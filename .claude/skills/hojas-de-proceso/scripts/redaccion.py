@@ -129,8 +129,10 @@ def revisar_cocina(texto, datos=None):
         m = re.search(pat, plano, re.IGNORECASE)
         if m:
             out.append((m.group(0), que))
-    # TBD se puede escribir, pero solo: el porque va a la bitacora
-    m = re.search(r"\btbd\b(.{0,400})", plano, re.DOTALL)
+    # TBD se puede escribir, pero solo: el porque va a la bitacora. Se mira SU renglon:
+    # en la lamina los pasos van en un solo cuadro, uno por renglon, y cruzar el salto
+    # tomaba el paso siguiente como "la explicacion" (falso rojo en la 30.3, 22/09/2026).
+    m = re.search(r"\btbd\b([^\n]{0,400})", plano)
     if m and len(m.group(1).strip(" .,:;-")) > 40:
         out.append(("TBD ...", "un TBD con explicacion (va TBD y nada mas)"))
     return out

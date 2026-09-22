@@ -10,30 +10,28 @@ py -3 .claude/skills/hojas-de-proceso/scripts/fotodevideo.py leer scripts/img/as
 Sale con codigo 1 si alguna no lo dice. Una foto sin eso es un huerfano: nadie puede
 rehacerla ni verificar de donde salio.
 
-## Las que usa el deck hoy (21)
+## Las que usa el deck hoy (19)
 
 | archivo | hoja | que es |
 |---|---|---|
 | `p1_listo.jpg` | portada | la maquina en posicion de arranque |
 | `e1_llave.jpg` | 30.1 | la llave general del tablero (Schneider On/Off) |
 | `e2_power.jpg` | 30.1 | el boton verde POWER START (电源启动) encendido |
-| `n3_servicios.jpg` | 30.1 | la fila de ocho servicios de la pantalla, en verde, rotulada |
-| `r_puesto.jpg` | 30.2 | el puesto de mando, rotulado — la marca 3 rodea SOLO el hongo rojo |
-| `r2_botonera.jpg` | 30.3 | la botonera con el hongo NEGRO adentro del cuadro, medida y rotulada |
-| `x2_enhebrar.jpg` | 30.4 | dos operarios llevan la punta entre las barras y el rodillo (s=49) |
-| `x3_mesa.jpg` | 30.4 | el operario apoya la punta sobre la mesa de carga (s=114) |
-| `x1_desenrollador.jpg` | 30.4 | el rollo en la cuna, con su eje y el material derecho (s=134) |
-| `x6_alimentacion.jpg` | 30.5 | la pantalla con `Seleccion Lamina Alimentacion: Cuero en rollo` |
-| `x4_selectores.jpg` | 30.5 | la caja del desenrollador: UNCOILER y Leather Convey, legibles (s=158) |
-| `x7_carga_hmi.jpg` | 30.5 | los mismos comandos en castellano: Desenrollador, Placa Prensad., Placa Soporte |
-| `x5r_botonera.jpg` | 30.6 | la botonera de carga rotulada, 4 marcas sobre los comandos del corte |
-| `r2_automatico.jpg` | 30.5 | la pantalla con Modo Automatico, los servicios y la botonera, rotulada |
+| `n3_servicios.jpg` | 30.1 | la fila de ocho servicios de la pantalla; el recuadro se corrigio el 22/09 (cortaba los iconos) |
+| `r_puesto.jpg` | 30.2 | el puesto de mando rotulado; la marca 4 se bajo el 22/09 (tapaba el boton verde) |
+| `y0_rollo_cuna.jpg` | 30.3 | el rollo con su eje sobre el soporte (IMG_0393 s=34,6); el paso dice montar: TBD |
+| `x2_enhebrar.jpg` | 30.3 | las manos llevan la punta entre las barras y el rodillo (s=48,5), sin caras |
+| `x3_mesa.jpg` | 30.3 | el operario apoya la punta sobre la mesa de carga (s=114) |
+| `x1_desenrollador.jpg` | 30.3 | el rollo en la cuna, con su eje y el material derecho (s=134) |
+| `x6_alimentacion.jpg` | 30.4 | la pantalla con `Seleccion Lamina Alimentacion: Cuero en rollo` |
+| `x4_selectores.jpg` | 30.4 | la caja del desenrollador: UNCOILER y Leather Convey, legibles (s=158) |
+| `r2_botonera.jpg` | 30.5 | la botonera con el hongo NEGRO de la caja colgante; la marca 1 se bajo el 22/09 (tapaba 自动) |
 | `d1_pieza.jpg` | 30.6 | el operario sacando la pieza del molde (IMG_0844 s=488) |
 | `d2_vinilo.jpg` | 30.6 | el operario sacando el RESTO DE VINILO del molde (s=492) |
 | `d5_caballete.jpg` | 30.6 | las piezas terminadas en el caballete (s=505) |
-| `d3_sustratos.jpg` | 30.6 | los sustratos plasticos en los nidos del molde |
-| `n5_mano.jpg` | 30.7 | la mano recorriendo la superficie de la pieza |
-| `n8_canto.jpg` | 30.7 | los dedos sobre la punta y el borde |
+| `d3_sustratos.jpg` | 30.6 | los sustratos en los nidos del molde (IMG_0579 s=480), sin las cabezas |
+| `z1_globito.jpg` | 30.7 | globito y grano planchado en la punta (foto de Fak, 10/09) |
+| `z2_puntitos.jpg` | 30.7 | los tres puntitos de los agujeros de vacio (IMG_0622, 03/09) |
 | `n7_despegue.jpg` | 30.7 | la punta abierta con la piel despegada |
 
 ## Las que NO usa el deck, y por que se quedan
@@ -51,6 +49,10 @@ castellano · `d4_nidos.jpg` el plano general de dos personas cargando sustratos
 `d5_molde_limpio.jpg` el molde sin el sobrante.
 
 **Quedaron descartadas, con el motivo**:
+
+- `x5r_botonera.jpg` / `x5_botonera.jpg` (la botonera de CARGA rotulada) y `x7_carga_hmi.jpg` — eran de la hoja del corte manual, que salio de la jornada el 22/09: el primer corte lo hace la maquina sola (IMG_0579 min 2:46). Se quedan para cuando el tecnico diga cuando se usa el corte a mano.
+- `r2_automatico.jpg` — la 30.7 vieja: no mostraba el boton negro. La reemplaza `r2_botonera.jpg` en la hoja de arranque.
+- `n5_mano.jpg`, `n8_canto.jpg` — la hoja de control no mostraba ningun defecto. Las reemplazan `z1_globito.jpg` y `z2_puntitos.jpg`.
 
 - `w1_rollo.jpg`, `w3_mesa.jpg`, `w5_selectores.jpg`, `w4_derecho.jpg`, `w7_alimentacion.jpg`
   y `w2_punta.jpg` — el primer set del vinilo (21/09). `w1_rollo` salio **rotada 90°**,

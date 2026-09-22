@@ -920,7 +920,7 @@ CAJETIN_BASE = dict(
     # firmo nadie (autonomy-contract.md F). Decir "C. Baptista" en una hoja que
     # el no vio es afirmar una aprobacion que no existe.
     aprobo="",
-    fecha="21/09/2026",
+    fecha="22/09/2026",
     rev="-",
 )
 
@@ -933,8 +933,8 @@ PORTADA_IMG = dict(
     cliente_modelo="VW / PATAGONIA",
     pieza="TOP ROLL PATAGONIA — N 216 / N 256 / N 285 / N 315",
     maquina="Moldeadora In-Mold Graining KINGPOWER (Molde Hembra)",
-    firmas="F. Santoro / (sin aprobar)",
-    fecha_rev="21/09/2026  ·  PRELIMINAR, sin aprobar",
+    firmas="F. Santoro / —",
+    fecha_rev="22/09/2026",
     foto=os.path.join(BASE_DIR, "assets2", "p1_listo.jpg"),
 )
 
@@ -946,15 +946,15 @@ def _f(n):
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# LAS HOJAS — cuatro partes, en el orden en que se usa la maquina
-#   1. ARRANQUE        como se prende y que se mira antes
-#   2. AUTOMATICO      como se pone en automatico y se arranca el ciclo
-#   3. EL PROCESO      que pasa en cada ciclo
-#   4. APAGADO         como se deja la maquina
+# LAS HOJAS — en el orden de la jornada del operario (hojas-proceso.md §17)
+#   30.1-30.2  prender la maquina y conocer el puesto
+#   30.3-30.4  el vinilo: montar el rollo, enhebrarlo y darle material
+#   30.5       arrancar en automatico (el primer corte lo hace la maquina)
+#   30.6-30.7  cada ciclo: descargar, cargar sustratos y controlar la pieza
+#   El APAGADO no esta filmado: esta en QUE FALTA FILMAR (falta_filmar.py), bloque 1.
 #
 # Todo lo que dice una hoja sale de un video de planta identificado. Lo que nadie filmo
-# NO se escribe por analogia (core-prohibiciones §1): va en
-# "QUE FALTA FILMAR - MOLDEADORA IMG.md", que es la lista de tomas para sacar en planta.
+# NO se escribe por analogia (core-prohibiciones §1): va a la lista de falta_filmar.py.
 # ════════════════════════════════════════════════════════════════════════════
 
 # ── Que entra y que sale de la OP 30 ─────────────────────────────────────────
@@ -998,42 +998,40 @@ def gate_materiales_del_deck(hojas):
 
 
 HOJAS_IMG = [
-    # ── PREPARAR Y ARRANCAR ──────────────────────────────────────────
+    # ── PRENDER Y CONOCER EL PUESTO ──────────────────────────────────────────
     dict(
         op="30.1",
         denominacion="ENCENDIDO GENERAL Y PUESTA EN MARCHA DE SERVICIOS",
         modo="secuencia",
         imagenes=[_f("e1_llave.jpg"), _f("e2_power.jpg"), _f("n3_servicios.jpg")],
         pies=["La llave general del tablero",
-              "El boton verde POWER START",
+              "El botón verde POWER START",
               "La fila de servicios de la pantalla"],
         sin_marcas_ok=True,
         pasos=[
-            "Girar la llave general del tablero a la posicion I.",
-            "Apretar el boton verde POWER START del tablero y esperar a que quede encendido.",
+            "Girar la llave general del tablero a la posición I.",
+            "Apretar el botón verde POWER START del tablero y esperar a que quede encendido.",
             "Prender los servicios desde la pantalla: apretar la fila de abajo hasta que los "
             "ocho queden en verde.",
         ],
         parametros=[
             ("Servicios a prender", "los 8 de la fila de abajo"),
-            ("Que son", "vacio, calor, lamparas, enfriador y temperatura de molde"),
+            ("Qué son", "vacío, calor, lámparas, enfriador y temperatura de molde"),
         ],
-        nota="El enfriador y la temperatura del molde se prenden de esta misma pantalla: "
-             "no hay que ir hasta el equipo.",
         fuentes=[
-            "IMG_0596 (02-09-2026) min 0:01 y 0:06, en el tablero: \u00ab¿Puedo cambiar a ON? "
-            "¿Asi?\u00bb / \u00ab¿Puedes prender los corrientes?\u00bb",
+            "IMG_0596 (02-09-2026) min 0:01 y 0:06, en el tablero: «¿Puedo cambiar a ON? "
+            "¿Asi?» / «¿Puedes prender los corrientes?»",
             "IMG_0597 (02-09-2026) s=3,0: el boton verde POWER START encendido, con su cartel",
-            "IMG_0579 (02-09-2026) min 6:22 a 6:41, el tecnico: \u00abPrimer paso es prender "
+            "IMG_0579 (02-09-2026) min 6:22 a 6:41, el tecnico: «Primer paso es prender "
             "todos los servicios, los motores de vacio, la temperatura del horno, iluminacion, "
-            "refrigeracion, que es chiller y es atemperador\u00bb",
+            "refrigeracion, que es chiller y es atemperador»",
         ],
         epp=EPP_IMG,
-        disparador="SI LA MAQUINA NO ENCIENDE O UN SERVICIO NO PASA A VERDE",
+        disparador="SI LA MÁQUINA NO ENCIENDE O UN SERVICIO NO PASA A VERDE",
         acciones=[
-            "1. No insistir con la llave ni con el boton.",
-            "2. Dar aviso al Lider de Produccion y a Mantenimiento.",
-            "3. Esperar la intervencion del personal autorizado.",
+            "1. No insistir con la llave ni con el botón.",
+            "2. Dar aviso al Líder de Producción y a Mantenimiento.",
+            "3. Esperar la intervención del personal autorizado.",
         ],
     ),
 
@@ -1043,285 +1041,225 @@ HOJAS_IMG = [
         modo="rotulada",
         imagenes=[_f("r_puesto.jpg")],
         pasos=[
-            "Operar la maquina desde la pantalla tactil: receta, temperaturas y ciclo.",
-            "Mandar el ciclo desde la botonera: el selector de modo y los botones.",
-            "Golpear el boton de parada de emergencia ante cualquier riesgo: corta todo.",
-            "Controlar el atemperador del agua del molde en su display: se prende y se apaga "
-            "desde la pantalla de la maquina, no desde el equipo.",
-            "Respetar los carteles del puesto: a la zona del molde no entra nadie sin "
-            "autorizacion.",
+            "Usar la pantalla táctil para elegir el modo y prender los servicios: los "
+            "parámetros no se tocan.",
+            "Usar la botonera para arrancar y parar el ciclo, como indica la hoja 30.5.",
+            "Presionar el botón de parada de emergencia ante cualquier riesgo: hay uno en la "
+            "caja colgante y otro en el panel.",
+            "Prender y apagar el atemperador desde la pantalla de la máquina, no desde su "
+            "display.",
+            "Respetar los carteles del puesto: no entra personal no autorizado y la máquina "
+            "se apaga cuando no se usa.",
         ],
         fuentes=[
-            "IMG_0801 (09-09-2026) s=1,1: la pantalla del puesto, se ve en la foto",
-            "misma foto: la botonera con el selector y los botones del ciclo",
-            "misma foto: el boton de parada de emergencia del lateral",
-            "IMG_0596 (02-09-2026) min 0:30 a 0:34, parados frente al equipo de agua: \u00abtodo eso se maneja de alla, de la pantalla\u00bb",
-            "misma foto: los dos carteles del puesto",
+            "IMG_0579 (02-09-2026) min 6:22 a 6:52: servicios y modo desde la pantalla; "
+            "IMG_0596 (02-09-2026) min 0:16 a 0:24: «¿Pide un usuario cuando la prendemos? "
+            "... quiere cambiar el parametro, ahi te pide»",
+            "IMG_0801 (09-09-2026) s=1,1: la botonera del puesto, se ve en la foto",
+            "IMG_0801 s=1,1: el hongo rojo de la caja colgante y el del panel, los dos en la foto",
+            "IMG_0596 (02-09-2026) min 0:30 a 0:34, frente a los equipos de agua: «todo eso "
+            "se maneja de alla, de la pantalla»; el atemperador (水式模温机) se ve en la foto",
+            "IMG_0801 s=1,1: los carteles «NO ENTRY to unauthorised persons» y «TURN OFF "
+            "MACHINE WHEN NOT IN USE»",
         ],
         epp=EPP_IMG,
-        disparador="SI FALTA UN COMANDO, ESTA FLOJO O NO ENCIENDE",
+        disparador="SI FALTA UN COMANDO, ESTÁ FLOJO O NO ENCIENDE",
         acciones=[
-            "1. No operar la maquina.",
-            "2. Dar aviso al Lider de Produccion y a Mantenimiento.",
-            "3. Esperar la intervencion del personal autorizado.",
+            "1. No operar la máquina.",
+            "2. Dar aviso al Líder de Producción y a Mantenimiento.",
+            "3. Esperar la intervención del personal autorizado.",
         ],
     ),
 
-    # ── PRODUCIR ──────────────────────────────────────
+    # ── EL VINILO ────────────────────────────────────────────────────────────
     dict(
         op="30.3",
-        denominacion="RECONOCIMIENTO DE LOS COMANDOS DE LA BOTONERA",
-        modo="rotulada",
-        imagenes=[_f("r2_botonera.jpg")],
+        denominacion="ENHEBRADO DEL VINILO EN EL DESENROLLADOR",
+        modo="secuencia",
+        imagenes=[_f("y0_rollo_cuna.jpg"), _f("x2_enhebrar.jpg"), _f("x3_mesa.jpg"),
+                  _f("x1_desenrollador.jpg")],
+        pies=["El rollo con su eje, en la cuna",
+              "La punta entre las barras y el rodillo",
+              "La punta sobre la mesa de carga",
+              "El material derecho, del rollo a la mesa"],
+        sin_marcas_ok=True,
         pasos=[
-            "Poner el selector de modo en AUTOMATICO.",
-            "Mantener apretado el boton azul de RESET hasta que quede encendido.",
-            "Apretar el boton verde de arranque de ciclo.",
-            "Apretar enseguida el boton negro de la caja colgante.",
-            "Apretar el boton rojo para parar el ciclo al terminar.",
-            "Golpear el boton de parada de emergencia ante cualquier riesgo.",
+            "Montar el rollo de vinilo con su eje en la cuna del desenrollador: TBD.",
+            "Pasar la punta del material entre las barras guía naranjas y el rodillo verde.",
+            "Apoyar la punta del material sobre la mesa de carga y alisarla con la mano.",
+            "Verificar que el material corra derecho del rollo a la mesa, sin arrugas.",
         ],
-        parametros=[("Tiempo que se mantiene el RESET", "3 s")],
         fuentes=[
-            "IMG_0579 (02-09-2026) min 6:41 a 6:49, el tecnico: \u00abes automatico, "
-            "directamente automatico\u00bb; el selector se ve en IMG_0840 s=4",
-            "IMG_0579 (02-09-2026) min 7:33 a 7:40: \u00ab3 segundos... 3 segundos hasta que "
-            "se enciende\u00bb, y min 7:09: \u00abcuando este luce azul esta encendido\u00bb",
-            "IMG_0842 (10-09-2026) min 0:00: \u00abboton verde y despues boton negro\u00bb",
-            "IMG_0842 (10-09-2026) min 0:00 y 0:06: \u00abboton verde y despues boton "
-            "negro\u00bb / \u00abarranca si queres de ahi\u00bb",
-            "IMG_0840 (10-09-2026) s=4: el boton rojo con su cartel, al lado del verde",
-            "IMG_0840 (10-09-2026) s=4: el hongo de emergencia sobre fondo amarillo",
+            "IMG_0393 (26-08-2026) s=34,6: el rollo ya montado, con su eje sobre el soporte. "
+            "Como se sube, se traba y se centra no esta filmado ni dicho en ninguno de los 91 "
+            "videos: TBD, preguntado al tecnico",
+            "IMG_0393 (26-08-2026) s=48,5: las manos llevan la punta entre las barras guia "
+            "naranjas y el rodillo verde",
+            "IMG_0393 (26-08-2026) s=114: el operario apoya el material sobre la mesa de "
+            "carga con las dos manos y lo alisa",
+            "IMG_0393 (26-08-2026) s=134: el rollo en la cuna del desenrollador, con el eje "
+            "y su soporte, y el material corriendo derecho a la mesa",
         ],
         epp=EPP_IMG,
-        disparador="SI UN COMANDO NO RESPONDE O QUEDA TRABADO",
+        disparador="SI EL MATERIAL SALE TORCIDO O CON ARRUGAS DEL ROLLO",
         acciones=[
-            "1. No forzar el boton ni repetirlo.",
-            "2. Anotar la alarma que muestra la pantalla.",
-            "3. Dar aviso al Lider de Produccion.",
+            "1. No forzar el rollo a mano con la máquina en marcha.",
+            "2. Dar aviso al Líder de Producción.",
+            "3. Esperar la intervención del personal autorizado.",
         ],
     ),
 
     dict(
         op="30.4",
-        denominacion="ENHEBRADO DEL VINILO EN EL DESENROLLADOR",
-        modo="secuencia",
-        imagenes=[_f("x2_enhebrar.jpg"), _f("x3_mesa.jpg"), _f("x1_desenrollador.jpg")],
-        pies=["La punta entre las barras y el rodillo",
-              "La punta sobre la mesa de carga",
-              "El material derecho, del rollo a la mesa"],
-        sin_marcas_ok=True,
-        pasos=[
-            "Pasar la punta del material entre las barras guia y el rodillo de arrastre.",
-            "Apoyar la punta del material sobre la mesa de carga y alisarla con la mano.",
-            "Verificar que el material corra derecho del rollo a la mesa, sin arrugas.",
-        ],
-        fuentes=[
-            "IMG_0393 (26-08-2026) s=49: dos operarios llevan la punta del material entre "
-            "las barras guia naranjas y el rodillo de arrastre verde",
-            "IMG_0393 (26-08-2026) s=114: el operario apoya el material sobre la mesa de "
-            "carga con las dos manos y lo alisa",
-            "IMG_0393 (26-08-2026) s=134: el rollo apoyado en la cuna del desenrollador, "
-            "con el eje pasante y su soporte, y el material corriendo derecho a la mesa",
-        ],
-        epp=EPP_IMG,
-        disparador="SI EL MATERIAL SALE TORCIDO O CON ARRUGAS DEL ROLLO",
-        acciones=[
-            "1. No forzar el rollo a mano con la maquina en marcha.",
-            "2. Dar aviso al Lider de Produccion.",
-            "3. Esperar la intervencion del personal autorizado.",
-        ],
-    ),
-
-    dict(
-        op="30.5",
         denominacion="AVANCE DEL VINILO CON LOS SELECTORES",
         modo="secuencia",
-        imagenes=[_f("x6_alimentacion.jpg"), _f("x4_selectores.jpg"),
-                  _f("x7_carga_hmi.jpg")],
-        pies=["La pantalla, en Cuero en rollo",
-              "Los dos selectores del desenrollador",
-              "Los mismos comandos, en castellano"],
+        imagenes=[_f("x6_alimentacion.jpg"), _f("x4_selectores.jpg")],
+        pies=["Selección Lámina Alimentación",
+              "UNCOILER y Leather Convey: FWD adelante"],
         sin_marcas_ok=True,
         pasos=[
-            "Elegir Cuero en rollo en la pantalla, en Seleccion Lamina Alimentacion.",
-            "Mover el material hasta la mesa de carga con los dos selectores del "
-            "desenrollador, UNCOILER y Leather Convey, los dos en FWD.",
-            "Ajustar la posicion del material desde la pantalla Manual - Carga: "
-            "Desenrollador en Atras o en Adelante.",
+            "Verificar en la pantalla que Selección Lámina Alimentación esté en Cuero en "
+            "rollo.",
+            "Mover el material hacia adelante con los dos selectores juntos en FWD, UNCOILER "
+            "y Leather Convey, y volverlos al medio para parar.",
         ],
         fuentes=[
             "IMG_0661 (04-09-2026) s=30: en la pantalla Operacion del Equipo se lee "
-            "\u00abSeleccion Lamina Alimentacion: Cuero en rollo\u00bb",
-            "IMG_0393 (26-08-2026) s=158: la caja del desenrollador, con las dos chapas "
-            "UNCOILER \u5f00\u5377\u673a y Leather Convey \u76ae\u6599\u8f93\u9001, "
-            "cada una con FWD \u6b63\u8f6c y REV \u53cd\u8f6c",
-            "IMG_0830 (10-09-2026) s=41: la pantalla Manual - Carga, en castellano, con "
-            "\u00abDesenrollador: Atras / Adelante\u00bb y \u00abRodillo de prensado de "
-            "desenrollador\u00bb",
+            "«Seleccion Lamina Alimentacion: Cuero en rollo»",
+            "IMG_0582 (02-09-2026) min 6:08 y 6:24, el tecnico en chino (IMG_0582.zh.txt y "
+            "la transcripcion vieja): 这个上料会送料 «esto de la carga alimenta material» / "
+            "因为它两个是配套的 «porque los dos van juntos». Las chapas UNCOILER 开卷机 y "
+            "Leather Convey 皮料输送 con FWD 正转 y REV 反转 se leen en IMG_0393 s=158, con "
+            "los dos selectores en el medio, que es la posicion de reposo",
         ],
         epp=EPP_IMG,
         disparador="SI EL MATERIAL NO AVANZA O AVANZA TORCIDO",
         acciones=[
-            "1. Llevar los dos selectores a REV y sacar el material de la mesa.",
-            "2. Dar aviso al Lider de Produccion.",
-            "3. No tirar del material a mano con los selectores en FWD.",
+            "1. Volver los dos selectores al medio.",
+            "2. No tirar del material a mano con los selectores en FWD.",
+            "3. Dar aviso al Líder de Producción.",
         ],
     ),
 
+    # ── ARRANCAR ─────────────────────────────────────────────────────────────
     dict(
-        op="30.6",
-        denominacion="CIERRE Y CORTE DE LA PRIMERA LAMINA",
+        op="30.5",
+        denominacion="ARRANQUE DE LA MAQUINA EN MODO AUTOMATICO",
         modo="rotulada",
-        imagenes=[_f("x5r_botonera.jpg")],
-        pies=["La botonera de carga"],
+        imagenes=[_f("r2_botonera.jpg")],
         pasos=[
-            "Cerrar la mordaza de tiro sobre la punta del material: PULL CLAMP en CLAMP.",
-            "Bajar la placa prensadora: CUT PRESS en DOWN.",
-            "Bajar la placa soporte: CUT SUPPORT en DOWN.",
-            "Cortar la lamina: CUTTING BLADE en ADV.",
+            "Poner el selector de modo en automático y elegir Modo Automático en la lista de "
+            "la pantalla.",
+            "Mantener apretado el botón azul RESET hasta que quede encendido.",
+            "Apretar el botón verde de arranque de ciclo.",
+            "Apretar el botón negro de la caja colgante cuando el carro de arriba empieza a "
+            "moverse.",
+            "Parar el ciclo con el botón rojo de parada de ciclo.",
+            "Presionar el botón de parada de emergencia ante cualquier riesgo.",
         ],
-        parametros=[("Largo de lamina", "1100 mm")],
+        nota="El primer corte lo hace la máquina sola: sacar el desperdicio de ese corte y "
+             "tirarlo al cajón de scrap. En el primer ciclo, colocar los sustratos cuando el "
+             "RESET queda encendido.",
         fuentes=[
-            "IMG_0393 (26-08-2026) s=173: en la botonera se lee PULL CLAMP "
-            "\u62c9\u6599\u5939\u94b3 con sus dos posiciones CLAMP \u5939\u7d27 y REL "
-            "\u677e\u5f00; IMG_0830 s=41 la llama \u00abMordaza de tiro\u00bb",
-            "IMG_0393 (26-08-2026) s=173: en la botonera se lee CUT PRESS "
-            "\u5207\u65ad\u538b\u6599 UP/DOWN; IMG_0830 s=41 la llama \u00abPlaca "
-            "Prensad.\u00bb y la muestra en Abajo",
-            "IMG_0393 (26-08-2026) s=173: en la botonera se lee CUT SUPPORT "
-            "\u5207\u65ad\u6258\u6599 UP/DOWN; IMG_0830 s=41 la llama \u00abPlaca "
-            "Soporte\u00bb y la muestra en Abajo",
-            "IMG_0393 (26-08-2026) s=173: en la botonera se lee CUTTING BLADE "
-            "\u5207\u65ad\u5200\u7247 ADV/BACK. El orden lo respalda IMG_0579 "
-            "(02-09-2026) min 2:10: \u00abtenes que poner el down de bajar para que ese "
-            "cuchillo baje\u00bb, o sea que la placa baja antes del corte. El largo de "
-            "lamina se lee en Parametro - Carga, bloque Mordaza Extractor: \u00abLargo "
-            "Lamina: +1100,0 mm\u00bb (IMG_0830, fotograma 0830_09, 10-09-2026)",
+            "IMG_0579 (02-09-2026) min 6:41 a 6:52: «directamente automatico», con la lista "
+            "de modos en la pantalla; el selector 自动/手动 se ve en IMG_0840 s=4",
+            "IMG_0579 (02-09-2026) min 7:09: «cuando este luce azul esta encendido»; min "
+            "2:42: «tiene que presionar como 3 o 5 segundos»",
+            "IMG_0842 (10-09-2026) min 0:00: «boton verde y despues boton negro»; el cartel "
+            "循环启动 es arranque de ciclo",
+            "IMG_0842 (10-09-2026) min 0:00 y 1:05 a 1:11: «boton verde y despues boton "
+            "negro» / «cuando se empieza a mover el carro de arriba, recien ahi arranca, "
+            "porque ahi va a buscar la placa»",
+            "IMG_0840 (10-09-2026) s=4: el boton rojo con su cartel 循环停止, parada de ciclo",
+            "IMG_0840 (10-09-2026) s=4: el hongo de emergencia sobre fondo amarillo. Nota: "
+            "IMG_0579 min 2:46 a 2:54 «¿esto esta sincronizado automatico, que haga ese "
+            "primer corte? — si, si», min 3:29 «sacar y lo tiras», y min 7:41 «encendido se "
+            "puede cortar y ahora tienen que poner los sustratos»",
         ],
         epp=EPP_IMG,
-        disparador="SI LA LAMINA SALE CORTA, TORCIDA O LA CUCHILLA NO CORTA",
+        disparador="SI EL CICLO NO ARRANCA O LA PANTALLA MUESTRA UNA ALARMA",
         acciones=[
-            "1. No repetir el corte sobre la misma lamina.",
-            "2. Apartar el recorte y dar aviso al Lider de Produccion.",
-            "3. No tocar los largos de la receta por cuenta propia.",
+            "1. No repetir el arranque.",
+            "2. Anotar la alarma que muestra la pantalla.",
+            "3. Dar aviso al Líder de Producción.",
+        ],
+    ),
+
+    # ── CADA CICLO ───────────────────────────────────────────────────────────
+    dict(
+        op="30.6",
+        denominacion="DESCARGA DE PIEZAS Y CARGA DE SUSTRATOS",
+        modo="secuencia",
+        imagenes=[_f("d1_pieza.jpg"), _f("d2_vinilo.jpg"),
+                  _f("d5_caballete.jpg"), _f("d3_sustratos.jpg")],
+        pies=["Las piezas en el molde inferior",
+              "El resto de vinilo sobre el molde",
+              "Las piezas en el caballete",
+              "Un sustrato en cada nido del molde"],
+        sin_marcas_ok=True,
+        pasos=[
+            "Retirar las piezas del molde recién cuando los expulsores las levantan.",
+            "Sacar del molde el resto de vinilo que sobra.",
+            "Apoyar las piezas en el caballete sin que se toquen entre sí, para que no se "
+            "marquen.",
+            "Colocar un sustrato plástico nuevo en cada nido del molde y verificar que se "
+            "encienda la luz de cada posición.",
+        ],
+        fuentes=[
+            "Fak, 21-09-2026: «la maquina no se abre sola, expulsa las piezas con los "
+            "expulsores, y ahi el operario tiene que retirar las piezas»; se ve en "
+            "IMG_0844 s=488",
+            "Fak, 21-09-2026: «y luego el resto de vinilo»; se ve en IMG_0844 s=492, el "
+            "operario sacando la lamina sobrante del molde verde",
+            "IMG_0844 (10-09-2026) min 6:33 a 6:36: «dale de a 2, para que no se marcan las "
+            "piezas una con la otra»; las piezas en el caballete se ven en s=505",
+            "IMG_0579 (02-09-2026) min 7:42 a 8:09, el tecnico: «ahora tiene que poner los "
+            "sustratos» / «si lo falta, le falta luz»; se ven en s=480. IMG_0844 min 0:00 a "
+            "0:04: «yo cargo las dos... el carga las otras dos»",
+        ],
+        epp=EPP_IMG,
+        disparador="SI HAY QUE ENTRAR AL MOLDE ANTES DE QUE LOS EXPULSORES LEVANTEN LAS "
+                   "PIEZAS",
+        acciones=[
+            "1. No entrar: esperar a que los expulsores levanten las piezas.",
+            "2. Ante cualquier riesgo, presionar el botón de parada de emergencia.",
+            "3. Dar aviso al Líder de Producción.",
         ],
     ),
 
     dict(
         op="30.7",
-        denominacion="ARRANQUE DE LA MAQUINA EN MODO AUTOMATICO",
-        modo="rotulada",
-        imagenes=[_f("r2_automatico.jpg")],
-        pasos=[
-            "Elegir Modo Automatico en la lista de la pantalla.",
-            "Verificar que los ocho servicios de la fila de abajo esten en verde.",
-            "Mantener apretado el boton azul de RESET hasta que quede encendido.",
-            "Apretar el boton verde y enseguida el negro: el ciclo arranca cuando se empieza "
-            "a mover el carro de arriba.",
-        ],
-        parametros=[
-            ("Tiempo que se mantiene el RESET", "3 s"),
-            ("Cuando van los sustratos", "despues de dar arranque, mientras la maquina "
-                                         "corta y calienta la piel"),
-            ("Retardo para poner los sustratos", "0 s en produccion de serie"),
-        ],
-        fuentes=[
-            "IMG_0579 (02-09-2026) min 6:41 a 6:49: \u00abes automatico, directamente "
-            "automatico\u00bb, y la lista se lee en la pantalla",
-            "IMG_0579 (02-09-2026) min 6:22 a 6:41: los servicios que el tecnico enumera son "
-            "los de esa fila",
-            "IMG_0579 (02-09-2026) min 7:33 a 7:40 y 7:09: \u00ab3 segundos hasta que se "
-            "enciende\u00bb / \u00abcuando este luce azul esta encendido\u00bb",
-            "IMG_0842 (10-09-2026) min 0:00 y 1:05 a 1:11: \u00abboton verde y despues boton "
-            "negro\u00bb / \u00abcuando se empieza a mover el carro de arriba, recien ahi "
-            "arranca, porque ahi va a buscar la placa\u00bb",
-        ],
-        epp=EPP_IMG,
-        disparador="SI EL CICLO NO ARRANCA O LA PANTALLA MUESTRA UNA ALARMA",
-        acciones=[
-            "1. No pasar a manual para destrabarlo.",
-            "2. Anotar la alarma que muestra la pantalla.",
-            "3. Dar aviso al Lider de Produccion.",
-        ],
-    ),
-
-    # ── CONTROLAR ────────────────────────────────────────
-    dict(
-        op="30.8",
-        denominacion="DESCARGA DE PIEZAS Y CARGA DE SUSTRATOS",
-        modo="secuencia",
-        imagenes=[_f("d1_pieza.jpg"), _f("d2_vinilo.jpg"),
-                  _f("d5_caballete.jpg"), _f("d3_sustratos.jpg")],
-        pies=["La pieza en el molde inferior",
-              "El resto de vinilo sobre el molde",
-              "Las piezas en el caballete",
-              "Los sustratos en los nidos del molde"],
-        sin_marcas_ok=True,
-        pasos=[
-            "Retirar la pieza del molde cuando los expulsores la levantan, entre dos "
-            "personas, una de cada lado del frente.",
-            "Sacar del molde el resto de vinilo que sobra.",
-            "Apoyar las piezas en el caballete.",
-            "Colocar los sustratos plasticos nuevos en los nidos del molde y verificar que "
-            "se encienda la luz de cada posicion: si falta una luz, falta un sustrato.",
-        ],
-        parametros=[("Personas en el frente", "dos como minimo")],
-        fuentes=[
-            "Fak, 21-09-2026: \u00abla maquina no se abre sola, expulsa las piezas con los "
-            "expulsores, y ahi el operario tiene que retirar las piezas\u00bb; se ve en "
-            "IMG_0844 s=488; y en el audio del mismo video, min 0:55, los dos operarios se reparten: \u00abyo la de abajo, yo la de arriba\u00bb",
-            "Fak, 21-09-2026: \u00aby luego el resto de vinilo\u00bb; se ve en IMG_0844 "
-            "s=492, el operario sacando la lamina sobrante del molde verde",
-            "IMG_0844 (10-09-2026) s=505: se ven las piezas terminadas apoyadas en el "
-            "caballete",
-            "IMG_0579 (02-09-2026) min 7:42 a 8:09, el tecnico: \u00abahora tiene que poner "
-            "los sustratos\u00bb / \u00abpara ver que todo el luce esta encendido\u00bb / "
-            "\u00absi lo falta, le falta luz\u00bb",
-        ],
-        epp=EPP_IMG,
-        disparador="SI HAY QUE ENTRAR A LA ZONA DEL MOLDE CON LA MAQUINA EN CICLO",
-        acciones=[
-            "1. Parar el ciclo con el boton rojo antes de acercarse.",
-            "2. Dar aviso al Lider de Produccion.",
-            "3. No entrar a la zona del molde sin autorizacion.",
-        ],
-    ),
-
-    dict(
-        op="30.9",
         denominacion="CONTROL DE PIEZA TERMOFORMADA",
         modo="secuencia",
-        imagenes=[_f("n5_mano.jpg"), _f("n8_canto.jpg"), _f("n7_despegue.jpg")],
-        pies=["Pasar la mano por la superficie",
-              "Mirar la punta y el borde",
-              "Abrir la punta con los dedos"],
+        imagenes=[_f("z1_globito.jpg"), _f("z2_puntitos.jpg"), _f("n7_despegue.jpg")],
+        pies=["Globito en la punta: así NO",
+              "Los tres puntitos: así NO",
+              "Piel despegada en la punta: así NO"],
         sin_marcas_ok=True,
         pasos=[
-            "Pasar la mano por la superficie de la pieza recien sacada del molde y mirar que "
-            "no quede ningun globito.",
-            "Mirar la punta y el borde de la pieza, y avisar si aparecen los tres puntitos "
-            "que dejan los agujeros de vacio.",
-            "Abrir la punta con los dedos y verificar que la piel este pegada.",
+            "Pasar la mano por la superficie de cada pieza y verificar que no tenga globitos.",
+            "Mirar la punta y el borde, y verificar que no aparezcan los tres puntitos de los "
+            "agujeros de vacío.",
+            "Verificar que la piel esté pegada en la punta, sin despegue.",
         ],
-        nota="Ante la duda, apartar la pieza y avisar. El criterio de aceptacion y la "
-             "frecuencia los define Calidad en el Plan de Control.",
         fuentes=[
-            "IMG_0859 (11-09-2026) min 0:08 a 0:21: \u00abes la que tenia el globito\u00bb / "
-            "\u00abcon eso logramos eliminar el globito\u00bb",
-            "IMG_0820 (09-09-2026) min 0:39: \u00abel defecto ese que sigue marcando los 3 "
-            "puntitos ahi en la punta de la pieza\u00bb; IMG_0660 (04-09-2026) min 0:00: "
-            "\u00abse notan los agujeros de vacio, lo sigue marcando\u00bb",
-            "IMG_0813 (09-09-2026) min 0:00: \u00abel T17 genero este defecto que no termino "
-            "de pegar bien en la punta\u00bb",
+            "IMG_0859 (11-09-2026) min 0:08 a 0:21: «es la que tenia el globito» / «con eso "
+            "logramos eliminar el globito». La foto es de Fak, 10-09-2026: burbuja y grano "
+            "planchado en la punta",
+            "IMG_0820 (09-09-2026) min 0:39: «el defecto ese que sigue marcando los 3 "
+            "puntitos ahi en la punta de la pieza»; IMG_0660 (04-09-2026) min 0:00: «se "
+            "notan los agujeros de vacio, lo sigue marcando». La foto es del telefono, "
+            "03-09-2026",
+            "IMG_0813 (09-09-2026) min 0:00: «el T17 genero este defecto que no termino de "
+            "pegar bien en la punta»",
         ],
         epp=EPP_IMG,
-        disparador="SI LA PIEZA SALE CON GLOBITO, CON LA PIEL DESPEGADA EN LA PUNTA O CON "
-                   "LOS TRES PUNTITOS DE LOS AGUJEROS DE VACIO",
+        disparador="SI LA PIEZA SALE CON GLOBITO, CON LOS TRES PUNTITOS O CON LA PIEL "
+                   "DESPEGADA EN LA PUNTA",
         acciones=[
-            "1. Apartar la pieza, identificarla y segregarla al cajon de scrap.",
-            "2. Dar aviso segun el procedimiento de no conformidades P-09/I.",
-            "3. No tocar parametros por cuenta propia.",
+            "1. Apartar la pieza e identificarla.",
+            "2. Dar aviso al Líder de Producción.",
+            "3. No tocar parámetros por cuenta propia.",
         ],
     ),
 ]

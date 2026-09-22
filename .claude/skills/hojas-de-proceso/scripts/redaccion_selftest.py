@@ -50,6 +50,11 @@ COCINA_CASOS = [
      "la nota que Fak mando borrar"),
     ("Pendiente de confirmar con KINGPOWER.", True, "un pendiente con el proveedor"),
     ("Temperatura de molde: TBD", False, "TBD pelado, que si va"),
+    ("Montar el rollo en la cuna: TBD.\nPasar la punta entre las barras y el rodillo.\n"
+     "Apoyar la punta sobre la mesa de carga y alisarla con la mano.", False,
+     "TBD al final de un paso, con los pasos siguientes abajo"),
+    ("Montar el rollo en la cuna: TBD, falta que lo confirme el tecnico de KingPower.",
+     True, "TBD con su porque en el mismo renglon"),
     ("Nadie mete la mano hasta que la maquina abrio.", False, "una nota operativa"),
 ]
 
