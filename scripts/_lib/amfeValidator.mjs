@@ -986,7 +986,7 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                                     ? { ...cCtx, type: 'CARACTERISTICA_CLIENTE_S_MENOR', severity: 'WARNING',
                                         detail: `el cliente la designo critica (${specialCh}, ${fuenteCliente}) y el efecto de esta fila da S=${sN}: se informa la diferencia al cliente, NO se sube la S` }
                                     : { ...cCtx, type: 'CAUSE_CC_LOW_SEVERITY',
-                                        detail: `marcada critica (${specialCh}) con S=${sN} y sin fuente del cliente declarada: el I-AC-005 exige S 9 o 10 (si el efecto habla de seguridad o ley, la S es la que esta mal; si la designo el cliente, escribir specialCharSource)` });
+                                        detail: `marcada critica (${specialCh}) con S=${sN}: el I-AC-005 exige S 9 o 10, sin excepciones (si el efecto habla de seguridad o ley, la S es la que esta mal; si la designo el cliente, declarar specialCharSource)` });
                             } else if (nivelSigla === 'SIGNIFICATIVA' && sN > 0 && !missO && nivelPorCriterio(sN, oN) !== 'SIGNIFICATIVA') {
                                 issues.push({ ...cCtx, type: 'CAUSE_SC_FUERA_DE_REGLA',
                                     detail: `marcada significativa (${specialCh}) con S=${sN} O=${oN}: el I-AC-005 exige S 5 a 8 y O >= 4` });
