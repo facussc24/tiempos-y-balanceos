@@ -42,6 +42,9 @@ import tempfile
 import numpy as np
 from PIL import Image, ImageDraw
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from nube import asegurar_local  # noqa: E402
+
 CLAVE = "hoja-de-proceso:origen"       # donde se escribe la procedencia
 FPS_BIBLIOTECA = 0.5                    # el muestreo con el que se armo la biblioteca
 
@@ -104,7 +107,12 @@ def recortar(im: Image.Image, crop: str | None) -> Image.Image:
 
 # ----------------------------------------------------------------- extraccion
 def cuadros_en(video: str, t0: float, t1: float, destino: str, alto: int | None = None) -> list[str]:
-    """Todos los cuadros del video entre t0 y t1, a resolucion completa."""
+    """Todos los cuadros del video entre t0 y t1, a resolucion completa.
+
+    Arranca por `asegurar_local`: si el video esta solo en la nube, se lo pide a OneDrive
+    antes de que ffmpeg falle con "Invalid argument".
+    """
+    asegurar_local(video)
     for f in os.listdir(destino):
         os.remove(os.path.join(destino, f))
     vf = [] if alto is None else ["-vf", f"scale=-2:{alto}"]
