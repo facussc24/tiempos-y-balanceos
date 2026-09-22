@@ -40,7 +40,12 @@ const DIMENSION_BY_TYPE = {
     CLAUDE_PHRASE: 'Vocabulario Claude / frecuencias',
     CAUSE_MISSING_SOD: 'S/O/D completos',
     CAUSE_NO_AP: 'S/O/D completos',
-    CAUSE_APH_EMPTY_NO_PLACEHOLDER: 'Acciones en AP=H',
+    // Hasta el 21/09/2026 la dimension era "Acciones en AP=H" y la bloqueaba la celda VACIA.
+    // Hoy es al reves: la celda vacia es estado valido y lo que bloquea es el placeholder
+    // (Fak: "saca esa mierda, no la quiero ni ver en el AMFE"). Ver amfe.md §4.
+    CAUSE_APH_PLACEHOLDER_PROHIBIDO: 'Placeholder prohibido en AP=H',
+    EQUIPO_PERSONA_NO_TRABAJA: 'Caratula / Header',
+    EQUIPO_PERSONA_DESCONOCIDA: 'Caratula / Header',
     FM_NO_EFFECT_LOCAL: 'Efectos VDA (3 niveles)',
     FM_NO_EFFECT_NEXT: 'Efectos VDA (3 niveles)',
     FM_NO_EFFECT_END: 'Efectos VDA (3 niveles)',

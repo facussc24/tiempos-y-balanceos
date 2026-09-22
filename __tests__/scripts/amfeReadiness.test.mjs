@@ -70,10 +70,26 @@ describe('computeReadiness — scorecard AMFE listo para entregar', () => {
         expect(s.blockers.some(b => b.type === 'CAUSE_MISSING_SOD')).toBe(true);
     });
 
-    it('3. AP=H sin accion => NO LISTO (CAUSE_APH_EMPTY_NO_PLACEHOLDER)', () => {
+    /**
+     * Este caso se dio VUELTA el 21/09/2026 y el test habia quedado afirmando lo contrario de
+     * lo que decidio Fak. Antes, un AP=H con la celda de accion vacia BLOQUEABA la entrega
+     * (`CAUSE_APH_EMPTY_NO_PLACEHOLDER`) y el placeholder "Pendiente definicion equipo APQP"
+     * era el default autorizado. Fak, viendo el PDF del AMFE 131: *"saca esa mierda, no la
+     * quiero ni ver en el AMFE"*. Ahora el AP=H sin accion es ESTADO VALIDO — la accion la
+     * define el equipo cuando decide definirla — y lo que bloquea es el placeholder.
+     */
+    it('3. AP=H con la celda de accion vacia => LISTO: es estado valido', () => {
         const s = computeReadiness(makeDoc({ cause: { ap: 'H', actionPriority: 'H' } }), 'Armrest', 'AMFE-TEST', HDR);
+        expect(s.blockers.some(b => b.type === 'CAUSE_APH_EMPTY_NO_PLACEHOLDER')).toBe(false);
+        expect(s.blockers.some(b => b.type === 'CAUSE_APH_PLACEHOLDER_PROHIBIDO')).toBe(false);
+    });
+
+    it('3b. AP=H CON el placeholder prohibido => NO LISTO (CAUSE_APH_PLACEHOLDER_PROHIBIDO)', () => {
+        const s = computeReadiness(
+            makeDoc({ cause: { ap: 'H', actionPriority: 'H', optimizationAction: 'Pendiente definicion equipo APQP' } }),
+            'Armrest', 'AMFE-TEST', HDR);
         expect(s.verdict).toBe('NO_LISTO');
-        expect(s.blockers.some(b => b.type === 'CAUSE_APH_EMPTY_NO_PLACEHOLDER')).toBe(true);
+        expect(s.blockers.some(b => b.type === 'CAUSE_APH_PLACEHOLDER_PROHIBIDO')).toBe(true);
     });
 
     it('4. control con invento "hielo seco" => NO LISTO (FORBIDDEN_VOCABULARY)', () => {
