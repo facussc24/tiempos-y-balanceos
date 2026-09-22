@@ -132,12 +132,12 @@ export const CRITICAL_TYPES = new Set([
     // 0 homonimas en los 17 AMFE, asi que hoy no bloquea nada.
     'OP_NOMBRE_DUPLICADO',
     // Severidad subcalibrada para fallas con efecto de incumplimiento legal
-    // (ver rules/amfe-severity-legal-compliance.md). Pais de origen, aduana, etc.
+    // (ver rules/amfe.md §1). Pais de origen, aduana, etc.
     'CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED',
     // Candado anti-invento (agregado 2026-06-26 por plan wise-jumping-island).
     // Equipos que Barack no tiene (hielo seco, ultrasonido para medir) +
     // espanolismos peninsulares (flexometro, ordenador). known-bad => bloquea.
-    // Ver rules/amfe-no-inventar-controles.md + scripts/_lib/forbiddenContent.mjs.
+    // Ver rules/amfe.md §6 + scripts/_lib/forbiddenContent.mjs.
     // CLAUDE_PHRASE (frases-Claude + frecuencias inventadas) es WARNING, NO va aca.
     'FORBIDDEN_VOCABULARY',
     // Caracteristica especial contra S/O (agregado 2026-09-11, regla caracteristicas-especiales.md).
@@ -193,7 +193,7 @@ export function nivelPorCriterio(severidad, ocurrencia) {
 export const CARACTERISTICAS_ESPECIALES = CE;
 
 // Patrones que identifican failures con efecto de incumplimiento legal/aduanero.
-// Ver rules/amfe-severity-legal-compliance.md. Match contra los 3 niveles de efecto.
+// Ver rules/amfe.md §1. Match contra los 3 niveles de efecto.
 const LEGAL_COMPLIANCE_PATTERNS = [
     /incumplimiento\s+legal/i,
     /retenci[oó]n\s+aduanera/i,
@@ -231,7 +231,7 @@ const REWORK_TERM_PATTERN = /retrabajo/i;
  * Candado anti-invento: escanea un campo de texto del AMFE y empuja issues.
  * - forbidden (equipo inexistente / espanolismo) -> FORBIDDEN_VOCABULARY (CRITICAL)
  * - warnings (frase-Claude / frecuencia inventada) -> CLAUDE_PHRASE (WARNING)
- * Ver scripts/_lib/forbiddenContent.mjs + rules/amfe-no-inventar-controles.md.
+ * Ver scripts/_lib/forbiddenContent.mjs + rules/amfe.md §6.
  *
  * @param {Array} issues - acumulador de issues (se muta)
  * @param {object} ctx - contexto del nivel actual (amfe, opNum, weName, fmDesc, causeDesc...)
@@ -245,7 +245,7 @@ function pushForbiddenIssues(issues, ctx, fieldLabel, value) {
         issues.push({
             ...ctx,
             type: 'FORBIDDEN_VOCABULARY',
-            detail: `${fieldLabel} contiene "${f.term}" (${f.kind}) — Barack no lo usa. Usar TBD o termino Barack (ver rules/amfe-no-inventar-controles.md).`,
+            detail: `${fieldLabel} contiene "${f.term}" (${f.kind}) — Barack no lo usa. Usar TBD o termino Barack (ver rules/amfe.md §6).`,
         });
     }
     for (const w of warnings) {
@@ -588,13 +588,13 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
             }
         }
 
-        // Operacion sospechosa: Clasif/Segreg (ver .claude/rules/pfd.md)
+        // Operacion sospechosa: Clasif/Segreg (incidente 2026-04-21, docs/_archive/INCIDENTES_REGLAS_AMFE.md)
         if (SUSPICIOUS_OP_PATTERNS.some(p => opNameUp.includes(p))) {
             issues.push({ ...ctx, type: 'SUSPICIOUS_OP',
                 detail: 'Op Clasificacion/Segregacion — no va como op separada, es implicita en Control Final' });
         }
 
-        // Clips en Telas Planas (ver .claude/rules/pfd.md)
+        // Clips en Telas Planas (incidente 2026-04-21, docs/_archive/INCIDENTES_REGLAS_AMFE.md)
         if (opNameUp.includes('CLIP') && (productUp.includes('TELAS_PLANAS') || productUp.includes('TELAS PLANAS'))) {
             issues.push({ ...ctx, type: 'INVALID_OP_CLIPS',
                 detail: 'Telas Planas no lleva clips — se refuerza con APLIX y ganchos' });
@@ -932,7 +932,7 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         }
 
                         // CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED
-                        // (rules/amfe-severity-legal-compliance.md)
+                        // (rules/amfe.md §1)
                         // Si el failure tiene efecto de incumplimiento legal/aduanero,
                         // todas las causas deben tener S>=7. Pais de origen incorrecto,
                         // retencion aduanera, multas, etc.
@@ -944,7 +944,7 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                             const sevNum = Number(sevEf);
                             if (Number.isFinite(sevNum) && sevNum > 0 && sevNum < 7) {
                                 issues.push({ ...cCtx, type: 'CAUSE_LEGAL_COMPLIANCE_UNDERCALIBRATED',
-                                    detail: `failure con efecto de incumplimiento legal pero S=${sevNum} (debe ser >=7, ver rules/amfe-severity-legal-compliance.md)` });
+                                    detail: `failure con efecto de incumplimiento legal pero S=${sevNum} (debe ser >=7, ver rules/amfe.md §1)` });
                             }
                         }
 

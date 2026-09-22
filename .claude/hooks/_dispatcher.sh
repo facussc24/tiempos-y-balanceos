@@ -8,7 +8,7 @@
 #   2026-09-05 (Ola 2 del plan de mejoras): medido de nuevo, cada guardian bash forkeaba 4-6
 #   procesos ($(cat), printf | grep por chequeo, date): 2,6-3,5 s por llamada con la maquina
 #   tranquila y 6-12 s con otras sesiones abiertas; con 11.400 Bash/Edit/Write en dos semanas,
-#   horas de espera. Ahora el matching de los 13 guardianes vive en scripts/_lib/guardianes.mjs
+#   horas de espera. Ahora el matching de los guardianes (NOMBRES) vive en scripts/_lib/guardianes.mjs
 #   y corre DENTRO del unico node que ya se levantaba para parsear. bash queda para: leer
 #   stdin, arrancar node y, solo si node dejo la marca, correr supabase-guard.sh (el unico con
 #   un efecto ademas del veredicto: el backup).

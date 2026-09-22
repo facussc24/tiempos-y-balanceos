@@ -14,14 +14,20 @@ nuestro destilado.
 
 ### 1. Dump live
 
-Dump de los AMFEs a auditar (filtro del argumento; sin argumento = los 8) desde Supabase
+Dump de los AMFEs a auditar (filtro del argumento; sin argumento = todos, contados live) desde Supabase
 live al scratchpad, con script temporal patrón `verify-supabase-live.md` (`.env.local`).
 Registrar el `updated_at` de cada documento — va al marcador del paso 5. El dump del mismo
 turno es foto válida; uno viejo no.
 
 ### 2. UN subagente auditor (techo 5 respetado — acá es 1)
 
-Lanzar 1 `Agent` (general-purpose) con este encuadre:
+Lanzar 1 `Agent` con `subagent_type: auditor-cliente` (`.claude/agents/auditor-cliente.md`, creado el
+22/09/2026). Corre con `omitClaudeMd: true`: un agente `general-purpose` carga el CLAUDE.md del
+proyecto, que importa LECCIONES y arrastra las reglas de siempre, asi que la prohibicion de abajo se
+cumplia a medias. **Primera vez que se use:** antes de auditar, preguntarle sin que lea archivos si
+ve "Lecciones Aprendidas" o "Caracteristicas especiales" en su contexto; si dice que SI, el
+aislamiento no anda y se avisa a Fak. Si el tipo no existe (sesion vieja), `general-purpose` y
+decirlo en el reporte. El encuadre:
 
 - **Rol**: auditor externo de cliente automotriz, auditoría de PFMEA contra AIAG-VDA FMEA
   1st Edition (2019) e IATF 16949. Su trabajo es encontrar lo que está MAL para el cliente,
@@ -31,9 +37,13 @@ Lanzar 1 `Agent` (general-purpose) con este encuadre:
   del autor y la auditoría no vale.
 - **Fuentes** (lectura con método `docs/COMO_LEER_PDF.md`; base OneDrive
   `C:\Users\FacundoS-PC\BARACK ARGENTINA SRL\Ingeniería y Proyecto - General\INGENIERIA BARACK (NUNCA BORRAR)\4- MANUALES\`):
-  - AIAG-VDA: `AMFE\FMEA-AMFE-VDA-AIAG\446076670-FMEA-AIAG-VDA-First-Edition-pdf.pdf`
+  - AIAG-VDA: `AMFE\FMEA-AMFE-VDA-AIAG\446076670-FMEA-AIAG-VDA-First-Edition-pdf.pdf` — ⚠️ es un
+    BORRADOR (Word del 05/12/2017; el manual salio en junio de 2019): su tabla AP y sus escalas
+    no son las publicadas. Para AP, P1, P2 y P3 manda el SETEC 2020 (abajo). Decirselo al auditor;
+    que la casa siga usando el borrador es una decision pendiente de Fak (memoria
+    `project_tabla_ap_de_la_casa_es_el_borrador_2017`), no un hallazgo a repetir en cada auditoria.
   - IATF: `IATF\IATF16949-IATF-SIs-May-2022-ISO9001-Integrados.pdf`
-  - SETEC (CC/SC pág. 129): `AMFE\MANUAL AMFE  R06 Julio 2020 Participante.pdf`
+  - SETEC (tabla AP pág. 116-118 del PDF; P1 101-103, P2 104-105, P3 109-111; CC/SC pág. 129): `AMFE\MANUAL AMFE  R06 Julio 2020 Participante.pdf`
   - Mapa tema→página (lecturas dirigidas): `.sgc-cache/manuales/*.md` si existe
   - Los dumps del paso 1
 - **Regla OneDrive**: lecturas puntuales de páginas; nada recursivo (`docs-empresa`).

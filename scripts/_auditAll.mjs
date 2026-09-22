@@ -224,7 +224,7 @@ for (const [amfe, r] of Object.entries(report)) {
     inventoForbidden += fb; inventoWarning += wn;
     inventoByAmfe.push({ amfe, project: r.project, fb, wn, items });
 }
-console.log('\n  CANDADO ANTI-INVENTO (rules/amfe-no-inventar-controles.md):');
+console.log('\n  CANDADO ANTI-INVENTO (rules/amfe.md §6):');
 console.log(`    ${inventoForbidden === 0 ? '✓' : '✗'} FORBIDDEN_VOCABULARY (equipo/espanolismo, BLOQUEA apply nuevo)  ${inventoForbidden}`);
 console.log(`    ${inventoWarning === 0 ? '✓' : '⚠'} CLAUDE_PHRASE (frase-Claude/frecuencia, revisar)              ${inventoWarning}`);
 for (const x of inventoByAmfe.sort((a, b) => (b.fb + b.wn) - (a.fb + a.wn))) {

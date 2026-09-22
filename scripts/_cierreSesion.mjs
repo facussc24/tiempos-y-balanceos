@@ -219,7 +219,7 @@ function git(args) {
     // (rama de worktree sin publicar), no ruido para la consola.
     return execSync(`git ${args}`, {
         cwd: REPO, encoding: 'utf8', windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
-    }).trim();
+    }).trimEnd(); // trimEnd: el " M" de la primera linea de `status --porcelain` lleva un espacio adelante; con trim() slice(3) se comia la primera letra de la ruta
 }
 
 function chequearGit() {

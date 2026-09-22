@@ -4,7 +4,8 @@
  * Para cada AMFE objetivo:
  *  1. Resuelve WE.name placeholders pobres:
  *     - Si WE tiene 0 failures: ELIMINAR el WE entero
- *     - Si WE tiene failures: renombrar a "Pendiente definicion equipo APQP" (placeholder valido por regla amfe-aph-pending.md)
+ *     - Si WE tiene failures: renombrar a "TBD" (ultimo recurso de amfe.md §7; la frase larga
+ *       "Pendiente definicion equipo APQP" quedo prohibida en todo el AMFE el 21/09/2026, §4)
  *     - Marca cada cambio con _autoFilled flag
  *  2. Mueve failures mal alocados (keyword pertenece a otra OP):
  *     - Encuentra OP destino por tags (canonica del auditor)
@@ -12,7 +13,7 @@
  *     - Si encuentra varias: toma la primera por opNumber asc
  *     - Si no encuentra: deja in-place + log ORPHAN
  *  3. Limpia WE.name con foreign opNumber (residuo de renumeracion):
- *     - Reemplaza con "Pendiente definicion equipo APQP"
+ *     - Reemplaza con "TBD"
  *
  * NO inventa: nombres de maquinas, controles, frecuencias. Solo mueve o elimina.
  *
@@ -25,7 +26,10 @@
 import { parseSafeArgs, runWithValidation } from './_lib/dryRunGuard.mjs';
 import { connectSupabase } from './_lib/amfeIo.mjs';
 
-const PLACEHOLDER = 'Pendiente definicion equipo APQP';
+const PLACEHOLDER = 'TBD';
+// Nombre que este script escribia hasta el 22/09/2026: si aparece, ya es placeholder (no se
+// vuelve a renombrar), pero no se escribe mas.
+const PLACEHOLDER_VIEJO = 'Pendiente definicion equipo APQP';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Heuristicas (compartidas con _auditWePlaceholdersAndAllocation.mjs)
@@ -80,7 +84,7 @@ function isProcessOpPlaceholder(weName) {
 }
 function isPlaceholderPobre(weName, weType) {
   if (!weName) return true;
-  if (normalize(weName) === normalize(PLACEHOLDER)) return false; // ya placeholder valido
+  if ([PLACEHOLDER, PLACEHOLDER_VIEJO].some((p) => normalize(weName) === normalize(p))) return false; // ya placeholder
   return isProcessOpPlaceholder(weName) || isGenericLabel(weName) || nameEqualsType(weName, weType);
 }
 function hasForeignOpNumber(weName, currentOpNumber) {

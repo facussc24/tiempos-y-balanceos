@@ -1,6 +1,6 @@
 ---
 name: apqp-schema
-description: Estructura de datos APQP en Supabase — schemas JSON de amfe_documents, cp_documents, ho_documents, pfd_documents. Tablas de soporte (products, product_families). Patron de actualizacion de datos JSONB. Usar cuando se leen, modifican o escriben datos en tablas APQP, cuando se crean scripts .mjs que tocan Supabase, o cuando se trabaja con repositorios.
+description: Estructura de datos APQP en Supabase — schemas JSON de amfe_documents, cp_documents, ho_documents, pfd_documents. Tablas de soporte (products, product_families). Patron de actualizacion de `data` (columna TEXT con JSON adentro). Usar cuando se leen, modifican o escriben datos en tablas APQP, cuando se crean scripts .mjs que tocan Supabase, o cuando se trabaja con repositorios.
 user-invocable: false
 ---
 
@@ -179,7 +179,7 @@ pfd_documents     → data: { header: {...}, steps: [...] }
 ## Tabla `projects` (Tiempos y Balanceos — OJO: NO es JSONB)
 
 `projects.data` es **TEXT** (JSON stringificado), NO jsonb. La app hace `JSON.stringify(data)`
-al guardar y `JSON.parse` al leer — OPUESTO a `amfe_documents` (jsonb directo). En scripts .mjs:
+al guardar y `JSON.parse` al leer — IGUAL que `amfe_documents` y los demas documentos APQP (ver arriba). En scripts .mjs:
 si escribís `.update({ data: objeto })` con el objeto crudo, la app leería mal. Guardar
 `data: JSON.stringify(objeto)` y verificar `typeof JSON.parse(row.data) === 'object'`.
 RLS = authenticated (anon → `[]`). Acceso sin `.env.local`: MCP Supabase, o token de la app

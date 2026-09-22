@@ -1,10 +1,14 @@
 ---
 name: product-map
-description: Mapa completo de productos Barack Mercosul — 8 familias, part numbers, variantes, documentos por familia. Equipo APQP con nombres y roles. Roles validos para controles CP/HO. Usar cuando se trabaja con familias de producto, part numbers, cross-document, headers APQP, o asignacion de responsables.
+description: Mapa completo de productos Barack Mercosul — familias (13 al 22/09/2026), part numbers, variantes, documentos por familia. Equipo APQP con nombres y roles. Roles validos para controles CP/HO. Usar cuando se trabaja con familias de producto, part numbers, cross-document, headers APQP, o asignacion de responsables.
 user-invocable: false
 ---
 
-# Productos — Mapa Completo (8 familias, 62 documentos)
+# Productos — Mapa Completo
+
+En Supabase (`product_families`, leido el 22/09/2026) hay **13 familias**: las 10 de producto de
+las tablas de abajo y 3 **maestros de proceso** sin productos (15 Inyeccion Plastica, 16 Logistica
+y Recepcion, 19 Inyeccion PUR in place). Antes de afirmar un conteo, leerlo live.
 
 ## VWA — Proyecto PATAGONIA
 
@@ -16,6 +20,8 @@ user-invocable: false
 | Headrest Front | 2HC881901 RL1 | 4+9 | AMFE+CP+HO+PFD | [L1][L2][L3]: AMFE+CP+HO (sin PFD) |
 | Headrest Rear Center | 2HC885900 RL1 | 4+9 | AMFE+CP+HO+PFD | [L1][L2][L3]: AMFE+CP+HO (sin PFD) |
 | Headrest Rear Outer | 2HC885901 RL1 | 4+9 | AMFE+CP+HO+PFD | [L1][L2][L3]: AMFE+CP+HO (sin PFD) |
+| IP PAD - Tapizado (familia 17) | 2HC.858.417.B FAM · .C GKK · .C GKN | ver Supabase | — | PL1 low / PL2-PL3 high |
+| Armrest Rear Center (familia 18) | 2HC.885.081 RL1 | ver Supabase | — | — |
 
 ## PWA — Proyecto HILUX
 

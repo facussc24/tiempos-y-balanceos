@@ -181,6 +181,23 @@ describe('hooksTienenTest — todo hook figura en la tabla, con su test', () => 
     expect(huerfanosReales, `hooks en el disco que nadie llama: ${huerfanosReales.join(', ')}`).toEqual([]);
   });
 
+  it('5c. todo hook de settings.json se llama por ${CLAUDE_PROJECT_DIR}, nunca por ruta relativa', () => {
+    // 22/09/2026: con `bash .claude/hooks/x.sh`, un `cd scripts` del Bash tool dejaba al hook sin
+    // archivo (exit 127, "non-blocking"): la tool corria SIN guardianes. 388 veces en un mes, en
+    // al menos 10 sesiones. La doc oficial (hooks, "CLAUDE_PROJECT_DIR") pide la ruta absoluta.
+    const s = JSON.parse(leer('.claude/settings.json'));
+    const relativos = [];
+    for (const evento of Object.values(s.hooks ?? {})) {
+      for (const grupo of evento) {
+        for (const h of grupo.hooks ?? []) {
+          const cmd = String(h.command ?? '');
+          if (/\.claude\/hooks\//.test(cmd) && !cmd.includes('"${CLAUDE_PROJECT_DIR}/.claude/hooks/')) relativos.push(cmd);
+        }
+      }
+    }
+    expect(relativos, `hooks con ruta relativa (se apagan tras un cd): ${relativos.join(' | ')}`).toEqual([]);
+  });
+
   it.skipIf(!fs.existsSync(GLOBAL))('5b. agentes-guard.sh del repo es identico al instalado en ~/.claude/hooks (el que corre)', () => {
     expect(leer('.claude/hooks/agentes-guard.sh')).toBe(fs.readFileSync(GLOBAL, 'utf8'));
   });

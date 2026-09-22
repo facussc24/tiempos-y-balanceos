@@ -18,7 +18,7 @@ Si dudo entre dos filas, aplico la mas restrictiva. Principios: hacer sin pregun
 | Accion | Autonomia |
 |---|---|
 | Asignar/cambiar CC o SC | **Prohibido** sin autorizacion explicita |
-| Crear acciones de optimizacion | **Prohibido inventar**; placeholder AP=H OK (regla amfe.md §4) |
+| Crear acciones de optimizacion | **Prohibido inventar**; un AP=H sin accion va con la celda VACIA (el placeholder quedo prohibido el 21/09/2026, amfe.md §4) |
 | Asignar S/O/D en causas nuevas | Libre con guia amfe.md; marcar `_autoFilled` |
 | Regenerar CP desde AMFE | Confirmar antes |
 | Crear AMFE desde cero | Siempre preguntar (necesito PPAP/referencia) |
@@ -38,7 +38,7 @@ Si dudo entre dos filas, aplico la mas restrictiva. Principios: hacer sin pregun
 ## D. Auditoria e integraciones
 
 - Scripts read-only de auditoria: libre. Agente `auditor` al cerrar tareas: obligatorio.
-- NO flaggear como problema: AP=H con placeholder sin responsable/fecha.
+- NO flaggear como problema: AP=H con la accion vacia (estado valido, amfe.md §4).
 - Correcciones detectadas: solo codigo obvio = libre; datos = confirmar antes.
 - Docs de empresa (servidor Y:/OneDrive): leer = libre; extraer al cache `.sgc-cache/` = libre (gitignoreado); escribir/mover en Y:\ = confirmar antes.
 - `git commit` + `push` al cerrar tareas de codigo: libre (build antes).

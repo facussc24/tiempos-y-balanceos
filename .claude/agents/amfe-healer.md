@@ -54,8 +54,8 @@ node scripts/_auditWePlaceholdersAndAllocation.mjs --filter=HF-PAT  # con filtro
 node scripts/_fixAmfePlaceholdersAndAllocation.mjs                  # dry-run del fix
 node scripts/_fixAmfePlaceholdersAndAllocation.mjs --filter=HF-PAT  # con filtro
 ```
-El fix clasifica: ELIMINAR (WE placeholder con 0 failures), RENOMBRAR (a
-"Pendiente definicion equipo APQP"), MOVER (failure mal alocado a su OP), ORPHAN
+El fix clasifica: ELIMINAR (WE placeholder con 0 failures), RENOMBRAR (a "TBD"; la frase
+"Pendiente definicion equipo APQP" esta prohibida desde el 21/09/2026, amfe.md §4), MOVER (failure mal alocado a su OP), ORPHAN
 (sin OP destino clara — no toca).
 
 ### 5. Reportar el plan a Fak

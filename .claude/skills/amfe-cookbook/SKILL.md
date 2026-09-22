@@ -185,5 +185,5 @@ Despues de `_fixAmfePlaceholdersAndAllocation.mjs --apply` (o de un one-off de p
 - `scripts/_lib/amfeIo.mjs` — helpers I/O + `calculateAP` + `countAmfeStats`
 - `scripts/_fixAmfePlaceholdersAndAllocation.mjs` — ejecutor automatico
 - `scripts/_archive/_autoHeal.mjs` — ejecutor viejo (HISTORICO; conserva el mapeo operacion→AMFE fuente)
-- `.claude/rules/amfe.md` — regla AMFE consolidada (§4 placeholder AP=H, §5 acciones)
+- `.claude/rules/amfe.md` — regla AMFE consolidada (§4 AP=H sin accion = celda vacia, placeholder prohibido; §5 acciones)
 - skill `amfe-domain` — detalle profundo (funciones, placeholders, SQL de auditoria)

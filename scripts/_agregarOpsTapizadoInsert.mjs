@@ -95,8 +95,7 @@ function falla(descripcion, ef, causas) {
         const ap = calculateAP(ef.s, c.occurrence, c.detection);
         c.ap = ap;
         c.actionPriority = ap;
-        // amfe.md §4: AP=H sin accion es bloqueo IATF; la accion la define el equipo APQP.
-        if (ap === 'H' && !c.optimizationAction) c.optimizationAction = 'Pendiente definicion equipo APQP';
+        // amfe.md §4: un AP=H sin accion va con la celda VACIA; el placeholder quedo prohibido el 21/09/2026.
     }
     return {
         id: id(),

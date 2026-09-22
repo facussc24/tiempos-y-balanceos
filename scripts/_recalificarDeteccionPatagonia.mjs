@@ -34,7 +34,8 @@
  * listadas al final para que las mire una persona.
  *
  * El AP se recalcula con `calculateAP()` y nunca a mano. La causa que quede en AP=H sin
- * accion recibe el placeholder autorizado por `amfe.md` §4. S y O no se tocan.
+ * accion queda con la celda VACIA (el placeholder quedo prohibido el 21/09/2026, `amfe.md` §4).
+ * S y O no se tocan.
  *
  * Dry-run por defecto; --apply escribe. Pasa por runWithValidation (regla amfe.md §14).
  */
@@ -58,8 +59,6 @@ const AGUAS_ABAJO = /antes de embalar|control final|inspecci[oó]n final|control
 /** La operacion de embalaje: ahi "antes de embalar" es EN la estacion, no aguas abajo. */
 const OP_EMBALAJE = '80';
 
-const PLACEHOLDER = 'Pendiente definicion equipo APQP';
-
 const envText = readFileSync(new URL('../.env.local', import.meta.url), 'utf8');
 const env = Object.fromEntries(envText.split('\n').filter(l => l.includes('=') && !l.startsWith('#'))
     .map(l => { const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()]; }));
@@ -78,7 +77,7 @@ if (rows.length !== Object.keys(PATAGONIA).length) {
 }
 
 const plan = [], pendientes = [], sinTocar = [];
-let totA7 = 0, totA8 = 0, totPlaceholder = 0;
+let totA7 = 0, totA8 = 0;
 
 console.log('N°   | a D=7 | a D=8 | sin tocar | AP antes (H/M/L) | AP despues (H/M/L)');
 
@@ -87,7 +86,7 @@ for (const row of rows.sort((a, b) => PATAGONIA[a.amfe_number].localeCompare(PAT
     const antes = typeof row.data === 'string' ? JSON.parse(row.data) : structuredClone(row.data);
     const doc = JSON.parse(JSON.stringify(antes));
 
-    let a7 = 0, a8 = 0, saltadas = 0, place = 0;
+    let a7 = 0, a8 = 0, saltadas = 0;
     const apAntes = { H: 0, M: 0, L: 0 }, apDespues = { H: 0, M: 0, L: 0 };
 
     for (const op of (doc.operations ?? [])) {
@@ -125,19 +124,15 @@ for (const row of rows.sort((a, b) => PATAGONIA[a.amfe_number].localeCompare(PAT
                 if (apD) {
                     c.ap = apD;
                     c.actionPriority = apD;
-                    if (apD === 'H' && !String(c.optimizationAction ?? '').trim()) {
-                        c.optimizationAction = PLACEHOLDER;   // amfe.md §4, bloqueo IATF
-                        place++;
-                    }
                     apDespues[apD]++;
                 }
             }
         }
     }
 
-    totA7 += a7; totA8 += a8; totPlaceholder += place;
+    totA7 += a7; totA8 += a8;
     console.log(`${nro.padEnd(5)}| ${String(a7).padStart(5)} | ${String(a8).padStart(5)} | ${String(saltadas).padStart(9)} | ${apAntes.H}/${apAntes.M}/${apAntes.L}`.padEnd(62)
-        + `| ${apDespues.H}/${apDespues.M}/${apDespues.L}   (+${place} placeholder)`);
+        + `| ${apDespues.H}/${apDespues.M}/${apDespues.L}`);
 
     if (!a7 && !a8) continue;
 
@@ -146,7 +141,7 @@ for (const row of rows.sort((a, b) => PATAGONIA[a.amfe_number].localeCompare(PAT
     pendientes.push({ id: row.id, amfeNumber: row.amfe_number, nro, data: JSON.stringify(doc) });
 }
 
-console.log(`\nTOTAL: ${totA7} causas a D=7 · ${totA8} a D=8 · ${sinTocar.length} sin tocar · ${totPlaceholder} placeholders`);
+console.log(`\nTOTAL: ${totA7} causas a D=7 · ${totA8} a D=8 · ${sinTocar.length} sin tocar`);
 
 if (sinTocar.length) {
     console.log('\n=== NO SE TOCARON. La calificacion de estas la define el equipo APQP, no este script.');

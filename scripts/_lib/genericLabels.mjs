@@ -15,8 +15,8 @@
  *   - isTextDescriptive(text, minLen?): { ok, reason?: string }
  *   - extractForeignOpNumber(weName, currentOp): number | null
  *
- * Reglas fuente: BarackMercosul/.claude/rules/amfe-funciones-3-niveles.md,
- *                amfe-leer-contenido-antes-de-renumerar.md
+ * Reglas fuente: .claude/rules/amfe.md §8 (3 niveles de funcion) y §10
+ *                (leer contenido antes de renumerar); antes eran dos reglas sueltas.
  * NO duplicar las listas aquí — siempre leer del JSON shared.
  */
 import { readFileSync } from 'fs';

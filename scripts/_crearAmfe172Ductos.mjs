@@ -90,7 +90,7 @@ function falla(descripcion, ef, causas) {
     const ap = calcularAP(ef.s, c.occurrence, c.detection);
     c.ap = ap;
     c.actionPriority = ap;
-    if (ap === 'H' && !c.optimizationAction) c.optimizationAction = 'Pendiente definicion equipo APQP';
+    // AP=H sin accion = celda vacia: el placeholder quedo prohibido el 21/09/2026 (amfe.md §4).
     // Toda causa con S=9 en este documento es de incumplimiento reglamentario (flamabilidad),
     // y `amfe.md` §2 dice que eso genera CC obligatoria independiente de S/O. Se asigna aca
     // para que no dependa de acordarse causa por causa. Normalmente las CC las pone solo Fak

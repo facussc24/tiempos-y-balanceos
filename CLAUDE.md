@@ -55,7 +55,7 @@ commit/push/archivar los hago yo.
 1. Nada de datos mock, cero duplicados en Supabase, reusar antes de crear: `core-prohibiciones.md` §5-6.
 2. **Export Excel**: AMFE y CP solo `xlsx-js-style`; HO (legacy) solo `ExcelJS`.
    Export AMFE oficial via node (skill `amfe-export-oficial`), no desde la app.
-3. **Verificacion**: tras seed/migracion contar familias (8) y duplicados (0);
+3. **Verificacion**: tras seed/migracion contar familias (13 al 22/09/2026: 10 de producto + 3 maestros de proceso; el numero se lee live) y duplicados (0);
    tras export abrir el archivo; `npx tsc --noEmit` y tests del modulo afectado.
 4. Documentos APQP son "documentos vivos" (IATF): cambios diarios van al audit trail;
    revisiones mayores (A/B/C) solo en hitos oficiales (prelanzamiento/PPAP/ECN).
@@ -94,8 +94,9 @@ Code en cada sesion; el detalle vive en su `SKILL.md` bajo `.claude/skills/`.
 `lecciones-consolidacion.md` (lo miden `_cierreSesion.mjs` y el hook Stop).
 
 **Modelo y sesion (decision Fak 04/09/2026):** Fable 5.1 para mejoras de codigo importantes,
-Opus 5 para el resto; no tocar el selector por cuenta propia. Toda sesion arranca en modo plan
-(`permissions.defaultMode`) y auto-compacta a 1M tokens (settings globales); el hook Stop
+Opus (hoy Opus 5.5) para el resto; no tocar el selector por cuenta propia. `permissions.defaultMode: plan`
+esta en el settings, pero Claude Desktop fija bypass para esta carpeta y lo pisa: el modo plan lo pide
+la plantilla de `_encargo.mjs`. Auto-compacta a 1M tokens (settings globales); el hook Stop
 `cierre-guard.sh` corta el turno si termina pidiendo permiso para mi propio trabajo o si entregue
 afuera del repo sin decir la ruta.
 

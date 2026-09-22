@@ -197,7 +197,7 @@ function reponerOp22(doc, cambios) {
         specialChar: siglaPorCriterio(S, O),           // S8 O6 -> SC. El backup traia "W": no se copia.
         characteristicNumber: '', preventionAction: '', detectionAction: '',
         responsible: '', targetDate: '', status: '',
-        optimizationAction: ap === 'H' ? 'Pendiente definicion equipo APQP' : '',
+        optimizationAction: '',                        // AP=H sin accion = celda vacia (amfe.md §4, 21/09/2026)
     };
     const falla = {
         id: randomUUID(),

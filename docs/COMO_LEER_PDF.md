@@ -1,62 +1,54 @@
 # Como leer archivos PDF en este proyecto
 
-Referencia rapida para Claude Code al trabajar con PDFs de referencia.
+Referencia rapida para Claude Code. Reescrita el 22/09/2026: la version de abril recomendaba
+`pdftotext -layout` como metodo preferido y `pdftoppm` para rasterizar, y las dos cosas fallaban.
 
-## Metodo 1 — pdftotext (preserva layout, PREFERIDO)
+## Primero: lo que NO anda en esta PC
+
+- **La tool Read con `pages` sobre un PDF falla**: necesita `pdftoppm` (Poppler), que no esta
+  instalado (en `/mingw64/bin` solo esta `pdftotext`). Paso en 25 sesiones distintas del ultimo
+  mes. Usar el Metodo 1 en su lugar.
+- **`pdftotext -layout` puede correr las filas de una tabla**: cada valor queda al lado de la
+  etiqueta de arriba y la salida se lee perfecta (memoria `reference_pdftotext_layout_corre_las_filas`,
+  dos casos el 13/09/2026). Nunca es la fuente final de un numero sacado de una tabla.
+
+## Metodo 1 — Mirar la pagina (el juez final, y el unico para escaneados)
 
 ```bash
-pdftotext -layout archivo.pdf output.txt
-cat output.txt
+python scripts/_pdfPaginas.py "<archivo.pdf>" 3-5          # imprime la ruta de un PNG por pagina
+python scripts/_pdfPaginas.py "<archivo.pdf>" 1,7 --dpi 200 # mas resolucion para letra chica
 ```
 
-Mejor para: documentos con texto plano, tablas simples, AMFEs impresos.
+Despues, Read sobre cada PNG. El script avisa si la pagina **no tiene capa de texto**
+(escaneada: manuales AIAG-VDA, normas, planos): esas solo se leen mirandolas. Los PNG van al
+TEMP del sistema, nunca al lado del PDF. Receta de fondo: memoria `reference_leer_pdfs_escaneados`.
 
-## Metodo 2 — pypdf (texto simple)
+## Metodo 2 — Texto corrido (PyMuPDF o pypdf)
 
 ```python
-from pypdf import PdfReader
-reader = PdfReader("archivo.pdf")
-for page in reader.pages:
-    print(page.extract_text())
+import fitz                      # PyMuPDF, instalado
+doc = fitz.open("archivo.pdf")
+print(doc[0].get_text("text"))   # pagina 1
 ```
 
-Mejor para: PDFs con texto embebido sin layout complejo.
+Para texto con capa (instructivos, mails impresos, fichas). Si da vacio o casi vacio, es
+escaneado: Metodo 1.
 
-## Metodo 3 — pdfplumber (tablas)
+## Metodo 3 — Tablas (pdfplumber)
 
 ```python
 import pdfplumber
 with pdfplumber.open("archivo.pdf") as pdf:
-    for page in pdf.pages:
-        tables = page.extract_tables()
-        for table in tables:
-            for row in table:
-                print(row)
+    for table in pdf.pages[0].extract_tables():
+        for row in table:
+            print(row)
 ```
 
-Mejor para: PDFs con tablas estructuradas (CPs, AMFEs tabulares).
+Para tablas con capa de texto (CPs, AMFEs tabulares, fichas tecnicas). **Un numero de una tabla
+se confirma mirando la pagina (Metodo 1)** o contra un valor que ya se conozca por otra fuente.
 
-## Metodo 4 — Rasterizar pagina como imagen
+## Regla: NO probar los metodos en fila
 
-```bash
-pdftoppm -jpeg -r 150 -f 1 -l 1 archivo.pdf /tmp/pagina
-```
-
-Mejor para: diagramas visuales (PFDs), PDFs escaneados, layout complejo.
-
-## Regla: NO perder tiempo probando metodos
-
-1. Si es texto/tabla simple → pdftotext primero
-2. Si pdftotext sale vacio → pypdf
-3. Si necesitas tablas estructuradas → pdfplumber
-4. Si es diagrama visual o escaneado → rasterizar
-
-NO probar los 4 metodos secuencialmente. Elegir el correcto segun el tipo de PDF.
-
-## Ubicaciones conocidas de PDFs
-
-| Tipo | Ruta |
-|------|------|
-| Archivos de referencia (AMFEs, CPs, HOs) | `C:\Users\FacundoS-PC\Documents\AMFES PC HO` |
-| Archivos nuevos (marzo 2026) | `C:\Users\FacundoS-PC\Documents\26.3.26` |
-| BOM Telas PWA | `\\SERVER\compartido\BARACK\CALIDAD\DOCUMENTACION SGC\PPAP CLIENTES\PWA\1- TOYOTA_TELAS_ PLANAS_581D\APQP\7-Lista de materiales` |
+1. Escaneado, diagrama, plano, o un numero de tabla que va a un entregable → Metodo 1.
+2. Texto corrido con capa → Metodo 2.
+3. Tabla con capa → Metodo 3, y el numero que importa se mira en la pagina.

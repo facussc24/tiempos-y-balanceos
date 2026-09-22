@@ -8,7 +8,7 @@
  *   Step 3 (library):          biblioteca canonica migrada del refine
  *   Step 7 (tbd):              ultimo recurso, value=null, source=tbd
  *
- * Implementa la regla `amfe-placeholder-last-resort.md` — agotar fuentes antes
+ * Implementa `.claude/rules/amfe.md` §7 (placeholder = ultimo recurso) — agotar fuentes antes
  * de poner placeholder.
  *
  * Modulo PURO:
@@ -308,7 +308,7 @@ function isValidWeNameCandidate(name, weType) {
   if (trimmed === TBD) return false;
   // Detectar placeholders "Proceso Op X" (residuo de renumeracion)
   if (/^proceso\s+op\s*\d*$/i.test(trimmed)) return false;
-  // Detectar "Pendiente definicion equipo APQP" (placeholder valido SOLO para actions)
+  // Detectar "Pendiente definicion equipo APQP" (prohibido en todo el AMFE desde el 21/09/2026, amfe.md §4)
   if (/^pendiente\s+definicion\s+equipo\s+apqp$/i.test(trimmed)) return false;
   // Filtro extra: WE.name vs WE.type
   if (weType) {
