@@ -45,6 +45,14 @@ describe('canon de flujogramas', () => {
                 expect(reglas(revisarFlujograma(leer(`${nombre}.json`)))).toEqual([]);
             });
 
+        it('un MURO DE CALIDAD con operacion+inspeccion es un control, no una transformacion', () => {
+            // El 159 lo dibuja porque lo exige la carta de nominacion de SMRC; el gate lo marcaba
+            // en rojo porque el nombre no dice CONTROL ni INSPECCION.
+            const muro = ACTUAL.flow.find((n) => n.description === 'MURO DE CALIDAD');
+            expect(muro?.type).toBe('op-ins');
+            expect(reglas(revisarFlujograma(ACTUAL))).not.toContain('opins-sobre-transformacion');
+        });
+
         it('ningun flujograma dispara decimal-sin-madre: ninguno usa decimales hoy', () => {
             for (const f of fs.readdirSync(DATA).filter((x) => x.endsWith('.json'))) {
                 expect(reglas(revisarFlujograma(leer(f))), f).not.toContain('decimal-sin-madre');

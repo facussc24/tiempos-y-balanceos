@@ -37,8 +37,11 @@ const TERMINALES_CANONICOS = ['SCRAP', 'RECLAMO DE CALIDAD AL PROVEEDOR', 'PLAN 
  * "CONTROL CON MYLAR" pero tambien "RECEPCION Y CONTROL DE MATERIA PRIMA" y "CONTROL FINAL DE
  * CALIDAD Y PRUEBAS FUNCIONALES". Exigir que empiece con la palabra marcaba en rojo a los
  * hermanos que estan bien.
+ * El MURO DE CALIDAD tambien es un control aunque no lleve ninguna de las dos palabras: el
+ * 22/09/2026 el 159 dibujo el que exige la carta de nominacion de SMRC y el gate lo marco como
+ * "operacion + inspeccion sobre una transformacion". Falso rojo del gate, no del flujograma.
  */
-const esControl = (t) => /\b(CONTROL|INSPECCI[OÓ]N)\b/i.test(String(t ?? ''));
+const esControl = (t) => /\b(CONTROL|INSPECCI[OÓ]N|MURO DE CALIDAD)\b/i.test(String(t ?? ''));
 /**
  * Un traslado o un almacenado NUNCA es un control, aunque su texto nombre el sector al que
  * lleva: "TRASLADO AL SECTOR DE INSPECCION FINAL" tiene la palabra y no es un puesto.

@@ -429,7 +429,10 @@ export function esMuestreoParcial(detectionControl) {
     const det = String(detectionControl ?? '').toLowerCase();
     if (!det.trim()) return false;
     if (/100\s*%/.test(det)) return false;
-    return /\d+\s*%|\b\d+\s*(muestras?|pz|piezas?)\s*(por|\/)|\b(una|1)\s+muestra|muestra por|muestreo|por lote|por entrega|por turno|auditoria periodica|auditor[ií]a peri[oó]dica|anual\b/.test(det);
+    // "\banual" con \b adelante: sin el, "manual" (un control que cita el manual de la maquina)
+    // se leia como auditoria anual. Lo cazo el AMFE 173 el 22/09/2026: "Alarma en pantalla y
+    // zumbador (manual YIN, p.44)" salia como muestreo.
+    return /\d+\s*%|\b\d+\s*(muestras?|pz|piezas?)\s*(por|\/)|\b(una|1)\s+muestra|muestra por|muestreo|por lote|por entrega|por turno|auditoria periodica|auditor[ií]a peri[oó]dica|\banual\b/.test(det);
 }
 
 /**

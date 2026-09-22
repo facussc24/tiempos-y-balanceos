@@ -1,0 +1,21 @@
+# Lecciones — snapshot de la consolidacion del 22/09/2026
+
+Version larga de los bullets que quedaron en su principio + puntero en `docs/LECCIONES_APRENDIDAS.md` (ya estaban graduados a su regla, gate o memoria).
+
+- **21/09 — Una regla MIA que contradice al instructivo del SGC sobrevive hasta que alguien abre el instructivo, y el que la sufre es Fak.** Dos en el mismo AMFE: el placeholder `Pendiente definicion equipo APQP` que yo mismo hacia escribir desde abril (*"saca esa mierda"*), y el historial numerado REV 1 a 7 contra el `I-AC-008` §5.2, que pide **letra**. Ninguna de las dos las cazo un gate: las vio Fak mirando el PDF. **Antes de fijar un criterio de formato, abrir el instructivo que ya lo fija.** Graduado a `amfe.md` §4 y §4bis con sus tres checks.
+
+- **22/09 — La rotacion de un video cambia ADENTRO del archivo, y ninguna medida separa una foto buena de una mala: se MIRA.** El IMG_0393 declara `rotation=-90` y el que filma giro el telefono a mitad: mismos parametros, s=135 derecha y s=14 con el operario ACOSTADO. Busque el umbral y no existe: la llave general da foco 34 y esta perfecta, `w5_selectores` da 37 y es ilegible. El gate no juzga la foto — exige la **plancha de contacto** mas nueva que la ultima tocada, y para regenerarla se abre. Graduado a `fotodevideo.py contacto` + `gate_fotos_miradas`.
+
+- **El entregable se revalida contra la fuente justo antes de mandarlo, un mail se verifica por DESTINATARIOS —no por el "enviado"—, y los mails de Barack se comparten: no les invento confidencialidad** (afuera solo Direccion, RRHH y lo obviamente privado). Graduado a `mail-envio.md` + el gate `_mailEnviar.py` y a las memorias `mail_ya_enviado`, `dejar_el_mail_listo_para_enviar`, `no_pisar_archivo_que_toco_fak`, `mails_de_barack_se_comparten`.
+
+- **08/09 — Lo que queda vivo por ahi sigue siendo una fuente: una mudanza que deja el origen ejecutable crea una segunda, y un secreto que no se publico por casualidad no esta protegido.** El origen se saca o se inutiliza el mismo dia, y el que instala verifica de que carpeta viene; el ejemplo de un gate tampoco lleva el valor real. Graduado a la memoria `mudanza_que_deja_el_origen_ejecutable` y a la cabecera de `scripts/_gateRepoPublico.mjs` CHECK-3.
+
+- **Una cosa no se identifica por su etiqueta ni por su parecido: se abre, o se enumeran sus rasgos; y antes de declarar que algo esta mal o que falta, preguntar si es una convencion de la casa.** Graduado entero a las memorias `el_nombre_no_es_el_contenido`, `el_nombre_de_la_pieza_no_identifica_el_proyecto`, `sgc_propio_ingenieria`, `ho_generales_compartidas`, `aplix_medida_16x16_dominante` y `unidad_oc_es_etiqueta_del_maestro`.
+
+- **13/09 — Lo que escribo sobre mi propio modelo se MIDE o se ACOTA: explicacion sin medir, caveat e IMPOSIBILIDAD son lo mismo, un numero suelto para el lado comodo.** Dos causas escritas sin medir y las dos falsas; un *"esto NO calcula la torsion"* que partido daba una COTA. **La constante que falta se toma en el extremo PEOR, nunca inventada.** Graduado entero a la memoria `el_modelo_lo_publica_el_sistema_no_yo`.
+
+- **21/09 — La severidad sale del EFECTO, nunca de la sigla: derivarla al reves es fabricar el riesgo para que encaje en la marca.** Puse S=9 en 11 modos de falla del AMFE 173 para sostener una designacion del cliente, y *"costura con dos lineas"* quedo mas grave que un paro de linea. Es el error del 11/09 dado vuelta. Graduado entero a `caracteristicas-especiales.md` §2bis (con su nota de enforcement: esto lo caza el auditor contra la Tabla P1, no un check).
+
+- **21/09 — La PRIMERA VEZ se pregunta, y un documento vivo tiene UN solo lugar.** Emiti un flujograma Rev.A en tres carpetas del servidor —una, el paquete que va al cliente, que arma Calidad— en mi primera vez en un APQP. Fak: *"si nunca lo hiciste, si es tu primera vez haciendo algo, preguntame antes"*. Graduado a `autonomy-contract.md` §F + el gate `apqp-cliente-guard`.
+
+- **21/09 — Cuando el cliente tiene su propia simbologia se escribe la del CLIENTE, y la primera vez que aparece se incorpora al canon.** SMRC parte la critica en `<cc/s>` seguridad y `<cc/h>` homologacion; yo las colapse a CC y perdi la distincion que el cliente hizo. Graduado a `caracteristicasEspeciales.data.json` (con la tabla de conversion que pide IATF §8.3.3.3 d).

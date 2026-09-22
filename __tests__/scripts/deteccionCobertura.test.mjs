@@ -87,6 +87,12 @@ describe('esMuestreoParcial — la cobertura se lee del texto del control', () =
         expect(esMuestreoParcial('Autocontrol visual 100% + control por Calidad por lote')).toBe(false);
     });
 
+    it('citar el MANUAL de la maquina no es una auditoria anual', () => {
+        // Texto real del AMFE 173 (22/09/2026): la regla leia "anual" adentro de "manual".
+        expect(esMuestreoParcial('Alarma en pantalla y zumbador de la mesa al caer la presion (manual YIN, p.44)')).toBe(false);
+        expect(esMuestreoParcial('Auditoria anual de proceso')).toBe(true);
+    });
+
     it('un control vacio no es muestreo (tiene su propio check)', () => {
         expect(esMuestreoParcial('')).toBe(false);
         expect(esMuestreoParcial(null)).toBe(false);
