@@ -1195,7 +1195,9 @@ HOJAS_IMG = [
             "IMG_0393 (26-08-2026) s=173: en la botonera se lee CUTTING BLADE "
             "\u5207\u65ad\u5200\u7247 ADV/BACK. El orden lo respalda IMG_0579 "
             "(02-09-2026) min 2:10: \u00abtenes que poner el down de bajar para que ese "
-            "cuchillo baje\u00bb, o sea que la placa baja antes del corte",
+            "cuchillo baje\u00bb, o sea que la placa baja antes del corte. El largo de "
+            "lamina se lee en Parametro - Carga, bloque Mordaza Extractor: \u00abLargo "
+            "Lamina: +1100,0 mm\u00bb (IMG_0830, fotograma 0830_09, 10-09-2026)",
         ],
         epp=EPP_IMG,
         disparador="SI LA LAMINA SALE CORTA, TORCIDA O LA CUCHILLA NO CORTA",
