@@ -1094,7 +1094,8 @@ HOJAS_IMG = [
             "Como se sube, se traba y se centra no esta filmado ni dicho en ninguno de los 91 "
             "videos: TBD, preguntado al tecnico",
             "IMG_0393 (26-08-2026) s=48,5: las manos llevan la punta entre las barras guia "
-            "naranjas y el rodillo verde",
+            "naranjas y el rodillo verde; y en el audio, min 0:38 en chino (IMG_0393.zh.txt): "
+            "走个两者中间走, pasalo por el medio de los dos",
             "IMG_0393 (26-08-2026) s=114: el operario apoya el material sobre la mesa de "
             "carga con las dos manos y lo alisa",
             "IMG_0393 (26-08-2026) s=134: el rollo en la cuna del desenrollador, con el eje "
