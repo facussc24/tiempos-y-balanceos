@@ -19,6 +19,10 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 > y de ahi TAB (ver `reference/maestro-de-insumos.md`).
 > **Sustituir el codigo de una linea: 5/5 el 15/09** — la bolsa de embalaje Patagonia en sus
 > 5 BOM, con una linea en la fila 7; diff de la base entera 6257 -> 6257, 0 fuera de lo pedido.
+> **Y la `Unidad` tambien: 11/11 el 22/09/2026** (`scripts/_arbUnidad.py`, vinilos Sansuy
+> MT2 -> MTL): diff de la base entera 7348 -> 7348, 32 lineas cambiadas y 0 fuera de los 11
+> codigos. Va SIEMPRE en la misma tanda que la conversion de consumos (`_arbCargar.py`): la
+> unidad es una sola para OC y BOM, y cambiarla sola deja los numeros viejos con la etiqueta nueva.
 > **Y la `Descripción` tambien: 3/3 el 01/09/2026** — 27 filas partidas del export → 0, con
 > 0 altas / 0 bajas / **0 consumos cambiados**. Ojo con los dos gates que la trababan:
 > `&Acepta` esta deshabilitado hasta que `Posee PAPP/PSW` tenga valor, y una tecla mandada

@@ -169,23 +169,36 @@ def fijar(codigo, nuevo, apply_=False, esperado=None):
     if quedo != nuevo:
         cerrar()
         return False, 'la descripcion quedo %r y esperaba %r — cerrado SIN GRABAR' % (quedo, nuevo)
+    return aceptar(h)
 
-    # Posee PAPP/PSW: sin valor, &Acepta queda deshabilitado y el TAB se clava aca.
+
+def tabular_hasta(h, xy):
+    """TAB real hasta que el foco cae en el control de posicion `xy` (relativa a la ventana).
+    Devuelve su handle, o None si no llego en MAX_TAB."""
     base = ai.rect(h)
-    hpapp = None
     for _ in range(MAX_TAB):
         ai.tecla(ai.TECLAS['TAB'], pausa=0.10)
         f = ai.foco(h)
         if not f:
             continue
         r = ai.rect(f)
-        if abs(r.l - base.l - PAPP_XY[0]) < 8 and abs(r.t - base.t - PAPP_XY[1]) < 8:
-            hpapp = f
-            break
+        if abs(r.l - base.l - xy[0]) < 8 and abs(r.t - base.t - xy[1]) < 8:
+            return f
+    return None
+
+
+def aceptar(h, forzar_papp=True):
+    """Desde cualquier campo del registro: completa PAPP, cae en &Acepta y graba.
+    `forzar_papp=False` solo lo llena si esta VACIO (un N queda N): para quien cambia otro
+    campo y no quiere tocar este de rebote. Devuelve (ok, mensaje). Ante cualquier gate en
+    rojo: WM_CLOSE, no graba."""
+    # Posee PAPP/PSW: sin valor, &Acepta queda deshabilitado y el TAB se clava aca.
+    hpapp = tabular_hasta(h, PAPP_XY)
     if not hpapp:
         cerrar()
         return False, 'no llegue a Posee PAPP/PSW — cerrado sin grabar'
-    if _texto(hpapp).strip() != PAPP_VALOR:
+    papp_hoy = _texto(hpapp).strip()
+    if papp_hoy != PAPP_VALOR and (forzar_papp or not papp_hoy):
         papp = _reemplazar(h, hpapp, PAPP_VALOR)
         if papp.strip() != PAPP_VALOR:
             cerrar()

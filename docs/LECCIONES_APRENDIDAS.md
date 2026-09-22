@@ -76,6 +76,7 @@ incidente vive en los snapshots.
 ## Consumos de material
 
 - **Un numero que no cuadra casi nunca es un error: es la misma cosa en otra magnitud, o el mismo numero con la merma adentro**, y se normaliza a la unidad que gobierna antes de reportar un desvio. Graduado a `consumos-entregables.md` + `_validarConsumos.mjs` + skill `verificacion-consumos`.
+- **22/09 — El consumo de vinilo o tela sale de la planilla que Pablo Gamboa manda por mail, no de lo que ya esta en el arb.** Converti a metros lo cargado en IP Pad y armrest rear y venia de tizadas viejas. Fak: *"si no salen de ahi no podemos mandar el mail"*. Despues se abre el .MRK para ver que no este inflada (piezas escaladas, separacion). Memoria `consumo_se_verifica_en_el_marker_no_en_la_planilla`.
 
 ## Entregables y comunicacion con Fak
 
