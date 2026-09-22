@@ -968,8 +968,25 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                                 issues.push({ ...cCtx, type: 'SIGLA_DESCONOCIDA',
                                     detail: `"${String(c.specialChar).trim()}" no es una sigla del I-AC-005 (CC/CS), del manual AIAG-VDA (▽/SC/OS/HI) ni de VW (D/TLD): no se adivina, se corrige a mano` });
                             } else if (nivelSigla === 'CRITICA' && sN > 0 && sN < CE.criterio.CRITICA.severidad_min) {
-                                issues.push({ ...cCtx, type: 'CAUSE_CC_LOW_SEVERITY',
-                                    detail: `marcada critica (${specialCh}) con S=${sN}: el I-AC-005 exige S 9 o 10, sin excepciones (si el efecto habla de seguridad o ley, la S es la que esta mal)` });
+                                // La designo el CLIENTE en su documento? Entonces no es una
+                                // sigla que nos pusimos solos: es un dato suyo, y la regla
+                                // `caracteristicas-especiales.md` §2bis dice que en ese caso la
+                                // diferencia SE INFORMA, no se cierra subiendo la S. Subirla es
+                                // el error del 21/09/2026 (11 modos de falla llevados a S=9
+                                // para sostener la marca, con lo que "costura con dos lineas"
+                                // quedo mas grave que un paro de linea en el cliente).
+                                //
+                                // El agujero que esto NO reabre: el del 11/09/2026 era una
+                                // sigla copiada de un backup, SIN fuente. Aca hace falta que la
+                                // causa declare `specialCharSource` — de que documento del
+                                // cliente sale y que caracteristica es. Sin esa fuente escrita,
+                                // sigue siendo CRITICAL y frena igual.
+                                const fuenteCliente = String(c.specialCharSource || '').trim();
+                                issues.push(fuenteCliente
+                                    ? { ...cCtx, type: 'CARACTERISTICA_CLIENTE_S_MENOR', severity: 'WARNING',
+                                        detail: `el cliente la designo critica (${specialCh}, ${fuenteCliente}) y el efecto de esta fila da S=${sN}: se informa la diferencia al cliente, NO se sube la S` }
+                                    : { ...cCtx, type: 'CAUSE_CC_LOW_SEVERITY',
+                                        detail: `marcada critica (${specialCh}) con S=${sN} y sin fuente del cliente declarada: el I-AC-005 exige S 9 o 10 (si el efecto habla de seguridad o ley, la S es la que esta mal; si la designo el cliente, escribir specialCharSource)` });
                             } else if (nivelSigla === 'SIGNIFICATIVA' && sN > 0 && !missO && nivelPorCriterio(sN, oN) !== 'SIGNIFICATIVA') {
                                 issues.push({ ...cCtx, type: 'CAUSE_SC_FUERA_DE_REGLA',
                                     detail: `marcada significativa (${specialCh}) con S=${sN} O=${oN}: el I-AC-005 exige S 5 a 8 y O >= 4` });

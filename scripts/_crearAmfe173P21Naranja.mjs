@@ -197,16 +197,27 @@ const EF_LEGAL_FUEGO = {
 // DECISION DE FAK, 21/09/2026. La tomo el con las dos lecturas delante:
 //   (a) montar un vehiculo con una pieza no homologada ES incumplimiento reglamentario -> 9
 //   (b) el efecto que Barack puede describir es el rechazo del lote -> 8
-// Eligio (a), que es ademas el razonamiento del propio cliente: por eso SMRC marca estas
-// caracteristicas como <cc/h>, critica de HOMOLOGACION.
+// Eligio (a).
 //
-// La S sigue saliendo del EFECTO, no de la sigla: lo que cambio es el efecto que se declara.
-// La diferencia que el script reportaba se cerro por decision, no subiendo un numero suelto.
+// CORREGIDO EL 22/09/2026 A (b), tambien por decision de Fak, despues de que una auditoria de
+// cliente contra la Tabla P1 mostrara la contradiccion que (a) dejaba adentro del documento:
+// "costura vista con dos lineas en lugar de una" quedaba S=9, es decir MAS GRAVE que "paro de
+// linea en la planta del cliente / vehiculo no ensamblable", que es S=8. Un desvio de
+// especificacion no es "Noncompliance with regulations": el efecto que Barack puede sostener
+// es el que ya escribe la fila de al lado, el rechazo del lote en la recepcion de SMRC, y eso
+// es P1-8 ("Stop shipment possible" en la columna Ship to Plant; "100% of product affected may
+// have to be scrapped" en Your Plant).
+//
+// Lo que NO cambia: las <cc/h> siguen siendo <cc/h>. Las designo el cliente en su LSC v1 y esa
+// designacion es un dato suyo, no una consecuencia de nuestra S (regla
+// caracteristicas-especiales.md §2bis: si el cliente designo y la S por efecto no llega a 9,
+// se informa la diferencia, NO se sube la S). Las tres <cc/s> de inflamabilidad se quedan en
+// S=9 por su propio efecto, que si dice incumplimiento legal.
 const EF_PIEZA_DISTINTA = {
-  s: 9,
+  s: 8,
   local: 'Pieza fabricada con un material, un hilo o una costura distintos de los homologados',
   next: 'Rechazo del lote completo en la recepcion de SMRC',
-  end: 'Vehiculo montado con una pieza que no corresponde a su homologacion',
+  end: 'Vehiculo montado con una pieza que no corresponde a la especificacion homologada',
 };
 // (Hubo un EF_ASPECTO_COSTURA con S=7 para la posicion y la densidad de la costura. Quedo sin
 //  uso: la SC 2.3 y la SC 2.4 tambien son <cc/h> del cliente, asi que por la decision de Fak
@@ -378,7 +389,7 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
 // Aca vive la SC 1.6, el limite de corte en la zona de insercion de la platina.
 // ===========================================================================
 const OP20 = operacion('20', 'CORTE DE VINILO O TELA',
-  'Cortar los componentes de vinilo o tela segun el patron liberado de la pieza',
+  'Cortar los componentes de vinilo segun el patron liberado de la pieza',
   'Componentes cortados dentro del patron, identificados y contados por bin',
   [
     we('Metodo', 'Patron y programa de corte', [
@@ -386,7 +397,7 @@ const OP20 = operacion('20', 'CORTE DE VINILO O TELA',
         'Cortar dentro del limite que el cliente fija para la zona de insercion de la platina',
         'SC 1.6: tolerancia de corte de tela / TEP en la zona de insercion de platina, +2 / -0',
         [
-          falla('Corte de tela o TEP fuera del limite +2 / -0 en la zona de insercion de la platina', EF_PARO_LINEA, [
+          falla('Corte del vinilo fuera del limite +2 / -0 en la zona de insercion de la platina', EF_PARO_LINEA, [
             causa('El programa de corte cargado en la mesa no es el de la revision liberada del patron',
               'Un unico archivo de corte habilitado por pieza, con su revision, en la carpeta de la mesa',
               4, 'Verificacion de la pieza cortada contra el patron en la zona de insercion, primera pieza del lote', 7,
@@ -1289,14 +1300,15 @@ if (diferencias.length) {
     porSigla.get(k).push(d.ca);
   }
   for (const [k, cas] of porSigla) console.log(`  ${cas.join(', ').padEnd(22)}  ${k}`);
-  console.log('\nLas dos lecturas, para que la decision sea con las dos delante:');
-  console.log('  (a) Montar un vehiculo con una pieza que no es la homologada ES un incumplimiento');
-  console.log('      reglamentario -> S=9 y la critica cierra sola. Es el razonamiento del cliente.');
-  console.log('  (b) El efecto que Barack puede describir es que SMRC rechaza el lote y para su');
-  console.log('      linea -> S=8 por la columna Ship to Plant. Es lo que dice el documento hoy.');
-  console.log('\n  Mientras quede en (b), el validador va a marcar CAUSE_CC_LOW_SEVERITY en esas');
-  console.log('  causas y el export oficial no corre. Eso NO es una falla del documento: es el');
-  console.log('  gate mostrando una discrepancia que tiene que resolver una persona.');
+  console.log('\nDECIDIDO por Fak el 22/09/2026: la S de estas filas es 8, la del efecto que Barack');
+  console.log('puede sostener (SMRC rechaza el lote -> P1-8 "Stop shipment possible"). La lectura');
+  console.log('alternativa -que montar una pieza no homologada es incumplimiento reglamentario,');
+  console.log('S=9- estuvo vigente el 21/09 y se dio vuelta porque dejaba una contradiccion adentro');
+  console.log('del documento: "costura con dos lineas" quedaba mas grave que un paro de linea.');
+  console.log('\n  Las <cc/h> se quedan: las designo el CLIENTE en su LSC v1 y eso es un dato suyo,');
+  console.log('  no una consecuencia de nuestra S. El validador lo informa como diferencia');
+  console.log('  (CARACTERISTICA_CLIENTE_S_MENOR, warning) y el export corre. Lo que sigue');
+  console.log('  frenando es una sigla critica con S<9 SIN fuente del cliente declarada.');
   console.log(`\n  Criticas que SI cierran con S>=9 por su propio efecto: ${criticasQueCierran.length ? [...new Set(criticasQueCierran)].join(', ') : 'ninguna'}`);
 }
 

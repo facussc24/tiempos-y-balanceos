@@ -11,7 +11,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import {
-  NOMINA, buscarPersona, trabajaHoy, revisarEquipo, normalizarNombre, activosDe, nominaVencida, aFecha,
+  NOMINA, buscarPersona, trabajaHoy, revisarEquipo, normalizarNombre, activosDe, nominaVencida, aFecha, indexarNomina,
 } from '../../scripts/_lib/nomina.mjs';
 
 const EQUIPO_QUE_EMITI = [
@@ -48,10 +48,30 @@ describe('nomina de Barack', () => {
       expect(p[0].motivo).toMatch(/no esta en la nomina/);
     });
 
-    it('una baja probable sin confirmar avisa, no bloquea', () => {
+    // Estuvo un dia en `dudosos` (WARNING): desaparecia de la lista de RRHH despues del
+    // 10/08/2026 sin mail de despedida, y un negativo no prueba una baja. Lo zanjo Fak el
+    // 22/09/2026: "jean no sigue en barack". El rastro y la confirmacion coincidian.
+    it('Pagliaroli ya no es una duda: Fak confirmo la baja, asi que bloquea', () => {
       const p = revisarEquipo(['Jean Claudio Pagliaroli (Seguridad e Higiene)']);
-      expect(p[0].gravedad).toBe('WARNING');
-      expect(p[0].motivo).toMatch(/sin confirmar/);
+      expect(p[0].gravedad).toBe('CRITICAL');
+      expect(p[0].motivo).toMatch(/no trabaja mas/);
+    });
+
+    it('el camino de la baja SIN confirmar sigue existiendo y avisa sin bloquear', () => {
+      // Se prueba contra un dudoso armado a mano: hoy la lista real esta vacia, y un camino
+      // que no se puede ejercitar es un camino que nadie sabe si funciona.
+      const dudoso = { nombre: 'Persona Dudosa', area: 'Calidad', activo: 'dudoso',
+        evidencia: 'falta en las ultimas listas, sin mail de despedida', que_falta: 'confirmar con Fak' };
+      NOMINA.personas.push(dudoso);
+      indexarNomina();
+      try {
+        const p = revisarEquipo(['Persona Dudosa (Calidad)']);
+        expect(p[0].gravedad).toBe('WARNING');
+        expect(p[0].motivo).toMatch(/sin confirmar/);
+      } finally {
+        NOMINA.personas.pop();
+        indexarNomina();
+      }
     });
   });
 

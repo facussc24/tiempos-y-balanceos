@@ -27,8 +27,21 @@ export const normalizarNombre = (s) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-const PORNOMBRE = new Map(NOMINA.personas.map((p) => [normalizarNombre(p.nombre), p]));
-const DUDOSOS = new Map((NOMINA.dudosos ?? []).map((p) => [normalizarNombre(p.nombre), p]));
+let PORNOMBRE;
+let DUDOSOS;
+
+/**
+ * Arma los indices de busqueda desde `NOMINA`. Se llama una vez al importar.
+ *
+ * Es exportada porque si no, el camino de la "baja probable sin confirmar" no se puede probar:
+ * hoy la lista de dudosos esta vacia — el unico que habia, Pagliaroli, lo confirmo Fak el
+ * 22/09/2026 — y un camino que no se puede ejercitar es un camino que nadie sabe si funciona.
+ */
+export function indexarNomina() {
+  PORNOMBRE = new Map(NOMINA.personas.map((p) => [normalizarNombre(p.nombre), p]));
+  DUDOSOS = new Map((NOMINA.dudosos ?? []).map((p) => [normalizarNombre(p.nombre), p]));
+}
+indexarNomina();
 
 /**
  * Busca a una persona. Tolera la inicial: "C.BAPTISTA" y "C. Baptista" encuentran a
