@@ -1,0 +1,64 @@
+{
+  "_fuente": "Fak 22/09/2026: cada vez que se modifica una BOM, la BOM ultimo nivel del arb va al legajo APQP, casillero 7, subcarpeta de BOM; la anterior pasa a Obsoleto. 'sino siempre me va a quedar desactualizado el apqp'.",
+  "_como": "python scripts/_bomLegajo.py <familia> --fecha dd/mm/aaaa --act \"...\" [--apply]. Una familia = TODAS sus piezas, no solo las que cambiaron.",
+  "_control": "scripts/_cierreSesion.mjs marca FALTA si el PDF de difusion mas nuevo de la carpeta 'biblioteca' de una familia es posterior a su BOM ultimo nivel del legajo. 'biblioteca' es relativa a 'raiz_biblioteca' (~ = carpeta del usuario).",
+  "raiz_biblioteca": "~\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\2. CONSUMO DE MATERIAL BOM\\BOMS",
+  "familias": {
+    "Insert": {
+      "legajo": "Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\NOVAX\\Tapizadas puerta\\7-Lista de materiales preliminares\\01_BOM MATERIAL",
+      "biblioteca": "VW\\PROYECTO VW\\PATAGONIA\\INSERT",
+      "piezas": [
+        "N 227",
+        "N 389",
+        "N 390",
+        "N 391",
+        "N 392",
+        "N 393",
+        "N 394",
+        "N 395",
+        "N 396",
+        "N 397",
+        "N 398",
+        "N 399",
+        "N 400",
+        "N 401",
+        "N 402",
+        "N 403"
+      ]
+    },
+    "APC": {
+      "legajo": "Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\VW\\VW427-1LA_K-PATAGONIA\\Headrest\\APQP\\7-Lista de materiales preliminares\\01_BOM MATERIAL",
+      "biblioteca": "VW\\PROYECTO VW\\PATAGONIA\\APC",
+      "piezas": [
+        "2HC881901 RL1",
+        "2HC881901A GFV",
+        "2HC881901B GEV",
+        "2HC881901C EFG",
+        "2HC885900 RL1",
+        "2HC885900A EIF",
+        "2HC885900B SIY",
+        "2HC885900C SIY",
+        "2HC885901 RL1",
+        "2HC885901A GFU",
+        "2HC885901B GEQ",
+        "2HC885901C DZS"
+      ]
+    },
+    "IP Pad": {
+      "legajo": "Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\VW\\VW427-1LA_K-PATAGONIA\\IP PADs\\APQP\\7-Lista de materiales preliminares\\1_BOM",
+      "biblioteca": "VW\\PROYECTO VW\\PATAGONIA\\IP",
+      "piezas": [
+        "2HC858417B FAM",
+        "2HC858417C GKK",
+        "2HC858417C GKN"
+      ]
+    },
+    "Armrest Rear": {
+      "legajo": "Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\VW\\VW427-1LA_K-PATAGONIA\\Armrest Rear\\1-APQP\\7-Lista de materiales preliminares\\01_BOM MATERIAL",
+      "biblioteca": "VW\\PROYECTO VW\\PATAGONIA\\APB TRASERO",
+      "piezas": [
+        "2HC885081 RL1"
+      ]
+    }
+  }
+}

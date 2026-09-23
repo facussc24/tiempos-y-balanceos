@@ -54,7 +54,7 @@ del de una variante anterior, y sus documentos nacen en Rev. A (memoria
 | 4 | Conformacion de equipo | 4/6 | El organigrama vigente | Direccion / RRHH |
 | 5 | Carta de nominacion | 1/6 | La SNL del cliente y la orden de compra | CLIENTE |
 | 6 | Planos de la pieza | 5/6 | El plano 2D del cliente (PDF/TIF) y su 3D | CLIENTE |
-| 7 | Lista de materiales | **6/6** | La BOM de Barack en PDF | INGENIERIA |
+| 7 | Lista de materiales | **6/6** | La BOM de Barack en PDF. **Cada vez que cambia una BOM, la BOM ultimo nivel del arb de la familia entera va a su subcarpeta de BOM y la anterior a Obsoleto** (Fak, 22/09/2026 — `scripts/_bomLegajo.py`, skill `carga-arb` §4b) | INGENIERIA |
 | 8 | Ficha tecnica | 4/6 | Fichas del **proveedor de materia prima**, con su membrete | TERCERO |
 | 9 | Flujograma preliminar | 2/6 | El flujograma antes de liberarse | INGENIERIA |
 | 10 | AMFE de **DISEÑO** | 1/6 | N/A en Barack: no hacemos AMFE de diseño. **Ojo: hay AMFE de PROCESO mal archivados aca** | — |

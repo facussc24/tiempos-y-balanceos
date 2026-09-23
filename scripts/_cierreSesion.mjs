@@ -44,6 +44,7 @@ const REPO = path.resolve(fileURLToPath(import.meta.url), '..', '..');
 // system prompt por @import desde CLAUDE.md, asi que el tope por bytes ya no recorta
 // nada: es una red. Lo que gobierna es el gate POR BULLET (evaluarBullets).
 import { CANON as CANON_CIERRE, evaluarBullets } from './_lib/cierreGuard.mjs';
+import { relevarBomLegajo, evaluarBomLegajo } from './_lib/bomLegajoCheck.mjs';
 import { relevarCerebro, lintCerebro, dirMemoriaDe, resumir as resumirCerebro } from './_lib/cerebroLint.mjs';
 export const LECCIONES_AVISO = CANON_CIERRE.lecciones.aviso_bytes;
 export const LECCIONES_TOPE = CANON_CIERRE.lecciones.tope_bytes;
@@ -171,6 +172,16 @@ export function evaluarDisco(bytesLibres) {
     if (gb < 10) return { estado: 'falta', detalle: `${txt} — con menos de 10 una sesion lo llena (pasó el 05, 07, 10 y 22/09): ${receta}` };
     if (gb < 20) return { estado: 'aviso', detalle: `${txt} — bajo 20; ${receta}` };
     return { estado: 'ok', detalle: txt };
+}
+
+function chequearBomLegajo() {
+    // Si la BOM cambio y el legajo APQP no se actualizo, FALTA. Logica y criterio en
+    // scripts/_lib/bomLegajoCheck.mjs; lo que lo arregla es scripts/_bomLegajo.py.
+    try {
+        return evaluarBomLegajo(relevarBomLegajo());
+    } catch (e) {
+        return { estado: 'aviso', detalle: `no se pudo medir: ${e.message}` };
+    }
 }
 
 function chequearDisco() {
@@ -476,6 +487,7 @@ async function main(argv) {
         { paso: 'Cerebro: wikilinks, indice, rutas citadas y tablas de reglas (_cerebroLint)', ...chequearCerebro() },
         { paso: 'Skills/agents/commands: los carga Claude Code (claude plugin validate)', ...chequearComponentesClaude() },
         { paso: 'Disco C: con lugar para la proxima sesion', ...chequearDisco() },
+        { paso: 'BOM ultimo nivel en el legajo APQP (regla de Fak 22/09/2026)', ...chequearBomLegajo() },
         // Lo que ningun script puede medir — se lista para que no se olvide, no bloquea:
         { paso: 'Auditor al cerrar tareas de codigo', estado: 'manual', detalle: 'lanzar el agente `auditor` si esta sesion toco codigo' },
         { paso: 'Lecciones y memorias de la sesion', estado: 'manual', detalle: 'si Fak corrigio, decidio o revelo algo: LECCIONES_APRENDIDAS + memoria con fuente' },

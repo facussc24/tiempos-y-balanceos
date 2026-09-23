@@ -183,6 +183,31 @@ python scripts/_pdfBomArb.py --piezas "<PN1>,<PN2>" --fecha dd/mm/aaaa \
   Lo segundo no es opcional: la primera version de esa suite tenia 13 casos en verde y **5 de
   7 defensas sin proteger**. Un test que sigue verde con el bug puesto es un verde vacio.
 
+## 4b. La BOM ultimo nivel va al legajo APQP — SIEMPRE que cambia una BOM
+
+Fak, 22/09/2026: *"cada vez que modificamos la bom... la bom ultimo nivel ahi en el apqp...
+sino siempre me va a quedar desactualizado el apqp... eso no puede suceder"*. Decidido ese dia
+(pregunta de primera vez, respondida): **casillero 7-Lista de materiales preliminares**, en la
+subcarpeta de BOM que ya tiene el legajo (`01_BOM MATERIAL` o `1_BOM`), y la anterior a su
+Obsoleto. En el legajo queda UNA sola, la ultima.
+
+```bash
+python scripts/_bomLegajo.py --lista                                   # familias y su legajo
+python scripts/_bomLegajo.py <familia> --fecha dd/mm/aaaa --act "..."  # dry-run
+python scripts/_bomLegajo.py <familia> --fecha dd/mm/aaaa --act "..." --apply
+```
+
+- Es un PDF distinto del de difusion: lleva **la familia ENTERA** (todas sus piezas, aunque no
+  hayan cambiado), porque lo que se archiva es el estado de la BOM, no la modificacion. El de
+  difusion sigue llevando solo las piezas que cambiaron.
+- Se corre con el MISMO export que el PDF de difusion (despues de cargar y re-exportar).
+- Familia que no esta en `scripts/_lib/bomLegajos.data.json`: se agrega ahi (ruta del casillero
+  7 del legajo + TODAS sus piezas, contadas del arb) la primera vez que cambia su BOM.
+- Sin el disco `Y:` montado el legajo "no existe": `node scripts/_montarDiscos.mjs` primero.
+- El script no borra nada: mueve el anterior a la carpeta obsoleta que ya exista en esa
+  subcarpeta (`Obsoleto`, `Obsoletos`, `0_Obsoleto`) o crea `Obsoleto`, y recien despues de
+  que el PDF nuevo quedo escrito.
+
 ## 5. El cuerpo del mail
 
 Estructura de Leo, corta:
