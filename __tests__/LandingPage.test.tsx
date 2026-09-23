@@ -8,6 +8,16 @@ vi.mock('../components/auth/AuthProvider', () => ({
     AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+// useProjectHub carga familias y documentos con los repositorios REALES: en el test fallaban
+// despues de terminar y el logger.error llegaba con vitest ya cerrando el worker
+// ("EnvironmentTeardownError: Closing rpc while onUserConsoleLog was pending"). Rompio el CI en
+// 2 de 6 corridas el 22/09/2026 y con eso se saltea el deploy. Ningun test de este archivo usa
+// esos datos: se mockea en su estado INICIAL (vacio y cargando, como lo veian las aserciones
+// antes del cambio), sin el fetch detras (regla testing.md: los repositorios se mockean).
+vi.mock('../hooks/useProjectHub', () => ({
+    useProjectHub: () => ({ projects: [], pendingItems: [], loading: true, error: null, refresh: vi.fn() }),
+}));
+
 describe('LandingPage', () => {
     const onSelectModule = vi.fn();
 
