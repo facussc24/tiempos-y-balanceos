@@ -3,11 +3,12 @@
 Referencia rapida para Claude Code. Reescrita el 22/09/2026: la version de abril recomendaba
 `pdftotext -layout` como metodo preferido y `pdftoppm` para rasterizar, y las dos cosas fallaban.
 
-## Primero: lo que NO anda en esta PC
+## Primero: lo que hay que saber en esta PC
 
-- **La tool Read con `pages` sobre un PDF falla**: necesita `pdftoppm` (Poppler), que no esta
-  instalado (en `/mingw64/bin` solo esta `pdftotext`). Paso en 25 sesiones distintas del ultimo
-  mes. Usar el Metodo 1 en su lugar.
+- **La tool Read con `pages` sobre un PDF necesita `pdftoppm` (Poppler).** Hasta el 22/09/2026 no
+  estaba y fallo en 25 sesiones distintas. Ese dia se instalo Poppler 25.07 con winget
+  (`oschwartz10612.Poppler`, en el PATH de usuario); anda en las sesiones que arrancan despues de
+  reiniciar la app de Claude. Si `pages` igual falla, Metodo 1.
 - **`pdftotext -layout` puede correr las filas de una tabla**: cada valor queda al lado de la
   etiqueta de arriba y la salida se lee perfecta (memoria `reference_pdftotext_layout_corre_las_filas`,
   dos casos el 13/09/2026). Nunca es la fuente final de un numero sacado de una tabla.

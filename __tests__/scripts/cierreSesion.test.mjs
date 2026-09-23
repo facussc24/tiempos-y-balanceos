@@ -9,7 +9,7 @@
 import { describe, it, expect } from 'vitest';
 import {
     carpetaTemporal, leerEpochFlag, clasificarPorcelain,
-    evaluarGit, evaluarBackup, evaluarLecciones, evaluarComponentesClaude, veredicto,
+    evaluarGit, evaluarBackup, evaluarLecciones, evaluarComponentesClaude, evaluarDisco, veredicto,
     LECCIONES_AVISO, LECCIONES_TOPE,
 } from '../../scripts/_cierreSesion.mjs';
 
@@ -184,5 +184,21 @@ describe('veredicto', () => {
     });
     it('lista vacia no bloquea', () => {
         expect(veredicto([])).toBe(0);
+    });
+});
+
+describe('evaluarDisco (el disco se lleno el 05, 07, 10 y 22/09/2026)', () => {
+    it('ROJO con menos de 10 GB: 0,07 GB fue el caso real del 22/09', () => {
+        const r = evaluarDisco(0.07e9);
+        expect(r.estado).toBe('falta');
+        expect(r.detalle).toContain('0,1 GB libres');
+        expect(r.detalle).toContain('nunca borrando');
+    });
+    it('aviso entre 10 y 20 GB, ok arriba', () => {
+        expect(evaluarDisco(13.6e9).estado).toBe('aviso');
+        expect(evaluarDisco(27.6e9).estado).toBe('ok');
+    });
+    it('si no se pudo medir, avisa (no frena ni da ok)', () => {
+        expect(evaluarDisco(null).estado).toBe('aviso');
     });
 });

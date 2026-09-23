@@ -206,6 +206,14 @@ De las tres entregas rechazadas, **dos no fallaron por el diseño: fallaron por 
   escalón sí): que el motor ande se prueba, no se asume.
 - **G-E3b — cuánto color tiene el render**, medido sobre los píxeles del objeto. **Se informa;
   no bloquea.** Un número bajo es una razón para mirar la imagen, no un veredicto.
+- **G-E4 — revisión ciega, después del GATE E verde y antes de mostrárselo a Fak (22/09/2026).**
+  Los gates en verde no vieron lo que Fak vio a ojo: el dispositivo del Insert (24/08 a 22/09,
+  cadena de 75 pasos verde) volvió cinco veces (*"hacés todo a medias sin testearlo"*, *"puesto
+  así nomás"*). Lanzar UN `Agent` que reciba **solo** el PDF y los renders de la entrega, más una
+  línea de para qué sirve la pieza — ni las medidas que calculé, ni el JSON, ni mi razonamiento —
+  con la pregunta: *"Sos el que tiene que fabricar y montar esto. ¿Qué le objetarías? ¿Qué no se
+  entiende?"*. Cada objeción se resuelve o se le dice a Fak. Es un paso de proceso, sin gate
+  automático: el GATE E corre en el mismo paso que arma el PDF y no puede exigir algo posterior.
 
 El motor bueno vive ahora **acá**: `.claude/skills/cad-design/scripts/foto3d.py` (trazado de rayos ortográfico, oclusión
 exacta, sombra proyectada, contorno por segunda derivada de la profundidad, maniquí a escala

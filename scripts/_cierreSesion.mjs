@@ -157,6 +157,31 @@ export function evaluarLecciones(bytes) {
  * pasada de consolidacion sea GRADUAR y no pelear bytes: 31 consolidaciones en 14 dias
  * porque los bullets graduados seguian contando el caso entero.
  */
+/**
+ * Espacio libre en C:. El disco (237 GB) se lleno el 05, 07, 10 y 22/09/2026 — la ultima vez con
+ * 0,07 GB libres — y una sesion con videos o SharePoint baja 10-40 GB sin avisar. Se libera
+ * deshidratando OneDrive, nunca borrando material de Fak (memorias
+ * `material_de_fak_no_se_borra_va_a_la_nube` y `reference_onedrive_files_on_demand_liberar_espacio`).
+ */
+export function evaluarDisco(bytesLibres) {
+    if (bytesLibres == null) return { estado: 'aviso', detalle: 'no se pudo medir el espacio libre de C:' };
+    const gb = bytesLibres / 1e9;
+    const txt = `${gb.toFixed(1).replace('.', ',')} GB libres en C:`;
+    const receta = 'liberar deshidratando OneDrive (attrib +U -P), nunca borrando material de Fak';
+    if (gb < 10) return { estado: 'falta', detalle: `${txt} — con menos de 10 una sesion lo llena (pasó el 05, 07, 10 y 22/09): ${receta}` };
+    if (gb < 20) return { estado: 'aviso', detalle: `${txt} — bajo 20; ${receta}` };
+    return { estado: 'ok', detalle: txt };
+}
+
+function chequearDisco() {
+    try {
+        const s = fs.statfsSync(path.parse(REPO).root);
+        return evaluarDisco(s.bavail * s.bsize);
+    } catch {
+        return evaluarDisco(null);
+    }
+}
+
 export function evaluarLeccionesBullets(texto) {
     if (texto == null) return { estado: 'aviso', detalle: 'no se pudo leer docs/LECCIONES_APRENDIDAS.md' };
     const malos = evaluarBullets(texto);
@@ -450,6 +475,7 @@ async function main(argv) {
         { paso: 'Escritorio: cola de tareas y archivo de cerradas', ...(await chequearEscritorio()) },
         { paso: 'Cerebro: wikilinks, indice, rutas citadas y tablas de reglas (_cerebroLint)', ...chequearCerebro() },
         { paso: 'Skills/agents/commands: los carga Claude Code (claude plugin validate)', ...chequearComponentesClaude() },
+        { paso: 'Disco C: con lugar para la proxima sesion', ...chequearDisco() },
         // Lo que ningun script puede medir — se lista para que no se olvide, no bloquea:
         { paso: 'Auditor al cerrar tareas de codigo', estado: 'manual', detalle: 'lanzar el agente `auditor` si esta sesion toco codigo' },
         { paso: 'Lecciones y memorias de la sesion', estado: 'manual', detalle: 'si Fak corrigio, decidio o revelo algo: LECCIONES_APRENDIDAS + memoria con fuente' },

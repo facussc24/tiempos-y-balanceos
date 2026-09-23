@@ -49,17 +49,23 @@ error de atribucion no es hipotetico: ya paso.
 Si una sesion se planta y pide el OK directo, **tiene razon** — no se la presiona ni se
 le cambia la regla: se le manda el borrador a quien esta hablando con Fak y lo envia esa.
 
-## Cada corrida de `_prepararMail.py` deja UN borrador: si rehacés el texto, limpiá
+## Rehacer un mail REEMPLAZA el borrador anterior: no se apilan
 
 **21/09/2026:** el gate de voz me rebote el mail dos veces (largo, y despues el plural), lo
 rehice y quedaron **3 borradores identicos** en Borradores. Ahi `_mailEnviar.py --buscar`
 aborta bien (*"esperaba 1 borrador y hay 3"*) y no deja mandar ninguno.
 
-**La salida no es `--forzar`** —eso saltea el gate de duplicados y puede mandar el equivocado—
-sino **`--id <EntryID>`**, que envia exactamente el borrador que uno eligio. Para sacar el
-EntryID del bueno, listar Borradores por `[CreationTime]` descendente y mirar un campo que
-los distinga (aca: el unico con CC). **Los duplicados que sobran NO los borro yo**: borrar
-mails no esta entre lo que hago, se los dejo dichos a Fak con su hora.
+**Desde el 22/09/2026 `_prepararMail.py` no los apila.** Anota cada borrador que arma en
+`.mail-cache/borradores_claude.json` y, al rehacer uno con el mismo asunto (sin contar RE:/RV:),
+manda el anterior a Elementos eliminados — **solo si lo armo el script, sigue en Borradores y
+nadie lo edito despues** (margen de 2 min). Fak lo pidio tres veces: 31/08, 07/09 (*"siempre
+generas muchos borradores"*) y 21/09 (*"borra vos los dos borradores duplicados y todos los que
+esten viejos tambien"*). Probado en Outlook de verdad: tres corridas, uno en Borradores y dos en
+Eliminados. `Delete()` de COM mueve, no borra definitivo. Selftest: `python scripts/_prepararMail.py --selftest`.
+
+Un borrador que el script no armo, o que Fak edito a mano, no se toca solo: se lista con su hora.
+Para mandar uno puntual cuando hay varios, **`--id <EntryID>`**, nunca `--forzar` (saltea el
+gate de duplicados y puede mandar el equivocado).
 
 **Lo barato es no generarlos:** el semaforo de voz sale ANTES de crear el item, asi que
 conviene pasar el texto por el criterio (corto como los de Fak, primera persona, con tildes)

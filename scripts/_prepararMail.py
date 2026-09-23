@@ -29,17 +29,120 @@ y los tags se verian como texto. La firma se sigue agregando abajo, igual que si
 """
 import json
 import os
+import re
 import sys
 import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib'))
 from vozMail import mostrar_voz                                          # noqa: E402
-from outlookUi import asegurar_outlook, cartel_de_seguridad              # noqa: E402
+# outlookUi y win32com son solo de Windows: se importan adentro de preparar() para que el
+# --selftest (funciones puras) corra tambien en el CI de Linux.
 
-try:
-    import win32com.client as win32
-except ImportError:
-    sys.exit('ERROR: falta pywin32 (win32com). No se puede hablar con Outlook.')
+# Registro de los borradores que arma ESTE script (EntryID, asunto, hora de guardado). Vive en la
+# cache de mails, gitignoreada. Sirve para reemplazar el borrador anterior del mismo asunto en vez
+# de apilar copias: Fak, 21/09/2026, *"borra vos los dos borradores duplicados y todos los que
+# esten viejos tambien"* (y antes el 31/08 y el 07/09: *"siempre generas muchos borradores"*).
+REGISTRO = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        '.mail-cache', 'borradores_claude.json')
+MARGEN_EDICION_S = 120   # modificado mas de 2 min despues de guardarlo = lo toco Fak a mano
+
+
+def clave_asunto(asunto):
+    """'RE: RV:  Muestras P21 ' -> 'muestras p21'. Mismo tema aunque sea respuesta o reenvio."""
+    s = str(asunto or '').strip()
+    while True:
+        m = re.match(r'^(re|rv|fw|fwd|reenviar)\s*:\s*', s, re.I)
+        if not m:
+            break
+        s = s[m.end():]
+    return re.sub(r'\s+', ' ', s).strip().lower()
+
+
+def decidir_reemplazo(en_borradores, guardado_ts, ultima_mod_ts):
+    """Que hacer con un borrador que este script armo antes, del mismo asunto.
+    'olvidar'   = ya no esta en Borradores (se mando, se borro, se movio): no se toca.
+    'conservar' = Fak lo edito despues de que lo guarde: es suyo, no se toca (se avisa).
+    'eliminar'  = sigue en Borradores tal cual lo deje: se mueve a Elementos eliminados."""
+    if not en_borradores:
+        return 'olvidar'
+    if ultima_mod_ts is not None and guardado_ts is not None and ultima_mod_ts > guardado_ts + MARGEN_EDICION_S:
+        return 'conservar'
+    return 'eliminar'
+
+
+def selftest():
+    casos = [
+        (clave_asunto('RE: RV:  Muestras P21 '), 'muestras p21'),
+        (clave_asunto('Muestras P21'), 'muestras p21'),
+        (clave_asunto('FW: re: Consumo aplix'), 'consumo aplix'),
+        (decidir_reemplazo(False, 1000, 1000), 'olvidar'),
+        (decidir_reemplazo(True, 1000, 1030), 'eliminar'),     # guardado y relectura del propio Save
+        (decidir_reemplazo(True, 1000, 1000 + 121), 'conservar'),  # Fak le cambio algo despues
+        (decidir_reemplazo(True, 1000, None), 'eliminar'),
+    ]
+    mal = [(i, obtenido, esperado) for i, (obtenido, esperado) in enumerate(casos) if obtenido != esperado]
+    for i, o, e in mal:
+        print(f'MAL caso {i}: {o!r} (esperado {e!r})')
+    if mal:
+        sys.exit(1)
+    print(f'selftest borradores OK ({len(casos)} casos)')
+
+
+def leer_registro():
+    try:
+        with open(REGISTRO, encoding='utf-8') as fh:
+            return json.load(fh)
+    except (OSError, ValueError):
+        return []
+
+
+def escribir_registro(entradas):
+    os.makedirs(os.path.dirname(REGISTRO), exist_ok=True)
+    with open(REGISTRO, 'w', encoding='utf-8') as fh:
+        json.dump(entradas, fh, ensure_ascii=False, indent=1)
+
+
+def reemplazar_borradores_previos(ns, asunto):
+    """Mueve a Elementos eliminados los borradores que este script armo antes con el mismo asunto
+    y que nadie toco despues. Delete() de COM MUEVE, no borra definitivo: se recuperan de ahi."""
+    clave = clave_asunto(asunto)
+    if not clave:
+        return
+    borradores_id = ns.GetDefaultFolder(16).EntryID   # 16 = olFolderDrafts
+    quedan = []
+    for e in leer_registro():
+        if e.get('clave') != clave:
+            quedan.append(e)
+            continue
+        try:
+            item = ns.GetItemFromID(e['entry_id'])
+            en_borradores = item.Parent.EntryID == borradores_id
+            ultima = item.LastModificationTime.timestamp()
+        except Exception:
+            continue   # ya no existe: se olvida
+        que = decidir_reemplazo(en_borradores, e.get('guardado_ts'), ultima)
+        if que == 'eliminar':
+            try:
+                item.Delete()
+                print(f'Borrador anterior del mismo asunto -> Elementos eliminados (guardado {e.get("guardado", "?")}).')
+            except Exception as ex:
+                print(f'AVISO: no pude mover el borrador anterior ({ex}); quedan dos, borrar a mano el viejo.')
+                quedan.append(e)
+        elif que == 'conservar':
+            print(f'AVISO: hay un borrador de este asunto que editaste a mano ({e.get("guardado", "?")}): no lo toco.')
+            quedan.append(e)
+    escribir_registro(quedan)
+
+
+def registrar_borrador(mail, asunto):
+    entradas = leer_registro()
+    entradas.append({
+        'entry_id': mail.EntryID,
+        'clave': clave_asunto(asunto),
+        'guardado': time.strftime('%Y-%m-%d %H:%M'),
+        'guardado_ts': mail.LastModificationTime.timestamp(),
+    })
+    escribir_registro(entradas)
 
 
 def preparar(cfg):
@@ -60,6 +163,11 @@ def preparar(cfg):
     # `GetInspector` / `Display()` nunca vuelven. Paso el 15/09/2026 — la corrida murio por
     # timeout, sin salida y sin borrador. Ademas, a un Outlook nacido de la automatizacion el
     # Object Model Guard le saca el cartel "un programa intenta enviar correo en su nombre".
+    from outlookUi import asegurar_outlook
+    try:
+        import win32com.client as win32
+    except ImportError:
+        sys.exit('ERROR: falta pywin32 (win32com). No se puede hablar con Outlook.')
     print(f'Outlook: {asegurar_outlook()}')
     ol = win32.Dispatch('Outlook.Application')
     ns = ol.GetNamespace('MAPI')
@@ -155,9 +263,14 @@ def preparar(cfg):
     for a in cfg.get('adjuntos', []):
         mail.Attachments.Add(a)
 
+    # El borrador anterior del mismo asunto que armo este script y nadie toco, a Eliminados:
+    # rehacer un mail no puede dejar copias apiladas (mail-envio.md).
+    reemplazar_borradores_previos(ns, mail.Subject)
+
     # Save() antes de Display(): la ventana abierta sola no sobrevive a cerrar Outlook.
     # Guardado en Borradores, el mail sigue ahi mañana. NUNCA Send(): eso lo decide Fak.
     mail.Save()
+    registrar_borrador(mail, mail.Subject)
     mail.Display()
 
     print('Mail abierto en Outlook Y guardado en Borradores (sin enviar).')
@@ -170,6 +283,9 @@ def preparar(cfg):
 
 
 if __name__ == '__main__':
+    if '--selftest' in sys.argv:
+        selftest()
+        sys.exit(0)
     if len(sys.argv) < 2:
         sys.exit('Uso: python scripts/_prepararMail.py <archivo.json>')
     with open(sys.argv[1], encoding='utf-8') as fh:

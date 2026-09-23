@@ -47,10 +47,15 @@ import { normalizeText } from './amfeIo.mjs';
 
 const TBD = 'TBD';
 
+// 22/09/2026: los WE Man usan los 4 roles canonicos de amfe.md §9 (nunca "Costurera", "Operador
+// de corte", etc.) con el reparto que tienen los 20 AMFE vivos ese dia: control final =
+// "Inspector de Calidad" (9 AMFE), todo lo demas = "Operador de Producción" (recepcion incluida:
+// 6 contra 2). "Galga" -> "Calibre" (§11) y en EMBALAJE "Etiquetadora impresora" (§9: la pistola
+// es del precinto de PU).
 export const CANONICAL_LIBRARY = {
   'recepcion': {
     'Machine': 'Autoelevador',
-    'Man': 'Inspector de recepcion',
+    'Man': 'Operador de Producción',
     'Material': 'Etiquetas de identificacion de materia prima',
     'Method': 'Procedimiento de recepcion P-14',
     'Measurement': 'Calibre',
@@ -58,7 +63,7 @@ export const CANONICAL_LIBRARY = {
   },
   'corte': {
     'Machine': 'Mesa de corte',
-    'Man': 'Operador de corte',
+    'Man': 'Operador de Producción',
     'Material': 'Cuchilla de corte',
     'Method': 'Programa de corte',
     'Measurement': 'Cinta metrica',
@@ -66,7 +71,7 @@ export const CANONICAL_LIBRARY = {
   },
   'mylar': {
     'Machine': TBD,
-    'Man': 'Operador de control',
+    'Man': 'Operador de Producción',
     'Material': TBD,
     'Method': 'Procedimiento de control dimensional',
     'Measurement': 'Plantilla mylar de control',
@@ -74,7 +79,7 @@ export const CANONICAL_LIBRARY = {
   },
   'costura': {
     'Machine': 'Maquina de coser industrial',
-    'Man': 'Costurera',
+    'Man': 'Operador de Producción',
     'Material': 'Hilo de costura',
     'Method': 'Configuracion de puntada',
     'Measurement': 'Muestra patron de costura',
@@ -82,7 +87,7 @@ export const CANONICAL_LIBRARY = {
   },
   'enfundado': {
     'Machine': TBD,
-    'Man': 'Operador de tapizado',
+    'Man': 'Operador de Producción',
     'Material': TBD,
     'Method': 'Procedimiento de enfundado',
     'Measurement': TBD,
@@ -90,7 +95,7 @@ export const CANONICAL_LIBRARY = {
   },
   'varilla': {
     'Machine': TBD,
-    'Man': 'Operador de insercion de varilla',
+    'Man': 'Operador de Producción',
     'Material': 'Varilla metalica',
     'Method': 'Procedimiento de insercion de varilla',
     'Measurement': TBD,
@@ -98,7 +103,7 @@ export const CANONICAL_LIBRARY = {
   },
   'insercion': {
     'Machine': TBD,
-    'Man': 'Operador de insercion',
+    'Man': 'Operador de Producción',
     'Material': 'Componente a insertar',
     'Method': 'Procedimiento de insercion',
     'Measurement': TBD,
@@ -106,7 +111,7 @@ export const CANONICAL_LIBRARY = {
   },
   'inyeccion': {
     'Machine': 'Inyectora de poliuretano',
-    'Man': 'Operador de inyectora',
+    'Man': 'Operador de Producción',
     'Material': 'Mezcla de poliol e isocianato',
     'Method': 'Hoja de parametros de inyeccion',
     'Measurement': 'Balanza de dosificacion',
@@ -114,7 +119,7 @@ export const CANONICAL_LIBRARY = {
   },
   'pu': {
     'Machine': 'Inyectora de poliuretano',
-    'Man': 'Operador de inyectora',
+    'Man': 'Operador de Producción',
     'Material': 'Mezcla de poliol e isocianato',
     'Method': 'Hoja de parametros de inyeccion',
     'Measurement': 'Balanza de dosificacion',
@@ -122,7 +127,7 @@ export const CANONICAL_LIBRARY = {
   },
   'espumado': {
     'Machine': 'Inyectora de poliuretano',
-    'Man': 'Operador de inyectora',
+    'Man': 'Operador de Producción',
     'Material': 'Mezcla de poliol e isocianato',
     'Method': 'Hoja de parametros de inyeccion',
     'Measurement': 'Balanza de dosificacion',
@@ -130,7 +135,7 @@ export const CANONICAL_LIBRARY = {
   },
   'pre-inyeccion': {
     'Machine': 'Pistola etiquetadora',
-    'Man': 'Operador de produccion',
+    'Man': 'Operador de Producción',
     'Material': 'Bolsa para molde',
     'Method': 'Procedimiento de carga al molde',
     'Measurement': TBD,
@@ -138,7 +143,7 @@ export const CANONICAL_LIBRARY = {
   },
   'control final': {
     'Machine': 'Mesa de control final',
-    'Man': 'Inspector de calidad',
+    'Man': 'Inspector de Calidad',
     'Material': TBD,
     'Method': 'Procedimiento de control final',
     'Measurement': 'Patron visual de referencia',
@@ -146,15 +151,15 @@ export const CANONICAL_LIBRARY = {
   },
   'reproceso': {
     'Machine': TBD,
-    'Man': 'Operador de reproceso',
+    'Man': 'Operador de Producción',
     'Material': 'Hilo de retrabajo',
     'Method': 'Instruccion de reproceso',
     'Measurement': TBD,
     'Environment': TBD,
   },
   'embalaje': {
-    'Machine': 'Pistola etiquetadora',
-    'Man': 'Operador de embalaje',
+    'Machine': 'Etiquetadora impresora',
+    'Man': 'Operador de Producción',
     'Material': 'Embalaje KLT',
     'Method': 'Instructivo de embalaje y etiquetado',
     'Measurement': 'Verificacion de etiqueta de identificacion',
@@ -162,7 +167,7 @@ export const CANONICAL_LIBRARY = {
   },
   'tapizado': {
     'Machine': TBD,
-    'Man': 'Operador de tapizado',
+    'Man': 'Operador de Producción',
     'Material': TBD,
     'Method': 'Procedimiento de tapizado',
     'Measurement': TBD,
@@ -170,10 +175,10 @@ export const CANONICAL_LIBRARY = {
   },
   'troquelado': {
     'Machine': 'Troqueladora',
-    'Man': 'Operador de troquelado',
+    'Man': 'Operador de Producción',
     'Material': 'Cuchilla de troquel',
     'Method': 'Set-up de troquel',
-    'Measurement': 'Galga de control post-corte',
+    'Measurement': 'Calibre de control post-corte',
     'Environment': TBD,
   },
 };

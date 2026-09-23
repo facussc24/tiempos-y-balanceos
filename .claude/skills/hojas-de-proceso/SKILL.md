@@ -578,6 +578,13 @@ cliente). En el repo va solo lo generico: libreria, gate y selftest.
 - [ ] cada nota pasa el test: ¿le cambia algo al que esta al lado de la maquina?
 - [ ] lo que falta filmar, en su lista aparte — **no se escribe por analogia**
 - [ ] ningun `TBD` sin avisar, ninguna foto sin mirar, ningun numero sin fuente citada
+- [ ] **revision ciega** (22/09/2026): UN `Agent` recibe SOLO el PDF impreso de las hojas (ni el
+      spec, ni la transcripcion, ni mi razonamiento) y contesta como operario nuevo: *"¿Que tengo
+      que hacer yo en este puesto, paso por paso? ¿Que no se entiende?"*. Si su respuesta no es el
+      proceso real, la hoja no se entiende y no se entrega. Los gates verdes no vieron lo que Fak
+      vio a ojo (08/09, tres veces el 21/09 — *"no me explicas que debo hacer yo"* —, 22/09). Es un
+      paso de proceso, sin gate automatico: por eso esta en esta lista. Un agente al que le paso mis
+      supuestos no es independiente (memoria `un_agente_no_es_independiente_si_le_paso_mis_supuestos`)
 
 ---
 

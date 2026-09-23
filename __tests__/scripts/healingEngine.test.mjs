@@ -96,14 +96,14 @@ describe('healingEngine: Step 3 (library fallback)', () => {
       currentAmfeId: 'id-B',
     });
 
-    // El library tiene costura.Man = "Costurera"
+    // El library tiene costura.Man = "Operador de Producción" (rol canonico, amfe.md §9; hasta el 22/09/2026 decia "Costurera")
     expect(result.source).toBe('library');
     expect(result.confidence).toBe('high');
     expect(result.value).not.toBeNull();
     expect(result.value).not.toBe('');
     // Sanity check contra el dict para que no se rompa si alguien edita CANONICAL_LIBRARY
     expect(result.value).toBe(CANONICAL_LIBRARY.costura.Man);
-    expect(result.value).toBe('Costurera');
+    expect(result.value).toBe('Operador de Producción');
   });
 });
 

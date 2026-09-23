@@ -79,6 +79,24 @@ copia al legajo o al paquete del cliente es una COPIA que envejece sola
 (memoria `gestion_ingenieria_es_el_maestro`). No se reparte una copia "por las dudas": se
 copia cuando se entrega, y quien entrega el PPAP es Calidad.
 
+### Que es de Ingenieria y que no — Fak es Ingenieria (6 correcciones, 24/08 a 22/09/2026)
+
+Antes de listarle un pendiente a Fak o proponerle un trabajo: ¿de que area es? Lo de otra area
+**no se le lleva como tarea suya**; se constata solo si afecta lo que estoy haciendo.
+
+| De Ingenieria (Fak) | De otra area: no se le lleva |
+|---|---|
+| Flujograma, AMFE, HO (a pedido), BOM/arb y consumos, planos del legajo, dispositivos y CAD, tiempos | **Plan de Control**: Calidad (*"ingenieria no hace planes de control... que lo actualice Calidad"*, 08/09). Una base preliminar alineada con flujograma y AMFE, solo si Fak la pide (11/09) |
+| La accion tecnica que le asignen en un 8D (ej. la D7 del 11010843) | **El 8D como documento, su archivo, alertas, NC**: Calidad (21/09) |
+| | **PPAP/PSW e IMDS**: Calidad (tabla de arriba y `mail-envio.md`) |
+| | **Firma/aprobacion del AMFE**: el circuito no existe hoy; no se reporta (24/08) |
+| | **Coordinar a otros por mail**: *"no somos el coordinador... solo somos un puesto junior"* (11/09) |
+| | **Layout de planta**: *"yo nunca hago lay out"* (11/09) |
+
+Al resumir mails o pendientes, van los de Ingenieria (*"pasame el listado de pendientes de
+ingenieria"*, 08/09; *"yo soy ingenieria te dije"*, 21/09). Memorias
+`no_reportar_aprobacion_ni_plan_de_control` y `archivar_documento_de_calidad_no_es_de_ingenieria`.
+
 Que va en cada casillero del legajo APQP: skill **`apqp-legajo`** (relevado de 7 legajos reales
 el 21/09/2026; lo corrige Fak). Lo que ahi dice SIN DEFINIR se pregunta, no se completa.
 
