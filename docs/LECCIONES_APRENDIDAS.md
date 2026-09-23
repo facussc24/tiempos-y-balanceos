@@ -14,6 +14,7 @@ incidente vive en los snapshots.
 ## Verificacion y evidencia
 
 - **23/09 — Antes de borrar una carpeta se buscan ENLACES adentro:** `git worktree remove` entro por un `node_modules` enlazado y se llevo 38 paquetes de la instalacion principal. Graduado a la V5 de `borrado-masivo-guard`.
+- **23/09 — Un respaldo que teclea A CIEGAS aprieta lo que este abajo: el del arb abrio `Seleccion de Empresa` (pidio la contraseña de Fak) y `About`.** Un click que falla no abre nada. Graduado a `_arbCargar.abrir()` y al skill `arb-operar`.
 - **22/09 — Lo que AFLOJA un control se prueba contra el VIEJO con los mismos intentos** (49 casos verdes; la comparacion saco 2 regresiones). Graduado a `un_control_se_audita_en_las_dos_direcciones`.
 - **22/09 — Un cambio de criterio se barre por su FRASE en todo el repo, y un guardian que falla sin bloquear esta apagado.** El placeholder prohibido el 21/09 seguia autorizado en `autonomy-contract.md` y lo escribian 5 scripts; y 388 veces un `cd` dejo los hooks sin archivo (exit 127, no bloquea). Graduado al test 5c de `hooksTienenTest` (`${CLAUDE_PROJECT_DIR}`).
 - **22/09 — La VARA también se audita, y lo primero que se le mira es la FECHA**: la tabla AP y las escalas O/D salían de un borrador de 2017 del AIAG-VDA. La tabla AP ya es la oficial (23/09); las escalas, pendientes. Memoria `project_tabla_ap_de_la_casa_es_el_borrador_2017`.

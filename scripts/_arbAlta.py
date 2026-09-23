@@ -51,6 +51,28 @@ def cadena_con_alta(bom):
     return ch
 
 
+def traer_vacio(v, producto):
+    """Traer un producto SIN BOM. No sirve `ac.traer`: su TAB por MENSAJE avanza de a dos
+    celdas (medido 05/08), pasa de largo el `Rubro` vacio de la fila 0 y el arb tira el
+    modal `No Ingreso Insumos` (medido 23/09/2026, primera alta sobre un codigo vacio —
+    INY-TRL0002-V1). Con UN TAB de teclado real el foco cae en ese `Rubro`, como cuando
+    lo hace Fak."""
+    if not ac.en_solapa_altas(v):
+        raise SystemExit('no veo la grilla de insumos: la ventana esta en otra solapa')
+    ps = ac.campo_producto(v)
+    if not ps:
+        raise SystemExit('no veo el campo `Parte Superior`')
+    if not ac.activar(v):
+        raise SystemExit('no pude traer la ventana del arb al frente')
+    if ac.foco_de(v) != ps:
+        ac.click_control(v, ps)
+    ac.escribir_con_foco(v, ps, producto)
+    if ac.leer(ps).strip() != producto:
+        raise SystemExit('no entro el codigo del producto (quedo "%s")' % ac.leer(ps))
+    ac.tecla(win32con.VK_TAB, 1.6)
+    return ps, ac.G(v)
+
+
 def alta(producto, insumo, cantidad, modulo, proceso, apply=False):
     v = ac.V()
     if not v:
@@ -80,6 +102,8 @@ def alta(producto, insumo, cantidad, modulo, proceso, apply=False):
     if ps_actual and ac.leer(ps_actual).strip() == producto:
         print('   (el producto ya estaba traido en pantalla: no se reescribe)')
         ps, g = ps_actual, ac.G(v)
+    elif n == 0:
+        ps, g = traer_vacio(v, producto)
     else:
         ps, g = ac.traer(v, producto)
 

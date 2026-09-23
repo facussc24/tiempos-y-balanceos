@@ -26,6 +26,26 @@
         "N 403"
       ]
     },
+    "Top Roll": {
+      "legajo": "Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\NOVAX\\Tapizadas puerta\\7-Lista de materiales preliminares\\01_BOM MATERIAL",
+      "biblioteca": "VW\\PROYECTO VW\\PATAGONIA\\TOP ROLL",
+      "piezas": [
+        "N 216",
+        "N 256",
+        "N 285",
+        "N 315"
+      ]
+    },
+    "APB Puerta": {
+      "legajo": "Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\NOVAX\\Tapizadas puerta\\7-Lista de materiales preliminares\\01_BOM MATERIAL",
+      "biblioteca": "VW\\PROYECTO VW\\PATAGONIA\\APB PUERTA",
+      "piezas": [
+        "N 231",
+        "N 267",
+        "N 297",
+        "N 328"
+      ]
+    },
     "APC": {
       "legajo": "Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\VW\\VW427-1LA_K-PATAGONIA\\Headrest\\APQP\\7-Lista de materiales preliminares\\01_BOM MATERIAL",
       "biblioteca": "VW\\PROYECTO VW\\PATAGONIA\\APC",

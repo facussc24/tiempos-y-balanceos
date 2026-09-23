@@ -7,6 +7,10 @@
     python scripts/_arbSustituir.py --verificar cambio.csv        contra el export
 
 CSV: `producto,viejo,nuevo` (una fila por producto terminado).
+Columnas OPCIONALES `cantidad,modulo,proceso`: si vienen con valor, se pisan en la MISMA fila
+y la misma pasada (23/09/2026, semiterminados de inyeccion: la resina `KG` de `INY/INY` pasa
+a ser el semiterminado `1 UNID` de `TAP/PRDTAP`, como la tapa Amarok PA2). Sin ellas el script
+hace lo de siempre: solo el codigo.
 
 POR QUE UN SCRIPT APARTE: `_arbCargar.py` pisa la celda `Cantidad` (indice 2 de las 5
 tabulables de cada fila) y compara los valores como NUMEROS. Aca se pisa la celda `Medida`
@@ -42,6 +46,8 @@ _spec.loader.exec_module(C)
 
 Abortar = C.Abortar
 POS_CODIGO = 1          # posicion de `Medida` dentro de las 5 celdas tabulables de la fila
+# Las otras celdas que se pueden pisar junto con el codigo (columnas opcionales del CSV)
+POS_EXTRA = {'cantidad': 2, 'modulo': 3, 'proceso': 4}
 
 
 def cadena_esperada(bom, codigos_nuevos):
@@ -87,7 +93,9 @@ def recorrer(v, btn, cadena, desde, escrituras, verboso=True):
             nuevo = escrituras[p]
             C.escribir_celda(f, nuevo)
             quedo = C.leer(f)
-            if quedo.strip() != nuevo.strip():
+            # La cantidad se compara como NUMERO (`1` y `1,00000000` son lo mismo); el
+            # codigo, el modulo y el proceso, como texto exacto.
+            if not (C.coincide(quedo, nuevo, True) if esnum else quedo.strip() == nuevo.strip()):
                 raise Abortar('TAB %d: escribi "%s" y quedo "%s" (SIN grabar)'
                               % (p + 1, nuevo, quedo))
             if verboso:
@@ -96,12 +104,13 @@ def recorrer(v, btn, cadena, desde, escrituras, verboso=True):
 
 
 def sustituir_producto(v, producto, cambios, bom):
-    """cambios: [(codigo_viejo, codigo_nuevo)]. Todas las lineas del producto en una pasada."""
+    """cambios: [(codigo_viejo, codigo_nuevo, extras)], con `extras` = {'cantidad'|'modulo'|
+    'proceso': valor} (puede ir vacio). Todas las lineas del producto en una pasada."""
     ps, g = C.traer(v, producto)
     filas = C.chequear_pantalla(v, producto, bom)
 
     escrituras, detalle, nuevos_por_fila = {}, [], {}
-    for viejo, nuevo in cambios:
+    for viejo, nuevo, extras in cambios:
         i = C.ubicar(bom, viejo)
         if i is None:
             raise Abortar('no encuentro %s en la BOM de %s' % (viejo, producto))
@@ -117,8 +126,12 @@ def sustituir_producto(v, producto, cambios, bom):
         else:
             actual = bom[i]['codigo'] + ' (del export)'
         escrituras[i * 5 + POS_CODIGO] = nuevo
+        for campo, valor in extras.items():
+            escrituras[i * 5 + POS_EXTRA[campo]] = valor
         nuevos_por_fila[i] = nuevo
-        detalle.append((producto, actual, nuevo, bom[i]['cantidad']))
+        detalle.append((producto, actual, nuevo,
+                        ' '.join('%s %s->%s' % (c, bom[i][c], x) for c, x in extras.items())
+                        or 'consumo %s, sin tocar' % bom[i]['cantidad']))
 
     btn = C.boton_acepta(v, filas[0][C.IDX_CANTIDAD])
     if not C.activar(v):
@@ -167,23 +180,25 @@ def sustituir_producto(v, producto, cambios, bom):
 
 
 def leer_tabla(path):
+    """[(producto, viejo, nuevo, extras)]; `extras` trae solo las columnas opcionales con valor."""
     filas = []
     with io.open(path, encoding='utf-8-sig') as f:
         for r in csv.DictReader(f):
             r = {(kk or '').strip().lower(): (vv or '').strip() for kk, vv in r.items()}
             if not r.get('producto'):
                 continue
-            filas.append((r['producto'], r['viejo'], r['nuevo']))
+            extras = {c: r[c] for c in POS_EXTRA if r.get(c)}
+            filas.append((r['producto'], r['viejo'], r['nuevo'], extras))
     return filas
 
 
 def agrupar(filas):
     orden, por = [], {}
-    for prod, viejo, nuevo in filas:
+    for prod, viejo, nuevo, extras in filas:
         por.setdefault(prod, [])
         if prod not in orden:
             orden.append(prod)
-        por[prod].append((viejo, nuevo))
+        por[prod].append((viejo, nuevo, extras))
     return [(p, por[p]) for p in orden]
 
 
@@ -196,15 +211,23 @@ def verificar(path):
     print('=' * 82)
     print('%-16s %-16s %-16s %s' % ('PRODUCTO', 'DEBE SALIR', 'DEBE ESTAR', ''))
     bien = mal = 0
-    for prod, viejo, nuevo in leer_tabla(path):
-        codigos = [f['codigo'].strip() for f in boms.get(prod, [])]
+    for prod, viejo, nuevo, extras in leer_tabla(path):
+        lineas = boms.get(prod, [])
+        codigos = [f['codigo'].strip() for f in lineas]
         esta_nuevo = any(c[:15] == nuevo[:15] for c in codigos)
         esta_viejo = any(c[:15] == viejo[:15] for c in codigos)
-        if esta_nuevo and not esta_viejo:
+        distintos = []
+        for f in lineas:
+            if f['codigo'].strip()[:15] != nuevo[:15]:
+                continue
+            for c, x in extras.items():
+                if not C.coincide(f[c], x, c == 'cantidad'):
+                    distintos.append('%s dice %s y debe %s' % (c, f[c], x))
+        if esta_nuevo and not esta_viejo and not distintos:
             print('%-16s %-16s %-16s OK' % (prod, viejo, nuevo))
             bien += 1
         else:
-            que = []
+            que = list(distintos)
             if not esta_nuevo:
                 que.append('falta el nuevo')
             if esta_viejo:
@@ -245,11 +268,13 @@ def main():
             if not bom:
                 print('%-16s  <-- NO ESTA EN EL EXPORT' % prod)
                 continue
-            for viejo, nuevo in cambios:
+            for viejo, nuevo, extras in cambios:
                 i = C.ubicar(bom, viejo)
-                print('%-16s %-16s %-16s %-8s %-8d %s' %
+                print('%-16s %-16s %-16s %-8s %-8d %s%s' %
                       (prod, viejo, nuevo, i if i is not None else 'NO ESTA',
-                       len(bom), bom[i]['cantidad'] if i is not None else '-'))
+                       len(bom), bom[i]['cantidad'] if i is not None else '-',
+                       ''.join('  %s %s->%s' % (c, bom[i][c], x) for c, x in extras.items())
+                       if i is not None else ''))
         return 0
 
     ed = C.edad_export()
@@ -270,7 +295,7 @@ def main():
         try:
             det = sustituir_producto(v, prod, cambios, bom)
             for d in det:
-                print('   OK  %s : %s -> %s   (consumo %s, sin tocar)' % d)
+                print('   OK  %s : %s -> %s   (%s)' % d)
             hechos.append(prod)
         except Abortar as e:
             print('   ABORTADO: %s' % e)

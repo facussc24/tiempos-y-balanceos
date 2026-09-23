@@ -48,6 +48,7 @@ import ctypes
 import ctypes.wintypes as w
 import io
 import json
+import importlib.util
 import os
 import re
 import sys
@@ -219,29 +220,23 @@ def boton_acepta(v, ancla):
 
 
 def abrir():
+    """La ventana `Maestro de Relaciones`; si no esta, la abre por CLICK (solapa del ribbon y
+    boton), con `_arbVer.reset_relaciones()`.
+
+    NUNCA por KeyTips a ciegas. Hasta el 23/09/2026 esto mandaba Alt, V, Y, 0, 3 sin mirar
+    donde caian: con el ribbon en otra solapa esas teclas apretaron `Seleccion de Empresa`
+    (abrio el `Inicio de Sesion`, que pide la contraseña de Fak) y `About`, y un rato antes
+    Fak tuvo que reabrir el arb trabado. Un click que falla no abre nada; una tecla a ciegas
+    aprieta lo que este abajo."""
     v = V()
     if v:
         return v
-    prod = []
-
-    def cb(h, _):
-        if win32gui.IsWindowVisible(h) and win32gui.GetWindowText(h).strip() == 'Producción':
-            prod.append(h)
-        return True
-    win32gui.EnumWindows(cb, None)
-    if prod:
-        try:
-            win32gui.SetForegroundWindow(prod[0])
-        except Exception:
-            pass
-        time.sleep(0.8)
-    tecla(win32con.VK_MENU, 0.5)      # doble Alt muestra los KeyTips
-    tecla(ord('V'), 0.7)
-    # El KeyTip del boton `Relacion de Consumo` es `Y03`, no `Y3`: sin el `0` del medio la
-    # secuencia se descarta y la ventana no abre (leido con _arbKeytips.py el 2026-08-25).
-    tecla(ord('Y'), 0.25)
-    tecla(ord('0'), 0.25)
-    tecla(ord('3'), 2.0)
+    spec = importlib.util.spec_from_file_location(
+        '_arbVer', os.path.join(os.path.dirname(os.path.abspath(__file__)), '_arbVer.py'))
+    av = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(av)
+    av.reset_relaciones()
+    time.sleep(1.0)
     return V()
 
 

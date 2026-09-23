@@ -30,6 +30,22 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 > **Altas EN LOTE: ANDA** (`scripts/_arbAltaLote.py`) — **12/12 el 28/08 en 116 seg**, mismo
 > insumo en 12 BOM, diff de la base entera 12 altas / 0 bajas / 0 cambios.
 >
+> **23/09/2026 — semiterminados de inyección de Patagonia, todo por robot** (diff de la base
+> entera 5503 → 5531: 59 altas, 31 bajas, 31 cambios, 0 fuera de la tabla):
+> - **Alta de CÓDIGOS en lote + leer la ficha entera + `Es Sub-Producto`**: `scripts/_arbInsumoCampos.py`
+>   (`--leer`, `--alta tabla.csv --como <HERMANO>`, `--subproducto`). 12/12 altas y 2/2 flags, releídos.
+>   El cartel de Visual C++ salió en CADA alta y el registro grabó igual: el script aprieta `Omitir`.
+> - **Alta en un producto SIN BOM**: `_arbAlta.traer_vacio()`. `ac.traer` manda TAB por mensaje, que
+>   avanza de a dos, se pasa el `Rubro` vacío y el arb tira `No Ingreso Insumos`. Con TAB real, anda.
+> - **Reemplazar una línea ENTERA en el lugar** (código + cantidad + módulo + proceso): columnas
+>   opcionales de `_arbSustituir.py`. Resina `KG INY` → semiterminado `1 UNID TAP`, 31/31, sin bajas.
+> - 🔴 **`_arbCargar.abrir()` tecleaba KeyTips A CIEGAS** (Alt V Y 0 3) si no veía Relaciones: con el
+>   ribbon en otra solapa apretó `Selección de Empresa` (pidió la contraseña) y `About`. Ahora abre por
+>   click (`reset_relaciones`). **Una tecla a ciegas aprieta lo que esté abajo; un click fallido no abre nada.**
+> - Al reabrir el arb el ribbon puede quedar **minimizado** (solo nombres de solapa): el click al botón no
+>   abre nada. Se despliega con la flechita de la derecha, `click (1474, 42)` de `Producción`.
+> - El export deja Relaciones en la solapa `Listado`: **`reset` DESPUÉS de exportar**, no antes.
+>
 > **Una limitación escrita por mí no es un hecho verificado.** Antes de anotar que algo "no se
 > puede", probarlo y fecharlo: las dos veces que esta skill lo dio por imposible (el scroll de la
 > grilla, las altas) costaron 13 líneas sin cargar y un "terminado" que no lo era.
@@ -326,7 +342,7 @@ Sin esto los clicks caen en la celda de al lado y se escribe basura en el códig
 `--tabla x.csv` (dry-run) `--apply`, `--verificar`.
 
 ```
-Alt -> V -> Y 0 3                  abrir (el KeyTip es Y03, no Y3 - ver arriba)
+_arbVer.py reset                   abrir por CLICK (solapa + boton). NUNCA KeyTips a ciegas (23/09, arriba)
 gate: ¿estoy en la solapa Altas?   si no hay grilla, ABORTAR — no escribir a ciegas
 CLICK en Parte Superior            <- click, NO tabular (por que: reference/bitacora-tandas-2026-08.md)
 escribir el codigo CON FOCO        <- o se pierde el guion
