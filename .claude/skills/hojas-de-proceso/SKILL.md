@@ -294,6 +294,7 @@ decora. Medido sobre las laminas del 21/09/2026.
 | 11 | **El pie describe el instante que la foto MUESTRA**, no el que el paso quiere | el pie decia *"la pieza queda en la cavidad"* y la foto mostraba una mano ya sacandola |
 | 12 | **El punto de vista es el del operario parado en el puesto** | una toma centrada de frente al molde es el punto de vista del que filmo, no el del que opera |
 | 13 | **Si la accion pasa ADENTRO, la foto del paso es la PANTALLA** | una maquina cerrada es la misma foto para cualquier paso del ciclo |
+| 15 | **Lo que la foto del paso MUESTRA y ningun renglon nombra se pregunta: ¿que hace el operario con esto?** | el sensor de la mesa de carga (soporte con cable negro) estaba en la foto del paso 3 de la 30.3 desde el 22/09 y nadie lo nombraba; el material colgando entre el desenrollador y la mesa estaba filmado en dos videos. Fak, 23/09: *"no hablaste del sensor... siempre dejamos el rollo colgando"*. Los pasos salieron de lo que NARRA el audio; lo que MUESTRA la imagen no se miro |
 
 Del 7 y del 14 (*dos chapas no se pisan*) falta el numero: **el umbral se corre antes contra
 las 17 hojas de la HOTMELT**, que es la poblacion que hay. Con 4 fotos no se declara un
@@ -575,6 +576,9 @@ cliente). En el repo va solo lo generico: libreria, gate y selftest.
 - [ ] **ninguna foto repetida con dos nombres** (`md5sum *.jpg | sort | uniq -d` sobre el hash)
 - [ ] cada hoja con 2 a 4 pasos, una foto por paso, y las partidas con su (HOJA n DE m)
 - [ ] **cada foto rotulada, mirada a tamaño completo DESPUES del ultimo cambio de recorte**
+- [ ] **cada elemento de maquina que se ve en la foto de un paso (sensor, perilla, boton, guia)
+      esta nombrado en algun renglon, o se decidio que el operario no lo toca** (criterio 15,
+      23/09/2026: el sensor de la mesa estaba en la foto y ningun paso lo nombraba)
 - [ ] cada nota pasa el test: ¿le cambia algo al que esta al lado de la maquina?
 - [ ] lo que falta filmar, en su lista aparte — **no se escribe por analogia**
 - [ ] ningun `TBD` sin avisar, ninguna foto sin mirar, ningun numero sin fuente citada

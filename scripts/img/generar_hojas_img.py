@@ -920,7 +920,7 @@ CAJETIN_BASE = dict(
     # firmo nadie (autonomy-contract.md F). Decir "C. Baptista" en una hoja que
     # el no vio es afirmar una aprobacion que no existe.
     aprobo="",
-    fecha="22/09/2026",
+    fecha="23/09/2026",
     rev="-",
 )
 
@@ -934,7 +934,7 @@ PORTADA_IMG = dict(
     pieza="TOP ROLL PATAGONIA — N 216 / N 256 / N 285 / N 315",
     maquina="Moldeadora In-Mold Graining KINGPOWER (Molde Hembra)",
     firmas="F. Santoro / —",
-    fecha_rev="22/09/2026",
+    fecha_rev="23/09/2026",
     foto=os.path.join(BASE_DIR, "assets2", "p1_listo.jpg"),
 )
 
@@ -1076,28 +1076,35 @@ HOJAS_IMG = [
         op="30.3",
         denominacion="ENHEBRADO DEL VINILO EN EL DESENROLLADOR",
         modo="secuencia",
-        imagenes=[_f("y0_rollo_cuna.jpg"), _f("x2_enhebrar.jpg"), _f("x3_mesa.jpg"),
-                  _f("x1_desenrollador.jpg")],
-        pies=["El rollo con su eje, en la cuna",
+        imagenes=[_f("y0_rollo_cuna.jpg"), _f("x2_enhebrar.jpg"),
+                  _f("x3r_mesa_sensor.jpg"), _f("x1_desenrollador.jpg")],
+        pies=["El rollo en la cuna, con el tope del eje",
               "La punta entre las barras y el rodillo",
-              "La punta sobre la mesa de carga",
+              "La punta por debajo del sensor",
               "El material derecho, del rollo a la mesa"],
         sin_marcas_ok=True,
         pasos=[
-            "Montar el rollo de vinilo con su eje en la cuna del desenrollador: TBD.",
+            "Montar el rollo de vinilo con su eje en la cuna del desenrollador y ajustar la "
+            "perilla del tope contra el rollo.",
             "Pasar la punta del material entre las barras guía naranjas y el rodillo verde.",
-            "Apoyar la punta del material sobre la mesa de carga y alisarla con la mano.",
+            "Apoyar la punta sobre la mesa de carga, pasarla por debajo del sensor y "
+            "alisarla con la mano.",
             "Verificar que el material corra derecho del rollo a la mesa, sin arrugas.",
         ],
+        nota="El sensor de la mesa es el que detecta si el material quedó bien pasado: "
+             "si la punta no pasa por debajo, volver a pasarla.",
         fuentes=[
             "IMG_0393 (26-08-2026) s=34,6: el rollo ya montado, con su eje sobre el soporte. "
-            "Como se sube, se traba y se centra no esta filmado ni dicho en ninguno de los 91 "
-            "videos: TBD, preguntado al tecnico",
+            "Como se sube a la cuna no esta filmado ni dicho en ninguno de los 91 videos: va en "
+            "la lista de falta_filmar.py, bloque 2. El tope: IMG_0579 (02-09-2026) min 0:12 a 0:25 «lo llevo para aca y lo "
+            "ajustamos / ¿esto es el tope? / si», con la mano en la perilla del cono del eje "
+            "(s=12, 23 y 26)",
             "IMG_0393 (26-08-2026) s=48,5: las manos llevan la punta entre las barras guia "
             "naranjas y el rodillo verde; y en el audio, min 0:38 en chino (IMG_0393.zh.txt): "
             "走个两者中间走, pasalo por el medio de los dos",
-            "IMG_0393 (26-08-2026) s=114: el operario apoya el material sobre la mesa de "
-            "carga con las dos manos y lo alisa",
+            "Fak, 23-09-2026: «tiene un sensor ahi que detecta si pasamos bien el material». "
+            "El sensor es el soporte con el cable negro al borde de la mesa (IMG_0393 s=112 y "
+            "s=114, marcado en la foto); el operario apoya y alisa el material en s=114",
             "IMG_0393 (26-08-2026) s=134: el rollo en la cuna del desenrollador, con el eje "
             "y su soporte, y el material corriendo derecho a la mesa",
         ],
@@ -1114,27 +1121,39 @@ HOJAS_IMG = [
         op="30.4",
         denominacion="AVANCE DEL VINILO CON LOS SELECTORES",
         modo="secuencia",
-        imagenes=[_f("x6_alimentacion.jpg"), _f("x4_selectores.jpg")],
+        imagenes=[_f("x6b_alimentacion.jpg"), _f("x4b_selectores.jpg"), _f("x8_lazo.jpg")],
         pies=["Selección Lámina Alimentación",
-              "UNCOILER y Leather Convey: FWD adelante"],
+              "Selectores UNCOILER y Leather Convey",
+              "El material colgando antes de la mesa"],
         sin_marcas_ok=True,
         pasos=[
-            "Verificar en la pantalla que Selección Lámina Alimentación esté en Cuero en "
-            "rollo.",
-            "Mover el material hacia adelante con los dos selectores juntos en FWD, UNCOILER "
-            "y Leather Convey, y volverlos al medio para parar.",
+            "Verificar en la pantalla, cuadro Operación del Equipo, que Selección Lámina "
+            "Alimentación esté en Cuero en rollo. Si no, avisar al Líder de Producción.",
+            "Dar material con los dos selectores juntos en FWD, UNCOILER y Leather Convey, "
+            "y volverlos al medio para parar.",
+            "Dejar siempre el material colgando entre el desenrollador y la mesa de carga, "
+            "sin tensar.",
         ],
+        nota="UNCOILER y Leather Convey se usan solo cuando falta material colgando. En "
+             "automático el corte lo hace la máquina sola: los selectores de la botonera de "
+             "atrás (mordaza de tiro, placas y cuchilla) son para mover la máquina a mano.",
         fuentes=[
-            "IMG_0661 (04-09-2026) s=30: en la pantalla Operacion del Equipo se lee "
+            "IMG_0661 (04-09-2026) s=30: en la pantalla, cuadro «Operacion del Equipo», se lee "
             "«Seleccion Lamina Alimentacion: Cuero en rollo»",
-            "IMG_0582 (02-09-2026) min 6:08 y 6:24, el tecnico en chino (IMG_0582.zh.txt y "
-            "la transcripcion vieja): 这个上料会送料 «esto de la carga alimenta material» / "
-            "因为它两个是配套的 «porque los dos van juntos». Las chapas UNCOILER 开卷机 y "
-            "Leather Convey 皮料输送 con FWD 正转 y REV 反转 se leen en IMG_0393 s=158, con "
-            "los dos selectores en el medio, que es la posicion de reposo",
+            "IMG_0579 (02-09-2026) min 1:00 a 1:22: «lo que hace es que vos giras... y esto "
+            "negrito baja», con la mano en los dos selectores (s=74 a 78) y el material "
+            "bajando entre el desenrollador y la mesa (s=79 a 107). IMG_0582 min 6:08 a 6:24, "
+            "el tecnico en chino: 这个上料会送料 «esto de la carga alimenta material» / "
+            "因为它两个是配套的 «los dos van juntos». Las chapas UNCOILER 开卷机 y Leather "
+            "Convey 皮料输送 con FWD 正转 y REV 反转 se leen en IMG_0579 s=96 (la foto)",
+            "Fak, 23-09-2026: «siempre dejamos el rollo colgando». Se ve en IMG_0579 s=103 "
+            "(la foto) y en IMG_0393 s=282 a 294. Nota: Fak, 23-09-2026, sobre los "
+            "selectores: «lo usabamos a veces nomas»; el corte en automatico, IMG_0579 min "
+            "2:48 a 2:54: «¿esto esta sincronizado automatico, que haga ese primer corte? / "
+            "automatico»; la botonera de atrás explicada como mando a mano, min 2:08 a 2:24",
         ],
         epp=EPP_IMG,
-        disparador="SI EL MATERIAL NO AVANZA O AVANZA TORCIDO",
+        disparador="SI EL MATERIAL NO BAJA, QUEDA TENSO O AVANZA TORCIDO",
         acciones=[
             "1. Volver los dos selectores al medio.",
             "2. No tirar del material a mano con los selectores en FWD.",

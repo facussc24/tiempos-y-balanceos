@@ -10,7 +10,7 @@ py -3 .claude/skills/hojas-de-proceso/scripts/fotodevideo.py leer scripts/img/as
 Sale con codigo 1 si alguna no lo dice. Una foto sin eso es un huerfano: nadie puede
 rehacerla ni verificar de donde salio.
 
-## Las que usa el deck hoy (19)
+## Las que usa el deck hoy (20)
 
 | archivo | hoja | que es |
 |---|---|---|
@@ -19,12 +19,13 @@ rehacerla ni verificar de donde salio.
 | `e2_power.jpg` | 30.1 | el boton verde POWER START (电源启动) encendido |
 | `n3_servicios.jpg` | 30.1 | la fila de ocho servicios de la pantalla; el recuadro se corrigio el 22/09 (cortaba los iconos) |
 | `r_puesto.jpg` | 30.2 | el puesto de mando rotulado; la marca 4 se bajo el 22/09 (tapaba el boton verde) |
-| `y0_rollo_cuna.jpg` | 30.3 | el rollo con su eje sobre el soporte (IMG_0393 s=34,6); el paso dice montar: TBD |
+| `y0_rollo_cuna.jpg` | 30.3 | el rollo con su eje sobre el soporte y la perilla del tope (IMG_0393 s=34,6) |
 | `x2_enhebrar.jpg` | 30.3 | las manos llevan la punta entre las barras y el rodillo (s=48,5), sin caras |
-| `x3_mesa.jpg` | 30.3 | el operario apoya la punta sobre la mesa de carga (s=114) |
+| `x3r_mesa_sensor.jpg` | 30.3 | `x3_mesa` (s=114) con UN recuadro sobre el sensor de la mesa: el soporte con el cable negro. Con una sola marca `rotular.py` no dibuja numero, asi que no choca con el del paso (23/09) |
 | `x1_desenrollador.jpg` | 30.3 | el rollo en la cuna, con su eje y el material derecho (s=134) |
-| `x6_alimentacion.jpg` | 30.4 | la pantalla con `Seleccion Lamina Alimentacion: Cuero en rollo` |
-| `x4_selectores.jpg` | 30.4 | la caja del desenrollador: UNCOILER y Leather Convey, legibles (s=158) |
+| `x6b_alimentacion.jpg` | 30.4 | la pantalla con `Seleccion Lamina Alimentacion: Cuero en rollo`, recortada a 2:1 (IMG_0661 s=30) |
+| `x4b_selectores.jpg` | 30.4 | la cajita de la mesa: UNCOILER y Leather Convey con FWD y REV, a 2:1 (IMG_0579 s=96,5) |
+| `x8_lazo.jpg` | 30.4 | el material colgando entre el desenrollador y la mesa (IMG_0579 s=103); arriba a la izquierda, el sensor (23/09) |
 | `r2_botonera.jpg` | 30.5 | la botonera con el hongo NEGRO de la caja colgante; la marca 1 se bajo el 22/09 (tapaba 自动) |
 | `d1_pieza.jpg` | 30.6 | el operario sacando la pieza del molde (IMG_0844 s=488) |
 | `d2_vinilo.jpg` | 30.6 | el operario sacando el RESTO DE VINILO del molde (s=492) |
@@ -66,6 +67,10 @@ castellano · `d4_nidos.jpg` el plano general de dos personas cargando sustratos
   — el set anterior a ese. `v4_cinta` ademas nombraba una **cinta que esta maquina no
   tiene**.
 
+- `x6_alimentacion.jpg`, `x4_selectores.jpg`, `x3_mesa.jpg` — reemplazadas el 23/09 por
+  `x6b`, `x4b` y `x3r`. Con tres fotos en la 30.4 la celda es 2:1 y las dos primeras eran
+  casi cuadradas: quedaban a la mitad de su celda. `x3_mesa` es el original sin marcar de
+  `x3r_mesa_sensor`.
 - `p4_saca.jpg` y `m4_saca.jpg` — dos operarios de espaldas tapando el 35 % del ancho.
 - `m1_entra.jpg`, `m2_conformado.jpg`, `m3_abre.jpg` — eran la hoja del ciclo escrita como
   narracion de la maquina; la reemplazo la 30.6, que muestra lo que hace el operario.

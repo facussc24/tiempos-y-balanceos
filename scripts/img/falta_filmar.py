@@ -40,7 +40,7 @@ ESCRITORIO = (r"C:\Users\FacundoS-PC\OneDrive - BARACK ARGENTINA SRL\Desktop"
               r"\Hojas de proceso maquina IMG - desde los videos")
 
 ENCABEZADO = ("Barridos los 91 videos, las 49 transcripciones y las pantallas del HMI, al "
-              "22/09/2026. Lo que esta en esta lista no aparece en ninguno: ni filmado ni "
+              "23/09/2026. Lo que esta en esta lista no aparece en ninguno: ni filmado ni "
               "dicho. Con esto se cierran las hojas de proceso.")
 
 # (bloque, [(que filmar o preguntar, por que / donde)])
@@ -58,12 +58,12 @@ TOMAS = [
         ("La pantalla del HMI en parada o fin de jornada",
          "Para cerrar la hoja de apagado con lo que ve el operario."),
     ]),
-    ("2 · EL ROLLO DE VINILO Y EL CORTE — hay imagen, pero nadie lo explica", [
+    ("2 · EL ROLLO DE VINILO — hay imagen, pero nadie lo explica", [
         ("Como sube el rollo a la cuna: a mano entre dos, con autoelevador o con un carro",
          "El IMG_0393 EMPIEZA con el rollo ya montado, y ningun otro video ni audio lo muestra."),
-        ("Como se fija el eje al rollo y como se traba en la cuna",
-         "Se ve un collar contra la cara del rollo (IMG_0393 s=134); no se ve ni se dice como "
-         "se fija."),
+        ("Como se traba el eje en la cuna",
+         "El tope del eje se corre contra el rollo y se ajusta con su perilla (IMG_0579 min "
+         "0:12 a 0:25, ya esta en la 30.3). Falta como queda trabado el eje en la cuna."),
         ("Como se centra el rollo a lo ancho y contra que referencia",
          "Ninguna toma lo muestra y nadie lo dice."),
         ("Para que lado va la cara buena, y si la punta sale por arriba o por abajo",
@@ -73,9 +73,26 @@ TOMAS = [
          "Cero menciones en las 49 transcripciones."),
         ("Que se hace con la punta vieja cuando se termina un rollo: empalme o descarte",
          "No esta filmado ni dicho."),
-        ("Si en serie el material avanza solo o lo avanza el operario",
-         "La caja del desenrollador tiene UNCOILER y Leather Convey con FWD y REV "
-         "(IMG_0393 s=158); no se ve como trabaja en serie."),
+    ]),
+    ("3 · LA CARGA DEL VINILO Y EL CORTE — hay imagen, pero nadie lo explica", [
+        ("Si en automatico el desenrollador da material solo",
+         "Fak recuerda que UNCOILER y Leather Convey se usaban «a veces nomas» (23/09). En "
+         "el audio chino del IMG_0393 min 2:02 el tecnico dice 打自动送了, «en automatico "
+         "alimenta», con mucho ruido. Confirmarlo mirando el material colgando en serie."),
+        ("Cuanto material tiene que quedar colgando entre el desenrollador y la mesa",
+         "Se deja siempre colgando (Fak, 23/09; IMG_0579 s=103). Cuanto, no lo dice nadie; "
+         "IMG_0579 min 1:57: «tiene que ver que se haga una cabecita, no tiene que estar "
+         "superado mucho», sin que se vea a que se refiere."),
+        ("Que hace el boton negro de la cajita de UNCOILER y Leather Convey",
+         "No tiene chapa. Pista en el audio chino del IMG_0582 min 7:51 a 8:01: «那个黑色的… "
+         "小盒子… 压料… 你推进去的时候，它被压», «el negro de la cajita… prensar material… "
+         "cuando lo apretas, prensa». Indicio, no dato: no entro en ninguna hoja."),
+        ("Que pasa si el material no pasa por el sensor de la mesa de carga",
+         "El sensor detecta si el material esta bien pasado (Fak, 23/09). No hay toma de la "
+         "maquina sin material debajo del sensor: si da alarma, si no carga o si no pasa nada."),
+        ("Si la botonera de atras responde con la maquina en automatico",
+         "El tecnico la explico como mando a mano (IMG_0579 min 2:08) y en automatico el corte "
+         "lo hace la maquina (min 2:48). Nadie probo si en automatico los selectores responden."),
         ("EL CORTE, filmado de cerca: la mordaza cerrando y la cuchilla entrando",
          "De los 91 videos, ninguno lo muestra en accion; solo se leen los nombres en la "
          "botonera (PULL CLAMP, CUT PRESS, CUT SUPPORT, CUTTING BLADE)."),
@@ -83,14 +100,15 @@ TOMAS = [
          "El primer corte lo hace la maquina sola (IMG_0579 min 2:46). El tecnico explico "
          "los comandos a mano (IMG_0579 min 2:08; IMG_0582 min 5:05 a 6:36 en chino): la "
          "placa prensadora baja y, segun el chino, la placa soporte SUBE. Falta cuando se usa."),
-        ("Como se ajusta el tope de la mesa de carga, y cada cuanto",
-         "IMG_0579 min 0:12 a 0:57: «lo llevo para aca y lo ajustamos / ¿esto es el tope? "
-         "si / hasta aca esta bien». No dice hasta donde ni si es por rollo o por formato."),
+        ("Hasta donde se lleva la punta del material sobre la mesa de carga",
+         "IMG_0579 min 0:51 a 0:57, con el material sobre la mesa: «ahi, hasta aca, hasta aca "
+         "esta bien». No se ve hasta que marca. (El «tope» del min 0:23 es el del eje del "
+         "rollo, no el de la mesa.)"),
         ("Si la carga del vinilo se hace con el selector en MANUAL",
          "En el audio chino del IMG_0393, min 1:14, se oye 手动 (manual). Es un indicio "
          "debil; ninguna hoja manda pasar a manual."),
     ]),
-    ("3 · LOS SUSTRATOS Y EL FIN DE CICLO — para cerrar el criterio", [
+    ("4 · LOS SUSTRATOS Y EL FIN DE CICLO — para cerrar el criterio", [
         ("Cuantos sustratos van por ciclo en el Top Roll y en que nidos",
          "La pantalla tiene «Sel. Bastidor 1» a «4», cada uno con su entrada (I42.0 a I42.3); "
          "el 10/09 solo el 1 estaba en verde (IMG_0830)."),
@@ -119,7 +137,7 @@ TOMAS = [
          "En IMG_0844 trabajan dos («yo la de abajo, yo la de arriba»); confirmar si en serie "
          "son dos."),
     ]),
-    ("4 · EL ARRANQUE Y EL CICLO — lo que las hojas 30.5 y 30.6 no pueden decir", [
+    ("5 · EL ARRANQUE Y EL CICLO — lo que las hojas 30.5 y 30.6 no pueden decir", [
         ("Cual es el boton negro: el de la caja colgante o los de los costados del molde",
          "«Boton verde y despues boton negro» (IMG_0842 min 0:00). Hay un hongo negro en la "
          "caja colgante y otro en cada columna del frente del molde (fotograma 0844_10)."),
@@ -129,10 +147,14 @@ TOMAS = [
         ("Como se vuelve a arrancar en automatico despues de una pausa",
          "IMG_0395 min 0:05: «tengo paradas durante 10 minutos y quiero volver a arrancar "
          "en automatico». La respuesta no se entiende en el audio."),
+        ("Si los ocho servicios van siempre en verde, o Mold Temp 2 depende del molde",
+         "La 30.1 pide los 8 en verde (el tecnico: «prender todos los servicios», IMG_0579 "
+         "min 6:22). En automatico, el 10/09, Mold Temp 2 estaba apagado (IMG_0840 s=4, la "
+         "foto de la 30.5)."),
         ("Si el material queda enhebrado de un dia para el otro",
          "Define si la 30.3 y la 30.4 se hacen todos los dias o solo con rollo nuevo."),
     ]),
-    ("5 · LAS TOMAS QUE MEJORARIAN LO QUE YA HAY", [
+    ("6 · LAS TOMAS QUE MEJORARIAN LO QUE YA HAY", [
         ("Las manos apretando, de frente y quietas: RESET azul, arranque verde, paro rojo",
          "Estan filmadas de costado o en movimiento. Tres segundos de frente y quietos "
          "alcanzan para sacar la foto de cada boton."),
