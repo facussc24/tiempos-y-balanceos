@@ -38,7 +38,7 @@ const HOME = path.join(TMP, 'home');
 const ESC_FLAGS = path.join(TMP, 'esc');
 fs.mkdirSync(path.join(HOME, '.claude'), { recursive: true });
 fs.mkdirSync(ESC_FLAGS, { recursive: true });
-const ENV = { ...process.env, TMPDIR: TMP, HOME, ESCRITORIO_GUARD_FLAGDIR: ESC_FLAGS };
+const ENV = { ...process.env, TMPDIR: TMP, HOME, ESCRITORIO_GUARD_FLAGDIR: ESC_FLAGS, GUARDIANES_RAIZ_REPO: 'C:/Dev/BarackMercosul' };
 const AHORA = 1_800_000_000;
 afterAll(() => { try { fs.rmSync(TMP, { recursive: true, force: true }); } catch { /* temp */ } });
 
@@ -886,15 +886,26 @@ describe('push-guard 22/09 — mira SOLO lo que va en el push (repo con upstream
 
 describe('carril de auto-reparacion 22/09 — un guardian roto no puede bloquear el Edit que lo arregla', () => {
   it('esArchivoDeReparacion: guardianes.mjs, sus modulos locales y sus .data.json; nada mas', () => {
-    const g = { esArchivoDeReparacion };
-    expect(g.esArchivoDeReparacion('C:\\Dev\\BarackMercosul\\scripts\\_lib\\guardianes.mjs')).toBe(true);
-    expect(g.esArchivoDeReparacion('/c/Dev/BarackMercosul/scripts/_lib/shellTexto.mjs')).toBe(true);
-    expect(g.esArchivoDeReparacion('C:/Dev/BarackMercosul/scripts/_lib/consumosCanon.data.json')).toBe(true);
-    expect(g.esArchivoDeReparacion('C:/Dev/BarackMercosul/core/amfe/caracteristicasEspeciales.data.json')).toBe(true);
-    expect(g.esArchivoDeReparacion('C:/Dev/BarackMercosul/scripts/_lib/cierreGuard.mjs')).toBe(false);
-    expect(g.esArchivoDeReparacion('C:/Dev/BarackMercosul/scripts/_encargo.mjs')).toBe(false);
-    expect(g.esArchivoDeReparacion('C:/tmp/guardianes.mjs')).toBe(false);
-    expect(g.esArchivoDeReparacion('C:/Dev/BarackMercosul/App.tsx')).toBe(false);
+    // La raiz va explicita: el default es la ubicacion del modulo, que en un worktree o en el
+    // runner de CI no es C:/Dev/BarackMercosul.
+    const R = 'C:/Dev/BarackMercosul';
+    const g = (f) => esArchivoDeReparacion(f, undefined, R);
+    expect(g('C:\\Dev\\BarackMercosul\\scripts\\_lib\\guardianes.mjs')).toBe(true);
+    expect(g('/c/Dev/BarackMercosul/scripts/_lib/shellTexto.mjs')).toBe(true);
+    expect(g('C:/Dev/BarackMercosul/scripts/_lib/consumosCanon.data.json')).toBe(true);
+    expect(g('C:/Dev/BarackMercosul/core/amfe/caracteristicasEspeciales.data.json')).toBe(true);
+    expect(g('C:/Dev/BarackMercosul/scripts/_lib/cierreGuard.mjs')).toBe(false);
+    expect(g('C:/Dev/BarackMercosul/scripts/_encargo.mjs')).toBe(false);
+    expect(g('C:/tmp/guardianes.mjs')).toBe(false);
+    expect(g('C:/Dev/BarackMercosul/App.tsx')).toBe(false);
+  });
+  it('ROJO — prueba de ataque 22/09: un archivo con el mismo nombre AFUERA del repo no es de reparacion', () => {
+    const R = 'C:/Dev/BarackMercosul';
+    const g = (f) => esArchivoDeReparacion(f, undefined, R);
+    expect(g('C:/Users/FacundoS-PC/OneDrive - BARACK ARGENTINA SRL/Desktop/scripts/_lib/guardianes.mjs')).toBe(false);
+    expect(g('C:/Users/FacundoS-PC/OneDrive - BARACK ARGENTINA SRL/Desktop/scripts/_lib/x.data.json')).toBe(false);
+    expect(g('C:/Dev/BarackMercosul/scripts/_lib/../../../Users/FacundoS-PC/x.data.json')).toBe(false);
+    expect(g('C:/Dev/BarackMercosulOtro/scripts/_lib/guardianes.mjs')).toBe(false);
   });
   it('un guardian que revienta: el Edit de guardianes.mjs pasa con el aviso; cualquier otra cosa sigue bloqueada', () => {
     GUARDIANES['_revienta'] = () => { throw new ReferenceError('HOME is not defined'); };

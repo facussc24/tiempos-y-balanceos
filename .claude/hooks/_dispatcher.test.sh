@@ -87,7 +87,11 @@ printf '%s\n' "export const sinCuerposHeredoc = (s) => s;" > "$R/scripts/_lib/sh
 roto() { printf '%s' "$1" | bash "$R/.claude/hooks/_dispatcher.sh" >/dev/null 2>&1; echo $?; }
 edit() { printf '{"tool_name":"%s","tool_input":{"file_path":"%s","old_string":"a","new_string":"b"}}' "$1" "$2"; }
 afirmar "Edit de scripts/_lib/guardianes.mjs -> pasa (0)"            0 "$(roto "$(edit Edit "$R/scripts/_lib/guardianes.mjs")")"
-afirmar "Write con ruta Windows (C:\\\\...\\\\guardianes.mjs) -> pasa" 0 "$(roto "$(edit Write 'C:\\Dev\\BarackMercosul\\scripts\\_lib\\guardianes.mjs')")"
+RWIN=$(cygpath -w "$R" | sed 's/\\/\\\\/g')
+afirmar "Write con ruta Windows (C:\\\\...\\\\guardianes.mjs) -> pasa" 0 "$(roto "$(edit Write "$RWIN\\\\scripts\\\\_lib\\\\guardianes.mjs")")"
+# Prueba de ataque 22/09: el mismo nombre AFUERA de este arbol no es de reparacion.
+afirmar "Write a guardianes.mjs de OTRO repo -> BLOQUEA"            2 "$(roto "$(edit Write 'C:\\Dev\\BarackMercosul\\scripts\\_lib\\guardianes.mjs')")"
+afirmar "Write a scripts/_lib/x.data.json en el Escritorio -> BLOQUEA" 2 "$(roto "$(edit Write 'C:/Users/FacundoS-PC/Desktop/scripts/_lib/x.data.json')")"
 afirmar "Edit de su modulo local ./shellTexto.mjs -> pasa"          0 "$(roto "$(edit Edit "$R/scripts/_lib/shellTexto.mjs")")"
 afirmar "Write de scripts/_lib/consumosCanon.data.json -> pasa"     0 "$(roto "$(edit Write "$R/scripts/_lib/consumosCanon.data.json")")"
 AVISO=$(printf '%s' "$(edit Edit "$R/scripts/_lib/guardianes.mjs")" | bash "$R/.claude/hooks/_dispatcher.sh" 2>/dev/null | grep -c "CARRIL DE AUTO-REPARACION")

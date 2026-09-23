@@ -1685,10 +1685,16 @@ export const NOMBRES = Object.keys(GUARDIANES);
  * los que su fuente nombra). Todo lo demas sigue bloqueado. El despachador (_dispatcher.sh) repite
  * esta misma regla para cuando el modulo ni siquiera carga (ahi no puede importar esta funcion).
  */
-export function esArchivoDeReparacion(file, fuente) {
-  const f = String(file ?? '').replace(/\\/g, '/');
+export function esArchivoDeReparacion(file, fuente, raizRepo) {
+  const f = path.posix.normalize(String(file ?? '').replace(/\\/g, '/').replace(/^\/([a-zA-Z])\//, (m, d) => `${d}:/`));
   const base = (f.split('/').pop() || '').toLowerCase();
   if (!base) return false;
+  // Solo archivos DE ESTE REPO (22/09/2026, prueba de ataque): sin esto, con los guardianes
+  // caidos pasaba un Write a <Escritorio>/scripts/_lib/guardianes.mjs o a cualquier *.data.json
+  // de una carpeta scripts/_lib de afuera. La ruta se normaliza antes (un `..` no sale).
+  const raiz = (raizRepo ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..'))
+    .replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase();
+  if (!f.toLowerCase().startsWith(raiz + '/')) return false;
   const enLib = /(^|\/)scripts\/_lib\/[^/]+$/i.test(f);
   if (enLib && (base === 'guardianes.mjs' || base.endsWith('.data.json'))) return true;
   let src = fuente;
@@ -1704,7 +1710,7 @@ export function correr(nombres, ctx, deps = {}) {
   const ahora = deps.ahora ?? Math.floor(Date.now() / 1000);
   const env = deps.env ?? process.env;
   const res = { bloqueos: [], avisos: [], recordatorios: [], contextos: [], supabase: false };
-  const reparando = ctx.ok && (ctx.tool === 'Edit' || ctx.tool === 'Write') && esArchivoDeReparacion(ctx.file);
+  const reparando = ctx.ok && (ctx.tool === 'Edit' || ctx.tool === 'Write') && esArchivoDeReparacion(ctx.file, undefined, env.GUARDIANES_RAIZ_REPO);
   for (const n of nombres) {
     const g = GUARDIANES[n];
     if (!g) continue;

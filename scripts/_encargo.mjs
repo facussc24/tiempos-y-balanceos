@@ -101,6 +101,35 @@ function siguen(textoLineas, desde) {
 const tieneFrase = (texto, frase) => new RegExp(`(^|[^a-z0-9])${frase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(texto);
 
 /**
+ * 22/09/2026, prueba de ataque sobre este mismo cambio: con la oracion entera (el fix del punto
+ * de `.mjs`), cualquier "no" de antes la negaba, y pasaban ordenes como "no corras nada SALVO
+ * <script> con <flag>" o "no te olvides de correr <flag>" — que el codigo viejo si frenaba.
+ * Ahora: (1) las frases que ORDENAN con un "no" adentro no niegan; (2) cuenta solo el ULTIMO
+ * negador de la oracion, y una excepcion despues de el ("salvo", "pero", "solo") lo anula;
+ * (3) una orden pegada despues del patron ("...: correlo") gana.
+ */
+const ORDENES_CON_NO = ['no te olvides de', 'no te olvides', 'no olvides', 'no dejes de', 'no te quedes sin',
+  'no omitas', 'no te saltees', 'no saltees', 'no pases por alto', 'no termines sin', 'no cierres sin',
+  'no te vayas sin', 'sin olvidar', 'sin olvidarte', 'que no falte'];
+const EXCEPTUAN = ['salvo', 'excepto', 'menos', 'solo', 'solamente', 'unicamente', 'nada mas que', 'pero', 'sino', 'aparte de'];
+const ORDEN_DESPUES = ['correlo', 'correla', 'ejecutalo', 'aplicalo', 'hacelo', 'mandalo', 'lanzalo', 'dale'];
+const escaparRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** ¿El fragmento de oracion anterior al patron lo niega? (ver arriba) */
+function negadoAntes(antes) {
+  let a = antes;
+  for (const o of ORDENES_CON_NO) a = a.split(normalizar(o)).join(' ');
+  let ultimo = -1;
+  for (const n of NEGADORES) {
+    const re = new RegExp(`(^|[^a-z0-9])${escaparRe(normalizar(n))}`, 'g');
+    let m;
+    while ((m = re.exec(a))) { ultimo = Math.max(ultimo, m.index); if (m[0].length === 0) re.lastIndex++; }
+  }
+  if (ultimo === -1) return false;
+  return !EXCEPTUAN.some((e) => tieneFrase(a.slice(ultimo), e));
+}
+
+/**
  * Negaciones que vienen DESPUES del patron, en la misma oracion: "la politica cita el borrado
  * recursivo para PROHIBIRLO" (fc581284, 06/09) es lo contrario de pedirlo.
  */
@@ -149,8 +178,10 @@ export function buscarPatrones(texto, patrones, { ignorarNegados = true, soloLec
       const cierraPalabra = !/[a-z0-9]/.test(sig) || !/[a-z0-9]$/.test(pn);
       if (cierraPalabra) {
         const antes = anteceden(tl, i);
-        const negado = ignorarNegados && (NEGADORES.some((n) => tieneFrase(antes, normalizar(n)))
-          || POSNEGADORES.some((n) => tieneFrase(siguen(tl, i + pn.length), n)));
+        const despues = siguen(tl, i + pn.length);
+        const negado = ignorarNegados
+          && ((negadoAntes(antes) && !ORDEN_DESPUES.some((o) => tieneFrase(despues, o)))
+            || POSNEGADORES.some((n) => tieneFrase(despues, n)));
         const mencion = soloLectura && esPatronDeCodigo(pn) && !ejecuta(antes);
         if (!negado && !mencion) return true;
       }

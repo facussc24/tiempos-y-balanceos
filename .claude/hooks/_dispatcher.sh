@@ -75,9 +75,13 @@ process.stdin.on("end", () => {
   // lee). Misma regla que esArchivoDeReparacion() de guardianes.mjs, que aca no se puede importar.
   const reparacion = () => {
     if (!ok || (tool !== "Edit" && tool !== "Write")) return false;
-    const f = file.replace(/\\/g, "/");
+    const f = require("path").posix.normalize(file.replace(/\\/g, "/").replace(/^\/([a-zA-Z])\//, (m, d) => d.toUpperCase() + ":/"));
     const base = (f.split("/").pop() || "").toLowerCase();
     if (!base) return false;
+    // Solo archivos DE ESTE REPO (22/09/2026, prueba de ataque: pasaba un Write a
+    // <Escritorio>/scripts/_lib/guardianes.mjs). La raiz sale de la ruta del modulo.
+    const raiz = require("path").posix.normalize(modWin).replace(/\/scripts\/_lib\/guardianes\.mjs$/i, "").toLowerCase();
+    if (!f.toLowerCase().startsWith(raiz + "/")) return false;
     const enLib = /(^|\/)scripts\/_lib\/[^\/]+$/i.test(f);
     if (enLib && (base === "guardianes.mjs" || base.endsWith(".data.json"))) return true;
     let src = "";
