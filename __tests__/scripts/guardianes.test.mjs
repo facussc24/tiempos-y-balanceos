@@ -29,6 +29,7 @@ vi.setConfig({ testTimeout: 60_000 });
 import {
   parsear, matriz, correr, resolver, evaluar, GUARDIANES, TODOS, NOMBRES,
   medirInline, sinCuerposHeredoc, frasesCausalesSinFuente, ultimaRuta, INLINE_MAX, comandoTocaSecreto,
+  esArchivoDeReparacion,
 } from '../../scripts/_lib/guardianes.mjs';
 
 const RAIZ = process.cwd();
@@ -374,8 +375,10 @@ describe('arb-cerrar-guard (casos de arb-cerrar-guard.test.sh + el bypass por se
 // ───────────────────────────────────────────────────────────── borrado-masivo-guard
 describe('borrado-masivo-guard (V1-V4, exclusiones y el falso positivo de los comentarios)', () => {
   const LOTE = 'Get-ChildItem -Path $R -Recurse | ForEach-Object {\n  Copy-Item -LiteralPath $_.FullName -Destination $D\n  Remove-Item -LiteralPath $_.FullName\n}';
-  it('V1: -Recurse + -Include sin \\* bloquea; con -Filter o con \\* pasa', () => {
-    expect(ev(bash("powershell -Command \"Get-ChildItem -LiteralPath 'C:\\x' -Recurse -File -Include *.step,*.dxf\"")).err).toMatch(/V1/);
+  it('V1: -Recurse + -Include sin \\* que MUEVE/BORRA lo listado bloquea; con -Filter o con \\* pasa', () => {
+    expect(ev(bash("powershell -Command \"Get-ChildItem -LiteralPath 'C:\\x' -Recurse -File -Include *.step,*.dxf | Move-Item -Destination 'C:\\y'\"")).err).toMatch(/V1/);
+    // 22/09/2026: el LISTADO solo no toca nada (4af94165 07/09, b2ae0714 15/09: ver fixture)
+    expect(ev(bash("powershell -Command \"Get-ChildItem -LiteralPath 'C:\\x' -Recurse -File -Include *.step,*.dxf\"")).exit).toBe(0);
     expect(ev(bash("powershell -Command \"Get-ChildItem -LiteralPath 'C:\\x' -Recurse -Filter *.step\"")).exit).toBe(0);
     expect(ev(bash("powershell -Command \"Get-ChildItem -Path 'C:\\x\\*' -Recurse -Include *.step\"")).exit).toBe(0);
   });
@@ -736,5 +739,173 @@ describe('por bash — los wrappers finos y el despachador (el camino real)', ()
       encoding: 'utf8', env: { ...ENV, HOOK_FILE: '/x/memory/m.md', HOOK_PARSED4: 'Cambiaron la unidad a BI y nadie recalculo los numeros.' }, stdio: ['ignore', 'pipe', 'pipe'],
     });
     expect(r.status).toBe(2);
+  });
+});
+
+// ═════════════════════════════════════════════════════════════ falsos positivos 22/09/2026
+// Los bloqueos del 05/09 al 22/09 medidos en los transcripts. Los payloads REALES (tool_input + el
+// cwd que tenia la sesion) viven en fixtures/guardianesFalsosPositivos.json: `verdes` son falsos
+// positivos que ahora PASAN, `rojos` son aciertos que SIGUEN bloqueando. Contra el codigo anterior
+// los 28 verdes daban exit 2 (verificado al escribir esto); los rojos, contra los dos.
+describe('falsos positivos 22/09 — payloads REALES de los transcripts', () => {
+  const FX = JSON.parse(fs.readFileSync(path.join(RAIZ, '__tests__/scripts/fixtures/guardianesFalsosPositivos.json'), 'utf8'));
+  const solo = (g) => ({ nombres: [g] });
+  const casos = (grupo, guardian) => {
+    for (const c of FX[grupo].verdes) expect(ev(c.payload, solo(guardian)).exit, `VERDE ${c.sesion} ${c.fecha}: ${c.nota}`).toBe(0);
+    for (const c of FX[grupo].rojos) expect(ev(c.payload, solo(guardian)).exit, `ROJO ${c.sesion} ${c.fecha}: ${c.nota}`).toBe(2);
+  };
+  it('el fixture trae los dos lados de cada guardian', () => {
+    for (const g of ['escritorio', 'borradoMasivo', 'coordinadorAgent', 'coordinadorMensajes']) {
+      expect(FX[g].verdes.length, g).toBeGreaterThan(0);
+      expect(FX[g].rojos.length, g).toBeGreaterThan(0);
+    }
+    // el acierto que motivo el guardian: la sesion 4af94165 iba a borrar los .MOV de Fak
+    expect(FX.escritorio.rojos.some((c) => c.sesion === '4af94165' && /IMG_0578\.MOV/.test(c.payload.tool_input.command))).toBe(true);
+  });
+  it('escritorio-guard: el borrado cuenta por su OBJETIVO y la salida por su DESTINO', () => casos('escritorio', 'escritorio-guard'));
+  it('borrado-masivo-guard: V1 con mutacion, V3 por objetivo resuelto, V4 sin la variable `mv`', () => casos('borradoMasivo', 'borrado-masivo-guard'));
+});
+
+describe('escritorio-guard 22/09 — lo que SIGUE bloqueando aunque la zona no este en el objetivo literal', () => {
+  const E = 'C:/Users/FacundoS-PC/OneDrive - BARACK ARGENTINA SRL/Desktop/Tarea X';
+  const conCwd = (command, cwd = 'C:\\Dev\\BarackMercosul') => ({ tool_name: 'Bash', tool_input: { command }, cwd });
+  const g = (p) => ev(p, { nombres: ['escritorio-guard'] });
+  it('la sesion PARADA en el Escritorio (cd de antes): un rm relativo borra ahi aunque el comando no lo nombre', () => {
+    expect(g(conCwd('rm -f IMG_0578.MOV', E)).err).toMatch(/NADA SE BORRA NUNCA/);
+    expect(g(ps('ri nota.txt')).exit).toBe(0); // sin cwd ni zona: nada que mirar
+    expect(g({ ...ps('ri nota.txt'), cwd: E }).exit).toBe(2);
+  });
+  it('objetivo que no se puede resolver con la zona a la vista: regla vieja (no se adivina)', () => {
+    expect(g(conCwd(`for f in "${E}"/*.MOV; do rm -f "$f"; done`)).exit).toBe(2);
+    expect(g(conCwd(`ls "${E}" | xargs rm -f`)).exit).toBe(2);
+    expect(g(conCwd(`D="$(dirname "${E}/x")"; rm -rf "$D"`)).exit).toBe(2);
+    expect(g(ps(`Get-ChildItem "${E}" -Filter *.tmp | Remove-Item`)).exit).toBe(2);
+    // relativo SIN cwd conocido (payload viejo) y la zona en el comando: se bloquea
+    expect(g(bash(`ls "${E}"; rm -f scripts/_tmp_x.mjs`)).exit).toBe(2);
+  });
+  it('find -delete / -exec rm, rutas con ~ y mezclas: el objetivo manda', () => {
+    expect(g(conCwd(`find "${E}" -name "*.tmp" -delete`)).exit).toBe(2);
+    expect(g(conCwd(`find "${E}" -name "*.tmp" -exec rm {} \\;`)).exit).toBe(2);
+    expect(g(conCwd('rm -rf ~/Desktop/tarea')).exit).toBe(2);
+    expect(g(conCwd(`S=/tmp/x; rm -rf "$S" "${E}"`)).exit).toBe(2);
+    expect(g(conCwd(`cd "${E}" && cd .. && rm -rf "Tarea X"`)).exit).toBe(2);
+  });
+  it('generar: la salida relativa con cd al Escritorio, y una salida sin resolver, siguen bloqueando', () => {
+    expect(g(conCwd(`cd "${E}" && python gen.py --out informe.pdf`)).err).toMatch(/GENERANDO un entregable/);
+    expect(g(conCwd(`python gen.py --out "$X" && ls "${E}/informe.pdf"`)).exit).toBe(2);
+    expect(g(conCwd(`python gen.py > "${E}/informe.pdf"`)).exit).toBe(2);
+    // y el -o de verdad (curl) tambien es una salida
+    expect(g(conCwd(`curl -s -o "${E}/plano.pdf" https://x/plano.pdf`)).exit).toBe(2);
+  });
+});
+
+describe('borrado-masivo-guard 22/09 — lo que SIGUE bloqueando', () => {
+  const conCwd = (command, cwd = 'C:\\Dev\\BarackMercosul') => ({ tool_name: 'Bash', tool_input: { command }, cwd });
+  const g = (p) => ev(p, { nombres: ['borrado-masivo-guard'] });
+  it('V3: un rm a un temporal y otro a una carpeta de Fak en el mismo comando', () => {
+    expect(g(conCwd('rm -rf tmp/x "C:/Users/FacundoS-PC/OneDrive - BARACK ARGENTINA SRL/Proyectos/y"')).err).toMatch(/V3/);
+  });
+  it('V3: objetivo sin resolver, codigo pegado, o un directorio del repo que no es temporal', () => {
+    expect(g(conCwd('rm -rf "$X"')).exit).toBe(2);
+    expect(g(conCwd('python -c "import shutil; shutil.rmtree(\'tmp/x\')"')).exit).toBe(2);
+    expect(g(conCwd('rm -rf _antes_1209', 'C:/Dev/_adhesivado/wk_unico')).exit).toBe(2);
+    expect(g(conCwd('rm -rf scripts/img/render_deck_img')).exit).toBe(2);
+    // relativo a tmp/ pero SIN cwd conocido: no se sabe donde cae
+    expect(g(bash('rm -rf tmp/amfe158')).exit).toBe(2);
+  });
+  it('V3: el mensaje del commit se ignora, pero un rm real al lado no', () => {
+    expect(g(conCwd('git commit -m "limpio con rm -rf" && rm -rf /c/Dev/BarackMercosul/modules/x')).exit).toBe(2);
+    expect(g(conCwd('git commit -m "limpio con rm -rf los temporales"')).exit).toBe(0);
+  });
+  it('V3: un script (.ps1/.py/.json) que lo contiene sigue bloqueando; solo la PROSA (.md/.txt) pasa', () => {
+    expect(g(escribir('C:\\tmp\\limpiar.ps1', 'Remove-Item -Recurse -Force $p')).exit).toBe(2);
+    expect(g(escribir('C:\\tmp\\plan.md', 'Paso 3: rm -rf del arbol viejo')).exit).toBe(0);
+    expect(g(escribir('C:\\tmp\\notas.txt', 'shutil.rmtree(d) borra sin papelera')).exit).toBe(0);
+  });
+  it('V4: en Python el rm/mv entre comillas (os.system, subprocess) sigue siendo un comando', () => {
+    expect(g(escribir('C:\\tmp\\limpiar.py', 'import os\nfor d in os.listdir(r):\n    os.system("rm -rf " + d)\n')).err).toMatch(/V4/);
+    expect(g(escribir('C:\\tmp\\lector.py', 'import re\nfor l in lineas:\n    mv = re.match(r"x", l)\n')).exit).toBe(0);
+  });
+});
+
+describe('push-guard 22/09 — mira SOLO lo que va en el push (repo con upstream)', () => {
+  const repo = path.join(TMP, 'repo-up');
+  const origen = path.join(TMP, 'origen.git');
+  const env = { ...ENV, CLAUDE_PROJECT_DIR: repo };
+  const git = (...a) => spawnSync('git', a, { cwd: repo, encoding: 'utf8' });
+  const tocar = (f, t) => fs.utimesSync(path.join(repo, f), t, t);
+  const pasado = new Date(Date.now() - 600_000);
+  const futuro = new Date(Date.now() + 600_000);
+  fs.mkdirSync(path.join(repo, 'docs'), { recursive: true });
+  fs.mkdirSync(path.join(repo, '.claude', 'skills', 'imds'), { recursive: true });
+  spawnSync('git', ['init', '-q', '--bare', origen]);
+  git('init', '-q');
+  git('config', 'user.email', 't@t');
+  git('config', 'user.name', 't');
+  git('checkout', '-q', '-b', 'main');
+  fs.writeFileSync(path.join(repo, 'App.tsx'), 'export default 1;');
+  fs.writeFileSync(path.join(repo, 'docs', 'LECCIONES_APRENDIDAS.md'), '# L\n');
+  fs.writeFileSync(path.join(repo, '.claude', 'skills', 'imds', 'SKILL.md'), '# imds\n');
+  git('add', '-A');
+  git('commit', '-qm', 'base');
+  git('remote', 'add', 'origin', origen);
+  git('push', '-q', '-u', 'origin', 'main');
+  fs.mkdirSync(path.join(repo, 'dist'), { recursive: true });
+  fs.writeFileSync(path.join(repo, 'dist', 'index.html'), '<html>');
+  tocar('dist/index.html', pasado);
+  const e1f76bb0 = "git add docs/LECCIONES_APRENDIDAS.md && git commit -q -F - <<'MSG'\ndocs(lecciones): una pieza nueva no es una revision de la anterior\n\nCo-Authored-By: Claude Opus 5 <noreply@anthropic.com>\nMSG\ngit push -q origin main && echo \"pusheado\" && git log --oneline -2";
+  const s903ada0d = "git add \".claude/skills/imds/SKILL.md\" && git commit -q -m \"$(cat <<'EOF'\ndocs(imds): el boton para cambiar un nodo es \"Add semicomponent\", no \"Replace\"\n\nCo-Authored-By: Claude Opus 5 <noreply@anthropic.com>\nEOF\n)\" && git push -q origin main && git log --oneline -3";
+
+  it('VERDE — los dos reales: push de solo docs con un .ts de OTRA sesion mas nuevo que dist/', () => {
+    fs.writeFileSync(path.join(repo, 'App.tsx'), 'export default 2; // otra sesion');
+    tocar('App.tsx', futuro);
+    fs.appendFileSync(path.join(repo, 'docs', 'LECCIONES_APRENDIDAS.md'), '- nueva\n');
+    fs.appendFileSync(path.join(repo, '.claude', 'skills', 'imds', 'SKILL.md'), 'x\n');
+    expect(ev(bash(e1f76bb0), { env, nombres: ['push-guard'] }).exit).toBe(0);
+    expect(ev(bash(s903ada0d), { env, nombres: ['push-guard'] }).exit).toBe(0);
+    expect(ev(bash('git push'), { env, nombres: ['push-guard'] }).exit).toBe(0); // nada sin subir
+  });
+  it('ROJO — el .ts entra en el push por el add, por commit -a, por add ., o ya stageado', () => {
+    for (const c of ['git add App.tsx && git commit -m x && git push', 'git commit -am x && git push', 'git add . && git commit -m x && git push -q origin main']) {
+      const r = ev(bash(c), { env, nombres: ['push-guard'] });
+      expect(r.exit, c).toBe(2);
+      expect(r.err).toMatch(/En el push: App\.tsx/);
+    }
+    git('add', 'App.tsx');
+    expect(ev(bash('git commit -m x && git push'), { env, nombres: ['push-guard'] }).exit).toBe(2);
+    git('reset', '-q');
+  });
+  it('ROJO — un commit de codigo sin subir con dist/ viejo; VERDE si el build es posterior', () => {
+    git('add', 'App.tsx');
+    git('commit', '-qm', 'codigo');
+    expect(ev(bash('git push'), { env, nombres: ['push-guard'] }).err).toMatch(/mas nuevo que el ultimo build/);
+    tocar('dist/index.html', new Date(Date.now() + 1_200_000));
+    expect(ev(bash('git push'), { env, nombres: ['push-guard'] }).exit).toBe(0);
+  });
+});
+
+describe('carril de auto-reparacion 22/09 — un guardian roto no puede bloquear el Edit que lo arregla', () => {
+  it('esArchivoDeReparacion: guardianes.mjs, sus modulos locales y sus .data.json; nada mas', () => {
+    const g = { esArchivoDeReparacion };
+    expect(g.esArchivoDeReparacion('C:\\Dev\\BarackMercosul\\scripts\\_lib\\guardianes.mjs')).toBe(true);
+    expect(g.esArchivoDeReparacion('/c/Dev/BarackMercosul/scripts/_lib/shellTexto.mjs')).toBe(true);
+    expect(g.esArchivoDeReparacion('C:/Dev/BarackMercosul/scripts/_lib/consumosCanon.data.json')).toBe(true);
+    expect(g.esArchivoDeReparacion('C:/Dev/BarackMercosul/core/amfe/caracteristicasEspeciales.data.json')).toBe(true);
+    expect(g.esArchivoDeReparacion('C:/Dev/BarackMercosul/scripts/_lib/cierreGuard.mjs')).toBe(false);
+    expect(g.esArchivoDeReparacion('C:/Dev/BarackMercosul/scripts/_encargo.mjs')).toBe(false);
+    expect(g.esArchivoDeReparacion('C:/tmp/guardianes.mjs')).toBe(false);
+    expect(g.esArchivoDeReparacion('C:/Dev/BarackMercosul/App.tsx')).toBe(false);
+  });
+  it('un guardian que revienta: el Edit de guardianes.mjs pasa con el aviso; cualquier otra cosa sigue bloqueada', () => {
+    GUARDIANES['_revienta'] = () => { throw new ReferenceError('HOME is not defined'); };
+    try {
+      const reparar = evaluar(JSON.stringify(editar('C:\\Dev\\BarackMercosul\\scripts\\_lib\\guardianes.mjs')), { env: ENV, ahora: AHORA, nombres: ['_revienta'] });
+      expect(reparar.salida.exit).toBe(0);
+      expect(reparar.salida.contexto).toMatch(/CARRIL DE AUTO-REPARACION/);
+      expect(reparar.salida.contexto).toMatch(/HOME is not defined/);
+      for (const p of [editar('C:\\Dev\\BarackMercosul\\App.tsx'), bash('node --check scripts/_lib/guardianes.mjs'), escribir('C:\\tmp\\guardianes.mjs')]) {
+        expect(evaluar(JSON.stringify(p), { env: ENV, ahora: AHORA, nombres: ['_revienta'] }).salida.exit).toBe(2);
+      }
+    } finally { delete GUARDIANES['_revienta']; }
   });
 });

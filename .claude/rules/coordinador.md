@@ -60,6 +60,14 @@ es como se gasta un control hasta que alguien lo desactiva.
   registro y texto coincidente; en `Agent` corre solo los dos checks baratos (G3 y G4), porque
   lanzar subagentes lo hacen todas las sesiones todo el dia y un gate pesado ahi es el candado
   que en un mes se saltea.
+- **22/09/2026:** un `SendMessage` a un **subagente que lanzo esta misma sesion** (su `name` o su
+  agentId, leidos del `transcript_path` del hook) no va a otra sesion: pasa con los checks de un
+  `Agent` (G3 y G4). 6 de los 9 bloqueos "no salio de _encargo.mjs" del 05/09 al 22/09 eran eso
+  (verificado contra los transcripts; los otros 3 iban a otra sesion y siguen bloqueados).
+  Lo que va a otra sesion (`uds:`, un nombre que la sesion no lanzo, el `send_message` del MCP)
+  sigue exigiendo el encargo. Y G4 ya no frena la MENCION: una negacion la gobierna en su
+  oracion (antes o despues del patron) y, en un prompt que se declara de SOLO LECTURA, un flag o
+  comando citado (`--apply`, `git push`) sin verbo de ejecutar al lado es una mencion.
 - Listas canonicas en `scripts/_lib/coordinadorCanon.data.json`, **nunca un regex escrito a
   ojo** (`feedback_heuristicas_lista_canonica_no_regex_parcial`). Una frase nueva de Fak se
   agrega ahi, con su fuente, en la misma sesion.

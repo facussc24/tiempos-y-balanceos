@@ -68,9 +68,34 @@ process.stdin.on("end", () => {
     w("parsed3", [clean(tool), clean(cmd).slice(0,6000), clean(file)].join("\x1f"));
   }
   if (!mod) return;   // el test solo prueba el parseo
-  const url = "file:///" + mod.replace(/\\/g, "/").replace(/^\/([a-zA-Z])\//, (m, d) => d.toUpperCase() + ":/");
+  const modWin = mod.replace(/\\/g, "/").replace(/^\/([a-zA-Z])\//, (m, d) => d.toUpperCase() + ":/");
+  const url = "file:///" + modWin;
+  // CARRIL DE AUTO-REPARACION (22/09/2026): si el modulo no carga, solo pasa un Edit/Write sobre
+  // los archivos de los guardianes (guardianes.mjs, sus modulos ./locales y los .data.json que
+  // lee). Misma regla que esArchivoDeReparacion() de guardianes.mjs, que aca no se puede importar.
+  const reparacion = () => {
+    if (!ok || (tool !== "Edit" && tool !== "Write")) return false;
+    const f = file.replace(/\\/g, "/");
+    const base = (f.split("/").pop() || "").toLowerCase();
+    if (!base) return false;
+    const enLib = /(^|\/)scripts\/_lib\/[^\/]+$/i.test(f);
+    if (enLib && (base === "guardianes.mjs" || base.endsWith(".data.json"))) return true;
+    let src = "";
+    try { src = fs.readFileSync(modWin, "utf8"); } catch {}
+    const locales = [...src.matchAll(/from\s+["\x27]\.\/([^"\x27]+)["\x27]/g)].map(x => x[1].toLowerCase());
+    if (enLib && locales.includes(base)) return true;
+    const datos = [...src.matchAll(/["\x27`\/\\]([\w.-]+\.data\.json)["\x27`]/g)].map(x => x[1].toLowerCase());
+    return datos.includes(base);
+  };
   import(url).then(g => g.despachar(s, dir)).then(code => { process.exitCode = code; }, e => {
-    process.stderr.write("[GUARDIANES] no pude correr scripts/_lib/guardianes.mjs — bloqueo por seguridad:\n" + (e && e.stack || e) + "\n");
+    const error = "[GUARDIANES] no pude correr scripts/_lib/guardianes.mjs:\n" + (e && e.stack || e) + "\n";
+    if (reparacion()) {
+      process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext:
+        error + "[CARRIL DE AUTO-REPARACION] Los guardianes estan CAIDOS. Este Edit/Write sobre " + file + " pasa para que se puedan arreglar; todo lo demas sigue bloqueado hasta que el modulo vuelva a cargar (node --check scripts/_lib/guardianes.mjs)." } }));
+      process.exitCode = 0;
+      return;
+    }
+    process.stderr.write(error + "Bloqueo por seguridad. Para arreglarlo, un Edit/Write sobre scripts/_lib/guardianes.mjs (o sus modulos y .data.json) SI pasa.\n");
     process.exitCode = 2;
   });
 });

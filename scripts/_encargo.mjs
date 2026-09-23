@@ -73,12 +73,54 @@ const NEGADORES = [
   'yo no', 'ya ', 'existe para', 'para que nadie', 'no se puede', 'no podes', 'no puede',
 ];
 
-/** El fragmento de oracion que termina donde arranca el patron. */
-function anteceden(textoNorm, posPatron) {
-  const desde = Math.max(0, textoNorm.lastIndexOf('.', posPatron) + 1);
-  const arranque = Math.max(desde, textoNorm.lastIndexOf('\n', posPatron) + 1);
-  return textoNorm.slice(arranque, posPatron);
+/**
+ * El fragmento de oracion que termina donde arranca el patron.
+ *
+ * 22/09/2026: la oracion la corta un salto de linea o un . ! ? SEGUIDO DE ESPACIO. Antes cortaba
+ * cualquier punto, y el de un nombre de archivo partia la frase al medio: en "no ejecutes ningun
+ * script que lo opere (_arb*.py con --apply ...)" la negacion quedaba del otro lado del `.py` y
+ * el guardian leia "py con --apply" como una orden (0b7435f4, 22/09). Y no mira mas de 200
+ * caracteres para atras: un "no" de tres renglones antes no gobierna la frase.
+ */
+function anteceden(textoLineas, posPatron) {
+  let arranque = 0;
+  const re = /[.!?](?=\s)|\n/g;
+  let m;
+  while ((m = re.exec(textoLineas)) && m.index < posPatron) arranque = m.index + 1;
+  return textoLineas.slice(Math.max(arranque, posPatron - 200), posPatron);
 }
+
+/** Lo que sigue al patron hasta el fin de la oracion (maximo 80 caracteres). */
+function siguen(textoLineas, desde) {
+  const resto = textoLineas.slice(desde, desde + 80);
+  const m = resto.match(/[.!?](?=\s)|\n/);
+  return m ? resto.slice(0, m.index) : resto;
+}
+
+/** `frase` como palabra entera al principio (no "uno " por "no ", ni "inevitable" por "evita"). */
+const tieneFrase = (texto, frase) => new RegExp(`(^|[^a-z0-9])${frase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(texto);
+
+/**
+ * Negaciones que vienen DESPUES del patron, en la misma oracion: "la politica cita el borrado
+ * recursivo para PROHIBIRLO" (fc581284, 06/09) es lo contrario de pedirlo.
+ */
+const POSNEGADORES = ['para prohibir', 'prohibid', 'no para ejecutar', 'no para correr'];
+
+/**
+ * Un prompt que se declara de SOLO LECTURA y nombra un flag o un comando literal (`--apply`,
+ * `--archivar`, el borrado recursivo de shell, `git push`) lo esta MENCIONANDO: un auditor que
+ * revisa un script con --apply, el que busca donde archiva `_escritorio.mjs --archivar`, el que
+ * lista flags de CLI. De los 6 bloqueos por "orden irreversible" del 05/09 al 22/09, 5 eran eso.
+ * Sigue siendo orden si en la misma oracion hay un verbo de ejecutar ("despues corre ...
+ * --apply"), y la prosa imperativa ("borra el ...", "manda el mail") no entra en la excepcion.
+ */
+const MARCAS_SOLO_LECTURA = ['solo lectura', 'solo de lectura', 'read-only', 'read only', 'no edites nada', 'no modifiques nada', 'no toques nada', 'no borres nada'];
+const VERBOS_EJECUTAR = ['corre ', 'correr', 'corra', 'correlo', 'ejecut', 'lanza', 'lanzar', 'aplica ', 'aplicar', 'aplicalo'];
+// "run" suelto (no el de "dry-run", que es justo lo contrario)
+const ejecuta = (antes) => VERBOS_EJECUTAR.some((v) => tieneFrase(antes, v)) || /(^|\s)run\s/.test(antes);
+/** Flag (`--x`), comando con opciones (`<verbo> -x`) o `git <sub>`: codigo, no prosa. */
+const esPatronDeCodigo = (pn) => /^--|^[a-z]+ -|^git /.test(pn);
+export const declaraSoloLectura = (texto) => MARCAS_SOLO_LECTURA.some((m) => tieneFrase(normalizar(texto), m));
 
 /**
  * Busca patrones de una lista canonica dentro de un texto. Devuelve los que aparecen.
@@ -90,8 +132,12 @@ function anteceden(textoNorm, posPatron) {
  * frena el trabajo normal se termina desactivando entero, asi que un falso positivo cuesta
  * lo mismo que un agujero.
  */
-export function buscarPatrones(texto, patrones, { ignorarNegados = true } = {}) {
-  const t = normalizar(texto);
+export function buscarPatrones(texto, patrones, { ignorarNegados = true, soloLectura = false } = {}) {
+  // Dos vistas del mismo texto, del MISMO largo: `t` para buscar (todo espacio es un espacio,
+  // como siempre) y `tl` para cortar oraciones (conserva los saltos de linea).
+  const tl = String(texto ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/\s+/g, (m) => (m.includes('\n') ? '\n' : ' '));
+  const t = tl.replace(/\n/g, ' ');
   return patrones.filter((p) => {
     const pn = normalizar(p);
     let i = t.indexOf(pn);
@@ -102,8 +148,11 @@ export function buscarPatrones(texto, patrones, { ignorarNegados = true } = {}) 
       const sig = t[i + pn.length] || ' ';
       const cierraPalabra = !/[a-z0-9]/.test(sig) || !/[a-z0-9]$/.test(pn);
       if (cierraPalabra) {
-        const antes = anteceden(t, i);
-        if (!ignorarNegados || !NEGADORES.some((n) => antes.includes(normalizar(n)))) return true;
+        const antes = anteceden(tl, i);
+        const negado = ignorarNegados && (NEGADORES.some((n) => tieneFrase(antes, normalizar(n)))
+          || POSNEGADORES.some((n) => tieneFrase(siguen(tl, i + pn.length), n)));
+        const mencion = soloLectura && esPatronDeCodigo(pn) && !ejecuta(antes);
+        if (!negado && !mencion) return true;
       }
       i = t.indexOf(pn, i + 1);   // aca no valia, pero puede aparecer de verdad mas adelante
     }
@@ -138,8 +187,9 @@ export function detectarSegundaTarea(cuerpo) {
 /** G4 · nada irreversible viaja en un encargo. */
 export function detectarIrreversibles(texto) {
   const hits = [];
+  const soloLectura = declaraSoloLectura(texto);
   for (const e of CANON.accionesIrreversibles.entradas) {
-    const encontrados = buscarPatrones(texto, e.patrones);
+    const encontrados = buscarPatrones(texto, e.patrones, { soloLectura });
     if (encontrados.length) hits.push({ ...e, encontrados });
   }
   return hits;

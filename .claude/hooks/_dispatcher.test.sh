@@ -73,6 +73,34 @@ rm -rf "$D"
 limpiar
 
 echo ""
+echo "CARRIL DE AUTO-REPARACION (22/09/2026): guardianes.mjs NO carga (SyntaxError, como el 10/09):"
+# Arbol de mentira con una COPIA del despachador y un guardianes.mjs roto. El despachador vivo
+# no se toca: si se rompe, se traba todo (incluido el Edit que lo arreglaria). Va adentro del
+# tmp/ del repo (gitignoreado) y no en /tmp: bajo msys /tmp es un montaje y `pwd` lo devuelve
+# como /tmp/..., que el file:/// del despachador no resuelve (el vivo esta en /c/Dev/...).
+mkdir -p tmp
+R=$(mktemp -d "$PWD/tmp/_despachador_roto.XXXXXX")
+mkdir -p "$R/.claude/hooks" "$R/scripts/_lib"
+cp "$H/_dispatcher.sh" "$R/.claude/hooks/_dispatcher.sh"
+printf '%s\n' "import { sinCuerposHeredoc } from './shellTexto.mjs';" "const CANON = 'consumosCanon.data.json';" "export const roto = ;" > "$R/scripts/_lib/guardianes.mjs"
+printf '%s\n' "export const sinCuerposHeredoc = (s) => s;" > "$R/scripts/_lib/shellTexto.mjs"
+roto() { printf '%s' "$1" | bash "$R/.claude/hooks/_dispatcher.sh" >/dev/null 2>&1; echo $?; }
+edit() { printf '{"tool_name":"%s","tool_input":{"file_path":"%s","old_string":"a","new_string":"b"}}' "$1" "$2"; }
+afirmar "Edit de scripts/_lib/guardianes.mjs -> pasa (0)"            0 "$(roto "$(edit Edit "$R/scripts/_lib/guardianes.mjs")")"
+afirmar "Write con ruta Windows (C:\\\\...\\\\guardianes.mjs) -> pasa" 0 "$(roto "$(edit Write 'C:\\Dev\\BarackMercosul\\scripts\\_lib\\guardianes.mjs')")"
+afirmar "Edit de su modulo local ./shellTexto.mjs -> pasa"          0 "$(roto "$(edit Edit "$R/scripts/_lib/shellTexto.mjs")")"
+afirmar "Write de scripts/_lib/consumosCanon.data.json -> pasa"     0 "$(roto "$(edit Write "$R/scripts/_lib/consumosCanon.data.json")")"
+AVISO=$(printf '%s' "$(edit Edit "$R/scripts/_lib/guardianes.mjs")" | bash "$R/.claude/hooks/_dispatcher.sh" 2>/dev/null | grep -c "CARRIL DE AUTO-REPARACION")
+afirmar "  ...y avisa por additionalContext que estan CAIDOS"      1 "$AVISO"
+afirmar "Bash inocente con el modulo roto -> BLOQUEA"               2 "$(roto '{"tool_name":"Bash","tool_input":{"command":"echo hola"}}')"
+afirmar "Bash node --check del mismo archivo -> BLOQUEA"            2 "$(roto '{"tool_name":"Bash","tool_input":{"command":"node --check scripts/_lib/guardianes.mjs"}}')"
+afirmar "Edit de otro archivo de scripts/_lib -> BLOQUEA"           2 "$(roto "$(edit Edit "$R/scripts/_lib/cierreGuard.mjs")")"
+afirmar "Edit de un archivo cualquiera -> BLOQUEA"                  2 "$(roto "$(edit Edit "$R/App.tsx")")"
+afirmar "Write de un guardianes.mjs FUERA de scripts/_lib -> BLOQUEA" 2 "$(roto "$(edit Write "$R/tmp/guardianes.mjs")")"
+afirmar "JSON roto con el modulo roto -> BLOQUEA"                   2 "$(roto '{"tool_name":"Edit","tool_input":{"file_path":"scripts/_lib/guardianes.mjs"')"
+rm -rf "$R"
+
+echo ""
 if [ "$FALLOS" -eq 0 ]; then
   echo "Todo OK."
 else

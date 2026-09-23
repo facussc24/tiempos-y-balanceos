@@ -42,7 +42,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { sinCuerposHeredoc } from './shellTexto.mjs';
+import { sinCuerposHeredoc, sinCuerposHeredocDeGit, sinArgumentosDeCommit, analizarComando, comandosSimples } from './shellTexto.mjs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -125,16 +125,18 @@ export function parsear(raw) {
   try { j = JSON.parse(raw); } catch { j = null; }
   if (!j || typeof j !== 'object') {
     const r = rescatarCampos(raw);
-    return { ok: false, raw, rescate: r, tool: '', cmd: '', file: '', content: '', target: '', cmd6: '', body6: '', toolL: '', fileL: '', parsed4: '', parsed3: '' };
+    return { ok: false, raw, rescate: r, tool: '', cmd: '', file: '', content: '', cwd: '', target: '', cmd6: '', body6: '', toolL: '', fileL: '', parsed4: '', parsed3: '' };
   }
   const t = j.tool_input && typeof j.tool_input === 'object' ? j.tool_input : {};
-  return armarCtx({ raw, tool: String(j.tool_name ?? ''), cmd: String(t.command ?? ''), file: String(t.file_path ?? ''), content: String(t.content ?? t.new_string ?? '') });
+  // `cwd` es el directorio de la sesion cuando corre la tool (22/09/2026): con el, un `rm x`
+  // relativo se sabe DONDE borra sin adivinarlo por palabras sueltas del comando.
+  return armarCtx({ raw, tool: String(j.tool_name ?? ''), cmd: String(t.command ?? ''), file: String(t.file_path ?? ''), content: String(t.content ?? t.new_string ?? ''), cwd: typeof j.cwd === 'string' ? j.cwd : '' });
 }
 
-function armarCtx({ raw, tool, cmd, file, content, parsed4 }) {
+function armarCtx({ raw, tool, cmd, file, content, parsed4, cwd = '' }) {
   const toolL = limpiar(tool), cmd6 = limpiar(cmd).slice(0, CORTE), fileL = limpiar(file), body6 = limpiar(content).slice(0, CORTE);
   return {
-    ok: true, raw, rescate: null, tool, cmd, file, content, target: `${cmd} ${file}`,
+    ok: true, raw, rescate: null, tool, cmd, file, content, cwd, target: `${cmd} ${file}`,
     cmd6, body6, toolL, fileL,
     parsed4: parsed4 ?? [toolL, cmd6, fileL, body6].join('\x1f'),
     parsed3: [toolL, cmd6, fileL].join('\x1f'),
@@ -384,23 +386,93 @@ pobres + failures mal alocados que el equipo APQP tuvo que corregir post-hoc.
 // Regla git-deploy: "SIEMPRE npm run build antes de pushear" (incidente 2026-04-13: 3 deploys
 // rotos por un import sin dependencia). vite solo escribe dist/ cuando pasa, asi que dist mas
 // nuevo que todo el codigo == hubo build exitoso post-cambios.
+//
+// 22/09/2026: mira SOLO lo que va en el push. Antes comparaba contra dist/ la fecha de CUALQUIER
+// .ts del arbol, y con otras sesiones editando codigo en paralelo el push de un .md quedaba
+// frenado (e1f76bb0 11/09 LECCIONES, 903ada0d 21/09 un SKILL.md): cada falso positivo costaba
+// un build completo. Ahora: los commits sin subir (@{u}..HEAD) mas lo que el MISMO comando va a
+// commitear (lo stageado, lo que nombra su `git add`, y todo lo modificado si es `commit -a`).
+// Si ahi no hay codigo que el build compile, no hay build que exigir. Si no se puede saber que
+// va en el push (sin upstream ni origin), queda la regla vieja.
+const esCodigoDeBuild = (f) => /\.(ts|tsx|css)$/i.test(f) || /^(index\.html|package\.json)$/i.test(f);
+
+/** Archivos (rutas del repo) que van en el push que arma `cmd`; null si no se puede saber. */
+export function archivosDelPush(cmd, root) {
+  const git = (...a) => spawnSync('git', a, { cwd: root, encoding: 'utf8' });
+  const nombres = (r) => (r.status === 0 ? String(r.stdout || '').split('\0').filter(Boolean) : null);
+  let base = null;
+  for (const ref of ['@{u}', 'origin/HEAD', 'origin/main']) {
+    base = nombres(git('diff', '--name-only', '-z', `${ref}..HEAD`));
+    if (base) break;
+  }
+  if (!base) return null;
+  const set = new Set(base);
+  const lineas = sinArgumentosDeCommit(sinCuerposHeredoc(cmd));
+  if (!/\bgit\s+(-C\s+\S+\s+)?commit\b/.test(lineas)) return [...set];
+  // El commit que arma este mismo comando: lo que ya esta stageado entra entero.
+  for (const f of nombres(git('diff', '--cached', '--name-only', '-z')) || []) set.add(f);
+  const statusDe = (specs) => {
+    const r = git('status', '--porcelain', '-z', '--untracked-files=all', '--', ...specs);
+    const partes = r.status === 0 ? String(r.stdout || '').split('\0') : [];
+    const out = [];
+    for (let i = 0; i < partes.length; i++) {
+      const e = partes[i];
+      if (e.length < 4) continue;
+      out.push(e.slice(3));
+      if (/[RC]/.test(e.slice(0, 2))) i++; // renombre: el nombre viejo viene a continuacion
+    }
+    return out;
+  };
+  for (const c of comandosSimples(lineas)) {
+    const p = c.palabras;
+    let k = p.indexOf('git');
+    if (k < 0) continue;
+    k++;
+    while (k < p.length && /^-(C|c)$/.test(p[k])) k += 2;
+    const sub = p[k];
+    const args = p.slice(k + 1);
+    if (sub === 'add') {
+      const todo = args.some((a) => /^(-A|--all|-u|--update|\.|:\/|\*)$/.test(a));
+      const specs = args.filter((a) => !/^-/.test(a));
+      for (const f of statusDe(todo || !specs.length ? [] : specs)) set.add(f);
+    } else if (sub === 'commit' && args.some((a) => a === '--all' || /^-[A-Za-z]*a[A-Za-z]*$/.test(a))) {
+      for (const f of nombres(git('diff', '--name-only', '-z', 'HEAD')) || []) set.add(f);
+    }
+  }
+  return [...set];
+}
+
 GUARDIANES['push-guard'] = (ctx, { env }) => {
   const cmd = ctx.cmd;
   if (!cmd || !/(^|[;&|]\s*)git\s+(-C\s+\S+\s+)?push/m.test(cmd)) return null;
   const root = raizProyecto(env);
+  const enPush = archivosDelPush(cmd, root);
+  const codigo = enPush ? enPush.filter(esCodigoDeBuild) : null;
+  if (codigo && !codigo.length) return null; // solo docs, reglas, scripts: el build no los compila
   const dist = path.join(root, 'dist', 'index.html');
   let distM;
   try { distM = Math.floor(fs.statSync(dist).mtimeMs / 1000); } catch {
     return bloqueo("PUSH-GUARD: no existe dist/index.html — corre 'npm run build' ANTES de pushear (regla git-deploy). Si el build pasa, reintenta el push.");
   }
-  const r = spawnSync('git', ['ls-files', '-z', '--', '*.ts', '*.tsx', '*.css', 'index.html', 'package.json', 'vite.config.ts'], { cwd: root, encoding: 'utf8' });
+  let lista = codigo;
+  if (!lista) {
+    const r = spawnSync('git', ['ls-files', '-z', '--', '*.ts', '*.tsx', '*.css', 'index.html', 'package.json', 'vite.config.ts'], { cwd: root, encoding: 'utf8' });
+    lista = (r.stdout || '').split('\0').filter(Boolean);
+  }
   let newest = 0;
-  for (const f of (r.stdout || '').split('\0')) {
-    if (!f) continue;
-    try { newest = Math.max(newest, Math.floor(fs.statSync(path.join(root, f)).mtimeMs / 1000)); } catch { /* borrado sin commitear */ }
+  let falta = false;
+  for (const f of lista) {
+    try { newest = Math.max(newest, Math.floor(fs.statSync(path.join(root, f)).mtimeMs / 1000)); } catch { falta = true; /* borrado */ }
+  }
+  // Un .ts BORRADO en el push tambien puede romper el build (un import que quedo colgando): la
+  // referencia pasa a ser la hora del ultimo commit.
+  if (codigo && falta) {
+    const t = parseInt(spawnSync('git', ['log', '-1', '--format=%ct'], { cwd: root, encoding: 'utf8' }).stdout, 10);
+    if (Number.isFinite(t)) newest = Math.max(newest, t);
   }
   if (newest > distM) {
-    return bloqueo("PUSH-GUARD: hay codigo fuente mas nuevo que el ultimo build (dist/). Corre 'npm run build' primero (regla git-deploy — incidente 2026-04-13: el build de CI valida imports que el dev server no). Si pasa, reintenta el push.");
+    const cuales = codigo ? ` En el push: ${codigo.slice(0, 5).join(', ')}${codigo.length > 5 ? ` y ${codigo.length - 5} mas` : ''}.` : '';
+    return bloqueo(`PUSH-GUARD: hay codigo fuente mas nuevo que el ultimo build (dist/).${cuales} Corre 'npm run build' primero (regla git-deploy — incidente 2026-04-13: el build de CI valida imports que el dev server no). Si pasa, reintenta el push.`);
   }
   return null;
 };
@@ -702,6 +774,35 @@ va al archivo al cerrar la tarea.
 
 Incidente 2026-08-28: PDF de difusion de BOM generado en el Escritorio y reportado como
 entregado. Fak: "no me dejes cosas en el escritorio".`;
+
+/**
+ * ¿Algun borrado del comando cae en la zona? (22/09/2026)
+ * Antes: la zona y el verbo se buscaban por separado en TODO el comando, y ~10 de los 19
+ * bloqueos del 05/09 al 22/09 eran un `rm` del scratchpad o del repo con la palabra Escritorio
+ * en otro lado (un `find` que la listaba, el `python -c` de al lado). Ahora cuenta el OBJETIVO:
+ *   · objetivo resuelto (variables del mismo comando, `cd` previos, cwd de la sesion) en la zona -> borra;
+ *   · objetivo que no se puede resolver (variable de un for, `$(...)`, `xargs rm`, rm sin argumentos
+ *     que recibe por tuberia) con la zona a la vista -> borra (regla vieja: no se adivina);
+ *   · verbo de borrar que el analisis no reconoce como comando (codigo pegado en python -c, un
+ *     heredoc, powershell -Command; o una forma rara) con la zona a la vista -> borra (regla vieja).
+ */
+function borraEnZona(an, zonaALaVista) {
+  if (zonaALaVista && (ESC_BORRA.test(an.residual) || ESC_BORRA_CMD.test(an.residual))) return true;
+  for (const b of an.borrados) {
+    if (b.objetivos.some((o) => o.ok && ESC_ZONA.test(o.valor))) return true;
+    if (zonaALaVista && (b.sinObjetivo || b.objetivos.some((o) => !o.ok))) return true;
+  }
+  return false;
+}
+
+/** Una salida ya resuelta que cae adentro del Escritorio y es un entregable (o una carpeta, y el comando nombra uno). */
+function generaEntregable(salida, cmd) {
+  if (!ESC_DENTRO.test(salida)) return false;
+  if (ESC_ENTREGABLE.test(salida)) return true;
+  const hoja = salida.replace(/[\\/]+$/, '').split(/[\\/]/).pop() || '';
+  return !/\.[A-Za-z0-9]{1,5}$/.test(hoja) && ESC_ENTREGABLE.test(cmd);
+}
+
 GUARDIANES['escritorio-guard'] = (ctx, { env }) => {
   let tool, cmd, file;
   if (ctx.ok) { tool = ctx.toolL; cmd = ctx.cmd6; file = ctx.fileL; }
@@ -713,10 +814,17 @@ GUARDIANES['escritorio-guard'] = (ctx, { env }) => {
   const todo = `${cmd} ${file}`;
   // El propio script es la via autorizada: pasa siempre, y sin recordatorio.
   if (/_escritorio\.mjs/.test(todo)) return null;
-  if (!ESC_ZONA.test(todo)) return null;
+  const zonaEnTexto = ESC_ZONA.test(todo);
+  // La sesion puede estar PARADA adentro del Escritorio (un `cd` de antes): un `rm x` relativo
+  // borra ahi aunque el comando no nombre la zona. Eso solo cuenta para el borrado.
+  const zonaEnCwd = ctx.ok && ESC_ZONA.test(ctx.cwd || '');
+  if (!zonaEnTexto && !zonaEnCwd) return null;
+  // Con JSON sano se mira A QUE apunta cada borrado y cada salida (analizarComando); con JSON
+  // roto no hay comando confiable y queda la regla vieja sobre el texto entero.
+  const an = ctx.ok && ctx.cmd ? analizarComando(ctx.cmd, { cwd: ctx.cwd || null }) : null;
 
   // 1. Borrar: prohibido, sin excepcion
-  if (ESC_BORRA.test(cmd) || ESC_BORRA_CMD.test(cmd)) {
+  if (an ? borraEnZona(an, zonaEnTexto || zonaEnCwd) : (ESC_BORRA.test(cmd) || ESC_BORRA_CMD.test(cmd))) {
     return bloqueo(`[ESCRITORIO-GUARD] BLOQUEADO: estas por borrar algo del Escritorio o de la biblioteca de
 Ingenieria — que ademas lleva "(NUNCA BORRAR)" en el nombre y esta bajo control documental.
 
@@ -728,6 +836,8 @@ ${ESC_ARCHIVAR}
 
 Si de verdad hay que sacar algo, lo decide Fak explicitamente, no yo.`);
   }
+  // Solo el cwd estaba en la zona: las demas reglas miran lo que el comando NOMBRA.
+  if (!zonaEnTexto) return null;
   // 2. Mover a mano hacia/desde el archivo
   if (/(_TERMINADAS|TAREAS CERRADAS)/i.test(todo) && ESC_MUEVE.test(cmd)) {
     return bloqueo(`[ESCRITORIO-GUARD] BLOQUEADO: mover a mano hacia/desde el archivo de tareas cerradas.
@@ -766,6 +876,15 @@ memoria y, si la tarea se cierra, a la fila del listado (--quien / --que / --don
   // proposito: lo que Fak va a USAR YA va suelto en el Escritorio (10/08/2026).
   if (esEscritura) {
     if (ESC_DENTRO.test(file) && ESC_ENTREGABLE.test(file)) return bloqueo(TEXTO_ESC_GENERA);
+  } else if (an) {
+    // La SALIDA real (--salida/--out/--output/-o/>) tiene que caer adentro del Escritorio. Antes
+    // bastaba con que las tres cosas aparecieran en cualquier lado: el `-o` de un `find` que
+    // LISTABA pptx del Escritorio contaba como salida (6e8e78c2, 10/09), y un generador que
+    // vive en el Escritorio pero escribe al scratchpad tambien (2934e9bd, 08/09).
+    if (an.salidas.some((s) => s.ok && generaEntregable(s.valor, cmd))) return bloqueo(TEXTO_ESC_GENERA);
+    const reglaVieja = ESC_GENERA.test(cmd) && ESC_DENTRO.test(cmd) && ESC_ENTREGABLE.test(cmd);
+    // Salida que no se pudo resolver, o la opcion de salida adentro de codigo pegado: regla vieja.
+    if (reglaVieja && (an.salidas.some((s) => !s.ok) || ESC_GENERA.test(an.embebido))) return bloqueo(TEXTO_ESC_GENERA);
   } else if (ESC_GENERA.test(cmd) && ESC_DENTRO.test(cmd) && ESC_ENTREGABLE.test(cmd)) {
     return bloqueo(TEXTO_ESC_GENERA);
   }
@@ -950,39 +1069,83 @@ ${DOC_CIERRE}`);
 // `permissions.deny` cita `rm -rf` y `Remove-Item -Recurse` justamente para PROHIBIRLOS en las PCs
 // de Claude Barack. Sin la excepcion, el guardian bloqueaba escribir la regla que lo replica.
 const BM_EXCEPCION = /(__tests__|\.test\.|\.spec\.|[/\\]hooks[/\\]([a-z-]+-guard|_dispatcher)\.sh$|[/\\]_lib[/\\]guardianes\.mjs$|[/\\]managed-settings(\.[a-z]+)?\.json$)/i;
+// V3: el patron del borrado PERMANENTE (sin Papelera).
+const BM_V3 = /(Remove-Item[^|;\n]*-(Force|Recurse)|rm +-[a-z]*r[a-z]*f|rm +-[a-z]*f[a-z]*r|DeletePermanently|shutil\.rmtree|fs\.rmSync)/i;
+// V1 (22/09/2026): el -Include ignorado solo hace dano si despues se MUEVE, COPIA o BORRA lo listado.
+// Un listado de solo lectura con -Recurse -Include (4af94165 07/09, b2ae0714 15/09) no toca nada.
+// Los alias cortos cuentan solo en posicion de COMANDO (principio de linea o despues de | ; { ( &):
+// "fuera del telefono" dentro de un echo no es un `del` (4af94165, 07/09).
+const BM_MUTA = /\b(Remove-Item|Move-Item|Copy-Item|Rename-Item|Clear-Content)\b|(^|[|;{(&])[ \t]*(ri|rm|rmdir|del|erase|rd|mi|mv|move|cpi|cp|copy|ren|rni|robocopy|xcopy)(?=\s|$)|Delete(File|Directory)|Move(File|Directory)|Copy(File|Directory)|\[(System\.)?IO\.(File|Directory)\]::(Delete|Move|Copy)|\.(Delete|MoveTo|CopyTo)\(|shutil\.|os\.(remove|rename|unlink)/im;
+// V3 (22/09/2026): destinos efimeros que un borrado permanente puede limpiar sin Papelera. Se
+// comparan contra el OBJETIVO resuelto del rm (no contra el comando entero): el TEMP de Windows
+// (ahi vive el scratchpad; $TEMP/$TMPDIR resuelven ahi), /tmp, y el tmp/ y .video/ de un repo en
+// C:\Dev\<repo>\ (7f176ac8 `rm -rf tmp/amfe158`, 623be82a `rm -rf .video/clips`), node_modules, .venv.
+const BM_EFIMERO = /AppData[\\/]Local[\\/]Temp([\\/]|$)|^(\/|[A-Za-z]:[\\/])tmp([\\/]|$)|[\\/]Dev[\\/][^\\/]+[\\/](tmp|\.video)([\\/]|$)|[\\/]node_modules([\\/]|$)|[\\/]\.venv([\\/]|$)/i;
+// Archivos que no se ejecutan: un plan o una nota que CITA `rm -rf` no borra nada (fc581284, 07/09).
+const BM_PROSA = /\.(md|markdown|txt|rst|csv|tsv|log)$/i;
+
+/** Un comando de shell cuyos borrados permanentes apuntan TODOS a destinos efimeros resueltos. */
+function borraSoloEfimero(ctx) {
+  const an = analizarComando(sinCuerposHeredocDeGit(ctx.cmd), { cwd: ctx.cwd || null });
+  if (!an.borrados.length) return false;
+  // Queda un borrado permanente en codigo pegado (python -c, heredoc, -Command) o en una forma
+  // que el analisis no desarmo: no se sabe a que apunta.
+  if (BM_V3.test(limpiar(an.residual))) return false;
+  return an.borrados.every((b) => !b.sinObjetivo && b.objetivos.length
+    && b.objetivos.every((o) => o.ok && BM_EFIMERO.test(o.valor)));
+}
+
 GUARDIANES['borrado-masivo-guard'] = (ctx) => {
   let tool, cmd, file, body;
-  if (ctx.ok) { tool = ctx.toolL; cmd = ctx.cmd6; file = ctx.fileL; body = ctx.body6; }
-  else {
+  if (ctx.ok) {
+    // El texto ENTERO (antes: cortado a 6000 y, cerca del tope, con el JSON crudo encima, que
+    // es lo mismo escapado). Los cuerpos de heredoc de git y el -m de un commit son PROSA: un
+    // mensaje que cita `rm -rf` no borra nada (37c172a1, 07/09).
+    tool = ctx.toolL; file = ctx.fileL;
+    cmd = limpiar(sinArgumentosDeCommit(sinCuerposHeredocDeGit(ctx.cmd)));
+    body = limpiar(ctx.content);
+  } else {
     // Red de seguridad: si no se pudo parsear, mirar el JSON crudo (mas lo rescatado a mano).
     tool = ctx.rescate.tool; file = ctx.rescate.file;
     cmd = `${ctx.rescate.cmd} ${ctx.raw}`; body = `${ctx.rescate.content} ${ctx.raw}`;
+    // Segunda red: el contenido puede venir RECORTADO y el bucle que borra suele estar al FINAL
+    // (verificado 2026-08-13 con un .py de 4.842 caracteres). Si llego cerca del tope, se suma
+    // el JSON crudo al haystack.
+    if (body.length >= TRUNC_HINT || cmd.length >= TRUNC_HINT) body = `${body} ${ctx.raw}`;
   }
-  // Segunda red: el contenido puede venir RECORTADO y el bucle que borra suele estar al FINAL
-  // (verificado 2026-08-13 con un .py de 4.842 caracteres). Si llego cerca del tope, se suma
-  // el JSON crudo al haystack.
-  if (body.length >= TRUNC_HINT || cmd.length >= TRUNC_HINT) body = `${body} ${ctx.raw}`;
   const haystack = `${cmd} ${body}`;
   const esEscritura = tool === 'Write' || tool === 'Edit';
+  const esShell = ctx.ok && (tool === 'Bash' || tool === 'PowerShell');
   // Los tests, los guardianes y este modulo CITAN los patrones peligrosos como dato: es su
   // trabajo. Sin esta excepcion el guardian se bloquea a si mismo (paso al escribir su test).
   if (esEscritura && BM_EXCEPCION.test(file)) return null;
 
   let motivo = '';
-  // V1: -Include junto con -Recurse. El filtro se ignora en silencio y el alcance se dispara.
-  if (/Get-ChildItem/i.test(haystack) && /-Recurse/i.test(haystack) && /-Include/i.test(haystack) && !/\\\*|\/\*/.test(haystack)) motivo += 'V1';
+  // V1: -Include junto con -Recurse. El filtro se ignora en silencio y el alcance se dispara;
+  // el dano lo hace lo que se MUEVE, COPIA o BORRA con esa lista.
+  // BM_MUTA se prueba sobre el texto CON sus saltos de linea (un alias al principio de un renglon
+  // de un .ps1 es un comando); con JSON roto, sobre el haystack de la red.
+  const conLineas = ctx.ok ? `${sinArgumentosDeCommit(sinCuerposHeredocDeGit(ctx.cmd))}\n${ctx.content}` : haystack;
+  if (/Get-ChildItem/i.test(haystack) && /-Recurse/i.test(haystack) && /-Include/i.test(haystack) && !/\\\*|\/\*/.test(haystack)
+    && BM_MUTA.test(conLineas)) motivo += 'V1';
   // V2: .ps1 con caracteres no-ASCII (powershell.exe 5.1 lo lee como ANSI si no tiene BOM).
   if (/\.ps1$/i.test(file) && /[^\x00-\x7F]/.test(body)) motivo += 'V2';
   // V3: borrado permanente en vez de Papelera. Excluidos (auditor 07/08): `git rm` (queda en
-  // el historial) y scratchpad/temporales (efimeros, no son cosas de Fak).
+  // el historial) y scratchpad/temporales (efimeros, no son cosas de Fak). Desde 22/09 tambien
+  // pasan: un archivo de prosa que lo cita, y un comando de shell cuyos rm apuntan SOLO a
+  // temporales (el objetivo resuelto, no la palabra en cualquier lado).
   const excluido = /(^|[;&|]|\s)git\s+rm\b/i.test(haystack)
     || /(scratchpad|[/\\]tmp[/\\]|AppData[/\\]Local[/\\]Temp|node_modules|[/\\]dist[/\\]?|\.venv)/i.test(haystack);
-  if (!excluido && /(Remove-Item[^|;\n]*-(Force|Recurse)|rm +-[a-z]*r[a-z]*f|rm +-[a-z]*f[a-z]*r|DeletePermanently|shutil\.rmtree|fs\.rmSync)/i.test(haystack)) motivo += 'V3';
+  if (!excluido && !(esEscritura && BM_PROSA.test(file)) && BM_V3.test(haystack) && !(esShell && borraSoloEfimero(ctx))) motivo += 'V3';
   // V4: script que borra/mueve en lote sin dry-run. Los tokens se buscan con los comentarios
   // afuera (05/09/2026: un comentario que decia "no usa fs.rename ni mv" bloqueo dos Write).
+  // `mv`/`rm` pelados son verbos solo en scripts de shell; en .py/.mjs/.js cuentan como comando
+  // entre comillas (os.system("rm ..."), ["mv", ...]): `mv = re.match(...)` es una variable
+  // (829f7135, 12/09).
   if (esEscritura && /\.(ps1|sh|mjs|js|py|bat|cmd)$/i.test(file)) {
     const codigo = sinComentarios(body);
-    if (/(Remove-Item|Move-Item|DeleteFile|DeleteDirectory|shutil\.(move|rmtree)|os\.remove|fs\.(unlink|rm|rename)|\bmv\b|\brm\b)/i.test(codigo)
+    const verboSuelto = /\.(ps1|sh|bat|cmd)$/i.test(file) ? /\bmv\b|\brm\b/i : /["'\x60]\s*(mv|rm)\b/i;
+    if ((/(Remove-Item|Move-Item|DeleteFile|DeleteDirectory|shutil\.(move|rmtree)|os\.remove|fs\.(unlink|rm|rename))/i.test(codigo) || verboSuelto.test(codigo))
       && /(foreach|for +\(|for +[a-z_]+ +in |while|Get-ChildItem|find |glob|walk|readdir|listdir|iterdir|rglob|scandir)/i.test(codigo)
       && !/dry[-_ ]?run|dryRun|DRYRUN|WhatIf/i.test(body)) motivo += 'V4';
   }
@@ -1512,17 +1675,45 @@ export const NOMBRES = Object.keys(GUARDIANES);
 
 // ─────────────────────────────────────────────────────────────────────────── motor
 
+/**
+ * CARRIL DE AUTO-REPARACION (22/09/2026). Un guardian roto bloquea TODO Bash/Edit/Write, y eso
+ * incluye el Edit que lo arreglaria: el 10/09 (03292ba3, un export sin definir) todas las sesiones
+ * quedaron trabadas ~9 minutos hasta que un subagente lo arreglo desde un worktree, y el 21/09
+ * paso dos veces mas (un ReferenceError adentro de apqp-cliente-guard). Solo un Edit/Write sobre
+ * los archivos DE LOS GUARDIANES pasa cuando el que falla es un guardian: guardianes.mjs, los
+ * modulos locales que importa (./shellTexto.mjs) y los .data.json que lee (los de scripts/_lib y
+ * los que su fuente nombra). Todo lo demas sigue bloqueado. El despachador (_dispatcher.sh) repite
+ * esta misma regla para cuando el modulo ni siquiera carga (ahi no puede importar esta funcion).
+ */
+export function esArchivoDeReparacion(file, fuente) {
+  const f = String(file ?? '').replace(/\\/g, '/');
+  const base = (f.split('/').pop() || '').toLowerCase();
+  if (!base) return false;
+  const enLib = /(^|\/)scripts\/_lib\/[^/]+$/i.test(f);
+  if (enLib && (base === 'guardianes.mjs' || base.endsWith('.data.json'))) return true;
+  let src = fuente;
+  if (src === undefined) { try { src = fs.readFileSync(fileURLToPath(import.meta.url), 'utf8'); } catch { src = ''; } }
+  const locales = [...src.matchAll(/from\s+['"]\.\/([^'"]+)['"]/g)].map((m) => m[1].toLowerCase());
+  if (enLib && locales.includes(base)) return true;
+  const datos = [...src.matchAll(/['"`/\\]([\w.-]+\.data\.json)['"`]/g)].map((m) => m[1].toLowerCase());
+  return datos.includes(base);
+}
+
 /** Corre los guardianes pedidos. Una excepcion adentro de uno BLOQUEA con el error. */
 export function correr(nombres, ctx, deps = {}) {
   const ahora = deps.ahora ?? Math.floor(Date.now() / 1000);
   const env = deps.env ?? process.env;
-  const res = { bloqueos: [], avisos: [], recordatorios: [], supabase: false };
+  const res = { bloqueos: [], avisos: [], recordatorios: [], contextos: [], supabase: false };
+  const reparando = ctx.ok && (ctx.tool === 'Edit' || ctx.tool === 'Write') && esArchivoDeReparacion(ctx.file);
   for (const n of nombres) {
     const g = GUARDIANES[n];
     if (!g) continue;
     let v;
     try { v = g(ctx, { ahora, env }); } catch (e) {
-      res.bloqueos.push({ guardian: n, texto: `[${n}] ERROR interno del guardian — se bloquea por seguridad (un guardian que no corre parece un guardian que aprobo):\n${e && e.stack || e}` });
+      const texto = `[${n}] ERROR interno del guardian — se bloquea por seguridad (un guardian que no corre parece un guardian que aprobo):\n${e && e.stack || e}`;
+      if (reparando) {
+        res.contextos.push({ guardian: n, texto: `${texto}\n[CARRIL DE AUTO-REPARACION] Este Edit/Write es sobre un archivo de los guardianes (${ctx.file}): pasa igual para que se pueda arreglar. Cualquier otra herramienta sigue bloqueada hasta que el guardian vuelva a correr.` });
+      } else res.bloqueos.push({ guardian: n, texto });
       continue;
     }
     for (const x of [].concat(v ?? [])) {
@@ -1544,10 +1735,12 @@ export function correr(nombres, ctx, deps = {}) {
 export function resolver(res, { ahora = Math.floor(Date.now() / 1000), marcar = true } = {}) {
   const err = res.avisos.map((a) => a.texto);
   if (res.bloqueos.length) {
-    err.push(...res.bloqueos.map((b) => b.texto));
+    err.push(...(res.contextos || []).map((c) => c.texto), ...res.bloqueos.map((b) => b.texto));
     return { exit: 2, stderr: `${err.join('\n')}\n`, stdout: '', contexto: '' };
   }
-  const textos = [];
+  // Los avisos del carril de auto-reparacion van al contexto sin cooldown: el modelo tiene que
+  // saber que un guardian esta roto aunque la herramienta haya pasado.
+  const textos = (res.contextos || []).map((c) => c.texto);
   const vistos = new Set();
   for (const r of res.recordatorios) {
     if (vistos.has(r.flag)) continue;

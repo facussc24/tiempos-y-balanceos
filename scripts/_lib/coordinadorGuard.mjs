@@ -11,7 +11,9 @@
  *
  * QUE BLOQUEA
  *   SendMessage  -> si el cuerpo no salio de scripts/_encargo.mjs (sin marcador, marcador
- *                   inventado, o texto editado despues de validarlo).
+ *                   inventado, o texto editado despues de validarlo). EXCEPTO (22/09/2026) si
+ *                   el destino es un subagente que lanzo esta MISMA sesion (su `name` o su
+ *                   agentId, leidos del transcript): ahi corren los checks de un Agent (G3 y G4).
  *   Agent        -> solo los dos checks baratos: segunda tarea (G3) y accion irreversible
  *                   (G4). El canal completo no aplica: lanzar subagentes lo hacen todas las
  *                   sesiones todo el dia y un gate pesado ahi es el candado que se saltea.
@@ -98,8 +100,69 @@ export function mismoTexto(cuerpo, textoValidado) {
   return limpiar(cuerpo) === limpiar(textoValidado);
 }
 
+/**
+ * Los subagentes que lanzo ESTA sesion, leidos de su propio transcript (`transcript_path` del
+ * payload): el `name` con que se lanzo cada Agent/Task y el `agentId` que devolvio ese
+ * lanzamiento. Solo cuentan los agentIds de resultados cuyo tool_use_id es un Agent/Task de la
+ * sesion (no un texto cualquiera que diga "agentId:"). Transcript ilegible = conjunto vacio:
+ * el mensaje vuelve al canal completo.
+ */
+export function subagentesPropios(transcriptPath, sessionId) {
+  const propios = new Set();
+  if (!transcriptPath) return propios;
+  let txt;
+  try { txt = fs.readFileSync(transcriptPath, 'utf8'); } catch { return propios; }
+  const lanzamientos = new Set();
+  const resultados = [];
+  for (const l of txt.split('\n')) {
+    if (!/"name":"(Agent|Task)"|agentId/.test(l)) continue;
+    let j;
+    try { j = JSON.parse(l); } catch { continue; }
+    if (j?.isSidechain) continue;
+    if (sessionId && j?.sessionId && j.sessionId !== sessionId) continue;
+    const c = j?.message?.content;
+    if (!Array.isArray(c)) continue;
+    for (const b of c) {
+      if (b?.type === 'tool_use' && (b.name === 'Agent' || b.name === 'Task')) {
+        lanzamientos.add(b.id);
+        if (typeof b.input?.name === 'string' && b.input.name.trim()) propios.add(b.input.name.trim());
+      } else if (b?.type === 'tool_result') resultados.push(b);
+    }
+  }
+  for (const b of resultados) {
+    if (!lanzamientos.has(b.tool_use_id)) continue;
+    const texto = typeof b.content === 'string' ? b.content
+      : Array.isArray(b.content) ? b.content.map((x) => (typeof x?.text === 'string' ? x.text : '')).join('\n') : '';
+    for (const m of texto.matchAll(/agentId:\s*([A-Za-z0-9_-]+)/g)) propios.add(m[1]);
+  }
+  return propios;
+}
+
+/** Los dos checks baratos (G4 irreversible, G3 segunda tarea) sobre un texto que arranca trabajo. */
+function checksDeLanzamiento(texto, prompt, quien = 'un subagente') {
+  const irre = detectarIrreversibles(texto);
+  if (irre.length) {
+    return { ok: false, titulo: `${quien} no puede recibir una orden irreversible`,
+      lineas: [`  Encontrado: "${irre[0].encontrados[0]}"  (${irre[0].id})`,
+               `  ${irre[0].motivo}`,
+               `  Se revierte con: ${irre[0].revierte}`,
+               '',
+               '  Eso vuelve a Fak. Sacalo del prompt y relanzá.'] };
+  }
+  const seg = detectarSegundaTarea(prompt);
+  if (seg.length) {
+    return { ok: false, titulo: 'un subagente, un entregable',
+      lineas: [`  Conector de segunda tarea: "${seg.join('", "')}"`,
+               '  El 31/08 se le dieron dos tareas a una sesion: agarro la segunda y dejo',
+               '  parada la primera, que era la que importaba.',
+               '',
+               '  Partilo en dos lanzamientos.'] };
+  }
+  return { ok: true };
+}
+
 /** Decide sobre un payload ya parseado. Exportada para poder testear sin proceso. */
-export function decidir(payload, { hayEscape, leerEncargo } = {}) {
+export function decidir(payload, { hayEscape, leerEncargo, leerSubagentes } = {}) {
   const tool = payload?.tool_name;
   const inp = payload?.tool_input || {};
   const sid = payload?.session_id;
@@ -115,25 +178,7 @@ export function decidir(payload, { hayEscape, leerEncargo } = {}) {
                       'mcp__scheduled-tasks__create_scheduled_task'];
   if (LANZADORAS.includes(tool)) {
     const texto = `${inp.description || ''} ${inp.prompt || ''} ${inp.title || ''} ${inp.tldr || ''}`;
-    const irre = detectarIrreversibles(texto);
-    if (irre.length) {
-      return { ok: false, titulo: 'un subagente no puede recibir una orden irreversible',
-        lineas: [`  Encontrado: "${irre[0].encontrados[0]}"  (${irre[0].id})`,
-                 `  ${irre[0].motivo}`,
-                 `  Se revierte con: ${irre[0].revierte}`,
-                 '',
-                 '  Eso vuelve a Fak. Sacalo del prompt y relanzá.'] };
-    }
-    const seg = detectarSegundaTarea(inp.prompt || '');
-    if (seg.length) {
-      return { ok: false, titulo: 'un subagente, un entregable',
-        lineas: [`  Conector de segunda tarea: "${seg.join('", "')}"`,
-                 '  El 31/08 se le dieron dos tareas a una sesion: agarro la segunda y dejo',
-                 '  parada la primera, que era la que importaba.',
-                 '',
-                 '  Partilo en dos lanzamientos.'] };
-    }
-    return { ok: true };
+    return checksDeLanzamiento(texto, inp.prompt || '');
   }
 
   // Cualquier otra tool que empiece trabajo en otro lado y todavia no este contemplada:
@@ -148,6 +193,21 @@ export function decidir(payload, { hayEscape, leerEncargo } = {}) {
 
   const cuerpo = inp.message || inp.content || '';
   if (typeof cuerpo !== 'string' || !cuerpo.trim()) return { ok: true };
+
+  // Un SendMessage a un SUBAGENTE que lanzo esta MISMA sesion no sale hacia otra sesion: es
+  // seguir hablandole a un Agent propio (una correccion, "me devolviste las rutas pero no el
+  // veredicto"). 22/09/2026: 6 de los 9 bloqueos "no salio de _encargo.mjs" desde el 05/09 eran
+  // esto (los otros 3 iban a otra sesion), y cada uno se resolvia con el escape + reenvio (2 turnos). Pasa por los MISMOS checks
+  // que el lanzamiento (G4 irreversible, G3 segunda tarea). Lo que va a otra sesion (`uds:`, un
+  // nombre que esta sesion no lanzo) o por el send_message del MCP sigue exigiendo _encargo.mjs.
+  const destino = String(inp.to || inp.recipient || '').trim();
+  if (tool === 'SendMessage' && destino && !/^uds:/i.test(destino)) {
+    const propios = leerSubagentes ? leerSubagentes() : subagentesPropios(payload?.transcript_path, sid);
+    if (propios.has(destino)) {
+      const r = checksDeLanzamiento(cuerpo, cuerpo, `el subagente ${destino}`);
+      return r.ok ? { ok: true, subagentePropio: destino } : r;
+    }
+  }
 
   const esc = buscarEscape();
   if (esc) return { ok: true, escape: esc };
@@ -224,7 +284,6 @@ export function decidir(payload, { hayEscape, leerEncargo } = {}) {
 
   // El encargo salio PARA una sesion. Mandarlo a otra es exactamente el error de hablarle a
   // la sesion equivocada, que G7 dice cubrir y el hook no comprobaba (auditoria 02/09, H4).
-  const destino = inp.to || inp.recipient || '';
   if (reg.a && destino && String(reg.a).trim() !== String(destino).trim()) {
     return { ok: false, titulo: `el encargo ${id} no era para ${destino}`,
       lineas: [`  Se emitio para: ${reg.a}`,

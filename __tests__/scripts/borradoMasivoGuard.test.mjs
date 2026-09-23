@@ -33,11 +33,24 @@ const bash = (command) => ({ tool_name: 'Bash', tool_input: { command } });
 const escribir = (file_path, content) => ({ tool_name: 'Write', tool_input: { file_path, content } });
 
 describe('V1 — -Include ignorado junto a -Recurse (lo que amplio el alcance a 942)', () => {
-    it('bloquea el comando exacto que fallo', () => {
+    it('bloquea el listado del incidente cuando MUEVE lo listado', () => {
         const r = correr(bash(
-            "powershell -Command \"Get-ChildItem -LiteralPath 'C:\\x' -Recurse -File -Include *.step,*.dxf\""));
+            "powershell -Command \"Get-ChildItem -LiteralPath 'C:\\x' -Recurse -File -Include *.step,*.dxf | Move-Item -Destination 'C:\\y'\""));
         expect(r.code).toBe(2);
         expect(r.err).toMatch(/V1/);
+    });
+
+    it('y en un .ps1 que copia y borra lo listado (alias al principio de renglon incluido)', () => {
+        const ps1 = "$l = Get-ChildItem -LiteralPath $args[0] -Recurse -File -Include *.step\nforeach ($f in $l) {\n  cp $f.FullName $args[1]\n}\n";
+        expect(correr(escribir('C:\\tmp\\rescatar.ps1', ps1)).err).toMatch(/V1/);
+    });
+
+    it('22/09/2026: el mismo listado de SOLO LECTURA pasa (no mueve ni borra nada)', () => {
+        expect(correr(bash(
+            "powershell -Command \"Get-ChildItem -LiteralPath 'C:\\x' -Recurse -File -Include *.step,*.dxf | Select-Object FullName\"")).code).toBe(0);
+        // "fuera del telefono" adentro de un echo no es el alias `del` (4af94165, 07/09)
+        expect(correr(bash(
+            "echo \"videos fuera del telefono\"; powershell -Command \"Get-ChildItem -Path C:\\Dev -Recurse -Include *.MOV | Format-Table\"")).code).toBe(0);
     });
 
     it('permite -Recurse con -Filter (la forma correcta)', () => {

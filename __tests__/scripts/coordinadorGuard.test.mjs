@@ -15,8 +15,8 @@ import { describe, it, expect, afterAll } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { decidir, escapeVigente, mismoTexto } from '../../scripts/_lib/coordinadorGuard.mjs';
-import { detectarIrreversibles, detectarSegundaTarea } from '../../scripts/_encargo.mjs';
+import { decidir, escapeVigente, mismoTexto, subagentesPropios } from '../../scripts/_lib/coordinadorGuard.mjs';
+import { detectarIrreversibles, detectarSegundaTarea, declaraSoloLectura } from '../../scripts/_encargo.mjs';
 
 const sinEscape = () => false;
 const conEscape = () => true;
@@ -256,5 +256,121 @@ describe('auditoria 02/09 · falsos positivos que ya no frenan', () => {
   it('FP7 · una orden de verdad SIGUE bloqueando (el gemelo rojo de los FP)', () => {
     bloquea(lanzar('Cargá el remache y cuando termines cerra el arb.'));
     expect(detectarIrreversibles('mandá el mail a Federico').length).toBeGreaterThan(0);
+  });
+});
+
+// ═════════════════════════════════════════════════════════════ falsos positivos 22/09/2026
+// Payloads REALES de los transcripts 05/09-22/09 en fixtures/guardianesFalsosPositivos.json.
+const FX = JSON.parse(fs.readFileSync(path.join(process.cwd(), '__tests__/scripts/fixtures/guardianesFalsosPositivos.json'), 'utf8'));
+const DIR_TR = fs.mkdtempSync(path.join(os.tmpdir(), 'coord-transcript-'));
+afterAll(() => { try { fs.rmSync(DIR_TR, { recursive: true, force: true }); } catch { /* temp */ } });
+
+/**
+ * Un transcript con la forma real de Claude Code: el tool_use del Agent (con `name` si se lanzo
+ * con nombre) y su tool_result con "agentId: <id>". `extra` suma lineas crudas.
+ */
+function transcript(sid, lanzados, extra = []) {
+  const lineas = [];
+  lanzados.forEach((l, i) => {
+    const id = `toolu_${sid.slice(0, 4)}${i}`;
+    const input = { description: 'x', subagent_type: 'general-purpose', prompt: 'Audita y devolve el veredicto.', ...(l.name ? { name: l.name } : {}) };
+    lineas.push({ type: 'assistant', sessionId: sid, message: { role: 'assistant', content: [{ type: 'tool_use', id, name: 'Agent', input }] } });
+    const texto = `Async agent launched successfully. (This tool result is internal metadata.)\nagentId: ${l.agentId || `a${i}f0f0f0f0f0f0f0f`} (internal ID - do not mention to user. Use SendMessage with to: '${l.agentId || 'x'}' to continue this agent.)`;
+    lineas.push({ type: 'user', sessionId: sid, message: { role: 'user', content: [{ tool_use_id: id, type: 'tool_result', content: [{ type: 'text', text: texto }] }] } });
+  });
+  const f = path.join(DIR_TR, `${sid}-${Math.random().toString(36).slice(2)}.jsonl`);
+  fs.writeFileSync(f, [...lineas, ...extra].map((x) => JSON.stringify(x)).join('\n') + '\n');
+  return f;
+}
+/** Los lanzados de una sesion, sacados de los verdes del fixture (los mismos nombres e ids reales). */
+const lanzadosDe = (sid) => FX.coordinadorMensajes.verdes.filter((v) => v.payload.session_id === sid).map((v) => v.lanzado);
+const conTranscript = (c) => ({ ...c.payload, transcript_path: transcript(c.payload.session_id, lanzadosDe(c.payload.session_id)) });
+const lanzar = (prompt) => decidir({ tool_name: 'Agent', tool_input: { description: 'x', prompt } }, { hayEscape: sinEsc });
+
+describe('falsos positivos 22/09 · Agent: negacion bien acotada y prompts de SOLO LECTURA', () => {
+  it('VERDE — los 5 prompts reales que prohibian o mencionaban la accion', () => {
+    for (const c of FX.coordinadorAgent.verdes) expect(decidir(c.payload, { hayEscape: sinEsc }).ok, `${c.sesion} ${c.fecha}: ${c.nota}`).toBe(true);
+  });
+  it('ROJO — el real que SI ordenaba borrar ("Borra el script temporal"), aunque se declare de solo lectura', () => {
+    for (const c of FX.coordinadorAgent.rojos) {
+      const r = decidir(c.payload, { hayEscape: sinEsc });
+      expect(r.ok, `${c.sesion}: ${c.nota}`).toBe(false);
+      expect(r.titulo).toMatch(/irreversible/);
+    }
+  });
+  it('el punto de un nombre de archivo no corta la oracion: la negacion alcanza al --apply', () => {
+    const t = 'Revisa el diff. No abras el ERP ni ejecutes ningun script que lo opere (_arb*.py con --apply o --tabla).';
+    expect(detectarIrreversibles(t)).toEqual([]);
+    // pero en la oracion SIGUIENTE ya no la gobierna
+    expect(detectarIrreversibles('No abras el ERP. Despues corre _arbSustituir.py con --apply.').length).toBe(1);
+  });
+  it('negacion DESPUES del patron: "la politica cita X para prohibirlo"', () => {
+    expect(detectarIrreversibles('La politica administrada cita `rm -rf` y `Remove-Item -Recurse` para prohibirlos, no para ejecutarlos.')).toEqual([]);
+  });
+  it('una negacion es una palabra entera: el "no" de "uno" ya no niega (era un agujero)', () => {
+    bloquea(lanzar('Toma uno y despues cerra el arb.'));
+    bloquea(lanzar('Es inevitable: al final manda el mail a Federico.'));
+  });
+  it('SOLO LECTURA con un flag o comando MENCIONADO pasa; con un verbo de ejecutar, o en prosa imperativa, bloquea', () => {
+    expect(declaraSoloLectura('Auditoria SOLO LECTURA: no edites nada.')).toBe(true);
+    expect(declaraSoloLectura('Revisa el script y avisame.')).toBe(false);
+    pasa(lanzar('SOLO LECTURA. El script nuevo tiene dry-run por defecto; --apply graba en el ERP. Revisa los gates.'));
+    bloquea(lanzar('SOLO LECTURA. Cuando termines de revisar, corre _arbSustituir.py --apply.'));
+    bloquea(lanzar('SOLO LECTURA. Al final manda el mail a Federico con el resumen.'));
+    bloquea(lanzar('Solo lectura: no edites nada. Despues ejecuta git push para subirlo.'));
+    // sin la declaracion, la misma mencion sigue frenando (G4 es una capa mas, no se afloja entero)
+    bloquea(lanzar('El script nuevo tiene dry-run por defecto; --apply graba en el ERP. Revisa los gates.'));
+  });
+});
+
+describe('falsos positivos 22/09 · SendMessage a un subagente que lanzo ESTA sesion', () => {
+  it('VERDE — los 6 mensajes reales a subagentes propios (por name y por agentId)', () => {
+    for (const c of FX.coordinadorMensajes.verdes) {
+      const r = decidir(conTranscript(c), { hayEscape: sinEsc });
+      expect(r.ok, `${c.sesion} ${c.fecha} -> ${c.payload.tool_input.to}: ${c.nota}`).toBe(true);
+      expect(r.subagentePropio).toBe(c.payload.tool_input.to);
+    }
+  });
+  it('ROJO — los reales a OTRA sesion (uds:) o a un nombre que esta sesion no lanzo', () => {
+    for (const c of FX.coordinadorMensajes.rojos) {
+      const r = decidir(conTranscript(c), { hayEscape: sinEsc });
+      expect(r.ok, `${c.sesion} -> ${c.payload.tool_input.to}`).toBe(false);
+      expect(r.titulo).toMatch(/no salio de _encargo/);
+    }
+  });
+  const SID = 'aaaa1111-2222-3333-4444-555566667777';
+  const aPropio = (message, extra = {}) => ({ tool_name: 'SendMessage', session_id: SID, tool_input: { to: 'auditor-img', message, ...extra } });
+  it('ROJO — a un subagente propio igual le corren G4 y G3: una orden irreversible no viaja', () => {
+    const tp = transcript(SID, [{ name: 'auditor-img' }]);
+    const r = decidir({ ...aPropio('Corregido. Cuando termines cerra el arb.'), transcript_path: tp }, { hayEscape: sinEsc });
+    expect(r.ok).toBe(false);
+    expect(r.titulo).toMatch(/el subagente auditor-img no puede recibir una orden irreversible/);
+    bloquea(decidir({ ...aPropio('Revisa el PDF. Y de paso segui buscando el ancho del thinsulate.'), transcript_path: tp }, { hayEscape: sinEsc }));
+  });
+  it('ROJO — sin transcript, transcript ilegible, o el nombre solo aparece en otro lado: canal completo', () => {
+    bloquea(decidir(aPropio('Corrección: el dato era otro.'), { hayEscape: sinEsc }));
+    bloquea(decidir({ ...aPropio('Corrección: el dato era otro.'), transcript_path: path.join(DIR_TR, 'no-existe.jsonl') }, { hayEscape: sinEsc }));
+    // un Bash que imprimio "agentId: x" no es un lanzamiento; un subagente de OTRA sesion tampoco
+    const bashConId = [
+      { type: 'assistant', sessionId: SID, message: { content: [{ type: 'tool_use', id: 'toolu_b1', name: 'Bash', input: { command: 'cat log' } }] } },
+      { type: 'user', sessionId: SID, message: { content: [{ type: 'tool_result', tool_use_id: 'toolu_b1', content: 'agentId: ae16aca829af96683' }] } },
+    ];
+    const tp = transcript(SID, [], bashConId);
+    bloquea(decidir({ tool_name: 'SendMessage', session_id: SID, transcript_path: tp, tool_input: { to: 'ae16aca829af96683', message: 'Corrección.' } }, { hayEscape: sinEsc }));
+    const deOtra = transcript('ffff0000-otra', [{ name: 'auditor-img' }]);
+    bloquea(decidir({ ...aPropio('Corrección.'), transcript_path: deOtra }, { hayEscape: sinEsc }));
+  });
+  it('ROJO — el send_message del MCP (va a OTRA sesion) no entra en la excepcion aunque el nombre coincida', () => {
+    const tp = transcript(SID, [{ name: 'auditor-img' }]);
+    bloquea(decidir({ tool_name: 'mcp__ccd_session_mgmt__send_message', session_id: SID, transcript_path: tp, tool_input: { to: 'auditor-img', message: 'Corrección.' } }, { hayEscape: sinEsc }));
+  });
+  it('subagentesPropios: nombres e ids de los Agent de la sesion, y nada de las lineas de un subagente (sidechain)', () => {
+    const side = { type: 'assistant', isSidechain: true, sessionId: SID, message: { content: [{ type: 'tool_use', id: 'toolu_s', name: 'Agent', input: { name: 'nieto', prompt: 'x' } }] } };
+    const tp = transcript(SID, [{ name: 'auditor-img' }, { agentId: 'ae16aca829af96683' }], [side]);
+    const s = subagentesPropios(tp, SID);
+    expect(s.has('auditor-img')).toBe(true);
+    expect(s.has('ae16aca829af96683')).toBe(true);
+    expect(s.has('nieto')).toBe(false);
+    expect(subagentesPropios(undefined, SID).size).toBe(0);
   });
 });
