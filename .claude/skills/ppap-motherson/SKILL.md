@@ -68,7 +68,7 @@ Y:\BARACK\CALIDAD\DOCUMENTACION SGC\PPAP CLIENTES\REYDEL-SMRC\<pieza>\<variante>
 | 17 CSR signed | Requisitos especificos del cliente firmados (los tiene Calidad; guardarlos tambien en el SGC) | Calidad |
 | 17b SLT | Las SLT en PDF (§3) | Ingenieria + logistica |
 | 17d IMDS · 17e auditoria de proceso | IMDS; auditoria VDA 6.3 **o una interna** | Calidad |
-| 18 PSW | Si el SQE manda un PSW mas avanzado que el otro, **los dos part numbers quedan igual de avanzados** | Calidad (firma) |
+| 18 PSW | Si el SQE manda un PSW mas avanzado que el otro, **los dos part numbers quedan igual de avanzados**. Hasta que este firmado queda **en Excel, sin PDF** (Fak: *"no estan listos, dejalos asi en Excel en el PPAP"*). Las casillas de tilde tienen celda vinculada: se escriben VALORES (`Range.Copy` duplica las casillas). "Org. Part Number" = codigo del arb (un solo cero), no es typo | Calidad (firma) |
 
 ## 3. La SLT (Supplier Logistics Template & Packaging Form)
 
