@@ -11,7 +11,8 @@ El JSON:
     "cuerpo": "texto, con \\n entre renglones",
     "adjuntos": ["Y:/.../uno.pdf", "..."],
     "cc_extra": ["Nombre", "..."],                 (opcional: suma copias a las del original)
-    "reemplazar_borradores": false                 (opcional, ver abajo)
+    "reemplazar_borradores": false,                (opcional, ver abajo)
+    "solo_remitente": false                        (opcional: true = Responder, no Responder a todos)
   }
 
 Por que una respuesta y no un mail nuevo (PPAP del APB P21 hilo naranja, 23/09/2026): el mail
@@ -61,7 +62,10 @@ def responder(cfg):
         if not r.Resolved:
             sys.exit(f'ABORTADO: "{nombre}" no resuelve en la libreta')
 
-    rp = original.ReplyAll()
+    # "solo_remitente": un mail del SQE a mucha gente (seguimiento de kick-off con 9 en copia) se
+    # contesta SOLO a el cuando lo que va es una correccion nuestra (Fak, 23/09/2026: "respondele
+    # solo a Capuana... con copia a Carlos").
+    rp = original.Reply() if cfg.get('solo_remitente') else original.ReplyAll()
     for nombre in cfg.get('cc_extra', []):
         rp.Recipients.Add(nombre).Type = 2          # olCC; nunca como string en .CC (regla mail-envio.md)
     for a in cfg.get('adjuntos', []):

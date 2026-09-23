@@ -134,6 +134,9 @@ Cada hallazgo se verifica contra la fuente antes de corregir (los agentes traen 
   scripts/_mailResponder.py <json>` (ReplyAll, adjuntos, `cc_extra`; solo Display y Save).
 - Copias del 23/09: las del mail original (Manuel Meszaros, Nicolas Perez) + Carlos Baptista +
   logistica (Luciano Lo Castro).
+- **Una correccion nuestra va SOLO al SQE**, aunque su mail tenga medio SMRC en copia:
+  `"solo_remitente": true` + `"cc_extra": ["Carlos Baptista"]`. Fak, al reenviar las SLT corregidas:
+  *"respondele solo a Capuana... con copia a Carlos, aclara que la SLT tenia errores"*.
 - Texto corto, voz de Fak (`_vozFak.mjs`): que se adjunta y la respuesta puntual a lo que pregunto
   (ej. el paletizado). El FCR y el AAR se "devuelven".
 - Sale **solo con el OK de Fak para ese mail**: `python scripts/_mailEnviar.py --buscar "<asunto>"
