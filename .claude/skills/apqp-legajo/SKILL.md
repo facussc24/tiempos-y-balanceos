@@ -5,6 +5,11 @@ description: Que va en cada casillero de un legajo APQP de Barack, quien lo prod
 
 # El legajo APQP: donde va cada cosa
 
+> **SMRC / Motherson (Reydel): desde el 23/09/2026 el legajo tiene el formato del paquete PPAP del
+> cliente** (las 29 carpetas del `PPAP Standard Folder` + `1. Imput`), no los 34 casilleros. Fak:
+> *"elimina las carpetas del APQP para dejar el formato de Capuana... el nuestro estaba mal"*.
+> Como se arma: skill **`ppap-motherson`**. Lo de abajo sigue valiendo para los demas clientes.
+
 > **Esta guia sale de mirar los legajos que YA estan hechos, no de la teoria APQP.** Se relevaron
 > 7 legajos reales el 21/09/2026 (P21 azul, cuero, naranja 2023, hilo verde, NOVAX tapizadas
 > puerta, COZZUOL insonos/ductos, PWA telas termoformadas 582D). Los conteos que dicen "x de 6"

@@ -71,7 +71,7 @@ concretos. Fak ajusta el criterio y eso queda escrito para que no se vuelva a pr
 | Cargar el plano del cliente en `6-Planos de la pieza` del legajo | Libre (OK de Fak 21/09/2026) |
 | Dejar la BOM ultimo nivel del arb en el casillero 7 del legajo (y la anterior a Obsoleto) cada vez que cambia una BOM | **Obligatorio y libre** (Fak 22/09/2026): `scripts/_bomLegajo.py`, skill `carga-arb` §4b |
 | Emitir un documento controlado (flujograma, AMFE, HO) en `Gestion Ingenieria` | **Preguntar** — el documento lo firma Fak |
-| Poner algo en el paquete del cliente (`31-...\PPAP_<PN>\`) | **Prohibido sin OK**: el PPAP es de CALIDAD, Ingenieria no lo arma |
+| Poner algo en el paquete del cliente (`31-...\PPAP_<PN>\`) | **Prohibido sin OK**: el PPAP es de CALIDAD, Ingenieria no lo arma. **SMRC**: el 23/09/2026 Fak pidio armarlo ("prepara el PPAP en el servidor Y"); como, skill `ppap-motherson`. Mandarlo al cliente sigue siendo con su OK para ese mail |
 | Escribir en un listado maestro (flujogramas, AMFEs, hojas de proceso) | **Preguntar** — es registro compartido |
 | Llenar cualquier otro casillero del APQP | **Preguntar** si es la primera vez que lo lleno; el mapa esta en el skill `apqp-legajo` |
 
