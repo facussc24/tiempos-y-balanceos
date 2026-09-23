@@ -1,0 +1,23 @@
+[
+  {
+    "n": "planta_limpia",
+    "nota": "Taller de Motores (Walter Pirfo, 23/09/2026): planta sin techo, sin etiquetas ni cotas; base de la vista aerea que se compara con el plano",
+    "view": "planta",
+    "layers": { "labels": false, "cubierta": false, "cotas": false }
+  },
+  {
+    "n": "recinto_ojo",
+    "nota": "a la altura de los ojos (y = 1,65), sin muros cortados; pos/tgt en coordenadas del mundo (en ese modelo, mundo = plano - (10, 0, 3,5))",
+    "pos": [4.35, 1.65, -1.2],
+    "tgt": [8.6, 1.0, -3.0],
+    "layers": { "labels": false, "cotas": false }
+  },
+  {
+    "n": "recinto_ojo_noche",
+    "nota": "misma toma con el LED prendido; para la foto nocturna sirvio mas partir de la FOTO de dia ya generada (skill render-a-foto-real)",
+    "pos": [4.35, 1.65, -1.2],
+    "tgt": [8.6, 1.0, -3.0],
+    "layers": { "labels": false, "cotas": false },
+    "night": true
+  }
+]
