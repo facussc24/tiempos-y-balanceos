@@ -147,6 +147,22 @@ OP 105 REFILADO POST-TAPIZADO existia solo en el Plan de Control, y era la OP 40
   detalle tecnico va al Plan de Control o al procedimiento, no al dibujo.
 - El **traslado de vuelta al flujo** va separado del paso de reproceso, con su rotulo
   `REVERIFICAR (A OP. XX)`.
+- **Varios reprocesos del mismo control son caminos ALTERNATIVOS, no una fila.** Cada uno es
+  para su defecto: dibujarlos uno debajo del otro dice que toda pieza rechazada pasa por
+  todos (en el 159, re-limpiar una pieza que ya tenia primer y adhesivo). Van en columnas
+  que convergen en la re-entrada: `¿SE PUEDE RETRABAJAR?` con `branches: [[72],[73],[74]]`
+  y `branchColumnWidth: 330`, y la rama lateral con `lineWidth: 900` para que no pise el
+  flujo principal. Lo cazo la auditoria de cliente del 23/09/2026; el 151 todavia los tiene
+  en serie.
+- **Al ARRANCAR un proyecto, el flujograma lleva de entrada TODOS los reprocesos conocidos y
+  posibles** — los de las piezas hermanas, los de la HO general de la familia (ej. hojas
+  `Ret-` de la HO APB) y los que el proceso admite aunque todavia no se usen. Fak,
+  23/09/2026: *"cuando inicia un proyecto es mencionar todos los reprocesos conocidos y
+  posibles de una, asi despues no son cambios de proceso ECR/ECO... asi de entrada es mas
+  facil despues pelear con el cliente para salvar piezas"*. Un reproceso que aparece despues
+  del PPAP es un cambio de proceso que el cliente tiene que aprobar; uno que ya estaba en el
+  flujograma aprobado, no. Antes de emitir la Rev. A de una pieza nueva, listar los
+  reprocesos de las hermanas y preguntarle a Fak cuales entran.
 - **Conector circulo-letra** (A, B, C...) para la materia prima que entra en una operacion
   intermedia: circulo a la salida del WIP de MP y `VIENE DE (A)` en la operacion que la
   consume. Si entra en la operacion inmediata siguiente, flecha directa.
@@ -175,7 +191,8 @@ header   = { title, documentCode, revision, date, revisionDate, preparedBy, revi
 products = [{ code, level, description, version }]
 revisions= [{ rev, date, item, details, pswDate, modifiedBy }]
 flow     = [{ stepId, type, description, labelCondition, labelDown, branchSide, branches,
-              rework, incomingConnector, critical, criticalType, criticalColor }]
+              rework, incomingConnector, critical, criticalType, criticalColor,
+              branchColumnWidth }]   // px por columna de `branches`; sin el, 900 (23/09/2026)
 // type: operation | op-ins | transfer | storage | inspection | condition | terminal | connector
 ```
 

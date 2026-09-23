@@ -55,18 +55,16 @@ filas.push(['AP fuera de la tabla AIAG-VDA', 'CAUSE_AP_MISMATCH (CRITICAL)', 'S=
   tiene(causa({ severity: 8, occurrence: 4, detection: 7, ap: 'M', actionPriority: 'M', specialChar: 'CC' }), 'CAUSE_AP_MISMATCH')]);
 filas.push(['  ...y NO molesta si esta bien', 'idem', 'S=8 O=4 D=7 declarado H',
   !tiene(causa({ severity: 8, occurrence: 4, detection: 7, ap: 'H', actionPriority: 'H', optimizationAction: 'Pendiente definicion equipo APQP', specialChar: 'CC' }), 'CAUSE_AP_MISMATCH')]);
-// La auditoria de cliente del 22/08 encontro que la tabla del repo partia la severidad en
-// bandas que no son las del manual (usaba 7-8 y 4-6 donde la Figura 3.5-3 usa 5-8 y 2-4).
-// 281 de 1000 combinaciones subdeclaraban riesgo, con los tests en verde porque estaban
-// escritos a partir del codigo. Estas dos filas prueban la banda 5-8 con casos reales.
-filas.push(['Banda de severidad 5-8 (no 7-8)', 'CAUSE_AP_MISMATCH (CRITICAL)', 'S=7 O=4 D=6 declarado M (figura: H)',
-  tiene(causa({ severity: 7, occurrence: 4, detection: 6, ap: 'M', actionPriority: 'M' }), 'CAUSE_AP_MISMATCH')]);
-filas.push(['  ...y S=5 tambien es banda 5-8', 'idem', 'S=5 O=5 D=5 declarado L (figura: H)',
-  tiene(causa({ severity: 5, occurrence: 5, detection: 5, ap: 'L', actionPriority: 'L' }), 'CAUSE_AP_MISMATCH')]);
-filas.push(['S/O/D que la figura llama "Error"', 'CAUSE_SOD_IMPLAUSIBLE (WARNING)', 'S=10 O=1 D=8 (O=1 exige D=1)',
-  tiene(causa({ severity: 10, occurrence: 1, detection: 8, ap: 'L', actionPriority: 'L' }), 'CAUSE_SOD_IMPLAUSIBLE')]);
-filas.push(['  ...pero O=1 con D=1 es valido', 'idem', 'S=10 O=1 D=1',
-  !tiene(causa({ severity: 10, occurrence: 1, detection: 1, ap: 'L', actionPriority: 'L' }), 'CAUSE_SOD_IMPLAUSIBLE')]);
+// Las bandas de severidad son las de la tabla OFICIAL (SETEC pag. 116-118): 9-10, 7-8, 4-6,
+// 2-3 y 1. Entre el 22/08 y el 23/09/2026 el repo copio un BORRADOR de 2017 del manual, con
+// bandas 5-8 y 2-4 y casilleros "Error" que la tabla publicada no tiene (decision de Fak del
+// 23/09: "la tabla oficial ni mas ni menos"). Estas filas prueban las bandas oficiales.
+filas.push(['Banda de severidad 7-8 (no 5-8)', 'CAUSE_AP_MISMATCH (CRITICAL)', 'S=7 O=4 D=6 declarado H (tabla: M)',
+  tiene(causa({ severity: 7, occurrence: 4, detection: 6, ap: 'H', actionPriority: 'H' }), 'CAUSE_AP_MISMATCH')]);
+filas.push(['  ...y S=5 es banda 4-6', 'idem', 'S=5 O=4 D=8 declarado H (tabla: M)',
+  tiene(causa({ severity: 5, occurrence: 4, detection: 8, ap: 'H', actionPriority: 'H' }), 'CAUSE_AP_MISMATCH')]);
+filas.push(['O=1 tiene AP en la tabla oficial (L)', 'idem', 'S=10 O=1 D=8 declarado L',
+  !tiene(causa({ severity: 10, occurrence: 1, detection: 8, ap: 'L', actionPriority: 'L' }), 'CAUSE_AP_MISMATCH')]);
 
 // ── La D se califica primero por la COBERTURA, no por el instrumento (31/08/2026).
 //    Tabla P3 renglon 9: "Random audits <100% of product". La auditoria de cliente
@@ -121,8 +119,12 @@ filas.push(['  ...y con S=7 O=5 no molesta', 'idem', 'SC con S=7 O=5',
   !tiene(conSigla('SC', 7, 5), 'CAUSE_SC_FUERA_DE_REGLA')]);
 filas.push(['Sigla que ninguna norma define', 'SIGLA_DESCONOCIDA (CRITICAL)', 'W (no existe en VW; Fak 09/09)',
   tiene(conSigla('W', 7, 5), 'SIGLA_DESCONOCIDA')]);
-filas.push(['AP=H sin accion (bloqueo IATF)', 'CAUSE_APH_EMPTY_NO_PLACEHOLDER (CRITICAL)', 'AP=H y accion vacia',
-  tiene(causa({ severity: 9, occurrence: 4, detection: 7, ap: 'H', actionPriority: 'H', specialChar: 'CC' }), 'CAUSE_APH_EMPTY_NO_PLACEHOLDER')]);
+// AP=H: la celda de accion va VACIA y el placeholder esta prohibido (Fak 21/09/2026, amfe.md §4).
+// Hasta el 21/09 esta fila exigia lo contrario (CAUSE_APH_EMPTY_NO_PLACEHOLDER).
+filas.push(['Placeholder en AP=H (prohibido 21/09)', 'CAUSE_APH_PLACEHOLDER_PROHIBIDO (CRITICAL)', 'AP=H con "Pendiente definicion equipo APQP"',
+  tiene(causa({ severity: 9, occurrence: 4, detection: 7, ap: 'H', actionPriority: 'H', specialChar: 'CC', optimizationAction: 'Pendiente definicion equipo APQP' }), 'CAUSE_APH_PLACEHOLDER_PROHIBIDO')]);
+filas.push(['  ...y AP=H con la celda vacia NO molesta', 'idem', 'AP=H y accion vacia',
+  !tiene(causa({ severity: 9, occurrence: 4, detection: 7, ap: 'H', actionPriority: 'H', specialChar: 'CC' }), 'CAUSE_APH_PLACEHOLDER_PROHIBIDO')]);
 filas.push(['Valor de especificacion en el control', 'CONTROL_CON_VALOR (WARNING)', 'Calibre... Cotas: diametro 90 mm',
   tiene(causa({ severity: 6, occurrence: 3, detection: 4, ap: 'L', actionPriority: 'L',
     preventionControl: 'Calibre digital (P-10/I). Cotas: diametro 90 mm +/- 0,5' }), 'CONTROL_CON_VALOR')]);

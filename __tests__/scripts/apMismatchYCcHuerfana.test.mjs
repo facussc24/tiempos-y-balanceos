@@ -50,9 +50,9 @@ describe('CAUSE_AP_MISMATCH — el AP sale de la tabla, no del criterio de quien
         expect(res.critical.filter(i => i.type === 'CAUSE_AP_MISMATCH')).toHaveLength(1);
     });
 
-    it('sobredeclarar tambien se marca (S=7 O=6 D=3 declarado H, la figura da M)', () => {
-        // Figura 3.5-3, banda S 5-8 / O 6-7 / D 2-4 -> M.
-        const res = validateAmfeDoc(docConCausa({ severity: 7, occurrence: 6, detection: 3, ap: 'H', actionPriority: 'H' }), 'X', 'TEST');
+    it('sobredeclarar tambien se marca (S=7 O=4 D=6 declarado H, la tabla da M)', () => {
+        // Tabla oficial (SETEC pag. 117), banda S 7-8 / O 4-5 / D 5-6 -> M.
+        const res = validateAmfeDoc(docConCausa({ severity: 7, occurrence: 4, detection: 6, ap: 'H', actionPriority: 'H' }), 'X', 'TEST');
         expect(res.critical.filter(i => i.type === 'CAUSE_AP_MISMATCH')).toHaveLength(1);
     });
 

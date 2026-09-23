@@ -411,9 +411,9 @@ describe('useAmfe', () => {
 
             const fail = result.current.data.operations[0].workElements[0].functions[0].failures[0];
             expect(fail.severity).toBe(9);
-            // S=9, O=5, D=4 → M por la Figura 3.5-3 (banda S 9-10 / O 4-5 / D 2-4).
-            // Antes este test esperaba H, que era lo que devolvia la tabla con las bandas mal.
-            expect(fail.causes[0].ap).toBe('M');
+            // S=9, O=5, D=4 → H por la tabla oficial (SETEC pag. 116, banda S 9-10 / O 4-5 / D 2-4).
+            // Entre el 22/08 y el 23/09/2026 esperaba M: era lo que daba el borrador de 2017.
+            expect(fail.causes[0].ap).toBe('H');
         });
 
         it('manual severity override still works independently', () => {

@@ -69,6 +69,11 @@ const AMFE_KEY = 'AMFE-P21-NAR-MY26';
 const NUMERO_EMPRESA = '173';   // proximo ID libre del Listado_Maestro_AMFE.xlsx (max cargado: 172)
 const FECHA = '21/09/2026';
 const FECHA_ISO = '2026-09-21';
+// Fecha de REVISION: la del ultimo cambio (23/09/2026, correcciones de la auditoria de cliente).
+// La Rev. A se EMITIO el 21/09 (FECHA, la de la fila de revisiones y la del listado maestro);
+// amfe.md §4bis: la letra no cambia hasta la proxima emision, la fecha de revision si se mueve.
+const FECHA_REVISION = '23/09/2026';
+const FECHA_REVISION_ISO = '2026-09-23';
 
 const calcularAP = calculateAP;
 
@@ -86,7 +91,29 @@ const calcularAP = calculateAP;
 let _n = 0;
 const id = () => `p21nar-${String(++_n).padStart(4, '0')}`;
 
+/**
+ * El AMFE no cita al Plan de Control. Fak, 23/09/2026: "no citemos a un PC y menos si es viejo,
+ * eso no me gusta nada". El PC que se citaba era el del P21 hilo verde (rev M) y el P21 rev H,
+ * con otra numeracion de operaciones: en la OP 100 decia "Operacion 120", que en este AMFE es el
+ * embalaje. Las citas quedan en el codigo de este generador como rastro de DE DONDE salio cada
+ * control; al documento no llegan. Saca "(Plan de Control ...)" entero y el tramo
+ * "; Plan de Control ..." o ", Plan de Control ..." adentro de un parentesis con otras fuentes.
+ * El "Plan de control de recepcion de materiales (P-10/I)" NO es el Plan de Control de la pieza:
+ * es el procedimiento de recepcion, y se queda.
+ */
+function sinPlanDeControl(texto) {
+  if (typeof texto !== 'string') return texto;
+  return texto
+    .replace(/\s*\(Plan de Control (?:rev|P21|\d)[^()]*\)/g, '')
+    .replace(/[;,]\s*Plan de Control (?:rev|P21|\d)[^();]*(?=[;)])/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+([,.;)])/g, '$1')
+    .trim();
+}
+
 function causa(descripcion, prevControl, O, detControl, D, extra = {}) {
+  prevControl = sinPlanDeControl(prevControl);
+  detControl = sinPlanDeControl(detControl);
   return {
     id: id(),
     cause: descripcion,
@@ -161,6 +188,7 @@ function sc(caracteristica, siglaCliente) {
 }
 
 function funcion(descripcion, requisitos, fallas) {
+  requisitos = sinPlanDeControl(requisitos);
   return { id: id(), description: descripcion, functionDescription: descripcion, requirements: requisitos, failures: fallas };
 }
 function we(type, name, funciones) {
@@ -274,9 +302,20 @@ const EF_RETRABAJO_CLIENTE = {
   next: 'Clasificacion y retrabajo de piezas en la planta de SMRC',
   end: 'Sin efecto en el vehiculo si se retrabaja antes del montaje',
 };
+// S=10 es el riesgo AGUDO (corte, aguja, quemadura, golpe) y S=8 el CRONICO, el que se acumula
+// con el tiempo (postura, repeticion, ruido): Tabla P1 oficial, SETEC pag. 101-102 (laminas 202
+// y 203: "riesgo de salud y/o seguridad agudo" = 10; "cronico para el trabajador de la linea" = 8).
+// Hasta el 23/09/2026 los dos iban en 10; lo separo la auditoria de cliente del 23/09 y lo aprobo
+// Fak ("tabla oficial ni mas ni menos").
 const EF_SEG_OPERARIO = {
   s: 10,
   local: 'Riesgo de salud o seguridad para el operario del puesto; posible incumplimiento de la Ley 19587',
+  next: 'Sin efecto en la planta del cliente',
+  end: 'Sin efecto en el vehiculo',
+};
+const EF_SALUD_CRONICA = {
+  s: 8,
+  local: 'Riesgo cronico para la salud del operario del puesto; posible incumplimiento de la Ley 19587',
   next: 'Sin efecto en la planta del cliente',
   end: 'Sin efecto en el vehiculo',
 };
@@ -328,7 +367,7 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
             // D=7: cotejo humano del papel, lote por lote (amfe.md §13).
             causa('El proveedor entrega el lote sin el certificado de ensayo D45 1333 o con el de otro lote',
               'Especificacion de compra a York con el limite de velocidad de combustion y el certificado por lote como condicion de entrega',
-              3, 'Cotejo del certificado de cada lote contra la especificacion antes de liberarlo', 7,
+              3, 'Cotejo del certificado de cada lote contra la especificacion antes de liberarlo', 8,
               sc('SC 1.1', 'cc/s')),
           ]),
           falla('Vinilo que pierde el comportamiento al fuego con el envejecimiento', EF_LEGAL_FUEGO, [
@@ -352,7 +391,7 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
           falla('Vinilo recibido con espesor, grano o color distintos del especificado', EF_PIEZA_DISTINTA, [
             causa('Los rollos de distintos granos y colores llegan sin una identificacion que los distinga en el deposito',
               'Un solo grano y un solo color habilitados para esta pieza, declarados en la orden de compra',
-              3, 'Cotejo de la certificacion del proveedor de cada lote, que el LSC v1 exige de forma explicita', 7,
+              3, 'Cotejo de la certificacion del proveedor de cada lote, que el LSC v1 exige de forma explicita', 8,
               sc('SC 1.4', 'cc/h')),
           ]),
         ]),
@@ -378,7 +417,7 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
           falla('Hilo de costura vista recibido distinto del especificado', EF_PIEZA_DISTINTA, [
             causa('Los conos de los distintos articulos de Linhanyl son visualmente parecidos y se almacenan juntos',
               'Un unico articulo de hilo vista habilitado para esta pieza (BX138 / 12124E), declarado en la orden de compra',
-              4, 'Cotejo de la etiqueta del cono contra la orden de compra, cono por cono, en la recepcion', 7,
+              4, 'Cotejo de la etiqueta del cono contra la orden de compra, cono por cono, en la recepcion', 8,
               sc('SC 2.5', 'cc/h')),
           ]),
         ]),
@@ -413,12 +452,12 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
           falla('Material entregado a produccion sin haber sido ingresado ni liberado', EF_SCRAP_INTERNO, [
             causa('El circuito admite entregar material directo al sector cuando hay una urgencia de produccion',
               'Zona de material pendiente de control fisicamente separada de la de material liberado',
-              4, 'Control de la identificacion de lote en el sector antes de arrancar el turno', 7),
+              4, 'Control de la identificacion de lote en el sector antes de arrancar el turno', 8),
           ]),
           falla('Se toma para produccion materia prima obsoleta', EF_SCRAP_INTERNO, [
             causa('El material obsoleto permanece en el deposito junto al vigente',
               'Material obsoleto identificado y en zona propia',
-              3, 'Control de la identificacion del rollo antes de habilitarlo al corte', 7),
+              3, 'Control de la identificacion del rollo antes de habilitarlo al corte', 8),
           ]),
           falla('Se utilizan pallets distintos de los definidos', EF_SCRAP_INTERNO, [
             causa('No esta definido por escrito cual es el pallet que corresponde a cada material',
@@ -438,17 +477,17 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
               6, 'Control visual de la estiba en el recorrido de turno', 8),
             causa('La distancia libre entre la estiba y el techo queda por debajo de 80 cm',
               'Carteleria que indica como debe quedar la estiba',
-              3, 'Control visual de la distancia al techo en el recorrido de turno', 7),
+              3, 'Control visual de la distancia al techo en el recorrido de turno', 8),
           ]),
           falla('Productos quimicos inflamables apilados junto a la materia prima', EF_SEG_OPERARIO, [
             causa('El deposito no tiene una zona propia y senalizada para los inflamables',
               'Procedimiento de almacenamiento de productos quimicos',
-              3, 'Control visual del sector en el recorrido de turno', 7),
+              3, 'Control visual del sector en el recorrido de turno', 8),
           ]),
           falla('Materia prima mojada por filtraciones del techo', EF_SCRAP_INTERNO, [
             causa('Deterioro de la cubierta del deposito',
               'Mantenimiento preventivo de la cubierta',
-              3, 'Control visual del deposito en el recorrido de turno y despues de cada lluvia', 7),
+              3, 'Control visual del deposito en el recorrido de turno y despues de cada lluvia', 8),
           ]),
         ]),
     ]),
@@ -460,15 +499,15 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
           falla('Autoelevador operado sin el check list previo o con una falla no detectada', EF_SEG_OPERARIO, [
             causa('El check list no esta disponible en el puesto y el equipo arranca igual sin completarlo',
               'Check list de autoelevador definido',
-              3, 'Verificacion del check list firmado al inicio de turno', 7),
+              3, 'Verificacion del check list firmado al inicio de turno', 8),
             causa('Falta de mantenimiento preventivo del autoelevador',
               'Plan de mantenimiento preventivo del equipo',
-              3, 'Control del estado del equipo en el check list de inicio de turno', 7),
+              3, 'Control del estado del equipo en el check list de inicio de turno', 8),
           ]),
           falla('Dano de la caja que contiene la materia prima durante el movimiento', EF_SCRAP_INTERNO, [
             causa('El ancho de pasillo y la altura de carga no dejan margen para maniobrar con la carga a la vista',
               'Carteleria de circulacion en el deposito',
-              3, 'Control visual del estado de las cajas al recibirlas en el sector', 7),
+              3, 'Control visual del estado de las cajas al recibirlas en el sector', 8),
           ]),
         ]),
     ]),
@@ -476,8 +515,13 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
 
 // ===========================================================================
 // OP 20 — CORTE DE VINILO O TELA  (incluye lo que el 127 abria como 20.1 a 20.5)
-// Aca vive la SC 1.6, el limite de corte en la zona de insercion de la platina.
 // ===========================================================================
+// 23/09/2026 — la SC 1.6 (limite de corte del TEP en la zona de insercion de la platina, +2 / -0)
+// estaba aca y se MUDO a la OP 91. El LSC v1 (pestaña ADDITIONAL INFORMATION) mide el corte
+// contra el "limite de apoyabrazo inyectado": ese borde no existe en la mesa, donde el vinilo se
+// corta plano. Lo corta el troquel sobre la pieza tapizada (HO 927, hoja 110.1: "al borde del
+// plastico o con maximo 2 mm de sobrante, carac. plano 18B01"). Lo encontro la auditoria de
+// cliente del 23/09/2026 y lo aprobo Fak el mismo dia.
 // 22/09/2026 (tarde) — auditada contra la HO de mesa de corte (archivo "REV.F", cajetin Rev A,
 // 13/05/2026: se cita como "HO mesa de corte" con su hoja), la ficha SET UP Mesa de corte Rev.G
 // (29/04/2025, hoja VINILO) y el Plan de Control rev M, Operacion 20.2. La Rev.A citaba una
@@ -490,18 +534,15 @@ const OP20 = operacion('20', 'CORTE DE VINILO',
   [
     we('Metodo', 'Patron y programa de corte', [
       funcion(
-        'Cortar dentro del limite que el cliente fija para la zona de insercion de la platina',
-        'SC 1.6: tolerancia de corte de tela / TEP en la zona de insercion de platina, +2 / -0',
+        'Cortar el contorno del patron liberado de la pieza',
+        'Programa de corte de la revision liberada del patron',
         [
-          falla('Corte del vinilo fuera del limite +2 / -0 en la zona de insercion de la platina', EF_PARO_LINEA, [
-            // D=9: el unico util documentado es la plantilla mylar con banda de +/-1 mm (HO mesa
-            // de corte, hoja 28). Con esa banda una pieza hasta 1 mm mas corta da OK, y la SC 1.6
-            // no admite nada por debajo (-0). El control existe pero no discrimina la tolerancia
-            // del cliente: es poco probable que detecte (P3-9). Queda informado para resolver.
+          // D=9: el programa equivocado se ve en la plantilla mylar, pero solo en la PRIMERA
+          // pieza de la tizada (OP 21): no cubre el 100 % (P3-9).
+          falla('Contorno del componente distinto del patron liberado', EF_SCRAP_INTERNO, [
             causa('El programa de corte cargado en la mesa no es el de la revision liberada del patron',
               'Codigo y nombre del programa verificados en la ficha de liberacion de inicio de produccion (SET UP Mesa de corte Rev.G, item 1 J)',
-              4, 'Control de forma contra la plantilla mylar, cuya banda de tolerancia es mas ancha que la del cliente en la zona de insercion (HO mesa de corte, hoja 28)', 9,
-              sc('SC 1.6', 'sc/f')),
+              4, 'Control de forma de la primera pieza contra la plantilla mylar (OP 21; HO mesa de corte, hoja 28)', 9),
           ]),
         ]),
       funcion(
@@ -511,12 +552,12 @@ const OP20 = operacion('20', 'CORTE DE VINILO',
           falla('Se corta un material distinto del que pide la planilla de corte', EF_SCRAP_INTERNO, [
             causa('Los rollos de vinilo de distintos granos y colores se parecen entre si en el deposito del sector',
               'Rollo identificado en la recepcion con su codigo de material (P-10/I)',
-              6, 'Verificacion del codigo de material del rollo contra la planilla de corte, antes de montarlo (HO mesa de corte, hoja 20)', 7),
+              6, 'Verificacion del codigo de material del rollo contra la planilla de corte, antes de montarlo (HO mesa de corte, hoja 20)', 8),
           ]),
           falla('Vinilo montado con el lado vista invertido', EF_SCRAP_INTERNO, [
             causa('El rollo entra en el portarrollos en los dos sentidos',
               'La planilla de corte indica como se coloca el rollo (HO mesa de corte, hoja 20)',
-              4, 'Control visual de la posicion del lado vista contra la planilla de corte (HO mesa de corte, hoja 20)', 7),
+              4, 'Control visual de la posicion del lado vista contra la planilla de corte (HO mesa de corte, hoja 20)', 8),
           ]),
           falla('Cantidad de capas distinta de la de la planilla de corte', EF_SCRAP_INTERNO, [
             // La cantidad se carga en cada tizada; el control es de set up (inicio de turno,
@@ -537,7 +578,7 @@ const OP20 = operacion('20', 'CORTE DE VINILO',
             // escalado del marker.
             causa('El marker se genera con una escala o una demasia distinta de la del patron liberado',
               'Archivo de corte de la pieza elegido en el programa Cutting Control (HO mesa de corte, hoja 26) y verificado por codigo y nombre en el set up (SET UP Mesa de corte Rev.G, item 1 J)',
-              4, 'Control de forma contra la pieza patron, al inicio y al fin de turno (Plan de Control rev M, Operacion 20.2), y contra la plantilla mylar (OP 21)', 7),
+              4, 'Control de forma contra la pieza patron, al inicio y al fin de turno (Plan de Control rev M, Operacion 20.2), y contra la plantilla mylar (OP 21)', 8),
           ]),
           falla('Se selecciona el archivo de corte equivocado', EF_SCRAP_INTERNO, [
             causa('Los archivos de corte de las distintas piezas conviven en la misma carpeta del programa',
@@ -578,7 +619,7 @@ const OP20 = operacion('20', 'CORTE DE VINILO',
             // laser rojo de la maquina (HO MESA DE CORTE REV.F, hoja 26).
             causa('Se omite la restauracion de origen despues de un corte de energia o una parada de emergencia',
               'Sensores de origen de la mesa y restauracion de origen obligatoria tras cada apagado (manual YIN, p.42)',
-              4, 'Alineacion del cabezal con el laser rojo de la maquina antes de dar marcha (HO MESA DE CORTE REV.F, hoja 26)', 7),
+              4, 'Alineacion del cabezal con el laser rojo de la maquina antes de dar marcha (HO MESA DE CORTE REV.F, hoja 26)', 8),
           ]),
           falla('Vinilo mal alineado sobre la mesa de corte', EF_SCRAP_INTERNO, [
             // LA REFERENCIA EXISTE: son las lineas rojas marcadas al costado de la mesa, y hay
@@ -588,7 +629,7 @@ const OP20 = operacion('20', 'CORTE DE VINILO',
             // parametros 14 "Section checking" y 15 "Fabric width checking").
             causa('El vinilo se detiene antes o despues de la marca y queda fuera de escuadra',
               'Lineas rojas de tope al costado de la mesa, chequeo automatico de medidas por sensores, y control de apilado en la ficha de liberacion de inicio de produccion (SET UP Mesa de corte Rev.G), item 1 C',
-              4, 'Verificacion visual del vinilo contra las marcas rojas, antes de cada corte (HO MESA DE CORTE REV.F, hoja 24)', 7),
+              4, 'Verificacion visual del vinilo contra las marcas rojas, antes de cada corte (HO MESA DE CORTE REV.F, hoja 24)', 8),
           ]),
           falla('Corte con vacio insuficiente sobre el tendido', EF_SCRAP_INTERNO, [
             // El corte no arranca sin vacio (manual p.43) y el cabezal se bloquea solo contra
@@ -618,7 +659,7 @@ const OP20 = operacion('20', 'CORTE DE VINILO',
             // El 127 lo tenia y la Rev.A lo perdio. HO mesa de corte, hoja 27, paso 3.
             causa('La elevacion del plato es un paso manual que se repite en cada corte',
               'Secuencia de arranque escrita en la hoja (HO mesa de corte, hoja 27)',
-              4, 'Control visual de la posicion del cabezal y de la elevacion del plato antes de cada corte (HO mesa de corte, hoja 27)', 7),
+              4, 'Control visual de la posicion del cabezal y de la elevacion del plato antes de cada corte (HO mesa de corte, hoja 27)', 8),
           ]),
           falla('Pieza cortada incompleta o con sobrante en los agujeros', EF_SCRAP_INTERNO, [
             // Plan de Control rev M, Operacion 20.2, items 4 a 6: "que no quede incompleto",
@@ -697,7 +738,7 @@ const OP21 = operacion('21', 'CONTROL DE PRIMERA PIEZA CONTRA MYLAR',
           falla('Se libera el lote contra una plantilla que no es la de esta pieza', EF_SCRAP_INTERNO, [
             causa('Las plantillas de las distintas referencias se parecen entre si',
               'Plantilla codificada por referencia y material (HO mesa de corte, hoja 28), y pieza patron y control de forma en la ficha de liberacion de inicio de produccion (SET UP Mesa de corte Rev.G, items 6 B a 6 D)',
-              4, 'Cotejo de la identificacion de la plantilla contra la planilla de corte (HO mesa de corte, hoja 28)', 7),
+              4, 'Cotejo de la identificacion de la plantilla contra la planilla de corte (HO mesa de corte, hoja 28)', 8),
           ]),
           falla('Pieza mas chica que el area OK que pasa como conforme', EF_SCRAP_INTERNO, [
             // Este es el modo de falla que la nota critica de la HO senala: el control es
@@ -719,7 +760,7 @@ const OP21 = operacion('21', 'CONTROL DE PRIMERA PIEZA CONTRA MYLAR',
           falla('El lote sigue cortandose antes de liberar la primera pieza', EF_SCRAP_INTERNO, [
             causa('La mesa puede seguir cortando mientras se hace el control de la primera pieza',
               'Liberacion de la primera pieza OK por el inspector de calidad antes de producir (SET UP Mesa de corte Rev.G, items 3 B y 8)',
-              5, 'Firma del inspector en la ficha de liberacion de inicio de produccion (SET UP Mesa de corte Rev.G)', 7),
+              5, 'Firma del inspector en la ficha de liberacion de inicio de produccion (SET UP Mesa de corte Rev.G)', 8),
           ]),
         ]),
     ]),
@@ -758,7 +799,7 @@ const OP30 = operacion('30', 'REFILADO DE COMPONENTES CORTADOS',
         'Trabajar el turno sin carga postural excesiva',
         'Puesto con silla ergonomica',
         [
-          falla('Dolores lumbares del operario del puesto', EF_SEG_OPERARIO, [
+          falla('Dolores lumbares del operario del puesto', EF_SALUD_CRONICA, [
             // "Adquisicion de sillas ergonomicas" es una ACCION planificada, no un control de
             // prevencion vigente: escrita como control, el documento decia que el riesgo ya
             // estaba cubierto. Y el mismo texto aparecia en dos operaciones con D=8 y D=10 -
@@ -818,7 +859,7 @@ const OP40 = operacion('40', 'COSTURA DE UNION',
           falla('Atraque inicial o final faltante o fuera de 2 a 3 puntadas', EF_COSTURA, [
             causa('El atraque se hace a mano al principio y al final de cada costura',
               'Atraque de 2 a 3 puntadas especificado en la hoja (HO 927 REV6, hoja 40)',
-              4, 'Autocontrol visual de los atraques en cada pieza, con sello del legajo (HO 927 REV6, hoja 40)', 7),
+              4, 'Autocontrol visual de los atraques en cada pieza, con sello del legajo (HO 927 REV6, hoja 40)', 8),
           ]),
           falla('Costura hecha con una aguja distinta de la especificada', EF_ASPECTO, [
             causa('La aguja se cambia a mano cuando se rompe',
@@ -857,7 +898,7 @@ const OP40 = operacion('40', 'COSTURA DE UNION',
         'Trabajar el turno sin riesgo para la salud del operario',
         'Iluminacion, ruido, proteccion de aguja y puesto segun Ley 19587',
         [
-          falla('Tendinitis o dolor articular en el brazo del operario', EF_SEG_OPERARIO, [
+          falla('Tendinitis o dolor articular en el brazo del operario', EF_SALUD_CRONICA, [
             causa('El ciclo del puesto es repetitivo y no hay rotacion ni pausa activa definidas',
               'TBD - falta definir la rotacion de puestos y la pausa activa',
               10, 'Seguimiento de Seguridad e Higiene y del servicio medico', 8),
@@ -867,17 +908,17 @@ const OP40 = operacion('40', 'COSTURA DE UNION',
               'Algunas maquinas ya tienen proteccion ante rotura de aguja',
               8, 'Control del estado de las protecciones en el recorrido de turno', 8),
           ]),
-          falla('Tension en el brazo por el borde de la mesa', EF_SEG_OPERARIO, [
+          falla('Tension en el brazo por el borde de la mesa', EF_SALUD_CRONICA, [
             causa('Las puntas del borde de la mesa del puesto no estan redondeadas',
               'Algunas mesas ya tienen las puntas redondeadas',
               8, 'Relevamiento de las mesas del sector', 8),
           ]),
-          falla('Perdida de audicion del operario', EF_SEG_OPERARIO, [
+          falla('Perdida de audicion del operario', EF_SALUD_CRONICA, [
             causa('El nivel de ruido del sector supera el limite sin proteccion auditiva',
               'Protectores auditivos como EPP del puesto',
-              3, 'Medicion con decibelimetro y control del uso de EPP', 7),
+              3, 'Medicion con decibelimetro y control del uso de EPP', 8),
           ]),
-          falla('Dolores lumbares del operario del puesto', EF_SEG_OPERARIO, [
+          falla('Dolores lumbares del operario del puesto', EF_SALUD_CRONICA, [
             causa('El puesto no tiene silla ergonomica asignada',
               'TBD - falta la silla ergonomica del puesto',
               10,'Relevamiento de puestos y seguimiento por Seguridad e Higiene', 9),
@@ -905,21 +946,23 @@ const OP50 = operacion('41', 'COSTURA VISTA - PESPUNTE SIMPLE, UNA LINEA',
         'SC 2.1: pespunte simple HAQ (rebatida / seam deck).  SC 2.2: 1 sola linea de costura',
         [
           // Las dos filas que siguen son causas de SET UP (se eligen al arrancar el lote), asi
-          // que el control de primera pieza SI las ve. Pero es visual y humano: D=7, no 4 ni 6
-          // (el 4 exige verificar un poka-yoke, el 6 una galga; P3). La hoja de operaciones de
-          // la pieza nueva es un control PLANIFICADO: se emite con este proyecto.
+          // que el control de primera pieza SI las ve. Pero es visual y humano: D=8 (P3 oficial,
+          // SETEC pag. 110: inspeccion humana con metodo no probado).
+          // La hoja de operaciones propia de la pieza nueva va como control ACTUAL: Fak, 23/09/2026,
+          // "la costura va a existir, podes poner la hoja de proceso porque si o si va a estar...
+          // no hables en futuro". La HO la emite Ingenieria para el arranque de la pieza.
           falla('Costura vista ejecutada con un tipo de puntada distinto del pespunte simple HAQ', EF_PIEZA_DISTINTA, [
             causa('El puesto produce tambien las versiones anteriores del P21 y el seteo de la maquina se comparte',
-              'Hoja de operaciones propia de la pieza nueva, a emitir con este proyecto, separada de la de las versiones anteriores',
-              4, 'Cotejo de la primera pieza del lote contra la muestra patron de la pieza nueva', 7,
+              'Hoja de operaciones propia de la pieza nueva, separada de la de las versiones anteriores',
+              4, 'Cotejo de la primera pieza del lote contra la muestra patron de la pieza nueva', 8,
               sc('SC 2.1', 'cc/h')),
           ]),
           falla('Costura vista ejecutada con dos lineas en lugar de una sola', EF_PIEZA_DISTINTA, [
             // El sector cose tambien la version de dos lineas paralelas (Plan de Control rev M,
             // Operacion 50: "paralelismo entre las vistas", "distancia entre costura de 3,5 mm").
             causa('En el mismo sector se cosen versiones del P21 con dos lineas de costura vista',
-              'Hoja de operaciones propia de la pieza nueva con el tipo y la cantidad de lineas, a emitir con este proyecto',
-              4, 'Cotejo de la primera pieza del lote contra la muestra patron de la pieza nueva', 7,
+              'Hoja de operaciones propia de la pieza nueva, con el tipo de puntada y la cantidad de lineas',
+              4, 'Cotejo de la primera pieza del lote contra la muestra patron de la pieza nueva', 8,
               sc('SC 2.2', 'cc/h')),
           ]),
         ]),
@@ -1003,7 +1046,7 @@ const OP50 = operacion('41', 'COSTURA VISTA - PESPUNTE SIMPLE, UNA LINEA',
         'Trabajar el turno sin riesgo para la salud del operario',
         'Iluminacion, ruido, proteccion de aguja y puesto segun Ley 19587',
         [
-          falla('Tendinitis o dolor articular en el brazo del operario', EF_SEG_OPERARIO, [
+          falla('Tendinitis o dolor articular en el brazo del operario', EF_SALUD_CRONICA, [
             causa('El ciclo del puesto es repetitivo y no hay rotacion ni pausa activa definidas',
               'TBD - falta definir la rotacion de puestos y la pausa activa',
               10, 'Seguimiento de Seguridad e Higiene y del servicio medico', 8),
@@ -1013,18 +1056,18 @@ const OP50 = operacion('41', 'COSTURA VISTA - PESPUNTE SIMPLE, UNA LINEA',
               'Algunas maquinas ya tienen proteccion ante rotura de aguja',
               8, 'Control del estado de las protecciones en el recorrido de turno', 8),
           ]),
-          falla('Tension en el brazo por el borde de la mesa', EF_SEG_OPERARIO, [
+          falla('Tension en el brazo por el borde de la mesa', EF_SALUD_CRONICA, [
             causa('Las puntas del borde de la mesa del puesto no estan redondeadas',
               'Algunas mesas ya tienen las puntas redondeadas',
               8, 'Relevamiento de las mesas del sector', 8),
           ]),
-          falla('Perdida de audicion del operario', EF_SEG_OPERARIO, [
+          falla('Perdida de audicion del operario', EF_SALUD_CRONICA, [
             causa('El nivel de ruido del sector supera el limite sin proteccion auditiva',
               'Protectores auditivos como EPP del puesto',
-              3, 'Medicion con decibelimetro y control del uso de EPP', 7),
+              3, 'Medicion con decibelimetro y control del uso de EPP', 8),
           ]),
           // El AMFE 127 lo tiene en la costura vista y la Rev.A solo lo habia dejado en la de union.
-          falla('Dolores lumbares del operario del puesto', EF_SEG_OPERARIO, [
+          falla('Dolores lumbares del operario del puesto', EF_SALUD_CRONICA, [
             causa('El puesto no tiene silla ergonomica asignada',
               'TBD - falta la silla ergonomica del puesto',
               10, 'Relevamiento de puestos y seguimiento por Seguridad e Higiene', 9),
@@ -1124,14 +1167,14 @@ const OP70 = operacion('61', 'APLICACION DE PRIMER',
           falla('Primer aplicado despues de su fecha de vencimiento', EF_DESPEGUE, [
             causa('Quedan en el puesto envases de primer de mas de un lote, con fechas de vencimiento distintas',
               'Control de vencimiento del primer en la recepcion del material (P-10/I)',
-              4, 'Verificacion de la fecha de vencimiento de los componentes A y B contra la identificacion del envase, al inicio y al fin de turno (Plan de Control rev M, Operacion 60)', 7),
+              4, 'Verificacion de la fecha de vencimiento de los componentes A y B contra la identificacion del envase, al inicio y al fin de turno (Plan de Control rev M, Operacion 60)', 8),
           ]),
           falla('Mezcla de primer fuera de la proporcion de los componentes A y B', EF_DESPEGUE, [
             // La Rev.A declaraba un "registro de preparacion con hora" que ningun documento
             // tiene. Lo que hay: vasos dosificadores con marca (IO-07, Plan de Control 60.1).
             causa('Los componentes se vierten a mano en los vasos dosificadores',
               'Vasos dosificadores con la marca de llenado de cada componente (IO-07; Plan de Control rev M, Operacion 60.1)',
-              4, 'Control visual del llenado de los vasos hasta la marca, en cada preparacion (Plan de Control rev M, Operacion 60.1)', 7),
+              4, 'Control visual del llenado de los vasos hasta la marca, en cada preparacion (Plan de Control rev M, Operacion 60.1)', 8),
           ]),
           // Vida util: la HO 927 hoja 70 y el IO-07 dicen 8 h; el Plan de Control rev M dice
           // 9 h. Se cita la hoja (la de planta) y la diferencia queda informada a Calidad.
@@ -1191,7 +1234,7 @@ const OP80 = operacion('70', 'ADHESIVADO DE PIEZA PLASTICA Y VINILO',
           ]),
           falla('Mezcla de adhesivo fuera de la relacion 1:1 o usada despues de dos turnos', EF_DESPEGUE, [
             causa('La lata de 18 l y la botella de 600 g se mezclan a mano en el tanque',
-              'Relacion 1:1 y vida util de dos turnos escritas en la hoja y en el plan de control (HO 927 REV6, hoja 80.1; Plan de Control rev M, Operacion 80)',
+              'Relacion 1:1 y vida util de dos turnos escritas en la hoja (HO 927 REV6, hoja 80.1)',
               4, 'Control visual de la mezcla, 1 muestra al inicio de turno, con registro (Plan de Control rev M, Operacion 80)', 9),
           ]),
         ]),
@@ -1267,7 +1310,7 @@ const OP71 = operacion('71', 'CONTROL DE ADHESIVADO',
           falla('Pieza con grumos de adhesivo en la superficie', EF_ASPECTO, [
             causa('El adhesivo se acumula en el sistema de aplicacion y forma grumos',
               'Limpieza del sistema de adhesivado segun IO-15 al finalizar cada turno (Plan de Control rev M, Operacion 80, item 5)',
-              4, 'Control visual de grumos en la superficie (HO 927 REV6, hojas 80.1 y 80.2)', 7),
+              4, 'Control visual de grumos en la superficie (HO 927 REV6, hojas 80.1 y 80.2)', 8),
           ]),
           // "Control del tiempo de espera" no lo dice ningun documento: la hoja pone el limite
           // de 24 h y el scrap, pero la pieza adhesivada no lleva su hora. Sin deteccion: D=10.
@@ -1398,7 +1441,7 @@ const OP90 = operacion('81', 'TAPIZADO',
           falla('Pieza tapizada con arrugas, pliegues o hundimientos en zona vista', EF_ASPECTO, [
             causa('El vinilo caliente se estira y se acomoda a mano sobre las curvas del sustrato',
               'Secuencia de tapizado con espatula del centro hacia los bordes y correccion del viboreo en caliente (HO 927 REV6, hoja 90.2)',
-              6, 'Control visual contra pieza patron y biblia de defectos: set up de primera pieza y registro de control de calidad (HO 927 REV6, hoja 90.2), y control al 100 % en la inspeccion final (HO 927 REV6, hoja 120)', 7),
+              6, 'Control visual contra pieza patron y biblia de defectos: set up de primera pieza y registro de control de calidad (HO 927 REV6, hoja 90.2), y control al 100 % en la inspeccion final (HO 927 REV6, hoja 120)', 8),
           ]),
           // Defecto que YA le llego al cliente tres veces: QR 213667 (2021), QR 235682
           // (29/07/2025, "vinilo corto - mal refilado") y QR 236562 (10/2025, "vinilo corto").
@@ -1414,7 +1457,7 @@ const OP90 = operacion('81', 'TAPIZADO',
           falla('Espuma del vinilo desgarrada', EF_ASPECTO, [
             causa('El vinilo se reacomoda en caliente sobre el sustrato despues de apoyado',
               'Correccion del viboreo en caliente segun la foto de la hoja (HO 927 REV6, hoja 90.2)',
-              4, 'Control visual contra pieza patron y biblia de defectos, set up de primera pieza y registro de control (HO 927 REV6, hoja 90.2; Plan de Control rev M, Operacion 100)', 7),
+              4, 'Control visual contra pieza patron y biblia de defectos, set up de primera pieza y registro de control (HO 927 REV6, hoja 90.2; Plan de Control rev M, Operacion 100)', 8),
           ]),
           // La Rev.A mandaba esto a la OP 82 con D=7, y la OP 82 es de primera pieza. Pero la
           // inspeccion final SI verifica la alineacion en todas las piezas, con plantilla (HO
@@ -1506,29 +1549,29 @@ const OP100 = operacion('90', 'REFILADO CON MASCARA',
           falla('Vinilo refilado de mas: no llega hasta el borde del sustrato (vinilo corto)', EF_ASPECTO, [
             causa('El cuter se inclina durante el recorrido y corta por dentro del borde',
               'Mascara de refilado y cuter perpendicular al plano de la pieza en todo el recorrido (HO 927 REV6, hoja 100)',
-              5, 'Control visual del vinilo hasta el borde contra el limite maximo de separacion del plan de control (Plan de Control rev M, Operacion 100.2) y al 100 % en la inspeccion final (HO 927 REV6, hoja 120)', 7),
+              5, 'Control visual del vinilo hasta el borde contra el limite maximo de separacion, y al 100 % en la inspeccion final (HO 927 REV6, hoja 120)', 8),
           ]),
           falla('Exceso de material sin refilar en el contorno', EF_RETRABAJO_CLIENTE, [
             causa('El refilado se hace a mano con cuter y el sobrante se juzga a ojo contra la referencia',
               'Refilado segun contorno de referencia visual, con mascara y pieza patron (HO 927 REV6, hoja 100)',
-              6, 'Control visual de excedentes contra pieza patron y biblia de defectos (HO 927 REV6, hoja 100) y al 100 % en la inspeccion final', 7),
+              6, 'Control visual de excedentes contra pieza patron y biblia de defectos (HO 927 REV6, hoja 100) y al 100 % en la inspeccion final', 8),
           ]),
           falla('Orificios obstruidos por material sin refilar', EF_RETRABAJO_CLIENTE, [
             causa('Los orificios se liberan a mano con el cuter, uno por uno',
               'Verificacion de los orificios contra la pieza patron y la biblia de defectos, como paso de la operacion (HO 927 REV6, hoja 100, paso 2)',
-              6, 'Control visual de los 17 orificios libres al 100 % en la inspeccion final (Plan de Control rev M, Operacion 120)', 7),
+              6, 'Control visual de los 17 orificios libres al 100 % en la inspeccion final (Plan de Control rev M, Operacion 120)', 8),
           ]),
           // Restos en la zona donde SMRC suelda el apoyabrazos al panel de puerta: la soldadura
           // no toma y el conjunto no se puede ensamblar. Es el efecto de paro de linea.
           falla('Restos de espuma o vinilo en la zona de soldadura', EF_PARO_LINEA, [
             causa('El sobrante de la zona de soldadura se retira a mano despues del refilado',
               'Limpieza de la zona de soldadura escrita como paso de la operacion (HO 927 REV6, hoja 100, paso 3)',
-              4, 'Control visual de la zona de soldadura, autocontrol por lote y al 100 % en la inspeccion final (Plan de Control rev M, Operaciones 90 y 120)', 7),
+              4, 'Control visual de la zona de soldadura, autocontrol por lote y al 100 % en la inspeccion final (Plan de Control rev M, Operaciones 90 y 120)', 8),
           ]),
           falla('Corte o raya del sustrato durante el refilado', EF_SCRAP_INTERNO, [
             causa('La profundidad de corte no esta limitada por el utillaje',
               'TBD - falta el tope de profundidad en el utillaje',
-              10, 'Control visual de rayas y cortes contra pieza patron y biblia de defectos (HO 927 REV6, hoja 100)', 7),
+              10, 'Control visual de rayas y cortes contra pieza patron y biblia de defectos (HO 927 REV6, hoja 100)', 8),
           ]),
         ]),
     ]),
@@ -1541,6 +1584,17 @@ const OP100 = operacion('90', 'REFILADO CON MASCARA',
             causa('La etiqueta se imprime y se coloca a mano en cada pieza',
               'Impresion y colocacion de la etiqueta segun IO-16 (HO 927 REV6, hoja 100, paso 4)',
               3, 'Control visual de la etiqueta, autocontrol por lote (Plan de Control rev M, Operacion 100.1)', 9),
+          ]),
+          // 23/09/2026 — mezcla de mano. La pieza es un par espejo (FR.RH 00257327 / FR.LH
+          // 00257328) y el AMFE no analizaba la mezcla de manos (auditoria de cliente del 23/09;
+          // Fak: "agrega el analisis de mezcla de mano"). La hoja de identificacion de la HO 927
+          // (hoja 110.2 en la REV.5) dice "una vez identificado el lado de la pieza, se procede a
+          // colocar la etiqueta" y controla "que la identificacion corresponda a la pieza",
+          // visual, OP, 100 %. O=5: prevencion por instruccion (amfe.md §6).
+          falla('Pieza identificada con la etiqueta de la otra mano (RH / LH)', EF_IDENTIFICACION, [
+            causa('Las piezas RH y LH son simetricas y se etiquetan en el mismo puesto',
+              'Identificacion del lado de la pieza antes de colocar la etiqueta (HO 927, hoja de identificacion)',
+              5, 'Control visual de que la etiqueta corresponda a la mano de la pieza, al 100 % por el operario (HO 927, hoja de identificacion)', 8),
           ]),
         ]),
     ]),
@@ -1559,26 +1613,39 @@ const OP110 = operacion('91', 'TROQUELADO DE VINILO',
   'Troquelado centrado en la cavidad, al borde del plastico o con un sobrante de 2 mm como maximo, sin danar el plastico',
   [
     we('Maquina', 'Dispositivo de troquelado', [
+      // 23/09/2026 — aca vive la SC 1.6 del cliente (sc/f): el troquel corta el vinilo sobre la
+      // pieza tapizada, y la HO 927 hoja 110.1 pide "al borde del plastico o con maximo 2 mm de
+      // sobrante (carac. plano 18B01)", que es el +2 / -0 del LSC v1 medido contra el borde del
+      // plastico inyectado. Vino de la OP 20 (ver alli por que). El efecto es el de la SC 1.6
+      // tal como la designo el cliente, significativa FUNCIONAL: el vinilo de mas en la zona de
+      // insercion de la platina impide ensamblar el conjunto (antes estas filas iban con S=5 de
+      // aspecto). S=8 con O=5 y O=4: la sigla cierra con el criterio (S 5-8 y O >= 4).
+      // El retrabajo con cuter de la hoja 110.3 se dio de baja en la HO 927 REV.5 (31/10/2025):
+      // un defecto de corte va a scrap.
       funcion(
-        'Troquelar en la posicion definida sin danar el vinilo ni el plastico',
-        'Pieza asentada sobre el posicionador y la base de grillon; sobrante de vinilo de 2 mm como maximo (caracteristica 18B01 del plano)',
+        'Troquelar el vinilo en la zona de insercion de la platina dentro del limite que fija el cliente',
+        'SC 1.6: vinilo al borde del plastico o con 2 mm de sobrante como maximo (+2 / -0) en la zona de insercion de la platina (caracteristica 18B01 del plano; HO 927 REV6, hoja 110.1)',
         [
-          // Efecto de aspecto (S=5, clasificacion en el cliente) y no de retrabajo: en Barack un
-          // defecto de corte va a scrap (amfe.md), y el retrabajo con cuter de la hoja 110.3 se
-          // dio de baja en la HO 927 REV.5 (31/10/2025).
-          falla('Troquelado con un sobrante de vinilo mayor a 2 mm', EF_ASPECTO, [
+          falla('Vinilo troquelado con mas de 2 mm de sobrante en la zona de insercion de la platina', EF_PARO_LINEA, [
             // I-MT-003 Rev A: "Controlar filo. En caso de perdida de filo se retira el fleje y se
             // lo afila". El instructivo no nombra ningun registro ("ANEXOS: No posee") ni un
             // criterio numerico (golpes u horas).
             causa('El filo del troquel se desgasta entre dos afilados',
               'Control de filo y fleje del troquel con reafilado (I-MT-003 Rev A)',
-              5, 'Control del sobrante con regla milimetrada por el operario, como paso de la operacion (HO 927 REV6, hoja 110.1)', 6),
+              5, 'Control del sobrante con regla milimetrada por el operario, como paso de la operacion (HO 927 REV6, hoja 110.1)', 6,
+              sc('SC 1.6', 'sc/f')),
           ]),
-          falla('Troquelado descentrado en la cavidad', EF_ASPECTO, [
+          falla('Troquelado descentrado: vinilo por debajo del borde del plastico o con mas de 2 mm de sobrante', EF_PARO_LINEA, [
             causa('La pieza se apoya a mano sobre el posicionador y la base de grillon antes de cada golpe',
               'Posicionador y base de grillon del dispositivo (HO 927 REV6, hoja 110.1, paso 1)',
-              4, 'Control visual del troquelado centrado y del posicionado: 1 pieza al inicio y al fin de turno por el operador de calidad y autocontrol del operario por lote (Plan de Control rev M, Operacion 110), y al 100 % en la inspeccion final (HO 927 REV6, hoja 120)', 8),
+              4, 'Control visual del troquelado centrado y del posicionado: 1 pieza al inicio y al fin de turno por el operador de calidad y autocontrol del operario por lote, y al 100 % en la inspeccion final (HO 927 REV6, hoja 120)', 8,
+              sc('SC 1.6', 'sc/f')),
           ]),
+        ]),
+      funcion(
+        'Troquelar sin danar el plastico',
+        'Pieza asentada sobre el posicionador y la base de grillon (HO 927 REV6, hoja 110.1, paso 1)',
+        [
           falla('Plastico danado por el troquelado', EF_SCRAP_INTERNO, [
             causa('La pieza mal asentada deja el plastico debajo de la linea de corte del troquel',
               'Posicionador y base de grillon del dispositivo (HO 927 REV6, hoja 110.1, paso 1)',
@@ -1616,14 +1683,14 @@ const OP120 = operacion('100', 'INSPECCION FINAL',
           falla('Pieza no conforme que pasa la inspeccion final', EF_PIEZA_DISTINTA, [
             causa('Los criterios de aspecto se juzgan a ojo, pieza por pieza, contra la biblia de defectos',
               'Biblia de defectos, pieza patron y plantilla de alineacion de costura en el puesto, con camino de inspeccion por zonas A, B y C (HO 927 REV6, hoja 120)',
-              4, 'Control al 100 % con registro en la planilla de control de calidad, e identificacion con etiqueta roja de cada pieza no conforme (HO 927 REV6, hoja 120)', 7),
+              4, 'Control al 100 % con registro en la planilla de control de calidad, e identificacion con etiqueta roja de cada pieza no conforme (HO 927 REV6, hoja 120)', 8),
           ]),
           // Plan de Control rev M, Operacion 120, item 1: adherencia del tapizado de 10 N como
           // referencia, con dinamometro. Es por muestreo -> P3-9. La Rev.A no tenia ningun modo
           // de falla de despegue del vinilo en todo el documento.
           falla('Adherencia del tapizado por debajo de 10 N', EF_DESPEGUE, [
             causa('El pegado deficiente no se ve en una inspeccion visual',
-              'Adherencia de 10 N como referencia en el plan de control (Plan de Control rev M, Operacion 120)',
+              'Adherencia minima de 10 N definida como criterio de aceptacion de la pieza',
               4, 'Ensayo de adherencia con dinamometro, por muestreo (Plan de Control rev M, Operacion 120)', 9),
           ]),
         ]),
@@ -1693,7 +1760,7 @@ const OP130 = operacion('120', 'EMBALAJE E IDENTIFICACION',
           falla('Medio despachado con una cantidad distinta de la de la ficha', EF_CANTIDAD, [
             causa('Las piezas se cuentan a mano por piso al armar el medio',
               'Modulo de embalaje segun el cuadro de la hoja: 4 piezas por piso, 5 pisos, 20 piezas por caja (HO 927 REV6, hoja 130)',
-              3, 'Control visual del modulo de embalaje por el operario (HO 927 REV6, hoja 130)', 7),
+              3, 'Control visual del modulo de embalaje por el operario (HO 927 REV6, hoja 130)', 8),
           ]),
           // Defecto que YA le llego al cliente, reincidente: QR 235703 "APB P21 sin costura -
           // identificacion incorrecta" (30/07/2025) y "hoy otra vez enviaron 20 piezas con error
@@ -1705,6 +1772,16 @@ const OP130 = operacion('120', 'EMBALAJE E IDENTIFICACION',
               'Identificacion segun el codigo de la pieza (Plan de Control rev M, Operacion 130)',
               6, 'Control visual de la identificacion, 1 medio al final del turno (Plan de Control rev M, Operacion 130)', 9),
           ]),
+          // 23/09/2026 — mezcla de mano en el medio. La hoja de embalaje (HO 927 REV6, hoja 130)
+          // arma el modulo (4 piezas por piso, 5 pisos, carton entre pisos) y no pide separar ni
+          // verificar la mano de cada pieza: D=10, sin control declarado. Lo que previene es la
+          // etiqueta de cada pieza con su mano (hoja de identificacion). S=8: una pieza de la otra
+          // mano no se puede montar en esa posicion del panel de puerta.
+          falla('Pieza de una mano embalada en el medio de la otra (RH / LH)', EF_PARO_LINEA, [
+            causa('Las piezas RH y LH son simetricas y se embalan en el mismo sector',
+              'Cada pieza lleva su etiqueta con la mano identificada (HO 927, hoja de identificacion)',
+              5, 'Sin control de la mano de cada pieza al armar el medio: la hoja de embalaje no lo pide', 10),
+          ]),
           // La Rev.A decia "el medio no tiene separadores". La HO 927 hoja 130 dice lo contrario:
           // carton en la base "para que no se ensucien o rallen las piezas" y un carton por piso.
           // Ya paso: QRCI 04/2020 "vinilo marcado por el embalaje". Y "marcado" es el defecto
@@ -1713,7 +1790,7 @@ const OP130 = operacion('120', 'EMBALAJE E IDENTIFICACION',
           falla('Vinilo marcado o danado por el propio embalaje', EF_ASPECTO, [
             causa('Dentro de un mismo piso las piezas quedan en contacto entre si',
               'Carton en la base y entre pisos, piezas dispuestas en forma cruzada (HO 927 REV6, hoja 130)',
-              5, 'Control visual del medio por el operario al cerrarlo (HO 927 REV6, hoja 130)', 7),
+              5, 'Control visual del medio por el operario al cerrarlo (HO 927 REV6, hoja 130)', 8),
           ]),
         ]),
     ]),
@@ -1741,7 +1818,7 @@ const doc = {
     rev: 'A',
     revisionLevel: 'A',
     amfeDate: FECHA,
-    revDate: FECHA,
+    revDate: FECHA_REVISION,
     responsibleEngineer: 'Carlos Baptista (Ingenieria)',
     processResponsible: 'Carlos Baptista',
     elaboratedBy: 'Facundo Santoro',
@@ -1987,10 +2064,13 @@ if (ex && ex.length) {
         ap_h_count: apCount.H || 0,
         ap_m_count: apCount.M || 0,
         coverage_percent: nCausas > 0 ? Math.round((causasConSOD / nCausas) * 100) : 0,
-        last_revision_date: FECHA_ISO,
+        last_revision_date: FECHA_REVISION_ISO,
         revision_level: 'A',
         data: JSON.stringify(doc),
         revisions: JSON.stringify(doc.revisions),
+        // La tabla no tiene trigger: sin esto la fila seguia diciendo 21/09 despues de las
+        // escrituras del 22/09 (saveAmfe() lo pone solo; este UPDATE es crudo).
+        updated_at: new Date().toISOString(),
       }).eq('id', id0);
       if (errUpd) { console.error('UPDATE FALLO:', errUpd.message); process.exit(1); }
     },
@@ -2028,7 +2108,7 @@ const { error } = await sb.from('amfe_documents').insert({
   ap_m_count: apCount.M || 0,
   coverage_percent: nCausas > 0 ? Math.round((causasConSOD / nCausas) * 100) : 0,
   start_date: FECHA_ISO,
-  last_revision_date: FECHA_ISO,
+  last_revision_date: FECHA_REVISION_ISO,
   revision_level: 'A',
   data: JSON.stringify(doc),
   revisions: JSON.stringify(doc.revisions),

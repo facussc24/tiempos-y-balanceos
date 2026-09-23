@@ -570,50 +570,79 @@ export function countAmfeStats(doc) {
     return { opCount: ops.length, weCount, fnCount, fmCount, causeCount };
 }
 
-// ─── calculateAP (transcripcion de la Figura 3.5-3 del AIAG-VDA) ────────────
+// ─── calculateAP (tabla oficial AIAG-VDA, SETEC pag. 116-118) ──────────────
 // Replica de modules/amfe/apTable.ts porque los .mjs no pueden importar .ts sin build.
-// Si apTable.ts cambia, actualizar aca. La fuente es la Figura 3.5-3 "Action Priority
-// for PFMEA" del AIAG & VDA FMEA Handbook 1st Ed. (2019), paginas 122-123 del PDF del
-// manual. Bandas de severidad del manual: 9-10, 5-8, 2-4 y 1.
-// (Hasta el 22/08/2026 esta replica usaba bandas 9-10/7-8/4-6/2-3/1 y subdeclaraba el
-// riesgo en 281 de 1000 combinaciones. Ver el encabezado de apTable.ts.)
+// Si apTable.ts cambia, actualizar aca: __tests__/scripts/apTableReplica.test.mjs compara
+// las dos en las 1000 combinaciones.
+// Fuente: tabla "AP - Prioridad de accion para AMFE de diseño y AMFE de proceso" del manual
+// AIAG-VDA publicado, version SETEC (`MANUAL AMFE  R06 Julio 2020 Participante.pdf`, paginas
+// 116-118 del PDF). Decision de Fak del 23/09/2026: "la tabla oficial ni mas ni menos".
+// Bandas: S 9-10/7-8/4-6/2-3/1 · O 8-10/6-7/4-5/2-3/1 · D 7-10/5-6/2-4/1. Sin casilleros "Error".
+// (Entre el 22/08 y el 23/09/2026 esta replica copiaba un BORRADOR de 2017 del manual.)
 
-/** Figura 3.5-3, fila por fila y en el orden impreso. */
-export const FIGURA_3_5_3 = [
-    { s: [9, 10], o: [6, 10], d: [2, 10], ap: 'H' },
-    { s: [9, 10], o: [4, 5], d: [7, 10], ap: 'H' },
-    { s: [9, 10], o: [4, 5], d: [5, 6], ap: 'H' },
-    { s: [9, 10], o: [4, 5], d: [2, 4], ap: 'M' },
-    { s: [9, 10], o: [2, 3], d: [7, 10], ap: 'H' },
-    { s: [9, 10], o: [2, 3], d: [5, 6], ap: 'M' },
-    { s: [9, 10], o: [2, 3], d: [2, 4], ap: 'L' },
+const D_7_10 = [7, 10], D_5_6 = [5, 6], D_2_4 = [2, 4], D_1 = [1, 1], D_TODAS = [1, 10];
 
-    { s: [5, 8], o: [8, 10], d: [2, 10], ap: 'H' },
-    { s: [5, 8], o: [6, 7], d: [7, 10], ap: 'H' },
-    { s: [5, 8], o: [6, 7], d: [5, 6], ap: 'H' },
-    { s: [5, 8], o: [6, 7], d: [2, 4], ap: 'M' },
-    { s: [5, 8], o: [4, 5], d: [7, 10], ap: 'H' },
-    { s: [5, 8], o: [4, 5], d: [5, 6], ap: 'H' },
-    { s: [5, 8], o: [4, 5], d: [2, 4], ap: 'M' },
-    { s: [5, 8], o: [2, 3], d: [7, 10], ap: 'M' },
-    { s: [5, 8], o: [2, 3], d: [5, 6], ap: 'M' },
-    { s: [5, 8], o: [2, 3], d: [2, 4], ap: 'L' },
-
-    { s: [2, 4], o: [8, 10], d: [2, 10], ap: 'H' },
-    { s: [2, 4], o: [6, 7], d: [7, 10], ap: 'H' },
-    { s: [2, 4], o: [6, 7], d: [5, 6], ap: 'H' },
-    { s: [2, 4], o: [6, 7], d: [2, 4], ap: 'M' },
-    { s: [2, 4], o: [4, 5], d: [7, 10], ap: 'H' },
-    { s: [2, 4], o: [4, 5], d: [5, 6], ap: 'M' },
-    { s: [2, 4], o: [4, 5], d: [2, 4], ap: 'L' },
-    { s: [2, 4], o: [2, 3], d: [7, 10], ap: 'M' },
-    { s: [2, 4], o: [2, 3], d: [5, 6], ap: 'L' },
-    { s: [2, 4], o: [2, 3], d: [2, 4], ap: 'L' },
-
-    { s: [2, 10], o: [1, 1], d: [1, 1], ap: 'L' },       // falla practicamente eliminada por prevencion
-    { s: [1, 1], o: [1, 10], d: [1, 10], ap: 'L' },      // sin efecto perceptible
-    { s: [2, 10], o: [1, 1], d: [2, 10], ap: 'Error' },  // "O=1 implausible without D=1"
-    { s: [2, 10], o: [2, 10], d: [1, 1], ap: 'Error' },  // "D=1 implausible without O=1"
+/** Tabla oficial, fila por fila y en el orden impreso. */
+export const TABLA_AP_OFICIAL = [
+    // S 9-10 (pag. 116)
+    { s: [9, 10], o: [8, 10], d: D_7_10, ap: 'H' },
+    { s: [9, 10], o: [8, 10], d: D_5_6, ap: 'H' },
+    { s: [9, 10], o: [8, 10], d: D_2_4, ap: 'H' },
+    { s: [9, 10], o: [8, 10], d: D_1, ap: 'H' },
+    { s: [9, 10], o: [6, 7], d: D_7_10, ap: 'H' },
+    { s: [9, 10], o: [6, 7], d: D_5_6, ap: 'H' },
+    { s: [9, 10], o: [6, 7], d: D_2_4, ap: 'H' },
+    { s: [9, 10], o: [6, 7], d: D_1, ap: 'H' },
+    { s: [9, 10], o: [4, 5], d: D_7_10, ap: 'H' },
+    { s: [9, 10], o: [4, 5], d: D_5_6, ap: 'H' },
+    { s: [9, 10], o: [4, 5], d: D_2_4, ap: 'H' },
+    { s: [9, 10], o: [4, 5], d: D_1, ap: 'M' },
+    { s: [9, 10], o: [2, 3], d: D_7_10, ap: 'H' },
+    { s: [9, 10], o: [2, 3], d: D_5_6, ap: 'M' },
+    { s: [9, 10], o: [2, 3], d: D_2_4, ap: 'L' },
+    { s: [9, 10], o: [2, 3], d: D_1, ap: 'L' },
+    { s: [9, 10], o: [1, 1], d: D_TODAS, ap: 'L' },
+    // S 7-8 (pag. 117)
+    { s: [7, 8], o: [8, 10], d: D_7_10, ap: 'H' },
+    { s: [7, 8], o: [8, 10], d: D_5_6, ap: 'H' },
+    { s: [7, 8], o: [8, 10], d: D_2_4, ap: 'H' },
+    { s: [7, 8], o: [8, 10], d: D_1, ap: 'H' },
+    { s: [7, 8], o: [6, 7], d: D_7_10, ap: 'H' },
+    { s: [7, 8], o: [6, 7], d: D_5_6, ap: 'H' },
+    { s: [7, 8], o: [6, 7], d: D_2_4, ap: 'H' },
+    { s: [7, 8], o: [6, 7], d: D_1, ap: 'M' },
+    { s: [7, 8], o: [4, 5], d: D_7_10, ap: 'H' },
+    { s: [7, 8], o: [4, 5], d: D_5_6, ap: 'M' },
+    { s: [7, 8], o: [4, 5], d: D_2_4, ap: 'M' },
+    { s: [7, 8], o: [4, 5], d: D_1, ap: 'M' },
+    { s: [7, 8], o: [2, 3], d: D_7_10, ap: 'M' },
+    { s: [7, 8], o: [2, 3], d: D_5_6, ap: 'M' },
+    { s: [7, 8], o: [2, 3], d: D_2_4, ap: 'L' },
+    { s: [7, 8], o: [2, 3], d: D_1, ap: 'L' },
+    { s: [7, 8], o: [1, 1], d: D_TODAS, ap: 'L' },
+    // S 4-6 (pag. 117)
+    { s: [4, 6], o: [8, 10], d: D_7_10, ap: 'H' },
+    { s: [4, 6], o: [8, 10], d: D_5_6, ap: 'H' },
+    { s: [4, 6], o: [8, 10], d: D_2_4, ap: 'M' },
+    { s: [4, 6], o: [8, 10], d: D_1, ap: 'M' },
+    { s: [4, 6], o: [6, 7], d: D_7_10, ap: 'M' },
+    { s: [4, 6], o: [6, 7], d: D_5_6, ap: 'M' },
+    { s: [4, 6], o: [6, 7], d: D_2_4, ap: 'M' },
+    { s: [4, 6], o: [6, 7], d: D_1, ap: 'L' },
+    { s: [4, 6], o: [4, 5], d: D_7_10, ap: 'M' },
+    { s: [4, 6], o: [4, 5], d: D_5_6, ap: 'L' },
+    { s: [4, 6], o: [4, 5], d: D_2_4, ap: 'L' },
+    { s: [4, 6], o: [4, 5], d: D_1, ap: 'L' },
+    { s: [4, 6], o: [2, 3], d: D_TODAS, ap: 'L' },
+    { s: [4, 6], o: [1, 1], d: D_TODAS, ap: 'L' },
+    // S 2-3 (pag. 118)
+    { s: [2, 3], o: [8, 10], d: D_7_10, ap: 'M' },
+    { s: [2, 3], o: [8, 10], d: D_5_6, ap: 'M' },
+    { s: [2, 3], o: [8, 10], d: D_2_4, ap: 'L' },
+    { s: [2, 3], o: [8, 10], d: D_1, ap: 'L' },
+    { s: [2, 3], o: [1, 7], d: D_TODAS, ap: 'L' },
+    // S 1 (pag. 118)
+    { s: [1, 1], o: [1, 10], d: D_TODAS, ap: 'L' },
 ];
 
 const enRangoAP = (v, [min, max]) => v >= min && v <= max;
@@ -628,15 +657,9 @@ function normalizarSOD(s, o, d) {
     return [sInt, oInt, dInt];
 }
 
-function buscarFilaAP(s, o, d) {
-    return FIGURA_3_5_3.find(f => enRangoAP(s, f.s) && enRangoAP(o, f.o) && enRangoAP(d, f.d));
-}
-
 /**
- * Calcula Action Priority segun la Figura 3.5-3 (PFMEA).
- * Devuelve '' si los valores estan fuera de rango y tambien si la figura marca la
- * combinacion como "Error" (O=1 sin D=1, o D=1 sin O=1): ahi no hay prioridad que
- * asignar, la calificacion es implausible. Para distinguirlo: apImplausible().
+ * Calcula Action Priority segun la tabla oficial del AIAG-VDA (SETEC pag. 116-118).
+ * Devuelve '' solo si los valores estan fuera de rango o no son numeros.
  * @param {number} s severity del MODO DE FALLA (no de la causa)
  * @param {number} o occurrence 1-10
  * @param {number} d detection 1-10
@@ -645,14 +668,6 @@ function buscarFilaAP(s, o, d) {
 export function calculateAP(s, o, d) {
     const v = normalizarSOD(s, o, d);
     if (!v) return '';
-    const fila = buscarFilaAP(...v);
-    if (!fila || fila.ap === 'Error') return '';
-    return fila.ap;
-}
-
-/** true si la Figura 3.5-3 marca la combinacion como "Error" (calificacion implausible). */
-export function apImplausible(s, o, d) {
-    const v = normalizarSOD(s, o, d);
-    if (!v) return false;
-    return buscarFilaAP(...v)?.ap === 'Error';
+    const fila = TABLA_AP_OFICIAL.find(f => enRangoAP(v[0], f.s) && enRangoAP(v[1], f.o) && enRangoAP(v[2], f.d));
+    return fila?.ap ?? '';
 }

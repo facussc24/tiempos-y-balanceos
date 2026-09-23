@@ -1,8 +1,8 @@
-# Text Quality Audit (L2) — 2026-09-11T18:26:15.836Z
+# Text Quality Audit (L2) — 2026-09-23T12:00:45.599Z
 
-**Resumen global**: 0 CRITICAL, 106 WARNING en 18/18 AMFEs.
+**Resumen global**: 0 CRITICAL, 115 WARNING en 20/20 AMFEs.
 
-**Por tipo**: FN_NO_VERB=80, FN_TOO_SHORT=12, OP_FUNCTION_SEMANTIC_MISMATCH=13, WE_NAME_FOREIGN_TYPE=1
+**Por tipo**: OP_FUNCTION_SEMANTIC_MISMATCH=16, FN_NO_VERB=83, FN_TOO_SHORT=15, WE_NAME_FOREIGN_TYPE=1
 
 ## Top 5 AMFEs con mas issues
 
@@ -173,6 +173,27 @@
 | WARNING FN_NO_VERB | 70-71 INYECCION DE PIEZAS PLASTICAS | function.description "Parámetros validados por producto" no comienza con verbo |
 | WARNING FN_NO_VERB | 70-71 INYECCION DE PIEZAS PLASTICAS | function.description "Inspección visual al 100% de cada pieza inyectada con compar" no comienza con verbo |
 | WARNING FN_NO_VERB | 70-71 INYECCION DE PIEZAS PLASTICAS | function.description "Aire comprimido filtrado y seco" no comienza con verbo |
+
+### 131 (VWA/AMAROK_PA2/APB_CENTRAL)
+0 CRITICAL + 5 WARNING
+
+| Type | OP | Detalle |
+|---|---|---|
+| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 10 Recepción de materiales | OP "Recepción de materiales" debería contener alguno de [verificar, conformidad, trazabilidad] en su función |
+| WARNING FN_TOO_SHORT | 10 Recepción de materiales | function.description "Aplicar Hoja de Operación" muy corta (< 30 chars) |
+| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 40 PROCESO DE INYECCION DE PUR DE | OP "PROCESO DE INYECCION DE PUR DE CUBIERTA PLASTICA EXTERIOR" debería contener alguno de [inyectar, conformar] en su función |
+| WARNING FN_TOO_SHORT | 50 Tapizado manual | function.description "Aplicar Hoja de operación" muy corta (< 30 chars) |
+| WARNING FN_TOO_SHORT | 70 Inspección | function.description "Aplicar Hoja de operación" muy corta (< 30 chars) |
+
+### AMFE-P21-NAR-MY26 (P21 SSRT MY2026 - HILO NARANJA)
+0 CRITICAL + 4 WARNING
+
+| Type | OP | Detalle |
+|---|---|---|
+| WARNING OP_FUNCTION_SEMANTIC_MISMATCH | 10 RECEPCION DE MATERIA PRIMA | OP "RECEPCION DE MATERIA PRIMA" debería contener alguno de [verificar, conformidad, trazabilidad] en su función |
+| WARNING FN_NO_VERB | 10 RECEPCION DE MATERIA PRIMA | function.description "Que a produccion solo salga material ingresado, controlado e" no comienza con verbo |
+| WARNING FN_NO_VERB | 20 CORTE DE VINILO | function.description "Que del corte salga la cantidad correcta y correctamente ide" no comienza con verbo |
+| WARNING FN_NO_VERB | 21 CONTROL DE PRIMERA PIEZA CONTR | function.description "Que el lote no avance hasta que la primera pieza este libera" no comienza con verbo |
 
 ### AMFE-ARM-PAT (VWA/PATAGONIA/ARMREST_DOOR_PANEL)
 0 CRITICAL + 3 WARNING

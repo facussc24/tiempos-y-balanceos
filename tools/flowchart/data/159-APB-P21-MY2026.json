@@ -5,14 +5,14 @@
   "_costura": "OP 41 COSTURA VISTA (la OP 50 del AMFE 127 y de la HO 927): esta pieza lleva PESPUNTE SIMPLE HAQ, UNA sola linea, a 4 +0/-1 mm por arriba de la linea de union de vinilos, con 10 a 11 puntos cada 50 mm (LSC v1 del cliente, SC 2.1 a 2.4). En el sector se cosen tambien versiones con dos lineas paralelas (Plan de Control rev M, Operacion 50). El flujograma declara la operacion; el parametro vive en la HO y en el Plan de Control.",
   "_hilo": "La tabla de materiales del Rev.03 lista el hilo VERDE (Linhanyl FX284EX - 12125E) y dos hilos Coats NEO-631YJ-TEX92. El hilo de esta pieza es Linhanyl articulo BX138, codigo de proveedor 12124E, Nylon 6.6, color Orange Zeus T90 / FHS-F090 (LSC v1 SC 2.5), con costura de union en hilo Nylon M40 negro (SC 2.6). El sinoptico no dibuja tabla de materiales: los materiales viven en la BOM y en el Plan de Control.",
   "_numeracion_120": "Numeracion por SECTOR (canon de la casa): 20-21 mesa de corte, 30 refilado y 40-41 costura, 60-61 limpieza y primer, 70-74 adhesivado, su control y sus reprocesos, 80-82 horno, tapizado y control con mylar, 90-91 refilado con mascara y troquelado, 100 inspeccion final, 110 muro de calidad, 120 embalaje. Es la numeracion del AMFE 173; la HO 927 y el AMFE 127 de la serie numeran distinto (50 costura vista, 90.1/90.2, 120 inspeccion, 130 embalaje).",
-  "_caracteristicas_especiales": "Las marcas salen de las causas del AMFE 173 Rev.A, que llevan la caracteristica que designo el CLIENTE en su LSC v1 (19: 3 <cc/s>, 15 <cc/h>, 1 <sc/f>). Reparto: OP 10 cc/s + cc/h (SC 1.1 a 1.5, SC 2.5 y SC 2.6 en recepcion) | OP 20 sc/f (SC 1.6) | OP 40 cc/h (SC 2.6) | OP 41 cc/h (SC 2.1 a 2.5) | OP 100 cc/h (SC 3.1 a 3.7, ensayos a cargo de SMRC). La OP 82 NO lleva marca: verifica la alineacion de la costura sobre el sustrato despues del tapizado, que no es la SC 2.3 (posicion de la linea respecto de la union, que se fija y se mide en la OP 41). Hasta el 22/09/2026 tenia <cc/h> sin ninguna causa con esa sigla detras.",
+  "_caracteristicas_especiales": "Las marcas salen de las causas del AMFE 173 Rev.A, que llevan la caracteristica que designo el CLIENTE en su LSC v1 (19: 3 <cc/s>, 15 <cc/h>, 1 <sc/f>). Reparto: OP 10 cc/s + cc/h (SC 1.1 a 1.5, SC 2.5 y SC 2.6 en recepcion) | OP 91 sc/f (SC 1.6) | OP 40 cc/h (SC 2.6) | OP 41 cc/h (SC 2.1 a 2.5) | OP 100 cc/h (SC 3.1 a 3.7, ensayos a cargo de SMRC). La OP 82 NO lleva marca: verifica la alineacion de la costura sobre el sustrato despues del tapizado, que no es la SC 2.3 (posicion de la linea respecto de la union, que se fija y se mide en la OP 41). Hasta el 22/09/2026 tenia <cc/h> sin ninguna causa con esa sigla detras. 23/09/2026: la sc/f (SC 1.6) paso de la OP 20 a la OP 91. El LSC v1 mide el corte del TEP contra el borde del plastico inyectado (+2 / -0 en la zona de insercion de la platina), y eso lo corta el troquel sobre la pieza tapizada (HO 927 hoja 110.1, carac. plano 18B01), no la mesa de corte. Auditoria de cliente del 23/09, aprobado por Fak.",
   "_fuentes": "FLUJOGRAMA REV.03 P21.pdf (10/02/2026) · P21 AMFE REV2.xlsx, AMFE N 127 (19/02/2024) · HO 927 REV6 (hojas del 31/10/2025; hoja 100 del 27/01/2026) · HO mesa de corte (13/05/2026) · SET UP Mesa de corte Rev.G (29/04/2025) · Plan de Control rev M (15/02/2024) y rev H del P21 (08/10/2024) · HO APB Rev 14, hojas Ret- (27/04/2022) · LSC v1 P21 ARMREST_SSRT MY2026 (13/07/2026) · SNL Amendment 02-Rev03 (26/08/2026).",
   "header": {
     "title": "FLUJOGRAMA DE PROCESO APB P21 — HILO NARANJA COSTURA SIMPLE (MY2026)",
     "documentCode": "I-IN-002/III",
     "revision": "A",
     "date": "21/09/2026",
-    "revisionDate": "",
+    "revisionDate": "23/09/2026",
     "preparedBy": "FACUNDO SANTORO",
     "reviewedBy": "CARLOS BAPTISTA",
     "project": "P21 SSRT MY2026",
@@ -100,10 +100,7 @@
           {
             "stepId": "20",
             "type": "operation",
-            "description": "CORTE DE VINILO",
-            "critical": true,
-            "criticalType": "sc/f",
-            "criticalColor": "black"
+            "description": "CORTE DE VINILO"
           },
           {
             "stepId": "21",
@@ -193,22 +190,31 @@
               "labelNode": "NO",
               "type": "terminal",
               "text": "SCRAP"
-            }
-          },
-          {
-            "stepId": "72",
-            "type": "operation",
-            "description": "REPROCESO: LIMPIEZA DEFICIENTE"
-          },
-          {
-            "stepId": "73",
-            "type": "operation",
-            "description": "REPROCESO: FALTA DE PRIMER"
-          },
-          {
-            "stepId": "74",
-            "type": "operation",
-            "description": "REPROCESO: FALTA DE ADHESIVO"
+            },
+            "branchColumnWidth": 330,
+            "branches": [
+              [
+                {
+                  "stepId": "72",
+                  "type": "operation",
+                  "description": "REPROCESO: LIMPIEZA DEFICIENTE"
+                }
+              ],
+              [
+                {
+                  "stepId": "73",
+                  "type": "operation",
+                  "description": "REPROCESO: FALTA DE PRIMER"
+                }
+              ],
+              [
+                {
+                  "stepId": "74",
+                  "type": "operation",
+                  "description": "REPROCESO: FALTA DE ADHESIVO"
+                }
+              ]
+            ]
           },
           {
             "type": "transfer",
@@ -218,7 +224,8 @@
               "label": "REVERIFICAR (A OP. 71)"
             }
           }
-        ]
+        ],
+        "lineWidth": 900
       }
     },
     {
@@ -254,7 +261,10 @@
     {
       "stepId": "91",
       "type": "operation",
-      "description": "TROQUELADO DE VINILO"
+      "description": "TROQUELADO DE VINILO",
+      "critical": true,
+      "criticalType": "sc/f",
+      "criticalColor": "black"
     },
     {
       "type": "transfer",
@@ -313,6 +323,7 @@
   ],
   "_primer": "SI lleva primer, y siempre lo llevo: OP 70 propia en la HO 927 desde la REV.2 (2023), instructivos IO-07 (mezcla) e IO-19 (aplicacion), items PPBL-3A/3B en la BOM 927 Rev03 y en la BOM 127 Rev7, consumo cargado en el arb, y un reclamo del cliente en su historial (PC rev L, log de revisiones: 'Revision por reclamo de cliente QR 219344 primer vencido'). El sustrato no cambio de material: el plano RP-00238891 V06 dice 'RAW MATERIAL: >P/E< -HC PPT X9127' y es UN SOLO plano para las 17 piezas; el ECR-0368291 solo cambia la costura. La Rev.A de este flujograma traia una condicion '¿el sustrato lleva primer?' heredada del REV.03 multiproducto, con una rama que no aterrizaba en ningun lado: se saco.",
   "_mylar": "El control con regla mylar sale de la HO 927 REV6, hoja 90.2 celda L39: 'Alineacion visual de costura utilizando regla Mylar de soporte', responsable OP, frecuencia 1, registro 'Set up 1° pieza OK + Registro control calidad'. Entro en la REV.5 (31/10/2025): las REV.2 y REV.3 no lo tienen. La hoja 120 celda I25 nombra el mismo util como 'plantilla de alineacion de costura'. El mylar es HERRAMIENTA, no material: no esta en la BOM ni en el arb (0 filas), y sus planos viven en Librales Ingenieria\\Mesa de Corte\\MYLAR\\SMRC\\P21 HILO. NO esta declarado en el Plan de Control: es un control que existe en planta y el cliente no lo ve donde lo audita.",
-  "_retrabajos": "Los reprocesos 72 a 74 son los que tienen METODO ESCRITO para el P21, y cuelgan del control de adhesivado porque ahi los detecta la hoja: limpieza (HO APB Rev 14, hoja Ret- Limpieza), primer (Ret- primer; Plan de Control P21 rev H, fila 99) y adhesivo (Ret- adhesivo; Plan de Control rev M, Operacion 80.1). AMFE unificado REV09/REV15, OP 150: \"llevar la pieza al lugar donde se origino el defecto\". El tapizado NO se retrabaja (\"no se debe retirar la tela/vinilo luego de colocada\", HO 927 REV.2 hoja 90.2): por eso el NO del control con mylar va a SCRAP. El retrabajo de troquelado con cuter (hoja 110.3) se dio de baja en la HO 927 REV.5 (31/10/2025). La HO 927 hoja 120 dice \"etiqueta roja para posterior scrap o retrabajo\" pero no escribe ningun metodo de retrabajo para la inspeccion final.",
-  "_muro": "MURO DE CALIDAD: lo exige la carta de nominacion (SNL Amendment 02-Rev03, pag. 8: \"Quality Wall 100% check... till 5000 consecutive checked good parts\") y el Plan de Control rev M lo tiene como Operacion 140. Va antes del embalaje, como en el flujograma 152."
+  "_retrabajos": "Los reprocesos 72 a 74 son los que tienen METODO ESCRITO para el P21, y cuelgan del control de adhesivado porque ahi los detecta la hoja: limpieza (HO APB Rev 14, hoja Ret- Limpieza), primer (Ret- primer; Plan de Control P21 rev H, fila 99) y adhesivo (Ret- adhesivo; Plan de Control rev M, Operacion 80.1). AMFE unificado REV09/REV15, OP 150: \"llevar la pieza al lugar donde se origino el defecto\". El tapizado NO se retrabaja (\"no se debe retirar la tela/vinilo luego de colocada\", HO 927 REV.2 hoja 90.2): por eso el NO del control con mylar va a SCRAP. El retrabajo de troquelado con cuter (hoja 110.3) se dio de baja en la HO 927 REV.5 (31/10/2025). La HO 927 hoja 120 dice \"etiqueta roja para posterior scrap o retrabajo\" pero no escribe ningun metodo de retrabajo para la inspeccion final. 23/09/2026: los tres reprocesos se dibujan como caminos ALTERNATIVOS (uno por defecto) que convergen en la re-entrada a la OP 71; hasta hoy iban en serie, como si toda pieza rechazada pasara por los tres. Fak: \"dale corregi lo de los reprocesos\". El motor abre columnas angostas con branchColumnWidth.",
+  "_muro": "MURO DE CALIDAD: lo exige la carta de nominacion (SNL Amendment 02-Rev03, pag. 8: \"Quality Wall 100% check... till 5000 consecutive checked good parts\") y el Plan de Control rev M lo tiene como Operacion 140. Va antes del embalaje, como en el flujograma 152.",
+  "_fecha": "Rev. A emitida el 21/09/2026 (fecha de emision, la del listado maestro). Fecha de revision 23/09/2026: correcciones de la auditoria de cliente antes de mandarlo a SMRC. amfe.md §4bis: la letra no cambia hasta la proxima emision; la fecha de revision se mueve con el ultimo cambio."
 }

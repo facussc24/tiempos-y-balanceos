@@ -33,7 +33,7 @@ import {
 } from './genericLabels.mjs';
 import { scanForbidden } from './forbiddenContent.mjs';
 import { revisarEquipo } from './nomina.mjs';
-import { calculateAP, apImplausible } from './amfeIo.mjs';
+import { calculateAP } from './amfeIo.mjs';
 
 const SUSPICIOUS_OP_PATTERNS = [
     'CLASIFICACION Y SEGREGACION',
@@ -831,17 +831,10 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                             }
                         }
 
-                        // CAUSE_SOD_IMPLAUSIBLE (WARNING) — la Figura 3.5-3 del AIAG-VDA no da
-                        // prioridad a estas dos combinaciones, las marca "Error": O=1 sin D=1
-                        // ("O=1 implausible without D=1") y D=1 sin O=1. Un O=1 dice que la
-                        // prevencion practicamente elimino la falla, y entonces la deteccion no
-                        // puede seguir siendo dificil. No se corrige solo: los valores son dato
-                        // tecnico y los define el equipo. Lo encontro la auditoria de cliente del
-                        // 22/08/2026 (6 causas en los 8 AMFE de Patagonia).
-                        if (!missS && !missO && !missD && apImplausible(sevEf, Number(c.occurrence), Number(c.detection))) {
-                            issues.push({ ...cCtx, type: 'CAUSE_SOD_IMPLAUSIBLE',
-                                detail: `S=${sevEf} O=${c.occurrence} D=${c.detection}: la Figura 3.5-3 marca esta combinacion como Error (O=1 exige D=1 y viceversa), no le asigna AP` });
-                        }
+                        // (CAUSE_SOD_IMPLAUSIBLE se saco el 23/09/2026: marcaba "Error" las
+                        // combinaciones O=1 sin D=1 y D=1 sin O=1, que salian de un BORRADOR de
+                        // 2017 del manual. La tabla oficial publicada les da AP: O=1 es L con
+                        // cualquier D, y D=1 tiene su valor por S y O. SETEC pag. 116-118.)
 
                         // DETECTION_HUMANA_OPTIMISTA (WARNING) — Tabla P3 del AIAG-VDA.
                         // Un control que depende de una PERSONA mirando, tocando, escuchando,

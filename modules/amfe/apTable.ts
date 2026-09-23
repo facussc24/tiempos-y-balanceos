@@ -1,85 +1,116 @@
 /**
- * AIAG-VDA FMEA Action Priority (AP) — PFMEA
+ * AIAG-VDA FMEA Action Priority (AP) — AMFE de diseño y de proceso
  *
- * Transcripcion literal de la **Figura 3.5-3 "Action Priority for PFMEA"** del
- * AIAG & VDA FMEA Handbook, 1st Edition (June 2019), paginas 122-123 del PDF del
- * manual de Barack (`4- MANUALES\AMFE\FMEA-AMFE-VDA-AIAG\`).
+ * Transcripcion literal de la tabla **"AP - Prioridad de accion para AMFE de diseño y AMFE de
+ * proceso"** del manual AIAG-VDA publicado (Handbook 1° edicion, junio de 2019), en la version
+ * licenciada de SETEC: `4- MANUALES\AMFE\MANUAL AMFE  R06 Julio 2020 Participante.pdf`,
+ * **paginas 116, 117 y 118 del PDF** (laminas 231 a 235). Es la tabla oficial: decision de Fak
+ * del 23/09/2026, *"vamos a usar la tabla oficial ni mas ni menos"*.
  *
- * El manual agrupa la severidad en CUATRO bandas: **9-10, 5-8, 2-4 y 1**.
+ * Bandas de la tabla oficial:
+ *   - Severidad:  9-10 · 7-8 · 4-6 · 2-3 · 1
+ *   - Ocurrencia: 8-10 · 6-7 · 4-5 · 2-3 · 1
+ *   - Deteccion:  7-10 · 5-6 · 2-4 · 1
+ *   - O = 1 da L con cualquier D, y S = 1 da L siempre. La tabla NO tiene casilleros "Error".
  *
- * 🔴 Hasta el 22/08/2026 este archivo usaba las bandas 9-10 / 7-8 / 4-6 / 2-3 / 1, que
- * NO son las del manual, y ademas se apartaba de la figura en tres celdas (S5-8 O4-5
- * D5-6, S5-8 O6-7 D2-4 y S9-10 O4-5 D2-4). Resultado: 305 de las 838 combinaciones
- * validas daban distinto y 281 de ellas SUBDECLARABAN el riesgo. Lo encontro una
- * auditoria con la norma delante; los tests que decian "verificado 1000/1000" estaban
- * escritos a partir de este codigo, no del manual, asi que fijaban el error.
- * Por eso la tabla ahora se escribe como FILAS, en el mismo orden en que estan
- * impresas: cada fila se puede cotejar con el manual sin leer logica.
+ * 🔴 Entre el 22/08 y el 23/09/2026 este archivo copiaba la Figura 3.5-3 de
+ * `446076670-FMEA-AIAG-VDA-First-Edition-pdf.pdf`, que resulto ser un BORRADOR del manual
+ * (un Word del 05/12/2017, anterior a la publicacion): bandas de S 9-10 / 5-8 / 2-4 / 1 y
+ * combinaciones marcadas "Error" que el manual publicado no tiene. Con esa tabla, 100 de las
+ * 118 causas del AMFE 173 daban H. Memoria `project_tabla_ap_de_la_casa_es_el_borrador_2017`.
+ *
+ * La tabla se escribe como FILAS en el orden impreso, para poder cotejarla con las paginas
+ * sin leer logica. El test (`__tests__/modules/amfe/apTable.test.ts`) la compara contra una
+ * transcripcion hecha aparte, en forma de matriz, en las 1000 combinaciones.
  */
 
 type AP = 'H' | 'M' | 'L';
 
-/** Una fila de la Figura 3.5-3: rangos de S, O y D -> AP (o 'Error'). */
+/** Una fila de la tabla oficial: rangos de S, O y D -> AP. */
 interface FilaAP {
     s: [number, number];
     o: [number, number];
     d: [number, number];
-    ap: AP | 'Error';
+    ap: AP;
 }
 
-/**
- * Figura 3.5-3, fila por fila y en el orden del manual.
- * Las cuatro ultimas son las filas especiales impresas al pie de la figura.
- */
-export const FIGURA_3_5_3: readonly FilaAP[] = [
-    // ── S 9-10: efectos de seguridad y/o reglamentarios ──────────────────────
-    { s: [9, 10], o: [6, 10], d: [2, 10], ap: 'H' },
-    { s: [9, 10], o: [4, 5], d: [7, 10], ap: 'H' },
-    { s: [9, 10], o: [4, 5], d: [5, 6], ap: 'H' },
-    { s: [9, 10], o: [4, 5], d: [2, 4], ap: 'M' },
-    { s: [9, 10], o: [2, 3], d: [7, 10], ap: 'H' },
-    { s: [9, 10], o: [2, 3], d: [5, 6], ap: 'M' },
-    { s: [9, 10], o: [2, 3], d: [2, 4], ap: 'L' },
+const D_7_10: [number, number] = [7, 10];
+const D_5_6: [number, number] = [5, 6];
+const D_2_4: [number, number] = [2, 4];
+const D_1: [number, number] = [1, 1];
+const D_TODAS: [number, number] = [1, 10];
 
-    // ── S 5-8: perdida o degradacion de funcion / disrupcion de fabricacion ──
-    { s: [5, 8], o: [8, 10], d: [2, 10], ap: 'H' },
-    { s: [5, 8], o: [6, 7], d: [7, 10], ap: 'H' },
-    { s: [5, 8], o: [6, 7], d: [5, 6], ap: 'H' },
-    { s: [5, 8], o: [6, 7], d: [2, 4], ap: 'M' },
-    { s: [5, 8], o: [4, 5], d: [7, 10], ap: 'H' },
-    { s: [5, 8], o: [4, 5], d: [5, 6], ap: 'H' },
-    { s: [5, 8], o: [4, 5], d: [2, 4], ap: 'M' },
-    { s: [5, 8], o: [2, 3], d: [7, 10], ap: 'M' },
-    { s: [5, 8], o: [2, 3], d: [5, 6], ap: 'M' },
-    { s: [5, 8], o: [2, 3], d: [2, 4], ap: 'L' },
+/** Tabla oficial, fila por fila y en el orden del manual (SETEC pag. 116-118). */
+export const TABLA_AP_OFICIAL: readonly FilaAP[] = [
+    // ── S 9-10: efecto muy alto en el producto o la planta (pag. 116, lamina 232) ──
+    { s: [9, 10], o: [8, 10], d: D_7_10, ap: 'H' },
+    { s: [9, 10], o: [8, 10], d: D_5_6, ap: 'H' },
+    { s: [9, 10], o: [8, 10], d: D_2_4, ap: 'H' },
+    { s: [9, 10], o: [8, 10], d: D_1, ap: 'H' },
+    { s: [9, 10], o: [6, 7], d: D_7_10, ap: 'H' },
+    { s: [9, 10], o: [6, 7], d: D_5_6, ap: 'H' },
+    { s: [9, 10], o: [6, 7], d: D_2_4, ap: 'H' },
+    { s: [9, 10], o: [6, 7], d: D_1, ap: 'H' },
+    { s: [9, 10], o: [4, 5], d: D_7_10, ap: 'H' },
+    { s: [9, 10], o: [4, 5], d: D_5_6, ap: 'H' },
+    { s: [9, 10], o: [4, 5], d: D_2_4, ap: 'H' },
+    { s: [9, 10], o: [4, 5], d: D_1, ap: 'M' },
+    { s: [9, 10], o: [2, 3], d: D_7_10, ap: 'H' },
+    { s: [9, 10], o: [2, 3], d: D_5_6, ap: 'M' },
+    { s: [9, 10], o: [2, 3], d: D_2_4, ap: 'L' },
+    { s: [9, 10], o: [2, 3], d: D_1, ap: 'L' },
+    { s: [9, 10], o: [1, 1], d: D_TODAS, ap: 'L' },
 
-    // ── S 2-4: calidad percibida (aspecto, ruido, tacto) ─────────────────────
-    { s: [2, 4], o: [8, 10], d: [2, 10], ap: 'H' },
-    { s: [2, 4], o: [6, 7], d: [7, 10], ap: 'H' },
-    { s: [2, 4], o: [6, 7], d: [5, 6], ap: 'H' },
-    { s: [2, 4], o: [6, 7], d: [2, 4], ap: 'M' },
-    { s: [2, 4], o: [4, 5], d: [7, 10], ap: 'H' },
-    { s: [2, 4], o: [4, 5], d: [5, 6], ap: 'M' },
-    { s: [2, 4], o: [4, 5], d: [2, 4], ap: 'L' },
-    { s: [2, 4], o: [2, 3], d: [7, 10], ap: 'M' },
-    { s: [2, 4], o: [2, 3], d: [5, 6], ap: 'L' },
-    { s: [2, 4], o: [2, 3], d: [2, 4], ap: 'L' },
+    // ── S 7-8: efecto alto en el producto o la planta (pag. 117, lamina 233) ──
+    { s: [7, 8], o: [8, 10], d: D_7_10, ap: 'H' },
+    { s: [7, 8], o: [8, 10], d: D_5_6, ap: 'H' },
+    { s: [7, 8], o: [8, 10], d: D_2_4, ap: 'H' },
+    { s: [7, 8], o: [8, 10], d: D_1, ap: 'H' },
+    { s: [7, 8], o: [6, 7], d: D_7_10, ap: 'H' },
+    { s: [7, 8], o: [6, 7], d: D_5_6, ap: 'H' },
+    { s: [7, 8], o: [6, 7], d: D_2_4, ap: 'H' },
+    { s: [7, 8], o: [6, 7], d: D_1, ap: 'M' },
+    { s: [7, 8], o: [4, 5], d: D_7_10, ap: 'H' },
+    { s: [7, 8], o: [4, 5], d: D_5_6, ap: 'M' },
+    { s: [7, 8], o: [4, 5], d: D_2_4, ap: 'M' },
+    { s: [7, 8], o: [4, 5], d: D_1, ap: 'M' },
+    { s: [7, 8], o: [2, 3], d: D_7_10, ap: 'M' },
+    { s: [7, 8], o: [2, 3], d: D_5_6, ap: 'M' },
+    { s: [7, 8], o: [2, 3], d: D_2_4, ap: 'L' },
+    { s: [7, 8], o: [2, 3], d: D_1, ap: 'L' },
+    { s: [7, 8], o: [1, 1], d: D_TODAS, ap: 'L' },
 
-    // ── Filas especiales al pie de la figura ─────────────────────────────────
-    // "Low priority due to the failure being virtually eliminated through prevention controls"
-    { s: [2, 10], o: [1, 1], d: [1, 1], ap: 'L' },
-    // "Low priority due to no discernible effect"
-    { s: [1, 1], o: [1, 10], d: [1, 10], ap: 'L' },
-    // "O=1 implausible without D=1"
-    { s: [2, 10], o: [1, 1], d: [2, 10], ap: 'Error' },
-    // "D=1 implausible without O=1"
-    { s: [2, 10], o: [2, 10], d: [1, 1], ap: 'Error' },
+    // ── S 4-6: efecto moderado en el producto o la planta (pag. 117, lamina 234) ──
+    { s: [4, 6], o: [8, 10], d: D_7_10, ap: 'H' },
+    { s: [4, 6], o: [8, 10], d: D_5_6, ap: 'H' },
+    { s: [4, 6], o: [8, 10], d: D_2_4, ap: 'M' },
+    { s: [4, 6], o: [8, 10], d: D_1, ap: 'M' },
+    { s: [4, 6], o: [6, 7], d: D_7_10, ap: 'M' },
+    { s: [4, 6], o: [6, 7], d: D_5_6, ap: 'M' },
+    { s: [4, 6], o: [6, 7], d: D_2_4, ap: 'M' },
+    { s: [4, 6], o: [6, 7], d: D_1, ap: 'L' },
+    { s: [4, 6], o: [4, 5], d: D_7_10, ap: 'M' },
+    { s: [4, 6], o: [4, 5], d: D_5_6, ap: 'L' },
+    { s: [4, 6], o: [4, 5], d: D_2_4, ap: 'L' },
+    { s: [4, 6], o: [4, 5], d: D_1, ap: 'L' },
+    { s: [4, 6], o: [2, 3], d: D_TODAS, ap: 'L' },
+    { s: [4, 6], o: [1, 1], d: D_TODAS, ap: 'L' },
+
+    // ── S 2-3: efecto bajo en el producto o la planta (pag. 118, lamina 235) ──
+    { s: [2, 3], o: [8, 10], d: D_7_10, ap: 'M' },
+    { s: [2, 3], o: [8, 10], d: D_5_6, ap: 'M' },
+    { s: [2, 3], o: [8, 10], d: D_2_4, ap: 'L' },
+    { s: [2, 3], o: [8, 10], d: D_1, ap: 'L' },
+    { s: [2, 3], o: [1, 7], d: D_TODAS, ap: 'L' },
+
+    // ── S 1: sin efecto (pag. 118, lamina 235) ──
+    { s: [1, 1], o: [1, 10], d: D_TODAS, ap: 'L' },
 ];
 
 const enRango = (v: number, [min, max]: [number, number]) => v >= min && v <= max;
 
 function buscarFila(s: number, o: number, d: number): FilaAP | undefined {
-    return FIGURA_3_5_3.find(f => enRango(s, f.s) && enRango(o, f.o) && enRango(d, f.d));
+    return TABLA_AP_OFICIAL.find(f => enRango(s, f.s) && enRango(o, f.o) && enRango(d, f.d));
 }
 
 function normalizar(s: number, o: number, d: number): [number, number, number] | null {
@@ -92,27 +123,11 @@ function normalizar(s: number, o: number, d: number): [number, number, number] |
 }
 
 /**
- * Calcula el Action Priority segun la Figura 3.5-3 del AIAG-VDA (PFMEA).
- *
- * Devuelve '' cuando los valores estan fuera de rango y tambien cuando la figura
- * marca la combinacion como **Error** (O=1 sin D=1, o D=1 sin O=1): ahi el manual no
- * asigna prioridad, dice que la calificacion es implausible y el equipo tiene que
- * revisarla. Para distinguir un caso del otro: `isImplausibleRating()`.
+ * Calcula el Action Priority segun la tabla oficial del AIAG-VDA (SETEC pag. 116-118).
+ * Devuelve '' solo cuando los valores estan fuera de rango (1 a 10) o no son numeros.
  */
 export function calculateAP(s: number, o: number, d: number): 'H' | 'M' | 'L' | '' {
     const v = normalizar(s, o, d);
     if (!v) return '';
-    const fila = buscarFila(...v);
-    if (!fila || fila.ap === 'Error') return '';
-    return fila.ap;
-}
-
-/**
- * true si la Figura 3.5-3 marca la combinacion como "Error": O=1 sin D=1, o D=1 sin
- * O=1. No es un AP bajo: es una calificacion que el manual considera implausible.
- */
-export function isImplausibleRating(s: number, o: number, d: number): boolean {
-    const v = normalizar(s, o, d);
-    if (!v) return false;
-    return buscarFila(...v)?.ap === 'Error';
+    return buscarFila(...v)?.ap ?? '';
 }

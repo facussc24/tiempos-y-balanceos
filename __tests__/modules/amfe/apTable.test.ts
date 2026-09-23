@@ -1,82 +1,74 @@
 import { describe, it, expect } from 'vitest';
-import { calculateAP, isImplausibleRating } from '../../../modules/amfe/apTable';
+import { calculateAP, TABLA_AP_OFICIAL } from '../../../modules/amfe/apTable';
 
 /**
- * La referencia de este test es la **Figura 3.5-3 "Action Priority for PFMEA"** del
- * AIAG & VDA FMEA Handbook 1st Ed. (2019), leida de las paginas 122-123 del PDF del
- * manual de Barack. Esta escrita aparte, con logica propia, para NO cotejar la tabla
- * contra si misma: hasta el 22/08/2026 este archivo probaba lo que el codigo hacia
- * (bandas 9-10/7-8/4-6/2-3/1) en vez de lo que el manual dice (9-10/5-8/2-4/1), y por
- * eso 281 combinaciones subdeclaraban el riesgo con los tests en verde.
+ * La referencia de este test es la tabla **"AP - Prioridad de accion para AMFE de diseño y
+ * AMFE de proceso"** del manual AIAG-VDA publicado, version SETEC
+ * (`MANUAL AMFE  R06 Julio 2020 Participante.pdf`, paginas 116-118 del PDF). Esta escrita
+ * aparte y con OTRA forma —una matriz por banda de S, con las columnas de D en el orden
+ * impreso: 7-10, 5-6, 2-4, 1— para NO cotejar la tabla contra si misma.
+ *
+ * Hasta el 23/09/2026 el codigo y este test copiaban un BORRADOR de 2017 del manual (bandas
+ * de S 9-10/5-8/2-4/1 y casilleros "Error"). Decision de Fak: la tabla oficial, ni mas ni menos.
  */
-function apSegunManual(s: number, o: number, d: number): 'H' | 'M' | 'L' | 'Error' {
-    if (s === 1) return 'L';                                  // sin efecto perceptible
-    if (o === 1 && d === 1) return 'L';                       // falla eliminada por prevencion
-    if (o === 1) return 'Error';                              // "O=1 implausible without D=1"
-    if (d === 1) return 'Error';                              // "D=1 implausible without O=1"
-
-    if (s >= 9) {                                             // banda S 9-10
-        if (o >= 6) return 'H';
-        if (o >= 4) return d >= 5 ? 'H' : 'M';
-        return d >= 7 ? 'H' : d >= 5 ? 'M' : 'L';
-    }
-    if (s >= 5) {                                             // banda S 5-8
-        if (o >= 8) return 'H';
-        if (o >= 6) return d >= 5 ? 'H' : 'M';
-        if (o >= 4) return d >= 5 ? 'H' : 'M';
-        return d >= 5 ? 'M' : 'L';
-    }
-    // banda S 2-4
-    if (o >= 8) return 'H';
-    if (o >= 6) return d >= 5 ? 'H' : 'M';
-    if (o >= 4) return d >= 7 ? 'H' : d >= 5 ? 'M' : 'L';
-    return d >= 7 ? 'M' : 'L';
+type Fila = ['H' | 'M' | 'L', 'H' | 'M' | 'L', 'H' | 'M' | 'L', 'H' | 'M' | 'L'];
+const MANUAL: Record<string, Record<string, Fila>> = {
+    //          O 8-10                 O 6-7                  O 4-5                  O 2-3                  O 1
+    '9-10': { '8-10': ['H', 'H', 'H', 'H'], '6-7': ['H', 'H', 'H', 'H'], '4-5': ['H', 'H', 'H', 'M'], '2-3': ['H', 'M', 'L', 'L'], '1': ['L', 'L', 'L', 'L'] },
+    '7-8':  { '8-10': ['H', 'H', 'H', 'H'], '6-7': ['H', 'H', 'H', 'M'], '4-5': ['H', 'M', 'M', 'M'], '2-3': ['M', 'M', 'L', 'L'], '1': ['L', 'L', 'L', 'L'] },
+    '4-6':  { '8-10': ['H', 'H', 'M', 'M'], '6-7': ['M', 'M', 'M', 'L'], '4-5': ['M', 'L', 'L', 'L'], '2-3': ['L', 'L', 'L', 'L'], '1': ['L', 'L', 'L', 'L'] },
+    '2-3':  { '8-10': ['M', 'M', 'L', 'L'], '6-7': ['L', 'L', 'L', 'L'], '4-5': ['L', 'L', 'L', 'L'], '2-3': ['L', 'L', 'L', 'L'], '1': ['L', 'L', 'L', 'L'] },
+};
+const bandaS = (s: number) => (s >= 9 ? '9-10' : s >= 7 ? '7-8' : s >= 4 ? '4-6' : '2-3');
+const bandaO = (o: number) => (o >= 8 ? '8-10' : o >= 6 ? '6-7' : o >= 4 ? '4-5' : o >= 2 ? '2-3' : '1');
+const columnaD = (d: number) => (d >= 7 ? 0 : d >= 5 ? 1 : d >= 2 ? 2 : 3);
+function apSegunManual(s: number, o: number, d: number): 'H' | 'M' | 'L' {
+    if (s === 1) return 'L';                                   // "SIN EFECTO": L en toda la fila
+    return MANUAL[bandaS(s)][bandaO(o)][columnaD(d)];
 }
 
-describe('calculateAP — Figura 3.5-3 del AIAG-VDA (PFMEA)', () => {
+describe('calculateAP — tabla oficial AIAG-VDA (SETEC pag. 116-118)', () => {
 
-    it('coincide con la figura en las 1000 combinaciones S/O/D', () => {
+    it('coincide con el manual en las 1000 combinaciones S/O/D', () => {
         const distintas: string[] = [];
         for (let s = 1; s <= 10; s++)
             for (let o = 1; o <= 10; o++)
-                for (let d = 1; d <= 10; d++) {
-                    const manual = apSegunManual(s, o, d);
-                    const esperado = manual === 'Error' ? '' : manual;
-                    if (calculateAP(s, o, d) !== esperado)
-                        distintas.push(`S${s} O${o} D${d}: manual=${manual} tabla=${calculateAP(s, o, d)}`);
-                }
+                for (let d = 1; d <= 10; d++)
+                    if (calculateAP(s, o, d) !== apSegunManual(s, o, d))
+                        distintas.push(`S${s} O${o} D${d}: manual=${apSegunManual(s, o, d)} tabla=${calculateAP(s, o, d)}`);
         expect(distintas).toEqual([]);
     });
 
-    describe('las tres celdas que el codigo tenia mal (auditoria de cliente 22/08/2026)', () => {
-        it('S 5-8 · O 4-5 · D 5-6 -> H (daba M, subdeclaraba)', () => {
-            expect(calculateAP(7, 4, 6)).toBe('H');
-            expect(calculateAP(5, 5, 5)).toBe('H');
-            expect(calculateAP(8, 4, 5)).toBe('H');
-        });
-        it('S 5-8 · O 6-7 · D 2-4 -> M (daba H, sobredeclaraba)', () => {
-            expect(calculateAP(7, 6, 4)).toBe('M');
-            expect(calculateAP(8, 7, 2)).toBe('M');
-        });
-        it('S 9-10 · O 4-5 · D 2-4 -> M (daba H, sobredeclaraba)', () => {
-            expect(calculateAP(9, 4, 3)).toBe('M');
-            expect(calculateAP(10, 5, 4)).toBe('M');
-        });
+    it('cada combinacion cae en UNA sola fila de la tabla (sin huecos ni solapes)', () => {
+        const problemas: string[] = [];
+        for (let s = 1; s <= 10; s++)
+            for (let o = 1; o <= 10; o++)
+                for (let d = 1; d <= 10; d++) {
+                    const n = TABLA_AP_OFICIAL.filter(f =>
+                        s >= f.s[0] && s <= f.s[1] && o >= f.o[0] && o <= f.o[1] && d >= f.d[0] && d <= f.d[1]).length;
+                    if (n !== 1) problemas.push(`S${s} O${o} D${d}: ${n} filas`);
+                }
+        expect(problemas).toEqual([]);
     });
 
-    describe('las bandas de severidad son las del manual: 9-10, 5-8, 2-4, 1', () => {
-        it('S=5 y S=6 pertenecen a la banda 5-8, no a una banda baja', () => {
-            expect(calculateAP(5, 8, 2)).toBe('H');   // banda 5-8: O 8-10 -> H siempre
-            expect(calculateAP(6, 8, 2)).toBe('H');
-            expect(calculateAP(6, 2, 8)).toBe('M');   // banda 5-8: O 2-3 / D 7-10 -> M
+    describe('las bandas de severidad son las publicadas: 9-10, 7-8, 4-6, 2-3, 1', () => {
+        it('S=7 y S=8 comparten banda, S=6 no: O 4-5 · D 5-6', () => {
+            expect(calculateAP(8, 4, 6)).toBe('M');
+            expect(calculateAP(7, 5, 5)).toBe('M');
+            expect(calculateAP(6, 5, 5)).toBe('L');
         });
-        it('S=4 pertenece a la banda 2-4', () => {
-            expect(calculateAP(4, 4, 6)).toBe('M');   // banda 2-4: O 4-5 / D 5-6 -> M
-            expect(calculateAP(4, 8, 2)).toBe('H');   // banda 2-4: O 8-10 -> H
+        it('S=5 con O 4 y D 7-10 es M (el borrador de 2017 daba H)', () => {
+            expect(calculateAP(5, 4, 8)).toBe('M');
+            expect(calculateAP(5, 4, 7)).toBe('M');
         });
-        it('S=2 y S=3 tambien: O 8-10 -> H (antes daba L o M)', () => {
-            expect(calculateAP(2, 8, 2)).toBe('H');
-            expect(calculateAP(3, 10, 10)).toBe('H');
+        it('S 4-6 con O 2-3 es L con cualquier D', () => {
+            for (let d = 1; d <= 10; d++) expect(calculateAP(5, 3, d)).toBe('L');
+        });
+        it('S 2-3 solo llega a M con O 8-10 y D 5-10', () => {
+            expect(calculateAP(3, 9, 8)).toBe('M');
+            expect(calculateAP(2, 8, 5)).toBe('M');
+            expect(calculateAP(3, 8, 4)).toBe('L');
+            expect(calculateAP(3, 7, 10)).toBe('L');
         });
         it('S=1 siempre L', () => {
             for (let o = 1; o <= 10; o++)
@@ -85,23 +77,18 @@ describe('calculateAP — Figura 3.5-3 del AIAG-VDA (PFMEA)', () => {
         });
     });
 
-    describe('combinaciones que el manual marca "Error"', () => {
-        it('O=1 con D>=2 es implausible: sin AP', () => {
-            expect(calculateAP(10, 1, 8)).toBe('');
-            expect(isImplausibleRating(10, 1, 8)).toBe(true);
-            expect(calculateAP(5, 1, 2)).toBe('');
-        });
-        it('D=1 con O>=2 es implausible: sin AP', () => {
-            expect(calculateAP(7, 5, 1)).toBe('');
-            expect(isImplausibleRating(7, 5, 1)).toBe(true);
-        });
-        it('O=1 y D=1 juntos SI son validos: L', () => {
+    describe('la tabla publicada no tiene casilleros "Error"', () => {
+        it('O=1 da L con cualquier D', () => {
+            expect(calculateAP(10, 1, 8)).toBe('L');
+            expect(calculateAP(5, 1, 2)).toBe('L');
             expect(calculateAP(10, 1, 1)).toBe('L');
-            expect(isImplausibleRating(10, 1, 1)).toBe(false);
         });
-        it('S=1 nunca es implausible', () => {
-            expect(calculateAP(1, 1, 10)).toBe('L');
-            expect(isImplausibleRating(1, 1, 10)).toBe(false);
+        it('D=1 tiene AP propio segun S y O', () => {
+            expect(calculateAP(9, 8, 1)).toBe('H');
+            expect(calculateAP(10, 4, 1)).toBe('M');
+            expect(calculateAP(7, 5, 1)).toBe('M');
+            expect(calculateAP(8, 6, 1)).toBe('M');
+            expect(calculateAP(5, 7, 1)).toBe('L');
         });
     });
 
@@ -116,10 +103,6 @@ describe('calculateAP — Figura 3.5-3 del AIAG-VDA (PFMEA)', () => {
             expect(calculateAP(NaN, 5, 5)).toBe('');
             expect(calculateAP(5, NaN, 5)).toBe('');
             expect(calculateAP(5, 5, NaN)).toBe('');
-        });
-        it('isImplausibleRating no se cuelga con entradas invalidas', () => {
-            expect(isImplausibleRating(NaN, 5, 5)).toBe(false);
-            expect(isImplausibleRating(0, 1, 5)).toBe(false);
         });
     });
 

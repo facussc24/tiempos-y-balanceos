@@ -239,6 +239,16 @@ Antes de poner placeholder en un campo, agotar EN ORDEN: (1) cross-reference Sup
 
 ## 13. Escalas O y D — transcritas de las Tablas P2 y P3 del AIAG-VDA
 
+> ⚠️ **23/09/2026 — esta seccion cita el BORRADOR de 2017** (`446076670-...pdf`, un Word del
+> 05/12/2017). Fak: *"vamos a usar la tabla oficial ni mas ni menos"*. La tabla AP ya es la
+> oficial (SETEC pag. 116-118, `apTable.ts`). Las escalas oficiales estan en el SETEC
+> (`MANUAL AMFE  R06 Julio 2020 Participante.pdf`): **P1 pag. 101-103** — riesgo AGUDO para el
+> operario = 10, CRONICO = 8; **P2 pag. 104-105** — sin control preventivo = 10, conducta con
+> poco efecto = 8-9; **P3 pag. 109-111** — por MADUREZ del metodo: inspeccion humana o medicion
+> manual no probada = **8**, probada = 6; por maquina no probada = **7**, probada = 5. **El "D=7
+> humana en estacion" de abajo NO existe en la oficial**: una inspeccion visual va en 8. Pendiente
+> transcribir esta seccion entera del SETEC (memoria `project_tabla_ap_de_la_casa_es_el_borrador_2017`).
+
 **Transcritas del manual, no derivadas (OK de Fak 24/08/2026: *"si no coincide con la oficial hay
 que corregirla"*).** Una escala de D generosa subdeclara riesgo en todos los AMFE a la vez: al
 recalificar las 47 causas del AMFE 172 con la tabla oficial, el AP paso de `L=9/M=22/H=15` a

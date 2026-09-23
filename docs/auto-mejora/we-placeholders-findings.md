@@ -1,8 +1,8 @@
-# WE Placeholders + Failure Allocation — 2026-09-11T18:26:17.818Z
+# WE Placeholders + Failure Allocation — 2026-09-23T12:00:42.926Z
 
-**Resumen global**: 51 CRITICAL, 0 WARNING en 9/18 AMFEs.
+**Resumen global**: 61 CRITICAL, 0 WARNING en 11/20 AMFEs.
 
-**Por tipo**: FAILURE_MISALLOCATED=51
+**Por tipo**: FAILURE_MISALLOCATED=61
 
 ## Detalle por AMFE
 
@@ -19,6 +19,20 @@
 | CRITICAL FAILURE_MISALLOCATED | 33 REFILADO DE FUNDA TERMINADA | failure "2- Costura vista dañada..." contiene "costura" (debe ir a OP tipo costura); OP actual = REFILADO DE FUNDA TERMINADA (tags: (ninguno |
 | CRITICAL FAILURE_MISALLOCATED | 50 TAPIZADO SEMIAUTOMÁTICO (PRE-M | failure "6- Costura vista desalineada..." contiene "costura" (debe ir a OP tipo costura); OP actual = TAPIZADO SEMIAUTOMÁTICO (PRE-MONTAJE + |
 | CRITICAL FAILURE_MISALLOCATED | 52 VIROLADO + REFILADO DE PIEZAS | failure "3- Contacto del operador con herramienta de corte..." contiene "corte" (debe ir a OP tipo corte); OP actual = VIROLADO + REFILADO D |
+
+### 131 (VWA/AMAROK_PA2/APB_CENTRAL)
+8 CRITICAL + 0 WARNING
+
+| Type | OP | Detalle |
+|---|---|---|
+| CRITICAL FAILURE_MISALLOCATED | 40 PROCESO DE REFILADO DE PIEZA I | failure "3- Espuma de PUR no adherida a pieza plástica..." contiene "pur" (debe ir a OP tipo inyeccion/pu/espumado); OP actual = PROCESO DE  |
+| CRITICAL FAILURE_MISALLOCATED | 60 Colocación de topes de goma y  | failure "Recorte de vinilo insuficiente: tapa los agujeros de clipsad..." contiene "corte" (debe ir a OP tipo corte); OP actual = Colocación |
+| CRITICAL FAILURE_MISALLOCATED | 70 Inspección | failure "7- TALON DE COSTURA UNION DISTINTO DE:  8  ± 2mm..." contiene "costura" (debe ir a OP tipo costura); OP actual = Inspección (tags:  |
+| CRITICAL FAILURE_MISALLOCATED | 70 Inspección | failure "8- DISTANCIA ENTRE COSTURAS VISTA DISTINTO DE  8 ± 0,2mm..." contiene "costura" (debe ir a OP tipo costura); OP actual = Inspección |
+| CRITICAL FAILURE_MISALLOCATED | 70 Inspección | failure "10- Costura incompleta..." contiene "costura" (debe ir a OP tipo costura); OP actual = Inspección (tags: (ninguno)) |
+| CRITICAL FAILURE_MISALLOCATED | 70 Inspección | failure "11- Costura deficiente..." contiene "costura" (debe ir a OP tipo costura); OP actual = Inspección (tags: (ninguno)) |
+| CRITICAL FAILURE_MISALLOCATED | 70 Inspección | failure "12- LARGO DE PUNTADA EN COSTURA UNION DISTINTO DE 2,5mm +/- ..." contiene "costura" (debe ir a OP tipo costura); OP actual = Inspec |
+| CRITICAL FAILURE_MISALLOCATED | 70 Inspección | failure "13- LARGO DE PUNTADA EN COSTURA VISTA DISTINTO DE 4 puntadas..." contiene "costura" (debe ir a OP tipo costura); OP actual = Inspec |
 
 ### 129 (VWA/AMAROK_PA2/IP_DECORATIVE_116)
 8 CRITICAL + 0 WARNING
@@ -95,6 +109,14 @@
 | CRITICAL FAILURE_MISALLOCATED | 21 CORTAR COMPONENTES | failure "Corte incompleto o irregular..." contiene "corte" (debe ir a OP tipo corte); OP actual = CORTAR COMPONENTES (tags: (ninguno)) |
 | CRITICAL FAILURE_MISALLOCATED | 21 CORTAR COMPONENTES | failure "Contaminación del material durante el corte o almacenamiento..." contiene "corte" (debe ir a OP tipo corte); OP actual = CORTAR COM |
 | CRITICAL FAILURE_MISALLOCATED | 102 REFILADO POST-TAPIZADO | failure "Corte irregular o desgarro del vinilo en el borde refilado..." contiene "corte" (debe ir a OP tipo corte); OP actual = REFILADO POS |
+
+### AMFE-P21-NAR-MY26 (P21 SSRT MY2026 - HILO NARANJA)
+2 CRITICAL + 0 WARNING
+
+| Type | OP | Detalle |
+|---|---|---|
+| CRITICAL FAILURE_MISALLOCATED | 81 TAPIZADO | failure "Costura vista fuera de su alineacion sobre el radio del sust..." contiene "costura" (debe ir a OP tipo costura); OP actual = TAPIZA |
+| CRITICAL FAILURE_MISALLOCATED | 90 REFILADO CON MASCARA | failure "Corte o raya del sustrato durante el refilado..." contiene "corte" (debe ir a OP tipo corte); OP actual = REFILADO CON MASCARA (tag |
 
 ### 150 (VWA/PATAGONIA/ARMREST_REAR_CEN)
 2 CRITICAL + 0 WARNING

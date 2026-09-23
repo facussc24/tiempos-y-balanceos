@@ -223,7 +223,11 @@ const FlowNode = ({ node, isLast, hasBranches, converges }) => {
 };
 
 // COMPONENTE: División de Ramas (Múltiples columnas - Lógica V4 indestructible)
-const BranchSplit = ({ branches, labelDown, converges }) => {
+// `columnWidth` (opcional, en px): ancho de cada columna en lugar del min-w-[900px] de siempre.
+// Hace falta para abrir caminos ALTERNATIVOS adentro de una rama lateral (los reprocesos 72/73/74
+// del flujograma 159: cada uno es para su defecto, no van en serie). Va inline porque el
+// tailwind.css del repo esta pre-compilado y una clase nueva no existiria (skill flujogramas).
+const BranchSplit = ({ branches, labelDown, converges, columnWidth }) => {
   return (
     <div className="w-full flex flex-col items-center">
       <div className="w-full relative z-0 flex mt-[-2px] items-stretch justify-center">
@@ -234,7 +238,8 @@ const BranchSplit = ({ branches, labelDown, converges }) => {
             </div>
          )}
          {branches.map((branch, idx) => (
-            <div key={idx} className="flex-1 flex flex-col items-center relative min-w-[900px] px-4">
+            <div key={idx} className={`flex-1 flex flex-col items-center relative px-4 ${columnWidth ? '' : 'min-w-[900px]'}`}
+                 style={columnWidth ? { minWidth: `${columnWidth}px`, maxWidth: `${columnWidth}px` } : undefined}>
 
                {/* Línea horizontal continua superior */}
                {branches.length > 1 && idx === 0 && <div className="absolute top-0 right-0 w-1/2 h-[1.5px] bg-[#93C5FD]"></div>}
@@ -280,7 +285,7 @@ const FlowSequence = ({ sequence, converges = false }) => {
          return (
            <React.Fragment key={index}>
               <FlowNode node={node} isLast={isLast} hasBranches={hasBranches} converges={nodeConverges} />
-              {hasBranches && <BranchSplit branches={node.branches} labelDown={node.labelDown} converges={nodeConverges} />}
+              {hasBranches && <BranchSplit branches={node.branches} labelDown={node.labelDown} converges={nodeConverges} columnWidth={node.branchColumnWidth} />}
            </React.Fragment>
          );
       })}
