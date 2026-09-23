@@ -176,12 +176,14 @@ const CHEQUEOS = [
         buscar: (t) => grep(t, /^\s*\|.*\|/gm),
     },
     {
-        codigo: 'VINETAS', nivel: AMARILLO, corpus: '0 de 935 mails de Fak usan vinetas',
-        motivo: 'Fak enumera con parrafos sueltos separados por una linea en blanco, sin guiones.',
+        // Recontado el 22/09/2026 con este mismo regex: 59 de 935, casi todos listas de codigos
+        // que el arma (el "0 de 935" del 12/09 estaba mal). Por eso sigue AMARILLO.
+        codigo: 'VINETAS', nivel: AMARILLO, corpus: '59 de 935 mails de Fak (sus listas de codigos); en los borradores que corrigio, 9 de 12',
+        motivo: 'Fak enumera con parrafos sueltos separados por una linea en blanco; las vinetas las usa para listar codigos, no para contar.',
         buscar: (t) => grep(t, /^\s*[-•*]\s+\S/gm),
     },
     {
-        codigo: 'SECCION_NUMERADA', nivel: AMARILLO, corpus: "0 de 935",
+        codigo: 'SECCION_NUMERADA', nivel: AMARILLO, corpus: "12 de 935 (recontado 22/09/2026)",
         motivo: 'Secciones numeradas: "marca IA" (Fak, 20/08/2026: "es obvio que lo armaste vos de esa forma").',
         buscar: (t) => grep(t, /^\s*\d+[.)]\s+[A-ZÁÉÍÓÚ]/gm),
     },
@@ -201,6 +203,94 @@ const CHEQUEOS = [
         buscar: (t) => grep(t, /\b(en resumen|a modo de|cabe aclarar|dicho esto|por consiguiente|en consecuencia|vale aclarar)\b/gi),
     },
 ];
+
+/**
+ * ACLARA_DE_MAS — la correccion que Fak mas repite sobre los mails que le redacto.
+ *
+ * 12 borradores mios que Fak corrigio o rechazo entre el 07/08 y el 22/09/2026 (sesion, fecha y
+ * cita de cada uno en __tests__/scripts/fixtures/vozRechazados.json): *"aclaras siempre demasiado loco,
+ * que entren y revisen ellos"* (01/09), *"los agregaste y aclaraste de mas"* (07/09), *"pusiste
+ * cosas muy explicativas"* (11/09), *"porque aclaras"* (22/09). El gate de antes dejaba pasar 7
+ * de los 12: el unico ROJO por largo era >2.500 y el EXPLICO_DE_MAS no encontraba NINGUNO (sus
+ * conectores de informe — "en resumen", "cabe aclarar" — no aparecen en esos borradores).
+ *
+ * Lo que tienen en comun no es el largo sino LA FRASE QUE ACLARA: describe el adjunto, respalda
+ * lo que dice, aclara lo que NO cambio o la consecuencia. Cada frase de esta lista esta en 0 a 3
+ * de los 935 mails de Fak (numero al lado), o sea que no es su forma de escribir.
+ * "asi que" (14 de 935) y "es decir" (2) quedaron AFUERA: son suyas.
+ *
+ * Medido el 22/09/2026 (`node scripts/_vozFak.mjs --selftest` y el test 36):
+ *   - ROJO con 2 aclaraciones, o con 1 en un mail mas largo que su p90 (585): **10 de los 12
+ *     borradores** (los otros 2 ya los frenaba el gate: GIRO_N_COSAS y PLURAL_APERTURA) y
+ *     **0 de los 935 mails de Fak**. El falso rojo total del gate sigue en 8 de 935 (0,86%).
+ *   - Alternativas que se midieron y NO se usaron: largo > p90 solo, 10/12 pero 93 de 935 (9,9%);
+ *     largo > p90 + EXPLICO_DE_MAS, 0 de 12; 1 aclaracion en cualquier largo, los mismos 10/12
+ *     pero 4 de 935 (0,43%): mails suyos cortos con "no cambio" o "que es lo".
+ *   - Una sola aclaracion en un mail corto queda AMARILLO: el Gate 3 que Fak dejo el 01/09
+ *     ("...que es el item 4 del checklist", 140 caracteres) la tiene, y lo escribio el.
+ * La lista salio de esos mismos 12 borradores: el 10 de 12 es sobre la muestra que la armo. Lo
+ * que esta medido afuera de la muestra es el falso rojo, que es lo que protege a Fak.
+ */
+const ACLARACIONES = [
+    // [que hace la frase, regex sobre el texto sin tildes y en minusculas, mails de Fak que la usan]
+    ['describe el adjunto', /\btiene (dos|tres|cuatro|cinco|seis|\d+) (hojas|pestanas|partes|diapositivas|laminas)\b/, 0],
+    ['describe el adjunto', /\besta anotad[oa] (en|dentro)\b/, 0],
+    ['describe el adjunto', /\blo del dia\b/, 0],
+    ['respalda lo que dice', /\blo confirma\b/, 0],
+    ['explica en una aposicion', /\bque es (el|la|lo)\b/, 1],
+    ['explica en una aposicion', /\bcuando son distint/, 0],
+    ['aclara lo que no cambio', /\bno cambi(a|an|o|aron)\b/, 3],
+    ['aclara lo que no cambio', /\bsiguen? (en|igual|sin)\b/, 0],
+    ['aclara la consecuencia', /\bpasan? a leerse\b/, 0],
+    ['aclara la consecuencia', /\bno se ve que\b/, 0],
+    ['conector de aclaracion', /\bo sea\b/, 0],
+    ['conector de aclaracion', /\bantes que nada\b/, 0],
+    ['conector de aclaracion', /\buna aclaracion\b/, 0],
+    ['conector de aclaracion', /\buna cosa para que\b/, 0],
+];
+
+/** Las aclaraciones que tiene el texto, cada una con su fragmento tal cual aparece. */
+export function aclaraciones(texto) {
+    // Se busca sin tildes, pero el fragmento se muestra como esta escrito: por eso se guarda,
+    // para cada letra del texto plano, de que posicion del original viene.
+    const original = String(texto ?? '').normalize('NFC');
+    let plano = '';
+    const desde = [];
+    for (let i = 0; i < original.length; i++) {
+        const p = sinTildes(original[i]);
+        for (let k = 0; k < p.length; k++) desde.push(i);
+        plano += p;
+    }
+    const out = [];
+    for (const [que, re] of ACLARACIONES) {
+        const m = plano.match(re);
+        if (m) out.push({ que, fragmento: original.slice(desde[m.index], desde[m.index + m[0].length - 1] + 1) });
+    }
+    return out;
+}
+
+/**
+ * Siglas sueltas de 2-3 mayusculas. Quedan afuera las que no son siglas de nadie: la
+ * abreviatura con punto (PTA.), la que va pegada a un codigo con digitos (2HC858417C GKK), la
+ * que se define ahi mismo entre parentesis — metros lineales (MTL) — y las lineas enteras en
+ * mayusculas (descripciones de pieza tipo "ESPUMA BCA 3MM"). La usan el gate y `--medir`,
+ * asi el vocabulario de Fak y el chequeo cuentan igual.
+ */
+export function siglasSueltas(texto) {
+    const out = new Set();
+    for (const linea of String(texto ?? '').split('\n')) {
+        const letras = linea.replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ]/g, '');
+        if (letras.length > 8 && letras === letras.toUpperCase()) continue;
+        for (const m of linea.matchAll(/(^|[^\w.\-/])([A-Z]{2,3})(?![\w.\-/])/g)) {
+            const antes = linea.slice(Math.max(0, m.index - 14), m.index + m[1].length);
+            if (/\d\S*\s*$/.test(antes)) continue;
+            const fin = m.index + m[0].length;
+            if (m[1] === '(' && linea[fin] === ')') continue;
+            out.add(m[2]);
+        }
+    }
+    return [...out];
+}
 
 function grep(texto, re) {
     const hits = [...String(texto).matchAll(re)];
@@ -242,6 +332,32 @@ export function revisarVoz(textoCrudo, perfil = cargarPerfil()) {
             `${largo} caracteres: mas largo que el 90% de los mails de Fak.`,
             `mediana ${perfil.largo.mediana} · p75 ${perfil.largo.p75} · p90 ${perfil.largo.p90}`,
             { fragmento: texto.slice(0, 40), contexto: '' });
+    }
+
+    // Aclarar de mas (numeros y por que, arriba de ACLARACIONES).
+    const aclara = aclaraciones(texto);
+    if (aclara.length) {
+        const rojo = aclara.length >= 2 || largo > perfil.largo.p90;
+        agregar('ACLARA_DE_MAS', rojo ? ROJO : AMARILLO,
+            `${aclara.map((a) => `"${a.fragmento}" (${a.que})`).join(' · ')}`
+            + `${rojo ? '' : ' — una sola y en un mail corto: avisa'}. Fak: "aclaras siempre demasiado, que entren y revisen ellos".`
+            + ' El mail dice QUE se manda; lo que no cambio, el por que y lo que tiene el adjunto, no van.',
+            'ROJO: 10 de 12 borradores que Fak corrigio y 0 de sus 935 mails (22/09/2026)',
+            { fragmento: aclara[0].fragmento, contexto: '' });
+    }
+
+    // Sigla que Fak no uso nunca: el que lee no sabe que es. AMARILLO y no ROJO por su numero:
+    // contada dejando afuera el propio mail, 43 de sus 935 traen una sigla que no esta en
+    // ningun otro (4,6%, 22/09/2026) — muy arriba del 1% que se le permite a un ROJO.
+    if (Array.isArray(perfil.siglas) && perfil.siglas.length) {
+        const conocidas = new Set(perfil.siglas);
+        const ajenas = siglasSueltas(texto).filter((s) => !conocidas.has(s));
+        if (ajenas.length) {
+            agregar('SIGLA_AJENA', AMARILLO,
+                `${ajenas.join(', ')}: Fak no la uso en ninguno de sus ${perfil.n} mails. Fak, 11/09/2026: "dice KP, no se que carajo es KP". Nombre completo, o la frase no va.`,
+                '43 de 935 mails de Fak traen una sigla que no esta en ningun otro suyo (4,6%): por eso avisa y no frena',
+                { fragmento: ajenas[0], contexto: '' });
+        }
     }
 
     // Tildes: Fak tiene typos, pero inconsistentes. Un texto largo con CERO tildes es mio.

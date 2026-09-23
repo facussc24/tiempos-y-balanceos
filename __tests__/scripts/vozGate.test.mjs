@@ -30,12 +30,22 @@
  *          arriba importan `vozGate.mjs` directo, y por eso dieron verde mientras
  *          `vozMail.py` apuntaba a una ruta que no existe: el bloqueo del envio nunca
  *          corrio, y el camino fail-open lo tapaba. Probado en las dos direcciones.
+ *  27-36   ACLARA_DE_MAS y SIGLA_AJENA (22/09/2026). Los 12 borradores REALES que Fak
+ *          corrigio o rechazo entre el 07/08 y el 22/09 (fixtures/vozRechazados.json: sesion,
+ *          fecha y la cita de Fak de cada uno) dan ROJO; el gate de antes dejaba pasar 7.
+ *          Y del otro lado, la version que dejo Fak de cada uno NO da ROJO — el Gate 3 de
+ *          dos renglones que escribio el tiene una aclaracion y tiene que pasar. El 36 mide
+ *          el falso rojo sobre sus 935 mails (corre donde esta el cache; en CI se saltea).
  */
 import { describe, it, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { revisarVoz, cuerpoPropio, primeraOracion, ROJO, AMARILLO } from '../../scripts/_lib/vozGate.mjs';
+import {
+    revisarVoz, cuerpoPropio, primeraOracion, aclaraciones, siglasSueltas, cargarPerfil, ROJO, AMARILLO,
+} from '../../scripts/_lib/vozGate.mjs';
+import { leerEnviados, CORTE_VOZ_PURA, JSONL_VOZ } from '../../scripts/_vozFak.mjs';
 import { GUARDIANES, ctxDesdeEnv } from '../../scripts/_lib/guardianes.mjs';
 
 const codigos = (texto) => revisarVoz(texto).hallazgos.map((h) => h.codigo);
@@ -117,7 +127,7 @@ describe('vozGate — las marcas de que el mail lo escribi yo', () => {
         expect(r.rojos).toBe(0);
     });
 
-    it('16. vinetas: 0 de 935 mails suyos las usan', () => {
+    it('16. vinetas: avisan, no frenan (59 de 935 mails suyos las usan para listar codigos)', () => {
         expect(amarillos('Te paso dos temas:\n\n- El primero.\n- El segundo.\n')).toContain('VINETAS');
     });
 
@@ -201,4 +211,85 @@ describe('vozGate — el texto que se mide', () => {
         expect(rojos(conTercero)).toHaveLength(0);
         expect(rojos(sinTercero)).toContain('PLURAL_APERTURA');
     });
+});
+
+const AQUI = path.dirname(fileURLToPath(import.meta.url));
+const { casos: RECHAZADOS } = JSON.parse(fs.readFileSync(path.join(AQUI, 'fixtures', 'vozRechazados.json'), 'utf8'));
+const CORREGIDOS = RECHAZADOS.filter((c) => c.comoLoDejoFak);
+
+describe('vozGate — los borradores que Fak corrigio o rechazo dan ROJO (07/08 al 22/09/2026)', () => {
+    it('27. son 12, de 9 sesiones distintas', () => {
+        expect(RECHAZADOS).toHaveLength(12);
+        expect(new Set(RECHAZADOS.map((c) => c.sesion)).size).toBe(9);
+    });
+
+    it.each(RECHAZADOS)('28. $id $fecha $para — Fak: "$fak"', ({ borrador }) => {
+        expect(rojos(borrador).length).toBeGreaterThan(0);
+    });
+
+    it('29. ACLARA_DE_MAS frena 10 de los 12; los otros 2 ya los frenaba el gate de antes', () => {
+        const porAclarar = RECHAZADOS.filter((c) => rojos(c.borrador).includes('ACLARA_DE_MAS')).map((c) => c.id);
+        expect(porAclarar).toEqual(['R01', 'R02', 'R04', 'R05', 'R06', 'R07', 'R08', 'R09', 'R10', 'R12']);
+        // R03: el giro "Tres cosas que valen para las tres piezas". R11: "Revisamos a fondo...".
+        expect(rojos(RECHAZADOS.find((c) => c.id === 'R03').borrador)).toContain('GIRO_N_COSAS');
+        expect(rojos(RECHAZADOS.find((c) => c.id === 'R11').borrador)).toContain('PLURAL_APERTURA');
+    });
+
+    it.each(CORREGIDOS)('30. $id: la version que dejo Fak NO da ROJO', ({ comoLoDejoFak }) => {
+        expect(rojos(comoLoDejoFak)).toHaveLength(0);
+    });
+
+    it('31. una aclaracion sola en un mail corto AVISA: la dejo el mismo Fak en su Gate 3 de 140 caracteres', () => {
+        const suyo = CORREGIDOS.find((c) => c.id === 'R05').comoLoDejoFak;
+        expect(suyo).toMatch(/que es el item 4/);
+        expect(amarillos(suyo)).toContain('ACLARA_DE_MAS');
+        expect(rojos(suyo)).toHaveLength(0);
+    });
+
+    it('32. EN ROJO: la MISMA aclaracion, en el borrador de 777 caracteres, frena', () => {
+        const mio = RECHAZADOS.find((c) => c.id === 'R05').borrador;
+        expect(mio.length).toBeGreaterThan(cargarPerfil().largo.p90);
+        expect(aclaraciones(mio)).toHaveLength(1);
+        expect(rojos(mio)).toContain('ACLARA_DE_MAS');
+    });
+
+    it('33. dos aclaraciones frenan aunque el mail sea corto (el "porque aclaras" del 22/09)', () => {
+        const texto = 'Pablo,\n\nEl piping sigue en m2. Las OC de estos 11 codigos pasan a leerse en metros.\n\nSaludos,';
+        expect(texto.length).toBeLessThan(cargarPerfil().largo.p75);
+        expect(rojos(texto)).toContain('ACLARA_DE_MAS');
+    });
+
+    it('34. aclaraciones() busca sin tildes pero devuelve el fragmento como esta escrito', () => {
+        const a = aclaraciones('Está anotado dentro de cada archivo. Por ahora no se ve que incidan.');
+        expect(a.map((x) => x.fragmento)).toEqual(['Está anotado dentro', 'no se ve que']);
+    });
+
+    it('35. SIGLA_AJENA: "KP" avisa (Fak no la uso nunca), "VW" no; y ninguna de las dos frena', () => {
+        const perfil = cargarPerfil();
+        expect(perfil.siglas).toContain('VW');
+        expect(perfil.siglas).not.toContain('KP');
+        const r = revisarVoz('Carlos,\n\nKP dice que el molde inferior tiene dos modos de vacio. VW pide el informe.', perfil);
+        const sigla = r.hallazgos.filter((h) => h.codigo === 'SIGLA_AJENA');
+        expect(sigla).toHaveLength(1);
+        expect(sigla[0].nivel).toBe(AMARILLO);
+        expect(sigla[0].motivo).toMatch(/^KP:/);
+        // No es sigla de nadie: la definida ahi mismo, el color pegado a un PN, la abreviatura con punto.
+        expect(siglasSueltas('metros lineales (MTL). 2HC858417C GKK. APOYABRAZO PTA. DEL.')).toEqual([]);
+    });
+
+    // El cache vive en el repo principal y esta gitignoreado: en un worktree se apunta con
+    // VOZ_MAILS_JSONL, y en CI no hay y el caso se saltea (el selftest dice lo mismo en voz alta).
+    it.skipIf(!fs.existsSync(JSONL_VOZ))('36. falso rojo sobre la voz pura de Fak: ACLARA_DE_MAS en 0, el total sin subir', async () => {
+        const mails = await leerEnviados({ hasta: CORTE_VOZ_PURA });
+        expect(mails.length).toBeGreaterThan(900);
+        let total = 0, aclara = 0;
+        for (const m of mails) {
+            const r = rojos(m.cuerpo);
+            if (r.length) total++;
+            if (r.includes('ACLARA_DE_MAS')) aclara++;
+        }
+        expect(aclara).toBeLessThanOrEqual(mails.length / 100);   // un ROJO no pasa del 1% de Fak
+        expect(aclara).toBe(0);                                     // medido el 22/09/2026
+        expect(total / mails.length).toBeLessThanOrEqual(0.01);     // 8 de 935 = 0,86%, igual que antes
+    }, 60000);
 });

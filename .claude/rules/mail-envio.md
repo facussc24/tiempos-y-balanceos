@@ -130,7 +130,7 @@ Fuente: `.mail-cache/mails.jsonl`, carpeta *Elementos enviados*, **935 mails suy
 | Arranque | `Buen dia` 136 · `Buenos dias` 85 · `Buenas tardes` 58 · `Hola` 40 | — |
 | Cierre | `Saludos,` 174 · `Gracias` 14 | — |
 | `cordialmente` · `atentamente` · `por medio de la presente` | **0 · 0 · 0** | — |
-| Viñetas, secciones numeradas, tabla en el cuerpo | **0** | las ponia yo |
+| Tabla en el cuerpo · viñetas · secciones numeradas | **0 · 59 · 12** (recontado el 22/09/2026: sus viñetas son listas de codigos; el "0" de antes estaba mal) | las ponia yo, para contar |
 
 **La desviacion real es el LARGO.** Su mail tipico son **dos renglones**. Y el numero corrige a
 la memoria `mail_corto_como_los_de_fak`: el mail de 592 caracteres que guarda como ejemplo de
@@ -156,22 +156,56 @@ revisamos juntos"*). Un gate que las marque no mide a Fak: mide mi idea de Fak
 ```bash
 node scripts/_vozFak.mjs --revisar "<archivo.txt>"   # semaforo; - para leer de stdin
 node scripts/_vozFak.mjs --medir                     # regenera el perfil del cache
-node scripts/_vozFak.mjs --selftest                  # 11 casos dirigidos + falsos rojos del corpus
+node scripts/_vozFak.mjs --selftest                  # 15 casos dirigidos + falsos rojos del corpus
 node scripts/_vozFak.mjs --diff                      # que le cambio Fak a mis borradores
 ```
 
 **ROJO, bloquea:** plural de apertura atribuyendose trabajo propio · impersonal de informe
 (*se procedio a*) · formula formal que el nunca uso · *"Tres cosas para mirar:"* · tabla en el
 cuerpo · mas de 2.500 caracteres · vocabulario prohibido (reusa `scanForbidden()`, las mismas
-listas del AMFE).
+listas del AMFE) · **aclarar de mas: 2 aclaraciones, o 1 en un mail mas largo que su p90**
+(`ACLARA_DE_MAS`, abajo).
 **AMARILLO, avisa:** largo sobre su p90 · viñetas · secciones numeradas · condicional de
-recomendacion (*convendria*) · cierre fuera del set medido · explicar el razonamiento en vez
-del resultado.
+recomendacion (*convendria*) · cierre fuera del set medido · conectores de informe (*en resumen*,
+*cabe aclarar*) · una sola aclaracion en un mail corto · **sigla que el no uso nunca** (`SIGLA_AJENA`).
 
-**Calibracion, en las dos direcciones** (`__tests__/scripts/vozGate.test.mjs`, 26 casos): los tres
-mails mios en plural dan rojo, los cuatro plurales legitimos de Fak dan verde, y el selftest mide
-el **falso rojo contra sus 935 mails: 8, o sea 0,86%**. Si ese numero sube, el gate empezo a medir
-mi idea de el y no se cablea hasta que baje.
+### Aclarar de mas — la correccion que mas repite (medido el 22/09/2026)
+
+Entre el 07/08 y el 22/09/2026 Fak corrigio o rechazo **12 borradores mios, de 9 sesiones**
+(`__tests__/scripts/fixtures/vozRechazados.json`, cada uno con su cita): *"aclaras siempre
+demasiado loco, que entren y revisen ellos"* (01/09), *"los agregaste y aclaraste de mas"* (07/09),
+*"dice KP, no se que carajo es KP... cosas muy explicativas"* (11/09), *"porque aclaras"* (22/09).
+**El gate de antes dejaba pasar 7 de los 12** — el del 22/09 dio VERDE con 551 caracteres.
+
+Lo que los separa de los 935 mails de Fak no es el largo sino la **frase que aclara**: describe
+el adjunto (*"Tiene cuatro hojas"*, *"Lo del dia"*), respalda lo que dice (*"Lo confirma el
+INCA..."*), aclara lo que NO cambio o la consecuencia (*"sigue en m2"*, *"pasan a leerse en
+metros"*, *"el consumo no cambia"*). Cada una esta en 0 a 3 de sus 935 mails.
+
+| Candidato a ROJO | Borradores que frena | Mails de Fak que frenaria |
+|---|---|---|
+| Largo > p90 (585) | 10 de 12 | 93 (9,9%) |
+| Largo > p90 + conectores de informe (*en resumen*...) | 0 de 12 | 2 (0,2%) |
+| Viñetas | 9 de 12 | 59 (6,3%) |
+| Sigla que Fak no uso en ningun otro mail | 6 de 12 | 43 (4,6%) |
+| 1 aclaracion, cualquier largo | 10 de 12 | 4 (0,43%) |
+| **2 aclaraciones, o 1 y largo > p90 — el que quedo** (los mismos 10, con 0) | **10 de 12** | **0** |
+
+Los otros 2 los frenaba ya el gate (*"Tres cosas que valen..."* y *"Revisamos a fondo..."*): con
+`ACLARA_DE_MAS` dan ROJO **los 12**. Del otro lado, **la version que dejo Fak** de los 4 que la
+tienen **no da ROJO** — su Gate 3 de dos renglones tiene *"que es el item 4 del checklist"* y
+por eso una aclaracion en un mail corto avisa y no frena. `asi que` (14 de sus 935) y `es decir`
+(2) quedaron afuera de la lista: son suyos. La sigla ajena queda AMARILLO por su 4,6%.
+Limite, dicho: la lista salio de esos mismos 12 borradores; lo medido afuera de la muestra es el
+falso rojo sobre Fak.
+
+**Calibracion, en las dos direcciones** (`__tests__/scripts/vozGate.test.mjs`, 50 casos): los
+mails mios en plural y los 12 borradores rechazados dan rojo, los plurales legitimos de Fak y sus
+versiones corregidas dan verde, y el selftest (y el test 36, donde esta el cache) mide el
+**falso rojo contra sus 935 mails: 8, o sea 0,86%** — el mismo que antes de `ACLARA_DE_MAS`, que
+suma 0. Si ese numero sube, el gate empezo a medir mi idea de el y no se cablea hasta que baje;
+y ningun ROJO por separado puede pasar del 1% (el selftest falla). En un worktree el cache se
+apunta con `VOZ_MAILS_JSONL`.
 
 ## Al cerrar un tema por mail, barrer Borradores por asunto
 

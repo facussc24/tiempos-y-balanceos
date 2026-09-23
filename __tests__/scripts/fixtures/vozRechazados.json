@@ -1,0 +1,105 @@
+{
+  "_que_es": "Borradores de mail que redacte para Fak y el corrigio o rechazo (07/08 al 22/09/2026). Sacados de la tool call que los escribio, en el transcript de cada sesion; \"comoLoDejoFak\" es el texto que salio despues de su correccion (cache de Enviados). Se recortaron las rutas del servidor. Los usa __tests__/scripts/vozGate.test.mjs.",
+  "casos": [
+    {
+      "id": "R01",
+      "sesion": "0fe4e13b",
+      "fecha": "2026-08-07",
+      "para": "a Leo (consumos Patagonia cargados en el arb)",
+      "fak": "genera un nuevo mail sin esto \"Una cosa para que confirmes: la bolsa quedo cargada...\"",
+      "borrador": "Leo, buenas.\n\nYa esta cargado en el arb todo lo del mail del 5/8. Adjunto el extracto del sistema para que lo valides antes de difundirlo.\n\nEn los 12 apoyacabeza se incorporo el embudo PIP y la bolsa de inyeccion de PUR, 1 unidad por pieza. Se ajusto el hilo decorativo al doble por el doble pespunte, y el de bobina en la proporcion que le corresponde a esa segunda costura. Y se incorporo el hilo decorativo negro a las tres variantes L0, que no lo tenian. Aparte se actualizaron los consumos de vinilo y tela con las tizadas vigentes de Pablo.\n\nSume al extracto los 4 apoyabrazos de puerta, donde se incorporo la cinta Tesa: son 2 tiras de 20 x 2 cm por pieza, 0,008 m2.\n\nUna cosa para que confirmes: la bolsa quedo cargada con la medida de la ficha FT158, que dice 130 mm de largo, y en tu mail figuraba 15 cm. Avisame si la dejamos asi o la corregimos antes de difundir.\n\nSaludos.",
+      "comoLoDejoFak": "Leo, buenas.\n\nYa esta cargado en el arb todo lo del mail del 5/8. Adjunto el extracto del sistema para que lo valides antes de difundirlo.\n\nEn los 12 apoyacabeza se incorporo el embudo PIP y la bolsa de inyeccion de PUR, 1 unidad por pieza. Se ajusto el hilo decorativo al doble por el doble pespunte, y el de bobina en la proporcion que le corresponde a esa segunda costura. Y se incorporo el hilo decorativo negro a las tres variantes L0, que no lo tenian. Aparte se actualizaron los consumos de vinilo y tela con las tizadas de Pablo.\n\nSume al extracto los 4 apoyabrazos de puerta, donde se incorporo la cinta Tesa: son 2 tiras de 20 x 2 cm por pieza, 0,008 m2.\n\nSaludos."
+    },
+    {
+      "id": "R02",
+      "sesion": "9a2a4b2f",
+      "fecha": "2026-08-28",
+      "para": "a Marcelo (BeOn, IP PAD)",
+      "fak": "no sobreaclarar cosas... \"Lo confirma el INCA de VW...\" suena soberbio, suena raro, suena a cosas que yo no haria",
+      "borrador": "Marcelo,\n\nTe paso la documentacion de Ingenieria del IP PAD para el BeOn.\n\nAntes que nada, una correccion en tu tabla: el indice B es solo del FAM. Las otras dos van\ncon C:\n\n  2HC.858.417.B FAM - IP PAD LOW, nivel L1\n  2HC.858.417.C GKK - IP PAD HIGH, nivel L2\n  2HC.858.417.C GKN - IP PAD HIGH, nivel L3\n\nLo confirma el propio INCA de VW y los remitos de las entregas VFF de febrero.\n\nVa adjunto: AMFE 149 Rev.A, flujograma 157, BOM006 Rev.A, ULM Gate 2, ficha de embalaje\nGE-279 y el analisis de factibilidad.\n\nLa hoja de operaciones es la HO-985 Rev.A (pesa 50 MB, esta en la ruta de abajo).\n\nTres cosas que valen para las tres piezas:\n\n- Lo que te pase en mayo quedo viejo. Los AMFE en Excel y los flujogramas \"preliminar\" que\n  tenes cargados de mayo estan reemplazados por estos. Convendria bajarlos del BeOn.\n- El lay-out lo pasa Pablo Gamboa, va en copia.\n- La capacidad ya esta cargada en INCA desde marzo. El formulario Gate 3 te lo paso esta semana."
+    },
+    {
+      "id": "R03",
+      "sesion": "9a2a4b2f",
+      "fecha": "2026-08-28",
+      "para": "a Marcelo (BeOn, apoyacabezas)",
+      "fak": "no sobreaclarar cosas (sacalo de todos)",
+      "borrador": "Marcelo,\n\nTe paso la documentacion de Ingenieria de los tres apoyacabezas para el BeOn.\n\nVa adjunto: AMFE 151, 153 y 155 Rev.A, flujograma 152, BOM004 Rev.A, ULM Gate 2, fichas de\nembalaje GE-103, GE-104 y GE-105 Rev.C, y el analisis de factibilidad.\n\nSobre la BOM: la BOM004 Rev.A es del 30/06. El 28/08 se dio de alta un precinto en las tres\nvariantes, asi que va tambien la difusion del cambio. La Rev.B de la BOM sale en estos dias.\n\nLas hojas de operaciones son la HO-968 (delantero), HO-969 (trasero central) y HO-970\n(trasero lateral), todas Rev.A. Pesan 17 MB cada una, estan en la ruta de abajo.\n\nTres cosas que valen para las tres piezas:\n\n- Lo que te pase en mayo quedo viejo. Los AMFE en Excel y los flujogramas \"preliminar\" que\n  tenes cargados de mayo estan reemplazados por estos. Convendria bajarlos del BeOn.\n- El lay-out lo pasa Pablo Gamboa, va en copia.\n- La capacidad ya esta cargada en INCA desde marzo. El formulario Gate 3 te lo paso esta semana."
+    },
+    {
+      "id": "R04",
+      "sesion": "e088f15d",
+      "fecha": "2026-09-01",
+      "para": "a Marcelo (Gate 3, primera version)",
+      "fak": "\"En las tres queda pendiente... Una aclaracion: la celda H20...\" eso se los sacamos",
+      "borrador": "Marcelo,\n\nTe paso el Gate 3 de capacidad de las tres piezas, que es el item 4 del checklist (porcentaje de proceso dedicado a VW). El dato esta en la hoja Protocolo_SFN1, fila 48.\n\n- Apoyacabezas (2HC.881.901 / 2HC.885.900 / 2HC.885.901): 100 % para el Grupo VW y 100 % para la familia. Capacidad planificada 10.161 pz/semana contra una demanda de 8.875.\n\n- IP PAD (2HC.858.417 B / C): 100 % para el Grupo VW y 14 % de la inyectora. Capacidad planificada 2.056 pz/semana contra una demanda de 1.770.\n\n- Apoyabrazos trasero central (2HC.885.081): 100 % para el Grupo VW y 100 % del puesto. Capacidad planificada 847 pz/semana contra una demanda de 270.\n\nEn las tres queda pendiente la prueba de produccion (Leistungstest): el bloque de capacidad comprobada figura como n.b. hasta que se haga la corrida. Esta anotado dentro de cada archivo, en Problemas detectados.\n\nUna aclaracion: la celda H20 del protocolo muestra #REF! en los tres. Viene asi de la plantilla original de VW, que no incluye la hoja del anexo de la lista de chequeo, y esta protegida.\n\nSaludos"
+    },
+    {
+      "id": "R05",
+      "sesion": "e088f15d",
+      "fecha": "2026-09-01",
+      "para": "a Marcelo (Gate 3, tercera version)",
+      "fak": "aclaras siempre demasiado loco, que entren y revisen ellos",
+      "borrador": "Marcelo,\n\nTe paso el Gate 3 de capacidad de las tres piezas, que es el item 4 del checklist (porcentaje de proceso dedicado a VW). El dato esta en la hoja Protocolo_SFN1, fila 48.\n\n- Apoyacabezas (2HC.881.901 / 2HC.885.900 / 2HC.885.901): 100 % para el Grupo VW y 100 % para la familia. Capacidad planificada 10.161 pz/semana contra una demanda de 8.875.\n\n- IP PAD (2HC.858.417 B / C): 100 % para el Grupo VW y 14 % de la inyectora. Capacidad planificada 2.056 pz/semana contra una demanda de 1.770.\n\n- Apoyabrazos trasero central (2HC.885.081): 100 % para el Grupo VW y 75 % de la inyectora de poliuretano, que es compartida. Capacidad planificada 913 pz/semana a dos turnos y 1.278 con el tercer turno, contra una demanda de 741 y un maximo de 1.152 en la semana 49.\n\nSaludos",
+      "comoLoDejoFak": "Marcelo,\n\nTe paso el Gate 3 de capacidad de las tres piezas, que es el item 4 del checklist (porcentaje de proceso dedicado a VW).\n\nSaludos,"
+    },
+    {
+      "id": "R06",
+      "sesion": "e088f15d",
+      "fecha": "2026-09-01",
+      "para": "a Carlos y Leo (capacidad en INCA)",
+      "fak": "lo edito el antes de mandarlo (\"fijate que modifique el borrador\"): saco \"y por eso la consulta de capacidad figuraba en rojo con un faltante acumulado de 10.564 piezas\" y \"asi que se declara el 75 % de su capacidad para esta pieza\" (cotejado contra Enviados)",
+      "borrador": "Carlos, Leo,\n\nActualizamos en INCA la capacidad del apoyabrazos trasero central de Patagonia. Estaba declarada en 270 piezas por semana, que corresponde al molde anterior, y por eso la consulta de capacidad figuraba en rojo con un faltante acumulado de 10.564 piezas.\n\nQuedo cargado y activado asi, desde la semana 36/2026:\n\n- Capacidad normal: 913 piezas por semana\n- Capacidad maxima: 1.278 piezas por semana (flexibilidad del 40 %)\n\nEn base a que:\n\n- Demanda de VW segun el portal: 741 piezas por semana de regimen, con un maximo de 1.152 en la semana 49 de 2026.\n- Proceso: la inyeccion de poliuretano define la capacidad. Hoy hay dos moldes, con un ciclo de 203 segundos por pieza.\n- Regimen: dos turnos para la capacidad normal y el tercer turno para la maxima.\n- OEE 0,45, que es el del analisis de capacidad de la pieza.\n- La inyectora es compartida, asi que se declara el 75 % de su capacidad para esta pieza.\n\nCon estos valores la consulta de capacidad quedo cubierta en todas las semanas, incluida la de mayor demanda. Adjunto el Antwortbogen que exporte del portal.\n\nLa activacion ya se envio; queda pendiente la liberacion por parte del comprador de VW.\n\nEl mismo criterio quedo reflejado en el Gate 3 que se le envia a Marcelo para el BeOn.\n\nSaludos"
+    },
+    {
+      "id": "R07",
+      "sesion": "f8086778",
+      "fecha": "2026-09-01",
+      "para": "a Luca (listado de codigos y colores)",
+      "fak": "simplificá la descripción del mail, poné \"te envío el listado de códigos e imágenes\"... dejá de aclarar todo de más, es obvio",
+      "borrador": "Luca,\n\nTe paso el listado de códigos y colores de Patagonia. Tiene cuatro hojas:\n\n- Códigos: todos los materiales pieza por pieza. La columna \"Código\" es la que consume el arb; al lado va la del plano o del proveedor cuando son distintas.\n- Ayuda Visual: los colores de hilos y vinilos de cada variante.\n- Galería: las fotos de los vinilos con su etiqueta.\n- Sustratos inyectados.\n\nEstá actualizado contra el arb al 01/09.\n\nCualquier cosa avisame.",
+      "comoLoDejoFak": "Luca,\n\nTe envío el listado de códigos e imágenes de Patagonia."
+    },
+    {
+      "id": "R08",
+      "sesion": "c90f901f",
+      "fecha": "2026-09-03",
+      "para": "a Carlos (TryOut Dia 5)",
+      "fak": "recordá hacelo breve el cuerpo del mail, así nomás",
+      "borrador": "Carlos,\n\nVa el Dia 5, sobre el mismo archivo. Las dos diapositivas del Plan de Trial siguen al final.\n\nLo del dia, sobre el molde delantero (Front TopRoll):\n- KP bajo el trimming tool 1 mm porque no se puede tapizar correctamente. Si no alcanza, la alternativa es limar mas el molde, y eso no tiene vuelta atras.\n- Fallo un sensor: la causa era que la traba del medio no cerraba bien. Se intervino y queda en revision.\n- KP agrego agujeros de vacio en un extremo del molde, donde faltaba vinilo, para succionar el borde. Por ahora no se ve que incidan sobre el defecto de marcas de vacio, que sigue abierto desde el 31/08.\n- Se probo sumar 5 segundos al contacto vinilo-plastico.\n- Se corrigio la secuencia del vinilo: ya no se detiene antes de bajar, baja mas rapido y el material no se enfria.\n- Sigue sin poder abrirse la puerta trasera de la maquina porque entra viento y no calienta.\n\nAdjunto el consolidado Dia 1 a 5, el Dia 5 suelto y la version en ingles.\n\nSaludos,"
+    },
+    {
+      "id": "R09",
+      "sesion": "878ddd3d",
+      "fecha": "2026-09-07",
+      "para": "a Pablo Gamboa (punzonado 100 grs/m2)",
+      "fak": "los agregaste y aclaraste de más, es un error conocido tuyo",
+      "borrador": "Pablo,\n\nCorregimos en el arb el punzonado de dos piezas de 100 grs/m2: 21-9689 y 21-8944. Estaban con TPES100 -2 (PES 100 termofijado), que no se compra desde junio de 2021, y pasaron a TPES70/PP30B A: (PES 70 + TNT PP 30, ancho 2 mt), que es el que se usa. Los dos son de 100 grs/m2 y 2 mt de ancho, asi que el consumo no cambia. Te adjunto el extracto del arb.\n\nDos cosas:\n\n1) La 21-9689 no figura en la planilla, la veo solo a la 21-8944. La podes agregar?\n\n2) Un punto de mejora: en la columna de material la planilla trae la descripcion pero no el codigo. Para verificar cual era el codigo tuve que ir a mirar el material en vez de resolverlo ahi, y me llevo mas tiempo del esperado. Si se le suma el codigo al lado de la descripcion se resuelve de una.\n\nAparte quedan siete codigos con TPES100 -1.5, que es el mismo material pero de 1,5 mt de ancho: la 21-6614 y los seis de mesa de corte (MC-21-6479, 6480, 6481, 6482, 6483 y MC-21-6614). Esos no los tocamos porque el PES 70 + TNT PP 30 existe solo en 2 mt y cambiar el ancho rehace la tizada. Siguen vivas esas piezas?\n\nSaludos"
+    },
+    {
+      "id": "R10",
+      "sesion": "6e8e78c2",
+      "fecha": "2026-09-10",
+      "para": "a Carlos (TryOut Dia 6)",
+      "fak": "dice \"KP\", no sé qué carajo es KP... pusiste cosas muy explicativas",
+      "borrador": "Carlos,\n\nVa el Día 6, sobre el mismo archivo. Las dos diapositivas del Plan de Trial siguen al final.\n\nLo del día, sobre el molde delantero (Front TopRoll), tiradas T3 a T14:\n\n- A la cavidad 4 se le sacó el suplemento: no volvió el hundimiento, pero apareció una arruga. En el T6, con el papel colocado de otra forma, la cavidad quedó resuelta.\n\n- Del T6 al T11 se bajó la temperatura por zonas: primero la zona superior 12 y 13, después toda la línea zonal a 400 °C, y la inferior de 435 a 410 °C. Las marcas de vacío de la cavidad 3 se repitieron en todas.\n\n- En el T11 se vio que la cavidad 2 también tiene marcas, más leves.\n\n- KP dice que el molde inferior tiene dos modos de vacío, rápido y lento, y que la sincronización entre los dos no es la correcta. Se pasó a ajustar los tiempos: el vacío rápido inferior de 5,3 a 11,0 s y, en el T13, el lento de 5,2 a 4,0 s. A las 16:28 quedaron cargados los parámetros del T14.\n\nSumé tres puntos al Plan de Trial: cavidad 3 (marcas de vacío), cavidad 2 (marcas leves) y los tiempos de vacío del molde inferior.\n\nAdjunto el consolidado Día 1 a 6, el Día 6 suelto y la versión en inglés.\n\nSaludos,"
+    },
+    {
+      "id": "R11",
+      "sesion": "3800c8eb",
+      "fecha": "2026-09-11",
+      "para": "a Calidad (PPAP NOVAX)",
+      "fak": "revisé porque revisamos, yo revisé",
+      "borrador": "Estimados,\n\nRevisamos a fondo los AMFE y los flujogramas que mandé el 08/09 y tenían varios errores en varios lugares: numeración de operaciones distinta entre el AMFE y el flujograma, características especiales que no cerraban entre los dos documentos, materiales y códigos de producto incompletos en las carátulas.\n\nYa están corregidos. Adjunto las versiones nuevas, con el AMFE y el flujograma de cada pieza alineados operación por operación:\n\n- INSERT: AMFE 158 Rev.A (11/09) + Flujograma 154 Rev.C\n- ARMREST DOOR PANEL (APB): AMFE 161 Rev.A (11/09) + Flujograma 153 Rev.C\n- TOP ROLL: AMFE 162 Rev.A (11/09) + Flujograma 155 Rev.C\n\nEstas son las versiones que hay que usar para armar los planes de control. Las del 08/09 no se usan más; ya quedaron reemplazadas en el legajo.\n\nCualquier consulta me avisan."
+    },
+    {
+      "id": "R12",
+      "sesion": "0b7435f4",
+      "fecha": "2026-09-22",
+      "para": "a Pablo Cejas y la difusion (vinilos Sansuy a metros)",
+      "fak": "como que pasan a leerse en metros, no entendí... por qué aclarás",
+      "borrador": "Estimados,\n\nPablo, gracias por el dato. Pasé los vinilos Sansuy de Patagonia de m2 a metros lineales (MTL) y cargué los consumos de las BOM según los usos de tizada de Pablo Gamboa (rollo de 1,40 m).\n\nInsertos de puerta: N 227 y N 389 a N 403\n\nApoyacabezas: 2HC881901, 2HC885900 y 2HC885901 (10 variantes)\n\nIP Pad: 2HC858417B FAM, 2HC858417C GKK y GKN\n\nApoyabrazos trasero: 2HC885081 RL1\n\nEl piping del IP Pad (124.505.0372-7) sigue en m2. Las OC y el stock de estos 11 códigos pasan a leerse en metros.\n\nAdjunto el extracto de cada familia.\n\nSaludos,",
+      "comoLoDejoFak": "Estimados,\n\nPablo, gracias por el dato. Pasé los vinilos Sansuy de Patagonia de m2 a metros lineales (MTL) y cargué los consumos de las BOM según los usos de tizada de Pablo Gamboa (rollo de 1,40 m).\n\nInsertos de puerta (N 227 y N 389 a N 403): 1246030223, 1246030224, 1246030225 y 1246030226\n\nApoyacabezas (2HC881901, 2HC885900 y 2HC885901, 10 variantes): 1246030198, 1246030199 y 1246030200\n\nIP Pad (2HC858417B FAM, 2HC858417C GKK y GKN): 1246030227, 1246030229 y 1246030230\n\nApoyabrazos trasero (2HC885081 RL1): 197.025.0425-6\n\nAdjunto el extracto de cada familia.\n\nSaludos,"
+    }
+  ]
+}

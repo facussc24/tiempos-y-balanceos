@@ -20,7 +20,7 @@ import path from 'node:path';
 import readline from 'node:readline';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { MAILS_JSONL } from './_lib/mailCache.mjs';
-import { revisarVoz, formatear, cargarPerfil, cuerpoPropio, PERFIL_JSON, ROJO } from './_lib/vozGate.mjs';
+import { revisarVoz, formatear, cargarPerfil, cuerpoPropio, siglasSueltas, PERFIL_JSON, ROJO } from './_lib/vozGate.mjs';
 
 const RAIZ = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
@@ -31,8 +31,15 @@ const RAIZ = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 export const CORTE_VOZ_PURA = '2026-03-01';
 const ENVIADOS = 'Elementos enviados';
 
+/**
+ * Donde esta el cache. `VOZ_MAILS_JSONL` lo apunta a otro lado: un worktree no trae el
+ * `.mail-cache/` (esta gitignoreado) y sin cache la mitad que importa del selftest, los
+ * falsos rojos sobre Fak, no corre.
+ */
+export const JSONL_VOZ = process.env.VOZ_MAILS_JSONL || MAILS_JSONL;
+
 /** Los mails que Fak mando, con cuerpo. Streaming: el jsonl pesa 21 MB. */
-export async function leerEnviados({ hasta = null, desde = null, jsonl = MAILS_JSONL } = {}) {
+export async function leerEnviados({ hasta = null, desde = null, jsonl = JSONL_VOZ } = {}) {
     const out = [];
     if (!fs.existsSync(jsonl)) return out;
     const rl = readline.createInterface({ input: fs.createReadStream(jsonl, 'utf8'), crlfDelay: Infinity });
@@ -88,6 +95,9 @@ export function medirPerfil(mails) {
     }
     const top = (lista, min) => contar(lista).filter(([, n]) => n >= min).slice(0, 12)
         .map(([texto, n]) => ({ texto, n }));
+    // Las siglas que Fak escribio alguna vez: una que no esta aca, el que lee no la conoce
+    // (SIGLA_AJENA del gate; el "KP" del 10/09 no aparece en ninguno de sus mails).
+    const siglas = [...new Set(mails.flatMap((m) => siglasSueltas(m.cuerpo)))].sort();
     return {
         _generado: new Date().toISOString().slice(0, 10),
         _fuente: `.mail-cache/mails.jsonl · "${ENVIADOS}" · hasta ${CORTE_VOZ_PURA} (voz pura)`,
@@ -104,6 +114,7 @@ export function medirPerfil(mails) {
         },
         arranques: top(arranques, 5),
         cierres: top(cierres, 5),
+        siglas,
     };
 }
 
@@ -124,6 +135,11 @@ export const CASOS = [
     ['FAK en singular', 'Buen dia, Actualice el arb con los consumos del P703. Adjunto el extracto de las 10 piezas. Saludos.', null],
     ['MIO giro de informe', 'Manuel,\n\nTe paso el estado del PPAP.\n\nTres cosas para mirar:\n\n- Los tres AMFE son de la version del 24/08.\n', ROJO],
     ['MIO formula formal', 'Estimados, Por medio de la presente se procedio a corregir el AMFE. Cordialmente,', ROJO],
+    // ACLARA_DE_MAS: cada borrador que Fak corrigio, al lado de como lo dejo el (22/09/2026).
+    ['MIO 01/09 a Luca (describe el adjunto)', 'Luca,\n\nTe paso el listado de codigos y colores de Patagonia. Tiene cuatro hojas:\n\n- Codigos: todos los materiales pieza por pieza. La columna "Codigo" es la que consume el arb; al lado va la del plano o del proveedor cuando son distintas.\n- Ayuda Visual: los colores de hilos y vinilos de cada variante.\n\nCualquier cosa avisame.', ROJO],
+    ['FAK 01/09 a Luca, como lo dejo', 'Luca,\n\nTe envío el listado de códigos e imágenes de Patagonia.', null],
+    ['MIO 22/09 a Pablo (porque aclaras)', 'Estimados,\n\nPablo, gracias por el dato. Pasé los vinilos Sansuy de Patagonia de m2 a metros lineales (MTL).\n\nEl piping del IP Pad (124.505.0372-7) sigue en m2. Las OC y el stock de estos 11 códigos pasan a leerse en metros.\n\nAdjunto el extracto de cada familia.\n\nSaludos,', ROJO],
+    ['FAK 01/09 Gate 3, como lo dejo', 'Marcelo,\n\nTe paso el Gate 3 de capacidad de las tres piezas, que es el item 4 del checklist (porcentaje de proceso dedicado a VW).\n\nSaludos,', null],
 ];
 
 async function selftest() {
@@ -157,6 +173,10 @@ async function selftest() {
         console.log(`   ej [${m.fecha.slice(0, 10)}] ${r.hallazgos.find((h) => h.nivel === ROJO).codigo}: "${m.cuerpo.slice(0, 90)}"`);
     }
     if (pct > 2) { console.log('\n>2% de falsos rojos: el gate esta midiendo MI idea de Fak. No se cablea asi.'); fallas++; }
+    // Y cada ROJO por separado, contra el 1% que se le permite a un chequeo que frena.
+    for (const [cod, n] of porCodigo) {
+        if (n > mails.length / 100) { console.log(`\n${cod} marca ${n} mails de Fak (>1%): ese chequeo no puede ser ROJO.`); fallas++; }
+    }
     console.log(fallas ? `\n${fallas} FALLAS` : '\nSELFTEST OK');
     return fallas ? 1 : 0;
 }
@@ -166,7 +186,7 @@ async function selftest() {
 async function medir() {
     const mails = await leerEnviados({ hasta: CORTE_VOZ_PURA });
     if (!mails.length) {
-        console.error(`Sin mails en ${MAILS_JSONL}. Corre antes: python scripts/_mails.py --sync`);
+        console.error(`Sin mails en ${JSONL_VOZ}. Corre antes: python scripts/_mails.py --sync`);
         process.exit(2);
     }
     const perfil = medirPerfil(mails);
