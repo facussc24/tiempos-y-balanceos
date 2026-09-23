@@ -89,6 +89,14 @@ describe('cierre-guard · declaraCierre y tieneRuta', () => {
     expect(declaraCierre('La tarea quedó archivada y el PDF en su carpeta.')).toBe(true);
     expect(declaraCierre('Sigo midiendo la torreta, falta la mitad.')).toBe(false);
   });
+  it('"cuando termine" / "cuando esté listo" es una espera, no un cierre (22/09/2026)', () => {
+    // Sin tildes, "terminé" y "termine" quedan iguales: el "te aviso cuando termine el auditor"
+    // que el chequeo 6 pide escribir se leia como tarea cerrada.
+    expect(declaraCierre('Te aviso cuando termine el auditor.')).toBe(false);
+    expect(declaraCierre('Sigo apenas terminen los agentes; te aviso cuando esté listo.')).toBe(false);
+    expect(declaraCierre('Terminé la carga y quedó todo subido.')).toBe(true);
+    expect(declaraCierre('Build verde. Listo.')).toBe(true);
+  });
   it('detecta rutas de Windows, UNC, Git Bash y OneDrive', () => {
     expect(tieneRuta('quedó en C:\\Dev\\x.pdf')).toBe(true);
     expect(tieneRuta('en \\\\SERVER\\compartido\\BARACK\\x')).toBe(true);

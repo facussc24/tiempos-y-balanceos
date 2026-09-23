@@ -78,9 +78,9 @@
     }
   ],
   "cierre_declarado": [
-    "\\blisto\\b",
+    "(?<!\\b(?:cuando|apenas|hasta que|en cuanto) (?:este|esten|quede|queden) )\\blisto\\b",
     "\\bterminad[oa]\\b",
-    "\\btermin[eé]\\b",
+    "(?<!\\b(?:cuando|apenas|si|hasta que|en cuanto|una vez que|despues de que|despues que) )\\btermin[eé]\\b",
     "qued[oó] (en|listo|lista|archivad|guardad|cerrad)",
     "\\bentregad[oa]\\b",
     "\\bpushead[oa]\\b",
