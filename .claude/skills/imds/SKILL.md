@@ -438,6 +438,12 @@ Varias veces el screenshot mostro el popup todavia abierto **despues** de que el
 funcionado. **No concluir "no anduvo" por una captura**: leer el DOM (`read_page`, o buscar el
 texto del valor cargado) antes de reintentar. Reintentar a ciegas puede duplicar una carga.
 
+**La otra mitad: cuando una accion NO responde, la captura es lo unico que dice POR QUE**
+(21/09/2026). Gaste OCHO intentos contra un boton que no hacia nada: la primera captura mostraba
+el menu con la opcion correcta y la que yo apretaba **en gris**, deshabilitada porque el nodo
+tenia hijos. **Repetir un clic que no anduvo es no haber mirado.** El ESTADO se lee del DOM; el
+MOTIVO de que algo no responda, de la pantalla.
+
 ### Secuencia que funciono, de punta a punta
 
 ```
