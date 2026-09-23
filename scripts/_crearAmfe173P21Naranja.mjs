@@ -461,7 +461,7 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
           ]),
           falla('Se utilizan pallets distintos de los definidos', EF_SCRAP_INTERNO, [
             causa('No esta definido por escrito cual es el pallet que corresponde a cada material',
-              'TBD - falta definir el pallet por material',
+              'Sin control preventivo',
               10, 'Control visual del pallet en la recepcion del material', 8),
           ]),
         ]),
@@ -805,7 +805,7 @@ const OP30 = operacion('30', 'REFILADO DE COMPONENTES CORTADOS',
             // estaba cubierto. Y el mismo texto aparecia en dos operaciones con D=8 y D=10 -
             // el mismo control no puede tener dos detecciones.
             causa('El puesto no tiene silla ergonomica asignada',
-              'TBD - falta la silla ergonomica del puesto',
+              'Sin control preventivo',
               10,'Relevamiento de puestos y seguimiento por Seguridad e Higiene', 9),
           ]),
         ]),
@@ -868,7 +868,7 @@ const OP40 = operacion('40', 'COSTURA DE UNION',
           ]),
           falla('Las puntadas se achican al pasar por la curva', EF_ASPECTO, [
             causa('El radio de la curva del patron obliga a reducir el avance en esa zona',
-              'TBD - falta evaluar el radio de la curva con Ingenieria de producto',
+              'Sin control preventivo',
               10, 'Control de la zona de curva en la pieza terminada', 8),
           ]),
         ]),
@@ -900,7 +900,7 @@ const OP40 = operacion('40', 'COSTURA DE UNION',
         [
           falla('Tendinitis o dolor articular en el brazo del operario', EF_SALUD_CRONICA, [
             causa('El ciclo del puesto es repetitivo y no hay rotacion ni pausa activa definidas',
-              'TBD - falta definir la rotacion de puestos y la pausa activa',
+              'Sin control preventivo',
               10, 'Seguimiento de Seguridad e Higiene y del servicio medico', 8),
           ]),
           falla('Herida del operario con la aguja de la maquina', EF_SEG_OPERARIO, [
@@ -920,7 +920,7 @@ const OP40 = operacion('40', 'COSTURA DE UNION',
           ]),
           falla('Dolores lumbares del operario del puesto', EF_SALUD_CRONICA, [
             causa('El puesto no tiene silla ergonomica asignada',
-              'TBD - falta la silla ergonomica del puesto',
+              'Sin control preventivo',
               10,'Relevamiento de puestos y seguimiento por Seguridad e Higiene', 9),
           ]),
           falla('Iluminacion del puesto por debajo del nivel requerido', EF_ASPECTO, [
@@ -975,7 +975,7 @@ const OP50 = operacion('41', 'COSTURA VISTA - PESPUNTE SIMPLE, UNA LINEA',
           // La medicion con calibre de la distancia a la union es 1 pieza al inicio y al fin de
           // turno (Plan de Control rev M, "Operacion 40 (Solo Hilo Verde)", item 7). La guia se
           // corre DURANTE el turno: el control no cubre cada pieza -> P3-9.
-          falla('Linea de costura vista fuera de 4 +0 / -1 mm de la linea de union', EF_PIEZA_DISTINTA, [
+          falla('Linea de costura vista fuera de 4 +0 / -1 mm por arriba de la linea de union de vinilo', EF_PIEZA_DISTINTA, [
             causa('La guia del pie de la maquina es regulable y no queda fijada entre lotes',
               'Guia de referencia en el pie de la maquina (HO 927 REV6, hoja 50)',
               5, 'Medicion con calibre de la distancia a la linea de union, 1 pieza al inicio y al fin de turno (Plan de Control rev M, Operacion 40)', 9,
@@ -990,7 +990,7 @@ const OP50 = operacion('41', 'COSTURA VISTA - PESPUNTE SIMPLE, UNA LINEA',
               5, 'Conteo de puntos con calibre en cada pieza, como paso de la operacion (HO 927 REV6, hoja 50)', 6,
               sc('SC 2.4', 'cc/h')),
             causa('El avance se reduce al pasar por la curva del contorno',
-              'TBD - falta evaluar el radio de la curva con Ingenieria de producto',
+              'Sin control preventivo',
               10, 'Conteo con calibre de los puntos en la zona de curva de la pieza terminada', 8,
               sc('SC 2.4', 'cc/h')),
           ]),
@@ -1048,7 +1048,7 @@ const OP50 = operacion('41', 'COSTURA VISTA - PESPUNTE SIMPLE, UNA LINEA',
         [
           falla('Tendinitis o dolor articular en el brazo del operario', EF_SALUD_CRONICA, [
             causa('El ciclo del puesto es repetitivo y no hay rotacion ni pausa activa definidas',
-              'TBD - falta definir la rotacion de puestos y la pausa activa',
+              'Sin control preventivo',
               10, 'Seguimiento de Seguridad e Higiene y del servicio medico', 8),
           ]),
           falla('Herida del operario con la aguja de la maquina', EF_SEG_OPERARIO, [
@@ -1069,7 +1069,7 @@ const OP50 = operacion('41', 'COSTURA VISTA - PESPUNTE SIMPLE, UNA LINEA',
           // El AMFE 127 lo tiene en la costura vista y la Rev.A solo lo habia dejado en la de union.
           falla('Dolores lumbares del operario del puesto', EF_SALUD_CRONICA, [
             causa('El puesto no tiene silla ergonomica asignada',
-              'TBD - falta la silla ergonomica del puesto',
+              'Sin control preventivo',
               10, 'Relevamiento de puestos y seguimiento por Seguridad e Higiene', 9),
           ]),
           falla('Iluminacion del puesto por debajo del nivel requerido', EF_ASPECTO, [
@@ -1121,12 +1121,12 @@ const OP60 = operacion('60', 'LIMPIEZA DE PIEZA PLASTICA',
           // tenia O=4 y un "control del tiempo transcurrido" que su propia causa negaba.
           falla('Pieza pasada al primer con menos de 5 minutos de secado', EF_DESPEGUE, [
             causa('El puesto no tiene un medio para saber cuando cada pieza cumplio su tiempo',
-              'TBD - falta el control de tiempo en el puesto',
+              'Sin control preventivo',
               10, 'Sin control del tiempo de secado en el puesto', 10),
           ]),
           falla('Pieza limpia que espera demasiado antes del primer', EF_DESPEGUE, [
             causa('No hay un limite superior de espera definido',
-              'TBD - falta definir el limite superior de espera',
+              'Sin control preventivo',
               10, 'Sin control del tiempo de espera en el puesto', 10),
           ]),
         ]),
@@ -1570,7 +1570,7 @@ const OP100 = operacion('90', 'REFILADO CON MASCARA',
           ]),
           falla('Corte o raya del sustrato durante el refilado', EF_SCRAP_INTERNO, [
             causa('La profundidad de corte no esta limitada por el utillaje',
-              'TBD - falta el tope de profundidad en el utillaje',
+              'Sin control preventivo',
               10, 'Control visual de rayas y cortes contra pieza patron y biblia de defectos (HO 927 REV6, hoja 100)', 8),
           ]),
         ]),
@@ -1660,8 +1660,13 @@ const OP110 = operacion('91', 'TROQUELADO DE VINILO',
 // El flujograma 159 numera 120 INSPECCION FINAL: resuelve la colision con el Rev.03,
 // que usaba el 120 para un traslado y dejaba la inspeccion sin numero.
 // ===========================================================================
-const OP120 = operacion('100', 'INSPECCION FINAL',
-  'Inspeccionar la pieza terminada contra los criterios de aceptacion antes de embalarla',
+// 23/09/2026 — la inspeccion final y el muro de calidad son la MISMA operacion. Fak: "la
+// inspeccion final es en realidad lo mismo que el muro de calidad, unificalos". Hasta hoy el
+// muro era la OP 110, con un solo modo de falla cuya causa decia justamente que "repite una
+// inspeccion visual con los mismos criterios que la inspeccion final". Queda la OP 100 con el
+// requisito de la carta de nominacion (100 % hasta 5.000 piezas buenas) y el embalaje pasa a 110.
+const OP120 = operacion('100', 'INSPECCION FINAL / MURO DE CALIDAD',
+  'Inspeccionar al 100 % la pieza terminada contra los criterios de aceptacion antes de embalarla, como muro de calidad hasta 5.000 piezas buenas consecutivas',
   'Pieza conforme a la muestra patron y a las caracteristicas designadas por el cliente',
   [
     we('Medicion', 'Inspeccion de la pieza terminada', [
@@ -1683,7 +1688,7 @@ const OP120 = operacion('100', 'INSPECCION FINAL',
           falla('Pieza no conforme que pasa la inspeccion final', EF_PIEZA_DISTINTA, [
             causa('Los criterios de aspecto se juzgan a ojo, pieza por pieza, contra la biblia de defectos',
               'Biblia de defectos, pieza patron y plantilla de alineacion de costura en el puesto, con camino de inspeccion por zonas A, B y C (HO 927 REV6, hoja 120)',
-              4, 'Control al 100 % con registro en la planilla de control de calidad, e identificacion con etiqueta roja de cada pieza no conforme (HO 927 REV6, hoja 120)', 8),
+              4, 'Control al 100 % como muro de calidad hasta 5.000 piezas buenas consecutivas (carta de nominacion, pag. 8), con registro en la planilla de control de calidad e identificacion con etiqueta roja de cada pieza no conforme (HO 927 REV6, hoja 120)', 8),
           ]),
           // Plan de Control rev M, Operacion 120, item 1: adherencia del tapizado de 10 N como
           // referencia, con dinamometro. Es por muestreo -> P3-9. La Rev.A no tenia ningun modo
@@ -1714,40 +1719,12 @@ const OP120 = operacion('100', 'INSPECCION FINAL',
     ]),
   ]);
 
-// ===========================================================================
-// OP 110 — MURO DE CALIDAD
-// ===========================================================================
-// La carta de nominacion (SNL Amendment 02-Rev03, pag. 8) lo exige: "Quality Wall (QW) 100%
-// check... till 5000 consecutive checked good parts". El Plan de Control rev M lo tiene como
-// Operacion 140, "Muro de Calidad SOP + 3 meses", con 12 defectos a controlar. La Rev.A no lo
-// tenia ni aca ni en el flujograma. El de la serie se retiro el 14/11/2025 (mail de SMRC del
-// 20/11/2025); esta es una pieza nueva y arranca con el suyo.
-//
-// Va ANTES del embalaje, como en el flujograma 152 (TRASLADO A MURO DE CALIDAD -> CONTROL ->
-// EMBALAJE): el muro inspecciona y etiqueta la pieza. El Plan de Control rev M lo numera despues
-// del embalaje (140 contra 130); eso queda informado.
-const OPMURO = operacion('110', 'MURO DE CALIDAD',
-  'Inspeccionar al 100 % la pieza terminada antes del embalaje, durante el arranque de la pieza nueva',
-  'Pieza sin ninguno de los defectos de la lista del muro, hasta 5.000 piezas buenas consecutivas',
-  [
-    we('Medicion', 'Inspeccion del muro de calidad', [
-      funcion(
-        'Detectar en la pieza terminada los defectos que escaparon de la inspeccion final',
-        'Arrugas y pliegues, manchas de adhesivo, 17 orificios libres, troquelado centrado, corte del sobrante, vinilo hasta el borde, vinilo danado, quemado o marcado, zona de soldadura limpia (Plan de Control rev M, Operacion 140)',
-        [
-          falla('Pieza no conforme que pasa el muro de calidad', EF_ASPECTO, [
-            causa('El muro repite una inspeccion visual con los mismos criterios que la inspeccion final',
-              'Lista de defectos del muro (Plan de Control rev M, Operacion 140) y biblia de defectos',
-              4, 'Control visual al 100 % por el operador de calidad, hasta 5.000 piezas buenas consecutivas (carta de nominacion, pag. 8)', 8),
-          ]),
-        ]),
-    ]),
-  ]);
+// (OP 110 MURO DE CALIDAD: unificada con la inspeccion final en la OP 100 el 23/09/2026.)
 
 // ===========================================================================
-// OP 120 — EMBALAJE E IDENTIFICACION
+// OP 110 — EMBALAJE E IDENTIFICACION (era la 120 hasta que el muro se unifico con la OP 100)
 // ===========================================================================
-const OP130 = operacion('120', 'EMBALAJE E IDENTIFICACION',
+const OP130 = operacion('110', 'EMBALAJE E IDENTIFICACION',
   'Embalar e identificar la pieza terminada segun la ficha de embalaje del cliente',
   'Medio embalado con la cantidad y la identificacion que pide el cliente',
   [
@@ -1797,7 +1774,7 @@ const OP130 = operacion('120', 'EMBALAJE E IDENTIFICACION',
   ]);
 
 // En el orden del flujograma. La Rev.A tenia la 71 antes que la 70.
-const OPERACIONES = [OP10, OP20, OP21, OP30, OP40, OP50, OP60, OP70, OP80, OP71, OP72, OP73, OP74, OP90A, OP90, OP82, OP100, OP110, OP120, OPMURO, OP130];
+const OPERACIONES = [OP10, OP20, OP21, OP30, OP40, OP50, OP60, OP70, OP80, OP71, OP72, OP73, OP74, OP90A, OP90, OP82, OP100, OP110, OP120, OP130];
 
 const doc = {
   header: {
@@ -1894,6 +1871,11 @@ console.log(`  con TBD       : ${tbd}`);
 // --- chequeos duros propios ---
 const errores = [];
 if (sinAP) errores.push(`${sinAP} causas sin AP calculado`);
+// 23/09/2026 — Fak, antes de mandarlo al cliente: "intentemos eliminar los TBD del AMFE... no
+// queda bien... ante la duda simplificalo un poco pero no dejes TBDs". Los 11 que habia eran
+// controles preventivos que no existen, todos con O=10: se escriben "Sin control preventivo",
+// que es lo que dice la P2 oficial para O=10 (SETEC pag. 104). Un TBD nuevo frena la corrida.
+if (tbd) errores.push(`${tbd} campos con TBD: el documento va al cliente sin TBD (Fak, 23/09/2026)`);
 
 // 1) las 13 operaciones del flujograma 159, ni una mas ni una menos
 // La serie sale del flujograma 159 Rev.A rehecho el 22/09/2026: una decena por SECTOR,
@@ -1902,7 +1884,7 @@ if (sinAP) errores.push(`${sinAP} causas sin AP calculado`);
 // 90-91 refilado con mascara y troquelado · 100 inspeccion final · 110 embalaje.
 // 22/09/2026 (tarde): se suman los reprocesos 72-74 del adhesivado y el muro de calidad (110),
 // y el embalaje pasa a 120.
-const DEL_FLUJOGRAMA = ['10', '20', '21', '30', '40', '41', '60', '61', '70', '71', '72', '73', '74', '80', '81', '82', '90', '91', '100', '110', '120'];
+const DEL_FLUJOGRAMA = ['10', '20', '21', '30', '40', '41', '60', '61', '70', '71', '72', '73', '74', '80', '81', '82', '90', '91', '100', '110'];
 const mias = doc.operations.map((o) => o.opNumber);
 for (const n of DEL_FLUJOGRAMA) if (!mias.includes(n)) errores.push(`falta la OP ${n} del flujograma 159`);
 for (const n of mias) if (!DEL_FLUJOGRAMA.includes(n)) errores.push(`la OP ${n} no existe en el flujograma 159`);
