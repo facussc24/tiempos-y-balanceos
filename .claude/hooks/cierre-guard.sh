@@ -3,10 +3,12 @@
 #
 # La logica vive en scripts/_lib/cierreGuard.mjs (node): el ultimo mensaje del asistente
 # trae comillas, markdown y saltos de linea, y parsear eso con sed es donde esta casa ya
-# se comio verdes falsos. Tres cosas mide, en este orden:
+# se comio verdes falsos. Seis cosas mide; las tres primeras:
 #   1. el turno termina pidiendo permiso para hacer mi propio trabajo   -> exit 2
 #   2. entregue algo afuera del repo y el cierre no dice la RUTA          -> exit 2
 #   3. declaro un cierre ("listo", "pusheado") con pendientes medibles   -> exit 2, 1x/20 min por sesion
+#   (y tres mas: entregable sin abrir, cierre-informe, y "Sigo con eso." sin nada corriendo —
+#    la lista completa y su medicion estan en la cabecera de cierreGuard.mjs)
 # Con stop_hook_active=true (segundo Stop del mismo turno) siempre deja pasar: sin loops.
 #
 # exit 0 = el turno termina · exit 2 = el stderr vuelve a Claude y el turno sigue.

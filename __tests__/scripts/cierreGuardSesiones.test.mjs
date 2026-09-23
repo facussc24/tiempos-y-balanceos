@@ -308,7 +308,8 @@ describe('cierre-guard · A1: un entregable escrito afuera y nunca abierto no se
     const f = transcriptDe([user('arma la difusion'), asis({ name: 'Bash', input: { command: `python scripts/_pdfBomArb.py --out "${DESK}\\difusion.pdf"` } })]);
     const g = transcriptDe([user('arma la difusion'), asis({ name: 'Bash', input: { command: `python scripts/_pdfBomArb.py --out "${SCR}\\difusion.pdf"` } })]);
     try {
-      expect((await cierre(f, { last_assistant_message: `Sigo con la tabla; el PDF va quedando en ${DESK}\\difusion.pdf.` })).ok).toBe(true);
+      // (hasta el 22/09 decia "Sigo con la tabla; …": ese final lo frena ahora el chequeo 6)
+      expect((await cierre(f, { last_assistant_message: `El PDF va quedando en ${DESK}\\difusion.pdf; a la tabla le falta tu dato de la hoja 2.` })).ok).toBe(true);
       expect((await relevarTranscript(g)).entregables).toEqual([]);
       const reclamos = [];
       const conMemoria = { ...deps, yaReclamado: (sid, k) => reclamos.includes(k), reclamar: (sid, k) => reclamos.push(k) };

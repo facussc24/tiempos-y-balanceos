@@ -9,25 +9,31 @@
  * El 10/09/2026 (Ola A) suma dos chequeos, salidos de las 29 sesiones del 02 al 10/09: ~42
  * correcciones de Fak por afirmar o entregar sin abrir el resultado, ~17 por informe largo.
  *
- * Cinco cosas mide, en este orden, sobre el ULTIMO mensaje del asistente:
+ * Seis cosas mide, en este orden, sobre el ULTIMO mensaje del asistente:
  *   1. la COLA (ultimos 500 caracteres) pide permiso  → exit 2 siempre
  *   2. en este turno escribi/copie algo afuera del repo y el texto no dice la RUTA → exit 2
+ *   6. el ultimo parrafo ANUNCIA trabajo ("Sigo con eso.") y no corre nada en segundo plano que el
+ *      texto diga esperar → exit 2 (22/09/2026: 19 empujes de Fak medidos, "sigo sigo sigo").
+ *      Va antes del 3 porque un anuncio no es un cierre.
  *   3. el texto DECLARA cierre ("listo", "pusheado") y hay pendientes medibles → exit 2,
  *      una vez cada 20 minutos por sesion (cooldown), para no repetir el mismo texto.
  *   4. declara cierre y en la sesion escribi un ENTREGABLE afuera del repo (pdf, xlsx, step…)
  *      que no abri despues de su ultima escritura → exit 2, una vez por (archivo, escritura).
  *   5. declara cierre y el mensaje es un INFORME (mas de 3.000 caracteres, 35 lineas o 2 tablas)
  *      → exit 2, 1x/20 min; exento si Fak pidio el detalle o la sesion esta en modo plan.
+ *      Re-medido el 22/09/2026 contra 65 "no entendi / sintetiza" de Fak: el largo no separa los
+ *      mensajes objetados de los que no, ni en cierres ni en todo turno (cierreCanon, _medicion_22_09).
  * Con stop_hook_active=true (segundo Stop del mismo turno) siempre deja pasar: sin loops.
  *
  * Toda frase vive en cierreCanon.data.json con su fuente (incidente + fecha). Una frase nueva
  * se agrega AHI, nunca como regex suelto aca (feedback_heuristicas_lista_canonica_no_regex_parcial).
  * Tests, en las dos direcciones y con textos reales: __tests__/scripts/cierreGuard*.test.mjs.
  *
- * El transcript se recorre UNA vez (`relevarTranscript`) y de esa pasada salen los cuatro datos
- * que usan los chequeos 2 a 5: lo entregado afuera, los archivos del repo que ESTA sesion toco
+ * El transcript se recorre UNA vez (`relevarTranscript`) y de esa pasada salen los cinco datos
+ * que usan los chequeos 2 a 6: lo entregado afuera, los archivos del repo que ESTA sesion toco
  * (subagentes incluidos: viven en <sesion>/subagents/*.jsonl), los entregables y si se miraron,
- * y el ultimo mensaje de Fak. `archivosTocadosEnSesion` la expone para dev-server-guard.sh.
+ * el ultimo mensaje de Fak, y lo que sigue corriendo en segundo plano (lanzado y sin su
+ * <task-notification> de fin). `archivosTocadosEnSesion` la expone para dev-server-guard.sh.
  *
  * Nota sobre el flag de Supabase: el guard viejo renombraba el flag a `.avisado` al recordarlo.
  * Aca se copia su contenido a `.avisado`, se vacia el flag y se conservan las dos fechas de
@@ -105,6 +111,123 @@ export function tieneRuta(texto) {
 /** ¿El ultimo mensaje de Fak pide el detalle? Entonces un cierre largo no es un informe no pedido. */
 export function pideDetalle(texto) {
   return PIDE_DETALLE.test(normalizar(texto));
+}
+
+// ---------------------------------------------------------------------------------------
+// Chequeo 6: el turno termina ANUNCIANDO trabajo ("Sigo con eso.") y nada lo va a despertar
+// ---------------------------------------------------------------------------------------
+
+const AN = CANON.anuncio_sin_hacer;
+const AN_ORACION = rx(AN.oracion_re);
+const AN_EXCLUYE = rx(AN.excluye_re);
+const AN_FRASE = rx(AN.frase_re);
+const AN_TE_AVISO = rx(AN.te_aviso_re);
+const AN_ESPERA = rx(AN.espera_re);
+
+/** El ultimo parrafo del texto crudo (bloques separados por una linea en blanco). */
+export function ultimoParrafo(texto) {
+  return String(texto ?? '').trim().split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean).at(-1) || '';
+}
+
+/** Oraciones normalizadas; el guion largo y los dos puntos tambien cortan ("Sigo: revierto…"). */
+const oraciones = (p) => normalizar(p).split(/(?<=[.!?;:])\s+|\s+[—–-]\s+/).map((s) => s.trim()).filter(Boolean);
+
+/**
+ * Chequeo 6. ¿El ultimo parrafo ANUNCIA trabajo que el turno no hizo? Mira la primera y la ultima
+ * oracion del parrafo (`oracion_re`, anclado al inicio) y dos formas sueltas (`frase_re`,
+ * `te_aviso_re`). No bloquea si:
+ *   - el parrafo tiene una pregunta (espera una respuesta de Fak; la de permiso es del chequeo 1),
+ *   - hay trabajo en segundo plano sin su aviso de fin Y el texto dice que lo espera (`espera_re`),
+ *   - o dice "te aviso cuando…" y ese trabajo se lanzo DESPUES del ultimo mensaje de Fak.
+ * `bg` = { total, delTurno } de relevarTranscript. Un "Sigo con X" pelado mientras corre OTRA cosa
+ * bloquea igual: e5b1b3cc 21/09 12:43, una busqueda en Y: corria desde las 12:21 y termino 15:15.
+ */
+export function evaluarAnuncio(texto, bg = {}) {
+  const total = bg?.total ?? 0;
+  const delTurno = bg?.delTurno ?? 0;
+  const ult = ultimoParrafo(texto);
+  const n = normalizar(ult);
+  const os = oraciones(ult);
+  const anuncia = (s) => AN_ORACION.test(s) && !AN_EXCLUYE.test(s);
+  const frase = [os[0], os.at(-1)].find((s) => s && anuncia(s)) || n.match(AN_FRASE)?.[0] || n.match(AN_TE_AVISO)?.[0];
+  if (!frase) return { bloquea: false };
+  if (n.includes('?')) return { bloquea: false, motivo: 'pregunta' };
+  if (total > 0 && AN_ESPERA.test(n)) return { bloquea: false, motivo: 'espera lo que corre en segundo plano' };
+  if (delTurno > 0 && AN_TE_AVISO.test(n)) return { bloquea: false, motivo: 'te aviso + algo lanzado en este turno' };
+  return { bloquea: true, frase: frase.slice(0, 140), motivo: total > 0 ? 'corre algo, pero el texto no dice que lo espera' : 'no corre nada en segundo plano' };
+}
+
+// Trabajo en segundo plano: lo lanzado (Bash/PowerShell con run_in_background, Agent asincrono,
+// Workflow, Monitor, un agente retomado con SendMessage) sin su <task-notification> de fin.
+// El id sale del toolUseResult (backgroundTaskId · agentId/taskId con status async_launched ·
+// taskId+timeoutMs del Monitor) o, si falta, del texto del resultado. El aviso de fin llega como
+// queue-operation, attachment o mensaje user segun la version: se lee de la linea CRUDA, y un
+// mismo aviso puede cerrar varias tareas (el "__orphan_summary__" al retomar una sesion).
+const RE_ID_TEXTO = [/Command running in background with ID: ([\w-]+)/, /agentId: ([\w-]+)/, /Monitor started \(task ([\w-]+)/, /Task ID: ([\w-]+)/];
+const LANZA = /^(Bash|PowerShell|Agent|Task|Monitor|Workflow)$/;
+
+export function nuevoBackground() {
+  return { pend: new Map(), agentes: new Map(), usos: new Map() };
+}
+
+function textoResultado(c) {
+  if (typeof c === 'string') return c;
+  if (Array.isArray(c)) return c.map((x) => (typeof x === 'string' ? x : x?.text || '')).join('\n');
+  return '';
+}
+
+/** Procesa UNA linea del transcript (objeto parseado + texto crudo) sobre el estado `bg`. */
+export function registrarBackground(bg, obj, linea) {
+  const ts = obj?.timestamp || '';
+  if (String(linea).includes('<task-notification>')) {
+    for (const trozo of String(linea).split('<task-notification>').slice(1)) {
+      const bloque = trozo.split('</task-notification>')[0];
+      const estado = bloque.match(/<status>([a-z_]+)<\/status>/)?.[1];
+      if (!estado || estado === 'running') continue;          // eventos de Monitor: no son el fin
+      for (const m of bloque.matchAll(/<task-id>([^<]+)<\/task-id>/g)) bg.pend.delete(m[1]);
+    }
+  }
+  const contenido = obj?.message?.content;
+  if (!Array.isArray(contenido)) return;
+  if (obj.type === 'assistant') {
+    for (const b of contenido) {
+      if (b?.type !== 'tool_use') continue;
+      const inp = b.input || {};
+      if (LANZA.test(b.name || '')) {
+        bg.usos.set(b.id, { name: b.name, desc: String(inp.description || inp.command || '').slice(0, 80), nombre: inp.name });
+      } else if (b.name === 'SendMessage') {
+        const id = bg.agentes.get(String(inp.to ?? ''));
+        if (id) bg.pend.set(id, { desc: `agente ${inp.to} (retomado)`, ts });
+      } else if (b.name === 'TaskStop') {
+        bg.pend.delete(String(inp.task_id || inp.shell_id || ''));
+      }
+    }
+  } else if (obj.type === 'user') {
+    const r = obj.toolUseResult && typeof obj.toolUseResult === 'object' ? obj.toolUseResult : {};
+    for (const b of contenido) {
+      if (b?.type !== 'tool_result') continue;
+      const uso = bg.usos.get(b.tool_use_id);
+      if (!uso) continue;
+      bg.usos.delete(b.tool_use_id);
+      let id = r.backgroundTaskId
+        || (r.status === 'async_launched' ? (r.agentId || r.taskId) : null)
+        || (r.taskId && r.timeoutMs !== undefined ? r.taskId : null);
+      if (!id && !b.is_error) {
+        const t = textoResultado(b.content);
+        for (const re of RE_ID_TEXTO) { const m = t.match(re); if (m) { id = m[1]; break; } }
+      }
+      if (!id) continue;
+      bg.pend.set(id, { desc: `${uso.name}: ${uso.desc}`, ts });
+      if (/^(Agent|Task)$/.test(uso.name)) {
+        bg.agentes.set(id, id);
+        if (uso.nombre) bg.agentes.set(String(uso.nombre), id);
+      }
+    }
+  }
+}
+
+export function pendientesBackground(bg) {
+  return [...bg.pend.entries()].map(([id, v]) => ({ id, ...v }));
 }
 
 /** Chequeo 5: ¿el mensaje es un informe? Tablas = bloques de lineas seguidas que arrancan con `|`. */
@@ -395,11 +518,18 @@ function esMensajeRealDeUsuario(obj) {
 async function pasada(archivo, st, { completa, repo }) {
   const rl = readline.createInterface({ input: fs.createReadStream(archivo, 'utf8'), crlfDelay: Infinity });
   for await (const linea of rl) {
-    if (!linea.includes('"tool_use"') && !linea.includes('"type":"user"')) continue;
+    if (!linea.includes('"tool_use"') && !linea.includes('"type":"user"')
+      && !linea.includes('<task-notification>') && !linea.includes('"queued_command"')) continue;
     let obj;
     try { obj = JSON.parse(linea); } catch { continue; }
+    if (completa) registrarBackground(st.bg, obj, linea);
+    // Lo que Fak escribe MIENTRAS trabajo entra como attachment queued_command (commandMode prompt).
+    if (obj.type === 'attachment' && obj.attachment?.type === 'queued_command' && obj.attachment.commandMode === 'prompt') {
+      if (completa) { st.ultimoMensajeFak = String(obj.attachment.prompt || ''); st.ultimoMensajeFakTs = obj.timestamp || ''; }
+      continue;
+    }
     if (obj.type === 'user') {
-      if (completa && esMensajeRealDeUsuario(obj)) { st.ejemplo = null; st.ultimoMensajeFak = textoDeUsuario(obj); }
+      if (completa && esMensajeRealDeUsuario(obj)) { st.ejemplo = null; st.ultimoMensajeFak = textoDeUsuario(obj); st.ultimoMensajeFakTs = obj.timestamp || ''; }
       continue;
     }
     if (obj.type !== 'assistant') continue;
@@ -436,10 +566,16 @@ async function pasada(archivo, st, { completa, repo }) {
  *                       o tool MCP sobre ese archivo DESPUES de su ultima escritura)
  *   sinMirar          — los entregables con mirado=false
  *   ultimoMensajeFak  — texto del ultimo mensaje real de Fak (para el chequeo 5)
+ *   bg                — { total, delTurno, lista }: trabajo en segundo plano lanzado y sin su aviso
+ *                       de fin (chequeo 6). Solo el transcript principal: lo que corre adentro de
+ *                       un subagente lo espera el subagente, no yo.
  */
 export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
   if (!transcriptPath || !fs.existsSync(transcriptPath)) return { fuera: false };
-  const st = { ejemplo: null, huboComando: false, tocados: new Set(), ultimoMensajeFak: '', ent: new Map(), seq: 0 };
+  const st = {
+    ejemplo: null, huboComando: false, tocados: new Set(), ultimoMensajeFak: '', ultimoMensajeFakTs: '', ent: new Map(), seq: 0,
+    bg: nuevoBackground(),
+  };
   await pasada(transcriptPath, st, { completa: true, repo });
   const dirSub = path.join(String(transcriptPath).replace(/\.jsonl$/i, ''), 'subagents');
   let subagentes = [];
@@ -451,6 +587,7 @@ export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
   const entregables = [...st.ent.entries()].map(([nombre, e]) => ({
     nombre, ruta: e.ruta, escritoEn: e.escritoEn, mirado: e.miradoEn > e.escritoEn,
   }));
+  const lista = pendientesBackground(st.bg);
   return {
     fuera: Boolean(st.ejemplo),
     ejemplo: st.ejemplo ?? undefined,
@@ -459,6 +596,12 @@ export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
     entregables,
     sinMirar: entregables.filter((e) => !e.mirado),
     ultimoMensajeFak: st.ultimoMensajeFak,
+    // chequeo 6: lo que sigue corriendo; delTurno = lanzado despues del ultimo mensaje de Fak
+    bg: {
+      total: lista.length,
+      delTurno: lista.filter((p) => !st.ultimoMensajeFakTs || p.ts > st.ultimoMensajeFakTs).length,
+      lista,
+    },
   };
 }
 
@@ -588,6 +731,19 @@ export async function decidir(payload = {}, deps = {}) {
       titulo: 'CIERRE-GUARD: entregaste algo afuera del repo y el cierre no dice DONDE quedo',
       detalle: `En este turno: ${fuera.ejemplo}.\n`
         + 'El mensaje final arranca con la RUTA completa del entregable (Fak la pidio 17 veces en dos semanas: "pasame la ruta"). Repetilo con la ruta.',
+    };
+  }
+
+  // 6. Termina anunciando trabajo ("Sigo con eso.") y no corre nada que lo espere.
+  const an = evaluarAnuncio(texto, fuera?.bg);
+  if (an.bloquea) {
+    return {
+      ok: false,
+      titulo: 'CIERRE-GUARD: el turno termina anunciando trabajo que no hiciste',
+      detalle: `El ultimo parrafo dice "${an.frase}" y ${an.motivo}: si el turno termina aca, nadie lo hace. `
+        + 'Fak, 21/09: "porque decis sigo sigo sigo dale segui y listo no lo digas" (19 veces tuvo que empujar un anuncio asi entre el 03/08 y el 22/09).\n'
+        + 'Si decis que seguis, segui: hacelo ahora, en este mismo turno, y reporta el resultado. Si de verdad estas esperando algo '
+        + '(un agente, el CI, un dato o un OK de Fak), escribilo asi: "Espero X" o "¿…?", sin anunciar trabajo.',
     };
   }
 

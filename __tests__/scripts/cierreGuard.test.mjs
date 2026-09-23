@@ -136,9 +136,12 @@ describe('cierre-guard · decidir (con relevadores inyectados)', () => {
     const r = await decidir({ session_id: 's1', last_assistant_message: 'Listo, quedó todo.' }, { fueraEnEsteTurno: sinFuera, pendientes: conPend, enCooldown: () => true, marcar: noMarcar });
     expect(r.ok).toBe(true);
   });
-  it('NO declara cierre (sigue trabajando) → no consulta pendientes aunque git este sucio', async () => {
+  // Hasta el 22/09 el texto era "Voy por la segunda torreta, falta medir la de atrás.": un turno que
+  // TERMINA asi es justo el anuncio sin hacer que ahora frena el chequeo 6. Lo que este test cuida
+  // (sin cierre declarado no se consultan pendientes) se prueba con un parcial que espera a Fak.
+  it('NO declara cierre (reporta un parcial) → no consulta pendientes aunque git este sucio', async () => {
     let consulto = false;
-    const r = await decidir({ session_id: 's1', last_assistant_message: 'Voy por la segunda torreta, falta medir la de atrás.' }, { fueraEnEsteTurno: sinFuera, pendientes: () => { consulto = true; return conPend(); }, enCooldown: nunca, marcar: noMarcar });
+    const r = await decidir({ session_id: 's1', last_assistant_message: 'Van dos de cuatro torretas medidas; la de atrás espera tu foto con el calibre.' }, { fueraEnEsteTurno: sinFuera, pendientes: () => { consulto = true; return conPend(); }, enCooldown: nunca, marcar: noMarcar });
     expect(r.ok).toBe(true);
     expect(consulto).toBe(false);
   });
@@ -209,8 +212,9 @@ describe('cierre-guard · chequeo 5: un cierre declarado que es un informe no pa
     expect(r.detalle).toMatch(/2 tablas/);
   });
 
-  it('VERDE: el mismo informe sin declarar cierre (sigue trabajando) → pasa', async () => {
-    const r = await decidir({ session_id: 's-largo', last_assistant_message: `${informe}\n\nSigo con el paso 3.` }, deps());
+  // El final era "Sigo con el paso 3." hasta el 22/09: ahora eso lo frena el chequeo 6 (anuncio sin hacer).
+  it('VERDE: el mismo informe sin declarar cierre (espera un dato) → pasa', async () => {
+    const r = await decidir({ session_id: 's-largo', last_assistant_message: `${informe}\n\nEspero tu dato del paso 3 para seguir.` }, deps());
     expect(r.ok).toBe(true);
   });
 

@@ -366,9 +366,32 @@ describe('cierre-guard.sh (Stop) — el wrapper llega a cierreGuard.mjs con el J
     expect(r.err.length).toBeGreaterThan(20);
   });
 
-  it('VERDE: stop_hook_active (segundo Stop del turno) y un mensaje que sigue trabajando → 0', () => {
+  // Hasta el 22/09 el VERDE era "Sigo con el paso 3: corriendo los tests del modulo." con el transcript
+  // vacio: nada corria, y un turno que termina asi es el "sigo sigo sigo" que frena el chequeo 6.
+  it('VERDE: stop_hook_active (segundo Stop del turno) y un parcial que espera a Fak → 0', () => {
     expect(stop('¿Arranco?', { stop_hook_active: true }).exit).toBe(0);
-    const r = stop('Sigo con el paso 3: corriendo los tests del modulo.');
+    const r = stop('Los tests del modulo dan 42 de 42. Espero tu foto de la pieza para el paso 3.');
+    expect(r.exit).toBe(0);
+    expect(r.err).toBe('');
+  });
+
+  it('ROJO (chequeo 6): el turno termina en "Sigo." y no corre nada → 2 con el motivo (e5b1b3cc 21/09 13:24)', () => {
+    const r = stop('Me falta el último tramo: convertir eso a la estructura de la app y escribirlo en Supabase. Sigo.');
+    expect(r.exit).toBe(2);
+    expect(r.err).toMatch(/anunciando trabajo/);
+    expect(r.err).toMatch(/sigo sigo sigo/);
+  });
+
+  // El texto no usa "termine": declaraCierre lo lee como cierre ("termin[eé]" sin acento) y con el
+  // repo sucio el chequeo 3 daria 2 por otro motivo; aca se prueba solo el 6.
+  it('VERDE (chequeo 6): "sigo cuando llegue su aviso" con el agente lanzado y sin su aviso de fin → 0', () => {
+    const conAgente = path.join(TMP, 'transcript-agente.jsonl');
+    fs.writeFileSync(conAgente, [
+      JSON.stringify({ type: 'user', timestamp: '2026-09-02T00:50:00.000Z', message: { content: 'cerra la tarea' } }),
+      JSON.stringify({ type: 'assistant', timestamp: '2026-09-02T00:59:00.000Z', message: { content: [{ type: 'tool_use', id: 'toolu_aud', name: 'Agent', input: { description: 'Auditar el cierre', prompt: 'audita' } }] } }),
+      JSON.stringify({ type: 'user', timestamp: '2026-09-02T00:59:01.000Z', message: { content: [{ type: 'tool_result', tool_use_id: 'toolu_aud', content: 'Async agent launched successfully.' }] }, toolUseResult: { isAsync: true, status: 'async_launched', agentId: 'af2d68113acb20be2' } }),
+    ].join('\n') + '\n');
+    const r = stop('El auditor está corriendo; sigo cuando llegue su aviso.', { transcript_path: posix(conAgente) });
     expect(r.exit).toBe(0);
     expect(r.err).toBe('');
   });
