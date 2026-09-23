@@ -284,8 +284,44 @@
       "labelDown": "SI",
       "branchSide": {
         "labelNode": "NO",
-        "type": "terminal",
-        "text": "SCRAP"
+        "lineWidth": 900,
+        "sequence": [
+          {
+            "type": "condition",
+            "labelCondition": "¿SE PUEDE RETRABAJAR?",
+            "labelDown": "SI",
+            "branchSide": {
+              "labelNode": "NO",
+              "type": "terminal",
+              "text": "SCRAP"
+            },
+            "branchColumnWidth": 330,
+            "branches": [
+              [
+                {
+                  "stepId": "101",
+                  "type": "operation",
+                  "description": "REPROCESO: PUNTADA FLOJA"
+                }
+              ],
+              [
+                {
+                  "stepId": "102",
+                  "type": "operation",
+                  "description": "REPROCESO: MANCHA DE ADHESIVO"
+                }
+              ]
+            ]
+          },
+          {
+            "type": "transfer",
+            "description": "RE-ENTRADA AL FLUJO PRINCIPAL",
+            "rework": {
+              "targetId": "100",
+              "label": "REVERIFICAR (A OP. 100)"
+            }
+          }
+        ]
       }
     },
     {
@@ -306,5 +342,6 @@
   "_mylar": "El control con regla mylar sale de la HO 927 REV6, hoja 90.2 celda L39: 'Alineacion visual de costura utilizando regla Mylar de soporte', responsable OP, frecuencia 1, registro 'Set up 1° pieza OK + Registro control calidad'. Entro en la REV.5 (31/10/2025): las REV.2 y REV.3 no lo tienen. La hoja 120 celda I25 nombra el mismo util como 'plantilla de alineacion de costura'. El mylar es HERRAMIENTA, no material: no esta en la BOM ni en el arb (0 filas), y sus planos viven en Librales Ingenieria\\Mesa de Corte\\MYLAR\\SMRC\\P21 HILO. NO esta declarado en el Plan de Control: es un control que existe en planta y el cliente no lo ve donde lo audita.",
   "_retrabajos": "Los reprocesos 72 a 74 son los que tienen METODO ESCRITO para el P21, y cuelgan del control de adhesivado porque ahi los detecta la hoja: limpieza (HO APB Rev 14, hoja Ret- Limpieza), primer (Ret- primer; Plan de Control P21 rev H, fila 99) y adhesivo (Ret- adhesivo; Plan de Control rev M, Operacion 80.1). AMFE unificado REV09/REV15, OP 150: \"llevar la pieza al lugar donde se origino el defecto\". El tapizado NO se retrabaja (\"no se debe retirar la tela/vinilo luego de colocada\", HO 927 REV.2 hoja 90.2): por eso el NO del control con mylar va a SCRAP. El retrabajo de troquelado con cuter (hoja 110.3) se dio de baja en la HO 927 REV.5 (31/10/2025). La HO 927 hoja 120 dice \"etiqueta roja para posterior scrap o retrabajo\" pero no escribe ningun metodo de retrabajo para la inspeccion final. 23/09/2026: los tres reprocesos se dibujan como caminos ALTERNATIVOS (uno por defecto) que convergen en la re-entrada a la OP 71; hasta hoy iban en serie, como si toda pieza rechazada pasara por los tres. Fak: \"dale corregi lo de los reprocesos\". El motor abre columnas angostas con branchColumnWidth.",
   "_muro": "23/09/2026: la inspeccion final y el muro de calidad son la MISMA operacion (Fak: \"la inspeccion final es en realidad lo mismo que el muro de calidad, unificalos\"). Queda 100 INSPECCION FINAL / MURO DE CALIDAD, con el requisito de la carta de nominacion (SNL Amendment 02-Rev03, pag. 8: 100 % hasta 5.000 piezas buenas consecutivas) en el AMFE 173, y el embalaje pasa a 110. Antes: 100 inspeccion final, 110 muro, 120 embalaje.",
-  "_fecha": "Rev. A emitida el 21/09/2026 (fecha de emision, la del listado maestro). Fecha de revision 23/09/2026: correcciones de la auditoria de cliente antes de mandarlo a SMRC. amfe.md §4bis: la letra no cambia hasta la proxima emision; la fecha de revision se mueve con el ultimo cambio."
+  "_fecha": "Rev. A emitida el 21/09/2026 (fecha de emision, la del listado maestro). Fecha de revision 23/09/2026: correcciones de la auditoria de cliente antes de mandarlo a SMRC. amfe.md §4bis: la letra no cambia hasta la proxima emision; la fecha de revision se mueve con el ultimo cambio.",
+  "_retrabajos_inspeccion_final": "23/09/2026: los dos reprocesos conocidos de la pieza terminada cuelgan de la inspeccion final (OP 100) y vuelven a ella: 101 PUNTADA FLOJA (HO-106 \"Reproceso: puntada floja\", Rev A 14/05/2026, en HOJAS DE OPERACIONES\\4- RETRABAJOS) y 102 MANCHA DE ADHESIVO (sin hoja escrita). Fak: \"unicamente esos 2... son retrabajos conocidos que deben estar declarados, ponelos en un lugar logico\". Resuelve el \"scrap o retrabajo\" sin metodo de la HO 927 hoja 120."
 }

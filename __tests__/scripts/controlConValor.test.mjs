@@ -130,3 +130,31 @@ describe('CONTROL_CON_VALOR — severidad', () => {
         expect(issue.detail).toContain('130 mm');
     });
 });
+
+// CONTROL_CON_CITA — Fak, 23/09/2026, sobre el AMFE 173 que iba al cliente: "hay demasiadas
+// aclaraciones... (OP 21; HO mesa de corte, hoja 28) esa esta al pedo, molestan".
+const cita = (prev, det) => validateAmfeDoc(docConControl(prev, det), 'TEST')
+    .all.filter(i => i.type === 'CONTROL_CON_CITA');
+
+describe('CONTROL_CON_CITA — marca la fuente citada entre parentesis', () => {
+    it('el caso real del 173: (OP 21; HO mesa de corte, hoja 28)', () => {
+        expect(cita(P14, 'Control de forma contra la plantilla mylar (OP 21; HO mesa de corte, hoja 28)')).toHaveLength(1);
+    });
+    it('hoja de operaciones, set up y manual', () => {
+        expect(cita('Guia en el pie de la maquina (HO 927 REV6, hoja 50)', 'Visual')).toHaveLength(1);
+        expect(cita('Programa verificado (SET UP Mesa de corte Rev.G, item 1 J)', 'Visual')).toHaveLength(1);
+        expect(cita('Presion de vacio (manual YIN, p.44)', 'Visual')).toHaveLength(1);
+    });
+    it('NO marca el parentesis que es parte de lo controlado', () => {
+        expect(cita('Corte al borde (+2 / -0)', 'Etiqueta de la mano (RH / LH)')).toHaveLength(0);
+        expect(cita('Hilo especificado (BX138 / 12124E)', 'Visual')).toHaveLength(0);
+    });
+    it('NO marca el instructivo que ES el control, sin parentesis', () => {
+        expect(cita('Instructivo IO-19 con las zonas a cubrir, en el puesto', 'Visual')).toHaveLength(0);
+    });
+    it('es WARNING: no frena un --apply por deuda de otros AMFE', () => {
+        const r = validateAmfeDoc(docConControl('Guia (HO 927 REV6, hoja 50)', 'Visual'), 'TEST');
+        expect(r.warning.some(i => i.type === 'CONTROL_CON_CITA')).toBe(true);
+        expect(r.critical.some(i => i.type === 'CONTROL_CON_CITA')).toBe(false);
+    });
+});

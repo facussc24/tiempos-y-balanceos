@@ -220,6 +220,13 @@ const CONTROL_VALUE_RE = new RegExp(
     'i',
 );
 
+/**
+ * CONTROL_CON_CITA (WARNING) — rules/amfe.md §11. Un parentesis que CITA la fuente del control
+ * (hoja de operaciones, set up, manual, instructivo, procedimiento, plano, OP de origen). No
+ * matchea el parentesis que es parte de lo controlado: (+2 / -0), (RH / LH), (BX138 / 12124E).
+ */
+export const CONTROL_CITA_RE = /\b(HO|hojas?|SET ?UP|manual|IO-\d|I-MT-|P-\d|OP \d|plan de validacion|carta de nominacion|plano|Plan de Control|REV\.?\s?\d|Rev\.?\s?[A-Z0-9])/i;
+
 const CUTTING_OP_PATTERNS = [/CORTE/i, /TROQUELADO/i];
 const CUTTING_FAILURE_PATTERNS = [/\bcort[aeoó]/i, /troquelad/i];
 const REWORK_TERM_PATTERN = /retrabajo/i;
@@ -895,7 +902,18 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                             if (m) {
                                 issues.push({
                                     ...cCtx, type: 'CONTROL_CON_VALOR',
-                                    detail: `${campo} lleva el valor "${m[0].trim()}" — va al Plan de Control, aca se cita el documento`,
+                                    detail: `${campo} lleva el valor "${m[0].trim()}" — va al Plan de Control, no al AMFE`,
+                                });
+                            }
+                            // CONTROL_CON_CITA (WARNING) — rules/amfe.md §11. El control no cita
+                            // entre parentesis de donde sale: Fak, 23/09/2026, sobre el AMFE 173 que
+                            // iba al cliente: "hay demasiadas aclaraciones... (OP 21; HO mesa de corte,
+                            // hoja 28) esa esta al pedo, molestan". La fuente vive en el generador.
+                            const cita = [...txt.matchAll(/\(([^()]*)\)/g)].find(x => CONTROL_CITA_RE.test(x[1]));
+                            if (cita) {
+                                issues.push({
+                                    ...cCtx, type: 'CONTROL_CON_CITA',
+                                    detail: `${campo} cita la fuente entre parentesis "(${cita[1].slice(0, 60)})" — la fuente no va al documento`,
                                 });
                             }
                         }

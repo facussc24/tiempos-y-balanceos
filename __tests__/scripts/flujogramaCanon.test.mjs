@@ -48,9 +48,12 @@ describe('canon de flujogramas', () => {
         it('un MURO DE CALIDAD con operacion+inspeccion es un control, no una transformacion', () => {
             // El 159 lo dibuja porque lo exige la carta de nominacion de SMRC; el gate lo marcaba
             // en rojo porque el nombre no dice CONTROL ni INSPECCION.
-            const muro = ACTUAL.flow.find((n) => n.description === 'MURO DE CALIDAD');
-            expect(muro?.type).toBe('op-ins');
-            expect(reglas(revisarFlujograma(ACTUAL))).not.toContain('opins-sobre-transformacion');
+            // Desde el 23/09/2026 el 159 lo unifica con la inspeccion final ("INSPECCION FINAL /
+            // MURO DE CALIDAD", pedido de Fak), asi que el caso se arma aparte: un nodo que se
+            // llama SOLO "MURO DE CALIDAD", sin la palabra INSPECCION que ya lo salvaria.
+            const conMuro = structuredClone(ACTUAL);
+            conMuro.flow.push({ stepId: '115', type: 'op-ins', description: 'MURO DE CALIDAD' });
+            expect(reglas(revisarFlujograma(conMuro))).not.toContain('opins-sobre-transformacion');
         });
 
         it('ningun flujograma dispara decimal-sin-madre: ninguno usa decimales hoy', () => {

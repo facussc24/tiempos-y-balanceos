@@ -111,9 +111,27 @@ function sinPlanDeControl(texto) {
     .trim();
 }
 
+/**
+ * El documento no cita de donde sale cada control. Fak, 23/09/2026, mirando el Excel que va al
+ * cliente: "hay demasiadas aclaraciones, no aclares tanto... (OP 21; HO mesa de corte, hoja 28)
+ * esa esta al pedo, molestan la verdad". Las fuentes quedan en el codigo de este generador (el
+ * rastro de por que cada fila dice lo que dice); al documento no llegan. Se saca el parentesis
+ * que CITA (hoja, HO, SET UP, manual, instructivo, procedimiento, plano, carta, OP de origen) y
+ * se deja el que es parte de lo que se controla: (+2 / -0), (RH / LH), (BX138 / 12124E).
+ */
+const CITA = /\b(HO|hojas?|SET ?UP|manual|IO-\d|I-MT-|P-\d|OP \d|plan de validacion|carta de nominacion|plano|REV\.?\s?\d|Rev\.?\s?[A-Z0-9])/i;
+function sinCitas(texto) {
+  if (typeof texto !== 'string') return texto;
+  return texto
+    .replace(/\s*\(([^()]*)\)/g, (todo, adentro) => (CITA.test(adentro) ? '' : todo))
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+([,.;:)])/g, '$1')
+    .trim();
+}
+
 function causa(descripcion, prevControl, O, detControl, D, extra = {}) {
-  prevControl = sinPlanDeControl(prevControl);
-  detControl = sinPlanDeControl(detControl);
+  prevControl = sinCitas(sinPlanDeControl(prevControl));
+  detControl = sinCitas(sinPlanDeControl(detControl));
   return {
     id: id(),
     cause: descripcion,
@@ -188,7 +206,7 @@ function sc(caracteristica, siglaCliente) {
 }
 
 function funcion(descripcion, requisitos, fallas) {
-  requisitos = sinPlanDeControl(requisitos);
+  requisitos = sinCitas(sinPlanDeControl(requisitos));
   return { id: id(), description: descripcion, functionDescription: descripcion, requirements: requisitos, failures: fallas };
 }
 function we(type, name, funciones) {
@@ -566,7 +584,7 @@ const OP20 = operacion('20', 'CORTE DE VINILO',
               'Reset del contador de capas y cantidad segun la planilla de mesa de corte (HO mesa de corte, hoja 23)',
               4, 'Control visual de la cantidad de capas en el set up (SET UP Mesa de corte Rev.G, item 1 A; Plan de Control rev M, Operacion 20.2)', 9),
           ]),
-          falla('Largo de capa distinto del de la planilla (largo de tizada mas demasia)', EF_SCRAP_INTERNO, [
+          falla('Largo de capa distinto del de la planilla', EF_SCRAP_INTERNO, [
             causa('El largo de la capa se ingresa a mano en el panel',
               'Largo de tizada y demasia indicados en la planilla de mesa de corte (HO mesa de corte, hoja 23)',
               4, 'Medicion del largo con regla en la primera capa de cada tizada (HO mesa de corte, hoja 23)', 6),
@@ -684,7 +702,7 @@ const OP20 = operacion('20', 'CORTE DE VINILO',
             // puesto. Queda como diferencia para que la resuelvan Fak y Seguridad e Higiene.
             causa('El documento de EPP por puesto no le asigna guantes anticorte a la mesa de corte',
               'Verificacion de EPP en la ficha de liberacion de inicio de produccion (SET UP Mesa de corte Rev.G), item 7 A, contra la matriz de EPP por puesto',
-              6, 'Control del uso de EPP en el set up y en el recorrido de turno: da OK contra una matriz que no incluye el guante', 9),
+              6, 'Control del uso de EPP en el set up y en el recorrido de turno', 9),
           ]),
           falla('Sobreesfuerzo al trasladar y cargar el rollo en la mesa', EF_SEG_OPERARIO, [
             // HO mesa de corte, hoja 20: el rollo se busca en el deposito y se lleva a la mesa
@@ -926,7 +944,7 @@ const OP40 = operacion('40', 'COSTURA DE UNION',
           falla('Iluminacion del puesto por debajo del nivel requerido', EF_ASPECTO, [
             causa('La luminaria del puesto no esta en el plan de mantenimiento preventivo',
               'Iluminacion en el sector y en la maquina de costura',
-              5, 'Medicion con luxometro segun el plan de mediciones (periodica, no por turno)', 9),
+              5, 'Medicion con luxometro segun el plan de mediciones', 9),
           ]),
         ]),
     ]),
@@ -1075,7 +1093,7 @@ const OP50 = operacion('41', 'COSTURA VISTA - PESPUNTE SIMPLE, UNA LINEA',
           falla('Iluminacion del puesto por debajo del nivel requerido', EF_ASPECTO, [
             causa('La luminaria del puesto no esta en el plan de mantenimiento preventivo',
               'Iluminacion en el sector y en la maquina de costura',
-              5, 'Medicion con luxometro segun el plan de mediciones (periodica, no por turno)', 9),
+              5, 'Medicion con luxometro segun el plan de mediciones', 9),
           ]),
         ]),
     ]),
@@ -1412,7 +1430,7 @@ const OP90A = operacion('80', 'ACTIVADO DEL ADHESIVO EN HORNO',
           falla('Adhesivo que sale del horno por debajo de su temperatura de activado', EF_DESPEGUE, [
             causa('El horno se habilita para trabajar antes de estabilizar su temperatura',
               'Horno calibrado a una temperatura de corte de 66 C, minimo de 55 C para la primera pieza y ciclo de 150 a 180 s (HO 927 REV6, hoja 90.1)',
-              4, 'Control visual del pegado en el tapizado y en la inspeccion final (aguas abajo)', 8),
+              4, 'Control visual del pegado en el tapizado y en la inspeccion final', 8),
           ]),
           falla('Pieza sobrecalentada en el horno', EF_ASPECTO, [
             causa('La pieza queda en el horno mas alla del ciclo cuando el puesto siguiente esta ocupado',
@@ -1449,7 +1467,7 @@ const OP90 = operacion('81', 'TAPIZADO',
           // Control rev M lo tiene en la Operacion 100 con el reclamo al lado. La Rev.A no lo
           // tenia en ninguna fila. Nace aca (vinilo que no se estira hasta el borde) o en el
           // refilado (OP 90, corte de mas).
-          falla('Vinilo que no llega hasta el borde del sustrato (vinilo corto)', EF_ASPECTO, [
+          falla('Vinilo que no llega hasta el borde del sustrato', EF_ASPECTO, [
             causa('El vinilo no se estira hasta el borde en las curvas del sustrato',
               'Secuencia de tapizado con espatula del centro hacia los bordes para asegurar cobertura completa (HO 927 REV6, hoja 90.2)',
               6, 'Control visual del vinilo hasta el borde contra pieza patron y biblia de defectos, al 100 % en la inspeccion final (HO 927 REV6, hoja 120)', 8),
@@ -1546,7 +1564,7 @@ const OP100 = operacion('90', 'REFILADO CON MASCARA',
         'Refilar el sobrante al ras del sustrato siguiendo la mascara',
         'Vinilo hasta el borde superior del plastico, o separacion dentro del maximo de 4,5 mm; sin excedentes; 17 orificios libres; zona de soldadura sin restos (HO 927 REV6, hoja 100; Plan de Control rev M, Operaciones 100.2 y 120)',
         [
-          falla('Vinilo refilado de mas: no llega hasta el borde del sustrato (vinilo corto)', EF_ASPECTO, [
+          falla('Vinilo refilado de mas, que no llega hasta el borde del sustrato', EF_ASPECTO, [
             causa('El cuter se inclina durante el recorrido y corta por dentro del borde',
               'Mascara de refilado y cuter perpendicular al plano de la pieza en todo el recorrido (HO 927 REV6, hoja 100)',
               5, 'Control visual del vinilo hasta el borde contra el limite maximo de separacion, y al 100 % en la inspeccion final (HO 927 REV6, hoja 120)', 8),
@@ -1701,7 +1719,7 @@ const OP120 = operacion('100', 'INSPECCION FINAL / MURO DE CALIDAD',
         ]),
       funcion(
         'Verificar que el apoyabrazos ensamblado cumple los ensayos de validacion del cliente',
-        'SC 3.1 fogging (B62 0400), 3.2 frotamiento (D45 1010), 3.3 flexibilidad, 3.4 esfuerzo excepcional y 3.5 solicitacion dinamica (ST 01439), 3.6 envejecimiento climatico (D47 1309), 3.7 usura (D14 1055 y D47 1309). Los siete quedaron a cargo de SMRC en el plan de validacion del 31/07/2026',
+        'SC 3.1 fogging (B62 0400), 3.2 frotamiento (D45 1010), 3.3 flexibilidad, 3.4 esfuerzo excepcional y 3.5 solicitacion dinamica (ST 01439), 3.6 envejecimiento climatico (D47 1309), 3.7 usura (D14 1055 y D47 1309)',
         [
           falla('Apoyabrazos ensamblado que no cumple un ensayo de validacion del cliente', EF_PIEZA_DISTINTA, [
             causa('La pieza se fabrica con una combinacion de sustrato y recubrimiento que no reproduce la que se valido',
@@ -1712,10 +1730,56 @@ const OP120 = operacion('100', 'INSPECCION FINAL / MURO DE CALIDAD',
               // documento una deteccion propia que no existe.
               // La O tampoco puede ser 2: P2-2 exige "carryover application" con historial de
               // capacidad en serie, y esta combinacion de sustrato y recubrimiento es nueva.
-              4, 'Sin control propio: los ensayos B62 0400, D45 1010, ST 01439, D47 1309 y D14 1055 quedaron a cargo de SMRC en el plan de validacion del 31/07/2026', 10,
+              4, 'Ensayos de validacion a cargo de SMRC', 10,
               sc('SC 3.1 a 3.7', 'cc/h')),
           ]),
         ]),
+    ]),
+  ]);
+
+// ===========================================================================
+// OP 101 y 102 — LOS REPROCESOS DE LA INSPECCION FINAL
+// ===========================================================================
+// Fak, 23/09/2026: "retrabajo de puntada, ya tenemos un instructivo hecho, puntada floja...
+// borrado de la mancha de adhesivo, unicamente esos 2... son retrabajos conocidos que deben estar
+// declarados, ponelos en un lugar logico". Los dos se hacen sobre la pieza TERMINADA y se detectan
+// en la inspeccion final (OP 100): cuelgan de ella, como los 72-74 cuelgan del control de
+// adhesivado, y vuelven a reverificarse en la OP 100. Resuelve el pendiente de la HO 927 hoja 120,
+// que decia "etiqueta roja para posterior scrap o retrabajo" sin decir cual retrabajo.
+//   - Puntada floja: HO-106 "Reproceso: puntada floja", Rev A del 14/05/2026 (F.Santoro / G.Cal),
+//     en HOJAS DE OPERACIONES\4- RETRABAJOS. Aguja Nm140 del lado interno, tensar el hilo,
+//     cauterizar con encendedor del lado interno, verificar la tension pasando la aguja bajo el
+//     hilo. OJO: la hoja nombra solo los codigos de AMAROK.
+//   - Mancha de adhesivo: no tiene hoja escrita. Sin control preventivo (O=10, P2 oficial).
+const reprocesoFinal = (numero, nombre, funcionOp, requisito, fallas) => operacion(numero, nombre,
+  funcionOp, requisito, [we('Metodo', 'Reproceso manual de la pieza terminada', [
+    funcion(funcionOp, requisito, fallas),
+  ])]);
+
+const OP_RET_PUNTADA = reprocesoFinal('101', 'REPROCESO: PUNTADA FLOJA',
+  'Tensar y fijar la puntada floja de la costura vista de la pieza terminada',
+  'Costura vista con la tension correcta y sin marcas en el vinilo',
+  [
+    falla('Puntada que sigue floja despues del reproceso', EF_COSTURA, [
+      causa('La tension del hilo se da a mano con la aguja',
+        'Hoja de reproceso HO-106 de puntada floja, con la verificacion de la tension',
+        4, 'Verificacion de la tension con la aguja en cada pieza reprocesada, y reverificacion en la OP 100', 8),
+    ]),
+    falla('Vinilo quemado o marcado al cauterizar el hilo', EF_ASPECTO, [
+      causa('El hilo se cauteriza con un encendedor cerca del vinilo',
+        'Cauterizado del lado interno de la pieza, segun la hoja de reproceso HO-106',
+        4, 'Control visual de la pieza reprocesada y reverificacion en la OP 100', 8),
+    ]),
+  ]);
+
+const OP_RET_MANCHA = reprocesoFinal('102', 'REPROCESO: MANCHA DE ADHESIVO',
+  'Borrar la mancha de adhesivo de la cara vista de la pieza terminada',
+  'Cara vista sin restos de adhesivo ni marcas del borrado',
+  [
+    falla('Cara vista con restos de adhesivo o marcada despues del borrado', EF_ASPECTO, [
+      causa('El borrado se hace a mano y sin un metodo escrito',
+        'Sin control preventivo',
+        10, 'Reverificacion en la OP 100: control visual al 100 % contra la biblia de defectos', 8),
     ]),
   ]);
 
@@ -1757,7 +1821,7 @@ const OP130 = operacion('110', 'EMBALAJE E IDENTIFICACION',
           falla('Pieza de una mano embalada en el medio de la otra (RH / LH)', EF_PARO_LINEA, [
             causa('Las piezas RH y LH son simetricas y se embalan en el mismo sector',
               'Cada pieza lleva su etiqueta con la mano identificada (HO 927, hoja de identificacion)',
-              5, 'Sin control de la mano de cada pieza al armar el medio: la hoja de embalaje no lo pide', 10),
+              5, 'Sin control de la mano de cada pieza al armar el medio', 10),
           ]),
           // La Rev.A decia "el medio no tiene separadores". La HO 927 hoja 130 dice lo contrario:
           // carton en la base "para que no se ensucien o rallen las piezas" y un carton por piso.
@@ -1774,7 +1838,7 @@ const OP130 = operacion('110', 'EMBALAJE E IDENTIFICACION',
   ]);
 
 // En el orden del flujograma. La Rev.A tenia la 71 antes que la 70.
-const OPERACIONES = [OP10, OP20, OP21, OP30, OP40, OP50, OP60, OP70, OP80, OP71, OP72, OP73, OP74, OP90A, OP90, OP82, OP100, OP110, OP120, OP130];
+const OPERACIONES = [OP10, OP20, OP21, OP30, OP40, OP50, OP60, OP70, OP80, OP71, OP72, OP73, OP74, OP90A, OP90, OP82, OP100, OP110, OP120, OP_RET_PUNTADA, OP_RET_MANCHA, OP130];
 
 const doc = {
   header: {
@@ -1884,7 +1948,7 @@ if (tbd) errores.push(`${tbd} campos con TBD: el documento va al cliente sin TBD
 // 90-91 refilado con mascara y troquelado · 100 inspeccion final · 110 embalaje.
 // 22/09/2026 (tarde): se suman los reprocesos 72-74 del adhesivado y el muro de calidad (110),
 // y el embalaje pasa a 120.
-const DEL_FLUJOGRAMA = ['10', '20', '21', '30', '40', '41', '60', '61', '70', '71', '72', '73', '74', '80', '81', '82', '90', '91', '100', '110'];
+const DEL_FLUJOGRAMA = ['10', '20', '21', '30', '40', '41', '60', '61', '70', '71', '72', '73', '74', '80', '81', '82', '90', '91', '100', '101', '102', '110'];
 const mias = doc.operations.map((o) => o.opNumber);
 for (const n of DEL_FLUJOGRAMA) if (!mias.includes(n)) errores.push(`falta la OP ${n} del flujograma 159`);
 for (const n of mias) if (!DEL_FLUJOGRAMA.includes(n)) errores.push(`la OP ${n} no existe en el flujograma 159`);
