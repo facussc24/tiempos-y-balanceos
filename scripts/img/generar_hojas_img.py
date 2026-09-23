@@ -566,6 +566,11 @@ def portada(prs, d, logo=None, foto=None, indice=None):
     y_body = M + cab_h + 0.35
     fw = 13.80
     bh = H - M - y_body - 0.10
+    # La foto va CENTRADA en el alto libre, no pegada arriba: Fak la bajo a mano el
+    # 23/09/2026 ("la imagen queda mejor ahi centrada") y pidio que valga para las proximas.
+    # La HOTMELT (scripts/hotmelt/hoja_pptx.py) ya la centraba. `foto_top` / `foto_dx`
+    # guardan una posicion puesta a mano en un deck ya entregado, para no movérsela.
+    fdx = d.get("foto_dx", 0.0)
     if foto and os.path.exists(foto):
         im = Image.open(foto)
         ar = im.width / im.height
@@ -577,9 +582,10 @@ def portada(prs, d, logo=None, foto=None, indice=None):
         # el recuadro se ajusta a la FOTO, no al reves: si no, una foto apaisada deja dos
         # bandas blancas arriba y abajo y parece que falta algo
         bh_real = min(bh, ih + 0.20)
-        _caja(slide, X0 + 0.10, y_body, fw, bh_real, BLANCO, borde=AZUL, ancho=Pt(1))
-        slide.shapes.add_picture(foto, Cm(X0 + 0.10 + (fw - iw) / 2),
-                                 Cm(y_body + (bh_real - ih) / 2), Cm(iw), Cm(ih))
+        top = d.get("foto_top", y_body + (bh - bh_real) / 2)
+        _caja(slide, X0 + 0.10 + fdx, top, fw, bh_real, BLANCO, borde=AZUL, ancho=Pt(1))
+        slide.shapes.add_picture(foto, Cm(X0 + 0.10 + fdx + (fw - iw) / 2),
+                                 Cm(top + (bh_real - ih) / 2), Cm(iw), Cm(ih))
     else:
         _caja(slide, X0 + 0.10, y_body, fw, bh, BLANCO, borde=AZUL, ancho=Pt(1))
 
@@ -961,9 +967,12 @@ PORTADA_IMG = dict(
     cliente_modelo="VW / PATAGONIA",
     pieza="TOP ROLL PATAGONIA — N 216 / N 256 / N 285 / N 315",
     maquina="Moldeadora In-Mold Graining KINGPOWER (Molde Hembra)",
-    firmas="F. Santoro / —",
+    # Fak, 23/09/2026, editando la portada a mano antes de mandarla a aprobar
+    firmas="F. Santoro / C. Baptista",
     fecha_rev="23/09/2026",
     foto=os.path.join(BASE_DIR, "assets2", "p1_listo.jpg"),
+    foto_dx=0.1,          # donde la dejo Fak en este deck; los nuevos van centrados
+    foto_top=7.56666,
 )
 
 A2 = os.path.join(BASE_DIR, "assets2")
@@ -975,10 +984,11 @@ def _f(n):
 
 # ════════════════════════════════════════════════════════════════════════════
 # LAS HOJAS — en el orden de la jornada del operario (hojas-proceso.md §17)
-#   30.1-30.2  prender la maquina y conocer el puesto
-#   30.3-30.4  el vinilo: montar el rollo, enhebrarlo y darle material
-#   30.5       arrancar en automatico (el primer corte lo hace la maquina)
-#   30.6-30.7  cada ciclo: descargar, cargar sustratos y controlar la pieza
+#   Numeradas 31 a 37 por pedido de Fak (23/09/2026); la OP del flujograma sigue siendo la 30.
+#   31-32  prender la maquina y conocer el puesto
+#   33-34  el vinilo: montar el rollo, enhebrarlo y darle material
+#   35     arrancar en automatico (el primer corte lo hace la maquina)
+#   36-37  cada ciclo: descargar, cargar sustratos y controlar la pieza
 #   El APAGADO no esta filmado: esta en QUE FALTA FILMAR (falta_filmar.py), bloque 1.
 #
 # Todo lo que dice una hoja sale de un video de planta identificado. Lo que nadie filmo
@@ -1028,7 +1038,7 @@ def gate_materiales_del_deck(hojas):
 HOJAS_IMG = [
     # ── PRENDER Y CONOCER EL PUESTO ──────────────────────────────────────────
     dict(
-        op="30.1",
+        op="31",
         denominacion="ENCENDIDO GENERAL Y PUESTA EN MARCHA DE SERVICIOS",
         modo="secuencia",
         imagenes=[_f("e1_llave.jpg"), _f("e2_power.jpg"), _f("n3_servicios.jpg")],
@@ -1064,14 +1074,14 @@ HOJAS_IMG = [
     ),
 
     dict(
-        op="30.2",
+        op="32",
         denominacion="RECONOCIMIENTO DEL PUESTO DE MANDO",
         modo="rotulada",
         imagenes=[_f("r_puesto.jpg")],
         pasos=[
             "Usar la pantalla táctil para elegir el modo y prender los servicios: los "
             "parámetros no se tocan.",
-            "Usar la botonera para arrancar y parar el ciclo, como indica la hoja 30.5.",
+            "Usar la botonera para arrancar y parar el ciclo, como indica la hoja 35.",
             "Presionar el botón de parada de emergencia ante cualquier riesgo: hay uno en la "
             "caja colgante y otro en el panel.",
             "Prender y apagar el atemperador desde la pantalla de la máquina (Mold Temp 1 y "
@@ -1104,7 +1114,7 @@ HOJAS_IMG = [
 
     # ── EL VINILO ────────────────────────────────────────────────────────────
     dict(
-        op="30.3",
+        op="33",
         denominacion="ENHEBRADO DEL VINILO EN EL DESENROLLADOR",
         modo="secuencia",
         imagenes=[_f("y0_rollo_cuna.jpg"), _f("x2_enhebrar.jpg"),
@@ -1149,7 +1159,7 @@ HOJAS_IMG = [
     ),
 
     dict(
-        op="30.4",
+        op="34",
         denominacion="AVANCE DEL VINILO CON LOS SELECTORES",
         modo="secuencia",
         imagenes=[_f("x6b_alimentacion.jpg"), _f("x4b_selectores.jpg"), _f("x8_lazo.jpg")],
@@ -1194,7 +1204,7 @@ HOJAS_IMG = [
 
     # ── ARRANCAR ─────────────────────────────────────────────────────────────
     dict(
-        op="30.5",
+        op="35",
         denominacion="ARRANQUE DE LA MAQUINA EN MODO AUTOMATICO",
         modo="rotulada",
         imagenes=[_f("r2_botonera.jpg")],
@@ -1239,7 +1249,7 @@ HOJAS_IMG = [
 
     # ── CADA CICLO ───────────────────────────────────────────────────────────
     dict(
-        op="30.6",
+        op="36",
         denominacion="DESCARGA DE PIEZAS Y CARGA DE SUSTRATOS",
         modo="secuencia",
         imagenes=[_f("d1_pieza.jpg"), _f("d2_vinilo.jpg"),
@@ -1282,7 +1292,7 @@ HOJAS_IMG = [
     ),
 
     dict(
-        op="30.7",
+        op="37",
         denominacion="CONTROL DE PIEZA TERMOFORMADA",
         modo="secuencia",
         # Los "tres puntitos" salieron el 23/09. Fak: «esa foto de los 3 puntos entendiste

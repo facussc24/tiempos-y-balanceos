@@ -491,6 +491,11 @@ en el pie: *"la franja es advertencia de esta hoja, no del HMI"*.
 Una hoja = una operacion. Bloques: cajetin · IMAGENES · DESCRIPCION DE LA OPERACION ·
 CICLO DE CONTROL · ELEMENTOS DE SEGURIDAD · PLAN DE REACCION.
 
+- **Portada** (Fak, 23/09/2026, corrigiendola a mano antes de mandarla a aprobar, *"la imagen
+  queda mejor ahi centrada"* y *"asi las aplicas para las proximas"*): la foto de la maquina va
+  **centrada vertical en el alto libre**, no pegada arriba; y **Realizó / Aprobó = F. Santoro /
+  C. Baptista**: las hojas de proceso de Ingenieria las aprueba Carlos Baptista. Lo cumplen
+  `portada()` de `scripts/img/generar_hojas_img.py` y de `scripts/hotmelt/hoja_pptx.py`.
 - **Resp.** solo `OP` / `OC` / `Insp.`  · **Registro** solo `Set up` o `-`, nunca "RC".
 - Pasos: frases cortas, imperativas, una accion por renglon. Sin "BORRADOR" ni "pendiente".
 - **Sin foto -> recuadro VACIO**, no una leyenda que diga que falta.

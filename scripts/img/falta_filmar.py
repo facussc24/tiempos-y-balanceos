@@ -63,7 +63,7 @@ TOMAS = [
          "El IMG_0393 EMPIEZA con el rollo ya montado, y ningun otro video ni audio lo muestra."),
         ("Como se traba el eje en la cuna",
          "El tope del eje se corre contra el rollo y se ajusta con su perilla (IMG_0579 min "
-         "0:12 a 0:25, ya esta en la 30.3). Falta como queda trabado el eje en la cuna."),
+         "0:12 a 0:25, ya esta en la 33). Falta como queda trabado el eje en la cuna."),
         ("Como se centra el rollo a lo ancho y contra que referencia",
          "Ninguna toma lo muestra y nadie lo dice."),
         ("Para que lado va la cara buena, y si la punta sale por arriba o por abajo",
@@ -120,7 +120,7 @@ TOMAS = [
          "ninguna foto se ve cual es esa luz."),
         ("En que momento exacto se puede entrar al molde en cada ciclo",
          "IMG_0844 min 6:42 a 6:48: «preguntale cuando se puede entrar... cuando la mesa "
-         "empieza a» y se corta. La hoja 30.6 dice: cuando los expulsores levantan las piezas."),
+         "empieza a» y se corta. La hoja 36 dice: cuando los expulsores levantan las piezas."),
         ("Si la maquina frena cuando falta un sustrato, o solo apaga la luz y sigue",
          "Del audio solo sale que la luz se apaga (IMG_0579). Probarlo: sacar uno y ver si "
          "arranca."),
@@ -137,22 +137,22 @@ TOMAS = [
          "En IMG_0844 trabajan dos («yo la de abajo, yo la de arriba»); confirmar si en serie "
          "son dos."),
     ]),
-    ("5 · EL ARRANQUE Y EL CICLO — lo que las hojas 30.5 y 30.6 no pueden decir", [
+    ("5 · EL ARRANQUE Y EL CICLO — lo que las hojas 35 y 36 no pueden decir", [
         ("Cual es el boton negro: el de la caja colgante o los de los costados del molde",
          "«Boton verde y despues boton negro» (IMG_0842 min 0:00). Hay un hongo negro en la "
          "caja colgante y otro en cada columna del frente del molde (fotograma 0844_10)."),
         ("Que se aprieta para que arranque el ciclo siguiente",
-         "La 30.6 termina con los sustratos puestos; nadie dice si se vuelve a apretar el "
+         "La 36 termina con los sustratos puestos; nadie dice si se vuelve a apretar el "
          "verde y el negro en cada ciclo."),
         ("Como se vuelve a arrancar en automatico despues de una pausa",
          "IMG_0395 min 0:05: «tengo paradas durante 10 minutos y quiero volver a arrancar "
          "en automatico». La respuesta no se entiende en el audio."),
         ("Si los ocho servicios van siempre en verde, o Mold Temp 2 depende del molde",
-         "La 30.1 pide los 8 en verde (el tecnico: «prender todos los servicios», IMG_0579 "
+         "La 31 pide los 8 en verde (el tecnico: «prender todos los servicios», IMG_0579 "
          "min 6:22). En automatico, el 10/09, Mold Temp 2 estaba apagado (IMG_0840 s=4, la "
-         "foto de la 30.5)."),
+         "foto de la 35)."),
         ("Si el material queda enhebrado de un dia para el otro",
-         "Define si la 30.3 y la 30.4 se hacen todos los dias o solo con rollo nuevo."),
+         "Define si la 33 y la 34 se hacen todos los dias o solo con rollo nuevo."),
     ]),
     ("6 · LAS TOMAS QUE MEJORARIAN LO QUE YA HAY", [
         ("Las manos apretando, de frente y quietas: RESET azul, arranque verde, paro rojo",
@@ -161,7 +161,7 @@ TOMAS = [
         ("La pieza recien sacada, entera y sola sobre la mesa",
          "Hoy siempre se ve en las manos o de lejos."),
         ("Una pieza con cada defecto al lado de una buena: globito y despegue",
-         "Para el plan de reaccion de la 30.7: que el operario sepa que esta mirando."),
+         "Para el plan de reaccion de la 37: que el operario sepa que esta mirando."),
     ]),
 ]
 
