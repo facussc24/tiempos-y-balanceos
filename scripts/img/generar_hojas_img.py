@@ -886,9 +886,37 @@ def _gate_una_foto_por_paso(d):
                              f"palabras; lo largo va en el paso, no abajo de la foto.")
 
 
+# Lo que Fak ya corrigio en ESTE deck y no puede volver. No va al vocabulario del skill:
+# ahi la regla mira la misma frase, y "apoyar las piezas en el caballete" no tiene ninguna
+# palabra de termoformado; ademas un caballete si existe en otros puestos.
+CORREGIDO_POR_FAK = [
+    (r"\bcaballetes?\b", "mesa",
+     "Fak, 23/09/2026: «las piezas que salen de la maquina se colocan en una mesa, no en un "
+     "caballete»"),
+    (r"\btres puntitos\b|\b3 puntitos\b", "(sacarlo)",
+     "Fak, 23/09/2026: «esa foto de los 3 puntos entendiste mal, es cualquier cosa, saca eso»"),
+]
+
+
+def _gate_corregido_por_fak(d):
+    """Una correccion de Fak que vuelve a aparecer es el mismo error dos veces."""
+    import re
+    op = d.get("op", "?")
+    piezas = [str(d.get("denominacion", "")), str(d.get("nota") or ""),
+              str(d.get("disparador") or "")]
+    piezas += [str(x) for x in (d.get("pasos") or []) + (d.get("pies") or [])
+               + (d.get("acciones") or [])]
+    todo = " ".join(piezas).lower()
+    for pat, en_vez, fuente in CORREGIDO_POR_FAK:
+        m = re.search(pat, todo)
+        if m:
+            raise SystemExit(f"hoja {op}: dice \"{m.group(0)}\" -> {en_vez}. {fuente}")
+
+
 def hoja(prs, d, logo=None):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     cajetin(slide, d, logo)
+    _gate_corregido_por_fak(d)
     _gate_una_foto_por_paso(d)
     _gate_texto_para_el_operario(d)
     _gate_cada_paso_con_fuente(d)
@@ -1011,8 +1039,8 @@ HOJAS_IMG = [
         pasos=[
             "Girar la llave general del tablero a la posición I.",
             "Apretar el botón verde POWER START del tablero y esperar a que quede encendido.",
-            "Prender los servicios desde la pantalla: apretar la fila de abajo hasta que los "
-            "ocho queden en verde.",
+            "Prender los servicios desde la pantalla: apretar cada botón de la fila de abajo "
+            "hasta que los ocho queden en verde.",
         ],
         parametros=[
             ("Servicios a prender", "los 8 de la fila de abajo"),
@@ -1046,8 +1074,8 @@ HOJAS_IMG = [
             "Usar la botonera para arrancar y parar el ciclo, como indica la hoja 30.5.",
             "Presionar el botón de parada de emergencia ante cualquier riesgo: hay uno en la "
             "caja colgante y otro en el panel.",
-            "Prender y apagar el atemperador desde la pantalla de la máquina, no desde su "
-            "display.",
+            "Prender y apagar el atemperador desde la pantalla de la máquina (Mold Temp 1 y "
+            "2), no desde su display.",
             "Respetar los carteles del puesto: no entra personal no autorizado y la máquina "
             "se apaga cuando no se usa.",
         ],
@@ -1058,7 +1086,10 @@ HOJAS_IMG = [
             "IMG_0801 (09-09-2026) s=1,1: la botonera del puesto, se ve en la foto",
             "IMG_0801 s=1,1: el hongo rojo de la caja colgante y el del panel, los dos en la foto",
             "IMG_0596 (02-09-2026) min 0:30 a 0:34, frente a los equipos de agua: «todo eso "
-            "se maneja de alla, de la pantalla»; el atemperador (水式模温机) se ve en la foto",
+            "se maneja de alla, de la pantalla»; el atemperador (水式模温机, maquina de temperatura "
+            "de molde) se ve en la foto, y en la fila de servicios son Mold Temp 1 y Mold "
+            "Temp 2 (IMG_0579 min 6:22 a 6:41: «refrigeracion, que es chiller y es "
+            "atemperador»)",
             "IMG_0801 s=1,1: los carteles «NO ENTRY to unauthorised persons» y «TURN OFF "
             "MACHINE WHEN NOT IN USE»",
         ],
@@ -1081,7 +1112,7 @@ HOJAS_IMG = [
         pies=["El rollo en la cuna, con el tope del eje",
               "La punta entre las barras y el rodillo",
               "La punta por debajo del sensor",
-              "El material derecho, del rollo a la mesa"],
+              "El material del rollo, sin torcerse"],
         sin_marcas_ok=True,
         pasos=[
             "Montar el rollo de vinilo con su eje en la cuna del desenrollador y ajustar la "
@@ -1089,7 +1120,7 @@ HOJAS_IMG = [
             "Pasar la punta del material entre las barras guía naranjas y el rodillo verde.",
             "Apoyar la punta sobre la mesa de carga, pasarla por debajo del sensor y "
             "alisarla con la mano.",
-            "Verificar que el material corra derecho del rollo a la mesa, sin arrugas.",
+            "Verificar que el material salga del rollo sin torcerse ni arrugarse.",
         ],
         nota="El sensor de la mesa es el que detecta si el material quedó bien pasado: "
              "si la punta no pasa por debajo, volver a pasarla.",
@@ -1134,9 +1165,9 @@ HOJAS_IMG = [
             "Dejar siempre el material colgando entre el desenrollador y la mesa de carga, "
             "sin tensar.",
         ],
-        nota="UNCOILER y Leather Convey se usan solo cuando falta material colgando. En "
-             "automático el corte lo hace la máquina sola: los selectores de la botonera de "
-             "atrás (mordaza de tiro, placas y cuchilla) son para mover la máquina a mano.",
+        nota="UNCOILER y Leather Convey se usan solo cuando falta material colgando. La "
+             "botonera de atrás (mordaza de tiro, placas y cuchilla) no se usa en automático: "
+             "el corte lo hace la máquina sola.",
         fuentes=[
             "IMG_0661 (04-09-2026) s=30: en la pantalla, cuadro «Operacion del Equipo», se lee "
             "«Seleccion Lamina Alimentacion: Cuero en rollo»",
@@ -1174,12 +1205,12 @@ HOJAS_IMG = [
             "Apretar el botón verde de arranque de ciclo.",
             "Apretar el botón negro de la caja colgante cuando el carro de arriba empieza a "
             "moverse.",
-            "Parar el ciclo con el botón rojo de parada de ciclo.",
+            "Apretar el botón rojo de parada de ciclo cuando haya que parar la máquina.",
             "Presionar el botón de parada de emergencia ante cualquier riesgo.",
         ],
-        nota="El primer corte lo hace la máquina sola: sacar el desperdicio de ese corte y "
-             "tirarlo al cajón de scrap. En el primer ciclo, colocar los sustratos cuando el "
-             "RESET queda encendido.",
+        nota="Solo en el primer ciclo, antes de apretar el verde: cuando el RESET queda "
+             "encendido, la máquina corta la punta del vinilo. Sacar ese recorte, tirarlo al "
+             "cajón de scrap y colocar los sustratos.",
         fuentes=[
             "IMG_0579 (02-09-2026) min 6:41 a 6:52: «directamente automatico», con la lista "
             "de modos en la pantalla; el selector 自动/手动 se ve en IMG_0840 s=4",
@@ -1194,7 +1225,8 @@ HOJAS_IMG = [
             "IMG_0840 (10-09-2026) s=4: el hongo de emergencia sobre fondo amarillo. Nota: "
             "IMG_0579 min 2:46 a 2:54 «¿esto esta sincronizado automatico, que haga ese "
             "primer corte? — si, si», min 3:29 «sacar y lo tiras», y min 7:41 «encendido se "
-            "puede cortar y ahora tienen que poner los sustratos»",
+            "puede cortar y ahora tienen que poner los sustratos», en ese orden: RESET, corte, "
+            "sustratos; el verde es el paso siguiente de la hoja",
         ],
         epp=EPP_IMG,
         disparador="SI EL CICLO NO ARRANCA O LA PANTALLA MUESTRA UNA ALARMA",
@@ -1214,13 +1246,13 @@ HOJAS_IMG = [
                   _f("d5_caballete.jpg"), _f("d3_sustratos.jpg")],
         pies=["Las piezas en el molde inferior",
               "El resto de vinilo sobre el molde",
-              "Las piezas en el caballete",
+              "Las piezas sobre la mesa",
               "Un sustrato en cada nido del molde"],
         sin_marcas_ok=True,
         pasos=[
             "Retirar las piezas del molde recién cuando los expulsores las levantan.",
             "Sacar del molde el resto de vinilo que sobra.",
-            "Apoyar las piezas en el caballete sin que se toquen entre sí, para que no se "
+            "Apoyar las piezas sobre la mesa sin que se toquen entre sí, para que no se "
             "marquen.",
             "Colocar un sustrato plástico nuevo en cada nido del molde y verificar que se "
             "encienda la luz de cada posición.",
@@ -1232,7 +1264,9 @@ HOJAS_IMG = [
             "Fak, 21-09-2026: «y luego el resto de vinilo»; se ve en IMG_0844 s=492, el "
             "operario sacando la lamina sobrante del molde verde",
             "IMG_0844 (10-09-2026) min 6:33 a 6:36: «dale de a 2, para que no se marcan las "
-            "piezas una con la otra»; las piezas en el caballete se ven en s=505",
+            "piezas una con la otra»; las piezas sobre la mesa se ven en s=505. Fak, "
+            "23-09-2026: «las piezas que salen de la maquina se colocan en una mesa, no en un "
+            "caballete»",
             "IMG_0579 (02-09-2026) min 7:42 a 8:09, el tecnico: «ahora tiene que poner los "
             "sustratos» / «si lo falta, le falta luz»; se ven en s=480. IMG_0844 min 0:00 a "
             "0:04: «yo cargo las dos... el carga las otras dos»",
@@ -1251,31 +1285,25 @@ HOJAS_IMG = [
         op="30.7",
         denominacion="CONTROL DE PIEZA TERMOFORMADA",
         modo="secuencia",
-        imagenes=[_f("z1_globito.jpg"), _f("z2_puntitos.jpg"), _f("n7_despegue.jpg")],
+        # Los "tres puntitos" salieron el 23/09. Fak: «esa foto de los 3 puntos entendiste
+        # mal, es cualquier cosa, saca eso». No vuelve sin que el lo pida.
+        imagenes=[_f("z1b_globito.jpg"), _f("n7b_despegue.jpg")],
         pies=["Globito en la punta: así NO",
-              "Los tres puntitos: así NO",
               "Piel despegada en la punta: así NO"],
         sin_marcas_ok=True,
         pasos=[
             "Pasar la mano por la superficie de cada pieza y verificar que no tenga globitos.",
-            "Mirar la punta y el borde, y verificar que no aparezcan los tres puntitos de los "
-            "agujeros de vacío.",
             "Verificar que la piel esté pegada en la punta, sin despegue.",
         ],
         fuentes=[
             "IMG_0859 (11-09-2026) min 0:08 a 0:21: «es la que tenia el globito» / «con eso "
             "logramos eliminar el globito». La foto es de Fak, 10-09-2026: burbuja y grano "
             "planchado en la punta",
-            "IMG_0820 (09-09-2026) min 0:39: «el defecto ese que sigue marcando los 3 "
-            "puntitos ahi en la punta de la pieza»; IMG_0660 (04-09-2026) min 0:00: «se "
-            "notan los agujeros de vacio, lo sigue marcando». La foto es del telefono, "
-            "03-09-2026",
             "IMG_0813 (09-09-2026) min 0:00: «el T17 genero este defecto que no termino de "
             "pegar bien en la punta»",
         ],
         epp=EPP_IMG,
-        disparador="SI LA PIEZA SALE CON GLOBITO, CON LOS TRES PUNTITOS O CON LA PIEL "
-                   "DESPEGADA EN LA PUNTA",
+        disparador="SI LA PIEZA SALE CON GLOBITO O CON LA PIEL DESPEGADA EN LA PUNTA",
         acciones=[
             "1. Apartar la pieza e identificarla.",
             "2. Dar aviso al Líder de Producción.",

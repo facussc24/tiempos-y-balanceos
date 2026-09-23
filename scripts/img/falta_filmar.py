@@ -160,8 +160,8 @@ TOMAS = [
          "alcanzan para sacar la foto de cada boton."),
         ("La pieza recien sacada, entera y sola sobre la mesa",
          "Hoy siempre se ve en las manos o de lejos."),
-        ("Una pieza con cada defecto al lado de una buena: globito, tres puntitos, despegue",
-         "Para el plan de reaccion de la 30.9: que el operario sepa que esta mirando."),
+        ("Una pieza con cada defecto al lado de una buena: globito y despegue",
+         "Para el plan de reaccion de la 30.7: que el operario sepa que esta mirando."),
     ]),
 ]
 
@@ -280,12 +280,14 @@ def a_pdf(pptx_path):
     import win32com.client
     pdf = os.path.splitext(pptx_path)[0] + ".pdf"
     ppt = win32com.client.Dispatch("PowerPoint.Application")
+    habia_abiertas = ppt.Presentations.Count   # lo que tenga abierto Fak no se cierra
     try:
         pres = ppt.Presentations.Open(os.path.abspath(pptx_path), WithWindow=False)
         pres.SaveAs(os.path.abspath(pdf), 32)   # 32 = ppSaveAsPDF
         pres.Close()
     finally:
-        ppt.Quit()
+        if habia_abiertas == 0 and ppt.Presentations.Count == 0:
+            ppt.Quit()
     print(f"[OK] {pdf}")
     return pdf
 

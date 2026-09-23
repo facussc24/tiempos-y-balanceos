@@ -59,6 +59,14 @@ CASOS = [
     (G._gate_cada_paso_con_fuente, "una fuente por paso",
      dict(op='X', pasos=['a'], fuentes=['IMG_0801 (09-09-2026) s=1,1: la serigrafia']), False),
 
+    # las dos correcciones de Fak del 23/09, con el texto exacto que el vio impreso
+    (G._gate_corregido_por_fak, "las piezas en el caballete",
+     dict(op='X', pies=['Las piezas en el caballete']), True),
+    (G._gate_corregido_por_fak, "los tres puntitos en el disparador",
+     dict(op='X', disparador='SI LA PIEZA SALE CON LOS TRES PUNTITOS'), True),
+    (G._gate_corregido_por_fak, "las piezas sobre la mesa",
+     dict(op='X', pasos=['Apoyar las piezas sobre la mesa sin que se toquen.']), False),
+
     (G._gate_transcripcion_leida, "manda algo desde un video sin transcripcion",
      dict(op='X', pasos=['Apretar el verde.'], fuentes=['IMG_9999 s=1: se ve']), True),
     (G._gate_transcripcion_leida, "DESCRIBE lo del mismo video sin transcripcion",

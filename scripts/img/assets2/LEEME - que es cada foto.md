@@ -29,11 +29,10 @@ rehacerla ni verificar de donde salio.
 | `r2_botonera.jpg` | 30.5 | la botonera con el hongo NEGRO de la caja colgante; la marca 1 se bajo el 22/09 (tapaba 自动) |
 | `d1_pieza.jpg` | 30.6 | el operario sacando la pieza del molde (IMG_0844 s=488) |
 | `d2_vinilo.jpg` | 30.6 | el operario sacando el RESTO DE VINILO del molde (s=492) |
-| `d5_caballete.jpg` | 30.6 | las piezas terminadas en el caballete (s=505) |
+| `d5_caballete.jpg` | 30.6 | las piezas terminadas sobre la MESA (s=505). El nombre del archivo quedo viejo: Fak, 23/09, *"se colocan en una mesa, no en un caballete"* |
 | `d3_sustratos.jpg` | 30.6 | los sustratos en los nidos del molde (IMG_0579 s=480), sin las cabezas |
-| `z1_globito.jpg` | 30.7 | globito y grano planchado en la punta (foto de Fak, 10/09) |
-| `z2_puntitos.jpg` | 30.7 | los tres puntitos de los agujeros de vacio (IMG_0622, 03/09) |
-| `n7_despegue.jpg` | 30.7 | la punta abierta con la piel despegada |
+| `z1b_globito.jpg` | 30.7 | globito y grano planchado en la punta (foto de Fak, 10/09), recortada a 0,93:1 para la hoja de 2 pasos |
+| `n7b_despegue.jpg` | 30.7 | la punta abierta con la piel despegada (IMG_0813 s=4,3), a 0,93:1 |
 
 ## Las que NO usa el deck, y por que se quedan
 
@@ -53,7 +52,7 @@ castellano · `d4_nidos.jpg` el plano general de dos personas cargando sustratos
 
 - `x5r_botonera.jpg` / `x5_botonera.jpg` (la botonera de CARGA rotulada) y `x7_carga_hmi.jpg` — eran de la hoja del corte manual, que salio de la jornada el 22/09: el primer corte lo hace la maquina sola (IMG_0579 min 2:46). Se quedan para cuando el tecnico diga cuando se usa el corte a mano.
 - `r2_automatico.jpg` — la 30.7 vieja: no mostraba el boton negro. La reemplaza `r2_botonera.jpg` en la hoja de arranque.
-- `n5_mano.jpg`, `n8_canto.jpg` — la hoja de control no mostraba ningun defecto. Las reemplazan `z1_globito.jpg` y `z2_puntitos.jpg`.
+- `n5_mano.jpg`, `n8_canto.jpg` — la hoja de control no mostraba ningun defecto. Las reemplazaron las fotos de defectos (hoy `z1b_globito.jpg` y `n7b_despegue.jpg`).
 
 - `w1_rollo.jpg`, `w3_mesa.jpg`, `w5_selectores.jpg`, `w4_derecho.jpg`, `w7_alimentacion.jpg`
   y `w2_punta.jpg` — el primer set del vinilo (21/09). `w1_rollo` salio **rotada 90°**,
@@ -71,6 +70,9 @@ castellano · `d4_nidos.jpg` el plano general de dos personas cargando sustratos
   `x6b`, `x4b` y `x3r`. Con tres fotos en la 30.4 la celda es 2:1 y las dos primeras eran
   casi cuadradas: quedaban a la mitad de su celda. `x3_mesa` es el original sin marcar de
   `x3r_mesa_sensor`.
+- `z2_puntitos.jpg` — los "tres puntitos" salieron de la 30.7 el 23/09. Fak: *"esa foto de los 3 puntos
+  entendiste mal, es cualquier cosa, saca eso"*. `z1_globito.jpg` y `n7_despegue.jpg` son el recorte
+  anterior, apaisado: con dos fotos la celda es casi cuadrada y quedaban a la mitad.
 - `p4_saca.jpg` y `m4_saca.jpg` — dos operarios de espaldas tapando el 35 % del ancho.
 - `m1_entra.jpg`, `m2_conformado.jpg`, `m3_abre.jpg` — eran la hoja del ciclo escrita como
   narracion de la maquina; la reemplazo la 30.6, que muestra lo que hace el operario.

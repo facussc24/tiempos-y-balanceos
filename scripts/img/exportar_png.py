@@ -14,6 +14,9 @@ def exportar():
 
     print(f"Abriendo PowerPoint para exportar: {pptx_path}")
     ppt = win32com.client.Dispatch("PowerPoint.Application")
+    # Si Fak tiene una presentacion abierta, PowerPoint no se cierra: el 23/09 un Quit()
+    # le cerro el deck que le acababa de abrir para mirar.
+    habia_abiertas = ppt.Presentations.Count
     try:
         # Abrir presentación en modo oculto / sin ventana principal
         pres = ppt.Presentations.Open(pptx_path, WithWindow=False)
@@ -38,7 +41,8 @@ def exportar():
 
         pres.Close()
     finally:
-        ppt.Quit()
+        if habia_abiertas == 0 and ppt.Presentations.Count == 0:
+            ppt.Quit()
 
     print("\nExportación completada con éxito.")
 
