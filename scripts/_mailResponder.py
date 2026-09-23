@@ -28,6 +28,9 @@ recien despues se escribe el texto arriba del <body>.
 """
 import json, os, sys, time
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _prepararMail import clave_asunto                                   # noqa: E402
+
 try:
     import win32com.client as win32
 except ImportError:
@@ -43,18 +46,17 @@ def responder(cfg):
             sys.exit(f'ABORTADO: {os.path.basename(a)} pesa {os.path.getsize(a) / 1e6:.0f} MB; Exchange lo rechaza '
                      '(el 23/09 un PDF de flujograma armado con PyMuPDF insert_image(filename=) pesaba 106 MB)')
     original = ns.GetItemFromID(cfg['entryid'])
-    asunto = 'RE: ' + original.Subject
     print('original:', original.Subject, '|', original.SentOn, '|', original.SenderName)
 
+    # Se compara por clave_asunto (sin RE:/RV:): si el original ya es "RE: ...", Outlook no le suma
+    # otro "RE:", y un 'RE: ' + Subject armado a mano no encontraba nunca el borrador repetido.
+    clave = clave_asunto(original.Subject)
     drafts = ns.GetDefaultFolder(16)
-    iguales = [it for it in list(drafts.Items) if getattr(it, 'Subject', '') == asunto]
+    iguales = [it for it in list(drafts.Items) if clave_asunto(getattr(it, 'Subject', '')) == clave]
     if iguales and not cfg.get('reemplazar_borradores'):
         for it in iguales:
-            print('   ya hay un borrador:', asunto, '|', it.LastModificationTime, '| adjuntos', it.Attachments.Count)
+            print('   ya hay un borrador:', it.Subject, '|', it.LastModificationTime, '| adjuntos', it.Attachments.Count)
         sys.exit('ABORTADO: hay borradores con el mismo asunto. Con "reemplazar_borradores": true se mandan a Eliminados.')
-    for it in iguales:
-        print('a Elementos eliminados: borrador de', it.LastModificationTime, '| adjuntos', it.Attachments.Count)
-        it.Delete()
 
     for nombre in cfg.get('cc_extra', []):
         r = ns.CreateRecipient(nombre)
@@ -72,6 +74,11 @@ def responder(cfg):
         rp.Attachments.Add(a)
     if not rp.Recipients.ResolveAll():
         sys.exit('ABORTADO: Outlook no pudo resolver todos los destinatarios')
+    # Los repetidos van a Eliminados recien ahora, con la respuesta nueva ya armada: si algo de
+    # arriba aborta, el borrador anterior sigue donde estaba.
+    for it in iguales:
+        print('a Elementos eliminados: borrador de', it.LastModificationTime, '| adjuntos', it.Attachments.Count)
+        it.Delete()
     rp.Display()
     time.sleep(1.5)
     html = rp.HTMLBody or ''

@@ -65,6 +65,10 @@ proy_archivo = a.proyecto.replace('P21 ', '').title().replace(' ', '_')
 destino = os.path.join(a.dest, f'BARACK_SMRC_SLT_{proy_archivo}_{a.codigo}.xlsx')
 if os.path.exists(destino):
     sys.exit(f'ya existe, no se pisa: {destino}')
+pdf_dir = a.pdf_dir or a.dest
+pdf = os.path.join(os.path.abspath(pdf_dir), os.path.basename(destino)[:-5] + '.pdf')
+if os.path.exists(pdf):      # antes de copiar: si no, quedaba el xlsx nuevo guardado y sin su PDF
+    sys.exit(f'ya existe el PDF, no se pisa: {pdf}')
 shutil.copy2(a.base, destino)
 
 import win32com.client as win32
@@ -73,8 +77,11 @@ xl.Visible = False
 xl.DisplayAlerts = False
 try:
     wb = xl.Workbooks.Open(os.path.abspath(destino))
-    hoja = lambda n: next(s for s in wb.Sheets if s.Name == n)
-    inp, slt, pf = hoja('Inputs'), hoja('SLT'), hoja('Packaging Form')
+    nombres = [s.Name for s in wb.Sheets]
+    faltan = [n for n in ('Inputs', 'SLT', 'Packaging Form') if n not in nombres]
+    if faltan:
+        sys.exit(f'la base no es la plantilla SLT de SMRC: faltan las hojas {faltan} (tiene {nombres})')
+    inp, slt, pf = wb.Sheets('Inputs'), wb.Sheets('SLT'), wb.Sheets('Packaging Form')
     inp.Range('F5').Value = ' ' + a.proyecto
     inp.Range('E15').Value = a.nombre
     inp.Range('G15').Value = a.codigo
@@ -99,11 +106,7 @@ try:
     print(f'   contacto {slt.Range("B16").Value} · {slt.Range("F16").Text} · {slt.Range("D16").Value}')
     print(f'   validacion: estado {a.estado} · proveedor {a.firma_proveedor} · SMRC {"; ".join(firmas)}')
     wb.Save()
-    pdf_dir = a.pdf_dir or a.dest
     os.makedirs(pdf_dir, exist_ok=True)
-    pdf = os.path.join(os.path.abspath(pdf_dir), os.path.basename(destino)[:-5] + '.pdf')
-    if os.path.exists(pdf):
-        sys.exit(f'ya existe el PDF, no se pisa: {pdf}')
     wb.Sheets(['SLT', 'Packaging Form']).Select()
     xl.ActiveSheet.ExportAsFixedFormat(0, pdf)
     wb.Close(False)
