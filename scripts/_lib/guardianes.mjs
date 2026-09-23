@@ -1084,6 +1084,29 @@ const BM_EFIMERO = /AppData[\\/]Local[\\/]Temp([\\/]|$)|^(\/|[A-Za-z]:[\\/])tmp(
 // Archivos que no se ejecutan: un plan o una nota que CITA `rm -rf` no borra nada (fc581284, 07/09).
 const BM_PROSA = /\.(md|markdown|txt|rst|csv|tsv|log)$/i;
 
+// V5 (23/09/2026): `git worktree remove` sobre un worktree con un ENLACE adentro. Un worktree
+// viejo tenia su node_modules como junction a la instalacion principal; git entro por el enlace
+// y borro en orden alfabetico 38 paquetes de C:\Dev\BarackMercosul\node_modules (.bin, @babel,
+// @dnd-kit...) hasta cortar con "Invalid argument". Se repuso con `npm install` desde el lock.
+const RE_WT_REMOVE = /\bgit\s+(?:-C\s+("[^"]*"|'[^']*'|\S+)\s+)?worktree\s+remove\s+(?:(?:-f|--force)\s+)*("[^"]*"|'[^']*'|\S+)/gi;
+
+/** Los enlaces (symlink o junction) en el primer nivel de cada worktree que el comando saca. */
+export function enlacesDeWorktree(cmd, cwd) {
+  const sinComillas = (s) => String(s ?? '').replace(/^["']|["']$/g, '');
+  const aWin = (s) => s.replace(/^\/([a-zA-Z])\//, (m, d) => `${d}:/`);
+  const hallados = [];
+  for (const m of String(cmd ?? '').matchAll(RE_WT_REMOVE)) {
+    const base = m[1] ? aWin(sinComillas(m[1])) : (cwd || process.cwd());
+    const dir = path.resolve(aWin(base), aWin(sinComillas(m[2])));
+    let entradas = [];
+    try { entradas = fs.readdirSync(dir); } catch { continue; }
+    for (const e of entradas) {
+      try { if (fs.lstatSync(path.join(dir, e)).isSymbolicLink()) hallados.push(path.join(dir, e)); } catch { /* sigue */ }
+    }
+  }
+  return hallados;
+}
+
 /** Un comando de shell cuyos borrados permanentes apuntan TODOS a destinos efimeros resueltos. */
 function borraSoloEfimero(ctx) {
   const an = analizarComando(sinCuerposHeredocDeGit(ctx.cmd), { cwd: ctx.cwd || null });
@@ -1149,6 +1172,8 @@ GUARDIANES['borrado-masivo-guard'] = (ctx) => {
       && /(foreach|for +\(|for +[a-z_]+ +in |while|Get-ChildItem|find |glob|walk|readdir|listdir|iterdir|rglob|scandir)/i.test(codigo)
       && !/dry[-_ ]?run|dryRun|DRYRUN|WhatIf/i.test(body)) motivo += 'V4';
   }
+  const enlaces = esShell ? enlacesDeWorktree(ctx.cmd, ctx.cwd) : [];
+  if (enlaces.length) motivo += 'V5';
   if (!motivo) return null;
   const partes = ['[BORRADO-MASIVO-GUARD - BLOQUEO. Incidente 2026-08-07: 942 archivos movidos en vez de 17]', ''];
   if (motivo.includes('V1')) partes.push('V1 - Get-ChildItem con -Recurse Y -Include, y el Path no termina en \\*',
@@ -1167,6 +1192,11 @@ GUARDIANES['borrado-masivo-guard'] = (ctx) => {
   if (motivo.includes('V4')) partes.push('V4 - script que borra o mueve EN LOTE y no tiene dry-run',
     '     Antes de tocar nada: imprimir el plan (origen -> destino, uno por linea)',
     '     y MIRAR EL CONTEO. Si esperabas 17 y dice 942, ahi se termina.', '');
+  if (motivo.includes('V5')) partes.push('V5 - git worktree remove sobre un worktree con ENLACES adentro',
+    ...enlaces.map((e) => `       ${e}`),
+    '     git entra por el enlace y borra el DESTINO: el 23/09/2026 se llevo 38 paquetes de la',
+    '     instalacion principal. Primero se quita SOLO el enlace, despues el worktree:',
+    "       powershell -Command \"[System.IO.Directory]::Delete('<enlace>', $false)\"", '');
   partes.push("ANTES DE ESCRIBIR UNO NUEVO: 'node scripts/_escritorio.mjs --archivar ... --dry-run'",
     'ya hace esto con verificacion de bytes y sin una sola llamada de borrado.',
     "Regla: .claude/rules/escritorio-tareas.md - 'Nada se borra, nunca'.");

@@ -15,9 +15,11 @@
  *
  * exit 2 = bloqueado · exit 0 = permitido.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterAll } from 'vitest';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
+import fs from 'node:fs';
+import os from 'node:os';
 
 const HOOK = path.resolve(process.cwd(), '.claude/hooks/borrado-masivo-guard.sh');
 
@@ -244,5 +246,43 @@ describe('la excepcion de test/guardianes — sin ella el hook se bloquea a si m
             expect(r.code, p).toBe(2);
             expect(r.err, p).toMatch(/V3/);
         }
+    });
+});
+
+describe('V5 — git worktree remove con un ENLACE adentro (23/09/2026: se llevo 38 paquetes de node_modules)', () => {
+    const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'bm-v5-'));
+    const destino = path.join(TMP, 'instalacion');
+    const conEnlace = path.join(TMP, 'wt-con-enlace');
+    const sinEnlace = path.join(TMP, 'wt-sin-enlace');
+    fs.mkdirSync(destino);
+    fs.writeFileSync(path.join(destino, 'paquete.txt'), 'x');
+    fs.mkdirSync(conEnlace);
+    fs.mkdirSync(sinEnlace);
+    fs.writeFileSync(path.join(sinEnlace, 'package.json'), '{}');
+    // 'junction' en Windows (como el worktree real); en Linux node lo crea como symlink comun.
+    fs.symlinkSync(destino, path.join(conEnlace, 'node_modules'), 'junction');
+    afterAll(() => {
+        fs.unlinkSync(path.join(conEnlace, 'node_modules'));
+        fs.rmSync(TMP, { recursive: true, force: true });
+    });
+
+    it('ROJO — el worktree tiene node_modules enlazado: bloquea y nombra el enlace', () => {
+        for (const cmd of [
+            `git worktree remove "${conEnlace}"`,
+            `git worktree remove --force "${conEnlace}"`,
+            `git -C "${TMP}" worktree remove wt-con-enlace`,
+        ]) {
+            const r = correr(bash(cmd));
+            expect(r.code, cmd).toBe(2);
+            expect(r.err, cmd).toMatch(/V5/);
+            expect(r.err, cmd).toMatch(/node_modules/);
+        }
+    });
+    it('VERDE — sin enlaces adentro, sacar el worktree no se frena', () => {
+        expect(correr(bash(`git worktree remove "${sinEnlace}"`)).code).toBe(0);
+        expect(correr(bash('git worktree list')).code).toBe(0);
+    });
+    it('el destino del enlace sigue intacto (el test no borra nada)', () => {
+        expect(fs.existsSync(path.join(destino, 'paquete.txt'))).toBe(true);
     });
 });

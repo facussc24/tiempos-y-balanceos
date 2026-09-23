@@ -13,6 +13,7 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **23/09 — Antes de borrar una carpeta se buscan ENLACES adentro:** `git worktree remove` entro por un `node_modules` enlazado y se llevo 38 paquetes de la instalacion principal. Graduado a la V5 de `borrado-masivo-guard`.
 - **22/09 — Lo que AFLOJA un control se prueba contra el VIEJO con los mismos intentos** (49 casos verdes; la comparacion saco 2 regresiones). Graduado a `un_control_se_audita_en_las_dos_direcciones`.
 - **22/09 — Un cambio de criterio se barre por su FRASE en todo el repo, y un guardian que falla sin bloquear esta apagado.** El placeholder prohibido el 21/09 seguia autorizado en `autonomy-contract.md` y lo escribian 5 scripts; y 388 veces un `cd` dejo los hooks sin archivo (exit 127, no bloquea). Graduado al test 5c de `hooksTienenTest` (`${CLAUDE_PROJECT_DIR}`).
 - **22/09 — La VARA también se audita, y lo primero que se le mira es la FECHA.** La tabla AP (`apTable.ts`) y las escalas O/D de `amfe.md` §13 salen de un PDF en inglés que es un Word del 05/12/2017; el AIAG-VDA salió en junio de 2019 y el SETEC 2020 trae otra tabla. Con la oficial cambian 900 de 1.955 causas (883 bajan): Fak lo olía (*"es raro que todo dé H"*). Lo cazó un auditor al que le pasé la norma y no mis reglas. Decide Fak. Memoria `project_tabla_ap_de_la_casa_es_el_borrador_2017`.
