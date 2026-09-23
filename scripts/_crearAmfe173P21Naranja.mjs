@@ -1371,7 +1371,7 @@ const reproceso = (numero, nombre, funcionOp, requisito, fallas) => operacion(nu
 
 const OP72 = reproceso('72', 'REPROCESO: LIMPIEZA DEFICIENTE',
   'Volver a limpiar con alcohol la superficie de la pieza plastica indicada',
-  'Superficie limpia, sin aureolas, antes de reponer primer y adhesivo',
+  'Superficie limpia, sin aureolas',
   [
     falla('Zona reprocesada que sigue con contaminantes', EF_DESPEGUE, [
       causa('El alcohol se aplica solo sobre la zona senalada y el limite de la zona se juzga a ojo',
@@ -1712,7 +1712,7 @@ const OP120 = operacion('100', 'INSPECCION FINAL / MURO DE CALIDAD',
           // referencia, con dinamometro. Es por muestreo -> P3-9. La Rev.A no tenia ningun modo
           // de falla de despegue del vinilo en todo el documento.
           falla('Adherencia del tapizado por debajo de 10 N', EF_DESPEGUE, [
-            causa('El pegado deficiente no se ve en una inspeccion visual',
+            causa('El pegado deficiente no siempre se ve en una inspeccion visual',
               'Adherencia minima de 10 N definida como criterio de aceptacion de la pieza',
               4, 'Ensayo de adherencia con dinamometro, por muestreo (Plan de Control rev M, Operacion 120)', 9),
           ]),
