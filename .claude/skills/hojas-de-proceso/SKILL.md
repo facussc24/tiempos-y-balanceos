@@ -502,8 +502,9 @@ que ir guardándolas donde sí van, o sea `Y:\BARACK\CALIDAD\DOCUMENTACION SGC\H
 
 Van el `.pptx` y su `.pdf`, con nombre `HO-<N> - HOJAS DE PROCESO - <PIEZA> - Rev.<letra>`. El
 generador puede escribir en el scratchpad para mirarla, pero la entrega va ahí. Los decks de
-HOTMELT, MOLDEADORA IMG y PRENSA EMBOSSING quedaron en `INSTRUCCIONES OPERATIVAS` antes de
-esta decisión.
+HOTMELT y MOLDEADORA IMG quedaron en `INSTRUCCIONES OPERATIVAS` antes de esta decisión; el de
+la PRENSA EMBOSSING se mudo el mismo 24/09 a `1- CLIENTES\COZZUOL\UPPER TRIM PANEL\` (sin
+numero de HO todavia: `HO-TBD - ...`, el numero lo pone el listado).
 
 ## 4. Lo fijo del formulario I-IN-002.4-R01
 

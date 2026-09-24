@@ -160,6 +160,11 @@ scripts/img/*.pdf
 scripts/img/render_deck_img/
 scripts/img/analysis/
 scripts/img/__pycache__/
+# Hojas de proceso de la PRENSA DE EMBOSSING: idem, se rehacen con
+# `py -3 scripts/embossing/generar_hojas_embossing.py`
+scripts/embossing/*.pptx
+scripts/embossing/render/
+scripts/embossing/__pycache__/
 scripts/img/assets/
 scripts/img/last_run.txt
 scripts/img/**/_*.jpg

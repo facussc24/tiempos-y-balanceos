@@ -1,0 +1,26 @@
+PRENSA DE EMBOSSING Jfortune — lo que las hojas dejan en TBD o no cubren (24/09/2026)
+Ninguna fuente lo dice (ni el manual del proveedor ni su video), asi que no se escribio.
+
+1. N° de operacion y sector. El Upper Trim no tiene flujograma en el Listado Maestro (llega
+   hasta el 159): las hojas van TBD.1 a TBD.6 hasta que lo tenga.
+2. Que pieza entra a la prensa y como se apoya en la base (tela suelta o pieza tapizada,
+   con nido o sin nido). El video del proveedor muestra una pieza negra de muestra.
+3. Temperatura del molde y parametros de carrera para el Upper Trim (one y two wireless).
+   Los valores que se ven en las fotos son los del proveedor.
+4. Montaje del molde nuevo: el manual explica como sacarlo, no como ponerlo (tornillos,
+   ajuste). En la hoja solo va lo que dice: el conector entra en una sola posicion.
+5. Apagado de la prensa: no esta en el manual ni en el video.
+6. Que hacer ante una alarma (boton 报警复位 de la pantalla): el manual no lo explica.
+7. Pag. 7 del manual (cables del cartucho calefactor rojo/azul y termocupla blanco/naranja):
+   es mantenimiento, no va en la hoja del operario.
+8. Las fotos son del proveedor. Cuando la prensa este en planta, filmarla con la pieza
+   real y rehacer las fotos.
+9. Como es un logo bien marcado (control de la pieza): lo define Calidad; el ciclo de
+   control va vacio.
+10. Cambio de molde con la prensa encendida (el manual sube el plato con SUBIR despues de
+    desconectar el conector): si hace falta bloqueo o esperar que enfrie el molde, lo
+    define Mantenimiento / Seguridad. La hoja solo dice guantes y manos fuera del plato.
+11. Cuando se pone a cero el contador de piezas (cada turno, cada orden).
+12. Como se ve en la pantalla que la prensa quedo en automatico, y como se destraba el
+    boton de parada de emergencia.
+(10 a 12 salieron de la revision ciega de las hojas, 24/09/2026.)

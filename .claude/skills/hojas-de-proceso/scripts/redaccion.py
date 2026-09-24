@@ -138,6 +138,19 @@ def revisar_cocina(texto, datos=None):
     return out
 
 
+def revisar_tbd(texto):
+    """Un TBD en lo que lee el operario. Devuelve lo hallado o None.
+
+    Fak, 24/09/2026, sobre las hojas de la prensa de embossing: "no puede haber ni 1 TBD...
+    el TBD del numero de hoja si, pero que sea una hoja de proceso sin TBD en las
+    descripciones... toda la informacion disponible para conseguirlo". Lo que no se sabe se
+    escribe GENERICO con lo que hay (sin inventar un valor), y el hueco va a la lista de
+    pendientes, no a la hoja. El TBD queda solo en el cajetin: N de operacion, HO, sector.
+    """
+    m = re.search(r"\bTBD\b", str(texto), re.IGNORECASE)
+    return m.group(0) if m else None
+
+
 def revisar_pie(pie, datos=None):
     """Un pie NOMBRA lo que se ve. Devuelve el verbo de movimiento si lo narra."""
     datos = datos or cargar()
@@ -246,6 +259,14 @@ def gate_redaccion(hoja, datos=None):
                 f'{op} {donde}: dice {que} -> "{hallado}".\n'
                 '        Eso es mio, no del operario: va a la bitacora o al PDF de\n'
                 '        pendientes, no impreso adelante suyo (Fak, 21/09/2026).')
+
+    for donde, txt in campos:
+        if not donde.startswith("epp") and revisar_tbd(txt):
+            rojos.append(
+                f'{op} {donde}: tiene un TBD -> "{str(txt).strip()[:70]}".\n'
+                '        Fak, 24/09/2026: "no puede haber ni 1 TBD" en la descripcion. Lo que\n'
+                '        no se sabe se escribe generico con la info que hay, sin inventar un\n'
+                '        valor; el TBD va solo en el cajetin (N de operacion, HO, sector).')
 
     for i, pie in enumerate(hoja.get("pies") or [], 1):
         v = revisar_pie(pie, datos)

@@ -1,0 +1,35 @@
+preview.mp4 (video del proveedor Suzhou Jfortune, 125 s, 544x960) — subtitulos en ingles,
+leidos cuadro por cuadro a 1 fps el 24/09/2026. Es la transcripcion del video: el audio es la
+voz del proveedor y los subtitulos son su propia traduccion.
+
+s  0-4    First press this servo motor button        (la mano en el boton verde, s 2-4,5)
+s  5-6    This is stop button                         (la mano en el boton rojo)
+s  8      ok, start button                            (la mano otra vez en el verde, s 7,75-9)
+s 10      enter into running screen                   (toca la pantalla, s 9,5-11)
+s 12-13   The default mode is manual mode
+s 15-16   if want to change mold, then move up
+s 18-19   move down, please pay attention: Be careful not to crush it.
+s 21      up or down
+s 23-24   And then change into auto mode
+s 26      Each time need to return home position
+s 27-28   Only return to home position and then this machine can run
+s 35      How to return home position
+s 37      ok, return to home position
+s 38-39   This machine can work after return to home position
+s 40-72   (sin subtitulos) s 44-57 las dos manos en los botones naranjas; s 59-63 la mano
+          toma la pieza de abajo del molde; s 64-71 llevan la pieza siguiente debajo del molde
+s 74-75   here is the machine parameter
+s 81-82   this is Fast-forward distance
+s 83-84   Fast-forward speed
+s 85-88   The slow-in position corresponds to the slow-in speed.
+s 89-90   The slow-in position is the entire length,
+s 91      the whole stroke
+s 93      Slow-in speed
+s 94      Pressure-holding Time
+s 108-111 Click here to reset production to zero
+s 113     This is just for monitoring purposes.
+s 114     These are all for surveillance purposes.
+s 121-124 manual and auto
+
+La pantalla del HMI sale quemada (blanca) en todo el video: los valores no se leen. Por eso
+las pantallas de las hojas salen de las fotos del manual.

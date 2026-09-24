@@ -85,8 +85,11 @@ Regla corta. El detalle, los umbrales y los errores caros: skill `hojas-de-proce
     (`gate_materiales_del_deck()`).
 18. **Una NOTA no le cuenta al operario lo que yo no averigue.** *"No esta documentado...
     preguntar antes de usarlo"* le pasa mi problema a el (Fak: *"esta nota esta al pedo,
-    eliminala"*). El hueco va a la lista de lo que falta preguntar; en la hoja va `TBD`
-    pelado o no va nada.
+    eliminala"*). El hueco va a la lista de lo que falta preguntar, no a la hoja.
+    **Y desde el 24/09/2026 tampoco va `TBD` en la descripcion**: Fak, *"no puede haber ni 1
+    TBD... que sea una hoja de proceso sin TBD en las descripciones"*. Lo que no se sabe se
+    escribe generico con la informacion disponible, sin inventar valores; el TBD queda solo
+    en el cajetin (N° de operacion, HO, sector). Lo frena `redaccion.revisar_tbd()`.
 19. **Si una frase hay que explicarla, esta mal escrita.** *"Mirar el canto envuelto"* —Fak:
     *"¿que carajo significa eso? no se entiende"*. La prueba es leerla en voz alta como si
     la leyera alguien que recien entra.
@@ -108,8 +111,8 @@ Regla corta. El detalle, los umbrales y los errores caros: skill `hojas-de-proce
   con los mismos numeros con los que el gate rechaza.
 - **Regresion:** `py -3 .claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py` — 25
   casos, cada criterio en ROJO y en VERDE.
-- **Regresion:** `py -3 .claude/skills/hojas-de-proceso/scripts/redaccion_selftest.py` — 36
-  casos de idioma, vocabulario y voz, en ROJO y en VERDE.
+- **Regresion:** `py -3 .claude/skills/hojas-de-proceso/scripts/redaccion_selftest.py` — 71
+  casos de idioma, vocabulario, voz, cocina y TBD, en ROJO y en VERDE.
 
 **Las contraseñas de HMI no van al repo** (`_gateRepoPublico.mjs` CHECK-3 las busca por contenido).
 El resto del spec de la maquina vive donde se lo busca —la carpeta de la maquina—, no en el repo.

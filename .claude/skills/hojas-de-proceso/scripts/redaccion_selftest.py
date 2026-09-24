@@ -12,7 +12,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from redaccion import (revisar_vocabulario, revisar_voz, revisar_idioma,  # noqa: E402
                        revisar_pie, revisar_cocina, revisar_denominacion,
-                       gate_redaccion)
+                       revisar_tbd, gate_redaccion)
 
 for _f in (sys.stdout, sys.stderr):
     try:
@@ -56,6 +56,19 @@ COCINA_CASOS = [
     ("Montar el rollo en la cuna: TBD, falta que lo confirme el tecnico de KingPower.",
      True, "TBD con su porque en el mismo renglon"),
     ("Nadie mete la mano hasta que la maquina abrio.", False, "una nota operativa"),
+]
+
+# ── TBD EN LA DESCRIPCION: ni uno (Fak, 24/09/2026) ──────────────────────────
+# Lo que no se sabe se escribe generico con la info disponible; el TBD va en el cajetin.
+TBD_CASOS = [
+    ("Temperatura del molde: TBD", True, "el parametro que entregue en la prensa de embossing"),
+    ("Posicion de la pieza en la base: tbd", True, "en minusculas tambien"),
+    ("Colocar la pieza sobre la base, bien apoyada, con la zona del logo debajo del molde.",
+     False, "la misma, generica con lo que hay"),
+    ("Los valores de la foto son de referencia del proveedor: se validan para cada pieza y "
+     "molde.", False, "la nota de los parametros, sin valores"),
+    ("Apretar el boton verde de arranque.", False, "una palabra que contiene 'tbd' no hay; "
+     "un paso normal pasa"),
 ]
 
 
@@ -157,6 +170,7 @@ correr("IDIOMA \u2014 IATF 8.5.1.2 c): el texto va en el idioma del que ejecuta"
 correr("EL PIE DE FOTO \u2014 narrar un movimiento da rojo; nombrar lo que se ve, verde",
        PIES, revisar_pie)
 correr("LA COCINA \u2014 lo que es mio y no del operario", COCINA_CASOS, revisar_cocina)
+correr("TBD EN LA DESCRIPCION \u2014 ni uno; el TBD va en el cajetin", TBD_CASOS, revisar_tbd)
 correr("LA DENOMINACION \u2014 como se llama una operacion en Barack",
        DENOM, lambda x: (lambda m: m and not m.startswith("AVISO"))
        (revisar_denominacion(x)))
