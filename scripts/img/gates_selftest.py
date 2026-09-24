@@ -66,6 +66,13 @@ CASOS = [
      dict(op='X', disparador='SI LA PIEZA SALE CON LOS TRES PUNTITOS'), True),
     (G._gate_corregido_por_fak, "las piezas sobre la mesa",
      dict(op='X', pasos=['Apoyar las piezas sobre la mesa sin que se toquen.']), False),
+    # la de las trabas rojas del molde, 24/09: son para el envio, no para el cambio en planta
+    (G._gate_corregido_por_fak, "colocar las trabas rojas antes de mover el carro",
+     dict(op='X', pasos=['Colocar las trabas rojas en las esquinas del molde.']), True),
+    (G._gate_corregido_por_fak, "los topes rojos de transporte en la nota",
+     dict(op='X', nota='Poner los topes rojos de transporte con sus bulones.'), True),
+    (G._gate_corregido_por_fak, "los pilares en los tacos rojos",
+     dict(op='X', pasos=['Colocar los 4 pilares en los tacos rojos de las esquinas.']), False),
 
     (G._gate_transcripcion_leida, "manda algo desde un video sin transcripcion",
      dict(op='X', pasos=['Apretar el verde.'], fuentes=['IMG_9999 s=1: se ve']), True),

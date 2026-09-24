@@ -39,8 +39,8 @@ SALIDA_PPTX = os.path.join(BASE, "QUE FALTA FILMAR - MOLDEADORA IMG.pptx")
 ESCRITORIO = (r"C:\Users\FacundoS-PC\OneDrive - BARACK ARGENTINA SRL\Desktop"
               r"\Hojas de proceso maquina IMG - desde los videos")
 
-ENCABEZADO = ("Barridos los 91 videos, las 49 transcripciones y las pantallas del HMI, al "
-              "23/09/2026. Lo que esta en esta lista no aparece en ninguno: ni filmado ni "
+ENCABEZADO = ("Barridos los 91 videos, sus transcripciones y las pantallas del HMI, al "
+              "24/09/2026. Lo que esta en esta lista no aparece en ninguno: ni filmado ni "
               "dicho. Con esto se cierran las hojas de proceso.")
 
 # (bloque, [(que filmar o preguntar, por que / donde)])
@@ -154,7 +154,54 @@ TOMAS = [
         ("Si el material queda enhebrado de un dia para el otro",
          "Define si la 33 y la 34 se hacen todos los dias o solo con rollo nuevo."),
     ]),
-    ("6 · LAS TOMAS QUE MEJORARIAN LO QUE YA HAY", [
+    ("6 · EL CAMBIO DE MOLDE — hojas 38 a 41", [
+        ("El MONTAJE del paso 4 al final de la lista, en la maquina",
+         "El 04/09 el montaje se filmo hasta empujar el molde y conectar el agua (IMG_0667, "
+         "16:44 a 16:48). Del paso 4 en adelante solo esta la pantalla: los pilares saliendo, "
+         "las palancas del panel de aire y las cuatro señales del paso 5 en verde no se ven."),
+        ("La lista de la pantalla Cambio Molde tal como esta HOY, desmontaje y montaje",
+         "El 04/09 los tecnicos dijeron que iban a reprogramarla (IMG_0663 min 8:13); entre el "
+         "29/08 y el 04/09 ya habia cambiado un paso. Una foto de cada lista alcanza."),
+        ("Cuando se saca el vinilo que protege el molde verde",
+         "En el desmontaje se pone un vinilo solo para que apoye el molde auxiliar (IMG_0662 "
+         "min 5:49). En el montaje nadie dice en que paso se retira."),
+        ("Que receta y que numero de molde se cargan despues del montaje, y la primera pieza",
+         "La hoja 41 termina en el ultimo boton de la lista. Falta como se vuelve a producir: "
+         "salir de Modo de Ajuste, receta, calentamiento, y si la primera pieza se controla "
+         "antes de seguir."),
+        ("Quien tiene la contraseña que pide la pantalla en el paso 4 del desmontaje",
+         "Se dijo en voz alta en el video (IMG_0662 min 9:31). No va en la hoja: la define el "
+         "Lider de Produccion."),
+        ("Donde se guardan los pilares largos y cortos, la grasa y las llaves Allen",
+         "«Esos son los largos y estos son los cortitos» (IMG_0662 min 5:02). No se ve donde "
+         "quedan cuando no se usan."),
+        ("La traba negra del carro: que es y donde se pone",
+         "«Ahora hay que ponerle la traba... esa cosa negra, para ser mas estable» (IMG_0664 "
+         "min 2:13 a 2:50). No se ve en ningun cuadro."),
+        ("Si el molde se mueve alguna vez con el puente grua o solo con el carro",
+         "En los videos del 04/09 el molde sale empujado al carro blanco (IMG_0664 s=78, "
+         "IMG_0666 s=45). Nadie nombra la grua."),
+        ("Cual palanca del panel de aire es la del molde auxiliar y cual la de la cuchilla",
+         "Se movieron en los pasos 7 y 13 (IMG_0662 s=684 a 702 y min 22:34), pero no se ve "
+         "cual es cual ni para que lado va. La traductora dijo que la iban a marcar con una "
+         "cinta (min 11:05)."),
+        ("Que es el «candado manual» (手动锁) de los pasos 7 y 13 del desmontaje",
+         "La pantalla lo pide junto con el agua, la luz y el aire; en el video solo se mueve "
+         "la palanca del aire. Si hay un candado o un agua para sacar, no se ve."),
+        ("Si hay que esperar que la maquina se enfrie antes del cambio",
+         "El 04/09 el cambio se hizo con guantes, a la tarde despues de producir. Nadie dice "
+         "si hay que apagar el calor o esperar."),
+        ("Que se hace con el molde que sale y como llega el molde nuevo al carro",
+         "Entre el desmontaje y el montaje: donde se deja el molde viejo, si es el mismo carro "
+         "y como se sube el nuevo. Ningun video lo muestra."),
+        ("Para que se usan las llaves Allen",
+         "«Vamos a necesitar ... las llaves allen para hacer el cambio de molde» (IMG_0662 min "
+         "6:53). No se ve en que paso."),
+        ("El sensor del sujetador de la cuchilla que no se activo el 04/09",
+         "«Falta un sensor ahi, el sujetador de cuchillo» (IMG_0662 min 23:22). Saber si ya "
+         "esta resuelto antes de dar las hojas a produccion."),
+    ]),
+    ("7 · LAS TOMAS QUE MEJORARIAN LO QUE YA HAY", [
         ("Las manos apretando, de frente y quietas: RESET azul, arranque verde, paro rojo",
          "Estan filmadas de costado o en movimiento. Tres segundos de frente y quietos "
          "alcanzan para sacar la foto de cada boton."),

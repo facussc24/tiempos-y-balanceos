@@ -901,6 +901,12 @@ CORREGIDO_POR_FAK = [
      "caballete»"),
     (r"\btres puntitos\b|\b3 puntitos\b", "(sacarlo)",
      "Fak, 23/09/2026: «esa foto de los 3 puntos entendiste mal, es cualquier cosa, saca eso»"),
+    # Las corner safety straps del molde de GS Engineering (IMG_0668): la chapa del molde dice
+    # "DO NOT MOVE TOOL WITHOUT CORNER SAFETY STRAPS", y aun asi no van en el cambio en planta.
+    (r"\b(trabas?|topes?|barras?) rojas?\b|\btopes? rojos?\b|\bsafety straps?\b|"
+     r"\btopes? de transporte\b", "(no va)",
+     "Fak, 24/09/2026: «el video ese con Kip y las cosas rojas es medio irrelevante, eso solo "
+     "se usa para traslados hasta Estados Unidos o traslados grandes»"),
 ]
 
 

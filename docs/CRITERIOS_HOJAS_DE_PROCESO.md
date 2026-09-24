@@ -210,6 +210,13 @@ Fak ordenó su **eliminación definitiva del pliego operativo** debido a que:
 
 > **Directiva:** Los elementos exclusivos de logística externa no forman parte del proceso de manufactura y no deben figurar como pasos operativos en las HO.
 
+> **La fuente, 24/09/2026.** Fak, sobre el video de las trabas rojas (IMG_0668, 04/09/2026):
+> *"el video ese con Kip y las cosas rojas es medio irrelevante, eso solo se usa para traslados
+> hasta Estados Unidos o traslados grandes"*. Son las **corner safety straps** del molde de GS
+> Engineering: la chapa amarilla del molde dice *"DO NOT MOVE TOOL WITHOUT CORNER SAFETY
+> STRAPS"* y *"PURGE WATER LINES BEFORE SHIPPING"*, y las dos frases hablan del envío del molde,
+> no del cambio en planta. Que la chapa lo diga no convierte el paso en parte de la hoja.
+
 ---
 
 ## 4. ESTRUCTURA, GEOMETRÍA Y FORMATO OFICIAL SGC: FORMULARIO I-IN-002.4-R01
