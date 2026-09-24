@@ -93,6 +93,10 @@ probar guard "_arbVer.py reset (cierra y REABRE Relaciones)" \
   '{"tool_name":"Bash","tool_input":{"command":"python scripts/_arbVer.py reset"}}' 0
 probar guard "_arbVer.py estado (solo lee)" \
   '{"tool_name":"Bash","tool_input":{"command":"python scripts/_arbVer.py estado"}}' 0
+probar guard "_arbVer.py excel (cierra SOLO el Excel del export, no el arb)" \
+  '{"tool_name":"Bash","tool_input":{"command":"python scripts/_arbVer.py excel"}}' 0
+probar guard "_arbVer.py excel --dry-run (solo lista)" \
+  '{"tool_name":"Bash","tool_input":{"command":"python scripts/_arbVer.py excel --dry-run"}}' 0
 probar guard "listar el proceso sin matarlo" \
   '{"tool_name":"PowerShell","tool_input":{"command":"Get-Process produc | Select-Object Id,MainWindowTitle"}}' 0
 probar guard "la carga normal en el arb" \

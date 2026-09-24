@@ -84,16 +84,39 @@ Lo cazó Fak: *"es como que sale un error de que tenés otro Excel abierto con e
 Peor: Excel abre además un cartel **"De forma predeterminada, Excel realizará las siguientes
 conversiones de datos: • Quitar ceros iniciales"** con botones `Convertir` / `No convertir`.
 ⚠ **Nunca `Convertir`**: sobre un consumo que arranca con ceros, sacarle los ceros iniciales destruye
-el dato. Se contesta **`No convertir`** y se cierra Excel.
+el dato. Se contesta **`No convertir`** y se cierra **la ventana de `RELACIONES.TXT`**.
 
-**Gate antes de exportar:** que no haya proceso `EXCEL.EXE` con `RELACIONES.TXT`, y que el
-archivo se pueda abrir en modo append. Si no:
+**Gate antes de exportar** (`_arbVer.archivo_tomado()`, lo corre `export()`): que el archivo se
+pueda abrir para escritura. Si Excel lo sigue teniendo, `export()` **frena y lo dice** en vez de
+exportar al vacío.
 
-```python
-open(r'C:\tmp\RELACIONES.TXT', 'a').close()   # PermissionError = alguien lo tiene tomado
+**Después de cada export, liberar el archivo** — y SOLO ese. `_arbVer.cerrar_excel()` lo hace
+antes y después de cada export:
+
+```bash
+python scripts/_arbVer.py excel --dry-run   # lista qué cerraría, qué contestaría y qué deja
+python scripts/_arbVer.py excel             # libera RELACIONES.TXT
 ```
 
-**Después de cada export, cerrar Excel.** Si no, el próximo export no sale.
+🔴 **24/09/2026 — cerraba TODO Excel.** Hasta ese día `cerrar_excel()` mandaba `WM_CLOSE` a
+todas las ventanas `XLMAIN` y clickeaba a ciegas en (383, 227) de todo `NUIDialog`: un export
+imprimió *"Excel cerrado (2 ventana/s)"* y se llevó lo que Fak tenía abierto. Y el click a
+ciegas era peor: **el cartel de "¿Guardar los cambios en este archivo?" también es un
+`NUIDialog`** (botones `Abrir` / `Guardar` / `No guardar` / `Cancelar`, título vacío), y el
+botón flotante `Análisis rápido` que Excel muestra al seleccionar celdas, también. Ahora:
+
+- se cierra solo la `XLMAIN` cuyo título nombra **exactamente** a `RELACIONES.TXT`
+  (`RELACIONES.xlsx` o `Copia de RELACIONES.TXT` no), y solo de un proceso `EXCEL.EXE`;
+- el cartel se **lee** con UI Automation (el `NUIDialog` es DirectUI: `WM_GETTEXT` da solo el
+  título) y se contesta solo si es el de conversiones, apretando `No convertir` **por su
+  nombre** (InvokePattern), sin mouse ni coordenadas;
+- un cartel de guardar, o uno que no se pudo leer, **no se toca**: se avisa, y mientras esté
+  arriba no se le manda el cierre a nada de ese Excel.
+
+La decisión vive en `scripts/_lib/arbExcel.py` (selftest en CI, con los carteles leídos del
+Excel real) y se probó el 24/09 contra Excel de verdad: el export se cerró, un libro sin
+guardar al lado quedó intacto, el cartel de guardar quedó sin tocar, y `No convertir` dejó
+`00123` con sus ceros.
 
 ### 🔴 EXPORTAR: el combo se RESETEA al cambiar de solapa `CONFIRMADO 2026-08-07`
 

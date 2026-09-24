@@ -6,9 +6,14 @@
      python arbver.py estado          -> ventanas, modales y foco
      python arbver.py modal           -> cierra los modales #32770 con click real
      python arbver.py reset           -> saca la ventana de una celda sucia (cierra y reabre)
+     python arbver.py excel --dry-run -> lista que ventanas de Excel cerraria cerrar_excel()
+     python arbver.py excel           -> libera RELACIONES.TXT (cierra SOLO la ventana del export)
 """
 import ctypes, ctypes.wintypes as w, os, subprocess, sys, time
 from PIL import Image
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib'))
+import arbExcel as ax  # noqa: E402  que ventana de Excel es del export (probado en CI)
 
 u = ctypes.windll.user32; k = ctypes.windll.kernel32; g = ctypes.windll.gdi32
 CB = ctypes.WINFUNCTYPE(w.BOOL, w.HWND, w.LPARAM)
@@ -228,50 +233,167 @@ def reset_relaciones():
     return 0 if abierta else 1
 
 
-def cerrar_excel(espera=2.0):
-    """El export abre el TXT en Excel y Excel SE QUEDA CON EL ARCHIVO: el export siguiente
-    falla en silencio (mtime igual, ningun cartel del arb). Se cierra siempre, antes y
-    despues de exportar.
+def imagen(p):
+    """Nombre del .exe del proceso `p`, en minusculas ('excel.exe'), o '' si no se puede leer."""
+    hp = k.OpenProcess(0x1000, False, p)         # PROCESS_QUERY_LIMITED_INFORMATION
+    if not hp:
+        return ''
+    try:
+        n = w.DWORD(1024); b = ctypes.create_unicode_buffer(1024)
+        ok = k.QueryFullProcessImageNameW(hp, 0, b, ctypes.byref(n))
+        return os.path.basename(b.value).lower() if ok else ''
+    finally:
+        k.CloseHandle(hp)
 
-    Ojo con el cartel "Excel realizara las siguientes conversiones: quitar ceros iniciales":
-    hay que contestar **No convertir**. Aceptar destruiria cualquier consumo que arranque con ceros.
+
+def plan_excel(archivos=ax.ARCHIVOS_EXPORT):
+    """Que haria `cerrar_excel` con cada ventana de Excel que hay ahora en pantalla.
+
+    Solo mira ventanas visibles de un proceso EXCEL.EXE (asi nunca toca el arb ni un cartel de
+    Word/Outlook, que tambien usan NUIDialog). Devuelve [(accion, hwnd, clase, titulo, detalle)]:
+      'cerrar'     XLMAIN cuyo titulo nombra a un archivo del export
+      'contestar'  NUIDialog que UI Automation confirma que es el cartel de conversiones;
+                   detalle = nombre exacto del boton No convertir
+      'dejar'      libros de Fak, y carteles MODALES que no son el de conversiones (guardar
+                   cambios, o uno que no se pudo leer): se avisa y frenan el cierre en ese Excel
+      'ignorar'    NUIDialog que no es modal: el boton flotante "Analisis rapido" que Excel
+                   muestra al seleccionar celdas es un NUIDialog (medido 24/09/2026). No se toca.
+      'esperar'    XLMAIN del export con un cartel modal encima: todavia no se cierra
     """
-    cerradas = 0
-    for _ in range(3):
-        dlg, xl = [], []
+    plan = []
 
-        def _cb(h, _l):
-            if u.IsWindowVisible(h):
-                c = cls(h)
-                if c == 'NUIDialog':
-                    dlg.append(h)
-                elif c == 'XLMAIN':
-                    xl.append(h)
-            return True
-        u.EnumWindows(CB(_cb), 0)
-        if not dlg and not xl:
+    def _cb(h, _l):
+        if u.IsWindowVisible(h) and cls(h) in ('XLMAIN', 'NUIDialog') and imagen(pid(h)) == 'excel.exe':
+            plan.append(h)
+        return True
+    u.EnumWindows(CB(_cb), 0)
+    out = []
+    for h in plan:
+        c, t = cls(h), txt(h)
+        if c == 'XLMAIN':
+            del_export = ax.es_ventana_del_export(t, archivos)
+            out.append(('cerrar' if del_export else 'dejar', h, c, t,
+                        'es del export' if del_export else 'no es del export'))
+            continue
+        elementos = ax.leer_cartel(h)
+        clase, boton = ax.clasificar_cartel(elementos or [])
+        if clase == 'conversiones':
+            out.append(('contestar', h, c, t, boton))
+            continue
+        leido = ('no se pudo leer (UI Automation)' if elementos is None else
+                 ' | '.join(n for _t, n in elementos if n.strip())[:160] or 'sin texto')
+        modal = es_modal(h)
+        out.append(('dejar' if modal or clase == 'guardar' else 'ignorar', h, c, t,
+                    'cartel %s%s: %s' % (clase, '' if modal else ', no modal', leido)))
+    # Un cartel modal que no es el de conversiones frena el cierre en ESE Excel: el WM_CLOSE
+    # quedaria encolado detras de el. La ventana deshabilitada es lo mismo visto desde ella.
+    trabados = {pid(h) for a, h, c, _t, _d in out if a == 'dejar' and c == 'NUIDialog'}
+    return [('esperar', h, c, t, 'tiene un cartel abierto encima: se cierra cuando lo contesten')
+            if a == 'cerrar' and (pid(h) in trabados or not u.IsWindowEnabled(h))
+            else (a, h, c, t, d) for a, h, c, t, d in out]
+
+
+def es_modal(h):
+    """Un cartel modal deshabilita la ventana de la que cuelga (GW_OWNER)."""
+    o = u.GetWindow(h, 4)
+    return bool(o) and not u.IsWindowEnabled(o)
+
+
+def _seguro(s):
+    """El texto de un cartel trae caracteres que la consola cp1252 no imprime (el de guardar
+    tiene U+200E en la ruta, medido 24/09/2026): un print que revienta en medio de un export es
+    peor que un '?'."""
+    enc = getattr(sys.stdout, 'encoding', None) or 'utf-8'
+    return str(s).encode(enc, 'replace').decode(enc, 'replace')
+
+
+def cerrar_excel(espera=2.0, archivos=ax.ARCHIVOS_EXPORT, seco=False):
+    """El export abre el TXT en Excel y Excel SE QUEDA CON EL ARCHIVO: el export siguiente
+    falla en silencio (mtime igual, ningun cartel del arb). Se cierra antes y despues de exportar.
+
+    Solo se cierra la ventana del ARCHIVO DEL EXPORT, nunca las demas. Hasta el 24/09/2026 se
+    cerraban TODAS las ventanas de Excel y se clickeaba a ciegas en todo cartel `NUIDialog`: se
+    llevo lo que Fak tenia abierto, y el cartel de "guardar cambios" es el mismo `NUIDialog`.
+
+    El cartel "Excel realizara las siguientes conversiones: quitar ceros iniciales" se contesta
+    **No convertir** (Convertir destruiria cualquier consumo que arranque con ceros), pero solo
+    despues de leerlo por UI Automation y confirmar que es ESE cartel; el boton se aprieta por
+    su nombre, no por coordenada. Cualquier otro cartel queda abierto y se avisa.
+
+    Mientras Excel tenga un cartel MODAL que no es el de conversiones (o la ventana del export
+    este deshabilitada, que es lo mismo visto desde ella), no se le manda WM_CLOSE a ninguna
+    ventana de ese proceso: el cierre quedaria encolado detras de un cartel ajeno.
+    Si algo no se pudo cerrar, lo dice; `archivo_tomado()` es el que confirma si quedo libre.
+
+    `seco=True` solo lista que haria, sin tocar nada.
+    """
+    if seco:
+        plan = plan_excel(archivos)
+        if not plan:
+            print('no hay ventanas de Excel abiertas')
+        for accion, _h, c, t, det in plan:
+            que = {'cerrar': 'CERRARIA', 'contestar': 'CONTESTARIA %r' % det,
+                   'dejar': 'DEJA ABIERTA', 'ignorar': 'NO TOCA', 'esperar': 'NO CIERRA TODAVIA'}[accion]
+            print(_seguro('  %-26s %-9s %r%s' % (que, c, t, '' if accion in ('cerrar', 'contestar') else '  (%s)' % det)))
+        return 0
+    enviados, contestados = set(), 0
+    avisos, ajenas = {}, set()                   # hwnd -> motivo / libros de Fak (solo se cuentan)
+    for _vuelta in range(3):
+        plan = plan_excel(archivos)
+        avisos = {h: det for a, h, _c, _t, det in plan              # los de ESTA vuelta
+                  if a in ('dejar', 'esperar') and det != 'no es del export'}
+        ajenas |= {h for _a, h, _c, _t, det in plan if det == 'no es del export'}
+        hubo, fallidos = False, set()
+        for a, h, _c, _t, det in plan:
+            if a != 'contestar':
+                continue
+            if ax.apretar_boton(h, det):
+                contestados += 1; hubo = True
+                print(_seguro('Excel: cartel de conversiones contestado %r' % det))
+            else:
+                avisos[h] = 'no pude apretar %r en el cartel de conversiones' % det
+                fallidos.add(pid(h))
+        if hubo:                                 # el cartel frenaba a Excel: mirar de nuevo antes de cerrar
+            time.sleep(espera)
+            continue
+        for a, h, _c, _t, _det in plan:
+            if a != 'cerrar' or h in enviados or pid(h) in fallidos:
+                continue
+            u.PostMessageW(h, 0x0010, 0, 0)      # WM_CLOSE a la ventana del export, y a ninguna mas
+            enviados.add(h); hubo = True
+        if not hubo:
             break
-        for d in dlg:                       # contestar "No convertir" (abajo a la derecha)
-            r = R(); u.GetWindowRect(d, ctypes.byref(r))
-            tid = u.GetWindowThreadProcessId(d, None); me = k.GetCurrentThreadId()
-            u.AttachThreadInput(me, tid, True)
-            try:
-                u.SetForegroundWindow(d); u.BringWindowToTop(d); time.sleep(0.4)
-                u.SetCursorPos((r.l + r.r) // 2, r.t + 14); time.sleep(0.15)
-                u.mouse_event(0x0002, 0, 0, 0, 0); time.sleep(0.08)
-                u.mouse_event(0x0004, 0, 0, 0, 0); time.sleep(0.4)
-                u.SetCursorPos(r.l + 383, r.t + 227); time.sleep(0.25)
-                u.mouse_event(0x0002, 0, 0, 0, 0); time.sleep(0.09)
-                u.mouse_event(0x0004, 0, 0, 0, 0); time.sleep(1.0)
-            finally:
-                u.AttachThreadInput(me, tid, False)
-            cerradas += 1
-        for h in xl:
-            u.PostMessageW(h, 0x0010, 0, 0); cerradas += 1
         time.sleep(espera)
-    if cerradas:
-        print('Excel cerrado (%d ventana/s) — el archivo queda libre' % cerradas)
+    t0 = time.time()                             # Excel puede tardar en soltar la ventana
+    while any(u.IsWindow(h) for h in enviados) and time.time() - t0 < 6:
+        time.sleep(0.5)
+    for h in enviados:
+        if u.IsWindow(h) and u.IsWindowVisible(h):
+            avisos.setdefault(h, 'le pedi cerrar y sigue abierta')
+    for h, motivo in avisos.items():
+        if u.IsWindow(h) and u.IsWindowVisible(h):
+            print(_seguro('   ATENCION Excel: dejo abierta %r — %s' % (txt(h) or cls(h), motivo)))
+    cerradas = sum(1 for h in enviados if not u.IsWindow(h))
+    ajenas = [h for h in ajenas if u.IsWindow(h)]
+    if enviados or contestados or ajenas:
+        print('Excel: %d ventana/s del export cerrada/s (%s) · %d cartel/es contestado/s · '
+              '%d libro/s que no son del export, sin tocar'
+              % (cerradas, ', '.join(archivos), contestados, len(ajenas)))
     return cerradas
+
+
+def archivo_tomado(path):
+    """True si otro programa (Excel) tiene el archivo abierto y el arb no lo podria escribir.
+    Abre para lectura+escritura sin truncar: no cambia nada del archivo."""
+    if not os.path.exists(path):
+        return False
+    try:
+        with open(path, 'r+b'):
+            return False
+    except FileNotFoundError:                    # se borro entre el exists() y el open()
+        return False
+    except PermissionError:
+        return True
 
 
 # ---------------------------------------------------------------- export
@@ -293,6 +415,9 @@ def export(timeout=240):
         raise SystemExit('no encuentro la ventana Maestro de Relaciones')
     P = os.path.join('C:' + os.sep, 'tmp', 'RELACIONES.TXT')
     cerrar_excel()                       # si Excel lo tiene tomado, el export no sale
+    if archivo_tomado(P):                # y fallaria EN SILENCIO: mejor frenar aca y decir por que
+        raise SystemExit('ABORTADO: %s sigue abierto en otro programa (Excel) y el export no lo '
+                         'podria escribir. Cerrar esa ventana a mano, sin guardar, y reintentar.' % P)
     antes = os.path.getmtime(P) if os.path.exists(P) else 0
     r = R(); u.GetWindowRect(h, ctypes.byref(r))
     tid = u.GetWindowThreadProcessId(h, None); me = k.GetCurrentThreadId()
@@ -352,6 +477,8 @@ def export(timeout=240):
             break
         prev = n
     cerrar_excel()                       # el export lo reabre: dejarlo libre para el proximo
+    if archivo_tomado(P):
+        print('ATENCION: %s quedo abierto en Excel: el proximo export va a frenar hasta que se cierre' % P)
     ok = os.path.getmtime(P) > antes
     print('export %s: %d bytes  mtime %s' % ('OK' if ok else 'NO SALIO',
           os.path.getsize(P), time.strftime('%H:%M:%S', time.localtime(os.path.getmtime(P)))))
@@ -378,5 +505,12 @@ if __name__ == '__main__':
         sys.exit(1 if cerrar_modales() else 0)
     elif cmd == 'reset':
         sys.exit(reset_relaciones())
+    elif cmd == 'excel':
+        seco = '--dry-run' in sys.argv[2:]
+        cerrar_excel(seco=seco)
+        P = os.path.join('C:' + os.sep, 'tmp', 'RELACIONES.TXT')
+        tomado = archivo_tomado(P)
+        print('%s: %s' % (P, 'TOMADO por otro programa' if tomado else 'libre'))
+        sys.exit(1 if tomado and not seco else 0)
     else:
         sys.exit(1 if estado() else 0)
