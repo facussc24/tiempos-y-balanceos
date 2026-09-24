@@ -23,9 +23,15 @@ historica de solo lectura.
 
 ## Hojas de operaciones (HO) — solo cuando Fak las pide
 
-- Cuando Fak lo pide, las HO se arman aca (aclarado 2026-08-13, HO-986 APB Trasero Central): en
-  Excel, sobre el formulario oficial del SGC `I-IN-002.4-R01`, una pestaña por operacion. Lo
-  prohibido es **ofrecerlas por cuenta propia**. Enforcement: hook `ho-numeracion-guard.sh`.
+- Cuando Fak lo pide, las HO se arman aca (aclarado 2026-08-13, HO-986 APB Trasero Central).
+  **Formato: el PowerPoint nuevo** (el generador de `scripts/img/generar_hojas_img.py`, skill
+  `hojas-de-proceso`: una foto por paso, 2 a 4 pasos por hoja, portada), sobre el formulario
+  `I-IN-002.4-R01`. **No el Excel viejo pestaña por pestaña**: el 24/09/2026 arme la HO-991 del
+  P21 copiando la HO 927 en Excel y Fak: *"la hoja de proceso la queria con el nuevo formato
+  power point"*. **Se guardan en `Y:\BARACK\CALIDAD\DOCUMENTACION SGC\HOJAS DE OPERACIONES\`**
+  (`1- CLIENTES\<cliente>\...`), nunca en la biblioteca de Ingeniería (Fak, 24/09/2026; skill
+  `hojas-de-proceso` §3 bis). Lo prohibido es **ofrecerlas por cuenta propia**. Enforcement: hook
+  `ho-numeracion-guard.sh`.
 - Los pasos de una HO son instruccion de planta: sin documento fuente van **TBD**. No se
   redactan por analogia con otra pieza "parecida" (`core-prohibiciones` §1). El listado
   maestro (`3- LISTADO\Listado hojas de proceso.xlsx` + hoja oculta `_CONTEXTO_CLAUDE`) manda

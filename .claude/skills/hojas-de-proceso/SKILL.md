@@ -37,7 +37,7 @@ secciones ganan sobre cualquier criterio que yo derive solo.
 | **2.x** | Fotografia operativa: paso a paso, nada de imagenes sinteticas, pantallas legibles, cero fotos invertidas |
 | **3.2** | **La tabla de terminos prohibidos**: el castellano de planta argentino |
 | **4.1 a 4.3** | Geometria, paleta y tipografias del formulario |
-| **4.4** | **Infinitivo obligatorio**, tono sobrio, `TBD` para lo que falta |
+| **4.4** | **Infinitivo obligatorio**, tono sobrio; `TBD` solo en el cajetin, nunca en la descripcion (Fak 24/09/2026) |
 | **4.5** | Las tres fases fijas del plan de reaccion |
 | **6** | El checklist de auditoria pre-entrega |
 
@@ -178,7 +178,7 @@ forma de dato) y el gate **`redaccion.py`**, que lee los dos y frena la hoja.
 ```bash
 py -3 .claude/skills/hojas-de-proceso/scripts/redaccion.py texto "La mesa entra con el molde"
 py -3 .claude/skills/hojas-de-proceso/scripts/redaccion.py spec <generador.py> HOJAS_X
-py -3 .claude/skills/hojas-de-proceso/scripts/redaccion_selftest.py   # 36 casos, rojo y verde
+py -3 .claude/skills/hojas-de-proceso/scripts/redaccion_selftest.py   # 71 casos, rojo y verde
 ```
 
 ### GATE 0 — antes de escribir nada: ¿cuantos pasos tiene esta hoja, y entran?
@@ -227,8 +227,8 @@ lo dijo nadie, vi un panel de manometros en una foto y lo converti en un paso.
 - **Del audio de planta sirve lo que narra Facundo**, no lo que sale del traductor: es chino
   traducido por celular y el transcriptor inventa. Un numero sale de la PANTALLA.
 - Y una charla con el tecnico **no es un procedimiento**: sirve para saber que preguntar.
-  Si lo unico que hay es esa charla, la hoja dice QUE ES CADA COSA y la secuencia queda
-  pendiente (`no-pfd-no-ho.md` §3: sin documento fuente va TBD).
+  Si lo unico que hay es esa charla, la hoja dice QUE ES CADA COSA y lo que ninguna fuente
+  dice se escribe generico o no se escribe: sin TBD en la descripcion (Fak, 24/09/2026, §4).
 
 ### GATE 1 — antes de acomodar: ¿cual es la imagen PRINCIPAL de esta hoja?
 
@@ -422,8 +422,9 @@ con el proveedor, como arme la hoja.
 va a la bitacora o al PDF de pendientes, no a la hoja. Sirven: un limite, una advertencia,
 un "no arranques si...", un "esto se hace entre dos". No sirven —y las frena el gate
 `_gate_texto_para_el_operario()`— el numero de video, "pendiente de confirmar con X",
-"filmado el ...", "lectura del ...", "lo agregamos nosotros", "BORRADOR". **`TBD` se puede
-escribir, pero solo**: el por que va aparte (`no-pfd-no-ho.md` §5).
+"filmado el ...", "lectura del ...", "lo agregamos nosotros", "BORRADOR". **Y desde el
+24/09/2026 tampoco `TBD`** en la descripcion: lo que no se sabe se escribe generico con lo que
+hay, y el por que va a la lista de pendientes (ver §4).
 
 Lo mismo para los parametros: va el valor que rige (`Tiempo de vacio: 19 s`), no su
 historia (`subido de 8 s el 10/09 porque...`).
@@ -486,6 +487,24 @@ en el pie: *"la franja es advertencia de esta hoja, no del HMI"*.
 
 ---
 
+## 3 bis. Dónde se guarda la hoja — `HOJAS DE OPERACIONES` del SGC, nunca en Ingeniería
+
+Fak, 24/09/2026, cuando dejé la HO-991 del P21 en la biblioteca de Ingeniería
+(`1- GENERAL\INSTRUCTIVOS\INSTRUCCIONES OPERATIVAS\`): *"ahí no van las hojas de proceso, hay
+que ir guardándolas donde sí van, o sea `Y:\BARACK\CALIDAD\DOCUMENTACION SGC\HOJAS DE OPERACIONES`"*.
+
+| Qué | Dónde |
+|---|---|
+| Hoja de un producto de cliente | `...\HOJAS DE OPERACIONES\1- CLIENTES\<CLIENTE>\<proyecto o pieza>\` (ej. `SMRC\P21\`, al lado de la HO 927) |
+| Hoja de un sector / máquina | `...\HOJAS DE OPERACIONES\2- SECTORES\<sector>\` |
+| Retrabajo | `...\HOJAS DE OPERACIONES\4- RETRABAJOS\` |
+| El número | `...\HOJAS DE OPERACIONES\3- LISTADO\Listado hojas de proceso.xlsx` (hoja oculta `_CONTEXTO_CLAUDE`) |
+
+Van el `.pptx` y su `.pdf`, con nombre `HO-<N> - HOJAS DE PROCESO - <PIEZA> - Rev.<letra>`. El
+generador puede escribir en el scratchpad para mirarla, pero la entrega va ahí. Los decks de
+HOTMELT, MOLDEADORA IMG y PRENSA EMBOSSING quedaron en `INSTRUCCIONES OPERATIVAS` antes de
+esta decisión.
+
 ## 4. Lo fijo del formulario I-IN-002.4-R01
 
 Una hoja = una operacion. Bloques: cajetin · IMAGENES · DESCRIPCION DE LA OPERACION ·
@@ -499,8 +518,14 @@ CICLO DE CONTROL · ELEMENTOS DE SEGURIDAD · PLAN DE REACCION.
 - **Resp.** solo `OP` / `OC` / `Insp.`  · **Registro** solo `Set up` o `-`, nunca "RC".
 - Pasos: frases cortas, imperativas, una accion por renglon. Sin "BORRADOR" ni "pendiente".
 - **Sin foto -> recuadro VACIO**, no una leyenda que diga que falta.
-- Dato que no tengo -> **TBD** y avisar. Los pasos son instruccion de planta: sin documento
-  fuente van TBD, no por analogia con otra pieza parecida.
+- **Ni un TBD en la descripcion** (pasos, notas, parametros, pies, plan de reaccion) —
+  Fak, 24/09/2026: *"no puede haber ni 1 TBD... el TBD del numero de hoja si, pero que sea
+  una hoja de proceso sin TBD en las descripciones... toda la informacion disponible para
+  conseguirlo"*. Lo que no se sabe se escribe **generico con lo que hay** (*"colocar la pieza
+  bien apoyada, con la zona del logo debajo del molde"*, *"los valores de la foto son de
+  referencia del proveedor"*), **sin inventar un valor** ni copiar un paso de otra pieza; el
+  hueco va a la lista de pendientes y al mail, no a la hoja. El TBD queda solo en el cajetin
+  (N° de operacion, HO, sector). Lo frena `redaccion.revisar_tbd()` dentro de `gate_redaccion`.
 - Los iconos de EPP se **extraen de una HO real** y se reusan; no se dibujan ni se buscan en
   internet. Y se identifican **abriendo el PNG**: el 03/09 el que yo llamaba "barbijo" era
   el mismo pictograma de anteojos con otro nombre de archivo.
@@ -553,13 +578,13 @@ CICLO DE CONTROL · ELEMENTOS DE SEGURIDAD · PLAN DE REACCION.
 | **Medido** | donde esta cada pulsador, en vez de estimarlo | `medir_marca.py` / `--marca "color:verde|..."` |
 | **Dura** | un termino que en planta no se dice asi (`seta`, `izaje`, `chumacera`...) | `redaccion.py` + `vocabulario.data.json` |
 | **Dura** | un paso que describe la maquina en vez de mandarle algo al operario | `redaccion.gate_redaccion()` |
-| **Regresion** | 36 casos de idioma, vocabulario y voz, en ROJO y en VERDE | `redaccion_selftest.py` |
+| **Regresion** | 71 casos de idioma, vocabulario, voz, cocina y TBD, en ROJO y en VERDE | `redaccion_selftest.py` |
 | **Dura (deck)** | un material que entra o sale de la operacion y ninguna hoja nombra | `gate_materiales_del_deck()` del generador |
 | **Dura** | una NOTA que le cuenta al operario un hueco mio ("no esta documentado", "preguntar antes") | `COCINA` en `_gate_texto_para_el_operario()` |
 
 ```bash
 py -3 .claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py     # 25 casos
-py -3 .claude/skills/hojas-de-proceso/scripts/redaccion_selftest.py   # 36 casos
+py -3 .claude/skills/hojas-de-proceso/scripts/redaccion_selftest.py   # 71 casos
 py -3 .claude/skills/hojas-de-proceso/scripts/fotodevideo.py leer <assets>/*.jpg  # procedencia
 py -3 .claude/skills/hojas-de-proceso/scripts/hoja_proceso_check.py "<deck.pptx>" --spec <spec.py>
 ```
@@ -586,7 +611,7 @@ cliente). En el repo va solo lo generico: libreria, gate y selftest.
       23/09/2026: el sensor de la mesa estaba en la foto y ningun paso lo nombraba)
 - [ ] cada nota pasa el test: ¿le cambia algo al que esta al lado de la maquina?
 - [ ] lo que falta filmar, en su lista aparte — **no se escribe por analogia**
-- [ ] ningun `TBD` sin avisar, ninguna foto sin mirar, ningun numero sin fuente citada
+- [ ] ningun `TBD` en la descripcion (solo en el cajetin), ninguna foto sin mirar, ningun numero sin fuente citada
 - [ ] **revision ciega** (22/09/2026): UN `Agent` recibe SOLO el PDF impreso de las hojas (ni el
       spec, ni la transcripcion, ni mi razonamiento) y contesta como operario nuevo: *"¿Que tengo
       que hacer yo en este puesto, paso por paso? ¿Que no se entiende?"*. Si su respuesta no es el
