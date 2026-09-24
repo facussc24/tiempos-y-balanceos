@@ -165,6 +165,13 @@ entrada de los últimos 10 días contra los nombres de tarea (abiertas + cerrada
 los hilos **sin carpeta** (candidatas a pedido invisible) y los **borradores/bandeja de
 salida** recientes (la firma de "hecho pero no avisado"). Detect-only: no crea carpetas ni
 manda mails. Lógica y tests: `scripts/_lib/mailCache.mjs` + `mailCache.test.mjs`.
+
+**Qué cuenta como "tiene carpeta"** (24/09/2026): dos palabras distintas en común con el nombre
+de una tarea, o UNA sola si es un código (4 dígitos o más, no un año) o un nombre propio (7 letras o
+más, fuera de `PALABRAS_GENERICAS`). Una palabra de dominio (`consumo`, `material`) o un pedazo
+de fecha (`21`, `2026`) no alcanza: ese día dos pedidos de Federico no aparecían, y medido
+sobre la Bandeja de 30 días, 32 de 33 hilos dados por "con carpeta" por un solo token los
+tapaba una carpeta de otro tema. Agregar una palabra a la lista solo hace aparecer mails.
 Necesita el cache de `_mails.py` (sync programado 2×/día); si está viejo, lo canta.
 
 Todos aceptan `--dry-run`. Las rutas viven en `scripts/_lib/serverPaths.mjs`.

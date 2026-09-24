@@ -19,12 +19,17 @@
  *  20      el control en ROJO: sacar la carpeta hace aparecer el mail (el mismo cruce
  *          que en verde lo suprime — un control que no da rojo contra un caso rojo
  *          no detecta nada)
+ *  21-26   un solo token compartido (24/09/2026): los dos pedidos de Federico que el
+ *          relevador escondio detras de una palabra generica ("consumo", "material") o de
+ *          un pedazo de fecha/codigo ("21"), con las carpetas REALES de esa mañana; la
+ *          carpeta propia de cada uno SI los suprime; que identifica solo y que no
  */
 import { describe, it, expect } from 'vitest';
 
 import {
     normalizarTexto, raiz, tokensSignificativos, matcheaTarea, claveHilo,
     esRuido, tipoCarpeta, cruzarMailsConTareas, fechaCorte,
+    identificaSolo, GENERICAS, PALABRAS_GENERICAS,
 } from '../../scripts/_lib/mailCache.mjs';
 
 const mail = (extra) => ({
@@ -162,6 +167,67 @@ describe('cruzarMailsConTareas', () => {
         expect(cruzarMailsConTareas(pedido, tareas).sinCarpeta).toHaveLength(0);
         const sinLaTarea = tareas.filter((t) => !t.includes('caimari'));
         expect(cruzarMailsConTareas(pedido, sinLaTarea).sinCarpeta).toHaveLength(1);
+    });
+});
+
+describe('un solo token compartido — los pedidos escondidos el 24/09/2026', () => {
+    const t = tokensSignificativos;
+    const federico = (asunto, fecha) => mail({ asunto, fecha, de: 'Federico Kipersain', de_mail: 'f.kipersain@barackmercosul.com' });
+    const hilos = federico('Consulta Consumo Hilos', '2026-09-21 14:43');
+    const felpa = federico('Material Felpa 21-6416', '2026-09-22 09:58');
+    // Carpetas reales de esa mañana que compartian UN token con alguno de los dos asuntos
+    // (las carpetas propias de los dos pedidos se abrieron a las 08:40 del 24/09).
+    const tareas2409 = [
+        'Top Roll Patagonia - consumo Haartz al pasar a MTL',
+        'Formato de consumo unitario de material - oficializar el IUM',
+        'Actualziar consumos en arb de smrc',
+        'Consumo aplix arb',
+        'RZ00440 - re-tizar el APB TRA CEN y recalcular consumo',
+        'Aplix arb - pendientes P280828, P280883 y doble conteo 21-6614',
+    ];
+    const propiaHilos = 'Consumo de hilo 0,1083 kg - consulta de Federico 21-09';
+    const propiaFelpa = 'Felpa 21-6416 - codigo nuevo en arb y OK para comprar - Federico 22-09';
+
+    it('21. los dos salen SIN CARPETA cuando lo unico en comun es una palabra generica o un "21"', () => {
+        for (const n of tareas2409) {
+            expect(matcheaTarea(t(hilos.asunto), t(n))).toBe(false);
+            expect(matcheaTarea(t(felpa.asunto), t(n))).toBe(false);
+        }
+        const { sinCarpeta } = cruzarMailsConTareas([hilos, felpa], tareas2409);
+        expect(sinCarpeta.map((h) => h.asunto)).toEqual(['Material Felpa 21-6416', 'Consulta Consumo Hilos']);
+    });
+
+    it('22. EN VERDE: la carpeta propia de cada uno lo suprime, y la del otro no', () => {
+        const conHilos = cruzarMailsConTareas([hilos, felpa], [...tareas2409, propiaHilos]).sinCarpeta;
+        expect(conHilos.map((h) => h.asunto)).toEqual(['Material Felpa 21-6416']);   // "21" de "21-09" no alcanza
+        const conFelpa = cruzarMailsConTareas([hilos, felpa], [...tareas2409, propiaFelpa]).sinCarpeta;
+        expect(conFelpa.map((h) => h.asunto)).toEqual(['Consulta Consumo Hilos']);
+        expect(cruzarMailsConTareas([hilos, felpa], [...tareas2409, propiaHilos, propiaFelpa]).sinCarpeta).toHaveLength(0);
+    });
+
+    it('23. un numero identifica solo si parece un codigo: 4 digitos o mas y no un año', () => {
+        for (const cod of ['asg1050', '6416', 'p280828', 'rz00440', '11010843']) expect(identificaSolo(cod)).toBe(true);
+        for (const pedazo of ['21', '09', '3', '158', '3d', '6a', 'p21', 'vw427', '2026', '2025']) expect(identificaSolo(pedazo)).toBe(false);
+    });
+
+    it('24. una palabra identifica sola si es un nombre propio largo, no una palabra de dominio', () => {
+        for (const propio of ['caimari', 'cozzuol', 'sinoyqx']) expect(identificaSolo(propio)).toBe(true);
+        for (const s of ['Consumos', 'MATERIALES', 'Patagonia', 'consultas', 'Proyectos', 'formatos', 'pendientes', 'insertos']) {
+            const [tok] = t(s);
+            expect(identificaSolo(tok), s).toBe(false);
+        }
+        expect(identificaSolo('nuevo')).toBe(false);   // corta: nunca alcanzo sola
+    });
+
+    it('25. el mismo token repetido en el asunto sigue siendo UNO', () => {
+        expect(matcheaTarea(t('Patagonia - review Patagonia.pptx'), t('Dispositivos de adhesivado Patagonia'))).toBe(false);
+    });
+
+    it('26. la lista de genericas no tiene entradas muertas: 7 letras o mas y en el Set como las deja el tokenizador', () => {
+        for (const p of PALABRAS_GENERICAS) {
+            expect(p.length, p).toBeGreaterThanOrEqual(7);
+            expect(GENERICAS.has(raiz(normalizarTexto(p))), p).toBe(true);
+        }
     });
 });
 

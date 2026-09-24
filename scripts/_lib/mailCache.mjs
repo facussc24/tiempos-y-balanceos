@@ -73,19 +73,75 @@ export function tokensSignificativos(s) {
 }
 
 /**
+ * Palabras largas que NOMBRAN UNA CLASE de cosa (un tipo de pedido, de documento, de accion,
+ * de material o de pieza), el proyecto paraguas y la reunion diaria: cualquier tarea puede
+ * tenerlas, asi que compartir UNA con una carpeta no dice que el mail sea esa tarea.
+ *
+ * El 24/09/2026 `_escritorio.mjs` escondio "Consulta Consumo Hilos" (Federico, 21/09) detras
+ * de las cinco carpetas con "consumo" en el nombre ("Top Roll Patagonia - consumo Haartz"...)
+ * y "Material Felpa 21-6416" (22/09) detras de "Formato de consumo unitario de material".
+ * Medido sobre la Bandeja real de los 30 dias anteriores: 33 hilos se daban por "con carpeta"
+ * por UN solo token y 32 los tapaba una carpeta de otro tema. La lista sale de esa medicion:
+ * las palabras que tapaban, y las de la misma clase que aparecen en esos asuntos o en los
+ * nombres de las carpetas (abiertas, en espera y cerradas).
+ *
+ * Solo van palabras de 7 letras o mas: las mas cortas ("codigo", "plano") ya no alcanzan solas.
+ * Se escriben en singular: el plural sale solo. Agregar una palabra nunca esconde un mail,
+ * solo hace aparecer alguno de mas — ante la duda, se agrega.
+ */
+export const PALABRAS_GENERICAS = [
+    // lo que pide un mail
+    'consulta', 'pregunta', 'solicitud', 'propuesta', 'pendiente', 'urgente', 'seguimiento',
+    'relevamiento', 'prioridad',
+    // documentos
+    'formato', 'informe', 'informacion', 'presentacion', 'factibilidad', 'flujograma',
+    'plantilla', 'documentacion', 'revision',
+    // acciones
+    'actualizacion', 'actualizar', 'actualizado', 'modificacion', 'modificar', 'modificado',
+    'corregido', 'revisar', 'verificar', 'imprimir', 'mejorar',
+    // materiales, cosas y tipos de pieza
+    'consumo', 'material', 'proceso', 'proyecto', 'producto', 'proveedor', 'cliente',
+    'maquina', 'dispositivo', 'impresora', 'estanteria', 'inserto', 'headrest', 'apoyacabeza',
+    // el proyecto paraguas (media cola es suya) y la reunion diaria de prioridades
+    'patagonia', 'asaichi',
+];
+
+const pluralDe = (p) => (/[aeiou]$/.test(p) ? `${p}s` : `${p}es`);
+/** Las palabras de arriba como las deja tokensSignificativos, en singular y en plural. */
+export const GENERICAS = new Set(PALABRAS_GENERICAS.flatMap((p) => {
+    const n = normalizarTexto(p);
+    return [raiz(n), raiz(pluralDe(n))];
+}));
+
+/**
+ * ¿Este token, compartido SOLO, alcanza para decir que el mail es esa tarea?
+ *
+ *  - Con numero: solo si parece un codigo — 4 digitos o mas y que no sea un año (asg1050,
+ *    6416, p280828, 11010843). Un pedazo corto es una fecha o una cantidad: el "21" de
+ *    "21-09" o de "21-6614" tapo "Material Felpa 21-6416" tanto como la palabra "material",
+ *    y "2026", "09", "3d" o "5" tapaban 17 hilos del mismo relevamiento.
+ *  - Sin numero: un nombre propio — un apellido, un cliente, un producto (caimari, cozzuol,
+ *    sinoyqx): 7 letras o mas y que no sea una PALABRAS_GENERICAS.
+ */
+export function identificaSolo(token) {
+    const t = String(token);
+    if (/\d/.test(t)) return (t.match(/\d/g) ?? []).length >= 4 && !/^(19|20)\d\d$/.test(t);
+    return t.length >= 7 && !GENERICAS.has(t);
+}
+
+/**
  * ¿El asunto de un mail "es" alguna de las tareas de la cola?
  *
- * Dos tokens en comun alcanzan ("alta codigo caimari" vs "nuevo codigo caimari"); uno solo
- * alcanza unicamente si es distintivo: tiene numero (un part number como asg1050 no aparece
- * de casualidad) o es largo (un apellido o un producto: caimari, cozzuol, sinoyqx). Palabras
- * comunes sueltas ("codigo", "plano") NO suprimen el aviso — el costo de tapar un pedido
- * invisible es mayor que el de listar un mail de mas.
+ * Dos tokens distintos en comun alcanzan ("alta codigo caimari" vs "nuevo codigo caimari");
+ * uno solo alcanza unicamente si `identificaSolo` (un codigo o un nombre propio). El mismo
+ * token repetido en el asunto sigue siendo uno. El costo de tapar un pedido invisible es
+ * mayor que el de listar un mail de mas.
  */
 export function matcheaTarea(tokensMail, tokensTarea) {
     const bolsa = new Set(tokensTarea);
-    const comunes = tokensMail.filter((t) => bolsa.has(t));
+    const comunes = [...new Set(tokensMail)].filter((t) => bolsa.has(t));
     if (comunes.length >= 2) return true;
-    return comunes.some((t) => /\d/.test(t) || t.length >= 7);
+    return comunes.some(identificaSolo);
 }
 
 /** "RV: RE: RV: asunto" -> "asunto", para agrupar un hilo entero en una sola linea. */
