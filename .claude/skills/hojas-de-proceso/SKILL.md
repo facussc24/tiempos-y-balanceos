@@ -495,7 +495,8 @@ que ir guardándolas donde sí van, o sea `Y:\BARACK\CALIDAD\DOCUMENTACION SGC\H
 
 | Qué | Dónde |
 |---|---|
-| Hoja de un producto de cliente | `...\HOJAS DE OPERACIONES\1- CLIENTES\<CLIENTE>\<proyecto o pieza>\` (ej. `SMRC\P21\`, al lado de la HO 927) |
+| Hoja de un producto de cliente | `...\HOJAS DE OPERACIONES\1- CLIENTES\<CLIENTE>\<proyecto>\HO NNN - <pieza o sector>\` — **una carpeta por HO** (Fak, 24/09/2026), con la vigente y una sola `OBSOLETO\` adentro. Ej. `SMRC\P21\HO 991 - APB P21 HILO NARANJA\` |
+| Lo viejo (2011-2024) | `...\HOJAS DE OPERACIONES\9- HISTORICO (NO USAR)\` (era `Revisar`): no se toca ni se usa |
 | Hoja de un sector / máquina | `...\HOJAS DE OPERACIONES\2- SECTORES\<sector>\` |
 | Retrabajo | `...\HOJAS DE OPERACIONES\4- RETRABAJOS\` |
 | El número | `...\HOJAS DE OPERACIONES\3- LISTADO\Listado hojas de proceso.xlsx` (hoja oculta `_CONTEXTO_CLAUDE`) |
