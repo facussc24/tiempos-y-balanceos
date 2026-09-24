@@ -19,6 +19,9 @@ Lo que chequea, con los umbrales de `hojalib`:
   3. como maximo 3 imagenes por hoja (4 en secuencia; con mas, la hoja se PARTE)
   4. ningun texto se sale de su caja
 
+El N° de operacion se lee de la celda del cajetin debajo de "N° DE OPERACIÓN" (ver
+`numero_de_operacion`): con cajetin y la celda vacia, la hoja da rojo en vez de saltearse.
+
     hoja_proceso_check.py <archivo.pptx> [--spec <modulo>] [--jerarquia op=idx,...]
 
 `--spec` es un modulo python con una lista HOJAS de dicts {op, principal, leer, secuencia}.
@@ -29,6 +32,7 @@ import argparse
 import os
 import re
 import sys
+import unicodedata
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -64,6 +68,50 @@ def numeros_sueltos(s):
     return out
 
 
+_ETIQUETA_OP = re.compile(r"N\S{0,3}\s*DE\s+OPERACION")    # "N° DE OPERACIÓN", "Nº de..."
+_OP_SUELTO = re.compile(r"(\d+|TBD)\.\d+")                   # "20.1", "TBD.1"
+
+
+def _normal(texto):
+    """Mayusculas, sin tildes y con un espacio entre palabras."""
+    t = unicodedata.normalize("NFKD", texto)
+    t = "".join(c for c in t if not unicodedata.combining(c))
+    return " ".join(t.upper().split())
+
+
+def numero_de_operacion(s):
+    """(op, tiene_cajetin) de una lamina. op es None si no se puede leer.
+
+    El N° se lee de la celda que esta JUSTO DEBAJO de la etiqueta "N° DE OPERACIÓN" del
+    cajetin, por posicion. Hasta el 24/09/2026 se buscaba por regex "NN.N" en cualquier
+    texto, y las hojas de la IMG renumeradas a "31".."37" quedaban sin operacion: el gate
+    salteaba todo el chequeo de imagenes y daba PASA. Un regex que aceptara "31" suelto
+    tampoco sirve: los numeros de paso ("1", "2") tambien son solo digitos.
+
+    Sin la etiqueta (un deck viejo, o el selftest) vale el N° suelto "20.1" o "TBD.1"
+    ("TBD": la operacion todavia no tiene numero en un flujograma, prensa de embossing).
+    """
+    con_texto = [sh for sh in s.shapes if sh.has_text_frame]
+    etiquetas = [sh for sh in con_texto if _ETIQUETA_OP.fullmatch(_normal(sh.text_frame.text))]
+    ubicadas = [sh for sh in con_texto if None not in (sh.left, sh.top, sh.height)]
+    for et in etiquetas:
+        if None in (et.left, et.top, et.height):  # sin posicion propia no hay "debajo"
+            continue
+        abajo = et.top + et.height
+        celdas = [sh for sh in ubicadas if sh.shape_id != et.shape_id
+                  and abs(sh.left - et.left) < 0.3 * EMU and abs(sh.top - abajo) < 0.3 * EMU]
+        for sh in sorted(celdas, key=lambda q: abs(q.top - abajo)):
+            texto = " ".join(sh.text_frame.text.split())
+            if texto:
+                return texto, True
+    if etiquetas:                 # con cajetin manda la celda: vacia es vacia, no se adivina
+        return None, True
+    for sh in con_texto:
+        if _OP_SUELTO.fullmatch(sh.text_frame.text.strip()):
+            return sh.text_frame.text.strip(), False
+    return None, False
+
+
 def texto_no_entra(sh):
     """Cuanto mas alto pide el texto que lo que la caja le da. None si entra."""
     tf = sh.text_frame
@@ -93,51 +141,64 @@ def texto_no_entra(sh):
 def revisar(ruta, declara=None):
     """Lista de infracciones (lamina, op, tipo, detalle). Vacia = pasa.
 
-    `declara` es {op: {"principal": i, "leer": [i, ...]}}.
+    `declara` es {op: {"principal": i, "leer": [i, ...]}}, o {op: [{...}, {...}]} cuando la
+    operacion esta partida en varias hojas, en el orden del deck.
     """
     declara = declara or {}
     prs = Presentation(ruta)
     _, alto_bloque = HL.bloque_cm()
     bloque_cm2 = HL.IMG_W * alto_bloque
     fallas = []
+    vistas = {}                                        # laminas ya recorridas de cada op
 
     for i, s in enumerate(prs.slides):
-        op = None
-        for sh in s.shapes:
-            if sh.has_text_frame and re.fullmatch(r"\d+\.\d+", sh.text_frame.text.strip()):
-                op = sh.text_frame.text.strip()
-                break
+        op, con_cajetin = numero_de_operacion(s)
+        quien = op or ("sin N°" if con_cajetin else "portada")
 
         for sh in s.shapes:                            # criterio 4, en TODAS las laminas
             if not sh.has_text_frame or not sh.text_frame.text.strip():
                 continue
             sobra = texto_no_entra(sh)
             if sobra:
-                fallas.append((i + 1, op or "portada", "texto",
+                fallas.append((i + 1, quien, "texto",
                                "un texto pide %.2f cm mas de los que tiene la caja: %r"
                                % (sobra, sh.text_frame.text.strip()[:52])))
             # el castellano de planta se chequea sobre el ARCHIVO ENTREGADO, no sobre el
             # generador: asi lo caza venga de donde venga el texto (canon 3.2)
             for hallado, reemplazo, _motivo, _fuente in RED.revisar_vocabulario(
                     sh.text_frame.text):
-                fallas.append((i + 1, op or "portada", "vocabulario",
+                fallas.append((i + 1, quien, "vocabulario",
                                "dice %r y aca se dice %r" % (hallado, reemplazo)))
             # la cocina interna tambien se mira sobre el ARCHIVO ENTREGADO: el 21/09 este
             # gate dio PASA sobre un deck con la nota "no esta documentado... preguntar
             # antes", porque la lista vivia solo adentro del generador
             for hallado, que in RED.revisar_cocina(sh.text_frame.text):
-                fallas.append((i + 1, op or "portada", "cocina",
+                fallas.append((i + 1, quien, "cocina",
                                "dice %s (%r): eso va a la bitacora, no a la hoja"
                                % (que, hallado)))
         if not op:
+            # una hoja CON cajetin y sin numero no se saltea callada: sin op no se sabe
+            # que declara, y el chequeo de imagenes no corre
+            if con_cajetin:
+                fallas.append((i + 1, quien, "sin operacion",
+                               "la celda de N° DE OPERACIÓN esta vacia: sin el numero no "
+                               "se chequean las imagenes de la hoja"))
             continue
+
+        h = declara.get(op, {})
+        if isinstance(h, list):
+            # una operacion partida ("HOJA 1 DE 2") repite el N° y cada hoja trae su
+            # declaracion: la n-esima lamina de la op usa la n-esima. Con un dict por op, la
+            # 41 del cambio de molde (secuencia + rotulada) se juzgaba entera como rotulada
+            n = vistas.get(op, 0)
+            vistas[op] = n + 1
+            h = h[min(n, len(h) - 1)] if h else {}
 
         fotos = sorted([sh for sh in s.shapes if es_contenido(sh)],
                        key=lambda q: (round(q.top / EMU, 1), round(q.left / EMU, 1)))
         if not fotos:
             continue                                   # recuadro vacio: permitido
 
-        h = declara.get(op, {})
         sec = bool(h.get("secuencia"))
         tope = HL.SECUENCIA_MAX if sec else HL.IMAGENES_MAX
         if len(fotos) > tope:                          # criterio 3
@@ -217,6 +278,15 @@ def revisar(ruta, declara=None):
     return fallas
 
 
+def declaraciones(hojas):
+    """{op: [declaracion, ...]} desde la lista HOJAS de un spec, en el orden del deck: una
+    operacion partida repite el op y cada hoja conserva la suya (ver `revisar`)."""
+    declara = {}
+    for h in hojas:
+        declara.setdefault(h["op"], []).append(h)
+    return declara
+
+
 def informe(fallas):
     if not fallas:
         return "hojas de proceso: PASA. Jerarquia, legibilidad, cantidad y textos, en regla."
@@ -244,11 +314,12 @@ def main():
     if a.spec:
         sys.path.insert(0, os.path.dirname(os.path.abspath(a.spec)) or os.getcwd())
         mod = __import__(os.path.splitext(os.path.basename(a.spec))[0])
-        declara = {h["op"]: h for h in mod.HOJAS}
+        declara = declaraciones(mod.HOJAS)
     if a.jerarquia:
         for par in a.jerarquia.split(","):
             op, _, idx = par.partition("=")
-            declara.setdefault(op.strip(), {})["principal"] = int(idx)
+            for h in declara.setdefault(op.strip(), [{}]):
+                h["principal"] = int(idx)
 
     fallas = revisar(a.pptx, declara)
     print(informe(fallas))

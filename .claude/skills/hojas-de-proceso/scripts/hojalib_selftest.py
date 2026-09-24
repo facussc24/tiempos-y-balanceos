@@ -37,15 +37,42 @@ def imagen(w_px, h_px, cuerpo_px=None, nombre=None):
     return ruta
 
 
-def hoja(imagenes, op="20.1", texto=None, caja=(6.0, 2.0), badges=False):
-    """Un pptx de una lamina: el numero de operacion, las imagenes con su tamaño en cm, y
-    opcionalmente un texto en una caja de `caja` cm. Con `badges`, cada foto lleva el
-    circulito con el numero del paso, como lo dibuja el generador."""
+def celda(s, x, y, w, h, texto, size):
+    """Una celda del cajetin como la dibuja el generador: un rectangulo con su texto."""
+    c = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Cm(x), Cm(y), Cm(w), Cm(h))
+    if texto:
+        r = c.text_frame.paragraphs[0].add_run()
+        r.text = texto
+        r.font.size = Pt(size)
+
+
+def hoja(imagenes, **kw):
+    """Un pptx de una lamina (ver `lamina`)."""
+    return deck(dict(kw, imagenes=imagenes))
+
+
+def deck(*laminas):
+    """Un pptx con una lamina por dict de argumentos de `lamina`."""
     prs = Presentation()
     prs.slide_width, prs.slide_height = Cm(29.7), Cm(21.0)
+    for kw in laminas:
+        lamina(prs, **kw)
+    op = laminas[0].get("op", "20.1")
+    d = os.path.join(TMP, "h_%s_%d.pptx" % (op.replace(".", "_"), len(os.listdir(TMP))))
+    prs.save(d)
+    return d
+
+
+def lamina(prs, imagenes, op="20.1", texto=None, caja=(6.0, 2.0), badges=False,
+           cajetin=False):
+    """Una lamina: el numero de operacion, las imagenes con su tamaño en cm, y
+    opcionalmente un texto en una caja de `caja` cm. Con `badges`, cada foto lleva el
+    circulito con el numero del paso, como lo dibuja el generador. Con `cajetin`, el numero
+    va en la celda de abajo de "N° DE OPERACIÓN" y se dibuja DESPUES de los badges."""
     s = prs.slides.add_slide(prs.slide_masters[0].slide_layouts[6])
-    c = s.shapes.add_textbox(Cm(0.6), Cm(3.0), Cm(2.0), Cm(0.6))
-    c.text_frame.text = op
+    if not cajetin:
+        c = s.shapes.add_textbox(Cm(0.6), Cm(3.0), Cm(2.0), Cm(0.6))
+        c.text_frame.text = op
     for k, (ruta, (x, y, w, h)) in enumerate(imagenes):
         s.shapes.add_picture(ruta, Cm(x), Cm(y), Cm(w), Cm(h))
         if badges:
@@ -59,9 +86,9 @@ def hoja(imagenes, op="20.1", texto=None, caja=(6.0, 2.0), badges=False):
         r = tf.paragraphs[0].add_run()
         r.text = texto
         r.font.size = Pt(11)
-    d = os.path.join(TMP, "h_%s_%d.pptx" % (op.replace(".", "_"), len(os.listdir(TMP))))
-    prs.save(d)
-    return d
+    if cajetin:                                    # la geometria del cajetin de la IMG
+        celda(s, 0.70, 2.30, 3.40, 0.60, "N° DE OPERACIÓN", 8)
+        celda(s, 0.70, 2.90, 3.40, 0.60, op, 9.5)
 
 
 def tipos(fallas):
@@ -176,6 +203,31 @@ caso("el mismo texto en una caja que le da",
 
 # ── 5. una hoja sin fotos: el recuadro vacio esta PERMITIDO ──────────────────
 caso("hoja sin imagenes", hoja([]), {}, None)
+
+# ── 6. el N° de operacion sale del CAJETIN ──────────────────────────────────
+# Las hojas de la IMG se renumeraron a "31".."37" el 23/09/2026 y el gate buscaba "NN.N":
+# las 7 quedaban sin operacion y el chequeo de imagenes no corria (PASA con las fotos sin
+# mirar). Los badges "1".."4" tambien son solo digitos y aca van ANTES que el cajetin: si el
+# N° se leyera del primer numero suelto, saldria "1" y la declaracion de "31" no se usaria.
+caso("op 31 en el cajetin, 3 fotos iguales", hoja(tres_iguales, op="31", cajetin=True),
+     {"31": {"principal": 0}}, "jerarquia")
+caso("op 31 en el cajetin, secuencia numerada",
+     hoja(cuatro_seq, op="31", cajetin=True, badges=True), {"31": {"secuencia": True}}, None)
+caso("op TBD.1 en el cajetin (sin flujograma)", hoja(tres_iguales, op="TBD.1", cajetin=True),
+     {"TBD.1": {"principal": 0}}, "jerarquia")
+# ROJO: cajetin con la celda vacia — antes se salteaba callada, igual que la "31"
+caso("cajetin con la celda de operacion vacia", hoja(tres_iguales, op="", cajetin=True), {},
+     "sin operacion")
+# Una operacion PARTIDA repite el N° en dos hojas y cada una se declara distinto (la 41 del
+# cambio de molde: hoja 1 en secuencia, hoja 2 rotulada). Con una declaracion por op, la
+# segunda pisaba a la primera y la hoja 1 salia roja por "cantidad" y "jerarquia".
+partida = deck(dict(imagenes=cuatro_seq, op="41", cajetin=True, badges=True),
+               dict(imagenes=[(horiz, (X0, Y0, 15.0, 8.4))], op="41", cajetin=True))
+SEC_41, ROT_41 = dict(op="41", secuencia=True), dict(op="41", principal=0)
+caso("op 41 partida: secuencia + rotulada", partida, CK.declaraciones([SEC_41, ROT_41]), None)
+# ROJO: las mismas declaraciones al reves -> la hoja 1, con 4 fotos, se juzga rotulada
+caso("op 41 partida, declaraciones al reves", partida, CK.declaraciones([ROT_41, SEC_41]),
+     "cantidad")
 
 
 def sizing():
