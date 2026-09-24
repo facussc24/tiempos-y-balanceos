@@ -125,6 +125,15 @@ el alta no hubiera grabado, las 5 BOMs no podrían mostrar `BOLSA PP 520 MM ...`
 `Modificaciones`, se trajo el código que se estaba reemplazando y se leyó su configuración
 (`UNID`, `PAPP/PSW=S`, `Tipo I`, `Origen M`). Eso es dato, no criterio.
 
+### Alta de un insumo COMPRADO — `--comprado` `CONFIRMADO 2026-09-24`
+
+`_arbInsumoCampos.py --alta` nació para semiterminados y fuerza `Es Sub-Producto = S`. Para
+algo que se compra (caja `9285` de Victoria Corrugados, 24/09) va **`--como <hermano del mismo
+proveedor> --comprado`**: `Proveedor` y `Es Sub-Producto` se copian del hermano. El código es
+el **Art del proveedor** (así están `8230`, `9119`, `8559`-`8562`) y **`1178` = Victoria
+Corrugados** (leído en las 3 fichas). Salió el cartel de Visual C++, `Omitir`, y releída con
+`--leer` la ficha quedó igual a la del hermano.
+
 ### Verificar un alta sin tocar nada — solapa `Modificaciones`
 
 ```bash

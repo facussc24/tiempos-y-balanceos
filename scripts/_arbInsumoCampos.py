@@ -4,8 +4,11 @@ y dar de ALTA codigos nuevos copiando la ficha de un hermano.
 
     python scripts/_arbInsumoCampos.py --leer COD [COD ...]
     python scripts/_arbInsumoCampos.py --subproducto COD [COD ...] [--apply]
-    python scripts/_arbInsumoCampos.py --alta tabla.csv --como COD_HERMANO [--apply]
+    python scripts/_arbInsumoCampos.py --alta tabla.csv --como COD_HERMANO [--comprado] [--apply]
         (csv con encabezado: codigo,descripcion)
+        --comprado: insumo que se COMPRA al mismo proveedor que el hermano (una caja de
+        Victoria, 24/09): `Proveedor` y `Es Sub-Producto` se copian del hermano en vez de
+        forzar S. Sin la marca, el alta es de un semiterminado y `Es Sub-Producto` va en S.
 
 Dry-run por defecto: sin `--apply` llena la pantalla, saca la foto y cierra SIN grabar
 (`WM_CLOSE` sobre `Maestro de Insumos` descarta la edicion — skill `arb-operar`).
@@ -237,8 +240,9 @@ def subproducto(codigo, apply_):
         return False, str(e)
 
 
-def alta(codigo, descripcion, hermano, apply_):
-    """`hermano` = ficha leida de un insumo que ya funciona como semiterminado."""
+def alta(codigo, descripcion, hermano, apply_, comprado=False):
+    """`hermano` = ficha leida de un insumo que ya funciona como semiterminado, o con
+    `comprado` uno del mismo proveedor (de ahi salen `Proveedor` y `Es Sub-Producto`)."""
     if len(codigo) > TOPE_COD:
         return False, 'el codigo mide %d y el campo es de %d' % (len(codigo), TOPE_COD)
     if len(descripcion) > TOPE_DESC:
@@ -271,10 +275,14 @@ def alta(codigo, descripcion, hermano, apply_):
             if ad._texto(f).strip() != valor:
                 raise Frenar('%s quedo %r y esperaba %r' % (campo, ad._texto(f), valor))
         copiados = []
+        no_copiar = (NO_COPIAR - {'proveedor1'}) if comprado else NO_COPIAR
         for campo, xy in CAMPOS:
-            if campo in NO_COPIAR or campo == 'papp_psw':
+            if campo in no_copiar or campo == 'papp_psw':
                 continue
-            valor = 'S' if campo == 'sub_producto' else hermano.get(campo, '')
+            if campo == 'sub_producto' and not comprado:
+                valor = 'S'
+            else:
+                valor = hermano.get(campo, '')
             if not valor:
                 continue
             hc = ad.tabular_hasta(h, xy)
@@ -296,7 +304,8 @@ def alta(codigo, descripcion, hermano, apply_):
 
 def main(argv):
     apply_ = '--apply' in argv
-    argv = [a for a in argv if a != '--apply']
+    comprado = '--comprado' in argv
+    argv = [a for a in argv if a not in ('--apply', '--comprado')]
     if not argv:
         print(__doc__)
         return 1
@@ -329,7 +338,7 @@ def main(argv):
 
     if modo == '--alta':
         if len(resto) < 3 or resto[1] != '--como':
-            print('Uso: --alta tabla.csv --como COD_HERMANO [--apply]')
+            print('Uso: --alta tabla.csv --como COD_HERMANO [--comprado] [--apply]')
             return 1
         with open(resto[0], encoding='utf-8-sig', newline='') as fh:
             filas = [(r['codigo'].strip(), r['descripcion'].strip())
@@ -346,7 +355,7 @@ def main(argv):
         malas = []
         for cod, desc in filas:
             print('%s  %r' % (cod, desc))
-            ok, msg = alta(cod, desc, hermano, apply_)
+            ok, msg = alta(cod, desc, hermano, apply_, comprado)
             print('   %s %s\n' % ('OK  ' if ok else 'FALLO', msg))
             if not ok:
                 malas.append((cod, msg))
