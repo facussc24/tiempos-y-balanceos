@@ -13,6 +13,7 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **25/09 — Guardar por COM un libro ajeno para cambiar UNA celda se tiró imágenes "en celda" en 17 HO** (lo vio el respaldo, no el conteo de fotos). Graduado al skill `hojas-de-proceso` §3 bis.
 - **23/09 — Antes de borrar una carpeta se buscan ENLACES adentro:** `git worktree remove` entro por un `node_modules` enlazado y se llevo 38 paquetes de la instalacion principal. Graduado a la V5 de `borrado-masivo-guard`.
 - **23-24/09 — Lo que actua A CIEGAS aprieta lo que este abajo:** el respaldo del arb abrio `Seleccion de Empresa`, y `cerrar_excel` clickeaba todo cartel de Excel (el de *guardar cambios* es la misma ventana) y cerraba TODO Excel, lo de Fak tambien. Un cartel se LEE antes de contestarlo; se cierra solo lo propio. Graduado a `_arbCargar.abrir()`, `_arbVer.cerrar_excel()` y al skill `arb-operar`.
 - **22/09 — Lo que AFLOJA un control se prueba contra el VIEJO con los mismos intentos** (49 casos verdes; la comparacion saco 2 regresiones). Graduado a `un_control_se_audita_en_las_dos_direcciones`.
@@ -81,6 +82,7 @@ incidente vive en los snapshots.
 
 - **Un numero que no cuadra casi nunca es un error: es la misma cosa en otra magnitud, o el mismo numero con la merma adentro**, y se normaliza a la unidad que gobierna antes de reportar un desvio. Graduado a `consumos-entregables.md` + `_validarConsumos.mjs` + skill `verificacion-consumos`.
 - **22/09 — El consumo de vinilo o tela sale de la planilla que Pablo Gamboa manda por mail, no de lo que ya esta en el arb.** Converti a metros lo cargado en IP Pad y armrest rear y venia de tizadas viejas. Fak: *"si no salen de ahi no podemos mandar el mail"*. Despues se abre el .MRK para ver que no este inflada (piezas escaladas, separacion). Memoria `consumo_se_verifica_en_el_marker_no_en_la_planilla`.
+- **25/09 — La base de una conversion la dice un DOCUMENTO, y un "te lo habia pedido" se busca antes de cargar.** El 20/08 pase el TPO del Top Roll de 0,2526 m² a 0,1804 ml dividiendo por 1,40 y escribi en el mail que era "el ancho con que se calculo": ningun papel lo decia, y el TPO ni se tiza (la IMG corta placas de 835 mm). Carlos habia mandado el dato el 17/07 (0,270/0,2525) y ese dia escribio *"creo que te habia pedido en su momento"*. Arb 31 % abajo. Memoria `reference_tabla_consumo_mesa_corte`.
 
 ## Entregables y comunicacion con Fak
 

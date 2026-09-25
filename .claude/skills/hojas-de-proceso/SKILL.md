@@ -501,6 +501,21 @@ que ir guardándolas donde sí van, o sea `Y:\BARACK\CALIDAD\DOCUMENTACION SGC\H
 | Retrabajo | `...\HOJAS DE OPERACIONES\4- RETRABAJOS\` |
 | El número | `...\HOJAS DE OPERACIONES\3- LISTADO\Listado hojas de proceso.xlsx` (hoja oculta `_CONTEXTO_CLAUDE`) |
 
+**El número** (Fak, 25/09/2026, al resolver 13 números repetidos: *"no quiero pasar de 999"*):
+- **Es de la HOJA, no del código.** Si varias piezas se hacen igual, van en la misma HO, con una
+  página (o subcarpeta) por código: 025, 952, 984 y la **913**, que junta las 17 telas de costura
+  blanco PWA (`...\PWA\HO 913 - COSTURA BLANCO\<código>\`). No se abre un número por tela.
+- Si dos hojas tienen el mismo número, **se lo queda la fila del listado**; la otra cambia.
+  Un número que se deja de usar no se reusa (queda su fila OBSOLETO "pasó a HO N").
+- **No se pasa de 999**: las hojas completas (GENERAL) siguen 992…999, después los huecos que
+  nunca tuvieron hoja (903, 921-925, 928, 930, 936, 947) y después la **serie 800**. La 300-899
+  no se usó nunca (300 y 400 quedan sugeridas para inyección y mesa de corte).
+- Antes de dar un número y al cerrar: `python scripts/_hoNumeros.py` (choques entre carpetas,
+  números sin fila en el listado, próximo libre; `--q3` lee además el cajetín).
+- **Cambiar el número de una hoja existente no pasa por Excel**: se toca solo el texto `HO-NNN`
+  de `xl/sharedStrings.xml`. Guardarla con Excel por COM se tiró de 1 a 3 imágenes "en celda"
+  por libro en las telas PWA (25/09/2026; se volvió al respaldo).
+
 Van el `.pptx` y su `.pdf`, con nombre `HO-<N> - HOJAS DE PROCESO - <PIEZA> - Rev.<letra>`. El
 generador puede escribir en el scratchpad para mirarla, pero la entrega va ahí. Los decks de
 HOTMELT y MOLDEADORA IMG quedaron en `INSTRUCCIONES OPERATIVAS` antes de esta decisión; el de
