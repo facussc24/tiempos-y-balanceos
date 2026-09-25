@@ -13,6 +13,7 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **25/09 — Un estado que alguien escribió en un mail vale con su FECHA: va con quién lo dijo y cuándo (y el mail adjunto), o no va.** Graduado a la memoria `la_fecha_del_archivo_no_es_la_fecha_del_documento`.
 - **25/09 — En el servidor del SGC va solo lo OFICIAL, en su lugar; lo no oficial va a la nube de Ingeniería.** Cree `HOJAS DE OPERACIONES\0- FORMATO A3` para el formato nuevo: *"no podes ir guardando los formatos donde se te cante"*. Graduado a `autonomy-contract.md` §F.
 - **25/09 — Guardar por COM un libro ajeno para cambiar UNA celda se tiró imágenes "en celda" en 17 HO** (lo vio el respaldo, no el conteo de fotos). Graduado al skill `hojas-de-proceso` §3 bis.
 - **23/09 — Antes de borrar una carpeta se buscan ENLACES adentro:** `git worktree remove` entro por un `node_modules` enlazado y se llevo 38 paquetes de la instalacion principal. Graduado a la V5 de `borrado-masivo-guard`.
@@ -74,16 +75,16 @@ incidente vive en los snapshots.
 
 - **Una fuente que sale de mi lado del mostrador no es una segunda fuente, y un artefacto propio describe la fuente, no la es.** Regla mia, test, memoria, export o cita de un subagente: si afirma un hecho que un documento puede zanjar, se abre el documento antes de actuar. Y **el numero que yo propuse y Fak solo eligio tampoco es un dato de Fak: antes de citarlo, buscar su frase textual**. Las cinco formas de caer, con sus casos: memorias `verificar_contra_la_fuente_no_el_codigo`, `un_agente_no_es_independiente`, `dispositivo_adhesivado_insert`; `amfe.md` §12.
 - **04/09 — "No se compra" no es "esta mal cargado", y el listado del legajo no valida al arb que se cargo desde el: es una sola fuente contada dos veces.** Graduado entero a la memoria `validar_insumo_de_bom_tres_fuentes`.
-- **13/09 — El que publica un dato le pone la MAGNITUD en el nombre, y un aviso no puede viajar adentro de un renglon.** `sobre_la_banda_del_tubo_mm` valia `[61,91 · 81,91]` —dos z, o sea una banda de 20 mm— y el PDF que la lee escribio *"61,91 a 81,91 mm de ancho"*: el que lee no tenia como saberlo. Y la lista de archivos que faltan iba en un solo `join`: con 5 llego a 216 caracteres, el control de ancho de columna corto la corrida y se comio justo el aviso que importaba. **Un control que frena tiene que decir CUAL renglon lo frena.**
+- **13/09 — El que publica un dato le pone la MAGNITUD en el nombre, y un control que frena tiene que decir CUAL renglon lo frena.** Graduado entero a la memoria `dispositivo_adhesivado_insert`.
 - **En la BOM va el codigo del proveedor; el interno es el parche hasta que el proveedor da el suyo.** Que un codigo interno aparezca en OC significa que ese material todavia no tiene codigo de proveedor, no que sea la regla. Graduado a la memoria `codigo_de_proveedor_le_gana_al_interno`.
 
-- **11/09 — Una pieza NUEVA no es una revision de la anterior, y el numero de un documento no sale del NOMBRE de un archivo.** Meti el legajo del APB P21 hilo naranja MY2026 adentro del de 2023 y emiti su flujograma como "127 Rev.04", sobre el que gobierna la serie. Fak: *"esta pieza es nueva arranco todo desde rev A"*. Y en el Listado Maestro el **127 es IP AMAROK LARGO de SAS**: era el numero del AMFE, copiado del nombre de un PDF. Va **legajo hermano propio y documentos en Rev.A**; el ID se lee del listado. Memoria `pieza_nueva_no_es_revision`.
+- **11/09 — Una pieza NUEVA no es una revision de la anterior (legajo propio, documentos en Rev.A), y el numero de un documento se lee del listado maestro, no del NOMBRE de un archivo.** Graduado entero a la memoria `pieza_nueva_no_es_revision`.
 
 ## Consumos de material
 
 - **Un numero que no cuadra casi nunca es un error: es la misma cosa en otra magnitud, o el mismo numero con la merma adentro**, y se normaliza a la unidad que gobierna antes de reportar un desvio. Graduado a `consumos-entregables.md` + `_validarConsumos.mjs` + skill `verificacion-consumos`.
 - **22/09 — El consumo de vinilo o tela sale de la planilla que Pablo Gamboa manda por mail, no de lo que ya esta en el arb.** Converti a metros lo cargado en IP Pad y armrest rear y venia de tizadas viejas. Fak: *"si no salen de ahi no podemos mandar el mail"*. Despues se abre el .MRK para ver que no este inflada (piezas escaladas, separacion). Memoria `consumo_se_verifica_en_el_marker_no_en_la_planilla`.
-- **25/09 — La base de una conversion la dice un DOCUMENTO, y un "te lo habia pedido" se busca antes de cargar.** El 20/08 pase el TPO del Top Roll de 0,2526 m² a 0,1804 ml dividiendo por 1,40 y escribi en el mail que era "el ancho con que se calculo": ningun papel lo decia, y el TPO ni se tiza (la IMG corta placas de 835 mm). Carlos habia mandado el dato el 17/07 (0,270/0,2525) y ese dia escribio *"creo que te habia pedido en su momento"*. Arb 31 % abajo. Graduado a `scripts/_lib/respaldoCarga.py` (frena el `--apply` del arb) y memoria `reference_tabla_consumo_mesa_corte`.
+- **25/09 — La base de una conversion la dice un DOCUMENTO, y un "te lo habia pedido" se busca antes de cargar** (TPO del Top Roll: 0,2526 / 1,4 sin papel, arb 31 % abajo). Graduado a `scripts/_lib/respaldoCarga.py`, que frena el `--apply` del arb, y a la memoria `reference_tabla_consumo_mesa_corte`.
 
 ## Entregables y comunicacion con Fak
 
