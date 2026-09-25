@@ -31,6 +31,11 @@ Una sola tabla plana, **una fila por producto terminado** aunque el cambio se re
 
 Detalle y el porque: memoria `feedback_formato_carga_arb`.
 
+**El CSV que ejecuta la carga lleva el respaldo de cada numero** (`fuente` + `cita`, y
+`cuenta` / `vistos` cuando corresponde): sin eso `_arbCargar.py --apply` no escribe desde el
+25/09/2026. Formato en el skill `arb-operar` ("RECETA QUE FUNCIONA"). La tabla para Fak no
+cambia: el respaldo va en el CSV, no en lo que el lee.
+
 ### Fijar el alcance con una cuenta, no con el nombre del producto
 
 Antes de listar las piezas, **buscar el numero que las cierra**. El pedido casi siempre trae

@@ -11,6 +11,12 @@ EJECUTAR (cargar en arb/Supabase, enviar a cliente):
    correcto) y el archivo ABIERTO y mirado antes de pasarlo.
 4. **"No documentado" prohibido** sin pegar el listado del folder (BOM: tomar la
    Rev de numero MAYOR, parseando el int).
+5. **Cada numero que va al arb lleva su papel, y el papel lo abre el programa.** Desde el
+   25/09/2026 `_arbCargar.py` y `_arbUnidad.py` no escriben con `--apply` si la tabla no trae
+   `fuente` + `cita` verificables, si una cuenta usa un numero que ningun papel dice, si el
+   ancho no es el de las OC, o si hay un mail sobre ese consumo sin mirar
+   (`scripts/_lib/respaldoCarga.py`, BLOQUEANTE; formato en el skill `arb-operar`).
+   Caso: TPO del Top Roll, 0,2526 / 1,4 con un 1,4 sin papel y el pedido de Carlos sin leer.
 
 Enforcement: hook `consumos-entregable-guard.sh` (PreToolUse, logica en
 `scripts/_lib/guardianes.mjs`) recuerda el checklist 1×/h al detectar trabajo de

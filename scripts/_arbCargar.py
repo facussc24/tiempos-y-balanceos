@@ -6,6 +6,12 @@ Cambiar consumos en el ERP arb: contando y verificando, no tanteando.
     python scripts/_arbCargar.py --seco <PRODUCTO>         recorre sin escribir ni grabar
     python scripts/_arbCargar.py --tabla carga.csv        DRY-RUN (default)
     python scripts/_arbCargar.py --tabla carga.csv --apply
+
+LA TABLA: producto,insumo,valor_nuevo,valor_esperado,fuente,cita[,cuenta][,vistos]
+  Antes de escribir corren los tres frenos de `_lib/respaldoCarga.py` (25/09/2026, TPO del
+  Top Roll): la cita tiene que estar en la fuente, cada numero de la cuenta en alguna cita,
+  el ancho contra el de la OC, y cada mail que habla de ese consumo citado o en `vistos`.
+  Con un rojo, --apply no escribe. Detalle y formato: docstring de ese archivo.
     python scripts/_arbCargar.py --verificar carga.csv    contra el export, tolerancia 0,1%
 
 ALCANCE: cambia el CONSUMO de una linea que YA existe en la BOM. No da de alta ni borra
@@ -878,6 +884,23 @@ def agrupar(filas):
 
 # ---------------------------------------------------------------- main
 
+def respaldo(path):
+    """Los tres frenos de `_lib/respaldoCarga.py`: cada numero con su papel, los pedidos
+    anteriores a la vista y el ancho contra la OC. Devuelve True si hay un rojo.
+
+    Existe por el TPO del Top Roll (20/08/2026): se cargo 0,2526 / 1,4 con un 1,4 que ningun
+    papel decia y con el pedido de Carlos del 17/07 sin mirar. Un aviso no lo freno; esto si."""
+    spec = importlib.util.spec_from_file_location(
+        'respaldoCarga',
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib', 'respaldoCarga.py'))
+    rc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rc)
+    print('--- respaldo de la tabla (fuente, pedidos anteriores, ancho contra OC) ---')
+    rojo, resumen = rc.revisar(path)
+    print()
+    return rojo, resumen
+
+
 def main():
     ap = argparse.ArgumentParser(description='Cambiar consumos en el arb')
     ap.add_argument('--diagnostico', metavar='PRODUCTO', help='read-only, cero teclas')
@@ -892,6 +915,17 @@ def main():
         return verificar(a.verificar)
     if not (a.diagnostico or a.seco or a.tabla):
         ap.error('elegi --diagnostico, --seco, --tabla o --verificar')
+
+    if a.tabla:
+        rojo, resumen = respaldo(a.tabla)
+        if rojo and a.apply:
+            sys.exit('FRENADO: la tabla tiene rojos de respaldo (arriba). No se escribio nada.\n'
+                     'Cada fila necesita fuente + cita que esten en el papel, y cada mail que '
+                     'habla de ese consumo citado o anotado en `vistos` con motivo.')
+        amarillos = [(e, am) for e, _, am, _ in resumen if am]
+        if a.apply and amarillos:
+            journal({'t': time.strftime('%H:%M:%S'), 'estado': 'respaldo_verbal',
+                     'tabla': a.tabla, 'filas': [[e, am] for e, am in amarillos]})
 
     if a.tabla and not a.apply:
         grupos = agrupar(leer_tabla(a.tabla))

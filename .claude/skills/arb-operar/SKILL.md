@@ -341,6 +341,21 @@ Sin esto los clicks caen en la celda de al lado y se escribe basura en el códig
 `scripts/_arbCargar.py`. Modos: `--diagnostico` (read-only), `--seco` (recorre sin grabar),
 `--tabla x.csv` (dry-run) `--apply`, `--verificar`.
 
+🔴 **Desde el 25/09/2026 la tabla lleva su respaldo, o `--apply` no escribe** (lo mismo
+`_arbUnidad.py --tabla`). Columnas: `producto,insumo,valor_nuevo,valor_esperado,fuente,cita`
+y, si hace falta, `cuenta` y `vistos`. Los tres frenos viven en `scripts/_lib/respaldoCarga.py`:
+- `fuente` = `mail:<id o sus ultimos 16+ caracteres>` del cache, o la ruta de un archivo
+  (xlsx, pdf, txt, foto con OCR); `cita` = la frase textual, que tiene que estar adentro.
+  Varias fuentes, separadas por `||` en las dos columnas.
+- `cuenta` (ej. `1100/1000/4`): tiene que dar el valor, y cada numero tiene que estar en
+  alguna cita. Si divide por un ancho de rollo, ese ancho se compara con el de las OC de Z:.
+- Cada mail de los ultimos 12 meses que habla del consumo de ese insumo va citado o en
+  `vistos` (`<id>: motivo` o `hilo:<asunto>: motivo`, separados por `|`).
+- `fak:` como fuente = decision de Fak en el chat: pasa en amarillo y queda en el journal.
+Solo el informe: `python scripts/_lib/respaldoCarga.py --revisar x.csv [--unidad]`.
+Nace del TPO del Top Roll: 0,2526 / 1,4 cargado el 20/08 con un 1,4 sin papel, rollo de
+835 mm y el pedido de Carlos del 17/07 sin mirar (memoria `reference_tabla_consumo_mesa_corte`).
+
 ```
 _arbVer.py reset                   abrir por CLICK (solapa + boton). NUNCA KeyTips a ciegas (23/09, arriba)
 gate: ¿estoy en la solapa Altas?   si no hay grilla, ABORTAR — no escribir a ciegas

@@ -2,9 +2,12 @@
 """Leer y cambiar la `Unidad` de insumos en el maestro del arb (ABM de Insumos).
 
     python scripts/_arbUnidad.py --leer COD [COD ...]
-    python scripts/_arbUnidad.py --tabla archivo.csv [--apply]   # csv: codigo,unidad_vieja,unidad_nueva
+    python scripts/_arbUnidad.py --tabla archivo.csv [--apply]
+        # csv: codigo,unidad_vieja,unidad_nueva,fuente,cita,vistos
 
 Dry-run por defecto: sin `--apply` trae el registro, lee la unidad y cierra sin grabar.
+Con `--apply`, antes de tocar nada corren los frenos de `_lib/respaldoCarga.py`: sin papel
+que diga por que cambia la unidad, o con un mail sobre ese consumo sin mirar, no se graba.
 
 POR QUE EXISTE (22/09/2026, vinilos Sansuy de Patagonia)
   La unidad vive en el maestro y es UNA sola: la usan la OC y todas las BOM que cuelgan del
@@ -99,6 +102,19 @@ def main(argv):
         cortas = [r[0].strip() for r in filas if len(r) < 3 or not r[1].strip() or not r[2].strip()]
         if cortas:
             print('ABORTADO: estas filas no traen unidad vieja y nueva: %s' % ', '.join(cortas))
+            return 1
+        # los frenos de _lib/respaldoCarga.py: por que cambia la unidad (fuente + cita) y los
+        # mails que hablan del consumo de ese insumo, mirados. El csv lleva encabezado
+        # codigo,unidad_vieja,unidad_nueva,fuente,cita,vistos
+        spec = importlib.util.spec_from_file_location(
+            'respaldoCarga', os.path.join(_AQUI, '_lib', 'respaldoCarga.py'))
+        rc = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(rc)
+        print('--- respaldo de la tabla (fuente, pedidos anteriores) ---')
+        rojo, _ = rc.revisar(argv[1], unidad=True)
+        print()
+        if rojo and apply_:
+            print('FRENADO: la tabla tiene rojos de respaldo (arriba). No se escribio nada.')
             return 1
         print('%d codigo(s)  |  modo %s\n' % (len(filas), 'APPLY' if apply_ else 'dry-run'))
         malas = []
