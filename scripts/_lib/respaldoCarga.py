@@ -163,7 +163,22 @@ def texto_de_archivo(path, ocr=None):
     if not os.path.exists(path):
         raise OSError('no existe: %s' % path)
     if ext in ('.jpg', '.jpeg', '.png'):
-        return (ocr or _ocr)(path), True
+        if ocr:
+            return ocr(path), True
+        # el OCR de una foto tarda ~1 min: se guarda por ruta + fecha + tamaño, y una foto
+        # que cambio se vuelve a leer sola
+        cache = os.path.join(RAIZ, '.arb-cache', 'ocr_cache.json')
+        st = os.stat(path)
+        clave = '%s|%d|%d' % (path, int(st.st_mtime), st.st_size)
+        try:
+            memo = json.load(io.open(cache, encoding='utf-8'))
+        except (OSError, ValueError):
+            memo = {}
+        if clave not in memo:
+            memo[clave] = _ocr(path)
+            os.makedirs(os.path.dirname(cache), exist_ok=True)
+            json.dump(memo, io.open(cache, 'w', encoding='utf-8'), ensure_ascii=False)
+        return memo[clave], True
     if ext == '.pdf':
         import fitz
         d = fitz.open(path)

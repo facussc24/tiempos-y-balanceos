@@ -84,6 +84,7 @@ incidente vive en los snapshots.
 
 - **Un numero que no cuadra casi nunca es un error: es la misma cosa en otra magnitud, o el mismo numero con la merma adentro**, y se normaliza a la unidad que gobierna antes de reportar un desvio. Graduado a `consumos-entregables.md` + `_validarConsumos.mjs` + skill `verificacion-consumos`.
 - **22/09 — El consumo de vinilo o tela sale de la planilla que Pablo Gamboa manda por mail, no de lo que ya esta en el arb.** Converti a metros lo cargado en IP Pad y armrest rear y venia de tizadas viejas. Fak: *"si no salen de ahi no podemos mandar el mail"*. Despues se abre el .MRK para ver que no este inflada (piezas escaladas, separacion). Memoria `consumo_se_verifica_en_el_marker_no_en_la_planilla`.
+- **25/09 — Cerrar y reabrir `Maestro de Relaciones` crashea el arb** (dos veces; Fak: *"anotalo para evitar hacerlo"*). Graduado a `_arbVer.reset_relaciones()` (se niega sin `--forzar`) y a `arb-no-cerrar.md`: ante un corte se reintenta la pieza con `--solo`.
 - **25/09 — La base de una conversion la dice un DOCUMENTO, y un "te lo habia pedido" se busca antes de cargar** (TPO del Top Roll: 0,2526 / 1,4 sin papel, arb 31 % abajo). Graduado a `scripts/_lib/respaldoCarga.py`, que frena el `--apply` del arb, y a la memoria `reference_tabla_consumo_mesa_corte`.
 
 ## Entregables y comunicacion con Fak

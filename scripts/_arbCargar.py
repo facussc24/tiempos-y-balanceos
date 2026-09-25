@@ -631,8 +631,20 @@ def recorrer(v, btn, cadena, desde, pausa=0.03, verboso=False, escrituras=None):
     for p in range(desde + 1, len(cadena)):
         if not asegurar_frente(v):
             raise Abortar('la ventana perdio el frente en el paso %d — no usar la PC' % p)
+        antes = foco_de(v)
         tecla(win32con.VK_TAB, pausa)
+        # Con el arb lento (25/09/2026: dos cortes seguidos, en el TAB 13 y en el 23) el foco
+        # tarda en moverse y leerlo a los 30 ms devuelve la celda ANTERIOR: el control da
+        # "cayo en <codigo>" sin que nada este mal. Se espera a que el foco SE MUEVA (hasta
+        # 2 s) y recien ahi se compara. Si no se mueve, el TAB se perdio: aborta igual.
+        t0 = time.time()
         f = foco_de(v)
+        while f == antes and time.time() - t0 < 2.0:
+            time.sleep(0.05)
+            f = foco_de(v)
+        if f == antes:
+            raise Abortar('TAB %d: el foco no se movio en 2 s (el arb no respondio) — SIN grabar'
+                          % (p + 1))
         etiq, esp, esnum = cadena[p]
         if etiq.startswith('BOTON'):
             if f != btn:

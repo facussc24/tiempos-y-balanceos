@@ -188,8 +188,16 @@ def cerrar_modales():
     return quedan
 
 
-def reset_relaciones():
+def reset_relaciones(forzar=False):
     """Saca la ventana `Maestro de Relaciones` de una celda sucia y la deja usable.
+
+    🔴 25/09/2026, Fak: *"cuando reseteas relaciones la app crashea... es la segunda vez que
+    pasa, anotalo para evitar hacerlo"*. CERRAR una Relaciones abierta (el WM_CLOSE de abajo)
+    y reabrirla trabo el arb dos veces ese dia, y reabrirlo pide la contraseña de Fak. Por
+    eso, con Relaciones abierta NO se cierra salvo `forzar=True` (CLI: `reset --forzar`, solo
+    con OK de Fak). Si Relaciones NO esta abierta, esto solo la ABRE con clicks: ese camino
+    anduvo. Ante un corte del cargador no hace falta: nada se graba sin ENTER, y reintentar
+    la pieza con `--solo` anduvo tres veces seguidas el mismo dia.
 
     Cuando el arb rechaza un renglon (por ejemplo `No Ingreso Procesos`), el valor
     escrito sobrevive a CANCELA y a volver a entrar el producto: el buffer de edicion
@@ -208,6 +216,11 @@ def reset_relaciones():
         print('queda un modal abierto sin poder cerrarlo: mirarlo antes de resetear')
         return 1
     h = buscar('rel')
+    if h and not forzar:
+        print('Relaciones esta ABIERTA y cerrarla crashea el arb (Fak 25/09/2026): no la cierro.\n'
+              'Reintenta la pieza con --solo; si de verdad hay que cerrarla, pedile OK a Fak y '
+              'corre `_arbVer.py reset --forzar`.')
+        return 1
     if h:
         u.PostMessageW(h, 0x0010, 0, 0)          # WM_CLOSE: descarta, no graba
         time.sleep(1.5)
@@ -504,7 +517,7 @@ if __name__ == '__main__':
     elif cmd == 'modal':
         sys.exit(1 if cerrar_modales() else 0)
     elif cmd == 'reset':
-        sys.exit(reset_relaciones())
+        sys.exit(reset_relaciones(forzar='--forzar' in sys.argv[2:]))
     elif cmd == 'excel':
         seco = '--dry-run' in sys.argv[2:]
         cerrar_excel(seco=seco)

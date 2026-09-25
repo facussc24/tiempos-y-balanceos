@@ -467,9 +467,16 @@ _arbVer.py click 118 68      volver a la solapa Altas
 _arbCargar.py --solo <1 pieza> --apply    prueba
 _arbVer.py export  +  verificar
 _arbCargar.py --tabla ... --apply         el resto
-_arbVer.py reset             si algo falló, ANTES de reintentar
+si algo falló: reintentar ESA pieza con --solo (nada se graba sin ENTER). NO reset:
+                             cerrar Relaciones abierta crashea el arb (25/09/2026, dos veces)
 _arbVer.py export  +  verificar + invariantes + diff del archivo entero
 ```
+
+🔴 **Con el arb lento (25/09/2026) el lote cortaba solo despues de grabar la primera pieza**:
+la pantalla seguia mostrando la BOM anterior ("la pantalla no coincide con el export") o la
+ventana no estaba activa. Ninguno grabo nada mal, pero ese dia lo que anduvo fue **una pieza
+por corrida** (`--solo`), las cuatro al primer o segundo intento. Y el recorrido ahora espera a
+que el foco SE MUEVA tras cada TAB (hasta 2 s): leerlo a los 30 ms daba la celda anterior.
 
 ⚠️ **La tabla se genera del export PRE-CAMBIO, no del actual.** Si se regenera a mitad de
 lote, las líneas ya convertidas se vuelven a dividir por el ancho. El `valor_esperado` sí
