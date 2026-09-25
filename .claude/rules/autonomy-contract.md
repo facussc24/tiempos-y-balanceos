@@ -73,6 +73,7 @@ concretos. Fak ajusta el criterio y eso queda escrito para que no se vuelva a pr
 | Emitir un documento controlado (flujograma, AMFE, HO) en `Gestion Ingenieria` | **Preguntar** — el documento lo firma Fak |
 | Poner algo en el paquete del cliente (`31-...\PPAP_<PN>\`) | **Prohibido sin OK**: el PPAP es de CALIDAD, Ingenieria no lo arma. **SMRC**: el 23/09/2026 Fak pidio armarlo ("prepara el PPAP en el servidor Y"); como, skill `ppap-motherson`. Mandarlo al cliente sigue siendo con su OK para ese mail |
 | Escribir en un listado maestro (flujogramas, AMFEs, hojas de proceso) | **Preguntar** — es registro compartido |
+| Guardar algo en el servidor del SGC (`Y:\BARACK\CALIDAD\DOCUMENTACION SGC\`) | **Solo lo OFICIAL y en el lugar que el SGC ya tiene para eso.** Un formato o documento no oficial va a la biblioteca de Ingenieria (la nube), p. ej. `1- GENERAL\FORMATOS GENERAL\HOJAS DE OPERACIONES\FORMATO A3 (NO OFICIAL)\` (Fak, 25/09/2026: *"no podes ir guardando los formatos donde se te cante... nuestro SGC tiene un lugar para todo... hay que guardarlo en un lugar nuestro o en la nube"*). No se crean carpetas nuevas en el servidor |
 | Llenar cualquier otro casillero del APQP | **Preguntar** si es la primera vez que lo lleno; el mapa esta en el skill `apqp-legajo` |
 
 **Un documento vivo tiene UN solo lugar.** El maestro vive en `Gestion Ingenieria`; lo que se
