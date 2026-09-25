@@ -158,6 +158,7 @@ scripts/hotmelt/_reemplazados_*/
 scripts/img/*.pptx
 scripts/img/*.pdf
 scripts/img/render_deck_img/
+scripts/img/render_cambio_molde/
 scripts/img/analysis/
 scripts/img/__pycache__/
 # Hojas de proceso de la PRENSA DE EMBOSSING: idem, se rehacen con
