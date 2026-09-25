@@ -21,7 +21,7 @@ def pasos(ruta):
             d[op] = txt or ""
     return d
 
-f = glob.glob("C:/Users/FacundoS-PC/BARACK ARGENTINA SRL/Ingenier*/INGENIERIA BARACK (NUNCA BORRAR)/1- GENERAL/INSTRUCTIVOS/INSTRUCCIONES OPERATIVAS/HOTMELT/HOJAS DE PROCESO*.pptx")[0]
+f = glob.glob("Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/1- CLIENTES/NOVAX/Tapizadas puerta/TOP ROLL/HOJAS DE PROCESO*.pptx")[0]
 a, b = pasos(f), pasos("_mio.pptx")
 for op in sorted(a, key=lambda x: float(x[3:])):
     if a[op] != b.get(op, ""):

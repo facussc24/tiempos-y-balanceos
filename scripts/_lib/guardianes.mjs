@@ -1237,6 +1237,8 @@ const TEXTO_HO = `[HO-GUARD — gate de numeracion ANTES de armar una Hoja de Op
 6. AL CERRAR: actualizar el listado maestro
    (3- LISTADO\\Listado hojas de proceso.xlsx) con la fila nueva en el bloque de
    su sector + la hoja oculta _CONTEXTO_CLAUDE con el proximo numero libre.
+   El numero es de la HOJA, no del codigo, y no se pasa de 999 (Fak 25/09/2026): antes de
+   dar uno y al cerrar, python scripts/_hoNumeros.py (sale 1 si hay un numero repetido).
 7. El .xlsx del SGC lo edito YO con Excel COM (regla modificada por Fak el 19/08/2026:
    "automaticemos eso asi podes hacerlo vos"). Trampas COM en la memoria
    excel_com_argumentos_posicionales; verificar lock ~$ antes y releer despues de guardar.`;

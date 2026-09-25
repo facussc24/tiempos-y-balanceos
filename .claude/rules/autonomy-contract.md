@@ -93,6 +93,7 @@ Antes de listarle un pendiente a Fak o proponerle un trabajo: ¿de que area es? 
 | | **Firma/aprobacion del AMFE**: el circuito no existe hoy; no se reporta (24/08) |
 | | **Coordinar a otros por mail**: *"no somos el coordinador... solo somos un puesto junior"* (11/09) |
 | | **Layout de planta**: *"yo nunca hago lay out"* (11/09) |
+| | **Instructivos (IO-NN)**: los hace Calidad; *"ingenieria no genera instructivos... mi SGC no me permite generar instructivos, no existe"* (25/09). Lo de Ingenieria es la HOJA DE PROCESO, que va a `HOJAS DE OPERACIONES` |
 
 Al resumir mails o pendientes, van los de Ingenieria (*"pasame el listado de pendientes de
 ingenieria"*, 08/09; *"yo soy ingenieria te dije"*, 21/09). Memorias

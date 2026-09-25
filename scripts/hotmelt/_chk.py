@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import glob, os, io
 from pptx import Presentation
-p = glob.glob("C:/Users/FacundoS-PC/BARACK ARGENTINA SRL/Ingenier*/INGENIERIA BARACK (NUNCA BORRAR)/1- GENERAL/INSTRUCTIVOS/INSTRUCCIONES OPERATIVAS/HOTMELT/*.pptx")
+p = glob.glob("Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/1- CLIENTES/NOVAX/Tapizadas puerta/TOP ROLL/*.pptx")
 f = p[0]
 print("existe:", os.path.exists(f), os.path.getsize(f))
 with open(f, "rb") as fh:

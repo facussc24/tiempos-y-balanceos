@@ -32,9 +32,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import hoja_pptx as HP                  # noqa: E402
 import hoja_proceso_check as CK         # noqa: E402
 
-RUTA = ("C:/Users/FacundoS-PC/BARACK ARGENTINA SRL/Ingeniería y Proyecto - General/"
-        "INGENIERIA BARACK (NUNCA BORRAR)/1- GENERAL/INSTRUCTIVOS/INSTRUCCIONES OPERATIVAS/"
-        "HOTMELT/HOJAS DE PROCESO - MAQUINA HOTMELT - Rev.A.pptx")
+RUTA = ("Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/1- CLIENTES/NOVAX/"
+        "Tapizadas puerta/TOP ROLL/HOJAS DE PROCESO - MAQUINA HOTMELT - Rev.A.pptx")
 
 OP = "_pantalla_operacion_%s.png"
 

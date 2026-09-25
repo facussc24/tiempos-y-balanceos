@@ -13,7 +13,7 @@ def todo(ruta):
         out.append("\n".join(t for _, _, t in cajas))
     return out
 
-f = glob.glob("C:/Users/FacundoS-PC/BARACK ARGENTINA SRL/Ingenier*/INGENIERIA BARACK (NUNCA BORRAR)/1- GENERAL/INSTRUCTIVOS/INSTRUCCIONES OPERATIVAS/HOTMELT/HOJAS DE PROCESO*.pptx")[0]
+f = glob.glob("Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/1- CLIENTES/NOVAX/Tapizadas puerta/TOP ROLL/HOJAS DE PROCESO*.pptx")[0]
 a, b = todo(f), todo("_mio.pptx")
 print("laminas: Fak %d / generador %d" % (len(a), len(b)))
 dif = 0

@@ -495,7 +495,7 @@ que ir guardándolas donde sí van, o sea `Y:\BARACK\CALIDAD\DOCUMENTACION SGC\H
 
 | Qué | Dónde |
 |---|---|
-| Hoja de un producto de cliente | `...\HOJAS DE OPERACIONES\1- CLIENTES\<CLIENTE>\<proyecto>\HO NNN - <pieza o sector>\` — **una carpeta por HO** (Fak, 24/09/2026), con la vigente y una sola `OBSOLETO\` adentro. Ej. `SMRC\P21\HO 991 - APB P21 HILO NARANJA\` |
+| Hoja de un producto de cliente | `...\HOJAS DE OPERACIONES\1- CLIENTES\<CLIENTE>\<proyecto>\HO NNN - <pieza o sector>\` — **una carpeta por HO** (Fak, 24/09/2026), con la vigente y una sola `OBSOLETO\` adentro. **Cliente y proyecto se llaman igual que en `PPAP CLIENTES`** (Fak, 25/09/2026: *"igualalos al PPAP"*). Ej. `REYDEL-SMRC\APB P21\HO 991 - APB P21 HILO NARANJA\` |
 | Lo viejo (2011-2024) | `...\HOJAS DE OPERACIONES\9- HISTORICO (NO USAR)\` (era `Revisar`): no se toca ni se usa |
 | Hoja de un sector / máquina | `...\HOJAS DE OPERACIONES\2- SECTORES\<sector>\` |
 | Retrabajo | `...\HOJAS DE OPERACIONES\4- RETRABAJOS\` |
@@ -518,8 +518,9 @@ que ir guardándolas donde sí van, o sea `Y:\BARACK\CALIDAD\DOCUMENTACION SGC\H
 
 Van el `.pptx` y su `.pdf`, con nombre `HO-<N> - HOJAS DE PROCESO - <PIEZA> - Rev.<letra>`. El
 generador puede escribir en el scratchpad para mirarla, pero la entrega va ahí. Los decks de
-HOTMELT y MOLDEADORA IMG quedaron en `INSTRUCCIONES OPERATIVAS` antes de esta decisión; el de
-la PRENSA EMBOSSING se mudo el mismo 24/09 a `1- CLIENTES\COZZUOL\UPPER TRIM PANEL\` (sin
+HOTMELT y MOLDEADORA IMG se mudaron el 25/09 de `INSTRUCCIONES OPERATIVAS` a
+`1- CLIENTES\NOVAX\Tapizadas puerta\TOP ROLL\` (son del Top Roll Patagonia, N 216/256/285/315); el de
+la PRENSA EMBOSSING se mudo el mismo 24/09 a `1- CLIENTES\COZZUOL\00_VW427-1LA_K-PATAGONIA\00- Upper Trimming\` (sin
 numero de HO todavia: `HO-TBD - ...`, el numero lo pone el listado).
 
 ## 4. Lo fijo del formulario I-IN-002.4-R01

@@ -2,7 +2,7 @@
 """Extrae SOLO la secuencia: numero, titulo y pasos de cada hoja, para leerla en fila."""
 import glob, io, re
 from pptx import Presentation
-p = glob.glob("C:/Users/FacundoS-PC/BARACK ARGENTINA SRL/Ingenier*/INGENIERIA BARACK (NUNCA BORRAR)/1- GENERAL/INSTRUCTIVOS/INSTRUCCIONES OPERATIVAS/HOTMELT/HOJAS DE PROCESO*.pptx")
+p = glob.glob("Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/1- CLIENTES/NOVAX/Tapizadas puerta/TOP ROLL/HOJAS DE PROCESO*.pptx")
 prs = Presentation(p[0])
 out = []
 for i, s in enumerate(prs.slides):
