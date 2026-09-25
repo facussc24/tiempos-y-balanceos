@@ -154,7 +154,7 @@ TOMAS = [
         ("Si el material queda enhebrado de un dia para el otro",
          "Define si la 33 y la 34 se hacen todos los dias o solo con rollo nuevo."),
     ]),
-    ("6 · EL CAMBIO DE MOLDE — hojas 38 a 41", [
+    ("6 · EL CAMBIO DE MOLDE — hojas 38 a 46", [
         ("El MONTAJE del paso 4 al final de la lista, en la maquina",
          "El 04/09 el montaje se filmo hasta empujar el molde y conectar el agua (IMG_0667, "
          "16:44 a 16:48). Del paso 4 en adelante solo esta la pantalla: los pilares saliendo, "
@@ -166,7 +166,7 @@ TOMAS = [
          "En el desmontaje se pone un vinilo solo para que apoye el molde auxiliar (IMG_0662 "
          "min 5:49). En el montaje nadie dice en que paso se retira."),
         ("Que receta y que numero de molde se cargan despues del montaje, y la primera pieza",
-         "La hoja 41 termina en el ultimo boton de la lista. Falta como se vuelve a producir: "
+         "La hoja 46 termina en el ultimo boton de la lista. Falta como se vuelve a producir: "
          "salir de Modo de Ajuste, receta, calentamiento, y si la primera pieza se controla "
          "antes de seguir."),
         ("Quien tiene la contraseña que pide la pantalla en el paso 4 del desmontaje",
@@ -181,10 +181,10 @@ TOMAS = [
         ("Si el molde se mueve alguna vez con el puente grua o solo con el carro",
          "En los videos del 04/09 el molde sale empujado al carro blanco (IMG_0664 s=78, "
          "IMG_0666 s=45). Nadie nombra la grua."),
-        ("Cual palanca del panel de aire es la del molde auxiliar y cual la de la cuchilla",
-         "Se movieron en los pasos 7 y 13 (IMG_0662 s=684 a 702 y min 22:34), pero no se ve "
-         "cual es cual ni para que lado va. La traductora dijo que la iban a marcar con una "
-         "cinta (min 11:05)."),
+        ("Para que lado se mueve cada palanca del panel de aire, y si ya tienen la cinta",
+         "Cual es cual si se ve: en el paso 7 la mano va a la DERECHA (molde auxiliar, IMG_0662 "
+         "s=684) y en el 13 a la IZQUIERDA (cuchilla, s=1362). No se ve para que lado va cada "
+         "una. La traductora dijo que la iban a marcar con una cinta (min 11:05)."),
         ("Que es el «candado manual» (手动锁) de los pasos 7 y 13 del desmontaje",
          "La pantalla lo pide junto con el agua, la luz y el aire; en el video solo se mueve "
          "la palanca del aire. Si hay un candado o un agua para sacar, no se ve."),
@@ -197,6 +197,19 @@ TOMAS = [
         ("Para que se usan las llaves Allen",
          "«Vamos a necesitar ... las llaves allen para hacer el cambio de molde» (IMG_0662 min "
          "6:53). No se ve en que paso."),
+        ("Cuales son los 4 pilares del molde auxiliar y cuales los 4 de la cuchilla",
+         "«Esos son los largos y estos son los cortitos» (IMG_0662 min 5:02), pero en la foto "
+         "del molde armado hay pilares largos que atraviesan la placa del medio y no se puede "
+         "decir cual es cual. Tampoco se ve si los de la cuchilla llevan pasador."),
+        ("Que manguera va en cada acople de agua del molde inferior, y si se cierra el agua antes",
+         "La hoja 43 desconecta y la 44 conecta (IMG_0663 min 1:09, IMG_0667 min 2:28). No se "
+         "ve si los acoples estan marcados ni si hay una llave de agua para cerrar."),
+        ("Si despues de un paso en rojo hay que apretar algo en la pantalla",
+         "La traductora: «lo que te figura rojo es lo que tienen que hacer manualmente» (IMG_0662 "
+         "min 4:21). No dice si despues se confirma o si pasa solo al siguiente."),
+        ("Como se traba el carro contra la maquina y quien hace que, entre las dos personas",
+         "En la hoja 43 el carro se acerca y se pasa el molde entre dos (IMG_0664 s=60). No se ve "
+         "como queda frenado el carro ni quien aprieta los botones mientras el otro mira."),
         ("El sensor del sujetador de la cuchilla que no se activo el 04/09",
          "«Falta un sensor ahi, el sujetador de cuchillo» (IMG_0662 min 23:22). Saber si ya "
          "esta resuelto antes de dar las hojas a produccion."),

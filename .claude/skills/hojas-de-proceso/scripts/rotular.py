@@ -142,7 +142,7 @@ def chequear_marcas(foto, marcas, permitir_lisa):
 
 
 def rotular(foto: str, marcas: list[tuple], banda: str, ancho: int, titulo: str | None,
-            numeros: bool = True):
+            numeros: bool = True, grosor: int = 0):
     im = Image.open(foto).convert("RGB")
     if ancho and im.width != ancho:
         im = im.resize((ancho, round(im.height * ancho / im.width)), Image.LANCZOS)
@@ -153,7 +153,10 @@ def rotular(foto: str, marcas: list[tuple], banda: str, ancho: int, titulo: str 
 
     # marcas sobre la foto
     d = ImageDraw.Draw(im)
-    grosor = max(3, W // 420)
+    # El grosor automatico sirve para una foto que va grande. En una hoja de SECUENCIA la foto
+    # sale de ~8 cm impresa y 4 px sobre 1800 son 0,2 mm: el recuadro casi no se ve en el
+    # papel (cambio de molde IMG, 25/09/2026). Ahi se pasa --grosor.
+    grosor = grosor or max(3, W // 420)
     r = max(15, W // 52)
     f_num = _fuente(int(r * 1.35))
     for i, (x, y, w, h, _t) in enumerate(marcas, 1):
@@ -248,6 +251,9 @@ def main() -> int:
     ap.add_argument("--banda", default="auto", choices=["auto", "derecha", "abajo", "ninguna"])
     ap.add_argument("--ancho", type=int, default=1600)
     ap.add_argument("--titulo")
+    ap.add_argument("--grosor", type=int, default=0,
+                    help="grosor del recuadro en px (0 = automatico, W/420). Para una foto de "
+                         "hoja de secuencia (~8 cm impresa) conviene 1/200 del ancho")
     a = ap.parse_args()
 
     marcas = []
@@ -315,7 +321,7 @@ def main() -> int:
             print(f"ROTULO CON CARACTERES QUE LA FUENTE NO DIBUJA {ch}: {t}", file=sys.stderr)
         raise SystemExit("saldrian cuadraditos vacios en el papel: cambiar el texto o la fuente")
 
-    im = rotular(a.foto, marcas, a.banda, a.ancho, a.titulo)
+    im = rotular(a.foto, marcas, a.banda, a.ancho, a.titulo, grosor=a.grosor)
     origen = leer_origen(a.foto) or "{}"
     try:
         dic = json.loads(origen)

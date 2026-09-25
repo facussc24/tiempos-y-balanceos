@@ -50,12 +50,12 @@ def _c(n):
 EPP_CAMBIO = [gh.ICO_ROPA, gh.ICO_CALZADO, gh.ICO_GUANTES]   # en los videos todos usan guantes
 
 CAJETIN_CM = dict(gh.CAJETIN_BASE)
-CAJETIN_CM.update(fecha="24/09/2026")
+CAJETIN_CM.update(fecha="25/09/2026")
 
 PORTADA_CM = dict(
     titulo="CAMBIO DE MOLDE — MÁQUINA MOLDEADORA IMG",
-    subtitulo="Desmontaje y montaje del molde con la pantalla Cambio Molde · OP 30 del "
-              "FLUJOGRAMA 155 TOP ROLL PATAGONIA",
+    subtitulo="Desmontaje y montaje del molde: molde auxiliar, cuchilla y molde inferior · "
+              "OP 30 del FLUJOGRAMA 155 TOP ROLL PATAGONIA",
     ho="HO-TBD",
     form="I-IN-002.4-R01",
     op_flujo="30 — PROCESO DE TERMOFORMADO Y LAMINADO IMG",
@@ -63,7 +63,7 @@ PORTADA_CM = dict(
     pieza="TOP ROLL PATAGONIA — N 216 / N 256 / N 285 / N 315",
     maquina="Moldeadora In-Mold Graining KINGPOWER (Molde Hembra)",
     firmas="F. Santoro / C. Baptista",
-    fecha_rev="24/09/2026",
+    fecha_rev="25/09/2026",
     foto=_c("cm00_paquete.jpg"),
 )
 
@@ -126,15 +126,68 @@ def gate_fotos_miradas_cm(hojas, portada=None):
 
 # ════════════════════════════════════════════════════════════════════════════
 # LAS HOJAS — numeradas despues de la 37 (Fak pidio 31 a 37 para la operacion, 23/09/2026).
-#   38     preparar la maquina para el cambio
-#   39     como se usa la pantalla Cambio Molde (vale para sacar y para poner)
-#   40     DESMONTAJE, 4 hojas: molde auxiliar · cuchilla · molde inferior al carro
-#   41     MONTAJE, 2 hojas: el molde nuevo adentro · la lista de la pantalla
+#   38     el mapa: las tres partes del molde y los pilares, y la idea del cambio
+#   39     preparar la maquina
+#   40     como se usa la pantalla Cambio Molde (vale para sacar y para poner)
+#   41-43  DESMONTAJE, una operacion por parte: molde auxiliar (2 hojas) · cuchilla ·
+#          molde inferior al carro
+#   44-46  MONTAJE, al reves: molde inferior · cuchilla · molde auxiliar
+#
+# Rehechas el 25/09/2026. Fak, sobre la version del 24/09: «la mire y no la entendi... no
+# estaba tan mal pero era extremadamente dificil de comprender». Lo que no se entendia:
+#   - nadie decia que es el molde auxiliar, la cuchilla o el molde inferior, ni la idea del
+#     cambio (la maquina deja las dos partes de arriba apoyadas sobre pilares y sale todo
+#     junto al carro) -> hoja 38, el mapa;
+#   - dos numeraciones en el mismo renglon («1. Completar los pasos 1 y 2 de la pantalla»)
+#     -> el renglon de la pantalla se nombra siempre «Paso N de la pantalla», y la nota de
+#     la hoja 40 lo dice;
+#   - pasos que eran solo «completar los pasos 11 y 12» -> cada paso dice primero que se
+#     mueve en la maquina y despues con que boton;
+#   - 7 de 16 fotos eran recortes de la pantalla con el texto cortado, y ninguna tenia un
+#     recuadro -> fotos de la maquina, cada una con el recuadro sobre lo que el paso nombra.
 # ════════════════════════════════════════════════════════════════════════════
 V0662 = "IMG_0662 (04-09-2026)"
 HOJAS_CM = [
     dict(
         op="38",
+        denominacion="RECONOCIMIENTO DEL MOLDE",
+        modo="rotulada",
+        imagenes=[_c("cm38_mapa.jpg")],
+        pasos=[
+            "Identificar el molde inferior, el de la franja verde: es la base, y al final sale "
+            "al carro con las otras dos partes encima.",
+            "Identificar el molde auxiliar, el del cartel amarillo: en el desmontaje baja y "
+            "queda apoyado sobre el molde inferior.",
+            "Identificar la cuchilla, la de arriba: en el desmontaje baja y queda apoyada "
+            "sobre sus pilares, encima del molde auxiliar.",
+        ],
+        nota="Sacar el molde es dejar el molde auxiliar y la cuchilla apoyados encima del "
+             "molde inferior y llevar todo junto al carro. Ponerlo es lo mismo al revés. Los "
+             "8 pilares (4 del molde auxiliar y 4 de la cuchilla) se colocan a mano en las "
+             "hojas 41 y 42.",
+        fuentes=[
+            "pantalla, desmontaje pasos 16 a 20: 人工将换模小车就位 ... 下模降卸模位 / "
+            "人工将模具移至小车 (el molde inferior baja y se lleva a mano al carro); la franja "
+            f"verde es la cara donde va el vinilo: {V0662} s=344 y s=645; el molde entero en "
+            "el carro: IMG_0666 (04-09-2026) s=45",
+            "pantalla, desmontaje paso 6: 辅模降去换模位 (el molde auxiliar baja a la posicion "
+            f"de cambio); {V0662} min 5:49 a 5:58: «hay que poner si o si un vinilo ... para "
+            "que se apoye ... cuando apoye el molde»; el cartel amarillo se ve en la foto",
+            "pantalla, desmontaje pasos 10 a 15: pilares de la cuchilla, 切刀降去换模位 (la "
+            "cuchilla baja), 切刀锁模器打开 (se abren sus sujetadores), 切刀升回原位; la "
+            "cuchilla sobre sus pilares con la maquina arriba: IMG_0663 (04-09-2026) s=70, la "
+            "foto. Nota: los pilares, pantalla desmontaje pasos 3 y 10 (人工安装辅模四根立柱 / "
+            "人工安装切刀四根立柱); el montaje repite la lista al reves (montaje 1 a 20)",
+        ],
+        epp=EPP_CAMBIO,
+        disparador="SI FALTA UN PILAR O UNA PARTE DEL MOLDE NO COINCIDE CON LA FOTO",
+        acciones=["1. No empezar el cambio de molde.",
+                  "2. Dar aviso al Líder de Producción.",
+                  "3. Esperar su definición antes de seguir."],
+    ),
+
+    dict(
+        op="39",
         denominacion="PREPARACION PARA EL CAMBIO DE MOLDE",
         modo="rotulada",
         imagenes=[_c("cm38_inicio.jpg")],
@@ -146,8 +199,9 @@ HOJAS_CM = [
             "Apretar el ícono Cambio Molde, el de las dos flechas, en la barra de la izquierda.",
         ],
         parametros=[("RESET", "3 s apretado")],
-        nota="El cambio se hace entre dos personas. Tener a mano, antes del paso 1: llaves "
-             "Allen, grasa de litio y un vinilo solo, sin sustrato.",
+        nota="El cambio se hace entre dos personas. Tener a mano, antes del paso 1: los 8 "
+             "pilares, llaves Allen, grasa de litio, un vinilo solo, sin sustrato, y la "
+             "contraseña que pide el Paso 4 de la pantalla (la da el Líder de Producción).",
         fuentes=[
             f"{V0662} min 0:00 a 0:07, la traductora: «boton reset ... hasta que la reset "
             "queda encendido»; min 1:40 a 1:47: «reset tres segundos. Cuando termina, cuando "
@@ -161,8 +215,8 @@ HOJAS_CM = [
             "dos flechas con el rotulo Cambio Molde se ve en la foto y en IMG_0662 s=1301. "
             "Nota: llaves Allen min 6:53 a 6:59 «vamos a necesitar ... las llaves allen para "
             "hacer el cambio de molde»; grasa min 6:07 a 6:13 y el balde en s=375 a 380; "
-            "vinilo min 5:49 a 5:58; dos personas empujando el molde: IMG_0664 (04-09-2026) "
-            "s=78",
+            "vinilo min 5:49 a 5:58; pilares: pantalla, desmontaje pasos 3 y 10; dos "
+            "personas llevando el molde al carro: IMG_0664 (04-09-2026) s=60",
         ],
         epp=EPP_CAMBIO,
         disparador="SI EL RESET NO QUEDA ENCENDIDO O LA PANTALLA MUESTRA UNA ALARMA",
@@ -172,7 +226,7 @@ HOJAS_CM = [
     ),
 
     dict(
-        op="39",
+        op="40",
         denominacion="CAMBIO DE MOLDE — MANEJO DE LA PANTALLA",
         modo="rotulada",
         imagenes=[_c("cm39_pantalla.jpg")],
@@ -183,19 +237,21 @@ HOJAS_CM = [
             "mientras la máquina se mueve.",
             "Soltar el botón cuando se prende el verde al costado, y recién ahí pasar al "
             "paso siguiente.",
-            "Completar a mano los pasos escritos en rojo, como indican las hojas 40 y 41.",
+            "Completar a mano los pasos escritos en rojo, como indican las hojas 41 a 46.",
             "Verificar que los recuadros de señal del paso queden en verde. Si uno queda gris, "
             "no seguir y avisar al Líder de Producción.",
         ],
-        nota="Antes de apretar un botón de la pantalla, verificar que nadie tenga las manos "
-             "adentro de la máquina.",
+        nota="Antes de apretar un botón, verificar que nadie tenga las manos adentro de la "
+             "máquina. En las hojas 41 a 46, «Paso 4 de la pantalla» es el renglón Paso 4 de "
+             "esta lista; los números grandes de cada foto son los pasos de la hoja.",
         fuentes=[
             f"{V0662} min 3:29 a 3:58, Fak: «vas a cambio de molde ... seleccionas cambio de "
             "desmolde»; IMG_0667 (04-09-2026) min 0:59 a 1:17: «vamos al montaje manual y "
             "seleccionamos el montaje»; arriba 手动卸模 y abajo 手动装模 (IMG_0663 s=465). Nota: "
             "la maquina se mueve mientras se aprieta el boton (min 0:17 a 0:33) y hay gente con "
             "las manos adentro durante el cambio (s=1215 y s=1245); IMG_0664 min 2:40 a 2:50: "
-            "«por seguridad no tocamos ... chicos, no muevan»",
+            "«por seguridad no tocamos ... chicos, no muevan»; la lista numerada Paso 1 a Paso "
+            "20 se ve en la foto",
             f"{V0662} min 0:17 a 0:33: «presta este boton hasta que la posicion actual llega a "
             "la posicion ajustada»; min 13:13: «mantuvo apretado»",
             f"{V0662} min 10:06 a 10:12: «a medida que vas marcando los pasos se te va poniendo "
@@ -211,41 +267,37 @@ HOJAS_CM = [
         acciones=ACCIONES_PASO,
     ),
 
-    # ── DESMONTAJE ──────────────────────────────────────────────────────────
+    # ── DESMONTAJE: primero el molde auxiliar, despues la cuchilla, al final el carro ──
     dict(
-        op="40",
-        denominacion="CAMBIO DE MOLDE — DESMONTAJE",
-        hoja_de=(1, 4),
+        op="41",
+        denominacion="DESMONTAJE DEL MOLDE AUXILIAR",
+        hoja_de=(1, 2),
         modo="secuencia",
-        imagenes=[_c("cm40a_pasos.jpg"), _c("cm40b_vinilo.jpg"),
-                  _c("cm40c_grasa.jpg"), _c("cm40d_pilar.jpg")],
-        pies=["Pasos 1 y 2 de la pantalla",
-              "El vinilo sobre el molde verde",
+        imagenes=[_c("cm41_1_vinilo.jpg"), _c("cm41_2_grasa.jpg"), _c("cm41_3_pilar.jpg")],
+        pies=["Vinilo sobre el molde inferior",
               "Grasa en la punta del pilar",
-              "Pilar trabado en el taco rojo"],
-        sin_marcas_ok=True,
+              "Pilar trabado en su taco rojo"],
         pasos=[
-            "Completar los pasos 1 y 2 de la pantalla.",
-            "Apoyar un vinilo solo, sin sustrato, sobre el molde verde, donde se va a apoyar "
-            "el molde auxiliar.",
-            "Pasar grasa de litio en la punta de los pilares: los 4 del molde auxiliar y los "
-            "4 de la cuchilla.",
-            "Colocar los 4 pilares en los tacos rojos de las esquinas, girarlos hasta que "
-            "coincida el agujero y trabarlos con su pasador (paso 3).",
+            "Completar los Pasos 1 y 2 de la pantalla (la máquina acomoda el marco y los "
+            "moldes) y apoyar un vinilo solo, sin sustrato, sobre el molde inferior.",
+            "Pasar grasa de litio con pincel en la punta de los 8 pilares.",
+            "Colocar los 4 pilares del molde auxiliar en los tacos rojos de las esquinas, "
+            "girarlos hasta que coincida el agujero y trabarlos con su pasador (Paso 3 de la "
+            "pantalla).",
         ],
         parametros=[("Grasa", "de litio semifluida, balde ZHONGLIANZHUOLI")],
         fuentes=[
-            "pantalla, desmontaje pasos 1 y 2 (IMG_0663 s=465, en chino): 上框去上料位 / "
-            f"上模平移去辅模位 + 下模去预升位; {V0662} min 0:17 a 0:44 los aprieta la traductora",
-            f"{V0662} min 5:41: «para que no se lastime el...»; min 5:49 a 5:58: «hay que poner "
-            "si o si un vinilo, sin sustrato, sin el plastico, solamente el vinilo para que se "
-            "apoye ... cuando apoye el molde»; se ve en s=344",
+            "pantalla, desmontaje pasos 1 y 2: 上框去上料位 / 上模平移去辅模位 + 下模去预升位; "
+            f"{V0662} min 0:17 a 0:44 los aprieta la traductora; min 5:49 a 5:58: «hay que "
+            "poner si o si un vinilo, sin sustrato, sin el plastico, solamente el vinilo para "
+            "que se apoye ... cuando apoye el molde»; se ve en s=344",
             f"{V0662} min 6:00 a 6:13: «cuando saquen los pilares, lo tienen que engrasar en "
             "las puntas»; el balde (Semifluid extreme pressure lithium grease) en s=375 a 380 y "
             "el pincel en la punta en s=433",
             "pantalla, desmontaje paso 3: 人工安装辅模四根立柱 (instalar a mano los 4 pilares "
             f"del molde auxiliar); {V0662} min 20:26 a 20:29: «hay que girar hasta que coincida "
-            "el agujero, si no no entra»; el pasador se ve en s=529",
+            "el agujero, si no no entra»; el pasador se ve en s=529; los tacos rojos de las "
+            "esquinas de la placa de abajo en s=480",
         ],
         epp=EPP_CAMBIO,
         disparador=DISPARADOR_PASO,
@@ -253,39 +305,40 @@ HOJAS_CM = [
     ),
 
     dict(
-        op="40",
-        denominacion="CAMBIO DE MOLDE — DESMONTAJE",
-        hoja_de=(2, 4),
+        op="41",
+        denominacion="DESMONTAJE DEL MOLDE AUXILIAR",
+        hoja_de=(2, 2),
         modo="secuencia",
-        imagenes=[_c("cm41a_auxiliar.jpg"), _c("cm41b_palanca.jpg"),
-                  _c("cm41c_senales.jpg"), _c("cm41d_sube.jpg")],
-        pies=["El molde auxiliar",
-              "El panel de aire del costado",
-              "Pasos 7 a 9 de la pantalla",
-              "El molde auxiliar después del paso 9"],
-        sin_marcas_ok=True,
+        imagenes=[_c("cm41_4_baja.jpg"), _c("cm41_5_palanca.jpg"), _c("cm41_6_apoyado.jpg")],
+        pies=["El molde auxiliar bajado",
+              "Palanca derecha: molde auxiliar",
+              "La máquina arriba y el auxiliar abajo"],
         pasos=[
-            "Completar los pasos 4, 5 y 6 mirando que el molde auxiliar baje suave hasta "
-            "apoyarse.",
-            "Desconectar el aire del molde auxiliar con su palanca del panel del costado de "
-            "la máquina (paso 7).",
-            "Verificar que las 4 señales del paso 7 queden en verde antes de seguir.",
-            "Completar los pasos 8 y 9 de a poco, mirando la placa del molde auxiliar: si "
-            "empieza a levantarse, soltar el botón.",
+            "Bajar el molde auxiliar con los Pasos 4, 5 y 6 de la pantalla hasta que apoye "
+            "sobre el molde inferior, mirándolo: tiene que bajar suave.",
+            "Mover la palanca derecha del panel de aire del costado, la del molde auxiliar, "
+            "y verificar en la pantalla que las 4 señales del Paso 7 queden en verde.",
+            "Completar los Pasos 8 y 9 de a poco, mirando la placa del molde auxiliar: tiene "
+            "que quedar apoyada. Si empieza a levantarse, soltar el botón.",
         ],
-        parametros=[("Contraseña del paso 4", "la da el Líder de Producción")],
+        parametros=[("Contraseña del Paso 4", "la da el Líder de Producción")],
+        nota="Al terminar esta hoja, el molde auxiliar queda apoyado sobre el molde inferior "
+             "y suelto de la máquina.",
         fuentes=[
             "pantalla, desmontaje pasos 4 a 6: 下模翻转插销退 / 下模去换模位 / 辅模降去换模位; "
             f"{V0662} min 9:23 a 9:36 (el paso 4 pide contraseña) y min 10:15 a 10:35: "
-            "«tienen que prestar mucha atencion ... que baje suave»",
+            "«tienen que prestar mucha atencion ... que baje suave»; apoyado sobre el vinilo "
+            "en s=645",
             "pantalla, desmontaje paso 7: 手动取下辅模水、电、气接头及手动锁; "
             f"{V0662} min 10:55 a 11:14: «desconectar manualmente conectores de aire. En este "
-            "caso es interno»; la mano en la palanca del panel en s=684 a 702",
-            f"{V0662} min 11:51 a 12:07: «ya te marco los cuatro sensores ... cuatro valores "
-            "verdes»",
+            "caso es interno»; la mano en la palanca DERECHA del panel en s=684 a 686; min "
+            "11:39 a 11:46: «este es de este lado de la prensa, y este es de la parte de atras, "
+            "la parte del trimming» (la izquierda, s=703); min 11:51 a 12:07: «ya te marco los "
+            "cuatro sensores ... cuatro valores verdes»",
             "pantalla, desmontaje pasos 8 y 9: 辅模锁模器1/2打开 / 辅模升回原位; "
             f"{V0662} min 12:30 a 12:43: «detecten de que no se levante la placa tambien, "
-            "entonces tiene que subir de a poquito»",
+            "entonces tiene que subir de a poquito»; en s=805 la maquina arriba y el molde "
+            "auxiliar apoyado. Nota: 锁模器打开 = se abren sus sujetadores",
         ],
         epp=EPP_CAMBIO,
         disparador=DISPARADOR_PASO,
@@ -293,41 +346,42 @@ HOJAS_CM = [
     ),
 
     dict(
-        op="40",
-        denominacion="CAMBIO DE MOLDE — DESMONTAJE",
-        hoja_de=(3, 4),
+        op="42",
+        denominacion="DESMONTAJE DE LA CUCHILLA",
         modo="secuencia",
-        imagenes=[_c("cm42a_pilares.jpg"), _c("cm42b_cuchilla.jpg"),
-                  _c("cm42c_palanca.jpg"), _c("cm42d_sube.jpg")],
-        pies=["Un pilar y su agujero en la placa",
-              "Paso 12 de la pantalla",
-              "El panel de aire del costado",
-              "Paso 15 de la pantalla"],
-        sin_marcas_ok=True,
+        imagenes=[_c("cm42_1_pilar.jpg"), _c("cm42_2_baja.jpg"),
+                  _c("cm42_3_palanca.jpg"), _c("cm42_4_apoyada.jpg")],
+        pies=["Pilar de la cuchilla con su taco rojo",
+              "La cuchilla bajada sobre sus pilares",
+              "Palanca izquierda: cuchilla",
+              "La máquina arriba y la cuchilla abajo"],
         pasos=[
             "Colocar los 4 pilares de la cuchilla, con la punta engrasada, en los agujeros "
-            "de la placa (paso 10).",
-            "Completar los pasos 11 y 12.",
-            "Desconectar el aire de la cuchilla con la otra palanca del panel y verificar "
-            "las 4 señales del paso 13 en verde.",
-            "Completar los pasos 14 y 15.",
+            "de la placa (Paso 10 de la pantalla).",
+            "Bajar la cuchilla con los Pasos 11 y 12 de la pantalla hasta que apoye sobre "
+            "sus pilares, mirándola mientras baja.",
+            "Mover la palanca izquierda del panel de aire, la de la cuchilla, y verificar "
+            "que las 4 señales del Paso 13 queden en verde.",
+            "Completar los Pasos 14 y 15 de a poco: la cuchilla tiene que quedar apoyada "
+            "sobre sus pilares.",
         ],
-        nota="En la pantalla, el paso 10 dice «Mover manualmente el molde al carro»: en ese "
+        nota="En la pantalla, el Paso 10 dice «Mover manualmente el molde al carro»: en ese "
              "paso se colocan los pilares de la cuchilla.",
         fuentes=[
             "pantalla, desmontaje paso 10 en chino: 人工安装切刀四根立柱 (instalar a mano los 4 "
             f"pilares de la cuchilla); {V0662} min 15:13 a 15:37, la traductora sobre ese paso: "
             "«es un programa de la colocacion de los ... ahora si hay que ponerlo»; el pilar "
-            "en su agujero en s=1190",
+            "en su agujero en s=1190 y con su taco rojo en s=1232",
             "pantalla, desmontaje pasos 11 y 12: 上模平移去切刀位 + 下模去换模位 / 切刀降去换模位 "
             f"(IMG_0663 s=465); {V0662} min 21:00 a 21:07: «vamos a empezar a bajar la prensa "
-            "de arriba ... decimo, decimo primer»",
+            "de arriba ... decimo, decimo primer»; la cuchilla abajo en s=1351",
             "pantalla, desmontaje paso 13: 手动取下切刀水、电、气接头及手动锁; "
             f"{V0662} min 22:34 a 23:07: «ahora movemos esta segunda palanca ... tenes que "
-            "fijar que los cuatro botones se puso verde»",
+            "fijar que los cuatro botones se puso verde»; la mano en la palanca IZQUIERDA en "
+            "s=1362 a 1366",
             "pantalla, desmontaje pasos 14 y 15: 切刀锁模器1/2打开 / 切刀升回原位; "
             "IMG_0663 (04-09-2026) min 0:09 a 0:30: «paso 15 ... aca se va liberando la "
-            "prensa arriba»",
+            "prensa arriba»; la cuchilla apoyada y la maquina arriba en IMG_0663 s=70",
         ],
         epp=EPP_CAMBIO,
         disparador=DISPARADOR_PASO,
@@ -335,24 +389,23 @@ HOJAS_CM = [
     ),
 
     dict(
-        op="40",
-        denominacion="CAMBIO DE MOLDE — DESMONTAJE",
-        hoja_de=(4, 4),
+        op="43",
+        denominacion="DESMONTAJE DEL MOLDE INFERIOR",
         modo="secuencia",
-        imagenes=[_c("cm43a_conectores.jpg"), _c("cm43c_pasador.jpg"),
-                  _c("cm43b_pantalla.jpg"), _c("cm43d_empuje.jpg")],
-        pies=["Acoples de agua y ficha eléctrica",
-              "El pasador de tope con su cadena",
-              "Pasos 16 al final de la lista",
-              "El molde empujado al carro"],
-        sin_marcas_ok=True,
+        imagenes=[_c("cm43_1_agua.jpg"), _c("cm43_2_carro.jpg"),
+                  _c("cm43_3_pasador.jpg"), _c("cm43_4_empuje.jpg")],
+        pies=["Acoples de agua del molde inferior",
+              "El carro contra la máquina",
+              "Pasador de tope con cadena",
+              "El molde con todo encima"],
         pasos=[
-            "Acercar el carro contra la máquina y desconectar el agua y la ficha eléctrica "
-            "del molde inferior (paso 16).",
-            "Sacar los pasadores de tope, los que tienen cadena (paso 16).",
-            "Completar los pasos 17, 18 y 19 para bajar el molde inferior al nivel del carro.",
-            "Empujar el molde al carro entre dos personas (paso 20) y completar el último "
-            "botón de la lista.",
+            "Desconectar el agua y la ficha eléctrica del molde inferior (Paso 16 de la "
+            "pantalla).",
+            "Acercar el carro de cambio de molde contra la máquina (Paso 16).",
+            "Sacar los pasadores de tope, los que tienen cadena, y completar los Pasos 17, "
+            "18 y 19: el molde inferior baja al nivel del carro.",
+            "Pasar el molde al carro a mano, entre dos personas (Paso 20), y completar el "
+            "botón que queda al final de la lista (el segundo Paso 19).",
         ],
         nota="Con el molde en el carro, ponerle la traba negra antes de mover el carro.",
         fuentes=[
@@ -360,15 +413,17 @@ HOJAS_CM = [
             "carro y sacar el pasador de tope y los conectores de agua, luz y aire); IMG_0663 "
             "(04-09-2026) min 1:09 a 1:27: «desconectamos los conectores de agua y tension ... "
             "solo de abajo»; la mano en el acople en s=142",
-            "pantalla, desmontaje paso 16 (限位插销, pasador de tope); IMG_0664 (04-09-2026) "
-            "min 0:27: «estan sacando las trabas de lado»; el pasador con su cadena en s=40",
-            "pantalla, desmontaje pasos 17 a 19: 换模小车插销进 + 下模气动增压泵泄压 / 下模锁模器打开 / "
-            "下模降卸模位; IMG_0663 min 7:44: «si yo aprieto este boton, el molde deberia bajar "
-            "y posicionarse a nivel del carro»",
+            "pantalla, desmontaje paso 16: 人工将换模小车就位 (poner el carro en su lugar); "
+            "IMG_0663 min 4:06: «hay que traer carro»; el carro contra la maquina en s=400",
+            "pantalla, desmontaje paso 16 (限位插销, pasador de tope) y pasos 17 a 19: "
+            "换模小车插销进 + 下模气动增压泵泄压 / 下模锁模器打开 / 下模降卸模位; IMG_0664 "
+            "(04-09-2026) min 0:27: «estan sacando las trabas de lado», el pasador con su cadena "
+            "en s=40; IMG_0663 min 7:44: «si yo aprieto este boton, el molde deberia bajar y "
+            "posicionarse a nivel del carro»",
             "pantalla, desmontaje paso 20: 人工将模具移至小车, y el ultimo 换模小车插销退; IMG_0664 "
             "min 0:00 a 0:22: «faltaba apretar ese boton y movemos el molde al carro»; dos "
-            "operarios empujando en s=78. Nota: IMG_0664 min 2:13 a 2:50: «ahora hay que "
-            "ponerle la traba ... esa cosa negra, para ser mas estable»",
+            "operarios en s=60. Nota: IMG_0664 min 2:13 a 2:50: «ahora hay que ponerle la "
+            "traba ... esa cosa negra, para ser mas estable»",
         ],
         epp=EPP_CAMBIO,
         disparador="SI EL MOLDE NO PASA AL CARRO O EL CARRO SE MUEVE",
@@ -377,32 +432,36 @@ HOJAS_CM = [
                   "3. Dar aviso al Líder de Producción."],
     ),
 
-    # ── MONTAJE ─────────────────────────────────────────────────────────────
+    # ── MONTAJE: lo mismo al reves — molde inferior, cuchilla, molde auxiliar ──
     dict(
-        op="41",
-        denominacion="CAMBIO DE MOLDE — MONTAJE",
-        hoja_de=(1, 2),
+        op="44",
+        denominacion="MONTAJE DEL MOLDE INFERIOR",
         modo="secuencia",
-        imagenes=[_c("cm44a_carro.jpg"), _c("cm44b_montaje.jpg"),
-                  _c("cm44c_empuje.jpg"), _c("cm44d_agua.jpg")],
-        pies=["El carro de cambio de molde",
-              "Montaje Manual y los pasos 1 a 6",
-              "El molde nuevo contra el tope",
-              "Acoples de agua y ficha eléctrica"],
-        sin_marcas_ok=True,
+        imagenes=[_c("cm44_1_carro.jpg"), _c("cm44_2_empuje.jpg"),
+                  _c("cm44_3_agua.jpg"), _c("cm44_4_senales.jpg")],
+        pies=["El carro con el molde nuevo",
+              "El molde empujado hacia adentro",
+              "Acoples de agua del molde inferior",
+              "Paso 5: estas 4 tienen que quedar en verde"],
         pasos=[
-            "Acercar el carro con el molde nuevo contra la máquina (paso 1).",
-            "Apretar Montaje Manual en la pantalla Cambio Molde y completar el paso 2.",
-            "Sacar las trabas del carro y empujar el molde hacia adentro hasta que haga tope; "
-            "poner el pasador de posición (paso 3).",
-            "Conectar la ficha eléctrica y el agua del molde inferior (paso 3).",
+            "Apretar Montaje Manual en la pantalla, acercar el carro con el molde nuevo "
+            "contra la máquina (Paso 1 de la lista de montaje) y completar el Paso 2.",
+            "Sacar las trabas del carro, empujar el molde hacia adentro hasta que haga tope y "
+            "poner el pasador de posición (Paso 3).",
+            "Conectar la ficha eléctrica y el agua del molde inferior (Paso 3).",
+            "Completar los Pasos 4, 5 y 6 y verificar que las 4 señales del Paso 5 queden en "
+            "verde: el molde inferior queda trabado.",
         ],
+        nota="El molde nuevo llega al carro armado, con el molde auxiliar, la cuchilla y sus "
+             "8 pilares encima. Si las 4 señales del Paso 5 no quedan en verde, la máquina no "
+             "arranca y marca la alarma 92.",
         fuentes=[
-            "pantalla, montaje paso 1 (IMG_0667 s=208, en chino): 人工将模具和换模小车就位; "
-            "IMG_0667 (04-09-2026) min 1:36: «el primer paso es montar el molde, que es lo "
-            "que hicieron recien»; el carro con el molde en IMG_0666 (04-09-2026) s=45",
-            "IMG_0667 min 0:59 a 1:17: «cuando ya colocamos el molde para posicionar en la "
-            "prensa, vamos al montaje manual y seleccionamos el montaje»; paso 2: 换模小车插销进",
+            "pantalla, montaje paso 1 (IMG_0667 s=208, en chino): 人工将模具和换模小车就位; paso 2: "
+            "换模小车插销进; IMG_0667 (04-09-2026) min 1:36: «el primer paso es montar el molde, "
+            "que es lo que hicieron recien»; el carro con el molde en IMG_0666 (04-09-2026) s=45; "
+            "Montaje Manual: IMG_0667 min 0:59 a 1:17, «vamos al montaje manual y "
+            "seleccionamos el montaje». Nota: la lista de montaje saca los pilares (pasos 13 y "
+            "19) y nunca los pone, y el paquete entero esta en el carro en IMG_0666 s=45",
             "pantalla, montaje paso 3: 人工将模具推入换模台 插入定位插销 (empujar el molde a la mesa "
             "de cambio y poner el pasador de posicion); IMG_0667 min 1:40 a 1:51: «empujar el "
             "molde hacia adentro, sacar los pitutos. Esto hay que empujarlo hasta que haga "
@@ -410,54 +469,94 @@ HOJAS_CM = [
             "pantalla, montaje paso 3: 装好下模航插 (enchufar la ficha del molde inferior); "
             "IMG_0667 min 2:28 a 2:30: «ahi viene agua. Y ahi le ponen agua»; los acoples en "
             "IMG_0663 (04-09-2026) s=120",
+            "pantalla, montaje pasos 4 a 6: 换模小车插销退 + 下模去翻转位 / 下模锁模器锁紧 (138.0 "
+            "138.2 138.4 138.6) / 下模气动增压泵增压 (136.7); las 4 senales del paso 5 en "
+            "IMG_0667 s=197.5. Nota: alarma 92 del 18/09/2026 (casos\\CASO ALARMA 92), "
+            "KingPower por WhatsApp: 下模的锁紧气缸没有锁紧, «los cilindros de bloqueo del "
+            "molde inferior no estan bloqueados»",
         ],
         epp=EPP_CAMBIO,
-        disparador="SI EL MOLDE NO ENTRA DERECHO O NO LLEGA AL TOPE",
+        disparador="SI EL MOLDE NO ENTRA DERECHO, NO LLEGA AL TOPE O EL PASO 5 NO QUEDA EN VERDE",
         acciones=["1. Dejar de empujar y no forzar el molde.",
                   "2. Ante cualquier riesgo, presionar el botón de parada de emergencia.",
                   "3. Dar aviso al Líder de Producción."],
     ),
 
     dict(
-        op="41",
-        denominacion="CAMBIO DE MOLDE — MONTAJE",
-        hoja_de=(2, 2),
-        modo="rotulada",
-        imagenes=[_c("cm45_montaje.jpg")],
+        op="45",
+        denominacion="MONTAJE DE LA CUCHILLA",
+        modo="secuencia",
+        imagenes=[_c("cm42_4_apoyada.jpg"), _c("cm42_3_palanca.jpg"), _c("cm42_1_pilar.jpg")],
+        pies=["La cuchilla apoyada sobre sus pilares",
+              "Palanca izquierda: cuchilla",
+              "Pilar de la cuchilla con su taco rojo"],
+        ciclos_distintos=True,
         pasos=[
-            "Completar los pasos 4, 5 y 6, y verificar que las 4 señales del paso 5 queden en "
-            "verde.",
-            "Completar los pasos 7 y 8 para bajar la cuchilla.",
-            "Conectar el aire de la cuchilla con su palanca del panel (paso 9) y completar "
-            "los pasos 10 y 12; el 11 está vacío.",
-            "Sacar a mano los 4 pilares de la cuchilla (paso 13).",
-            "Completar los pasos 14 a 18 del molde auxiliar: en el 16, conectar su aire con "
-            "la palanca del panel.",
-            "Sacar a mano los 4 pilares del molde auxiliar (paso 19) y completar los dos "
-            "últimos botones de la lista.",
+            "Completar los Pasos 7 y 8 de la lista de montaje: la máquina baja hasta la "
+            "cuchilla.",
+            "Mover la palanca izquierda del panel de aire, la de la cuchilla (Paso 9), "
+            "verificar sus 4 señales en verde y completar los Pasos 10 y 12: la cuchilla sube "
+            "con la máquina. El Paso 11 no tiene botón.",
+            "Sacar a mano los 4 pilares de la cuchilla (Paso 13).",
         ],
-        nota="Si las señales del paso 5 no quedan en verde, la máquina no arranca y marca la "
-             "alarma 92. En la pantalla, los pasos 13 y 19 dicen «Posicionar manualmente molde "
-             "y carro»: en los dos se sacan los pilares.",
+        nota="En la pantalla, el Paso 13 dice «Posicionar manualmente molde y carro»: en ese "
+             "paso se sacan los pilares de la cuchilla. Las fotos son de las mismas piezas en "
+             "el desmontaje (hoja 42).",
         fuentes=[
-            "pantalla, montaje pasos 4 a 6: 换模小车插销退 + 下模去翻转位 / 下模锁模器锁紧 (138.0 "
-            "138.2 138.4 138.6) / 下模气动增压泵增压 (136.7). Alarma 92 del 18/09/2026 "
-            "(casos\\CASO ALARMA 92), KingPower por WhatsApp: 下模的锁紧气缸没有锁紧, «los "
-            "cilindros de bloqueo del molde inferior no estan bloqueados»",
-            "pantalla, montaje pasos 7 y 8: 下模升去换模位 + 上模平移去切刀位 / 切刀降去换模位",
+            "pantalla, montaje pasos 7 y 8: 下模升去换模位 + 上模平移去切刀位 / 切刀降去换模位 "
+            "(IMG_0667 s=208); la cuchilla sobre sus pilares, como queda en el desmontaje: "
+            "IMG_0663 (04-09-2026) s=70",
             "pantalla, montaje pasos 9, 10 y 12: 手动安装切刀水、电、气接头及手动锁 / 切刀锁模器1/2锁紧 "
-            "/ 切刀升回原位; el 11 esta vacio en la pantalla (IMG_0667 s=51). Esos conectores, en "
-            f"el desmontaje, son la palanca del panel: {V0662} min 22:34 a 22:42, «ahora movemos "
-            "esta segunda palanca. Dice que te conectas manualmente, lo conecto de aire»",
+            "/ 切刀升回原位; señales del paso 9: 155.0 155.1 155.2 155.3 (IMG_0667 s=208); el 11 "
+            "esta vacio en la pantalla (IMG_0667 s=51). Esos conectores, en "
+            f"el desmontaje, son la palanca izquierda del panel: {V0662} min 22:34 a 22:42, "
+            "«ahora movemos esta segunda palanca. Dice que te conectas manualmente, lo conecto "
+            "de aire»",
             "pantalla, montaje paso 13 en chino: 人工将切刀四根立柱拿走 (sacar a mano los 4 "
-            "pilares de la cuchilla)",
-            "pantalla, montaje pasos 14 a 18: 上模平移去辅模位 / 辅模降去换模位 / 手动安装辅模水、电、"
-            f"气接头及手动锁 / 辅模锁模器1/2锁紧 / 辅模升回原位; el conector del auxiliar: {V0662} "
+            "pilares de la cuchilla); el pilar de la cuchilla con su taco rojo en "
+            f"{V0662} s=1232, cuando se coloca en el desmontaje",
+        ],
+        epp=EPP_CAMBIO,
+        disparador=DISPARADOR_PASO,
+        acciones=ACCIONES_PASO,
+    ),
+
+    dict(
+        op="46",
+        denominacion="MONTAJE DEL MOLDE AUXILIAR",
+        modo="secuencia",
+        imagenes=[_c("cm41_6_apoyado.jpg"), _c("cm41_5_palanca.jpg"), _c("cm41_3_pilar.jpg")],
+        pies=["El molde auxiliar apoyado, la máquina arriba",
+              "Palanca derecha: molde auxiliar",
+              "Pilar del molde auxiliar en su taco rojo"],
+        ciclos_distintos=True,
+        pasos=[
+            "Completar los Pasos 14 y 15 de la lista de montaje: la máquina baja hasta el "
+            "molde auxiliar.",
+            "Mover la palanca derecha del panel de aire, la del molde auxiliar (Paso 16), "
+            "verificar sus 4 señales en verde y completar los Pasos 17 y 18: el molde auxiliar "
+            "sube con la máquina.",
+            "Sacar el pasador de cada pilar y retirar a mano los 4 pilares del molde auxiliar "
+            "(Paso 19); completar los dos botones del final de la lista (Paso 20 y el segundo "
+            "Paso 19).",
+        ],
+        nota="En la pantalla, el Paso 19 dice «Posicionar manualmente molde y carro»: en ese "
+             "paso se sacan los pilares del molde auxiliar. Las fotos son de las mismas piezas "
+             "en el desmontaje (hoja 41).",
+        fuentes=[
+            "pantalla, montaje pasos 14 y 15: 上模平移去辅模位 + 下模升去换模位 / 辅模降去换模位 "
+            "(IMG_0667 s=208); el molde auxiliar apoyado con la maquina arriba, como queda en "
+            f"el desmontaje: {V0662} s=805",
+            "pantalla, montaje pasos 16 a 18: 手动安装辅模水、电、气接头及手动锁 / 辅模锁模器1/2锁紧 / "
+            f"辅模升回原位; señales del paso 16: 152.0 152.1 152.2 152.3 (IMG_0667 s=208); el "
+            f"conector del auxiliar es la palanca derecha del panel: {V0662} "
             "min 10:55 a 11:14, «desconectar manualmente conectores de aire. En este caso es "
-            "interno», con la palanca del panel",
+            "interno», y la mano en esa palanca en s=684 a 686",
             "pantalla, montaje paso 19 en chino: 人工将辅模四根立柱拿走 (sacar a mano los 4 "
             "pilares del molde auxiliar); despues, la pantalla sigue con «Paso 20» 下模翻转插销进 y "
-            "un segundo «Paso 19» 下模降回原位 (IMG_0667 s=208)",
+            "un segundo «Paso 19» 下模降回原位 (IMG_0667 s=208); el pilar del molde auxiliar "
+            f"en su taco rojo, trabado con su pasador, cuando se coloca: {V0662} s=529 (paso 3 "
+            "del desmontaje, 人工安装辅模四根立柱)",
         ],
         epp=EPP_CAMBIO,
         disparador=DISPARADOR_PASO,

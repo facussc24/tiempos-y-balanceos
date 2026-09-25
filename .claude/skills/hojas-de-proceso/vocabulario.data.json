@@ -332,6 +332,7 @@
       "CORTE",
       "COSTURA",
       "DESCARGA",
+      "DESMONTAJE",
       "DESTRABE",
       "EDGE",
       "EMBALAJE",
@@ -376,7 +377,10 @@
       "VALIDACION",
       "VIROLADO",
       "WRAPPING"
-    ]
+    ],
+    "primera_palabra_fuentes": {
+      "DESMONTAJE": "I-AC-048 Uso de Calibre de Control Tapa Consola MIRGOR Rev.1, punto 5.4: «Desmontaje de pieza en calibre»; y la pantalla Cambio Molde de la moldeadora IMG dice «Desmontaje Manual» / «Montaje Manual». Agregada el 25/09/2026 para las hojas 41 a 43 del cambio de molde."
+    }
   },
   "partes_inexistentes": {
     "_leeme": [
