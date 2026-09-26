@@ -1218,30 +1218,38 @@ const TEXTO_HO = `[HO-GUARD — gate de numeracion ANTES de armar una Hoja de Op
 2. LA NUMERACION LA MANDA EL FLUJOGRAMA. Es el orden APQP: flujograma → AMFE →
    Plan de Control. Si el PdC difiere, lo que se corrige es el PdC.
    Mirar especialmente las COLISIONES (mismo numero, distinta operacion).
-3. Los PASOS de una HO son instruccion de planta. Sin documento fuente van TBD.
-   PROHIBIDO redactarlos por analogia con otra pieza "parecida" o copiar los de
-   otro producto: el proceso puede ser otro (core-prohibiciones §1).
-4. FOTOS: solo de la pieza real, o de maquina/gesto donde NO SE RECONOZCA otra pieza.
+3. Los PASOS de una HO son instruccion de planta: cada uno sale de una fuente (video con
+   minuto, documento, o quien lo dijo y cuando); sin fuente el paso no va. PROHIBIDO
+   redactarlos por analogia con otra pieza "parecida" o copiar los de otro producto: el
+   proceso puede ser otro (core-prohibiciones §1). En la DESCRIPCION no va ni un TBD
+   (Fak, 24/09/2026: "no puede haber ni 1 TBD"): lo que no se sabe se escribe generico,
+   sin inventar valores, y el hueco va a la lista de pendientes. El TBD queda solo en el
+   cajetin (hojas-proceso.md 11 y 18).
+4. FORMATO: el PowerPoint del generador (scripts/img/generar_hojas_img.py, skill
+   hojas-de-proceso) sobre el formulario I-IN-002.4-R01: portada, una foto por paso, de 2
+   a 4 pasos por hoja. No el Excel viejo pestaña por pestaña (Fak, 24/09/2026).
+   FOTOS: solo de la pieza real, o de maquina/gesto donde NO SE RECONOZCA otra pieza.
    Si no hay foto, el recuadro va VACIO — nada de leyendas tipo "FOTO PENDIENTE"
    (Fak, 13/08: "si no hay imagenes en alguna hoja no pongas nada").
-   Al duplicar una hoja como plantilla, BORRAR sus imagenes de contenido: se arrastran
-   invisibles. Paso con la HO-986: la plantilla era un reproceso de costura y sus 9 fotos
-   de agujas quedaron en las 8 hojas nuevas, incluida la de inyeccion de PU.
 5. UNA HO ES PARA EL OPERARIO, NO PARA AUDITAR: sin "BORRADOR", sin "pendiente de
-   validacion", sin "el Plan de Control dice X pero Y". Donde no hay dato va TBD y nada
-   mas; el analisis va en el informe aparte. Estilo de la casa en el ciclo de control:
+   validacion", sin "el Plan de Control dice X pero Y". Lo interno no va a la hoja ni a un
+   informe (no se hacen informes): va al .txt de estado de la carpeta de la tarea.
+   Estilo de la casa en el ciclo de control:
    Resp. = OP / OC / Insp.; **Registro: los unicos validos son los "Set up" (de control o
    de lanzamiento) — "RC" NO EXISTE** (aparece en HOs viejas, es arrastre; Fak 14/08).
    Si no hay registro asociado va "-", no se inventa un codigo. Frases cortas: las
    columnas son angostas y un texto largo se CORTA.
-6. AL CERRAR: actualizar el listado maestro
-   (3- LISTADO\\Listado hojas de proceso.xlsx) con la fila nueva en el bloque de
-   su sector + la hoja oculta _CONTEXTO_CLAUDE con el proximo numero libre.
+6. LISTADO MAESTRO (3- LISTADO\\Listado hojas de proceso.xlsx): la fila nueva, en el
+   bloque de su sector, + la hoja oculta _CONTEXTO_CLAUDE con el proximo numero libre, se
+   PREPARA en la misma tanda en que se arma la hoja y se ESCRIBE con el OK de Fak
+   (registro compartido, autonomy-contract.md §F).
    El numero es de la HOJA, no del codigo, y no se pasa de 999 (Fak 25/09/2026): antes de
    dar uno y al cerrar, python scripts/_hoNumeros.py (sale 1 si hay un numero repetido).
-7. El .xlsx del SGC lo edito YO con Excel COM (regla modificada por Fak el 19/08/2026:
-   "automaticemos eso asi podes hacerlo vos"). Trampas COM en la memoria
-   excel_com_argumentos_posicionales; verificar lock ~$ antes y releer despues de guardar.`;
+7. Con ese OK, el .xlsx lo edito YO con Excel COM (Fak, 19/08/2026: "automaticemos eso
+   asi podes hacerlo vos"). Trampas COM en la memoria excel_com_argumentos_posicionales;
+   verificar lock ~$ antes y releer despues de guardar. Limite (25/09/2026): un libro con
+   imagenes "en celda" no se guarda por COM para cambiar una celda — asi se perdieron
+   imagenes en 17 HO; ese cambio va por el XML (skill hojas-de-proceso §3 bis).`;
 GUARDIANES['ho-numeracion-guard'] = (ctx, { env }) => {
   // Red de seguridad: si no se pudo parsear (o no hay nada que mirar), grep sobre el JSON crudo.
   let target = ctx.target.trim() ? ctx.target : ctx.raw;
@@ -1596,9 +1604,10 @@ QUE HACER EN VEZ:
   - Si de verdad hay que cerrarlo, PREGUNTALE A FAK primero, con el motivo.
   - Si Fak ya dijo que si:  touch ~/.claude/.arb-cerrar-ok   y reintenta (vale 1 vez).
 
-NO BLOQUEADO, por si era lo que buscabas: cerrar 'Maestro de Insumos' o 'Maestro de
-Relaciones' con WM_CLOSE (es el modo documentado de descartar una edicion sin grabar),
-y 'python scripts/_arbVer.py reset', que cierra y REABRE la de Relaciones.`);
+NO BLOQUEADO, por si era lo que buscabas: cerrar 'Maestro de Insumos' con WM_CLOSE (es el
+modo documentado de descartar una edicion sin grabar) y 'python scripts/_arbVer.py reset'
+con Relaciones CERRADA (solo la abre). 'Maestro de Relaciones' ABIERTA no se cierra: crashea
+el arb (25/09/2026, regla arb-no-cerrar.md); 'reset --forzar' solo con OK de Fak.`);
 };
 
 // ── apqp-cliente-guard ─────────────────────────────────────────────────────

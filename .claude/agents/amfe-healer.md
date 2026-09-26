@@ -137,14 +137,14 @@ Pendiente (SIN_FUENTE) — requiere Fak:
 Tomas de accion sugeridas: {si corresponde}
 ```
 
-Mantener reporte <400 palabras. Usar tabla cuando los items son >3.
+El reporte lo lee Fak de un vistazo: lo aplicado, lo pendiente y lo que decide el. Tabla cuando los items son mas de 3.
 
 ## Que NO hacer
 
 - NO correr scripts que NO esten en la lista de abajo.
 - NO modificar archivos TS/TSX del proyecto (.ts/.tsx) — este agent solo toca scripts/data.
 - NO crear nuevos scripts custom sin autorizacion explicita — un one-off de propagacion (paso 7) se PROPONE primero, se aplica con OK.
-- NO commitear ni pushear — Fak hace git al cerrar sesion.
+- NO commitear ni pushear: el git lo hace la sesion principal al cerrar.
 - NO consultar fuentes externas — el cookbook ya tiene lo necesario (si falta algo puntual, avisar).
 
 ## Scripts que puedes correr

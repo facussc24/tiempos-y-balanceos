@@ -29,7 +29,7 @@ es esa, **no** el `scripts/` de la raíz del repo, que es otro.
 > tres entregas el cálculo estructural estaba bien. Todos los gates de abajo miran la pieza
 > **quieta**: la zona, el frame, el ensamble, el tamaño. Un dispositivo puede pasarlos todos
 > y no servir, porque lo que lo hace fallar pasa **mientras el operario trabaja**. Por eso
-> el primer gate ya no es el 0.
+> el primer gate es el P, antes que el 0.
 
 **GATE P — EL PROCESO** (antes que todo lo demás, incluso antes de mirar la zona).
 
@@ -118,13 +118,10 @@ cliente, la primera hipótesis es el sistema de medición.*
   cambia al trasladar).
 - `gate_aristas.py --t-fino <mm> --tension-nominal <MPa>` — concentradores **cóncavos** sin
   radio + factor de seguridad a fatiga. Una esquina interna viva multiplica ×2,2.
-  **De vuelta en servicio (2026-08-09)** tras dos falsos verdes: la concavidad ya no se le
-  pregunta a una malla sino a la topología OCC (normal invertida si la cara es `REVERSED`;
-  la tangente **con el signo que la arista tiene dentro del wire de la cara** — ése era el
-  bug que quedaba). Trae par sintético BIEN/MAL propio que corre en **cada** invocación: si
-  no separa, sale con **código 3** y no juzga nada. `--verificar-material` da una segunda
-  opinión con un método que no comparte una línea de código (fracción de material alrededor
-  de la arista, `BRepClass3d_SolidClassifier`); sobre 5 piezas coincidieron en 1094/1094.
+  La concavidad la decide la topología OCC, no una malla. Trae par sintético BIEN/MAL propio
+  que corre en **cada** invocación: si no separa, sale con **código 3** y no juzga nada.
+  `--verificar-material` da una segunda opinión con un método que no comparte código (fracción
+  de material alrededor de la arista); sobre 5 piezas coincidieron en 1094/1094.
 - `reconocer_caras.py --step <f> [--cilindros]` — tipo de cada cara (plano/cilindro/cono/
   esfera) **sin barrer rayos**: `GetType()` para las analíticas + `ShapeAnalysis_Canonical`
   `Recognition` para recuperar las que el STEP guardó como NURBS. Sobre nuestras salidas
@@ -170,7 +167,7 @@ tres demostrados EN CORRIDA antes de arreglarlos; regresión `test_gates_entrega
 cerraron, y las dos hipótesis de umbral que se cayeron contra datos:
 `reference/enforcement-como-se-cerro.md`.
 
-**GATE 5 — TRAYECTORIA** (`gate_giro.py`, 24/08/2026). Todos los gates de arriba miran **una pose**. Un conjunto que gira no falla en la pose de carga: falla a 137 grados, con la máquina armada y el perfil comprado.
+**GATE 6 — TRAYECTORIA** (`gate_giro.py`, 24/08/2026; el GATE 5 de `cad-3d.md` es "medir si el PROCESO repite"). Todos los gates de arriba miran **una pose**. Un conjunto que gira no falla en la pose de carga: falla a 137 grados, con la máquina armada y el perfil comprado.
 
 ```
 gate_giro.py --step conjunto.step --eje-punto 0,0,1050 --eje-dir 1,0,0 \
@@ -179,7 +176,9 @@ gate_giro.py --step conjunto.step --eje-punto 0,0,1050 --eje-dir 1,0,0 \
 
 Gira los sólidos `--moviles` alrededor del eje y devuelve **la curva d(ángulo) entera**, no un número. Cuatro veredictos, y la distinción importó en la primera corrida real: **LIBRE** · **ROZA** · **CHOCA** · **ESTÁTICO** — la luz es chica pero **no cambia al girar**, así que el giro no es la causa y el que la juzga es `check_collision`. Sin esa cuarta clase el gate dio *0,00 mm en los 72 ángulos* sobre un concepto real: un control que devuelve lo mismo para toda la vuelta no está midiendo el giro. **La firma de un problema de trayectoria es una CAÍDA de la curva**, no un mínimo bajo.
 
-Dos cosas que enseñó escribirlo: (a) sin decimar, una base de 620×480 con `lc=3` da millones de puntos y el barrido **no termina** — la celda de decimación es además **la resolución del resultado** y se informa; (b) el autotest nació fallado: su caso MAL también chocaba a 0°, así que un gate que mirara sólo la pose inicial lo habría cazado igual y el par no probaba nada. Ahora los dos postes están al mismo radio y ángulo, y el de BIEN corrido sobre el eje: **en la pose de carga los dos dan LIBRE** (106,3 y 70,0 mm) y sólo la vuelta entera los separa.
+Sin decimar, una base de 620×480 con `lc=3` da millones de puntos y el barrido **no termina**:
+la celda de decimación (`--celda`) es además **la resolución del resultado** y se informa. Cómo
+se armó su autotest para que separe de verdad: `reference/enforcement-como-se-cerro.md`.
 
 **GATE E — EL ENTREGABLE: que Fak pueda ENTENDERLO, no que esté documentado.**
 
@@ -214,15 +213,16 @@ De las tres entregas rechazadas, **dos no fallaron por el diseño: fallaron por 
   con la pregunta: *"Sos el que tiene que fabricar y montar esto. ¿Qué le objetarías? ¿Qué no se
   entiende?"*. Cada objeción se resuelve o se le dice a Fak. Es un paso de proceso, sin gate
   automático: el GATE E corre en el mismo paso que arma el PDF y no puede exigir algo posterior.
+  `revision_ciega.py --step <pieza>.step --workdir W --funcion "<para qué sirve>"` arma ese
+  expediente (renders con escala, magnitudes y ratios, sin la derivación) y el prompt para el
+  `Agent`; sale siempre con 0: prepara el juicio, no lo da.
 
-El motor bueno vive ahora **acá**: `.claude/skills/cad-design/scripts/foto3d.py` (trazado de rayos ortográfico, oclusión
+El motor es `.claude/skills/cad-design/scripts/foto3d.py` (trazado de rayos ortográfico, oclusión
 exacta, sombra proyectada, contorno por segunda derivada de la profundidad, maniquí a escala
 para poner el operario en la escena, **fondo blanco** — Fak 02/09: *"necesito verlos bien los
-modelos 3D, con fondo blanco"*). Nació suelto en la carpeta de trabajo del carro; vivir ahí
-significaba que la tarea siguiente volvía a matplotlib, que es el fallo que existe para no
-repetir.
+modelos 3D, con fondo blanco"*).
 
-> **Lo que los gates NO cubren, y hay que saberlo:** los siete nacieron cada uno DESPUÉS de que una persona encontrara el bug. Son tests de regresión: demuestran memoria, no capacidad de detección. Las dos clases que siguen abiertas: el **estado real del material** (el STEP es la pieza fría y desnuda; en uso tiene tela, adhesivo, calor y springback) y la **unicidad del posicionamiento** (nada verifica que haya UNA sola forma de montar el utillaje). Y falta lo que la auditoría del 24/08 dejó abierto para ensambles: **partes de catálogo con procedencia** (hoy GATE 1 exige que toda cota salga del CAD medido o de Fak — para un rodamiento comprado no hay fuente válida posible) y **cálculo del conjunto** (eje entre apoyos, vuelco, par en el volante): el único cálculo estructural del sistema es `viga_voladizo.py`, que sirve para láminas impresas en PLA.
+> **Lo que los gates NO cubren, y hay que saberlo:** todos nacieron DESPUÉS de que una persona encontrara el bug. Son tests de regresión: demuestran memoria, no capacidad de detección. Las dos clases que siguen abiertas: el **estado real del material** (el STEP es la pieza fría y desnuda; en uso tiene tela, adhesivo, calor y springback) y la **unicidad del posicionamiento** (nada verifica que haya UNA sola forma de montar el utillaje). Y falta lo que la auditoría del 24/08 dejó abierto para ensambles: **partes de catálogo con procedencia** (hoy GATE 1 exige que toda cota salga del CAD medido o de Fak — para un rodamiento comprado no hay fuente válida posible) y **cálculo del conjunto** (eje entre apoyos, vuelco, par en el volante): el único cálculo estructural del sistema es `viga_voladizo.py`, que sirve para láminas impresas en PLA.
 
 ## 1. Entorno — UN solo intérprete
 

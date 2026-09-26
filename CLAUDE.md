@@ -5,8 +5,9 @@ App web React 19 + TypeScript + Supabase para gestion de calidad automotriz
 simulador de flujo, mix multi-modelo, calculadora de medios). Auth Supabase, pero
 **la usa un solo usuario (Fak)** (aclarado 2026-08-07): no hay edicion concurrente, asi que
 nada que dependa de locks entre usuarios es critico.
-PFDs y Hojas de Operaciones no se hacen aca (regla `no-pfd-no-ho.md`);
-sus documentos en Supabase son referencia historica de solo lectura.
+La app no tiene modulo de PFD ni de HO: sus documentos en Supabase son referencia historica de
+solo lectura. Los flujogramas los genero yo por script y las HO se arman a pedido de Fak
+(regla `no-pfd-no-ho.md`).
 
 ## Protocolo de inicio de sesion
 
@@ -39,9 +40,11 @@ commit/push/archivar los hago yo.
 
 - Fak escribe en espanol informal con typos. Entender sin corregir.
 - Fak no es programador. Explicar decisiones tecnicas en lenguaje simple.
-- No preguntar "¿queres que haga X?": se hace y se reporta. La respuesta es siempre si, y cada
+- No preguntar "¿queres que haga X?" por trabajo propio y reversible: se hace y se reporta. Cada
   pregunta le cuesta un turno a Fak (37 por semana antes de los hooks `pregunta-guard.sh` y
-  `cierre-guard.sh`; 2 despues).
+  `cierre-guard.sh`; 2 despues). Lo que el contrato de autonomia marca "confirmar" o "preguntar"
+  (datos en Supabase, servidor de la empresa, listados maestros, primera vez) se pregunta como
+  "esto va aca, ¿esta bien?", con la ruta concreta.
 - Si Fak dice "decidi vos": decidir con mejor practica y explicar brevemente por que.
   No devolverle la pregunta.
 - Si Fak te corrige: registrarlo en LECCIONES_APRENDIDAS inmediatamente.

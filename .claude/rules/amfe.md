@@ -99,7 +99,7 @@ Todo modo de falla DEBE tener `effectLocal`, `effectNextLevel` y `effectEndUser`
 
 - AP se calcula SOLO con la tabla oficial: `calculateAP(s,o,d)` de `modules/amfe/apTable.ts`. PROHIBIDA la formula `S*O*D > umbral` (en .mjs: copiar la tabla lookup, ver GUIA_AMFE seccion 6).
 - **Un AP=H NO obliga a definir una accion.** La define el equipo APQP cuando decide definirla, y mientras tanto la causa **queda como esta** (Fak 21/09/2026: *"no hace falta definir una accion, eso lo decidimos nosotros... si es alta no es obligatorio que tenga"*; ya lo habia dicho el 11/09). Nunca presentarle un AP=H como trabajo pendiente suyo, ni contar cuantos hay, ni listarlos al costado (memoria `ap_alto_sin_accion_no_se_toca`). **La celda va VACIA.**
-- **El placeholder `Pendiente definicion equipo APQP` esta PROHIBIDO.** Fak, 21/09/2026, viendo el PDF del AMFE 131: *"saca esa mierda, no la quiero ni ver en el AMFE"*. Estuvo autorizado como default entre el 20/04 y el 21/09/2026, y el importador lo escribia solo: las dos cosas se sacaron. Enforcement: check `CAUSE_APH_PLACEHOLDER_PROHIBIDO` (CRITICAL), que bloquea el `--apply` de cualquier script que lo vuelva a escribir.
+- **El placeholder `Pendiente definicion equipo APQP` esta PROHIBIDO.** Fak, 21/09/2026, viendo el PDF del AMFE 131: *"saca esa mierda, no la quiero ni ver en el AMFE"*. Enforcement: check `CAUSE_APH_PLACEHOLDER_PROHIBIDO` (CRITICAL), que bloquea el `--apply` de cualquier script que lo vuelva a escribir.
 - Un AP=H con la celda vacia **NO se flaggea como issue**: es estado valido (decision Fak 2026-05-17, ratificada el 21/09).
 - NUNCA sobrescribir una accion ya definida. Sin accion, cualquiera sea el AP: la celda va vacia.
 
@@ -174,7 +174,7 @@ Aplica a `preventionControl`, `detectionControl`, `controlMethod`, `evaluationTe
 
 **Enforcement ejecutable:** fuente unica `core/amfe/forbiddenContent.data.json` → `scanForbidden()` en `scripts/_lib/forbiddenContent.mjs`. Checks: `FORBIDDEN_VOCABULARY` (CRITICAL, bloquea --apply), `CLAUDE_PHRASE` (WARNING). Para ampliar listas: editar SOLO el .data.json.
 
-**Correccion de un invento detectado:** NO corregir solo — confirmar con Fak (opciones: placeholder / vaciar / Fak dicta). Sincronizar AMFE→CP→HO. Backup antes.
+**Correccion de un invento detectado:** NO corregir solo — confirmar con Fak (opciones: vaciar / dejar lo que se sabe con "TBD" en lo que falta, como en la tabla de arriba / Fak dicta). Sincronizar AMFE→CP→HO. Backup antes.
 
 **Jerarquia de prevencion:** poka-yoke tecnico (O=2-3) > sensor con interlock (O=3-4) > instruccion + dossier (O=4-5) > autocontrol/capacitacion (O=6-8, nunca como unico control). PROHIBIDO "Falta de capacitacion" como CAUSA (los operarios SIEMPRE estan capacitados, IATF); la causa real es defecto de proceso/metodo/sistema. "Capacitacion" si puede ser control preventivo conductual.
 
@@ -219,8 +219,8 @@ Antes de poner placeholder en un campo, agotar EN ORDEN: (1) cross-reference Sup
 
 - **Parametros numericos van al CP, NO al AMFE**: `failure.description` describe el FENOMENO generico ("Ancho de costura fuera de tolerancia"), el valor exacto (5±1mm, 80-120°C) vive en `cp.specification`. Si aparece `X±Y mm`/`N°C` en un description: copy-paste del CP, limpiar.
 - **Aplica igual a los CONTROLES** (`preventionControl` / `detectionControl`): va **metodo + instrumento + frecuencia**, NUNCA el valor. Bien: `"Calibre digital, 3% del lote por entrega"`. Mal: `"... Cotas: diametro 90 mm"`.
-- **Y el control NO cita entre parentesis de donde sale** (hoja de la HO, set up, manual, OP de origen, plano). Fak, 23/09/2026, sobre el AMFE 173 que iba al cliente: *"hay demasiadas aclaraciones, no aclares tanto... (OP 21; HO mesa de corte, hoja 28) esa esta al pedo, molestan la verdad"*. La fuente queda en el generador (comentario al lado de la fila), no en el documento. Si el instructivo ES el control, se nombra sin parentesis (*"Instructivo IO-19 con las zonas a cubrir, en el puesto"*). El parentesis que es parte de lo controlado se queda: `(+2 / -0)`, `(RH / LH)`. Enforcement: `CONTROL_CON_CITA` (WARNING) en `scripts/_lib/amfeValidator.mjs`, tests en `__tests__/scripts/controlConValor.test.mjs`. (Hasta el 23/09 esta linea pedia citar el documento: es lo que Fak corrigio.)
-- Sobre el valor: La frecuencia de muestreo y los codigos de norma/procedimiento SI van. Fundamento (16/08/2026, contra el manual AMFE de `4- MANUALES` y el instructivo I-AC-005): el formulario oficial de AMFE de Barack **no tiene** columna de especificacion ni tolerancia y el de Plan de Control si; el AMFE no se distribuye y el Plan de Control si; del AMFE al CP viajan las **acciones recomendadas**, no las especificaciones. Medido: 98,4% de los controles de los 17 AMFE no lleva numero. **Como llegan los datos a Calidad entonces: por el Plan de Control**; el AMFE aporta DONDE FALTA CONTROL. Enforcement: check `CONTROL_CON_VALOR` (WARNING) en `scripts/_lib/amfeValidator.mjs`. Citas textuales: `_DECISION donde van los valores` en la carpeta de la tarea — no va al repo porque cita el instructivo interno y un manual con copyright de terceros.
+- **Y el control NO cita entre parentesis de donde sale** (hoja de la HO, set up, manual, OP de origen, plano). Fak, 23/09/2026, sobre el AMFE 173 que iba al cliente: *"hay demasiadas aclaraciones, no aclares tanto... (OP 21; HO mesa de corte, hoja 28) esa esta al pedo, molestan la verdad"*. La fuente queda en el generador (comentario al lado de la fila), no en el documento. Si el instructivo ES el control, se nombra sin parentesis (*"Instructivo IO-19 con las zonas a cubrir, en el puesto"*). El parentesis que es parte de lo controlado se queda: `(+2 / -0)`, `(RH / LH)`. Enforcement: `CONTROL_CON_CITA` (WARNING) en `scripts/_lib/amfeValidator.mjs`, tests en `__tests__/scripts/controlConValor.test.mjs`.
+- Sobre el valor: la frecuencia de muestreo y el codigo de norma o procedimiento SI van, como parte del control y sin parentesis (`Verificacion segun P-14`, `Autocontrol segun P-09/I`); entre parentesis cuentan como cita (`CONTROL_CON_CITA`). Fundamento (16/08/2026, contra el manual AMFE de `4- MANUALES` y el instructivo I-AC-005): el formulario oficial de AMFE de Barack **no tiene** columna de especificacion ni tolerancia y el de Plan de Control si; el AMFE no se distribuye y el Plan de Control si; del AMFE al CP viajan las **acciones recomendadas**, no las especificaciones. Medido: 98,4% de los controles de los 17 AMFE no lleva numero. **Como llegan los datos a Calidad entonces: por el Plan de Control**; el AMFE aporta DONDE FALTA CONTROL. Enforcement: check `CONTROL_CON_VALOR` (WARNING) en `scripts/_lib/amfeValidator.mjs`. Citas textuales: `_DECISION donde van los valores` en la carpeta de la tarea — no va al repo porque cita el instructivo interno y un manual con copyright de terceros.
 - **Lenguaje simple, max 8-10 palabras por campo**: causa = que salio mal en 3-5 palabras ("Dosificacion corta"); control = que se hace ("Dossier + alarmas en panel"); sin parentesis aclaratorios, sin sinonimos rebuscados ("husillo"→"tornillo"). Si Fak no la dijo, no la uses.
 - **Vocabulario Claude prohibido** (reemplazar): "Inspeccion Humana..."→"Autocontrol con [instrumento]"; "Instruccion de Trabajo (IT) visual"→"Hoja de operacion"; "Implementar/Establecer..."→verbo concreto; "(checklist)"→"Set up"; "por parte del operador o supervisor"→"operador"; "galga"→"calibre". Senales: mayusculas en terminos comunes, sigla entre parentesis repetida, verbos abstractos, frases >60 chars.
 - **"SCRAP" se queda** (no traducir a "DESCARTE"). Terminos tecnicos de industria (KLT, PPAP) OK. Fak es autoridad final sobre referencias externas.
@@ -267,8 +267,8 @@ rasteriza y se MIRA; `get_text()` da vacio.
 |---|---|
 | 10 | Sin metodo de deteccion / no se detecta |
 | 9 | *"Failure is not easily detected. Random audits <100% of product"* |
-| **8** | Deteccion **aguas abajo** por medios **visuales, tactiles o audibles**. *"The method relies on a human"* |
-| **7** | Lo mismo **en la propia estacion**. *"The method relies on a human"* |
+| **8** | *(borrador 2017)* Deteccion aguas abajo por medios visuales, tactiles o audibles. **Oficial (SETEC pag. 109-111): inspeccion humana con metodo no probado** |
+| **7** | *(borrador 2017; para lo humano no existe en la oficial)* Lo mismo en la propia estacion. **Oficial: deteccion por maquina con metodo no probado** |
 | 6 | **Galga** (calibre, comparador, pasa/no-pasa). Capacidad del equipo **todavia no probada** |
 | 5 | Galga + *"capability... confirmed through gauge repeatability and reproducibility evaluations"* |
 | 4 | Ademas: metodo probado y *"the required error proofing verification is performed"* (aguas abajo) |
@@ -281,9 +281,9 @@ rasteriza y se MIRA; `get_text()` da vacio.
 1. **¿Cubre el 100% del producto?** Si NO, es **D=9**, tenga o no instrumento: la tabla dice
    *"Random audits <100% of product"*. Un muestreo con calibre sigue siendo un muestreo.
    "1 muestra por entrega", "3% del lote", "auditoria periodica", "5 pz/turno" son D=9.
-2. **Recien si es al 100%:** mirar, tocar, escuchar, contar o revisar un papel es **D=7** (en
-   estacion) u **8** (aguas abajo). Para bajar de 7 hace falta INSTRUMENTO; de 6, R&R
-   confirmado; para 4 o menos, ademas verificacion de poka-yoke.
+2. **Recien si es al 100%:** mirar, tocar, escuchar, contar o revisar un papel es inspeccion
+   HUMANA: **D=8** con el metodo no probado, 6 probado; por maquina, 7 y 5 (P3 oficial, SETEC
+   pag. 109-111, nota de arriba). Debajo de eso, lo que diga la P3 oficial al transcribirla.
 3. **Sin metodo declarado es D=10**, no 8. Un 8 presupone un control visual aguas abajo que el
    documento tiene que decir; un control vacio o en "-" no lo dice.
 

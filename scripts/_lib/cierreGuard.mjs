@@ -718,8 +718,10 @@ export async function decidir(payload = {}, deps = {}) {
       ok: false,
       titulo: 'CIERRE-GUARD: el turno termina pidiendo permiso para hacer tu propio trabajo',
       detalle: `La cola del mensaje dice "${p.frase}". Patron nacido del incidente: ${p.fuente}.\n`
-        + 'Regla de la casa (CLAUDE.md): la respuesta es SI. Hacelo ahora y reporta el resultado con la ruta. '
-        + 'Si de verdad falta un dato que SOLO Fak tiene, preguntalo con AskUserQuestion y un renglon "Lo que ya tengo:".',
+        + 'Regla de la casa (CLAUDE.md): para tu propio trabajo la respuesta es SI. Hacelo ahora y reporta el resultado con la ruta. '
+        + 'Si lo que falta es un OK que el contrato de autonomia exige (escribir en Supabase, un listado maestro, emitir en el SGC '
+        + 'o el legajo, la primera vez de algo, mandar un mail, cerrar el arb) o un dato que SOLO Fak tiene, pedilo con '
+        + 'AskUserQuestion y un renglon "Lo que ya tengo:".',
     };
   }
 
@@ -785,11 +787,12 @@ export async function decidir(payload = {}, deps = {}) {
     d.marcar(sid, 'largo');
     return {
       ok: false,
-      titulo: 'CIERRE-GUARD: el cierre es un informe, y una tarea se cierra en cinco lineas',
+      titulo: 'CIERRE-GUARD: el cierre es un informe',
       detalle: `El mensaje tiene ${largo.motivos.join(', ')}. Fak, 08/09: "no voy a leer todo eso... podes sintetizar que recomendas".\n`
         + 'El cierre pasa el test de un mail: que recomiendo, el comando o la ruta, y lo que le cambia una decision; el detalle ya vive '
         + 'en el archivo o la memoria (memoria no_hacer_informes). Reescribilo corto. Si Fak pidio el detalle con esas palabras, este aviso '
-        + 'no aplica (se lee su ultimo mensaje). No se repite por 20 minutos.',
+        + 'no aplica (se lee su ultimo mensaje). Lo que Fak objeta no es el largo sino lo que no se entiende de una lectura '
+        + '(medicion 22/09, cierreCanon cierre_largo): palabras de planta, sin siglas ni rotulos inventados. No se repite por 20 minutos.',
     };
   }
   return { ok: true };

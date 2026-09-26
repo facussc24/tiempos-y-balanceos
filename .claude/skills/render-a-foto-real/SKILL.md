@@ -1,6 +1,6 @@
 ---
 name: render-a-foto-real
-description: Pasar un render o modelo 3D (HTML de Claude Design, STEP renderizado, captura) a imagenes que parezcan fotos reales para un deck o un cliente; tambien la version nocturna y la vista aerea. Usar cuando Fak pida "que parezca una foto", "hacelo real", "pasalo a foto" o quiera mostrarle una propuesta a un cliente con imagenes realistas.
+description: Pasar un render o modelo 3D (HTML de Claude Design, STEP renderizado, captura) a imagenes que parezcan fotos reales para un deck o un cliente, incluidas la version nocturna y la vista aerea. Usar cuando haya que convertir un render o una propuesta 3D en imagen fotorrealista.
 ---
 
 # Render a foto real — vistas del 3D pasadas por el Gemini de Fak

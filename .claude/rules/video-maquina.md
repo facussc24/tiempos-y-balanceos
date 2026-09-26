@@ -63,8 +63,10 @@ nombre de la maquina.
 
 ## El procedimiento, en orden
 
-1. **Indexar el telefono** (barato, no copia nada): `tel_indice.ps1` → `INDICE_TELEFONO.tsv`.
-   La carpeta `_b` del iPhone duplica la `_a`: se descarta.
+1. **Indexar el telefono** (barato, no copia nada) → `INDICE_TELEFONO.tsv` (carpeta, archivo,
+   creado, bytes; con BOM: es lo que lee `--cruzar`). El script que lo generaba, `tel_indice.ps1`,
+   no esta en el repo ni en `C:\Dev\_telefono`: TBD, rehacerlo en `scripts/video/` antes de la
+   proxima bajada. La carpeta `_b` del iPhone duplica la `_a`: se descarta.
 2. **CRUZAR contra la biblioteca ANTES de bajar un byte**:
    `node scripts/_videoBiblioteca.mjs --cruzar <indice.tsv>`.
 3. Bajar **solo lo que falta**, a transito **fuera de OneDrive** (`C:\Dev\_telefono`), con
@@ -116,14 +118,12 @@ archivo no avisa. Las claves que **no se procesan** —ni cuadros, ni audio, ni 
 compartida con el equipo. Las respetan `_infoDeVideos.py` y `--auditar` (las marca
 `NO_SE_PROCESA`). Sacar una de esa lista, o sacar el archivo de la biblioteca, **lo decide Fak**.
 
-## Lo que quedo abierto (21/09/2026)
+## Pendientes de la biblioteca
 
-- **IMG_9527 no esta archivado**: el video de 1 h 30 narrado en español — la unica fuente buena
-  del audio de la hotmelt — sigue solo en el celular de Fak. Quedaron su transcripcion y sus
-  fotogramas. Son unos 37 GB y el disco no da: hay que bajarlo directo a la biblioteca.
-- **24 videos de la moldeadora y 2 de la prensa no tienen fotogramas**, y 51 no tienen audio
-  sacado. Se hace con `python scripts/video/_infoDeVideos.py todo "<carpeta>"`, de a uno,
-  hidratando y volviendo a deshidratar (`attrib +U -P`).
+Lo que falta archivar o procesar: memoria `project_videos_maquinas_hotmelt_moldeadora`. Los
+fotogramas y el audio que falten se sacan con `python scripts/video/_infoDeVideos.py todo
+"<carpeta>"`, de a uno, hidratando y volviendo a deshidratar (`attrib +U -P`); un original que
+no entra en el disco se baja directo a la biblioteca.
 
 ## De donde sale el candado (07/09/2026)
 

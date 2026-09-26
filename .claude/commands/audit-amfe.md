@@ -26,7 +26,7 @@ For EACH AMFE, verify all of the following:
 - All text in Spanish (no English in parentheses)
 - VDA 3-level effects complete (effectLocal, effectNextLevel, effectEndUser)
 - S/O/D in range 1-10 for all causes
-- AP matches `calculateAP` (`modules/amfe/apTable.ts`), NOT S*O*D formula (the table's own source is under review, memory `project_tabla_ap_de_la_casa_es_el_borrador_2017`: report, don't recalculate)
+- AP matches `calculateAP` (`modules/amfe/apTable.ts` = the official AIAG-VDA table, SETEC 2020 pp. 116-118, in force since 23/09/2026), NOT an S*O*D formula
 - Special characteristics ONLY by S and O of that cause (`.claude/rules/caracteristicas-especiales.md`): CC = S 9-10, SC = S 5-8 and O >= 4. No exemption by words (flamabilidad/seguridad/legal in the text do not make a CC). Assigning is Fak's: report, never set
 - A regulatory effect (flamabilidad TL 1010, VOC, ELV) has S=9 by AIAG-VDA Table P1: report it if the S is lower
 - Correct norm per client (TL 1010 for VW only, NOT for PWA)

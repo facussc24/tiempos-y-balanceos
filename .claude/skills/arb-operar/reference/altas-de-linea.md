@@ -39,10 +39,13 @@ python scripts/_arbAltaLote.py --tabla .arb-cache/<tabla>.csv --apply [--reset-p
 
 CSV con encabezado `producto,insumo,cantidad,modulo,proceso`, una fila por producto terminado.
 Envuelve a `_arbAlta.py` (que hace UNA línea por invocación) y agrega lo que había que repetir
-a mano: abre la ventana si no está, **resetea después de cada fallo** (una celda sucia
-envenena la alta siguiente), sigue con el resto del lote y lista lo que quedó pendiente.
-Sin `--apply` es dry-run — y ahí el reset es obligatorio igual, porque el renglón queda
-escrito en pantalla.
+a mano: abre la ventana si no está, **después de cada fallo intenta el `reset`** (una celda
+sucia envenena la alta siguiente), sigue con el resto del lote y lista lo que quedó pendiente.
+Desde el 25/09 el `reset` **se niega con Relaciones abierta** (cerrarla crashea el arb: regla
+`arb-no-cerrar.md`), así que con Relaciones abierta el lote **se corta en el primer fallo** y
+deja la lista de pendientes. `--reset-primero` solo sirve con Relaciones cerrada: la abre.
+Sin `--apply` es dry-run, y el renglón queda escrito en pantalla: con Relaciones abierta no se
+descarta solo (ver la celda sucia en `fallas-modales-y-export.md`).
 
 **Estrenado el 28/08**: mismo insumo en 12 BOM de headrest, 12/12 en 116 seg.
 

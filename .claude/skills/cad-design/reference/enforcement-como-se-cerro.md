@@ -40,3 +40,18 @@ los tres se demostraron EN CORRIDA antes de arreglarlos — regresión: `test_ga
 > las dos: con n=2 en una clase no hay umbral, hay coincidencia** — y lo escribí como límite
 > conocido en el canon *antes* de que el auditor lo probara, lo cual no me salvó de haberlo puesto
 > a bloquear igual.
+
+### `gate_aristas.py`: de vuelta en servicio (2026-08-09)
+
+**De vuelta en servicio (2026-08-09)** tras dos falsos verdes: la concavidad ya no se le
+pregunta a una malla sino a la topología OCC (normal invertida si la cara es `REVERSED`;
+la tangente **con el signo que la arista tiene dentro del wire de la cara** — ése era el
+bug que quedaba). `--verificar-material` usa `BRepClass3d_SolidClassifier` para la fracción de
+material alrededor de la arista.
+
+### El autotest de `gate_giro.py` (24/08/2026)
+
+El autotest nació fallado: su caso MAL también chocaba a 0°, así que un gate que mirara sólo la
+pose inicial lo habría cazado igual y el par no probaba nada. Ahora los dos postes están al mismo
+radio y ángulo, y el de BIEN corrido sobre el eje: **en la pose de carga los dos dan LIBRE**
+(106,3 y 70,0 mm) y sólo la vuelta entera los separa.

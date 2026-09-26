@@ -46,7 +46,8 @@ describe('plantilla de arranque · lo que Fak tipeaba a mano sale fijo', () => {
     expect(t).toMatch(/3\. Leé ENTERO cada archivo fuente/);
     expect(t).toMatch(/4\. Cargá con la tool Skill, antes de empezar: carga-arb, verificacion-consumos\./);
     expect(t).toMatch(/5\. Al cerrar: node scripts\/_cierreSesion\.mjs --sin-build en verde; agente auditor con el informe a un ARCHIVO/);
-    expect(t).toMatch(/síntesis de 12 líneas o menos, con la RUTA del entregable en la primera/);
+    expect(t).toMatch(/síntesis con lo que recomendás, el comando o la ruta y lo que le cambia una decisión, con la RUTA del entregable en la primera línea/);
+    expect(t).toMatch(/el entregable se escribe directo en su carpeta por tipo/);
     // el cierre del encargo sigue siendo la ultima linea
     expect(t.trim().split('\n').pop()).toBe('Si algo de este encargo no cierra, PARA y avisame antes de seguir.');
   });

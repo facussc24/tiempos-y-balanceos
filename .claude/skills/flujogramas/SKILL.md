@@ -17,7 +17,7 @@ flujograma** — nunca al reves, aunque la HO sea mas nueva.
 
 **`node scripts/_flujograma.mjs <clave>` revisa el JSON contra las convenciones ANTES de
 dibujar, y si hay rojos no genera nada.** El chequeo vive en `scripts/_lib/flujogramaCanon.mjs`,
-con 18 casos en `__tests__/scripts/flujogramaCanon.test.mjs`. `--sin-canon` dibuja igual para
+con sus casos en `__tests__/scripts/flujogramaCanon.test.mjs`. `--sin-canon` dibuja igual para
 mirarlo, pero asi no se entrega.
 
 > **Por que existe, y es incomodo:** el 22/09/2026 Fak abrio el flujograma 159 y marco ocho
@@ -49,9 +49,9 @@ sector destino, cuando un nombre esta en infinitivo (el corpus usa **sustantivo*
 VINILO`, no `CORTAR EL VINILO` — es lo contrario de las hojas de proceso) y cuando una caja
 terminal se sale de `SCRAP` / `RECLAMO DE CALIDAD AL PROVEEDOR` / `PLAN DE REACCION / SCRAP`.
 
-**Antes de numerar nada, abrir dos flujogramas vigentes del mismo cliente y familia.** Para
-SMRC/SAS apoyabrazos-IP-APC el modelo es el **153**; en el servidor, 126 Rev.7, 131 Rev.5 y
-105 Rev.H.
+**Antes de numerar nada, abrir dos flujogramas vigentes del mismo cliente y familia.** En el
+generador, el de SMRC es el **159** (APB P21) y el apoyabrazos de Patagonia (VWA) el **153**; en
+el servidor, 126 Rev.7, 131 Rev.5 y 105 Rev.H. El cliente de cada JSON esta en `header.client`.
 
 ---
 
@@ -107,8 +107,9 @@ operacion y mirar las **colisiones** (mismo numero, distinta operacion). Lo mide
 `scripts/_lib/numeracionPatagonia.data.json`, que hay que actualizar en la misma tanda
 (`secuencia`, `secuenciaConfirmadaPor`, `nota`, `fuente`).
 
-⚠️ En el **Armrest** se hizo al reves: el 153 Rev.B se alineo a la HO-971 y quedaron **11
-colisiones abiertas** entre flujograma, AMFE y Plan de Control. No repetirlo.
+⚠️ En el **Armrest** se hizo al reves: el 153 Rev.B se alineo a la HO-971 y abrio 11
+colisiones entre flujograma, AMFE y Plan de Control, que costo cerrar hasta la Rev.C. No
+repetirlo. El estado de cada producto se lee de `_verificarNumeracion.mjs`, no de aca.
 
 ### 1.4 Una operacion se saca cuando dos documentos la desmienten, no porque suene rara
 
@@ -254,12 +255,16 @@ Entrega:
 
 1. PNG → PDF a **150 DPI** (`pagina_pt = px * 72 / 150`), que es la convencion de los
    documentos hermanos del legajo. Con `fitz`: `new_page(w_pt, h_pt)` + `insert_image`.
-2. El PDF va a la carpeta del legajo por tipo — para un PPAP, el casillero
-   **`20- Flujograma de proceso`**. Ver `reference_donde_se_archiva_cada_entregable`.
-3. Actualizar el **listado maestro** de Gestion Ingenieria
-   (`8. Flujograma Sinóptico (I-IN-002III)\1. LISTADO DE FLUJOGRAMAS\Listado_Maestro_FLUJOGRMAS.xlsx`):
-   columna M revision, N fecha. Tiene tablas y formulas — se edita por **Excel COM**, no con
-   openpyxl. Antes de escribir, verificar que la fila es la del producto correcto.
+2. El editable vive en Gestion Ingenieria (`8. Flujograma Sinóptico`); emitirlo ahi se
+   **pregunta** (`autonomy-contract.md` §F). La copia en PDF va al casillero
+   **`20- Flujograma de proceso`** del legajo; para SMRC, a `05 Process Flow` del paquete
+   (skill `ppap-motherson`). Ver `reference_donde_se_archiva_cada_entregable`.
+3. El **listado maestro** (`8. Flujograma Sinóptico (I-IN-002III)\1. LISTADO DE FLUJOGRAMAS\Listado_Maestro_FLUJOGRMAS.xlsx`,
+   columna M revision, N fecha) es registro compartido: la fila se **prepara** en la misma
+   tanda, se le muestra a Fak y se **escribe con su OK** (§F; escape `~/.claude/.apqp-listado-ok`,
+   vale una carga). Tiene tablas y formulas — se edita por **Excel COM**, no con openpyxl — y el
+   guard `apqp-cliente-guard` no ve ese camino, asi que el OK se pide igual. Antes de escribir,
+   verificar que la fila es la del producto correcto.
 4. Actualizar `scripts/_lib/numeracionPatagonia.data.json` y correr
    `node scripts/_verificarNumeracion.mjs`.
 
@@ -269,8 +274,10 @@ Entrega:
 ❌ Alinear el flujograma a la HO. La HO es la que se renumera.
 ❌ Meter dos sectores en una decena, o un sector en tres.
 ❌ Agregar una operacion o un control que ningun documento ni Fak respalda.
-❌ Asignar CC/SC. Las asigna Fak o el cliente (`core-prohibiciones.md` §2); en un flujograma
-   nuevo se transcriben las que ya traia la revision anterior, sobre las mismas operaciones.
+❌ Asignar CC/SC por cuenta propia, o copiarlas de la revision anterior. La marca de cada
+   operacion es la union de las siglas de sus causas en el AMFE (`caracteristicas-especiales.md`
+   §3); una marca heredada que el AMFE no sostiene se informa como diferencia, no se copia.
+   Asignarlas es de Fak o del cliente (`core-prohibiciones.md` §2).
 ❌ Agregar una clase Tailwind nueva al JSX esperando que aplique.
 ❌ **Empezar a numerar sin abrir dos flujogramas vigentes del mismo cliente y familia.** Fak,
    22/09/2026: *"¿no revisas los demas flujogramas antes de hacer este?"*.

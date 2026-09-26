@@ -1,30 +1,20 @@
 ---
 name: hojas-de-proceso
-description: Hojas de proceso / hojas de operaciones de Barack (formulario I-IN-002.4-R01) en PPTX o Excel — que le manda cada paso al operario, con que palabras, que imagen manda y como se prepara una pantalla de HMI para que se lea impresa. El canon es `docs/CRITERIOS_HOJAS_DE_PROCESO.md`; trae `hojalib`, el gate de redaccion con el castellano de planta, el gate que rechaza la hoja y sus selftests.
+description: Hojas de proceso / hojas de operaciones (HO) de Barack, formulario I-IN-002.4-R01 en PowerPoint — que le manda cada paso al operario y con que palabras, que foto va en cada paso, como se prepara una pantalla de HMI para que se lea impresa, donde se guarda la hoja y que numero de HO lleva. El canon es `docs/CRITERIOS_HOJAS_DE_PROCESO.md`; trae `hojalib`, el gate de redaccion, el gate que rechaza la hoja y sus selftests.
 ---
 
 # Una hoja de proceso se lee de pie, al lado de la maquina, impresa en A4
 
 > **El que decide si una hoja sirve no es como se ve en el monitor: es como se lee en el papel.**
-> El 03/09/2026 Fak miro la lamina 3 de la HOTMELT y pregunto: *"en la filmina 3 un celular se
-> ve mucho mas grande que una hoja con parametros, ¿que clase de criterio estas aplicando a
-> las hojas de proceso?"*. Tenia razon, y al medir aparecio algo peor que esa lamina:
-> **ninguna de las 7 pantallas del deck se leia impresa** — entre 2,3 y 4,5 pt, contra 7 que
-> es lo mas chico que Barack pone en estos documentos. Yo las habia dado por buenas
-> mirandolas ampliadas en la pantalla.
 
-Dos causas, las dos ciegas de la misma forma:
-
-- el repartidor de imagenes **maximizaba superficie total** y no sabia cual imagen importaba;
-- yo juzgaba la legibilidad **en el zoom equivocado**.
-
-Ninguna se arregla con buena voluntad. Las dos se arreglan con un numero.
+Cada gate de abajo nacio de una hoja que Fak devolvio; los casos, con fecha y cita, estan en
+`reference/casos.md`.
 
 ---
 
-## 0. LOS GATES (bloqueantes, en este orden)
+## 0. LOS GATES (bloqueantes). Los 0.x se contestan antes de escribir; 1 a 3, al armar y al entregar
 
-### GATE 0 cero — el canon se abre ANTES de escribir el primer paso
+### GATE 0.1 — el canon se abre ANTES de escribir el primer paso
 
 **El documento maestro de estas hojas es `docs/CRITERIOS_HOJAS_DE_PROCESO.md`.** Lo escribio
 Fak corrigiendo hoja por hoja. No es material de consulta: es lo primero que se lee, y sus
@@ -41,14 +31,10 @@ secciones ganan sobre cualquier criterio que yo derive solo.
 | **4.5** | Las tres fases fijas del plan de reaccion |
 | **6** | El checklist de auditoria pre-entrega |
 
-> **Por que esto es un gate y no una nota al pie.** El 21/09/2026 entregue seis hojas de la
-> MOLDEADORA IMG. El canon estaba en el repo desde el 08/09 y **ningun archivo del skill lo
-> nombraba**, asi que no lo abri. Resultado: 26 de los 27 pasos escritos como narracion de la
-> maquina, y una hoja que decia "SETA". Fak: *"encontre un error gravisimo... tenes que
-> corregir directamente la skill para incluir vocabulario conocido argentino nuestro, no este
-> random que inventaste"*. **Un canon huerfano no gobierna nada.**
+**Un canon huerfano no gobierna nada** (21/09/2026: 26 de 27 pasos narrando la maquina y una
+hoja que decia SETA).
 
-### GATE 0 uno — ¿este paso le dice al operario que HACER?
+### GATE 0.2 — ¿este paso le dice al operario que HACER?
 
 La pregunta que decide si una hoja sirve: **si el que la lee hace exactamente lo que dice
 cada renglon, ¿queda el trabajo hecho?** Si el renglon describe la maquina, la respuesta es no.
@@ -66,8 +52,8 @@ Reglas duras, las tres del canon 4.4:
    Retirar. Nunca con articulo, nunca con el nombre de una pieza, nunca narrando.
 2. **El sujeto del paso es el operario, no la maquina.** Lo que la maquina hace sola solo se
    escribe cuando le cambia algo al operario: que espere, que no se acerque, que mire.
-3. **Un rotulo no es un paso.** El nombre de un comando va **en la foto** (`rotular.py`); en
-   la DESCRIPCION va lo que hay que hacer con ese comando.
+3. **Un rotulo no es un paso.** La foto lleva el numero (`rotular.py`); el renglon de la
+   DESCRIPCION nombra el comando y dice que hacer con el.
 
 **Un panel que el operario no toca no lleva hoja.** Fak, 21/09/2026, sobre la lamina de los
 manometros: *"el panel de los no se que, ¿para que hace falta eso? al pedo esta"*. Antes de
@@ -97,7 +83,7 @@ la reaccion, el operario queda solo con el problema.
 del HMI: *"no se de que me sirve conocer esa pantalla... quiero saber como empezar"*. La
 pantalla entra cuando el paso manda **mirarla o tocarla**, y entra dentro de ese paso.
 
-### GATE 0 cuatro — la operacion se llama como Barack las llama
+### GATE 0.3 — la operacion se llama como Barack las llama
 
 **`SUSTANTIVO DE ACCION [+ calificador] [+ DE/EN/CON + objeto]`**, en mayusculas, 20 a 40
 caracteres, tope real 64. Contado sobre **113 denominaciones reales** (los nodos de los 8
@@ -113,33 +99,20 @@ DENOMINACION del cajetin de las HO limpias):
 - **Parte 2 de una operacion**: guion largo + calificador (`LAMINADO - CONTROL DURANTE LA
   MARCHA`), mismo sustantivo + calificador (`TAPIZADO AUTOMATICO`), o decimal (`20.1`).
 
-> **El precedente manda sobre el criterio, y ya existia.** El deck de la **HOTMELT** —mismo
-> formulario, mismo autor, tres semanas antes— tiene 17 sub-operaciones que cumplen la regla
-> sin excepcion: `20.1 RECONOCIMIENTO DE LA MAQUINA Y RIESGOS`, `20.6 MONTAJE DEL ROLLO EN
-> EL DESBOBINADOR`, `20.9 ARRANQUE Y ALINEACION`, `20.15 PARADA DE LA MAQUINA`. Igual titule
-> la IMG con `EL CICLO: QUE HACE EL OPERARIO`, y Fak: *"eso es cualquier cosa"*. **Antes de
-> inventar una forma, se abre la maquina hermana.**
->
-> Ojo con mezclar registros: en el spec de la HOTMELT el campo `etapa=` SI lleva infinitivo
-> (`PREPARAR Y ARRANCAR`, `PRODUCIR`, `TERMINAR`) — ese es el **banner que agrupa**, no el
-> cajetin. Yo use el registro de banner adentro de `denominacion`.
+**Antes de inventar una forma se abre la maquina hermana** (Fak: *"eso es cualquier cosa"*).
+En el spec, `etapa=` es el **banner que agrupa** y SI va en infinitivo (`PREPARAR Y ARRANCAR`);
+`denominacion` es el cajetin y va con sustantivo de accion.
 
-Lo frena `redaccion.revisar_denominacion()` contra la **lista canonica de 67 primeras
-palabras reales**, no contra un sufijo: mi primera version, hecha con sufijos, marcaba en
-rojo `CONTROL DE PIEZA INYECTADA` y `ARRANQUE Y ALINEACION`, que son de Barack. Una palabra
-nueva da **aviso**, no rojo, para agregarla mirando un documento real.
+Lo frena `redaccion.revisar_denominacion()` contra la **lista canonica de primeras palabras
+reales** (`vocabulario.data.json` → `denominacion.primera_palabra`), no contra un sufijo. Una
+palabra nueva da **aviso**, no rojo, para agregarla mirando un documento real.
 
-### GATE 0 tres — la lista de hojas sale del TRABAJO, no de lo que hay filmado
+### GATE 0.4 — la lista de hojas sale del TRABAJO, no de lo que hay filmado
 
 **Antes de decidir cuantas hojas son, se escribe la jornada del operario de punta a punta**,
 y recien despues se busca con que fotos se cuenta cada parte. Al reves —mirar el material y
-armar hojas con lo que se puede mostrar— **lo que no esta filmado deja de existir**.
-
-El 21/09/2026 entregue seis hojas con los seis gates en verde y **faltaba el vinilo entero**:
-colocar el rollo, pasar el material por la mesa y sacar el recorte que sobra en cada ciclo.
-Fak: *"no pusimos en ningun lugar el tema del vinilo... hay que ponerlo por mas que sea modo
-automatico porque lo hace el operario"*. Ninguno de los seis gates podia verlo: **todos miran
-una hoja por vez, y lo que falta no esta en ninguna hoja.**
+armar hojas con lo que se puede mostrar— **lo que no esta filmado deja de existir** (21/09/2026:
+faltaba el vinilo entero con todos los gates en verde, porque cada gate mira una hoja por vez).
 
 Lo que si se puede chequear a nivel DECK es el **balance de materiales**:
 
@@ -147,14 +120,9 @@ Lo que si se puede chequear a nivel DECK es el **balance de materiales**:
 > hoja.** La lista no sale de los videos: sale del **flujograma y del AMFE**, que existen
 > antes que las hojas.
 
-En la MOLDEADORA IMG son cuatro: el rollo de vinilo · los sustratos plasticos · la pieza
-terminada · el recorte de vinilo que sobra. Lo frena `gate_materiales_del_deck()`, que corre
-sobre `HOJAS_IMG` entera antes de compilar y nombra lo que falta con la fuente de por que
-existe. **Corrido contra el deck del 21/09 reprodujo la correccion de Fak sin ayuda**: los
-tres materiales que el habia nombrado.
-
-No prueba que las hojas esten completas — prueba que no falta un bloque entero, que es
-exactamente lo que fallo.
+Lo frena `gate_materiales_del_deck()`, que corre sobre el deck entero antes de compilar y nombra
+lo que falta con la fuente de por que existe. No prueba que las hojas esten completas: prueba
+que no falta un bloque entero.
 
 **Las tres preguntas del arranque, en este orden:**
 
@@ -163,7 +131,7 @@ exactamente lo que fallo.
 3. ¿Con que material cuento para mostrar cada parte? — y lo que falta filmar **va a la lista
    de lo que falta**, no se borra del alcance.
 
-### GATE 0 dos — el castellano de planta
+### GATE 0.5 — el castellano de planta
 
 Antes de escribir, el vocabulario: **`vocabulario.data.json`** (la tabla 3.2 del canon, en
 forma de dato) y el gate **`redaccion.py`**, que lee los dos y frena la hoja.
@@ -178,10 +146,10 @@ forma de dato) y el gate **`redaccion.py`**, que lee los dos y frena la hoja.
 ```bash
 py -3 .claude/skills/hojas-de-proceso/scripts/redaccion.py texto "La mesa entra con el molde"
 py -3 .claude/skills/hojas-de-proceso/scripts/redaccion.py spec <generador.py> HOJAS_X
-py -3 .claude/skills/hojas-de-proceso/scripts/redaccion_selftest.py   # 71 casos, rojo y verde
+py -3 .claude/skills/hojas-de-proceso/scripts/redaccion_selftest.py   # tiene que dar "0 fallan"
 ```
 
-### GATE 0 — antes de escribir nada: ¿cuantos pasos tiene esta hoja, y entran?
+### GATE 0.6 — ¿cuantos pasos tiene esta hoja, y entran?
 
 **Un paso es UNA accion que alguien hace y que se ve en UNA foto.** Lo que no se puede
 fotografiar no es un paso: una condicion va en la NOTA, un valor va en PARAMETROS.
@@ -197,25 +165,18 @@ fotografiar no es un paso: una condicion va en la NOTA, un valor va en PARAMETRO
 - Si al partir queda un paso suelto, se reparte: **3+2 antes que 4+1**.
 
 Fak, 21/09/2026: *"en el flujograma lo que nos paso es que en algunos casos pusimos muy
-pocos pasos, a veces muchisimos, esta medio confuso"*. Antes esto no estaba escrito y por
-eso cada hoja salia con la cantidad de pasos que quedara. Ahora lo frena
-`_gate_una_foto_por_paso()` del generador.
+pocos pasos, a veces muchisimos, esta medio confuso"*. Lo frena `_gate_una_foto_por_paso()`
+de `scripts/img/generar_hojas_img.py`.
 
 **La hoja es operativa, no un manual** (Fak, mismo dia): *"con las fotos se entienda
 rapidamente de que va el paso, y solo haga falta leer para entender mas a fondo"*. La foto
 cuenta el paso; el renglon lo precisa; los parametros van en la hoja, no aparte.
 
-### GATE 0 bis — la transcripcion del video se lee ENTERA, siempre
+### GATE 0.7 — la transcripcion del video se lee ENTERA, siempre
 
 Fak, 21/09/2026: *"siempre leer las transcripciones si o si, ¿entendiste?"*. Y antes:
 *"si no sabes algo no lo asumas vos, lees las transcripciones de audio para entender lo que
 pasa en vez de inventar"*.
-
-El caso: escribi un paso de *"prender los servicios: refrigeracion y atemperador"* mirando
-los fotogramas del IMG_0596. La transcripcion de ESE MISMO video dice lo contrario —
-**"todo eso se maneja de alla, de la pantalla"**— y yo la tenia al lado sin leer. En la
-misma hoja escribi *"mirar la presion de aire antes de pedir cualquier movimiento"*: eso no
-lo dijo nadie, vi un panel de manometros en una foto y lo converti en un paso.
 
 **Los fotogramas dicen QUE HAY. La transcripcion dice QUE PASA.** Un paso es lo segundo.
 
@@ -243,7 +204,7 @@ En el spec de la maquina va como `principal=<indice>` y `leer=[<indices>]`.
 ### GATE 2 — antes de dibujar una pantalla: ¿a cuantos cm va a salir impresa?
 
 ```bash
-py -3 .claude/skills/hojas-de-proceso/scripts/hojalib.py   # ver ancho_que_le_toca_cm
+py -3 -c "import sys; sys.path.insert(0, '.claude/skills/hojas-de-proceso/scripts'); import hojalib; print(hojalib.ancho_que_le_toca_cm(1600, 900, 2))"   # ancho_px, alto_px, n_imagenes -> cm
 ```
 
 Lo contraintuitivo: **la imagen se acomoda por su ALTURA dentro del bloque**, asi que una
@@ -273,10 +234,8 @@ Sale con codigo 1 y no se entrega. `--jerarquia 20.2=0,20.4=0` sirve para cheque
 | 5 | **Cantidad** | **2 o 3** en jerarquia · **hasta 4** en secuencia, y con mas la hoja se PARTE | en A4, con 4 fotos de tamaños distintos no se ve ninguna; en secuencia van las 4 iguales en grilla 2x2, 34 cm² cada una |
 | 6 | Las pantallas son la **foto real enderezada**, con el rotulo encima | — | ver §3 |
 
-**Ojo con el criterio 1.** Primero lo escribi como *"45 % del bloque"* y **13 de 17 hojas lo
-violaban sin tener nada malo**: era imposible de cumplir para cualquier foto vertical. Un
-umbral se prueba contra la poblacion entera antes de declararlo, no contra el caso que lo
-inspiro.
+**Un umbral se prueba contra la poblacion entera antes de declararlo** (el primer 45 %
+reprobaba 13 de 17 hojas sanas).
 
 ---
 
@@ -297,8 +256,7 @@ decora. Medido sobre las laminas del 21/09/2026.
 | 15 | **Lo que la foto del paso MUESTRA y ningun renglon nombra se pregunta: ¿que hace el operario con esto?** | el sensor de la mesa de carga (soporte con cable negro) estaba en la foto del paso 3 de la 30.3 desde el 22/09 y nadie lo nombraba; el material colgando entre el desenrollador y la mesa estaba filmado en dos videos. Fak, 23/09: *"no hablaste del sensor... siempre dejamos el rollo colgando"*. Los pasos salieron de lo que NARRA el audio; lo que MUESTRA la imagen no se miro |
 
 Del 7 y del 14 (*dos chapas no se pisan*) falta el numero: **el umbral se corre antes contra
-las 17 hojas de la HOTMELT**, que es la poblacion que hay. Con 4 fotos no se declara un
-umbral — eso ya costo una vez (criterio 1, "45 % del bloque", reprobaba 13 de 17 hojas sanas).
+las 17 hojas de la HOTMELT**, que es la poblacion que hay (§1).
 
 Lo que **si** esta en codigo hoy: el orden del reloj (`_gate_secuencia_en_orden`), que cada
 foto de secuencia lleve al menos una marca (aviso: poner la marca obliga a BUSCAR el objeto
@@ -329,7 +287,8 @@ imagenes **ya embebidas en el pptx**, donde no hay nombre de archivo que seguir.
 
 ## 2 bis. La foto sale del VIDEO, no del fotograma de la biblioteca
 
-`_INFO SACADA DE LOS VIDEOS` (hoy `.claude\fotogramas de cada video`) muestrea **un cuadro
+La biblioteca de fotogramas de la maquina (`<MAQUINA>\.claude\fotogramas de cada video\`,
+memoria `reference_videos_y_fotos_de_maquina_donde_van`) muestrea **un cuadro
 cada 2 segundos, escalado a 1600**. Eso sirve para ENCONTRAR el momento; la foto de la hoja
 se saca aparte, y por tres motivos medidos el 21/09/2026:
 
@@ -387,9 +346,7 @@ py -3 $S/rotular.py --foto f.jpg --out r.jpg --banda ninguna \
 
 Fak, 21/09/2026: *"le erraste con los cuadraditos, no estan bien puestos sobre los botones,
 eso revisalo cuidadosamente... errores obvios"*, *"el skill deberia verificar bien esas
-cosas, no podemos fallar en algo tan obvio"*. Y tenia razon: yo habia puesto las marcas
-mirando un render, despues **cambie el recorte y volvi a estimar los porcentajes sin volver
-a mirar**. Es el mismo error del 15/09 con el aire de una tarjeta: mirar no es medir.
+cosas, no podemos fallar en algo tan obvio"*. Mirar no es medir.
 
 ```bash
 py -3 $S/medir_marca.py --foto f.jpg --marcado prueba.jpg   # donde esta cada pulsador
@@ -434,17 +391,11 @@ historia (`subido de 8 s el 10/09 porque...`).
 Fak, 21/09/2026: *"hay que intentar que todas, dentro de lo posible, esten en español, no en
 chino: cuando ya lo habiamos traducido me asegure de grabar todas las pantallas de frente"*.
 
-Barridos los 5.335 fotogramas de la moldeadora: **ninguna pantalla existe solo en chino**.
-Las 26 pantallas distintas tienen al menos una toma en castellano. Asi que si una hoja
-muestra una pantalla en chino, es que no se busco bien.
+En la moldeadora ninguna pantalla existe solo en chino: si una hoja muestra una en chino, no se
+busco bien. **El idioma de la pantalla no es del dia**: se cambia en cualquier momento con las
+banderas de la barra de arriba, asi que se busca cuadro por cuadro.
 
-**Y lo que cambia como se busca: el idioma NO es una propiedad del dia.** La barra de arriba
-tiene las tres banderas (China / Reino Unido / Argentina) y se cambia en cualquier momento —
-el 09/09 a las 08:50:22 la pantalla esta en chino y a las 08:50:27 ya esta en castellano; el
-11/09 a las 11:29:40 en castellano y seis segundos despues en chino otra vez. Buscar "el dia
-en que estaba traducido" no sirve: se mira cuadro por cuadro.
-
-**Y el OCR no alcanza para encontrarlas.** En ese barrido, un fotograma con la pantalla en
+**Y el OCR no alcanza para encontrarlas.** En el barrido de la moldeadora, un fotograma con la pantalla en
 castellano perfectamente legible dio CERO texto, ni agrandandolo al doble. Lo encontro el
 barrido visual. El OCR ordena la busqueda; el que decide es el ojo.
 
@@ -472,11 +423,8 @@ fila: la foto conserva distorsion y el rotulo y su casilla no quedan a la misma 
 la pantalla de seguridad de la HOTMELT se llevan 18 px). Con un paso fijo la banda le corta
 el borde a la casilla del valor. Ejemplo completo: `scripts/hotmelt/pantalla_seguridad.py`.
 
-**Sigue prohibido pasarla por un generador de imagenes.** El 03/09/2026 Fak propuso mejorarlas
-con Gemini y borrarle la marca de agua: *"si los reinventa lo detectas y lo corregis poniendo
-el texto correcto encima, pero va a quedar prolija"*. No se hace: un modelo generativo
-**reinventa los digitos** —y un digito de temperatura equivocado en una hoja de planta es un
-problema real—, y una marca de procedencia no se saca.
+**No se pasa por un generador de imagenes: reinventa los digitos, y una marca de procedencia
+no se saca.**
 
 Lo que agregamos nosotros (una advertencia, una franja) va visiblemente separado y aclarado
 en el pie: *"la franja es advertencia de esta hoja, no del HMI"*.
@@ -512,6 +460,12 @@ que ir guardándolas donde sí van, o sea `Y:\BARACK\CALIDAD\DOCUMENTACION SGC\H
   no se usó nunca (300 y 400 quedan sugeridas para inyección y mesa de corte).
 - Antes de dar un número y al cerrar: `python scripts/_hoNumeros.py` (choques entre carpetas,
   números sin fila en el listado, próximo libre; `--q3` lee además el cajetín).
+- **El listado maestro es registro compartido**: la fila de la hoja nueva (o de su cambio de
+  revisión) se **prepara** en la misma tanda en que se arma la hoja, se le muestra a Fak y se
+  **escribe con su OK** (`autonomy-contract.md` §F; el hook `apqp-cliente-guard` frena copiar o
+  escribir `Listado hojas de proceso.xlsx` sin ese OK, pero no ve el camino por Excel COM: el OK
+  se pide igual; escape `~/.claude/.apqp-listado-ok`, vale una carga). En el cierre se dice qué
+  fila quedó preparada y si ya se escribió.
 - **Cambiar el número de una hoja existente no pasa por Excel**: se toca solo el texto `HO-NNN`
   de `xl/sharedStrings.xml`. Guardarla con Excel por COM se tiró de 1 a 3 imágenes "en celda"
   por libro en las telas PWA (25/09/2026; se volvió al respaldo).
@@ -534,7 +488,7 @@ CICLO DE CONTROL · ELEMENTOS DE SEGURIDAD · PLAN DE REACCION.
   C. Baptista**: las hojas de proceso de Ingenieria las aprueba Carlos Baptista. Lo cumplen
   `portada()` de `scripts/img/generar_hojas_img.py` y de `scripts/hotmelt/hoja_pptx.py`.
 - **Resp.** solo `OP` / `OC` / `Insp.`  · **Registro** solo `Set up` o `-`, nunca "RC".
-- Pasos: frases cortas, imperativas, una accion por renglon. Sin "BORRADOR" ni "pendiente".
+- Pasos: frases cortas, en infinitivo (canon 4.4), una accion por renglon. Sin "BORRADOR" ni "pendiente".
 - **Sin foto -> recuadro VACIO**, no una leyenda que diga que falta.
 - **Ni un TBD en la descripcion** (pasos, notas, parametros, pies, plan de reaccion) —
   Fak, 24/09/2026: *"no puede haber ni 1 TBD... el TBD del numero de hoja si, pero que sea
@@ -553,39 +507,39 @@ CICLO DE CONTROL · ELEMENTOS DE SEGURIDAD · PLAN DE REACCION.
 
 ---
 
-## 5. Errores caros de esta tanda (no repetirlos)
+## 5. De donde sale cada gate
 
-1. **Juzgar la legibilidad en el zoom y no al tamaño impreso** (03/09/2026). Las 7 pantallas
-   estaban a menos de la mitad del minimo y yo las habia mirado una por una. Lo que se mide
-   es el cuerpo en cm sobre el papel. Gate 2.
-2. **Declarar un umbral sin probarlo contra la poblacion** (03/09/2026). "45 % del bloque"
-   reprobaba 13 de 17 hojas sanas. Un umbral se corre sobre todo el conjunto antes de fijarlo.
-3. **Mezclar dos estados de la maquina en una hoja** (03/09/2026). La 20.4 tenia parametros
-   del 26/08 y velocidades del 28/08. Una hoja se basa en **una** lectura; si hay dos fechas,
-   se elige una y se dice cual.
-4. **Comparar dos lecturas de distinto minuto y llamarlo contradiccion** (03/09/2026).
-   Reporte dos campos de alarma en conflicto comparando un fotograma de las 11:04 con otro de
-   las 12:33 del mismo dia — y arme una "prueba" encima. Antes de comparar, la hora de cada
-   lectura al lado del valor. Memoria `dos_lecturas_del_mismo_dia_no_son_comparables`.
-5. **Verificar el script en vez del archivo publicado** (03/09/2026). PowerPoint tenia el
-   pptx abierto, el render salio de una version vieja y reporte 12 correcciones que no
-   estaban. Se cierra PowerPoint, se regenera y se verifica **extrayendo el texto del archivo**.
-6. **Dar por buena una foto por su nombre de archivo.** `h11_a_corte_diagonal.jpg` seguia
-   llamandose asi despues de que el contenido se corrigiera a corte RECTO. El nombre no es el
-   contenido: se abre.
-7. **Un script que reordena imagenes no es idempotente.** Los indices apuntan al estado
-   ANTERIOR; corriendolo dos veces apuntan a otra cosa. Cada hoja declara cuantas imagenes
-   espera encontrar y aborta antes de escribir si no coinciden.
+Cada gate de arriba nacio de una hoja que Fak devolvio. Los casos, con fecha y cita, estan en
+`reference/casos.md`: se leen para entender por que un gate esta donde esta, no para aplicarlo.
+
+De la tanda del 03/09 quedan tres reglas que no estan en otra seccion:
+
+- Una hoja se basa en **una** lectura de la maquina: si hay dos fechas, se elige una y se dice
+  cual. Dos lecturas de distinto minuto no se comparan como contradiccion sin poner la hora al
+  lado de cada valor (memoria `dos_lecturas_del_mismo_dia_no_son_comparables`).
+- Una foto no se da por buena por su nombre de archivo: se abre.
+- Un script que reordena imagenes no es idempotente: cada hoja declara cuantas imagenes espera
+  encontrar y aborta antes de escribir si no coinciden.
 
 ---
 
 ## 6. Enforcement
 
+Los `_gate_*()` y `gate_materiales_del_deck()` que nombra esta tabla viven en
+**`scripts/img/generar_hojas_img.py`**: su `hoja()` corre los de cada hoja y `compilar_deck()`
+el de materiales. El generador de la prensa embossing importa ese archivo y usa su `hoja()`,
+pero no el de materiales; el de P21 arma su propia hoja y corre solo texto para el operario,
+fuente por paso, no afirmar de mas y `gate_redaccion`. Un deck armado con otro generador (el de
+la HOTMELT, `scripts/hotmelt/hoja_pptx.py`) no pasa por ninguno, y `hoja_proceso_check.py` sobre
+el PPTX mira legibilidad, jerarquia, vocabulario y cocina, no la redaccion: en ese caso se corre
+`redaccion.py spec <generador.py> HOJAS_X`. Un generador nuevo usa el `hoja()` de la IMG en vez
+de copiar los gates.
+
 | Capa | Que | Donde |
 |---|---|---|
 | **Dura** | `hoja_proceso_check.py` sale con codigo 1 y la hoja no se entrega | `.claude/skills/hojas-de-proceso/scripts/hoja_proceso_check.py` |
 | **Dura** | los umbrales viven **solo** en `hojalib.py`: el generador dibuja con los mismos numeros con los que el gate rechaza | `.claude/skills/hojas-de-proceso/scripts/hojalib.py` |
-| **Regresion** | 25 casos, cada criterio en ROJO y en VERDE | `.claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py` |
+| **Regresion** | cada criterio en ROJO y en VERDE | `.claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py` |
 | **Dato** | la metrica de legibilidad viaja dentro del PNG, sobrevive al pptx | `hojalib.guardar_pantalla()` |
 | **Dato** | de que video y que segundo salio cada foto, adentro del archivo | `fotodevideo.py leer` (sale 1 si alguna no lo dice) |
 | **Dura** | una foto por paso · 2 a 4 pasos · las marcas de la foto = los pasos de la hoja | `_gate_una_foto_por_paso()` del generador |
@@ -596,25 +550,27 @@ CICLO DE CONTROL · ELEMENTOS DE SEGURIDAD · PLAN DE REACCION.
 | **Medido** | donde esta cada pulsador, en vez de estimarlo | `medir_marca.py` / `--marca "color:verde|..."` |
 | **Dura** | un termino que en planta no se dice asi (`seta`, `izaje`, `chumacera`...) | `redaccion.py` + `vocabulario.data.json` |
 | **Dura** | un paso que describe la maquina en vez de mandarle algo al operario | `redaccion.gate_redaccion()` |
-| **Regresion** | 71 casos de idioma, vocabulario, voz, cocina y TBD, en ROJO y en VERDE | `redaccion_selftest.py` |
+| **Regresion** | idioma, vocabulario, voz, cocina y TBD, en ROJO y en VERDE | `redaccion_selftest.py` |
 | **Dura (deck)** | un material que entra o sale de la operacion y ninguna hoja nombra | `gate_materiales_del_deck()` del generador |
 | **Dura** | una NOTA que le cuenta al operario un hueco mio ("no esta documentado", "preguntar antes") | `COCINA` en `_gate_texto_para_el_operario()` |
 
 ```bash
-py -3 .claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py     # 25 casos
-py -3 .claude/skills/hojas-de-proceso/scripts/redaccion_selftest.py   # 71 casos
+py -3 .claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py     # tiene que dar "0 fallan"
+py -3 .claude/skills/hojas-de-proceso/scripts/redaccion_selftest.py   # tiene que dar "0 fallan"
 py -3 .claude/skills/hojas-de-proceso/scripts/fotodevideo.py leer <assets>/*.jpg  # procedencia
 py -3 .claude/skills/hojas-de-proceso/scripts/hoja_proceso_check.py "<deck.pptx>" --spec <spec.py>
 ```
 
-El **spec de cada maquina vive fuera del repo** (trae contraseñas de HMI y part numbers de
-cliente). En el repo va solo lo generico: libreria, gate y selftest.
+El spec de cada maquina vive en el repo, junto a su generador (`scripts/hotmelt/hojas_spec.py`,
+`HOJAS_IMG` en `scripts/img/generar_hojas_img.py`). Lo unico que no entra es la **contraseña del
+HMI**: va en `scripts/hotmelt/datos_privados.py` (gitignoreado) y `_gateRepoPublico.mjs` CHECK-3
+la busca por contenido.
 
 ---
 
 ## 7. Antes de entregar
 
-- [ ] `hojalib_selftest.py` en verde (25/25)
+- [ ] `hojalib_selftest.py` en verde ("0 fallan")
 - [ ] `hoja_proceso_check.py` en verde sobre el deck
 - [ ] **las laminas miradas una por una**, renderizadas — no el script, el archivo publicado
 - [ ] las pantallas miradas **al ancho que van a tener impresas**, no ampliadas

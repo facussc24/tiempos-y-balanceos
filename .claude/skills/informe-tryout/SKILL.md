@@ -1,6 +1,6 @@
 ---
 name: informe-tryout
-description: Informe de TryOut / T0 de Patagonia (el deck de Carlos Baptista, IMG y moldes) — sumar la jornada nueva al .pptx que crece, en castellano y en ingles, con las fotos, audios y partes del dia. Usar cuando Fak pida "el informe del try out", "armá el día N", "agregá la jornada al deck de Carlos", "el TryOut de la IMG", o mande material de una corrida de prueba para informar.
+description: Informe de TryOut / T0 de Patagonia — el deck bilingue (castellano e ingles) de Carlos Baptista sobre la IMG y los moldes, que crece una jornada por corrida. Usar cuando haya que informar una corrida de prueba o sumarle una jornada a ese deck con las fotos, audios y partes del dia.
 ---
 
 # Informe de TryOut — la jornada nueva se CLONA sobre el deck de Carlos
@@ -22,9 +22,9 @@ Skill armado el 22/09/2026 a partir de lo que ya estaba probado en seis jornadas
    `reference_sacar_material_de_whatsapp_web` y `python scripts/_mails.py --buscar`.
 2. **Partir del ULTIMO deck que mando Carlos**, no del mio: el deck crece y el lo reenvia entero.
    Si agrego slides suyas y pidio dejarlas al final, siguen ultimas.
-3. **Clonar, no dibujar**: kit en `scripts/tryout/` (`clonlib.py` con dup / mover /
-   `set_pairs_exacto` / `set_lineas_exacto`; `contenido_diaN.py` solo texto ES+EN; `diaN_bilingue.py`
-   el generador; `mapear.py` para ver indice/id/texto de una slide). Se copia el par
+3. **Clonar, no dibujar**: kit en `scripts/tryout/` (`clonlib.py` con dup / mover / set_pairs /
+   set_txt; `contenido_diaN.py` solo texto ES+EN; `diaN_bilingue.py` el generador, que trae
+   `set_pairs_exacto` / `set_lineas_exacto`; `mapear.py` para ver indice/id/texto de una slide). Se copia el par
    contenido+generador de la jornada anterior y se cambian indices y textos.
 4. **El numero de Dia es el del INFORME, no el del calendario** (Dia 5 = 02/09, Dia 6 = 08/09).
 5. **Antes/despues se ordena por lo que DICE la fuente** (quien lo rotulo, la pantalla, el audio),

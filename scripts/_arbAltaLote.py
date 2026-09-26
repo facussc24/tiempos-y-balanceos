@@ -13,8 +13,9 @@ grabar); lo que agrega este script es lo que hacia falta repetir a mano entre pr
 producto:
 
   · abre la ventana `Maestro de Relaciones` si no esta;
-  · **despues de cada fallo resetea** (`WM_CLOSE` + reapertura) antes de seguir: una celda
-    sucia sobrevive a reabrir el producto y envenena todas las altas siguientes;
+  · **despues de cada fallo intenta el reset** antes de seguir: una celda sucia sobrevive a
+    reabrir el producto y envenena todas las altas siguientes. Con Relaciones ABIERTA el reset
+    se niega (cerrarla crashea el arb, Fak 25/09/2026) y el lote se corta en ese fallo;
   · sigue con el resto del lote en vez de cortar, y al final lista lo que quedo pendiente.
 
 Un alta NO se deshace tipeando el valor viejo: sin `--apply` es dry-run (escribe el renglon

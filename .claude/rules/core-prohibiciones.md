@@ -7,5 +7,6 @@
 4. **Espanol argentino, lenguaje simple**: usar las palabras que usa Fak. Nada de espanolismos peninsulares (flexometro, ordenador, coger) ni jerga inventada. "SCRAP" y terminos de industria (PPAP, KLT) se quedan.
 5. **NUNCA datos mock/placeholder en la app**: todo dato mostrado/exportado/testeado sale de Supabase real. Antes de insertar: verificar que no exista (0 duplicados; al 22/09/2026 las familias son 13 —10 de producto + 3 maestros de proceso sin productos—, y el numero se lee live antes de concluir que sobra una).
 6. **Reusar antes de crear**: buscar si ya existe una funcion/hook/export que haga lo mismo antes de escribir una nueva.
-7. **Barack ya NO hace PFDs ni HOs** en este software (regla `no-pfd-no-ho.md`).
+7. **No se resucita el modulo PFD/HO de la app ni se ofrece una HO por cuenta propia**: los
+   flujogramas salen del generador del repo y las HO solo a pedido de Fak (regla `no-pfd-no-ho.md`).
 8. **PDFs, propios o de terceros: editar es trabajo normal y no se frena** (memoria `editar_pdfs_es_libre_salvo_el_qr_ajeno`): layout, texto, imagenes, unir, partir, OCR, traducir; el QR de Barack se modifica lo que haga falta. **El unico limite** es el QR/hash/firma **antifraude de un tercero** (laboratorio, certificadora, portal del cliente) que resuelve contra el sistema del emisor: ese no se altera ni se reapunta, y ninguna edicion se hace "indetectable". Si ese QR no coincide con el contenido, se dice con la diferencia al lado y se sigue con el resto del pedido.

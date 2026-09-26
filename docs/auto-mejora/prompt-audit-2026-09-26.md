@@ -78,7 +78,37 @@ FRASE en todo el repo"*) sin su barrido.
 4. **La HO tiene dos domicilios en el nucleo** (`autonomy-contract.md:73` vs `no-pfd-no-ho.md:31`) y
    `CLAUDE.md:8` dice que "no se hacen aca" (N1, N2).
 
-### Lo que decide Fak (no lo contesta ningun documento)
+### Aplicado el 26/09/2026, con OK de Fak
+
+Fak: *"hace las correcciones dale te las apruebo"*. Se aplicaron todos los de confianza alta y media
+de las cuatro partes (los `baja`/`flag` no): nucleo N1-N7b; parte A 25 hunks mas N5, N7 y N7b; parte B
+todos los alta/media de sus archivos mas los hunks 25-28 de A sobre `hojas-proceso.md`; parte C 29 de
+29 mas M20-M23 de B en sus skills. Lo movido a `reference/` o a una memoria se movio entero
+(`hojas-de-proceso/reference/casos.md`, `arb-operar/reference/bitacora-tandas-2026-08.md`,
+`cad-design/reference/enforcement-como-se-cerro.md`, memoria `feedback_mail_corto_como_los_de_fak`).
+
+Decisiones de Fak del mismo dia: **IMDS es de Calidad** (*"pero podria llegar a hacerlo algun dia"*:
+se carga solo si el lo pide para una pieza). **Listado maestro de HO**: primero *"la cargo en la
+misma tanda"* y despues *"el listado maestro no se"*; ante la duda va la fila mas restrictiva del
+contrato: la fila se prepara en la misma tanda y se escribe con su OK, como los de flujogramas y
+AMFEs. Si lo quiere liberar, es la fila 75 de `autonomy-contract.md` y el guardian `apqp-cliente`.
+
+Verificacion: vitest completo 4.586 pasan / 1 falla ajena (`convencionesScripts`: shebang en
+`scripts/_liberarDisco.mjs`, archivo sin commitear de otra sesion); tests `.sh` de hooks OK;
+selftests de `hojas-de-proceso` 31/31 y 71/71; `_cerebroLint.mjs` LIMPIO; `npm run build` OK.
+
+**Quedo abierto (no tiene texto que proponer o necesita una prueba):**
+- La celda que el arb rechazo con Relaciones abierta (C-L16): `fallas-modales-y-export.md` sigue
+  diciendo que solo la limpia cerrar Relaciones, y eso crashea. Lo decide una prueba o Fak. Mientras,
+  `_arbAltaLote.py` corta el lote en el primer fallo con Relaciones abierta (docstring corregido).
+- `DETECTION_HUMANA_OPTIMISTA` avisa desde D<=6; su mensaje ya dice la P3 oficial (humana 8/6), el
+  umbral no se toco para no cambiar que causas se marcan. Transcribir la P3 entera a `amfe.md` §13
+  sigue pendiente (memoria `project_tabla_ap_de_la_casa_es_el_borrador_2017`).
+- El guardian del arb no frena un `WM_CLOSE` crudo sobre Relaciones abierta (lo frena
+  `reset_relaciones()` sin `--forzar`); el guardian `apqp-cliente` no ve una escritura por Excel COM.
+- Memoria `project_videos_maquinas_hotmelt_moldeadora:42`: el conteo 50/51 no se re-conto en disco.
+
+### Lo que decide Fak (no lo contesta ningun documento) — las dos primeras, contestadas arriba
 
 - **Quien es dueño del IMDS.** `apqp-legajo` fila 23 e `imds:20` dicen Ingenieria (*"paso a
   Ingenieria"* tras la renuncia de Marcelo Nieve); `autonomy-contract.md:93`, `ppap-motherson` y la

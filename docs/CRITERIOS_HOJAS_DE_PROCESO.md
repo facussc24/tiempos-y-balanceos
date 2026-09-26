@@ -147,8 +147,10 @@ Las máquinas importadas (como la Kingpower de In-Mold Graining) frecuentemente 
 - **Directiva de traducción in situ:**
   > **Cita Textual de Fak (08/09/2026):**  
   > *"intinemos traducir loque dice arriba de los botones en chino y poner un cartel en esapñol prof avor tmaiben...."*
-- **Estándar de cartelón superpuesto (Overlay SGC):**  
-  Se debe incorporar un cartel o badge instructivo de alta nitidez en español ubicado directamente sobre el selector o botón, con flecha indicadora:
+- **Rótulo dentro de una hoja (Fak, 21/09/2026):**  
+  Sobre la foto va solo un recuadro y un **número montado en la esquina** (`rotular.py --banda ninguna`), para no taparle al control la serigrafía; el texto en castellano de cada número va en la DESCRIPCIÓN, citando la serigrafía original (*"Verde ARRANQUE DE CICLO (循环启动)"*).
+- **Estándar de cartelón superpuesto (Overlay SGC), solo para una foto que viaja sola (mail, PDF; `rotular.py --banda derecha|abajo`):**  
+  Cartel o badge instructivo de alta nitidez en español, ubicado directamente sobre el selector o botón, con flecha indicadora:
   - Header azul SGC (`#44546A`) con el nombre operativo en español argentino (ej. `DESBOBINADOR`, `TRANSPORTE DE LÁMINA`).
   - Subtítulo con la referencia bilingüe del panel original (ej. `Panel: UNCOILER | 开卷机`).
   - Viñetas de función explicativa para cada posición del selector:
@@ -318,7 +320,7 @@ La redacción de los pasos debe seguir un patrón gramatical riguroso:
   2. La HO debe indicar una **acción positiva concreta de verificación**, no un lamento:  
      *Forma correcta:* **"Verificar que no haya piezas metálicas ni impurezas sobre la lámina antes de iniciar el ciclo de conformado."**
 * **Tratamiento de Datos No Confirmados:**  
-  Queda prohibido imprimir leyendas como "BORRADOR", "SUJETO A REVISIÓN" o "PENDIENTE DE VALIDACIÓN" cruzando la lámina. Si un dato técnico exacto no está disponible en la documentación fuente, se rotula como **`TBD`** (*To Be Defined*) y se notifica formalmente a Ingeniería.
+  Queda prohibido imprimir leyendas como "BORRADOR", "SUJETO A REVISIÓN" o "PENDIENTE DE VALIDACIÓN" cruzando la lámina. Si un dato técnico exacto no está disponible en la documentación fuente, **no se escribe `TBD` en la descripción** (Fak, 24/09/2026: *"no puede haber ni 1 TBD... el TBD del numero de hoja si"*): el paso se redacta genérico con la información disponible, sin inventar el valor, y el faltante va a la lista de pendientes. `TBD` solo en el cajetín (N° de operación, HO, sector).
 
 ---
 

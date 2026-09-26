@@ -406,8 +406,9 @@ export function validateOrdenEnfundadoPu(doc, amfeNumber = '') {
  * Una sola definicion, dos consumidores.
  *
  * Devuelve true cuando el control de deteccion depende de una PERSONA (mirar, tocar, oir,
- * contar, revisar un papel), NO nombra instrumento, y la D esta por debajo del piso que la
- * Tabla P3 del AIAG-VDA admite para ese tipo de control (7 en estacion, 8 aguas abajo).
+ * contar, revisar un papel), NO nombra instrumento, y la D es 6 o menos. La Tabla P3 oficial
+ * (SETEC pag. 109-111) le da a la inspeccion humana D=8 con el metodo no probado y 6 probado;
+ * el texto del control no dice si esta probado, asi que un 6 avisa y lo confirma el equipo.
  */
 export function esDeteccionHumanaOptimista(detectionControl, detection) {
     const dNum = Number(detection);
@@ -843,11 +844,12 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         // 2017 del manual. La tabla oficial publicada les da AP: O=1 es L con
                         // cualquier D, y D=1 tiene su valor por S y O. SETEC pag. 116-118.)
 
-                        // DETECTION_HUMANA_OPTIMISTA (WARNING) — Tabla P3 del AIAG-VDA.
+                        // DETECTION_HUMANA_OPTIMISTA (WARNING) — Tabla P3 oficial (SETEC pag. 109-111).
                         // Un control que depende de una PERSONA mirando, tocando, escuchando,
-                        // contando o revisando un papel es D=7 (en estacion) u 8 (aguas abajo):
-                        // "the method relies on a human". Para bajar de 7 hace falta INSTRUMENTO;
-                        // de 6, R&R confirmado; de 4, ademas verificacion de poka-yoke.
+                        // contando o revisando un papel es inspeccion humana: D=8 con el metodo
+                        // no probado, 6 probado (amfe.md §13). Debajo de 6 hace falta instrumento
+                        // con capacidad confirmada o poka-yoke. Avisa desde 6 porque el texto del
+                        // control no dice si el metodo esta probado.
                         // Lo destapo /auditoria-cliente sobre el AMFE 172 el 24/08/2026: 47 causas
                         // con controles visuales calificadas D=3-6. Al corregirlas el AP paso de
                         // L=9/M=22/H=15 a M=12/H=35 — el riesgo estaba subdeclarado a la mitad.
@@ -856,7 +858,7 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         // Avisa, no corrige: la calificacion es dato tecnico del equipo.
                         if (!missD && esDeteccionHumanaOptimista(c.detectionControl, c.detection)) {
                             issues.push({ ...cCtx, type: 'DETECTION_HUMANA_OPTIMISTA',
-                                detail: `D=${Number(c.detection)} para un control que depende de una persona ("${String(c.detectionControl).slice(0, 60)}"). Tabla P3: visual/tactil/audible/conteo va D=7 en estacion u 8 aguas abajo` });
+                                detail: `D=${Number(c.detection)} para un control que depende de una persona ("${String(c.detectionControl).slice(0, 60)}"). Tabla P3 oficial: la inspeccion humana va D=8 con el metodo no probado y 6 probado` });
                         }
 
                         // DETECCION_MUESTREO_OPTIMISTA (WARNING) — Tabla P3 renglon 9.

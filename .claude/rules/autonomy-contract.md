@@ -70,13 +70,14 @@ concretos. Fak ajusta el criterio y eso queda escrito para que no se vuelva a pr
 |---|---|
 | Cargar el plano del cliente en `6-Planos de la pieza` del legajo | Libre (OK de Fak 21/09/2026) |
 | Dejar la BOM ultimo nivel del arb en el casillero 7 del legajo (y la anterior a Obsoleto) cada vez que cambia una BOM | **Obligatorio y libre** (Fak 22/09/2026): `scripts/_bomLegajo.py`, skill `carga-arb` §4b |
-| Emitir un documento controlado (flujograma, AMFE, HO) en `Gestion Ingenieria` | **Preguntar** — el documento lo firma Fak |
-| Poner algo en el paquete del cliente (`31-...\PPAP_<PN>\`) | **Prohibido sin OK**: el PPAP es de CALIDAD, Ingenieria no lo arma. **SMRC**: el 23/09/2026 Fak pidio armarlo ("prepara el PPAP en el servidor Y"); como, skill `ppap-motherson`. Mandarlo al cliente sigue siendo con su OK para ese mail |
-| Escribir en un listado maestro (flujogramas, AMFEs, hojas de proceso) | **Preguntar** — es registro compartido |
+| Emitir un documento controlado (flujograma y AMFE en `Gestion Ingenieria`, HO en `HOJAS DE OPERACIONES` del SGC) | **Preguntar** — el documento lo firma Fak |
+| Poner algo en el paquete del cliente (`PPAP_<PN>\`, que vive en `1. Imput` del legajo: skill `apqp-legajo` §0) | **Prohibido sin OK**: el PPAP es de CALIDAD, Ingenieria no lo arma. **SMRC**: el 23/09/2026 Fak pidio armarlo ("prepara el PPAP en el servidor Y"); como, skill `ppap-motherson`. Mandarlo al cliente sigue siendo con su OK para ese mail |
+| Escribir en un listado maestro (flujogramas, AMFEs, hojas de proceso) | **Preguntar** — es registro compartido. La fila se prepara en la misma tanda y se escribe con el OK de Fak |
 | Guardar algo en el servidor del SGC (`Y:\BARACK\CALIDAD\DOCUMENTACION SGC\`) | **Solo lo OFICIAL y en el lugar que el SGC ya tiene para eso.** Un formato o documento no oficial va a la biblioteca de Ingenieria (la nube), p. ej. `1- GENERAL\FORMATOS GENERAL\HOJAS DE OPERACIONES\FORMATO A3 (NO OFICIAL)\` (Fak, 25/09/2026: *"no podes ir guardando los formatos donde se te cante... nuestro SGC tiene un lugar para todo... hay que guardarlo en un lugar nuestro o en la nube"*). No se crean carpetas nuevas en el servidor |
 | Llenar cualquier otro casillero del APQP | **Preguntar** si es la primera vez que lo lleno; el mapa esta en el skill `apqp-legajo` |
 
-**Un documento vivo tiene UN solo lugar.** El maestro vive en `Gestion Ingenieria`; lo que se
+**Un documento vivo tiene UN solo lugar.** El maestro vive en `Gestion Ingenieria` (la HO, en
+`HOJAS DE OPERACIONES` del SGC); lo que se
 copia al legajo o al paquete del cliente es una COPIA que envejece sola
 (memoria `gestion_ingenieria_es_el_maestro`). No se reparte una copia "por las dudas": se
 copia cuando se entrega, y quien entrega el PPAP es Calidad.
@@ -90,7 +91,7 @@ Antes de listarle un pendiente a Fak o proponerle un trabajo: ¿de que area es? 
 |---|---|
 | Flujograma, AMFE, HO (a pedido), BOM/arb y consumos, planos del legajo, dispositivos y CAD, tiempos | **Plan de Control**: Calidad (*"ingenieria no hace planes de control... que lo actualice Calidad"*, 08/09). Una base preliminar alineada con flujograma y AMFE, solo si Fak la pide (11/09) |
 | La accion tecnica que le asignen en un 8D (ej. la D7 del 11010843) | **El 8D como documento, su archivo, alertas, NC**: Calidad (21/09) |
-| | **PPAP/PSW e IMDS**: Calidad (tabla de arriba y `mail-envio.md`) |
+| | **PPAP/PSW e IMDS**: Calidad (tabla de arriba y `mail-envio.md`). El IMDS de una pieza lo puedo cargar si Fak lo pide para esa pieza (Fak 26/09/2026: *"el imds es de calidad pero podria llegar a hacerlo algun dia"*) |
 | | **Firma/aprobacion del AMFE**: el circuito no existe hoy; no se reporta (24/08) |
 | | **Coordinar a otros por mail**: *"no somos el coordinador... solo somos un puesto junior"* (11/09) |
 | | **Layout de planta**: *"yo nunca hago lay out"* (11/09) |

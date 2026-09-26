@@ -42,7 +42,7 @@ Raiz servidor: `//SERVER/compartido/BARACK/CALIDAD/DOCUMENTACION SGC/` (= `SGC_R
 | Normas VW (24 PDF: TL/PV/VW; VOC, PPAP) | `SGC_ROOT/PPAP CLIENTES/VW/VW427-1LA_K-PATAGONIA/Normas/` | leer directo (PDF) |
 | APQP cerrado + PPAP por pieza | `SGC_ROOT/PPAP CLIENTES/<CLIENTE>/<PROGRAMA>/<PIEZA>/` (34 subcarpetas AIAG) | leer directo |
 | Legajos de proyecto VIVOS (I-PY-001) | `Y:\Ingenieria\Documentacion Gestion Ingenieria\Proyecto\<cliente>\<programa>\<pieza>\` (memoria `project_legajo_proyecto_barack`) | leer directo |
-| Manuales oficiales (AIAG-VDA FMEA 2019, SETEC p129 CC/SC, VDA, MSA, IMDS, Formel Q, IATF) | OneDrive: `C:\Users\FacundoS-PC\BARACK ARGENTINA SRL\Ingeniería y Proyecto - General\INGENIERIA BARACK (NUNCA BORRAR)\4- MANUALES\` — ojo que hay **dos** carpetas de Barack sincronizadas y la buena es `- General` (memoria `reference_onedrive_dos_carpetas_barack`) | leer directo (PDF; escaneados → memoria `reference_leer_pdfs_escaneados`) |
+| Manuales oficiales (SETEC 2020 = AIAG-VDA publicado: tabla AP p116-118, P1-P3 p101-111, CC/SC p129; VDA, MSA, IMDS, Formel Q, IATF). ⚠️ El PDF de `AMFE\FMEA-AMFE-VDA-AIAG\` es un BORRADOR de 2017, no el manual 2019 | OneDrive: `C:\Users\FacundoS-PC\BARACK ARGENTINA SRL\Ingeniería y Proyecto - General\INGENIERIA BARACK (NUNCA BORRAR)\4- MANUALES\` — ojo que hay **dos** carpetas de Barack sincronizadas y la buena es `- General` (memoria `reference_onedrive_dos_carpetas_barack`) | leer directo (PDF; escaneados → memoria `reference_leer_pdfs_escaneados`) |
 | Guias internas APQP/AMFE/CP/Gate3 | `docs/` del repo (GUIA_AMFE, GUIA_PLAN_DE_CONTROL, GUIA_GATE3...) | ya es local |
 | Docs Patagonia curados (36) | `docs-local/` (junction a OneDrive, creado y verificado el 11/09/2026: trae `INDEX.md`, `normas-vw/`, `projects/`, `shared/`; como se rehace si se rompe: memoria `reference_docs_local_onedrive_junction`) | leer directo |
 | ERP arb (BOMs, insumos) | `.arb-cache/` + skill `verificacion-consumos` | ya cacheado |
@@ -56,7 +56,7 @@ Raiz servidor: `//SERVER/compartido/BARACK/CALIDAD/DOCUMENTACION SGC/` (= `SGC_R
   pero el arbol es enorme.
 - `.doc` legacy → extraer con Word COM (`scripts/_extraerSgc.ps1`); `.docx` tambien via COM
   (uniforme). PDFs escaneados → PyMuPDF + Read (memoria `reference_leer_pdfs_escaneados`).
-- Escribir/mover archivos EN el servidor u OneDrive = confirmar con Fak antes (autonomy-contract).
+- Escribir/mover en el servidor `Y:` = confirmar con Fak antes, y solo lo oficial en el lugar que el SGC ya tiene (`autonomy-contract.md` §D y §F). En OneDrive, el entregable propio va a su carpeta por tipo de la biblioteca de Ingeniería al cerrar la tarea (`CLAUDE.md`, fin de sesión §5).
 
 ## Cache `.sgc-cache/` — protocolo
 

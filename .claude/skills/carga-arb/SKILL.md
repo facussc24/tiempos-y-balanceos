@@ -21,13 +21,15 @@ Una sola tabla plana, **una fila por producto terminado** aunque el cambio se re
 - **El Sector es el del insumo que se AGREGA**, nunca el del que se quita. El que sale se
   borra y listo: su modulo no le sirve para nada, y mostrarlo lo hace pensar que tiene que
   mover algo de lugar.
-- **Sector y unidad van SI o SI adentro de la tabla.** Sin ellos tiene que ir a buscarlos al
-  arb, que es justo lo que la tabla viene a evitar.
+- **Sector y unidad van SI o SI adentro de la tabla.** Es lo que Fak revisa antes de la carga
+  y lo que el CSV de carga necesita: sin ellos la tabla no se ejecuta sola.
 - **NO va:** descripcion del insumo, secciones por producto, ni mi razonamiento.
 - Lo que frena la carga (un dato que no cierra, una medida a confirmar) va **abajo de la
   tabla, en dos lineas**. Nunca arriba ni intercalado.
 - Si el codigo que sale y el que entra tienen **unidades distintas** en el maestro (`UN` vs
-  `UNID`), decirlo: el arb no deja pisar la linea, hay que borrar y crear.
+  `UNID`), decirlo en la tabla: el cambio va por `_arbSustituir.py` con `cantidad` (y
+  `modulo,proceso` si cambian) en la misma fila. Si el arb borra algo al sustituir, el script
+  aborta sin grabar y hay que ir por alta + baja, que se le consulta a Fak (borrar no esta probado).
 
 Detalle y el porque: memoria `feedback_formato_carga_arb`.
 
@@ -44,15 +46,14 @@ un consumo diario o un volumen; si la cuenta da exacta, el alcance esta probado.
 + (vehiculos de cierta version x 1 trasero), y eso descarto de un plumazo otras 8 referencias
 de la familia que por nombre parecian entrar.
 
-⚠ Ese numero **se queda en el analisis**: no sube al mail de difusion (ver §5) ni se escribe
-en este archivo — el repo es publico y los volumenes de produccion son datos de la empresa.
+⚠ Ese numero **se queda en el analisis**: no sube al mail de difusion (ver §5).
 
 ### El ALCANCE lo fija el pedido, no lo que uno encuentra barriendo
 
 Leer el mail que origino la tarea y quedarse **dentro de su alcance**. El 04/08/2026 se armo
 una tabla de carga cruzando el arb entero y quedaron adentro piezas de otro proyecto, que el
 pedido nunca menciono. Si aparece un desvio real fuera de alcance, se reporta aparte — no se
-mete en la carga, porque Fak la ejecuta creyendo que es lo que le pidieron.
+mete en la carga: Fak la aprueba creyendo que es lo que le pidieron.
 
 Los codigos y sectores actuales salen del export crudo, **nunca del cache**:
 
@@ -68,12 +69,12 @@ por columna, parsear con Python/node y comparar `campos[0].strip()`, no con grep
 ### Gate: descartar los productos ANULADOS antes de armar la tabla
 
 **Un producto puede seguir teniendo lineas en `RELACIONES.TXT` despues de dado de baja: la BOM
-queda huerfana.** Si entra en la tabla, Fak carga algo que no existe.
+queda huerfana.** Si entra en la tabla, se carga una BOM de un producto que ya no existe.
 
 Se detecta cruzando contra el maestro: **si el codigo NO esta en `ARTICULO.TXT`, esta anulado.**
 
 ```bash
-python scripts/_pdfBomArb.py --verificar-vigencia "<PN1>,<PN2>,..."
+python scripts/_pdfBomArb.py --verificar-vigencia --piezas "<PN1>,<PN2>,..."
 ```
 
 Incidente 04/08/2026: le pase 6 productos para cambiar un isocianato discontinuado y uno
@@ -102,7 +103,7 @@ digitos que si darian ese DV; la que ya existe cargada es el codigo real. Caso q
 estreno (05/08): el codigo pedido no cerraba, y el verificador que traia era el de otro
 codigo con dos digitos cambiados de lugar que ya estaba cargado con el mismo material.
 Crearlo hubiera dejado dos codigos para lo mismo en deposito. Numeros del caso en la
-memoria `project_alta_codigos_sansuy_427` (fuera del repo — este es publico).
+memoria `project_alta_codigos_sansuy_427`.
 
 Y antes de escribir la descripcion, mirar como esta escrita la familia en el maestro:
 el campo **corta en 60 caracteres** y a veces corta justo antes de lo que diferencia dos
@@ -245,13 +246,16 @@ no la vuelvas a incorporar nunca mas".
 **Ojo con los destinatarios:** responder "a todos" al mail que origino el pedido suele dejar
 afuera a Logistica, Abastecimiento, Recepcion y Compras — que son justo los que tienen que
 enterarse de un cambio de BOM. La lista buena es la del ultimo mail de difusion formato Leo
-(esta en la carpeta `Modificacion arb por Leo` del Escritorio, junto con el PDF modelo).
+(la tarea archivada `1- GENERAL\TAREAS CERRADAS\2026\2026-07-31 - Modificacion arb por Leo\`
+de la biblioteca de Ingenieria tiene el mail y el PDF modelo; el ultimo mail enviado, con
+`python scripts/_mails.py --buscar "Difundo actualizacion"`).
 Comparar las dos listas y decirle a Fak a quien le falta agregar.
 
 ## Cierre
 
 El cambio de BOM casi nunca viene solo: revisar si tambien hay que tocar **ficha de embalaje**
-(`1- GENERAL\FICHAS DE EMBALAJE\<cliente>\<proyecto>\`) y si aplica subir revision.
+(el maestro esta en `Y:\Ingenieria\Documentacion Gestion Ingenieria\17. Fichas de embalaje\`,
+con su listado; memoria `reference_fichas_embalaje_server`) y si aplica subir revision.
 
 La tarea del Escritorio **no se archiva hasta que el mail salio** — regla `escritorio-tareas.md`:
 trabajo hecho sin avisarle al que lo pidio es tarea abierta.

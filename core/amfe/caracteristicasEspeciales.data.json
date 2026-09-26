@@ -164,6 +164,7 @@
     "CRITICA = S 9 o 10 (O indistinto) -> CC; para VW se escribe D/TLD. D y TLD son UNA sola marca (mismo rango, Formel Q pag. 28 §7.5) = documentacion obligatoria LEGAL (inflamabilidad, emisiones, sustancias prohibidas), la designa el cliente en el plano. Una costura rota NO es D/TLD.",
     "SIGNIFICATIVA = S 5 a 8 Y O >= 4 -> SC (I-AC-005 punto 5 la escribe CS; todos escriben SC). VW no tiene sigla propia: SC. La W NO existe.",
     "La sigla se justifica SOLO con S y O de ESA causa (+ lo que el cliente designo en el plano). NUNCA porque otro documento (backup, Rev.A, PdC viejo) la tenia. Antes de poner, sacar o restaurar una sigla: escribir S, O y la regla. Si el efecto dice 'seguridad' con S7, lo incoherente es el par texto/S.",
+    "Y al reves tampoco: la S sale del EFECTO por la Tabla P1, nunca de la sigla. Si el cliente designo una critica y la S por efecto no llega a 9, se informa como diferencia; no se sube la S (caracteristicas-especiales.md §2bis).",
     "Flujograma: la marca de la OP = union de las siglas de sus causas en el AMFE; una ▽ heredada sin causa S>=9 detras se informa, no se copia. Asignar sigue siendo de Fak: la lista por criterio se muestra con S y O y su OK la asigna. Lo que un documento contesta no se le pregunta.",
     "Gates CRITICAL en scripts/_lib/amfeValidator.mjs: CAUSE_CC_LOW_SEVERITY (critica con S<9, sin exencion por palabras), CAUSE_SC_FUERA_DE_REGLA (SC con S fuera de 5-8 u O<4), SIGLA_DESCONOCIDA. Fuente unica: core/amfe/caracteristicasEspeciales.data.json."
   ],

@@ -1,9 +1,11 @@
 ---
 name: verificacion-consumos
-description: Checklist canonico + validador para tablas de consumo y cargas al ERP arb (BOMs, tizadas, insumos, etiquetas, quimicos). Usar SIEMPRE antes de entregar a Fak una tabla de consumos, una carga para el arb, o una auditoria de BOM — y cuando se trabaje con INSUMOS.txt, export RELACIONES, o fichas de embalaje. Nace de 6 fallos reales de 2026-07-14/16.
+description: Checklist canonico + validador para tablas de consumo y cargas al ERP arb (BOMs, tizadas, insumos, etiquetas, quimicos). Usar SIEMPRE antes de entregar a Fak una tabla de consumos, una carga para el arb, o una auditoria de BOM — y cuando se trabaje con INSUMOS.txt, export RELACIONES, o fichas de embalaje.
 ---
 
 # Verificacion de consumos — checklist canonico
+
+Nace de 6 fallos reales de 2026-07-14/16.
 
 **REGLA MADRE: la regla canonica le gana al dato puntual de cualquier fuente**
 (arb, BOM, mi propio analisis). Un valor fresco y concreto siempre "gana" dentro

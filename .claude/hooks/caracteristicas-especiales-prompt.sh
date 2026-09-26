@@ -27,6 +27,9 @@ process.stdin.on("data", (d) => { s += d; });
 process.stdin.on("end", () => {
   let prompt = "";
   try { prompt = String(JSON.parse(s).prompt ?? ""); } catch { prompt = s; }
+  // Los avisos automaticos (fin de un agente o de un comando de fondo) llegan como turno de usuario
+  // pero no son palabras de Fak: el recordatorio es para cuando EL nombra el tema.
+  if (/^\s*<task-notification>|\[SYSTEM NOTIFICATION/.test(prompt)) return;
   let canon = null;
   try { canon = JSON.parse(fs.readFileSync(path.join(raiz, "core", "amfe", "caracteristicasEspeciales.data.json"), "utf8")); } catch {}
   if (!canon || !Array.isArray(canon.prompt_disparadores) || !Array.isArray(canon.recordatorio)) {

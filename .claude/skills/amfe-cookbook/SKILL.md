@@ -1,6 +1,6 @@
 ---
 name: amfe-cookbook
-description: Recetas prescriptivas para completar gaps en AMFEs Barack Mercosul. Tabla issue-type -> accion con ejemplos. Usar cuando Fak pida "completar AMFE", "reparar AMFE", "fill gaps", "fix AMFE gaps", "llenar faltantes". Complementa /audit-amfe y los auditores (que detectan) — este skill dice como fijar cada tipo de issue.
+description: Recetas para completar gaps en AMFEs de Barack — tabla tipo de issue -> accion, con ejemplos; es la referencia de `_fixAmfePlaceholdersAndAllocation.mjs`. Usar cuando haya que completar o reparar lo que le falta a un AMFE. Lo ejecutan el comando /fix-amfe-gaps y el agente amfe-healer; lo detectan /audit-amfe y los auditores.
 ---
 
 # AMFE Cookbook — Recetas para fijar gaps
@@ -79,7 +79,7 @@ Para gaps que son WE real (no placeholder), buscar fuente en estos AMFEs segun e
 | COSTURA / COSER | `AMFE-HF-PAT`, `AMFE-HRC-PAT`, `AMFE-HRO-PAT` (Headrest) | `AMFE-2` OP "Costura de refuerzos" |
 | TROQUELADO | `AMFE-2` OP 60 y OP 70 (Termoformadas) | `AMFE-INS-PAT` si aplica |
 | INYECCION PLASTICA (termoplastico) | `AMFE-MAESTRO-INY-001` (family 15) | `AMFE-INS-PAT` OP 70, `AMFE-ARM-PAT` OP 60 |
-| INYECCION PU / ESPUMADO | **Sin maestro** — pedir a Fak | Headrest OP ESPUMADO |
+| INYECCION PU / ESPUMADO | `AMFE-MAESTRO-PU-001` (family 19) | Headrest OP ESPUMADO |
 | TERMOFORMADO | `AMFE-2` OP 40 (Termoformadas) | `AMFE-TR-PAT` OP 40 |
 | ADHESIVADO / HOT MELT | `AMFE-TR-PAT` OP 30 | `AMFE-INS-PAT` OP 90, `AMFE-ARM-PAT` OP 80 |
 | SOLDADURA ULTRASONIDO | `VWA-PAT-IPPADS-001` OP 110 | Top Roll OP 80 |

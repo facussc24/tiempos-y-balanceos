@@ -269,6 +269,13 @@ describe('caracteristicas-especiales-prompt.sh (UserPromptSubmit) — inyecta el
     expect(inyecta('que es TLD?')).toMatch(/CARACTERISTICAS ESPECIALES/);
     expect(inyecta('y la W que es?')).toMatch(/CARACTERISTICAS ESPECIALES/);
   });
+  it('VERDE (vacio): un aviso automatico que nombra CC/SC no es un mensaje de Fak; el mismo texto sin envoltorio si inyecta', () => {
+    // 26/09/2026: el recordatorio entro dos veces sobre avisos de fin de agente que decian "CC/SC".
+    const cuerpo = 'El agente termino: revise las CC/SC de las 3 piezas para el casillero 17.';
+    expect(inyecta(`<task-notification>\n<status>completed</status>\n<result>${cuerpo}</result>\n</task-notification>`)).toBe('');
+    expect(inyecta(`[SYSTEM NOTIFICATION] ${cuerpo}`)).toBe('');
+    expect(inyecta(cuerpo)).toMatch(/CARACTERISTICAS ESPECIALES/);
+  });
   it('JSON roto por stdin: exit 0 y no rompe el turno', () => {
     const r = hook('caracteristicas-especiales-prompt.sh', null, { stdin: '{no es json' });
     expect(r.exit).toBe(0);

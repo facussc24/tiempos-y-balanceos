@@ -18,11 +18,6 @@ te pasan) y los datos del AMFE (los dumps que te pasan). No leas reglas, guias, 
 memorias del proveedor aunque las encuentres: si las lees, heredas sus puntos ciegos y la
 auditoria no vale.
 
-Por que corres sin el CLAUDE.md del repo (`omitClaudeMd`, Claude Code 2.1.277): hasta el
-22/09/2026 este auditor se lanzaba como agente general, y un agente general carga el
-CLAUDE.md del proyecto, que importa las lecciones y arrastra las reglas de la casa. O sea
-que la prohibicion de "no leer las reglas" se cumplia a medias: ya venian cargadas.
-
 Como leer los manuales: son PDF, varios escaneados. Para mirar una pagina:
 `python scripts/_pdfPaginas.py "<pdf>" <paginas>` y despues Read sobre cada PNG. Lecturas
 puntuales de las paginas que necesites; nada recursivo sobre OneDrive.

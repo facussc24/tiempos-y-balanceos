@@ -1,6 +1,6 @@
 ---
 name: injection-process
-description: Conocimiento del proceso de inyeccion Barack (plastica y PU) — 6M obligatorio, defectos tipicos validados por el gerente, retrabajos tipificados, controles de deteccion diferenciados, maestros Supabase (families 15/16/17), materiales higroscopicos, refrigeracion de tornillo, mantenimiento de molde. Usar cuando se edita un AMFE/CP con operaciones de inyeccion, se trabaja con los maestros de inyeccion, o se evaluan defectos/controles de inyectora.
+description: Conocimiento del proceso de inyeccion Barack (plastica y PU) — 6M obligatorio, defectos tipicos validados por el gerente, retrabajos tipificados, controles de deteccion diferenciados, maestros Supabase (families 15/16/19), materiales higroscopicos, refrigeracion de tornillo, mantenimiento de molde. Usar cuando se edita un AMFE/CP con operaciones de inyeccion, se trabaja con los maestros de inyeccion, o se evaluan defectos/controles de inyectora.
 ---
 
 # injection-process — inyeccion plastica y PU en Barack
@@ -11,7 +11,7 @@ Leer `docs/GUIA_INYECCION.md` antes de editar AMFE/CP de inyeccion (conocimiento
 
 **Inyeccion PLASTICA (termoplastico)** — maestro family 15. Materiales: PP, ABS, PC, PA, EPDM, PET. Inyectora, molde metalico, ciclo corto. Familias con esta OP: IP PAD (OP 20), Top Roll (OP 10), Insert (OP 70), Armrest (OP 60, carrier).
 
-**Inyeccion PU (espuma poliuretano)** — maestro family 17 (Iny PUR Headrest). Mezcla quimica Poliol+Isocianato, reaccion en molde, curado 180+ seg, EPP completo. Familias: Armrest (OP 70, respaldo sobre carrier), Headrest x3 (OP ESPUMADO/INYECCION DE PU).
+**Inyeccion PU (espuma poliuretano)** — maestro family 19 (Proceso de Inyeccion PUR in place; la 17 es IP PAD Patagonia - Tapizado). Mezcla quimica Poliol+Isocianato, reaccion en molde, curado 180+ seg, EPP completo. Familias: Armrest (OP 70, respaldo sobre carrier), Headrest x3 (OP ESPUMADO/INYECCION DE PU).
 
 Sin inyeccion: Telas Planas PWA, Telas Termoformadas PWA.
 
@@ -23,7 +23,7 @@ Sin inyeccion: Telas Planas PWA, Telas Termoformadas PWA.
 |---|---|---|---|---|
 | Inyeccion Plastica | 15 | 4a5fa0d1-46ee-4d6b-b699-2cbaeb14602c (AMFE-MAESTRO-INY-001) | 81b60cdd-1296-4821-a348-a8e3c2433b0d (CP-MAESTRO-INY-001) | 20 Inyeccion, 30 Control dim + corte colada |
 | Logistica y Recepcion | 16 | ef327ae0-c147-4716-ba22-601cedf5b3d1 (AMFE-MAESTRO-LOG-REC-001) | 34943c75-b9ad-4284-8dd6-d491d1dccf95 (CP-MAESTRO-LOG-REC-001) | 10 Recepcion MP (transversal, AIAG CP 2024 "procesos interdependientes") |
-| Iny PUR Headrest | 17 | ver memoria `project_maestro_pu_headrest` | — | 1 OP, aplica a 3 Headrest |
+| Inyeccion PUR in place | 19 | d32de6b8-b240-43fc-9e45-1e6fe3b83c27 (AMFE-MAESTRO-PU-001; decisiones: memoria `project_maestro_pu_headrest`) | — | 1 OP, aplica a 3 Headrest |
 
 ## 6M obligatorio en OP de INYECCION PLASTICA (los 6, 1M por linea)
 

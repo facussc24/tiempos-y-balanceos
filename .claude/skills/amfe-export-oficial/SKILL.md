@@ -79,8 +79,14 @@ for (const we of op.workElements) for (const fn of we.functions) for (const f of
 Desde 2026-07-03 las revisiones van en la **tabla REVISIONES de la Caratula** (formato AMFE 150 real: la carátula ES la primera hoja del formato, con el log de cambios — cumple el I-AC-005 "toda modificación se registra en la primera hoja"). Columnas: **REV | FECHA | ITEM CAMBIADO | DETALLES | FECHA PSW | MODIFICO**. La fila cuya REV coincide con la revisión vigente sale en rojo. NO se genera una hoja "Revisiones" aparte (el AMFE 150 real tiene solo `Caratula` + `P-FMEA`). El historial son hitos A→G (no el log diario), alineados al Plan de Control (ver `feedback_amfe_revisiones_vs_pc`).
 
 ## 5. Scripts de referencia
+- **El export oficial de cualquier AMFE:** `npx tsx scripts/_exportAmfeOficial.ts --amfe <numero> --out <carpeta>`.
+  Tiene los gates de `amfe.md`: no exporta sin marcador `.audit-cliente/<amfe>.json` de menos de
+  7 dias (`/auditoria-cliente`; `--sin-auditoria` solo para trabajo interno) ni con metadatos de
+  redaccion en el log de revisiones (`scanRevisionMeta()`).
 - `scripts/_buildAmfeBarack.mjs` — construye doc con header canónico + FM secuencial + O/D.
-- `scripts/_exportOficial.ts` (159/160) y `scripts/_exportAmfeAmarok.ts` (128/129) — usan `buildAmfeOficialWorkbook`. Amarok corre con `SUPABASE_SERVICE_ROLE_KEY=... VITE_SUPABASE_URL=... npx tsx`.
+- `scripts/_exportOficial.ts` (159/160) y `scripts/_exportAmfeAmarok.ts` (128/129) — exports
+  puntuales anteriores: usan `buildAmfeOficialWorkbook` pero **no** tienen el gate de auditoria.
+  Amarok corre con `SUPABASE_SERVICE_ROLE_KEY=... VITE_SUPABASE_URL=... npx tsx`.
 - Oficializar una revisión (bump + snapshot + export + copia a Y: + listado): `scripts/_oficializarRevision.ts`.
 - Cargar a Supabase sin `.env.local`: service key por env var (ver `reference_amfe_xlsx_importer` en memoria).
 
@@ -91,6 +97,9 @@ Desde 2026-07-03 las revisiones van en la **tabla REVISIONES de la Caratula** (f
 ## Checklist antes de entregar un Excel de AMFE
 - [ ] Hoja **Caratula** presente y **primera** (workbook = `Caratula`, `AMFE`).
 - [ ] Carátula con TODOS los campos llenos (abrir el .xlsx y mirar el bloque de identificación).
+- [ ] Si el Excel va a imprimirse o al cliente: la caratula lleva el margen y el area de
+      impresion que acomodo Fak (`B2:M29`). `buildAmfeOficialWorkbook` no los pone; hoy lo hace
+      el molde `scripts/_archive/2026-09-23-ppap-p21-naranja/armar_final.py` (skill `ppap-motherson` §4).
 - [ ] Nivel de revisión vigente en ROJO; título con " PRELIMINAR" solo si el doc no está approved.
 - [ ] FM numerados 1,2,3,…N sin saltos en cada operación.
 - [ ] Tabla REVISIONES con hitos A→N y columna MODIFICO.

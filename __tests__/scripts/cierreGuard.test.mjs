@@ -186,7 +186,7 @@ describe('gate por bullet de LECCIONES (evaluarBullets)', () => {
   });
 });
 
-// ───────────────────────────────── A3 (10/09/2026): el cierre es un informe → cinco lineas
+// ───────────────────────────────── A3 (10/09/2026): el cierre es un informe
 describe('cierre-guard · chequeo 5: un cierre declarado que es un informe no pasa', () => {
   const deps = (extra = {}) => ({
     fueraEnEsteTurno: async () => ({ fuera: false, ultimoMensajeFak: 'dale, cerralo' }),

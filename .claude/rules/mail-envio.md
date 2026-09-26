@@ -51,17 +51,13 @@ le cambia la regla: se le manda el borrador a quien esta hablando con Fak y lo e
 
 ## Rehacer un mail REEMPLAZA el borrador anterior: no se apilan
 
-**21/09/2026:** el gate de voz me rebote el mail dos veces (largo, y despues el plural), lo
-rehice y quedaron **3 borradores identicos** en Borradores. Ahi `_mailEnviar.py --buscar`
-aborta bien (*"esperaba 1 borrador y hay 3"*) y no deja mandar ninguno.
-
-**Desde el 22/09/2026 `_prepararMail.py` no los apila.** Anota cada borrador que arma en
+`_prepararMail.py` no apila borradores: anota cada uno que arma en
 `.mail-cache/borradores_claude.json` y, al rehacer uno con el mismo asunto (sin contar RE:/RV:),
 manda el anterior a Elementos eliminados — **solo si lo armo el script, sigue en Borradores y
-nadie lo edito despues** (margen de 2 min). Fak lo pidio tres veces: 31/08, 07/09 (*"siempre
-generas muchos borradores"*) y 21/09 (*"borra vos los dos borradores duplicados y todos los que
-esten viejos tambien"*). Probado en Outlook de verdad: tres corridas, uno en Borradores y dos en
-Eliminados. `Delete()` de COM mueve, no borra definitivo. Selftest: `python scripts/_prepararMail.py --selftest`.
+nadie lo edito despues** (margen de 2 min). Con varios borradores del mismo asunto
+`_mailEnviar.py --buscar` aborta y no deja mandar ninguno. Fak lo pidio tres veces (31/08, 07/09
+y 21/09: *"borra vos los dos borradores duplicados y todos los que esten viejos tambien"*).
+`Delete()` de COM mueve, no borra definitivo. Selftest: `python scripts/_prepararMail.py --selftest`.
 
 Un borrador que el script no armo, o que Fak edito a mano, no se toca solo: se lista con su hora.
 Para mandar uno puntual cuando hay varios, **`--id <EntryID>`**, nunca `--forzar` (saltea el
@@ -109,10 +105,8 @@ otro esta de mas"*.
 inventa un equipo que no es el que hizo el trabajo y le saca la responsabilidad de encima.
 Vale para todo verbo del cuerpo: adjunto, revise, corregi, mande.
 
-Hasta el 12/09/2026 eso era **solo texto**: una regla escrita, sin nadie que la mida. Y el error
-volvio igual — el plural de apertura **salio enviado** dos veces (01/09 a Carlos y Leo,
-*"Actualizamos en INCA..."*; 07/09 a Pablo, *"Corregimos en el arb..."*). Es el rule enforcement
-gap del skill `rule-enforcement-gate`. Desde hoy la voz se mide contra su propio corpus.
+Escrita sola, la regla no alcanzo: el plural de apertura salio enviado dos veces (01/09 y 07/09).
+Por eso la voz se mide contra su propio corpus, con el gate de abajo.
 
 ### El perfil, contado — no es mi idea de como escribe Fak
 
@@ -130,7 +124,7 @@ Fuente: `.mail-cache/mails.jsonl`, carpeta *Elementos enviados*, **935 mails suy
 | Arranque | `Buen dia` 136 · `Buenos dias` 85 · `Buenas tardes` 58 · `Hola` 40 | — |
 | Cierre | `Saludos,` 174 · `Gracias` 14 | — |
 | `cordialmente` · `atentamente` · `por medio de la presente` | **0 · 0 · 0** | — |
-| Tabla en el cuerpo · viñetas · secciones numeradas | **0 · 59 · 12** (recontado el 22/09/2026: sus viñetas son listas de codigos; el "0" de antes estaba mal) | las ponia yo, para contar |
+| Tabla en el cuerpo · viñetas · secciones numeradas | **0 · 59 · 12** (sus viñetas son listas de codigos) | las ponia yo, para contar |
 
 **La desviacion real es el LARGO.** Su mail tipico son **dos renglones**. Y el numero corrige a
 la memoria `mail_corto_como_los_de_fak`: el mail de 592 caracteres que guarda como ejemplo de
@@ -169,43 +163,17 @@ listas del AMFE) · **aclarar de mas: 2 aclaraciones, o 1 en un mail mas largo q
 recomendacion (*convendria*) · cierre fuera del set medido · conectores de informe (*en resumen*,
 *cabe aclarar*) · una sola aclaracion en un mail corto · **sigla que el no uso nunca** (`SIGLA_AJENA`).
 
-### Aclarar de mas — la correccion que mas repite (medido el 22/09/2026)
+### Aclarar de mas — la correccion que mas repite
 
-Entre el 07/08 y el 22/09/2026 Fak corrigio o rechazo **12 borradores mios, de 9 sesiones**
-(`__tests__/scripts/fixtures/vozRechazados.json`, cada uno con su cita): *"aclaras siempre
-demasiado loco, que entren y revisen ellos"* (01/09), *"los agregaste y aclaraste de mas"* (07/09),
-*"dice KP, no se que carajo es KP... cosas muy explicativas"* (11/09), *"porque aclaras"* (22/09).
-**El gate de antes dejaba pasar 7 de los 12** — el del 22/09 dio VERDE con 551 caracteres.
-
-Lo que los separa de los 935 mails de Fak no es el largo sino la **frase que aclara**: describe
-el adjunto (*"Tiene cuatro hojas"*, *"Lo del dia"*), respalda lo que dice (*"Lo confirma el
-INCA..."*), aclara lo que NO cambio o la consecuencia (*"sigue en m2"*, *"pasan a leerse en
-metros"*, *"el consumo no cambia"*). Cada una esta en 0 a 3 de sus 935 mails.
-
-| Candidato a ROJO | Borradores que frena | Mails de Fak que frenaria |
-|---|---|---|
-| Largo > p90 (585) | 10 de 12 | 93 (9,9%) |
-| Largo > p90 + conectores de informe (*en resumen*...) | 0 de 12 | 2 (0,2%) |
-| Viñetas | 9 de 12 | 59 (6,3%) |
-| Sigla que Fak no uso en ningun otro mail | 6 de 12 | 43 (4,6%) |
-| 1 aclaracion, cualquier largo | 10 de 12 | 4 (0,43%) |
-| **2 aclaraciones, o 1 y largo > p90 — el que quedo** (los mismos 10, con 0) | **10 de 12** | **0** |
-
-Los otros 2 los frenaba ya el gate (*"Tres cosas que valen..."* y *"Revisamos a fondo..."*): con
-`ACLARA_DE_MAS` dan ROJO **los 12**. Del otro lado, **la version que dejo Fak** de los 4 que la
-tienen **no da ROJO** — su Gate 3 de dos renglones tiene *"que es el item 4 del checklist"* y
-por eso una aclaracion en un mail corto avisa y no frena. `asi que` (14 de sus 935) y `es decir`
-(2) quedaron afuera de la lista: son suyos. La sigla ajena queda AMARILLO por su 4,6%.
-Limite, dicho: la lista salio de esos mismos 12 borradores; lo medido afuera de la muestra es el
-falso rojo sobre Fak.
-
-**Calibracion, en las dos direcciones** (`__tests__/scripts/vozGate.test.mjs`, 50 casos): los
-mails mios en plural y los 12 borradores rechazados dan rojo, los plurales legitimos de Fak y sus
-versiones corregidas dan verde, y el selftest (y el test 36, donde esta el cache) mide el
-**falso rojo contra sus 935 mails: 8, o sea 0,86%** — el mismo que antes de `ACLARA_DE_MAS`, que
-suma 0. Si ese numero sube, el gate empezo a medir mi idea de el y no se cablea hasta que baje;
-y ningun ROJO por separado puede pasar del 1% (el selftest falla). En un worktree el cache se
-apunta con `VOZ_MAILS_JSONL`.
+Lo que separa mis borradores rechazados de los mails de Fak no es el largo sino la **frase que
+aclara**: describe el adjunto (*"Tiene cuatro hojas"*), respalda lo que dice (*"Lo confirma el
+INCA..."*) o aclara lo que NO cambio (*"sigue en m2"*, *"el consumo no cambia"*). `ACLARA_DE_MAS`
+da ROJO con 2 aclaraciones, o 1 en un mail mas largo que su p90; una sola en un mail corto avisa.
+El gate se calibra en las dos direcciones (`__tests__/scripts/vozGate.test.mjs`): los borradores
+rechazados (`fixtures/vozRechazados.json`) dan rojo, y el falso rojo contra los 935 mails de Fak no
+puede pasar del 1 % por ROJO (lo frena el selftest). Si sube, el gate no se cablea. La medicion de
+cada candidato: memoria `mail_corto_como_los_de_fak`. En un worktree el cache se apunta con
+`VOZ_MAILS_JSONL`.
 
 ## Al cerrar un tema por mail, barrer Borradores por asunto
 
@@ -291,11 +259,9 @@ verde; mas que `vigilando` devuelve lo de `fn` y no se come su excepcion).
   (`--sin-chequeo-voz` lo saltea; `--forzar` **tambien lo saltea**, ademas del anti-duplicado —
   los dos piden el OK de Fak para ESE mail). Si node falla, **no bloquea**: un chequeo de estilo
   roto no puede dejar a Fak sin poder mandar un correo.
-- **El fail-open necesita su propio caso, y por eso existe `python scripts/_lib/vozMail.py
-  --selftest`** (rojo y verde por la cadena real, clavado en el test 26). El 12/09/2026
-  `vozMail.py` calculaba mal su raiz y buscaba el gate en un "scripts/scripts/_vozFak.mjs" (la carpeta repetida) que no existe: los 25
-  tests del gate daban verde —importan `vozGate.mjs` directo— y **el bloqueo del envio no corrio
-  ni una vez**, porque el camino fail-open se lo tragaba en silencio. Lo encontro el auditor.
+- **El fail-open necesita su propio caso: `python scripts/_lib/vozMail.py --selftest`** (rojo y
+  verde por la cadena real, clavado en el test 26). Un chequeo que falla abierto deja de correr sin
+  que ningun test del gate lo note (caso del 12/09: memoria `reference_fail_open_esconde_su_propia_rotura`).
 
 ## De donde sale el gate — 2026-08-14
 

@@ -63,7 +63,7 @@ Preferir UPDATE con un flag (ej `deleted_at`, `archived: true`) sobre DELETE. Lo
 ```bash
 node scripts/_backup.mjs
 ```
-Guarda snapshot de 12 tablas en `backups/<timestamp>/`. Lo corre solo el hook en casos destructivos, pero se puede forzar manualmente antes de cualquier cambio riesgoso.
+Guarda un JSON por cada tabla con filas en `backups/<timestamp>/` (el inventario lo lee live: no hay un número fijo) y compara filas esperadas contra respaldadas en `_manifest.json`. Lo corre solo el hook en casos destructivos, pero se puede forzar manualmente antes de cualquier cambio riesgoso.
 
 ### Listar backups
 ```bash
@@ -125,7 +125,7 @@ await runWithValidation(plan, apply, async () => {
 finish(apply);
 ```
 
-**Override:** si el script intencionalmente deja algunos issues (ej: placeholder para que el equipo APQP complete), usar `{ allowNewCritical: true }` como cuarto argumento y documentar por que.
+**Override:** si el script deja a proposito un issue CRITICAL que Fak acepto, usar `{ allowNewCritical: true }` como cuarto argumento y escribir en el script el porque, con la frase de Fak. El placeholder `Pendiente definicion equipo APQP` nunca es ese motivo: esta prohibido (`amfe.md` §4) y un AP=H sin accion va con la celda vacia.
 
 **Demo ejecutable:** `scripts/_demoValidator.mjs` (read-only, no escribe nada) muestra el flujo con cambios inocuo/warning/critico contra un AMFE real.
 

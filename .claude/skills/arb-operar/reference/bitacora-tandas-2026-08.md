@@ -96,8 +96,9 @@ los KeyTips son ventanas y se pueden enumerar.
 Lo mismo pasó, en chiquito, con *"reabrir la ventana requiere una persona"* (corregido el
 20/08 con un click real) — dos veces el mismo patrón en la misma skill.
 
-`_arbVer.py reset` sigue usando el click de (298, 95): funciona y está probado. La vía por
-teclado es la alternativa cuando no se quiere mover el mouse.
+`_arbVer.py reset` abre Relaciones por click (solapa + botón): funciona y está probado, y solo
+con Relaciones CERRADA (regla `arb-no-cerrar.md`, 25/09). La vía por teclado (KeyTips) ya no es
+alternativa: el 23/09 apretó `Selección de Empresa` con el ribbon en otra solapa.
 
 ### La lección de método
 
@@ -112,3 +113,52 @@ El orden de arranque que salió de acá vive en `../SKILL.md`, §Orden de arranq
 
 Aplix de m² a metros lineales: 34 líneas objetivo, **31 productos terminados grabados y
 verificados**, 3 fuera de alcance por una validación del arb que no estaba documentada.
+
+## Tandas de septiembre — el bloque de estado que abría `../SKILL.md` hasta el 26/09/2026
+
+Movido entero el 26/09/2026, cuando el SKILL pasó a abrir con una tabla de capacidades. Dos
+retoques al moverlo: los punteros a "la sección del 31/08 / del 01/09" ahora nombran
+`maestro-de-insumos.md`, donde viven, y la viñeta del export dice lo que manda la regla
+`arb-no-cerrar.md` (25/09) en vez de "`reset` después de exportar".
+
+> **Cambiar consumos: ANDA** — 14/14 el 05/08 · 16/16 el 06/08 · 36/36 el 07/08 ·
+> **31/31 el 20/08** (y ahí el robot aprendió a **recuperarse solo**: cierra el modal y
+> reabre la ventana sin pedirle nada a nadie — ver la tanda del 20/08).
+> **Dar de alta líneas: ANDA** (`scripts/_arbAlta.py`) — **31/31 el 07/08**, verificadas contra
+> el export y con 0 bajas en el diff de la base entera. Borrar líneas sigue fuera de alcance.
+> **Modificar un campo del MAESTRO DE INSUMOS: ANDA** — **31/08/2026**, `Es Sub-Producto`
+> de `TRO-TEL0001-V1`, diff del export entero 2 altas / 0 bajas / 0 cambios. Todo por
+> teclado: se TABULA, no se clickea por coordenada (`maestro-de-insumos.md`, sección del 31/08).
+> **Dar de ALTA un CODIGO en el maestro: ANDA** — **15/09/2026**, `427VAR002TAP01`, primera
+> corrida del robot (hasta ese dia era "APRENDIDO", grabado de Fak pero nunca ejecutado).
+> En `Altas` el click por coordenada **tambien** falla en silencio: un solo click en `Rubro`
+> y de ahi TAB (ver `maestro-de-insumos.md`).
+> **Sustituir el codigo de una linea: 5/5 el 15/09** — la bolsa de embalaje Patagonia en sus
+> 5 BOM, con una linea en la fila 7; diff de la base entera 6257 -> 6257, 0 fuera de lo pedido.
+> **Y la `Unidad` tambien: 11/11 el 22/09/2026** (`scripts/_arbUnidad.py`, vinilos Sansuy
+> MT2 -> MTL): diff de la base entera 7348 -> 7348, 32 lineas cambiadas y 0 fuera de los 11
+> codigos. Va SIEMPRE en la misma tanda que la conversion de consumos (`_arbCargar.py`): la
+> unidad es una sola para OC y BOM, y cambiarla sola deja los numeros viejos con la etiqueta nueva.
+> **Y la `Descripción` tambien: 3/3 el 01/09/2026** — 27 filas partidas del export → 0, con
+> 0 altas / 0 bajas / **0 consumos cambiados**. Ojo con los dos gates que la trababan:
+> `&Acepta` esta deshabilitado hasta que `Posee PAPP/PSW` tenga valor, y una tecla mandada
+> muy rapido **no llega y no da error** (`maestro-de-insumos.md`, sección del 01/09).
+> **Altas EN LOTE: ANDA** (`scripts/_arbAltaLote.py`) — **12/12 el 28/08 en 116 seg**, mismo
+> insumo en 12 BOM, diff de la base entera 12 altas / 0 bajas / 0 cambios.
+>
+> **23/09/2026 — semiterminados de inyección de Patagonia, todo por robot** (diff de la base
+> entera 5503 → 5531: 59 altas, 31 bajas, 31 cambios, 0 fuera de la tabla):
+> - **Alta de CÓDIGOS en lote + leer la ficha entera + `Es Sub-Producto`**: `scripts/_arbInsumoCampos.py`
+>   (`--leer`, `--alta tabla.csv --como <HERMANO>`, `--subproducto`). 12/12 altas y 2/2 flags, releídos.
+>   El cartel de Visual C++ salió en CADA alta y el registro grabó igual: el script aprieta `Omitir`.
+> - **Alta en un producto SIN BOM**: `_arbAlta.traer_vacio()`. `ac.traer` manda TAB por mensaje, que
+>   avanza de a dos, se pasa el `Rubro` vacío y el arb tira `No Ingreso Insumos`. Con TAB real, anda.
+> - **Reemplazar una línea ENTERA en el lugar** (código + cantidad + módulo + proceso): columnas
+>   opcionales de `_arbSustituir.py`. Resina `KG INY` → semiterminado `1 UNID TAP`, 31/31, sin bajas.
+> - 🔴 **`_arbCargar.abrir()` tecleaba KeyTips A CIEGAS** (Alt V Y 0 3) si no veía Relaciones: con el
+>   ribbon en otra solapa apretó `Selección de Empresa` (pidió la contraseña) y `About`. Ahora abre por
+>   click (`reset_relaciones`). **Una tecla a ciegas aprieta lo que esté abajo; un click fallido no abre nada.**
+> - Al reabrir el arb el ribbon puede quedar **minimizado** (solo nombres de solapa): el click al botón no
+>   abre nada. Se despliega con la flechita de la derecha, `click (1474, 42)` de `Producción`.
+> - El export deja Relaciones en la solapa `Listado`: se vuelve a `Altas` con `_arbVer.py click 118 68`.
+>   **No con `reset`**: con Relaciones abierta se niega, y cerrarla crashea el arb (`arb-no-cerrar.md`).

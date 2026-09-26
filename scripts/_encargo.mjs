@@ -25,7 +25,7 @@
  *
  *   ARRANQUE (desde el 05/09/2026): al final de todo encargo va la plantilla fija del canon
  *   (modo plan, la carpeta de la tarea, leer los archivos enteros, cargar los skills, cierre con
- *   _cierreSesion.mjs + auditor a archivo + sintesis de 12 lineas). Es lo que Fak tipeaba a mano
+ *   _cierreSesion.mjs + auditor a archivo + sintesis con la ruta primero). Es lo que Fak tipeaba a mano
  *   en cada sesion ("modo plan" 47 veces en dos semanas). --sin-arranque la saca; --skill se
  *   valida contra .claude/skills/<nombre>/SKILL.md y --carpeta contra el disco.
  *

@@ -39,9 +39,10 @@ Fak. Si el tipo no existe, `general-purpose` y decirlo en el reporte. El encuadr
   `C:\Users\FacundoS-PC\BARACK ARGENTINA SRL\Ingeniería y Proyecto - General\INGENIERIA BARACK (NUNCA BORRAR)\4- MANUALES\`):
   - AIAG-VDA: `AMFE\FMEA-AMFE-VDA-AIAG\446076670-FMEA-AIAG-VDA-First-Edition-pdf.pdf` — ⚠️ es un
     BORRADOR (Word del 05/12/2017; el manual salio en junio de 2019): su tabla AP y sus escalas
-    no son las publicadas. Para AP, P1, P2 y P3 manda el SETEC 2020 (abajo). Decirselo al auditor;
-    que la casa siga usando el borrador es una decision pendiente de Fak (memoria
-    `project_tabla_ap_de_la_casa_es_el_borrador_2017`), no un hallazgo a repetir en cada auditoria.
+    no son las publicadas. Para AP, P1, P2 y P3 manda el SETEC 2020 (abajo). Decirselo al auditor.
+    La tabla AP de la casa ya es la del SETEC (23/09/2026); las escalas O/D de `amfe.md` §13
+    todavia citan el borrador y falta transcribir las del SETEC (memoria
+    `project_tabla_ap_de_la_casa_es_el_borrador_2017`): eso no es un hallazgo a repetir en cada auditoria.
   - IATF: `IATF\IATF16949-IATF-SIs-May-2022-ISO9001-Integrados.pdf`
   - SETEC (tabla AP pág. 116-118 del PDF; P1 101-103, P2 104-105, P3 109-111; CC/SC pág. 129): `AMFE\MANUAL AMFE  R06 Julio 2020 Participante.pdf`
   - Mapa tema→página (lecturas dirigidas): `.sgc-cache/manuales/*.md` si existe

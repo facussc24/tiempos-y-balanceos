@@ -235,9 +235,9 @@
       "{carpeta}",
       "Leé ENTERO cada archivo fuente de arriba antes de opinar sobre él, no la primera pantalla.",
       "{skills}",
-      "Al cerrar: node scripts/_cierreSesion.mjs --sin-build en verde; agente auditor con el informe a un ARCHIVO dentro de la carpeta de la tarea, no al chat; y a Fak una síntesis de 12 líneas o menos, con la RUTA del entregable en la primera."
+      "Al cerrar: node scripts/_cierreSesion.mjs --sin-build en verde; agente auditor con el informe a un ARCHIVO dentro de la carpeta de la tarea, no al chat; y a Fak una síntesis con lo que recomendás, el comando o la ruta y lo que le cambia una decisión, con la RUTA del entregable en la primera línea."
     ],
-    "conCarpeta": "La tarea vive en el Escritorio: {carpeta}. Todo lo que produzcas queda ahí hasta que se archive; nada tuyo queda suelto en el Escritorio.",
+    "conCarpeta": "La tarea vive en el Escritorio: {carpeta}. Ahí va el rastro (el mail, capturas, borradores); el entregable se escribe directo en su carpeta por tipo de la biblioteca de Ingeniería, y nada tuyo queda suelto en el Escritorio.",
     "sinCarpeta": "Carpeta de la tarea: ninguna declarada. Si es trabajo de Barack va en una carpeta del Escritorio, y la carpeta la decide Fak.",
     "conSkills": "Cargá con la tool Skill, antes de empezar: {skills}."
   }

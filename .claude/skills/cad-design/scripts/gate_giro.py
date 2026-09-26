@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Interprete: .venv-cad (Py3.12). Correr: C:\Dev\BarackMercosul\.venv-cad\Scripts\python.exe gate_giro.py --help
-"""GATE 5 — TRAYECTORIA: que el conjunto no choque DURANTE el giro, no solo al final.
+"""GATE 6 — TRAYECTORIA: que el conjunto no choque DURANTE el giro, no solo al final.
 
 Por que existe (auditoria del 2026-08-24): los seis gates que habia miran UNA pose. El
 propio SKILL.md lo declaraba como clase abierta: "todos miran la posicion final, no el

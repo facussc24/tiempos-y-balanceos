@@ -230,7 +230,7 @@ esperado, se aborta **antes** de la primera tecla que modifica.
 
 Con la descripción ya pisada en pantalla y `&Cancela` deshabilitado, **`WM_CLOSE` sobre
 `Maestro de Insumos` cerró sin grabar**: al reabrir y traer el mismo código, la descripción
-estaba intacta. Mismo comportamiento que ya estaba documentado para `Maestro de Relaciones`.
+estaba intacta. En `Maestro de Relaciones` no: cerrarla abierta crashea el arb (regla `arb-no-cerrar.md`).
 
 ⚠ **El campo `Descripción` engaña al mirarlo.** Después del BACKSPACE mostraba `RO` y parecía
 que había borrado casi todo; era el render con el cursor al final (la propia skill ya lo

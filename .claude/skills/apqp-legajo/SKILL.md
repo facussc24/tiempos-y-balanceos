@@ -1,6 +1,6 @@
 ---
 name: apqp-legajo
-description: Que va en cada casillero de un legajo APQP de Barack, quien lo produce y donde vive el original. Usar al armar o completar un legajo de PPAP CLIENTES, al recibir material de un cliente, al archivar un flujograma / AMFE / plan de control / HO, o cuando haya que decidir en que carpeta va un documento del proyecto. Trae lo que Fak decidio el 21/09/2026 y las preguntas que todavia no tienen respuesta.
+description: Que va en cada casillero de un legajo APQP de Barack, quien lo produce y donde vive el original. Usar al armar o completar un legajo de PPAP CLIENTES, al recibir material de un cliente, al archivar un flujograma / AMFE / plan de control / HO, o cuando haya que decidir en que carpeta va un documento del proyecto. Marca lo que esta SIN DEFINIR, que se pregunta. Para SMRC / Motherson el legajo es el paquete del cliente (skill ppap-motherson).
 ---
 
 # El legajo APQP: donde va cada cosa
@@ -31,8 +31,9 @@ que yo emitiera un flujograma Rev.A en tres carpetas del servidor sin que el lo 
    de PPAP del cliente entero (`PPAP_<part number>_<n>\`) va ahi, con su zip al lado.
 3. **Lo unico que se saca de ahi es el plano**, que va a `6-Planos de la pieza`. Y eso tiene su
    propio procedimiento, que hoy no se cumple (§4).
-4. **Un documento vivo tiene UN solo lugar.** El maestro vive en `Gestion Ingenieria`; lo que se
-   copia al legajo es una COPIA que envejece sola. No se reparte "por las dudas".
+4. **Un documento vivo tiene UN solo lugar.** El maestro vive en `Gestion Ingenieria` —salvo la
+   HO, que vive en `DOCUMENTACION SGC\HOJAS DE OPERACIONES\` (skill `hojas-de-proceso` §3 bis)—;
+   lo que se copia al legajo es una COPIA que envejece sola. No se reparte "por las dudas".
 
 ## 1. Donde vive un legajo
 
@@ -75,10 +76,10 @@ del de una variante anterior, y sus documentos nacen en Rev. A (memoria
 | 20 | Flujograma de proceso | 4/6 | El flujograma **liberado**, en PDF | INGENIERIA |
 | 21 | Lay out de la planta | 0/6 | En la practica va todo al 11 | — |
 | 22 | FMEA de proceso | 5/6 | El AMFE en xlsx y PDF | INGENIERIA / CALIDAD |
-| 23 | IMDS | 1/6 | La declaracion y su captura. Skill `imds` | INGENIERIA |
+| 23 | IMDS | 1/6 | La declaracion y su captura. Skill `imds` | CALIDAD (Fak, 08/09/2026: *"el imds es de calidad"*). Ingenieria lo carga solo cuando Fak lo pide para una pieza puntual (26/09/2026: *"podria llegar a hacerlo algun dia"*); no se le lista como pendiente suyo |
 | 24 | PC de Pre lanzamiento | 0/6 | — | CALIDAD |
 | 25 | MSA | 0/6 | R&R, calibraciones. **Hoy los R&R se archivan en el 10 del cliente** | CALIDAD |
-| 26 | **Instrucciones de Proceso** | 5/6 | **Las hojas de operacion (HO).** Skill `hojas-de-proceso` | INGENIERIA |
+| 26 | **Instrucciones de Proceso** | 5/6 | **Copia** de las hojas de operacion (HO). El original y su numero viven en `HOJAS DE OPERACIONES` del SGC: skill `hojas-de-proceso` §3 bis | INGENIERIA |
 | 27 | Capacitacion | 0/6 | Matriz de polivalencia | RRHH |
 | 28 | Corrida de produccion | 4/6 | TryOut, PVS, dimensional | mezclado |
 | 29 | Capacidad preliminar | 1/6 | Ppk. **Hoy tiene metodos y tiempos, que es otra cosa** | CALIDAD |
@@ -93,8 +94,9 @@ vacios no significa que no correspondan: significa que hoy nadie los llena.
 
 ## 3. Lo que NO es nuestro
 
-El PPAP lo coordina **CALIDAD**. Ingenieria deja la base en el legajo: flujograma, AMFE, base
-de plan de control, IMDS y el alta de codigos en el arb. **No arma el paquete que va al
+El PPAP lo coordina **CALIDAD**. Ingenieria deja la base en el legajo: flujograma, AMFE y el
+alta de codigos en el arb; una base de plan de control, solo si Fak la pide (`autonomy-contract.md` §F). El IMDS es de
+Calidad (fila 23). **No arma el paquete que va al
 cliente, no lo presenta y no persigue lo que falta.** Lo que queda pendiente se escribe con
 dueño y se le pasa a Calidad.
 

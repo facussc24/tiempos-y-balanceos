@@ -261,8 +261,10 @@ Eso completa el ciclo de recuperación **sin intervención**, que es lo que hac�
 sucia terminara la tanda:
 
 ```bash
-python scripts/_arbVer.py reset      # cierra modales + WM_CLOSE + reabre + solapa Altas
+python scripts/_arbVer.py reset      # con Relaciones CERRADA: la abre por click y va a Altas
 ```
+⚠️ 25/09/2026: con Relaciones ABIERTA `reset` se niega. Cerrarla y reabrirla crasheó el arb dos
+veces (regla `arb-no-cerrar.md`); `reset --forzar` solo con OK de Fak.
 
 **`CANCELA` no limpia la celda sucia** cuando el rechazo vino de una validación del arb: se
 cliqueó dos veces y la ventana siguió clavada en la misma pieza con el valor escrito. Lo único
@@ -291,11 +293,12 @@ if not mod or not proc:      # el arb va a rechazar el renglon entero
 
 Ya estaba anotado que el foco queda ahí, pero no que **el cargador aborta por eso**:
 *"no veo la grilla de insumos: la ventana está en otra solapa"*. Entre el export y el
-`--apply` va siempre un `click 118 68` (solapa `Altas`). El comando `reset` ya lo hace.
+`--apply` va siempre un `click 118 68` (solapa `Altas`). `reset` no: con Relaciones abierta se niega.
 
 ⚠️ **22/09/2026: ese click puede dejar `Altas` elegida y VACÍA** (sin `Parte Superior` ni
 grilla; se ve en `_arbVer.py foto rel`). Ir a `Listado` y volver no la redibujó. Lo que la
-arregló fue cerrar y reabrir la ventana, y eso desató las dos fallas de abajo.
+arregló ese día fue cerrar y reabrir la ventana, y eso desató las dos fallas de abajo. Desde el
+25/09 cerrar Relaciones abierta pide OK de Fak (`reset --forzar`).
 
 ### 🔴 CARTEL OCULTO DETRÁS DE RELACIONES: `ENTRY failed with error 1400` `22/09/2026`
 
@@ -342,5 +345,8 @@ sin imprimir nada.
 ### `reset` no reabre si la ventana `Producción` está chica `22/09/2026`
 
 Con `Producción` en (10,10) y 1516×788, el click del ribbon de `reset` en (849,43) y
-(296,98) no abrió `Relaciones`, y no apareció ningún cartel. **`abrir()` de `_arbCargar.py`
-(teclado: `Alt V Y 0 3`) sí la abrió.** Ante la duda, reabrir por teclado.
+(296,98) no abrió `Relaciones`, y no apareció ningún cartel. Ese día la abrió `abrir()` de
+`_arbCargar.py`, que entonces tecleaba `Alt V Y 0 3`. Desde el 23/09 `abrir()` va por click:
+esas teclas mandadas sin mirar abrieron `Selección de Empresa`. Si el click no abre, mirar si el
+ribbon está minimizado (SKILL.md) o si `Producción` está chica, y preguntar antes de volver a
+los KeyTips.

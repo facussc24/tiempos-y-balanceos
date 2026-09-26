@@ -1,50 +1,33 @@
 ---
 name: arb-operar
-description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Claude — navegación, pantallas, y carga/modificación de consumos en Relaciones de Consumo. Usar cuando haya que cargar o corregir consumos en el arb, verificar una carga, o automatizar cualquier tarea repetitiva dentro del ERP. Complementa `carga-arb` (que arma QUÉ cargar) y `verificacion-consumos` (que valida los números); esta cubre CÓMO se opera el programa.
+description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Claude — navegación, pantallas, carga y corrección de consumos, altas y sustitución de líneas de BOM, y el maestro de insumos (alta de códigos, descripción, unidad). Usar cuando haya que escribir o verificar algo en el arb, o automatizar una tarea repetitiva dentro del ERP. Complementa `carga-arb` (que arma QUÉ cargar) y `verificacion-consumos` (que valida los números); esta cubre CÓMO se opera.
 ---
 
 # Operar el arb desde Claude
 
-> **Cambiar consumos: ANDA** — 14/14 el 05/08 · 16/16 el 06/08 · 36/36 el 07/08 ·
-> **31/31 el 20/08** (y ahí el robot aprendió a **recuperarse solo**: cierra el modal y
-> reabre la ventana sin pedirle nada a nadie — ver la tanda del 20/08).
-> **Dar de alta líneas: ANDA** (`scripts/_arbAlta.py`) — **31/31 el 07/08**, verificadas contra
-> el export y con 0 bajas en el diff de la base entera. Borrar líneas sigue fuera de alcance.
-> **Modificar un campo del MAESTRO DE INSUMOS: ANDA** — **31/08/2026**, `Es Sub-Producto`
-> de `TRO-TEL0001-V1`, diff del export entero 2 altas / 0 bajas / 0 cambios. Todo por
-> teclado: se TABULA, no se clickea por coordenada (ver la seccion nueva del 31/08).
-> **Dar de ALTA un CODIGO en el maestro: ANDA** — **15/09/2026**, `427VAR002TAP01`, primera
-> corrida del robot (hasta ese dia era "APRENDIDO", grabado de Fak pero nunca ejecutado).
-> En `Altas` el click por coordenada **tambien** falla en silencio: un solo click en `Rubro`
-> y de ahi TAB (ver `reference/maestro-de-insumos.md`).
-> **Sustituir el codigo de una linea: 5/5 el 15/09** — la bolsa de embalaje Patagonia en sus
-> 5 BOM, con una linea en la fila 7; diff de la base entera 6257 -> 6257, 0 fuera de lo pedido.
-> **Y la `Unidad` tambien: 11/11 el 22/09/2026** (`scripts/_arbUnidad.py`, vinilos Sansuy
-> MT2 -> MTL): diff de la base entera 7348 -> 7348, 32 lineas cambiadas y 0 fuera de los 11
-> codigos. Va SIEMPRE en la misma tanda que la conversion de consumos (`_arbCargar.py`): la
-> unidad es una sola para OC y BOM, y cambiarla sola deja los numeros viejos con la etiqueta nueva.
-> **Y la `Descripción` tambien: 3/3 el 01/09/2026** — 27 filas partidas del export → 0, con
-> 0 altas / 0 bajas / **0 consumos cambiados**. Ojo con los dos gates que la trababan:
-> `&Acepta` esta deshabilitado hasta que `Posee PAPP/PSW` tenga valor, y una tecla mandada
-> muy rapido **no llega y no da error** (ver la seccion del 01/09).
-> **Altas EN LOTE: ANDA** (`scripts/_arbAltaLote.py`) — **12/12 el 28/08 en 116 seg**, mismo
-> insumo en 12 BOM, diff de la base entera 12 altas / 0 bajas / 0 cambios.
+> **Qué anda, con qué script y cuándo se probó** (cada fila contra el export de la base entera;
+> la crónica de las tandas, con sus conteos y diffs: `reference/bitacora-tandas-2026-08.md`):
 >
-> **23/09/2026 — semiterminados de inyección de Patagonia, todo por robot** (diff de la base
-> entera 5503 → 5531: 59 altas, 31 bajas, 31 cambios, 0 fuera de la tabla):
-> - **Alta de CÓDIGOS en lote + leer la ficha entera + `Es Sub-Producto`**: `scripts/_arbInsumoCampos.py`
->   (`--leer`, `--alta tabla.csv --como <HERMANO>`, `--subproducto`). 12/12 altas y 2/2 flags, releídos.
->   El cartel de Visual C++ salió en CADA alta y el registro grabó igual: el script aprieta `Omitir`.
-> - **Alta en un producto SIN BOM**: `_arbAlta.traer_vacio()`. `ac.traer` manda TAB por mensaje, que
->   avanza de a dos, se pasa el `Rubro` vacío y el arb tira `No Ingreso Insumos`. Con TAB real, anda.
-> - **Reemplazar una línea ENTERA en el lugar** (código + cantidad + módulo + proceso): columnas
->   opcionales de `_arbSustituir.py`. Resina `KG INY` → semiterminado `1 UNID TAP`, 31/31, sin bajas.
-> - 🔴 **`_arbCargar.abrir()` tecleaba KeyTips A CIEGAS** (Alt V Y 0 3) si no veía Relaciones: con el
->   ribbon en otra solapa apretó `Selección de Empresa` (pidió la contraseña) y `About`. Ahora abre por
->   click (`reset_relaciones`). **Una tecla a ciegas aprieta lo que esté abajo; un click fallido no abre nada.**
-> - Al reabrir el arb el ribbon puede quedar **minimizado** (solo nombres de solapa): el click al botón no
->   abre nada. Se despliega con la flechita de la derecha, `click (1474, 42)` de `Producción`.
-> - El export deja Relaciones en la solapa `Listado`: **`reset` DESPUÉS de exportar**, no antes.
+> | Operación | Cómo | Probado |
+> |---|---|---|
+> | Cambiar consumos | `_arbCargar.py`; un modal con `Aceptar` lo cierra `_arbVer.py modal` | 31/31 el 20/08 |
+> | Cambiar la `Unidad` | `_arbUnidad.py`, en la MISMA tanda que la conversión de consumos: la unidad es una sola para OC y BOM | 11/11 el 22/09 |
+> | Dar de alta líneas | `_arbAlta.py`; en lote `_arbAltaLote.py`; en un producto SIN BOM `_arbAlta.traer_vacio()` | 31/31 el 07/08 · 12/12 el 28/08 |
+> | Sustituir el código de una línea (y, opcional, cantidad/módulo/proceso) | `_arbSustituir.py` | 5/5 el 15/09 · 31/31 el 23/09 |
+> | Alta de CÓDIGOS en el maestro, leer la ficha, `Es Sub-Producto` | `_arbInsumoCampos.py` (`--leer`, `--alta tabla.csv --como <HERMANO>`, `--subproducto`) | 12/12 y 2/2 el 23/09 |
+> | Cambiar la `Descripción` del maestro | `_arbDescripcion.py`; dentro del formulario se TABULA (`reference/maestro-de-insumos.md`) | 3/3 el 01/09 |
+> | Borrar líneas | — | fuera de alcance |
+>
+> Tres reglas de las tandas de septiembre:
+> - **Una tecla a ciegas aprieta lo que esté abajo; un click fallido no abre nada.** Las
+>   ventanas se abren por click (`_arbCargar.abrir()` → `reset_relaciones()`). Si el arb se
+>   reabrió con el ribbon **minimizado**, el click al botón no abre nada: desplegarlo con
+>   `click (1474, 42)` de `Producción`.
+> - El export deja Relaciones en la solapa `Listado`: se vuelve a `Altas` con
+>   `_arbVer.py click 118 68`, **no con `reset`** (con Relaciones abierta se niega; cerrarla
+>   crashea el arb).
+> - El cartel de Visual C++ sale en cada alta del maestro y el registro graba igual: el script
+>   aprieta `Omitir`.
 >
 > **Una limitación escrita por mí no es un hecho verificado.** Antes de anotar que algo "no se
 > puede", probarlo y fecharlo: las dos veces que esta skill lo dio por imposible (el scroll de la
@@ -71,9 +54,11 @@ interfaz.** Ver la sección de seguridad abajo antes de escribir nada.
 ## El arb no se cierra sin consultarle a Fak
 
 Regla dura (31/08/2026). **El estado por defecto es abierto**: cerrarlo lo puedo hacer yo,
-reabrirlo no. Lo que sí está permitido es `WM_CLOSE` sobre `Maestro de Insumos` / `Maestro de
-Relaciones` y `_arbVer.py reset`. El incidente, la tabla de lo prohibido y lo permitido, el escape
-y el hook: regla `arb-no-cerrar.md`, que carga sola al abrir este skill.
+reabrirlo no. Permitido: `WM_CLOSE` sobre `Maestro de Insumos` (descarta sin grabar) y
+`_arbVer.py reset` con `Maestro de Relaciones` CERRADA (solo la abre por click). **Cerrar
+Relaciones abierta crashea el arb** (dos veces el 25/09/2026): `reset` se niega sin `--forzar`,
+y `--forzar` va solo con OK de Fak. El incidente, la tabla completa, el escape y el hook: regla
+`arb-no-cerrar.md`, que carga sola al abrir este skill.
 
 ## Regla de oro
 
@@ -173,11 +158,9 @@ Al tabular aparecen la **descripción del producto** al lado del código y **tod
 la BOM**. Verificado en vivo contra el export `RELACIONES.TXT`: coincide fila por fila,
 código, unidad y consumo.
 
-**No es `Shift`+`↑`** (probado dos veces, no hace nada). ~~ni `Alt` (el ribbon no tiene
-KeyTips) ni las flechas para cambiar de solapa. La navegación del ribbon es con mouse~~ —
-**las tres afirmaciones eran falsas, corregido el 25/08/2026**: el ribbon SÍ tiene KeyTips
-(son ventanas `KbxLabelClass` y se leen), las flechas SÍ cambian de solapa una vez que `Alt`
-lo activó, y la navegación entera se hace por teclado. Ver "Navegación 100% por teclado".
+**No es `Shift`+`↑`** (probado dos veces, no hace nada). El ribbon tiene KeyTips (ventanas
+`KbxLabelClass`, se leen) y las flechas cambian de solapa una vez que `Alt` lo activó: ver
+"Navegación 100% por teclado".
 
 ## Mapa de teclas del programa `CONFIRMADO` (extraído del binario)
 
@@ -243,23 +226,17 @@ el `.exe` vive en `Z:\arb\prod\` y lo puede abrir cualquier máquina de la red.
 
 ## Exportar para verificar `CONFIRMADO`
 
-### La secuencia, en cuatro teclas `dato de Fak 2026-08-06`
-
-Estando en la solapa `Listado de Insumos de Un Producto`:
-
-```
-TAB  TAB            ← Desde Artículo → Hasta Artículo → combo Salida
-↓  ↓  ↓             ← baja 3 en el combo
-ENTER  ENTER  ENTER ← genera el archivo
+```bash
+python scripts/_arbVer.py export     # reintentar: el combo falla ~1 de cada 2
 ```
 
-**Esto es lo primero que hay que probar. Nada de pelearse con el combo.** Perdí ~10 minutos
-mandándole clicks y `WM_CHAR` al ComboBox: el click no le mueve el foco (el arb se lo queda
-en `Desde Artículo`) y la letra que tipeé terminó **escrita en el campo de filtro**. Tabular
-tampoco: el TAB desde ahí cae en un botón y se queda. Fak lo hace en cuatro teclas.
-
-> Ojo: lo probé por teclado sintético (`keybd_event`) y **no disparó el export**. Con teclado
-> real de Fak sí anda. Si hace falta automatizarlo, hay que medirlo — no darlo por hecho.
+Lo que hace, por si hay que hacerlo a mano: click en la solapa `Listado`, click en `Desde
+Artículo` (el click sobre el combo no le da el foco), `TAB TAB` hasta el combo `Salida`, `↑`×8
+para pararse en la opción 0 venga de donde venga, `↓`×3 hasta `Tabla EXcel`, y **recién con el
+combo diciendo `Tabla EXcel`**, `ENTER ENTER ENTER`. El combo vuelve a vacío cada vez que se
+entra a `Listado`, y desde vacío `↓↓↓` cae en **`Impresora`**: aceptar ahí manda el listado
+entero a la impresora de la oficina. El detalle y la espera hasta que el archivo termina de
+escribirse: `reference/fallas-modales-y-export.md` §"EXPORTAR: el combo se RESETEA".
 
 ### El combo y sus opciones
 
@@ -309,8 +286,8 @@ seleccionarse) pero **no dibuja los KeyTips**. Una vez leídos, la tecla sí se 
 Dentro de `V`: `Y01` ABM de Insumos · `Y02` Rubros · **`Y03` Relación de Consumo** ·
 `Y04` Depósitos.
 
-La secuencia que **funciona** (probada de punta a punta el 25/08, abrió `Maestro de
-Relaciones - BA` sin un solo click sobre un control):
+La secuencia (probada de punta a punta el 25/08, abrió `Maestro de Relaciones - BA` sin un
+solo click sobre un control):
 
 ```
 click en la BARRA DE TITULO     <- da foco de teclado sin tocar nada; ver abajo
@@ -318,6 +295,11 @@ Alt                             <- activa el ribbon
 V                               <- solapa Menu de Insumos
 Y  0  3                         <- Relacion de Consumo  (TRES teclas, no dos)
 ```
+
+⚠️ **Para ABRIR Relaciones no se usa** (23/09/2026): mandada sin mirar dónde caía, con el ribbon
+en otra solapa, apretó `Selección de Empresa` (pide la contraseña de Fak) y `About`. Se abre por
+click (`_arbCargar.abrir()` → `reset_relaciones()`). Los KeyTips sirven leídos en vivo
+(`_arbKeytips.py`), no tecleados de memoria.
 
 **El click en la barra de título es la forma segura de dar foco.** Ya estaba anotado que sólo
 un click real da foco de teclado; lo que faltaba es que **no hace falta clickear un control**
@@ -357,7 +339,8 @@ Nace del TPO del Top Roll: 0,2526 / 1,4 cargado el 20/08 con un 1,4 sin papel, r
 835 mm y el pedido de Carlos del 17/07 sin mirar (memoria `reference_tabla_consumo_mesa_corte`).
 
 ```
-_arbVer.py reset                   abrir por CLICK (solapa + boton). NUNCA KeyTips a ciegas (23/09, arriba)
+Relaciones CERRADA: _arbVer.py reset        la abre por CLICK (solapa + boton). NUNCA KeyTips a ciegas
+Relaciones ABIERTA: _arbVer.py click 118 68 solapa Altas (reset se niega: cerrarla crashea el arb)
 gate: ¿estoy en la solapa Altas?   si no hay grilla, ABORTAR — no escribir a ciegas
 CLICK en Parte Superior            <- click, NO tabular (por que: reference/bitacora-tandas-2026-08.md)
 escribir el codigo CON FOCO        <- o se pierde el guion
@@ -378,7 +361,7 @@ de la grabación y confirmada en vivo — son **5 celdas tabulables por fila, no
 | `Parte Superior` | botón `&Acepta`, con `N` insumos | **`5*N + 2`** |
 
 `Descripción` y `U.M.` existen como controles (por eso `Cantidad` es el índice 4 al leer)
-pero **no reciben el foco**. La versión vieja decía "insumos × 7 columnas": estaba mal.
+pero **no reciben el foco**.
 
 **El conteo es la predicción, no la orden.** Después de cada TAB se lee el control con foco y
 se compara su contenido contra la BOM del export. A la primera discrepancia se aborta **sin
@@ -401,8 +384,8 @@ verificación por contenido pasa de ser previa a ser *al llegar*. Detalle en
 | **escribir** (`WM_CHAR` dirigido) | **SÍ, siempre** — ver abajo |
 | **recorrer con TAB** | **SÍ** — `GetGUIThreadInfo` devuelve `None` si la ventana no está activa |
 
-> ⚠️ **La versión vieja de esta tabla decía que escribir NO necesitaba foco. Estaba mal, y
-> era la razón de fondo por la que las cargas "entraban" y no grababan.** Medido el
+> ⚠️ **Sin foco, lo escrito se ve en pantalla y no se graba** (era la razón de las cargas que
+> "entraban" y no grababan). Medido el
 > 05/08 sobre el campo `Parte Superior`: sin foco, un código `NN-NNNN` queda **`NNNNNN`** —
 > se pierde el guión; con foco entra entero. En una celda de la grilla es peor: el valor se ve en
 > pantalla y **vuelve solo al viejo** en cuanto el recorrido pasa por ahí.
@@ -532,7 +515,10 @@ modal se detecta enumerando ventanas, y el export pre-cambio se guarda o no se g
 estos seis pasos van **antes de cualquier `--apply`**, siempre, sin decidir cada vez.
 
 ```
-1. ¿hay un #32770 abierto?            -> abortar, pedir el click real
+1. ¿hay un #32770 abierto?            -> abortar y LEER el cartel. `_arbVer.py modal` lo imprime y
+                                         cierra los que tienen Aceptar/OK; el que no (Visual C++),
+                                         con la tabla de reference/fallas-modales-y-export.md
+                                         (`Omitir`, nunca `Anular`)
 2. ¿el CSV tiene valor_nuevo con PUNTO? -> si tiene coma, abortar
 3. ¿el export que genero la tabla es el PRE-CAMBIO? -> si se regenero a mitad, rehacerla
 4. export fresco guardado en .arb-cache/pre-cambio/
@@ -548,7 +534,7 @@ sin correrlo). La crónica de dónde salió cada uno: `reference/bitacora-tandas
 
 1. ⚠️ **NO HAY BACKUP DE DATOS DEL ARB.** `Z:\arb\prod\BAK` tiene sólo archivos `.DTF`
    (definiciones de tabla, 1996-2019) — **no datos**; los datos viven en el servidor
-   Pervasive, fuera de alcance por red. La versión vieja de esta skill lo daba por backup.
+   Pervasive, fuera de alcance por red.
    **El único respaldo es el export**: guarda el valor anterior de cada celda, así que un
    consumo mal cargado se deshace tipeando el viejo. **Un alta no se deshace así**, por eso va de
    a una, con foto antes del ENTER y verificada contra el export (`_arbAlta.py`, `_arbAltaLote.py`).

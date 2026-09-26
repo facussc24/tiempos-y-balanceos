@@ -5,19 +5,19 @@ description: Declarar materiales en IMDS (International Material Data System, md
 
 # IMDS — declaracion de materiales
 
-> **Estado al 21/09/2026: CARGAR UNA NORMA EN UN MATERIAL, ANDA.** Primera corrida real ese
-> dia sobre `NO TEJIDO 100 Gr` (1017903710): version nueva 1.01 + norma Toyota
-> `TSL2603G-2BN-100g/m²` + recyclate, guardado y verificado reabriendo el MDS desde la base.
-> El checker bajo de **2 errores a 1**. El que queda no es mio: **no hay Contact Person
-> valido** (ver §"Los tres muros" mas abajo).
-> **Una limitacion que escribi yo no es un hecho verificado**: antes de anotar que algo
-> "no se puede", probarlo y fecharlo.
+> **Una limitacion escrita aca no es un hecho verificado**: antes de anotar que algo "no se
+> puede", probarlo y fecharlo. El estado de cada carga (que se mando, que acepto el cliente,
+> que falta) vive en la memoria `project_imds_barack`, no en este skill.
 
 IMDS es donde la industria automotriz guarda **la composicion quimica de cada pieza** que se
 le entrega. Barack carga; el cliente acepta o rechaza. Sin IMDS aceptado **no hay PPAP
 aprobado**, asi que un IMDS trabado frena la entrega de la pieza.
 
-Lo cargaba Calidad (Marcelo Nieve). Renuncio el 02/09/2026 y paso a Ingenieria.
+El IMDS es de **Calidad** (regla `autonomy-contract.md` §F y `mail-envio.md`; Fak, 26/09/2026:
+*"el imds es de calidad pero podria llegar a hacerlo algun dia"*). Lo cargaba Marcelo Nieve, que
+renuncio el 02/09/2026. Se toca solo cuando Fak lo pide para una pieza puntual (la primera carga,
+a pedido suyo, fue el 21/09/2026): no se le lista como pendiente suyo ni se nombra en un mail de
+Ingenieria.
 
 ---
 
@@ -154,9 +154,11 @@ deduce, no se completa "con algo parecido".
 sending to company 10674 only)"* (pag. 239). **Si la pieza termina en Toyota y el material no
 tiene norma, el MDS no pasa.** Esa es la causa tipica de un rechazo en las telas de PWA.
 
-### Si el material ya esta released y le falta la norma — NO hace falta versionar
+### Si el material ya esta released y le falta la norma
 
-Esta es la salida que el manual contempla y la que conviene (pag. 55-56):
+El manual contempla una salida sin versionar (pag. 55-56), pero **en Release 15.4 no aparecio**
+en la pestaña *Recipient data* del componente (21/09/2026): lo que funciono fue versionar el
+material ("Los tres muros", muro 2). Lo que dice el manual, por si aparece:
 
 > *"Under Recipient Data the originally selected norms for the Material MDS are listed. The
 > Tier1 supplier may overwrite the norms as recipient-specific data… **For those Material MDSs
@@ -407,7 +409,7 @@ nodo nuevo queda agregado igual**. Por eso el orden correcto es **Delete del vie
 **Estado al 21/09/2026: el `Delete` de la barra del arbol no se logro disparar en remoto**
 (clic real, por codigo y clic derecho). Agregar, escribir pesos y guardar SI andan.
 
-### El buscador del arbol vive en un IFRAME y tiene dos trampas
+### El buscador del arbol vive en un IFRAME y tiene tres trampas
 
 1. **Esta en un `<iframe>`** (`j_id<NN>::f`), asi que no aparece en el DOM principal: hay que
    entrar por `contentDocument`. Buscar sus campos en el documento de afuera da vacio y parece

@@ -1,6 +1,6 @@
 ---
 name: ppap-motherson
-description: Como se arma y se manda un PPAP para SMRC / Motherson (Reydel) — la estructura de carpetas que pide el cliente, que va en cada una y quien la hace, la SLT de embalaje, el AMFE y el flujograma en PDF, la auditoria antes de mandar y el mail al SQE. Usar cuando Fak diga "PPAP de SMRC / Motherson / Capuana / Reydel", cuando llegue un mail del SQE de SMRC con carpetas del PPAP, SLT, FCR, AAR, MSA o PSW, o al armar el legajo de una pieza nueva de SMRC. Nace del PPAP del APB P21 hilo naranja MY2026 (23/09/2026).
+description: Como se arma y se manda un PPAP para SMRC / Motherson (Reydel) — la estructura de carpetas que pide el cliente, que va en cada una y quien la hace, la SLT de embalaje, el AMFE y el flujograma en PDF, la auditoria antes de mandar y el mail al SQE. Usar cuando Fak diga "PPAP de SMRC / Motherson / Capuana / Reydel", cuando llegue un mail del SQE de SMRC con carpetas del PPAP, SLT, FCR, AAR, MSA o PSW, o al armar el legajo de una pieza nueva de SMRC.
 ---
 
 # PPAP para SMRC / Motherson — como se carga
@@ -17,7 +17,7 @@ description: Como se arma y se manda un PPAP para SMRC / Motherson (Reydel) — 
 |---|---|
 | **El cliente (SQE de SMRC)** | Manda la estructura vacia del paquete (`PPAP Standard Folder.zip`), el LSC, el plano, el FCR firmado, el AAR aprobado, la SLT de la variante anterior, el plan de control generico, las normas, los MSA y el dimensional viejos, y el PSW |
 | **Ingenieria (Fak)** | Flujograma, AMFE, SLT (con logistica), el orden de la carpeta y el mail al SQE. Fak: *"prepara el PPAP en el servidor Y, ayudame con eso"* |
-| **Calidad** (Manuel Meszaros; Cecilia Rodriguez y Agustin Aguayo para MSA/dimensional) | Plan de control, R&R/MSA, dimensional, capacidad, ensayos, PSW (firma), IMDS, CSR firmados |
+| **Calidad** (Manuel Meszaros; Cecilia Rodriguez y Agustin Aguayo para MSA/dimensional) | Plan de control, R&R/MSA, dimensional, capacidad de proceso (Ppk), ensayos, PSW (firma), IMDS, CSR firmados |
 | **Logistica** (Luciano Lo Castro, Responsable de Logistica) | Paletizado y firma de proveedor de la SLT |
 
 Lo de otra area **no se le lleva a Fak como tarea suya** (regla `autonomy-contract.md` §F). Cuando
@@ -62,7 +62,7 @@ Y:\BARACK\CALIDAD\DOCUMENTACION SGC\PPAP CLIENTES\REYDEL-SMRC\<pieza>\<variante>
 | 06 Process FMEA | AMFE en PDF (§4) | Ingenieria |
 | 07a/07b/07c | Planes de control / safe launch. SMRC manda uno "generico" para actualizar | Calidad |
 | 08 R&R · 09 Dimensional | MSA y RMCP de la variante anterior "para actualizar": se reenvian a Calidad | Calidad |
-| 11 Capability · 17a Run-at-Rate | Estudio de capacidad y Performance Test Corp-8.3.4: **por sectores**, con la demanda de la carta (volumen anual y capacidad semanal); dudas al SQE | Ingenieria + planta |
+| 11 Capability · 17a Run-at-Rate | Capacidad **productiva** (no Ppk) y Performance Test Corp-8.3.4: **por sectores**, con la demanda de la carta (volumen anual y capacidad semanal); dudas al SQE | Ingenieria + planta |
 | 13 AAR | El AAR aprobado (puede ser del panel de puerta completo; vale si aprueba el material/color de esta pieza): vuelve en el paquete | cliente |
 | 14/15 Muestras | Muestra patron firmada internamente + foto al cliente, **una por part number** (RH y LH) | Calidad |
 | 17 CSR signed | Requisitos especificos del cliente firmados (los tiene Calidad; guardarlos tambien en el SGC) | Calidad |

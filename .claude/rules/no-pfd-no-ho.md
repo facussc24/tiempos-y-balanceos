@@ -34,10 +34,14 @@ historica de solo lectura.
   `hojas-de-proceso` §3 bis). **El número es de la hoja, no del código, y no se pasa de 999**:
   `python scripts/_hoNumeros.py` antes de dar uno. Lo prohibido es **ofrecerlas por cuenta
   propia**. Enforcement: hook `ho-numeracion-guard.sh`.
-- Los pasos de una HO son instruccion de planta: sin documento fuente van **TBD**. No se
+- Los pasos de una HO son instruccion de planta, y **en la descripcion no va ningun `TBD`**
+  (Fak, 24/09/2026: *"no puede haber ni 1 TBD... el TBD del numero de hoja si"*). Lo que no se
+  sabe se escribe generico con lo que hay, sin inventar un valor, y el hueco va a la lista de
+  pendientes y al mail; el `TBD` queda solo en el cajetin (skill `hojas-de-proceso`). No se
   redactan por analogia con otra pieza "parecida" (`core-prohibiciones` §1). El listado
   maestro (`3- LISTADO\Listado hojas de proceso.xlsx` + hoja oculta `_CONTEXTO_CLAUDE`) manda
-  la numeracion de HO y se actualiza en la misma tanda.
+  la numeracion de HO; la fila nueva se prepara en la misma tanda y se escribe con el OK de Fak
+  (registro compartido: `autonomy-contract.md` §F).
 - `ho_documents` y `hoRepository`: referencia historica, capa de lectura. Los tipos
   (`pfdTypes.ts`, `hojaOperacionesTypes.ts`) quedan para leer historicos.
 

@@ -109,7 +109,7 @@ Reportar dependencias faltantes o conflictos.
 ```
 
 ## Reglas del auditor
-- **DETECT-ONLY (decision Fak 2026-07-14):** NUNCA editar archivos ni datos. Solo leer y reportar. Las correcciones las decide y ejecuta la sesion principal con OK de Fak.
+- **DETECT-ONLY (decision Fak 2026-07-14):** no editas codigo, datos ni documentos: lees y reportas. Lo unico que escribis es tu `MEMORY.md` y, si el prompt te lo pide, el archivo del informe. Las correcciones las decide y ejecuta la sesion principal con OK de Fak.
 - NO consultar fuentes externas (las reglas criticas ya viven en `.claude/rules/amfe.md`).
 - NUNCA inventar hallazgos. Todo debe ser verificable con comandos.
 - Si todo esta OK, decirlo claramente: "Auditoria limpia, sin hallazgos."
@@ -117,11 +117,9 @@ Reportar dependencias faltantes o conflictos.
 
 ## Checks detallados AMFE (auditoria de datos, no solo codigo)
 
-Cuando Fak pida "auditoria" o "auditar" de un AMFE/CP, ejecutar este protocolo. (PFD/HO no se hacen mas aca — regla `no-pfd-no-ho.md`; sus docs en Supabase son referencia historica y NO se auditan proactivamente.) Los agentes lanzados en paralelo deben recibir el prompt con la lista EXPLICITA de checks — asumir que el agente "ya sabe" es error recurrente.
+Si el prompt te pide auditar datos de un AMFE/CP, este es el protocolo. Los PFD y HO de Supabase son referencia historica: no se auditan.
 
-### Reglas criticas para prompts de co-auditores
-
-**INCIDENTE 2026-04-09:** agentes no detectaron `operationFunction` vacio en 17 OPs porque el prompt no listaba ese check. Regla: el prompt DEBE listar TODOS los checks explicitamente:
+### Checks obligatorios (el reporte dice el resultado de cada uno)
 
 - **C-FEF:** `focusElementFunction` no vacio en toda OP con workElements.
 - **C-OPFUNC:** `operationFunction` no vacio en toda OP con workElements.
@@ -136,7 +134,7 @@ Cuando Fak pida "auditoria" o "auditar" de un AMFE/CP, ejecutar este protocolo. 
 - **C-FIELD:** failure modes estan en `fn.failures`, NO en `fn.failureModes`. Path correcto: `op.workElements[].functions[].failures[].causes[]`.
 - **C-ORPHAN:** todo componente React con `export default` debe ser importado y renderizado. `grep -rn "import.*ComponentName" modules/` — si 0 resultados, BLOCKER (componente huerfano = funcionalidad invisible).
 
-**INCIDENTE 2026-04-12:** tres agentes contaron 0 causas en maestro inyeccion (real: 65). Causas: campo `failureModes` (incorrecto) y falta de autenticacion. Por eso C-AUTH y C-FIELD son obligatorios.
+C-AUTH y C-FIELD son obligatorios: sin autenticar, RLS devuelve 0 filas; y el camino es `failures`, no `failureModes`.
 
 ### Protocolo de checks AMFE
 
@@ -152,17 +150,20 @@ Cuando Fak pida "auditoria" o "auditar" de un AMFE/CP, ejecutar este protocolo. 
    - Todo failure tiene 3 efectos VDA NO vacios — BLOCKER.
    - Toda causa con S/O/D completos tiene AP calculado con tabla oficial.
 
-3. **Calibracion severidades** (ver rules/amfe.md)
-   - S=9-10 solo para: flamabilidad, VOC, airbag, bordes filosos, seguridad usuario.
-   - S=9-10 por seguridad del **operador** NO lleva CC (se gestiona con EPP).
+3. **Calibracion severidades**: la S sale del EFECTO por la Tabla P1 (rules/amfe.md §1 y §13).
+   Reportar la S que el texto del efecto no sostiene, para arriba o para abajo — el §2bis de
+   caracteristicas-especiales.md (S inflada para sostener una sigla) no tiene check automatico
+   y lo tiene que ver este auditor.
 
-4. **CC/SC — NO auditar** (Fak decide personalmente)
-   - NO reportar CC% ni SC% como problema.
-   - NO sugerir que items deberian tener CC/SC.
+4. **CC/SC — asignar es de Fak**
+   - No sugerir que items deberian tener o perder una CC/SC, ni reportar CC% / SC%.
+   - SI reportar lo que el validador marca CRITICAL, porque frena el --apply y el export:
+     `CAUSE_CC_LOW_SEVERITY`, `CAUSE_SC_FUERA_DE_REGLA`, `SIGLA_DESCONOCIDA`.
 
 5. **Acciones de optimizacion — NO auditar**
-   - NO reportar AP=H sin acciones como problema (Fak decide).
-   - `.claude/rules/amfe.md` §4 cubre el placeholder.
+   - Un AP=H con la accion vacia es estado valido (rules/amfe.md §4): no se reporta.
+   - SI se reporta el texto `Pendiente definicion equipo APQP` en cualquier campo: esta
+     prohibido (`CAUSE_APH_PLACEHOLDER_PROHIBIDO`).
 
 6. **Usabilidad (UX)**
    - Todo documento visible desde UI sin trucos/filtros especiales.
@@ -176,7 +177,7 @@ Cuando Fak pida "auditoria" o "auditar" de un AMFE/CP, ejecutar este protocolo. 
 
 ### Principios
 
-- **Rol estatico:** si detectas un check faltante o uno que genera falsos positivos recurrentes, SUGERILO en el reporte final — NO edites este archivo ni ningun otro.
+- **Rol estatico:** si detectas un check faltante o uno que genera falsos positivos recurrentes, SUGERILO en el reporte final — NO edites este archivo.
 - **Propagacion (solo deteccion):** si un error en 1 documento puede afectar a OTROS del mismo tipo, verificar TODOS y reportar la lista completa de afectados. La correccion la decide la sesion principal.
 - **Verificacion post-sesion:** cambios guardados correctamente, scripts creados funcionan, backup reciente (<5 min), lecciones aprendidas actualizadas si hubo errores.
 
