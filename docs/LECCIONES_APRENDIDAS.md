@@ -13,6 +13,7 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **28/09 — Cuando el arb no deja seguir, lo primero es el CARTEL, no mi teoría:** `_arbUnidad` dijo "no llegué a PAPP" y armé una traza de campos vacíos; la causa era un modal *"Unidad Esta Anulado"* (Fak: *"si tomaras capturas te darías cuenta"*). Graduado a `_arbDescripcion.por_que_no_avanza()` (foto + texto del cartel en el mensaje de falla) y, la regla de fondo (BOM en unidades, nunca en envase), al canon `unidades_empaque` + freno en `_arbUnidad.py`.
 - **25/09 — Un estado que alguien escribió en un mail vale con su FECHA: va con quién lo dijo y cuándo (y el mail adjunto), o no va.** Graduado a la memoria `la_fecha_del_archivo_no_es_la_fecha_del_documento`.
 - **25/09 — En el servidor del SGC va solo lo OFICIAL, en su lugar; lo no oficial va a la nube de Ingeniería.** Cree `HOJAS DE OPERACIONES\0- FORMATO A3` para el formato nuevo: *"no podes ir guardando los formatos donde se te cante"*. Graduado a `autonomy-contract.md` §F.
 - **25/09 — Guardar por COM un libro ajeno para cambiar UNA celda se tiró imágenes "en celda" en 17 HO** (lo vio el respaldo, no el conteo de fotos). Graduado al skill `hojas-de-proceso` §3 bis.

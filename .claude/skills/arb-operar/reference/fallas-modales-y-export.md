@@ -6,6 +6,20 @@ tanda fallo o cuando aparece un cartel que no reconozco. El flujo normal esta en
 > Dos secciones se corrigen entre si a proposito: el modal y la ventana se daban por imposibles de
 > manejar el 07/08 y el 20/08 se probo que no. La version vigente es siempre la de fecha mayor.
 
+### `Error: Unidad Esta Anulado` — la unidad CAJ no se puede asignar `visto 2026-09-28`
+
+Al cambiar la `Unidad` de un insumo a `CAJ` en el maestro, el arb abre un `#32770` titulado
+`Error` con *"Unidad Esta Anulado"* y el TAB no avanza. El script lo veía como "no llegué a
+Posee PAPP/PSW" y lo diagnostiqué como campos vacíos: **el cartel se lee primero**. Desde ese
+día `_arbDescripcion.por_que_no_avanza()` saca la foto (`arb_fotos/fallo_maestro.png`), pone
+el texto del cartel en el mensaje de falla y lo cierra con `Aceptar`. Los códigos que YA
+estaban en `CAJ` (ej. la grampa 84/06) la conservan; lo anulado es asignarla. Y de todas
+formas un envase no va en la BOM: canon `unidades_empaque` (Fak, 28/09/2026).
+
+Un registro viejo del maestro (2019) puede tener vacíos `Tiene Vencimiento` / `Tipo de
+Descarga` (OP, Granel, Indirecto) / `Origen Descarga` (Módulo, Línea): el TAB también se clava
+ahí sin cartel. El mensaje de falla dice en qué campo quedó.
+
 ### El arb puede tirar `HEAP CORRUPTION DETECTED` `visto 2026-08-06`
 
 Cartel `Microsoft Visual C++ Runtime Library` → *"Debug Error! … HEAP CORRUPTION DETECTED …

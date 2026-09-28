@@ -187,6 +187,49 @@ def tabular_hasta(h, xy):
     return None
 
 
+# Campos del registro donde el TAB se puede clavar (posicion relativa a la ventana)
+CAMPOS_XY = {(194, 311): 'Unidad', (459, 311): 'Doble Medida', (194, 454): 'Es Sub-Producto',
+             (194, 482): 'Tiene Vencimiento', (459, 482): 'Tipo de Descarga',
+             (640, 482): 'Origen Descarga', (194, 511): 'Posee PAPP/PSW'}
+
+
+def carteles():
+    """[(titulo, texto)] de los #32770 visibles del arb. Se leen, no se adivinan."""
+    out = []
+    for m in [x for x in av.ventanas() if av.cls(x) == '#32770']:
+        partes = []
+
+        def cb(hh, _l):
+            if av.cls(hh) == 'Static' and av.txt(hh).strip():
+                partes.append(' '.join(av.txt(hh).split()))
+            return True
+        u.EnumChildWindows(m, av.CB(cb), 0)
+        out.append((av.txt(m), ' | '.join(partes)))
+    return out
+
+
+def por_que_no_avanza(h):
+    """Cuando el TAB no llega: PRIMERO el cartel (28/09/2026: 'Unidad Esta Anulado' tapado
+    por un 'no llegue a PAPP'; Fak: *"si tomaras capturas te darias cuenta"*), despues el
+    campo donde quedo el foco. Deja la foto en arb_fotos/fallo_maestro.png."""
+    try:
+        av.foto(h, 'fallo_maestro')
+    except Exception:
+        pass
+    c = carteles()
+    if c:
+        av.cerrar_modales()
+        return 'CARTEL DEL ARB: ' + '; '.join('%s: %s' % x for x in c)
+    f = ai.foco(h)
+    if not f:
+        return 'sin foco'
+    r, base = ai.rect(f), ai.rect(h)
+    xy = (r.l - base.l, r.t - base.t)
+    campo = next((n for (x, y), n in CAMPOS_XY.items()
+                  if abs(xy[0] - x) < 8 and abs(xy[1] - y) < 8), 'campo en %s' % (xy,))
+    return 'el TAB se clavo en %s = %r (vacio y obligatorio?)' % (campo, _texto(f))
+
+
 def aceptar(h, forzar_papp=True):
     """Desde cualquier campo del registro: completa PAPP, cae en &Acepta y graba.
     `forzar_papp=False` solo lo llena si esta VACIO (un N queda N): para quien cambia otro
@@ -195,8 +238,9 @@ def aceptar(h, forzar_papp=True):
     # Posee PAPP/PSW: sin valor, &Acepta queda deshabilitado y el TAB se clava aca.
     hpapp = tabular_hasta(h, PAPP_XY)
     if not hpapp:
+        motivo = por_que_no_avanza(h)
         cerrar()
-        return False, 'no llegue a Posee PAPP/PSW — cerrado sin grabar'
+        return False, 'no llegue a Posee PAPP/PSW (%s) — cerrado sin grabar' % motivo
     papp_hoy = _texto(hpapp).strip()
     if papp_hoy != PAPP_VALOR and (forzar_papp or not papp_hoy):
         papp = _reemplazar(h, hpapp, PAPP_VALOR)

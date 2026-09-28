@@ -162,5 +162,21 @@
       "que": "carga en el arb"
     }
   ],
-  "guard_excluir_rutas": "[\\\\/](memory|hooks|__tests__|_lib)[\\\\/]|LECCIONES_APRENDIDAS|MEMORY\\.md|\\.claude[\\\\/]rules|\\b(feedback|reference|project)_[a-z0-9_]{6,}"
+  "guard_excluir_rutas": "[\\\\/](memory|hooks|__tests__|_lib)[\\\\/]|LECCIONES_APRENDIDAS|MEMORY\\.md|\\.claude[\\\\/]rules|\\b(feedback|reference|project)_[a-z0-9_]{6,}",
+  "unidades_empaque": {
+    "regla_corta": "En la BOM y el APQP la cantidad va en una unidad que se entiende sola (unidades, m2, metros, kg), nunca en un envase (caja, bolsa, paquete).",
+    "regla": "Un insumo que se compra por envase (grampas por caja) se carga en la BOM y en el maestro por lo que lleva la pieza: 36 grampas, no una fraccion de caja. El que lee el APQP no sabe cuanto trae cada caja. La conversion a envase es de Compras, con el contenido que da el proveedor. Excepcion a 'BOM = maestro = factura' (unidades_tres_fuentes).",
+    "envases": [
+      "CAJ",
+      "CAJA",
+      "CAJON",
+      "BOL",
+      "BOLSA",
+      "PAQ",
+      "PAQUETE",
+      "BLISTER"
+    ],
+    "enforcement": "scripts/_arbUnidad.py no pasa un insumo a una unidad de esta lista con --apply.",
+    "fuente": "Fak 28/09/2026, grampas de Patagonia: 'es mejor dejar en el sistema la cantidad de grampas en unidades porque si ponemos en caja alguien que lee el apqp no va a saber cuantas grampas trae cada caja'. Ademas la unidad CAJ esta anulada en el arb ('Unidad Esta Anulado')."
+  }
 }

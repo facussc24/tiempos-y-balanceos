@@ -48,6 +48,12 @@ def _traer_unidad(codigo):
     return h, hu, desc, ad._texto(hu).strip()
 
 
+def envases_prohibidos():
+    import json
+    with open(os.path.join(_AQUI, '_lib', 'consumosCanon.data.json'), encoding='utf-8') as fh:
+        return {x.upper() for x in json.load(fh)['unidades_empaque']['envases']}
+
+
 def leer(codigo):
     h, hu, desc, unidad = _traer_unidad(codigo)
     ad.cerrar()
@@ -115,6 +121,15 @@ def main(argv):
         print()
         if rojo and apply_:
             print('FRENADO: la tabla tiene rojos de respaldo (arriba). No se escribio nada.')
+            return 1
+        # Un envase no es una unidad de BOM: el que lee el APQP no sabe cuanto trae una caja
+        # (Fak 28/09/2026, grampas; canon `unidades_empaque`).
+        envases = envases_prohibidos()
+        a_envase = [r[0].strip() for r in filas if r[2].strip().upper() in envases]
+        if a_envase and apply_:
+            print('FRENADO: %s pasaria(n) a un envase (%s). En la BOM va la cantidad en unidades, '
+                  'm2, metros o kg; la conversion a envase es de Compras (canon unidades_empaque). '
+                  'No se escribio nada.' % (', '.join(a_envase), ', '.join(sorted(envases))))
             return 1
         print('%d codigo(s)  |  modo %s\n' % (len(filas), 'APPLY' if apply_ else 'dry-run'))
         malas = []
