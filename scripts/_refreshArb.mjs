@@ -16,6 +16,12 @@
  *  - El offset del arbol se leyo mal (+9 en vez de +7) y se perdian 858 sub-ensambles.
  *  - Aparecieron 3 pares de codigos con descripcion identica al cortarse en 60 caracteres,
  *    un duplicado por NBSP invisible al final del codigo, y un codigo con 2 unidades.
+ *  - 30/09/2026: el INSUMOS.TXT exportado desde el 28/08 es el LISTADO IMPRESO, no el tabulado: el
+ *    parser daba 0 insumos y insumos.csv quedo en 25 bytes. Ahora lee los dos formatos; del listado
+ *    sale el codigo y la descripcion, y la unidad solo de los que aparecen en alguna BOM.
+ *
+ * Para CONSULTAR un consumo no hace falta este script: `python scripts/_consumo.py` lee el export
+ * directo (parser unico en scripts/_lib/arbRelaciones.py).
  */
 
 import fs from 'node:fs';
@@ -63,7 +69,48 @@ function parseArticulos(src) {
   return out;
 }
 
+/**
+ * INSUMOS.TXT viene en DOS formatos y el arb elige segun como se exporte:
+ *  - 'tabulado': columnas separadas por TAB con U.Medida (el que se necesita).
+ *  - 'listado':  el reporte impreso "Listado de Insumos BA" (marcos, "Hoja N", columnas fijas). NO trae
+ *                unidad. Es el que quedo exportado desde el 28/08/2026: hasta el 30/09 el parser lo leia
+ *                como tabulado, daba 0 insumos y .arb-cache/insumos.csv quedo en 25 bytes (solo la cabecera).
+ */
+function formatoInsumos(src) {
+  const primera = src.lineas.find((l) => l.trim());
+  if (!primera) return 'vacio';
+  return (primera.match(/\t/g) || []).length >= 4 ? 'tabulado' : 'listado';
+}
+
+/**
+ * Listado impreso: rubro en las columnas 0-4, codigo en la 5-23, descripcion desde la 24; la descripcion
+ * larga sigue en las lineas de abajo. Los marcos son caracteres de cp437 leidos como cp1252: bordes con
+ * una tira de A con dieresis y renglones que abren y cierran con ³ (una letra suelta de esa lista en una
+ * descripcion, como "M³", NO es un marco). No trae unidad: queda ''.
+ */
+function parseInsumosListado(src) {
+  const out = [];
+  let ultimo = null;
+  const esMarco = (s) => /Ä{3,}/.test(s) || /^\s*³.*³\s*$/.test(s);
+  for (const ln of src.lineas) {
+    const s = ln.replace(/\s+$/, '');
+    if (!s.trim() || esMarco(s) || s.startsWith('\x1b') || /^\s*Hoja\s+\d+/.test(s)) {
+      if (esMarco(s)) ultimo = null;
+      continue;
+    }
+    if (s.length > 24 && /^\s*\d{1,2}\s*$/.test(s.slice(0, 5)) && s.slice(5, 24).trim()) {
+      ultimo = { codigo: s.slice(5, 24).trim(), descripcion: s.slice(24).replace(/\r/g, ' ').trim(), unidad: '', rubro: s.slice(0, 5).trim() };
+      out.push(ultimo);
+    } else if (ultimo) {
+      const extra = s.replace(/\r/g, ' ').trim();
+      if (extra) ultimo.descripcion = `${ultimo.descripcion} ${extra}`.trim();
+    }
+  }
+  return out;
+}
+
 function parseInsumos(src) {
+  if (formatoInsumos(src) === 'listado') return parseInsumosListado(src);
   const out = [];
   for (const ln of src.lineas.slice(1)) {
     if (!ln.trim()) continue;
@@ -167,7 +214,7 @@ function parseRelaciones(src) {
 }
 
 // ---------------------------------------------------------------- chequeos de salud
-function chequear(articulos, insumos, rel) {
+function chequear(articulos, insumos, rel, formato = 'tabulado') {
   const problemas = [];
   const push = (tipo, detalle) => problemas.push({ tipo, detalle });
 
@@ -212,8 +259,18 @@ function chequear(articulos, insumos, rel) {
   }
 
   // 4. insumos sin unidad: sus lineas de BOM salen sin unidad
-  for (const i of insumos.filter((x) => !x.unidad)) {
-    push('insumo sin unidad', `${i.codigo} — ${i.descripcion.slice(0, 44)}`);
+  if (formato === 'listado') {
+    // el reporte impreso no tiene la columna: no son 1 por 1 "sin unidad", es un solo hecho
+    const sin = insumos.filter((x) => !x.unidad).length;
+    push(
+      'INSUMOS.TXT es el listado impreso, sin columna de unidad',
+      `${sin} de ${insumos.length} insumos sin unidad conocida (solo se completa la de los que estan en alguna BOM); ` +
+        're-exportar INSUMOS como tabulado para tener el maestro completo'
+    );
+  } else {
+    for (const i of insumos.filter((x) => !x.unidad)) {
+      push('insumo sin unidad', `${i.codigo} — ${i.descripcion.slice(0, 44)}`);
+    }
   }
 
   // 5. BOM que referencia un codigo que no esta en el maestro
@@ -275,10 +332,26 @@ const articulos = parseArticulos(fuentes.ARTICULO);
 const insumos = parseInsumos(fuentes.INSUMOS);
 const rel = parseRelaciones(fuentes.RELACIONES);
 
+// El listado impreso no trae unidad. Se completa con la que el arb imprime en RELACIONES (la llena
+// desde el maestro: 0 codigos con dos unidades, ver unidadesArb.mjs). Los insumos que ninguna BOM usa
+// quedan SIN unidad, y asi se dicen: no se inventa.
+const formatoIns = formatoInsumos(fuentes.INSUMOS);
+if (formatoIns === 'listado') {
+  const unidadDe = new Map();
+  for (const f of rel.filas) if (f.unidad && !unidadDe.has(f.codigo)) unidadDe.set(f.codigo, f.unidad);
+  for (const i of insumos) i.unidad = unidadDe.get(i.codigo) ?? '';
+}
+const insumosConUnidad = insumos.filter((i) => i.unidad).length;
+
 say('');
 say(`${c.b}parseo${c.x}`);
 say(`   articulos          ${articulos.length}`);
-say(`   insumos            ${insumos.length}`);
+say(
+  `   insumos            ${insumos.length}` +
+    (formatoIns === 'listado'
+      ? `   ${c.d}(listado impreso, sin unidad: completada desde RELACIONES para ${insumosConUnidad})${c.x}`
+      : '')
+);
 say(`   lineas de BOM      ${rel.filas.length}`);
 const porNivel = rel.filas.reduce((a, f) => ((a[f.nivel] = (a[f.nivel] || 0) + 1), a), {});
 say(`   por nivel          ${JSON.stringify(porNivel)}   ${c.d}(offset +7; con +9 se pierden los niveles 1-2)${c.x}`);
@@ -286,7 +359,7 @@ say(`   filas fusionadas   ${rel.partidas.length}   ${c.d}(descripciones multi-l
 
 say('');
 say(`${c.b}chequeos de salud${c.x}`);
-const problemas = chequear(articulos, insumos, rel);
+const problemas = chequear(articulos, insumos, rel, formatoIns);
 if (!problemas.length) ok('sin observaciones');
 else {
   const porTipo = problemas.reduce((a, p) => ((a[p.tipo] = a[p.tipo] || []).push(p.detalle), a), {});
@@ -304,7 +377,11 @@ if (CHECK_ONLY) {
 
 fs.mkdirSync(DEST, { recursive: true });
 escribir('articulos.csv', 'codigo,descripcion', articulos, ['codigo', 'descripcion']);
-escribir('insumos.csv', 'codigo,descripcion,unidad', insumos, ['codigo', 'descripcion', 'unidad']);
+// Del listado impreso solo se escriben los insumos con unidad conocida. Una fila con la unidad VACIA en este
+// csv (que unidadesArb.mjs lee como fuente "mas nueva") taparia la unidad que SI tienen RELACIONES.TXT y el
+// maestro del 02/08, y el validador diria "maestro sin unidad" para codigos que la tienen.
+const insumosCsv = formatoIns === 'listado' ? insumos.filter((i) => i.unidad) : insumos;
+escribir('insumos.csv', 'codigo,descripcion,unidad', insumosCsv, ['codigo', 'descripcion', 'unidad']);
 escribir(
   'relaciones_plano.csv',
   'prod_raiz,nivel,padre,codigo,desc,unidad,consumo,modulo,proceso',
@@ -318,7 +395,8 @@ fs.writeFileSync(
       generado: new Date().toISOString(),
       origen: SOURCE,
       fuentes: Object.fromEntries(Object.entries(fuentes).map(([k, v]) => [k, { mtime: v.mtime, filas: v.lineas.length - 1 }])),
-      conteos: { articulos: articulos.length, insumos: insumos.length, relaciones: rel.filas.length, porNivel },
+      conteos: { articulos: articulos.length, insumos: insumos.length, insumos_con_unidad: insumosConUnidad, relaciones: rel.filas.length, porNivel },
+      formato_insumos: formatoIns,
       filas_fusionadas: rel.partidas.length,
       problemas,
     },

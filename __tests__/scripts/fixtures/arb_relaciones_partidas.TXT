@@ -1,0 +1,12 @@
+Artículo	 Rubro	 Medida	  Descripción	Unidad	Consumo	Modulo	Proceso		Sub-Artículo	 Rubro	 Medida	  Descripción	Unidad	Consumo	Modulo	Proceso		Sub-Artículo	 Rubro	 Medida	  Descripción	Unidad	Consumo	Modulo	Proceso		Sub-Artículo	 Rubro	 Medida	  Descripción	Unidad	Consumo	Módulo	Proceso
+
+2GJ858417D AMB 	 1    	 FUN-2GJ-417D-AB	 FUNDA 2GJ858417D AMB IP TAOS PA HIGHLINE	 UN   	   1,00000000	          	               	
+							FUN-2GJ-417D-AB	 1    	 COR-2GJ-417D-AB	 CORTE 2GJ858417D AMB IP TAOS PA HIGHLINE	 UN   	   1,00000000	
+							FUN-2GJ-417D-AB	 1    	 FX284-11703E   	 PANTONE GRAY VIOLET 30/3 14-4103        	 KG   	   0,00011700	
+							FUN-2GJ-417D-AB	 1    	 FX663TK-11703E 	 Pantone Gray Violet 14-4103 
+(TGA AT2) 	 KG   	   0,00059000	
+
+2GJ868110B ZKZ 	 1    	 FX284-11703E   	 PANTONE GRAY VIOLET 30/3 14-4103        	 KG   	   0,00033000	COS       	PRDCOS         	
+2GJ868110B ZKZ 	 1    	 FX663TK-11703E 	 Pantone Gray Violet 14-4103 
+(TGA AT2) 	 KG   	   0,00022000	COS       	PRDCOS         	
+2GJ868110B ZKZ 	 1    	 PPBL - 3A      	 PRIMER PPBL 4 - PARTE A X 5 LTS         	 BI   	   0,00324060	TAP       	PRDTAP         	

@@ -1,0 +1,26 @@
+Artículo	 Rubro	 Medida	  Descripción	Unidad	Consumo	Modulo	Proceso		Sub-Artículo	 Rubro	 Medida	  Descripción	Unidad	Consumo	Modulo	Proceso		Sub-Artículo	 Rubro	 Medida	  Descripción	Unidad	Consumo	Modulo	Proceso		Sub-Artículo	 Rubro	 Medida	  Descripción	Unidad	Consumo	Módulo	Proceso
+
+0024760703-FZHE	 1    	 0024764702-FZHE	 SUSTRATO PLASTICO APB PUERTA P703 DEL IZ	 UN   	   1,00000000	          	               	
+0024760703-FZHE	 1    	 AD - REGV0.6   	 RETICULANTE GV X 0.6 KG                 	 LTS  	   0,00083000	          	               	
+0024760703-FZHE	 1    	 AD-ADNC18      	 ADHESIVO NC X 18 LTS FENOCLOR           	 BI   	   0,00083000	          	               	
+0024760703-FZHE	 1    	 ET-SATO-100X60 	 ETIQUETA TERMICA 100X60 IMPRESORA SATO  	 UNID 	   1,00000000	          	               	
+0024760703-FZHE	 1    	 FUN-002-607-FZH	 FUNDA 0024760703FZHE APB DELANTERO IZQUI	 UN   	   1,00000000	          	               	
+							FUN-002-607-FZH	 1    	 BX69-11527E    	 HILO UNION NEGRO TEX 70 - 40/3 (P703)   	 KG   	   0,00060000	
+							FUN-002-607-FZH	 1    	 COR-002-607-FZH	 CORTE 0024760703FZHE APB DELANTERO IZQUI	 UN   	   1,00000000	
+
+														COR-002-607-FZH	 1    	 124.602.0228-1 	 VINILO SANSUY SANFOAM PREMIUM III CL100 	 MTL  	   0,09800000	
+
+
+0024760703-FZHE	 1    	 TRO-002-607-FZH	 TROQUELADO 0024760703FZHE APB DELANTERO 	 UN   	   1,00000000	          	               	
+							TRO-002-607-FZH	 1    	 3M-HB004040869 	 Fitimpress TR AC 50G FITIM RL 1170m x 10	 ROLL 	   0,05000000	
+							TRO-002-607-FZH	 1    	 ES-P-60-4-01   	 PLACA DE ESPUMA PU 60 KG/M3 ESP 4 MM 0.5	 UN   	   0,12500000	
+							TRO-002-607-FZH	 1    	 HDPE-1.5-2X1   	 PLACA HDPE ESPESOR 1.5 MM 2X1 MTS       	 KG   	   0,02500000	
+
+COR-002-607-FZH	 1    	 124.602.0228-1 	 VINILO SANSUY SANFOAM PREMIUM III CL100 	 MTL  	   0,09800000	          	               	
+
+FUN-002-607-FZH	 1    	 BX69-11527E    	 HILO UNION NEGRO TEX 70 - 40/3 (P703)   	 KG   	   0,00060000	          	               	
+FUN-002-607-FZH	 1    	 COR-002-607-FZH	 CORTE 0024760703FZHE APB DELANTERO IZQUI	 UN   	   1,00000000	          	               	
+
+TRO-002-607-FZH	 1    	 3M-HB004040869 	 Fitimpress TR AC 50G FITIM RL 1170m x 10	 ROLL 	   0,05000000	TRO       	TRO            	
+TRO-002-607-FZH	 1    	 ES-P-60-4-01   	 PLACA DE ESPUMA PU 60 KG/M3 ESP 4 MM 0.5	 UN   	   0,12500000	TRO       	TRO            	
+TRO-002-607-FZH	 1    	 HDPE-1.5-2X1   	 PLACA HDPE ESPESOR 1.5 MM 2X1 MTS       	 KG   	   0,02500000	TRO       	TRO            	

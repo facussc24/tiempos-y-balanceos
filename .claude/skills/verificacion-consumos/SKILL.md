@@ -5,6 +5,15 @@ description: Checklist canonico + validador para tablas de consumo y cargas al E
 
 # Verificacion de consumos — checklist canonico
 
+> **Primero corre `_consumo.py` (solo lectura, segundos):** antes de releer el export o escribir un parser.
+> - `python scripts/_consumo.py <codigo|texto>` → BOM explotada del producto: semielaborados marcados, cantidad,
+>   acumulado por unidad de producto y unidad del maestro. Si el texto coincide con varios, los lista.
+> - `python scripts/_consumo.py --donde-se-usa <codigo insumo>` → que productos lo usan y cuanto, directo o por semielaborado.
+> - Arriba siempre sale el **SELLO**: que export uso, su hora REAL y si hubo cargas al arb despues. Con
+>   "PUEDE ESTAR VIEJO" se re-exporta RELACIONES antes de afirmar un numero.
+> - Desde otro script: `scripts/_lib/arbRelaciones.py` (`cargar()` → `Relaciones` + `Sello`). No escribas otro parser ni otro `iconv`.
+> - No reemplaza el checklist de abajo: una tabla para entregar o cargar sigue pasando por `_validarConsumos.mjs`.
+
 Nace de 6 fallos reales de 2026-07-14/16.
 
 **REGLA MADRE: la regla canonica le gana al dato puntual de cualquier fuente**

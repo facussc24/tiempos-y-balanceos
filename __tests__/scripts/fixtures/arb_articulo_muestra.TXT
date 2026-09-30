@@ -1,0 +1,6 @@
+Art›culo 	Descripciæn    	Costo Unitario $ 	Costo Unitario U$S002                 	DIFERENCIA DE PRECIOS                 	       0,0000	         0,0000	
+N 216               	TOP ROLL PTA. DEL. IZQ.               	       0,0000	         0,0000	
+40-12825            	CONJ. PA—O D/I PVC JET BLACK FENIX    	       0,0000	         0,0000	
+40-12826            	CONJ. PA—O D/D PVC JET BLACK FENIX    	       0,0000	         0,0000	
+40-12827            	CONJ. PA—O D/I PVC MED ATM FENIX      	       0,0000	         0,0000	
+21-8908             	TELA_ASIENTO_P21_A—O/MODELO_2022_PWA  	       0,0000	         0,0000	
