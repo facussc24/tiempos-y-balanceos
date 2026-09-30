@@ -19,7 +19,7 @@ live al scratchpad, con script temporal patrón `verify-supabase-live.md` (`.env
 Registrar el `updated_at` de cada documento — va al marcador del paso 5. El dump del mismo
 turno es foto válida; uno viejo no.
 
-### 2. UN subagente auditor (techo 5 respetado — acá es 1)
+### 2. UN subagente auditor (techo de 10 respetado — acá es 1)
 
 Lanzar 1 `Agent` con `subagent_type: auditor-cliente` (`.claude/agents/auditor-cliente.md`, creado el
 22/09/2026). Corre con `omitClaudeMd: true`: un agente `general-purpose` carga el CLAUDE.md del

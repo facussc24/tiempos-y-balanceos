@@ -1,6 +1,7 @@
 ---
 name: auditor
 description: Auditor de calidad para Barack Mercosul. Lanzar SIEMPRE al final de cada tarea de codigo. Verifica TypeScript, build, git status, integridad de modulos, y reporta hallazgos.
+effort: xhigh
 model: sonnet
 memory: project
 skills:

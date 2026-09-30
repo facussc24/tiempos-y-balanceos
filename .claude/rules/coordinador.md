@@ -99,6 +99,6 @@ estan tapados y clavados en la suite; el detalle, en la memoria
   casa y el motivo por el que existe `rule-enforcement-gate`.
 - No agregar un juez LLM que "revise si el encargo esta bien": lo decide el script o no se
   decide. *La maquina puede MATAR un hallazgo, nunca APROBAR un dato.*
-- No tocar el techo de 5 subagentes ni resucitar `Workflow`.
+- No tocar el techo de subagentes (10, Sonnet 5.5 en xhigh: `techo-agentes.md`) ni resucitar `Workflow`.
 
 Investigacion completa y las fuentes externas: Escritorio → `Mejorar el rol de coordinador`.

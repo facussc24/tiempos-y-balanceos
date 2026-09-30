@@ -1,6 +1,7 @@
 ---
 name: amfe-healer
 description: Reparador de AMFEs incompletos en Barack Mercosul. Corre audit integral, clasifica gaps, aplica fixes seguros y reporta lo que requiere decision humana. Usar cuando Fak pida "completar AMFEs", "reparar gaps", "fill gaps", "fix AMFE", "healear". Complementa el auditor (que detecta) — este agent fija.
+effort: xhigh
 model: sonnet
 memory: project
 skills:

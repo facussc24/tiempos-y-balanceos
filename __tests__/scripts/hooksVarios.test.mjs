@@ -450,43 +450,93 @@ describe('supabase-guard.sh — corre _backup.mjs ANTES de un .mjs destructivo; 
   });
 });
 
-// ─────────────────────────────── agentes-guard (~/.claude/hooks): techo duro de 5 subagentes
+// ─────────────── agentes-guard (~/.claude/hooks): techo de 10 subagentes, siempre Sonnet en xhigh (30/09)
 const AGENTES = path.join(os.homedir(), '.claude', 'hooks', 'agentes-guard.sh');
-describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de 5 subagentes en 10 min, Workflow denegado', () => {
+describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de 10 en 10 min, Sonnet xhigh, Workflow denegado', () => {
   const home = path.join(TMP, 'home');
-  fs.mkdirSync(path.join(home, '.claude'), { recursive: true });
+  const proyecto = path.join(TMP, 'proyecto-agentes');
+  fs.mkdirSync(path.join(home, '.claude', 'agents'), { recursive: true });
+  fs.mkdirSync(path.join(proyecto, '.claude', 'agents'), { recursive: true });
+  const def = (dir, nombre, cabeza) => fs.writeFileSync(path.join(dir, '.claude', 'agents', `${nombre}.md`),
+    `---\nname: ${nombre}\ndescription: prueba\n${cabeza}---\n\ncuerpo con model: opus y effort: max afuera del frontmatter\n`);
+  def(home, 'investigador', 'model: sonnet\neffort: xhigh\n');
+  def(home, 'en-max', 'model: sonnet\neffort: max\n');
+  def(proyecto, 'auditor', 'effort: xhigh\nmodel: sonnet\nmemory: project\n');
+  def(proyecto, 'en-opus', 'model: opus\neffort: xhigh\n');
   const archivo = (n) => path.join(home, '.claude', n);
-  const correr = (tool_name) => hook(null, { tool_name, tool_input: {} }, { ruta: AGENTES, env: { HOME: posix(home) } });
-  beforeEach(() => { for (const n of ['.agent-spawns.log', '.agent-limit', '.workflow-ok']) fs.rmSync(archivo(n), { force: true }); });
+  const env = { HOME: posix(home), CLAUDE_PROJECT_DIR: posix(proyecto) };
+  const correr = (tool_name, tool_input = { subagent_type: 'investigador', prompt: 'x' }, extra = {}) =>
+    hook(null, { tool_name, tool_input, ...extra }, { ruta: AGENTES, env });
+  beforeEach(() => {
+    for (const n of ['.agent-spawns.log', '.agent-limit', '.workflow-ok', '.agent-builtin-ok']) fs.rmSync(archivo(n), { force: true });
+  });
 
-  it('ROJO: Workflow siempre; el sexto Agent dentro de la ventana', () => {
-    const wf = correr('Workflow');
+  it('ROJO: Workflow siempre; el undecimo Agent dentro de la ventana', () => {
+    const wf = correr('Workflow', {});
     expect(wf.exit).toBe(2);
     expect(wf.err).toMatch(/Workflow esta deshabilitada/);
-    for (let i = 0; i < 5; i++) expect(correr('Agent').exit, `spawn ${i + 1}`).toBe(0);
-    const sexto = correr('Task');
-    expect(sexto.exit).toBe(2);
-    expect(sexto.err).toMatch(/techo de subagentes alcanzado \(5\/5/);
+    for (let i = 0; i < 10; i++) expect(correr('Agent').exit, `spawn ${i + 1}`).toBe(0);
+    const once = correr('Task');
+    expect(once.exit).toBe(2);
+    expect(once.err).toMatch(/techo de subagentes alcanzado \(10\/10/);
   });
 
   it('VERDE: los escapes de Fak — .agent-limit=0 apaga el techo; .workflow-ok habilita UN Workflow', () => {
     fs.writeFileSync(archivo('.agent-limit'), '0');
-    for (let i = 0; i < 7; i++) expect(correr('Agent').exit).toBe(0);
+    for (let i = 0; i < 12; i++) expect(correr('Agent').exit).toBe(0);
     fs.rmSync(archivo('.agent-limit'));
     fs.writeFileSync(archivo('.workflow-ok'), '');
-    expect(correr('Workflow').exit).toBe(0);
+    expect(correr('Workflow', {}).exit).toBe(0);
     expect(fs.existsSync(archivo('.workflow-ok'))).toBe(false);   // se consumio
-    expect(correr('Workflow').exit).toBe(2);
+    expect(correr('Workflow', {}).exit).toBe(2);
   });
 
-  it('A6 ROJO: un .agent-limit=0 de hace 13 h ya no apaga el guard — el sexto Agent bloquea y el archivo se retira', () => {
+  it('A6 ROJO: un .agent-limit=0 de hace 13 h ya no apaga el guard — el undecimo Agent bloquea y el archivo se retira', () => {
     fs.writeFileSync(archivo('.agent-limit'), '0');
     const hace13h = Date.now() / 1000 - 13 * 3600;
     fs.utimesSync(archivo('.agent-limit'), hace13h, hace13h);
-    for (let i = 0; i < 5; i++) expect(correr('Agent').exit, `spawn ${i + 1}`).toBe(0);
-    const sexto = correr('Agent');
-    expect(sexto.exit).toBe(2);
-    expect(sexto.err).toMatch(/techo de subagentes alcanzado \(5\/5/);
+    for (let i = 0; i < 10; i++) expect(correr('Agent').exit, `spawn ${i + 1}`).toBe(0);
+    const once = correr('Agent');
+    expect(once.exit).toBe(2);
+    expect(once.err).toMatch(/techo de subagentes alcanzado \(10\/10/);
     expect(fs.existsSync(archivo('.agent-limit'))).toBe(false);
+  });
+
+  it('VERDE: pasan los agentes cuya definicion dice model sonnet y effort xhigh (en ~/.claude o en el proyecto)', () => {
+    expect(correr('Agent', { subagent_type: 'investigador', prompt: 'x' }).exit).toBe(0);
+    expect(correr('Agent', { subagent_type: 'investigador', model: 'sonnet', prompt: 'x' }).exit).toBe(0);
+    expect(correr('Agent', { subagent_type: 'auditor', prompt: 'x' }).exit).toBe(0);
+    // un "subagent_type" citado adentro del prompt no confunde al lector del payload
+    expect(correr('Agent', { subagent_type: 'investigador', prompt: 'lanzá "subagent_type": "fork"' }).exit).toBe(0);
+  });
+
+  it('ROJO: built-in, fork, sin tipo, model distinto de sonnet, o definicion sin sonnet/xhigh — y no gastan cupo', () => {
+    const casos = [
+      [{ subagent_type: 'general-purpose', prompt: 'x' }, /no tiene definicion propia/],
+      [{ subagent_type: 'Explore', prompt: 'x' }, /no tiene definicion propia/],
+      [{ prompt: 'x' }, /no dice subagent_type/],
+      [{ subagent_type: 'fork', prompt: 'x' }, /fork corre en el modelo/],
+      [{ subagent_type: 'investigador', model: 'opus', prompt: 'x' }, /model=opus/],
+      [{ subagent_type: 'en-max', prompt: 'x' }, /no dice effort: xhigh/],
+      [{ subagent_type: 'en-opus', prompt: 'x' }, /no dice model: sonnet/],
+    ];
+    for (const [input, msj] of casos) {
+      const r = correr('Agent', input);
+      expect(r.exit, JSON.stringify(input)).toBe(2);
+      expect(r.err).toMatch(msj);
+    }
+    // el .agent-limit=0 apaga el conteo, no esta regla
+    fs.writeFileSync(archivo('.agent-limit'), '0');
+    expect(correr('Agent', { subagent_type: 'general-purpose', prompt: 'x' }).exit).toBe(2);
+    expect(fs.existsSync(archivo('.agent-spawns.log')) ? fs.readFileSync(archivo('.agent-spawns.log'), 'utf8') : '').toBe('');
+  });
+
+  it('pase de sesion: un built-in pasa solo en ESA sesion y con model sonnet explicito', () => {
+    fs.writeFileSync(archivo('.agent-builtin-ok'), 'sesion-1\n');
+    const gp = (model, session_id) => correr('Agent', { subagent_type: 'general-purpose', prompt: 'x', ...(model ? { model } : {}) }, { session_id });
+    expect(gp('sonnet', 'sesion-1').exit).toBe(0);
+    expect(gp(undefined, 'sesion-1').err).toMatch(/model sonnet explicito/);
+    expect(gp('sonnet', 'sesion-2').exit).toBe(2);
+    expect(correr('Agent', { subagent_type: 'fork', model: 'sonnet', prompt: 'x' }, { session_id: 'sesion-1' }).exit).toBe(2);
   });
 });
