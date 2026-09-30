@@ -1,7 +1,7 @@
 ---
 name: auditor-cliente
 description: Auditor externo de cliente automotriz para el comando /auditoria-cliente. Audita AMFEs contra la NORMA (AIAG-VDA FMEA 2019, IATF 16949) SIN las reglas de la casa. Lo lanza solo /auditoria-cliente, con los dumps y las rutas de los manuales en el prompt.
-model: sonnet
+model: opus
 effort: xhigh
 omitClaudeMd: true
 tools:

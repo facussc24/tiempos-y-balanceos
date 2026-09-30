@@ -461,7 +461,8 @@ describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de
     `---\nname: ${nombre}\ndescription: prueba\n${cabeza}---\n\ncuerpo con model: opus y effort: max afuera del frontmatter\n`);
   def(home, 'investigador', 'model: sonnet\neffort: xhigh\n');
   def(home, 'en-max', 'model: sonnet\neffort: max\n');
-  def(proyecto, 'auditor', 'effort: xhigh\nmodel: sonnet\nmemory: project\n');
+  def(proyecto, 'auditor', 'effort: xhigh\nmodel: opus\nmemory: project\n');
+  def(proyecto, 'auditor-cliente', 'model: sonnet\neffort: xhigh\n');   // auditoria final en Sonnet: rojo
   def(proyecto, 'en-opus', 'model: opus\neffort: xhigh\n');
   const archivo = (n) => path.join(home, '.claude', n);
   const env = { HOME: posix(home), CLAUDE_PROJECT_DIR: posix(proyecto) };
@@ -505,7 +506,9 @@ describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de
   it('VERDE: pasan los agentes cuya definicion dice model sonnet y effort xhigh (en ~/.claude o en el proyecto)', () => {
     expect(correr('Agent', { subagent_type: 'investigador', prompt: 'x' }).exit).toBe(0);
     expect(correr('Agent', { subagent_type: 'investigador', model: 'sonnet', prompt: 'x' }).exit).toBe(0);
+    // la auditoria final corre en Opus (Fak, 30/09/2026)
     expect(correr('Agent', { subagent_type: 'auditor', prompt: 'x' }).exit).toBe(0);
+    expect(correr('Agent', { subagent_type: 'auditor', model: 'opus', prompt: 'x' }).exit).toBe(0);
     // un "subagent_type" citado adentro del prompt no confunde al lector del payload
     expect(correr('Agent', { subagent_type: 'investigador', prompt: 'lanzá "subagent_type": "fork"' }).exit).toBe(0);
   });
@@ -519,6 +522,8 @@ describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de
       [{ subagent_type: 'investigador', model: 'opus', prompt: 'x' }, /model=opus/],
       [{ subagent_type: 'en-max', prompt: 'x' }, /no dice effort: xhigh/],
       [{ subagent_type: 'en-opus', prompt: 'x' }, /no dice model: sonnet/],
+      [{ subagent_type: 'auditor-cliente', prompt: 'x' }, /no dice model: opus/],
+      [{ subagent_type: 'auditor', model: 'sonnet', prompt: 'x' }, /auditoria final y corre en Opus/],
     ];
     for (const [input, msj] of casos) {
       const r = correr('Agent', input);

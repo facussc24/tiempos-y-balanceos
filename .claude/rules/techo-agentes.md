@@ -1,6 +1,6 @@
-# Techo de subagentes: 10, siempre Sonnet 5.5 en esfuerzo xhigh
+# Techo de subagentes: 10 en Sonnet 5.5 xhigh; la auditoria final en Opus
 
-**Maximo 10 subagentes en 10 minutos, todos en Sonnet 5.5 con esfuerzo `xhigh`** (el
+**Maximo 10 subagentes en 10 minutos, en Sonnet 5.5 con esfuerzo `xhigh`** (el
 anteultimo; el maximo es `max`). La tool `Workflow` esta DESHABILITADA.
 Decision de Fak, 30/09/2026: *"cambia la regla de agentes maximo en paralelo, aumentala a 10...
 pero solo usando siempre sonnet 5.5 y no en el maximo esfuerzo, en el anteultimo"*. Hasta ese
@@ -8,10 +8,10 @@ dia el techo era 5 (desde el 06/08).
 
 Esto no vive solo aca: esta enforced en `~/.claude/settings.json`
 (`disableWorkflows: true`, `workflowKeywordTriggerEnabled: false`,
-`CLAUDE_CODE_SUBAGENT_MODEL=claude-sonnet-5-5` + `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1`) y en el hook
+`CLAUDE_CODE_SUBAGENT_MODEL=claude-sonnet-5-5`, sin `_FORCE`) y en el hook
 `~/.claude/hooks/agentes-guard.sh` (PreToolUse, matcher `Agent|Task|Workflow`; copia identica en
 `.claude/hooks/`), que cuenta spawns en ventana de 10 min, devuelve exit 2 al pasar de 10 y
-rechaza todo agente cuya definicion no diga `model: sonnet` y `effort: xhigh`.
+rechaza todo agente cuya definicion no diga `model: sonnet` (o `opus` si es auditor) y `effort: xhigh`.
 Aplica a todos los proyectos de esta PC, no solo Barack.
 
 ## Que agente se lanza
@@ -20,7 +20,14 @@ Aplica a todos los proyectos de esta PC, no solo Barack.
 |---|---|---|
 | `investigador` | trabajo general con todas las herramientas (reemplaza a general-purpose) | `~/.claude/agents/` |
 | `explorador` | barrido de solo lectura (reemplaza a Explore) | `~/.claude/agents/` |
-| `auditor`, `amfe-healer`, `auditor-cliente` | los del proyecto | `.claude/agents/` |
+| `amfe-healer` | del proyecto, en Sonnet | `.claude/agents/` |
+| `auditor`, `auditor-cliente` | **la auditoria final: en OPUS** con effort xhigh | `.claude/agents/` |
+
+**La auditoria final la hace Opus, no Sonnet** (Fak, 30/09/2026: *"la auditoria la deberia hacer
+un Opus... es la auditoria final, Sonnet no se si puede hacerla"*). El hook exige `model: opus` en
+`auditor` y `auditor-cliente` (lista `AUDITORES`) y rechaza pasarles otro modelo. Por eso en
+`settings.json` queda `CLAUDE_CODE_SUBAGENT_MODEL=claude-sonnet-5-5` como default pero SIN
+`CLAUDE_CODE_SUBAGENT_MODEL_FORCE` (que ignoraria el `model: opus` de los auditores).
 
 Los built-in (`general-purpose`, `Explore`, `Plan`, `claude`...) no dejan fijar el esfuerzo y
 `fork` corre en el modelo de la sesion: el hook los rechaza. Un agente nuevo pasa si su

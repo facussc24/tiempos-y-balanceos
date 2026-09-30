@@ -16,6 +16,8 @@
 #                         (general-purpose, Explore, Plan, claude...) no dejan fijar el esfuerzo y
 #                         `fork` corre en el modelo de la sesion: se rechazan y se usa `investigador`
 #                         (todas las herramientas) o `explorador` (solo lectura), en ~/.claude/agents.
+#                         EXCEPCION: la auditoria final (`auditor`, `auditor-cliente`) corre en OPUS
+#                         con effort xhigh (Fak, 30/09/2026); ver AUDITORES mas abajo.
 #
 # Escape para Fak (no hace falta editar este script):
 #   echo 15 > ~/.claude/.agent-limit          # sube el techo a 15
@@ -120,7 +122,8 @@ leer_def() {
 
 rechazar() {
   cat >&2 <<EOF
-BLOQUEADO: los subagentes corren SIEMPRE en Sonnet 5.5 con esfuerzo xhigh (Fak, 30/09/2026).
+BLOQUEADO: los subagentes corren en Sonnet 5.5 con esfuerzo xhigh, y la auditoria final
+(auditor, auditor-cliente) en Opus con xhigh (Fak, 30/09/2026).
 $1
 
 Que hacer: relanzar con subagent_type "investigador" (todas las herramientas) o "explorador"
@@ -130,15 +133,29 @@ EOF
   exit 2
 }
 
+# La auditoria final la hace OPUS, no Sonnet (Fak, 30/09/2026: "la auditoria la deberia hacer un
+# Opus... es la auditoria final, Sonnet no se si puede hacerla"). Estos agentes DEBEN declarar
+# `model: opus` (y effort: xhigh); el resto, `model: sonnet`.
+AUDITORES=" auditor auditor-cliente "
+
 if [ "$TOOL" != "Workflow" ]; then
   campo subagent_type; SUBTIPO=$CAMPO
   campo model; MODELO=$CAMPO
-  case "$MODELO" in
-    ""|sonnet|claude-sonnet-*) ;;
-    *) rechazar "Se pidio model=$MODELO." ;;
-  esac
   [ -z "$SUBTIPO" ] && rechazar "La llamada no dice subagent_type: correria general-purpose, que no deja fijar el esfuerzo."
   [ "$SUBTIPO" = "fork" ] && rechazar "Un fork corre en el modelo de la sesion principal, no en Sonnet."
+  ES_AUDITOR=0
+  case "$AUDITORES" in *" $SUBTIPO "*) ES_AUDITOR=1 ;; esac
+  if [ "$ES_AUDITOR" = "1" ]; then
+    case "$MODELO" in
+      ""|opus|claude-opus-*) ;;
+      *) rechazar "\"$SUBTIPO\" es la auditoria final y corre en Opus: no se le pasa model=$MODELO." ;;
+    esac
+  else
+    case "$MODELO" in
+      ""|sonnet|claude-sonnet-*) ;;
+      *) rechazar "Se pidio model=$MODELO." ;;
+    esac
+  fi
 
   DEF=""
   for DIR in "${CLAUDE_PROJECT_DIR:+${CLAUDE_PROJECT_DIR}/.claude/agents}" "${BASE}/agents"; do
@@ -150,7 +167,13 @@ if [ "$TOOL" != "Workflow" ]; then
     done
   done
 
-  if [ -n "$DEF" ]; then
+  if [ -n "$DEF" ] && [ "$ES_AUDITOR" = "1" ]; then
+    case "$D_MODELO" in
+      opus|claude-opus-*) ;;
+      *) rechazar "La definicion $DEF no dice model: opus (la auditoria final la hace Opus)." ;;
+    esac
+    [ "$D_ESFUERZO" = "xhigh" ] || rechazar "La definicion $DEF no dice effort: xhigh."
+  elif [ -n "$DEF" ]; then
     case "$D_MODELO" in
       sonnet|claude-sonnet-*) ;;
       *) rechazar "La definicion $DEF no dice model: sonnet." ;;
