@@ -50,8 +50,88 @@ def log(msg):
         pass
 
 
+SILENCIOSO = False                   # modo vigilante: nada de carteles, todo al log
+
+
 def aviso(texto, flags=MB_OK | MB_ICONWARN):
+    if SILENCIOSO:
+        log('aviso (silencioso): %s' % texto.replace('\n', ' ')[:200])
+        return 0                     # 0 != IDYES: nunca "acepta" una pregunta sola
     return u.MessageBoxW(None, texto, 'ARB', flags | MB_TOPMOST)
+
+
+# ---------------------------------------------------------------- vigilante (Fak, 30/09/2026)
+# Tarea de Windows que instala FAK ("ARB - activar vigilante") y corre sola cada 3 min: si el
+# arb esta cerrado o en el login, lo abre y entra. Claude no la dispara (CLAUDECODE sigue
+# bloqueando) ni cierra el arb para provocarla (regla arb-no-cerrar.md). Frenos:
+#   - solo actua si nadie toco teclado ni mouse en 2 min (no le roba el foco a Fak);
+#   - un login fallido PAUSA el vigilante (no reintenta cada 3 min: bloquearia la cuenta);
+#   - "ARB - pausar vigilante" lo frena a mano (vigilante_estado.txt dice PAUSADO).
+ESTADO_VIGILANTE = os.path.join(os.path.expanduser('~'), 'arb_fotos', 'vigilante_estado.txt')
+
+
+def vigilante_pausado():
+    """La primera palabra de vigilante_estado.txt es ACTIVO o PAUSADO (lo escribe _arbVigilante.ps1)."""
+    try:
+        with open(ESTADO_VIGILANTE, encoding='utf-8-sig') as f:
+            return f.read(20).strip().upper().startswith('PAUSADO')
+    except OSError:
+        return False
+
+
+class LASTINPUTINFO(ctypes.Structure):
+    _fields_ = [('cbSize', ctypes.c_uint), ('dwTime', ctypes.c_uint)]
+
+
+def segundos_inactivo():
+    li = LASTINPUTINFO(); li.cbSize = ctypes.sizeof(li)
+    u.GetLastInputInfo(ctypes.byref(li))
+    return ((k.GetTickCount() - li.dwTime) & 0xFFFFFFFF) / 1000.0
+
+
+def pantalla_bloqueada():
+    """Con Windows bloqueado (Win+L) el teclado va al escritorio seguro: no se intenta."""
+    h = u.OpenInputDesktop(0, False, 0x0100)      # DESKTOP_SWITCHDESKTOP
+    if not h:
+        return True
+    ok = u.SwitchDesktop(h)
+    u.CloseDesktop(h)
+    return not ok
+
+
+def arb_abierto_rapido():
+    """Chequeo barato (sin tasklist): hay ventana principal del arb y ninguna de login."""
+    if not u.FindWindowW('ProdWindow', None):
+        return False
+    hay_login = []
+
+    def cb(h, l):
+        if u.IsWindowVisible(h) and 'Inicio de Sesi' in txt(h):
+            hay_login.append(h)
+        return True
+    u.EnumWindows(CB(cb), 0)
+    return not hay_login
+
+
+def log_sin_repetir(msg):
+    """No llena el log con la misma linea cada 3 minutos."""
+    try:
+        with open(LOG, encoding='utf-8') as f:
+            ultima = f.read()[-400:].strip().splitlines()[-1:]
+        if ultima and ultima[0].endswith(msg):
+            return
+    except (OSError, IndexError):
+        pass
+    log(msg)
+
+
+def pausar_vigilante(motivo):
+    try:
+        with open(ESTADO_VIGILANTE, 'w', encoding='utf-8') as f:
+            f.write('PAUSADO %s  %s\n' % (datetime.datetime.now().strftime('%d/%m %H:%M'), motivo))
+    except OSError:
+        pass
+    log('vigilante PAUSADO: %s (se reactiva con "ARB - activar vigilante")' % motivo)
 
 
 # ---------------------------------------------------------------- credencial (Windows)
@@ -523,8 +603,29 @@ def main(argv):
               'Claude no lo ejecuta: pedile a Fak que lo apriete.')
         return 3
 
+    vigilar = '--vigilar' in argv
+    if vigilar:
+        global SILENCIOSO
+        SILENCIOSO = True
+        if vigilante_pausado():
+            return 0
+        if arb_abierto_rapido():
+            return 0                                  # lo normal: abierto y logueado, sale en ms
+        if pids_arb() and not ventana_login():
+            return 0                                  # abierto con otra ventana adelante
+        if pantalla_bloqueada():
+            log_sin_repetir('vigilante: arb cerrado pero Windows esta bloqueado; espero')
+            return 0
+        if segundos_inactivo() < 120:
+            log_sin_repetir('vigilante: arb cerrado pero Fak esta usando la PC; espero')
+            return 0
+        log('vigilante: el arb esta %s; lo abro' % ('en el login' if pids_arb() else 'cerrado'))
+
     cred = None if '--guardar-clave' in argv else leer_cred()
     if cred is None:
+        if vigilar:
+            pausar_vigilante('no hay clave guardada (apretar ARB una vez)')
+            return 1
         cred = pedir_y_guardar_cred()
         if cred is None:
             return 1
@@ -551,6 +652,9 @@ def main(argv):
             return 0
     else:
         if not asegurar_z():
+            if SILENCIOSO:
+                log_sin_repetir('vigilante: sin red al servidor; reintento en el proximo chequeo')
+                return 1
             aviso('No llego al servidor de la empresa (%s): el arb vive ahi.\n\n'
                   '¿Estas conectado a la red de la planta o a la VPN? '
                   'Conectate y volve a apretar ARB.' % UNC_Z)
@@ -565,6 +669,9 @@ def main(argv):
 
     res = entrar(login, usuario, clave)
     del clave
+    if SILENCIOSO and res in ('rechazo', 'sin_respuesta', 'usuario', 'foco_tarde'):
+        # Un intento fallido y se frena: no se reintenta cada 3 minutos con la misma clave.
+        pausar_vigilante('login fallido (%s%s)' % (res, (': ' + ULTIMO_CARTEL[:80]) if ULTIMO_CARTEL else ''))
     if res == 'foco':
         aviso('No pude escribir en "Inicio de Sesion": otra ventana le saco el frente.\n'
               'No se mando la clave. Hacele click al arb y volve a apretar ARB.')

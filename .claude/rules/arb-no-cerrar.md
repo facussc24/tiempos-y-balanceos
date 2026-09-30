@@ -40,6 +40,10 @@ Y ni siquiera alcanzaría con tener la contraseña: el campo `Usuario` se autoco
 | ✅ `python scripts/_arbVer.py reset` con Relaciones CERRADA | solo la **abre** por click; ese camino anda |
 | ✅ Fak aprieta **"ARB - reiniciar"** en su Escritorio | `scripts/_arbLanzar.py --reiniciar`: le pregunta, cierra el arb trabado, lo abre y entra con la clave que Fak guardo en el Administrador de credenciales de Windows (30/09/2026). **Lo aprieta Fak**: el script se niega si lo lanza una sesion de Claude (`CLAUDECODE`) |
 
+**Vigilante (30/09/2026):** con "ARB - activar vigilante" Fak deja una tarea de Windows que cada 3 min
+reabre el arb si esta CERRADO y nadie usa la PC (no cierra un arb colgado; un login fallido la pausa).
+No habilita a cerrarlo: cerrar el arb "para que el vigilante lo reabra" sigue prohibido.
+
 **Si el arb se cuelga o pide login:** escribirle a Fak una linea — *"doble click en ARB - reiniciar"*
 (o *"doble click en ARB"* si solo pide la clave) — y esperar con `python scripts/_arbVer.py estado`
 hasta que `ProdWindow` este habilitada. Claude nunca lee ni tipea la clave, ni corre `_arbLanzar.py`

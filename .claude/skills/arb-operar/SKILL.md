@@ -59,10 +59,14 @@ reabrirlo no. Permitido: `WM_CLOSE` sobre `Maestro de Insumos` (descarta sin gra
 Relaciones abierta crashea el arb** (dos veces el 25/09/2026): `reset` se niega sin `--forzar`,
 y `--forzar` va solo con OK de Fak. El incidente, la tabla completa, el escape y el hook: regla
 `arb-no-cerrar.md`, que carga sola al abrir este skill.
-**Si el arb se cuelga o pide login** (desde el 30/09/2026): una linea a Fak — *"doble click en
-ARB - reiniciar"* (o *"en ARB"* si solo pide la clave) — y esperar con `_arbVer.py estado` a que
-`ProdWindow` este habilitada. Los accesos directos corren `scripts/_arbLanzar.py`, que entra con
-la clave que Fak guardo en Windows; Claude no lo corre (se niega con `CLAUDECODE`) salvo `--diagnostico`.
+**Cuando Fak pide algo del arb y el arb esta cerrado** (desde el 30/09/2026): si el vigilante
+esta activo (`~/arb_fotos/vigilante_estado.txt` empieza con ACTIVO), lo abre SOLO en <= 3-5 min
+(tarea "Barack - ARB siempre abierto", cada 3 min, solo si nadie usa la PC hace 2 min): esperar
+con `python scripts/_arbVer.py estado` hasta `ProdWindow` habilitada y seguir. Si dice PAUSADO
+(se pausa solo tras un login fallido; la causa esta al final de `~/arb_fotos/lanzador.log`) o no
+abre en 6 min: una linea a Fak — *"doble click en ARB"* (o *"ARB - reiniciar"* si esta colgado,
+o *"ARB - activar vigilante"* si esta pausado). Claude NO corre `_arbLanzar.py` (se niega con
+`CLAUDECODE`) salvo `--diagnostico`, ni cierra el arb para que el vigilante lo reabra.
 
 ## Regla de oro
 
