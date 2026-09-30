@@ -198,20 +198,41 @@ def _enviar(vk=0, scan=0, flags=0):
     u.SendInput(1, ctypes.byref(i), ctypes.sizeof(INPUT))
 
 
+u.VkKeyScanW.argtypes = [w.WCHAR]
+u.VkKeyScanW.restype = ctypes.c_short
+
+
 def tecla(vk):
-    _enviar(vk=vk); time.sleep(0.02); _enviar(vk=vk, flags=0x2); time.sleep(0.05)
+    sc = u.MapVirtualKeyW(vk, 0)
+    _enviar(vk=vk, scan=sc); time.sleep(0.02); _enviar(vk=vk, scan=sc, flags=0x2); time.sleep(0.05)
 
 
 def combo(mod, vk):
-    _enviar(vk=mod); tecla(vk); _enviar(vk=mod, flags=0x2); time.sleep(0.05)
+    sc = u.MapVirtualKeyW(mod, 0)
+    _enviar(vk=mod, scan=sc); tecla(vk); _enviar(vk=mod, scan=sc, flags=0x2); time.sleep(0.05)
 
 
 def escribir(texto):
-    """Cada caracter como KEYEVENTF_UNICODE: no depende del teclado (es-AR pide AltGr para
-    @ \\ ^ ~) y el login del arb (RichEdit20A) lo acepta: el 30/09/2026 escribio FACUNDO asi."""
+    """TECLAS REALES, como un humano y como los scripts del arb que andan (_arbInsumo): la F es la
+    tecla F con SHIFT. El 30/09/2026 la version con KEYEVENTF_UNICODE mostraba FACUNDO en el
+    campo pero el arb contesto "usuario no definido en el sistema": el arb no lee el campo, lee
+    las teclas. Bloq Mayus invierte el SHIFT de las letras. Solo un caracter que pide AltGr
+    (@ \\ ^ ~ en es-AR) o que el teclado no tiene va como unicode."""
+    caps = u.GetKeyState(0x14) & 1
     for ch in texto:
-        _enviar(scan=ord(ch), flags=0x4); _enviar(scan=ord(ch), flags=0x4 | 0x2)
-        time.sleep(0.02)
+        r = u.VkKeyScanW(ch)
+        if r == -1 or ((r >> 8) & 0x6):
+            _enviar(scan=ord(ch), flags=0x4); _enviar(scan=ord(ch), flags=0x4 | 0x2)
+        else:
+            vk, shift = r & 0xFF, bool((r >> 8) & 1)
+            if caps and ch.isalpha():
+                shift = not shift
+            if shift:
+                _enviar(vk=0x10, scan=u.MapVirtualKeyW(0x10, 0))
+            tecla(vk)
+            if shift:
+                _enviar(vk=0x10, scan=u.MapVirtualKeyW(0x10, 0), flags=0x2)
+        time.sleep(0.03)
 
 
 def click_en(h):
@@ -257,6 +278,7 @@ def entrar(login, usuario, clave):
     """Un solo intento. Devuelve 'ok'; 'foco' (la ventana perdio el frente antes de la clave:
     no se mando); 'foco_tarde' (lo perdio despues de tipear la clave: no se apreto Acepta);
     'usuario' (no quedo el usuario guardado); 'rechazo' (el login sigue abierto a los 45 s)."""
+    global ULTIMO_CARTEL
     if not activar(login):
         log('login: no pude traerla al frente')
         return 'foco'
@@ -272,13 +294,24 @@ def entrar(login, usuario, clave):
             return 'usuario'
         escribir(usuario)
         time.sleep(0.2)
-        if texto_de(campos[0]).strip().upper() != usuario.strip().upper():
-            log('login: el Usuario no quedo igual al guardado (%d caracteres)' % len(texto_de(campos[0])))
+        visto = texto_de(campos[0])
+        if visto != usuario:
+            log('login: el Usuario no quedo igual al guardado (%d caracteres, esperaba %d)'
+                % (len(visto), len(usuario)))
             return 'usuario'
-        click_en(campos[1])
+        tecla(0x09)               # TAB -> Contraseña, como lo hace una persona
+        time.sleep(0.6)
+        cartel = cartel_del_arb()             # el arb puede validar el usuario al salir del campo
+        if cartel:
+            ULTIMO_CARTEL = cartel
+            log('login: al salir del Usuario el arb dijo: %s' % cartel[:200])
+            return 'rechazo'
         if not al_frente(login):
             return 'foco'
+        if foco_de(login) != campos[1]:
+            click_en(campos[1])
         vaciar_campo(campos[1]); escribir(clave)
+        foto(login, 'login_antes_de_aceptar')   # la clave se ve con asteriscos
     else:
         # Sin campos visibles por clase: el cursor arranca en Contraseña (captura 31/08/2026).
         combo(0x10, 0x09)         # SHIFT+TAB -> Usuario
@@ -290,14 +323,69 @@ def entrar(login, usuario, clave):
     if not al_frente(login):
         return 'foco_tarde'       # la clave ya se tipeo: no se aprieta Acepta
     tecla(0x0D)                   # ENTER = Acepta
+    # OK recien cuando: no hay "Inicio de Sesion", no hay cartel del arb y la ventana principal
+    # existe, tres segundos seguidos. El 30/09/2026 se dio por bueno solo porque se cerro el
+    # login, y el arb habia puesto "usuario no definido en el sistema".
     fin = time.time() + 45
+    seguidos = 0
     while time.time() < fin:
         time.sleep(1)
-        if not ventana_login():
-            log('login OK')
-            return 'ok'
-    log('login: la ventana de inicio sigue abierta a los 45 s')
+        cartel = cartel_del_arb()
+        if cartel:
+            ULTIMO_CARTEL = cartel
+            log('login: el arb dijo: %s' % cartel[:200])
+            return 'rechazo'
+        if not ventana_login() and ventana_principal():
+            seguidos += 1
+            if seguidos >= 3:
+                log('login OK')
+                return 'ok'
+        else:
+            seguidos = 0
+    log('login: sin confirmacion a los 45 s')
     return 'rechazo'
+
+
+ULTIMO_CARTEL = ''
+
+
+def cartel_del_arb():
+    """Texto de un cuadro de mensaje (#32770) del arb, si hay uno visible."""
+    for h in ventanas():
+        if cls(h) == '#32770':
+            partes = []
+
+            def cb(hh, l):
+                t = txt(hh).strip()
+                if t and cls(hh).lower() == 'static':
+                    partes.append(t)
+                return True
+            u.EnumChildWindows(h, CB(cb), 0)
+            return ' '.join(partes) or txt(h) or 'cartel sin texto'
+    return ''
+
+
+class GUI(ctypes.Structure):
+    _fields_ = [('cbSize', ctypes.c_uint), ('flags', ctypes.c_uint), ('hwndActive', w.HWND),
+                ('hwndFocus', w.HWND), ('hwndCapture', w.HWND), ('hwndMenuOwner', w.HWND),
+                ('hwndMoveSize', w.HWND), ('hwndCaret', w.HWND), ('rcCaret', R)]
+
+
+def foco_de(h):
+    gi = GUI(); gi.cbSize = ctypes.sizeof(GUI)
+    u.GetGUIThreadInfo(u.GetWindowThreadProcessId(h, None), ctypes.byref(gi))
+    return gi.hwndFocus
+
+
+def foto(h, nombre):
+    """Captura de la ventana a ~/arb_fotos/<nombre>.png (para ver que paso si falla)."""
+    try:
+        from PIL import ImageGrab
+        r = rect(h)
+        ImageGrab.grab(bbox=(r.l, r.t, r.r, r.b)).save(
+            os.path.join(os.path.dirname(LOG), nombre + '.png'))
+    except Exception as e:
+        log('foto %s: %s' % (nombre, type(e).__name__))
 
 
 def esperar_login(seg=90):
@@ -441,7 +529,8 @@ def main(argv):
               'No se mando la clave. Borralo a mano, escribi %s y la clave.' % (usuario, usuario))
         return 1
     if res == 'rechazo':
-        if aviso('El arb no acepto el usuario o la contraseña.\n\n'
+        if aviso('El arb no dejo entrar%s.\n\n'
+                 % ((': "%s"' % ULTIMO_CARTEL[:150]) if ULTIMO_CARTEL else '') +
                  '¿Queres cargarlos de nuevo? (despues apreta ARB otra vez)',
                  MB_YESNO | MB_ICONQ) == IDYES:
             pedir_y_guardar_cred()
