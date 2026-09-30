@@ -30,6 +30,15 @@ CRED = 'BARACK_ARB'
 USUARIO_DEFAULT = 'FACUNDO'
 LOG = os.path.join(os.path.expanduser('~'), 'arb_fotos', 'lanzador.log')
 
+if '--vigilar' in sys.argv:
+    # Diagnostico (30/09/2026: las corridas de la tarea quedaban trabadas sin escribir nada):
+    # si a los 240 s sigue vivo, vuelca en que linea esta cada hilo y termina (la tarea corta a los 5 min).
+    import faulthandler
+    _volcado = open(os.path.join(os.path.dirname(LOG), 'vigilante_volcado.txt'), 'w')
+    _volcado.write('%s arranque pid %d\n' % (datetime.datetime.now().strftime('%d/%m %H:%M:%S'), os.getpid()))
+    _volcado.flush()
+    faulthandler.dump_traceback_later(240, exit=True, file=_volcado)
+
 u = ctypes.windll.user32
 try:                                   # coordenadas reales aunque Windows escale la pantalla
     ctypes.windll.shcore.SetProcessDpiAwareness(2)
@@ -111,6 +120,29 @@ def arb_abierto_rapido():
         return True
     u.EnumWindows(CB(cb), 0)
     return not hay_login
+
+
+LATIDO = os.path.join(os.path.expanduser('~'), 'arb_fotos', 'vigilante_latido.txt')
+
+
+def latido(paso):
+    """El vigilante sobrescribe (no agrega) su ultimo paso: se ve donde quedo sin llenar el log."""
+    try:
+        with open(LATIDO, 'w', encoding='utf-8') as f:
+            f.write('%s  pid %d  %s\n' % (datetime.datetime.now().strftime('%d/%m %H:%M:%S'),
+                                          os.getpid(), paso))
+    except OSError:
+        pass
+
+
+def existe_con_tope(ruta, seg=10):
+    """os.path.exists sobre una unidad de red puede quedar colgado (Z: 'Desconectado' en la
+    sesion de la tarea de Windows, 30/09/2026): se mira en un hilo y se abandona a los `seg`."""
+    import threading
+    res = []
+    t = threading.Thread(target=lambda: res.append(os.path.exists(ruta)), daemon=True)
+    t.start(); t.join(seg)
+    return bool(res and res[0])
 
 
 def log_sin_repetir(msg):
@@ -545,16 +577,16 @@ def asegurar_z():
     """Z: suele quedar 'Desconectado' (conexion recordada): el Explorador la reconecta al abrirla,
     un programa no. Si el servidor responde, se reconecta con `net use`. Devuelve True si EXE
     quedo accesible; False si el servidor no responde (fuera de la red de la planta / sin VPN)."""
-    if os.path.exists(EXE):
+    if existe_con_tope(EXE):
         return True
     unc_exe = UNC_Z + r'\arb\prod\produc.exe'
-    if not os.path.exists(unc_exe):
+    if not existe_con_tope(unc_exe):
         log('servidor no responde (%s)' % unc_exe)
         return False
     r = subprocess.run(['net', 'use', 'Z:', UNC_Z, '/persistent:yes'], capture_output=True,
-                       text=True, creationflags=0x08000000)
+                       text=True, creationflags=0x08000000, timeout=30)
     log('net use Z: -> %s' % (r.returncode,))
-    return os.path.exists(EXE)
+    return existe_con_tope(EXE)
 
 
 def asegurar_icono():
@@ -607,18 +639,22 @@ def main(argv):
     if vigilar:
         global SILENCIOSO
         SILENCIOSO = True
+        latido('inicio')
         if vigilante_pausado():
-            return 0
+            latido('pausado'); return 0
         if arb_abierto_rapido():
-            return 0                                  # lo normal: abierto y logueado, sale en ms
+            latido('arb abierto: nada que hacer'); return 0   # lo normal: sale en ms
         if pids_arb() and not ventana_login():
             return 0                                  # abierto con otra ventana adelante
         if pantalla_bloqueada():
+            latido('windows bloqueado')
             log_sin_repetir('vigilante: arb cerrado pero Windows esta bloqueado; espero')
             return 0
         if segundos_inactivo() < 120:
+            latido('Fak usando la PC')
             log_sin_repetir('vigilante: arb cerrado pero Fak esta usando la PC; espero')
             return 0
+        latido('abriendo el arb')
         log('vigilante: el arb esta %s; lo abro' % ('en el login' if pids_arb() else 'cerrado'))
 
     cred = None if '--guardar-clave' in argv else leer_cred()

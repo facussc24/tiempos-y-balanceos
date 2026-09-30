@@ -65,7 +65,9 @@ esta activo (`~/arb_fotos/vigilante_estado.txt` empieza con ACTIVO), lo abre SOL
 con `python scripts/_arbVer.py estado` hasta `ProdWindow` habilitada y seguir. Si dice PAUSADO
 (se pausa solo tras un login fallido; la causa esta al final de `~/arb_fotos/lanzador.log`) o no
 abre en 6 min: una linea a Fak — *"doble click en ARB"* (o *"ARB - reiniciar"* si esta colgado,
-o *"ARB - activar vigilante"* si esta pausado). Claude NO corre `_arbLanzar.py` (se niega con
+o activar el vigilante si esta pausado). **Activar el vigilante lo hace Claude** (Fak, 30/09/2026:
+*"activa el vigilante, eso lo podes hacer vos, no requiere contraseñas"*): `powershell -ExecutionPolicy
+Bypass -File scripts\_arbVigilante.ps1 -Activar` (muestra un mensaje a Fak). Claude NO corre `_arbLanzar.py` (se niega con
 `CLAUDECODE`) salvo `--diagnostico`, ni cierra el arb para que el vigilante lo reabra.
 
 ## Regla de oro
