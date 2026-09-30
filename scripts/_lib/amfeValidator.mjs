@@ -406,13 +406,20 @@ export function validateOrdenEnfundadoPu(doc, amfeNumber = '') {
  * Una sola definicion, dos consumidores.
  *
  * Devuelve true cuando el control de deteccion depende de una PERSONA (mirar, tocar, oir,
- * contar, revisar un papel), NO nombra instrumento, y la D es 6 o menos. La Tabla P3 oficial
+ * contar, revisar un papel), NO nombra instrumento, y la D es 7 o menos. La Tabla P3 oficial
  * (SETEC pag. 109-111) le da a la inspeccion humana D=8 con el metodo no probado y 6 probado;
- * el texto del control no dice si esta probado, asi que un 6 avisa y lo confirma el equipo.
+ * el texto del control no dice si esta probado, asi que un 6 o un 7 avisan y lo confirma el
+ * equipo (un 6 puede ser un metodo probado; un 7 no existe en la tabla para una persona: el 7 de
+ * la oficial es de la MAQUINA con metodo no probado).
+ *
+ * Hasta el 30/09/2026 avisaba solo con D <= 6 y dejaba pasar el 7, que era el valor del
+ * BORRADOR de 2017 ("lo mismo en la propia estacion") que la oficial no tiene. Por eso un
+ * script que recalificaba a 7 —mejor de lo que la tabla admite— cerraba sin un solo aviso.
+ * Sigue siendo WARNING: el 8 lo confirma el equipo, nunca el validador.
  */
 export function esDeteccionHumanaOptimista(detectionControl, detection) {
     const dNum = Number(detection);
-    if (!Number.isFinite(dNum) || dNum < 1 || dNum > 6) return false;
+    if (!Number.isFinite(dNum) || dNum < 1 || dNum > 7) return false;
     const det = String(detectionControl ?? '').toLowerCase();
     // Un muestreo tiene su propio piso (9) y su propio check: no entra por aca, o lo
     // mandariamos a 7, que es MEJOR de lo que la tabla admite. Ver esMuestreoParcial().
@@ -468,6 +475,94 @@ export function esDeteccionSinControlDeclarado(detectionControl, detection) {
     if (!Number.isFinite(dNum) || dNum >= 10) return false;
     const det = String(detectionControl ?? '').trim();
     return det === '' || det === '-' || det.toLowerCase() === 'tbd';
+}
+
+/**
+ * CONTROL_CONTRADICE_CAUSA — la causa niega que algo exista y el control de esa misma fila
+ * se apoya en eso.
+ *
+ * Nacio del AMFE 173 (21/09/2026): cinco filas decian "no hay X" en la causa y "X definido" en
+ * el control — "no hay un patron de comparacion" / "Control visual contra el patron del
+ * puesto" — y la tercera sostenia una D=8 con un patron que la propia causa declara inexistente.
+ * La contradiccion esta ADENTRO del renglon, por eso un script la ve. Memoria
+ * `feedback_un_control_no_puede_afirmar_lo_que_su_causa_niega`. Regla: amfe.md §6 y §17.7.
+ *
+ * Criterio (medido el 30/09/2026 sobre las 2044 causas del backup de ese dia):
+ *  1. La causa trae una negacion de EXISTENCIA: no hay / no existe / no tiene / no lleva /
+ *     no cuenta con / no posee / no dispone / no esta definido|asignado|disponible... /
+ *     no se define|asigna|establece / carece / inexistente.
+ *  2. El control comparte 2 o mas palabras de 6+ letras con la causa (sin acentos ni
+ *     mayusculas, comparadas por sus primeras 6 letras: definido = definida, puesto = puestos)
+ *     y al menos UNA de esas palabras esta en lo que la causa niega (lo que sigue al disparador).
+ *  3. El control no es honesto sobre el hueco: si empieza con "Sin / No / Falta / Ninguno" o
+ *     lleva "TBD" dice justamente que falta, y eso NO es una contradiccion (en el 173, 7 de las
+ *     12 candidatas eran "TBD - falta ..." y no eran error).
+ *
+ * "Sin X" y "Falta de X" NO son disparadores por si solos, a proposito: en los AMFE de la casa
+ * son la forma corriente de nombrar una omision ("Proveedor sin certificado VW 50180 vigente"
+ * con el control "Certificado VW 50180 del proveedor por lote") y el control es justo la
+ * contramedida. Con ellos el check marcaba 149 controles de 2044 causas, casi todos de ese
+ * tipo; con la negacion de existencia marca 7. "Falta de / ausencia de" entra solo cuando el
+ * control ademas AFIRMA existencia con una palabra propia de eso (disponible, definido,
+ * asignado, establecido, existe, cuenta con, provisto): "falta de ayudas visuales" contra
+ * "ayudas visuales disponibles en el puesto".
+ *
+ * Avisa, no corrige: el control correcto y la D los define el equipo.
+ */
+const sinAcentos = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+const NEGACION_EXISTENCIA_RE = new RegExp('\\b(?:' + [
+    'no\\s+(?:hay|existe|existen|tiene|tienen|lleva|llevan|cuenta|cuentan|posee|poseen|dispone|disponen)(?:\\s+con)?',
+    'no\\s+(?:esta|estan)\\s+(?:definid|asignad|disponible|identific|senaliz|document|establecid|indicad|marcad)\\w*',
+    'no\\s+se\\s+(?:define|definen|asigna|asignan|establece|establecen|cuenta\\s+con|dispone\\s+de)',
+    'carece[n]?(?:\\s+de)?',
+    'inexistente[s]?',
+].join('|') + ')\\b');
+const NEGACION_FALTA_RE = /\b(?:falta[n]?|ausencia)\s+de\b/;
+/** Palabras con las que un control AFIRMA que algo existe (solo para el disparador "falta de"). */
+const AFIRMA_EXISTENCIA_RE = /\b(?:definid[oa]s?|asignad[oa]s?|disponibles?|establecid[oa]s?|existe[n]?|cuenta[n]?\s+con|provist[oa]s?)\b/;
+/** El control arranca diciendo que falta algo: es coherente con la causa, no la contradice. */
+const CONTROL_ADMITE_HUECO_RE = /^\s*(?:sin|no|ningun[oa]?|falta|ausencia|pendiente)\b|\btbd\b/;
+/** Palabras tan del puesto de trabajo que compartirlas no dice que se hable de lo mismo. */
+const PALABRAS_GENERICAS = new Set(['puesto', 'puestos', 'operador', 'operadores', 'produccion', 'proceso']);
+
+function raicesDe(textoSinAcentos) {
+    const out = new Set();
+    for (const w of textoSinAcentos.match(/[a-z]{6,}/g) ?? []) {
+        if (!PALABRAS_GENERICAS.has(w)) out.add(w.slice(0, 6));
+    }
+    return out;
+}
+
+/**
+ * ¿El control afirma lo que la causa de su misma fila niega? Predicado puro, sin AMFE: lo
+ * usa el check y lo puede usar cualquier script que redacte controles. Criterio arriba.
+ *
+ * @param {string} causa   texto de la causa
+ * @param {string} control preventionControl o detectionControl de esa causa
+ * @returns {null | {disparador: string, compartidas: string[], nivel: 'existencia'|'falta'}}
+ *          `compartidas` son las raices de 6 letras en comun; `nivel` dice que disparador salto.
+ */
+export function controlContradiceCausa(causa, control) {
+    const k = sinAcentos(control);
+    if (!k.trim() || k.trim() === '-' || CONTROL_ADMITE_HUECO_RE.test(k)) return null;
+    const c = sinAcentos(causa);
+
+    let m = c.match(NEGACION_EXISTENCIA_RE);
+    let nivel = 'existencia';
+    if (!m) {
+        m = c.match(NEGACION_FALTA_RE);
+        if (!m || !AFIRMA_EXISTENCIA_RE.test(k)) return null;
+        nivel = 'falta';
+    }
+
+    const enLaCausa = raicesDe(c);
+    const enLoNegado = raicesDe(c.slice(m.index + m[0].length));
+    const enElControl = raicesDe(k);
+    const compartidas = [...enLaCausa].filter((r) => enElControl.has(r));
+    if (compartidas.length < 2) return null;
+    if (!compartidas.some((r) => enLoNegado.has(r))) return null;
+    return { disparador: m[0].trim(), compartidas, nivel };
 }
 
 /**
@@ -848,8 +943,9 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         // Un control que depende de una PERSONA mirando, tocando, escuchando,
                         // contando o revisando un papel es inspeccion humana: D=8 con el metodo
                         // no probado, 6 probado (amfe.md §13). Debajo de 6 hace falta instrumento
-                        // con capacidad confirmada o poka-yoke. Avisa desde 6 porque el texto del
-                        // control no dice si el metodo esta probado.
+                        // con capacidad confirmada o poka-yoke. Avisa con D 7 o menos (hasta el
+                        // 30/09/2026 era 6 o menos): el texto del control no dice si el metodo esta
+                        // probado, y el 7 es el valor de maquina, no de una persona.
                         // Lo destapo /auditoria-cliente sobre el AMFE 172 el 24/08/2026: 47 causas
                         // con controles visuales calificadas D=3-6. Al corregirlas el AP paso de
                         // L=9/M=22/H=15 a M=12/H=35 — el riesgo estaba subdeclarado a la mitad.
@@ -858,7 +954,7 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         // Avisa, no corrige: la calificacion es dato tecnico del equipo.
                         if (!missD && esDeteccionHumanaOptimista(c.detectionControl, c.detection)) {
                             issues.push({ ...cCtx, type: 'DETECTION_HUMANA_OPTIMISTA',
-                                detail: `D=${Number(c.detection)} para un control que depende de una persona ("${String(c.detectionControl).slice(0, 60)}"). Tabla P3 oficial: la inspeccion humana va D=8 con el metodo no probado y 6 probado` });
+                                detail: `D=${Number(c.detection)} para un control que depende de una persona ("${String(c.detectionControl).slice(0, 60)}"). Tabla P3 oficial: la inspeccion humana va D=8 con el metodo no probado y 6 probado (el 7 es de maquina)` });
                         }
 
                         // DETECCION_MUESTREO_OPTIMISTA (WARNING) — Tabla P3 renglon 9.
@@ -918,6 +1014,25 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                                     detail: `${campo} cita la fuente entre parentesis "(${cita[1].slice(0, 60)})" — la fuente no va al documento`,
                                 });
                             }
+                        }
+
+                        // CONTROL_CONTRADICE_CAUSA (WARNING) — la causa dice que algo NO existe y el
+                        // control de la misma fila se apoya en eso (AMFE 173, 21/09/2026: "no hay un
+                        // patron de comparacion" / "Control visual contra el patron del puesto").
+                        // Un issue por CAUSA (no por control): issueKey() no distingue el campo, y
+                        // dos issues con la misma clave taparian al segundo en el diff.
+                        // Memoria feedback_un_control_no_puede_afirmar_lo_que_su_causa_niega.
+                        const contradicciones = ['preventionControl', 'detectionControl']
+                            .map((campo) => ({ campo, r: controlContradiceCausa(causeDesc, c[campo]) }))
+                            .filter((x) => x.r);
+                        if (contradicciones.length) {
+                            const partes = contradicciones.map(({ campo, r }) =>
+                                `${campo} "${String(c[campo]).trim().slice(0, 60)}" comparte "${r.compartidas.join(', ')}" con lo que la causa niega ("${r.disparador}")`);
+                            issues.push({
+                                ...cCtx, type: 'CONTROL_CONTRADICE_CAUSA',
+                                campos: contradicciones.map((x) => x.campo),
+                                detail: `${partes.join('; ')}. El control describe lo que HAY: si eso falta, va "TBD - falta <lo que falta>", y la D se revisa contra la Tabla P3`,
+                            });
                         }
 
                         // Candado anti-invento en el TEXTO DE LA CAUSA (23/08/2026).
@@ -1000,6 +1115,10 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                                 const fuenteCliente = String(c.specialCharSource || '').trim();
                                 issues.push(fuenteCliente
                                     ? { ...cCtx, type: 'CARACTERISTICA_CLIENTE_S_MENOR', severity: 'WARNING',
+                                        // La decision de Fak sobre esta diferencia (campo opcional de la
+                                        // causa): el modo "entrega" de amfeReadiness.mjs bloquea la que
+                                        // llega sin decision escrita. Aca solo se transporta.
+                                        decision: String(c.specialCharDecision || '').trim(),
                                         detail: `el cliente la designo critica (${specialCh}, ${fuenteCliente}) y el efecto de esta fila da S=${sN}: se informa la diferencia al cliente, NO se sube la S` }
                                     : { ...cCtx, type: 'CAUSE_CC_LOW_SEVERITY',
                                         detail: `marcada critica (${specialCh}) con S=${sN}: el I-AC-005 exige S 9 o 10, sin excepciones (si el efecto habla de seguridad o ley, la S es la que esta mal; si la designo el cliente, declarar specialCharSource)` });

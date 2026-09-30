@@ -8,6 +8,9 @@
  *   node scripts/_readiness.mjs            # scorecard detallado por AMFE
  *   node scripts/_readiness.mjs --summary  # una linea por AMFE
  *   node scripts/_readiness.mjs --filter=128   # solo AMFEs cuyo numero/proyecto matchea
+ *   node scripts/_readiness.mjs --entrega      # modo ENTREGA: TBD en campos exportables,
+ *                                              # CONTROL_CON_CITA y CARACTERISTICA_CLIENTE_S_MENOR
+ *                                              # sin decision pasan a bloqueantes (amfeReadiness.mjs)
  *
  * READ-ONLY, no toca Supabase. Requiere .env.local (entorno de Fak).
  * Exit 1 si algun AMFE esta NO LISTO (util para gates/CI).
@@ -16,6 +19,7 @@ import { connectSupabase, parseData } from './_lib/amfeIo.mjs';
 import { computeReadiness, formatScorecard } from './_lib/amfeReadiness.mjs';
 
 const SUMMARY = process.argv.includes('--summary');
+const ENTREGA = process.argv.includes('--entrega');
 const filterArg = process.argv.find(a => a.startsWith('--filter='));
 const filter = filterArg ? filterArg.split('=')[1].toLowerCase() : null;
 
@@ -40,7 +44,7 @@ for (const row of amfes) {
         });
         continue;
     }
-    scores.push(computeReadiness(doc, row.project_name, row.amfe_number, doc.header));
+    scores.push(computeReadiness(doc, row.project_name, row.amfe_number, doc.header, { entrega: ENTREGA }));
 }
 
 const listos = scores.filter(s => s.verdict === 'LISTO');
@@ -49,7 +53,7 @@ const noListos = scores.filter(s => s.verdict === 'NO_LISTO');
 console.log('\n╔══════════════════════════════════════════════════════════════╗');
 console.log('║        AMFE LISTO PARA ENTREGAR — scorecard de readiness       ║');
 console.log('╚══════════════════════════════════════════════════════════════╝\n');
-console.log(`  LISTOS: ${listos.length} / ${scores.length}     NO LISTOS: ${noListos.length}\n`);
+console.log(`  LISTOS: ${listos.length} / ${scores.length}     NO LISTOS: ${noListos.length}${ENTREGA ? '     (modo ENTREGA)' : ''}\n`);
 
 // NO LISTOS primero, ordenados por cantidad de bloqueantes (peor arriba)
 const ordered = [...scores].sort((a, b) => {

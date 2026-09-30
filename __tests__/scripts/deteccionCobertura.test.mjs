@@ -130,6 +130,46 @@ describe('el muestreo NO entra por el check de deteccion humana — el bug del 3
     });
 });
 
+// D=7 — Tabla P3 oficial (SETEC pag. 109-111): a una PERSONA le corresponde 8 (metodo no
+// probado) o 6 (probado); el 7 de la oficial es de la MAQUINA con metodo no probado. El 7 era
+// el valor del borrador de 2017 ("lo mismo en la propia estacion") y hasta el 30/09/2026 el
+// check avisaba solo con D <= 6: un script que recalificaba a 7 cerraba sin un solo aviso.
+describe('DETECTION_HUMANA_OPTIMISTA — desde el 30/09/2026 avisa tambien con D=7', () => {
+    const VISUAL = 'Inspeccion visual 100% + pieza patron';
+
+    it.each([1, 4, 6, 7])('D=%i con un control humano al 100%% avisa', (d) => {
+        expect(esDeteccionHumanaOptimista(VISUAL, d)).toBe(true);
+        expect(tipos(docConDeteccion(VISUAL, d))).toContain('DETECTION_HUMANA_OPTIMISTA');
+    });
+
+    it.each([8, 9, 10])('D=%i ya esta donde la tabla lo pone: no avisa', (d) => {
+        expect(esDeteccionHumanaOptimista(VISUAL, d)).toBe(false);
+        expect(tipos(docConDeteccion(VISUAL, d))).not.toContain('DETECTION_HUMANA_OPTIMISTA');
+    });
+
+    it('con D=7 sigue siendo WARNING: el 8 lo confirma el equipo, no el validador', () => {
+        const r = validateAmfeDoc(docConDeteccion(VISUAL, 7), 'X', 'T');
+        expect(r.warning.some(i => i.type === 'DETECTION_HUMANA_OPTIMISTA')).toBe(true);
+        expect(r.critical.some(i => i.type === 'DETECTION_HUMANA_OPTIMISTA')).toBe(false);
+    });
+
+    it('un instrumento nombrado sigue eximiendo: visual + calibre al 100% con D=7 no avisa', () => {
+        expect(esDeteccionHumanaOptimista('Inspeccion visual con calibre 100%', 7)).toBe(false);
+    });
+
+    it('el muestreo sigue sin entrar por aca, tampoco con D=7 (tiene su propio piso: 9)', () => {
+        expect(esDeteccionHumanaOptimista('Verificacion visual de la etiqueta, 1 muestra por entrega', 7)).toBe(false);
+        expect(tipos(docConDeteccion('Verificacion visual de la etiqueta, 1 muestra por entrega', 7)))
+            .toContain('DETECCION_MUESTREO_OPTIMISTA');
+    });
+
+    it('D invalida o vacia no explota', () => {
+        expect(esDeteccionHumanaOptimista(VISUAL, 0)).toBe(false);
+        expect(esDeteccionHumanaOptimista(VISUAL, '')).toBe(false);
+        expect(esDeteccionHumanaOptimista(VISUAL, undefined)).toBe(false);
+    });
+});
+
 describe('DETECCION_SIN_CONTROL_DECLARADO', () => {
     it.each([['', 8], ['-', 8], ['   ', 5], ['TBD', 8]])(
         'marca %s con D=%i porque no hay metodo declarado', (texto, d) => {

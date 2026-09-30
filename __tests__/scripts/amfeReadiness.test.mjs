@@ -11,7 +11,8 @@
  *  7. header vacio                               -> NO LISTO (HEADER_MISSING)
  */
 import { describe, it, expect } from 'vitest';
-import { computeReadiness } from '../../scripts/_lib/amfeReadiness.mjs';
+import { computeReadiness, formatScorecard, scanTbdExportable } from '../../scripts/_lib/amfeReadiness.mjs';
+import { calculateAP } from '../../scripts/_lib/amfeIo.mjs';
 
 const HDR = {
     organization: 'BARACK MERCOSUL', client: 'VWA',
@@ -143,5 +144,125 @@ describe('computeReadiness — scorecard AMFE listo para entregar', () => {
     it('maestro: no exige partNumber/applicableParts', () => {
         const s = computeReadiness(makeDoc({ header: { ...HDR, partNumber: '', applicableParts: '' } }), 'MAESTRO-INY', 'AMFE-MAESTRO-INY-001', { ...HDR, partNumber: '', applicableParts: '' });
         expect(s.blockers.some(b => b.type === 'HEADER_MISSING')).toBe(false);
+    });
+});
+
+/**
+ * MODO ENTREGA (30/09/2026): para el AMFE que sale de verdad, tres avisos pasan a bloqueantes
+ * — TBD en un campo que el export imprime, CONTROL_CON_CITA, y CARACTERISTICA_CLIENTE_S_MENOR
+ * sin decision escrita. Sin el modo el scorecard es el de siempre.
+ */
+describe('computeReadiness — modo ENTREGA', () => {
+    const CITA = 'Guia en el pie de la maquina (HO 927 REV6, hoja 50)';
+    // CC con S=8: el cliente la designo critica y el efecto da S=8 (AMFE 173). El AP sale de la
+    // tabla para no disparar CAUSE_AP_MISMATCH, que es CRITICAL en los dos modos.
+    const apCliente = calculateAP(8, 3, 4);
+    const causaCliente = (extra = {}) => ({
+        cause: { specialChar: 'CC', severity: 8, occurrence: 3, detection: 4, ap: apCliente, actionPriority: apCliente,
+            specialCharSource: 'LSC v1 del cliente, SC 1.4 (SMRC la marca <cc/h>)', ...extra },
+    });
+    const hay = (s, tipo) => s.blockers.some(b => b.type === tipo);
+    const avisa = (s, tipo) => s.warnings.some(w => w.type === tipo);
+
+    it('un AMFE limpio es LISTO en los dos modos, y el scorecard dice en cual corrio', () => {
+        const normal = computeReadiness(makeDoc(), 'Armrest', 'AMFE-TEST', HDR);
+        const entrega = computeReadiness(makeDoc(), 'Armrest', 'AMFE-TEST', HDR, { entrega: true });
+        expect(normal.verdict).toBe('LISTO');
+        expect(entrega.verdict).toBe('LISTO');
+        expect(normal.modo).toBe('normal');
+        expect(entrega.modo).toBe('entrega');
+    });
+
+    it('TBD en un control: sin el modo es LISTO como siempre; con el modo, NO LISTO', () => {
+        const doc = () => makeDoc({ cause: { preventionControl: 'Calibre digital, frecuencia TBD' } });
+        const normal = computeReadiness(doc(), 'Armrest', 'AMFE-TEST', HDR);
+        expect(normal.verdict).toBe('LISTO');
+        expect(hay(normal, 'TBD_EN_CAMPO_EXPORTABLE')).toBe(false);
+
+        const entrega = computeReadiness(doc(), 'Armrest', 'AMFE-TEST', HDR, { entrega: true });
+        expect(entrega.verdict).toBe('NO_LISTO');
+        const b = entrega.blockers.find(x => x.type === 'TBD_EN_CAMPO_EXPORTABLE');
+        expect(b.campo).toBe('preventionControl');
+        expect(b.opNum).toBe('20');
+        expect(entrega.dimensions['TBD en campos exportables'].blockers).toBe(1);
+    });
+
+    it('TBD en cada campo que el export imprime: efecto, funcion, nombre de WE, causa y accion', () => {
+        const doc = makeDoc({ cause: { cause: 'Presion TBD', description: 'Presion TBD', optimizationAction: 'TBD' },
+            failure: { effectEndUser: 'TBD' } });
+        doc.operations[0].workElements[0].name = 'Inyectora TBD';
+        doc.operations[0].workElements[0].functions[0].description = 'Inyectar TBD';
+        doc.operations[0].workElements[0].functions[0].functionDescription = 'Inyectar TBD';
+        const campos = scanTbdExportable(doc, HDR, 'AMFE-TEST').map(i => i.campo);
+        expect(campos).toEqual(expect.arrayContaining([
+            'workElement.name', 'function.description', 'effectEndUser', 'cause.cause', 'optimizationAction']));
+    });
+
+    it('TBD en la caratula (header) tambien bloquea la entrega', () => {
+        const hdr = { ...HDR, partNumber: 'TBD' };
+        const s = computeReadiness(makeDoc({ header: hdr }), 'Armrest', 'AMFE-TEST', hdr, { entrega: true });
+        expect(s.blockers.find(b => b.type === 'TBD_EN_CAMPO_EXPORTABLE').campo).toBe('header.partNumber');
+    });
+
+    it('"tbd" adentro de otra palabra no es un TBD', () => {
+        const s = computeReadiness(makeDoc({ cause: { preventionControl: 'Tabla STBDX de ajuste' } }), 'Armrest', 'AMFE-TEST', HDR, { entrega: true });
+        expect(hay(s, 'TBD_EN_CAMPO_EXPORTABLE')).toBe(false);
+    });
+
+    it('CONTROL_CON_CITA: aviso en el dia a dia, bloqueante en la entrega', () => {
+        const normal = computeReadiness(makeDoc({ cause: { preventionControl: CITA } }), 'Armrest', 'AMFE-TEST', HDR);
+        expect(normal.verdict).toBe('LISTO');
+        expect(avisa(normal, 'CONTROL_CON_CITA')).toBe(true);
+
+        const entrega = computeReadiness(makeDoc({ cause: { preventionControl: CITA } }), 'Armrest', 'AMFE-TEST', HDR, { entrega: true });
+        expect(entrega.verdict).toBe('NO_LISTO');
+        expect(hay(entrega, 'CONTROL_CON_CITA')).toBe(true);
+        expect(avisa(entrega, 'CONTROL_CON_CITA')).toBe(false);
+        expect(entrega.dimensions['Controles: cita de la fuente'].blockers).toBe(1);
+    });
+
+    it('CARACTERISTICA_CLIENTE_S_MENOR sin decision: aviso en el dia a dia, bloqueante en la entrega', () => {
+        const normal = computeReadiness(makeDoc(causaCliente()), 'Armrest', 'AMFE-TEST', HDR);
+        expect(normal.verdict).toBe('LISTO');
+        expect(avisa(normal, 'CARACTERISTICA_CLIENTE_S_MENOR')).toBe(true);
+
+        const entrega = computeReadiness(makeDoc(causaCliente()), 'Armrest', 'AMFE-TEST', HDR, { entrega: true });
+        expect(entrega.verdict).toBe('NO_LISTO');
+        expect(hay(entrega, 'CARACTERISTICA_CLIENTE_S_MENOR')).toBe(true);
+    });
+
+    it('...con la decision escrita en specialCharDecision sigue siendo aviso, no bloquea', () => {
+        const doc = makeDoc(causaCliente({ specialCharDecision: 'Fak 22/09/2026: la S queda en 8, se informa la diferencia a SMRC' }));
+        const entrega = computeReadiness(doc, 'Armrest', 'AMFE-TEST', HDR, { entrega: true });
+        expect(entrega.verdict).toBe('LISTO');
+        expect(hay(entrega, 'CARACTERISTICA_CLIENTE_S_MENOR')).toBe(false);
+        expect(avisa(entrega, 'CARACTERISTICA_CLIENTE_S_MENOR')).toBe(true);
+    });
+
+    it('una decision en blanco ("  ") no cuenta como decision', () => {
+        const entrega = computeReadiness(makeDoc(causaCliente({ specialCharDecision: '   ' })), 'Armrest', 'AMFE-TEST', HDR, { entrega: true });
+        expect(hay(entrega, 'CARACTERISTICA_CLIENTE_S_MENOR')).toBe(true);
+    });
+
+    it('el modo entrega no afloja nada: un critico sigue bloqueando en los dos', () => {
+        const s = computeReadiness(makeDoc({ cause: { occurrence: '' } }), 'Armrest', 'AMFE-TEST', HDR, { entrega: true });
+        expect(s.verdict).toBe('NO_LISTO');
+        expect(hay(s, 'CAUSE_MISSING_SOD')).toBe(true);
+    });
+
+    it('pasar opts vacios, nulos o entrega:false es el modo de siempre', () => {
+        const doc = () => makeDoc({ cause: { preventionControl: CITA + ' TBD' } });
+        for (const opts of [undefined, null, {}, { entrega: false }]) {
+            const s = computeReadiness(doc(), 'Armrest', 'AMFE-TEST', HDR, opts);
+            expect(s.modo).toBe('normal');
+            expect(s.verdict).toBe('LISTO');
+        }
+    });
+
+    it('formatScorecard marca "(entrega)" solo en ese modo', () => {
+        const normal = formatScorecard(computeReadiness(makeDoc(), 'Armrest', 'AMFE-TEST', HDR), { verbose: false });
+        const entrega = formatScorecard(computeReadiness(makeDoc(), 'Armrest', 'AMFE-TEST', HDR, { entrega: true }), { verbose: false });
+        expect(normal).not.toContain('(entrega)');
+        expect(entrega).toContain('(entrega)');
     });
 });
