@@ -207,19 +207,10 @@ def combo(mod, vk):
 
 
 def escribir(texto):
-    """Teclas reales como las de _arbInsumo: VkKeyScan (con SHIFT si hace falta) y, para un
-    caracter que el teclado no tiene, KEYEVENTF_UNICODE."""
+    """Cada caracter como KEYEVENTF_UNICODE: no depende del teclado (es-AR pide AltGr para
+    @ \\ ^ ~) y el login del arb (RichEdit20A) lo acepta: el 30/09/2026 escribio FACUNDO asi."""
     for ch in texto:
-        vks = u.VkKeyScanW(ch)
-        if vks != -1 and (vks & 0xFFFF) != 0xFFFF:
-            vk, shift = vks & 0xFF, (vks >> 8) & 1
-            if shift:
-                _enviar(vk=0x10)
-            tecla(vk)
-            if shift:
-                _enviar(vk=0x10, flags=0x2)
-        else:
-            _enviar(scan=ord(ch), flags=0x4); _enviar(scan=ord(ch), flags=0x4 | 0x2)
+        _enviar(scan=ord(ch), flags=0x4); _enviar(scan=ord(ch), flags=0x4 | 0x2)
         time.sleep(0.02)
 
 
@@ -263,8 +254,9 @@ def vaciar_campo(h=None):
 # ---------------------------------------------------------------- login
 
 def entrar(login, usuario, clave):
-    """Un solo intento. Devuelve 'ok', 'foco' (no pude escribir: la ventana perdio el frente,
-    no se mando la clave), 'rechazo' (sigue el login: usuario o clave mal) o 'demora'."""
+    """Un solo intento. Devuelve 'ok'; 'foco' (la ventana perdio el frente antes de la clave:
+    no se mando); 'foco_tarde' (lo perdio despues de tipear la clave: no se apreto Acepta);
+    'usuario' (no quedo el usuario guardado); 'rechazo' (el login sigue abierto a los 45 s)."""
     if not activar(login):
         log('login: no pude traerla al frente')
         return 'foco'
@@ -296,7 +288,7 @@ def entrar(login, usuario, clave):
             return 'foco'
         vaciar_campo(); escribir(clave)
     if not al_frente(login):
-        return 'foco'
+        return 'foco_tarde'       # la clave ya se tipeo: no se aprieta Acepta
     tecla(0x0D)                   # ENTER = Acepta
     fin = time.time() + 45
     while time.time() < fin:
@@ -351,8 +343,17 @@ def asegurar_z():
 def asegurar_icono():
     """La primera vez que se llega al servidor, guarda el icono del arb en local y se lo pone a
     los accesos directos (un icono en Z: no se ve cuando Z: esta desconectado)."""
-    if os.path.exists(ICONO):
+    if os.path.exists(ICONO) and os.path.getsize(ICONO) > 0:
         return
+    try:
+        _guardar_icono()
+    except Exception as e:                   # sin icono el arb igual se abre
+        log('icono: %s' % type(e).__name__)
+        if os.path.exists(ICONO) and os.path.getsize(ICONO) == 0:
+            os.remove(ICONO)
+
+
+def _guardar_icono():
     ps = ("$i=[System.Drawing.Icon]::ExtractAssociatedIcon('%s'); $f=[IO.File]::Create('%s'); "
           "$i.Save($f); $f.Close(); $w=New-Object -ComObject WScript.Shell; "
           "$d=[Environment]::GetFolderPath('Desktop'); "
@@ -360,7 +361,7 @@ def asegurar_icono():
           "if(Test-Path $p){ $l=$w.CreateShortcut($p); $l.IconLocation='%s,0'; $l.Save() } }"
           % (EXE, ICONO, ICONO))
     subprocess.run(['powershell.exe', '-NoProfile', '-Command', 'Add-Type -AssemblyName System.Drawing; ' + ps],
-                   capture_output=True, creationflags=0x08000000)
+                   capture_output=True, creationflags=0x08000000, timeout=60)
     log('icono guardado: %s' % os.path.exists(ICONO))
 
 
@@ -431,6 +432,10 @@ def main(argv):
         aviso('No pude escribir en "Inicio de Sesion": otra ventana le saco el frente.\n'
               'No se mando la clave. Hacele click al arb y volve a apretar ARB.')
         return 1
+    if res == 'foco_tarde':
+        aviso('Otra ventana le saco el frente al arb mientras escribia la clave, asi que no '
+              'apreté Aceptar.\nBorrá lo que haya quedado en "Inicio de Sesion" y volve a apretar ARB.')
+        return 1
     if res == 'usuario':
         aviso('No pude dejar el Usuario en "%s" (el arb lo precarga con otro nombre).\n'
               'No se mando la clave. Borralo a mano, escribi %s y la clave.' % (usuario, usuario))
@@ -447,5 +452,22 @@ def main(argv):
     return 0
 
 
+def una_sola_vez(argv):
+    """Un doble click repetido no lanza un segundo login (mutex con nombre de Windows) y
+    ningun error muere en silencio: pythonw no tiene consola, asi que va al log y a un aviso."""
+    if '--diagnostico' not in argv:
+        k32 = ctypes.WinDLL('kernel32', use_last_error=True)
+        k32.CreateMutexW(None, False, 'Local\\BarackArbLanzar')
+        if ctypes.get_last_error() == 183:   # ERROR_ALREADY_EXISTS
+            log('ya hay un lanzador corriendo: salgo')
+            return 0
+    try:
+        return main(argv)
+    except Exception as e:
+        log('error: %s: %s' % (type(e).__name__, str(e)[:200]))
+        aviso('El acceso directo del arb fallo (%s).\nEl detalle quedo en %s' % (type(e).__name__, LOG))
+        return 1
+
+
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(una_sola_vez(sys.argv[1:]))
