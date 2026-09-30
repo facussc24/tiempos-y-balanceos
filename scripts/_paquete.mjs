@@ -15,6 +15,8 @@
  *   node scripts/_paquete.mjs --perfil "Nombre Apellido - Sector"       (una vez por PC)
  *   node scripts/_paquete.mjs --aportar <ruta> [--autor "..."] [--que "..."] [--simular]
  *   node scripts/_paquete.mjs --aportes [--autor "..."]                 (lo lee Fak)
+ *   node scripts/_paquete.mjs --pendrive <carpeta> [--nota "..."]       (lo corre Fak: arma <carpeta>\Base + Instalar.*)
+ *   node scripts/_paquete.mjs --donde                                   (imprime la carpeta de la nube; lo usa la sync)
  *   --nube <carpeta>  --origen <carpeta>  --destino <carpeta>  --lista <json>   (para probar)
  *
  * QUE HAY EN LA NUBE
@@ -994,12 +996,60 @@ export function listarAportes({ nube, autor = null }) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// PENDRIVE: la base + el instalador, para llevarlo en mano a la PC de un compañero
+// ---------------------------------------------------------------------------------------------
+
+/** Lo que va en la RAIZ del pendrive (al lado de la carpeta `Base`). Vive en tools/paquete-equipo/. */
+export const REL_INSTALADOR = 'tools/paquete-equipo';
+export const ARCHIVOS_PENDRIVE = ['Instalar.cmd', 'Instalar.ps1', 'LEEME.txt'];
+
+/**
+ * Arma `<pendrive>\Base` (la misma publicacion que iria a la nube) y copia al lado los archivos de
+ * instalacion. El instalador corre `_paquete.mjs --actualizar --nube <pendrive>\Base`, asi que el
+ * pendrive se instala con EXACTAMENTE la misma logica que la nube (sin pisar lo que ya tenga el
+ * compañero). La carpeta del pendrive tiene que existir: no se inventan unidades ni carpetas madre.
+ */
+export function armarPendrive({ origen, pendrive, lista, notas = [], forzar = false, ahora = new Date(), identidad = identidadLocal() }) {
+    const res = { estado: 'rechazado', errores: [], avisos: [], copiados: [] };
+    if (!pendrive) { res.errores.push('falta la carpeta del pendrive (--pendrive <carpeta>)'); return res; }
+    res.pendrive = pendrive;
+    res.base = path.join(pendrive, 'Base');
+    let st;
+    try { st = fs.statSync(pendrive); } catch { st = null; }
+    if (!st || !st.isDirectory()) { res.errores.push(`la carpeta del pendrive no existe: ${pendrive} (¿está puesto el pendrive?)`); return res; }
+
+    const instaladores = new Map();
+    for (const n of ARCHIVOS_PENDRIVE) {
+        const abs = path.join(origen, ...REL_INSTALADOR.split('/'), n);
+        if (fs.existsSync(abs)) instaladores.set(`${REL_INSTALADOR}/${n}`, abs);
+        else res.errores.push(`falta ${REL_INSTALADOR}/${n}`);
+    }
+    if (res.errores.length) return res;
+    for (const h of revisarContenido(instaladores, patronesFiltro({ lista, identidad }))) res.errores.push(`${h.ruta}${h.linea ? `:${h.linea}` : ''}: ${h.motivo}`);
+    if (res.errores.length) return res;
+
+    fs.mkdirSync(res.base, { recursive: true });
+    const r = publicar({ origen, nube: res.base, lista, notas, forzar, ahora, identidad });
+    res.publicacion = r;
+    res.avisos.push(...r.avisos);
+    if (r.estado === 'rechazado') { res.errores.push(...r.errores); return res; }
+    try {
+        for (const [rel, abs] of instaladores) {
+            copiarVerificando(abs, path.join(pendrive, path.basename(rel)), sha256Archivo(abs));
+            res.copiados.push(path.basename(rel));
+        }
+    } catch (e) { res.errores.push(`no pude copiar los archivos de instalacion: ${e.message}`); return res; }
+    res.estado = 'listo';
+    return res;
+}
+
+// ---------------------------------------------------------------------------------------------
 // Linea de comandos
 // ---------------------------------------------------------------------------------------------
 
 export function parsearArgs(argv) {
     const a = { notas: [] };
-    const conValor = new Set(['nube', 'origen', 'destino', 'lista', 'nota', 'autor', 'que', 'aportar', 'perfil']);
+    const conValor = new Set(['nube', 'origen', 'destino', 'lista', 'nota', 'autor', 'que', 'aportar', 'perfil', 'pendrive']);
     for (let i = 0; i < argv.length; i++) {
         if (!argv[i].startsWith('--')) continue;
         const k = argv[i].slice(2);
@@ -1029,13 +1079,39 @@ function main() {
     const origen = path.resolve(a.origen || RAIZ);
     const destino = path.resolve(a.destino || RAIZ);
     const nube = a.nube ? path.resolve(a.nube) : buscarNube();
-    const modos = ['publicar', 'actualizar', 'ver', 'aportar', 'aportes', 'perfil'].filter((k) => a[k]);
+    const modos = ['publicar', 'actualizar', 'ver', 'aportar', 'aportes', 'perfil', 'pendrive', 'donde'].filter((k) => a[k]);
     if (modos.length !== 1) {
         say('Uso: node scripts/_paquete.mjs --publicar | --ver | --actualizar | --aportar <ruta> | --aportes | --perfil "Nombre Apellido - Sector"');
+        say('     Fak: --pendrive <carpeta del pendrive> (arma Base + el instalador) · --donde (muestra la carpeta de la nube)');
         say('     opciones: --nota "texto" · --simular · --forzar · --reponer · --autor "..." · --que "..." · --nube <carpeta> · --destino <carpeta>');
         return modos.length ? 1 : 0;
     }
     const modo = modos[0];
+
+    if (modo === 'donde') {
+        if (nube && fs.existsSync(nube)) { say(nube); return 0; }
+        console.error(`✗ no encuentro la carpeta "${NOMBRE_CARPETA_NUBE}" en la biblioteca sincronizada`);
+        return 1;
+    }
+
+    if (modo === 'pendrive') {
+        const rutaLista = path.resolve(a.lista || path.join(origen, ...REL_LISTA.split('/')));
+        let lista;
+        try { lista = cargarLista(rutaLista); } catch (e) { console.error(`✗ ${e.message}`); return 1; }
+        const r = armarPendrive({ origen, pendrive: path.resolve(a.pendrive), lista, notas: a.notas, forzar: !!a.forzar });
+        say(`Pendrive → ${r.pendrive}`);
+        if (r.estado !== 'listo') {
+            console.error(`\n✗ NO QUEDO LISTO (${r.errores.length} problema(s)):`);
+            for (const e of r.errores.slice(0, 40)) console.error(`    - ${e}`);
+            return 1;
+        }
+        const p = r.publicacion;
+        say(`  Base: versión ${p.version} (${p.estado === 'sin_novedades' ? 'ya estaba al día' : `${p.archivos} archivos, ${kb(p.bytes)}`})`);
+        say(`  Instalador: ${r.copiados.join(', ')}`);
+        imprimirLista(`  Avisos (no frenan):`, r.avisos, 15);
+        say('\n✓ Listo. En la PC del compañero: doble click en Instalar.cmd del pendrive.');
+        return 0;
+    }
 
     if (modo === 'publicar') {
         const rutaLista = path.resolve(a.lista || path.join(origen, ...REL_LISTA.split('/')));

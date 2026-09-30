@@ -1,0 +1,6 @@
+﻿BASE DE CLAUDE - INGENIERÍA BARACK MERCOSUL
+1. Doble click en "Instalar" (Instalar.cmd), desde el pendrive. No hace falta ser administrador.
+2. Te pide tu nombre y apellido y tu sector, una sola vez: con eso se identifican tus aportes.
+3. Copia la base a C:\Dev\BarackMercosul (si tu PC ya tiene esa carpeta) o a C:\Dev\BarackIngenieria, sin pisar nada tuyo, y le agrega a tu CLAUDE.md la línea @CLAUDE.equipo.md.
+4. Deja una tarea en segundo plano (sin ventanas, al iniciar sesión y cada 4 horas) que sincroniza tu PC con la nube del equipo: baja las mejoras que publique Fak sin borrar ni pisar lo tuyo.
+5. Si algo dice "falta" o no anda, avisale a Fak (Facundo Santoro). Para ver si hay novedades, preguntale a tu Claude: "¿hay actualizaciones de Fak?".

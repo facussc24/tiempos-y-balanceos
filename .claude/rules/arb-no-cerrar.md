@@ -27,7 +27,7 @@ a cerrar arb sin consultarme, nueva regla dura... fue gravísimo eso"*. El caso 
 ruta de relanzamiento: memoria `no_cerrar_arb_sin_consultar`.
 
 Y ni siquiera alcanzaría con tener la contraseña: el campo `Usuario` se autocompleta con
-`FACUNDOS-PC` y el usuario real del arb es `FACUNDO`.
+el nombre de la PC y el usuario real del arb es `FACUNDO`.
 
 ## Qué está prohibido y qué no
 
