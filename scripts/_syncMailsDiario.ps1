@@ -74,6 +74,7 @@ $out = Join-Path $env:TEMP 'barack_sync_mails.out'
 $err = Join-Path $env:TEMP 'barack_sync_mails.err'
 $p = Start-Process -FilePath 'python' -ArgumentList 'scripts\_mails.py', '--sync' -WorkingDirectory $raiz `
        -NoNewWindow -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+$null = $p.Handle    # sin esto PowerShell pierde el ExitCode (30/09: 'ERROR (codigo )' con el sync OK)
 if (-not $p.WaitForExit(15 * 60 * 1000)) {
   Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
   Escribir 'RESULTADO: ERROR - _mails.py no termino en 15 min (Outlook no contesto). Se reintenta en la proxima corrida.'
