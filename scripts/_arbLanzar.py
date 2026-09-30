@@ -31,6 +31,10 @@ USUARIO_DEFAULT = 'FACUNDO'
 LOG = os.path.join(os.path.expanduser('~'), 'arb_fotos', 'lanzador.log')
 
 u = ctypes.windll.user32
+try:                                   # coordenadas reales aunque Windows escale la pantalla
+    ctypes.windll.shcore.SetProcessDpiAwareness(2)
+except Exception:
+    pass
 k = ctypes.windll.kernel32
 CB = ctypes.WINFUNCTYPE(w.BOOL, w.HWND, w.LPARAM)
 
@@ -204,7 +208,7 @@ u.VkKeyScanW.restype = ctypes.c_short
 
 def tecla(vk):
     sc = u.MapVirtualKeyW(vk, 0)
-    _enviar(vk=vk, scan=sc); time.sleep(0.02); _enviar(vk=vk, scan=sc, flags=0x2); time.sleep(0.05)
+    _enviar(vk=vk, scan=sc); time.sleep(0.015); _enviar(vk=vk, scan=sc, flags=0x2); time.sleep(0.03)
 
 
 def combo(mod, vk):
@@ -277,7 +281,8 @@ def vaciar_campo(h=None):
 def entrar(login, usuario, clave):
     """Un solo intento. Devuelve 'ok'; 'foco' (la ventana perdio el frente antes de la clave:
     no se mando); 'foco_tarde' (lo perdio despues de tipear la clave: no se apreto Acepta);
-    'usuario' (no quedo el usuario guardado); 'rechazo' (el login sigue abierto a los 45 s)."""
+    'usuario' (no quedo el usuario guardado); 'rechazo' (el arb puso un cartel);
+    'sin_respuesta' (todo escrito pero el arb no tomo Acepta en 30 s)."""
     global ULTIMO_CARTEL
     if not activar(login):
         log('login: no pude traerla al frente')
@@ -322,14 +327,15 @@ def entrar(login, usuario, clave):
         vaciar_campo(); escribir(clave)
     if not al_frente(login):
         return 'foco_tarde'       # la clave ya se tipeo: no se aprieta Acepta
-    tecla(0x0D)                   # ENTER = Acepta
+    apretar_acepta(login)
+    foto(login, 'login_despues_de_aceptar')
     # OK recien cuando: no hay "Inicio de Sesion", no hay cartel del arb y la ventana principal
     # existe, tres segundos seguidos. El 30/09/2026 se dio por bueno solo porque se cerro el
     # login, y el arb habia puesto "usuario no definido en el sistema".
-    fin = time.time() + 45
+    fin = time.time() + 30
     seguidos = 0
     while time.time() < fin:
-        time.sleep(1)
+        time.sleep(0.5)
         cartel = cartel_del_arb()
         if cartel:
             ULTIMO_CARTEL = cartel
@@ -337,13 +343,47 @@ def entrar(login, usuario, clave):
             return 'rechazo'
         if not ventana_login() and ventana_principal():
             seguidos += 1
-            if seguidos >= 3:
+            if seguidos >= 4:
                 log('login OK')
                 return 'ok'
         else:
             seguidos = 0
-    log('login: sin confirmacion a los 45 s')
-    return 'rechazo'
+    log('login: el arb no tomo Aceptar en 30 s (sin cartel)')
+    return 'sin_respuesta'
+
+
+def boton_acepta(login):
+    hallado = []
+
+    def cb(hh, l):
+        if 'cepta' in txt(hh).lower() and u.IsWindowVisible(hh):
+            hallado.append(hh)
+        return True
+    u.EnumChildWindows(login, CB(cb), 0)
+    return hallado[0] if hallado else None
+
+
+def apretar_acepta(login):
+    """El arb deja 'Acepta' gris hasta que procesa la clave, y el ENTER no lo aprieta (prueba
+    de Fak 15:21, 30/09/2026: quedo todo escrito y no entro). Se espera a que se habilite (con
+    un TAB a los 1,5 s para que el arb valide el campo) y se hace click real; si no aparece el
+    boton, ALT+A (la A esta subrayada) y ENTER."""
+    b = boton_acepta(login)
+    fin = time.time() + 6
+    tab = False
+    while b and not u.IsWindowEnabled(b) and time.time() < fin:
+        time.sleep(0.25)
+        if not tab and time.time() > fin - 4.5:
+            tecla(0x09); tab = True
+    if b and u.IsWindowEnabled(b) and al_frente(login):
+        log('login: click en Acepta')
+        click_en(b)
+        return
+    log('login: Acepta %s; pruebo ALT+A y ENTER' % ('no se habilito' if b else 'no encontrado'))
+    combo(0x12, 0x41)             # ALT+A
+    time.sleep(0.5)
+    if ventana_login():
+        tecla(0x0D)
 
 
 ULTIMO_CARTEL = ''
@@ -393,9 +433,9 @@ def esperar_login(seg=90):
     while time.time() < fin:
         h = ventana_login()
         if h:
-            time.sleep(0.8)
+            time.sleep(0.5)
             return h
-        time.sleep(1)
+        time.sleep(0.5)
     return None
 
 
@@ -527,6 +567,10 @@ def main(argv):
     if res == 'usuario':
         aviso('No pude dejar el Usuario en "%s" (el arb lo precarga con otro nombre).\n'
               'No se mando la clave. Borralo a mano, escribi %s y la clave.' % (usuario, usuario))
+        return 1
+    if res == 'sin_respuesta':
+        aviso('Escribi el usuario y la clave pero el arb no tomo "Acepta".\n'
+              'Ya esta todo escrito: apretá Acepta vos. (La clave guardada NO se cambia.)')
         return 1
     if res == 'rechazo':
         if aviso('El arb no dejo entrar%s.\n\n'
