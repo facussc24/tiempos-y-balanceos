@@ -13,7 +13,7 @@ Pagina para Fak con el plan y las decisiones: Artifact "Plan de automejora Barac
 
 - Techo de subagentes 5 -> **10 en 10 min, siempre Sonnet 5.5 con esfuerzo xhigh**.
   Hook `agentes-guard.sh` (repo + `~/.claude/hooks`), regla `techo-agentes.md`,
-  `CLAUDE_CODE_SUBAGENT_MODEL=claude-sonnet-5-5` + `..._FORCE=1` en `~/.claude/settings.json`,
+  `CLAUDE_CODE_SUBAGENT_MODEL=claude-sonnet-5-5` en `~/.claude/settings.json` (el `_FORCE=1` se saco el mismo dia: pisaba el Opus de los auditores),
   agentes `investigador` y `explorador` en `~/.claude/agents/`, `effort: xhigh` en los 3 del proyecto.
 - El hook se reescribio con builtins de bash: de 12 s a ~1 s por llamada con la PC cargada.
 - Aviso de Anthropic (guia Sonnet 5.5): xhigh/max "para trabajo donde se midio una mejora".

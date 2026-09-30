@@ -128,7 +128,7 @@ $1
 
 Que hacer: relanzar con subagent_type "investigador" (todas las herramientas) o "explorador"
 (solo lectura); los dos viven en ~/.claude/agents con model: sonnet y effort: xhigh. Un agente
-propio pasa si su definicion dice esas dos lineas. No se pasa un model distinto de sonnet.
+propio pasa si su definicion dice esas dos lineas. Excepcion: `auditor` y `auditor-cliente` van en opus.
 EOF
   exit 2
 }
