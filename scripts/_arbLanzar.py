@@ -282,7 +282,7 @@ def entrar(login, usuario, clave):
     """Un solo intento. Devuelve 'ok'; 'foco' (la ventana perdio el frente antes de la clave:
     no se mando); 'foco_tarde' (lo perdio despues de tipear la clave: no se apreto Acepta);
     'usuario' (no quedo el usuario guardado); 'rechazo' (el arb puso un cartel);
-    'sin_respuesta' (todo escrito pero el arb no tomo Acepta en 30 s)."""
+    'sin_respuesta' (todo escrito pero el arb no entro en 60 s)."""
     global ULTIMO_CARTEL
     if not activar(login):
         log('login: no pude traerla al frente')
@@ -332,7 +332,7 @@ def entrar(login, usuario, clave):
     # OK recien cuando: no hay "Inicio de Sesion", no hay cartel del arb y la ventana principal
     # existe, tres segundos seguidos. El 30/09/2026 se dio por bueno solo porque se cerro el
     # login, y el arb habia puesto "usuario no definido en el sistema".
-    fin = time.time() + 30
+    fin = time.time() + 60
     seguidos = 0
     while time.time() < fin:
         time.sleep(0.5)
@@ -348,7 +348,7 @@ def entrar(login, usuario, clave):
                 return 'ok'
         else:
             seguidos = 0
-    log('login: el arb no tomo Aceptar en 30 s (sin cartel)')
+    log('login: el arb no entro en 60 s (sin cartel)')
     return 'sin_respuesta'
 
 
@@ -368,22 +368,31 @@ def apretar_acepta(login):
     de Fak 15:21, 30/09/2026: quedo todo escrito y no entro). Se espera a que se habilite (con
     un TAB a los 1,5 s para que el arb valide el campo) y se hace click real; si no aparece el
     boton, ALT+A (la A esta subrayada) y ENTER."""
+    # Prueba de Fak 15:33 (foto login_despues_de_aceptar.png): TAB deja el foco EN Acepta, pero
+    # ni IsWindowEnabled lo vio habilitado ni ALT+A lo apreto. Orden: esperar hasta 3 s, click
+    # real sobre el boton, y si el login sigue: foco al boton + ESPACIO (aprieta el boton con
+    # foco), y por ultimo ALT+A y ENTER. Cada paso solo si el login sigue abierto y al frente.
     b = boton_acepta(login)
-    fin = time.time() + 6
-    tab = False
+    fin = time.time() + 3
     while b and not u.IsWindowEnabled(b) and time.time() < fin:
-        time.sleep(0.25)
-        if not tab and time.time() > fin - 4.5:
-            tecla(0x09); tab = True
-    if b and u.IsWindowEnabled(b) and al_frente(login):
-        log('login: click en Acepta')
-        click_en(b)
-        return
-    log('login: Acepta %s; pruebo ALT+A y ENTER' % ('no se habilito' if b else 'no encontrado'))
-    combo(0x12, 0x41)             # ALT+A
-    time.sleep(0.5)
-    if ventana_login():
-        tecla(0x0D)
+        time.sleep(0.2)
+    pasos = []
+    if b and al_frente(login):
+        click_en(b); pasos.append('click')
+        time.sleep(1.5)
+    if ventana_login() and al_frente(login):
+        if foco_de(login) != b:
+            tecla(0x09)           # TAB -> Acepta (asi quedo el foco en la prueba)
+            time.sleep(0.3)
+        tecla(0x20); pasos.append('espacio')   # ESPACIO aprieta el boton con foco
+        time.sleep(1.5)
+    if ventana_login() and al_frente(login):
+        combo(0x12, 0x41); pasos.append('alt+a')
+        time.sleep(0.8)
+        if ventana_login() and al_frente(login):
+            tecla(0x0D); pasos.append('enter')
+    log('login: Acepta (%s; habilitado=%s): %s' % ('hallado' if b else 'no hallado',
+        bool(b and u.IsWindowEnabled(b)), ', '.join(pasos)))
 
 
 ULTIMO_CARTEL = ''
