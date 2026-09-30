@@ -1,6 +1,6 @@
 ---
 name: patrones-corte-plotter
-description: Patrones de corte 2D en DXF y PLT/HPGL para mesa de corte y plotter — leer el DXF, mover puntos de anclaje y piquetes, generar el PLT y demostrar con numeros que el cambio salio exacto. Cubre tambien tizadas, mix de plotter y comparar las dos manos. Trae los 3 gates que evitan los errores caros.
+description: Patrones de corte 2D en DXF y PLT/HPGL para mesa de corte y plotter — leer el DXF, mover puntos de anclaje y piquetes, generar el PLT y demostrar con numeros que el cambio salio exacto. Cubre tambien tizadas, mix de plotter, partir en 2 una pieza que no entra en el plotter y comparar las dos manos. Trae los 3 gates que evitan los errores caros.
 ---
 
 # patrones-corte-plotter — mover puntos sin equivocarse
@@ -187,6 +187,28 @@ en el Escritorio.
 > intermedias confiando en que se recuperan con un click; tres dias despues la Papelera estaba
 > **vacia** y el mix que Fak habia aprobado no aparecio por ningun lado. La Papelera no es un
 > archivo: es una cola que alguien vacia.
+
+## 3 ter. PARTIR una pieza que no entra en el plotter
+
+**`python scripts/_partirPlotter.py entrada.dxf CARPETA --ancho <mm del papel> --nombre "..." [--largo 0] [--sentido auto] [--en COORD] [--dry-run]`**
+(selftest: `scripts/_partirPlotterSelftest.py`). Primera vez: 30/09/2026, `Tapa_Medio_AirDuct.dxf`
+de Paulo, 2000 x 1220 mm, papel de ~900 -> dos tiras de 610 x 2000 que se pegan sobre un carton y
+hacen de plantilla (PLT + DXF + imagen de control).
+
+- **Lo que manda es el ANCHO DEL MATERIAL puesto** (`--ancho`, obligatorio), no las hojas que ya
+  se cortaron: parti primero a 1000 x 1220 con la vara de las hojas de vinilo (1373 x 1030) y en
+  papel de 90 no entraba. `--sentido auto` elige el corte cuyas mitades entran.
+- 🔴 **En el HTV2A, `Añadir` = cortar** (`AutoStart=1`): agregar los PLT de a uno, cuando el que
+  esta en la maquina lo pide (memoria del plotter).
+- Corta por una recta (default: el centro) y **agrega el corte del medio solo donde hay
+  material** (par/impar contra los contornos cerrados): si la recta atraviesa una ranura, cada
+  mitad queda con media ranura como muesca. Salen **2 piezas sueltas** que se unen despues.
+- Saca los tramos **duplicados** (doble pasada de cuchilla), gira 90 grados solo si hace falta
+  para entrar, y corta **lo de adentro primero y el contorno exterior al final**.
+- Aborta si el largo total no cierra (mitades = original + 2 x corte del medio, a 0,000 mm), si
+  aparece un vertice que no es del original ni de la recta, si una linea cae sobre la recta, o
+  si la mitad no entra ni girada. Los DXF pasan por AutoCAD (`_validarDxf.py`) antes de copiarse.
+- **No toca el diseño**: las punteadas (dobleces) van igual que en el original, en SP1.
 
 ## 4. Rotar e identificar el PLT
 
