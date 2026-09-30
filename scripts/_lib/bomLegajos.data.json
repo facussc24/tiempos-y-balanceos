@@ -79,6 +79,18 @@
       "piezas": [
         "2HC885081 RL1"
       ]
+    },
+    "Telas termoformadas PWA": {
+      "legajo": "Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\PWA\\2-TOYOTA_TELAS_TERMOFORMADAS_582D\\APQP\\7-Lista de materiales",
+      "biblioteca": "PWA\\TBA\\TELAS TERMOFORMADAS",
+      "piezas": [
+        "21-9640",
+        "21-9641",
+        "21-9642",
+        "21-9643",
+        "304883",
+        "304884"
+      ]
     }
   }
 }
