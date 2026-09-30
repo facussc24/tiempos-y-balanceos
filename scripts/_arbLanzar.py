@@ -217,9 +217,35 @@ def pid(h):
 
 
 def pids_arb():
-    out = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq produc.exe', '/FO', 'CSV'],
-                         capture_output=True, text=True, creationflags=0x08000000).stdout
-    return {int(l.split('","')[1]) for l in out.splitlines()[1:] if l.startswith('"produc.exe"')}
+    return pids_de('produc.exe')
+
+
+def pids_de(nombre):
+    """PIDs del ejecutable `nombre` preguntandole a Windows directo. NO con `tasklist`: dentro de la tarea
+    del vigilante (conhost --headless) tasklist quedaba colgado para siempre (volcado del
+    30/09/2026 18:03, _arbLanzar.py -> pids_arb -> subprocess.communicate)."""
+    class PE32(ctypes.Structure):
+        _fields_ = [('dwSize', w.DWORD), ('cntUsage', w.DWORD), ('th32ProcessID', w.DWORD),
+                    ('th32DefaultHeapID', ctypes.c_size_t), ('th32ModuleID', w.DWORD),
+                    ('cntThreads', w.DWORD), ('th32ParentProcessID', w.DWORD),
+                    ('pcPriClassBase', ctypes.c_long), ('dwFlags', w.DWORD),
+                    ('szExeFile', ctypes.c_wchar * 260)]
+    k32 = ctypes.WinDLL('kernel32', use_last_error=True)
+    k32.CreateToolhelp32Snapshot.restype = w.HANDLE
+    snap = k32.CreateToolhelp32Snapshot(0x2, 0)       # TH32CS_SNAPPROCESS: una foto, sin abrir nada
+    if not snap or snap == w.HANDLE(-1).value:
+        return set()
+    res = set()
+    try:
+        pe = PE32(); pe.dwSize = ctypes.sizeof(PE32)
+        ok = k32.Process32FirstW(snap, ctypes.byref(pe))
+        while ok:
+            if pe.szExeFile.lower() == nombre.lower():
+                res.add(pe.th32ProcessID)
+            ok = k32.Process32NextW(snap, ctypes.byref(pe))
+    finally:
+        k32.CloseHandle(snap)
+    return res
 
 
 def ventanas():
@@ -370,8 +396,8 @@ def texto_de(h):
 
 def vaciar_campo(h=None):
     """Borra lo que tenga el campo ANTES de escribir. El arb precarga el Usuario con el nombre
-    de la PC (FACUNDOS-PC): el 30/09/2026 HOME + SHIFT+END no lo selecciono y quedo
-    'FACUNDOS-PCFACUNDO'. Ahora: seleccionar todo por mensaje + SUPR, y si el campo todavia
+    de la PC: el 30/09/2026 HOME + SHIFT+END no lo selecciono y quedo
+    '<nombre de la PC>FACUNDO'. Ahora: seleccionar todo por mensaje + SUPR, y si el campo todavia
     tiene texto, END + tantos BACKSPACE como caracteres tenga."""
     if h:
         u.SendMessageW(h, EM_SETSEL, 0, -1)

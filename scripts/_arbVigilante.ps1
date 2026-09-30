@@ -49,7 +49,7 @@ $cada3 = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) `
            -RepetitionInterval (New-TimeSpan -Minutes 3)
 $ajustes = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
              -ExecutionTimeLimit (New-TimeSpan -Minutes 5) -MultipleInstances IgnoreNew `
-             -StartWhenAvailable -Priority 7
+             -StartWhenAvailable -Priority 6
 $quien = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Limited
 Register-ScheduledTask -TaskName $tarea -Action $accion -Trigger @($alEntrar, $cada3) `
   -Settings $ajustes -Principal $quien -Force | Out-Null
