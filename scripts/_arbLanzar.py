@@ -24,6 +24,8 @@ import ctypes, ctypes.wintypes as w, datetime, os, subprocess, sys, time
 
 EXE = r'Z:\arb\prod\produc.exe'
 DIR_EXE = r'Z:\arb\prod'
+UNC_Z = r'\\server\sistema'          # lo que Windows tiene recordado para Z: (net use, 30/09/2026)
+ICONO = os.path.join(os.path.expanduser('~'), 'arb_fotos', 'arb.ico')
 CRED = 'BARACK_ARB'
 USUARIO_DEFAULT = 'FACUNDO'
 LOG = os.path.join(os.path.expanduser('~'), 'arb_fotos', 'lanzador.log')
@@ -298,6 +300,38 @@ def abrir_arb():
     subprocess.Popen([EXE], cwd=DIR_EXE)
 
 
+def asegurar_z():
+    """Z: suele quedar 'Desconectado' (conexion recordada): el Explorador la reconecta al abrirla,
+    un programa no. Si el servidor responde, se reconecta con `net use`. Devuelve True si EXE
+    quedo accesible; False si el servidor no responde (fuera de la red de la planta / sin VPN)."""
+    if os.path.exists(EXE):
+        return True
+    unc_exe = UNC_Z + r'\arb\prod\produc.exe'
+    if not os.path.exists(unc_exe):
+        log('servidor no responde (%s)' % unc_exe)
+        return False
+    r = subprocess.run(['net', 'use', 'Z:', UNC_Z, '/persistent:yes'], capture_output=True,
+                       text=True, creationflags=0x08000000)
+    log('net use Z: -> %s' % (r.returncode,))
+    return os.path.exists(EXE)
+
+
+def asegurar_icono():
+    """La primera vez que se llega al servidor, guarda el icono del arb en local y se lo pone a
+    los accesos directos (un icono en Z: no se ve cuando Z: esta desconectado)."""
+    if os.path.exists(ICONO):
+        return
+    ps = ("$i=[System.Drawing.Icon]::ExtractAssociatedIcon('%s'); $f=[IO.File]::Create('%s'); "
+          "$i.Save($f); $f.Close(); $w=New-Object -ComObject WScript.Shell; "
+          "$d=[Environment]::GetFolderPath('Desktop'); "
+          "foreach($n in 'ARB.lnk','ARB - reiniciar.lnk'){ $p=Join-Path $d $n; "
+          "if(Test-Path $p){ $l=$w.CreateShortcut($p); $l.IconLocation='%s,0'; $l.Save() } }"
+          % (EXE, ICONO, ICONO))
+    subprocess.run(['powershell.exe', '-NoProfile', '-Command', 'Add-Type -AssemblyName System.Drawing; ' + ps],
+                   capture_output=True, creationflags=0x08000000)
+    log('icono guardado: %s' % os.path.exists(ICONO))
+
+
 def diagnostico():
     for h in ventanas():
         print('%-16s ena=%-5s %r' % (cls(h), bool(u.IsWindowEnabled(h)), txt(h)[:50]))
@@ -344,9 +378,12 @@ def main(argv):
             log('ya estaba abierto')
             return 0
     else:
-        if not os.path.exists(EXE):
-            aviso('No encuentro %s. ¿Esta conectado el disco Z:?' % EXE)
+        if not asegurar_z():
+            aviso('No llego al servidor de la empresa (%s): el arb vive ahi.\n\n'
+                  '¿Estas conectado a la red de la planta o a la VPN? '
+                  'Conectate y volve a apretar ARB.' % UNC_Z)
             return 1
+        asegurar_icono()
         log('abriendo produc.exe')
         abrir_arb()
         login = esperar_login()
