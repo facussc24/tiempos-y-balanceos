@@ -38,6 +38,12 @@ Y ni siquiera alcanzaría con tener la contraseña: el campo `Usuario` se autoco
 | ✅ `WM_CLOSE` sobre `Maestro de Insumos` | es el modo **documentado** de descartar una edición sin grabar (skill `arb-operar`) |
 | ❌ cerrar `Maestro de Relaciones` abierta (su `WM_CLOSE`, o `_arbVer.py reset` con ella abierta) | **crashea el arb**: dos veces el 25/09/2026 (Fak: *"cuando reseteas relaciones la app crashea... anotalo para evitar hacerlo"*). `reset_relaciones()` se niega sin `--forzar`, y `--forzar` solo con OK de Fak |
 | ✅ `python scripts/_arbVer.py reset` con Relaciones CERRADA | solo la **abre** por click; ese camino anda |
+| ✅ Fak aprieta **"ARB - reiniciar"** en su Escritorio | `scripts/_arbLanzar.py --reiniciar`: le pregunta, cierra el arb trabado, lo abre y entra con la clave que Fak guardo en el Administrador de credenciales de Windows (30/09/2026). **Lo aprieta Fak**: el script se niega si lo lanza una sesion de Claude (`CLAUDECODE`) |
+
+**Si el arb se cuelga o pide login:** escribirle a Fak una linea — *"doble click en ARB - reiniciar"*
+(o *"doble click en ARB"* si solo pide la clave) — y esperar con `python scripts/_arbVer.py estado`
+hasta que `ProdWindow` este habilitada. Claude nunca lee ni tipea la clave, ni corre `_arbLanzar.py`
+salvo `--diagnostico`.
 
 Si de verdad hay que cerrarlo: **preguntarle a Fak, con el motivo**. Si ya dijo que sí:
 

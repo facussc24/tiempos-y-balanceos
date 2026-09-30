@@ -59,6 +59,10 @@ reabrirlo no. Permitido: `WM_CLOSE` sobre `Maestro de Insumos` (descarta sin gra
 Relaciones abierta crashea el arb** (dos veces el 25/09/2026): `reset` se niega sin `--forzar`,
 y `--forzar` va solo con OK de Fak. El incidente, la tabla completa, el escape y el hook: regla
 `arb-no-cerrar.md`, que carga sola al abrir este skill.
+**Si el arb se cuelga o pide login** (desde el 30/09/2026): una linea a Fak — *"doble click en
+ARB - reiniciar"* (o *"en ARB"* si solo pide la clave) — y esperar con `_arbVer.py estado` a que
+`ProdWindow` este habilitada. Los accesos directos corren `scripts/_arbLanzar.py`, que entra con
+la clave que Fak guardo en Windows; Claude no lo corre (se niega con `CLAUDECODE`) salvo `--diagnostico`.
 
 ## Regla de oro
 

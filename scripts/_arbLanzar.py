@@ -1,0 +1,369 @@
+# -*- coding: utf-8 -*-
+"""Abrir el arb con doble click (acceso directo "ARB") o reiniciarlo ("ARB - reiniciar").
+
+LO EJECUTA FAK, NUNCA CLAUDE. La contraseña la escribe Fak una sola vez en la ventana de
+credenciales de Windows y queda guardada en el Administrador de credenciales (credencial
+generica BARACK_ARB). Este script la lee ahi, la tipea en `Inicio de Sesion` y la olvida:
+no la imprime, no la loguea, no la escribe en ningun archivo. Si lo lanza una sesion de Claude
+(variable CLAUDECODE), se niega (salvo `--diagnostico`, que solo mira ventanas).
+
+Pedido de Fak, 30/09/2026: "crea un link de arb facil de abrir... no guardes [la contraseña],
+simplemente crea el link". Diseño: docs/auto-mejora/2026-09-30-automejora-10-frentes.md §2.
+
+Uso (los accesos directos del Escritorio llaman a pythonw con esto):
+    _arbLanzar.py                -> si el arb esta abierto lo trae al frente; si pide login, entra;
+                                    si esta cerrado, lo abre y entra.
+    _arbLanzar.py --reiniciar    -> pregunta, cierra el arb (trabado) y lo vuelve a abrir.
+    _arbLanzar.py --guardar-clave-> vuelve a pedir usuario y contraseña (si cambio la clave).
+    _arbLanzar.py --diagnostico  -> solo lista las ventanas del arb y sus campos (sin tocar nada).
+
+Un solo intento de login: si la clave esta mal, frena y avisa (no se reintenta para no
+bloquear la cuenta). Log sin secretos en ~/arb_fotos/lanzador.log.
+"""
+import ctypes, ctypes.wintypes as w, datetime, os, subprocess, sys, time
+
+EXE = r'Z:\arb\prod\produc.exe'
+DIR_EXE = r'Z:\arb\prod'
+CRED = 'BARACK_ARB'
+USUARIO_DEFAULT = 'FACUNDO'
+LOG = os.path.join(os.path.expanduser('~'), 'arb_fotos', 'lanzador.log')
+
+u = ctypes.windll.user32
+k = ctypes.windll.kernel32
+CB = ctypes.WINFUNCTYPE(w.BOOL, w.HWND, w.LPARAM)
+
+MB_OK, MB_YESNO, MB_ICONWARN, MB_ICONQ, MB_TOPMOST, IDYES = 0x0, 0x4, 0x30, 0x20, 0x40000, 6
+
+
+def log(msg):
+    try:
+        os.makedirs(os.path.dirname(LOG), exist_ok=True)
+        with open(LOG, 'a', encoding='utf-8') as f:
+            f.write('%s  %s\n' % (datetime.datetime.now().strftime('%d/%m %H:%M:%S'), msg))
+    except OSError:
+        pass
+
+
+def aviso(texto, flags=MB_OK | MB_ICONWARN):
+    return u.MessageBoxW(None, texto, 'ARB', flags | MB_TOPMOST)
+
+
+# ---------------------------------------------------------------- credencial (Windows)
+
+def leer_cred():
+    import win32cred
+    try:
+        c = win32cred.CredRead(CRED, win32cred.CRED_TYPE_GENERIC)
+    except Exception:
+        return None
+    blob = c.get('CredentialBlob') or b''
+    clave = blob if isinstance(blob, str) else blob.decode('utf-16-le')
+    return (c.get('UserName') or USUARIO_DEFAULT), clave
+
+
+def pedir_y_guardar_cred():
+    """Ventana nativa de Windows para usuario y contraseña; la guarda en el Administrador de
+    credenciales. Devuelve (usuario, clave) o None si Fak cancelo."""
+    import win32cred
+    flags = (win32cred.CREDUI_FLAGS_GENERIC_CREDENTIALS | win32cred.CREDUI_FLAGS_ALWAYS_SHOW_UI
+             | win32cred.CREDUI_FLAGS_DO_NOT_PERSIST)
+    try:
+        usuario, clave, _ = win32cred.CredUIPromptForCredentials(
+            'arb (Produccion)', 0, USUARIO_DEFAULT, None, False, flags, None)
+    except Exception:
+        return None
+    usuario = (usuario or USUARIO_DEFAULT).strip()
+    if not clave:
+        return None
+    win32cred.CredWrite({'Type': win32cred.CRED_TYPE_GENERIC, 'TargetName': CRED,
+                         'UserName': usuario, 'CredentialBlob': clave,
+                         'Persist': win32cred.CRED_PERSIST_LOCAL_MACHINE,
+                         'Comment': 'Login del arb para el acceso directo ARB'}, 0)
+    log('credencial guardada para el usuario %s' % usuario)
+    return usuario, clave
+
+
+# ---------------------------------------------------------------- ventanas del arb
+
+def cls(h):
+    b = ctypes.create_unicode_buffer(256); u.GetClassNameW(h, b, 256); return b.value
+
+
+def txt(h):
+    n = u.GetWindowTextLengthW(h) + 1; b = ctypes.create_unicode_buffer(n)
+    u.GetWindowTextW(h, b, n); return b.value
+
+
+def pid(h):
+    p = w.DWORD(); u.GetWindowThreadProcessId(h, ctypes.byref(p)); return p.value
+
+
+def pids_arb():
+    out = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq produc.exe', '/FO', 'CSV'],
+                         capture_output=True, text=True, creationflags=0x08000000).stdout
+    return {int(l.split('","')[1]) for l in out.splitlines()[1:] if l.startswith('"produc.exe"')}
+
+
+def ventanas():
+    ps = pids_arb(); v = []
+
+    def cb(h, l):
+        if pid(h) in ps and u.IsWindowVisible(h):
+            v.append(h)
+        return True
+    u.EnumWindows(CB(cb), 0)
+    return v
+
+
+def ventana_login():
+    for h in ventanas():
+        if 'Inicio de Sesi' in txt(h):
+            return h
+    return None
+
+
+def ventana_principal():
+    for h in ventanas():
+        if cls(h) == 'ProdWindow':
+            return h
+    return None
+
+
+class R(ctypes.Structure):
+    _fields_ = [('l', ctypes.c_long), ('t', ctypes.c_long), ('r', ctypes.c_long), ('b', ctypes.c_long)]
+
+
+def rect(h):
+    r = R(); u.GetWindowRect(h, ctypes.byref(r)); return r
+
+
+def campos_de_texto(h):
+    """Los campos editables del login, de arriba hacia abajo (Usuario, Contraseña)."""
+    hijos = []
+
+    def cb(hh, l):
+        c = cls(hh).lower()
+        if u.IsWindowVisible(hh) and ('edit' in c or 'text' in c):
+            hijos.append(hh)
+        return True
+    u.EnumChildWindows(h, CB(cb), 0)
+    return sorted(hijos, key=lambda x: (rect(x).t, rect(x).l))
+
+
+def al_frente(h):
+    return u.GetForegroundWindow() == h
+
+
+def activar(h):
+    """Traer al frente con AttachThreadInput (SetForegroundWindow solo falla si el frente es
+    de otro proceso). Mismo camino que _arbCargar.activar()."""
+    if al_frente(h):
+        return True
+    me = k.GetCurrentThreadId()
+    hilos = {u.GetWindowThreadProcessId(x, None) for x in (u.GetForegroundWindow(), h) if x}
+    otros = [t for t in hilos if t and t != me]
+    for t in otros:
+        u.AttachThreadInput(me, t, True)
+    try:
+        u.ShowWindow(h, 9)          # SW_RESTORE
+        u.SetForegroundWindow(h)
+        u.BringWindowToTop(h)
+        time.sleep(0.4)
+    finally:
+        for t in otros:
+            u.AttachThreadInput(me, t, False)
+    return al_frente(h)
+
+
+# ---------------------------------------------------------------- teclado y mouse reales
+
+class KEYBDINPUT(ctypes.Structure):
+    _fields_ = [('wVk', w.WORD), ('wScan', w.WORD), ('dwFlags', w.DWORD), ('time', w.DWORD),
+                ('dwExtraInfo', ctypes.POINTER(ctypes.c_ulong))]
+
+
+class _U(ctypes.Union):
+    _fields_ = [('ki', KEYBDINPUT), ('pad', ctypes.c_byte * 32)]
+
+
+class INPUT(ctypes.Structure):
+    _fields_ = [('type', w.DWORD), ('u', _U)]
+
+
+def _enviar(vk=0, scan=0, flags=0):
+    i = INPUT(); i.type = 1
+    i.u.ki = KEYBDINPUT(vk, scan, flags, 0, None)
+    u.SendInput(1, ctypes.byref(i), ctypes.sizeof(INPUT))
+
+
+def tecla(vk):
+    _enviar(vk=vk); time.sleep(0.02); _enviar(vk=vk, flags=0x2); time.sleep(0.05)
+
+
+def combo(mod, vk):
+    _enviar(vk=mod); tecla(vk); _enviar(vk=mod, flags=0x2); time.sleep(0.05)
+
+
+def escribir(texto):
+    """Teclas reales como las de _arbInsumo: VkKeyScan (con SHIFT si hace falta) y, para un
+    caracter que el teclado no tiene, KEYEVENTF_UNICODE."""
+    for ch in texto:
+        vks = u.VkKeyScanW(ch)
+        if vks != -1 and (vks & 0xFFFF) != 0xFFFF:
+            vk, shift = vks & 0xFF, (vks >> 8) & 1
+            if shift:
+                _enviar(vk=0x10)
+            tecla(vk)
+            if shift:
+                _enviar(vk=0x10, flags=0x2)
+        else:
+            _enviar(scan=ord(ch), flags=0x4); _enviar(scan=ord(ch), flags=0x4 | 0x2)
+        time.sleep(0.02)
+
+
+def click_en(h):
+    r = rect(h)
+    u.SetCursorPos((r.l + r.r) // 2, (r.t + r.b) // 2); time.sleep(0.15)
+    u.mouse_event(0x2, 0, 0, 0, 0); time.sleep(0.06); u.mouse_event(0x4, 0, 0, 0, 0)
+    time.sleep(0.25)
+
+
+def vaciar_campo():
+    tecla(0x24)                   # HOME
+    combo(0x10, 0x23)             # SHIFT+END
+    tecla(0x2E)                   # SUPR
+
+
+# ---------------------------------------------------------------- login
+
+def entrar(login, usuario, clave):
+    """Un solo intento. Devuelve True si el arb quedo abierto y habilitado."""
+    if not activar(login):
+        aviso('No pude traer al frente la ventana "Inicio de Sesion" del arb.\n'
+              'Hacele click y volve a apretar el acceso directo ARB.')
+        log('login: no pude traerla al frente')
+        return False
+    campos = campos_de_texto(login)
+    log('login: %d campos (%s)' % (len(campos), ', '.join(cls(c) for c in campos)))
+    if len(campos) >= 2:
+        click_en(campos[0])
+        if not al_frente(login):
+            return False
+        vaciar_campo(); escribir(usuario)
+        click_en(campos[1])
+        if not al_frente(login):
+            return False
+        vaciar_campo(); escribir(clave)
+    else:
+        # Sin campos visibles por clase: el cursor arranca en Contraseña (captura 31/08/2026).
+        combo(0x10, 0x09)         # SHIFT+TAB -> Usuario
+        vaciar_campo(); escribir(usuario)
+        tecla(0x09)               # TAB -> Contraseña
+        if not al_frente(login):
+            return False
+        vaciar_campo(); escribir(clave)
+    tecla(0x0D)                   # ENTER = Acepta
+    fin = time.time() + 45
+    while time.time() < fin:
+        time.sleep(1)
+        p = ventana_principal()
+        if p and u.IsWindowEnabled(p) and not ventana_login():
+            log('login OK')
+            return True
+    log('login: el arb no se habilito en 45 s')
+    return False
+
+
+def esperar_login(seg=90):
+    fin = time.time() + seg
+    while time.time() < fin:
+        h = ventana_login()
+        if h:
+            time.sleep(0.8)
+            return h
+        time.sleep(1)
+    return None
+
+
+def cerrar_arb():
+    subprocess.run(['taskkill', '/IM', 'produc.exe', '/F'], capture_output=True,
+                   creationflags=0x08000000)
+    fin = time.time() + 20
+    while time.time() < fin and pids_arb():
+        time.sleep(1)
+    return not pids_arb()
+
+
+def abrir_arb():
+    subprocess.Popen([EXE], cwd=DIR_EXE)
+
+
+def diagnostico():
+    for h in ventanas():
+        print('%-16s ena=%-5s %r' % (cls(h), bool(u.IsWindowEnabled(h)), txt(h)[:50]))
+        if 'Inicio de Sesi' in txt(h):
+            for c in campos_de_texto(h):
+                r = rect(c)
+                print('    campo %-20s en (%d,%d)' % (cls(c), r.l, r.t))
+    if not ventanas():
+        print('el arb no esta abierto')
+
+
+def main(argv):
+    if '--diagnostico' in argv:
+        diagnostico(); return 0
+    if os.environ.get('CLAUDECODE'):
+        print('Este lanzador lo usa Fak con doble click (ARB / ARB - reiniciar). '
+              'Claude no lo ejecuta: pedile a Fak que lo apriete.')
+        return 3
+
+    cred = None if '--guardar-clave' in argv else leer_cred()
+    if cred is None:
+        cred = pedir_y_guardar_cred()
+        if cred is None:
+            return 1
+    usuario, clave = cred
+
+    if '--reiniciar' in argv and pids_arb():
+        r = aviso('¿Cierro el arb y lo vuelvo a abrir?\n\n'
+                  'Usalo cuando esta trabado. Si estabas grabando algo, se pierde.',
+                  MB_YESNO | MB_ICONQ)
+        if r != IDYES:
+            return 0
+        log('reiniciar: cerrando produc.exe')
+        if not cerrar_arb():
+            aviso('No se pudo cerrar el arb. Cerralo desde el Administrador de tareas.')
+            return 1
+
+    if pids_arb():
+        login = ventana_login()
+        if not login:
+            p = ventana_principal()
+            if p:
+                activar(p)
+            log('ya estaba abierto')
+            return 0
+    else:
+        if not os.path.exists(EXE):
+            aviso('No encuentro %s. ¿Esta conectado el disco Z:?' % EXE)
+            return 1
+        log('abriendo produc.exe')
+        abrir_arb()
+        login = esperar_login()
+        if not login:
+            aviso('El arb no mostro la ventana de inicio de sesion en 90 segundos.')
+            return 1
+
+    ok = entrar(login, usuario, clave)
+    del clave
+    if not ok and ventana_login():
+        if aviso('El arb no acepto el usuario o la contraseña.\n\n'
+                 '¿Queres cargarlos de nuevo? (despues apreta ARB otra vez)',
+                 MB_YESNO | MB_ICONQ) == IDYES:
+            pedir_y_guardar_cred()
+        return 1
+    return 0 if ok else 1
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))
