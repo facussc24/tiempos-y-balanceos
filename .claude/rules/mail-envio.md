@@ -116,6 +116,11 @@ otro esta de mas"*.
 nombre mostrado) y **aborta si alguna no es @barackmercosul.com**, salvo `--externos-ok`, que
 se usa solo con el OK de Fak para ese mail. Probado en las dos direcciones el 30/09/2026: el
 mail de Aunde (4 internos) pasa; un mail del hilo de SMRC marca al de Motherson.
+Tres trampas que cazo el auditor y ya estan cubiertas: **una lista de distribucion se abre**
+y se mira cada miembro (PAGOS GHS tiene dos de ghs-pharma.com); **un DN de Exchange (`/o=...`)
+no prueba que sea de Barack** (los invitados externos tienen uno: se busca la casilla real por
+`PR_SMTP_ADDRESS`); y **un destinatario sin casilla resuelta tambien aborta**, con su propio
+aviso (Ctrl+K en el borrador). Una casilla tipeada a mano (`cbaptista@...`) se lee del nombre.
 
 ## El mail lo firma Fak: primera persona del singular — y su voz esta MEDIDA
 

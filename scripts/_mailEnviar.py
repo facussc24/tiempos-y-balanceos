@@ -46,6 +46,7 @@ from outlookUi import asegurar_outlook, cartel_de_seguridad, vigilando   # noqa:
 
 VENTANA_HORAS = 72          # cuanto para atras se mira Enviados
 DOMINIO_INTERNO = '@barackmercosul.com'
+PR_SMTP_ADDRESS = 'http://schemas.microsoft.com/mapi/proptag/0x39FE001E'
 INLINE = re.compile(r'^(image\d+\.(png|jpg|jpeg|gif)|Outlook-[\w\-]+\.(png|jpg|jpeg))$', re.I)
 
 
@@ -98,10 +99,12 @@ def es_duplicado(cand, previo):
 
 
 def es_interno(direccion: str) -> bool:
-    """Casilla de Barack. Un DN de Exchange (/o=...) es de la organizacion; vacio NO cuenta
-    como interno (un destinatario sin direccion resuelta se trata como de afuera)."""
+    """Casilla de Barack: solo la que termina en @barackmercosul.com. Un DN de Exchange
+    (/o=...) NO prueba nada: los invitados externos tambien tienen uno (lista PAGOS GHS,
+    30/09/2026: dos casillas de ghs-pharma.com con DN de la organizacion). Vacio tampoco:
+    lo que no se pudo leer cuenta como de afuera."""
     d = (direccion or '').strip().lower()
-    return d.endswith(DOMINIO_INTERNO) or d.startswith('/o=')
+    return d.endswith(DOMINIO_INTERNO)
 
 
 def destinatarios_externos(direcciones):
@@ -160,8 +163,9 @@ def selftest() -> int:
     chk('dominio parecido no pasa por interno',
         destinatarios_externos(['x@barackmercosul.com.ar', 'y@mail-barackmercosul.com.br']),
         ['x@barackmercosul.com.ar', 'y@mail-barackmercosul.com.br'])
-    chk('DN de Exchange es interno',
-        destinatarios_externos(['/O=EXCHANGELABS/OU=EXCHANGE ADMINISTRATIVE GROUP/CN=RECIPIENTS/CN=abc']), [])
+    dn = '/O=EXCHANGELABS/OU=EXCHANGE ADMINISTRATIVE GROUP/CN=RECIPIENTS/CN=abc-Guest_46eeb'
+    chk('un DN de Exchange solo no prueba que sea de Barack (invitado externo)',
+        destinatarios_externos([dn]), [dn])
     chk('sin direccion resuelta cuenta como externo', destinatarios_externos(['']), [''])
 
     ok = all(c[1] for c in casos)
@@ -173,20 +177,67 @@ def selftest() -> int:
 
 # ── Outlook ─────────────────────────────────────────────────────────────────
 
-def _direcciones(item):
-    """[(nombre, smtp)] de cada destinatario, con la casilla REAL (no el nombre mostrado)."""
-    res = []
-    for k in range(item.Recipients.Count):
-        r = item.Recipients.Item(k + 1)
+def _smtp_de_entrada(ae, nombre=''):
+    """Casilla de un AddressEntry: la de Exchange, o la tipeada. Una direccion tipeada a mano
+    (`cbaptista@...` sin resolver) trae Address vacio y la casilla en el nombre."""
+    smtp = ''
+    try:
+        eu = ae.GetExchangeUser()
+        smtp = eu.PrimarySmtpAddress if eu else ''
+    except Exception:
         smtp = ''
-        try:
-            eu = r.AddressEntry.GetExchangeUser()
-            smtp = eu.PrimarySmtpAddress if eu else ''
+    if not smtp:
+        try:   # PR_SMTP_ADDRESS: la trae tambien un invitado externo, que no es ExchangeUser
+            smtp = str(ae.PropertyAccessor.GetProperty(PR_SMTP_ADDRESS) or '')
         except Exception:
             smtp = ''
-        if not smtp:
-            smtp = str(r.Address or '')
-        res.append((str(r.Name or ''), smtp))
+    if not smtp or smtp.lower().startswith('/o='):
+        if '@' in (nombre or ''):
+            smtp = nombre.strip()
+        elif not smtp:
+            try:
+                smtp = str(ae.Address or '')
+            except Exception:
+                smtp = ''
+    return smtp
+
+
+def _miembros_de_lista(ae, nombre, prof=0):
+    """[(nombre, smtp)] de los miembros de una lista de distribucion de Exchange (anidadas
+    hasta 3 niveles). Una lista no es interna por su DN: sus miembros pueden ser de afuera."""
+    res = []
+    dl = ae.GetExchangeDistributionList()
+    miembros = dl.GetExchangeDistributionListMembers()
+    for k in range(miembros.Count):
+        m = miembros.Item(k + 1)
+        mnom = f"{nombre} > {m.Name}"
+        if prof < 3 and getattr(m, 'AddressEntryUserType', None) == 1:
+            res.extend(_miembros_de_lista(m, mnom, prof + 1))
+        else:
+            res.append((mnom, _smtp_de_entrada(m, str(m.Name or ''))))
+    return res
+
+
+def _direcciones(item):
+    """[(nombre, smtp)] de cada destinatario, con la casilla REAL (no el nombre mostrado).
+    Falla hacia BLOQUEAR: un destinatario que no se puede leer vuelve sin direccion, y sin
+    direccion cuenta como de afuera."""
+    res = []
+    for k in range(item.Recipients.Count):
+        nombre = ''
+        try:
+            r = item.Recipients.Item(k + 1)
+            nombre = str(r.Name or '')
+            ae = r.AddressEntry
+            if getattr(ae, 'AddressEntryUserType', None) == 1:   # lista de distribucion
+                res.extend(_miembros_de_lista(ae, nombre))
+                continue
+            smtp = _smtp_de_entrada(ae, nombre)
+            if not smtp:
+                smtp = str(r.Address or '')
+        except Exception:
+            smtp = ''
+        res.append((nombre or f'destinatario {k + 1}', smtp))
     return res
 
 
@@ -248,10 +299,19 @@ def main() -> int:
     # 1b. GATE — destinatarios de fuera de Barack (regla dura de Fak, 30/09/2026)
     direcciones = _direcciones(it)
     afuera = [(n, d) for n, d in direcciones if not es_interno(d)]
-    if afuera:
-        print(f"\n  *** {len(afuera)} DESTINATARIO(S) DE FUERA DE BARACK ***")
-        for n, d in afuera:
-            print(f"      {n} <{d or 'sin direccion resuelta'}>")
+    sin_resolver = [(n, d) for n, d in afuera if '@' not in d]
+    externos = [(n, d) for n, d in afuera if '@' in d]
+    if sin_resolver:
+        print(f"\n  *** {len(sin_resolver)} DESTINATARIO(S) SIN CASILLA RESUELTA ***")
+        for n, d in sin_resolver:
+            print(f"      {n} <{d or 'vacio'}>")
+        print("\nABORTA. Sin casilla no se sabe si es de Barack, y asi Exchange suele rebotar")
+        print("(incidente 08/09). Abrir el borrador, resolver el nombre (Ctrl+K) y volver a correr.")
+        return 3
+    if externos:
+        print(f"\n  *** {len(externos)} DESTINATARIO(S) DE FUERA DE BARACK ***")
+        for n, d in externos:
+            print(f"      {n} <{d}>")
         if not a.externos_ok:
             print("\nABORTA. A un externo no se lo suma a un mail: solo si el mail ya viene de el y")
             print("Fak dice 'respondele a todos' para ESE mail. Con su OK: --externos-ok.")
