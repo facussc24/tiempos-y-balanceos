@@ -66,13 +66,22 @@ for ($i = 0; $i -lt 40; $i++) {
 Escribir ('Outlook expone {0} items; arranco el sync' -f $visto)
 
 # 3. Sincronizar. _mails.py sale con codigo 2 si el recorrido fue parcial.
-Push-Location $raiz
-try {
-  $salida = & python 'scripts\_mails.py' --sync 2>&1
-  $code   = $LASTEXITCODE
-} finally {
-  Pop-Location
+#    Con TOPE de 15 min: el 30/09/2026 una corrida quedo 35 min esperando a Outlook con 0 % de
+#    CPU (sin red a los servidores) y la tarea no terminaba nunca. Si se pasa, se corta y queda
+#    como ERROR para que la corrida siguiente reintente.
+$env:PYTHONIOENCODING = 'utf-8'      # la salida va a archivo: sin esto sale en cp1252
+$out = Join-Path $env:TEMP 'barack_sync_mails.out'
+$err = Join-Path $env:TEMP 'barack_sync_mails.err'
+$p = Start-Process -FilePath 'python' -ArgumentList 'scripts\_mails.py', '--sync' -WorkingDirectory $raiz `
+       -NoNewWindow -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+if (-not $p.WaitForExit(15 * 60 * 1000)) {
+  Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+  Escribir 'RESULTADO: ERROR - _mails.py no termino en 15 min (Outlook no contesto). Se reintenta en la proxima corrida.'
+  exit 3
 }
+$code   = $p.ExitCode
+$salida = @()
+foreach ($f in @($out, $err)) { if (Test-Path $f) { $salida += Get-Content $f -Encoding UTF8 } }
 foreach ($l in $salida) { Escribir ('  | {0}' -f $l) }
 
 if ($code -eq 2) {
