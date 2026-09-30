@@ -79,6 +79,26 @@ function marcarFlag(flag, ahora) {
   try { fs.mkdirSync(path.dirname(flag), { recursive: true }); fs.writeFileSync(flag, String(ahora)); } catch { /* sin permiso: se recuerda otra vez, no se cae */ }
 }
 
+// RECORDATORIOS "UNA VEZ POR SESION" (30/09/2026). Medido en septiembre (98 sesiones): 428
+// inyecciones de recordatorios 1x/h (CAD, Escritorio, CC/SC, HO), ~175 mil tokens: el aviso
+// que salia cada hora se repetia dentro de la misma sesion, que ya lo tenia en contexto. Ahora
+// cada recordatorio sale UNA vez por sesion: la clave es el `session_id` del payload (y el
+// `agent_id` si la llamada viene de un subagente, que tiene su propio contexto y no vio el
+// aviso del padre). Las marcas de una sesion viven en UN archivo del TEMP, una linea por
+// recordatorio ya mostrado. Sin `session_id` (JSON roto, payload sin el campo) se vuelve al
+// cooldown de una hora por recordatorio: fallar hacia el lado de avisar de mas, no de menos.
+const limpiarId = (x) => String(x ?? '').replace(/[^\w-]/g, '_');
+function archivoMarcasSesion(sesion, env) {
+  const clave = [sesion.sid, sesion.agente].filter(Boolean).map(limpiarId).join('.');
+  return path.join(dirTmp(env), `claude-recordatorios.${clave}`);
+}
+function recordatoriosYaMostrados(archivo) {
+  try { return new Set(fs.readFileSync(archivo, 'utf8').split(/\r?\n/).filter(Boolean)); } catch { return new Set(); }
+}
+function marcarRecordatorioDeSesion(archivo, clave) {
+  try { fs.mkdirSync(path.dirname(archivo), { recursive: true }); fs.appendFileSync(archivo, `${clave}\n`); } catch { /* sin permiso: se recuerda otra vez, no se cae */ }
+}
+
 const bloqueo = (texto) => ({ tipo: 'bloqueo', texto });
 const aviso = (texto) => ({ tipo: 'aviso', texto });
 const recordatorio = (flag, texto) => ({ tipo: 'recordatorio', flag, texto });
@@ -110,7 +130,7 @@ function rescatarCampos(raw) {
   const des = (s) => s.replace(/\\(["\\/bfnrt]|u[0-9a-fA-F]{4})/g, (m, c) =>
     ({ '"': '"', '\\': '\\', '/': '/', b: '\b', f: '\f', n: '\n', r: '\r', t: '\t' })[c] ?? String.fromCharCode(parseInt(c.slice(1), 16)));
   const campo = (k) => { const m = raw.match(new RegExp(`"${k}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)`)); return m ? des(m[1]) : ''; };
-  return { tool: campo('tool_name'), cmd: campo('command'), file: campo('file_path'), content: campo('content') || campo('new_string') };
+  return { tool: campo('tool_name'), cmd: campo('command'), file: campo('file_path'), content: campo('content') || campo('new_string'), sid: campo('session_id'), agente: campo('agent_id') };
 }
 
 /**
@@ -125,18 +145,20 @@ export function parsear(raw) {
   try { j = JSON.parse(raw); } catch { j = null; }
   if (!j || typeof j !== 'object') {
     const r = rescatarCampos(raw);
-    return { ok: false, raw, rescate: r, tool: '', cmd: '', file: '', content: '', cwd: '', target: '', cmd6: '', body6: '', toolL: '', fileL: '', parsed4: '', parsed3: '' };
+    return { ok: false, raw, rescate: r, tool: '', cmd: '', file: '', content: '', cwd: '', target: '', cmd6: '', body6: '', toolL: '', fileL: '', parsed4: '', parsed3: '', sid: r.sid, agente: r.agente };
   }
   const t = j.tool_input && typeof j.tool_input === 'object' ? j.tool_input : {};
   // `cwd` es el directorio de la sesion cuando corre la tool (22/09/2026): con el, un `rm x`
   // relativo se sabe DONDE borra sin adivinarlo por palabras sueltas del comando.
-  return armarCtx({ raw, tool: String(j.tool_name ?? ''), cmd: String(t.command ?? ''), file: String(t.file_path ?? ''), content: String(t.content ?? t.new_string ?? ''), cwd: typeof j.cwd === 'string' ? j.cwd : '' });
+  // `session_id` (y `agent_id`, solo cuando la llamada sale de un subagente) son la clave de los
+  // recordatorios "una vez por sesion": ver `resolver`.
+  return armarCtx({ raw, tool: String(j.tool_name ?? ''), cmd: String(t.command ?? ''), file: String(t.file_path ?? ''), content: String(t.content ?? t.new_string ?? ''), cwd: typeof j.cwd === 'string' ? j.cwd : '', sid: typeof j.session_id === 'string' ? j.session_id : '', agente: typeof j.agent_id === 'string' ? j.agent_id : '' });
 }
 
-function armarCtx({ raw, tool, cmd, file, content, parsed4, cwd = '' }) {
+function armarCtx({ raw, tool, cmd, file, content, parsed4, cwd = '', sid = '', agente = '' }) {
   const toolL = limpiar(tool), cmd6 = limpiar(cmd).slice(0, CORTE), fileL = limpiar(file), body6 = limpiar(content).slice(0, CORTE);
   return {
-    ok: true, raw, rescate: null, tool, cmd, file, content, cwd, target: `${cmd} ${file}`,
+    ok: true, raw, rescate: null, tool, cmd, file, content, cwd, sid, agente, target: `${cmd} ${file}`,
     cmd6, body6, toolL, fileL,
     parsed4: parsed4 ?? [toolL, cmd6, fileL, body6].join('\x1f'),
     parsed3: [toolL, cmd6, fileL].join('\x1f'),
@@ -1750,7 +1772,7 @@ export function esArchivoDeReparacion(file, fuente, raizRepo) {
 export function correr(nombres, ctx, deps = {}) {
   const ahora = deps.ahora ?? Math.floor(Date.now() / 1000);
   const env = deps.env ?? process.env;
-  const res = { bloqueos: [], avisos: [], recordatorios: [], contextos: [], supabase: false };
+  const res = { bloqueos: [], avisos: [], recordatorios: [], contextos: [], supabase: false, sesion: { sid: ctx.sid || '', agente: ctx.agente || '' } };
   const reparando = ctx.ok && (ctx.tool === 'Edit' || ctx.tool === 'Write') && esArchivoDeReparacion(ctx.file, undefined, env.GUARDIANES_RAIZ_REPO);
   for (const n of nombres) {
     const g = GUARDIANES[n];
@@ -1775,11 +1797,12 @@ export function correr(nombres, ctx, deps = {}) {
 }
 
 /**
- * Convierte el resultado en salida de hook. Los recordatorios pasan por su cooldown recien
- * aca, y solo si nada bloqueo: si la llamada no va a correr, el aviso se perderia y encima
- * quedaria consumida la hora.
+ * Convierte el resultado en salida de hook. Los recordatorios pasan por su control recien
+ * aca (una vez por sesion si el payload trae `session_id`; si no, el cooldown de una hora), y
+ * solo si nada bloqueo: si la llamada no va a correr, el aviso se perderia y encima quedaria
+ * consumido.
  */
-export function resolver(res, { ahora = Math.floor(Date.now() / 1000), marcar = true } = {}) {
+export function resolver(res, { ahora = Math.floor(Date.now() / 1000), marcar = true, env = process.env } = {}) {
   const err = res.avisos.map((a) => a.texto);
   if (res.bloqueos.length) {
     err.push(...(res.contextos || []).map((c) => c.texto), ...res.bloqueos.map((b) => b.texto));
@@ -1789,11 +1812,20 @@ export function resolver(res, { ahora = Math.floor(Date.now() / 1000), marcar = 
   // saber que un guardian esta roto aunque la herramienta haya pasado.
   const textos = (res.contextos || []).map((c) => c.texto);
   const vistos = new Set();
+  const conSesion = Boolean(res.sesion?.sid);
+  const marcasSesion = conSesion ? archivoMarcasSesion(res.sesion, env) : '';
+  const yaMostrados = conSesion && res.recordatorios.length ? recordatoriosYaMostrados(marcasSesion) : new Set();
   for (const r of res.recordatorios) {
     if (vistos.has(r.flag)) continue;
     vistos.add(r.flag);
-    if (cooldownVigente(r.flag, ahora)) continue;
-    if (marcar) marcarFlag(r.flag, ahora);
+    if (conSesion) {
+      const clave = path.basename(r.flag);
+      if (yaMostrados.has(clave)) continue;                 // ya salio en esta sesion
+      if (marcar) marcarRecordatorioDeSesion(marcasSesion, clave);
+    } else {
+      if (cooldownVigente(r.flag, ahora)) continue;
+      if (marcar) marcarFlag(r.flag, ahora);
+    }
     textos.push(`${r.texto}\n(Si ya cumpliste, o no aplica a esta operacion, segui: esto es un recordatorio, no un bloqueo.)`);
   }
   const contexto = textos.join('\n\n');
@@ -1806,7 +1838,7 @@ export function evaluar(raw, { nombres, ahora, env, marcar } = {}) {
   const ctx = parsear(raw);
   const lista = nombres ?? matriz(ctx.tool);
   const res = correr(lista, ctx, { ahora, env });
-  return { ctx, res, salida: resolver(res, { ahora, marcar }) };
+  return { ctx, res, salida: resolver(res, { ahora, marcar, env }) };
 }
 
 /** Entrada del despachador: escribe stdout/stderr, deja la marca `supabase` y devuelve el exit. */

@@ -35,6 +35,15 @@
  * el ultimo mensaje de Fak, y lo que sigue corriendo en segundo plano (lanzado y sin su
  * <task-notification> de fin). `archivosTocadosEnSesion` la expone para dev-server-guard.sh.
  *
+ * "Archivos sin commitear" (chequeo 3), 30/09/2026: cuenta solo los archivos que ESTA sesion
+ * ESCRIBIO —Write/Edit/MultiEdit/NotebookEdit y los comandos que escriben (`escrituraEnComando`:
+ * redireccion, tee, sed -i, mv/cp/rm, git add, un interprete con una marca de escritura)—
+ * cruzados con `git status --porcelain`. Nombrar un archivo en un cat o un grep no lo toca:
+ * antes una sesion con 9 escritos figuraba con 465 "tocados" y el aviso listaba lo que dejo
+ * sucio otra sesion. Si la sesion corrio algo que no se ubica (un interprete, un agente) y no
+ * tiene ninguna escritura atribuible, se cuenta lo sucio modificado desde que arranco; sin
+ * transcript, todo lo sucio, como siempre (fallar al lado seguro).
+ *
  * Nota sobre el flag de Supabase: el guard viejo renombraba el flag a `.avisado` al recordarlo.
  * Aca se copia su contenido a `.avisado`, se vacia el flag y se conservan las dos fechas de
  * modificacion, asi _cierreSesion.mjs sigue viendo la misma "ultima escritura".
@@ -45,7 +54,7 @@ import path from 'node:path';
 import readline from 'node:readline';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { soloLineasDeComando } from './shellTexto.mjs';
+import { soloLineasDeComando, separarHeredocs, comandosSimples } from './shellTexto.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const REPO = path.resolve(AQUI, '..', '..');
@@ -383,17 +392,237 @@ const RE_TOKEN_RUTA = /^[\w@.\-]+(?:\/[\w@.\-]+)*$/;
  *  tampoco entran. Sobreincluir es barato: solo cuenta si ademas esta sucio en git. */
 export function rutasRepoEnComando(cmd, repo = REPO) {
   const out = new Set();
-  for (let t of String(cmd || '').split(/\s+/)) {
-    t = t.replace(/^["'`(]+|["'`),;:]+$/g, '');
-    if (!t || !EXT_CODIGO.test(t)) continue;
-    const rel = rutaRelativaAlRepo({ name: 'Write', input: { file_path: t } }, repo);
-    if (rel) { out.add(rel); continue; }
-    if (/^[a-z]:[\\/]/i.test(t) || t.startsWith('\\\\') || t.startsWith('/')) continue;   // absoluta, afuera del repo
-    const n = t.replace(/\\/g, '/').replace(/^\.\//, '');
-    if (!RE_TOKEN_RUTA.test(n) || n.split('/').includes('..')) continue;
-    out.add(n);
+  for (const t of String(cmd || '').split(/\s+/)) {
+    const r = rutaDeToken(t, repo);
+    if (r) out.add(r);
   }
   return out;
+}
+
+/** Ruta repo-relativa (con /) si UN token nombra un archivo de codigo del repo; null si no (sin extension
+ *  de codigo, URL, `..`, o absoluta de afuera). No mira el disco. */
+function rutaDeToken(t, repo = REPO) {
+  t = String(t ?? '').replace(/^["'`(]+|["'`),;:]+$/g, '');
+  if (!t || !EXT_CODIGO.test(t)) return null;
+  const rel = rutaRelativaAlRepo({ name: 'Write', input: { file_path: t } }, repo);
+  if (rel) return rel;
+  if (/^[a-z]:[\\/]/i.test(t) || t.startsWith('\\\\') || t.startsWith('/')) return null;   // absoluta, afuera del repo
+  const n = t.replace(/\\/g, '/').replace(/^\.\//, '');
+  if (!RE_TOKEN_RUTA.test(n) || n.split('/').includes('..')) return null;
+  return n;
+}
+
+// ---------------------------------------------------------------------------------------
+// Que ESCRIBE un comando (pendientes de ESTA sesion, 30/09/2026)
+// ---------------------------------------------------------------------------------------
+// `rutasRepoEnComando` cuenta todo archivo NOMBRADO: un cat, un grep o un node --check lo
+// vuelven "tocado" (25 transcripts con el aviso: 9 archivos escritos figuraban como 465, y la
+// mayoria de los avisos listaban lo que OTRA sesion dejo sucio). `escrituraEnComando` cuenta
+// solo lo que el comando ESCRIBE; lo que no se puede ubicar es OPACO. Las listas de verbos
+// viven en cierreCanon.data.json (`escrituras`), no como regex.
+
+const ESC = CANON.escrituras;
+const aSet = (a) => new Set(a ?? []);
+const conjuntosPorVerbo = (o) => Object.fromEntries(Object.entries(o).filter(([k]) => !k.startsWith('_')).map(([k, v]) => [k, aSet(v)]));
+const V_LECTORES = aSet(ESC.lectores);
+const V_LECTOR_OPC = conjuntosPorVerbo(ESC.lectores_con_opcion_que_escribe);
+const V_INTERP_LEE = conjuntosPorVerbo(ESC.interpretes_que_leen);
+const V_CD = aSet(ESC.cd);
+const V_ESCRIBEN = aSet(ESC.escriben_todo);
+const V_BORRAN = aSet(ESC.borran);
+const V_MUEVEN = aSet(ESC.mueven);
+const V_COPIAN = aSet(ESC.copian);
+const V_SED = aSet(ESC.sed_en_sitio);
+const V_GIT_LEE = aSet(ESC.git_lee);
+const V_GIT_RUTAS = aSet(ESC.git_escribe_rutas);
+const V_GIT_CHECKOUT = aSet(ESC.git_checkout);
+const V_GIT_ADD_TODO = aSet(ESC.ruta_que_no_se_puede_ubicar.git_add_todo);
+const RE_CODIGO_ESCRIBE = ESC.codigo_que_escribe.re.map((s) => new RegExp(s, 'i'));
+const NPM = { lee: aSet(ESC.npm.lee), runLee: aSet(ESC.npm.run_lee), npxLee: aSet(ESC.npm.npx_lee), escriben: aSet(ESC.npm.opciones_que_escriben) };
+const ENVOLTORIOS = new Set(['sudo', 'command', 'builtin', 'exec', 'nohup', 'nice', 'time', 'stdbuf', 'then', 'do', 'else', 'elif', 'if', '!', '&', '{']);
+
+const INTERPRETES = new Set(['node', 'python', 'python3', 'py', 'bash', 'sh', 'zsh', 'pwsh', 'powershell', 'ruby', 'perl', 'deno', 'bun']);
+// Candidatos a ruta dentro de un texto de codigo: corridas de caracteres de ruta, aunque vengan pegadas a
+// comillas o a `p=` (`p='docs/x.md'`, `r"C:\Dev\x.py"`): en un script pegado nadie las separa con espacios.
+// Se parte el texto (lineal) en vez de buscar con un regex anidado: un script con un blob base64 de 50 KB
+// haria explotar el backtracking de ese regex (n^2) en el hook Stop. Una corrida de mas de 400 no es una ruta.
+const SEPARADOR_DE_RUTAS = /[^\w@.:\\/-]+/;
+function rutasEnCodigo(texto) {
+  const out = [];
+  for (let t of String(texto ?? '').split(SEPARADOR_DE_RUTAS)) {
+    if (t.length < 4 || t.length > 400) continue;
+    t = t.replace(/^:+|[.:]+$/g, '');                 // "…en docs/x.md." al final de una oracion
+    if (t) out.push(t);
+  }
+  return out;
+}
+// Una variable, un comodin o una sustitucion donde deberia ir el archivo. Un texto con espacios (el
+// contenido de un Set-Content, una frase) no es una ruta: no cuenta como incognita.
+const tieneIncognita = (t) => /[$*`(]/.test(t) && !/\s/.test(t);
+const esOpcion = (a) => /^-/.test(a);
+const sinExt = (a) => !/\.[A-Za-z0-9]+$/.test(a);
+
+/**
+ * Lo que un comando Bash/PowerShell ESCRIBE dentro del repo.
+ *   escritos: Set de rutas repo-relativas (con /) de archivos de codigo que el comando escribe, borra,
+ *             mueve, copia o agrega al indice de git (`git add`).
+ *   opaco:    true si el comando puede escribir en un lugar que no se ubica: un interprete que corre
+ *             codigo (python, node x.mjs, bash), un comodin o una variable como destino, `git add .`,
+ *             un verbo que ninguna lista conoce. Un comando que solo LEE no es opaco.
+ * No mira el disco. Un `cd` a otra carpeta hace opaca toda ruta relativa que venga despues.
+ */
+export function escrituraEnComando(cmd, repo = REPO) {
+  const escritos = new Set();
+  let opaco = false;
+  let nombrar = false;                                              // corrio codigo: lo que ese codigo NOMBRA puede estar escrito
+  let movido = false;
+  const ejecutados = new Set();                                     // el script que un interprete EJECUTA no es un archivo que escribe
+  const corre = (script) => {
+    opaco = true;
+    nombrar = true;
+    const r = script === undefined ? null : rutaDeToken(script, repo);
+    if (r) ejecutados.add(r);
+  };
+  const atribuir = (tok) => {
+    if (tieneIncognita(tok)) { opaco = true; return; }
+    const r = rutaDeToken(tok, repo);
+    if (!r) return;
+    escritos.add(r);
+    if (movido && !/^([a-z]:|[\\/])/i.test(tok)) opaco = true;
+  };
+  const esRaiz = (t) => /git\s+rev-parse\s+--show-toplevel/.test(t)
+    || aWindows(t).replace(/\//g, '\\').replace(/\\+$/, '').toLowerCase() === normRepo(repo);
+  const { lineas } = separarHeredocs(cmd);
+  for (const c of comandosSimples(lineas)) {
+    for (const r of c.redirs) if (/^&?>/.test(r.op)) atribuir(r.t);
+    let p = c.palabras.slice();
+    while (p.length) {
+      if (/^[A-Za-z_][A-Za-z0-9_]*\+?=/.test(p[0])) { p.shift(); continue; }
+      if (/^\$\w+$/.test(p[0]) && p[1] === '=') { p = p.slice(2); continue; }   // $x = ... (PowerShell)
+      if (ENVOLTORIOS.has(p[0].toLowerCase())) { p.shift(); continue; }
+      if (/^(env|timeout)$/i.test(p[0])) { p.shift(); while (p.length && (esOpcion(p[0]) || /^\d+[smhd]?$/.test(p[0]) || /^[A-Za-z_]\w*=/.test(p[0]))) p.shift(); continue; }
+      break;
+    }
+    if (!p.length) continue;
+    const verbo = p[0].replace(/^.*[\\/]/, '').replace(/\.exe$/i, '').toLowerCase();
+    const args = p.slice(1);
+    const noOpc = args.filter((a) => !esOpcion(a));
+    if (verbo.startsWith('$')) continue;                            // `$_.Name -like ...` (PowerShell): una expresion, no un comando
+
+    if (V_CD.has(verbo)) {
+      const dest = noOpc[0];
+      if (dest !== undefined && !esRaiz(dest)) movido = true;
+      continue;
+    }
+
+    if (verbo === 'git') {
+      let k = 0;
+      let otraCarpeta = false;
+      while (k < args.length && esOpcion(args[k])) { if (args[k] === '-C') otraCarpeta = true; k += /^-[cC]$/.test(args[k]) ? 2 : 1; }
+      const sub = (args[k] ?? '').toLowerCase();
+      const resto = args.slice(k + 1);
+      if (sub === '' || V_GIT_LEE.has(sub)) continue;               // `git --version`, status, diff, log, commit...
+      if (otraCarpeta) { opaco = true; continue; }
+      if (V_GIT_RUTAS.has(sub)) {
+        for (const a of resto) {
+          if (V_GIT_ADD_TODO.has(a)) { opaco = true; continue; }        // `-A`, `.`, `-u`: todo el arbol (antes del filtro de opciones: -A es una opcion)
+          if (esOpcion(a) || a === '--') continue;
+          if (tieneIncognita(a) || sinExt(a)) { opaco = true; continue; }   // una carpeta, un comodin, una variable
+          atribuir(a);
+        }
+        continue;
+      }
+      if (V_GIT_CHECKOUT.has(sub)) {
+        const i = resto.indexOf('--');
+        if (i >= 0) { for (const a of resto.slice(i + 1)) { if (sinExt(a) || tieneIncognita(a)) opaco = true; else atribuir(a); } continue; }
+        if (resto.some((a) => /^-[bBcC]$/.test(a))) continue;      // crear rama no cambia archivos
+        opaco = true;                                               // cambia de rama o restaura: no se ubica
+        continue;
+      }
+      opaco = true;                                                 // stash, pull, merge, reset, apply...: no se ubica
+      continue;
+    }
+
+    if (V_BORRAN.has(verbo)) {
+      const cmdEstilo = verbo === 'del' || verbo === 'rd' || verbo === 'erase';
+      for (const a of noOpc.filter((x) => !(cmdEstilo && /^\/[A-Za-z]$/.test(x)))) {
+        if (tieneIncognita(a) || sinExt(a)) opaco = true; else atribuir(a);   // una carpeta se lleva archivos que no se ven
+      }
+      continue;
+    }
+    if (V_MUEVEN.has(verbo)) {
+      for (const a of noOpc) {
+        if (tieneIncognita(a) || (sinExt(a) && !/^([a-z]:|[\\/])/i.test(a))) opaco = true; else atribuir(a);
+      }
+      continue;
+    }
+    if (V_COPIAN.has(verbo)) {
+      const i = args.findIndex((a) => /^(-t|--target-directory|-destination|-dest)$/i.test(a));
+      const dest = i >= 0 ? args[i + 1] : noOpc[noOpc.length - 1];
+      if (dest === undefined) continue;
+      if (tieneIncognita(dest)) opaco = true;
+      else if (sinExt(dest)) { if (!/^([a-z]:|[\\/])/i.test(dest)) opaco = true; }   // carpeta de adentro: el nombre sale del origen
+      else atribuir(dest);
+      continue;
+    }
+    if (V_ESCRIBEN.has(verbo)) {
+      for (const a of noOpc) atribuir(a);
+      continue;
+    }
+    if (V_SED.has(verbo)) {
+      const enSitio = args.some((a) => /^-[A-Za-z]*i[A-Za-z0-9.]*$/.test(a) || /^--in-place/.test(a));
+      if (enSitio) {
+        // El guion del script no es un archivo: es el valor de -e/-f, o el primer argumento sin opcion.
+        const scripts = new Set();
+        args.forEach((a, i) => { if (/^(-e|-f|--expression|--file)$/.test(a) && args[i + 1] !== undefined) scripts.add(i + 1); });
+        let saltado = scripts.size > 0;
+        args.forEach((a, i) => {
+          if (esOpcion(a) || scripts.has(i)) return;
+          if (!saltado) { saltado = true; return; }
+          atribuir(a);
+        });
+        continue;
+      }
+      if (verbo === 'sed') continue;                                // sed sin -i solo imprime
+      corre();                                                      // perl sin -i corre codigo
+      continue;
+    }
+    if (V_LECTOR_OPC[verbo]) {
+      const dispara = args.findIndex((a) => V_LECTOR_OPC[verbo].has(a));
+      if (dispara >= 0) {
+        if (/^(sort|curl|wget)$/.test(verbo) && args[dispara + 1] !== undefined) atribuir(args[dispara + 1]); else corre();
+      }
+      continue;
+    }
+    if (V_LECTORES.has(verbo)) continue;
+    if (V_INTERP_LEE[verbo]) {
+      if (!args.some((a) => V_INTERP_LEE[verbo].has(a))) corre(noOpc[0]);
+      continue;
+    }
+    if (verbo === 'npx') {
+      const primero = noOpc[0];
+      if (!(NPM.npxLee.has(primero) && !args.some((a) => NPM.escriben.has(a)))) corre();
+      continue;
+    }
+    if (/^(npm|pnpm|yarn)$/.test(verbo)) {
+      const sub = noOpc[0];
+      const lee = (sub === 'run' || sub === 'run-script') ? NPM.runLee.has(noOpc[1]) : NPM.lee.has(sub) || NPM.runLee.has(sub);
+      if (!(lee && !args.some((a) => NPM.escriben.has(a)))) corre();
+      continue;
+    }
+    corre(INTERPRETES.has(verbo) ? noOpc[0] : undefined);           // verbo que ninguna lista conoce (bash x.sh, pwsh, un .exe): no se ubica lo que escribe
+  }
+  // Un interprete que corrio codigo (python - <<EOF ... open('docs/x.md','w')) puede haber escrito los archivos
+  // que NOMBRA: es como editan las sesiones cuando no usan Edit (d5ac4fb1 y deeb4d2b, 09/2026). Solo si ese
+  // mismo comando tiene una marca de escritura (canon `codigo_que_escribe`): un py -c que lee un json y lo
+  // imprime nombra el archivo sin tocarlo. Un comando que solo lee no entra aca: nombrar no es tocar.
+  if (nombrar && RE_CODIGO_ESCRIBE.some((re) => re.test(cmd))) {
+    for (const t of rutasEnCodigo(cmd)) {
+      const r = rutaDeToken(t, repo);
+      if (r && !ejecutados.has(r)) escritos.add(r);
+    }
+  }
+  return { escritos, opaco };
 }
 
 // ---------------------------------------------------------------------------------------
@@ -522,6 +751,7 @@ async function pasada(archivo, st, { completa, repo }) {
       && !linea.includes('<task-notification>') && !linea.includes('"queued_command"')) continue;
     let obj;
     try { obj = JSON.parse(linea); } catch { continue; }
+    if (completa && !st.inicio && obj.timestamp) st.inicio = Date.parse(obj.timestamp) || 0;
     if (completa) registrarBackground(st.bg, obj, linea);
     // Lo que Fak escribe MIENTRAS trabajo entra como attachment queued_command (commandMode prompt).
     if (obj.type === 'attachment' && obj.attachment?.type === 'queued_command' && obj.attachment.commandMode === 'prompt') {
@@ -540,9 +770,15 @@ async function pasada(archivo, st, { completa, repo }) {
       st.seq++;
       const rel = rutaRelativaAlRepo(b, repo);
       if (rel) st.tocados.add(rel);
-      if (/^(Bash|PowerShell|Agent|Task)$/.test(b.name || '')) {
+      if (/^(Bash|PowerShell)$/.test(b.name || '')) {
         st.huboComando = true;
-        for (const r of rutasRepoEnComando(b.input?.command, repo)) st.tocados.add(r);
+        // Solo lo que el comando ESCRIBE (30/09/2026): nombrar un archivo en un cat o un grep no lo toca.
+        const e = escrituraEnComando(b.input?.command, repo);
+        for (const r of e.escritos) st.tocados.add(r);
+        if (e.opaco) st.huboOpaco = true;
+      } else if (/^(Agent|Task)$/.test(b.name || '')) {
+        st.huboComando = true;
+        st.huboOpaco = true;                              // un agente puede escribir donde no se ve (y su transcript puede faltar)
       }
       if (!completa) continue;
       const e = evaluarToolUse(b, repo);
@@ -556,12 +792,17 @@ async function pasada(archivo, st, { completa, repo }) {
  * UNA pasada por el transcript de la sesion (y por los de sus subagentes, que viven en
  * `<sesion>/subagents/*.jsonl` y NO en el transcript principal). Devuelve:
  *   fuera / ejemplo   — algo entregado afuera del repo DESPUES del ultimo mensaje real de Fak
- *   tocados           — Set de rutas repo-relativas que esta sesion escribio (Write/Edit) o
- *                       nombro en un comando (sed -i, cat >, python x.py), subagentes incluidos.
- *                       Con dos sesiones sobre el mismo repo, lo sucio de la otra no es pendiente
- *                       mio (falso positivo del 05/09). Si la sesion corrio comandos o agentes y
- *                       aun asi no se le puede atribuir NINGUN archivo, vuelve null y se cuenta
- *                       todo lo sucio, como antes (auditoria 05/09, C.1).
+ *   tocados           — Set de rutas repo-relativas que esta sesion ESCRIBIO: Write/Edit/MultiEdit/
+ *                       NotebookEdit y los comandos que escriben (`escrituraEnComando`: redireccion,
+ *                       tee, sed -i, mv/cp/rm, git add...), subagentes incluidos. Nombrar un archivo
+ *                       en un cat, un grep o un node --check NO lo toca (30/09/2026: una sesion con
+ *                       9 escritos figuraba con 465 "tocados"). Con dos sesiones sobre el mismo repo,
+ *                       lo sucio de la otra no es pendiente mio (falso positivo del 05/09). Si la
+ *                       sesion corrio algo OPACO (un interprete, un agente, un comodin) y no se le
+ *                       puede atribuir NINGUN archivo, vuelve null (auditoria 05/09, C.1) y se cuenta
+ *                       lo sucio modificado desde `inicio`; sin transcript, todo lo sucio, como antes.
+ *   inicio            — epoch ms del primer mensaje del transcript (desde cuando puede haber escrito)
+ *   huboOpaco         — corrio algo que puede escribir donde no se ve
  *   entregables       — archivos de entrega escritos afuera, con `mirado` (hubo Read, verificador
  *                       o tool MCP sobre ese archivo DESPUES de su ultima escritura)
  *   sinMirar          — los entregables con mirado=false
@@ -573,7 +814,7 @@ async function pasada(archivo, st, { completa, repo }) {
 export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
   if (!transcriptPath || !fs.existsSync(transcriptPath)) return { fuera: false };
   const st = {
-    ejemplo: null, huboComando: false, tocados: new Set(), ultimoMensajeFak: '', ultimoMensajeFakTs: '', ent: new Map(), seq: 0,
+    ejemplo: null, huboComando: false, huboOpaco: false, inicio: 0, tocados: new Set(), ultimoMensajeFak: '', ultimoMensajeFakTs: '', ent: new Map(), seq: 0,
     bg: nuevoBackground(),
   };
   await pasada(transcriptPath, st, { completa: true, repo });
@@ -583,7 +824,7 @@ export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
   for (const f of subagentes) {
     try { await pasada(path.join(dirSub, f), st, { completa: false, repo }); } catch { /* un transcript roto no frena el cierre */ }
   }
-  const atribuibles = st.tocados.size > 0 || !st.huboComando ? st.tocados : null;
+  const atribuibles = st.tocados.size > 0 || !st.huboOpaco ? st.tocados : null;
   const entregables = [...st.ent.entries()].map(([nombre, e]) => ({
     nombre, ruta: e.ruta, escritoEn: e.escritoEn, mirado: e.miradoEn > e.escritoEn,
   }));
@@ -592,7 +833,9 @@ export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
     fuera: Boolean(st.ejemplo),
     ejemplo: st.ejemplo ?? undefined,
     tocados: atribuibles,
+    inicio: st.inicio || undefined,
     huboComando: st.huboComando,
+    huboOpaco: st.huboOpaco,
     entregables,
     sinMirar: entregables.filter((e) => !e.mirado),
     ultimoMensajeFak: st.ultimoMensajeFak,
@@ -633,16 +876,24 @@ function flagSupabase() {
   } catch { return false; }
 }
 
+/** `true` si el archivo sucio se modifico desde `desde` (epoch ms, con un minuto de margen). Borrado o
+ *  ilegible: no se sabe, cuenta. */
+function modificadoDesde(rel, desde, repo = REPO) {
+  try { return fs.statSync(path.join(repo, rel)).mtimeMs >= desde - 60_000; } catch { return true; }
+}
+
 /** Pendientes medibles al declarar un cierre. Cada renglon es accionable.
- *  `tocados` (Set de rutas repo-relativas que escribio o nombro esta sesion) filtra el git
- *  status: si viene null (sin transcript, o sesion con comandos sin archivo atribuible), se
- *  cuenta todo lo sucio como antes. */
-export function relevarPendientes(tocados = null) {
+ *  `tocados` (Set de rutas repo-relativas que ESCRIBIO esta sesion) filtra el git status. Si viene
+ *  null la sesion no se puede atribuir y se cuenta lo sucio: con `desde` (la sesion tiene
+ *  transcript pero corrio algo opaco) solo lo modificado desde que arranco; sin `desde` (no hubo
+ *  transcript) todo, como antes: fallar hacia el lado seguro. */
+export function relevarPendientes(tocados = null, { desde = null, repo = REPO } = {}) {
   const out = [];
   try {
-    const st = execSync('git status --porcelain', { cwd: REPO, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    const st = execSync('git status --porcelain', { cwd: repo, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
     let archivos = st.split(/\r?\n/).filter(Boolean).map((l) => l.slice(3).trim().replace(/^.*-> /, '').replace(/^"|"$/g, '')).filter((a) => EXT_CODIGO.test(a));
     if (tocados instanceof Set) archivos = archivos.filter((a) => tocados.has(a.replace(/\\/g, '/')));
+    else if (Number.isFinite(desde) && desde > 0) archivos = archivos.filter((a) => modificadoDesde(a, desde, repo));
     if (archivos.length) {
       out.push(`hay ${archivos.length} archivo(s) sin commitear (${archivos.slice(0, 4).join(', ')}${archivos.length > 4 ? ', …' : ''}) — regla git-deploy: build + commit por ruta + push`);
     }
@@ -754,7 +1005,7 @@ export async function decidir(payload = {}, deps = {}) {
 
   // 3. Cierre declarado con pendientes medibles (1x/20 min).
   if (!d.enCooldown(sid)) {
-    const pend = d.pendientes(fuera?.tocados ?? null) || [];
+    const pend = d.pendientes(fuera?.tocados ?? null, { desde: fuera?.inicio }) || [];
     if (pend.length) {
       d.marcar(sid);
       return {

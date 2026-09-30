@@ -10,6 +10,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync, execFileSync } from 'node:child_process';
+import { COMPUERTA, evaluarTimeout } from '../../scripts/_lib/timeoutGuard.mjs';
 
 // Cada caso levanta bash -> node (y agentes-guard, siete veces seguidas). Solos tardan
 // decimas; con la suite entera en paralelo en la notebook de Windows pasaron los 15 s del
@@ -343,6 +344,67 @@ describe('timeout-guard.sh (PostToolUse) — el timeout deja el aviso; todo lo d
     expect(vitest.out).toBe('');
     const cat = correr({ tool_name: 'Bash', tool_input: { command: 'cat x.test.mjs' }, tool_response: { stdout: "    tool_response: { stdout: '', stderr: 'Command timed out after 2m 0.0s', interrupted: false }", stderr: '' } });
     expect(cat.out).toBe('');
+  });
+});
+
+// ─────────────── timeout-guard directo con node (30/09/2026): sin el envoltorio bash
+describe('timeout-guard con node directo (settings.json) — el mismo veredicto que el .sh, sin bash', () => {
+  const NODE = path.join(RAIZ, 'scripts', '_lib', 'timeoutGuard.mjs');
+  const directo = (payload, stdin) => {
+    const r = spawnSync('node', [NODE], { input: stdin ?? JSON.stringify(payload), encoding: 'utf8' });
+    return { exit: r.status, out: r.stdout ?? '', err: r.stderr ?? '' };
+  };
+  const ROJOS = [
+    { hook_event_name: 'PostToolUse', tool_name: 'Bash', tool_input: { command: 'find /y/BARACK -name "I-AC-012*"' }, tool_response: { stdout: '', stderr: 'Command timed out after 2m 0.0s', interrupted: false } },
+    { hook_event_name: 'PostToolUseFailure', tool_name: 'Bash', tool_input: { command: 'grep -r x /y' }, error: 'Command timed out after 2m 0s' },
+    { hook_event_name: 'PostToolUse', tool_name: 'Bash', tool_input: { command: 'find /y -name x' }, tool_response: { stdout: 'Command did not complete within its 120s timeout and was moved to the background (ID: b1).', stderr: '' } },
+    { hook_event_name: 'PostToolUse', tool_name: 'PowerShell', tool_input: { command: 'Get-ChildItem Y:\\ -Recurse' }, tool_response: { stdout: '', stderr: 'algo\nCommand timed out after 2m 0.0s' } },
+  ];
+  const VERDES = [
+    { tool_name: 'Bash', tool_input: { command: 'ls' }, tool_response: { stdout: 'a\nb', stderr: '' } },
+    { tool_name: 'Bash', tool_input: { command: 'grep "timed out" log.txt' }, tool_response: { stdout: 'nada', stderr: '' } },
+    { tool_name: 'Bash', tool_input: { command: 'npx vitest run' }, tool_response: { stdout: ' ✓ ROJO (deja marca): "Command timed out" en tool_response → exit 0\n Tests 177 passed', stderr: '' } },
+    { tool_name: 'Bash', tool_input: { command: 'cat x.test.mjs' }, tool_response: { stdout: "    tool_response: { stdout: '', stderr: 'Command timed out after 2m 0.0s', interrupted: false }", stderr: '' } },
+  ];
+
+  it('ROJO: un timeout deja el aviso con el comando; el evento de salida es el del payload', () => {
+    for (const p of ROJOS) {
+      const r = directo(p);
+      expect(r.exit).toBe(0);
+      const ctx = JSON.parse(r.out).hookSpecificOutput;
+      expect(ctx.hookEventName).toBe(p.hook_event_name);
+      expect(ctx.additionalContext).toMatch(/TIMEOUT-GUARD/);
+      expect(ctx.additionalContext).toMatch(/NO es un chequeo/);
+    }
+  });
+
+  it('VERDE: salida normal, "timed out" solo en el comando o citado en un stdout, payload ilegible o vacio → exit 0 sin nada', () => {
+    for (const p of VERDES) expect(directo(p), JSON.stringify(p).slice(0, 80)).toEqual({ exit: 0, out: '', err: '' });
+    expect(directo(null, '{roto Command timed out after 2m')).toEqual({ exit: 0, out: '', err: '' });
+    expect(directo(null, '')).toEqual({ exit: 0, out: '', err: '' });
+    expect(directo(null, 'no es json')).toEqual({ exit: 0, out: '', err: '' });
+  });
+
+  it('IGUAL al .sh en los 8 casos (el envoltorio no agrega ni saca nada)', () => {
+    for (const p of [...ROJOS, ...VERDES]) expect(directo(p)).toEqual(hook('timeout-guard.sh', p));
+  });
+
+  it('la compuerta del crudo es mas ancha que el detector: todo lo que el detector avisa pasa por ella (no se pierde ningun aviso)', () => {
+    for (const p of ROJOS) {
+      expect(evaluarTimeout(p), JSON.stringify(p).slice(0, 80)).not.toBe(null);
+      expect(COMPUERTA.test(JSON.stringify(p))).toBe(true);
+    }
+    // y lo que la compuerta deja pasar sin ser timeout lo descarta el detector (la frase citada en un stdout)
+    for (const p of VERDES) if (COMPUERTA.test(JSON.stringify(p))) expect(evaluarTimeout(p)).toBe(null);
+  });
+
+  it('settings.json llama a este mismo archivo, con node y por ${CLAUDE_PROJECT_DIR}, en PostToolUse y PostToolUseFailure (Bash|PowerShell)', () => {
+    const s = JSON.parse(fs.readFileSync(path.join(RAIZ, '.claude', 'settings.json'), 'utf8'));
+    for (const evento of ['PostToolUse', 'PostToolUseFailure']) {
+      const grupo = s.hooks[evento].find((g) => g.matcher === 'Bash|PowerShell');
+      expect(grupo, evento).toBeTruthy();
+      expect(grupo.hooks.map((h) => h.command)).toEqual(['node "${CLAUDE_PROJECT_DIR}/scripts/_lib/timeoutGuard.mjs"']);
+    }
   });
 });
 

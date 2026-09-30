@@ -146,6 +146,60 @@
     "re": "(^|\":\\s*\"|\\\\n|\\n)\\s*(Command timed out after \\d+|Command did not complete within its \\d+s timeout)",
     "mensaje": "TIMEOUT-GUARD: el comando se corto por timeout: {comando}\nUn chequeo que no termino NO es un chequeo (LECCIONES 08/09, anexo I-AC-012.1: lo di por inexistente porque el find se corto, y el mail ya habia salido). Este resultado no prueba que algo no exista ni que este bien. Repetilo acotado (ruta exacta, -maxdepth, por nombre o por indice y nunca grep -r sobre OneDrive/Y:) o en background con run_in_background, y espera la vuelta antes de concluir."
   },
+  "escrituras": {
+    "_que_es": "Que ESCRIBE un comando Bash/PowerShell dentro del repo, para el chequeo 3 del cierre-guard (archivos sin commitear). Medido el 30/09/2026 sobre 25 transcripts con el aviso: el relevador contaba como 'tocado' cualquier archivo de codigo NOMBRADO en un comando (un cat, un grep, un node --check), y los de los subagentes: una sesion con 9 archivos escritos figuraba con 465 tocados, y 3 de 4 avisos eran archivos que otra sesion dejo sucios. Ahora cuenta lo que la sesion escribio (Write/Edit/MultiEdit/NotebookEdit y los comandos de estas listas). Lo que no se puede ubicar (un interprete, un glob, una variable, git add . ) es OPACO: si la sesion no tiene ninguna escritura atribuible y corrio algo opaco, se cuenta lo sucio modificado desde que arranco la sesion (mtime), nunca menos que eso. Verbos en LISTA CANONICA, no en regex (feedback_heuristicas_lista_canonica_no_regex_parcial): lo que no esta en ninguna lista es opaco.",
+    "lectores": ["ls", "dir", "cat", "head", "tail", "less", "more", "grep", "egrep", "fgrep", "rg", "ag", "wc", "file", "stat", "pwd", "echo", "printf", "test", "[", "[[", "true", "false", "which", "where", "type", "date", "basename", "dirname", "realpath", "readlink", "sleep", "sort", "uniq", "cut", "tr", "nl", "diff", "cmp", "comm", "du", "df", "ps", "tasklist", "whoami", "hostname", "uname", "id", "printenv", "jq", "column", "fold", "expand", "seq", "xxd", "od", "md5sum", "sha1sum", "sha256sum", "cygpath", "tree", "mkdir", "gh", "netstat", "taskkill", "get-content", "gc", "get-childitem", "gci", "select-string", "sls", "get-item", "test-path", "write-output", "write-host", "measure-object", "get-date", "get-process", "get-location", "resolve-path", "split-path", "join-path", "format-table", "sort-object", "where-object", "foreach-object", "select-object", "out-string", "convertto-json", "convertfrom-json", "start-sleep", "get-filehash", "get-command", "export", "unset", "set", "local", "declare", "readonly", "read", "for", "while", "until", "in", "done", "fi", "esac", "case", "wait", "exit", "return", "shift", "trap", "alias", "unalias", "foreach", "switch", "try", "catch", "finally", "param", "function", "break", "continue", "throw"],
+    "lectores_con_opcion_que_escribe": {
+      "_que_es": "Verbos que leen, salvo con una de estas opciones: entonces escriben o ejecutan y se tratan como opacos. find -exec/-delete, sort -o, awk -i, curl/wget -o.",
+      "find": ["-delete", "-exec", "-execdir", "-ok", "-okdir", "-fprint", "-fprint0", "-fprintf", "-fls"],
+      "sort": ["-o", "--output"],
+      "awk": ["-i", "--in-place"],
+      "curl": ["-o", "-O", "--output", "--remote-name"],
+      "wget": ["-o", "-O", "--output-document"]
+    },
+    "interpretes_que_leen": {
+      "_que_es": "Un interprete ejecuta codigo y por eso es opaco, salvo con estas opciones que solo miran (node --check, python --version).",
+      "node": ["--check", "-c", "--version", "-v", "--help", "-h"],
+      "python": ["--version", "-V", "--help", "-h"],
+      "python3": ["--version", "-V", "--help", "-h"],
+      "py": ["--version", "-V", "--help", "-h"]
+    },
+    "npm": {
+      "_que_es": "npm/npx/pnpm/yarn: lo que solo mira o compila (dist/ esta en .gitignore). Todo lo demas (install, update, scripts propios) es opaco: toca package-lock.json o corre codigo del repo.",
+      "lee": ["ls", "list", "view", "outdated", "explain", "why", "prefix", "root", "bin", "help", "test", "t", "-v", "--version", "whoami", "config"],
+      "run_lee": ["build", "test", "test:run", "lint", "typecheck", "preview", "dev"],
+      "npx_lee": ["tsc", "vitest", "eslint", "prettier", "vite", "playwright", "gh-pages"],
+      "opciones_que_escriben": ["--fix", "--write", "-w", "--update", "-u", "--updateSnapshot"]
+    },
+    "codigo_que_escribe": {
+      "_que_es": "Marcas de ESCRITURA dentro de un codigo pegado (python - <<EOF, python -c, node -e, pwsh -Command, bash -c). Un interprete que corrio codigo solo hace 'tocados' a los archivos que NOMBRA si ese mismo comando tiene alguna de estas marcas: un py -c que hace json.load(open(ruta)) y imprime nombra el archivo sin tocarlo (visto 30/09/2026 en 0e101d1f: vocabulario.data.json), y uno que hace open(ruta, 'w') si (visto en d5ac4fb1: apTable.ts). Regex en minusculas/mayusculas indistintas.",
+      "re": [
+        "open\\([^)]{0,200},\\s*['\"][^'\"]{0,8}[wax+][^'\"]{0,8}['\"]",
+        "mode\\s*=\\s*['\"][^'\"]{0,8}[wax+]",
+        "\\.write_text\\(|\\.write_bytes\\(|\\.write\\(|\\.writelines\\(",
+        "shutil\\.(copy|copy2|copyfile|copytree|move|rmtree)",
+        "os\\.(replace|rename|remove|unlink)",
+        "\\.(save|to_csv|to_excel|to_json)\\(",
+        "writeFileSync|writeFile\\(|appendFile|createWriteStream|fs\\.(rename|copyFile|cp|rm|unlink)",
+        "Set-Content|Add-Content|Out-File|Copy-Item|Move-Item|Remove-Item|Rename-Item|New-Item",
+        "sed\\s+-i|perl\\s+-pi|\\btee\\b",
+        ">>?\\s*\\S{1,200}\\.(ts|tsx|js|jsx|mjs|css|json|md|py|sh)\\b"
+      ]
+    },
+    "cd": ["cd", "pushd", "chdir", "set-location", "sl", "push-location"],
+    "escriben_todo": ["tee", "touch", "truncate", "chmod", "chown", "chgrp", "dos2unix", "unix2dos", "patch", "ln", "install", "set-content", "add-content", "out-file", "new-item", "clear-content", "tee-object", "sc", "ac"],
+    "borran": ["rm", "rmdir", "unlink", "del", "erase", "rd", "ri", "remove-item"],
+    "mueven": ["mv", "move", "move-item", "mi", "rename-item", "ren", "rni"],
+    "copian": ["cp", "copy", "copy-item", "cpi"],
+    "sed_en_sitio": ["sed", "perl"],
+    "git_lee": ["status", "diff", "log", "show", "blame", "rev-parse", "rev-list", "ls-files", "ls-tree", "cat-file", "describe", "remote", "config", "fetch", "push", "branch", "tag", "shortlog", "grep", "diff-tree", "show-ref", "for-each-ref", "merge-base", "name-rev", "reflog", "count-objects", "check-ignore", "archive", "worktree", "commit", "version", "help", "ls-remote", "whatchanged", "range-diff", "difftool"],
+    "git_escribe_rutas": ["add", "rm", "mv", "restore"],
+    "git_checkout": ["checkout", "switch"],
+    "ruta_que_no_se_puede_ubicar": {
+      "_que_es": "Argumentos de un comando que escribe y que no dicen QUE archivo: todo el arbol, una carpeta, un comodin o una variable. Son opacos.",
+      "git_add_todo": [".", "-A", "--all", "-u", "--update", ":/", "*"]
+    }
+  },
   "lecciones": {
     "_que_es": "Gate de docs/LECCIONES_APRENDIDAS.md. Desde el 04/09/2026 el archivo entra al system prompt por @import desde CLAUDE.md (el hook lo recortaba a 2 KB desde el 03/08). El techo por bytes se queda como red; lo que evita la pelea por bytes es el gate POR BULLET: una leccion graduada no conserva su narrativa.",
     "aviso_bytes": 26624,

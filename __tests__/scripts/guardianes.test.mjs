@@ -42,7 +42,7 @@ const ENV = { ...process.env, TMPDIR: TMP, HOME, ESCRITORIO_GUARD_FLAGDIR: ESC_F
 const AHORA = 1_800_000_000;
 afterAll(() => { try { fs.rmSync(TMP, { recursive: true, force: true }); } catch { /* temp */ } });
 
-const FLAGS = () => [...fs.readdirSync(TMP).filter((f) => f.endsWith('.flag')).map((f) => path.join(TMP, f)),
+const FLAGS = () => [...fs.readdirSync(TMP).filter((f) => f.endsWith('.flag') || f.startsWith('claude-recordatorios.')).map((f) => path.join(TMP, f)),
   ...fs.readdirSync(path.join(HOME, '.claude')).filter((f) => f.endsWith('.flag')).map((f) => path.join(HOME, '.claude', f)),
   ...fs.readdirSync(ESC_FLAGS).map((f) => path.join(ESC_FLAGS, f))];
 const limpiarFlags = () => { for (const f of FLAGS()) fs.rmSync(f, { force: true }); };
@@ -734,6 +734,36 @@ describe('por bash — los wrappers finos y el despachador (el camino real)', ()
     expect(cad.code).toBe(0);
     expect(cad.out).toMatch(/CAD-GUARD/);
   });
+  // 30/09/2026: bash dejo de leer stdin, de calcular DIR y de crear/borrar el directorio temporal (antes ~9
+  // procesos por llamada en msys; ahora bash + node). Lo que NO puede cambiar: el veredicto, y que no quede basura.
+  it('_dispatcher.sh sin bash de mas: no deja directorio temporal (ni al permitir, ni al bloquear, ni con JSON roto) y el veredicto es el mismo', () => {
+    const restos = () => fs.readdirSync(TMP).filter((f) => f.startsWith('hookdisp.'));
+    expect(correrSh('_dispatcher.sh', bash('echo hola')).code).toBe(0);
+    expect(correrSh('_dispatcher.sh', bash(`rm -rf "${ESC}\\Insert"`)).code).toBe(2);
+    expect(correrSh('_dispatcher.sh', '{"tool_name":"Bash","tool_input":{"command":"rm -rf /c/Users/FacundoS-PC/OneDrive/Escritorio/tarea"').code).toBe(2);
+    expect(correrSh('_dispatcher.sh', bash(`ls "${ESC}"`)).out).toMatch(/ESCRITORIO-GUARD/);
+    expect(restos()).toEqual([]);
+  });
+  it('_dispatcher.sh con un payload de 500 KB por stdin (un Write enorme): node lo lee entero y el bloqueo sigue saltando', () => {
+    const grande = 'x'.repeat(500_000);
+    const r = correrSh('_dispatcher.sh', escribir(`${ESC}\\Insert\\README.md`, grande));
+    expect(r.code).toBe(2);
+    expect(r.err).toMatch(/archivo auxiliar suelto/);
+    expect(correrSh('_dispatcher.sh', escribir('C:\\Dev\\BarackMercosul\\docs\\nota.md', grande)).code).toBe(0);
+  });
+  it('_dispatcher.sh se puede llamar con ruta relativa, absoluta con barras o absoluta con barras invertidas (bash ya no calcula DIR: lo resuelve node)', () => {
+    const payload = JSON.stringify(bash(`rm -rf "${ESC}\\Insert"`));
+    const formas = [
+      path.join('.claude', 'hooks', '_dispatcher.sh'),
+      path.join(RAIZ, '.claude', 'hooks', '_dispatcher.sh'),
+      path.join(RAIZ, '.claude', 'hooks', '_dispatcher.sh').replace(/\\/g, '/'),
+      `${RAIZ.replace(/\\/g, '/')}/.claude/hooks/../hooks/_dispatcher.sh`,
+    ];
+    for (const f of formas) {
+      const r = spawnSync('bash', [f], { input: payload, encoding: 'utf8', env: ENV, cwd: RAIZ });
+      expect(r.status, `forma ${f}`).toBe(2);
+    }
+  });
   it('causas-ajenas-guard.sh con HOOK_FILE/HOOK_PARSED4 y sin stdin (como su .test.sh)', () => {
     const r = spawnSync('bash', [path.join(RAIZ, '.claude/hooks/causas-ajenas-guard.sh')], {
       encoding: 'utf8', env: { ...ENV, HOOK_FILE: '/x/memory/m.md', HOOK_PARSED4: 'Cambiaron la unidad a BI y nadie recalculo los numeros.' }, stdio: ['ignore', 'pipe', 'pipe'],
@@ -918,5 +948,99 @@ describe('carril de auto-reparacion 22/09 — un guardian roto no puede bloquear
         expect(evaluar(JSON.stringify(p), { env: ENV, ahora: AHORA, nombres: ['_revienta'] }).salida.exit).toBe(2);
       }
     } finally { delete GUARDIANES['_revienta']; }
+  });
+});
+
+// ═════════════════════════════════════════════════════════════ 30/09/2026: recordatorios UNA vez por sesion
+// Medido en septiembre: 428 inyecciones de recordatorios 1x/h, ~175 mil tokens. El aviso que volvia
+// a salir cada hora dentro de la MISMA sesion ya estaba en su contexto. Ahora la clave es el
+// `session_id` del payload (y el `agent_id` de un subagente, que tiene su propio contexto);
+// sin `session_id` se conserva el cooldown de una hora.
+describe('recordatorios: una vez por sesion (clave session_id), el texto igual', () => {
+  const deSesion = (sid, payload, agente) => ({ session_id: sid, ...(agente ? { agent_id: agente } : {}), ...payload });
+  const CAD = bash('python medir.py pieza.step');
+  const ESCRITORIO = bash(`ls "${ESC}"`);
+  const marcasDe = (sid) => fs.readFileSync(path.join(TMP, `claude-recordatorios.${sid}`), 'utf8').split(/\r?\n/).filter(Boolean);
+
+  it('VERDE (el falso positivo ya no sale): el mismo recordatorio NO vuelve en la misma sesion, ni pasada la hora', () => {
+    const p = deSesion('s-uno', CAD);
+    expect(ev(p).contexto).toMatch(/CAD-GUARD/);
+    expect(ev(p, { ahora: AHORA + 100 }).contexto).toBe('');
+    expect(ev(p, { ahora: AHORA + 3601 }).contexto).toBe('');          // el cooldown viejo lo repetia aca
+    expect(ev(p, { ahora: AHORA + 7 * 3600 }).contexto).toBe('');
+  });
+
+  it('ROJO (lo que tiene que avisar sigue avisando): otra sesion lo recibe de nuevo, y cada guardia sale una vez', () => {
+    expect(ev(deSesion('s-uno', CAD)).contexto).toMatch(/CAD-GUARD/);
+    expect(ev(deSesion('s-dos', CAD)).contexto).toMatch(/CAD-GUARD/);   // otra sesion: lo recibe
+    // en la sesion uno el de ESCRITORIO todavia no salio: sale ahora, una vez
+    expect(ev(deSesion('s-uno', ESCRITORIO)).contexto).toMatch(/ESCRITORIO-GUARD/);
+    expect(ev(deSesion('s-uno', ESCRITORIO)).contexto).toBe('');
+    expect(marcasDe('s-uno')).toEqual(['claude-cad-guard.flag', 'escritorio-guard.flag']);
+  });
+
+  it('dos recordatorios en la misma llamada salen juntos; en la segunda llamada de la sesion no sale ninguno', () => {
+    const p = deSesion('s-juntos', bash(`python cad.py --step "${ESC}/pieza.step"`));
+    const primera = ev(p).contexto;
+    expect(primera).toMatch(/CAD-GUARD/);
+    expect(primera).toMatch(/ESCRITORIO-GUARD/);
+    expect(ev(p).contexto).toBe('');
+  });
+
+  it('un subagente (agent_id) recibe el suyo aunque el padre ya lo recibio; y el padre no lo repite', () => {
+    expect(ev(deSesion('s-padre', CAD)).contexto).toMatch(/CAD-GUARD/);
+    expect(ev(deSesion('s-padre', CAD, 'agente-a')).contexto).toMatch(/CAD-GUARD/);
+    expect(ev(deSesion('s-padre', CAD, 'agente-a')).contexto).toBe('');
+    expect(ev(deSesion('s-padre', CAD, 'agente-b')).contexto).toMatch(/CAD-GUARD/);
+    expect(ev(deSesion('s-padre', CAD)).contexto).toBe('');
+  });
+
+  it('el texto es el MISMO que con el cooldown de una hora (no se toco ni una palabra)', () => {
+    const conSesion = ev(deSesion('s-texto', CAD)).contexto;
+    limpiarFlags();
+    const sinSesion = ev(CAD).contexto;
+    expect(conSesion).toBe(sinSesion);
+    expect(conSesion).toMatch(/CAD-GUARD/);
+  });
+
+  it('sin session_id vale el cooldown de una hora de siempre (fallar hacia avisar de mas, no de menos)', () => {
+    expect(ev(CAD).contexto).toMatch(/CAD-GUARD/);
+    expect(ev(CAD, { ahora: AHORA + 100 }).contexto).toBe('');
+    expect(ev(CAD, { ahora: AHORA + 3601 }).contexto).toMatch(/CAD-GUARD/);
+    // un session_id vacio o que no es texto cuenta como sin sesion
+    limpiarFlags();
+    expect(ev({ session_id: '', ...CAD }).contexto).toMatch(/CAD-GUARD/);
+    expect(ev({ session_id: '', ...CAD }, { ahora: AHORA + 3601 }).contexto).toMatch(/CAD-GUARD/);
+    expect(ev({ session_id: 123, ...CAD }, { ahora: AHORA + 7300 }).contexto).toMatch(/CAD-GUARD/);
+  });
+
+  it('un bloqueo en la misma llamada NO consume la marca de la sesion: el reintento lo recibe', () => {
+    const bloqueada = ev(deSesion('s-bloq', bash(`taskkill /IM produc.exe /F && ls "${ESC}"`)));
+    expect(bloqueada.exit).toBe(2);
+    expect(fs.existsSync(path.join(TMP, 'claude-recordatorios.s-bloq'))).toBe(false);
+    expect(ev(deSesion('s-bloq', ESCRITORIO)).contexto).toMatch(/ESCRITORIO-GUARD/);
+  });
+
+  it('JSON roto que conserva el session_id: se rescata y vale igual (primero avisa, despues calla)', () => {
+    const roto = '{"session_id":"s-roto","tool_name":"Bash","tool_input":{"command":"python m.py --usa-gmsh"';
+    expect(ev(roto).contexto).toMatch(/CAD-GUARD/);
+    expect(ev(roto, { ahora: AHORA + 3601 }).contexto).toBe('');
+  });
+
+  it('el id de sesion no sale del TEMP: un id con barras o puntos no escribe afuera', () => {
+    expect(ev(deSesion('../../../evil', CAD)).contexto).toMatch(/CAD-GUARD/);
+    const afuera = fs.readdirSync(TMP).filter((f) => /evil/.test(f));
+    expect(afuera.every((f) => f.startsWith('claude-recordatorios.'))).toBe(true);
+    expect(fs.existsSync(path.join(TMP, '..', '..', 'evil'))).toBe(false);
+  });
+
+  it('por el camino real (_dispatcher.sh con session_id): avisa la primera vez y calla la segunda', () => {
+    const correr = (payload) => spawnSync('bash', [path.join(RAIZ, '.claude/hooks/_dispatcher.sh')], { input: JSON.stringify(payload), encoding: 'utf8', env: ENV });
+    const a = correr(deSesion('s-bash', CAD));
+    expect(a.status).toBe(0);
+    expect(a.stdout).toMatch(/CAD-GUARD/);
+    const b = correr(deSesion('s-bash', CAD));
+    expect(b.status).toBe(0);
+    expect(b.stdout).toBe('');
   });
 });

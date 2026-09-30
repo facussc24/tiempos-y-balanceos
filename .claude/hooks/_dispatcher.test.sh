@@ -64,7 +64,7 @@ afirmar "herramienta que no matchea -> pasa" 0 \
 echo ""
 echo "El parser compartido deja los campos VERDADERAMENTE vacios si falla:"
 D=$(mktemp -d)
-printf '%s' "$ROTO_CAD" | node -e "$(awk '/^printf .%s. "\$INPUT" \| node -e /{f=1;next} f&&/^. "\$TMP"/{exit} f' "$H/_dispatcher.sh")" "$D" 2>/dev/null
+printf '%s' "$ROTO_CAD" | node -e "$(awk '/^node -e /{f=1;next} f&&/^. "\$TMP"/{exit} f' "$H/_dispatcher.sh")" "$D" 2>/dev/null
 for campo in parsed4 parsed3 cmd; do
   N=$( [ -f "$D/$campo" ] && wc -c < "$D/$campo" || echo ausente )
   afirmar "$campo con JSON roto mide 0 bytes" 0 "$N"

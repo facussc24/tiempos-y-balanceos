@@ -90,6 +90,10 @@ function hooksCableados() {
       for (const h of grupo.hooks ?? []) {
         const m = String(h.command ?? '').match(/\.claude\/hooks\/([A-Za-z0-9_.-]+\.sh)/);
         if (m) nombres.add(m[1]);
+        // Un hook cableado como `node "${CLAUDE_PROJECT_DIR}/scripts/_lib/X.mjs"` (sin el envoltorio bash, 30/09/2026)
+        // cuenta como cableado para el wrapper .sh que nombra a ese X.mjs (timeout-guard.sh -> timeoutGuard.mjs).
+        const n = String(h.command ?? '').match(/^node\s+"\$\{CLAUDE_PROJECT_DIR\}\/scripts\/_lib\/([A-Za-z0-9_.-]+\.mjs)"/);
+        if (n) for (const f of enDisco) if (leer(`.claude/hooks/${f}`).includes(n[1])) nombres.add(f);
       }
     }
   }
@@ -196,6 +200,24 @@ describe('hooksTienenTest — todo hook figura en la tabla, con su test', () => 
       }
     }
     expect(relativos, `hooks con ruta relativa (se apagan tras un cd): ${relativos.join(' | ')}`).toEqual([]);
+  });
+
+  it('5d. un hook cableado como `node ...mjs` (sin bash): el script existe y usa ${CLAUDE_PROJECT_DIR}; el wrapper .sh de esa logica sigue cableado por nombre', () => {
+    const s = JSON.parse(leer('.claude/settings.json'));
+    const directos = [];
+    for (const [evento, grupos] of Object.entries(s.hooks ?? {})) {
+      for (const g of grupos) for (const h of g.hooks ?? []) {
+        const cmd = String(h.command ?? '');
+        if (!/^node\s/.test(cmd)) continue;
+        expect(cmd, `${evento}: un hook de node se llama por \${CLAUDE_PROJECT_DIR}, nunca por ruta relativa`).toMatch(/^node\s+"\$\{CLAUDE_PROJECT_DIR\}\/scripts\/_lib\/[A-Za-z0-9_.-]+\.mjs"$/);
+        const rel = cmd.match(/\/(scripts\/_lib\/[A-Za-z0-9_.-]+\.mjs)"/)[1];
+        expect(fs.existsSync(path.join(RAIZ, rel)), `${evento} llama a ${rel}, que no existe`).toBe(true);
+        directos.push(`${evento}:${rel}`);
+      }
+    }
+    // el timeout-guard corre en los dos eventos, sin bash
+    expect(directos.sort()).toEqual(['PostToolUse:scripts/_lib/timeoutGuard.mjs', 'PostToolUseFailure:scripts/_lib/timeoutGuard.mjs']);
+    expect(hooksCableados().has('timeout-guard.sh')).toBe(true);
   });
 
   it.skipIf(!fs.existsSync(GLOBAL))('5b. agentes-guard.sh del repo es identico al instalado en ~/.claude/hooks (el que corre)', () => {

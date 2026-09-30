@@ -24,7 +24,7 @@
     ],
     "PreToolUse": [
       {
-        "_comentario": "Los guardianes (20 al 22/09/2026; la lista es NOMBRES en guardianes.mjs) corren dentro de _dispatcher.sh, que arranca UN node con scripts/_lib/guardianes.mjs (desde 05/09/2026; antes cada guardian era un bash aparte: medido 2.600-3.500 ms por comando con la maquina tranquila, 6-12 s con otras sesiones; ahora ~550 ms). La matriz tool->guardian vive en guardianes.mjs (file-guard/causas solo Edit|Write; supabase/validator/renumber/push/arb/script-inline solo Bash|PowerShell; el resto en los cuatro). Los recordatorios 1x/h salen como additionalContext con exit 0, ya no bloquean. Cada *-guard.sh es un wrapper que sigue andando suelto (asi lo usan sus tests). Tests: _dispatcher.test.sh, guardianes.test.mjs, hooksTienenTest.test.mjs.",
+        "_comentario": "Los guardianes (20 al 22/09/2026; la lista es NOMBRES en guardianes.mjs) corren dentro de _dispatcher.sh, que arranca UN node con scripts/_lib/guardianes.mjs (desde 05/09/2026; antes cada guardian era un bash aparte: medido 2.600-3.500 ms por comando con la maquina tranquila, 6-12 s con otras sesiones; ahora ~550 ms). La matriz tool->guardian vive en guardianes.mjs (file-guard/causas solo Edit|Write; supabase/validator/renumber/push/arb/script-inline solo Bash|PowerShell; el resto en los cuatro). Los recordatorios (escritorio, cad, patrones, HO, consumos, CC/SC, doc. oficial, rule-gate) salen como additionalContext con exit 0, ya no bloquean, y desde el 30/09/2026 una sola vez por sesion (clave session_id; sin session_id, 1x/h). El 30/09/2026 bash dejo de leer stdin, de calcular DIR y de crear/borrar el directorio temporal: node lo hace todo (de ~9 procesos a 2 por llamada). Cada *-guard.sh es un wrapper que sigue andando suelto (asi lo usan sus tests). Tests: _dispatcher.test.sh, guardianes.test.mjs, hooksTienenTest.test.mjs.",
         "matcher": "Bash|PowerShell|Write|Edit",
         "hooks": [
           {
@@ -92,12 +92,12 @@
     ],
     "PostToolUse": [
       {
-        "_comentario": "10/09/2026 (A2): un comando cortado por timeout NO es evidencia (LECCIONES 08/09, anexo I-AC-012.1). El .sh hace un grep del stdin y solo levanta node si dice 'timed out'; el aviso sale como additionalContext, exit 0. Se cablea tambien en PostToolUseFailure porque no esta verificado en cual de los dos eventos llega el timeout de Bash. Tests: hooksVarios.test.mjs.",
+        "_comentario": "10/09/2026 (A2): un comando cortado por timeout NO es evidencia (LECCIONES 08/09, anexo I-AC-012.1); el aviso sale como additionalContext, exit 0. Se cablea tambien en PostToolUseFailure porque no esta verificado en cual de los dos eventos llega el timeout de Bash. 30/09/2026: se llama a node directo, sin el envoltorio bash de timeout-guard.sh (corrio ~21.000 veces en septiembre y aviso 1: el bash + subshells + grep costaban mas que el chequeo); la compuerta barata (un regex sobre el payload crudo) vive ahora en scripts/_lib/timeoutGuard.mjs. timeout-guard.sh queda como wrapper suelto para las pruebas. Tests: hooksVarios.test.mjs.",
         "matcher": "Bash|PowerShell",
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/timeout-guard.sh\""
+            "command": "node \"${CLAUDE_PROJECT_DIR}/scripts/_lib/timeoutGuard.mjs\""
           }
         ]
       }
@@ -108,7 +108,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/timeout-guard.sh\""
+            "command": "node \"${CLAUDE_PROJECT_DIR}/scripts/_lib/timeoutGuard.mjs\""
           }
         ]
       }
