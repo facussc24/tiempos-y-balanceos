@@ -115,6 +115,17 @@ def cartel_de_seguridad():
     return None
 
 
+def asegurar_desktop_default():
+    """Si corremos en un desktop virtual/sandbox (exebox), pasar al desktop Default del usuario
+    para que Display() y las ventanas de Outlook se vean directamente en su pantalla."""
+    try:
+        hDesk = user32.OpenDesktopW('Default', 0, False, 0x01FF)
+        if hDesk:
+            user32.SetThreadDesktop(hDesk)
+    except Exception:
+        pass
+
+
 def asegurar_outlook(segundos=90, log=print):
     """
     Deja Outlook corriendo COMO PROGRAMA DEL USUARIO, con su ventana abierta.
@@ -122,6 +133,7 @@ def asegurar_outlook(segundos=90, log=print):
     Devuelve 'ya-estaba' | 'arrancado'. Si no llega a levantar, lanza RuntimeError: es mejor
     frenar aca que descubrirlo colgado adentro de un Send().
     """
+    asegurar_desktop_default()
     if _pids_outlook():
         return 'ya-estaba'
     if not os.path.exists(EXE_OUTLOOK):

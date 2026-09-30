@@ -254,7 +254,13 @@ def preparar(cfg):
     else:
         cuerpo = cfg['cuerpo'].replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
         cuerpo = cuerpo.replace(chr(10), '<br>')
-    mail.HTMLBody = f'<div style="font-family:Calibri,sans-serif;font-size:11pt">{cuerpo}</div>{firma}'
+    bloque_cuerpo = f'<div style="font-family:Calibri,sans-serif;font-size:11pt">{cuerpo}</div>'
+    pos_body = firma.lower().find('<body')
+    if pos_body != -1:
+        end_body_tag = firma.find('>', pos_body)
+        mail.HTMLBody = firma[:end_body_tag + 1] + bloque_cuerpo + firma[end_body_tag + 1:]
+    else:
+        mail.HTMLBody = f'{bloque_cuerpo}{firma}'
 
     # Limpiar adjuntos previos o heredados antes de adjuntar los oficiales
     while mail.Attachments.Count > 0:
@@ -272,6 +278,10 @@ def preparar(cfg):
     mail.Save()
     registrar_borrador(mail, mail.Subject)
     mail.Display()
+    try:
+        mail.GetInspector.Activate()
+    except Exception:
+        pass
 
     print('Mail abierto en Outlook Y guardado en Borradores (sin enviar).')
     print(f'  Para:     {mail.To}')
