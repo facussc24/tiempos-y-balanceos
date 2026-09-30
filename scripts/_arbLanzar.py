@@ -239,22 +239,21 @@ def vaciar_campo():
 # ---------------------------------------------------------------- login
 
 def entrar(login, usuario, clave):
-    """Un solo intento. Devuelve True si el arb quedo abierto y habilitado."""
+    """Un solo intento. Devuelve 'ok', 'foco' (no pude escribir: la ventana perdio el frente,
+    no se mando la clave), 'rechazo' (sigue el login: usuario o clave mal) o 'demora'."""
     if not activar(login):
-        aviso('No pude traer al frente la ventana "Inicio de Sesion" del arb.\n'
-              'Hacele click y volve a apretar el acceso directo ARB.')
         log('login: no pude traerla al frente')
-        return False
+        return 'foco'
     campos = campos_de_texto(login)
     log('login: %d campos (%s)' % (len(campos), ', '.join(cls(c) for c in campos)))
     if len(campos) >= 2:
         click_en(campos[0])
         if not al_frente(login):
-            return False
+            return 'foco'
         vaciar_campo(); escribir(usuario)
         click_en(campos[1])
         if not al_frente(login):
-            return False
+            return 'foco'
         vaciar_campo(); escribir(clave)
     else:
         # Sin campos visibles por clase: el cursor arranca en Contraseña (captura 31/08/2026).
@@ -262,18 +261,19 @@ def entrar(login, usuario, clave):
         vaciar_campo(); escribir(usuario)
         tecla(0x09)               # TAB -> Contraseña
         if not al_frente(login):
-            return False
+            return 'foco'
         vaciar_campo(); escribir(clave)
+    if not al_frente(login):
+        return 'foco'
     tecla(0x0D)                   # ENTER = Acepta
     fin = time.time() + 45
     while time.time() < fin:
         time.sleep(1)
-        p = ventana_principal()
-        if p and u.IsWindowEnabled(p) and not ventana_login():
+        if not ventana_login():
             log('login OK')
-            return True
-    log('login: el arb no se habilito en 45 s')
-    return False
+            return 'ok'
+    log('login: la ventana de inicio sigue abierta a los 45 s')
+    return 'rechazo'
 
 
 def esperar_login(seg=90):
@@ -391,15 +391,22 @@ def main(argv):
             aviso('El arb no mostro la ventana de inicio de sesion en 90 segundos.')
             return 1
 
-    ok = entrar(login, usuario, clave)
+    res = entrar(login, usuario, clave)
     del clave
-    if not ok and ventana_login():
+    if res == 'foco':
+        aviso('No pude escribir en "Inicio de Sesion": otra ventana le saco el frente.\n'
+              'No se mando la clave. Hacele click al arb y volve a apretar ARB.')
+        return 1
+    if res == 'rechazo':
         if aviso('El arb no acepto el usuario o la contraseña.\n\n'
                  '¿Queres cargarlos de nuevo? (despues apreta ARB otra vez)',
                  MB_YESNO | MB_ICONQ) == IDYES:
             pedir_y_guardar_cred()
         return 1
-    return 0 if ok else 1
+    p = ventana_principal()
+    if p:
+        activar(p)
+    return 0
 
 
 if __name__ == '__main__':
