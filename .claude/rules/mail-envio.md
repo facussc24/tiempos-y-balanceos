@@ -98,6 +98,25 @@ otro esta de mas"*.
   con esto hoy?* Si no, afuera. Al mail para Gamboa le sume siete codigos que nadie iba a
   tocar: *"los agregaste y aclaraste de mas, es un error conocido tuyo"*.
 
+## Quien va en el mail — reglas de Fak del 30/09/2026
+
+1. **Si nombro a alguien de Barack en el cuerpo, esa persona va en el mail** (CC como minimo).
+   Caso: la difusion de la tela Aunde nombraba a Pablo Gamboa y el no estaba; Fak: *"pone a
+   pablo gamboa en copia ya que lo mencionaste... si mencionas a alguien debe estar en el mail"*.
+2. **REGLA DURA: a un EXTERNO no se lo suma nunca.** Solo va si el mail ya viene de el y Fak
+   dice *"respondele a todos"* para ESE mail. Fak: *"si mencionas internamente a Capuana y vos
+   vas y lo pones... se va a enterar de cosas internas"*. Un nombre en el cuerpo no autoriza
+   nada: lo interno es interno.
+3. **Cambio que no toca el consumo real (solo unidad):** se contesta a los que ya estaban en
+   el hilo, sin sumar a nadie. **Difusion de BOM que cambia lo consumido:** PARA Pablo Cejas,
+   Daniel Rosello y Carlos Baptista; el resto en CC; Nicolas Perez va; Agustina Villagra no
+   (es RRHH). Detalle: memoria `feedback_destinatarios_difusion_bom`.
+
+**Enforcement de la 2:** `_mailEnviar.py` lee la casilla REAL de cada destinatario (no el
+nombre mostrado) y **aborta si alguna no es @barackmercosul.com**, salvo `--externos-ok`, que
+se usa solo con el OK de Fak para ese mail. Probado en las dos direcciones el 30/09/2026: el
+mail de Aunde (4 internos) pasa; un mail del hilo de SMRC marca al de Motherson.
+
 ## El mail lo firma Fak: primera persona del singular — y su voz esta MEDIDA
 
 **"Revise", no "Revisamos".** 11/09/2026, sobre el correo de correccion del PPAP de NOVAX:
@@ -247,7 +266,8 @@ verde; mas que `vigilando` devuelve lo de `fn` y no se come su excepcion).
 - **Hook `mail-guard.sh`** (PreToolUse, `Bash|PowerShell|Write|Edit`, registrado en `_dispatcher.sh`):
   bloquea cualquier `.Send()` / `SendAndReceive` sobre Outlook que no pase por `_mailEnviar.py`.
   Deja pasar `.Display()`, `.Save()`, `ReplyAll()` y la lectura con `_mails.py`.
-- **`_mailEnviar.py --selftest`**: 9 casos de la logica de deteccion, incluido el del incidente.
+- **`_mailEnviar.py --selftest`**: 14 casos (duplicados, incluido el del incidente, y
+  destinatarios de afuera: proveedor, dominio parecido, DN de Exchange, sin direccion).
 - **`mail-guard.test.sh`**: 15 casos de regresion del hook, por el guardian suelto Y por el despachador
   (incluye los dos sentidos del chequeo de destinatarios: `.To = "..."` bloquea, `Recipients.Add()` y
   leer `.To` para reportarlo pasan)

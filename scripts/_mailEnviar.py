@@ -26,6 +26,13 @@ USO
 
   Dry-run por default, como todo script del proyecto que escribe.
   --forzar solo si Fak lo autoriza EXPLICITAMENTE para ese mail puntual.
+
+DESTINATARIOS DE AFUERA (regla dura de Fak, 30/09/2026)
+  Si alguno de los destinatarios no es @barackmercosul.com, ABORTA salvo --externos-ok.
+  Fak: "no vamos a andar agregando a personas externas de esta empresa... a no ser que sea
+  un mail que ya venga de ellos y yo te diga respondele a todos". Nombrar a alguien interno
+  en el cuerpo lo suma al mail; a un externo, nunca: se enteraria de cosas internas.
+  --externos-ok solo con el OK de Fak para ESE mail.
 """
 import argparse
 import os
@@ -38,6 +45,7 @@ from vozMail import mostrar_voz                                          # noqa:
 from outlookUi import asegurar_outlook, cartel_de_seguridad, vigilando   # noqa: E402
 
 VENTANA_HORAS = 72          # cuanto para atras se mira Enviados
+DOMINIO_INTERNO = '@barackmercosul.com'
 INLINE = re.compile(r'^(image\d+\.(png|jpg|jpeg|gif)|Outlook-[\w\-]+\.(png|jpg|jpeg))$', re.I)
 
 
@@ -89,6 +97,18 @@ def es_duplicado(cand, previo):
     return False, ''
 
 
+def es_interno(direccion: str) -> bool:
+    """Casilla de Barack. Un DN de Exchange (/o=...) es de la organizacion; vacio NO cuenta
+    como interno (un destinatario sin direccion resuelta se trata como de afuera)."""
+    d = (direccion or '').strip().lower()
+    return d.endswith(DOMINIO_INTERNO) or d.startswith('/o=')
+
+
+def destinatarios_externos(direcciones):
+    """Las direcciones que no son de Barack, en el orden en que vienen."""
+    return [d for d in direcciones if not es_interno(d)]
+
+
 # ── selftest ────────────────────────────────────────────────────────────────
 
 def selftest() -> int:
@@ -131,6 +151,19 @@ def selftest() -> int:
     dup, _ = es_duplicado(base, ajeno)
     chk('mismo asunto pero otra gente no bloquea', dup, False)
 
+    # destinatarios de afuera (regla del 30/09/2026)
+    chk('todos internos: ninguno externo',
+        destinatarios_externos(['pcejas@barackmercosul.com', 'CBaptista@BarackMercosul.com']), [])
+    chk('el proveedor del hilo es externo',
+        destinatarios_externos(['pcejas@barackmercosul.com', 'jorge.uresandi@partner.aunde.com']),
+        ['jorge.uresandi@partner.aunde.com'])
+    chk('dominio parecido no pasa por interno',
+        destinatarios_externos(['x@barackmercosul.com.ar', 'y@mail-barackmercosul.com.br']),
+        ['x@barackmercosul.com.ar', 'y@mail-barackmercosul.com.br'])
+    chk('DN de Exchange es interno',
+        destinatarios_externos(['/O=EXCHANGELABS/OU=EXCHANGE ADMINISTRATIVE GROUP/CN=RECIPIENTS/CN=abc']), [])
+    chk('sin direccion resuelta cuenta como externo', destinatarios_externos(['']), [''])
+
     ok = all(c[1] for c in casos)
     for nombre, paso, obt, esp in casos:
         print(f"  {'OK  ' if paso else '*** FALLA'} {nombre}" + ('' if paso else f"  obtenido={obt} esperado={esp}"))
@@ -139,6 +172,23 @@ def selftest() -> int:
 
 
 # ── Outlook ─────────────────────────────────────────────────────────────────
+
+def _direcciones(item):
+    """[(nombre, smtp)] de cada destinatario, con la casilla REAL (no el nombre mostrado)."""
+    res = []
+    for k in range(item.Recipients.Count):
+        r = item.Recipients.Item(k + 1)
+        smtp = ''
+        try:
+            eu = r.AddressEntry.GetExchangeUser()
+            smtp = eu.PrimarySmtpAddress if eu else ''
+        except Exception:
+            smtp = ''
+        if not smtp:
+            smtp = str(r.Address or '')
+        res.append((str(r.Name or ''), smtp))
+    return res
+
 
 def _campos(item):
     return dict(
@@ -158,6 +208,8 @@ def main() -> int:
                     help='saltea el gate de duplicados — SOLO con OK explicito de Fak')
     ap.add_argument('--sin-chequeo-voz', action='store_true', dest='sin_chequeo_voz',
                     help='saltea el gate de voz — solo con OK de Fak para ESE mail')
+    ap.add_argument('--externos-ok', action='store_true', dest='externos_ok',
+                    help='deja mandar a destinatarios de fuera de Barack — solo con OK de Fak para ESE mail')
     ap.add_argument('--selftest', action='store_true')
     a = ap.parse_args()
 
@@ -192,6 +244,21 @@ def main() -> int:
     print(f"BORRADOR: {cand['asunto']}")
     print(f"  Para: {cand['para']}   CC: {cand['cc']}")
     print(f"  Adj : {cand['adjuntos']}")
+
+    # 1b. GATE — destinatarios de fuera de Barack (regla dura de Fak, 30/09/2026)
+    direcciones = _direcciones(it)
+    afuera = [(n, d) for n, d in direcciones if not es_interno(d)]
+    if afuera:
+        print(f"\n  *** {len(afuera)} DESTINATARIO(S) DE FUERA DE BARACK ***")
+        for n, d in afuera:
+            print(f"      {n} <{d or 'sin direccion resuelta'}>")
+        if not a.externos_ok:
+            print("\nABORTA. A un externo no se lo suma a un mail: solo si el mail ya viene de el y")
+            print("Fak dice 'respondele a todos' para ESE mail. Con su OK: --externos-ok.")
+            return 3
+        print("  --externos-ok activo: sigo igual.")
+    else:
+        print(f"  Destinatarios: los {len(direcciones)} son de Barack.")
 
     # 2. GATE — ¿ya hay algo parecido en Enviados?
     print(f"\nGATE anti-duplicado (Enviados, ultimas {VENTANA_HORAS} h)")

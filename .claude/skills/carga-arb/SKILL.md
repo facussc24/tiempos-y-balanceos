@@ -251,6 +251,14 @@ de la biblioteca de Ingenieria tiene el mail y el PDF modelo; el ultimo mail env
 `python scripts/_mails.py --buscar "Difundo actualizacion"`).
 Comparar las dos listas y decirle a Fak a quien le falta agregar.
 
+**PARA y CC (Fak, 30/09/2026 — fijo):** PARA = solo **Pablo Cejas, Daniel Rosello y Carlos
+Baptista**; todos los demas en **CC** (*"sino queda raro"*). **Nicolas Perez va siempre** en CC.
+**Agustina Villagra NO va: es Recursos Humanos** (se colo en las difusiones del 28/09). Ante un
+nombre que no conozco, mirar su firma en el cache de mails antes de sumarlo. **Si el cambio es
+solo de UNIDAD** (el consumo fisico por pieza no cambia), se contesta **unicamente a los que ya
+estaban en el mail del pedido**, sin sumar a nadie (Fak, 30/09/2026). Memoria
+`feedback_destinatarios_difusion_bom`.
+
 ## Cierre
 
 El cambio de BOM casi nunca viene solo: revisar si tambien hay que tocar **ficha de embalaje**

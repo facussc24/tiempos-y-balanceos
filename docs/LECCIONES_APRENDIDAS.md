@@ -107,6 +107,7 @@ incidente vive en los snapshots.
 - **23/09 — Una nota que junta dos momentos se escribe en el orden en que pasan** (el corte iba antes del RESET que lo dispara: *"no se entiende, es confusa"*). Lo que Fak corrige en un deck queda frenado en ESE deck: graduado a `_gate_corregido_por_fak()` del generador IMG y `gates_selftest.py`.
 - **15/09 — Mirar un render NO es medirlo: a ojo, 0,6 pt y 13 pt de aire se ven igual.** Dije dos veces que el texto entraba en su tarjeta mirando el PNG a tamaño completo; medido con Pillow, la ultima tinta estaba a **1 pixel** del borde (0,6 pt) — lo cazo el agente independiente, no yo. Lo que decide *pegado o no* es una DISTANCIA, y una distancia se mide: `medir.py` sobre el PNG (aire adentro de la caja, separacion notas/pie, tinta abajo del margen) y su gemelo con la caja chica, que da rojo.
 
+- **30/09 — Quién va en un mail: el interno que nombro va; un EXTERNO nunca sin OK de Fak; un cambio solo de unidad va a los del hilo; difusión de BOM, Para Cejas/Rosello/Baptista y el resto en CC.** Graduado a `mail-envio.md` (freno de externos en `_mailEnviar.py`) y a la memoria `feedback_destinatarios_difusion_bom`.
 - **21/09 — La PRIMERA VEZ se pregunta, y un documento vivo tiene UN solo lugar.** Graduado a `autonomy-contract.md` §F + el gate `apqp-cliente-guard`.
 - **21/09 — Cuando el cliente tiene su propia simbologia se escribe la del CLIENTE.** Graduado a `caracteristicasEspeciales.data.json` (tabla de conversion, IATF §8.3.3.3 d).
 
