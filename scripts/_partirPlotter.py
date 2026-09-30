@@ -45,16 +45,21 @@ copiarse al destino: el que dice si un DXF sirve es AutoCAD (regla dxf-entregabl
 import argparse
 import math
 import os
+import shutil
 import sys
 import tempfile
-from collections import Counter, defaultdict
+from collections import Counter
+
+import ezdxf
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from _mixPlotter import leer_entidades, encadenar, _doc_nuevo  # noqa: E402
+from _mixPlotter import encadenar, _doc_nuevo  # noqa: E402
 
 PLU_POR_MM = 40          # HPGL: unidades de plotter por mm (igual que patronlib)
 TOL = 1e-4               # mm: dos puntas son la misma por debajo de esto
 PEDACITO_MIN = 2.0       # mm: tramos mas cortos que esto la cuchilla no los hace bien
+FLECHA_ARCO = 0.02       # mm: error maximo de la cuerda al pasar un ARC a segmentos
+CASI_TOCA = 0.5          # mm: dos puntas sueltas a menos de esto = contorno abierto
 AREA_DEFAULT = (1373.0, 1030.0)   # hojas mas grandes que cortaron bien (APB RevB, mixto R2)
 
 
@@ -66,6 +71,47 @@ class PartirAbortado(Exception):
 
 def _k(p):
     return (round(p[0] / TOL), round(p[1] / TOL))
+
+
+def leer(path):
+    """LINE, ARC y LWPOLYLINE recta -> tramos; CIRCLE -> circulos. Todo lo demas ABORTA:
+    perder o deformar geometria en silencio es peor que no partir (auditor, 30/09/2026:
+    un bulge leido como cuerda, un SPLINE descartado y un ARC con extrusion espejado
+    salian con todos los chequeos en verde)."""
+    tramos, circulos, malos = [], [], Counter()
+    for e in ezdxf.readfile(path).modelspace():
+        t = e.dxftype()
+        if t == 'LINE':
+            tramos.append([(e.dxf.start.x, e.dxf.start.y), (e.dxf.end.x, e.dxf.end.y)])
+        elif t == 'ARC':
+            if abs(e.dxf.extrusion.z - 1) > 1e-9:
+                malos['ARC con extrusion invertida'] += 1
+                continue
+            c, r = e.dxf.center, e.dxf.radius
+            a0, a1 = math.radians(e.dxf.start_angle), math.radians(e.dxf.end_angle)
+            if a1 <= a0:
+                a1 += 2 * math.pi
+            paso = 2 * math.acos(max(-1.0, 1 - FLECHA_ARCO / r)) if r > FLECHA_ARCO else math.pi
+            n = max(8, math.ceil((a1 - a0) / paso))
+            pts = [(c.x + r * math.cos(a0 + (a1 - a0) * k / n),
+                    c.y + r * math.sin(a0 + (a1 - a0) * k / n)) for k in range(n + 1)]
+            tramos += [[pts[k], pts[k + 1]] for k in range(n)]
+        elif t == 'LWPOLYLINE':
+            pts = list(e.get_points('xyb'))
+            if any(abs(b) > 1e-12 for _, _, b in pts):
+                malos['LWPOLYLINE con curvas (bulge)'] += 1
+                continue
+            p = [(x, y) for x, y, _ in pts] + ([(pts[0][0], pts[0][1])] if e.closed else [])
+            tramos += [[p[k], p[k + 1]] for k in range(len(p) - 1)]
+        elif t == 'CIRCLE':
+            circulos.append((e.dxf.center.x, e.dxf.center.y, e.dxf.radius * 2))
+        else:
+            malos[t] += 1
+    if malos:
+        lista = ', '.join(f'{v} {k}' for k, v in malos.items())
+        raise PartirAbortado(f'El dibujo trae entidades que no se leer sin deformarlas: {lista}. '
+                             f'Explotarlas a lineas y arcos en AutoCAD y volver a correr.')
+    return tramos, circulos
 
 
 def _largo(cad):
@@ -169,8 +215,12 @@ def _grados(tramos):
 def armar_mitad(tramos, corte):
     ts = [t for t in tramos if math.dist(t[0], t[-1]) > TOL] + corte
     g = _grados(ts)
-    if max(g.values()) > 2:
-        raise PartirAbortado('Hay un nodo con 3 o mas tramos: la cadena seria ambigua.')
+    nodos = [(k[0] * TOL, k[1] * TOL) for k, v in g.items() if v > 2]
+    if nodos:
+        raise PartirAbortado(
+            f'{len(nodos)} punto(s) donde se juntan 3 o mas lineas, ej. ({nodos[0][0]:.3f}, '
+            f'{nodos[0][1]:.3f}): la cadena seria ambigua. Si esta sobre la recta de corte, '
+            f'correla con --en.')
     cadenas = encadenar(ts, tol=TOL)
     cerradas = [c for c in cadenas if _cerrada(c)]
     abiertas = [c for c in cadenas if not _cerrada(c)]
@@ -340,6 +390,29 @@ def imagen(path, original, s, e, mitades_marco, archivos, nombre, area):
 
 # ------------------------------------------------------------------ main
 
+def chequear_cerrado(tramos, bb):
+    """El corte del medio sale de la regla par/impar contra los contornos CERRADOS: si el
+    exterior no cierra (aunque sea por 0,002 mm), la regla no lo ve, el corte se calcula
+    contra lo que si cerro, y el chequeo de largo no lo detecta porque usa ese mismo corte
+    (auditor, 30/09/2026). Por eso se exige ANTES de partir:
+      1. que los contornos cerrados cubran la pieza entera (mismo bbox), y
+      2. que no haya dos puntas sueltas a menos de CASI_TOCA (un contorno abierto por poco).
+    """
+    cadenas = encadenar(tramos, tol=TOL)
+    cerradas = [c for c in cadenas if _cerrada(c)]
+    puntas = [p for c in cadenas if not _cerrada(c) for p in (c[0], c[-1])]
+    for i in range(len(puntas)):
+        for j in range(i + 1, len(puntas)):
+            d = math.dist(puntas[i], puntas[j])
+            if TOL < d < CASI_TOCA:
+                raise PartirAbortado(
+                    f'Un contorno no cierra: dos puntas a {d:.4f} mm en '
+                    f'({puntas[i][0]:.3f}, {puntas[i][1]:.3f}). Cerrarlo en el DXF.')
+    if not cerradas or any(abs(a - b) > TOL for a, b in zip(_bbox(cerradas), bb)):
+        raise PartirAbortado('El contorno exterior no cierra: ningun contorno cerrado cubre '
+                             'la pieza entera. Revisar el DXF (JOIN en AutoCAD).')
+
+
 def elegir_corte(bb, area, sentido):
     """Devuelve e: 0 = recta vertical (parte el largo en X), 1 = recta horizontal.
     En 'auto' prueba primero cortar a traves del lado largo y se queda con el primero
@@ -360,11 +433,12 @@ def elegir_corte(bb, area, sentido):
 
 
 def partir(entrada, salida, nombre, pos=None, sentido='auto', area=AREA_DEFAULT, dry=False):
-    tramos, circulos = leer_entidades(entrada)
+    tramos, circulos = leer(entrada)
     if circulos:
         raise PartirAbortado('El dibujo trae CIRCLE: este script todavia no los reparte.')
     tramos, dup = sin_duplicados(tramos)
     bb = _bbox(tramos)
+    chequear_cerrado(tramos, bb)
     x0, y0, x1, y1 = bb
     e = elegir_corte(bb, area, sentido)
     s = pos if pos is not None else ((x0 + x1) / 2 if e == 0 else (y0 + y1) / 2)
@@ -376,6 +450,9 @@ def partir(entrada, salida, nombre, pos=None, sentido='auto', area=AREA_DEFAULT,
     cerradas = [c for c in cad_orig if _cerrada(c)]
     corte = corte_del_medio(cerradas, s, e)
     izq, der = partir_tramos(tramos, s, e)
+    if not corte or not izq or not der:
+        raise PartirAbortado(f'La recta {"xy"[e]} = {s:.3f} no atraviesa la pieza '
+                             f'(va de {bb[e]:.3f} a {bb[e + 2]:.3f}).')
     mitades = [armar_mitad(izq, corte), armar_mitad(der, [list(q) for q in corte])]
 
     # --- verificacion: largo total

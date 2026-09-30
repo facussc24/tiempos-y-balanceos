@@ -57,7 +57,7 @@ def caso_bueno(tmp):
     ent = os.path.join(tmp, 'bueno.dxf')
     dxf_de(L, ent)
 
-    tramos, _ = P.leer_entidades(ent)
+    tramos, _ = P.leer(ent)
     tramos, dup = P.sin_duplicados(tramos)
     check(dup == 1, f'duplicado sacado: {dup} == 1')
     cer = [c for c in P.encadenar(tramos, tol=P.TOL) if P._cerrada(c)]
@@ -102,7 +102,7 @@ def caso_papel_angosto(tmp):
           'con papel de 900 elige el corte horizontal (las mitades verticales no entran)')
     check(P.elegir_corte(bb, (1373.0, 1030.0), 'auto') == 0,
           'con 1373 x 1030 elige el vertical (a traves del lado largo)')
-    tramos, _ = P.leer_entidades(ent)
+    tramos, _ = P.leer(ent)
     cer = [c for c in P.encadenar(tramos, tol=P.TOL) if P._cerrada(c)]
     corte = P.corte_del_medio(cer, 610.0, 1)
     check(len(corte) == 1 and abs(P._largo(corte[0]) - 2000.0) < 1e-9,
@@ -118,6 +118,47 @@ def caso_papel_angosto(tmp):
         check(False, 'papel de 500: tiene que abortar')
     except P.PartirAbortado as e:
         check('Hacen falta mas partes' in str(e), f'papel de 500 aborta: {e}')
+
+
+def _tiene_que_abortar(ent, tmp, texto, **kw):
+    try:
+        P.partir(ent, os.path.join(tmp, 'x'), 'X', dry=True, **kw)
+        check(False, f'tenia que abortar ({texto})')
+    except P.PartirAbortado as e:
+        check(texto in str(e), f'abortó: {e}')
+
+
+def caso_malo_auditor(tmp):
+    """Los que encontro el auditor el 30/09: salian con todo verde y el archivo mal."""
+    print('Caso 6: contorno exterior abierto 0,002 mm -> tiene que abortar (antes salia verde)')
+    L = [((0, 0.002), (0, 1000)), ((0, 1000), (2000, 1000)), ((2000, 1000), (2000, 0)),
+         ((2000, 0), (0, 0))] + rect(900, 400, 1100, 410)
+    ent = os.path.join(tmp, 'hueco.dxf')
+    dxf_de(L, ent)
+    _tiene_que_abortar(ent, tmp, 'no cierra', sentido='vertical', area=(1373.0, 1030.0))
+
+    print('Caso 7: curvas que el lector no sabe leer -> tiene que abortar')
+    doc = ezdxf.new('R2010')
+    ms = doc.modelspace()
+    ms.add_lwpolyline([(0, 0, 0, 0, 1), (1000, 0), (1000, 1000), (0, 1000)],
+                      format='xyseb', close=True)          # primer tramo con bulge
+    ent = os.path.join(tmp, 'bulge.dxf')
+    doc.saveas(ent)
+    _tiene_que_abortar(ent, tmp, 'no se leer', area=(1373.0, 1030.0))
+    doc = ezdxf.new('R2010')
+    ms = doc.modelspace()
+    for a, b in rect(0, 0, 2000, 1000):
+        ms.add_line(a, b)
+    ms.add_spline([(100, 100), (200, 300), (300, 100)])
+    ent = os.path.join(tmp, 'spline.dxf')
+    doc.saveas(ent)
+    _tiene_que_abortar(ent, tmp, 'no se leer', area=(1373.0, 1030.0))
+
+    print('Caso 8: recta de corte fuera de la pieza -> ABORTADO prolijo, no ValueError')
+    ent = os.path.join(tmp, 'fuera.dxf')
+    dxf_de(rect(0, 0, 2000, 1000), ent)
+    _tiene_que_abortar(ent, tmp, 'no atraviesa', sentido='vertical', pos=2500.0,
+                       area=(1373.0, 1030.0))
 
 
 def caso_malo_linea_sobre_corte(tmp):
@@ -148,6 +189,7 @@ def main():
     try:
         caso_bueno(tmp)
         caso_papel_angosto(tmp)
+        caso_malo_auditor(tmp)
         caso_malo_linea_sobre_corte(tmp)
         caso_malo_no_entra(tmp)
     finally:

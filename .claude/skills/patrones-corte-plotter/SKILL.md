@@ -208,6 +208,10 @@ hacen de plantilla (PLT + DXF + imagen de control).
 - Aborta si el largo total no cierra (mitades = original + 2 x corte del medio, a 0,000 mm), si
   aparece un vertice que no es del original ni de la recta, si una linea cae sobre la recta, o
   si la mitad no entra ni girada. Los DXF pasan por AutoCAD (`_validarDxf.py`) antes de copiarse.
+- **Y aborta ANTES de partir** si un contorno no cierra (aunque sea por 0,002 mm) o si el DXF
+  trae algo que no lee sin deformar (bulge, SPLINE, POLYLINE, ELLIPSE, texto, bloques, ARC con
+  extrusion invertida): el auditor mostro que esos casos salian con todo en verde y el archivo
+  mal, porque el chequeo de largo usa el mismo corte que falla. Solucion: explotar/JOIN en AutoCAD.
 - **No toca el diseño**: las punteadas (dobleces) van igual que en el original, en SP1.
 
 ## 4. Rotar e identificar el PLT
