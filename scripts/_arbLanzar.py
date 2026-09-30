@@ -230,10 +230,34 @@ def click_en(h):
     time.sleep(0.25)
 
 
-def vaciar_campo():
-    tecla(0x24)                   # HOME
-    combo(0x10, 0x23)             # SHIFT+END
-    tecla(0x2E)                   # SUPR
+WM_GETTEXT, WM_GETTEXTLENGTH, EM_SETSEL = 0x000D, 0x000E, 0x00B1
+
+
+def texto_de(h):
+    n = u.SendMessageW(h, WM_GETTEXTLENGTH, 0, 0)
+    b = ctypes.create_unicode_buffer(n + 1)
+    u.SendMessageW(h, WM_GETTEXT, n + 1, b)
+    return b.value
+
+
+def vaciar_campo(h=None):
+    """Borra lo que tenga el campo ANTES de escribir. El arb precarga el Usuario con el nombre
+    de la PC (FACUNDOS-PC): el 30/09/2026 HOME + SHIFT+END no lo selecciono y quedo
+    'FACUNDOS-PCFACUNDO'. Ahora: seleccionar todo por mensaje + SUPR, y si el campo todavia
+    tiene texto, END + tantos BACKSPACE como caracteres tenga."""
+    if h:
+        u.SendMessageW(h, EM_SETSEL, 0, -1)
+        time.sleep(0.05)
+        tecla(0x2E)               # SUPR
+        resto = len(texto_de(h))
+        if resto:
+            tecla(0x23)           # END
+            for _ in range(resto + 2):
+                tecla(0x08)       # BACKSPACE
+        return
+    tecla(0x23)                   # END
+    for _ in range(40):
+        tecla(0x08)               # BACKSPACE (sin handle: se borra de mas, no de menos)
 
 
 # ---------------------------------------------------------------- login
@@ -250,11 +274,19 @@ def entrar(login, usuario, clave):
         click_en(campos[0])
         if not al_frente(login):
             return 'foco'
-        vaciar_campo(); escribir(usuario)
+        vaciar_campo(campos[0])
+        if texto_de(campos[0]):
+            log('login: no pude vaciar el Usuario')
+            return 'usuario'
+        escribir(usuario)
+        time.sleep(0.2)
+        if texto_de(campos[0]).strip().upper() != usuario.strip().upper():
+            log('login: el Usuario no quedo igual al guardado (%d caracteres)' % len(texto_de(campos[0])))
+            return 'usuario'
         click_en(campos[1])
         if not al_frente(login):
             return 'foco'
-        vaciar_campo(); escribir(clave)
+        vaciar_campo(campos[1]); escribir(clave)
     else:
         # Sin campos visibles por clase: el cursor arranca en Contraseña (captura 31/08/2026).
         combo(0x10, 0x09)         # SHIFT+TAB -> Usuario
@@ -336,9 +368,11 @@ def diagnostico():
     for h in ventanas():
         print('%-16s ena=%-5s %r' % (cls(h), bool(u.IsWindowEnabled(h)), txt(h)[:50]))
         if 'Inicio de Sesi' in txt(h):
-            for c in campos_de_texto(h):
+            for i, c in enumerate(campos_de_texto(h)):
                 r = rect(c)
-                print('    campo %-20s en (%d,%d)' % (cls(c), r.l, r.t))
+                # Solo el primero (Usuario) muestra su texto; del resto, solo el largo.
+                visto = repr(texto_de(c)) if i == 0 else '%d caracteres' % len(texto_de(c))
+                print('    campo %-20s en (%d,%d)  %s' % (cls(c), r.l, r.t, visto))
     if not ventanas():
         print('el arb no esta abierto')
 
@@ -396,6 +430,10 @@ def main(argv):
     if res == 'foco':
         aviso('No pude escribir en "Inicio de Sesion": otra ventana le saco el frente.\n'
               'No se mando la clave. Hacele click al arb y volve a apretar ARB.')
+        return 1
+    if res == 'usuario':
+        aviso('No pude dejar el Usuario en "%s" (el arb lo precarga con otro nombre).\n'
+              'No se mando la clave. Borralo a mano, escribi %s y la clave.' % (usuario, usuario))
         return 1
     if res == 'rechazo':
         if aviso('El arb no acepto el usuario o la contraseña.\n\n'
