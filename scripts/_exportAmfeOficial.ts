@@ -14,6 +14,7 @@
  *
  * Correr:  npx tsx scripts/_exportAmfeOficial.ts --amfe <numero> --out <carpeta> [--nombre <archivo.xlsx>]
  * Ej:      npx tsx scripts/_exportAmfeOficial.ts --amfe AMFE-HF-PAT --out tmp/export-amfe
+ * Borrador que todavia no esta en Supabase:  ... --amfe <clave> --json <archivo.json> --sin-auditoria
  */
 import { writeFileSync, mkdirSync, readFileSync, existsSync, rmSync, statSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
@@ -35,29 +36,42 @@ if (!AMFE_NUMBER) {
 // El repo es publico: la carpeta de destino se pasa por argumento, no se hardcodea.
 const destDir = arg('out') ?? 'tmp/export-amfe';
 
-const envText = readFileSync(new URL('../.env.local', import.meta.url), 'utf8');
-const env = Object.fromEntries(
-  envText.split('\n').filter(l => l.includes('=') && !l.startsWith('#'))
-    .map(l => { const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()]; })
-);
-
-const sb = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
-const auth = await sb.auth.signInWithPassword({
-  email: env.VITE_AUTO_LOGIN_EMAIL, password: env.VITE_AUTO_LOGIN_PASSWORD,
-});
-if (auth.error) { console.error('auth:', auth.error.message); process.exit(1); }
-
-const { data: rows, error } = await sb
-  .from('amfe_documents')
-  .select('amfe_number, project_name, data, revisions, status')
-  .eq('amfe_number', AMFE_NUMBER);
-if (error) { console.error(error.message); process.exit(1); }
-if (!rows || rows.length !== 1) { console.error(`Esperaba 1 fila para ${AMFE_NUMBER}, hay ${rows?.length}`); process.exit(1); }
-
-const row = rows[0] as {
+type Fila = {
   amfe_number: string; project_name: string; data: string | object;
   revisions: unknown; status?: string;
 };
+let row: Fila;
+
+// --json <archivo>: BORRADOR que todavia no esta en Supabase (un AMFE nuevo, antes del OK de
+// Fak para crearlo). Pasa por los mismos gates y sale siempre como PRELIMINAR. No reemplaza a
+// Supabase live para un documento que ya existe: ahi se exporta sin --json.
+const JSON_FILE = arg('json');
+if (JSON_FILE) {
+  if (!existsSync(JSON_FILE)) { console.error(`No existe ${JSON_FILE}`); process.exit(1); }
+  const local = JSON.parse(readFileSync(JSON_FILE, 'utf8'));
+  row = { amfe_number: AMFE_NUMBER, project_name: local?.header?.subject ?? '', data: local, revisions: local?.revisions ?? [], status: 'draft' };
+  console.warn(`\n*** BORRADOR LOCAL: ${JSON_FILE} (no es el estado de Supabase) ***\n`);
+} else {
+  const envText = readFileSync(new URL('../.env.local', import.meta.url), 'utf8');
+  const env = Object.fromEntries(
+    envText.split('\n').filter(l => l.includes('=') && !l.startsWith('#'))
+      .map(l => { const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()]; })
+  );
+
+  const sb = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
+  const auth = await sb.auth.signInWithPassword({
+    email: env.VITE_AUTO_LOGIN_EMAIL, password: env.VITE_AUTO_LOGIN_PASSWORD,
+  });
+  if (auth.error) { console.error('auth:', auth.error.message); process.exit(1); }
+
+  const { data: rows, error } = await sb
+    .from('amfe_documents')
+    .select('amfe_number, project_name, data, revisions, status')
+    .eq('amfe_number', AMFE_NUMBER);
+  if (error) { console.error(error.message); process.exit(1); }
+  if (!rows || rows.length !== 1) { console.error(`Esperaba 1 fila para ${AMFE_NUMBER}, hay ${rows?.length}`); process.exit(1); }
+  row = rows[0] as Fila;
+}
 const doc = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
 
 // GATE — el log de REVISIONES no puede hablar del REDACTOR (Fak, 20/08/2026).

@@ -143,6 +143,9 @@ tools/flowchart/.build/
 # Venv de transcripcion de audio (faster-whisper + modelo, ~2 GB) — no va al repo
 .venv-audio/
 
+# Venv de mejora de fotos (rembg + onnxruntime + opencv, 01/10/2026) — no va al repo
+.venv-fotos/
+
 # spec privado de las hojas HOTMELT (contrasena de HMI)
 scripts/hotmelt/datos_privados.py
 # documentos COMPLETOS del SGC (AMFE, Plan de Control, flujograma): el repo es publico

@@ -1,0 +1,44 @@
+{
+  "_doc": "BORRADOR del 01/10/2026. Primer flujograma del Upper Trim Panel (Cozzuol / VW427). Sin numero del Listado Maestro: el proximo libre es el 160 y la fila se escribe con el OK de Fak.",
+  "_fuentes": "Secuencia: pliego de dispositivos (Dispositivo Tapizado Manual Console Central Component Rev.01, 27/04/2026: cuna 1 posicionado, cuna 2 doblado y refilado, punzonado, embossing) + BOM del arb (adhesivo FA + reticulante GV en tela y sustrato) + video de planta del 31/07/2026 (adhesivo a pistola, tapizado manual) + gama de embalaje GE-103 Rev.1. El hueco del cargador viene cortado en la tela desde la mesa de corte (contorno interior del DXF de tizada). Reprocesos: ningun documento define un metodo, por eso el NO de la inspeccion final va a SCRAP.",
+  "header": {
+    "title": "FLUJOGRAMA DE PROCESO UPPER TRIM PANEL — CONSOLA CENTRAL",
+    "documentCode": "I-IN-002/III",
+    "revision": "A",
+    "date": "01/10/2026",
+    "revisionDate": "01/10/2026",
+    "preparedBy": "FACUNDO SANTORO",
+    "reviewedBy": "CARLOS BAPTISTA",
+    "project": "VW427 PATAGONIA",
+    "client": "COZZUOL / VW",
+    "productsColumns": { "code": "Código Barack", "version": "N° de pieza cliente" }
+  },
+  "products": [
+    { "code": "MP8405", "level": "", "description": "SINGLE 50W SUEDE COVER FRAME", "version": "2HC.864.263.C" },
+    { "code": "MP8404", "level": "", "description": "DUAL 50W SUEDE COVER FRAME", "version": "2HC.864.263.B" }
+  ],
+  "revisions": [
+    { "rev": "A", "date": "01/10/2026", "item": "N/A.", "details": "EMISIÓN INICIAL DEL FLUJOGRAMA DEL UPPER TRIM PANEL DE CONSOLA CENTRAL.", "pswDate": "", "modifiedBy": "FS" }
+  ],
+  "flow": [
+    { "stepId": "10", "type": "operation", "description": "RECEPCIÓN DE MATERIA PRIMA" },
+    { "type": "storage", "description": "ALMACENADO EN SECTOR DE RECEPCIÓN DE MATERIA PRIMA PENDIENTE DE CONTROL" },
+    { "type": "inspection", "description": "INSPECCIÓN DE MATERIA PRIMA" },
+    { "type": "condition", "labelCondition": "¿MATERIAL CONFORME?", "labelDown": "SI",
+      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "RECLAMO DE CALIDAD AL PROVEEDOR" } },
+    { "type": "storage", "description": "ALMACENADO EN SECTOR DE RECEPCIÓN DE MATERIA PRIMA CONTROLADA E IDENTIFICADA" },
+    { "type": "transfer", "description": "TRASLADO DE MICROFIBRA AL SECTOR DE MESA DE CORTE" },
+    { "stepId": "20", "type": "operation", "description": "CORTE DE MICROFIBRA" },
+    { "type": "transfer", "description": "TRASLADO DE MICROFIBRA CORTADA Y SUSTRATOS AL SECTOR DE TAPIZADO" },
+    { "stepId": "30", "type": "operation", "description": "ADHESIVADO DE MICROFIBRA Y SUSTRATO" },
+    { "stepId": "40", "type": "operation", "description": "POSICIONADO Y TAPIZADO DE MICROFIBRA SOBRE SUSTRATO" },
+    { "stepId": "41", "type": "operation", "description": "DOBLADO DE BORDES Y REFILADO" },
+    { "stepId": "50", "type": "operation", "description": "PUNZONADO DE AGUJEROS" },
+    { "stepId": "60", "type": "operation", "description": "GRABADO DE LOGO DE CARGA" },
+    { "stepId": "70", "type": "op-ins", "description": "INSPECCIÓN FINAL" },
+    { "type": "condition", "labelCondition": "¿PRODUCTO CONFORME?", "labelDown": "SI",
+      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
+    { "stepId": "80", "type": "operation", "description": "EMBALAJE E IDENTIFICACIÓN" },
+    { "type": "storage", "description": "ALMACENADO EN DEPÓSITO DE PRODUCTO TERMINADO" }
+  ]
+}
