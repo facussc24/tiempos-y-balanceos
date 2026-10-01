@@ -1,0 +1,33 @@
+{
+  "_LEEME": "Lista de lo que se publica en el proyecto 'un Claude por área' (node tools/claude-area/armar_publicable.mjs --plugin-repo <repo del plugin> --publicar). NO es la lista de la base de Ingeniería (esa es scripts/_lib/paquete.data.json). Las rutas son relativas a la carpeta de ORIGEN que arma armar_publicable.mjs: marketplace/ (el plugin barack-area), casa/ (las reglas de la casa), conocimiento/<comun|area>/ (lo que deja el agente de conocimiento) y programas/ (lo que corre en cada PC). Todo esto viaja FIRMADO adentro de contenido\\ y se copia verificado a <HOME>\\publicado\\ de cada PC. `areas` dice a qué PC le llega una carpeta (sin `areas` = comun, llega a todas). `sin_filtro_identidad` son los archivos que nombran a TODOS, incluido quien publica (la lista de personas): pasan el filtro de claves y rutas pero no el del nombre de usuario de quien publica.",
+  "formato": 1,
+  "proyecto": "area",
+
+  "incluir": [
+    { "ruta": "marketplace", "nota": "el marketplace con el plugin barack-area, armado desde --plugin-repo (sin tests ni node_modules). Es el único lugar donde pueden viajar hooks." },
+    { "ruta": "casa", "nota": "casa/CLAUDE.md (reglas de la casa) y casa/donde-vive.md del plugin. El instalador copia las reglas a Trabajo\\.claude\\rules\\casa.md." },
+    { "ruta": "programas", "nota": "_paquete.mjs (actualiza, chequea e instala), sync_area.ps1 (la tarea de la PC) e inventario.ps1." },
+    { "ruta": "conocimiento/comun", "opcional": true, "nota": "lo que ve toda PC: personas.json, donde-vive.md, fichas comunes." },
+    { "ruta": "conocimiento/calidad", "areas": ["calidad"], "opcional": true },
+    { "ruta": "conocimiento/ingenieria", "areas": ["ingenieria"], "opcional": true },
+    { "ruta": "conocimiento/logistica", "areas": ["logistica"], "opcional": true },
+    { "ruta": "conocimiento/compras", "areas": ["compras"], "opcional": true },
+    { "ruta": "conocimiento/produccion", "areas": ["produccion"], "opcional": true },
+    { "ruta": "conocimiento/mantenimiento", "areas": ["mantenimiento"], "opcional": true },
+    { "ruta": "conocimiento/rrhh", "areas": ["rrhh"], "opcional": true },
+    { "ruta": "conocimiento/direccion", "areas": ["direccion"], "opcional": true }
+  ],
+
+  "sin_filtro_identidad": ["conocimiento/comun/personas.json", "conocimiento/personas.json"],
+
+  "no_van": [],
+
+  "excluir_nombres": ["tests", "node_modules", ".git", "__pycache__", "tmp", "Thumbs.db", "desktop.ini", ".DS_Store"],
+  "excluir_sufijos": [".test.mjs", ".pyc", ".tmp", ".log", ".bak", ".fak-nueva", ".lock"],
+
+  "prohibido_contenido": [
+    { "texto": "santorofacundomartin", "motivo": "mail personal de Fak" },
+    { "texto": "Barack-cerebro", "motivo": "carpeta del cerebro de Fak en la nube" },
+    { "texto": "BarackDatos", "motivo": "repo privado de datos de Fak" }
+  ]
+}

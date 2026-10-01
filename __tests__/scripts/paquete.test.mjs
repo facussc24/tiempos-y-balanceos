@@ -1037,6 +1037,14 @@ function claves(nombre = 'claves') {
     expect(r.estado).toBe('creada');
     return { rutaClave, rutaPub: r.publica, huella: r.huella };
 }
+/** Un origen con la forma del proyecto `area`: sus raices son otras (marketplace, casa, conocimiento, programas). */
+const V1_AREA = {
+    'marketplace/.claude-plugin/marketplace.json': '{"name":"barack","plugins":[]}\n',
+    'casa/CLAUDE.md': '# reglas de la casa\n',
+    'conocimiento/comun/donde-vive.md': '- BOM: en el arb.\n',
+    'programas/util.mjs': 'export const x = 1;\n',
+};
+const LISTA_AREA = { formato: 1, proyecto: 'area', incluir: [{ ruta: 'marketplace' }, { ruta: 'casa' }, { ruta: 'conocimiento/comun', opcional: true }, { ruta: 'programas' }], excluir_nombres: ['__pycache__'], excluir_sufijos: ['.pyc', '.fak-nueva'] };
 const leerVersion = (nube) => JSON.parse(leer(nube, 'VERSION.json'));
 const escribirVersion = (nube, v) => fs.writeFileSync(path.join(nube, 'VERSION.json'), P.jsonCanonico(v));
 /** Vuelve a firmar el MANIFIESTO.json que hay en la nube con OTRA clave y deja VERSION.json coherente (lo que haria un atacante con escritura). */
@@ -1791,19 +1799,20 @@ describe('la carpeta de la nube por proyecto: la de siempre por defecto, CLAUDE 
     });
 
     it('publicar crea 1- PUBLICADO si falta (su carpeta madre existe); la de siempre sigue sin inventarse; en areas sin clave no publica', () => {
-        const origen = armarOrigen();
+        const origen = armarOrigen(V1_AREA);
         const madre = dir('CLAUDE POR AREA');
         const nube = path.join(madre, '1- PUBLICADO');
         const { rutaClave } = claves();
-        const sim = pub(origen, nube, LISTA, { simular: true, clavePrivada: rutaClave });
+        const sim = pub(origen, nube, LISTA_AREA, { simular: true, clavePrivada: rutaClave, proyecto: 'area' });
+        expect(sim.errores).toEqual([]);
         expect(sim.estado).toBe('simulado');
         expect(fs.existsSync(nube)).toBe(false);
         // sin clave privada, en el proyecto de areas no se publica (ninguna PC lo aceptaria); con --sin-firma explicito si
-        const sinClave = pub(origen, nube, LISTA, { proyecto: 'area' });
+        const sinClave = pub(origen, nube, LISTA_AREA, { proyecto: 'area' });
         expect(sinClave.estado).toBe('rechazado');
         expect(sinClave.errores.join(' ')).toContain('toda publicación va firmada');
         expect(fs.existsSync(nube)).toBe(false);
-        const r = pub(origen, nube, LISTA, { proyecto: 'area', clavePrivada: rutaClave });
+        const r = pub(origen, nube, LISTA_AREA, { proyecto: 'area', clavePrivada: rutaClave });
         expect(r.estado).toBe('publicado');
         expect(r.firmada).toBe(true);
         expect(P.leerPublicacion(nube).estado).toBe('ok');
@@ -1814,11 +1823,11 @@ describe('la carpeta de la nube por proyecto: la de siempre por defecto, CLAUDE 
     });
 
     it('en la estructura de areas, salud y aportes van a 4- BUZON (hermana de 1- PUBLICADO)', () => {
-        const origen = armarOrigen();
+        const origen = armarOrigen(V1_AREA);
         const madre = dir('CLAUDE POR AREA');
         const nube = path.join(madre, '1- PUBLICADO');
         const { rutaClave, rutaPub } = claves();
-        pub(origen, nube, LISTA, { proyecto: 'area', clavePrivada: rutaClave });
+        expect(pub(origen, nube, LISTA_AREA, { proyecto: 'area', clavePrivada: rutaClave }).estado).toBe('publicado');
         const pc = dir('pc1');
         const r = act(pc, nube, { identidad: { usuario: 'u', pc: 'PC-01' }, clavePublica: rutaPub });
         expect(r.estado).toBe('actualizado');
@@ -1858,8 +1867,9 @@ describe('la carpeta de la nube por proyecto: la de siempre por defecto, CLAUDE 
             const { rutaClave, rutaPub } = claves();
             const madre = dir('CLAUDE POR AREA');
             const nube = path.join(madre, '1- PUBLICADO');
-            const origen = armarOrigen();
-            const r = pub(origen, nube, LISTA, firmada ? { proyecto: 'area', clavePrivada: rutaClave } : { proyecto: 'area', sinFirma: true });
+            const origen = armarOrigen(V1_AREA);
+            const r = pub(origen, nube, LISTA_AREA, firmada ? { proyecto: 'area', clavePrivada: rutaClave } : { proyecto: 'area', sinFirma: true });
+            expect(r.errores).toEqual([]);
             expect(r.estado).toBe('publicado');
             return { rutaClave, rutaPub, madre, nube, origen };
         }
@@ -2005,8 +2015,8 @@ describe('la carpeta de la nube por proyecto: la de siempre por defecto, CLAUDE 
         const home = dir('ClaudeBarack');
         const estado = dir('estado');
         const clave = path.join(tmp, 'claves', 'publicador.key');
-        const origen = armarOrigen();
-        const lista = esc(tmp, 'lista.json', JSON.stringify(LISTA));
+        const origen = armarOrigen(V1_AREA);
+        const lista = esc(tmp, 'lista.json', JSON.stringify(LISTA_AREA));
         const env = { ...process.env, CLAUDE_AREA_NUBE: nubeArea, CLAUDE_AREA_HOME: home, CLAUDE_AREA_CLAVE: clave, CLAUDE_AREA_ESTADO: estado };
         const correr = (args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8', env, timeout: 60000 });
         expect(correr(['--generar-clave']).status).toBe(0);
@@ -2021,7 +2031,8 @@ describe('la carpeta de la nube por proyecto: la de siempre por defecto, CLAUDE 
         expect(a.status, a.stdout + a.stderr).toBe(0);
         expect(a.stdout).toContain('firma verificada');
         expect(a.stdout).toContain('área compras');
-        expect(fs.existsSync(path.join(home, 'publicado', 'scripts', 'util.mjs'))).toBe(true);
+        expect(fs.existsSync(path.join(home, 'publicado', 'programas', 'util.mjs'))).toBe(true);
+        expect(fs.existsSync(path.join(home, 'Trabajo', '.claude', 'rules', 'casa.md'))).toBe(true);   // --home regenera las reglas de la casa
         expect(correr(['--chequear']).status).toBe(0);
         expect(fs.readdirSync(path.join(nubeArea, '4- BUZON', 'salud'))).toHaveLength(1);
         expect(correr(['--donde']).stdout.trim()).toBe(path.join(nubeArea, '1- PUBLICADO'));

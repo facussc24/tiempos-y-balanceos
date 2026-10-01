@@ -9,10 +9,12 @@ acá, lo cambia ACÁ y lo dice en su informe: dos programas no pueden suponer fo
 | Qué | Ruta real | Para pruebas |
 |---|---|---|
 | Nube del proyecto | `<biblioteca de Ingeniería>\CLAUDE POR AREA\` (todavía NO existe: se crea con el OK de Fak) | variable `CLAUDE_AREA_NUBE` apuntando a una carpeta temporal |
-| Lo que bajan las PC | `…\1- PUBLICADO\` (`VERSION.json`, `MANIFIESTO.json`, `MANIFIESTO.sig`, `NOVEDADES.md`, `contenido\`, `historial\v<N>\`, `historial\_objetos\`) | idem |
+| Lo que bajan las PC | `…\1- PUBLICADO\` (`VERSION.json`, `MANIFIESTO.json`, `MANIFIESTO.sig`, `NOVEDADES.md`, `contenido\`, `historial\v<N>\`, `historial\_objetos\`, `publicador.pub` (la clave pública, para la primera instalación), `CLAUDE.md` (el "instalá"; fuera de lo firmado)) | idem |
+| Adentro de `contenido\` (firmado) | `marketplace\` (el plugin `barack-area`; único lugar donde viajan hooks), `casa\` (`CLAUDE.md` de la casa, `donde-vive.md`), `conocimiento\comun\` y `conocimiento\<area>\` (una PC recibe lo común más lo de su área), `programas\` (`_paquete.mjs`, `sync_area.ps1`, `inventario.ps1`). Lo arma `tools/claude-area/armar_publicable.mjs` con la lista `tools/claude-area/publicar.data.json` | idem |
 | Lo que suben las PC | `…\4- BUZON\salud\<pc>.json`, `avisos\<pc>\`, `inventario\<pc>.json`, `aportes\<autor>\`, `mails\_entrada\<autor>\` | idem |
 | Lo que arma el administrador | `…\4- BUZON\TABLERO.md`, `INVENTARIO.md` y la lista `conocidos.json` (la carga el administrador). Los arman `tablero.mjs` e `inventario_resumen.mjs`; solo los ve el administrador | idem |
-| En cada PC | `C:\ClaudeBarack\` → `publicado\` (copia verificada de `contenido\`), `Trabajo\` (donde la persona abre Claude), `perfil.json` | variable `CLAUDE_AREA_HOME` |
+| En cada PC | `C:\ClaudeBarack\` → `publicado\` (copia verificada de `contenido\`), `Trabajo\` (donde la persona abre Claude; `Trabajo\.claude\rules\casa.md` son las reglas de la casa, regeneradas en cada actualización; `Trabajo\CLAUDE.md` es de la persona), `perfil.json`, `instalado.json` (el marcador, se escribe al final) | variable `CLAUDE_AREA_HOME` |
+| Configuración de Claude del usuario | `%USERPROFILE%\.claude\settings.json`: el instalador agrega SOLO `extraKnownMarketplaces.barack` (directory → `<HOME>\publicado\marketplace`) y `enabledPlugins["barack-area@barack"]`, con respaldo `settings.json.respaldo-<fecha>` | variable `CLAUDE_CONFIG_DIR` (la misma que lee Claude) |
 | Estado de la PC | `%LOCALAPPDATA%\BarackEquipo\` (log, estado, clave pública en modo sin administrador) | variable `CLAUDE_AREA_ESTADO` |
 | Clave privada de firma | `%USERPROFILE%\.claude-area\publicador.key` (solo la PC del administrador; nunca al repo ni a la nube) | variable `CLAUDE_AREA_CLAVE` |
 | Clave pública | `publicador.pub` (PEM): `C:\Program Files\Claude Barack\` con administrador, o `%LOCALAPPDATA%\BarackEquipo\` sin él | — |
@@ -41,8 +43,9 @@ Una PC instala lo `comun` más lo de su área.
 { "pc": "", "usuario_windows": "", "area": "", "version_instalada": 0, "version_publicada_vista": 0,
   "ultima_sync_ok": "2026-10-01T18:00:00", "firma_ok": true, "politica": "si|no",
   "outlook": "clasico|nuevo|cerrado|no", "python": true, "ve_Y": true, "ve_Z": true,
-  "disco_libre_gb": 0, "errores": [], "estado": "actualizado|al_dia|esperar|error|firma_rechazada|sin_clave|version_anterior",
+  "disco_libre_gb": 0, "errores": [], "estado": "instalado|actualizado|al_dia|esperar|error|firma_rechazada|sin_clave|version_anterior",
   "mensaje": null, "escrito": "2026-10-01T18:00:00" }
+//   politica, python, ve_Y, ve_Z y disco_libre_gb los completa la tarea `sync_area.ps1` después de cada --actualizar.
 
 // inventario\<pc>.json
 { "pc": "", "usuario_windows": "", "relevado": "2026-10-01T18:00:00",
@@ -147,7 +150,72 @@ adentro; con el arranque de Node, lo que tarde Node en esa PC.
 **`--actualizar`** sale con 0 bien · 1 error · 3 nube incompleta u otra sincronización corriendo · **4 la PC no
 acepta lo publicado** (firma inválida o ausente, le falta la clave pública en el proyecto `area`, o la versión
 retrocede; cuál fue lo dice `estado` en la salud). `--simular` es su dry-run: imprime el plan (cuarentena
-incluida, origen → destino) y no escribe.
+incluida, origen → destino) y no escribe. En el proyecto `area`, con `--home` (o `CLAUDE_AREA_HOME`), además
+regenera `Trabajo\.claude\rules\casa.md` desde `publicado\casa\CLAUDE.md`.
+
+**Raíces por proyecto.** En `ingenieria` lo publicado cae en `.claude/skills`, `.claude/rules`, `.claude/commands`,
+`.claude/agents`, `scripts`, `docs`, `tools` y `CLAUDE.equipo.md`. En `area` cae SOLO en `marketplace/`, `casa/`,
+`conocimiento/`, `programas/`; un `.md` con `hooks:` en el encabezado se acepta únicamente adentro de `marketplace/`.
+El manifiesto declara `"proyecto": "area"` (firmado): una PC valida las rutas con las raíces de ese proyecto. La lista
+del proyecto puede declarar `sin_filtro_identidad` (hoy la lista de personas): esos archivos pasan el filtro de claves
+y rutas pero no el del nombre de usuario de quien publica, porque nombran a todos.
+
+## Instalar una PC nueva (`--instalar`, proyecto `area`) — 01/10/2026
+
+`node <1- PUBLICADO>\contenido\programas\_paquete.mjs --instalar --proyecto area --nube <1- PUBLICADO>` (es lo que
+hace Claude cuando alguien abre esa carpeta y escribe "instalá": `1- PUBLICADO\CLAUDE.md`, fuente
+`tools/claude-area/hola/CLAUDE.md`). Opciones: `--home` (o `CLAUDE_AREA_HOME`), `--claude-dir` (o `CLAUDE_CONFIG_DIR`),
+`--clave-publica`, `CLAUDE_AREA_ESTADO`. Pasos, en este orden; cada uno repetible:
+
+1. **La clave pública**: la indicada, si no la ya fijada en `<ESTADO>\publicador.pub`, si no (por única vez) la que
+   viaja en `1- PUBLICADO\publicador.pub`, que queda fijada. **Riesgo (confianza en el primer uso):** quien pueda escribir
+   en la biblioteca en el momento de ESA primera instalación puede plantar su clave y su publicación; desde la segunda vez
+   un cambio de clave se rechaza. La forma segura es que la primera clave llegue por el pendrive o la ponga el
+   administrador con `--clave-publica`. Sin clave → código 4, `sin_clave`, nada escrito.
+2. **La publicación**: completa y firmada con esa clave (si no → 3 esperar, o 4 y nada escrito).
+3. **Quién es**: `conocimiento\comun\personas.json` (o `conocimiento\personas.json`), verificado por hash contra el
+   manifiesto firmado ANTES de leerlo; se busca por `usuario_windows` (sin mayúsculas ni tildes) y después por `pc`; las
+   bajas no cuentan. Si no figura: `perfil.json` con `area: "comun"` y `nombre: ""` (el aviso de arranque pregunta una
+   vez), y un aviso `sin-persona` en `4- BUZON\avisos\<pc>\` (una sola vez por perfil escrito). `perfil.json` se
+   escribe acá; si cambia, el anterior queda como `perfil.json.anterior-<fecha>`.
+4. **La copia**: `--actualizar` con el área del perfil hacia `<HOME>\publicado\` (nunca pisa, nunca borra).
+5. **Trabajo\**: `Trabajo\.claude\rules\casa.md` (copia de `publicado\casa\CLAUDE.md` con un encabezado; se regenera en
+   cada actualización) y `Trabajo\CLAUDE.md` corto, solo si no existe (es de la persona). No se usa un import `@../`
+   que salga de la carpeta: pide confirmación la primera vez.
+6. **El plugin**: `settings.json` del usuario con solo las dos claves de arriba, respaldo antes; un `settings.json` que no
+   se entiende no se toca y la instalación queda sin marcador.
+7. **El marcador `instalado.json`**, al final, y `salud.json` con `estado: "instalado"`. Correrlo de nuevo con todo igual
+   da `ya_instalado` y no escribe nada.
+
+Códigos de `--instalar`: 0 instalado o ya instalado · 1 error · 3 esperar · 4 sin clave, firma rechazada o versión que
+retrocede. El marcador se mira junto con `publicado\marketplace\.claude-plugin\marketplace.json`: los dos, o se repite.
+
+**Lo que no puede pasar (incidente del 01/10: un `--help` ignorado instaló de verdad y tocó el `settings.json` real):**
+- `--help` / `-h` muestran el uso y salen con 0 sin tocar nada. Una opción que el programa no conoce, o un argumento
+  suelto, es un error de una línea que lo nombra, código 1, y NO se ejecuta nada (vale para todos los comandos de
+  `_paquete.mjs` y de `armar_publicable.mjs`).
+- **Todo o nada.** `--instalar`: si CUALQUIERA de `CLAUDE_AREA_HOME`/`--home`, `CLAUDE_AREA_NUBE`/`--nube`,
+  `CLAUDE_AREA_ESTADO` o `--usuario-home` (la carpeta `.claude` del usuario, donde está su `settings.json`) está
+  indicada y alguna otra no, se niega con código 1 ("estás mezclando carpetas de prueba y reales…"). Para probar van las
+  cuatro; para instalar de verdad, ninguna. `--actualizar` en `area`: lo mismo con PC (`--home`/`--destino`), nube y
+  estado; y `Trabajo\` se regenera solo con una carpeta de PC indicada, nunca con la real por defecto. `sync_area.ps1`:
+  `-HomeDir`/`-Nube`/`-EstadoDir` (o sus variables) las tres o ninguna, si no sale con 2 antes de escribir nada; la
+  tarea registrada no pasa ninguna.
+- **La PC del administrador no se instala sola.** Una instalación de verdad (sin rutas de prueba) se niega si en la PC
+  está la clave privada de firma en su lugar real, si la carpeta de la PC está adentro de un repo git, o si el programa
+  corre desde el repo de origen (el que tiene la lista de publicación): código 1 con el motivo, salvo `--forzar`.
+- `--instalar --simular` lista cada ruta que escribiría (clave fijada, perfil, cada archivo publicado, Trabajo, el
+  `settings.json` del usuario con las dos claves y su respaldo, el aviso, el marcador, la salud) y no escribe ninguna.
+- Publicar en `area` sin `--nube` ni `CLAUDE_AREA_NUBE` (la nube se buscaría por nombre: la REAL) exige `--nube-real`,
+  tanto en `_paquete.mjs --publicar --proyecto area` como en `armar_publicable.mjs --publicar`.
+
+**La tarea de la PC** es `programas\sync_area.ps1` (viaja en lo publicado; solo ASCII): 1) `--actualizar --proyecto area`
+(códigos 0/3/4), 2) mueve la cola local `<ESTADO>\avisos-pendientes\<pc>\*.json` a `4- BUZON\avisos\<pc>\` (uno por uno,
+sin pisar: si el nombre existe agrega `-2`; `-Simular` solo lo lista), 3) `inventario.ps1` una vez por semana
+(marca `<ESTADO>\inventario-ultimo.txt`), 4) completa en la salud `politica`, `python`, `ve_Y`, `ve_Z`,
+`disco_libre_gb`, 5) mails: gancho sin uso. Deja `<ESTADO>\estado.json` y `sync.log`; sale siempre con 0. La tarea de
+Windows ("Barack - Claude por area": al iniciar sesión y cada 4 h, sin ventana) se registra SOLO con `-RegistrarTarea`;
+`-VerTarea` la muestra sin registrar.
 
 ## Lo que usa el plugin `barack-area` (aviso de arranque y controles) — 01/10/2026
 
@@ -175,8 +243,10 @@ frena cada control: `NOTAS.md` del plugin.
 - **Cola local**: si la nube no está, el aviso queda en `<ESTADO>\avisos-pendientes\<pc>\` con el mismo nombre y
   formato. **Falta que la tarea de la PC los suba** a `4- BUZON\avisos\<pc>\` (mover, no copiar). Marcas propias
   del plugin en `<ESTADO>\`: `avisos-recientes.json` y `aviso-<tipo>.txt`.
-- **Lo instalado no lo cambia el asistente**: Write, Edit o un comando directo sobre `<HOME>\publicado\` o
-  `<HOME>\perfil.json` se frenan. Los programas que están bajo `<HOME>\publicado\` no se revisan (llegan firmados):
+- **Lo instalado no lo cambia el asistente**: Write, Edit o un comando directo sobre `<HOME>\publicado\`,
+  `<HOME>\perfil.json`, `%USERPROFILE%\.claude\plugins\` o `%USERPROFILE%\.claude\settings*.json` se frenan (un
+  programa que escribe ahí por dentro, como el instalador o `--actualizar`, no: el control no abre programas para
+  esta regla). Los programas que están bajo `<HOME>\publicado\` no se revisan (llegan firmados):
   por eso el envío con ventana (`_mailEnviar.py`) tiene que viajar adentro de `publicado\`.
 - **Reglas de la casa**: `casa/CLAUDE.md` del plugin (versión 1); la pone en su lugar el instalador.
 

@@ -116,9 +116,20 @@ export const LIMITE_MB_ARCHIVO = 15;
 export const MAX_ARCHIVOS_APORTE = 500;
 export const LOCK_VENCE_MIN = 60;
 
-/** Carpetas (y archivos sueltos de la raiz) donde puede caer algo de la nube en la PC del compañero. */
-const RAICES_PERMITIDAS = ['.claude/skills/', '.claude/rules/', '.claude/commands/', '.claude/agents/', 'scripts/', 'docs/', 'tools/'];
-const ARCHIVOS_RAIZ_PERMITIDOS = ['claude.equipo.md'];
+/**
+ * Carpetas (y archivos sueltos de la raiz) donde puede caer algo de la nube en la PC, POR PROYECTO.
+ * En `area` todo lo que el asistente lee como verdad viaja firmado adentro de cuatro carpetas: el plugin
+ * (`marketplace/`, el unico lugar donde pueden viajar hooks), las reglas de la casa (`casa/`), el
+ * conocimiento (`conocimiento/`, con una carpeta por area) y los programas de la PC (`programas/`).
+ */
+const RAICES_POR_PROYECTO = {
+    // en ingenieria una raiz entera ("scripts") NO es una entrada valida de la lista: se publica de a archivos o subcarpetas
+    ingenieria: { carpetas: ['.claude/skills/', '.claude/rules/', '.claude/commands/', '.claude/agents/', 'scripts/', 'docs/', 'tools/'], sueltos: ['claude.equipo.md'], raizEntera: false, texto: '.claude/skills, .claude/rules, .claude/commands, .claude/agents, scripts, docs, tools, CLAUDE.equipo.md' },
+    // en area las cuatro raices son justamente las unidades que se publican enteras
+    area: { carpetas: ['marketplace/', 'casa/', 'conocimiento/', 'programas/'], sueltos: [], raizEntera: true, texto: 'marketplace, casa, conocimiento, programas' },
+};
+/** En el proyecto `area` los hooks viajan solo adentro del plugin (que llega firmado); afuera se rechazan. */
+const RAIZ_HOOKS_AREA = 'marketplace/';
 /** Lo que la nube NO puede escribir nunca, aunque este dentro de una raiz permitida. */
 const RUTAS_NEGADAS = [
     { re: /(^|\/)[.]env([.]|$)/i, motivo: 'es un archivo de variables de entorno (lleva claves)' },
@@ -203,22 +214,29 @@ export function rutaSegura(rel) {
     return rel.split('/').every((s) => s !== '' && s !== '.' && s !== '..' && !/[. ]$/.test(s) && !/[<>"|?*]/.test(s));
 }
 
-/** null si esa ruta puede viajar en la base; si no, el motivo. */
-export function motivoRutaNoPermitida(rel) {
+/** null si esa ruta puede viajar en la base de ese proyecto; si no, el motivo. */
+export function motivoRutaNoPermitida(rel, proyecto = PROYECTO_POR_DEFECTO) {
     if (!rutaSegura(rel)) return 'la ruta no es segura (sale de la carpeta o tiene caracteres que Windows no acepta)';
     const min = rel.toLowerCase();
     for (const n of RUTAS_NEGADAS) if (n.re.test(min)) return n.motivo;
-    if (!RAICES_PERMITIDAS.some((r) => min.startsWith(r)) && !ARCHIVOS_RAIZ_PERMITIDOS.includes(min)) {
-        return 'esta fuera de las carpetas que la base puede tocar (.claude/skills, .claude/rules, .claude/commands, .claude/agents, scripts, docs, tools, CLAUDE.equipo.md)';
+    const def = RAICES_POR_PROYECTO[proyecto] || RAICES_POR_PROYECTO[PROYECTO_POR_DEFECTO];
+    if (!def.carpetas.some((r) => min.startsWith(r) || (def.raizEntera && min === r.slice(0, -1))) && !def.sueltos.includes(min)) {
+        return `esta fuera de las carpetas que la base puede tocar (${def.texto})`;
     }
     return null;
 }
 
 const empiezaCon = (rel, base) => { const a = rel.toLowerCase(); const b = base.toLowerCase().replace(/\/+$/, ''); return a === b || a.startsWith(`${b}/`); };
 
-/** `.md` dentro de `.claude/` cuyo encabezado declara `hooks:` (una skill o un agente pueden ejecutar codigo solos). */
-export function frontmatterConHooks(rel, texto) {
-    if (!/^[.]claude\/.*[.]md$/i.test(rel)) return false;
+/**
+ * `.md` cuyo encabezado declara `hooks:` (una skill o un agente pueden ejecutar codigo solos) donde no
+ * puede: en `ingenieria`, cualquier `.md` dentro de `.claude/`; en `area`, cualquier `.md` FUERA de
+ * `marketplace/` (adentro del plugin los hooks son parte de lo que se firma).
+ */
+export function frontmatterConHooks(rel, texto, proyecto = PROYECTO_POR_DEFECTO) {
+    if (!/[.]md$/i.test(rel)) return false;
+    const min = rel.toLowerCase();
+    if (proyecto === 'area' ? min.startsWith(RAIZ_HOOKS_AREA) : !min.startsWith('.claude/')) return false;
     const m = /^---\r?\n([\s\S]*?)\r?\n---/.exec(String(texto));
     return !!m && /^\s*hooks\s*:/m.test(m[1]);
 }
@@ -327,15 +345,17 @@ export function areasDeEntrada(e) {
 export const areasDelArchivo = (entrada) => (entrada && Array.isArray(entrada.areas) && entrada.areas.length ? entrada.areas : [AREA_COMUN]);
 
 /** Errores de forma de la lista (vacio = bien). Es lo que corre tambien el test de la lista real. */
-export function revisarLista(lista) {
+export function revisarLista(lista, proyecto = PROYECTO_POR_DEFECTO) {
     const errores = [];
     if (!lista || typeof lista !== 'object') return ['la lista no es un JSON valido'];
     if (!Array.isArray(lista.incluir) || lista.incluir.length === 0) errores.push('"incluir" esta vacio o no es una lista');
+    if (lista.proyecto !== undefined && lista.proyecto !== proyecto) errores.push(`esta lista es del proyecto "${lista.proyecto}" y se esta publicando el proyecto "${proyecto}"`);
+    if (lista.sin_filtro_identidad !== undefined && (!Array.isArray(lista.sin_filtro_identidad) || lista.sin_filtro_identidad.some((x) => typeof x !== 'string'))) errores.push('"sin_filtro_identidad" tiene que ser una lista de rutas');
     const noVan = (lista.no_van || []).map((x) => (typeof x === 'string' ? x : x.ruta)).filter(Boolean);
     for (const e of lista.incluir || []) {
         const ruta = e && e.ruta;
         if (typeof ruta !== 'string') { errores.push(`una entrada de "incluir" no tiene "ruta": ${JSON.stringify(e)}`); continue; }
-        const m = motivoRutaNoPermitida(ruta.replace(/\/+$/, ''));
+        const m = motivoRutaNoPermitida(ruta.replace(/\/+$/, ''), proyecto);
         if (m) errores.push(`"${ruta}" no puede viajar: ${m}`);
         for (const nv of noVan) if (empiezaCon(ruta, nv) || empiezaCon(nv, ruta)) errores.push(`"${ruta}" choca con "${nv}" de la lista no_van (lo personal de Fak)`);
         if (e.areas !== undefined) {
@@ -666,18 +686,22 @@ export function leerPublicacion(nube) {
         return { estado: 'manifiesto_invalido', version: version.version, mensaje: 'el manifiesto trae rutas o datos que no se aceptan', problemas: [`el manifiesto dice ser la versión ${manifiesto.version} y VERSION.json dice ${version.version}`] };
     }
     const firma = version.firma && typeof version.firma === 'object' ? version.firma : null;
-    return { estado: 'ok', version: version.version, fecha: version.fecha, manifiesto, manifiestoSha: version.manifest_sha256, info: version, bytesManifiesto: bytes, firma };
+    return { estado: 'ok', version: version.version, fecha: version.fecha, manifiesto, manifiestoSha: version.manifest_sha256, info: version, bytesManifiesto: bytes, firma, proyecto: proyectoDelManifiesto(manifiesto) };
 }
 
 const ES_HASH = (s) => typeof s === 'string' && /^[0-9a-f]{64}$/.test(s);
 const ES_AREA = (s) => typeof s === 'string' && /^[a-z][a-z0-9_-]{0,29}$/.test(s);
+/** El proyecto que declara un manifiesto (los de antes del 01/10/2026 no lo traen: son de ingenieria). */
+export const proyectoDelManifiesto = (m) => (m && m.proyecto !== undefined ? m.proyecto : PROYECTO_POR_DEFECTO);
 
 /** Problemas de forma de un manifiesto (vacio = bien). Lo usa la nube y tambien el historial. */
 export function problemasDeManifiesto(manifiesto) {
     const problemas = [];
     if (!manifiesto || typeof manifiesto.archivos !== 'object' || manifiesto.archivos === null) { problemas.push('el manifiesto no tiene "archivos"'); return problemas; }
+    const proyecto = proyectoDelManifiesto(manifiesto);
+    if (!PROYECTOS[proyecto]) { problemas.push(`el manifiesto declara un proyecto que no existe: ${JSON.stringify(manifiesto.proyecto)}`); return problemas; }
     for (const [rel, e] of Object.entries(manifiesto.archivos)) {
-        const m = motivoRutaNoPermitida(rel);
+        const m = motivoRutaNoPermitida(rel, proyecto);
         if (m) problemas.push(`${rel}: ${m}`);
         else if (!e || !ES_HASH(e.sha256) || !Number.isInteger(e.bytes)) problemas.push(`${rel}: hash o tamaño invalido`);
         // areas: solo se mira la forma (un area nueva en la lista no puede dejar afuera a toda la nube)
@@ -688,7 +712,7 @@ export function problemasDeManifiesto(manifiesto) {
         else {
             for (const l of manifiesto.lapidas) {
                 if (!l || typeof l.ruta !== 'string') { problemas.push('una lapida no tiene ruta'); continue; }
-                const m = motivoRutaNoPermitida(l.ruta);
+                const m = motivoRutaNoPermitida(l.ruta, proyecto);
                 if (m) problemas.push(`lapida ${l.ruta}: ${m}`);
                 else if (!Number.isInteger(l.desde_version) || (l.sha256 !== undefined && l.sha256 !== null && !ES_HASH(l.sha256))) problemas.push(`lapida ${l.ruta}: datos invalidos`);
                 else if (l.ruta in manifiesto.archivos) problemas.push(`lapida ${l.ruta}: tambien figura como archivo publicado`);
@@ -838,7 +862,7 @@ export function leerHistorial(nube, n) {
 }
 
 /** Una lapida heredada del manifiesto anterior se conserva solo si tiene la forma correcta. */
-const lapidaValida = (l) => l && typeof l.ruta === 'string' && !motivoRutaNoPermitida(l.ruta) && Number.isInteger(l.desde_version) && (l.sha256 === undefined || l.sha256 === null || ES_HASH(l.sha256));
+const lapidaValida = (l, proyecto) => l && typeof l.ruta === 'string' && !motivoRutaNoPermitida(l.ruta, proyecto) && Number.isInteger(l.desde_version) && (l.sha256 === undefined || l.sha256 === null || ES_HASH(l.sha256));
 
 // ---------------------------------------------------------------------------------------------
 // PUBLICAR
@@ -898,7 +922,7 @@ export function publicar({ origen, nube, lista, notas = [], simular = false, for
         res.rollback = Number(rollback);
         notasFinales = [`Se volvió a la versión ${res.rollback}`, ...notas];
     } else {
-        res.errores.push(...revisarLista(lista));
+        res.errores.push(...revisarLista(lista, proyecto));
         const exp = expandirLista(origen, lista);
         res.omitidos = exp.omitidos;
         res.errores.push(...exp.errores);
@@ -912,7 +936,7 @@ export function publicar({ origen, nube, lista, notas = [], simular = false, for
     let total = 0;
     const hashes = new Map();
     for (const [rel, abs] of archivos) {
-        const motivo = motivoRutaNoPermitida(rel);
+        const motivo = motivoRutaNoPermitida(rel, proyecto);
         if (motivo) res.errores.push(`${rel}: ${motivo}`);
         const largo = path.join(nube, 'contenido', ...rel.split('/')).length;
         if (largo > LIMITE_RUTA) res.errores.push(`${rel}: en la nube la ruta mide ${largo} caracteres (tope ${LIMITE_RUTA}): Windows no la abriria. Acortar el nombre`);
@@ -921,10 +945,18 @@ export function publicar({ origen, nube, lista, notas = [], simular = false, for
         if (st.size > LIMITE_MB_ARCHIVO * 1024 * 1024) res.errores.push(`${rel}: pesa ${(st.size / 1048576).toFixed(1)} MB (tope ${LIMITE_MB_ARCHIVO} MB)`);
         const buf = fs.readFileSync(abs);
         hashes.set(rel, { sha256: sha256(buf), bytes: buf.length });
-        if (frontmatterConHooks(rel, buf.toString('utf8'))) res.errores.push(`${rel}: el encabezado declara "hooks:" (ejecutaria codigo solo en la PC del compañero)`);
+        if (frontmatterConHooks(rel, buf.toString('utf8'), proyecto)) res.errores.push(`${rel}: el encabezado declara "hooks:" (ejecutaria codigo solo en la PC del compañero)`);
     }
     if (total > LIMITE_MB_TOTAL * 1024 * 1024) res.errores.push(`la lista pesa ${(total / 1048576).toFixed(1)} MB (tope ${LIMITE_MB_TOTAL} MB)`);
-    for (const h of revisarContenido(archivos, patronesFiltro({ lista, identidad }))) {
+    // `sin_filtro_identidad` (la lista de personas, que nombra a todos, incluido quien publica) pasa el filtro de claves y
+    // rutas pero no el del nombre de usuario / PC de quien publica; todo lo demas pasa el filtro entero.
+    const sinIdentidad = new Set(lista && Array.isArray(lista.sin_filtro_identidad) ? lista.sin_filtro_identidad : []);
+    const filtroEntero = new Map([...archivos].filter(([rel]) => !sinIdentidad.has(rel)));
+    const soloGenerico = new Map([...archivos].filter(([rel]) => sinIdentidad.has(rel)));
+    for (const h of revisarContenido(filtroEntero, patronesFiltro({ lista, identidad }))) {
+        res.errores.push(`${h.ruta}${h.linea ? `:${h.linea}` : ''}: ${h.motivo}`);
+    }
+    for (const h of revisarContenido(soloGenerico, patronesFiltro({ lista, identidad: { usuario: '', pc: '' } }))) {
         res.errores.push(`${h.ruta}${h.linea ? `:${h.linea}` : ''}: ${h.motivo}`);
     }
     for (const f of importsQueFaltan(archivos)) res.errores.push(`${f.desde} importa ${f.hacia}, que no esta en la lista`);
@@ -958,7 +990,7 @@ export function publicar({ origen, nube, lista, notas = [], simular = false, for
         res.sobrantes = enNube.filter((r) => !hashes.has(r) && !r.endsWith('.tmp')).sort();
     }
     // --- lapidas: las heredadas que siguen retiradas + lo que se retira ahora (con el hash que tenia publicado)
-    const heredadas = (Array.isArray(previa && previa.lapidas) ? previa.lapidas : []).filter((l) => lapidaValida(l) && !hashes.has(l.ruta) && !res.retirados.includes(l.ruta));
+    const heredadas = (Array.isArray(previa && previa.lapidas) ? previa.lapidas : []).filter((l) => lapidaValida(l, proyecto) && !hashes.has(l.ruta) && !res.retirados.includes(l.ruta));
     const motivo = motivoRetiro || (res.rollback ? `no estaba en la versión ${res.rollback}` : 'salió de la lista de publicación');
     const nuevasLapidas = res.retirados.map((r) => ({ ruta: r, desde_version: res.version, motivo, sha256: ES_HASH(previos[r].sha256) ? previos[r].sha256 : null }));
     const lapidas = [...heredadas, ...nuevasLapidas].sort((a, b) => (a.ruta < b.ruta ? -1 : 1));
@@ -976,6 +1008,7 @@ export function publicar({ origen, nube, lista, notas = [], simular = false, for
         }
         const manifiesto = {
             formato: FORMATO, version: res.version, generado: isoLocal(ahora),
+            ...(proyecto !== PROYECTO_POR_DEFECTO ? { proyecto } : {}),
             archivos: Object.fromEntries([...hashes].map(([rel, h]) => [rel, { ...h, areas: areasPorRel.get(rel) }])),
             lapidas,
         };
@@ -991,6 +1024,15 @@ export function publicar({ origen, nube, lista, notas = [], simular = false, for
             textoSig = f.texto;
             escribirAtomico(path.join(nube, 'MANIFIESTO.sig'), textoSig);
             infoFirma = { algoritmo: ALGORITMO_FIRMA, sha256: sha256(textoSig), clave: f.huella };
+            // En el proyecto de areas la clave PUBLICA viaja al lado de lo publicado para la primera instalacion de una
+            // PC (confianza en el primer uso: ver clavePublicaParaInstalar). Es publica: no revela nada.
+            if (exigeFirma({ nube, proyecto })) {
+                const pem = createPublicKey(clave).export({ type: 'spki', format: 'pem' });
+                const pPub = path.join(nube, NOMBRE_CLAVE_PUBLICA);
+                let igual = false;
+                try { igual = fs.readFileSync(pPub, 'utf8') === pem; } catch { igual = false; }
+                if (!igual) escribirAtomico(pPub, pem);
+            }
         }
 
         const previosPorSkill = new Set(Object.keys(previos).map((r) => describirRuta(r)).filter((d) => d.grupo === 'skill').map((d) => d.nombre));
@@ -1088,14 +1130,14 @@ export function armarPendientes({ version, fecha, tocados, sacados, retirados, r
  * El area de esta PC: `--area`, o la que diga perfil.json (en CLAUDE_AREA_HOME, en el destino, o el
  * perfil-equipo.json de siempre). null = solo lo comun. "todas" instala todo (la PC de Fak, las pruebas).
  */
-export function resolverArea({ area = null, destino, env = process.env }) {
+export function resolverArea({ area = null, destino, env = process.env, home = null }) {
     if (area) {
         const a = normTexto(area);
         if (a === AREA_TODAS || a === '*') return { area: AREA_TODAS };
         if (!AREAS.includes(a)) return { error: `el área "${area}" no existe (van: ${AREAS.join(', ')}, o "todas")` };
         return { area: a };
     }
-    const candidatos = [env.CLAUDE_AREA_HOME ? path.join(env.CLAUDE_AREA_HOME, 'perfil.json') : null, path.join(destino, 'perfil.json'), path.join(destino, ...REL_PERFIL.split('/'))].filter(Boolean);
+    const candidatos = [home ? path.join(home, 'perfil.json') : null, env.CLAUDE_AREA_HOME ? path.join(env.CLAUDE_AREA_HOME, 'perfil.json') : null, path.join(destino, 'perfil.json'), path.join(destino, ...REL_PERFIL.split('/'))].filter(Boolean);
     for (const p of candidatos) {
         const perfil = leerJson(p);
         if (!perfil || typeof perfil.area !== 'string' || !perfil.area.trim()) continue;
@@ -1149,7 +1191,8 @@ function tomarLock(destino, ahora) {
 export function actualizar(opts) {
     const { nube, simular = false } = opts;
     const ahora = opts.ahora || new Date();
-    const identidad = opts.identidad || identidadLocal();
+    // la identidad con la que se firma la salud: la del perfil de la PC si lo hay (misma regla que el plugin y la tarea), si no la de Windows
+    const identidad = identidadDePerfil(opts.home, opts.identidad || identidadLocal());
     const res = actualizarAdentro({ ...opts, ahora, identidad });
     // salud: lo que esta PC cuenta de si misma, bien o mal. Nunca frena ni cambia el resultado.
     if (!simular && !res.sinSalud && nube && fs.existsSync(nube) && res.estado !== 'ocupado') {
@@ -1159,7 +1202,7 @@ export function actualizar(opts) {
     return res;
 }
 
-function actualizarAdentro({ destino, nube, reponer = false, simular = false, ahora, identidad, area = null, clavePublica = null, proyecto = PROYECTO_POR_DEFECTO, env = process.env }) {
+function actualizarAdentro({ destino, nube, reponer = false, simular = false, ahora, identidad, area = null, clavePublica = null, proyecto = PROYECTO_POR_DEFECTO, home = null, env = process.env }) {
     const res = {
         estado: 'error', errores: [], avisos: [],
         contadores: { nuevos: 0, actualizados: 0, iguales: 0, tocados: 0, sacados: 0, propios: 0, fuera_de_area: 0, cuarentena: 0 },
@@ -1172,7 +1215,7 @@ function actualizarAdentro({ destino, nube, reponer = false, simular = false, ah
         res.sinSalud = true;
         return res;
     }
-    const areaRes = resolverArea({ area, destino, env });
+    const areaRes = resolverArea({ area, destino, env, home });
     if (areaRes.error) { res.errores.push(areaRes.error); return res; }
     res.area = areaRes.area;
 
@@ -1279,8 +1322,8 @@ function actualizarAdentro({ destino, nube, reponer = false, simular = false, ah
         return res;
     }
     for (const { rel } of aInstalar) {
-        if (!/^[.]claude\/.*[.]md$/i.test(rel)) continue;
-        if (frontmatterConHooks(rel, fs.readFileSync(path.join(nube, 'contenido', ...rel.split('/')), 'utf8'))) {
+        if (!/[.]md$/i.test(rel)) continue;
+        if (frontmatterConHooks(rel, fs.readFileSync(path.join(nube, 'contenido', ...rel.split('/')), 'utf8'), pub.proyecto)) {
             res.errores.push(`${rel}: el encabezado declara "hooks:"; no se instala`);
         }
     }
@@ -1342,6 +1385,11 @@ function actualizarAdentro({ destino, nube, reponer = false, simular = false, ah
         };
         escribirAtomico(path.join(destino, ...REL_INSTALADO.split('/')), jsonCanonico(nuevoInstalado));
         res.respaldo = huboRespaldo ? carpetaRespaldo : null;
+        // proyecto de areas: las reglas de la casa de Trabajo\ se regeneran desde lo recien instalado
+        if (home && exigeFirma({ nube, proyecto })) {
+            try { res.trabajo = regenerarTrabajo({ home, publicado: destino, perfil: leerJson(path.join(home, 'perfil.json')) }); }
+            catch (e) { res.avisos.push(`no pude actualizar las reglas de la casa en Trabajo: ${e.message}`); }
+        }
     } finally {
         soltar();
     }
@@ -1376,9 +1424,20 @@ export function armarSalud({ destino, res, identidad, ahora }) {
     };
 }
 
+/** Nombre de PC apto para carpeta, con la MISMA regla que el plugin (asi `salud\<pc>.json` y `avisos\<pc>\` coinciden). */
+export const nombrePcCarpeta = (pc) => String(pc || '').replace(/[^A-Za-z0-9._-]/g, '-').slice(0, 40) || 'pc-sin-nombre';
+
+/** `<home>\perfil.json` manda sobre el nombre de Windows para `pc` y `usuario_windows` (CONTRATO: "<pc> = perfil.json -> pc, o el nombre de Windows"). */
+export function identidadDePerfil(home, identidad) {
+    if (!home) return identidad;
+    const perfil = leerJson(path.join(home, 'perfil.json'));
+    if (!perfil || typeof perfil !== 'object') return identidad;
+    return { usuario: (typeof perfil.usuario_windows === 'string' && perfil.usuario_windows) || identidad.usuario, pc: (typeof perfil.pc === 'string' && perfil.pc) || identidad.pc };
+}
+
 /** `salud\<pc>.json` en el buzon (4- BUZON en la estructura de areas; la misma carpeta en la de siempre). Escritura atomica. */
 export function escribirSalud({ nube, salud }) {
-    const p = path.join(carpetaBuzon(nube), 'salud', `${nombreParaCarpeta(salud.pc || 'pc')}.json`);
+    const p = path.join(carpetaBuzon(nube), 'salud', `${nombrePcCarpeta(salud.pc)}.json`);
     escribirAtomico(p, jsonCanonico(salud));
     return p;
 }
@@ -1645,22 +1704,360 @@ export function armarPendrive({ origen, pendrive, lista, notas = [], forzar = fa
 }
 
 // ---------------------------------------------------------------------------------------------
+// INSTALAR (proyecto `area`): una PC sin nada queda lista para que la persona abra Claude en Trabajo\
+// ---------------------------------------------------------------------------------------------
+// Orden: clave publica -> publicacion completa y firmada -> quien es (personas.json, verificado por hash
+// antes de leerlo) -> perfil.json -> copia verificada de lo comun + lo de su area -> Trabajo\ -> el plugin
+// a nivel usuario (solo dos claves en settings.json, con respaldo) -> el marcador, AL FINAL.
+// Es repetible: correrlo dos veces no cambia nada; una instalacion cortada se completa al repetir.
+
+export const NOMBRE_MARKETPLACE = 'barack';
+export const NOMBRE_PLUGIN = 'barack-area';
+export const REL_REGLAS_CASA = '.claude/rules/casa.md';
+export const MARCADOR_INSTALADO = 'instalado.json';
+
+/** `<home>` del proyecto de areas: CLAUDE_AREA_HOME o `C:\ClaudeBarack` (las pruebas pasan siempre una carpeta temporal). */
+export function rutaHomePorDefecto(env = process.env) {
+    return env.CLAUDE_AREA_HOME ? path.resolve(env.CLAUDE_AREA_HOME) : 'C:\\ClaudeBarack';
+}
+/** Estado de la PC: CLAUDE_AREA_ESTADO o `%LOCALAPPDATA%\BarackEquipo`. */
+export function rutaEstadoPorDefecto(env = process.env) {
+    if (env.CLAUDE_AREA_ESTADO) return path.resolve(env.CLAUDE_AREA_ESTADO);
+    return path.join(env.LOCALAPPDATA || path.join(env.USERPROFILE || os.homedir(), 'AppData', 'Local'), 'BarackEquipo');
+}
+/** La carpeta de configuracion de Claude Code del usuario: la misma que mira Claude (CLAUDE_CONFIG_DIR, o `~\.claude`). */
+export function rutaClaudeDirPorDefecto(env = process.env) {
+    return env.CLAUDE_CONFIG_DIR ? path.resolve(env.CLAUDE_CONFIG_DIR) : path.join(env.USERPROFILE || os.homedir(), '.claude');
+}
+
+/** Busca a la persona en personas.json por usuario de Windows (sin mayusculas ni tildes) o, si no, por nombre de PC. Las bajas no cuentan. */
+export function buscarPersona(personas, { usuario, pc }) {
+    const lista = personas && Array.isArray(personas.personas) ? personas.personas : [];
+    const activas = lista.filter((p) => p && typeof p === 'object' && !p.baja);
+    const n = (s) => normTexto(String(s || ''));
+    return activas.find((p) => n(p.usuario_windows) && n(p.usuario_windows) === n(usuario))
+        || activas.find((p) => n(p.pc) && n(p.pc) === n(pc))
+        || null;
+}
+
+/** El perfil.json del contrato a partir de la persona; si no figura, queda sin area asignada (`comun`) y sin nombre. */
+export function armarPerfil({ persona, identidad }) {
+    const area = persona && AREAS.includes(normTexto(persona.area || '')) ? normTexto(persona.area) : AREA_COMUN;
+    const texto = (v, max) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
+    return {
+        nombre: persona ? texto(persona.nombre, 60) : '',
+        mail: persona ? texto(persona.mail, 80) : '',
+        area,
+        puesto: persona ? texto(persona.puesto, 80) : '',
+        rol: persona && persona.rol ? texto(persona.rol, 30) : 'usuario',
+        pc: texto(identidad.pc, 40),
+        usuario_windows: texto(identidad.usuario, 40),
+    };
+}
+
+/**
+ * La clave publica con la que esta PC verifica lo publicado: la indicada (--clave-publica), si no la ya fijada en
+ * `<estado>\publicador.pub`, y si no hay ninguna, por UNICA vez la que viaja al lado de lo publicado
+ * (`1- PUBLICADO\publicador.pub`), que queda fijada. RIESGO (confianza en el primer uso): quien pueda escribir en
+ * la biblioteca en el momento de esa primera instalacion puede plantar su clave y su publicacion; desde la segunda
+ * vez un cambio de clave se rechaza. La forma segura es que la primera clave llegue por el pendrive o la ponga
+ * el administrador (`--clave-publica`).
+ */
+export function clavePublicaParaInstalar({ nube, estado, clavePublica = null, simular = false }) {
+    const fijada = path.join(estado, NOMBRE_CLAVE_PUBLICA);
+    const fijar = (desde, origen) => {
+        const k = leerClavePublica(desde);
+        if (k.error) return { error: k.error };
+        if (fs.existsSync(fijada) && sha256Archivo(fijada) !== sha256Archivo(desde)) {
+            return { error: `esta PC ya tiene fijada otra clave pública (${fijada}): un cambio de clave lo hace el administrador a mano` };
+        }
+        const pendienteFijar = !fs.existsSync(fijada);
+        if (pendienteFijar && simular) return { ruta: desde, fijada, pendienteFijar, origen, huella: huellaClave(k.clave) };   // --simular: se usa la de origen, no se fija
+        if (pendienteFijar) { fs.mkdirSync(estado, { recursive: true }); copiarVerificando(desde, fijada, sha256Archivo(desde)); }
+        return { ruta: fijada, fijada, pendienteFijar: false, origen, huella: huellaClave(k.clave) };
+    };
+    if (clavePublica) return fijar(clavePublica, 'indicada');
+    if (fs.existsSync(fijada)) {
+        const k = leerClavePublica(fijada);
+        return k.error ? { error: k.error } : { ruta: fijada, origen: 'fijada', huella: huellaClave(k.clave) };
+    }
+    const enNube = path.join(nube, NOMBRE_CLAVE_PUBLICA);
+    if (fs.existsSync(enNube)) return fijar(enNube, 'nube_primera_vez');
+    return { error: 'A esta PC le falta la clave para comprobar que la instalación es de Barack: avisale al administrador.' };
+}
+
+/**
+ * Habilita el plugin a nivel usuario: agrega SOLO `extraKnownMarketplaces.barack` y `enabledPlugins["barack-area@barack"]`
+ * al settings.json del usuario, con un respaldo antes y sin pisar ni reordenar nada mas. Un settings.json que no se
+ * entiende no se toca. Devuelve { estado: 'habilitado'|'ya_estaba'|'error', ruta, respaldo }.
+ */
+export function habilitarPlugin({ claudeDir, rutaMarketplace, ahora = new Date(), simular = false }) {
+    const ruta = path.join(claudeDir, 'settings.json');
+    const idPlugin = `${NOMBRE_PLUGIN}@${NOMBRE_MARKETPLACE}`;
+    const claves = [`extraKnownMarketplaces.${NOMBRE_MARKETPLACE} = { source: "directory", path: "${rutaMarketplace}" }`, `enabledPlugins["${idPlugin}"] = true`];
+    let actual = {};
+    let habia = false;
+    if (fs.existsSync(ruta)) {
+        habia = true;
+        const texto = sinBom(fs.readFileSync(ruta, 'utf8'));
+        if (texto.trim()) {
+            try { actual = JSON.parse(texto); } catch { return { estado: 'error', ruta, error: `la configuración de Claude del usuario (${ruta}) no se entiende: no la toco. Que la revise el administrador` }; }
+            if (!actual || typeof actual !== 'object' || Array.isArray(actual)) return { estado: 'error', ruta, error: `la configuración de Claude del usuario (${ruta}) no tiene la forma esperada: no la toco` };
+        }
+    }
+    const fuente = { source: 'directory', path: rutaMarketplace };
+    const ekm = actual.extraKnownMarketplaces && typeof actual.extraKnownMarketplaces === 'object' ? actual.extraKnownMarketplaces : {};
+    const ep = actual.enabledPlugins && typeof actual.enabledPlugins === 'object' ? actual.enabledPlugins : {};
+    const yaMarket = ekm[NOMBRE_MARKETPLACE] && ekm[NOMBRE_MARKETPLACE].source && JSON.stringify(ordenarClaves(ekm[NOMBRE_MARKETPLACE].source)) === JSON.stringify(ordenarClaves(fuente));
+    if (yaMarket && ep[idPlugin] === true) return { estado: 'ya_estaba', ruta, respaldo: null, claves };
+    let respaldo = null;
+    if (habia) {
+        respaldo = `${ruta}.respaldo-${selloCarpeta(ahora)}`;
+        for (let i = 2; fs.existsSync(respaldo); i++) respaldo = `${ruta}.respaldo-${selloCarpeta(ahora)}-${i}`;
+    }
+    if (simular) return { estado: 'habilitaria', ruta, respaldo, claves };
+    if (respaldo) fs.copyFileSync(ruta, respaldo);
+    const nuevo = {
+        ...actual,
+        extraKnownMarketplaces: { ...ekm, [NOMBRE_MARKETPLACE]: { ...(ekm[NOMBRE_MARKETPLACE] || {}), source: fuente } },
+        enabledPlugins: { ...ep, [idPlugin]: true },
+    };
+    escribirAtomico(ruta, `${JSON.stringify(nuevo, null, 2)}\n`);   // sin reordenar las claves de la persona
+    return { estado: 'habilitado', ruta, respaldo, claves };
+}
+
+/**
+ * Trabajo\ es de la persona. Las reglas de la casa van en `Trabajo\.claude\rules\casa.md` (copia del casa/CLAUDE.md
+ * publicado, que Claude Code carga al arrancar) y se regeneran en cada actualizacion; el `CLAUDE.md` de Trabajo se
+ * crea una sola vez, corto, y despues no se toca. Asi no hay import que salga de la carpeta (pide confirmacion la
+ * primera vez) ni se pisa lo que la persona escriba.
+ */
+export function regenerarTrabajo({ home, publicado, perfil = null, simular = false, fuenteSimulada = null }) {
+    const res = { reglas: 'sin_cambios', claudeMd: 'sin_cambios', rutas: [] };
+    // con --simular lo publicado todavia no se copio: para el plan se mira la copia de la nube (solo para listar la ruta)
+    const enPublicado = path.join(publicado, 'casa', 'CLAUDE.md');
+    const fuente = fs.existsSync(enPublicado) ? enPublicado : (simular && fuenteSimulada && fs.existsSync(fuenteSimulada) ? fuenteSimulada : null);
+    const destino = path.join(home, 'Trabajo', ...REL_REGLAS_CASA.split('/'));
+    if (!fuente) res.reglas = 'sin_fuente';
+    else {
+        const texto = `<!-- Reglas de la casa de Claude de Barack. Las deja la instalación y se actualizan solas: no editar acá. La copia maestra es publicado/casa/CLAUDE.md. -->\n\n${fs.readFileSync(fuente, 'utf8')}`;
+        let actual = null;
+        try { actual = fs.readFileSync(destino, 'utf8'); } catch { actual = null; }
+        if (actual !== texto) {
+            res.reglas = actual === null ? 'creado' : 'actualizado';
+            res.rutas.push(destino);
+            if (!simular) escribirAtomico(destino, texto);
+        }
+    }
+    const cm = path.join(home, 'Trabajo', 'CLAUDE.md');
+    if (!fs.existsSync(cm)) {
+        const quien = perfil && perfil.nombre ? ` de ${perfil.nombre}` : '';
+        res.claudeMd = 'creado';
+        res.rutas.push(cm);
+        if (!simular) escribirAtomico(cm, `# Carpeta de trabajo${quien} - Claude de Barack Mercosul\n\nAcá se trabaja y se guardan las cosas. Las reglas de la casa están en \`.claude/rules/casa.md\` y se actualizan solas con la instalación: no hace falta tocarlas.\n`);
+    }
+    return res;
+}
+
+/** ¿`ruta` esta adentro de un repo git? Devuelve la raiz del repo o null. */
+export function dentroDeRepoGit(ruta) {
+    let d = path.resolve(ruta || '.');
+    for (;;) {
+        if (fs.existsSync(path.join(d, '.git'))) return d;
+        const p = path.dirname(d);
+        if (p === d) return null;
+        d = p;
+    }
+}
+
+/**
+ * Señales de que esta es la PC del administrador (la que publica), donde una instalacion DE VERDAD no corre sola:
+ * tiene la clave privada de firma en su lugar real, la carpeta de la PC esta adentro de un repo git, o este programa
+ * corre desde el repo de origen (el que tiene la lista de publicacion). Devuelve la lista de motivos (vacia = no).
+ */
+export function pcDelAdministrador({ env = process.env, home, raizScript = null }) {
+    const motivos = [];
+    const clave = rutaClavePrivadaPorDefecto(env);
+    if (fs.existsSync(clave)) motivos.push(`tiene la clave privada de firma (${clave})`);
+    const repoHome = home ? dentroDeRepoGit(home) : null;
+    if (repoHome) motivos.push(`la carpeta de la PC está adentro de un repo git (${repoHome})`);
+    if (raizScript && dentroDeRepoGit(raizScript) && fs.existsSync(path.join(raizScript, ...REL_LISTA.split('/')))) motivos.push(`este programa corre desde el repo de origen (${raizScript})`);
+    return motivos;
+}
+
+/**
+ * Todo o nada: o todas las rutas son las reales (instalacion de verdad) o todas son de prueba. Una mezcla —carpetas
+ * temporales para la PC pero el settings.json real, o una nube temporal con la salud en la real— no corre.
+ * `indicadores` dice, por ruta, si vino indicada (prueba) o se toma la real; `cuales` son las que cuentan para
+ * ese comando. Devuelve null o el mensaje de una linea.
+ */
+export function mezclaPruebaReal(indicadores, cuales) {
+    const NOMBRES = {
+        home: 'la carpeta de la PC (--home / CLAUDE_AREA_HOME)', nube: 'la nube (--nube / CLAUDE_AREA_NUBE)',
+        estado: 'el estado de la PC (CLAUDE_AREA_ESTADO)', usuarioHome: 'la configuración de Claude del usuario (--usuario-home)',
+    };
+    const dePrueba = cuales.filter((c) => indicadores[c]);
+    const reales = cuales.filter((c) => !indicadores[c]);
+    if (!dePrueba.length || !reales.length) return null;
+    return `estás mezclando carpetas de prueba y reales. De prueba: ${dePrueba.map((c) => NOMBRES[c]).join(', ')}. Reales: ${reales.map((c) => NOMBRES[c]).join(', ')}. O todas de prueba o ninguna. No se tocó nada.`;
+}
+
+/** Un aviso para el administrador en el buzon, con el formato del contrato (lo lee el tablero). */
+function dejarAvisoInstalacion({ nube, identidad, area, tipo, mensaje, ahora }) {
+    const dir = path.join(carpetaBuzon(nube), 'avisos', nombrePcCarpeta(identidad.pc));
+    const cuerpo = { nivel: 'hoy', tipo, mensaje, cuando: isoLocal(ahora), pc: identidad.pc || '', usuario_windows: identidad.usuario || '', area, origen: 'instalador' };
+    const base = `${isoLocal(ahora).replace(/:/g, '')}-${tipo}`;
+    let ruta = path.join(dir, `${base}.json`);
+    for (let i = 2; fs.existsSync(ruta); i++) ruta = path.join(dir, `${base}-${i}.json`);
+    escribirAtomico(ruta, `${JSON.stringify(cuerpo, null, 2)}\n`);
+    return ruta;
+}
+
+/**
+ * @returns {{estado:'instalado'|'ya_instalado'|'esperar'|'sin_clave'|'firma_rechazada'|'version_anterior'|'error', ...}}
+ * `antesDe(paso)` es un gancho de las pruebas: se llama antes de cada paso ('clave', 'publicacion', 'persona', 'copia',
+ * 'trabajo', 'plugin', 'marcador') y sirve para simular un corte.
+ */
+export function instalar({ nube, home, estado, claudeDir, clavePublica = null, identidad = identidadLocal(), ahora = new Date(), antesDe = null, simular = false, env = process.env }) {
+    const res = { estado: 'error', errores: [], avisos: [], pasos: [], plan: [], home, estado_dir: estado, claudeDir };
+    const paso = (n) => { res.pasos.push(n); if (antesDe) antesDe(n); };
+    const anotar = (que, ruta) => res.plan.push({ que, ruta });   // con --simular es TODO lo que se escribiria; sin el, lo que se escribio
+    if (!nube || !fs.existsSync(nube)) { res.estado = 'esperar'; res.mensaje = 'No encuentro la carpeta publicada de la nube: ¿OneDrive ya la bajó? Probá de nuevo en un rato.'; return res; }
+    if (!home || !estado || !claudeDir) { res.errores.push('falta la carpeta de la PC, la de estado o la de configuración de Claude (CLAUDE_AREA_HOME, CLAUDE_AREA_ESTADO, --usuario-home o sus opciones)'); return res; }
+    const publicado = path.join(home, 'publicado');
+    res.publicado = publicado;
+
+    // 1) la clave publica con la que esta PC va a comprobar TODO lo que baje
+    paso('clave');
+    const k = clavePublicaParaInstalar({ nube, estado, clavePublica, simular });
+    if (k.error) { res.estado = 'sin_clave'; res.mensaje = k.error; res.errores.push(k.error); return res; }
+    res.clave = k;
+    if (k.pendienteFijar || k.origen === 'nube_primera_vez' || (k.origen === 'indicada' && k.ruta === k.fijada && !simular)) anotar('clave pública fijada', k.fijada);
+    if (k.origen === 'nube_primera_vez') res.avisos.push(`la clave pública se ${simular ? 'tomaría' : 'tomó'} de la nube por primera vez (huella ${k.huella}) y ${simular ? 'quedaría' : 'quedó'} fijada en esta PC: desde ahí un cambio de clave se rechaza`);
+
+    // 2) la publicacion: completa y firmada con esa clave
+    paso('publicacion');
+    const pub = leerPublicacion(nube);
+    if (pub.estado === 'manifiesto_invalido') { res.errores.push(`${pub.mensaje}: ${(pub.problemas || []).slice(0, 5).join(' | ')}`); return res; }
+    if (pub.estado !== 'ok') { res.estado = 'esperar'; res.mensaje = `${MSJ_BAJANDO} (${pub.mensaje})`; return res; }
+    const kp = leerClavePublica(k.ruta);
+    if (kp.error) { res.errores.push(kp.error); return res; }
+    const v = verificarFirma({ nube, bytesManifiesto: pub.bytesManifiesto, clavePublica: kp.clave, infoVersion: pub.info });
+    res.firma = v.estado;
+    if (v.estado === 'firma_pendiente') { res.estado = 'esperar'; res.mensaje = `${MSJ_BAJANDO} (${v.mensaje})`; return res; }
+    if (v.estado !== 'valida') { res.estado = 'firma_rechazada'; res.mensaje = `${MSJ_FIRMA_RECHAZADA} ${v.mensaje}`; res.errores.push(v.mensaje); return res; }
+    res.version = pub.version;
+
+    // 3) quien es: personas.json se verifica por hash contra el manifiesto firmado ANTES de leerlo
+    paso('persona');
+    const relPersonas = ['conocimiento/personas.json', 'conocimiento/comun/personas.json'].find((r) => pub.manifiesto.archivos[r]);
+    let personas = null;
+    if (relPersonas) {
+        const vp = verificarContenido(nube, pub.manifiesto, new Set([relPersonas]));
+        if (!vp.ok) { res.estado = 'esperar'; res.mensaje = `${MSJ_BAJANDO} (todavía no bajó la lista de personas)`; return res; }
+        personas = leerJson(path.join(nube, 'contenido', ...relPersonas.split('/')));
+        if (!personas) res.avisos.push('la lista de personas no se pudo leer: la PC queda sin área asignada');
+    } else res.avisos.push('lo publicado no trae la lista de personas: la PC queda sin área asignada');
+    const persona = buscarPersona(personas, identidad);
+    const perfil = armarPerfil({ persona, identidad });
+    res.perfil = perfil;
+    res.persona = !!persona;
+    const pPerfil = path.join(home, 'perfil.json');
+    const textoPerfil = jsonCanonico(perfil);
+    let perfilActual = null;
+    try { perfilActual = fs.readFileSync(pPerfil, 'utf8'); } catch { perfilActual = null; }
+    const perfilCambia = perfilActual !== textoPerfil;
+    if (perfilCambia) {
+        if (perfilActual !== null) { anotar('copia del perfil anterior', `${pPerfil}.anterior-${selloCarpeta(ahora)}`); if (!simular) fs.copyFileSync(pPerfil, `${pPerfil}.anterior-${selloCarpeta(ahora)}`); }   // nada se pisa sin copia
+        anotar(perfilActual === null ? 'perfil nuevo' : 'perfil actualizado', pPerfil);
+        if (!simular) escribirAtomico(pPerfil, textoPerfil);
+    }
+
+    // 4) la copia verificada de lo comun + lo de su area (misma logica que --actualizar: nunca pisa, nunca borra)
+    paso('copia');
+    const act = actualizar({ destino: publicado, nube, clavePublica: k.ruta, proyecto: 'area', area: perfil.area, identidad, ahora, home: simular ? null : home, simular, env });
+    res.actualizacion = act;
+    if (act.estado !== 'actualizado' && act.estado !== 'al_dia' && act.estado !== 'simulado') {
+        res.errores.push(...act.errores);
+        if (act.mensaje) res.mensaje = act.mensaje;
+        res.estado = ['esperar', 'sin_clave', 'firma_rechazada', 'version_anterior'].includes(act.estado) ? act.estado : 'error';
+        return res;
+    }
+    for (const p of act.plan || []) if (p.que === 'nuevo' || p.que === 'actualizar') anotar(`archivo publicado (${p.que})`, path.join(publicado, ...p.rel.split('/')));
+    if (act.respaldo) anotar('respaldo de lo reemplazado', act.respaldo);
+
+    // 5) Trabajo\: las reglas de la casa y el CLAUDE.md de la persona (solo si no existe)
+    paso('trabajo');
+    res.trabajo = regenerarTrabajo({ home, publicado, perfil, simular, fuenteSimulada: path.join(nube, 'contenido', 'casa', 'CLAUDE.md') });
+    for (const r of res.trabajo.rutas) anotar('Trabajo', r);
+
+    // 6) el plugin, a nivel usuario, con lo minimo en settings.json
+    paso('plugin');
+    const marketplace = path.join(publicado, 'marketplace');
+    const traePlugin = fs.existsSync(path.join(marketplace, '.claude-plugin', 'marketplace.json')) || (simular && pub.manifiesto.archivos['marketplace/.claude-plugin/marketplace.json']);
+    if (!traePlugin) {
+        res.errores.push('lo publicado no trae el plugin (falta marketplace/.claude-plugin/marketplace.json): la instalación queda incompleta y sin marcador');
+        return res;
+    }
+    const hp = habilitarPlugin({ claudeDir, rutaMarketplace: marketplace, ahora, simular });
+    if (hp.estado === 'error') { res.errores.push(hp.error); return res; }
+    res.plugin = hp;
+    if (hp.estado !== 'ya_estaba') {
+        if (hp.respaldo) anotar('respaldo de settings.json', hp.respaldo);
+        anotar(`settings.json del usuario (${hp.claves.join(' · ')})`, hp.ruta);
+    }
+
+    // 7) si la persona no figura, el administrador se entera (una vez por perfil escrito, no en cada corrida)
+    if (!persona && perfilCambia) {
+        if (simular) anotar('aviso "sin persona" al buzón', path.join(carpetaBuzon(nube), 'avisos', nombrePcCarpeta(identidad.pc)));
+        else {
+            try { res.avisoSinPersona = dejarAvisoInstalacion({ nube, identidad, area: perfil.area, tipo: 'sin-persona', mensaje: `${identidad.usuario || 'alguien'} en ${identidad.pc || 'una PC'} no figura en la lista de personas: quedó instalada sin área asignada`, ahora }); anotar('aviso "sin persona" al buzón', res.avisoSinPersona); }
+            catch (e) { res.avisos.push(`no pude dejar el aviso de persona sin asignar: ${e.message}`); }
+        }
+    }
+
+    // 8) el marcador, AL FINAL (si ya estaba igual, no se reescribe: correr dos veces no cambia nada)
+    paso('marcador');
+    const pMarcador = path.join(home, MARCADOR_INSTALADO);
+    const previo = leerJson(pMarcador);
+    const marcador = { formato: FORMATO, version: pub.version, area: perfil.area, usuario_windows: perfil.usuario_windows, pc: perfil.pc, plugin: `${NOMBRE_PLUGIN}@${NOMBRE_MARKETPLACE}`, claude_dir: claudeDir, clave: k.huella, instalado: previo && previo.instalado ? previo.instalado : isoLocal(ahora), ultima_vez: isoLocal(ahora) };
+    const sinCambios = previo && previo.version === marcador.version && previo.area === marcador.area && previo.clave === marcador.clave && act.estado === 'al_dia' && hp.estado === 'ya_estaba' && !perfilCambia;
+    if (!sinCambios) { anotar('marcador de instalado (al final)', pMarcador); if (!simular) escribirAtomico(pMarcador, jsonCanonico(marcador)); }
+    const rutaSalud = path.join(carpetaBuzon(nube), 'salud', `${nombrePcCarpeta(identidad.pc)}.json`);
+    anotar('salud de esta PC en el buzón', rutaSalud);
+    if (simular) { res.estado = 'simulado'; res.version = pub.version; return res; }
+    try { res.salud = escribirSalud({ nube, salud: { ...armarSalud({ destino: publicado, res: { ...act, estado: sinCambios ? 'al_dia' : 'instalado', errores: [] }, identidad, ahora }), area: perfil.area } }); }
+    catch (e) { res.avisos.push(`no pude dejar la salud de esta PC en la nube: ${e.message}`); }
+    res.estado = sinCambios ? 'ya_instalado' : 'instalado';
+    return res;
+}
+
+// ---------------------------------------------------------------------------------------------
 // Linea de comandos
 // ---------------------------------------------------------------------------------------------
 
+/** Las opciones que existen. Cualquier otra cosa es un error: un argumento mal escrito NO se ignora (01/10/2026: un `--help` ignorado instalo de verdad). */
+export const OPCIONES_CON_VALOR = ['nube', 'origen', 'destino', 'lista', 'nota', 'autor', 'que', 'aportar', 'perfil', 'pendrive', 'area', 'proyecto', 'clave', 'clave-publica', 'rollback', 'motivo', 'home', 'usuario-home', 'claude-dir'];
+export const OPCIONES_BANDERA = ['publicar', 'actualizar', 'instalar', 'ver', 'aportes', 'donde', 'generar-clave', 'chequear', 'simular', 'forzar', 'reponer', 'sin-firma', 'nube-real'];
+
 export function parsearArgs(argv) {
     const a = { notas: [] };
-    const conValor = new Set(['nube', 'origen', 'destino', 'lista', 'nota', 'autor', 'que', 'aportar', 'perfil', 'pendrive', 'area', 'proyecto', 'clave', 'clave-publica', 'rollback', 'motivo']);
+    const conValor = new Set(OPCIONES_CON_VALOR);
+    const banderas = new Set(OPCIONES_BANDERA);
     for (let i = 0; i < argv.length; i++) {
-        if (!argv[i].startsWith('--')) continue;
-        const k = argv[i].slice(2);
+        const arg = argv[i];
+        if (arg === '--help' || arg === '-h' || arg === '/?') { a.help = true; continue; }
+        if (!arg.startsWith('--')) { a.error = `no entiendo "${arg}": las opciones empiezan con -- (probá --help)`; break; }
+        const k = arg.slice(2);
         if (conValor.has(k)) {
             const v = argv[i + 1];
             if (v === undefined || v.startsWith('--')) { a.error = `--${k} necesita un valor`; break; }
             if (k === 'nota') a.notas.push(v); else a[k] = v;
             i++;
-        } else a[k] = true;
+        } else if (banderas.has(k)) a[k] = true;
+        else { a.error = `opción desconocida: ${arg} (probá --help). No se hizo nada`; break; }
     }
+    if (a['claude-dir'] && !a['usuario-home']) a['usuario-home'] = a['claude-dir'];   // nombre viejo de la misma opcion
     return a;
 }
 
@@ -1690,29 +2087,73 @@ export function resolverEntorno(a, env = process.env, raiz = RAIZ) {
         : (esArea && env.CLAUDE_AREA_NUBE) ? path.join(path.resolve(env.CLAUDE_AREA_NUBE), PROYECTOS.area.publicado)
             : buscarNube(env.USERPROFILE || os.homedir(), proyecto);
     const origen = path.resolve(a.origen || raiz);
-    const destino = path.resolve(a.destino || ((esArea && env.CLAUDE_AREA_HOME) ? path.join(env.CLAUDE_AREA_HOME, 'publicado') : raiz));
+    // la PC del proyecto de areas: --home, CLAUDE_AREA_HOME o C:\ClaudeBarack (y su `publicado\` es el destino)
+    const homeIndicado = !!(a.home || env.CLAUDE_AREA_HOME);
+    const home = a.home ? path.resolve(a.home) : (env.CLAUDE_AREA_HOME ? path.resolve(env.CLAUDE_AREA_HOME) : (esArea ? rutaHomePorDefecto(env) : null));
+    const destino = path.resolve(a.destino || ((esArea && home) ? path.join(home, 'publicado') : raiz));
+    const estado = rutaEstadoPorDefecto(env);
+    const claudeDir = a['usuario-home'] ? path.resolve(a['usuario-home']) : rutaClaudeDirPorDefecto(env);
     const clavePrivada = a.clave ? path.resolve(a.clave) : rutaClavePrivadaPorDefecto(env);
     const clavePublica = a['clave-publica'] ? path.resolve(a['clave-publica']) : buscarClavePublica(env);
-    return { proyecto, nube, origen, destino, clavePrivada, clavePublica };
+    // que rutas vinieron INDICADAS (prueba) y cuales se toman reales: la regla "todo o nada" de --instalar / --actualizar en area
+    const indicadores = { home: homeIndicado, destino: !!a.destino, nube: !!(a.nube || env.CLAUDE_AREA_NUBE), estado: !!env.CLAUDE_AREA_ESTADO, usuarioHome: !!a['usuario-home'] };
+    const nubeAutomatica = !a.nube && !env.CLAUDE_AREA_NUBE;
+    return { proyecto, nube, origen, destino, home, homeIndicado, estado, claudeDir, clavePrivada, clavePublica, indicadores, nubeAutomatica };
+}
+
+function imprimirUso() {
+    say('Uso: node scripts/_paquete.mjs --publicar | --ver | --actualizar | --chequear | --aportar <ruta> | --aportes | --perfil "Nombre Apellido - Sector"');
+    say('     Fak: --pendrive <carpeta del pendrive> (arma Base + el instalador) · --donde (muestra la carpeta de la nube)');
+    say('          --generar-clave (una vez: el par de claves de firma) · --publicar --rollback <N> (vuelve a la version N)');
+    say('     PC nueva del proyecto de areas: --instalar --proyecto area [--simular] [--home <carpeta>] [--usuario-home <carpeta .claude>] [--clave-publica <archivo>] [--forzar]');
+    say('       (para PROBAR: CLAUDE_AREA_HOME, CLAUDE_AREA_NUBE, CLAUDE_AREA_ESTADO y --usuario-home, TODAS; una mezcla de prueba y real no corre)');
+    say('     opciones: --nota "texto" · --simular · --forzar · --reponer · --area <id> · --proyecto area|ingenieria · --autor "..." · --que "..."');
+    say('              --nube <carpeta> · --destino <carpeta> · --clave <archivo> · --clave-publica <archivo> · --sin-firma · --motivo "..." · --nube-real');
+    say('     --help muestra esto y no hace nada. Una opcion que no existe es un error y tampoco hace nada.');
 }
 
 function main() {
     const a = parsearArgs(process.argv.slice(2));
     if (a.error) { console.error(`✗ ${a.error}`); return 1; }
+    if (a.help) { imprimirUso(); return 0; }
     const ent = resolverEntorno(a);
     if (ent.error) { console.error(`✗ ${ent.error}`); return 1; }
-    const { proyecto, nube, origen, destino, clavePrivada, clavePublica } = ent;
-    const modos = ['publicar', 'actualizar', 'ver', 'aportar', 'aportes', 'perfil', 'pendrive', 'donde', 'generar-clave', 'chequear'].filter((k) => a[k]);
-    if (modos.length !== 1) {
-        say('Uso: node scripts/_paquete.mjs --publicar | --ver | --actualizar | --chequear | --aportar <ruta> | --aportes | --perfil "Nombre Apellido - Sector"');
-        say('     Fak: --pendrive <carpeta del pendrive> (arma Base + el instalador) · --donde (muestra la carpeta de la nube)');
-        say('          --generar-clave (una vez: el par de claves de firma) · --publicar --rollback <N> (vuelve a la version N)');
-        say('     opciones: --nota "texto" · --simular · --forzar · --reponer · --area <id> · --proyecto area|ingenieria · --autor "..." · --que "..."');
-        say('              --nube <carpeta> · --destino <carpeta> · --clave <archivo> · --clave-publica <archivo> · --sin-firma · --motivo "..."');
-        return modos.length ? 1 : 0;
-    }
+    const { proyecto, nube, origen, destino, home, homeIndicado, estado, claudeDir, clavePrivada, clavePublica, indicadores, nubeAutomatica } = ent;
+    const modos = ['publicar', 'actualizar', 'instalar', 'ver', 'aportar', 'aportes', 'perfil', 'pendrive', 'donde', 'generar-clave', 'chequear'].filter((k) => a[k]);
+    if (modos.length !== 1) { imprimirUso(); return modos.length ? 1 : 0; }
     const modo = modos[0];
     if (a.rollback !== undefined && !/^\d+$/.test(String(a.rollback))) { console.error('✗ --rollback necesita el numero de una version publicada (ej: --rollback 3)'); return 1; }
+
+    if (modo === 'instalar') {
+        if (proyecto !== 'area' && !exigeFirma({ nube, proyecto })) { console.error('✗ --instalar es del proyecto de áreas: pasá --proyecto area (o la variable CLAUDE_AREA_NUBE)'); return 1; }
+        // todo o nada: carpetas de prueba para la PC pero el settings.json real (o al reves) no corre
+        const mezcla = mezclaPruebaReal(indicadores, ['home', 'nube', 'estado', 'usuarioHome']);
+        if (mezcla) { console.error(`✗ ${mezcla} Para probar: CLAUDE_AREA_HOME, CLAUDE_AREA_NUBE, CLAUDE_AREA_ESTADO y --usuario-home, las cuatro.`); return 1; }
+        // la PC del administrador no se instala sola de verdad
+        if (!indicadores.home && !a.forzar) {
+            const motivos = pcDelAdministrador({ env: process.env, home, raizScript: RAIZ });
+            if (motivos.length) { console.error(`✗ Esta parece la PC del administrador (${motivos.join('; ')}): acá una instalación de verdad no corre sola. Si de verdad querés, pasá --forzar. No se tocó nada.`); return 1; }
+        }
+        const r = instalar({ nube, home, estado, claudeDir, clavePublica: a['clave-publica'] ? path.resolve(a['clave-publica']) : null, identidad: identidadLocal(), simular: !!a.simular });
+        if (r.estado === 'simulado') {
+            say(`Simulado: --instalar (versión ${r.version}, ${r.perfil.nombre || 'persona sin asignar'}, área ${r.perfil.area}) escribiría ${r.plan.length} cosa(s) y no escribió ninguna:`);
+            for (const p of r.plan) say(`    - ${p.ruta}  (${p.que})`);
+            imprimirLista('  Avisos:', r.avisos, 10);
+            return 0;
+        }
+        if (r.estado === 'esperar') { say(`⏳ ${r.mensaje}`); return 3; }
+        if (r.estado === 'sin_clave' || r.estado === 'firma_rechazada' || r.estado === 'version_anterior') { console.error(`✗ ${r.mensaje || r.errores.join(' ')}`); return CODIGO_SALIDA_FIRMA; }
+        if (r.estado === 'error') {
+            console.error(`✗ No quedó instalado (${r.errores.length} problema(s)):`);
+            for (const e of r.errores.slice(0, 20)) console.error(`    - ${e}`);
+            return 1;
+        }
+        const quien = r.perfil.nombre ? `${r.perfil.nombre} (área ${r.perfil.area})` : `persona sin asignar (área ${r.perfil.area}): el administrador ya tiene el aviso`;
+        say(`✓ ${r.estado === 'ya_instalado' ? 'Ya estaba instalado' : 'Instalado'}: versión ${r.version}, ${quien}.`);
+        say(`  Trabajo: ${path.join(r.home, 'Trabajo')}   Plugin: ${r.plugin.estado === 'habilitado' ? `habilitado en ${r.plugin.ruta}` : 'ya estaba habilitado'}${r.plugin.respaldo ? ` (respaldo: ${r.plugin.respaldo})` : ''}`);
+        imprimirLista('  Avisos:', r.avisos, 10);
+        return 0;
+    }
 
     if (modo === 'donde') {
         if (nube && fs.existsSync(nube)) { say(nube); return 0; }
@@ -1757,6 +2198,8 @@ function main() {
     }
 
     if (modo === 'publicar') {
+        // en el proyecto de areas la nube no se adivina para publicar: o se indica, o se confirma que es la real
+        if (proyecto === 'area' && nubeAutomatica && !a['nube-real']) { console.error('✗ Sin --nube ni CLAUDE_AREA_NUBE esto publicaría a la nube REAL del proyecto de áreas. Si es eso lo que querés, pasá --nube-real. No se hizo nada.'); return 1; }
         const rutaLista = path.resolve(a.lista || path.join(origen, ...REL_LISTA.split('/')));
         let lista = null;
         if (a.rollback === undefined) { try { lista = cargarLista(rutaLista); } catch (e) { console.error(`✗ ${e.message}`); return 1; } }
@@ -1782,7 +2225,14 @@ function main() {
     }
 
     if (modo === 'actualizar') {
-        const r = actualizar({ destino, nube, reponer: !!a.reponer, simular: !!a.simular, area: a.area || null, clavePublica, proyecto });
+        const enArea = exigeFirma({ nube, proyecto });
+        if (enArea) {
+            // todo o nada tambien aca: un --destino de prueba con la nube real escribiria la salud de una PC falsa en el buzon real
+            const mezcla = mezclaPruebaReal({ ...indicadores, home: indicadores.home || indicadores.destino }, ['home', 'nube', 'estado']);
+            if (mezcla) { console.error(`✗ ${mezcla}`); return 1; }
+        }
+        // Trabajo\ se regenera solo con una carpeta de PC INDICADA (--home / CLAUDE_AREA_HOME): nunca con la real por defecto
+        const r = actualizar({ destino, nube, reponer: !!a.reponer, simular: !!a.simular, area: a.area || null, clavePublica, proyecto, home: enArea && homeIndicado ? home : null });
         const pie = () => { if (r.salud) say(`  Salud de esta PC: ${r.salud}`); for (const av of r.avisos || []) say(`  Aviso: ${av}`); };
         if (r.estado === 'esperar') { say(`⏳ ${r.mensaje}`); pie(); return 3; }
         if (r.estado === 'ocupado') { say(`⏳ ${r.mensaje}`); return 3; }
