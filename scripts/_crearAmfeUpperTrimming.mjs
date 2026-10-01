@@ -4,12 +4,12 @@
  * (2HC.864.263.B). Es la PRIMERA emision: la pieza no tenia ni flujograma ni AMFE (pedido de
  * Calidad del 01/10/2026).
  *
- * HOY ES SOLO BORRADOR. No escribe en Supabase: arma el documento, lo valida y deja el JSON en
- * tmp/. Crear un AMFE desde cero y usar un numero del Listado Maestro llevan el OK de Fak
- * (autonomy-contract §B y §F); el camino que escribe se agrega cuando ese OK este.
+ * Sin --apply arma el documento, lo valida y deja el JSON en tmp/. Con --apply lo crea en
+ * Supabase (o lo actualiza en su lugar si ya existe). Crear el AMFE y usar el numero 174 del
+ * Listado Maestro tienen el OK de Fak del 01/10/2026 (autonomy-contract §B y §F).
  *
  * DE DONDE SALE CADA DATO
- *   - Secuencia y numeracion: tools/flowchart/data/BORRADOR-UPPER-TRIMMING.json (manda el
+ *   - Secuencia y numeracion: tools/flowchart/data/160-UPPER-TRIM-PANEL.json (manda el
  *     flujograma, regla no-pfd-no-ho). Se lee del archivo, no se copia a mano.
  *   - Proceso: pliego de dispositivos "Dispositivo Tapizado Manual Console Central Component"
  *     Rev.01 del 27/04/2026 (cuna de posicionado, cuna de doblado y refilado, punzonado,
@@ -43,19 +43,25 @@
  * SIGLAS: ninguna. Las CC/SC las asigna Fak o el cliente (core-prohibiciones §2). El script
  * lista al final las causas que por S y O son candidatas, para que el decida.
  *
- * Uso:  node scripts/_crearAmfeUpperTrimming.mjs      (arma, valida y muestra; no escribe)
+ * Uso:  node scripts/_crearAmfeUpperTrimming.mjs            (arma, valida y muestra; no escribe)
+ *       node scripts/_crearAmfeUpperTrimming.mjs --apply    (escribe en Supabase)
  */
 
+import { randomUUID } from 'crypto';
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { calculateAP } from './_lib/amfeIo.mjs';
+import { connectSupabase, parseData, calculateAP } from './_lib/amfeIo.mjs';
+import { runWithValidation } from './_lib/dryRunGuard.mjs';
 import { validateAmfeDoc, validateEquipoMultifuncional, printIssues, nivelPorCriterio } from './_lib/amfeValidator.mjs';
 
+const APPLY = process.argv.includes('--apply');
+const FECHA_ISO = '2026-10-01';
+
 const AMFE_KEY = 'AMFE-UT-PAT';
-// Proximo libre del Listado_Maestro_AMFE.xlsx leido el 01/10/2026 (el ultimo cargado es el 173).
-// Se usa recien con el OK de Fak: la fila del listado es registro compartido.
+// Numero del Listado_Maestro_AMFE.xlsx (el ultimo cargado era el 173), tomado con el OK de Fak
+// del 01/10/2026.
 const NUMERO_EMPRESA = '174';
 const FECHA = '01/10/2026';
-const FLUJOGRAMA = 'tools/flowchart/data/BORRADOR-UPPER-TRIMMING.json';
+const FLUJOGRAMA = 'tools/flowchart/data/160-UPPER-TRIM-PANEL.json';
 
 // Ids estables entre corridas: el gate identifica cada hallazgo por el id de su operacion.
 let _n = 0;
@@ -147,12 +153,20 @@ const EF_MONTAJE = {
   next: 'Pieza que no se puede montar en la consola central: rechazo del lote en Cozzuol',
   end: 'Sin efecto en el vehiculo: la pieza no llega a montarse',
 };
-// No hay metodo de reproceso definido: la pieza con un defecto de aspecto va a SCRAP (asi lo
-// dibuja el flujograma). Tabla P1, columna de la planta: una porcion de la produccion a scrap
-// es 7; el 5 es para lo que se retrabaja fuera de linea. Auditoria de cliente del 01/10/2026.
+// Los unicos reprocesos de la pieza son la reactivacion del adhesivo (OP 71) y la mancha de
+// adhesivo (OP 72). Cualquier otro defecto de aspecto va a SCRAP. Tabla P1, columna de la
+// planta: una porcion de la produccion a scrap es 7; el 5 es para lo que se retrabaja fuera de
+// linea. Auditoria de cliente del 01/10/2026.
 const EF_ASPECTO = {
   s: 7,
   local: 'Pieza con desvio de aspecto en zona vista, rechazada en la inspeccion final: scrap',
+  next: 'Posible clasificacion de piezas en la planta de Cozzuol',
+  end: 'Aspecto por debajo del estandar percibido por el usuario',
+};
+// La mancha de adhesivo tiene reproceso (OP 72): retrabajo fuera de linea, P1-5.
+const EF_ASPECTO_REPROCESO = {
+  s: 5,
+  local: 'Pieza con mancha de adhesivo en zona vista, que va a reproceso',
   next: 'Posible clasificacion de piezas en la planta de Cozzuol',
   end: 'Aspecto por debajo del estandar percibido por el usuario',
 };
@@ -261,8 +275,8 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
           // Material de serie hace anos en la planta: O=3. El control es el del plan de
           // recepcion del material, que es por muestreo: D=9.
           falla('Adhesivo o reticulante recibido distinto del especificado o vencido', EF_DESPEGUE, [
-            causa('Los componentes se reciben contra el remito y el control es por muestreo',
-              'Plan de control de recepcion del adhesivo FA y del reticulante GV',
+            causa('El proveedor entrega un lote distinto del pedido o cerca de su vencimiento',
+              'Adhesivo y reticulante comprados por su codigo, con lote y vencimiento en el envase',
               3, 'Control de recepcion segun el plan del material, por muestreo', 9),
           ]),
         ]),
@@ -272,10 +286,10 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
         'Que a produccion solo salga material ingresado, controlado e identificado',
         'Material identificado por lote y liberado antes de habilitarlo al sector',
         [
-          falla('Material entregado a produccion sin haber sido ingresado ni liberado', EF_SCRAP_INTERNO, [
-            causa('El circuito admite entregar material directo al sector cuando hay una urgencia de produccion',
+          falla('Material entregado a produccion sin haber sido ingresado ni liberado', EF_DESPEGUE, [
+            causa('El material se retira del deposito antes de que termine su control de recepcion',
               'Zona de material pendiente de control fisicamente separada de la de material liberado',
-              4, 'Control de la identificacion de lote en el sector antes de arrancar el turno', 8),
+              4, 'Control de la identificacion de lote en el sector, al inicio de turno', 9),
           ]),
         ]),
     ]),
@@ -333,7 +347,7 @@ const OP20 = operacion('20', 'CORTE DE MICROFIBRA',
           falla('Se corta una variante distinta de la pedida', EF_SCRAP_INTERNO, [
             causa('Los archivos de corte de las dos variantes conviven en el programa y se diferencian por un hueco',
               'Codigo y nombre del programa verificados en el set up de la mesa de corte',
-              3, 'Sin control de la variante definido despues del corte', 10),
+              4, 'Sin control de la variante definido despues del corte', 10),
           ]),
           falla('Microfibra montada en la mesa con la cara vista invertida', EF_SCRAP_INTERNO, [
             causa('El rollo entra en el portarrollos en los dos sentidos',
@@ -384,7 +398,7 @@ const OP20 = operacion('20', 'CORTE DE MICROFIBRA',
           falla('Corte identificado con una variante o una cantidad que no corresponde', EF_SCRAP_INTERNO, [
             causa('La etiqueta se coloca en el bin despues de retirar el corte',
               'Etiqueta emitida con la orden de corte',
-              3, 'Cotejo de la etiqueta contra el contenido al cerrar el bin', 8),
+              4, 'Cotejo de la etiqueta contra el contenido al cerrar el bin', 8),
           ]),
         ]),
     ]),
@@ -397,7 +411,7 @@ const OP20 = operacion('20', 'CORTE DE MICROFIBRA',
 // pieza no tiene hoja.
 // ===========================================================================
 const OP30 = operacion('30', 'ADHESIVADO DE MICROFIBRA Y SUSTRATO',
-  'Aplicar adhesivo sobre la microfibra y sobre el sustrato antes del tapizado',
+  'Aplicar adhesivo sobre la microfibra y sobre el sustrato y dejarlo secar antes del activado',
   [
     we('Material', 'Mezcla de adhesivo FA con reticulante GV', [
       funcion(
@@ -434,12 +448,13 @@ const OP30 = operacion('30', 'ADHESIVADO DE MICROFIBRA Y SUSTRATO',
           ]),
         ]),
     ]),
-    we('Method', 'Espera entre el adhesivado y el tapizado', [
+    // Ficha tecnica del adhesivo FA: el adhesivo se deja secar antes de reactivarlo con calor.
+    we('Method', 'Secado del adhesivo antes del activado', [
       funcion(
-        'Tapizar dentro del tiempo abierto del adhesivo',
-        'Pieza adhesivada tapizada antes de que el adhesivo pierda pegajosidad',
+        'Dejar secar el adhesivo aplicado antes de activarlo',
+        'Adhesivo seco antes del activado, segun la ficha tecnica del adhesivo',
         [
-          falla('Pieza adhesivada que se tapiza fuera del tiempo abierto del adhesivo', EF_DESPEGUE, [
+          falla('Pieza que pasa al activado con el adhesivo sin secar', EF_DESPEGUE, [
             causa('Las piezas adhesivadas esperan sin la hora de adhesivado a la vista',
               SIN_PREVENCION,
               10, 'Sin registro de la hora de adhesivado en la pieza', 10),
@@ -449,11 +464,45 @@ const OP30 = operacion('30', 'ADHESIVADO DE MICROFIBRA Y SUSTRATO',
   ]);
 
 // ===========================================================================
-// OP 40 — POSICIONADO Y TAPIZADO DE MICROFIBRA SOBRE SUSTRATO
+// OP 40 — ACTIVADO DEL ADHESIVO CON CALOR
+// La ficha tecnica del adhesivo FA dice que el pegado se hace por reactivacion con calor
+// (infrarrojo, flash o aire caliente) y posterior prensado; Fak lo confirmo el 01/10/2026. La
+// lista de herramentales de la pieza no tiene una maquina para esto, y ningun documento fija
+// la temperatura ni el tiempo: por eso todo va sin control preventivo.
+// ===========================================================================
+const OP40A = operacion('40', 'ACTIVADO DEL ADHESIVO CON CALOR',
+  'Reactivar con calor el adhesivo de la microfibra y del sustrato justo antes del tapizado',
+  [
+    we('Method', 'Activado del adhesivo con calor', [
+      funcion(
+        'Llevar el adhesivo de las dos partes a su temperatura de activado',
+        'Adhesivo activado en toda la superficie, sin dano de la microfibra ni del sustrato',
+        [
+          falla('Adhesivo sin activar o activado en forma despareja', EF_DESPEGUE, [
+            causa('La temperatura que alcanza el adhesivo depende del tiempo y de la distancia de aplicacion del calor',
+              SIN_PREVENCION,
+              10, 'Sin ensayo de adherencia definido para esta pieza', 10),
+          ]),
+          falla('Pieza que se tapiza con el adhesivo ya enfriado', EF_DESPEGUE, [
+            causa('El adhesivo activado se enfria si la pieza espera antes del tapizado',
+              SIN_PREVENCION,
+              10, 'Sin ensayo de adherencia definido para esta pieza', 10),
+          ]),
+          falla('Microfibra o sustrato marcado por exceso de calor', EF_ASPECTO, [
+            causa('El calor se aplica sin una temperatura ni un tiempo de referencia',
+              SIN_PREVENCION,
+              10, VISUAL_FINAL, 8),
+          ]),
+        ]),
+    ]),
+  ]);
+
+// ===========================================================================
+// OP 41 — POSICIONADO Y TAPIZADO DE MICROFIBRA SOBRE SUSTRATO
 // A mano. El pliego preve una cuna de posicionado; al 21/08/2026 no habia ninguna liberada.
 // ===========================================================================
-const OP40 = operacion('40', 'POSICIONADO Y TAPIZADO DE MICROFIBRA SOBRE SUSTRATO',
-  'Posicionar la microfibra adhesivada sobre el sustrato y asentarla sin arrugas',
+const OP41 = operacion('41', 'POSICIONADO Y TAPIZADO DE MICROFIBRA SOBRE SUSTRATO',
+  'Posicionar la microfibra con el adhesivo activado sobre el sustrato y asentarla sin arrugas',
   [
     we('Machine', 'Cuna de posicionado del sustrato', [
       funcion(
@@ -469,13 +518,20 @@ const OP40 = operacion('40', 'POSICIONADO Y TAPIZADO DE MICROFIBRA SOBRE SUSTRAT
     ]),
     we('Method', 'Tapizado manual de la microfibra', [
       funcion(
-        'Asentar la microfibra sobre toda la superficie del sustrato',
-        'Sin arrugas, pliegues, burbujas, manchas ni marcas de presion en zona vista',
+        'Asentar y prensar la microfibra sobre toda la superficie del sustrato',
+        'Microfibra adherida en toda la superficie, sin arrugas, pliegues, burbujas, manchas ni marcas de presion en zona vista',
         [
           falla('Pieza tapizada con arrugas o pliegues en zona vista', EF_ASPECTO, [
             causa('La microfibra se estira y se acomoda a mano sobre las curvas del sustrato',
               SIN_PREVENCION,
               10, VISUAL_FINAL, 8),
+          ]),
+          // La ficha del adhesivo pide reactivacion con calor y posterior prensado. El
+          // prensado corto no se ve: sin deteccion.
+          falla('Microfibra asentada con presion insuficiente', EF_DESPEGUE, [
+            causa('La presion de asentado se da a mano y no se mide',
+              SIN_PREVENCION,
+              10, 'Sin ensayo de adherencia definido para esta pieza', 10),
           ]),
           falla('Microfibra con marcas de presion', EF_ASPECTO, [
             causa('La presion para asentar la microfibra se da a mano, sin una referencia',
@@ -487,7 +543,7 @@ const OP40 = operacion('40', 'POSICIONADO Y TAPIZADO DE MICROFIBRA SOBRE SUSTRAT
               SIN_PREVENCION,
               10, VISUAL_FINAL, 8),
           ]),
-          falla('Cara vista de la microfibra manchada con adhesivo', EF_ASPECTO, [
+          falla('Cara vista de la microfibra manchada con adhesivo', EF_ASPECTO_REPROCESO, [
             causa('La cara vista toca restos de adhesivo de la mesa o de las manos durante el tapizado',
               SIN_PREVENCION,
               10, VISUAL_FINAL, 8),
@@ -497,12 +553,12 @@ const OP40 = operacion('40', 'POSICIONADO Y TAPIZADO DE MICROFIBRA SOBRE SUSTRAT
   ]);
 
 // ===========================================================================
-// OP 41 — DOBLADO DE BORDES Y REFILADO
+// OP 42 — DOBLADO DE BORDES Y REFILADO
 // A mano. El pliego preve una cuna de doblado y refilado (tampoco liberada). Para la pared
 // del hueco del cargador existe un virolador que sostiene la microfibra mientras el adhesivo
 // toma (utillaje propio, entregado el 20/08/2026).
 // ===========================================================================
-const OP41 = operacion('41', 'DOBLADO DE BORDES Y REFILADO',
+const OP42 = operacion('42', 'DOBLADO DE BORDES Y REFILADO',
   'Doblar la microfibra sobre los bordes del sustrato y del hueco del cargador y cortar el sobrante',
   [
     we('Method', 'Doblado manual de los bordes', [
@@ -676,6 +732,16 @@ const OP70 = operacion('70', 'INSPECCION FINAL',
           ]),
         ]),
       funcion(
+        'Volver a inspeccionar toda pieza que sale de un reproceso',
+        'Pieza reprocesada reverificada en la inspeccion final antes de embalarla',
+        [
+          falla('Pieza reprocesada que se embala sin volver a la inspeccion final', EF_ASPECTO_CLIENTE_ESCAPE, [
+            causa('La pieza reprocesada no lleva una identificacion que la distinga de la ya inspeccionada',
+              SIN_PREVENCION,
+              10, 'Sin control posterior a la inspeccion final', 10),
+          ]),
+        ]),
+      funcion(
         'Verificar la adherencia de la microfibra sobre el sustrato',
         'Adherencia segun PV 2034',
         [
@@ -685,6 +751,48 @@ const OP70 = operacion('70', 'INSPECCION FINAL',
               10, 'Sin ensayo de adherencia definido para esta pieza', 10),
           ]),
         ]),
+    ]),
+  ]);
+
+// ===========================================================================
+// OP 71 y 72 — LOS REPROCESOS DE LA INSPECCION FINAL
+// Los dos que ya tienen las piezas tapizadas hermanas y aplican a una pieza sin costura
+// (flujogramas 153 y 159). Entran desde la Rev. A por el criterio de Fak del 23/09/2026: los
+// reprocesos conocidos y posibles van de entrada. Ninguno tiene hoja escrita para esta pieza.
+// ===========================================================================
+const reproceso = (numero, nombre, funcionOp, elemento, funcionElemento, requisito, fallas) => operacion(numero, nombre,
+  funcionOp, [we('Method', elemento, [
+    funcion(funcionElemento, requisito, fallas),
+  ])]);
+
+const OP71 = reproceso('71', 'REPROCESO: REACTIVACION DE ADHESIVO POR CALOR',
+  'Volver a pegar con calor la zona o el borde despegado de la pieza terminada',
+  'Reactivado manual del adhesivo en la zona despegada',
+  'Aplicar calor y presion sobre la zona despegada sin marcar la cara vista',
+  'Microfibra adherida en la zona reprocesada, sin marcas en la cara vista',
+  [
+    falla('Zona que vuelve a despegarse despues del reproceso', EF_DESPEGUE, [
+      causa('El calor y la presion del reproceso se aplican a mano y sin un metodo escrito',
+        SIN_PREVENCION,
+        10, 'Sin ensayo de adherencia definido para esta pieza', 10),
+    ]),
+    falla('Microfibra marcada o brillante por el calor del reproceso', EF_ASPECTO, [
+      causa('El calor se aplica del lado de la cara vista sin una temperatura de referencia',
+        SIN_PREVENCION,
+        10, 'Reverificacion en la inspeccion final', 8),
+    ]),
+  ]);
+
+const OP72 = reproceso('72', 'REPROCESO: MANCHA DE ADHESIVO',
+  'Borrar la mancha de adhesivo de la cara vista de la pieza terminada',
+  'Borrado manual de la mancha de adhesivo',
+  'Quitar el adhesivo de la cara vista sin marcar la microfibra',
+  'Cara vista sin restos de adhesivo ni marcas del borrado',
+  [
+    falla('Cara vista con restos de adhesivo o marcada despues del borrado', EF_ASPECTO, [
+      causa('El borrado se hace a mano y sin un metodo escrito',
+        SIN_PREVENCION,
+        10, 'Reverificacion en la inspeccion final', 8),
     ]),
   ]);
 
@@ -706,35 +814,38 @@ const OP80 = operacion('80', 'EMBALAJE E IDENTIFICACION',
           ]),
           falla('Pieza de una variante embalada en el cajon de la otra', EF_VARIANTE, [
             causa('Las dos variantes se embalan en el mismo sector y se diferencian por un hueco del cargador',
-              'Etiqueta del cajon con el codigo de la variante',
-              5, 'Sin control de la variante de cada pieza al armar el cajon', 10),
+              SIN_PREVENCION,
+              10, 'Sin control de la variante de cada pieza al armar el cajon', 10),
           ]),
           falla('Cajon despachado con una etiqueta que no corresponde a su contenido', EF_VARIANTE, [
             causa('La etiqueta se coloca a mano al completar el cajon',
               'Etiqueta definida en la gama de embalaje',
               4, 'Autocontrol segun P-09/I', 8),
           ]),
-          // El carton separa los pisos, no las piezas de un mismo piso: O=5. Lo que se marca
-          // adentro del cajon cerrado ya no lo ve nadie en planta: D=10.
+          // El carton separa los pisos, no las piezas de un mismo piso: son dos causas. Lo que
+          // se marca adentro del cajon cerrado ya no lo ve nadie en planta: D=10.
           falla('Microfibra marcada o sucia por el propio embalaje', EF_ASPECTO_CLIENTE, [
-            causa('Dentro de un mismo piso las piezas quedan en contacto entre si',
+            causa('Las piezas de un piso se apoyan sobre las del piso de abajo',
               'Carton entre pisos y piezas con el lado vista hacia arriba, segun la gama de embalaje',
-              5, 'Sin control del cajon despues de cerrado', 10),
+              4, 'Sin control del cajon despues de cerrado', 10),
+            causa('Dentro de un mismo piso las piezas quedan en contacto entre si',
+              SIN_PREVENCION,
+              10, 'Sin control del cajon despues de cerrado', 10),
           ]),
         ]),
     ]),
   ]);
 
-const OPERACIONES = [OP10, OP20, OP30, OP40, OP41, OP50, OP60, OP70, OP80];
+const OPERACIONES = [OP10, OP20, OP30, OP40A, OP41, OP42, OP50, OP60, OP70, OP71, OP72, OP80];
 
 const doc = {
   header: {
     scope: 'UPPER TRIM PANEL - CONSOLA CENTRAL - VW427 PATAGONIA - COZZUOL / VW',
     subject: 'UPPER TRIM PANEL - CONSOLA CENTRAL',
-    partNumber: '2HC.864.263.C / 2HC.864.263.B',
+    partNumber: 'MP8404 / MP8405',
     applicableParts: [
-      '2HC.864.263.C SINGLE 50W SUEDE COVER FRAME (MP8405)',
-      '2HC.864.263.B DUAL 50W SUEDE COVER FRAME (MP8404)',
+      'MP8405 SINGLE 50W SUEDE COVER FRAME (2HC.864.263.C)',
+      'MP8404 DUAL 50W SUEDE COVER FRAME (2HC.864.263.B)',
     ].join(', '),
     client: 'COZZUOL',
     customerName: 'COZZUOL / VW',
@@ -820,7 +931,17 @@ if (/TBD/.test(todoElTexto)) errores.push('hay un TBD en el documento');
 // Las operaciones son las del flujograma, en su orden, con su nombre. Se lee del archivo.
 const flujo = JSON.parse(readFileSync(FLUJOGRAMA, 'utf8'));
 const sinAcentos = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
-const delFlujo = flujo.flow.filter((p) => p.stepId).map((p) => ({ n: p.stepId, nombre: sinAcentos(p.description) }));
+const pasosDelFlujo = [];
+(function juntar(seq) {
+  for (const p of seq || []) {
+    if (p.stepId) pasosDelFlujo.push(p);
+    for (const rama of p.branches || []) juntar(Array.isArray(rama) ? rama : rama.sequence);
+    if (p.branchSide?.sequence) juntar(p.branchSide.sequence);
+  }
+})(flujo.flow);
+const delFlujo = pasosDelFlujo
+  .map((p) => ({ n: p.stepId, nombre: sinAcentos(p.description) }))
+  .sort((a, b) => Number(a.n) - Number(b.n));
 const mias = doc.operations.map((o) => ({ n: o.opNumber, nombre: o.name }));
 if (JSON.stringify(delFlujo.map((x) => x.n)) !== JSON.stringify(mias.map((x) => x.n))) {
   errores.push(`las operaciones no son las del flujograma: flujograma ${delFlujo.map((x) => x.n).join(',')} / AMFE ${mias.map((x) => x.n).join(',')}`);
@@ -830,19 +951,22 @@ for (const f of delFlujo) {
   if (m && m.nombre !== f.nombre) errores.push(`OP ${f.n}: el flujograma dice "${f.nombre}" y el AMFE "${m.nombre}"`);
 }
 
-// Si el flujograma manda la pieza no conforme a SCRAP, lo que se rechaza en la inspeccion final
-// es scrap: su S no puede quedar en la banda de retrabajo (Tabla P1, planta: scrap = 7 u 8).
-// Lo encontro la auditoria de cliente del 01/10/2026 en 15 modos de falla.
-const noConformeAScrap = flujo.flow.some((p) => p.type === 'condition' && p.branchSide?.text === 'SCRAP');
-if (noConformeAScrap) {
-  for (const op of doc.operations) for (const w of op.workElements) for (const f of w.functions) for (const fm of f.failures) {
-    if (fm.severity < 7 && fm.causes.some((c) => c.detectionControl === VISUAL_FINAL)) {
-      errores.push(`OP${op.opNumber}: "${fm.description}" se rechaza en la inspeccion final y va a scrap, pero tiene S=${fm.severity}`);
-    }
+// Lo que se rechaza en la inspeccion final y NO tiene reproceso va a scrap: su S no puede
+// quedar en la banda de retrabajo (Tabla P1, planta: scrap = 7 u 8). Lo encontro la auditoria
+// de cliente del 01/10/2026 en 15 modos de falla. Los unicos efectos que admiten S<7 con
+// deteccion en la inspeccion final son los que declaran su reproceso.
+for (const op of doc.operations) for (const w of op.workElements) for (const f of w.functions) for (const fm of f.failures) {
+  const seVeEnLaFinal = fm.causes.some((c) => c.detectionControl === VISUAL_FINAL);
+  const tieneReproceso = /reproceso/i.test(fm.effectLocal);
+  if (fm.severity < 7 && seVeEnLaFinal && !tieneReproceso) {
+    errores.push(`OP${op.opNumber}: "${fm.description}" se rechaza en la inspeccion final y va a scrap, pero tiene S=${fm.severity}`);
+  }
+  if (fm.severity < 7 && /scrap/i.test(fm.effectLocal)) {
+    errores.push(`OP${op.opNumber}: "${fm.description}" dice scrap en su efecto y tiene S=${fm.severity}`);
   }
 }
 
-console.log(`AMFE ${NUMERO_EMPRESA} (numero a confirmar) — UPPER TRIM PANEL, CONSOLA CENTRAL — BORRADOR\n`);
+console.log(`AMFE ${NUMERO_EMPRESA} — UPPER TRIM PANEL, CONSOLA CENTRAL\n`);
 console.log(`  operaciones   : ${doc.operations.length}`);
 console.log(`  work elements : ${nWE}`);
 console.log(`  funciones     : ${nFn}`);
@@ -874,5 +998,66 @@ for (const c of candidatas) console.log(`  OP ${c.op.padStart(2)}  S=${c.s} O=${
 mkdirSync('tmp/uppertrim', { recursive: true });
 writeFileSync('tmp/uppertrim/amfe_upper_trimming.json', JSON.stringify(doc, null, 1));
 console.log('\nJSON escrito en tmp/uppertrim/amfe_upper_trimming.json');
-console.log('BORRADOR: no se escribio en Supabase.');
-process.exit(errores.length ? 1 : 0);
+
+if (!APPLY) {
+  console.log('DRY-RUN. Corre con --apply para escribir en Supabase.');
+  process.exit(errores.length ? 1 : 0);
+}
+if (errores.length) { console.error('\nNO se escribe: hay errores.'); process.exit(1); }
+
+const causasConSOD = doc.operations.flatMap((o) => o.workElements.flatMap((w) => w.functions.flatMap((f) => f.failures.flatMap((fm) => fm.causes.filter((c) => fm.severity && c.occurrence && c.detection))))).length;
+const columnas = {
+  subject: doc.header.subject,
+  part_number: doc.header.partNumber,
+  responsible: doc.header.processResponsible,
+  operation_count: doc.operations.length,
+  cause_count: nCausas,
+  ap_h_count: apCount.H || 0,
+  ap_m_count: apCount.M || 0,
+  coverage_percent: nCausas > 0 ? Math.round((causasConSOD / nCausas) * 100) : 0,
+  last_revision_date: FECHA_ISO,
+  revision_level: 'A',
+  data: JSON.stringify(doc),
+  revisions: JSON.stringify(doc.revisions),
+};
+
+const sb = await connectSupabase();
+const { data: ex, error: errSel } = await sb.from('amfe_documents').select('id,amfe_number,updated_at,data').eq('amfe_number', AMFE_KEY);
+if (errSel) { console.error('SELECT FALLO:', errSel.message); process.exit(1); }
+if (ex && ex.length > 1) { console.error(`Hay ${ex.length} filas ${AMFE_KEY}: no se toca nada.`); process.exit(1); }
+
+let idDoc;
+if (ex && ex.length === 1) {
+  // Ya existe: se actualiza en su lugar. Este script es el generador del documento.
+  idDoc = ex[0].id;
+  console.log(`\n${AMFE_KEY} ya existe (id=${idDoc}, updated_at=${ex[0].updated_at}). Se ACTUALIZA en su lugar.`);
+  await runWithValidation(
+    [{ id: idDoc, amfeNumber: AMFE_KEY, productName: doc.header.subject, before: parseData(ex[0].data), after: doc }],
+    true,
+    async () => {
+      const { error: errUpd } = await sb.from('amfe_documents').update({ ...columnas, updated_at: new Date().toISOString() }).eq('id', idDoc);
+      if (errUpd) { console.error('UPDATE FALLO:', errUpd.message); process.exit(1); }
+    },
+  );
+} else {
+  idDoc = randomUUID();
+  const { error } = await sb.from('amfe_documents').insert({
+    id: idDoc,
+    amfe_number: AMFE_KEY,
+    project_name: 'VWA/PATAGONIA/UPPER_TRIM_PANEL',
+    client: 'COZZUOL',
+    organization: 'BARACK MERCOSUL',
+    status: 'draft',
+    start_date: FECHA_ISO,
+    checksum: '',
+    ...columnas,
+  });
+  if (error) { console.error('INSERT FALLO:', error.message); process.exit(1); }
+  console.log(`\nINSERT OK id=${idDoc}`);
+}
+
+// Relectura de control: que el data quedo legible y que hay UNA sola fila con esa clave.
+const { data: v } = await sb.from('amfe_documents').select('id,operation_count,cause_count,updated_at,data').eq('amfe_number', AMFE_KEY);
+const back = parseData(v[0].data);
+console.log(`  verificado: filas=${v.length} ops=${v[0].operation_count} causas=${v[0].cause_count} | data.operations es array: ${Array.isArray(back.operations)} | ops leidas: ${back.operations.length} | updated_at ${v[0].updated_at}`);
+process.exit(v.length === 1 && back.operations.length === doc.operations.length ? 0 : 1);

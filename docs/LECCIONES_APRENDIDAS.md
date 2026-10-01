@@ -93,6 +93,7 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **01/10 — Lo que contesta una ficha técnica no se le pregunta a Fak, y un "sí" no se devuelve con otra pregunta** (*"¿por qué no investigaste las fichas?"*, *"escribiste demasiado"*). Graduado a la memoria `la_info_ya_la_tengo_no_preguntar`.
 - **01/10 — Un punto del Asaichi que dice "pasar mail" no es la orden de armarlo hoy, y un cierre de 80 renglones no se lee** (*"armaste un mail que no te pedi"*). Graduado a la memoria `feedback_mail_de_una_tarea_va_con_la_info_procesada`.
 
 - **01/10 — Si un entregable nombra una fuente, lleva su captura** (*"si no me van a preguntar de dónde saqué los datos"*), **y una herramienta nueva no informa lo que no corrió con un caso de respuesta conocida.** Graduado al skill `superficie-vinilo-3d` y a la memoria `entregables_para_fak`.

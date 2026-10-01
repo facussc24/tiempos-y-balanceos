@@ -81,7 +81,8 @@
         "71",
         "80",
         "81",
-        "82", "83",
+        "82",
+        "83",
         "90",
         "100",
         "101",
@@ -91,7 +92,8 @@
       "fuente": "Flujograma 153 Rev.B (09/09/2026) y Rev.C (11/09/2026) + AMFE 161 Supabase live 2026-09-11 + HO-971 pag. 25",
       "secuenciaConfirmadaPor": [
         "flujograma 153 Rev.C (11/09/2026, datos en tools/flowchart/data/153-ARMREST-DOOR-PANEL.json; la numeracion es la misma de la Rev.B del 09/09/2026)",
-        "AMFE 161 Supabase live 11/09/2026 (17 operaciones, 80-82 en una fila)", "Fak 01/10/2026 (prensa y despues grampas) + AMFE 161 Supabase live 01/10/2026 (18 operaciones, con la 83) + flujograma 153 Rev.D emitido el 01/10/2026 (tools/flowchart/data/153-ARMREST-DOOR-PANEL.json)"
+        "AMFE 161 Supabase live 11/09/2026 (17 operaciones, 80-82 en una fila)",
+        "Fak 01/10/2026 (prensa y despues grampas) + AMFE 161 Supabase live 01/10/2026 (18 operaciones, con la 83) + flujograma 153 Rev.D emitido el 01/10/2026 (tools/flowchart/data/153-ARMREST-DOOR-PANEL.json)"
       ]
     },
     "AMFE-HF-PAT": {
@@ -329,6 +331,34 @@
       "fuente": "AMFE 149 Supabase live + Listado Maestro 2026-08-18",
       "secuenciaConfirmadaPor": [
         "flujograma 157 Rev.B: corte 30-38 y la 90 partida en 90+91"
+      ]
+    },
+    "174": {
+      "producto": "UPPER TRIM PANEL",
+      "claveSupabase": "AMFE-UT-PAT",
+      "flujograma": {
+        "id": "160",
+        "revVigente": "A",
+        "estado": "VIGENTE"
+      },
+      "secuencia": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "41",
+        "42",
+        "50",
+        "60",
+        "70",
+        "71",
+        "72",
+        "80"
+      ],
+      "nota": "Emitidos juntos el 01/10/2026: el flujograma 160 Rev.A y el AMFE 174 Rev.A nacen alineados (el generador del AMFE lee las operaciones del JSON del flujograma y frena si no coinciden). 71 y 72 son los reprocesos que cuelgan de la inspeccion final. La pieza no tiene hoja de operaciones propia; las hojas de la prensa de grabado (HO sin numero, Rev.A del 24/09/2026) corresponden a la operacion 60.",
+      "fuente": "AMFE-UT-PAT Supabase live 2026-10-01 + tools/flowchart/data/160-UPPER-TRIM-PANEL.json",
+      "secuenciaConfirmadaPor": [
+        "flujograma 160 Rev.A generado el 01/10/2026 desde tools/flowchart/data/"
       ]
     }
   },

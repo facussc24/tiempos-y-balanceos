@@ -1,6 +1,9 @@
 {
-  "_doc": "BORRADOR del 01/10/2026. Primer flujograma del Upper Trim Panel (Cozzuol / VW427). Sin numero del Listado Maestro: el proximo libre es el 160 y la fila se escribe con el OK de Fak.",
-  "_fuentes": "Secuencia: pliego de dispositivos (Dispositivo Tapizado Manual Console Central Component Rev.01, 27/04/2026: cuna 1 posicionado, cuna 2 doblado y refilado, punzonado, embossing) + BOM del arb (adhesivo FA + reticulante GV en tela y sustrato) + video de planta del 31/07/2026 (adhesivo a pistola, tapizado manual) + gama de embalaje GE-103 Rev.1. El hueco del cargador viene cortado en la tela desde la mesa de corte (contorno interior del DXF de tizada). Reprocesos: ningun documento define un metodo, por eso el NO de la inspeccion final va a SCRAP.",
+  "_doc": "Flujograma 160, Rev. A del 01/10/2026. Primer flujograma del Upper Trim Panel (Cozzuol / VW427). Numero del Listado Maestro tomado con el OK de Fak del 01/10/2026 (el ultimo cargado era el 159).",
+  "_fuentes": "Secuencia: pliego de dispositivos (Dispositivo Tapizado Manual Console Central Component Rev.01, 27/04/2026: cuna 1 posicionado, cuna 2 doblado y refilado, punzonado, embossing) + BOM del arb (adhesivo FA + reticulante GV en tela y sustrato) + video de planta del 31/07/2026 (adhesivo a pistola, tapizado manual) + gama de embalaje GE-103 Rev.1. El hueco del cargador viene cortado en la tela desde la mesa de corte (contorno interior del DXF de tizada).",
+  "_activado": "OP 40: la ficha tecnica del adhesivo FA de Fenoclor (HT.AD FA) dice que el pegado se hace por REACTIVACION con calor (infrarrojo, flash o aire caliente) y posterior prensado. Confirmado por Fak el 01/10/2026 ('el adhesivo se activa con calor, si, obviamente'). La lista de herramentales de la pieza no tiene un horno ni otra maquina para eso, por eso el nombre no dice con que equipo.",
+  "_punzonado": "OP 50: con el dispositivo neumatico cotizado el 27/08/2026 (Fak, 01/10/2026: 'asumamos que si').",
+  "_reprocesos": "Los dos reprocesos conocidos de las piezas tapizadas hermanas que aplican a una pieza sin costura: REACTIVACION DE ADHESIVO POR CALOR (flujograma 153) y MANCHA DE ADHESIVO (flujograma 159). Entran desde la Rev. A por el criterio de Fak del 23/09/2026: al arrancar un proyecto van todos los reprocesos conocidos y posibles, para que despues no sean un cambio de proceso.",
   "header": {
     "title": "FLUJOGRAMA DE PROCESO UPPER TRIM PANEL — CONSOLA CENTRAL",
     "documentCode": "I-IN-002/III",
@@ -31,13 +34,28 @@
     { "stepId": "20", "type": "operation", "description": "CORTE DE MICROFIBRA" },
     { "type": "transfer", "description": "TRASLADO DE MICROFIBRA CORTADA Y SUSTRATOS AL SECTOR DE TAPIZADO" },
     { "stepId": "30", "type": "operation", "description": "ADHESIVADO DE MICROFIBRA Y SUSTRATO" },
-    { "stepId": "40", "type": "operation", "description": "POSICIONADO Y TAPIZADO DE MICROFIBRA SOBRE SUSTRATO" },
-    { "stepId": "41", "type": "operation", "description": "DOBLADO DE BORDES Y REFILADO" },
+    { "stepId": "40", "type": "operation", "description": "ACTIVADO DEL ADHESIVO CON CALOR" },
+    { "stepId": "41", "type": "operation", "description": "POSICIONADO Y TAPIZADO DE MICROFIBRA SOBRE SUSTRATO" },
+    { "stepId": "42", "type": "operation", "description": "DOBLADO DE BORDES Y REFILADO" },
     { "stepId": "50", "type": "operation", "description": "PUNZONADO DE AGUJEROS" },
     { "stepId": "60", "type": "operation", "description": "GRABADO DE LOGO DE CARGA" },
     { "stepId": "70", "type": "op-ins", "description": "INSPECCIÓN FINAL" },
     { "type": "condition", "labelCondition": "¿PRODUCTO CONFORME?", "labelDown": "SI",
-      "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
+      "branchSide": {
+        "labelNode": "NO",
+        "lineWidth": 640,
+        "sequence": [
+          { "type": "condition", "labelCondition": "¿SE PUEDE RETRABAJAR?", "labelDown": "SI",
+            "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" },
+            "branchColumnWidth": 330,
+            "branches": [
+              [ { "stepId": "71", "type": "operation", "description": "REPROCESO: REACTIVACIÓN DE ADHESIVO POR CALOR" } ],
+              [ { "stepId": "72", "type": "operation", "description": "REPROCESO: MANCHA DE ADHESIVO" } ]
+            ] },
+          { "type": "transfer", "description": "RE-ENTRADA AL FLUJO PRINCIPAL",
+            "rework": { "targetId": "70", "label": "REVERIFICAR (A OP. 70)" } }
+        ]
+      } },
     { "stepId": "80", "type": "operation", "description": "EMBALAJE E IDENTIFICACIÓN" },
     { "type": "storage", "description": "ALMACENADO EN DEPÓSITO DE PRODUCTO TERMINADO" }
   ]
