@@ -161,7 +161,7 @@ que se produce hoy. **El original quedo viejo y la copia buena se fue con el cli
    *"no quiero notas de mierda ni carpetas extrañas que nadie va a ver... sin notas y sin back
    up"*; hasta ese dia este punto recomendaba dejar un `_LEEME`). Caso: el legajo del Upper
    Trimming quedo VIVO adentro de `_BACKUP_UpperTrim_2026-07-01\`, con una nota al lado que
-   mandaba a una carpeta de Ingenieria que ya no existia. **El legajo va siempre en `PPAP
+   mandaba a una ruta de Ingenieria que ya no abria (a esa carpeta la habian movido despues). **El legajo va siempre en `PPAP
    CLIENTES\<cliente>\<pieza>\APQP\`, a secas.** Si algo se muda, se muda entero y no queda
    ni copia ni cartel.
 9. **Un legajo con un archivo abierto por otro no se deja renombrar** (`WinError 5` con permisos
