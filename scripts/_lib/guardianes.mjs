@@ -185,7 +185,7 @@ export function ctxDesdeEnv(env) {
  */
 const SOLO_SHELL = ['supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'arb-cerrar-guard', 'script-inline-guard', 'secretos-guard'];
 const SOLO_ARCHIVO = ['file-guard', 'causas-ajenas-guard'];
-const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard', 'documentacion-oficial-guard', 'video-maquina-guard', 'caracteristicas-especiales-guard', 'apqp-cliente-guard'];
+const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard', 'documentacion-oficial-guard', 'video-maquina-guard', 'caracteristicas-especiales-guard', 'apqp-cliente-guard', 'nube-personal-guard'];
 export const TODOS = ['file-guard', 'supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'script-inline-guard', 'secretos-guard', ...LOS_CUATRO, 'arb-cerrar-guard', 'causas-ajenas-guard'];
 
 export function matriz(tool) {
@@ -1732,6 +1732,70 @@ ${APQP_CIERRE}`);
   }
 
   return null;
+};
+
+// ── nube-personal-guard ────────────────────────────────────────────────────
+// Regla `.claude/rules/nube-ingenieria.md` (Fak, 01/10/2026): "no quiero nada en mi nube personal...
+// solo laburamos en la nube de ingenieria... dejalo bien anotado como regla dura, no podemos volver a
+// fallar". En la PC hay DOS carpetas de OneDrive: `OneDrive - BARACK ARGENTINA SRL\` es la nube de la
+// CUENTA de Fak (la ve solo el, y cualquier PC donde ponga su cuenta) y `BARACK ARGENTINA SRL\Ingenieria
+// y Proyecto - General\` es la biblioteca del sector. BLOQUEA guardar, copiar, mover o crear adentro de
+// la primera. Deja pasar: LEER de ahi, SACAR cosas de ahi, y lo que hoy vive ahi y todavia no se mudo
+// (el Escritorio, que Windows guarda ahi, y la copia de docs-local): cuando se muden salen de NP_TRANSICION.
+const NP_ZONA = /[\\/]OneDrive - BARACK ARGENTINA SRL(?=[\\/]|["'\s]|$)/i;
+const NP_TRANSICION = /[\\/]OneDrive - BARACK ARGENTINA SRL[\\/](Desktop|Escritorio|Barack-docs-local)(?=[\\/]|["'\s]|$)/i;
+const NP_CREA = /(^|[;&|\s(])(mkdir|md|touch)(\s|$)|New-Item|os\.makedirs|mkdirSync/im;
+const NP_COPIA_O_MUEVE = /(^|[;&|\s(])(cp|copy|xcopy|robocopy|mv|move)(\s|$)|Copy-Item|Move-Item|shutil\.(copy|move)/im;
+const enNubePersonal = (ruta) => NP_ZONA.test(ruta) && !NP_TRANSICION.test(ruta);
+
+/** La ruta de la nube personal a la que el comando ESCRIBE, o '' si solo lee o saca de ahi. */
+export function escribeEnNubePersonal(cmd, cwd = null) {
+  const an = analizarComando(cmd, { cwd });
+  const salida = an.salidas.find((s) => s.ok && enNubePersonal(s.valor));
+  if (salida) return salida.valor;
+  for (const tramo of String(cmd).split(/&&|\|\||[;|]|\r?\n/)) {
+    // Argumentos del tramo sin opciones (-r, -Force, /E, /MIR) ni redirecciones (2>&1, >/dev/null).
+    const args = (tramo.match(/"[^"]*"|'[^']*'|\S+/g) || []).map((t) => t.replace(/^["']|["']$/g, ''))
+      .filter((t) => !/^-/.test(t) && !/^\/[A-Za-z]{1,8}(:\S*)?$/.test(t) && !/^\d*[<>]/.test(t));
+    if (!args.length) continue;
+    // crear: cualquier argumento del tramo; copiar o mover: solo el DESTINO (el ultimo). Sacar de ahi pasa.
+    if (NP_CREA.test(tramo)) { const r = args.find(enNubePersonal); if (r) return r; }
+    if (NP_COPIA_O_MUEVE.test(tramo) && enNubePersonal(args[args.length - 1])) return args[args.length - 1];
+  }
+  return '';
+}
+
+GUARDIANES['nube-personal-guard'] = (ctx, { env } = {}) => {
+  let destino = '';
+  if (ctx.ok) {
+    const tool = ctx.toolL;
+    if (tool === 'write' || tool === 'edit') destino = enNubePersonal(ctx.fileL) ? ctx.fileL : '';
+    else destino = escribeEnNubePersonal(ctx.cmd ?? ctx.cmd6 ?? '', ctx.cwd || null);
+  } else {
+    // JSON roto: no hay comando confiable. Regla sobre el texto entero, hacia el lado seguro.
+    const todo = `${ctx.rescate.cmd} ${ctx.rescate.file} ${ctx.raw.replace(/\n/g, '')}`;
+    if (enNubePersonal(todo) && (NP_CREA.test(todo) || NP_COPIA_O_MUEVE.test(todo) || /"tool_name"\s*:\s*"(Write|Edit)"/.test(todo))) destino = 'la nube personal (no pude leer el comando entero)';
+  }
+  if (!destino) return null;
+  // Escape de UN uso, igual que apqp-cliente-guard: si Fak dijo que ESE archivo va ahi, el freno se abre.
+  const ok = path.join(dirHome(env ?? process.env), '.claude', '.nube-personal-ok');
+  if (fs.existsSync(ok)) {
+    try { fs.unlinkSync(ok); } catch { /* si no se puede borrar, igual paso: el aviso queda */ }
+    return aviso('[NUBE-PERSONAL] Paso con el OK de Fak (se consumio ~/.claude/.nube-personal-ok).');
+  }
+  return bloqueo(`[NUBE-PERSONAL] BLOQUEADO: estas por guardar algo en la nube PERSONAL de Fak.
+
+${destino}
+
+Regla dura de Fak, 01/10/2026: "no quiero nada en mi nube personal... solo laburamos en la nube
+de ingenieria". \`OneDrive - BARACK ARGENTINA SRL\\\` es la nube de SU cuenta. El trabajo va a la
+biblioteca del sector: \`BARACK ARGENTINA SRL\\Ingenieria y Proyecto - General\\\`.
+
+  · Guardalo en su carpeta por tipo de la biblioteca de Ingenieria.
+  · Leer de la nube personal y SACAR cosas de ahi no esta bloqueado.
+  · Si Fak dijo que ESTE archivo va ahi:  : > ~/.claude/.nube-personal-ok   y reintenta (vale una vez).
+
+Regla: .claude/rules/nube-ingenieria.md`);
 };
 
 export const NOMBRES = Object.keys(GUARDIANES);

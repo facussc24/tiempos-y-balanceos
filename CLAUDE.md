@@ -12,8 +12,10 @@ solo lectura. Los flujogramas los genero yo por script y las HO se arman a pedid
 ## Protocolo de inicio de sesion
 
 0. **PC nueva** (repo recien clonado y `~/.claude/projects/C--Dev-BarackMercosul/memory/` casi
-   vacio): esta PC tiene el codigo pero no el cerebro. Correr `node scripts/_nube.mjs --bajar --aplicar`
-   (Node pelado) y avisarlo en una linea. Es la red por si el hook `cerebro-guard.sh` no corrio.
+   vacio): esta PC tiene el codigo pero no mi memoria ni la configuracion. Correr
+   `node scripts/_nube.mjs --bajar --aplicar` (Node pelado) **sin preguntarle a Fak** y avisarlo en
+   una linea, en castellano simple: a Fak no se le dice "el cerebro" (regla `nube-ingenieria.md`).
+   Es la red por si el hook `cerebro-guard.sh` no corrio.
 1. Las lecciones vigentes ya estan en este contexto: `docs/LECCIONES_APRENDIDAS.md` entra por
    el `@import` de abajo. No releerlo; si un tema tiene memoria propia, esa si se lee al tocarlo.
 2. Si Fak menciona un producto: leer su AMFE/CP en Supabase live antes de hacer cambios.
@@ -67,7 +69,9 @@ commit/push/archivar los hago yo.
 
 Las reglas sin `paths:` ya estan en este contexto: `core-prohibiciones.md`, `techo-agentes.md`,
 `no-pfd-no-ho.md`, `autonomy-contract.md`, `git-deploy.md`, `consumos-entregables.md`,
-`caracteristicas-especiales.md` (criterio CC/SC, D/TLD y sus fuentes — pedido de Fak 11/09/2026).
+`caracteristicas-especiales.md` (criterio CC/SC, D/TLD y sus fuentes — pedido de Fak 11/09/2026),
+`nube-ingenieria.md` (regla dura de Fak 01/10/2026: se guarda solo en la nube de Ingenieria, nada en
+su nube personal `OneDrive - BARACK ARGENTINA SRL\`; hook `nube-personal-guard`).
 
 | Con `paths:` (cargan al tocar) | Ambito |
 |---|---|
