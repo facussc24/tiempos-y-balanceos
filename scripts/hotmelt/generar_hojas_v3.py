@@ -54,7 +54,7 @@ def para_redaccion(d):
         for f in p.get("fotos") or ([p] if p.get("foto") else []):
             pies.append(f.get("pie", ""))
     return dict(op=d["op"], denominacion=d["denominacion"], nota=d.get("aviso"),
-                pasos=[p["texto"].replace("⚠", "").replace("«", '"').replace("»", '"') for p in d["pasos"]],
+                pasos=[p["texto"].replace("⚠", "").replace("“", '"').replace("”", '"') for p in d["pasos"]],
                 pies=pies)
 
 

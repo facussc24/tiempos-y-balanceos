@@ -79,11 +79,25 @@ def _baldosa(cols, filas):
             (base.IMG_H - PAD * (filas + 1)) / filas - PIE_H)
 
 
+RECORTE_MAX = 0.15      # si llenar la baldosa recorta mas que esto, la foto entra entera
+AREA_MIN, LADO_MIN = 25.0, 3.5      # los pisos de hojalib (SECUENCIA_AREA_MIN / SECUENCIA_LADO_MIN)
+
+
+def _como_queda(rel, aw, ah):
+    """Ancho y alto impresos (cm) de una foto de proporcion `rel` en una baldosa de aw x ah:
+    la llena si pierde poco; si no, entra entera y queda mas chica."""
+    if 1 - min(rel, aw / ah) / max(rel, aw / ah) <= RECORTE_MAX:
+        return aw, ah
+    alto = min(ah, aw / rel)
+    return alto * rel, alto
+
+
 def elegir_grilla(fotos):
-    """La grilla que MENOS recorta estas fotos. El bloque es casi cuadrado, asi que con seis
-    pantallas apaisadas 3 x 2 da baldosas verticales y les corta la mitad; 2 x 3 las deja enteras.
-    Se prueban las grillas sin una fila entera vacia y gana la de menor perdida media; a igual
-    perdida, la de baldosa mas grande."""
+    """La grilla donde la foto MAS CHICA queda mas grande. El bloque es casi cuadrado: con seis
+    pantallas apaisadas, 3 x 2 da baldosas verticales donde cada pantalla entra de 20 cm2 (una
+    estampilla, y el control duro la rechaza); 2 x 3 las deja de 70. Se prueban las grillas sin
+    una fila entera vacia; primero cuenta cuantas fotos quedan bajo el piso de 25 cm2 y 3,5 cm
+    de lado, despues el tamano de la mas chica."""
     n = len(fotos)
     rel = []
     for f in fotos:
@@ -95,10 +109,11 @@ def elegir_grilla(fotos):
             if cols * filas < n or cols * (filas - 1) >= n:
                 continue
             aw, ah = _baldosa(cols, filas)
-            if aw < 4.5 or ah < 3.4:
+            if aw < 3.5 or ah < 3.5:
                 continue
-            perdida = sum(1 - min(r, aw / ah) / max(r, aw / ah) for r in rel) / n
-            clave = (round(perdida, 2), -aw * ah)
+            medidas = [_como_queda(r, aw, ah) for r in rel]
+            bajo_piso = sum(1 for w, h in medidas if w * h < AREA_MIN or min(w, h) < LADO_MIN)
+            clave = (bajo_piso, -round(min(w * h for w, h in medidas), 1), -aw * ah)
             if mejor is None or clave < mejor[0]:
                 mejor = (clave, (cols, filas))
     return mejor[1] if mejor else GRILLA[min(n, 15)]
@@ -126,7 +141,7 @@ def bloque_fotos(slide, fotos, grilla=None):
         ruta = f["foto"]
         if not os.path.exists(ruta):
             raise FileNotFoundError(f"REF. {k + 1}: no existe la foto {ruta}")
-        if f.get("entera") or perdida_de_recorte(ruta, ancho, fh) > 0.15:
+        if f.get("entera") or perdida_de_recorte(ruta, ancho, fh) > RECORTE_MAX:
             # una pantalla o un plano que no se puede recortar, o una foto que al llenar la
             # baldosa perderia mas del 15 % (ahi se van los botones marcados o una columna): entra entera,
             # centrada. Queda mas chica, pero no se corta lo que el paso manda mirar.
@@ -244,6 +259,10 @@ def armar(d):
     fotos, refs, textos = [], [], []
     for paso in d["pasos"]:
         mias = []
+        if paso.get("misma_foto_que"):
+            # el paso se apoya en la foto de un paso anterior de la misma hoja (dos botones de
+            # la misma botonera): apunta a esa REF sin repetir la foto
+            mias = list(refs[paso["misma_foto_que"] - 1])
         for f in paso.get("fotos") or ([paso] if paso.get("foto") else []):
             fotos.append({"foto": f["foto"], "pie": f.get("pie", ""), "ancla": f.get("ancla", (0.5, 0.5)),
                           "entera": f.get("entera", False), "badge": f.get("badge")})
