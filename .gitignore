@@ -173,3 +173,6 @@ scripts/img/assets/
 scripts/img/last_run.txt
 scripts/img/**/_*.jpg
 scripts/img/**/_*.png
+
+# Modelos de recorte y mejora de fotos de las laminas de proceso (rembg, ~430 MB) — no van al repo
+scripts/lamina_proceso/modelos/
