@@ -123,6 +123,9 @@ try {
     Fallo "no esta $script"
   } else {
     $node = Buscar-Exe 'node'
+    # El Node que dejo el instalador cuando la PC no tenia uno (viaja en el pendrive).
+    $nodePropio = Join-Path $EstadoDir 'node\node.exe'
+    if (-not $node -and (Test-Path $nodePropio)) { $node = $nodePropio }
     if (-not $node) {
       $estado.base = @{ resultado = 'sin_node'; detalle = 'no encuentro Node.js' }
       Fallo 'no encuentro Node.js: no puedo actualizar la base ni buscar la nube'

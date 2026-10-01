@@ -645,6 +645,50 @@ describe.skipIf(!ES_WINDOWS || !PY)('punta a punta: Instalar.ps1 y sync_equipo.p
         expect(existe(pc, 'CLAUDE.equipo.md')).toBe(true);
     });
 
+    // Fak, 01/10/2026: "¿el pendrive no puede instalar node si no lo tenes?". El pendrive lleva node.exe.
+    describe('PC sin Node', () => {
+        /** Corre el Instalar.ps1 DEL PENDRIVE con un PATH donde no hay Node (solo Windows). */
+        function instalarSinNode(pendrive, pc, estado) {
+            const raiz = process.env.SystemRoot || 'C:\\Windows';
+            const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^path$/i.test(k)));
+            env.Path = [path.join(raiz, 'System32'), raiz, path.join(raiz, 'System32', 'WindowsPowerShell', 'v1.0')].join(';');
+            return spawnSync(path.join(raiz, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe'),
+                ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', path.join(pendrive, 'Instalar.ps1'), '-Destino', pc, '-Nombre', 'Prueba Equipo',
+                    '-Sector', 'Ingenieria', '-EstadoDir', estado, '-SinTareas', '-SinChequeos', '-SinPath'], { encoding: 'utf8', timeout: 170000, env });
+        }
+
+        it('VERDE: usa el Node que trae el pendrive, lo deja en la carpeta de estado y termina la instalacion', () => {
+            const origen = armarOrigenEq();
+            const pendrive = dir('pendrive con node');
+            const armado = P.armarPendrive({ origen, pendrive, lista: LISTA_EQ, identidad: NOIDENT, nodeExe: process.execPath });
+            expect(armado.estado).toBe('listo');
+            expect(armado.copiados).toContain('node/node.exe');
+            expect(P.sha256Archivo(path.join(pendrive, 'node', 'node.exe'))).toBe(P.sha256Archivo(process.execPath));
+            const pc = path.join(tmp, 'pc sin node');
+            const estado = dir('estado sin node');
+            const r = instalarSinNode(pendrive, pc, estado);
+            expect(r.status, r.stdout + r.stderr).toBe(0);
+            expect(r.stdout).toContain('no tenia Node');
+            expect(r.stdout).toContain('LISTO');
+            const nodePropio = path.join(estado, 'node', 'node.exe');
+            expect(fs.existsSync(nodePropio)).toBe(true);
+            expect(existe(pc, 'CLAUDE.equipo.md')).toBe(true);
+            expect(JSON.parse(fs.readFileSync(path.join(estado, 'instalado.json'), 'utf8')).node).toBe(nodePropio);
+        });
+
+        it('ROJO: sin Node en la PC y sin la carpeta node en el pendrive, frena y lo dice (no instala a medias)', () => {
+            const origen = armarOrigenEq();
+            const pendrive = dir('pendrive sin node');
+            expect(P.armarPendrive({ origen, pendrive, lista: LISTA_EQ, identidad: NOIDENT }).estado).toBe('listo');
+            expect(fs.existsSync(path.join(pendrive, 'node'))).toBe(false);
+            const pc = path.join(tmp, 'pc sin node 2');
+            const r = instalarSinNode(pendrive, pc, dir('estado sin node 2'));
+            expect(r.status).not.toBe(0);
+            expect(r.stdout + r.stderr).toContain('falta Node.js');
+            expect(existe(pc, 'CLAUDE.equipo.md')).toBe(false);
+        });
+    });
+
     it('Instalar sobre un CLAUDE.md que ya existe agrega la linea al final sin tocar lo demas, y repetirlo no la duplica', () => {
         const original = '# Mi proyecto\r\nnota mia con tilde: está bien\r\n\r\n- punto 1\r\n- punto 2';   // sin salto final, CRLF
         const { pc, pendrive, estado, r } = instalada((pcDir) => { esc(pcDir, 'CLAUDE.md', original); esc(pcDir, '.claude/skills/mia/SKILL.md', '# mia\n'); });

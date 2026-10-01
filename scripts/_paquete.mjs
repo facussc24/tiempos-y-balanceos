@@ -1014,7 +1014,10 @@ export const ARCHIVOS_PENDRIVE = ['Instalar.cmd', 'Instalar.ps1', 'LEEME.txt'];
  * pendrive se instala con EXACTAMENTE la misma logica que la nube (sin pisar lo que ya tenga el
  * compañero). La carpeta del pendrive tiene que existir: no se inventan unidades ni carpetas madre.
  */
-export function armarPendrive({ origen, pendrive, lista, notas = [], forzar = false, ahora = new Date(), identidad = identidadLocal() }) {
+/** Donde viaja Node en el pendrive: un solo archivo, que el instalador usa si la PC no tiene Node. */
+export const NODE_EN_PENDRIVE = ['node', 'node.exe'];
+
+export function armarPendrive({ origen, pendrive, lista, notas = [], forzar = false, ahora = new Date(), identidad = identidadLocal(), nodeExe = null }) {
     const res = { estado: 'rechazado', errores: [], avisos: [], copiados: [] };
     if (!pendrive) { res.errores.push('falta la carpeta del pendrive (--pendrive <carpeta>)'); return res; }
     res.pendrive = pendrive;
@@ -1044,6 +1047,21 @@ export function armarPendrive({ origen, pendrive, lista, notas = [], forzar = fa
             res.copiados.push(path.basename(rel));
         }
     } catch (e) { res.errores.push(`no pude copiar los archivos de instalacion: ${e.message}`); return res; }
+    // Node viaja en el pendrive (Fak, 01/10/2026: "¿el pendrive no puede instalar node si no lo tenes?").
+    // Es el mismo node.exe que corre este script: un archivo solo, sin instalador ni permisos de
+    // administrador. Si ya esta y es identico no se vuelve a copiar (85 MB a un pendrive tardan).
+    if (nodeExe) {
+        try {
+            const destinoNode = path.join(pendrive, ...NODE_EN_PENDRIVE);
+            const hash = sha256Archivo(nodeExe);
+            if (!(fs.existsSync(destinoNode) && sha256Archivo(destinoNode) === hash)) {
+                fs.mkdirSync(path.dirname(destinoNode), { recursive: true });
+                copiarVerificando(nodeExe, destinoNode, hash);
+            }
+            res.copiados.push(NODE_EN_PENDRIVE.join('/'));
+            res.node = destinoNode;
+        } catch (e) { res.avisos.push(`no pude dejar Node en el pendrive (${e.message}): el compañero va a necesitar tenerlo instalado`); }
+    }
     res.estado = 'listo';
     return res;
 }
@@ -1103,7 +1121,8 @@ function main() {
         const rutaLista = path.resolve(a.lista || path.join(origen, ...REL_LISTA.split('/')));
         let lista;
         try { lista = cargarLista(rutaLista); } catch (e) { console.error(`✗ ${e.message}`); return 1; }
-        const r = armarPendrive({ origen, pendrive: path.resolve(a.pendrive), lista, notas: a.notas, forzar: !!a.forzar });
+        const nodeExe = process.platform === 'win32' && /node\.exe$/i.test(process.execPath) ? process.execPath : null;
+        const r = armarPendrive({ origen, pendrive: path.resolve(a.pendrive), lista, notas: a.notas, forzar: !!a.forzar, nodeExe });
         say(`Pendrive → ${r.pendrive}`);
         if (r.estado !== 'listo') {
             console.error(`\n✗ NO QUEDO LISTO (${r.errores.length} problema(s)):`);

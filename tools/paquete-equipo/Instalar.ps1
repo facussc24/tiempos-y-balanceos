@@ -8,7 +8,7 @@
   3) Copia la base del pendrive SIN PISAR nada de lo que ya tenga (usa la misma logica que la
      actualizacion por la nube: `_paquete.mjs --actualizar`; nunca borra).
   4) Agrega la linea @CLAUDE.equipo.md al CLAUDE.md de la carpeta (lo crea si no existe; no borra nada).
-  5) Revisa Node, Python y pywin32 y avisa si falta alguno.
+  5) Si falta Node usa el que trae el pendrive (carpeta node); revisa Python y pywin32 y avisa si faltan.
   6) Deja UNA tarea de Windows, "Barack - Base Claude y mails": al iniciar sesion y cada 4 h, sin
      ventana (conhost --headless), prioridad baja, tambien a bateria, tope de 30 min y una sola
      corrida a la vez. Corre tools\paquete-equipo\sync_equipo.ps1.
@@ -22,6 +22,7 @@
     -VerTarea            muestra como quedaria la tarea y sale (no registra nada)
     -NoArrancar          no arranca la tarea al final
     -SinChequeos         salta los avisos de Python, pywin32, Claude Code y restos del intento anterior
+    -SinPath             si usa el Node del pendrive, no toca el PATH del usuario (para las pruebas)
 
   Solo ASCII en este archivo (powershell.exe 5.1 sin BOM lee UTF-8 como ANSI).
 #>
@@ -35,7 +36,8 @@ param(
   [switch]$SinTareas,
   [switch]$VerTarea,
   [switch]$NoArrancar,
-  [switch]$SinChequeos
+  [switch]$SinChequeos,
+  [switch]$SinPath
 )
 $ErrorActionPreference = 'Stop'
 $TAREA = 'Barack - Base Claude y mails'
@@ -153,7 +155,30 @@ if (-not (Test-Path $paqueteBase)) { Parar "la carpeta Base esta incompleta: fal
 
 # ---- 3) programas que hacen falta ---------------------------------------------------------------
 $node = Buscar-Exe 'node' '--version'
-if (-not $node) { Parar 'falta Node.js (se baja de nodejs.org). Instalalo y volve a hacer doble click en Instalar. Si no sabes como, avisale a Fak.' }
+if (-not $node) {
+  # El pendrive trae su propio Node (un solo archivo; no pide permisos de administrador). Se deja en la
+  # carpeta de estado y se suma al PATH del USUARIO, para que Claude y la tarea lo encuentren despues.
+  $nodePendrive = Join-Path $PSScriptRoot 'node\node.exe'
+  if (Test-Path $nodePendrive) {
+    $dirNode = Join-Path $EstadoDir 'node'
+    $nodeLocal = Join-Path $dirNode 'node.exe'
+    if (-not (Test-Path $dirNode)) { New-Item -ItemType Directory -Force -Path $dirNode | Out-Null }
+    if (-not (Test-Path $nodeLocal)) { Copy-Item -LiteralPath $nodePendrive -Destination $nodeLocal }
+    $t = Correr $nodeLocal @('--version') 3
+    if ($t.Codigo -eq 0) {
+      $node = $nodeLocal
+      if (-not $SinPath) {
+        $pathUsuario = [string][Environment]::GetEnvironmentVariable('Path', 'User')
+        if (-not (($pathUsuario -split ';') -contains $dirNode)) {
+          [Environment]::SetEnvironmentVariable('Path', (($pathUsuario.TrimEnd(';') + ';' + $dirNode).TrimStart(';')), 'User')
+        }
+      }
+      $env:Path = $env:Path.TrimEnd(';') + ';' + $dirNode
+      Decir "Esta PC no tenia Node: le deje el que trae el pendrive ($($t.Salida))."
+    }
+  }
+}
+if (-not $node) { Parar 'falta Node.js y el pendrive no trae el suyo (carpeta node). Avisale a Fak: lo rearma con el Node adentro.' }
 $python = $null
 if ($SinChequeos) {
   Decir '(-SinChequeos: no reviso Python, pywin32, Claude Code ni restos del intento anterior)'
