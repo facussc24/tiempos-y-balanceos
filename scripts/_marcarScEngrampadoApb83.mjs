@@ -2,8 +2,10 @@
  * _marcarScEngrampadoApb83.mjs — marca SC las causas de la operacion 83 ENGRAMPADO del AMFE del
  * APB de puerta (AMFE-ARM-PAT, 161) que cumplen el criterio de caracteristica significativa.
  *
- *   node scripts/_marcarScEngrampadoApb83.mjs            # dry-run
- *   node scripts/_marcarScEngrampadoApb83.mjs --apply
+ *   node scripts/_marcarScEngrampadoApb83.mjs                                  # dry-run
+ *   node scripts/_marcarScEngrampadoApb83.mjs --apply --allow-specialchar      # escribe
+ *   (sin --allow-specialchar el candado de CC/SC de dryRunGuard frena el --apply: agregar una
+ *   sigla pide el OK de Fak, que para este caso es la delegacion citada abajo)
  *
  * QUIEN LO DECIDIO: Fak, 01/10/2026 — "por ahora decidilo vos pero en base a evidencia contundente".
  * LA EVIDENCIA: instructivo I-AC-005 rev.B del SGC, tabla de caracteristicas especiales:

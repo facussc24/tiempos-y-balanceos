@@ -52,8 +52,9 @@ TOPE_ACOMPANANTE = 3.0     # cada acompañante, hasta 1/3 del area de la princip
 # y esa es la razon por la que las hojas "estan pero no se entiende un carajo". La foto que
 # si se miraba era siempre la grande, de 46 cm2 para arriba.
 SECUENCIA_MAX = 4            # mas de 4 pasos en una lamina: se PARTE la hoja, no se achica
-SECUENCIA_MAX_A3 = 12        # hoja A3 de una foto por paso (formato de P. Gamboa, Fak 28/09/2026):
-                             # su ejemplo HO-971 ENGRAMPADO lleva 12 baldosas; el piso de 25 cm2 sigue
+SECUENCIA_MAX_A3 = 15        # hoja A3 de una foto por paso (formato de P. Gamboa, Fak 28/09/2026):
+                             # su HO-992 TAPIZADO Y ENGRAMPADO DE PANEL lleva 15 baldosas y la
+                             # HO-971 ENGRAMPADO, 12; el piso de 25 cm2 por foto sigue igual
 SECUENCIA_AREA_MIN = 25.0    # cm2 impresos por foto (una grilla 2x2 da 34; una 3x1, 15)
 SECUENCIA_LADO_MIN = 3.5     # y ningun lado por debajo de esto
 SECUENCIA_DISPARIDAD = 2.0   # si una dobla a otra hay jerarquia: se declara, no es secuencia

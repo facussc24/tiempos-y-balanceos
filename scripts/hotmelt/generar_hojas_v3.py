@@ -4,6 +4,7 @@
     py -3 scripts/hotmelt/generar_hojas_v3.py                # los dos juegos, con PDF
     py -3 scripts/hotmelt/generar_hojas_v3.py maquina        # solo la hoja de maquina
     py -3 scripts/hotmelt/generar_hojas_v3.py --sin-pdf
+    py -3 scripts/hotmelt/generar_hojas_v3.py --sin-pdf --out <carpeta>   # probar sin pisar lo entregado
 
 Contenido: `hojas_v3_spec.py`. Fotos: `fotos_v3.py` + `fotos_v3_lista.py`. Dibujo: `hoja_a3_fotos.py`.
 Antes de dibujar cada hoja corren los controles de redaccion del skill hojas-de-proceso
@@ -27,6 +28,10 @@ from redaccion import gate_redaccion          # noqa: E402
 import hoja_proceso_check as CHK              # noqa: E402
 
 SALIDA = os.path.abspath(os.path.join(AQUI, "..", "..", "exports", "hojas-hotmelt-01-10"))
+if "--out" in sys.argv:                       # para probar sin pisar lo ya entregado
+    _i = sys.argv.index("--out")
+    SALIDA = os.path.abspath(sys.argv[_i + 1])
+    del sys.argv[_i:_i + 2]
 FECHA = "01/10/2026"
 
 JUEGOS = {

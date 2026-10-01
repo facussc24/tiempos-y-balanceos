@@ -30,7 +30,9 @@ describe('canon de numeracion de Patagonia', () => {
     // este test se cae y obliga a mirarlo. Van 9 desde el 24/08/2026, cuando entro el AMFE 172
     // de los ductos/insonos (commit `88b264f1`). Al agregar el 9no no se actualizo el numero,
     // asi que la suite quedo en rojo — si lo tocas, actualizalo aca en la misma tanda.
-    const ESPERADOS = 9;
+    // Van 10 desde el 01/10/2026: entro el AMFE 174 del UPPER TRIM PANEL, que cierra con el
+    // flujograma 160 (commit `3ad423ad`); otra vez el numero habia quedado atras.
+    const ESPERADOS = 10;
 
     it(`tiene los ${ESPERADOS} documentos del proyecto`, () => {
         expect(entradas.map(([clave]) => clave).sort()).toHaveLength(ESPERADOS);

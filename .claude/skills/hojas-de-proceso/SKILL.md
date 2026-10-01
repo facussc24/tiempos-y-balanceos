@@ -276,8 +276,10 @@ no la A4 agrandada:
   su pie; el paso termina en *"– Ver REF. n"*. Un paso que no se puede fotografiar va sin REF.
 - La advertencia va en el **cuadro amarillo**, al lado de los elementos de seguridad. El ciclo
   de control queda con las filas vacias (canon 1.1 y 1.2).
-- **Hasta 12 fotos por hoja** (el ejemplo HO-971 ENGRAMPADO de Gamboa lleva 12); el piso sigue
-  siendo **25 cm² y 3,5 cm de lado** por foto. Con mas, la hoja se parte.
+- **Hasta 15 fotos por hoja** (la HO-992 TAPIZADO Y ENGRAMPADO DE PANEL de Gamboa lleva 15 y la
+  HO-971 ENGRAMPADO, 12); el piso sigue siendo **25 cm² y 3,5 cm de lado** por foto. Con mas, la
+  hoja se parte. Cada foto lleva su cartel `REF. n` en su propia baldosa: el control los cuenta
+  y rechaza dos encimados.
 - La grilla se elige por la FORMA de las fotos: el bloque es casi cuadrado, y seis pantallas
   apaisadas en 3 x 2 quedan en baldosas verticales que les cortan la mitad. Si llenar la
   baldosa recortaria mas del 15 %, la foto entra **entera** (queda mas chica, pero no se corta

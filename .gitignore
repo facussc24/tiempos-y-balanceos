@@ -148,6 +148,9 @@ tools/flowchart/.build/
 
 # spec privado de las hojas HOTMELT (contrasena de HMI)
 scripts/hotmelt/datos_privados.py
+# volcados de texto de los decks viejos de HOTMELT: traen la clave de operador del tablero en
+# claro; un `git add scripts/hotmelt/` los subia al repo publico (auditoria del 01/10/2026)
+scripts/hotmelt/_audit_*_out.txt
 # documentos COMPLETOS del SGC (AMFE, Plan de Control, flujograma): el repo es publico
 scripts/hotmelt/docs_fuente/
 # lo que el generador PRODUCE (se rehace corriendolo) y los scripts ya reemplazados

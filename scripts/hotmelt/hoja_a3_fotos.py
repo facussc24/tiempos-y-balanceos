@@ -19,6 +19,7 @@ Una hoja es un dict:
      "aviso": "texto del cuadro amarillo", "epp": [iconos]}
 Un paso sin foto no lleva REF. Varias fotos seguidas pueden compartir paso con "ref_de": n.
 """
+import hashlib
 import os
 import sys
 import tempfile
@@ -61,7 +62,11 @@ def _recorte_a_baldosa(ruta, ancho_cm, alto_cm, ancla=(0.5, 0.5)):
     px = int(ancho_cm / 2.54 * 150)
     if im.width > px:
         im = im.resize((px, int(px / rel)), Image.LANCZOS)
-    dst = os.path.join(TMP, f"{abs(hash((ruta, ancho_cm, alto_cm, ancla))):x}.jpg")
+    # nombre ESTABLE (el hash() de Python cambia en cada corrida y dejaba un temporal nuevo por
+    # foto y por corrida: 296 archivos en un dia). Con la fecha del origen adentro, una foto
+    # rehecha no reusa el recorte viejo.
+    clave = f"{ruta}|{os.path.getmtime(ruta)}|{ancho_cm:.3f}|{alto_cm:.3f}|{tuple(ancla)}"
+    dst = os.path.join(TMP, hashlib.md5(clave.encode("utf-8")).hexdigest() + ".jpg")
     im.save(dst, quality=90)
     return dst
 
@@ -129,6 +134,8 @@ def bloque_fotos(slide, fotos, grilla=None):
         if not os.path.exists(f["foto"]):
             raise FileNotFoundError(f"REF. {k + 1}: no existe la foto {f['foto']}")
     cols, filas = grilla or elegir_grilla(fotos)
+    if cols * filas < n:
+        raise ValueError(f"la grilla {cols} x {filas} no alcanza para {n} fotos: quedarian fuera del bloque")
     ancho = (base.IMG_W - PAD * (cols + 1)) / cols
     alto = (base.IMG_H - PAD * (filas + 1)) / filas
     avisos = []
@@ -139,8 +146,6 @@ def bloque_fotos(slide, fotos, grilla=None):
         base._caja(slide, x, y, ancho, alto, base.BLANCO, borde=GRIS_BORDE, ancho=Pt(0.75))
         fh = alto - PIE_H
         ruta = f["foto"]
-        if not os.path.exists(ruta):
-            raise FileNotFoundError(f"REF. {k + 1}: no existe la foto {ruta}")
         if f.get("entera") or perdida_de_recorte(ruta, ancho, fh) > RECORTE_MAX:
             # una pantalla o un plano que no se puede recortar, o una foto que al llenar la
             # baldosa perderia mas del 15 % (ahi se van los botones marcados o una columna): entra entera,
@@ -150,10 +155,10 @@ def bloque_fotos(slide, fotos, grilla=None):
             ih = min(fh, ancho / rel)
             iw = ih * rel
             slide.shapes.add_picture(ruta, Cm(x + (ancho - iw) / 2), Cm(y + (fh - ih) / 2), Cm(iw), Cm(ih))
+            if iw * ih < AREA_MIN or min(iw, ih) < LADO_MIN:
+                avisos.append(f"REF. {k + 1}: {os.path.basename(ruta)} entra entera y queda de "
+                              f"{iw:.1f} x {ih:.1f} cm: recortarla a la forma de la baldosa o partir la hoja")
         else:
-            p = perdida_de_recorte(ruta, ancho, fh)
-            if p > 0.30:
-                avisos.append(f"REF. {k + 1}: el recorte a la baldosa deja afuera el {p:.0%} de {os.path.basename(ruta)}")
             rec = _recorte_a_baldosa(ruta, ancho, fh, f.get("ancla", (0.5, 0.5)))
             slide.shapes.add_picture(rec, Cm(x), Cm(y), Cm(ancho), Cm(fh))
         # el cartel REF va arriba a la izquierda; si justo ahi esta lo que el paso manda tocar
@@ -259,10 +264,14 @@ def armar(d):
     fotos, refs, textos = [], [], []
     for paso in d["pasos"]:
         mias = []
-        if paso.get("misma_foto_que"):
+        if "misma_foto_que" in paso:
             # el paso se apoya en la foto de un paso anterior de la misma hoja (dos botones de
             # la misma botonera): apunta a esa REF sin repetir la foto
-            mias = list(refs[paso["misma_foto_que"] - 1])
+            n = paso["misma_foto_que"]
+            if not (isinstance(n, int) and 1 <= n <= len(refs)) or not refs[n - 1]:
+                raise ValueError(f"misma_foto_que={n!r}: tiene que ser el numero de un paso ANTERIOR "
+                                 f"de esta hoja que tenga foto (hay {len(refs)} antes)")
+            mias = list(refs[n - 1])
         for f in paso.get("fotos") or ([paso] if paso.get("foto") else []):
             fotos.append({"foto": f["foto"], "pie": f.get("pie", ""), "ancla": f.get("ancla", (0.5, 0.5)),
                           "entera": f.get("entera", False), "badge": f.get("badge")})

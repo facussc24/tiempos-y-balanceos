@@ -44,25 +44,33 @@ import redaccion as RED
 EMU = 360000.0
 
 
-def es_contenido(sh):
-    """Logo e iconos de EPP no son imagenes de contenido: se reconocen por donde estan."""
+EPP_X_A4, EPP_X_A3 = 17.0, 25.4   # donde arranca la columna de la derecha (descripcion y EPP)
+
+
+def es_contenido(sh, es_a3=False):
+    """Logo e iconos de EPP no son imagenes de contenido: se reconocen por donde estan.
+    En la A3 el bloque de fotos llega hasta x = 25,53 cm: con el limite de la A4 (17 cm) una
+    foto angosta del tercio derecho se tomaba por icono de EPP y no se juzgaba."""
     if sh.shape_type != 13:
         return False
     x, y = sh.left / EMU, sh.top / EMU
     if y < HL.BODY_Y - 0.4:                            # cajetin (logo)
         return False
-    if x > 17.0 and sh.width / EMU < 2.5:              # banda de EPP
+    if x > (EPP_X_A3 if es_a3 else EPP_X_A4) and sh.width / EMU < 2.5:   # banda de EPP
         return False
     return True
 
 
 def carteles_ref(s):
-    """Cuantos carteles "REF. n" tiene la lamina (hoja A3 de una foto por paso)."""
-    n = 0
+    """Los carteles "REF. n" de la lamina (hoja A3 de una foto por paso): [(n, x, y)] en cm."""
+    out = []
     for sh in s.shapes:
-        if sh.has_text_frame and re.fullmatch(r"REF\.\s*\d+", sh.text_frame.text.strip()):
-            n += 1
-    return n
+        if not sh.has_text_frame:
+            continue
+        m = re.fullmatch(r"REF\.\s*(\d+)", sh.text_frame.text.strip())
+        if m:
+            out.append((int(m.group(1)), sh.left / EMU, sh.top / EMU))
+    return out
 
 
 def numeros_sueltos(s):
@@ -207,7 +215,7 @@ def revisar(ruta, declara=None):
             vistas[op] = n + 1
             h = h[min(n, len(h) - 1)] if h else {}
 
-        fotos = sorted([sh for sh in s.shapes if es_contenido(sh)],
+        fotos = sorted([sh for sh in s.shapes if es_contenido(sh, es_a3)],
                        key=lambda q: (round(q.top / EMU, 1), round(q.left / EMU, 1)))
         if not fotos:
             continue                                   # recuadro vacio: permitido
@@ -241,11 +249,22 @@ def revisar(ruta, declara=None):
         if sec:                                        # criterio 1, modo SECUENCIA
             badges = numeros_sueltos(s)
             areas = [(x.width / EMU) * (x.height / EMU) for x in fotos]
-            refs = carteles_ref(s) if es_a3 else 0
-            if es_a3 and refs < len(fotos):
-                fallas.append((i + 1, op, "sin numero",
-                               "hay %d fotos y %d carteles REF.: alguna foto no dice que paso es"
-                               % (len(fotos), refs)))
+            if es_a3:
+                refs = carteles_ref(s)
+                distintos = len({n for n, _x, _y in refs})
+                if distintos < len(fotos):
+                    fallas.append((i + 1, op, "sin numero",
+                                   "hay %d fotos y %d carteles REF. distintos: alguna foto no "
+                                   "dice que paso es" % (len(fotos), distintos)))
+                # contarlos no alcanza: tres carteles apilados sobre la primera foto dejan a
+                # las otras dos sin numero. Cada cartel tiene que estar en su baldosa.
+                for a in range(len(refs)):
+                    for b in range(a + 1, len(refs)):
+                        if abs(refs[a][1] - refs[b][1]) < 1.0 and abs(refs[a][2] - refs[b][2]) < 0.6:
+                            fallas.append((i + 1, op, "sin numero",
+                                           "los carteles REF. %d y REF. %d estan encimados: no "
+                                           "se sabe de que foto es cada uno"
+                                           % (refs[a][0], refs[b][0])))
             for k, sh in enumerate(fotos):
                 x, y = sh.left / EMU, sh.top / EMU
                 w, hh = sh.width / EMU, sh.height / EMU
@@ -319,9 +338,10 @@ def informe(fallas):
     out += ["", "Criterios: jerarquia — la principal >= %.0f%% de la foto de la hoja y %.1fx "
             "la segunda · secuencia — cada foto con su numero, >= %.0f cm2, y ninguna %.1fx "
             "otra · lo que hay que leer >= %.0f pt impreso · maximo %d imagenes (%d en "
-            "secuencia)."
+            "secuencia; %d en la hoja A3 de una foto por paso, cada una con su cartel REF.)."
             % (HL.PRINCIPAL_MIN * 100, HL.PRINCIPAL_VENTAJA, HL.SECUENCIA_AREA_MIN,
-               HL.SECUENCIA_DISPARIDAD, HL.CUERPO_MIN_PT, HL.IMAGENES_MAX, HL.SECUENCIA_MAX)]
+               HL.SECUENCIA_DISPARIDAD, HL.CUERPO_MIN_PT, HL.IMAGENES_MAX, HL.SECUENCIA_MAX,
+               HL.SECUENCIA_MAX_A3)]
     return "\n".join(out)
 
 

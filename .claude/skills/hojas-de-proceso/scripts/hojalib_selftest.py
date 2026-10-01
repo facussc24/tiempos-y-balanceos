@@ -230,6 +230,50 @@ caso("op 41 partida, declaraciones al reves", partida, CK.declaraciones([ROT_41,
      "cantidad")
 
 
+# ── hoja A3 de una foto por paso (formato de P. Gamboa) ─────────────────────
+# Otra lamina (42 x 29,7 cm), otro tope de fotos y el numero del paso es un cartel "REF. n".
+# Cada regla del modo A3 en VERDE y en ROJO: sin estos casos el modo paso un mes verde solo
+# porque nadie lo ejercia (auditoria del 01/10/2026).
+def deck_a3(imagenes, refs="propio", op="20.1"):
+    """Una lamina A3. `refs`: "propio" = cada foto con su cartel; "apilados" = todos los
+    carteles sobre la primera foto; "ninguno" = sin carteles."""
+    prs = Presentation()
+    prs.slide_width, prs.slide_height = Cm(42.0), Cm(29.7)
+    s = prs.slides.add_slide(prs.slide_masters[0].slide_layouts[6])
+    c = s.shapes.add_textbox(Cm(0.6), Cm(3.0), Cm(2.0), Cm(0.6))
+    c.text_frame.text = op
+    for k, (ruta, (x, y, w, h)) in enumerate(imagenes):
+        s.shapes.add_picture(ruta, Cm(x), Cm(y), Cm(w), Cm(h))
+        if refs == "ninguno":
+            continue
+        bx, by = (x, y) if refs == "propio" else imagenes[0][1][:2]
+        b = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Cm(bx + 0.1), Cm(by + 0.1), Cm(1.7), Cm(0.58))
+        r = b.text_frame.paragraphs[0].add_run()
+        r.text = "REF. %d" % (k + 1)
+        r.font.size = Pt(8)
+    d = os.path.join(TMP, "a3_%d.pptx" % len(os.listdir(TMP)))
+    prs.save(d)
+    return d
+
+
+A3 = {"*": {"secuencia": True}}
+foto_a3 = imagen(900, 1060)
+seis_a3 = [(foto_a3, (0.9 + (k % 3) * 8.2, 5.5 + (k // 3) * 10.2, 8.0, 9.5)) for k in range(6)]
+caso("A3: 6 fotos, cada una con su cartel REF", deck_a3(seis_a3), A3, None)
+caso("A3: 6 fotos sin ningun cartel REF", deck_a3(seis_a3, refs="ninguno"), A3, "sin numero")
+caso("A3: los 6 carteles REF apilados sobre la primera foto", deck_a3(seis_a3, refs="apilados"),
+     A3, "sin numero")
+quince_a3 = [(foto_a3, (0.9 + (k % 5) * 4.9, 5.5 + (k // 5) * 6.8, 4.7, 6.1)) for k in range(15)]
+caso("A3: 15 fotos (el tope, como la hoja de engrampado de Gamboa)", deck_a3(quince_a3), A3, None)
+dieciseis_a3 = quince_a3 + [(foto_a3, (0.9, 26.0, 4.7, 6.1))]
+caso("A3: 16 fotos", deck_a3(dieciseis_a3), A3, "cantidad")
+# la foto angosta del tercio derecho del bloque: con el limite de EPP de la A4 (x > 17 cm) se
+# tomaba por icono y no se juzgaba
+angosta_a3 = seis_a3[:2] + [(foto_a3, (20.0, 5.5, 2.4, 6.0))]
+caso("A3: foto de 2,4 cm de ancho en x = 20 cm", deck_a3(angosta_a3), A3, "estampilla")
+caso("A3: sin declarar que es de una foto por paso", deck_a3(seis_a3), {}, "cantidad")
+
+
 def sizing():
     """`ancho_que_le_toca_cm` es lo que el GATE 2 manda usar ANTES de dibujar una pantalla.
     Si mintiera por exceso, uno dimensiona una pantalla que despues no entra. El invariante
