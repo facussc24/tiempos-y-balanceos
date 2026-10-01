@@ -250,6 +250,11 @@ Antes de poner placeholder en un campo, agotar EN ORDEN: (1) cross-reference Sup
 > manual no probada = **8**, probada = 6; por maquina no probada = **7**, probada = 5. **El "D=7
 > humana en estacion" de abajo NO existe en la oficial**: una inspeccion visual va en 8. Pendiente
 > transcribir esta seccion entera del SETEC (memoria `project_tabla_ap_de_la_casa_es_el_borrador_2017`).
+> **01/10/2026 — corregido en los datos** (OK de Fak): las 515 causas con inspeccion humana en D=7
+> de 12 AMFE (los de Patagonia, el 131, el 128 y el 129) pasaron a 8 con
+> `scripts/_recalificarDeteccionHumana8.mjs`; ningun AP cambio. El check
+> `DETECTION_HUMANA_OPTIMISTA` avisa hasta D<=7. Quedan sin tocar los D<=6 humanos (un 6 puede
+> ser metodo probado: lo define el equipo) y los que nombran instrumento.
 
 **Transcritas del manual, no derivadas (OK de Fak 24/08/2026: *"si no coincide con la oficial hay
 que corregirla"*).** Una escala de D generosa subdeclara riesgo en todos los AMFE a la vez: al
