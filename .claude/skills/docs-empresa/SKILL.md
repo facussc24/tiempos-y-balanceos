@@ -48,6 +48,22 @@ Raiz servidor: `//SERVER/compartido/BARACK/CALIDAD/DOCUMENTACION SGC/` (= `SGC_R
 | ERP arb (BOMs, insumos) | `.arb-cache/` + skill `verificacion-consumos` | ya cacheado |
 | APQP vivos (AMFE/CP) | Supabase live (UNICA verdad — `verify-supabase-live.md`) | NO cachear |
 
+## Lo relevado el 01/10/2026 (proyecto "Claudes por área") — usarlo antes de ir al servidor
+
+| Qué | Dónde (todo en `.sgc-cache/`, extraído del SERVIDOR el 01/10/2026) |
+|---|---|
+| SGC vigente en texto: 20 procedimientos, 13 del manual, instructivos de las 9 áreas (Calidad 58, Logística 8, Mantenimiento 6, Ingeniería 6, Dirección 3, Compras 2, Producción 1, Proyecto 1, RRHH 1) | `sgc-servidor-20261001/<AREA>/` — más nuevo que `sgc/` (julio) |
+| Descripciones de puesto vigentes (49, `F-NN`) | `sgc-funciones/` (de `Manual de funciones\MANUAL DE FUNCIONES JUNIO 2026\`) |
+| Dónde se guarda cada registro y cuánto tiempo (anexo P-16/I, junio 2021, por área) | `sgc-servidor-20261001/Control de los registros/` — una ruta de 2021 puede no existir hoy |
+| Catálogos (lista maestra con la revisión vigente) y organigramas (enero 2023) | `empresa-extracted/catalogos-20261001/` |
+| **"¿Dónde está X?" sin el servidor**: nombres y fechas de 114.054 archivos de `DOCUMENTACION SGC`, 29.469 de `Y:\Ingenieria` (6 niveles), `Y:\PRODUCCION`, `Y:\Supply Chain`, `Z:\LOGISTICA` | `node scripts/_catalogoServidor.mjs --buscar "palabras"` (catálogo en `catalogo-servidor/*.tsv`; decir siempre la fecha del listado) |
+| Fichas por área (qué hace cada área, preguntas típicas con cita, huecos), puestos, mapa de rutas del servidor, dónde vive cada dato | `claude-por-area/*.md` |
+
+Tres trampas vistas ese día: (1) la copia en PDF de la nube `3- SISTEMA DE CALIDAD SGC BARACK` está **atrás del servidor**
+(P-05 B/C, P-12 D/E, P-21 E/F; 20 puestos contra 49) — no se cita desde ahí; (2) dentro de `DOCUMENTACION SGC` hay una
+carpeta `BRASIL` con otra copia del sistema: la vigente es `SISTEMA\SISTEMA SGC\`; (3) lo vigente lo dice el **catálogo**
+(`Catalogo SGC.xlsx`), no solo la letra mayor del nombre del archivo. Las BOM y los consumos viven en el arb, no en la nube.
+
 ## Reglas de acceso — NO romper
 
 - **OneDrive / docs-local: PROHIBIDO `du`/`find -r`/`grep -r`** (Files On-Demand hidrata y

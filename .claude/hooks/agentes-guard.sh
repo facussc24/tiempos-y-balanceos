@@ -23,7 +23,8 @@
 #   echo 15 > ~/.claude/.agent-limit          # sube el techo a 15
 #   echo 0  > ~/.claude/.agent-limit          # 0 = sin limite (apaga el CONTEO)
 #   touch ~/.claude/.workflow-ok              # permite UN Workflow (se consume al usarlo)
-# La regla de modelo y esfuerzo no tiene escape: el `echo 0` apaga el conteo, no esa regla.
+#   touch ~/.claude/.agent-opus-ok            # 12 h: un agente comun puede pedirse con model opus o fable
+# La regla de esfuerzo (xhigh) no tiene escape, y el `echo 0` apaga el conteo, no la regla de modelo.
 #
 # El override VENCE a las 12 horas (A6, 10/09/2026): se respeta solo si el archivo tiene menos
 # de VENCE_SEG desde su ultima modificacion; pasado eso se retira y vuelve el techo de 10 solo.
@@ -133,6 +134,24 @@ EOF
   exit 2
 }
 
+# Pase de Fak para lanzar agentes COMUNES en Opus o Fable (01/10/2026: "si habia una regla que te
+# impedia desplegar otros Opus la puse yo mismo y yo mismo te puedo decir que era demasiado
+# estricta"). ~/.claude/.agent-opus-ok vale 12 h desde su ultima modificacion, igual que
+# .agent-limit; pasado eso se retira y la regla vuelve sola a Sonnet. El modelo va EXPLICITO en la
+# llamada (model: opus | fable) sobre un agente cuya definicion sigue diciendo sonnet + xhigh.
+PASE_MODELO="${BASE}/.agent-opus-ok"
+pase_modelo_vigente() {
+  [ -f "$PASE_MODELO" ] || return 1
+  local mod
+  mod=$(stat -c %Y "$PASE_MODELO" 2>/dev/null || echo 0)
+  if [ "$mod" -gt 0 ] 2>/dev/null && [ $((AHORA - mod)) -gt "$VENCE_SEG" ]; then
+    rm -f "$PASE_MODELO"
+    echo "agentes-guard: el pase ~/.claude/.agent-opus-ok tenia mas de 12 h y se retiro; los agentes comunes vuelven a Sonnet." >&2
+    return 1
+  fi
+  return 0
+}
+
 # La auditoria final la hace OPUS, no Sonnet (Fak, 30/09/2026: "la auditoria la deberia hacer un
 # Opus... es la auditoria final, Sonnet no se si puede hacerla"). Estos agentes DEBEN declarar
 # `model: opus` (y effort: xhigh); el resto, `model: sonnet`.
@@ -153,6 +172,8 @@ if [ "$TOOL" != "Workflow" ]; then
   else
     case "$MODELO" in
       ""|sonnet|claude-sonnet-*) ;;
+      opus|claude-opus-*|fable|claude-fable-*)
+        pase_modelo_vigente || rechazar "Se pidio model=$MODELO y no hay pase vigente: ~/.claude/.agent-opus-ok (vale 12 h; Claude lo escribe solo si Fak lo pidio TEXTUAL en el chat, y lo dice)." ;;
       *) rechazar "Se pidio model=$MODELO." ;;
     esac
   fi

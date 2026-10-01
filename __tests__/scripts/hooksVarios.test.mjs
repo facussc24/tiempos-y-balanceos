@@ -531,7 +531,29 @@ describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de
   const correr = (tool_name, tool_input = { subagent_type: 'investigador', prompt: 'x' }, extra = {}) =>
     hook(null, { tool_name, tool_input, ...extra }, { ruta: AGENTES, env });
   beforeEach(() => {
-    for (const n of ['.agent-spawns.log', '.agent-limit', '.workflow-ok', '.agent-builtin-ok']) fs.rmSync(archivo(n), { force: true });
+    for (const n of ['.agent-spawns.log', '.agent-limit', '.workflow-ok', '.agent-builtin-ok', '.agent-opus-ok']) fs.rmSync(archivo(n), { force: true });
+  });
+
+  it('pase de modelo (Fak, 01/10): con .agent-opus-ok un agente comun pasa en opus o fable; sin pase o vencido, no', () => {
+    const inv = (model) => correr('Agent', { subagent_type: 'investigador', model, prompt: 'x' });
+    // ROJO sin pase
+    expect(inv('opus').err).toMatch(/model=opus y no hay pase vigente/);
+    expect(inv('fable').exit).toBe(2);
+    // VERDE con pase
+    fs.writeFileSync(archivo('.agent-opus-ok'), '');
+    expect(inv('opus').exit).toBe(0);
+    expect(inv('fable').exit).toBe(0);
+    expect(inv('claude-opus-5-5').exit).toBe(0);
+    // el pase no abre lo demas: otro modelo, el esfuerzo, los built-in y la auditoria siguen igual
+    expect(inv('haiku').err).toMatch(/model=haiku/);
+    expect(correr('Agent', { subagent_type: 'en-max', model: 'opus', prompt: 'x' }).err).toMatch(/no dice effort: xhigh/);
+    expect(correr('Agent', { subagent_type: 'general-purpose', model: 'opus', prompt: 'x' }).exit).toBe(2);
+    expect(correr('Agent', { subagent_type: 'auditor', model: 'sonnet', prompt: 'x' }).err).toMatch(/auditoria final y corre en Opus/);
+    // ROJO: un pase de hace 13 h no vale y se retira
+    const hace13h = Date.now() / 1000 - 13 * 3600;
+    fs.utimesSync(archivo('.agent-opus-ok'), hace13h, hace13h);
+    expect(inv('opus').exit).toBe(2);
+    expect(fs.existsSync(archivo('.agent-opus-ok'))).toBe(false);
   });
 
   it('ROJO: Workflow siempre; el undecimo Agent dentro de la ventana', () => {

@@ -60,10 +60,19 @@ hace a mano y se le avisa a Fak que se llego al techo.
 echo 15 > ~/.claude/.agent-limit    # sube el techo (vale 12 h, despues vuelve a 10 solo)
 echo 0 > ~/.claude/.agent-limit     # apaga el CONTEO (idem, 12 h); la regla Sonnet/xhigh sigue
 touch ~/.claude/.workflow-ok        # habilita UN Workflow (se consume al usarlo)
+touch ~/.claude/.agent-opus-ok      # 12 h: un agente comun se puede pedir con model opus o fable
 ```
 
 Si Fak lo pide **textual en el chat** ("usá mas agentes", "no me importa gastar tokens"),
 lo escribo yo con `echo 15 > ~/.claude/.agent-limit` y lo digo: Fak no corre comandos. Sin esa
 frase suya, no se toca (10/09/2026).
+
+**Opus o Fable en agentes comunes (Fak, 01/10/2026):** *"si habia una regla que te impedia
+desplegar otros Opus la puse yo mismo y yo mismo te puedo decir que era demasiado estricta"*. Con
+`~/.claude/.agent-opus-ok` (vale 12 h) pasa `investigador` / `explorador` con `model: "opus"` o
+`"fable"` explicito en la llamada; el esfuerzo sigue en xhigh y el default sigue siendo Sonnet.
+Igual que el techo: lo escribo yo solo cuando Fak lo pide textual, y lo digo. **Si Fak repite un
+pedido que le negue por una regla suya, la segunda vez no se le vuelve a explicar la regla: se le
+nombra el cambio exacto y se hace** (el 01/10 tuvo que pedirlo cuatro veces).
 
 Para reactivar Workflow del todo: sacar `disableWorkflows` de `~/.claude/settings.json`.
