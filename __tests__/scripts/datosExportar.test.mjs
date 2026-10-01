@@ -14,7 +14,7 @@
  * archivos se escriben en una carpeta temporal.
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync, rmSync, readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,6 +22,7 @@ import {
     ordenarClaves, canonicoTexto, sha256, hashDeFila, normalizarData, prepararFila,
     esTablaExcluida, claveDeFila, claveArchivoSegura, compararFilas, etiquetaDe,
     planificarTabla, escribirArchivos, leerTablaDeDisco, compararHashes, exportar, verificar,
+    carpetaNube,
 } from '../../scripts/_datosExportar.mjs';
 
 const RUTA_SCRIPT = resolve(fileURLToPath(import.meta.url), '../../../scripts/_datosExportar.mjs');
@@ -482,5 +483,34 @@ describe('solo lectura sobre Supabase', () => {
         const rpcs = [...codigo.matchAll(/\.rpc\(\s*['"]([^'"]+)['"]/g)].map((m) => m[1]);
         expect(rpcs.length).toBeGreaterThan(0);
         expect([...new Set(rpcs)]).toEqual(['exec_sql_read']);
+    });
+});
+
+// Fak, 01/10/2026: "los AMFE son de ingenieria... usemos la nube, no en local".
+describe('carpetaNube: el destino por defecto es la biblioteca de Ingenieria, buscada por forma', () => {
+    let home;
+    beforeEach(() => { home = mkdtempSync(join(tmpdir(), 'datos-nube-')); });
+    afterEach(() => { rmSync(home, { recursive: true, force: true }); });
+    const general = (biblioteca) => join(home, 'BARACK ARGENTINA SRL', biblioteca, 'INGENIERIA BARACK (NUNCA BORRAR)', '1- GENERAL');
+
+    it.each([['con tilde', 'Ingeniería y Proyecto - General'], ['sin tilde', 'Ingenieria y Proyecto - General']])(
+        'encuentra la biblioteca %s y devuelve 1- GENERAL/AMFE/DATOS (aunque DATOS todavia no exista)', (_q, biblioteca) => {
+            mkdirSync(general(biblioteca), { recursive: true });
+            expect(carpetaNube(home)).toBe(join(general(biblioteca), 'AMFE', 'DATOS'));
+        });
+
+    it('ROJO: sin la biblioteca sincronizada devuelve null (el script frena, no guarda en local)', () => {
+        expect(carpetaNube(home)).toBe(null);
+        mkdirSync(join(home, 'BARACK ARGENTINA SRL', 'Otra biblioteca - General'), { recursive: true });
+        expect(carpetaNube(home)).toBe(null);
+        // la biblioteca esta pero vacia (no bajo todavia): tampoco
+        mkdirSync(join(home, 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General'), { recursive: true });
+        expect(carpetaNube(home)).toBe(null);
+    });
+
+    it('con dos bibliotecas de nombre parecido elige la que tiene la carpeta de Ingenieria', () => {
+        mkdirSync(join(home, 'BARACK ARGENTINA SRL', 'Ingenieria y Proyecto - General'), { recursive: true });
+        mkdirSync(general('Ingeniería y Proyecto - General'), { recursive: true });
+        expect(carpetaNube(home)).toBe(join(general('Ingeniería y Proyecto - General'), 'AMFE', 'DATOS'));
     });
 });

@@ -204,6 +204,17 @@ describe('computeReadiness — modo ENTREGA', () => {
         expect(s.blockers.find(b => b.type === 'TBD_EN_CAMPO_EXPORTABLE').campo).toBe('header.partNumber');
     });
 
+    // Auditoria del 01/10/2026: el export imprime mas caratula y mas columnas que las que se barrian.
+    it('TBD en el resto de lo que el export imprime: fechas y estado de la accion, y la caratula entera (asunto, equipo, ubicacion, modelo, numero)', () => {
+        const hdr = { ...HDR, amfeNumber: 'TBD', location: 'TBD', modelYear: 'TBD', subject: 'Proceso TBD', coreTeam: ['Carlos Baptista', 'TBD'], _meta: 'TBD' };
+        const doc = makeDoc({ header: hdr, cause: { targetDate: 'TBD', completionDate: 'TBD', status: 'TBD' } });
+        const campos = scanTbdExportable(doc, hdr, 'AMFE-TEST').map(i => i.campo);
+        expect(campos).toEqual(expect.arrayContaining(['header.amfeNumber', 'header.location', 'header.modelYear',
+            'header.subject', 'header.coreTeam', 'targetDate', 'completionDate', 'status']));
+        expect(campos).not.toContain('header._meta');                           // lo interno no se imprime
+        expect(campos.filter(c => c === 'header.coreTeam')).toHaveLength(1);    // solo el integrante que dice TBD
+    });
+
     it('"tbd" adentro de otra palabra no es un TBD', () => {
         const s = computeReadiness(makeDoc({ cause: { preventionControl: 'Tabla STBDX de ajuste' } }), 'Armrest', 'AMFE-TEST', HDR, { entrega: true });
         expect(hay(s, 'TBD_EN_CAMPO_EXPORTABLE')).toBe(false);

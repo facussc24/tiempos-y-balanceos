@@ -43,4 +43,4 @@ borra nada tuyo: ni skills, ni reglas, ni archivos que hayas agregado.
   compartirlo en la nube?"**. Una sola vez por trabajo, sin insistir.
 - Solo con un sí: `node scripts/_paquete.mjs --aportar <ruta> --que "<qué es, en una frase>"`. El
   aporte va a una carpeta con su nombre, pasa un filtro de claves y datos personales, y Fak decide
-  si entra a la base oficial. Nunca se sube nada sin ese sí.
+  si entra a la base oficial. Un aporte nunca se sube sin ese sí.

@@ -1,19 +1,20 @@
 /**
  * _datosExportar.mjs — ETAPA 0 de "dejar de depender de Supabase" (decision Fak, 30/09/2026).
  *
- * Baja TODO lo que hay en Supabase a archivos JSON dentro de un repo git aparte
- * (`C:\Dev\BarackDatos`) y prueba que no falta nada. NO cambia nada de lo existente:
- * Supabase sigue siendo la fuente de verdad, esto es una COPIA.
+ * Baja TODO lo que hay en Supabase a archivos JSON en la biblioteca de Ingenieria en la nube
+ * (`...\INGENIERIA BARACK (NUNCA BORRAR)\1- GENERAL\AMFE\DATOS`, decision de Fak del 01/10/2026;
+ * hasta el 30/09 era el repo local `C:\Dev\BarackDatos`) y prueba que no falta nada. NO cambia
+ * nada de lo existente: Supabase sigue siendo la fuente de verdad, esto es una COPIA.
  * Plan: docs/auto-mejora/2026-09-30-automejora-10-frentes.md §4.
  *
  * Uso:
  *   node scripts/_datosExportar.mjs                   exporta (escribe SOLO en la carpeta destino)
  *   node scripts/_datosExportar.mjs --verificar       relee Supabase y compara contra los archivos
- *   node scripts/_datosExportar.mjs --out <carpeta>   otra carpeta destino (por defecto C:\Dev\BarackDatos)
+ *   node scripts/_datosExportar.mjs --out <carpeta>   otra carpeta destino (por defecto, la de la nube)
  *
  * SOLO LECTURA sobre Supabase: login, `select` y el RPC `exec_sql_read`. Nada de escrituras
  * (un test lee este archivo y falla si aparece alguna). No borra archivos: los que quedan
- * sin fila en Supabase se listan como "sobrantes" y se sacan a mano (`git rm`).
+ * sin fila en Supabase se listan como "sobrantes" y se sacan a mano.
  *
  * Que tablas: las mismas que baja `_backup.mjs` (se descubren de information_schema, no hay
  * lista escrita a mano), MENOS las vacias y las copias viejas (`_bk_*`, `_backup_*` y
@@ -43,11 +44,29 @@
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { connectSupabase, parseData, countAmfeStats } from './_lib/amfeIo.mjs';
 
-export const DESTINO_POR_DEFECTO = 'C:/Dev/BarackDatos';
+/**
+ * Donde van los datos: la biblioteca de Ingenieria en la nube (Fak, 01/10/2026: "los AMFE son de
+ * ingenieria... usemos la nube, no en local"; carpeta aprobada el mismo dia). Se busca por FORMA y no
+ * por ruta fija: la carpeta del usuario cambia de PC en PC y la biblioteca puede venir con o sin tilde.
+ * Si la biblioteca no esta sincronizada en esta PC devuelve null, y el script frena: no guarda en local
+ * "por las dudas". Hasta el 30/09 el destino era `C:\Dev\BarackDatos` (repo git local, queda de historia).
+ */
+export const CARPETA_EN_LA_BIBLIOTECA = ['INGENIERIA BARACK (NUNCA BORRAR)', '1- GENERAL', 'AMFE', 'DATOS'];
+export function carpetaNube(home = homedir()) {
+    const org = join(home, 'BARACK ARGENTINA SRL');
+    let bibliotecas = [];
+    try { bibliotecas = readdirSync(org).filter((n) => /^Ingenier.{1,2}a y Proyecto - General$/i.test(n)); } catch { return null; }
+    for (const b of bibliotecas) {
+        const general = join(org, b, CARPETA_EN_LA_BIBLIOTECA[0], CARPETA_EN_LA_BIBLIOTECA[1]);
+        if (existsSync(general)) return join(general, ...CARPETA_EN_LA_BIBLIOTECA.slice(2));
+    }
+    return null;
+}
 export const FORMATO = 'canonico-v1: claves ordenadas, 2 espacios, LF, UTF-8; data parseada (objeto, no TEXT)';
 
 // --------------------------------------------------------------------------
@@ -533,10 +552,16 @@ function argumento(args, nombre) {
 
 async function main() {
     const args = process.argv.slice(2);
-    const dir = resolve(argumento(args, '--out') ?? DESTINO_POR_DEFECTO);
+    const destino = argumento(args, '--out') ?? carpetaNube();
+    if (!destino) {
+        console.error('\n✗ ABORTADO — no encuentro la biblioteca de Ingenieria en esta PC (BARACK ARGENTINA SRL\\Ingenieria y Proyecto - General).'
+            + '\n  Los datos van a la nube, no a una carpeta local: abrir OneDrive y esperar que sincronice, o pasar la carpeta con --out.\n');
+        process.exit(1);
+    }
+    const dir = resolve(destino);
     const raizRepo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
     if (dir === raizRepo || dir.startsWith(raizRepo + sep)) {
-        console.error(`\n✗ ABORTADO — la carpeta destino (${dir}) esta adentro del repo de la app. Los datos van al repo aparte.\n`);
+        console.error(`\n✗ ABORTADO — la carpeta destino (${dir}) esta adentro del repo de la app. Los datos van a la nube de Ingenieria.\n`);
         process.exit(1);
     }
     const t0 = Date.now();

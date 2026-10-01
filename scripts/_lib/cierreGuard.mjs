@@ -744,6 +744,28 @@ function esMensajeRealDeUsuario(obj) {
   return t.trim().length > 0 && !ES_SISTEMA.test(t);
 }
 
+// Ventana de un comando OPACO: desde que se lanzo hasta que volvio su resultado. Lo que quedo sucio con
+// fecha adentro de una ventana lo pudo escribir ese comando (auditoria 01/10/2026: `python scripts/gen.py
+// --out x` junto a un Write dejaba afuera a `x`, porque con UN archivo atribuido ya no se miraba lo opaco).
+// Sin hora en el transcript no hay ventana que armar: se marca y se cae a "todo desde el inicio".
+function abrirVentana(st, b, obj) {
+  const ini = Date.parse(obj.timestamp || '');
+  if (!Number.isFinite(ini)) { st.sinVentana = true; return; }
+  if (b.input?.run_in_background || !b.id) st.ventanas.push([ini, Infinity]);   // sigue corriendo: no se sabe hasta cuando
+  else st.abiertas.set(b.id, ini);
+}
+
+function cerrarVentanas(st, obj) {
+  const bloques = obj.message?.content;
+  if (!st.abiertas.size || !Array.isArray(bloques)) return;
+  for (const b of bloques) {
+    if (b.type !== 'tool_result' || !st.abiertas.has(b.tool_use_id)) continue;
+    const fin = Date.parse(obj.timestamp || '');
+    st.ventanas.push([st.abiertas.get(b.tool_use_id), Number.isFinite(fin) ? fin : Infinity]);
+    st.abiertas.delete(b.tool_use_id);
+  }
+}
+
 async function pasada(archivo, st, { completa, repo }) {
   const rl = readline.createInterface({ input: fs.createReadStream(archivo, 'utf8'), crlfDelay: Infinity });
   for await (const linea of rl) {
@@ -759,6 +781,7 @@ async function pasada(archivo, st, { completa, repo }) {
       continue;
     }
     if (obj.type === 'user') {
+      cerrarVentanas(st, obj);
       if (completa && esMensajeRealDeUsuario(obj)) { st.ejemplo = null; st.ultimoMensajeFak = textoDeUsuario(obj); st.ultimoMensajeFakTs = obj.timestamp || ''; }
       continue;
     }
@@ -775,10 +798,11 @@ async function pasada(archivo, st, { completa, repo }) {
         // Solo lo que el comando ESCRIBE (30/09/2026): nombrar un archivo en un cat o un grep no lo toca.
         const e = escrituraEnComando(b.input?.command, repo);
         for (const r of e.escritos) st.tocados.add(r);
-        if (e.opaco) st.huboOpaco = true;
+        if (e.opaco) { st.huboOpaco = true; abrirVentana(st, b, obj); }
       } else if (/^(Agent|Task)$/.test(b.name || '')) {
         st.huboComando = true;
         st.huboOpaco = true;                              // un agente puede escribir donde no se ve (y su transcript puede faltar)
+        abrirVentana(st, b, obj);
       }
       if (!completa) continue;
       const e = evaluarToolUse(b, repo);
@@ -803,7 +827,9 @@ async function pasada(archivo, st, { completa, repo }) {
  *                       lo sucio modificado desde `inicio`; sin transcript, todo lo sucio, como antes.
  *   inicio            — epoch ms del primer mensaje del transcript (desde cuando puede haber escrito)
  *   huboOpaco         — corrio algo que puede escribir donde no se ve
- *   entregables       — archivos de entrega escritos afuera, con `mirado` (hubo Read, verificador
+ *   ventanas          — [[desde, hasta], ...] en epoch ms: cuando corrio cada comando opaco. Lo sucio con
+ *                       fecha adentro de una ventana se suma a `tocados` (lo pudo escribir ese comando)
+ *   entregables      — archivos de entrega escritos afuera, con `mirado` (hubo Read, verificador
  *                       o tool MCP sobre ese archivo DESPUES de su ultima escritura)
  *   sinMirar          — los entregables con mirado=false
  *   ultimoMensajeFak  — texto del ultimo mensaje real de Fak (para el chequeo 5)
@@ -815,7 +841,7 @@ export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
   if (!transcriptPath || !fs.existsSync(transcriptPath)) return { fuera: false };
   const st = {
     ejemplo: null, huboComando: false, huboOpaco: false, inicio: 0, tocados: new Set(), ultimoMensajeFak: '', ultimoMensajeFakTs: '', ent: new Map(), seq: 0,
-    bg: nuevoBackground(),
+    bg: nuevoBackground(), ventanas: [], abiertas: new Map(), sinVentana: false,
   };
   await pasada(transcriptPath, st, { completa: true, repo });
   const dirSub = path.join(String(transcriptPath).replace(/\.jsonl$/i, ''), 'subagents');
@@ -825,6 +851,8 @@ export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
     try { await pasada(path.join(dirSub, f), st, { completa: false, repo }); } catch { /* un transcript roto no frena el cierre */ }
   }
   const atribuibles = st.tocados.size > 0 || !st.huboOpaco ? st.tocados : null;
+  for (const ini of st.abiertas.values()) st.ventanas.push([ini, Infinity]);   // sin resultado todavia: sigue abierta
+  if (st.sinVentana && st.inicio) st.ventanas.push([st.inicio, Infinity]);
   const entregables = [...st.ent.entries()].map(([nombre, e]) => ({
     nombre, ruta: e.ruta, escritoEn: e.escritoEn, mirado: e.miradoEn > e.escritoEn,
   }));
@@ -836,6 +864,7 @@ export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
     inicio: st.inicio || undefined,
     huboComando: st.huboComando,
     huboOpaco: st.huboOpaco,
+    ventanas: st.ventanas,
     entregables,
     sinMirar: entregables.filter((e) => !e.mirado),
     ultimoMensajeFak: st.ultimoMensajeFak,
@@ -882,17 +911,27 @@ function modificadoDesde(rel, desde, repo = REPO) {
   try { return fs.statSync(path.join(repo, rel)).mtimeMs >= desde - 60_000; } catch { return true; }
 }
 
+/** `true` si el archivo sucio quedo con fecha adentro de la ventana de un comando opaco (5 s de margen).
+ *  Borrado: no tiene fecha y no se le atribuye a la ventana (seria contar lo que borro otra sesion). */
+function modificadoEnVentana(rel, ventanas, repo = REPO) {
+  let t;
+  try { t = fs.statSync(path.join(repo, rel)).mtimeMs; } catch { return false; }
+  return ventanas.some(([ini, fin]) => t >= ini - 5000 && t <= fin + 5000);
+}
+
 /** Pendientes medibles al declarar un cierre. Cada renglon es accionable.
- *  `tocados` (Set de rutas repo-relativas que ESCRIBIO esta sesion) filtra el git status. Si viene
- *  null la sesion no se puede atribuir y se cuenta lo sucio: con `desde` (la sesion tiene
- *  transcript pero corrio algo opaco) solo lo modificado desde que arranco; sin `desde` (no hubo
+ *  `tocados` (Set de rutas repo-relativas que ESCRIBIO esta sesion) filtra el git status; a eso se le
+ *  suma lo sucio con fecha adentro de una de las `ventanas` (lo que pudo escribir un comando opaco).
+ *  Si `tocados` viene null la sesion no se puede atribuir y se cuenta lo sucio: con `desde` (la sesion
+ *  tiene transcript pero corrio algo opaco) solo lo modificado desde que arranco; sin `desde` (no hubo
  *  transcript) todo, como antes: fallar hacia el lado seguro. */
-export function relevarPendientes(tocados = null, { desde = null, repo = REPO } = {}) {
+export function relevarPendientes(tocados = null, { desde = null, ventanas = null, repo = REPO } = {}) {
   const out = [];
   try {
     const st = execSync('git status --porcelain', { cwd: repo, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
     let archivos = st.split(/\r?\n/).filter(Boolean).map((l) => l.slice(3).trim().replace(/^.*-> /, '').replace(/^"|"$/g, '')).filter((a) => EXT_CODIGO.test(a));
-    if (tocados instanceof Set) archivos = archivos.filter((a) => tocados.has(a.replace(/\\/g, '/')));
+    const vent = Array.isArray(ventanas) ? ventanas : [];
+    if (tocados instanceof Set) archivos = archivos.filter((a) => tocados.has(a.replace(/\\/g, '/')) || (vent.length > 0 && modificadoEnVentana(a, vent, repo)));
     else if (Number.isFinite(desde) && desde > 0) archivos = archivos.filter((a) => modificadoDesde(a, desde, repo));
     if (archivos.length) {
       out.push(`hay ${archivos.length} archivo(s) sin commitear (${archivos.slice(0, 4).join(', ')}${archivos.length > 4 ? ', …' : ''}) — regla git-deploy: build + commit por ruta + push`);
@@ -1005,7 +1044,7 @@ export async function decidir(payload = {}, deps = {}) {
 
   // 3. Cierre declarado con pendientes medibles (1x/20 min).
   if (!d.enCooldown(sid)) {
-    const pend = d.pendientes(fuera?.tocados ?? null, { desde: fuera?.inicio }) || [];
+    const pend = d.pendientes(fuera?.tocados ?? null, { desde: fuera?.inicio, ventanas: fuera?.ventanas }) || [];
     if (pend.length) {
       d.marcar(sid);
       return {

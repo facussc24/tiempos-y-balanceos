@@ -30,7 +30,7 @@ CRED = 'BARACK_ARB'
 USUARIO_DEFAULT = 'FACUNDO'
 LOG = os.path.join(os.path.expanduser('~'), 'arb_fotos', 'lanzador.log')
 
-if '--vigilar' in sys.argv:
+if '--vigilar' in sys.argv and not os.environ.get('CLAUDECODE'):   # una sesion de Claude no pisa el volcado de la tarea
     # Diagnostico (30/09/2026: las corridas de la tarea quedaban trabadas sin escribir nada):
     # si a los 240 s sigue vivo, vuelca en que linea esta cada hilo y termina (la tarea corta a los 5 min).
     import faulthandler
@@ -161,8 +161,10 @@ def pausar_vigilante(motivo):
     try:
         with open(ESTADO_VIGILANTE, 'w', encoding='utf-8') as f:
             f.write('PAUSADO %s  %s\n' % (datetime.datetime.now().strftime('%d/%m %H:%M'), motivo))
-    except OSError:
-        pass
+    except OSError as e:
+        # El log dice lo que paso: si no se pudo escribir, el vigilante SIGUE activo y reintenta en 3 min.
+        log('vigilante: NO se pudo pausar (%s) por "%s": sigue activo' % (e.__class__.__name__, motivo))
+        return
     log('vigilante PAUSADO: %s (se reactiva con "ARB - activar vigilante")' % motivo)
 
 

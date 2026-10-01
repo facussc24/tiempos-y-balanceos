@@ -355,26 +355,33 @@ describe.skipIf(!PY)('mails_equipo.py: que sube, que no, y que conserva', () => 
         expect(r.stdout).toContain('selftest: OK');
     });
 
-    it('cada mail va a su lugar: trabajo a _entrada, sueldos a _cuarentena, privados y codigos de acceso a ningun lado', () => {
+    // Auditoria del 01/10/2026: la cuarentena subia a una carpeta que lee todo el equipo, y un mail con
+    // el remitente o un destinatario sin casilla pasaba el filtro de privados sin que hubiera con que filtrar.
+    it('solo el mail de trabajo sube: sueldos (cuarentena), privados, codigos de acceso y mails sin casilla legible no salen de la PC', () => {
         const { nube, estado } = escenario();
         const src = jsonl('src.jsonl', [
-            mail('<trabajo@x>'),
+            mail('<trabajo@x>', { sin_resolver: 0 }),
             mail('<gerencia@x>', { de_mail: 'gerencia@ejemplo.com', asunto: 'reunion de direccion' }),
             mail('<cc-gerencia@x>', { cc_mails: ['Gerencia@Ejemplo.com'] }),
             mail('<sueldo@x>', { asunto: 'Anticipo de sueldo de Juan' }),
             mail('<login@x>', { de_mail: 'noreply@mail.anthropic.com', asunto: 'Your login code', cuerpo: '123456' }),
+            mail('<dn@x>', { de_mail: '/o=exchangelabs/cn=recipients/cn=abc', asunto: 'remitente sin casilla' }),
+            mail('<sinresolver@x>', { sin_resolver: 1, asunto: 'destinatario sin casilla' }),
         ]);
         const r = py(['--nube', nube, '--estado-dir', estado, '--fuente-jsonl', src]);
         expect(r.status, r.stdout + r.stderr).toBe(0);
         expect(subidos(nube, 'entrada').map((m) => m.id)).toEqual(['<trabajo@x>']);
-        expect(subidos(nube, 'cuarentena').map((m) => m.id)).toEqual(['<sueldo@x>']);
-        const todo = JSON.stringify([subidos(nube, 'entrada'), subidos(nube, 'cuarentena')]);
+        expect(subidos(nube, 'entrada')[0]).not.toHaveProperty('sin_resolver');   // el formato de lo subido no cambia
+        // en la nube no queda NADA mas que la entrada: ni carpeta de cuarentena
+        expect(fs.readdirSync(path.join(nube, 'mails'))).toEqual(['_entrada']);
+        const todo = JSON.stringify(foto(path.join(nube, 'mails'))) + JSON.stringify(subidos(nube, 'entrada'));
         expect(todo).not.toContain('gerencia');
         expect(todo).not.toContain('123456');
-        // lo privado tambien queda anotado: no se vuelve a evaluar
+        expect(todo).not.toContain('sueldo');
+        // lo que no sube tambien queda anotado: no se vuelve a evaluar
         const ids = fs.readFileSync(path.join(estado, 'mails-subidos.txt'), 'utf8').split('\n').filter(Boolean);
-        expect(ids.sort()).toEqual(['<cc-gerencia@x>', '<gerencia@x>', '<login@x>', '<sueldo@x>', '<trabajo@x>']);
-        expect(r.stdout).toContain('entrada 1 - cuarentena 1 - privados (no suben) 3');
+        expect(ids.sort()).toEqual(['<cc-gerencia@x>', '<dn@x>', '<gerencia@x>', '<login@x>', '<sinresolver@x>', '<sueldo@x>', '<trabajo@x>']);
+        expect(r.stdout).toContain('entrada 1 - cuarentena (no suben) 1 - privados (no suben) 5');
     });
 
     it('la segunda corrida no sube nada repetido y no toca lo que ya estaba en la nube; un mail nuevo sube solo', () => {
@@ -401,6 +408,23 @@ describe.skipIf(!PY)('mails_equipo.py: que sube, que no, y que conserva', () => 
         const r = py(['--nube', nube, '--estado-dir', estado, '--fuente-jsonl', src]);
         expect(r.status).toBe(5);
         expect(r.stdout).toContain('privados.json');
+        expect(fs.existsSync(path.join(nube, 'mails'))).toBe(false);
+        expect(fs.existsSync(path.join(estado, 'mails-subidos.txt'))).toBe(false);
+    });
+
+    // Auditoria del 01/10/2026: el privados.json de la nube era un borrador con tres direcciones
+    // "TBD.*" y el script lo tomaba por bueno. Un filtro sin completar es lo mismo que no tenerlo.
+    it.each([
+        ['una direccion TBD', { direcciones: ['gerencia@ejemplo.com', 'TBD.rrhh@ejemplo.com'], dominios: [] }],
+        ['un dominio TBD', { direcciones: ['gerencia@ejemplo.com'], dominios: ['tbd'] }],
+        ['el objeto vacio', {}],
+        ['las dos listas vacias', { direcciones: [], dominios: [], palabras_extra: ['sueldo'] }],
+    ])('privados.json SIN COMPLETAR (%s) no sube nada: sale con 5 y no deja rastro', (_, privados) => {
+        const { nube, estado } = escenario({ privados });
+        const src = jsonl('src.jsonl', [mail('<a@x>')]);
+        const r = py(['--nube', nube, '--estado-dir', estado, '--fuente-jsonl', src]);
+        expect(r.status, r.stdout + r.stderr).toBe(5);
+        expect(r.stdout).toContain('SIN COMPLETAR');
         expect(fs.existsSync(path.join(nube, 'mails'))).toBe(false);
         expect(fs.existsSync(path.join(estado, 'mails-subidos.txt'))).toBe(false);
     });
@@ -434,7 +458,7 @@ describe.skipIf(!PY)('mails_equipo.py: que sube, que no, y que conserva', () => 
         const src = jsonl('src.jsonl', [mail('<a@x>'), mail('<s@x>', { asunto: 'sueldos' })]);
         const r = py(['--nube', nube, '--estado-dir', estado, '--fuente-jsonl', src, '--dry-run']);
         expect(r.status).toBe(0);
-        expect(r.stdout).toContain('entrada 1 - cuarentena 1');
+        expect(r.stdout).toContain('entrada 1 - cuarentena (no suben) 1');
         expect(fs.existsSync(path.join(nube, 'mails'))).toBe(false);
         expect(fs.existsSync(path.join(estado, 'mails-subidos.txt'))).toBe(false);
         expect(fs.existsSync(path.join(estado, 'mails-estado.json'))).toBe(false);

@@ -104,8 +104,8 @@ const TBD_RE = /\bTBD\b/i;
  * TBD_EN_CAMPO_EXPORTABLE — un "TBD" en un campo que el export del AMFE imprime.
  *
  * Campos: los que lee `modules/amfe/amfeExcelExport.ts` (nombre de operacion, funciones,
- * WE, modo de falla, 3 efectos, causa, controles, acciones, responsable, observaciones) y los
- * de la caratula que el readiness ya exige. Un TBD adentro de otro texto ("frecuencia TBD")
+ * WE, modo de falla, 3 efectos, causa, controles, acciones, responsable, fechas y estado de la
+ * accion, observaciones) y la caratula entera. Un TBD adentro de otro texto ("frecuencia TBD")
  * cuenta igual: es un hueco impreso. No mira `_meta` ni nada que el export no imprima.
  *
  * Solo lo usa el modo entrega: en el trabajo diario un TBD es la forma honesta de marcar un
@@ -124,9 +124,17 @@ export function scanTbdExportable(doc, header = null, amfeNumber = '') {
         });
     };
 
+    // La caratula ENTERA, no solo los campos obligatorios (auditoria 01/10/2026): el export imprime
+    // tambien amfeNumber, ubicacion, modelo/año, asunto, alcance, equipo y fechas, y la data live los
+    // guarda con nombres historicos (amfeDate, coreTeam...: HEADER_ALIASES del export). Barrer por
+    // nombre deja afuera el alias que nadie listo; se barre todo lo que no sea interno (`_meta`...).
     const hdr = header || (doc && doc.header) || {};
-    const camposHeader = [...HEADER_REQUIRED, ...HEADER_REQUIRED_NON_MASTER, ...HEADER_RESPONSIBLE_ALIASES];
-    for (const f of new Set(camposHeader)) push({ amfe: amfeNumber, opNum: '-' }, `header.${f}`, hdr[f]);
+    for (const [f, v] of Object.entries(hdr)) {
+        if (f.startsWith('_')) continue;
+        const ctx = { amfe: amfeNumber, opNum: '-' };
+        if (Array.isArray(v)) v.forEach((x) => { if (typeof x === 'string') push(ctx, `header.${f}`, x); });
+        else if (typeof v === 'string') push(ctx, `header.${f}`, v);
+    }
 
     for (const op of (doc && Array.isArray(doc.operations) ? doc.operations : [])) {
         const opNum = op.opNumber ?? op.operationNumber ?? '?';
@@ -153,7 +161,8 @@ export function scanTbdExportable(doc, header = null, amfeNumber = '') {
                         push(cCtx, 'cause.cause', c.cause);
                         if (c.description !== c.cause) push(cCtx, 'cause.description', c.description);
                         for (const campo of ['preventionControl', 'detectionControl', 'preventionAction',
-                            'detectionAction', 'optimizationAction', 'responsible', 'actionTaken', 'observations']) {
+                            'detectionAction', 'optimizationAction', 'responsible', 'targetDate', 'status',
+                            'actionTaken', 'completionDate', 'observations']) {
                             push(cCtx, campo, c[campo]);
                         }
                     }

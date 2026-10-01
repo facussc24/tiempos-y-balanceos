@@ -275,6 +275,30 @@ describe('relevarTranscript · los tocados son lo ESCRITO, no lo nombrado', () =
     } finally { t.limpiar(); }
   });
 
+  // Auditoria del 01/10/2026: con UN archivo atribuido, lo que escribia un comando opaco quedaba afuera.
+  it('ventanas: cada comando opaco deja su [lanzado, resultado]; uno sin resultado o en segundo plano queda abierto; uno que solo lee no abre nada', async () => {
+    const ts = (h) => `2026-09-30T${h}:00.000Z`;
+    const opaco = (id, command, h, extra = {}) => asis({ name: 'Bash', id, input: { command, ...extra } }, { timestamp: ts(h) });
+    const vuelve = (id, h) => l({ type: 'user', timestamp: ts(h), message: { content: [{ type: 'tool_result', tool_use_id: id, content: 'ok' }] } });
+    const t = transcriptDe([
+      user('dale'),
+      write('CLAUDE.md'),
+      asis({ name: 'Bash', id: 'lee', input: { command: 'cat CLAUDE.md' } }, { timestamp: ts('10:01') }), vuelve('lee', '10:02'),
+      opaco('a', 'python scripts/gen.py --out docs/x.md', '10:05'), vuelve('a', '10:07'),
+      opaco('b', 'node scripts/x.mjs docs/y.md', '10:10', { run_in_background: true }), vuelve('b', '10:10'),
+      opaco('c', 'npx prettier --write scripts/z.mjs', '10:20'),
+    ]);
+    try {
+      const r = await relevarTranscript(t.f);
+      expect([...r.tocados]).toEqual(['CLAUDE.md']);
+      expect(r.ventanas).toEqual([
+        [Date.parse(ts('10:05')), Date.parse(ts('10:07'))],
+        [Date.parse(ts('10:10')), Infinity],
+        [Date.parse(ts('10:20')), Infinity],
+      ]);
+    } finally { t.limpiar(); }
+  });
+
   it('ROJO: una sesion que lanzo un agente y no escribio nada ubicable → null (el agente pudo escribir donde no se ve)', async () => {
     const t = transcriptDe([user('audita'), asis({ name: 'Agent', input: { prompt: 'audita' } })]);
     try { expect((await relevarTranscript(t.f)).tocados).toBe(null); } finally { t.limpiar(); }
@@ -335,6 +359,24 @@ describe('relevarPendientes · git status de un repo real, intersectado con lo e
     } finally { fs.rmSync(repo, { recursive: true, force: true }); }
   });
 
+  it('ROJO (auditoria 01/10): con tocados Y la ventana de un comando opaco, lo que quedo sucio adentro de la ventana TAMBIEN cuenta; lo de ayer y lo borrado, no', () => {
+    const repo = repoConSucio();
+    try {
+      const ahora = Date.now();
+      const n = nombres(relevarPendientes(new Set(['scripts/mio.mjs']), { ventanas: [[ahora - 60_000, ahora + 60_000]], repo }));
+      expect(n).toContain('scripts/mio.mjs');
+      expect(n).toContain('scripts/ajeno.mjs');                                // lo pudo escribir el comando opaco
+      expect(n).toContain('scripts/nuevo.mjs');
+      expect(n).not.toContain('scripts/viejo.mjs');                            // sucio de ayer: afuera de la ventana
+      expect(n).not.toContain('scripts/borrado.mjs');                          // borrado: sin fecha, no se le atribuye
+      // VERDE: la ventana fue ayer a la mañana (antes de que nada se ensuciara) → solo lo atribuido
+      const antes = nombres(relevarPendientes(new Set(['scripts/mio.mjs']), { ventanas: [[ahora - 48 * 3600_000, ahora - 47 * 3600_000]], repo }));
+      expect(antes).toBe('scripts/mio.mjs');
+      // VERDE: sin ventanas (la sesion no corrio nada opaco) se comporta como siempre
+      expect(nombres(relevarPendientes(new Set(['scripts/mio.mjs']), { ventanas: [], repo }))).toBe('scripts/mio.mjs');
+    } finally { fs.rmSync(repo, { recursive: true, force: true }); }
+  });
+
   it('sesion opaca (tocados null) con `desde`: cuenta lo modificado desde que arranco y lo borrado; NO lo sucio de ayer', () => {
     const repo = repoConSucio();
     try {
@@ -367,6 +409,14 @@ describe('decidir · le pasa a los pendientes los tocados y desde cuando', () =>
     expect(r.ok).toBe(false);                                                  // ROJO: con pendientes medibles sigue frenando
     expect(args[0]).toBe(null);
     expect(args[1]).toEqual({ desde: 1234 });
+  });
+
+  it('con tocados y comandos opacos: a los pendientes les llegan tambien las ventanas', async () => {
+    let args = null;
+    const ventanas = [[10, 20]];
+    await decidir(base, { ...deps, pendientes: (...a) => { args = a; return []; }, fueraEnEsteTurno: async () => ({ fuera: false, tocados: new Set(['a.mjs']), inicio: 5, ventanas }) });
+    expect([...args[0]]).toEqual(['a.mjs']);
+    expect(args[1]).toEqual({ desde: 5, ventanas });
   });
 
   it('sin transcript: pendientes(null, { desde: undefined }) → cuenta todo, como hoy', async () => {

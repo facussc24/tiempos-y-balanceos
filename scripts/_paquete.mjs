@@ -185,6 +185,11 @@ const GENERICOS = [
     { re: /sk-ant-[A-Za-z0-9_-]{10,}|sk-[A-Za-z0-9]{32,}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}/, motivo: 'parece una clave de API' },
     { re: /-----BEGIN [A-Z ]*PRIVATE KEY-----/, motivo: 'es una clave privada' },
     { re: /(?:password|passwd|contrase[nñ]a)\s*[:=]\s*["'][^"'\s]{4,}["']/i, motivo: 'parece una contraseña escrita en el archivo' },
+    // Auditoria 01/10/2026: lo que el filtro de arriba no veia. Una variable de entorno con el valor
+    // pelado (sin comillas), las claves nuevas de Supabase y la direccion de un proyecto de Supabase.
+    { re: /^[ \t]*(?:export[ \t]+)?[A-Z0-9_]*(?:PASSWORD|PASSWD|SECRET|TOKEN|API_?KEY|ANON_KEY)[A-Z0-9_]*[ \t]*=[ \t]*(?=[A-Za-z0-9_+/=-]*[0-9])(?=[A-Za-z0-9_+/=-]*[A-Za-z])[A-Za-z0-9_+/=-]{8,}[ \t]*$/m, motivo: 'parece una clave escrita sin comillas en una variable' },
+    { re: /sb_(?:secret|publishable)_[A-Za-z0-9_-]{10,}/, motivo: 'parece una clave de Supabase' },
+    { re: /[a-z0-9]{15,}[.]supabase[.]co(?![a-z])/i, motivo: 'trae la direccion de un proyecto de Supabase' },
     { re: /[A-Za-z]:[\\/]+Users[\\/]+(?!Public\b|Default\b|All Users\b|%|<)[^\\/\s"'<>|*?]+/i, motivo: 'trae la ruta de la carpeta personal de una PC' },
     { re: /[.]sgc-cache/i, motivo: 'nombra la carpeta de cache de documentos de la empresa' },
     { re: /[.]claude[\\/]+projects/i, motivo: 'nombra la carpeta de memoria de Claude' },

@@ -5,8 +5,11 @@ esta PC, en segundo plano. Lo corre `sync_equipo.ps1` (la tarea "Barack - Base C
 Que hace, en una linea: lee el buzon propio de Outlook clasico (solo lectura) y, por cada mail
 nuevo, segun el filtro de esta PC:
 
-    privado    -> NO sube (direccion de privados.json en De/Para/CC, o remitente de Anthropic)
-    cuarentena -> <nube>\\mails\\_cuarentena\\<autor>\\   (sueldos, licencias, sanciones, etc.)
+    privado    -> NO sube (direccion de privados.json en De/Para/CC, remitente de Anthropic, o un
+                  remitente/destinatario cuya casilla no se pudo leer: sin casilla no hay filtro)
+    cuarentena -> NO sube (sueldos, licencias, sanciones, etc.). Hasta el 01/10/2026 iba a
+                  <nube>\\mails\\_cuarentena, que lee todo el que tiene la biblioteca: es justo lo
+                  que no tiene que quedar a la vista del equipo. El mail sigue en el Outlook de su dueño.
     entrada    -> <nube>\\mails\\_entrada\\<autor>\\
 
 Reglas que cumple este script:
@@ -144,7 +147,11 @@ def cargar_privados(nube, estado_dir):
                     escribir_atomico(copia, f.read())
             except Exception:
                 pass
-        return dirs, doms, pal, donde
+        # Un filtro SIN COMPLETAR vale lo mismo que no tenerlo: falla cerrado. El 01/10/2026 el
+        # privados.json de la nube era un borrador con tres direcciones "TBD.*" (dueño, RRHH,
+        # sueldos) y un {} tambien pasaba: los mails de esas casillas habrian subido a _entrada.
+        incompleto = (not dirs and not doms) or any('tbd' in x for x in (dirs | doms))
+        return dirs, doms, pal, donde, incompleto
     return None
 
 
@@ -160,9 +167,13 @@ def direcciones_de(m):
 
 
 def clasificar(m, dirs_priv, doms_priv, palabras_extra=()):
-    """'privado' (no sube), 'cuarentena' (sube aparte) o 'entrada'."""
+    """'privado' (no sube), 'cuarentena' (tampoco sube, se cuenta aparte) o 'entrada'."""
     dirs = direcciones_de(m)
     if any(NUNCA_SUBE.search(d) for d in dirs):
+        return 'privado'
+    # Sin la casilla del remitente o de algun destinatario, el filtro de privados no tiene contra que
+    # comparar (un DN de Exchange no es una direccion): falla cerrado.
+    if '@' not in str(m.get('de_mail') or '') or m.get('sin_resolver'):
         return 'privado'
     if dirs & dirs_priv:
         return 'privado'
@@ -266,12 +277,16 @@ def _fecha_recibido(m):
 
 def _leer_mail(m, carpeta, mid, eid, rt):
     para, cc, adj = [], [], []
+    sin_resolver = 0
     try:
         for i in range(1, m.Recipients.Count + 1):
             r = m.Recipients.Item(i)
-            (para if r.Type == 1 else cc).append(_smtp(r))
+            a = _smtp(r)
+            (para if r.Type == 1 else cc).append(a)
+            if not a:
+                sin_resolver += 1
     except Exception:
-        pass
+        sin_resolver += 1
     try:
         for k in range(1, m.Attachments.Count + 1):
             adj.append(str(m.Attachments.Item(k).FileName))
@@ -285,6 +300,7 @@ def _leer_mail(m, carpeta, mid, eid, rt):
         'asunto': str(getattr(m, 'Subject', '') or ''), 'adjuntos': adj,
         'conversacion': str(getattr(m, 'ConversationID', '') or ''),
         'cuerpo': _limpiar(getattr(m, 'Body', '')),
+        'sin_resolver': sin_resolver,
     }
 
 
@@ -405,17 +421,16 @@ def escribir_lote(nube, destino, autor, lista):
 
 
 def volcar(lote, nube, autor, priv, dry, ids_path, cuenta):
-    por_destino = {'entrada': [], 'cuarentena': []}
+    suben = []
     for m in lote:
         c = clasificar(m, priv[0], priv[1], priv[2])
         cuenta[c] += 1
-        if c != 'privado':
-            por_destino[c].append(m)
+        if c == 'entrada':                    # privado y cuarentena no salen de la PC
+            suben.append({k: v for k, v in m.items() if k != 'sin_resolver'})
     if dry:
         return
-    for destino, lista in por_destino.items():
-        if lista:
-            escribir_lote(nube, destino, autor, lista)
+    if suben:
+        escribir_lote(nube, 'entrada', autor, suben)
     anotar_ids(ids_path, lote)
 
 
@@ -437,6 +452,9 @@ def correr(a):
     priv = cargar_privados(nube if nube and os.path.isdir(nube) else None, estado_dir)
     if priv is None:
         print('Falta privados.json (ni en la nube ni la copia local): no se sube nada hasta que Fak lo deje en la carpeta de la base.')
+        return 5
+    if priv[4]:
+        print('privados.json esta SIN COMPLETAR (lista vacia o direcciones "TBD", leido de la %s): no se sube nada hasta que Fak lo complete.' % priv[3])
         return 5
 
     ids_path = os.path.join(estado_dir, 'mails-subidos.txt')
@@ -481,7 +499,7 @@ def correr(a):
         return 1
 
     print('Revisados %d - nuevos %d - desde %s - %s' % (ctx['revisados'], nuevos, corte.strftime('%Y-%m-%d'), 'completo' if ctx['completa'] else 'PARCIAL (se acabo el tiempo)'))
-    print('Nube: entrada %d - cuarentena %d - privados (no suben) %d - filtro: %s' % (cuenta['entrada'], cuenta['cuarentena'], cuenta['privado'], priv[3]))
+    print('Nube: entrada %d - cuarentena (no suben) %d - privados (no suben) %d - filtro: %s' % (cuenta['entrada'], cuenta['cuarentena'], cuenta['privado'], priv[3]))
     if not a.dry_run:
         nuevo = dict(estado)
         nuevo.setdefault('corte_inicial', corte.strftime('%Y-%m-%dT%H:%M:%S'))
@@ -502,6 +520,11 @@ def selftest():
         ({'de_mail': 'a@ejemplo.com', 'para_mails': ['b@ejemplo.com'], 'asunto': 'Licencia médica de Juan', 'cuerpo': ''}, 'cuarentena'),
         ({'de_mail': 'noreply@mail.anthropic.com', 'para_mails': ['f@ejemplo.com'], 'asunto': 'Your login code', 'cuerpo': '123456'}, 'privado'),
         ({'de_mail': 'prov@x.com', 'para_mails': ['compras@ejemplo.com'], 'asunto': 'Pesos HotMelt', 'cuerpo': 'el sueldo no importa aca'}, 'cuarentena'),
+        # sin casilla no hay contra que filtrar: no sube (remitente en DN de Exchange, vacio, o un destinatario sin resolver)
+        ({'de_mail': '/o=exchangelabs/ou=x/cn=recipients/cn=abc', 'para_mails': ['f@ejemplo.com'], 'asunto': 'remitente en DN', 'cuerpo': ''}, 'privado'),
+        ({'de_mail': '', 'para_mails': ['f@ejemplo.com'], 'asunto': 'remitente vacio', 'cuerpo': ''}, 'privado'),
+        ({'de_mail': 'compras@ejemplo.com', 'para_mails': ['f@ejemplo.com'], 'sin_resolver': 1, 'asunto': 'destinatario sin resolver', 'cuerpo': ''}, 'privado'),
+        ({'de_mail': 'compras@ejemplo.com', 'para_mails': ['f@ejemplo.com'], 'sin_resolver': 0, 'asunto': 'todos resueltos', 'cuerpo': ''}, 'entrada'),
     ]
     ok = True
     for m, esperado in casos:

@@ -254,6 +254,11 @@ describe('publicar: el filtro frena lo que no puede viajar (y no escribe nada)',
         ['una clave de API', C('sk-', 'ant-', 'api03-abcdefghijklmn')],
         ['una clave privada', C('-----BEGIN ', 'RSA PRIVATE KEY-----')],
         ['una contraseña escrita', 'password = "hunter22"'],
+        // auditoria 01/10/2026: lo que pasaba sin que el filtro lo viera
+        ['una clave sin comillas en una variable', C('MI_API', '_KEY=', 'abcd1234efgh5678')],
+        ['una clave sin comillas con export', C('export SERVICE_', 'TOKEN = ', 'Zx81kQ', 'p0-_aB')],
+        ['una clave nueva de Supabase', C('sb_', 'secret_', 'abcdefghij1234')],
+        ['la direccion de un proyecto de Supabase', C('https://', 'abcdefghijklmnopqrst', '.supa', 'base.co/rest')],
     ];
     it.each(casosQueFrenan)('frena %s', (_que, texto) => {
         const h = P.revisarContenido(new Map([['x.md', esc(tmp, 'x.md', `linea uno\n${texto}\n`)]]), P.patronesFiltro({ identidad: NOIDENT }));
@@ -268,6 +273,12 @@ describe('publicar: el filtro frena lo que no puede viajar (y no escribe nada)',
         ['una clave de cache (variable)', "clave = '%s|%d|%d' % (a, b, c)"],
         ['la carpeta publica de Windows', 'C:/Users/Public/Documents'],
         ['una ruta con %USERPROFILE%', '%USERPROFILE%/Desktop'],
+        // una variable que LEE la clave de otro lado no la lleva escrita
+        ['una variable que lee del entorno', "TOKEN = os.environ['X_TOKEN']"],
+        ['una variable que llama a una funcion', 'API_KEY = leer_credencial()'],
+        ['una variable vacia o None', 'ARB_PASSWORD = None'],
+        ['el nombre supabase sin proyecto', 'los datos estan en supabase.co y en el repo'],
+        ['una palabra larga sin numeros', 'SECRET_NAME = BARACK_ARB_GENERICA'],
     ];
     it.each(casosQuePasan)('NO frena %s (un filtro que grita por todo se termina ignorando)', (_que, texto) => {
         const h = P.revisarContenido(new Map([['x.md', esc(tmp, 'x.md', `${texto}\n`)]]), P.patronesFiltro({ identidad: NOIDENT }));

@@ -1,4 +1,9 @@
 /**
+ * ARCHIVADO el 01/10/2026 — NO CORRER. Este script lleva la inspeccion humana a D=7, que salia del
+ * borrador de 2017. La tabla P3 oficial (SETEC pag. 109-111) pone 8 a la inspeccion humana con metodo
+ * no probado: lo corrige `scripts/_recalificarDeteccionHumana8.mjs` (515 causas, 01/10/2026). Queda
+ * aca como historia; desde esta carpeta sus imports relativos no resuelven, a proposito.
+ *
  * _recalificarDeteccionPatagonia.mjs — la columna D de los 8 AMFE de Patagonia estaba
  * calificada por debajo del piso que fija la norma.
  *
