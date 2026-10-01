@@ -93,7 +93,6 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
-- **01/10 — Una decisión de diseño no se le pregunta a Fak: se investiga cómo se hace y se decide** (*"no me podés preguntar estas cosas, simplemente debés saber hacerlas"*); y una lámina se lee de corrido, siempre hacia la derecha. Graduado al skill `lamina-de-proceso`.
 - **01/10 — Un punto del Asaichi que dice "pasar mail" no es la orden de armarlo hoy, y un cierre de 80 renglones no se lee** (*"armaste un mail que no te pedi"*). Graduado a la memoria `feedback_mail_de_una_tarea_va_con_la_info_procesada`.
 
 - **01/10 — Si un entregable nombra una fuente, lleva su captura** (*"si no me van a preguntar de dónde saqué los datos"*), **y una herramienta nueva no informa lo que no corrió con un caso de respuesta conocida.** Graduado al skill `superficie-vinilo-3d` y a la memoria `entregables_para_fak`.
@@ -103,7 +102,7 @@ incidente vive en los snapshots.
 - **30/09 — Si Fak ya dijo DONDE, no se elige otro lugar ni se vuelve a preguntar; un "no" a lo que acabo de anunciar rechaza ESO.** Graduado a `nube-ingenieria.md` §3 y a la memoria `feedback_si_fak_ya_dijo_donde`.
 - **30/09 — Lo que Fak ejecuta con doble click se prueba por SU camino y lo que pasa la primera vez se dice ANTES** (*"me pide contraseña, te dije que sea automatico y encima no anda"*: Z: desconectado para el lanzador). Graduado a la memoria `lo_que_fak_ejecuta_se_prueba_por_su_camino`.
 - **23/09 — Lo que dice la norma publicada no se presenta como decisión pendiente, y una pregunta a Fak se escribe como la lista que él lee.** Graduado a la memoria `feedback_pregunta_a_fak_como_listita`.
-- **31/08 — El pedido se ejecuta como viene: ni fabricar una decision que Fak no tiene que tomar, ni convertir un comentario en trabajo; y el dato que Fak pasa escrito no se discute.** Graduado a la memoria `feedback_el_pedido_se_ejecuta_como_viene`.
+- **31/08 — El pedido se ejecuta como viene: ni fabricar una decision que Fak no tiene que tomar (tampoco una de diseño: 01/10, skill `lamina-de-proceso`), ni convertir un comentario en trabajo; y el dato que Fak pasa escrito no se discute.** Graduado a la memoria `feedback_el_pedido_se_ejecuta_como_viene`.
 - **30/09-01/10 — IP Pad: seis correcciones sobre cómo contesto, decido, busco antes de pedir y cierro lo que escribo** (un contador derivado y el historial de revisiones quedaron atrás). Graduado a `no_hacer_informes`, `peso_imds_no_es_consumo`, `project_ippad_ho985_engrampado`, skill `hojas-de-proceso` §2 quinquies y `saveAmfe()`.
 - **26/09 — Un audit que pide Fak incluye aplicar lo que encuentra: el informe solo no es el entregable.** Graduado a la memoria `feedback_audit_incluye_aplicar`.
 - **Un entregable tecnicamente correcto falla igual si el que lo mira no entiende lo que esta viendo: siete planos del mismo gesto no son siete, son uno repetido.** Si hay que explicar algo no va en un .txt: va en un PDF visual, imagen grande arriba, 4-5 renglones abajo, una idea por pagina, un archivo por destinatario. Vale igual para un video, un deck o un instructivo. Graduado al skill `editar-video` §5, a `cad-3d.md` GATE E + `gate_entregable.py` y a la memoria `entregables_para_fak`.
