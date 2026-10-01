@@ -93,7 +93,7 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
-- **01/10 — Un punto del Asaichi que dice "pasar mail" no es la orden de armarlo hoy, y un cierre de 80 renglones no se lee** (*"armaste un mail que no te pedi"*). Graduado a la memoria `feedback_mail_de_una_tarea_va_con_la_info_procesada`.
+- **01/10 — Un punto del Asaichi que dice "pasar mail" no es la orden de armarlo hoy, y un cierre de 80 renglones o con tres tablas no se lee** (*"armaste un mail que no te pedi"*, *"no entendi un carajo"*). Graduado a la memoria `feedback_mail_de_una_tarea_va_con_la_info_procesada`.
 
 - **01/10 — Si un entregable nombra una fuente, lleva su captura, y lo nuevo (una herramienta, un Claude que se publica para otros) no sale sin correr un caso de respuesta conocida** (al dueño le contestaron que la BOM "está en la nube": vive en el arb). Graduado al skill `superficie-vinilo-3d` y a las memorias `entregables_para_fak` y `project_claudes_por_area`.
 - **30/09-01/10 — REGLA DURA: se guarda solo en la nube de Ingeniería, en la personal de Fak nada; si Fak ya dijo DÓNDE no se elige otro lugar ni se vuelve a preguntar; y no se le habla del "cerebro".** Graduado a `nube-ingenieria.md` + hook `nube-personal-guard` y a la memoria `feedback_si_fak_ya_dijo_donde`.
