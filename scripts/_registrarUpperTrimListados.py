@@ -110,6 +110,14 @@ try:
     REPARA = bool(donde[ID_NUEVO])
     if REPARA and donde[ID_NUEVO][0] != fila_nueva:
         raise RuntimeError(f"el {ID_NUEVO} esta en la fila {donde[ID_NUEVO][0]}, no en la {fila_nueva}. Reviso a mano.")
+    # El alta ya se hizo el 01/10/2026. Volver a correr esto con --apply reescribiria la fila
+    # con los valores del ALTA (Rev. A, 01/10/2026): si el documento ya paso a Rev. B, lo
+    # devolveria a la A sin avisar (auditoria de cierre del 01/10/2026). Una revision nueva se
+    # anota con `_registrarRevFlujograma.py`, no con este script.
+    if REPARA and APPLY and "--reparar" not in sys.argv:
+        raise RuntimeError(
+            f"el {ID_NUEVO} ya esta cargado (fila {fila_nueva}: Rev. {ws.Cells(fila_nueva, 13 if QUE == 'flujograma' else 14).Value!r}). "
+            "No se reescribe. Para rehacer el ALTA a proposito: --apply --reparar")
     # La fila siguiente al modelo: si esta vacia se usa; si tiene otro documento se inserta una.
     siguiente_ocupada = (not REPARA) and ident(fila_nueva) != ""
     modo = "REPARACION" if REPARA else ("ALTA insertando una fila" if siguiente_ocupada else "ALTA en la fila vacia que sigue")

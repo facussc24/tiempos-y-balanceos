@@ -53,6 +53,62 @@ terminal se sale de `SCRAP` / `RECLAMO DE CALIDAD AL PROVEEDOR` / `PLAN DE REACC
 generador, el de SMRC es el **159** (APB P21) y el apoyabrazos de Patagonia (VWA) el **153**; en
 el servidor, 126 Rev.7, 131 Rev.5 y 105 Rev.H. El cliente de cada JSON esta en `header.client`.
 
+### 0 bis. Lo que FALTA tambien frena — los bloques de cada sector (01/10/2026)
+
+> **El 160 (Upper Trim) lo emiti sin el control con mylar despues del corte, sin el control de
+> adhesivado ni su reproceso, y con todo en una sola columna.** Los chequeos de arriba daban
+> verde: no habia nada mal dibujado, faltaban bloques enteros. Fak lo abrio y paro en la
+> operacion 20: *"siempre en corte hay control con mylar... debe estar lleno de errores... no
+> puede ser que a esta altura hagamos mal los flujogramas"*.
+>
+> **Por que paso:** lo arme desde los papeles de la PIEZA (pliego, video, BOM) y, como ninguno
+> nombraba un mylar, no lo puse — crei que ponerlo era inventar un control. Es al reves: **en una
+> pieza nueva, los bloques de cada sector salen de los flujogramas hermanos**; los papeles de la
+> pieza dicen que operaciones propias tiene (un troquelado, un embossing), no como se dibuja el
+> corte o el adhesivado en esta casa. Y el renglon de arriba ("abrir dos flujogramas vigentes")
+> no lo obligaba nadie.
+
+**El metodo, en este orden:**
+
+1. Elegir dos hermanos (misma familia y mismo tipo de proceso) y **copiar su estructura**:
+   recepcion, ramas por material, conectores, y el bloque completo de cada sector que la pieza
+   comparte con ellos.
+2. Sobre esa estructura, cambiar los nombres al material de la pieza y agregar las operaciones
+   propias, cada una con su fuente.
+3. Dejar escrito en el JSON `_hermanos` (cuales y que se tomo de cada uno).
+4. Correr el generador: compara solo contra **todos** los demas flujogramas del generador.
+
+**Los bloques, contados el 01/10/2026 sobre los 8 del generador** (los que reviso Fak en 2026;
+los 56 Visio viejos del servidor casi no dibujan el control con mylar — 2 de 48 con corte —, es
+criterio suyo de este año, y por eso la vara son los del generador):
+
+| Sector | Como se dibuja | Rojo si falta |
+|---|---|---|
+| Recepcion | `10 RECEPCION` → almacenado pendiente de control → `INSPECCION DE MATERIA PRIMA` → rombo (NO: reclamo al proveedor) → almacenado controlada e identificada | — (lo ve la comparacion con hermanos) |
+| Materiales que van a sectores distintos | **una rama por material** (`branches`): la tela a la mesa de corte, el sustrato directo a su sector. El adhesivo entra por **conector** (A) en el adhesivado | — |
+| Mesa de corte | corte → **`CONTROL CON MYLAR` (op+inspeccion, numero de la decena del corte) → rombo `¿CORTE CONFORME?` (NO: SCRAP)** → WIP → traslado | `corte-sin-control-mylar` (6 de 7) |
+| Adhesivado de la pieza | adhesivado → **`INSPECCION DE PIEZA ADHESIVADA` → rombo `¿ADHESIVADO OK?` → `¿SE PUEDE RETRABAJAR?` → `REPROCESO: FALTA DE ADHESIVO` → re-entrada al control** | `adhesivado-sin-control` (los 4 tapizados a pistola: 153, 154, 157, 159) |
+| Cualquier control numerado | lo sigue su rombo de conformidad | `control-sin-rombo` (6 de 8) |
+| Cierre | `CONTROL FINAL DE CALIDAD` → rombo → retrabajo y reprocesos → traslado → **embalaje, ultima operacion** → traslado → almacenado de producto terminado | `sin-control-final`, `embalaje-no-es-la-ultima`, `sin-almacenado-final` (8 de 8) |
+
+**Y la comparacion con los hermanos**, que es lo que reemplaza al "acordate de abrirlos": por
+cada sector, si dos tercios o mas de los hermanos que lo tienen lo dibujan con un control, un
+rombo, la pregunta de retrabajo o un reproceso y este no, el generador dice **que falta, en
+cuantos esta, en cuales y como se llama ahi**. En una **Rev. A frena**
+(`falta-lo-que-tienen-los-hermanos`); en una revision posterior avisa. El WIP solo avisa: el
+159, que Fak reviso renglon por renglon, no lo lleva despues del corte.
+
+Dos salidas, las dos con el motivo escrito en el JSON:
+- `_no_aplica: { "ADHESIVADO.reproceso": "por que no corresponde a esta pieza, con su fuente" }`
+  — para un documento nuevo.
+- `_excepciones_canon: { "corte-sin-control-mylar": "emitido asi en Rev.B; se agrega en la proxima" }`
+  — para uno ya emitido (hoy solo el 151). Baja a aviso; no apaga la regla.
+
+**Vocabulario de la casa** (contado en el corpus del servidor): `VIROLADO + REFILADO` para el
+cierre de bordes (105, 106, 107, 126, 127), `TROQUELADO`, `CONTROL FINAL DE CALIDAD` en
+Patagonia (`INSPECCION FINAL` en los viejos), `EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO`.
+No se inventa un nombre nuevo para una operacion que la casa ya nombra.
+
 ---
 
 ## 1. La numeracion — el criterio de la casa
@@ -273,7 +329,15 @@ Entrega:
 ❌ Juzgar el flujograma por el JSON o por la vista general del PNG.
 ❌ Alinear el flujograma a la HO. La HO es la que se renumera.
 ❌ Meter dos sectores en una decena, o un sector en tres.
-❌ Agregar una operacion o un control que ningun documento ni Fak respalda.
+❌ Agregar una operacion o un control que ningun documento ni Fak respalda. **Ojo, que esta
+   regla se lee al reves con facilidad:** el control con mylar del corte, el control de
+   adhesivado y el control final NO son "un control que nadie respalda" — los respaldan los
+   flujogramas hermanos y Fak (*"siempre en corte hay control con mylar"*, 01/10/2026). Lo que no
+   se agrega es una operacion PROPIA de la pieza que ningun papel de la pieza nombra.
+❌ **Armar un flujograma nuevo desde los documentos de la pieza en vez de desde sus hermanos**
+   (el 160, 01/10/2026). Sale prolijo, pasa los chequeos de dibujo y le faltan los bloques.
+❌ **Emitir (servidor, legajo, listado) antes de que Fak lo haya mirado.** El 160 se emitio con
+   su OK a los numeros y se tuvo que rehacer una hora despues: el PNG se le muestra ANTES.
 ❌ Asignar CC/SC por cuenta propia, o copiarlas de la revision anterior. La marca de cada
    operacion es la union de las siglas de sus causas en el AMFE (`caracteristicas-especiales.md`
    §3); una marca heredada que el AMFE no sostiene se informa como diferencia, no se copia.

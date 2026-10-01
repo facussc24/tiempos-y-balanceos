@@ -1,4 +1,7 @@
 {
+  "_excepciones_canon": {
+    "corte-sin-control-mylar": "La Rev.B del 18/08/2026 se emitio sin el control con mylar despues del corte. Criterio de Fak del 01/10/2026: en corte siempre va. Se agrega en la proxima revision del 151."
+  },
   "_doc": "Flujograma 151 — APOYABRAZOS TRASERO CENTRAL (VW427 Patagonia). Transcrito del PNG Rev.A que genero Fak en Claude Design el 04/05/2026, mas la correccion de la Rev.B. Los numeros de operacion tienen que coincidir con el AMFE 150 en Supabase — verificar con `node scripts/_verificarNumeracion.mjs`.",
   "_cambio_revB": "Se agrega la operacion 61 MONTAJE DE PORTAVASOS Y MARCO, entre 60 TAPIZADO y 70 CONTROL FINAL. Ya existe en el AMFE 150 (revision entregada a Calidad el 14/08/2026) y el flujograma no la mostraba. Fuente: AMFE 150 Supabase live.",
   "header": {

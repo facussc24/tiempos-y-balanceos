@@ -4,14 +4,20 @@ lugar del servidor: el maestro en Gestion Ingenieria y la copia en el legajo APQ
 
 Emitir un documento controlado lleva el OK de Fak (autonomy-contract §F): lo dio el 01/10/2026.
 
-Solo COPIA. No borra ni pisa: si el destino ya existe y es identico lo dice, y si es distinto
-frena (una Rev. A ya emitida no se reemplaza en silencio; para eso esta --reemplazar, que
-manda el archivo anterior a la carpeta Obsoleto de al lado).
+Solo COPIA. Si el destino ya existe y es identico lo dice; si es distinto FRENA: una Rev. A ya
+emitida no se reemplaza en silencio. Dos salidas, las dos explicitas:
+  --reemplazar   el archivo anterior va a la carpeta Obsoleto de al lado (cambio de revision).
+  --pisar        el archivo anterior se reemplaza en su lugar y queda una copia LOCAL en
+                 `.sgc-cache/emitidos-respaldo/`. Es para corregir una emision propia que no
+                 llego a usarse (el 01/10/2026 Fak rechazo la primera Rev. A una hora despues de
+                 emitida): dejarla en un Obsoleto del legajo seria guardar un documento que
+                 nunca valio.
 
 Uso:  py -3 scripts/_emitirUpperTrim.py flujograma            (muestra que haria)
       py -3 scripts/_emitirUpperTrim.py flujograma --apply
-      py -3 scripts/_emitirUpperTrim.py amfe [--apply]
+      py -3 scripts/_emitirUpperTrim.py amfe [--apply] [--pisar | --reemplazar]
 """
+import datetime
 import hashlib
 import os
 import shutil
@@ -22,8 +28,9 @@ sys.stdout.reconfigure(encoding="utf-8")
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 APPLY = "--apply" in sys.argv
 REEMPLAZAR = "--reemplazar" in sys.argv
-if len(args) != 1 or args[0] not in ("flujograma", "amfe"):
-    sys.exit("Uso: py -3 scripts/_emitirUpperTrim.py <flujograma|amfe> [--apply] [--reemplazar]")
+PISAR = "--pisar" in sys.argv
+if len(args) != 1 or args[0] not in ("flujograma", "amfe") or (REEMPLAZAR and PISAR):
+    sys.exit("Uso: py -3 scripts/_emitirUpperTrim.py <flujograma|amfe> [--apply] [--pisar | --reemplazar]")
 QUE = args[0]
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -68,10 +75,14 @@ if QUE == "flujograma":
     Image.MAX_IMAGE_PIXELS = None
     png = os.path.join(SALIDA, NOMBRE + ".png")
     pdf = os.path.join(SALIDA, NOMBRE + ".pdf")
-    shutil.copyfile(PNG_GENERADOR, png)
-    # 150 DPI: la convencion de los flujogramas hermanos del legajo.
-    with Image.open(png) as img:
-        img.convert("RGB").save(pdf, "PDF", resolution=150)
+    # El PDF se rehace SOLO si cambio el dibujo. PIL le graba la hora al PDF: rehecho en cada
+    # corrida nunca daba "igual" contra el ya emitido y pedia reemplazar un archivo identico
+    # a la vista (auditoria de cierre del 01/10/2026).
+    if not (os.path.isfile(png) and os.path.isfile(pdf) and sha(png) == sha(PNG_GENERADOR)):
+        shutil.copyfile(PNG_GENERADOR, png)
+        # 150 DPI: la convencion de los flujogramas hermanos del legajo.
+        with Image.open(png) as img:
+            img.convert("RGB").save(pdf, "PDF", resolution=150)
 
 fuentes = [os.path.join(SALIDA, NOMBRE + ext) for ext in EXTENSIONES]
 for f in fuentes:
@@ -103,8 +114,8 @@ for f, destino, estado in plan:
 if not os.path.isdir(MAESTRO):
     print(f"\n  (se crea la carpeta {MAESTRO})")
 distintos = [p for p in plan if p[2] == "DISTINTO"]
-if distintos and not REEMPLAZAR:
-    problemas.append(f"{len(distintos)} destino(s) ya existen con otro contenido; con --reemplazar el anterior va a Obsoleto")
+if distintos and not (REEMPLAZAR or PISAR):
+    problemas.append(f"{len(distintos)} destino(s) ya existen con otro contenido: --reemplazar (el anterior a Obsoleto) o --pisar (correccion de una emision propia sin usar)")
 if problemas:
     print("\nFRENO:\n  " + "\n  ".join(problemas))
     sys.exit(1)
@@ -117,7 +128,17 @@ os.makedirs(MAESTRO, exist_ok=True)
 for f, destino, estado in plan:
     if estado == "igual":
         continue
-    if estado == "DISTINTO":
+    if estado == "DISTINTO" and PISAR:
+        respaldo_dir = os.path.join(REPO, ".sgc-cache", "emitidos-respaldo",
+                                    datetime.datetime.now().strftime("%Y%m%d_%H%M%S"),
+                                    "maestro" if destino.startswith(MAESTRO) else "legajo")
+        os.makedirs(respaldo_dir, exist_ok=True)
+        respaldo = os.path.join(respaldo_dir, os.path.basename(destino))
+        shutil.copyfile(destino, respaldo)
+        if sha(respaldo) != sha(destino):
+            sys.exit(f"ERROR: no pude respaldar {destino}; no lo piso")
+        print(f"  respaldo local del anterior: {respaldo}")
+    elif estado == "DISTINTO":
         obsoleto = os.path.join(os.path.dirname(destino), "Obsoleto")
         os.makedirs(obsoleto, exist_ok=True)
         base, ext = os.path.splitext(os.path.basename(destino))

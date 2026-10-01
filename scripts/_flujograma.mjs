@@ -112,7 +112,11 @@ try {
         // 08/09 — y yo no la habia abierto. Un canon en prosa depende de que me acuerde de
         // leerlo; este corre solo. Fak: "no solo quiero que lo corrijas, quiero que no vuelvan
         // a suceder la proxima vez que haga flujogramas".
-        const hallazgos = revisarFlujograma(datos);
+        // Los hermanos son los demas flujogramas del generador: el canon compara sector por
+        // sector y dice que bloque tienen ellos y este no (01/10/2026, flujograma 160).
+        const hermanos = clavesDisponibles().filter((c) => c !== clave && /^\d/.test(c))
+            .map((c) => ({ clave: c, doc: JSON.parse(readFileSync(join(DATA, `${c}.json`), 'utf8')) }));
+        const hallazgos = revisarFlujograma(datos, { hermanos });
         for (const h of hallazgos.filter((x) => x.gravedad === 'AVISO')) {
             console.warn(`  ⚠ ${clave}: ${h.regla} — ${h.detalle}`);
         }

@@ -53,7 +53,7 @@ const esNodoDeControl = (n) => !NO_SON_PUESTOS.has(n.type) && esControl(n.descri
  * Revisa un flujograma contra el canon. Devuelve una lista de hallazgos; cada uno dice
  * QUE renglon lo motiva, porque un control que frena sin decir cual nodo no sirve.
  */
-export function revisarFlujograma(doc) {
+export function revisarFlujograma(doc, { hermanos = null } = {}) {
     const hallazgos = [];
     const rojo = (regla, detalle) => hallazgos.push({ gravedad: 'ROJO', regla, detalle });
     const aviso = (regla, detalle) => hallazgos.push({ gravedad: 'AVISO', regla, detalle });
@@ -220,7 +220,214 @@ export function revisarFlujograma(doc) {
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────────────────────────
+    // 13. LOS BLOQUES QUE NO PUEDEN FALTAR. Todo lo de arriba mira lo que ESTA dibujado; esto
+    //     mira lo que FALTA, que es lo que no se ve.
+    //
+    //     01/10/2026: emiti el flujograma 160 (Upper Trim) con el corte sin su control con
+    //     mylar y el adhesivado sin su control ni su reproceso. Los 11 chequeos de arriba daban
+    //     verde: no habia nada mal dibujado, faltaban bloques enteros. Fak, al abrirlo: *"siempre
+    //     en corte hay control con mylar, y apenas llegue al 20... debe estar lleno de errores"*.
+    //     Lo arme desde los documentos de la pieza (pliego, video, BOM) y, como ninguno nombraba
+    //     un mylar, no lo puse: en una pieza NUEVA la fuente de los bloques es el flujograma de
+    //     las hermanas, no los papeles de la pieza.
+    //
+    //     Conteo sobre los 8 del generador (los que reviso Fak en 2026), el 01/10/2026:
+    //       corte en mesa -> control con mylar + rombo ......... 6 de 7 (falta en el 151 Rev.B)
+    //       adhesivado -> control + rombo ...................... 4 de 6 (los 4 tapizados a
+    //                     pistola: 153, 154, 157, 159; faltan el hot melt del 155 y el
+    //                     laminado del 158)
+    //       todo control numerado va seguido de su rombo ....... 6 de 8 (155 y 158)
+    //       control final con rombo antes del embalaje ......... 8 de 8
+    //       el embalaje es la ultima operacion y cierra en un almacenado ... 8 de 8
+    //     Los 56 Visio viejos del servidor casi no dibujan el control con mylar (2 de 48 con
+    //     corte): es criterio de Fak de 2026, y por eso la vara son los del generador.
+    //
+    //     Un flujograma ya emitido que no lo cumple lo declara en `_excepciones_canon`
+    //     ({ "<regla>": "por que, y cuando se corrige" }) y baja a aviso: un control que queda
+    //     rojo por trabajo pendiente se termina ignorando.
+    // ─────────────────────────────────────────────────────────────────────────────────────
+    const excepciones = doc._excepciones_canon ?? {};
+    const bloque = (regla, detalle) => (excepciones[regla]
+        ? aviso(regla, `${detalle} — excepcion declarada: ${excepciones[regla]}`)
+        : rojo(regla, detalle));
+    const todasLasColumnas = [...columnas(doc.flow)];
+    const siguienteEnSuColumna = (nodo) => {
+        for (const col of todasLasColumnas) {
+            const i = col.indexOf(nodo);
+            if (i >= 0) return col[i + 1] ?? null;
+        }
+        return null;
+    };
+    const controlConRombo = (patron) => todos.some((n) => (esNodoDeControl(n) || n.type === 'inspection')
+        && patron.test(n.description ?? '') && siguienteEnSuColumna(n)?.type === 'condition');
+
+    // 13a. Corte en mesa -> control con mylar y su rombo.
+    const cortes = todos.filter((n) => esCorteEnMesa(n));
+    if (cortes.length && !controlConRombo(/MYLAR/i)) {
+        bloque('corte-sin-control-mylar',
+            `${cortes[0].stepId ?? ''} "${cortes[0].description}" no tiene despues su CONTROL CON MYLAR con el rombo ¿CORTE CONFORME?`);
+    }
+
+    // 13b. Adhesivado de la pieza -> control de adhesivado y su rombo.
+    const adhesivados = todos.filter((n) => esAdhesivado(n));
+    if (adhesivados.length && !controlConRombo(/ADHESIV/i)) {
+        bloque('adhesivado-sin-control',
+            `${adhesivados[0].stepId ?? ''} "${adhesivados[0].description}" no tiene despues su control de adhesivado con el rombo ¿ADHESIVADO OK?`);
+    }
+
+    // 13c. Un control numerado sin rombo es un control que no decide nada.
+    for (const n of todos) {
+        if (!n.stepId || !(esNodoDeControl(n) || n.type === 'op-ins')) continue;
+        if (siguienteEnSuColumna(n)?.type !== 'condition') {
+            bloque('control-sin-rombo', `${n.stepId} "${n.description}" es un control y no lo sigue un rombo de conformidad`);
+        }
+    }
+
+    // 13d y 13e. El cierre: control final con rombo -> embalaje (la ultima operacion) -> almacenado.
+    const principal = (doc.flow ?? []);
+    const numeradasPrincipal = principal.filter((n) => n.stepId);
+    const ultima = numeradasPrincipal[numeradasPrincipal.length - 1];
+    if (ultima && !/EMBALAJE/i.test(ultima.description ?? '')) {
+        bloque('embalaje-no-es-la-ultima', `la ultima operacion es ${ultima.stepId} "${ultima.description}" y tendria que ser el embalaje`);
+    }
+    if (principal.length && principal[principal.length - 1].type !== 'storage') {
+        bloque('sin-almacenado-final', 'el flujograma no cierra en el almacenado de producto terminado');
+    }
+    const iEmbalaje = principal.findIndex((n) => n.stepId && /EMBALAJE/i.test(n.description ?? ''));
+    if (iEmbalaje > 0) {
+        const antes = principal.slice(0, iEmbalaje).filter((n) => n.type !== 'transfer');
+        const rombo = antes[antes.length - 1];
+        const control = antes[antes.length - 2];
+        const hayControlFinal = rombo?.type === 'condition' && control
+            && (esNodoDeControl(control) || control.type === 'inspection' || control.type === 'op-ins');
+        if (!hayControlFinal) {
+            bloque('sin-control-final', 'antes del embalaje no hay un control final con su rombo ¿PRODUCTO CONFORME?');
+        }
+    }
+
+    // 14. Contra los HERMANOS. La skill decia "antes de numerar, abrir dos flujogramas vigentes
+    //     de la misma familia" y nada lo obligaba: el 160 salio sin abrirlos. Ahora la
+    //     comparacion la hace el programa: si la mayoria de los hermanos que tienen un sector lo
+    //     dibujan con un control, un rombo, la pregunta de retrabajo, un reproceso o un WIP, y
+    //     este no, se dice cual falta y en cuales esta. En una Rev. A (documento nuevo) frena;
+    //     en una revision posterior avisa, porque ese documento ya lo vio Fak asi.
+    //     Lo que de verdad no corresponde a la pieza se declara en `_no_aplica`
+    //     ({ "SECTOR.rasgo": "por que, con su fuente" }).
+    if (Array.isArray(hermanos) && hermanos.length) {
+        const noAplica = doc._no_aplica ?? {};
+        const esNuevo = String(h.revision ?? '').trim().toUpperCase() === 'A';
+        for (const d of compararConHermanos(doc, hermanos)) {
+            const clave = `${d.sector}.${d.rasgo}`;
+            const texto = `sector ${d.sector}: ${d.con.length} de ${d.de} hermanos lo dibujan con ${ROTULO_RASGO[d.rasgo]} y este no (${d.con.join(', ')})${d.ejemplos.length ? ` — p. ej. ${d.ejemplos.slice(0, 3).join(' · ')}` : ''}`;
+            if (noAplica[clave]) aviso('distinto-de-los-hermanos', `${texto} — no aplica: ${noAplica[clave]}`);
+            else if (esNuevo && d.fuerte) rojo('falta-lo-que-tienen-los-hermanos', `${texto}. Si no corresponde a esta pieza: "_no_aplica": { "${clave}": "por que" }`);
+            else aviso('distinto-de-los-hermanos', texto);
+        }
+    }
+
     return hallazgos;
+}
+
+/** Todas las columnas del dibujo: la principal, cada rama y cada secuencia lateral. */
+function* columnas(nodos) {
+    if (!Array.isArray(nodos)) return;
+    yield nodos;
+    for (const n of nodos) {
+        if (Array.isArray(n.branchSide?.sequence)) yield* columnas(n.branchSide.sequence);
+        for (const b of n.branches ?? []) yield* columnas(Array.isArray(b) ? b : b.sequence);
+    }
+}
+
+const esReproceso = (n) => /REPROCESO|RETRABAJO/i.test(n.description ?? '');
+/** Corte en la mesa de corte. El trimming, el corte de colada y el troquelado son otra cosa. */
+const esCorteEnMesa = (n) => n.type === 'operation' && !esReproceso(n)
+    && /\bCORT(E|AR)\b/i.test(n.description ?? '') && !/TRIMMING|COLADA|TROQUEL|REBABA|HILO/i.test(n.description ?? '');
+/** Adhesivado de la pieza. "ACTIVADO DEL ADHESIVO" y "REACTIVACION DE ADHESIVO" no lo son. */
+const esAdhesivado = (n) => n.type === 'operation' && !esReproceso(n) && !esControl(n.description)
+    && /ADHESIVAD/i.test(n.description ?? '');
+
+/** A que sector pertenece un puesto, por su nombre. El orden importa: gana el primero. */
+const SECTORES = [
+    [/RECEPCI[OÓ]N/i, 'RECEPCION'],
+    [/CONTROL FINAL|INSPECCI[OÓ]N FINAL|MURO DE CALIDAD/i, 'CONTROL FINAL'],
+    [/EMBALAJE/i, 'EMBALAJE'],
+    [/MYLAR|MESA DE CORTE|\bCORT(E|AR)\b(?!.*COLADA)/i, 'CORTE'],
+    [/COSTURA/i, 'COSTURA'],
+    [/INYEC/i, 'INYECCION'],
+    [/ADHESIVAD/i, 'ADHESIVADO'],
+    [/TAPIZ|VIROLAD|EDGE FOLDING|WRAPPING|ENFUNDAD|ACTIVAD/i, 'TAPIZADO'],
+    [/TROQUEL|PUNZON/i, 'TROQUELADO'],
+    [/SOLDAD/i, 'SOLDADURA'],
+];
+const sectorDe = (texto) => {
+    if (/TRIMMING/i.test(texto ?? '')) return null;
+    for (const [re, nombre] of SECTORES) if (re.test(texto ?? '')) return nombre;
+    return null;
+};
+const ROTULO_RASGO = {
+    control: 'un puesto de CONTROL',
+    rombo: 'un ROMBO de conformidad',
+    retrabajo: 'la pregunta ¿SE PUEDE RETRABAJAR?',
+    reproceso: 'al menos un REPROCESO',
+    wip: 'un ALMACENAMIENTO WIP',
+};
+
+/**
+ * Que tiene dibujado cada sector de un flujograma: { CORTE: { control, rombo, retrabajo,
+ * reproceso, wip, nombres: [...] }, ... }. Un control, un rombo o un WIP pertenecen al sector
+ * del ultimo puesto que se dibujo antes; un reproceso, al sector del control del que cuelga.
+ */
+export function perfilDeSectores(doc) {
+    const perfil = {};
+    let actual = null;
+    for (const { nodo: n } of recorrer(doc.flow)) {
+        const texto = n.description ?? n.labelCondition ?? '';
+        const esPuesto = ['operation', 'op-ins', 'inspection'].includes(n.type);
+        if (esPuesto && !esReproceso(n)) actual = sectorDe(texto) ?? actual;
+        if (!actual) continue;
+        const s = (perfil[actual] ??= { control: false, rombo: false, retrabajo: false, reproceso: false, wip: false, nombres: [] });
+        if (esPuesto && esReproceso(n)) { s.reproceso = true; s.nombres.push(texto); continue; }
+        if (esPuesto && (n.type !== 'operation' || esControl(texto))) { s.control = true; s.nombres.push(texto); }
+        if (n.type === 'condition') {
+            if (/RETRABAJ|REPROCES/i.test(n.labelCondition ?? '')) s.retrabajo = true; else s.rombo = true;
+        }
+        if (n.type === 'storage' && /WIP/i.test(texto)) s.wip = true;
+    }
+    // La recepcion, el control final y el embalaje siempre son un control o no llevan WIP por
+    // definicion: compararlos por estos rasgos solo mete ruido.
+    delete perfil.EMBALAJE;
+    return perfil;
+}
+
+/**
+ * Que le falta a `doc` de lo que la MAYORIA de sus hermanos dibuja en el mismo sector.
+ * `hermanos` = [{ clave, doc }]. Devuelve [{ sector, rasgo, con: [claves], de, ejemplos, fuerte }];
+ * `fuerte` = lo tienen dos tercios o mas de los hermanos que tienen ese sector.
+ */
+export function compararConHermanos(doc, hermanos) {
+    const mio = perfilDeSectores(doc);
+    const perfiles = hermanos.map((x) => ({ clave: x.clave, perfil: perfilDeSectores(x.doc) }));
+    const faltan = [];
+    for (const [sector, rasgos] of Object.entries(mio)) {
+        const conSector = perfiles.filter((p) => p.perfil[sector]);
+        if (conSector.length < 2) continue;
+        for (const rasgo of Object.keys(ROTULO_RASGO)) {
+            if (rasgos[rasgo]) continue;
+            const con = conSector.filter((p) => p.perfil[sector][rasgo]);
+            if (con.length * 2 <= conSector.length) continue;      // hace falta mayoria
+            // Con mayoria justa (4 de 7) el corpus esta partido: se dice, no se frena. Y el WIP
+            // nunca frena: el 159, que Fak reviso renglon por renglon el 22 y 23/09/2026, no
+            // lo dibuja despues del corte.
+            const fuerte = rasgo !== 'wip' && con.length * 3 >= conSector.length * 2;
+            const ejemplos = rasgo === 'reproceso' || rasgo === 'control'
+                ? [...new Set(con.flatMap((p) => p.perfil[sector].nombres
+                    .filter((t) => (rasgo === 'reproceso') === /REPROCESO|RETRABAJO/i.test(t))))]
+                : [];
+            faltan.push({ sector, rasgo, con: con.map((p) => p.clave.split('-')[0]), de: conSector.length, ejemplos, fuerte });
+        }
+    }
+    return faltan;
 }
 
 export const hayRojos = (hallazgos) => hallazgos.some((h) => h.gravedad === 'ROJO');

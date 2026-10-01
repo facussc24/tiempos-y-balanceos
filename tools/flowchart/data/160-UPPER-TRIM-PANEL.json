@@ -1,9 +1,12 @@
 {
   "_doc": "Flujograma 160, Rev. A del 01/10/2026. Primer flujograma del Upper Trim Panel (Cozzuol / VW427). Numero del Listado Maestro tomado con el OK de Fak del 01/10/2026 (el ultimo cargado era el 159).",
-  "_fuentes": "Secuencia: pliego de dispositivos (Dispositivo Tapizado Manual Console Central Component Rev.01, 27/04/2026: cuna 1 posicionado, cuna 2 doblado y refilado, punzonado, embossing) + BOM del arb (adhesivo FA + reticulante GV en tela y sustrato) + video de planta del 31/07/2026 (adhesivo a pistola, tapizado manual) + gama de embalaje GE-103 Rev.1. El hueco del cargador viene cortado en la tela desde la mesa de corte (contorno interior del DXF de tizada).",
-  "_activado": "OP 40: la ficha tecnica del adhesivo FA de Fenoclor (HT.AD FA) dice que el pegado se hace por REACTIVACION con calor (infrarrojo, flash o aire caliente) y posterior prensado. Confirmado por Fak el 01/10/2026 ('el adhesivo se activa con calor, si, obviamente'). La lista de herramentales de la pieza no tiene un horno ni otra maquina para eso, por eso el nombre no dice con que equipo.",
-  "_punzonado": "OP 50: con el dispositivo neumatico cotizado el 27/08/2026 (Fak, 01/10/2026: 'asumamos que si').",
-  "_reprocesos": "Los dos reprocesos conocidos de las piezas tapizadas hermanas que aplican a una pieza sin costura: REACTIVACION DE ADHESIVO POR CALOR (flujograma 153) y MANCHA DE ADHESIVO (flujograma 159). Entran desde la Rev. A por el criterio de Fak del 23/09/2026: al arrancar un proyecto van todos los reprocesos conocidos y posibles, para que despues no sean un cambio de proceso.",
+  "_rehecho_01_10": "La primera version de esta Rev. A (emitida el 01/10 a las 14:45) no tenia el control con mylar despues del corte ni el control de adhesivado con su reproceso, y dibujaba todo en una sola columna. Fak la abrio y la rechazo: 'siempre en corte hay control con mylar'. Se rehizo ese mismo dia contra los flujogramas hermanos 153 (apoyabrazos de puerta Patagonia) y 159 (APB P21), que son los dos tapizados a pistola con adhesivo FA. Sigue siendo Rev. A: la anterior no llego a usarse.",
+  "_hermanos": "153-ARMREST-DOOR-PANEL (misma familia Patagonia: recepcion, ramas por material, conector del adhesivo, corte con control con mylar y WIP, adhesivado con inspeccion y reproceso, control final con reproceso, cierre) y 159-APB-P21-MY2026 (rama del sustrato plastico al sector de tapizado, activado del adhesivo antes del tapizado, reprocesos alternativos en columnas).",
+  "_fuentes": "Bloques de cada sector: flujogramas 153 y 159. Operaciones propias de la pieza: pliego de dispositivos (Dispositivo Tapizado Manual Console Central Component Rev.01, 27/04/2026: cuna 1 posicionado, cuna 2 doblado hacia adentro y refilado, troquelado, embossing) + lista de herramentales (prensa neumatica y troquel; prensa atemperada de embossing) + BOM del arb (adhesivo FA + reticulante GV) + video de planta del 31/07/2026 + gama de embalaje GE-103 Rev.1. El hueco del cargador viene cortado en la tela desde la mesa de corte (contorno interior del DXF de tizada).",
+  "_activado": "OP 40: la ficha tecnica del adhesivo FA de Fenoclor (HT.AD FA) dice que el pegado se hace por REACTIVACION con calor (infrarrojo, flash o aire caliente) y posterior prensado. Confirmado por Fak el 01/10/2026. La lista de herramentales de la pieza no tiene un horno ni otra maquina para eso, por eso el nombre no dice con que equipo.",
+  "_troquelado": "OP 50: con el dispositivo troquelador neumatico cotizado el 27/08/2026 (Fak, 01/10/2026: 'asumamos que si'). La lista de herramentales y la cotizacion lo llaman troquelado.",
+  "_nombres": "VIROLADO + REFILADO es el nombre de la casa para el cierre de bordes (flujogramas 105, 106, 107, 126, 127 del servidor). EMBOSSING es como lo llaman las hojas de proceso de la prensa y los mails de Carlos Baptista.",
+  "_reprocesos": "Entran desde la Rev. A los reprocesos conocidos de las hermanas que aplican a una pieza tapizada sin costura (criterio de Fak del 23/09/2026: al arrancar un proyecto van todos los reprocesos conocidos y posibles): FALTA DE ADHESIVO en el control de adhesivado (153, 154, 159), y REACTIVACION DE ADHESIVO POR CALOR (153) y MANCHA DE ADHESIVO (159) en el control final.",
   "header": {
     "title": "FLUJOGRAMA DE PROCESO UPPER TRIM PANEL — CONSOLA CENTRAL",
     "documentCode": "I-IN-002/III",
@@ -30,16 +33,41 @@
     { "type": "condition", "labelCondition": "¿MATERIAL CONFORME?", "labelDown": "SI",
       "branchSide": { "labelNode": "NO", "type": "terminal", "text": "RECLAMO DE CALIDAD AL PROVEEDOR" } },
     { "type": "storage", "description": "ALMACENADO EN SECTOR DE RECEPCIÓN DE MATERIA PRIMA CONTROLADA E IDENTIFICADA" },
-    { "type": "transfer", "description": "TRASLADO DE MICROFIBRA AL SECTOR DE MESA DE CORTE" },
-    { "stepId": "20", "type": "operation", "description": "CORTE DE MICROFIBRA" },
-    { "type": "transfer", "description": "TRASLADO DE MICROFIBRA CORTADA Y SUSTRATOS AL SECTOR DE TAPIZADO" },
-    { "stepId": "30", "type": "operation", "description": "ADHESIVADO DE MICROFIBRA Y SUSTRATO" },
+    { "type": "transfer", "description": "TRASLADO DE ADHESIVO DESDE ALMACÉN A SECTOR DE ADHESIVADO",
+      "branchSide": { "type": "connector", "text": "A", "description": "ADHESIVO" },
+      "branches": [
+        [
+          { "type": "transfer", "description": "TRASLADO DE MICROFIBRA A SECTOR DE MESA DE CORTE" },
+          { "stepId": "20", "type": "operation", "description": "CORTE DE MICROFIBRA" },
+          { "stepId": "21", "type": "op-ins", "description": "CONTROL CON MYLAR" },
+          { "type": "condition", "labelCondition": "¿CORTE CONFORME?", "labelDown": "SI",
+            "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
+          { "stepId": "22", "type": "storage", "description": "ALMACENAMIENTO EN MEDIOS WIP" },
+          { "type": "transfer", "description": "TRASLADO DE MICROFIBRA CORTADA A SECTOR DE TAPIZADO" }
+        ],
+        [
+          { "type": "transfer", "description": "TRASLADO DEL SUSTRATO PLÁSTICO A SECTOR DE TAPIZADO" }
+        ]
+      ] },
+    { "stepId": "30", "type": "operation", "description": "ADHESIVADO DE MICROFIBRA Y SUSTRATO", "incomingConnector": "A" },
+    { "stepId": "31", "type": "op-ins", "description": "INSPECCIÓN DE PIEZA ADHESIVADA" },
+    { "type": "condition", "labelCondition": "¿ADHESIVADO OK?", "labelDown": "SI",
+      "branchSide": {
+        "labelNode": "NO",
+        "sequence": [
+          { "type": "condition", "labelCondition": "¿SE PUEDE RETRABAJAR?", "labelDown": "SI",
+            "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
+          { "stepId": "32", "type": "operation", "description": "REPROCESO: FALTA DE ADHESIVO" },
+          { "type": "transfer", "description": "RE-ENTRADA AL FLUJO PRINCIPAL",
+            "rework": { "targetId": "31", "label": "REVERIFICAR (A OP. 31)" } }
+        ]
+      } },
     { "stepId": "40", "type": "operation", "description": "ACTIVADO DEL ADHESIVO CON CALOR" },
-    { "stepId": "41", "type": "operation", "description": "POSICIONADO Y TAPIZADO DE MICROFIBRA SOBRE SUSTRATO" },
-    { "stepId": "42", "type": "operation", "description": "DOBLADO DE BORDES Y REFILADO" },
-    { "stepId": "50", "type": "operation", "description": "PUNZONADO DE AGUJEROS" },
-    { "stepId": "60", "type": "operation", "description": "GRABADO DE LOGO DE CARGA" },
-    { "stepId": "70", "type": "op-ins", "description": "INSPECCIÓN FINAL" },
+    { "stepId": "41", "type": "operation", "description": "TAPIZADO MANUAL" },
+    { "stepId": "42", "type": "operation", "description": "VIROLADO + REFILADO" },
+    { "stepId": "50", "type": "operation", "description": "TROQUELADO DE AGUJEROS" },
+    { "stepId": "60", "type": "operation", "description": "EMBOSSING DEL LOGO DE CARGA" },
+    { "stepId": "70", "type": "op-ins", "description": "CONTROL FINAL DE CALIDAD" },
     { "type": "condition", "labelCondition": "¿PRODUCTO CONFORME?", "labelDown": "SI",
       "branchSide": {
         "labelNode": "NO",
@@ -56,7 +84,9 @@
             "rework": { "targetId": "70", "label": "REVERIFICAR (A OP. 70)" } }
         ]
       } },
-    { "stepId": "80", "type": "operation", "description": "EMBALAJE E IDENTIFICACIÓN" },
-    { "type": "storage", "description": "ALMACENADO EN DEPÓSITO DE PRODUCTO TERMINADO" }
+    { "type": "transfer", "description": "TRASLADO A SECTOR DE EMBALAJE" },
+    { "stepId": "80", "type": "operation", "description": "EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO" },
+    { "type": "transfer", "description": "TRASLADO A ALMACÉN DE PRODUCTO TERMINADO" },
+    { "type": "storage", "description": "ALMACENADO FINAL DE PRODUCTO TERMINADO" }
   ]
 }

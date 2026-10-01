@@ -46,6 +46,12 @@ let row: Fila;
 // Fak para crearlo). Pasa por los mismos gates y sale siempre como PRELIMINAR. No reemplaza a
 // Supabase live para un documento que ya existe: ahi se exporta sin --json.
 const JSON_FILE = arg('json');
+// `--json` sin archivo (o seguido de otra opcion) no puede caer callado al camino de Supabase
+// y exportar el documento vivo creyendo que es el borrador.
+if (process.argv.includes('--json') && (!JSON_FILE || JSON_FILE.startsWith('--'))) {
+  console.error('Falta el archivo despues de --json. Ej: --json tmp/uppertrim/amfe_upper_trimming.json');
+  process.exit(1);
+}
 if (JSON_FILE) {
   if (!existsSync(JSON_FILE)) { console.error(`No existe ${JSON_FILE}`); process.exit(1); }
   const local = JSON.parse(readFileSync(JSON_FILE, 'utf8'));
