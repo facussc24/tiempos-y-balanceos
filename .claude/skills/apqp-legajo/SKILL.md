@@ -157,8 +157,15 @@ que se produce hoy. **El original quedo viejo y la copia buena se fue con el cli
    `0_Obsoleto` — y en un caso, OBSOLETO anidado adentro de OBSOLETO.
 7. **Formularios en blanco archivados como si fueran el registro** (plantillas de 2018 dentro
    de un PPAP de 2024): el casillero parece lleno y esta vacio.
-8. **Un `.txt` de puntero cuando algo se mueve** — esto si esta bien hecho y conviene repetirlo:
-   `_LEEME - el legajo 2026 esta en P21 SSRT-MY2026 HILO NARANJA.txt`.
+8. **Ni notas `.txt` de puntero ni carpetas de respaldo adentro de un legajo** (Fak, 01/10/2026:
+   *"no quiero notas de mierda ni carpetas extrañas que nadie va a ver... sin notas y sin back
+   up"*; hasta ese dia este punto recomendaba dejar un `_LEEME`). Caso: el legajo del Upper
+   Trimming quedo VIVO adentro de `_BACKUP_UpperTrim_2026-07-01\`, con una nota al lado que
+   mandaba a una carpeta de Ingenieria que ya no existia. **El legajo va siempre en `PPAP
+   CLIENTES\<cliente>\<pieza>\APQP\`, a secas.** Si algo se muda, se muda entero y no queda
+   ni copia ni cartel.
+9. **Un legajo con un archivo abierto por otro no se deja renombrar** (`WinError 5` con permisos
+   completos): se ordena adentro y el renombre se reintenta despues, no se parte en dos lugares.
 
 ## 7. Enforcement
 
