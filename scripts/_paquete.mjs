@@ -1076,6 +1076,52 @@ export function leerInstalado(destino) {
     return leerJson(path.join(destino, ...REL_INSTALADO.split('/')), null);
 }
 
+/**
+ * En el proyecto `area` lo que hay en `publicado\` es de la instalacion, no de la persona (y queda adentro de la
+ * carpeta que abre el asistente, asi que puede cambiarse o borrarse por error): lo que falte o tenga otro hash se
+ * REPONE desde la nube verificada aunque la version no haya cambiado; lo cambiado se guarda antes en cuarentena.
+ * No hay `.fak-nueva`, ni "propio", ni "sacado".
+ */
+export function decidirArchivoArea({ nuevoHash, localHash, instaladoHash }) {
+    if (localHash === nuevoHash) return 'igual';
+    if (localHash === null) return instaladoHash === undefined ? 'nuevo' : 'repuesto';     // faltaba
+    if (instaladoHash !== undefined && localHash === instaladoHash) return 'actualizar';   // version nueva, archivo sin tocar
+    return 'repuesto';                                                                    // alguien lo cambio
+}
+
+/** Huella barata de un archivo instalado (tamaño + fecha): lo que compara `--chequear` sin hashear. */
+export function huellaArchivo(abs) {
+    try { const st = fs.statSync(abs); return st.isFile() ? { bytes: st.size, mtime: Math.floor(st.mtimeMs) } : null; } catch { return null; }
+}
+
+/** Los archivos del registro cuya huella (tamaño + fecha) ya no coincide con la anotada, o que faltan. */
+export function archivosConOtraHuella(destino, huellas) {
+    const cambiados = [];
+    for (const [rel, h] of Object.entries(huellas || {})) {
+        if (!h || !rutaSegura(rel)) continue;
+        const ahora = huellaArchivo(path.join(destino, ...rel.split('/')));
+        if (!ahora || ahora.bytes !== h.bytes || ahora.mtime !== h.mtime) cambiados.push(rel);
+    }
+    return cambiados;
+}
+
+/** Lo que hay adentro de `publicado\` y no esta en el manifiesto (no se borra: se anota). Lo interno de la sincronizacion no cuenta. */
+export function archivosExtranos(destino, manifiesto) {
+    const out = [];
+    const rec = (d, r) => {
+        let entradas;
+        try { entradas = fs.readdirSync(d, { withFileTypes: true }); } catch { return; }
+        for (const e of entradas) {
+            const rel = r ? `${r}/${e.name}` : e.name;
+            if (!r && e.name === '.claude') continue;   // registro, respaldos, cuarentena, pendientes
+            if (e.isDirectory()) rec(path.join(d, e.name), rel);
+            else if (e.isFile() && !(rel in manifiesto) && !/[.]tmp$/i.test(e.name)) out.push(rel);
+        }
+    };
+    rec(destino, '');
+    return out.sort();
+}
+
 /** Decide que hacer con UN archivo. Es el corazon de "nunca pisar lo del compañero". */
 export function decidirArchivo({ nuevoHash, localHash, instaladoHash, reponer = false }) {
     if (localHash === nuevoHash) return 'igual';                 // ya esta como lo publicamos
@@ -1205,8 +1251,8 @@ export function actualizar(opts) {
 function actualizarAdentro({ destino, nube, reponer = false, simular = false, ahora, identidad, area = null, clavePublica = null, proyecto = PROYECTO_POR_DEFECTO, home = null, env = process.env }) {
     const res = {
         estado: 'error', errores: [], avisos: [],
-        contadores: { nuevos: 0, actualizados: 0, iguales: 0, tocados: 0, sacados: 0, propios: 0, fuera_de_area: 0, cuarentena: 0 },
-        tocados: [], sacados: [], retirados: [], retiradosTuyos: [], cuarentena: [], plan: [], firma: 'no_verificada', area: null,
+        contadores: { nuevos: 0, actualizados: 0, iguales: 0, tocados: 0, sacados: 0, propios: 0, fuera_de_area: 0, cuarentena: 0, repuestos: 0 },
+        tocados: [], sacados: [], retirados: [], retiradosTuyos: [], cuarentena: [], repuestos: [], extranos: [], plan: [], firma: 'no_verificada', area: null,
     };
     if (!nube || !fs.existsSync(nube)) { res.errores.push(`no encuentro la carpeta "${nombreNube(proyecto)}" (¿OneDrive ya sincronizo la biblioteca?)`); return res; }
     const instalado = leerInstalado(destino);
@@ -1260,15 +1306,21 @@ function actualizarAdentro({ destino, nube, reponer = false, simular = false, ah
     const versionNueva = !instalado || instalado.version !== pub.version || instalado.manifest_sha256 !== pub.manifiestoSha;
 
     // --- plan: solo mira el disco local y el manifiesto
-    const aInstalar = [];   // { rel, modo: 'nuevo'|'actualizar'|'tocado' }
+    //     En el proyecto de areas `publicado\` es de la instalacion: lo que falta o cambio se repone (decidirArchivoArea).
+    const enArea = exigeFirma({ nube, proyecto }) || pub.proyecto === 'area';
+    const aInstalar = [];   // { rel, modo: 'nuevo'|'actualizar'|'tocado'|'repuesto', cuarentena }
     const nuevoRecord = { ...inst };
+    // huellas (tamaño + fecha) para --chequear: las de lo que esta en el manifiesto pero fuera de la vista de esta PC se conservan
+    const huellas = {};
+    for (const [rel, h] of Object.entries((instalado && instalado.huellas) || {})) if (rel in manTodo && !(rel in man)) huellas[rel] = h;
     for (const [rel, e] of Object.entries(man)) {
         const abs = path.join(destino, ...rel.split('/'));
         let localHash = null;
         try { localHash = fs.statSync(abs).isFile() ? sha256Archivo(abs) : null; } catch { localHash = null; }
-        const que = decidirArchivo({ nuevoHash: e.sha256, localHash, instaladoHash: inst[rel], reponer });
+        const que = enArea ? decidirArchivoArea({ nuevoHash: e.sha256, localHash, instaladoHash: inst[rel] }) : decidirArchivo({ nuevoHash: e.sha256, localHash, instaladoHash: inst[rel], reponer });
         res.plan.push({ rel, que });
-        if (que === 'igual') { res.contadores.iguales++; nuevoRecord[rel] = e.sha256; }
+        if (que === 'igual') { res.contadores.iguales++; nuevoRecord[rel] = e.sha256; if (enArea) huellas[rel] = huellaArchivo(abs); }
+        else if (que === 'repuesto') { res.contadores.repuestos++; res.repuestos.push({ rel, motivo: localHash === null ? 'faltaba' : 'cambiado' }); aInstalar.push({ rel, modo: 'repuesto', cuarentena: localHash !== null }); }
         else if (que === 'propio') res.contadores.propios++;
         else if (que === 'sacado') { res.contadores.sacados++; res.sacados.push(rel); }
         else if (que === 'nuevo') { res.contadores.nuevos++; aInstalar.push({ rel, modo: 'nuevo' }); }
@@ -1302,6 +1354,8 @@ function actualizarAdentro({ destino, nube, reponer = false, simular = false, ah
     // sin lapida (publicacion vieja): como siempre, siguen en la PC y se anotan
     res.retirados = Object.keys(inst).filter((r) => !(r in manTodo) && !conLapida.has(r)).sort();
     for (const r of Object.keys(inst)) if (!(r in manTodo)) delete nuevoRecord[r];
+    // en areas, lo que aparecio adentro de publicado\ y no es de la publicacion: no se borra, se anota (va a la salud)
+    if (enArea) res.extranos = archivosExtranos(destino, manTodo);
 
     const pendientesTexto = armarPendientes({ version: pub.version, fecha: new Date(pub.fecha || ahora), tocados: res.tocados, sacados: res.sacados, retirados: res.retirados, retiradosTuyos: res.retiradosTuyos });
     const pPendientes = path.join(destino, ...REL_PENDIENTES.split('/'));
@@ -1310,7 +1364,8 @@ function actualizarAdentro({ destino, nube, reponer = false, simular = false, ah
     // sin pendientes y con el archivo de una vez anterior: se deja el texto "sin pendientes" (y se queda quieto)
     const pendientesEsperado = pendientesTexto ?? (pendientesActual === null ? null : TEXTO_SIN_PENDIENTES);
     const cambiaPendientes = pendientesEsperado !== pendientesActual;
-    const hayTrabajo = aInstalar.length > 0 || aCuarentena.length > 0 || versionNueva || cambiaPendientes || jsonCanonico(nuevoRecord) !== jsonCanonico(inst);
+    const huellasCambian = enArea && jsonCanonico(huellas) !== jsonCanonico((instalado && instalado.huellas) || {});
+    const hayTrabajo = aInstalar.length > 0 || aCuarentena.length > 0 || versionNueva || cambiaPendientes || jsonCanonico(nuevoRecord) !== jsonCanonico(inst) || huellasCambian;
     if (!hayTrabajo) { res.estado = 'al_dia'; return res; }
 
     // --- seguridad de lo que se va a escribir + verificacion de la nube ANTES de tocar nada
@@ -1329,7 +1384,7 @@ function actualizarAdentro({ destino, nube, reponer = false, simular = false, ah
     }
     if (res.errores.length) return res;
     const carpetaCuarentena = path.join(destino, ...REL_CUARENTENA.split('/'), selloCarpeta(ahora));
-    res.carpetaCuarentena = aCuarentena.length ? carpetaCuarentena : null;
+    res.carpetaCuarentena = aCuarentena.length || aInstalar.some((a) => a.cuarentena) ? carpetaCuarentena : null;
     if (simular) { res.estado = 'simulado'; return res; }
 
     // --- escribir (con lock, respaldo de lo reemplazado y sin borrar nada)
@@ -1338,7 +1393,8 @@ function actualizarAdentro({ destino, nube, reponer = false, simular = false, ah
     try {
         const carpetaRespaldo = path.join(destino, ...REL_RESPALDO.split('/'), selloCarpeta(ahora));
         let huboRespaldo = false;
-        for (const { rel, modo } of aInstalar) {
+        let huboCuarentena = false;
+        for (const { rel, modo, cuarentena } of aInstalar) {
             const origenNube = path.join(nube, 'contenido', ...rel.split('/'));
             const abs = path.join(destino, ...rel.split('/'));
             const hash = man[rel].sha256;
@@ -1352,12 +1408,17 @@ function actualizarAdentro({ destino, nube, reponer = false, simular = false, ah
                         fs.copyFileSync(abs, resp);
                         huboRespaldo = true;
                     }
+                    // repuesto con el archivo cambiado: lo que habia va a la cuarentena con fecha ANTES de reponer (no se pierde)
+                    if (modo === 'repuesto' && cuarentena) { moverACuarentena(abs, path.join(carpetaCuarentena, ...rel.split('/'))); huboCuarentena = true; }
                     copiarVerificando(origenNube, abs, hash);
                     nuevoRecord[rel] = hash;
+                    if (enArea) huellas[rel] = huellaArchivo(abs);
                 }
             } catch (e) {
                 res.errores.push(`${rel}: ${e.code || e.message}`);
-                if (modo !== 'tocado') { res.contadores[modo === 'nuevo' ? 'nuevos' : 'actualizados']--; }
+                if (modo === 'nuevo') res.contadores.nuevos--;
+                else if (modo === 'actualizar') res.contadores.actualizados--;
+                else if (modo === 'repuesto') { res.contadores.repuestos--; res.repuestos = res.repuestos.filter((x) => x.rel !== rel); }
             }
         }
         // cuarentena: un rename por archivo (y su .fak-nueva si quedo uno); lo que no se pudo mover se queda
@@ -1372,28 +1433,31 @@ function actualizarAdentro({ destino, nube, reponer = false, simular = false, ah
                 res.contadores.cuarentena--;
             }
         }
-        if (!res.cuarentena.length) res.carpetaCuarentena = null;
+        if (!res.cuarentena.length && !huboCuarentena) res.carpetaCuarentena = null;
         if (huboRespaldo) { const r = leerInstalado(destino); if (r) escribirAtomico(path.join(carpetaRespaldo, '.paquete-instalado.json'), jsonCanonico(r)); }
         if (cambiaPendientes && pendientesEsperado !== null) escribirAtomico(pPendientes, pendientesEsperado);
         const historial = ((instalado && instalado.historial) || []).slice(-19);
         const nuevoInstalado = {
             formato: FORMATO, version: pub.version, manifest_sha256: pub.manifiestoSha, publicada: pub.fecha, actualizado: isoLocal(ahora),
-            area: res.area, firma: res.firma,
+            area: res.area, firma: res.firma, proyecto: pub.proyecto,
             archivos: nuevoRecord,
+            // en areas, la huella (tamaño + fecha) de cada archivo instalado: lo que `--chequear` compara sin hashear
+            ...(enArea ? { huellas: Object.fromEntries(Object.entries(huellas).filter(([, h]) => h)) } : {}),
             pendientes: { tocados: res.tocados, sacados: res.sacados, retirados: res.retirados, retiradosTuyos: res.retiradosTuyos },
-            historial: [...historial, { fecha: isoLocal(ahora), version: pub.version, nuevos: res.contadores.nuevos, actualizados: res.contadores.actualizados, tocados: res.contadores.tocados, cuarentena: res.cuarentena.length, errores: res.errores.length }],
+            historial: [...historial, { fecha: isoLocal(ahora), version: pub.version, nuevos: res.contadores.nuevos, actualizados: res.contadores.actualizados, tocados: res.contadores.tocados, repuestos: res.contadores.repuestos, cuarentena: res.cuarentena.length, errores: res.errores.length }],
         };
         escribirAtomico(path.join(destino, ...REL_INSTALADO.split('/')), jsonCanonico(nuevoInstalado));
         res.respaldo = huboRespaldo ? carpetaRespaldo : null;
-        // proyecto de areas: las reglas de la casa de Trabajo\ se regeneran desde lo recien instalado
-        if (home && exigeFirma({ nube, proyecto })) {
-            try { res.trabajo = regenerarTrabajo({ home, publicado: destino, perfil: leerJson(path.join(home, 'perfil.json')) }); }
-            catch (e) { res.avisos.push(`no pude actualizar las reglas de la casa en Trabajo: ${e.message}`); }
+        // proyecto de areas: las reglas de la casa (en la raiz de la PC) se regeneran desde lo recien instalado
+        if (home && enArea) {
+            try { res.casa = regenerarCasa({ home, publicado: destino, perfil: leerJson(path.join(home, 'perfil.json')), ahora }); }
+            catch (e) { res.avisos.push(`no pude actualizar las reglas de la casa: ${e.message}`); }
         }
     } finally {
         soltar();
     }
     res.estado = res.errores.length ? 'error' : 'actualizado';
+    if (res.repuestos.length) res.mensaje = `${res.repuestos.length} archivo(s) repuesto(s) desde la nube: ${res.repuestos.map((x) => `${x.rel} (${x.motivo})`).join(', ')}`;
     return res;
 }
 
@@ -1420,6 +1484,9 @@ export function armarSalud({ destino, res, identidad, ahora }) {
         errores: res.estado === 'esperar' ? [] : [...res.errores],
         estado: res.estado,
         mensaje: res.mensaje || null,
+        // areas: lo que se repuso desde la nube en esta corrida (faltaba o estaba cambiado) y lo que aparecio en publicado\ sin ser publicado
+        repuestos: (res.repuestos || []).map((x) => x.rel),
+        extranos: (res.extranos || []).slice(0, 50),
         escrito: isoLocal(ahora),
     };
 }
@@ -1447,7 +1514,9 @@ export function escribirSalud({ nube, salud }) {
 // ---------------------------------------------------------------------------------------------
 
 /**
- * Compara VERSION.json de la nube con lo instalado. Lee dos archivos chicos y nada mas.
+ * Compara VERSION.json de la nube con lo instalado. Lee dos archivos chicos y nada mas (en el proyecto de areas,
+ * ademas, mira tamaño y fecha de cada archivo instalado contra lo anotado: si algo falta o cambio, avisa con el
+ * mismo codigo de "hay novedades" y `motivo: 'instalacion_tocada'`; la reposicion la hace --actualizar).
  * estado: 'al_dia' | 'hay_novedades' | 'sin_nube' | 'sin_instalar' | 'nube_incompleta'. `ms` es lo que tardo adentro.
  */
 export function chequear({ destino, nube }) {
@@ -1459,8 +1528,13 @@ export function chequear({ destino, nube }) {
     const instalada = instalado && Number.isInteger(instalado.version) ? instalado.version : null;
     if (!version || !Number.isInteger(version.version) || typeof version.manifest_sha256 !== 'string') return fin('nube_incompleta', { publicada: null, instalada });
     if (!instalado) return fin('sin_instalar', { publicada: version.version, instalada: null, fecha_publicada: version.fecha || null });
-    const alDia = instalado.manifest_sha256 === version.manifest_sha256;
-    return fin(alDia ? 'al_dia' : 'hay_novedades', { publicada: version.version, instalada, fecha_publicada: version.fecha || null, firmada: !!version.firma });
+    const base = { publicada: version.version, instalada, fecha_publicada: version.fecha || null, firmada: !!version.firma };
+    if (instalado.manifest_sha256 !== version.manifest_sha256) return fin('hay_novedades', { ...base, motivo: 'version_nueva' });
+    if (instalado.proyecto === 'area' && instalado.huellas && typeof instalado.huellas === 'object') {
+        const cambiados = archivosConOtraHuella(destino, instalado.huellas);
+        if (cambiados.length) return fin('hay_novedades', { ...base, motivo: 'instalacion_tocada', cambiados: cambiados.slice(0, 5), total_cambiados: cambiados.length });
+    }
+    return fin('al_dia', base);
 }
 export const CODIGOS_CHEQUEO = { al_dia: 0, hay_novedades: 2, sin_nube: 3, nube_incompleta: 3, sin_instalar: 5 };
 
@@ -1704,10 +1778,10 @@ export function armarPendrive({ origen, pendrive, lista, notas = [], forzar = fa
 }
 
 // ---------------------------------------------------------------------------------------------
-// INSTALAR (proyecto `area`): una PC sin nada queda lista para que la persona abra Claude en Trabajo\
+// INSTALAR (proyecto `area`): una PC sin nada queda lista para que la persona abra Claude en <home> (la raiz)
 // ---------------------------------------------------------------------------------------------
 // Orden: clave publica -> publicacion completa y firmada -> quien es (personas.json, verificado por hash
-// antes de leerlo) -> perfil.json -> copia verificada de lo comun + lo de su area -> Trabajo\ -> el plugin
+// antes de leerlo) -> perfil.json -> copia verificada de lo comun + lo de su area -> la casa (reglas, CLAUDE.md, Trabajo\) -> el plugin
 // a nivel usuario (solo dos claves en settings.json, con respaldo) -> el marcador, AL FINAL.
 // Es repetible: correrlo dos veces no cambia nada; una instalacion cortada se completa al repetir.
 
@@ -1827,17 +1901,19 @@ export function habilitarPlugin({ claudeDir, rutaMarketplace, ahora = new Date()
 }
 
 /**
- * Trabajo\ es de la persona. Las reglas de la casa van en `Trabajo\.claude\rules\casa.md` (copia del casa/CLAUDE.md
- * publicado, que Claude Code carga al arrancar) y se regeneran en cada actualizacion; el `CLAUDE.md` de Trabajo se
- * crea una sola vez, corto, y despues no se toca. Asi no hay import que salga de la carpeta (pide confirmacion la
- * primera vez) ni se pisa lo que la persona escriba.
+ * La persona abre Claude en `<home>` (la RAIZ, decision del 01/10/2026): asi `publicado\conocimiento\...` queda adentro
+ * de la carpeta abierta y Claude Code lo lee sin pedir permiso. Las reglas de la casa van en `<home>\.claude\rules\casa.md`
+ * (copia del casa/CLAUDE.md publicado; se regeneran en cada actualizacion); `<home>\CLAUDE.md` es de la persona y se
+ * crea una sola vez, corto; `Trabajo\` es donde deja SUS archivos (con un LEEME si esta vacia). Migracion de la
+ * version anterior, que ponia las reglas en `Trabajo\.claude\rules\casa.md`: ese archivo se lleva a la cuarentena de
+ * lo publicado para que no queden dos copias; el `Trabajo\CLAUDE.md` de la persona no se toca.
  */
-export function regenerarTrabajo({ home, publicado, perfil = null, simular = false, fuenteSimulada = null }) {
-    const res = { reglas: 'sin_cambios', claudeMd: 'sin_cambios', rutas: [] };
+export function regenerarCasa({ home, publicado, perfil = null, simular = false, fuenteSimulada = null, ahora = new Date() }) {
+    const res = { reglas: 'sin_cambios', claudeMd: 'sin_cambios', trabajo: 'sin_cambios', migrado: null, rutas: [] };
     // con --simular lo publicado todavia no se copio: para el plan se mira la copia de la nube (solo para listar la ruta)
     const enPublicado = path.join(publicado, 'casa', 'CLAUDE.md');
     const fuente = fs.existsSync(enPublicado) ? enPublicado : (simular && fuenteSimulada && fs.existsSync(fuenteSimulada) ? fuenteSimulada : null);
-    const destino = path.join(home, 'Trabajo', ...REL_REGLAS_CASA.split('/'));
+    const destino = path.join(home, ...REL_REGLAS_CASA.split('/'));
     if (!fuente) res.reglas = 'sin_fuente';
     else {
         const texto = `<!-- Reglas de la casa de Claude de Barack. Las deja la instalación y se actualizan solas: no editar acá. La copia maestra es publicado/casa/CLAUDE.md. -->\n\n${fs.readFileSync(fuente, 'utf8')}`;
@@ -1849,12 +1925,30 @@ export function regenerarTrabajo({ home, publicado, perfil = null, simular = fal
             if (!simular) escribirAtomico(destino, texto);
         }
     }
-    const cm = path.join(home, 'Trabajo', 'CLAUDE.md');
+    const cm = path.join(home, 'CLAUDE.md');
     if (!fs.existsSync(cm)) {
         const quien = perfil && perfil.nombre ? ` de ${perfil.nombre}` : '';
         res.claudeMd = 'creado';
         res.rutas.push(cm);
-        if (!simular) escribirAtomico(cm, `# Carpeta de trabajo${quien} - Claude de Barack Mercosul\n\nAcá se trabaja y se guardan las cosas. Las reglas de la casa están en \`.claude/rules/casa.md\` y se actualizan solas con la instalación: no hace falta tocarlas.\n`);
+        if (!simular) escribirAtomico(cm, `# Claude de Barack Mercosul${quien}\n\nAcá se trabaja. Tus archivos van en la carpeta \`Trabajo\`. Lo que llega de la nube está en \`publicado\` y no se toca a mano (se repone solo). Las reglas de la casa están en \`.claude/rules/casa.md\` y se actualizan solas: no hace falta tocarlas.\n`);
+    }
+    // Trabajo\: la carpeta de la persona. Si no existe o esta vacia, un LEEME corto; si tiene cosas, no se toca.
+    const trabajo = path.join(home, 'Trabajo');
+    const leeme = path.join(trabajo, 'LEEME.txt');
+    let vacia = true;
+    try { vacia = fs.readdirSync(trabajo).length === 0; } catch { vacia = true; }
+    if (vacia) {
+        res.trabajo = 'creado';
+        res.rutas.push(leeme);
+        if (!simular) escribirAtomico(leeme, 'Esta carpeta es tuya: aca van tus archivos (planillas, notas, lo que armes con Claude).\r\nLo que llega de la nube esta en la carpeta "publicado", al lado, y no se toca a mano: se repone solo.\r\n');
+    }
+    // migracion: las reglas de la version anterior vivian en Trabajo\.claude\rules\casa.md -> a la cuarentena (nada se borra)
+    const viejo = path.join(trabajo, ...REL_REGLAS_CASA.split('/'));
+    if (fs.existsSync(viejo)) {
+        const aDonde = path.join(publicado, ...REL_CUARENTENA.split('/'), selloCarpeta(ahora), 'Trabajo', ...REL_REGLAS_CASA.split('/'));
+        res.migrado = aDonde;
+        res.rutas.push(aDonde);
+        if (!simular) moverACuarentena(viejo, aDonde);
     }
     return res;
 }
@@ -1986,10 +2080,12 @@ export function instalar({ nube, home, estado, claudeDir, clavePublica = null, i
     for (const p of act.plan || []) if (p.que === 'nuevo' || p.que === 'actualizar') anotar(`archivo publicado (${p.que})`, path.join(publicado, ...p.rel.split('/')));
     if (act.respaldo) anotar('respaldo de lo reemplazado', act.respaldo);
 
-    // 5) Trabajo\: las reglas de la casa y el CLAUDE.md de la persona (solo si no existe)
-    paso('trabajo');
-    res.trabajo = regenerarTrabajo({ home, publicado, perfil, simular, fuenteSimulada: path.join(nube, 'contenido', 'casa', 'CLAUDE.md') });
-    for (const r of res.trabajo.rutas) anotar('Trabajo', r);
+    // 5) la casa: las reglas en <home>\.claude\rules\casa.md, el CLAUDE.md de la persona (solo si no existe) y Trabajo\
+    paso('casa');
+    res.casa = regenerarCasa({ home, publicado, perfil, simular, fuenteSimulada: path.join(nube, 'contenido', 'casa', 'CLAUDE.md'), ahora });
+    // la migracion de Trabajo\.claude\rules la puede haber hecho ya el --actualizar de arriba: se informa igual
+    if (!res.casa.migrado && act.casa && act.casa.migrado) { res.casa.migrado = act.casa.migrado; res.casa.rutas.push(act.casa.migrado); }
+    for (const r of res.casa.rutas) anotar('casa (reglas, CLAUDE.md de la persona, Trabajo)', r);
 
     // 6) el plugin, a nivel usuario, con lo minimo en settings.json
     paso('plugin');
@@ -2150,7 +2246,8 @@ function main() {
         }
         const quien = r.perfil.nombre ? `${r.perfil.nombre} (área ${r.perfil.area})` : `persona sin asignar (área ${r.perfil.area}): el administrador ya tiene el aviso`;
         say(`✓ ${r.estado === 'ya_instalado' ? 'Ya estaba instalado' : 'Instalado'}: versión ${r.version}, ${quien}.`);
-        say(`  Trabajo: ${path.join(r.home, 'Trabajo')}   Plugin: ${r.plugin.estado === 'habilitado' ? `habilitado en ${r.plugin.ruta}` : 'ya estaba habilitado'}${r.plugin.respaldo ? ` (respaldo: ${r.plugin.respaldo})` : ''}`);
+        say(`  Abrí Claude en ${r.home} (tus archivos van en ${path.join(r.home, 'Trabajo')}).   Plugin: ${r.plugin.estado === 'habilitado' ? `habilitado en ${r.plugin.ruta}` : 'ya estaba habilitado'}${r.plugin.respaldo ? ` (respaldo: ${r.plugin.respaldo})` : ''}`);
+        if (r.casa && r.casa.migrado) say(`  Las reglas viejas de Trabajo\\.claude\\rules pasaron a cuarentena: ${r.casa.migrado}`);
         imprimirLista('  Avisos:', r.avisos, 10);
         return 0;
     }
@@ -2231,7 +2328,7 @@ function main() {
             const mezcla = mezclaPruebaReal({ ...indicadores, home: indicadores.home || indicadores.destino }, ['home', 'nube', 'estado']);
             if (mezcla) { console.error(`✗ ${mezcla}`); return 1; }
         }
-        // Trabajo\ se regenera solo con una carpeta de PC INDICADA (--home / CLAUDE_AREA_HOME): nunca con la real por defecto
+        // las reglas de la casa se regeneran solo con una carpeta de PC INDICADA (--home / CLAUDE_AREA_HOME): nunca con la real por defecto
         const r = actualizar({ destino, nube, reponer: !!a.reponer, simular: !!a.simular, area: a.area || null, clavePublica, proyecto, home: enArea && homeIndicado ? home : null });
         const pie = () => { if (r.salud) say(`  Salud de esta PC: ${r.salud}`); for (const av of r.avisos || []) say(`  Aviso: ${av}`); };
         if (r.estado === 'esperar') { say(`⏳ ${r.mensaje}`); pie(); return 3; }
@@ -2246,8 +2343,11 @@ function main() {
             for (const e of r.errores.slice(0, 20)) console.error(`    - ${e}`);
             if (!c.nuevos && !c.actualizados && !c.cuarentena) { pie(); return 1; }
         }
-        say(`${r.estado === 'simulado' ? 'Simulado' : 'Actualizado'} a la version ${r.version}: ${c.nuevos} nuevos · ${c.actualizados} actualizados · ${c.iguales} iguales · ${c.propios} tuyos sin novedad de Fak${c.fuera_de_area ? ` · ${c.fuera_de_area} de otras áreas (no se tocan)` : ''}`);
+        say(`${r.estado === 'simulado' ? 'Simulado' : 'Actualizado'} a la version ${r.version}: ${c.nuevos} nuevos · ${c.actualizados} actualizados · ${c.iguales} iguales · ${c.propios} tuyos sin novedad de Fak${c.repuestos ? ` · ${c.repuestos} repuestos` : ''}${c.fuera_de_area ? ` · ${c.fuera_de_area} de otras áreas (no se tocan)` : ''}`);
         say(`  ${firmaTxt}; ${areaTxt}`);
+        imprimirLista(`  ${r.estado === 'simulado' ? 'Se repondrían' : 'Repuestos'} desde la nube (faltaban o estaban cambiados; lo cambiado quedó en cuarentena) (${r.repuestos.length}):`, r.repuestos.map((x) => `${x.rel} (${x.motivo})`));
+        imprimirLista(`  En publicado y fuera de lo publicado (no se borran; quedan anotados en la salud) (${r.extranos.length}):`, r.extranos);
+        if (r.casa && r.casa.migrado) say(`  Las reglas viejas de Trabajo\\.claude\\rules pasaron a cuarentena: ${r.casa.migrado}`);
         imprimirLista(`  Con version nueva de Fak, pero tocaste el tuyo — quedo al lado como ${SUFIJO_NUEVA} (${r.tocados.length}):`, r.tocados);
         imprimirLista(`  Los sacaste vos (no se repusieron; --reponer los trae) (${r.sacados.length}):`, r.sacados);
         if (r.carpetaCuarentena) {

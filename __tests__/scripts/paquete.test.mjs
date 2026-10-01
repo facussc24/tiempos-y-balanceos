@@ -2032,7 +2032,7 @@ describe('la carpeta de la nube por proyecto: la de siempre por defecto, CLAUDE 
         expect(a.stdout).toContain('firma verificada');
         expect(a.stdout).toContain('área compras');
         expect(fs.existsSync(path.join(home, 'publicado', 'programas', 'util.mjs'))).toBe(true);
-        expect(fs.existsSync(path.join(home, 'Trabajo', '.claude', 'rules', 'casa.md'))).toBe(true);   // --home regenera las reglas de la casa
+        expect(fs.existsSync(path.join(home, '.claude', 'rules', 'casa.md'))).toBe(true);   // --home regenera las reglas de la casa (en la raiz de la PC)
         expect(correr(['--chequear']).status).toBe(0);
         expect(fs.readdirSync(path.join(nubeArea, '4- BUZON', 'salud'))).toHaveLength(1);
         expect(correr(['--donde']).stdout.trim()).toBe(path.join(nubeArea, '1- PUBLICADO'));

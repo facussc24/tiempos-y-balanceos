@@ -5,7 +5,7 @@
 
   "incluir": [
     { "ruta": "marketplace", "nota": "el marketplace con el plugin barack-area, armado desde --plugin-repo (sin tests ni node_modules). Es el único lugar donde pueden viajar hooks." },
-    { "ruta": "casa", "nota": "casa/CLAUDE.md (reglas de la casa) y casa/donde-vive.md del plugin. El instalador copia las reglas a Trabajo\\.claude\\rules\\casa.md." },
+    { "ruta": "casa", "nota": "casa/CLAUDE.md (reglas de la casa) y casa/donde-vive.md del plugin. El instalador copia las reglas a <HOME>\\.claude\\rules\\casa.md (la persona abre Claude en <HOME>, la raiz; Trabajo\\ es para sus archivos)." },
     { "ruta": "programas", "nota": "_paquete.mjs (actualiza, chequea e instala), sync_area.ps1 (la tarea de la PC) e inventario.ps1." },
     { "ruta": "conocimiento/comun", "opcional": true, "nota": "lo que ve toda PC: personas.json, donde-vive.md, fichas comunes." },
     { "ruta": "conocimiento/calidad", "areas": ["calidad"], "opcional": true },

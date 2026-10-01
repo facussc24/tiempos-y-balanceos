@@ -287,7 +287,7 @@ describe('simulacro de PC nueva: --instalar', () => {
         const r = instalar(pub, pc, ID.marta);
         expect(r.errores).toEqual([]);
         expect(r.estado).toBe('instalado');
-        expect(r.pasos).toEqual(['clave', 'publicacion', 'persona', 'copia', 'trabajo', 'plugin', 'marcador']);
+        expect(r.pasos).toEqual(['clave', 'publicacion', 'persona', 'copia', 'casa', 'plugin', 'marcador']);
         expect(r.clave.origen).toBe('nube_primera_vez');
         expect(leer(pc.estado, 'publicador.pub')).toBe(fs.readFileSync(rutaPub, 'utf8'));   // quedo fijada
         // lo publicado: comun + compras, no calidad
@@ -299,11 +299,15 @@ describe('simulacro de PC nueva: --instalar', () => {
         expect(json(pc.home, 'publicado/.claude/.paquete-instalado.json')).toMatchObject({ version: 1, area: 'compras', firma: 'valida' });
         // perfil
         expect(json(pc.home, 'perfil.json')).toEqual({ nombre: 'Marta Pérez', mail: 'marta@ejemplo.com', area: 'compras', puesto: 'Compradora', rol: 'usuario', pc: 'PC-COMPRAS-01', usuario_windows: 'marta' });
-        // Trabajo
-        expect(leer(pc.home, 'Trabajo/.claude/rules/casa.md')).toContain(CASA);
-        expect(leer(pc.home, 'Trabajo/.claude/rules/casa.md')).toMatch(/^<!-- Reglas de la casa/);
-        expect(leer(pc.home, 'Trabajo/CLAUDE.md')).toContain('Marta Pérez');
-        expect(leer(pc.home, 'Trabajo/CLAUDE.md')).toContain('.claude/rules/casa.md');
+        // la casa: reglas y CLAUDE.md en la RAIZ (la persona abre Claude ahi), Trabajo\ con su LEEME
+        expect(leer(pc.home, '.claude/rules/casa.md')).toContain(CASA);
+        expect(leer(pc.home, '.claude/rules/casa.md')).toMatch(/^<!-- Reglas de la casa/);
+        expect(leer(pc.home, 'CLAUDE.md')).toContain('Marta Pérez');
+        expect(leer(pc.home, 'CLAUDE.md')).toContain('.claude/rules/casa.md');
+        expect(leer(pc.home, 'Trabajo/LEEME.txt')).toContain('Esta carpeta es tuya');
+        expect(existe(pc.home, 'Trabajo/.claude')).toBe(false);
+        expect(json(pc.home, 'publicado/.claude/.paquete-instalado.json').proyecto).toBe('area');
+        expect(Object.keys(json(pc.home, 'publicado/.claude/.paquete-instalado.json').huellas)).toContain('casa/CLAUDE.md');
         // el plugin: solo dos claves nuevas, lo previo intacto, respaldo con el original
         const s = json(pc.claudeDir, 'settings.json');
         expect(s.model).toBe('opus');
@@ -385,8 +389,8 @@ describe('simulacro de PC nueva: --instalar', () => {
         expect(existe(marta.home, 'publicado/conocimiento/comun/glosario.md')).toBe(true);
         expect(existe(marta.home, 'publicado/conocimiento/calidad/pauta.md')).toBe(false);
         expect(am.contadores.fuera_de_area, JSON.stringify(Object.fromEntries(Object.entries(json(pub, 'MANIFIESTO.json').archivos).map(([k, e]) => [k, e.areas])))).toBe(2);
-        expect(leer(marta.home, 'Trabajo/.claude/rules/casa.md')).toContain('Regla nueva de la v2');
-        expect(am.trabajo.reglas).toBe('actualizado');
+        expect(leer(marta.home, '.claude/rules/casa.md')).toContain('Regla nueva de la v2');
+        expect(am.casa.reglas).toBe('actualizado');
         const al = P.actualizar({ destino: path.join(lucas.home, 'publicado'), nube: pub, proyecto: 'area', home: lucas.home, identidad: ID.lucas, ahora: F(4), clavePublica: path.join(lucas.estado, 'publicador.pub') });
         expect(al.estado).toBe('actualizado');
         expect(existe(lucas.home, 'publicado/conocimiento/calidad/pauta.md')).toBe(true);
@@ -452,10 +456,10 @@ describe('simulacro de PC nueva: --instalar', () => {
         expect(() => instalar(pub, pc, ID.marta, { antesDe: (paso) => { if (paso === 'plugin') throw new Error('corte simulado'); } })).toThrow('corte simulado');
         expect(existe(pc.home, 'publicado/casa/CLAUDE.md')).toBe(true);
         expect(existe(pc.home, 'perfil.json')).toBe(true);
-        expect(existe(pc.home, 'Trabajo/.claude/rules/casa.md')).toBe(true);
+        expect(existe(pc.home, '.claude/rules/casa.md')).toBe(true);
         expect(leer(pc.claudeDir, 'settings.json')).toBe(SETTINGS_PREVIO);
         expect(existe(pc.home, 'instalado.json')).toBe(false);
-        const r = instalar(pc === null ? null : pub, pc, ID.marta, { ahora: F(3) });
+        const r = instalar(pub, pc, ID.marta, { ahora: F(3) });
         expect(r.estado).toBe('instalado');
         expect(r.actualizacion.estado).toBe('al_dia');
         expect(r.plugin.estado).toBe('habilitado');
@@ -471,6 +475,104 @@ describe('simulacro de PC nueva: --instalar', () => {
         expect(existe(pc2.home, 'instalado.json')).toBe(true);
     });
 
+    // 01/10 (tarde): la persona abre Claude en la RAIZ de la PC, no en Trabajo\. Migracion y reposicion de publicado\.
+    it('migracion: las reglas viejas de Trabajo\\.claude\\rules pasan a cuarentena (no se borran); el Trabajo\\CLAUDE.md de la persona y sus archivos no se tocan, y sin LEEME si ya tenia cosas', () => {
+        const { pub } = nubeArmada();
+        const pc = pcNueva('pc-vieja');
+        esc(pc.home, 'Trabajo/.claude/rules/casa.md', '<!-- reglas de la version anterior -->\n');
+        esc(pc.home, 'Trabajo/CLAUDE.md', '# el CLAUDE.md de Marta\n');
+        esc(pc.home, 'Trabajo/mis-notas.txt', 'notas\n');
+        const r = instalar(pub, pc, ID.marta, { ahora: F(2, 9) });
+        expect(r.estado).toBe('instalado');
+        expect(existe(pc.home, 'Trabajo/.claude/rules/casa.md')).toBe(false);
+        const cuarentena = path.join(pc.home, 'publicado', ...P.REL_CUARENTENA.split('/'), P.selloCarpeta(F(2, 9)), 'Trabajo', '.claude', 'rules', 'casa.md');
+        expect(r.casa.migrado).toBe(cuarentena);
+        expect(fs.readFileSync(cuarentena, 'utf8')).toBe('<!-- reglas de la version anterior -->\n');
+        expect(leer(pc.home, 'Trabajo/CLAUDE.md')).toBe('# el CLAUDE.md de Marta\n');
+        expect(leer(pc.home, 'Trabajo/mis-notas.txt')).toBe('notas\n');
+        expect(existe(pc.home, 'Trabajo/LEEME.txt')).toBe(false);
+        expect(leer(pc.home, '.claude/rules/casa.md')).toContain(CASA);
+        expect(instalar(pub, pc, ID.marta, { ahora: F(3) }).estado).toBe('ya_instalado');
+    });
+
+    it('publicado\\ se repone solo: lo que falta o cambio vuelve desde la nube (misma version), lo cambiado va a cuarentena, la salud lo anota; lo extraño no se borra y se anota', () => {
+        const { pub, nubeRaiz } = nubeArmada();
+        const pc = pcNueva('pc');
+        expect(instalar(pub, pc, ID.marta).estado).toBe('instalado');
+        const act = (ahora) => P.actualizar({ destino: path.join(pc.home, 'publicado'), nube: pub, proyecto: 'area', home: pc.home, identidad: ID.marta, ahora, clavePublica: path.join(pc.estado, 'publicador.pub') });
+        expect(act(F(3)).estado).toBe('al_dia');
+        // alguien borra un archivo, cambia otro y deja uno suyo adentro de publicado
+        fs.rmSync(path.join(pc.home, 'publicado', 'casa', 'CLAUDE.md'));
+        esc(pc.home, 'publicado/conocimiento/comun/donde-vive.md', '- BOM: en un excel (MAL).\n');
+        esc(pc.home, 'publicado/notas-de-alguien.txt', 'esto no es de la publicacion\n');
+        const r = act(F(4, 11));
+        expect(r.errores).toEqual([]);
+        expect(r.estado).toBe('actualizado');
+        expect(r.repuestos).toEqual([{ rel: 'casa/CLAUDE.md', motivo: 'faltaba' }, { rel: 'conocimiento/comun/donde-vive.md', motivo: 'cambiado' }]);
+        expect(r.contadores.repuestos).toBe(2);
+        expect(leer(pc.home, 'publicado/casa/CLAUDE.md')).toBe(CASA);
+        expect(leer(pc.home, 'publicado/conocimiento/comun/donde-vive.md')).not.toContain('MAL');
+        const cuarentena = path.join(pc.home, 'publicado', ...P.REL_CUARENTENA.split('/'), P.selloCarpeta(F(4, 11)), 'conocimiento', 'comun', 'donde-vive.md');
+        expect(fs.readFileSync(cuarentena, 'utf8')).toBe('- BOM: en un excel (MAL).\n');
+        expect(r.extranos).toEqual(['notas-de-alguien.txt']);
+        expect(leer(pc.home, 'publicado/notas-de-alguien.txt')).toBe('esto no es de la publicacion\n');
+        expect(r.mensaje).toContain('2 archivo(s) repuesto(s)');
+        const salud = json(nubeRaiz, '4- BUZON/salud/PC-COMPRAS-01.json');
+        expect(salud.repuestos).toEqual(['casa/CLAUDE.md', 'conocimiento/comun/donde-vive.md']);
+        expect(salud.extranos).toEqual(['notas-de-alguien.txt']);
+        expect(salud.mensaje).toContain('repuesto');
+        expect(salud.errores).toEqual([]);
+        // la vuelta siguiente: al dia, sin repuestos (el extraño sigue anotado)
+        const r2 = act(F(5));
+        expect(r2.estado).toBe('al_dia');
+        expect(json(nubeRaiz, '4- BUZON/salud/PC-COMPRAS-01.json').repuestos).toEqual([]);
+        expect(json(nubeRaiz, '4- BUZON/salud/PC-COMPRAS-01.json').extranos).toEqual(['notas-de-alguien.txt']);
+        // --simular lo dice y no toca
+        fs.rmSync(path.join(pc.home, 'publicado', 'casa', 'CLAUDE.md'));
+        const sim = P.actualizar({ destino: path.join(pc.home, 'publicado'), nube: pub, proyecto: 'area', identidad: ID.marta, ahora: F(6), clavePublica: path.join(pc.estado, 'publicador.pub'), simular: true });
+        expect(sim.estado).toBe('simulado');
+        expect(sim.repuestos).toEqual([{ rel: 'casa/CLAUDE.md', motivo: 'faltaba' }]);
+        expect(existe(pc.home, 'publicado/casa/CLAUDE.md')).toBe(false);
+        // ROJO (la regla es solo de areas): en el proyecto de siempre un archivo cambiado por la persona NO se repone
+        expect(P.decidirArchivo({ nuevoHash: 'N', localHash: 'X', instaladoHash: 'N' })).toBe('propio');
+        expect(P.decidirArchivoArea({ nuevoHash: 'N', localHash: 'X', instaladoHash: 'N' })).toBe('repuesto');
+        expect(P.decidirArchivoArea({ nuevoHash: 'N', localHash: null, instaladoHash: 'N' })).toBe('repuesto');
+        expect(P.decidirArchivoArea({ nuevoHash: 'N', localHash: null, instaladoHash: undefined })).toBe('nuevo');
+        expect(P.decidirArchivoArea({ nuevoHash: 'N', localHash: 'I', instaladoHash: 'I' })).toBe('actualizar');
+        expect(P.decidirArchivoArea({ nuevoHash: 'N', localHash: 'N', instaladoHash: 'I' })).toBe('igual');
+    });
+
+    it('--chequear sigue barato: tamaño + fecha contra lo anotado; un archivo cambiado o faltante da el codigo de novedades con motivo instalacion_tocada; tras reponer, al dia', () => {
+        const { pub } = nubeArmada();
+        const pc = pcNueva('pc');
+        expect(instalar(pub, pc, ID.marta).estado).toBe('instalado');
+        const publicado = path.join(pc.home, 'publicado');
+        const ok = P.chequear({ destino: publicado, nube: pub });
+        expect(ok.estado).toBe('al_dia');
+        expect(ok.ms).toBeLessThan(200);   // sin carga son 2-5 ms; con los cuatro archivos de tests a la vez llega a ~90
+        // mismo tamaño, otro contenido: la fecha lo delata
+        const f = path.join(publicado, 'casa', 'CLAUDE.md');
+        const texto = fs.readFileSync(f, 'utf8');
+        const futuro = new Date(Date.now() + 60000);
+        fs.writeFileSync(f, texto.replace('Nunca', 'NUNCA'));
+        fs.utimesSync(f, futuro, futuro);
+        const tocado = P.chequear({ destino: publicado, nube: pub });
+        expect(tocado).toMatchObject({ estado: 'hay_novedades', motivo: 'instalacion_tocada', cambiados: ['casa/CLAUDE.md'], total_cambiados: 1 });
+        expect(tocado.ms).toBeLessThan(200);
+        const cli = spawnSync(process.execPath, [SCRIPT, '--chequear', '--proyecto', 'area', '--destino', publicado, '--nube', pub], { encoding: 'utf8', env: { ...process.env, CLAUDE_AREA_ESTADO: pc.estado }, timeout: 60000 });
+        expect(cli.status).toBe(2);
+        expect(JSON.parse(cli.stdout.trim()).motivo).toBe('instalacion_tocada');
+        // falta uno
+        fs.rmSync(path.join(publicado, 'conocimiento', 'comun', 'donde-vive.md'));
+        expect(P.chequear({ destino: publicado, nube: pub }).total_cambiados).toBe(2);
+        // --actualizar repone y vuelve a quedar al dia
+        const r = P.actualizar({ destino: publicado, nube: pub, proyecto: 'area', home: pc.home, identidad: ID.marta, ahora: F(4), clavePublica: path.join(pc.estado, 'publicador.pub') });
+        expect(r.repuestos.map((x) => x.rel).sort()).toEqual(['casa/CLAUDE.md', 'conocimiento/comun/donde-vive.md']);
+        expect(P.chequear({ destino: publicado, nube: pub }).estado).toBe('al_dia');
+        // version nueva: el motivo es otro
+        expect(P.archivosConOtraHuella(publicado, json(publicado, '.claude/.paquete-instalado.json').huellas)).toEqual([]);
+    });
+
     it('por linea de comandos con las variables del contrato: --instalar, --chequear y una segunda vez', () => {
         const { pub, nubeRaiz } = nubeArmada();
         const pc = pcNueva('pc-cli', { settings: SETTINGS_PREVIO });
@@ -480,7 +582,7 @@ describe('simulacro de PC nueva: --instalar', () => {
         const r = correr(['--instalar', '--usuario-home', pc.claudeDir]);
         expect(r.status, r.stdout + r.stderr).toBe(0);
         expect(r.stdout).toContain('Instalado');
-        expect(r.stdout).toContain('Trabajo');
+        expect(r.stdout).toContain(`Abrí Claude en ${pc.home}`);
         expect(existe(pc.home, 'instalado.json')).toBe(true);
         expect(json(pc.claudeDir, 'settings.json').model).toBe('opus');
         expect(correr(['--chequear']).status).toBe(0);
@@ -629,7 +731,7 @@ describe('lo que no puede pasar: --help, opciones desconocidas, mezcla de prueba
         expect(r.errores).toEqual([]);
         expect(r.estado).toBe('simulado');
         const rutas = r.plan.map((p) => p.ruta);
-        for (const esperada of [path.join(pc.estado, 'publicador.pub'), path.join(pc.home, 'perfil.json'), path.join(pc.home, 'publicado', 'casa', 'CLAUDE.md'), path.join(pc.home, 'publicado', 'conocimiento', 'compras', 'ficha-compras.md'), path.join(pc.home, 'Trabajo', '.claude', 'rules', 'casa.md'), path.join(pc.home, 'Trabajo', 'CLAUDE.md'), path.join(pc.claudeDir, 'settings.json'), path.join(pc.home, 'instalado.json'), path.join(nubeRaiz, '4- BUZON', 'salud', 'PC-COMPRAS-01.json')]) {
+        for (const esperada of [path.join(pc.estado, 'publicador.pub'), path.join(pc.home, 'perfil.json'), path.join(pc.home, 'publicado', 'casa', 'CLAUDE.md'), path.join(pc.home, 'publicado', 'conocimiento', 'compras', 'ficha-compras.md'), path.join(pc.home, '.claude', 'rules', 'casa.md'), path.join(pc.home, 'CLAUDE.md'), path.join(pc.home, 'Trabajo', 'LEEME.txt'), path.join(pc.claudeDir, 'settings.json'), path.join(pc.home, 'instalado.json'), path.join(nubeRaiz, '4- BUZON', 'salud', 'PC-COMPRAS-01.json')]) {
             expect(rutas, esperada).toContain(esperada);
         }
         expect(rutas.some((x) => x.includes('settings.json.respaldo-'))).toBe(true);
@@ -743,6 +845,8 @@ describe.skipIf(!ES_WINDOWS)('sync_area.ps1: la tarea de la PC (sin registrar ni
         esc(cola, '2026-10-01T090000-servidor.json', JSON.stringify({ nivel: 'hoy', tipo: 'servidor', mensaje: 'x', cuando: '2026-10-01T09:00:00' }));
         esc(cola, '2026-10-01T091500-mail.json', JSON.stringify({ nivel: 'hoy', tipo: 'mail', mensaje: 'y', cuando: '2026-10-01T09:15:00' }));
         esc(nubeRaiz, '4- BUZON/avisos/PC-COMPRAS-01/2026-10-01T090000-servidor.json', '{"ya":"estaba"}');
+        // y alguien borro un archivo de publicado: la tarea lo repone
+        fs.rmSync(path.join(pc.home, 'publicado', 'casa', 'donde-vive.md'));
         // -Simular: lista y no mueve
         const sim = ps(['-HomeDir', pc.home, '-Nube', nubeRaiz, '-EstadoDir', pc.estado, '-SinTarea', '-SinInventario', '-SinActualizar', '-Simular', '-PrioridadNormal']);
         expect(sim.status, sim.stdout + sim.stderr).toBe(0);
@@ -753,6 +857,7 @@ describe.skipIf(!ES_WINDOWS)('sync_area.ps1: la tarea de la PC (sin registrar ni
         const r = ps(['-HomeDir', pc.home, '-Nube', nubeRaiz, '-EstadoDir', pc.estado, '-SinTarea', '-SinInventario', '-PrioridadNormal', '-Verbose2']);
         expect(r.status, r.stdout + r.stderr).toBe(0);
         expect(existe(pc.home, 'publicado/conocimiento/comun/glosario.md')).toBe(true);
+        expect(existe(pc.home, 'publicado/casa/donde-vive.md')).toBe(true);   // repuesto por la tarea
         expect(json(pc.home, 'publicado/.claude/.paquete-instalado.json').version).toBe(2);
         expect(fs.readdirSync(cola)).toEqual([]);
         const subidos = fs.readdirSync(path.join(nubeRaiz, '4- BUZON', 'avisos', 'PC-COMPRAS-01')).sort();

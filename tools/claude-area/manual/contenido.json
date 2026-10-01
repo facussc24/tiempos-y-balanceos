@@ -20,12 +20,12 @@
   },
 
   "variables": {
-    "CARPETA": "C:\\ClaudeBarack\\Trabajo",
+    "CARPETA": "C:\\ClaudeBarack",
     "CONTACTO": "Facundo"
   },
 
   "a_confirmar_general": [
-    "Idioma de la app: los nombres de este manual son los de la documentacion (en ingles). Si la app de la PC se ve en castellano, va lo que se ve en la captura.",
+    "Los nombres de los botones son los que se ven en las capturas (la app esta en castellano). Si en la PC piloto se ve distinto, se saca la captura de nuevo ahi.",
     "Que la pestaña correcta para el trabajo de cada area sea Code (la documentacion la describe como la de programar).",
     "Releer .sgc-cache/claude-por-area/modelos-y-esfuerzo.md el dia de imprimir: los modelos cambian cada pocas semanas."
   ],
@@ -40,7 +40,7 @@
           "archivo": "capturas/01-respuesta-con-cita.png",
           "que_se_ve": "La app en Code, con la pregunta de las tres piezas malas ya respondida y, al final de la respuesta, el documento y la revisión (P-09.1 rev B.1).",
           "marcas": [
-            { "tipo": "recuadro", "x": 22, "y": 66, "ancho": 50, "alto": 8, "posicion_confirmada": false }
+            { "tipo": "recuadro", "x": 15.8, "y": 86.6, "ancho": 68.4, "alto": 12, "posicion_confirmada": true }
           ]
         }
       ],
@@ -79,25 +79,26 @@
 
     {
       "numero": 3,
-      "titulo": "La pestaña es Code",
+      "titulo": "El botón Code",
       "activa": true,
       "capturas": [
         {
-          "archivo": "capturas/03-tres-pestanas.png",
-          "que_se_ve": "La app recién abierta, sin ninguna conversación: arriba, en el medio, las tres pestañas Chat, Cowork y Code.",
+          "archivo": "capturas/03-boton-code.png",
+          "que_se_ve": "El rincón de arriba a la izquierda de la app: los dos botones juntos (el del globito y el de </>), y debajo Nuevo.",
           "marcas": [
-            { "tipo": "recuadro", "x": 53, "y": 2, "ancho": 8, "alto": 6, "posicion_confirmada": false },
-            { "tipo": "flecha", "desde": [72, 24], "hasta": [62, 9], "posicion_confirmada": false }
+            { "tipo": "recuadro", "x": 84.5, "y": 2.5, "ancho": 13, "alto": 18.5, "posicion_confirmada": true }
           ]
         }
       ],
       "texto": [
-        "Arriba, en el medio, hay tres pestañas: Chat, Cowork y Code.",
-        "La nuestra es **Code**. Hacé clic ahí.",
-        "Las otras dos no las usamos."
+        "Arriba a la izquierda hay dos botones juntos.",
+        "El nuestro es el de la derecha: **</>**. Se llama Code. Hacé clic ahí.",
+        "El otro, el del globito, es para charlar: acá no lo usamos."
       ],
-      "error_que_evita": "Escribir la pregunta en Chat.",
-      "a_confirmar": []
+      "error_que_evita": "Escribir la pregunta en el chat común, que no conoce nada de Barack.",
+      "a_confirmar": [
+        { "donde": "app", "que": "que en la PC piloto se vean los mismos dos botones (la documentación nombra tres pestañas: Chat, Cowork y Code)" }
+      ]
     },
 
     {
@@ -118,14 +119,15 @@
           "que_se_ve": "La ventana para elegir carpeta, con la carpeta de Barack marcada. Sin el árbol de carpetas de al lado.",
           "rotulo": "3. La carpeta",
           "marcas": [
-            { "tipo": "recuadro", "x": 25, "y": 30, "ancho": 45, "alto": 8, "posicion_confirmada": false }
+            { "tipo": "recuadro", "x": 16, "y": 44.6, "ancho": 26, "alto": 4.8, "posicion_confirmada": true },
+            { "tipo": "recuadro", "x": 75.3, "y": 91.6, "ancho": 13.6, "alto": 4.8, "posicion_confirmada": true }
           ]
         }
       ],
       "texto": [
         "1. Elegí **Local**: así Claude trabaja en esta computadora.",
         "2. Apretá **Select folder** (quiere decir «elegir carpeta»).",
-        "3. Elegí la carpeta **{CARPETA}**.",
+        "3. Elegí **{CARPETA}** y apretá **Seleccionar carpeta**.",
         "Siempre esa: con otra, Claude no tiene las reglas de Barack."
       ],
       "error_que_evita": "Elegir Cloud, o cualquier otra carpeta.",
@@ -144,13 +146,14 @@
           "archivo": "capturas/06-decir-el-puesto.png",
           "que_se_ve": "El mensaje «Soy supervisor de producción. ¿Qué funciones tiene mi puesto?» ya enviado y, debajo, el comienzo de la respuesta con «F-24 Supervisor de Producción, rev I».",
           "marcas": [
-            { "tipo": "recuadro", "x": 25, "y": 18, "ancho": 60, "alto": 9, "posicion_confirmada": false }
+            { "tipo": "recuadro", "x": 45, "y": 15.6, "ancho": 39, "alto": 7.6, "numero": 1, "posicion_confirmada": true },
+            { "tipo": "recuadro", "x": 54, "y": 41.2, "ancho": 30, "alto": 5, "numero": 2, "posicion_confirmada": true }
           ]
         }
       ],
       "texto": [
-        "Escribí abajo y apretá **Enter**.",
-        "Empezá por tu puesto: «Soy supervisor de producción».",
+        "1. Escribí abajo y apretá **Enter**. Empezá por tu puesto.",
+        "2. Claude busca la descripción de tu puesto y te dice de qué documento salió.",
         "Claude contesta distinto a un supervisor que a un comprador.",
         "No hace falta escribir bien: alcanza con que se entienda."
       ],
@@ -169,7 +172,7 @@
           "archivo": "capturas/07-respuesta-tres-piezas.png",
           "que_se_ve": "La respuesta completa a «¿Qué hago si en la línea salen tres piezas malas seguidas con el mismo defecto?», con el renglón del documento y la revisión a la vista.",
           "marcas": [
-            { "tipo": "recuadro", "x": 22, "y": 78, "ancho": 50, "alto": 8, "posicion_confirmada": false }
+            { "tipo": "recuadro", "x": 15.8, "y": 68.1, "ancho": 68.4, "alto": 9.5, "posicion_confirmada": true }
           ]
         },
         {
@@ -221,7 +224,7 @@
           "archivo": "capturas/09-mail-en-outlook.png",
           "que_se_ve": "Solo la ventana del mail nuevo de Outlook: Para, asunto, dos renglones y «Saludos». El botón Enviar a la vista. Sin la bandeja de entrada atrás.",
           "marcas": [
-            { "tipo": "recuadro", "x": 1, "y": 22, "ancho": 9, "alto": 14, "posicion_confirmada": false }
+            { "tipo": "recuadro", "x": 3.9, "y": 30.5, "ancho": 7.4, "alto": 16, "posicion_confirmada": true }
           ]
         }
       ],
@@ -243,14 +246,14 @@
       "capturas": [
         {
           "archivo": "capturas/10-boton-mas-adjunto.png",
-          "que_se_ve": "La caja de texto con el botón + a la vista y un archivo ya adjunto (el PDF de un instructivo).",
+          "que_se_ve": "La caja donde se escribe, con el botón + abajo a la izquierda.",
           "marcas": [
-            { "tipo": "recuadro", "x": 22, "y": 86, "ancho": 5, "alto": 8, "posicion_confirmada": false }
+            { "tipo": "recuadro", "x": 9, "y": 58, "ancho": 6.6, "alto": 28, "posicion_confirmada": true }
           ]
         }
       ],
       "texto": [
-        "Con el botón **+** le pasás un archivo o una foto.",
+        "Con el botón **+**, abajo de donde escribís, le pasás un archivo o una foto.",
         "Sirve para un PDF, un documento o una captura de pantalla.",
         "Después decile qué querés: «resumime esto»."
       ],
@@ -265,9 +268,9 @@
       "capturas": [
         {
           "archivo": "capturas/11-modelo-y-nivel.png",
-          "que_se_ve": "La lista de modelos abierta, al lado del botón de enviar, con Opus 5.5 elegido; y el nivel a la vista.",
+          "que_se_ve": "La caja donde se escribe: abajo a la derecha dice el modelo (Opus 5.5) y el nivel (Medio).",
           "marcas": [
-            { "tipo": "recuadro", "x": 55, "y": 55, "ancho": 28, "alto": 8, "posicion_confirmada": false }
+            { "tipo": "recuadro", "x": 43, "y": 58, "ancho": 40, "alto": 28, "posicion_confirmada": true }
           ]
         }
       ],
@@ -283,12 +286,12 @@
       },
       "texto": [
         "Si no sabés, no toques nada: **Opus 5.5** en nivel **Medio**.",
-        "Se cambia en la lista que está al lado del botón de enviar.",
-        "**Máximo**, **Fable** y el modo rápido no se usan sin avisar."
+        "Se ve abajo a la derecha. Si dice otra cosa, hacé clic ahí y elegilo.",
+        "Los niveles **Extra** y **Ultracode**, **Fable** y el modo rápido no se usan sin avisar."
       ],
-      "error_que_evita": "Poner todo en Máximo «para que salga mejor» y dejar sin cupo al resto.",
+      "error_que_evita": "Poner todo en el nivel más alto «para que salga mejor» y dejar sin cupo al resto.",
       "a_confirmar": [
-        { "donde": "app", "que": "cómo se llama y dónde está el control del nivel; si los niveles se llaman Bajo, Medio, Alto y Máximo" }
+        { "donde": "app", "que": "cómo se llaman en la lista los niveles de abajo y de arriba de Medio (en pantalla se vieron Medio, Extra y Ultracode)" }
       ]
     },
 
@@ -298,15 +301,15 @@
       "activa": true,
       "capturas": [
         {
-          "archivo": "capturas/12-new-session.png",
-          "que_se_ve": "La barra del costado con el botón + New session. La lista de conversaciones vacía, o con una sola de prueba.",
+          "archivo": "capturas/12-boton-nuevo.png",
+          "que_se_ve": "El rincón de arriba a la izquierda de la app, con el botón + Nuevo. Sin la lista de conversaciones.",
           "marcas": [
-            { "tipo": "recuadro", "x": 1, "y": 8, "ancho": 18, "alto": 6, "posicion_confirmada": false }
+            { "tipo": "recuadro", "x": 3.5, "y": 29.5, "ancho": 25, "alto": 15, "posicion_confirmada": true }
           ]
         }
       ],
       "texto": [
-        "Tema nuevo, conversación nueva: **+ New session** («sesión nueva»).",
+        "Tema nuevo, conversación nueva: apretá **+ Nuevo**, arriba a la izquierda.",
         "Si lo corregiste dos veces y sigue mal, también: empezá de nuevo.",
         "Una conversación de todo el día se confunde y gasta el cupo de todos."
       ],
@@ -321,9 +324,9 @@
       "capturas": [
         {
           "archivo": "capturas/13-mail-esperando-enviar.png",
-          "que_se_ve": "La misma ventana del mail de la captura 09, un poco más abierta, con el cursor arriba del botón Enviar.",
+          "que_se_ve": "El mismo mail de la página del mail, más de cerca: el botón Enviar lo aprieta la persona.",
           "marcas": [
-            { "tipo": "recuadro", "x": 1, "y": 22, "ancho": 9, "alto": 14, "posicion_confirmada": false }
+            { "tipo": "recuadro", "x": 3.9, "y": 9, "ancho": 7.4, "alto": 25.5, "posicion_confirmada": true }
           ]
         }
       ],
@@ -345,17 +348,19 @@
       "activa": true,
       "capturas": [
         {
-          "archivo": "capturas/14-accept-reject.png",
-          "que_se_ve": "Un cambio que propone Claude, con los botones Accept y Reject a la vista.",
+          "archivo": "capturas/14-claude-pide-permiso.png",
+          "que_se_ve": "El cartel con que Claude pide permiso para guardar un archivo: abajo, Denegar, Permitir siempre y Permitir una vez.",
           "marcas": [
-            { "tipo": "recuadro", "x": 60, "y": 80, "ancho": 25, "alto": 8, "posicion_confirmada": false }
+            { "tipo": "recuadro", "x": 69.3, "y": 84.3, "ancho": 29, "alto": 8, "numero": 1, "posicion_confirmada": true },
+            { "tipo": "recuadro", "x": 2.2, "y": 84.3, "ancho": 16, "alto": 8, "numero": 2, "posicion_confirmada": true }
           ]
         }
       ],
       "texto": [
-        "A veces Claude pregunta antes de hacer algo.",
-        "Leé qué va a hacer. Si es lo que pediste: **Accept** («aceptar»).",
-        "Si no entendés qué es: **Reject** («rechazar») y avisá."
+        "Antes de guardar algo, Claude muestra qué va a hacer y pregunta.",
+        "1. Si es lo que pediste: **Permitir una vez**.",
+        "2. Si no entendés qué es: **Denegar**, y avisá.",
+        "**Permitir siempre** no se usa: que pregunte cada vez."
       ],
       "error_que_evita": "Aceptar todo sin leer.",
       "a_confirmar": [
@@ -372,7 +377,7 @@
           "archivo": "capturas/16-boton-detener.png",
           "que_se_ve": "Claude trabajando, con el botón de detener a la vista.",
           "marcas": [
-            { "tipo": "recuadro", "x": 88, "y": 86, "ancho": 6, "alto": 9, "posicion_confirmada": false }
+            { "tipo": "recuadro", "x": 84.3, "y": 17, "ancho": 6.6, "alto": 32, "posicion_confirmada": true }
           ]
         },
         {

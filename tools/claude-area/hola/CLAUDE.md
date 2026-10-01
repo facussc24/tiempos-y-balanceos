@@ -17,7 +17,7 @@ Según lo que haya:
 
 | Lo que encontrás | Qué hacer |
 |---|---|
-| Están los dos | Ya está instalado. Decile: *"Ya está instalado en esta PC. Cerrá esta carpeta y abrí Claude en `C:\ClaudeBarack\Trabajo`: ahí te saludo por tu nombre."* No instales de nuevo ni toques nada acá. |
+| Están los dos | Ya está instalado. Decile: *"Ya está instalado en esta PC. Cerrá esta carpeta y abrí Claude en `C:\ClaudeBarack`: ahí te saludo por tu nombre."* No instales de nuevo ni toques nada acá. |
 | Falta alguno de los dos (o los dos) | Seguí con el Paso 1. Si hay cosas a medias no importa: el instalador se puede correr las veces que haga falta y completa lo que falta sin romper nada. |
 
 ## Paso 1 - Avisarle, en una línea
@@ -56,10 +56,10 @@ Esperá a que termine (menos de dos minutos). **No lo corras dos veces a la vez.
 
 ## Paso 3 - Cierre
 
-El instalador dejó listo `C:\ClaudeBarack\Trabajo` y habilitó el asistente, pero el asistente recién se carga en
+El instalador dejó listo `C:\ClaudeBarack` y habilitó el asistente, pero el asistente recién se carga en
 la **próxima** conversación. Decile, en una línea:
 
-*"Listo. Cerrá esta carpeta y abrí Claude en `C:\ClaudeBarack\Trabajo`: ahí te saludo por tu nombre y ya podés
+*"Listo. Cerrá esta carpeta y abrí Claude en `C:\ClaudeBarack`: ahí te saludo por tu nombre y ya podés
 preguntarme, por ejemplo, dónde está un procedimiento."*
 
 Si te dice que quiere seguir ahora mismo acá, explicale que hace falta volver a abrirlo para que cargue todo, y
@@ -72,4 +72,4 @@ nada más.
 - No instales, descargues ni configures nada que no sea el instalador de arriba. Si falta algo, se espera o se le
   avisa al administrador: no se improvisa.
 - Si la persona te pide otra cosa antes de terminar, decile que primero terminan la instalación y que después, en
-  `C:\ClaudeBarack\Trabajo`, se lo hacés.
+  `C:\ClaudeBarack`, se lo hacés.
