@@ -1,0 +1,57 @@
+{
+ "_que_es": "Lo que tiene que volver a dar sv_medir.py sobre los dos STEP del caso (01/10/2026). Tolerancias en comprobar_referencia.py.",
+ "_archivos": {
+  "del": "VW Patagonia Front Door Final Trimmed Skin 3-17-2026.step",
+  "tras": "VW Patagonia Rear Door Final Trimmed Skin 3-17-2026 (1).step"
+ },
+ "_control_independiente_gmsh": {
+  "del": {
+   "recortada": 1401.035,
+   "terminada": 1190.102,
+   "coincide_0.3mm": 960.2,
+   "apoyada_3mm": 1007.0
+  },
+  "tras": {
+   "recortada": 1375.422,
+   "terminada": 1134.408,
+   "coincide_0.3mm": 975.5,
+   "apoyada_3mm": 1037.5
+  }
+ },
+ "del": {
+  "total_cm2": 1401.03,
+  "terminada_cm2": 1190.1,
+  "vista_cm2": 960.4,
+  "vista_rango_cm2": [
+   960.4,
+   1010.3
+  ],
+  "doblez_cm2": 440.6,
+  "espesor_mm": 2.0,
+  "cara_vista_sustrato_cm2": 931.8,
+  "area_que_mira_al_reves": 0.104,
+  "se_cuela_al_dorso": false,
+  "sustrato_cubierto_por_rayos_cm2": 931.5,
+  "huecos": {},
+  "estable_a_2_decimales": true
+ },
+ "tras": {
+  "total_cm2": 1375.42,
+  "terminada_cm2": 1134.41,
+  "vista_cm2": 978.3,
+  "vista_rango_cm2": [
+   978.3,
+   1040.4
+  ],
+  "doblez_cm2": 397.1,
+  "espesor_mm": 1.99,
+  "cara_vista_sustrato_cm2": 1770.9,
+  "area_que_mira_al_reves": 0.497,
+  "se_cuela_al_dorso": true,
+  "sustrato_cubierto_por_rayos_cm2": 1017.4,
+  "huecos": {
+   "hueco del parlante": 67.6
+  },
+  "estable_a_2_decimales": true
+ }
+}

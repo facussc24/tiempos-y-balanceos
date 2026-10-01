@@ -95,6 +95,7 @@ incidente vive en los snapshots.
 
 - **01/10 — Un punto del Asaichi que dice "pasar mail" no es la orden de armarlo hoy, y un cierre de 80 renglones no se lee** (*"armaste un mail que no te pedi"*). Graduado a la memoria `feedback_mail_de_una_tarea_va_con_la_info_procesada`.
 
+- **01/10 — Si un entregable nombra una fuente, lleva su captura** (*"si no me van a preguntar de dónde saqué los datos"*), **y una herramienta nueva no informa lo que no corrió con un caso de respuesta conocida.** Graduado al skill `superficie-vinilo-3d` y a la memoria `entregables_para_fak`.
 - **01/10 — REGLA DURA: se guarda solo en la nube de Ingeniería; en la nube personal de Fak, nada** (*"no podemos volver a fallar"*), y a Fak no se le habla del "cerebro". Graduado a `nube-ingenieria.md` + hook `nube-personal-guard`.
 - **01/10 — Si Fak pregunta "qué es esto / por qué", se le explica y se para: no se arregla nada en paralelo** (*"yo tomo las decisiones acá... explicame antes de hacer algo"*). Graduado a la memoria `feedback_si_pide_que_le_explique_se_explica_y_se_para`.
 - **30/09-01/10 — Un trabajo de toda la noche no se sostiene con avisos de la sesión, y el techo de 10 agentes no es la capacidad de la PC** (máximo 4-5 con navegador; ninguno nuevo con menos de 3 GB libres). Graduado a la memoria `reference_notebook_capacidad_agentes_con_navegador`.
