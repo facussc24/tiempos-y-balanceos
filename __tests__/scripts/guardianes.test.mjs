@@ -741,7 +741,11 @@ describe('por bash — los wrappers finos y el despachador (el camino real)', ()
     expect(correrSh('_dispatcher.sh', bash('echo hola')).code).toBe(0);
     expect(correrSh('_dispatcher.sh', bash(`rm -rf "${ESC}\\Insert"`)).code).toBe(2);
     expect(correrSh('_dispatcher.sh', '{"tool_name":"Bash","tool_input":{"command":"rm -rf /c/Users/FacundoS-PC/OneDrive/Escritorio/tarea"').code).toBe(2);
-    expect(correrSh('_dispatcher.sh', bash(`ls "${ESC}"`)).out).toMatch(/ESCRITORIO-GUARD/);
+    // Con session_id PROPIO de esta corrida: el recordatorio sale una vez por sesion (30/09/2026) y
+    // sin esto dependia de que un test anterior no lo hubiera gastado. En Linux `aRutaWin()` no
+    // remapea igual el temporal, `limpiarFlags` no lo limpiaba y el CI quedo rojo en 0b288f60.
+    const sesion = { session_id: `disp-sin-bash-${process.pid}-${Date.now()}` };
+    expect(correrSh('_dispatcher.sh', { ...bash(`ls "${ESC}"`), ...sesion }).out).toMatch(/ESCRITORIO-GUARD/);
     expect(restos()).toEqual([]);
   });
   it('_dispatcher.sh con un payload de 500 KB por stdin (un Write enorme): node lo lee entero y el bloqueo sigue saltando', () => {
