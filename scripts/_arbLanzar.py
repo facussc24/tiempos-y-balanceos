@@ -73,10 +73,12 @@ def aviso(texto, flags=MB_OK | MB_ICONWARN):
 # Tarea de Windows que instala FAK ("ARB - activar vigilante") y corre sola cada 3 min: si el
 # arb esta cerrado o en el login, lo abre y entra. Claude no la dispara (CLAUDECODE sigue
 # bloqueando) ni cierra el arb para provocarla (regla arb-no-cerrar.md). Frenos:
-#   - solo actua si nadie toco teclado ni mouse en 2 min (no le roba el foco a Fak);
+#   - solo actua si nadie toco teclado ni mouse en INACTIVO_MIN_S (eran 2 min; Fak lo bajo a
+#     10 s el 01/10/2026: "en vez de 2 minutos... 10 segundos seria mejor");
 #   - un login fallido PAUSA el vigilante (no reintenta cada 3 min: bloquearia la cuenta);
 #   - "ARB - pausar vigilante" lo frena a mano (vigilante_estado.txt dice PAUSADO).
 ESTADO_VIGILANTE = os.path.join(os.path.expanduser('~'), 'arb_fotos', 'vigilante_estado.txt')
+INACTIVO_MIN_S = 10                  # segundos sin teclado ni mouse para que el vigilante abra el arb
 
 
 def vigilante_pausado():
@@ -678,7 +680,7 @@ def main(argv):
             latido('windows bloqueado')
             log_sin_repetir('vigilante: arb cerrado pero Windows esta bloqueado; espero')
             return 0
-        if segundos_inactivo() < 120:
+        if segundos_inactivo() < INACTIVO_MIN_S:
             latido('Fak usando la PC')
             log_sin_repetir('vigilante: arb cerrado pero Fak esta usando la PC; espero')
             return 0

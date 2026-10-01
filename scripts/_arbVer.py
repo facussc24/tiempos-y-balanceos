@@ -114,6 +114,21 @@ def click(h, dx, dy):
         u.AttachThreadInput(me, tid, False)
 
 
+def restaurar():
+    """Levanta la ventana principal si esta minimizada. Con el arb minimizado todo click cae en
+    pantalla(-32000,...) y no abre nada (01/10/2026, despues de que lo abrio el vigilante).
+    `ShowWindow(SW_RESTORE)` desde otro proceso NO la levanto: va el SC_RESTORE por mensaje."""
+    h = buscar('prod')
+    if not h:
+        print('el arb no esta abierto'); return 1
+    if u.IsIconic(h):
+        u.PostMessageW(h, 0x0112, 0xF120, 0)           # WM_SYSCOMMAND / SC_RESTORE
+        time.sleep(2.0)
+    r = R(); u.GetWindowRect(h, ctypes.byref(r))
+    print('ventana principal %s en (%d,%d)' % ('MINIMIZADA' if u.IsIconic(h) else 'a la vista', r.l, r.t))
+    return 1 if u.IsIconic(h) else 0
+
+
 def estado():
     print('ventanas visibles del arb:')
     modales = 0
@@ -516,6 +531,8 @@ if __name__ == '__main__':
         sys.exit(0 if export() else 1)
     elif cmd == 'modal':
         sys.exit(1 if cerrar_modales() else 0)
+    elif cmd == 'restaurar':
+        sys.exit(restaurar())
     elif cmd == 'reset':
         sys.exit(reset_relaciones(forzar='--forzar' in sys.argv[2:]))
     elif cmd == 'excel':

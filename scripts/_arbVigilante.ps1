@@ -6,7 +6,7 @@
 #
 # La tarea ("Barack - ARB siempre abierto") corre cada 3 minutos, sin ventana, como el usuario
 # de Windows de Fak: `conhost --headless python scripts\_arbLanzar.py --vigilar`. Si el arb esta abierto sale en
-# milisegundos; si esta cerrado o en el login y nadie usa la PC hace 2 minutos, lo abre y entra
+# milisegundos; si esta cerrado o en el login y nadie usa la PC hace 10 segundos, lo abre y entra
 # con la clave que Fak guardo en el Administrador de credenciales. Un login fallido la pausa sola.
 # El estado vive en ~\arb_fotos\vigilante_estado.txt: la primera palabra es ACTIVO o PAUSADO
 # (no se borra nada para activar). Pedido de Fak, 30/09/2026. Sin tildes en este archivo

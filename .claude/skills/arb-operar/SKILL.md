@@ -23,6 +23,9 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 >   ventanas se abren por click (`_arbCargar.abrir()` → `reset_relaciones()`). Si el arb se
 >   reabrió con el ribbon **minimizado**, el click al botón no abre nada: desplegarlo con
 >   `click (1474, 42)` de `Producción`.
+> - **Si un click cae en `pantalla(-32000,...)` el arb está MINIMIZADO** (pasa después de que lo
+>   abre el vigilante, o si Fak lo minimizó): `python scripts/_arbVer.py restaurar` y reintentar
+>   (01/10/2026). Y si Fak está usando la PC, la tanda se corta sola: avisarle y esperar.
 > - El export deja Relaciones en la solapa `Listado`: se vuelve a `Altas` con
 >   `_arbVer.py click 118 68`, **no con `reset`** (con Relaciones abierta se niega; cerrarla
 >   crashea el arb).
@@ -61,13 +64,16 @@ y `--forzar` va solo con OK de Fak. El incidente, la tabla completa, el escape y
 `arb-no-cerrar.md`, que carga sola al abrir este skill.
 **Cuando Fak pide algo del arb y el arb esta cerrado** (desde el 30/09/2026): si el vigilante
 esta activo (`~/arb_fotos/vigilante_estado.txt` empieza con ACTIVO), lo abre SOLO en <= 3-5 min
-(tarea "Barack - ARB siempre abierto", cada 3 min, solo si nadie usa la PC hace 2 min): esperar
+(tarea "Barack - ARB siempre abierto", cada 3 min, solo si nadie usa la PC hace 10 s —eran 2 min
+hasta el 01/10/2026, `INACTIVO_MIN_S` en `_arbLanzar.py`—): esperar
 con `python scripts/_arbVer.py estado` hasta `ProdWindow` habilitada y seguir. Si dice PAUSADO
 (se pausa solo tras un login fallido; la causa esta al final de `~/arb_fotos/lanzador.log`) o no
 abre en 6 min: una linea a Fak — *"doble click en ARB"* (o *"ARB - reiniciar"* si esta colgado,
 o activar el vigilante si esta pausado). **Activar el vigilante lo hace Claude** (Fak, 30/09/2026:
 *"activa el vigilante, eso lo podes hacer vos, no requiere contraseñas"*): `powershell -ExecutionPolicy
-Bypass -File scripts\_arbVigilante.ps1 -Activar` (muestra un mensaje a Fak). Claude NO corre `_arbLanzar.py` (se niega con
+Bypass -File scripts\_arbVigilante.ps1 -Activar -SinMensaje` (**siempre con `-SinMensaje`**: sin esa
+marca sale un cartel que espera el click de Fak y el comando queda colgado — 01/10/2026, Fak:
+*"deberias hacerlo automaticamente"*). Claude NO corre `_arbLanzar.py` (se niega con
 `CLAUDECODE`) salvo `--diagnostico`, ni cierra el arb para que el vigilante lo reabra.
 
 ## Regla de oro
