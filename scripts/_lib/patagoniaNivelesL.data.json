@@ -1,0 +1,356 @@
+{
+  "_info": "Mapeo canónico simplificado de Niveles L, Productos Terminados e Insumos Vinilos Sansuy Serie VW427 Patagonia",
+  "_columnas": [
+    "Nivel (L)",
+    "Conjunto",
+    "Código Producto Terminado (PN)",
+    "Descripción Producto Terminado",
+    "Código Insumo Serie (ARB)",
+    "Descripción Insumo (ARB)",
+    "Código Sansuy / IMDS Item-No",
+    "ID IMDS"
+  ],
+  "_total_registros_activos": 34,
+  "registros": [
+    {
+      "nivel": "L0",
+      "conjunto": "Insertos de Puerta",
+      "pn_terminado": "N 227",
+      "descripcion_terminado": "INSERTO PTA. DEL. IZQ. L0",
+      "codigo_insumo_arb": "1246030226",
+      "descripcion_insumo_arb": "SANLEATHER IV CL74 S085 NEGRO 1,1X1400 E",
+      "codigo_sansuy": "197.025.0426",
+      "imds_id": "1495443217"
+    },
+    {
+      "nivel": "L0",
+      "conjunto": "Insertos de Puerta",
+      "pn_terminado": "N 392",
+      "descripcion_terminado": "INSERTO PTA. DEL. DER. L0",
+      "codigo_insumo_arb": "1246030226",
+      "descripcion_insumo_arb": "SANLEATHER IV CL74 S085 NEGRO 1,1X1400 E",
+      "codigo_sansuy": "197.025.0426",
+      "imds_id": "1495443217"
+    },
+    {
+      "nivel": "L0",
+      "conjunto": "Insertos de Puerta",
+      "pn_terminado": "N 396",
+      "descripcion_terminado": "INSERTO PTA. TRAS. IZQ. L0",
+      "codigo_insumo_arb": "1246030226",
+      "descripcion_insumo_arb": "SANLEATHER IV CL74 S085 NEGRO 1,1X1400 E",
+      "codigo_sansuy": "197.025.0426",
+      "imds_id": "1495443217"
+    },
+    {
+      "nivel": "L0",
+      "conjunto": "Insertos de Puerta",
+      "pn_terminado": "N 400",
+      "descripcion_terminado": "INSERTO PTA. TRAS. DER. L0",
+      "codigo_insumo_arb": "1246030226",
+      "descripcion_insumo_arb": "SANLEATHER IV CL74 S085 NEGRO 1,1X1400 E",
+      "codigo_sansuy": "197.025.0426",
+      "imds_id": "1495443217"
+    },
+    {
+      "nivel": "L0",
+      "conjunto": "Apoyacabezas (PIP)",
+      "pn_terminado": "2HC881901 RL1",
+      "descripcion_terminado": "FRONT HEADREST TITAN BLACK",
+      "codigo_insumo_arb": "1246030198",
+      "descripcion_insumo_arb": "VINILO PU 4,5MM + PVC 1MM TITAN BLACK",
+      "codigo_sansuy": "197.026.0071",
+      "imds_id": "1495446065"
+    },
+    {
+      "nivel": "L0",
+      "conjunto": "Apoyacabezas (PIP)",
+      "pn_terminado": "2HC885900 RL1",
+      "descripcion_terminado": "REAR CENTER HEADREST TITAN BLACK",
+      "codigo_insumo_arb": "1246030198",
+      "descripcion_insumo_arb": "VINILO PU 4,5MM + PVC 1MM TITAN BLACK",
+      "codigo_sansuy": "197.026.0071",
+      "imds_id": "1495446065"
+    },
+    {
+      "nivel": "L0",
+      "conjunto": "Apoyacabezas (PIP)",
+      "pn_terminado": "2HC885901 RL1",
+      "descripcion_terminado": "REAR OUTER HEADREST TITAN BLACK",
+      "codigo_insumo_arb": "1246030198",
+      "descripcion_insumo_arb": "VINILO PU 4,5MM + PVC 1MM TITAN BLACK",
+      "codigo_sansuy": "197.026.0071",
+      "imds_id": "1495446065"
+    },
+    {
+      "nivel": "L1",
+      "conjunto": "Insertos de Puerta",
+      "pn_terminado": "N 389",
+      "descripcion_terminado": "INSERTO PTA. DEL. IZQ. L1",
+      "codigo_insumo_arb": "1246030225",
+      "descripcion_insumo_arb": "SANLEATHER IV CL74 S704 1,1X1400 ESP3,00",
+      "codigo_sansuy": "197.026.0006",
+      "imds_id": "1495437689"
+    },
+    {
+      "nivel": "L1",
+      "conjunto": "Insertos de Puerta",
+      "pn_terminado": "N 393",
+      "descripcion_terminado": "INSERTO PTA. DEL. DER. L1",
+      "codigo_insumo_arb": "1246030225",
+      "descripcion_insumo_arb": "SANLEATHER IV CL74 S704 1,1X1400 ESP3,00",
+      "codigo_sansuy": "197.026.0006",
+      "imds_id": "1495437689"
+    },
+    {
+      "nivel": "L1",
+      "conjunto": "Insertos de Puerta",
+      "pn_terminado": "N 397",
+      "descripcion_terminado": "INSERTO PTA. TRAS. IZQ. L1",
+      "codigo_insumo_arb": "1246030225",
+      "descripcion_insumo_arb": "SANLEATHER IV CL74 S704 1,1X1400 ESP3,00",
+      "codigo_sansuy": "197.026.0006",
+      "imds_id": "1495437689"
+    },
+    {
+      "nivel": "L1",
+      "conjunto": "Insertos de Puerta",
+      "pn_terminado": "N 401",
+      "descripcion_terminado": "INSERTO PTA. TRAS. DER. L1",
+      "codigo_insumo_arb": "1246030225",
+      "descripcion_insumo_arb": "SANLEATHER IV CL74 S704 1,1X1400 ESP3,00",
+      "codigo_sansuy": "197.026.0006",
+      "imds_id": "1495437689"
+    },
+    {
+      "nivel": "L1",
+      "conjunto": "Tablero (IP Pad)",
+      "pn_terminado": "2HC858417B FAM",
+      "descripcion_terminado": "IP PAD - LOW VERSION_L1",
+      "codigo_insumo_arb": "1246030227",
+      "descripcion_insumo_arb": "SANLEATHER IV CL74 S704 1,1X1400 ESP2,00",
+      "codigo_sansuy": "197.025.0427",
+      "imds_id": "1495436728"
+    },
+    {
+      "nivel": "L1",
+      "conjunto": "Apoyacabezas (PIP)",
+      "pn_terminado": "2HC881901A GFV",
+      "descripcion_terminado": "FRONT HEADREST RENNES BLACK MELLANGE",
+      "codigo_insumo_arb": "1246030198",
+      "descripcion_insumo_arb": "VINILO PU 4,5MM + PVC 1MM TITAN BLACK",
+      "codigo_sansuy": "197.026.0071",
+      "imds_id": "1495446065"
+    },
+    {
+      "nivel": "L2",
+      "conjunto": "Insertos de Puerta",
+      "pn_terminado": "N 390",
+      "descripcion_terminado": "INSERTO PTA. DEL. IZQ. L2",
+      "codigo_insumo_arb": "1246030223",
+      "descripcion_insumo_arb": "SANLEATHER IV CL74 S782 1,1X1400 ESP3,00",
+      "codigo_sansuy": "197.026.0007",
+      "imds_id": "1495441919"
+    },
+    {
+      "nivel": "L2",
+      "conjunto": "Insertos de Puerta",
+      "pn_terminado": "N 394",
+      "descripcion_terminado": "INSERTO PTA. DEL. DER. L2",
+      "codigo_insumo_arb": "1246030223",
+      "descripcion_insumo_arb": "SANLEATHER IV CL74 S782 1,1X1400 ESP3,00",
+      "codigo_sansuy": "197.026.0007",
+      "imds_id": "1495441919"
+    },
+    {
+      "nivel": "L2",
+      "conjunto": "Insertos de Puerta",
+      "pn_terminado": "N 398",
+      "descripcion_terminado": "INSERTO PTA. TRAS. IZQ. L2",
+      "codigo_insumo_arb": "1246030223",
+      "descripcion_insumo_arb": "SANLEATHER IV CL74 S782 1,1X1400 ESP3,00",
+      "codigo_sansuy": "197.026.0007",
+      "imds_id": "1495441919"
+    },
+    {
+      "nivel": "L2",
+      "conjunto": "Insertos de Puerta",
+      "pn_terminado": "N 402",
+      "descripcion_terminado": "INSERTO PTA. TRAS. DER. L2",
+      "codigo_insumo_arb": "1246030223",
+      "descripcion_insumo_arb": "SANLEATHER IV CL74 S782 1,1X1400 ESP3,00",
+      "codigo_sansuy": "197.026.0007",
+      "imds_id": "1495441919"
+    },
+    {
+      "nivel": "L2",
+      "conjunto": "Tablero (IP Pad)",
+      "pn_terminado": "2HC858417C GKK",
+      "descripcion_terminado": "IP PAD - HIGH VERSION_L2",
+      "codigo_insumo_arb": "1246030229",
+      "descripcion_insumo_arb": "SANLEATHER IV CL74 S782 1,1X1400 ESP2,00",
+      "codigo_sansuy": "197.025.0431",
+      "imds_id": "1495440189"
+    },
+    {
+      "nivel": "L2",
+      "conjunto": "Piping Tablero",
+      "pn_terminado": "2HC858417C GKK",
+      "descripcion_terminado": "IP PAD - HIGH VERSION_L2",
+      "codigo_insumo_arb": "124.505.0372-7",
+      "descripcion_insumo_arb": "SANFLEX G KL NARANJA S202 0,600MM ESPESO",
+      "codigo_sansuy": "197.026.0114",
+      "imds_id": "1495435976"
+    },
+    {
+      "nivel": "L2",
+      "conjunto": "Apoyacabezas (PIP)",
+      "pn_terminado": "2HC881901B GEV",
+      "descripcion_terminado": "FRONT HEADREST ANDINO GRAY",
+      "codigo_insumo_arb": "1246030199",
+      "descripcion_insumo_arb": "VINILO PU 4,5MM + PVC 1MM ANDINO",
+      "codigo_sansuy": "197.026.0072",
+      "imds_id": "1495446171"
+    },
+    {
+      "nivel": "L2",
+      "conjunto": "Apoyacabezas (PIP)",
+      "pn_terminado": "2HC881901B GEV",
+      "descripcion_terminado": "FRONT HEADREST ANDINO GRAY",
+      "codigo_insumo_arb": "1246030198",
+      "descripcion_insumo_arb": "VINILO PU 4,5MM + PVC 1MM TITAN BLACK",
+      "codigo_sansuy": "197.026.0071",
+      "imds_id": "1495446065"
+    },
+    {
+      "nivel": "L2",
+      "conjunto": "Apoyacabezas (PIP)",
+      "pn_terminado": "2HC885900B SIY",
+      "descripcion_terminado": "REAR CENTER HEADREST ANDINO GRAY",
+      "codigo_insumo_arb": "1246030199",
+      "descripcion_insumo_arb": "VINILO PU 4,5MM + PVC 1MM ANDINO",
+      "codigo_sansuy": "197.026.0072",
+      "imds_id": "1495446171"
+    },
+    {
+      "nivel": "L2",
+      "conjunto": "Apoyacabezas (PIP)",
+      "pn_terminado": "2HC885901B GEQ",
+      "descripcion_terminado": "REAR OUTER HEADREST ANDINO GRAY",
+      "codigo_insumo_arb": "1246030199",
+      "descripcion_insumo_arb": "VINILO PU 4,5MM + PVC 1MM ANDINO",
+      "codigo_sansuy": "197.026.0072",
+      "imds_id": "1495446171"
+    },
+    {
+      "nivel": "L3",
+      "conjunto": "Insertos de Puerta",
+      "pn_terminado": "N 391",
+      "descripcion_terminado": "INSERTO PTA. DEL. IZQ. L3",
+      "codigo_insumo_arb": "1246030224",
+      "descripcion_insumo_arb": "SANLEATHER IV ML14 S769 1,1X1400 ESP3,00",
+      "codigo_sansuy": "197.026.0008",
+      "imds_id": "1495668352"
+    },
+    {
+      "nivel": "L3",
+      "conjunto": "Insertos de Puerta",
+      "pn_terminado": "N 395",
+      "descripcion_terminado": "INSERTO PTA. DEL. DER. L3",
+      "codigo_insumo_arb": "1246030224",
+      "descripcion_insumo_arb": "SANLEATHER IV ML14 S769 1,1X1400 ESP3,00",
+      "codigo_sansuy": "197.026.0008",
+      "imds_id": "1495668352"
+    },
+    {
+      "nivel": "L3",
+      "conjunto": "Insertos de Puerta",
+      "pn_terminado": "N 399",
+      "descripcion_terminado": "INSERTO PTA. TRAS. IZQ. L3",
+      "codigo_insumo_arb": "1246030224",
+      "descripcion_insumo_arb": "SANLEATHER IV ML14 S769 1,1X1400 ESP3,00",
+      "codigo_sansuy": "197.026.0008",
+      "imds_id": "1495668352"
+    },
+    {
+      "nivel": "L3",
+      "conjunto": "Insertos de Puerta",
+      "pn_terminado": "N 403",
+      "descripcion_terminado": "INSERTO PTA. TRAS. DER. L3",
+      "codigo_insumo_arb": "1246030224",
+      "descripcion_insumo_arb": "SANLEATHER IV ML14 S769 1,1X1400 ESP3,00",
+      "codigo_sansuy": "197.026.0008",
+      "imds_id": "1495668352"
+    },
+    {
+      "nivel": "L3",
+      "conjunto": "Tablero (IP Pad)",
+      "pn_terminado": "2HC858417C GKN",
+      "descripcion_terminado": "IP PAD - HIGH VERSION_L3",
+      "codigo_insumo_arb": "1246030230",
+      "descripcion_insumo_arb": "SANLEATHER IV ML14 S769 1,1X1400 ESP2,00",
+      "codigo_sansuy": "197.025.0429",
+      "imds_id": "1495664781"
+    },
+    {
+      "nivel": "L3",
+      "conjunto": "Piping Tablero",
+      "pn_terminado": "2HC858417C GKN",
+      "descripcion_terminado": "IP PAD - HIGH VERSION_L3",
+      "codigo_insumo_arb": "124.505.0372-7",
+      "descripcion_insumo_arb": "SANFLEX G KL NARANJA S202 0,600MM ESPESO",
+      "codigo_sansuy": "197.026.0114",
+      "imds_id": "1495435976"
+    },
+    {
+      "nivel": "L3",
+      "conjunto": "Apoyacabezas (PIP)",
+      "pn_terminado": "2HC881901C EFG",
+      "descripcion_terminado": "FRONT HEADREST DARK SLATE",
+      "codigo_insumo_arb": "1246030200",
+      "descripcion_insumo_arb": "VINILO PU 4,5MM + PVC 1MM DARK SLATE",
+      "codigo_sansuy": "197.026.0073",
+      "imds_id": "1495446290"
+    },
+    {
+      "nivel": "L3",
+      "conjunto": "Apoyacabezas (PIP)",
+      "pn_terminado": "2HC881901C EFG",
+      "descripcion_terminado": "FRONT HEADREST DARK SLATE",
+      "codigo_insumo_arb": "1246030198",
+      "descripcion_insumo_arb": "VINILO PU 4,5MM + PVC 1MM TITAN BLACK",
+      "codigo_sansuy": "197.026.0071",
+      "imds_id": "1495446065"
+    },
+    {
+      "nivel": "L3",
+      "conjunto": "Apoyacabezas (PIP)",
+      "pn_terminado": "2HC885900C SIY",
+      "descripcion_terminado": "REAR CENTER HEADREST DARK SLATE",
+      "codigo_insumo_arb": "1246030200",
+      "descripcion_insumo_arb": "VINILO PU 4,5MM + PVC 1MM DARK SLATE",
+      "codigo_sansuy": "197.026.0073",
+      "imds_id": "1495446290"
+    },
+    {
+      "nivel": "L3",
+      "conjunto": "Apoyacabezas (PIP)",
+      "pn_terminado": "2HC885901C DZS",
+      "descripcion_terminado": "REAR OUTER HEADREST DARK SLATE",
+      "codigo_insumo_arb": "1246030200",
+      "descripcion_insumo_arb": "VINILO PU 4,5MM + PVC 1MM DARK SLATE",
+      "codigo_sansuy": "197.026.0073",
+      "imds_id": "1495446290"
+    },
+    {
+      "nivel": "L3",
+      "conjunto": "Apoyabrazos Central",
+      "pn_terminado": "2HC885081 RL1",
+      "descripcion_terminado": "ARMREST REAR, L3 TITAN BLACK",
+      "codigo_insumo_arb": "197.025.0425-6",
+      "descripcion_insumo_arb": "TIPO IV IS LE DE 1,10 MM DE ESPESOR, DE",
+      "codigo_sansuy": "197.025.0425",
+      "imds_id": "1495442530"
+    }
+  ]
+}

@@ -309,6 +309,8 @@
       "EMBALAJE"
     ],
     "primera_palabra": [
+      "ABASTECIMIENTO",
+      "ACCESO",
       "ADHESIVADO",
       "AJUSTE",
       "ALINEACION",
@@ -368,6 +370,7 @@
       "SCRAP",
       "SECADO",
       "SELECCION",
+      "SET",
       "SOLDADURA",
       "TAPIZADO",
       "TERMINACION",

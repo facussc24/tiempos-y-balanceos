@@ -33,7 +33,47 @@ Uso:
 (faster-whisper); los cuadros solo ffmpeg + Pillow.
 """
 from __future__ import annotations
-import argparse, os, re, shutil, subprocess, sys
+import argparse, ctypes, os, re, shutil, subprocess, sys, time
+
+
+def get_short_path(long_path: str) -> str:
+    if os.name != "nt":
+        return long_path
+    buf = ctypes.create_unicode_buffer(500)
+    res = ctypes.windll.kernel32.GetShortPathNameW(long_path, buf, 500)
+    return buf.value if res > 0 else long_path
+
+
+def hidratar_video(p: str, timeout: int = 120) -> str:
+    """Si el archivo esta en OneDrive/SharePoint como online-only, lo fija (+P) para descargarlo."""
+    if os.name != "nt":
+        return p
+    try:
+        attrs = os.stat(p).st_file_attributes
+        # Si NO es FILE_ATTRIBUTE_OFFLINE (0x1000) ni RECALL_ON_DATA_ACCESS (0x00400000), ya está en disco
+        if not (attrs & 0x1000 or attrs & 0x00400000):
+            return p
+    except Exception:
+        pass
+    sp = get_short_path(p)
+    subprocess.run(["attrib", "-U", "+P", sp], capture_output=True, shell=True)
+    t0 = time.time()
+    while time.time() - t0 < timeout:
+        try:
+            with open(p, "rb") as fp:
+                fp.read(1024)
+                return p
+        except OSError:
+            time.sleep(1)
+    return sp
+
+
+def deshidratar_video(p: str) -> None:
+    """Vuelve el archivo a solo-online en la nube (+U -P) para liberar los bytes del disco."""
+    if os.name != "nt":
+        return
+    sp = get_short_path(p)
+    subprocess.run(["attrib", "+U", "-P", sp], capture_output=True, shell=True)
 
 
 def tag_de(nombre: str) -> str:
@@ -163,10 +203,14 @@ CABECERA = (
 )
 # Whisper escupe siempre las mismas frases cuando el audio es ruido de maquina sin habla.
 SPAM = ("订阅", "点赞", "打赏", "转发", "字幕", "subscribe", "Thanks for watching",
-        "请不吝", "明镜", "amara.org", "Subtitles by",
+        "请不吝", "明镜", "amara.org", "Subtitles by", "打一瓶子",
         # forzado a castellano escupe el mismo spam traducido: el IMG_0393 dio dos
         # "¡Suscribete al canal!" sobre 297 s de ruido de maquina
         "suscríbete", "suscribete", "subtítulos", "subtitulos")
+
+
+def libre_gb() -> float:
+    return shutil.disk_usage("C:\\").free / (1024 ** 3)
 
 
 def _alucina(texto: str, previas: list[str]) -> bool:
@@ -202,16 +246,36 @@ def audio(carpeta: str, desde: str | None, solo: set[str] | None, trabajo: str,
     modelo = WhisperModel("large-v3-turbo", device="cpu", compute_type="int8")
     for v in videos_de(carpeta, desde):
         t = tag_de(v)
-        if solo and t not in solo:
+        if solo and (t not in solo and t.lstrip('0') not in solo):
             continue
         dst = os.path.join(destino, f"IMG_{t}.bilingue.txt")
         if os.path.exists(dst):
             print(f"skip {t}", flush=True)
             continue
+        disco_gb = libre_gb()
+        if disco_gb < 25.0:
+            print(f"ABORT: Espacio en disco bajo ({disco_gb:.1f} GB libres). Minimo de seguridad: 25.0 GB.", flush=True)
+            break
+        v_path = os.path.join(carpeta, v)
+        sp = hidratar_video(v_path)
         wav = os.path.join(trabajo, f"{t}.wav")
-        subprocess.run(
-            ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", os.path.join(carpeta, v),
+        res = subprocess.run(
+            ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", sp,
              "-ac", "1", "-ar", "16000", wav], check=False)
+        if not os.path.exists(wav) or os.path.getsize(wav) == 0:
+            # Reintento con path original si sp difiere
+            if sp != v_path:
+                res = subprocess.run(
+                    ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", v_path,
+                     "-ac", "1", "-ar", "16000", wav], check=False)
+        if not os.path.exists(wav) or os.path.getsize(wav) == 0:
+            print(f"{t}: ERROR - ffmpeg no pudo generar audio (archivo posiblemente no disponible)", flush=True)
+            continue
+        # Deshidratar el video de inmediato: ffmpeg ya saco el audio, no hace falta que ocupe disco
+        deshidratar_video(v_path)
+        wav_mb = os.path.getsize(wav) / (1024 * 1024)
+        dur_seg = os.path.getsize(wav) / 32000.0
+        print(f"{t}: audio extraido ({wav_mb:.1f} MB, ~{dur_seg/60:.1f} min) -> transcribiendo...", flush=True)
         crudo, detectado, rotas = [], [], []
         for idi, tarea, marca in pedidos:
             try:
@@ -234,6 +298,10 @@ def audio(carpeta: str, desde: str | None, solo: set[str] | None, trabajo: str,
         if rotas:
             print(f"{t}: NO se escribe nada, {len(rotas)} pasada(s) fallaron:\n  "
                   + "\n  ".join(rotas), flush=True)
+            try:
+                os.remove(wav)
+            except OSError:
+                pass
             continue
         # Fusion: recorro en orden y, cuando dos pasadas pisan el mismo tramo, gana la que
         # Whisper dio mas segura. Sin esto el archivo queda con todo dicho dos veces.
@@ -255,9 +323,14 @@ def audio(carpeta: str, desde: str | None, solo: set[str] | None, trabajo: str,
             os.remove(wav)
         except OSError:
             pass
+        # Deshidratar de inmediato para volver a estado 'solo online' en OneDrive/SharePoint
+        try:
+            subprocess.run(["attrib", "+U", "-P", v_path], capture_output=True, shell=True)
+        except Exception as e:
+            print(f"  Aviso al deshidratar {v}: {e}", flush=True)
         dudosas = sum(1 for l in lineas[4:] if "(ALUCINA)" in l)
         print(f"{t}: {len(elegidos)} segmentos fusionados, {dudosas} marcados ALUCINA "
-              f"-> {os.path.basename(dst)}", flush=True)
+              f"-> {os.path.basename(dst)} (disco libre: {libre_gb():.1f} GB)", flush=True)
 
 
 def main() -> int:
@@ -277,7 +350,16 @@ def main() -> int:
         print(f"No existe la carpeta: {a.carpeta}", file=sys.stderr)
         return 1
     os.makedirs(a.trabajo, exist_ok=True)
-    solo = [x.strip() for x in a.solo.split(",")] if a.solo else None
+    solo = set()
+    if a.solo:
+        for x in a.solo.split(","):
+            s = x.strip()
+            if s:
+                solo.add(s)
+                solo.add(s.lstrip("0"))
+                if s.isdigit():
+                    solo.add(f"{int(s):04d}")
+    solo = solo if solo else None
     if a.accion in ("cuadros", "todo"):
         cuadros(a.carpeta, a.desde, a.tope, a.trabajo, solo)
     if a.accion in ("audio", "todo"):

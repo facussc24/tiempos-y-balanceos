@@ -103,28 +103,16 @@ la plantilla de `_encargo.mjs`. Auto-compacta a 1M tokens (settings globales); e
 `cierre-guard.sh` corta el turno si termina pidiendo permiso para mi propio trabajo o si entregue
 afuera del repo sin decir la ruta.
 
-## Stack y comandos
-
-React + TypeScript + Vite · Supabase (auth+DB) · Vitest + testing-library · TailwindCSS ·
-xlsx-js-style / ExcelJS / html2pdf.js · Recharts · @dnd-kit (versiones: `package.json`).
+## Comandos
 
 ```bash
-npm run dev          # Vite dev server (localhost:3000)
-npx vitest run       # tests (durante desarrollo: --testPathPattern=<modulo>)
 npm run build        # build de produccion — obligatorio antes de push
-npx tsc --noEmit     # chequeo de tipos
 node scripts/_auditAll.mjs --summary   # salud de los AMFEs en Supabase
 ```
 
-## Estructura del proyecto (codigo en la RAIZ, no en src/)
+## Estructura del proyecto (codigo en la RAIZ, no hay src/)
 
-`App.tsx`/`AppRouter.tsx` (entry + routing lazy) · `types/` · `components/` · `core/` (balancing,
-inheritance maestro→variante, amfe) · `hooks/` · `modules/` (amfe, controlPlan, family, balancing,
-dashboard, registry, mix, flow-simulator, eightD, flowchart) · `utils/repositories/` (repositorios
-tipados: UNICO acceso a datos) · `scripts/` (_backup, _restore, _auditAll, `_lib/`, `archive/` de
-one-shots) · `__tests__/` (Vitest) · `docs/` (guias APQP, LECCIONES, `_archive/`).
-
-- Path alias `@/*` → raiz. Modulos lazy con `React.lazy()` + `Suspense`.
+- `utils/repositories/` (repositorios tipados) es el UNICO acceso a datos. One-shots viejos: `scripts/archive/`.
 - NO hardcodear API keys (`VITE_*`). `logger.ts` en vez de console.log. NO `as any` ni `@ts-ignore`.
 - Familias de producto (herencia maestro→variante): tablas `product_families`,
   `family_documents`, `family_change_proposals`; motor en `core/inheritance/`.

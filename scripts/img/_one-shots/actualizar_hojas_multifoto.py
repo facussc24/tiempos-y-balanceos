@@ -624,12 +624,12 @@ HOJAS_IMG = [
         badges=["Paso 1-2: Login PIN", "Paso 3-5: Receta"],
         pasos=[
             'Aguardar la inicialización del software en la pantalla táctil HMI ("Moldeadora Hembra") y seleccionar idioma español.',
-            "Ingresar el PIN de seguridad de operador (1688) en el teclado táctil para habilitar el nivel de operación.",
+            "Ingresar el PIN de seguridad de operador (<clave en datos_privados.py>) en el teclado táctil para habilitar el nivel de operación.",
             "Seleccionar en el menú de recetas la configuración correspondiente a Top Roll Patagonia (versión Delantera / Trasera).",
             "Verificar consignas de temperatura de conformado: Temperatura 1 = 135,0 °C, Temperatura 2 = 165,0 °C y tiempo de estirado = 5,0 s.",
             "Comprobar consigna de vacío en -0,50 MPa, presión de asistencia neumática en +0,59 MPa (mín. +0,20 MPa) y activar el calentamiento zonal."
         ],
-        nota="El PIN 1688 habilita funciones de producción. Todos los parámetros térmicos y de vacío deben coincidir con la receta validada en TryOut.",
+        nota="El PIN <clave en datos_privados.py> habilita funciones de producción. Todos los parámetros térmicos y de vacío deben coincidir con la receta validada en TryOut.",
         epp=EPP_STD,
         disparador='SI DETECTA PARÁMETROS FUERA DE RANGO O FALLA EN PANTALLA HMI',
         acciones=[

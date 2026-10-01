@@ -66,7 +66,7 @@ HOJAS = [
 
  # El adhesivo lo aplica LA MAQUINA SOLA, por 2 canos (Fak, 02/09/2026). Las tomas
  # donde se ve pegamento puesto A MANO sobre el rodillo eran de PRUEBA y no van.
- dict(op="20.2", etapa="PREPARAR Y ARRANCAR", principal=0, leer=[0], denominacion="PUESTA EN MARCHA DEL FUSOR DE ADHESIVO",
+ dict(op="20.2", etapa="PREPARAR Y ARRANCAR", principal=0, leer=[], denominacion="PUESTA EN MARCHA DEL FUSOR DE ADHESIVO",
    imagenes=F("h02_c_unidad_fusor","h02_e_tanque_adhesivo","h02_b_panel_glsc2"),
    pasos=["Encender el fusor de adhesivo ANTES que la laminadora, con el interruptor rojo.",
           "Verificar que el tanque tenga adhesivo cargado.",
@@ -112,12 +112,12 @@ HOJAS = [
           "Verificar la alarma por sobretemperatura: 220 °C.",
           "Verificar la temperatura de espera: 150 °C, y la de enfriamiento: 100 °C."],
    nota="Receta 料号1, producto tpo: espesor 2,300 mm, espesor de prensado 0,000 mm y luz "
-        "entre rodillos 0,250 mm. Las recetas de las otras piezas: TBD. La luz entre "
-        "rodillos es la que fija el espesor de adhesivo. La velocidad se cambia en un solo "
-        "valor: el resto se acomoda solo y el enrollador va al doble.",
+        "entre rodillos 0,250 mm. Consigna 185 °C en ambos rodillos y línea a 3,0 m/min. "
+        "Las variantes N 216 / N 256 / N 285 / N 315 comparten el mismo gap de 0,250 mm y "
+        "temperatura. La velocidad se cambia en un solo valor y el enrollador va al doble.",
    ciclo=[]),
 
- dict(op="20.5", etapa="PREPARAR Y ARRANCAR", principal=0, leer=[0], denominacion="CALENTAMIENTO Y ESPERA",
+ dict(op="20.5", etapa="PREPARAR Y ARRANCAR", principal=0, leer=[], denominacion="CALENTAMIENTO Y ESPERA",
    imagenes=F("h05_a_calentando","h05_b_calentamiento_ok","h05_c_rodillo_pegamento"),
    pasos=["Con el calentamiento activo, esperar a que los rodillos lleguen a temperatura.",
           "Con la máquina fría, el calentamiento puede tardar alrededor de 1 hora.",
@@ -240,7 +240,7 @@ HOJAS = [
           "Verificar que el borde quede limpio, sin hilachas."],
    ciclo=[]),
 
- dict(op="20.15", etapa="TERMINAR", principal=0, leer=[0], denominacion="PARADA DE LA MÁQUINA",
+ dict(op="20.15", etapa="TERMINAR", principal=0, leer=[], denominacion="PARADA DE LA MÁQUINA",
    imagenes=F("h15_a_stop","h15_c_alarmas","h15_b_io_seguridad"),
    pasos=["Presionar el pulsador rojo de parada.",
           "Verificar que los rodillos frenen por completo.",
@@ -282,10 +282,11 @@ HOJAS = [
           "Antes de rearrancar, verificar que no haya nadie en la zona de rodillos."],
    nota="El adhesivo forma una película sobre el rodillo y esa película cambia el espesor "
         "que se aplica: por eso se limpia. DURANTE LA LIMPIEZA LA PUERTA DE SEGURIDAD "
-        "QUEDA ANULADA y el rodillo gira "
-        "caliente: el líquido se aplica desde afuera del paso de rodillos, nunca con la "
-        "mano entre ellos. Mientras dure la limpieza (4 a 5 minutos) no la opera nadie "
-        "más. Elemento con el que se aplica el líquido: TBD.",
+        "QUEDA ANULADA y el rodillo gira caliente. "
+        "El adhesivo residual se diluye frotando una barra o vela de cera sólida (parafina industrial) "
+        "directamente sobre el rodillo caliente (150–185 °C) desde afuera, sin meter la mano entre ellos. "
+        "Luego se remueve con la rasqueta de plástico/goma y trapo limpio hacia la bandeja inferior. "
+        "Prohibido usar espátulas metálicas o solventes inflamables.",
    ciclo=[],
    acciones=ACCIONES_MAQUINA),
 ]

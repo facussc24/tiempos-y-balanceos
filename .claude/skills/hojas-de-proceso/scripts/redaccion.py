@@ -49,7 +49,9 @@ VERBOS = {
     # los que faltaban, contados en las hojas limpias de Barack (78 pasos, 21/09/2026)
     "mover", "levantar", "verter", "mezclar", "armar", "apilar", "tapar", "desarmar",
     "sumergir", "batir", "rociar", "superar", "prender", "pasar", "enganchar", "precintar",
-    "setear", "torquear", "segregar", "operar", "mandar", "golpear", "respetar", "dejar",
+    "setear", "torquear", "segregar", "operar", "mandar", "golpear", "respetar", "dejar", "meter", "ingresar",
+    "aplicar", "rearmar", "despresurizar", "recibir", "realizar", "desactivar", "insertar", "repasar", "presentar",
+    "hacer", "redondear", "calzar", "entrar", "raspar",
 }
 
 # Con que arranca una frase que describe a la maquina en vez de mandarle algo al operario.

@@ -41,8 +41,8 @@ GRISTX = (108, 116, 130)
 # vertices del LCD en la foto YA ROTADA 90° (1920 x 1080), en orden TL, TR, BR, BL
 VERTICES = [(392, 292), (1370, 258), (1428, 905), (440, 938)]
 LCD_W, LCD_H = 1400, 900
-BANDA = 380                      # la columna blanca de la derecha, FUERA de la pantalla
-CAB, PIE = 96, 54
+BANDA = 400                      # la columna blanca de la derecha, FUERA de la pantalla
+CAB, PIE = 48, 12
 W, H = LCD_W + BANDA, LCD_H + CAB + PIE
 
 # Las cuatro señales de la hoja 20.15: numero, centro y ALTO de la fila dentro del LCD
@@ -61,7 +61,7 @@ FILAS = [
 FILA_X0, FILA_X1 = 58, 482       # la primera columna: rotulo chino + casilla del valor
 BADGE_X, BADGE_R = 285, 22       # hueco vacio entre el rotulo y la casilla, en las 4 filas
 
-CUERPO = 28                      # el texto mas chico del dibujo: 7,2 pt impreso a 16,2 cm
+CUERPO = 30                      # el texto de los valores: 7,5 pt impreso a 15,7 cm
 
 
 def _f(px, bold=False):
@@ -152,16 +152,16 @@ def anotar(lcd):
     d = ImageDraw.Draw(im, "RGBA")
     avisos = []
 
-    d.rectangle([0, 0, W, 90], fill=AZUL)
-    _texto(d, (24, 22), "PANTALLA DE SEÑALES DE SEGURIDAD  —  HMI de la máquina",
-           40, True, BLANCO, W - 48, avisos)
+    d.rectangle([0, 0, W, CAB], fill=AZUL)
+    _texto(d, (24, 8), "PANTALLA DE SEÑALES DE SEGURIDAD  —  HMI de la máquina",
+           30, True, BLANCO, W - 48, avisos)
 
     _marcas(d, avisos)
     _banda(d, avisos)
 
-    _texto(d, (16, H - 42),
-           "IMG_0387 · fotograma 105 · 26/08/2026 — foto real de la pantalla, enderezada.  "
-           "Ningún valor fue modificado.", CUERPO, False, GRISTX, W - 32, avisos)
+    _texto(d, (16, H - 10),
+           "IMG_0387 · fotograma 105 · 26/08/2026 — foto real de la pantalla, enderezada.",
+           10, False, GRISTX, W - 32, avisos)
     return im, avisos
 
 
