@@ -28,7 +28,7 @@ En la PC hay dos carpetas de OneDrive con nombre parecido. Las dos son de la emp
 
 | Qué | Dónde está hoy | Estado |
 |---|---|---|
-| Mi memoria y la configuración de Claude (`Barack-cerebro`) | `OneDrive - BARACK ARGENTINA SRL\Barack-cerebro\` | Sin mudar. Trae claves y el buzón de Fak volcado: antes de pasarla a Ingeniería se le muestra a Fak la carpeta de destino y quién la puede abrir. Mientras tanto no se sube nada más ahí |
+| Mi memoria y la configuración de Claude | **Mudada el 01/10/2026** a `BARACK ARGENTINA SRL\Ingeniería y Proyecto - General\Claude Fak\` (aprobada por Fak). Sin permiso especial: Fak decidió que no hace falta (*"ya fue la privacidad"*); no volver a proponerlo | En la personal queda la copia vieja `Barack-cerebro\`, congelada: ya no se escribe ahí. Sacarla es borrar: con el OK de Fak |
 | El Escritorio (la cola de tareas) | `OneDrive - BARACK ARGENTINA SRL\Desktop\` | Lo guarda ahí Windows, no yo. Sigue funcionando como está hasta que Fak decida |
 | La copia de `docs-local` | `OneDrive - BARACK ARGENTINA SRL\Barack-docs-local\` | Sin mudar |
 
@@ -49,8 +49,8 @@ Cuando algo de esta tabla se muda, se saca de la tabla y de `NP_TRANSICION` en e
   `OneDrive - BARACK ARGENTINA SRL\`. Deja pasar leer, sacar de ahí y el Escritorio.
   Probado en las dos direcciones: `__tests__/scripts/nubePersonalGuard.test.mjs`.
 - Escape de un solo uso, solo si Fak dijo que ESE archivo va ahí: `: > ~/.claude/.nube-personal-ok`.
-- Límite conocido: el guardián mira el texto del comando. Un script que escribe ahí por dentro
-  (como `node scripts/_nube.mjs --subir`) no lo nombra: por eso ese comando no se corre hasta que
-  la memoria esté mudada.
+- Límite conocido: el guardián mira el texto del comando; un script que escribe ahí por dentro no
+  lo nombra. Por eso `_nube.mjs` resuelve su destino con `buscarNube()` (`scripts/_lib/nubeRutas.mjs`),
+  que devuelve SIEMPRE una ruta de la biblioteca de Ingeniería (test `nubeRutas.test.mjs`).
 - Memorias: `feedback_solo_nube_de_ingenieria`, `reference_onedrive_dos_carpetas_barack`,
   `reference_onedrive_sync_colgado_como_detectarlo`.

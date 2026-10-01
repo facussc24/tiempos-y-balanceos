@@ -62,13 +62,10 @@ const NUBE_INGENIERIA = buscarNube(HOME);
 const NUBE_VIEJA = buscarNubeVieja(HOME);
 // TRANSICION (01/10/2026, regla nube-ingenieria.md). La copia pasa de la OneDrive personal de Fak a
 // `Claude Fak` en la nube de Ingenieria. Mientras esa carpeta este vacia y la vieja siga existiendo,
-// se LEE de la vieja (leer de ahi no rompe la regla). SUBIR va siempre a Ingenieria, y solo cuando la
-// carpeta ya quedo con permiso solo para Fak: adentro van claves y su buzon, y sin el permiso lo abre
-// todo el sector. La marca la deja quien VERIFICO el permiso, no quien lo supone.
+// se LEE de la vieja (leer de ahi no rompe la regla). SUBIR va siempre a Ingenieria.
 const EN_TRANSICION = !process.argv.includes('--subir')
     && !existsSync(join(NUBE_INGENIERIA, 'claude-memoria')) && existsSync(join(NUBE_VIEJA, 'claude-memoria'));
 const NUBE = EN_TRANSICION ? NUBE_VIEJA : NUBE_INGENIERIA;
-const MARCA_PERMISO = join(CLAUDE, '.nube-ingenieria-permiso-ok');
 
 // Cada pieza: [clave, carpeta local, subcarpeta en la nube, que es]
 const PIEZAS = [
@@ -103,16 +100,10 @@ if (subir && bajar) {
     process.exit(1);
 }
 
-if (subir && aplicar && !existsSync(MARCA_PERMISO)) {
-    console.error('\n[X] NO SUBO: la carpeta de la nube de Ingenieria todavia no esta confirmada con permiso SOLO para Fak.');
-    console.error(`    ${NUBE_INGENIERIA}`);
-    console.error('    Ahi van claves (.env.local, .qr-secret), el buzon de Fak volcado y las memorias: sin ese permiso');
-    console.error('    lo puede abrir todo el sector. Primero se deja la carpeta solo para Fak (Administrar acceso) y se');
-    console.error('    VERIFICA; recien entonces se crea la marca y se sube:');
-    console.error(`        : > "${MARCA_PERMISO.replace(/\\/g, '/')}"`);
-    console.error('    Regla: .claude/rules/nube-ingenieria.md\n');
-    process.exit(1);
-}
+// El permiso "solo para Fak" sobre la carpeta NO es condicion para subir: lo decidio el el 01/10/2026,
+// sabiendo que adentro van claves, su buzon y las memorias y que la carpeta la abre todo Ingenieria
+// ("si no importa eso, ya fue la privacidad"). Hasta ese mensaje este script se negaba a subir sin una
+// marca de permiso verificado. No volver a proponerlo (igual que el cifrado, 03/09 y 05/09).
 
 /** Corre robocopy. `listar` = /L: enumera lo que HARIA, sin tocar nada. */
 function robocopy(origen, destino, { direccion, listar, soloArchivo }) {
