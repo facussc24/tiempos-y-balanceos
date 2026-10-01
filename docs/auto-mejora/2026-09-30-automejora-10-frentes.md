@@ -139,6 +139,13 @@ por etapas: 0) exportar con hash y conteos; 1) `saveAmfe` escribe tambien el arc
 Preguntas: OK al repo privado; ¿Fak edita AMFE en la app o solo mira/exporta?; ¿sacar pantallas
 muertas (8D, flujograma, solicitud)?
 
+**01/10/2026 — decidido por Fak: los datos van a la NUBE de Ingenieria, no a un repo local**
+(*"no en local porque los AMFE son de ingenieria"*). Carpeta:
+`INGENIERIA BARACK (NUNCA BORRAR)\1- GENERAL\AMFE\DATOS\` de la biblioteca. Etapa 0 hecha ahi
+(898 de 898 verificados; `_datosExportar.mjs` ya apunta a la nube por defecto). La historia de
+cambios pasa a ser el historial de versiones de SharePoint (falta confirmar que esta activo) en
+lugar de las etiquetas de git; `C:\Dev\BarackDatos` queda de historia. Las etapas 1 a 4 siguen igual.
+
 ## 5. 3D / CAD
 
 `.venv-cad`: build123d 0.11.1, cadquery 2.8.0, gmsh, trimesh, manifold3d, scikit-fem,

@@ -17,8 +17,8 @@ Nada se publicó en la nube real ni se tocó el pendrive. Todo lo de abajo está
 4. Lo que mandan los compañeros: `node scripts/_paquete.mjs --aportes`.
 
 ## Lo que sigue abierto (decide Fak)
-- **Mails**: los compañeros que tengan la tarea vieja `Claude Barack - sync` (Lucca) suben a otra carpeta (`Claude Barack\mails\`). La nueva sube a `Base Claude Ingenieria\mails\_entrada|_cuarentena\<Nombre Apellido - Sector>\`. Hay que sacar la vieja a mano (el instalador solo avisa) y decidir si lo que ya está en `Claude Barack\mails\` se mueve.
-- **privados.json**: el que existe en `Claude Barack\` tiene 3 direcciones en TBD (dueño, RRHH, sueldos). Hasta completarlas, esos buzones no quedan afuera del todo (la cuarentena por palabras sí corre).
+- **Mails**: los compañeros que tengan la tarea vieja `Claude Barack - sync` (Lucca) suben a otra carpeta (`Claude Barack\mails\`). La nueva sube a `Base Claude Ingenieria\mails\_entrada\<Nombre Apellido - Sector>\` (desde el 01/10/2026 la cuarentena —sueldos, licencias, sanciones— no sube: quedaba a la vista de todo el que tiene la biblioteca). Hay que sacar la vieja a mano (el instalador solo avisa) y decidir si lo que ya está en `Claude Barack\mails\` se mueve.
+- **privados.json**: el que existe en `Claude Barack\` tiene 3 direcciones en TBD (dueño, RRHH, sueldos). Hasta completarlas **no sube ningún mail** (desde el 01/10/2026 el script se niega con un filtro sin completar: sale con 5 y lo dice).
 - **Primera pasada de mails**: mira hasta 90 días hacia atrás (después, solo lo nuevo). Se cambia en `mails_dias` de `perfil.json`.
 - **Outlook**: solo se sube si Outlook clásico YA está abierto (no se lo abre ni se muestra ventana). Si el compañero usa el Outlook nuevo, no sube nada; queda dicho en `%LOCALAPPDATA%\BarackEquipo\estado.json`.
 - **Node** hace falta para instalar (el instalador avisa y para). Python + pywin32 hacen falta para los scripts del arb y los mails (avisa, pero instala igual).
