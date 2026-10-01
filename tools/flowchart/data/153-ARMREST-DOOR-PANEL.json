@@ -1,14 +1,15 @@
 {
   "_doc": "Flujograma 153 — DOOR PANEL / APOYABRAZOS DE PUERTA (VW427 Patagonia). Transcripcion literal del PNG FLUJOGRAMA_DOOR_PANEL_APB_PUERTA.png. El documento original dibuja DOS COLUMNAS que arrancan del mismo traslado de materia prima y convergen antes de la OP 70 ADHESIVADO: la izquierda es corte/costura (20 a 41) y la derecha es inyeccion plastica + PU (50 a 60). Aca se representan con `branches` (dos ramas paralelas que convergen).",
   "_cambio_revB": "El original traia DOS controles de pieza inyectada — `51 CONTROL DE PIEZA INYECTADA — APB DELANTERO` (rombo ¿PIEZA DELANTERA OK?) y `52 CONTROL DE PIEZA INYECTADA — APB TRASERO` (rombo ¿PIEZA TRASERA OK?). En planta es UN SOLO PUESTO (confirmado por el responsable el 18/08/2026), asi que queda una sola operacion 51 CONTROL DE PIEZA INYECTADA con un unico rombo ¿PIEZA CONFORME? y su misma rama NO al plan de reaccion / scrap. La operacion 52 NO existe. No se renumero nada mas.",
+  "_cambio_revD": "Se agrega 83 ENGRAMPADO despues de 80-81-82. Fuente: Fak, 01/10/2026 (la prensa tapiza y despues se engrampa a mano) y las hojas HO-971 ENGRAMPADO de P. Gamboa del 25 y 28/09/2026 (27 grampas delantero, 21 trasero; BOM del arb del 28/09/2026). Marca SC en la 83: union de las siglas de sus causas en el AMFE 161 (3 causas S6 O6 = SC por el I-AC-005 rev.B, S 5 a 8 y O >= 4; la de S4 sin sigla), asignadas el 01/10/2026 por delegacion de Fak (\"decidilo vos pero en base a evidencia contundente\").",
   "_nota_cajetin": "El cajetin del PNG dice REVISION A y FECHA EMISION 08/06/2026. Los valores que van al documento son los indicados por Fak: emision 12/11/2025, revision B del 18/08/2026. Se deja constancia de la diferencia contra la imagen.",
   "_nota_tbd": "En la tabla CODIGOS PROD. TERMINADO el Part Number VW figura como TBD en el original. Se deja TBD.",
   "header": {
     "title": "FLUJOGRAMA DE PROCESO DOOR PANEL",
     "documentCode": "I-IN-002/III",
-    "revision": "C",
+    "revision": "D",
     "date": "12/11/2025",
-    "revisionDate": "11/09/2026",
+    "revisionDate": "01/10/2026",
     "preparedBy": "FACUNDO SANTORO",
     "reviewedBy": "CARLOS BAPTISTA",
     "project": "PATAGONIA",
@@ -77,6 +78,14 @@
       "date": "11/09/2026",
       "item": "10 / 20-22 / 30 / 40-41 / 50 / 70-71 / 80-82 / 90 / 100",
       "details": "SE ALINEAN LAS CARACTERISTICAS ESPECIALES CON EL AMFE 161: D/TLD Y SC EN LA RECEPCION (10) Y SC EN 20, 21, 30, 40, 41, 50, 70, 71, 80-82 Y 100.",
+      "pswDate": "",
+      "modifiedBy": "FS"
+    },
+    {
+      "rev": "D",
+      "date": "01/10/2026",
+      "item": "83",
+      "details": "SE AGREGA LA OPERACION 83 ENGRAMPADO, CON SC, DESPUES DEL TAPIZADO (80-82).",
       "pswDate": "",
       "modifiedBy": "FS"
     }
@@ -317,6 +326,14 @@
       "stepId": "82",
       "type": "operation",
       "description": "TAPIZADO REFILADO MANUAL",
+      "critical": true,
+      "criticalType": "SC",
+      "criticalColor": "black"
+    },
+    {
+      "stepId": "83",
+      "type": "operation",
+      "description": "ENGRAMPADO",
       "critical": true,
       "criticalType": "SC",
       "criticalColor": "black"

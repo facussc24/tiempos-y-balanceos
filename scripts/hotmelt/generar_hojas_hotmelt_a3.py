@@ -2,7 +2,7 @@
 """
 Generador Oficial de HOJAS DE OPERACIONES en FORMATO A3 APAISADO (42.0 x 29.7 cm)
 para la MÁQUINA LAMINADORA HOTMELT KINGPOWER + FUSOR GLSC-2.
-Proyecto: Top Roll Patagonia / VW427 (OP 20 del Flujograma 122).
+Proyecto: Top Roll Patagonia / VW427 (OP 20 del Flujograma 155).
 Formulario SGC oficial: I-IN-002.4-R01 (Geometría canónica Pablo Gamboa / Barack Argentina SRL).
 
 Estructura Oficial por Decks (Criterio Fak 28-29/09/2026):
@@ -597,7 +597,7 @@ def portada_a3(prs, d, logo=None, foto=None, ops_indice=None):
            d.get("titulo", "HOJAS DE PROCESO — MÁQUINA HOTMELT"),
            size=28, bold=True, color=AZUL, relleno=BLANCO, borde=None, align=PP_ALIGN.LEFT)
     _celda(slide, tx, Y0 + 2.00, tw, 1.00,
-           d.get("subtitulo", "Laminadora de vinilo con adhesivo hot melt · OP 20 del FLUJOGRAMA 122 TOP ROLL PATAGONIA"),
+           d.get("subtitulo", "Laminadora de vinilo con adhesivo hot melt · OP 20 del FLUJOGRAMA 155 TOP ROLL PATAGONIA"),
            size=13, bold=False, color=AZUL2, relleno=BLANCO, borde=None, align=PP_ALIGN.LEFT)
 
     y_body = Y0 + cab_h + 0.40
@@ -1382,19 +1382,19 @@ def compilar_todos_a3():
 
     decks_a3 = [
         (HOJAS_A3_PARTE_1,
-         "PARTE 1: OPERACIÓN ESTÁNDAR Y PRODUCCIÓN (A3) · OP 20 DEL FLUJOGRAMA 122",
+         "PARTE 1: OPERACIÓN ESTÁNDAR Y PRODUCCIÓN (A3) · OP 20 DEL FLUJOGRAMA 155",
          "HOJAS DE PROCESO - HOTMELT - A3 - 1. OPERACION ESTANDAR",
          "ÍNDICE: OPERACIÓN ESTÁNDAR"),
         (HOJAS_A3_PARTE_2,
-         "PARTE 2: CONTINGENCIAS Y RESOLUCIÓN DE DESVÍOS (A3) · OP 20 DEL FLUJOGRAMA 122",
+         "PARTE 2: CONTINGENCIAS Y RESOLUCIÓN DE DESVÍOS (A3) · OP 20 DEL FLUJOGRAMA 155",
          "HOJAS DE PROCESO - HOTMELT - A3 - 2. CONTINGENCIAS",
          "ÍNDICE: CONTINGENCIAS"),
         (HOJAS_A3_PARTE_3,
-         "PARTE 3: MANTENIMIENTO OPERATIVO Y LIMPIEZA (A3) · OP 20 DEL FLUJOGRAMA 122",
+         "PARTE 3: MANTENIMIENTO OPERATIVO Y LIMPIEZA (A3) · OP 20 DEL FLUJOGRAMA 155",
          "HOJAS DE PROCESO - HOTMELT - A3 - 3. LIMPIEZA Y MANTENIMIENTO",
          "ÍNDICE: MANTENIMIENTO Y LIMPIEZA"),
         (HOJAS_HOTMELT_A3,
-         "MANUAL OPERATIVO COMPLETO A3 (17 OPERACIONES) · OP 20 DEL FLUJOGRAMA 122",
+         "MANUAL OPERATIVO COMPLETO A3 (17 OPERACIONES) · OP 20 DEL FLUJOGRAMA 155",
          "HOJAS DE PROCESO - MAQUINA HOTMELT - A3 COMPLETO",
          "ÍNDICE GENERAL DE FABRICACIÓN"),
     ]

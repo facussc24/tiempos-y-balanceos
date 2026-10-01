@@ -28,7 +28,7 @@ def F(*nombres):
 
 PORTADA = dict(
     titulo="HOJAS DE PROCESO — MÁQUINA HOTMELT",
-    subtitulo="Laminadora de vinilo con adhesivo hot melt  ·  OP 20 del FLUJOGRAMA 122 TOP ROLL PATAGONIA",
+    subtitulo="Laminadora de vinilo con adhesivo hot melt  ·  OP 20 del FLUJOGRAMA 155 TOP ROLL PATAGONIA",
     ho="HO-TBD",
     form="I-IN-002.4-R01",
     op_flujo="20 — ADHESIVADO HOT MELT",

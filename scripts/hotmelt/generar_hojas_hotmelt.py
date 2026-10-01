@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Generador oficial de HOJAS DE OPERACIONES para la MÁQUINA LAMINADORA HOTMELT KINGPOWER
-Proyecto: Top Roll Patagonia / VW (OP 20 del Flujograma 122).
+Proyecto: Top Roll Patagonia / VW (OP 20 del Flujograma 155).
 Formulario SGC oficial: I-IN-002.4-R01 (A4 apaisado 29.7 x 21.0 cm).
 
 Estructura Oficial Dividida por Partes (Criterio Fak 28/09/2026):
@@ -578,7 +578,7 @@ def portada(prs, d, logo=None, foto=None, ops_indice=None):
            d.get("titulo", "HOJAS DE PROCESO — MÁQUINA HOTMELT"),
            size=24, bold=True, color=AZUL, relleno=BLANCO, borde=None, align=PP_ALIGN.LEFT)
     _celda(slide, tx, M + 1.80, tw, 1.00,
-           d.get("subtitulo", "Laminadora de vinilo con adhesivo hot melt · OP 20 del FLUJOGRAMA 122 TOP ROLL PATAGONIA"),
+           d.get("subtitulo", "Laminadora de vinilo con adhesivo hot melt · OP 20 del FLUJOGRAMA 155 TOP ROLL PATAGONIA"),
            size=11.5, bold=False, color=AZUL2, relleno=BLANCO, borde=None, align=PP_ALIGN.LEFT)
 
     y_body = M + cab_h + 0.35
@@ -1147,19 +1147,19 @@ def compilar_todos():
     decks = [
         # (lista_hojas, subtitulo, nombre_base, titulo_indice)
         (HOJAS_PARTE_1,
-         "PARTE 1: OPERACIÓN ESTÁNDAR Y PRODUCCIÓN · OP 20 DEL FLUJOGRAMA 122",
+         "PARTE 1: OPERACIÓN ESTÁNDAR Y PRODUCCIÓN · OP 20 DEL FLUJOGRAMA 155",
          "HOJAS DE PROCESO - HOTMELT - 1. OPERACION ESTANDAR",
          "ÍNDICE: OPERACIÓN ESTÁNDAR"),
         (HOJAS_PARTE_2,
-         "PARTE 2: CONTINGENCIAS Y RESOLUCIÓN DE DESVÍOS · OP 20 DEL FLUJOGRAMA 122",
+         "PARTE 2: CONTINGENCIAS Y RESOLUCIÓN DE DESVÍOS · OP 20 DEL FLUJOGRAMA 155",
          "HOJAS DE PROCESO - HOTMELT - 2. CONTINGENCIAS",
          "ÍNDICE: CONTINGENCIAS"),
         (HOJAS_PARTE_3,
-         "PARTE 3: MANTENIMIENTO OPERATIVO Y LIMPIEZA · OP 20 DEL FLUJOGRAMA 122",
+         "PARTE 3: MANTENIMIENTO OPERATIVO Y LIMPIEZA · OP 20 DEL FLUJOGRAMA 155",
          "HOJAS DE PROCESO - HOTMELT - 3. LIMPIEZA Y MANTENIMIENTO",
          "ÍNDICE: MANTENIMIENTO Y LIMPIEZA"),
         (HOJAS_HOTMELT,
-         "MANUAL OPERATIVO COMPLETO (17 OPERACIONES) · OP 20 DEL FLUJOGRAMA 122",
+         "MANUAL OPERATIVO COMPLETO (17 OPERACIONES) · OP 20 DEL FLUJOGRAMA 155",
          "HOJAS DE PROCESO - MAQUINA HOTMELT",
          "ÍNDICE GENERAL DE FABRICACIÓN"),
     ]

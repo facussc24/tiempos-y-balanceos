@@ -125,8 +125,11 @@ const FlowNode = ({ node, isLast, hasBranches, converges }) => {
                "toda la documentacion (diagrama de flujo, AMFE, plan de control, etc.) debe
                estar identificada segun la norma VDA con una letra 'D' de color rojo".
                `criticalColor` permite otro color si algun cliente pide una marca distinta. */}
+           {/* Con conector de entrada ("VIENE DE A") la sigla se corre a la izquierda: los dos
+               ocupan el mismo lugar y la sigla tapaba la letra del conector (153 Rev.C, OP 70).
+               Va con estilo inline: tailwind.css esta pre-compilado y una clase nueva no existe. */}
            {node.critical && (
-             <span className={`text-[11px] font-black bg-white/80 px-1 rounded border ${node.criticalColor === 'black' ? 'text-black border-black' : 'text-[#DC2626] border-[#DC2626]'}`}>{node.criticalType}</span>
+             <span style={node.incomingConnector ? { marginRight: '104px' } : undefined} className={`text-[11px] font-black bg-white/80 px-1 rounded border ${node.criticalColor === 'black' ? 'text-black border-black' : 'text-[#DC2626] border-[#DC2626]'}`}>{node.criticalType}</span>
            )}
            {node.type === 'condition' && node.branchSide?.direction !== 'left' && (
              <span className="text-[9px] font-bold text-[#60A5FA] italic uppercase text-right leading-tight max-w-[100px] bg-white/80 px-1 rounded">

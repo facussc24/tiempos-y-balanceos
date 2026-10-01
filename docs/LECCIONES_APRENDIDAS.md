@@ -93,6 +93,8 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **01/10 — Un punto del Asaichi que dice "pasar mail" no es la orden de armarlo hoy, y un cierre de 80 renglones no se lee.** Con el plan de control de Nicolas arme un mail con el listado de lo que faltaba (*"armaste un mail que no te pedi: la idea es pasarle un mail si, pero ya con la info procesada"*) y cerre con un informe largo (*"no voy a leer todo eso, me da paja... sintetizame si tenes alguna duda bloqueante"*). El mail va cuando los documentos estan terminados; mientras tanto se avanza con lo seguro y el cierre son las dudas que frenan, en pocas lineas.
+
 - **01/10 — REGLA DURA: se guarda solo en la nube de Ingeniería; en la nube personal de Fak, nada** (*"no podemos volver a fallar"*), y a Fak no se le habla del "cerebro". Graduado a `nube-ingenieria.md` + hook `nube-personal-guard`.
 - **01/10 — Si Fak pregunta "qué es esto / por qué", se le explica y se para: no se arregla nada en paralelo** (*"yo tomo las decisiones acá... explicame antes de hacer algo"*). Graduado a la memoria `feedback_si_pide_que_le_explique_se_explica_y_se_para`.
 - **30/09-01/10 — Un trabajo de toda la noche no se sostiene con avisos de la sesión, y el techo de 10 agentes no es la capacidad de la PC.** Con 12 agentes probando en navegador la RAM libre bajó a 872 MB, el proceso se cayó a las 22:17 y nadie retomó hasta las 08:22 (Fak: *"¿a qué hora te detuviste?"*); de 12 frentes llegaron 2. En esta notebook (16 GB, sin GPU): máximo 4-5 agentes con navegador a la vez y no sumar ninguno con menos de 3 GB libres.

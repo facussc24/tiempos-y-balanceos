@@ -266,6 +266,30 @@ Lo que **no ve ningun script** y hay que mirar: si lo que esta en el cuadro es e
 el paso nombra, si el pie describe el instante que se ve, si la persona agarra o tapa, y el
 punto de vista.
 
+## 1 ter. La hoja A3 de una foto por paso (formato de Pablo Gamboa)
+
+Fak, 28/09/2026: *"el formato ahora es el que hizo Pablo Gamboa, el A3"* y *"con las FOTOS se
+tiene que entender exactamente lo que hay que hacer... menos texto, mas visual"*. Es otra hoja,
+no la A4 agrandada:
+
+- **Una foto por paso, en una grilla de baldosas iguales**, cada una con su cartel `REF. n` y
+  su pie; el paso termina en *"– Ver REF. n"*. Un paso que no se puede fotografiar va sin REF.
+- La advertencia va en el **cuadro amarillo**, al lado de los elementos de seguridad. El ciclo
+  de control queda con las filas vacias (canon 1.1 y 1.2).
+- **Hasta 12 fotos por hoja** (el ejemplo HO-971 ENGRAMPADO de Gamboa lleva 12); el piso sigue
+  siendo **25 cm² y 3,5 cm de lado** por foto. Con mas, la hoja se parte.
+- La grilla se elige por la FORMA de las fotos: el bloque es casi cuadrado, y seis pantallas
+  apaisadas en 3 x 2 quedan en baldosas verticales que les cortan la mitad. Si llenar la
+  baldosa recortaria mas del 15 %, la foto entra **entera** (queda mas chica, pero no se corta
+  el boton marcado ni una columna de la tabla: paso con la consigna del fusor).
+- **Pantalla en ingles** (cuando la maquina no tiene castellano): la foto real con el recuadro
+  rojo, y el paso dice que es el boton en castellano y cita el rotulo entre comillas:
+  *"Presionar el boton 1, inicio de limpieza («Glue removal starts»)"*.
+
+Motor: `scripts/hotmelt/hoja_a3_fotos.py` (`hoja(prs, d)`); ejemplo completo con sus gates,
+`scripts/hotmelt/generar_hojas_v3.py`. El control duro la juzga con
+`hoja_proceso_check.py "<deck>" --secuencia` (detecta el A3 por el tamano de la lamina).
+
 ## 2. Como se dimensiona una pantalla para que entre legible
 
 1. cuantas imagenes va a tener la hoja (2 o 3), y cual es la principal;
@@ -475,6 +499,23 @@ que ir guardándolas donde sí van, o sea `Y:\BARACK\CALIDAD\DOCUMENTACION SGC\H
 - **Cambiar el número de una hoja existente no pasa por Excel**: se toca solo el texto `HO-NNN`
   de `xl/sharedStrings.xml`. Guardarla con Excel por COM se tiró de 1 a 3 imágenes "en celda"
   por libro en las telas PWA (25/09/2026; se volvió al respaldo).
+
+**Un número por PIEZA, no por sector** (decisión de Carlos Baptista, contada por Fak el
+01/10/2026: *"las hojas de proceso ahora están unificadas, no se separan más por sectores,
+número único"*). 971 = APB de puerta, 990 = Insert, 992 = Top Roll: todas las operaciones de la
+pieza van en ese número y cada hoja lleva el **N° de operación del flujograma**. La hoja de una
+**máquina** (encendido, limpieza, alarmas) no es de una pieza: va a `2- SECTORES` con número
+propio y sus operaciones numeradas 10, 20, 30… como la HO 118 de la costura CNC.
+
+**¿Cada hoja puede tener su revisión dentro del mismo número?** Ni el SGC ni las normas lo
+obligan ni lo prohíben (barrido del 01/10/2026: I-IN-002, P-05, P-09, I-AC-008, IATF 16949,
+ISO 9001, APQP 3ª, VDA 6.3 P6). Lo que sí está escrito: la revisión es una **letra** y sube al
+modificar (I-IN-002 §5.1); la instrucción lleva nivel y fecha (P-09 §5.2); la regla de "todas
+las hojas con la misma revisión y fecha" (P-05 §5.1.2) es para manuales, procedimientos e
+instructivos, no para las HO. Hoy conviven las dos formas (HO 971 y 927 con pestañas en
+distinta revisión; 968 a 991 con una revisión por libro) y el listado tiene una sola columna
+de revisión por HO. **Es criterio de Barack: lo define Carlos Baptista** (Fak se lo va a
+preguntar). Hasta que conteste, no se unifica ni se cambia la revisión de lo que ya está.
 
 Van el `.pptx` y su `.pdf`, con nombre `HO-<N> - HOJAS DE PROCESO - <PIEZA> - Rev.<letra>`. El
 generador puede escribir en el scratchpad para mirarla, pero la entrega va ahí. Los decks de

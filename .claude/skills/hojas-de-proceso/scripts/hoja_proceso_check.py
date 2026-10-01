@@ -56,6 +56,15 @@ def es_contenido(sh):
     return True
 
 
+def carteles_ref(s):
+    """Cuantos carteles "REF. n" tiene la lamina (hoja A3 de una foto por paso)."""
+    n = 0
+    for sh in s.shapes:
+        if sh.has_text_frame and re.fullmatch(r"REF\.\s*\d+", sh.text_frame.text.strip()):
+            n += 1
+    return n
+
+
 def numeros_sueltos(s):
     """Centros (x, y) en cm de los circulos con un numero adentro: los badges de paso."""
     out = []
@@ -146,6 +155,10 @@ def revisar(ruta, declara=None):
     """
     declara = declara or {}
     prs = Presentation(ruta)
+    # La hoja A3 de una foto por paso (formato de P. Gamboa) no es la A4 achicada: lleva una
+    # grilla de baldosas iguales con su cartel "REF. n". Ahi el tope de fotos es otro y el
+    # numero del paso es ese cartel; el piso de superficie por foto es el mismo.
+    es_a3 = prs.slide_width / EMU >= 40.0
     _, alto_bloque = HL.bloque_cm()
     bloque_cm2 = HL.IMG_W * alto_bloque
     fallas = []
@@ -185,7 +198,7 @@ def revisar(ruta, declara=None):
                                "se chequean las imagenes de la hoja"))
             continue
 
-        h = declara.get(op, {})
+        h = declara.get(op, declara.get("*", {}))
         if isinstance(h, list):
             # una operacion partida ("HOJA 1 DE 2") repite el N° y cada hoja trae su
             # declaracion: la n-esima lamina de la op usa la n-esima. Con un dict por op, la
@@ -200,7 +213,7 @@ def revisar(ruta, declara=None):
             continue                                   # recuadro vacio: permitido
 
         sec = bool(h.get("secuencia"))
-        tope = HL.SECUENCIA_MAX if sec else HL.IMAGENES_MAX
+        tope = (HL.SECUENCIA_MAX_A3 if es_a3 else HL.SECUENCIA_MAX) if sec else HL.IMAGENES_MAX
         if len(fotos) > tope:                          # criterio 3
             fallas.append((i + 1, op, "cantidad",
                            "tiene %d imagenes; el maximo es %d%s"
@@ -228,10 +241,16 @@ def revisar(ruta, declara=None):
         if sec:                                        # criterio 1, modo SECUENCIA
             badges = numeros_sueltos(s)
             areas = [(x.width / EMU) * (x.height / EMU) for x in fotos]
+            refs = carteles_ref(s) if es_a3 else 0
+            if es_a3 and refs < len(fotos):
+                fallas.append((i + 1, op, "sin numero",
+                               "hay %d fotos y %d carteles REF.: alguna foto no dice que paso es"
+                               % (len(fotos), refs)))
             for k, sh in enumerate(fotos):
                 x, y = sh.left / EMU, sh.top / EMU
                 w, hh = sh.width / EMU, sh.height / EMU
-                if not any(abs(bx - x) < 1.0 and abs(by - y) < 1.0 for bx, by in badges):
+                if not es_a3 and not any(abs(bx - x) < 1.0 and abs(by - y) < 1.0
+                                         for bx, by in badges):
                     fallas.append((i + 1, op, "sin numero",
                                    "la imagen %d no tiene el numero del paso: nadie sabe a "
                                    "cual mirar" % (k + 1)))
@@ -241,7 +260,10 @@ def revisar(ruta, declara=None):
                                    "%.0f cm2 y %.1f cm de lado): se parte la hoja"
                                    % (k + 1, w, hh, areas[k], HL.SECUENCIA_AREA_MIN,
                                       HL.SECUENCIA_LADO_MIN)))
-            if areas and min(areas) and max(areas) / min(areas) > HL.SECUENCIA_DISPARIDAD:
+            # en la A3 las baldosas son iguales por construccion: una foto apaisada que entra
+            # entera en una baldosa vertical mide menos sin que haya jerarquia entre pasos
+            if (not es_a3 and areas and min(areas)
+                    and max(areas) / min(areas) > HL.SECUENCIA_DISPARIDAD):
                 fallas.append((i + 1, op, "despareja",
                                "la mayor (%.0f cm2) le saca %.1fx a la menor (%.0f cm2): si "
                                "una manda, se declara `principal`; si no, van con la misma "
@@ -308,6 +330,8 @@ def main():
     ap.add_argument("pptx")
     ap.add_argument("--spec", help="modulo con HOJAS = [{op, principal, leer}, ...]")
     ap.add_argument("--jerarquia", help="atajo sin spec, por ejemplo 20.2=0,20.4=0")
+    ap.add_argument("--secuencia", action="store_true",
+                    help="todas las hojas son de una foto por paso (hoja A3 con carteles REF.)")
     a = ap.parse_args()
 
     declara = {}
@@ -320,6 +344,9 @@ def main():
             op, _, idx = par.partition("=")
             for h in declara.setdefault(op.strip(), [{}]):
                 h["principal"] = int(idx)
+
+    if a.secuencia:
+        declara.setdefault("*", {"secuencia": True})
 
     fallas = revisar(a.pptx, declara)
     print(informe(fallas))
