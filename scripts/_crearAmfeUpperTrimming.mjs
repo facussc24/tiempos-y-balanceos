@@ -108,7 +108,7 @@ function operacion(numero, nombre, funcionOperacion, workElements) {
 }
 
 // Nivel 1 (amfe.md §8): que entrega la pieza. Identico en todas las operaciones.
-const FOCO = 'Funcion Interna: Entregar el Upper Trim Panel tapizado en microfibra, con los agujeros libres y el logo de carga grabado, conforme a la muestra aprobada'
+const FOCO = 'Funcion Interna: Entregar el Upper Trim Panel tapizado en microfibra, con los agujeros libres y el logo de carga grabado, conforme a la muestra aprobada y con la inflamabilidad y la adherencia que exige el cliente'
   + ' / Funcion del Cliente: Permitir el armado de la consola central en Cozzuol sin clasificacion ni retrabajo'
   + ' / Funcion del Usuario Final: Aspecto y tacto de la consola central, con la zona de carga inalambrica identificada';
 
@@ -143,26 +143,53 @@ const EF_SCRAP_INTERNO = {
 // de la planta del cliente. P1-7: paro de linea de una hora a un turno, posible freno de envios.
 const EF_MONTAJE = {
   s: 7,
-  local: 'Pieza con agujeros que no coinciden con los del sustrato',
+  local: 'Pieza con agujeros tapados o corridos respecto de los del sustrato',
   next: 'Pieza que no se puede montar en la consola central: rechazo del lote en Cozzuol',
   end: 'Sin efecto en el vehiculo: la pieza no llega a montarse',
 };
+// No hay metodo de reproceso definido: la pieza con un defecto de aspecto va a SCRAP (asi lo
+// dibuja el flujograma). Tabla P1, columna de la planta: una porcion de la produccion a scrap
+// es 7; el 5 es para lo que se retrabaja fuera de linea. Auditoria de cliente del 01/10/2026.
 const EF_ASPECTO = {
-  s: 5,
-  local: 'Pieza con desvio de aspecto en zona vista',
+  s: 7,
+  local: 'Pieza con desvio de aspecto en zona vista, rechazada en la inspeccion final: scrap',
   next: 'Posible clasificacion de piezas en la planta de Cozzuol',
   end: 'Aspecto por debajo del estandar percibido por el usuario',
 };
-const EF_IDENTIFICACION = {
+// El mismo scrap, cuando el defecto deja el sustrato a la vista.
+const EF_SCRAP_VISTA = {
+  s: 7,
+  local: 'Pieza rechazada en el puesto, se genera scrap',
+  next: 'Posible clasificacion de piezas en la planta de Cozzuol',
+  end: 'Sustrato a la vista en el borde de la pieza',
+};
+// Dano que aparece DESPUES de la inspeccion final (adentro del cajon): ya no hay scrap interno,
+// lo ve el cliente. P1-5: clasificacion de piezas sin paro de linea.
+const EF_ASPECTO_CLIENTE = {
   s: 5,
-  local: 'Cajon sin la identificacion que corresponde a su contenido',
-  next: 'Clasificacion y reidentificacion de piezas en Cozzuol',
-  end: 'Sin efecto en la funcion del vehiculo',
+  local: 'Pieza marcada dentro del cajon, despues de la inspeccion final',
+  next: 'Clasificacion de piezas en la planta de Cozzuol',
+  end: 'Aspecto por debajo del estandar percibido por el usuario',
+};
+// Defecto que se le escapa a la inspeccion final y llega al cliente. El peor de los que mira
+// esa inspeccion es el agujero tapado, que no deja montar la pieza (P1-7).
+const EF_ASPECTO_CLIENTE_ESCAPE = {
+  s: 7,
+  local: 'Pieza no conforme embalada como conforme',
+  next: 'Rechazo y clasificacion de piezas en Cozzuol; la pieza con un agujero tapado no se puede montar',
+  end: 'Aspecto por debajo del estandar percibido por el usuario',
 };
 const EF_CANTIDAD = {
   s: 6,
-  local: 'Cajon con una cantidad o una variante distinta de la pedida',
+  local: 'Cajon con una cantidad de piezas distinta de la pedida',
   next: 'Faltante en la recepcion de Cozzuol, con reposicion urgente',
+  end: 'Sin efecto en el vehiculo',
+};
+// Variante equivocada en el cajon, sea por una pieza mezclada o por la etiqueta del cajon.
+const EF_VARIANTE = {
+  s: 6,
+  local: 'Cajon con piezas de una variante distinta de la que indica su etiqueta',
+  next: 'Pieza de la variante equivocada en la linea de Cozzuol: clasificacion y reposicion urgente',
   end: 'Sin efecto en el vehiculo',
 };
 const EF_SEG_OPERARIO = {
@@ -254,14 +281,9 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
     ]),
     we('Environment', 'Deposito de materia prima', [
       funcion(
-        'Almacenar la materia prima sin degradarla y sin generar riesgo en el sector',
-        'Estiba segun las especificaciones del fabricante y deposito libre de filtraciones',
+        'Almacenar la materia prima sin degradarla',
+        'Deposito libre de filtraciones',
         [
-          falla('Productos quimicos inflamables apilados junto a la materia prima', EF_SEG_OPERARIO, [
-            causa('El deposito no tiene una zona propia y senalizada para los inflamables',
-              'Procedimiento de almacenamiento de productos quimicos',
-              3, 'Control visual del sector en el recorrido de turno', 8),
-          ]),
           falla('Materia prima mojada por filtraciones del techo', EF_SCRAP_INTERNO, [
             causa('Deterioro de la cubierta del deposito',
               'Mantenimiento preventivo de la cubierta',
@@ -274,15 +296,16 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
         'Mover la materia prima sin danarla y sin generar riesgo',
         'Autoelevador en condiciones de uso, con check list previo',
         [
-          falla('Autoelevador operado sin el check list previo o con una falla no detectada', EF_SEG_OPERARIO, [
-            causa('El check list no esta disponible en el puesto y el equipo arranca igual sin completarlo',
-              'Check list de autoelevador definido',
-              3, 'Verificacion del check list firmado al inicio de turno', 8),
+          // Redactadas como en el AMFE del Armrest Door Panel de Patagonia (mismo deposito).
+          falla('Autoelevador operado con una falla no detectada', EF_SEG_OPERARIO, [
+            causa('Falla en el sistema hidraulico o en los frenos del autoelevador',
+              'Check list diario del autoelevador y mantenimiento preventivo',
+              6, 'Inspeccion previa al uso en cada turno', 8),
           ]),
           falla('Dano del embalaje de la materia prima durante el movimiento', EF_SCRAP_INTERNO, [
-            causa('El ancho de pasillo y la altura de carga no dejan margen para maniobrar con la carga a la vista',
-              'Carteleria de circulacion en el deposito',
-              3, 'Control visual del estado del embalaje al recibirlo en el sector', 8),
+            causa('El material se deposita sin proteccion durante el movimiento y el almacenaje',
+              'Procedimiento de estiba y uso de embalajes cerrados',
+              5, 'Inspeccion visual del estado del embalaje al recibirlo en el sector', 8),
           ]),
         ]),
     ]),
@@ -306,12 +329,16 @@ const OP20 = operacion('20', 'CORTE DE MICROFIBRA',
               'Codigo y nombre del programa verificados en el set up de la mesa de corte',
               4, 'Sin control de primera pieza documentado para esta pieza', 10),
           ]),
-          // Un corte SINGLE no se puede tapizar sobre un sustrato DUAL sin que se note: el
-          // hueco no esta. Deteccion aguas abajo, a la vista: D=8.
+          // Ningun documento define un control de la variante despues del corte: D=10.
           falla('Se corta una variante distinta de la pedida', EF_SCRAP_INTERNO, [
             causa('Los archivos de corte de las dos variantes conviven en el programa y se diferencian por un hueco',
               'Codigo y nombre del programa verificados en el set up de la mesa de corte',
-              3, 'Control visual de los huecos al posicionar la microfibra sobre el sustrato, en el tapizado', 8),
+              3, 'Sin control de la variante definido despues del corte', 10),
+          ]),
+          falla('Microfibra montada en la mesa con la cara vista invertida', EF_SCRAP_INTERNO, [
+            causa('El rollo entra en el portarrollos en los dos sentidos',
+              'La planilla de corte indica como se coloca el rollo',
+              4, 'Control visual de la posicion de la cara vista contra la planilla de corte', 8),
           ]),
         ]),
       funcion(
@@ -335,7 +362,7 @@ const OP20 = operacion('20', 'CORTE DE MICROFIBRA',
           falla('Borde de la microfibra deshilachado o con rebaba', EF_ASPECTO, [
             causa('La cuchilla pierde filo entre dos afilados',
               'Afilado automatico de la cuchilla y criterio de cambio por ancho minimo, verificado en el set up',
-              4, 'Medicion del ancho de cuchilla con calibre, antes de cada corte', 6),
+              4, VISUAL_FINAL, 8),
           ]),
           falla('Microfibra mal alineada sobre la mesa de corte', EF_SCRAP_INTERNO, [
             causa('El material se detiene antes o despues de la marca y queda fuera de escuadra',
@@ -355,7 +382,7 @@ const OP20 = operacion('20', 'CORTE DE MICROFIBRA',
         'Corte identificado con la variante y la cantidad de la orden',
         [
           falla('Corte identificado con una variante o una cantidad que no corresponde', EF_SCRAP_INTERNO, [
-            causa('La etiqueta se completa a mano despues de retirar el corte',
+            causa('La etiqueta se coloca en el bin despues de retirar el corte',
               'Etiqueta emitida con la orden de corte',
               3, 'Cotejo de la etiqueta contra el contenido al cerrar el bin', 8),
           ]),
@@ -377,10 +404,15 @@ const OP30 = operacion('30', 'ADHESIVADO DE MICROFIBRA Y SUSTRATO',
         'Usar el adhesivo mezclado en la relacion definida y dentro de su vida util',
         'Mezcla segun la instruccion IO-08',
         [
-          falla('Mezcla de adhesivo fuera de la relacion definida o usada fuera de su vida util', EF_DESPEGUE, [
+          falla('Mezcla de adhesivo fuera de la relacion definida', EF_DESPEGUE, [
             causa('El reticulante se vuelca a mano en la lata de adhesivo',
               'Instruccion IO-08: una botella de reticulante por lata de adhesivo',
               4, 'Sin control de la mezcla definido para esta pieza', 10),
+          ]),
+          falla('Mezcla de adhesivo usada fuera de su vida util', EF_DESPEGUE, [
+            causa('La mezcla preparada queda en el puesto sin la hora de preparacion a la vista',
+              SIN_PREVENCION,
+              10, 'Sin registro de la hora de preparacion de la mezcla', 10),
           ]),
         ]),
     ]),
@@ -389,10 +421,11 @@ const OP30 = operacion('30', 'ADHESIVADO DE MICROFIBRA Y SUSTRATO',
         'Aplicar el adhesivo en forma uniforme sobre las dos partes',
         'Microfibra y sustrato cubiertos por completo, sin exceso',
         [
+          // El adhesivo queda tapado por la microfibra: en la inspeccion final no se ve. D=10.
           falla('Adhesivo insuficiente o con zonas sin cubrir', EF_DESPEGUE, [
             causa('El adhesivo se rocia con pistola manual y la cobertura depende del recorrido',
               SIN_PREVENCION,
-              10, VISUAL_FINAL, 8),
+              10, 'Sin ensayo de adherencia definido para esta pieza', 10),
           ]),
           falla('Exceso de adhesivo que traspasa la microfibra o deja zonas brillantes', EF_ASPECTO, [
             causa('La cantidad de adhesivo depende de la regulacion de la pistola y de las pasadas',
@@ -437,7 +470,7 @@ const OP40 = operacion('40', 'POSICIONADO Y TAPIZADO DE MICROFIBRA SOBRE SUSTRAT
     we('Method', 'Tapizado manual de la microfibra', [
       funcion(
         'Asentar la microfibra sobre toda la superficie del sustrato',
-        'Sin arrugas, pliegues, burbujas ni marcas de presion en zona vista',
+        'Sin arrugas, pliegues, burbujas, manchas ni marcas de presion en zona vista',
         [
           falla('Pieza tapizada con arrugas o pliegues en zona vista', EF_ASPECTO, [
             causa('La microfibra se estira y se acomoda a mano sobre las curvas del sustrato',
@@ -449,8 +482,13 @@ const OP40 = operacion('40', 'POSICIONADO Y TAPIZADO DE MICROFIBRA SOBRE SUSTRAT
               SIN_PREVENCION,
               10, VISUAL_FINAL, 8),
           ]),
-          falla('Microfibra con burbujas o zonas sin pegar', EF_DESPEGUE, [
+          falla('Microfibra con burbujas o levantada del sustrato', EF_DESPEGUE, [
             causa('El asentado a mano no llega a toda la superficie en los radios del sustrato',
+              SIN_PREVENCION,
+              10, VISUAL_FINAL, 8),
+          ]),
+          falla('Cara vista de la microfibra manchada con adhesivo', EF_ASPECTO, [
+            causa('La cara vista toca restos de adhesivo de la mesa o de las manos durante el tapizado',
               SIN_PREVENCION,
               10, VISUAL_FINAL, 8),
           ]),
@@ -503,7 +541,7 @@ const OP41 = operacion('41', 'DOBLADO DE BORDES Y REFILADO',
               10, VISUAL_FINAL, 8),
           ]),
           // Sin metodo de reproceso definido: la pieza va a scrap.
-          falla('Microfibra cortada de mas, con el sustrato a la vista', EF_SCRAP_INTERNO, [
+          falla('Microfibra cortada de mas, con el sustrato a la vista', EF_SCRAP_VISTA, [
             causa('La herramienta de corte se guia a mano contra el borde del sustrato',
               SIN_PREVENCION,
               10, VISUAL_FINAL, 8),
@@ -534,10 +572,28 @@ const OP50 = operacion('50', 'PUNZONADO DE AGUJEROS',
               SIN_PREVENCION,
               10, VISUAL_FINAL, 8),
           ]),
+          falla('Recorte de microfibra que queda dentro del agujero', EF_MONTAJE, [
+            causa('El punzon corta la microfibra pero no expulsa el recorte',
+              SIN_PREVENCION,
+              10, VISUAL_FINAL, 8),
+          ]),
           falla('Microfibra marcada o desgarrada alrededor del agujero', EF_ASPECTO, [
             causa('Punzon sin filo que arrastra la microfibra en lugar de cortarla',
               SIN_PREVENCION,
               10, VISUAL_FINAL, 8),
+          ]),
+        ]),
+    ]),
+    // La cotizacion del dispositivo (27/08/2026) lo define con manejo por dos pulsadores.
+    we('Man', 'Operador de Produccion', [
+      funcion(
+        'Cargar y retirar la pieza sin exponerse a los punzones',
+        'Manos fuera de la zona de punzonado durante el ciclo',
+        [
+          falla('Atrapamiento de la mano en el dispositivo de punzonado', EF_SEG_OPERARIO, [
+            causa('La pieza se acomoda con la mano dentro de la zona de punzonado',
+              'Accionamiento del dispositivo con dos pulsadores',
+              3, 'Sin verificacion periodica de los pulsadores definida', 10),
           ]),
         ]),
     ]),
@@ -558,12 +614,18 @@ const OP60 = operacion('60', 'GRABADO DE LOGO DE CARGA',
         'Logo segun la muestra aprobada, sin dano de la microfibra alrededor',
         [
           falla('Logo grabado incompleto o con poca definicion', EF_ASPECTO, [
-            causa('Temperatura del molde o carrera de la prensa por debajo de lo que necesita la microfibra',
+            causa('Temperatura del molde por debajo de la que necesita la microfibra',
               'Hoja de proceso de la prensa, con el control de temperatura del molde antes de producir',
+              9, VISUAL_FINAL, 8),
+            causa('Carrera de la prensa mas corta que la que necesita la pieza',
+              'Hoja de proceso de la prensa, con los parametros de referencia del proveedor',
               9, VISUAL_FINAL, 8),
           ]),
           falla('Microfibra quemada, brillante o marcada alrededor del logo', EF_ASPECTO, [
-            causa('Temperatura del molde o tiempo de prensado por encima de lo que admite la microfibra',
+            causa('Temperatura del molde por encima de la que admite la microfibra',
+              'Hoja de proceso de la prensa, con el control de temperatura del molde antes de producir',
+              9, VISUAL_FINAL, 8),
+            causa('Tiempo de prensado mas largo que el que admite la microfibra',
               'Hoja de proceso de la prensa, con los parametros de referencia del proveedor',
               9, VISUAL_FINAL, 8),
           ]),
@@ -587,7 +649,7 @@ const OP60 = operacion('60', 'GRABADO DE LOGO DE CARGA',
           falla('Quemadura del operario con el molde caliente', EF_SEG_OPERARIO, [
             causa('El molde trabaja caliente y queda al alcance de la mano al cargar y retirar la pieza',
               'Guantes indicados en la hoja de proceso de la prensa',
-              4, 'Control del uso de guantes en el recorrido de turno', 9),
+              9, 'Control del uso de guantes en el recorrido de turno', 9),
           ]),
         ]),
     ]),
@@ -603,23 +665,24 @@ const OP70 = operacion('70', 'INSPECCION FINAL',
   [
     we('Measurement', 'Inspeccion visual de la pieza terminada', [
       funcion(
-        'Detectar en la pieza terminada los defectos de aspecto del tapizado',
-        'Sin tela despegada o desalineada, zonas brillantes, adhesivo que traspasa, arrugas, marcas de presion ni bordes deshilachados, segun TL 496',
+        'Detectar en la pieza terminada los defectos del tapizado, de los agujeros y del logo',
+        'Sin tela despegada o desalineada, zonas brillantes, adhesivo que traspasa, arrugas, marcas de presion ni bordes deshilachados, segun TL 496; todos los agujeros libres y el logo completo y en posicion',
         [
-          falla('Pieza con un defecto de aspecto que pasa la inspeccion final', EF_ASPECTO, [
+          // Lo que se le escapa a esta inspeccion no lo mira nadie despues: D=10.
+          falla('Pieza con un defecto que pasa la inspeccion final', EF_ASPECTO_CLIENTE_ESCAPE, [
             causa('El aspecto se juzga a ojo, sin muestra patron ni criterios de aceptacion escritos',
               SIN_PREVENCION,
-              10, 'Inspeccion visual 100% de la pieza terminada', 8),
+              10, 'Sin control posterior a la inspeccion final', 10),
           ]),
         ]),
       funcion(
-        'Asegurar la adherencia de la microfibra sobre el sustrato',
+        'Verificar la adherencia de la microfibra sobre el sustrato',
         'Adherencia segun PV 2034',
         [
           falla('Pieza con adherencia por debajo del requisito que pasa la inspeccion final', EF_DESPEGUE, [
-            causa('El pegado deficiente no siempre se ve en una inspeccion visual',
-              'Requisito de adherencia definido por la norma del cliente',
-              6, 'Sin ensayo de adherencia definido para esta pieza', 10),
+            causa('La inspeccion final es visual y la adherencia no se ve',
+              SIN_PREVENCION,
+              10, 'Sin ensayo de adherencia definido para esta pieza', 10),
           ]),
         ]),
     ]),
@@ -641,20 +704,22 @@ const OP80 = operacion('80', 'EMBALAJE E IDENTIFICACION',
               'Gama de embalaje con las piezas por piso y los pisos por cajon',
               4, 'Autocontrol segun P-09/I', 8),
           ]),
-          falla('Pieza de una variante embalada en el cajon de la otra', EF_CANTIDAD, [
+          falla('Pieza de una variante embalada en el cajon de la otra', EF_VARIANTE, [
             causa('Las dos variantes se embalan en el mismo sector y se diferencian por un hueco del cargador',
               'Etiqueta del cajon con el codigo de la variante',
               5, 'Sin control de la variante de cada pieza al armar el cajon', 10),
           ]),
-          falla('Cajon despachado con una etiqueta que no corresponde a su contenido', EF_IDENTIFICACION, [
+          falla('Cajon despachado con una etiqueta que no corresponde a su contenido', EF_VARIANTE, [
             causa('La etiqueta se coloca a mano al completar el cajon',
               'Etiqueta definida en la gama de embalaje',
               4, 'Autocontrol segun P-09/I', 8),
           ]),
-          falla('Microfibra marcada o sucia por el propio embalaje', EF_ASPECTO, [
+          // El carton separa los pisos, no las piezas de un mismo piso: O=5. Lo que se marca
+          // adentro del cajon cerrado ya no lo ve nadie en planta: D=10.
+          falla('Microfibra marcada o sucia por el propio embalaje', EF_ASPECTO_CLIENTE, [
             causa('Dentro de un mismo piso las piezas quedan en contacto entre si',
               'Carton entre pisos y piezas con el lado vista hacia arriba, segun la gama de embalaje',
-              4, 'Autocontrol segun P-09/I', 8),
+              5, 'Sin control del cajon despues de cerrado', 10),
           ]),
         ]),
     ]),
@@ -763,6 +828,18 @@ if (JSON.stringify(delFlujo.map((x) => x.n)) !== JSON.stringify(mias.map((x) => 
 for (const f of delFlujo) {
   const m = mias.find((x) => x.n === f.n);
   if (m && m.nombre !== f.nombre) errores.push(`OP ${f.n}: el flujograma dice "${f.nombre}" y el AMFE "${m.nombre}"`);
+}
+
+// Si el flujograma manda la pieza no conforme a SCRAP, lo que se rechaza en la inspeccion final
+// es scrap: su S no puede quedar en la banda de retrabajo (Tabla P1, planta: scrap = 7 u 8).
+// Lo encontro la auditoria de cliente del 01/10/2026 en 15 modos de falla.
+const noConformeAScrap = flujo.flow.some((p) => p.type === 'condition' && p.branchSide?.text === 'SCRAP');
+if (noConformeAScrap) {
+  for (const op of doc.operations) for (const w of op.workElements) for (const f of w.functions) for (const fm of f.failures) {
+    if (fm.severity < 7 && fm.causes.some((c) => c.detectionControl === VISUAL_FINAL)) {
+      errores.push(`OP${op.opNumber}: "${fm.description}" se rechaza en la inspeccion final y va a scrap, pero tiene S=${fm.severity}`);
+    }
+  }
 }
 
 console.log(`AMFE ${NUMERO_EMPRESA} (numero a confirmar) — UPPER TRIM PANEL, CONSOLA CENTRAL — BORRADOR\n`);
