@@ -553,13 +553,20 @@ describe('actualizar', () => {
         expect(leer(pc, 'scripts/util.mjs.fak-nueva')).toBe(V1['scripts/util.mjs']);
     });
 
-    it('lo que Fak saca de la lista sigue en la PC del compañero y se anota', () => {
-        const { origen, nube, pc } = escenarioInstalado();
-        const sinDato = { ...LISTA, incluir: LISTA.incluir.filter((e) => !e.ruta.includes('dato.json')) };
-        esc(origen, '.claude/rules/regla.md', '# regla dos\n');
-        pub(origen, nube, sinDato, { ahora: F(3) });
+    // Hasta el 01/10/2026 lo retirado "seguia en tu PC". Desde las lapidas (punto 3 del plan), lo que
+    // Fak saca de la lista pasa a cuarentena si en la PC esta identico a lo publicado: ver el bloque
+    // "lapidas" mas abajo. Un manifiesto SIN lapidas (publicador viejo) sigue como antes:
+    it('lo que un publicador VIEJO (sin lapidas) saca de la lista sigue en la PC del compañero y se anota', () => {
+        const { nube, pc } = escenarioInstalado();
+        const man = JSON.parse(fs.readFileSync(path.join(nube, 'MANIFIESTO.json'), 'utf8'));
+        delete man.archivos['scripts/_lib/dato.json'];
+        delete man.lapidas;
+        man.version = 2;
+        firmar(nube, man);
         const r = act(pc, nube, { ahora: F(4) });
+        expect(r.estado).toBe('actualizado');
         expect(r.retirados).toEqual(['scripts/_lib/dato.json']);
+        expect(r.cuarentena).toEqual([]);
         expect(existe(pc, 'scripts/_lib/dato.json')).toBe(true);
         expect(leer(pc, P.REL_PENDIENTES)).toContain('Fak dejó de publicarlos');
     });
@@ -1014,5 +1021,1009 @@ describe('linea de comandos', () => {
         const r = correr(['--nube']);
         expect(r.status).toBe(1);
         expect(r.stderr).toContain('necesita un valor');
+    });
+});
+
+// =============================================================================================
+// 01/10/2026 — proyecto "un Claude por area": firma, historial/rollback, lapidas, areas, chequeo
+// rapido, salud y la carpeta por proyecto (tools/claude-area/CONTRATO.md). Cada control se prueba
+// en las dos direcciones y cada camino que escribe corre de verdad contra una carpeta temporal.
+// =============================================================================================
+
+/** Un par de claves de firma en una carpeta temporal (nunca la real). */
+function claves(nombre = 'claves') {
+    const rutaClave = path.join(dir(nombre), P.NOMBRE_CLAVE_PRIVADA);
+    const r = P.generarClave({ rutaClave });
+    expect(r.estado).toBe('creada');
+    return { rutaClave, rutaPub: r.publica, huella: r.huella };
+}
+const leerVersion = (nube) => JSON.parse(leer(nube, 'VERSION.json'));
+const escribirVersion = (nube, v) => fs.writeFileSync(path.join(nube, 'VERSION.json'), P.jsonCanonico(v));
+/** Vuelve a firmar el MANIFIESTO.json que hay en la nube con OTRA clave y deja VERSION.json coherente (lo que haria un atacante con escritura). */
+function refirmar(nube, rutaClavePrivada) {
+    const bytes = fs.readFileSync(path.join(nube, 'MANIFIESTO.json'));
+    const { texto, huella } = P.firmarManifiesto(bytes, P.leerClavePrivada(rutaClavePrivada).clave);
+    fs.writeFileSync(path.join(nube, 'MANIFIESTO.sig'), texto);
+    const v = leerVersion(nube);
+    v.manifest_sha256 = P.sha256(bytes);
+    v.firma = { algoritmo: 'ed25519', sha256: P.sha256(texto), clave: huella };
+    escribirVersion(nube, v);
+}
+const medido = (que, ms) => console.log(`[medido] ${que}: ${ms.toFixed(2)} ms`);
+
+// ---------------------------------------------------------------------------------------------
+describe('firma del manifiesto (Ed25519)', () => {
+    it('generarClave crea el par, deja publicador.pub al lado y se NIEGA a pisar una clave existente', () => {
+        const { rutaClave, rutaPub } = claves();
+        expect(fs.existsSync(rutaClave)).toBe(true);
+        expect(fs.existsSync(rutaPub)).toBe(true);
+        expect(P.leerClavePrivada(rutaClave).clave.asymmetricKeyType).toBe('ed25519');
+        expect(P.leerClavePublica(rutaPub).clave.asymmetricKeyType).toBe('ed25519');
+        const antes = { k: P.sha256Archivo(rutaClave), p: P.sha256Archivo(rutaPub) };
+        const otra = P.generarClave({ rutaClave });
+        expect(otra.estado).toBe('existe');
+        expect(otra.errores.join(' ')).toContain('no se pisa');
+        expect(P.sha256Archivo(rutaClave)).toBe(antes.k);
+        expect(P.sha256Archivo(rutaPub)).toBe(antes.p);
+    });
+
+    it('--publicar con clave firma: MANIFIESTO.sig verifica el manifiesto, VERSION.json lleva el hash de la firma y el historial la guarda', () => {
+        const { rutaClave, rutaPub, huella } = claves();
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        const r = pub(origen, nube, LISTA, { clavePrivada: rutaClave });
+        expect(r.estado).toBe('publicado');
+        expect(r.firmada).toBe(true);
+        expect(r.ms_firma).toBeGreaterThan(0);
+        medido('firmar el manifiesto', r.ms_firma);
+        const v = leerVersion(nube);
+        expect(v.firma).toMatchObject({ algoritmo: 'ed25519', sha256: P.sha256Archivo(path.join(nube, 'MANIFIESTO.sig')), clave: huella });
+        const t0 = process.hrtime.bigint();
+        const ver = P.verificarFirma({ nube, bytesManifiesto: fs.readFileSync(path.join(nube, 'MANIFIESTO.json')), clavePublica: P.leerClavePublica(rutaPub).clave, infoVersion: v });
+        medido('verificar la firma', Number(process.hrtime.bigint() - t0) / 1e6);
+        expect(ver.estado).toBe('valida');
+        expect(existe(nube, 'historial/v1/MANIFIESTO.sig')).toBe(true);
+        expect(leer(nube, 'historial/v1/MANIFIESTO.sig')).toBe(leer(nube, 'MANIFIESTO.sig'));
+        // la clave privada no viajo a la nube
+        expect(JSON.stringify(foto(nube))).not.toContain('publicador.key');
+    });
+
+    it('la firma se escribe ANTES de VERSION.json: si la escritura de VERSION falla, la firma del manifiesto ya esta y es de ese manifiesto', () => {
+        const { rutaClave, rutaPub } = claves();
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        // un directorio no vacio donde tiene que ir VERSION.json: el rename final falla
+        fs.mkdirSync(path.join(nube, 'VERSION.json'));
+        fs.writeFileSync(path.join(nube, 'VERSION.json', 'traba'), 'x');
+        const r = pub(origen, nube, LISTA, { clavePrivada: rutaClave });
+        expect(r.estado).toBe('rechazado');
+        expect(r.errores.join(' ')).toContain('se cortó la publicación');
+        expect(existe(nube, 'MANIFIESTO.sig')).toBe(true);
+        const ver = P.verificarFirma({ nube, bytesManifiesto: fs.readFileSync(path.join(nube, 'MANIFIESTO.json')), clavePublica: P.leerClavePublica(rutaPub).clave, infoVersion: null });
+        expect(ver.estado).toBe('valida');
+        expect(P.leerPublicacion(nube).estado).not.toBe('ok');   // sin VERSION valida nadie la toma
+    });
+
+    it('VERDE: una PC con la clave publica acepta la publicacion firmada y lo anota', () => {
+        const { rutaClave, rutaPub } = claves();
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        pub(origen, nube, LISTA, { clavePrivada: rutaClave });
+        const pc = dir('pc1');
+        const r = act(pc, nube, { clavePublica: rutaPub });
+        expect(r.estado).toBe('actualizado');
+        expect(r.firma).toBe('valida');
+        expect(r.contadores.nuevos).toBe(5);
+        expect(JSON.parse(leer(pc, P.REL_INSTALADO)).firma).toBe('valida');
+    });
+
+    describe('ROJO: una PC con la clave publica no toca nada si la publicacion no esta bien firmada', () => {
+        /** v1 firmada e instalada; v2 firmada publicada; despues se la estropea de una forma. */
+        function v2Firmada() {
+            const { rutaClave, rutaPub } = claves();
+            const origen = armarOrigen();
+            const nube = dir('nube');
+            const pc = dir('pc1');
+            expect(pub(origen, nube, LISTA, { clavePrivada: rutaClave }).estado).toBe('publicado');
+            expect(act(pc, nube, { clavePublica: rutaPub }).estado).toBe('actualizado');
+            esc(origen, '.claude/rules/regla.md', '# regla dos\n');
+            expect(pub(origen, nube, LISTA, { clavePrivada: rutaClave, ahora: F(3) }).estado).toBe('publicado');
+            return { rutaClave, rutaPub, origen, nube, pc };
+        }
+        const formas = {
+            'publicada SIN firma (--sin-firma) cuando esta PC exige firma': ({ origen, nube }) => {
+                esc(origen, '.claude/rules/regla.md', '# regla tres\n');
+                expect(pub(origen, nube, LISTA, { sinFirma: true, ahora: F(4) }).estado).toBe('publicado');
+                return 'sin_firma';
+            },
+            'firmada con OTRA clave (alguien con escritura trajo la suya)': ({ nube }) => { refirmar(nube, claves('otras').rutaClave); return 'otra_clave'; },
+            'manifiesto TOCADO (un hash cambiado y VERSION.json rehecho, con la firma vieja)': ({ nube }) => {
+                const malo = '# regla envenenada\n';
+                esc(nube, 'contenido/.claude/rules/regla.md', malo);
+                const man = JSON.parse(leer(nube, 'MANIFIESTO.json'));
+                man.archivos['.claude/rules/regla.md'] = { sha256: P.sha256(malo), bytes: Buffer.byteLength(malo), areas: ['comun'] };
+                const txt = P.jsonCanonico(man);
+                fs.writeFileSync(path.join(nube, 'MANIFIESTO.json'), txt);
+                const v = leerVersion(nube); v.manifest_sha256 = P.sha256(txt); escribirVersion(nube, v);
+                return 'invalida';
+            },
+            'firma DAÑADA (un caracter cambiado, VERSION.json rehecho)': ({ nube }) => {
+                const sig = JSON.parse(leer(nube, 'MANIFIESTO.sig'));
+                sig.firma = (sig.firma[0] === 'A' ? 'B' : 'A') + sig.firma.slice(1);
+                const txt = P.jsonCanonico(sig);
+                fs.writeFileSync(path.join(nube, 'MANIFIESTO.sig'), txt);
+                const v = leerVersion(nube); v.firma.sha256 = P.sha256(txt); escribirVersion(nube, v);
+                return 'invalida';
+            },
+            'MANIFIESTO.sig ilegible (VERSION.json rehecho)': ({ nube }) => {
+                fs.writeFileSync(path.join(nube, 'MANIFIESTO.sig'), 'esto no es una firma');
+                const v = leerVersion(nube); v.firma.sha256 = P.sha256('esto no es una firma'); escribirVersion(nube, v);
+                return 'ilegible';
+            },
+        };
+        it.each(Object.keys(formas))('%s', (forma) => {
+            const esc2 = v2Firmada();
+            const esperado = formas[forma](esc2);
+            const antes = foto(esc2.pc);
+            const r = act(esc2.pc, esc2.nube, { clavePublica: esc2.rutaPub, ahora: F(5) });
+            expect(r.estado).toBe('firma_rechazada');
+            expect(r.firma).toBe(esperado);
+            expect(r.mensaje).toContain('No se tocó nada');
+            expect(foto(esc2.pc)).toEqual(antes);
+            expect(leer(esc2.pc, '.claude/rules/regla.md')).toBe('# regla uno\n');
+            // la salud cuenta el rechazo
+            const salud = JSON.parse(leer(esc2.nube, `salud/${P.identidadLocal().pc}.json`));
+            expect(salud.firma_ok).toBe(false);
+            expect(salud.estado).toBe('firma_rechazada');
+        });
+
+        it('si MANIFIESTO.sig todavia no bajo (VERSION.json dice que hay firma) es ESPERAR, no rechazo', () => {
+            const { nube, pc, rutaPub } = v2Firmada();
+            fs.rmSync(path.join(nube, 'MANIFIESTO.sig'));
+            const antes = foto(pc);
+            const r = act(pc, nube, { clavePublica: rutaPub, ahora: F(5) });
+            expect(r.estado).toBe('esperar');
+            expect(r.mensaje).toContain('todavía no bajó');
+            expect(foto(pc)).toEqual(antes);
+        });
+
+        it('la misma PC SIN clave publica acepta esas publicaciones y dice que no verifico la firma (compatibilidad)', () => {
+            const esc2 = v2Firmada();
+            refirmar(esc2.nube, claves('otras').rutaClave);
+            const r = act(esc2.pc, esc2.nube, { ahora: F(5) });
+            expect(r.estado).toBe('actualizado');
+            expect(r.firma).toBe('no_verificada');
+            expect(leer(esc2.pc, '.claude/rules/regla.md')).toBe('# regla dos\n');
+        });
+
+        it('una clave publica ilegible en la PC frena (no se "cae" a no verificar)', () => {
+            const { nube, pc } = v2Firmada();
+            const rota = esc(tmp, 'rota/publicador.pub', 'no soy una clave\n');
+            const antes = foto(pc);
+            const r = act(pc, nube, { clavePublica: rota, ahora: F(5) });
+            expect(r.estado).toBe('error');
+            expect(r.errores.join(' ')).toContain('clave pública');
+            expect(foto(pc)).toEqual(antes);
+        });
+    });
+
+    it('publicar sin clave cuando la version anterior estaba firmada se niega (salvo --sin-firma, que avisa)', () => {
+        const { rutaClave } = claves();
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        pub(origen, nube, LISTA, { clavePrivada: rutaClave });
+        esc(origen, '.claude/rules/regla.md', '# regla dos\n');
+        const antes = foto(nube);
+        const r = pub(origen, nube, LISTA, { ahora: F(3) });
+        expect(r.estado).toBe('rechazado');
+        expect(r.errores.join(' ')).toContain('estaba firmada');
+        expect(foto(nube)).toEqual(antes);
+        const r2 = pub(origen, nube, LISTA, { ahora: F(3), sinFirma: true });
+        expect(r2.estado).toBe('publicado');
+        expect(r2.firmada).toBe(false);
+        expect(r2.avisos.join(' ')).toContain('SIN firma');
+        expect(leerVersion(nube).firma).toBe(null);
+    });
+
+    it('una clave privada que no se entiende frena la publicacion sin escribir nada', () => {
+        const rota = esc(tmp, 'rota/publicador.key', 'basura\n');
+        const nube = dir('nube');
+        const r = pub(armarOrigen(), nube, LISTA, { clavePrivada: rota });
+        expect(r.estado).toBe('rechazado');
+        expect(r.errores.join(' ')).toContain('no se entiende');
+        expect(fs.readdirSync(nube)).toEqual([]);
+    });
+
+    it('buscarClavePublica: con CLAUDE_AREA_ESTADO mira SOLO ahi; sin la variable, programas y despues el usuario', () => {
+        const estado = dir('estado');
+        expect(P.buscarClavePublica({ CLAUDE_AREA_ESTADO: estado })).toBe(null);
+        const p = esc(estado, 'publicador.pub', 'x');
+        expect(P.buscarClavePublica({ CLAUDE_AREA_ESTADO: estado, ProgramFiles: dir('pf'), LOCALAPPDATA: dir('la') })).toBe(p);
+        const pf = dir('pf'); const la = dir('la');
+        expect(P.buscarClavePublica({ ProgramFiles: pf, LOCALAPPDATA: la })).toBe(null);
+        const enLa = esc(la, 'BarackEquipo/publicador.pub', 'x');
+        expect(P.buscarClavePublica({ ProgramFiles: pf, LOCALAPPDATA: la })).toBe(enLa);
+        const enPf = esc(pf, 'Claude Barack/publicador.pub', 'x');
+        expect(P.buscarClavePublica({ ProgramFiles: pf, LOCALAPPDATA: la })).toBe(enPf);
+    });
+
+    it('el pendrive lleva publicador.pub en la raiz (y nunca la clave privada)', () => {
+        const { rutaClave } = claves();
+        const origen = armarOrigen();
+        const pendrive = dir('pendrive');
+        for (const n of P.ARCHIVOS_PENDRIVE) esc(origen, `${P.REL_INSTALADOR}/${n}`, `${n}\n`);
+        const r = P.armarPendrive({ origen, pendrive, lista: LISTA, identidad: NOIDENT, ahora: F(1), clavePrivada: rutaClave });
+        expect(r.estado).toBe('listo');
+        expect(r.copiados).toContain('publicador.pub');
+        expect(r.publicacion.firmada).toBe(true);
+        const todo = Object.keys(foto(pendrive));
+        expect(todo).toContain('publicador.pub');
+        expect(todo.some((k) => k.endsWith('publicador.key'))).toBe(false);
+    });
+
+    describe('linea de comandos', () => {
+        const correr = (args, env = {}) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8', env: { ...process.env, CLAUDE_AREA_ESTADO: dir('estado-vacio'), ...env }, timeout: 60000 });
+        it('--generar-clave crea una vez y la segunda sale con 1; --publicar firma; --actualizar verifica; una firma mala sale con 4', () => {
+            const rutaClave = path.join(dir('claves'), 'publicador.key');
+            const g = correr(['--generar-clave', '--clave', rutaClave]);
+            expect(g.status, g.stdout + g.stderr).toBe(0);
+            expect(g.stdout).toContain('Clave de firma creada');
+            expect(correr(['--generar-clave', '--clave', rutaClave]).status).toBe(1);
+            const origen = armarOrigen();
+            const nube = dir('nube');
+            const lista = esc(tmp, 'lista.json', JSON.stringify(LISTA));
+            const p = correr(['--publicar', '--origen', origen, '--nube', nube, '--lista', lista, '--clave', rutaClave]);
+            expect(p.status, p.stdout + p.stderr).toBe(0);
+            expect(p.stdout).toMatch(/firmada \([\d.]+ ms\)/);
+            const pc = dir('pc1');
+            const rutaPub = path.join(path.dirname(rutaClave), 'publicador.pub');
+            const a = correr(['--actualizar', '--destino', pc, '--nube', nube, '--clave-publica', rutaPub]);
+            expect(a.status, a.stdout + a.stderr).toBe(0);
+            expect(a.stdout).toContain('firma verificada');
+            // la clave publica tambien se encuentra sola en CLAUDE_AREA_ESTADO
+            const estado = dir('estado');
+            fs.copyFileSync(rutaPub, path.join(estado, 'publicador.pub'));
+            expect(correr(['--actualizar', '--destino', pc, '--nube', nube], { CLAUDE_AREA_ESTADO: estado }).stdout).toContain('firma verificada');
+            // atacante: otra clave
+            refirmar(nube, claves('otras').rutaClave);
+            const mala = correr(['--actualizar', '--destino', pc, '--nube', nube, '--clave-publica', rutaPub]);
+            expect(mala.status).toBe(P.CODIGO_SALIDA_FIRMA);
+            expect(mala.stderr).toContain('No se tocó nada');
+            // sin clave publica: pasa, y lo dice
+            const sin = correr(['--actualizar', '--destino', pc, '--nube', nube]);
+            expect(sin.status, sin.stdout + sin.stderr).toBe(0);
+            expect(sin.stdout).toContain('no tiene la clave pública');
+        });
+    });
+});
+
+// ---------------------------------------------------------------------------------------------
+describe('historial y volver atras (--rollback)', () => {
+    /** v1 y v2 publicadas (firmadas) y la PC en la v2. */
+    function dosVersiones() {
+        const { rutaClave, rutaPub } = claves();
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        const pc = dir('pc1');
+        expect(pub(origen, nube, LISTA, { clavePrivada: rutaClave }).version).toBe(1);
+        esc(origen, 'scripts/util.mjs', 'export const x = 2;\n');
+        esc(origen, 'scripts/nuevo.mjs', 'export const z = 1;\n');
+        expect(pub(origen, nube, LISTA2, { clavePrivada: rutaClave, ahora: F(2) }).version).toBe(2);
+        expect(act(pc, nube, { clavePublica: rutaPub, ahora: F(3) }).estado).toBe('actualizado');
+        expect(leer(pc, 'scripts/util.mjs')).toBe('export const x = 2;\n');
+        return { rutaClave, rutaPub, origen, nube, pc };
+    }
+
+    it('de punta a punta: v1, v2, la PC en v2, rollback a v1 (sale como v3, firmada) y la PC queda con el contenido de v1', () => {
+        const { rutaClave, rutaPub, nube, pc } = dosVersiones();
+        const r = P.publicar({ origen: dir('origen'), nube, lista: null, rollback: 1, clavePrivada: rutaClave, identidad: NOIDENT, ahora: F(4) });
+        expect(r.errores).toEqual([]);
+        expect(r.estado).toBe('publicado');
+        expect(r.version).toBe(3);
+        expect(r.firmada).toBe(true);
+        expect(r.rollback).toBe(1);
+        expect(r.retirados).toEqual(['scripts/nuevo.mjs']);
+        expect(leer(nube, 'contenido/scripts/util.mjs')).toBe(V1['scripts/util.mjs']);
+        expect(leer(nube, 'NOVEDADES.md')).toContain('Se volvió a la versión 1');
+        const man = JSON.parse(leer(nube, 'MANIFIESTO.json'));
+        expect(man.version).toBe(3);
+        expect(man.lapidas).toEqual([{ ruta: 'scripts/nuevo.mjs', desde_version: 3, motivo: 'no estaba en la versión 1', sha256: P.sha256('export const z = 1;\n') }]);
+        const t0 = process.hrtime.bigint();
+        const a = act(pc, nube, { clavePublica: rutaPub, ahora: F(5) });
+        medido('actualizar la PC (rollback, 5 archivos + 1 cuarentena)', Number(process.hrtime.bigint() - t0) / 1e6);
+        expect(a.estado).toBe('actualizado');
+        expect(a.firma).toBe('valida');
+        expect(leer(pc, 'scripts/util.mjs')).toBe(V1['scripts/util.mjs']);
+        expect(JSON.parse(leer(pc, P.REL_INSTALADO)).version).toBe(3);
+        // lo que no estaba en la v1 se fue a cuarentena (estaba identico a lo publicado), no se borro
+        expect(existe(pc, 'scripts/nuevo.mjs')).toBe(false);
+        expect(a.cuarentena).toEqual(['scripts/nuevo.mjs']);
+        expect(fs.readFileSync(path.join(a.carpetaCuarentena, 'scripts', 'nuevo.mjs'), 'utf8')).toBe('export const z = 1;\n');
+        expect(existe(nube, 'historial/v3/MANIFIESTO.json')).toBe(true);
+    });
+
+    it('el historial guarda cada version y el contenido una sola vez por hash', () => {
+        const { nube } = dosVersiones();
+        expect(existe(nube, 'historial/v1/MANIFIESTO.json')).toBe(true);
+        expect(existe(nube, 'historial/v2/MANIFIESTO.json')).toBe(true);
+        expect(JSON.parse(leer(nube, 'historial/v1/MANIFIESTO.json')).version).toBe(1);
+        const objetos = Object.keys(foto(path.join(nube, 'historial', '_objetos')));
+        // v1: 5 archivos; v2: cambia 1 y agrega 1 -> 7 contenidos distintos, no 11
+        expect(objetos).toHaveLength(7);
+        for (const o of objetos) expect(path.basename(o)).toBe(P.sha256Archivo(path.join(nube, 'historial', '_objetos', ...o.split('/'))));
+    });
+
+    it('ROJO: rollback a una version que no existe, a un numero invalido, o con el historial dañado: no se escribe nada', () => {
+        const { rutaClave, nube } = dosVersiones();
+        const antes = foto(nube);
+        const intentar = (rollback) => P.publicar({ origen: dir('origen'), nube, lista: null, rollback, clavePrivada: rutaClave, identidad: NOIDENT, ahora: F(4) });
+        expect(intentar(9).errores.join(' ')).toContain('no hay una version 9');
+        expect(intentar(0).errores.join(' ')).toContain('--rollback necesita');
+        expect(intentar(NaN).estado).toBe('rechazado');
+        expect(foto(nube)).toEqual(antes);
+        // un objeto del historial corrompido
+        const h1 = JSON.parse(leer(nube, 'historial/v1/MANIFIESTO.json'));
+        const sha = h1.archivos['scripts/util.mjs'].sha256;
+        const obj = path.join(nube, 'historial', '_objetos', sha.slice(0, 2), sha);
+        const original = fs.readFileSync(obj);
+        fs.writeFileSync(obj, 'export const x = 9;\n');   // mismo tamaño, otro contenido
+        const r = intentar(1);
+        expect(r.estado).toBe('rechazado');
+        expect(r.errores.join(' ')).toContain('no coincide con su hash');
+        fs.writeFileSync(obj, original);
+        // un manifiesto del historial con una ruta que se sale
+        esc(nube, 'historial/v7/MANIFIESTO.json', JSON.stringify({ formato: 1, version: 7, archivos: { '../fuera.txt': { sha256: 'a'.repeat(64), bytes: 1 } } }));
+        expect(intentar(7).errores.join(' ')).toContain('no se aceptan');
+        expect(Object.keys(foto(nube)).filter((k) => !k.startsWith('historial/v7/'))).toEqual(Object.keys(antes));
+        expect(leerVersion(nube).version).toBe(2);
+    });
+
+    it('--rollback --simular cuenta y no escribe; por linea de comandos un --rollback sin numero sale con 1', () => {
+        const { rutaClave, nube } = dosVersiones();
+        const antes = foto(nube);
+        const r = P.publicar({ origen: dir('origen'), nube, lista: null, rollback: 1, clavePrivada: rutaClave, identidad: NOIDENT, ahora: F(4), simular: true });
+        expect(r.estado).toBe('simulado');
+        expect(r.version).toBe(3);
+        expect(r.retirados).toEqual(['scripts/nuevo.mjs']);
+        expect(foto(nube)).toEqual(antes);
+        const cli = spawnSync(process.execPath, [SCRIPT, '--publicar', '--rollback', 'uno', '--nube', nube, '--clave', rutaClave], { encoding: 'utf8', timeout: 60000 });
+        expect(cli.status).toBe(1);
+        expect(cli.stderr).toContain('--rollback necesita');
+        const ok = spawnSync(process.execPath, [SCRIPT, '--publicar', '--rollback', '1', '--nube', nube, '--clave', rutaClave], { encoding: 'utf8', timeout: 60000 });
+        expect(ok.status, ok.stdout + ok.stderr).toBe(0);
+        expect(ok.stdout).toContain('Vuelta a la versión 1');
+        expect(leerVersion(nube).version).toBe(3);
+    });
+});
+
+// ---------------------------------------------------------------------------------------------
+describe('lapidas: retirar algo ya publicado (nada se borra)', () => {
+    const SIN_DATO = { ...LISTA, incluir: LISTA.incluir.filter((e) => !e.ruta.includes('dato.json')) };
+    const REL = 'scripts/_lib/dato.json';
+    const enCuarentena = (pc) => Object.keys(foto(path.join(pc, ...P.REL_CUARENTENA.split('/'))));
+
+    it('al sacar un archivo de la lista el manifiesto lleva su lapida (ruta, desde_version, motivo, hash publicado)', () => {
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        pub(origen, nube);
+        const r = pub(origen, nube, SIN_DATO, { ahora: F(2), motivoRetiro: 'decía un procedimiento viejo' });
+        expect(r.estado).toBe('publicado');
+        expect(r.lapidas).toBe(1);
+        const man = JSON.parse(leer(nube, 'MANIFIESTO.json'));
+        expect(man.lapidas).toEqual([{ ruta: REL, desde_version: 2, motivo: 'decía un procedimiento viejo', sha256: P.sha256(V1[REL]) }]);
+        expect(leerVersion(nube).lapidas).toBe(1);
+        expect(existe(nube, `contenido/${REL}`)).toBe(true);   // en la nube no se borra
+    });
+
+    it('VERDE: en la PC el archivo IDENTICO a lo publicado se MUEVE a cuarentena con fecha (contenido igual, nada mas cambia)', () => {
+        const { origen, nube, pc } = escenarioInstalado();
+        esc(pc, `${REL}${P.SUFIJO_NUEVA}`, 'una nueva que quedo\n');
+        pub(origen, nube, SIN_DATO, { ahora: F(2) });
+        const antes = foto(pc);
+        const r = act(pc, nube, { ahora: F(3, 8) });
+        expect(r.estado).toBe('actualizado');
+        expect(r.cuarentena).toEqual([REL]);
+        expect(r.contadores.cuarentena).toBe(1);
+        expect(r.retiradosTuyos).toEqual([]);
+        expect(r.retirados).toEqual([]);
+        const carpeta = path.join(pc, ...P.REL_CUARENTENA.split('/'), P.selloCarpeta(F(3, 8)));
+        expect(r.carpetaCuarentena).toBe(carpeta);
+        expect(fs.readFileSync(path.join(carpeta, 'scripts', '_lib', 'dato.json'), 'utf8')).toBe(V1[REL]);
+        expect(fs.readFileSync(path.join(carpeta, 'scripts', '_lib', `dato.json${P.SUFIJO_NUEVA}`), 'utf8')).toBe('una nueva que quedo\n');
+        expect(existe(pc, REL)).toBe(false);
+        expect(existe(pc, `${REL}${P.SUFIJO_NUEVA}`)).toBe(false);
+        // todo lo demas sigue igual, y el registro ya no lo tiene
+        const despues = foto(pc);
+        for (const k of Object.keys(antes)) if (k !== REL && k !== `${REL}${P.SUFIJO_NUEVA}` && k !== P.REL_INSTALADO) expect(despues[k], k).toBe(antes[k]);
+        expect(JSON.parse(leer(pc, P.REL_INSTALADO)).archivos).not.toHaveProperty([REL]);
+        expect(act(pc, nube, { ahora: F(4) }).estado).toBe('al_dia');
+    });
+
+    it('ROJO: si la persona lo habia cambiado, se queda donde esta y se anota en pendientes', () => {
+        const { origen, nube, pc } = escenarioInstalado();
+        esc(pc, REL, '{"a":1,"mio":true}\n');
+        pub(origen, nube, SIN_DATO, { ahora: F(2) });
+        const r = act(pc, nube, { ahora: F(3) });
+        expect(r.estado).toBe('actualizado');
+        expect(r.cuarentena).toEqual([]);
+        expect(r.retiradosTuyos).toEqual([REL]);
+        expect(leer(pc, REL)).toBe('{"a":1,"mio":true}\n');
+        expect(enCuarentena(pc)).toEqual([]);
+        expect(leer(pc, P.REL_PENDIENTES)).toContain('los habías cambiado');
+        expect(leer(pc, P.REL_PENDIENTES)).toContain(`\`${REL}\``);
+    });
+
+    it('un archivo que la PC nunca recibio de la base no se nombra; salvo que sea igual a lo publicado, que entonces si va a cuarentena', () => {
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        pub(origen, nube);
+        pub(origen, nube, SIN_DATO, { ahora: F(2) });
+        const propia = dir('pc-propia');
+        esc(propia, REL, '{"mio":1}\n');
+        const r1 = act(propia, nube, { ahora: F(3) });
+        expect(r1.estado).toBe('actualizado');
+        expect(r1.cuarentena).toEqual([]);
+        expect(r1.retiradosTuyos).toEqual([]);
+        expect(leer(propia, REL)).toBe('{"mio":1}\n');
+        const copiada = dir('pc-copiada');
+        esc(copiada, REL, V1[REL]);
+        const r2 = act(copiada, nube, { ahora: F(3) });
+        expect(r2.cuarentena).toEqual([REL]);
+        expect(existe(copiada, REL)).toBe(false);
+    });
+
+    it('la lapida se hereda: una PC que se salto la v2 la aplica al pasar a la v3; y si el archivo vuelve a la lista, la lapida se levanta', () => {
+        const { origen, nube, pc } = escenarioInstalado();
+        pub(origen, nube, SIN_DATO, { ahora: F(2) });
+        esc(origen, '.claude/rules/regla.md', '# regla dos\n');
+        pub(origen, nube, SIN_DATO, { ahora: F(3) });
+        expect(JSON.parse(leer(nube, 'MANIFIESTO.json')).lapidas.map((l) => l.desde_version)).toEqual([2]);
+        const r = act(pc, nube, { ahora: F(4) });
+        expect(r.version).toBe(3);
+        expect(r.cuarentena).toEqual([REL]);
+        // vuelve a la lista: sin lapida, y la PC lo recibe como nuevo (lo de cuarentena no se toca)
+        const r4 = pub(origen, nube, LISTA, { ahora: F(5) });
+        expect(r4.estado).toBe('publicado');
+        expect(JSON.parse(leer(nube, 'MANIFIESTO.json')).lapidas).toEqual([]);
+        const a = act(pc, nube, { ahora: F(6) });
+        expect(a.contadores.nuevos).toBe(1);
+        expect(leer(pc, REL)).toBe(V1[REL]);
+        expect(enCuarentena(pc)).toHaveLength(1);
+    });
+
+    it('ROJO: una lapida con una ruta que se sale, que pisaria la configuracion o que tambien figura como archivo, invalida el manifiesto y no se toca nada', () => {
+        const { nube, pc } = escenarioInstalado();
+        const limpio = JSON.parse(leer(nube, 'MANIFIESTO.json'));
+        const antes = foto(pc);
+        const casos = [
+            [{ ruta: '../fuera.txt', desde_version: 2 }, 'fuera.txt'],
+            [{ ruta: '.claude/settings.json', desde_version: 2 }, 'settings.json'],
+            [{ ruta: 'scripts/util.mjs', desde_version: 2 }, 'tambien figura'],
+            [{ ruta: 'scripts/_lib/dato.json', desde_version: 'dos' }, 'datos invalidos'],
+        ];
+        for (const [lapida, texto] of casos) {
+            const man = { ...limpio, version: 2, lapidas: [lapida] };
+            if (lapida.ruta === 'scripts/_lib/dato.json') delete man.archivos['scripts/_lib/dato.json'];
+            firmar(nube, man);
+            const r = act(pc, nube, { ahora: F(4) });
+            expect(r.estado, texto).toBe('error');
+            expect(r.errores.join(' '), texto).toContain(texto);
+            expect(foto(pc), texto).toEqual(antes);
+        }
+        expect(existe(tmp, 'fuera.txt')).toBe(false);
+    });
+
+    it('--simular muestra el plan de cuarentena (origen -> destino) y no mueve nada', () => {
+        const { origen, nube, pc } = escenarioInstalado();
+        pub(origen, nube, SIN_DATO, { ahora: F(2) });
+        const antes = foto(pc);
+        const r = act(pc, nube, { ahora: F(3), simular: true });
+        expect(r.estado).toBe('simulado');
+        expect(r.plan.filter((p) => p.que === 'cuarentena').map((p) => p.rel)).toEqual([REL]);
+        expect(r.carpetaCuarentena).toContain('_cuarentena-paquete');
+        expect(foto(pc)).toEqual(antes);
+        const cli = spawnSync(process.execPath, [SCRIPT, '--actualizar', '--simular', '--destino', pc, '--nube', nube], { encoding: 'utf8', env: { ...process.env, CLAUDE_AREA_ESTADO: dir('estado-vacio') }, timeout: 60000 });
+        expect(cli.status, cli.stdout + cli.stderr).toBe(0);
+        expect(cli.stdout).toContain('Pasarían a cuarentena');
+        expect(cli.stdout).toMatch(/scripts\/_lib\/dato\.json {2}-> {2}.*_cuarentena-paquete/);
+        expect(foto(pc)).toEqual(antes);
+    });
+});
+
+// ---------------------------------------------------------------------------------------------
+describe('areas: cada PC instala lo comun mas lo de su area', () => {
+    const LISTA_AREAS = {
+        ...LISTA,
+        incluir: [
+            { ruta: '.claude/skills/docs-x' },                                     // sin areas = comun
+            { ruta: '.claude/rules/regla.md', areas: ['calidad'] },
+            { ruta: 'scripts/util.mjs', areas: ['logistica', 'calidad', 'calidad'] },
+            { ruta: 'scripts/_lib/dato.json', areas: ['comun'] },
+        ],
+    };
+    const instalados = (pc) => Object.keys(foto(pc)).filter((k) => !k.startsWith('.claude/.paquete') && !k.startsWith('.claude/paquete-') && k !== 'perfil.json' && k !== P.REL_PERFIL).sort();
+
+    it('revisarLista acepta las areas del contrato y rechaza una desconocida o mal escrita', () => {
+        expect(P.revisarLista(LISTA_AREAS)).toEqual([]);
+        expect(P.revisarLista({ ...LISTA, incluir: [{ ruta: 'scripts/util.mjs', areas: ['ventas'] }] }).join(' ')).toContain('"ventas" no existe');
+        expect(P.revisarLista({ ...LISTA, incluir: [{ ruta: 'scripts/util.mjs', areas: 'calidad' }] }).join(' ')).toContain('lista de nombres de area');
+        expect(P.areasDeEntrada({ ruta: 'x', areas: ['Calidad', 'calidad', 'comun'] })).toEqual(['calidad', 'comun']);
+        expect(P.areasDeEntrada({ ruta: 'x' })).toEqual(['comun']);
+    });
+
+    it('el manifiesto guarda las areas de cada archivo (ordenadas, sin repetir; sin areas = comun)', () => {
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        expect(pub(origen, nube, LISTA_AREAS).estado).toBe('publicado');
+        const man = JSON.parse(leer(nube, 'MANIFIESTO.json')).archivos;
+        expect(man['.claude/skills/docs-x/SKILL.md'].areas).toEqual(['comun']);
+        expect(man['.claude/rules/regla.md'].areas).toEqual(['calidad']);
+        expect(man['scripts/util.mjs'].areas).toEqual(['calidad', 'logistica']);
+        expect(man['scripts/_lib/dato.json'].areas).toEqual(['comun']);
+    });
+
+    it('cada PC recibe lo comun mas lo suyo: calidad, logistica, sin area y "todas"', () => {
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        pub(origen, nube, LISTA_AREAS);
+        const calidad = dir('pc-calidad');
+        const rc = act(calidad, nube, { area: 'calidad' });
+        expect(rc.estado).toBe('actualizado');
+        expect(rc.area).toBe('calidad');
+        expect(rc.contadores).toMatchObject({ nuevos: 5, fuera_de_area: 0 });
+        const logistica = dir('pc-logistica');
+        const rl = act(logistica, nube, { area: 'Logística' });
+        expect(rl.contadores).toMatchObject({ nuevos: 4, fuera_de_area: 1 });
+        expect(instalados(logistica)).toEqual(['.claude/skills/docs-x/SKILL.md', '.claude/skills/docs-x/ref/a.md', 'scripts/_lib/dato.json', 'scripts/util.mjs']);
+        const sinArea = dir('pc-sin-area');
+        const rs = act(sinArea, nube);
+        expect(rs.area).toBe(null);
+        expect(rs.contadores).toMatchObject({ nuevos: 3, fuera_de_area: 2 });
+        expect(instalados(sinArea)).toEqual(['.claude/skills/docs-x/SKILL.md', '.claude/skills/docs-x/ref/a.md', 'scripts/_lib/dato.json']);
+        const todas = dir('pc-todas');
+        expect(act(todas, nube, { area: 'todas' }).contadores).toMatchObject({ nuevos: 5, fuera_de_area: 0 });
+        // una segunda pasada en cada una: al dia (lo de otras areas no se vuelve a mirar)
+        expect(act(logistica, nube, { area: 'logistica', ahora: F(3) }).estado).toBe('al_dia');
+        expect(act(sinArea, nube, { ahora: F(3) }).estado).toBe('al_dia');
+    });
+
+    it('el area sale de perfil.json (CLAUDE_AREA_HOME, el destino, o el perfil de siempre) cuando no se pasa --area', () => {
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        pub(origen, nube, LISTA_AREAS);
+        const home = dir('home-area');
+        esc(home, 'perfil.json', JSON.stringify({ nombre: 'Marta', area: 'compras' }));
+        expect(P.resolverArea({ destino: dir('x'), env: { CLAUDE_AREA_HOME: home } })).toMatchObject({ area: 'compras' });
+        const pc = dir('pc');
+        esc(pc, 'perfil.json', JSON.stringify({ area: 'calidad' }));
+        expect(act(pc, nube, { env: {} }).contadores.nuevos).toBe(5);
+        const pc2 = dir('pc2');
+        esc(pc2, P.REL_PERFIL, JSON.stringify({ autor: 'Ana Perez - Logistica', area: 'logistica' }));
+        expect(act(pc2, nube, { env: {} }).contadores.nuevos).toBe(4);
+        expect(JSON.parse(leer(pc2, P.REL_INSTALADO)).area).toBe('logistica');
+    });
+
+    it('ROJO: un area que no existe (por --area o en el perfil) frena sin escribir nada', () => {
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        pub(origen, nube, LISTA_AREAS);
+        const pc = dir('pc');
+        const r = act(pc, nube, { area: 'ventas' });
+        expect(r.estado).toBe('error');
+        expect(r.errores.join(' ')).toContain('"ventas" no existe');
+        expect(foto(pc)).toEqual({});
+        esc(pc, 'perfil.json', JSON.stringify({ area: 'marketing' }));
+        const r2 = act(pc, nube, { env: {} });
+        expect(r2.estado).toBe('error');
+        expect(r2.errores.join(' ')).toContain('"marketing"');
+        expect(Object.keys(foto(pc))).toEqual(['perfil.json']);
+    });
+
+    it('cambiar solo el area de un archivo es una publicacion nueva; el archivo que deja de ser de mi area se queda y no se olvida', () => {
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        pub(origen, nube, LISTA_AREAS);
+        const pc = dir('pc-logistica');
+        act(pc, nube, { area: 'logistica' });
+        const soloCalidad = { ...LISTA_AREAS, incluir: LISTA_AREAS.incluir.map((e) => (e.ruta === 'scripts/util.mjs' ? { ...e, areas: ['calidad'] } : e)) };
+        const r = pub(origen, nube, soloCalidad, { ahora: F(2) });
+        expect(r.estado).toBe('publicado');
+        expect(r.areasCambiadas).toEqual(['scripts/util.mjs']);
+        expect(r.cambiados).toEqual([]);
+        const a = act(pc, nube, { area: 'logistica', ahora: F(3) });
+        expect(a.estado).toBe('actualizado');
+        expect(a.contadores.fuera_de_area).toBe(2);
+        expect(a.retirados).toEqual([]);
+        expect(a.cuarentena).toEqual([]);
+        expect(leer(pc, 'scripts/util.mjs')).toBe(V1['scripts/util.mjs']);
+        expect(JSON.parse(leer(pc, P.REL_INSTALADO)).archivos).toHaveProperty(['scripts/util.mjs']);
+        expect(existe(pc, 'scripts/util.mjs.fak-nueva')).toBe(false);
+    });
+
+    it('por linea de comandos: --area y lo que dice la salida', () => {
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        pub(origen, nube, LISTA_AREAS);
+        const pc = dir('pc');
+        const r = spawnSync(process.execPath, [SCRIPT, '--actualizar', '--destino', pc, '--nube', nube, '--area', 'logistica'], { encoding: 'utf8', env: { ...process.env, CLAUDE_AREA_ESTADO: dir('estado-vacio') }, timeout: 60000 });
+        expect(r.status, r.stdout + r.stderr).toBe(0);
+        expect(r.stdout).toContain('4 nuevos');
+        expect(r.stdout).toContain('1 de otras áreas (no se tocan)');
+        expect(r.stdout).toContain('área logistica');
+    });
+});
+
+// ---------------------------------------------------------------------------------------------
+describe('--chequear: en milisegundos, ¿hay version nueva? (no verifica hashes ni copia)', () => {
+    it('da los cinco estados y no escribe nada', () => {
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        const pc = dir('pc1');
+        expect(P.chequear({ destino: pc, nube: null }).estado).toBe('sin_nube');
+        expect(P.chequear({ destino: pc, nube: path.join(tmp, 'no-esta') }).estado).toBe('sin_nube');
+        expect(P.chequear({ destino: pc, nube }).estado).toBe('nube_incompleta');
+        pub(origen, nube);
+        const sinInstalar = P.chequear({ destino: pc, nube });
+        expect(sinInstalar).toMatchObject({ estado: 'sin_instalar', publicada: 1, instalada: null });
+        act(pc, nube);
+        const fotoPc = foto(pc);
+        let fotoNube = foto(nube);
+        const alDia = P.chequear({ destino: pc, nube });
+        expect(alDia).toMatchObject({ estado: 'al_dia', publicada: 1, instalada: 1, firmada: false });
+        medido('--chequear adentro (al_dia)', alDia.ms);
+        expect(alDia.ms).toBeLessThan(50);
+        expect(foto(nube)).toEqual(fotoNube);
+        esc(origen, '.claude/rules/regla.md', '# regla dos\n');
+        pub(origen, nube, LISTA, { ahora: F(3) });
+        fotoNube = foto(nube);
+        expect(P.chequear({ destino: pc, nube })).toMatchObject({ estado: 'hay_novedades', publicada: 2, instalada: 1 });
+        expect(foto(nube)).toEqual(fotoNube);
+        fs.writeFileSync(path.join(nube, 'VERSION.json'), '{"version": 2, "manifest_sh');
+        expect(P.chequear({ destino: pc, nube }).estado).toBe('nube_incompleta');
+        expect(foto(pc)).toEqual(fotoPc);
+    });
+
+    it('por linea de comandos: una linea JSON y los codigos 0 al_dia / 2 hay_novedades / 3 sin nube o incompleta / 5 sin instalar', () => {
+        const correr = (args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8', env: { ...process.env, CLAUDE_AREA_ESTADO: dir('estado-vacio') }, timeout: 60000 });
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        const pc = dir('pc1');
+        expect(correr(['--chequear', '--destino', pc, '--nube', path.join(tmp, 'no-esta')]).status).toBe(3);
+        expect(correr(['--chequear', '--destino', pc, '--nube', nube]).status).toBe(3);
+        pub(origen, nube);
+        expect(correr(['--chequear', '--destino', pc, '--nube', nube]).status).toBe(5);
+        act(pc, nube);
+        const t0 = process.hrtime.bigint();
+        const ok = correr(['--chequear', '--destino', pc, '--nube', nube]);
+        medido('--chequear por linea de comandos, con el arranque de Node', Number(process.hrtime.bigint() - t0) / 1e6);
+        expect(ok.status, ok.stdout + ok.stderr).toBe(0);
+        const j = JSON.parse(ok.stdout.trim());
+        expect(j).toMatchObject({ estado: 'al_dia', publicada: 1, instalada: 1 });
+        expect(typeof j.ms).toBe('number');
+        esc(origen, '.claude/rules/regla.md', '# regla dos\n');
+        pub(origen, nube, LISTA, { ahora: F(3) });
+        const nov = correr(['--chequear', '--destino', pc, '--nube', nube]);
+        expect(nov.status).toBe(2);
+        expect(JSON.parse(nov.stdout.trim()).estado).toBe('hay_novedades');
+    });
+});
+
+// ---------------------------------------------------------------------------------------------
+describe('salud: lo que cada PC deja en la nube al terminar --actualizar', () => {
+    const CAMPOS = ['pc', 'usuario_windows', 'area', 'version_instalada', 'version_publicada_vista', 'ultima_sync_ok', 'firma_ok', 'politica', 'outlook', 'python', 've_Y', 've_Z', 'disco_libre_gb', 'errores', 'escrito'];
+    const IDENT = { usuario: 'marta', pc: 'COMPRAS-02' };
+
+    it('despues de actualizar bien: salud\\<pc>.json con los campos del contrato, atomico, y lo que no sabe en null', () => {
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        pub(origen, nube);
+        const pc = dir('pc1');
+        const r = act(pc, nube, { identidad: IDENT, area: 'compras' });
+        expect(r.estado).toBe('actualizado');
+        expect(r.salud).toBe(path.join(nube, 'salud', 'COMPRAS-02.json'));
+        const s = JSON.parse(leer(nube, 'salud/COMPRAS-02.json'));
+        for (const c of CAMPOS) expect(s, c).toHaveProperty(c);
+        expect(s).toMatchObject({ pc: 'COMPRAS-02', usuario_windows: 'marta', area: 'compras', version_instalada: 1, version_publicada_vista: 1, ultima_sync_ok: P.isoLocal(F(2)), firma_ok: null, politica: null, outlook: null, python: null, ve_Y: null, ve_Z: null, disco_libre_gb: null, errores: [], estado: 'actualizado', escrito: P.isoLocal(F(2)) });
+        expect(fs.readdirSync(path.join(nube, 'salud')).filter((n) => n.endsWith('.tmp'))).toEqual([]);
+        // al dia: se vuelve a escribir (es la señal de vida)
+        const r2 = act(pc, nube, { identidad: IDENT, area: 'compras', ahora: F(3) });
+        expect(r2.estado).toBe('al_dia');
+        expect(JSON.parse(leer(nube, 'salud/COMPRAS-02.json'))).toMatchObject({ estado: 'al_dia', ultima_sync_ok: P.isoLocal(F(3)) });
+    });
+
+    it('tambien cuando sale mal: nube a medias (esperar) y firma rechazada quedan contados, con el error adentro', () => {
+        const { rutaClave, rutaPub } = claves();
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        pub(origen, nube, LISTA, { clavePrivada: rutaClave });
+        const pc = dir('pc1');
+        expect(act(pc, nube, { identidad: IDENT, clavePublica: rutaPub }).estado).toBe('actualizado');
+        expect(JSON.parse(leer(nube, 'salud/COMPRAS-02.json')).firma_ok).toBe(true);
+        esc(origen, '.claude/rules/regla.md', '# regla dos\n');
+        pub(origen, nube, LISTA, { clavePrivada: rutaClave, ahora: F(3) });
+        fs.rmSync(path.join(nube, 'contenido', '.claude', 'rules', 'regla.md'));
+        const e = act(pc, nube, { identidad: IDENT, clavePublica: rutaPub, ahora: F(4) });
+        expect(e.estado).toBe('esperar');
+        const s = JSON.parse(leer(nube, 'salud/COMPRAS-02.json'));
+        expect(s).toMatchObject({ estado: 'esperar', version_instalada: 1, version_publicada_vista: 2, ultima_sync_ok: P.isoLocal(F(2)) });
+        // la espera por OneDrive es normal: va en `mensaje`, y `errores` queda vacio para que el tablero no la pinte de rojo
+        expect(s.errores).toEqual([]);
+        expect(s.mensaje).toContain('OneDrive');
+        refirmar(nube, claves('otras').rutaClave);
+        esc(nube, 'contenido/.claude/rules/regla.md', '# regla dos\n');
+        expect(act(pc, nube, { identidad: IDENT, clavePublica: rutaPub, ahora: F(5) }).estado).toBe('firma_rechazada');
+        expect(JSON.parse(leer(nube, 'salud/COMPRAS-02.json'))).toMatchObject({ estado: 'firma_rechazada', firma_ok: false });
+    });
+
+    it('NO se escribe con --simular, sin nube, ni desde la PC de origen; y si la nube no deja escribir, es un aviso y no un error', () => {
+        const origen = armarOrigen();
+        const nube = dir('nube');
+        pub(origen, nube);
+        const pc = dir('pc1');
+        act(pc, nube, { identidad: IDENT, simular: true });
+        expect(existe(nube, 'salud')).toBe(false);
+        expect(act(pc, null, { identidad: IDENT }).salud).toBeUndefined();
+        esc(origen, P.REL_LISTA, '{}');
+        expect(act(origen, nube, { identidad: IDENT }).estado).toBe('error');
+        expect(existe(nube, 'salud')).toBe(false);
+        // un archivo donde tiene que ir la carpeta salud: no se puede escribir
+        fs.writeFileSync(path.join(nube, 'salud'), 'ocupado');
+        const r = act(pc, nube, { identidad: IDENT });
+        expect(r.estado).toBe('actualizado');
+        expect(r.avisos.join(' ')).toContain('salud');
+    });
+});
+
+// ---------------------------------------------------------------------------------------------
+describe('la carpeta de la nube por proyecto: la de siempre por defecto, CLAUDE POR AREA\\1- PUBLICADO con --proyecto area', () => {
+    it('buscarNube: por defecto Base Claude Ingenieria; con "area", CLAUDE POR AREA\\1- PUBLICADO (si existe la carpeta madre); nada se inventa', () => {
+        const home = dir('home');
+        const vieja = dir('home', 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General', 'Base Claude Ingenieria');
+        expect(P.buscarNube(home)).toBe(vieja);
+        expect(P.buscarNube(home, 'area')).toBe(null);
+        const madre = dir('home', 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General', 'CLAUDE POR AREA');
+        expect(P.buscarNube(home, 'area')).toBe(path.join(madre, '1- PUBLICADO'));
+        expect(P.buscarNube(home, 'otro')).toBe(null);
+        expect(P.nombreNube()).toBe('Base Claude Ingenieria');
+        expect(P.nombreNube('area')).toBe('CLAUDE POR AREA\\1- PUBLICADO');
+        expect(P.carpetaBuzon(path.join(madre, '1- PUBLICADO'))).toBe(path.join(madre, '4- BUZON'));
+        expect(P.carpetaBuzon(vieja)).toBe(vieja);
+    });
+
+    it('publicar crea 1- PUBLICADO si falta (su carpeta madre existe); la de siempre sigue sin inventarse; en areas sin clave no publica', () => {
+        const origen = armarOrigen();
+        const madre = dir('CLAUDE POR AREA');
+        const nube = path.join(madre, '1- PUBLICADO');
+        const { rutaClave } = claves();
+        const sim = pub(origen, nube, LISTA, { simular: true, clavePrivada: rutaClave });
+        expect(sim.estado).toBe('simulado');
+        expect(fs.existsSync(nube)).toBe(false);
+        // sin clave privada, en el proyecto de areas no se publica (ninguna PC lo aceptaria); con --sin-firma explicito si
+        const sinClave = pub(origen, nube, LISTA, { proyecto: 'area' });
+        expect(sinClave.estado).toBe('rechazado');
+        expect(sinClave.errores.join(' ')).toContain('toda publicación va firmada');
+        expect(fs.existsSync(nube)).toBe(false);
+        const r = pub(origen, nube, LISTA, { proyecto: 'area', clavePrivada: rutaClave });
+        expect(r.estado).toBe('publicado');
+        expect(r.firmada).toBe(true);
+        expect(P.leerPublicacion(nube).estado).toBe('ok');
+        const otra = pub(origen, path.join(tmp, 'Base Claude Ingenieria'), LISTA);
+        expect(otra.estado).toBe('rechazado');
+        expect(otra.errores.join(' ')).toContain('no existe');
+        expect(pub(origen, path.join(tmp, 'sin-madre', '1- PUBLICADO'), LISTA).estado).toBe('rechazado');
+    });
+
+    it('en la estructura de areas, salud y aportes van a 4- BUZON (hermana de 1- PUBLICADO)', () => {
+        const origen = armarOrigen();
+        const madre = dir('CLAUDE POR AREA');
+        const nube = path.join(madre, '1- PUBLICADO');
+        const { rutaClave, rutaPub } = claves();
+        pub(origen, nube, LISTA, { proyecto: 'area', clavePrivada: rutaClave });
+        const pc = dir('pc1');
+        const r = act(pc, nube, { identidad: { usuario: 'u', pc: 'PC-01' }, clavePublica: rutaPub });
+        expect(r.estado).toBe('actualizado');
+        expect(r.salud).toBe(path.join(madre, '4- BUZON', 'salud', 'PC-01.json'));
+        expect(fs.existsSync(path.join(nube, 'salud'))).toBe(false);
+        esc(pc, 'scripts/mio.py', 'print(1)\n');
+        const ap = P.aportar({ ruta: path.join(pc, 'scripts', 'mio.py'), autor: 'Ana Maria Perez - Compras', que: 'x', nube, destino: pc, identidad: NOIDENT, ahora: F(1) });
+        expect(ap.estado).toBe('aportado');
+        expect(ap.carpeta.startsWith(path.join(madre, '4- BUZON', 'aportes'))).toBe(true);
+        expect(P.listarAportes({ nube })).toHaveLength(1);
+    });
+
+    it('resolverEntorno: CLAUDE_AREA_NUBE/HOME/CLAVE/ESTADO del contrato; --nube, --destino y --clave le ganan', () => {
+        const raiz = dir('raiz');
+        const vacio = { USERPROFILE: dir('casa') };
+        const porDefecto = P.resolverEntorno({}, vacio, raiz);
+        expect(porDefecto).toMatchObject({ proyecto: 'ingenieria', nube: null, origen: raiz, destino: raiz, clavePublica: null });
+        expect(porDefecto.clavePrivada).toBe(path.join(vacio.USERPROFILE, '.claude-area', 'publicador.key'));
+        const nubeArea = dir('nube area');
+        const home = dir('home pc');
+        const estado = dir('estado');
+        const pubKey = esc(estado, 'publicador.pub', 'x');
+        const env = { CLAUDE_AREA_NUBE: nubeArea, CLAUDE_AREA_HOME: home, CLAUDE_AREA_CLAVE: path.join(tmp, 'k', 'publicador.key'), CLAUDE_AREA_ESTADO: estado };
+        const area = P.resolverEntorno({}, env, raiz);
+        expect(area).toMatchObject({ proyecto: 'area', nube: path.join(nubeArea, '1- PUBLICADO'), destino: path.join(home, 'publicado'), clavePrivada: path.join(tmp, 'k', 'publicador.key'), clavePublica: pubKey });
+        const manual = P.resolverEntorno({ nube: dir('otra'), destino: dir('dest'), clave: path.join(tmp, 'c.key'), 'clave-publica': path.join(tmp, 'c.pub'), proyecto: 'ingenieria' }, env, raiz);
+        expect(manual).toMatchObject({ proyecto: 'ingenieria', nube: dir('otra'), destino: dir('dest'), clavePrivada: path.join(tmp, 'c.key'), clavePublica: path.join(tmp, 'c.pub') });
+        expect(P.resolverEntorno({ proyecto: 'ventas' }, env, raiz).error).toContain('--proyecto');
+    });
+
+    // -----------------------------------------------------------------------------------------
+    // Revision del coordinador (01/10): en el proyecto `area` una PC SIN clave publica no instala nada.
+    // -----------------------------------------------------------------------------------------
+    describe('proyecto area: la PC tiene que poder comprobar quien publico', () => {
+        /** Una nube `CLAUDE POR AREA\1- PUBLICADO` con la v1 publicada (firmada salvo que se pida lo contrario). */
+        function nubeDeArea({ firmada = true } = {}) {
+            const { rutaClave, rutaPub } = claves();
+            const madre = dir('CLAUDE POR AREA');
+            const nube = path.join(madre, '1- PUBLICADO');
+            const origen = armarOrigen();
+            const r = pub(origen, nube, LISTA, firmada ? { proyecto: 'area', clavePrivada: rutaClave } : { proyecto: 'area', sinFirma: true });
+            expect(r.estado).toBe('publicado');
+            return { rutaClave, rutaPub, madre, nube, origen };
+        }
+
+        it('VERDE: con la clave publica instala. ROJO: sin clave no toca nada, lo dice en una linea y la salud queda en rojo', () => {
+            const { rutaPub, madre, nube } = nubeDeArea();
+            const conClave = act(dir('pc-con-clave'), nube, { clavePublica: rutaPub, identidad: { usuario: 'u', pc: 'CON-CLAVE' } });
+            expect(conClave).toMatchObject({ estado: 'actualizado', firma: 'valida' });
+            const sinClave = dir('pc-sin-clave');
+            const r = act(sinClave, nube, { identidad: { usuario: 'u', pc: 'SIN-CLAVE' } });
+            expect(r.estado).toBe('sin_clave');
+            expect(r.firma).toBe('sin_clave');
+            expect(r.mensaje).toContain('le falta la clave');
+            expect(r.mensaje).toContain('Avisale al administrador');
+            expect(foto(sinClave)).toEqual({});
+            const s = JSON.parse(fs.readFileSync(path.join(madre, '4- BUZON', 'salud', 'SIN-CLAVE.json'), 'utf8'));
+            expect(s).toMatchObject({ estado: 'sin_clave', firma_ok: false, version_instalada: 0 });
+            expect(s.errores).toHaveLength(1);
+            // tambien si la nube se llama de otra forma pero se pidio el proyecto area; y en el proyecto de siempre sigue entrando (compatibilidad)
+            const { rutaClave: otraClave } = claves('otras');
+            const otraNube = dir('nube-cualquiera');
+            expect(pub(armarOrigen(), otraNube, LISTA, { clavePrivada: otraClave }).estado).toBe('publicado');
+            expect(act(dir('pc3'), otraNube, { proyecto: 'area' }).estado).toBe('sin_clave');
+            expect(act(dir('pc4'), otraNube).estado).toBe('actualizado');
+            expect(P.exigeFirma({ nube, proyecto: 'ingenieria' })).toBe(true);
+            expect(P.exigeFirma({ nube: otraNube, proyecto: 'ingenieria' })).toBe(false);
+        });
+
+        it('una nube de area publicada SIN firma (--sin-firma) no entra en ninguna PC: sin clave es sin_clave, con clave es sin_firma', () => {
+            const { rutaPub, nube } = nubeDeArea({ firmada: false });
+            expect(act(dir('pc1'), nube).estado).toBe('sin_clave');
+            const r = act(dir('pc2'), nube, { clavePublica: rutaPub });
+            expect(r.estado).toBe('firma_rechazada');
+            expect(r.firma).toBe('sin_firma');
+            expect(foto(dir('pc2'))).toEqual({});
+        });
+
+        it('por linea de comandos: sin clave sale con 4 y no copia nada; con publicador.pub en CLAUDE_AREA_ESTADO, 0', () => {
+            const correr = (args, env = {}) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8', env: { ...process.env, CLAUDE_AREA_ESTADO: dir('estado-vacio'), ...env }, timeout: 60000 });
+            const { rutaPub, nube } = nubeDeArea();
+            const pc = dir('pc');
+            const porNombre = correr(['--actualizar', '--destino', pc, '--nube', nube]);
+            expect(porNombre.status).toBe(P.CODIGO_SALIDA_FIRMA);
+            expect(porNombre.stderr).toContain('le falta la clave');
+            const porProyecto = correr(['--actualizar', '--destino', pc, '--nube', nube, '--proyecto', 'area']);
+            expect(porProyecto.status).toBe(P.CODIGO_SALIDA_FIRMA);
+            expect(foto(pc)).toEqual({});
+            const estado = dir('estado');
+            fs.copyFileSync(rutaPub, path.join(estado, 'publicador.pub'));
+            const ok = correr(['--actualizar', '--destino', pc, '--nube', nube], { CLAUDE_AREA_ESTADO: estado });
+            expect(ok.status, ok.stdout + ok.stderr).toBe(0);
+            expect(ok.stdout).toContain('firma verificada');
+        });
+    });
+
+    // -----------------------------------------------------------------------------------------
+    // Revision del coordinador (01/10): la version nunca retrocede.
+    // -----------------------------------------------------------------------------------------
+    describe('la version nunca retrocede', () => {
+        const IDENT = { usuario: 'marta', pc: 'COMPRAS-02' };
+        /** v1 y v2 firmadas; la PC (con clave publica) en la v2. Devuelve lo necesario para poner la v1 vieja en la raiz. */
+        function pcEnV2() {
+            const { rutaClave, rutaPub } = claves();
+            const origen = armarOrigen();
+            const nube = dir('nube');
+            const pc = dir('pc1');
+            expect(pub(origen, nube, LISTA, { clavePrivada: rutaClave }).version).toBe(1);
+            esc(origen, '.claude/rules/regla.md', '# regla dos\n');
+            expect(pub(origen, nube, LISTA, { clavePrivada: rutaClave, ahora: F(2) }).version).toBe(2);
+            expect(act(pc, nube, { clavePublica: rutaPub, identidad: IDENT, ahora: F(3) }).estado).toBe('actualizado');
+            return { rutaClave, rutaPub, origen, nube, pc };
+        }
+        /**
+         * Lo que haria alguien con escritura: vuelve a poner en la raiz la v1 ENTERA (manifiesto y firma legitimos
+         * y su contenido, que esta en historial\_objetos), con un VERSION.json coherente que dice `numero`.
+         */
+        function reponerV1(nube, numero) {
+            const man = fs.readFileSync(path.join(nube, 'historial', 'v1', 'MANIFIESTO.json'));
+            const sig = fs.readFileSync(path.join(nube, 'historial', 'v1', 'MANIFIESTO.sig'));
+            for (const [rel, e] of Object.entries(JSON.parse(man.toString('utf8')).archivos)) {
+                esc(nube, `contenido/${rel}`, fs.readFileSync(path.join(nube, 'historial', '_objetos', e.sha256.slice(0, 2), e.sha256)));
+            }
+            fs.writeFileSync(path.join(nube, 'MANIFIESTO.json'), man);
+            fs.writeFileSync(path.join(nube, 'MANIFIESTO.sig'), sig);
+            const v = leerVersion(nube);
+            v.version = numero;
+            v.manifest_sha256 = P.sha256(man);
+            v.firma.sha256 = P.sha256(sig);
+            escribirVersion(nube, v);
+        }
+
+        it('ROJO: la v1 (firma legitima) vuelta a poner en la raiz: version_anterior, nada se toca, la salud lo anota como error; una PC nueva si la instala', () => {
+            const { rutaPub, nube, pc } = pcEnV2();
+            reponerV1(nube, 1);
+            expect(P.leerPublicacion(nube).estado).toBe('ok');   // es una publicacion valida y firmada: solo la version la delata
+            const antes = foto(pc);
+            const r = act(pc, nube, { clavePublica: rutaPub, identidad: IDENT, ahora: F(5) });
+            expect(r.estado).toBe('version_anterior');
+            expect(r.firma).toBe('valida');
+            expect(r.mensaje).toContain('más vieja (1)');
+            expect(r.mensaje).toContain('(2)');
+            expect(foto(pc)).toEqual(antes);
+            expect(leer(pc, '.claude/rules/regla.md')).toBe('# regla dos\n');
+            const s = JSON.parse(leer(nube, 'salud/COMPRAS-02.json'));
+            expect(s).toMatchObject({ estado: 'version_anterior', version_instalada: 2, version_publicada_vista: 1 });
+            expect(s.errores).toHaveLength(1);
+            // sin clave publica (proyecto de siempre) tampoco retrocede
+            expect(act(pc, nube, { identidad: IDENT, ahora: F(6) }).estado).toBe('version_anterior');
+            // una PC sin nada instalado no tiene contra que comparar: instala la v1 como siempre
+            expect(act(dir('pc-nueva'), nube, { clavePublica: rutaPub, ahora: F(6) })).toMatchObject({ estado: 'actualizado', version: 1 });
+        });
+
+        it('ROJO: VERSION.json reescrito con un numero igual o mas alto sobre el manifiesto viejo tampoco pasa: la version viaja adentro del manifiesto firmado', () => {
+            const { rutaPub, nube, pc } = pcEnV2();
+            const antes = foto(pc);
+            for (const numero of [2, 3, 99]) {
+                reponerV1(nube, numero);
+                expect(P.leerPublicacion(nube).estado, String(numero)).toBe('manifiesto_invalido');
+                const r = act(pc, nube, { clavePublica: rutaPub, identidad: IDENT, ahora: F(5) });
+                expect(r.estado, String(numero)).toBe('error');
+                expect(r.errores.join(' '), String(numero)).toContain('dice ser la versión 1');
+                expect(foto(pc), String(numero)).toEqual(antes);
+            }
+        });
+
+        it('VERDE: el rollback legitimo entra porque sale como version NUEVA; por linea de comandos la vieja sale con 4', () => {
+            const { rutaClave, rutaPub, nube, pc } = pcEnV2();
+            const rb = P.publicar({ origen: dir('origen'), nube, lista: null, rollback: 1, clavePrivada: rutaClave, identidad: NOIDENT, ahora: F(4) });
+            expect(rb).toMatchObject({ estado: 'publicado', version: 3 });
+            const a = act(pc, nube, { clavePublica: rutaPub, identidad: IDENT, ahora: F(5) });
+            expect(a).toMatchObject({ estado: 'actualizado', version: 3 });
+            expect(leer(pc, '.claude/rules/regla.md')).toBe('# regla uno\n');
+            reponerV1(nube, 1);
+            const cli = spawnSync(process.execPath, [SCRIPT, '--actualizar', '--destino', pc, '--nube', nube, '--clave-publica', rutaPub], { encoding: 'utf8', env: { ...process.env, CLAUDE_AREA_ESTADO: dir('estado-vacio') }, timeout: 60000 });
+            expect(cli.status).toBe(P.CODIGO_SALIDA_FIRMA);
+            expect(cli.stderr).toContain('más vieja');
+            expect(JSON.parse(leer(pc, P.REL_INSTALADO)).version).toBe(3);
+        });
+    });
+
+    it('de punta a punta por linea de comandos con las variables del contrato: generar clave, publicar, actualizar, chequear, salud', () => {
+        const nubeArea = dir('CLAUDE POR AREA');
+        const home = dir('ClaudeBarack');
+        const estado = dir('estado');
+        const clave = path.join(tmp, 'claves', 'publicador.key');
+        const origen = armarOrigen();
+        const lista = esc(tmp, 'lista.json', JSON.stringify(LISTA));
+        const env = { ...process.env, CLAUDE_AREA_NUBE: nubeArea, CLAUDE_AREA_HOME: home, CLAUDE_AREA_CLAVE: clave, CLAUDE_AREA_ESTADO: estado };
+        const correr = (args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8', env, timeout: 60000 });
+        expect(correr(['--generar-clave']).status).toBe(0);
+        fs.copyFileSync(path.join(path.dirname(clave), 'publicador.pub'), path.join(estado, 'publicador.pub'));
+        esc(home, 'perfil.json', JSON.stringify({ nombre: 'Marta', area: 'compras' }));
+        const p = correr(['--publicar', '--origen', origen, '--lista', lista]);
+        expect(p.status, p.stdout + p.stderr).toBe(0);
+        expect(p.stdout).toContain(path.join(nubeArea, '1- PUBLICADO'));
+        expect(p.stdout).toContain('firmada');
+        expect(correr(['--chequear']).status).toBe(5);
+        const a = correr(['--actualizar']);
+        expect(a.status, a.stdout + a.stderr).toBe(0);
+        expect(a.stdout).toContain('firma verificada');
+        expect(a.stdout).toContain('área compras');
+        expect(fs.existsSync(path.join(home, 'publicado', 'scripts', 'util.mjs'))).toBe(true);
+        expect(correr(['--chequear']).status).toBe(0);
+        expect(fs.readdirSync(path.join(nubeArea, '4- BUZON', 'salud'))).toHaveLength(1);
+        expect(correr(['--donde']).stdout.trim()).toBe(path.join(nubeArea, '1- PUBLICADO'));
     });
 });

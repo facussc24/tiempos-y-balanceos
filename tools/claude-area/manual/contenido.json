@@ -1,0 +1,398 @@
+{
+  "_como_se_usa": [
+    "Estas son las paginas del manual, como DATOS. El programa generar_manual.py las lee y arma el PDF y el PowerPoint.",
+    "titulo: maximo 6 palabras. texto: de 2 a 4 renglones cortos; **asi** va en negrita; un renglon que empieza con '1. ' sale numerado.",
+    "capturas: 1 o 2 por pagina (la primera es la grande). El archivo es capturas/NN-nombre.png.",
+    "marcas: lo que se dibuja en rojo ARRIBA de la captura, en porcentaje de la imagen (0 a 100, desde arriba a la izquierda).",
+    "  recuadro: x, y (esquina de arriba a la izquierda), ancho, alto. Con 'numero' le pone un circulo con ese numero.",
+    "  flecha: desde [x, y] hasta [x, y]. La punta queda en 'hasta'.",
+    "  posicion_confirmada: false = la posicion es ESTIMADA (la captura todavia no existia). Con la captura sacada: python generar_manual.py --grilla, se lee la posicion real en capturas/_grilla/, se corrige aca y se pone true.",
+    "a_confirmar: lo que todavia no esta verificado. Sale impreso en una franja ambar al pie de la pagina. Cuando se confirma, se borra el renglon de aca y la franja desaparece.",
+    "error_que_evita: para que esta la pagina. No se imprime (con --notas va a las notas del PowerPoint).",
+    "activa: false saca la pagina del manual y las demas se renumeran solas.",
+    "Las llaves {CARPETA} y {CONTACTO} se reemplazan por lo que dice 'variables'."
+  ],
+
+  "manual": {
+    "archivo": "Manual de arranque - Claude Barack",
+    "pie": "Claude en Barack · Manual de arranque",
+    "version": "Octubre 2026"
+  },
+
+  "variables": {
+    "CARPETA": "C:\\ClaudeBarack\\Trabajo",
+    "CONTACTO": "Facundo"
+  },
+
+  "a_confirmar_general": [
+    "Idioma de la app: los nombres de este manual son los de la documentacion (en ingles). Si la app de la PC se ve en castellano, va lo que se ve en la captura.",
+    "Que la pestaña correcta para el trabajo de cada area sea Code (la documentacion la describe como la de programar).",
+    "Releer .sgc-cache/claude-por-area/modelos-y-esfuerzo.md el dia de imprimir: los modelos cambian cada pocas semanas."
+  ],
+
+  "paginas": [
+    {
+      "numero": 1,
+      "titulo": "Claude en Barack",
+      "activa": true,
+      "capturas": [
+        {
+          "archivo": "capturas/01-respuesta-con-cita.png",
+          "que_se_ve": "La app en Code, con la pregunta de las tres piezas malas ya respondida y, al final de la respuesta, el documento y la revisión (P-09.1 rev B.1).",
+          "marcas": [
+            { "tipo": "recuadro", "x": 22, "y": 66, "ancho": 50, "alto": 8, "posicion_confirmada": false }
+          ]
+        }
+      ],
+      "texto": [
+        "Claude lee los procedimientos e instructivos de Barack y contesta.",
+        "Cada respuesta dice de qué documento salió.",
+        "Vos decidís qué hacer con eso."
+      ],
+      "error_que_evita": "Creer que es un buscador de internet o que sabe las cosas por su cuenta.",
+      "a_confirmar": []
+    },
+
+    {
+      "numero": 2,
+      "titulo": "Abrir Claude",
+      "activa": true,
+      "capturas": [
+        {
+          "archivo": "capturas/02-menu-inicio.png",
+          "que_se_ve": "El menú Inicio de Windows abierto, con la palabra Claude escrita en el buscador y el programa Claude primero en la lista.",
+          "marcas": [
+            { "tipo": "recuadro", "x": 3, "y": 14, "ancho": 38, "alto": 14, "posicion_confirmada": false }
+          ]
+        }
+      ],
+      "texto": [
+        "Apretá la tecla de Windows y escribí **Claude**.",
+        "Hacé clic en el programa, que aparece primero.",
+        "Si te pide iniciar sesión o pagar, no sigas: avisale a {CONTACTO}."
+      ],
+      "error_que_evita": "Buscarlo en el navegador, o iniciar sesión con una cuenta propia.",
+      "a_confirmar": [
+        { "donde": "plan", "que": "a quién se avisa y por dónde" }
+      ]
+    },
+
+    {
+      "numero": 3,
+      "titulo": "La pestaña es Code",
+      "activa": true,
+      "capturas": [
+        {
+          "archivo": "capturas/03-tres-pestanas.png",
+          "que_se_ve": "La app recién abierta, sin ninguna conversación: arriba, en el medio, las tres pestañas Chat, Cowork y Code.",
+          "marcas": [
+            { "tipo": "recuadro", "x": 53, "y": 2, "ancho": 8, "alto": 6, "posicion_confirmada": false },
+            { "tipo": "flecha", "desde": [72, 24], "hasta": [62, 9], "posicion_confirmada": false }
+          ]
+        }
+      ],
+      "texto": [
+        "Arriba, en el medio, hay tres pestañas: Chat, Cowork y Code.",
+        "La nuestra es **Code**. Hacé clic ahí.",
+        "Las otras dos no las usamos."
+      ],
+      "error_que_evita": "Escribir la pregunta en Chat.",
+      "a_confirmar": []
+    },
+
+    {
+      "numero": 4,
+      "titulo": "Local y la carpeta",
+      "activa": true,
+      "capturas": [
+        {
+          "archivo": "capturas/04-local-y-select-folder.png",
+          "que_se_ve": "Pestaña Code, conversación nueva sin empezar: se ve Local elegido y el botón Select folder.",
+          "marcas": [
+            { "tipo": "recuadro", "x": 30, "y": 60, "ancho": 10, "alto": 6, "numero": 1, "posicion_confirmada": false },
+            { "tipo": "recuadro", "x": 44, "y": 60, "ancho": 16, "alto": 6, "numero": 2, "posicion_confirmada": false }
+          ]
+        },
+        {
+          "archivo": "capturas/05-carpeta-elegida.png",
+          "que_se_ve": "La ventana para elegir carpeta, con la carpeta de Barack marcada. Sin el árbol de carpetas de al lado.",
+          "rotulo": "3. La carpeta",
+          "marcas": [
+            { "tipo": "recuadro", "x": 25, "y": 30, "ancho": 45, "alto": 8, "posicion_confirmada": false }
+          ]
+        }
+      ],
+      "texto": [
+        "1. Elegí **Local**: así Claude trabaja en esta computadora.",
+        "2. Apretá **Select folder** (quiere decir «elegir carpeta»).",
+        "3. Elegí la carpeta **{CARPETA}**.",
+        "Siempre esa: con otra, Claude no tiene las reglas de Barack."
+      ],
+      "error_que_evita": "Elegir Cloud, o cualquier otra carpeta.",
+      "a_confirmar": [
+        { "donde": "plan", "que": "nombre y lugar de la carpeta (si se entrega un acceso directo que ya abre ahí, esta página cambia)" },
+        { "donde": "app", "que": "si la primera vez aparece un cartel al elegir la carpeta" }
+      ]
+    },
+
+    {
+      "numero": 5,
+      "titulo": "Decile tu puesto",
+      "activa": true,
+      "capturas": [
+        {
+          "archivo": "capturas/06-decir-el-puesto.png",
+          "que_se_ve": "El mensaje «Soy supervisor de producción. ¿Qué funciones tiene mi puesto?» ya enviado y, debajo, el comienzo de la respuesta con «F-24 Supervisor de Producción, rev I».",
+          "marcas": [
+            { "tipo": "recuadro", "x": 25, "y": 18, "ancho": 60, "alto": 9, "posicion_confirmada": false }
+          ]
+        }
+      ],
+      "texto": [
+        "Escribí abajo y apretá **Enter**.",
+        "Empezá por tu puesto: «Soy supervisor de producción».",
+        "Claude contesta distinto a un supervisor que a un comprador.",
+        "No hace falta escribir bien: alcanza con que se entienda."
+      ],
+      "error_que_evita": "Preguntar sin decir quién sos y recibir una respuesta general.",
+      "a_confirmar": [
+        { "donde": "plan", "que": "si el sistema ya sabe el puesto de cada persona, esta página cambia" }
+      ]
+    },
+
+    {
+      "numero": 6,
+      "titulo": "Preguntá y mirá la cita",
+      "activa": true,
+      "capturas": [
+        {
+          "archivo": "capturas/07-respuesta-tres-piezas.png",
+          "que_se_ve": "La respuesta completa a «¿Qué hago si en la línea salen tres piezas malas seguidas con el mismo defecto?», con el renglón del documento y la revisión a la vista.",
+          "marcas": [
+            { "tipo": "recuadro", "x": 22, "y": 78, "ancho": 50, "alto": 8, "posicion_confirmada": false }
+          ]
+        },
+        {
+          "archivo": "capturas/08-documento-original.png",
+          "que_se_ve": "El original P-09.1 rev B.1 abierto en solo lectura, encuadrado en el cuadro de las tres piezas. Sin el pie (trae nombres de personas).",
+          "rotulo": "El documento original",
+          "marcas": [
+            { "tipo": "recuadro", "x": 15, "y": 40, "ancho": 70, "alto": 20, "posicion_confirmada": false }
+          ]
+        }
+      ],
+      "texto": [
+        "Al final de la respuesta están el documento y la revisión.",
+        "Si la decisión es importante, abrí ese documento y controlalo.",
+        "Si Claude dice que no lo encontró, preguntale a tu jefe."
+      ],
+      "error_que_evita": "Tomar la respuesta como una orden sin mirar de dónde salió.",
+      "a_confirmar": []
+    },
+
+    {
+      "numero": 7,
+      "titulo": "Qué le puedo pedir",
+      "activa": true,
+      "tarjetas": [
+        { "area": "Calidad", "pregunta": "¿En cuánto tiempo se manda una notificación al proveedor?", "documento": "I-AC-010" },
+        { "area": "Logística", "pregunta": "¿Cómo estibo el producto terminado?", "documento": "I-LG-010" },
+        { "area": "Compras", "pregunta": "El proveedor no me confirmó la orden de compra. ¿Qué pasa?", "documento": "I-CO-001" },
+        { "area": "Ingeniería", "pregunta": "¿Cómo se codifica una máquina o un calibre?", "documento": "I-IN-004" },
+        { "area": "Producción", "pregunta": "¿Qué hago si salen tres piezas malas seguidas?", "documento": "P-09.1" },
+        { "area": "Mantenimiento", "pregunta": "¿Qué miro en el mantenimiento autónomo?", "documento": "I-MT-001" },
+        { "area": "Recursos Humanos", "pregunta": "¿Cómo pido una capacitación para mi gente?", "documento": "P-18" },
+        { "area": "Dirección", "pregunta": "¿Qué hay que llevar a la revisión por la Dirección?", "documento": "MC-04" }
+      ],
+      "texto": [
+        "Escribilo como se lo dirías a un compañero.",
+        "Cuanto más concreto, mejor: la pieza, el proveedor, el documento."
+      ],
+      "error_que_evita": "No saber por dónde empezar.",
+      "a_confirmar": []
+    },
+
+    {
+      "numero": 8,
+      "titulo": "Pedile un mail",
+      "activa": true,
+      "capturas": [
+        {
+          "archivo": "capturas/09-mail-en-outlook.png",
+          "que_se_ve": "Solo la ventana del mail nuevo de Outlook: Para, asunto, dos renglones y «Saludos». El botón Enviar a la vista. Sin la bandeja de entrada atrás.",
+          "marcas": [
+            { "tipo": "recuadro", "x": 1, "y": 22, "ancho": 9, "alto": 14, "posicion_confirmada": false }
+          ]
+        }
+      ],
+      "texto": [
+        "Pedíselo con tus palabras: a quién va y qué necesitás.",
+        "Claude lo escribe y lo deja abierto en Outlook. No lo manda.",
+        "Leelo entero. Sale recién cuando vos apretás **Enviar**."
+      ],
+      "error_que_evita": "Creer que ya se mandó, o mandarlo sin leer a quién va.",
+      "a_confirmar": [
+        { "donde": "plan", "que": "en las PC de área, si el mail queda abierto en Outlook o guardado en Borradores" }
+      ]
+    },
+
+    {
+      "numero": 9,
+      "titulo": "Pasale un archivo",
+      "activa": true,
+      "capturas": [
+        {
+          "archivo": "capturas/10-boton-mas-adjunto.png",
+          "que_se_ve": "La caja de texto con el botón + a la vista y un archivo ya adjunto (el PDF de un instructivo).",
+          "marcas": [
+            { "tipo": "recuadro", "x": 22, "y": 86, "ancho": 5, "alto": 8, "posicion_confirmada": false }
+          ]
+        }
+      ],
+      "texto": [
+        "Con el botón **+** le pasás un archivo o una foto.",
+        "Sirve para un PDF, un documento o una captura de pantalla.",
+        "Después decile qué querés: «resumime esto»."
+      ],
+      "error_que_evita": "Copiar y pegar a mano un documento entero.",
+      "a_confirmar": []
+    },
+
+    {
+      "numero": 10,
+      "titulo": "Qué modelo elijo",
+      "activa": true,
+      "capturas": [
+        {
+          "archivo": "capturas/11-modelo-y-nivel.png",
+          "que_se_ve": "La lista de modelos abierta, al lado del botón de enviar, con Opus 5.5 elegido; y el nivel a la vista.",
+          "marcas": [
+            { "tipo": "recuadro", "x": 55, "y": 55, "ancho": 28, "alto": 8, "posicion_confirmada": false }
+          ]
+        }
+      ],
+      "tabla": {
+        "encabezado": ["Para", "Modelo", "Nivel"],
+        "filas": [
+          ["Lo de todos los días", "Opus 5.5", "Medio"],
+          ["Un mail o un texto corto", "Sonnet 5.5", "Medio"],
+          ["Comparar planillas o revisar muchos archivos", "Opus 5.5", "Alto"],
+          ["Algo mecánico y repetido", "Opus 5.5", "Bajo"]
+        ],
+        "resaltar": 0
+      },
+      "texto": [
+        "Si no sabés, no toques nada: **Opus 5.5** en nivel **Medio**.",
+        "Se cambia en la lista que está al lado del botón de enviar.",
+        "**Máximo**, **Fable** y el modo rápido no se usan sin avisar."
+      ],
+      "error_que_evita": "Poner todo en Máximo «para que salga mejor» y dejar sin cupo al resto.",
+      "a_confirmar": [
+        { "donde": "app", "que": "cómo se llama y dónde está el control del nivel; si los niveles se llaman Bajo, Medio, Alto y Máximo" }
+      ]
+    },
+
+    {
+      "numero": 11,
+      "titulo": "Un tema, una conversación",
+      "activa": true,
+      "capturas": [
+        {
+          "archivo": "capturas/12-new-session.png",
+          "que_se_ve": "La barra del costado con el botón + New session. La lista de conversaciones vacía, o con una sola de prueba.",
+          "marcas": [
+            { "tipo": "recuadro", "x": 1, "y": 8, "ancho": 18, "alto": 6, "posicion_confirmada": false }
+          ]
+        }
+      ],
+      "texto": [
+        "Tema nuevo, conversación nueva: **+ New session** («sesión nueva»).",
+        "Si lo corregiste dos veces y sigue mal, también: empezá de nuevo.",
+        "Una conversación de todo el día se confunde y gasta el cupo de todos."
+      ],
+      "error_que_evita": "Seguir todo el día en una sola conversación.",
+      "a_confirmar": []
+    },
+
+    {
+      "numero": 12,
+      "titulo": "Qué no hace solo",
+      "activa": true,
+      "capturas": [
+        {
+          "archivo": "capturas/13-mail-esperando-enviar.png",
+          "que_se_ve": "La misma ventana del mail de la captura 09, un poco más abierta, con el cursor arriba del botón Enviar.",
+          "marcas": [
+            { "tipo": "recuadro", "x": 1, "y": 22, "ancho": 9, "alto": 14, "posicion_confirmada": false }
+          ]
+        }
+      ],
+      "texto": [
+        "No borra archivos por su cuenta.",
+        "No manda un mail si vos no apretás **Enviar**.",
+        "No muestra los mails de Dirección ni de Recursos Humanos.",
+        "Se puede equivocar: por eso dice de dónde sacó cada respuesta."
+      ],
+      "error_que_evita": "Pedirle que decida, o confiar sin controlar.",
+      "a_confirmar": [
+        { "donde": "plan", "que": "las tres primeras frases valen recién cuando estén probadas en una PC de área; la que no esté probada, se saca" }
+      ]
+    },
+
+    {
+      "numero": 13,
+      "titulo": "Si Claude te pide permiso",
+      "activa": true,
+      "capturas": [
+        {
+          "archivo": "capturas/14-accept-reject.png",
+          "que_se_ve": "Un cambio que propone Claude, con los botones Accept y Reject a la vista.",
+          "marcas": [
+            { "tipo": "recuadro", "x": 60, "y": 80, "ancho": 25, "alto": 8, "posicion_confirmada": false }
+          ]
+        }
+      ],
+      "texto": [
+        "A veces Claude pregunta antes de hacer algo.",
+        "Leé qué va a hacer. Si es lo que pediste: **Accept** («aceptar»).",
+        "Si no entendés qué es: **Reject** («rechazar») y avisá."
+      ],
+      "error_que_evita": "Aceptar todo sin leer.",
+      "a_confirmar": [
+        { "donde": "plan", "que": "esta página va solo si el sistema queda pidiendo permiso; si no, se pone \"activa\": false" }
+      ]
+    },
+
+    {
+      "numero": 14,
+      "titulo": "Si algo no anda",
+      "activa": true,
+      "capturas": [
+        {
+          "archivo": "capturas/16-boton-detener.png",
+          "que_se_ve": "Claude trabajando, con el botón de detener a la vista.",
+          "marcas": [
+            { "tipo": "recuadro", "x": 88, "y": 86, "ancho": 6, "alto": 9, "posicion_confirmada": false }
+          ]
+        },
+        {
+          "archivo": "capturas/15-cartel-limite.png",
+          "que_se_ve": "El cartel de límite de uso («You've hit your session limit»), con la hora en que vuelve.",
+          "rotulo": "El cartel de límite de uso",
+          "opcional": true,
+          "marcas": []
+        }
+      ],
+      "texto": [
+        "Se trabó o contesta cualquier cosa: detenelo y empezá de nuevo.",
+        "Dice **session limit** («límite de uso»): esperá a la hora que marca.",
+        "Pide iniciar sesión o pagar, o da un error: avisale a {CONTACTO}."
+      ],
+      "error_que_evita": "Reinstalar, cambiar de cuenta, o cambiar de modelo para saltear el límite (no sirve: el límite es de todos los modelos).",
+      "a_confirmar": [
+        { "donde": "app", "que": "cómo se ven hoy el botón de detener y el cartel de límite" },
+        { "donde": "plan", "que": "a quién se avisa y por dónde" }
+      ]
+    }
+  ]
+}

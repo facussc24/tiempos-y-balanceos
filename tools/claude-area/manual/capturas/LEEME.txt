@@ -1,0 +1,144 @@
+CAPTURAS DEL MANUAL DE ARRANQUE DE CLAUDE EN BARACK
+====================================================
+
+En esta carpeta van las capturas de pantalla del manual. Cuando están, se corre
+
+    python generar_manual.py          (desde tools\claude-area\manual\)
+
+y salen el PDF y el PowerPoint en exports\CLAUDES_POR_AREA_20261001\.
+Si falta una captura, el manual sale igual con un cartel gris en su lugar y el programa avisa cuál falta.
+
+
+PARA TODAS LAS CAPTURAS
+-----------------------
+- Archivo PNG, con el nombre EXACTO de la lista de abajo (número, guiones, minúsculas, sin acentos).
+- La ventana sola. No el escritorio entero, no la barra de tareas.
+- De 1600 píxeles de ancho o más: en la hoja se ve a unos 22 cm de ancho.
+- Que la letra de la app se lea: antes de capturar, achicar la ventana o subir la escala de Windows.
+  No se agranda después.
+- Se sacan en la instalación de área (PC piloto o un usuario de Windows limpio), no en la sesión de
+  trabajo de Facundo: es lo que va a ver la persona, y no trae conversaciones viejas.
+- Si la app se ve en castellano, vale lo que se ve: después se corrige el texto de contenido.json
+  para que nombre los botones igual que la captura.
+
+
+QUÉ NO PUEDE VERSE EN NINGUNA
+-----------------------------
+- La lista de conversaciones de la barra del costado (títulos con clientes, personas, temas internos).
+- El mail o el nombre de la cuenta de Claude.
+- La bandeja de entrada de Outlook, ni ningún mail real de otra persona.
+- La dirección y el nombre del destinatario del mail de la demostración (que vaya a Facundo, o se tapa).
+- El celular de la firma del mail (encuadrar hasta "Saludos").
+- Claves: pantallas de inicio de sesión de Claude, del arb o de Windows.
+- El árbol de carpetas con nombres de clientes o de otras personas.
+- Rutas con el nombre de usuario de la PC (C:\Users\...).
+- Nombres de personas en los documentos (el pie del P-09.1, "elaborado por / aprobado por").
+- Datos de personas: legajos, sueldos, matrices con nombres.
+- Avisos de Windows, Teams, WhatsApp u Outlook que salten en ese momento ("No molestar" prendido).
+
+
+LA LISTA (16 capturas; la 15 es opcional)
+-----------------------------------------
+
+01-respuesta-con-cita.png            página 1
+    La app en Code, con la pregunta "¿Qué hago si en la línea salen tres piezas malas seguidas con el
+    mismo defecto?" ya respondida. Al final de la respuesta tiene que verse el documento y la
+    revisión: P-09.1 rev B.1.
+    Antes: hacer la pregunta en una conversación nueva. Si la respuesta no cita ese documento, no se
+    captura: se avisa.
+
+02-menu-inicio.png                   página 2
+    El menú Inicio de Windows abierto, con "Claude" escrito en el buscador y el programa Claude
+    primero en la lista.
+    No puede verse: archivos recientes ni otros resultados con nombres de documentos (recortar).
+
+03-tres-pestanas.png                 página 3
+    La app recién abierta, sin ninguna conversación. Arriba, en el medio, las tres pestañas:
+    Chat, Cowork y Code.
+
+04-local-y-select-folder.png         página 4
+    Pestaña Code, conversación nueva sin empezar. Se ve Local elegido y el botón Select folder.
+
+05-carpeta-elegida.png               página 4 (va chica, al costado)
+    La ventana para elegir carpeta, con la carpeta de trabajo de Barack marcada.
+    No puede verse: el árbol de carpetas de al lado (abrir la ventana ya parada en el lugar y recortar).
+    A definir antes: cuál es la carpeta. Hoy el manual dice C:\ClaudeBarack\Trabajo.
+
+06-decir-el-puesto.png               página 5
+    El mensaje "Soy supervisor de producción. ¿Qué funciones tiene mi puesto?" ya enviado y, debajo,
+    el comienzo de la respuesta con la cita "F-24 Supervisor de Producción, rev I".
+    Antes: si la respuesta cita la rev F, está leyendo la copia vieja: no se captura, se avisa.
+
+07-respuesta-tres-piezas.png         página 6
+    La respuesta completa a la pregunta de las tres piezas, con el renglón del documento y la
+    revisión a la vista (P-09.1 rev B.1). Puede ser la misma conversación de la captura 01.
+
+08-documento-original.png            página 6 (va chica, al costado)
+    El original abierto en solo lectura, encuadrado en el cuadro de las tres piezas:
+    Y:\BARACK\CALIDAD\DOCUMENTACION SGC\SISTEMA\SISTEMA SGC\Procedimientos\Anexos\
+    P-09.1 Reaccion ante una NO conformidad B.1.xls
+    Antes: comprobar que el cuadro dice lo mismo que la respuesta de Claude.
+    No puede verse: el pie del documento (trae nombres de personas).
+
+09-mail-en-outlook.png               página 8
+    Solo la ventana del mail nuevo de Outlook: Para, asunto, dos renglones y "Saludos". El botón
+    Enviar a la vista. El pedido a Claude es: "Armame un mail para Recursos Humanos: necesito una
+    capacitación en uso de calibre para dos operarios nuevos de costura. Dejámelo listo para enviar."
+    (es un caso armado para el manual; si esa semana hay un pedido real, se usa ese).
+    No puede verse: la bandeja de entrada atrás, el destinatario real, el celular de la firma.
+
+10-boton-mas-adjunto.png             página 9
+    La caja de texto con el botón + a la vista y un archivo ya adjunto (el PDF de un instructivo).
+
+11-modelo-y-nivel.png                página 10
+    La lista de modelos abierta, al lado del botón de enviar, con Opus 5.5 elegido. Y el nivel a la
+    vista.
+    A mirar en la app: cómo se llama y dónde está el control del nivel (la documentación solo da el
+    atajo Ctrl+Shift+E) y si los niveles se llaman Bajo, Medio, Alto y Máximo.
+
+12-new-session.png                   página 11
+    La barra del costado con el botón + New session.
+    No puede verse: conversaciones. La lista vacía, o con una sola de prueba.
+
+13-mail-esperando-enviar.png         página 12
+    La misma ventana del mail de la captura 09, un poco más abierta, con el cursor arriba del botón
+    Enviar. Mismos cuidados que la 09.
+
+14-accept-reject.png                 página 13
+    Un cambio que propone Claude, con los botones Accept y Reject a la vista.
+    Solo si el sistema queda pidiendo permiso. Si queda sin carteles, esta captura no se saca y en
+    contenido.json se pone "activa": false en la página 13 (el manual queda en 13 páginas).
+
+15-cartel-limite.png                 página 14 (va chica, al costado) — OPCIONAL
+    El cartel de límite de uso ("You've hit your session limit"), con la hora en que vuelve.
+    Solo se puede sacar cuando aparece. Si no está, la página sale sin ella y el programa no la reclama.
+
+16-boton-detener.png                 página 14
+    Claude trabajando, con el botón de detener a la vista.
+
+Las capturas 17 a 20 del guion son del video. No van en esta carpeta.
+
+
+DESPUÉS DE SACARLAS: UBICAR LOS RECUADROS ROJOS
+-----------------------------------------------
+Los recuadros y la flecha se dibujan arriba de la captura, y su posición está en contenido.json en
+porcentaje de la imagen. Hoy esas posiciones son ESTIMADAS: se escribieron antes de que existieran
+las capturas. Por eso, con la captura puesta, el programa avisa y sale con 1 hasta que se confirme.
+
+1.  python generar_manual.py --grilla
+    Deja en capturas\_grilla\ cada captura con una cuadrícula de 10 en 10 y el recuadro actual.
+2.  Mirar dónde está de verdad el botón y corregir en contenido.json: x, y (esquina de arriba a la
+    izquierda), ancho, alto. En la flecha, "hasta" es la punta.
+3.  Poner "posicion_confirmada": true en esa marca.
+4.  python generar_manual.py     Tiene que terminar con "Manual completo."
+5.  Abrir el PDF y mirarlo hoja por hoja antes de pasarlo.
+
+La franja ámbar "A confirmar" que sale al pie de algunas páginas se va sola cuando se borra ese
+renglón de "a_confirmar" en contenido.json. No se borra hasta que esté confirmado.
+
+
+PARA PROBAR SIN CAPTURAS REALES
+-------------------------------
+    python probar.py                     prueba completa, en una carpeta temporal (no toca nada de acá)
+    python probar.py --de-prueba 03 04   deja acá capturas DE MENTIRA de esos números, para ver una hoja armada
+Las de mentira dicen "CAPTURA DE PRUEBA" bien grande. Hay que sacarlas antes de poner las reales.
