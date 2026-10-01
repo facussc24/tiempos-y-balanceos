@@ -733,6 +733,17 @@ def main(argv):
             aviso('El arb no mostro la ventana de inicio de sesion en 90 segundos.')
             return 1
 
+    if vigilar and segundos_inactivo() < INACTIVO_MIN_S:
+        # Entre el chequeo de arriba y este punto pasan hasta 90 s (abrir el arb y esperar el
+        # login) y el lanzador no manda teclas ni mouse en ese tramo: si el contador volvio a
+        # cero, Fak retomo. No se le tipea el usuario ni la clave encima de lo que escribe
+        # (hallazgo del auditor al bajar el umbral a 10 s, 01/10/2026). El arb queda en el
+        # login y el proximo chequeo lo vuelve a intentar.
+        del clave
+        latido('Fak volvio a usar la PC: no escribo el login')
+        log_sin_repetir('vigilante: Fak volvio a usar la PC antes del login; espero')
+        return 0
+
     res = entrar(login, usuario, clave)
     del clave
     if SILENCIOSO and res in ('rechazo', 'sin_respuesta', 'usuario', 'foco_tarde'):

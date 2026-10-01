@@ -18,14 +18,16 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 > | Cambiar la `Descripción` del maestro | `_arbDescripcion.py`; dentro del formulario se TABULA (`reference/maestro-de-insumos.md`) | 3/3 el 01/09 |
 > | Borrar líneas | — | fuera de alcance |
 >
-> Tres reglas de las tandas de septiembre:
+> Cuatro reglas de las tandas de septiembre y octubre:
 > - **Una tecla a ciegas aprieta lo que esté abajo; un click fallido no abre nada.** Las
 >   ventanas se abren por click (`_arbCargar.abrir()` → `reset_relaciones()`). Si el arb se
 >   reabrió con el ribbon **minimizado**, el click al botón no abre nada: desplegarlo con
 >   `click (1474, 42)` de `Producción`.
-> - **Si un click cae en `pantalla(-32000,...)` el arb está MINIMIZADO** (pasa después de que lo
->   abre el vigilante, o si Fak lo minimizó): `python scripts/_arbVer.py restaurar` y reintentar
->   (01/10/2026). Y si Fak está usando la PC, la tanda se corta sola: avisarle y esperar.
+> - **Si un click sale con coordenadas de pantalla negativas cerca de -32000** (ej.
+>   `pantalla(-31149,-31957)`) **el arb está MINIMIZADO** (pasa después de que lo abre el
+>   vigilante, o si Fak lo minimizó). `_arbVer.click()` ya lo levanta solo; a mano:
+>   `python scripts/_arbVer.py restaurar` (01/10/2026). Y si Fak está usando la PC, la tanda se
+>   corta sola: avisarle y esperar.
 > - El export deja Relaciones en la solapa `Listado`: se vuelve a `Altas` con
 >   `_arbVer.py click 118 68`, **no con `reset`** (con Relaciones abierta se niega; cerrarla
 >   crashea el arb).
@@ -73,7 +75,10 @@ o activar el vigilante si esta pausado). **Activar el vigilante lo hace Claude**
 *"activa el vigilante, eso lo podes hacer vos, no requiere contraseñas"*): `powershell -ExecutionPolicy
 Bypass -File scripts\_arbVigilante.ps1 -Activar -SinMensaje` (**siempre con `-SinMensaje`**: sin esa
 marca sale un cartel que espera el click de Fak y el comando queda colgado — 01/10/2026, Fak:
-*"deberias hacerlo automaticamente"*). Claude NO corre `_arbLanzar.py` (se niega con
+*"deberias hacerlo automaticamente"*). **Antes de reactivar un vigilante PAUSADO se lee el
+motivo** (segunda palabra en adelante de `vigilante_estado.txt` y el final de `lanzador.log`): si
+dice `a mano` se reactiva; si dice `login fallido` NO se reactiva —seria otro intento con la misma
+clave— y se le avisa a Fak. Claude NO corre `_arbLanzar.py` (se niega con
 `CLAUDECODE`) salvo `--diagnostico`, ni cierra el arb para que el vigilante lo reabra.
 
 ## Regla de oro

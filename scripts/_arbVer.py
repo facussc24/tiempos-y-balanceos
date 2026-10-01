@@ -5,6 +5,7 @@
      python arbver.py click X Y       -> click real en coordenadas de VENTANA (no de pantalla)
      python arbver.py estado          -> ventanas, modales y foco
      python arbver.py modal           -> cierra los modales #32770 con click real
+     python arbver.py restaurar       -> levanta la ventana principal si esta minimizada
      python arbver.py reset           -> saca la ventana de una celda sucia (cierra y reabre)
      python arbver.py excel --dry-run -> lista que ventanas de Excel cerraria cerrar_excel()
      python arbver.py excel           -> libera RELACIONES.TXT (cierra SOLO la ventana del export)
@@ -99,6 +100,9 @@ def foto(h, nombre):
 
 def click(h, dx, dy):
     """dx,dy en coordenadas de la VENTANA (las mismas de la captura)."""
+    p = buscar('prod')
+    if p and u.IsIconic(p):
+        restaurar()             # minimizado, el click caeria fuera de la pantalla y no abre nada
     r = R(); u.GetWindowRect(h, ctypes.byref(r))
     tid = u.GetWindowThreadProcessId(h, None); me = k.GetCurrentThreadId()
     u.AttachThreadInput(me, tid, True)
