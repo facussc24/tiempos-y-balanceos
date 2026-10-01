@@ -141,10 +141,12 @@ const SIN_PREVENCION = 'Sin control preventivo';
 const OPERARIO = 'Operarios del sector con practica en piezas tapizadas a mano';
 const O_OPERARIO = 7;
 const VISUAL_FINAL = 'Control visual 100% en el control final de calidad';
-// El plan de validacion TL 496 pide la adherencia por PV 2034. Es un ensayo unico de
-// validacion, no un control de serie: Tabla P3-9 (auditoria esporadica).
-const ADHERENCIA = 'Ensayo de adherencia del plan de validacion, una sola vez; sin ensayo de serie';
-const D_ADHERENCIA = 9;
+// El plan de validacion TL 496 pide la adherencia por PV 2034, una sola vez y todavia sin
+// resultado. Eso valida el proceso; no es un control de la produccion. En la serie no hay
+// ensayo de adherencia: D=10 (tercera pasada de la auditoria de cliente, 01/10/2026: con D=9
+// la misma ausencia valia 9 aca y 10 en "sin control posterior").
+const ADHERENCIA = 'Sin ensayo de adherencia en la serie';
+const D_ADHERENCIA = 10;
 
 // ---------------------------------------------------------------------------
 // EFECTOS — cada uno trae su S, de la Tabla P1 oficial (SETEC pag. 101-103).
@@ -157,6 +159,22 @@ const EF_LEGAL_FUEGO = {
   local: 'Microfibra sin evidencia de cumplir el limite de velocidad de combustion',
   next: 'Bloqueo del lote en la recepcion de Cozzuol',
   end: 'Incumplimiento de un requisito legal de inflamabilidad en el habitaculo del vehiculo',
+};
+// Material que entra a produccion sin liberar: el efecto mas grave es el de la microfibra,
+// que ya llego una vez sin tratamiento antiflama. Tres pasadas de la auditoria de cliente lo
+// marcaron: la S es la del efecto mas grave del modo de falla (Tabla P1).
+const EF_SIN_LIBERAR = {
+  s: 9,
+  local: 'Material sin liberar usado en la pieza',
+  next: 'Bloqueo del lote en la recepcion de Cozzuol',
+  end: 'Posible incumplimiento del requisito legal de inflamabilidad en el habitaculo del vehiculo',
+};
+// Sustrato o pieza fuera de las medidas de montaje del plano: no entra en la consola. P1-7.
+const EF_NO_MONTA = {
+  s: 7,
+  local: 'Pieza fuera de las medidas de montaje del plano',
+  next: 'Pieza que no se puede montar en la consola central: rechazo del lote en Cozzuol',
+  end: 'Sin efecto en el vehiculo: la pieza no llega a montarse',
 };
 const EF_DESPEGUE = {
   s: 7,
@@ -291,10 +309,15 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
         [
           // Hay un informe dimensional del 08/09/2026 sobre una pieza, con cotas fuera de plano.
           // Es una medicion unica, no un control de recepcion: P3-9.
-          falla('Sustrato recibido fuera de medida, deformado, con rebabas o con marcas', EF_ASPECTO, [
-            causa('Variacion del proceso de inyeccion del proveedor',
+          falla('Sustrato recibido fuera de medida', EF_NO_MONTA, [
+            causa('Variacion dimensional del proceso de inyeccion del proveedor',
               SIN_PREVENCION,
               10, 'Control dimensional por muestreo, sin plan de control de recepcion para el sustrato', 9),
+          ]),
+          falla('Sustrato recibido deformado, con rebabas o con marcas', EF_ASPECTO, [
+            causa('Dano o defecto de inyeccion que llega en el lote del proveedor',
+              SIN_PREVENCION,
+              10, 'Sin plan de control de recepcion para el sustrato', 10),
           ]),
         ]),
     ]),
@@ -317,7 +340,7 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
         'Que a produccion solo salga material ingresado, controlado e identificado',
         'Material identificado por lote y liberado antes de habilitarlo al sector',
         [
-          falla('Material entregado a produccion sin haber sido ingresado ni liberado', EF_DESPEGUE, [
+          falla('Material entregado a produccion sin haber sido ingresado ni liberado', EF_SIN_LIBERAR, [
             causa('El material se retira del deposito antes de que termine su control de recepcion',
               'Zona de material pendiente de control fisicamente separada de la de material liberado',
               4, 'Control de la identificacion de lote en el sector, al inicio de turno', 9),
@@ -456,12 +479,12 @@ const OP21 = operacion('21', 'CONTROL CON MYLAR',
               'Plantilla codificada por referencia y material',
               4, 'Cotejo de la identificacion de la plantilla contra la planilla de corte', 8),
           ]),
-          // El control es al inicio de turno y despues de mantenimiento, corte de energia o
-          // problema de calidad: no cubre todas las piezas. P3-9.
-          falla('Pieza mas chica que el area OK que pasa como conforme', EF_SCRAP_INTERNO, [
+          // Lo que se le escapa a este control se ve recien al tapizar: la tela no llega al
+          // borde. La deteccion es aguas abajo, a la vista.
+          falla('Pieza mas chica que el area OK que pasa como conforme', EF_SCRAP_VISTA, [
             causa('Una pieza mas chica entra dentro del contorno de la plantilla y parece conforme',
               'Banda de tolerancia marcada en la plantilla, con criterio en los dos sentidos',
-              4, 'Verificacion del contorno contra el area OK de la plantilla al inicio de turno y despues de cada intervencion en la mesa', 9),
+              4, VISUAL_FINAL, 8),
           ]),
         ]),
     ]),
@@ -496,7 +519,7 @@ const OP30 = operacion('30', 'ADHESIVADO DE MICROFIBRA Y SUSTRATO',
           falla('Mezcla de adhesivo fuera de la relacion definida', EF_DESPEGUE, [
             causa('El reticulante se vuelca a mano en la lata de adhesivo',
               'Instruccion IO-08: una botella de reticulante por lata de adhesivo',
-              4, 'Control visual de la mezcla por el operario', 8),
+              4, 'Sin control de la mezcla despues de preparada', 10),
           ]),
           // El set up se hace al lanzar el turno, no en cada mezcla: P3-9.
           falla('Adhesivo o reticulante vencido usado en la mezcla', EF_DESPEGUE, [
@@ -602,6 +625,11 @@ const OP32 = operacion('32', 'REPROCESO: FALTA DE ADHESIVO',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
           ]),
+          falla('Pieza reprocesada que pasa al activado sin volver a la inspeccion', EF_DESPEGUE, [
+            causa('La pieza reprocesada no lleva una identificacion que la distinga de la ya inspeccionada',
+              SIN_PREVENCION,
+              10, 'Sin control posterior a la inspeccion de pieza adhesivada', 10),
+          ]),
         ]),
     ]),
   ]);
@@ -627,14 +655,28 @@ const OP40 = operacion('40', 'ACTIVADO DEL ADHESIVO CON CALOR',
               O_OPERARIO, ADHERENCIA, D_ADHERENCIA),
           ]),
           falla('Pieza que se tapiza con el adhesivo ya enfriado', EF_DESPEGUE, [
-            causa('El adhesivo activado se enfria si la pieza espera antes del tapizado',
-              OPERARIO,
-              O_OPERARIO, ADHERENCIA, D_ADHERENCIA),
+            causa('La pieza activada espera antes del tapizado sin un tiempo maximo a la vista',
+              SIN_PREVENCION,
+              10, ADHERENCIA, D_ADHERENCIA),
           ]),
           falla('Microfibra o sustrato marcado por exceso de calor', EF_ASPECTO, [
             causa('El calor se aplica sin una temperatura ni un tiempo de referencia',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
+          ]),
+        ]),
+    ]),
+    // Guantes y ropa de trabajo: el equipo de proteccion del sector para el trabajo con calor
+    // (AMFE 149). Es un control de conducta: O=7, igual que en la trincheta y en la prensa.
+    we('Man', 'Operador de Produccion', [
+      funcion(
+        'Aplicar el calor sin exponerse a una quemadura',
+        'Guantes puestos durante el activado',
+        [
+          falla('Quemadura del operario al aplicar el calor', EF_SEG_OPERARIO, [
+            causa('El calor se aplica cerca de las manos que sostienen la pieza',
+              'Guantes y ropa de trabajo del sector',
+              7, 'Control del uso de guantes en el recorrido de turno', 9),
           ]),
         ]),
     ]),
@@ -753,7 +795,7 @@ const OP42 = operacion('42', 'VIROLADO + REFILADO',
           falla('Corte del operario con la trincheta de refilado', EF_SEG_OPERARIO, [
             causa('El refilado se hace con una trincheta de filo expuesto',
               'Guantes anticorte del sector',
-              3, 'Control del uso de guantes en el recorrido de turno', 9),
+              7, 'Control del uso de guantes en el recorrido de turno', 9),
           ]),
         ]),
     ]),
@@ -785,8 +827,8 @@ const OP50 = operacion('50', 'TROQUELADO DE AGUJEROS',
           ]),
           falla('Pieza troquelada con los cilindros de la otra variante', EF_MONTAJE, [
             causa('Los cilindros que actuan se seleccionan a mano segun la variante',
-              'Troquel y posicionador propios de cada variante',
-              5, VISUAL_FINAL, 8),
+              SIN_PREVENCION,
+              10, VISUAL_FINAL, 8),
           ]),
           falla('Recorte de microfibra que queda dentro del agujero', EF_MONTAJE, [
             causa('El troquel corta la microfibra pero no expulsa el recorte',
@@ -866,7 +908,7 @@ const OP60 = operacion('60', 'EMBOSSING DEL LOGO DE CARGA',
           falla('Quemadura del operario con el molde caliente', EF_SEG_OPERARIO, [
             causa('El molde trabaja caliente y queda al alcance de la mano al cargar y retirar la pieza',
               'Guantes indicados en la hoja de proceso de la prensa',
-              9, 'Control del uso de guantes en el recorrido de turno', 9),
+              7, 'Control del uso de guantes en el recorrido de turno', 9),
           ]),
         ]),
     ]),
@@ -933,14 +975,14 @@ const OP71 = reproceso('71', 'REPROCESO: REACTIVACION DE ADHESIVO POR CALOR',
   'Microfibra adherida en la zona reprocesada, sin marcas en la cara vista',
   [
     falla('Zona que vuelve a despegarse despues del reproceso', EF_DESPEGUE, [
-      causa('El calor y la presion del reproceso se aplican a mano y sin un metodo escrito',
-        SIN_PREVENCION,
-        10, ADHERENCIA, D_ADHERENCIA),
+      causa('El calor y la presion del reproceso se aplican a mano',
+        OPERARIO,
+        O_OPERARIO, ADHERENCIA, D_ADHERENCIA),
     ]),
     falla('Microfibra marcada o brillante por el calor del reproceso', EF_ASPECTO, [
       causa('El calor se aplica del lado de la cara vista sin una temperatura de referencia',
-        SIN_PREVENCION,
-        10, 'Reverificacion en el control final', 8),
+        OPERARIO,
+        O_OPERARIO, 'Reverificacion en el control final', 8),
     ]),
   ]);
 
@@ -951,9 +993,9 @@ const OP72 = reproceso('72', 'REPROCESO: MANCHA DE ADHESIVO',
   'Cara vista sin restos de adhesivo ni marcas del borrado',
   [
     falla('Cara vista con restos de adhesivo o marcada despues del borrado', EF_ASPECTO, [
-      causa('El borrado se hace a mano y sin un metodo escrito',
-        SIN_PREVENCION,
-        10, 'Reverificacion en el control final', 8),
+      causa('El borrado se hace a mano sobre la cara vista',
+        OPERARIO,
+        O_OPERARIO, 'Reverificacion en el control final', 8),
     ]),
   ]);
 
