@@ -46,7 +46,7 @@ import { homedir } from 'os';
 import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { construirFlags } from './_lib/nubeFlags.mjs';
-import { buscarNube } from './_lib/nubeRutas.mjs';
+import { buscarNube, buscarNubeVieja } from './_lib/nubeRutas.mjs';
 
 const HOME = homedir();
 // El repo es el padre de scripts/, no una ruta fija: si se clona en otra carpeta, el
@@ -58,7 +58,17 @@ const CLAUDE = join(HOME, '.claude');
 // cambia segun la PC: se busca, no se hardcodea (`_lib/nubeRutas.mjs`, que ademas la
 // encuentra cuando es un reparse point). Si no aparece ninguna, se cae a la canonica
 // para que los mensajes de error muestren una ruta concreta.
-const NUBE = buscarNube(HOME);
+const NUBE_INGENIERIA = buscarNube(HOME);
+const NUBE_VIEJA = buscarNubeVieja(HOME);
+// TRANSICION (01/10/2026, regla nube-ingenieria.md). La copia pasa de la OneDrive personal de Fak a
+// `Claude Fak` en la nube de Ingenieria. Mientras esa carpeta este vacia y la vieja siga existiendo,
+// se LEE de la vieja (leer de ahi no rompe la regla). SUBIR va siempre a Ingenieria, y solo cuando la
+// carpeta ya quedo con permiso solo para Fak: adentro van claves y su buzon, y sin el permiso lo abre
+// todo el sector. La marca la deja quien VERIFICO el permiso, no quien lo supone.
+const EN_TRANSICION = !process.argv.includes('--subir')
+    && !existsSync(join(NUBE_INGENIERIA, 'claude-memoria')) && existsSync(join(NUBE_VIEJA, 'claude-memoria'));
+const NUBE = EN_TRANSICION ? NUBE_VIEJA : NUBE_INGENIERIA;
+const MARCA_PERMISO = join(CLAUDE, '.nube-ingenieria-permiso-ok');
 
 // Cada pieza: [clave, carpeta local, subcarpeta en la nube, que es]
 const PIEZAS = [
@@ -90,6 +100,17 @@ const liberar = args.includes('--liberar');
 
 if (subir && bajar) {
     console.error('\n[X] --subir y --bajar juntos no. Una direccion por vez.\n');
+    process.exit(1);
+}
+
+if (subir && aplicar && !existsSync(MARCA_PERMISO)) {
+    console.error('\n[X] NO SUBO: la carpeta de la nube de Ingenieria todavia no esta confirmada con permiso SOLO para Fak.');
+    console.error(`    ${NUBE_INGENIERIA}`);
+    console.error('    Ahi van claves (.env.local, .qr-secret), el buzon de Fak volcado y las memorias: sin ese permiso');
+    console.error('    lo puede abrir todo el sector. Primero se deja la carpeta solo para Fak (Administrar acceso) y se');
+    console.error('    VERIFICA; recien entonces se crea la marca y se sube:');
+    console.error(`        : > "${MARCA_PERMISO.replace(/\\/g, '/')}"`);
+    console.error('    Regla: .claude/rules/nube-ingenieria.md\n');
     process.exit(1);
 }
 
@@ -125,6 +146,10 @@ console.log('='.repeat(74));
 console.log(`  local : ${CLAUDE}`);
 console.log(`          ${REPO}`);
 console.log(`  nube  : ${NUBE}`);
+if (EN_TRANSICION) {
+    console.log('          (lugar VIEJO, solo para leer: la carpeta nueva de Ingenieria todavia esta vacia)');
+    console.log(`  nueva : ${NUBE_INGENIERIA}`);
+}
 
 const est = estadoRepo();
 if (est.sinPushear > 0) {
