@@ -90,6 +90,24 @@ describe('saveAmfe mantiene los conteos de la fila', () => {
         expect(sb.capturado.cause_count).toBe(4);
     });
 
+    it('escribe ap_h_count y ap_m_count contados de las causas (01/10/2026)', async () => {
+        // El caso: una causa AP=M agregada a un AMFE y la columna `ap_m_count` un numero atras.
+        const sb = stubSupabase();
+        const doc = docCon(2, 3);                              // 6 causas, todas AP=M
+        doc.operations[0].workElements[0].functions[0].failures[0].causes[0].ap = 'H';
+        doc.operations[1].workElements[0].functions[0].failures[0].causes[2].ap = 'L';
+        await saveAmfe(sb, 'id-1', doc);
+        expect(sb.capturado.ap_h_count).toBe(1);
+        expect(sb.capturado.ap_m_count).toBe(4);
+        expect(countAmfeStats(doc).apHCount).toBe(1);
+        expect(countAmfeStats(doc).apMCount).toBe(4);
+
+        // y al sumar una causa AP=M el contador la sigue
+        doc.operations[0].workElements[0].functions[0].failures[0].causes.push({ cause: 'Nueva', description: 'Nueva', ap: 'M', actionPriority: 'M' });
+        await saveAmfe(sb, 'id-1', doc);
+        expect(sb.capturado.ap_m_count).toBe(5);
+    });
+
     it('sigue guardando data como string y actualizando updated_at', async () => {
         const sb = stubSupabase();
         await saveAmfe(sb, 'id-1', docCon(1, 1));

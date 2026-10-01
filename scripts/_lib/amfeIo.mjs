@@ -253,6 +253,11 @@ export async function saveAmfe(sb, id, doc, opts = {}) {
         updated_at: new Date().toISOString(),
         operation_count: stats.opCount,
         cause_count: stats.causeCount,
+        // 01/10/2026: los contadores de AP tambien son derivados y tampoco los mantenia nadie. Al
+        // agregar una causa AP=M a la OP 120 del IP PAD, `ap_m_count` quedo en 63 con 64 reales
+        // (lo muestra el tablero de la app). Misma definicion que `computeAmfeStats` de la app.
+        ap_h_count: stats.apHCount,
+        ap_m_count: stats.apMCount,
         ...(opts.extraFields || {}),
     };
     // Extra guard: nunca permitir pasar objeto directo en data
@@ -550,7 +555,7 @@ export function findCauseByText(causes, desc) {
  */
 export function countAmfeStats(doc) {
     const ops = Array.isArray(doc?.operations) ? doc.operations : [];
-    let weCount = 0, fnCount = 0, fmCount = 0, causeCount = 0;
+    let weCount = 0, fnCount = 0, fmCount = 0, causeCount = 0, apHCount = 0, apMCount = 0;
     for (const op of ops) {
         const wes = Array.isArray(op?.workElements) ? op.workElements : [];
         weCount += wes.length;
@@ -563,11 +568,15 @@ export function countAmfeStats(doc) {
                 for (const fm of fms) {
                     const cs = Array.isArray(fm?.causes) ? fm.causes : [];
                     causeCount += cs.length;
+                    for (const c of cs) {
+                        if (c?.ap === 'H') apHCount++;
+                        if (c?.ap === 'M') apMCount++;
+                    }
                 }
             }
         }
     }
-    return { opCount: ops.length, weCount, fnCount, fmCount, causeCount };
+    return { opCount: ops.length, weCount, fnCount, fmCount, causeCount, apHCount, apMCount };
 }
 
 // ─── calculateAP (tabla oficial AIAG-VDA, SETEC pag. 116-118) ──────────────

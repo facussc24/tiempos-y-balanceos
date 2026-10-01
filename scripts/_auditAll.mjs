@@ -61,7 +61,7 @@ function isEmptyStr(v) {
 }
 
 const sb = await connectSupabase();
-const { data: amfes } = await sb.from('amfe_documents').select('id, amfe_number, project_name, operation_count, cause_count, data');
+const { data: amfes } = await sb.from('amfe_documents').select('id, amfe_number, project_name, operation_count, cause_count, ap_h_count, ap_m_count, data');
 
 const report = {};
 
@@ -103,13 +103,17 @@ for (const row of amfes) {
     if (!hasAnyResp) findings.header_missing.push(`responsible (ningun alias: ${HEADER_RESPONSIBLE_ALIASES.join('/')})`);
 
     // 3. Metadata desync
-    let realOps = 0, realCauses = 0;
+    let realOps = 0, realCauses = 0, realApH = 0, realApM = 0;
     for (const op of doc.operations) {
         realOps++;
         for (const we of op.workElements || []) {
             for (const fn of we.functions || []) {
                 for (const fm of fn.failures || []) {
                     realCauses += (fm.causes || []).length;
+                    for (const c of fm.causes || []) {
+                        if (c?.ap === 'H') realApH++;
+                        if (c?.ap === 'M') realApM++;
+                    }
                 }
             }
         }
@@ -119,6 +123,13 @@ for (const row of amfes) {
     }
     if (realCauses !== row.cause_count) {
         findings.metadata_desync.push(`cause_count: real=${realCauses} stored=${row.cause_count}`);
+    }
+    // 01/10/2026: los contadores de AP se desfasaban sin que este audit lo viera
+    if (realApH !== row.ap_h_count) {
+        findings.metadata_desync.push(`ap_h_count: real=${realApH} stored=${row.ap_h_count}`);
+    }
+    if (realApM !== row.ap_m_count) {
+        findings.metadata_desync.push(`ap_m_count: real=${realApM} stored=${row.ap_m_count}`);
     }
 
     // 4. Alias desync
