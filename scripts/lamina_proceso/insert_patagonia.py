@@ -135,8 +135,7 @@ tarjeta(8, x2[1], yc2, w2, H2, "Adhesivado de pieza plástica con espuma", "A", 
 ])
 tarjeta(9, x2[2], yc2, w2, H2, "Tapizado en Hot Press", "A", [
     [fx(9, "principal", rotulo="Hot Press", modo="cubrir", alto=1.25)],
-    [fx(9, "pieza", rotulo="Pieza tapizada (dorso)", **TIRA)],
-], entra=[("V", "Vinilo"), ("A", "Pieza con espuma")])
+] + ([[fx(9, "pieza", rotulo="Pieza tapizada (dorso)", **TIRA)]] if F(9, "pieza") else []), entra=[("V", "Vinilo"), ("A", "Pieza con espuma")])
 tarjeta(10, x2[3], yc2, w2, H2, "Virolado", "A", [
     [fx(10, "pieza", rotulo="Pieza virolada", modo="entera")],
 ], uso=USO["10"])
@@ -157,14 +156,19 @@ foto(F("final", "pieza"), xh + 3.5, ty, wh - 7, th, modo="entera", fondo=BLANCO,
      radio=2.0, margen=4.0, rotar=FOTOS.get("final", {}).get("rotar", 0))
 texto(xh, yc2 + H2 - 12.5, wh, 6, "Delantero y trasero  ·  izquierdo y derecho", tam=9.5, color="DCE6F2", alin="c")
 
-# de la franja 1 a la franja 2: una flecha por componente
+# de la franja 1 a la franja 2: cada componente dice a que paso va (la misma pastilla esta en ese paso)
 yb = Y1 + PAD_T + H1 + PAD
-for cx, clave in ((xs[1] + w1 / 2, "V"), (xs[3] + w1 / 2, "S"), (xs[4] + w1 + G1 / 2, "E")):
-    flecha([(cx, yb + 1.2), (cx, Y2 - 1.2)], color=LINEAS[clave]["color"])
+for cx, clave, destino in ((xs[1] + w1 / 2, "V", "Va al paso 9"), (xs[3] + w1 / 2, "S", "Va al paso 7"),
+                           (xs[4] + w1 + G1 / 2, "E", "Va al paso 7")):
+    pw_ = 30.0
+    caja(cx - pw_ / 2, yb - 3.1, pw_, 6.2, relleno=LINEAS[clave]["color"], radio=3.1)
+    texto(cx - pw_ / 2, yb - 3.1, pw_, 6.2, "▼  " + destino, tam=8.5, color=BLANCO, negrita=True, alin="c")
 
 # ------------------------------------------------------------ pie
 caja(0, H - PIE, W, PIE, relleno=AZUL)
 texto(13, H - PIE, 250, PIE, "BARACK MERCOSUL  ·  Ingeniería", tam=8.5, color=BLANCO, espaciado=60)
+texto(110, H - PIE, 200, PIE, "Uso por pieza: sin aclaración, el valor es el mismo para delantero y trasero",
+      tam=8.5, color="DCE6F2", alin="c")
 texto(W - 113, H - PIE, 100, PIE, "Octubre 2026", tam=8.5, color=BLANCO, alin="r", espaciado=60)
 
 cp = prs.core_properties

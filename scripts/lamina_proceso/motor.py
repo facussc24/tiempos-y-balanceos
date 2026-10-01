@@ -270,7 +270,7 @@ def tarjeta(n, x, y, w, h, titulo, linea, fotos, uso=None, reserva=0.0, entra=No
         uy = y + h - pad - uh
         caja(bx, uy, bw, uh, relleno=L["claro"], radio=1.4)
         caja(bx, uy, 1.1, uh, relleno=L["color"])
-        texto(bx + 2.8, uy + 0.7, bw - 3.8, 3.8, "USO POR PIEZA", tam=6.8, color=L.get("tinta", L["color"]),
+        texto(bx + 2.8, uy + 0.7, bw - 3.8, 3.8, "USO POR PIEZA", tam=7.5, color=L.get("tinta", L["color"]),
               negrita=True, espaciado=80)
         for k, ln in enumerate(uso):
             texto(bx + 2.8, uy + 4.5 + 4.3 * k, bw - 3.8, 4.3, ln, tam=9, color=AZUL_OSC)
