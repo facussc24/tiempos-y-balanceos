@@ -1,1 +1,5 @@
+# Gate del repo publico ANTES de commitear. CHECK-3 (secretos de planta, p. ej. la clave de un
+# HMI) solo puede correr en esta PC: la lista vive en archivos privados gitignoreados y el CI no
+# la ve. El 01/10/2026 encontro la clave de operador en 4 archivos, dos versionados desde el 21/09.
+node scripts/_gateRepoPublico.mjs || exit 1
 npx lint-staged
