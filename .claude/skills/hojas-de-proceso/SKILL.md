@@ -386,6 +386,12 @@ hay, y el por que va a la lista de pendientes (ver §4).
 Lo mismo para los parametros: va el valor que rige (`Tiempo de vacio: 19 s`), no su
 historia (`subido de 8 s el 10/09 porque...`).
 
+**Tampoco va en la nota como LEI yo la foto** (Fak, 01/10/2026, hoja de engrampado del IP Pad):
+habia puesto *"Una grampa que quedo hundida en el vinilo se cuenta igual"* — era mi duda al
+contar grampas en el video, no una instruccion. *"Esa nota eliminala, no hace falta."* Si la
+foto ya numera cada grampa, la nota dice eso y nada mas; la duda de conteo se resuelve antes
+(con Fak o con la pieza) y no llega a la hoja.
+
 ## 2 sexies. La pantalla va en CASTELLANO, y el idioma no es del dia
 
 Fak, 21/09/2026: *"hay que intentar que todas, dentro de lo posible, esten en español, no en
