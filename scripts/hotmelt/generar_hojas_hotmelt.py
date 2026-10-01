@@ -1176,8 +1176,11 @@ def compilar_todos():
             desktop_root_pdf = os.path.join(DESKTOP_ROOT, os.path.basename(pdf_path))
             shutil.copy2(pdf_path, desktop_root_pdf)
             print(f"     -> Replicado a Escritorio raíz: {desktop_root_pdf}")
-            # Replicar al servidor SGC Y: si está accesible
-            if os.path.exists(SGC_DIR):
+            # Este generador (formato A4 viejo) YA NO publica en el servidor: desde el 01/10/2026
+            # las hojas vigentes son las de `generar_hojas_v3.py` (HO 992 y HO 993) y los decks
+            # que salian de aca quedaron en `HO 992 - TOP ROLL\OBSOLETO\`. Con la copia activa,
+            # una corrida vieja volvia a dejar hojas obsoletas al lado de las vigentes.
+            if False and os.path.exists(SGC_DIR):
                 sgc_dest_pptx = os.path.join(SGC_DIR, os.path.basename(pptx_path))
                 sgc_dest_pdf = os.path.join(SGC_DIR, os.path.basename(pdf_path))
                 try:
