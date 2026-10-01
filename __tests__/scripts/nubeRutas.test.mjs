@@ -23,7 +23,9 @@ import { mkdtempSync, mkdirSync, symlinkSync, writeFileSync, rmdirSync, unlinkSy
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buscarNube, CANONICA, CARPETA_CEREBRO } from '../../scripts/_lib/nubeRutas.mjs';
+import {
+    buscarNube, buscarNubeVieja, buscarBiblioteca, CANONICA, CARPETA_CEREBRO, ORGANIZACION, BIBLIOTECA_CANONICA, CARPETA_EN_INGENIERIA,
+} from '../../scripts/_lib/nubeRutas.mjs';
 
 const ONEDRIVE_LINK = 'OneDrive - BARACK PRUEBA';
 
@@ -65,7 +67,45 @@ afterEach(() => {
     piezas = [];
 });
 
-describe('buscarNube — la OneDrive como reparse point (EL BUG DEL 06/09)', () => {
+// Regla dura de Fak, 01/10/2026: mi memoria vive en la nube de Ingenieria, nunca mas en su nube personal.
+describe('buscarNube — desde el 01/10/2026 apunta SIEMPRE a la biblioteca de Ingenieria', () => {
+    it.each([['con tilde', 'Ingeniería y Proyecto - General'], ['sin tilde', 'Ingenieria y Proyecto - General']])(
+        'con la biblioteca sincronizada (%s) devuelve su carpeta Claude Fak, exista o no', (_q, nombre) => {
+            const h = home();
+            const org = carpeta(h, ORGANIZACION);
+            const bib = carpeta(org, nombre);
+            expect(buscarBiblioteca(h)).toBe(bib);
+            expect(buscarNube(h)).toBe(join(bib, CARPETA_EN_INGENIERIA));
+        });
+
+    it('ROJO: aunque la copia vieja siga en la OneDrive personal, NO vuelve a apuntar ahi', () => {
+        const h = home();
+        const od = carpeta(h, CANONICA);
+        carpeta(od, CARPETA_CEREBRO);
+        const bib = carpeta(carpeta(h, ORGANIZACION), BIBLIOTECA_CANONICA);
+        expect(buscarNube(h)).toBe(join(bib, CARPETA_EN_INGENIERIA));
+        expect(buscarNube(h)).not.toContain('OneDrive');
+    });
+
+    it('sin la biblioteca en esta PC devuelve la ruta canonica de Ingenieria (que no existe), nunca la personal', () => {
+        const h = home();
+        const od = carpeta(h, CANONICA);
+        carpeta(od, CARPETA_CEREBRO);
+        expect(buscarBiblioteca(h)).toBe(null);
+        expect(buscarNube(h)).toBe(join(h, ORGANIZACION, BIBLIOTECA_CANONICA, CARPETA_EN_INGENIERIA));
+    });
+
+    it('con dos bibliotecas de nombre parecido elige la que tiene la carpeta de Ingenieria', () => {
+        const h = home();
+        const org = carpeta(h, ORGANIZACION);
+        carpeta(org, 'Ingenieria y Proyecto - General');
+        const buena = carpeta(org, 'Ingeniería y Proyecto - General');
+        carpeta(buena, 'INGENIERIA BARACK (NUNCA BORRAR)');
+        expect(buscarBiblioteca(h)).toBe(buena);
+    });
+});
+
+describe('buscarNubeVieja — la OneDrive como reparse point (EL BUG DEL 06/09)', () => {
     it('encuentra Barack-cerebro aunque la carpeta de OneDrive sea un enlace', () => {
         const h = home();
         const real = carpeta(h, 'real');
@@ -78,14 +118,14 @@ describe('buscarNube — la OneDrive como reparse point (EL BUG DEL 06/09)', () 
         expect(dirent, 'la junction tiene que aparecer en el listado del HOME').toBeDefined();
         expect(dirent.isDirectory(), 'el fixture no reproduce el bug: el Dirent dice directorio').toBe(false);
 
-        expect(buscarNube(h)).toBe(join(link, CARPETA_CEREBRO));
+        expect(buscarNubeVieja(h)).toBe(join(link, CARPETA_CEREBRO));
     });
 
     it('si el cerebro todavia no existe, apunta ADENTRO de la OneDrive enlazada (para que --subir --aplicar lo cree ahi)', () => {
         const h = home();
         const real = carpeta(h, 'real');
         const link = enlace(real, join(h, ONEDRIVE_LINK));
-        expect(buscarNube(h)).toBe(join(link, CARPETA_CEREBRO));
+        expect(buscarNubeVieja(h)).toBe(join(link, CARPETA_CEREBRO));
     });
 });
 
@@ -94,7 +134,7 @@ describe('buscarNube — lo que ya andaba y tiene que seguir andando', () => {
         const h = home();
         const od = carpeta(h, 'OneDrive - BARACK OTRO TENANT');
         const cerebro = carpeta(od, CARPETA_CEREBRO);
-        expect(buscarNube(h)).toBe(cerebro);
+        expect(buscarNubeVieja(h)).toBe(cerebro);
     });
 
     it('con dos OneDrive BARACK elige la que TIENE el cerebro, no la primera', () => {
@@ -102,30 +142,30 @@ describe('buscarNube — lo que ya andaba y tiene que seguir andando', () => {
         carpeta(h, 'OneDrive - BARACK A');
         const b = carpeta(h, 'OneDrive - BARACK B');
         const cerebro = carpeta(b, CARPETA_CEREBRO);
-        expect(buscarNube(h)).toBe(cerebro);
+        expect(buscarNubeVieja(h)).toBe(cerebro);
     });
 
     it('sin ninguna OneDrive BARACK cae a la canonica, debajo de ESE home', () => {
         const h = home();
-        expect(buscarNube(h)).toBe(join(h, CANONICA, CARPETA_CEREBRO));
+        expect(buscarNubeVieja(h)).toBe(join(h, CANONICA, CARPETA_CEREBRO));
     });
 
     it('un home que no se puede leer tambien cae a la canonica, sin explotar', () => {
         const h = join(home(), 'no-existe');
-        expect(buscarNube(h)).toBe(join(h, CANONICA, CARPETA_CEREBRO));
+        expect(buscarNubeVieja(h)).toBe(join(h, CANONICA, CARPETA_CEREBRO));
     });
 
     it('un ARCHIVO que se llama como la OneDrive no cuenta (al sacar isDirectory no se cuela)', () => {
         const h = home();
         archivo(h, 'OneDrive - BARACK ARGENTINA SRL.lnk');
-        expect(buscarNube(h)).toBe(join(h, CANONICA, CARPETA_CEREBRO));
+        expect(buscarNubeVieja(h)).toBe(join(h, CANONICA, CARPETA_CEREBRO));
     });
 
     it('la OneDrive de otra empresa no cuenta aunque tenga un Barack-cerebro adentro', () => {
         const h = home();
         const od = carpeta(h, 'OneDrive - OTRA EMPRESA SA');
         carpeta(od, CARPETA_CEREBRO);
-        expect(buscarNube(h)).toBe(join(h, CANONICA, CARPETA_CEREBRO));
+        expect(buscarNubeVieja(h)).toBe(join(h, CANONICA, CARPETA_CEREBRO));
     });
 });
 

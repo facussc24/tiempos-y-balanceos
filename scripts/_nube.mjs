@@ -185,11 +185,13 @@ if (!subir && !bajar) {
 // "se bajarian --", que se lee igual que "no habia nada que traer". Una lista vacia
 // nunca puede significar "no pude leer" (misma leccion que _backup.mjs).
 if (bajar && !existsSync(NUBE)) {
-    console.error(`\n[X] NO EXISTE la carpeta del cerebro en la nube:\n    ${NUBE}\n`);
+    console.error(`\n[X] NO EXISTE en esta PC la carpeta de la nube de Ingenieria con la memoria de Claude:\n    ${NUBE}\n`);
     console.error('    Sin eso no hay nada que bajar. Suele ser una de tres:');
-    console.error('      1. Falta iniciar sesion en OneDrive con la cuenta de Barack.');
+    console.error('      1. Esta PC no tiene sincronizada la biblioteca de Ingenieria con la cuenta de Fak');
+    console.error('         (la carpeta "Claude Fak" tiene permiso solo para el): abrir el sitio "Ingenieria y');
+    console.error('         Proyecto" en Teams o SharePoint, entrar a Documentos y apretar "Sincronizar".');
     console.error('      2. OneDrive todavia no termino de sincronizar la carpeta.');
-    console.error('      3. Nunca se subio: correr "--subir --aplicar" en la PC que tiene el cerebro.');
+    console.error('      3. Nunca se subio: correr "--subir --aplicar" en la PC que tiene la memoria.');
     console.error('\n    NO seguir trabajando como si estuviera todo: sin memorias ni .env.local');
     console.error('    la sesion no puede leer Supabase ni sabe como trabaja Fak.\n');
     process.exit(1);
@@ -262,7 +264,8 @@ console.log('-'.repeat(74) + '\n');
 function leeme() {
     return [
         '========================================================================',
-        '  CEREBRO BARACK EN LA NUBE',
+        '  MEMORIA Y CONFIGURACION DE CLAUDE (Fak) — NUBE DE INGENIERIA',
+        '  Carpeta con permiso solo para Fak: tiene claves. No compartirla.',
         '  Lo actualiza solo scripts/_nube.mjs — no editar a mano.',
         '========================================================================',
         '',
@@ -283,10 +286,11 @@ function leeme() {
         '       cd C:\\Dev\\BarackMercosul',
         '       npm install',
         '',
-        '2) Iniciar sesion en OneDrive con la cuenta de Barack, para que aparezca',
-        '   esta misma carpeta del otro lado.',
+        '2) Con la cuenta de Fak, sincronizar la biblioteca de Ingenieria: en Teams o',
+        '   SharePoint, sitio "Ingenieria y Proyecto" > Documentos > "Sincronizar".',
+        '   Asi aparece esta misma carpeta ("Claude Fak") del otro lado.',
         '',
-        '3) Traer el cerebro:',
+        '3) Traer la memoria y la configuracion (lo corre Claude solo al arrancar):',
         '',
         '       node scripts/_nube.mjs --bajar --aplicar',
         '',

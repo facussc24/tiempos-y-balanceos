@@ -28,8 +28,15 @@ MINIMO_MEMORIAS=20   # por debajo de esto la PC no tiene cerebro util, no es "fa
 
 # La carpeta del OneDrive corporativo trae el nombre del tenant y el usuario cambia
 # segun la PC: se busca con glob, nunca hardcodeada.
+# Desde el 01/10/2026 vive en la nube de INGENIERIA (regla nube-ingenieria.md: nada en la nube
+# personal de Fak): `BARACK ARGENTINA SRL\Ingenieria y Proyecto - General\Claude Fak`. Cuenta solo
+# si ya tiene algo adentro (`claude-memoria`): la carpeta vacia no sirve para bajar. El lugar viejo
+# (`OneDrive*BARACK*/Barack-cerebro`) queda como segunda opcion mientras alguna PC lo conserve.
 nube_path() {
   local d
+  for d in "$HOME"/"BARACK ARGENTINA SRL"/Ingenier*a\ y\ Proyecto\ -\ General/"Claude Fak"; do
+    [ -d "$d/claude-memoria" ] && { echo "$d"; return 0; }
+  done
   for d in "$HOME"/OneDrive*BARACK*/Barack-cerebro; do
     [ -d "$d" ] && { echo "$d"; return 0; }
   done
@@ -50,7 +57,7 @@ NUBE=$(nube_path || true)
 if [ "$CANT" -lt "$MINIMO_MEMORIAS" ]; then
   echo "[PC NUEVA DETECTADA — hook cerebro-guard]"
   echo ""
-  echo "Esta PC tiene el codigo pero NO tiene el cerebro: hay $CANT memorias en"
+  echo "Esta PC tiene el codigo pero le falta la memoria de Claude y la configuracion: hay $CANT memorias en"
   echo "$MEMORIA (deberia haber cientos). Sin eso esta sesion no sabe como trabaja Fak,"
   echo "no tiene las reglas globales y le falta .env.local para leer Supabase."
 
@@ -71,13 +78,13 @@ if [ "$CANT" -lt "$MINIMO_MEMORIAS" ]; then
     echo "Si el comando falla, reportar el error concreto — no seguir trabajando a ciegas."
   else
     echo ""
-    echo "Ademas NO se encuentra la carpeta del cerebro en OneDrive. Buscada como"
-    echo "\$HOME/OneDrive*BARACK*/Barack-cerebro"
+    echo "Ademas esta PC NO tiene la carpeta de la nube de Ingenieria donde esta guardada. Buscada como"
+    echo "\$HOME/BARACK ARGENTINA SRL/Ingenieria y Proyecto - General/Claude Fak"
     echo ""
-    echo "Decirle a Fak, en una linea y sin la palabra 'cerebro', que falta iniciar sesion en OneDrive"
-    echo "con la cuenta de Barack en esta PC y esperar a que sincronice. Por ejemplo:"
-    echo "  'En esta PC falta abrir OneDrive con tu cuenta de Barack. Cuando termine de"
-    echo "   sincronizar avisame y bajo mi memoria de la otra PC.'"
+    echo "Decirle a Fak, en una linea y sin la palabra 'cerebro', que en esta PC falta sincronizar la nube"
+    echo "de Ingenieria con su cuenta (iniciar sesion en OneDrive y apretar Sincronizar). Por ejemplo:"
+    echo "  'En esta PC falta la nube de Ingenieria: abri Teams, equipo Ingenieria y Proyecto, pestaña"
+    echo "   Archivos, y apreta Sincronizar. Cuando termine avisame y bajo mi memoria de la otra PC.'"
     echo "Cuando avise, despues corre 'node scripts/_nube.mjs --bajar --aplicar' (lo corre Claude, no Fak)."
     echo "Mientras tanto se puede trabajar, pero SIN memorias, SIN credenciales de Supabase y sin"
     echo "las reglas globales: avisarlo antes de afirmar cualquier cosa que dependa de datos."

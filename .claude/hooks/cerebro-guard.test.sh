@@ -26,9 +26,11 @@ armar() {
   mkdir -p "$mem"
   local i=0
   while [ "$i" -lt "$1" ]; do : > "$mem/memoria_$i.md"; i=$((i+1)); done
-  if [ "$2" = "si" ]; then
-    local nube="$casa/OneDrive - BARACK ARGENTINA SRL/Barack-cerebro"
-    mkdir -p "$nube"
+  if [ "$2" = "si" ] || [ "$2" = "vieja" ]; then
+    # "si" = donde vive desde el 01/10/2026 (nube de Ingenieria); "vieja" = la OneDrive personal.
+    local nube="$casa/BARACK ARGENTINA SRL/Ingeniería y Proyecto - General/Claude Fak"
+    [ "$2" = "vieja" ] && nube="$casa/OneDrive - BARACK ARGENTINA SRL/Barack-cerebro"
+    mkdir -p "$nube/claude-memoria"
     printf '{\n  "fecha": "%s",\n  "pc": "%s"\n}\n' "$4" "$3" > "$nube/_ESTADO.json"
   fi
   echo "$casa"
@@ -53,6 +55,12 @@ probar 'PC NUEVA DETECTADA'                "$CASA" PC-NUEVA "cero memorias: avis
 probar 'node scripts/_nube.mjs --bajar'    "$CASA" PC-NUEVA "cero memorias: da el comando exacto"
 probar 'ANTES DE CUALQUIER OTRA COSA'      "$CASA" PC-NUEVA "cero memorias: lo marca prioritario"
 
+CASA=$(armar 0 si PC-VIEJA "2026-09-03 11:39")
+probar 'Ingeniería y Proyecto - General/Claude Fak' "$CASA" PC-NUEVA "baja de la nube de Ingenieria"
+
+CASA=$(armar 0 vieja PC-VIEJA "2026-09-03 11:39")
+probar 'node scripts/_nube.mjs --bajar'    "$CASA" PC-NUEVA "una PC que todavia tiene la copia en el lugar viejo tambien la encuentra"
+
 CASA=$(armar 5 si PC-VIEJA "2026-09-03 11:39")
 probar 'PC NUEVA DETECTADA'                "$CASA" PC-NUEVA "5 memorias sueltas siguen siendo PC sin cerebro"
 
@@ -60,6 +68,8 @@ echo
 echo "PC NUEVA SIN ONEDRIVE — no puede bajar nada, tiene que decirlo:"
 CASA=$(armar 0 no - -)
 probar 'iniciar sesion en OneDrive'        "$CASA" PC-NUEVA "sin nube: manda iniciar sesion"
+probar 'nube de Ingenieria'                "$CASA" PC-NUEVA "sin nube: nombra la nube de Ingenieria, no la personal"
+probar "!NO tiene el cerebro"              "$CASA" PC-NUEVA "a Fak no se le habla del cerebro"
 # El comando SI puede nombrarse (como paso posterior); lo que no debe hacer es
 # ordenarlo YA, porque sin la carpeta montada falla y la sesion arranca en un error.
 probar '!HACER ESTO AHORA'                 "$CASA" PC-NUEVA "sin nube: no lo ordena todavia"
