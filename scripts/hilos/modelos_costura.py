@@ -15,6 +15,8 @@ Fuentes (leidas el 02/10/2026; la hoja y la celda van en el comentario de cada m
 A_CONFIRMAR = 'confirmar en la máquina'
 
 # (operaciones, nombre de la costura, hilo arriba, hilo abajo, maquina segun el documento)
+# Las hojas de Patagonia escriben este hilo FX284TK-E0PTO; en el arb y en las ordenes de compra es FX284-E0PTO
+# (mismo hilo: memoria project_patagonia_arb_alineacion). La planilla usa el codigo del arb.
 UNION_PAT = 'FX284-E0PTO (negro 30/3)'
 
 
@@ -53,15 +55,18 @@ MODELOS = [
     dict(sector='Patagonia', cliente='VW', familia='Apoyacabezas', modelo='Apoyacabezas delantero',
          piezas=['2HC881901 RL1', '2HC881901A GFV', '2HC881901B GEV', '2HC881901C EFG'],
          costuras=[_union('30, 32, 33 y 34'),
-                   ('31', 'Vista (2 líneas, L1 a L3)', 'FX483TK 20/3, color según nivel', '30/3 (' + A_CONFIRMAR + ')', '')]),
+                   ('31', 'Vista (2 líneas, L1 a L3)', 'FX483TK 20/3, color según nivel', '30/3 (' + A_CONFIRMAR + ')', '')],
+         no_aplica={'Vista (2 líneas, L1 a L3)': ['2HC881901 RL1']}),
     dict(sector='Patagonia', cliente='VW', familia='Apoyacabezas', modelo='Apoyacabezas trasero central',
          piezas=['2HC885900 RL1', '2HC885900A EIF', '2HC885900B SIY', '2HC885900C SIY'],
          costuras=[_union('30, 32 y 33'),
-                   ('31', 'Vista (2 líneas, L1 a L3)', 'FX483TK 20/3, color según nivel', '30/3 (' + A_CONFIRMAR + ')', '')]),
+                   ('31', 'Vista (2 líneas, L1 a L3)', 'FX483TK 20/3, color según nivel', '30/3 (' + A_CONFIRMAR + ')', '')],
+         no_aplica={'Vista (2 líneas, L1 a L3)': ['2HC885900 RL1']}),
     dict(sector='Patagonia', cliente='VW', familia='Apoyacabezas', modelo='Apoyacabezas trasero lateral',
          piezas=['2HC885901 RL1', '2HC885901A GFU', '2HC885901B GEQ', '2HC885901C DZS'],
          costuras=[_union('30, 32 y 33'),
-                   ('31', 'Vista (2 líneas, L1 a L3)', 'FX483TK 20/3, color según nivel', '30/3 (' + A_CONFIRMAR + ')', '')]),
+                   ('31', 'Vista (2 líneas, L1 a L3)', 'FX483TK 20/3, color según nivel', '30/3 (' + A_CONFIRMAR + ')', '')],
+         no_aplica={'Vista (2 líneas, L1 a L3)': ['2HC885901 RL1']}),
     # Apoyabrazo trasero central: HO-986 hoja 40 (no nombra hilo); el arb tiene solo FX284-E0PTO
     dict(sector='Patagonia', cliente='VW', familia='Apoyabrazo trasero central', modelo='Apoyabrazo trasero central',
          piezas=['2HC885081 RL1'],
@@ -147,12 +152,12 @@ def _tela(piezas, ops, costuras, familia='Telas de serie'):
                 costuras=[(ops,) + c for c in costuras])
 
 
-def nombre_tela(piezas):
-    if len(piezas) == 1:
-        return 'Tela ' + piezas[0]
-    if len(piezas) == 2:
-        return 'Telas %s y %s' % tuple(piezas)
-    return 'Telas %s a %s' % (piezas[0], piezas[-1])
+def nombre_tela(activas, todas=None):
+    if len(activas) == 1:
+        return 'Tela ' + activas[0]
+    if len(activas) > 2 and todas is not None and list(activas) == list(todas):
+        return 'Telas %s a %s' % (activas[0], activas[-1])   # el grupo entero, que es corrido
+    return 'Telas ' + ', '.join(activas[:-1]) + ' y ' + activas[-1]
 
 
 MODELOS += [

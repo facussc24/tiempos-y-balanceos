@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Captura de un rango de una planilla como imagen, con Excel (instancia propia, solo lectura).
 Se le pasa una COPIA local, nunca el original del servidor.
-Uso: python scripts/lamina_proceso/captura_planilla.py <copia.xlsx> <rango, p.ej. A1:I14> <salida.png>"""
+Uso: python scripts/lamina_proceso/captura_planilla.py <copia.xlsx> <rango, p.ej. A1:I14> <salida.png> [hoja]
+(sin [hoja] toma la primera hoja del libro)"""
 import os
 import time
 
@@ -16,7 +17,7 @@ xl.Visible = False
 xl.DisplayAlerts = False
 try:
     wb = xl.Workbooks.Open(xlsx, ReadOnly=True, UpdateLinks=0)
-    ws = wb.Worksheets(1)
+    ws = wb.Worksheets(sys.argv[4]) if len(sys.argv) > 4 else wb.Worksheets(1)
     rng = ws.Range(rango)
     rng.CopyPicture(1, -4147)  # como en pantalla, vectorial (se puede agrandar sin perder)
     k = 3.0

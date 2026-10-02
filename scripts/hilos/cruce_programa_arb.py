@@ -46,7 +46,7 @@ for w in ('W40', 'W41'):
             continue
         k = str(row[1]).strip()
         d = prog.setdefault(k, {'linea': str(row[0]).strip(), 'desc': str(row[2] or '').strip(), 'proc': proc, 'W40': 0, 'W41': 0})
-        d[w] = sum(v for v in row[4:10] if isinstance(v, (int, float)))
+        d[w] += sum(v for v in row[4:9] if isinstance(v, (int, float)))   # Lu a Vi; un articulo repetido se suma
 
 # --- PE W41
 wb = openpyxl.load_workbook(os.path.join(S, 'PE_W41.xlsx'), read_only=True, data_only=True)
@@ -85,11 +85,13 @@ def buscar(art):
         return exactos[AR.clave(art)]
     c = AR.compacto(art)
     if c in prods:
-        if len(prods[c]) > 1:
-            print('OJO sin exacto y con varias grafias:', art, prods[c])
+        if len(prods[c]) > 1:   # no se elige: cada grafia tiene su BOM y una es la vieja
+            raise SystemExit('%s no esta con ese codigo exacto en el arb y hay varias grafias: %s' % (art, prods[c]))
         return prods[c][0]
     c2 = c.lstrip('0')
     hits = [v for k, vs in prods.items() if k.lstrip('0') == c2 for v in vs]
+    if len(hits) > 1:
+        raise SystemExit('%s: varias grafias en el arb sin el cero inicial: %s' % (art, hits))
     return hits[0] if hits else None
 
 

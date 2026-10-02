@@ -37,6 +37,7 @@ PIEZAS_POR_MEDICION = 30
 PRIMERO = ('Patagonia', 'Costura Blanco')       # por donde se empieza (Fak, 02/10/2026)
 ORDEN_SECTOR = ['Patagonia', 'Costura Blanco', 'Amarok', 'Ford P703', 'P21']
 LOGO = os.path.join(AQUI, '..', '..', 'tools', 'flowchart', 'assets', 'barack_logo.png')
+CAPTURAS = ('programa_w41.png', 'ho971_cab.png', 'ho971_paso.png', 'arb_n231.png')
 
 
 # ---------------------------------------------------------------------------- datos
@@ -51,14 +52,25 @@ def cargar():
         if faltan:
             raise SystemExit('modelo %s: piezas que no estan en el programa: %s' % (m['modelo'], faltan))
         activas = [p for p in m['piezas'] if base[p]['W40'] + base[p]['W41'] > 0]
-        modelos.append(dict(m, activas=activas, modelo=m['modelo'] or nombre_tela(activas or m['piezas'])))
+        # una costura que no aplica a ninguna de las piezas con programa no se mide (la vista del apoyacabezas L0)
+        no = m.get('no_aplica', {})
+        costuras = [c for c in m['costuras'] if not (activas and all(p in no.get(c[1], ()) for p in activas))]
+        modelos.append(dict(m, activas=activas, costuras=costuras,
+                            modelo=m['modelo'] or nombre_tela(activas or m['piezas'], m['piezas'])))
     modelos.sort(key=lambda m: ORDEN_SECTOR.index(m['sector']))
+    # control: una pieza va en un solo modelo, y no puede estar a la vez en un modelo y en los que no se cosen
+    todas = [p for m in modelos for p in m['piezas']] + list(SIN_COSTURA)
+    repetidas = sorted({p for p in todas if todas.count(p) > 1})
+    if repetidas:
+        raise SystemExit('piezas repetidas (en dos modelos, o en un modelo y en SIN_COSTURA): %s' % repetidas)
     # control: toda pieza del programa con hilo en el arb tiene que estar en un modelo
     en_modelo = {p for m in modelos for p in m['piezas']}
     sueltas = [a for a, b in base.items() if b['hilos'] and a not in en_modelo and b['W40'] + b['W41'] > 0]
     if sueltas:
         raise SystemExit('piezas con hilo y programa que no estan en ningun modelo: %s' % sueltas)
     for a in SIN_COSTURA:
+        if a not in base:
+            raise SystemExit('%s esta en SIN_COSTURA y no esta en el programa' % a)
         if base[a]['hilos']:
             raise SystemExit('%s figura sin costura pero tiene hilo en el arb' % a)
     # control: todo articulo con programa esta en un modelo o en la lista de los que no se cosen
@@ -153,9 +165,9 @@ def _anchos(ws, anchos):
         ws.column_dimensions[get_column_letter(2 + j)].width = a
 
 
-def _pagina(ws, ultima_col, fila_titulos):
+def _pagina(ws, ultima_col, fila_titulos, papel=None):
     ws.page_setup.orientation = 'landscape'
-    ws.page_setup.paperSize = ws.PAPERSIZE_A4
+    ws.page_setup.paperSize = papel or ws.PAPERSIZE_A4
     ws.page_setup.fitToWidth = 1
     ws.page_setup.fitToHeight = 0
     ws.sheet_properties.pageSetUpPr.fitToPage = True
@@ -188,14 +200,16 @@ def planilla(base, modelos, salida):
             _fila(ws, f, [n, m['sector'], m['modelo'], ' / '.join(m['activas']), int(ops) if ops.isdigit() else ops,
                           nombre, arriba, abajo, maquina,
                           None, None, None, None, None, None, None,
-                          '=IF(OR(L{0}="",M{0}="",N{0}=""),"",(M{0}-N{0})/L{0})'.format(f),
-                          '=IF(OR(L{0}="",O{0}="",P{0}=""),"",(O{0}-P{0})/L{0})'.format(f)],
+                          '=IF(OR(L{0}="",L{0}=0,M{0}="",N{0}=""),"",(M{0}-N{0})/L{0})'.format(f),
+                          '=IF(OR(L{0}="",L{0}=0,O{0}="",P{0}=""),"",(O{0}-P{0})/L{0})'.format(f)],
                   centrar=(0, 4, 9, 10, 11, 12, 13, 14, 15, 16, 17))
             for col in (18, 19):
                 ws.cell(row=f, column=col).number_format = '0.00'
             f += 1
-    _anchos(ws, [5, 14, 30, 34, 13, 20, 32, 32, 20, 11, 9, 11, 11, 11, 11, 10, 11, 11])
-    _pagina(ws, 19, 4)
+    ws.row_dimensions[4].height = 48   # los titulos de los pesos van en tres renglones
+    # se imprime en A3 apaisado: en A4 las 18 columnas salen a 4,6 pt y no se pueden llenar a mano
+    _anchos(ws, [4, 12, 22, 24, 10, 14, 26, 26, 14, 9, 8, 9, 9, 9, 9, 8, 9, 9])
+    _pagina(ws, 19, 4, papel=ws.PAPERSIZE_A3)
 
     # --- hoja 2: una fila por pieza y por hilo, con lo que hoy dice el arb
     ws = wb.create_sheet('Piezas e hilos')
@@ -407,9 +421,10 @@ def powerpoint(base, modelos, salida, capturas):
               % (len(fuera), NOTA_SIN_COSTURA), 12, GRIS_TXT)
 
     # ---- 4, 5 y 6. el detalle, una fila por modelo
-    for titulo, grupo in (('Primero: Patagonia', [m for m in med if m['sector'] == 'Patagonia']),
-                          ('Primero: Costura Blanco', [m for m in med if m['sector'] == 'Costura Blanco']),
-                          ('Después: Amarok, P703 y P21', [m for m in med if m['sector'] not in PRIMERO])):
+    resto = list(OrderedDict.fromkeys(m['sector'] for m in med if m['sector'] not in PRIMERO))
+    for titulo, grupo in [('Primero: ' + sec, [m for m in med if m['sector'] == sec]) for sec in PRIMERO] + [
+            ('Después: ' + (', '.join(resto[:-1]) + ' y ' + resto[-1] if len(resto) > 1 else ''.join(resto)),
+             [m for m in med if m['sector'] not in PRIMERO])]:
         if not grupo:
             continue
         filas = [(m['modelo'], ', '.join(m['activas']), ' + '.join(c[1] for c in m['costuras']), hilos_del_modelo(base, m))
@@ -493,18 +508,27 @@ def main():
     if not args:
         raise SystemExit(__doc__)
     salida = os.path.abspath(args[0])
-    capturas = salida
+    capturas = os.path.join(AQUI, 'capturas')
     if '--capturas' in sys.argv:
         capturas = os.path.abspath(sys.argv[sys.argv.index('--capturas') + 1])
+    faltan = [c for c in CAPTURAS if not os.path.exists(os.path.join(capturas, c))]
+    if faltan:   # sin las capturas el PowerPoint sale sin la hoja de fuentes y sin la hoja de operaciones
+        raise SystemExit('faltan capturas en %s: %s' % (capturas, faltan))
     os.makedirs(salida, exist_ok=True)
     base, modelos = cargar()
     xlsx = os.path.join(salida, 'Consumo de hilos - Planilla de medicion.xlsx')
     pptx = os.path.join(salida, 'Consumo de hilos - Plan de medicion.pptx')
-    n = planilla(base, modelos, xlsx)
+    planilla(base, modelos, xlsx)
     piezas, nmod, nmed = powerpoint(base, modelos, pptx, capturas)
-    if n != nmed:
-        raise SystemExit('la planilla tiene %d mediciones y el PowerPoint dice %d' % (n, nmed))
-    print('piezas %d · modelos %d · mediciones %d' % (piezas, nmod, nmed))
+    # control sobre lo que QUEDO escrito: se reabren los dos archivos y se cuentan
+    from openpyxl import load_workbook
+    wb = load_workbook(xlsx)
+    filas = sum(1 for r in wb['Mediciones'].iter_rows(min_row=5, min_col=2, max_col=2, values_only=True) if isinstance(r[0], int))
+    piezas_xl = len({r[0] for r in wb['Piezas e hilos'].iter_rows(min_row=5, min_col=5, max_col=5, values_only=True) if r[0]})
+    hojas = len(Presentation(pptx).slides)
+    if (filas, piezas_xl) != (nmed, piezas):
+        raise SystemExit('la planilla quedo con %d mediciones y %d piezas; el PowerPoint dice %d y %d' % (filas, piezas_xl, nmed, piezas))
+    print('piezas %d · modelos %d · mediciones %d · %d hojas' % (piezas, nmod, nmed, hojas))
     print(xlsx)
     print(pptx)
 
