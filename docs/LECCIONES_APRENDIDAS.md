@@ -86,6 +86,8 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **02/10 — Un alta en el arb son dos pasadas por código (grabar y releer) y la descripción va en MAYÚSCULAS** (12 ventanas abiertas antes de grabar 2 códigos: *"una tarea rápida la transformás en un calvario"*). Graduado a `_arbInsumoCampos.py` y a la memoria `feedback_arb_una_pasada_por_codigo_y_mayusculas`.
+
 - **01/10 — Cuando un entregable vuelve se relee el PRIMER pedido entero; lo que no aparece no se rellena con algo parecido, y "no hay" se dice después de listar sin filtro de palabras** (fotos de las prensas Hot Press: cuatro vueltas; medido, en 15 de 54 sesiones lo mismo volvió 3 veces o más). Graduado al hook `correccion-guard` y a `scripts/_materialAfuera.mjs` (`video-maquina.md`).
 
 - **01/10 — Un punto del Asaichi que dice "pasar mail" no es la orden de armarlo hoy, y un cierre de 80 renglones o con tres tablas no se lee** (*"armaste un mail que no te pedi"*, *"no entendi un carajo"*). Graduado a la memoria `feedback_mail_de_una_tarea_va_con_la_info_procesada`.
@@ -98,7 +100,6 @@ incidente vive en los snapshots.
 - **30/09 — Lo que Fak ejecuta con doble click se prueba por SU camino y lo que pasa la primera vez se dice ANTES** (*"me pide contraseña, te dije que sea automatico y encima no anda"*: Z: desconectado para el lanzador). Graduado a la memoria `lo_que_fak_ejecuta_se_prueba_por_su_camino`.
 - **23/09 — Lo que dice la norma publicada no se presenta como decisión pendiente, y una pregunta a Fak se escribe como la lista que él lee.** Graduado a la memoria `feedback_pregunta_a_fak_como_listita`.
 - **31/08 — El pedido se ejecuta como viene: ni fabricar una decision que Fak no tiene que tomar (tampoco una de diseño: 01/10, skill `lamina-de-proceso`), ni convertir un comentario en trabajo; y el dato que Fak pasa escrito no se discute.** Graduado a la memoria `feedback_el_pedido_se_ejecuta_como_viene`.
-- **30/09-01/10 — IP Pad: seis correcciones sobre cómo contesto, decido, busco antes de pedir y cierro lo que escribo** (un contador derivado y el historial de revisiones quedaron atrás). Graduado a `no_hacer_informes`, `peso_imds_no_es_consumo`, `project_ippad_ho985_engrampado`, skill `hojas-de-proceso` §2 quinquies y `saveAmfe()`.
 - **26/09 — Un audit que pide Fak incluye aplicar lo que encuentra: el informe solo no es el entregable.** Graduado a la memoria `feedback_audit_incluye_aplicar`.
 - **Un entregable tecnicamente correcto falla igual si el que lo mira no entiende lo que esta viendo; lo que explica va en un PDF visual, no en un .txt.** Graduado al skill `editar-video` §5, a `cad-3d.md` GATE E + `gate_entregable.py` y a la memoria `entregables_para_fak`.
 - **Lo que sale de aca lo define el destinatario: que entra, la voz, el largo y el idioma.** El test de que entra: **¿el que lee tiene que hacer algo con esto hoy?** El resto graduado a `mail-envio.md` (voz medida + su gate) y a las memorias `mail_corto_como_los_de_fak`, `sin_ingles_random`, `traduccion_va_completa_en_idioma_destino`.
@@ -108,7 +109,6 @@ incidente vive en los snapshots.
 - **Material de Fak no se borra para hacer lugar: va a la nube, y el disco se libera deshidratando.** Graduado entero a la memoria `material_de_fak_no_se_borra_va_a_la_nube` (*"nunca di esa orden"*, *"nunca los borres"*).
 - **01 y 12/09 — Despues de la segunda correccion seguida se deja de parchear y se barre la tabla ENTERA; barrer una COLUMNA no es barrer la tabla.** Graduado a la memoria `feedback_despues_de_la_segunda_correccion_se_barre_la_tabla`.
 - **Lo que se entrega se juzga en su forma final —impreso, rasterizado, en el zoom en que se va a usar— y el control que lo juzga mide lo que el LECTOR ve, no lo que el codigo cree.** Graduado a `hojas-proceso.md` §5 + skill `hojas-de-proceso`, `_xlsxAPdf.py`, los dos controles de hoja de `cajetin.py`, y las memorias `ppap_novax_tapizadas_puerta` y `columnas_de_un_entregable` (ahi viven las cuatro reglas de columna).
-- **21-24/09 — Hojas de proceso: cada correccion de Fak quedo graduada al skill `hojas-de-proceso` (y su `reference/casos.md`) y a `hojas-proceso.md`;** se leen ahi antes de armar o corregir una hoja.
 - **25/09 — Una hoja que manda seguir los pasos de una pantalla nombra primero las PIEZAS que se mueven** (*"era extremadamente dificil de comprender"*): hoja-mapa, una hoja por pieza, QUE se mueve antes que CON QUE boton. Memoria `project_hojas_proceso_img`.
 - **23/09 — Una nota que junta dos momentos se escribe en el orden en que pasan** (el corte iba antes del RESET que lo dispara: *"no se entiende, es confusa"*). Lo que Fak corrige en un deck queda frenado en ESE deck: graduado a `_gate_corregido_por_fak()` del generador IMG y `gates_selftest.py`.
 - **15/09 — Mirar un render NO es medirlo: lo que decide *pegado o no* es una DISTANCIA, y se mide.** Graduado a la memoria `reference_medir_una_hoja_de_matplotlib` (`medir.py` y su gemelo).

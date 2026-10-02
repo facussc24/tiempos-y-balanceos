@@ -30,11 +30,15 @@ LO QUE NO SE VE LEYENDO EL CODIGO (todo medido antes, ver `reference/maestro-de-
   - Al grabar puede salir `Microsoft Visual C++ Runtime Library`: el boton lo eligio Fak y es
     `Omitir` (15/09). `Anular` cierra el arb y reabrirlo pide SU contraseña: aca nunca se toca.
     Si el cartel sale INVISIBLE con el foco en `Anular`, no se manda ninguna tecla: se para.
-  - Los campos que el hermano tiene vacios quedan vacios: no se inventa ninguno.
+  - Los campos que el hermano tiene vacios quedan vacios: no se inventa ninguno. Salvo los
+    que `Altas` exige para dejar grabar (`OBLIGATORIOS`: Tipo de Descarga I, Origen M).
+  - La descripcion del alta se pasa a MAYUSCULAS, y la ficha del hermano se guarda 12 h en
+    `~/arb_fotos/fichas/` para no reabrirla en cada corrida (Fak, 02/10/2026).
 """
 import csv
 import ctypes
 import importlib.util
+import json
 import os
 import sys
 import time
@@ -73,6 +77,13 @@ TOPE_DESC, TOPE_COD = 40, 15
 NO_COPIAR = {'rubro', 'medida', 'descripcion', 'proveedor1', 'cod_original1',
              'proveedor2', 'cod_original2'}
 RUNTIME = 'Microsoft Visual C++ Runtime Library'
+# Campos que `Altas` EXIGE (el TAB se clava si quedan vacios) y un hermano viejo puede traer en
+# blanco: `YPF GAS - 10053`, 02/10/2026, freno el alta en "no llegue a Posee PAPP/PSW". El valor
+# es el que tipea Fak en toda alta (grabacion del 28/08: `reference/maestro-de-insumos.md`).
+OBLIGATORIOS = {'tipo_descarga': 'I', 'origen_descarga': 'M'}
+# La ficha del hermano se guarda 12 h: releerla es abrir la ventana y tipear el codigo otra vez
+# delante de Fak (02/10/2026: "me molesta mucho verte poner el mismo codigo 300 veces").
+CACHE_FICHA_H = 12
 
 
 class Frenar(Exception):
@@ -211,6 +222,26 @@ def grabar(h):
     return 'GRABADO'
 
 
+def _ruta_ficha(codigo):
+    carpeta = os.path.join(os.path.expanduser('~'), 'arb_fotos', 'fichas')
+    os.makedirs(carpeta, exist_ok=True)
+    return os.path.join(carpeta, ''.join(c if c.isalnum() or c in '._-' else '_' for c in codigo)
+                        + '.json')
+
+
+def _ficha_guardada(codigo):
+    ruta = _ruta_ficha(codigo)
+    if not os.path.exists(ruta) or time.time() - os.path.getmtime(ruta) > CACHE_FICHA_H * 3600:
+        return None
+    with open(ruta, encoding='utf-8') as fh:
+        return json.load(fh)
+
+
+def _guardar_ficha(codigo, ficha):
+    with open(_ruta_ficha(codigo), 'w', encoding='utf-8') as fh:
+        json.dump(ficha, fh, ensure_ascii=False, indent=1)
+
+
 def subproducto(codigo, apply_):
     try:
         h, ficha = traer_ficha(codigo)
@@ -282,7 +313,7 @@ def alta(codigo, descripcion, hermano, apply_, comprado=False):
             if campo == 'sub_producto' and not comprado:
                 valor = 'S'
             else:
-                valor = hermano.get(campo, '')
+                valor = hermano.get(campo, '') or OBLIGATORIOS.get(campo, '')
             if not valor:
                 continue
             hc = ad.tabular_hasta(h, xy)
@@ -341,14 +372,20 @@ def main(argv):
             print('Uso: --alta tabla.csv --como COD_HERMANO [--comprado] [--apply]')
             return 1
         with open(resto[0], encoding='utf-8-sig', newline='') as fh:
-            filas = [(r['codigo'].strip(), r['descripcion'].strip())
+            # En el arb la descripcion va SIEMPRE en mayusculas (Fak, 02/10/2026)
+            filas = [(r['codigo'].strip(), r['descripcion'].strip().upper())
                      for r in csv.DictReader(fh) if (r.get('codigo') or '').strip()]
-        try:
-            _h, hermano = traer_ficha(resto[2])
-        except Frenar as e:
-            print('no pude leer el hermano %s: %s' % (resto[2], e))
-            return 1
-        ad.cerrar()
+        hermano = _ficha_guardada(resto[2])
+        if hermano is None:
+            try:
+                _h, hermano = traer_ficha(resto[2])
+            except Frenar as e:
+                print('no pude leer el hermano %s: %s' % (resto[2], e))
+                return 1
+            ad.cerrar()
+            _guardar_ficha(resto[2], hermano)
+        else:
+            print('(ficha del hermano leida hace menos de %d h: no la vuelvo a abrir)' % CACHE_FICHA_H)
         print('hermano %s: %s\n' % (resto[2], ', '.join('%s=%s' % (c, hermano[c])
                                                       for c, _xy in CAMPOS if hermano.get(c))))
         print('%d alta(s)  |  modo %s\n' % (len(filas), 'APPLY' if apply_ else 'dry-run'))

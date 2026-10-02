@@ -141,6 +141,22 @@ se confirma contra las OC (`_ocHistoria.py "VICTORIA CORRUGADOS"`). Antes del al
 código que **no existe** contesta `NO SE PUDO LEER: el foco no quedo en un RichEdit (Button)`: así
 se ve "no existe" en `Modificaciones`, no es una falla del robot.
 
+**Tercera tanda, 2/2 el 02/10/2026** (`AMARILLA GAS` y `LIDER GAS`, cilindros de Hexagon Ragasco,
+`--como "YPF GAS - 10053" --comprado`; pedido de Compras por WhatsApp). Tres cosas nuevas:
+
+- **Un hermano viejo puede tener vacíos los campos que `Altas` exige** (`Tipo de Descarga`,
+  `Origen Descarga`): el TAB se clava ahí y el alta se frena en *"no llegue a Posee PAPP/PSW"*,
+  sin grabar. El script los completa con `OBLIGATORIOS` (`I` y `M`, lo que tipea Fak en toda alta).
+- **La descripción va SIEMPRE en MAYÚSCULAS** (Fak, 02/10/2026); el script la pasa solo. Y entra
+  en un renglón de 40: se acorta sacando `DE` / `PARA`, no partiéndola en dos.
+- 🔴 **Cada lectura es una ventana que se abre y un código que se tipea delante de Fak**: ese día
+  fueron 12 pasadas antes de grabar 2 altas (*"me molesta mucho verte poner el mismo código 300
+  veces... una tarea rápida la transformás en un calvario"*). **Un alta son dos pasadas por
+  código y ninguna más: `--apply` y un `--leer` de todos los nuevos al final.** La ficha del
+  hermano queda guardada 12 h (`~/arb_fotos/fichas/`), si el código ya existe se busca con
+  `grep` en `C:\tmp\INSUMOS.TXT` y `RELACIONES.TXT`, y el dry-run aparte es solo para un hermano
+  que nunca se usó: los gates del `--apply` cierran sin grabar igual.
+
 ### Verificar un alta sin tocar nada — solapa `Modificaciones`
 
 ```bash
