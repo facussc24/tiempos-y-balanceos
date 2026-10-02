@@ -131,3 +131,9 @@ archivo): como entra una leccion, la tabla de graduacion y el **gate por bullet*
 por leccion; una "graduada a X", 2 lineas). El techo de 26/28 KB queda como red. Enforcement:
 `scripts/_lib/cierreGuard.mjs`, corrido por `node scripts/_cierreSesion.mjs` y por el hook Stop
 `cierre-guard.sh`.
+
+## Archivado el 02/10/2026 (ya graduadas enteras a sus memorias; salen del archivo vivo en la consolidacion de ese dia)
+
+- **30/08 — Un barrido se escribe en el idioma del sistema que busca, y "sin errores" no es "correcto": el veredicto lo da el compilador.** Graduado entero a las memorias `buscar_quien_importa_un_archivo` y `barrer_formulario_ajeno_antes_de_entregar`.
+- **24-25/08 — Antes de hacer "lo mismo pero simetrico", verificar que el mecanismo lo admita; y antes de preguntar, listar lo que ya tengo.** **Una pieza no se escala ni se espeja: se re-deriva del mecanismo**, y si no puedo escribir por que lo que tengo no alcanza, falta procesar, no informacion. Graduado entero a las memorias `mecanismo_no_admite_la_variante` y `la_info_ya_la_tengo`.
+- **02/09 — Un hallazgo heredado se re-verifica por sus ARGUMENTOS aunque la conclusion sea correcta, y una fuente que el checklist da por existente puede devolver cero filas sin error.** Graduado entero a `telas_termoformadas_pwa_582d` y `arb_insumos_maestro`.
