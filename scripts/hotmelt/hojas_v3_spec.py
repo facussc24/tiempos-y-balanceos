@@ -38,6 +38,9 @@ AVISO_MECANISMO = ("ANTES DE TOCAR UN MECANISMO O MATERIAL TRABADO: apretar la p
                    "cerrar el aire. Usar guantes para calor.")
 
 AVISO_METAL = None
+# Fak, 02/10/2026: el enhebrado completo es la excepcion; lo normal es el empalme.
+AVISO_ENHEBRADO = ("SOLO CON LA MÁQUINA SIN MATERIAL PASADO. En el trabajo normal el rollo nuevo "
+                   "se une con un empalme (HO-992, operación 20.3).")
 AVISO_FRIO = "Girar y juntar los rodillos solo con los dos por encima de 150 °C."
 
 MAQUINA = [
@@ -202,6 +205,56 @@ MAQUINA = [
                   fuentes=["manual p. 45 y p. 46 (alarmas de accionamientos: revisión del variador)",
                            "manual p. 46: falla y nivel bajo del fusor son avisos, no detienen la maquina"]),
          ]),
+    # El enhebrado completo NO es del trabajo de todos los dias (Fak, 02/10/2026: "lo unico que
+    # hay que hacer es un empalme con el rollo viejo y listo... no se pasa el vinilo siempre por
+    # todos lados"). Por eso vive aca, en la hoja de la maquina, y no en la operacion 20.
+    dict(op="60", hoja_de=(1, 2), denominacion="ENHEBRADO DEL MATERIAL", epp=EPP_MANOS,
+         aviso=AVISO_ENHEBRADO,
+         pasos=[
+             dict(texto="Apretar el botón de la pantalla manual (“Hand-drawn screen F2”) en la "
+                        "pantalla principal.",
+                  foto=ruta("n_home_f2"), pie="Pantalla principal",
+                  fuentes=["cuadro 0836_03", "IMG_9527 72:27"]),
+             dict(texto="Apretar el botón del modo de enhebrado (“Feeding material Mode”). "
+                        "Verificar que quede en verde.",
+                  foto=ruta("n_modo"), pie="Pantalla manual",
+                  fuentes=["manual p. 13", "cuadros 0836_04 y 9527_4580"]),
+             dict(texto="Llevar la punta del material hacia arriba por el primer rodillo, del lado del frente.",
+                  foto=ruta("n_rollo"), pie="Salida del rollo",
+                  fuentes=["IMG_9415 00:00 a 00:45", "cuadro 9415_0002"]),
+             dict(texto="Pasar el material por el acumulador de entrada: sube y baja tres veces.",
+                  foto=ruta("n_acumulador"), pie="Acumulador de entrada",
+                  fuentes=["IMG_9415 (sube, baja, sube, baja, sube, baja)", "manual p. 13 y p. 17"]),
+             # "detector", no "sensor de borde": ninguna fuente le pone ese nombre (ver hoja 20.4)
+             dict(texto="Pasar el borde del material por el detector negro que está sobre la regla.",
+                  foto=ruta("r_sensor_borde"), pie="Detector sobre la regla",
+                  fuentes=["IMG_9415 00:45 (tiene que pasar por este dispositivo negro)", "cuadro 9415_0024"]),
+             dict(texto="Pasar el material por debajo del rodillo y subirlo hasta los rodillos de encolado.",
+                  fuentes=["IMG_9415 01:00", "manual p. 13"]),
+         ]),
+    dict(op="60", hoja_de=(2, 2), denominacion="ENHEBRADO DEL MATERIAL", epp=EPP_MANOS,
+         aviso=AVISO_ENHEBRADO,
+         pasos=[
+             # SIN FOTO a proposito: la unica toma (IMG_0360) muestra el material MAL pasado
+             # ("esta esta mal pasada... es un modo de falla"). Lo que vale de ese video es el audio.
+             dict(texto="Verificar que el material pase por adentro, entre el rodillo plateado y el verde.",
+                  fuentes=["IMG_0360 00:00 (audio: el vinilo tiene que ir por adentro, entre el plateado y aca)"]),
+             dict(texto="Pasar el material por la mesa de enfriamiento y por el acumulador de salida.",
+                  foto=ruta("n_enfriamiento"), pie="Mesa de enfriamiento",
+                  fuentes=["manual p. 13", "cuadros 0392_0020 a 0025 y 0361_0001 a 0025"]),
+             dict(texto="Llevar el material sobre el rodillo cromado alto y bajarlo hasta el enrollador.",
+                  foto=ruta("n_salida"), pie="Rodillo cromado alto",
+                  fuentes=["cuadros 0361_0028 a 0040"]),
+             dict(texto="Pegar la punta al tubo de cartón con cinta adhesiva y dar 3 vueltas a mano.",
+                  foto=ruta("n_tubo"), pie="Punta pegada al tubo",
+                  fuentes=["manual p. 15 pasos 4 y 5", "cuadros 0361_0041 a 0048"]),
+             dict(texto="Inflar el eje del enrollador con la manguera naranja.",
+                  foto=ruta("r_inflar"), pie="Boquilla en el orificio del eje",
+                  fuentes=["manual p. 15 paso 6", "IMG_0355 2:58 a 3:10"]),
+             dict(texto="Verificar que el material salga derecho.",
+                  foto=ruta("n_derecho"), pie="Material a la salida",
+                  fuentes=["IMG_0394 03:33", "cuadro 0394_0100"]),
+         ]),
 ]
 
 EPP_ROLLO = EPP_MANOS
@@ -210,12 +263,13 @@ AVISO_EMPALME = "EL EMPALME VA RECTO: cortar la punta recta y pegar la cinta adh
 # INFERENCIA (ninguna fuente lo dice con estas palabras; esta en FALTA para confirmar). Lo que dicen
 # las fuentes: al girar la llave de cambio corre el tiempo del cambio, y si no se termina la maquina
 # se detiene (IMG_9527 33:19 a 33:40 y 40:35 a 40:54). De ahi sale que el rollo tiene que estar a mano.
+# Fak, 02/10/2026: "lo unico que hay que hacer es un empalme con el rollo viejo y listo".
+AVISO_SIGUE_EMPALME = ("EL ROLLO NUEVO SE UNE CON UN EMPALME AL MATERIAL QUE QUEDÓ PASADO EN LA MÁQUINA "
+                       "(hoja 20.3). No hace falta volver a pasar el material por la máquina.")
 AVISO_ROLLO_LISTO = "TENER EL ROLLO SIGUIENTE AL LADO DEL DESBOBINADOR ANTES DE QUE SUENE LA ALARMA DE FIN DE MATERIAL."
-AVISO_ENHEBRADO = ("El enhebrado se hace solo cuando la máquina no tiene material pasado. "
-                   "Con material pasado, el rollo nuevo se une con un empalme (hoja 20.8).")
 
 PRODUCCION = [
-    dict(op="20.1", denominacion="CONTROL DE LA RECETA", epp=EPP_BASE,
+    dict(op="20.1", denominacion="CONTROL DE LA RECETA", epp=EPP_BASE, cuando="cada arranque",
          aviso="El encendido de la máquina, del fusor y de los rodillos está en la HO-993.",
          pasos=[
              dict(texto="Apretar el botón de receta (“Recipe F5”) en la pantalla principal.",
@@ -229,8 +283,8 @@ PRODUCCION = [
              dict(texto="Verificar que no haya alarmas activas antes de arrancar (HO-993, operación 50).",
                   fuentes=["manual p. 11, aviso"]),
          ]),
-    dict(op="20.2", denominacion="MONTAJE DEL ROLLO EN EL DESBOBINADOR", epp=EPP_ROLLO,
-         aviso=AVISO_ROLLO_LISTO,
+    dict(op="20.2", denominacion="MONTAJE DEL ROLLO EN EL DESBOBINADOR", epp=EPP_ROLLO, cuando="cada rollo",
+         aviso=AVISO_SIGUE_EMPALME,
          pasos=[
              dict(texto="Retirar el film de plástico del rollo nuevo.",
                   foto=ruta("r_film"), pie="Rollo nuevo sin el film",
@@ -256,7 +310,7 @@ PRODUCCION = [
     # El paso "verificar el sensor de borde sobre el borde del material" se saco el 02/10: ninguna
     # fuente llama "sensor de borde" al aparato de la regla (con el en cuadro, el audio habla del
     # detector de la cinta de aviso), y el guiador de borde se explica en otro lugar de la maquina.
-    dict(op="20.4", denominacion="CENTRADO Y TENSIÓN DE LA BANDA", epp=EPP_BASE,
+    dict(op="20.4", denominacion="CENTRADO Y TENSIÓN DE LA BANDA", epp=EPP_BASE, cuando="cada rollo",
          pasos=[
              dict(texto="Verificar que el guiador de borde esté en automático. ⚠ No modificar sus valores.",
                   fuentes=["IMG_9527 46:34 a 49:11"]),
@@ -267,7 +321,7 @@ PRODUCCION = [
                   misma_foto_que=2,
                   fuentes=["IMG_9527 41:17 a 43:26", "cuadro 9527_2500"]),
          ]),
-    dict(op="20.7", denominacion="CAMBIO DE ROLLO POR ALARMA DE FIN DE MATERIAL", epp=EPP_ROLLO,
+    dict(op="20.7", denominacion="CAMBIO DE ROLLO POR ALARMA DE FIN DE MATERIAL", epp=EPP_ROLLO, cuando="cada rollo",
          aviso=AVISO_ROLLO_LISTO,
          pasos=[
              # El paso 1 va SIN FOTO: en el cuadro 9527_2590 la banda azul esta pegada al RODILLO, no
@@ -289,17 +343,18 @@ PRODUCCION = [
                   foto=ruta("r_tubo_vacio"), pie="Tubo vacío en el eje",
                   fuentes=["IMG_0364 0:03", "IMG_0366 0:00 a 0:16", "manual p. 14 paso 3"]),
              dict(texto="Sacar el tubo vacío del eje. Montar el rollo nuevo como indica la hoja 20.2 y "
-                        "empalmar como indica la hoja 20.8.",
+                        "empalmar como indica la hoja 20.3.",
                   foto=ruta("r_montado"), pie="Rollo nuevo montado",
                   fuentes=["cuadros 0366_0006 a 0012 (el eje sale del tubo vacío)", "IMG_0367 0:10 a 0:36",
                            "manual p. 14 pasos 3 y 4"]),
          ]),
-    dict(op="20.8", denominacion="EMPALME DEL MATERIAL", aviso=AVISO_EMPALME, epp=EPP_ROLLO,
+    dict(op="20.3", denominacion="EMPALME DEL MATERIAL", aviso=AVISO_EMPALME, epp=EPP_ROLLO, cuando="cada rollo",
          pasos=[
              dict(texto="Llevar la punta del material nuevo hasta la mesa superior, junto a la barra amarilla.",
                   foto=ruta("r_punta"), pie="Punta del material nuevo",
                   fuentes=["IMG_0367 0:38 a 1:34", "manual p. 14 paso 5"]),
-             dict(texto="Apretar la punta contra la mesa con la mano y alinear las dos puntas.",
+             dict(texto="Apretar la punta contra la mesa con la mano y alinearla con la punta del material que "
+                        "quedó pasado en la máquina.",
                   foto=ruta("r_apretar"), pie="Mano sobre el material",
                   fuentes=["IMG_0367 cuadros 0049 a 0090", "manual p. 14 paso 6"]),
              dict(texto="Cortar la punta con el cúter, recta de lado a lado. ⚠ Usar guantes anticorte y "
@@ -316,54 +371,7 @@ PRODUCCION = [
              dict(texto="Soltar la punta del material.",
                   fuentes=["manual p. 14 paso 8"]),
          ]),
-    dict(op="20.3", hoja_de=(1, 2), denominacion="ENHEBRADO DEL MATERIAL", epp=EPP_ROLLO,
-         aviso=AVISO_ENHEBRADO,
-         pasos=[
-             dict(texto="Apretar el botón de la pantalla manual (“Hand-drawn screen F2”) en la "
-                        "pantalla principal.",
-                  foto=ruta("n_home_f2"), pie="Pantalla principal",
-                  fuentes=["cuadro 0836_03", "IMG_9527 72:27"]),
-             dict(texto="Apretar el botón del modo de enhebrado (“Feeding material Mode”). "
-                        "Verificar que quede en verde.",
-                  foto=ruta("n_modo"), pie="Pantalla manual",
-                  fuentes=["manual p. 13", "cuadros 0836_04 y 9527_4580"]),
-             dict(texto="Llevar la punta del material hacia arriba por el primer rodillo, del lado del frente.",
-                  foto=ruta("n_rollo"), pie="Salida del rollo",
-                  fuentes=["IMG_9415 00:00 a 00:45", "cuadro 9415_0002"]),
-             dict(texto="Pasar el material por el acumulador de entrada: sube y baja tres veces.",
-                  foto=ruta("n_acumulador"), pie="Acumulador de entrada",
-                  fuentes=["IMG_9415 (sube, baja, sube, baja, sube, baja)", "manual p. 13 y p. 17"]),
-             # "detector", no "sensor de borde": ninguna fuente le pone ese nombre (ver hoja 20.4)
-             dict(texto="Pasar el borde del material por el detector negro que está sobre la regla.",
-                  foto=ruta("r_sensor_borde"), pie="Detector sobre la regla",
-                  fuentes=["IMG_9415 00:45 (tiene que pasar por este dispositivo negro)", "cuadro 9415_0024"]),
-             dict(texto="Pasar el material por debajo del rodillo y subirlo hasta los rodillos de encolado.",
-                  fuentes=["IMG_9415 01:00", "manual p. 13"]),
-         ]),
-    dict(op="20.3", hoja_de=(2, 2), denominacion="ENHEBRADO DEL MATERIAL", epp=EPP_ROLLO,
-         aviso=AVISO_ENHEBRADO,
-         pasos=[
-             # SIN FOTO a proposito: la unica toma (IMG_0360) muestra el material MAL pasado
-             # ("esta esta mal pasada... es un modo de falla"). Lo que vale de ese video es el audio.
-             dict(texto="Verificar que el material pase por adentro, entre el rodillo plateado y el verde.",
-                  fuentes=["IMG_0360 00:00 (audio: el vinilo tiene que ir por adentro, entre el plateado y aca)"]),
-             dict(texto="Pasar el material por la mesa de enfriamiento y por el acumulador de salida.",
-                  foto=ruta("n_enfriamiento"), pie="Mesa de enfriamiento",
-                  fuentes=["manual p. 13", "cuadros 0392_0020 a 0025 y 0361_0001 a 0025"]),
-             dict(texto="Llevar el material sobre el rodillo cromado alto y bajarlo hasta el enrollador.",
-                  foto=ruta("n_salida"), pie="Rodillo cromado alto",
-                  fuentes=["cuadros 0361_0028 a 0040"]),
-             dict(texto="Pegar la punta al tubo de cartón con cinta adhesiva y dar 3 vueltas a mano.",
-                  foto=ruta("n_tubo"), pie="Punta pegada al tubo",
-                  fuentes=["manual p. 15 pasos 4 y 5", "cuadros 0361_0041 a 0048"]),
-             dict(texto="Inflar el eje del enrollador con la manguera naranja.",
-                  foto=ruta("r_inflar"), pie="Boquilla en el orificio del eje",
-                  fuentes=["manual p. 15 paso 6", "IMG_0355 2:58 a 3:10"]),
-             dict(texto="Verificar que el material salga derecho.",
-                  foto=ruta("n_derecho"), pie="Material a la salida",
-                  fuentes=["IMG_0394 03:33", "cuadro 0394_0100"]),
-         ]),
-    dict(op="20.5", denominacion="ARRANQUE Y ALINEACIÓN", epp=EPP_ROLLO,
+    dict(op="20.5", denominacion="ARRANQUE Y ALINEACIÓN", epp=EPP_ROLLO, cuando="cada arranque",
          pasos=[
              dict(texto="Verificar en la pantalla de operación que la casilla de calentamiento completo "
                         "(“Heating complete”) esté en verde.",
@@ -388,6 +396,7 @@ PRODUCCION = [
     # filas=[2]: la pantalla es la foto que el paso manda LEER (gate 1), va grande aunque el
     # acumulador quede mas chico que en baldosas iguales
     dict(op="20.6", denominacion="LAMINADO — CONTROL DURANTE LA MARCHA", epp=EPP_CALOR, filas=[2],
+         cuando="durante la marcha",
          pasos=[
              dict(texto="Verificar en la pantalla que la temperatura de los dos rodillos se mantenga en "
                         "la programada, 185 °C. Si aparece una alarma de temperatura, avisar al líder.",
@@ -410,7 +419,7 @@ PRODUCCION = [
              dict(texto="Avisar al líder si aparece la alarma de nivel bajo de adhesivo (“low liquid level”).",
                   fuentes=["manual p. 46: Glue machine low liquid level es un aviso, no detiene la máquina"]),
          ]),
-    dict(op="SIN FOTO", denominacion="CORTE DE LA PLANCHA", epp=EPP_CALOR,
+    dict(op="SIN FOTO", denominacion="CORTE DE LA PLANCHA", epp=EPP_CALOR, cuando="sin confirmar",
          aviso="No cortar en el piso. No cortar en cuadrado: los cortes cuadrados dan problemas en la máquina.",
          pasos=[
              dict(texto="Usar guantes anticorte.",
@@ -422,7 +431,8 @@ PRODUCCION = [
              dict(texto="Cortar con forma redondeada, sin esquinas en cuadrado.",
                   fuentes=["Fak, 03/09/2026 (bitácora de las hojas)"]),
          ]),
-    dict(op="20.9", denominacion="PARADA DE LA MÁQUINA", aviso=AVISO_MECANISMO, epp=EPP_ROLLO,
+    dict(op="20.8", denominacion="PARADA DE LA MÁQUINA", aviso=AVISO_MECANISMO, epp=EPP_ROLLO,
+         cuando="cada parada",
          pasos=[
              dict(texto="Apretar el botón Stop.",
                   foto=ruta("m_stop"), pie="Botón Stop",
@@ -482,7 +492,7 @@ FALTA = [
                         "Confirmar en la máquina qué es el detector negro de la regla: el técnico lo muestra "
                         "como el que lee la cinta, y no está claro si además guía el borde."),
     ("CAMBIO DE ROLLO", "Confirmar que conviene tener el rollo siguiente al lado del desbobinador antes de la "
-                        "alarma (lo dice el aviso de las hojas 20.2 y 20.7; ninguna fuente lo dice así)."),
+                        "alarma (lo dice el aviso de la hoja 20.7; ninguna fuente lo dice así)."),
     ("EMPALME", "Confirmar con Fak que el corte de la punta va con guantes anticorte (su indicación fue para "
                 "el corte de la plancha)."),
     ("SEGURIDAD", "Elementos de seguridad de cada hoja: hoy llevan los del juego anterior del 30/09 según la "

@@ -76,6 +76,27 @@ caso("VERDE: todos los pasos con fuente", not frena(G.gate_fuente_por_paso,
                                                     {"op": "10", "denominacion": "X",
                                                      "pasos": [dict(texto="Apretar.", fuentes=["manual p. 12"])]}))
 
+# ── gate_lo_normal_en_produccion ─────────────────────────────────────────────────────────────
+normal = {"op": "20.3", "denominacion": "EMPALME DEL MATERIAL", "cuando": "cada rollo"}
+caso("VERDE: una hoja de todos los dias", not frena(G.gate_lo_normal_en_produccion, [normal]))
+caso("ROJO: una hoja de produccion sin decir cuando se hace",
+     frena(G.gate_lo_normal_en_produccion, [{"op": "20.3", "denominacion": "ENHEBRADO DEL MATERIAL"}]))
+caso("ROJO: una excepcion metida en el juego de produccion (el enhebrado del 02/10)",
+     frena(G.gate_lo_normal_en_produccion,
+           [normal, {"op": "20.3", "denominacion": "ENHEBRADO DEL MATERIAL", "cuando": "excepcion"}]))
+caso("ROJO: un `cuando` que no esta en la lista", frena(G.gate_lo_normal_en_produccion,
+                                                       [dict(normal, cuando="a veces")]))
+import hojas_v3_spec as spec_hoy               # noqa: E402
+caso("VERDE (caso real): las hojas de produccion de hoy declaran cuando se hacen",
+     not frena(G.gate_lo_normal_en_produccion, spec_hoy.PRODUCCION))
+caso("VERDE (caso real): el enhebrado esta en la hoja de la maquina, no en produccion",
+     any(h["denominacion"] == "ENHEBRADO DEL MATERIAL" for h in spec_hoy.MAQUINA)
+     and not any(h["denominacion"] == "ENHEBRADO DEL MATERIAL" for h in spec_hoy.PRODUCCION))
+ops = [h["op"] for h in spec_hoy.PRODUCCION]
+caso("VERDE (caso real): despues de montar el rollo viene el empalme",
+     ops.index("20.3") == ops.index("20.2") + 1
+     and spec_hoy.PRODUCCION[ops.index("20.3")]["denominacion"] == "EMPALME DEL MATERIAL")
+
 # ── el caso real del 01/10, contra la biblioteca (si esta en esta PC) ────────────────────────
 if G.titulo_del_video("0360"):
     real = hoja(dict(texto="Verificar que el material pase por adentro.", foto=G.ruta_foto("n_adentro"),

@@ -47,7 +47,7 @@ JUEGOS = {
                     portada=dict(
                         titulo="HOJAS DE PROCESO — LAMINADORA HOT MELT",
                         subtitulo="Hoja de la máquina: encendido, fusor de adhesivo, calentamiento de rodillos, "
-                                  "limpieza y alarmas",
+                                  "limpieza, alarmas y enhebrado con la máquina sin material",
                         ficha=[("Documento", "HO-993 · Form. I-IN-002.4-R01"),
                                ("Máquina", MAQUINA_TXT),
                                ("Sector", "LAMINADO"),
@@ -76,6 +76,25 @@ def gate_fuente_por_paso(d):
     if sin:
         raise SystemExit(f"OP {d['op']} {d['denominacion']}: los pasos {sin} no dicen de donde salen. "
                          "Sin fuente el paso no va (hojas-proceso.md punto 11).")
+
+
+CUANDO = ("cada arranque", "cada rollo", "durante la marcha", "cada parada", "sin confirmar", "excepcion")
+
+
+def gate_lo_normal_en_produccion(hojas):
+    """El juego de PRODUCCION cuenta lo que se hace todos los dias; la excepcion va a la hoja de la
+    maquina. Cada hoja declara `cuando=` y eso obliga a contestar la pregunta antes de numerarla.
+    El 02/10 la operacion 20 salio con el ENHEBRADO completo como 20.3, en fila con el trabajo normal
+    (Fak: "lo unico que hay que hacer es un empalme con el rollo viejo y listo... lo complejizaste
+    al pedo"): el enhebrado estaba filmado en la puesta en marcha y nadie pregunto cada cuanto se hace."""
+    for h in hojas:
+        c = h.get("cuando")
+        if c not in CUANDO:
+            raise SystemExit(f"OP {h['op']} {h['denominacion']}: falta decir CUANDO se hace "
+                             f"(cuando= uno de {', '.join(CUANDO)}).")
+        if c == "excepcion":
+            raise SystemExit(f"OP {h['op']} {h['denominacion']}: es una excepcion y esta en el juego de "
+                             "produccion. Lo que no se hace todos los dias va a la hoja de la maquina.")
 
 
 PALABRAS_DE_FALLA = ("MODO DE FALLA", "DEFECTO", "MAL PASAD")
@@ -129,6 +148,8 @@ def generar(nombre, pdf=True):
     if not j["hojas"]:
         print(f"[{nombre}] todavia no tiene hojas en el spec.")
         return None
+    if nombre == "produccion":
+        gate_lo_normal_en_produccion(j["hojas"])
     prs = Presentation()
     prs.slide_width, prs.slide_height = Cm(base.W), Cm(base.H)
     # lamina 1: portada con el indice (criterios, seccion 5)
