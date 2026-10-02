@@ -60,9 +60,9 @@
       "capturas": [
         {
           "archivo": "capturas/02-menu-inicio.png",
-          "que_se_ve": "El menú Inicio de Windows abierto, con la palabra Claude escrita en el buscador y el programa Claude primero en la lista.",
+          "que_se_ve": "El buscador de Windows con la palabra Claude escrita: el programa Claude aparece primero, como «Mejor coincidencia».",
           "marcas": [
-            { "tipo": "recuadro", "x": 3, "y": 14, "ancho": 38, "alto": 14, "posicion_confirmada": false }
+            { "tipo": "recuadro", "x": 3.4, "y": 41.5, "ancho": 43, "alto": 25, "posicion_confirmada": true }
           ]
         }
       ],
@@ -108,10 +108,10 @@
       "capturas": [
         {
           "archivo": "capturas/04-local-y-select-folder.png",
-          "que_se_ve": "Pestaña Code, conversación nueva sin empezar: se ve Local elegido y el botón Select folder.",
+          "que_se_ve": "La pantalla de conversación nueva, abajo: Local (con su lista abierta) y al lado el botón de la carpeta.",
           "marcas": [
-            { "tipo": "recuadro", "x": 30, "y": 60, "ancho": 10, "alto": 6, "numero": 1, "posicion_confirmada": false },
-            { "tipo": "recuadro", "x": 44, "y": 60, "ancho": 16, "alto": 6, "numero": 2, "posicion_confirmada": false }
+            { "tipo": "recuadro", "x": 3.6, "y": 53.3, "ancho": 14.4, "alto": 11, "numero": 1, "posicion_confirmada": true },
+            { "tipo": "recuadro", "x": 18.6, "y": 53.3, "ancho": 28.6, "alto": 11, "numero": 2, "posicion_confirmada": true }
           ]
         },
         {
@@ -125,14 +125,14 @@
         }
       ],
       "texto": [
-        "1. Elegí **Local**: así Claude trabaja en esta computadora.",
-        "2. Apretá **Select folder** (quiere decir «elegir carpeta»).",
+        "1. Abajo tiene que decir **Local**: así Claude trabaja en esta computadora.",
+        "2. Al lado está la carpeta. Si no dice **ClaudeBarack**, hacé clic ahí.",
         "3. Elegí **{CARPETA}** y apretá **Seleccionar carpeta**.",
         "Siempre esa: con otra, Claude no tiene las reglas de Barack."
       ],
       "error_que_evita": "Elegir Cloud, o cualquier otra carpeta.",
       "a_confirmar": [
-        { "donde": "app", "que": "si la primera vez aparece un cartel al elegir la carpeta" }
+        { "donde": "app", "que": "si la primera vez aparece un cartel al elegir la carpeta; y sacar la foto de nuevo en la PC piloto (acá la carpeta dice BarackMercosul, que es la de Ingeniería)" }
       ]
     },
 

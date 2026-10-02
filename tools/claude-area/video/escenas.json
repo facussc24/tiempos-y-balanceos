@@ -220,7 +220,7 @@
           "recurso": "../manual/capturas/13-mail-esperando-enviar.png",
           "que_tiene_que_verse": "La misma ventana del mail, un poco más abierta, con el cursor arriba del botón Enviar.",
           "recuadros": [
-            { "que_marca": "el botón Enviar", "x": 3.9, "y": 9, "ancho": 7.4, "alto": 25.5, "posicion_confirmada": "df5cc7727be8" }
+            { "que_marca": "el botón Enviar", "x": 3.2, "y": 5, "ancho": 6.6, "alto": 23, "posicion_confirmada": "c7d31368e572" }
           ]
         }
       ]
