@@ -6,8 +6,12 @@
    no alcanza: verifica tipos, no que las dependencias existan ni que rollup resuelva las imports
    (3 deploys rotos por un paquete sin instalar: memoria `incidente_deploy_html_to_image_2026-04-13`).
    Si el build falla, no se pushea: se arregla primero.
-2. **`git add` + `git commit`** — todos los archivos modificados/creados, por nombre (no `git add .`
-   ni `-A`: suele haber otra sesion con archivos sin commitear en el mismo repo).
+2. **`git add` + `git commit -- <rutas>`** — todos los archivos modificados/creados, por nombre (no
+   `git add .` ni `-A`: suele haber otra sesion con archivos sin commitear en el mismo repo). **El
+   commit tambien lleva las rutas** (`git commit -m "..." -- ruta1 ruta2`): el indice es uno solo para
+   todas las sesiones, y un `git commit` pelado guarda lo que la OTRA sesion haya puesto ahi mientras
+   tanto (02/10/2026: el commit `cee8f1b2` salio con 12 archivos ajenos). Antes del push,
+   `git show --stat HEAD` y contar. Memoria `reference_sesiones_claude_en_paralelo_mismo_repo`.
 3. **`git push origin main`**.
 4. **Verificar CI** — `gh` no tiene login en esta PC (memoria `gh_cli_sin_login_ci_por_api`); el
    ultimo run se lee por API y se mira `status` / `conclusion`:
