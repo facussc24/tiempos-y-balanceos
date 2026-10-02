@@ -93,9 +93,9 @@
       "dice": "Recuerda lo importante que le dicen",
       "pedido": "02/10: «claude memoriza las cosas importantes que le dicen»",
       "en_el_video": true,
-      "estado": "sin probar",
-      "prueba": null,
-      "que_falta": "Probarlo en la instalación: decirle un dato, cerrar, abrir otra conversación en la misma carpeta y preguntarle. Si no lo recuerda solo, construirlo."
+      "estado": "probado",
+      "prueba": ".sgc-cache/claude-por-area/examen/prueba_memoria.md",
+      "como_se_probo": "02/10: se le enseñó el formato del parte de turno en una conversación y en otra NUEVA lo armó en los 4 renglones en orden, más el de los viernes, sin repetírselo. La memoria queda en la PC de cada uno."
     },
     {
       "id": "no-hace-solo",
