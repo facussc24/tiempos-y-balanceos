@@ -1,0 +1,1331 @@
+{
+  "_como_se_usa": [
+    "Este es el video, como DATOS. El programa armar_video.py lo lee y arma el MP4, el .srt y los cuadros de control.",
+    "La narracion ya esta grabada: un WAV por parrafo en la carpeta 'voz' (partes/01.wav ...), con partes/NN.json (cuando empieza cada frase y cuando dice cada palabra). Aca solo se dice que se VE mientras suena cada uno.",
+    "Las rutas son relativas a la carpeta de este archivo.",
+    "escena: numero, titulo (corto), parrafos (los numeros de partes/NN.wav, en orden) y sus tomas.",
+    "toma: lo que se ve durante un pedazo de la narracion. Cada toma entra con un fundido corto; entre escenas hay un fundido un poco mas largo.",
+    "  voz: que pedazo de la narracion tapa. '4' = el parrafo 4 entero; '4:1' = la frase 1 del parrafo 4; '4:2-3' = las frases 2 y 3. Entre todas las tomas de una escena tienen que cubrir sus parrafos enteros, en orden.",
+    "  recurso: la ruta de una imagen fija (png o jpg), la de un video grabado (mp4, mov, mkv), 'lamina' (texto), 'ticker' (documentos reales que suben en columnas) o 'triptico' (tres capturas con su paso).",
+    "  texto_en_pantalla: el nombre del paso, que va arriba a la izquierda (maximo 6 palabras; vacio = nada).",
+    "  que_tiene_que_verse: lo que tiene que mostrar la captura. Si el archivo todavia no existe, el video sale con una lamina 'FALTA LA TOMA' con este texto y el programa termina con 1.",
+    "  pendiente: la toma sale bien, pero con algo provisorio. Aca se anota que toma real la tiene que reemplazar.",
+    "  recuadros: lo que se marca en rojo ARRIBA de la imagen, en porcentaje de la imagen ENTERA (0 a 100, desde arriba a la izquierda): x, y, ancho, alto. Aparecen de a uno; lo que no se marca se oscurece. 'con_la_palabra': aparece cuando la voz dice esa palabra o esas palabras ('ocurrencia': 2 = la segunda vez que las dice). 'con_la_frase': cuando empieza esa frase de la toma (sin ninguno de los dos, a los 0,8 s). 'etiqueta': el nombre del boton, escrito al lado ('etiqueta_lado': arriba, abajo, derecha, izquierda). 'foco': false = no oscurecer el resto.",
+    "  posicion_confirmada: la huella de la captura sobre la que se ubico el recuadro (python armar_video.py --grilla la da, 12 letras). Si despues cambian la captura, el recuadro vuelve a quedar sin ubicar solo.",
+    "  encuadre: {x, y, ancho, alto} en porcentaje: la toma usa solo esa parte de la imagen.",
+    "  omitir: [{desde, hasta}] en porcentaje del alto: franjas horizontales que se sacan de la captura (para no mostrar una ruta interna). Los porcentajes de los recuadros y del encuadre van sobre la captura YA recortada (--grilla la muestra asi).",
+    "  escala_maxima: cuanto se puede agrandar la imagen (1.0 = su tamaño real). zoom_maximo: tope del acercamiento de esa toma.",
+    "  zoom: sin nada = un acercamiento muy lento hacia lo marcado. 'no' = quieta. 'al_recuadro' = se acerca despacio a lo marcado.",
+    "  lamina: titulo y renglones (con 'con_la_frase' o 'con_la_palabra' aparecen de a uno, con la voz); 'icono': 'x' pone una cruz roja en cada renglon. O 'cita': lo que la persona le escribe a Claude.",
+    "  ticker: documentos: lista de [codigo, titulo] de documentos reales del SGC. triptico: tarjetas: tres {recurso, encuadre, titulo, con_la_palabra}.",
+    "  segundos_extra: segundos de pantalla sin voz al final de la toma (solo si la toma termina con un parrafo entero).",
+    "CUANDO HAYA UNA GRABACION que reemplaza a una imagen: se guarda en tomas/ con el mismo nombre que la imagen o como tomas/escena-2.mp4 para la escena entera.",
+    "  Para una grabacion: 'desde' y 'hasta' (segundos, para recortarla) y 'velocidad' ('ajustar' = se estira o se acelera para durar lo mismo que la voz; o un numero: 1 = como se grabo).",
+    "antes_de_publicar: lo que el guion marca sin confirmar. El programa lo lista al final; no cambia el video.",
+    "VIDEO POR SECTOR (02/10/2026): un ejemplo real de cada sector, uno por uno, con grabaciones de la demostracion instalada como la PC de ESE sector (tomas/sector-*.mp4, que saca recortar_sectores_ilusiona.py de las grabaciones crudas) y de la prueba en Produccion (tomas/demo-02oct-*.mp4, recortar_demo_v2.py). Guion: guion_ilusiona.md.",
+    "  tramos, camara, recuadros: ver escenas_v2.json (mismo armador).",
+    "  pregunta (en la toma): {\"texto\": \"...\"}. Cartel con la pregunta arriba de la grabacion; sirve cuando la pregunta no se ve en la grabacion porque la mando otra sesion.",
+    "  alto (en una vista de la camara): la vista es mas baja que la caja y se muestra entera, con el fondo de la grabacion arriba y abajo."
+  ],
+  "video": {
+    "salida": "../../../exports/CLAUDES_POR_AREA_20261001/Video por sector - Claude en Barack.mp4",
+    "voz": "../../../exports/CLAUDES_POR_AREA_20261001/fuentes/voz_ilusiona",
+    "logo": "../../../scripts/video/logo_hd.png",
+    "placa_apertura": {
+      "titulo": "Claude en Barack",
+      "frase": "Un ejemplo real de cada sector",
+      "segundos": 1.7
+    },
+    "placa_final": {
+      "titulo": "Claude en Barack",
+      "frase": "Abrí Claude, elegí la carpeta y preguntá.",
+      "credito": "Voz: Piper es_AR-daniela (CC BY-SA 4.0)",
+      "segundos": 3.8
+    }
+  },
+  "ajustes": {
+    "aire_de_escena_s": 0.3,
+    "pausa_entre_parrafos_s": 0.4,
+    "fundido_entre_escenas_s": 0.4,
+    "zoom_lento_por_segundo": 0.008,
+    "zoom_lento_tope": 0.06,
+    "zoom_maximo": 1.5,
+    "sonoridad_lufs": -16.0,
+    "calidad_crf": 21,
+    "duracion_minima_s": 90,
+    "duracion_maxima_s": 150
+  },
+  "escenas": [
+    {
+      "numero": 1,
+      "titulo": "Todo está escrito",
+      "parrafos": [
+        1
+      ],
+      "tomas": [
+        {
+          "voz": [
+            "1:1-2"
+          ],
+          "recurso": "ticker",
+          "texto_en_pantalla": "",
+          "que_tiene_que_verse": "Documentos reales de Barack (procedimientos, instructivos, funciones de puesto) que suben en columnas: hay mucho escrito.",
+          "ticker": {
+            "documentos": [
+              [
+                "P-05",
+                "Control de los documentos"
+              ],
+              [
+                "I-AC-005",
+                "Emisión y control del AMFE y plan de control"
+              ],
+              [
+                "F-24",
+                "Supervisor de Producción"
+              ],
+              [
+                "P-08",
+                "Identificación y rastreabilidad del producto"
+              ],
+              [
+                "I-LG-001",
+                "Recepción de materias primas"
+              ],
+              [
+                "P-13",
+                "Control de las salidas no conformes"
+              ],
+              [
+                "I-AC-019",
+                "Calibración interna de instrumentos"
+              ],
+              [
+                "F-12",
+                "Inspector de calidad"
+              ],
+              [
+                "P-09",
+                "Control de los procesos"
+              ],
+              [
+                "I-IN-003",
+                "Modificación de un Producto-Proceso"
+              ],
+              [
+                "P-16",
+                "Control de los registros"
+              ],
+              [
+                "F-43",
+                "Operario - Líder"
+              ],
+              [
+                "P-14",
+                "No conformidad y acción correctiva"
+              ],
+              [
+                "I-AC-032",
+                "Verificación Poka Yoke"
+              ],
+              [
+                "I-LG-012",
+                "Trazabilidad"
+              ],
+              [
+                "P-10",
+                "Inspección y ensayos"
+              ],
+              [
+                "F-61",
+                "Operario - Sector Inyección"
+              ],
+              [
+                "I-PR-001",
+                "Puesta a punto del proceso"
+              ],
+              [
+                "P-11",
+                "Control de equipos de inspección, medición y ensayo"
+              ],
+              [
+                "I-AC-012",
+                "Devolución de clientes"
+              ],
+              [
+                "P-18",
+                "Formación"
+              ],
+              [
+                "F-69",
+                "Planificador de Materiales"
+              ],
+              [
+                "I-CO-001",
+                "Compra de materiales productivos"
+              ],
+              [
+                "P-15",
+                "Manejo, almacenamiento, empaque y entrega"
+              ],
+              [
+                "I-AC-025",
+                "Lecciones aprendidas"
+              ],
+              [
+                "F-25",
+                "Operario de Mantenimiento"
+              ],
+              [
+                "P-12",
+                "Estado de inspección y ensayo"
+              ],
+              [
+                "I-AC-007",
+                "Aprobación de piezas de producción"
+              ],
+              [
+                "I-MT-001",
+                "Instructivo general de mantenimiento"
+              ],
+              [
+                "P-17",
+                "Auditorías internas de calidad"
+              ],
+              [
+                "F-52",
+                "Operario - Sector Costura Blanca"
+              ],
+              [
+                "I-LG-009",
+                "Obsoletos"
+              ],
+              [
+                "P-21",
+                "Planes de contingencia"
+              ],
+              [
+                "I-AC-029",
+                "Respuestas rápidas"
+              ],
+              [
+                "F-06",
+                "Gerente de Calidad"
+              ],
+              [
+                "I-IN-005",
+                "Solicitud de desviación de ingeniería"
+              ],
+              [
+                "P-09.1",
+                "Reacción ante una NO conformidad"
+              ],
+              [
+                "I-AC-009",
+                "Análisis de los sistemas de medición"
+              ],
+              [
+                "F-59",
+                "Operario - Sector Inyección PU"
+              ],
+              [
+                "I-RH-001",
+                "Desarrollo de policompetencia y polivalencia"
+              ],
+              [
+                "P-03",
+                "Revisión de contrato"
+              ],
+              [
+                "I-AC-004",
+                "Programa 5S"
+              ],
+              [
+                "F-36",
+                "Auditor de Recepción de Materiales"
+              ],
+              [
+                "P-22",
+                "Análisis del contexto, partes interesadas y gestión de riesgos"
+              ],
+              [
+                "I-DR-002",
+                "Satisfacción al cliente"
+              ],
+              [
+                "F-20",
+                "Ingeniero de Proceso"
+              ],
+              [
+                "P-02",
+                "Sistema de gestión de la calidad"
+              ]
+            ]
+          }
+        },
+        {
+          "voz": [
+            "1:3"
+          ],
+          "recurso": "../manual/capturas/06-decir-el-puesto.png",
+          "texto_en_pantalla": "",
+          "encuadre": {
+            "x": 0,
+            "y": 7.5,
+            "ancho": 100,
+            "alto": 92.5
+          },
+          "escala_maxima": 1.5,
+          "que_tiene_que_verse": "Claude abierto con una pregunta de un puesto y su respuesta."
+        }
+      ]
+    },
+    {
+      "numero": 2,
+      "titulo": "Producción",
+      "parrafos": [
+        2
+      ],
+      "tomas": [
+        {
+          "voz": [
+            "2"
+          ],
+          "recurso": "tomas/demo-02oct-tres-piezas-responde.mp4",
+          "texto_en_pantalla": "Producción",
+          "segundos_extra": 1.3,
+          "que_tiene_que_verse": "La pregunta de las tres piezas, Claude buscando, la respuesta (parar la línea, avisar al líder y a Calidad) y la fuente P-09.1.",
+          "tramos": [
+            {
+              "desde": 20.0,
+              "hasta": 34.8,
+              "hasta_frase": 3,
+              "mas": -0.1,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 680
+                }
+              ]
+            },
+            {
+              "desde": 34.8,
+              "hasta": 48.2,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 680
+                },
+                {
+                  "con_la_palabra": "Calidad",
+                  "x": 0,
+                  "y": 176,
+                  "ancho": 680,
+                  "mov": 0.8
+                }
+              ],
+              "recuadros": [
+                {
+                  "que_marca": "parar la línea y avisar al líder y a Calidad",
+                  "x": 2.06,
+                  "y": 28.3,
+                  "ancho": 96.18,
+                  "alto": 9.36,
+                  "con_la_palabra": "parar",
+                  "mas": 0.3
+                },
+                {
+                  "que_marca": "la fuente: P-09.1 rev B.1",
+                  "x": 5.88,
+                  "y": 88.94,
+                  "ancho": 67.65,
+                  "alto": 5.53,
+                  "con_la_palabra": "Calidad",
+                  "mas": 0.7,
+                  "etiqueta": "P-09.1",
+                  "etiqueta_lado": "derecha"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "numero": 3,
+      "titulo": "Calidad",
+      "parrafos": [
+        3
+      ],
+      "tomas": [
+        {
+          "voz": [
+            "3"
+          ],
+          "recurso": "tomas/sector-calidad-responde.mp4",
+          "texto_en_pantalla": "Calidad",
+          "pregunta": {
+            "texto": "¿Cuánto tiempo hay para avisarle al proveedor que su material vino mal?"
+          },
+          "segundos_extra": 1.4,
+          "que_tiene_que_verse": "Calidad: la respuesta de Claude y, marcado, el documento que cita.",
+          "tramos": [
+            {
+              "desde": 0.0,
+              "hasta": 1.9,
+              "hasta_frase": 3,
+              "mas": -0.2,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 830,
+                  "alto": 236
+                }
+              ]
+            },
+            {
+              "desde": 1.9,
+              "hasta": 7.0,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 830,
+                  "alto": 236
+                }
+              ],
+              "recuadros": [
+                {
+                  "que_marca": "24 horas desde que se crea la NP",
+                  "x": 1.78,
+                  "y": 16.95,
+                  "ancho": 79.78,
+                  "alto": 12.71,
+                  "con_la_frase": 3,
+                  "mas": 0.3
+                },
+                {
+                  "que_marca": "la fuente: I-AC-010 rev A, §5.3",
+                  "x": 1.78,
+                  "y": 53.39,
+                  "ancho": 73.33,
+                  "alto": 11.02,
+                  "con_la_frase": 4,
+                  "etiqueta": "I-AC-010",
+                  "etiqueta_lado": "derecha"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "numero": 4,
+      "titulo": "Logística",
+      "parrafos": [
+        4
+      ],
+      "tomas": [
+        {
+          "voz": [
+            "4"
+          ],
+          "recurso": "tomas/sector-logistica-responde.mp4",
+          "texto_en_pantalla": "Logística",
+          "pregunta": {
+            "texto": "¿Cómo se estiba el producto terminado?"
+          },
+          "segundos_extra": 1.1,
+          "que_tiene_que_verse": "Logística: la respuesta de Claude y, marcado, el documento que cita.",
+          "tramos": [
+            {
+              "desde": 0.0,
+              "hasta": 6.9,
+              "hasta_frase": 3,
+              "mas": -0.15,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 830,
+                  "alto": 250
+                }
+              ]
+            },
+            {
+              "desde": 6.9,
+              "hasta": 12.4,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 830,
+                  "alto": 250
+                }
+              ],
+              "recuadros": [
+                {
+                  "que_marca": "racks: de 2 a 5 por fila",
+                  "x": 5.78,
+                  "y": 12.4,
+                  "ancho": 50.0,
+                  "alto": 11.2,
+                  "con_la_frase": 3
+                },
+                {
+                  "que_marca": "cajas: hasta 4 por fila",
+                  "x": 5.78,
+                  "y": 22.8,
+                  "ancho": 43.56,
+                  "alto": 11.2,
+                  "con_la_frase": 4
+                },
+                {
+                  "que_marca": "la fuente: I-LG-010 rev A, §5",
+                  "x": 1.78,
+                  "y": 50.8,
+                  "ancho": 53.78,
+                  "alto": 11.2,
+                  "con_la_palabra": "cuatro",
+                  "etiqueta": "I-LG-010",
+                  "etiqueta_lado": "derecha"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "numero": 5,
+      "titulo": "Compras",
+      "parrafos": [
+        5
+      ],
+      "tomas": [
+        {
+          "voz": [
+            "5"
+          ],
+          "recurso": "tomas/sector-compras-responde.mp4",
+          "texto_en_pantalla": "Compras",
+          "pregunta": {
+            "texto": "El proveedor no confirmó la orden de compra. ¿Qué pasa?"
+          },
+          "segundos_extra": 1.1,
+          "que_tiene_que_verse": "Compras: la respuesta de Claude y, marcado, el documento que cita.",
+          "tramos": [
+            {
+              "desde": 1.0,
+              "hasta": 6.9,
+              "hasta_frase": 4,
+              "mas": -0.15,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 830,
+                  "alto": 330
+                }
+              ]
+            },
+            {
+              "desde": 6.9,
+              "hasta": 8.95,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 830,
+                  "alto": 330
+                }
+              ],
+              "recuadros": [
+                {
+                  "que_marca": "el primer embarque vale como aceptación",
+                  "x": 1.78,
+                  "y": 1.21,
+                  "ancho": 82.78,
+                  "alto": 13.94,
+                  "con_la_frase": 4
+                },
+                {
+                  "que_marca": "la fuente: I-CO-001 rev A, 5.1.1",
+                  "x": 1.78,
+                  "y": 43.64,
+                  "ancho": 58.89,
+                  "alto": 8.48,
+                  "con_la_palabra": "aceptación",
+                  "etiqueta": "I-CO-001",
+                  "etiqueta_lado": "derecha"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "numero": 6,
+      "titulo": "Mantenimiento",
+      "parrafos": [
+        6
+      ],
+      "tomas": [
+        {
+          "voz": [
+            "6"
+          ],
+          "recurso": "tomas/sector-mantenimiento-responde.mp4",
+          "texto_en_pantalla": "Mantenimiento",
+          "pregunta": {
+            "texto": "¿Qué se mira en el mantenimiento autónomo?"
+          },
+          "segundos_extra": 1.1,
+          "que_tiene_que_verse": "Mantenimiento: la respuesta de Claude y, marcado, el documento que cita.",
+          "tramos": [
+            {
+              "desde": 2.0,
+              "hasta": 6.2,
+              "hasta_frase": 3,
+              "mas": -0.1,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 830,
+                  "alto": 300
+                }
+              ]
+            },
+            {
+              "desde": 6.2,
+              "hasta": 10.4,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 830,
+                  "alto": 300
+                },
+                {
+                  "con_la_palabra": "tacto",
+                  "x": 0,
+                  "y": 168,
+                  "ancho": 830,
+                  "alto": 300,
+                  "mov": 0.9,
+                  "mas": 0.1
+                }
+              ],
+              "recuadros": [
+                {
+                  "que_marca": "vista",
+                  "x": 5.78,
+                  "y": 7.91,
+                  "ancho": 84.67,
+                  "alto": 17.52,
+                  "con_la_palabra": "vista",
+                  "mas": 0.2
+                },
+                {
+                  "que_marca": "oído",
+                  "x": 5.78,
+                  "y": 26.92,
+                  "ancho": 83.89,
+                  "alto": 8.55,
+                  "con_la_palabra": "oído"
+                },
+                {
+                  "que_marca": "olfato",
+                  "x": 5.78,
+                  "y": 36.54,
+                  "ancho": 85.56,
+                  "alto": 8.55,
+                  "con_la_palabra": "olfato"
+                },
+                {
+                  "que_marca": "tacto",
+                  "x": 5.78,
+                  "y": 46.15,
+                  "ancho": 84.44,
+                  "alto": 8.55,
+                  "con_la_palabra": "tacto"
+                },
+                {
+                  "que_marca": "la fuente: I-MT-001 rev C, 5.6",
+                  "x": 1.78,
+                  "y": 85.04,
+                  "ancho": 87.22,
+                  "alto": 8.97,
+                  "con_la_palabra": "tacto",
+                  "mas": 1.0,
+                  "etiqueta": "I-MT-001",
+                  "etiqueta_lado": "abajo"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "numero": 7,
+      "titulo": "Recursos Humanos",
+      "parrafos": [
+        7
+      ],
+      "tomas": [
+        {
+          "voz": [
+            "7"
+          ],
+          "recurso": "tomas/sector-rrhh-responde.mp4",
+          "texto_en_pantalla": "Recursos Humanos",
+          "pregunta": {
+            "texto": "¿Cómo sigue el pedido de una capacitación?"
+          },
+          "segundos_extra": 1.1,
+          "que_tiene_que_verse": "Recursos Humanos: la respuesta de Claude y, marcado, el documento que cita.",
+          "tramos": [
+            {
+              "desde": 0.0,
+              "hasta": 6.4,
+              "hasta_frase": 3,
+              "mas": -0.1,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 830,
+                  "alto": 300
+                }
+              ]
+            },
+            {
+              "desde": 6.4,
+              "hasta": 13.0,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 830,
+                  "alto": 300
+                },
+                {
+                  "con_la_palabra": "procedimiento",
+                  "x": 0,
+                  "y": 146,
+                  "ancho": 830,
+                  "alto": 300,
+                  "mov": 0.9
+                }
+              ],
+              "recuadros": [
+                {
+                  "que_marca": "los pasos del trámite",
+                  "x": 5.56,
+                  "y": 6.4,
+                  "ancho": 86.11,
+                  "alto": 54.4,
+                  "con_la_palabra": "Paso"
+                },
+                {
+                  "que_marca": "la fuente: P-18 rev F, §5.4 a §5.7",
+                  "x": 1.78,
+                  "y": 75.4,
+                  "ancho": 43.89,
+                  "alto": 5.6,
+                  "con_la_palabra": "procedimiento",
+                  "etiqueta": "P-18",
+                  "etiqueta_lado": "abajo"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "numero": 8,
+      "titulo": "Dirección",
+      "parrafos": [
+        8
+      ],
+      "tomas": [
+        {
+          "voz": [
+            "8"
+          ],
+          "recurso": "tomas/sector-direccion-espera.mp4",
+          "texto_en_pantalla": "Dirección",
+          "pregunta": {
+            "texto": "¿Qué hay que llevar a la revisión por la Dirección?"
+          },
+          "segundos_extra": 1.1,
+          "que_tiene_que_verse": "Dirección: la respuesta de Claude y, marcado, el documento que cita.",
+          "tramos": [
+            {
+              "desde": 4.0,
+              "hasta": 7.0,
+              "hasta_frase": 2,
+              "mas": 0.1,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 830,
+                  "alto": 300
+                }
+              ]
+            },
+            {
+              "recurso": "tomas/sector-direccion-responde.mp4",
+              "desde": 0.0,
+              "hasta": 6.0,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 26,
+                  "ancho": 830,
+                  "alto": 300
+                },
+                {
+                  "con_la_palabra": "manual",
+                  "x": 0,
+                  "y": 300,
+                  "ancho": 830,
+                  "alto": 300,
+                  "mov": 1.0,
+                  "mas": -0.8
+                }
+              ],
+              "recuadros": [
+                {
+                  "que_marca": "el manual: MC-09 rev F, 9.3.2",
+                  "x": 1.78,
+                  "y": 45.0,
+                  "ancho": 61.44,
+                  "alto": 2.95,
+                  "con_la_palabra": "manual",
+                  "etiqueta": "MC-09",
+                  "etiqueta_lado": "derecha"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "numero": 9,
+      "titulo": "Ingeniería",
+      "parrafos": [
+        9
+      ],
+      "tomas": [
+        {
+          "voz": [
+            "9:1"
+          ],
+          "recurso": "tomas/arb-06ago2026-ventana-con-una-bom.png",
+          "texto_en_pantalla": "Ingeniería · el arb",
+          "escala_maxima": 1.2,
+          "que_tiene_que_verse": "La ventana Maestro de Relaciones - BA con una BOM a la vista."
+        },
+        {
+          "voz": [
+            "9:2"
+          ],
+          "recurso": "tomas/arb-06ago2026-trae-la-bom-de-cada-pieza.mp4",
+          "texto_en_pantalla": "Ingeniería · el arb",
+          "desde": 0.0,
+          "hasta": 6.0,
+          "velocidad": "ajustar",
+          "escala_maxima": 1.2,
+          "que_tiene_que_verse": "El arb: se escribe la pieza, se llena la grilla con su BOM y se escribe el consumo."
+        },
+        {
+          "voz": [
+            "9:3"
+          ],
+          "recurso": "triptico",
+          "texto_en_pantalla": "",
+          "segundos_extra": 1.0,
+          "que_tiene_que_verse": "Tres entregables reales de Ingeniería: la hoja de operaciones, la lámina de proceso y el flujograma.",
+          "triptico": {
+            "tarjetas": [
+              {
+                "recurso": "tomas/ho-992-hot-melt-hoja-2.png",
+                "encuadre": {
+                  "x": 0,
+                  "y": 8,
+                  "ancho": 100,
+                  "alto": 78
+                },
+                "titulo": "Hoja de operaciones",
+                "con_la_palabra": "hojas"
+              },
+              {
+                "recurso": "tomas/lamina-proceso-insert.png",
+                "encuadre": {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 100,
+                  "alto": 86
+                },
+                "titulo": "Lámina de proceso",
+                "con_la_palabra": "láminas"
+              },
+              {
+                "recurso": "tomas/flujograma-160.png",
+                "encuadre": {
+                  "x": 15,
+                  "y": 8,
+                  "ancho": 70,
+                  "alto": 40
+                },
+                "titulo": "Flujograma",
+                "con_la_palabra": "flujogramas"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "numero": 10,
+      "titulo": "Para todos: el mail",
+      "parrafos": [
+        10
+      ],
+      "tomas": [
+        {
+          "voz": [
+            "10:1-2"
+          ],
+          "recurso": "tomas/demo-02oct-mail-pedido.mp4",
+          "texto_en_pantalla": "Para todos",
+          "que_tiene_que_verse": "El pedido del mail, Claude armándolo y Outlook que se abre con el mail armado.",
+          "tramos": [
+            {
+              "desde": 0.2,
+              "hasta": 2.2,
+              "hasta_frase": 2,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 680
+                }
+              ]
+            },
+            {
+              "desde": 36.0,
+              "hasta": 38.8,
+              "hasta_palabra": "Outlook",
+              "mas": -0.05,
+              "etiqueta": "Espera acortada",
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 680
+                }
+              ]
+            },
+            {
+              "recurso": "tomas/demo-02oct-mail-se-abre.mp4",
+              "desde": 0.5,
+              "hasta": 2.5,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 1148
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "voz": [
+            "10:3"
+          ],
+          "recurso": "tomas/demo-02oct-mail-se-abre.mp4",
+          "texto_en_pantalla": "Para todos",
+          "segundos_extra": 2.3,
+          "que_tiene_que_verse": "El mail con el botón Enviar, «mandalo» escrito en Claude y «Listo: salió a…».",
+          "tramos": [
+            {
+              "desde": 2.5,
+              "hasta": 4.5,
+              "dura": 0.8,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 130,
+                  "ancho": 800
+                }
+              ],
+              "recuadros": [
+                {
+                  "que_marca": "el botón Enviar",
+                  "x": 2.6,
+                  "y": 26.0,
+                  "ancho": 6.2,
+                  "alto": 14.5
+                }
+              ]
+            },
+            {
+              "recurso": "tomas/demo-02oct-mail-mandalo.mp4",
+              "desde": 0.15,
+              "hasta": 2.0,
+              "dura": 0.9,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 308,
+                  "ancho": 680
+                }
+              ]
+            },
+            {
+              "recurso": "tomas/demo-02oct-mail-listo.mp4",
+              "desde": 0.9,
+              "hasta": 4.3,
+              "fundido": 0,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 298,
+                  "ancho": 676
+                }
+              ],
+              "recuadros": [
+                {
+                  "que_marca": "Listo: salio a Facundo Santoro",
+                  "x": 2.0,
+                  "y": 86.5,
+                  "ancho": 96.0,
+                  "alto": 8.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "numero": 11,
+      "titulo": "Para todos: la presentación",
+      "parrafos": [
+        11
+      ],
+      "tomas": [
+        {
+          "voz": [
+            "11"
+          ],
+          "recurso": "tomas/demo-02oct-presentacion-pedido.mp4",
+          "texto_en_pantalla": "Para todos",
+          "segundos_extra": 1.8,
+          "que_tiene_que_verse": "El pedido de la presentación, Claude armándola y PowerPoint abierto con las diapositivas.",
+          "tramos": [
+            {
+              "desde": 0.3,
+              "hasta": 2.4,
+              "dura": 0.9,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 680
+                }
+              ]
+            },
+            {
+              "desde": 3.9,
+              "hasta": 5.9,
+              "dura": 0.8,
+              "etiqueta": "Espera acortada",
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 680
+                }
+              ]
+            },
+            {
+              "recurso": "tomas/demo-02oct-presentacion-powerpoint.mp4",
+              "desde": 2.1,
+              "hasta": 4.9,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 1767
+                },
+                {
+                  "t": 1.3,
+                  "x": 240,
+                  "y": 50,
+                  "ancho": 1560,
+                  "mov": 0.9
+                }
+              ],
+              "recuadros": [
+                {
+                  "que_marca": "la fuente al pie de la hoja",
+                  "x": 26.5,
+                  "y": 89.0,
+                  "ancho": 41.0,
+                  "alto": 5.5,
+                  "foco": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "numero": 12,
+      "titulo": "Para todos: enseñarle",
+      "parrafos": [
+        12
+      ],
+      "tomas": [
+        {
+          "voz": [
+            "12"
+          ],
+          "recurso": "tomas/demo-02oct-aprende-propone.mp4",
+          "texto_en_pantalla": "Para todos",
+          "segundos_extra": 1.8,
+          "que_tiene_que_verse": "Se le enseña el parte de fin de turno, Claude muestra cómo quedaría («¿La guardo así?») y «Listo, la dejé guardada».",
+          "tramos": [
+            {
+              "desde": 0.2,
+              "hasta": 1.5,
+              "dura": 0.7,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 680
+                }
+              ]
+            },
+            {
+              "desde": 7.4,
+              "hasta": 11.7,
+              "dura": 1.1,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 680
+                },
+                {
+                  "t": 0.5,
+                  "x": 0,
+                  "y": 95,
+                  "ancho": 680,
+                  "mov": 0.6
+                }
+              ]
+            },
+            {
+              "recurso": "tomas/demo-02oct-aprende-guardado.mp4",
+              "desde": 1.2,
+              "hasta": 11.4,
+              "dura": 0.6,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 40,
+                  "ancho": 680
+                }
+              ]
+            },
+            {
+              "recurso": "tomas/demo-02oct-aprende-guardado.mp4",
+              "desde": 11.6,
+              "hasta": 15.4,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 40,
+                  "ancho": 680
+                }
+              ],
+              "recuadros": [
+                {
+                  "que_marca": "Listo, la dejé guardada",
+                  "x": 1.5,
+                  "y": 57.2,
+                  "ancho": 97.0,
+                  "alto": 9.2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "numero": 13,
+      "titulo": "Está controlado",
+      "parrafos": [
+        13
+      ],
+      "tomas": [
+        {
+          "voz": [
+            "13:1-2"
+          ],
+          "recurso": "tomas/sector-calidad-responde.mp4",
+          "texto_en_pantalla": "Está controlado",
+          "que_tiene_que_verse": "Una respuesta con su fuente marcada: Claude dice de dónde sacó el dato.",
+          "tramos": [
+            {
+              "desde": 5.5,
+              "hasta": 9.5,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 830,
+                  "alto": 244
+                }
+              ],
+              "recuadros": [
+                {
+                  "que_marca": "la fuente: I-AC-010 rev A",
+                  "x": 1.78,
+                  "y": 39.41,
+                  "ancho": 73.33,
+                  "alto": 11.02,
+                  "con_la_palabra": "dónde",
+                  "etiqueta": "Fuente: I-AC-010",
+                  "etiqueta_lado": "derecha"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "voz": [
+            "13:3-4"
+          ],
+          "recurso": "lamina",
+          "texto_en_pantalla": "",
+          "que_tiene_que_verse": "Lámina de texto: no borra nada, no muestra lo reservado.",
+          "lamina": {
+            "titulo": "Claude no hace esto solo",
+            "icono": "x",
+            "renglones": [
+              {
+                "texto": "No borra nada",
+                "con_la_frase": 1
+              },
+              {
+                "texto": "No muestra lo reservado",
+                "con_la_frase": 2
+              }
+            ]
+          }
+        },
+        {
+          "voz": [
+            "13:5"
+          ],
+          "recurso": "../manual/capturas/14-claude-pide-permiso.png",
+          "texto_en_pantalla": "Está controlado",
+          "omitir": [
+            {
+              "desde": 12,
+              "hasta": 36
+            }
+          ],
+          "escala_maxima": 1.6,
+          "que_tiene_que_verse": "El cartel con el que Claude pide permiso antes de escribir un archivo: el título y los botones Denegar, Permitir siempre y Permitir una vez.",
+          "recuadros": [
+            {
+              "que_marca": "Permitir una vez",
+              "x": 69,
+              "y": 79,
+              "ancho": 29,
+              "alto": 10,
+              "con_la_palabra": "pediste",
+              "posicion_confirmada": "f33025f814e6"
+            }
+          ],
+          "zoom": "no"
+        }
+      ]
+    },
+    {
+      "numero": 14,
+      "titulo": "Cierre",
+      "parrafos": [
+        14
+      ],
+      "tomas": [
+        {
+          "voz": [
+            "14"
+          ],
+          "recurso": "triptico",
+          "texto_en_pantalla": "",
+          "que_tiene_que_verse": "Tres capturas, una por paso: abrir Claude, elegir la carpeta, preguntar.",
+          "triptico": {
+            "tarjetas": [
+              {
+                "recurso": "../manual/capturas/02-menu-inicio.png",
+                "encuadre": {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 58,
+                  "alto": 100
+                },
+                "titulo": "Abrí Claude",
+                "con_la_palabra": "Abrí"
+              },
+              {
+                "recurso": "../manual/capturas/04-local-y-select-folder.png",
+                "titulo": "Elegí la carpeta",
+                "con_la_palabra": "elegí",
+                "encuadre": {
+                  "x": 0,
+                  "y": 20,
+                  "ancho": 69,
+                  "alto": 55
+                }
+              },
+              {
+                "recurso": "../manual/capturas/06-decir-el-puesto.png",
+                "encuadre": {
+                  "x": 43.3,
+                  "y": 12,
+                  "ancho": 42,
+                  "alto": 53
+                },
+                "titulo": "Preguntá",
+                "con_la_palabra": "preguntá"
+              }
+            ]
+          },
+          "segundos_extra": 1.3
+        }
+      ]
+    }
+  ]
+}

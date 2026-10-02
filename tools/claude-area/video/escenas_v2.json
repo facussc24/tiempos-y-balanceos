@@ -25,7 +25,8 @@
     "VERSION 2 (02/10/2026): igual que el video de siempre pero con grabaciones reales (la prueba hecha en una PC de Produccion). Los recortes estan en tomas/demo-02oct-*.mp4 y los saca recortar_demo_v2.py de la grabacion cruda (que no esta en el repositorio). Cada recorte ya viene cortado a la zona que se puede mostrar.",
     "  tramos: una toma con grabacion puede traer 'tramos' (lista, en el orden en que se ven). Cada uno: 'recurso' (si no es el de la toma), 'desde' y 'hasta' (segundos de ESA grabacion) y cuanto dura: 'velocidad', 'dura', 'hasta_palabra' (+ 'ocurrencia', 'mas') o 'hasta_frase'; el ultimo llena lo que queda. Entre un tramo y otro puede haber un corte: asi se saca la espera. Desde 1,8x aparece el cartel «Acelerado ×N» (o el texto de 'etiqueta').",
     "  recuadros en una grabacion: dentro de un tramo, en porcentaje del cuadro de ESA grabacion; entran con la voz ('con_la_palabra' o 'con_la_frase') y valen mientras ese tramo se ve.",
-    "  ajustes.duracion_minima_s y duracion_maxima_s: el rango que controla el archivo terminado (por defecto 105 y 140)."
+    "  ajustes.duracion_minima_s y duracion_maxima_s: el rango que controla el archivo terminado (por defecto 105 y 140).",
+    "  camara (en un tramo de grabacion): lista de vistas {x, y, ancho} en PIXELES de la grabacion (el alto sale solo). La grabacion se lee a su tamaño real y la pantalla muestra solo esa ventana, ocupando todo el ancho del area: sirve para leer una conversacion (la columna de texto) en un proyector o en un celular. La primera vista es la de partida; cada otra entra con 't' (segundos desde el principio del tramo) o con 'con_la_palabra' / 'con_la_frase' y se alcanza con un desplazamiento suave de 'mov' segundos (0,9 por defecto). Los recuadros de ese tramo siguen en porcentaje de la grabacion entera."
   ],
   "video": {
     "salida": "../../../exports/CLAUDES_POR_AREA_20261001/Video tutorial - Claude en Barack (version 2).mp4",
@@ -474,7 +475,14 @@
           "tramos": [
             {
               "desde": 0.4,
-              "hasta": 35.0
+              "hasta": 35.0,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 680
+                }
+              ]
             }
           ]
         },
@@ -490,11 +498,32 @@
             {
               "desde": 35.0,
               "hasta": 37.7,
-              "hasta_frase": 2
+              "hasta_frase": 2,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 680
+                }
+              ]
             },
             {
               "desde": 38.0,
               "hasta": 48.2,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 680
+                },
+                {
+                  "con_la_frase": 2,
+                  "x": 0,
+                  "y": 176,
+                  "ancho": 680,
+                  "mov": 0.8
+                }
+              ],
               "recuadros": [
                 {
                   "que_marca": "las fuentes: documento y revision",
@@ -502,7 +531,7 @@
                   "y": 83.0,
                   "ancho": 73.0,
                   "alto": 15.0,
-                  "con_la_palabra": "final"
+                  "con_la_palabra": "sacó"
                 },
                 {
                   "que_marca": "P-09.1, revision B.1",
@@ -537,7 +566,14 @@
           "tramos": [
             {
               "desde": 0.2,
-              "hasta": 2.2
+              "hasta": 2.2,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 680
+                }
+              ]
             }
           ]
         },
@@ -556,13 +592,32 @@
               "hasta": 38.8,
               "hasta_palabra": "Outlook",
               "mas": -0.05,
-              "etiqueta": "Espera acortada"
+              "etiqueta": "Espera acortada",
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 680
+                }
+              ]
             },
             {
               "recurso": "tomas/demo-02oct-mail-se-abre.mp4",
               "desde": 0.5,
               "hasta": 2.5,
-              "escala_maxima": 1.4
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 1148
+                },
+                {
+                  "con_la_frase": 2,
+                  "x": 0,
+                  "y": 130,
+                  "ancho": 800
+                }
+              ]
             }
           ]
         },
@@ -581,6 +636,13 @@
               "hasta": 4.5,
               "hasta_palabra": "mandalo",
               "mas": -0.05,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 130,
+                  "ancho": 800
+                }
+              ],
               "recuadros": [
                 {
                   "que_marca": "el boton Enviar",
@@ -596,16 +658,28 @@
               "recurso": "tomas/demo-02oct-mail-mandalo.mp4",
               "desde": 0.15,
               "hasta": 2.0,
-              "escala_maxima": 1.4,
               "hasta_palabra": "él",
-              "mas": -0.05
+              "mas": -0.05,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 308,
+                  "ancho": 680
+                }
+              ]
             },
             {
               "recurso": "tomas/demo-02oct-mail-listo.mp4",
               "desde": 0.9,
               "hasta": 4.3,
-              "escala_maxima": 1.4,
               "fundido": 0,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 298,
+                  "ancho": 676
+                }
+              ],
               "recuadros": [
                 {
                   "que_marca": "Listo: salio a Facundo Santoro",
@@ -638,7 +712,14 @@
           "tramos": [
             {
               "desde": 0.3,
-              "hasta": 2.4
+              "hasta": 2.4,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 680
+                }
+              ]
             }
           ]
         },
@@ -657,13 +738,33 @@
               "hasta": 5.9,
               "hasta_palabra": "PowerPoint",
               "mas": -0.1,
-              "etiqueta": "Espera acortada"
+              "etiqueta": "Espera acortada",
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 680
+                }
+              ]
             },
             {
               "recurso": "tomas/demo-02oct-presentacion-powerpoint.mp4",
               "desde": 2.1,
               "hasta": 4.9,
-              "escala_maxima": 1.1,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 1767
+                },
+                {
+                  "con_la_palabra": "fuente",
+                  "x": 240,
+                  "y": 50,
+                  "ancho": 1560,
+                  "mov": 0.9
+                }
+              ],
               "recuadros": [
                 {
                   "que_marca": "la fuente al pie de la hoja",
@@ -699,11 +800,32 @@
             {
               "desde": 0.2,
               "hasta": 1.5,
-              "hasta_frase": 2
+              "hasta_frase": 2,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 680
+                }
+              ]
             },
             {
               "desde": 7.4,
-              "hasta": 11.7
+              "hasta": 11.7,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 680
+                },
+                {
+                  "con_la_palabra": "parte",
+                  "x": 0,
+                  "y": 95,
+                  "ancho": 680,
+                  "mov": 1.0
+                }
+              ]
             }
           ]
         },
@@ -720,11 +842,25 @@
             {
               "desde": 1.2,
               "hasta": 11.4,
-              "dura": 0.9
+              "dura": 0.9,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 40,
+                  "ancho": 680
+                }
+              ]
             },
             {
               "desde": 11.6,
               "hasta": 15.4,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 40,
+                  "ancho": 680
+                }
+              ],
               "recuadros": [
                 {
                   "que_marca": "Listo, la deje guardada",

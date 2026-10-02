@@ -945,14 +945,16 @@ class Estados:
 
 
 def cuando_entra(item, tm, por_defecto):
+    """Segundo (de la toma) en que entra un recuadro, un renglon o una vista. 'mas' lo corre esos segundos."""
+    mas = float(item.get("mas", 0) or 0) if isinstance(item, dict) else 0.0
     if isinstance(item, dict) and item.get("con_la_palabra"):       # cuando la voz dice esa palabra
-        return tm.t_palabra(item["con_la_palabra"], int(item.get("ocurrencia", 1)))
+        return tm.t_palabra(item["con_la_palabra"], int(item.get("ocurrencia", 1))) + mas
     n = item.get("con_la_frase") if isinstance(item, dict) else None
     if n is None:
         return por_defecto
     if not (1 <= n <= len(tm.frases_t)):
         raise ErrorDeDatos(f"{tm.nombre}: 'con_la_frase': {n}, y la toma tiene {len(tm.frases_t)} frases.")
-    return max(0.0, tm.frases_t[n - 1] - tm.t0)
+    return max(0.0, tm.frases_t[n - 1] - tm.t0) + mas
 
 
 class VisualFijo:
@@ -1258,9 +1260,10 @@ class VisualTriptico:
         pass
 
 
-VEL_MIN_TRAMO, VEL_MAX_TRAMO = 0.5, 12.0     # fuera de esto un tramo de grabacion avisa (se ve a los saltos o no se lee)
+VEL_MIN_TRAMO, VEL_MAX_TRAMO = 0.3, 12.0     # fuera de esto un tramo de grabacion avisa (se ve a los saltos o no se lee)
 VEL_CON_ETIQUETA = 1.8                        # desde aca un tramo muestra «Acelerado ×N» arriba a la derecha
 FUNDIDO_TRAMO = 0.12                          # el cambio de un tramo al siguiente no es un corte seco: dura esto
+BANDA_PREGUNTA = 118                          # alto del cartel de la pregunta (toma con 'pregunta')
 
 
 class _Tramo:
@@ -1271,6 +1274,8 @@ class _Tramo:
         self.t0, self.t1, self.etiqueta = t0, t1, etiqueta
         self.ow, self.oh, self.pos, self.base = geom
         self.recuadros, self.estados, self.orden = recuadros, estados, orden
+        self.cam = None            # camara: lista de vistas {"t","x","y","w","mov"} en pixeles de la grabacion (o None)
+        self.nat = None            # tamaño de la grabacion (ancho, alto)
 
 
 class VisualVideo:
@@ -1289,7 +1294,18 @@ class VisualVideo:
     de ese tramo ('' = sin cartel); sin etiqueta, desde 1,8x dice «Acelerado ×N». 'fundido' (segundos) es lo que dura el paso
     del tramo anterior a este (0,12 s; 0 = corte seco: sirve cuando los dos cuadros se parecen y mezclarlos hace sombra).
     'recuadros' (en la toma o en un tramo) marca una parte del cuadro con la voz, igual que en una imagen: en porcentaje
-    del cuadro de ESA grabacion; los de un tramo valen mientras ese tramo se ve."""
+    del cuadro de ESA grabacion; los de un tramo valen mientras ese tramo se ve.
+    'camara' (en un tramo): lista de vistas para leer una conversacion grande. La grabacion se lee a su tamaño real y la
+    pantalla muestra solo una ventana de ella, que ocupa TODO el ancho del area; cada vista es {x, y, ancho} en pixeles de la
+    grabacion (el alto sale solo, con la proporcion del area) y cuando entra: 't' (segundos desde el principio del tramo) o
+    'con_la_palabra' / 'con_la_frase' (como en los recuadros). La primera vista es la de partida; las otras se alcanzan con un
+    desplazamiento suave de 'mov' segundos (0,9 por defecto). Ejemplo: {"x": 20, "y": 0, "ancho": 660} y despues
+    {"con_la_palabra": "final", "x": 20, "y": 190, "ancho": 560}. Los recuadros de un tramo con camara siguen yendo en
+    porcentaje de la grabacion entera y se dibujan sobre la ventana.
+    Una vista puede traer 'alto' (pixeles de la grabacion): si es mas baja que la caja, o la grabacion no alcanza para
+    llenarla, se muestra entera con el fondo de la grabacion arriba y abajo (respuestas anchas y bajas, como las de un sector).
+    'pregunta' (en la toma, con camara): {"texto": "..."} o el texto solo. Pone arriba un cartel con la pregunta (para las
+    grabaciones donde la pregunta no se ve porque se mando desde otra sesion) y la grabacion queda debajo."""
 
     def __init__(self, tm, plano):
         self.tm, self.plano = tm, plano
@@ -1320,8 +1336,88 @@ class VisualVideo:
                 raise ErrorDeDatos(f"{self.tm.nombre}: no puedo leer la grabacion {Path(ruta).name}.")
             _, ow, oh, pos = encajar(iw, ih, self.plano, escala_maxima)
             base = base_con_marco(self.plano, self.tm.texto, pos, ow, oh)
-            self._geoms[clave] = (largo, (ow, oh, pos, base))
+            self._geoms[clave] = (largo, (ow, oh, pos, base), (iw, ih))
         return self._geoms[clave]
+
+    def _geometria_camara(self):
+        """La caja de una toma con camara: todo el area (1840 x 796 con subtitulos). Si la toma trae 'pregunta', arriba va
+        el cartel con lo que la persona le pregunto a Claude (la pregunta no sale en la grabacion) y la caja es mas baja."""
+        if "camara" not in self._geoms:
+            ow, oh = self.plano.aw, self.plano.ah
+            pos = (self.plano.area[0], self.plano.area[1])
+            preg = self.tm.d.get("pregunta")
+            if preg:
+                banda = BANDA_PREGUNTA
+                oh -= banda + 14
+                pos = (pos[0], pos[1] + banda + 14)
+            base = base_con_marco(self.plano, self.tm.texto, pos, ow, oh)
+            if preg:
+                self._dibujar_pregunta(base, preg if isinstance(preg, str) else preg["texto"])
+            self._geoms["camara"] = (ow, oh, pos, base)
+        return self._geoms["camara"]
+
+    def _dibujar_pregunta(self, base, texto):
+        """El cartel de la pregunta: una caja blanca con la rotulo 'Pregunta' y lo que se le pregunto, entre comillas."""
+        ax, ay = self.plano.area[0], self.plano.area[1]
+        aw = self.plano.aw
+        d = ImageDraw.Draw(base)
+        d.rounded_rectangle([ax, ay, ax + aw, ay + BANDA_PREGUNTA], radius=24, fill=BLANCO, outline=AZUL, width=4)
+        rot = "Pregunta"
+        f_rot = fuente(26, "negrita")
+        wr = round(f_rot.getlength(rot)) + 40
+        d.rounded_rectangle([ax + 22, ay + BANDA_PREGUNTA / 2 - 20, ax + 22 + wr, ay + BANDA_PREGUNTA / 2 + 20], radius=20, fill=AZUL)
+        d.text((ax + 22 + wr / 2, ay + BANDA_PREGUNTA / 2 - 1), rot, font=f_rot, fill=BLANCO, anchor="mm")
+        x_txt = ax + 22 + wr + 28
+        ancho = aw - (x_txt - ax) - 28
+        cita = "«" + texto + "»"
+        for px in (50, 46, 42, 38, 34):
+            f = fuente(px, "media")
+            lineas = partir_parejo(cita, f, ancho)
+            if len(lineas) <= 2 and (len(lineas) == 1 or px <= 42):
+                break
+        paso = round(f.size * 1.2)
+        y = ay + BANDA_PREGUNTA / 2 - paso * (len(lineas) - 1) / 2 - 1
+        for l in lineas:
+            d.text((x_txt, y), l, font=f, fill=TINTA, anchor="lm")
+            y += paso
+
+    def _leer_camara(self, tm, donde, claves, t_tramo, nat, caja):
+        """Las vistas de la camara de un tramo, ya con su segundo (desde el principio del tramo)."""
+        nw, nh = nat
+        ow, oh = caja[0], caja[1]
+        vistas = []
+        for k in claves:
+            if not all(isinstance(k.get(c), (int, float)) for c in ("x", "y", "ancho")):
+                raise ErrorDeDatos(f"{donde}: una vista de la camara necesita x, y y ancho (en pixeles de la grabacion).")
+            tk = float(k["t"]) if k.get("t") is not None else cuando_entra(k, tm, 0.0) - t_tramo
+            w = float(k["ancho"])
+            h = w * oh / ow
+            x, y = float(k["x"]), float(k["y"])
+            if k.get("alto") is not None or h > nh + 0.5:
+                # la vista es mas baja que la caja (o la grabacion no alcanza para llenarla): se muestra tal cual, con el
+                # fondo de la grabacion arriba y abajo. Pasa con un recorte ancho y bajo, como la respuesta de un sector.
+                h = float(k["alto"]) if k.get("alto") is not None else float(nh)
+                w = min(w, nw)
+                h = min(h, nh)
+                x = min(max(x, 0.0), nw - w)
+                y = min(max(y, 0.0), nh - h)
+            elif w > nw + 0.5 or x < -0.5 or y < -0.5 or x + w > nw + 0.5 or y + h > nh + 0.5:
+                tm.avisos.append(f"{donde}: una vista de la camara (x {x:.0f}, y {y:.0f}, ancho {w:.0f}, alto {h:.0f}) se sale de la "
+                                 f"grabacion ({nw}x{nh}): se la corre adentro.")
+                w = min(w, nw)
+                h = w * oh / ow
+                if h > nh:
+                    h = nh
+                    w = h * ow / oh
+                x = min(max(x, 0.0), nw - w)
+                y = min(max(y, 0.0), nh - h)
+            vistas.append({"t": tk, "x": x, "y": y, "w": w, "h": h, "mov": float(k.get("mov", 0.9))})
+        if any(vistas[i]["t"] > vistas[i + 1]["t"] + 1e-6 for i in range(len(vistas) - 1)):
+            raise ErrorDeDatos(f"{donde}: las vistas de la camara tienen que ir en el orden en que entran.")
+        escala_max = max(min(ow / v["w"], oh / v["h"]) for v in vistas)
+        if escala_max > 3.6:
+            tm.avisos.append(f"{donde}: la camara llega a agrandar la grabacion {escala_max:.1f} veces: puede verse borrosa.")
+        return vistas
 
     def _leer_tramos(self, tm, crudos):
         if not isinstance(crudos, list):
@@ -1337,7 +1433,9 @@ class VisualVideo:
                 ruta = ruta.resolve()
                 if not ruta.exists():
                     raise ErrorDeDatos(f"{donde}: no existe la grabacion {ruta}")
-            largo, geom = self._geometria(ruta, c.get("escala_maxima", tm.escala_maxima))
+            largo, geom, nat = self._geometria(ruta, c.get("escala_maxima", tm.escala_maxima))
+            if c.get("camara"):
+                geom = self._geometria_camara()
             desde = float(c.get("desde", 0) or 0)
             hasta = float(c.get("hasta") or largo)
             if not self.legado:
@@ -1383,8 +1481,12 @@ class VisualVideo:
             entradas = sorted(((cuando_entra(rc, tm, t + 0.8), k) for k, rc in enumerate(recs)))
             orden = [recs[k] for _, k in entradas]
             estados = Estados([x for x, _ in entradas]) if entradas else None
-            tramos.append(_Tramo(ruta, desde, hasta, vel, t, fin, c.get("etiqueta"), geom, recs, estados, orden,
-                                 float(c.get("fundido", FUNDIDO_TRAMO))))
+            tr = _Tramo(ruta, desde, hasta, vel, t, fin, c.get("etiqueta"), geom, recs, estados, orden,
+                        float(c.get("fundido", FUNDIDO_TRAMO)))
+            tr.nat = nat
+            if c.get("camara"):
+                tr.cam = self._leer_camara(tm, donde, c["camara"], t, nat, geom)
+            tramos.append(tr)
             t = fin
         return tramos
 
@@ -1392,7 +1494,10 @@ class VisualVideo:
     def _abrir(self, i):
         self._cerrar_proc()
         tr = self.tramos[i]
-        filtro = f"setpts=(PTS-STARTPTS)/{tr.vel:.6f},fps={FPS},scale={tr.ow}:{tr.oh}:flags=lanczos"
+        if tr.cam:      # con camara se lee a su tamaño real y el recorte y el agrandado se hacen despues, cuadro por cuadro
+            filtro = f"setpts=(PTS-STARTPTS)/{tr.vel:.6f},fps={FPS}"
+        else:
+            filtro = f"setpts=(PTS-STARTPTS)/{tr.vel:.6f},fps={FPS},scale={tr.ow}:{tr.oh}:flags=lanczos"
         self.proc = subprocess.Popen(
             [ffmpeg_bin("ffmpeg"), "-v", "error", "-ss", f"{tr.desde:.3f}", "-t", f"{max(0.1, tr.hasta - tr.desde):.3f}",
              "-i", str(tr.ruta), "-an", "-vf", filtro, "-pix_fmt", "rgb24", "-f", "rawvideo", "-"],
@@ -1422,6 +1527,69 @@ class VisualVideo:
         fa = marcar_foco(im, tr.orden[a - 1], 1.0) if a else im
         return Image.blend(fa, fb, alfa)
 
+    @staticmethod
+    def _vista(tr, t):
+        """La ventana de la grabacion que se ve en el instante t: (x0, y0, x1, y1) en pixeles de la grabacion."""
+        rt = t - tr.t0
+        vs = tr.cam
+        i = 0
+        for k, v in enumerate(vs):
+            if v["t"] <= rt + 1e-9:
+                i = k
+        v1 = vs[i]
+        x, y, w, h = v1["x"], v1["y"], v1["w"], v1["h"]
+        if i > 0:
+            v0 = vs[i - 1]
+            u = suave((rt - v1["t"]) / max(0.05, v1["mov"]))
+            if u < 1.0:
+                c0x, c0y = v0["x"] + v0["w"] / 2, v0["y"] + v0["h"] / 2
+                c1x, c1y = v1["x"] + v1["w"] / 2, v1["y"] + v1["h"] / 2
+                w = v0["w"] * (v1["w"] / v0["w"]) ** u
+                h = v0["h"] * (v1["h"] / v0["h"]) ** u
+                cx, cy = c0x + (c1x - c0x) * u, c0y + (c1y - c0y) * u
+                x, y = cx - w / 2, cy - h / 2
+        nw, nh = tr.nat                       # entre una vista y otra el desplazamiento no puede salirse de la grabacion
+        w, h = min(w, nw), min(h, nh)
+        x, y = min(max(x, 0.0), nw - w), min(max(y, 0.0), nh - h)
+        return (x, y, x + w, y + h)
+
+    def _con_camara(self, tr, nativo, t):
+        """La ventana de la camara agrandada a la caja, con el recuadro rojo si la voz lo esta nombrando."""
+        x0, y0, x1, y1 = self._vista(tr, t)
+        vw, vh = x1 - x0, y1 - y0
+        s = min(tr.ow / vw, tr.oh / vh)                    # la vista entra entera en la caja, sin deformarse
+        ancho, alto = max(2, round(vw * s)), max(2, round(vh * s))
+        ox, oy = (tr.ow - ancho) // 2, (tr.oh - alto) // 2
+        recorte = nativo.resize((ancho, alto), Image.LANCZOS, box=(x0, y0, x1, y1))
+        if ancho == tr.ow and alto == tr.oh:
+            im = recorte
+        else:                                              # vista mas baja que la caja: el fondo de la grabacion rellena
+            nw0, nh0 = tr.nat
+            im = Image.new("RGB", (tr.ow, tr.oh), nativo.getpixel((nw0 - 3, nh0 - 3)))
+            im.paste(recorte, (ox, oy))
+        if not tr.estados:
+            return im
+        nw, nh = tr.nat
+        sx = sy = s
+
+        def en_caja(r):          # el recuadro (porcentaje de la grabacion) en porcentaje de la caja; None si no entra
+            rx0, ry0 = (nw * r["x"] / 100 - x0) * sx + ox, (nh * r["y"] / 100 - y0) * sy + oy
+            rx1, ry1 = rx0 + nw * r["ancho"] / 100 * sx, ry0 + nh * r["alto"] / 100 * sy
+            if rx1 < 4 or ry1 < 4 or rx0 > tr.ow - 4 or ry0 > tr.oh - 4:
+                return None
+            return dict(r, x=rx0 * 100 / tr.ow, y=ry0 * 100 / tr.oh, ancho=(rx1 - rx0) * 100 / tr.ow, alto=(ry1 - ry0) * 100 / tr.oh)
+
+        a, b, alfa = tr.estados.en(t)
+
+        def con(k):
+            if not k:
+                return im
+            r = en_caja(tr.orden[k - 1])
+            return marcar_foco(im, r, 1.0) if r else im
+        if a == b:
+            return con(b)
+        return Image.blend(con(a), con(b), alfa)
+
     def _cartel(self, f, tr):
         """Arriba a la derecha, afuera de la grabacion: «Acelerado ×N» (o la etiqueta del tramo) cuando no va a 1x."""
         texto = tr.etiqueta
@@ -1444,15 +1612,19 @@ class VisualVideo:
             else:
                 self.fundir_desde = self.compuesto if self.idx >= 0 else None
                 self._abrir(i)
-        quiero, tam = max(0, int((t - tr.t0) * FPS)), tr.ow * tr.oh * 3
+        tam_img = tr.nat if tr.cam else (tr.ow, tr.oh)
+        quiero, tam = max(0, int((t - tr.t0) * FPS)), tam_img[0] * tam_img[1] * 3
         while self.n < quiero:
             crudo = self.proc.stdout.read(tam)
             if len(crudo) < tam:
                 break                              # se termino la grabacion: queda el ultimo cuadro
-            self.ultimo, self.n = Image.frombytes("RGB", (tr.ow, tr.oh), crudo), self.n + 1
+            self.ultimo, self.n = Image.frombytes("RGB", tam_img, crudo), self.n + 1
         f = tr.base.copy()
         if self.ultimo is not None:
-            f.paste(self._con_recuadros(tr, self.ultimo, t) if tr.estados else self.ultimo, tr.pos)
+            if tr.cam:
+                f.paste(self._con_camara(tr, self.ultimo, t), tr.pos)
+            else:
+                f.paste(self._con_recuadros(tr, self.ultimo, t) if tr.estados else self.ultimo, tr.pos)
         if not self.legado:
             self._cartel(f, tr)
             self.compuesto = f
