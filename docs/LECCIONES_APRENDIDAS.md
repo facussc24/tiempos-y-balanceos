@@ -60,8 +60,6 @@ incidente vive en los snapshots.
 
 - **10/09 — El lenguaje del entregable son las palabras que usa Fak (no es acortar, es la palabra comun), y un script que barre una carpeta se prueba en un arbol.** Graduado a la memoria `feedback_lenguaje_del_entregable_palabras_de_fak`.
 
-- **21/09 — La severidad sale del EFECTO, nunca de la sigla.** Graduado entero a `caracteristicas-especiales.md` §2bis.
-
 ## Identidad de un dato
 
 - **Una fuente que sale de mi lado del mostrador no es una segunda fuente** (regla mia, test, memoria, export, cita de un subagente, o el numero que yo propuse y Fak solo eligio; 02/10: tampoco el proceso de la pieza vecina, Upper Trim no es IP Pad): si un documento puede zanjarlo, se abre el documento antes de actuar. Las formas de caer: memorias `verificar_contra_la_fuente_no_el_codigo`, `un_agente_no_es_independiente`, `dispositivo_adhesivado_insert`, `al_documento_entra_lo_que_dice_un_papel_de_esa_pieza`; `amfe.md` §12.
@@ -79,6 +77,8 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **02/10 — Antes de tocar un patrón por lo que muestra un video, se le devuelve a Fak el dibujo con "llevo ESTO a ESTO" (emparejé la herradura al ancho de las patas y era al del arco); y un piquete es marca de COSTURA: se reubica por largo de costura, no en línea recta.** Graduado a las memorias `feedback_confirmar_la_zona_antes_de_modelar` y `project_apc_delantero_tela_tiras_ancho_parejo`.
+
 - **02/10 — Una mejora que Fak pidió se USA, y no está implementada hasta probarla con un mensaje REAL suyo** (pidió "fácil de entender" y contesté una tabla). Graduado a `mejora-implementada.md` y al chequeo 7 del `cierre-guard`.
 
 - **02/10 — Lo que hay que volver a pedir hasta que contesten no depende de acordarse: va a un seguimiento con fecha que se avisa solo; y lo que va a quien lo lee buscando el error sale corto, fácil y sin nada que suene a generado: el papel lo muestra la captura, no una cita mía de la norma.** Graduado a `scripts/_seguimientos.mjs` (arranque de sesion + tarea de lunes y viernes) y a las memorias `project_seguimientos_con_fecha` y `feedback_mails_a_calidad_cecilia_sin_flancos`.
@@ -92,7 +92,6 @@ incidente vive en los snapshots.
 - **01/10 — Un punto del Asaichi que dice "pasar mail" no es la orden de armarlo hoy, y un cierre de 80 renglones o con tres tablas no se lee** (*"armaste un mail que no te pedi"*, *"no entendi un carajo"*). Graduado a la memoria `feedback_mail_de_una_tarea_va_con_la_info_procesada`.
 
 - **01/10 — Si un entregable nombra una fuente, lleva su captura, y lo nuevo (una herramienta, un Claude que se publica para otros) no sale sin correr un caso de respuesta conocida** (al dueño le contestaron que la BOM "está en la nube": vive en el arb). Graduado al skill `superficie-vinilo-3d` y a las memorias `entregables_para_fak` y `project_claudes_por_area`.
-- **30/09-01/10 — REGLA DURA: se guarda solo en la nube de Ingeniería, en la personal de Fak nada; si Fak ya dijo DÓNDE no se elige otro lugar ni se vuelve a preguntar; y no se le habla del "cerebro".** Graduado a `nube-ingenieria.md` + hook `nube-personal-guard` y a la memoria `feedback_si_fak_ya_dijo_donde`.
 - **01/10 — Con un camino cerrado (no puedo hacer clic en la app que me aloja) se busca la herramienta que da la propia app antes de frenar o de pedirle a Fak** (*"buscale la solución a las cosas, no pares"*). Graduado a la memoria `reference_capturar_la_app_claude_sin_clics`.
 - **01/10 — Si Fak pregunta "qué es esto / por qué", se le explica y se para: no se arregla nada en paralelo** (*"yo tomo las decisiones acá... explicame antes de hacer algo"*). Graduado a la memoria `feedback_si_pide_que_le_explique_se_explica_y_se_para`.
 - **02/10 — Antes de decir "el arb tiene mal X", confirmar que la BOM que leí es la de ESE código: hay 10 productos cargados dos veces con otra grafía, y un cruce "sin guiones" me dio la vieja** (lo cazó el revisor independiente). Graduado a `scripts/hilos/cruce_programa_arb.py` (código exacto primero) y a la memoria `reference_arb_export_estructura` §4.
