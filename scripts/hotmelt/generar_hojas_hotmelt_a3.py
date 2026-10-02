@@ -1303,20 +1303,23 @@ def exportar_pdf_com(pptx_path):
     except Exception:
         pass
     habia_abiertas = ppt.Presentations.Count
+    pres = None
     try:
         pres = ppt.Presentations.Open(os.path.abspath(pptx_path), WithWindow=False)
         pres.SaveAs(os.path.abspath(pdf_path), 32)
+    finally:
+        # La propia se cierra aunque el SaveAs falle: abierta, PowerPoint no se va y retiene el .pptx.
         try:
-            pres.Saved = 1
-            pres.Close()
+            if pres is not None:
+                pres.Saved = 1
+                pres.Close()
         except Exception:
             pass
-    finally:
-        if habia_abiertas == 0:
-            try:
+        try:
+            if habia_abiertas == 0 and ppt.Presentations.Count == 0:
                 ppt.Quit()
-            except Exception:
-                pass
+        except Exception:
+            pass
     print(f"     -> PDF generado: {pdf_path}")
     return pdf_path
 

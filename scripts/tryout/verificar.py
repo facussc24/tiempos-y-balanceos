@@ -133,6 +133,7 @@ print("\n=== 8. el JUEZ del pptx es PowerPoint, no python-pptx ===")
 import shutil
 import win32com.client
 app = win32com.client.Dispatch("PowerPoint.Application")
+habia_abiertas = app.Presentations.Count   # lo que tenga abierto Fak no se cierra
 for f in ("TryOut_IMG_Dia1a5.pptx", "TryOut_IMG_Dia5.pptx", "TryOut_IMG_Day1to5_EN.pptx"):
     try:
         pres = app.Presentations.Open(os.path.join(ENT, f), WithWindow=False)
@@ -156,7 +157,8 @@ try:
 except Exception:
     abrio = False
 chequear("gemelo: PowerPoint RECHAZA un pptx corrompido", not abrio)
-app.Quit()
+if habia_abiertas == 0 and app.Presentations.Count == 0:
+    app.Quit()
 
 print("\n" + ("=" * 62))
 print("RESUMEN: %d control(es) en ROJO" % len(fallas))
