@@ -1,364 +1,850 @@
 {
   "_como_se_usa": [
     "Este es el video, como DATOS. El programa armar_video.py lo lee y arma el MP4, el .srt y los cuadros de control.",
-    "La narracion ya esta grabada: un WAV por parrafo en la carpeta 'voz' (partes/01.wav ... 20.wav). Aca solo se dice que se VE mientras suena cada uno.",
+    "La narracion ya esta grabada: un WAV por parrafo en la carpeta 'voz' (partes/01.wav ...), con partes/NN.json (cuando empieza cada frase y cuando dice cada palabra). Aca solo se dice que se VE mientras suena cada uno.",
     "Las rutas son relativas a la carpeta de este archivo.",
-    "escena: numero, titulo (corto), parrafos (los numeros de partes/NN.wav, en orden), texto_en_pantalla (maximo 6 palabras; va en la franja de abajo) y sus tomas.",
-    "toma: lo que se ve durante un pedazo de la narracion. Adentro de una escena las tomas cambian con corte seco; entre escenas hay un fundido corto.",
+    "escena: numero, titulo (corto), parrafos (los numeros de partes/NN.wav, en orden) y sus tomas.",
+    "toma: lo que se ve durante un pedazo de la narracion. Cada toma entra con un fundido corto; entre escenas hay un fundido un poco mas largo.",
     "  voz: que pedazo de la narracion tapa. '4' = el parrafo 4 entero; '4:1' = la frase 1 del parrafo 4; '4:2-3' = las frases 2 y 3. Entre todas las tomas de una escena tienen que cubrir sus parrafos enteros, en orden.",
-    "  recurso: la ruta de una imagen fija (png o jpg), la de un video grabado (mp4, mov, mkv), o la palabra 'lamina' para una lamina de texto.",
+    "  recurso: la ruta de una imagen fija (png o jpg), la de un video grabado (mp4, mov, mkv), 'lamina' (texto), 'ticker' (documentos reales que suben en columnas) o 'triptico' (tres capturas con su paso).",
+    "  texto_en_pantalla: el nombre del paso, que va arriba a la izquierda (maximo 6 palabras; vacio = nada).",
     "  que_tiene_que_verse: lo que tiene que mostrar la captura. Si el archivo todavia no existe, el video sale con una lamina 'FALTA LA TOMA' con este texto y el programa termina con 1.",
-    "  pendiente: la toma sale bien, pero con algo provisorio (una lamina, o la captura de al lado estirada). Aca se anota que toma real la tiene que reemplazar. El programa las lista al final; no cambia el video ni el codigo de salida. Para reemplazarla: cambiar 'recurso' (y 'voz' si estaba estirada) y borrar 'pendiente'.",
-    "  recuadros: lo que se marca en rojo ARRIBA de la imagen, en porcentaje de la imagen ENTERA (0 a 100, desde arriba a la izquierda): x, y, ancho, alto. 'numero' le pone un circulo. 'con_la_frase': aparece cuando empieza esa frase de la toma (sin eso, aparece a los 0,8 s).",
-    "  posicion_confirmada: false = la posicion es ESTIMADA (la captura todavia no existia). Con la captura puesta: python armar_video.py --grilla, se lee la posicion real en control/_grilla/, se corrige aca y en posicion_confirmada se pone la huella que da la grilla (12 letras). Si despues cambian la captura, el recuadro vuelve a quedar sin ubicar solo. Mientras haya uno sin ubicar, el programa termina con 1.",
-    "  encuadre: {x, y, ancho, alto} en porcentaje: la toma usa solo esa parte de la imagen (para sacar el encabezado de la ventana, o quedarse con la parte de arriba). En la grilla sale en azul.",
-    "  escala_maxima: cuanto se puede agrandar la imagen (1.0 = su tamaño real). Para capturas que ya vienen agrandadas: quedan mas chicas y centradas, y se ven menos borrosas.",
-    "  zoom: sin nada = un acercamiento muy lento. 'no' = quieta. 'al_recuadro' = se acerca despacio a lo marcado. O un cuadro {x, y, ancho, alto} en porcentaje, que es donde termina.",
-    "  lamina: titulo (si no se pone, el de la escena; '' = sin titulo) y renglones (maximo 6 palabras cada uno; con 'con_la_frase' aparecen de a uno, con la voz). O 'cita': lo que la persona le escribe a Claude, entre comillas, en un globo.",
+    "  pendiente: la toma sale bien, pero con algo provisorio. Aca se anota que toma real la tiene que reemplazar.",
+    "  recuadros: lo que se marca en rojo ARRIBA de la imagen, en porcentaje de la imagen ENTERA (0 a 100, desde arriba a la izquierda): x, y, ancho, alto. Aparecen de a uno; lo que no se marca se oscurece. 'con_la_palabra': aparece cuando la voz dice esa palabra o esas palabras ('ocurrencia': 2 = la segunda vez que las dice). 'con_la_frase': cuando empieza esa frase de la toma (sin ninguno de los dos, a los 0,8 s). 'etiqueta': el nombre del boton, escrito al lado ('etiqueta_lado': arriba, abajo, derecha, izquierda). 'foco': false = no oscurecer el resto.",
+    "  posicion_confirmada: la huella de la captura sobre la que se ubico el recuadro (python armar_video.py --grilla la da, 12 letras). Si despues cambian la captura, el recuadro vuelve a quedar sin ubicar solo.",
+    "  encuadre: {x, y, ancho, alto} en porcentaje: la toma usa solo esa parte de la imagen.",
+    "  omitir: [{desde, hasta}] en porcentaje del alto: franjas horizontales que se sacan de la captura (para no mostrar una ruta interna). Los porcentajes de los recuadros y del encuadre van sobre la captura YA recortada (--grilla la muestra asi).",
+    "  escala_maxima: cuanto se puede agrandar la imagen (1.0 = su tamaño real). zoom_maximo: tope del acercamiento de esa toma.",
+    "  zoom: sin nada = un acercamiento muy lento hacia lo marcado. 'no' = quieta. 'al_recuadro' = se acerca despacio a lo marcado.",
+    "  lamina: titulo y renglones (con 'con_la_frase' o 'con_la_palabra' aparecen de a uno, con la voz); 'icono': 'x' pone una cruz roja en cada renglon. O 'cita': lo que la persona le escribe a Claude.",
+    "  ticker: documentos: lista de [codigo, titulo] de documentos reales del SGC. triptico: tarjetas: tres {recurso, encuadre, titulo, con_la_palabra}.",
     "  segundos_extra: segundos de pantalla sin voz al final de la toma (solo si la toma termina con un parrafo entero).",
-    "CUANDO HAYA UNA GRABACION que reemplaza a una imagen: se guarda en tomas/ con el mismo nombre que la imagen (tomas/03-boton-code.mp4 reemplaza a 03-boton-code.png) o como tomas/escena-2.mp4 para la escena entera, y el programa la toma sola.",
-    "  Para una grabacion: 'desde' y 'hasta' (segundos, para recortarla) y 'velocidad' ('ajustar' = se estira o se acelera para durar lo mismo que la voz; o un numero: 1 = como se grabo). En la toma, o en 'grabacion' de la escena si es la escena entera.",
+    "CUANDO HAYA UNA GRABACION que reemplaza a una imagen: se guarda en tomas/ con el mismo nombre que la imagen o como tomas/escena-2.mp4 para la escena entera.",
+    "  Para una grabacion: 'desde' y 'hasta' (segundos, para recortarla) y 'velocidad' ('ajustar' = se estira o se acelera para durar lo mismo que la voz; o un numero: 1 = como se grabo).",
     "antes_de_publicar: lo que el guion marca sin confirmar. El programa lo lista al final; no cambia el video."
   ],
-
   "video": {
     "salida": "../../../exports/CLAUDES_POR_AREA_20261001/Video tutorial - Claude en Barack.mp4",
     "voz": "../../../exports/CLAUDES_POR_AREA_20261001/fuentes/voz",
     "logo": "../../../scripts/video/logo_hd.png",
-    "placa_apertura": { "texto": "Claude en Barack — cómo se usa", "segundos": 2.0 },
+    "placa_apertura": {
+      "titulo": "Claude en Barack",
+      "frase": "Cómo se usa",
+      "segundos": 1.7
+    },
     "placa_final": {
-      "texto": "Claude en Barack",
-      "credito": "Voz: Piper es_AR-daniela, datos OpenSLR 61, CC BY-SA 4.0",
-      "segundos": 4.0
+      "titulo": "Claude en Barack",
+      "frase": "Abrí Claude, elegí la carpeta y preguntá.",
+      "credito": "Voz: Piper es_AR-daniela (CC BY-SA 4.0)",
+      "segundos": 3.8
     }
   },
-
   "ajustes": {
-    "aire_de_escena_s": 0.5,
+    "aire_de_escena_s": 0.3,
     "pausa_entre_parrafos_s": 0.4,
-    "fundido_entre_escenas_s": 0.5,
+    "fundido_entre_escenas_s": 0.4,
     "zoom_lento_por_segundo": 0.008,
     "zoom_lento_tope": 0.06,
-    "zoom_maximo": 2.2,
-    "sonoridad_lufs": -20.0,
-    "musica_db_bajo_la_voz": 22.0,
-    "calidad_crf": 23
+    "zoom_maximo": 1.5,
+    "sonoridad_lufs": -16.0,
+    "calidad_crf": 21
   },
-
   "escenas": [
     {
       "numero": 1,
-      "titulo": "Apertura",
-      "parrafos": [1, 2, 3],
-      "texto_en_pantalla": "Todo está escrito. ¿Dónde?",
-      "antes_de_publicar": [
-        "Los números de la lámina del servidor: 19 procedimientos y 49 descripciones de puesto coinciden con lo extraído en .sgc-cache (sgc y sgc-funciones); los 87 instructivos no los pude contar (en .sgc-cache hay 67 extraídos y el servidor no estaba a mano). Contarlos en el servidor antes de mostrar."
+      "titulo": "El problema y Claude",
+      "parrafos": [
+        1,
+        2,
+        3
       ],
       "tomas": [
         {
-          "voz": ["1"],
-          "recurso": "lamina",
-          "lamina": {
-            "titulo": "La forma de trabajar está escrita",
-            "renglones": [
-              { "texto": "Cómo se recibe un material", "con_la_frase": 2 },
-              { "texto": "Qué hacer con una pieza mala", "con_la_frase": 3 },
-              { "texto": "Qué le toca a cada puesto", "con_la_frase": 4 }
+          "voz": [
+            "1",
+            "2:1"
+          ],
+          "recurso": "ticker",
+          "texto_en_pantalla": "",
+          "que_tiene_que_verse": "Documentos reales de Barack (procedimientos, instructivos, funciones de puesto) que suben en columnas: hay mucho escrito.",
+          "ticker": {
+            "documentos": [
+              [
+                "P-05",
+                "Control de los documentos"
+              ],
+              [
+                "I-AC-005",
+                "Emisión y control del AMFE y plan de control"
+              ],
+              [
+                "F-24",
+                "Supervisor de Producción"
+              ],
+              [
+                "P-08",
+                "Identificación y rastreabilidad del producto"
+              ],
+              [
+                "I-LG-001",
+                "Recepción de materias primas"
+              ],
+              [
+                "P-13",
+                "Control de las salidas no conformes"
+              ],
+              [
+                "I-AC-019",
+                "Calibración interna de instrumentos"
+              ],
+              [
+                "F-12",
+                "Inspector de calidad"
+              ],
+              [
+                "P-09",
+                "Control de los procesos"
+              ],
+              [
+                "I-IN-003",
+                "Modificación de un Producto-Proceso"
+              ],
+              [
+                "P-16",
+                "Control de los registros"
+              ],
+              [
+                "F-43",
+                "Operario - Líder"
+              ],
+              [
+                "P-14",
+                "No conformidad y acción correctiva"
+              ],
+              [
+                "I-AC-032",
+                "Verificación Poka Yoke"
+              ],
+              [
+                "I-LG-012",
+                "Trazabilidad"
+              ],
+              [
+                "P-10",
+                "Inspección y ensayos"
+              ],
+              [
+                "F-61",
+                "Operario - Sector Inyección"
+              ],
+              [
+                "I-PR-001",
+                "Puesta a punto del proceso"
+              ],
+              [
+                "P-11",
+                "Control de equipos de inspección, medición y ensayo"
+              ],
+              [
+                "I-AC-012",
+                "Devolución de clientes"
+              ],
+              [
+                "P-18",
+                "Formación"
+              ],
+              [
+                "F-69",
+                "Planificador de Materiales"
+              ],
+              [
+                "I-CO-001",
+                "Compra de materiales productivos"
+              ],
+              [
+                "P-15",
+                "Manejo, almacenamiento, empaque y entrega"
+              ],
+              [
+                "I-AC-025",
+                "Lecciones aprendidas"
+              ],
+              [
+                "F-25",
+                "Operario de Mantenimiento"
+              ],
+              [
+                "P-12",
+                "Estado de inspección y ensayo"
+              ],
+              [
+                "I-AC-007",
+                "Aprobación de piezas de producción"
+              ],
+              [
+                "I-MT-001",
+                "Instructivo general de mantenimiento"
+              ],
+              [
+                "P-17",
+                "Auditorías internas de calidad"
+              ],
+              [
+                "F-52",
+                "Operario - Sector Costura Blanca"
+              ],
+              [
+                "I-LG-009",
+                "Obsoletos"
+              ],
+              [
+                "P-21",
+                "Planes de contingencia"
+              ],
+              [
+                "I-AC-029",
+                "Respuestas rápidas"
+              ],
+              [
+                "F-06",
+                "Gerente de Calidad"
+              ],
+              [
+                "I-IN-005",
+                "Solicitud de desviación de ingeniería"
+              ],
+              [
+                "P-09.1",
+                "Reacción ante una NO conformidad"
+              ],
+              [
+                "I-AC-009",
+                "Análisis de los sistemas de medición"
+              ],
+              [
+                "F-59",
+                "Operario - Sector Inyección PU"
+              ],
+              [
+                "I-RH-001",
+                "Desarrollo de policompetencia y polivalencia"
+              ],
+              [
+                "P-03",
+                "Revisión de contrato"
+              ],
+              [
+                "I-AC-004",
+                "Programa 5S"
+              ],
+              [
+                "F-36",
+                "Auditor de Recepción de Materiales"
+              ],
+              [
+                "P-22",
+                "Análisis del contexto, partes interesadas y gestión de riesgos"
+              ],
+              [
+                "I-DR-002",
+                "Satisfacción al cliente"
+              ],
+              [
+                "F-20",
+                "Ingeniero de Proceso"
+              ],
+              [
+                "P-02",
+                "Sistema de gestión de la calidad"
+              ]
             ]
-          },
-          "pendiente": "El Explorador de Windows en la carpeta Instructivos del servidor, en vista Detalles: las carpetas por área, la ventana sola (tomas/17-explorador-instructivos.png)."
+          }
         },
         {
-          "voz": ["2"],
-          "recurso": "lamina",
-          "lamina": {
-            "titulo": "Está todo en el servidor",
-            "renglones": ["19 procedimientos", "87 instructivos", "49 descripciones de puesto"]
-          },
-          "pendiente": "El mismo Explorador, adentro de la carpeta CALIDAD: la lista larga de instructivos (tomas/17b-explorador-calidad.png)."
+          "voz": [
+            "2:2"
+          ],
+          "recurso": "../manual/capturas/02-menu-inicio.png",
+          "texto_en_pantalla": "1 · Abrir Claude",
+          "escala_maxima": 1.5,
+          "que_tiene_que_verse": "El menú Inicio de Windows con Claude escrito en el buscador y el programa primero en la lista.",
+          "recuadros": [
+            {
+              "que_marca": "el programa Claude",
+              "x": 3.8,
+              "y": 42.5,
+              "ancho": 42.1,
+              "alto": 23.8,
+              "con_la_palabra": "Claude",
+              "posicion_confirmada": "76f43c05ac72"
+            }
+          ]
         },
         {
-          "voz": ["3"],
-          "recurso": "../manual/capturas/01-respuesta-con-cita.png",
-          "encuadre": { "x": 0, "y": 7.5, "ancho": 100, "alto": 90.4 },
-          "que_tiene_que_verse": "Una respuesta de Claude con su documento al pie (la misma captura de la escena 4).",
-          "pendiente": "La app de Claude abierta y vacía: la caja de texto sin nada escrito, sin conversaciones a la vista (tomas/24-caja-de-texto-vacia.png)."
+          "voz": [
+            "3"
+          ],
+          "recurso": "../manual/capturas/03-boton-code.png",
+          "texto_en_pantalla": "1 · Abrir Claude",
+          "escala_maxima": 1.4,
+          "que_tiene_que_verse": "La app abierta sin ninguna conversación: arriba los dos botones; el de la derecha es Code.",
+          "recuadros": [
+            {
+              "que_marca": "el botón Code",
+              "x": 84.5,
+              "y": 2.5,
+              "ancho": 13,
+              "alto": 18.5,
+              "posicion_confirmada": "404ee580cf7f",
+              "con_la_palabra": "derecha"
+            },
+            {
+              "que_marca": "el botón Code",
+              "x": 84.5,
+              "y": 2.5,
+              "ancho": 13,
+              "alto": 18.5,
+              "con_la_palabra": "Code",
+              "etiqueta": "Code",
+              "etiqueta_lado": "abajo",
+              "posicion_confirmada": "404ee580cf7f"
+            }
+          ],
+          "encuadre": {
+            "x": 0,
+            "y": 0,
+            "ancho": 100,
+            "alto": 30
+          },
+          "segundos_extra": 0.9
         }
       ]
     },
-
     {
       "numero": 2,
-      "titulo": "Abrir y elegir la carpeta",
-      "parrafos": [4, 5],
-      "texto_en_pantalla": "Code · Local · la carpeta de Barack",
-      "antes_de_publicar": [
-        "Nombre y lugar de la carpeta que se elige (hoy sin definir). Si se entrega un acceso directo que ya abre ahí, esta escena se acorta.",
-        "Mirar en la app si la primera vez aparece un cartel al elegir la carpeta."
+      "titulo": "Elegir la carpeta",
+      "parrafos": [
+        4
       ],
       "tomas": [
         {
-          "voz": ["4"],
-          "recurso": "../manual/capturas/03-boton-code.png",
-          "escala_maxima": 0.85,
-          "que_tiene_que_verse": "La app recién abierta, sin ninguna conversación: arriba se ven los dos botones; el de la derecha es Code.",
-          "recuadros": [
-            { "que_marca": "el botón Code", "x": 84.5, "y": 2.5, "ancho": 13, "alto": 18.5, "con_la_frase": 3, "posicion_confirmada": "404ee580cf7f" }
+          "voz": [
+            "4:1-3"
           ],
-          "pendiente": "Para la primera frase («se abre desde el menú Inicio»): el menú Inicio de Windows con la palabra Claude escrita y el programa primero en la lista (manual/capturas/02-menu-inicio.png). Hoy esa frase va con la captura del botón Code."
-        },
-        {
-          "voz": ["5:1"],
-          "recurso": "lamina",
-          "lamina": {
-            "titulo": "",
-            "renglones": ["Local", "Claude trabaja en esta computadora"]
-          },
-          "pendiente": "La pantalla de conversación nueva con Local elegido y el botón para elegir la carpeta (manual/capturas/04-local-y-select-folder.png)."
-        },
-        {
-          "voz": ["5:2-3"],
-          "recurso": "../manual/capturas/05-carpeta-elegida.png",
-          "que_tiene_que_verse": "La ventana para elegir carpeta, con la carpeta de Barack marcada. Sin el árbol de carpetas de al lado.",
+          "recurso": "../manual/capturas/04-local-y-select-folder.png",
+          "texto_en_pantalla": "2 · Elegir la carpeta",
+          "escala_maxima": 1.6,
+          "que_tiene_que_verse": "Conversación nueva: abajo el botón Local, arriba la lista de carpetas con ClaudeBarack y Abrir carpeta.",
           "recuadros": [
-            { "que_marca": "la carpeta de Barack", "x": 16, "y": 44.3, "ancho": 12.5, "alto": 5.2, "posicion_confirmada": "cff4438022fe" }
+            {
+              "que_marca": "el botón Local",
+              "x": 1.5,
+              "y": 70,
+              "ancho": 14.5,
+              "alto": 7.2,
+              "con_la_palabra": "Local",
+              "posicion_confirmada": "7ce2f8a846ca"
+            },
+            {
+              "que_marca": "la carpeta ClaudeBarack",
+              "x": 17.5,
+              "y": 25.6,
+              "ancho": 38,
+              "alto": 5.6,
+              "con_la_palabra": "ClaudeBarack",
+              "posicion_confirmada": "7ce2f8a846ca"
+            },
+            {
+              "que_marca": "Abrir carpeta",
+              "x": 17.5,
+              "y": 60.5,
+              "ancho": 38,
+              "alto": 5.6,
+              "con_la_palabra": "Abrir",
+              "posicion_confirmada": "7ce2f8a846ca"
+            }
+          ],
+          "encuadre": {
+            "x": 0,
+            "y": 12,
+            "ancho": 64,
+            "alto": 70
+          },
+          "zoom": "no"
+        },
+        {
+          "voz": [
+            "4:4"
+          ],
+          "recurso": "../manual/capturas/05-carpeta-elegida.png",
+          "texto_en_pantalla": "2 · Elegir la carpeta",
+          "escala_maxima": 1.4,
+          "que_tiene_que_verse": "La ventana Seleccionar carpeta con ClaudeBarack escrita y el botón Seleccionar carpeta.",
+          "recuadros": [
+            {
+              "que_marca": "la carpeta ClaudeBarack",
+              "x": 16.6,
+              "y": 44.8,
+              "ancho": 10.2,
+              "alto": 4.4,
+              "con_la_frase": 1,
+              "posicion_confirmada": "cff4438022fe"
+            },
+            {
+              "que_marca": "el botón Seleccionar carpeta",
+              "x": 75.4,
+              "y": 91.4,
+              "ancho": 13,
+              "alto": 5.3,
+              "con_la_palabra": "Seleccionar",
+              "posicion_confirmada": "cff4438022fe"
+            }
           ]
         }
       ]
     },
-
     {
       "numero": 3,
       "titulo": "Decirle el puesto",
-      "parrafos": [6, 7],
-      "texto_en_pantalla": "Primero: decile tu puesto",
-      "antes_de_publicar": [
-        "La respuesta tiene que citar F-24 Supervisor de Producción rev I. Si cita la rev F, está leyendo la copia vieja: no se captura."
+      "parrafos": [
+        5,
+        6
       ],
       "tomas": [
         {
-          "voz": ["6"],
-          "recurso": "../manual/capturas/06-decir-el-puesto.png",
-          "encuadre": { "x": 0, "y": 7.5, "ancho": 100, "alto": 47 },
-          "que_tiene_que_verse": "La parte de arriba de la conversación: el mensaje «Soy supervisor de producción. ¿Qué funciones tiene mi puesto?» ya enviado.",
-          "recuadros": [
-            { "que_marca": "el mensaje con el puesto y la pregunta", "x": 45, "y": 15.6, "ancho": 39, "alto": 7.6, "con_la_frase": 2, "posicion_confirmada": "b2966ba64429" }
+          "voz": [
+            "5",
+            "6"
           ],
-          "pendiente": "La app con ese mensaje escrito en la caja de texto, todavía sin enviar (tomas/21-pregunta-del-puesto-escrita.png)."
-        },
-        {
-          "voz": ["7"],
           "recurso": "../manual/capturas/06-decir-el-puesto.png",
-          "encuadre": { "x": 0, "y": 7.5, "ancho": 100, "alto": 92.5 },
-          "que_tiene_que_verse": "El mensaje del puesto ya enviado y, debajo, la respuesta: la lista de funciones y el documento y la revisión (F-24 Supervisor de Producción, rev I).",
+          "texto_en_pantalla": "3 · Preguntar",
+          "encuadre": {
+            "x": 0,
+            "y": 7.5,
+            "ancho": 100,
+            "alto": 92.5
+          },
+          "escala_maxima": 1.5,
+          "que_tiene_que_verse": "El mensaje «Soy supervisor de producción. ¿Qué funciones tiene mi puesto?» y debajo la respuesta con el F-24, rev I.",
           "recuadros": [
-            { "que_marca": "el documento y la revisión (F-24, rev I)", "x": 54, "y": 41.2, "ancho": 30, "alto": 5, "con_la_frase": 2, "posicion_confirmada": "b2966ba64429" }
+            {
+              "que_marca": "el mensaje con el puesto y la pregunta",
+              "x": 45,
+              "y": 15.6,
+              "ancho": 39,
+              "alto": 7.6,
+              "con_la_palabra": "supervisor",
+              "posicion_confirmada": "b2966ba64429"
+            },
+            {
+              "que_marca": "el documento y la revisión (F-24, rev I)",
+              "x": 54,
+              "y": 41.4,
+              "ancho": 30,
+              "alto": 3.9,
+              "con_la_palabra": "F-24",
+              "posicion_confirmada": "b2966ba64429"
+            }
           ]
         }
       ]
     },
-
     {
       "numero": 4,
-      "titulo": "Pregunta real del SGC",
-      "parrafos": [8, 9, 10],
-      "texto_en_pantalla": "Respuesta con documento y revisión",
-      "antes_de_publicar": [
-        "Abrir el original P-09.1 rev B.1 en solo lectura y confirmar que el cuadro dice lo mismo que la respuesta."
+      "titulo": "Pregunta real y su fuente",
+      "parrafos": [
+        7,
+        8
       ],
       "tomas": [
         {
-          "voz": ["8"],
-          "recurso": "../manual/capturas/01-respuesta-con-cita.png",
-          "encuadre": { "x": 0, "y": 7.5, "ancho": 100, "alto": 38 },
-          "que_tiene_que_verse": "La parte de arriba de la conversación: la pregunta «¿Qué hago si en la línea salen tres piezas malas seguidas con el mismo defecto?» ya enviada.",
-          "recuadros": [
-            { "que_marca": "la pregunta de las tres piezas", "x": 36.3, "y": 13.4, "ancho": 47.4, "alto": 7.4, "con_la_frase": 2, "posicion_confirmada": "1a8dd613bf6b" }
+          "voz": [
+            "7"
           ],
-          "pendiente": "La app con esa pregunta escrita en la caja de texto, todavía sin enviar (tomas/22-pregunta-tres-piezas-escrita.png)."
+          "recurso": "../manual/capturas/01-respuesta-con-cita.png",
+          "texto_en_pantalla": "3 · Preguntar",
+          "encuadre": {
+            "x": 0,
+            "y": 7.5,
+            "ancho": 100,
+            "alto": 38
+          },
+          "escala_maxima": 1.5,
+          "que_tiene_que_verse": "La pregunta «¿Qué hago si en la línea salen tres piezas malas seguidas con el mismo defecto?» ya enviada.",
+          "recuadros": [
+            {
+              "que_marca": "la pregunta de las tres piezas",
+              "x": 36.3,
+              "y": 13.4,
+              "ancho": 47.4,
+              "alto": 7.4,
+              "con_la_frase": 1,
+              "posicion_confirmada": "1a8dd613bf6b"
+            }
+          ]
         },
         {
-          "voz": ["9", "10"],
-          "recurso": "../manual/capturas/01-respuesta-con-cita.png",
-          "encuadre": { "x": 0, "y": 7.5, "ancho": 100, "alto": 90.4 },
-          "que_tiene_que_verse": "La respuesta completa a la pregunta de las tres piezas, con el renglón del documento y la revisión a la vista (P-09.1 rev B.1).",
+          "voz": [
+            "8"
+          ],
+          "recurso": "../manual/capturas/07-respuesta-tres-piezas.png",
+          "texto_en_pantalla": "3 · Preguntar",
+          "escala_maxima": 1.1,
+          "que_tiene_que_verse": "La respuesta corta y, al final, el renglón Fuente con el documento y la revisión (P-09.1 rev B.1).",
           "recuadros": [
-            { "que_marca": "el renglón del documento y la revisión", "x": 15.8, "y": 86.6, "ancho": 68.4, "alto": 10.8, "con_la_frase": 2, "posicion_confirmada": "1a8dd613bf6b" }
+            {
+              "que_marca": "la respuesta",
+              "x": 3,
+              "y": 3.5,
+              "ancho": 65,
+              "alto": 16,
+              "con_la_frase": 1,
+              "posicion_confirmada": "9b17bd148580"
+            },
+            {
+              "que_marca": "la fuente: documento y revisión",
+              "x": 3,
+              "y": 82.5,
+              "ancho": 69,
+              "alto": 14.5,
+              "con_la_frase": 2,
+              "posicion_confirmada": "9b17bd148580"
+            }
           ],
           "zoom": "al_recuadro",
-          "pendiente": "Para las frases 2 y 3 del párrafo 10 («se abre el original y se controla»): el original P-09.1 rev B.1 abierto en solo lectura, encuadrado en el cuadro de las tres piezas, sin el pie con nombres (manual/capturas/08-documento-original.png). Hoy esas frases van con la respuesta."
+          "zoom_maximo": 1.35,
+          "relleno_abajo": 14
         }
       ]
     },
-
     {
       "numero": 5,
       "titulo": "Pedido de mail",
-      "parrafos": [11, 12],
-      "texto_en_pantalla": "Claude redacta. Vos enviás.",
-      "antes_de_publicar": [
-        "A quién va el mail de la demostración (propuesta del guion: a Facundo mismo). El caso de la capacitación es armado: si esa semana hay un pedido real, se usa ese.",
-        "En las PC de área: si el mail queda abierto en Outlook o guardado en Borradores."
+      "parrafos": [
+        9,
+        10
       ],
       "tomas": [
         {
-          "voz": ["11"],
-          "recurso": "lamina",
-          "lamina": {
-            "titulo": "Se le pide con palabras comunes",
-            "cita": "Armame un mail para Recursos Humanos: necesito una capacitación en uso de calibre para dos operarios nuevos de costura. Dejámelo listo para enviar."
-          },
-          "pendiente": "La app con ese pedido escrito y la respuesta de Claude avisando que lo dejó abierto en Outlook (tomas/23-pedido-de-mail.png)."
-        },
-        {
-          "voz": ["12:1-2"],
+          "voz": [
+            "9"
+          ],
           "recurso": "../manual/capturas/09-mail-en-outlook.png",
-          "que_tiene_que_verse": "Solo la ventana del mail nuevo de Outlook: Para, asunto, dos renglones y «Saludos». El botón Enviar a la vista. Sin la bandeja de entrada atrás, sin el destinatario real y sin el celular de la firma."
+          "texto_en_pantalla": "Pedir un mail",
+          "escala_maxima": 1.15,
+          "que_tiene_que_verse": "Solo la ventana del mail nuevo de Outlook: Para, asunto, dos renglones y «Saludos». Sin la bandeja de entrada atrás.",
+          "recuadros": [
+            {
+              "que_marca": "Outlook",
+              "x": 1.9,
+              "y": 0.9,
+              "ancho": 2.2,
+              "alto": 3.8,
+              "con_la_palabra": "Outlook",
+              "etiqueta": "Outlook",
+              "etiqueta_lado": "derecha",
+              "posicion_confirmada": "8d3628d7774b"
+            }
+          ]
         },
         {
-          "voz": ["12:3"],
+          "voz": [
+            "10"
+          ],
           "recurso": "../manual/capturas/13-mail-esperando-enviar.png",
-          "que_tiene_que_verse": "La misma ventana del mail, un poco más abierta, con el cursor arriba del botón Enviar.",
+          "texto_en_pantalla": "Pedir un mail",
+          "escala_maxima": 1.4,
+          "que_tiene_que_verse": "El mail abierto, con el botón Enviar a la vista.",
           "recuadros": [
-            { "que_marca": "el botón Enviar", "x": 3.2, "y": 5, "ancho": 6.6, "alto": 23, "posicion_confirmada": "c7d31368e572" }
+            {
+              "que_marca": "el texto del mail",
+              "x": 2.5,
+              "y": 42,
+              "ancho": 66,
+              "alto": 55,
+              "con_la_frase": 2,
+              "posicion_confirmada": "c7d31368e572"
+            },
+            {
+              "que_marca": "el botón Enviar",
+              "x": 3.2,
+              "y": 5,
+              "ancho": 6.6,
+              "alto": 23,
+              "con_la_palabra": "Enviar",
+              "posicion_confirmada": "c7d31368e572"
+            }
           ]
         }
       ]
     },
-
     {
       "numero": 6,
       "titulo": "BOM en el arb",
-      "parrafos": [13, 14, 15],
-      "texto_en_pantalla": "Carga y controla contra el arb",
+      "parrafos": [
+        11
+      ],
       "antes_de_publicar": [
-        "Las tomas del arb salen de una grabación real del 06/08/2026 (Claude cargando consumos del Insert), recortada a la ventana sola: no se ve la barra de abajo con el usuario. No es una carga hecha para el video.",
-        "La voz habla de la tabla de carga y de comparar línea por línea: eso no se ve (se ve el arb trayendo cada BOM y la solapa del listado). El PDF es el aviso real del 28/09/2026 (grampas del Insert), que es de otra carga."
+        "Las tomas del arb salen de una grabación real del 06/08/2026 (Claude cargando consumos del Insert), recortada a la ventana sola: no se ve la barra de abajo con el usuario. No es una carga hecha para el video."
       ],
       "tomas": [
         {
-          "voz": ["13"],
-          "recurso": "tomas/arb-06ago2026-trae-la-bom-de-cada-pieza.mp4",
-          "velocidad": 1,
-          "que_tiene_que_verse": "El arb, ventana Maestro de Relaciones - BA: se escribe la pieza, se llena la grilla con su BOM y queda marcada la celda del consumo. Solo esa ventana."
-        },
-        {
-          "voz": ["14:1"],
-          "recurso": "tomas/arb-06ago2026-escribe-en-la-grilla.mp4",
-          "velocidad": 1,
-          "que_tiene_que_verse": "El arb escribiendo en la grilla, renglón por renglón."
-        },
-        {
-          "voz": ["14:2"],
-          "recurso": "tomas/arb-06ago2026-pide-el-listado.mp4",
-          "que_tiene_que_verse": "El arb pasando a la solapa Listado de Insumos de Un Producto y eligiendo la salida del listado (se sacó la espera del medio)."
-        },
-        {
-          "voz": ["14:3"],
-          "recurso": "tomas/pdf-difusion-insert-grampas-28sep2026-pag-01.png",
-          "encuadre": { "x": 2, "y": 1.5, "ancho": 89, "alto": 88 },
-          "que_tiene_que_verse": "La primera página de un PDF real que avisa un cambio de BOM (sin nombres de personas)."
-        },
-        {
-          "voz": ["15"],
+          "voz": [
+            "11:1"
+          ],
           "recurso": "tomas/arb-06ago2026-ventana-con-una-bom.png",
+          "texto_en_pantalla": "Solo Ingeniería · el arb",
+          "escala_maxima": 1.2,
           "que_tiene_que_verse": "La ventana Maestro de Relaciones - BA con una BOM a la vista. Nunca la pantalla donde se pone la clave."
+        },
+        {
+          "voz": [
+            "11:2"
+          ],
+          "recurso": "tomas/arb-06ago2026-trae-la-bom-de-cada-pieza.mp4",
+          "texto_en_pantalla": "Solo Ingeniería · el arb",
+          "desde": 0.0,
+          "hasta": 6.0,
+          "velocidad": "ajustar",
+          "escala_maxima": 1.2,
+          "que_tiene_que_verse": "El arb: se escribe la pieza, se llena la grilla con su BOM y se escribe el consumo."
+        },
+        {
+          "voz": [
+            "11:3"
+          ],
+          "recurso": "tomas/arb-06ago2026-pide-el-listado.mp4",
+          "texto_en_pantalla": "Solo Ingeniería · el arb",
+          "desde": 0.0,
+          "hasta": 4.5,
+          "velocidad": "ajustar",
+          "escala_maxima": 1.2,
+          "que_tiene_que_verse": "El arb pasando a la solapa Listado y eligiendo la salida del listado."
+        },
+        {
+          "voz": [
+            "11:4"
+          ],
+          "recurso": "tomas/arb-06ago2026-ventana-con-una-bom.png",
+          "texto_en_pantalla": "Solo Ingeniería · el arb",
+          "escala_maxima": 1.2,
+          "que_tiene_que_verse": "La ventana Maestro de Relaciones - BA con una BOM a la vista."
         }
       ]
     },
-
     {
       "numero": 7,
-      "titulo": "Modelo y nivel",
-      "parrafos": [16],
-      "texto_en_pantalla": "Si dudás: Opus, nivel medio",
-      "antes_de_publicar": [
-        "Mirar en la app cómo se llama y dónde está el control del nivel. Releer la ficha de modelos el día de grabar: cambian cada pocas semanas."
+      "titulo": "Modelo y esfuerzo",
+      "parrafos": [
+        12
       ],
       "tomas": [
         {
-          "voz": ["16"],
+          "voz": [
+            "12:1-3"
+          ],
           "recurso": "../manual/capturas/11-modelo-y-nivel.png",
+          "texto_en_pantalla": "Modelo y esfuerzo",
+          "encuadre": {
+            "x": 0,
+            "y": 0,
+            "ancho": 100,
+            "alto": 49
+          },
           "escala_maxima": 1.25,
-          "que_tiene_que_verse": "La lista de modelos abierta, al lado del botón de enviar, con Opus 5.5 elegido; y el nivel en Medio a la vista.",
+          "que_tiene_que_verse": "La lista de modelos abierta, con Opus 5.5 elegido.",
           "recuadros": [
-            { "que_marca": "Opus 5.5 y el nivel Medio", "x": 43, "y": 58, "ancho": 40, "alto": 28, "posicion_confirmada": "e99d0196dcdd" }
+            {
+              "que_marca": "Opus 5.5",
+              "x": 50,
+              "y": 5.2,
+              "ancho": 34,
+              "alto": 6.4,
+              "con_la_palabra": "Opus",
+              "posicion_confirmada": "5a8cbd918d7b"
+            }
+          ]
+        },
+        {
+          "voz": [
+            "12:4"
+          ],
+          "recurso": "../manual/capturas/11-modelo-y-nivel.png",
+          "texto_en_pantalla": "Modelo y esfuerzo",
+          "encuadre": {
+            "x": 0,
+            "y": 51.5,
+            "ancho": 100,
+            "alto": 48.5
+          },
+          "escala_maxima": 1.25,
+          "que_tiene_que_verse": "El control Esfuerzo en Medio, con la marca Recomendado.",
+          "recuadros": [
+            {
+              "que_marca": "Esfuerzo: Medio",
+              "x": 41,
+              "y": 60.5,
+              "ancho": 29,
+              "alto": 5.2,
+              "con_la_palabra": "esfuerzo",
+              "posicion_confirmada": "5a8cbd918d7b"
+            },
+            {
+              "que_marca": "Recomendado",
+              "x": 43.0,
+              "y": 82.5,
+              "ancho": 25.5,
+              "alto": 5,
+              "con_la_palabra": "recomendado",
+              "posicion_confirmada": "5a8cbd918d7b"
+            }
           ]
         }
       ]
     },
-
     {
       "numero": 8,
-      "titulo": "Qué no hace solo",
-      "parrafos": [17, 18],
-      "texto_en_pantalla": "",
-      "antes_de_publicar": [
-        "Las tres frases son promesas. Hoy ninguna está probada en una PC de área: se publica cuando las tres estén probadas; la que no lo esté, sale (de la voz y de la lámina)."
+      "titulo": "Lo que no hace solo",
+      "parrafos": [
+        13,
+        14
       ],
       "tomas": [
         {
-          "voz": ["17:1"],
+          "voz": [
+            "13"
+          ],
           "recurso": "../manual/capturas/14-claude-pide-permiso.png",
-          "escala_maxima": 1.45,
-          "que_tiene_que_verse": "El cartel con el que Claude pide permiso antes de escribir un archivo: Denegar, Permitir siempre, Permitir una vez.",
+          "texto_en_pantalla": "Si Claude pide permiso",
+          "omitir": [
+            {
+              "desde": 12,
+              "hasta": 36
+            }
+          ],
+          "escala_maxima": 1.6,
+          "que_tiene_que_verse": "El cartel con el que Claude pide permiso antes de escribir un archivo: el título y los botones Denegar, Permitir siempre y Permitir una vez.",
           "recuadros": [
-            { "que_marca": "los botones Denegar y Permitir", "x": 2.2, "y": 84.3, "ancho": 96.1, "alto": 8, "posicion_confirmada": "f33025f814e6" }
-          ]
+            {
+              "que_marca": "el cartel",
+              "x": 2,
+              "y": 2,
+              "ancho": 96,
+              "alto": 10,
+              "con_la_palabra": "pide permiso",
+              "posicion_confirmada": "f33025f814e6"
+            },
+            {
+              "que_marca": "Denegar",
+              "x": 2.5,
+              "y": 79,
+              "ancho": 16,
+              "alto": 10,
+              "con_la_palabra": "Denegar",
+              "posicion_confirmada": "f33025f814e6"
+            },
+            {
+              "que_marca": "Permitir una vez",
+              "x": 69,
+              "y": 79,
+              "ancho": 29,
+              "alto": 10,
+              "con_la_palabra": "Permitir una vez",
+              "posicion_confirmada": "f33025f814e6"
+            },
+            {
+              "que_marca": "Permitir siempre",
+              "x": 40,
+              "y": 79,
+              "ancho": 28,
+              "alto": 10,
+              "con_la_palabra": "Permitir siempre",
+              "posicion_confirmada": "f33025f814e6"
+            }
+          ],
+          "zoom": "no"
         },
         {
-          "voz": ["17:2-4"],
+          "voz": [
+            "14"
+          ],
           "recurso": "lamina",
+          "texto_en_pantalla": "",
           "lamina": {
+            "titulo": "Claude no hace esto solo",
+            "icono": "x",
             "renglones": [
-              { "texto": "No borra por su cuenta", "con_la_frase": 1 },
-              { "texto": "No envía sin vos", "con_la_frase": 2 },
-              { "texto": "Mails de Dirección y RRHH: no", "con_la_frase": 3 }
+              {
+                "texto": "No elimina archivos",
+                "con_la_frase": 1
+              },
+              {
+                "texto": "No manda mails sin vos",
+                "con_la_frase": 2
+              },
+              {
+                "texto": "No muestra mails de Dirección ni RRHH",
+                "con_la_frase": 3
+              }
             ]
           }
-        },
-        {
-          "voz": ["18"],
-          "recurso": "../manual/capturas/01-respuesta-con-cita.png",
-          "encuadre": { "x": 0, "y": 7.5, "ancho": 100, "alto": 90.4 },
-          "que_tiene_que_verse": "La respuesta a la pregunta de las tres piezas (la misma captura de la escena 4), con el renglón del documento y la revisión a la vista.",
-          "recuadros": [
-            { "que_marca": "el renglón del documento y la revisión", "x": 15.8, "y": 86.6, "ancho": 68.4, "alto": 10.8, "con_la_frase": 2, "posicion_confirmada": "1a8dd613bf6b" }
-          ],
-          "zoom": "al_recuadro"
         }
       ]
     },
-
     {
       "numero": 9,
       "titulo": "Cierre",
-      "parrafos": [19, 20],
-      "texto_en_pantalla": "Abrí. Elegí la carpeta. Preguntá.",
+      "parrafos": [
+        15,
+        16
+      ],
       "tomas": [
         {
-          "voz": ["19"],
-          "recurso": "lamina",
+          "voz": [
+            "15",
+            "16"
+          ],
+          "recurso": "triptico",
           "texto_en_pantalla": "",
-          "lamina": {
-            "titulo": "",
-            "renglones": [
-              { "texto": "Claude no reemplaza a nadie", "con_la_frase": 1 },
-              { "texto": "Ahorra el tiempo de buscar", "con_la_frase": 2 },
-              { "texto": "Los documentos son de Barack", "con_la_frase": 3 },
-              { "texto": "Las decisiones, de su gente", "con_la_frase": 4 }
+          "que_tiene_que_verse": "Tres capturas, una por paso: abrir Claude, elegir la carpeta, preguntar.",
+          "triptico": {
+            "tarjetas": [
+              {
+                "recurso": "../manual/capturas/02-menu-inicio.png",
+                "encuadre": {
+                  "x": 0,
+                  "y": 0,
+                  "ancho": 58,
+                  "alto": 100
+                },
+                "titulo": "Abrí Claude",
+                "con_la_palabra": "Abrí"
+              },
+              {
+                "recurso": "../manual/capturas/04-local-y-select-folder.png",
+                "titulo": "Elegí la carpeta",
+                "con_la_palabra": "elegí",
+                "encuadre": {
+                  "x": 0,
+                  "y": 20,
+                  "ancho": 69,
+                  "alto": 55
+                }
+              },
+              {
+                "recurso": "../manual/capturas/06-decir-el-puesto.png",
+                "encuadre": {
+                  "x": 43.3,
+                  "y": 12,
+                  "ancho": 42,
+                  "alto": 53
+                },
+                "titulo": "Preguntá",
+                "con_la_palabra": "preguntá"
+              }
             ]
           },
-          "pendiente": "La app en Code, con la carpeta de Barack ya elegida y la caja de texto vacía, lista para escribir (tomas/24-caja-de-texto-vacia.png)."
-        },
-        {
-          "voz": ["20"],
-          "recurso": "lamina",
-          "texto_en_pantalla": "",
-          "lamina": {
-            "titulo": "",
-            "renglones": ["Abrí.", "Elegí la carpeta.", "Preguntá."]
-          }
+          "segundos_extra": 1.3
         }
       ]
     }
