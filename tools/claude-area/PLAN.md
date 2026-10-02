@@ -54,7 +54,7 @@ de demostración `C:\ClaudeBarack`).
 |---|---|
 | C1 | Guion nuevo. Estructura: el problema (10 s) → **un ejemplo real por sector** (Producción, Calidad con IMDS, Logística, Compras, Mantenimiento, RRHH, Dirección, Ingeniería con arb y hojas de operaciones) → lo que hace para todos (mails y enviarlos, presentaciones, aprende, recuerda) → controlado (cita, no borra, no muestra lo reservado, pide permiso) → cómo se empieza (los 3 pasos y buscar la carpeta a mano). Tope: 3 minutos |
 | C2 | Antes de grabar, tres listas: lo que Facundo pidió con sus palabras (01/10 y 02/10), lo que el objetivo necesita y no dijo, y cada promesa con su prueba |
-| C3 | Tomas reales de la instalación de demostración (una por promesa) + la grabación del arb + los entregables de Ingeniería |
+| C3 | Tomas EN MOVIMIENTO, no fotos (Facundo, 02/10: *"me interesa más que vean videos de Claude funcionando y haciendo las cosas"*). Se graban con `video/grabar_ventana.py` (graba una ventana sola, sin el resto de la pantalla): (a) la ventana de una conversación de demostración mientras Claude busca y contesta, una por sector; (b) el mail que queda abierto en Outlook y sale cuando se le pide; (c) IMDS en el navegador: Claude busca una pieza y cita el manual de IMDS, con una placa que diga para qué ya se usó (21/09: una declaración rechazada por el cliente, corregida y reenviada); (d) la grabación del arb del 06/08; (e) los entregables de Ingeniería (hoja de operaciones, lámina, flujograma) |
 | C4 | Armado, voz revisada palabra por palabra, subtítulos |
 | C5 | Auditoría independiente (Opus): el video contra la lista de promesas y contra el pedido original |
 
@@ -74,7 +74,8 @@ ensayo; anotar todo lo que tranque (Git Bash, permisos, OneDrive, Outlook nuevo)
 Ensayo general con el guion (`4 - Guion de la reunion.pdf`) en la PC donde se va a mostrar, el día anterior.
 
 ## Lo que necesito de Facundo (y nada más)
-1. Decir qué palabras de la voz del video suenan mal.
+1. ~~Decir qué palabras de la voz suenan mal~~ — contestado el 02/10: *"la voz estaba bastante bien"*. Se mantiene la misma voz.
+   En su lugar: 10 minutos para grabar las tomas en movimiento (entrar a IMDS con su clave en el navegador, y quedarse en esta conversación mientras se graban las ventanas de demostración).
 2. Confirmar la carpeta de la instalación: hoy es `C:\ClaudeBarack` (nombró "archivos de programa").
 3. El OK para contar el caso de IMDS y para qué sectores quiere el ejemplo más fuerte.
 4. Revisar `6 - Lista para tildar` antes de mostrarla (reservados y piloto).
