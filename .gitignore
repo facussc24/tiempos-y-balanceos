@@ -52,6 +52,8 @@ AUDIT_FUNCIONAL.md
 
 # Test exports and debug scripts
 exports/test-*
+# Paginas descartables del skill explicar-mejor (no son entregables)
+exports/explicaciones/
 *.bak
 /*.mjs
 !eslint.config.mjs

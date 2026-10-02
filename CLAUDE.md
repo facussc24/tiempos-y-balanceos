@@ -49,6 +49,8 @@ commit/push/archivar los hago yo.
   "esto va aca, ¿esta bien?", con la ruta concreta.
 - Si Fak dice "decidi vos": decidir con mejor practica y explicar brevemente por que.
   No devolverle la pregunta.
+- Si Fak dice que no entendio, pide que se lo explique o se nota que no entendio: no repetir lo
+  mismo mas largo, cambiar la forma (skill `explicar-mejor`; lo recuerda el hook `explicar-prompt.sh`).
 - Si Fak te corrige: registrarlo en LECCIONES_APRENDIDAS inmediatamente.
 - Si detectas un problema o inconsistencia: reportar sin esperar a que pregunte.
 - Si un cambio afecta multiples productos: sugerir aplicarlo/verificarlos todos.

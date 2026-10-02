@@ -60,6 +60,9 @@ const COBERTURA = {
   // UserPromptSubmit (02/10/2026): cuando un entregable vuelve (2a correccion, o 2 versiones
   // de la misma carpeta) devuelve el pedido original. No bloquea. Origen: fotos de las prensas Hot Press, 01/10/2026.
   'correccion-guard.sh': { test: '__tests__/scripts/correccionGuard.test.mjs', tipo: 'aviso' },
+  // UserPromptSubmit (02/10/2026): cuando Fak dice que no entendio, pide que se lo expliquen o pide corto,
+  // recuerda el skill explicar-mejor. No bloquea. Origen: prueba de la escalera del post de Karpathy.
+  'explicar-prompt.sh': { test: '__tests__/scripts/explicarGuard.test.mjs', tipo: 'aviso' },
   'arb-cerrar-guard.sh': { test: '.claude/hooks/arb-cerrar-guard.test.sh', tipo: 'bloquea' },
   'causas-ajenas-guard.sh': { test: '.claude/hooks/causas-ajenas-guard.test.sh', tipo: 'bloquea' },
   'supabase-guard.sh': { test: VARIOS, tipo: 'bloquea' },
