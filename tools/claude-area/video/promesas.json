@@ -133,9 +133,9 @@
       "pedido": "02/10: «ver qué hacen las distintas personas en Barack… que sea un video que realmente los ilusione… a Ingeniería ya se los vendí, a los demás sectores aún no»",
       "en_el_video": true,
       "estado": "probado",
-      "prueba": ".sgc-cache/claude-por-area/examen/sectores_respuestas.md",
-      "como_se_probo": "02/10: siete preguntas, una por sector, en la instalación de demostración; las siete con su documento y las citas comprobadas contra los extractos.",
-      "probado_sobre": "2eaeb71a4834"
+      "prueba": ".sgc-cache/claude-por-area/examen/sectores_respuestas_v3.md",
+      "como_se_probo": "02/10, 12:50 a 14:20: los ocho sectores, cada uno en una conversación abierta con la demostración instalada por el instalador como la PC de ESE sector (común + su área): Producción P-09.1, Calidad I-AC-010 (24 horas), Logística I-LG-010, Compras I-CO-001, Mantenimiento I-MT-001, Recursos Humanos P-18, Dirección I-DR-001/MC-09/P-01, Ingeniería I-IN-004. Cada conversación dijo primero su puesto y su área. Citas comprobadas contra los extractos (.sgc-cache/claude-por-area/examen/sectores_respuestas_v3.md) y seis tomas grabadas en video.",
+      "probado_sobre": "a95c7109fcd9"
     },
     {
       "id": "imds-caso-real",
