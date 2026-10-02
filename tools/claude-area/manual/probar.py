@@ -360,7 +360,7 @@ def prueba_completa():
 
         print("8. La cuadricula para ubicar las marcas")
         cod, out = correr(base + ["--grilla"])
-        control("deja una imagen por captura", cod == 0 and len(list((caps / "_grilla").glob("*.png"))) == 15)
+        control("deja una imagen por captura", cod == 0 and len(list((caps / "_grilla").glob("*.png"))) == len(list(caps.glob("*.png"))))
 
     print()
     if fallas:
