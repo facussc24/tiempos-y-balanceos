@@ -9,6 +9,7 @@ ARCHIVOS = [
 ]
 
 app = win32com.client.Dispatch("PowerPoint.Application")
+habia_abiertas = app.Presentations.Count   # lo que tenga abierto Fak no se cierra
 for src, dst in ARCHIVOS:
     p_src, p_dst = os.path.join(BASE, src), os.path.join(BASE, dst)
     pres = app.Presentations.Open(p_src, WithWindow=False)
@@ -16,4 +17,5 @@ for src, dst in ARCHIVOS:
     n = pres.Slides.Count
     pres.Close()
     print("%s -> %s  (%d slides, %d KB)" % (src, dst, n, os.path.getsize(p_dst) // 1024))
-app.Quit()
+if habia_abiertas == 0 and app.Presentations.Count == 0:
+    app.Quit()

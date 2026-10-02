@@ -22,6 +22,7 @@ TRABAJOS = [("TryOut_IMG_Dia1a6.pptx", "ES", range(46, 55)),        # las 9 lami
 
 os.makedirs(OUT, exist_ok=True)
 app = win32com.client.Dispatch("PowerPoint.Application")
+habia_abiertas = app.Presentations.Count   # lo que tenga abierto Fak no se cierra
 for fname, tag, pages in TRABAJOS:
     ruta = os.path.join(ENT, fname)
     try:
@@ -37,5 +38,6 @@ for fname, tag, pages in TRABAJOS:
         dst = os.path.join(OUT, "%s_%02d.png" % (tag, n))
         pres.Slides(n).Export(dst, "PNG", 1920, 1080)
     pres.Close()
-app.Quit()
+if habia_abiertas == 0 and app.Presentations.Count == 0:
+    app.Quit()
 print("salida: %s" % OUT)

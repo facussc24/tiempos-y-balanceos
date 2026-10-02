@@ -12,6 +12,7 @@ jobs = [
 ]
 
 app = win32com.client.Dispatch("PowerPoint.Application")
+habia_abiertas = app.Presentations.Count   # lo que tenga abierto Fak no se cierra
 for fname, tag, pages in jobs:
     path = os.path.join(BASE, fname)
     try:
@@ -29,5 +30,6 @@ for fname, tag, pages in jobs:
         pres.Slides(n).Export(dst, "PNG", 1920, 1080)
         print("  exported", dst, os.path.getsize(dst))
     pres.Close()
-app.Quit()
+if habia_abiertas == 0 and app.Presentations.Count == 0:
+    app.Quit()
 print("DONE")
