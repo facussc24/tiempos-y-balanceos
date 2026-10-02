@@ -63,21 +63,21 @@
     },
     {
       "id": "hojas-de-operaciones",
-      "dice": "En Ingeniería, arma hojas de operaciones con fotos",
+      "dice": "En Ingeniería, arma hojas de operaciones con fotos, láminas de proceso y flujogramas",
       "pedido": "02/10: «…armar presentaciones, hojas de operaciones»",
       "en_el_video": true,
-      "estado": "sin probar",
-      "prueba": null,
-      "que_falta": "Es de Ingeniería (como el arb). Elegir con Facundo una hoja real ya entregada para mostrar, y anotar acá su ruta como prueba."
+      "estado": "probado",
+      "prueba": "tools/claude-area/video/tomas/ho-992-hot-melt-hoja-2.png",
+      "como_se_probo": "Entregables reales hechos en Ingeniería: HO-992 Hot Melt (01/10/2026), lámina de proceso del Insert (01/10) y flujograma 160 (01/10). En el video van como ejemplos de Ingeniería, sin los nombres del cajetín."
     },
     {
       "id": "carpeta-a-mano",
       "dice": "Cómo se busca la carpeta a mano en el disco de la PC",
       "pedido": "02/10: «no mostraste realmente cómo hacer la conexión manual de buscar en el disco principal»",
       "en_el_video": true,
-      "estado": "sin probar",
-      "prueba": null,
-      "que_falta": "Sacar las fotos del recorrido (Este equipo → disco C: → la carpeta → Seleccionar carpeta) y confirmar con Facundo qué carpeta es (dijo «en archivos de programa»; la instalación usa C:\\ClaudeBarack)."
+      "estado": "probado",
+      "prueba": "tools/claude-area/manual/capturas/17-este-equipo.png",
+      "como_se_probo": "Fotos reales del cuadro de Windows del 02/10 (Este equipo, y adentro del disco C con ClaudeBarack y «Seleccionar carpeta») y página 5 del manual. Queda confirmar con Facundo que la carpeta es C:\\ClaudeBarack (nombró «archivos de programa»)."
     },
     {
       "id": "aprende-habilidades",
