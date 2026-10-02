@@ -197,9 +197,13 @@ def generar(nombre, pdf=True):
     indice = [(h["op"], h["denominacion"] + (f" (hoja {h['hoja_de'][0]} de {h['hoja_de'][1]})" if h.get("hoja_de") else ""))
               for h in j["hojas"]]
     foto_portada = ruta_foto("p_maquina")
-    H.portada(prs, j["portada"]["titulo"], j["portada"]["subtitulo"], j["portada"]["ficha"], indice,
-              logo=base.LOGO_BARACK, foto=foto_portada if os.path.exists(foto_portada) else None,
-              pie_foto="Laminadora hot melt, vista desde el desbobinador")
+    # --sin-portada: el juego sale sin la lamina de portada, para el PDF por pieza que se le pasa a
+    # Calidad (Fak, 02/10/2026: "sin la hoja esa primera que haces de intro... no la elimines, me
+    # gusto, pero por ahora no se la pasamos"). La portada sigue siendo la forma por defecto.
+    if "--sin-portada" not in sys.argv:
+        H.portada(prs, j["portada"]["titulo"], j["portada"]["subtitulo"], j["portada"]["ficha"], indice,
+                  logo=base.LOGO_BARACK, foto=foto_portada if os.path.exists(foto_portada) else None,
+                  pie_foto="Laminadora hot melt, vista desde el desbobinador")
     for h in j["hojas"]:
         d = dict(fecha=FECHA, rev="A", **j["cajetin"])
         d.update(h)

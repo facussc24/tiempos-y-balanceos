@@ -503,6 +503,14 @@ en el pie: *"la franja es advertencia de esta hoja, no del HMI"*.
 
 ## 3 bis. Dónde se guarda la hoja — `HOJAS DE OPERACIONES` del SGC, nunca en Ingeniería
 
+**Se entrega UN PDF por pieza, con las hojas ordenadas por operación y sin la portada** (Fak,
+02/10/2026: *"deberían estar unidas las de Top Roll en una hoja sola... sin la hoja esa primera
+que hacés de intro... no la elimines, me gustó, pero por ahora no se la pasamos... la idea es que
+sea un PDF por pieza, y organizadas"*). Las hojas de varios autores y generadores de la misma
+pieza van juntas en ese PDF; la hoja de una máquina (sector) va en el suyo. Lo arma
+`scripts/novax/_pdfPorPieza.py` (lista cada hoja en el orden en que quedó); el generador del hot
+melt saca la portada con `--sin-portada`.
+
 Fak, 24/09/2026, cuando dejé la HO-991 del P21 en la biblioteca de Ingeniería
 (`1- GENERAL\INSTRUCTIVOS\INSTRUCCIONES OPERATIVAS\`): *"ahí no van las hojas de proceso, hay
 que ir guardándolas donde sí van, o sea `Y:\BARACK\CALIDAD\DOCUMENTACION SGC\HOJAS DE OPERACIONES`"*.
