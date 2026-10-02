@@ -57,6 +57,9 @@ const COBERTURA = {
   'caracteristicas-especiales-guard.sh': { test: GUARDIANES, tipo: 'aviso' },
   // UserPromptSubmit (11/09/2026): el mismo criterio, SIN cooldown, cuando Fak nombra el tema.
   'caracteristicas-especiales-prompt.sh': { test: VARIOS, tipo: 'aviso' },
+  // UserPromptSubmit (02/10/2026): cuando un entregable vuelve (2a correccion, o 2 versiones
+  // de la misma carpeta) devuelve el pedido original. No bloquea. Origen: fotos de las prensas Hot Press, 01/10/2026.
+  'correccion-guard.sh': { test: '__tests__/scripts/correccionGuard.test.mjs', tipo: 'aviso' },
   'arb-cerrar-guard.sh': { test: '.claude/hooks/arb-cerrar-guard.test.sh', tipo: 'bloquea' },
   'causas-ajenas-guard.sh': { test: '.claude/hooks/causas-ajenas-guard.test.sh', tipo: 'bloquea' },
   'supabase-guard.sh': { test: VARIOS, tipo: 'bloquea' },

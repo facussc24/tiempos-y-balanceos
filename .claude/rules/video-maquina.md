@@ -110,6 +110,21 @@ Sale del Escritorio **hacia** la biblioteca: pasa (la ruta destino contiene `5- 
 Leer, listar o `ffprobe` un video: pasa. Tests en las dos direcciones:
 `__tests__/scripts/videoMaquinaGuard.test.mjs`.
 
+## Antes de decir "no hay foto ni video de X" (02/10/2026)
+
+El 01/10/2026 dije que no habia video de la prensa Hot Press funcionando despues de buscar por
+**nombre de archivo y con mis palabras** ("hot press", "tapizado"). El video estaba en una carpeta de
+tarea del Escritorio que se llama *"Video explicativo funcionamiento mdood automatico LMJ"* y las
+fotos adentro de un zip de 1,39 GB: ninguno de los dos nombres dice "hot press".
+
+`node scripts/_materialAfuera.mjs` lista **todo** el material que esta fuera de la biblioteca
+(Escritorio y `_EN ESPERA`, Descargas, adjuntos, la copia de la migracion, `C:\Dev\_telefono`),
+agrupado por carpeta y **sin filtro de palabras**; los zip los nombra con su tamaño y no los abre
+(un zip de OneDrive se bajaria entero). `--buscar <palabra>` solo MARCA carpetas, no recorta el
+listado. Se corre, se miran las carpetas con videos o zip, y recien despues se concluye. Lo que
+aparezca ahi y sea de una maquina esta sin archivar: va a la biblioteca.
+Test: `__tests__/scripts/materialAfuera.test.mjs` (reproduce ese arbol).
+
 ## Material que NO se abre
 
 Un barrido del telefono por fecha arrastra cosas que no son de la fabrica, y el nombre de

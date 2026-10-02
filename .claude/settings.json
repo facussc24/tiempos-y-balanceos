@@ -76,6 +76,16 @@
             "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/caracteristicas-especiales-prompt.sh\""
           }
         ]
+      },
+      {
+        "_comentario": "02/10/2026: cuando un entregable vuelve (2a correccion de Fak dentro de la misma tanda, o 2 versiones entregadas de la misma carpeta y Fak sigue objetando) inyecta el PEDIDO ORIGINAL textual y exige contrastar el entregable contra el antes de rehacer. Las entregas (SendUserFile) las lee del transcript, solo el tramo nuevo. Origen: 01/10/2026, fotos de las prensas Hot Press (tres entregas distintas respondiendo solo a la ultima correccion). Medido: en 15 de 54 sesiones con entregas lo mismo volvio 3 veces o mas. Nunca bloquea. Logica y palabras: scripts/_lib/correccionGuard.mjs + correccionCanon.data.json. Test: correccionGuard.test.mjs.",
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/correccion-guard.sh\""
+          }
+        ]
       }
     ],
     "InstructionsLoaded": [

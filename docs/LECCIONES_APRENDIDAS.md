@@ -86,7 +86,7 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
-- **01/10 — Después de la segunda corrección sobre el mismo entregable se vuelve a leer el PRIMER pedido palabra por palabra: pidieron fotos de la MÁQUINA (una de frente por máquina, editada, y la máquina funcionando) y entregué tres veces otra cosa** (sus fotos retocadas, 25 fotos del proceso, costura y piezas). Y una foto pegada en una hoja no es de la pieza de esa hoja hasta compararla con la real (las de la HO 971 eran del APB de Taos). Graduado a la memoria `reference_hot_press_patagonia_bma101_bma103`.
+- **01/10 — Cuando un entregable vuelve se relee el PRIMER pedido entero; lo que no aparece no se rellena con algo parecido, y "no hay" se dice después de listar sin filtro de palabras** (fotos de las prensas Hot Press: cuatro vueltas; medido, en 15 de 54 sesiones lo mismo volvió 3 veces o más). Graduado al hook `correccion-guard` y a `scripts/_materialAfuera.mjs` (`video-maquina.md`).
 
 - **01/10 — Un punto del Asaichi que dice "pasar mail" no es la orden de armarlo hoy, y un cierre de 80 renglones o con tres tablas no se lee** (*"armaste un mail que no te pedi"*, *"no entendi un carajo"*). Graduado a la memoria `feedback_mail_de_una_tarea_va_con_la_info_procesada`.
 

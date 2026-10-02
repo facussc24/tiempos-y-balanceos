@@ -1,0 +1,37 @@
+{
+  "_que_es": "Como escribe Fak cuando CORRIGE un entregable. Lo lee scripts/_lib/correccionGuard.mjs (hook UserPromptSubmit correccion-guard.sh). Se calibra contra sus mensajes reales: node scripts/_lib/correccionGuard.mjs --medir <corpus>. No se agrega una palabra sin volver a medir.",
+  "_fuente": "Sesion del 01/10/2026 (fotos de las prensas Hot Press): cuatro correcciones seguidas sobre un pedido que estaba completo en el primer mensaje. Lista corregida el 02/10 con la auditoria (falsos rojos medidos sobre 1.548 mensajes).",
+  "debiles_para_marcar": 3,
+  "fuertes": [
+    { "nombre": "no_entendiste", "regex": "\\bno (me |lo |la |te )?(entendiste|comprendiste|interpretaste)\\b(?!\\?)|entendiste (mal|cualquier)" },
+    { "nombre": "no_era", "regex": "\\bno era (eso|asi|lo que)|\\bno es (eso|lo que)|no fue lo que (te )?pedi" },
+    { "nombre": "no_pedi", "regex": "\\bno te (lo )?pedi\\b|que no te pedi|no te (dije|explique) que|nunca (te )?(pedi|di esa orden)|yo no (te )?pedi" },
+    { "nombre": "seguis", "regex": "\\bseguis (haciendo|sin|con lo mismo)|otra vez (lo mismo|hiciste|me (pasas|mandas))|volviste a (hacer|poner|mandar)" },
+    { "nombre": "no_me_gusta", "regex": "\\bno (me|em) gust|\\bes fe[ao]\\b|\\bson fe[ao]s\\b|malisim[ao]s?\\b|horrible" },
+    { "nombre": "hartazgo", "regex": "me tenes cansado|ya me tenes|no (lo )?puedo creer|tan duro para" }
+  ],
+  "debiles": [
+    { "nombre": "te_dije", "regex": "\\bte (lo )?(dije|habia dicho|habia pedido)\\b|ya te (lo )?dije" },
+    { "nombre": "esta_mal", "regex": "\\b(esta|estan|quedo|quedaron|salio|hiciste|lo hiciste) (todo |muy |re )?mal\\b|\\bmal hecho\\b|\\bes un error\\b|\\bgravisimo\\b" },
+    { "nombre": "ojo", "regex": "\\bojo\\b" },
+    { "nombre": "de_mas", "regex": "\\bdema(si|is)ad[oa]s?\\b|\\bde mas\\b|no hace falta" },
+    { "nombre": "no_asi", "regex": "\\bno (asi|de esa forma)\\b" }
+  ],
+  "enojo_difuso": {
+    "_nota": "Insultos con errores de tipeo: palabra a distancia <= 1 y con la MISMA primera letra ('pierda' no es 'mierda'). Uno solo es senal debil (Fak los usa de muletilla y contra terceros); dos o mas, fuerte.",
+    "palabras": ["boludo", "pelotudo", "pelotudeces", "mierda", "enfermo"],
+    "distancia": 1
+  },
+  "difusos_fuertes": {
+    "_nota": "Formas de 'no entendiste' con errores de tipeo: palabra a distancia <= 2 de la forma, con un 'no' en las 4 palabras anteriores y sin signo de pregunta pegado (\"entendiste?\" es muletilla).",
+    "formas": ["entendiste", "comprendiste"],
+    "distancia": 2,
+    "negacion_antes": 4
+  },
+  "aprobaciones": "^(ok|oka|okey|dale|listo|perfecto|genial|gracias|buenisimo|joya|si|sii+|bien|excelente|quedo (muy )?bien|esta (muy )?bien|envialo|mandalo|manda(lo)? el mail)\\b",
+  "adversativas": "\\b(pero|no|falta|faltan|sigue|siguen|igual|salvo|excepto|aunque)\\b|\\?",
+  "neutros": "^(abri|abrilo|abrila|abrime|abrimelo|pasame la ruta|mostrame|donde (esta|quedo)|cerra|minimiz|intentar nuevamente|continua|segui|proced|espera)",
+  "duda": "\\?|\\b(no|pero|falta|faltan|sigue|siguen|porque|por que)\\b",
+  "carpetas_genericas": "^(scratchpad|desktop|escritorio|downloads|descargas|tmp|temp|documents|documentos)$",
+  "subcarpetas_de_version": "^(v\\d+|rev[ ._-]?[a-z0-9]+|renders?|fotos|imagenes|img|png|pdf|final|finales|salida|out|output|entregable)$"
+}
