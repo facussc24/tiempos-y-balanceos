@@ -1,0 +1,119 @@
+{
+  "_que_es": [
+    "Todo lo que el video (y el manual) le PROMETE a la gente sobre lo que hace Claude en Barack, una fila por promesa.",
+    "Regla: no se filma ni se escribe una promesa que no tenga su prueba hecha en la instalacion de demostracion (C:\\ClaudeBarack).",
+    "estado: 'probado' (hay un archivo de prueba y existe) · 'sin probar' (existe, falta correr la prueba) · 'no existe' (hay que construirlo).",
+    "en_el_video: true = el guion ya lo dice o lo va a decir. chequear_promesas.py sale con 1 si hay una promesa en el video que no esta probada.",
+    "pedido: las palabras de Facundo que la piden, con su fecha. Si una promesa no tiene pedido, sobra."
+  ],
+  "promesas": [
+    {
+      "id": "pregunta-con-fuente",
+      "dice": "Le preguntás algo de la empresa y contesta con el documento y la revisión",
+      "pedido": "01/10: «que se vea un ejemplo de preguntarle alguna cosa de esta empresa y que vean la respuesta»",
+      "en_el_video": true,
+      "estado": "probado",
+      "prueba": ".sgc-cache/claude-por-area/examen/ensayo_respuestas.md",
+      "como_se_probo": "Ensayo del 01/10 sobre la instalación, nivel Medio: tres piezas malas → P-09.1 rev B.1; funciones del puesto → F-24 rev I; PPAP → I-AC-007 rev A (cita comprobada contra el extracto)."
+    },
+    {
+      "id": "bom-en-el-arb",
+      "dice": "Sabe dónde vive cada dato: la BOM está en el arb",
+      "pedido": "01/10: «le dijiste que la bom de apc estaba en la nube… arb debiste haber dicho… eso no me puede volver a pasar»",
+      "en_el_video": false,
+      "estado": "probado",
+      "prueba": ".sgc-cache/claude-por-area/examen/correccion_inst_1.json",
+      "como_se_probo": "Examen de 139 sobre la instalación: las 15 preguntas de BOM y consumos contestan «en el arb»."
+    },
+    {
+      "id": "mail-borrador",
+      "dice": "Redacta el mail y lo deja abierto en Outlook",
+      "pedido": "01/10: «como mandar mails… un ejemplo de como se le debe pedir a claude enviar mails»",
+      "en_el_video": true,
+      "estado": "probado",
+      "prueba": ".sgc-cache/claude-por-area/examen/ensayo_respuestas.md",
+      "como_se_probo": "Ensayo del 01/10, pregunta 4: usó la herramienta de mail y el borrador quedó abierto en Outlook (capturado y cerrado sin guardar)."
+    },
+    {
+      "id": "mail-enviar",
+      "dice": "Si se lo pedís, Claude envía el mail",
+      "pedido": "02/10: «lo de los mails hay que aclarar que nosotros le podemos decir a claude que lo envíe»",
+      "en_el_video": true,
+      "estado": "no existe",
+      "prueba": null,
+      "que_falta": "Hoy el asistente de área nunca envía (reglas de la casa §5, mail-guard, manual p. 8 y 12, hojas para Dirección). Construir el envío a pedido (muestra a quién va y el asunto, la persona dice «enviá», sale; afuera de Barack nunca sin que la persona lo nombre), probarlo con un mail interno de prueba, y cambiar regla, guard, manual y hojas juntos."
+    },
+    {
+      "id": "arb-ingenieria",
+      "dice": "En Ingeniería, Claude carga consumos en el arb tecla por tecla y controla lo cargado",
+      "pedido": "01/10: «como se cargan automaticamente las boms en arb»",
+      "en_el_video": true,
+      "estado": "probado",
+      "prueba": "tools/claude-area/video/tomas/arb-06ago2026-escribe-en-la-grilla.mp4",
+      "como_se_probo": "Grabación real del 06/08/2026 (16 insertos de puerta de Patagonia, verificados contra el listado del arb)."
+    },
+    {
+      "id": "presentaciones",
+      "dice": "Arma presentaciones de PowerPoint",
+      "pedido": "02/10: «deberías mostrar otras capacidades de claude como armar presentaciones»",
+      "en_el_video": true,
+      "estado": "sin probar",
+      "prueba": null,
+      "que_falta": "En Ingeniería ya lo hace (hay entregables reales). En una PC de área no hay Python: probar en la instalación de demostración que arma un PowerPoint simple con lo que tiene esa PC, y elegir un ejemplo real de Barack para mostrar."
+    },
+    {
+      "id": "hojas-de-operaciones",
+      "dice": "En Ingeniería, arma hojas de operaciones con fotos",
+      "pedido": "02/10: «…armar presentaciones, hojas de operaciones»",
+      "en_el_video": true,
+      "estado": "sin probar",
+      "prueba": null,
+      "que_falta": "Es de Ingeniería (como el arb). Elegir con Facundo una hoja real ya entregada para mostrar, y anotar acá su ruta como prueba."
+    },
+    {
+      "id": "carpeta-a-mano",
+      "dice": "Cómo se busca la carpeta a mano en el disco de la PC",
+      "pedido": "02/10: «no mostraste realmente cómo hacer la conexión manual de buscar en el disco principal»",
+      "en_el_video": true,
+      "estado": "sin probar",
+      "prueba": null,
+      "que_falta": "Sacar las fotos del recorrido (Este equipo → disco C: → la carpeta → Seleccionar carpeta) y confirmar con Facundo qué carpeta es (dijo «en archivos de programa»; la instalación usa C:\\ClaudeBarack)."
+    },
+    {
+      "id": "aprende-habilidades",
+      "dice": "Se le puede enseñar una tarea nueva y Claude guía a la persona para dejarla como habilidad",
+      "pedido": "02/10: «claude puede aprender nuevas habilidades que le enseñen y claude debe guiarlos y ayudarlos a crear la skill» · alcance original, punto 6",
+      "en_el_video": true,
+      "estado": "no existe",
+      "prueba": null,
+      "que_falta": "El asistente de área trae 3 habilidades fijas y no tiene el camino para crear una. Construirlo (la habilidad queda en la PC de la persona y se le ofrece a Ingeniería por el buzón para publicarla a todos), y probarlo: enseñarle una tarea, abrir una conversación nueva y pedirle esa tarea."
+    },
+    {
+      "id": "recuerda",
+      "dice": "Recuerda lo importante que le dicen",
+      "pedido": "02/10: «claude memoriza las cosas importantes que le dicen»",
+      "en_el_video": true,
+      "estado": "sin probar",
+      "prueba": null,
+      "que_falta": "Probarlo en la instalación: decirle un dato, cerrar, abrir otra conversación en la misma carpeta y preguntarle. Si no lo recuerda solo, construirlo."
+    },
+    {
+      "id": "no-hace-solo",
+      "dice": "No borra, no muestra los mails de Dirección ni de RRHH, pide permiso antes de escribir un archivo",
+      "pedido": "01/10: «Nada se esconde… no borra ni desactiva nada por su cuenta» · «el mail de un director o de RRHH no se comparte»",
+      "en_el_video": true,
+      "estado": "probado",
+      "prueba": ".sgc-cache/claude-por-area/examen/ensayo_respuestas.md",
+      "como_se_probo": "Ensayo del 01/10, preguntas 3, 5 y 6; cartel de permiso capturado en modo Manual."
+    },
+    {
+      "id": "modelo-y-esfuerzo",
+      "dice": "Qué modelo y qué nivel se usa (Opus, esfuerzo Medio = recomendado)",
+      "pedido": "01/10: «explicar los modelos y los niveles de razonamiento»",
+      "en_el_video": true,
+      "estado": "probado",
+      "prueba": "tools/claude-area/manual/capturas/11-modelo-y-nivel.png",
+      "como_se_probo": "Captura real de la app del 02/10: lista de modelos y control «Esfuerzo» con Medio marcado como Recomendado."
+    }
+  ]
+}
