@@ -61,7 +61,7 @@ import readline from 'node:readline';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { soloLineasDeComando, separarHeredocs, comandosSimples } from './shellTexto.mjs';
-import { sinAvisosAdelante } from './correccionGuard.mjs';
+import { sinAvisosAdelante, esAutomatico } from './correccionGuard.mjs';
 import { pideExplicar, pideEstado, CANON as CANON_EXPLICAR } from './explicarGuard.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
@@ -85,6 +85,7 @@ const ESCRIBE = rx(ENT.escribe_re);
 const MIRA = rx(ENT.mira_re);
 const PIDE_DETALLE = rx(CANON.cierre_largo.pide_detalle_re);
 const MEJ_SISTEMA = rx(CANON.mejora.sistema_re);
+const MEJ_MENSAJES = rx(CANON.mejora.mensajes_re);
 const MEJ_WORKTREE = /^\.claude\/worktrees\/[^/]+\//;
 const MEJ_PRUEBA = rx(CANON.mejora.prueba_re);
 const MEJ_SESIONES = rx(CANON.mejora.sesiones_re);
@@ -478,6 +479,7 @@ const sinExt = (a) => !/\.[A-Za-z0-9]+$/.test(a);
  * Lo que un comando Bash/PowerShell ESCRIBE dentro del repo.
  *   escritos: Set de rutas repo-relativas (con /) de archivos de codigo que el comando escribe, borra,
  *             mueve, copia o agrega al indice de git (`git add`).
+ *   soloIndice: de esos, los que el comando solo agrego al indice (`git add x`): su contenido no cambio.
  *   opaco:    true si el comando puede escribir en un lugar que no se ubica: un interprete que corre
  *             codigo (python, node x.mjs, bash), un comodin o una variable como destino, `git add .`,
  *             un verbo que ninguna lista conoce. Un comando que solo LEE no es opaco.
@@ -495,11 +497,14 @@ export function escrituraEnComando(cmd, repo = REPO) {
     const r = script === undefined ? null : rutaDeToken(script, repo);
     if (r) ejecutados.add(r);
   };
-  const atribuir = (tok) => {
+  const alIndice = new Set();                                       // `git add x`: entra al indice de git, su contenido no cambia
+  const contenido = new Set();
+  const atribuir = (tok, soloAlIndice = false) => {
     if (tieneIncognita(tok)) { opaco = true; return; }
     const r = rutaDeToken(tok, repo);
     if (!r) return;
     escritos.add(r);
+    (soloAlIndice ? alIndice : contenido).add(r);
     if (movido && !/^([a-z]:|[\\/])/i.test(tok)) opaco = true;
   };
   const esRaiz = (t) => /git\s+rev-parse\s+--show-toplevel/.test(t)
@@ -540,7 +545,7 @@ export function escrituraEnComando(cmd, repo = REPO) {
           if (V_GIT_ADD_TODO.has(a)) { opaco = true; continue; }        // `-A`, `.`, `-u`: todo el arbol (antes del filtro de opciones: -A es una opcion)
           if (esOpcion(a) || a === '--') continue;
           if (tieneIncognita(a) || sinExt(a)) { opaco = true; continue; }   // una carpeta, un comodin, una variable
-          atribuir(a);
+          atribuir(a, sub === 'add');
         }
         continue;
       }
@@ -631,10 +636,13 @@ export function escrituraEnComando(cmd, repo = REPO) {
   if (nombrar && RE_CODIGO_ESCRIBE.some((re) => re.test(cmd))) {
     for (const t of rutasEnCodigo(cmd)) {
       const r = rutaDeToken(t, repo);
-      if (r && !ejecutados.has(r)) escritos.add(r);
+      if (r && !ejecutados.has(r)) { escritos.add(r); contenido.add(r); }
     }
   }
-  return { escritos, opaco };
+  // soloIndice: lo que el comando SOLO agrego al indice (`git add x`). Sigue siendo "tocado" para el chequeo de
+  // archivos sin commitear, pero su contenido no cambio: no cuenta como un cambio nuevo a una pieza ya probada.
+  const soloIndice = new Set([...alIndice].filter((r) => !contenido.has(r)));
+  return { escritos, opaco, soloIndice };
 }
 
 // ---------------------------------------------------------------------------------------
@@ -743,23 +751,19 @@ function registrarEntregables(b, st, repo) {
  *  que llegaba detras de un "<system-reminder>The user started your suggested background task…" se tomaba entero
  *  por un aviso: el turno no arrancaba ahi y el chequeo 2 reclamaba la ruta de algo entregado en el turno ANTERIOR
  *  (61a9a9ac 02/10 14:19, justo en el turno del incidente de explicar-mejor). */
-function textoDeUsuario(obj) {
-  const c = obj.message?.content;
-  if (typeof c === 'string') return sinAvisosAdelante(c);
-  if (Array.isArray(c)) return sinAvisosAdelante(c.filter((b) => b.type === 'text').map((b) => b.text || '').join('\n'));
-  return '';
-}
+/** El texto de un contenido de mensaje (cadena, o lista de bloques: se juntan los de texto; una imagen no es texto). */
+const textoDeBloques = (c) => (typeof c === 'string' ? c : Array.isArray(c) ? c.filter((b) => b?.type === 'text').map((b) => b.text || '').join('\n') : '');
+const crudoDeUsuario = (obj) => textoDeBloques(obj.message?.content);
+const textoDeUsuario = (obj) => sinAvisosAdelante(crudoDeUsuario(obj));
 
-// Lo que Claude Code mete como "user" sin que Fak lo haya escrito: avisos de tareas en
-// background, system-reminders, salidas de comandos, el resumen de un compactado y lo que manda
-// otra sesion. No cuentan como mensaje de Fak.
-const ES_SISTEMA = /^\s*(<system-reminder>|\[SYSTEM NOTIFICATION|<task-notification>|<local-command|<command-(name|message)|<user-prompt-submit-hook|<ide_|<cross-session-message|This session is being continued from a previous conversation)/;
-
+// Lo que Claude Code mete como "user" sin que Fak lo haya escrito (avisos de tareas, salidas de comandos, el
+// resumen de un compactado, lo que manda otra sesion) no cuenta como mensaje de Fak. Como arranca cada uno
+// vive en UNA lista: correccionCanon.data.json, `no_es_de_fak` (esAutomatico).
 function esMensajeRealDeUsuario(obj) {
   if (obj.isMeta || obj.isCompactSummary) return false;
-  if (obj.origin?.kind && obj.origin.kind !== 'human') return false;       // task-notification y demas: lo dice el transcript
+  if (obj.origin?.kind && obj.origin.kind !== 'human') return false;       // task-notification, peer: lo dice el transcript
   const t = textoDeUsuario(obj);
-  return t.trim().length > 0 && !ES_SISTEMA.test(t);
+  return t.trim().length > 0 && !esAutomatico(t);
 }
 
 // ---------------------------------------------------------------------------------------
@@ -774,9 +778,12 @@ const CX = CANON_EXPLICAR.cierre;
 const CX_SKILL_ARCHIVO = rx(CX.skill_archivo_re);
 const CX_DIBUJO = rx(CX.dibujo_re);
 const CX_PAGINA_EXT = rx(CX.pagina_ext_re);
+const CX_PAGINA_RUTA = rx(CX.pagina_ruta_re);
 const CX_PAGINA_TOOL = rx(CX.pagina_tools_re);
 const CX_NO_APLICA = rx(CX.no_aplica_re);
-const turnoDeExplicar = () => ({ skill: false, dibujo: false, pagina: false, envio: false });
+const CX_ENCARGO = rx(CX.encargo_re);
+const CX_MENCION = /explicar[- ]mejor/i;
+const turnoDeExplicar = () => ({ skill: false, dibujo: false, pagina: false, envio: false, noAplica: false });
 
 /** Anota en `t` (el turno en curso) lo que un tool_use deja hecho para el chequeo 7. */
 function registrarExplicar(b, t) {
@@ -789,7 +796,8 @@ function registrarExplicar(b, t) {
   } else if (CX_DIBUJO.test(nombre)) {
     t.dibujo = true;
   } else if (/^(Write|Edit|MultiEdit)$/.test(nombre)) {
-    if (CX_PAGINA_EXT.test(String(input.file_path || ''))) t.pagina = true;
+    // Una pagina de explicacion vive en exports/explicaciones/: el index.html de la app o un html suelto no lo son.
+    if (CX_PAGINA_RUTA.test(String(input.file_path || ''))) t.pagina = true;
   } else if (nombre === 'SendUserFile') {
     const archivos = Array.isArray(input.files) ? input.files.map(String) : [];
     if (archivos.some((a) => CX_PAGINA_EXT.test(a))) t.pagina = true;
@@ -800,19 +808,22 @@ function registrarExplicar(b, t) {
 }
 
 /**
- * Chequeo 7. `rel` es lo que devuelve relevarTranscript: el ultimo mensaje de Fak, lo que el turno hizo
- * (`explicar`) y si entrego algo afuera del repo (`fuera`). No bloquea si el mensaje no pedia explicar, si el
- * skill se cargo en el turno, si se mostro un dibujo o una pagina, si el turno entrego un archivo (el pedido
- * era de un entregable: sigue con sus reglas), o si el texto dice que el aviso no aplica.
+ * Chequeo 7. `rel` es lo que devuelve relevarTranscript: el ultimo mensaje de Fak y lo que el turno hizo desde
+ * ese mensaje (`explicar`). No bloquea si el mensaje no pedia explicar, si es el encargo de otra sesion, si el
+ * skill se cargo en el turno, si se mostro un dibujo o una pagina, si el turno le mando un archivo a Fak (el
+ * pedido era de un entregable: sigue con sus reglas), o si la respuesta —esta o una anterior del mismo turno—
+ * dice que el aviso no aplica. Escribir algo afuera del repo NO exime (auditoria 02/10: de 12 turnos reales que
+ * pasaban, 5 eran pedidos de explicacion que pasaban solo por eso).
  */
 export function evaluarExplicar(texto, rel = {}) {
   const pedido = String(rel?.ultimoMensajeFak || '');
   if (!pedido || !pideExplicar(pedido)) return { bloquea: false };
+  if (rel.encargo) return { bloquea: false, motivo: 'es el encargo de otra sesion, no palabras de Fak' };
   const t = rel.explicar || {};
   if (t.skill) return { bloquea: false, motivo: 'cargo el skill' };
   if (t.dibujo || t.pagina) return { bloquea: false, motivo: 'mostro un dibujo o una pagina' };
-  if (t.envio || rel.fuera) return { bloquea: false, motivo: 'entrego un archivo: el pedido era de un entregable' };
-  if (CX_NO_APLICA.test(normalizar(texto))) return { bloquea: false, motivo: 'dice que no aplica' };
+  if (t.envio) return { bloquea: false, motivo: 'le mando un archivo: el pedido era de un entregable' };
+  if (t.noAplica || CX_NO_APLICA.test(normalizar(texto))) return { bloquea: false, motivo: 'dice que no aplica' };
   return { bloquea: true, pedido: normalizar(pedido).slice(0, 220), estado: pideEstado(pedido) };
 }
 
@@ -844,43 +855,76 @@ function cerrarVentanas(st, obj) {
   }
 }
 
+/** El resultado de una corrida de `_probarMejora.mjs --mensaje`: si volvio sin error, la prueba cuenta. */
+function cerrarPruebas(st, obj) {
+  const bloques = obj.message?.content;
+  if (!st.sis.pruebas.size || !Array.isArray(bloques)) return;
+  for (const b of bloques) {
+    if (b.type !== 'tool_result' || !st.sis.pruebas.has(b.tool_use_id)) continue;
+    if (!b.is_error) st.sis.probado = Math.max(st.sis.probado, st.sis.pruebas.get(b.tool_use_id));
+    st.sis.pruebas.delete(b.tool_use_id);
+  }
+}
+
 async function pasada(archivo, st, { completa, repo }) {
   const rl = readline.createInterface({ input: fs.createReadStream(archivo, 'utf8'), crlfDelay: Infinity });
   for await (const linea of rl) {
     if (!linea.includes('"tool_use"') && !linea.includes('"type":"user"')
-      && !linea.includes('<task-notification>') && !linea.includes('"queued_command"')) continue;
+      && !linea.includes('<task-notification>') && !linea.includes('"queued_command"')
+      && !(completa && CX_MENCION.test(linea))) continue;
     let obj;
     try { obj = JSON.parse(linea); } catch { continue; }
     if (completa && !st.inicio && obj.timestamp) st.inicio = Date.parse(obj.timestamp) || 0;
     if (completa) registrarBackground(st.bg, obj, linea);
-    // Lo que Fak escribe MIENTRAS trabajo entra como attachment queued_command (commandMode prompt).
+    // Lo que Fak escribe MIENTRAS trabajo entra como attachment queued_command (commandMode prompt). Lo que
+    // encola OTRA sesion trae origin.kind 'peer' (42 en dos meses) y no es de Fak; con una imagen adjunta el
+    // prompt es una lista de bloques (24), no una cadena.
     if (obj.type === 'attachment' && obj.attachment?.type === 'queued_command' && obj.attachment.commandMode === 'prompt') {
-      if (completa) { st.ultimoMensajeFak = sinAvisosAdelante(obj.attachment.prompt); st.ultimoMensajeFakTs = obj.timestamp || ''; st.explicar = turnoDeExplicar(); }
+      const a = obj.attachment;
+      const t = sinAvisosAdelante(textoDeBloques(a.prompt));
+      if (completa && !(a.origin?.kind && a.origin.kind !== 'human') && t.trim() && !esAutomatico(t)) {
+        st.ultimoMensajeFak = t; st.ultimoMensajeFakTs = obj.timestamp || ''; st.explicar = turnoDeExplicar(); st.encargo = false;
+      }
       continue;
     }
     if (obj.type === 'user') {
       cerrarVentanas(st, obj);
-      if (completa && esMensajeRealDeUsuario(obj)) { st.ejemplo = null; st.ultimoMensajeFak = textoDeUsuario(obj); st.ultimoMensajeFakTs = obj.timestamp || ''; st.explicar = turnoDeExplicar(); }
-      else if (completa && linea.includes('<command-name>') && linea.includes(`/${CX.skill}<`)) st.explicar.skill = true;   // Fak lo cargo a mano
+      cerrarPruebas(st, obj);
+      if (completa && esMensajeRealDeUsuario(obj)) {
+        st.ejemplo = null; st.ultimoMensajeFak = textoDeUsuario(obj); st.ultimoMensajeFakTs = obj.timestamp || ''; st.explicar = turnoDeExplicar();
+        st.encargo = CX_ENCARGO.test(crudoDeUsuario(obj));           // el primer mensaje de una sesion lanzada por otra
+      } else if (completa && linea.includes('<command-name>') && linea.includes(`/${CX.skill}<`)) st.explicar.skill = true;   // Fak lo cargo a mano
       continue;
     }
     if (obj.type !== 'assistant') continue;
     const bloques = obj.message?.content;
     if (!Array.isArray(bloques)) continue;
     for (const b of bloques) {
+      // El renglon "No aplica explicar-mejor:" vale para todo el turno: si despues un aviso de tarea despierta
+      // la sesion y hay otro cierre, no se vuelve a pedir (auditoria 02/10: 4 turnos reales con 2 cierres o mas).
+      if (completa && b.type === 'text' && CX_NO_APLICA.test(normalizar(b.text))) st.explicar.noAplica = true;
       if (b.type !== 'tool_use') continue;
       st.seq++;
       const orden = Date.parse(obj.timestamp || '') || st.seq;
-      const pieza = (r) => { if (MEJ_SISTEMA.test(r)) { st.sis.archivos.add(r.replace(MEJ_WORKTREE, '')); st.sis.escrito = Math.max(st.sis.escrito, orden); } };
+      const pieza = (r) => {
+        if (!MEJ_SISTEMA.test(r)) return;
+        const limpia = r.replace(MEJ_WORKTREE, '');
+        st.sis.archivos.add(limpia);
+        if (MEJ_MENSAJES.test(limpia)) { st.sis.deMensajes.add(limpia); st.sis.escrito = Math.max(st.sis.escrito, orden); }
+      };
       const rel = rutaRelativaAlRepo(b, repo);
       if (rel) { st.tocados.add(rel); pieza(rel); }
       if (/^(Bash|PowerShell)$/.test(b.name || '')) {
         st.huboComando = true;
         // Solo lo que el comando ESCRIBE (30/09/2026): nombrar un archivo en un cat o un grep no lo toca.
         const e = escrituraEnComando(b.input?.command, repo);
-        for (const r of e.escritos) { st.tocados.add(r); pieza(r); }
+        for (const r of e.escritos) {
+          st.tocados.add(r);
+          if (!e.soloIndice.has(r)) pieza(r);               // `git add` despues de la prueba no es un cambio nuevo
+        }
         if (e.opaco) { st.huboOpaco = true; abrirVentana(st, b, obj); }
-        if (MEJ_PRUEBA.test(String(b.input?.command || ''))) st.sis.probado = Math.max(st.sis.probado, orden);
+        // La prueba cuenta cuando VUELVE sin error (cerrarPruebas): un grep que nombra el script, o una que fallo, no.
+        if (completa && b.id && MEJ_PRUEBA.test(soloLineasDeComando(String(b.input?.command || '')))) st.sis.pruebas.set(b.id, orden);
       } else if (/^(Agent|Task)$/.test(b.name || '')) {
         st.huboComando = true;
         st.huboOpaco = true;                              // un agente puede escribir donde no se ve (y su transcript puede faltar)
@@ -925,7 +969,8 @@ export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
   const st = {
     ejemplo: null, huboComando: false, huboOpaco: false, inicio: 0, tocados: new Set(), ultimoMensajeFak: '', ultimoMensajeFakTs: '', ent: new Map(), seq: 0,
     bg: nuevoBackground(), ventanas: [], abiertas: new Map(), sinVentana: false,
-    explicar: turnoDeExplicar(), sis: { archivos: new Set(), escrito: 0, probado: 0 },
+    explicar: turnoDeExplicar(), encargo: false,
+    sis: { archivos: new Set(), deMensajes: new Set(), escrito: 0, probado: 0, pruebas: new Map() },
   };
   await pasada(transcriptPath, st, { completa: true, repo });
   const dirSub = path.join(String(transcriptPath).replace(/\.jsonl$/i, ''), 'subagents');
@@ -954,8 +999,10 @@ export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
     ultimoMensajeFak: st.ultimoMensajeFak,
     // chequeo 7: lo que el turno hizo desde el ultimo mensaje de Fak (skill cargado, dibujo, pagina, archivo enviado)
     explicar: st.explicar,
-    // pendiente de "mejora sin probar": piezas del sistema que la sesion escribio y si las probo despues
-    sistema: { archivos: [...st.sis.archivos], probada: st.sis.probado > 0 && st.sis.probado >= st.sis.escrito },
+    encargo: st.encargo,
+    // pendiente de "mejora sin probar": las piezas del sistema que la sesion escribio; de esas, las que un mensaje
+    // de Fak ejercita (deMensajes); y si despues de la ultima escritura de estas corrio la prueba y volvio bien
+    sistema: { archivos: [...st.sis.archivos], deMensajes: [...st.sis.deMensajes], probada: st.sis.probado > 0 && st.sis.probado >= st.sis.escrito },
     // chequeo 6: lo que sigue corriendo; delTurno = lanzado despues del ultimo mensaje de Fak
     bg: {
       total: lista.length,
@@ -1054,9 +1101,9 @@ export function pendientesDeMejora(texto, sistema) {
   const archivos = sistema?.archivos || [];
   if (!archivos.length) return [];
   const out = [];
-  const lista = `${archivos.slice(0, 3).join(', ')}${archivos.length > 3 ? ', …' : ''}`;
-  if (!sistema.probada) {
-    out.push(`tocaste ${archivos.length} pieza(s) del sistema (${lista}) y no las probaste despues del ultimo cambio con un mensaje REAL de Fak: `
+  const deMensajes = sistema.deMensajes || [];
+  if (deMensajes.length && !sistema.probada) {
+    out.push(`tocaste ${deMensajes.length} pieza(s) que leen los mensajes de Fak (${deMensajes.slice(0, 3).join(', ')}${deMensajes.length > 3 ? ', …' : ''}) y no las probaste despues del ultimo cambio con un mensaje REAL suyo: `
       + 'node scripts/_probarMejora.mjs --mensaje "<el mensaje, textual>" — regla mejora-implementada.md: sin esa prueba la mejora no esta implementada');
   }
   if (!MEJ_SESIONES.test(normalizar(texto))) {

@@ -34,12 +34,12 @@ import readline from 'node:readline';
 import { spawnSync, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { avisoDe } from './explicarGuard.mjs';
-import { sinAvisosAdelante } from './correccionGuard.mjs';
+import { sinAvisosAdelante, esAutomatico } from './correccionGuard.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const REPO = path.resolve(AQUI, '..', '..');
 const CIERRE = JSON.parse(fs.readFileSync(path.join(AQUI, 'cierreCanon.data.json'), 'utf8'));
-const SISTEMA = new RegExp(CIERRE.mejora.sistema_re, 'i');
+const SISTEMA = new RegExp(CIERRE.mejora.piezas_re, 'i');
 export const DATOS = JSON.parse(fs.readFileSync(path.join(AQUI, 'mejorasEnPrueba.data.json'), 'utf8'));
 
 /** El aviso que la app le pega adelante al mensaje cuando Fak lanza una tarea sugerida (forma real, 02/10/2026). */
@@ -56,15 +56,32 @@ export function hooksDe(raiz, evento) {
   return (s.hooks?.[evento] || []).flatMap((g) => (g.hooks || []).filter((h) => h.type === 'command').map((h) => h.command));
 }
 
-/** Corre UN comando de hook como lo corre Claude Code: por bash, con el payload por stdin. */
-export function correrHook(cmd, payload, raiz, env = {}) {
-  const r = spawnSync('bash', ['-c', cmd], {
-    input: JSON.stringify(payload), encoding: 'utf8', cwd: raiz, timeout: 60000,
-    env: { ...process.env, CLAUDE_PROJECT_DIR: barras(raiz), ...env },
-  });
+const TMP = () => path.join(os.tmpdir(), 'claude-probar-mejora');
+
+/**
+ * Corre UN comando de hook como lo corre Claude Code: por bash, con el payload por stdin. La entrada y las dos
+ * salidas van por tres archivos del TEMP (siempre los mismos) y no por tuberias: con tuberias, un hook que no
+ * termina dejaba colgado al que espera aunque se matara a bash, porque el hijo seguia con la tuberia abierta
+ * (auditoria 02/10: volvio a los 150 s con un tope de 60). `colgado` = no termino en `tope` ms.
+ */
+export function correrHook(cmd, payload, raiz, env = {}, { tmp = TMP(), tope = 60000 } = {}) {
+  fs.mkdirSync(tmp, { recursive: true });
+  const entrada = path.join(tmp, 'hook.entrada.json');
+  fs.writeFileSync(entrada, JSON.stringify(payload));
+  const archivos = [path.join(tmp, 'hook.salida.txt'), path.join(tmp, 'hook.error.txt')];
+  const fds = [fs.openSync(entrada, 'r'), ...archivos.map((f) => fs.openSync(f, 'w'))];
+  let r;
+  try {
+    r = spawnSync('bash', ['-c', cmd], {
+      cwd: raiz, timeout: tope, stdio: fds,
+      env: { ...process.env, CLAUDE_PROJECT_DIR: barras(raiz), ...env },
+    });
+  } finally { for (const fd of fds) fs.closeSync(fd); }
+  const [stdout, stderr] = archivos.map((f) => { try { return fs.readFileSync(f, 'utf8'); } catch { return ''; } });
+  const colgado = r.error?.code === 'ETIMEDOUT' || (r.status === null && r.signal !== null);
   let contexto = '';
-  try { contexto = JSON.parse(r.stdout || '{}')?.hookSpecificOutput?.additionalContext || ''; } catch { contexto = String(r.stdout || '').trim(); }
-  return { hook: nombreDe(cmd), status: r.status, contexto, stderr: String(r.stderr || '').trim() };
+  try { contexto = JSON.parse(stdout || '{}')?.hookSpecificOutput?.additionalContext || ''; } catch { contexto = stdout.trim(); }
+  return { hook: nombreDe(cmd), status: r.status, colgado, contexto, stderr: stderr.trim() };
 }
 
 const linea1 = (t) => String(t || '').split('\n')[0].slice(0, 110);
@@ -76,18 +93,25 @@ const linea1 = (t) => String(t || '').split('\n')[0].slice(0, 110);
  *   fallas    lo que esta mal sin discusion: un hook que contesta distinto segun venga o no el aviso de la app
  *             adelante, uno que sale con error, o que ninguno devuelva lo que `espera`
  */
-export function probarMensaje(mensaje, { raiz = REPO, espera = null, tmp = path.join(os.tmpdir(), 'claude-probar-mejora') } = {}) {
+export function probarMensaje(mensaje, { raiz = REPO, espera = null, tmp = TMP(), tope = 60000 } = {}) {
   fs.mkdirSync(tmp, { recursive: true });
-  const sid = `prueba-mejora-${process.pid}-${Date.now()}`;
+  const sid = 'prueba-mejora';                               // nombres fijos: cada corrida pisa los archivos de la anterior
   const fallas = [];
   const base = { hook_event_name: 'UserPromptSubmit', cwd: barras(raiz), transcript_path: '' };
-  const env = { CORRECCION_GUARD_DIR: tmp };                  // el estado del guardian de correcciones no se mezcla con el real
+  // El estado del guardian de correcciones no se mezcla con el real, y arranca vacio en cada mensaje.
+  const env = { CORRECCION_GUARD_DIR: tmp };
+  const estado = path.join(tmp, 'claude-correccion-guard');
+  fs.mkdirSync(estado, { recursive: true });
   const mensajes = hooksDe(raiz, 'UserPromptSubmit').map((cmd) => {
-    const pelado = correrHook(cmd, { ...base, session_id: `${sid}-a`, prompt: mensaje }, raiz, env);
-    const conAviso = correrHook(cmd, { ...base, session_id: `${sid}-b`, prompt: AVISO_APP + mensaje }, raiz, env);
+    for (const s of [`${sid}-a`, `${sid}-b`]) fs.writeFileSync(path.join(estado, `${s}.json`), '{}');
+    const pelado = correrHook(cmd, { ...base, session_id: `${sid}-a`, prompt: mensaje }, raiz, env, { tmp, tope });
+    const conAviso = correrHook(cmd, { ...base, session_id: `${sid}-b`, prompt: AVISO_APP + mensaje }, raiz, env, { tmp, tope });
     const distinto = pelado.contexto.trim() !== conAviso.contexto.trim();
     if (distinto) fallas.push(`${pelado.hook}: contesta distinto si el mensaje llega con un aviso de la app adelante (pelado: "${linea1(pelado.contexto) || 'nada'}" · con aviso: "${linea1(conAviso.contexto) || 'nada'}")`);
-    for (const r of [pelado, conAviso]) if (r.status !== 0 || r.stderr) fallas.push(`${r.hook}: salio con ${r.status}${r.stderr ? ` y escribio por la salida de error: ${linea1(r.stderr)}` : ''}`);
+    for (const r of [pelado, conAviso]) {
+      if (r.colgado) fallas.push(`${r.hook}: no termino en ${tope / 1000} s`);
+      else if (r.status !== 0 || r.stderr) fallas.push(`${r.hook}: salio con ${r.status}${r.stderr ? ` y escribio por la salida de error: ${linea1(r.stderr)}` : ''}`);
+    }
     return { hook: pelado.hook, pelado: pelado.contexto, conAviso: conAviso.contexto, distinto };
   });
   if (espera && !mensajes.some((m) => m.pelado.includes(espera) && m.conAviso.includes(espera))) {
@@ -101,8 +125,9 @@ export function probarMensaje(mensaje, { raiz = REPO, espera = null, tmp = path.
     { type: 'assistant', timestamp: new Date(ahora + 1000).toISOString(), message: { content: [{ type: 'text', text: RESPUESTA_COMUN }] } },
   ].map((o) => JSON.stringify(o)).join('\n') + '\n');
   const cierre = hooksDe(raiz, 'Stop').filter((c) => /cierre-guard/.test(c)).map((cmd) => {
-    const r = correrHook(cmd, { hook_event_name: 'Stop', session_id: sid, transcript_path: transcript, last_assistant_message: RESPUESTA_COMUN, stop_hook_active: false }, raiz);
-    if (r.status !== 0 && r.status !== 2) fallas.push(`${r.hook}: salio con ${r.status}`);
+    const r = correrHook(cmd, { hook_event_name: 'Stop', session_id: sid, transcript_path: transcript, last_assistant_message: RESPUESTA_COMUN, stop_hook_active: false }, raiz, {}, { tmp, tope });
+    if (r.colgado) fallas.push(`${r.hook}: no termino en ${tope / 1000} s`);
+    else if (r.status !== 0 && r.status !== 2) fallas.push(`${r.hook}: salio con ${r.status}`);
     return { hook: r.hook, frena: r.status === 2, motivo: linea1(r.stderr) };
   });
   return { mensaje, mensajes, cierre, fallas };
@@ -118,15 +143,16 @@ function git(raiz, args) {
 const lineas = (t) => String(t || '').split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
 
 /** Piezas del sistema que cambian en `raiz`: sin commitear, sin trackear y lo que la rama tiene de mas contra
- *  origin/main; si no hay nada de eso, las del ultimo commit. */
+ *  origin/main; si ahi no hay ninguna pieza (ya se commiteo y se subio, o lo sucio es de otra sesion y es
+ *  otra cosa), las del ultimo commit. */
 export function piezasCambiadas(raiz = REPO) {
-  let archivos = [
+  const piezas = (archivos) => [...new Set(archivos.map(barras))].filter((a) => SISTEMA.test(a)).sort();
+  const enCurso = piezas([
     ...lineas(git(raiz, ['diff', '--name-only', 'HEAD'])),
     ...lineas(git(raiz, ['ls-files', '--others', '--exclude-standard'])),
     ...lineas(git(raiz, ['diff', '--name-only', 'origin/main...HEAD'])),
-  ];
-  if (!archivos.length) archivos = lineas(git(raiz, ['show', '--name-only', '--format=', 'HEAD']));
-  return [...new Set(archivos.map(barras))].filter((a) => SISTEMA.test(a)).sort();
+  ]);
+  return enCurso.length ? enCurso : piezas(lineas(git(raiz, ['show', '--name-only', '--format=', 'HEAD'])));
 }
 
 /** El checkout de donde corren los hooks: el principal, aunque `raiz` sea un worktree. */
@@ -188,7 +214,7 @@ export function sesionesAbiertas(raiz = REPO, piezas = piezasCambiadas(raiz), pr
 const DEBIA = { 'explicar-prompt': (t) => avisoDe(t) !== null };
 
 const dirProyectos = () => path.join(os.homedir(), '.claude', 'projects');
-const NO_ES_FAK = /^\s*(<task-notification|\[SYSTEM NOTIFICATION|Stop hook feedback|<command-|<local-command|\[Request interrupted|<cross-session-message|This session is being continued)/;
+const textoDeBloques = (c) => (typeof c === 'string' ? c : Array.isArray(c) ? c.filter((b) => b?.type === 'text').map((b) => b.text || '').join('\n') : '');
 
 /** Los mensajes de Fak de UN transcript, con lo que le llego a cada uno: [{ ts, texto, conAviso, llego }]. */
 export async function mensajesConAviso(archivo, { marca }) {
@@ -206,16 +232,18 @@ export async function mensajesConAviso(archivo, { marca }) {
       continue;
     }
     let crudo = null;
-    if (o.type === 'attachment' && a?.type === 'queued_command' && a.commandMode === 'prompt') crudo = String(a.prompt || '');
-    else if (o.type === 'user' && !o.isMeta && !o.isCompactSummary && !(o.origin?.kind && o.origin.kind !== 'human')) {
+    const deOtro = (x) => x?.origin?.kind && x.origin.kind !== 'human';          // otra sesion, o un aviso de tarea
+    if (o.type === 'attachment' && a?.type === 'queued_command' && a.commandMode === 'prompt') {
+      if (!deOtro(a)) crudo = textoDeBloques(a.prompt);                           // con una imagen adjunta el prompt es una lista
+    } else if (o.type === 'user' && !o.isMeta && !o.isCompactSummary && !deOtro(o)) {
       const c = o.message?.content;
       if (Array.isArray(c) && c.some((b) => b.type === 'tool_result')) continue;
-      crudo = typeof c === 'string' ? c : Array.isArray(c) ? c.filter((b) => b.type === 'text').map((b) => b.text || '').join('\n') : '';
+      crudo = textoDeBloques(c);
     }
     if (crudo === null) continue;
     if (pend) { out.push(pend); pend = null; }
     const texto = sinAvisosAdelante(crudo).trim();
-    if (!texto || NO_ES_FAK.test(texto)) continue;
+    if (!texto || esAutomatico(texto)) continue;
     pend = { ts: o.timestamp || '', texto, conAviso: texto.length !== crudo.trim().length, llego: false };
   }
   if (pend) out.push(pend);

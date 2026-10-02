@@ -2,7 +2,7 @@
  * explicarGuard.mjs — cuando Fak dice que no entendio, pide que se lo expliquen o pide corto, le recuerda a Claude
  * que cambie la FORMA de explicar (skill `explicar-mejor`) en vez de repetir lo mismo mas largo. Nunca bloquea.
  *
- * Por que existe (02/10/2026): Fak escribe "no entiendo" o "no entendi" en una de cada siete sesiones, y la respuesta
+ * Por que existe (02/10/2026): Fak escribio que no entendia en 64 de 257 sesiones, y la respuesta
  * habitual era la misma explicacion con mas detalle ("no entendi un carajo", 01/10, tres tablas con codigos). El
  * 01/10 se probo la escalera del post de Karpathy (texto simple -> dibujo -> pagina -> video) y Fak pidio dejarla
  * fija para cuando alguien pide una explicacion mejor o no entiende.
@@ -30,7 +30,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { normalizar, distancia, esAutomatico } from './correccionGuard.mjs';
+import { normalizar, distancia, esAutomatico, sinAvisosAdelante } from './correccionGuard.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const CANON = JSON.parse(fs.readFileSync(path.join(AQUI, 'explicarCanon.data.json'), 'utf8'));
@@ -124,20 +124,24 @@ function corto(w, i) {
 
 /** "entender" y sus tipeos, sin las formas que van para Claude ("entendes?") ni otra palabra comun ("atender"). */
 const esEntender = (x, tope = FA.tope) => x.length >= 6 && cerca(x, FA.entender, FA.ajenas, FA.otras_palabras, tope) !== null;
-const esFacil = (p) => FA.facil.some((f) => (f.length <= 6 ? p.length <= f.length + 2 && distancia(p.slice(0, f.length), f, 1) <= 1 : distancia(p, f, 2) <= 2));
+const esFacil = (p) => !FA.no_son_facil.includes(p) && FA.facil.some((f) => (f.length <= 6 ? p.length <= f.length + 2 && distancia(p.slice(0, f.length), f, 1) <= 1 : distancia(p, f, 2) <= 2));
 
 /**
  * "facil de entender": facil / simple / sencillo y, en las palabras que siguen, "entender". Fak corre los espacios al
  * tipear: la f puede quedar en la palabra de antes ("yf aicl"), el "de" pegado ("denentende", "dentnender") y la
  * ultima letra en la palabra siguiente ("entende r", "dentned er"). A una forma ARMADA asi se le admite un solo
- * error ("sencilla dentro de todo" no es "de entender"). "facil de montar" y "facil de leer rapido, entendes?" no.
+ * error ("sencilla dentro de todo" no es "de entender"), y la letra de antes solo se toma de una palabra de una o
+ * dos letras ("ademas encima… entender" no es "sencilla"). No cuenta "no es facil…" (no pide nada), "…sin
+ * entender", "facil de montar" ni "facil de leer rapido, entendes?".
  */
 function facil(w, i) {
   const p = w[i];
-  if (!esFacil(p) && !(i > 0 && p.length >= 4 && esFacil(w[i - 1].slice(-1) + p))) return false;
+  const armada = i > 0 && w[i - 1].length <= FA.letra_de_antes && p.length >= 4 && !FA.no_son_facil.includes(p) && esFacil(w[i - 1].slice(-1) + p);
+  if (!esFacil(p) && !armada) return false;
+  if (w.slice(Math.max(0, i - FA.negacion_antes), i).some((x) => FA.negaciones.includes(x))) return false;      // "no es facil, tenes que entender que…"
   for (let j = i + 1; j <= i + FA.despues && j < w.length; j++) {
     const x = w[j];
-    if (FA.otras_palabras.includes(x)) continue;                                          // "facil de atender"
+    if (FA.otras_palabras.includes(x) || FA.cortan_antes.includes(w[j - 1])) continue;    // "facil de atender", "criticar sin entender"
     if (esEntender(x)) return true;
     const armadas = w[j + 1] && w[j + 1].length <= 2 ? [x + w[j + 1]] : [];
     for (const f of [x, ...armadas]) for (const de of FA.pegado) if (f.startsWith(de) && f.length >= de.length + 6) armadas.push(f.slice(de.length));
@@ -155,7 +159,7 @@ function estado(w, i) {
 }
 
 function palabras(texto) {
-  const t = normalizar(texto);
+  const t = normalizar(sinAvisosAdelante(texto));          // el tope de 20.000 caracteres se cuenta sobre lo que escribio Fak
   const crudas = t.split(' ').filter((x) => limpia(x));
   return { t, crudas, w: crudas.map(limpia) };
 }

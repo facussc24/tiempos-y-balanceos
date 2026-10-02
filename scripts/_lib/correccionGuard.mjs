@@ -106,12 +106,14 @@ export const sinAvisosAdelante = (texto) => {
   const crudo = String(texto ?? ''); const t = crudo.replace(AVISOS_ADELANTE, '');
   return t.length === crudo.length ? crudo : t.replace(/^\s+/, '');      // sin aviso adelante el mensaje queda como vino
 };
-/** Aviso automatico (fin de agente, hook) que llega como turno de usuario: no son palabras de Fak. Un mensaje de
- *  Fak con un aviso de la app adelante NO es automatico; uno que es solo avisos, si. */
+const NO_ES_DE_FAK = new RegExp(`^\\s*(${CANON.no_es_de_fak.map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'i');
+/** Aviso automatico (fin de agente, hook, otra sesion, resumen de un compactado) que llega como turno de usuario:
+ *  no son palabras de Fak. La lista vive en el canon (`no_es_de_fak`). Un mensaje de Fak con un aviso de la app
+ *  adelante NO es automatico; uno que es solo avisos, si. */
 export const esAutomatico = (texto) => {
   const crudo = String(texto ?? ''); const t = sinAvisosAdelante(crudo);
   if (!t.trim()) return crudo.trim().length > 0;
-  return /^\s*(<task-notification|<system-reminder|\[SYSTEM NOTIFICATION|Stop hook feedback|<command-|<local-command|\[Request interrupted|\[Image:)/i.test(t);
+  return NO_ES_DE_FAK.test(t);
 };
 
 const corta = (s, n) => { const u = String(s ?? '').replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, ' ').replace(/\s+/g, ' ').trim(); return u.length > n ? `${u.slice(0, n)}…` : u; };

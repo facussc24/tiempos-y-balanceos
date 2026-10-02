@@ -36,7 +36,13 @@
     "facil": ["facil", "sencilla", "sencillo", "simple"],
     "entender": ["entender", "entende", "entenderlo", "comprender"],
     "ajenas": ["entendes", "entiendes", "entendiste", "entiendo", "entendi", "entiende", "entienden", "comprendes", "comprendo"],
-    "otras_palabras": ["atender", "extender", "encender", "defender", "depender", "emprender", "entrenar", "dentro"],
+    "otras_palabras": ["atender", "extender", "encender", "defender", "depender", "emprender", "sorprender", "reprender", "entrenar", "dentro"],
+    "_auditoria_02_10": "De la auditoria del mismo dia (17 de 43 frases armadas para atacar marcaban de mas; en sus mensajes reales, ninguna): `no_son_facil` son palabras a una o dos letras de facil / simple / sencilla que son otra cosa; `letra_de_antes` es el largo maximo de la palabra de la que se toma la letra corrida ('yf aicl' si; 'ademas encima… entender' armaba 'sencima'); una negacion en las `negacion_antes` palabras anteriores a facil no pide nada ('no es facil, tenes que entender que…'); y `cortan_antes`, pegado a entender, lo niega ('criticar sin entender').",
+    "no_son_facil": ["semilla", "simpleza", "sencillez", "faculta", "facultad", "facial", "fiscal"],
+    "letra_de_antes": 2,
+    "negaciones": ["no", "nunca", "tampoco"],
+    "negacion_antes": 2,
+    "cortan_antes": ["sin"],
     "pegado": ["de", "d"],
     "despues": 4,
     "tope": 2
@@ -77,12 +83,14 @@
     "5. Fak pide el ESTADO de una tarea o proyecto: eso es el escalon 3 del skill. Texto corto y UNA pagina (un .html en exports/explicaciones/, que abra sin conexion), mostrada con SendUserFile display render. Una tabla o una lista en el chat no es la pagina."
   ],
   "cierre": {
-    "_que_es": "Chequeo 7 del cierre-guard (hook Stop, scripts/_lib/cierreGuard.mjs), 02/10/2026. Si el ultimo mensaje de Fak pedia explicar (senales no_entendi, explicame o facil) y en el turno no se cargo el skill explicar-mejor, ni se mostro un dibujo o una pagina, ni se entrego un archivo, el turno no termina. Fak: 'te pedi antes que me lo des facil de entender y no aplicaste la mejora que habiamos implementado... me respondiste normal como si no recordaras esa conversacion'. La salida cuando el aviso no aplica es decirlo: un renglon que matchee no_aplica_re.",
+    "_que_es": "Chequeo 7 del cierre-guard (hook Stop, scripts/_lib/cierreGuard.mjs), 02/10/2026. Si el ultimo mensaje de Fak pedia explicar (senales no_entendi, explicame o facil) y en el turno no se cargo el skill explicar-mejor, ni se mostro un dibujo o una pagina, ni se le mando un archivo a Fak, el turno no termina. Fak: 'te pedi antes que me lo des facil de entender y no aplicaste la mejora que habiamos implementado... me respondiste normal como si no recordaras esa conversacion'. La salida cuando el aviso no aplica es decirlo: un renglon que matchee no_aplica_re, en cualquier respuesta del turno. Una pagina es un .html escrito en exports/explicaciones/ (pagina_ruta_re), uno mandado con SendUserFile (pagina_ext_re) o un Artifact: el index.html de la app no lo es. El primer mensaje de una sesion lanzada por otra es un encargo, no palabras de Fak: llega con el aviso de encargo_re adelante (auditoria 02/10: 15 encargos, 2 citaban palabras de Fak que marcaban). Limite conocido: si Fak abre el mismo una sesion en un worktree, su primer mensaje tampoco se exige.",
     "skill": "explicar-mejor",
     "skill_archivo_re": "skills[\\\\/]explicar-mejor[\\\\/]SKILL\\.md$",
     "dibujo_re": "show_widget$",
+    "pagina_ruta_re": "exports[\\\\/]explicaciones[\\\\/][^\\\\/]+\\.html?$",
     "pagina_ext_re": "\\.html?$",
     "pagina_tools_re": "^Artifact$",
+    "encargo_re": "^\\s*<system-reminder>\\s*You are operating in a git worktree",
     "no_aplica_re": "no aplica[^.\\n]{0,30}explicar[- ]mejor|explicar[- ]mejor[^.\\n]{0,30}no aplica"
   },
   "aviso_corto": [

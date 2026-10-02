@@ -7,8 +7,8 @@
     {
       "id": "explicar-prompt",
       "marca": "[EXPLICAR-MEJOR]",
-      "desde": "2026-10-02T19:30:00Z",
-      "_nota": "Alta: 02/10/2026 08:44 (a855d52d). Medido con `--llego --desde 2026-10-02T11:44:18Z`: entre el alta y el arreglo de la tarde debia llegar en 12 mensajes y llego en 7. De los 5 que faltaron, 3 venian con un aviso de la app adelante (dos en la sesion 61a9a9ac, entre ellos el del incidente, y el encargo de la sesion que lo arreglo) y 2 decian 'facil de entender' con el 'de' pegado, que la logica de ese momento no reconocia. `desde` es la hora del arreglo."
+      "desde": "2026-10-02T18:47:00Z",
+      "_nota": "Alta: 02/10/2026 08:44 (a855d52d). Medido con `--llego --desde 2026-10-02T11:44:18Z`: entre el alta y el arreglo de la tarde debia llegar en 12 mensajes y llego en 7. De los 5 que faltaron, 3 venian con un aviso de la app adelante (dos en la sesion 61a9a9ac, entre ellos el del incidente, y el encargo de la sesion que lo arreglo) y 2 decian 'facil de entender' con el 'de' pegado, que la logica de ese momento no reconocia. `desde` es la hora en que el arreglo llego al checkout principal (02/10 15:46)."
     }
   ]
 }

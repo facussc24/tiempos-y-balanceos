@@ -4,7 +4,10 @@ paths:
   - ".claude/hooks/**"
   - ".claude/skills/**"
   - ".claude/rules/**"
+  - ".claude/agents/**"
+  - ".claude/commands/**"
   - ".claude/settings.json"
+  - "CLAUDE.md"
   - "scripts/_lib/*Guard*.mjs"
   - "scripts/_lib/*Canon*.json"
   - "scripts/_lib/guardianes.mjs"
@@ -36,7 +39,10 @@ Tres cosas fallaron, y los tests no veian ninguna:
 Una pieza del sistema es un hook, un skill, una regla, un agente, un comando, `settings.json`,
 `CLAUDE.md`, o un guardian de `scripts/_lib` con su canon. Quien la crea o la cambia:
 
-1. **La prueba con un mensaje REAL de Fak, textual, antes de cerrar.** El mensaje sale de sus
+1. **Si la pieza lee los mensajes de Fak** (un hook de mensajes, el cierre-guard, su codigo o su
+   canon, `settings.json`): **la prueba con un mensaje REAL suyo, textual, antes de cerrar.** Una
+   mejora nueva que tiene que saltar con sus palabras (un skill que el pide) nace con su aviso y
+   entra en esa lista. El mensaje sale de sus
    transcripts (`~/.claude/projects/C--Dev-BarackMercosul*/*.jsonl`), con sus errores de tipeo.
    No sirve uno escrito por mi.
 
@@ -47,8 +53,9 @@ Una pieza del sistema es un hook, un skill, una regla, un agente, un comando, `s
    Lo corre por los hooks de `.claude/settings.json` (bash → node, como Claude Code), en las dos
    formas en que llega un mensaje: pelado y con el aviso de la app adelante. Despues corre el cierre
    del turno sobre una respuesta comun. Si un hook contesta distinto en una forma y en la otra, falla.
-2. **Le dice a Fak si las sesiones abiertas la toman solas o hay que reabrirlas.** El renglon lo
-   imprime el mismo script (`SESIONES ABIERTAS`); solo eso: `--sesiones`.
+2. **Le dice a Fak si las sesiones abiertas la toman solas o hay que reabrirlas**, cuando toco un
+   hook, una regla, `CLAUDE.md` o una pieza que lee sus mensajes. El renglon lo imprime el mismo
+   script (`SESIONES ABIERTAS`); solo eso: `--sesiones`.
 3. **La da por implementada cuando la vio llegar.** El aviso se anota en
    `scripts/_lib/mejorasEnPrueba.data.json` y de ahi en mas se mide solo: en los transcripts, cuantos
    mensajes debian recibirlo y a cuantos les llego (`node scripts/_probarMejora.mjs --llego`).
@@ -76,11 +83,18 @@ escribir una causa asi, se mide (`--llego`).
 
 - **Hook Stop `cierre-guard.sh`, chequeo 7** (`scripts/_lib/cierreGuard.mjs`): si el ultimo mensaje
   de Fak pedia explicar y en el turno no se cargo el skill `explicar-mejor`, ni se mostro un dibujo
-  o una pagina, ni se entrego un archivo, el turno no termina. Salida: un renglon
-  `No aplica explicar-mejor: <motivo>`. Es el control de "lo vi en la lista y no lo use".
-- **Mismo hook, chequeo 3**: si la sesion escribio una pieza del sistema y declara un cierre sin
-  haber corrido despues `_probarMejora.mjs --mensaje`, o sin decirle a Fak lo de las sesiones
-  abiertas, bloquea (`pendientesDeMejora`, lista de piezas en `cierreCanon.data.json`, `mejora`).
+  o una pagina (un `.html` en `exports/explicaciones/`), ni se le mando un archivo, el turno no
+  termina. Salida: un renglon `No aplica explicar-mejor: <motivo>`, que vale para todo el turno. Es
+  el control de "lo vi en la lista y no lo use". No cuentan como palabras de Fak el encargo de otra
+  sesion (el primer mensaje de una sesion lanzada por otra), lo que otra sesion deja en cola, un
+  aviso de tarea ni el resumen de un compactado.
+- **Mismo hook, chequeo 3** (`pendientesDeMejora`; las listas, en `cierreCanon.data.json`, `mejora`):
+  al declarar un cierre bloquea si la sesion escribio una pieza que lee los mensajes de Fak
+  (`mensajes_re`) y despues del ultimo cambio no corrio `node scripts/_probarMejora.mjs --mensaje`
+  con resultado sin fallas (un `git add` posterior no cuenta como cambio; un grep que nombra el
+  script no cuenta como prueba), o si escribio un hook, una regla o `CLAUDE.md` (`sistema_re`) y el
+  cierre no dice nada de las sesiones abiertas. Editar un skill no deja pendientes.
+- **Una sola lista de "esto no lo escribio Fak"**: `correccionCanon.data.json`, `no_es_de_fak`.
 - **`node scripts/_cierreSesion.mjs`**, paso "Mejoras del sistema": un aviso que debia llegar en
   los ultimos 3 dias y no llego es una falta; uno mas viejo, un aviso.
 - **Un mensaje de Fak con un aviso de la app adelante es de Fak**: `sinAvisosAdelante()` en
@@ -88,7 +102,8 @@ escribir una causa asi, se mide (`--llego`).
 - Tests, en las dos direcciones y con los mensajes reales: `__tests__/scripts/probarMejora.test.mjs`,
   `cierreGuardExplicar.test.mjs`, `explicarGuard.test.mjs`.
 
-Limite conocido: una sesion nueva de punta a punta (que el modelo cargue el skill al leer el mensaje)
+Limites conocidos: si Fak abre el mismo una sesion en un worktree, su primer mensaje se toma por un
+encargo y el chequeo 7 no lo exige (el aviso del hook le llega igual). Y una sesion nueva de punta a punta (que el modelo cargue el skill al leer el mensaje)
 no se puede lanzar sola desde esta PC: la linea de comandos `claude -p` no tiene la sesion iniciada
 (02/10/2026: *"OAuth session expired"*). Por eso el paso 3 mide lo que paso en las sesiones reales, y
 el chequeo 7 exige el skill en el momento.

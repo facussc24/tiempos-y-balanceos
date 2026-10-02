@@ -1,6 +1,8 @@
 {
   "_que_es": "Como escribe Fak cuando CORRIGE un entregable. Lo lee scripts/_lib/correccionGuard.mjs (hook UserPromptSubmit correccion-guard.sh). Se calibra contra sus mensajes reales: node scripts/_lib/correccionGuard.mjs --medir <corpus>. No se agrega una palabra sin volver a medir.",
   "_fuente": "Sesion del 01/10/2026 (fotos de las prensas Hot Press): cuatro correcciones seguidas sobre un pedido que estaba completo en el primer mensaje. Lista corregida el 02/10 con la auditoria (falsos rojos medidos sobre 1.548 mensajes).",
+  "_no_es_de_fak": "Como ARRANCA un turno de usuario que no escribio Fak: avisos de tareas y de hooks, salidas de comandos, el resumen de un compactado y lo que manda otra sesion. Son textos literales, no regex. Lista UNICA desde el 02/10/2026: la usan esAutomatico() en este guardian y en explicarGuard, el relevador del cierre-guard y el medidor de _probarMejora (antes habia tres listas distintas y cada una conocia casos que las otras no). Un mensaje de Fak con un aviso de la app ADELANTE no entra aca: ese aviso se saca primero (sinAvisosAdelante).",
+  "no_es_de_fak": ["<task-notification", "<system-reminder", "[SYSTEM NOTIFICATION", "Stop hook feedback", "<command-", "<local-command", "<user-prompt-submit-hook", "<ide_", "[Request interrupted", "[Image:", "<cross-session-message", "Another Claude session sent a message", "This session is being continued from a previous conversation"],
   "debiles_para_marcar": 3,
   "fuertes": [
     { "nombre": "no_entendiste", "regex": "\\bno (me |lo |la |te )?(entendiste|comprendiste|interpretaste)\\b(?!\\?)|entendiste (mal|cualquier)" },

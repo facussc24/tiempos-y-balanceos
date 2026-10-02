@@ -85,6 +85,25 @@ describe('_probarMejora — un mensaje real por los hooks de verdad (bash -> nod
     expect(r.fallas.join(' ')).toMatch(/contesta distinto si el mensaje llega con un aviso de la app adelante/);
     expect(r.cierre).toEqual([]);                                  // ese settings no tiene cierre-guard: no se inventa uno
   }, LARGO);
+  // Auditoria 02/10: con las salidas por tuberia, un hook que no termina dejaba colgada la prueba 150 s con un tope de 60.
+  it('ROJO: un hook que no termina no cuelga la prueba: corta en el tope y lo dice', () => {
+    const raiz = carpeta('pm-colgado');
+    fs.mkdirSync(path.join(raiz, '.claude'), { recursive: true });
+    fs.writeFileSync(path.join(raiz, '.claude', 'settings.json'), JSON.stringify({ hooks: { UserPromptSubmit: [{ matcher: '', hooks: [{ type: 'command', command: 'sleep 20' }] }] } }));
+    const t0 = Date.now();
+    const r = probarMensaje(INCIDENTE, { raiz, tmp: path.join(raiz, 'tmp'), tope: 1500 });
+    expect(Date.now() - t0).toBeLessThan(12000);
+    expect(r.fallas.join(' ')).toMatch(/no termino en 1\.5 s/);
+  }, LARGO);
+  it('no acumula archivos: dos corridas dejan en el TEMP los mismos nombres', () => {
+    const tmp = path.join(carpeta('pm-tmp'), 't');
+    const listar = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? listar(path.join(d, e.name)) : [path.join(d, e.name)])).sort();
+    probarMensaje(COMUN, { tmp });
+    const una = listar(tmp);
+    probarMensaje(INCIDENTE, { tmp });
+    expect(listar(tmp)).toEqual(una);
+    expect(una.length).toBeGreaterThanOrEqual(4);              // las dos salidas del hook, el turno y el estado del guardian de correcciones
+  }, LARGO);
   it('los hooks que corre son los de settings.json, y cada aviso en prueba tiene su hook ahi', () => {
     const cmds = hooksDe(REPO, 'UserPromptSubmit');
     expect(cmds.length).toBeGreaterThanOrEqual(3);
@@ -170,6 +189,18 @@ describe('_probarMejora — ¿llego? lo que debia recibir el aviso y lo que lo r
       ['no entiendo nada', false, false],                       // le llego OTRO aviso, no el de explicar
       [COMUN.slice(0, 22), false, false],
     ]);
+  });
+  it('mensajes en cola: el de otra sesion no es de Fak, y el que trae una imagen se lee por su texto (auditoria 02/10)', async () => {
+    const cola = (n, prompt, origin) => l({ type: 'attachment', timestamp: T(n), attachment: { type: 'queued_command', commandMode: 'prompt', prompt, origin } });
+    const { dir } = proyecto({ cccc3333: [
+      fak(1, COMUN),
+      cola(2, 'No entiendo el estado, explicame mejor', { kind: 'peer', name: 'barackmercosul-51' }),
+      cola(3, [{ type: 'image', source: { type: 'base64', data: 'UklGR' } }, { type: 'text', text: 'no entiendo esta pantalla explicame' }], { kind: 'human' }),
+      aviso(3, '[EXPLICAR-MEJOR] Fak no entendio…'),
+      cola(4, 'no te entendi un carajo', { kind: 'human' }),
+    ] });
+    const ms = await mensajesConAviso(path.join(dir, 'cccc3333.jsonl'), { marca: EXPLICAR.marca });
+    expect(ms.map((m) => [m.texto, m.llego])).toEqual([[COMUN, false], ['no entiendo esta pantalla explicame', true], ['no te entendi un carajo', false]]);
   });
   it('ROJO: llego() cuenta lo que debia y no llego, y dice cual', async () => {
     const { raiz } = proyecto({ aaaa1111: [...incidente, ...bien, ...noSonDeFak], bbbb2222: bien });

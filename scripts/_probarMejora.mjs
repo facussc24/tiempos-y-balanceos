@@ -17,7 +17,8 @@
  *       Solo el renglon de las sesiones abiertas.
  *
  * Sale con 0 si no hay fallas, 1 si las hay, 2 si no entiende los argumentos (y no hace nada).
- * No escribe en el repo ni en ninguna carpeta de trabajo: solo en el TEMP, siempre los mismos archivos.
+ * No escribe en el repo ni en ninguna carpeta de trabajo: solo en el TEMP (claude-probar-mejora), siempre
+ * los mismos seis archivos, que pisa en cada corrida. No borra nada.
  * El cierre-guard reconoce la corrida con `--mensaje` como la prueba de la sesion (cierreCanon, `mejora`).
  */
 import path from 'node:path';

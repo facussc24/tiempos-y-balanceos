@@ -107,6 +107,38 @@ describe('explicarGuard — "facil de entender"', () => {
     ]) expect(senales(t), t).toEqual([]);
     expect(FA._no_entran).toMatch(/que se entienda/);
   });
+  // Auditoria del 02/10/2026: 17 de 43 frases armadas para atacar marcaban de mas (en sus mensajes reales, ninguna).
+  it('VERDE: la letra corrida solo se toma de una palabra de una o dos letras ("yf aicl" si; "ademas encima" no)', () => {
+    for (const t of ['ademas encima tengo que entender yo el codigo?', 'vos encima queres comprender todo el arb', 'eso nos implica entender el proceso', 'las implico a entender', 'los empleos nuevos tienen que entender'])
+      expect(senales(t), t).toEqual([]);
+    expect(senales('claro yf aicl dentned er')).toEqual(['facil']);
+    expect(FA.letra_de_antes).toBe(2);
+  });
+  it('VERDE: palabras a una o dos letras de facil / simple / sencilla y de entender que son otra cosa (dependen del canon)', () => {
+    for (const t of ['la semilla del proyecto es entender al cliente', 'con esa simpleza no vas a entender', 'eso me faculta a entender', 'es facil de sorprender al auditor'])
+      expect(senales(t), t).toEqual([]);
+    for (const p of FA.no_son_facil) expect(senales(`una ${p} de entender`), p).toEqual([]);
+    expect(FA.otras_palabras).toContain('sorprender');
+  });
+  it('VERDE: "no es facil…" no pide nada, y "sin entender" no es "de entender"', () => {
+    expect(senales('no es facil, tenes que entender que calidad no firma')).toEqual([]);
+    expect(senales('no es simple hacerle entender a manuel')).toEqual([]);
+    expect(senales('nunca fue facil entender a calidad')).toEqual([]);
+    expect(senales('que facil es criticar sin entender')).not.toContain('facil');
+    expect(senales('hacelo facil de entender')).toEqual(['facil']);                    // el control: sin negacion adelante, marca
+    expect(senales('no se, hacelo bien facil de entender')).toEqual(['facil']);        // un "no" lejos no la apaga
+  });
+  it('el tope de 20.000 caracteres se cuenta sobre lo que escribio Fak, no sobre el aviso que la app le pega adelante', () => {
+    const avisoLargo = `<system-reminder>\n${'contexto '.repeat(3000)}\n</system-reminder>\n\n`;
+    expect(avisoLargo.length).toBeGreaterThan(25000);
+    expect(senales(avisoLargo + INCIDENTE)).toEqual(['facil']);
+    expect(avisoDe(avisoLargo + INCIDENTE)).toBe(avisoDe(INCIDENTE));
+  });
+  it('lo que manda otra sesion no son palabras de Fak (lista unica `no_es_de_fak`), venga o no con un aviso adelante', () => {
+    const deOtra = '<cross-session-message from="local_20b5">no entendi nada, explicame mejor</cross-session-message>';
+    for (const t of [deOtra, AVISO_APP + deOtra, `Another Claude session sent a message: ${deOtra}`, 'This session is being continued from a previous conversation. Fak: no entiendo, explicame'])
+      expect(avisoDe(t), t.slice(0, 50)).toBeNull();
+  });
   it('"facil de entender" pide explicar aunque ademas pida corto: gana el aviso de explicar', () => {
     expect(senales('r epsodne breve y de una fomra bine facil de entender')).toEqual(['facil', 'corto']);
     expect(avisoDe('r epsodne breve y de una fomra bine facil de entender')).toMatch(/cambia la FORMA/);
