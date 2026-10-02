@@ -169,9 +169,9 @@
       "capturas": [
         {
           "archivo": "capturas/07-respuesta-tres-piezas.png",
-          "que_se_ve": "La respuesta completa a «¿Qué hago si en la línea salen tres piezas malas seguidas con el mismo defecto?», con el renglón del documento y la revisión a la vista.",
+          "que_se_ve": "La respuesta a «¿Qué hago si en la línea salen tres piezas malas seguidas con el mismo defecto?»: corta, y al pie el documento y la revisión.",
           "marcas": [
-            { "tipo": "recuadro", "x": 15.8, "y": 68.1, "ancho": 68.4, "alto": 9.5, "posicion_confirmada": true }
+            { "tipo": "recuadro", "x": 2.4, "y": 83, "ancho": 70, "alto": 14, "posicion_confirmada": true }
           ]
         },
         {
@@ -221,15 +221,16 @@
       "capturas": [
         {
           "archivo": "capturas/09-mail-en-outlook.png",
-          "que_se_ve": "Solo la ventana del mail nuevo de Outlook: Para, asunto, dos renglones y «Saludos». El botón Enviar a la vista. Sin la bandeja de entrada atrás.",
+          "que_se_ve": "El mail que dejó abierto Claude en Outlook: Para, asunto y el texto, con lo que falta completar entre corchetes. El botón Enviar a la vista.",
           "marcas": [
-            { "tipo": "recuadro", "x": 3.9, "y": 30.5, "ancho": 7.4, "alto": 16, "posicion_confirmada": true }
+            { "tipo": "recuadro", "x": 3.2, "y": 26.4, "ancho": 6.6, "alto": 14.6, "posicion_confirmada": true }
           ]
         }
       ],
       "texto": [
         "Pedíselo con tus palabras: a quién va y qué necesitás.",
         "Claude lo escribe y lo deja abierto en Outlook. No lo manda.",
+        "Lo que no sabe lo deja entre corchetes: completalo vos.",
         "Leelo entero. Sale recién cuando vos apretás **Enviar**."
       ],
       "error_que_evita": "Creer que ya se mandó, o mandarlo sin leer a quién va.",
@@ -323,7 +324,7 @@
           "archivo": "capturas/13-mail-esperando-enviar.png",
           "que_se_ve": "El mismo mail de la página del mail, más de cerca: el botón Enviar lo aprieta la persona.",
           "marcas": [
-            { "tipo": "recuadro", "x": 3.9, "y": 9, "ancho": 7.4, "alto": 25.5, "posicion_confirmada": true }
+            { "tipo": "recuadro", "x": 3.2, "y": 5, "ancho": 6.6, "alto": 23, "posicion_confirmada": true }
           ]
         }
       ],
@@ -379,20 +380,19 @@
         },
         {
           "archivo": "capturas/15-cartel-limite.png",
-          "que_se_ve": "El cartel de límite de uso («You've hit your session limit»), con la hora en que vuelve.",
-          "rotulo": "El cartel de límite de uso",
+          "que_se_ve": "El aviso de límite de uso, con el día y la hora en que se restablece.",
+          "rotulo": "El aviso de límite de uso",
           "opcional": true,
           "marcas": []
         }
       ],
       "texto": [
         "Se trabó o contesta cualquier cosa: detenelo y empezá de nuevo.",
-        "Dice **session limit** («límite de uso»): esperá a la hora que marca.",
+        "Dice **límite de uso**: esperá al día y la hora que marca.",
         "Pide iniciar sesión o pagar, o da un error: avisale a {CONTACTO}."
       ],
       "error_que_evita": "Reinstalar, cambiar de cuenta, o cambiar de modelo para saltear el límite (no sirve: el límite es de todos los modelos).",
       "a_confirmar": [
-        { "donde": "app", "que": "cómo se ve hoy el cartel de límite de uso" },
         { "donde": "plan", "que": "a quién se avisa y por dónde" }
       ]
     }
