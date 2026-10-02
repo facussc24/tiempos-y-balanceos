@@ -70,7 +70,7 @@ incidente vive en los snapshots.
 
 ## Identidad de un dato
 
-- **Una fuente que sale de mi lado del mostrador no es una segunda fuente** (regla mia, test, memoria, export, cita de un subagente, o el numero que yo propuse y Fak solo eligio): si un documento puede zanjarlo, se abre el documento antes de actuar. Las cinco formas de caer: memorias `verificar_contra_la_fuente_no_el_codigo`, `un_agente_no_es_independiente`, `dispositivo_adhesivado_insert`; `amfe.md` §12.
+- **Una fuente que sale de mi lado del mostrador no es una segunda fuente** (regla mia, test, memoria, export, cita de un subagente, o el numero que yo propuse y Fak solo eligio; 02/10: tampoco el proceso de la pieza vecina, Upper Trim no es IP Pad): si un documento puede zanjarlo, se abre el documento antes de actuar. Las formas de caer: memorias `verificar_contra_la_fuente_no_el_codigo`, `un_agente_no_es_independiente`, `dispositivo_adhesivado_insert`, `project_upper_trimming_flujograma_amfe`; `amfe.md` §12.
 - **04/09 — "No se compra" no es "esta mal cargado", y el listado del legajo no valida al arb que se cargo desde el: es una sola fuente contada dos veces.** Graduado entero a la memoria `validar_insumo_de_bom_tres_fuentes`.
 - **En la BOM va el codigo del proveedor; el interno es el parche hasta que el proveedor da el suyo.** Que un codigo interno aparezca en OC significa que ese material todavia no tiene codigo de proveedor, no que sea la regla. Graduado a la memoria `codigo_de_proveedor_le_gana_al_interno`.
 

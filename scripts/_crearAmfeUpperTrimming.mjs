@@ -16,10 +16,12 @@
  *     first delivery is OK". Programa de la semana 40: 20 SINGLE y 30 DUAL por dia. No es un
  *     proceso "sin experiencia": la prevencion que existe es de CONDUCTA (operarios del sector
  *     con practica), que por la Tabla P2 oficial es O=8, no O=10.
- *   - El adhesivado y el tapizado se hacen en el sector del IP Pad (planillas de PCP
- *     "Adhesivado IP y Upper Trimming" y "Tapizado IP PAD y UPPER TRIM", con piezas OK, NOK y
- *     scrap por hora): cabina con campana de extraccion, set up de lanzamiento y guantes
- *     anticorte son los del AMFE 149 de ese sector.
+ *   - El adhesivado y el tapizado se registran junto con los del IP Pad (programa de la semana
+ *     40: "REGISTRO DE PRODUCCION - ADHESIVADO IP Y UPPER TRIMMING" y "Tapizado IP PAD y UPPER
+ *     TRIM", con piezas por hora y scrap). De ese sector se toma solo lo que es del LUGAR
+ *     (campana de extraccion, set up de lanzamiento, guantes). El METODO del IP Pad no se
+ *     copia: Fak, 02/10/2026, "capaz no va a ser igual al IP Pad... solo lo confirmado, lo que
+ *     vas con evidencia".
  *   - El corte se hace en la mesa de corte, con su hoja general, su ficha de set up y el
  *     control con mylar (como el AMFE 173). El mylar del Upper Trim todavia no esta hecho.
  *   - La inflamabilidad SI se ensayo en el laboratorio de Barack, con la camara MC 184:
@@ -30,7 +32,13 @@
  * DE DONDE SALE CADA DATO
  *   - Secuencia y numeracion: tools/flowchart/data/160-UPPER-TRIM-PANEL.json (manda el
  *     flujograma, regla no-pfd-no-ho). Se lee del archivo y se compara en ORDEN.
- *   - Proceso: pliego "Dispositivo Tapizado Manual Console Central Component" Rev.01 del
+ *   - Proceso: flujo de proceso de la cotizacion (PATAGONIA_UPPER_TRIM_PANEL_(BOM).xlsx,
+ *     P. Centurion, 20/08/2025, en la carpeta de Ingenieria de la pieza): corte, adhesivado de
+ *     la tela y adhesivado del sustrato (10,25 g cada uno, "por proyeccion o por rodillo"),
+ *     alineado manual con dispositivo en mesa, virolado manual CON PISTOLA DE CALOR ("tiene
+ *     complejidad en el virolado del agujero interior"), muro de calidad y embalaje. Es el
+ *     unico papel de la pieza que dice con que se da calor, y lo dice para el virolado.
+ *   - Tambien: pliego "Dispositivo Tapizado Manual Console Central Component" Rev.01 del
  *     27/04/2026, lista de herramentales, pliego de punzonado (23/07/2026: 10 zonas, sin rebaba
  *     ni deformacion, guardas), cotizacion del troquelador (27/08/2026: dos pulsadores, troquel
  *     y posicionador por variante, cilindros seleccionables), BOM del arb, DXF de tizada.
@@ -504,9 +512,12 @@ const OP21 = operacion('21', 'CONTROL CON MYLAR',
 
 // ===========================================================================
 // OP 30 — ADHESIVADO DE MICROFIBRA Y SUSTRATO
-// Adhesivo FA con reticulante GV, a pistola, sobre las dos partes, en el sector de adhesivado
-// que comparte con el IP Pad (cabina con campana de extraccion, set up de lanzamiento: AMFE
-// 149). La mezcla tiene instruccion (IO-08); la aplicacion sobre esta pieza no tiene hoja.
+// Adhesivo FA con reticulante GV sobre las dos partes: el flujo de proceso de la cotizacion
+// (20/08/2025) tiene un adhesivado de la tela y otro del sustrato, 10,25 g cada uno, que es de
+// donde sale el consumo cargado en el arb. CON QUE se aplica no esta definido en ningun papel
+// de la pieza (ese flujo dice "por proyeccion o por rodillo"; la ficha del adhesivo, "a
+// soplete o pincel") y el 01/10/2026 se estaba discutiendo como mejorarlo: no se nombra la
+// herramienta. La mezcla tiene instruccion (IO-08); la aplicacion sobre esta pieza no tiene hoja.
 // ===========================================================================
 const OP30 = operacion('30', 'ADHESIVADO DE MICROFIBRA Y SUSTRATO',
   'Aplicar adhesivo sobre la microfibra y sobre el sustrato y dejarlo secar antes del activado',
@@ -534,18 +545,18 @@ const OP30 = operacion('30', 'ADHESIVADO DE MICROFIBRA Y SUSTRATO',
           ]),
         ]),
     ]),
-    we('Machine', 'Pistola de adhesivado', [
+    we('Method', 'Aplicacion del adhesivo', [
       funcion(
         'Aplicar el adhesivo en forma uniforme sobre las dos partes',
         'Microfibra y sustrato cubiertos por completo, sin exceso',
         [
           falla('Adhesivo insuficiente o con zonas sin cubrir', EF_DESPEGUE, [
-            causa('El adhesivo se rocia con pistola manual y la cobertura depende del recorrido',
+            causa('La cobertura del adhesivo depende de como se aplica en cada pieza',
               OPERARIO,
               O_OPERARIO, 'Control visual del colocado del adhesivo en la inspeccion de pieza adhesivada', 8),
           ]),
           falla('Exceso de adhesivo que traspasa la microfibra o deja zonas brillantes', EF_ASPECTO, [
-            causa('La cantidad de adhesivo depende de la regulacion de la pistola y de las pasadas',
+            causa('La cantidad de adhesivo que recibe cada pieza no tiene una referencia definida',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
           ]),
@@ -564,15 +575,16 @@ const OP30 = operacion('30', 'ADHESIVADO DE MICROFIBRA Y SUSTRATO',
           ]),
         ]),
     ]),
-    // Riesgo cronico (vapores de solvente): P1-8, no 10.
-    we('Environment', 'Cabina de adhesivado', [
+    // Riesgo cronico (vapores de solvente): P1-8, no 10. La ficha del adhesivo dice que es de
+    // base solvente; la campana es la del sector donde se registra el adhesivado de la pieza.
+    we('Environment', 'Sector de adhesivado', [
       funcion(
         'Mantener el puesto ventilado durante la aplicacion',
         'Extraccion en marcha mientras se adhesiva',
         [
           falla('Operario expuesto a los vapores del adhesivo', EF_SALUD_CRONICA, [
-            causa('La aplicacion a pistola genera niebla de adhesivo en el puesto',
-              'Cabina de adhesivado con campana de extraccion',
+            causa('El adhesivo es de base solvente y libera vapores al aplicarlo y mientras seca',
+              'Campana de extraccion del sector de adhesivado',
               3, 'Control del funcionamiento de la extraccion al inicio de turno', 8),
           ]),
         ]),
@@ -639,7 +651,9 @@ const OP32 = operacion('32', 'REPROCESO: FALTA DE ADHESIVO',
 // La ficha tecnica del adhesivo FA dice que el pegado se hace por reactivacion con calor
 // (infrarrojo, flash o aire caliente) y posterior prensado; Fak lo confirmo el 01/10/2026. La
 // lista de herramentales no tiene una maquina para esto, y ningun documento fija la
-// temperatura ni el tiempo.
+// temperatura ni el tiempo. El unico papel de la pieza que nombra una fuente de calor es el
+// flujo de proceso de la cotizacion, y la nombra para el virolado (pistola de calor, OP 42):
+// aca no se nombra la herramienta.
 // ===========================================================================
 const OP40 = operacion('40', 'ACTIVADO DEL ADHESIVO CON CALOR',
   'Reactivar con calor el adhesivo de la microfibra y del sustrato justo antes del tapizado',
@@ -666,8 +680,8 @@ const OP40 = operacion('40', 'ACTIVADO DEL ADHESIVO CON CALOR',
           ]),
         ]),
     ]),
-    // Guantes y ropa de trabajo: el equipo de proteccion del sector para el trabajo con calor
-    // (AMFE 149). Es un control de conducta: O=7, igual que en la trincheta y en la prensa.
+    // Guantes y ropa de trabajo: el equipo de proteccion del sector para el trabajo con calor.
+    // Es un control de conducta: O=7, igual que en el refilado y en la prensa.
     we('Man', 'Operador de Produccion', [
       funcion(
         'Aplicar el calor sin exponerse a una quemadura',
@@ -694,7 +708,7 @@ const OP41 = operacion('41', 'TAPIZADO MANUAL',
         'Microfibra centrada respecto del sustrato y del hueco del cargador',
         [
           falla('Microfibra desalineada respecto del sustrato o del hueco del cargador', EF_ASPECTO, [
-            causa('La microfibra se posiciona a mano, sin un tope que la ubique sobre el sustrato',
+            causa('La microfibra se posiciona a mano sobre el sustrato',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
           ]),
@@ -738,9 +752,11 @@ const OP41 = operacion('41', 'TAPIZADO MANUAL',
 
 // ===========================================================================
 // OP 42 — VIROLADO + REFILADO
-// A mano. Para la pared del hueco del cargador existe un virolador que sostiene la microfibra
-// mientras el adhesivo toma (utillaje propio, entregado el 20/08/2026). El refilado es con
-// trincheta; los guantes anticorte son los del sector (AMFE 149).
+// A mano y con pistola de calor: lo dice el flujo de proceso de la cotizacion (20/08/2025),
+// "el virolado se realiza manualmente con pistola de calor; tiene complejidad en el virolado
+// del agujero interior". Para la pared del hueco del cargador existe un virolador que sostiene
+// la microfibra mientras el adhesivo toma (utillaje propio, entregado el 20/08/2026). El
+// pliego del 27/04/2026 dice que se refila "en zonas indicadas" y no nombra la herramienta.
 // ===========================================================================
 const OP42 = operacion('42', 'VIROLADO + REFILADO',
   'Doblar la microfibra sobre los bordes del sustrato y del hueco del cargador y cortar el sobrante',
@@ -752,6 +768,23 @@ const OP42 = operacion('42', 'VIROLADO + REFILADO',
         [
           falla('Borde de la microfibra despegado en el contorno de la pieza', EF_DESPEGUE, [
             causa('El doblez se hace a mano y se suelta antes de que el adhesivo tome',
+              OPERARIO,
+              O_OPERARIO, VISUAL_FINAL, 8),
+          ]),
+        ]),
+    ]),
+    we('Machine', 'Pistola de calor', [
+      funcion(
+        'Dar calor al borde para que el adhesivo tome en el doblez',
+        'Borde adherido en todo el contorno, sin marcas de calor en la cara vista',
+        [
+          falla('Borde de la microfibra despegado por falta de calor en el doblez', EF_DESPEGUE, [
+            causa('El calor que recibe el borde depende del tiempo y de la distancia de la pistola',
+              OPERARIO,
+              O_OPERARIO, VISUAL_FINAL, 8),
+          ]),
+          falla('Microfibra marcada o brillante por el calor en el borde', EF_ASPECTO, [
+            causa('El calor de la pistola se aplica sin una temperatura ni un tiempo de referencia',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
           ]),
@@ -789,12 +822,17 @@ const OP42 = operacion('42', 'VIROLADO + REFILADO',
     ]),
     we('Man', 'Operador de Produccion', [
       funcion(
-        'Refilar sin exponerse al filo de la herramienta',
-        'Guantes anticorte puestos durante el refilado',
+        'Virolar y refilar sin exponerse al filo de la herramienta ni al calor de la pistola',
+        'Guantes puestos durante el virolado y el refilado',
         [
-          falla('Corte del operario con la trincheta de refilado', EF_SEG_OPERARIO, [
-            causa('El refilado se hace con una trincheta de filo expuesto',
+          falla('Corte del operario con la herramienta de refilado', EF_SEG_OPERARIO, [
+            causa('El refilado se hace a mano con una herramienta de filo expuesto',
               'Guantes anticorte del sector',
+              7, 'Control del uso de guantes en el recorrido de turno', 9),
+          ]),
+          falla('Quemadura del operario con la pistola de calor', EF_SEG_OPERARIO, [
+            causa('La pistola de calor se usa cerca de la mano que sostiene el doblez',
+              'Guantes y ropa de trabajo del sector',
               7, 'Control del uso de guantes en el recorrido de turno', 9),
           ]),
         ]),
