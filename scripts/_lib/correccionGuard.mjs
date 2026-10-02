@@ -41,6 +41,8 @@ export function normalizar(texto) {
   return String(texto ?? '').slice(0, TOPE_TEXTO)
     .replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, ' ')
     .replace(/<pasted_content[\s\S]*?<\/pasted_content>/g, ' ')
+    // un pegado que el corte de arriba dejo sin su cierre: lo que sigue hasta el final tampoco lo escribio Fak
+    .replace(/<(system-reminder|pasted_content)\b[\s\S]*$/, ' ')
     .replace(/"[^"\n]{40,}"/g, ' ')
     .replace(/[A-Za-z]:\\[^\s"]+/g, ' ')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')

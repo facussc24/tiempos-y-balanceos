@@ -88,7 +88,7 @@
         ]
       },
       {
-        "_comentario": "02/10/2026: cuando Fak dice que no entendio ('no entiendo', 'noe nteidno') o pide que se lo expliquen ('explicame mejor') recuerda el skill explicar-mejor: no repetir lo mismo mas largo, cambiar la forma (texto corto -> dibujo -> pagina). Si pide corto ('sintetiza', 'mucho texto') recuerda responder en 1 a 4 renglones. 'entendes?' es muletilla y no dispara. Pedido de Fak tras probar la escalera del post de Karpathy: 'aplicarlo permanente para cuando alguien pide una mejor explicacion o nota que no entiende'. Medido: salta en 154 de 1.592 mensajes suyos. Nunca bloquea. Logica y palabras: scripts/_lib/explicarGuard.mjs + explicarCanon.data.json. Test: explicarGuard.test.mjs.",
+        "_comentario": "02/10/2026: cuando Fak dice que no entendio ('no entiendo', 'noe nteidno') o pide que se lo expliquen ('explicame mejor') recuerda el skill explicar-mejor: no repetir lo mismo mas largo, cambiar la forma (texto corto -> dibujo -> pagina). Si pide corto ('sintetiza', 'mucho texto') recuerda responder en 1 a 4 renglones. 'entendes?' es muletilla y no dispara. Pedido de Fak tras probar la escalera del post de Karpathy: 'aplicarlo permanente para cuando alguien quiere y pide una mejor explicacion o nota que no entiende'. Medido: salta en 166 de 1.592 mensajes suyos. El aviso dice cuando no aplica (un entregable, palabras de un tercero) y que ante un aviso de correccion-guard manda ese. Nunca bloquea. Logica y palabras: scripts/_lib/explicarGuard.mjs + explicarCanon.data.json. Test: explicarGuard.test.mjs.",
         "matcher": "",
         "hooks": [
           {

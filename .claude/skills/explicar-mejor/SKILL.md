@@ -6,8 +6,8 @@ description: Cómo explicar algo para que se entienda en una sola lectura — te
 # Explicar mejor
 
 Fak cada vez hace menos trabajo a mano y revisa y decide cada vez más. Lo que le llega tiene que
-entenderse en una sola lectura. En 38 de 257 sesiones escribió "no entiendo" o "no entendí", y la
-respuesta habitual era la misma explicación con más detalle.
+entenderse en una sola lectura. En 64 de 257 sesiones escribió que no entendía, y la respuesta
+habitual era la misma explicación con más detalle.
 
 Origen: post de Andrej Karpathy del 01/10/2026 (lenguaje controlado → dibujo → página → video),
 probado ese día con el caso de la espuma del IP Pad. Fak, 02/10/2026: *"aplicarlo permanente para
@@ -59,7 +59,8 @@ cerrado van las palabras de la persona.
 El orden de una explicación: **qué debería pasar, qué pasa, qué falta saber**. Si hace falta una
 decisión, va una sola pregunta al final, que se pueda contestar con una palabra.
 
-Si lo que no entiende es por qué hice o no hice algo, se contesta eso en un renglón y se sigue.
+Si pregunta qué es algo o por qué hice o no hice algo, se le explica y **se para**. Lo que haría
+después se ofrece en un renglón; no se ejecuta ni se arregla nada en paralelo.
 
 ## Escalón 2 — un dibujo
 
@@ -125,7 +126,11 @@ respuesta va en 1 a 4 renglones. Las palabras y sus errores de tipeo están en
 `scripts/_lib/explicarCanon.data.json`; la lógica, en `scripts/_lib/explicarGuard.mjs`. Una palabra
 nueva se agrega al canon y se vuelve a medir contra sus mensajes reales
 (`node scripts/_lib/explicarGuard.mjs --medir <mensajes.jsonl> --muestra`). Medido el 02/10/2026:
-salta en 154 de 1.592 mensajes. Tests: `__tests__/scripts/explicarGuard.test.mjs`.
+salta en 166 de 1.592 mensajes. Tests: `__tests__/scripts/explicarGuard.test.mjs`.
+
+El aviso no sabe de quién son las palabras ("Carlos me dijo: no entiendo") ni si Fak habla de un
+entregable ("la hoja no se entiende"). En esos casos no aplica: el aviso mismo lo dice. Si en el mismo
+mensaje salta el aviso de `correccion-guard`, manda ese.
 
 Lo que el hook no ve es cuando se nota que no entendió sin que lo diga: eso lo tengo que ver yo.
 

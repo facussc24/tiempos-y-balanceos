@@ -1,45 +1,63 @@
 {
-  "_que_es": "Como escribe Fak cuando NO ENTENDIO lo que le explique, cuando pide que se lo explique, y cuando pide corto. Lo lee scripts/_lib/explicarGuard.mjs (hook UserPromptSubmit explicar-prompt.sh), que le recuerda a Claude el skill explicar-mejor. Se calibra contra sus mensajes reales: node scripts/_lib/explicarGuard.mjs --medir <corpus.jsonl> --muestra. No se agrega una palabra sin volver a medir.",
-  "_fuente": "Fak, 02/10/2026, despues de probar la forma nueva de explicar (post de Karpathy del 01/10): 'aplicarlo permanente para cuando alguien quiere y pide una mejor explicacion o se nota que no entiende'. Medido ese dia sobre 1.586 mensajes suyos de 257 sesiones.",
+  "_que_es": "Como escribe Fak cuando NO ENTENDIO lo que le explique, cuando pide que se lo explique, y cuando pide corto. Lo lee scripts/_lib/explicarGuard.mjs (hook UserPromptSubmit explicar-prompt.sh), que le recuerda a Claude el skill explicar-mejor. Se calibra contra sus mensajes reales: node scripts/_lib/explicarGuard.mjs --medir <mensajes.jsonl> --muestra. No se agrega una palabra sin volver a medir.",
+  "_fuente": "Fak, 02/10/2026, despues de probar la forma nueva de explicar (post de Karpathy del 01/10): 'aplicarlo permanente para cuando alguien quiere y pide una mejor explicacion o nota que no entiende'. Calibrado ese dia contra sus mensajes reales y corregido con la auditoria del mismo dia (11 mensajes reales que no marcaban, avisos de mas por palabras parecidas).",
   "no_entendi": {
-    "_nota": "Primera persona, con errores de tipeo: palabra a distancia <= tope de una forma PROPIA y mas cerca de ella que de cualquier forma AJENA ('entendes?' y 'entendiste?' son muletilla o van para Claude), con una negacion en las palabras anteriores. Tambien pegado ('noentiendo') y con el espacio corrido ('noe nteidno'). 'otras_palabras' son palabras comunes que quedan a una o dos letras: se descartan solo si estan escritas EXACTAS (como competidoras por distancia tapaban tipeos reales: 'etneindo' empataba con 'teniendo').",
-    "propias": ["entiendo", "entendi", "comprendo", "comprendi", "entender", "comprender"],
-    "ajenas": ["entendes", "entiendes", "entendiste", "entendido", "entende", "entiende", "entienden", "entienda", "entiendan", "entendible", "entenderas", "comprendes", "comprende", "comprendiste", "comprendido", "comprenda"],
-    "otras_palabras": ["teniendo", "enciendo", "atiendo", "extiendo", "entrando", "enviando", "sintiendo", "encendi", "atendi", "extendi", "comprando", "emprender", "encender", "extender", "atender", "tender"],
-    "negaciones": ["no", "nunca", "tampoco"],
+    "_nota": "Primera persona, con errores de tipeo. Una palabra cuenta si esta a `tope` letras o menos de una forma CONJUGADA o de un INFINITIVO, mas cerca que de cualquier forma AJENA ('entendes?' y 'entendiste?' son muletilla o van para Claude) y no mas cerca de OTRA palabra comun ('teniendo', 'comprado'; escritas exactas se descartan, y un tipeo real como 'etneindo', que empata con 'teniendo', se queda). La conjugada pide una negacion en las palabras de antes; el infinitivo pide 'sin' pegado o un auxiliar en el medio ('no termino de entender'), porque 'no hace falta entender' no es no entender. Una negacion seguida de coma o punto no niega ('no, ahora si entiendo'), y 'si' o 'ya' en el medio la cortan. El participio pide la negacion PEGADA ('no entenido' es de Fak; 'no lo has entendido' va para Claude y 'no es verdad, entendido?' es muletilla).",
+    "conjugadas": ["entiendo", "entendi", "comprendo", "comprendi"],
+    "participios": ["entendido", "comprendido"],
+    "infinitivos": ["entender", "comprender"],
+    "ajenas": ["entendes", "entiendes", "entendiste", "entende", "entiende", "entienden", "entienda", "entiendan", "comprendes", "comprende", "comprendiste", "comprenda"],
+    "otras_palabras": ["entendible", "entenderas", "teniendo", "enciendo", "atiendo", "extiendo", "entrando", "enviando", "sintiendo", "emitiendo", "metiendo", "mintiendo", "vendiendo", "rompiendo", "encendi", "atendi", "extendi", "comprando", "comparando", "comprado", "comprada", "comprados", "compradas", "compramos", "entrenado", "emprender", "encender", "extender", "atender"],
+    "negaciones": ["no", "nunca", "tampoco", "sin"],
+    "negacion_pegada": "^[a-z]no$",
+    "no_son_negacion": ["uno", "ano"],
     "negacion_antes": 3,
+    "cortan": ["si", "ya"],
+    "auxiliares": ["termino", "termine", "logro", "logre", "puedo", "pude", "llego", "llegue", "alcanzo"],
+    "pegadas": ["noe", "noc"],
+    "regex": ["\\bno (me |te )?(queda|quedo) (muy |nada )?claro\\b"],
     "tope": 2,
     "largo_minimo": 6
   },
   "explicame": {
-    "_nota": "Pedido de explicacion dirigido a Claude. 'directas' marcan solas; 'verbos' marcan con un 'me' en las 2 palabras anteriores ('me lo explicas', 'me podes explicar') o con una palabra de 'como' en las 3 siguientes ('explica bien facil'). 'explicales' y 'explicaste' no son un pedido.",
-    "directas": ["explicame", "explicamelo", "explicarme", "explicarmelo"],
+    "_nota": "Pedido de explicacion dirigido a Claude. 'directas' marcan solas; 'verbos' marcan con un 'me' en las 2 palabras anteriores ('me lo explicas', 'me podes explicar') o con una palabra de 'como' en las 3 siguientes ('explica bien facil'). 'explicales', 'explicaste' y 'me explica que...' (alguien me cuenta) no son un pedido. 'replicame' y 'aplicame' quedan a dos letras y son otro trabajo.",
+    "directas": ["explicame", "explicamelo", "explicamela", "explicarme", "explicarmelo", "explicalo", "explicate"],
     "verbos": ["explica", "explicas", "explicar"],
     "ajenas": ["explicales", "explicale", "explicarle", "explicarles", "explicaste", "explicado", "explicada", "explicacion", "explico", "explique", "explicito", "explicita", "explicitamente"],
+    "otras_palabras": ["replicame", "replicamelo", "replicar", "replica", "duplicame", "duplicar", "duplica", "aplicame", "aplicamelo", "aplicar", "aplica", "implica", "complica", "complicar", "publicar", "publica"],
     "como": ["mejor", "facil", "simple", "sencillo", "bien", "claro"],
+    "como_no": ["mejora", "mejoras", "mejorar", "clara"],
     "tope": 2
   },
   "corto": {
-    "_nota": "Fak pide corto o dice que es mucho texto. 'sintetiza' lo tipea de muchas formas: va por molde de letras, con la z obligatoria.",
+    "_nota": "Fak pide corto o dice que es mucho texto. 'sintetiza' lo tipea de muchas formas: va por molde de letras, con la z obligatoria ('sintetico' es un material). 'breve' cuenta con 'responde' cerca o con se/mas/muy/bien pegado ('reunion breve' no). 'facil de entender' cuenta con 'entender' en las palabras siguientes ('facil de montar' no).",
     "regex": [
       "\\b(mucho|tanto|demasiado) texto\\b",
-      "\\bno (lo |te )?v[a-z]{1,3} a a?leer\\b",
+      "\\bno (lo |te )?v(?!as\\b|a\\b|an\\b|amos\\b)[a-z]{1,3} (a a?l+eer|al+eer)\\b",
       "\\bme da paja leer",
-      "\\bresumi(me|melo|lo)?\\b",
-      "\\b(se|re[a-z]{4,7}) breve\\b",
-      "\\b(mas |bien )fa[ci]{2}l d ?e ?[a-z]{0,2}nt"
+      "(?<!\\bya )\\bresumi(me|melo|lo)?\\b",
+      "\\bal grano\\b",
+      "\\b(una|hace|haceme|dame|pasame) (una )?sintesis\\b"
     ],
     "sintetiza_molde": "^s[a-z]{0,2}n[a-z]{0,2}t[a-z]{1,6}z[a-z]{0,4}$",
-    "sintetiza_largo": [8, 14]
+    "sintetiza_largo": [8, 14],
+    "breve_antes": ["se", "mas", "muy", "bien", "decime", "respuesta"],
+    "responde": ["responde", "respondeme", "responder", "responderme", "contestame"],
+    "responde_antes": 4,
+    "facil": ["facil", "sencilla", "sencillo", "simple"],
+    "facil_de": ["entender", "entende", "entenderlo"],
+    "facil_despues": 4
   },
   "aviso_explicar": [
     "[EXPLICAR-MEJOR] Fak no entendio, o pide que se lo expliques. No repitas lo mismo mas largo: cambia la FORMA.",
     "1. Carga el skill `explicar-mejor` y seguilo.",
     "2. Primero la respuesta, en 1 a 4 renglones, con sus palabras y sin codigos: que deberia pasar, que pasa, que falta saber.",
     "3. Si hay partes que se relacionan (un proceso, una comparacion, un antes y despues) va UN dibujo en el chat. Si son muchas partes, una pagina. Las dos cosas juntas, no.",
-    "Si lo que no entiende es por que hiciste o no hiciste algo, contestale eso en un renglon y segui."
+    "4. Si pregunta que es algo o por que lo hiciste: se le explica y se PARA. Lo que harias despues se ofrece en un renglon, no se ejecuta.",
+    "No aplica si habla de un entregable para otra persona (una hoja, un mail, un PowerPoint: siguen con sus reglas) o si las palabras son de un tercero. Si en este mensaje tambien hay un aviso [CORRECCION-GUARD], manda ese: esto es solo como redactar la respuesta."
   ],
   "aviso_corto": [
-    "[EXPLICAR-MEJOR] Fak pide corto. La respuesta entera en 1 a 4 renglones: primero lo que pregunto, despues lo que falta, y una sola pregunta si hace falta. Sin tablas, sin codigos, con sus palabras (skill `explicar-mejor`, escalon 1)."
+    "[EXPLICAR-MEJOR] Fak pide corto. La respuesta entera en 1 a 4 renglones: primero lo que pregunto, despues lo que falta, y una sola pregunta si hace falta. Sin tablas, sin codigos, con sus palabras (skill `explicar-mejor`, escalon 1).",
+    "No aplica si lo que pide acortar o resumir es un entregable o material de trabajo (una hoja, un mail, los mails del dia): eso sigue con sus reglas. Si en este mensaje tambien hay un aviso [CORRECCION-GUARD], manda ese."
   ]
 }

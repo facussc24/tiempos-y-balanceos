@@ -9,7 +9,7 @@
 #   - si pide corto ("sintetiza", "mucho texto", "no voy a leer todo eso"), le recuerda responder en 1 a 4 renglones.
 # "entendes?" y "entendiste?" son muletilla: no disparan.
 #
-# Por que: en 38 de 257 sesiones Fak escribio "no entiendo / no entendi" y la respuesta habitual era lo mismo con mas
+# Por que: en 64 de 257 sesiones Fak escribio que no entendia y la respuesta habitual era lo mismo con mas
 # detalle. Pedido del 02/10/2026, despues de probar la escalera del post de Karpathy: "aplicarlo permanente para
 # cuando alguien quiere y pide una mejor explicacion o nota que no entiende".
 # Test: __tests__/scripts/explicarGuard.test.mjs · node scripts/_lib/explicarGuard.mjs --selftest
