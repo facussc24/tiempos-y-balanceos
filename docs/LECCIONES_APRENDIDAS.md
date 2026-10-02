@@ -13,6 +13,7 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **02/10 — De un flujograma o de un AMFE puede salir la PALABRA "reproceso", nunca su analisis (IATF 8.7.1.4; fue una no conformidad en 2019), y un AMFE escrito de cero se delata por el largo de sus frases** (12 palabras por causa contra 4 a 7; Calidad: "hecho con IA"). Graduado a la memoria `reference_iatf_retrabajo_8714_y_antecedentes_barack` y a `TOPE_PALABRAS` de `scripts/_lib/amfeAutoria.mjs`.
 - **01/10 — Guardar en la carpeta sincronizada no es subir a la nube: "está en la nube" se dice después de medirlo** (OneDrive trabado 20 h; 229 archivos que di por subidos). Graduado a `scripts/_nubeSubio.ps1` y a la memoria `reference_onedrive_sync_colgado_como_detectarlo`.
 - **30/09 — El límite de una máquina lo pone el MATERIAL puesto, no el trabajo más grande que ya salió** (papel de 90 cm). Graduado a `patrones-corte-plotter` §3 ter y a `reference_plotter_inkjet_software_htv2a`.
 - **15-28/09 — Un cartel del arb se LEE antes de contestarlo: es lo primero que se mira cuando no deja seguir (no mi teoría), lo que actúa a ciegas aprieta lo que esté abajo, el botón es `Omitir` y no `Anular`, y se cierra solo lo propio.** Graduado al skill `arb-operar`, a `_arbDescripcion.por_que_no_avanza()`, `_arbCargar.abrir()`, `_arbVer.cerrar_excel()`, `fallas-modales-y-export.md` y la memoria `feedback_bom_en_unidades_no_en_envase`.
@@ -84,6 +85,8 @@ incidente vive en los snapshots.
 - **25/09 — La base de una conversion la dice un DOCUMENTO, y un "te lo habia pedido" se busca antes de cargar** (TPO del Top Roll: 0,2526 / 1,4 sin papel, arb 31 % abajo). Graduado a `scripts/_lib/respaldoCarga.py`, que frena el `--apply` del arb, y a la memoria `reference_tabla_consumo_mesa_corte`.
 
 ## Entregables y comunicacion con Fak
+
+- **02/10 — Lo que hay que volver a pedir hasta que contesten no depende de acordarse: va a un seguimiento con fecha que se avisa solo; y lo que va a quien lo lee buscando el error sale corto, con papel y sin nada que suene a generado.** Graduado a `scripts/_seguimientos.mjs` (arranque de sesion + tarea de lunes y viernes) y a las memorias `project_seguimientos_con_fecha` y `feedback_mails_a_calidad_cecilia_sin_flancos`.
 
 - **02/10 — REGLA DURA: Carlos Baptista va en todo mail que sale de Fak, como mínimo en copia** (*"es mi gerente... él debe saber que Sebas me pide cosas"*). Graduado a `mail-envio.md` punto 0 y a `scripts/_lib/gerenteCopia.py` (los que arman lo agregan; `_mailEnviar.py` aborta si falta).
 

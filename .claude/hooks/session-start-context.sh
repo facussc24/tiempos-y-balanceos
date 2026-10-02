@@ -11,7 +11,9 @@
 #
 # Uso (cableado en settings.json):
 #   session-start-context.sh inicio    → matcher startup|resume|clear: corre cerebro-guard
-#       (baja el cerebro si esta PC no lo tiene). No emite texto.
+#       (baja el cerebro si esta PC no lo tiene) y despues imprime los SEGUIMIENTOS CON FECHA
+#       abiertos (scripts/_seguimientos.mjs --hook; nada si no hay ninguno). Fak, 02/10/2026:
+#       "memorias con fechas que chequees constantemente en las sesiones".
 #   session-start-context.sh compact   → matcher compact: reinyecta el nucleo anti-perdida,
 #       menos de 1 KB.
 #   "lecciones" se acepta como alias de "inicio" (nombre viejo del modo).
@@ -47,4 +49,8 @@ fi
 
 # El cerebro va PRIMERO: si esta PC no lo tiene, bajarlo es prioritario sobre todo lo demas.
 bash "$ROOT/.claude/hooks/cerebro-guard.sh" 2>/dev/null
+
+# Seguimientos con fecha: lo que hay que volver a pedir (lunes y viernes) hasta que contesten.
+# Va DESPUES del cerebro porque los datos viven en la memoria. Menos de 1 KB; si falla, no frena.
+node "$ROOT/scripts/_seguimientos.mjs" --hook 2>/dev/null
 exit 0

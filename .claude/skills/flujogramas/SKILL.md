@@ -225,6 +225,16 @@ OP 105 REFILADO POST-TAPIZADO existia solo en el Plan de Control, y era la OP 40
   del PPAP es un cambio de proceso que el cliente tiene que aprobar; uno que ya estaba en el
   flujograma aprobado, no. Antes de emitir la Rev. A de una pieza nueva, listar los
   reprocesos de las hermanas y preguntarle a Fak cuales entran.
+  ⚠ **02/10/2026 — este criterio esta EN REVISION, y antes de dibujar un reproceso se le
+  pregunta a Fak.** Al revisar el 160 (Upper Trim), Calidad y el cliente (Cozzuol) pidieron
+  que los reprocesos NO se dibujen como tales: *"poner como operacion de terminacion"*. Para
+  el 160 la propuesta saca los tres, deja `70 TERMINACION Y CONTROL FINAL DE CALIDAD` y manda
+  a SCRAP lo que no pasa (los cuatro avisos del canon van por `_no_aplica`, con el motivo).
+  Para los demas clientes lo define la reunion de AMFE con Calidad (memoria
+  `project_reunion_amfe_calidad_2026-10`). **Lo que no cambia:** la tarea que se hace sobre
+  una pieza rechazada sigue analizada en el AMFE, con su hoja y su registro (IATF 16949
+  8.7.1.4; memoria `reference_iatf_retrabajo_8714_y_antecedentes_barack`). Sale el nombre,
+  no el analisis.
 - **Conector circulo-letra** (A, B, C...) para la materia prima que entra en una operacion
   intermedia: circulo a la salida del WIP de MP y `VIENE DE (A)` en la operacion que la
   consume. Si entra en la operacion inmediata siguiente, flecha directa.
