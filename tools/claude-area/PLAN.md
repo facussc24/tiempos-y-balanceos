@@ -26,13 +26,14 @@ no está probado, o si la prueba es más vieja que las reglas instaladas en `C:\
 | Manual (15 páginas, todas con foto real) y PowerPoint | hecho | mirado página por página |
 | Hojas para Dirección (1 a 7) | hecho | falta ponerlas al día con la etapa A |
 | Video tutorial de 2:12 | hecho; le gustó, la voz queda | le falta contenido: etapa C |
-| Enviar el mail a pedido | en construcción (agente) + endurecido tras la revisión | — |
-| Enseñarle una habilidad · armar presentaciones | en construcción (agente) | — |
+| Enviar el mail a pedido (el programa) | hecho (02/10, 11:40) | **en vivo con Outlook**: 3 mails de Facundo para Facundo salieron una vez cada uno; copia oculta, sin asunto, nombre inexistente, ventana cambiada (asunto, texto, adjunto, copia) y alguien de afuera NO salieron; la huella no cambia sola en 5 minutos; dos mails de trabajo abiertos no se tocaron. Casillas en `NOTAS.md` punto 11 |
+| Enviar el mail a pedido (el control en una conversación) | falta | la persona escribe "mandalo" en la carpeta instalada: es la toma del video. Ya se sabe que en esta PC lo que escribe la persona llega como `human` y lo de otra sesión como `peer` |
+| Enseñarle una habilidad · armar presentaciones | integrado (plugin 0.2.0, 997 pruebas) | falta probarlo en una conversación: ensayo 2, preguntas 13 a 15 |
+| Demostración instalada por el instalador como PC de Producción (B1) | hecho (02/10, 11:39) | `instalado.json` y `perfil.json` del instalador; conocimiento: común + producción; reglas v3. `armar_demo_instalada.sh <área>` la rehace para cualquier área |
 
-**Lo que la demostración de hoy todavía NO es** (hallazgo de la revisión): `C:\ClaudeBarack` tiene el plugin enchufado
-por una configuración de carpeta hecha a mano, perfil de área "común" corregido a mano y el conocimiento de TODAS las
-áreas. Una PC real recibe lo común + lo de su área, por el instalador. Los ensayos de hoy valen como ensayo, no como
-"así queda una PC". Se corrige en B1.
+**Lo que cambió con la reinstalación:** las reglas instaladas son otras (v3), así que TODAS las promesas del video
+quedaron sin prueba vigente (`chequear_promesas.py` las pide de nuevo). Se vuelven a probar con el ensayo 2
+(`.sgc-cache/claude-por-area/examen/ensayo_2_preguntas.md`), después de las 13:00.
 
 ## Las etapas, en orden. Cada una tiene su puerta: no se pasa a la siguiente con la puerta en rojo.
 
