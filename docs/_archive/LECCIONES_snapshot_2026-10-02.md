@@ -1,3 +1,4 @@
+<!-- Snapshot del 02/10/2026, antes de pasar al archivo cinco lecciones de septiembre ya graduadas enteras a su memoria. -->
 # Lecciones Aprendidas — Barack Mercosul APQP (destilado vivo)
 
 Archivo mantenido por Claude Code. Entra completo al system prompt (`@import` desde CLAUDE.md),
@@ -6,7 +7,7 @@ leccion es un bullet legible de hasta 600 caracteres; el detalle vive en la memo
 que cita (gate por bullet: regla `lecciones-consolidacion.md`). La historia completa de cada
 incidente vive en los snapshots.
 
-- **Snapshots** (la version larga de cada consolidacion): los tres ultimos son [2026-09-23](docs/_archive/LECCIONES_snapshot_2026-09-23.md) · [2026-10-01](docs/_archive/LECCIONES_snapshot_2026-10-01.md) · [2026-10-02](docs/_archive/LECCIONES_snapshot_2026-10-02.md) y el historico 2026-03-30 a 07-02, [2026H1](docs/_archive/LECCIONES_APRENDIDAS_2026H1_completo.md); los demas estan en `docs/_archive/`.
+- **Snapshots** (la version larga de cada consolidacion): los tres ultimos son [2026-09-22](docs/_archive/LECCIONES_snapshot_2026-09-22.md) · [2026-09-23](docs/_archive/LECCIONES_snapshot_2026-09-23.md) · [2026-10-01](docs/_archive/LECCIONES_snapshot_2026-10-01.md) y el historico 2026-03-30 a 07-02, [2026H1](docs/_archive/LECCIONES_APRENDIDAS_2026H1_completo.md); los demas estan en `docs/_archive/`.
 - **Tabla incidente → regla**: `docs/_archive/INCIDENTES_REGLAS_AMFE.md`
 - Lo ya codificado no se repite aca: reglas de `.claude/rules/` y sus gates ejecutables
   (amfe.md + amfeValidator, database.md, verify-supabase-live.md, no-pfd-no-ho.md, techo-agentes.md, cad-3d.md).
@@ -30,8 +31,10 @@ incidente vive en los snapshots.
 - **21/09 — Una captura no es el estado, pero cuando una accion NO responde es lo unico que dice POR QUE.** Graduado entero al skill `imds` ("El panel del navegador muestra capturas VIEJAS").
 - **21/09 — Cortar un listado para leerlo es una decisión sobre los DATOS, y un control que queda rojo por trabajo pendiente se termina ignorando.** Graduado a `video-maquina.md` y a la memoria `videos_y_fotos_de_maquina_donde_van`.
 - **21/09 — Antes de ejecutar un pedido que toca a un cliente, se abre el sistema del CLIENTE: ahi esta si el trabajo ya se hizo y por que esta trabado** (un 8D cerrado hacia semanas en KPM; un "agregale la norma" que era un PPAP rechazado en IMDS). Memorias `8d_11010843_tapa_amarok`, `project_imds_barack`.
+- **10/09 — La primera hipotesis simple se prueba antes de sofisticarla: si crece con cada dato parcial, se esta alejando.** Graduado entero a la memoria `la_primera_hipotesis_simple_se_prueba_antes_de_sofisticarla`.
 - **10-13/09 — Una contradicción adentro del entregable es un ROJO, no una nota al pie; la frase que resume números la arma el CÓDIGO.** Graduado a la memoria `contradiccion_en_el_entregable_es_rojo`.
 - **12/09 — Un gate que barre CODIGO decide por RENGLON, y la cadena no es todo lo que parece un script: 5 de 13 huerfanos eran falsos y 16 pasos no corrian.** Se lee la LLAMADA entera y se sigue el orden de las variables. Graduado entero a `generador_fuera_de_la_cadena_entrega_viejo`.
+- **12/09 — Un inventario sobre una fuente ajena se cierra enumerando las FORMAS en que la cosa puede estar dibujada, y la respuesta comoda es la señal de que falta una.** Graduado entero a la memoria `layout_planta_hurlingham`.
 - **11/09 — El system prompt es la foto del arranque: antes de concluir que algo quedó sin hacer, mirar el disco y el `git log`.** Graduado a la memoria `el_system_prompt_es_la_foto_del_arranque`.
 - **08-13/09 — Lo que pasa del otro lado no lo veo, y lo que apunta a un lugar vacio no falla: el vacio se lee como "roto".** Mi arbol NO es lo que se commitea, lo que corre otra PC se escribe desde SU lado, y un OK de Fak no viaja de segunda mano. **Un default que ninguna corrida usa falla sin romperse** (52 rojos que no existian). Memorias `worktree_sin_env_local`, `hablarle_a_otra_pc`, `dispositivo_adhesivado_insert`.
 - **Antes de construir un control propio, correr el que ya viene; y en una interfaz ajena (ERP, ventana, render) el limite y la causa casi siempre estan de mi lado: mirar antes de rediagnosticar.** El que carga el archivo juzga mejor que yo. Graduado a las memorias `claude_plugin_cli` y `crlf_en_claude_md_reglas_y_memory`, y al skill `arb-operar`.
@@ -42,6 +45,9 @@ incidente vive en los snapshots.
 - **07/09 — Un cero puede ser del sistema y no del hecho, y la columna la nombra el que manda el dato.** Antes de concluir desde un campo, mirar si la poblacion de ese campo lo llena. Memoria `datos_produccion_pcp_federico`.
 - **07/09 — Un sistema se diseña para el que lo va a usar, y su estado se declara cuando es verdad.** Antes de poner un control, escribir que ve el que no lo pidio; el marcador de "instalado" va en el ultimo paso. Memoria `project_claude_barack_fase0`.
 - **Lo que yo construyo lo prueba algo que no sea yo, y un control solo ve lo que DECLARA.** Un gate que no puede dar verde esta tan roto como el que no puede dar rojo, y **lo que FALTA no se ve**: un gate verde mientras dos hojas mandaban imprimir 9 piezas que ninguna lista nombraba. Verificar las promesas no ve las que nunca se escribieron (01/10, flujograma 160: skill `flujogramas` §0 bis). Memorias `un_control_se_audita_en_las_dos_direcciones`, `sims_carros_metodos`.
+- **13/09 — Un control que MUESTREA AL AZAR no es un control: con la MISMA geometria, 2 de 8 semillas daban ROJO y 6 VERDE — y mentia para los dos lados.** Determinista, `contains()`, y la zona que toca a proposito declarada como tal. Graduado entero a la memoria `sims_carros_metodos` §10.
+- **12/09 — Un gemelo dice si el CONTROL sirve, nunca si el sujeto esta bien. Si el MAL no falla, se cambia el DEFECTO, no el umbral.** Graduado entero a la memoria `un_gemelo_prueba_el_control_no_aprueba_al_sujeto` (las cuatro formas en que miente).
+- **12/09 — Antes de creerle un numero a un modelo, preguntarle por un caso cuya respuesta ya se sabe por sentido comun: si contesta algo imposible, el defecto es del modelo.** Graduado entero a la memoria `modelo_que_reporta_lo_imposible_es_el_modelo`.
 - **El entregable se revalida contra la fuente justo antes de mandarlo, y un mail se verifica por DESTINATARIOS.** Graduado a `mail-envio.md` + `_mailEnviar.py` y a las memorias `mail_ya_enviado`, `dejar_el_mail_listo_para_enviar`, `no_pisar_archivo_que_toco_fak`, `mails_de_barack_se_comparten`.
 - **04/09 — El denominador de un "cuanto falta" se mide antes de decirlo, y un "reanudar" que salta por nombre pelado descarta en silencio.** La ocurrencia se cuenta en el recorrido, no se deduce del disco; el cotejo final va contra la fuente, base por base. Memoria `leer_buzones_ost_pst`.
 - **08/09 — Una mudanza que deja el origen ejecutable crea una segunda fuente: el origen se saca el mismo dia.** Graduado a la memoria `mudanza_que_deja_el_origen_ejecutable` y a `_gateRepoPublico.mjs` CHECK-3.
