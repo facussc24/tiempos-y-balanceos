@@ -78,8 +78,8 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
-- **02/10 — Una mejora que Fak pidió implementar se USA: pidió "fácil de entender" el estado de una tarea y contesté una tabla, con el skill `explicar-mejor` listado y a la vista** (*"me respondiste normal como si no recordaras esa conversación"*). Si el pedido calza con un skill listado, se carga antes de contestar. Graduado a la memoria `feedback_mejora_implementada_se_usa`.
-- **02/10 — En una hoja de proceso va primero lo de TODOS LOS DÍAS y la excepción aparte: lo filmado en la puesta en marcha no es la jornada** (hot melt con el enhebrado completo en fila; lo normal es un empalme: *"lo complejizaste al pedo"*). Graduado a `gate_lo_normal_en_produccion()` de `scripts/hotmelt/generar_hojas_v3.py`.
+- **02/10 — Una mejora que Fak pidió implementar se USA: si su pedido calza con un skill listado, se carga antes de contestar** (pidió "fácil de entender" y contesté una tabla). Graduado a la memoria `feedback_mejora_implementada_se_usa`.
+- **02/10 — En una hoja de proceso va primero lo de TODOS LOS DÍAS y la excepción aparte: lo filmado en la puesta en marcha no es la jornada.** Graduado a `gate_lo_normal_en_produccion()` de `scripts/hotmelt/generar_hojas_v3.py`.
 
 - **02/10 — Lo que hay que volver a pedir hasta que contesten no depende de acordarse: va a un seguimiento con fecha que se avisa solo; y lo que va a quien lo lee buscando el error sale corto, con papel y sin nada que suene a generado.** Graduado a `scripts/_seguimientos.mjs` (arranque de sesion + tarea de lunes y viernes) y a las memorias `project_seguimientos_con_fecha` y `feedback_mails_a_calidad_cecilia_sin_flancos`.
 
