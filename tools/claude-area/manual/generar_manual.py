@@ -452,7 +452,15 @@ def poner_captura(l, cap, caja, dir_capturas, lugar_rotulo=False, arriba=False):
             mw, mh = nw * m["ancho"] / 100, nh * m["alto"] / 100
             l.marco(mx, my, mw, mh)
             if m.get("numero") is not None:
-                l.insignia(mx - GROSOR_MARCA, my - GROSOR_MARCA, m["numero"])
+                # el numero va chico y corrido hacia afuera de la esquina: sobre la esquina tapaba lo marcado
+                # "numero_en": "izquierda" o "derecha" lo saca al costado del recuadro, a media altura
+                donde = m.get("numero_en")
+                if donde == "izquierda":
+                    l.insignia(mx - 4.4, my + mh / 2, m["numero"], d=6.4, pt=13)
+                elif donde == "derecha":
+                    l.insignia(mx + mw + 4.4, my + mh / 2, m["numero"], d=6.4, pt=13)
+                else:
+                    l.insignia(mx - 2.0, my - 2.0, m["numero"], d=6.4, pt=13)
         elif m["tipo"] == "flecha":
             l.flecha(ix + nw * m["desde"][0] / 100, iy + nh * m["desde"][1] / 100,
                      ix + nw * m["hasta"][0] / 100, iy + nh * m["hasta"][1] / 100)

@@ -69,6 +69,7 @@
       "texto": [
         "Apretá la tecla de Windows y escribí **Claude**.",
         "Hacé clic en el programa, que aparece primero.",
+        "Si no aparece, no está instalado: se baja de **claude.com/download**.",
         "Si te pide iniciar sesión o pagar, no sigas: avisale a {CONTACTO}."
       ],
       "error_que_evita": "Buscarlo en el navegador, o iniciar sesión con una cuenta propia.",
@@ -110,8 +111,8 @@
           "archivo": "capturas/04-local-y-select-folder.png",
           "que_se_ve": "La pantalla de conversación nueva, abajo: Local, y el botón de la carpeta con su lista abierta (ClaudeBarack y «Abrir carpeta…»).",
           "marcas": [
-            { "tipo": "recuadro", "x": 1.6, "y": 69.6, "ancho": 14.6, "alto": 7.4, "numero": 1, "posicion_confirmada": true },
-            { "tipo": "recuadro", "x": 17.5, "y": 24.6, "ancho": 24, "alto": 6, "numero": 2, "posicion_confirmada": true }
+            { "tipo": "recuadro", "x": 1.6, "y": 69.6, "ancho": 14.6, "alto": 7.4, "numero": 1, "numero_en": "izquierda", "posicion_confirmada": true },
+            { "tipo": "recuadro", "x": 17.5, "y": 24.6, "ancho": 24, "alto": 6, "numero": 2, "numero_en": "izquierda", "posicion_confirmada": true }
           ]
         },
         {
@@ -145,8 +146,8 @@
           "archivo": "capturas/06-decir-el-puesto.png",
           "que_se_ve": "El mensaje «Soy supervisor de producción. ¿Qué funciones tiene mi puesto?» ya enviado y, debajo, el comienzo de la respuesta con «F-24 Supervisor de Producción, rev I».",
           "marcas": [
-            { "tipo": "recuadro", "x": 45, "y": 15.6, "ancho": 39, "alto": 7.6, "numero": 1, "posicion_confirmada": true },
-            { "tipo": "recuadro", "x": 54, "y": 41.2, "ancho": 30, "alto": 5, "numero": 2, "posicion_confirmada": true }
+            { "tipo": "recuadro", "x": 45, "y": 15.6, "ancho": 39, "alto": 7.6, "numero": 1, "numero_en": "izquierda", "posicion_confirmada": true },
+            { "tipo": "recuadro", "x": 54, "y": 41.2, "ancho": 30, "alto": 5, "numero": 2, "numero_en": "derecha", "posicion_confirmada": true }
           ]
         }
       ],
@@ -266,10 +267,10 @@
       "capturas": [
         {
           "archivo": "capturas/11-modelo-y-nivel.png",
-          "que_se_ve": "A la izquierda, la lista de modelos con Opus 5.5 elegido. A la derecha, el control de esfuerzo, con Medio marcado como «Recomendado».",
+          "que_se_ve": "Arriba, la lista de modelos con Opus 5.5 elegido. Abajo, el control de esfuerzo, con Medio marcado como «Recomendado».",
           "marcas": [
-            { "tipo": "recuadro", "x": 23.5, "y": 8.5, "ancho": 13.5, "alto": 12, "posicion_confirmada": true },
-            { "tipo": "recuadro", "x": 70, "y": 12.5, "ancho": 16, "alto": 13, "posicion_confirmada": true }
+            { "tipo": "recuadro", "x": 47, "y": 3.6, "ancho": 30, "alto": 6.8, "posicion_confirmada": true },
+            { "tipo": "recuadro", "x": 38, "y": 57.6, "ancho": 34, "alto": 7, "posicion_confirmada": true }
           ]
         }
       ],
@@ -348,8 +349,8 @@
           "archivo": "capturas/14-claude-pide-permiso.png",
           "que_se_ve": "El cartel con que Claude pide permiso para guardar un archivo: abajo, Denegar, Permitir siempre y Permitir una vez.",
           "marcas": [
-            { "tipo": "recuadro", "x": 69.3, "y": 84.3, "ancho": 29, "alto": 8, "numero": 1, "posicion_confirmada": true },
-            { "tipo": "recuadro", "x": 2.2, "y": 84.3, "ancho": 16, "alto": 8, "numero": 2, "posicion_confirmada": true }
+            { "tipo": "recuadro", "x": 69.3, "y": 84.3, "ancho": 29, "alto": 8, "numero": 1, "numero_en": "derecha", "posicion_confirmada": true },
+            { "tipo": "recuadro", "x": 2.2, "y": 84.3, "ancho": 16, "alto": 8, "numero": 2, "numero_en": "izquierda", "posicion_confirmada": true }
           ]
         }
       ],
