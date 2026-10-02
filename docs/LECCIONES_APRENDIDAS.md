@@ -90,7 +90,7 @@ incidente vive en los snapshots.
 
 - **02/10 — REGLA DURA: Carlos Baptista va en todo mail que sale de Fak, como mínimo en copia** (*"es mi gerente... él debe saber que Sebas me pide cosas"*). Graduado a `mail-envio.md` punto 0 y a `scripts/_lib/gerenteCopia.py` (los que arman lo agregan; `_mailEnviar.py` aborta si falta).
 
-- **02/10 — Un alta en el arb son dos pasadas por código (grabar y releer) y la descripción va en MAYÚSCULAS** (12 ventanas abiertas antes de grabar 2 códigos: *"una tarea rápida la transformás en un calvario"*). Graduado a `_arbInsumoCampos.py` y a la memoria `feedback_arb_una_pasada_por_codigo_y_mayusculas`.
+- **02/10 — En el arb la pantalla se toma UNA vez por cambio y se mira si responde; un alta son dos pasadas por código y la descripción va en MAYÚSCULAS** (dos veces el mismo día: *"una tarea rápida la transformás en un calvario"*, *"abrir cerrar abrir cerrar me pone ansioso"*, y se colgó sin que yo lo viera). Graduado a `_arbInsumoCampos.py` y a las memorias `feedback_arb_una_pasada_por_codigo_y_mayusculas` y `feedback_arb_una_sola_pasada_y_mirarlo`.
 
 - **01/10 — Cuando un entregable vuelve se relee el PRIMER pedido entero; lo que no aparece no se rellena con algo parecido, y "no hay" se dice después de listar sin filtro de palabras** (fotos de las prensas Hot Press: cuatro vueltas; medido, en 15 de 54 sesiones lo mismo volvió 3 veces o más). Graduado al hook `correccion-guard` y a `scripts/_materialAfuera.mjs` (`video-maquina.md`).
 

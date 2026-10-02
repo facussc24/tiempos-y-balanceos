@@ -42,12 +42,40 @@ el nombre de la PC y el usuario real del arb es `FACUNDO`.
 
 **Vigilante (30/09/2026):** con "ARB - activar vigilante" Fak deja una tarea de Windows que cada 3 min
 reabre el arb si esta CERRADO y nadie usa la PC (no cierra un arb colgado; un login fallido la pausa).
-No habilita a cerrarlo: cerrar el arb "para que el vigilante lo reabra" sigue prohibido.
+No habilita a cerrar un arb SANO: cerrarlo "para que el vigilante lo reabra" sigue prohibido.
 
-**Si el arb se cuelga o pide login:** escribirle a Fak una linea — *"doble click en ARB - reiniciar"*
-(o *"doble click en ARB"* si solo pide la clave) — y esperar con `python scripts/_arbVer.py estado`
-hasta que `ProdWindow` este habilitada. Claude nunca lee ni tipea la clave, ni corre `_arbLanzar.py`
-salvo `--diagnostico`.
+## Arb COLGADO: lo resuelvo yo, sin pedirle nada a Fak — 02/10/2026
+
+Fak, cuando le pedi que apretara "ARB - reiniciar" con el arb colgado: *"no, eso lo deberias
+hacer vos... deberias solucionarlo todo automaticamente, para eso creamos los botones, anotalo
+en la skill"*. Y antes: *"porque te lo tengo que decir? no te das cuenta cuando se traba?"*.
+
+**El OK para cerrar un arb COLGADO es permanente.** Colgado = las tres cosas:
+
+1. `powershell -NoProfile -Command "(Get-Process produc).Responding"` da `False` (y sigue asi a los 20 s);
+2. la ultima escritura esta verificada en un export (no quedo nada a medio grabar);
+3. el vigilante dice `ACTIVO` en `~/arb_fotos/vigilante_estado.txt`.
+
+Con las tres:
+
+```bash
+touch ~/.claude/.arb-cerrar-ok          # en un comando aparte: el guardian mira ANTES de ejecutar
+taskkill //F //PID <pid de produc.exe>
+```
+
+y se espera mirando cada 10 s hasta `ProdWindow ena=True` (el vigilante lo abre y entra con la
+clave guardada cuando la PC esta quieta 10 s; el 02/10 tardo 143 s). A Fak se le avisa en una
+linea lo que paso; no se le pide que haga nada. Si el vigilante esta `PAUSADO` por login fallido,
+o a los 6 min no abrio, ahi si: *"doble click en ARB"*.
+
+Casi siempre el cuelgue es el cartel **invisible** de `Microsoft Visual C++ Runtime Library`
+(`_arbVer.py estado` dice `MODALES ABIERTOS: 0` porque solo enumera las visibles; se ve
+enumerando TODAS las ventanas del proceso). Sale despues de varios abrir y cerrar seguidos del
+maestro: otra razon para tomar la pantalla una sola vez (memoria
+`feedback_arb_una_sola_pasada_y_mirarlo`).
+
+**Si el arb solo pide login** (no esta colgado): esperar al vigilante igual. Claude nunca lee ni
+tipea la clave, ni corre `_arbLanzar.py` salvo `--diagnostico`.
 
 Si de verdad hay que cerrarlo: **preguntarle a Fak, con el motivo**. Si ya dijo que sí:
 

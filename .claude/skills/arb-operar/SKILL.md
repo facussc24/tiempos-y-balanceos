@@ -18,6 +18,22 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 > | Cambiar la `Descripción` del maestro | `_arbDescripcion.py`; dentro del formulario se TABULA (`reference/maestro-de-insumos.md`) | 3/3 el 01/09 |
 > | Borrar líneas | — | fuera de alcance |
 >
+> **Con Fak mirando, la pantalla se toma UNA vez por cambio y se vigila** (Fak, 02/10/2026: *"me
+> molesta que tomes el control de la pc y hagas esa boludez de abrir cerrar abrir cerrar"*,
+> *"porque te lo tengo que decir? no te das cuenta cuando se traba?"*):
+> - El respaldo (`respaldoCarga.py --revisar`, no toca la pantalla) queda en verde ANTES de abrir
+>   nada. Despues va directo el `--apply`, que ya verifica cada celda: sin `--leer` ni prueba en
+>   seco previos. Avisarle en una linea y esperar a que la PC este quieta.
+> - Los pasos (cambio → abrir Relaciones → export) se encadenan mirando el codigo de salida de
+>   CADA uno y `(Get-Process produc).Responding` entre paso y paso, con tope de tiempo. Nunca
+>   `a | tail && b` (el `tail` siempre devuelve 0) ni una pasada suelta en segundo plano.
+> - **Arb colgado: lo resuelvo yo.** `python scripts/_arbVer.py colgado` (sale 0 si esta colgado
+>   y el vigilante activo) → `touch ~/.claude/.arb-cerrar-ok` → `taskkill //F //PID <pid>` →
+>   esperar al vigilante. A Fak se le avisa, no se le pide nada (regla `arb-no-cerrar.md`).
+> - Un codigo viejo puede traer **basura en `Posee PAPP/PSW`** y deja `&Acepta` apagado: desde
+>   el 02/10 `_arbDescripcion.aceptar()` la trata como vacio (pone `S`) y, si el TAB no cae en el
+>   boton, dice el cartel o el campo y deja la foto en `~/arb_fotos/fallo_maestro.png`.
+>
 > Cuatro reglas de las tandas de septiembre y octubre:
 > - **Una tecla a ciegas aprieta lo que esté abajo; un click fallido no abre nada.** Las
 >   ventanas se abren por click (`_arbCargar.abrir()` → `reset_relaciones()`). Si el arb se
@@ -70,8 +86,8 @@ esta activo (`~/arb_fotos/vigilante_estado.txt` empieza con ACTIVO), lo abre SOL
 hasta el 01/10/2026, `INACTIVO_MIN_S` en `_arbLanzar.py`—): esperar
 con `python scripts/_arbVer.py estado` hasta `ProdWindow` habilitada y seguir. Si dice PAUSADO
 (se pausa solo tras un login fallido; la causa esta al final de `~/arb_fotos/lanzador.log`) o no
-abre en 6 min: una linea a Fak — *"doble click en ARB"* (o *"ARB - reiniciar"* si esta colgado,
-o activar el vigilante si esta pausado). **Activar el vigilante lo hace Claude** (Fak, 30/09/2026:
+abre en 6 min: una linea a Fak — *"doble click en ARB"* (o activar el vigilante si esta pausado).
+Un arb COLGADO ya no se le lleva a Fak: se cierra y lo reabre el vigilante (02/10/2026, arriba). **Activar el vigilante lo hace Claude** (Fak, 30/09/2026:
 *"activa el vigilante, eso lo podes hacer vos, no requiere contraseñas"*): `powershell -ExecutionPolicy
 Bypass -File scripts\_arbVigilante.ps1 -Activar -SinMensaje` (**siempre con `-SinMensaje`**: sin esa
 marca sale un cartel que espera el click de Fak y el comando queda colgado — 01/10/2026, Fak:

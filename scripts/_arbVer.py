@@ -517,8 +517,58 @@ def export(timeout=240):
     return ok
 
 
+def colgado(espera=20):
+    """¿El arb esta COLGADO? Solo lectura: no trae nada al frente ni manda mensajes al arb
+    (un `SendMessage` o un `ShowWindow` contra un hilo colgado cuelga al que llama).
+
+    Devuelve 0 si esta colgado Y el vigilante esta ACTIVO (se puede cerrar: regla
+    `arb-no-cerrar.md`, OK permanente de Fak del 02/10/2026), 1 si responde, 2 si esta colgado
+    pero el vigilante no lo va a reabrir, 3 si el arb no esta abierto. Imprime el PID, los
+    carteles OCULTOS (el de Visual C++ no se dibuja) y que falta chequear a mano."""
+    import subprocess
+
+    def responde():
+        r = subprocess.run(['powershell', '-NoProfile', '-Command',
+                            '$p = Get-Process produc -ErrorAction SilentlyContinue; '
+                            'if ($p) { "$($p.Id) $($p.Responding)" }'],
+                           capture_output=True, text=True).stdout.split()
+        return (int(r[0]), r[1] == 'True') if len(r) == 2 else (None, None)
+
+    pid, ok = responde()
+    if pid is None:
+        print('el arb no esta abierto')
+        return 3
+    if not ok:
+        time.sleep(espera)                      # un "no responde" de un instante no es un cuelgue
+        pid2, ok = responde()
+        if pid2 != pid:
+            print('el arb se reabrio solo (pid %s -> %s)' % (pid, pid2))
+            return 1
+    ocultos = []
+
+    def cb(h, _l):
+        p = ctypes.c_ulong()
+        u.GetWindowThreadProcessId(h, ctypes.byref(p))
+        if p.value == pid and cls(h) == '#32770' and not u.IsWindowVisible(h):
+            ocultos.append(txt(h))
+        return True
+    u.EnumWindows(CB(cb), 0)
+    for t in ocultos:
+        print('cartel OCULTO: %r' % t)
+    if ok:
+        print('pid %d: RESPONDE' % pid)
+        return 1
+    est = os.path.join(os.path.expanduser('~'), 'arb_fotos', 'vigilante_estado.txt')
+    vig = open(est, encoding='utf-8', errors='replace').read().strip() if os.path.exists(est) else ''
+    print('pid %d: COLGADO (no responde hace %d s)  |  vigilante: %s' % (pid, espera, vig or 'sin estado'))
+    print('antes de cerrarlo: la ultima escritura tiene que estar verificada en un export')
+    return 0 if vig.startswith('ACTIVO') else 2
+
+
 if __name__ == '__main__':
     cmd = sys.argv[1] if len(sys.argv) > 1 else 'estado'
+    if cmd == 'colgado':
+        sys.exit(colgado())
     if cmd == 'foto':
         cual = sys.argv[2] if len(sys.argv) > 2 else 'rel'
         h = buscar(cual)

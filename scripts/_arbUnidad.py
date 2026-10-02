@@ -140,6 +140,9 @@ def main(argv):
             print('   %s %s\n' % ('OK  ' if ok else 'FALLO', msg))
             if not ok:
                 malas.append((cod, msg))
+        # Tras el ultimo codigo el Maestro de Insumos quedaba abierto y tapaba lo siguiente
+        # (02/10/2026: `reset` no pudo abrir Relaciones para el export de verificacion).
+        ad.cerrar()
         print('=' * 60)
         print('%d/%d bien' % (len(filas) - len(malas), len(filas)))
         for c, m in malas:

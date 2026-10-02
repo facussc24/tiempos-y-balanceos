@@ -242,6 +242,10 @@ def aceptar(h, forzar_papp=True):
         cerrar()
         return False, 'no llegue a Posee PAPP/PSW (%s) — cerrado sin grabar' % motivo
     papp_hoy = _texto(hpapp).strip()
+    # Un codigo viejo puede traer BASURA en este campo (FIELTRO330, 02/10/2026: 'ýýýýÝÝ...'):
+    # el arb solo acepta S / N / X, con otra cosa deja &Acepta apagado. Basura = vacio.
+    if papp_hoy.upper() not in ('S', 'N', 'X'):
+        papp_hoy = ''
     if papp_hoy != PAPP_VALOR and (forzar_papp or not papp_hoy):
         papp = _reemplazar(h, hpapp, PAPP_VALOR)
         if papp.strip() != PAPP_VALOR:
@@ -251,8 +255,12 @@ def aceptar(h, forzar_papp=True):
     ai.tecla(ai.TECLAS['TAB'], pausa=PAUSA_TECLA)
     boton = ai.foco(h)
     if not boton or ai.cls(boton) != 'Button':
+        # 02/10/2026: "no cai en un boton sino en ''" no decia nada y costo tres aperturas.
+        # Antes de cerrar se lee el cartel o el campo donde quedo el foco (y queda la foto).
+        clase = ai.cls(boton) if boton else 'None'
+        motivo = por_que_no_avanza(h)
         cerrar()
-        return False, 'no cai en un boton sino en %s' % (ai.cls(boton) if boton else 'None')
+        return False, 'no cai en un boton sino en %r (%s) — cerrado sin grabar' % (clase, motivo)
     rot = _texto(boton).replace('&', '').strip().lower()
     if rot != 'acepta' or not u.IsWindowEnabled(boton):
         cerrar()
