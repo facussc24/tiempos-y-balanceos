@@ -10,20 +10,109 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { CASOS, CANON, senales, avisoDe, atender } from '../../scripts/_lib/explicarGuard.mjs';
+import { CASOS, CANON, EXPLICAR, senales, avisoDe, atender, pideEstado, pideExplicar } from '../../scripts/_lib/explicarGuard.mjs';
+import { esAutomatico, sinAvisosAdelante } from '../../scripts/_lib/correccionGuard.mjs';
 
 const RAIZ = process.cwd();
 const HOOK = path.join(RAIZ, '.claude', 'hooks', 'explicar-prompt.sh');
 const correr = (payload, cwd = RAIZ) => spawnSync('bash', [HOOK], { input: typeof payload === 'string' ? payload : JSON.stringify(payload), encoding: 'utf8', cwd });
 const prompt = (t, extra = {}) => ({ hook_event_name: 'UserPromptSubmit', session_id: 's1', prompt: t, ...extra });
-const NE = CANON.no_entendi; const EX = CANON.explicame;
+const NE = CANON.no_entendi; const EX = CANON.explicame; const FA = CANON.facil;
+
+// 02/10/2026 14:16 (61a9a9ac): lo que escribio Fak, lo que le contestaron (una tabla) y su reclamo de las 14:31.
+const INCIDENTE = 'che ene que estaod esta hace que sea faicl de entender esta taare adigmaos le pdoemos apsar las hojas de rpcoeos anico?';
+const RECLAMO = 'ojo te pedi atne sque me lo des facil denentende ry no aplcaiste la mejora que habiamos imepletnado hoyu o ayer';
+// Asi llego: con un aviso de la app adelante, en el mismo mensaje.
+const AVISO_APP = '<system-reminder>\nThe user started your suggested background task task_eee4ad8a ("Agregar guard que frene git commit sin rutas") in a separate local session. It is running independently. You will be notified here when it ends.\n</system-reminder>\n\n';
 
 describe('explicarGuard — los casos del canon', () => {
-  it.each(['no_entendi', 'explicame', 'corto'])('ROJO: los mensajes reales de "%s" marcan esa senal', (k) => {
+  it.each(['no_entendi', 'explicame', 'facil', 'corto'])('ROJO: los mensajes reales de "%s" marcan esa senal', (k) => {
+    expect(CASOS[k].length).toBeGreaterThan(5);
     for (const t of CASOS[k]) expect(senales(t), t.slice(0, 60)).toContain(k);
   });
   it('VERDE: muletillas, pedidos de trabajo y palabras parecidas no marcan nada', () => {
     for (const t of CASOS.verdes) expect(senales(t), t.slice(0, 60)).toEqual([]);
+  });
+  it('ROJO y VERDE: el pedido de ESTADO de una tarea se reconoce con sus tipeos, y "haber estado" o "un mail del estado" no', () => {
+    for (const t of CASOS.estado) expect(pideEstado(t), t.slice(0, 60)).toBe(true);
+    for (const t of CASOS.sin_estado) expect(pideEstado(t), t.slice(0, 60)).toBe(false);
+  });
+});
+
+describe('explicarGuard — el incidente del 02/10/2026', () => {
+  it('ROJO: el mensaje de Fak pedia explicar (no "corto") y pedia el estado de una tarea', () => {
+    expect(senales(INCIDENTE)).toEqual(['facil']);
+    expect(pideExplicar(INCIDENTE)).toBe(true);
+    expect(pideEstado(INCIDENTE)).toBe(true);
+    expect(senales('hace que sea facil de entender esta tarea')).toEqual(['facil']);
+  });
+  it('ROJO: el reclamo de Fak, con "denentende ry", tambien se ve (antes no marcaba nada)', () => {
+    expect(senales(RECLAMO)).toEqual(['facil']);
+  });
+  it('el aviso de ese mensaje manda cargar el skill, dice que va el escalon 3 (una pagina) y con que renglon se pasa si no aplica', () => {
+    const a = avisoDe(INCIDENTE);
+    expect(a).toMatch(/Carga el skill `explicar-mejor` AHORA/);
+    expect(a).toMatch(/ESTADO de una tarea o proyecto: eso es el escalon 3/);
+    expect(a).toMatch(/exports\/explicaciones\//);
+    expect(a).toMatch(/«No aplica explicar-mejor:»/);
+    expect(a.indexOf('escalon 3')).toBeLessThan(a.indexOf('No aplica si'));          // lo que no aplica cierra el aviso
+    expect(avisoDe(RECLAMO)).not.toMatch(/escalon 3/);                                 // sin pedido de estado no se manda una pagina
+  });
+  it('ROJO: un aviso de la app ADELANTE del mensaje no lo tapa (asi llego: ningun hook lo vio)', () => {
+    expect(esAutomatico(AVISO_APP + INCIDENTE)).toBe(false);
+    expect(sinAvisosAdelante(AVISO_APP + AVISO_APP + INCIDENTE)).toBe(INCIDENTE);
+    expect(avisoDe(AVISO_APP + INCIDENTE)).toBe(avisoDe(INCIDENTE));
+    expect(atender(prompt(AVISO_APP + INCIDENTE))).toMatch(/escalon 3/);
+  });
+  it('VERDE: un mensaje que es SOLO avisos, o un aviso seguido de una notificacion de tarea, sigue siendo automatico', () => {
+    expect(esAutomatico(AVISO_APP)).toBe(true);
+    expect(esAutomatico(`${AVISO_APP}<task-notification>el agente dice: no entendi, explicame</task-notification>`)).toBe(true);
+    expect(avisoDe(`${AVISO_APP}<task-notification>el agente dice: no entendi, explicame</task-notification>`)).toBeNull();
+    expect(esAutomatico('<system-reminder>sin cerrar y despues no entiendo nada')).toBe(true);
+    expect(esAutomatico('')).toBe(false);
+    const t0 = Date.now(); esAutomatico('<system-reminder>'.repeat(200000)); expect(Date.now() - t0).toBeLessThan(2000);
+  });
+});
+
+describe('explicarGuard — "facil de entender"', () => {
+  it.each([
+    ['mas faicl d etnende rme das muchas tablas', 'hace el nido mas facil de montar'],
+    ['de una forma sencilla de etnender', 'una forma sencilla de armar el carro'],
+    ['ahcelo faicl de entender asi repsondero', 'hacelo facil de desmontar asi lo limpio'],
+    ['dame un resumen bien simple de entender', 'arma un power point bien simple para carlos'],
+    ['algo asi facil tamiben d eentnder', 'algo asi facil tambien de imprimir'],
+  ])('ROJO "%s" · VERDE "%s"', (rojo, verde) => {
+    expect(senales(rojo)).toEqual(['facil']);
+    expect(senales(verde)).toEqual([]);
+  });
+  it('los espacios corridos de Fak: la f en la palabra de antes, el "de" pegado, la ultima letra en la palabra siguiente', () => {
+    for (const t of ['claro yf aicl dentned er', 'bine simple y faicl dentnender', 're faicl denntender', 'me lo des facil denentende ry', 'es faicl de entende rque se yo'])
+      expect(senales(t), t).toEqual(['facil']);
+  });
+  it('VERDE: "entendes?" detras es muletilla, y "atender" y "dentro" son otras palabras (dependen de ajenas y otras_palabras)', () => {
+    expect(senales('debe ser faicl de leer rapdiod etnendes no es un manual')).toEqual([]);
+    expect(senales('es facil entendes')).toEqual([]);
+    expect(senales('el cliente es facil de atender')).toEqual([]);
+    expect(senales('es una tarea sencicila dentor de todo pero hacelo bien')).toEqual([]);
+    expect(FA.ajenas).toContain('entendes');
+    for (const p of FA.otras_palabras) expect(senales(`es facil de ${p}`), p).toEqual([]);
+  });
+  it('VERDE: lo que se midio y quedo AFUERA — "que se entienda" y "mas simple" los dice de un entregable o de un trabajo', () => {
+    for (const t of [
+      'me ayduscon las de hot melt entendes qiu es eentienda bine cada paso',
+      'quiero que se entienda como es el proceso porque es como que se repetia mucho',
+      'es und iseno mas simple podes que pensas',
+      'hciste un test mas sencicllo que si podias pasar comrpendes',
+      'hay que cerrarlo y reabrirlo mas facil',
+    ]) expect(senales(t), t).toEqual([]);
+    expect(FA._no_entran).toMatch(/que se entienda/);
+  });
+  it('"facil de entender" pide explicar aunque ademas pida corto: gana el aviso de explicar', () => {
+    expect(senales('r epsodne breve y de una fomra bine facil de entender')).toEqual(['facil', 'corto']);
+    expect(avisoDe('r epsodne breve y de una fomra bine facil de entender')).toMatch(/cambia la FORMA/);
+    expect(EXPLICAR).toEqual(['no_entendi', 'explicame', 'facil']);
+    expect(pideExplicar('sintetiza')).toBe(false);
+    expect(pideExplicar('<task-notification>no entendi, explicame</task-notification>')).toBe(false);
   });
 });
 
@@ -134,8 +223,6 @@ describe('explicarGuard — "corto"', () => {
     ['se breve', 'tuve una reunion breve con carlos'],
     ['repsonde rapido y breve si o no', 'el video es breve'],
     ['r epsodne breve por favor', 'la respuesta de carlos llego'],
-    ['mas faicl d etnende rme das muchas tablas', 'hace el nido mas facil de montar'],
-    ['de una forma sencilla de etnender', 'una forma sencilla de armar el carro'],
   ])('ROJO "%s" · VERDE "%s"', (rojo, verde) => {
     expect(senales(rojo)).toEqual(['corto']);
     expect(senales(verde)).toEqual([]);
@@ -209,6 +296,12 @@ describe('explicar-prompt.sh — el hook de verdad (bash -> node)', () => {
     const r = correr(prompt('no entiendo explicame mejor'), os.tmpdir());
     expect(r.status, r.stderr).toBe(0); expect(r.stderr).toBe('');
     expect(JSON.parse(r.stdout).hookSpecificOutput.additionalContext).toMatch(/explicar-mejor/);
+  });
+  it('ROJO: el mensaje del incidente tal como llego (con el aviso de la app adelante) -> el aviso sale, con la pagina', () => {
+    const r = correr(prompt(AVISO_APP + INCIDENTE));
+    expect(r.status, r.stderr).toBe(0); expect(r.stderr).toBe('');
+    const a = JSON.parse(r.stdout).hookSpecificOutput.additionalContext;
+    expect(a).toMatch(/\[EXPLICAR-MEJOR\]/); expect(a).toMatch(/escalon 3/);
   });
   it('VERDE: un pedido comun -> exit 0 y nada en la salida', () => {
     const r = correr(prompt('pasame el archivo de la bom entendes? asi lo reviso'));

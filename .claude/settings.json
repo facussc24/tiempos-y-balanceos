@@ -88,7 +88,7 @@
         ]
       },
       {
-        "_comentario": "02/10/2026: cuando Fak dice que no entendio ('no entiendo', 'noe nteidno') o pide que se lo expliquen ('explicame mejor') recuerda el skill explicar-mejor: no repetir lo mismo mas largo, cambiar la forma (texto corto -> dibujo -> pagina). Si pide corto ('sintetiza', 'mucho texto') recuerda responder en 1 a 4 renglones. 'entendes?' es muletilla y no dispara. Pedido de Fak tras probar la escalera del post de Karpathy: 'aplicarlo permanente para cuando alguien quiere y pide una mejor explicacion o nota que no entiende'. Medido: salta en 166 de 1.592 mensajes suyos. El aviso dice cuando no aplica (un entregable, palabras de un tercero) y que ante un aviso de correccion-guard manda ese. Nunca bloquea. Logica y palabras: scripts/_lib/explicarGuard.mjs + explicarCanon.data.json. Test: explicarGuard.test.mjs.",
+        "_comentario": "02/10/2026: cuando Fak dice que no entendio ('no entiendo', 'noe nteidno') o pide que se lo expliquen ('explicame mejor') recuerda el skill explicar-mejor: no repetir lo mismo mas largo, cambiar la forma (texto corto -> dibujo -> pagina). Si pide corto ('sintetiza', 'mucho texto') recuerda responder en 1 a 4 renglones. 'entendes?' es muletilla y no dispara. Pedido de Fak tras probar la escalera del post de Karpathy: 'aplicarlo permanente para cuando alguien quiere y pide una mejor explicacion o nota que no entiende'. Medido: salta en 166 de 1.592 mensajes suyos. El aviso dice cuando no aplica (un entregable, palabras de un tercero) y que ante un aviso de correccion-guard manda ese. Nunca bloquea. 02/10/2026, a la tarde: 'facil de entender' pasa de 'corto' a senal de explicar, el pedido del ESTADO de una tarea suma el renglon de la pagina (escalon 3), un mensaje que llega con un aviso de la app adelante ya no se toma por automatico, y que el skill se cargo lo exige el cierre del turno (cierre-guard, chequeo 7). Re-medido sobre 2.723 mensajes: aviso de explicar en 167, solo corto en 54. Logica y palabras: scripts/_lib/explicarGuard.mjs + explicarCanon.data.json. Test: explicarGuard.test.mjs.",
         "matcher": "",
         "hooks": [
           {
@@ -135,7 +135,7 @@
     ],
     "Stop": [
       {
-        "_comentario": "10/09/2026 (A1, A3, A4): cierre-guard suma dos chequeos (entregable afuera nunca abierto; cierre largo) y los dos Stop hooks miran solo lo que toco ESTA sesion (transcript_path del payload, subagentes incluidos). Logica en scripts/_lib/cierreGuard.mjs, frases en cierreCanon.data.json.",
+        "_comentario": "10/09/2026 (A1, A3, A4): cierre-guard suma dos chequeos (entregable afuera nunca abierto; cierre largo) y los dos Stop hooks miran solo lo que toco ESTA sesion (transcript_path del payload, subagentes incluidos). Logica en scripts/_lib/cierreGuard.mjs, frases en cierreCanon.data.json. 02/10/2026: chequeo 7 (Fak pidio que se lo explique y el turno no cargo el skill explicar-mejor, ni mostro un dibujo o una pagina; salida: un renglon 'No aplica explicar-mejor: …') y pendiente de mejora sin probar (regla mejora-implementada.md, node scripts/_probarMejora.mjs). Tests: cierreGuardExplicar.test.mjs.",
         "matcher": "",
         "hooks": [
           {

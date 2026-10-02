@@ -46,6 +46,7 @@ const REPO = path.resolve(fileURLToPath(import.meta.url), '..', '..');
 import { CANON as CANON_CIERRE, evaluarBullets } from './_lib/cierreGuard.mjs';
 import { relevarBomLegajo, evaluarBomLegajo } from './_lib/bomLegajoCheck.mjs';
 import { relevarCerebro, lintCerebro, dirMemoriaDe, resumir as resumirCerebro } from './_lib/cerebroLint.mjs';
+import { chequearAvisos } from './_lib/probarMejora.mjs';
 export const LECCIONES_AVISO = CANON_CIERRE.lecciones.aviso_bytes;
 export const LECCIONES_TOPE = CANON_CIERRE.lecciones.tope_bytes;
 
@@ -486,6 +487,7 @@ async function main(argv) {
         { paso: 'Escritorio: cola de tareas y archivo de cerradas', ...(await chequearEscritorio()) },
         { paso: 'Cerebro: wikilinks, indice, rutas citadas y tablas de reglas (_cerebroLint)', ...chequearCerebro() },
         { paso: 'Skills/agents/commands: los carga Claude Code (claude plugin validate)', ...chequearComponentesClaude() },
+        { paso: 'Mejoras del sistema: el aviso que debia llegar, llego (regla mejora-implementada)', ...(await chequearAvisos()) },
         { paso: 'Disco C: con lugar para la proxima sesion', ...chequearDisco() },
         { paso: 'BOM ultimo nivel en el legajo APQP (regla de Fak 22/09/2026)', ...chequearBomLegajo() },
         // Lo que ningun script puede medir — se lista para que no se olvide, no bloquea:

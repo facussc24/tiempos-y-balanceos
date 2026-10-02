@@ -9,14 +9,20 @@
  * El 10/09/2026 (Ola A) suma dos chequeos, salidos de las 29 sesiones del 02 al 10/09: ~42
  * correcciones de Fak por afirmar o entregar sin abrir el resultado, ~17 por informe largo.
  *
- * Seis cosas mide, en este orden, sobre el ULTIMO mensaje del asistente:
+ * Siete cosas mide, en este orden, sobre el ULTIMO mensaje del asistente:
  *   1. la COLA (ultimos 500 caracteres) pide permiso  → exit 2 siempre
  *   2. en este turno escribi/copie algo afuera del repo y el texto no dice la RUTA → exit 2
  *   6. el ultimo parrafo ANUNCIA trabajo ("Sigo con eso.") y no corre nada en segundo plano que el
  *      texto diga esperar → exit 2 (22/09/2026: 19 empujes de Fak medidos, "sigo sigo sigo").
  *      Va antes del 3 porque un anuncio no es un cierre.
+ *   7. el ultimo mensaje de Fak pedia que se lo explique ("no entiendo", "explicame", "faicl de entender":
+ *      explicarGuard) y en el turno no cargue el skill `explicar-mejor`, ni mostre un dibujo o una pagina,
+ *      ni entregue un archivo → exit 2 (02/10/2026: el skill estaba en la lista y conteste una tabla).
+ *      Salida: un renglon "No aplica explicar-mejor: <motivo>". Si ademas bloquea el 1 o el 6, va en ese aviso.
  *   3. el texto DECLARA cierre ("listo", "pusheado") y hay pendientes medibles → exit 2,
- *      una vez cada 20 minutos por sesion (cooldown), para no repetir el mismo texto.
+ *      una vez cada 20 minutos por sesion (cooldown), para no repetir el mismo texto. Entre los
+ *      pendientes, desde el 02/10/2026: una pieza del sistema (hook, skill, regla, guardian) escrita y
+ *      sin probar con un mensaje real de Fak, o un cierre que no dice si las sesiones abiertas la toman.
  *   4. declara cierre y en la sesion escribi un ENTREGABLE afuera del repo (pdf, xlsx, step…)
  *      que no abri despues de su ultima escritura → exit 2, una vez por (archivo, escritura).
  *   5. declara cierre y el mensaje es un INFORME (mas de 3.000 caracteres, 35 lineas o 2 tablas)
@@ -55,6 +61,8 @@ import readline from 'node:readline';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { soloLineasDeComando, separarHeredocs, comandosSimples } from './shellTexto.mjs';
+import { sinAvisosAdelante } from './correccionGuard.mjs';
+import { pideExplicar, pideEstado, CANON as CANON_EXPLICAR } from './explicarGuard.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const REPO = path.resolve(AQUI, '..', '..');
@@ -76,6 +84,10 @@ const SALIDA_ANTES = rx(ENT.salida_antes_re);
 const ESCRIBE = rx(ENT.escribe_re);
 const MIRA = rx(ENT.mira_re);
 const PIDE_DETALLE = rx(CANON.cierre_largo.pide_detalle_re);
+const MEJ_SISTEMA = rx(CANON.mejora.sistema_re);
+const MEJ_WORKTREE = /^\.claude\/worktrees\/[^/]+\//;
+const MEJ_PRUEBA = rx(CANON.mejora.prueba_re);
+const MEJ_SESIONES = rx(CANON.mejora.sesiones_re);
 
 /** Sin markdown, sin acentos, espacios colapsados. Conserva mayusculas y los signos ¿?¡!. */
 export function normalizar(texto) {
@@ -727,22 +739,88 @@ function registrarEntregables(b, st, repo) {
 // Relevadores (leen el mundo). En los tests se inyectan versiones falsas.
 // ---------------------------------------------------------------------------------------
 
+/** Lo que ESCRIBIO Fak: el texto sin los avisos que la app le pega ADELANTE. Hasta el 02/10/2026 un mensaje suyo
+ *  que llegaba detras de un "<system-reminder>The user started your suggested background task…" se tomaba entero
+ *  por un aviso: el turno no arrancaba ahi y el chequeo 2 reclamaba la ruta de algo entregado en el turno ANTERIOR
+ *  (61a9a9ac 02/10 14:19, justo en el turno del incidente de explicar-mejor). */
 function textoDeUsuario(obj) {
   const c = obj.message?.content;
-  if (typeof c === 'string') return c;
-  if (Array.isArray(c)) return c.filter((b) => b.type === 'text').map((b) => b.text || '').join('\n');
+  if (typeof c === 'string') return sinAvisosAdelante(c);
+  if (Array.isArray(c)) return sinAvisosAdelante(c.filter((b) => b.type === 'text').map((b) => b.text || '').join('\n'));
   return '';
 }
 
 // Lo que Claude Code mete como "user" sin que Fak lo haya escrito: avisos de tareas en
-// background, system-reminders, salidas de comandos. No cuentan como mensaje de Fak.
-const ES_SISTEMA = /^\s*(<system-reminder>|\[SYSTEM NOTIFICATION|<task-notification>|<local-command|<command-(name|message)|<user-prompt-submit-hook|<ide_)/;
+// background, system-reminders, salidas de comandos, el resumen de un compactado y lo que manda
+// otra sesion. No cuentan como mensaje de Fak.
+const ES_SISTEMA = /^\s*(<system-reminder>|\[SYSTEM NOTIFICATION|<task-notification>|<local-command|<command-(name|message)|<user-prompt-submit-hook|<ide_|<cross-session-message|This session is being continued from a previous conversation)/;
 
 function esMensajeRealDeUsuario(obj) {
-  if (obj.isMeta) return false;
+  if (obj.isMeta || obj.isCompactSummary) return false;
+  if (obj.origin?.kind && obj.origin.kind !== 'human') return false;       // task-notification y demas: lo dice el transcript
   const t = textoDeUsuario(obj);
   return t.trim().length > 0 && !ES_SISTEMA.test(t);
 }
+
+// ---------------------------------------------------------------------------------------
+// Chequeo 7: Fak pidio que se lo explique y el turno contesto sin cambiar la forma
+// ---------------------------------------------------------------------------------------
+// Las palabras de Fak las reconoce explicarGuard (hook UserPromptSubmit explicar-prompt.sh); aca se mide lo
+// que ese aviso no puede medir: que en el turno se haya CARGADO el skill, o mostrado un dibujo o una pagina.
+// El 02/10/2026 el skill estaba en la lista y se contesto una tabla (Fak: "me respondiste normal como si no
+// recordaras esa conversacion"). Lo que cuenta como cada cosa vive en explicarCanon.data.json (`cierre`).
+
+const CX = CANON_EXPLICAR.cierre;
+const CX_SKILL_ARCHIVO = rx(CX.skill_archivo_re);
+const CX_DIBUJO = rx(CX.dibujo_re);
+const CX_PAGINA_EXT = rx(CX.pagina_ext_re);
+const CX_PAGINA_TOOL = rx(CX.pagina_tools_re);
+const CX_NO_APLICA = rx(CX.no_aplica_re);
+const turnoDeExplicar = () => ({ skill: false, dibujo: false, pagina: false, envio: false });
+
+/** Anota en `t` (el turno en curso) lo que un tool_use deja hecho para el chequeo 7. */
+function registrarExplicar(b, t) {
+  const nombre = b.name || '';
+  const input = b.input || {};
+  if (nombre === 'Skill') {
+    if (String(input.skill || '').split(':').pop() === CX.skill) t.skill = true;
+  } else if (nombre === 'Read') {
+    if (CX_SKILL_ARCHIVO.test(String(input.file_path || ''))) t.skill = true;
+  } else if (CX_DIBUJO.test(nombre)) {
+    t.dibujo = true;
+  } else if (/^(Write|Edit|MultiEdit)$/.test(nombre)) {
+    if (CX_PAGINA_EXT.test(String(input.file_path || ''))) t.pagina = true;
+  } else if (nombre === 'SendUserFile') {
+    const archivos = Array.isArray(input.files) ? input.files.map(String) : [];
+    if (archivos.some((a) => CX_PAGINA_EXT.test(a))) t.pagina = true;
+    else if (archivos.length) t.envio = true;
+  } else if (CX_PAGINA_TOOL.test(nombre)) {
+    if (!input.action || input.action === 'publish') t.pagina = true;
+  }
+}
+
+/**
+ * Chequeo 7. `rel` es lo que devuelve relevarTranscript: el ultimo mensaje de Fak, lo que el turno hizo
+ * (`explicar`) y si entrego algo afuera del repo (`fuera`). No bloquea si el mensaje no pedia explicar, si el
+ * skill se cargo en el turno, si se mostro un dibujo o una pagina, si el turno entrego un archivo (el pedido
+ * era de un entregable: sigue con sus reglas), o si el texto dice que el aviso no aplica.
+ */
+export function evaluarExplicar(texto, rel = {}) {
+  const pedido = String(rel?.ultimoMensajeFak || '');
+  if (!pedido || !pideExplicar(pedido)) return { bloquea: false };
+  const t = rel.explicar || {};
+  if (t.skill) return { bloquea: false, motivo: 'cargo el skill' };
+  if (t.dibujo || t.pagina) return { bloquea: false, motivo: 'mostro un dibujo o una pagina' };
+  if (t.envio || rel.fuera) return { bloquea: false, motivo: 'entrego un archivo: el pedido era de un entregable' };
+  if (CX_NO_APLICA.test(normalizar(texto))) return { bloquea: false, motivo: 'dice que no aplica' };
+  return { bloquea: true, pedido: normalizar(pedido).slice(0, 220), estado: pideEstado(pedido) };
+}
+
+const detalleExplicar = (ex) => `Su mensaje: «${ex.pedido}».\n`
+  + `En este turno no cargaste el skill \`${CX.skill}\` ni mostraste un dibujo o una pagina: verlo en la lista no es usarlo. `
+  + 'Fak, 02/10: "te pedi antes que me lo des facil de entender y no aplicaste la mejora que habiamos implementado... me respondiste normal como si no recordaras esa conversacion".\n'
+  + `Carga el skill ahora, elegi el escalon y rehace la respuesta con esa forma${ex.estado ? ': pide el ESTADO de una tarea o proyecto, que es el escalon 3 (texto corto y UNA pagina en exports/explicaciones/, mostrada con SendUserFile)' : ''}. `
+  + 'Si no aplica (habla de un entregable para otra persona, o las palabras son de un tercero), decilo en un renglon que empiece con "No aplica explicar-mejor:" y el motivo.';
 
 // Ventana de un comando OPACO: desde que se lanzo hasta que volvio su resultado. Lo que quedo sucio con
 // fecha adentro de una ventana lo pudo escribir ese comando (auditoria 01/10/2026: `python scripts/gen.py
@@ -777,12 +855,13 @@ async function pasada(archivo, st, { completa, repo }) {
     if (completa) registrarBackground(st.bg, obj, linea);
     // Lo que Fak escribe MIENTRAS trabajo entra como attachment queued_command (commandMode prompt).
     if (obj.type === 'attachment' && obj.attachment?.type === 'queued_command' && obj.attachment.commandMode === 'prompt') {
-      if (completa) { st.ultimoMensajeFak = String(obj.attachment.prompt || ''); st.ultimoMensajeFakTs = obj.timestamp || ''; }
+      if (completa) { st.ultimoMensajeFak = sinAvisosAdelante(obj.attachment.prompt); st.ultimoMensajeFakTs = obj.timestamp || ''; st.explicar = turnoDeExplicar(); }
       continue;
     }
     if (obj.type === 'user') {
       cerrarVentanas(st, obj);
-      if (completa && esMensajeRealDeUsuario(obj)) { st.ejemplo = null; st.ultimoMensajeFak = textoDeUsuario(obj); st.ultimoMensajeFakTs = obj.timestamp || ''; }
+      if (completa && esMensajeRealDeUsuario(obj)) { st.ejemplo = null; st.ultimoMensajeFak = textoDeUsuario(obj); st.ultimoMensajeFakTs = obj.timestamp || ''; st.explicar = turnoDeExplicar(); }
+      else if (completa && linea.includes('<command-name>') && linea.includes(`/${CX.skill}<`)) st.explicar.skill = true;   // Fak lo cargo a mano
       continue;
     }
     if (obj.type !== 'assistant') continue;
@@ -791,14 +870,17 @@ async function pasada(archivo, st, { completa, repo }) {
     for (const b of bloques) {
       if (b.type !== 'tool_use') continue;
       st.seq++;
+      const orden = Date.parse(obj.timestamp || '') || st.seq;
+      const pieza = (r) => { if (MEJ_SISTEMA.test(r)) { st.sis.archivos.add(r.replace(MEJ_WORKTREE, '')); st.sis.escrito = Math.max(st.sis.escrito, orden); } };
       const rel = rutaRelativaAlRepo(b, repo);
-      if (rel) st.tocados.add(rel);
+      if (rel) { st.tocados.add(rel); pieza(rel); }
       if (/^(Bash|PowerShell)$/.test(b.name || '')) {
         st.huboComando = true;
         // Solo lo que el comando ESCRIBE (30/09/2026): nombrar un archivo en un cat o un grep no lo toca.
         const e = escrituraEnComando(b.input?.command, repo);
-        for (const r of e.escritos) st.tocados.add(r);
+        for (const r of e.escritos) { st.tocados.add(r); pieza(r); }
         if (e.opaco) { st.huboOpaco = true; abrirVentana(st, b, obj); }
+        if (MEJ_PRUEBA.test(String(b.input?.command || ''))) st.sis.probado = Math.max(st.sis.probado, orden);
       } else if (/^(Agent|Task)$/.test(b.name || '')) {
         st.huboComando = true;
         st.huboOpaco = true;                              // un agente puede escribir donde no se ve (y su transcript puede faltar)
@@ -808,6 +890,7 @@ async function pasada(archivo, st, { completa, repo }) {
       const e = evaluarToolUse(b, repo);
       if (e) st.ejemplo = e;
       registrarEntregables(b, st, repo);
+      registrarExplicar(b, st.explicar);
     }
   }
 }
@@ -842,6 +925,7 @@ export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
   const st = {
     ejemplo: null, huboComando: false, huboOpaco: false, inicio: 0, tocados: new Set(), ultimoMensajeFak: '', ultimoMensajeFakTs: '', ent: new Map(), seq: 0,
     bg: nuevoBackground(), ventanas: [], abiertas: new Map(), sinVentana: false,
+    explicar: turnoDeExplicar(), sis: { archivos: new Set(), escrito: 0, probado: 0 },
   };
   await pasada(transcriptPath, st, { completa: true, repo });
   const dirSub = path.join(String(transcriptPath).replace(/\.jsonl$/i, ''), 'subagents');
@@ -868,6 +952,10 @@ export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
     entregables,
     sinMirar: entregables.filter((e) => !e.mirado),
     ultimoMensajeFak: st.ultimoMensajeFak,
+    // chequeo 7: lo que el turno hizo desde el ultimo mensaje de Fak (skill cargado, dibujo, pagina, archivo enviado)
+    explicar: st.explicar,
+    // pendiente de "mejora sin probar": piezas del sistema que la sesion escribio y si las probo despues
+    sistema: { archivos: [...st.sis.archivos], probada: st.sis.probado > 0 && st.sis.probado >= st.sis.escrito },
     // chequeo 6: lo que sigue corriendo; delTurno = lanzado despues del ultimo mensaje de Fak
     bg: {
       total: lista.length,
@@ -954,6 +1042,29 @@ export function relevarPendientes(tocados = null, { desde = null, ventanas = nul
   return out;
 }
 
+/**
+ * Pendientes de una MEJORA del sistema (regla `mejora-implementada.md`, 02/10/2026). `sistema` sale de
+ * relevarTranscript: las piezas que esta sesion escribio (hooks, skills, reglas, guardianes y sus canones,
+ * settings.json, CLAUDE.md) y si despues de la ultima escritura corrio `_probarMejora.mjs --mensaje`.
+ *   - sin esa prueba, el cierre no puede decir que la mejora esta implementada;
+ *   - con piezas tocadas, el cierre le dice a Fak si las sesiones abiertas la toman solas o hay que reabrirlas.
+ * Fak, 02/10: "pensa como evitar que cuando te digo que implementes algo realmente lo implementes".
+ */
+export function pendientesDeMejora(texto, sistema) {
+  const archivos = sistema?.archivos || [];
+  if (!archivos.length) return [];
+  const out = [];
+  const lista = `${archivos.slice(0, 3).join(', ')}${archivos.length > 3 ? ', …' : ''}`;
+  if (!sistema.probada) {
+    out.push(`tocaste ${archivos.length} pieza(s) del sistema (${lista}) y no las probaste despues del ultimo cambio con un mensaje REAL de Fak: `
+      + 'node scripts/_probarMejora.mjs --mensaje "<el mensaje, textual>" — regla mejora-implementada.md: sin esa prueba la mejora no esta implementada');
+  }
+  if (!MEJ_SESIONES.test(normalizar(texto))) {
+    out.push('el cierre no le dice a Fak si las sesiones abiertas toman el cambio solas o hay que reabrirlas (lo contesta _probarMejora.mjs, renglon "Sesiones abiertas")');
+  }
+  return out;
+}
+
 // Marcas por sesion en el TEMP: `claude-cierre-recordado.<sid>` (chequeo 3), `.largo` (chequeo 5)
 // y `.entregables` (chequeo 4: una linea por `<archivo>@<escritura>` ya reclamado).
 const archivoMarca = (sid, clave = '') => path.join(
@@ -1001,10 +1112,16 @@ export async function decidir(payload = {}, deps = {}) {
   const texto = String(payload.last_assistant_message ?? '');
   if (!texto.trim()) return { ok: true, motivo: 'sin texto' };
 
+  // El transcript se lee una vez, antes de todo: el chequeo 7 necesita el ultimo mensaje de Fak, y un turno se
+  // frena UNA sola vez (stop_hook_active), asi que si otro chequeo bloquea, el de explicar va en el mismo aviso.
+  const fuera = await d.fueraEnEsteTurno(payload.transcript_path);
+  const ex = evaluarExplicar(texto, fuera);
+  const conExplicar = (r) => (ex.bloquea ? { ...r, detalle: `${r.detalle}\nADEMAS, Fak pidio que se lo expliques y contestaste sin cambiar la forma. ${detalleExplicar(ex)}` } : r);
+
   // 1. La cola pide permiso para mi propio trabajo.
   const p = evaluarPermiso(texto);
   if (p.bloquea) {
-    return {
+    return conExplicar({
       ok: false,
       titulo: 'CIERRE-GUARD: el turno termina pidiendo permiso para hacer tu propio trabajo',
       detalle: `La cola del mensaje dice "${p.frase}". Patron nacido del incidente: ${p.fuente}.\n`
@@ -1012,11 +1129,10 @@ export async function decidir(payload = {}, deps = {}) {
         + 'Si lo que falta es un OK que el contrato de autonomia exige (escribir en Supabase, un listado maestro, emitir en el SGC '
         + 'o el legajo, la primera vez de algo, mandar un mail, cerrar el arb) o un dato que SOLO Fak tiene, pedilo con '
         + 'AskUserQuestion y un renglon "Lo que ya tengo:".',
-    };
+    });
   }
 
   // 2. Entregue afuera del repo y no digo donde.
-  const fuera = await d.fueraEnEsteTurno(payload.transcript_path);
   if (fuera?.fuera && !tieneRuta(texto)) {
     return {
       ok: false,
@@ -1029,13 +1145,22 @@ export async function decidir(payload = {}, deps = {}) {
   // 6. Termina anunciando trabajo ("Sigo con eso.") y no corre nada que lo espere.
   const an = evaluarAnuncio(texto, fuera?.bg);
   if (an.bloquea) {
-    return {
+    return conExplicar({
       ok: false,
       titulo: 'CIERRE-GUARD: el turno termina anunciando trabajo que no hiciste',
       detalle: `El ultimo parrafo dice "${an.frase}" y ${an.motivo}: si el turno termina aca, nadie lo hace. `
         + 'Fak, 21/09: "porque decis sigo sigo sigo dale segui y listo no lo digas" (19 veces tuvo que empujar un anuncio asi entre el 03/08 y el 22/09).\n'
         + 'Si decis que seguis, segui: hacelo ahora, en este mismo turno, y reporta el resultado. Si de verdad estas esperando algo '
         + '(un agente, el CI, un dato o un OK de Fak), escribilo asi: "Espero X" o "¿…?", sin anunciar trabajo.',
+    });
+  }
+
+  // 7. Fak pidio que se lo explique (o que sea facil de entender) y el turno contesto sin cambiar la forma.
+  if (ex.bloquea) {
+    return {
+      ok: false,
+      titulo: 'CIERRE-GUARD: Fak pidio que se lo expliques y contestaste sin cambiar la forma',
+      detalle: detalleExplicar(ex),
     };
   }
 
@@ -1044,7 +1169,10 @@ export async function decidir(payload = {}, deps = {}) {
 
   // 3. Cierre declarado con pendientes medibles (1x/20 min).
   if (!d.enCooldown(sid)) {
-    const pend = d.pendientes(fuera?.tocados ?? null, { desde: fuera?.inicio, ventanas: fuera?.ventanas }) || [];
+    const pend = [
+      ...(d.pendientes(fuera?.tocados ?? null, { desde: fuera?.inicio, ventanas: fuera?.ventanas }) || []),
+      ...pendientesDeMejora(texto, fuera?.sistema),
+    ];
     if (pend.length) {
       d.marcar(sid);
       return {

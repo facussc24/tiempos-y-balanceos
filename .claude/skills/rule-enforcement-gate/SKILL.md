@@ -69,6 +69,20 @@ Preguntarme: los mismos checks deberian ir tambien al validator gate?
 - Si la respuesta es "si" → integrar ANTES de cerrar (capa 1 o 2).
 - Si la respuesta es "no" (es un audit puntual de exploracion) → documentar **por que** no es gate.
 
+## La regla o el hook nuevo se prueba con un mensaje REAL de Fak
+
+Desde el 02/10/2026 (regla `mejora-implementada.md`): el test unitario con frases mias no alcanza.
+El hook `explicar-prompt` tenia 41 tests en verde y el primer mensaje real que lo necesitaba no
+recibio nada: su frase caia en otra señal y el mensaje llego con un aviso de la app adelante.
+
+```bash
+node scripts/_probarMejora.mjs --mensaje "<mensaje de Fak, textual>" --espera "<lo que tiene que llegar>"
+node scripts/_probarMejora.mjs --llego      # despues: lo que debia recibir el aviso y lo que lo recibio
+```
+
+El cierre-guard frena el cierre de una sesion que toco un hook, un skill o una regla y no corrio la
+primera; y el cierre le dice a Fak si las sesiones abiertas toman el cambio solas o hay que reabrirlas.
+
 ## Que NO es enforcement
 
 - Comentario en CLAUDE.md o MEMORY.md describiendo la regla

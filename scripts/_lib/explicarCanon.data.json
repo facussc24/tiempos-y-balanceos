@@ -1,6 +1,6 @@
 {
   "_que_es": "Como escribe Fak cuando NO ENTENDIO lo que le explique, cuando pide que se lo explique, y cuando pide corto. Lo lee scripts/_lib/explicarGuard.mjs (hook UserPromptSubmit explicar-prompt.sh), que le recuerda a Claude el skill explicar-mejor. Se calibra contra sus mensajes reales: node scripts/_lib/explicarGuard.mjs --medir <mensajes.jsonl> --muestra. No se agrega una palabra sin volver a medir.",
-  "_fuente": "Fak, 02/10/2026, despues de probar la forma nueva de explicar (post de Karpathy del 01/10): 'aplicarlo permanente para cuando alguien quiere y pide una mejor explicacion o nota que no entiende'. Calibrado ese dia contra sus mensajes reales y corregido con la auditoria del mismo dia (11 mensajes reales que no marcaban, avisos de mas por palabras parecidas).",
+  "_fuente": "Fak, 02/10/2026, despues de probar la forma nueva de explicar (post de Karpathy del 01/10): 'aplicarlo permanente para cuando alguien quiere y pide una mejor explicacion o nota que no entiende'. Calibrado ese dia contra sus mensajes reales y corregido con la auditoria del mismo dia (11 mensajes reales que no marcaban, avisos de mas por palabras parecidas). Esa misma tarde Fak pidio el estado de una tarea 'faicl de entender' y recibio una tabla: 'facil de entender' pasa de `corto` a senal de explicar (`facil`), el pedido de estado suma el renglon de la pagina (`estado`, `aviso_estado`) y el cierre del turno exige el skill (`cierre`).",
   "no_entendi": {
     "_nota": "Primera persona, con errores de tipeo. Una palabra cuenta si esta a `tope` letras o menos de una forma CONJUGADA o de un INFINITIVO, mas cerca que de cualquier forma AJENA ('entendes?' y 'entendiste?' son muletilla o van para Claude) y no mas cerca de OTRA palabra comun ('teniendo', 'comprado'; escritas exactas se descartan, y un tipeo real como 'etneindo', que empata con 'teniendo', se queda). La conjugada pide una negacion en las palabras de antes; el infinitivo pide 'sin' pegado o un auxiliar en el medio ('no termino de entender'), porque 'no hace falta entender' no es no entender. Una negacion seguida de coma o punto no niega ('no, ahora si entiendo'), y 'si' o 'ya' en el medio la cortan. El participio pide la negacion PEGADA ('no entenido' es de Fak; 'no lo has entendido' va para Claude y 'no es verdad, entendido?' es muletilla).",
     "conjugadas": ["entiendo", "entendi", "comprendo", "comprendi"],
@@ -29,8 +29,28 @@
     "como_no": ["mejora", "mejoras", "mejorar", "clara"],
     "tope": 2
   },
+  "facil": {
+    "_nota": "Fak pide que sea FACIL DE ENTENDER: es un pedido de explicar mejor, no de responder corto (hasta el 02/10/2026 a la tarde caia en `corto`). Cuenta facil / simple / sencillo y, en las `despues` palabras siguientes, 'entender' con sus tipeos: tambien pegado al 'de' ('denentende ry', 'dentnender', 'denntender') o partido ('entende r', 'dentned er'). 'entendes?' al final es muletilla ('facil de leer rapido, entendes?') y 'atender' es otra palabra: no cuentan.",
+    "_medicion_02_10": "Sobre 2.723 mensajes de Fak (263 sesiones, 03/08 al 02/10/2026): 'facil ... entender' aparece en 30; en 20 Fak lo pide para si mismo y en 10 habla de un entregable (un mail, un pdf, una hoja, un video, un power point): por eso el aviso dice con que renglon se pasa cuando no aplica. El aviso de explicar pasa de 143 a 167 mensajes (24 que antes recibian el de responder corto); 3 de los 167 piden ademas el estado de una tarea.",
+    "_no_entran": "Medidas el mismo dia y dejadas afuera porque en sus mensajes reales nunca fueron un pedido de explicar: 'que se entienda' (3 usos, los 3 de un entregable: las hojas de hot melt, un video, unas imagenes); 'mas / bien / muy' + facil, simple o sencillo sin 'entender' (16 usos: un diseno mas simple, un test mas sencillo, un power point bien simple, 'cerrarlo y reabrirlo mas facil'; el unico que pedia una explicacion, 'explcia bien faicl', ya entra por `explicame`); 'de forma sencilla' sin 'entender' (1 para una respuesta, 1 de un trabajo, y pisa el verde 'una forma sencilla de armar el carro'); 'hacelo facil' solo aparece como 'ahcelo faicl de entender', que ya entra. Si alguna aparece como pedido real, se agrega aca con ese mensaje y se vuelve a medir.",
+    "facil": ["facil", "sencilla", "sencillo", "simple"],
+    "entender": ["entender", "entende", "entenderlo", "comprender"],
+    "ajenas": ["entendes", "entiendes", "entendiste", "entiendo", "entendi", "entiende", "entienden", "comprendes", "comprendo"],
+    "otras_palabras": ["atender", "extender", "encender", "defender", "depender", "emprender", "entrenar", "dentro"],
+    "pegado": ["de", "d"],
+    "despues": 4,
+    "tope": 2
+  },
+  "estado": {
+    "_nota": "Fak pide el ESTADO de una tarea o proyecto. Solo cambia el aviso de explicar: suma el renglon del escalon 3 del skill (texto corto y UNA pagina). 'estado' con sus tipeos reales ('estaod', 'stado', 'estsado') cuenta si la palabra de antes es un 'que' ('en que estado esta', 'enq ue estado', 'en euq estaod') o si en las dos siguientes viene 'actual' ('el estado actual', 'estaod actatual', 'ele stado catula'). 'un mail del estado ppap', 'haber estado en ingles' y 'estando' no.",
+    "palabra": ["estado"],
+    "otras_palabras": ["estando", "estador", "estadio"],
+    "que_antes": ["que", "ue", "euq"],
+    "despues": ["actual", "actualmente"],
+    "despues_ventana": 2
+  },
   "corto": {
-    "_nota": "Fak pide corto o dice que es mucho texto. 'sintetiza' lo tipea de muchas formas: va por molde de letras, con la z obligatoria ('sintetico' es un material). 'breve' cuenta con 'responde' cerca o con se/mas/muy/bien pegado ('reunion breve' no). 'facil de entender' cuenta con 'entender' en las palabras siguientes ('facil de montar' no).",
+    "_nota": "Fak pide corto o dice que es mucho texto. 'sintetiza' lo tipea de muchas formas: va por molde de letras, con la z obligatoria ('sintetico' es un material). 'breve' cuenta con 'responde' cerca o con se/mas/muy/bien pegado ('reunion breve' no). 'facil de entender' ya no esta aca: es la senal `facil`.",
     "regex": [
       "\\b(mucho|tanto|demasiado) texto\\b",
       "\\bno (lo |te )?v(?!as\\b|a\\b|an\\b|amos\\b)[a-z]{1,3} (a a?l+eer|al+eer)\\b",
@@ -43,19 +63,28 @@
     "sintetiza_largo": [8, 14],
     "breve_antes": ["se", "mas", "muy", "bien", "decime", "respuesta"],
     "responde": ["responde", "respondeme", "responder", "responderme", "contestame"],
-    "responde_antes": 4,
-    "facil": ["facil", "sencilla", "sencillo", "simple"],
-    "facil_de": ["entender", "entende", "entenderlo"],
-    "facil_despues": 4
+    "responde_antes": 4
   },
   "aviso_explicar": [
-    "[EXPLICAR-MEJOR] Fak no entendio, o pide que se lo expliques. No repitas lo mismo mas largo: cambia la FORMA.",
-    "1. Carga el skill `explicar-mejor` y seguilo.",
+    "[EXPLICAR-MEJOR] Fak no entendio, o pide que se lo expliques o que sea facil de entender. No repitas lo mismo mas largo: cambia la FORMA.",
+    "1. Carga el skill `explicar-mejor` AHORA, antes de contestar, y seguilo. Verlo en la lista no es usarlo: si el turno termina sin haberlo cargado (o sin un dibujo o una pagina), el cierre-guard lo frena.",
     "2. Primero la respuesta, en 1 a 4 renglones, con sus palabras y sin codigos: que deberia pasar, que pasa, que falta saber.",
     "3. Si hay partes que se relacionan (un proceso, una comparacion, un antes y despues) va UN dibujo en el chat. Si son muchas partes, una pagina. Las dos cosas juntas, no.",
     "4. Si pregunta que es algo o por que lo hiciste: se le explica y se PARA. Lo que harias despues se ofrece en un renglon, no se ejecuta.",
-    "No aplica si habla de un entregable para otra persona (una hoja, un mail, un PowerPoint: siguen con sus reglas) o si las palabras son de un tercero. Si en este mensaje tambien hay un aviso [CORRECCION-GUARD], manda ese: esto es solo como redactar la respuesta."
+    "No aplica si habla de un entregable para otra persona (una hoja, un mail, un PowerPoint: siguen con sus reglas) o si las palabras son de un tercero: en ese caso la respuesta lleva un renglon que empieza con «No aplica explicar-mejor:» y el motivo, y el pedido se hace igual. Si en este mensaje tambien hay un aviso [CORRECCION-GUARD], manda ese: esto es solo como redactar la respuesta."
   ],
+  "aviso_estado": [
+    "5. Fak pide el ESTADO de una tarea o proyecto: eso es el escalon 3 del skill. Texto corto y UNA pagina (un .html en exports/explicaciones/, que abra sin conexion), mostrada con SendUserFile display render. Una tabla o una lista en el chat no es la pagina."
+  ],
+  "cierre": {
+    "_que_es": "Chequeo 7 del cierre-guard (hook Stop, scripts/_lib/cierreGuard.mjs), 02/10/2026. Si el ultimo mensaje de Fak pedia explicar (senales no_entendi, explicame o facil) y en el turno no se cargo el skill explicar-mejor, ni se mostro un dibujo o una pagina, ni se entrego un archivo, el turno no termina. Fak: 'te pedi antes que me lo des facil de entender y no aplicaste la mejora que habiamos implementado... me respondiste normal como si no recordaras esa conversacion'. La salida cuando el aviso no aplica es decirlo: un renglon que matchee no_aplica_re.",
+    "skill": "explicar-mejor",
+    "skill_archivo_re": "skills[\\\\/]explicar-mejor[\\\\/]SKILL\\.md$",
+    "dibujo_re": "show_widget$",
+    "pagina_ext_re": "\\.html?$",
+    "pagina_tools_re": "^Artifact$",
+    "no_aplica_re": "no aplica[^.\\n]{0,30}explicar[- ]mejor|explicar[- ]mejor[^.\\n]{0,30}no aplica"
+  },
   "aviso_corto": [
     "[EXPLICAR-MEJOR] Fak pide corto. La respuesta entera en 1 a 4 renglones: primero lo que pregunto, despues lo que falta, y una sola pregunta si hace falta. Sin tablas, sin codigos, con sus palabras (skill `explicar-mejor`, escalon 1).",
     "No aplica si lo que pide acortar o resumir es un entregable o material de trabajo (una hoja, un mail, los mails del dia): eso sigue con sus reglas. Si en este mensaje tambien hay un aviso [CORRECCION-GUARD], manda ese."

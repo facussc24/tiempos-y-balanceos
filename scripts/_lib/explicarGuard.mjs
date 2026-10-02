@@ -7,12 +7,21 @@
  * 01/10 se probo la escalera del post de Karpathy (texto simple -> dibujo -> pagina -> video) y Fak pidio dejarla
  * fija para cuando alguien pide una explicacion mejor o no entiende.
  *
- * Tres senales, con las palabras y los errores de tipeo de Fak (explicarCanon.data.json):
+ * Cuatro senales, con las palabras y los errores de tipeo de Fak (explicarCanon.data.json):
  *   no_entendi  "no entiendo", "no te entendi un carajo", "noe nteidno", "sigo sin entender"  -> aviso de explicar
  *   explicame   "explicame mejor", "me lo explicas", "explica bien facil"                     -> aviso de explicar
+ *   facil       "faicl de entender", "facil denentende ry", "forma sencilla de entender"      -> aviso de explicar
  *   corto       "sintetiza", "mucho texto", "no voy a leer todo eso", "responde breve"        -> aviso de responder corto
+ * Si ademas pide el ESTADO de una tarea o proyecto ("en que estaod esta", "el estado actual"), el aviso de explicar
+ * dice que va el escalon 3 del skill: texto corto y una pagina.
  * "entendes?" y "entendiste?" son muletilla: no marcan. Lo que el hook no puede saber es de QUIEN son las palabras
- * ("carlos me dijo: no entiendo") ni si habla de un entregable: por eso el aviso dice cuando no aplica.
+ * ("carlos me dijo: no entiendo") ni si habla de un entregable: por eso el aviso dice cuando no aplica y con que
+ * renglon se pasa.
+ *
+ * 02/10/2026, a la tarde: "hace que sea faicl de entender esta taare" pedia el estado de una tarea y caia en `corto`;
+ * la respuesta fue una tabla y una lista (Fak: "no aplicaste la mejora que habiamos implementado"). Ademas ese mensaje
+ * llego con un aviso de la app adelante y ningun hook lo vio (correccionGuard.sinAvisosAdelante). "facil de entender"
+ * pasa a ser senal de explicar, y que el skill se cargo lo mide el cierre del turno (cierreGuard, chequeo 7).
  *
  *   node scripts/_lib/explicarGuard.mjs --hook                       # stdin: JSON de UserPromptSubmit
  *   node scripts/_lib/explicarGuard.mjs --medir <jsonl> [--muestra] [--solo <senal>]   # filas {ses,t}
@@ -28,6 +37,11 @@ export const CANON = JSON.parse(fs.readFileSync(path.join(AQUI, 'explicarCanon.d
 const NE = CANON.no_entendi;
 const EX = CANON.explicame;
 const CO = CANON.corto;
+const FA = CANON.facil;
+const ES = CANON.estado;
+/** Las senales que piden CAMBIAR LA FORMA (cargar el skill); `corto` solo pide responder en pocos renglones. */
+export const EXPLICAR = ['no_entendi', 'explicame', 'facil'];
+const TODAS = [...EXPLICAR, 'corto'];
 const re = (s) => new RegExp(s, 'i');
 const NE_REGEX = NE.regex.map(re);
 const NEG_PEGADA = new RegExp(NE.negacion_pegada);
@@ -105,32 +119,83 @@ function corto(w, i) {
       if ([w[j], pegada].some((x) => x.length >= 6 && menor(x, CO.responde, 2) <= 2)) return true;
     }
   }
-  const facil = CO.facil.some((f) => (f.length <= 6 ? p.length <= f.length + 2 && distancia(p.slice(0, f.length), f, 1) <= 1 : distancia(p, f, 2) <= 2));
-  if (facil && w.slice(i + 1, i + 1 + CO.facil_despues).some((x) => x.length >= 6 && menor(x, CO.facil_de, 2) <= 2)) return true;   // "facil de entender"
   return false;
 }
 
-/** Senales de un mensaje de Fak: subconjunto de ['no_entendi', 'explicame', 'corto']. */
-export function senales(texto) {
+/** "entender" y sus tipeos, sin las formas que van para Claude ("entendes?") ni otra palabra comun ("atender"). */
+const esEntender = (x, tope = FA.tope) => x.length >= 6 && cerca(x, FA.entender, FA.ajenas, FA.otras_palabras, tope) !== null;
+const esFacil = (p) => FA.facil.some((f) => (f.length <= 6 ? p.length <= f.length + 2 && distancia(p.slice(0, f.length), f, 1) <= 1 : distancia(p, f, 2) <= 2));
+
+/**
+ * "facil de entender": facil / simple / sencillo y, en las palabras que siguen, "entender". Fak corre los espacios al
+ * tipear: la f puede quedar en la palabra de antes ("yf aicl"), el "de" pegado ("denentende", "dentnender") y la
+ * ultima letra en la palabra siguiente ("entende r", "dentned er"). A una forma ARMADA asi se le admite un solo
+ * error ("sencilla dentro de todo" no es "de entender"). "facil de montar" y "facil de leer rapido, entendes?" no.
+ */
+function facil(w, i) {
+  const p = w[i];
+  if (!esFacil(p) && !(i > 0 && p.length >= 4 && esFacil(w[i - 1].slice(-1) + p))) return false;
+  for (let j = i + 1; j <= i + FA.despues && j < w.length; j++) {
+    const x = w[j];
+    if (FA.otras_palabras.includes(x)) continue;                                          // "facil de atender"
+    if (esEntender(x)) return true;
+    const armadas = w[j + 1] && w[j + 1].length <= 2 ? [x + w[j + 1]] : [];
+    for (const f of [x, ...armadas]) for (const de of FA.pegado) if (f.startsWith(de) && f.length >= de.length + 6) armadas.push(f.slice(de.length));
+    if (armadas.some((f) => esEntender(f, 1))) return true;
+  }
+  return false;
+}
+
+/** ¿Pide el ESTADO de una tarea o proyecto? "en que estaod esta", "enq ue estado esta", "el estado actual de". */
+function estado(w, i) {
+  const p = w[i];
+  if (p.length < 5 || p.length > 7 || cerca(p, ES.palabra, [], ES.otras_palabras, 1) === null) return false;
+  if (ES.que_antes.includes(w[i - 1])) return true;
+  return w.slice(i + 1, i + 1 + ES.despues_ventana).some((x) => x.length >= 6 && menor(x, ES.despues, 2) <= 2);
+}
+
+function palabras(texto) {
   const t = normalizar(texto);
   const crudas = t.split(' ').filter((x) => limpia(x));
-  const w = crudas.map(limpia);
+  return { t, crudas, w: crudas.map(limpia) };
+}
+
+/** Senales de un mensaje de Fak: subconjunto de ['no_entendi', 'explicame', 'facil', 'corto']. */
+export function senales(texto) {
+  const { t, crudas, w } = palabras(texto);
   const out = new Set();
   for (let i = 0; i < w.length; i++) {
     if (noEntendi(w, crudas, i)) out.add('no_entendi');
     if (explicame(w, i)) out.add('explicame');
+    if (facil(w, i)) out.add('facil');
     if (corto(w, i)) out.add('corto');
   }
   if (NE_REGEX.some((r) => r.test(t))) out.add('no_entendi');
   if (CORTO.some((r) => r.test(t))) out.add('corto');
-  return ['no_entendi', 'explicame', 'corto'].filter((k) => out.has(k));
+  return TODAS.filter((k) => out.has(k));
+}
+
+/** ¿El mensaje pide el estado de una tarea o proyecto? Solo cambia el aviso de explicar (escalon 3: una pagina). */
+export function pideEstado(texto) {
+  const { w } = palabras(texto);
+  return w.some((_, i) => estado(w, i));
+}
+
+/** ¿El mensaje de Fak pide cambiar la forma de explicar? Lo usan este hook y el chequeo 7 del cierre-guard. */
+export function pideExplicar(texto) {
+  if (esAutomatico(texto)) return false;
+  const s = senales(texto);
+  return EXPLICAR.some((k) => s.includes(k));
 }
 
 /** El texto a inyectar para un mensaje, o null. Si no entendio Y pide corto, gana el de explicar. */
 export function avisoDe(texto) {
   if (esAutomatico(texto)) return null;
   const s = senales(texto);
-  if (s.includes('no_entendi') || s.includes('explicame')) return CANON.aviso_explicar.join('\n');
+  if (EXPLICAR.some((k) => s.includes(k))) {
+    const a = CANON.aviso_explicar;                      // el ultimo renglon dice cuando NO aplica: el del estado va antes
+    return [...a.slice(0, -1), ...(pideEstado(texto) ? CANON.aviso_estado : []), a.at(-1)].join('\n');
+  }
   if (s.includes('corto')) return CANON.aviso_corto.join('\n');
   return null;
 }
@@ -153,18 +218,22 @@ function hook() {
 
 function medir(ruta) {
   const filas = fs.readFileSync(ruta, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
-  const cuenta = { no_entendi: 0, explicame: 0, corto: 0, avisos: 0 }; const ses = new Set(); const todas = new Set(); const muestras = [];
-  const sesiones = { no_entendi: new Set(), explicame: new Set(), corto: new Set() };
+  const cuenta = { no_entendi: 0, explicame: 0, facil: 0, corto: 0, explicar: 0, estado: 0, avisos: 0 }; const ses = new Set(); const todas = new Set(); const muestras = [];
+  const sesiones = { no_entendi: new Set(), explicame: new Set(), facil: new Set(), corto: new Set() };
   const solo = process.argv.includes('--solo') ? process.argv[process.argv.indexOf('--solo') + 1] : null;
   for (const f of filas) {
     todas.add(f.ses);
     if (esAutomatico(f.t)) continue;
     const s = senales(f.t); if (!s.length) continue;
     cuenta.avisos += 1; ses.add(f.ses); for (const k of s) { cuenta[k] += 1; sesiones[k].add(f.ses); }
-    if (!solo || s.includes(solo)) muestras.push(`  [${f.ses}] ${s.join('+')} | ${normalizar(f.t).slice(0, 150)}`);
+    const explica = EXPLICAR.some((k) => s.includes(k)); const est = explica && pideEstado(f.t);
+    if (explica) cuenta.explicar += 1;
+    if (est) cuenta.estado += 1;
+    if (!solo || s.includes(solo) || (solo === 'estado' && est)) muestras.push(`  [${f.ses}] ${s.join('+')}${est ? '+ESTADO' : ''} | ${normalizar(f.t).slice(0, 150)}`);
   }
   console.log(`${filas.length} mensajes en ${todas.size} sesiones`);
-  console.log(`saltaria en ${cuenta.avisos} mensajes de ${ses.size} sesiones · no_entendi ${cuenta.no_entendi} (${sesiones.no_entendi.size} ses.) · explicame ${cuenta.explicame} (${sesiones.explicame.size} ses.) · corto ${cuenta.corto} (${sesiones.corto.size} ses.)`);
+  console.log(`saltaria en ${cuenta.avisos} mensajes de ${ses.size} sesiones · no_entendi ${cuenta.no_entendi} (${sesiones.no_entendi.size} ses.) · explicame ${cuenta.explicame} (${sesiones.explicame.size} ses.) · facil ${cuenta.facil} (${sesiones.facil.size} ses.) · corto ${cuenta.corto} (${sesiones.corto.size} ses.)`);
+  console.log(`aviso de explicar (el que el cierre del turno exige cumplir): ${cuenta.explicar} · de esos, piden el estado de una tarea (pagina): ${cuenta.estado} · solo aviso corto: ${cuenta.avisos - cuenta.explicar}`);
   if (process.argv.includes('--muestra')) muestras.forEach((m) => console.log(m));
 }
 
@@ -200,6 +269,35 @@ export const CASOS = {
     'el cc no se reemplaza por tld d o nada que ver explciame eso',
     'me podes explicar que paso',
   ],
+  // El primero es el mensaje del incidente del 02/10/2026 y el segundo, el reclamo de Fak 15 minutos despues.
+  facil: [
+    'che ene que estaod esta hace que sea faicl de entender esta taare adigmaos le pdoemos apsar las hojas de rpcoeos anico?',
+    'ojo te pedi atne sque me lo des facil denentende ry no aplcaiste la mejora que habiamos imepletnado',
+    'dame la info mas facil d etnende rme das muchas talba s',
+    'luego sintetizame el estado actual de forma sencilla de entender ya sabes',
+    'pok sinsteitzma que hicicmos asi entiendo que paso osea como un resumen muy faicl de entender',
+    'si tenes alguna duda blqoeuante por favor y ahcelo faicl de entender asi repsondero',
+    'mostrame fotos ais entiendo como funciona ais me convoences bine faicl de entenderok',
+    'ya deberias asber como bine simple y faicl dentnender',
+    'claro yf aicl dentned er simple breve',
+    'no s eentnedes algo asi facil tamiben d eentnder',
+    'sinstnieiz auqe queda pendeintie osea de una fomra facil de explcair de entender digamos',
+  ],
+  estado: [
+    'che ene que estaod esta hace que sea faicl de entender esta taare',
+    'no s euq en euq estaod est ala parte d ehormlet',
+    'comoque trabajo temrinado enq ue estado esta acutalmente los disenos digmaos',
+    'luego sintetizame el estado actual de forma sencilla de entender',
+    'dame un reprote deimce ele stado catula de est atarea digamos',
+    'fijat ele estaod actatual de las tareas',
+  ],
+  sin_estado: [
+    's eusa para traslados hasta estaod sundiso o tralsados grandes entendes',
+    'nunca tuvieron que haber estado en ingles entendes esas trampitas',
+    'lo sabes deci que el estado es el del que forma',
+    'la autorizacion estaba fechada estando a con dominio de mail',
+    'que mande un mail del estado ppap',
+  ],
   corto: [
     'loco no voy a leer todo eso que mandaste que carajo?... osea pdoes sintteitzar que reomceondas',
     'hmm no vpu a aleer todo eso me da paja',
@@ -211,7 +309,6 @@ export const CASOS = {
     'repsodnerme breve ais avanzo',
     'repsonde rapido y breve si o no',
     'r epsodne breve y de una fomra bine facil de entender',
-    'dame la info mas facil d etnende rme das muchas talba s',
   ],
   verdes: [
     'pasame el archivo de la bom entendes? asi lo reviso',
@@ -263,18 +360,34 @@ export const CASOS = {
     'hace el nido mas facil de montar',
     'con el tope queda bien facil de contar las piezas',
     'el vinilo sintetico no llego',
+    // --- 02/10/2026, reales: "facil / simple" y "que se entienda" dichos de un trabajo o de un entregable
+    'la isntrucciond e rpceoso soe adebe ser faicl de leer rapdiod etnendes no es un manual',
+    'buenoe cneistoq uevos me ayduscon las de hot melt entendes qiu es eentienda bine cada paso',
+    'y para tambien quiero que se entienda como es el proceso porque es como que se repetia mucho',
+    'quitarles el ogog gemini porque ecnisot que se entiendan cunado las subo',
+    'a ver si fucniona comrpendes es und iseno mas simple podes que pensas',
+    'arma un pwoer point bine simple para carlos bapasita',
+    'v a aprece rque hciste un test mas sencicllo que si podias pasar comrpendes',
+    'sis e traba asi cagamos hay que cerrarlo y reabrirlo mas facil',
+    'capaz lo pdoe sagregar vos rapdiametne de fomra sencilla no lo se',
+    'el cliente es facil de atender si le mandas la planilla',
   ],
 };
 
 function selftest() {
   let mal = 0; const falla = (m) => { mal += 1; console.log('FALLA:', m); };
-  for (const k of ['no_entendi', 'explicame', 'corto']) for (const t of CASOS[k]) if (!senales(t).includes(k)) falla(`deberia marcar ${k}: ${t.slice(0, 70)} -> ${JSON.stringify(senales(t))}`);
+  for (const k of TODAS) for (const t of CASOS[k]) if (!senales(t).includes(k)) falla(`deberia marcar ${k}: ${t.slice(0, 70)} -> ${JSON.stringify(senales(t))}`);
   for (const t of CASOS.verdes) if (senales(t).length) falla(`no deberia marcar: ${t.slice(0, 70)} -> ${JSON.stringify(senales(t))}`);
+  for (const t of CASOS.estado) if (!pideEstado(t)) falla(`deberia ver el pedido de estado: ${t.slice(0, 70)}`);
+  for (const t of CASOS.sin_estado) if (pideEstado(t)) falla(`no es un pedido de estado: ${t.slice(0, 70)}`);
+  if (!/escalon 3/.test(avisoDe(CASOS.facil[0]) || '')) falla('el mensaje del incidente (facil de entender + estado de la tarea) -> aviso con el escalon 3');
+  if (/escalon 3/.test(avisoDe(CASOS.no_entendi[0]) || '')) falla('sin pedido de estado el aviso no habla de la pagina');
+  if (!/explicar-mejor/.test(avisoDe(`<system-reminder>\nThe user started your suggested background task\n</system-reminder>\n\n${CASOS.facil[0]}`) || '')) falla('un aviso de la app adelante no tapa el mensaje de Fak');
   if (!/explicar-mejor/.test(avisoDe(CASOS.no_entendi[0]) || '')) falla('el aviso de explicar nombra el skill');
   if (!/1 a 4 renglones/.test(avisoDe('sisntetniezame') || '')) falla('"sintetizame" solo -> aviso corto');
   if (!/cambia la FORMA/.test(avisoDe('sigo sin entneder sinteitiz amejore xpclaime emjro') || '')) falla('no entendio y pide corto -> gana el de explicar');
   if (avisoDe('<task-notification>el agente dice: no entendi el pedido</task-notification>') !== null) falla('un aviso automatico no son palabras de Fak');
-  const n = CASOS.no_entendi.length + CASOS.explicame.length + CASOS.corto.length;
+  const n = TODAS.reduce((a, k) => a + CASOS[k].length, 0);
   console.log(mal ? `SELFTEST: ${mal} falla(s)` : `SELFTEST OK (${n} rojos, ${CASOS.verdes.length} verdes)`);
   process.exit(mal ? 1 : 0);
 }
@@ -283,5 +396,5 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   if (process.argv.includes('--hook')) hook();
   else if (process.argv.includes('--selftest')) selftest();
   else if (process.argv.includes('--medir')) medir(process.argv[process.argv.indexOf('--medir') + 1]);
-  else console.log('uso: --hook | --medir <mensajes.jsonl> [--muestra] [--solo no_entendi|explicame|corto] | --selftest');
+  else console.log('uso: --hook | --medir <mensajes.jsonl> [--muestra] [--solo no_entendi|explicame|facil|corto|estado] | --selftest');
 }

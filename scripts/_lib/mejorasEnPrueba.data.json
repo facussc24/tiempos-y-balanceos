@@ -1,0 +1,14 @@
+{
+  "_que_es": "Los avisos de hooks que se MIDEN en los transcripts: cuantos mensajes debian recibir cada uno y a cuantos les llego. Lo leen scripts/_lib/probarMejora.mjs (node scripts/_probarMejora.mjs --llego) y el paso 'Mejoras del sistema' de scripts/_cierreSesion.mjs. Regla: .claude/rules/mejora-implementada.md. Un aviso entra aca cuando se da de alta y no sale: si un dia deja de llegar, este es el control que lo ve.",
+  "_como_agregar": "id = el nombre del hook; marca = el texto con que arranca su aviso; desde = fecha y hora (UTC) desde la que tiene que llegar: la del ultimo arreglo que cambio a quien le llega, no la del alta. Y en probarMejora.mjs, en DEBIA, la funcion que dice que mensaje lo dispara (la misma que usa el hook): sin esa funcion el aviso figura 'sin medidor'.",
+  "proyectos_prefijo": "C--Dev-BarackMercosul",
+  "dias_falta": 3,
+  "avisos": [
+    {
+      "id": "explicar-prompt",
+      "marca": "[EXPLICAR-MEJOR]",
+      "desde": "2026-10-02T19:30:00Z",
+      "_nota": "Alta: 02/10/2026 08:44 (a855d52d). Medido con `--llego --desde 2026-10-02T11:44:18Z`: entre el alta y el arreglo de la tarde debia llegar en 12 mensajes y llego en 7. De los 5 que faltaron, 3 venian con un aviso de la app adelante (dos en la sesion 61a9a9ac, entre ellos el del incidente, y el encargo de la sesion que lo arreglo) y 2 decian 'facil de entender' con el 'de' pegado, que la logica de ese momento no reconocia. `desde` es la hora del arreglo."
+    }
+  ]
+}

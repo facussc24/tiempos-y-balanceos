@@ -94,8 +94,25 @@ export function esAprobacion(texto) {
 }
 /** "abrilo", "pasame la ruta", "cerra la sesion": ni aprueba ni rechaza; el veredicto es el mensaje que sigue. */
 export const esNeutro = (texto) => NEUTRO.test(normalizar(texto)) && !esCorreccion(texto);
-/** Aviso automatico (fin de agente, hook) que llega como turno de usuario: no son palabras de Fak. */
-export const esAutomatico = (texto) => /^\s*(<task-notification|<system-reminder|\[SYSTEM NOTIFICATION|Stop hook feedback|<command-|<local-command|\[Request interrupted|\[Image:)/i.test(String(texto ?? ''));
+/**
+ * Lo que queda de un mensaje sin los avisos que la app le pega ADELANTE ("<system-reminder>The user started your
+ * suggested background task…</system-reminder>" y despues lo que escribio Fak). Medido el 02/10/2026: el hook recibe
+ * el mensaje CON ese aviso al principio; 18 mensajes de Fak llegaron asi (10 en los dos primeros dias de octubre)
+ * y ningun hook de mensajes los vio, porque el mensaje entero se tomaba por automatico. Entre ellos, el del
+ * incidente de explicar-mejor (61a9a9ac, 02/10 14:16).
+ */
+const AVISOS_ADELANTE = /^(\s*<system-reminder>[\s\S]*?<\/system-reminder>)+/;
+export const sinAvisosAdelante = (texto) => {
+  const crudo = String(texto ?? ''); const t = crudo.replace(AVISOS_ADELANTE, '');
+  return t.length === crudo.length ? crudo : t.replace(/^\s+/, '');      // sin aviso adelante el mensaje queda como vino
+};
+/** Aviso automatico (fin de agente, hook) que llega como turno de usuario: no son palabras de Fak. Un mensaje de
+ *  Fak con un aviso de la app adelante NO es automatico; uno que es solo avisos, si. */
+export const esAutomatico = (texto) => {
+  const crudo = String(texto ?? ''); const t = sinAvisosAdelante(crudo);
+  if (!t.trim()) return crudo.trim().length > 0;
+  return /^\s*(<task-notification|<system-reminder|\[SYSTEM NOTIFICATION|Stop hook feedback|<command-|<local-command|\[Request interrupted|\[Image:)/i.test(t);
+};
 
 const corta = (s, n) => { const u = String(s ?? '').replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, ' ').replace(/\s+/g, ' ').trim(); return u.length > n ? `${u.slice(0, n)}…` : u; };
 

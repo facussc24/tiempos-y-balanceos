@@ -1,6 +1,6 @@
 ---
 name: explicar-mejor
-description: Cómo explicar algo para que se entienda en una sola lectura — texto corto en castellano técnico simplificado, un dibujo, una página o un video. Usar cuando la persona dice que no entendió ("no entiendo", "no entendí un carajo"), pide que se lo expliquen ("explicame mejor", "más fácil", "sintetizá", "mucho texto"), o se nota que no entendió (pregunta dos veces lo mismo, contesta otra cosa). No es para lo que sale a terceros (mail, PDF, PowerPoint, planilla): eso sigue con sus reglas.
+description: Cómo explicar algo para que se entienda en una sola lectura — texto corto en castellano técnico simplificado, un dibujo, una página o un video. Cargarlo ANTES de contestar cuando la persona dice que no entendió ("no entiendo", "no entendí un carajo"), pide que se lo expliquen o que sea fácil de entender ("explicame mejor", "hacelo fácil de entender", "más fácil", "sintetizá", "mucho texto"), pide el estado de una tarea o proyecto de forma que se entienda, o se nota que no entendió (pregunta dos veces lo mismo, contesta otra cosa). No es para lo que sale a terceros (mail, PDF, PowerPoint, planilla): eso sigue con sus reglas.
 ---
 
 # Explicar mejor
@@ -16,7 +16,11 @@ cuando alguien quiere y pide una mejor explicación o nota que no entiende"*.
 ## Cuándo se usa
 
 - La persona dice que no entendió, o pide que se lo expliquen mejor, más fácil o más corto.
+- Pide algo "fácil de entender": el estado de una tarea, qué pasó, qué falta.
 - Se nota que no entendió: pregunta dos veces lo mismo, o contesta otra cosa.
+- **Verlo en la lista de skills no es usarlo: se carga y se elige el escalón.** El 02/10/2026 Fak
+  pidió el estado de una tarea *"fácil de entender"*; el skill estaba en la lista y la respuesta fue
+  una tabla. Fak: *"no aplicaste la mejora que habíamos implementado"*.
 - **No** se usa para lo que sale a otra persona. Un mail, un PDF, un PowerPoint, una planilla o un
   documento del SGC siguen con sus reglas.
 
@@ -121,16 +125,24 @@ son los dibujos del escalón 2. Al 02/10/2026 este escalón no se probó todaví
 ## Cómo se dispara solo
 
 El hook `explicar-prompt.sh` (UserPromptSubmit, no bloquea) lee cada mensaje de Fak. Si dice que no
-entendió o pide que se lo expliquen, avisa que hay que cargar este skill. Si pide corto, avisa que la
-respuesta va en 1 a 4 renglones. Las palabras y sus errores de tipeo están en
-`scripts/_lib/explicarCanon.data.json`; la lógica, en `scripts/_lib/explicarGuard.mjs`. Una palabra
-nueva se agrega al canon y se vuelve a medir contra sus mensajes reales
-(`node scripts/_lib/explicarGuard.mjs --medir <mensajes.jsonl> --muestra`). Medido el 02/10/2026:
-salta en 166 de 1.592 mensajes. Tests: `__tests__/scripts/explicarGuard.test.mjs`.
+entendió, pide que se lo expliquen o pide que sea fácil de entender, avisa que hay que cargar este
+skill; si además pide el estado de una tarea o proyecto, avisa que va el escalón 3 (la página). Si
+solo pide corto, avisa que la respuesta va en 1 a 4 renglones. Las palabras y sus errores de tipeo
+están en `scripts/_lib/explicarCanon.data.json`; la lógica, en `scripts/_lib/explicarGuard.mjs`. Una
+palabra nueva se agrega al canon y se vuelve a medir contra sus mensajes reales
+(`node scripts/_lib/explicarGuard.mjs --medir <mensajes.jsonl> --muestra`). Medido el 02/10/2026
+sobre 2.723 mensajes: el aviso de explicar salta en 167 y el de responder corto, solo, en 54.
+Tests: `__tests__/scripts/explicarGuard.test.mjs`.
+
+**El cierre del turno lo exige** (hook Stop `cierre-guard.sh`, chequeo 7): si el mensaje de Fak pedía
+explicar y el turno termina sin haber cargado este skill, sin un dibujo o una página y sin entregar
+un archivo, el turno no termina.
 
 El aviso no sabe de quién son las palabras ("Carlos me dijo: no entiendo") ni si Fak habla de un
-entregable ("la hoja no se entiende"). En esos casos no aplica: el aviso mismo lo dice. Si en el mismo
-mensaje salta el aviso de `correccion-guard`, manda ese.
+entregable ("la hoja no se entiende", "un PDF fácil de entender": 10 de los 30 "fácil de entender"
+medidos). En esos casos no aplica, y la respuesta lo dice en un renglón que empieza con
+**"No aplica explicar-mejor:"** y el motivo; con ese renglón el cierre pasa. Si en el mismo mensaje
+salta el aviso de `correccion-guard`, manda ese.
 
 Lo que el hook no ve es cuando se nota que no entendió sin que lo diga: eso lo tengo que ver yo.
 

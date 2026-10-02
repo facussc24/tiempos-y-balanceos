@@ -79,7 +79,7 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
-- **02/10 — Una mejora que Fak pidió implementar se USA: si su pedido calza con un skill listado, se carga antes de contestar** (pidió "fácil de entender" y contesté una tabla). Graduado a la memoria `feedback_mejora_implementada_se_usa`.
+- **02/10 — Una mejora que Fak pidió se USA, y no está implementada hasta probarla con un mensaje REAL suyo** (pidió "fácil de entender" y contesté una tabla). Graduado a `mejora-implementada.md` y al chequeo 7 del `cierre-guard`.
 
 - **02/10 — Lo que hay que volver a pedir hasta que contesten no depende de acordarse: va a un seguimiento con fecha que se avisa solo; y lo que va a quien lo lee buscando el error sale corto, fácil y sin nada que suene a generado: el papel lo muestra la captura, no una cita mía de la norma.** Graduado a `scripts/_seguimientos.mjs` (arranque de sesion + tarea de lunes y viernes) y a las memorias `project_seguimientos_con_fecha` y `feedback_mails_a_calidad_cecilia_sin_flancos`.
 

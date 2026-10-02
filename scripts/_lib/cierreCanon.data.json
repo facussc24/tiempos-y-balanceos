@@ -200,6 +200,12 @@
       "git_add_todo": [".", "-A", "--all", "-u", "--update", ":/", "*"]
     }
   },
+  "mejora": {
+    "_que_es": "Pendiente del chequeo 3 (02/10/2026, regla mejora-implementada.md). Fak: 'pensa como evitar que cuando te digo que implementes algo realmente lo implementes'. El 02/10 el hook explicar-prompt llevaba 5 horas dado de alta, con 41 tests en verde, y el primer mensaje real que lo necesitaba no recibio nada: su frase caia en otra senal y ademas llego con un aviso de la app adelante, que ningun test tenia. Si la sesion ESCRIBIO una pieza del sistema (sistema_re: hooks, skills, reglas, agentes, comandos, settings.json, CLAUDE.md, y los guardianes de scripts/_lib con sus canones) y declara un cierre, tiene que haber corrido DESPUES de la ultima escritura la prueba con un mensaje real de Fak (prueba_re: node scripts/_probarMejora.mjs --mensaje), y el cierre tiene que decirle a Fak si las sesiones abiertas toman el cambio solas o hay que reabrirlas (sesiones_re). Las rutas de un worktree (.claude/worktrees/<nombre>/...) cuentan igual.",
+    "sistema_re": "^(\\.claude/worktrees/[^/]+/)?(\\.claude/(hooks|skills|rules|agents|commands)/|\\.claude/settings\\.json$|CLAUDE\\.md$|scripts/_lib/[^/]*(Guard|Canon|guardianes)[^/]*\\.(mjs|json)$)",
+    "prueba_re": "_probarMejora\\.mjs\\b[^\\n;|&]*--mensaje",
+    "sesiones_re": "sesion(es)? (que )?(ya )?(estan |esten |estaban )?abiertas?|reabr"
+  },
   "lecciones": {
     "_que_es": "Gate de docs/LECCIONES_APRENDIDAS.md. Desde el 04/09/2026 el archivo entra al system prompt por @import desde CLAUDE.md (el hook lo recortaba a 2 KB desde el 03/08). El techo por bytes se queda como red; lo que evita la pelea por bytes es el gate POR BULLET: una leccion graduada no conserva su narrativa.",
     "aviso_bytes": 26624,

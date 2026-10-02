@@ -226,10 +226,19 @@ describe('cierre-guard · chequeo 5: un cierre declarado que es un informe no pa
     expect(r.ok).toBe(true);
   });
 
-  it('VERDE: Fak pidio el detalle con esas palabras → pasa', async () => {
+  // Desde el 02/10/2026 "explicame…" tambien dispara el chequeo 7: el turno tiene que haber cargado el skill.
+  it('VERDE: Fak pidio el detalle con esas palabras (y el turno cargo el skill de explicar) → pasa', async () => {
+    const pedido = 'explicame en detalle todo lo que hiciste, paso a paso';
     const r = await decidir({ session_id: 's-largo', last_assistant_message: largoQueCierra },
-      deps({ fueraEnEsteTurno: async () => ({ fuera: false, ultimoMensajeFak: 'explicame en detalle todo lo que hiciste, paso a paso' }) }));
+      deps({ fueraEnEsteTurno: async () => ({ fuera: false, ultimoMensajeFak: pedido, explicar: { skill: true } }) }));
     expect(r.ok).toBe(true);
+    const sinSkill = await decidir({ session_id: 's-largo', last_assistant_message: largoQueCierra },
+      deps({ fueraEnEsteTurno: async () => ({ fuera: false, ultimoMensajeFak: pedido }) }));
+    expect(sinSkill.ok).toBe(false);
+    expect(sinSkill.titulo).toMatch(/sin cambiar la forma/);
+    const otroPedido = await decidir({ session_id: 's-largo', last_assistant_message: largoQueCierra },
+      deps({ fueraEnEsteTurno: async () => ({ fuera: false, ultimoMensajeFak: 'pasame el informe completo, con todo el detalle' }) }));
+    expect(otroPedido.ok).toBe(true);
   });
 
   it('VERDE: en modo plan, o con el cooldown "largo" vigente → pasa (y el cooldown del chequeo 3 no lo tapa)', async () => {

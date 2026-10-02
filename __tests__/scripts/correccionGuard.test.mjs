@@ -208,3 +208,22 @@ describe('correccion-guard.sh — corrido como lo corre Claude Code (bash + JSON
     expect(s.hooks.UserPromptSubmit.some((g) => g.matcher === '' && g.hooks.some((h) => h.command === 'bash "${CLAUDE_PROJECT_DIR}/.claude/hooks/correccion-guard.sh"'))).toBe(true);
   });
 });
+
+// 02/10/2026: la app le pega adelante al mensaje de Fak un aviso ("The user started your suggested background
+// task…") y el hook recibe las dos cosas juntas. Hasta ese dia el mensaje entero se tomaba por automatico:
+// 18 mensajes de Fak pasaron sin que ningun hook de mensajes los viera (10 en los dos primeros dias de octubre).
+describe('correccionGuard — un mensaje de Fak con un aviso de la app adelante sigue siendo de Fak', () => {
+  const AVISO = '<system-reminder>\nThe user started your suggested background task task_eee4ad8a ("Agregar guard") in a separate local session.\n</system-reminder>\n\n';
+  it('ROJO: la correccion se ve igual con el aviso adelante (y cuenta como turno de Fak)', () => {
+    const r = paso(null, AVISO + CASOS.rojos[4]);
+    expect(r.aviso).toMatch(/\[CORRECCION-GUARD\]/);
+    expect(r.estado.turno).toBe(1);
+    expect(r.aviso).toBe(paso(null, CASOS.rojos[4]).aviso);
+  });
+  it('VERDE: un mensaje que es solo avisos no es un turno de Fak', () => {
+    const r = paso(null, AVISO);
+    expect(r.aviso).toBeNull();
+    expect(r.estado.turno).toBe(0);
+    expect(paso(null, `${AVISO}<task-notification>el agente termino: armaste un mail que no te pedi</task-notification>`).estado.turno).toBe(0);
+  });
+});

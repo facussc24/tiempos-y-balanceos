@@ -49,8 +49,10 @@ commit/push/archivar los hago yo.
   "esto va aca, ¿esta bien?", con la ruta concreta.
 - Si Fak dice "decidi vos": decidir con mejor practica y explicar brevemente por que.
   No devolverle la pregunta.
-- Si Fak dice que no entendio, pide que se lo explique o se nota que no entendio: no repetir lo
-  mismo mas largo, cambiar la forma (skill `explicar-mejor`; lo recuerda el hook `explicar-prompt.sh`).
+- Si Fak dice que no entendio, pide que se lo explique o que sea facil de entender, o se nota que
+  no entendio: no repetir lo mismo mas largo, cambiar la forma. El skill `explicar-mejor` se CARGA
+  antes de contestar (verlo en la lista no es usarlo): lo recuerda el hook `explicar-prompt.sh` y
+  el cierre del turno lo exige (`cierre-guard.sh`, chequeo 7).
 - Si Fak te corrige: registrarlo en LECCIONES_APRENDIDAS inmediatamente.
 - Si detectas un problema o inconsistencia: reportar sin esperar a que pregunte.
 - Si un cambio afecta multiples productos: sugerir aplicarlo/verificarlos todos.
@@ -92,6 +94,7 @@ su nube personal `OneDrive - BARACK ARGENTINA SRL\`; hook `nube-personal-guard`)
 | `escritorio-tareas.md` | `_escritorio.mjs` + su hook — cola de tareas: cuando se cierra y como se archiva |
 | `hojas-proceso.md` | hojas de proceso / HO (`I-IN-002.4-R01`) — una hoja se juzga impresa (skill `hojas-de-proceso`, gate `hoja_proceso_check.py`) |
 | `lecciones-consolidacion.md` | `docs/LECCIONES_APRENDIDAS.md` — ciclo de vida de una leccion y gate por bullet |
+| `mejora-implementada.md` | hooks, skills, reglas, `settings.json`, guardianes y sus canones — una mejora no esta implementada hasta probarla con un mensaje real de Fak (`node scripts/_probarMejora.mjs`) y decirle si las sesiones abiertas la toman solas |
 | `documentacion-oficial.md` | `4- MANUALES`, `0-Documentacion cliente`, `1. Imput`, `normas-vw` — el original de un tercero manda y nada mio comparte su carpeta (hook `documentacion-oficial-guard.sh`) |
 | `video-maquina.md` | `_videoBiblioteca.mjs`, `*.MOV` / `*.MP4`, material del telefono — va a `5- VIDEOS Y FOTOS`, se cruza por `(IMG_xxxx)` antes de bajar del celular y el master no se borra (hook `video-maquina-guard.sh`) |
 
