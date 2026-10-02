@@ -12,6 +12,14 @@
    todas las sesiones, y un `git commit` pelado guarda lo que la OTRA sesion haya puesto ahi mientras
    tanto (02/10/2026: el commit `cee8f1b2` salio con 12 archivos ajenos). Antes del push,
    `git show --stat HEAD` y contar. Memoria `reference_sesiones_claude_en_paralelo_mismo_repo`.
+   **Enforcement: hook `commit-rutas-guard`** (PreToolUse, Bash y PowerShell, dentro de
+   `_dispatcher.sh`; logica en `scripts/_lib/guardianes.mjs`): bloquea un `git commit` sin rutas,
+   con `-a`, con `--include`, con `.` como ruta o con las rutas en una variable que sale de un
+   `$(...)`. Pasan `-- rutas`, `--only rutas`, `--amend --only` (cambia solo el mensaje) y el commit
+   que cierra un merge. Probado en las dos direcciones: `__tests__/scripts/commitRutasGuard.test.mjs`.
+   Limite conocido: mira el texto del comando; no ve un script que commitea por dentro, un alias ni
+   un commit entre backticks (la lista entera, en el comentario del guardian). Es una red contra el
+   habito (855 de 887 commits de 10 dias iban sin rutas), no un candado.
 3. **`git push origin main`**.
 4. **Verificar CI** — `gh` no tiene login en esta PC (memoria `gh_cli_sin_login_ci_por_api`); el
    ultimo run se lee por API y se mira `status` / `conclusion`:

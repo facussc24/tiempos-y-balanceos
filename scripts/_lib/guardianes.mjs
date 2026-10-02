@@ -42,7 +42,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { sinCuerposHeredoc, sinCuerposHeredocDeGit, sinArgumentosDeCommit, analizarComando, comandosSimples } from './shellTexto.mjs';
+import { sinCuerposHeredoc, sinCuerposHeredocDeGit, sinArgumentosDeCommit, analizarComando, comandosSimples, separarHeredocs } from './shellTexto.mjs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -183,10 +183,10 @@ export function ctxDesdeEnv(env) {
  * settings.json antes del despachador (2026-08-04). Si corrieran todos siempre, guardianes
  * que hoy no ven un Write empezarian a verlo: eso es cambiar el comportamiento, no acelerarlo.
  */
-const SOLO_SHELL = ['supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'arb-cerrar-guard', 'script-inline-guard', 'secretos-guard'];
+const SOLO_SHELL = ['supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'commit-rutas-guard', 'arb-cerrar-guard', 'script-inline-guard', 'secretos-guard'];
 const SOLO_ARCHIVO = ['file-guard', 'causas-ajenas-guard'];
 const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard', 'documentacion-oficial-guard', 'video-maquina-guard', 'caracteristicas-especiales-guard', 'apqp-cliente-guard', 'nube-personal-guard'];
-export const TODOS = ['file-guard', 'supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'script-inline-guard', 'secretos-guard', ...LOS_CUATRO, 'arb-cerrar-guard', 'causas-ajenas-guard'];
+export const TODOS = ['file-guard', 'supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'commit-rutas-guard', 'script-inline-guard', 'secretos-guard', ...LOS_CUATRO, 'arb-cerrar-guard', 'causas-ajenas-guard'];
 
 export function matriz(tool) {
   // Si no se pudo leer el tool_name, NO se adivina: corren TODOS. Fallar hacia el lado seguro
@@ -1796,6 +1796,285 @@ biblioteca del sector: \`BARACK ARGENTINA SRL\\Ingenieria y Proyecto - General\\
   · Si Fak dijo que ESTE archivo va ahi:  : > ~/.claude/.nube-personal-ok   y reintenta (vale una vez).
 
 Regla: .claude/rules/nube-ingenieria.md`);
+};
+
+// ── commit-rutas-guard ─────────────────────────────────────────────────────
+// Regla `.claude/rules/git-deploy.md` paso 2: el commit lleva las rutas (`git commit -m "..." -- a b`).
+// El indice de git es UNO para todas las sesiones que trabajan en el worktree principal: un
+// `git commit` sin rutas guarda lo que haya ahi en ese instante, sea de quien sea. 02/10/2026: una
+// sesion hizo `git add` de 9 archivos por nombre y despues `git commit` pelado; en esos segundos otra
+// sesion puso 12 suyos en el indice y `cee8f1b2` salio con los 21 bajo un mensaje que no los
+// describe, ya pusheado. La memoria `reference_sesiones_claude_en_paralelo_mismo_repo` lo decia desde
+// el 30/08 y volvio a pasar el 11/09 y el 02/10: por eso pasa de memoria a freno.
+// BLOQUEA un `git commit`: sin rutas · con `-a` (todo lo modificado) · con `--include` (suma las
+// rutas a lo que ya este en el indice) · con una ruta que es TODO (`.`, `..`, `*`, `:/`, o solo una
+// exclusion) · con rutas que no estan escritas (una variable que sale de un `$(...)`, `xargs`,
+// `--pathspec-from-file`: si la lista viene vacia es un commit del indice entero).
+// PASA: rutas despues de `--`, `--only rutas`, rutas sueltas, `--amend --only` (cambia solo el
+// mensaje), `--allow-empty --only`, `--dry-run`, y el `git commit` que cierra un merge o un
+// cherry-pick (ahi git no acepta rutas).
+// Medido el 02/10/2026 contra los 887 comandos con `git commit` de los transcripts de 10 dias: 855
+// iban sin rutas y 7 eran `--amend` pelados; los que ya llevaban rutas pasan todos (0 falsos rojos).
+// Limites conocidos (auditoria del 02/10/2026): mira el texto del comando, asi que no ve un script
+// que commitea por dentro, un alias, un commit entre backticks ni un `echo ... | bash`; un `<<PALABRA`
+// ENTRE COMILLAS le esconde las lineas que siguen (lo decide `separarHeredocs`); y de PowerShell no
+// entiende la continuacion con backtick ni los here-strings.
+const CR_SQ = String.fromCharCode(0xE000); // la marca que `comandosSimples` deja por un `$` entre comillas simples
+const CR_CONTROL = new Set(['then', 'do', 'else', 'elif', 'if', 'while', 'until', '!']);
+// Lo que va DELANTE de un comando con sus propias opciones (`nice -n 5 git commit`, `sudo -u x git
+// commit`, `xargs git commit`): tras uno de estos, `git` se busca entre las palabras que siguen.
+const CR_ENVOLTORIOS = new Set(['sudo', 'command', 'builtin', 'exec', 'nohup', 'nice', 'time', 'env', 'timeout', 'stdbuf', 'winpty', 'xargs']);
+const CR_DECLARA = new Set(['export', 'local', 'declare', 'typeset', 'readonly']);
+const CR_GIT_GLOBAL_CON_VALOR = new Set(['-C', '-c', '--git-dir', '--work-tree', '--namespace', '--super-prefix', '--attr-source']);
+// Opciones de `git commit` que se llevan la palabra siguiente (git-commit(1)). `-S[id]` y `-u[modo]`
+// llevan el valor pegado, no la palabra siguiente. Git acepta las largas abreviadas (`--mess`).
+const CR_LARGAS_CON_VALOR = ['--message', '--file', '--reuse-message', '--reedit-message', '--fixup', '--squash', '--author', '--date', '--template', '--cleanup', '--trailer', '--pathspec-from-file'];
+const CR_CORTAS_CON_VALOR = 'mFCct';
+const CR_CORTAS_VALOR_PEGADO = 'Su';
+const CR_EXCLUSION = /^:(\([^)]*\bexclude\b[^)]*\)|\/*[!^])/;
+const crVerbo = (w) => String(w ?? '').replace(/^.*[\\/]/, '').replace(/\.exe$/i, '').toLowerCase();
+
+/** Parte una palabra en lo que queda escrito y lo que va adentro de sus `$(...)` (con parentesis anidados). */
+function crPartes(w) {
+  let resto = '';
+  const dentro = [];
+  for (let i = 0; i < w.length; i++) {
+    if (w[i] === '$' && w[i + 1] === '(') {
+      let prof = 0;
+      let j = i + 1;
+      for (; j < w.length; j++) { if (w[j] === '(') prof++; else if (w[j] === ')' && --prof === 0) break; }
+      dentro.push(w.slice(i + 2, j));
+      i = j;
+    } else if (w[i] === '`') {
+      const j = w.indexOf('`', i + 1);
+      i = j < 0 ? w.length : j;
+    } else resto += w[i];
+  }
+  return { resto, dentro };
+}
+const crSinVariables = (x) => crPartes(String(x)).resto.replace(/\$\{[^}]*\}|\$env:\w+|\$\w+/gi, '');
+/** Una ruta ESCRITA: le queda algo despues de sacarle variables y sustituciones. */
+const crRutaEscrita = (x) => crSinVariables(x).length > 0;
+/** Una ruta que es TODO: `.`, `./.`, `..`, `*`, `**`, `./*`, `*.*`, `:/`, `:(top)*`, `"$PWD/"`. */
+function crRutaEsTodo(x) {
+  const y = crSinVariables(x);
+  if (y === '' && y !== String(x)) return false; // una variable sola: no se sabe (eso lo mira crRutaEscrita)
+  return /^[.\\/*]*$/.test(y.replace(/^:\([^)]*\)/, '').replace(/^:\/*/, ''));
+}
+
+/** Saca los comentarios `# ...` de las lineas de comando (fuera de comillas): sus palabras no son rutas. */
+function crSinComentarios(s) {
+  let out = '';
+  let q = '';
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (c === '\\' && q !== "'") { out += c + (s[i + 1] ?? ''); i++; continue; }
+    if (q) { if (c === q) q = ''; out += c; continue; }
+    if (c === '"' || c === "'") { q = c; out += c; continue; }
+    if (c === '#' && (i === 0 || /[\s;&|(]/.test(s[i - 1]))) {
+      while (i < s.length && s[i] !== '\n') i++;
+      out += '\n';
+      continue;
+    }
+    out += c;
+  }
+  return out;
+}
+
+/**
+ * Los comandos `git` de un comando de shell: [{ sub, args, crudo, dir, rutaConValor }].
+ * Entra a `bash -c "..."`, `eval`, `cmd /c`, `powershell -Command`, a los `$(...)` y al heredoc que
+ * alimenta a un shell. `dir`: undefined = la carpeta de la sesion · una ruta = un `cd`/`-C` absoluto ·
+ * null = no se sabe (cd relativo, shell anidado).
+ */
+function comandosGit(texto, prof = 0, dirInicial = undefined) {
+  const out = [];
+  const adentro = (t) => { if (prof < 4 && t) out.push(...comandosGit(t.split(CR_SQ).join('$'), prof + 1, null)); };
+  const { lineas, cuerpos } = separarHeredocs(String(texto ?? '').replace(/\r\n?/g, '\n'));
+  for (const h of cuerpos) if (!h.deGit && /(^|[\s|;&(])(ba|z|da)?sh(\s|$)/.test(h.dueno)) adentro(h.cuerpo);
+  // Variables que el MISMO comando escribe con un valor a la vista (`F="a.md b.md"; git commit -- $F`):
+  // esas rutas estan escritas. Una que sale de un `$(...)` queda sin valor: puede venir vacia.
+  const vars = new Map();
+  let dir = dirInicial;
+  for (const c of comandosSimples(crSinComentarios(lineas))) {
+    const p = c.palabras;
+    for (const w of p) if (w.includes('$(')) for (const s of crPartes(w).dentro) adentro(s);
+    const asignadas = [];
+    let envuelto = false;
+    let k = 0;
+    while (k < p.length) {
+      const asg = p[k].match(/^([A-Za-z_][A-Za-z0-9_]*)(\+?)=([\s\S]*)$/);
+      if (asg) { asignadas.push([asg[1], asg[2] || /[$`]/.test(asg[3]) || asg[3].includes(CR_SQ) ? '' : asg[3]]); k++; continue; }
+      const w = crVerbo(p[k]);
+      if (CR_CONTROL.has(w) || CR_DECLARA.has(w)) { k++; continue; }
+      if (CR_ENVOLTORIOS.has(w)) { envuelto = true; k++; continue; }
+      break;
+    }
+    // `F=x` solo, en su propio comando, queda para los que siguen; `F=x git commit` vale solo para ese proceso.
+    if (k === p.length) for (const [n, v] of asignadas) vars.set(n, v);
+    if (envuelto && crVerbo(p[k]) !== 'git') { const j = p.findIndex((w, n) => n > k && crVerbo(w) === 'git'); if (j > 0) k = j; }
+    const verbo = crVerbo(p[k]);
+    const esAbsoluta = (d) => typeof d === 'string' && /^([A-Za-z]:|[\\/])/.test(d) && !/[$`]/.test(d) && !d.includes(CR_SQ);
+    if (verbo === 'git') {
+      k++;
+      let enC;
+      while (k < p.length && p[k].startsWith('-')) {
+        if (p[k] === '-C') enC = p[k + 1];
+        k += CR_GIT_GLOBAL_CON_VALOR.has(p[k]) ? 2 : 1;
+      }
+      // Solo las RUTAS se resuelven (el valor de un `-m "$MSG"` partido en palabras pareceria una ruta).
+      const valores = new Map(vars);
+      const rutaConValor = (a) => { const m = a.match(/^\$\{?([A-Za-z_]\w*)\}?$/); return m && valores.get(m[1]) ? valores.get(m[1]).split(/\s+/).filter(Boolean) : [a]; };
+      out.push({ sub: p[k] ?? '', args: p.slice(k + 1), crudo: c.crudo, dir: enC === undefined ? dir : (esAbsoluta(enC) ? enC : null), rutaConValor });
+    } else if (/^(cd|pushd|chdir|set-location|sl|push-location)$/.test(verbo)) {
+      const d = p.slice(k + 1).find((x) => !/^-/.test(x));
+      dir = esAbsoluta(d) ? d : null;
+    } else if (/^(popd|pop-location)$/.test(verbo)) {
+      dir = null;
+    } else if (/^(ba|z|da)?sh$/.test(verbo)) {
+      const i = p.findIndex((a, n) => n > k && /^-[a-z]*c$/.test(a));
+      if (i >= 0) adentro(p[i + 1]);
+    } else if (verbo === 'cmd' || /^(powershell|pwsh)$/.test(verbo)) {
+      const i = p.findIndex((a, n) => n > k && /^(\/[ck]|-c|-command)$/i.test(a));
+      if (i >= 0) adentro(p.slice(i + 1).join(' '));
+    } else if (/^(eval|iex|invoke-expression)$/.test(verbo)) {
+      adentro(p.slice(k + 1).join(' '));
+    }
+  }
+  return out;
+}
+
+/** Lee los argumentos de un `git commit`: que rutas lleva y que opciones cambian lo que guarda. */
+export function leerArgsDeCommit(args) {
+  const r = { rutas: [], todo: false, incluir: false, solo: false, amend: false, vacio: false, seco: false, desdeArchivo: false };
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a === '--') { r.rutas.push(...args.slice(i + 1)); break; }
+    if (a.startsWith('--')) {
+      const nombre = a.split('=')[0];
+      // `--no-dry-run` apaga a `--dry-run`: gana la ultima, como en git.
+      const no = nombre.startsWith('--no-');
+      const es = (larga) => (no ? `--no-${larga.slice(2)}` : larga).startsWith(nombre);
+      if (es('--all')) r.todo = !no;
+      else if (es('--include')) r.incluir = !no;
+      else if (es('--only')) r.solo = !no;
+      else if (es('--amend')) r.amend = !no;
+      else if (es('--allow-empty') && !nombre.startsWith('--allow-empty-')) r.vacio = !no;
+      else if (es('--dry-run') || es('--short') || es('--porcelain') || es('--long') || es('--help')) r.seco = !no;
+      else if (es('--pathspec-from-file')) r.desdeArchivo = !no;
+      if (!no && !a.includes('=') && CR_LARGAS_CON_VALOR.some((larga) => larga.startsWith(nombre))) i++;
+      continue;
+    }
+    if (/^-[A-Za-z]/.test(a)) {
+      for (let k = 1; k < a.length; k++) {
+        const c = a[k];
+        if (c === 'a') r.todo = true;
+        else if (c === 'i') r.incluir = true;
+        else if (c === 'o') r.solo = true;
+        else if (c === 'h') r.seco = true;
+        if (CR_CORTAS_VALOR_PEGADO.includes(c)) break;
+        if (CR_CORTAS_CON_VALOR.includes(c)) { if (k === a.length - 1) i++; break; }
+      }
+      continue;
+    }
+    if (a === '-') continue;
+    r.rutas.push(a);
+  }
+  return r;
+}
+
+/** Por que un `git commit` no pasa ('' si pasa). */
+function motivoDeCommit(a) {
+  if (a.seco) return '';
+  if (a.todo) return 'todo';
+  if (a.incluir) return 'incluir';
+  if (a.desdeArchivo) return 'ruta-variable';
+  // `--only` sin rutas solo lo acepta git con --amend o --allow-empty, y ahi no toca el indice.
+  if (!a.rutas.length) return a.solo && (a.amend || a.vacio) ? '' : 'sin-rutas';
+  const positivas = a.rutas.filter((x) => !CR_EXCLUSION.test(x));
+  if (!positivas.length) return 'ruta-todo'; // solo exclusiones: todo menos eso
+  if (!positivas.some(crRutaEscrita)) return 'ruta-variable';
+  if (positivas.some(crRutaEsTodo)) return 'ruta-todo';
+  return '';
+}
+
+/** Los `git commit` del comando que no pasan, cuantos commits trae, y las rutas que el mismo comando agrego con `git add`. */
+export function commitsSinRutas(cmd) {
+  const cmds = comandosGit(String(cmd ?? ''));
+  const malos = [];
+  let commits = 0;
+  for (const c of cmds) {
+    if (c.sub !== 'commit') continue;
+    commits++;
+    const leido = leerArgsDeCommit(c.args);
+    leido.rutas = leido.rutas.flatMap(c.rutaConValor);
+    const motivo = motivoDeCommit(leido);
+    if (motivo) malos.push({ motivo, crudo: c.crudo.replace(/\s+/g, ' ').trim(), dir: c.dir });
+  }
+  const agregadas = [...new Set(cmds.filter((c) => c.sub === 'add')
+    .flatMap((c) => c.args.filter((a) => !a.startsWith('-')).flatMap(c.rutaConValor).filter((a) => crRutaEscrita(a) && !crRutaEsTodo(a))))];
+  return { malos, agregadas, commits };
+}
+
+/** 'merge' / 'cherry-pick' si el repo de `dir` esta en medio de uno (git no acepta rutas ahi); '' si no. */
+function commitQueCierra(dir) {
+  const r = spawnSync('git', ['rev-parse', '--absolute-git-dir'], { cwd: dir, encoding: 'utf8' });
+  const g = r.status === 0 ? String(r.stdout || '').trim() : '';
+  if (!g) return '';
+  if (fs.existsSync(path.join(g, 'MERGE_HEAD'))) return 'merge';
+  if (fs.existsSync(path.join(g, 'CHERRY_PICK_HEAD'))) return 'cherry-pick';
+  return '';
+}
+
+const CR_MOTIVO = {
+  'sin-rutas': 'no dice QUE archivos guarda',
+  todo: 'lleva `-a`: guarda TODO lo modificado, tambien lo que este tocando otra sesion',
+  incluir: 'lleva `--include`: suma las rutas a lo que ya este en el indice, sea de quien sea',
+  'ruta-todo': 'pone como ruta `.` (o `..`, `*`, `:/`), que es TODO: se lleva tambien lo de otra sesion',
+  'ruta-variable': 'no trae las rutas ESCRITAS (salen de una variable, de un `$(...)` o de una lista): si la lista viene vacia, guarda el indice entero',
+};
+
+GUARDIANES['commit-rutas-guard'] = (ctx, { env } = {}) => {
+  const cmd = ctx.ok ? ctx.cmd : ctx.rescate.cmd;
+  if (!cmd || !/\bcommit\b/.test(cmd)) return null;
+  const { malos, agregadas, commits } = commitsSinRutas(cmd);
+  if (!malos.length) return null;
+  // El commit que cierra un merge o un cherry-pick no admite rutas ("cannot do a partial commit
+  // during a merge"): ese pasa. Solo si es el UNICO commit del comando (un segundo ya no cierra nada)
+  // y se sabe en que carpeta corre. `-a` e `--include` siguen frenados tambien ahi.
+  const m = malos[0];
+  if (commits === 1 && m.motivo === 'sin-rutas' && m.dir !== null) {
+    const dir = m.dir === undefined ? (ctx.cwd || raizProyecto(env ?? process.env)) : aRutaWin(m.dir, m.dir);
+    const cierra = dir ? commitQueCierra(dir) : '';
+    if (cierra) {
+      return recordatorio(path.join(dirTmp(env ?? process.env), 'claude-commit-rutas-merge.flag'),
+        `[COMMIT-RUTAS] Este \`git commit\` paso sin rutas porque cierra un ${cierra} (git no acepta rutas ahi). Se lleva lo que haya en el indice: mira \`git show --stat HEAD\` antes del push.`);
+    }
+  }
+  const comillas = (x) => (/\s/.test(x) ? `"${x}"` : x);
+  const tuyas = agregadas.length ? `
+En este mismo comando agregaste: ${agregadas.map(comillas).join(' ')}
+Termina el commit con:  -- ${agregadas.map(comillas).join(' ')}
+` : '';
+  return bloqueo(`[COMMIT-RUTAS] BLOQUEADO: este \`git commit\` ${CR_MOTIVO[m.motivo]}.
+
+  ${m.crudo.slice(0, 200)}
+
+El indice de git es UNO SOLO para todas las sesiones que trabajan en la misma carpeta. Un commit
+sin rutas guarda lo que haya ahi en ese momento, incluido lo que otra sesion agrego mientras
+tanto (02/10/2026: el commit cee8f1b2 salio con 12 archivos de otra sesion, y ya estaba pusheado).
+
+El comando correcto lleva las rutas, escritas una por una, despues de \`--\`:
+
+  git add ruta1 ruta2
+  git commit -m "mensaje" -- ruta1 ruta2
+${tuyas}
+  · Con el mensaje por heredoc:  git commit -F - -- ruta1 ruta2 <<'MSG'
+  · Sumar un archivo al ultimo commit:  git commit --amend --no-edit -- ruta1
+  · Cambiar solo el mensaje del ultimo commit:  git commit --amend --only -m "mensaje"
+  · Antes del push:  git show --stat HEAD   y contar los archivos.
+
+Regla: .claude/rules/git-deploy.md, paso 2.`);
 };
 
 export const NOMBRES = Object.keys(GUARDIANES);

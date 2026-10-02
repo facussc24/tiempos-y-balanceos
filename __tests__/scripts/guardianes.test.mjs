@@ -170,8 +170,10 @@ describe('escritorio-guard (bloqueos duros)', () => {
     expect(ev(ps(`ri "${ESC}\\Insert\\nota.txt"`)).exit).toBe(2);
   });
   it('"del Escritorio" en prosa no es un borrado (del = preposicion)', () => {
-    expect(ev(bash('git commit -m "docs: la sintesis va antes de tocar cosas del Escritorio (OneDrive, Y:)"')).exit).toBe(0);
-    expect(ev(bash(`git commit -m "feat: el rastro va a 1- GENERAL\\TAREAS CERRADAS; antes salia del Escritorio"`)).exit).toBe(0);
+    // Los commits de ejemplo de este archivo llevan sus rutas (`-- docs/a.md`): sin ellas los frena
+    // commit-rutas-guard (02/10/2026) y el test dejaria de probar al guardian que nombra.
+    expect(ev(bash('git commit -m "docs: la sintesis va antes de tocar cosas del Escritorio (OneDrive, Y:)" -- docs/a.md')).exit).toBe(0);
+    expect(ev(bash(`git commit -m "feat: el rastro va a 1- GENERAL\\TAREAS CERRADAS; antes salia del Escritorio" -- docs/a.md`)).exit).toBe(0);
   });
   it('bloquea mover a mano hacia/desde el archivo; permite el script y mover DENTRO del Escritorio', () => {
     expect(ev(bash(`mv "${ESC}\\X" "${ARCH}\\2026\\"`)).err).toMatch(/Mover y registrar son UNA operacion/);
@@ -248,7 +250,7 @@ describe('consumos-entregable-guard — lista canonica, probada contra los dispa
     expect(recuerda(editar('C:\\Users\\FacundoS-PC\\.claude\\projects\\C--Dev-BarackMercosul\\memory\\reference_aplix_consumo_dos_unidades.md'))).toBe(false);
     expect(recuerda(bash('cat -n .claude/hooks/consumos-entregable-guard.sh'))).toBe(false);
     expect(recuerda(bash("python - <<'PYEOF'\np='docs/LECCIONES_APRENDIDAS.md'\nanchor='\\n## Consumos de material\\n'\nPYEOF"))).toBe(false);
-    expect(recuerda(bash('git commit -m "docs(lecciones): un consumo que no cuadra se normaliza a la unidad que gobierna"'))).toBe(false);
+    expect(recuerda(bash('git commit -m "docs(lecciones): un consumo que no cuadra se normaliza a la unidad que gobierna" -- docs/LECCIONES_APRENDIDAS.md'))).toBe(false);
     expect(recuerda(bash('grep -nE "RELACIONES|ARTICULO|INSUMOS" scripts/_arbVer.py | head -15'))).toBe(false);
     expect(recuerda(bash('for f in feedback_formato_carga_arb feedback_destino_material; do cat "$M/$f.md"; done'))).toBe(false);
   });
@@ -290,7 +292,7 @@ describe('caracteristicas-especiales-guard — el criterio CC/SC se recuerda al 
     expect(recuerda(editar('C:\\Dev\\BarackMercosul\\docs\\LECCIONES_APRENDIDAS.md', 'una sigla se justifica con S y O; D/TLD'))).toBe(false);
     expect(recuerda(bash('cat -n .claude/hooks/caracteristicas-especiales-guard.sh'))).toBe(false);
     expect(recuerda(bash('npx vitest run __tests__/scripts/caracteristicasEspeciales.test.mjs'))).toBe(false);
-    expect(recuerda(bash('git commit -m "fix(amfe): criterio D/TLD y SC por S y O"'))).toBe(false);
+    expect(recuerda(bash('git commit -m "fix(amfe): criterio D/TLD y SC por S y O" -- docs/a.md'))).toBe(false);
     expect(recuerda(bash('ls tmp/export-novax'))).toBe(false);
     expect(recuerda(editar('C:\\Dev\\BarackMercosul\\scripts\\_backup.mjs', 'const x = 1;'))).toBe(false);
   });
@@ -351,9 +353,9 @@ describe('arb-cerrar-guard (casos de arb-cerrar-guard.test.sh + el bypass por se
     expect(ev(bash('grep -nE "WM_CLOSE|0x0010|DestroyWindow|EndTask|ProdWindow|taskkill" .claude/skills/arb-operar/SKILL.md')).exit).toBe(0);
     expect(ev(bash('git show 222674cf -- .claude/hooks/arb-cerrar-guard.sh')).exit).toBe(0);
     expect(ev(bash('cat <<EOF | bash\ntaskkill /IM produc.exe /F\nEOF')).exit).toBe(2);
-    expect(ev(bash('git commit -F - <<EOF\nfix: tapar bypasses\n\nTapados: .Kill() y taskkill sobre produc.exe y wmic delete.\nEOF')).exit).toBe(0);
+    expect(ev(bash('git commit -F - -- docs/a.md <<EOF\nfix: tapar bypasses\n\nTapados: .Kill() y taskkill sobre produc.exe y wmic delete.\nEOF')).exit).toBe(0);
     expect(ev(bash('cat > notas.txt <<EOF\nprobar taskkill /IM produc.exe /F\nEOF')).exit).toBe(0);
-    expect(ev(bash('taskkill /IM produc.exe /F && git commit -F - <<EOF\nnota\nEOF')).exit).toBe(2);
+    expect(ev(bash('taskkill /IM produc.exe /F && git commit -F - -- docs/a.md <<EOF\nnota\nEOF')).err).toMatch(/ARB-CERRAR/i);
   });
   it('BYPASS TAPADO 05/09: una segunda linea que empieza con grep ya no exime al kill de la primera', () => {
     expect(ev(bash('taskkill /IM produc.exe /F\ngrep x y')).exit).toBe(2);
@@ -463,7 +465,7 @@ describe('renumber-guard', () => {
     expect(ev(bash('node scripts/_realignWe.mjs --amfe 150 --apply')).exit).toBe(2);
     expect(ev(bash('node scripts/_renumberOps.mjs')).exit).toBe(0);
     expect(ev(bash('node scripts/_renumberOps.mjs --apply --i-read-content')).exit).toBe(0);
-    expect(ev(bash('git commit -m "scripts/_renumberOps.mjs --apply listo"')).exit).toBe(0);
+    expect(ev(bash('git commit -m "scripts/_renumberOps.mjs --apply listo" -- docs/a.md')).exit).toBe(0);
   });
 });
 
@@ -553,11 +555,11 @@ describe('script-inline-guard — comandos REALES de los transcripts', () => {
   });
   it('FALSO POSITIVO TAPADO 05/09: un commit largo cuyo MENSAJE nombra "node -e / python -" no es un script pegado', () => {
     // El primer commit de la Ola 2 lo bloqueo su propio guardian: el detector miraba el cuerpo del heredoc.
-    const commit = `git add a.mjs b.sh && \\\ngit commit -q -F - <<'EOF'\nfeat: guardian para heredoc / node -e / python - pegados\n${'x'.repeat(3200)}\nEOF\ngit log --oneline -1`;
+    const commit = `git add a.mjs b.sh && \\\ngit commit -q -F - -- a.mjs b.sh <<'EOF'\nfeat: guardian para heredoc / node -e / python - pegados\n${'x'.repeat(3200)}\nEOF\ngit log --oneline -1`;
     expect(medirInline(commit).inline).toBe(0);
     expect(ev(bash(commit)).exit).toBe(0);
     // Pero el node -e de verdad, fuera del heredoc, sigue contando entero.
-    expect(ev(bash(`node -e 'x' && git commit -F - <<'EOF'\nmsg\nEOF\nnode -e '${'z'.repeat(3100)}'`)).exit).toBe(2);
+    expect(ev(bash(`node -e 'x' && git commit -F - -- a.mjs <<'EOF'\nmsg\nEOF\nnode -e '${'z'.repeat(3100)}'`)).err).toMatch(/SCRIPT-INLINE-GUARD/);
   });
 });
 
