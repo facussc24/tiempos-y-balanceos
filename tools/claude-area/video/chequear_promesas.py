@@ -7,10 +7,14 @@ Lee promesas.json (una fila por cosa que el video dice que Claude hace) y sale c
     1  hay algo en el video sin probar, sin construir, con la prueba faltante, o probado sobre otras reglas
     2  promesas.json esta mal escrito
 
-Una prueba vale para la version sobre la que se hizo: cada promesa probada lleva "probado_sobre" = la huella de
-las reglas de la casa instaladas en la carpeta de demostracion cuando se probo (o el texto fijo
-"no depende de las reglas" para lo que no contesta el asistente: una grabacion, una captura de la app).
-Si las reglas instaladas hoy tienen otra huella, la prueba quedo vieja y hay que volver a correrla.
+Una prueba vale para la version sobre la que se hizo: cada promesa probada lleva "probado_sobre", que es
+  - el texto fijo "no depende de las reglas" (lo que no contesta el asistente: una grabacion, una captura de la app), o
+  - la huella de CADA SECCION de las reglas de la casa de la que esa promesa depende ("depende_de": ["2", "3"]):
+    {"2": "<huella>", "3": "<huella>"}, tomadas de las reglas instaladas en la demostracion cuando se probo.
+Si una de ESAS secciones cambio, la prueba quedo vieja y hay que volver a correrla. Un cambio en otra seccion no la
+toca (02/10/2026: la version 4 agrego dos renglones en la seccion 2, y eso no puede voltear la prueba de que el mail
+sale cuando la persona lo pide, que depende de la seccion 5 y de su programa). La forma vieja, una sola huella de
+todas las reglas, se sigue aceptando y envejece con cualquier cambio.
 
 Uso:
     python chequear_promesas.py              la lista, con lo que falta
@@ -21,6 +25,7 @@ import hashlib
 import io
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -40,10 +45,29 @@ def huella_instalada(ruta=REGLAS_INSTALADAS):
     return hashlib.sha1(texto.encode("utf-8")).hexdigest()[:12]
 
 
-def revisar(datos, raiz=REPO, huella="sin-mirar"):
+def huellas_por_seccion(ruta=REGLAS_INSTALADAS):
+    """{numero de seccion: huella} de las reglas instaladas ("## 2. Los datos" -> "2"), o None si no se ven."""
+    try:
+        texto = Path(ruta).read_text(encoding="utf-8").replace("\r\n", "\n")
+    except OSError:
+        return None
+    partes, actual = {}, None
+    for linea in texto.split("\n"):
+        m = re.match(r"## (\d+)\. ", linea)
+        if m:
+            actual = m.group(1)
+            partes[actual] = []
+        if actual:
+            partes[actual].append(linea.rstrip())
+    return {k: hashlib.sha1("\n".join(v).strip().encode("utf-8")).hexdigest()[:12] for k, v in partes.items()}
+
+
+def revisar(datos, raiz=REPO, huella="sin-mirar", secciones="sin-mirar"):
     """Devuelve (filas, problemas). Un problema = una promesa del video que no se puede sostener."""
     if huella == "sin-mirar":
         huella = huella_instalada()
+    if secciones == "sin-mirar":
+        secciones = huellas_por_seccion()
     filas, problemas = [], []
     vistos = set()
     for p in datos.get("promesas", []):
@@ -65,6 +89,18 @@ def revisar(datos, raiz=REPO, huella="sin-mirar"):
             sobre = p.get("probado_sobre")
             if not sobre:
                 problemas.append("%s: dice 'probado' y no dice sobre que version se probo (probado_sobre)" % pid)
+            elif isinstance(sobre, dict):
+                depende = [str(x) for x in (p.get("depende_de") or [])]
+                if not depende or sorted(depende) != sorted(sobre):
+                    problemas.append("%s: 'depende_de' tiene que nombrar las mismas secciones que 'probado_sobre' (y al menos una)" % pid)
+                elif secciones is None:
+                    problemas.append("%s: no puedo ver las reglas instaladas para saber si la prueba sigue valiendo" % pid)
+                else:
+                    cambiadas = [s for s in sorted(depende) if secciones.get(s) != sobre[s]]
+                    if cambiadas:
+                        vieja = True
+                        problemas.append("%s: cambio la seccion %s de las reglas desde que se probo: volver a probar"
+                                         % (pid, ", ".join(cambiadas)))
             elif sobre != NO_DEPENDE:
                 if huella is None:
                     problemas.append("%s: no puedo ver las reglas instaladas para saber si la prueba sigue valiendo" % pid)
@@ -102,9 +138,24 @@ def autoprueba():
     fija = json.loads(json.dumps(buena))
     fija["promesas"][0]["probado_sobre"] = NO_DEPENDE
     casos.append(("lo que no depende de las reglas no envejece", fija, "zzz999", 0))
+    # por seccion: un cambio en una seccion de la que depende frena; un cambio en otra, no
+    hoy = {"2": "aaa", "5": "bbb"}
+    por = json.loads(json.dumps(buena))
+    por["promesas"][0].update({"depende_de": ["5"], "probado_sobre": {"5": "bbb"}})
+    casos.append(("por seccion: la suya sigue igual, pasa aunque cambie otra", por, "zzz999", 0))
+    for nombre, cambio, espera in (
+        ("por seccion: cambio la suya", {"probado_sobre": {"5": "vieja"}}, 1),
+        ("por seccion: la seccion ya no existe en las reglas", {"depende_de": ["9"], "probado_sobre": {"9": "x"}}, 1),
+        ("por seccion: sin decir de que depende", {"depende_de": []}, 1),
+        ("por seccion: depende de dos y la huella trae una", {"depende_de": ["2", "5"]}, 1),
+        ("por seccion: depende de dos, una cambio", {"depende_de": ["2", "5"], "probado_sobre": {"2": "vieja", "5": "bbb"}}, 1),
+    ):
+        mala = json.loads(json.dumps(por))
+        mala["promesas"][0].update(cambio)
+        casos.append((nombre, mala, "zzz999", espera))
     fallas = 0
     for nombre, datos, huella, espera in casos:
-        _, problemas = revisar(datos, huella=huella)
+        _, problemas = revisar(datos, huella=huella, secciones=hoy)
         sale = 1 if problemas else 0
         ok = sale == espera
         fallas += 0 if ok else 1
@@ -119,6 +170,8 @@ def main(argv):
         return autoprueba()
     if "--huella" in argv:
         print(huella_instalada() or "no encuentro las reglas instaladas en %s" % REGLAS_INSTALADAS)
+        for s, h in sorted((huellas_por_seccion() or {}).items()):
+            print("  seccion %s: %s" % (s, h))
         return 0
     try:
         datos = json.loads((AQUI / "promesas.json").read_text(encoding="utf-8"))

@@ -1,14 +1,30 @@
 # Anota en promesas.json las pruebas del ensayo 2 (02/10/2026), hechas sobre la demostracion instalada por el
-# instalador como PC de Produccion. Cada prueba queda atada a la huella de las reglas instaladas HOY.
-# Uso: python anotar_pruebas.py [--aplicar]
+# instalador. Cada prueba queda atada a la huella de las SECCIONES de las reglas de las que depende (DEPENDE).
+# Uso: python anotar_pruebas.py --solo id1,id2 [--reglas <casa.md sobre la que se probo>] [--aplicar]
+#   --solo es obligatorio: anotar una prueba dice "esto se probo sobre ESTAS reglas", y eso se dice promesa por promesa.
+#   --reglas: por defecto las instaladas hoy en la demostracion; para una prueba hecha sobre una version anterior va la
+#             ruta de las reglas de ESA version (queda una copia en la carpeta de cada conversacion de demostracion).
 import io
 import json
 import sys
 from pathlib import Path
 
-from chequear_promesas import huella_instalada
+from chequear_promesas import REGLAS_INSTALADAS, huellas_por_seccion
 
 AQUI = Path(__file__).resolve().parent
+# De que secciones de las reglas de la casa depende cada promesa (1 como arrancas, 2 los datos, 3 donde esta cada
+# cosa, 4 lo que no haces solo, 5 mails, 6 como hablas).
+DEPENDE = {
+    "pregunta-con-fuente": ["2", "3", "6"],
+    "bom-en-el-arb": ["2", "3"],
+    "mail-borrador": ["5"],
+    "mail-enviar": ["5"],
+    "presentaciones": ["1", "2"],
+    "aprende-habilidades": ["1", "4"],
+    "recuerda": ["1"],
+    "no-hace-solo": ["4", "5"],
+    "un-ejemplo-por-sector": ["1", "2", "3"],
+}
 ENSAYO = ".sgc-cache/claude-por-area/examen/ensayo_2_respuestas.md"
 PRUEBAS = {
     "pregunta-con-fuente": "Ensayo 2 del 02/10 (PC de Producción, nivel Medio, reglas v3), preguntas 2, 7 y 10: P-09.1 rev B.1, F-24 rev I e I-AC-007 rev A, cada cita comprobada contra su documento y cada ruta contra el servidor.",
@@ -26,23 +42,31 @@ PRUEBAS = {
 def main():
     ruta = AQUI / "promesas.json"
     datos = json.loads(ruta.read_text(encoding="utf-8"))
-    huella = huella_instalada()
-    if not huella:
-        sys.exit("no veo las reglas instaladas")
+    if "--solo" not in sys.argv:
+        sys.exit("falta --solo id1,id2: se anota promesa por promesa")
+    solo = sys.argv[sys.argv.index("--solo") + 1].split(",")
+    reglas = Path(sys.argv[sys.argv.index("--reglas") + 1]) if "--reglas" in sys.argv else REGLAS_INSTALADAS
+    secciones = huellas_por_seccion(reglas)
+    if not secciones:
+        sys.exit("no veo las reglas en %s" % reglas)
+    desconocidas = [i for i in solo if i not in PRUEBAS or i not in DEPENDE]
+    if desconocidas:
+        sys.exit("no tengo la prueba o las secciones de: %s" % ", ".join(desconocidas))
     hechos = 0
     for p in datos["promesas"]:
-        if p["id"] in PRUEBAS:
+        if p["id"] in solo:
             p["estado"] = "probado"
             p["prueba"] = ".sgc-cache/claude-por-area/examen/sectores_respuestas_v3.md" if p["id"] == "un-ejemplo-por-sector" else ENSAYO
             p["como_se_probo"] = PRUEBAS[p["id"]]
-            p["probado_sobre"] = huella
+            p["depende_de"] = DEPENDE[p["id"]]
+            p["probado_sobre"] = {s: secciones[s] for s in DEPENDE[p["id"]]}
             p.pop("que_falta", None)
             hechos += 1
-    if hechos != len(PRUEBAS):
-        sys.exit("esperaba %d promesas y encontre %d" % (len(PRUEBAS), hechos))
+    if hechos != len(solo):
+        sys.exit("esperaba %d promesas y encontre %d" % (len(solo), hechos))
     if "--aplicar" in sys.argv:
         io.open(ruta, "w", encoding="utf-8", newline="\n").write(json.dumps(datos, ensure_ascii=False, indent=2) + "\n")
-    print("%s %d pruebas sobre la huella %s" % ("anotadas" if "--aplicar" in sys.argv else "anotaria", hechos, huella))
+    print("%s %d pruebas sobre las reglas de %s" % ("anotadas" if "--aplicar" in sys.argv else "anotaria", hechos, reglas))
 
 
 if __name__ == "__main__":
