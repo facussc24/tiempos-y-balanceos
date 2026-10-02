@@ -90,10 +90,10 @@
       "en_el_video": true,
       "estado": "probado",
       "prueba": ".sgc-cache/claude-por-area/examen/ensayo_2_respuestas.md",
-      "como_se_probo": "Ensayo 2 del 02/10, tanda 2: «armame una presentación de 3 hojas sobre qué hacer ante una pieza no conforme» → PowerPoint abierto en 40 s, 5 diapositivas (portada, 3 hojas, cierre) con la fuente P-09.1 rev B.1 al pie; exportadas a imagen y comparadas renglón por renglón con el documento.",
+      "como_se_probo": "Ensayo 2 del 02/10, tanda 2: «armame una presentación de 3 hojas sobre qué hacer ante una pieza no conforme» → PowerPoint abierto en 40 s, 5 diapositivas (portada, 3 hojas, cierre) con la fuente P-09.1 rev B.1 al pie; exportadas a imagen y comparadas renglón por renglón con el documento. Repetido el 02/10 a las 15:50 sobre las reglas v4 (PC de Producción, nivel Medio): 5 diapositivas con P-09.1 rev B.1 y P-13 rev C al pie, miradas hoja por hoja.",
       "probado_sobre": {
         "1": "5e909aeff8c4",
-        "2": "81397ab116bb"
+        "2": "8e3dbad38e55"
       },
       "depende_de": [
         "1",
@@ -202,10 +202,10 @@
       "id": "imds-caso-real",
       "dice": "En Calidad: ayudó a destrabar una declaración de materiales (IMDS) rechazada por el cliente",
       "pedido": "02/10: «podríamos mostrarle cómo ayudarlos en imds con un ejemplo real»",
-      "en_el_video": true,
+      "en_el_video": false,
       "estado": "sin probar",
       "prueba": null,
-      "que_falta": "El caso es real (21/09/2026: MDS de la 21-9689 rechazado por falta de norma, corregido y reenviado con 0 errores; lo hizo el Claude de Ingeniería a pedido de Facundo). Falta una imagen que se pueda mostrar (pantalla de IMDS con el estado, sin nombres de personas del cliente) y que Facundo confirme que se puede contar."
+      "que_falta": "El caso es real (21/09/2026: MDS de la 21-9689 rechazado por falta de norma, corregido y reenviado con 0 errores; lo hizo el Claude de Ingeniería a pedido de Facundo). Falta una imagen que se pueda mostrar (pantalla de IMDS con el estado, sin nombres de personas del cliente) y que Facundo confirme que se puede contar. 02/10 15:55: NO está en la narración del video por sector (voz_ilusiona/narracion.txt). Entra solo si Facundo da el OK para contarlo y se graba la toma con su clave."
     }
   ]
 }
