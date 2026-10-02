@@ -108,16 +108,16 @@
       "capturas": [
         {
           "archivo": "capturas/04-local-y-select-folder.png",
-          "que_se_ve": "La pantalla de conversación nueva, abajo: Local (con su lista abierta) y al lado el botón de la carpeta.",
+          "que_se_ve": "La pantalla de conversación nueva, abajo: Local, y el botón de la carpeta con su lista abierta (ClaudeBarack y «Abrir carpeta…»).",
           "marcas": [
-            { "tipo": "recuadro", "x": 3.6, "y": 53.3, "ancho": 14.4, "alto": 11, "numero": 1, "posicion_confirmada": true },
-            { "tipo": "recuadro", "x": 18.6, "y": 53.3, "ancho": 28.6, "alto": 11, "numero": 2, "posicion_confirmada": true }
+            { "tipo": "recuadro", "x": 1.6, "y": 69.6, "ancho": 14.6, "alto": 7.4, "numero": 1, "posicion_confirmada": true },
+            { "tipo": "recuadro", "x": 17.5, "y": 24.6, "ancho": 24, "alto": 6, "numero": 2, "posicion_confirmada": true }
           ]
         },
         {
           "archivo": "capturas/05-carpeta-elegida.png",
           "que_se_ve": "La ventana para elegir carpeta, con la carpeta de Barack marcada. Sin el árbol de carpetas de al lado.",
-          "rotulo": "3. La carpeta",
+          "rotulo": "3. Abrir carpeta…",
           "marcas": [
             { "tipo": "recuadro", "x": 16, "y": 44.6, "ancho": 26, "alto": 4.8, "posicion_confirmada": true },
             { "tipo": "recuadro", "x": 75.3, "y": 91.6, "ancho": 13.6, "alto": 4.8, "posicion_confirmada": true }
@@ -126,8 +126,8 @@
       ],
       "texto": [
         "1. Abajo tiene que decir **Local**: así Claude trabaja en esta computadora.",
-        "2. Al lado está la carpeta. Si no dice **ClaudeBarack**, hacé clic ahí.",
-        "3. Elegí **{CARPETA}** y apretá **Seleccionar carpeta**.",
+        "2. Al lado está la carpeta. Hacé clic y elegí **ClaudeBarack**.",
+        "3. Si no está en la lista: **Abrir carpeta…** y elegí **{CARPETA}**.",
         "Siempre esa: con otra, Claude no tiene las reglas de Barack."
       ],
       "error_que_evita": "Elegir Cloud, o cualquier otra carpeta.",
@@ -266,9 +266,10 @@
       "capturas": [
         {
           "archivo": "capturas/11-modelo-y-nivel.png",
-          "que_se_ve": "La caja donde se escribe: abajo a la derecha dice el modelo (Opus 5.5) y el nivel (Medio).",
+          "que_se_ve": "A la izquierda, la lista de modelos con Opus 5.5 elegido. A la derecha, el control de esfuerzo, con Medio marcado como «Recomendado».",
           "marcas": [
-            { "tipo": "recuadro", "x": 43, "y": 58, "ancho": 40, "alto": 28, "posicion_confirmada": true }
+            { "tipo": "recuadro", "x": 23.5, "y": 8.5, "ancho": 13.5, "alto": 12, "posicion_confirmada": true },
+            { "tipo": "recuadro", "x": 70, "y": 12.5, "ancho": 16, "alto": 13, "posicion_confirmada": true }
           ]
         }
       ],
@@ -277,20 +278,18 @@
         "filas": [
           ["Lo de todos los días", "Opus 5.5", "Medio"],
           ["Un mail o un texto corto", "Sonnet 5.5", "Medio"],
-          ["Comparar planillas o revisar muchos archivos", "Opus 5.5", "Alto"],
-          ["Algo mecánico y repetido", "Opus 5.5", "Bajo"]
+          ["Comparar planillas o revisar muchos archivos", "Opus 5.5", "Uno más"],
+          ["Algo mecánico y repetido", "Opus 5.5", "Uno menos"]
         ],
         "resaltar": 0
       },
       "texto": [
         "Si no sabés, no toques nada: **Opus 5.5** en nivel **Medio**.",
-        "Se ve abajo a la derecha. Si dice otra cosa, hacé clic ahí y elegilo.",
-        "Los niveles **Extra** y **Ultracode**, **Fable** y el modo rápido no se usan sin avisar."
+        "Se cambian abajo a la derecha: clic en el modelo, o en el nivel («Esfuerzo»).",
+        "**Fable** y los niveles más altos gastan mucho: no se usan sin avisar."
       ],
       "error_que_evita": "Poner todo en el nivel más alto «para que salga mejor» y dejar sin cupo al resto.",
-      "a_confirmar": [
-        { "donde": "app", "que": "cómo se llaman en la lista los niveles de abajo y de arriba de Medio (en pantalla se vieron Medio, Extra y Ultracode)" }
-      ]
+      "a_confirmar": []
     },
 
     {

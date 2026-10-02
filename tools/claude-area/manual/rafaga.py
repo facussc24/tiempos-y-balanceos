@@ -30,7 +30,9 @@ while time.time() < fin:
     if anterior is not None:
         dif = ImageChops.difference(chica, anterior).convert("L")
         # cuanto de la pantalla cambio (0 a 1); menos de 2 % es el cursor o el reloj
-        cambio = sum(1 for p in dif.getdata() if p > 24) / (192 * 108) > 0.02
+        # un menu chico cambia menos del 1 % de la pantalla (el 01/10 con 2 % se perdieron las listas de
+        # modelos y de niveles): alcanza con que cambie algo mas que el cursor
+        cambio = sum(1 for p in dif.getdata() if p > 16) / (192 * 108) > 0.0015
     if cambio:
         nombre = destino / time.strftime("%H%M%S.png")
         im.save(nombre)
