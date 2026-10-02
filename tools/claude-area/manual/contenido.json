@@ -249,11 +249,12 @@
         { "area": "Producción", "pregunta": "¿Qué hago si salen tres piezas malas seguidas?", "documento": "P-09.1" },
         { "area": "Mantenimiento", "pregunta": "¿Qué miro en el mantenimiento autónomo?", "documento": "I-MT-001" },
         { "area": "Recursos Humanos", "pregunta": "¿Cómo pido una capacitación para mi gente?", "documento": "P-18" },
-        { "area": "Dirección", "pregunta": "¿Qué hay que llevar a la revisión por la Dirección?", "documento": "MC-04" }
+        { "area": "Dirección", "pregunta": "¿Qué hay que llevar a la revisión por la Dirección?", "documento": "MC-09" }
       ],
       "texto": [
         "Escribilo como se lo dirías a un compañero.",
-        "Cuanto más concreto, mejor: la pieza, el proveedor, el documento."
+        "Cuanto más concreto, mejor: la pieza, el proveedor, el documento.",
+        "También te arma una presentación de PowerPoint."
       ],
       "error_que_evita": "No saber por dónde empezar.",
       "a_confirmar": []
@@ -274,9 +275,9 @@
       ],
       "texto": [
         "Pedíselo con tus palabras: a quién va y qué necesitás.",
-        "Claude lo escribe y lo deja abierto en Outlook. No lo manda.",
+        "Claude lo escribe y lo deja abierto en Outlook, sin mandarlo.",
         "Lo que no sabe lo deja entre corchetes: completalo vos.",
-        "Leelo entero. Sale recién cuando vos apretás **Enviar**."
+        "Leelo entero. Sale cuando apretás **Enviar**, o cuando le escribís **mandalo**."
       ],
       "error_que_evita": "Creer que ya se mandó, o mandarlo sin leer a quién va.",
       "a_confirmar": []
@@ -366,14 +367,14 @@
       "capturas": [
         {
           "archivo": "capturas/13-mail-esperando-enviar.png",
-          "que_se_ve": "El mismo mail de la página del mail, más de cerca: el botón Enviar lo aprieta la persona.",
+          "que_se_ve": "El mismo mail de la página del mail, más de cerca: sale con el botón Enviar o cuando la persona se lo pide.",
           "marcas": [
             { "tipo": "recuadro", "x": 3.2, "y": 5, "ancho": 6.6, "alto": 23, "posicion_confirmada": true }
           ]
         }
       ],
       "texto": [
-        "No borra archivos ni manda mails: eso lo decidís vos, con **Enviar**.",
+        "No borra archivos. Un mail sale solo si lo mandás vos o se lo pedís.",
         "No muestra los mails de Dirección ni de Recursos Humanos.",
         "Le pasa a Ingeniería la lista de programas de la PC. No saca ninguno.",
         "Se puede equivocar: por eso dice de dónde sacó cada respuesta."

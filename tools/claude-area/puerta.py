@@ -27,8 +27,9 @@ RESPALDO = Path.home() / "BARACK ARGENTINA SRL" / "Ingeniería y Proyecto - Gene
 
 # Frases que dicen "Claude nunca envia un mail". Dejan de ser verdad cuando la promesa mail-enviar esta probada.
 FRASES_NO_ENVIA = [
-    r"No lo manda", r"[Nn]o manda un mail", r"[Uu]n mail lo env[ií]a la persona", r"Nunca solo",
+    r"No lo manda", r"[Nn]o manda un mail", r"[Uu]n mail lo env[ií]a la persona", r"ni manda mails",
     r"[Ss]ale reci[eé]n cuando vos apret", r"el bot[oó]n lo aprieta la persona", r"No env[ií]a sin vos",
+    r"Enviar lo decide la persona",   # "Nunca solo" se saco el 02/10: sigue siendo verdad (sale a pedido, nunca solo)
 ]
 
 
