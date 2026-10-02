@@ -13,6 +13,9 @@ from fotos_v3 import cuadro
 PANT_LIMPIEZA = dict(fuente=cuadro("0836", 5), crop=(11, 16, 89, 92))   # "Glue Removal Operation", en ingles
 
 FOTOS = {
+    # ---------------- PORTADA ----------------
+    "p_maquina": dict(fuente=cuadro("0347", 23), crop=(0, 0, 100, 68),
+                      nota="La laminadora de frente, vista desde el desbobinador (recorrida del 25/08)"),
     # ---------------- LIMPIEZA DE RODILLOS ----------------
     "l_home_f3": dict(fuente=cuadro("0836", 3), crop=(11, 16, 94, 96),
                       marcas=[(30, 42, 17, 11, "Cleaning glue screen F3")],
@@ -61,13 +64,15 @@ FOTOS.update({
                       nota="Manos empujando el rollo sobre el eje, regla impresa a la vista"),
     "r_montado": dict(fuente=cuadro("9415", 5),
                       nota="Rollo montado en el brazo, volante cromado y orificio de aire"),
+    # El aparato negro de la regla: "detector", no "sensor de borde". Con el en cuadro (9527_2650 a
+    # 2670) el tecnico dice "aca tiene un detector" hablando de la cinta de aviso; ninguna fuente lo
+    # llama sensor de borde. La banda azul esta pegada al RODILLO cromado: no es la cinta de aviso.
     "r_sensor_borde": dict(fuente=cuadro("9527", 2590), crop=(15, 12, 100, 52),
-                           marcas=[(31, 38, 29, 22, "Sensor de borde")],
-                           nota="Sensor de borde sobre la barra verde y borde del material"),
+                           marcas=[(31, 38, 29, 22, "Detector")],
+                           nota="Detector negro sobre la regla, con el borde del material adentro"),
     "r_cinta_aviso": dict(fuente=cuadro("9527", 2590), crop=(15, 12, 100, 52),
-                          marcas=[(60, 0, 10.5, 28, "Cinta adhesiva de aviso"),
-                                  (31, 38, 29, 22, "Sensor")],
-                          nota="Cinta azul de aviso sobre el material y sensor"),
+                          marcas=[(31, 38, 29, 22, "Detector")],
+                          nota="Detector negro sobre la regla, el que el tecnico muestra para la cinta de aviso"),
     "r_guiador": dict(fuente=cuadro("9527", 3370), crop=(0, 10, 75, 55),
                       nota="Pantalla del guiador de borde BF5500S"),
     "r_tension": dict(fuente=cuadro("9527", 2500), crop=(3, 28, 75, 82),
@@ -101,7 +106,7 @@ FOTOS.update({
     # ---------------- ENCENDIDO ----------------
     "e_rodillos": dict(fuente=cuadro("0383", 121), crop=(40, 25, 100, 70),
                        nota="Frente de la maquina: los dos rodillos detras de la ventana"),
-    "e_aire": dict(fuente=("manual", 7), crop=(54, 30, 85, 90),
+    "e_aire": dict(fuente=("manual", 7), crop=(54, 30, 85, 85.5),
                    nota="Llave de aire (foto del manual del fabricante, p. 7)"),
     "e_manometro": dict(fuente=("manual", 8), crop=(30, 27, 80, 87),
                         nota="Manometro de aire (foto del manual del fabricante, p. 8)"),
@@ -153,7 +158,8 @@ FOTOS.update({
                        nota="Tablero: pantalla y los cuatro pulsadores"),
     # ---------------- RECETA ----------------
     "v_receta": dict(fuente=cuadro("0836", 8), crop=(18, 19, 84, 81),
-                     marcas=[(4, 13, 30, 9, "Product Part Number"), (45, 13, 26, 9, "Product Model")],
+                     # la marca 2 arranca ANTES de la palabra "Product Model": arrancando en 45 la tachaba
+                     marcas=[(4, 13, 30, 9, "Product Part Number"), (38.5, 13, 32.5, 9, "Product Model")],
                      nota="Pantalla de receta (Material Number Formula)"),
 })
 
@@ -187,11 +193,14 @@ FOTOS.update({
                     nota="Pantalla de operacion, casilla de calentamiento completo"),
     "m_start": dict(**BOTONERA, marcas=[(17.5, 79, 10, 12, "Start")],
                     nota="Tablero con el boton verde Start"),
-    "m_marcha": dict(fuente=cuadro("0392", 4), crop=(28, 30, 62, 64),
-                     marcas=[(29.5, 47, 42.5, 20, "Estado: marcha automatica")],
+    # recorte bajo: deja afuera las temperaturas del 26/08 (50,0 y 181,7), que no son las de la
+    # pantalla del 10/09 que va en la misma hoja; lo que el paso manda mirar es el estado
+    "m_marcha": dict(fuente=cuadro("0392", 4), crop=(28, 45, 62, 60),
+                     marcas=[(29.5, 6, 42.5, 43, "Estado: marcha automatica")],
                      nota="Pantalla con el estado de marcha automatica (en chino, 26/08)"),
-    "m_temperaturas": dict(**PANT_OPERACION, marcas=[(36.5, 56, 25, 16, "Temperatura de los rodillos"),
-                                                     (63.5, 70, 34, 14.5, "Temperatura programada")],
+    # UNA sola marca (sin numerito): con dos, el circulo de la segunda tapaba el "°C" de al lado y
+    # su borde tachaba el renglon "Glue coating roller". El recuadro abraza rotulo, valor y unidad.
+    "m_temperaturas": dict(**PANT_OPERACION, marcas=[(35.6, 55.9, 27.6, 16.4, "Temperatura de los rodillos")],
                            nota="Pantalla de operacion, temperatura real de los dos rodillos"),
     "m_stop": dict(**BOTONERA, marcas=[(37, 79, 10, 12, "Stop")],
                    nota="Tablero con el boton rojo Stop"),

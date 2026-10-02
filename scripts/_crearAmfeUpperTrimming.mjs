@@ -15,7 +15,12 @@
  *     sin devoluciones; Manuel Meszaros, 15/09: "no problems during the wrapping trials. The
  *     first delivery is OK". Programa de la semana 40: 20 SINGLE y 30 DUAL por dia. No es un
  *     proceso "sin experiencia": la prevencion que existe es de CONDUCTA (operarios del sector
- *     con practica), que por la Tabla P2 oficial es O=8, no O=10.
+ *     con practica). Por la Tabla P2 oficial un control de conducta va de 6 a 9; se uso O=7
+ *     (ver O_OPERARIO). Es un JUICIO: lo respaldan los dos remitos y el mail de Calidad; en
+ *     contra, la planilla de cumplimiento del cliente decia "entregado 0" al 29/09 y la
+ *     tercera pasada del auditor pidio 8 o 9. Esa evidencia NO cubre los reprocesos (32, 71
+ *     y 72): nadie reproceso una pieza todavia. Queda dicho a Fak; si el decide 8, cambia
+ *     O_OPERARIO y 11 causas de aspecto pasan de prioridad media a alta (contado el 02/10).
  *   - El adhesivado y el tapizado se registran junto con los del IP Pad (programa de la semana
  *     40: "REGISTRO DE PRODUCCION - ADHESIVADO IP Y UPPER TRIMMING" y "Tapizado IP PAD y UPPER
  *     TRIM", con piezas por hora y scrap). De ese sector se toma solo lo que es del LUGAR
@@ -63,13 +68,16 @@
  *
  * Uso:  node scripts/_crearAmfeUpperTrimming.mjs            (arma, valida y muestra; no escribe)
  *       node scripts/_crearAmfeUpperTrimming.mjs --apply    (escribe en Supabase)
+ *       ... --sin-bom   saltea el cruce de materiales contra el export del arb (C:\tmp\RELACIONES.TXT)
+ *       ... --candidatas   lista las causas candidatas a caracteristica especial
  */
 
 import { randomUUID } from 'crypto';
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { connectSupabase, parseData, calculateAP } from './_lib/amfeIo.mjs';
+import { connectSupabase, parseData } from './_lib/amfeIo.mjs';
 import { runWithValidation } from './_lib/dryRunGuard.mjs';
-import { validateAmfeDoc, validateEquipoMultifuncional, printIssues, nivelPorCriterio } from './_lib/amfeValidator.mjs';
+import { validateAmfeDoc, validateEquipoMultifuncional, printIssues } from './_lib/amfeValidator.mjs';
+import { crearConstructores, chequeosDeAutoria, leerBomDelArb, materialesContraBom } from './_lib/amfeAutoria.mjs';
 
 const APPLY = process.argv.includes('--apply');
 const FECHA_ISO = '2026-10-01';
@@ -81,60 +89,13 @@ const NUMERO_EMPRESA = '174';
 const FECHA = '01/10/2026';
 const FLUJOGRAMA = 'tools/flowchart/data/160-UPPER-TRIM-PANEL.json';
 
-// Ids estables entre corridas: el gate identifica cada hallazgo por el id de su operacion.
-let _n = 0;
-const id = () => `utp-${String(++_n).padStart(4, '0')}`;
-
-function causa(descripcion, prevControl, O, detControl, D) {
-  return {
-    id: id(),
-    cause: descripcion,
-    description: descripcion,
-    preventionControl: prevControl,
-    preventiveControl: prevControl,
-    detectionControl: detControl,
-    occurrence: O,
-    detection: D,
-  };
-}
-
-/** La S sale del EFECTO y el AP se calcula. Un AP=H sin accion va con la celda vacia. */
-function falla(descripcion, ef, causas) {
-  for (const c of causas) {
-    const ap = calculateAP(ef.s, c.occurrence, c.detection);
-    c.ap = ap;
-    c.actionPriority = ap;
-  }
-  return {
-    id: id(),
-    description: descripcion,
-    failureMode: descripcion,
-    severity: ef.s,
-    effectLocal: ef.local,
-    effectNextLevel: ef.next,
-    effectEndUser: ef.end,
-    causes: causas,
-  };
-}
-function funcion(descripcion, requisitos, fallas) {
-  return { id: id(), description: descripcion, functionDescription: descripcion, requirements: requisitos, failures: fallas };
-}
-function we(type, name, funciones) {
-  return { id: id(), name, type, functions: funciones };
-}
-function operacion(numero, nombre, funcionOperacion, workElements) {
-  return {
-    id: id(), opNumber: numero, operationNumber: numero,
-    name: nombre, operationName: nombre,
-    operationFunction: funcionOperacion, focusElementFunction: FOCO,
-    workElements,
-  };
-}
-
 // Nivel 1 (amfe.md §8): que entrega la pieza. Identico en todas las operaciones.
 const FOCO = 'Funcion Interna: Entregar el Upper Trim Panel tapizado en microfibra, con los agujeros libres y el logo de carga grabado, conforme al plano y con la inflamabilidad y la adherencia que exige el cliente'
   + ' / Funcion del Cliente: Permitir el armado de la consola central en Cozzuol sin clasificacion ni retrabajo'
   + ' / Funcion del Usuario Final: Aspecto y tacto de la consola central, con la zona de carga inalambrica identificada';
+
+// Constructores comunes a los generadores (ids estables, S en el efecto, AP calculado).
+const { causa, falla, funcion, we, operacion } = crearConstructores({ prefijo: 'utp', foco: FOCO });
 
 // ---------------------------------------------------------------------------
 // CONTROLES QUE SE REPITEN
@@ -1134,77 +1095,43 @@ const doc = {
 // ---------------------------------------------------------------------------
 // Estadisticas y chequeos propios
 // ---------------------------------------------------------------------------
-let nWE = 0, nFn = 0, nFM = 0, nCausas = 0;
-const apCount = {};
-const errores = [];
-const candidatas = [];
-const sinPrevencion = [];
-const sinDeteccion = [];
-// "Sin ..." y "No hay ..." dicen que el control no existe: las dos formas, en las dos columnas
-// (la auditoria de cierre del 01/10/2026 marco que el chequeo anterior miraba una sola).
-const NO_EXISTE = /^(Sin |No hay )/i;
-for (const op of doc.operations) {
-  if (!op.workElements.length) errores.push(`OP${op.opNumber} sin work elements`);
-  if (op.operationFunction === op.focusElementFunction) errores.push(`OP${op.opNumber}: la funcion de la operacion es igual a la del elemento foco`);
-  for (const w of op.workElements) {
-    nWE++;
-    for (const f of w.functions) {
-      nFn++;
-      if (f.description === op.operationFunction) errores.push(`OP${op.opNumber}/${w.name}: la funcion del elemento es igual a la de la operacion`);
-      if (!f.failures.length) errores.push(`OP${op.opNumber}/${w.name}: funcion sin fallas`);
-      for (const fm of f.failures) {
-        nFM++;
-        if (!fm.effectLocal || !fm.effectNextLevel || !fm.effectEndUser) errores.push(`OP${op.opNumber}: modo de falla sin los 3 efectos: ${fm.description}`);
-        if (!fm.causes.length) errores.push(`OP${op.opNumber}: modo de falla sin causas: ${fm.description}`);
-        for (const c of fm.causes) {
-          nCausas++;
-          if (!c.ap) errores.push(`OP${op.opNumber}: causa sin AP: ${c.description}`);
-          else apCount[c.ap] = (apCount[c.ap] || 0) + 1;
-          if (/error de oper|error del oper|error humano|capacitaci/i.test(`${c.description} ${c.preventiveControl}`)) errores.push(`OP${op.opNumber}: causa o control de "error de operario / capacitacion": ${c.description}`);
-          if (NO_EXISTE.test(c.preventiveControl) && c.occurrence !== 10) errores.push(`OP${op.opNumber}: una prevencion que no existe lleva O=10 y tiene ${c.occurrence}: ${c.preventiveControl}`);
-          if (c.preventiveControl === OPERARIO && c.occurrence !== O_OPERARIO) errores.push(`OP${op.opNumber}: el control de conducta lleva O=${O_OPERARIO} y tiene ${c.occurrence}`);
-          if (NO_EXISTE.test(c.detectionControl) && c.detection !== 10) errores.push(`OP${op.opNumber}: una deteccion que no existe lleva D=10 y tiene ${c.detection}: ${c.detectionControl}`);
-          if (NO_EXISTE.test(c.preventiveControl)) sinPrevencion.push(`OP ${op.opNumber} · ${fm.description}`);
-          if (c.detection === 10) sinDeteccion.push(`OP ${op.opNumber} · ${fm.description}`);
-          const nivel = nivelPorCriterio(fm.severity, c.occurrence);
-          if (nivel) candidatas.push({ op: op.opNumber, fm: fm.description, s: fm.severity, o: c.occurrence, nivel });
-        }
-      }
-    }
-  }
-}
-if (/TBD/.test(JSON.stringify(doc))) errores.push('hay un TBD en el documento');
-
-// Las operaciones son las del flujograma, EN SU ORDEN y con su nombre. Se lee del archivo en
-// orden de lectura (rama por rama, el reproceso despues de su control) y no se ordena por
-// numero: ordenado, una 41 dibujada antes de la 40 pasaba (auditoria de cierre del 01/10/2026).
-// Un almacenado con numero (el WIP del corte) no es una operacion con AMFE.
+// Los chequeos de autoria son los comunes (scripts/_lib/amfeAutoria.mjs): operaciones del
+// flujograma en su orden y con su nombre, tres efectos, AP de la tabla, un control que no
+// existe lleva 10, scrap con S >= 7, niveles de funcion distintos, sin TBD.
 const flujo = JSON.parse(readFileSync(FLUJOGRAMA, 'utf8'));
-const sinAcentos = (s) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toUpperCase();
-const pasosDelFlujo = [];
-(function juntar(seq) {
-  for (const p of seq || []) {
-    if (p.stepId && p.type !== 'storage') pasosDelFlujo.push(p);
-    if (p.branchSide?.stepId) pasosDelFlujo.push(p.branchSide);
-    if (p.branchSide?.sequence) juntar(p.branchSide.sequence);
-    for (const rama of p.branches || []) juntar(Array.isArray(rama) ? rama : rama.sequence);
-  }
-})(flujo.flow);
-const delFlujo = pasosDelFlujo.map((p) => ({ n: p.stepId, nombre: sinAcentos(p.description) }));
-const mias = doc.operations.map((o) => ({ n: o.opNumber, nombre: o.name }));
-if (JSON.stringify(delFlujo.map((x) => x.n)) !== JSON.stringify(mias.map((x) => x.n))) {
-  errores.push(`las operaciones no son las del flujograma, o no estan en su orden: flujograma ${delFlujo.map((x) => x.n).join(',')} / AMFE ${mias.map((x) => x.n).join(',')}`);
-}
-for (const f of delFlujo) {
-  const m = mias.find((x) => x.n === f.n);
-  if (m && m.nombre !== f.nombre) errores.push(`OP ${f.n}: el flujograma dice "${f.nombre}" y el AMFE "${m.nombre}"`);
-}
+const { errores, stats, candidatas, sinPrevencion, sinDeteccion } = chequeosDeAutoria(doc, {
+  flujograma: flujo,
+  controlDeConducta: { texto: OPERARIO, o: O_OPERARIO },
+});
+const { nWE, nFn, nFM, nCausas, apCount } = stats;
 
-// Un efecto que dice SCRAP no puede quedar en la banda de retrabajo (amfe.md §13: S=6 para
-// abajo son bandas de retrabajo; si el efecto dice scrap, va 7 u 8).
-for (const op of doc.operations) for (const w of op.workElements) for (const f of w.functions) for (const fm of f.failures) {
-  if (fm.severity < 7 && /scrap/i.test(fm.effectLocal)) {
-    errores.push(`OP${op.opNumber}: "${fm.description}" dice scrap en su efecto y tiene S=${fm.severity}`);
+// LOS MATERIALES DE LA RECEPCION SON LOS DE LA BOM DEL ARB, en las dos direcciones (Fak,
+// 02/10/2026, antes de pasarle el AMFE a Calidad: "fijate si tiene los materiales el AMFE, eso
+// es importante"). Cada codigo de insumo de la BOM dice que material de la OP 10 lo cubre.
+// La etiqueta no es materia prima que se recibe y se controla como tal: se trata en el embalaje.
+const PRODUCTOS_ARB = ['MP8404', 'MP8405'];
+const COBERTURA_BOM = {
+  '13600': 'Sustrato plastico inyectado provisto por Cozzuol',
+  '13601': 'Sustrato plastico inyectado provisto por Cozzuol',
+  '9PQ009-BK25-2': 'Microfibra suede Meisheng MS-9PQ009-BK25-2',
+  'AD - ADFA15': 'Adhesivo FA y reticulante GV',
+  'AD - REGV0.6': 'Adhesivo FA y reticulante GV',
+  'ET-SATO-50X20': { fuera: 'etiqueta de identificacion: se coloca y se controla en el embalaje (OP 80)' },
+};
+let notaBom;
+if (process.argv.includes('--sin-bom')) {
+  notaBom = 'OJO: corrida con --sin-bom, los materiales NO se cruzaron contra la BOM del arb.';
+  // --sin-bom es para armar y mirar sin el export a mano. A Supabase no se escribe sin el cruce.
+  if (APPLY) errores.push('--sin-bom no va junto con --apply: sin cruzar los materiales con la BOM del arb no se escribe');
+} else {
+  try {
+    const { lineas, fecha } = leerBomDelArb(PRODUCTOS_ARB);
+    const fallasBom = materialesContraBom({ doc, bom: lineas, cobertura: COBERTURA_BOM });
+    errores.push(...fallasBom);
+    notaBom = `materiales contra la BOM del arb (export del ${fecha.toISOString().slice(0, 10)}): ${fallasBom.length ? `${fallasBom.length} diferencias` : 'cierra en las dos direcciones'}`;
+  } catch (e) {
+    errores.push(`no se pudo cruzar con la BOM del arb: ${e.message}`);
+    notaBom = 'materiales contra la BOM del arb: NO SE PUDO LEER';
   }
 }
 
@@ -1216,6 +1143,7 @@ console.log(`  modos de falla: ${nFM}`);
 console.log(`  causas        : ${nCausas}`);
 console.log(`  AP            : ${Object.entries(apCount).map(([k, v]) => `${k}=${v}`).join('  ')}`);
 console.log(`  sin control preventivo: ${sinPrevencion.length}   sin deteccion: ${sinDeteccion.length}`);
+console.log(`  ${notaBom}`);
 
 console.log('\nPor operacion:');
 for (const op of doc.operations) {

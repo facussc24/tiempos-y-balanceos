@@ -38,7 +38,7 @@ const destDir = arg('out') ?? 'tmp/export-amfe';
 
 type Fila = {
   amfe_number: string; project_name: string; data: string | object;
-  revisions: unknown; status?: string;
+  revisions: unknown; status?: string; updated_at?: string;
 };
 let row: Fila;
 
@@ -72,7 +72,7 @@ if (JSON_FILE) {
 
   const { data: rows, error } = await sb
     .from('amfe_documents')
-    .select('amfe_number, project_name, data, revisions, status')
+    .select('amfe_number, project_name, data, revisions, status, updated_at')
     .eq('amfe_number', AMFE_NUMBER);
   if (error) { console.error(error.message); process.exit(1); }
   if (!rows || rows.length !== 1) { console.error(`Esperaba 1 fila para ${AMFE_NUMBER}, hay ${rows?.length}`); process.exit(1); }
@@ -140,10 +140,18 @@ if (process.argv.includes('--sin-auditoria')) {
     motivo = 'no hay auditoria de cliente registrada';
   } else {
     try {
-      const m = JSON.parse(readFileSync(marcadorAuditoria, 'utf8')) as { fecha?: string };
+      const m = JSON.parse(readFileSync(marcadorAuditoria, 'utf8')) as { fecha?: string; updated_at_auditado?: string };
       const edadDias = (Date.now() - new Date(m.fecha ?? '').getTime()) / 86_400_000;
       if (Number.isNaN(edadDias)) motivo = `${marcadorAuditoria} no tiene fecha legible`;
       else if (edadDias > DIAS_VALIDEZ) motivo = `la ultima auditoria fue hace ${Math.floor(edadDias)} dias (vence a los ${DIAS_VALIDEZ})`;
+      // El marcador vale 7 dias y no mira el contenido. Si el documento cambio DESPUES de lo
+      // que se audito, el export sale igual (re-auditar cada frase frena el trabajo), pero se
+      // avisa: el 02/10/2026 el AMFE 174 salio a Calidad con tres filas nuevas sin auditar.
+      else if (row.updated_at && m.updated_at_auditado && new Date(row.updated_at) > new Date(m.updated_at_auditado)) {
+        console.warn(`\n*** OJO: ${AMFE_NUMBER} cambio despues de su auditoria de cliente ***`);
+        console.warn(`*** auditado: ${m.updated_at_auditado} · documento: ${row.updated_at} ***`);
+        console.warn('*** Si el cambio es de contenido, /auditoria-cliente de nuevo; si no, decirlo en el cierre. ***\n');
+      }
     } catch {
       motivo = `${marcadorAuditoria} no se pudo leer`;
     }
@@ -174,7 +182,10 @@ for (const op of doc.operations ?? []) {
 }
 
 mkdirSync(destDir, { recursive: true });
-const nombre = arg('nombre') ?? `AMFE ${row.amfe_number}.xlsx`;
+// El nombre lleva SIEMPRE .xlsx. El 02/10/2026 pase `--nombre "AMFE 174 - ... - Rev.A"`: salio un
+// archivo sin extension al lado del .xlsx de la corrida anterior, y el PDF se rehizo del viejo.
+const nombrePedido = arg('nombre') ?? `AMFE ${row.amfe_number}.xlsx`;
+const nombre = /\.xlsx$/i.test(nombrePedido) ? nombrePedido : `${nombrePedido}.xlsx`;
 const dest = `${destDir}/${nombre}`;
 
 // 1. Borrar ANTES de intentar generar, no despues. Si la generacion falla (el caso mas

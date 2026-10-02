@@ -166,6 +166,13 @@ que se produce hoy. **El original quedo viejo y la copia buena se fue con el cli
    ni copia ni cartel.
 9. **Un legajo con un archivo abierto por otro no se deja renombrar** (`WinError 5` con permisos
    completos): se ordena adentro y el renombre se reintenta despues, no se parte en dos lugares.
+   **Cual archivo** lo traba se encuentra abriendo cada uno en escritura (da "Permission denied"
+   sin ser de solo lectura; el 02/10/2026 era el plano del casillero 6). **Quien** lo tiene
+   abierto no se ve desde esta PC: no se nombra a nadie.
+10. **Copias repetidas sueltas en la carpeta de la pieza** (Fak, 01/10/2026: *"metelos en un zip
+    y a la mierda... en PPAP CLIENTES no deben haber archivos raros"*): antes de sacarlas se
+    comprueba por hash que cada una es identica a la del casillero, se arma el zip, se verifica
+    el zip archivo por archivo, y recien ahi se sacan. El zip va a la carpeta de la tarea.
 
 ## 7. Enforcement
 

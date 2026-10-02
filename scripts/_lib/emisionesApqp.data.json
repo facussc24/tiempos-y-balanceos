@@ -1,0 +1,34 @@
+{
+  "_doc": "Que documentos controlados emite scripts/_emitirApqp.py y donde va cada uno. Una entrada por documento. 'maestro' y cada candidata de 'legajo' son listas de tramos de ruta; el primer tramo es el nombre de una raiz de 'raices'. 'legajo' es una lista ORDENADA de carpetas candidatas: se usa la primera que exista (sirve mientras un legajo esta a medio mudar). Emitir un documento controlado lleva el OK de Fak (autonomy-contract §F): se anota en 'ok_de_fak' con su fecha. Para una pieza nueva: agregar sus dos entradas (flujograma y AMFE) y nada mas.",
+  "raices": {
+    "GI": "Y:\\Ingenieria\\Documentacion Gestion Ingenieria",
+    "PPAP": "Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES"
+  },
+  "emisiones": {
+    "160-flujograma": {
+      "tipo": "flujograma",
+      "nombre": "FLUJOGRAMA 160 - UPPER TRIM PANEL - Rev.A",
+      "salida": "exports/UPPER_TRIMMING_20261001",
+      "png_generador": "tools/flowchart/.build/FLUJOGRAMA_160-UPPER-TRIM-PANEL.png",
+      "maestro": ["GI", "8. Flujograma Sinóptico (I-IN-002III)", "CLIENTES", "COZZUOL", "160 - UPPER TRIM PANEL"],
+      "legajo": [
+        ["PPAP", "COZZUOL", "00_VW427-1LA_K-PATAGONIA", "00- Upper Trimming", "APQP"],
+        ["PPAP", "COZZUOL", "00_VW427-1LA_K-PATAGONIA", "00- Upper Trimming", "_BACKUP_UpperTrim_2026-07-01", "APQP"]
+      ],
+      "casillero": "20- Flujograma de proceso",
+      "ok_de_fak": "01/10/2026"
+    },
+    "174-amfe": {
+      "tipo": "amfe",
+      "nombre": "AMFE 174 - UPPER TRIM PANEL - Rev.A",
+      "salida": "exports/UPPER_TRIMMING_20261001",
+      "maestro": ["GI", "13. Analisis del modo de falla y sus efectos ( I-AC-005.3)", "2. AMFES DE PROCESO", "COZZUOL", "174 - UPPER TRIM PANEL"],
+      "legajo": [
+        ["PPAP", "COZZUOL", "00_VW427-1LA_K-PATAGONIA", "00- Upper Trimming", "APQP"],
+        ["PPAP", "COZZUOL", "00_VW427-1LA_K-PATAGONIA", "00- Upper Trimming", "_BACKUP_UpperTrim_2026-07-01", "APQP"]
+      ],
+      "casillero": "22- FMEA de proceso",
+      "ok_de_fak": "01/10/2026"
+    }
+  }
+}

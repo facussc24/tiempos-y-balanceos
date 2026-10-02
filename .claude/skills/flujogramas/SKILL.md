@@ -55,6 +55,9 @@ el servidor, 126 Rev.7, 131 Rev.5 y 105 Rev.H. El cliente de cada JSON esta en `
 
 ### 0 bis. Lo que FALTA tambien frena — los bloques de cada sector (01/10/2026)
 
+> Si la pieza tampoco tiene AMFE, el camino completo (papeles de la pieza → flujograma → AMFE →
+> emision → revision antes de pasarlo) esta en la skill **`pieza-nueva-flujograma-amfe`**.
+
 > **El 160 (Upper Trim) lo emiti sin el control con mylar despues del corte, sin el control de
 > adhesivado ni su reproceso, y con todo en una sola columna.** Los chequeos de arriba daban
 > verde: no habia nada mal dibujado, faltaban bloques enteros. Fak lo abrio y paro en la
@@ -209,7 +212,9 @@ OP 105 REFILADO POST-TAPIZADO existia solo en el Plan de Control, y era la OP 40
   todos (en el 159, re-limpiar una pieza que ya tenia primer y adhesivo). Van en columnas
   que convergen en la re-entrada: `¿SE PUEDE RETRABAJAR?` con `branches: [[72],[73],[74]]`
   y `branchColumnWidth: 330`, y la rama lateral con `lineWidth: 900` para que no pise el
-  flujo principal. Lo cazo la auditoria de cliente del 23/09/2026; el 151 todavia los tiene
+  flujo principal. **El 900 es para tres columnas (159): con dos (160) el PNG salio cortado a
+  la derecha y fue 640.** El generador informa el margen de cada lado: se mira antes de dar
+  por bueno el ancho. Lo cazo la auditoria de cliente del 23/09/2026; el 151 todavia los tiene
   en serie.
 - **Al ARRANCAR un proyecto, el flujograma lleva de entrada TODOS los reprocesos conocidos y
   posibles** — los de las piezas hermanas, los de la HO general de la familia (ej. hojas

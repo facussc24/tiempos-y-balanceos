@@ -26,22 +26,48 @@ import hoja_a3_fotos as H                     # noqa: E402
 import hojas_v3_spec as spec                  # noqa: E402
 from redaccion import gate_redaccion          # noqa: E402
 import hoja_proceso_check as CHK              # noqa: E402
+from fotos_v3 import ruta as ruta_foto, BIB   # noqa: E402
+from fotos_v3_lista import FOTOS              # noqa: E402
 
-SALIDA = os.path.abspath(os.path.join(AQUI, "..", "..", "exports", "hojas-hotmelt-01-10"))
+# exports/hojas-hotmelt-01-10 es la copia de lo que se subio al servidor el 01/10 (no se pisa);
+# la revision del 02/10 sale en su propia carpeta hasta que Fak apruebe reemplazar lo del servidor.
+SALIDA = os.path.abspath(os.path.join(AQUI, "..", "..", "exports", "hojas-hotmelt-02-10"))
 if "--out" in sys.argv:                       # para probar sin pisar lo ya entregado
     _i = sys.argv.index("--out")
     SALIDA = os.path.abspath(sys.argv[_i + 1])
     del sys.argv[_i:_i + 2]
-FECHA = "01/10/2026"
+FECHA = "02/10/2026"
+
+MAQUINA_TXT = "Laminadora hot melt KINGPOWER con fusor de adhesivo"
 
 JUEGOS = {
     "maquina": dict(hojas=spec.MAQUINA, archivo="HO-993 - LAMINADORA HOT MELT - HOJA DE MAQUINA",
                     cajetin=dict(ho="HO-993", sector="LAMINADO", pieza="LAMINADORA HOT MELT",
-                                 modelo="PATAGONIA / VW427", cliente="VW / NOVAX")),
+                                 modelo="PATAGONIA / VW427", cliente="VW / NOVAX"),
+                    portada=dict(
+                        titulo="HOJAS DE PROCESO — LAMINADORA HOT MELT",
+                        subtitulo="Hoja de la máquina: encendido, fusor de adhesivo, calentamiento de rodillos, "
+                                  "limpieza y alarmas",
+                        ficha=[("Documento", "HO-993 · Form. I-IN-002.4-R01"),
+                               ("Máquina", MAQUINA_TXT),
+                               ("Sector", "LAMINADO"),
+                               ("Proyecto en curso", "PATAGONIA / VW427 · TOP ROLL (HO-992, operación 20)"),
+                               ("Elaboró", "F. Santoro · Ingeniería"),
+                               ("Fecha / Revisión", f"{FECHA} · Rev. A")])),
     "produccion": dict(hojas=spec.PRODUCCION, archivo="HO-992 - OP 20 ADHESIVADO HOT MELT - TOP ROLL",
                        cajetin=dict(ho="HO-992", sector="LAMINADO",
                                     pieza="TOP ROLL — N 216 / N 256 / N 285 / N 315",
-                                    modelo="PATAGONIA / VW427", cliente="VW / NOVAX")),
+                                    modelo="PATAGONIA / VW427", cliente="VW / NOVAX"),
+                       portada=dict(
+                           titulo="HOJAS DE PROCESO — TOP ROLL PATAGONIA",
+                           subtitulo="Operación 20 del flujograma 155: ADHESIVADO HOT MELT",
+                           ficha=[("Documento", "HO-992 · Form. I-IN-002.4-R01"),
+                                  ("Cliente / Proyecto", "VW / NOVAX · PATAGONIA / VW427"),
+                                  ("Pieza", "TOP ROLL — N 216 / N 256 / N 285 / N 315"),
+                                  ("Operación", "20 — ADHESIVADO HOT MELT"),
+                                  ("Máquina", MAQUINA_TXT + " (encendido y limpieza: HO-993)"),
+                                  ("Elaboró", "F. Santoro · Ingeniería"),
+                                  ("Fecha / Revisión", f"{FECHA} · Rev. A")])),
 }
 
 
@@ -50,6 +76,41 @@ def gate_fuente_por_paso(d):
     if sin:
         raise SystemExit(f"OP {d['op']} {d['denominacion']}: los pasos {sin} no dicen de donde salen. "
                          "Sin fuente el paso no va (hojas-proceso.md punto 11).")
+
+
+PALABRAS_DE_FALLA = ("MODO DE FALLA", "DEFECTO", "MAL PASAD")
+
+
+def titulo_del_video(video):
+    """El titulo que lleva la transcripcion del video en su primera linea ('' si no hay)."""
+    p = os.path.join(BIB, ".claude", "transcripciones", f"IMG_{video}.txt")
+    if not os.path.exists(p):
+        return ""
+    with open(p, encoding="utf-8") as f:
+        return f.readline().strip()
+
+
+def gate_foto_no_es_de_falla(d, fotos=None, titulo=titulo_del_video):
+    """Una foto sacada de un video que muestra una FALLA no ilustra un paso como si fuera lo
+    correcto. El 01/10 la 20.3 salio con el cuadro 0360_0008 ("MODO DE FALLA - vinilo mal pasado",
+    audio: "esta esta mal pasada") al lado del paso que manda pasar bien el material; el control
+    de la hoja impresa, la revision ciega y la auditoria dieron verde: ninguno abre la fuente de
+    la foto. Para mostrar una falla a proposito, el paso lo declara con `contraejemplo=True`."""
+    fotos = FOTOS if fotos is None else fotos
+    for i, p in enumerate(d["pasos"], 1):
+        if p.get("contraejemplo"):
+            continue
+        for f in p.get("fotos") or ([p] if p.get("foto") else []):
+            nombre = os.path.splitext(os.path.basename(f["foto"]))[0]
+            fuente = (fotos.get(nombre) or {}).get("fuente")
+            if not isinstance(fuente, str):
+                continue                      # pagina del manual, o foto sin ficha
+            video = os.path.basename(fuente).split("_")[0]
+            t = titulo(video)
+            if any(w in t.upper() for w in PALABRAS_DE_FALLA):
+                raise SystemExit(f"OP {d['op']} paso {i}: la foto '{nombre}' sale del video {video}, que "
+                                 f"muestra una FALLA ({t.lstrip('# ')}). No puede ilustrar el paso como "
+                                 "si fuera lo correcto: sacarla, o declarar contraejemplo=True.")
 
 
 def para_redaccion(d):
@@ -70,10 +131,18 @@ def generar(nombre, pdf=True):
         return None
     prs = Presentation()
     prs.slide_width, prs.slide_height = Cm(base.W), Cm(base.H)
+    # lamina 1: portada con el indice (criterios, seccion 5)
+    indice = [(h["op"], h["denominacion"] + (f" (hoja {h['hoja_de'][0]} de {h['hoja_de'][1]})" if h.get("hoja_de") else ""))
+              for h in j["hojas"]]
+    foto_portada = ruta_foto("p_maquina")
+    H.portada(prs, j["portada"]["titulo"], j["portada"]["subtitulo"], j["portada"]["ficha"], indice,
+              logo=base.LOGO_BARACK, foto=foto_portada if os.path.exists(foto_portada) else None,
+              pie_foto="Laminadora hot melt, vista desde el desbobinador")
     for h in j["hojas"]:
         d = dict(fecha=FECHA, rev="A", **j["cajetin"])
         d.update(h)
         gate_fuente_por_paso(d)
+        gate_foto_no_es_de_falla(d)
         gate_redaccion(para_redaccion(d))
         _, avisos = H.hoja(prs, d, logo=base.LOGO_BARACK)
         etiqueta = f"OP {d['op']} {d['denominacion']}" + (f" ({d['hoja_de'][0]}/{d['hoja_de'][1]})" if d.get("hoja_de") else "")

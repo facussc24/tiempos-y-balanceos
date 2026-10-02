@@ -349,6 +349,13 @@ A1 S/O/D parciales; A2 AP=H con el placeholder prohibido (§4); A3 failure sin c
 Destilado de la tanda Patagonia (14-21/08/2026) y de la auditoria externa contra AIAG-VDA/IATF.
 Cada punto operativo tiene su gate ejecutable ya cargado; esto es para no llegar al gate.
 
+**Una pieza que no tiene ni flujograma ni AMFE: skill `pieza-nueva-flujograma-amfe`** (el metodo
+entero, del relevamiento al mail; sale del 174, 01-02/10/2026). El generador nuevo nace con
+`scripts/_lib/amfeAutoria.mjs`: operaciones del flujograma en su orden, S en el efecto, un
+control que no existe lleva 10, y **los materiales de la recepcion cruzados con la BOM del arb
+en las dos direcciones**. Al documento entra lo que dice un papel de ESA pieza: de la pieza
+vecina se toma el lugar (deposito, mesa de corte, campana), nunca el metodo (Fak, 02/10/2026).
+
 **El documento lo firma Fak y lo lee el cliente:**
 1. **El log de REVISIONES cuenta que cambio del PROCESO, nunca como se redacto.** Prohibido:
    traduccion, ortografia, "replicado del AMFE de X", "(decision Fak)", "para no pisar la

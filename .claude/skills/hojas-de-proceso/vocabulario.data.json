@@ -114,6 +114,7 @@
     "_leeme": "4.4: tono tecnico sobrio. La hoja manda una accion, no lamenta una consecuencia.",
     "patrones": [
       "\\bse rompen? al instante\\b",
+      "\\bse rompen?\\b",
       "\\bal instante\\b",
       "\\bcatastrof",
       "\\bgravisim",
