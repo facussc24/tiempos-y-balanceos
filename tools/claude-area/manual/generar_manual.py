@@ -10,6 +10,7 @@ Uso:
     python generar_manual.py --grilla     deja en capturas/_grilla/ cada captura con una cuadricula
                                           de 10 en 10 y las marcas actuales, para ubicar los recuadros
     python generar_manual.py --notas      ademas pone "para que esta la pagina" en las notas del PowerPoint
+                                          (la copia --sin-avisos las lleva siempre)
 
 Sale con:
     0  salio completo
@@ -18,8 +19,16 @@ Sale con:
 
 Solo usa python-pptx y Pillow. Las medidas de la hoja estan en milimetros (A4 apaisado) y se usan
 igual para el PDF y para el PowerPoint: por eso las dos salidas son la misma pagina.
+
+El PowerPoint lleva ademas (el PDF no): una portada con el logo y una diapositiva de cierre con los tres
+pasos. Es un PowerPoint hecho para proyectar o recorrer en la PC: el titulo de cada diapositiva es el titulo
+de verdad, cada captura tiene su texto alternativo (el "que_se_ve" de contenido.json), el idioma esta
+puesto en castellano de Argentina, hay un fundido corto entre diapositivas y la tabla es una tabla de
+PowerPoint. La letra es Segoe UI (viene con Windows): en una compu sin esa letra PowerPoint pone otra.
 """
 import argparse
+import contextlib
+import datetime
 import json
 import math
 import os
@@ -27,14 +36,16 @@ import re
 import sys
 from pathlib import Path
 
+from lxml import etree
 from PIL import Image, ImageDraw, ImageFont
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.dml import MSO_LINE
-from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
+from pptx.enum.lang import MSO_LANGUAGE_ID
+from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE, PP_PLACEHOLDER
 from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE, PP_ALIGN
 from pptx.oxml.ns import qn
-from pptx.util import Mm, Pt
+from pptx.util import Emu, Mm, Pt
 
 AQUI = Path(__file__).resolve().parent
 REPO = AQUI.parents[2]
@@ -91,6 +102,21 @@ AMBAR = (0x7A, 0x52, 0x00)
 AMBAR_FONDO = (0xFF, 0xF0, 0xCC)
 GROSOR_MARCA = 1.5                     # mm: se tiene que ver impreso
 HALO = 0.6                             # borde blanco alrededor del rojo (por si la app es oscura)
+
+# ------------------------------------------------------------------ PowerPoint
+LOGO = REPO / "scripts" / "video" / "logo_hd.png"
+FUENTE_PPT = "Segoe UI"                # viene con Windows; el PDF usa la misma
+IDIOMA = "es-AR"
+IDIOMA_ID = MSO_LANGUAGE_ID.SPANISH_ARGENTINA
+# En un renglon de interlineado EXACTO, PowerPoint apoya la letra a esta fraccion del alto del renglon
+# (medido con PowerPoint 16 sobre Segoe UI: 0,77 a 0,78). El PDF la apoya donde dicen las metricas de la letra.
+# La diferencia (de 0,1 a 2 mm segun el tamaño) se corrige bajando el cuadro de texto: ver ajuste_ppt().
+BASE_RENGLON_PPT = 0.767
+PAD_TABLA = 2.2                        # mm de aire adentro de cada celda de la tabla
+HOLGURA_PPT = 0.4                      # mm de mas de ancho en cada cuadro de texto de PowerPoint (ver LienzoPPT.texto)
+TRANSICION = "fast"                    # fundido corto (0,5 s): lo mismo entre todas las diapositivas
+VINETA_PUNTO_PCT = 54                  # tamaño del punto de las viñetas, en % de la letra (da 2,9 mm, como en el PDF)
+VINETA_NUMERO_PCT = 120                # tamaño del circulo con numero, en % de la letra (6,8 mm)
 
 
 class ErrorDeContenido(Exception):
@@ -164,6 +190,22 @@ def alto_parrafos(parrafos, pt, ancho_mm, negrita=False, interlinea=INTERLINEA, 
     return n * pt * interlinea * MM_PT + entre * (len(parrafos) - 1), n
 
 
+def interlineado_ppt(pt, interlinea):
+    """Interlineado exacto de PowerPoint, en puntos ENTEROS: PowerPoint redondea el interlineado y el espacio
+    entre parrafos al punto entero (28,6 pt se dibuja como 29), asi que se pide ya redondeado."""
+    return max(1, round(pt * interlinea))
+
+
+def ajuste_ppt(pt, interlinea):
+    """Cuantos mm hay que BAJAR un cuadro de texto de PowerPoint para que la letra quede donde la apoya el PDF.
+    PDF: la letra se apoya a (alto del renglon - alto de la letra) / 2 + ascendente, desde arriba del renglon.
+    PowerPoint, con interlineado exacto: a BASE_RENGLON_PPT del alto del renglon."""
+    lh = pt * interlinea * MM_PT
+    asc, desc = fuente(pt, False).getmetrics()
+    base_pdf = ((lh * PX_MM - (asc + desc)) / 2 + asc) / PX_MM
+    return base_pdf - BASE_RENGLON_PPT * interlineado_ppt(pt, interlinea) * MM_PT
+
+
 # ================================================================== lienzo PDF (Pillow)
 class LienzoPDF:
     def __init__(self):
@@ -203,8 +245,32 @@ class LienzoPDF:
         self.d.ellipse([self.px(x), self.px(y), self.px(x + w), self.px(y + h)],
                        fill=relleno, outline=borde if g else None, width=g)
 
+    def banda(self):
+        """Franja azul del titulo."""
+        self.rect(0, 0, HOJA_W, BANDA_H, relleno=AZUL_OSC)
+
+    def titulo(self, x, y, w, h, texto, pt, color):
+        self.texto(x, y, w, h, [texto], pt, color, negrita=True, anclar="medio", interlinea=1.0)
+
+    @contextlib.contextmanager
+    def grupo(self, nombre):
+        """En el PowerPoint junta varias formas en un grupo (se mueven juntas). En el PDF no hace nada."""
+        yield
+
+    def tabla(self, x, y, anchos, altos, filas, descr=None):
+        """filas: lista de filas; cada celda es un dict con texto, fondo, color, negrita."""
+        yy = y
+        for fila, alto in zip(filas, altos):
+            xx = x
+            for c, a in zip(fila, anchos):
+                self.rect(xx, yy, a, alto, relleno=c["fondo"], borde=GRIS_BORDE, grosor=0.25)
+                self.texto(xx + PAD_TABLA, yy, a - 2 * PAD_TABLA, alto, [c["texto"]], TABLA_PT, c["color"],
+                           negrita=c["negrita"], anclar="medio", interlinea=1.22)
+                xx += a
+            yy += alto
+
     def texto(self, x, y, w, h, parrafos, pt, color=TINTA, negrita=False, alinear="izq",
-              anclar="arriba", interlinea=INTERLINEA, entre=0.0, vinetas=False):
+              anclar="arriba", interlinea=INTERLINEA, entre=0.0, vinetas=False, deco=False, nombre=None):
         sangria = SANGRIA if vinetas else 0.0
         lh = pt * interlinea * MM_PT
         bloques = []
@@ -246,7 +312,7 @@ class LienzoPDF:
         self.elipse(cx - d / 2, cy - d / 2, d, d, relleno=ROJO)
         self.d.text((cx * PX_MM, cy * PX_MM), str(num), font=fuente(pt, True), fill=BLANCO, anchor="mm")
 
-    def imagen(self, ruta, x, y, w, h):
+    def imagen(self, ruta, x, y, w, h, descr=None, nombre=None):
         with Image.open(ruta) as im:
             if im.mode in ("RGBA", "LA", "P"):
                 im = im.convert("RGBA")
@@ -282,18 +348,58 @@ class LienzoPDF:
 
 
 # ================================================================== lienzo PowerPoint (python-pptx)
+NS_DECORATIVO = "http://schemas.microsoft.com/office/drawing/2017/decorative"
+NS_P = "http://schemas.openxmlformats.org/presentationml/2006/main"
+NS_A = "http://schemas.openxmlformats.org/drawingml/2006/main"
+ESTILO_SIN_LINEAS = "{2D5ABB26-0587-4C30-8999-92F81FD0307C}"      # estilo de tabla "sin estilo, sin cuadricula"
+
+
 def _rgb(c):
     return RGBColor(*c)
 
 
-class LienzoPPT:
-    def __init__(self, prs):
-        self.s = prs.slides.add_slide(prs.slide_layouts[6])
-        for ph in list(self.s.placeholders):
-            ph._element.getparent().remove(ph._element)
+def _hex(c):
+    return "%02X%02X%02X" % tuple(c)
 
-    def _forma(self, tipo, x, y, w, h, relleno, borde, grosor, punteado=False):
-        sh = self.s.shapes.add_shape(tipo, Mm(x), Mm(y), Mm(w), Mm(h))
+
+def _cnvpr(sh):
+    """El elemento con el nombre y el texto alternativo de cualquier forma."""
+    return sh._element.xpath("./*[1]/p:cNvPr")[0]
+
+
+def _decorativo(sh):
+    """Lo marca 'decorativo' (igual que el boton de PowerPoint): el lector de pantalla no lo nombra."""
+    ext = etree.SubElement(etree.SubElement(_cnvpr(sh), qn("a:extLst")), qn("a:ext"),
+                           uri="{C183D7F6-B498-43B3-948B-1728B52AA6E4}")
+    etree.SubElement(ext, "{%s}decorative" % NS_DECORATIVO, nsmap={"adec": NS_DECORATIVO}, val="1")
+
+
+def _formato(r, pt, color, negrita):
+    r.font.name = FUENTE_PPT
+    r.font.size = Pt(pt)
+    r.font.bold = bool(negrita)
+    r.font.color.rgb = _rgb(color)
+    r.font.language_id = IDIOMA_ID
+
+
+def _mm(v):
+    return str(int(Mm(v)))
+
+
+class LienzoPPT:
+    """Dibuja con formas nativas de PowerPoint: lo que se ve en la diapositiva se puede editar."""
+
+    def __init__(self, prs, layout):
+        self.s = prs.slides.add_slide(layout)
+        self._cont = self.s.shapes          # donde caen las formas nuevas: la diapositiva o un grupo
+
+    # ---- formas
+    def _forma(self, tipo, x, y, w, h, relleno, borde, grosor, punteado=False, deco=True, nombre=None, adentro=True):
+        # En PowerPoint la linea va CENTRADA sobre el contorno y en el PDF va hacia ADENTRO: se achica media
+        # linea para que el borde ocupe el mismo lugar (los marcos rojos, que van por fuera, lo piden aparte).
+        if adentro and borde and grosor > 0:
+            x, y, w, h = x + grosor / 2, y + grosor / 2, w - grosor, h - grosor
+        sh = self._cont.add_shape(tipo, Mm(x), Mm(y), Mm(w), Mm(h))
         sh.shadow.inherit = False
         if relleno:
             sh.fill.solid()
@@ -307,6 +413,10 @@ class LienzoPPT:
                 sh.line.dash_style = MSO_LINE.DASH
         else:
             sh.line.fill.background()
+        if nombre:
+            sh.name = nombre
+        if deco:
+            _decorativo(sh)
         return sh
 
     def rect(self, x, y, w, h, relleno=None, borde=None, grosor=0.0, punteado=False):
@@ -315,9 +425,34 @@ class LienzoPPT:
     def elipse(self, x, y, w, h, relleno=None, borde=None, grosor=0.0):
         return self._forma(MSO_SHAPE.OVAL, x, y, w, h, relleno, borde, grosor)
 
+    @contextlib.contextmanager
+    def grupo(self, nombre):
+        """Junta en un grupo todo lo que se dibuje adentro: la captura y sus marcas se mueven juntas."""
+        g = self._cont.add_group_shape()
+        g.name = nombre
+        antes, self._cont = self._cont, g.shapes
+        try:
+            yield
+        finally:
+            self._cont = antes
+
+    # ---- titulo: es el titulo de verdad de la diapositiva (vista de esquema, lector de pantalla)
+    def banda(self):
+        """La franja azul vive en la plantilla (layout), no en cada diapositiva."""
+
+    def titulo(self, x, y, w, h, texto, pt, color):
+        ph = self.s.shapes.title
+        ph.left, ph.top, ph.width, ph.height = Mm(x), Mm(y + ajuste_ppt(pt, 1.0)), Mm(w), Mm(h)
+        poner_texto_placeholder(ph, [texto], pt, color, True, "izq", interlinea=1.0)
+
+    # ---- texto
     def texto(self, x, y, w, h, parrafos, pt, color=TINTA, negrita=False, alinear="izq",
-              anclar="arriba", interlinea=INTERLINEA, entre=0.0, vinetas=False):
-        tb = self.s.shapes.add_textbox(Mm(x), Mm(y), Mm(w), Mm(h))
+              anclar="arriba", interlinea=INTERLINEA, entre=0.0, vinetas=False, deco=False, nombre=None):
+        # Un poco mas ancho que en el PDF (HOLGURA_PPT): si PowerPoint mide la letra apenas distinto en otra
+        # compu, un renglon que entra justo no se corta en otro lado. Se reparte segun la alineacion.
+        x -= {"izq": 0.0, "centro": HOLGURA_PPT / 2, "der": HOLGURA_PPT}[alinear]
+        tb = self._cont.add_textbox(Mm(x), Mm(y + ajuste_ppt(pt, interlinea)), Mm(w + HOLGURA_PPT), Mm(h))
+        tb.name = nombre or "Texto"
         tf = tb.text_frame
         tf.word_wrap = True
         tf.auto_size = MSO_AUTO_SIZE.NONE
@@ -326,66 +461,275 @@ class LienzoPPT:
         for i, par in enumerate(parrafos):
             p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
             p.alignment = {"izq": PP_ALIGN.LEFT, "centro": PP_ALIGN.CENTER, "der": PP_ALIGN.RIGHT}[alinear]
-            p.line_spacing = Pt(pt * interlinea)
+            p.line_spacing = Pt(interlineado_ppt(pt, interlinea))
             if entre and i < len(parrafos) - 1:
-                p.space_after = Pt(entre / MM_PT)
+                # el espacio entre parrafos se redondea para que el paso de un parrafo al otro quede como en el PDF
+                p.space_after = Pt(max(0, round(pt * interlinea + entre / MM_PT - interlineado_ppt(pt, interlinea))))
             num, cuerpo = separar_numero(par) if vinetas else (None, par)
             if vinetas:
                 self._vineta(p, num)
             for t, neg in trozos(cuerpo):
                 r = p.add_run()
                 r.text = t
-                r.font.name = "Segoe UI"
-                r.font.size = Pt(pt)
-                r.font.bold = bool(neg or negrita)
-                r.font.color.rgb = _rgb(color)
+                _formato(r, pt, color, neg or negrita)
+        if deco:
+            _decorativo(tb)
         return tb
 
     @staticmethod
     def _vineta(p, num):
+        """Punto azul, o circulo rojo con el numero adentro (numeracion automatica de PowerPoint,
+        'circleNumWdBlackPlain': los numeros siguen siendo una lista numerada para el lector de pantalla)."""
         pPr = p._p.get_or_add_pPr()
-        pPr.set("marL", str(int(Mm(SANGRIA))))
-        pPr.set("indent", str(-int(Mm(SANGRIA))))
-        clr = pPr.makeelement(qn("a:buClr"), {})
-        clr.append(clr.makeelement(qn("a:srgbClr"), {"val": "%02X%02X%02X" % (AZUL if num is None else ROJO)}))
-        pPr.append(clr)
-        pPr.append(pPr.makeelement(qn("a:buFont"), {"typeface": "Segoe UI"}))
-        if num is None:
-            pPr.append(pPr.makeelement(qn("a:buChar"), {"char": "\u2022"}))
-        else:
-            pPr.append(pPr.makeelement(qn("a:buAutoNum"), {"type": "arabicPeriod"}))
+        pPr.set("marL", _mm(SANGRIA))
+        # el punto arranca un poco adentro (centrado donde lo pone el PDF); el circulo arranca al ras
+        pPr.set("indent", str(-int(Mm(SANGRIA - (2.0 if num is None else 0.0)))))
 
+        def hijo(tag, **atr):
+            return etree.SubElement(pPr, qn(tag), **atr)
+
+        clr = hijo("a:buClr")
+        etree.SubElement(clr, qn("a:srgbClr"), val=_hex(AZUL if num is None else ROJO))
+        hijo("a:buSzPct", val=str((VINETA_PUNTO_PCT if num is None else VINETA_NUMERO_PCT) * 1000))
+        hijo("a:buFont", typeface="Segoe UI Symbol")
+        if num is None:
+            hijo("a:buChar", char="●")
+        else:
+            hijo("a:buAutoNum", type="circleNumWdBlackPlain", startAt=str(num))
+
+    # ---- marcas sobre las capturas
     def insignia(self, cx, cy, num, d=9.0, pt=18, halo=True):
-        sh = self._forma(MSO_SHAPE.OVAL, cx - d / 2, cy - d / 2, d, d, ROJO, BLANCO if halo else None, HALO)
+        if halo:
+            self._forma(MSO_SHAPE.OVAL, cx - d / 2 - HALO, cy - d / 2 - HALO, d + 2 * HALO, d + 2 * HALO,
+                        BLANCO, None, 0.0)
+        sh = self._forma(MSO_SHAPE.OVAL, cx - d / 2, cy - d / 2, d, d, ROJO, None, 0.0, deco=False,
+                         nombre="Numero %s" % num)
         tf = sh.text_frame
         tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+        tf.word_wrap = False
         tf.vertical_anchor = MSO_ANCHOR.MIDDLE
         p = tf.paragraphs[0]
         p.alignment = PP_ALIGN.CENTER
         r = p.add_run()
+        _formato(r, pt, BLANCO, True)
         r.text = str(num)
-        r.font.name = "Segoe UI"
-        r.font.size = Pt(pt)
-        r.font.bold = True
-        r.font.color.rgb = _rgb(BLANCO)
 
-    def imagen(self, ruta, x, y, w, h):
-        self.s.shapes.add_picture(str(ruta), Mm(x), Mm(y), Mm(w), Mm(h))
+    def imagen(self, ruta, x, y, w, h, descr=None, nombre=None):
+        pic = self._cont.add_picture(str(ruta), Mm(x), Mm(y), Mm(w), Mm(h))
+        if nombre:
+            pic.name = nombre
+        if descr:
+            _cnvpr(pic).set("descr", descr)
+        else:
+            _decorativo(pic)
+        return pic
 
     def marco(self, x, y, w, h):
+        """El rojo va POR FUERA de lo marcado (de x-g a x); el borde blanco, pegado por fuera del rojo."""
         g = GROSOR_MARCA
-        # en PowerPoint la linea va centrada sobre el borde: se corre media linea para que quede por fuera
-        self._forma(MSO_SHAPE.RECTANGLE, x - g / 2, y - g / 2, w + g, h + g, None, BLANCO, g + 2 * HALO)
-        self._forma(MSO_SHAPE.RECTANGLE, x - g / 2, y - g / 2, w + g, h + g, None, ROJO, g)
+        bl = HALO + 0.2                       # un poco mas ancho, por debajo del rojo: sin rendija entre los dos
+        d = g + HALO - bl / 2                 # del borde marcado al centro de la linea blanca
+        self._forma(MSO_SHAPE.RECTANGLE, x - d, y - d, w + 2 * d, h + 2 * d, None, BLANCO, bl,
+                    nombre="Recuadro rojo (borde blanco)", adentro=False)
+        self._forma(MSO_SHAPE.RECTANGLE, x - g / 2, y - g / 2, w + g, h + g, None, ROJO, g,
+                    nombre="Recuadro rojo", adentro=False)
 
     def flecha(self, x1, y1, x2, y2):
-        for color, grosor in ((BLANCO, GROSOR_MARCA + 0.3 + 2 * HALO), (ROJO, GROSOR_MARCA + 0.3)):
-            c = self.s.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Mm(x1), Mm(y1), Mm(x2), Mm(y2))
+        for color, grosor, nombre in ((BLANCO, GROSOR_MARCA + 0.3 + 2 * HALO, "Flecha roja (borde blanco)"),
+                                      (ROJO, GROSOR_MARCA + 0.3, "Flecha roja")):
+            c = self._cont.add_connector(MSO_CONNECTOR.STRAIGHT, Mm(x1), Mm(y1), Mm(x2), Mm(y2))
+            c.name = nombre
             c.shadow.inherit = False
             c.line.color.rgb = _rgb(color)
             c.line.width = Mm(grosor)
             ln = c.line._get_or_add_ln()
             ln.append(ln.makeelement(qn("a:tailEnd"), {"type": "triangle", "w": "med", "len": "med"}))
+            _decorativo(c)
+
+    # ---- tabla: una tabla de PowerPoint de verdad (se edita celda por celda, y el lector de pantalla la entiende)
+    def tabla(self, x, y, anchos, altos, filas, descr=None):
+        gf = self.s.shapes.add_table(len(filas), len(anchos), Mm(x), Mm(y), Mm(sum(anchos)), Mm(sum(altos)))
+        gf.name = "Tabla"
+        if descr:
+            _cnvpr(gf).set("descr", descr)
+        tbl = gf.table
+        tbl.first_row = True                  # la primera fila es el encabezado
+        tbl.horz_banding = False
+        sid = tbl._tbl.tblPr.find(qn("a:tableStyleId"))
+        if sid is None:
+            sid = etree.SubElement(tbl._tbl.tblPr, qn("a:tableStyleId"))
+        sid.text = ESTILO_SIN_LINEAS          # todo (relleno, bordes, letra) se define celda por celda
+        for j, a in enumerate(anchos):
+            tbl.columns[j].width = Mm(a)
+        dy = ajuste_ppt(TABLA_PT, 1.22)
+        reng_pdf = TABLA_PT * 1.22 * MM_PT
+        reng_ppt = interlineado_ppt(TABLA_PT, 1.22) * MM_PT       # PowerPoint redondea el interlineado al punto
+        for i, (fila, alto) in enumerate(zip(filas, altos)):
+            tbl.rows[i].height = Mm(alto)
+            lineas = max(1, round((alto - 2 * PAD_TABLA) / reng_pdf))
+            aire = max(0.5, alto - lineas * reng_ppt)             # lo que sobra arriba y abajo para que la fila no crezca
+            for j, c in enumerate(fila):
+                celda = tbl.cell(i, j)
+                tf = celda.text_frame
+                tf.word_wrap = True
+                p = tf.paragraphs[0]
+                p.line_spacing = Pt(interlineado_ppt(TABLA_PT, 1.22))
+                r = p.add_run()
+                _formato(r, TABLA_PT, c["color"], c["negrita"])
+                r.text = c["texto"]
+                tcPr = celda._tc.get_or_add_tcPr()
+                tcPr.set("marL", _mm(PAD_TABLA))
+                tcPr.set("marR", _mm(PAD_TABLA - HOLGURA_PPT))        # mas lugar para el texto, como en HOLGURA_PPT
+                tcPr.set("marT", _mm(max(0.0, aire / 2 + dy)))    # el texto, centrado, baja dy: queda donde lo pone el PDF
+                tcPr.set("marB", _mm(max(0.0, aire / 2 - dy)))
+                tcPr.set("anchor", "ctr")
+                for lado in ("a:lnL", "a:lnR", "a:lnT", "a:lnB"):                 # primero los bordes...
+                    ln = etree.SubElement(tcPr, qn(lado), w=_mm(0.25), cap="flat", cmpd="sng", algn="ctr")
+                    etree.SubElement(etree.SubElement(ln, qn("a:solidFill")), qn("a:srgbClr"), val=_hex(GRIS_BORDE))
+                    etree.SubElement(ln, qn("a:prstDash"), val="solid")
+                etree.SubElement(etree.SubElement(tcPr, qn("a:solidFill")), qn("a:srgbClr"), val=_hex(c["fondo"]))  # ...despues el relleno
+        return gf
+
+
+def poner_texto_placeholder(ph, parrafos, pt, color, negrita, alinear, interlinea=1.0):
+    """Escribe en un cuadro de titulo/subtitulo de la plantilla (la posicion y la letra las trae la plantilla)."""
+    tf = ph.text_frame
+    for i, par in enumerate(parrafos):
+        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+        p.alignment = {"izq": PP_ALIGN.LEFT, "centro": PP_ALIGN.CENTER, "der": PP_ALIGN.RIGHT}[alinear]
+        p.line_spacing = Pt(interlineado_ppt(pt, interlinea))
+        for t, neg in trozos(par):
+            r = p.add_run()
+            _formato(r, pt, color, neg or negrita)
+            r.text = t
+
+
+# ------------------------------------------------------------------ la plantilla del PowerPoint
+PORTADA_BLOQUE_Y = 92.0                 # donde empieza el bloque azul oscuro de la portada
+PORTADA_TITULO_PT = 60
+PORTADA_SUBTITULO_PT = 34
+PORTADA_DATOS_PT = 22
+CIERRE_PASO_PT = 28
+CIERRE_AVISO_PT = 26
+
+
+def _forma_de_plantilla(spTree, ident, nombre, x, y, w, h, color):
+    """Rectangulo liso en la plantilla (layout), debajo de todo. Va marcado como decorativo."""
+    sp = etree.fromstring(
+        '<p:sp xmlns:p="%s" xmlns:a="%s" xmlns:adec="%s"><p:nvSpPr>'
+        '<p:cNvPr id="%d" name="%s"><a:extLst><a:ext uri="{C183D7F6-B498-43B3-948B-1728B52AA6E4}">'
+        '<adec:decorative val="1"/></a:ext></a:extLst></p:cNvPr><p:cNvSpPr/><p:nvPr userDrawn="1"/></p:nvSpPr>'
+        '<p:spPr><a:xfrm><a:off x="%s" y="%s"/><a:ext cx="%s" cy="%s"/></a:xfrm>'
+        '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="%s"/></a:solidFill>'
+        '<a:ln><a:noFill/></a:ln></p:spPr></p:sp>'
+        % (NS_P, NS_A, NS_DECORATIVO, ident, nombre, _mm(x), _mm(y), _mm(w), _mm(h), _hex(color)))
+    spTree.insert(2, sp)                  # despues de nvGrpSpPr y grpSpPr: queda al fondo
+
+
+def _estilo_de_placeholder(ph, pt, color, negrita, alinear, anclar):
+    """Letra y alineacion del cuadro de la plantilla: lo que escriba alguien despues sale igual."""
+    tf = ph.text_frame
+    tf.word_wrap = True
+    tf.auto_size = MSO_AUTO_SIZE.NONE
+    tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+    tf.vertical_anchor = {"arriba": MSO_ANCHOR.TOP, "medio": MSO_ANCHOR.MIDDLE, "abajo": MSO_ANCHOR.BOTTOM}[anclar]
+    txBody = ph._element.txBody
+    lst = txBody.find(qn("a:lstStyle"))
+    if lst is None:
+        lst = etree.Element(qn("a:lstStyle"))
+        txBody.find(qn("a:bodyPr")).addnext(lst)
+    for hijo in list(lst):
+        lst.remove(hijo)
+    nivel = etree.SubElement(lst, qn("a:lvl1pPr"), marL="0", indent="0", algn={"izq": "l", "centro": "ctr"}[alinear])
+    etree.SubElement(nivel, qn("a:buNone"))
+    d = etree.SubElement(nivel, qn("a:defRPr"), sz=str(int(pt * 100)), b="1" if negrita else "0", lang=IDIOMA)
+    etree.SubElement(etree.SubElement(d, qn("a:solidFill")), qn("a:srgbClr"), val=_hex(color))
+    etree.SubElement(d, qn("a:latin"), typeface=FUENTE_PPT)
+
+
+def preparar_plantilla(prs, ancho_orig, alto_orig):
+    """La plantilla de python-pptx es 4:3 y de Calibri. Se deja a medida: A4 apaisado, letra Segoe UI y solo
+    las dos plantillas del manual (portada y pagina con franja azul). Devuelve (layout_portada, layout_pagina)."""
+    sx, sy = prs.slide_width / ancho_orig, prs.slide_height / alto_orig
+    maestra = prs.slide_master
+    for sh in maestra.shapes:
+        sh.left, sh.top = int(sh.left * sx), int(sh.top * sy)
+        sh.width, sh.height = int(sh.width * sx), int(sh.height * sy)
+    # letra del tema: lo que se agregue despues en PowerPoint sale en Segoe UI
+    tema = maestra.part.part_related_by(
+        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme")
+    tema._blob = re.sub(rb'(<a:latin typeface=")Calibri(")', rb"\1" + FUENTE_PPT.encode() + rb"\2", tema.blob)
+    tema._blob = tema._blob.replace(b'name="Office Theme"', b'name="Manual Barack"')
+    prs._element.find(qn("p:sldSz")).attrib.pop("type", None)    # la plantilla decia 4:3; 297 x 210 mm es "personalizado" para PowerPoint
+    portada = next(l for l in prs.slide_layouts if l.name == "Title Slide")
+    pagina = next(l for l in prs.slide_layouts if l.name == "Title Only")
+    for lay in list(prs.slide_layouts):
+        if lay.name not in ("Title Slide", "Title Only"):
+            prs.slide_layouts.remove(lay)
+    for lay, nombre in ((portada, "Manual - portada"), (pagina, "Manual - pagina")):
+        lay._element.cSld.set("name", nombre)
+        for ph in list(lay.placeholders):           # fecha, pie y numero de diapositiva no se usan
+            if ph.placeholder_format.type in (PP_PLACEHOLDER.DATE, PP_PLACEHOLDER.FOOTER, PP_PLACEHOLDER.SLIDE_NUMBER):
+                ph._element.getparent().remove(ph._element)
+        for sh in lay.shapes:
+            if not sh.is_placeholder:
+                sh._element.getparent().remove(sh._element)
+
+    # pagina: franja azul arriba + el titulo adentro de la franja
+    _forma_de_plantilla(pagina.shapes._spTree, 101, "Franja del titulo", 0, 0, HOJA_W, BANDA_H, AZUL_OSC)
+    d = 17.0
+    titulo = next(p for p in pagina.placeholders if p.placeholder_format.type == PP_PLACEHOLDER.TITLE)
+    titulo.left, titulo.top = Mm(MARGEN + d + 6), Mm(ajuste_ppt(TITULO_PT, 1.0))
+    titulo.width, titulo.height = Mm(ANCHO - d - 6), Mm(BANDA_H)
+    _estilo_de_placeholder(titulo, TITULO_PT, BLANCO, True, "izq", "medio")
+
+    # portada: bloque azul oscuro abajo; titulo y subtitulo adentro
+    # (cada una se mete al fondo de todo: la que va encima se mete primero)
+    _forma_de_plantilla(portada.shapes._spTree, 102, "Raya de color", MARGEN + 4, PORTADA_BLOQUE_Y + 12, 46, 2.4, AZUL)
+    _forma_de_plantilla(portada.shapes._spTree, 101, "Bloque azul", 0, PORTADA_BLOQUE_Y, HOJA_W,
+                        HOJA_H - PORTADA_BLOQUE_Y, AZUL_OSC)
+    ph_titulo = next(p for p in portada.placeholders if p.placeholder_format.type == PP_PLACEHOLDER.CENTER_TITLE)
+    ph_sub = next(p for p in portada.placeholders if p.placeholder_format.type == PP_PLACEHOLDER.SUBTITLE)
+    ph_titulo.left, ph_titulo.top = Mm(MARGEN + 4), Mm(PORTADA_BLOQUE_Y + 20 + ajuste_ppt(PORTADA_TITULO_PT, 1.0))
+    ph_titulo.width, ph_titulo.height = Mm(ANCHO - 8), Mm(26)
+    _estilo_de_placeholder(ph_titulo, PORTADA_TITULO_PT, BLANCO, True, "izq", "abajo")
+    ph_sub.left, ph_sub.top = Mm(MARGEN + 4), Mm(PORTADA_BLOQUE_Y + 50 + ajuste_ppt(PORTADA_SUBTITULO_PT, 1.0))
+    ph_sub.width, ph_sub.height = Mm(ANCHO - 8), Mm(16)
+    _estilo_de_placeholder(ph_sub, PORTADA_SUBTITULO_PT, CELESTE, False, "izq", "arriba")
+    return portada, pagina
+
+
+def poner_transicion(slide):
+    """Fundido corto, el mismo en todas las diapositivas. Sin animaciones por elemento."""
+    t = etree.fromstring('<p:transition xmlns:p="%s" spd="%s"><p:fade/></p:transition>' % (NS_P, TRANSICION))
+    sld = slide._element
+    anterior = sld.find(qn("p:clrMapOvr"))
+    if anterior is None:
+        anterior = sld.find(qn("p:cSld"))
+    anterior.addnext(t)
+
+
+def poner_propiedades_app(prs, n_notas):
+    """docProps/app.xml de la plantilla dice '4:3', 0 diapositivas y 'Macintosh': se deja con lo que es."""
+    xml = ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+           '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" '
+           'xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">'
+           '<TotalTime>0</TotalTime><Application>Microsoft Office PowerPoint</Application>'
+           '<PresentationFormat>Personalizado</PresentationFormat><Slides>%d</Slides><Notes>%d</Notes>'
+           '<HiddenSlides>0</HiddenSlides><ScaleCrop>false</ScaleCrop><LinksUpToDate>false</LinksUpToDate>'
+           '<SharedDoc>false</SharedDoc><HyperlinksChanged>false</HyperlinksChanged><AppVersion>16.0000</AppVersion>'
+           '</Properties>' % (len(prs.slides), n_notas))
+    for parte in prs.part.package.iter_parts():
+        if str(parte.partname) == "/docProps/app.xml":
+            parte._blob = xml.encode("utf-8")
+
+
+def poner_notas(slide, texto):
+    tf = slide.notes_slide.notes_text_frame
+    tf.text = texto
+    for p in tf.paragraphs:
+        for r in p.runs:
+            r.font.language_id = IDIOMA_ID
 
 
 # ================================================================== la pagina (igual para los dos lienzos)
@@ -421,6 +765,22 @@ def parrafos_chip(pag):
     return out
 
 
+def poner_chip(l, pag, y_fin):
+    """La franja ambar "a confirmar" al pie. Devuelve hasta donde llega ahora el texto de arriba."""
+    chip = parrafos_chip(pag)
+    if not chip:
+        return y_fin
+    alto_chip, n_chip = alto_parrafos(chip, CHIP_PT, ANCHO - 6, interlinea=1.25)
+    if n_chip > 4:
+        raise ErrorDeContenido("pagina %s: lo que hay 'a confirmar' ocupa mas de 4 renglones: acortalo"
+                               % pag.get("numero", pag.get("titulo", "?")))
+    alto_chip += 3.0
+    l.rect(MARGEN, CHIP_FONDO - alto_chip, ANCHO, alto_chip, relleno=AMBAR_FONDO)
+    l.rect(MARGEN, CHIP_FONDO - alto_chip, 1.2, alto_chip, relleno=AMBAR)
+    l.texto(MARGEN + 4, CHIP_FONDO - alto_chip + 1.5, ANCHO - 6, alto_chip - 3, chip, CHIP_PT, AMBAR, interlinea=1.25)
+    return CHIP_FONDO - alto_chip - 4.5
+
+
 def poner_captura(l, cap, caja, dir_capturas, lugar_rotulo=False, arriba=False):
     """lugar_rotulo: deja el lugar del rotulo aunque esta captura no lo tenga (para que dos capturas
     de la misma hoja arranquen a la misma altura). arriba: pega la imagen arriba en vez de centrarla."""
@@ -444,49 +804,44 @@ def poner_captura(l, cap, caja, dir_capturas, lugar_rotulo=False, arriba=False):
     with Image.open(ruta) as im:
         iw, ih = im.size
     ix, iy, nw, nh = encajar(iw, ih, x, y, w, h, arriba=arriba)
-    l.imagen(ruta, ix, iy, nw, nh)
-    l.rect(ix, iy, nw, nh, borde=GRIS_BORDE, grosor=0.3)
-    for m in cap.get("marcas", []):
-        if m["tipo"] == "recuadro":
-            mx, my = ix + nw * m["x"] / 100, iy + nh * m["y"] / 100
-            mw, mh = nw * m["ancho"] / 100, nh * m["alto"] / 100
-            l.marco(mx, my, mw, mh)
-            if m.get("numero") is not None:
-                # el numero va chico y corrido hacia afuera de la esquina: sobre la esquina tapaba lo marcado
-                # "numero_en": "izquierda" o "derecha" lo saca al costado del recuadro, a media altura
-                donde = m.get("numero_en")
-                if donde == "izquierda":
-                    l.insignia(mx - 4.4, my + mh / 2, m["numero"], d=6.4, pt=13)
-                elif donde == "derecha":
-                    l.insignia(mx + mw + 4.4, my + mh / 2, m["numero"], d=6.4, pt=13)
-                else:
-                    l.insignia(mx - 2.0, my - 2.0, m["numero"], d=6.4, pt=13)
-        elif m["tipo"] == "flecha":
-            l.flecha(ix + nw * m["desde"][0] / 100, iy + nh * m["desde"][1] / 100,
-                     ix + nw * m["hasta"][0] / 100, iy + nh * m["hasta"][1] / 100)
+    with l.grupo("Captura %s con sus marcas" % numero_captura(cap)):
+        l.imagen(ruta, ix, iy, nw, nh, descr=cap["que_se_ve"], nombre="Captura %s" % numero_captura(cap))
+        l.rect(ix, iy, nw, nh, borde=GRIS_BORDE, grosor=0.3)
+        for m in cap.get("marcas", []):
+            if m["tipo"] == "recuadro":
+                mx, my = ix + nw * m["x"] / 100, iy + nh * m["y"] / 100
+                mw, mh = nw * m["ancho"] / 100, nh * m["alto"] / 100
+                l.marco(mx, my, mw, mh)
+                if m.get("numero") is not None:
+                    # el numero va chico y corrido hacia afuera de la esquina: sobre la esquina tapaba lo marcado
+                    # "numero_en": "izquierda" o "derecha" lo saca al costado del recuadro, a media altura
+                    donde = m.get("numero_en")
+                    if donde == "izquierda":
+                        l.insignia(mx - 4.4, my + mh / 2, m["numero"], d=6.4, pt=13)
+                    elif donde == "derecha":
+                        l.insignia(mx + mw + 4.4, my + mh / 2, m["numero"], d=6.4, pt=13)
+                    else:
+                        l.insignia(mx - 2.0, my - 2.0, m["numero"], d=6.4, pt=13)
+            elif m["tipo"] == "flecha":
+                l.flecha(ix + nw * m["desde"][0] / 100, iy + nh * m["desde"][1] / 100,
+                         ix + nw * m["hasta"][0] / 100, iy + nh * m["hasta"][1] / 100)
 
 
 def poner_tabla(l, tabla, caja):
     x, y, w, h = caja
     anchos = [w * f for f in (0.50, 0.27, 0.23)]
-    pad = 2.2
     filas = [tabla["encabezado"]] + tabla["filas"]
-    altos = []
+    altos, celdas = [], []
     for i, fila in enumerate(filas):
-        gruesa = i == 0 or (i - 1) == tabla.get("resaltar", -1)
-        n = max(len(partir(c, TABLA_PT, a - 2 * pad, negrita=gruesa)) for c, a in zip(fila, anchos))
-        altos.append(n * TABLA_PT * 1.22 * MM_PT + 2 * pad)
-    yy = y + max(0.0, (h - sum(altos)) / 2)
-    for i, (fila, alto) in enumerate(zip(filas, altos)):
         resaltada = (i - 1) == tabla.get("resaltar", -1)
+        gruesa = i == 0 or resaltada
+        n = max(len(partir(c, TABLA_PT, a - 2 * PAD_TABLA, negrita=gruesa)) for c, a in zip(fila, anchos))
+        altos.append(n * TABLA_PT * 1.22 * MM_PT + 2 * PAD_TABLA)
         fondo = AZUL_OSC if i == 0 else (AMBAR_FONDO if resaltada else (BLANCO if i % 2 else CELESTE))
-        xx = x
-        for c, a in zip(fila, anchos):
-            l.rect(xx, yy, a, alto, relleno=fondo, borde=GRIS_BORDE, grosor=0.25)
-            l.texto(xx + pad, yy, a - 2 * pad, alto, [c], TABLA_PT, BLANCO if i == 0 else TINTA,
-                    negrita=(i == 0 or resaltada), anclar="medio", interlinea=1.22)
-            xx += a
-        yy += alto
+        celdas.append([dict(texto=c, fondo=fondo, color=BLANCO if i == 0 else TINTA, negrita=gruesa) for c in fila])
+    yy = y + max(0.0, (h - sum(altos)) / 2)
+    l.tabla(x, yy, anchos, altos, celdas,
+            descr="Tabla con las columnas: " + ", ".join(tabla["encabezado"]) + ".")
 
 
 def poner_tarjetas(l, tarjetas, caja):
@@ -497,43 +852,34 @@ def poner_tarjetas(l, tarjetas, caja):
     pad = 4.0
     for i, t in enumerate(tarjetas):
         tx, ty = x + (i % cols) * (tw + hueco), y + (i // cols) * (th + hueco)
-        l.rect(tx, ty, tw, th, relleno=BLANCO, borde=GRIS_BORDE, grosor=0.3)
-        l.rect(tx, ty, tw, 1.6, relleno=AZUL)
-        l.texto(tx + pad, ty + 5.0, tw - 2 * pad, 7.0, [t["area"].upper()], 14, AZUL, negrita=True, interlinea=1.15)
         alto_p, _ = alto_parrafos([t["pregunta"]], TARJETA_PT, tw - 2 * pad)
         libre = th - 13.5 - 9.5
         if alto_p > libre + 0.01:
             raise ErrorDeContenido("la pregunta de la tarjeta de %s no entra: acortala" % t["area"])
-        l.texto(tx + pad, ty + 13.5, tw - 2 * pad, libre, [t["pregunta"]], TARJETA_PT, TINTA)
-        l.texto(tx + pad, ty + th - 9.0, tw - 2 * pad, 6.5, ["Documento: **%s**" % t["documento"]], 13, GRIS,
-                interlinea=1.15)
+        with l.grupo("Tarjeta %s" % t["area"]):
+            l.rect(tx, ty, tw, th, relleno=BLANCO, borde=GRIS_BORDE, grosor=0.3)
+            l.rect(tx, ty, tw, 1.6, relleno=AZUL)
+            l.texto(tx + pad, ty + 5.0, tw - 2 * pad, 7.0, [t["area"].upper()], 14, AZUL, negrita=True,
+                    interlinea=1.15)
+            l.texto(tx + pad, ty + 13.5, tw - 2 * pad, libre, [t["pregunta"]], TARJETA_PT, TINTA)
+            l.texto(tx + pad, ty + th - 9.0, tw - 2 * pad, 6.5, ["Documento: **%s**" % t["documento"]], 13, GRIS,
+                    interlinea=1.15)
 
 
 def dibujar_pagina(l, pag, n, total, manual, dir_capturas):
     # franja del titulo, con el numero de pagina
-    l.rect(0, 0, HOJA_W, BANDA_H, relleno=AZUL_OSC)
+    l.banda()
     d = 17.0
     l.elipse(MARGEN, (BANDA_H - d) / 2, d, d, relleno=BLANCO)
     l.texto(MARGEN, (BANDA_H - d) / 2, d, d, [str(n)], 28, AZUL_OSC, negrita=True, alinear="centro",
-            anclar="medio", interlinea=1.0)
-    l.texto(MARGEN + d + 6, 0, ANCHO - d - 6, BANDA_H, [pag["titulo"]], TITULO_PT, BLANCO, negrita=True,
-            anclar="medio", interlinea=1.0)
+            anclar="medio", interlinea=1.0, deco=True, nombre="Numero de pagina")
+    l.titulo(MARGEN + d + 6, 0, ANCHO - d - 6, BANDA_H, pag["titulo"], TITULO_PT, BLANCO)
 
     # de abajo hacia arriba: pie, franja "a confirmar", texto
     l.texto(MARGEN, PIE_Y, ANCHO * 0.7, 5, ["%s · %s" % (manual["pie"], manual["version"])], 10, GRIS, interlinea=1.2)
     l.texto(MARGEN + ANCHO * 0.7, PIE_Y, ANCHO * 0.3, 5, ["Página %d de %d" % (n, total)], 10, GRIS,
             alinear="der", interlinea=1.2)
-    y_fin = TEXTO_FONDO
-    chip = parrafos_chip(pag)
-    if chip:
-        alto_chip, n_chip = alto_parrafos(chip, CHIP_PT, ANCHO - 6, interlinea=1.25)
-        if n_chip > 4:
-            raise ErrorDeContenido("pagina %d: lo que hay 'a confirmar' ocupa mas de 4 renglones: acortalo" % pag["numero"])
-        alto_chip += 3.0
-        l.rect(MARGEN, CHIP_FONDO - alto_chip, ANCHO, alto_chip, relleno=AMBAR_FONDO)
-        l.rect(MARGEN, CHIP_FONDO - alto_chip, 1.2, alto_chip, relleno=AMBAR)
-        l.texto(MARGEN + 4, CHIP_FONDO - alto_chip + 1.5, ANCHO - 6, alto_chip - 3, chip, CHIP_PT, AMBAR, interlinea=1.25)
-        y_fin = CHIP_FONDO - alto_chip - 4.5
+    y_fin = poner_chip(l, pag, TEXTO_FONDO)
     alto_texto, n_reng = alto_parrafos(pag["texto"], TEXTO_PT, ANCHO, entre=ENTRE_PARRAFOS, vinetas=True)
     if n_reng > MAX_RENGLONES:
         raise ErrorDeContenido("pagina %d (%s): el texto ocupa %d renglones impresos y el maximo es %d: acortalo"
@@ -580,7 +926,9 @@ def reemplazar(obj, variables):
 
 def cargar(ruta):
     datos = json.loads(Path(ruta).read_text(encoding="utf-8"))
-    datos["paginas"] = reemplazar(datos["paginas"], datos.get("variables", {}))
+    for clave in ("paginas", "portada", "cierre"):
+        if clave in datos:
+            datos[clave] = reemplazar(datos[clave], datos.get("variables", {}))
     return datos
 
 
@@ -643,6 +991,29 @@ def controlar(datos):
         for it in p.get("a_confirmar", []):
             if it.get("donde") not in ("app", "plan") or not it.get("que"):
                 errores.append("%s: cada 'a_confirmar' lleva donde ('app' o 'plan') y que" % donde)
+    errores += controlar_portada_y_cierre(datos)
+    return errores
+
+
+def controlar_portada_y_cierre(datos):
+    """La portada y el cierre salen solo en el PowerPoint, pero tienen que estar bien escritos igual."""
+    errores = []
+    por, cie = datos.get("portada") or {}, datos.get("cierre") or {}
+    if not por.get("titulo") or not por.get("subtitulo"):
+        errores.append("portada: faltan el titulo y el subtitulo")
+    elif ancho_txt(por["titulo"], PORTADA_TITULO_PT, True) > ANCHO - 8:
+        errores.append("portada: el titulo no entra en un renglon")
+    pasos = cie.get("pasos", [])
+    if not cie.get("titulo") or not cie.get("aviso") or not 2 <= len(pasos) <= 4:
+        errores.append("cierre: faltan el titulo, el aviso o los pasos (de 2 a 4)")
+    for t in [por.get("titulo", ""), por.get("subtitulo", ""), cie.get("titulo", ""), cie.get("aviso", "")] + pasos:
+        if t.count("**") % 2:
+            errores.append("portada/cierre: hay un ** sin cerrar en: %s" % t)
+        if "{" in t or "}" in t:
+            errores.append("portada/cierre: quedo una llave sin reemplazar en: %s" % t)
+    for it in cie.get("a_confirmar", []):
+        if it.get("donde") not in ("app", "plan") or not it.get("que"):
+            errores.append("cierre: cada 'a_confirmar' lleva donde ('app' o 'plan') y que")
     return errores
 
 
@@ -675,20 +1046,90 @@ def armar_pdf(datos, dir_capturas):
     return hojas
 
 
-def armar_pptx(datos, dir_capturas, con_notas=False):
+MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre",
+         "noviembre", "diciembre"]
+
+
+def fecha_larga(dia=None):
+    dia = dia or datetime.date.today()
+    return "%d de %s de %d" % (dia.day, MESES[dia.month - 1], dia.year)
+
+
+def diapositiva_portada(prs, layout, datos, hoy=None):
+    """Solo en el PowerPoint: titulo, 'Manual de arranque', el logo, version y fecha."""
+    por, man = datos["portada"], datos["manual"]
+    l = LienzoPPT(prs, layout)
+    poner_texto_placeholder(l.s.shapes.title, [por["titulo"]], PORTADA_TITULO_PT, BLANCO, True, "izq")
+    sub = next(p for p in l.s.placeholders if p.placeholder_format.type == PP_PLACEHOLDER.SUBTITLE)
+    poner_texto_placeholder(sub, [por["subtitulo"]], PORTADA_SUBTITULO_PT, CELESTE, False, "izq")
+    if LOGO.exists():
+        with Image.open(LOGO) as im:
+            iw, ih = im.size
+        lw = 78.0
+        l.imagen(LOGO, MARGEN + 4, 22.0, lw, lw * ih / iw, descr="Logo de Barack Mercosul", nombre="Logo")
+    l.texto(MARGEN + 4, PORTADA_BLOQUE_Y + 82, ANCHO - 8, 22,
+            ["**Versión:** %s" % man["version"], "**Fecha:** %s" % fecha_larga(hoy)], PORTADA_DATOS_PT, BLANCO,
+            interlinea=1.3, entre=1.0, nombre="Version y fecha")
+    return l.s
+
+
+def diapositiva_cierre(prs, layout, datos):
+    """Solo en el PowerPoint: los tres pasos, y a quien avisar."""
+    cie, man = datos["cierre"], datos["manual"]
+    l = LienzoPPT(prs, layout)
+    l.titulo(MARGEN, 0, ANCHO, BANDA_H, cie["titulo"], TITULO_PT, BLANCO)
+    pasos = cie["pasos"]
+    hueco, y, alto = 8.0, 38.0, 96.0
+    ancho = (ANCHO - hueco * (len(pasos) - 1)) / len(pasos)
+    for i, paso in enumerate(pasos, 1):
+        x = MARGEN + (i - 1) * (ancho + hueco)
+        if len(partir(paso, CIERRE_PASO_PT, ancho - 12)) > 3:
+            raise ErrorDeContenido("cierre: el paso %d no entra en la tarjeta: acortalo" % i)
+        with l.grupo("Paso %d" % i):
+            l.rect(x, y, ancho, alto, relleno=BLANCO, borde=GRIS_BORDE, grosor=0.3)
+            l.rect(x, y, ancho, 1.6, relleno=AZUL)
+            l.insignia(x + ancho / 2, y + 25, i, d=26, pt=40, halo=False)
+            l.texto(x + 6, y + 46, ancho - 12, alto - 52, [paso], CIERRE_PASO_PT, TINTA, alinear="centro",
+                    anclar="medio", interlinea=1.2)
+    ya, ah = y + alto + 10, 26.0
+    l.rect(MARGEN, ya, ANCHO, ah, relleno=CELESTE)
+    l.rect(MARGEN, ya, 1.6, ah, relleno=AZUL)
+    l.texto(MARGEN + 8, ya, ANCHO - 12, ah, [cie["aviso"]], CIERRE_AVISO_PT, TINTA, anclar="medio", interlinea=1.2)
+    poner_chip(l, cie, ya + ah)
+    l.texto(MARGEN, PIE_Y, ANCHO * 0.7, 5, ["%s · %s" % (man["pie"], man["version"])], 10, GRIS, interlinea=1.2)
+    return l.s
+
+
+def armar_pptx(datos, dir_capturas, con_notas=False, hoy=None):
+    """El PowerPoint: portada + las paginas del manual (iguales al PDF) + cierre."""
     activas = [p for p in datos["paginas"] if p.get("activa", True)]
     prs = Presentation()
+    ancho0, alto0 = prs.slide_width, prs.slide_height
     prs.slide_width, prs.slide_height = Mm(HOJA_W), Mm(HOJA_H)
+    portada, pagina = preparar_plantilla(prs, ancho0, alto0)
     cp = prs.core_properties
     cp.title = datos["manual"]["archivo"]
     cp.author = cp.last_modified_by = "Ingeniería - Barack Mercosul"
-    cp.subject = cp.keywords = cp.comments = ""
+    cp.subject = cp.keywords = cp.comments = cp.category = ""
+    cp.language = IDIOMA
+    cp.created = cp.modified = datetime.datetime.now()
+    cp.revision = 1
+
+    s = diapositiva_portada(prs, portada, datos, hoy)
+    if con_notas:
+        poner_notas(s, "Portada. Después siguen las %d páginas del manual, en orden." % len(activas))
     for n, pag in enumerate(activas, 1):
-        l = LienzoPPT(prs)
+        l = LienzoPPT(prs, pagina)
         dibujar_pagina(l, pag, n, len(activas), datos["manual"], dir_capturas)
         if con_notas and pag.get("error_que_evita"):
-            l.s.notes_slide.notes_text_frame.text = "Para qué está esta página: evita " + \
-                pag["error_que_evita"][0].lower() + pag["error_que_evita"][1:]
+            poner_notas(l.s, "Para qué está esta página: evita " + pag["error_que_evita"][0].lower()
+                        + pag["error_que_evita"][1:])
+    s = diapositiva_cierre(prs, pagina, datos)
+    if con_notas:
+        poner_notas(s, "Cierre. Repasar los tres pasos y a quién avisar si algo no anda.")
+    for diapositiva in prs.slides:
+        poner_transicion(diapositiva)
+    poner_propiedades_app(prs, sum(1 for d in prs.slides if d.has_notes_slide))
     return prs
 
 
@@ -752,7 +1193,8 @@ def main(argv=None):
     ap.add_argument("--capturas", default=str(AQUI / "capturas"), help="otra carpeta de capturas (para pruebas)")
     ap.add_argument("--salida", default=str(SALIDA), help="otra carpeta de salida (para pruebas)")
     ap.add_argument("--grilla", action="store_true", help="solo deja las capturas con cuadricula en capturas/_grilla/")
-    ap.add_argument("--notas", action="store_true", help="pone 'para que esta la pagina' en las notas del PowerPoint")
+    ap.add_argument("--notas", action="store_true",
+                    help="pone 'para que esta la pagina' en las notas del PowerPoint (con --sin-avisos van siempre)")
     ap.add_argument("--sin-avisos", action="store_true",
                     help="copia para mostrar: sin la franja 'a confirmar' (el archivo sale con ' - para mostrar' en el nombre)")
     a = ap.parse_args(argv)
@@ -782,7 +1224,7 @@ def main(argv=None):
 
     try:
         hojas = armar_pdf(datos, a.capturas)
-        prs = armar_pptx(datos, a.capturas, con_notas=a.notas)
+        prs = armar_pptx(datos, a.capturas, con_notas=a.notas or a.sin_avisos)
         pdf, pptx = guardar(hojas, prs, Path(a.salida),
                             datos["manual"]["archivo"] + (" - para mostrar" if a.sin_avisos else ""))
     except ErrorDeContenido as e:
@@ -794,10 +1236,11 @@ def main(argv=None):
     print("  PDF : %s" % pdf)
     print("  PPTX: %s" % pptx)
     pendientes = [(p["numero"], it) for p in datos["paginas"] if p.get("activa", True) for it in p.get("a_confirmar", [])]
+    pendientes += [("cierre", it) for it in datos.get("cierre", {}).get("a_confirmar", [])]
     if pendientes or datos.get("a_confirmar_general"):
         print("\nA CONFIRMAR (sale impreso en la franja ambar de cada pagina hasta que se borre de contenido.json):")
         for num, it in pendientes:
-            print("  pag. %2d  [%s]  %s" % (num, "en la app" if it["donde"] == "app" else "antes de entregar", it["que"]))
+            print("  pag. %2s  [%s]  %s" % (num, "en la app" if it["donde"] == "app" else "antes de entregar", it["que"]))
         for g in datos.get("a_confirmar_general", []):
             print("  general  %s" % g)
     if opcionales:

@@ -22,6 +22,7 @@ from pathlib import Path
 
 from PIL import Image, ImageChops, ImageDraw, ImageFont
 from pptx import Presentation
+from pptx.enum.lang import MSO_LANGUAGE_ID
 from pptx.util import Pt
 
 import generar_manual as g
@@ -85,6 +86,102 @@ def caja_de_color(im, color):
     return mascara.getbbox()
 
 
+def formas(shapes):
+    """Todas las formas de una diapositiva, entrando a los grupos."""
+    for sh in shapes:
+        yield sh
+        if sh.shape_type == 6:
+            yield from formas(sh.shapes)
+
+
+def cuadros_de_texto(prs):
+    for s in prs.slides:
+        for sh in formas(s.shapes):
+            if sh.has_text_frame:
+                yield sh.text_frame
+            elif getattr(sh, "has_table", False) and sh.has_table:
+                for fila in sh.table.rows:
+                    for celda in fila.cells:
+                        yield celda.text_frame
+
+
+def todo_el_texto(prs):
+    return "\n".join(tf.text for tf in cuadros_de_texto(prs))
+
+
+def revisar_pptx(prs, datos, dir_capturas, con_notas):
+    """Lo que tiene que cumplir el PowerPoint para proyectarlo o recorrerlo en la PC. Devuelve los problemas."""
+    problemas = []
+    activas = [p for p in datos["paginas"] if p.get("activa", True)]
+    diapos = list(prs.slides)
+    if len(diapos) != len(activas) + 2:
+        return ["tiene %d diapositivas y tendria que tener %d" % (len(diapos), len(activas) + 2)]
+    esperados = [datos["portada"]["titulo"]] + [p["titulo"] for p in activas] + [datos["cierre"]["titulo"]]
+    for i, (s, titulo) in enumerate(zip(diapos, esperados), 1):
+        tit = s.shapes.title
+        if tit is None or tit.text_frame.text != titulo:
+            problemas.append("diapositiva %d: el titulo de verdad (el cuadro de titulo) no dice '%s'" % (i, titulo))
+        if not s._element.xpath("./p:transition/p:fade"):
+            problemas.append("diapositiva %d: sin fundido" % i)
+        if s._element.xpath("./p:timing"):
+            problemas.append("diapositiva %d: tiene animaciones" % i)
+        for sh in formas(s.shapes):
+            if sh.shape_type == 13 and not "".join(sh._element.xpath("./p:nvPicPr/p:cNvPr/@descr")).strip():
+                problemas.append("diapositiva %d: la imagen '%s' no tiene texto alternativo" % (i, sh.name))
+    velocidades = {v for s in diapos for v in s._element.xpath("./p:transition/@spd")}
+    if len(velocidades) > 1:
+        problemas.append("el fundido no es el mismo en todas las diapositivas: %s" % sorted(velocidades))
+    if any(r.font.language_id != MSO_LANGUAGE_ID.SPANISH_ARGENTINA
+           for tf in cuadros_de_texto(prs) for para in tf.paragraphs for r in para.runs):
+        problemas.append("hay texto sin idioma castellano de Argentina (sin idioma puesto)")
+    if prs.core_properties.language != "es-AR":
+        problemas.append("el idioma del documento no es es-AR")
+    for pag, s in zip(activas, diapos[1:-1]):
+        grupos = {sh.name: sh for sh in s.shapes if sh.shape_type == 6}
+        for c in pag.get("capturas", []):
+            if not (Path(dir_capturas) / Path(c["archivo"]).name).exists():
+                continue
+            num = Path(c["archivo"]).name[:2]
+            grupo = grupos.get("Captura %s con sus marcas" % num)
+            if grupo is None:
+                problemas.append("pagina %s: no esta el grupo de la captura %s" % (pag["numero"], num))
+                continue
+            foto = next(sh for sh in grupo.shapes if sh.shape_type == 13)
+            alt = "".join(foto._element.xpath("./p:nvPicPr/p:cNvPr/@descr"))
+            if alt != c["que_se_ve"]:
+                problemas.append("pagina %s: el texto alternativo de la captura %s no es el 'que_se_ve'" % (pag["numero"], num))
+            marcos = [sh for sh in grupo.shapes if sh.name == "Recuadro rojo"]
+            recuadros = [m for m in c.get("marcas", []) if m["tipo"] == "recuadro"]
+            if len(marcos) != len(recuadros):
+                problemas.append("pagina %s: la captura %s tiene %d recuadros y tendria que tener %d"
+                                 % (pag["numero"], num, len(marcos), len(recuadros)))
+                continue
+            medio = g.Mm(g.GROSOR_MARCA / 2)
+            for marco, m in zip(marcos, recuadros):
+                # el rojo va por fuera de lo marcado: la linea (centrada) queda media linea mas afuera
+                esperado = (foto.left + foto.width * m["x"] / 100 - medio, foto.top + foto.height * m["y"] / 100 - medio,
+                            foto.width * m["ancho"] / 100 + 2 * medio, foto.height * m["alto"] / 100 + 2 * medio)
+                real = (marco.left, marco.top, marco.width, marco.height)
+                if max(abs(a - b) for a, b in zip(esperado, real)) > 2000:          # 2000 EMU = 0,06 mm
+                    problemas.append("pagina %s: un recuadro rojo de la captura %s no cae sobre lo que marca" % (pag["numero"], num))
+        if pag.get("tabla"):
+            tablas = [sh for sh in s.shapes if getattr(sh, "has_table", False) and sh.has_table]
+            if len(tablas) != 1:
+                problemas.append("pagina %s: la tabla no es una tabla de PowerPoint" % pag["numero"])
+            else:
+                t = tablas[0].table
+                esperada = [pag["tabla"]["encabezado"]] + pag["tabla"]["filas"]
+                real = [[c.text_frame.text for c in fila.cells] for fila in t.rows]
+                if real != esperada or not t.first_row:
+                    problemas.append("pagina %s: la tabla no dice lo mismo que contenido.json" % pag["numero"])
+    if con_notas:
+        for i, (s, pag) in enumerate(zip(diapos, [None] + activas + [None]), 1):
+            debe = pag is None or pag.get("error_que_evita")
+            if debe and not (s.has_notes_slide and s.notes_slide.notes_text_frame.text.strip()):
+                problemas.append("diapositiva %d: falta la nota del orador" % i)
+    return problemas
+
+
 def prueba_completa():
     fallas = []
 
@@ -117,16 +214,61 @@ def prueba_completa():
         hojas_pdf = len(re.findall(rb"/Type\s*/Page\b(?!s)", pdf.read_bytes())) if pdf.exists() else 0
         control("el PDF tiene %d paginas" % n_pag, hojas_pdf == n_pag, "tiene %d" % hojas_pdf)
         prs = Presentation(str(pptx))
-        control("el PowerPoint tiene %d diapositivas" % n_pag, len(prs.slides) == n_pag, "tiene %d" % len(prs.slides))
+        control("el PowerPoint tiene %d diapositivas (portada + %d paginas + cierre)" % (n_pag + 2, n_pag),
+                len(prs.slides) == n_pag + 2, "tiene %d" % len(prs.slides))
         control("el PowerPoint es A4 apaisado", abs(prs.slide_width - g.Mm(297)) < 100 and abs(prs.slide_height - g.Mm(210)) < 100)
-        tam = [[r.font.size for sh in s.shapes if sh.has_text_frame for p in sh.text_frame.paragraphs for r in p.runs
-                if r.font.size] for s in prs.slides]
+        paginas_ppt = list(prs.slides)[1:-1]            # las del manual: sin la portada ni el cierre
+        tam = [[r.font.size for sh in formas(s.shapes) if sh.has_text_frame for p in sh.text_frame.paragraphs
+                for r in p.runs if r.font.size] for s in prs.slides]
         control("cada diapositiva tiene el titulo en %d pt o mas" % 34, all(max(t) >= Pt(34) for t in tam))
-        control("cada diapositiva tiene texto de %d pt" % g.TEXTO_PT, all(Pt(g.TEXTO_PT) in t for t in tam))
+        control("cada pagina tiene texto de %d pt" % g.TEXTO_PT, all(Pt(g.TEXTO_PT) in t for t in tam[1:-1]))
         control("la letra del texto es de 20 pt o mas y la del titulo de 34 o mas", g.TEXTO_PT >= 20 and g.TITULO_PT >= 34)
-        fotos = [sum(1 for sh in s.shapes if sh.shape_type == 13) for s in prs.slides]
+        fotos = [sum(1 for sh in formas(s.shapes) if sh.shape_type == 13) for s in paginas_ppt]
         esperadas = [len(p.get("capturas", [])) for p in original["paginas"] if p.get("activa", True)]
         control("cada diapositiva tiene sus capturas", fotos == esperadas, "%s contra %s" % (fotos, esperadas))
+
+        print("1 bis. El PowerPoint para proyectar: titulo de verdad, texto alternativo, idioma, fundido, tabla, marcos")
+        datos_ok = g.cargar(ok_json)
+        problemas = revisar_pptx(prs, datos_ok, caps, con_notas=False)
+        control("el PowerPoint pasa todos los controles", not problemas, "; ".join(problemas[:6]))
+        # los casos MALOS: cada control tiene que poder dar mal
+        malo = Presentation(str(pptx))
+        malo.slides[3].shapes.title.text_frame.text = ""
+        control("un titulo vacio se detecta", any("titulo" in p for p in revisar_pptx(malo, datos_ok, caps, False)))
+        malo = Presentation(str(pptx))
+        for sh in formas(malo.slides[2].shapes):
+            if sh.shape_type == 13:
+                sh._element.xpath("./p:nvPicPr/p:cNvPr")[0].set("descr", "")
+        control("una captura sin texto alternativo se detecta",
+                any("alternativo" in p for p in revisar_pptx(malo, datos_ok, caps, False)))
+        malo = Presentation(str(pptx))
+        malo.slides[4]._element.remove(malo.slides[4]._element.xpath("./p:transition")[0])
+        control("una diapositiva sin fundido se detecta", any("fundido" in p for p in revisar_pptx(malo, datos_ok, caps, False)))
+        malo = Presentation(str(pptx))
+        marco = next(sh for sh in formas(malo.slides[5].shapes) if sh.name == "Recuadro rojo")
+        marco.left = marco.left + g.Mm(0.5)
+        control("un recuadro rojo corrido 0,5 mm se detecta",
+                any("recuadro" in p for p in revisar_pptx(malo, datos_ok, caps, False)))
+        malo = Presentation(str(pptx))
+        for sh in formas(malo.slides[2].shapes):
+            if sh.has_text_frame:
+                for p in sh.text_frame.paragraphs:
+                    for r in p.runs:
+                        r.font.language_id = None
+        control("texto sin idioma se detecta", any("idioma" in p for p in revisar_pptx(malo, datos_ok, caps, False)))
+
+        print("1 ter. La copia para mostrar: sin la franja 'a confirmar' y con las notas del orador")
+        cod, out = correr(base + ["--contenido", str(ok_json), "--sin-avisos"])
+        mostrar = sal / (nombre + " - para mostrar.pptx")
+        control("deja la copia para mostrar", mostrar.exists(), "salio con %s\n%s" % (cod, out[:300]))
+        if mostrar.exists():
+            prs_m = Presentation(str(mostrar))
+            control("la copia para mostrar no dice 'A confirmar'", "A confirmar" not in todo_el_texto(prs_m))
+            control("el PowerPoint normal si dice 'A confirmar'", "A confirmar" in todo_el_texto(prs))
+            problemas_m = revisar_pptx(prs_m, datos_ok, caps, con_notas=True)
+            control("la copia para mostrar lleva las notas del orador en cada diapositiva", not problemas_m,
+                    "; ".join(problemas_m[:6]))
+            control("el PowerPoint normal no lleva notas", not any(s.has_notes_slide for s in prs.slides))
 
         print("2. El recuadro rojo cae sobre el boton verde y la captura no se deforma (pagina 1)")
 
@@ -191,6 +333,9 @@ def prueba_completa():
             ("titulo de 7 palabras", lambda d: d["paginas"][0].__setitem__("titulo", "Uno dos tres cuatro cinco seis siete")),
             ("marca fuera de la imagen", lambda d: d["paginas"][0]["capturas"][0]["marcas"][0].__setitem__("x", 95)),
             ("archivo mal nombrado", lambda d: d["paginas"][0]["capturas"][0].__setitem__("archivo", "capturas/foto.png")),
+            ("portada sin titulo", lambda d: d["portada"].__setitem__("titulo", "")),
+            ("cierre con un solo paso", lambda d: d["cierre"].__setitem__("pasos", ["Abrí Claude"])),
+            ("paso del cierre que no entra", lambda d: d["cierre"]["pasos"].__setitem__(0, "palabra " * 40)),
             ("15 paginas", lambda d: d["paginas"].append(dict(copy.deepcopy(d["paginas"][0]), numero=15,
                                                               capturas=[dict(d["paginas"][0]["capturas"][0],
                                                                              archivo="capturas/21-otra.png")]))),

@@ -10,7 +10,8 @@
     "a_confirmar: lo que todavia no esta verificado. Sale impreso en una franja ambar al pie de la pagina. Cuando se confirma, se borra el renglon de aca y la franja desaparece.",
     "error_que_evita: para que esta la pagina. No se imprime (con --notas va a las notas del PowerPoint).",
     "activa: false saca la pagina del manual y las demas se renumeran solas.",
-    "Las llaves {CARPETA} y {CONTACTO} se reemplazan por lo que dice 'variables'."
+    "Las llaves {CARPETA} y {CONTACTO} se reemplazan por lo que dice 'variables'.",
+    "portada y cierre: salen SOLO en el PowerPoint (el PDF no los lleva). La portada agrega sola la version de 'manual' y la fecha del dia en que se arma. El cierre lleva de 2 a 4 pasos y el aviso; si tiene 'a_confirmar' sale la franja ambar (la copia para mostrar no la lleva)."
   ],
 
   "manual": {
@@ -22,6 +23,24 @@
   "variables": {
     "CARPETA": "C:\\ClaudeBarack",
     "CONTACTO": "Ingeniería (Facundo)"
+  },
+
+  "portada": {
+    "titulo": "Claude en Barack",
+    "subtitulo": "Manual de arranque"
+  },
+
+  "cierre": {
+    "titulo": "Los tres pasos",
+    "pasos": [
+      "Abrí **Claude**",
+      "Elegí la carpeta **ClaudeBarack**",
+      "**Preguntá**"
+    ],
+    "aviso": "¿Algo no anda? Avisale a **{CONTACTO}**.",
+    "a_confirmar": [
+      { "donde": "plan", "que": "a quién se avisa y por dónde" }
+    ]
   },
 
   "a_confirmar_general": [
