@@ -1084,9 +1084,11 @@ const doc = {
     scope: 'UPPER TRIM PANEL - CONSOLA CENTRAL - VW427 PATAGONIA - COZZUOL / VW',
     subject: 'UPPER TRIM PANEL - CONSOLA CENTRAL',
     partNumber: 'MP8404 / MP8405',
+    // El plano 2HC.864.263 (hoja 4) no le da numero propio a la cubierta suede (items 17 a 20):
+    // los numeros son de los CONJUNTOS en los que va. La SINGLE va en el .C y en el .D.
     applicableParts: [
-      'MP8405 SINGLE 50W SUEDE COVER FRAME (2HC.864.263.C)',
-      'MP8404 DUAL 50W SUEDE COVER FRAME (2HC.864.263.B)',
+      'MP8405 SINGLE 50W SUEDE COVER FRAME (conjuntos 2HC.864.263.C y 2HC.864.263.D)',
+      'MP8404 DUAL 50W SUEDE COVER FRAME (conjunto 2HC.864.263.B)',
     ].join(', '),
     client: 'COZZUOL',
     customerName: 'COZZUOL / VW',

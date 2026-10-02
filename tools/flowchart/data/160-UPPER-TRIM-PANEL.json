@@ -17,10 +17,11 @@
     "reviewedBy": "CARLOS BAPTISTA",
     "project": "VW427 PATAGONIA",
     "client": "COZZUOL / VW",
-    "productsColumns": { "code": "Código Barack", "version": "N° de pieza cliente" }
+    "productsColumns": { "code": "Código Barack", "version": "Conjunto del cliente" }
   },
+  "_conjuntos": "El plano 2HC.864.263 (C00610730_05, hoja 4) no le da numero propio a la cubierta suede ni a su sustrato (items 17 a 20): los numeros son de los CONJUNTOS. La cubierta SINGLE va en el .C (cargador simple sin logo) y en el .D (cargador simple con logo, agregado el 25/11/2025); la DUAL, en el .B. Hasta el 02/10/2026 esta tabla decia 'N de pieza cliente' y al SINGLE le faltaba el .D.",
   "products": [
-    { "code": "MP8405", "level": "", "description": "SINGLE 50W SUEDE COVER FRAME", "version": "2HC.864.263.C" },
+    { "code": "MP8405", "level": "", "description": "SINGLE 50W SUEDE COVER FRAME", "version": "2HC.864.263.C / .D" },
     { "code": "MP8404", "level": "", "description": "DUAL 50W SUEDE COVER FRAME", "version": "2HC.864.263.B" }
   ],
   "revisions": [
