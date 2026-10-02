@@ -33,6 +33,11 @@ const INDEXAR = path.join(DIR, 'indexar.mjs');
 const BUSCAR = path.join(DIR, 'buscar.mjs');
 const CITA = path.join(DIR, 'cita.mjs');
 
+// El indice usa el SQLite que trae Node desde la 22.5. Donde no esta (el CI corre Node 20) las pruebas que
+// necesitan el indice se saltean, y una prueba aparte comprueba que el programa lo dice claro y sale con 1.
+const [NODE_MAYOR, NODE_MENOR] = process.versions.node.split('.').map(Number);
+const HAY_MOTOR = NODE_MAYOR > 22 || (NODE_MAYOR === 22 && NODE_MENOR >= 5);
+
 const temporales = [];
 function carpetaTemporal(prefijo = 'claude-area-buscar-') {
     const d = fs.mkdtempSync(path.join(os.tmpdir(), prefijo));
@@ -195,6 +200,7 @@ const buscarJson = (consulta, extra = []) => {
 beforeAll(() => {
     K = armarConocimiento();
     I = carpetaTemporal('indice-');
+    if (!HAY_MOTOR) return;
     const r = correr(INDEXAR, [K, I]);
     expect(r.err).toBe('');
     expect(r.codigo).toBe(0);
@@ -293,7 +299,7 @@ describe('partir en secciones', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
-describe('indexar', () => {
+describe.skipIf(!HAY_MOTOR)('indexar', () => {
     it('guarda la fecha y el sha256 de cada archivo indexado', () => {
         const meta = JSON.parse(fs.readFileSync(path.join(I, 'indice.json'), 'utf8'));
         expect(meta.creado).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/);
@@ -365,7 +371,7 @@ describe('indexar', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
-describe('buscar', () => {
+describe.skipIf(!HAY_MOTOR)('buscar', () => {
     it('encuentra con y sin tilde, con mayusculas y en plural: siempre el mismo pasaje', () => {
         const formas = ['inspeccion', 'inspección', 'INSPECCIÓN', 'Inspeccion de recepcion', 'inspecciones'];
         const archivos = formas.map((q) => buscarJson(q, ['--area', 'calidad', '--max', '1']).resultados[0]?.archivo);
@@ -510,7 +516,7 @@ describe('buscar', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
-describe('indice viejo', () => {
+describe.skipIf(!HAY_MOTOR)('indice viejo', () => {
     function armarPar() {
         const k = armarConocimiento();
         const i = carpetaTemporal('indice-viejo-');
@@ -573,7 +579,7 @@ describe('indice viejo', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
-describe('cita', () => {
+describe.skipIf(!HAY_MOTOR)('cita', () => {
     const rel010 = 'comun/extractos/I-AC-010 Proceso de notificacion al proveedor.md';
     const abs010 = () => path.join(K, ...rel010.split('/'));
     const renglon = (texto) => DOC_010.split('\n').findIndex((l) => l.includes(texto)) + 1;
@@ -643,5 +649,13 @@ describe('cita', () => {
         expect(linea).toBeTruthy();
         const frase = linea.texto.replace(/…$/, '').replace(/^…/, '').split('.')[0];
         expect(correr(CITA, [frase, p.ruta]).codigo).toBe(0);
+    });
+});
+
+describe.skipIf(HAY_MOTOR)('en un Node sin el motor de busqueda', () => {
+    it('indexar lo dice en una linea y sale con 1, sin romperse', () => {
+        const r = correr(INDEXAR, [K, I]);
+        expect(r.codigo).toBe(1);
+        expect(r.err).toMatch(/Node 22\.5/);
     });
 });
