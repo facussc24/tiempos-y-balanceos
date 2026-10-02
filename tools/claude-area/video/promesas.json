@@ -14,7 +14,8 @@
       "en_el_video": true,
       "estado": "probado",
       "prueba": ".sgc-cache/claude-por-area/examen/ensayo_respuestas.md",
-      "como_se_probo": "Ensayo del 01/10 sobre la instalación, nivel Medio: tres piezas malas → P-09.1 rev B.1; funciones del puesto → F-24 rev I; PPAP → I-AC-007 rev A (cita comprobada contra el extracto)."
+      "como_se_probo": "Ensayo del 01/10 sobre la instalación, nivel Medio: tres piezas malas → P-09.1 rev B.1; funciones del puesto → F-24 rev I; PPAP → I-AC-007 rev A (cita comprobada contra el extracto).",
+      "probado_sobre": "2eaeb71a4834"
     },
     {
       "id": "bom-en-el-arb",
@@ -22,8 +23,9 @@
       "pedido": "01/10: «le dijiste que la bom de apc estaba en la nube… arb debiste haber dicho… eso no me puede volver a pasar»",
       "en_el_video": false,
       "estado": "probado",
-      "prueba": ".sgc-cache/claude-por-area/examen/correccion_inst_1.json",
-      "como_se_probo": "Examen de 139 sobre la instalación: las 15 preguntas de BOM y consumos contestan «en el arb»."
+      "prueba": ".sgc-cache/claude-por-area/examen/ensayo_respuestas.md",
+      "como_se_probo": "Examen de 139 sobre la instalación (reglas v1, 01/10): las 15 preguntas de BOM y consumos contestan «en el arb». Con las reglas instaladas hoy lo confirma la pregunta 1 del ensayo del 01/10 a la noche.",
+      "probado_sobre": "2eaeb71a4834"
     },
     {
       "id": "mail-borrador",
@@ -32,7 +34,8 @@
       "en_el_video": true,
       "estado": "probado",
       "prueba": ".sgc-cache/claude-por-area/examen/ensayo_respuestas.md",
-      "como_se_probo": "Ensayo del 01/10, pregunta 4: usó la herramienta de mail y el borrador quedó abierto en Outlook (capturado y cerrado sin guardar)."
+      "como_se_probo": "Ensayo del 01/10, pregunta 4: usó la herramienta de mail y el borrador quedó abierto en Outlook (capturado y cerrado sin guardar).",
+      "probado_sobre": "2eaeb71a4834"
     },
     {
       "id": "mail-enviar",
@@ -50,7 +53,8 @@
       "en_el_video": true,
       "estado": "probado",
       "prueba": "tools/claude-area/video/tomas/arb-06ago2026-escribe-en-la-grilla.mp4",
-      "como_se_probo": "Grabación real del 06/08/2026 (16 insertos de puerta de Patagonia, verificados contra el listado del arb)."
+      "como_se_probo": "Grabación real del 06/08/2026 (16 insertos de puerta de Patagonia, verificados contra el listado del arb).",
+      "probado_sobre": "no depende de las reglas"
     },
     {
       "id": "presentaciones",
@@ -68,7 +72,8 @@
       "en_el_video": true,
       "estado": "probado",
       "prueba": "tools/claude-area/video/tomas/ho-992-hot-melt-hoja-2.png",
-      "como_se_probo": "Entregables reales hechos en Ingeniería: HO-992 Hot Melt (01/10/2026), lámina de proceso del Insert (01/10) y flujograma 160 (01/10). En el video van como ejemplos de Ingeniería, sin los nombres del cajetín."
+      "como_se_probo": "Entregables reales hechos en Ingeniería: HO-992 Hot Melt (01/10/2026), lámina de proceso del Insert (01/10) y flujograma 160 (01/10). En el video van como ejemplos de Ingeniería, sin los nombres del cajetín.",
+      "probado_sobre": "no depende de las reglas"
     },
     {
       "id": "carpeta-a-mano",
@@ -77,7 +82,8 @@
       "en_el_video": true,
       "estado": "probado",
       "prueba": "tools/claude-area/manual/capturas/17-este-equipo.png",
-      "como_se_probo": "Fotos reales del cuadro de Windows del 02/10 (Este equipo, y adentro del disco C con ClaudeBarack y «Seleccionar carpeta») y página 5 del manual. Queda confirmar con Facundo que la carpeta es C:\\ClaudeBarack (nombró «archivos de programa»)."
+      "como_se_probo": "Fotos reales del cuadro de Windows del 02/10 (Este equipo, y adentro del disco C con ClaudeBarack y «Seleccionar carpeta») y página 5 del manual. Queda confirmar con Facundo que la carpeta es C:\\ClaudeBarack (nombró «archivos de programa»).",
+      "probado_sobre": "no depende de las reglas"
     },
     {
       "id": "aprende-habilidades",
@@ -95,7 +101,8 @@
       "en_el_video": true,
       "estado": "probado",
       "prueba": ".sgc-cache/claude-por-area/examen/prueba_memoria.md",
-      "como_se_probo": "02/10: se le enseñó el formato del parte de turno en una conversación y en otra NUEVA lo armó en los 4 renglones en orden, más el de los viernes, sin repetírselo. La memoria queda en la PC de cada uno."
+      "como_se_probo": "02/10: se le enseñó el formato del parte de turno en una conversación y en otra NUEVA lo armó en los 4 renglones en orden, más el de los viernes, sin repetírselo. La memoria queda en la PC de cada uno.",
+      "probado_sobre": "2eaeb71a4834"
     },
     {
       "id": "no-hace-solo",
@@ -104,7 +111,8 @@
       "en_el_video": true,
       "estado": "probado",
       "prueba": ".sgc-cache/claude-por-area/examen/ensayo_respuestas.md",
-      "como_se_probo": "Ensayo del 01/10, preguntas 3, 5 y 6; cartel de permiso capturado en modo Manual."
+      "como_se_probo": "Ensayo del 01/10, preguntas 3, 5 y 6; cartel de permiso capturado en modo Manual.",
+      "probado_sobre": "2eaeb71a4834"
     },
     {
       "id": "modelo-y-esfuerzo",
@@ -113,7 +121,8 @@
       "en_el_video": true,
       "estado": "probado",
       "prueba": "tools/claude-area/manual/capturas/11-modelo-y-nivel.png",
-      "como_se_probo": "Captura real de la app del 02/10: lista de modelos y control «Esfuerzo» con Medio marcado como Recomendado."
+      "como_se_probo": "Captura real de la app del 02/10: lista de modelos y control «Esfuerzo» con Medio marcado como Recomendado.",
+      "probado_sobre": "no depende de las reglas"
     },
     {
       "id": "un-ejemplo-por-sector",
@@ -122,7 +131,8 @@
       "en_el_video": true,
       "estado": "probado",
       "prueba": ".sgc-cache/claude-por-area/examen/sectores_respuestas.md",
-      "como_se_probo": "02/10: siete preguntas, una por sector, en la instalación de demostración; las siete con su documento y las citas comprobadas contra los extractos."
+      "como_se_probo": "02/10: siete preguntas, una por sector, en la instalación de demostración; las siete con su documento y las citas comprobadas contra los extractos.",
+      "probado_sobre": "2eaeb71a4834"
     },
     {
       "id": "imds-caso-real",
