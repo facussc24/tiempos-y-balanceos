@@ -27,13 +27,16 @@ no está probado, o si la prueba es más vieja que las reglas instaladas en `C:\
 | Hojas para Dirección (1 a 7) | hecho | falta ponerlas al día con la etapa A |
 | Video tutorial de 2:12 | hecho; le gustó, la voz queda | le falta contenido: etapa C |
 | Enviar el mail a pedido (el programa) | hecho (02/10, 11:40) | **en vivo con Outlook**: 3 mails de Facundo para Facundo salieron una vez cada uno; copia oculta, sin asunto, nombre inexistente, ventana cambiada (asunto, texto, adjunto, copia) y alguien de afuera NO salieron; la huella no cambia sola en 5 minutos; dos mails de trabajo abiertos no se tocaron. Casillas en `NOTAS.md` punto 11 |
-| Enviar el mail a pedido (el control en una conversación) | falta | la persona escribe "mandalo" en la carpeta instalada: es la toma del video. Ya se sabe que en esta PC lo que escribe la persona llega como `human` y lo de otra sesión como `peer` |
-| Enseñarle una habilidad · armar presentaciones | integrado (plugin 0.2.0, 997 pruebas) | falta probarlo en una conversación: ensayo 2, preguntas 13 a 15 |
+| Enviar el mail a pedido (en una conversación) | hecho (02/10, 12:04) | ensayo 2: el "Mandalo" de otra sesión NO salió; el "mandalo" que escribió Facundo salió una vez; a uno de afuera con "cuando puedas" quedó abierto |
+| Armar presentaciones | hecho (02/10, 12:06) | ensayo 2: PowerPoint abierto en 40 s, 5 diapositivas con la fuente al pie, comparadas con el P-09.1 |
+| Enseñarle una habilidad | falta la prueba | pedido por otra sesión se negó a guardarla (bien: la tiene que pedir la persona). Hay que probarlo con Facundo escribiendo, en una conversación abierta directo en `C:\ClaudeBarack` (sin copia de trabajo: en una copia la habilidad queda adentro de la copia y la conversación siguiente no la ve) |
+| Ensayo 2 | 13 de 15 | las 10 de siempre bien, con citas y rutas comprobadas; mail y presentación bien; faltan las 2 de la habilidad. `examen/ensayo_2_respuestas.md` |
+| Papeles al día (etapa D) | hecho salvo el video | manual (PDF y PowerPoint, mirado en PowerPoint), propuesta y hojas 3, 4, 5 y 7 regenerados. De paso se corrigió la tarjeta de Dirección del manual (MC-09, no MC-04). La voz del video sigue diciendo "no lo manda": se rehace en la etapa C |
 | Demostración instalada por el instalador como PC de Producción (B1) | hecho (02/10, 11:39) | `instalado.json` y `perfil.json` del instalador; conocimiento: común + producción; reglas v3. `armar_demo_instalada.sh <área>` la rehace para cualquier área |
 
 **Lo que cambió con la reinstalación:** las reglas instaladas son otras (v3), así que TODAS las promesas del video
 quedaron sin prueba vigente (`chequear_promesas.py` las pide de nuevo). Se vuelven a probar con el ensayo 2
-(`.sgc-cache/claude-por-area/examen/ensayo_2_preguntas.md`), después de las 13:00.
+(`.sgc-cache/claude-por-area/examen/ensayo_2_preguntas.md`). Al 02/10 12:20 quedan sin prueba vigente: enseñarle una habilidad, un ejemplo por sector (se prueba al grabar cada sector con la demostración instalada como ese sector) y el caso de IMDS.
 
 ## Las etapas, en orden. Cada una tiene su puerta: no se pasa a la siguiente con la puerta en rojo.
 
