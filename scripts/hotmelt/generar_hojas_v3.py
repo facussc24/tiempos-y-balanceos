@@ -11,7 +11,9 @@ Antes de dibujar cada hoja corren los controles de redaccion del skill hojas-de-
 (vocabulario de planta, infinitivo, sin TBD, denominacion) y el de fuente por paso.
 """
 import os
+import re
 import sys
+import unicodedata
 
 from pptx import Presentation
 from pptx.util import Cm
@@ -97,6 +99,45 @@ def gate_lo_normal_en_produccion(hojas):
                              "produccion. Lo que no se hace todos los dias va a la hoja de la maquina.")
 
 
+# Las piezas y aparatos de esta maquina que un operario nuevo no conoce por su nombre.
+PIEZAS = ("volante", "guiador", "controlador", "contador", "detector", "torre", "acumulador", "bandeja",
+          "boquilla", "llave", "manometro", "barra amarilla", "mesa superior", "eje", "tubo",
+          "rodillo cromado", "mesa de enfriamiento", "enrollador", "interruptor", "parafina", "cuter",
+          "film", "fusor", "desbobinador")
+
+
+def _plano(texto):
+    """minusculas y sin acentos, para comparar nombres de piezas"""
+    return "".join(c for c in unicodedata.normalize("NFD", (texto or "").lower()) if unicodedata.category(c) != "Mn")
+
+
+def gate_pieza_nombrada_se_ve(d, fotos=None):
+    """Un paso que nombra una pieza la MUESTRA: alguna foto de ese paso tiene que decir, en su pie, en
+    su ficha o en sus marcas, que esa pieza esta ahi. Fak, 02/10/2026, con la hoja en la mano: "Girar
+    el volante cromado... que es el volante cromado? es como que te diga gira esta nave espacial, cual
+    es? pone una foto del volante" (el paso llevaba la foto del tubo vacio, y la del volante estaba
+    tapada por dos manos). Un paso que nombra una pieza y va sin foto lo declara con
+    `sin_foto="por que"`, y eso lo deja a la vista en vez de pasar callado."""
+    fotos = FOTOS if fotos is None else fotos
+    # lo que dicen TODAS las fotos de la hoja: una pieza mostrada en un paso vale para los demas
+    vistas = []
+    for p in d["pasos"]:
+        for f in p.get("fotos") or ([p] if p.get("foto") else []):
+            ficha = fotos.get(os.path.splitext(os.path.basename(f["foto"]))[0]) or {}
+            marcas = " ".join(str(m[4]) for m in ficha.get("marcas", []) if len(m) > 4)
+            vistas.append(" ".join([f.get("pie", ""), ficha.get("nota", ""), marcas]))
+    vistas = _plano(" ".join(vistas))
+    for i, p in enumerate(d["pasos"], 1):
+        nombradas = [x for x in PIEZAS if re.search(r"\b" + x + r"\b", _plano(p["texto"]))]
+        if not nombradas or p.get("sin_foto"):
+            continue
+        faltan = [x for x in nombradas if not re.search(r"\b" + x, vistas)]
+        if faltan:
+            raise SystemExit(f"OP {d['op']} paso {i}: nombra {', '.join(faltan)} y ninguna foto de la hoja dice "
+                             "que lo muestra. Poner la foto donde se ve (marcada), o declarar "
+                             'sin_foto="por que" y sumarlo a lo que falta filmar.')
+
+
 PALABRAS_DE_FALLA = ("MODO DE FALLA", "DEFECTO", "MAL PASAD")
 
 
@@ -164,6 +205,7 @@ def generar(nombre, pdf=True):
         d.update(h)
         gate_fuente_por_paso(d)
         gate_foto_no_es_de_falla(d)
+        gate_pieza_nombrada_se_ve(d)
         gate_redaccion(para_redaccion(d))
         _, avisos = H.hoja(prs, d, logo=base.LOGO_BARACK)
         etiqueta = f"OP {d['op']} {d['denominacion']}" + (f" ({d['hoja_de'][0]}/{d['hoja_de'][1]})" if d.get("hoja_de") else "")

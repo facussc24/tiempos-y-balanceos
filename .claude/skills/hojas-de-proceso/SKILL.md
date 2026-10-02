@@ -191,6 +191,40 @@ pasa en vez de inventar"*.
   Si lo unico que hay es esa charla, la hoja dice QUE ES CADA COSA y lo que ninguna fuente
   dice se escribe generico o no se escribe: sin TBD en la descripcion (Fak, 24/09/2026, §4).
 
+### GATE 0.8 — las tres preguntas que Fak hizo con la hoja en la mano (02/10/2026)
+
+Salieron de la hoja del hot melt, que habia pasado todos los controles, dos revisiones y una
+auditoria. Las tres se contestan ANTES de numerar las hojas y cada una tiene su control.
+
+**a) ¿Esto se hace TODOS LOS DIAS, o es una excepcion?** El juego de produccion cuenta el trabajo
+normal; lo que pasa una vez cada tanto va a la hoja de la maquina, con un cartel que diga cuando.
+El hot melt salio con el enhebrado completo (dos hojas) en fila con el trabajo diario, porque
+estaba filmado en la puesta en marcha, con la maquina vacia. Fak: *"lo unico que hay que hacer es
+un empalme con el rollo viejo y listo... lo complejizaste al pedo"*. **Lo filmado en la instalacion
+no es la jornada.** Cada hoja de produccion declara `cuando=` y una excepcion no entra:
+`gate_lo_normal_en_produccion()`.
+
+**b) ¿La foto MUESTRA la pieza que el paso nombra?** *"Girar el volante cromado... ¿que es el
+volante cromado? es como que te diga gira esta nave espacial, ¿cual es? pone una foto del
+volante"*. El paso llevaba la foto del tubo vacio, y en la otra foto dos manos tapaban el volante.
+Una pieza o un aparato que un operario nuevo no conoce por el nombre va **en la foto y marcado**
+(recuadro o numero); el pie lo nombra. Un paso que nombra una pieza y va sin foto lo declara con
+`sin_foto="por que"`, y eso va a lo que falta filmar: `gate_pieza_nombrada_se_ve()`.
+
+**c) ¿Yo entiendo lo que estoy mandando hacer?** *"Pegar una cinta adhesiva como indicador para el
+cambio de rollo: no se entiende ni la foto ni el texto"*. El paso salia de un audio traducido que
+yo tampoco entendia (no se ve la cinta, ni donde se pega, ni quien, ni cuando). **Lo que no puedo
+explicar con mis palabras no se escribe como paso**: va a la lista de lo que falta preguntar. Vale
+igual para un paso traducido del manual (*"soltar la punta del material"*) y para un "verificar"
+que no dice contra que. Esto no tiene control automatico: lo caza una **lectura a ciegas** (un
+agente con SOLO el PDF, haciendo de operario nuevo, que dice paso por paso que haria y marca
+"no entiendo"). Se corre antes de mostrarle la hoja a Fak, no despues.
+
+Los tres controles viven en `scripts/hotmelt/generar_hojas_v3.py` (prueba:
+`scripts/hotmelt/gates_v3_selftest.py`), junto con `gate_foto_no_es_de_falla()` (una foto de un
+video titulado "MODO DE FALLA" no ilustra un paso como si fuera lo correcto). Un generador nuevo
+los importa de ahi.
+
 ### GATE 1 — antes de acomodar: ¿cual es la imagen PRINCIPAL de esta hoja?
 
 Se contesta **por hoja y por escrito**, antes de tocar el layout: *la imagen que el paso

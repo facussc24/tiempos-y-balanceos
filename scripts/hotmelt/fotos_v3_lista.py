@@ -54,8 +54,11 @@ FOTOS.update({
                    nota="Rollo nuevo ya sin el film de plastico, una mano en el tubo"),
     "r_eje_tubo": dict(fuente=cuadro("0367", 7), crop=(8, 28, 100, 78),
                        nota="El eje entrando por el tubo del rollo parado en el piso"),
+    # El recuadro marca el VOLANTE: un paso que nombra una pieza la muestra marcada (Fak, 02/10/2026:
+    # "que es el volante cromado... pone una foto del volante").
     "r_volante": dict(fuente=HEIC_0365, crop=(5, 0, 85, 62),
-                      nota="Extremo del eje apoyado en el brazo y volante cromado de apriete"),
+                      marcas=[(42.5, 54, 42, 26, "Volante cromado")],
+                      nota="Extremo del eje apoyado en el brazo del desbobinador y volante cromado de apriete"),
     "r_volante_giro": dict(fuente=cuadro("0366", 4), crop=(0, 10, 100, 100),
                            nota="Manos girando el volante cromado"),
     "r_inflar": dict(fuente=cuadro("0355", 94), crop=(0, 20, 100, 100),
@@ -75,8 +78,16 @@ FOTOS.update({
                           nota="Detector negro sobre la regla, el que el tecnico muestra para la cinta de aviso"),
     "r_guiador": dict(fuente=cuadro("9527", 3370), crop=(0, 10, 75, 55),
                       nota="Pantalla del guiador de borde BF5500S"),
+    # el recuadro marca la luz "Auto": es lo que el paso manda mirar
     "r_tension": dict(fuente=cuadro("9527", 2500), crop=(3, 28, 75, 82),
+                      marcas=[(21.5, 44.8, 9, 5.2, "Luz Auto")],
                       nota="Controlador de tension BFTC-600 y contador de metros"),
+    # los dos aparatos que nombra la hoja 20.4, marcados en el tablero del desbobinador
+    # Solo el guiador: el mismo cuadro muestra abajo el controlador de tension en MANUAL, y en la
+    # hoja 20.4 eso contradecia a la foto de al lado, que lo muestra en automatico (lectura a ciegas
+    # del 02/10). El controlador se ubica por su propia foto (r_tension).
+    "r_tablero": dict(fuente=cuadro("9527", 3110), crop=(20, 28, 85, 60),
+                      nota="Guiador de borde, el aparato de arriba en el tablero del desbobinador"),
     "r_contador": dict(fuente=cuadro("9527", 3110),
                        nota="Los tres instrumentos del tablero del desbobinador"),
     "r_llave": dict(fuente=cuadro("9527", 2610), crop=(0, 28, 75, 75),
@@ -86,7 +97,8 @@ FOTOS.update({
     "r_sacar_eje": dict(fuente=cuadro("0366", 6),
                         nota="Sacando el eje con el tubo vacio"),
     "r_punta": dict(fuente=cuadro("0367", 22), crop=(0, 25, 100, 95),
-                    nota="Dos manos llevando la punta del vinilo nuevo a la mesa"),
+                    marcas=[(0.5, 1, 65, 16, "Barra amarilla")],
+                    nota="Dos manos llevando la punta del vinilo nuevo a la mesa superior, junto a la barra amarilla"),
     "r_apretar": dict(fuente=cuadro("0367", 62), crop=(0, 20, 88, 75),
                       nota="Mano plana sobre el vinilo contra la barra amarilla"),
     "r_cortar": dict(fuente=cuadro("0367", 98), crop=(0, 15, 100, 70),
@@ -151,6 +163,9 @@ FOTOS.update({
     "c_gap": dict(**PANT_OPERACION, marcas=[(4.5, 67.5, 10, 9, "Glue Gap position")],
                   nota="Pantalla de operacion, boton de posicion de encolado"),
     # ---------------- ALARMAS ----------------
+    "a_torre": dict(fuente=cuadro("0347", 13), crop=(0, 10, 75, 65),
+                    marcas=[(1.5, 14, 28.5, 54, "Torre de luces")],
+                    nota="Torre de luces roja, amarilla y verde, al lado de la pantalla del fusor"),
     "a_alarmas": dict(fuente=cuadro("0836", 10), crop=(16, 20, 86, 86),
                       nota="Pantalla Alarm Information con la lista de alarmas"),
     "a_botonera": dict(fuente=cuadro("0836", 13), crop=(21, 5, 84, 100),
@@ -185,7 +200,7 @@ FOTOS.update({
     "n_salida": dict(fuente=cuadro("0361", 33),
                      nota="Mano llevando el material sobre el rodillo cromado, barra amarilla"),
     "n_tubo": dict(fuente=cuadro("0361", 44), crop=(0, 38, 100, 95),
-                   nota="Dos manos pegando la punta al tubo de carton con cinta azul"),
+                   nota="Dos manos pegando la punta al tubo de carton con cinta azul, en el enrollador"),
     "n_derecho": dict(fuente=cuadro("0394", 100), crop=(0, 10, 100, 95),
                       nota="Material recto saliendo, tubo con cinta azul en los dos extremos"),
     # ---------------- ARRANQUE, MARCHA Y PARADA ----------------

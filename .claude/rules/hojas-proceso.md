@@ -110,8 +110,24 @@ Regla corta. El detalle, los umbrales y los errores caros: skill `hojas-de-proce
     frena copiarlo o escribirlo sin ese OK, no el camino por Excel COM, asi que el OK se pide
     igual). En el cierre se dice que fila quedo preparada y si ya se escribio.
 
+22. **Primero lo de TODOS LOS DIAS; la excepcion va aparte, en la hoja de la maquina.** Lo filmado
+    en la puesta en marcha no es la jornada (Fak, 02/10/2026, hot melt con el enhebrado completo en
+    fila: *"lo unico que hay que hacer es un empalme... lo complejizaste al pedo"*). Cada hoja de
+    produccion declara `cuando=`: `gate_lo_normal_en_produccion()`.
+23. **Un paso que nombra una pieza la MUESTRA marcada** (Fak, 02/10/2026: *"¿que es el volante
+    cromado? es como que te diga gira esta nave espacial... pone una foto del volante"*). Sin foto,
+    el paso lo declara con `sin_foto="por que"`: `gate_pieza_nombrada_se_ve()`.
+24. **Lo que yo no entiendo de la fuente no se escribe como paso** (un audio traducido, un renglon
+    del manual, un "verificar" sin decir contra que): va a lo que falta preguntar. Antes de
+    mostrarle la hoja a Fak se corre una **lectura a ciegas**: un agente con solo el PDF, haciendo
+    de operario nuevo, que marca los pasos que no entiende (skill `hojas-de-proceso`, gate 0.8).
+
 ## Enforcement
 
+- **Contenido (22 y 23):** `gate_lo_normal_en_produccion`, `gate_pieza_nombrada_se_ve` y
+  `gate_foto_no_es_de_falla` en `scripts/hotmelt/generar_hojas_v3.py`, en ROJO y en VERDE en
+  `py -3 scripts/hotmelt/gates_v3_selftest.py`. Un generador nuevo los importa de ahi. El 24 no
+  tiene control automatico: es la lectura a ciegas.
 - **Duro:** `py -3 .claude/skills/hojas-de-proceso/scripts/hoja_proceso_check.py "<deck.pptx>"`
   sale con codigo 1 y la hoja no se entrega.
 - **Una sola fuente:** los umbrales viven solo en `.claude/skills/hojas-de-proceso/scripts/hojalib.py`; el generador dibuja

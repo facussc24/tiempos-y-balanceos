@@ -97,6 +97,37 @@ caso("VERDE (caso real): despues de montar el rollo viene el empalme",
      ops.index("20.3") == ops.index("20.2") + 1
      and spec_hoy.PRODUCCION[ops.index("20.3")]["denominacion"] == "EMPALME DEL MATERIAL")
 
+# ── gate_pieza_nombrada_se_ve ────────────────────────────────────────────────────────────────
+FICHAS_P = {"tubo": {"nota": "Tubo vacio en el eje"},
+            "volante": {"nota": "Extremo del eje en el brazo", "marcas": [(1, 1, 5, 5, "Volante cromado")]},
+            "llave": {"nota": "Llave de cambio de rollo OFF / ON"}}
+
+
+def paso_p(texto, *nombres, **mas):
+    fotos = [dict(foto=rf"C:\fotos\{n}.jpg", pie="") for n in nombres]
+    return dict(texto=texto, fuentes=["x"], **({"fotos": fotos} if fotos else {}), **mas)
+
+
+GIRAR = "Girar el volante cromado para soltar el eje."
+caso("ROJO (caso real del 02/10): manda girar el volante y la foto es la del tubo vacio",
+     frena(G.gate_pieza_nombrada_se_ve, hoja(paso_p(GIRAR, "tubo")), FICHAS_P))
+caso("ROJO: nombra una pieza y el paso va sin foto, sin declararlo",
+     frena(G.gate_pieza_nombrada_se_ve, hoja(paso_p("Verificar que el guiador de borde este en automatico.")), FICHAS_P))
+caso("VERDE: la misma orden con la foto donde el volante esta marcado",
+     not frena(G.gate_pieza_nombrada_se_ve, hoja(paso_p(GIRAR, "volante", "tubo")), FICHAS_P))
+caso("VERDE: la pieza se muestra en otro paso de la misma hoja",
+     not frena(G.gate_pieza_nombrada_se_ve,
+               hoja(paso_p("Apoyar el eje en el brazo.", "volante"), paso_p(GIRAR, "tubo")), FICHAS_P))
+caso("VERDE: paso sin foto que lo declara con sin_foto",
+     not frena(G.gate_pieza_nombrada_se_ve,
+               hoja(paso_p("Verificar que el guiador de borde este en automatico.", sin_foto="falta filmarlo")), FICHAS_P))
+caso("VERDE: un paso que no nombra ninguna pieza de la maquina",
+     not frena(G.gate_pieza_nombrada_se_ve, hoja(paso_p("Apretar el boton verde Start.")), FICHAS_P))
+caso("VERDE: 'dejarlo' o 'ejemplo' no cuentan como 'eje'",
+     not frena(G.gate_pieza_nombrada_se_ve, hoja(paso_p("Empujar el rollo hasta dejarlo en el medio.")), FICHAS_P))
+caso("VERDE (caso real): todas las hojas de hoy muestran las piezas que nombran",
+     all(not frena(G.gate_pieza_nombrada_se_ve, h) for h in spec_hoy.MAQUINA + spec_hoy.PRODUCCION))
+
 # ── el caso real del 01/10, contra la biblioteca (si esta en esta PC) ────────────────────────
 if G.titulo_del_video("0360"):
     real = hoja(dict(texto="Verificar que el material pase por adentro.", foto=G.ruta_foto("n_adentro"),
