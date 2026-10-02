@@ -134,6 +134,13 @@ el **Art del proveedor** (así están `8230`, `9119`, `8559`-`8562`) y **`1178` 
 Corrugados** (leído en las 3 fichas). Salió el cartel de Visual C++, `Omitir`, y releída con
 `--leer` la ficha quedó igual a la del hermano.
 
+**Segunda tanda, 3/3 el 02/10/2026** (`9400`/`9401`/`9402`, base, tapa y piso de la caja 150x120,
+`--como 9285 --comprado`). El pedido de Compras llega como captura del listado del proveedor: el
+código del arb es la columna **`Id`**, no la columna `Codigo` (que es el nombre, `150 X 120 :: BASE`);
+se confirma contra las OC (`_ocHistoria.py "VICTORIA CORRUGADOS"`). Antes del alta, `--leer` de un
+código que **no existe** contesta `NO SE PUDO LEER: el foco no quedo en un RichEdit (Button)`: así
+se ve "no existe" en `Modificaciones`, no es una falla del robot.
+
 ### Verificar un alta sin tocar nada — solapa `Modificaciones`
 
 ```bash

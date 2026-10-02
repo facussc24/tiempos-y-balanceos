@@ -14,7 +14,7 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 > | Cambiar la `Unidad` | `_arbUnidad.py`, en la MISMA tanda que la conversión de consumos: la unidad es una sola para OC y BOM | 11/11 el 22/09 |
 > | Dar de alta líneas | `_arbAlta.py`; en lote `_arbAltaLote.py`; en un producto SIN BOM `_arbAlta.traer_vacio()` | 31/31 el 07/08 · 12/12 el 28/08 |
 > | Sustituir el código de una línea (y, opcional, cantidad/módulo/proceso) | `_arbSustituir.py` | 5/5 el 15/09 · 31/31 el 23/09 |
-> | Alta de CÓDIGOS en el maestro, leer la ficha, `Es Sub-Producto` | `_arbInsumoCampos.py` (`--leer`, `--alta tabla.csv --como <HERMANO>`, `--subproducto`) | 12/12 y 2/2 el 23/09 |
+> | Alta de CÓDIGOS en el maestro, leer la ficha, `Es Sub-Producto` | `_arbInsumoCampos.py` (`--leer`, `--alta tabla.csv --como <HERMANO>`, `--subproducto`) | 12/12 y 2/2 el 23/09 · 3/3 el 02/10 (`--comprado`) |
 > | Cambiar la `Descripción` del maestro | `_arbDescripcion.py`; dentro del formulario se TABULA (`reference/maestro-de-insumos.md`) | 3/3 el 01/09 |
 > | Borrar líneas | — | fuera de alcance |
 >
