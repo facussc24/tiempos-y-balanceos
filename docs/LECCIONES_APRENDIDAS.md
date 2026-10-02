@@ -13,6 +13,7 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **02/10 — Un examen se toma como lo va a usar la gente (nivel, material de su área, PC instalada por el instalador), y el aviso de un documento va donde se LEE ese documento** (en mi nivel dio 131/8/0; en el de ellos, 105/31/3; un dato que estaba en otra tabla no se usó). Graduado a la memoria `project_claudes_por_area`.
 - **02/10 — De un flujograma o de un AMFE puede salir la PALABRA "reproceso", nunca su analisis (IATF 8.7.1.4; fue una no conformidad en 2019), y un AMFE escrito de cero se delata por el largo de sus frases** (12 palabras por causa contra 4 a 7; Calidad: "hecho con IA"). Graduado a la memoria `reference_iatf_retrabajo_8714_y_antecedentes_barack` y a `TOPE_PALABRAS` de `scripts/_lib/amfeAutoria.mjs`.
 - **01/10 — Guardar en la carpeta sincronizada no es subir a la nube: "está en la nube" se dice después de medirlo** (OneDrive trabado 20 h; 229 archivos que di por subidos). Graduado a `scripts/_nubeSubio.ps1` y a la memoria `reference_onedrive_sync_colgado_como_detectarlo`.
 - **30/09 — El límite de una máquina lo pone el MATERIAL puesto, no el trabajo más grande que ya salió** (papel de 90 cm). Graduado a `patrones-corte-plotter` §3 ter y a `reference_plotter_inkjet_software_htv2a`.
@@ -79,7 +80,7 @@ incidente vive en los snapshots.
 ## Entregables y comunicacion con Fak
 
 - **02/10 — Una mejora que Fak pidió implementar se USA: si su pedido calza con un skill listado, se carga antes de contestar** (pidió "fácil de entender" y contesté una tabla). Graduado a la memoria `feedback_mejora_implementada_se_usa`.
-- **02/10 — En una hoja de proceso va primero lo de TODOS LOS DÍAS y la excepción aparte: lo filmado en la puesta en marcha no es la jornada.** Graduado a `gate_lo_normal_en_produccion()` de `scripts/hotmelt/generar_hojas_v3.py`.
+- **02/10 — Hoja de proceso: primero lo de TODOS LOS DÍAS y la excepción aparte; un paso que nombra una pieza la MUESTRA marcada; y lo que yo no entiendo de la fuente no se escribe como paso** (hot melt, tres correcciones con la hoja en la mano). Graduado a `hojas-proceso.md` 22 a 24, al skill `hojas-de-proceso` gate 0.8 y a los gates de `scripts/hotmelt/generar_hojas_v3.py`.
 
 - **02/10 — Lo que hay que volver a pedir hasta que contesten no depende de acordarse: va a un seguimiento con fecha que se avisa solo; y lo que va a quien lo lee buscando el error sale corto, con papel y sin nada que suene a generado.** Graduado a `scripts/_seguimientos.mjs` (arranque de sesion + tarea de lunes y viernes) y a las memorias `project_seguimientos_con_fecha` y `feedback_mails_a_calidad_cecilia_sin_flancos`.
 
