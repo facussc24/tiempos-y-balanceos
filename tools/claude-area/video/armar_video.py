@@ -14,6 +14,9 @@ Lo que se ve y como se mueve (todo por escenas.json):
   - recuadros: aparecen cuando la voz dice la frase ('con_la_frase') o la palabra ('con_la_palabra'); el resto de la
     captura se oscurece (foco) y pueden llevar una etiqueta con el nombre del boton.
   - omitir: franjas horizontales de la captura que se sacan (para no mostrar una ruta interna).
+  - grabaciones de pantalla: una sola velocidad ('desde', 'hasta', 'velocidad') o 'tramos' con velocidades distintas,
+    cortes (se saca la espera), otra grabacion en cada tramo, un tramo que dura hasta que la voz dice una palabra, recuadros
+    que entran con la voz y el cartel «Acelerado ×N» (ver VisualVideo y el campo _como_se_usa de escenas_v2.json).
   - entrada suave a cada toma (fundido corto), acercamiento lento, placas de apertura y cierre animadas.
 
 Uso:
@@ -25,6 +28,9 @@ Uso:
                                               de 10 en 10 y los recuadros, para ubicarlos
     python armar_video.py --solo-control      vuelve a controlar el video que ya esta armado
     python armar_video.py --escenas otro.json --salida otro.mp4
+                                              (con otro .json los cuadros de control van a control_<nombre>/, para no
+                                              pisar los del video de siempre; --control CARPETA elige otra)
+    python armar_video.py --cuadros 5,20.5    deja esos segundos como imagen en control/_cuadros/ sin armar el video
 
 Sale con:
     0  salio completo
@@ -1252,62 +1258,213 @@ class VisualTriptico:
         pass
 
 
+VEL_MIN_TRAMO, VEL_MAX_TRAMO = 0.5, 12.0     # fuera de esto un tramo de grabacion avisa (se ve a los saltos o no se lee)
+VEL_CON_ETIQUETA = 1.8                        # desde aca un tramo muestra «Acelerado ×N» arriba a la derecha
+FUNDIDO_TRAMO = 0.12                          # el cambio de un tramo al siguiente no es un corte seco: dura esto
+
+
+class _Tramo:
+    """Un pedazo de grabacion con su propia velocidad, su propio recorte (la grabacion puede ser otra) y sus recuadros."""
+
+    def __init__(self, ruta, desde, hasta, vel, t0, t1, etiqueta, geom, recuadros, estados, orden, fundido=FUNDIDO_TRAMO):
+        self.ruta, self.desde, self.hasta, self.vel, self.fundido = ruta, desde, hasta, vel, fundido
+        self.t0, self.t1, self.etiqueta = t0, t1, etiqueta
+        self.ow, self.oh, self.pos, self.base = geom
+        self.recuadros, self.estados, self.orden = recuadros, estados, orden
+
+
 class VisualVideo:
-    """Una grabacion de pantalla: se la lleva a la duracion de la voz y se lee cuadro por cuadro."""
+    """Una grabacion de pantalla: se la lleva a la duracion de la voz y se lee cuadro por cuadro.
+
+    Una sola velocidad (lo de siempre): 'desde', 'hasta' y 'velocidad' de la toma.
+    Varias velocidades, cortes y hasta varias grabaciones: 'tramos', una lista en el orden en que se ven. Cada tramo dice
+    que parte de la grabacion usa ('desde' y 'hasta', en segundos de ESA grabacion; 'recurso' si no es la de la toma) y
+    cuanto dura en el video, con UNA de estas:
+        'velocidad'      cuantas veces mas rapido (1 = como se grabo)
+        'dura'           cuantos segundos ocupa
+        'hasta_palabra'  dura hasta que la voz dice esa palabra ('ocurrencia' si se repite; 'mas' corre el instante)
+        'hasta_frase'    dura hasta que empieza esa frase de la toma ('mas' tambien)
+    El ultimo tramo no necesita nada: llena lo que queda de la toma. Entre un tramo y el siguiente puede haber un corte
+    (el 'hasta' de uno no tiene por que ser el 'desde' del otro: asi se saca la espera). 'etiqueta' reemplaza el cartel
+    de ese tramo ('' = sin cartel); sin etiqueta, desde 1,8x dice «Acelerado ×N». 'fundido' (segundos) es lo que dura el paso
+    del tramo anterior a este (0,12 s; 0 = corte seco: sirve cuando los dos cuadros se parecen y mezclarlos hace sombra).
+    'recuadros' (en la toma o en un tramo) marca una parte del cuadro con la voz, igual que en una imagen: en porcentaje
+    del cuadro de ESA grabacion; los de un tramo valen mientras ese tramo se ve."""
 
     def __init__(self, tm, plano):
-        self.tm = tm
-        r = correr([ffmpeg_bin("ffprobe"), "-v", "error", "-select_streams", "v:0", "-show_entries",
-                    "stream=width,height:format=duration", "-of", "json", str(tm.ruta)])
-        try:
-            info = json.loads(r.stdout)
-            iw, ih = info["streams"][0]["width"], info["streams"][0]["height"]
-            largo = float(info["format"]["duration"])
-        except (ValueError, KeyError, IndexError):
-            raise ErrorDeDatos(f"{tm.nombre}: no puedo leer la grabacion {tm.ruta.name}.")
-        _, self.ow, self.oh, self.pos = encajar(iw, ih, plano, tm.escala_maxima)
-        self.base = base_con_marco(plano, tm.texto, self.pos, self.ow, self.oh)
-        self.desde = float(tm.d.get("desde", 0) or 0)
-        hasta = float(tm.d.get("hasta", largo) or largo)
-        self.tramo = max(0.1, min(hasta, largo) - self.desde)
-        vel = tm.d.get("velocidad", "ajustar")
-        self.vel = self.tramo / max(0.1, tm.dur) if vel == "ajustar" else float(vel)
-        if not (0.5 <= self.vel <= 3.0):
-            tm.avisos.append(f"{tm.nombre}: la grabacion dura {seg(self.tramo)} y la voz {seg(tm.dur)}: va a {self.vel:.2f}x. "
-                             "Si se ve apurada o lenta, recortarla con 'desde' y 'hasta' o darle 'segundos_extra'.")
-        if tm.recuadros or tm.zoom not in (None, "no", "lento"):
-            tm.avisos.append(f"{tm.nombre}: es una grabacion; los recuadros y el zoom de la imagen fija no se aplican.")
-        self.proc, self.n, self.ultimo = None, -1, None
+        self.tm, self.plano = tm, plano
+        self._geoms = {}
+        crudos = tm.d.get("tramos")
+        self.legado = not crudos
+        if self.legado:
+            vel = tm.d.get("velocidad", "ajustar")
+            crudos = [{"desde": tm.d.get("desde", 0), "hasta": tm.d.get("hasta"),
+                       "velocidad": None if vel == "ajustar" else vel}]
+        self.tramos = self._leer_tramos(tm, crudos)
+        if tm.zoom not in (None, "no", "lento"):
+            tm.avisos.append(f"{tm.nombre}: es una grabacion; el zoom de la imagen fija no se aplica.")
+        self.proc, self.idx, self.n, self.ultimo = None, -1, -1, None
+        self.compuesto, self.fundir_desde = None, None     # el ultimo cuadro armado, y el del tramo anterior (para el fundido)
 
-    def _abrir(self):
-        filtro = f"setpts=(PTS-STARTPTS)/{self.vel:.6f},fps={FPS},scale={self.ow}:{self.oh}:flags=lanczos"
+    # --- armado
+    def _geometria(self, ruta, escala_maxima):
+        clave = (str(ruta), escala_maxima)
+        if clave not in self._geoms:
+            r = correr([ffmpeg_bin("ffprobe"), "-v", "error", "-select_streams", "v:0", "-show_entries",
+                        "stream=width,height:format=duration", "-of", "json", str(ruta)])
+            try:
+                info = json.loads(r.stdout)
+                iw, ih = info["streams"][0]["width"], info["streams"][0]["height"]
+                largo = float(info["format"]["duration"])
+            except (ValueError, KeyError, IndexError):
+                raise ErrorDeDatos(f"{self.tm.nombre}: no puedo leer la grabacion {Path(ruta).name}.")
+            _, ow, oh, pos = encajar(iw, ih, self.plano, escala_maxima)
+            base = base_con_marco(self.plano, self.tm.texto, pos, ow, oh)
+            self._geoms[clave] = (largo, (ow, oh, pos, base))
+        return self._geoms[clave]
+
+    def _leer_tramos(self, tm, crudos):
+        if not isinstance(crudos, list):
+            raise ErrorDeDatos(f"{tm.nombre}: 'tramos' tiene que ser una lista.")
+        tramos, t = [], 0.0
+        for i, c in enumerate(crudos):
+            donde = f"{tm.nombre}, tramo {i + 1}" if not self.legado else tm.nombre
+            ultimo = i == len(crudos) - 1
+            ruta = tm.ruta
+            if c.get("recurso"):
+                ruta = Path(c["recurso"])
+                ruta = ruta if ruta.is_absolute() else (AQUI / ruta)
+                ruta = ruta.resolve()
+                if not ruta.exists():
+                    raise ErrorDeDatos(f"{donde}: no existe la grabacion {ruta}")
+            largo, geom = self._geometria(ruta, c.get("escala_maxima", tm.escala_maxima))
+            desde = float(c.get("desde", 0) or 0)
+            hasta = float(c.get("hasta") or largo)
+            if not self.legado:
+                if not (0 <= desde < hasta <= largo + 0.05):
+                    raise ErrorDeDatos(f"{donde}: pide de {desde} a {hasta} s y la grabacion dura {largo:.1f} s.")
+            hasta = min(hasta, largo)
+            mas = float(c.get("mas", 0) or 0)
+            if c.get("hasta_palabra"):
+                fin = tm.t_palabra(c["hasta_palabra"], int(c.get("ocurrencia", 1))) + mas
+            elif c.get("hasta_frase"):
+                n = int(c["hasta_frase"])
+                if not (1 <= n <= len(tm.frases_t)):
+                    raise ErrorDeDatos(f"{donde}: 'hasta_frase': {n}, y la toma tiene {len(tm.frases_t)} frases.")
+                fin = tm.frases_t[n - 1] - tm.t0 + mas
+            elif c.get("dura") is not None:
+                fin = t + float(c["dura"])
+            elif c.get("velocidad") is not None:
+                fin = t + max(0.1, hasta - desde) / float(c["velocidad"])
+            elif ultimo:
+                fin = tm.dur
+            else:
+                raise ErrorDeDatos(f"{donde}: dice que parte usa pero no cuanto dura (velocidad, dura, hasta_palabra o hasta_frase).")
+            timed = any(c.get(k) is not None and c.get(k) != "" for k in ("hasta_palabra", "hasta_frase", "dura", "velocidad"))
+            if ultimo:
+                if timed and abs(fin - tm.dur) > 0.35:
+                    tm.avisos.append(f"{donde}: es el ultimo y termina a los {seg(fin)} de la toma, que dura {seg(tm.dur)}: "
+                                     + ("queda quieto el ultimo cuadro." if fin < tm.dur else "se corta."))
+                else:
+                    fin = tm.dur
+            if fin - t < 0.1:
+                raise ErrorDeDatos(f"{donde}: le quedan {fin - t:.2f} s (empieza a los {t:.2f} s de la toma y termina a los {fin:.2f} s).")
+            tramo_g = max(0.1, hasta - desde)
+            vel = tramo_g / (fin - t)
+            if self.legado:
+                if not (0.5 <= vel <= 3.0):
+                    tm.avisos.append(f"{tm.nombre}: la grabacion dura {seg(tramo_g)} y la voz {seg(tm.dur)}: va a {vel:.2f}x. "
+                                     "Si se ve apurada o lenta, recortarla con 'desde' y 'hasta' o darle 'segundos_extra'.")
+            elif not (VEL_MIN_TRAMO <= vel <= VEL_MAX_TRAMO):
+                tm.avisos.append(f"{donde}: va a {vel:.2f}x ({seg(tramo_g)} de grabacion en {seg(fin - t)}).")
+            recs = c.get("recuadros")
+            if recs is None:
+                recs = tm.recuadros if len(crudos) == 1 else []
+            entradas = sorted(((cuando_entra(rc, tm, t + 0.8), k) for k, rc in enumerate(recs)))
+            orden = [recs[k] for _, k in entradas]
+            estados = Estados([x for x, _ in entradas]) if entradas else None
+            tramos.append(_Tramo(ruta, desde, hasta, vel, t, fin, c.get("etiqueta"), geom, recs, estados, orden,
+                                 float(c.get("fundido", FUNDIDO_TRAMO))))
+            t = fin
+        return tramos
+
+    # --- lectura
+    def _abrir(self, i):
+        self._cerrar_proc()
+        tr = self.tramos[i]
+        filtro = f"setpts=(PTS-STARTPTS)/{tr.vel:.6f},fps={FPS},scale={tr.ow}:{tr.oh}:flags=lanczos"
         self.proc = subprocess.Popen(
-            [ffmpeg_bin("ffmpeg"), "-v", "error", "-ss", f"{self.desde:.3f}", "-t", f"{self.tramo:.3f}", "-i", str(self.tm.ruta),
-             "-an", "-vf", filtro, "-pix_fmt", "rgb24", "-f", "rawvideo", "-"],
+            [ffmpeg_bin("ffmpeg"), "-v", "error", "-ss", f"{tr.desde:.3f}", "-t", f"{max(0.1, tr.hasta - tr.desde):.3f}",
+             "-i", str(tr.ruta), "-an", "-vf", filtro, "-pix_fmt", "rgb24", "-f", "rawvideo", "-"],
             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        self.idx, self.n, self.ultimo = i, -1, None
+
+    def _cerrar_proc(self):
+        if self.proc:
+            self.proc.stdout.close()
+            self.proc.kill()
+            self.proc.wait()
+            self.proc = None
+
+    def _indice(self, t):
+        for i, tr in enumerate(self.tramos):
+            if t < tr.t1:
+                return i
+        return len(self.tramos) - 1
+
+    def _con_recuadros(self, tr, im, t):
+        a, b, alfa = tr.estados.en(t)
+        if a == 0 and b == 0:
+            return im
+        fb = marcar_foco(im, tr.orden[b - 1], 1.0) if b else im
+        if a == b:
+            return fb
+        fa = marcar_foco(im, tr.orden[a - 1], 1.0) if a else im
+        return Image.blend(fa, fb, alfa)
+
+    def _cartel(self, f, tr):
+        """Arriba a la derecha, afuera de la grabacion: «Acelerado ×N» (o la etiqueta del tramo) cuando no va a 1x."""
+        texto = tr.etiqueta
+        if texto is None:
+            texto = f"Acelerado ×{tr.vel:.0f}" if tr.vel >= VEL_CON_ETIQUETA else ""
+        if not texto:
+            return
+        fnt = fuente(CHIP_PX - 4, "negrita")
+        ancho = round(fnt.getlength(texto)) + 48
+        d = ImageDraw.Draw(f)
+        d.rounded_rectangle([W - 40 - ancho, 16, W - 40, 60], radius=22, fill=AMBAR_FONDO, outline=AMBAR, width=2)
+        d.text((W - 40 - ancho / 2, 38), texto, font=fnt, fill=AMBAR, anchor="mm")
 
     def cuadro(self, t):
-        if self.proc is None:
-            self._abrir()
-        quiero, tam = max(0, int(t * FPS)), self.ow * self.oh * 3
+        i = self._indice(t)
+        tr = self.tramos[i]
+        if self.proc is None or self.idx != i:
+            if self.idx >= 0 and i < self.idx:
+                i, tr = self.idx, self.tramos[self.idx]          # no se vuelve para atras: queda donde estaba
+            else:
+                self.fundir_desde = self.compuesto if self.idx >= 0 else None
+                self._abrir(i)
+        quiero, tam = max(0, int((t - tr.t0) * FPS)), tr.ow * tr.oh * 3
         while self.n < quiero:
             crudo = self.proc.stdout.read(tam)
             if len(crudo) < tam:
                 break                              # se termino la grabacion: queda el ultimo cuadro
-            self.ultimo, self.n = Image.frombytes("RGB", (self.ow, self.oh), crudo), self.n + 1
-        f = self.base.copy()
+            self.ultimo, self.n = Image.frombytes("RGB", (tr.ow, tr.oh), crudo), self.n + 1
+        f = tr.base.copy()
         if self.ultimo is not None:
-            f.paste(self.ultimo, self.pos)
+            f.paste(self._con_recuadros(tr, self.ultimo, t) if tr.estados else self.ultimo, tr.pos)
+        if not self.legado:
+            self._cartel(f, tr)
+            self.compuesto = f
+            if self.fundir_desde is not None and tr.fundido > 0 and 0 <= t - tr.t0 < tr.fundido:
+                return Image.blend(self.fundir_desde, f, suave((t - tr.t0) / tr.fundido))
         return f
 
     def clave(self, t):
         return None
 
     def cerrar(self):
-        if self.proc:
-            self.proc.stdout.close()
-            self.proc.kill()
-            self.proc.wait()
+        self._cerrar_proc()
 
 
 # ================================================================== el sonido
@@ -1483,8 +1640,9 @@ def cuadros_sueltos(tiempos, elementos, cues, plano, fundido, total, destino):
 
 
 # ================================================================== el control
-def controlar(mp4, elementos, escenas, plano, dir_control, cues=None):
-    """Mide el archivo terminado y saca un cuadro de cada toma. Devuelve (paso, renglones)."""
+def controlar(mp4, elementos, escenas, plano, dir_control, cues=None, dur_min=105.0, dur_max=140.0):
+    """Mide el archivo terminado y saca un cuadro de cada toma. Devuelve (paso, renglones).
+    dur_min y dur_max (segundos) salen de 'ajustes' en escenas.json (duracion_minima_s y duracion_maxima_s)."""
     out, ok = [], True
     r = correr([ffmpeg_bin("ffprobe"), "-v", "error", "-show_entries",
                 "format=duration,size:stream=codec_type,codec_name,profile,width,height,r_frame_rate,pix_fmt,"
@@ -1518,7 +1676,8 @@ def controlar(mp4, elementos, escenas, plano, dir_control, cues=None):
     out.append(f"  Volumen (volumedetect): medio {medio.group(1)} dB, maximo {maximo.group(1)} dB")
     chequeo(-17.0 <= lufs <= -15.0 and pico <= -1.0,
             f"sonoridad {lufs:.1f} LUFS, pico real {pico:.1f} dBTP (se busca -16 LUFS y pico bajo -1)")
-    chequeo(105.0 <= dur <= 140.0, f"duracion {int(dur // 60)}:{dur % 60:04.1f} (el pedido: entre 1:45 y 2:20)")
+    chequeo(dur_min <= dur <= dur_max, f"duracion {int(dur // 60)}:{dur % 60:04.1f} (el pedido: entre "
+            f"{int(dur_min // 60)}:{dur_min % 60:02.0f} y {int(dur_max // 60)}:{dur_max % 60:02.0f})")
     if cues:
         fnt = fuente(SUB_PX, "media")
         lineas = max(len(c[2]) for c in cues)
@@ -1665,11 +1824,14 @@ def main():
     ap.add_argument("--sin-control", action="store_true")
     ap.add_argument("--cuadros", help="segundos separados por coma (por ejemplo 5,20.5,47): deja esos cuadros en "
                                       "control/_cuadros/ y no arma el video")
+    ap.add_argument("--control", help="carpeta de los cuadros de control (por defecto control/, o control_<nombre>/ si "
+                                      "--escenas no es escenas.json: una version nueva no pisa los cuadros de la anterior)")
     a = ap.parse_args()
 
     ruta_json = Path(a.escenas).resolve()
     base = ruta_json.parent
-    dir_control = base / "control"
+    resto = ruta_json.stem[len("escenas"):].strip("_- ") if ruta_json.stem.startswith("escenas") else ruta_json.stem
+    dir_control = Path(a.control).resolve() if a.control else base / (f"control_{resto}" if resto else "control")
 
     def ruta(x):
         p = Path(x)
@@ -1763,7 +1925,8 @@ def main():
             if not salida.exists():
                 raise ErrorDeDatos(f"No hay video para controlar: {salida}")
             print("\nCONTROL DEL ARCHIVO TERMINADO")
-            paso, renglones = controlar(salida, elementos, escenas, plano, dir_control, cues if plano.subs else None)
+            paso, renglones = controlar(salida, elementos, escenas, plano, dir_control, cues if plano.subs else None,
+                                        float(aj.get("duracion_minima_s", 105.0)), float(aj.get("duracion_maxima_s", 140.0)))
             print("\n".join(renglones))
         if not paso:
             print("\nEl video NO pasa el control tecnico.")
