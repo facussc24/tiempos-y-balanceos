@@ -323,7 +323,11 @@ def prueba_completa():
         (tmp / "15.png").rename(caps / "15-cartel-limite.png")
 
         print("5. Con las capturas puestas pero las marcas en posicion estimada")
-        cod, out = correr(base)
+        # el caso se arma aca: una marca vuelve a "estimada" (el contenido real ya puede tener todas confirmadas)
+        estimado = copy.deepcopy(confirmado)
+        estimado["paginas"][0]["capturas"][0]["marcas"][0]["posicion_confirmada"] = False
+        (tmp / "estimado.json").write_text(json.dumps(estimado, ensure_ascii=False), encoding="utf-8")
+        cod, out = correr(base + ["--contenido", str(tmp / "estimado.json")])
         control("sale con 1 y lo dice", cod == 1 and "POSICION ESTIMADA" in out, "salio con %s" % cod)
 
         print("6. Contenido que no entra o esta mal escrito")
@@ -336,7 +340,7 @@ def prueba_completa():
             ("portada sin titulo", lambda d: d["portada"].__setitem__("titulo", "")),
             ("cierre con un solo paso", lambda d: d["cierre"].__setitem__("pasos", ["Abrí Claude"])),
             ("paso del cierre que no entra", lambda d: d["cierre"]["pasos"].__setitem__(0, "palabra " * 40)),
-            ("15 paginas", lambda d: d["paginas"].append(dict(copy.deepcopy(d["paginas"][0]), numero=15,
+            ("16 paginas", lambda d: d["paginas"].append(dict(copy.deepcopy(d["paginas"][0]), numero=16,
                                                               capturas=[dict(d["paginas"][0]["capturas"][0],
                                                                              archivo="capturas/21-otra.png")]))),
         ):

@@ -133,26 +133,51 @@
             { "tipo": "recuadro", "x": 1.6, "y": 69.6, "ancho": 14.6, "alto": 7.4, "numero": 1, "numero_en": "izquierda", "posicion_confirmada": true },
             { "tipo": "recuadro", "x": 17.5, "y": 24.6, "ancho": 24, "alto": 6, "numero": 2, "numero_en": "izquierda", "posicion_confirmada": true }
           ]
-        },
-        {
-          "archivo": "capturas/05-carpeta-elegida.png",
-          "que_se_ve": "La ventana para elegir carpeta, con la carpeta de Barack marcada. Sin el árbol de carpetas de al lado.",
-          "rotulo": "3. Abrir carpeta…",
-          "marcas": [
-            { "tipo": "recuadro", "x": 16, "y": 44.6, "ancho": 26, "alto": 4.8, "posicion_confirmada": true },
-            { "tipo": "recuadro", "x": 75.3, "y": 91.6, "ancho": 13.6, "alto": 4.8, "posicion_confirmada": true }
-          ]
         }
       ],
       "texto": [
         "1. Abajo tiene que decir **Local**: así Claude trabaja en esta computadora.",
         "2. Al lado está la carpeta. Hacé clic y elegí **ClaudeBarack**.",
-        "3. Si no está en la lista: **Abrir carpeta…** y elegí **{CARPETA}**.",
+        "Si no está en la lista, tocá **Abrir carpeta…**: es la página que sigue.",
         "Siempre esa: con otra, Claude no tiene las reglas de Barack."
       ],
       "error_que_evita": "Elegir Cloud, o cualquier otra carpeta.",
       "a_confirmar": [
         { "donde": "app", "que": "si la primera vez aparece un cartel al elegir la carpeta; y sacar la foto de nuevo en la PC piloto (acá la carpeta dice BarackMercosul, que es la de Ingeniería)" }
+      ]
+    },
+
+    {
+      "numero": 15,
+      "titulo": "Buscar la carpeta a mano",
+      "activa": true,
+      "capturas": [
+        {
+          "archivo": "capturas/17-este-equipo.png",
+          "que_se_ve": "La ventana para elegir carpeta, parada en «Este equipo»: se ve el disco Windows (C:).",
+          "marcas": [
+            { "tipo": "recuadro", "x": 16.6, "y": 23, "ancho": 23, "alto": 9, "numero": 1, "numero_en": "izquierda", "posicion_confirmada": true }
+          ]
+        },
+        {
+          "archivo": "capturas/05-carpeta-elegida.png",
+          "que_se_ve": "La misma ventana, adentro del disco C: la carpeta ClaudeBarack marcada y el botón Seleccionar carpeta.",
+          "rotulo": "Adentro del disco C",
+          "marcas": [
+            { "tipo": "recuadro", "x": 16, "y": 44.6, "ancho": 26, "alto": 4.8, "numero": 2, "numero_en": "izquierda", "posicion_confirmada": true },
+            { "tipo": "recuadro", "x": 75.3, "y": 91.6, "ancho": 13.6, "alto": 4.8, "numero": 3, "numero_en": "izquierda", "posicion_confirmada": true }
+          ]
+        }
+      ],
+      "texto": [
+        "1. En **Abrir carpeta…** entrá a **Este equipo** y hacé doble clic en el disco **C:**.",
+        "2. Buscá la carpeta **ClaudeBarack** y hacele un clic.",
+        "3. Apretá **Seleccionar carpeta**.",
+        "La próxima vez ya aparece sola en la lista."
+      ],
+      "error_que_evita": "No encontrar la carpeta la primera vez, o elegir una parecida.",
+      "a_confirmar": [
+        { "donde": "plan", "que": "que la carpeta sea {CARPETA} en todas las PC (Facundo nombró «archivos de programa»)" }
       ]
     },
 
@@ -196,10 +221,10 @@
         },
         {
           "archivo": "capturas/08-documento-original.png",
-          "que_se_ve": "El original P-09.1 rev B.1 abierto en solo lectura, encuadrado en el cuadro de las tres piezas. Sin el pie (trae nombres de personas).",
+          "que_se_ve": "El original P-09.1 rev B.1 (del servidor), encuadrado en el cuadro de las tres piezas. Sin el pie (trae nombres de personas).",
           "rotulo": "El documento original",
           "marcas": [
-            { "tipo": "recuadro", "x": 15, "y": 40, "ancho": 70, "alto": 20, "posicion_confirmada": false }
+            { "tipo": "recuadro", "x": 4.2, "y": 49.5, "ancho": 91.6, "alto": 18.5, "posicion_confirmada": true }
           ]
         }
       ],

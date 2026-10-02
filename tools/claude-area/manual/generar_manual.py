@@ -82,7 +82,7 @@ ROTULO_H = 8.5
 TARJETA_PT = 20
 TABLA_PT = 16
 MAX_RENGLONES = 4                      # renglones IMPRESOS de texto por pagina
-MAX_PAGINAS = 14
+MAX_PAGINAS = 15
 MAX_PALABRAS_TITULO = 6
 
 assert TEXTO_PT >= 20 and TITULO_PT >= 34, "la letra no puede ser mas chica que 20 / 34 puntos"
