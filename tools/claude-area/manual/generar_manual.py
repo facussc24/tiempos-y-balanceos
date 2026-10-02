@@ -404,7 +404,12 @@ def encajar(iw, ih, x, y, w, h, arriba=False):
     return x + (w - nw) / 2, (y if arriba else y + (h - nh) / 2), nw, nh
 
 
+SIN_AVISOS = False     # --sin-avisos: la copia para mostrar no lleva la franja "a confirmar"
+
+
 def parrafos_chip(pag):
+    if SIN_AVISOS:
+        return []
     grupos = {"app": [], "plan": []}
     for it in pag.get("a_confirmar", []):
         grupos[it["donde"]].append(it["que"])
@@ -740,7 +745,11 @@ def main(argv=None):
     ap.add_argument("--salida", default=str(SALIDA), help="otra carpeta de salida (para pruebas)")
     ap.add_argument("--grilla", action="store_true", help="solo deja las capturas con cuadricula en capturas/_grilla/")
     ap.add_argument("--notas", action="store_true", help="pone 'para que esta la pagina' en las notas del PowerPoint")
+    ap.add_argument("--sin-avisos", action="store_true",
+                    help="copia para mostrar: sin la franja 'a confirmar' (el archivo sale con ' - para mostrar' en el nombre)")
     a = ap.parse_args(argv)
+    global SIN_AVISOS
+    SIN_AVISOS = a.sin_avisos
 
     try:
         datos = cargar(a.contenido)
@@ -766,7 +775,8 @@ def main(argv=None):
     try:
         hojas = armar_pdf(datos, a.capturas)
         prs = armar_pptx(datos, a.capturas, con_notas=a.notas)
-        pdf, pptx = guardar(hojas, prs, Path(a.salida), datos["manual"]["archivo"])
+        pdf, pptx = guardar(hojas, prs, Path(a.salida),
+                            datos["manual"]["archivo"] + (" - para mostrar" if a.sin_avisos else ""))
     except ErrorDeContenido as e:
         print("ERROR: %s" % e)
         return 2

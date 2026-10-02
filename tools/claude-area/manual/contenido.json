@@ -21,7 +21,7 @@
 
   "variables": {
     "CARPETA": "C:\\ClaudeBarack",
-    "CONTACTO": "Facundo"
+    "CONTACTO": "Ingeniería (Facundo)"
   },
 
   "a_confirmar_general": [
@@ -132,7 +132,6 @@
       ],
       "error_que_evita": "Elegir Cloud, o cualquier otra carpeta.",
       "a_confirmar": [
-        { "donde": "plan", "que": "nombre y lugar de la carpeta (si se entrega un acceso directo que ya abre ahí, esta página cambia)" },
         { "donde": "app", "que": "si la primera vez aparece un cartel al elegir la carpeta" }
       ]
     },
@@ -234,9 +233,7 @@
         "Leelo entero. Sale recién cuando vos apretás **Enviar**."
       ],
       "error_que_evita": "Creer que ya se mandó, o mandarlo sin leer a quién va.",
-      "a_confirmar": [
-        { "donde": "plan", "que": "en las PC de área, si el mail queda abierto en Outlook o guardado en Borradores" }
-      ]
+      "a_confirmar": []
     },
 
     {
@@ -319,7 +316,7 @@
 
     {
       "numero": 12,
-      "titulo": "Qué no hace solo",
+      "titulo": "Lo que tenés que saber",
       "activa": true,
       "capturas": [
         {
@@ -331,14 +328,14 @@
         }
       ],
       "texto": [
-        "No borra archivos por su cuenta.",
-        "No manda un mail si vos no apretás **Enviar**.",
+        "No borra archivos ni manda mails: eso lo decidís vos, con **Enviar**.",
         "No muestra los mails de Dirección ni de Recursos Humanos.",
+        "Le pasa a Ingeniería la lista de programas de la PC. No saca ninguno.",
         "Se puede equivocar: por eso dice de dónde sacó cada respuesta."
       ],
       "error_que_evita": "Pedirle que decida, o confiar sin controlar.",
       "a_confirmar": [
-        { "donde": "plan", "que": "las tres primeras frases valen recién cuando estén probadas en una PC de área; la que no esté probada, se saca" }
+        { "donde": "plan", "que": "estas frases valen recién cuando estén probadas en una PC de área; la que no esté probada, se saca" }
       ]
     },
 
@@ -395,7 +392,7 @@
       ],
       "error_que_evita": "Reinstalar, cambiar de cuenta, o cambiar de modelo para saltear el límite (no sirve: el límite es de todos los modelos).",
       "a_confirmar": [
-        { "donde": "app", "que": "cómo se ven hoy el botón de detener y el cartel de límite" },
+        { "donde": "app", "que": "cómo se ve hoy el cartel de límite de uso" },
         { "donde": "plan", "que": "a quién se avisa y por dónde" }
       ]
     }

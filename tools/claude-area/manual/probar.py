@@ -167,12 +167,12 @@ def prueba_completa():
                     and abs(proporcion_mala / (1920 / 1080) - 1) >= 0.01, "proporcion %s y no salto" % proporcion_mala)
 
         print("3. Si falta una captura")
-        (caps / "03-tres-pestanas.png").rename(tmp / "03.png")
+        (caps / "03-boton-code.png").rename(tmp / "03.png")
         cod, out = correr(base + ["--contenido", str(ok_json)])
         control("sale con 1", cod == 1, "salio con %s" % cod)
-        control("dice cual falta", "03-tres-pestanas.png" in out and "FALTAN 1 CAPTURAS" in out)
+        control("dice cual falta", "03-boton-code.png" in out and "FALTAN 1 CAPTURAS" in out)
         control("igual deja los archivos (con el cartel gris)", pdf.exists() and pptx.exists())
-        (tmp / "03.png").rename(caps / "03-tres-pestanas.png")
+        (tmp / "03.png").rename(caps / "03-boton-code.png")
 
         print("4. Si la captura opcional no esta")
         (caps / "15-cartel-limite.png").rename(tmp / "15.png")
@@ -205,7 +205,7 @@ def prueba_completa():
         sin13 = copy.deepcopy(confirmado)
         [p for p in sin13["paginas"] if p["numero"] == 13][0]["activa"] = False
         (tmp / "sin13.json").write_text(json.dumps(sin13, ensure_ascii=False), encoding="utf-8")
-        (caps / "14-accept-reject.png").unlink()
+        (caps / "14-claude-pide-permiso.png").unlink()
         cod, out = correr(base + ["--contenido", str(tmp / "sin13.json")])
         control("sale con 0 y con una pagina menos", cod == 0 and "%d paginas" % (n_pag - 1) in out, "salio con %s" % cod)
 
