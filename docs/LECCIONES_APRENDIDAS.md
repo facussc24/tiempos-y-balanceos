@@ -81,10 +81,11 @@ incidente vive en los snapshots.
 - **Un numero que no cuadra casi nunca es un error: es la misma cosa en otra magnitud, o el mismo numero con la merma adentro**, y se normaliza a la unidad que gobierna antes de reportar un desvio. Graduado a `consumos-entregables.md` + `_validarConsumos.mjs` + skill `verificacion-consumos`.
 - **22/09 — El consumo de vinilo o tela sale de la planilla que Pablo Gamboa manda por mail, no de lo que ya esta en el arb** (*"si no salen de ahi no podemos mandar el mail"*); despues se abre el .MRK. Memoria `consumo_se_verifica_en_el_marker_no_en_la_planilla`.
 - **25/09 — Una difusion que corrige un error PROPIO dice solo el valor que queda, en el mail y en el PDF** (Fak: *"si ponemos el antes y el despues me escrachas"*). Graduado a la memoria `documento_no_confiesa_como_se_hizo`.
-- **25/09 — Cerrar y reabrir `Maestro de Relaciones` crashea el arb** (dos veces; Fak: *"anotalo para evitar hacerlo"*). Graduado a `_arbVer.reset_relaciones()` (se niega sin `--forzar`) y a `arb-no-cerrar.md`: ante un corte se reintenta la pieza con `--solo`.
 - **25/09 — La base de una conversion la dice un DOCUMENTO, y un "te lo habia pedido" se busca antes de cargar** (TPO del Top Roll: 0,2526 / 1,4 sin papel, arb 31 % abajo). Graduado a `scripts/_lib/respaldoCarga.py`, que frena el `--apply` del arb, y a la memoria `reference_tabla_consumo_mesa_corte`.
 
 ## Entregables y comunicacion con Fak
+
+- **02/10 — REGLA DURA: Carlos Baptista va en todo mail que sale de Fak, como mínimo en copia** (*"es mi gerente... él debe saber que Sebas me pide cosas"*). Graduado a `mail-envio.md` punto 0 y a `scripts/_lib/gerenteCopia.py` (los que arman lo agregan; `_mailEnviar.py` aborta si falta).
 
 - **02/10 — Un alta en el arb son dos pasadas por código (grabar y releer) y la descripción va en MAYÚSCULAS** (12 ventanas abiertas antes de grabar 2 códigos: *"una tarea rápida la transformás en un calvario"*). Graduado a `_arbInsumoCampos.py` y a la memoria `feedback_arb_una_pasada_por_codigo_y_mayusculas`.
 

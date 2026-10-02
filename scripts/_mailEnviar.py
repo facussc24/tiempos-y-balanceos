@@ -43,6 +43,7 @@ import time
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib'))
 from vozMail import mostrar_voz                                          # noqa: E402
 from outlookUi import asegurar_outlook, cartel_de_seguridad, vigilando   # noqa: E402
+from gerenteCopia import GERENTE_NOMBRE, falta_gerente, selftest as selftest_gerente  # noqa: E402
 
 VENTANA_HORAS = 72          # cuanto para atras se mira Enviados
 DOMINIO_INTERNO = '@barackmercosul.com'
@@ -261,11 +262,13 @@ def main() -> int:
                     help='saltea el gate de voz — solo con OK de Fak para ESE mail')
     ap.add_argument('--externos-ok', action='store_true', dest='externos_ok',
                     help='deja mandar a destinatarios de fuera de Barack — solo con OK de Fak para ESE mail')
+    ap.add_argument('--sin-gerente', action='store_true', dest='sin_gerente',
+                    help='deja mandar sin Carlos Baptista en el mail — solo con OK de Fak para ESE mail')
     ap.add_argument('--selftest', action='store_true')
     a = ap.parse_args()
 
     if a.selftest:
-        return selftest()
+        return selftest() or selftest_gerente()
     if not (a.buscar or a.id):
         ap.error('falta --buscar o --id')
 
@@ -319,6 +322,17 @@ def main() -> int:
         print("  --externos-ok activo: sigo igual.")
     else:
         print(f"  Destinatarios: los {len(direcciones)} son de Barack.")
+
+    # 1c. GATE — el gerente va siempre, como minimo en copia (regla dura de Fak, 02/10/2026)
+    if falta_gerente(direcciones):
+        print(f"\n  *** {GERENTE_NOMBRE} NO ESTA EN EL MAIL ***")
+        if not a.sin_gerente:
+            print("\nABORTA. El gerente va siempre, como minimo en copia: rehacer el borrador con el")
+            print("script que lo armo (lo agrega solo). Si Fak dijo que ESE mail va sin el: --sin-gerente.")
+            return 3
+        print("  --sin-gerente activo: sigo igual.")
+    else:
+        print(f"  {GERENTE_NOMBRE}: esta en el mail.")
 
     # 2. GATE — ¿ya hay algo parecido en Enviados?
     print(f"\nGATE anti-duplicado (Enviados, ultimas {VENTANA_HORAS} h)")

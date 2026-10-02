@@ -23,6 +23,10 @@ El JSON:
     "adjuntos": ["C:\\ruta\\uno.pdf", "..."]
   }
 
+Carlos Baptista va SIEMPRE, como minimo en copia: si no esta en "para" ni en "cc", el script lo
+agrega en CC (regla dura de Fak, 02/10/2026; `_lib/gerenteCopia.py`). `"sin_gerente": true` lo
+saca, solo con el OK de Fak para ese mail.
+
 Opcional: en vez de "cuerpo" se puede pasar "cuerpo_html" con HTML ya armado, que va SIN
 escapar. Sirve para mandar una tabla de verdad (<table>): con "cuerpo" los < y > se escapan
 y los tags se verian como texto. La firma se sigue agregando abajo, igual que siempre.
@@ -238,6 +242,9 @@ def preparar(cfg):
         for n in sin_resolver:
             print(f'  - {n}')
         sys.exit(1)
+    # El gerente va siempre, como minimo en copia (regla dura de Fak, 02/10/2026)
+    from gerenteCopia import asegurar_gerente
+    asegurar_gerente(mail, cfg.get('sin_gerente', False))
     mail.Recipients.ResolveAll()
     if cfg.get('asunto'):
         mail.Subject = cfg['asunto']   # en una respuesta se omite: vale el "RE: ..." de Outlook

@@ -98,8 +98,13 @@ otro esta de mas"*.
   con esto hoy?* Si no, afuera. Al mail para Gamboa le sume siete codigos que nadie iba a
   tocar: *"los agregaste y aclaraste de mas, es un error conocido tuyo"*.
 
-## Quien va en el mail — reglas de Fak del 30/09/2026
+## Quien va en el mail — reglas de Fak del 30/09/2026 y del 02/10/2026
 
+0. **REGLA DURA: Carlos Baptista va en TODO mail que sale de Fak, como minimo en copia** (Fak,
+   02/10/2026: *"siempre pone a Carlos en copia, es mi gerente... minimo en copia debe estar"*,
+   *"el debe saber que Sebas me pide cosas"*). Vale tambien para el mail de dos renglones que le
+   contesta a un compañero un pedido que llego por WhatsApp. Si el mail ya salio sin el, se le
+   **reenvia** (`_reenviarMail.py` con `"asunto_enviado"`), no se rehace.
 1. **Si nombro a alguien de Barack en el cuerpo, esa persona va en el mail** (CC como minimo).
    Caso: la difusion de la tela Aunde nombraba a Pablo Gamboa y el no estaba; Fak: *"pone a
    pablo gamboa en copia ya que lo mencionaste... si mencionas a alguien debe estar en el mail"*.
@@ -111,6 +116,14 @@ otro esta de mas"*.
    el hilo, sin sumar a nadie. **Difusion de BOM que cambia lo consumido:** PARA Pablo Cejas,
    Daniel Rosello y Carlos Baptista; el resto en CC; Nicolas Perez va; Agustina Villagra no
    (es RRHH). Detalle: memoria `feedback_destinatarios_difusion_bom`.
+
+**Enforcement de la 0** (`scripts/_lib/gerenteCopia.py`, una sola fuente): los tres que arman el
+borrador (`_prepararMail.py`, `_mailResponder.py`, `_reenviarMail.py`) lo agregan solos en CC si
+no esta, y **`_mailEnviar.py` aborta si su casilla real no esta entre los destinatarios**, salvo
+`--sin-gerente` (en el JSON, `"sin_gerente": true`), que se usa solo con el OK de Fak para ESE
+mail. Probado en las dos direcciones el 02/10/2026 con un borrador real: sin el, aborta; por el
+camino normal entra solo en CC y pasa. Casos puros: `python scripts/_lib/gerenteCopia.py --selftest`
+(tambien corren con `_mailEnviar.py --selftest`).
 
 **Enforcement de la 2:** `_mailEnviar.py` lee la casilla REAL de cada destinatario (no el
 nombre mostrado) y **aborta si alguna no es @barackmercosul.com**, salvo `--externos-ok`, que

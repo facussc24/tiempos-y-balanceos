@@ -72,6 +72,11 @@ def responder(cfg):
         rp.Recipients.Add(nombre).Type = 2          # olCC; nunca como string en .CC (regla mail-envio.md)
     for a in cfg.get('adjuntos', []):
         rp.Attachments.Add(a)
+    # El gerente va siempre, como minimo en copia (regla dura de Fak, 02/10/2026).
+    # "sin_gerente": true lo saca, solo con el OK de Fak para ese mail.
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib'))
+    from gerenteCopia import asegurar_gerente
+    asegurar_gerente(rp, cfg.get('sin_gerente', False))
     if not rp.Recipients.ResolveAll():
         sys.exit('ABORTADO: Outlook no pudo resolver todos los destinatarios')
     # Los repetidos van a Eliminados recien ahora, con la respuesta nueva ya armada: si algo de

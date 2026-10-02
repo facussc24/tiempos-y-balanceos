@@ -11,7 +11,9 @@ El JSON:
     "encabezado": "una o dos lineas que van ARRIBA del mail reenviado"
   }
 
-El EntryID sale de `scripts/_mails.py --buscar <asunto>`.
+El EntryID sale de `scripts/_mails.py --buscar <asunto>`. Para un mail recien enviado (todavia
+no esta en el cache) va `"asunto_enviado": "<parte del asunto>"` en lugar de `"entryid"`.
+Carlos Baptista va siempre, como minimo en copia (`_lib/gerenteCopia.py`).
 
 Por que un Forward y no un mail nuevo: el reenvio deja a la vista el mail original con su
 fecha y sus destinatarios, asi que el que lo recibe ve que la difusion ya habia salido y a
@@ -25,6 +27,7 @@ La firma no se escribe a mano: Outlook la agrega al mostrar el mensaje, y escrib
 `HTMLBody` de una la pisaria (memoria `dejar_el_mail_listo_para_enviar`).
 """
 import json
+import os
 import sys
 import time
 
@@ -38,10 +41,30 @@ def reenviar(cfg):
     ol = win32.Dispatch('Outlook.Application')
     ns = ol.GetNamespace('MAPI')
 
-    try:
-        original = ns.GetItemFromID(cfg['entryid'])
-    except Exception as e:
-        sys.exit('no pude abrir el mail original con ese EntryID: %s' % e)
+    if cfg.get('asunto_enviado'):
+        # Un mail recien enviado todavia no esta en el cache de `_mails.py`: se busca directo
+        # en Elementos enviados por una parte del asunto. Tiene que haber UNO solo.
+        enviados = ns.GetDefaultFolder(5).Items
+        enviados.Sort('[SentOn]', True)
+        clave = cfg['asunto_enviado'].lower()
+        cands = []
+        for k, x in enumerate(enviados):
+            if k >= 200:
+                break
+            if clave in str(getattr(x, 'Subject', '') or '').lower():
+                cands.append(x)
+        if len(cands) != 1:
+            print('ABORTADO: esperaba 1 mail enviado que diga "%s" y hay %d.'
+                  % (cfg['asunto_enviado'], len(cands)))
+            for x in cands[:10]:
+                print('  - %s | %s | %s' % (x.SentOn, x.Subject, x.To))
+            sys.exit(1)
+        original = cands[0]
+    else:
+        try:
+            original = ns.GetItemFromID(cfg['entryid'])
+        except Exception as e:
+            sys.exit('no pude abrir el mail original con ese EntryID: %s' % e)
     print('original: %s  |  %s  |  para: %s'
           % (original.Subject, original.SentOn, original.To))
 
@@ -66,6 +89,10 @@ def reenviar(cfg):
         fw.Recipients.Add(nombre).Type = 1          # olTo
     for nombre in cfg.get('cc', []):
         fw.Recipients.Add(nombre).Type = 2          # olCC
+    # El gerente va siempre, como minimo en copia (regla dura de Fak, 02/10/2026).
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib'))
+    from gerenteCopia import asegurar_gerente
+    asegurar_gerente(fw, cfg.get('sin_gerente', False))
     if not fw.Recipients.ResolveAll():
         sys.exit('ABORTADO: Outlook no pudo resolver todos los destinatarios del reenvio')
 
