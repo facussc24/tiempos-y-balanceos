@@ -51,6 +51,7 @@ fi
 bash "$ROOT/.claude/hooks/cerebro-guard.sh" 2>/dev/null
 
 # Seguimientos con fecha: lo que hay que volver a pedir (lunes y viernes) hasta que contesten.
-# Va DESPUES del cerebro porque los datos viven en la memoria. Menos de 1 KB; si falla, no frena.
+# Va DESPUES del cerebro porque los datos viven en la memoria. Detalla hasta 10 (unos 5 KB) y
+# cuenta el resto; un dato mal escrito lo DICE por esta misma salida; si node falla, no frena.
 node "$ROOT/scripts/_seguimientos.mjs" --hook 2>/dev/null
 exit 0
