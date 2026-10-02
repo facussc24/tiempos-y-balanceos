@@ -51,6 +51,24 @@ que el jefe del sector deja de tener que hacer.
 - En las tomas no pueden verse: la lista de conversaciones, el usuario del arb, nombres de personas del cliente
   en IMDS, ni rutas con el nombre de usuario de la PC.
 
+## Estado al 02/10, 13:30
+
+- **La narración ya está escrita** (246 palabras, alrededor de 1:40 de voz): `exports/CLAUDES_POR_AREA_20261001/fuentes/voz_ilusiona/narracion.txt`.
+  Cada dato que dice salió de `examen/sectores_respuestas.md` (citas comprobadas). El caso de IMDS NO está en la
+  narración: entra en el párrafo de Calidad solo con el OK de Facundo.
+- **Tomas que ya existen** (02/10, 12:50 a 12:56, Facundo escribiendo en la demostración instalada como PC de
+  Producción; grabación cruda en `.sgc-cache/claude-por-area/tomas-crudas/toma-produccion-1249.mp4`, no va al repo):
+  la pregunta de las tres piezas, el mail que se abre en Outlook y sale con «mandalo», la presentación en
+  PowerPoint y enseñarle el parte de fin de turno. Los recortes los deja el armado de la versión 2 del tutorial
+  en `tomas/demo-02oct-*.mp4`.
+- **Tomas que faltan:** una por cada otro sector (Calidad, Logística, Compras, Mantenimiento, RRHH, Dirección), el
+  parte de fin de turno pedido en una conversación nueva (la habilidad ya aprendida) e IMDS.
+- **Cómo se graban los otros sectores (6 clics de Facundo, sin escribir):** por cada sector,
+  `bash armar_demo_instalada.sh <área>` → una sugerencia que abre una conversación en `C:\ClaudeBarack` → Facundo
+  la aprieta (la conversación arranca sabiendo que es la PC de ese sector) → siguiente sector. Después, sin
+  Facundo: a cada conversación se le manda su pregunta, se graba su ventana con `grabar_ventana.py` y la pregunta
+  va escrita como cartel. Al terminar, la demostración vuelve a quedar como Producción.
+
 ## Lo que falta para poder grabarlo
 
 Según `chequear_promesas.py` al 02/10: `mail-enviar`, `presentaciones`, `aprende-habilidades` e `imds-caso-real`.
