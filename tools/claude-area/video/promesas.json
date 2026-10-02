@@ -14,9 +14,9 @@
       "en_el_video": true,
       "estado": "probado",
       "prueba": ".sgc-cache/claude-por-area/examen/ensayo_2_respuestas.md",
-      "como_se_probo": "Ensayo 2 del 02/10 (PC de Producción, nivel Medio, reglas v3), preguntas 2, 7 y 10: P-09.1 rev B.1, F-24 rev I e I-AC-007 rev A, cada cita comprobada contra su documento y cada ruta contra el servidor.",
+      "como_se_probo": "Ensayo 2 del 02/10 (PC de Producción, nivel Medio, reglas v3), preguntas 2, 7 y 10: P-09.1 rev B.1, F-24 rev I e I-AC-007 rev A, cada cita comprobada contra su documento y cada ruta contra el servidor. Repetido el 02/10 a las 15:00 sobre las reglas v4, en la PC de Ingeniería (final del mismo archivo): contestó lo mismo, con la misma fuente.",
       "probado_sobre": {
-        "2": "81397ab116bb",
+        "2": "8e3dbad38e55",
         "3": "e69d30871672",
         "6": "0ccb6d133355"
       },
@@ -33,9 +33,9 @@
       "en_el_video": false,
       "estado": "probado",
       "prueba": ".sgc-cache/claude-por-area/examen/ensayo_2_respuestas.md",
-      "como_se_probo": "Ensayo 2 del 02/10, pregunta 1: «La BOM del APC está en el arb… lo que hay en la nube o en el legajo son copias con fecha».",
+      "como_se_probo": "Ensayo 2 del 02/10, pregunta 1: «La BOM del APC está en el arb… lo que hay en la nube o en el legajo son copias con fecha». Repetido el 02/10 a las 15:00 sobre las reglas v4, en la PC de Ingeniería (final del mismo archivo): contestó lo mismo, con la misma fuente.",
       "probado_sobre": {
-        "2": "81397ab116bb",
+        "2": "8e3dbad38e55",
         "3": "e69d30871672"
       },
       "depende_de": [

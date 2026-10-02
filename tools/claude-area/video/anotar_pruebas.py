@@ -27,8 +27,8 @@ DEPENDE = {
 }
 ENSAYO = ".sgc-cache/claude-por-area/examen/ensayo_2_respuestas.md"
 PRUEBAS = {
-    "pregunta-con-fuente": "Ensayo 2 del 02/10 (PC de Producción, nivel Medio, reglas v3), preguntas 2, 7 y 10: P-09.1 rev B.1, F-24 rev I e I-AC-007 rev A, cada cita comprobada contra su documento y cada ruta contra el servidor.",
-    "bom-en-el-arb": "Ensayo 2 del 02/10, pregunta 1: «La BOM del APC está en el arb… lo que hay en la nube o en el legajo son copias con fecha».",
+    "pregunta-con-fuente": "Ensayo 2 del 02/10 (PC de Producción, nivel Medio, reglas v3), preguntas 2, 7 y 10: P-09.1 rev B.1, F-24 rev I e I-AC-007 rev A, cada cita comprobada contra su documento y cada ruta contra el servidor. Repetido el 02/10 a las 15:00 sobre las reglas v4, en la PC de Ingeniería (final del mismo archivo): contestó lo mismo, con la misma fuente.",
+    "bom-en-el-arb": "Ensayo 2 del 02/10, pregunta 1: «La BOM del APC está en el arb… lo que hay en la nube o en el legajo son copias con fecha». Repetido el 02/10 a las 15:00 sobre las reglas v4, en la PC de Ingeniería (final del mismo archivo): contestó lo mismo, con la misma fuente.",
     "mail-borrador": "Ensayo 2 del 02/10, pregunta 4 y tanda 2: el mail quedó abierto en Outlook (leído por programa: asunto, destinatario y marca) y dijo a quién iba, el asunto y los adjuntos.",
     "mail-enviar": "02/10. El programa, en vivo con Outlook: 3 mails de Facundo para Facundo salieron una vez cada uno; copia oculta, sin asunto, nombre inexistente, ventana cambiada y alguien de afuera NO salieron (NOTAS.md del plugin, punto 11). En la conversación (ensayo 2, tanda 2): un «Mandalo» que mandó otra sesión NO salió; cuando Facundo escribió «mandalo» en la conversación salió una vez (Enviados, entrada y bitácora); a una dirección de afuera con «mandalo cuando puedas» quedó abierto y no salió.",
     "presentaciones": "Ensayo 2 del 02/10, tanda 2: «armame una presentación de 3 hojas sobre qué hacer ante una pieza no conforme» → PowerPoint abierto en 40 s, 5 diapositivas (portada, 3 hojas, cierre) con la fuente P-09.1 rev B.1 al pie; exportadas a imagen y comparadas renglón por renglón con el documento.",
