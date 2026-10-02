@@ -140,14 +140,17 @@ def main(argv):
             print('   %s %s\n' % ('OK  ' if ok else 'FALLO', msg))
             if not ok:
                 malas.append((cod, msg))
-        # Tras el ultimo codigo el Maestro de Insumos quedaba abierto y tapaba lo siguiente
-        # (02/10/2026: `reset` no pudo abrir Relaciones para el export de verificacion).
-        ad.cerrar()
         print('=' * 60)
         print('%d/%d bien' % (len(filas) - len(malas), len(filas)))
         for c, m in malas:
             print('   PENDIENTE %s: %s' % (c, m))
-        print('\nVERIFICAR contra el export (columna Unidad de RELACIONES): la pantalla NO prueba que grabo.')
+        print('\nVERIFICAR contra el export (columna Unidad de RELACIONES): la pantalla NO prueba que grabo.',
+              flush=True)
+        # Tras el ultimo codigo el Maestro de Insumos quedaba abierto y tapaba lo siguiente
+        # (02/10/2026: `reset` no pudo abrir Relaciones para el export de verificacion). Va
+        # DESPUES del resumen: `cerrar()` manda un mensaje al arb y, si el arb se colgo tras el
+        # ultimo ENTER, el script queda ahi; el resultado ya tiene que estar impreso.
+        ad.cerrar()
         return 1 if malas else 0
 
     print(__doc__)

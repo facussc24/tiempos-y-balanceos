@@ -196,13 +196,15 @@ def grabar(h):
     hpapp = ad.tabular_hasta(h, XY['papp_psw'])
     if not hpapp:
         raise Frenar('no llegue a Posee PAPP/PSW')
-    if not ad._texto(hpapp).strip():
+    # Un codigo viejo puede traer basura en PAPP (02/10/2026): solo S / N / X cuentan como valor.
+    if ad._texto(hpapp).strip().upper() not in ('S', 'N', 'X'):
         if ad._reemplazar(h, hpapp, ad.PAPP_VALOR).strip() != ad.PAPP_VALOR:
             raise Frenar('PAPP no quedo en %s' % ad.PAPP_VALOR)
     ai.tecla(ai.TECLAS['TAB'], pausa=ad.PAUSA_TECLA)
     boton = ai.foco(h)
     if not boton or ai.cls(boton) != 'Button':
-        raise Frenar('no cai en un boton sino en %s' % (ai.cls(boton) if boton else 'None'))
+        raise Frenar('no cai en un boton sino en %r (%s)' % (ai.cls(boton) if boton else 'None',
+                                                              ad.por_que_no_avanza(h)))
     rot = ad._texto(boton).replace('&', '').strip().lower()
     if rot != 'acepta' or not u.IsWindowEnabled(boton):
         raise Frenar('boton %r habilitado=%s' % (rot, bool(u.IsWindowEnabled(boton))))

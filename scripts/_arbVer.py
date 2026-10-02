@@ -523,27 +523,44 @@ def colgado(espera=20):
 
     Devuelve 0 si esta colgado Y el vigilante esta ACTIVO (se puede cerrar: regla
     `arb-no-cerrar.md`, OK permanente de Fak del 02/10/2026), 1 si responde, 2 si esta colgado
-    pero el vigilante no lo va a reabrir, 3 si el arb no esta abierto. Imprime el PID, los
-    carteles OCULTOS (el de Visual C++ no se dibuja) y que falta chequear a mano."""
+    pero el vigilante no lo va a reabrir, 3 si el arb no esta abierto, 4 si hay mas de un arb
+    abierto (se mira a mano). Si el chequeo mismo falla, sale con 5: un 1 es siempre "responde".
+    Imprime el PID y los carteles OCULTOS (el de Visual C++ no se dibuja).
+
+    NO comprueba que la ultima escritura este verificada en un export (`_arbUnidad.py` y las
+    altas no dejan journal): eso se mira antes de cerrar, y lo recuerda en la salida."""
     import subprocess
 
     def responde():
+        """[(pid, responde)] de todos los produc.exe. `.Responding` pregunta con tope de 5 s."""
         r = subprocess.run(['powershell', '-NoProfile', '-Command',
-                            '$p = Get-Process produc -ErrorAction SilentlyContinue; '
-                            'if ($p) { "$($p.Id) $($p.Responding)" }'],
+                            'Get-Process produc -ErrorAction SilentlyContinue | '
+                            'ForEach-Object { "$($_.Id) $($_.Responding)" }'],
                            capture_output=True, text=True).stdout.split()
-        return (int(r[0]), r[1] == 'True') if len(r) == 2 else (None, None)
+        return [(int(r[i]), r[i + 1] == 'True') for i in range(0, len(r) - 1, 2)]
 
-    pid, ok = responde()
-    if pid is None:
+    procs = responde()
+    if not procs:
         print('el arb no esta abierto')
         return 3
+    if len(procs) > 1:
+        print('hay %d arb abiertos (%s): mirar a mano' % (len(procs), ', '.join(
+            '%d %s' % (p, 'responde' if o else 'NO responde') for p, o in procs)))
+        return 4
+    pid, ok = procs[0]
     if not ok:
         time.sleep(espera)                      # un "no responde" de un instante no es un cuelgue
-        pid2, ok = responde()
-        if pid2 != pid:
-            print('el arb se reabrio solo (pid %s -> %s)' % (pid, pid2))
-            return 1
+        procs = responde()
+        if not procs:
+            print('el arb (pid %d) se cerro durante la espera' % pid)
+            return 3
+        if len(procs) > 1:
+            print('hay %d arb abiertos: mirar a mano' % len(procs))
+            return 4
+        if procs[0][0] != pid:
+            print('el arb se reabrio (pid %d -> %d): se vuelve a mirar' % (pid, procs[0][0]))
+            return colgado(espera)
+        ok = procs[0][1]
     ocultos = []
 
     def cb(h, _l):
@@ -568,7 +585,12 @@ def colgado(espera=20):
 if __name__ == '__main__':
     cmd = sys.argv[1] if len(sys.argv) > 1 else 'estado'
     if cmd == 'colgado':
-        sys.exit(colgado())
+        try:
+            rc = colgado()
+        except Exception as e:                  # un 1 tiene que querer decir "responde", nada mas
+            print('el chequeo fallo: %r' % (e,))
+            rc = 5
+        sys.exit(rc)
     if cmd == 'foto':
         cual = sys.argv[2] if len(sys.argv) > 2 else 'rel'
         h = buscar(cual)

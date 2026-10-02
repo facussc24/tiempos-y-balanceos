@@ -61,9 +61,15 @@ Con las tres:
 ```bash
 touch ~/.claude/.arb-cerrar-ok          # en un comando aparte: el guardian mira ANTES de ejecutar
 taskkill //F //PID <pid de produc.exe>
+rm -f ~/.claude/.arb-cerrar-ok          # si el kill no nombro al arb, el permiso quedaria armado
 ```
 
-y se espera mirando cada 10 s hasta `ProdWindow ena=True` (el vigilante lo abre y entra con la
+`python scripts/_arbVer.py colgado` mide las condiciones 1 y 3 (sale 0 solo con las dos). La 2 no
+la puede medir —el maestro de insumos y las altas no dejan journal—: se mira a mano antes del
+`touch`. Si el cuelgue cae entre una escritura y su export, despues de reabrir lo PRIMERO es
+exportar y comparar contra la foto previa, antes de reintentar nada.
+
+Despues del kill se espera mirando cada 10 s hasta `ProdWindow ena=True` (el vigilante lo abre y entra con la
 clave guardada cuando la PC esta quieta 10 s; el 02/10 tardo 143 s). A Fak se le avisa en una
 linea lo que paso; no se le pide que haga nada. Si el vigilante esta `PAUSADO` por login fallido,
 o a los 6 min no abrio, ahi si: *"doble click en ARB"*.

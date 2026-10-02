@@ -95,7 +95,8 @@ marca sale un cartel que espera el click de Fak y el comando queda colgado — 0
 motivo** (segunda palabra en adelante de `vigilante_estado.txt` y el final de `lanzador.log`): si
 dice `a mano` se reactiva; si dice `login fallido` NO se reactiva —seria otro intento con la misma
 clave— y se le avisa a Fak. Claude NO corre `_arbLanzar.py` (se niega con
-`CLAUDECODE`) salvo `--diagnostico`, ni cierra el arb para que el vigilante lo reabra.
+`CLAUDECODE`) salvo `--diagnostico`, ni cierra un arb SANO para que el vigilante lo reabra (el
+colgado si: arriba).
 
 ## Regla de oro
 

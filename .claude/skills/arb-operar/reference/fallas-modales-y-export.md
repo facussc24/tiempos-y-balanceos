@@ -349,8 +349,9 @@ sin imprimir nada.
 - **Con el foco en `Anular`, ninguna tecla.** Un `ENTER` cierra el arb.
 - **Arb colgado (IsHung + CPU quieta) → no se espera ni se prueban trucos.** Fak, 22/09:
   *"no que va a responder el arb jaja... si se traba así cagamos, hay que cerrarlo y
-  reabrirlo más fácil"*. Se le dice con el motivo, él da el OK, `taskkill /F` con el escape
-  de `arb-no-cerrar.md`, y él lo reabre con su usuario.
+  reabrirlo más fácil"*. Desde el 02/10/2026 lo cierro yo sin pedirle nada (OK permanente para
+  un arb COLGADO: `_arbVer.py colgado`, el escape y el cierre de `arb-no-cerrar.md`) y lo
+  reabre el vigilante con la clave guardada; a Fak se le avisa en una línea.
 - **Antes del kill, confirmar que no queda nada a medio grabar**: la última escritura tiene
   que estar verificada en un export. Ese día lo estaba (una pieza grabada a las 14:03; los
   intentos siguientes habían frenado antes del `ENTER`), y después del kill la base dio
