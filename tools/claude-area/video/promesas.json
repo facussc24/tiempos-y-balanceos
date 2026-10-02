@@ -114,6 +114,24 @@
       "estado": "probado",
       "prueba": "tools/claude-area/manual/capturas/11-modelo-y-nivel.png",
       "como_se_probo": "Captura real de la app del 02/10: lista de modelos y control «Esfuerzo» con Medio marcado como Recomendado."
+    },
+    {
+      "id": "un-ejemplo-por-sector",
+      "dice": "A cada sector le contesta lo suyo: Calidad, Logística, Compras, Mantenimiento, RRHH, Dirección, Ingeniería y Producción",
+      "pedido": "02/10: «ver qué hacen las distintas personas en Barack… que sea un video que realmente los ilusione… a Ingeniería ya se los vendí, a los demás sectores aún no»",
+      "en_el_video": true,
+      "estado": "probado",
+      "prueba": ".sgc-cache/claude-por-area/examen/sectores_respuestas.md",
+      "como_se_probo": "02/10: siete preguntas, una por sector, en la instalación de demostración; las siete con su documento y las citas comprobadas contra los extractos."
+    },
+    {
+      "id": "imds-caso-real",
+      "dice": "En Calidad: ayudó a destrabar una declaración de materiales (IMDS) rechazada por el cliente",
+      "pedido": "02/10: «podríamos mostrarle cómo ayudarlos en imds con un ejemplo real»",
+      "en_el_video": true,
+      "estado": "sin probar",
+      "prueba": null,
+      "que_falta": "El caso es real (21/09/2026: MDS de la 21-9689 rechazado por falta de norma, corregido y reenviado con 0 errores; lo hizo el Claude de Ingeniería a pedido de Facundo). Falta una imagen que se pueda mostrar (pantalla de IMDS con el estado, sin nombres de personas del cliente) y que Facundo confirme que se puede contar."
     }
   ]
 }
