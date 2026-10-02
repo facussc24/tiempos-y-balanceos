@@ -1,0 +1,2842 @@
+{
+ "sello": [
+  "SELLO DEL DATO",
+  "  export:   RELACIONES_20261002_post-unidad-fieltro330.TXT  -  hecho 02/10/2026 12:26 (hace 1 h 14 min)",
+  "            el archivo tiene fecha 02/10/2026 12:26 pero es copia identica de C:\\tmp\\RELACIONES.TXT: vale la hora del original",
+  "  cargas al arb despues del export: ninguna (ultima escritura del journal: 02/10/2026 10:11, producto 2HC858417C GKN)",
+  "  descripciones: ARTICULO.TXT del 03/08/2026 (60 dias: un producto nuevo sale sin descripcion) - INSUMOS.TXT del 28/08/2026 (listado impreso, sin unidad: la unidad sale de RELACIONES)",
+  "  estado: al dia (export de menos de 24 h y sin cargas posteriores en el journal)"
+ ],
+ "base": [
+  {
+   "art": "2HT885900B YZM",
+   "linea": "APC AMK",
+   "desc": "AM Centr HL",
+   "proc": "Costura",
+   "W40": 576,
+   "W41": 576,
+   "arb": "2HT885900B YZM",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000957,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-12088E",
+     "desc": "HILO FLINTGREY AMAROK PA II TEX158-20/3",
+     "un": "KG",
+     "cons": 0.00046,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "SAS",
+   "inst": "Serie",
+   "pe_desc": "AM Centr HL"
+  },
+  {
+   "art": "2HT885901E YZM",
+   "linea": "APC AMK",
+   "desc": "AM Lat HL",
+   "proc": "Costura",
+   "W40": 240,
+   "W41": 288,
+   "arb": "2HT885901E YZM",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.0006288,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-12088E",
+     "desc": "HILO FLINTGREY AMAROK PA II TEX158-20/3",
+     "un": "KG",
+     "cons": 0.0004775,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "SAS",
+   "inst": "Serie",
+   "pe_desc": "AM Lat HL"
+  },
+  {
+   "art": "2HT885900A OHE",
+   "linea": "APC AMK",
+   "desc": "AM Centr CL",
+   "proc": "Costura",
+   "W40": 528,
+   "W41": 576,
+   "arb": "2HT885900A OHE",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000957,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-12088E",
+     "desc": "HILO FLINTGREY AMAROK PA II TEX158-20/3",
+     "un": "KG",
+     "cons": 0.00046,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "SAS",
+   "inst": "Serie",
+   "pe_desc": "AM Centr CL"
+  },
+  {
+   "art": "2HT885901D OHE",
+   "linea": "APC AMK",
+   "desc": "AM Lat CL",
+   "proc": "Costura",
+   "W40": 288,
+   "W41": 384,
+   "arb": "2HT885901D OHE",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.0006288,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-12088E",
+     "desc": "HILO FLINTGREY AMAROK PA II TEX158-20/3",
+     "un": "KG",
+     "cons": 0.0004775,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "SAS",
+   "inst": "Serie",
+   "pe_desc": "AM Lat CL"
+  },
+  {
+   "art": "2HT885900 9NY",
+   "linea": "APC AMK",
+   "desc": "AM Centr TL",
+   "proc": "Costura",
+   "W40": 480,
+   "W41": 288,
+   "arb": "2HT885900 9NY",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000957,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "SAS",
+   "inst": "Serie",
+   "pe_desc": "AM Centr TL"
+  },
+  {
+   "art": "2HT885901C 9NY",
+   "linea": "APC AMK",
+   "desc": "AM Lat TL",
+   "proc": "Costura",
+   "W40": 528,
+   "W41": 336,
+   "arb": "2HT885901C 9NY",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.0006288,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "SAS",
+   "inst": "Serie",
+   "pe_desc": "AM Lat TL"
+  },
+  {
+   "art": "2HT881901D YZM",
+   "linea": "APC AMK",
+   "desc": "AM DEL HL",
+   "proc": "Costura",
+   "W40": 750,
+   "W41": 816,
+   "arb": "2HT881901D YZM",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.0007545,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-12088E",
+     "desc": "HILO FLINTGREY AMAROK PA II TEX158-20/3",
+     "un": "KG",
+     "cons": 0.000573,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 200,
+   "pe_fc6": 1897,
+   "cliente": "VWA",
+   "inst": "Serie",
+   "pe_desc": "AM DEL HL"
+  },
+  {
+   "art": "2HT881901E OHE",
+   "linea": "APC AMK",
+   "desc": "AM Del CL",
+   "proc": "Costura",
+   "W40": 250,
+   "W41": 288,
+   "arb": "2HT881901E OHE",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.0007546,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-12088E",
+     "desc": "HILO FLINTGREY AMAROK PA II TEX158-20/3",
+     "un": "KG",
+     "cons": 0.000573,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 150,
+   "pe_fc6": 538,
+   "cliente": "VWA",
+   "inst": "Serie",
+   "pe_desc": "AM Del CL"
+  },
+  {
+   "art": "2HT857115 DEC",
+   "linea": "IP-AMK",
+   "desc": "IP AMK Corto Verde",
+   "proc": "Costura",
+   "W40": 210,
+   "W41": 30,
+   "arb": "2HT857115 DEC",
+   "hilos": [
+    {
+     "cod": "FX284-12088E",
+     "desc": "HILO FLINT GRAY 30/3 16-5803",
+     "un": "KG",
+     "cons": 0.000109,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000109,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX663TK-12088E",
+     "desc": "HILO FLINT GREY 15/3 PANTONE 16-5803TPG",
+     "un": "KG",
+     "cons": 6.3e-05,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 96,
+   "pe_fc6": 432,
+   "cliente": "SAS",
+   "inst": "Serie",
+   "pe_desc": "IP AMK Corto Verde"
+  },
+  {
+   "art": "2HT857116 DEC",
+   "linea": "IP-AMK",
+   "desc": "IP AMK Largo Verde",
+   "proc": "Costura",
+   "W40": 150,
+   "W41": 30,
+   "arb": "2HT857116 DEC",
+   "hilos": [
+    {
+     "cod": "FX284-12088E",
+     "desc": "HILO FLINT GRAY 30/3 16-5803",
+     "un": "KG",
+     "cons": 0.00038,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.00038,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX663TK-12088E",
+     "desc": "HILO FLINT GREY 15/3 PANTONE 16-5803TPG",
+     "un": "KG",
+     "cons": 0.000286,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 96,
+   "pe_fc6": 432,
+   "cliente": "SAS",
+   "inst": "Serie",
+   "pe_desc": "IP AMK Largo Verde"
+  },
+  {
+   "art": "2HT857115 YZM",
+   "linea": "IP-AMK",
+   "desc": "IP AMK Corto Negro",
+   "proc": "Costura",
+   "W40": 420,
+   "W41": 720,
+   "arb": "2HT857115 YZM",
+   "hilos": [
+    {
+     "cod": "FX284-12088E",
+     "desc": "HILO FLINT GRAY 30/3 16-5803",
+     "un": "KG",
+     "cons": 0.000109,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000109,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX663TK-12088E",
+     "desc": "HILO FLINT GREY 15/3 PANTONE 16-5803TPG",
+     "un": "KG",
+     "cons": 6.3e-05,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 426,
+   "pe_fc6": 3318,
+   "cliente": "SAS",
+   "inst": "Serie",
+   "pe_desc": "IP AMK Corto Negro"
+  },
+  {
+   "art": "2HT857116 YZM",
+   "linea": "IP-AMK",
+   "desc": "IP AMK Largo Negro",
+   "proc": "Costura",
+   "W40": 690,
+   "W41": 810,
+   "arb": "2HT857116 YZM",
+   "hilos": [
+    {
+     "cod": "FX284-12088E",
+     "desc": "HILO FLINT GRAY 30/3 16-5803",
+     "un": "KG",
+     "cons": 0.00038,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.00038,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX663TK-12088E",
+     "desc": "HILO FLINT GREY 15/3 PANTONE 16-5803TPG",
+     "un": "KG",
+     "cons": 0.000286,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 426,
+   "pe_fc6": 3318,
+   "cliente": "SAS",
+   "inst": "Serie",
+   "pe_desc": "IP AMK Largo Negro"
+  },
+  {
+   "art": "2HT857115 HOA",
+   "linea": "IP-AMK",
+   "desc": "IP AMK Corto Gris",
+   "proc": "Costura",
+   "W40": 120,
+   "W41": 60,
+   "arb": "2HT857115 HOA",
+   "hilos": [
+    {
+     "cod": "FX284-12088E",
+     "desc": "HILO FLINT GRAY 30/3 16-5803",
+     "un": "KG",
+     "cons": 0.000109,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX663TK-12088E",
+     "desc": "HILO FLINT GREY 15/3 PANTONE 16-5803TPG",
+     "un": "KG",
+     "cons": 6.3e-05,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 90,
+   "pe_fc6": 510,
+   "cliente": "SAS",
+   "inst": "Serie",
+   "pe_desc": "IP AMK Corto Gris"
+  },
+  {
+   "art": "2HT857116 HOA",
+   "linea": "IP-AMK",
+   "desc": "IP AMK Largo Gris",
+   "proc": "Costura",
+   "W40": 60,
+   "W41": 60,
+   "arb": "2HT857116 HOA",
+   "hilos": [
+    {
+     "cod": "FX284-12088E",
+     "desc": "HILO FLINT GRAY 30/3 16-5803",
+     "un": "KG",
+     "cons": 0.00038,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX663TK-12088E",
+     "desc": "HILO FLINT GREY 15/3 PANTONE 16-5803TPG",
+     "un": "KG",
+     "cons": 0.000286,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 90,
+   "pe_fc6": 510,
+   "cliente": "SAS",
+   "inst": "Serie",
+   "pe_desc": "IP AMK Largo Gris"
+  },
+  {
+   "art": "2H6863761B OIO",
+   "linea": "TAPA AMK",
+   "desc": "Vinilo hilo blanco",
+   "proc": "Costura",
+   "W40": 484,
+   "W41": 308,
+   "arb": "2H6863761B OIO",
+   "hilos": [
+    {
+     "cod": "FX284-12088E",
+     "desc": "HILO FLINT GRAY 30/3 16-5803",
+     "un": "KG",
+     "cons": 0.00045,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX663TK-12088E",
+     "desc": "HILO FLINT GREY 15/3 PANTONE 16-5803TPG",
+     "un": "KG",
+     "cons": 0.00062,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 924,
+   "cliente": "VWA",
+   "inst": "Serie",
+   "pe_desc": "Tapa AMK HL"
+  },
+  {
+   "art": "2HT863761 SMC",
+   "linea": "TAPA AMK",
+   "desc": "Tela",
+   "proc": "Costura",
+   "W40": 220,
+   "W41": 44,
+   "arb": "2HT863761 SMC",
+   "hilos": [
+    {
+     "cod": "FX284-12088E",
+     "desc": "HILO FLINT GRAY 30/3 16-5803",
+     "un": "KG",
+     "cons": 0.00045,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX663TK-12088E",
+     "desc": "HILO FLINT GREY 15/3 PANTONE 16-5803TPG",
+     "un": "KG",
+     "cons": 0.00062,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 132,
+   "pe_fc6": 1437,
+   "cliente": "VWA",
+   "inst": "Serie",
+   "pe_desc": "Tapa AMK CL"
+  },
+  {
+   "art": "2H6863761B IYO",
+   "linea": "TAPA AMK",
+   "desc": "Vinilo hilo negro",
+   "proc": "Costura",
+   "W40": 396,
+   "W41": 572,
+   "arb": "2H6863761B IYO",
+   "hilos": [
+    {
+     "cod": "FX663TK-E0PTO",
+     "desc": "HILO JET BLACK 15/3 19-0303",
+     "un": "KG",
+     "cons": 0.00062,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 352,
+   "pe_fc6": 1762,
+   "cliente": "VWA",
+   "inst": "Serie",
+   "pe_desc": "Tapa AMK TL"
+  },
+  {
+   "art": "0247615-03-FZHE",
+   "linea": "APB FORD",
+   "desc": "TRI",
+   "proc": "Costura",
+   "W40": 1050,
+   "W41": 1050,
+   "arb": "0247615-03-FZHE",
+   "hilos": [],
+   "pe_firme": 840,
+   "pe_fc6": 4140,
+   "cliente": "SMRC",
+   "inst": "Serie",
+   "pe_desc": "TRI"
+  },
+  {
+   "art": "0247616-03-FZHE",
+   "linea": "APB FORD",
+   "desc": "TRD",
+   "proc": "Costura",
+   "W40": 1050,
+   "W41": 1050,
+   "arb": "0247616-03-FZHE",
+   "hilos": [],
+   "pe_firme": 840,
+   "pe_fc6": 4140,
+   "cliente": "SMRC",
+   "inst": "Serie",
+   "pe_desc": "TRD"
+  },
+  {
+   "art": "0247607-04-FZHE",
+   "linea": "APB FORD",
+   "desc": "DIS",
+   "proc": "Costura",
+   "W40": 450,
+   "W41": 450,
+   "arb": "0247607-04-FZHE",
+   "hilos": [
+    {
+     "cod": "BX69-11527E",
+     "desc": "HILO UNION NEGRO TEX 70 - 40/3 (P703)",
+     "un": "KG",
+     "cons": 0.006,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 420,
+   "pe_fc6": 1890,
+   "cliente": "SMRC",
+   "inst": "Serie",
+   "pe_desc": "DIS"
+  },
+  {
+   "art": "0247608-04-FZHE",
+   "linea": "APB FORD",
+   "desc": "DDS",
+   "proc": "Costura",
+   "W40": 450,
+   "W41": 450,
+   "arb": "0247608-04-FZHE",
+   "hilos": [
+    {
+     "cod": "BX69-11527E",
+     "desc": "HILO UNION NEGRO TEX 70 - 40/3 (P703)",
+     "un": "KG",
+     "cons": 0.006,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 420,
+   "pe_fc6": 1890,
+   "cliente": "SMRC",
+   "inst": "Serie",
+   "pe_desc": "DDS"
+  },
+  {
+   "art": "0247609-04-FZHE",
+   "linea": "APB FORD",
+   "desc": "DIC",
+   "proc": "Costura",
+   "W40": 600,
+   "W41": 600,
+   "arb": "0247609-04-FZHE",
+   "hilos": [
+    {
+     "cod": "BX138A-1530E",
+     "desc": "HILO VISTA URBEN GREY TEX 181- 20/3 (P70",
+     "un": "KG",
+     "cons": 0.005,
+     "mod": "COS"
+    },
+    {
+     "cod": "BX69-11527E",
+     "desc": "HILO UNION NEGRO TEX 70 - 40/3 (P703)",
+     "un": "KG",
+     "cons": 0.006,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 600,
+   "pe_fc6": 2640,
+   "cliente": "SMRC",
+   "inst": "Serie",
+   "pe_desc": "DIC"
+  },
+  {
+   "art": "0247610-04-FZHE",
+   "linea": "APB FORD",
+   "desc": "DDC",
+   "proc": "Costura",
+   "W40": 600,
+   "W41": 600,
+   "arb": "0247610-04-FZHE",
+   "hilos": [
+    {
+     "cod": "BX138A-1530E",
+     "desc": "HILO VISTA URBEN GREY TEX 181- 20/3 (P70",
+     "un": "KG",
+     "cons": 0.005,
+     "mod": "COS"
+    },
+    {
+     "cod": "BX69-11527E",
+     "desc": "HILO UNION NEGRO TEX 70 - 40/3 (P703)",
+     "un": "KG",
+     "cons": 0.006,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 600,
+   "pe_fc6": 2640,
+   "cliente": "SMRC",
+   "inst": "Serie",
+   "pe_desc": "DDC"
+  },
+  {
+   "art": "0247611-04-FZHE",
+   "linea": "APB FORD",
+   "desc": "TIS",
+   "proc": "Costura",
+   "W40": 450,
+   "W41": 450,
+   "arb": "0247611-04-FZHE",
+   "hilos": [
+    {
+     "cod": "BX69-11527E",
+     "desc": "HILO UNION NEGRO TEX 70 - 40/3 (P703)",
+     "un": "KG",
+     "cons": 0.006,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 420,
+   "pe_fc6": 1890,
+   "cliente": "SMRC",
+   "inst": "Serie",
+   "pe_desc": "TIS"
+  },
+  {
+   "art": "0247612-04-FZHE",
+   "linea": "APB FORD",
+   "desc": "TDS",
+   "proc": "Costura",
+   "W40": 450,
+   "W41": 450,
+   "arb": "0247612-04-FZHE",
+   "hilos": [
+    {
+     "cod": "BX69-11527E",
+     "desc": "HILO UNION NEGRO TEX 70 - 40/3 (P703)",
+     "un": "KG",
+     "cons": 0.006,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 420,
+   "pe_fc6": 1890,
+   "cliente": "SMRC",
+   "inst": "Serie",
+   "pe_desc": "TDS"
+  },
+  {
+   "art": "0247613-04-FZHE",
+   "linea": "APB FORD",
+   "desc": "TIC",
+   "proc": "Costura",
+   "W40": 600,
+   "W41": 600,
+   "arb": "0247613-04-FZHE",
+   "hilos": [
+    {
+     "cod": "BX138A-1530E",
+     "desc": "HILO VISTA URBEN GREY TEX 181- 20/3 (P70",
+     "un": "KG",
+     "cons": 0.005,
+     "mod": "COS"
+    },
+    {
+     "cod": "BX69-11527E",
+     "desc": "HILO UNION NEGRO TEX 70 - 40/3 (P703)",
+     "un": "KG",
+     "cons": 0.006,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 600,
+   "pe_fc6": 2640,
+   "cliente": "SMRC",
+   "inst": "Serie",
+   "pe_desc": "TIC"
+  },
+  {
+   "art": "0247614-04-FZHE",
+   "linea": "APB FORD",
+   "desc": "TDC",
+   "proc": "Costura",
+   "W40": 600,
+   "W41": 600,
+   "arb": "0247614-04-FZHE",
+   "hilos": [
+    {
+     "cod": "BX138A-1530E",
+     "desc": "HILO VISTA URBEN GREY TEX 181- 20/3 (P70",
+     "un": "KG",
+     "cons": 0.005,
+     "mod": "COS"
+    },
+    {
+     "cod": "BX69-11527E",
+     "desc": "HILO UNION NEGRO TEX 70 - 40/3 (P703)",
+     "un": "KG",
+     "cons": 0.006,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 600,
+   "pe_fc6": 2640,
+   "cliente": "SMRC",
+   "inst": "Serie",
+   "pe_desc": "TDC"
+  },
+  {
+   "art": "0235799-01-0000",
+   "linea": "Capotaje",
+   "desc": "Capotaje",
+   "proc": "Costura",
+   "W40": 0,
+   "W41": 0,
+   "arb": "0235799-01-0000",
+   "hilos": [
+    {
+     "cod": "GM30W-49990",
+     "desc": "HILO 30/3 W4999 NEGRO BILEVICH",
+     "un": "KG",
+     "cons": 4.81e-05,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "SMRC",
+   "inst": "Serie",
+   "pe_desc": "CAPOTAJE"
+  },
+  {
+   "art": "0252631-03-NHZD",
+   "linea": "P21",
+   "desc": "P21 Hilo Verde Derecho",
+   "proc": "Costura",
+   "W40": 160,
+   "W41": 160,
+   "arb": "0252631-03-NHZD",
+   "hilos": [
+    {
+     "cod": "FX284-12125E",
+     "desc": "HILO 30/3 POLIESTER",
+     "un": "KG",
+     "cons": 0.00045,
+     "mod": "COS"
+    },
+    {
+     "cod": "GM30W-49990",
+     "desc": "HILO 30/3 W4999 NEGRO BILEVICH",
+     "un": "KG",
+     "cons": 0.0003641,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 60,
+   "pe_fc6": 600,
+   "cliente": "SMRC",
+   "inst": "Serie",
+   "pe_desc": "P21 Hilo Verde Derecho"
+  },
+  {
+   "art": "0252632-03-NHZD",
+   "linea": "P21",
+   "desc": "P21 Hilo Verde Izquierdo",
+   "proc": "Costura",
+   "W40": 160,
+   "W41": 160,
+   "arb": "0252632-03-NHZD",
+   "hilos": [
+    {
+     "cod": "FX284-12125E",
+     "desc": "HILO 30/3 POLIESTER",
+     "un": "KG",
+     "cons": 0.00045,
+     "mod": "COS"
+    },
+    {
+     "cod": "GM30W-49990",
+     "desc": "HILO 30/3 W4999 NEGRO BILEVICH",
+     "un": "KG",
+     "cons": 0.0003641,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 60,
+   "pe_fc6": 600,
+   "cliente": "SMRC",
+   "inst": "Serie",
+   "pe_desc": "P21 Hilo Verde Izquierdo"
+  },
+  {
+   "art": "21-6034",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 2500,
+   "W41": 1500,
+   "arb": "21-6034",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.0109,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.01893,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "Tela Bifielt 100GS  (69843)"
+  },
+  {
+   "art": "21-6567",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 2700,
+   "W41": 3750,
+   "arb": "21-6567",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.0062,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.01076,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "Tela RB (70012, 70015,70018) Toyota 640"
+  },
+  {
+   "art": "21-6619",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 100,
+   "W41": 0,
+   "arb": "21-6619",
+   "hilos": [],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "Tela + Placa PP 71743-X7A23 Asiento der.(69860) Toyota 640"
+  },
+  {
+   "art": "21-6621",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 300,
+   "W41": 0,
+   "arb": "21-6621",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.01321,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.02294,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "Tela Bifelt 120GS Resp.del 60% (69718) Toyota 640"
+  },
+  {
+   "art": "21-6699",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 3650,
+   "W41": 3750,
+   "arb": "21-6699",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00624,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.1083,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "Tela Bifelt 140gs/M2 Resp. Butaca izq, RB Izq. (69719, 69923) Toyota 640"
+  },
+  {
+   "art": "21-6756",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 0,
+   "W41": 625,
+   "arb": "21-6756",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00813,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.01412,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "Tela Bifelt 100gs/M2 AT c/apoyab.(69848) Toyota 640"
+  },
+  {
+   "art": "21-6757",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 300,
+   "W41": 1500,
+   "arb": "21-6757",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00222,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.00386,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "Tela Asiento Butaca (70001,70003,70005,70006) Toyota 640"
+  },
+  {
+   "art": "21-6758",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 1200,
+   "W41": 2000,
+   "arb": "21-6758",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00813,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.01412,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "Tela Resp. Tras.100% (70009) Toyota 640"
+  },
+  {
+   "art": "21-6766",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 1050,
+   "W41": 500,
+   "arb": "21-6766",
+   "hilos": [],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "Tela AT (70011) Toyota 640 "
+  },
+  {
+   "art": "21-6767",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 1100,
+   "W41": 750,
+   "arb": "21-6767",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00338,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.00586,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "Tela AT 40% (70013) Toyota 640"
+  },
+  {
+   "art": "21-6807",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 300,
+   "W41": 375,
+   "arb": "21-6807",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00834,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.01448,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "Tela AB Izq.(70032) Toyota 640"
+  },
+  {
+   "art": "21-6923",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 250,
+   "W41": 0,
+   "arb": "21-6923",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00834,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.01448,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "Tela Bifielt 907x1028 -3cist 13MC RB Toyota (Molde 70033)"
+  },
+  {
+   "art": "21-7339",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 1400,
+   "W41": 2000,
+   "arb": "21-7339",
+   "hilos": [],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "Tela TNT 60G/M²- RT 100% Argos"
+  },
+  {
+   "art": "21-7340",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 0,
+   "W41": 0,
+   "arb": "21-7340",
+   "hilos": [],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "TelaTNT 60G/M²- RT 40%  Argos"
+  },
+  {
+   "art": "21-7341",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 0,
+   "W41": 0,
+   "arb": "21-7341",
+   "hilos": [],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "Tela TNT 60G/M²- RT 60% Argos"
+  },
+  {
+   "art": "21-7467",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 0,
+   "W41": 150,
+   "arb": "21-7467",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00091,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.00158,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "Tela Bifelt 140G/M² Totoya 338"
+  },
+  {
+   "art": "21-7763",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 1300,
+   "W41": 2000,
+   "arb": "21-7763",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.002128,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.0003696,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "Tela Asiento Butaca (70003,70006) Toyota 640"
+  },
+  {
+   "art": "21-8908",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 1500,
+   "W41": 1200,
+   "arb": "21-8908",
+   "hilos": [],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "TELA_ASIENTO_P21_AÑO/MODELO_2022_Pw"
+  },
+  {
+   "art": "21-8909",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 1500,
+   "W41": 1350,
+   "arb": "21-8909",
+   "hilos": [],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "TELA_ASIENTO_P21_AÑO/MODELO_2022_Pw"
+  },
+  {
+   "art": "21-6416",
+   "linea": "BLANCO",
+   "desc": "",
+   "proc": "Costura Blanco",
+   "W40": 400,
+   "W41": 400,
+   "arb": "21-6416",
+   "hilos": [],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "Felpa Apoyabrazo (69870) Toyota 640"
+  },
+  {
+   "art": "2HC858417B FAM",
+   "linea": "IP PAD",
+   "desc": "IP Pad L1 low",
+   "proc": "Costura",
+   "W40": 82,
+   "W41": 40,
+   "arb": "2HC858417B FAM",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.00084,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11930E",
+     "desc": "ALPE GRAY TGA IP3 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.00028,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "VWA",
+   "inst": "Proyecto",
+   "pe_desc": "IP Pad L1"
+  },
+  {
+   "art": "2HC858417C GKK",
+   "linea": "IP PAD",
+   "desc": "IP Pad L2 High",
+   "proc": "Costura",
+   "W40": 4,
+   "W41": 25,
+   "arb": "2HC858417C GKK",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.00084,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11703E",
+     "desc": "GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.00028,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "VWA",
+   "inst": "Proyecto",
+   "pe_desc": "IP Pad L2"
+  },
+  {
+   "art": "2HC858417C GKN",
+   "linea": "IP PAD",
+   "desc": "IP Pad L3 High",
+   "proc": "Costura",
+   "W40": 6,
+   "W41": 0,
+   "arb": "2HC858417C GKN",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.00084,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11703E",
+     "desc": "GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.00028,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "VWA",
+   "inst": "Proyecto",
+   "pe_desc": "IP Pad L3"
+  },
+  {
+   "art": "N 227",
+   "linea": "INSERT",
+   "desc": "Inserto Pta. Del. Izq. L0",
+   "proc": "Costura",
+   "W40": 90,
+   "W41": 120,
+   "arb": "N 227",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-E0PTO",
+     "desc": "HILO JET BLACK 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Inserto Pta. Del. Izq. L0"
+  },
+  {
+   "art": "N 392",
+   "linea": "INSERT",
+   "desc": "Inserto Pta. Del. Der. L0",
+   "proc": "Costura",
+   "W40": 90,
+   "W41": 120,
+   "arb": "N 392",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-E0PTO",
+     "desc": "HILO JET BLACK 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Inserto Pta. Del. Der. L0"
+  },
+  {
+   "art": "N 396",
+   "linea": "INSERT",
+   "desc": "Inserto Pta. Tras. Izq. L0",
+   "proc": "Costura",
+   "W40": 90,
+   "W41": 120,
+   "arb": "N 396",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-E0PTO",
+     "desc": "HILO JET BLACK 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Inserto Pta. Tras. Izq. L0"
+  },
+  {
+   "art": "N 400",
+   "linea": "INSERT",
+   "desc": "Inserto Pta. Tras. Der. L0",
+   "proc": "Costura",
+   "W40": 90,
+   "W41": 120,
+   "arb": "N 400",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-E0PTO",
+     "desc": "HILO JET BLACK 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Inserto Pta. Tras. Der. L0"
+  },
+  {
+   "art": "N 389",
+   "linea": "INSERT",
+   "desc": "Inserto Pta. Del. Izq. L1",
+   "proc": "Costura",
+   "W40": 90,
+   "W41": 120,
+   "arb": "N 389",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11930E",
+     "desc": "ALPE GRAY TGA IP3 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Inserto Pta. Del. Izq. L1"
+  },
+  {
+   "art": "N 393",
+   "linea": "INSERT",
+   "desc": "Inserto Pta. Del. Der. L1",
+   "proc": "Costura",
+   "W40": 90,
+   "W41": 120,
+   "arb": "N 393",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11930E",
+     "desc": "ALPE GRAY TGA IP3 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Inserto Pta. Del. Der. L1"
+  },
+  {
+   "art": "N 397",
+   "linea": "INSERT",
+   "desc": "Inserto Pta. Tras. Izq. L1",
+   "proc": "Costura",
+   "W40": 90,
+   "W41": 120,
+   "arb": "N 397",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11930E",
+     "desc": "ALPE GRAY TGA IP3 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Inserto Pta. Tras. Izq. L1"
+  },
+  {
+   "art": "N 401",
+   "linea": "INSERT",
+   "desc": "Inserto Pta. Tras. Der. L1",
+   "proc": "Costura",
+   "W40": 90,
+   "W41": 120,
+   "arb": "N 401",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11930E",
+     "desc": "ALPE GRAY TGA IP3 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Inserto Pta. Tras. Der. L1"
+  },
+  {
+   "art": "N 390",
+   "linea": "INSERT",
+   "desc": "Inserto Pta. Del. Izq. L2",
+   "proc": "Costura",
+   "W40": 0,
+   "W41": 0,
+   "arb": "N 390",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11703E",
+     "desc": "GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Inserto Pta. Del. Izq. L2"
+  },
+  {
+   "art": "N 394",
+   "linea": "INSERT",
+   "desc": "Inserto Pta. Del. Der. L2",
+   "proc": "Costura",
+   "W40": 0,
+   "W41": 0,
+   "arb": "N 394",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11703E",
+     "desc": "GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Inserto Pta. Del. Der. L2"
+  },
+  {
+   "art": "N 398",
+   "linea": "INSERT",
+   "desc": "Inserto Pta. Tras. Izq. L2",
+   "proc": "Costura",
+   "W40": 0,
+   "W41": 0,
+   "arb": "N 398",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11703E",
+     "desc": "GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Inserto Pta. Tras. Izq. L2"
+  },
+  {
+   "art": "N 402",
+   "linea": "INSERT",
+   "desc": "Inserto Pta. Tras. Der. L2",
+   "proc": "Costura",
+   "W40": 0,
+   "W41": 0,
+   "arb": "N 402",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11703E",
+     "desc": "GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Inserto Pta. Tras. Der. L2"
+  },
+  {
+   "art": "N 391",
+   "linea": "INSERT",
+   "desc": "Inserto Pta. Del. Izq. L3",
+   "proc": "Costura",
+   "W40": 90,
+   "W41": 0,
+   "arb": "N 391",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11703E",
+     "desc": "GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Inserto Pta. Del. Izq. L3"
+  },
+  {
+   "art": "N 395",
+   "linea": "INSERT",
+   "desc": "Inserto Pta. Del. Der. L3",
+   "proc": "Costura",
+   "W40": 90,
+   "W41": 0,
+   "arb": "N 395",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11703E",
+     "desc": "GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Inserto Pta. Del. Der. L3"
+  },
+  {
+   "art": "N 399",
+   "linea": "INSERT",
+   "desc": "Inserto Pta. Tras. Izq. L3",
+   "proc": "Costura",
+   "W40": 90,
+   "W41": 0,
+   "arb": "N 399",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11703E",
+     "desc": "GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Inserto Pta. Tras. Izq. L3"
+  },
+  {
+   "art": "N 403",
+   "linea": "INSERT",
+   "desc": "Inserto Pta. Tras. Der. L3",
+   "proc": "Costura",
+   "W40": 90,
+   "W41": 0,
+   "arb": "N 403",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11703E",
+     "desc": "GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Inserto Pta. Tras. Der. L3"
+  },
+  {
+   "art": "N 231",
+   "linea": "APB Puerta",
+   "desc": "Apoyabrazo Pta. Del. Izq.",
+   "proc": "Costura",
+   "W40": 250,
+   "W41": 120,
+   "arb": "N 231",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-E0PTO",
+     "desc": "HILO JET BLACK 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Apoyabrazo Pta. Del. Izq."
+  },
+  {
+   "art": "N 267",
+   "linea": "APB Puerta",
+   "desc": "Apoyabrazo Pta. Del. Der.",
+   "proc": "Costura",
+   "W40": 250,
+   "W41": 120,
+   "arb": "N 267",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-E0PTO",
+     "desc": "HILO JET BLACK 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Apoyabrazo Pta. Del. Der."
+  },
+  {
+   "art": "N 297",
+   "linea": "APB Puerta",
+   "desc": "Apoyabrazo Pta. Tras. Izq.",
+   "proc": "Costura",
+   "W40": 250,
+   "W41": 120,
+   "arb": "N 297",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-E0PTO",
+     "desc": "HILO JET BLACK 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Apoyabrazo Pta. Tras. Izq."
+  },
+  {
+   "art": "N 328",
+   "linea": "APB Puerta",
+   "desc": "Apoyabrazo Pta. Tras. Der.",
+   "proc": "Costura",
+   "W40": 250,
+   "W41": 120,
+   "arb": "N 328",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000544,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-E0PTO",
+     "desc": "HILO JET BLACK 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": null,
+   "pe_fc6": null,
+   "cliente": "NVX SAS",
+   "inst": "Proyecto",
+   "pe_desc": "Apoyabrazo Pta. Tras. Der."
+  },
+  {
+   "art": "2HC881901 RL1",
+   "linea": "APC PAT",
+   "desc": "APC Delantero L0",
+   "proc": "Costura",
+   "W40": 0,
+   "W41": 0,
+   "arb": "2HC881901 RL1",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.0010725,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-E0PTO",
+     "desc": "HILO JET BLACK 20/3",
+     "un": "KG",
+     "cons": 0.0003,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 10,
+   "cliente": "VWA",
+   "inst": "Proyecto",
+   "pe_desc": "APC Delantero L0"
+  },
+  {
+   "art": "2HC885900 RL1",
+   "linea": "APC PAT",
+   "desc": "APC Trasero Central L0",
+   "proc": "Costura",
+   "W40": 0,
+   "W41": 0,
+   "arb": "2HC885900 RL1",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000819,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-E0PTO",
+     "desc": "HILO JET BLACK 20/3",
+     "un": "KG",
+     "cons": 0.00024,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 5,
+   "cliente": "VWA",
+   "inst": "Proyecto",
+   "pe_desc": "APC Trasero Central L0"
+  },
+  {
+   "art": "2HC885901 RL1",
+   "linea": "APC PAT",
+   "desc": "APC Trasero Lateral L0",
+   "proc": "Costura",
+   "W40": 0,
+   "W41": 0,
+   "arb": "2HC885901 RL1",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.0009243,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-E0PTO",
+     "desc": "HILO JET BLACK 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 10,
+   "cliente": "VWA",
+   "inst": "Proyecto",
+   "pe_desc": "APC Trasero Lateral L0"
+  },
+  {
+   "art": "2HC881901A GFV",
+   "linea": "APC PAT",
+   "desc": "APC Delantero L1",
+   "proc": "Costura",
+   "W40": 58,
+   "W41": 0,
+   "arb": "2HC881901A GFV",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.0010725,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11930E",
+     "desc": "ALPE GRAY TGA IP3 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.0003,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 10,
+   "cliente": "VWA",
+   "inst": "Proyecto",
+   "pe_desc": "APC Delantero L1"
+  },
+  {
+   "art": "2HC885900A EIF",
+   "linea": "APC PAT",
+   "desc": "APC Trasero Central L1",
+   "proc": "Costura",
+   "W40": 17,
+   "W41": 0,
+   "arb": "2HC885900A EIF",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000819,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11930E",
+     "desc": "ALPE GRAY TGA IP3 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.00024,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 5,
+   "cliente": "VWA",
+   "inst": "Proyecto",
+   "pe_desc": "APC Trasero Central L1"
+  },
+  {
+   "art": "2HC885901A GFU",
+   "linea": "APC PAT",
+   "desc": "APC Trasero Lateral L1",
+   "proc": "Costura",
+   "W40": 34,
+   "W41": 0,
+   "arb": "2HC885901A GFU",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.0009243,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11930E",
+     "desc": "ALPE GRAY TGA IP3 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 10,
+   "cliente": "VWA",
+   "inst": "Proyecto",
+   "pe_desc": "APC Trasero Lateral L1"
+  },
+  {
+   "art": "2HC881901B GEV",
+   "linea": "APC PAT",
+   "desc": "APC Delantero L2",
+   "proc": "Costura",
+   "W40": 0,
+   "W41": 0,
+   "arb": "2HC881901B GEV",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.0010725,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11703E",
+     "desc": "GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.0003,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "VWA",
+   "inst": "Proyecto",
+   "pe_desc": "APC Delantero L2"
+  },
+  {
+   "art": "2HC885900B SIY",
+   "linea": "APC PAT",
+   "desc": "APC Trasero Central L2",
+   "proc": "Costura",
+   "W40": 3,
+   "W41": 0,
+   "arb": "2HC885900B SIY",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000819,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11703E",
+     "desc": "GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.00024,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "VWA",
+   "inst": "Proyecto",
+   "pe_desc": "APC Trasero Central L2"
+  },
+  {
+   "art": "2HC885901B GEQ",
+   "linea": "APC PAT",
+   "desc": "APC Trasero Lateral L2",
+   "proc": "Costura",
+   "W40": 6,
+   "W41": 0,
+   "arb": "2HC885901B GEQ",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.0009243,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11703E",
+     "desc": "GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "VWA",
+   "inst": "Proyecto",
+   "pe_desc": "APC Trasero Lateral L2"
+  },
+  {
+   "art": "2HC881901C EFG",
+   "linea": "APC PAT",
+   "desc": "APC Delantero L3",
+   "proc": "Costura",
+   "W40": 0,
+   "W41": 0,
+   "arb": "2HC881901C EFG",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.0010725,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11703E",
+     "desc": "GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.0003,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "VWA",
+   "inst": "Proyecto",
+   "pe_desc": "APC Delantero L3"
+  },
+  {
+   "art": "2HC885900C SIY",
+   "linea": "APC PAT",
+   "desc": "APC Trasero Central L3",
+   "proc": "Costura",
+   "W40": 0,
+   "W41": 0,
+   "arb": "2HC885900C SIY",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.000819,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11703E",
+     "desc": "GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.00024,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "VWA",
+   "inst": "Proyecto",
+   "pe_desc": "APC Trasero Central L3"
+  },
+  {
+   "art": "2HC885901C DZS",
+   "linea": "APC PAT",
+   "desc": "APC Trasero Lateral L3",
+   "proc": "Costura",
+   "W40": 0,
+   "W41": 0,
+   "arb": "2HC885901C DZS",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.0009243,
+     "mod": "COS"
+    },
+    {
+     "cod": "FX483TK-11703E",
+     "desc": "GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3",
+     "un": "KG",
+     "cons": 0.000351,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "VWA",
+   "inst": "Proyecto",
+   "pe_desc": "APC Trasero Lateral L3"
+  },
+  {
+   "art": "2HC885081 RL1",
+   "linea": "APBtc PAT",
+   "desc": "Apoyabrazos Trasero Central",
+   "proc": "Costura",
+   "W40": 0,
+   "W41": 0,
+   "arb": "2HC885081 RL1",
+   "hilos": [
+    {
+     "cod": "FX284-E0PTO",
+     "desc": "Hilo union Negro Titan Pantone 19-4205 T",
+     "un": "KG",
+     "cons": 0.00182,
+     "mod": "COS"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "VWA",
+   "inst": "Proyecto",
+   "pe_desc": "Apoyabrazos Trasero Central"
+  },
+  {
+   "art": "21-9463",
+   "linea": "581D",
+   "desc": "",
+   "proc": "Costura",
+   "W40": 550,
+   "W41": 350,
+   "arb": "21-9463",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.0022,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.00386,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Proyecto",
+   "pe_desc": "-"
+  },
+  {
+   "art": "21-9465",
+   "linea": "581D",
+   "desc": "",
+   "proc": "Costura",
+   "W40": 400,
+   "W41": 400,
+   "arb": "21-9465",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00222,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.00386,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "-"
+  },
+  {
+   "art": "21-9464",
+   "linea": "581D",
+   "desc": "",
+   "proc": "Costura",
+   "W40": 550,
+   "W41": 350,
+   "arb": "21-9464",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.0022,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.00386,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "-"
+  },
+  {
+   "art": "21-9466",
+   "linea": "581D",
+   "desc": "",
+   "proc": "Costura",
+   "W40": 150,
+   "W41": 150,
+   "arb": "21-9466",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00222,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.00386,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "-"
+  },
+  {
+   "art": "21-9467",
+   "linea": "581D",
+   "desc": "",
+   "proc": "Costura",
+   "W40": 0,
+   "W41": 0,
+   "arb": "21-9467",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00222,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.00386,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "-"
+  },
+  {
+   "art": "21-9468",
+   "linea": "581D",
+   "desc": "",
+   "proc": "Costura",
+   "W40": 250,
+   "W41": 250,
+   "arb": "21-9468",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00222,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.00386,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "-"
+  },
+  {
+   "art": "21-9469",
+   "linea": "581D",
+   "desc": "",
+   "proc": "Costura",
+   "W40": 400,
+   "W41": 400,
+   "arb": "21-9469",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00624,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.1083,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "-"
+  },
+  {
+   "art": "21-9470",
+   "linea": "581D",
+   "desc": "",
+   "proc": "Costura",
+   "W40": 400,
+   "W41": 400,
+   "arb": "21-9470",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00624,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.1083,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "-"
+  },
+  {
+   "art": "21-9471",
+   "linea": "581D",
+   "desc": "",
+   "proc": "Costura",
+   "W40": 350,
+   "W41": 350,
+   "arb": "21-9471",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00624,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.1083,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "-"
+  },
+  {
+   "art": "21-9472",
+   "linea": "581D",
+   "desc": "",
+   "proc": "Costura",
+   "W40": 350,
+   "W41": 350,
+   "arb": "21-9472",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00624,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.1083,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "-"
+  },
+  {
+   "art": "21-9474",
+   "linea": "581D",
+   "desc": "",
+   "proc": "Costura",
+   "W40": 50,
+   "W41": 50,
+   "arb": "21-9474",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00834,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.01448,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "-"
+  },
+  {
+   "art": "21-9475",
+   "linea": "581D",
+   "desc": "",
+   "proc": "Costura",
+   "W40": 50,
+   "W41": 50,
+   "arb": "21-9475",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00834,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.01448,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "-"
+  },
+  {
+   "art": "21-9902",
+   "linea": "MHV",
+   "desc": "",
+   "proc": "Costura",
+   "W40": 0,
+   "W41": 0,
+   "arb": "21-9902",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.0022,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.00386,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "-"
+  },
+  {
+   "art": "21-9689",
+   "linea": "MHV",
+   "desc": "",
+   "proc": "Costura",
+   "W40": 0,
+   "W41": 0,
+   "arb": "21-9689",
+   "hilos": [
+    {
+     "cod": "HILO CAIMAN 120",
+     "desc": "HILO CAIMAN POLIESTER 120 BLANCO",
+     "un": "KG",
+     "cons": 0.00834,
+     "mod": "COSB"
+    },
+    {
+     "cod": "HILO POLI TEXT",
+     "desc": "HILO POLIESTER TEXTURIZADO BLANCO",
+     "un": "KG",
+     "cons": 0.01448,
+     "mod": "COSB"
+    }
+   ],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "-"
+  },
+  {
+   "art": "21-8944",
+   "linea": "MHV",
+   "desc": "",
+   "proc": "Costura",
+   "W40": 0,
+   "W41": 0,
+   "arb": "21-8944",
+   "hilos": [],
+   "pe_firme": 0,
+   "pe_fc6": 0,
+   "cliente": "PWA",
+   "inst": "Serie",
+   "pe_desc": "-"
+  }
+ ]
+}
