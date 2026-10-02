@@ -92,9 +92,10 @@
       "dice": "Se le puede enseñar una tarea nueva y Claude guía a la persona para dejarla como habilidad",
       "pedido": "02/10: «claude puede aprender nuevas habilidades que le enseñen y claude debe guiarlos y ayudarlos a crear la skill» · alcance original, punto 6",
       "en_el_video": true,
-      "estado": "no existe",
-      "prueba": null,
-      "que_falta": "El asistente de área trae 3 habilidades fijas y no tiene el camino para crear una. Construirlo (la habilidad queda en la PC de la persona y se le ofrece a Ingeniería por el buzón para publicarla a todos), y probarlo: enseñarle una tarea, abrir una conversación nueva y pedirle esa tarea."
+      "estado": "probado",
+      "prueba": ".sgc-cache/claude-por-area/examen/ensayo_2_respuestas.md",
+      "como_se_probo": "02/10, 12:55, Facundo escribiendo en una conversación abierta directo en la carpeta instalada (tanda 3 del ensayo 2): «Aprendé cómo armo el parte de fin de turno…» → mostró el resumen de la habilidad en 5 renglones, avisó que reemplazaba al formato anterior, preguntó «¿La guardo así?» y con el sí la guardó en la carpeta de la persona (solo nombre y descripción en el encabezado). En OTRA conversación nueva, «Armame el parte de fin de turno: hoy, turno mañana, 412 buenas, 9 de scrap, una parada de 20 minutos por falta de hilo» → la usó y salió en los cinco renglones y en ese orden. Pedido por otra sesión, antes, se había negado a guardarla.",
+      "probado_sobre": "a95c7109fcd9"
     },
     {
       "id": "recuerda",
