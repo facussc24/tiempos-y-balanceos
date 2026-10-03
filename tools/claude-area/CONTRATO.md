@@ -170,6 +170,16 @@ El manifiesto declara `"proyecto": "area"` (firmado): una PC valida las rutas co
 del proyecto puede declarar `sin_filtro_identidad` (hoy la lista de personas): esos archivos pasan el filtro de claves
 y rutas pero no el del nombre de usuario de quien publica, porque nombran a todos.
 
+**El Node del plugin (03/10/2026).** `marketplace/plugins/barack-area/bin/node.exe` viaja firmado como cualquier otro
+archivo: lo copia `armar_publicable.mjs` al armar (el mismo `node.exe` que lo corre, u otro con `--node`) y la lista lo
+declara en `ejecutables` por su ruta exacta. Un archivo de `ejecutables` no pasa el filtro de texto ni el tope de 15 MB
+(tope propio: 120 MB) y no cuenta en el tope total; a cambio tiene que estar y empezar como un programa de Windows
+("MZ"), y cualquier otro `.exe`, `.dll`, `.com`, `.scr` o `.msi` que no esté declarado frena la publicación. Lo usan:
+los controles del plugin (`hooks/hooks.json` lo llama por `${CLAUDE_PLUGIN_ROOT}/bin/node.exe`, sin consola), la
+primera instalación (`1- PUBLICADO\CLAUDE.md` corre el instalador con el de `contenido\`) y la tarea de la PC
+(`sync_area.ps1`, con una copia en el estado de la PC). Motivo: un control que no puede arrancar no frena nada, y las
+PC de planta no tienen Node.
+
 ## Instalar una PC nueva (`--instalar`, proyecto `area`) — 01/10/2026
 
 `node <1- PUBLICADO>\contenido\programas\_paquete.mjs --instalar --proyecto area --nube <1- PUBLICADO>` (es lo que

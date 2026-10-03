@@ -20,6 +20,9 @@
 
   "sin_filtro_identidad": ["conocimiento/comun/personas.json", "conocimiento/personas.json"],
 
+  "_ejecutables": "Programas de Windows que viajan firmados, por su ruta exacta. Hoy uno solo: el Node del plugin (lo copia armar_publicable.mjs al armar). Los controles del plugin lo llaman por esa ruta para no depender de que la PC tenga Node ni Git instalados; si un control no arranca, el programa sigue sin frenar nada. No pasan el filtro de texto ni el tope de 15 MB; tienen que ser un .exe de verdad y estar: si falta, no se publica.",
+  "ejecutables": ["marketplace/plugins/barack-area/bin/node.exe"],
+
   "no_van": [],
 
   "excluir_nombres": ["tests", "node_modules", ".git", "__pycache__", "tmp", "Thumbs.db", "desktop.ini", ".DS_Store"],

@@ -29,17 +29,18 @@ instalada igual (sin área asignada) y el administrador recibe el aviso solo.
 
 ## Paso 2 - Correr el instalador
 
-Primero fijate si la PC tiene Node (corré `node --version`). Si no lo tiene, usá el que viaja en esta carpeta:
-`.\herramientas\node\node.exe` (si tampoco está, es que OneDrive todavía no lo bajó: andá al final de este paso).
+El instalador corre con el Node que viaja en esta carpeta: no hace falta que la PC tenga Node ni ningún otro
+programa instalado, y no instales ninguno. Si ese archivo no está, es que OneDrive todavía no lo bajó (pesa unos
+85 MB): andá a la tabla de abajo.
 
 Desde esta misma carpeta (la que tenés abierta), corré exactamente esto, sin agregarle ni sacarle opciones (el
 programa encuentra solo la nube, la carpeta de la PC y la configuración; una opción que no existe lo frena):
 
 ```
-node ./contenido/programas/_paquete.mjs --instalar --proyecto area
+& ".\contenido\marketplace\plugins\barack-area\bin\node.exe" ".\contenido\programas\_paquete.mjs" --instalar --proyecto area
 ```
 
-(con el Node de la carpeta: `./herramientas/node/node.exe ./contenido/programas/_paquete.mjs --instalar --proyecto area`)
+(si la consola que tenés es Bash: `./contenido/marketplace/plugins/barack-area/bin/node.exe ./contenido/programas/_paquete.mjs --instalar --proyecto area`)
 
 Si querés ver primero qué va a escribir, agregá `--simular`: muestra cada ruta y no escribe nada.
 
@@ -51,7 +52,7 @@ Esperá a que termine (menos de dos minutos). **No lo corras dos veces a la vez.
 | Dice que OneDrive todavía está bajando (código 3), o que no encuentra la carpeta publicada de la nube | *"La copia de la nube todavía está bajando a esta PC. Probá de nuevo en un rato."* No insistas ni intentes bajarla vos. Si sigue igual al otro día: avisarle al administrador (la nube no está sincronizada en esta PC). |
 | Dice que esta parece la PC del administrador | Es la PC de Ingeniería: no se instala así. Decile que lo hable con el administrador. No pases `--forzar`. |
 | Dice que le falta la clave, que la copia no pasa la verificación o que la versión es más vieja (código 4) | *"Esta PC no puede comprobar que la copia de la nube sea la oficial de Barack. Avisale al administrador del sistema (Ingeniería): lo arregla él."* No toques nada ni busques otra forma de instalar. |
-| Dice que no encuentra Node | *"A esta PC le falta un programa que viene en la nube y todavía no bajó. Probá en un rato; si sigue igual, avisale al administrador."* |
+| No encuentra el `node.exe` de la carpeta (el comando falla porque ese archivo no existe) | *"A esta PC le falta un programa que viene en la nube y todavía no bajó. Probá en un rato; si sigue igual, avisale al administrador."* No uses otro Node ni instales uno. |
 | Falló por otra cosa (código 1) | Mostrale las últimas líneas tal cual salieron y decile que se las mande al administrador del sistema (Ingeniería). No intentes arreglarlo tocando archivos de esta carpeta. |
 
 ## Paso 3 - Cierre

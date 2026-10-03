@@ -26,6 +26,12 @@ const REPO_PLUGIN_REAL = 'C:\\Dev\\barack-claude';
 const ES_WINDOWS = process.platform === 'win32';
 const F = (dia = 1, hora = 10) => new Date(2026, 9, dia, hora, 0, 0);
 
+// El Node del plugin viaja en cada publicacion (el de verdad pesa unos 85 MB): las pruebas usan uno de mentira, chico,
+// que empieza como un programa de Windows ("MZ"). Lo toma armar_publicable.mjs de esta variable.
+const NODE_DE_MENTIRA = path.join(os.tmpdir(), 'claude-area-node-de-prueba.exe');
+if (!fs.existsSync(NODE_DE_MENTIRA)) fs.writeFileSync(NODE_DE_MENTIRA, Buffer.concat([Buffer.from('MZ'), Buffer.alloc(4096, 1)]));
+process.env.CLAUDE_AREA_NODE_EXE = NODE_DE_MENTIRA;
+
 let tmp;
 beforeEach(() => { tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-area-')); });
 afterEach(() => { fs.rmSync(tmp, { recursive: true, force: true }); });
@@ -716,12 +722,16 @@ describe('lo que no puede pasar: --help, opciones desconocidas, mezcla de prueba
         };
         const reales = ['C:\\ClaudeBarack', path.join(process.env.LOCALAPPDATA || '', 'BarackEquipo'), path.join(process.env.USERPROFILE || '', '.claude', 'settings.json')];
         const antes = reales.map(fotoReal);
+        // el marcador puede estar: desde el 02/10/2026 la carpeta de demostracion la deja el instalador (la arma
+        // armar_demo_instalada.sh). Lo que se prueba es que ESTA corrida no lo crea ni lo toca.
+        const marcador = 'C:\\ClaudeBarack\\instalado.json';
+        const marcadorAntes = fs.existsSync(marcador) ? fs.readFileSync(marcador, 'utf8') : null;
         const r = correr(['--instalar', '--proyecto', 'area'], sinVars());
         expect(r.status).toBe(1);
         expect(r.stderr).toContain('PC del administrador');
         expect(r.stderr).toContain('--forzar');
         expect(reales.map(fotoReal)).toEqual(antes);
-        expect(fs.existsSync('C:\\ClaudeBarack\\instalado.json')).toBe(false);
+        expect(fs.existsSync(marcador) ? fs.readFileSync(marcador, 'utf8') : null).toBe(marcadorAntes);
     });
 
     it('--instalar --simular lista cada ruta que escribiria (settings.json con las dos claves y su respaldo incluidos) y no escribe ninguna', () => {
@@ -921,5 +931,85 @@ describe.skipIf(!ES_WINDOWS)('sync_area.ps1: la tarea de la PC (sin registrar ni
         expect(st.actualizar.resultado, JSON.stringify(st)).toBe('rechazado');
         expect(st.errores.join(' ')).toContain('no acepta lo publicado');
         expect(json(nubeRaiz, '4- BUZON/salud/PC-COMPRAS-01.json')).toMatchObject({ estado: 'firma_rechazada', firma_ok: false });
+    });
+});
+
+// ---------------------------------------------------------------------------------------------
+// El Node del plugin (03/10/2026). Los controles del plugin lo llaman por su ruta (hooks.json): un control que no
+// puede arrancar NO frena nada, y con `node` a secas una PC sin Node quedaba sin controles y sin aviso.
+// ---------------------------------------------------------------------------------------------
+describe('el Node del plugin viaja firmado, por su ruta exacta', () => {
+    const publicarStaging = (staging, nombreNube) => {
+        const rutaClave = path.join(dir(`claves-${nombreNube}`), P.NOMBRE_CLAVE_PRIVADA);
+        expect(P.generarClave({ rutaClave }).estado).toBe('creada');
+        return A.publicarPublicable({ salida: staging, nube: path.join(dir(nombreNube), '1- PUBLICADO'), clavePrivada: rutaClave, identidad: { usuario: '', pc: '' }, ahora: F(1) });
+    };
+    const armar = (nombre, extra = {}) => {
+        const r = A.armarPublicable({ pluginRepo: armarRepoPlugin(), conocimiento: armarConocimiento(extra), programasDe: RAIZ, salida: path.join(tmp, nombre), ahora: F(1) });
+        expect(r.errores).toEqual([]);
+        return r;
+    };
+
+    it('armar lo deja en bin/ del plugin, se publica en el manifiesto firmado y llega a la PC con la misma huella', () => {
+        const { pub, arm } = nubeArmada();
+        expect(arm.node.bytes).toBe(fs.statSync(NODE_DE_MENTIRA).size);
+        expect(A.REL_NODE).toBe('marketplace/plugins/barack-area/bin/node.exe');
+        expect(P.cargarLista(A.RUTA_LISTA).ejecutables).toEqual([A.REL_NODE]);
+        expect(json(pub, 'MANIFIESTO.json').archivos[A.REL_NODE].sha256).toBe(P.sha256Archivo(NODE_DE_MENTIRA));
+        const pc = pcNueva('pc-marta');
+        expect(instalar(pub, pc, ID.marta).estado).toBe('instalado');
+        expect(P.sha256Archivo(path.join(pc.home, 'publicado', ...A.REL_NODE.split('/')))).toBe(P.sha256Archivo(NODE_DE_MENTIRA));
+    });
+
+    it('sin Node no se arma (los controles quedarian apagados)', () => {
+        const r = A.armarPublicable({ pluginRepo: armarRepoPlugin(), conocimiento: armarConocimiento(), programasDe: RAIZ, salida: path.join(tmp, 'sin-node'), nodeExe: path.join(tmp, 'no-hay.exe') });
+        expect(r.estado).toBe('error');
+        expect(r.errores.join(' ')).toContain('no encuentro el Node');
+    });
+
+    it('si falta, o no es un programa de Windows, no se publica', () => {
+        const a = armar('st-falta');
+        fs.rmSync(path.join(a.salida, ...A.REL_NODE.split('/')));
+        const falta = publicarStaging(a.salida, 'nube-falta');
+        expect(falta.estado).toBe('rechazado');
+        expect(falta.errores.join(' ')).toContain('"ejecutables" y no está en lo que se publica');
+
+        const b = armar('st-texto');
+        fs.writeFileSync(path.join(b.salida, ...A.REL_NODE.split('/')), 'esto no es un programa\n'.repeat(200));
+        const texto = publicarStaging(b.salida, 'nube-texto');
+        expect(texto.estado).toBe('rechazado');
+        expect(texto.errores.join(' ')).toContain('no es un programa de Windows');
+    });
+
+    it('un programa que la lista no declara no viaja, y el filtro de texto se salta SOLO el declarado', () => {
+        // lo mismo que trae un binario de verdad: cadenas que parecen una clave privada y la carpeta de alguien
+        const conCadenas = Buffer.concat([Buffer.from('MZ'), Buffer.from('-----BEGIN RSA PRIVATE KEY-----\nC:\\Users\\juan\\AppData\n'), Buffer.alloc(4096, 0)]);
+
+        const a = armar('st-declarado');
+        fs.writeFileSync(path.join(a.salida, ...A.REL_NODE.split('/')), conCadenas);
+        expect(publicarStaging(a.salida, 'nube-declarado').estado).toBe('publicado');
+
+        const b = armar('st-otro-exe');
+        fs.writeFileSync(path.join(b.salida, 'programas', 'otro.exe'), conCadenas);
+        const otro = publicarStaging(b.salida, 'nube-otro-exe');
+        expect(otro.estado).toBe('rechazado');
+        expect(otro.errores.join(' ')).toContain('programas/otro.exe: es un programa y no está en "ejecutables"');
+
+        const c = armar('st-dato');
+        fs.writeFileSync(path.join(c.salida, 'conocimiento', 'comun', 'dato.bin'), conCadenas);
+        const dato = publicarStaging(c.salida, 'nube-dato');
+        expect(dato.estado).toBe('rechazado');
+        expect(dato.errores.join(' ')).toContain('conocimiento/comun/dato.bin: es una clave privada');
+    });
+
+    it('la lista: "ejecutables" va con la ruta exacta de un .exe que esta adentro de lo incluido', () => {
+        const base = { incluir: [{ ruta: 'marketplace' }, { ruta: 'programas' }] };
+        const errores = (ejecutables) => P.revisarLista({ ...base, ejecutables }, 'area').filter((e) => e.includes('ejecutables'));
+        expect(errores(['marketplace/plugins/barack-area/bin/node.exe'])).toEqual([]);
+        expect(errores('marketplace/x.exe')).toHaveLength(1);
+        expect(errores(['marketplace/*.exe'])).toHaveLength(1);
+        expect(errores(['marketplace/../programas/x.exe'])).toHaveLength(1);
+        expect(errores(['marketplace/plugins/x.dll'])).toHaveLength(1);
+        expect(errores(['otra/carpeta/x.exe'])).toHaveLength(1);
     });
 });

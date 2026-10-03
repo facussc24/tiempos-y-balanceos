@@ -113,6 +113,8 @@ export const CARPETA_OBJETOS = '_objetos';
 export const LIMITE_RUTA = 239;
 export const LIMITE_MB_TOTAL = 100;
 export const LIMITE_MB_ARCHIVO = 15;
+/** Tope de un programa declarado en `ejecutables` de la lista (el Node del plugin pesa unos 85 MB). */
+export const LIMITE_MB_EJECUTABLE = 120;
 export const MAX_ARCHIVOS_APORTE = 500;
 export const LOCK_VENCE_MIN = 60;
 
@@ -365,6 +367,16 @@ export function revisarLista(lista, proyecto = PROYECTO_POR_DEFECTO) {
     }
     for (const e of lista.prohibido_contenido || []) {
         try { patronesDeLista({ prohibido_contenido: [e] }); } catch (err) { errores.push(`patron prohibido invalido ${JSON.stringify(e)}: ${err.message}`); }
+    }
+    // `ejecutables`: programas de Windows que viajan firmados (el Node que usan los controles del plugin). Van por su
+    // ruta EXACTA, una por una: no pasan el filtro de texto (un binario trae cadenas que parecen claves) ni el tope por
+    // archivo, y a cambio se exige que sean un .exe de verdad (ver publicar()).
+    if (lista.ejecutables !== undefined) {
+        if (!Array.isArray(lista.ejecutables) || lista.ejecutables.some((x) => typeof x !== 'string')) errores.push('"ejecutables" tiene que ser una lista de rutas');
+        else for (const r of lista.ejecutables) {
+            if (!/^[A-Za-z0-9_][A-Za-z0-9_./-]*[.]exe$/.test(r) || r.includes('..') || r.includes('//')) errores.push(`"ejecutables": "${r}" tiene que ser la ruta exacta de un .exe (sin comodines ni "..")`);
+            else if (!(lista.incluir || []).some((e) => e && typeof e.ruta === 'string' && empiezaCon(r, e.ruta.replace(/\/+$/, '')))) errores.push(`"ejecutables": "${r}" no está adentro de nada de "incluir"`);
+        }
     }
     return errores;
 }
@@ -935,24 +947,33 @@ export function publicar({ origen, nube, lista, notas = [], simular = false, for
     // --- revision de cada archivo (todo se junta: Fak ve todos los problemas de una vez)
     let total = 0;
     const hashes = new Map();
+    // Los `ejecutables` de la lista (ruta exacta): no cuentan para los topes de texto ni pasan el filtro de texto; se
+    // exige que esten y que sean un programa de Windows (empiezan con "MZ"). Si la lista declara uno y no viaja, no se
+    // publica: los controles del plugin lo llaman por su ruta y sin el quedarian apagados.
+    const ejecutables = new Set(lista && Array.isArray(lista.ejecutables) ? lista.ejecutables : []);
+    for (const r of ejecutables) if (!archivos.has(r)) res.errores.push(`${r}: la lista lo declara en "ejecutables" y no está en lo que se publica`);
     for (const [rel, abs] of archivos) {
         const motivo = motivoRutaNoPermitida(rel, proyecto);
         if (motivo) res.errores.push(`${rel}: ${motivo}`);
         const largo = path.join(nube, 'contenido', ...rel.split('/')).length;
         if (largo > LIMITE_RUTA) res.errores.push(`${rel}: en la nube la ruta mide ${largo} caracteres (tope ${LIMITE_RUTA}): Windows no la abriria. Acortar el nombre`);
         const st = fs.statSync(abs);
-        total += st.size;
-        if (st.size > LIMITE_MB_ARCHIVO * 1024 * 1024) res.errores.push(`${rel}: pesa ${(st.size / 1048576).toFixed(1)} MB (tope ${LIMITE_MB_ARCHIVO} MB)`);
+        const esEjecutable = ejecutables.has(rel);
+        if (!esEjecutable) total += st.size;
+        const tope = esEjecutable ? LIMITE_MB_EJECUTABLE : LIMITE_MB_ARCHIVO;
+        if (st.size > tope * 1024 * 1024) res.errores.push(`${rel}: pesa ${(st.size / 1048576).toFixed(1)} MB (tope ${tope} MB)`);
         const buf = fs.readFileSync(abs);
         hashes.set(rel, { sha256: sha256(buf), bytes: buf.length });
+        if (esEjecutable) { if (!(buf.length > 1024 && buf[0] === 0x4d && buf[1] === 0x5a)) res.errores.push(`${rel}: está en "ejecutables" y no es un programa de Windows`); continue; }
+        if (/[.](?:exe|dll|com|scr|msi)$/i.test(rel)) res.errores.push(`${rel}: es un programa y no está en "ejecutables" de la lista: no viaja`);
         if (frontmatterConHooks(rel, buf.toString('utf8'), proyecto)) res.errores.push(`${rel}: el encabezado declara "hooks:" (ejecutaria codigo solo en la PC del compañero)`);
     }
     if (total > LIMITE_MB_TOTAL * 1024 * 1024) res.errores.push(`la lista pesa ${(total / 1048576).toFixed(1)} MB (tope ${LIMITE_MB_TOTAL} MB)`);
     // `sin_filtro_identidad` (la lista de personas, que nombra a todos, incluido quien publica) pasa el filtro de claves y
     // rutas pero no el del nombre de usuario / PC de quien publica; todo lo demas pasa el filtro entero.
     const sinIdentidad = new Set(lista && Array.isArray(lista.sin_filtro_identidad) ? lista.sin_filtro_identidad : []);
-    const filtroEntero = new Map([...archivos].filter(([rel]) => !sinIdentidad.has(rel)));
-    const soloGenerico = new Map([...archivos].filter(([rel]) => sinIdentidad.has(rel)));
+    const filtroEntero = new Map([...archivos].filter(([rel]) => !sinIdentidad.has(rel) && !ejecutables.has(rel)));
+    const soloGenerico = new Map([...archivos].filter(([rel]) => sinIdentidad.has(rel) && !ejecutables.has(rel)));
     for (const h of revisarContenido(filtroEntero, patronesFiltro({ lista, identidad }))) {
         res.errores.push(`${h.ruta}${h.linea ? `:${h.linea}` : ''}: ${h.motivo}`);
     }

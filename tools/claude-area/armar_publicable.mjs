@@ -39,6 +39,15 @@ export const PROGRAMAS = [
     ['tools/claude-area/inventario.ps1', 'programas/inventario.ps1'],
 ];
 
+/** Donde viaja el Node del plugin (relativo al staging). Es la ruta que `hooks/hooks.json` del plugin llama y la que
+ *  la lista declara en `ejecutables`. */
+export const REL_NODE = `marketplace/plugins/${P.NOMBRE_PLUGIN}/bin/node.exe`;
+/** El node.exe que se publica: `CLAUDE_AREA_NODE_EXE` (las pruebas ponen uno chico) o el mismo que corre este programa. */
+export function nodePorDefecto(env = process.env) {
+    if (env.CLAUDE_AREA_NODE_EXE) return env.CLAUDE_AREA_NODE_EXE;
+    return process.platform === 'win32' && /node\.exe$/i.test(process.execPath) ? process.execPath : null;
+}
+
 const sello = (d) => P.selloCarpeta(d);
 const excluido = (nombre) => NO_COPIAR.has(nombre) || SUFIJOS_NO.some((s) => nombre.toLowerCase().endsWith(s));
 
@@ -59,8 +68,8 @@ function copiarArbol(origen, destino, copiados = []) {
  * Arma el staging. Devuelve { estado: 'armado'|'error', salida, errores, avisos, copiados, plugin, areas }.
  * No publica nada.
  */
-export function armarPublicable({ pluginRepo, conocimiento = null, programasDe = RAIZ_REPO, salida = null, ahora = new Date() }) {
-    const res = { estado: 'error', errores: [], avisos: [], salida, copiados: { marketplace: 0, casa: 0, conocimiento: 0, programas: 0 }, areas: {}, plugin: null };
+export function armarPublicable({ pluginRepo, conocimiento = null, programasDe = RAIZ_REPO, salida = null, ahora = new Date(), nodeExe = nodePorDefecto() }) {
+    const res = { estado: 'error', errores: [], avisos: [], salida, copiados: { marketplace: 0, casa: 0, conocimiento: 0, programas: 0 }, areas: {}, plugin: null, node: null };
     if (!pluginRepo) { res.errores.push('falta --plugin-repo (la carpeta del repo del plugin, p. ej. C:\\Dev\\barack-claude)'); return res; }
     const repo = path.resolve(pluginRepo);
     const marketplaceJson = path.join(repo, '.claude-plugin', 'marketplace.json');
@@ -94,6 +103,17 @@ export function armarPublicable({ pluginRepo, conocimiento = null, programasDe =
     P.escribirAtomico(path.join(out, 'marketplace', '.claude-plugin', 'marketplace.json'), `${JSON.stringify(nuevoMarket, null, 2)}\n`);
     res.copiados.marketplace = 1 + copiarArbol(carpetaPlugin, path.join(out, 'marketplace', 'plugins', NOMBRE_PLUGIN)).length;
     res.plugin = { nombre: plug.name, version: plug.version || null };
+
+    // 1 bis) el Node del plugin. Los controles (hooks.json) lo llaman por SU ruta: asi corren en una PC que no tiene
+    // Node ni Git. Si un control no puede arrancar, el programa sigue SIN frenar nada: sin este archivo no se arma.
+    const destinoNode = path.join(out, ...REL_NODE.split('/'));
+    if (!nodeExe || !fs.existsSync(nodeExe)) res.errores.push(`no encuentro el Node para el plugin (${nodeExe || 'esta PC no corre node.exe'}): pasá --node <ruta a node.exe>. Sin él los controles no corren en una PC sin Node`);
+    else {
+        fs.mkdirSync(path.dirname(destinoNode), { recursive: true });
+        fs.copyFileSync(nodeExe, destinoNode);
+        res.copiados.marketplace++;
+        res.node = { de: nodeExe, bytes: fs.statSync(destinoNode).size };
+    }
 
     // 2) casa: las reglas de la casa del plugin
     const casa = path.join(carpetaPlugin, 'casa');
@@ -148,7 +168,7 @@ export function publicarPublicable({ salida, nube, clavePrivada, notas = [], sim
 }
 
 /** Las opciones que existen; cualquier otra es un error y no se hace nada. */
-export const OPCIONES_CON_VALOR = ['plugin-repo', 'conocimiento', 'programas-de', 'salida', 'nube', 'clave', 'nota'];
+export const OPCIONES_CON_VALOR = ['plugin-repo', 'conocimiento', 'programas-de', 'salida', 'nube', 'clave', 'nota', 'node'];
 export const OPCIONES_BANDERA = ['publicar', 'simular', 'forzar', 'nube-real'];
 
 export function parsear(argv) {
@@ -172,7 +192,7 @@ export function parsear(argv) {
 }
 
 function uso() {
-    console.log('Uso: node tools/claude-area/armar_publicable.mjs --plugin-repo <repo del plugin> [--conocimiento <carpeta>] [--salida <carpeta vacia>]');
+    console.log('Uso: node tools/claude-area/armar_publicable.mjs --plugin-repo <repo del plugin> [--conocimiento <carpeta>] [--salida <carpeta vacia>] [--node <node.exe>]');
     console.log('     [--publicar] [--nube <1- PUBLICADO>] [--clave <publicador.key>] [--nota "..."] [--simular] [--forzar]');
     console.log('     Para publicar hay que decir a que nube: --nube, la variable CLAUDE_AREA_NUBE, o --nube-real (la de la biblioteca, buscada por nombre).');
     console.log('     --help muestra esto y no hace nada.');
@@ -187,7 +207,7 @@ function main() {
         console.error('✗ Sin --nube ni CLAUDE_AREA_NUBE, --publicar iría a la nube REAL del proyecto. Si es eso lo que querés, pasá --nube-real. No se hizo nada.');
         return 1;
     }
-    const r = armarPublicable({ pluginRepo: a['plugin-repo'], conocimiento: a.conocimiento || null, programasDe: a['programas-de'] ? path.resolve(a['programas-de']) : RAIZ_REPO, salida: a.salida || null });
+    const r = armarPublicable({ pluginRepo: a['plugin-repo'], conocimiento: a.conocimiento || null, programasDe: a['programas-de'] ? path.resolve(a['programas-de']) : RAIZ_REPO, salida: a.salida || null, ...(a.node ? { nodeExe: path.resolve(a.node) } : {}) });
     console.log(`Origen armado en ${r.salida || '(nada)'}`);
     for (const av of r.avisos) console.log(`  Aviso: ${av}`);
     if (r.estado !== 'armado') { console.error(`✗ No se armó (${r.errores.length} problema(s)):`); for (const e of r.errores) console.error(`    - ${e}`); return 1; }

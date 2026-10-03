@@ -224,10 +224,19 @@ try {
   if (-not (Test-Path $script)) { $script = Join-Path $Publicado 'programas\_paquete.mjs' }
   $node = Buscar-Exe 'node'
   $nodePropio = Join-Path $EstadoDir 'node\node.exe'
+  # El Node que viaja con el plugin (03/10/2026). Si la PC no tiene Node, la tarea corre con una COPIA de ese en el
+  # estado de la PC: un programa que esta corriendo no se puede reemplazar, y asi el actualizador puede reponer el del plugin.
+  $nodePlugin = Join-Path $Publicado 'marketplace\plugins\barack-area\bin\node.exe'
+  if (-not $node -and (Test-Path $nodePlugin)) {
+    $hayCopia = Test-Path $nodePropio
+    if (-not $hayCopia -or ((Get-Item -LiteralPath $nodePlugin).Length -ne (Get-Item -LiteralPath $nodePropio).Length)) {
+      try { New-Item -ItemType Directory -Force -Path (Split-Path -Parent $nodePropio) | Out-Null; Copy-Item -LiteralPath $nodePlugin -Destination $nodePropio -Force } catch { Log "no pude copiar el Node del plugin al estado de la PC: $($_.Exception.Message)" }
+    }
+  }
   if (-not $node -and (Test-Path $nodePropio)) { $node = $nodePropio }
   $Pub = Resolver-Publicado $node $(if (Test-Path $script) { $script } else { $null })
   if (-not $node -and $Pub) {
-    $nodeNube = Join-Path (Split-Path -Parent $Pub) '1- PUBLICADO\herramientas\node\node.exe'
+    $nodeNube = Join-Path (Split-Path -Parent $Pub) '1- PUBLICADO\contenido\marketplace\plugins\barack-area\bin\node.exe'
     if (Test-Path $nodeNube) { $node = $nodeNube }
   }
   $estado.publicado = $Pub
