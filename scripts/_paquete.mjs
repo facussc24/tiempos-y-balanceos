@@ -1579,12 +1579,17 @@ export function chequear({ destino, nube }) {
     if (!version || !Number.isInteger(version.version) || typeof version.manifest_sha256 !== 'string') return fin('nube_incompleta', { publicada: null, instalada });
     if (!instalado) return fin('sin_instalar', { publicada: version.version, instalada: null, fecha_publicada: version.fecha || null });
     const base = { publicada: version.version, instalada, fecha_publicada: version.fecha || null, firmada: !!version.firma };
-    if (instalado.manifest_sha256 !== version.manifest_sha256) return fin('hay_novedades', { ...base, motivo: 'version_nueva' });
+    const distinta = instalado.manifest_sha256 !== version.manifest_sha256;
+    // La nube que ve esta PC puede estar ATRASADA respecto de lo instalado (OneDrive todavia no bajo la ultima, o la PC
+    // se instalo desde un pendrive mas nuevo): ahi no hay nada que aplicar —la version nunca retrocede— y no es una
+    // novedad. Sin esto el aviso de arranque decia "hay una nueva (la 4)" con la 5 instalada (visto el 03/10/2026).
+    const atrasada = distinta && instalada !== null && version.version < instalada;
+    if (distinta && !atrasada) return fin('hay_novedades', { ...base, motivo: 'version_nueva' });
     if (instalado.proyecto === 'area' && instalado.huellas && typeof instalado.huellas === 'object') {
         const cambiados = archivosConOtraHuella(destino, instalado.huellas);
         if (cambiados.length) return fin('hay_novedades', { ...base, motivo: 'instalacion_tocada', cambiados: cambiados.slice(0, 5), total_cambiados: cambiados.length });
     }
-    return fin('al_dia', base);
+    return fin('al_dia', atrasada ? { ...base, motivo: 'nube_atrasada' } : base);
 }
 export const CODIGOS_CHEQUEO = { al_dia: 0, hay_novedades: 2, sin_nube: 3, nube_incompleta: 3, sin_instalar: 5 };
 

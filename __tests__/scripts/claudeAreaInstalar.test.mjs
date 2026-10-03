@@ -408,6 +408,12 @@ describe('simulacro de PC nueva: --instalar', () => {
         const cualquiera = pcNueva('pc-x');
         expect(P.actualizar({ destino: path.join(cualquiera.home, 'publicado'), nube: pub, proyecto: 'area', identidad: ID.pepe }).estado).toBe('sin_clave');
         expect(P.chequear({ destino: path.join(marta.home, 'publicado'), nube: pub })).toMatchObject({ estado: 'al_dia', publicada: 2, instalada: 2, firmada: true });
+        // una nube ATRASADA (todavia muestra la version 1 y la PC ya tiene la 2) no es una novedad: no hay nada que aplicar
+        const otraNube = (n, version) => { const d = dir(n); fs.writeFileSync(path.join(d, 'VERSION.json'), JSON.stringify({ version, manifest_sha256: `otro-${version}`, fecha: '2026-10-01T10:00:00' })); return d; };
+        expect(P.chequear({ destino: path.join(marta.home, 'publicado'), nube: otraNube('nube-atrasada', 1) })).toMatchObject({ estado: 'al_dia', motivo: 'nube_atrasada', publicada: 1, instalada: 2 });
+        // ROJO: una version mas nueva, o el mismo numero con otro contenido, SI es una novedad
+        expect(P.chequear({ destino: path.join(marta.home, 'publicado'), nube: otraNube('nube-adelantada', 3) })).toMatchObject({ estado: 'hay_novedades', motivo: 'version_nueva', publicada: 3 });
+        expect(P.chequear({ destino: path.join(marta.home, 'publicado'), nube: otraNube('nube-mismo-numero', 2) })).toMatchObject({ estado: 'hay_novedades', motivo: 'version_nueva', publicada: 2 });
     });
 
     it('ROJO: nube alterada (una regla cambiada, manifiesto y VERSION rehechos): --instalar no instala, codigo 4, y no queda nada a medias', () => {
