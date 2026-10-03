@@ -121,7 +121,8 @@ necesita prender nada a mano): `CONTRATO.md`, "El modo de permisos".
   llevar (498 archivos, sha256) y subió entera. Facundo comparte SOLO esa carpeta. Con todo «solo en la nube» se instaló
   desde ahí en 65 s. Quedaron dos archivos de una PC inventada en `4- BUZON` (`PRUEBA-NUBE-01`): el guardián no deja
   borrar nada de la biblioteca; los saca Facundo si quiere.
-- **El paquete es la versión 6** (plugin 0.3.0, reglas v5): la PC recuerda de dónde se instaló y se actualiza sola
+- **El paquete llegó a la versión 6 a las 15:40** (plugin 0.3.0, reglas v5; a las 17:00 ya es el 8, con las reglas v6:
+  ver más abajo): la PC recuerda de dónde se instaló y se actualiza sola
   (tarea al iniciar sesión y cada 4 horas), encuentra la nube en las tres formas en que OneDrive la cuelga, avisa si
   falta habilitar «Omitir permisos», no anuncia como novedad una nube atrasada y, al terminar, abre Claude en la carpeta
   (`abrir-claude.txt` en `si`, para probarlo esa noche). Pruebas: 67 del instalador y 273 con las del paquete;
@@ -149,11 +150,31 @@ pisar un archivo que ya tiene, no armar un mail que nadie pidió, avisar cuando 
 las reglas (v6) y un freno nuevo en el plugin. Tabla completa: `examen/mejoras_recientes_2026-10-03.md`. Como cambian
 las reglas, van con su examen: la demostración y el paquete siguen en v5 hasta que la v6 lo rinda.
 
-**Estado de la v6 (03/10, 15:30):** reglas v6 (72 renglones) y freno de Office (plugin 0.4.0) commiteados en la rama
-`v6` del repo privado, copia de trabajo `C:/Dev/barack-claude-v6` (1.516 pruebas, 53 chequeos del validador en verde).
-`main` sigue en la v5 y el plugin 0.3.0, que es lo publicado. Las ocho carpetas de área ya están rearmadas con la v6
-(`PLUGIN_REPO=/c/Dev/barack-claude-v6 bash armar_demo_area.sh <area>`). Falta: los ocho clics de Facundo, tomar el
-examen, los 16 jueces y, si da igual o mejor que el v5, pasar la rama a `main`, publicar y reinstalar la demostración.
+**Las reglas v6 quedaron ADOPTADAS el 03/10 a las 17:00.** Facundo hizo los ocho clics a las 14:56; el examen se tomó
+a las 16:13 (nivel Medio, cada área en su carpeta) y lo corrigieron 16 jueces Opus: **114 bien, 25 a medias, 0 mal**
+(`examen/correccion_v6.md`; el v5 había dado 110 / 28 / 1). La que salía mal (B18, alta de proveedor) quedó a medias;
+las 9 de lista de materiales contestan «en el arb»; privacidad 11 de 11. Era la vara escrita antes de tomarlo (igual o
+mejor que el v5), así que la rama `v6` pasó a `main` del repo privado (`15989de`: reglas v6 + plugin 0.4.1, 1.660
+pruebas, 54 chequeos del validador), se publicó el **paquete 8** (para llevar y nube, idénticos: 513 archivos) y la
+demostración `C:\ClaudeBarack` se reinstaló desde ese paquete. Las hojas 1, 3, 4 y 7 citan 114 / 25 / 0.
+- **Entre medio hubo una auditoría del instalador (Opus) y una revisión independiente de todo (Fable).** Del instalador
+  se corrigió: «Instalar» con otra corrida copiando salía sin motivo, un candado de una corrida cortada trababa una hora,
+  el aviso de «Omitir permisos» afirmaba de más, la ventana no decía que estaba copiando (paquete 7). Del freno de
+  Office (plugin 0.4.1): frenaba «cerrame el excel que no responde» y dejaba pasar «cerrar la NC… » seguido de un
+  `Quit`, no veía `Get-Process POWER* | Stop-Process`, y un control roto apagaba a los demás. De los papeles: la carilla
+  prometía de más o de menos sobre la actualización, «6 segundos», «en el servidor avisa antes», los revisores del
+  examen sin decir que son automáticos, los USD 200 sin decir que son de lista, y el video por sector decía «No elimina
+  nada» (ahora «No borra nada si no se lo pedís», igual que el tutorial). Informes: `examen/revision_final_2026-10-03.md`.
+- **Con las reglas v6 hay que volver a probar en vivo** (puerta C, 4 abiertas): dejar el mail abierto, mandarlo con
+  «mandalo», la presentación, y enseñarle una tarea. Van en el ensayo general (hoja 10, ahora 9 pasos). Ya probadas
+  sobre la v6: pregunta con fuente, BOM en el arb y lo que no hace solo (por el examen), recordar una tarea enseñada
+  (`examen/recuerda_v6.md`) y un ejemplo por sector (`examen/sectores_respuestas_v6.md`: ninguna cita inventada ni dato
+  cambiado; la de Mantenimiento agregó «sin instrumentos», que el instructivo no dice).
+- **Enseñarle una tarea desde otra conversación de Claude no anda, y está bien:** contestó que una habilidad nueva la
+  guarda solo si la pide la persona en su conversación.
+- **Próxima mejora de las reglas (después de la reunión, con su examen):** que no agregue aclaraciones, ejemplos ni
+  criterios propios pegados a lo que dice el documento. Es el motivo que más se repite en las 25 «a medias» (C15 un
+  ejemplo con números, I02 «lo que cuenta es el punto 8», E02 «fijate la letra al pie», Mantenimiento «sin instrumentos»).
 
 **Lo que encontró la segunda opinión (Fable, 03/10) y sigue abierto:** el código de ingreso de la cuenta le llega a
 otra persona; el importe real de la cuenta (está contratada por Apple); Outlook, PowerPoint e internet en la PC de
