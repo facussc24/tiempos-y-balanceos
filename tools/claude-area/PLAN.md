@@ -53,7 +53,7 @@ El Fable independiente revisó todo a las 22:00 del 02/10. Lo que encontró y c�
 | En la carpeta de entregables convivían tres videos y el guion no decía cuál | Los dos viejos pasaron a `versiones anteriores (no mostrar)\`; el guion nombra «Video por sector - Claude en Barack» | hecho |
 | "Dos PC de Calidad probaron la versión anterior" y "una PC de prueba recibió la versión en 5 segundos" decían más de lo probado | Una PC de Calidad (07/09); "en una instalación de prueba" | hecho |
 | Si la PC no tiene Node, los controles se apagan sin aviso | Confirmado con la documentación oficial (un control que no arranca no frena). Además `hola/CLAUDE.md` y `sync_area.ps1` nombraban un Node en `herramientas\node\` que nada publicaba. Ahora el Node viaja firmado adentro del plugin (`bin/node.exe`, lista `ejecutables`) y `hooks.json` lo llama por su ruta, sin consola | hecho por consola; falta verlo en una conversación y en una PC de planta |
-| "No elimina nada" lo sostenía solo una regla escrita (en el disco de la PC) | `pc-guard`: borrar, mover o renombrar en la PC se frena si la persona no lo pidió en su mensaje. 99 pruebas | hecho; falta verlo en una conversación |
+| "No elimina nada" (frase que el video ya no usa: ahora dice «No borra nada si no se lo pedís») lo sostenía solo una regla escrita (en el disco de la PC) | `pc-guard`: borrar, mover o renombrar en la PC se frena si la persona no lo pidió en su mensaje. 99 pruebas | hecho; falta verlo en una conversación |
 | No había techo de ayudantes en el plugin (pedido del 01/10) | `agentes-guard`: 10 en 10 minutos por PC. 16 pruebas | hecho |
 | 8 de las 31 "a medias" mandaban a preguntarle a un "Gerente de…" que ningún documento nombra | Reglas de la casa **v5** (dos cambios en la sección 2). Prueba A/B con 4 ayudantes (2 tomas por versión, 18 preguntas): con la v5 desaparece el cargo supuesto en D02, D15, E11, E08, D11 y D01 y se mantienen los que nombra un documento | hecho; falta el examen de verdad |
 | La demostración está instalada como PC de Producción y el guion prevé una pregunta de Dirección | Decisión de Facundo: con qué área se muestra | pendiente de Facundo |
@@ -62,7 +62,7 @@ El Fable independiente revisó todo a las 22:00 del 02/10. Lo que encontró y c�
 | Nadie de afuera validó una respuesta | Hoja con las 8 respuestas por sector para que la lea alguien de Calidad | pendiente de Facundo |
 | IMDS, el cupo semanal, quién inicia sesión en cada PC, qué recibe Ingeniería | Decisiones de Facundo o de Dirección | pendiente |
 
-**Video por sector:** armado (2:02,5), revisado cuadro por cuadro. Tres tramos de voz que Whisper oía mal
+**Video por sector:** armado (2:03,1 desde el 03/10 a la tarde: dice «No borra nada si no se lo pedís», igual que el tutorial), revisado cuadro por cuadro. Tres tramos de voz que Whisper oía mal
 (Logística, Mantenimiento, RRHH) se regrabaron con otra frase; los tres se oyen enteros.
 
 **Plugin 0.3.0** (commit 923355d de `barack-claude`): 1.118 pruebas. **Instalador y publicador** (repo principal):
