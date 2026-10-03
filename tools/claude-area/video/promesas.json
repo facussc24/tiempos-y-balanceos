@@ -185,11 +185,11 @@
       "pedido": "02/10: «ver qué hacen las distintas personas en Barack… que sea un video que realmente los ilusione… a Ingeniería ya se los vendí, a los demás sectores aún no»",
       "en_el_video": true,
       "estado": "probado",
-      "prueba": ".sgc-cache/claude-por-area/examen/sectores_respuestas_v3.md",
-      "como_se_probo": "02/10, 12:50 a 14:20: los ocho sectores, cada uno en una conversación abierta con la demostración instalada por el instalador como la PC de ESE sector (común + su área): Producción P-09.1, Calidad I-AC-010 (24 horas), Logística I-LG-010, Compras I-CO-001, Mantenimiento I-MT-001, Recursos Humanos P-18, Dirección I-DR-001/MC-09/P-01, Ingeniería I-IN-004. Cada conversación dijo primero su puesto y su área. Citas comprobadas contra los extractos (.sgc-cache/claude-por-area/examen/sectores_respuestas_v3.md) y seis tomas grabadas en video.",
+      "prueba": ".sgc-cache/claude-por-area/examen/sectores_respuestas_v5.md",
+      "como_se_probo": "03/10 (reglas v5, plugin 0.3.0, nivel Medio): los ocho sectores, cada uno en su carpeta instalada por el instalador como la PC de ESE sector (común + su área). Cada afirmación de las ocho respuestas se buscó en el extracto del documento que cita: Producción P-09.1 rev B.1 y P-13 rev C §5.1.2; Calidad I-AC-010 rev A §5.3 y §5.1; Logística I-LG-010 rev A §5; Compras I-CO-001 rev A §5.1.1; Mantenimiento I-MT-001 rev C §5.6; RRHH P-18 rev F §5.4 a §5.7 y §7; Dirección P-01 rev E §5.7.1, MC-04 rev H Anexo IV e I-DR-001 rev A §5 y §7; Ingeniería I-IN-004 rev A §5.1 y §5.2. 8 de 8 coinciden. Contra el extracto del 01/10, no contra el original del servidor (la PC estaba fuera de la planta).",
       "probado_sobre": {
         "1": "5e909aeff8c4",
-        "2": "81397ab116bb",
+        "2": "766fe17fb7ee",
         "3": "e69d30871672"
       },
       "depende_de": [

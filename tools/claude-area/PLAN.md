@@ -87,6 +87,39 @@ Es una desviación de la instalación real (la carpeta no es `C:\ClaudeBarack`):
 
 **Examen sobre la v5 (03/10, 02:45): 110 bien, 28 a medias, 1 mal** (v3: 105/31/3). `examen/correccion_v5.md`. El rojo es B18 (Compras: sumó como exigencia una certificación que el Manual pone como meta). Quedan sin prueba sobre la v5: presentaciones y un ejemplo por sector. Candidata a v6: no cambiar la fuerza de lo que dice un documento.
 
+## El sábado 03/10 (lo que cambió para la reunión del lunes 05/10)
+
+Facundo, 03/10: *"el lunes debo presentar esta implementación ante el director… se le debe instalar rápida y
+fácilmente, digamos en una nueva PC, para demostrarle que funciona"*. Lo que no estaba resuelto era justo eso:
+el instalador solo sabía instalar desde la nube de Ingeniería (que una PC de planta no ve) y a quien no figuraba en
+la lista (hoy, nadie) la dejaba sin área.
+
+| Qué | Cómo quedó | Prueba |
+|---|---|---|
+| Instalar en una PC que no ve la nube | El instalador instala desde la carpeta donde vive (pendrive o copia); `Instalar.cmd` de doble clic en la raíz de lo publicado | 52 pruebas del instalador (14 nuevas, con el doble clic de punta a punta) y `ensayo_pc_nueva.sh`: 6 de 6, 6 segundos |
+| La persona no está en la lista | Dice su área, nombre y puesto al instalar (`--preguntar` en el doble clic; Paso 2 bis del «instalá»). La lista manda cuando figura | idem; una corrida con consola de verdad contestando por teclado quedó instalada como Calidad |
+| ¿La primera conversación carga el asistente? | Sí: con el programa de la app (2.1.286) y una configuración de Claude recién creada, el plugin se carga y el aviso de arranque saluda | `ensayo_pc_nueva.sh`, paso 3 (sin cuenta: no llega a contestar) |
+| Llave de firma real | Creada en `~\.claude-area\` (huella `1cd6adfa3361e26a`). Esta PC queda como la del administrador | — |
+| El paquete para llevar | `C:\ClaudeBarack-para-llevar\` (218 MB): `CLAUDE POR AREA\1- PUBLICADO` versión 2, firmada con la llave real, + videos y hojas + `LEEME.txt`. Es la copia maestra: cuando exista la carpeta de la nube, se copia ESTA (misma historia de versiones) | `ensayo_pc_nueva.sh --paquete`: 6 de 6 |
+| Con qué área se muestra | **Dirección** (Facundo: "me da igual"). `C:\ClaudeBarack` reinstalada como Dirección y sin restos de pruebas | 22 preguntas de dueño en las PC de Dirección y de Producción (`examen/ensayo_dueno_*.md`); juez independiente sobre la de Dirección: 15 bien, 7 a medias, 0 mal, ninguna cita inventada (`examen/correccion_dueno_direccion.json`) |
+| Un ejemplo por sector, sobre la v5 | Las 8 respuestas de la hoja 9, afirmación por afirmación contra su extracto: 8 de 8 | `examen/sectores_respuestas_v5.md` |
+| Dónde están los certificados | Fila 35b de `donde-vive.md` (el asistente decía que no estaban; la carpeta figuraba en el mapa del servidor) | ensayo en `C:\ClaudeBarack` del 03/10 |
+| Papeles | Hoja 1 (ya no promete la bajada automática: "se prende con el piloto"), hoja 4 (guion de 7 pasos, con la PC nueva) y hoja 8 (pendrive y doble clic) | miradas en imagen |
+| Control de antes de mostrar | `python tools/claude-area/antes_de_la_reunion.py`: BIEN / OJO / MAL de la demostración, el paquete, el pendrive, los videos y las hojas | corrido el 03/10 |
+
+**Lo que encontró la segunda opinión (Fable, 03/10) y sigue abierto:** el código de ingreso de la cuenta le llega a
+otra persona; los carteles de permiso en vivo; nadie registra la tarea que actualiza sola (`sync_area.ps1
+-RegistrarTarea` no lo llama nadie: por eso la hoja 1 dejó de prometerlo); el importe real de la cuenta (está
+contratada por Apple); Outlook, PowerPoint e internet en la PC de planta. Informe completo:
+`premortem_lunes.md` (copia en `examen/`).
+
+**Lo que NO se probó y solo se puede probar con Facundo o en la PC de planta:** instalar el programa Claude e
+iniciar sesión; el doble clic real en una PC ajena; una conversación completa en esa PC; la presentación en
+PowerPoint y el freno de borrado sobre la v5 (abren ventanas en la PC de Facundo: van en el ensayo con él).
+
+**Error mío del día, para no repetir:** una prueba con teclas simuladas escribió en la ventana que Facundo tenía al
+frente. Memoria `feedback_no_teclear_ni_fotografiar_la_pantalla_de_fak`.
+
 ## Las etapas, en orden. Cada una tiene su puerta: no se pasa a la siguiente con la puerta en rojo.
 
 ### A — Que el asistente HAGA lo que el video va a decir (hoy)
@@ -150,18 +183,30 @@ Ensayo general el día anterior, en la PC donde se va a mostrar (`4 - Guion de l
 control: plugin cargado, perfil con área, Outlook clásico abierto, nube subida, ningún agente corriendo.
 **Nada de agentes ni baterías en las 5 horas anteriores:** el cupo es el mismo que usa la demostración.
 
-## Lo que necesito de Facundo (y nada más) — al 03/10
+## Lo que necesito de Facundo (y nada más) — al 03/10, mediodía
 
-1. Mirar y escuchar los dos videos (el por sector es nuevo; la voz no la escuchó nadie, solo se transcribió).
-2. Ocho clics seguidos, uno por sector, para rendir el examen sobre las reglas v5 (y con eso vuelve a quedar
-   probado "un ejemplo por sector").
-3. Decir con qué área se muestra la demostración en la reunión (hoy está como PC de Producción) y el OK para
-   archivar las conversaciones de demostración viejas.
-4. Elegir una PC de la planta para la etapa E1 y el OK para crear la carpeta del proyecto en la nube de Ingeniería
-   (es la primera vez). La hoja `8 - Prueba en una PC de planta.pdf` tiene los pasos.
-5. Pedirle a alguien de Calidad que lea las 8 respuestas por sector (20 minutos).
-6. IMDS: 10 minutos con su clave en el navegador y el OK para contarlo.
-7. Revisar `6 - Lista para tildar` antes de mostrarla (reservados y piloto).
+**Para el lunes, sí o sí:**
+1. **El código de ingreso de la cuenta.** Para abrir Claude en una PC nueva hay que iniciar sesión, y el código llega
+   al mail de la cuenta, que hoy recibe otra persona. Tenerla avisada el lunes temprano, o dejar la sesión iniciada
+   antes en la PC que se va a usar.
+2. **Un pendrive**: copiar entera `C:\ClaudeBarack-para-llevar` (218 MB).
+3. **La PC nueva**: con internet, y con el programa Claude ya instalado y la sesión iniciada ANTES de que mire el
+   director (es lo lento; la instalación de Barack es un doble clic).
+4. **Un ensayo de 10 minutos conmigo** (domingo o lunes temprano), escribiendo él en `C:\ClaudeBarack`: hola; la
+   lista de materiales; qué llevar a la revisión por la Dirección; una presentación de 3 hojas; guardar una nota y
+   borrarla; un mail para él mismo y «mandalo». Cierra las dos promesas que faltan sobre la v5.
+5. **Confirmar cuánto se paga hoy por la cuenta.** Las hojas dicen USD 200 por mes (precio de lista); la cuenta está
+   contratada por Apple y puede ser otro monto.
+6. Mirar y escuchar los dos videos.
+
+**Cuando pueda (no frena el lunes):**
+7. «Archivá»: sacar de la lista de la app las conversaciones de prueba (unas 35).
+8. El nombre con el que saluda la demostración (hoy «Demostración», puesto Dirección).
+9. El OK para crear la carpeta del proyecto en la nube de Ingeniería (primera vez) y copiar ahí el paquete.
+10. Guardar una copia de la llave de firma (`~\.claude-area\publicador.key`) en un pendrive suyo: si se pierde,
+    cada PC instalada hay que re-fijarla a mano.
+11. Las casillas reservadas reales (hoy la lista es una plantilla): es la decisión 2 de la reunión.
+12. Alguien de Calidad que lea las 8 respuestas por sector (hoja 9); IMDS; revisar la hoja 6.
 
 ## Lo que NO se hace ahora (para no perder el foco)
 Tablero, inventario de programas, buscador, lista de las 85 personas, ordenar la nube. Están hechos o encaminados

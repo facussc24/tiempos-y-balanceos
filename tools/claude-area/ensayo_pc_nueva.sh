@@ -4,13 +4,17 @@
 # la PRIMERA conversacion con el mismo programa que usa la app de Claude (sin cuenta: alcanza para ver si el asistente
 # se carga y si corre el aviso de arranque) y dice que paso.
 #
-# Uso:  bash tools/claude-area/ensayo_pc_nueva.sh [area] [--dejar]
+# Uso:  bash tools/claude-area/ensayo_pc_nueva.sh [area] [--dejar] [--paquete <carpeta "CLAUDE POR AREA" ya publicada>]
 #       area: la que "dice la persona" al instalar (por defecto Produccion). --dejar: no borra la carpeta temporal.
+#       --paquete: en vez de publicar con una clave temporal, ensaya ESE paquete (el que va al pendrive); solo lo lee.
 # Todo corre en una carpeta temporal: ni C:\ClaudeBarack, ni ~/.claude/settings.json, ni la nube real.
 # Sale con 0 si las seis comprobaciones dan bien; con 1 si alguna no.
 set -u
-AREA="Producción"; DEJAR=""
-for a in "$@"; do case "$a" in --dejar) DEJAR=1 ;; *) AREA="$a" ;; esac; done
+AREA="Producción"; DEJAR=""; PAQUETE=""; SIG=""
+for a in "$@"; do
+  if [ "$SIG" = paquete ]; then PAQUETE="$a"; SIG=""; continue; fi
+  case "$a" in --dejar) DEJAR=1 ;; --paquete) SIG=paquete ;; *) AREA="$a" ;; esac
+done
 RAIZ="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$RAIZ"
 TP="$(mktemp -d)"; T="$(cygpath -w "$TP")"
@@ -20,12 +24,21 @@ FALLAS=0
 bien() { echo "   BIEN  $1"; }
 mal()  { echo "   MAL   $1"; FALLAS=$((FALLAS + 1)); }
 
-echo "== 1. publicar (clave temporal) y copiar al pendrive"
 mkdir -p "$TP/nube/CLAUDE POR AREA" "$TP/pendrive" "$TP/clave" "$TP/pc/estado" "$TP/pc/usuario" "$TP/pc/perfil-windows" "$TP/pc/localappdata"
-CLAUDE_AREA_CLAVE="$T\\clave\\publicador.key" node scripts/_paquete.mjs --generar-clave >/dev/null 2>&1
-CLAUDE_AREA_NUBE="$T\\nube\\CLAUDE POR AREA" CLAUDE_AREA_CLAVE="$T\\clave\\publicador.key" \
-  node tools/claude-area/armar_publicable.mjs --plugin-repo 'C:\Dev\barack-claude' --publicar --nota "ensayo de PC nueva" 2>&1 | tail -1 | cut -c1-160
-cp -r "$TP/nube/CLAUDE POR AREA" "$TP/pendrive/"
+if [ -n "$PAQUETE" ]; then
+  echo "== 1. copiar al pendrive el paquete ya publicado: $PAQUETE"
+  ORIGEN="$(cygpath -u "$PAQUETE")"
+  [ -f "$ORIGEN/1- PUBLICADO/VERSION.json" ] || { echo "   ese paquete no trae «1- PUBLICADO\\VERSION.json»"; exit 1; }
+  HUELLA_ANTES="$(find "$ORIGEN" -type f -printf '%P %s\n' | sort | sha256sum | cut -c1-16)"
+  cp -r "$ORIGEN" "$TP/pendrive/CLAUDE POR AREA"
+  echo "      versión $(grep -o '"version": [0-9]*' "$ORIGEN/1- PUBLICADO/VERSION.json" | grep -o '[0-9]*'), clave $(grep -o '"clave": "[0-9a-f]*"' "$ORIGEN/1- PUBLICADO/VERSION.json" | cut -d'"' -f4)"
+else
+  echo "== 1. publicar (clave temporal) y copiar al pendrive"
+  CLAUDE_AREA_CLAVE="$T\\clave\\publicador.key" node scripts/_paquete.mjs --generar-clave >/dev/null 2>&1
+  CLAUDE_AREA_NUBE="$T\\nube\\CLAUDE POR AREA" CLAUDE_AREA_CLAVE="$T\\clave\\publicador.key" \
+    node tools/claude-area/armar_publicable.mjs --plugin-repo 'C:\Dev\barack-claude' --publicar --nota "ensayo de PC nueva" 2>&1 | tail -1 | cut -c1-160
+  cp -r "$TP/nube/CLAUDE POR AREA" "$TP/pendrive/"
+fi
 PEN="$TP/pendrive/CLAUDE POR AREA/1- PUBLICADO"
 [ -f "$PEN/Instalar.cmd" ] && [ -f "$PEN/CLAUDE.md" ] && [ -f "$PEN/publicador.pub" ] && bien "el pendrive trae Instalar.cmd, el CLAUDE.md del «instalá» y la clave pública" || mal "al pendrive le falta Instalar.cmd, CLAUDE.md o publicador.pub"
 
@@ -66,6 +79,9 @@ grep -q "^QUIEN=Quién es: Persona De Prueba" "$TP/sesion1.txt" && bien "el avis
 
 echo "== 4. nada real cambió"
 [ "$REAL" = "$(sha256sum ~/.claude/settings.json 2>/dev/null | cut -c1-16)" ] && [ "$DEMO" = "$(sha256sum /c/ClaudeBarack/instalado.json 2>/dev/null | cut -c1-16)" ] && bien "la configuración real de Claude y C:\\ClaudeBarack siguen igual" || mal "cambió la configuración real o C:\\ClaudeBarack"
+if [ -n "$PAQUETE" ]; then
+  [ "$HUELLA_ANTES" = "$(find "$ORIGEN" -type f -printf '%P %s\n' | sort | sha256sum | cut -c1-16)" ] && echo "   el paquete ensayado quedó igual (solo se leyó)" || mal "el paquete ensayado cambió"
+fi
 
 if [ -n "$DEJAR" ]; then echo "   (queda la carpeta: $T)"; else case "$TP" in /tmp/tmp.*) rm -rf "$TP" && echo "   carpeta temporal sacada" ;; esac; fi
 echo "== RESULTADO: $([ "$FALLAS" = 0 ] && echo "todo bien (6 de 6)" || echo "$FALLAS comprobación(es) MAL")"
