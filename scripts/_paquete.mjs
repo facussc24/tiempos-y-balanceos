@@ -546,6 +546,8 @@ function buscarCarpetaEnBiblioteca(home, nombreCarpeta) {
             const p = path.join(raiz, n);
             if (!esDir(p)) continue;
             if (normTexto(n) === buscada) { encontradas.push({ p, prioridad: 2 }); continue; }
+            // la carpeta sincronizada SOLA (boton "Sincronizar" sobre ella) cuelga como "<sitio> - CLAUDE POR AREA"
+            if (normTexto(n).endsWith(` - ${buscada}`)) { encontradas.push({ p, prioridad: 1 }); continue; }
             // la OneDrive personal es enorme: solo se mira adentro de los atajos a bibliotecas
             if (esOneDrivePersonal && !/^documents -|ingenier/.test(normTexto(n))) continue;
             for (const m of listar(p)) {
@@ -2440,6 +2442,29 @@ function imprimirLista(titulo, items, max = 12, decir = say) {
 }
 
 /**
+ * ¿La app de Claude de esta PC ya tiene habilitado «Omitir permisos»? La app lo guarda POR CUENTA en
+ * `%APPDATA%\Claude\claude_desktop_config.json` (`preferences.bypassPermissionsOptInByAccount`, visto el 03/10/2026 en la
+ * app 2.19675). Solo se LEE, para decirle a quien instala si le falta ese paso: el instalador no prende esa opcion (la
+ * prende una persona). Devuelve 'si' (alguna cuenta de esta PC lo habilito), 'no' (la app esta y ninguna lo habilito)
+ * o 'no_se' (no hay app, o el archivo no se entiende: el formato es de la app y puede cambiar sin aviso).
+ */
+export function omitirPermisosEnLaApp(env = process.env) {
+    if (!env || !env.APPDATA) return 'no_se';
+    const cfg = leerJson(path.join(env.APPDATA, 'Claude', 'claude_desktop_config.json'));
+    if (!cfg || typeof cfg !== 'object' || Array.isArray(cfg)) return 'no_se';
+    const porCuenta = cfg.preferences && cfg.preferences.bypassPermissionsOptInByAccount;
+    if (!porCuenta || typeof porCuenta !== 'object') return 'no';
+    return Object.values(porCuenta).some((v) => v === true) ? 'si' : 'no';
+}
+
+/** La linea que ve quien instala sobre «Omitir permisos», segun lo que se pudo leer de la app. */
+export const lineaOmitirPermisos = (estado) => (estado === 'si'
+    ? '  Permisos: las conversaciones nuevas arrancan sin carteles («Omitir permisos»); en esta PC la app ya lo tiene habilitado.'
+    : (estado === 'no'
+        ? '  Permisos: FALTA UN PASO en esta PC para que Claude no pida permiso a cada rato: abrir Claude > Configuración > Claude Code y prender la opción que permite el modo «Omitir permisos» (una vez por cuenta).'
+        : '  Permisos: las conversaciones nuevas arrancan sin carteles («Omitir permisos»). Para que la app lo use, prender UNA vez en esta PC: Configuración de Claude > Claude Code > permitir el modo de omitir permisos.'));
+
+/**
  * El cierre de `--instalar` cuando QUEDO instalado (`instalado` o `ya_instalado`): lo que se le muestra a la persona, la
  * tarea que actualiza sola y el codigo de salida, que es SIEMPRE 0: si la tarea no se pudo dejar, se avisa en una linea
  * y la instalacion no falla por eso. La tarea se intenta solo en una instalacion de verdad (`debeRegistrarTarea`).
@@ -2455,7 +2480,7 @@ export function cerrarInstalacion(r, { indicadores, simular = false, sinTarea = 
     else if (r.desdeCarpeta) decir('  Instalado desde esta carpeta (esta PC no ve la nube de Barack): las novedades las busca acá, cuando esta carpeta esté a la vista.');
     decir(`  Abrí Claude en ${r.home} (tus archivos van en ${path.join(r.home, 'Trabajo')}).   Plugin: ${r.plugin.estado === 'habilitado' ? `habilitado en ${r.plugin.ruta}` : 'ya estaba habilitado'}${r.plugin.respaldo ? ` (respaldo: ${r.plugin.respaldo})` : ''}`);
     if (r.casa && r.casa.migrado) decir(`  Las reglas viejas de Trabajo\\.claude\\rules pasaron a cuarentena: ${r.casa.migrado}`);
-    if (r.plugin.modo && r.plugin.modo.valor === 'bypassPermissions') decir('  Permisos: las conversaciones nuevas arrancan sin carteles («Omitir permisos»). Para que la app lo use, prender UNA vez en esta PC: Configuración de Claude > Claude Code > permitir el modo de omitir permisos.');
+    if (r.plugin.modo && r.plugin.modo.valor === 'bypassPermissions') decir(lineaOmitirPermisos(omitirPermisosEnLaApp(env)));
     const tarea = dejarActualizacionAutomatica({ indicadores, estado: r.estado, simular, sinTarea, home: r.home, env, ejecutar, plataforma });
     if (tarea.linea) decir(`  ${tarea.linea}`);
     imprimirLista('  Avisos:', r.avisos, 10, decir);

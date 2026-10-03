@@ -804,6 +804,35 @@ describe('lo que no puede pasar: --help, opciones desconocidas, mezcla de prueba
 
 // =============================================================================================
 describe('habilitarPlugin y perfil: las dos direcciones', () => {
+    it('«Omitir permisos» en la app: se LEE si alguna cuenta lo habilito para decir si falta ese paso; nunca se escribe', () => {
+        const appdata = dir('appdata-app');
+        const cfg = path.join(appdata, 'Claude', 'claude_desktop_config.json');
+        fs.mkdirSync(path.dirname(cfg), { recursive: true });
+        // no hay app, o no se sabe donde esta: no se afirma nada
+        expect(P.omitirPermisosEnLaApp({})).toBe('no_se');
+        expect(P.omitirPermisosEnLaApp({ APPDATA: appdata })).toBe('no_se');
+        fs.writeFileSync(cfg, 'esto no es json');
+        expect(P.omitirPermisosEnLaApp({ APPDATA: appdata })).toBe('no_se');
+        // la app esta y nadie lo habilito: falta el paso
+        fs.writeFileSync(cfg, JSON.stringify({ preferences: { sidebarMode: 'code' } }));
+        expect(P.omitirPermisosEnLaApp({ APPDATA: appdata })).toBe('no');
+        fs.writeFileSync(cfg, JSON.stringify({ preferences: { bypassPermissionsOptInByAccount: { 'cuenta-1': false } } }));
+        expect(P.omitirPermisosEnLaApp({ APPDATA: appdata })).toBe('no');
+        // una cuenta lo habilito
+        const conUna = JSON.stringify({ preferences: { bypassPermissionsOptInByAccount: { 'cuenta-1': false, 'cuenta-2': true } } });
+        fs.writeFileSync(cfg, conUna);
+        expect(P.omitirPermisosEnLaApp({ APPDATA: appdata })).toBe('si');
+        expect(fs.readFileSync(cfg, 'utf8')).toBe(conUna);   // solo lee
+        // las tres lineas dicen cosas distintas, y solo la del "no" manda a hacer algo
+        expect(P.lineaOmitirPermisos('si')).toContain('ya lo tiene habilitado');
+        expect(P.lineaOmitirPermisos('no')).toContain('FALTA UN PASO');
+        expect(P.lineaOmitirPermisos('no_se')).toContain('prender UNA vez');
+        const dicho = [];
+        const r = { estado: 'instalado', version: 1, perfil: { nombre: 'Marta', area: 'compras' }, persona: {}, home: path.join(tmp, 'h'), plugin: { estado: 'habilitado', ruta: 'x', modo: { valor: 'bypassPermissions' } }, avisos: [] };
+        P.cerrarInstalacion(r, { indicadores: { home: true }, decir: (l) => dicho.push(l), env: { APPDATA: appdata } });
+        expect(dicho.join('\n')).toContain('ya lo tiene habilitado');
+    });
+
     it('crea settings.json si no existe; agrega solo dos claves si existe; detecta "ya estaba"; no toca uno roto', () => {
         const cd = dir('cd');
         const market = path.join(tmp, 'home', 'publicado', 'marketplace');
@@ -1415,8 +1444,9 @@ describe('una PC que no ve la nube: se instala desde la carpeta donde vive el pr
     });
 
     it('el instalador de doble clic viaja en la raiz de lo publicado: ASCII, fines de linea de Windows, fuera de lo firmado, y llama al programa firmado con el Node del plugin', () => {
-        const { pub, publicacion } = nubeArmada();
+        const { pub, publicacion, staging, rutaClave } = nubeArmada();
         expect(publicacion.instalar_cmd).toBe('creado');
+        expect(publicacion.abrir_claude).toBe('no_tocado');
         const bytes = fs.readFileSync(path.join(pub, 'Instalar.cmd'));
         expect([...bytes].every((b) => b < 128)).toBe(true);
         const texto = bytes.toString('latin1');
@@ -1431,8 +1461,23 @@ describe('una PC que no ve la nube: se instala desde la carpeta donde vive el pr
         const interruptor = texto.indexOf('if not exist "%AQUI%abrir-claude.txt" goto pasos');
         expect(guarda).toBeGreaterThan(0);
         expect(interruptor).toBeGreaterThan(guarda);   // apagado hasta que ese archivo este al lado del instalador
-        expect(enlace).toBeGreaterThan(interruptor);
-        expect(existe(pub, 'abrir-claude.txt')).toBe(false);
+        // y vale por CONTENIDO: tiene que empezar con "si" (en la nube no se borra nada: apagarlo es escribirle "no")
+        const porContenido = texto.indexOf('findstr /x /i /c:"si" "%AQUI%abrir-claude.txt"');
+        expect(porContenido).toBeGreaterThan(interruptor);
+        expect(texto.indexOf('if errorlevel 1 goto pasos', porContenido)).toBeGreaterThan(porContenido);
+        expect(enlace).toBeGreaterThan(porContenido);
+        expect(existe(pub, 'abrir-claude.txt')).toBe(false);   // publicar sin la opcion no lo crea
+        // publicar con la opcion lo escribe (ASCII, "si" o "no" en la primera linea) y sin la opcion no lo toca
+        const con = (abrirClaude) => A.publicarPublicable({ salida: staging, nube: pub, clavePrivada: rutaClave, identidad: { usuario: '', pc: '' }, ahora: F(5), ...(abrirClaude === undefined ? {} : { abrirClaude }) });
+        expect(con(true).abrir_claude).toBe('prendido');
+        const prendido = fs.readFileSync(path.join(pub, 'abrir-claude.txt'));
+        expect([...prendido].every((b) => b < 128)).toBe(true);
+        expect(prendido.toString('latin1').startsWith('si\r\n')).toBe(true);
+        expect(con(undefined).abrir_claude).toBe('no_tocado');
+        expect(fs.readFileSync(path.join(pub, 'abrir-claude.txt'), 'latin1').startsWith('si\r\n')).toBe(true);
+        expect(con(false).abrir_claude).toBe('apagado');
+        expect(fs.readFileSync(path.join(pub, 'abrir-claude.txt'), 'latin1').startsWith('no\r\n')).toBe(true);
+        expect(con(false).abrir_claude).toBe('igual');
         // y LISTO se dice solo si quedo la marca de instalado
         expect(texto).toContain('if exist "%CASA%\\instalado.json" goto quedo');
         expect(texto).toContain('reg query "HKCR\\claude\\shell\\open\\command"');
@@ -1972,6 +2017,30 @@ describe.skipIf(!ES_WINDOWS)('como se actualiza una PC: sync_area.ps1 con la car
         const r2 = correrPs(path.join(pc.home, 'publicado', 'programas', 'sync_area.ps1'), ['-SinTarea', '-SinInventario', '-PrioridadNormal'], env);
         expect(r2.status, r2.stdout + r2.stderr).toBe(0);
         expect(json(pc.estado, 'estado.json')).toMatchObject({ nube: 'por_nombre', publicado: pub });
+    });
+
+    it('la nube se encuentra en las tres formas en que OneDrive la cuelga en otra PC: la biblioteca entera, la carpeta sincronizada sola y el acceso directo', () => {
+        const hacer = (...p) => { const d = path.join(...p); fs.mkdirSync(d, { recursive: true }); return d; };
+        // 1. la carpeta sincronizada SOLA cuelga como "<sitio> - CLAUDE POR AREA" (lo que hace el boton "Sincronizar")
+        const sola = dir('pc-sola', 'perfil');
+        const raizSola = hacer(sola, 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - CLAUDE POR AREA');
+        expect(P.buscarNube(sola, 'area')).toBe(path.join(raizSola, '1- PUBLICADO'));
+        // 2. el acceso directo ("Agregar acceso directo a Mis archivos") queda adentro de la OneDrive de la cuenta
+        const atajo = dir('pc-atajo', 'perfil');
+        const raizAtajo = hacer(atajo, 'OneDrive - BARACK ARGENTINA SRL', 'CLAUDE POR AREA');
+        hacer(atajo, 'OneDrive - BARACK ARGENTINA SRL', 'Documentos', 'CLAUDE POR AREA');   // una carpeta cualquiera de la persona no cuenta
+        expect(P.buscarNube(atajo, 'area')).toBe(path.join(raizAtajo, '1- PUBLICADO'));
+        // 3. si estan las dos, gana la de la biblioteca de Ingenieria entera; despues la sincronizada sola; despues el acceso directo
+        const todas = dir('pc-todas', 'perfil');
+        const enBiblioteca = hacer(todas, 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General', 'CLAUDE POR AREA');
+        hacer(todas, 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - CLAUDE POR AREA');
+        hacer(todas, 'OneDrive - BARACK ARGENTINA SRL', 'CLAUDE POR AREA');
+        expect(P.buscarNube(todas, 'area')).toBe(path.join(enBiblioteca, '1- PUBLICADO'));
+        // ROJO: un nombre que solo se parece no es la nube
+        const nada = dir('pc-nada', 'perfil');
+        hacer(nada, 'BARACK ARGENTINA SRL', 'CLAUDE POR AREA viejo');
+        hacer(nada, 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - CLAUDE POR AREA (copia)');
+        expect(P.buscarNube(nada, 'area')).toBe(null);
     });
 
     it('con la PC y el estado de prueba y sin -Nube: corre solo si ese estado recuerda una carpeta a la vista; en una copia con otro nombre actualiza y no escribe nada adentro; con -RegistrarTarea esa excepcion no vale', () => {

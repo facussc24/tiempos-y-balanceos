@@ -154,7 +154,7 @@ export function armarPublicable({ pluginRepo, conocimiento = null, programasDe =
 }
 
 /** Publica el staging con la lista del proyecto y deja el hola en la raiz de la nube. Devuelve el resultado de publicar() + `hola`. */
-export function publicarPublicable({ salida, nube, clavePrivada, notas = [], simular = false, forzar = false, identidad = P.identidadLocal(), ahora = new Date() }) {
+export function publicarPublicable({ salida, nube, clavePrivada, notas = [], simular = false, forzar = false, identidad = P.identidadLocal(), ahora = new Date(), abrirClaude = null }) {
     const lista = P.cargarLista(RUTA_LISTA);
     const r = P.publicar({ origen: salida, nube, lista, notas, simular, forzar, clavePrivada, proyecto: 'area', identidad, ahora });
     r.hola = 'no';
@@ -175,11 +175,26 @@ export function publicarPublicable({ salida, nube, clavePrivada, notas = [], sim
         try { actual = fs.readFileSync(destino, 'utf8'); } catch { actual = null; }
         if (actual !== texto) { P.escribirAtomico(destino, texto); r.instalar_cmd = actual === null ? 'creado' : 'actualizado'; } else r.instalar_cmd = 'igual';
     }
+    // el interruptor de "al terminar, abrir Claude solo en la carpeta" (lo lee Instalar.cmd: vale si empieza con "si").
+    // Va por CONTENIDO y no por existir: en la nube no se borra nada, asi que apagarlo es escribirle "no".
+    // Sin `abrirClaude` no se toca lo que haya.
+    r.abrir_claude = 'no_tocado';
+    if (abrirClaude !== null && !simular && (r.estado === 'publicado' || r.estado === 'sin_novedades')) {
+        const destino = path.join(nube, NOMBRE_ABRIR_CLAUDE);
+        const texto = textoAbrirClaude(abrirClaude);
+        let actual = null;
+        try { actual = fs.readFileSync(destino, 'utf8'); } catch { actual = null; }
+        if (actual !== texto) { P.escribirAtomico(destino, texto); r.abrir_claude = abrirClaude ? 'prendido' : 'apagado'; } else r.abrir_claude = 'igual';
+    }
     return r;
 }
 
+export const NOMBRE_ABRIR_CLAUDE = 'abrir-claude.txt';
+/** Lo que se escribe en abrir-claude.txt: la primera palabra es la que lee Instalar.cmd (solo ASCII, CRLF). */
+export const textoAbrirClaude = (prendido) => `${prendido ? 'si' : 'no'}\r\n\r\nEste archivo lo lee Instalar.cmd. Si la primera linea dice "si", al terminar de instalar abre el programa\r\nClaude en la carpeta C:\\ClaudeBarack con "hola" ya escrito. Si dice "no", muestra los pasos para abrirlo a mano.\r\nLo cambia Ingenieria al publicar (--abrir-claude si|no).\r\n`;
+
 /** Las opciones que existen; cualquier otra es un error y no se hace nada. */
-export const OPCIONES_CON_VALOR = ['plugin-repo', 'conocimiento', 'programas-de', 'salida', 'nube', 'clave', 'nota', 'node'];
+export const OPCIONES_CON_VALOR = ['plugin-repo', 'conocimiento', 'programas-de', 'salida', 'nube', 'clave', 'nota', 'node', 'abrir-claude'];
 export const OPCIONES_BANDERA = ['publicar', 'simular', 'forzar', 'nube-real'];
 
 export function parsear(argv) {
@@ -205,6 +220,7 @@ export function parsear(argv) {
 function uso() {
     console.log('Uso: node tools/claude-area/armar_publicable.mjs --plugin-repo <repo del plugin> [--conocimiento <carpeta>] [--salida <carpeta vacia>] [--node <node.exe>]');
     console.log('     [--publicar] [--nube <1- PUBLICADO>] [--clave <publicador.key>] [--nota "..."] [--simular] [--forzar]');
+    console.log('     [--abrir-claude si|no]  que Instalar.cmd, al terminar, abra Claude solo en la carpeta (sin la opcion no se toca).');
     console.log('     Para publicar hay que decir a que nube: --nube, la variable CLAUDE_AREA_NUBE, o --nube-real (la de la biblioteca, buscada por nombre).');
     console.log('     --help muestra esto y no hace nada.');
 }
@@ -214,6 +230,7 @@ function main() {
     if (a.error) { console.error(`✗ ${a.error}`); return 1; }
     if (a.help) { uso(); return 0; }
     if (!a['plugin-repo']) { uso(); return 1; }
+    if (a['abrir-claude'] !== undefined && !['si', 'no'].includes(a['abrir-claude'])) { console.error('✗ --abrir-claude lleva "si" o "no". No se hizo nada.'); return 1; }
     if (a.publicar && !a.nube && !process.env.CLAUDE_AREA_NUBE && !a['nube-real']) {
         console.error('✗ Sin --nube ni CLAUDE_AREA_NUBE, --publicar iría a la nube REAL del proyecto. Si es eso lo que querés, pasá --nube-real. No se hizo nada.');
         return 1;
@@ -228,13 +245,14 @@ function main() {
     const env = process.env;
     const nube = a.nube ? path.resolve(a.nube) : (env.CLAUDE_AREA_NUBE ? path.join(path.resolve(env.CLAUDE_AREA_NUBE), P.PROYECTOS.area.publicado) : P.buscarNube(undefined, 'area'));
     const clavePrivada = a.clave ? path.resolve(a.clave) : P.rutaClavePrivadaPorDefecto(env);
-    const p = publicarPublicable({ salida: r.salida, nube, clavePrivada, notas: a.notas, simular: !!a.simular, forzar: !!a.forzar });
+    const p = publicarPublicable({ salida: r.salida, nube, clavePrivada, notas: a.notas, simular: !!a.simular, forzar: !!a.forzar, abrirClaude: a['abrir-claude'] === undefined ? null : a['abrir-claude'] === 'si' });
     console.log(`Nube → ${nube || '(sin carpeta de nube)'}`);
     if (p.estado === 'rechazado') { console.error(`✗ NO SE PUBLICO NADA (${p.errores.length} problema(s)):`); for (const e of p.errores.slice(0, 40)) console.error(`    - ${e}`); return 1; }
     for (const av of p.avisos) console.log(`  Aviso: ${av}`);
     if (p.estado === 'simulado') { console.log(`Simulado: se publicaría la versión ${p.version} (${p.nuevos.length} nuevos, ${p.cambiados.length} cambiados, ${p.retirados.length} retirados). No se escribió nada.`); return 0; }
-    if (p.estado === 'sin_novedades') { console.log(`Sin novedades: la versión ${p.version} ya es igual a lo armado (hola: ${p.hola}).`); return 0; }
-    console.log(`✓ Publicada la versión ${p.version}: ${p.archivos} archivos, ${p.firmada ? 'firmada' : 'SIN FIRMA'}; hola: ${p.hola}.`);
+    const abrir = p.abrir_claude && p.abrir_claude !== 'no_tocado' ? `; abrir Claude solo: ${p.abrir_claude}` : '';
+    if (p.estado === 'sin_novedades') { console.log(`Sin novedades: la versión ${p.version} ya es igual a lo armado (hola: ${p.hola}${abrir}).`); return 0; }
+    console.log(`✓ Publicada la versión ${p.version}: ${p.archivos} archivos, ${p.firmada ? 'firmada' : 'SIN FIRMA'}; hola: ${p.hola}${abrir}.`);
     return 0;
 }
 
