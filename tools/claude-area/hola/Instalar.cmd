@@ -37,6 +37,8 @@ if defined CLAUDE_AREA_HOME goto pasos
 rem El programa Claude, cuando esta instalado, registra los enlaces claude:// en Windows.
 reg query "HKCR\claude\shell\open\command" >nul 2>&1
 if errorlevel 1 goto sinclaude
+rem Abrir Claude solo queda APAGADO hasta que el archivo abrir-claude.txt este al lado de este instalador.
+if not exist "%AQUI%abrir-claude.txt" goto pasos
 echo  LISTO. Ahora se abre Claude en la carpeta C:\ClaudeBarack.
 echo    1. Cuando pregunte por la carpeta, acepta.
 echo    2. Ya esta escrito "hola": apreta Enter.

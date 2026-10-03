@@ -11,7 +11,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import * as P from '../../scripts/_paquete.mjs';
 import * as A from '../../tools/claude-area/armar_publicable.mjs';
@@ -1303,6 +1303,67 @@ describe('una PC que no ve la nube: se instala desde la carpeta donde vive el pr
         expect(P.mensajeDeError(new Error('otra cosa'))).toBe('otra cosa');
     });
 
+    // Las preguntas del doble clic, con una "consola": el programa publicado corre creyendo que tiene una terminal y se le
+    // contesta cada pregunta cuando aparece (como una persona; todas juntas no sirve: se pierden las que llegan antes de la pregunta).
+    function conConsola(pub, args, env, respuestas) {
+        const envoltorio = esc(tmp, `consola-${Math.random().toString(36).slice(2)}.mjs`, [
+            "import { pathToFileURL } from 'node:url';",
+            "Object.defineProperty(process.stdin, 'isTTY', { value: true });",
+            "Object.defineProperty(process.stdout, 'isTTY', { value: true });",
+            'process.argv[1] = process.argv[2];',
+            'process.argv.splice(2, 1);',
+            'await import(pathToFileURL(process.argv[1]).href);',
+        ].join('\n'));
+        return new Promise((resolver) => {
+            const hijo = spawn(process.execPath, [envoltorio, path.join(pub, 'contenido', 'programas', '_paquete.mjs'), ...args], { env });
+            let salida = '';
+            let errores = '';
+            let vistas = 0;
+            const PREGUNTAS = ['Escribí el número', 'Nombre y apellido', 'Puesto'];
+            hijo.stdout.on('data', (d) => {
+                salida += d.toString('utf8');
+                while (vistas < PREGUNTAS.length && salida.includes(PREGUNTAS[vistas])) {
+                    const r = respuestas[vistas++];
+                    if (r === null) hijo.stdin.end(); else hijo.stdin.write(`${r}\n`);
+                }
+            });
+            hijo.stderr.on('data', (d) => { errores += d.toString('utf8'); });
+            const reloj = setTimeout(() => hijo.kill(), 60000);
+            hijo.on('close', (codigo) => { clearTimeout(reloj); resolver({ codigo, salida, errores }); });
+        });
+    }
+
+    it('las preguntas del doble clic: contestando, queda instalada con esa área; cortando en medio, NO instala nada', async () => {
+        const { pub } = nubeArmada();
+        const { pc, env } = pcDePlanta({ settings: SETTINGS_PREVIO });
+        const args = ['--instalar', '--proyecto', 'area', '--usuario-home', pc.claudeDir, '--preguntar'];
+        // corta en la segunda pregunta (cierra la ventana): cancelado, codigo 1, nada escrito
+        const corte = await conConsola(pub, args, env, ['2', null]);
+        expect(corte.codigo, corte.salida + corte.errores).toBe(1);
+        expect(corte.errores).toContain('Cancelado: no se instaló nada');
+        expect(fs.existsSync(pc.home)).toBe(false);
+        expect(leer(pc.claudeDir, 'settings.json')).toBe(SETTINGS_PREVIO);
+        // contesta las tres
+        const r = await conConsola(pub, args, env, ['Calidad', 'Ana Ruiz', 'Inspectora']);
+        expect(r.codigo, r.salida + r.errores).toBe(0);
+        expect(r.salida).toMatch(/1\. Producción[\s\S]*8\. Ingeniería/);
+        expect(r.salida).toContain('Ana Ruiz (área calidad, como lo dijo la persona)');
+        expect(json(pc.home, 'perfil.json')).toMatchObject({ nombre: 'Ana Ruiz', area: 'calidad', puesto: 'Inspectora', declarado: true });
+        expect(existe(pc.home, 'publicado/conocimiento/calidad/ficha-calidad.md')).toBe(true);
+        // la segunda vez ya no pregunta (lo declarado en esta PC se conserva)
+        const otra = await conConsola(pub, args, env, []);
+        expect(otra.codigo, otra.salida + otra.errores).toBe(0);
+        expect(otra.salida).not.toContain('Escribí el número');
+        expect(otra.salida).toContain('Ya estaba instalado');
+        // Enter en la primera pregunta = seguir sin área (no es cancelar)
+        const env2 ={ ...env, CLAUDE_AREA_HOME: path.join(tmp, 'pc-sin-area', 'ClaudeBarack'), CLAUDE_AREA_ESTADO: dir('pc-sin-area', 'estado') };
+        const claude2 = dir('pc-sin-area', '.claude');
+        const vacio = await conConsola(pub, ['--instalar', '--proyecto', 'area', '--usuario-home', claude2, '--preguntar'], env2, ['']);
+        expect(vacio.codigo, vacio.salida + vacio.errores).toBe(0);
+        expect(vacio.salida).toContain('persona sin asignar');
+        expect(json(env2.CLAUDE_AREA_HOME, 'perfil.json')).toMatchObject({ area: 'comun', nombre: '' });
+    });
+
     it.runIf(ES_WINDOWS)('si la carpeta se alcanza por un enlace de carpetas el programa igual corre (antes no hacia nada y salia con 0)', () => {
         const { pub } = nubeArmada();
         const enlace = path.join(tmp, 'enlace-a-publicado');
@@ -1328,8 +1389,13 @@ describe('una PC que no ve la nube: se instala desde la carpeta donde vive el pr
         // al terminar abre Claude en la carpeta con un enlace, solo si el programa esta instalado y NO es una prueba
         const guarda = texto.indexOf('if defined CLAUDE_AREA_HOME goto pasos');
         const enlace = texto.indexOf('start "" "claude://code/new?folder=C%%3A%%5CClaudeBarack&q=hola"');
+        const interruptor = texto.indexOf('if not exist "%AQUI%abrir-claude.txt" goto pasos');
         expect(guarda).toBeGreaterThan(0);
-        expect(enlace).toBeGreaterThan(guarda);
+        expect(interruptor).toBeGreaterThan(guarda);   // apagado hasta que ese archivo este al lado del instalador
+        expect(enlace).toBeGreaterThan(interruptor);
+        expect(existe(pub, 'abrir-claude.txt')).toBe(false);
+        // y LISTO se dice solo si quedo la marca de instalado
+        expect(texto).toContain('if exist "%CASA%\\instalado.json" goto quedo');
         expect(texto).toContain('reg query "HKCR\\claude\\shell\\open\\command"');
         expect(existe(pub, `contenido/${A.REL_NODE}`)).toBe(true);
         expect(json(pub, 'MANIFIESTO.json').archivos['Instalar.cmd']).toBeUndefined();

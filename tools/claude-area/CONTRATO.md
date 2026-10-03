@@ -237,8 +237,10 @@ Una PC de planta no podía instalar, y si instalaba quedaba sin área.
   `CLAUDE_AREA_HOME` y `CLAUDE_AREA_ESTADO`: las tres, o se niega. Al terminar bien, si el programa Claude está
   instalado (registra los enlaces `claude://` en Windows: `HKCR\claude\shell\open\command`) lo abre en la carpeta con
   «hola» ya escrito: `claude://code/new?folder=C%3A%5CClaudeBarack&q=hola` (enlace documentado en la ayuda oficial,
-  "Open Claude Desktop with a link"; Claude pide confirmar la carpeta). Con carpetas de prueba no abre nada. **A
-  verificar una vez en una PC, antes de publicarlo:** al 03/10/2026 el enlace no se probó (el paquete v2 no lo trae).
+  "Open Claude Desktop with a link"; Claude pide confirmar la carpeta). Con carpetas de prueba no abre nada. **Está
+  APAGADO** hasta que al lado de `Instalar.cmd` exista el archivo `abrir-claude.txt`: al 03/10/2026 el enlace no se
+  probó en vivo, y el paquete (v3) no trae ese archivo. Para prenderlo: probar el enlace una vez y crear el archivo.
+  `LISTO` se dice solo si quedó `instalado.json`; cortar las preguntas (Ctrl+C, cerrar la ventana) cancela sin instalar.
 - **Quien no figura dice su área.** `--area "<área>" --nombre "<nombre>" --puesto "<puesto>"` (es lo que pasa Claude
   después de preguntarle, Paso 2 bis del "instalá"), o `--preguntar` (el `.cmd`: mira primero, sin escribir, si la
   persona figura; si no, pregunta en la consola; sin consola a la vista no pregunta). El área se acepta con el nombre de
