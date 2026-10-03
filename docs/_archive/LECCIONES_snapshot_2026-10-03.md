@@ -127,3 +127,9 @@ archivo): como entra una leccion, la tabla de graduacion y el **gate por bullet*
 por leccion; una "graduada a X", 2 lineas). El techo de 26/28 KB queda como red. Enforcement:
 `scripts/_lib/cierreGuard.mjs`, corrido por `node scripts/_cierreSesion.mjs` y por el hook Stop
 `cierre-guard.sh`.
+
+## Graduadas el 03/10/2026 al mediodia (cada una tiene su memoria con puntero en MEMORY.md)
+
+- **08/09 — En revisiones y caratulas no se escriben metadatos internos ni se citan normas; "Item cambiado" va centrado.** Graduado a la memoria `feedback_caratula_y_revisiones_sin_cocina_interna`.
+- **13/09 — La vara contra la que comparo un numero se elige por su MAGNITUD y por el MOMENTO, y casi siempre ya esta publicada.** Graduado a la memoria `feedback_la_vara_se_elige_por_magnitud_y_momento`.
+- **10/09 — El lenguaje del entregable son las palabras que usa Fak (no es acortar, es la palabra comun), y un script que barre una carpeta se prueba en un arbol.** Graduado a la memoria `feedback_lenguaje_del_entregable_palabras_de_fak`.

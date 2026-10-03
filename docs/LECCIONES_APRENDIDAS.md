@@ -37,7 +37,6 @@ incidente vive en los snapshots.
 - **08-13/09 — Lo que pasa del otro lado no lo veo, y lo que apunta a un lugar vacio no falla: el vacio se lee como "roto".** Mi arbol NO es lo que se commitea, lo que corre otra PC se escribe desde SU lado, y un OK de Fak no viaja de segunda mano. **Un default que ninguna corrida usa falla sin romperse** (52 rojos que no existian). Memorias `worktree_sin_env_local`, `hablarle_a_otra_pc`, `dispositivo_adhesivado_insert`.
 - **Antes de construir un control propio, correr el que ya viene; y en una interfaz ajena (ERP, ventana, render) el limite y la causa casi siempre estan de mi lado: mirar antes de rediagnosticar.** El que carga el archivo juzga mejor que yo. Graduado a las memorias `claude_plugin_cli` y `crlf_en_claude_md_reglas_y_memory`, y al skill `arb-operar`.
 - **11/09 — Un dry-run verde no prueba el `--apply`: el camino que escribe es el que nadie ejercio.** Un script con `--apply` no se entrega ni se nombra en un cierre hasta que su escritura corrio de verdad, aunque sea contra un solo caso. Y al revés (01/10): un `--instalar --help` que creí inofensivo instaló de verdad sobre mi `settings.json`; lo que escribe frena ante un argumento que no conoce y no mezcla carpetas de prueba con las reales. Graduado a la memoria `no_entregable_ejecutable_sin_verificar` y a `_paquete.mjs`.
-- **08/09 — En revisiones y caratulas no se escriben metadatos internos ni se citan normas; "Item cambiado" va centrado.** Graduado a la memoria `feedback_caratula_y_revisiones_sin_cocina_interna`.
 - **07/09 — Un cero puede ser del sistema y no del hecho, y la columna la nombra el que manda el dato.** Antes de concluir desde un campo, mirar si la poblacion de ese campo lo llena. Memoria `datos_produccion_pcp_federico`.
 - **07/09 — Un sistema se diseña para el que lo va a usar, y su estado se declara cuando es verdad.** Antes de poner un control, escribir que ve el que no lo pidio; el marcador de "instalado" va en el ultimo paso. Memoria `project_claude_barack_fase0`.
 - **Lo que yo construyo lo prueba algo que no sea yo, y un control solo ve lo que DECLARA.** Un gate que no puede dar verde esta tan roto como el que no puede dar rojo, y **lo que FALTA no se ve**: un gate verde mientras dos hojas mandaban imprimir 9 piezas que ninguna lista nombraba. Verificar las promesas no ve las que nunca se escribieron (01/10, flujograma 160: skill `flujogramas` §0 bis). Memorias `un_control_se_audita_en_las_dos_direcciones`, `sims_carros_metodos`.
@@ -52,10 +51,6 @@ incidente vive en los snapshots.
 - **10-11/09 — Si algo mio vuelve por cuarta vez, el numero objetivo lo elegi yo: se MIDE una referencia real. Si vuelve una quinta, la equivocada es la FUENTE, no el numero.** A la quinta Fak mando el MP3 (*"usa esa cancion, las tuyas son malisimas"*): la medicion estaba bien y servia a la pieza equivocada. Graduado al skill `editar-video` §3, §4.1 y §6.2 + `scripts/_video.py`.
 - **El chequeo frena, no decide; y la objecion de Fak es un dato, no una opinion a refutar: ante un "no anda", preguntar como falla.** Graduado a la memoria `feedback_el_chequeo_frena_no_decide` (y `cad-3d.md` GATE 0).
 - **Un plan de accion heredado se arrastra fila por fila: fusionar dos filas pierde alcance, media fila que se cae no la ve nadie, y un issue no se cierra con evidencia de una parte del alcance.** Graduado a la memoria `plan_heredado_se_arrastra_fila_por_fila`.
-
-- **13/09 — La vara contra la que comparo un numero se elige por su MAGNITUD y por el MOMENTO, y casi siempre ya esta publicada.** Graduado a la memoria `feedback_la_vara_se_elige_por_magnitud_y_momento`.
-
-- **10/09 — El lenguaje del entregable son las palabras que usa Fak (no es acortar, es la palabra comun), y un script que barre una carpeta se prueba en un arbol.** Graduado a la memoria `feedback_lenguaje_del_entregable_palabras_de_fak`.
 
 ## Identidad de un dato
 
@@ -72,6 +67,8 @@ incidente vive en los snapshots.
 ## Entregables y comunicacion con Fak
 
 - **03/10 — Teclas simuladas y fotos de pantalla no se usan sin saber que Fak no está en la PC: las teclas van a la ventana que tenga el foco** (una prueba mía escribió en su Chrome mientras buscaba su banco). Graduado a la memoria `feedback_no_teclear_ni_fotografiar_la_pantalla_de_fak`.
+
+- **03/10 — Cuando Fak cuenta lo que estuvo haciendo («hice mejoras en…»), es un pedido de revisarlo y traer lo que sirva, no contexto** (*"para algo que te había dicho"*). Graduado a la memoria `feedback_el_pedido_flojo_se_completa_con_el_objetivo`.
 
 - **02/10 — Antes de tocar un patrón por lo que muestra un video, se le devuelve a Fak el dibujo con "llevo ESTO a ESTO" (emparejé la herradura al ancho de las patas y era al del arco); y un piquete es marca de COSTURA: se reubica por largo de costura, no en línea recta.** Graduado a las memorias `feedback_confirmar_la_zona_antes_de_modelar` y `project_apc_delantero_tela_tiras_ancho_parejo`.
 
