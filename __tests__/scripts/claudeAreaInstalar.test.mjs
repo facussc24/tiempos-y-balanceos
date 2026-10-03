@@ -1039,3 +1039,306 @@ describe('el Node del plugin viaja firmado, por su ruta exacta', () => {
         expect(errores(['otra/carpeta/x.exe'])).toHaveLength(1);
     });
 });
+
+// =============================================================================================
+// 03/10/2026: una PC de planta no ve la nube de Ingenieria y su usuario no esta en la lista (la lista real todavia
+// no tiene personas). Dos cosas: quien no figura DICE su area, y se instala desde la carpeta donde vive el
+// programa (un pendrive o una copia), con doble clic o desde Claude.
+// =============================================================================================
+describe('la persona que no figura en la lista dice su area', () => {
+    it('VERDE: con area, nombre y puesto queda instalada con lo de esa area, el perfil dice que lo declaro y el administrador se entera; repetir no la deja sin area', () => {
+        const { pub, nubeRaiz } = nubeArmada();
+        const pc = pcNueva('pc-pepe');
+        const r = instalar(pub, pc, ID.pepe, { declarado: { area: 'Compras', nombre: '  Pepe   Gómez ', puesto: 'Comprador' } });
+        expect(r.errores).toEqual([]);
+        expect(r.estado).toBe('instalado');
+        expect(r.persona).toBe(false);
+        expect(r.declarado).toBe(true);
+        expect(json(pc.home, 'perfil.json')).toEqual({ nombre: 'Pepe Gómez', mail: '', area: 'compras', puesto: 'Comprador', rol: 'usuario', pc: 'PC-NUEVA-99', usuario_windows: 'pepe', declarado: true });
+        expect(existe(pc.home, 'publicado/conocimiento/compras/ficha-compras.md')).toBe(true);
+        expect(existe(pc.home, 'publicado/conocimiento/calidad')).toBe(false);
+        expect(json(pc.home, 'instalado.json')).toMatchObject({ area: 'compras' });
+        expect(json(pc.home, 'instalado.json').origen).toBeUndefined();
+        const dirAvisos = path.join(nubeRaiz, '4- BUZON', 'avisos', 'PC-NUEVA-99');
+        expect(fs.readdirSync(dirAvisos)).toHaveLength(1);
+        const aviso = JSON.parse(fs.readFileSync(path.join(dirAvisos, fs.readdirSync(dirAvisos)[0]), 'utf8'));
+        expect(aviso).toMatchObject({ tipo: 'sin-persona', area: 'compras', usuario_windows: 'pepe' });
+        expect(aviso.mensaje).toContain('lo dijo la persona');
+        expect(aviso.mensaje).toContain('Pepe Gómez');
+        // repetir SIN decir nada: lo declarado en esta PC se conserva y no se escribe nada
+        const antes = foto(pc.home);
+        const otra = instalar(pub, pc, ID.pepe, { ahora: F(3) });
+        expect(otra.estado).toBe('ya_instalado');
+        expect(otra.declarado).toBe(true);
+        expect(foto(pc.home)).toEqual(antes);
+        expect(fs.readdirSync(dirAvisos)).toHaveLength(1);
+        // otra persona de Windows en la misma carpeta no hereda lo que declaro la anterior
+        expect(instalar(pub, pc, { usuario: 'otro', pc: 'PC-NUEVA-99' }, { ahora: F(4) }).perfil).toMatchObject({ nombre: '', area: 'comun' });
+    });
+
+    it('las formas de decir el area: el nombre de todos los dias, el identificador, el numero del menu; comun y lo desconocido no', () => {
+        expect(P.areaDeclarada('Producción')).toBe('produccion');
+        expect(P.areaDeclarada('  recursos   humanos ')).toBe('rrhh');
+        expect(P.areaDeclarada('RRHH')).toBe('rrhh');
+        expect(P.areaDeclarada('Dirección')).toBe('direccion');
+        expect(P.areaDeclarada('INGENIERIA')).toBe('ingenieria');
+        expect(P.areaDeclarada('logística')).toBe('logistica');
+        expect(P.areaDeclarada('1')).toBe('produccion');
+        expect(P.areaDeclarada('8')).toBe('ingenieria');
+        for (const no of ['', '  ', 'comun', 'común', '0', '9', '12', 'ventas', 'todas', null, undefined]) expect(P.areaDeclarada(no), String(no)).toBe(null);
+        // el menu nombra las ocho areas del contrato, una vez cada una
+        expect(P.AREAS_PARA_ELEGIR.map(([id]) => id).sort()).toEqual(P.AREAS.filter((a) => a !== 'comun').sort());
+    });
+
+    it('ROJO: un area que no existe no instala nada; la lista le gana a lo que se diga; una baja no puede declararse; sin nombre queda el usuario', () => {
+        const { pub, nubeRaiz } = nubeArmada();
+        const pc = pcNueva('pc-pepe', { settings: SETTINGS_PREVIO });
+        const mal = instalar(pub, pc, ID.pepe, { declarado: { area: 'Ventas', nombre: 'Pepe', puesto: '' } });
+        expect(mal.estado).toBe('error');
+        expect(mal.errores.join(' ')).toContain('"Ventas" no existe');
+        expect(fs.existsSync(pc.home)).toBe(false);
+        expect(leer(pc.claudeDir, 'settings.json')).toBe(SETTINGS_PREVIO);
+        expect(fs.readdirSync(pc.estado)).toEqual([]);
+        expect(existe(nubeRaiz, '4- BUZON')).toBe(false);
+        // Marta figura como Compras: aunque diga Calidad, queda Compras y sin la marca de declarado
+        const marta = pcNueva('pc-marta');
+        const rm = instalar(pub, marta, ID.marta, { declarado: { area: 'Calidad', nombre: 'Otra', puesto: 'Jefa' } });
+        expect(rm.estado).toBe('instalado');
+        expect(json(marta.home, 'perfil.json')).toEqual({ nombre: 'Marta Pérez', mail: 'marta@ejemplo.com', area: 'compras', puesto: 'Compradora', rol: 'usuario', pc: 'PC-COMPRAS-01', usuario_windows: 'marta' });
+        expect(rm.avisos.join(' ')).toContain('se usó lo que dice la lista');
+        expect(existe(marta.home, 'publicado/conocimiento/calidad')).toBe(false);
+        // el que figura dado de baja no elige area
+        const ex = pcNueva('pc-ex');
+        const rx = instalar(pub, ex, { usuario: 'ex', pc: 'PC-EX' }, { declarado: { area: 'Calidad', nombre: 'Se Fue', puesto: '' } });
+        expect(rx.estado).toBe('instalado');
+        expect(json(ex.home, 'perfil.json')).toMatchObject({ nombre: '', area: 'comun' });
+        expect(json(ex.home, 'perfil.json').declarado).toBeUndefined();
+        expect(rx.avisos.join(' ')).toContain('dado de baja');
+        expect(existe(ex.home, 'publicado/conocimiento/calidad')).toBe(false);
+        // sin nombre queda el usuario de Windows (el aviso de arranque necesita un nombre para saludar)
+        const sinNombre = pcNueva('pc-sn');
+        expect(instalar(pub, sinNombre, { usuario: 'jlopez', pc: 'PC-SN' }, { declarado: { area: '2', nombre: '', puesto: '' } }).perfil).toMatchObject({ nombre: 'jlopez', area: 'calidad', declarado: true });
+    });
+
+    it('cuando la persona entra a la lista manda la lista: el perfil deja de decir "declarado" y toma el area de la lista', () => {
+        const { pub, rutaClave, conocimiento } = nubeArmada();
+        const pc = pcNueva('pc-pepe');
+        expect(instalar(pub, pc, ID.pepe, { declarado: { area: 'compras', nombre: 'Pepe Gómez', puesto: '' } }).perfil).toMatchObject({ area: 'compras', declarado: true });
+        const lista = { personas: [...PERSONAS.personas, { nombre: 'José Gómez', mail: '', usuario_windows: 'PEPE', pc: '', area: 'calidad', puesto: 'Inspector', rol: 'usuario', mails: 'no_sube', baja: null }] };
+        esc(conocimiento, 'comun/personas.json', JSON.stringify(lista, null, 2));
+        const st2 = path.join(tmp, 'staging-2');
+        expect(A.armarPublicable({ pluginRepo: path.join(tmp, 'repo-plugin'), conocimiento, programasDe: RAIZ, salida: st2, ahora: F(2) }).estado).toBe('armado');
+        expect(A.publicarPublicable({ salida: st2, nube: pub, clavePrivada: rutaClave, identidad: { usuario: '', pc: '' }, ahora: F(2) }).version).toBe(2);
+        const r = instalar(pub, pc, ID.pepe, { ahora: F(2, 12) });
+        expect(r.errores).toEqual([]);
+        expect(r.persona).toBe(true);
+        expect(json(pc.home, 'perfil.json')).toEqual({ nombre: 'José Gómez', mail: '', area: 'calidad', puesto: 'Inspector', rol: 'usuario', pc: 'PC-NUEVA-99', usuario_windows: 'pepe' });
+        expect(existe(pc.home, 'publicado/conocimiento/calidad/ficha-calidad.md')).toBe(true);
+    });
+
+    it('pedirPersona (lo que pregunta el instalador de doble clic): numero o nombre, tres intentos, y Enter es "sin area"', async () => {
+        const con = async (respuestas) => { const dichas = []; const r = await P.pedirPersona({ preguntar: async () => respuestas.shift(), decir: (t) => dichas.push(t) }); return { r, dichas: dichas.join('\n') }; };
+        expect((await con(['3', 'Ana Ruiz', 'Analista'])).r).toEqual({ area: 'logistica', nombre: 'Ana Ruiz', puesto: 'Analista' });
+        expect((await con(['Recursos Humanos', '', ''])).r).toEqual({ area: 'rrhh', nombre: '', puesto: '' });
+        expect((await con([''])).r).toBe(null);
+        const tres = await con(['ventas', 'oficina', 'nada']);
+        expect(tres.r).toBe(null);
+        expect(tres.dichas).toContain('No conozco el área "ventas"');
+        expect(tres.dichas).toMatch(/1\. Producción[\s\S]*8\. Ingeniería/);
+        expect((await con(['ventas', 'Calidad', 'Luis', ''])).r).toEqual({ area: 'calidad', nombre: 'Luis', puesto: '' });
+    });
+});
+
+describe('una PC que no ve la nube: se instala desde la carpeta donde vive el programa (pendrive o copia)', () => {
+    const sinVars = () => Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^CLAUDE_AREA_|^CLAUDE_CONFIG_DIR$/.test(k)));
+    /** El programa QUE VIAJA en lo publicado, corrido con un perfil de Windows vacio: no hay biblioteca de Barack a la vista. */
+    const correrDesde = (pub, args, env) => spawnSync(process.execPath, [path.join(pub, 'contenido', 'programas', '_paquete.mjs'), ...args], { encoding: 'utf8', env, timeout: 90000, input: '' });
+    const pcDePlanta = (extra = {}) => {
+        const pc = pcNueva('pc-planta', extra);
+        return { pc, env: { ...sinVars(), USERPROFILE: dir('perfil-windows'), LOCALAPPDATA: dir('la'), CLAUDE_AREA_HOME: pc.home, CLAUDE_AREA_ESTADO: pc.estado } };
+    };
+
+    it('publicadoDeEstePrograma: la carpeta de arriba de contenido\\ si trae VERSION y MANIFIESTO; desde el repo, nada', () => {
+        const { pub } = nubeArmada();
+        expect(P.publicadoDeEstePrograma(path.join(pub, 'contenido'))).toBe(pub);
+        expect(P.publicadoDeEstePrograma(RAIZ)).toBe(null);
+        expect(P.publicadoDeEstePrograma(path.join(dir('x'), 'contenido'))).toBe(null);
+        expect(P.publicadoDeEstePrograma(path.join(pub, 'contenido', 'programas'))).toBe(null);
+    });
+
+    it('resolverEntorno: sin nube a la vista --instalar toma la carpeta del programa; con la nube a la vista manda la nube; los demas comandos y las rutas indicadas no cambian', () => {
+        const { pub } = nubeArmada();
+        const raiz = path.join(pub, 'contenido');
+        const env = { USERPROFILE: dir('perfil-vacio'), LOCALAPPDATA: dir('la') };
+        const e1 = P.resolverEntorno({ instalar: true, proyecto: 'area', notas: [] }, env, raiz);
+        expect(e1.nube).toBe(pub);
+        expect(e1.nubeDesdeCarpeta).toBe(true);
+        expect(e1.indicadores.nube).toBe(false);
+        const e2 = P.resolverEntorno({ actualizar: true, proyecto: 'area', notas: [] }, env, raiz);
+        expect(e2.nube).toBe(null);
+        expect(e2.nubeDesdeCarpeta).toBe(false);
+        // la biblioteca de Barack a la vista, con una publicacion: manda la nube
+        const conNube = dir('perfil-con-nube');
+        const enBiblioteca = path.join(conNube, 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General', 'CLAUDE POR AREA', '1- PUBLICADO');
+        fs.mkdirSync(enBiblioteca, { recursive: true });
+        fs.copyFileSync(path.join(pub, 'VERSION.json'), path.join(enBiblioteca, 'VERSION.json'));
+        const e3 = P.resolverEntorno({ instalar: true, proyecto: 'area', notas: [] }, { USERPROFILE: conNube, LOCALAPPDATA: dir('la2') }, raiz);
+        expect(e3.nube).toBe(enBiblioteca);
+        expect(e3.nubeDesdeCarpeta).toBe(false);
+        // la carpeta de la biblioteca esta pero todavia no bajo nada: se instala desde la carpeta del programa
+        fs.rmSync(path.join(enBiblioteca, 'VERSION.json'));
+        expect(P.resolverEntorno({ instalar: true, proyecto: 'area', notas: [] }, { USERPROFILE: conNube, LOCALAPPDATA: dir('la3') }, raiz).nubeDesdeCarpeta).toBe(true);
+        // con --nube o con la variable no se toca; y desde el repo (no es una carpeta publicada) no hay de donde
+        expect(P.resolverEntorno({ instalar: true, proyecto: 'area', nube: dir('otra'), notas: [] }, env, raiz).nubeDesdeCarpeta).toBe(false);
+        expect(P.resolverEntorno({ instalar: true, notas: [] }, { ...env, CLAUDE_AREA_NUBE: dir('nb') }, raiz).nubeDesdeCarpeta).toBe(false);
+        const e4 = P.resolverEntorno({ instalar: true, proyecto: 'area', notas: [] }, env, RAIZ);
+        expect(e4.nube).toBe(null);
+        expect(e4.nubeDesdeCarpeta).toBe(false);
+    });
+
+    it('VERDE por linea de comandos: el programa del pendrive instala desde su carpeta, con el area que dijo la persona; marcador con el origen; salud y aviso en el buzon del pendrive', () => {
+        const { pub, nubeRaiz } = nubeArmada();
+        const { pc, env } = pcDePlanta({ settings: SETTINGS_PREVIO });
+        const r = correrDesde(pub, ['--instalar', '--proyecto', 'area', '--usuario-home', pc.claudeDir, '--area', 'Calidad', '--nombre', 'Ana Ruiz', '--puesto', 'Inspectora'], env);
+        expect(r.status, r.stdout + r.stderr).toBe(0);
+        expect(r.stdout).toContain('Instalado');
+        expect(r.stdout).toContain('Ana Ruiz (área calidad, como lo dijo la persona)');
+        expect(r.stdout).toContain('Instalado desde esta carpeta');
+        expect(json(pc.home, 'instalado.json')).toMatchObject({ version: 1, area: 'calidad', origen: 'carpeta' });
+        expect(json(pc.home, 'perfil.json')).toMatchObject({ nombre: 'Ana Ruiz', area: 'calidad', puesto: 'Inspectora', declarado: true });
+        expect(existe(pc.home, 'publicado/conocimiento/calidad/ficha-calidad.md')).toBe(true);
+        expect(existe(pc.home, 'publicado/conocimiento/compras')).toBe(false);
+        const s = json(pc.claudeDir, 'settings.json');
+        expect(s.model).toBe('opus');
+        expect(s.enabledPlugins['barack-area@barack']).toBe(true);
+        expect(leer(pc.estado, 'publicador.pub')).toBe(leer(pub, 'publicador.pub'));
+        // la carpeta trae la forma de la nube (1- PUBLICADO con su 4- BUZON al lado): la salud y el aviso quedan ahi
+        expect(fs.readdirSync(path.join(nubeRaiz, '4- BUZON', 'salud'))).toHaveLength(1);
+        expect(fs.readdirSync(path.join(nubeRaiz, '4- BUZON', 'avisos'))).toHaveLength(1);
+        const otra = correrDesde(pub, ['--instalar', '--proyecto', 'area', '--usuario-home', pc.claudeDir], env);
+        expect(otra.status, otra.stdout + otra.stderr).toBe(0);
+        expect(otra.stdout).toContain('Ya estaba instalado');
+        expect(otra.stdout).toContain('Ana Ruiz');
+        // sin nube a la vista, el chequeo que hace el aviso de arranque igual sabe que version tiene la PC
+        const ch = spawnSync(process.execPath, [path.join(pc.home, 'publicado', 'programas', '_paquete.mjs'), '--chequear', '--proyecto', 'area', '--destino', path.join(pc.home, 'publicado')], { encoding: 'utf8', env, timeout: 60000 });
+        expect(ch.status, ch.stdout + ch.stderr).toBe(3);
+        expect(JSON.parse(ch.stdout.trim())).toMatchObject({ estado: 'sin_nube', instalada: 1, publicada: null });
+    });
+
+    it('una carpeta copiada con otro nombre (sin la forma de la nube): instala igual y no escribe nada adentro de la copia; sin area lo dice y explica como darla', () => {
+        const { pub } = nubeArmada();
+        const copia = path.join(tmp, 'pendrive', 'Claude Barack');
+        fs.cpSync(pub, copia, { recursive: true });
+        const antes = foto(path.join(tmp, 'pendrive'));
+        const { pc, env } = pcDePlanta();
+        const r = correrDesde(copia, ['--instalar', '--proyecto', 'area', '--usuario-home', pc.claudeDir, '--preguntar'], env);   // sin consola a la vista: no pregunta ni se cuelga
+        expect(r.status, r.stdout + r.stderr).toBe(0);
+        expect(r.stdout).toContain('persona sin asignar');
+        expect(r.stdout).not.toContain('el administrador ya tiene el aviso');
+        expect(r.stdout).toContain('--area "<área>"');
+        expect(json(pc.home, 'instalado.json')).toMatchObject({ area: 'comun', origen: 'carpeta' });
+        expect(foto(path.join(tmp, 'pendrive'))).toEqual(antes);
+        // --preguntar, --nombre y --puesto son solo de --instalar; --nombre sin --area no alcanza
+        const mal = correrDesde(copia, ['--chequear', '--preguntar'], env);
+        expect(mal.status).toBe(1);
+        expect(mal.stderr).toContain('--preguntar');
+        const sinArea = correrDesde(copia, ['--instalar', '--proyecto', 'area', '--usuario-home', pc.claudeDir, '--nombre', 'Ana'], env);
+        expect(sinArea.status).toBe(1);
+        expect(sinArea.stderr).toContain('hace falta --area');
+        const areaMala = correrDesde(copia, ['--instalar', '--proyecto', 'area', '--usuario-home', pc.claudeDir, '--area', 'Ventas'], env);
+        expect(areaMala.status).toBe(1);
+        expect(areaMala.stderr).toContain('"Ventas" no existe');
+        expect(json(pc.home, 'perfil.json')).toMatchObject({ area: 'comun' });
+    });
+
+    it('ROJO: la carpeta del pendrive con un archivo cambiado a mano no instala; y la mezcla de carpetas de prueba y reales se sigue negando', () => {
+        const { pub } = nubeArmada();
+        const { pc, env } = pcDePlanta({ settings: SETTINGS_PREVIO });
+        const mezcla = correrDesde(pub, ['--instalar', '--proyecto', 'area'], env);   // sin --usuario-home: tocaria la configuracion real de Claude
+        expect(mezcla.status).toBe(1);
+        expect(mezcla.stderr).toContain('mezclando carpetas de prueba y reales');
+        expect(fs.existsSync(pc.home)).toBe(false);
+        fs.appendFileSync(path.join(pub, 'contenido', 'casa', 'CLAUDE.md'), '\n- Regla plantada a mano.\n');
+        const r = correrDesde(pub, ['--instalar', '--proyecto', 'area', '--usuario-home', pc.claudeDir], env);
+        expect(r.status, r.stdout + r.stderr).not.toBe(0);
+        expect(existe(pc.home, 'instalado.json')).toBe(false);
+        expect(existe(pc.home, 'publicado/casa/CLAUDE.md')).toBe(false);
+        expect(leer(pc.claudeDir, 'settings.json')).toBe(SETTINGS_PREVIO);
+    });
+
+    it('ROJO: si Windows no deja crear la carpeta de la PC, una linea que se entiende y codigo 1 (sin la traza del programa)', () => {
+        const { pub } = nubeArmada();
+        const { pc, env } = pcDePlanta();
+        const estorbo = esc(tmp, 'soy-un-archivo', 'x');
+        const r = correrDesde(pub, ['--instalar', '--proyecto', 'area', '--usuario-home', pc.claudeDir], { ...env, CLAUDE_AREA_HOME: path.join(estorbo, 'ClaudeBarack') });
+        expect(r.status).toBe(1);
+        expect(r.stderr).toContain('No se pudo terminar');
+        expect(r.stderr).not.toMatch(/\n\s+at /);
+        expect(r.stderr.trim().split('\n')).toHaveLength(1);
+        expect(P.mensajeDeError({ code: 'EPERM', path: 'C:\\ClaudeBarack' })).toContain('Windows no deja crear o escribir (C:\\ClaudeBarack)');
+        expect(P.mensajeDeError({ code: 'ENOSPC' })).toContain('no queda lugar');
+        expect(P.mensajeDeError(new Error('otra cosa'))).toBe('otra cosa');
+    });
+
+    it('el instalador de doble clic viaja en la raiz de lo publicado: ASCII, fines de linea de Windows, fuera de lo firmado, y llama al programa firmado con el Node del plugin', () => {
+        const { pub, publicacion } = nubeArmada();
+        expect(publicacion.instalar_cmd).toBe('creado');
+        const bytes = fs.readFileSync(path.join(pub, 'Instalar.cmd'));
+        expect([...bytes].every((b) => b < 128)).toBe(true);
+        const texto = bytes.toString('latin1');
+        expect(texto.split('\r\n').length).toBeGreaterThan(20);
+        expect(texto.replace(/\r\n/g, '')).not.toMatch(/[\r\n]/);
+        expect(texto).toContain('contenido\\marketplace\\plugins\\barack-area\\bin\\node.exe');
+        expect(texto).toContain('contenido\\programas\\_paquete.mjs');
+        expect(texto).toContain('--instalar --proyecto area --preguntar');
+        expect(existe(pub, `contenido/${A.REL_NODE}`)).toBe(true);
+        expect(json(pub, 'MANIFIESTO.json').archivos['Instalar.cmd']).toBeUndefined();
+    });
+
+    it.runIf(ES_WINDOWS)('el doble clic de verdad (cmd.exe): corre el programa con el Node de la carpeta y devuelve su codigo; sin el Node dice que faltan archivos', () => {
+        const { pub } = nubeArmada();
+        const { pc, env } = pcDePlanta({ settings: SETTINGS_PREVIO });
+        // el Node de las pruebas es de mentira: para correr el .cmd de verdad va el de esta PC
+        fs.copyFileSync(process.execPath, path.join(pub, 'contenido', ...A.REL_NODE.split('/')));
+        // la ruta lleva espacios ("CLAUDE POR AREA\1- PUBLICADO"), como la de verdad: con /s van comillas dobles dos veces
+        const cmd = (carpeta) => spawnSync('cmd.exe', ['/d', '/s', '/c', `""${path.join(carpeta, 'Instalar.cmd')}""`], { encoding: 'utf8', env, timeout: 90000, input: '\r\n\r\n', windowsVerbatimArguments: true });
+        // con las carpetas de prueba a medias (sin la configuracion de Claude) el programa se niega: el .cmd lo muestra y devuelve el 1
+        const r = cmd(pub);
+        expect(r.status, r.stdout + r.stderr).toBe(1);
+        expect(r.stdout + r.stderr).toContain('mezclando carpetas de prueba y reales');
+        expect(r.stdout).toContain('No quedo instalado (codigo 1)');
+        expect(fs.existsSync(pc.home)).toBe(false);
+        expect(leer(pc.claudeDir, 'settings.json')).toBe(SETTINGS_PREVIO);
+        // con las TRES carpetas de prueba (la configuracion de Claude va por variable: el .cmd no recibe opciones) instala de
+        // punta a punta. No se puede comparar el Node copiado contra el manifiesto (es el de esta PC, no el publicado):
+        // por eso esta corrida sale por "todavia esta bajando" y la que instala es la de abajo, con el Node publicado.
+        const envCompleto = { ...env, CLAUDE_AREA_USUARIO_HOME: pc.claudeDir };
+        const incompleta = spawnSync('cmd.exe', ['/d', '/s', '/c', `""${path.join(pub, 'Instalar.cmd')}""`], { encoding: 'utf8', env: envCompleto, timeout: 90000, input: '\r\n\r\n', windowsVerbatimArguments: true });
+        expect(incompleta.status, incompleta.stdout + incompleta.stderr).toBe(3);
+        expect(incompleta.stdout).toContain('todavia no termino de bajar o de copiarse');
+        expect(existe(pc.home, 'instalado.json')).toBe(false);
+        // sin el Node en la carpeta (todavia no bajo o no se copio)
+        fs.rmSync(path.join(pub, 'contenido', ...A.REL_NODE.split('/')));
+        const f = cmd(pub);
+        expect(f.status).toBe(3);
+        expect(f.stdout).toContain('le faltan archivos');
+    });
+
+    it.runIf(ES_WINDOWS)('el doble clic de verdad instala de punta a punta cuando lo publicado lleva un Node de verdad (variables de prueba completas)', () => {
+        // se publica con el Node de ESTA PC (no el de mentira): asi el .cmd puede correrlo y el manifiesto firmado lo reconoce
+        const anterior = process.env.CLAUDE_AREA_NODE_EXE;
+        process.env.CLAUDE_AREA_NODE_EXE = process.execPath;
+        let armada;
+        try { armada = nubeArmada(); } finally { process.env.CLAUDE_AREA_NODE_EXE = anterior; }
+        const { pub, nubeRaiz } = armada;
+        const { pc, env } = pcDePlanta({ settings: SETTINGS_PREVIO });
+        const r = spawnSync('cmd.exe', ['/d', '/s', '/c', `""${path.join(pub, 'Instalar.cmd')}""`], { encoding: 'utf8', env: { ...env, CLAUDE_AREA_USUARIO_HOME: pc.claudeDir }, timeout: 120000, input: '\r\n\r\n', windowsVerbatimArguments: true });
+        expect(r.status, r.stdout + r.stderr).toBe(0);
+        expect(r.stdout).toContain('LISTO');
+        expect(r.stdout).toContain('C:\\ClaudeBarack');
+        expect(json(pc.home, 'instalado.json')).toMatchObject({ version: 1, origen: 'carpeta' });
+        expect(json(pc.claudeDir, 'settings.json').enabledPlugins['barack-area@barack']).toBe(true);
+        expect(P.sha256Archivo(path.join(pc.home, 'publicado', ...A.REL_NODE.split('/')))).toBe(P.sha256Archivo(process.execPath));
+        expect(fs.readdirSync(path.join(nubeRaiz, '4- BUZON', 'salud'))).toHaveLength(1);
+    });
+});

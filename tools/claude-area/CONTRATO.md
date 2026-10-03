@@ -211,6 +211,44 @@ hace Claude cuando alguien abre esa carpeta y escribe "instalá": `1- PUBLICADO\
 Códigos de `--instalar`: 0 instalado o ya instalado · 1 error · 3 esperar · 4 sin clave, firma rechazada o versión que
 retrocede. El marcador se mira junto con `publicado\marketplace\.claude-plugin\marketplace.json`: los dos, o se repite.
 
+### Una PC que no ve la nube y una persona que no está en la lista (03/10/2026)
+
+Motivo: la biblioteca de Ingeniería la ven Ingeniería y Calidad, y la lista de personas real todavía no tiene a nadie.
+Una PC de planta no podía instalar, y si instalaba quedaba sin área.
+
+- **Desde un pendrive o una carpeta copiada.** Si `--instalar` no recibe nube (ni `--nube` ni `CLAUDE_AREA_NUBE`) y la
+  biblioteca no está a la vista (o su `1- PUBLICADO` todavía no trae `VERSION.json`), el programa instala desde la
+  carpeta publicada **en la que él mismo vive** (`<carpeta>\contenido\programas\_paquete.mjs` con `VERSION.json` y
+  `MANIFIESTO.json` arriba de `contenido\`: `publicadoDeEstePrograma`). Si la nube está a la vista, manda la nube. Lo
+  demás no cambia: clave fijada en el primer uso, manifiesto firmado, hash de cada archivo. Vale solo para
+  `--instalar`; `--actualizar` y `--chequear` siguen mirando la nube (una PC instalada así da `sin_nube`, con su
+  `instalada`, y no se actualiza sola: se instala de nuevo desde una carpeta más nueva). El marcador lleva
+  `"origen": "carpeta"`. El buzón se usa solo si la carpeta trae la forma de la nube (`1- PUBLICADO` con `4- BUZON` al
+  lado); en una copia con otro nombre no se escribe nada adentro. Para la regla "todo o nada", la carpeta del programa
+  no cuenta ni como de prueba ni como real.
+- **`Instalar.cmd`** (fuente `tools/claude-area/hola/Instalar.cmd`; `armar_publicable.mjs` lo deja en la raíz de lo
+  publicado, al lado del `CLAUDE.md` del "instalá", fuera de lo firmado, siempre con fines de línea de Windows): doble
+  clic, sin abrir Claude. Corre `--instalar --proyecto area --preguntar` con el Node del plugin y devuelve su código
+  (3 si a la carpeta le faltan archivos). Como no recibe opciones, para probarlo con carpetas de prueba la
+  configuración de Claude va por la variable `CLAUDE_AREA_USUARIO_HOME` (vale lo mismo que `--usuario-home`), junto con
+  `CLAUDE_AREA_HOME` y `CLAUDE_AREA_ESTADO`: las tres, o se niega.
+- **Quien no figura dice su área.** `--area "<área>" --nombre "<nombre>" --puesto "<puesto>"` (es lo que pasa Claude
+  después de preguntarle, Paso 2 bis del "instalá"), o `--preguntar` (el `.cmd`: mira primero, sin escribir, si la
+  persona figura; si no, pregunta en la consola; sin consola a la vista no pregunta). El área se acepta con el nombre de
+  todos los días, el identificador o el número del menú (`areaDeclarada`); `comun` no se declara. El `perfil.json`
+  lleva `"declarado": true` y `rol: "usuario"`; sin nombre queda el usuario de Windows. **La lista manda:** si la
+  persona figura, lo declarado se ignora (y lo dice); si figura dada de baja, no puede declararse; cuando entra a la
+  lista, el perfil pasa a ser el de la lista. Repetir sin decir nada conserva lo declarado por ese mismo usuario en esa
+  PC. Un área que no existe no instala nada (código 1). El aviso `sin-persona` dice qué declaró.
+- **Si Windows no deja escribir** (permiso, disco lleno, archivo en uso): una línea que se entiende y código 1, sin la
+  traza del programa (`mensajeDeError`).
+- **Ensayo sin tocar nada real:** `bash tools/claude-area/ensayo_pc_nueva.sh [área]` publica con una clave temporal,
+  copia a un "pendrive", instala con el Node del pendrive sin Node ni Git en el PATH y sin nube, y arranca la primera
+  conversación con el programa de la app y una configuración de Claude recién creada: el plugin se carga solo en esa
+  primera conversación y el aviso de arranque sabe quién es (medido el 03/10/2026 con el programa 2.1.286: 6 de 6,
+  instalación en 5 segundos). Lo que el ensayo no ve: instalar el programa Claude e iniciar sesión, los carteles de la
+  app, y lo que una PC de la empresa prohíba (crear `C:\ClaudeBarack`, correr un programa desde un pendrive).
+
 **Lo que no puede pasar (incidente del 01/10: un `--help` ignorado instaló de verdad y tocó el `settings.json` real):**
 - `--help` / `-h` muestran el uso y salen con 0 sin tocar nada. Una opción que el programa no conoce, o un argumento
   suelto, es un error de una línea que lo nombra, código 1, y NO se ejecuta nada (vale para todos los comandos de

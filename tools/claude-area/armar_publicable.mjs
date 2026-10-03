@@ -28,6 +28,7 @@ const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const RAIZ_REPO = path.resolve(AQUI, '..', '..');
 export const RUTA_LISTA = path.join(AQUI, 'publicar.data.json');
 export const RUTA_HOLA = path.join(AQUI, 'hola', 'CLAUDE.md');
+export const RUTA_INSTALAR_CMD = path.join(AQUI, 'hola', 'Instalar.cmd');
 export const NOMBRE_PLUGIN = P.NOMBRE_PLUGIN;
 /** Lo que NO se copia del plugin ni del conocimiento. */
 export const NO_COPIAR = new Set(['tests', 'node_modules', '.git', '__pycache__', 'tmp', 'Thumbs.db', 'desktop.ini', '.DS_Store']);
@@ -163,6 +164,16 @@ export function publicarPublicable({ salida, nube, clavePrivada, notas = [], sim
         let actual = null;
         try { actual = fs.readFileSync(destino, 'utf8'); } catch { actual = null; }
         if (actual !== texto) { P.escribirAtomico(destino, texto); r.hola = actual === null ? 'creado' : 'actualizado'; } else r.hola = 'igual';
+    }
+    // el instalador de doble clic, al lado del hola (tambien fuera de lo firmado: solo llama al programa firmado).
+    // Un .cmd con fines de linea de Linux falla en los saltos: se escribe siempre con CRLF.
+    r.instalar_cmd = 'no';
+    if (!simular && (r.estado === 'publicado' || r.estado === 'sin_novedades') && fs.existsSync(RUTA_INSTALAR_CMD)) {
+        const texto = fs.readFileSync(RUTA_INSTALAR_CMD, 'utf8').replace(/\r?\n/g, '\r\n');
+        const destino = path.join(nube, 'Instalar.cmd');
+        let actual = null;
+        try { actual = fs.readFileSync(destino, 'utf8'); } catch { actual = null; }
+        if (actual !== texto) { P.escribirAtomico(destino, texto); r.instalar_cmd = actual === null ? 'creado' : 'actualizado'; } else r.instalar_cmd = 'igual';
     }
     return r;
 }

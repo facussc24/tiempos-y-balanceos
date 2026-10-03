@@ -1267,7 +1267,7 @@ export function actualizar(opts) {
     const identidad = identidadDePerfil(opts.home, opts.identidad || identidadLocal());
     const res = actualizarAdentro({ ...opts, ahora, identidad });
     // salud: lo que esta PC cuenta de si misma, bien o mal. Nunca frena ni cambia el resultado.
-    if (!simular && !res.sinSalud && nube && fs.existsSync(nube) && res.estado !== 'ocupado') {
+    if (!simular && !opts.sinSalud && !res.sinSalud && nube && fs.existsSync(nube) && res.estado !== 'ocupado') {
         try { res.salud = escribirSalud({ nube, salud: armarSalud({ destino: opts.destino, res, identidad, ahora }) }); }
         catch (e) { res.avisos.push(`no pude dejar la salud de esta PC en la nube: ${e.message}`); }
     }
@@ -1550,10 +1550,11 @@ export function escribirSalud({ nube, salud }) {
 export function chequear({ destino, nube }) {
     const t0 = process.hrtime.bigint();
     const fin = (estado, extra) => ({ estado, ...extra, ms: Math.round(Number(process.hrtime.bigint() - t0) / 1e3) / 1e3 });
-    if (!nube || !fs.existsSync(nube)) return fin('sin_nube', { publicada: null, instalada: null });
-    const version = leerJson(path.join(nube, 'VERSION.json'));
     const instalado = leerInstalado(destino);
     const instalada = instalado && Number.isInteger(instalado.version) ? instalado.version : null;
+    // sin nube a la vista (una PC instalada desde un pendrive) igual se sabe que version tiene
+    if (!nube || !fs.existsSync(nube)) return fin('sin_nube', { publicada: null, instalada });
+    const version = leerJson(path.join(nube, 'VERSION.json'));
     if (!version || !Number.isInteger(version.version) || typeof version.manifest_sha256 !== 'string') return fin('nube_incompleta', { publicada: null, instalada });
     if (!instalado) return fin('sin_instalar', { publicada: version.version, instalada: null, fecha_publicada: version.fecha || null });
     const base = { publicada: version.version, instalada, fecha_publicada: version.fecha || null, firmada: !!version.firma };
@@ -1842,19 +1843,57 @@ export function buscarPersona(personas, { usuario, pc }) {
         || null;
 }
 
-/** El perfil.json del contrato a partir de la persona; si no figura, queda sin area asignada (`comun`) y sin nombre. */
-export function armarPerfil({ persona, identidad }) {
-    const area = persona && AREAS.includes(normTexto(persona.area || '')) ? normTexto(persona.area) : AREA_COMUN;
+/** ¿La lista de personas tiene a este usuario (o a esta PC) dado de baja? Una baja no puede declararse un area. */
+export function estaDeBaja(personas, { usuario, pc }) {
+    const lista = personas && Array.isArray(personas.personas) ? personas.personas : [];
+    const n = (s) => normTexto(String(s || ''));
+    return lista.some((p) => p && typeof p === 'object' && p.baja && ((n(p.usuario_windows) && n(p.usuario_windows) === n(usuario)) || (n(p.pc) && n(p.pc) === n(pc))));
+}
+
+/** Como se le dice a cada area cuando se le habla a la persona (el orden es el del menu del instalador). */
+export const AREAS_PARA_ELEGIR = [
+    ['produccion', 'Producción'], ['calidad', 'Calidad'], ['logistica', 'Logística'], ['compras', 'Compras'],
+    ['mantenimiento', 'Mantenimiento'], ['rrhh', 'Recursos Humanos'], ['direccion', 'Dirección'], ['ingenieria', 'Ingeniería'],
+];
+const OTROS_NOMBRES_DE_AREA = { 'recursos humanos': 'rrhh', 'rr.hh.': 'rrhh', 'rr hh': 'rrhh', personal: 'rrhh', gerencia: 'direccion', 'ingenieria y proyectos': 'ingenieria', proyectos: 'ingenieria', deposito: 'logistica', planta: 'produccion' };
+
+/**
+ * El area que DIJO la persona (con el nombre de todos los dias, el identificador o el numero del menu), o null.
+ * `comun` no se puede declarar: es lo que queda cuando no se dice nada.
+ */
+export function areaDeclarada(texto) {
+    const t = normTexto(texto ?? '');
+    if (!t) return null;
+    if (/^[1-8]$/.test(t)) return AREAS_PARA_ELEGIR[Number(t) - 1][0];
+    if (AREAS.includes(t) && t !== AREA_COMUN) return t;
+    const porNombre = AREAS_PARA_ELEGIR.find(([, nombre]) => normTexto(nombre) === t);
+    if (porNombre) return porNombre[0];
+    return OTROS_NOMBRES_DE_AREA[t] || null;
+}
+
+/**
+ * El perfil.json del contrato. Manda la lista de personas. Si la persona no figura: lo que ella DECLARO al instalar
+ * (`declarado`: area, nombre, puesto), o lo que ya habia declarado antes en esta PC (`previo`), y el perfil lleva
+ * `declarado: true` para que se sepa que no salio de la lista; si no declaro nada queda sin area asignada (`comun`)
+ * y sin nombre. El rol de quien se declara es siempre `usuario`.
+ */
+export function armarPerfil({ persona, identidad, declarado = null, previo = null }) {
     const texto = (v, max) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
-    return {
-        nombre: persona ? texto(persona.nombre, 60) : '',
-        mail: persona ? texto(persona.mail, 80) : '',
-        area,
-        puesto: persona ? texto(persona.puesto, 80) : '',
-        rol: persona && persona.rol ? texto(persona.rol, 30) : 'usuario',
-        pc: texto(identidad.pc, 40),
-        usuario_windows: texto(identidad.usuario, 40),
-    };
+    const base = { pc: texto(identidad.pc, 40), usuario_windows: texto(identidad.usuario, 40) };
+    if (persona) {
+        const area = AREAS.includes(normTexto(persona.area || '')) ? normTexto(persona.area) : AREA_COMUN;
+        return { nombre: texto(persona.nombre, 60), mail: texto(persona.mail, 80), area, puesto: texto(persona.puesto, 80), rol: persona.rol ? texto(persona.rol, 30) : 'usuario', ...base };
+    }
+    const areaDicha = declarado ? areaDeclarada(declarado.area) : null;
+    if (areaDicha) {
+        return { nombre: texto(declarado.nombre, 60) || base.usuario_windows, mail: '', area: areaDicha, puesto: texto(declarado.puesto, 80), rol: 'usuario', ...base, declarado: true };
+    }
+    // lo que la persona ya habia declarado en esta PC se conserva: repetir la instalacion no la deja sin area
+    const mismoUsuario = previo && normTexto(previo.usuario_windows || '') === normTexto(base.usuario_windows);
+    if (mismoUsuario && previo.declarado === true && areaDeclarada(previo.area)) {
+        return { nombre: texto(previo.nombre, 60) || base.usuario_windows, mail: '', area: areaDeclarada(previo.area), puesto: texto(previo.puesto, 80), rol: 'usuario', ...base, declarado: true };
+    }
+    return { nombre: '', mail: '', area: AREA_COMUN, puesto: '', rol: 'usuario', ...base };
 }
 
 /**
@@ -2040,12 +2079,20 @@ function dejarAvisoInstalacion({ nube, identidad, area, tipo, mensaje, ahora }) 
  * `antesDe(paso)` es un gancho de las pruebas: se llama antes de cada paso ('clave', 'publicacion', 'persona', 'copia',
  * 'trabajo', 'plugin', 'marcador') y sirve para simular un corte.
  */
-export function instalar({ nube, home, estado, claudeDir, clavePublica = null, identidad = identidadLocal(), ahora = new Date(), antesDe = null, simular = false, env = process.env }) {
-    const res = { estado: 'error', errores: [], avisos: [], pasos: [], plan: [], home, estado_dir: estado, claudeDir };
+export function instalar({ nube, home, estado, claudeDir, clavePublica = null, identidad = identidadLocal(), ahora = new Date(), antesDe = null, simular = false, env = process.env, declarado = null, desdeCarpeta = false }) {
+    const res = { estado: 'error', errores: [], avisos: [], pasos: [], plan: [], home, estado_dir: estado, claudeDir, desdeCarpeta: !!desdeCarpeta };
     const paso = (n) => { res.pasos.push(n); if (antesDe) antesDe(n); };
     const anotar = (que, ruta) => res.plan.push({ que, ruta });   // con --simular es TODO lo que se escribiria; sin el, lo que se escribio
     if (!nube || !fs.existsSync(nube)) { res.estado = 'esperar'; res.mensaje = 'No encuentro la carpeta publicada de la nube: ¿OneDrive ya la bajó? Probá de nuevo en un rato.'; return res; }
     if (!home || !estado || !claudeDir) { res.errores.push('falta la carpeta de la PC, la de estado o la de configuración de Claude (CLAUDE_AREA_HOME, CLAUDE_AREA_ESTADO, --usuario-home o sus opciones)'); return res; }
+    // lo que la persona declara se revisa ANTES de tocar nada: un area mal escrita no instala a medias
+    if (declarado && String(declarado.area ?? '').trim() && !areaDeclarada(declarado.area)) {
+        res.errores.push(`el área "${declarado.area}" no existe (van: ${AREAS_PARA_ELEGIR.map(([, n]) => n).join(', ')}). No se tocó nada.`);
+        return res;
+    }
+    // Instalando desde una carpeta (pendrive o copia): el buzon solo se usa si la carpeta trae la forma de la nube
+    // (`1- PUBLICADO` con su `4- BUZON` al lado); si no, no se escribe nada adentro de lo publicado.
+    const hayBuzon = !desdeCarpeta || normTexto(path.basename(nube)) === normTexto(PROYECTOS.area.publicado);
     const publicado = path.join(home, 'publicado');
     res.publicado = publicado;
 
@@ -2081,13 +2128,21 @@ export function instalar({ nube, home, estado, claudeDir, clavePublica = null, i
         if (!personas) res.avisos.push('la lista de personas no se pudo leer: la PC queda sin área asignada');
     } else res.avisos.push('lo publicado no trae la lista de personas: la PC queda sin área asignada');
     const persona = buscarPersona(personas, identidad);
-    const perfil = armarPerfil({ persona, identidad });
-    res.perfil = perfil;
-    res.persona = !!persona;
     const pPerfil = path.join(home, 'perfil.json');
-    const textoPerfil = jsonCanonico(perfil);
     let perfilActual = null;
     try { perfilActual = fs.readFileSync(pPerfil, 'utf8'); } catch { perfilActual = null; }
+    // quien no figura puede DECIR su area (y queda anotado que la dijo ella); una baja de la lista, no
+    const baja = !persona && estaDeBaja(personas, identidad);
+    const dijo = declarado && areaDeclarada(declarado.area) ? declarado : null;
+    if (persona && dijo) res.avisos.push('esta persona figura en la lista de personas: se usó lo que dice la lista, no lo que se indicó al instalar');
+    if (baja && dijo) res.avisos.push('este usuario figura dado de baja en la lista de personas: queda sin área asignada');
+    let perfilPrevio = null;
+    try { perfilPrevio = perfilActual ? JSON.parse(perfilActual) : null; } catch { perfilPrevio = null; }
+    const perfil = armarPerfil({ persona, identidad, declarado: baja ? null : dijo, previo: baja ? null : perfilPrevio });
+    res.perfil = perfil;
+    res.persona = !!persona;
+    res.declarado = perfil.declarado === true;
+    const textoPerfil = jsonCanonico(perfil);
     const perfilCambia = perfilActual !== textoPerfil;
     if (perfilCambia) {
         if (perfilActual !== null) { anotar('copia del perfil anterior', `${pPerfil}.anterior-${selloCarpeta(ahora)}`); if (!simular) fs.copyFileSync(pPerfil, `${pPerfil}.anterior-${selloCarpeta(ahora)}`); }   // nada se pisa sin copia
@@ -2097,7 +2152,7 @@ export function instalar({ nube, home, estado, claudeDir, clavePublica = null, i
 
     // 4) la copia verificada de lo comun + lo de su area (misma logica que --actualizar: nunca pisa, nunca borra)
     paso('copia');
-    const act = actualizar({ destino: publicado, nube, clavePublica: k.ruta, proyecto: 'area', area: perfil.area, identidad, ahora, home: simular ? null : home, simular, env });
+    const act = actualizar({ destino: publicado, nube, clavePublica: k.ruta, proyecto: 'area', area: perfil.area, identidad, ahora, home: simular ? null : home, simular, env, sinSalud: !hayBuzon });
     res.actualizacion = act;
     if (act.estado !== 'actualizado' && act.estado !== 'al_dia' && act.estado !== 'simulado') {
         res.errores.push(...act.errores);
@@ -2132,10 +2187,13 @@ export function instalar({ nube, home, estado, claudeDir, clavePublica = null, i
     }
 
     // 7) si la persona no figura, el administrador se entera (una vez por perfil escrito, no en cada corrida)
-    if (!persona && perfilCambia) {
+    if (!persona && perfilCambia && hayBuzon) {
+        const quedo = perfil.declarado
+            ? `quedó instalada como ${perfil.area} porque lo dijo la persona al instalar (nombre: ${perfil.nombre || 'sin decir'}; puesto: ${perfil.puesto || 'sin decir'}). Si está bien, agregala a la lista`
+            : 'quedó instalada sin área asignada';
         if (simular) anotar('aviso "sin persona" al buzón', path.join(carpetaBuzon(nube), 'avisos', nombrePcCarpeta(identidad.pc)));
         else {
-            try { res.avisoSinPersona = dejarAvisoInstalacion({ nube, identidad, area: perfil.area, tipo: 'sin-persona', mensaje: `${identidad.usuario || 'alguien'} en ${identidad.pc || 'una PC'} no figura en la lista de personas: quedó instalada sin área asignada`, ahora }); anotar('aviso "sin persona" al buzón', res.avisoSinPersona); }
+            try { res.avisoSinPersona = dejarAvisoInstalacion({ nube, identidad, area: perfil.area, tipo: 'sin-persona', mensaje: `${identidad.usuario || 'alguien'} en ${identidad.pc || 'una PC'} no figura en la lista de personas: ${quedo}`, ahora }); anotar('aviso "sin persona" al buzón', res.avisoSinPersona); }
             catch (e) { res.avisos.push(`no pude dejar el aviso de persona sin asignar: ${e.message}`); }
         }
     }
@@ -2144,14 +2202,16 @@ export function instalar({ nube, home, estado, claudeDir, clavePublica = null, i
     paso('marcador');
     const pMarcador = path.join(home, MARCADOR_INSTALADO);
     const previo = leerJson(pMarcador);
-    const marcador = { formato: FORMATO, version: pub.version, area: perfil.area, usuario_windows: perfil.usuario_windows, pc: perfil.pc, plugin: `${NOMBRE_PLUGIN}@${NOMBRE_MARKETPLACE}`, claude_dir: claudeDir, clave: k.huella, instalado: previo && previo.instalado ? previo.instalado : isoLocal(ahora), ultima_vez: isoLocal(ahora) };
+    const marcador = { formato: FORMATO, version: pub.version, area: perfil.area, usuario_windows: perfil.usuario_windows, pc: perfil.pc, plugin: `${NOMBRE_PLUGIN}@${NOMBRE_MARKETPLACE}`, claude_dir: claudeDir, clave: k.huella, instalado: previo && previo.instalado ? previo.instalado : isoLocal(ahora), ultima_vez: isoLocal(ahora), ...(desdeCarpeta ? { origen: 'carpeta' } : {}) };
     const sinCambios = previo && previo.version === marcador.version && previo.area === marcador.area && previo.clave === marcador.clave && act.estado === 'al_dia' && hp.estado === 'ya_estaba' && !perfilCambia;
     if (!sinCambios) { anotar('marcador de instalado (al final)', pMarcador); if (!simular) escribirAtomico(pMarcador, jsonCanonico(marcador)); }
     const rutaSalud = path.join(carpetaBuzon(nube), 'salud', `${nombrePcCarpeta(identidad.pc)}.json`);
-    anotar('salud de esta PC en el buzón', rutaSalud);
+    if (hayBuzon) anotar('salud de esta PC en el buzón', rutaSalud);
     if (simular) { res.estado = 'simulado'; res.version = pub.version; return res; }
-    try { res.salud = escribirSalud({ nube, salud: { ...armarSalud({ destino: publicado, res: { ...act, estado: sinCambios ? 'al_dia' : 'instalado', errores: [] }, identidad, ahora }), area: perfil.area } }); }
-    catch (e) { res.avisos.push(`no pude dejar la salud de esta PC en la nube: ${e.message}`); }
+    if (hayBuzon) {
+        try { res.salud = escribirSalud({ nube, salud: { ...armarSalud({ destino: publicado, res: { ...act, estado: sinCambios ? 'al_dia' : 'instalado', errores: [] }, identidad, ahora }), area: perfil.area } }); }
+        catch (e) { res.avisos.push(`no pude dejar la salud de esta PC en la nube: ${e.message}`); }
+    }
     res.estado = sinCambios ? 'ya_instalado' : 'instalado';
     return res;
 }
@@ -2161,8 +2221,8 @@ export function instalar({ nube, home, estado, claudeDir, clavePublica = null, i
 // ---------------------------------------------------------------------------------------------
 
 /** Las opciones que existen. Cualquier otra cosa es un error: un argumento mal escrito NO se ignora (01/10/2026: un `--help` ignorado instalo de verdad). */
-export const OPCIONES_CON_VALOR = ['nube', 'origen', 'destino', 'lista', 'nota', 'autor', 'que', 'aportar', 'perfil', 'pendrive', 'area', 'proyecto', 'clave', 'clave-publica', 'rollback', 'motivo', 'home', 'usuario-home', 'claude-dir'];
-export const OPCIONES_BANDERA = ['publicar', 'actualizar', 'instalar', 'ver', 'aportes', 'donde', 'generar-clave', 'chequear', 'simular', 'forzar', 'reponer', 'sin-firma', 'nube-real'];
+export const OPCIONES_CON_VALOR = ['nube', 'origen', 'destino', 'lista', 'nota', 'autor', 'que', 'aportar', 'perfil', 'pendrive', 'area', 'proyecto', 'clave', 'clave-publica', 'rollback', 'motivo', 'home', 'usuario-home', 'claude-dir', 'nombre', 'puesto'];
+export const OPCIONES_BANDERA = ['publicar', 'actualizar', 'instalar', 'ver', 'aportes', 'donde', 'generar-clave', 'chequear', 'simular', 'forzar', 'reponer', 'sin-firma', 'nube-real', 'preguntar'];
 
 export function parsearArgs(argv) {
     const a = { notas: [] };
@@ -2203,26 +2263,48 @@ function imprimirLista(titulo, items, max = 12) {
  *   CLAUDE_AREA_ESTADO la carpeta de estado de la PC, donde puede estar `publicador.pub`
  * --nube, --destino, --clave y --clave-publica le ganan a las variables.
  */
+/**
+ * La carpeta publicada desde la que corre este programa, o null. En lo publicado el programa vive en
+ * `<publicado>\contenido\programas\_paquete.mjs`: si arriba de `contenido\` estan VERSION.json y MANIFIESTO.json,
+ * esa carpeta ES una publicacion (la de la nube, un pendrive o una copia). Solo mira: lo que haya adentro se
+ * verifica despues, igual que lo de la nube (manifiesto firmado y hash de cada archivo).
+ */
+export function publicadoDeEstePrograma(raiz = RAIZ) {
+    if (normTexto(path.basename(raiz)) !== 'contenido') return null;
+    const pub = path.dirname(raiz);
+    return fs.existsSync(path.join(pub, 'VERSION.json')) && fs.existsSync(path.join(pub, 'MANIFIESTO.json')) ? pub : null;
+}
+
 export function resolverEntorno(a, env = process.env, raiz = RAIZ) {
     const proyecto = a.proyecto || (env.CLAUDE_AREA_NUBE ? 'area' : PROYECTO_POR_DEFECTO);
     if (!PROYECTOS[proyecto]) return { error: `--proyecto tiene que ser ${Object.keys(PROYECTOS).join(' o ')}` };
     const esArea = proyecto === 'area';
-    const nube = a.nube ? path.resolve(a.nube)
+    let nube = a.nube ? path.resolve(a.nube)
         : (esArea && env.CLAUDE_AREA_NUBE) ? path.join(path.resolve(env.CLAUDE_AREA_NUBE), PROYECTOS.area.publicado)
             : buscarNube(env.USERPROFILE || os.homedir(), proyecto);
+    // --instalar en una PC que no ve la nube de Barack (una PC de planta, un pendrive, una carpeta copiada): si este
+    // programa corre desde una carpeta publicada, se instala desde ESA carpeta. La nube, si esta a la vista, manda.
+    let nubeDesdeCarpeta = false;
+    if (esArea && a.instalar && !a.nube && !env.CLAUDE_AREA_NUBE && !(nube && fs.existsSync(path.join(nube, 'VERSION.json')))) {
+        const aqui = publicadoDeEstePrograma(raiz);
+        if (aqui) { nube = aqui; nubeDesdeCarpeta = true; }
+    }
     const origen = path.resolve(a.origen || raiz);
     // la PC del proyecto de areas: --home, CLAUDE_AREA_HOME o C:\ClaudeBarack (y su `publicado\` es el destino)
     const homeIndicado = !!(a.home || env.CLAUDE_AREA_HOME);
     const home = a.home ? path.resolve(a.home) : (env.CLAUDE_AREA_HOME ? path.resolve(env.CLAUDE_AREA_HOME) : (esArea ? rutaHomePorDefecto(env) : null));
     const destino = path.resolve(a.destino || ((esArea && home) ? path.join(home, 'publicado') : raiz));
     const estado = rutaEstadoPorDefecto(env);
-    const claudeDir = a['usuario-home'] ? path.resolve(a['usuario-home']) : rutaClaudeDirPorDefecto(env);
+    // CLAUDE_AREA_USUARIO_HOME vale lo mismo que --usuario-home: es la forma de probar el instalador de doble clic
+    // (`Instalar.cmd` no recibe opciones) con las carpetas de prueba completas
+    const usuarioHome = a['usuario-home'] || env.CLAUDE_AREA_USUARIO_HOME || null;
+    const claudeDir = usuarioHome ? path.resolve(usuarioHome) : rutaClaudeDirPorDefecto(env);
     const clavePrivada = a.clave ? path.resolve(a.clave) : rutaClavePrivadaPorDefecto(env);
     const clavePublica = a['clave-publica'] ? path.resolve(a['clave-publica']) : buscarClavePublica(env);
     // que rutas vinieron INDICADAS (prueba) y cuales se toman reales: la regla "todo o nada" de --instalar / --actualizar en area
-    const indicadores = { home: homeIndicado, destino: !!a.destino, nube: !!(a.nube || env.CLAUDE_AREA_NUBE), estado: !!env.CLAUDE_AREA_ESTADO, usuarioHome: !!a['usuario-home'] };
+    const indicadores = { home: homeIndicado, destino: !!a.destino, nube: !!(a.nube || env.CLAUDE_AREA_NUBE), estado: !!env.CLAUDE_AREA_ESTADO, usuarioHome: !!usuarioHome };
     const nubeAutomatica = !a.nube && !env.CLAUDE_AREA_NUBE;
-    return { proyecto, nube, origen, destino, home, homeIndicado, estado, claudeDir, clavePrivada, clavePublica, indicadores, nubeAutomatica };
+    return { proyecto, nube, origen, destino, home, homeIndicado, estado, claudeDir, clavePrivada, clavePublica, indicadores, nubeAutomatica, nubeDesdeCarpeta };
 }
 
 function imprimirUso() {
@@ -2230,35 +2312,64 @@ function imprimirUso() {
     say('     Fak: --pendrive <carpeta del pendrive> (arma Base + el instalador) · --donde (muestra la carpeta de la nube)');
     say('          --generar-clave (una vez: el par de claves de firma) · --publicar --rollback <N> (vuelve a la version N)');
     say('     PC nueva del proyecto de areas: --instalar --proyecto area [--simular] [--home <carpeta>] [--usuario-home <carpeta .claude>] [--clave-publica <archivo>] [--forzar]');
+    say('       si la persona no figura en la lista: --area "<área>" --nombre "<nombre>" --puesto "<puesto>" (lo que dijo ella), o --preguntar (se lo pregunta en la consola)');
+    say('       desde un pendrive o una carpeta copiada: corre igual; si la PC no ve la nube, instala desde la carpeta donde está este programa');
     say('       (para PROBAR: CLAUDE_AREA_HOME, CLAUDE_AREA_NUBE, CLAUDE_AREA_ESTADO y --usuario-home, TODAS; una mezcla de prueba y real no corre)');
     say('     opciones: --nota "texto" · --simular · --forzar · --reponer · --area <id> · --proyecto area|ingenieria · --autor "..." · --que "..."');
     say('              --nube <carpeta> · --destino <carpeta> · --clave <archivo> · --clave-publica <archivo> · --sin-firma · --motivo "..." · --nube-real');
     say('     --help muestra esto y no hace nada. Una opcion que no existe es un error y tampoco hace nada.');
 }
 
-function main() {
+/**
+ * Las tres preguntas del instalador de doble clic a quien no figura en la lista de personas. `preguntar(texto)` devuelve
+ * lo que escribio la persona. Devuelve { area, nombre, puesto } o null si no eligio un area (Enter = seguir sin area).
+ */
+export async function pedirPersona({ preguntar, decir = () => {} }) {
+    decir('');
+    decir('Esta PC no figura todavía en la lista de personas de Barack.');
+    decir('¿De qué área es quien la usa?');
+    decir(AREAS_PARA_ELEGIR.map(([, nombre], i) => `  ${i + 1}. ${nombre}`).join('\n'));
+    let area = null;
+    for (let intento = 0; intento < 3 && !area; intento++) {
+        const r = String(await preguntar('Escribí el número o el nombre del área (Enter solo = seguir sin área): ') ?? '').trim();
+        if (!r) return null;
+        area = areaDeclarada(r);
+        if (!area) decir(`  No conozco el área "${r}".`);
+    }
+    if (!area) return null;
+    const nombre = String(await preguntar('Nombre y apellido: ') ?? '').trim();
+    const puesto = String(await preguntar('Puesto (por ejemplo: Supervisor de Producción): ') ?? '').trim();
+    return { area, nombre, puesto };
+}
+
+function main(extra = null) {
     const a = parsearArgs(process.argv.slice(2));
     if (a.error) { console.error(`✗ ${a.error}`); return 1; }
     if (a.help) { imprimirUso(); return 0; }
+    if (extra) Object.assign(a, extra);   // lo que contesto la persona en la consola (--preguntar)
     const ent = resolverEntorno(a);
     if (ent.error) { console.error(`✗ ${ent.error}`); return 1; }
-    const { proyecto, nube, origen, destino, home, homeIndicado, estado, claudeDir, clavePrivada, clavePublica, indicadores, nubeAutomatica } = ent;
+    const { proyecto, nube, origen, destino, home, homeIndicado, estado, claudeDir, clavePrivada, clavePublica, indicadores, nubeAutomatica, nubeDesdeCarpeta } = ent;
     const modos = ['publicar', 'actualizar', 'instalar', 'ver', 'aportar', 'aportes', 'perfil', 'pendrive', 'donde', 'generar-clave', 'chequear'].filter((k) => a[k]);
     if (modos.length !== 1) { imprimirUso(); return modos.length ? 1 : 0; }
     const modo = modos[0];
     if (a.rollback !== undefined && !/^\d+$/.test(String(a.rollback))) { console.error('✗ --rollback necesita el numero de una version publicada (ej: --rollback 3)'); return 1; }
+    if (modo !== 'instalar' && (a.nombre !== undefined || a.puesto !== undefined || a.preguntar)) { console.error('✗ --nombre, --puesto y --preguntar son de --instalar. No se hizo nada.'); return 1; }
 
     if (modo === 'instalar') {
         if (proyecto !== 'area' && !exigeFirma({ nube, proyecto })) { console.error('✗ --instalar es del proyecto de áreas: pasá --proyecto area (o la variable CLAUDE_AREA_NUBE)'); return 1; }
-        // todo o nada: carpetas de prueba para la PC pero el settings.json real (o al reves) no corre
-        const mezcla = mezclaPruebaReal(indicadores, ['home', 'nube', 'estado', 'usuarioHome']);
+        // todo o nada: carpetas de prueba para la PC pero el settings.json real (o al reves) no corre. La carpeta desde la
+        // que corre el programa (un pendrive, una copia) no es ni de prueba ni la nube real: no entra en la cuenta.
+        const mezcla = mezclaPruebaReal(indicadores, nubeDesdeCarpeta ? ['home', 'estado', 'usuarioHome'] : ['home', 'nube', 'estado', 'usuarioHome']);
         if (mezcla) { console.error(`✗ ${mezcla} Para probar: CLAUDE_AREA_HOME, CLAUDE_AREA_NUBE, CLAUDE_AREA_ESTADO y --usuario-home, las cuatro.`); return 1; }
         // la PC del administrador no se instala sola de verdad
         if (!indicadores.home && !a.forzar) {
             const motivos = pcDelAdministrador({ env: process.env, home, raizScript: RAIZ });
             if (motivos.length) { console.error(`✗ Esta parece la PC del administrador (${motivos.join('; ')}): acá una instalación de verdad no corre sola. Si de verdad querés, pasá --forzar. No se tocó nada.`); return 1; }
         }
-        const r = instalar({ nube, home, estado, claudeDir, clavePublica: a['clave-publica'] ? path.resolve(a['clave-publica']) : null, identidad: identidadLocal(), simular: !!a.simular });
+        const declarado = (a.area !== undefined || a.nombre !== undefined || a.puesto !== undefined) ? { area: a.area ?? '', nombre: a.nombre ?? '', puesto: a.puesto ?? '' } : null;
+        if (declarado && !String(declarado.area).trim()) { console.error('✗ Con --nombre o --puesto hace falta --area (el área que dijo la persona). No se hizo nada.'); return 1; }
+        const r = instalar({ nube, home, estado, claudeDir, clavePublica: a['clave-publica'] ? path.resolve(a['clave-publica']) : null, identidad: identidadLocal(), simular: !!a.simular, declarado, desdeCarpeta: nubeDesdeCarpeta });
         if (r.estado === 'simulado') {
             say(`Simulado: --instalar (versión ${r.version}, ${r.perfil.nombre || 'persona sin asignar'}, área ${r.perfil.area}) escribiría ${r.plan.length} cosa(s) y no escribió ninguna:`);
             for (const p of r.plan) say(`    - ${p.ruta}  (${p.que})`);
@@ -2272,8 +2383,12 @@ function main() {
             for (const e of r.errores.slice(0, 20)) console.error(`    - ${e}`);
             return 1;
         }
-        const quien = r.perfil.nombre ? `${r.perfil.nombre} (área ${r.perfil.area})` : `persona sin asignar (área ${r.perfil.area}): el administrador ya tiene el aviso`;
+        const quien = r.perfil.nombre
+            ? `${r.perfil.nombre} (área ${r.perfil.area}${r.declarado ? ', como lo dijo la persona' : ''})`
+            : `persona sin asignar (área ${r.perfil.area})${r.avisoSinPersona ? ': el administrador ya tiene el aviso' : ''}`;
         say(`✓ ${r.estado === 'ya_instalado' ? 'Ya estaba instalado' : 'Instalado'}: versión ${r.version}, ${quien}.`);
+        if (!r.persona && !r.declarado) say('  Esta persona no figura en la lista. Para que quede con su área: correr de nuevo con --area "<área>" --nombre "<nombre y apellido>" --puesto "<puesto>".');
+        if (r.desdeCarpeta) say('  Instalado desde esta carpeta (esta PC no ve la nube de Barack): no se actualiza sola; para actualizarla se instala de nuevo desde una carpeta más nueva.');
         say(`  Abrí Claude en ${r.home} (tus archivos van en ${path.join(r.home, 'Trabajo')}).   Plugin: ${r.plugin.estado === 'habilitado' ? `habilitado en ${r.plugin.ruta}` : 'ya estaba habilitado'}${r.plugin.respaldo ? ` (respaldo: ${r.plugin.respaldo})` : ''}`);
         if (r.casa && r.casa.migrado) say(`  Las reglas viejas de Trabajo\\.claude\\rules pasaron a cuarentena: ${r.casa.migrado}`);
         imprimirLista('  Avisos:', r.avisos, 10);
@@ -2435,6 +2550,44 @@ function main() {
     return 1;
 }
 
+/**
+ * `--instalar --preguntar` (el instalador de doble clic): si la persona no figura en la lista y no declaro nada, se le
+ * pregunta en la consola. Primero se mira (sin escribir) quien es; sin consola a la vista no se pregunta nada.
+ */
+async function conPreguntas() {
+    const a = parsearArgs(process.argv.slice(2));
+    if (a.error || a.help || !a.instalar || !a.preguntar || a.simular || a.area !== undefined) return main();
+    if (!process.stdin.isTTY || !process.stdout.isTTY) return main();
+    const ent = resolverEntorno(a);
+    if (ent.error || !ent.nube || !ent.home) return main();
+    // lo que main() va a rechazar igual (mezcla de prueba y real, la PC del administrador) no merece preguntas
+    if (mezclaPruebaReal(ent.indicadores, ent.nubeDesdeCarpeta ? ['home', 'estado', 'usuarioHome'] : ['home', 'nube', 'estado', 'usuarioHome'])) return main();
+    if (!ent.indicadores.home && !a.forzar && pcDelAdministrador({ env: process.env, home: ent.home, raizScript: RAIZ }).length) return main();
+    let vista = null;
+    try { vista = instalar({ nube: ent.nube, home: ent.home, estado: ent.estado, claudeDir: ent.claudeDir, clavePublica: a['clave-publica'] ? path.resolve(a['clave-publica']) : null, identidad: identidadLocal(), simular: true, desdeCarpeta: ent.nubeDesdeCarpeta }); } catch { vista = null; }
+    if (!vista || vista.estado !== 'simulado' || vista.persona || vista.declarado) return main();
+    const { createInterface } = await import('node:readline/promises');
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    let dicho = null;
+    try { dicho = await pedirPersona({ preguntar: (t) => rl.question(t), decir: say }); } catch { dicho = null; } finally { rl.close(); }
+    say('');
+    return main(dicho ? { area: dicho.area, nombre: dicho.nombre, puesto: dicho.puesto } : null);
+}
+
+/** Lo que se le dice a la persona cuando el sistema no deja seguir (una linea, sin la traza del programa). */
+export function mensajeDeError(e) {
+    const ruta = e && e.path ? ` (${e.path})` : '';
+    const codigo = e && e.code;
+    if (codigo === 'EPERM' || codigo === 'EACCES') return `Windows no deja crear o escribir${ruta}: puede ser un permiso de esta PC o el antivirus. Avisale a Ingeniería.`;
+    if (codigo === 'ENOSPC') return `no queda lugar en el disco${ruta}.`;
+    if (codigo === 'EBUSY') return `hay un archivo en uso${ruta}: cerrá Claude y probá de nuevo.`;
+    if (codigo === 'ENOTDIR' || codigo === 'ENOENT') return `no se puede usar esa carpeta${ruta}: hay algo con ese nombre que no es una carpeta, o falta la de arriba.`;
+    return String((e && e.message) || e);
+}
+
 // Solo corre como script; importado (por el test) no hace nada.
 const comoScript = process.argv[1] && path.resolve(process.argv[1]).toLowerCase() === path.resolve(fileURLToPath(import.meta.url)).toLowerCase();
-if (comoScript) process.exitCode = main();
+if (comoScript) {
+    try { process.exitCode = process.argv.includes('--preguntar') ? await conPreguntas() : main(); }
+    catch (e) { console.error(`✗ No se pudo terminar: ${mensajeDeError(e)} Lo que ya estaba no se borró; se puede repetir.`); process.exitCode = 1; }
+}
