@@ -1255,6 +1255,22 @@ function moverACuarentena(abs, destinoCuarentena) {
     fs.renameSync(abs, destinoCuarentena);
 }
 
+/** El numero de proceso anotado en el candado (`<pid> <fecha>`), o null si no se entiende. */
+function pidDelLock(p) {
+    try { const n = Number.parseInt(String(fs.readFileSync(p, 'utf8')).trim().split(/\s+/)[0], 10); return Number.isInteger(n) && n > 0 ? n : null; }
+    catch { return null; }
+}
+
+/**
+ * ¿Sigue vivo ese proceso en esta PC? `process.kill(pid, 0)` no mata: solo pregunta. Sin numero (null) se contesta que
+ * SI: ante la duda el candado se respeta. EPERM = existe y es de otro usuario.
+ */
+export function procesoVivo(pid) {
+    if (pid === null || pid === undefined) return true;
+    if (pid === process.pid) return true;
+    try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
+}
+
 function tomarLock(destino, ahora) {
     const p = path.join(destino, ...REL_LOCK.split('/'));
     fs.mkdirSync(path.dirname(p), { recursive: true });
@@ -1268,6 +1284,9 @@ function tomarLock(destino, ahora) {
             if (e.code !== 'EEXIST') throw e;
             let viejo = false;
             try { viejo = Date.now() - fs.statSync(p).mtimeMs > LOCK_VENCE_MIN * 60000; } catch { viejo = false; }
+            // Un candado de una corrida que se CORTO (ventana cerrada, PC apagada) no tiene por que trabar una hora: si el
+            // proceso que lo tomo ya no existe en esta PC, se toma. Si no se puede saber (archivo raro), vale la hora.
+            if (!viejo && !procesoVivo(pidDelLock(p))) viejo = true;
             if (!viejo) return null;
             try { fs.unlinkSync(p); } catch { return null; }
         }
@@ -1585,11 +1604,14 @@ export function chequear({ destino, nube }) {
     // novedad. Sin esto el aviso de arranque decia "hay una nueva (la 4)" con la 5 instalada (visto el 03/10/2026).
     const atrasada = distinta && instalada !== null && version.version < instalada;
     if (distinta && !atrasada) return fin('hay_novedades', { ...base, motivo: 'version_nueva' });
+    // con la nube atrasada tampoco se avisa de una instalacion tocada: de ESA nube no se puede reponer nada
+    // (`--actualizar` la rechaza por version anterior), y el aviso diria "hay una nueva (la 1)" con la 2 instalada
+    if (atrasada) return fin('al_dia', { ...base, motivo: 'nube_atrasada' });
     if (instalado.proyecto === 'area' && instalado.huellas && typeof instalado.huellas === 'object') {
         const cambiados = archivosConOtraHuella(destino, instalado.huellas);
         if (cambiados.length) return fin('hay_novedades', { ...base, motivo: 'instalacion_tocada', cambiados: cambiados.slice(0, 5), total_cambiados: cambiados.length });
     }
-    return fin('al_dia', atrasada ? { ...base, motivo: 'nube_atrasada' } : base);
+    return fin('al_dia', base);
 }
 export const CODIGOS_CHEQUEO = { al_dia: 0, hay_novedades: 2, sin_nube: 3, nube_incompleta: 3, sin_instalar: 5 };
 
@@ -2240,6 +2262,13 @@ export function instalar({ nube, home, estado, claudeDir, clavePublica = null, i
     if (act.estado !== 'actualizado' && act.estado !== 'al_dia' && act.estado !== 'simulado') {
         res.errores.push(...act.errores);
         if (act.mensaje) res.mensaje = act.mensaje;
+        // otra corrida esta copiando en esta PC (la tarea que actualiza, u otro «Instalar»): no es un error, es esperar.
+        // Antes salia "No quedó instalado (0 problema(s))", sin decir por que.
+        if (act.estado === 'ocupado') {
+            res.estado = 'esperar';
+            res.mensaje = 'En esta PC hay otra instalación o actualización corriendo en este momento. No se tocó nada: esperá un par de minutos y repetí «Instalar».';
+            return res;
+        }
         res.estado = ['esperar', 'sin_clave', 'firma_rechazada', 'version_anterior'].includes(act.estado) ? act.estado : 'error';
         return res;
     }
@@ -2464,7 +2493,7 @@ export function omitirPermisosEnLaApp(env = process.env) {
 
 /** La linea que ve quien instala sobre «Omitir permisos», segun lo que se pudo leer de la app. */
 export const lineaOmitirPermisos = (estado) => (estado === 'si'
-    ? '  Permisos: las conversaciones nuevas arrancan sin carteles («Omitir permisos»); en esta PC la app ya lo tiene habilitado.'
+    ? '  Permisos: las conversaciones nuevas arrancan sin carteles («Omitir permisos»); en esta PC ya hay una cuenta de Claude que lo tiene habilitado (se habilita por cuenta: con otra cuenta hay que prenderlo de nuevo).'
     : (estado === 'no'
         ? '  Permisos: FALTA UN PASO en esta PC para que Claude no pida permiso a cada rato: abrir Claude > Configuración > Claude Code y prender la opción que permite el modo «Omitir permisos» (una vez por cuenta).'
         : '  Permisos: las conversaciones nuevas arrancan sin carteles («Omitir permisos»). Para que la app lo use, prender UNA vez en esta PC: Configuración de Claude > Claude Code > permitir el modo de omitir permisos.'));

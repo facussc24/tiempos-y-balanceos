@@ -830,13 +830,13 @@ describe('habilitarPlugin y perfil: las dos direcciones', () => {
         expect(P.omitirPermisosEnLaApp({ APPDATA: appdata })).toBe('si');
         expect(fs.readFileSync(cfg, 'utf8')).toBe(conUna);   // solo lee
         // las tres lineas dicen cosas distintas, y solo la del "no" manda a hacer algo
-        expect(P.lineaOmitirPermisos('si')).toContain('ya lo tiene habilitado');
+        expect(P.lineaOmitirPermisos('si')).toContain('lo tiene habilitado');
         expect(P.lineaOmitirPermisos('no')).toContain('FALTA UN PASO');
         expect(P.lineaOmitirPermisos('no_se')).toContain('prender UNA vez');
         const dicho = [];
         const r = { estado: 'instalado', version: 1, perfil: { nombre: 'Marta', area: 'compras' }, persona: {}, home: path.join(tmp, 'h'), plugin: { estado: 'habilitado', ruta: 'x', modo: { valor: 'bypassPermissions' } }, avisos: [] };
         P.cerrarInstalacion(r, { indicadores: { home: true }, decir: (l) => dicho.push(l), env: { APPDATA: appdata } });
-        expect(dicho.join('\n')).toContain('ya lo tiene habilitado');
+        expect(dicho.join('\n')).toContain('lo tiene habilitado');
     });
 
     it('crea settings.json si no existe; agrega solo dos claves si existe; detecta "ya estaba"; no toca uno roto', () => {
@@ -2023,6 +2023,25 @@ describe.skipIf(!ES_WINDOWS)('como se actualiza una PC: sync_area.ps1 con la car
         const r2 = correrPs(path.join(pc.home, 'publicado', 'programas', 'sync_area.ps1'), ['-SinTarea', '-SinInventario', '-PrioridadNormal'], env);
         expect(r2.status, r2.stdout + r2.stderr).toBe(0);
         expect(json(pc.estado, 'estado.json')).toMatchObject({ nube: 'por_nombre', publicado: pub });
+    });
+
+    it('«Instalar» mientras otra corrida esta copiando en esa PC: no es un error sin motivo, es "esperá y repetí" (y no toca nada)', () => {
+        const armada = nubeArmada();
+        const pub = armada.pub;
+        const pc = pcNueva('pc-ocupada');
+        expect(instalar(pub, pc, ID.marta).estado).toBe('instalado');
+        publicarOtra(armada, pub);   // hay algo para copiar: ahi es donde se toma el candado
+        const candado = path.join(pc.home, 'publicado', ...P.REL_LOCK.split('/'));
+        fs.writeFileSync(candado, `${process.pid} 2026-10-03T10:00:00\n`);   // un proceso que sigue vivo: este
+        const antes = foto(pc.home);
+        const r = instalar(pub, pc, ID.marta);
+        expect(r.estado).toBe('esperar');
+        expect(r.mensaje).toContain('otra instalación o actualización corriendo');
+        expect(foto(pc.home)).toEqual(antes);
+        fs.unlinkSync(candado);
+        const despues = instalar(pub, pc, ID.marta);
+        expect(['instalado', 'ya_instalado']).toContain(despues.estado);
+        expect(json(pc.home, 'publicado/.claude/.paquete-instalado.json').version).toBe(2);
     });
 
     it('la nube se encuentra en las tres formas en que OneDrive la cuelga en otra PC: la biblioteca entera, la carpeta sincronizada sola y el acceso directo', () => {

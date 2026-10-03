@@ -587,13 +587,35 @@ describe('actualizar', () => {
         const { origen, nube, pc } = escenarioInstalado();
         esc(origen, '.claude/rules/regla.md', '# regla dos\n');
         pub(origen, nube, LISTA, { ahora: F(3) });
-        const candado = esc(pc, P.REL_LOCK, '123 x\n');
+        // el candado lo tiene un proceso que SIGUE vivo (este mismo): ocupado
+        const candado = esc(pc, P.REL_LOCK, `${process.pid} x\n`);
         const r = act(pc, nube, { ahora: F(4) });
         expect(r.estado).toBe('ocupado');
         expect(leer(pc, '.claude/rules/regla.md')).toBe('# regla uno\n');
+        // un candado que no dice de quien es se respeta igual (ante la duda, esperar)
+        fs.writeFileSync(candado, 'no se entiende\n');
+        expect(act(pc, nube, { ahora: F(4) }).estado).toBe('ocupado');
+        fs.writeFileSync(candado, `${process.pid} x\n`);
         const hace2h = new Date(Date.now() - 2 * 3600 * 1000);
         fs.utimesSync(candado, hace2h, hace2h);
         expect(act(pc, nube, { ahora: F(4) }).estado).toBe('actualizado');
+        expect(existe(pc, P.REL_LOCK)).toBe(false);
+    });
+
+    it('un candado RECIENTE de una corrida que se corto (el proceso ya no existe) no traba una hora: se retoma', () => {
+        const { origen, nube, pc } = escenarioInstalado();
+        esc(origen, '.claude/rules/regla.md', '# regla dos\n');
+        pub(origen, nube, LISTA, { ahora: F(3) });
+        // un proceso de verdad que ya termino: su numero ya no esta vivo
+        const muerto = spawnSync(process.execPath, ['-e', 'process.stdout.write(String(process.pid))'], { encoding: 'utf8' });
+        const pidMuerto = Number(muerto.stdout);
+        expect(Number.isInteger(pidMuerto) && pidMuerto > 0).toBe(true);
+        expect(P.procesoVivo(process.pid)).toBe(true);
+        expect(P.procesoVivo(null)).toBe(true);   // sin numero no se afirma que murio
+        expect(P.procesoVivo(pidMuerto)).toBe(false);
+        esc(pc, P.REL_LOCK, `${pidMuerto} 2026-10-03T10:00:00\n`);
+        expect(act(pc, nube, { ahora: F(4) }).estado).toBe('actualizado');
+        expect(leer(pc, '.claude/rules/regla.md')).toBe('# regla dos\n');
         expect(existe(pc, P.REL_LOCK)).toBe(false);
     });
 });

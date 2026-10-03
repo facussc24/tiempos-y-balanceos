@@ -255,8 +255,14 @@ carpeta de red o un pendrive no la encontraba). Ahora:
   si ese estado recuerda una carpeta a la vista (y entonces NO busca la nube por nombre); con `-RegistrarTarea` no.
 - **Una nube atrasada no es una novedad** (`chequear`): si la versión que se ve es MENOR que la instalada (OneDrive
   todavía no bajó la última, o la PC se instaló desde un pendrive más nuevo) devuelve `al_dia` con
-  `motivo: "nube_atrasada"`; la tarea no intenta una actualización que el programa rechazaría y el aviso de arranque no
-  dice "hay una nueva". Una versión mayor, o el mismo número con otro contenido, sigue siendo `hay_novedades`.
+  `motivo: "nube_atrasada"` (aunque haya archivos instalados tocados: de esa nube no se puede reponer nada), y el aviso
+  de arranque no dice "hay una nueva". Una versión mayor, o el mismo número con otro contenido, sigue siendo
+  `hay_novedades`. **Ojo:** la tarea no pasa por `--chequear`: corre siempre `--actualizar`, que con una nube más vieja
+  no toca nada y deja `version_anterior` en la salud (queda en rojo en el tablero). Es a propósito: una nube que
+  retrocede se mira (auditoría del 03/10/2026, punto 1).
+- **«Instalar» mientras otra corrida copia en la misma PC** (la tarea, u otro «Instalar»): sale con `esperar` (código 3)
+  y el motivo, no con "0 problemas". El candado (`publicado\.claude\.paquete.lock`, `<pid> <fecha>`) de una corrida que
+  se cortó se retoma enseguida si ese proceso ya no existe en la PC (`procesoVivo`); si no se puede saber, vale 60 minutos.
 - **Las tres formas en que OneDrive cuelga la nube en otra PC** (`buscarCarpetaEnBiblioteca`, en este orden de
   preferencia): adentro de la biblioteca de Ingeniería entera (`BARACK ARGENTINA SRL\Ingeniería y Proyecto -
   General\CLAUDE POR AREA`); la carpeta sincronizada sola (`BARACK ARGENTINA SRL\<sitio> - CLAUDE POR AREA`, lo que

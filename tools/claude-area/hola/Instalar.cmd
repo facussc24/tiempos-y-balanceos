@@ -12,6 +12,9 @@ echo  ------------------------------------------
 echo.
 if not exist "%NODE%" goto falta
 if not exist "%PROG%" goto falta
+echo  Verificando y copiando. Puede tardar uno o dos minutos (mas si se
+echo  esta bajando de la nube): no cierres esta ventana.
+echo.
 "%NODE%" "%PROG%" --instalar --proyecto area --preguntar
 set "COD=%ERRORLEVEL%"
 echo.
