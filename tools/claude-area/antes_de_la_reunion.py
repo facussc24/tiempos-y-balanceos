@@ -13,7 +13,7 @@ import sys
 RAIZ = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CASA = r"C:\ClaudeBarack"
 ENTREGABLES = os.path.join(RAIZ, "exports", "CLAUDES_POR_AREA_20261001")
-VIDEOS = ["Video por sector - Claude en Barack.mp4", "Video tutorial - Claude en Barack (version 2).mp4"]
+VIDEOS = ["Video por sector - Claude en Barack.mp4", "Video tutorial - Claude en Barack (version 3).mp4"]
 HOJAS = ["1 - Propuesta para Direccion.pdf", "3 - Preguntas que puede hacer Direccion.pdf", "4 - Guion de la reunion.pdf",
          "5 - Que dato puede pasar por Claude.pdf", "8 - Prueba en una PC de planta.pdf"]
 PLUGIN_REPO = r"C:\Dev\barack-claude\plugins\barack-area"
@@ -130,7 +130,40 @@ def paquete(carpeta):
         ("el «instalá» de Claude", os.path.join(pub, "CLAUDE.md"), os.path.join(RAIZ, "tools", "claude-area", "hola", "CLAUDE.md")),
     ) if not igual(a, b)]
     decir("BIEN" if not viejos else "OJO", "el paquete trae lo ultimo del repositorio" if not viejos else "el paquete trae una version anterior de: %s (anda igual; lo nuevo esta sin publicar)" % ", ".join(viejos))
+    # el validador oficial de Claude sobre el asistente del paquete (solo lee; con el programa de la app)
+    try:
+        import glob
+        binarios = sorted(glob.glob(os.path.join(os.environ.get("APPDATA", ""), "Claude", "claude-code", "*", "*", "claude.exe")), key=os.path.getmtime)
+        if binarios:
+            mk = os.path.join(pub, "contenido", "marketplace")
+            malos = [n for n, ruta in (("la lista de asistentes", mk), ("el asistente", os.path.join(mk, "plugins", "barack-area")))
+                     if subprocess.run([binarios[-1], "plugin", "validate", ruta, "--strict"], capture_output=True, text=True, timeout=120).returncode != 0]
+            decir("BIEN" if not malos else "MAL", "validador oficial de Claude: %s" % ("pasa" if not malos else "NO pasa en " + " y en ".join(malos)))
+        else:
+            decir("OJO", "no encontre el programa de la app para pasar el validador oficial")
+    except Exception as e:
+        decir("OJO", "no pude pasar el validador oficial (%s)" % str(e)[:60])
     return ver
+
+
+def la_nube(ver):
+    """La copia de la nube de Ingenieria: que sea la misma version que el paquete para llevar y que haya subido."""
+    org = os.path.join(os.path.expanduser("~"), "BARACK ARGENTINA SRL")
+    bib = [os.path.join(org, n) for n in (os.listdir(org) if os.path.isdir(org) else []) if re.match(r"^Ingenier.{1,2}a y Proyecto - General$", n)]
+    carpeta = os.path.join(bib[0], "CLAUDE POR AREA") if bib else None
+    print("La copia de la nube (%s)" % (carpeta or "no veo la biblioteca de Ingenieria"))
+    if not carpeta or not os.path.isdir(carpeta):
+        decir("OJO", "no esta la carpeta «CLAUDE POR AREA» en la nube de Ingenieria: las PC se instalan solo desde el pendrive")
+        return
+    v = leer_json(os.path.join(carpeta, "1- PUBLICADO", "VERSION.json"))
+    igual = bool(v and ver and v.get("manifest_sha256") == ver.get("manifest_sha256"))
+    decir("BIEN" if igual else "MAL", "version %s%s" % ((v or {}).get("version"), ", la misma que el paquete para llevar" if igual else "; el paquete para llevar es la %s: no son la misma" % (ver or {}).get("version")))
+    try:
+        r = subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", os.path.join(RAIZ, "scripts", "_nubeSubio.ps1"), "-Carpeta", "CLAUDE POR AREA"],
+                           capture_output=True, text=True, timeout=180, encoding="utf-8", errors="replace")
+        decir("BIEN" if r.returncode == 0 else "OJO", "subio entera a la nube" if r.returncode == 0 else "todavia hay archivos sin subir a la nube: esperar y medir de nuevo")
+    except Exception as e:
+        decir("OJO", "no pude medir si subio a la nube (%s)" % str(e)[:60])
 
 
 def pendrive(ver):
@@ -167,6 +200,15 @@ def la_pc():
         decir("BIEN" if "OUTLOOK.EXE" in t.upper() else "OJO", "Outlook %s" % ("abierto" if "OUTLOOK.EXE" in t.upper() else "cerrado: abrirlo si se va a mostrar un mail"))
     except Exception:
         pass
+    # el servicio de Claude: si esta con problemas, la demostracion en vivo se cambia por los videos
+    try:
+        import urllib.request
+        with urllib.request.urlopen("https://status.claude.com/api/v2/status.json", timeout=15) as resp:
+            est = json.loads(resp.read().decode("utf-8")).get("status", {})
+        normal = est.get("indicator") == "none"
+        decir("BIEN" if normal else "OJO", "servicio de Claude: %s" % ("funcionando normal" if normal else "CON PROBLEMAS (%s): tener los videos a mano" % est.get("description")))
+    except Exception as e:
+        decir("OJO", "no pude mirar el estado del servicio de Claude (status.claude.com): %s" % str(e)[:60])
     decir("OJO", "mirar el cupo de la cuenta (el anillo al lado del selector de modelo) y no lanzar examenes ni ayudantes las 5 horas de antes")
 
 
@@ -176,6 +218,7 @@ def main():
     demostracion(area)
     ver = paquete(arg("--paquete", r"C:\ClaudeBarack-para-llevar\CLAUDE POR AREA"))
     pendrive(ver)
+    la_nube(ver)
     papeles()
     la_pc()
     print("RESULTADO: %s" % ("nada en MAL" if not fallas else "%d cosa(s) en MAL" % fallas))
