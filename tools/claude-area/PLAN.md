@@ -100,12 +100,28 @@ la lista (hoy, nadie) la dejaba sin área.
 | La persona no está en la lista | Dice su área, nombre y puesto al instalar (`--preguntar` en el doble clic; Paso 2 bis del «instalá»). La lista manda cuando figura | idem; una corrida con consola de verdad contestando por teclado quedó instalada como Calidad |
 | ¿La primera conversación carga el asistente? | Sí: con el programa de la app (2.1.286) y una configuración de Claude recién creada, el plugin se carga y el aviso de arranque saluda | `ensayo_pc_nueva.sh`, paso 3 (sin cuenta: no llega a contestar) |
 | Llave de firma real | Creada en `~\.claude-area\` (huella `1cd6adfa3361e26a`). Esta PC queda como la del administrador | — |
-| El paquete para llevar | `C:\ClaudeBarack-para-llevar\` (218 MB): `CLAUDE POR AREA\1- PUBLICADO` versión 3 (con lo que corrigió la auditoría del instalador), firmada con la llave real, + videos y hojas + `LEEME.txt`. Es la copia maestra: cuando exista la carpeta de la nube, se copia ESTA (misma historia de versiones) | `ensayo_pc_nueva.sh --paquete`: 6 de 6 |
+| El paquete para llevar | `C:\ClaudeBarack-para-llevar\` (218 MB): `CLAUDE POR AREA\1- PUBLICADO` versión 4 (con lo que corrigió la auditoría del instalador y «Omitir permisos» por defecto), firmada con la llave real, + videos y hojas + `LEEME.txt`. Es la copia maestra: cuando exista la carpeta de la nube, se copia ESTA (misma historia de versiones) | `ensayo_pc_nueva.sh --paquete`: 6 de 6 |
 | Con qué área se muestra | **Dirección** (Facundo: "me da igual"). `C:\ClaudeBarack` reinstalada como Dirección y sin restos de pruebas | 22 preguntas de dueño en las PC de Dirección y de Producción (`examen/ensayo_dueno_*.md`); juez independiente sobre la de Dirección: 15 bien, 7 a medias, 0 mal, ninguna cita inventada (`examen/correccion_dueno_direccion.json`) |
 | Un ejemplo por sector, sobre la v5 | Las 8 respuestas de la hoja 9, afirmación por afirmación contra su extracto: 8 de 8 | `examen/sectores_respuestas_v5.md` |
 | Dónde están los certificados | Fila 35b de `donde-vive.md` (el asistente decía que no estaban; la carpeta figuraba en el mapa del servidor) | ensayo en `C:\ClaudeBarack` del 03/10 |
 | Papeles | Hoja 1 (ya no promete la bajada automática: "se prende con el piloto"), hoja 4 (guion de 7 pasos, con la PC nueva) y hoja 8 (pendrive y doble clic) | miradas en imagen |
 | Control de antes de mostrar | `python tools/claude-area/antes_de_la_reunion.py`: BIEN / OJO / MAL de la demostración, el paquete, el pendrive, los videos y las hojas | corrido el 03/10 |
+
+**«Omitir permisos» para todos (Facundo, 03/10, 13:00):** *"no quiero que anden aprobando cambios de Claude; que
+aprueben pero hablando… si no se van a cansar de darle aceptar a todo"*. El instalador deja ese modo por defecto en
+cada PC (sin pisar el que la PC ya tenga) y el paquete para llevar quedó en la **versión 4**; lo que frena son los
+controles del plugin, que es como se probó todo. En la app hay que prender UNA vez por PC la opción que permite ese
+modo (Configuración → Claude Code): el instalador no la toca. Hojas 4, 8 y 10 al día. **Falta poner al día:** la
+página "Si Claude te pide permiso" del manual (se apaga con `"activa": false` y hay que regenerarlo), dos renglones
+del video tutorial ("te pide permiso… Denegar, Permitir una vez…") y la promesa `no-hace-solo`. El video por sector
+no nombra los permisos. Detalle y la alternativa (modo `auto`): `CONTRATO.md`, "El modo de permisos".
+
+**Las mejoras de Facundo de los últimos días (pedido del 03/10):** revisados 103 commits y 383 mensajes suyos.
+Sirven para las áreas y no estaban: cambiar la forma cuando no entiende y contestar corto, explicar y parar, releer
+el primer pedido a la segunda corrección, un corte por tiempo no es evidencia, no cerrar programas de la persona, no
+pisar un archivo que ya tiene, no armar un mail que nadie pidió, avisar cuando algo tarda. Son unos 10 renglones de
+las reglas (v6) y un freno nuevo en el plugin. Tabla completa: `examen/mejoras_recientes_2026-10-03.md`. Como cambian
+las reglas, van con su examen: la demostración y el paquete siguen en v5 hasta que la v6 lo rinda.
 
 **Lo que encontró la segunda opinión (Fable, 03/10) y sigue abierto:** el código de ingreso de la cuenta le llega a
 otra persona; los carteles de permiso en vivo; nadie registra la tarea que actualiza sola (`sync_area.ps1
@@ -196,8 +212,9 @@ control: plugin cargado, perfil con área, Outlook clásico abierto, nube subida
    al mail de la cuenta, que hoy recibe otra persona. Tenerla avisada el lunes temprano, o dejar la sesión iniciada
    antes en la PC que se va a usar.
 2. **Un pendrive**: copiar entera `C:\ClaudeBarack-para-llevar` (218 MB).
-3. **La PC nueva**: con internet, y con el programa Claude ya instalado y la sesión iniciada ANTES de que mire el
-   director (es lo lento; la instalación de Barack es un doble clic).
+3. **La PC nueva**: con internet, con el programa Claude ya instalado y la sesión iniciada ANTES de que mire el
+   director (es lo lento; la instalación de Barack es un doble clic), y con la opción que permite «Omitir permisos»
+   prendida (Configuración → Claude Code).
 4. **Un ensayo de 10 minutos conmigo** (domingo o lunes temprano), escribiendo él en `C:\ClaudeBarack`: hola; la
    lista de materiales; qué llevar a la revisión por la Dirección; una presentación de 3 hojas; guardar una nota y
    borrarla; un mail para él mismo y «mandalo». Cierra las dos promesas que faltan sobre la v5.

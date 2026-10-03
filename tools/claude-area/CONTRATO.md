@@ -14,7 +14,7 @@ acá, lo cambia ACÁ y lo dice en su informe: dos programas no pueden suponer fo
 | Lo que suben las PC | `…\4- BUZON\salud\<pc>.json`, `avisos\<pc>\`, `inventario\<pc>.json`, `aportes\<autor>\`, `mails\_entrada\<autor>\` | idem |
 | Lo que arma el administrador | `…\4- BUZON\TABLERO.md`, `INVENTARIO.md` y la lista `conocidos.json` (la carga el administrador). Los arman `tablero.mjs` e `inventario_resumen.mjs`; solo los ve el administrador | idem |
 | En cada PC | `C:\ClaudeBarack\` es la carpeta que la persona ABRE en Claude (la raíz: así `publicado\conocimiento\...` queda adentro y se lee sin pedir permiso). Adentro: `publicado\` (copia verificada de `contenido\`; se repone sola), `.claude\rules\casa.md` (las reglas de la casa, regeneradas en cada actualización), `CLAUDE.md` (de la persona, se crea una vez), `Trabajo\` (SUS archivos; con un `LEEME.txt` si está vacía), `perfil.json`, `instalado.json` (el marcador, se escribe al final) | variable `CLAUDE_AREA_HOME` |
-| Configuración de Claude del usuario | `%USERPROFILE%\.claude\settings.json`: el instalador agrega SOLO `extraKnownMarketplaces.barack` (directory → `<HOME>\publicado\marketplace`) y `enabledPlugins["barack-area@barack"]`, con respaldo `settings.json.respaldo-<fecha>` | variable `CLAUDE_CONFIG_DIR` (la misma que lee Claude) |
+| Configuración de Claude del usuario | `%USERPROFILE%\.claude\settings.json`: el instalador agrega SOLO `extraKnownMarketplaces.barack` (directory → `<HOME>\publicado\marketplace`) `enabledPlugins["barack-area@barack"]` y, solo si la PC no tiene uno elegido, `permissions.defaultMode` (ver "El modo de permisos"), con respaldo `settings.json.respaldo-<fecha>` | variable `CLAUDE_CONFIG_DIR` (la misma que lee Claude) |
 | Estado de la PC | `%LOCALAPPDATA%\BarackEquipo\` (log, estado, clave pública en modo sin administrador) | variable `CLAUDE_AREA_ESTADO` |
 | Clave privada de firma | `%USERPROFILE%\.claude-area\publicador.key` (solo la PC del administrador; nunca al repo ni a la nube) | variable `CLAUDE_AREA_CLAVE` |
 | Clave pública | `publicador.pub` (PEM): `C:\Program Files\Claude Barack\` con administrador, o `%LOCALAPPDATA%\BarackEquipo\` sin él | — |
@@ -210,6 +210,28 @@ hace Claude cuando alguien abre esa carpeta y escribe "instalá": `1- PUBLICADO\
 
 Códigos de `--instalar`: 0 instalado o ya instalado · 1 error · 3 esperar · 4 sin clave, firma rechazada o versión que
 retrocede. El marcador se mira junto con `publicado\marketplace\.claude-plugin\marketplace.json`: los dos, o se repite.
+
+### El modo de permisos (03/10/2026)
+
+Decisión de Facundo: *"modo omitir permisos a todos… no quiero que anden aprobando cambios de Claude; que aprueben
+pero hablando… si no se van a cansar de darle aceptar a todo"*. `--instalar` deja en el `settings.json` del usuario
+`permissions.defaultMode: "bypassPermissions"` (constante `MODO_PERMISOS_AREA`), sin pisar el que la PC ya tenga
+elegido. `--modo-permisos <default|acceptEdits|plan|auto|bypassPermissions>` lo cambia para esa instalación y
+`--modo-permisos no` no lo toca. Es el modo en el que se tomaron todos los exámenes y ensayos.
+
+- **Lo que frena en ese modo son los controles del plugin** (servidor, mails, borrado en la PC, lo instalado): corren
+  en cualquier modo. La persona decide con sus palabras («mandalo», «borrala»).
+- **Según la documentación oficial** (code.claude.com/docs, "Choose a permission mode", leída el 03/10/2026): la app
+  aplica `defaultMode` del `settings.json` del usuario a las conversaciones locales nuevas; el modo elegido en el
+  selector queda recordado por carpeta y le gana; y en los planes Pro y Max «Omitir permisos» aparece recién cuando en
+  esa PC se prende, a mano, "Allow bypass permissions mode" en Configuración → Claude Code. **El instalador no toca esa
+  opción ni acepta ningún cartel por la persona** (no escribe `skipDangerousModePermissionPrompt`): es un paso de quien
+  instala, una vez por PC (hoja 8).
+- **Medido:** con el programa de la app y una configuración recién creada, la conversación arranca en
+  `bypassPermissions` (`ensayo_pc_nueva.sh`, 7 de 7). Qué hace la app si la opción no está prendida no se probó.
+- **Alternativa a evaluar después de la reunión:** el modo `auto` (la misma documentación lo recomienda en lugar de
+  «Omitir permisos»: no pide permiso en lo de todos los días, un clasificador frena lo riesgoso, acepta aprobaciones
+  dichas en la conversación y no necesita prender nada a mano). No se probó con los mails ni las presentaciones.
 
 ### Una PC que no ve la nube y una persona que no está en la lista (03/10/2026)
 

@@ -1816,6 +1816,16 @@ export function armarPendrive({ origen, pendrive, lista, notas = [], forzar = fa
 
 export const NOMBRE_MARKETPLACE = 'barack';
 export const NOMBRE_PLUGIN = 'barack-area';
+/**
+ * El modo de permisos con el que arranca una conversacion nueva en una PC de area. Decision de Facundo (03/10/2026):
+ * "modo omitir permisos a todos… no quiero que anden aprobando cambios de Claude; que aprueben pero hablando". La
+ * persona decide con sus palabras («mandalo», «borrala») y lo que frena son los controles del plugin (servidor, mails,
+ * borrado en la PC), que corren en cualquier modo. Es el modo en el que se probo todo (examenes y ensayos).
+ * En la app, este modo aparece recien cuando en esa PC se prende, una vez y a mano, la opcion que lo permite
+ * (Configuracion > Claude Code): el instalador NO la toca. Si no esta prendida, la app usa su modo de siempre.
+ */
+export const MODO_PERMISOS_AREA = 'bypassPermissions';
+export const MODOS_DE_PERMISOS = ['default', 'acceptEdits', 'plan', 'auto', 'bypassPermissions'];
 export const REL_REGLAS_CASA = '.claude/rules/casa.md';
 export const MARCADOR_INSTALADO = 'instalado.json';
 
@@ -1935,10 +1945,11 @@ export function clavePublicaParaInstalar({ nube, estado, clavePublica = null, si
  * al settings.json del usuario, con un respaldo antes y sin pisar ni reordenar nada mas. Un settings.json que no se
  * entiende no se toca. Devuelve { estado: 'habilitado'|'ya_estaba'|'error', ruta, respaldo }.
  */
-export function habilitarPlugin({ claudeDir, rutaMarketplace, ahora = new Date(), simular = false }) {
+export function habilitarPlugin({ claudeDir, rutaMarketplace, ahora = new Date(), simular = false, modoPermisos = MODO_PERMISOS_AREA }) {
     const ruta = path.join(claudeDir, 'settings.json');
     const idPlugin = `${NOMBRE_PLUGIN}@${NOMBRE_MARKETPLACE}`;
     const claves = [`extraKnownMarketplaces.${NOMBRE_MARKETPLACE} = { source: "directory", path: "${rutaMarketplace}" }`, `enabledPlugins["${idPlugin}"] = true`];
+    if (modoPermisos && !MODOS_DE_PERMISOS.includes(modoPermisos)) return { estado: 'error', ruta, error: `el modo de permisos "${modoPermisos}" no existe (van: ${MODOS_DE_PERMISOS.join(', ')}, o "no" para no tocarlo)` };
     let actual = {};
     let habia = false;
     if (fs.existsSync(ruta)) {
@@ -1953,21 +1964,29 @@ export function habilitarPlugin({ claudeDir, rutaMarketplace, ahora = new Date()
     const ekm = actual.extraKnownMarketplaces && typeof actual.extraKnownMarketplaces === 'object' ? actual.extraKnownMarketplaces : {};
     const ep = actual.enabledPlugins && typeof actual.enabledPlugins === 'object' ? actual.enabledPlugins : {};
     const yaMarket = ekm[NOMBRE_MARKETPLACE] && ekm[NOMBRE_MARKETPLACE].source && JSON.stringify(ordenarClaves(ekm[NOMBRE_MARKETPLACE].source)) === JSON.stringify(ordenarClaves(fuente));
-    if (yaMarket && ep[idPlugin] === true) return { estado: 'ya_estaba', ruta, respaldo: null, claves };
+    // El modo de permisos con el que arranca una conversacion nueva. Se pone solo si la PC no tiene uno elegido: lo que
+    // ya eligio la persona (o el administrador) en esa PC no se pisa.
+    const perm = actual.permissions && typeof actual.permissions === 'object' && !Array.isArray(actual.permissions) ? actual.permissions : {};
+    const modoPrevio = typeof perm.defaultMode === 'string' && perm.defaultMode.trim() ? perm.defaultMode : null;
+    const ponerModo = !!modoPermisos && !modoPrevio;
+    const modo = { valor: ponerModo ? modoPermisos : modoPrevio, puesto: ponerModo, previo: modoPrevio };
+    if (ponerModo) claves.push(`permissions.defaultMode = "${modoPermisos}"`);
+    if (yaMarket && ep[idPlugin] === true && !ponerModo) return { estado: 'ya_estaba', ruta, respaldo: null, claves, modo };
     let respaldo = null;
     if (habia) {
         respaldo = `${ruta}.respaldo-${selloCarpeta(ahora)}`;
         for (let i = 2; fs.existsSync(respaldo); i++) respaldo = `${ruta}.respaldo-${selloCarpeta(ahora)}-${i}`;
     }
-    if (simular) return { estado: 'habilitaria', ruta, respaldo, claves };
+    if (simular) return { estado: 'habilitaria', ruta, respaldo, claves, modo };
     if (respaldo) fs.copyFileSync(ruta, respaldo);
     const nuevo = {
         ...actual,
         extraKnownMarketplaces: { ...ekm, [NOMBRE_MARKETPLACE]: { ...(ekm[NOMBRE_MARKETPLACE] || {}), source: fuente } },
         enabledPlugins: { ...ep, [idPlugin]: true },
+        ...(ponerModo ? { permissions: { ...perm, defaultMode: modoPermisos } } : {}),
     };
     escribirAtomico(ruta, `${JSON.stringify(nuevo, null, 2)}\n`);   // sin reordenar las claves de la persona
-    return { estado: 'habilitado', ruta, respaldo, claves };
+    return { estado: 'habilitado', ruta, respaldo, claves, modo };
 }
 
 /**
@@ -2089,7 +2108,7 @@ function dejarAvisoInstalacion({ nube, identidad, area, tipo, mensaje, ahora }) 
  * `antesDe(paso)` es un gancho de las pruebas: se llama antes de cada paso ('clave', 'publicacion', 'persona', 'copia',
  * 'trabajo', 'plugin', 'marcador') y sirve para simular un corte.
  */
-export function instalar({ nube, home, estado, claudeDir, clavePublica = null, identidad = identidadLocal(), ahora = new Date(), antesDe = null, simular = false, env = process.env, declarado = null, desdeCarpeta = false }) {
+export function instalar({ nube, home, estado, claudeDir, clavePublica = null, identidad = identidadLocal(), ahora = new Date(), antesDe = null, simular = false, env = process.env, declarado = null, desdeCarpeta = false, modoPermisos = MODO_PERMISOS_AREA }) {
     const res = { estado: 'error', errores: [], avisos: [], pasos: [], plan: [], home, estado_dir: estado, claudeDir, desdeCarpeta: !!desdeCarpeta };
     const paso = (n) => { res.pasos.push(n); if (antesDe) antesDe(n); };
     const anotar = (que, ruta) => res.plan.push({ que, ruta });   // con --simular es TODO lo que se escribiria; sin el, lo que se escribio
@@ -2188,9 +2207,10 @@ export function instalar({ nube, home, estado, claudeDir, clavePublica = null, i
         res.errores.push('lo publicado no trae el plugin (falta marketplace/.claude-plugin/marketplace.json): la instalación queda incompleta y sin marcador');
         return res;
     }
-    const hp = habilitarPlugin({ claudeDir, rutaMarketplace: marketplace, ahora, simular });
+    const hp = habilitarPlugin({ claudeDir, rutaMarketplace: marketplace, ahora, simular, modoPermisos });
     if (hp.estado === 'error') { res.errores.push(hp.error); return res; }
     res.plugin = hp;
+    if (modoPermisos && hp.modo && hp.modo.previo && hp.modo.previo !== modoPermisos) res.avisos.push(`esta PC ya tenía elegido el modo de permisos "${hp.modo.previo}": no se cambió`);
     if (hp.estado !== 'ya_estaba') {
         if (hp.respaldo) anotar('respaldo de settings.json', hp.respaldo);
         anotar(`settings.json del usuario (${hp.claves.join(' · ')})`, hp.ruta);
@@ -2231,7 +2251,7 @@ export function instalar({ nube, home, estado, claudeDir, clavePublica = null, i
 // ---------------------------------------------------------------------------------------------
 
 /** Las opciones que existen. Cualquier otra cosa es un error: un argumento mal escrito NO se ignora (01/10/2026: un `--help` ignorado instalo de verdad). */
-export const OPCIONES_CON_VALOR = ['nube', 'origen', 'destino', 'lista', 'nota', 'autor', 'que', 'aportar', 'perfil', 'pendrive', 'area', 'proyecto', 'clave', 'clave-publica', 'rollback', 'motivo', 'home', 'usuario-home', 'claude-dir', 'nombre', 'puesto'];
+export const OPCIONES_CON_VALOR = ['nube', 'origen', 'destino', 'lista', 'nota', 'autor', 'que', 'aportar', 'perfil', 'pendrive', 'area', 'proyecto', 'clave', 'clave-publica', 'rollback', 'motivo', 'home', 'usuario-home', 'claude-dir', 'nombre', 'puesto', 'modo-permisos'];
 export const OPCIONES_BANDERA = ['publicar', 'actualizar', 'instalar', 'ver', 'aportes', 'donde', 'generar-clave', 'chequear', 'simular', 'forzar', 'reponer', 'sin-firma', 'nube-real', 'preguntar'];
 
 export function parsearArgs(argv) {
@@ -2377,9 +2397,13 @@ function main(extra = null) {
             const motivos = pcDelAdministrador({ env: process.env, home, raizScript: RAIZ });
             if (motivos.length) { console.error(`✗ Esta parece la PC del administrador (${motivos.join('; ')}): acá una instalación de verdad no corre sola. Si de verdad querés, pasá --forzar. No se tocó nada.`); return 1; }
         }
+        // --modo-permisos <modo> cambia el modo con el que arrancan las conversaciones nuevas; "no" = no tocarlo
+        const pedido = a['modo-permisos'];
+        if (pedido !== undefined && pedido !== 'no' && !MODOS_DE_PERMISOS.includes(pedido)) { console.error(`✗ --modo-permisos tiene que ser uno de: ${MODOS_DE_PERMISOS.join(', ')}, o "no". No se hizo nada.`); return 1; }
+        const modoPermisos = pedido === undefined ? MODO_PERMISOS_AREA : (pedido === 'no' ? null : pedido);
         const declarado = (a.area !== undefined || a.nombre !== undefined || a.puesto !== undefined) ? { area: a.area ?? '', nombre: a.nombre ?? '', puesto: a.puesto ?? '' } : null;
         if (declarado && !String(declarado.area).trim()) { console.error('✗ Con --nombre o --puesto hace falta --area (el área que dijo la persona). No se hizo nada.'); return 1; }
-        const r = instalar({ nube, home, estado, claudeDir, clavePublica: a['clave-publica'] ? path.resolve(a['clave-publica']) : null, identidad: identidadLocal(), simular: !!a.simular, declarado, desdeCarpeta: nubeDesdeCarpeta });
+        const r = instalar({ nube, home, estado, claudeDir, clavePublica: a['clave-publica'] ? path.resolve(a['clave-publica']) : null, identidad: identidadLocal(), simular: !!a.simular, declarado, desdeCarpeta: nubeDesdeCarpeta, modoPermisos });
         if (r.estado === 'simulado') {
             say(`Simulado: --instalar (versión ${r.version}, ${r.perfil.nombre || 'persona sin asignar'}, área ${r.perfil.area}) escribiría ${r.plan.length} cosa(s) y no escribió ninguna:`);
             for (const p of r.plan) say(`    - ${p.ruta}  (${p.que})`);
@@ -2401,6 +2425,7 @@ function main(extra = null) {
         if (r.desdeCarpeta) say('  Instalado desde esta carpeta (esta PC no ve la nube de Barack): no se actualiza sola; para actualizarla se instala de nuevo desde una carpeta más nueva.');
         say(`  Abrí Claude en ${r.home} (tus archivos van en ${path.join(r.home, 'Trabajo')}).   Plugin: ${r.plugin.estado === 'habilitado' ? `habilitado en ${r.plugin.ruta}` : 'ya estaba habilitado'}${r.plugin.respaldo ? ` (respaldo: ${r.plugin.respaldo})` : ''}`);
         if (r.casa && r.casa.migrado) say(`  Las reglas viejas de Trabajo\\.claude\\rules pasaron a cuarentena: ${r.casa.migrado}`);
+        if (r.plugin.modo && r.plugin.modo.valor === 'bypassPermissions') say('  Permisos: las conversaciones nuevas arrancan sin carteles («Omitir permisos»). Para que la app lo use, prender UNA vez en esta PC: Configuración de Claude > Claude Code > permitir el modo de omitir permisos.');
         imprimirLista('  Avisos:', r.avisos, 10);
         return 0;
     }

@@ -92,6 +92,10 @@ preguntarme, por ejemplo, dónde está un procedimiento."*
 Si te dice que quiere seguir ahora mismo acá, explicale que hace falta volver a abrirlo para que cargue todo, y
 nada más.
 
+Si el instalador nombró el modo «Omitir permisos», agregá una línea: *"Si en `C:\ClaudeBarack` Claude te pide
+permiso a cada paso, avisale a Ingeniería: falta prender una opción en esta PC."* No la prendas vos ni le expliques
+cómo: esa opción la prende quien administra el sistema.
+
 ## Reglas de esta carpeta
 
 - No modifiques, borres ni muevas nada de esta carpeta ni de las de al lado: es de la empresa y la administra una

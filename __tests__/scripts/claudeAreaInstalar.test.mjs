@@ -317,7 +317,10 @@ describe('simulacro de PC nueva: --instalar', () => {
         // el plugin: solo dos claves nuevas, lo previo intacto, respaldo con el original
         const s = json(pc.claudeDir, 'settings.json');
         expect(s.model).toBe('opus');
-        expect(s.permissions).toEqual({ allow: ['Bash(ls)'] });
+        // lo que la persona ya tenia en permisos queda; se suma el modo con el que arrancan las conversaciones nuevas
+        expect(s.permissions).toEqual({ allow: ['Bash(ls)'], defaultMode: 'bypassPermissions' });
+        expect(r.plugin.modo).toEqual({ valor: 'bypassPermissions', puesto: true, previo: null });
+        expect(s.skipDangerousModePermissionPrompt).toBeUndefined();   // el instalador no acepta ningun cartel por la persona
         expect(s.enabledPlugins).toEqual({ 'otro@x': true, 'barack-area@barack': true });
         expect(s.extraKnownMarketplaces).toEqual({ barack: { source: { source: 'directory', path: path.join(pc.home, 'publicado', 'marketplace') } } });
         expect(Object.keys(s).sort()).toEqual(['enabledPlugins', 'extraKnownMarketplaces', 'model', 'permissions']);
@@ -807,8 +810,23 @@ describe('habilitarPlugin y perfil: las dos direcciones', () => {
         const a = P.habilitarPlugin({ claudeDir: cd, rutaMarketplace: market, ahora: F(1) });
         expect(a.estado).toBe('habilitado');
         expect(a.respaldo).toBe(null);
-        expect(json(cd, 'settings.json')).toEqual({ extraKnownMarketplaces: { barack: { source: { source: 'directory', path: market } } }, enabledPlugins: { 'barack-area@barack': true } });
+        expect(json(cd, 'settings.json')).toEqual({ extraKnownMarketplaces: { barack: { source: { source: 'directory', path: market } } }, enabledPlugins: { 'barack-area@barack': true }, permissions: { defaultMode: 'bypassPermissions' } });
         expect(P.habilitarPlugin({ claudeDir: cd, rutaMarketplace: market, ahora: F(2) }).estado).toBe('ya_estaba');
+        // el modo de permisos: el que la PC ya tiene elegido NO se pisa; con null no se toca; uno que no existe es un error
+        const conModo = dir('cd-con-modo');
+        fs.writeFileSync(path.join(conModo, 'settings.json'), JSON.stringify({ permissions: { defaultMode: 'plan', deny: ['Bash(rm *)'] } }));
+        const m = P.habilitarPlugin({ claudeDir: conModo, rutaMarketplace: market, ahora: F(1) });
+        expect(m.modo).toEqual({ valor: 'plan', puesto: false, previo: 'plan' });
+        expect(json(conModo, 'settings.json').permissions).toEqual({ defaultMode: 'plan', deny: ['Bash(rm *)'] });
+        const sinModo = dir('cd-sin-modo');
+        expect(P.habilitarPlugin({ claudeDir: sinModo, rutaMarketplace: market, ahora: F(1), modoPermisos: null }).estado).toBe('habilitado');
+        expect(json(sinModo, 'settings.json').permissions).toBeUndefined();
+        expect(P.habilitarPlugin({ claudeDir: sinModo, rutaMarketplace: market, ahora: F(2), modoPermisos: 'auto' }).modo).toEqual({ valor: 'auto', puesto: true, previo: null });
+        expect(json(sinModo, 'settings.json').permissions).toEqual({ defaultMode: 'auto' });
+        const malo = P.habilitarPlugin({ claudeDir: dir('cd-malo'), rutaMarketplace: market, modoPermisos: 'todo-vale' });
+        expect(malo.estado).toBe('error');
+        expect(malo.error).toContain('"todo-vale" no existe');
+        expect(existe(path.join(tmp, 'cd-malo'), 'settings.json')).toBe(false);
         fs.writeFileSync(path.join(cd, 'settings.json'), JSON.stringify({ model: 'sonnet', extraKnownMarketplaces: { barack: { source: { source: 'directory', path: 'C:\\otra' }, autoUpdate: true } }, enabledPlugins: { 'barack-area@barack': false } }));
         const b = P.habilitarPlugin({ claudeDir: cd, rutaMarketplace: market, ahora: F(3) });
         expect(b.estado).toBe('habilitado');
@@ -1227,6 +1245,19 @@ describe('una PC que no ve la nube: se instala desde la carpeta donde vive el pr
         const s = json(pc.claudeDir, 'settings.json');
         expect(s.model).toBe('opus');
         expect(s.enabledPlugins['barack-area@barack']).toBe(true);
+        expect(s.permissions.defaultMode).toBe('bypassPermissions');
+        expect(r.stdout).toContain('Omitir permisos');
+        // por linea de comandos: "no" no toca el modo, y un modo que no existe no instala nada
+        const otraPc = pcNueva('pc-sin-modo');
+        const envOtra = { ...env, CLAUDE_AREA_HOME: otraPc.home, CLAUDE_AREA_ESTADO: otraPc.estado };
+        const maloCli = correrDesde(pub, ['--instalar', '--proyecto', 'area', '--usuario-home', otraPc.claudeDir, '--modo-permisos', 'todo-vale'], envOtra);
+        expect(maloCli.status).toBe(1);
+        expect(maloCli.stderr).toContain('--modo-permisos');
+        expect(fs.existsSync(otraPc.home)).toBe(false);
+        const sinTocar = correrDesde(pub, ['--instalar', '--proyecto', 'area', '--usuario-home', otraPc.claudeDir, '--modo-permisos', 'no'], envOtra);
+        expect(sinTocar.status, sinTocar.stdout + sinTocar.stderr).toBe(0);
+        expect(json(otraPc.claudeDir, 'settings.json').permissions).toBeUndefined();
+        expect(sinTocar.stdout).not.toContain('Omitir permisos');
         expect(leer(pc.estado, 'publicador.pub')).toBe(leer(pub, 'publicador.pub'));
         // la carpeta trae la forma de la nube (1- PUBLICADO con su 4- BUZON al lado): la salud y el aviso quedan ahi
         expect(fs.readdirSync(path.join(nubeRaiz, '4- BUZON', 'salud'))).toHaveLength(1);

@@ -8,7 +8,7 @@
 #       area: la que "dice la persona" al instalar (por defecto Produccion). --dejar: no borra la carpeta temporal.
 #       --paquete: en vez de publicar con una clave temporal, ensaya ESE paquete (el que va al pendrive); solo lo lee.
 # Todo corre en una carpeta temporal: ni C:\ClaudeBarack, ni ~/.claude/settings.json, ni la nube real.
-# Sale con 0 si las seis comprobaciones dan bien; con 1 si alguna no.
+# Sale con 0 si las siete comprobaciones dan bien; con 1 si alguna no.
 set -u
 AREA="Producción"; DEJAR=""; PAQUETE=""; SIG=""
 for a in "$@"; do
@@ -72,10 +72,14 @@ const p=init&&(init.plugins||[]).find(x=>x.name==="barack-area");
 console.log("PLUGIN="+(p?p.version+" desde "+p.path:"NO"));
 console.log("SKILLS="+((init&&init.skills)||[]).filter(s=>s.startsWith("barack-area:")).length);
 console.log("QUIEN="+(hook?String(hook.output).split("\n")[1]||"":"NO CORRIO"));
+console.log("MODO="+((init&&init.permissionMode)||"?"));
 ' "$(cygpath -w "$TP/sesion1.jsonl")" > "$TP/sesion1.txt"
 sed 's/^/      /' "$TP/sesion1.txt" | cut -c1-230
 grep -q "^PLUGIN=[0-9]" "$TP/sesion1.txt" && bien "el asistente se cargó solo en la primera conversación" || mal "el asistente NO se cargó en la primera conversación"
 grep -q "^QUIEN=Quién es: Persona De Prueba" "$TP/sesion1.txt" && bien "el aviso de arranque corrió con el Node del plugin y sabe quién es" || mal "el aviso de arranque no corrió o no sabe quién es"
+# el modo de permisos que dejo el instalador en la configuracion de la PC (en la app hace falta, ademas, prender una vez
+# la opcion que permite ese modo: eso este ensayo no lo ve)
+grep -q "^MODO=bypassPermissions" "$TP/sesion1.txt" && bien "la conversación arranca en «Omitir permisos», sin carteles" || mal "la conversación NO arranca en «Omitir permisos»: $(grep '^MODO=' "$TP/sesion1.txt")"
 
 echo "== 4. nada real cambió"
 [ "$REAL" = "$(sha256sum ~/.claude/settings.json 2>/dev/null | cut -c1-16)" ] && [ "$DEMO" = "$(sha256sum /c/ClaudeBarack/instalado.json 2>/dev/null | cut -c1-16)" ] && bien "la configuración real de Claude y C:\\ClaudeBarack siguen igual" || mal "cambió la configuración real o C:\\ClaudeBarack"
@@ -84,5 +88,5 @@ if [ -n "$PAQUETE" ]; then
 fi
 
 if [ -n "$DEJAR" ]; then echo "   (queda la carpeta: $T)"; else case "$TP" in /tmp/tmp.*) rm -rf "$TP" && echo "   carpeta temporal sacada" ;; esac; fi
-echo "== RESULTADO: $([ "$FALLAS" = 0 ] && echo "todo bien (6 de 6)" || echo "$FALLAS comprobación(es) MAL")"
+echo "== RESULTADO: $([ "$FALLAS" = 0 ] && echo "todo bien (7 de 7)" || echo "$FALLAS comprobación(es) MAL")"
 [ "$FALLAS" = 0 ]

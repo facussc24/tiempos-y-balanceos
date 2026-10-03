@@ -59,6 +59,9 @@ echo  LISTO. Ahora:
 echo    1. Abri el programa Claude (esta en el menu Inicio).
 echo    2. Arriba, hace clic en Code y despues en Local.
 echo    3. Elegi la carpeta C:\ClaudeBarack y escribi: hola
+echo.
+echo  Si Claude pide permiso a cada paso: en Configuracion, Claude Code, prender
+echo  la opcion que permite "Omitir permisos" (una sola vez, lo hace Ingenieria).
 goto fin
 
 :esperar
