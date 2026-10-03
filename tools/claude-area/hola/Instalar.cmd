@@ -22,13 +22,31 @@ echo  Sacale una foto a esta ventana y mandasela a Ingenieria.
 goto fin
 
 :listo
+rem Con carpetas de prueba (las pruebas del programa) no se abre nada.
+if defined CLAUDE_AREA_HOME goto pasos
+rem El programa Claude, cuando esta instalado, registra los enlaces claude:// en Windows.
+reg query "HKCR\claude\shell\open\command" >nul 2>&1
+if errorlevel 1 goto sinclaude
+echo  LISTO. Ahora se abre Claude en la carpeta C:\ClaudeBarack.
+echo    1. Cuando pregunte por la carpeta, acepta.
+echo    2. Ya esta escrito "hola": apreta Enter.
+echo.
+echo  Si Claude no se abre solo: abrilo, hace clic en Code y despues en Local,
+echo  elegi la carpeta C:\ClaudeBarack y escribi: hola
+start "" "claude://code/new?folder=C%%3A%%5CClaudeBarack&q=hola"
+goto fin
+
+:sinclaude
+echo  LISTO, pero falta el programa Claude en esta PC: se baja de claude.com/download
+echo  Despues: abrir Claude, clic en Code y en Local, elegir la carpeta C:\ClaudeBarack
+echo  y escribir: hola
+goto fin
+
+:pasos
 echo  LISTO. Ahora:
 echo    1. Abri el programa Claude (esta en el menu Inicio).
 echo    2. Arriba, hace clic en Code y despues en Local.
 echo    3. Elegi la carpeta C:\ClaudeBarack y escribi: hola
-if exist "%LOCALAPPDATA%\AnthropicClaude\claude.exe" goto fin
-echo.
-echo  Si el programa Claude todavia no esta en esta PC, se baja de claude.ai/download
 goto fin
 
 :esperar

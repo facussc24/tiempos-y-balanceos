@@ -231,7 +231,11 @@ Una PC de planta no podía instalar, y si instalaba quedaba sin área.
   clic, sin abrir Claude. Corre `--instalar --proyecto area --preguntar` con el Node del plugin y devuelve su código
   (3 si a la carpeta le faltan archivos). Como no recibe opciones, para probarlo con carpetas de prueba la
   configuración de Claude va por la variable `CLAUDE_AREA_USUARIO_HOME` (vale lo mismo que `--usuario-home`), junto con
-  `CLAUDE_AREA_HOME` y `CLAUDE_AREA_ESTADO`: las tres, o se niega.
+  `CLAUDE_AREA_HOME` y `CLAUDE_AREA_ESTADO`: las tres, o se niega. Al terminar bien, si el programa Claude está
+  instalado (registra los enlaces `claude://` en Windows: `HKCR\claude\shell\open\command`) lo abre en la carpeta con
+  «hola» ya escrito: `claude://code/new?folder=C%3A%5CClaudeBarack&q=hola` (enlace documentado en la ayuda oficial,
+  "Open Claude Desktop with a link"; Claude pide confirmar la carpeta). Con carpetas de prueba no abre nada. **A
+  verificar una vez en una PC, antes de publicarlo:** al 03/10/2026 el enlace no se probó (el paquete v2 no lo trae).
 - **Quien no figura dice su área.** `--area "<área>" --nombre "<nombre>" --puesto "<puesto>"` (es lo que pasa Claude
   después de preguntarle, Paso 2 bis del "instalá"), o `--preguntar` (el `.cmd`: mira primero, sin escribir, si la
   persona figura; si no, pregunta en la consola; sin consola a la vista no pregunta). El área se acepta con el nombre de

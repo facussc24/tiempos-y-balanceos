@@ -1291,6 +1291,12 @@ describe('una PC que no ve la nube: se instala desde la carpeta donde vive el pr
         expect(texto).toContain('contenido\\marketplace\\plugins\\barack-area\\bin\\node.exe');
         expect(texto).toContain('contenido\\programas\\_paquete.mjs');
         expect(texto).toContain('--instalar --proyecto area --preguntar');
+        // al terminar abre Claude en la carpeta con un enlace, solo si el programa esta instalado y NO es una prueba
+        const guarda = texto.indexOf('if defined CLAUDE_AREA_HOME goto pasos');
+        const enlace = texto.indexOf('start "" "claude://code/new?folder=C%%3A%%5CClaudeBarack&q=hola"');
+        expect(guarda).toBeGreaterThan(0);
+        expect(enlace).toBeGreaterThan(guarda);
+        expect(texto).toContain('reg query "HKCR\\claude\\shell\\open\\command"');
         expect(existe(pub, `contenido/${A.REL_NODE}`)).toBe(true);
         expect(json(pub, 'MANIFIESTO.json').archivos['Instalar.cmd']).toBeUndefined();
     });
@@ -1336,6 +1342,9 @@ describe('una PC que no ve la nube: se instala desde la carpeta donde vive el pr
         expect(r.status, r.stdout + r.stderr).toBe(0);
         expect(r.stdout).toContain('LISTO');
         expect(r.stdout).toContain('C:\\ClaudeBarack');
+        // con carpetas de prueba el instalador NO abre el programa Claude (en una PC de verdad lo abre con un enlace claude://)
+        expect(r.stdout).toContain('LISTO. Ahora:');
+        expect(r.stdout).not.toContain('se abre Claude');
         expect(json(pc.home, 'instalado.json')).toMatchObject({ version: 1, origen: 'carpeta' });
         expect(json(pc.claudeDir, 'settings.json').enabledPlugins['barack-area@barack']).toBe(true);
         expect(P.sha256Archivo(path.join(pc.home, 'publicado', ...A.REL_NODE.split('/')))).toBe(P.sha256Archivo(process.execPath));
