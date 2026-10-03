@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **03/10 — Una prueba contra la carpeta de VERDAD deja su huella, y en la biblioteca de Ingeniería nada se borra: va con `--simular` o contra una copia** (instalé desde la nube real para probarla y quedaron dos archivos de una PC inventada en su buzón). Graduado a la memoria `project_claudes_por_area`.
+- **03/10 — «Borrá lo temporal al terminar» sin decir CUÁL termina en un borrado por comodín: un agente se llevó 38 borradores ajenos de la carpeta que comparten todos.** Graduado a la memoria `reference_notebook_capacidad_agentes_con_navegador` (carpeta propia con su nombre; se borra esa y nada más).
 - **03/10 — Cuando cambia un resultado, los papeles que lo citan no se enteran solos** (cuatro hojas para el dueño seguían con el examen fácil, 131/8/0, un día después de medir el real, 105/31/3; lo cazó un Fable independiente). Graduado a `tools/claude-area/puerta.py`, puerta D (`cifras_viejas`, `--autotest`).
 - **03/10 — Un freno que depende de un programa de la PC se prueba SIN ese programa: un control que no puede arrancar no frena nada** (los controles del asistente de área llamaban a `node` a secas y la instalación nombraba un Node que nadie publicaba). Graduado a `hooks.json` del plugin (Node propio, por su ruta), a `ejecutables` de `_paquete.mjs` y a la memoria `project_claudes_por_area`.
 - **02/10 — Un examen se toma como lo va a usar la gente (nivel, material de su área, PC instalada por el instalador), y el aviso de un documento va donde se LEE ese documento** (en mi nivel dio 131/8/0; en el de ellos, 105/31/3; un dato que estaba en otra tabla no se usó). Graduado a la memoria `project_claudes_por_area`.
