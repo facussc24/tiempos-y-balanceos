@@ -40,6 +40,7 @@ FRASES_NO_ENVIA = [
 VIDEOS = {
     "voz": "Video tutorial - Claude en Barack.mp4",
     "voz_v2": "Video tutorial - Claude en Barack (version 2).mp4",
+    "voz_v3": "Video tutorial - Claude en Barack (version 3).mp4",
     "voz_ilusiona": "Video por sector - Claude en Barack.mp4",
 }
 EXAMENES = REPO / ".sgc-cache" / "claude-por-area" / "examen"

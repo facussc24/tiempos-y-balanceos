@@ -36,7 +36,10 @@ Cambios en `voz_ilusiona\narrar.py`: los de la v2 (`abierta`, `él`, `decís`, s
 1 apertura (documentos que suben + foto de pregunta) · 2 Produccion (grabacion de las tres piezas, P-09.1) · 3 Calidad (I-AC-010) ·
 4 Logistica (I-LG-010) · 5 Compras (I-CO-001) · 6 Mantenimiento (I-MT-001) · 7 RRHH (P-18) · 8 Direccion (MC-09) · 9 Ingenieria (arb,
 mas hoja de operaciones, lamina y flujograma) · 10 mail · 11 presentacion · 12 ensenar una tarea · 13 controlado (fuente marcada,
-lamina «No elimina nada / No muestra lo reservado», cartel de permiso) · 14 cierre.
+lamina «No elimina nada / No muestra lo reservado», la conversacion del mail con «mandalo» marcado) · 14 cierre.
+03/10: la ultima toma de la 13 era el cartel de permiso; con «Omitir permisos» en todas las PC ese cartel ya no aparece y se cambio
+por la grabacion real `tomas\demo-02oct-mail-listo.mp4` (misma voz, mismos tiempos). El video anterior quedo en
+`versiones anteriores (no mostrar)\Video por sector - Claude en Barack (hasta 03-10, con el cartel de permiso).mp4`.
 Todas estan ubicadas y miradas con cuadros.
 
 ## A cuidar (privacidad)
@@ -59,3 +62,8 @@ Todas estan ubicadas y miradas con cuadros.
 - Ayudantes en `ayudas_video\`: `medir_pasos.py` (instante en que salta la pantalla), `grilla_clip.py` (cuadro con cuadricula),
   `probar_multi.py` (como suena una escritura; usa `.venv-audio`), `hoja.py` (hoja de contacto de un video).
 - Version 2 del tutorial: terminada, `Video tutorial - Claude en Barack (version 2).mp4` (2:36,8, con el recorte a la columna de texto).
+  Desde el 03/10 esta en `versiones anteriores (no mostrar)`: la reemplaza la version 3.
+- Version 3 del tutorial (03/10): `Video tutorial - Claude en Barack (version 3).mp4` (2:32,4). Igual que la 2 menos la escena 10: ya no
+  muestra el cartel de permiso ni dice «te pide permiso». Dice «No borra archivos ni manda un mail, salvo que se lo pidas con tus
+  palabras. En el servidor solo lee: no cambia nada.» y la escena es una sola lamina. Voz en `fuentes\voz_v3` (se regrabaron los
+  parrafos 15 y 16), escenas en `escenas_v3.json` (las arma `ayudas_video\generar_escenas_v3.py` desde `escenas_v2.json`).

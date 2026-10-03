@@ -1248,28 +1248,33 @@
           "voz": [
             "13:5"
           ],
-          "recurso": "../manual/capturas/14-claude-pide-permiso.png",
+          "recurso": "tomas/demo-02oct-mail-listo.mp4",
           "texto_en_pantalla": "Está controlado",
-          "omitir": [
+          "que_tiene_que_verse": "La conversación real del mail: Claude avisa que lo manda la persona con el botón o si le dice «mandalo», la persona escribe «mandalo» y recién ahí «Listo: salió a…».",
+          "tramos": [
             {
-              "desde": 12,
-              "hasta": 36
+              "desde": 1.9,
+              "hasta": 4.3,
+              "camara": [
+                {
+                  "x": 0,
+                  "y": 298,
+                  "ancho": 676
+                }
+              ],
+              "recuadros": [
+                {
+                  "que_marca": "«mandalo», lo que escribió la persona",
+                  "x": 86.0,
+                  "y": 71.0,
+                  "ancho": 11.5,
+                  "alto": 6.3,
+                  "con_la_palabra": "porque",
+                  "foco": false
+                }
+              ]
             }
-          ],
-          "escala_maxima": 1.6,
-          "que_tiene_que_verse": "El cartel con el que Claude pide permiso antes de escribir un archivo: el título y los botones Denegar, Permitir siempre y Permitir una vez.",
-          "recuadros": [
-            {
-              "que_marca": "Permitir una vez",
-              "x": 69,
-              "y": 79,
-              "ancho": 29,
-              "alto": 10,
-              "con_la_palabra": "pediste",
-              "posicion_confirmada": "f33025f814e6"
-            }
-          ],
-          "zoom": "no"
+          ]
         }
       ]
     },

@@ -340,9 +340,11 @@ def prueba_completa():
             ("portada sin titulo", lambda d: d["portada"].__setitem__("titulo", "")),
             ("cierre con un solo paso", lambda d: d["cierre"].__setitem__("pasos", ["Abrí Claude"])),
             ("paso del cierre que no entra", lambda d: d["cierre"]["pasos"].__setitem__(0, "palabra " * 40)),
-            ("16 paginas", lambda d: d["paginas"].append(dict(copy.deepcopy(d["paginas"][0]), numero=16,
-                                                              capturas=[dict(d["paginas"][0]["capturas"][0],
-                                                                             archivo="capturas/21-otra.png")]))),
+            # una pagina mas que el maximo: se agregan las que hagan falta (hoy hay menos de 15 prendidas)
+            ("una pagina mas que el maximo", lambda d: d["paginas"].extend(
+                dict(copy.deepcopy(d["paginas"][0]), numero=20 + k,
+                     capturas=[dict(d["paginas"][0]["capturas"][0], archivo="capturas/%d-otra.png" % (21 + k))])
+                for k in range(g.MAX_PAGINAS + 1 - n_pag))),
         ):
             malo = copy.deepcopy(confirmado)
             cambio(malo)
@@ -351,11 +353,14 @@ def prueba_completa():
             control("%s: sale con 2" % nombre_caso, cod == 2, "salio con %s\n%s" % (cod, out[:300]))
 
         print("7. Una pagina apagada (\"activa\": false) sale del manual y no pide su captura")
-        sin13 = copy.deepcopy(confirmado)
-        [p for p in sin13["paginas"] if p["numero"] == 13][0]["activa"] = False
-        (tmp / "sin13.json").write_text(json.dumps(sin13, ensure_ascii=False), encoding="utf-8")
-        (caps / "14-claude-pide-permiso.png").unlink()
-        cod, out = correr(base + ["--contenido", str(tmp / "sin13.json")])
+        # se apaga la ultima pagina que HOY esta prendida y tiene captura. La 13 (el cartel de permiso) ya viene apagada
+        # en contenido.json desde el 03/10/2026: apagarla de nuevo no probaria nada.
+        apagada = copy.deepcopy(confirmado)
+        pag_apagada = [p for p in apagada["paginas"] if p.get("activa", True) and p.get("capturas")][-1]
+        pag_apagada["activa"] = False
+        (tmp / "apagada.json").write_text(json.dumps(apagada, ensure_ascii=False), encoding="utf-8")
+        (caps / Path(pag_apagada["capturas"][0]["archivo"]).name).unlink()
+        cod, out = correr(base + ["--contenido", str(tmp / "apagada.json")])
         control("sale con 0 y con una pagina menos", cod == 0 and "%d paginas" % (n_pag - 1) in out, "salio con %s" % cod)
 
         print("8. La cuadricula para ubicar las marcas")

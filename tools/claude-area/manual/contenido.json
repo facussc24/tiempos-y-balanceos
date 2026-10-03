@@ -374,8 +374,8 @@
         }
       ],
       "texto": [
-        "No borra archivos. Un mail sale solo si lo mandás vos o se lo pedís.",
-        "No muestra los mails de Dirección ni de Recursos Humanos.",
+        "No borra archivos ni manda un mail si no se lo pedís con tus palabras.",
+        "En el servidor solo lee. No muestra los mails de Dirección ni de RRHH.",
         "Le pasa a Ingeniería la lista de programas de la PC. No saca ninguno.",
         "Se puede equivocar: por eso dice de dónde sacó cada respuesta."
       ],
@@ -388,7 +388,8 @@
     {
       "numero": 13,
       "titulo": "Si Claude te pide permiso",
-      "activa": true,
+      "activa": false,
+      "por_que_no_va": "03/10/2026 (decisión de Facundo): todas las PC quedan en «Omitir permisos», así que este cartel ya no aparece. La persona decide con sus palabras («borralo», «mandalo») y lo que frena son los controles del asistente. Si algún día se vuelve a un modo que pregunta, se prende de nuevo.",
       "capturas": [
         {
           "archivo": "capturas/14-claude-pide-permiso.png",

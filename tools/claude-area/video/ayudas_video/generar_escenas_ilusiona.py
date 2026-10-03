@@ -190,11 +190,15 @@ esc.append({"numero": 12, "titulo": "Para todos: enseñarle", "parrafos": [12], 
           "recuadros": [{"que_marca": "Listo, la dejé guardada", "x": 1.5, "y": 57.2, "ancho": 97.0, "alto": 9.2}]}]}]})
 
 # ---- 13. controlado (parrafo 13)
-perm = copy.deepcopy(esc1[8]["tomas"][0])
-perm["voz"] = ["13:5"]
-perm["texto_en_pantalla"] = "Está controlado"
-perm["recuadros"] = [r for r in perm["recuadros"] if r["que_marca"] == "Permitir una vez"]
-perm["recuadros"][0]["con_la_palabra"] = "pediste"
+# 03/10/2026: la ultima toma era el cartel de permiso (capturas/14-claude-pide-permiso.png). Con «Omitir permisos» en
+# todas las PC ese cartel ya no aparece. Va la conversacion real del mail (la misma grabacion de la escena 10): Claude
+# avisa «lo mandás vos con el botón, o decime "mandalo" y lo mando yo», la persona escribe «mandalo» y recien ahi dice
+# «Listo: salió a…». La voz y los tiempos no cambian: la toma dura lo que dura la frase.
+pedido = {"voz": ["13:5"], "recurso": MAIL_LISTO, "texto_en_pantalla": "Está controlado",
+          "que_tiene_que_verse": "La conversación real del mail: Claude avisa que lo manda la persona con el botón o si le dice «mandalo», la persona escribe «mandalo» y recién ahí «Listo: salió a…».",
+          "tramos": [{"desde": 1.9, "hasta": 4.3, "camara": [{"x": 0, "y": 298, "ancho": 676}],
+                      "recuadros": [{"que_marca": "«mandalo», lo que escribió la persona", "x": 86.0, "y": 71.0,
+                                     "ancho": 11.5, "alto": 6.3, "con_la_palabra": "porque", "foco": False}]}]}
 esc.append({"numero": 13, "titulo": "Está controlado", "parrafos": [13], "tomas": [
     {"voz": ["13:1-2"], "recurso": T + "sector-calidad-responde.mp4", "texto_en_pantalla": "Está controlado",
      "que_tiene_que_verse": "Una respuesta con su fuente marcada: Claude dice de dónde sacó el dato.",
@@ -205,7 +209,7 @@ esc.append({"numero": 13, "titulo": "Está controlado", "parrafos": [13], "tomas
      "que_tiene_que_verse": "Lámina de texto: no elimina nada, no muestra lo reservado.",
      "lamina": {"titulo": "Claude no hace esto solo", "icono": "x", "renglones": [
          {"texto": "No elimina nada", "con_la_frase": 1}, {"texto": "No muestra lo reservado", "con_la_frase": 2}]}},
-    perm]})
+    pedido]})
 
 # ---- 14. cierre (parrafo 14)
 tri = copy.deepcopy(esc1[9]["tomas"][0])
