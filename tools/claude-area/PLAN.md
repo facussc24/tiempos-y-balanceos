@@ -68,6 +68,15 @@ El Fable independiente revisó todo a las 22:00 del 02/10. Lo que encontró y c�
 **Plugin 0.3.0** (commit 923355d de `barack-claude`): 1.118 pruebas. **Instalador y publicador** (repo principal):
 37 + 206 pruebas.
 
+**Auditoría independiente (Opus) de los cambios de la noche:** un error real (volver a una versión anterior quedó
+roto por la lista `ejecutables`; arreglado con su prueba) y huecos del freno de borrado (de 217 comandos peligrosos
+pasaban 79): corregidos los que el control tenía que ver, y el resto dicho en `NOTAS.md`. Plugin: 1.154 pruebas.
+
+**Hecho el 03/10 a las 02:00:** las ocho carpetas (`C:\ClaudeBarack-areas\<area>`) y `C:\ClaudeBarack` quedaron con el plugin
+0.3.0 y las reglas v5, y los ocho botones «Examen N de 8» esperan el clic de Facundo. Después del examen: jueces
+(`extraer_v5.py`, `resumen_examen_v5.py`), volver a anotar las cuatro promesas que quedaron sin prueba vigente
+(pregunta con fuente, BOM, presentaciones, un ejemplo por sector) y regenerar la hoja 9 con `hoja_respuestas.py v5`.
+
 **Para rendir el examen sobre la v5 sin reinstalar entre áreas:** una carpeta de demostración por área en
 `C:\ClaudeBarack-areas\<area>` (`examen/armar_demo_area.sh`), cada una con su configuración (el plugin sabe cuál es
 su carpeta por `CLAUDE_AREA_HOME`) y sus preguntas adentro. Facundo abre las ocho conversaciones con ocho clics
