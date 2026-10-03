@@ -253,9 +253,23 @@ carpeta de red o un pendrive no la encontraba). Ahora:
   carpeta recordada, `estado.json` dice `actualizar: sin_nube` y no es un error. `estado.json` lleva `nube`:
   `por_nombre` · `indicada` · `recordada` · `sin_nube`. Para probarla: `-HomeDir` y `-EstadoDir` sin `-Nube` corre solo
   si ese estado recuerda una carpeta a la vista (y entonces NO busca la nube por nombre); con `-RegistrarTarea` no.
-- **Lo que no se probó**: el registro de verdad en el Programador de tareas de Windows (ninguna prueba ni ensayo
-  registra una tarea) y la corrida que lanza la tarea registrada (`conhost --headless`). Sí se probó lo que la tarea
-  corre: el programa de la copia instalada, sin ninguna ruta, en una PC entera armada en una carpeta temporal.
+- **Una nube atrasada no es una novedad** (`chequear`): si la versión que se ve es MENOR que la instalada (OneDrive
+  todavía no bajó la última, o la PC se instaló desde un pendrive más nuevo) devuelve `al_dia` con
+  `motivo: "nube_atrasada"`; la tarea no intenta una actualización que el programa rechazaría y el aviso de arranque no
+  dice "hay una nueva". Una versión mayor, o el mismo número con otro contenido, sigue siendo `hay_novedades`.
+- **Las tres formas en que OneDrive cuelga la nube en otra PC** (`buscarCarpetaEnBiblioteca`, en este orden de
+  preferencia): adentro de la biblioteca de Ingeniería entera (`BARACK ARGENTINA SRL\Ingeniería y Proyecto -
+  General\CLAUDE POR AREA`); la carpeta sincronizada sola (`BARACK ARGENTINA SRL\<sitio> - CLAUDE POR AREA`, lo que
+  hace el botón «Sincronizar» sobre ella); y el acceso directo (`OneDrive - BARACK ARGENTINA SRL\CLAUDE POR AREA`, lo
+  que hace «Agregar acceso directo a Mis archivos»). El buscador propio del plugin (`carpetaNube` de `hooks/lib/comun.mjs`)
+  todavía no conoce la segunda forma: ahí los avisos quedan en la cola local hasta que corre la tarea.
+- **Probado el 03/10/2026 en la notebook (usuario sin permisos de administrador)**: Windows deja registrar y sacar una
+  tarea con la MISMA definición (al iniciar sesión de ese usuario + cada 4 horas, `conhost --headless`, sin elevar),
+  con otro nombre y una acción inofensiva. Y con la carpeta de la nube «solo en la nube» (490 archivos sin bajar) el
+  `node.exe` arranca bajándose solo (9,7 s) y el instalador instala leyendo de ahí (65 s, código 0).
+- **Lo que no se probó**: la tarea de verdad registrada por `--instalar` (ninguna prueba ni ensayo la registra) y la
+  corrida que lanza el Programador de tareas (`conhost --headless` con el programa de la copia instalada). Sí se probó
+  lo que la tarea corre: el programa de la copia instalada, sin ninguna ruta, en una PC entera armada en una carpeta temporal.
 
 ### El modo de permisos (03/10/2026)
 
@@ -275,6 +289,12 @@ elegido. `--modo-permisos <default|acceptEdits|plan|auto|bypassPermissions>` lo 
   instala, una vez por PC (hoja 8).
 - **Medido:** con el programa de la app y una configuración recién creada, la conversación arranca en
   `bypassPermissions` (`ensayo_pc_nueva.sh`, 8 de 8). Qué hace la app si la opción no está prendida no se probó.
+- **El instalador LEE si esa opción está prendida** (`omitirPermisosEnLaApp`): la app la guarda por cuenta en
+  `%APPDATA%\Claude\claude_desktop_config.json` → `preferences.bypassPermissionsOptInByAccount` (visto en la app
+  2.19675; el formato es de la app y puede cambiar). Con alguna cuenta en `true` dice "ya lo tiene habilitado"; si la app
+  está y ninguna lo habilitó, "FALTA UN PASO…"; si no se puede leer, el aviso de siempre. Nunca la escribe.
+- **Lo que ningún modo aprueba solo** (misma documentación): las preguntas con opciones (`AskUserQuestion`), las reglas
+  `ask`, borrar una ruta crítica y archivar una conversación. Por eso puede aparecer un cartel aun en «Omitir permisos».
 - **Alternativa a evaluar después de la reunión:** el modo `auto` (la misma documentación lo recomienda en lugar de
   «Omitir permisos»: no pide permiso en lo de todos los días, un clasificador frena lo riesgoso, acepta aprobaciones
   dichas en la conversación y no necesita prender nada a mano). No se probó con los mails ni las presentaciones.
@@ -306,9 +326,12 @@ Una PC de planta no podía instalar, y si instalaba quedaba sin área.
   `CLAUDE_AREA_HOME` y `CLAUDE_AREA_ESTADO`: las tres, o se niega. Al terminar bien, si el programa Claude está
   instalado (registra los enlaces `claude://` en Windows: `HKCR\claude\shell\open\command`) lo abre en la carpeta con
   «hola» ya escrito: `claude://code/new?folder=C%3A%5CClaudeBarack&q=hola` (enlace documentado en la ayuda oficial,
-  "Open Claude Desktop with a link"; Claude pide confirmar la carpeta). Con carpetas de prueba no abre nada. **Está
-  APAGADO** hasta que al lado de `Instalar.cmd` exista el archivo `abrir-claude.txt`: al 03/10/2026 el enlace no se
-  probó en vivo, y el paquete (v3) no trae ese archivo. Para prenderlo: probar el enlace una vez y crear el archivo.
+  "Open Claude Desktop with a link"; Claude pide confirmar la carpeta y deja el texto escrito sin mandarlo). Con
+  carpetas de prueba no abre nada. **El interruptor es el archivo `abrir-claude.txt`**, al lado de `Instalar.cmd`: vale
+  solo si tiene una línea que dice exactamente `si` (`findstr /x /i /c:"si"`). Va por contenido porque en la nube no se
+  borra nada: apagarlo es escribirle `no`. Lo escribe `armar_publicable.mjs --abrir-claude si|no` al publicar; sin esa
+  opción no se toca. Al 03/10/2026 el paquete (versión 6) lo trae en `si` para probarlo esa noche en otra PC: el enlace
+  todavía no se vio funcionar en vivo, y si no anda la ventana muestra igual los pasos a mano.
   `LISTO` se dice solo si quedó `instalado.json`; cortar las preguntas (Ctrl+C, cerrar la ventana) cancela sin instalar.
 - **Quien no figura dice su área.** `--area "<área>" --nombre "<nombre>" --puesto "<puesto>"` (es lo que pasa Claude
   después de preguntarle, Paso 2 bis del "instalá"), o `--preguntar` (el `.cmd`: mira primero, sin escribir, si la

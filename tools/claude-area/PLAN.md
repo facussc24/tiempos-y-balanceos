@@ -111,10 +111,36 @@ la lista (hoy, nadie) la dejaba sin área.
 aprueben pero hablando… si no se van a cansar de darle aceptar a todo"*. El instalador deja ese modo por defecto en
 cada PC (sin pisar el que la PC ya tenga) y el paquete para llevar quedó en la **versión 4**; lo que frena son los
 controles del plugin, que es como se probó todo. En la app hay que prender UNA vez por PC la opción que permite ese
-modo (Configuración → Claude Code): el instalador no la toca. Hojas 4, 8 y 10 al día. **Falta poner al día:** la
-página "Si Claude te pide permiso" del manual (se apaga con `"activa": false` y hay que regenerarlo), dos renglones
-del video tutorial ("te pide permiso… Denegar, Permitir una vez…") y la promesa `no-hace-solo`. El video por sector
-no nombra los permisos. Detalle y la alternativa (modo `auto`): `CONTRATO.md`, "El modo de permisos".
+modo (Configuración → Claude Code): el instalador no la toca, pero la LEE y avisa si falta. Hojas 4, 8 y 10 al día.
+El manual (14 páginas, sin la página del cartel), el video tutorial (versión 3) y el video por sector ya no muestran
+el cartel de permiso (03/10, tarde). Detalle y la alternativa (modo `auto`, el que recomienda el fabricante y no
+necesita prender nada a mano): `CONTRATO.md`, "El modo de permisos".
+
+**03/10, tarde — lo que quedó hecho mientras Facundo no estaba:**
+- **La nube.** `…\Ingeniería y Proyecto - General\CLAUDE POR AREA\1- PUBLICADO` existe, es idéntica al paquete para
+  llevar (498 archivos, sha256) y subió entera. Facundo comparte SOLO esa carpeta. Con todo «solo en la nube» se instaló
+  desde ahí en 65 s. Quedaron dos archivos de una PC inventada en `4- BUZON` (`PRUEBA-NUBE-01`): el guardián no deja
+  borrar nada de la biblioteca; los saca Facundo si quiere.
+- **El paquete es la versión 6** (plugin 0.3.0, reglas v5): la PC recuerda de dónde se instaló y se actualiza sola
+  (tarea al iniciar sesión y cada 4 horas), encuentra la nube en las tres formas en que OneDrive la cuelga, avisa si
+  falta habilitar «Omitir permisos», no anuncia como novedad una nube atrasada y, al terminar, abre Claude en la carpeta
+  (`abrir-claude.txt` en `si`, para probarlo esa noche). Pruebas: 67 del instalador y 273 con las del paquete;
+  `ensayo_pc_nueva.sh` 8 de 8 y, sobre el paquete real, 7 de 7.
+- **La demostración** `C:\ClaudeBarack` quedó instalada desde ese mismo paquete (`examen/armar_demo_del_paquete.sh
+  direccion`): versión 6, "al día" contra la nube.
+- **El registro de la tarea**, probado con una tarea inofensiva de otro nombre: este usuario no es administrador y
+  Windows la dejó registrar y sacar. La tarea de verdad se registra por primera vez en la PC de la prueba.
+- **Freno de Office** (rama `v6` del repo privado, plugin 0.4.0, 1.516 pruebas): no le cierra PowerPoint, Outlook,
+  Excel ni Word a la persona salvo que lo pida. Va con las reglas v6, cuando rindan.
+- **Examen de las reglas v6**: las ocho carpetas `C:\ClaudeBarack-areas\<area>` tienen reglas v6 + plugin 0.4.0 y hay
+  ocho botones «Examen v6 · N de 8» esperando el clic de Facundo. Programas: `examen/extraer_v6.py`,
+  `encargos_jueces_v6.py`, `resumen_examen_v6.py` (comparan contra el v5: 110 / 28 / 1).
+- **Lo que hicieron otros** (tres informes en `examen/investigacion_*.md`): nuestro esquema es el que la documentación
+  oficial describe para repartir un asistente PC por PC; el validador oficial (`claude plugin validate --strict`) pasa
+  sobre el paquete; la actualización automática oficial no sirve para una carpeta, así que la tarea propia hace falta;
+  compartir una cuenta individual va contra las condiciones (ya está en la hoja 3); el fabricante recomienda `auto`.
+- **Control de antes de la reunión**: mira además la copia de la nube, el validador oficial y el estado del servicio.
+- **Hoja 11**: la prueba en otra PC con la nube (`exports/CLAUDES_POR_AREA_20261001/11 - Prueba en otra PC con la nube.pdf`).
 
 **Las mejoras de Facundo de los últimos días (pedido del 03/10):** revisados 103 commits y 383 mensajes suyos.
 Sirven para las áreas y no estaban: cambiar la forma cuando no entiende y contestar corto, explicar y parar, releer
@@ -123,16 +149,16 @@ pisar un archivo que ya tiene, no armar un mail que nadie pidió, avisar cuando 
 las reglas (v6) y un freno nuevo en el plugin. Tabla completa: `examen/mejoras_recientes_2026-10-03.md`. Como cambian
 las reglas, van con su examen: la demostración y el paquete siguen en v5 hasta que la v6 lo rinda.
 
-**Estado de la v6 (03/10, 13:40):** las reglas están escritas y commiteadas en la rama `v6` del repo privado, en la
-copia de trabajo `C:/Dev/barack-claude-v6` (72 renglones; 1.154 pruebas en verde). `main` sigue en la v5. Falta: el freno
-de `.Quit()` / `Stop-Process` / `taskkill` de Office en el plugin, rearmar las ocho carpetas de área desde esa copia
-(`armar_demo_area.sh` tiene la ruta del repo fija: hay que pasarla por variable), los ocho botones del examen y los
-jueces (Opus: hace falta que Facundo lo vuelva a pedir, el pase de 12 horas venció).
+**Estado de la v6 (03/10, 15:30):** reglas v6 (72 renglones) y freno de Office (plugin 0.4.0) commiteados en la rama
+`v6` del repo privado, copia de trabajo `C:/Dev/barack-claude-v6` (1.516 pruebas, 53 chequeos del validador en verde).
+`main` sigue en la v5 y el plugin 0.3.0, que es lo publicado. Las ocho carpetas de área ya están rearmadas con la v6
+(`PLUGIN_REPO=/c/Dev/barack-claude-v6 bash armar_demo_area.sh <area>`). Falta: los ocho clics de Facundo, tomar el
+examen, los 16 jueces y, si da igual o mejor que el v5, pasar la rama a `main`, publicar y reinstalar la demostración.
 
 **Lo que encontró la segunda opinión (Fable, 03/10) y sigue abierto:** el código de ingreso de la cuenta le llega a
-otra persona; los carteles de permiso en vivo; nadie registra la tarea que actualiza sola (`sync_area.ps1
--RegistrarTarea` no lo llama nadie: por eso la hoja 1 dejó de prometerlo); el importe real de la cuenta (está
-contratada por Apple); Outlook, PowerPoint e internet en la PC de planta. Informe completo:
+otra persona; el importe real de la cuenta (está contratada por Apple); Outlook, PowerPoint e internet en la PC de
+planta. Ya resueltos: los carteles de permiso en vivo («Omitir permisos» para todos) y la tarea que actualiza sola (la
+registra `--instalar` desde el 03/10; falta verla correr en una PC de verdad). Informe completo:
 `premortem_lunes.md` (copia en `examen/`).
 
 **Lo que NO se probó y solo se puede probar con Facundo o en la PC de planta:** instalar el programa Claude e
@@ -211,13 +237,17 @@ Ensayo general el día anterior, en la PC donde se va a mostrar (`4 - Guion de l
 control: plugin cargado, perfil con área, Outlook clásico abierto, nube subida, ningún agente corriendo.
 **Nada de agentes ni baterías en las 5 horas anteriores:** el cupo es el mismo que usa la demostración.
 
-## Lo que necesito de Facundo (y nada más) — al 03/10, mediodía
+## Lo que necesito de Facundo (y nada más) — al 03/10, tarde
+
+**Esta noche (sábado), con la otra PC:** la hoja 11 (`11 - Prueba en otra PC con la nube.pdf`): cuenta de Claude paga,
+prender «Omitir permisos», la carpeta `CLAUDE POR AREA` a la vista por OneDrive, doble clic en «Instalar», «hola», y
+pedirme "publicá una versión nueva" para ver que llega sola. Y **ocho clics** en los botones «Examen v6 · N de 8».
 
 **Para el lunes, sí o sí:**
 1. **El código de ingreso de la cuenta.** Para abrir Claude en una PC nueva hay que iniciar sesión, y el código llega
    al mail de la cuenta, que hoy recibe otra persona. Tenerla avisada el lunes temprano, o dejar la sesión iniciada
    antes en la PC que se va a usar.
-2. **Un pendrive**: copiar entera `C:\ClaudeBarack-para-llevar` (218 MB).
+2. **Un pendrive**: copiar entera `C:\ClaudeBarack-para-llevar` (277 MB; el paquete es la versión 6).
 3. **La PC nueva**: con internet, con el programa Claude ya instalado y la sesión iniciada ANTES de que mire el
    director (es lo lento; la instalación de Barack es un doble clic), y con la opción que permite «Omitir permisos»
    prendida (Configuración → Claude Code).
@@ -231,7 +261,9 @@ control: plugin cargado, perfil con área, Outlook clásico abierto, nube subida
 **Cuando pueda (no frena el lunes):**
 7. «Archivá»: sacar de la lista de la app las conversaciones de prueba (unas 35).
 8. El nombre con el que saluda la demostración (hoy «Demostración», puesto Dirección).
-9. El OK para crear la carpeta del proyecto en la nube de Ingeniería (primera vez) y copiar ahí el paquete.
+9. Compartir la carpeta `CLAUDE POR AREA` de la nube de Ingeniería con quien corresponda (solo esa carpeta, no la
+   biblioteca entera). La carpeta ya está creada y con el paquete (03/10: *"si podés hacer lo de la nube ahora, hacelo"*).
+   Si quiere, sacar de `4- BUZON` los dos archivos de la PC inventada `PRUEBA-NUBE-01`.
 10. Guardar una copia de la llave de firma (`~\.claude-area\publicador.key`) en un pendrive suyo: si se pierde,
     cada PC instalada hay que re-fijarla a mano.
 11. Las casillas reservadas reales (hoy la lista es una plantilla): es la decisión 2 de la reunión.
@@ -240,11 +272,16 @@ control: plugin cargado, perfil con área, Outlook clásico abierto, nube subida
 ## Después de la reunión, en este orden
 
 1. Lo que traiga la prueba en la PC nueva (hoja 8) y lo que pregunte el director: cada pregunta que no supo entra al examen.
-2. **La actualización automática:** hoy nadie registra la tarea (`sync_area.ps1 -RegistrarTarea`). O `--instalar` la
-   registra (y se prueba en una PC), o se deja a mano; y el aviso de arranque deja de decir "se aplica sola".
-3. **La carpeta del proyecto en la nube** (con el OK de Facundo): se copia `C:\ClaudeBarack-para-llevar\CLAUDE POR AREA`
-   tal cual, con su historial. Para las demás áreas hace falta la carpeta compartida (decisión 3 de la reunión).
-4. El enlace que abre Claude solo al terminar de instalar: probarlo una vez y publicarlo (paquete v3).
+2. **La actualización automática:** `--instalar` ya registra la tarea (03/10). Falta verla correr sola en una PC de
+   verdad (la primera corrida es a los 10 minutos de instalar) y decidir qué pasa con dos usuarios en la misma PC.
+3. **La carpeta del proyecto en la nube**: hecha el 03/10. Falta compartirla y, para las demás áreas, la carpeta
+   compartida de toda la empresa (decisión 3 de la reunión). Publicar de ahora en más: se publica en
+   `C:\ClaudeBarack-para-llevar` y se copia a la nube lo que cambió (`cp -ru`), con la comparación sha256 al final.
+4. El enlace que abre Claude solo al terminar de instalar: va prendido en la versión 6; si en la prueba no anda, se
+   apaga publicando con `--abrir-claude no`.
+4 bis. **El modo `auto`** en lugar de «Omitir permisos» (lo recomienda el fabricante; en Windows «Omitir permisos» no
+   tiene ninguna capa de aislamiento y lo único que frena son los controles del plugin): probarlo con los mails, las
+   presentaciones y la lectura del servidor, y sumar reglas `deny` como segunda red. Con su examen.
 5. Leer el servidor sin cartel de permiso (decisión: hoy pide permiso cada vez que abre un original).
 6. Si una PC no deja crear `C:\ClaudeBarack`: otra ubicación (hoy solo avisa).
 7. Las casillas reservadas reales y la lista de personas.
