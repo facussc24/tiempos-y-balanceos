@@ -47,7 +47,9 @@ EXAMENES = REPO / ".sgc-cache" / "claude-por-area" / "examen"
 
 def examen_vigente(carpeta=EXAMENES):
     """((bien, a_medias, mal), archivo) del ultimo examen completo: el renglon Total de correccion_v<N>.md."""
-    archivos = sorted(carpeta.glob("correccion_v*.md"), key=lambda p: int(re.search(r"_v(\d+)", p.name).group(1)))
+    # un examen a medio corregir (el resumen dice "Falta corregir: ...") todavia no es el vigente
+    archivos = [p for p in sorted(carpeta.glob("correccion_v*.md"), key=lambda p: int(re.search(r"_v(\d+)", p.name).group(1)))
+                if "Falta corregir:" not in p.read_text(encoding="utf-8")]
     if not archivos:
         return None, None
     m = re.search(r"\*\*Total\*\*.*\*\*(\d+)/(\d+)/(\d+)\*\*", archivos[-1].read_text(encoding="utf-8"))

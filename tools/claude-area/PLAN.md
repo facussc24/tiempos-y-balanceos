@@ -43,6 +43,39 @@ no está probado, o si la prueba es más vieja que las reglas instaladas en `C:\
 quedaron sin prueba vigente (`chequear_promesas.py` las pide de nuevo). Se vuelven a probar con el ensayo 2
 (`.sgc-cache/claude-por-area/examen/ensayo_2_preguntas.md`). Al 02/10 12:20 quedan sin prueba vigente: enseñarle una habilidad, un ejemplo por sector (se prueba al grabar cada sector con la demostración instalada como ese sector) y el caso de IMDS.
 
+## La noche del 02 al 03/10 (segunda opinión del Fable y lo que se hizo con ella)
+
+El Fable independiente revisó todo a las 22:00 del 02/10. Lo que encontró y cómo quedó cada punto:
+
+| Lo que marcó | Qué se hizo | Estado |
+|---|---|---|
+| Los papeles para el dueño citaban el examen fácil (131/8/0 y 126/12/1) y no el tomado como lo va a usar la gente (105/31/3) | Hojas 1, 3, 4 y 7 corregidas y regeneradas. `puerta.py` (puerta D) ahora barre los números de examen de los papeles contra el renglón Total del último `correccion_v<N>.md`, con `--autotest` | hecho |
+| En la carpeta de entregables convivían tres videos y el guion no decía cuál | Los dos viejos pasaron a `versiones anteriores (no mostrar)\`; el guion nombra «Video por sector - Claude en Barack» | hecho |
+| "Dos PC de Calidad probaron la versión anterior" y "una PC de prueba recibió la versión en 5 segundos" decían más de lo probado | Una PC de Calidad (07/09); "en una instalación de prueba" | hecho |
+| Si la PC no tiene Node, los controles se apagan sin aviso | Confirmado con la documentación oficial (un control que no arranca no frena). Además `hola/CLAUDE.md` y `sync_area.ps1` nombraban un Node en `herramientas\node\` que nada publicaba. Ahora el Node viaja firmado adentro del plugin (`bin/node.exe`, lista `ejecutables`) y `hooks.json` lo llama por su ruta, sin consola | hecho por consola; falta verlo en una conversación y en una PC de planta |
+| "No elimina nada" lo sostenía solo una regla escrita (en el disco de la PC) | `pc-guard`: borrar, mover o renombrar en la PC se frena si la persona no lo pidió en su mensaje. 99 pruebas | hecho; falta verlo en una conversación |
+| No había techo de ayudantes en el plugin (pedido del 01/10) | `agentes-guard`: 10 en 10 minutos por PC. 16 pruebas | hecho |
+| 8 de las 31 "a medias" mandaban a preguntarle a un "Gerente de…" que ningún documento nombra | Reglas de la casa **v5** (dos cambios en la sección 2). Prueba A/B con 4 ayudantes (2 tomas por versión, 18 preguntas): con la v5 desaparece el cargo supuesto en D02, D15, E11, E08, D11 y D01 y se mantienen los que nombra un documento | hecho; falta el examen de verdad |
+| La demostración está instalada como PC de Producción y el guion prevé una pregunta de Dirección | Decisión de Facundo: con qué área se muestra | pendiente de Facundo |
+| Hay 18 copias de trabajo de la demostración con reglas viejas | Se archivan con el OK de Facundo. La conversación de la reunión se abre directo en la carpeta (guion, "Antes de entrar") | pendiente de Facundo |
+| Resumir mails no tiene ninguna prueba; el asistente de área no tiene con qué leer Outlook | Sin resolver. Hoy resume un hilo que se le pega. Leer el buzón propio es una decisión (qué se puede leer) | pendiente |
+| Nadie de afuera validó una respuesta | Hoja con las 8 respuestas por sector para que la lea alguien de Calidad | pendiente de Facundo |
+| IMDS, el cupo semanal, quién inicia sesión en cada PC, qué recibe Ingeniería | Decisiones de Facundo o de Dirección | pendiente |
+
+**Video por sector:** armado (2:02,5), revisado cuadro por cuadro. Tres tramos de voz que Whisper oía mal
+(Logística, Mantenimiento, RRHH) se regrabaron con otra frase; los tres se oyen enteros.
+
+**Plugin 0.3.0** (commit 923355d de `barack-claude`): 1.118 pruebas. **Instalador y publicador** (repo principal):
+37 + 206 pruebas.
+
+**Para rendir el examen sobre la v5 sin reinstalar entre áreas:** una carpeta de demostración por área en
+`C:\ClaudeBarack-areas\<area>` (`examen/armar_demo_area.sh`), cada una con su configuración (el plugin sabe cuál es
+su carpeta por `CLAUDE_AREA_HOME`) y sus preguntas adentro. Facundo abre las ocho conversaciones con ocho clics
+seguidos; el resto lo hace la sesión que coordina (`examen/examen_v5_plan.json`, `examen/sesiones_areas.py`).
+Es una desviación de la instalación real (la carpeta no es `C:\ClaudeBarack`): se anota en el resultado.
+
+**Hoja nueva para Facundo:** `8 - Prueba en una PC de planta.pdf` (los 9 pasos de la etapa E1 con su casilla).
+
 ## Las etapas, en orden. Cada una tiene su puerta: no se pasa a la siguiente con la puerta en rojo.
 
 ### A — Que el asistente HAGA lo que el video va a decir (hoy)
@@ -106,13 +139,18 @@ Ensayo general el día anterior, en la PC donde se va a mostrar (`4 - Guion de l
 control: plugin cargado, perfil con área, Outlook clásico abierto, nube subida, ningún agente corriendo.
 **Nada de agentes ni baterías en las 5 horas anteriores:** el cupo es el mismo que usa la demostración.
 
-## Lo que necesito de Facundo (y nada más)
-1. 10 minutos para grabar las tomas en movimiento: entrar a IMDS con su clave en el navegador, y quedarse en esta
-   conversación mientras se graban las ventanas de demostración. (La voz queda: *"estaba bastante bien"*.)
-2. Confirmar la carpeta de la instalación: hoy es `C:\ClaudeBarack` (nombró "archivos de programa").
-3. El OK para contar el caso de IMDS.
-4. Revisar `6 - Lista para tildar` antes de mostrarla (reservados y piloto).
-5. Elegir una PC de la planta para la etapa E1.
+## Lo que necesito de Facundo (y nada más) — al 03/10
+
+1. Mirar y escuchar los dos videos (el por sector es nuevo; la voz no la escuchó nadie, solo se transcribió).
+2. Ocho clics seguidos, uno por sector, para rendir el examen sobre las reglas v5 (y con eso vuelve a quedar
+   probado "un ejemplo por sector").
+3. Decir con qué área se muestra la demostración en la reunión (hoy está como PC de Producción) y el OK para
+   archivar las conversaciones de demostración viejas.
+4. Elegir una PC de la planta para la etapa E1 y el OK para crear la carpeta del proyecto en la nube de Ingeniería
+   (es la primera vez). La hoja `8 - Prueba en una PC de planta.pdf` tiene los pasos.
+5. Pedirle a alguien de Calidad que lea las 8 respuestas por sector (20 minutos).
+6. IMDS: 10 minutos con su clave en el navegador y el OK para contarlo.
+7. Revisar `6 - Lista para tildar` antes de mostrarla (reservados y piloto).
 
 ## Lo que NO se hace ahora (para no perder el foco)
 Tablero, inventario de programas, buscador, lista de las 85 personas, ordenar la nube. Están hechos o encaminados

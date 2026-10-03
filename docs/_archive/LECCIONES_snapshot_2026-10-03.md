@@ -6,7 +6,7 @@ leccion es un bullet legible de hasta 600 caracteres; el detalle vive en la memo
 que cita (gate por bullet: regla `lecciones-consolidacion.md`). La historia completa de cada
 incidente vive en los snapshots.
 
-- **Snapshots** (la version larga de cada consolidacion): los tres ultimos son [2026-10-01](docs/_archive/LECCIONES_snapshot_2026-10-01.md) · [2026-10-02](docs/_archive/LECCIONES_snapshot_2026-10-02.md) · [2026-10-03](docs/_archive/LECCIONES_snapshot_2026-10-03.md) y el historico 2026-03-30 a 07-02, [2026H1](docs/_archive/LECCIONES_APRENDIDAS_2026H1_completo.md); los demas estan en `docs/_archive/`.
+- **Snapshots** (la version larga de cada consolidacion): los tres ultimos son [2026-09-23](docs/_archive/LECCIONES_snapshot_2026-09-23.md) · [2026-10-01](docs/_archive/LECCIONES_snapshot_2026-10-01.md) · [2026-10-02](docs/_archive/LECCIONES_snapshot_2026-10-02.md) y el historico 2026-03-30 a 07-02, [2026H1](docs/_archive/LECCIONES_APRENDIDAS_2026H1_completo.md); los demas estan en `docs/_archive/`.
 - **Tabla incidente → regla**: `docs/_archive/INCIDENTES_REGLAS_AMFE.md`
 - Lo ya codificado no se repite aca: reglas de `.claude/rules/` y sus gates ejecutables
   (amfe.md + amfeValidator, database.md, verify-supabase-live.md, no-pfd-no-ho.md, techo-agentes.md, cad-3d.md).
@@ -30,14 +30,18 @@ incidente vive en los snapshots.
 - **22/09 y 02/10 — Una foto sacada de un video no se juzga por una medida: se MIRA y se abre su FUENTE.** Graduado a `fotodevideo.py contacto` + `gate_fotos_miradas` y a `gate_foto_no_es_de_falla()` (`hojas-proceso.md`, Enforcement).
 - **22/09 — Whisper no se calla cuando no entiende: INVENTA, y una transcripción alucinada pasa el gate igual que una buena.** Graduado a la memoria `extraer_video_audio_local` (una pasada por idioma, fusión por `avg_logprob`, repeticiones marcadas `(ALUCINA)`).
 - **22/09 — Un gate contesta lo que le preguntan: los obstáculos se listan del CONJUNTO, no del subconjunto, centrado y simetría también se miden, y un control que frena dice CUÁL renglón lo frena.** Graduado a `chequeo_centrado.py` y a la memoria `dispositivo_adhesivado_insert`.
+- **21/09 — Una captura no es el estado, pero cuando una accion NO responde es lo unico que dice POR QUE.** Graduado entero al skill `imds` ("El panel del navegador muestra capturas VIEJAS").
 - **21/09 — Cortar un listado para leerlo es una decisión sobre los DATOS, y un control que queda rojo por trabajo pendiente se termina ignorando.** Graduado a `video-maquina.md` y a la memoria `videos_y_fotos_de_maquina_donde_van`.
 - **21/09 — Antes de ejecutar un pedido que toca a un cliente, se abre el sistema del CLIENTE: ahi esta si el trabajo ya se hizo y por que esta trabado** (un 8D cerrado hacia semanas en KPM; un "agregale la norma" que era un PPAP rechazado en IMDS). Memorias `8d_11010843_tapa_amarok`, `project_imds_barack`.
 - **10-13/09 — Una contradicción adentro del entregable es un ROJO, no una nota al pie; la frase que resume números la arma el CÓDIGO.** Graduado a la memoria `contradiccion_en_el_entregable_es_rojo`.
+- **12/09 — Un gate que barre CODIGO decide por RENGLON, y la cadena no es todo lo que parece un script: 5 de 13 huerfanos eran falsos y 16 pasos no corrian.** Se lee la LLAMADA entera y se sigue el orden de las variables. Graduado entero a `generador_fuera_de_la_cadena_entrega_viejo`.
 - **11/09 — El system prompt es la foto del arranque: antes de concluir que algo quedó sin hacer, mirar el disco y el `git log`.** Graduado a la memoria `el_system_prompt_es_la_foto_del_arranque`.
 - **08-13/09 — Lo que pasa del otro lado no lo veo, y lo que apunta a un lugar vacio no falla: el vacio se lee como "roto".** Mi arbol NO es lo que se commitea, lo que corre otra PC se escribe desde SU lado, y un OK de Fak no viaja de segunda mano. **Un default que ninguna corrida usa falla sin romperse** (52 rojos que no existian). Memorias `worktree_sin_env_local`, `hablarle_a_otra_pc`, `dispositivo_adhesivado_insert`.
 - **Antes de construir un control propio, correr el que ya viene; y en una interfaz ajena (ERP, ventana, render) el limite y la causa casi siempre estan de mi lado: mirar antes de rediagnosticar.** El que carga el archivo juzga mejor que yo. Graduado a las memorias `claude_plugin_cli` y `crlf_en_claude_md_reglas_y_memory`, y al skill `arb-operar`.
 - **11/09 — Un dry-run verde no prueba el `--apply`: el camino que escribe es el que nadie ejercio.** Un script con `--apply` no se entrega ni se nombra en un cierre hasta que su escritura corrio de verdad, aunque sea contra un solo caso. Y al revés (01/10): un `--instalar --help` que creí inofensivo instaló de verdad sobre mi `settings.json`; lo que escribe frena ante un argumento que no conoce y no mezcla carpetas de prueba con las reales. Graduado a la memoria `no_entregable_ejecutable_sin_verificar` y a `_paquete.mjs`.
+- **10/09 — Un negativo de un agente sobre contenido visual no es prueba de ausencia: vio la resolucion que le llegue, no el material.** Graduado entero a la memoria `un_agente_no_es_independiente_si_le_paso_mis_supuestos`.
 - **08/09 — En revisiones y caratulas no se escriben metadatos internos ni se citan normas; "Item cambiado" va centrado.** Graduado a la memoria `feedback_caratula_y_revisiones_sin_cocina_interna`.
+- **07-13/09 — Dispositivo de adhesivado: lo que doy por existente se busca en el sólido, un número propio que domina el total es un agujero del modelo, y una cuenta que cierra se lee al revés (¿quién NO está adentro?).** Graduado entero a la memoria `dispositivo_adhesivado_insert`; el detalle, en el snapshot 2026-10-01.
 - **07/09 — Un cero puede ser del sistema y no del hecho, y la columna la nombra el que manda el dato.** Antes de concluir desde un campo, mirar si la poblacion de ese campo lo llena. Memoria `datos_produccion_pcp_federico`.
 - **07/09 — Un sistema se diseña para el que lo va a usar, y su estado se declara cuando es verdad.** Antes de poner un control, escribir que ve el que no lo pidio; el marcador de "instalado" va en el ultimo paso. Memoria `project_claude_barack_fase0`.
 - **Lo que yo construyo lo prueba algo que no sea yo, y un control solo ve lo que DECLARA.** Un gate que no puede dar verde esta tan roto como el que no puede dar rojo, y **lo que FALTA no se ve**: un gate verde mientras dos hojas mandaban imprimir 9 piezas que ninguna lista nombraba. Verificar las promesas no ve las que nunca se escribieron (01/10, flujograma 160: skill `flujogramas` §0 bis). Memorias `un_control_se_audita_en_las_dos_direcciones`, `sims_carros_metodos`.
@@ -54,13 +58,17 @@ incidente vive en los snapshots.
 - **Un plan de accion heredado se arrastra fila por fila: fusionar dos filas pierde alcance, media fila que se cae no la ve nadie, y un issue no se cierra con evidencia de una parte del alcance.** Graduado a la memoria `plan_heredado_se_arrastra_fila_por_fila`.
 
 - **13/09 — La vara contra la que comparo un numero se elige por su MAGNITUD y por el MOMENTO, y casi siempre ya esta publicada.** Graduado a la memoria `feedback_la_vara_se_elige_por_magnitud_y_momento`.
+- **13/09 — Lo que escribo sobre mi propio modelo se MIDE o se ACOTA; la constante que falta se toma en el extremo PEOR.** Graduado entero a la memoria `el_modelo_lo_publica_el_sistema_no_yo`.
 
 - **10/09 — El lenguaje del entregable son las palabras que usa Fak (no es acortar, es la palabra comun), y un script que barre una carpeta se prueba en un arbol.** Graduado a la memoria `feedback_lenguaje_del_entregable_palabras_de_fak`.
 
 ## Identidad de un dato
 
 - **Una fuente que sale de mi lado del mostrador no es una segunda fuente** (regla mia, test, memoria, export, cita de un subagente, o el numero que yo propuse y Fak solo eligio; 02/10: tampoco el proceso de la pieza vecina, Upper Trim no es IP Pad): si un documento puede zanjarlo, se abre el documento antes de actuar. Las formas de caer: memorias `verificar_contra_la_fuente_no_el_codigo`, `un_agente_no_es_independiente`, `dispositivo_adhesivado_insert`, `al_documento_entra_lo_que_dice_un_papel_de_esa_pieza`; `amfe.md` §12.
+- **04/09 — "No se compra" no es "esta mal cargado", y el listado del legajo no valida al arb que se cargo desde el: es una sola fuente contada dos veces.** Graduado entero a la memoria `validar_insumo_de_bom_tres_fuentes`.
 - **En la BOM va el codigo del proveedor; el interno es el parche hasta que el proveedor da el suyo.** Que un codigo interno aparezca en OC significa que ese material todavia no tiene codigo de proveedor, no que sea la regla. Graduado a la memoria `codigo_de_proveedor_le_gana_al_interno`.
+
+- **11/09 — Una pieza NUEVA no es una revision de la anterior (legajo propio, documentos en Rev.A), y el numero de un documento se lee del listado maestro, no del NOMBRE de un archivo.** Graduado entero a la memoria `pieza_nueva_no_es_revision`.
 
 ## Consumos de material
 
