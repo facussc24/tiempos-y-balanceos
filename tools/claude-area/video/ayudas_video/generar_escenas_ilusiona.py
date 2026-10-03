@@ -206,9 +206,11 @@ esc.append({"numero": 13, "titulo": "Está controlado", "parrafos": [13], "tomas
                  "recuadros": [R("cal", 16, 144, 660, 26, "la fuente: I-AC-010 rev A", con_la_palabra="dónde",
                                  etiqueta="Fuente: I-AC-010", etiqueta_lado="derecha")]}]},
     {"voz": ["13:3-4"], "recurso": "lamina", "texto_en_pantalla": "",
-     "que_tiene_que_verse": "Lámina de texto: no elimina nada, no muestra lo reservado.",
+     "que_tiene_que_verse": "Lámina de texto: no borra nada si no se lo pedís, no muestra lo reservado.",
+     # 03/10/2026: decia «No elimina nada». El tutorial dice que borra si la persona se lo pide («borrala»), que es lo
+     # que deja pasar el control pc-guard: la voz y la lamina dicen ahora lo mismo que el tutorial.
      "lamina": {"titulo": "Claude no hace esto solo", "icono": "x", "renglones": [
-         {"texto": "No elimina nada", "con_la_frase": 1}, {"texto": "No muestra lo reservado", "con_la_frase": 2}]}},
+         {"texto": "No borra nada si no se lo pedís", "con_la_frase": 1}, {"texto": "No muestra lo reservado", "con_la_frase": 2}]}},
     pedido]})
 
 # ---- 14. cierre (parrafo 14)

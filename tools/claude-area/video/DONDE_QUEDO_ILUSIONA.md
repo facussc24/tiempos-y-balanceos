@@ -1,6 +1,6 @@
 # Video "por sector" — donde quedo (02/10/2026, noche)
 
-**Armado.** `exports\CLAUDES_POR_AREA_20261001\Video por sector - Claude en Barack.mp4` (+ `.srt`), 2:02,5 (tope 2:30).
+**Armado.** `exports\CLAUDES_POR_AREA_20261001\Video por sector - Claude en Barack.mp4` (+ `.srt`), 2:03,1 (tope 2:30).
 `armar_video.py --escenas escenas_ilusiona.json` sale con 0 y el control tecnico da todo OK. Control mirado: un cuadro cada 4 s
 del MP4 entero y un barrido cada 0,5 s de los 14 sectores/escenas (privacidad, documento marcado, cartel de la pregunta).
 
@@ -11,7 +11,10 @@ cuaderno de trabajo adentro: si se mueve, cambiar `VID`).
 
 ## La voz (`exports\CLAUDES_POR_AREA_20261001\fuentes\voz_ilusiona\`)
 
-14 parrafos grabados, 1:44. El 13 dice «No elimina nada» (cambio del coordinador, texto de `narracion.txt`).
+14 parrafos grabados, 1:44. El 13 dice «No borra nada si no se lo pedís» desde el 03/10
+(antes «No elimina nada»: el tutorial dice que borra si se lo piden, que es lo que deja pasar el control `pc-guard`). Se grabo SOLO esa frase y se empalmo: las
+otras cuatro del parrafo son las tomas de antes, muestra por muestra (`empalmar_13.py`, en la carpeta de la voz; lo anterior quedo
+ahi mismo, en `anterior_03-10_parrafo13_no_elimina_nada`). El parrafo paso de 9,14 a 9,75 s y el video de 2:02,5 a 2:03,1.
 Control con Whisper (no se escucho a oido). Con una palabra dudosa:
 
 | Parrafo | Palabra | Que se oye | Que se probo |
@@ -36,7 +39,7 @@ Cambios en `voz_ilusiona\narrar.py`: los de la v2 (`abierta`, `él`, `decís`, s
 1 apertura (documentos que suben + foto de pregunta) · 2 Produccion (grabacion de las tres piezas, P-09.1) · 3 Calidad (I-AC-010) ·
 4 Logistica (I-LG-010) · 5 Compras (I-CO-001) · 6 Mantenimiento (I-MT-001) · 7 RRHH (P-18) · 8 Direccion (MC-09) · 9 Ingenieria (arb,
 mas hoja de operaciones, lamina y flujograma) · 10 mail · 11 presentacion · 12 ensenar una tarea · 13 controlado (fuente marcada,
-lamina «No elimina nada / No muestra lo reservado», la conversacion del mail con «mandalo» marcado) · 14 cierre.
+lamina «No borra nada si no se lo pedís / No muestra lo reservado», la conversacion del mail con «mandalo» marcado) · 14 cierre.
 03/10: la ultima toma de la 13 era el cartel de permiso; con «Omitir permisos» en todas las PC ese cartel ya no aparece y se cambio
 por la grabacion real `tomas\demo-02oct-mail-listo.mp4` (misma voz, mismos tiempos). El video anterior quedo en
 `versiones anteriores (no mostrar)\Video por sector - Claude en Barack (hasta 03-10, con el cartel de permiso).mp4`.

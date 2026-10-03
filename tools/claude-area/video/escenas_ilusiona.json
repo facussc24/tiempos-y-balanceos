@@ -1228,13 +1228,13 @@
           ],
           "recurso": "lamina",
           "texto_en_pantalla": "",
-          "que_tiene_que_verse": "Lámina de texto: no elimina nada, no muestra lo reservado.",
+          "que_tiene_que_verse": "Lámina de texto: no borra nada si no se lo pedís, no muestra lo reservado.",
           "lamina": {
             "titulo": "Claude no hace esto solo",
             "icono": "x",
             "renglones": [
               {
-                "texto": "No elimina nada",
+                "texto": "No borra nada si no se lo pedís",
                 "con_la_frase": 1
               },
               {

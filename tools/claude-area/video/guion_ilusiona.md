@@ -28,7 +28,7 @@ que el jefe del sector deja de tener que hacer.
 | 11 | 1:28–1:42 | Ingeniería: carga los consumos en el arb tecla por tecla y controla lo cargado. Y arma hojas de operaciones, láminas y flujogramas. | La grabación del arb; la hoja HO-992, la lámina del Insert y el flujograma 160 | arb-ingenieria · hojas-de-operaciones |
 | 12 | 1:42–1:54 | Para todos: redacta el mail, y si se lo pedís, lo manda. | El mail abierto; la persona escribe "mandalo"; "salió a…" | mail-enviar |
 | 13 | 1:54–2:04 | Se le enseña una tarea una vez, y la aprende. | "Te enseño cómo…"; Claude la guarda; conversación nueva: la hace | aprende-habilidades |
-| 14 | 2:04–2:18 | Y está controlado: dice de dónde sacó cada dato, no borra nada, no muestra lo reservado, y lo que sale, sale porque vos lo pediste. | Cuatro tomas cortas: la fuente marcada, "no la borro", "no te los muestro", la conversación del mail donde la persona escribe «mandalo» y recién ahí sale (hasta el 03/10 era el cartel de permiso: con «Omitir permisos» en todas las PC ya no aparece) | no-hace-solo |
+| 14 | 2:04–2:18 | Y está controlado: dice de dónde sacó cada dato, no borra nada si no se lo pedís, no muestra lo reservado, y lo que sale, sale porque vos lo pediste. | Cuatro tomas cortas: la fuente marcada, "no la borro", "no te los muestro", la conversación del mail donde la persona escribe «mandalo» y recién ahí sale (hasta el 03/10 era el cartel de permiso: con «Omitir permisos» en todas las PC ya no aparece) | no-hace-solo |
 | 15 | 2:18–2:28 | Abrí Claude, elegí la carpeta y preguntá. | Los tres pasos y la placa de cierre con el logo | — |
 
 ## Antes de grabar (lista)

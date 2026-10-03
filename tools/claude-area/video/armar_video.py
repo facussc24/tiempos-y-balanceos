@@ -595,6 +595,11 @@ def armar_subtitulos(escenas, parrafos):
             for i, c in enumerate(propios):
                 sig = propios[i + 1][0] if i + 1 < len(propios) else p.t1 + 0.4
                 c[1] = max(min(c[1], sig - 0.02), c[0] + 0.5)
+                # un subtitulo muy corto se queda medio segundo igual, y asi puede pasarse del comienzo del que sigue:
+                # el que sigue entra cuando este se va. En la imagen ya se veia asi; en el .srt quedaban los dos pisados
+                # (03/10/2026: «Mantenimiento.» y «¿Qué se mira…» del video por sector).
+                if i + 1 < len(propios) and propios[i + 1][0] < c[1]:
+                    propios[i + 1][0] = c[1]
             cues += propios
     return [tuple(c) for c in cues]
 
@@ -1861,6 +1866,9 @@ def controlar(mp4, elementos, escenas, plano, dir_control, cues=None, dur_min=10
         cps = [(sum(len(l) for l in c[2]) + len(c[2]) - 1) / max(0.1, c[1] - c[0]) for c in cues]
         chequeo(lineas <= 2 and ancho <= SUB_ANCHO + 1,
                 f"subtitulos: {len(cues)}, hasta {lineas} renglones, el mas ancho {ancho:.0f} px de {SUB_ANCHO} y {letras} letras")
+        pisados = [i + 1 for i in range(len(cues) - 1) if cues[i + 1][0] < cues[i][1] - 1e-9]
+        chequeo(not pisados, "subtitulos: ninguno pisa al que sigue" if not pisados
+                else f"subtitulos: el {', el '.join(str(i) for i in pisados)} pisa al que sigue")
         peor = max(range(len(cues)), key=lambda i: cps[i])
         out.append(f"  Velocidad de lectura de los subtitulos: media {sum(cps) / len(cps):.1f}, maxima {cps[peor]:.1f} "
                    f"letras por segundo (Netflix: 17 a 20) en «{' '.join(cues[peor][2])[:40]}…»")
