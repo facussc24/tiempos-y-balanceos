@@ -1231,8 +1231,11 @@ class VisualTriptico:
                 ImageDraw.Draw(im2).rectangle([0, 0, self.ANCHO - 1, self.ALTO - 1], outline=GRIS_BORDE, width=2)
                 im2.paste(tile2.crop((2, 2, self.ANCHO - 2, self.ALTO - 2)), (2, 2))
                 d = ImageDraw.Draw(im2)
-                fnt = fuente(52, "negrita")
                 txt = tj["titulo"]
+                px = 52
+                while px > 34 and fuente(px, "negrita").getlength(txt) + 84 > self.ANCHO - 10:    # un titulo largo achica la letra
+                    px -= 2
+                fnt = fuente(px, "negrita")
                 gx = (self.ANCHO - (fnt.getlength(txt) + 84)) / 2          # el grupo numero + nombre, centrado
                 cy = self.ALTO + 70
                 d.ellipse([gx, cy - 34, gx + 68, cy + 34], fill=c_num, outline=BLANCO, width=3)

@@ -51,7 +51,7 @@ esc.append({"numero": 1, "titulo": "Todo está escrito", "parrafos": [1], "tomas
 # ---- 2. Produccion (parrafo 2): la prueba real de Facundo, la pregunta se ve en la conversacion
 esc.append({"numero": 2, "titulo": "Producción", "parrafos": [2], "tomas": [
     {"voz": ["2"], "recurso": T + "demo-02oct-tres-piezas-responde.mp4", "texto_en_pantalla": "Producción",
-     "segundos_extra": 1.3,
+     "segundos_extra": 2.0,
      "que_tiene_que_verse": "La pregunta de las tres piezas, Claude buscando, la respuesta (parar la línea, avisar al líder y a Calidad) y la fuente P-09.1.",
      "tramos": [
          {"desde": 20.0, "hasta": 34.8, "hasta_frase": 3, "mas": -0.1, "camara": [{"x": 0, "y": 0, "ancho": 680}]},
@@ -64,7 +64,7 @@ esc.append({"numero": 2, "titulo": "Producción", "parrafos": [2], "tomas": [
 
 
 # ---- 3 a 8: un sector por parrafo; la pregunta va en un cartel arriba (en la grabacion no se ve)
-def sector(num, par, titulo, pregunta, clip, tramos, extra=1.1, dur_chip=None):
+def sector(num, par, titulo, pregunta, clip, tramos, extra=2.0, dur_chip=None):
     return {"numero": num, "titulo": titulo, "parrafos": [par], "tomas": [
         {"voz": [str(par)], "recurso": T + clip, "texto_en_pantalla": titulo, "pregunta": {"texto": pregunta},
          "segundos_extra": extra, "que_tiene_que_verse": f"{titulo}: la respuesta de Claude y, marcado, el documento que cita.",
@@ -78,7 +78,7 @@ esc.append(sector(3, 3, "Calidad", "¿Cuánto tiempo hay para avisarle al provee
     {"desde": 1.45, "hasta": 7.0, "camara": [{"x": 0, "y": 0, "ancho": V, "alto": 176}],
      "recuadros": [R("cal", 16, 60, 718, 30, "24 horas desde que se crea la NP", con_la_frase=3, mas=0.3),
                    R("cal", 16, 144, 660, 26, "la fuente: I-AC-010 rev A, §5.3", con_la_frase=4,
-                     etiqueta="I-AC-010", etiqueta_lado="derecha")]}], extra=1.4))
+                     etiqueta="I-AC-010", etiqueta_lado="derecha")]}]))
 
 esc.append(sector(4, 4, "Logística", "¿Cómo se estiba el producto terminado?", "sector-logistica-responde.mp4", [
     {"desde": 0.0, "hasta": 6.9, "hasta_frase": 3, "mas": -0.15, "camara": [{"x": 0, "y": 0, "ancho": V, "alto": 250}]},
@@ -99,22 +99,22 @@ esc.append(sector(6, 6, "Mantenimiento", "¿Qué se mira en el mantenimiento aut
     {"desde": 2.0, "hasta": 6.2, "hasta_frase": 3, "mas": -0.1, "camara": [{"x": 0, "y": 0, "ancho": V, "alto": 300}]},
     {"desde": 6.2, "hasta": 10.4,
      "camara": [{"x": 0, "y": 0, "ancho": V, "alto": 300},
-                {"con_la_palabra": "tacto", "x": 0, "y": 168, "ancho": V, "alto": 300, "mov": 0.9, "mas": 0.1}],
-     "recuadros": [R("man", 52, 37, 762, 82, "vista", con_la_palabra="vista", mas=0.2),
-                   R("man", 52, 126, 755, 40, "oído", con_la_palabra="oído"),
-                   R("man", 52, 171, 770, 40, "olfato", con_la_palabra="olfato"),
-                   R("man", 52, 216, 760, 40, "tacto", con_la_palabra="tacto"),
-                   R("man", 16, 398, 785, 42, "la fuente: I-MT-001 rev C, 5.6", con_la_palabra="tacto", mas=1.0,
-                     etiqueta="I-MT-001", etiqueta_lado="abajo")]}]))
+                {"con_la_palabra": "toca", "x": 0, "y": 168, "ancho": V, "alto": 300, "mov": 0.9, "mas": 0.1}],
+     "recuadros": [R("man", 52, 37, 762, 82, "vista", con_la_palabra="ve", mas=0.2),
+                   R("man", 52, 126, 755, 40, "oído", con_la_palabra="oye"),
+                   R("man", 52, 171, 770, 40, "olfato", con_la_palabra="huele"),
+                   R("man", 52, 216, 760, 40, "tacto", con_la_palabra="toca"),
+                   R("man", 16, 398, 525, 26, "la fuente: I-MT-001 rev C, 5.6", con_la_palabra="toca", mas=1.0,
+                     etiqueta="I-MT-001", etiqueta_lado="derecha")]}]))
 
-esc.append(sector(7, 7, "Recursos Humanos", "¿Cómo sigue el pedido de una capacitación?", "sector-rrhh-responde.mp4", [
-    {"desde": 0.0, "hasta": 6.4, "hasta_frase": 3, "mas": -0.1, "camara": [{"x": 0, "y": 0, "ancho": V, "alto": 300}]},
+esc.append(sector(7, 7, "Recursos Humanos", "Me piden una capacitación. ¿Cómo sigue el trámite?", "sector-rrhh-responde.mp4", [
+    {"desde": 0.0, "hasta": 6.4, "hasta_frase": 4, "mas": -0.1, "camara": [{"x": 0, "y": 0, "ancho": V, "alto": 300}]},
     {"desde": 6.4, "hasta": 13.0,
      "camara": [{"x": 0, "y": 0, "ancho": V, "alto": 300},
                 {"con_la_palabra": "procedimiento", "x": 0, "y": 146, "ancho": V, "alto": 300, "mov": 0.9}],
      "recuadros": [R("rrh", 50, 32, 775, 272, "los pasos del trámite", con_la_palabra="Paso"),
                    R("rrh", 16, 377, 395, 28, "la fuente: P-18 rev F, §5.4 a §5.7", con_la_palabra="procedimiento",
-                     etiqueta="P-18", etiqueta_lado="abajo")]}]))
+                     etiqueta="P-18", etiqueta_lado="derecha")]}]))
 
 esc.append(sector(8, 8, "Dirección", "¿Qué hay que llevar a la revisión por la Dirección?", "sector-direccion-espera.mp4", [
     {"desde": 4.0, "hasta": 7.0, "hasta_frase": 2, "mas": 0.1, "camara": [{"x": 0, "y": 0, "ancho": V, "alto": 300}]},
@@ -185,7 +185,7 @@ esc.append({"numero": 12, "titulo": "Para todos: enseñarle", "parrafos": [12], 
          {"desde": 0.2, "hasta": 1.5, "dura": 0.7, "camara": [{"x": 0, "y": 0, "ancho": 680}]},
          {"desde": 7.4, "hasta": 11.7, "dura": 1.1,
           "camara": [{"x": 0, "y": 0, "ancho": 680}, {"t": 0.5, "x": 0, "y": 95, "ancho": 680, "mov": 0.6}]},
-         {"recurso": APR_GUARDADO, "desde": 1.2, "hasta": 11.4, "dura": 0.6, "camara": [{"x": 0, "y": 40, "ancho": 680}]},
+         {"recurso": APR_GUARDADO, "desde": 1.2, "hasta": 11.4, "dura": 0.6, "etiqueta": "Espera acortada", "camara": [{"x": 0, "y": 40, "ancho": 680}]},
          {"recurso": APR_GUARDADO, "desde": 11.6, "hasta": 15.4, "camara": [{"x": 0, "y": 40, "ancho": 680}],
           "recuadros": [{"que_marca": "Listo, la dejé guardada", "x": 1.5, "y": 57.2, "ancho": 97.0, "alto": 9.2}]}]}]})
 
@@ -198,13 +198,13 @@ perm["recuadros"][0]["con_la_palabra"] = "pediste"
 esc.append({"numero": 13, "titulo": "Está controlado", "parrafos": [13], "tomas": [
     {"voz": ["13:1-2"], "recurso": T + "sector-calidad-responde.mp4", "texto_en_pantalla": "Está controlado",
      "que_tiene_que_verse": "Una respuesta con su fuente marcada: Claude dice de dónde sacó el dato.",
-     "tramos": [{"desde": 5.5, "hasta": 9.5, "camara": [{"x": 0, "y": 0, "ancho": V, "alto": 244}],
-                 "recuadros": [R("cal", 16, 93, 660, 26, "la fuente: I-AC-010 rev A", con_la_palabra="dónde",
+     "tramos": [{"desde": 5.0, "hasta": 9.0, "camara": [{"x": 0, "y": 0, "ancho": V, "alto": 176}],
+                 "recuadros": [R("cal", 16, 144, 660, 26, "la fuente: I-AC-010 rev A", con_la_palabra="dónde",
                                  etiqueta="Fuente: I-AC-010", etiqueta_lado="derecha")]}]},
     {"voz": ["13:3-4"], "recurso": "lamina", "texto_en_pantalla": "",
-     "que_tiene_que_verse": "Lámina de texto: no borra nada, no muestra lo reservado.",
+     "que_tiene_que_verse": "Lámina de texto: no elimina nada, no muestra lo reservado.",
      "lamina": {"titulo": "Claude no hace esto solo", "icono": "x", "renglones": [
-         {"texto": "No borra nada", "con_la_frase": 1}, {"texto": "No muestra lo reservado", "con_la_frase": 2}]}},
+         {"texto": "No elimina nada", "con_la_frase": 1}, {"texto": "No muestra lo reservado", "con_la_frase": 2}]}},
     perm]})
 
 # ---- 14. cierre (parrafo 14)

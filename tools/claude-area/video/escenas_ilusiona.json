@@ -293,7 +293,7 @@
           ],
           "recurso": "tomas/demo-02oct-tres-piezas-responde.mp4",
           "texto_en_pantalla": "Producción",
-          "segundos_extra": 1.3,
+          "segundos_extra": 2.0,
           "que_tiene_que_verse": "La pregunta de las tres piezas, Claude buscando, la respuesta (parar la línea, avisar al líder y a Calidad) y la fuente P-09.1.",
           "tramos": [
             {
@@ -369,12 +369,12 @@
           "pregunta": {
             "texto": "¿Cuánto tiempo hay para avisarle al proveedor que su material vino mal?"
           },
-          "segundos_extra": 1.4,
+          "segundos_extra": 2.0,
           "que_tiene_que_verse": "Calidad: la respuesta de Claude y, marcado, el documento que cita.",
           "tramos": [
             {
               "desde": 0.0,
-              "hasta": 1.9,
+              "hasta": 1.45,
               "hasta_frase": 3,
               "mas": -0.2,
               "camara": [
@@ -382,37 +382,37 @@
                   "x": 0,
                   "y": 0,
                   "ancho": 830,
-                  "alto": 236
+                  "alto": 176
                 }
               ]
             },
             {
-              "desde": 1.9,
+              "desde": 1.45,
               "hasta": 7.0,
               "camara": [
                 {
                   "x": 0,
                   "y": 0,
                   "ancho": 830,
-                  "alto": 236
+                  "alto": 176
                 }
               ],
               "recuadros": [
                 {
                   "que_marca": "24 horas desde que se crea la NP",
                   "x": 1.78,
-                  "y": 16.95,
+                  "y": 34.09,
                   "ancho": 79.78,
-                  "alto": 12.71,
+                  "alto": 17.05,
                   "con_la_frase": 3,
                   "mas": 0.3
                 },
                 {
                   "que_marca": "la fuente: I-AC-010 rev A, §5.3",
                   "x": 1.78,
-                  "y": 53.39,
+                  "y": 81.82,
                   "ancho": 73.33,
-                  "alto": 11.02,
+                  "alto": 14.77,
                   "con_la_frase": 4,
                   "etiqueta": "I-AC-010",
                   "etiqueta_lado": "derecha"
@@ -439,7 +439,7 @@
           "pregunta": {
             "texto": "¿Cómo se estiba el producto terminado?"
           },
-          "segundos_extra": 1.1,
+          "segundos_extra": 2.0,
           "que_tiene_que_verse": "Logística: la respuesta de Claude y, marcado, el documento que cita.",
           "tramos": [
             {
@@ -516,7 +516,7 @@
           "pregunta": {
             "texto": "El proveedor no confirmó la orden de compra. ¿Qué pasa?"
           },
-          "segundos_extra": 1.1,
+          "segundos_extra": 2.0,
           "que_tiene_que_verse": "Compras: la respuesta de Claude y, marcado, el documento que cita.",
           "tramos": [
             {
@@ -585,7 +585,7 @@
           "pregunta": {
             "texto": "¿Qué se mira en el mantenimiento autónomo?"
           },
-          "segundos_extra": 1.1,
+          "segundos_extra": 2.0,
           "que_tiene_que_verse": "Mantenimiento: la respuesta de Claude y, marcado, el documento que cita.",
           "tramos": [
             {
@@ -613,7 +613,7 @@
                   "alto": 300
                 },
                 {
-                  "con_la_palabra": "tacto",
+                  "con_la_palabra": "toca",
                   "x": 0,
                   "y": 168,
                   "ancho": 830,
@@ -629,7 +629,7 @@
                   "y": 7.91,
                   "ancho": 84.67,
                   "alto": 17.52,
-                  "con_la_palabra": "vista",
+                  "con_la_palabra": "ve",
                   "mas": 0.2
                 },
                 {
@@ -638,7 +638,7 @@
                   "y": 26.92,
                   "ancho": 83.89,
                   "alto": 8.55,
-                  "con_la_palabra": "oído"
+                  "con_la_palabra": "oye"
                 },
                 {
                   "que_marca": "olfato",
@@ -646,7 +646,7 @@
                   "y": 36.54,
                   "ancho": 85.56,
                   "alto": 8.55,
-                  "con_la_palabra": "olfato"
+                  "con_la_palabra": "huele"
                 },
                 {
                   "que_marca": "tacto",
@@ -654,18 +654,18 @@
                   "y": 46.15,
                   "ancho": 84.44,
                   "alto": 8.55,
-                  "con_la_palabra": "tacto"
+                  "con_la_palabra": "toca"
                 },
                 {
                   "que_marca": "la fuente: I-MT-001 rev C, 5.6",
                   "x": 1.78,
                   "y": 85.04,
-                  "ancho": 87.22,
-                  "alto": 8.97,
-                  "con_la_palabra": "tacto",
+                  "ancho": 58.33,
+                  "alto": 5.56,
+                  "con_la_palabra": "toca",
                   "mas": 1.0,
                   "etiqueta": "I-MT-001",
-                  "etiqueta_lado": "abajo"
+                  "etiqueta_lado": "derecha"
                 }
               ]
             }
@@ -687,15 +687,15 @@
           "recurso": "tomas/sector-rrhh-responde.mp4",
           "texto_en_pantalla": "Recursos Humanos",
           "pregunta": {
-            "texto": "¿Cómo sigue el pedido de una capacitación?"
+            "texto": "Me piden una capacitación. ¿Cómo sigue el trámite?"
           },
-          "segundos_extra": 1.1,
+          "segundos_extra": 2.0,
           "que_tiene_que_verse": "Recursos Humanos: la respuesta de Claude y, marcado, el documento que cita.",
           "tramos": [
             {
               "desde": 0.0,
               "hasta": 6.4,
-              "hasta_frase": 3,
+              "hasta_frase": 4,
               "mas": -0.1,
               "camara": [
                 {
@@ -742,7 +742,7 @@
                   "alto": 5.6,
                   "con_la_palabra": "procedimiento",
                   "etiqueta": "P-18",
-                  "etiqueta_lado": "abajo"
+                  "etiqueta_lado": "derecha"
                 }
               ]
             }
@@ -766,7 +766,7 @@
           "pregunta": {
             "texto": "¿Qué hay que llevar a la revisión por la Dirección?"
           },
-          "segundos_extra": 1.1,
+          "segundos_extra": 2.0,
           "que_tiene_que_verse": "Dirección: la respuesta de Claude y, marcado, el documento que cita.",
           "tramos": [
             {
@@ -1147,6 +1147,7 @@
               "desde": 1.2,
               "hasta": 11.4,
               "dura": 0.6,
+              "etiqueta": "Espera acortada",
               "camara": [
                 {
                   "x": 0,
@@ -1196,23 +1197,23 @@
           "que_tiene_que_verse": "Una respuesta con su fuente marcada: Claude dice de dónde sacó el dato.",
           "tramos": [
             {
-              "desde": 5.5,
-              "hasta": 9.5,
+              "desde": 5.0,
+              "hasta": 9.0,
               "camara": [
                 {
                   "x": 0,
                   "y": 0,
                   "ancho": 830,
-                  "alto": 244
+                  "alto": 176
                 }
               ],
               "recuadros": [
                 {
                   "que_marca": "la fuente: I-AC-010 rev A",
                   "x": 1.78,
-                  "y": 39.41,
+                  "y": 81.82,
                   "ancho": 73.33,
-                  "alto": 11.02,
+                  "alto": 14.77,
                   "con_la_palabra": "dónde",
                   "etiqueta": "Fuente: I-AC-010",
                   "etiqueta_lado": "derecha"
@@ -1227,13 +1228,13 @@
           ],
           "recurso": "lamina",
           "texto_en_pantalla": "",
-          "que_tiene_que_verse": "Lámina de texto: no borra nada, no muestra lo reservado.",
+          "que_tiene_que_verse": "Lámina de texto: no elimina nada, no muestra lo reservado.",
           "lamina": {
             "titulo": "Claude no hace esto solo",
             "icono": "x",
             "renglones": [
               {
-                "texto": "No borra nada",
+                "texto": "No elimina nada",
                 "con_la_frase": 1
               },
               {
