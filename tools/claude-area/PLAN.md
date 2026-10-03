@@ -85,6 +85,8 @@ Es una desviación de la instalación real (la carpeta no es `C:\ClaudeBarack`):
 
 **Hoja nueva para Facundo:** `8 - Prueba en una PC de planta.pdf` (los 9 pasos de la etapa E1 con su casilla).
 
+**Examen sobre la v5 (03/10, 02:45): 110 bien, 28 a medias, 1 mal** (v3: 105/31/3). `examen/correccion_v5.md`. El rojo es B18 (Compras: sumó como exigencia una certificación que el Manual pone como meta). Quedan sin prueba sobre la v5: presentaciones y un ejemplo por sector. Candidata a v6: no cambiar la fuerza de lo que dice un documento.
+
 ## Las etapas, en orden. Cada una tiene su puerta: no se pasa a la siguiente con la puerta en rojo.
 
 ### A — Que el asistente HAGA lo que el video va a decir (hoy)
