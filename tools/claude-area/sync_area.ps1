@@ -13,6 +13,12 @@
   No borra nada en ningun lado. Sale siempre con 0: el detalle queda en <estado>\sync.log y estado.json.
   -Simular es el dry-run de los avisos: escribe en el log "origen -> destino" de cada uno y no mueve nada.
 
+  LA NUBE RECORDADA (03/10/2026). Si la nube no se encuentra por nombre (un OneDrive de otra cuenta, una carpeta de
+  red, un pendrive), el programa de la base usa la carpeta de la que se instalo esta PC (<estado>\origen.json), si hoy
+  esta a la vista. Aca NO se le pasa --nube en ese caso: la elige el. Esta tarea mira origen.json solo para saber si
+  esa carpeta trae buzon: avisos, inventario y salud van a su "4- BUZON" unicamente si tiene la forma de la nube
+  (CLAUDE POR AREA\1- PUBLICADO); en una copia con otro nombre no se escribe nada y los avisos quedan en la cola.
+
   Parametros (para probar):
     -HomeDir     la carpeta de la PC (por defecto CLAUDE_AREA_HOME, o la de arriba de publicado\programas, o C:\ClaudeBarack)
     -Nube        la carpeta CLAUDE POR AREA o directamente su 1- PUBLICADO (por defecto CLAUDE_AREA_NUBE o se la pide al programa)
@@ -20,8 +26,9 @@
     -SinActualizar / -SinAvisos / -SinInventario   saltean un paso     -ForzarInventario  lo corre aunque no haya pasado la semana
     -ClavesInventario <claves del registro>         SOLO PRUEBAS: se las pasa a inventario.ps1 -Claves
     -PrioridadNormal   no baja la prioridad del proceso (para pruebas)   -Verbose2  muestra el log en pantalla
-  La tarea de Windows se registra SOLO con -RegistrarTarea (lo hace la instalacion, una vez); -VerTarea la muestra
-  sin registrar nada; -SinTarea es lo que pasa por defecto y existe para que las pruebas lo digan explicito.
+  La tarea de Windows se registra SOLO con -RegistrarTarea (lo llama "_paquete.mjs --instalar" al terminar una
+  instalacion de verdad, sin ninguna carpeta indicada); -VerTarea la muestra sin registrar nada; -SinTarea es lo que
+  pasa por defecto y existe para que las pruebas lo digan explicito.
 
   Solo ASCII en este archivo (powershell.exe 5.1 sin BOM lee UTF-8 como ANSI).
 #>
@@ -51,14 +58,41 @@ $DIAS_INVENTARIO = 7
 # ---- todo o nada (CONTRATO): o las tres rutas son las reales o las tres son de prueba ---------------------
 # Una mezcla (una PC de prueba con la nube real, o el estado real) escribiria salud o avisos falsos en la nube
 # de verdad, o claves de prueba en el estado real. Se decide ANTES de crear o escribir nada. -VerTarea no escribe.
+
+# La carpeta de la que se instalo esta PC (<estado>\origen.json), solo si HOY trae una publicacion. Solo lee.
+function Leer-Recordada([string]$dirEstado) {
+  if (-not $dirEstado) { return $null }
+  try {
+    $o = Get-Content -LiteralPath (Join-Path $dirEstado 'origen.json') -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json
+    $c = [string]$o.publicado
+    if ($c -and [IO.Path]::IsPathRooted($c) -and (Test-Path -LiteralPath (Join-Path $c 'VERSION.json') -PathType Leaf) -and (Test-Path -LiteralPath (Join-Path $c 'MANIFIESTO.json') -PathType Leaf)) { return $c.TrimEnd('\') }
+  } catch {}
+  return $null
+}
+
+$homeIndicado = [bool]($HomeDir -or $env:CLAUDE_AREA_HOME)
+$nubeIndicada = [bool]($Nube -or $env:CLAUDE_AREA_NUBE)
+$estadoIndicado = [bool]($EstadoDir -or $env:CLAUDE_AREA_ESTADO)
 $dePrueba = @()
 $reales = @()
-if ($HomeDir -or $env:CLAUDE_AREA_HOME) { $dePrueba += 'la carpeta de la PC (-HomeDir / CLAUDE_AREA_HOME)' } else { $reales += 'la carpeta de la PC' }
-if ($Nube -or $env:CLAUDE_AREA_NUBE) { $dePrueba += 'la nube (-Nube / CLAUDE_AREA_NUBE)' } else { $reales += 'la nube' }
-if ($EstadoDir -or $env:CLAUDE_AREA_ESTADO) { $dePrueba += 'el estado (-EstadoDir / CLAUDE_AREA_ESTADO)' } else { $reales += 'el estado' }
+if ($homeIndicado) { $dePrueba += 'la carpeta de la PC (-HomeDir / CLAUDE_AREA_HOME)' } else { $reales += 'la carpeta de la PC' }
+if ($nubeIndicada) { $dePrueba += 'la nube (-Nube / CLAUDE_AREA_NUBE)' } else { $reales += 'la nube' }
+if ($estadoIndicado) { $dePrueba += 'el estado (-EstadoDir / CLAUDE_AREA_ESTADO)' } else { $reales += 'el estado' }
+# La nube recordada no es ni de prueba ni real: la dice el estado. Con la PC y el estado de prueba y SIN nube indicada
+# se corre solo si ese estado recuerda una carpeta que hoy esta a la vista; y entonces la nube NO se busca por nombre
+# (una PC de prueba no toca nunca la nube de verdad).
+$soloRecordada = $false
 if ($dePrueba.Count -gt 0 -and $reales.Count -gt 0 -and -not $VerTarea) {
-  Write-Host ('No hago nada: estas mezclando carpetas de prueba y reales. De prueba: ' + ($dePrueba -join ', ') + '. Reales: ' + ($reales -join ', ') + '. O las tres de prueba o ninguna.')
-  exit 2
+  # (con -RegistrarTarea no vale: una tarea no se registra nunca desde carpetas de prueba a medias)
+  if ($homeIndicado -and $estadoIndicado -and -not $nubeIndicada -and -not $RegistrarTarea) {
+    $estadoMirado = $EstadoDir
+    if (-not $estadoMirado) { $estadoMirado = $env:CLAUDE_AREA_ESTADO }
+    if (Leer-Recordada $estadoMirado) { $soloRecordada = $true }
+  }
+  if (-not $soloRecordada) {
+    Write-Host ('No hago nada: estas mezclando carpetas de prueba y reales. De prueba: ' + ($dePrueba -join ', ') + '. Reales: ' + ($reales -join ', ') + '. O las tres de prueba o ninguna.')
+    exit 2
+  }
 }
 
 # ---- carpetas ---------------------------------------------------------------------------------------
@@ -194,7 +228,8 @@ function Mostrar-Tarea($def) {
 }
 function Registrar-Tarea {
   $def = Nueva-Definicion
-  Register-ScheduledTask -TaskName $TAREA -Action $def.Accion -Trigger $def.Triggers -Principal $def.Principal -Settings $def.Ajustes -Force | Out-Null
+  # -ErrorAction Stop: si Windows no deja, el motivo que se muestra es el de verdad (y no "no encuentro la tarea")
+  Register-ScheduledTask -TaskName $TAREA -Action $def.Accion -Trigger $def.Triggers -Principal $def.Principal -Settings $def.Ajustes -Force -ErrorAction Stop | Out-Null
   $t = Get-ScheduledTask -TaskName $TAREA -ErrorAction Stop
   if (-not (Test-Path $EstadoDir)) { New-Item -ItemType Directory -Force -Path $EstadoDir | Out-Null }
   Log "tarea registrada: $($t.TaskName) ($($t.State))"
@@ -234,20 +269,41 @@ try {
     }
   }
   if (-not $node -and (Test-Path $nodePropio)) { $node = $nodePropio }
-  $Pub = Resolver-Publicado $node $(if (Test-Path $script) { $script } else { $null })
+  $Pub = $null
+  if (-not $soloRecordada) { $Pub = Resolver-Publicado $node $(if (Test-Path $script) { $script } else { $null }) }
+  # La nube recordada, con la MISMA regla que el programa de la base: la nube por nombre (o la indicada) manda si trae
+  # una publicacion; si no, la carpeta de la que se instalo esta PC. En ese caso no se le pasa --nube: la elige el.
+  $Recordada = $null
+  if (-not $nubeIndicada) {
+    $candidata = Leer-Recordada $EstadoDir
+    if ($candidata -and ($soloRecordada -or -not $Pub -or -not (Test-Path -LiteralPath (Join-Path $Pub 'VERSION.json')))) { $Recordada = $candidata; $Pub = $null }
+  }
   if (-not $node -and $Pub) {
     $nodeNube = Join-Path (Split-Path -Parent $Pub) '1- PUBLICADO\contenido\marketplace\plugins\barack-area\bin\node.exe'
     if (Test-Path $nodeNube) { $node = $nodeNube }
   }
-  $estado.publicado = $Pub
+  # El buzon (avisos, inventario, salud): el de la nube; con la recordada, solo si trae la forma de la nube.
+  $PubBuzon = $Pub
+  if ($Recordada) {
+    if ((Split-Path -Leaf $Recordada) -eq '1- PUBLICADO' -and (Split-Path -Leaf (Split-Path -Parent $Recordada)) -eq 'CLAUDE POR AREA') { $PubBuzon = $Recordada }
+    Log ('nube: no la veo por nombre; uso la carpeta de donde se instalo esta PC (' + $Recordada + ')' + $(if (-not $PubBuzon) { ' - sin buzon: no trae la forma de la nube' } else { '' }))
+  }
+  $estado.publicado = $(if ($Recordada) { $Recordada } else { $Pub })
+  $estado.nube = $(if ($Recordada) { 'recordada' } elseif ($Pub) { $(if ($nubeIndicada) { 'indicada' } else { 'por_nombre' }) } else { 'sin_nube' })
   $Buzon = $null
-  if ($Pub) { $Buzon = Join-Path (Split-Path -Parent $Pub) '4- BUZON' }
+  $RaizBuzon = $null
+  if ($PubBuzon) { $RaizBuzon = Split-Path -Parent $PubBuzon; $Buzon = Join-Path $RaizBuzon '4- BUZON' }
   $pc = Nombre-Pc
 
   # ---- 1) actualizar ----------------------------------------------------------------------------------
   if ($SinActualizar) { Log 'actualizar: salteado (-SinActualizar)' }
   elseif (-not (Test-Path $script)) { $estado.actualizar = @{ resultado = 'sin_script'; detalle = "no esta $script" }; Fallo "no esta $script" }
   elseif (-not $node) { $estado.actualizar = @{ resultado = 'sin_node'; detalle = 'no encuentro Node.js' }; Fallo 'no encuentro Node.js: no puedo actualizar' }
+  elseif (-not $Pub -and -not $Recordada) {
+    # ni la nube por nombre ni la carpeta de donde se instalo (un pendrive desenchufado): no es un error, se reintenta
+    $estado.actualizar = @{ resultado = 'sin_nube'; detalle = 'no veo la nube ni la carpeta de donde se instalo esta PC' }
+    Log 'actualizar: no veo la nube ni la carpeta de donde se instalo esta PC (se reintenta en la proxima corrida)'
+  }
   else {
     $args1 = @($script, '--actualizar', '--proyecto', 'area', '--destino', $Publicado, '--home', $HomeDir)
     if ($Pub) { $args1 += @('--nube', $Pub) }
@@ -273,7 +329,7 @@ try {
   # ---- 2) la cola de avisos del plugin -> buzon (mover uno por uno, sin pisar; -Simular solo lo lista) ----
   $cola = Join-Path $EstadoDir ('avisos-pendientes\' + $pc)
   if ($SinAvisos) { Log 'avisos: salteado (-SinAvisos)' }
-  elseif (-not $Buzon -or -not (Test-Path (Split-Path -Parent $Pub))) { $estado.avisos = @{ resultado = 'sin_nube' }; Log 'avisos: no veo la nube, quedan en la cola local' }
+  elseif (-not $Buzon -or -not (Test-Path -LiteralPath $RaizBuzon)) { $estado.avisos = @{ resultado = 'sin_nube' }; Log 'avisos: no veo un buzon de la nube, quedan en la cola local' }
   elseif (-not (Test-Path $cola)) { $estado.avisos = @{ resultado = 'sin_cola'; movidos = 0 } }
   else {
     $destinoAvisos = Join-Path $Buzon ('avisos\' + $pc)
@@ -308,7 +364,7 @@ try {
   }
   if ($SinInventario) { Log 'inventario: salteado (-SinInventario)' }
   elseif (-not $toca) { $estado.inventario = @{ resultado = 'no_toca' } }
-  elseif (-not $Buzon -or -not (Test-Path (Split-Path -Parent $Pub))) { $estado.inventario = @{ resultado = 'sin_nube' } }
+  elseif (-not $Buzon -or -not (Test-Path -LiteralPath $RaizBuzon)) { $estado.inventario = @{ resultado = 'sin_nube' } }
   elseif (-not (Test-Path $invScript)) { $estado.inventario = @{ resultado = 'sin_script' }; Fallo "no esta $invScript" }
   else {
     $ps = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
@@ -325,7 +381,7 @@ try {
   }
 
   # ---- 4) salud: lo que el programa de la base no sabe ---------------------------------------------------
-  if ($Buzon -and (Test-Path (Split-Path -Parent $Pub))) {
+  if ($Buzon -and (Test-Path -LiteralPath $RaizBuzon)) {
     $rutaSalud = Join-Path $Buzon ('salud\' + $pc + '.json')
     if (-not (Test-Path $rutaSalud)) { $estado.salud = @{ resultado = 'sin_salud' } }
     else {

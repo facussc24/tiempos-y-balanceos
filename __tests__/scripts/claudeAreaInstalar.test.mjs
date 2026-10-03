@@ -1266,8 +1266,16 @@ describe('una PC que no ve la nube: se instala desde la carpeta donde vive el pr
         expect(otra.status, otra.stdout + otra.stderr).toBe(0);
         expect(otra.stdout).toContain('Ya estaba instalado');
         expect(otra.stdout).toContain('Ana Ruiz');
-        // sin nube a la vista, el chequeo que hace el aviso de arranque igual sabe que version tiene la PC
-        const ch = spawnSync(process.execPath, [path.join(pc.home, 'publicado', 'programas', '_paquete.mjs'), '--chequear', '--proyecto', 'area', '--destino', path.join(pc.home, 'publicado')], { encoding: 'utf8', env, timeout: 60000 });
+        // la PC recuerda de donde se instalo (03/10/2026): con el pendrive a la vista, el chequeo que hace el aviso de
+        // arranque lo encuentra solo, sin que nadie le diga la nube...
+        expect(json(pc.estado, 'origen.json')).toMatchObject({ publicado: pub, desde: 'carpeta' });
+        const chequear = () => spawnSync(process.execPath, [path.join(pc.home, 'publicado', 'programas', '_paquete.mjs'), '--chequear', '--proyecto', 'area', '--destino', path.join(pc.home, 'publicado')], { encoding: 'utf8', env, timeout: 60000 });
+        const conPendrive = chequear();
+        expect(conPendrive.status, conPendrive.stdout + conPendrive.stderr).toBe(0);
+        expect(JSON.parse(conPendrive.stdout.trim())).toMatchObject({ estado: 'al_dia', instalada: 1, publicada: 1 });
+        // ... y con el pendrive desenchufado todo sigue como antes: sin nube, pero igual sabe que version tiene la PC
+        fs.renameSync(nubeRaiz, path.join(tmp, 'pendrive-desenchufado'));
+        const ch = chequear();
         expect(ch.status, ch.stdout + ch.stderr).toBe(3);
         expect(JSON.parse(ch.stdout.trim())).toMatchObject({ estado: 'sin_nube', instalada: 1, publicada: null });
     });
@@ -1482,3 +1490,534 @@ describe('una PC que no ve la nube: se instala desde la carpeta donde vive el pr
         expect(fs.readdirSync(path.join(nubeRaiz, '4- BUZON', 'salud'))).toHaveLength(1);
     });
 });
+
+// =============================================================================================
+// Como se actualiza una PC (03/10/2026). Hasta ese dia una PC instalada no se actualizaba nunca: nadie registraba la
+// tarea (`sync_area.ps1 -RegistrarTarea` no lo llamaba ningun programa) y --actualizar / --chequear buscaban la nube
+// solo por nombre. Ahora --instalar anota de donde instalo (<estado>\origen.json) y, en una instalacion DE VERDAD,
+// deja la tarea. NINGUNA de estas pruebas registra una tarea: el registro va siempre con un ejecutor de mentira.
+// =============================================================================================
+const sinVariables = () => Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^CLAUDE_AREA_|^CLAUDE_CONFIG_DIR$/.test(k)));
+/** Una version mas en esa carpeta publicada (con la misma clave), con un archivo de conocimiento comun nuevo. */
+function publicarOtra(armada, nube, n = 2) {
+    esc(armada.conocimiento, `comun/novedad-v${n}.md`, `# Novedad de la versión ${n}\n`);
+    const st = path.join(tmp, `staging-v${n}`);
+    expect(A.armarPublicable({ pluginRepo: armada.repo, conocimiento: armada.conocimiento, programasDe: RAIZ, salida: st, ahora: F(2 + n) }).estado).toBe('armado');
+    const r = A.publicarPublicable({ salida: st, nube, clavePrivada: armada.rutaClave, identidad: { usuario: '', pc: '' }, ahora: F(2 + n) });
+    expect(r.errores).toEqual([]);
+    expect(r.version).toBe(n);
+    return r;
+}
+const mismaCarpeta = (a, b) => fs.realpathSync.native(a).toLowerCase() === fs.realpathSync.native(b).toLowerCase();
+/** Copia una carpeta entera archivo por archivo (y no con fs.cpSync: en Node 22 cpSync escribe mal un destino con tilde). */
+function copiarCarpeta(de, a) {
+    fs.mkdirSync(a, { recursive: true });
+    for (const e of fs.readdirSync(de, { withFileTypes: true })) {
+        if (e.isDirectory()) copiarCarpeta(path.join(de, e.name), path.join(a, e.name)); else fs.copyFileSync(path.join(de, e.name), path.join(a, e.name));
+    }
+}
+const hayTareaDeWindows = () => spawnSync('powershell.exe', ['-NoProfile', '-Command', "if (Get-ScheduledTask -TaskName 'Barack - Claude por area' -ErrorAction SilentlyContinue) { 'EXISTE' } else { 'NO_EXISTE' }"], { encoding: 'utf8', timeout: 60000 }).stdout.trim();
+
+describe('como se actualiza una PC: recuerda de donde se instalo (origen.json)', () => {
+    /** Un perfil de Windows vacio: la nube de Barack NO se ve por nombre (en la PC que publica, la de verdad si se ve). */
+    const entornoPc = (pc) => ({ ...sinVariables(), USERPROFILE: dir('perfil-vacio'), LOCALAPPDATA: dir('la-vacia'), CLAUDE_AREA_HOME: pc.home, CLAUDE_AREA_ESTADO: pc.estado });
+    /** El programa de la copia INSTALADA, como lo corren el aviso de arranque y la tarea. Nunca se le dice la nube. */
+    const instalado = (pc, args, env) => spawnSync(process.execPath, [path.join(pc.home, 'publicado', 'programas', '_paquete.mjs'), ...args], { encoding: 'utf8', env, timeout: 90000 });
+
+    it('--instalar deja <estado>\\origen.json (carpeta, desde, cuando) antes del marcador; repetir no lo reescribe; --simular solo lo anota; una instalacion que no termina no anota nada', () => {
+        const { pub } = nubeArmada();
+        const pc = pcNueva('pc-marta');
+        const rutaOrigen = path.join(pc.estado, 'origen.json');
+        const sim = instalar(pub, pc, ID.marta, { simular: true });
+        expect(sim.estado).toBe('simulado');
+        expect(fs.existsSync(rutaOrigen)).toBe(false);
+        const plan = sim.plan.map((p) => p.ruta);
+        expect(plan).toContain(rutaOrigen);
+        expect(plan.indexOf(rutaOrigen)).toBeLessThan(plan.indexOf(path.join(pc.home, 'instalado.json')));
+        const r = instalar(pub, pc, ID.marta);
+        expect(r.estado).toBe('instalado');
+        expect(json(pc.estado, 'origen.json')).toEqual({ publicado: pub, desde: 'nube', cuando: P.isoLocal(F(2)) });
+        expect(r.origen).toMatchObject({ ruta: rutaOrigen, publicado: pub, desde: 'nube', escrito: true });
+        expect(P.leerOrigen(pc.estado)).toEqual({ publicado: pub, desde: 'nube', cuando: P.isoLocal(F(2)) });
+        expect(P.origenRecordado(pc.estado)).toBe(pub);
+        expect(fs.readdirSync(pc.estado).filter((n) => /[.]tmp$/.test(n))).toEqual([]);   // escritura por temporal + rename
+        // repetir: ya_instalado y el archivo queda como estaba (misma fecha)
+        const otra = instalar(pub, pc, ID.marta, { ahora: F(5) });
+        expect(otra.estado).toBe('ya_instalado');
+        expect(otra.origen.escrito).toBe(false);
+        expect(json(pc.estado, 'origen.json').cuando).toBe(P.isoLocal(F(2)));
+        // instalada desde una carpeta (pendrive o copia): lo dice. Y si despues se instala desde la nube, se actualiza
+        const planta = pcNueva('pc-planta');
+        const copia = path.join(tmp, 'pendrive', 'Claude Barack');
+        fs.cpSync(pub, copia, { recursive: true });
+        expect(instalar(copia, planta, ID.pepe, { desdeCarpeta: true }).estado).toBe('instalado');
+        expect(json(planta.estado, 'origen.json')).toEqual({ publicado: copia, desde: 'carpeta', cuando: P.isoLocal(F(2)) });
+        const cambio = instalar(pub, planta, ID.pepe, { ahora: F(6) });
+        expect(cambio.estado).toBe('ya_instalado');
+        expect(cambio.origen.escrito).toBe(true);
+        expect(json(planta.estado, 'origen.json')).toEqual({ publicado: pub, desde: 'nube', cuando: P.isoLocal(F(6)) });
+        // ROJO: una instalacion que no termina (la configuracion de Claude no se entiende) no anota nada
+        const rota = pcNueva('pc-rota', { settings: '{ esto no es json' });
+        expect(instalar(pub, rota, ID.pepe).estado).toBe('error');
+        expect(fs.existsSync(path.join(rota.estado, 'origen.json'))).toBe(false);
+        // ROJO: un origen.json que no se entiende, o que no trae una ruta absoluta, no vale
+        const basura = dir('estado-basura');
+        expect(P.leerOrigen(basura)).toBe(null);
+        for (const texto of ['{ roto', '[]', '{}', JSON.stringify({ publicado: '' }), JSON.stringify({ publicado: 'carpeta\\relativa' }), JSON.stringify({ publicado: 7 })]) {
+            fs.writeFileSync(path.join(basura, 'origen.json'), texto);
+            expect(P.leerOrigen(basura), texto).toBe(null);
+            expect(P.origenRecordado(basura), texto).toBe(null);
+        }
+        expect(P.origenRecordado(null)).toBe(null);
+    });
+
+    it('resolverEntorno: sin nube por nombre usa la carpeta recordada en --actualizar, --chequear, --ver e --instalar (no en los demas); la carpeta del programa, la nube indicada y la nube por nombre le ganan; si ya no esta, nada', () => {
+        const { pub } = nubeArmada();
+        const pc = pcNueva('pc-marta');
+        expect(instalar(pub, pc, ID.marta).estado).toBe('instalado');
+        const env = { USERPROFILE: dir('perfil-vacio'), LOCALAPPDATA: dir('la'), CLAUDE_AREA_HOME: pc.home, CLAUDE_AREA_ESTADO: pc.estado };
+        for (const modo of ['actualizar', 'chequear', 'ver', 'instalar']) {
+            const e = P.resolverEntorno({ [modo]: true, proyecto: 'area', notas: [] }, env, RAIZ);
+            expect(e.nube, modo).toBe(pub);
+            expect(e.nubeRecordada, modo).toBe(true);
+            expect(e.nubeDesdeCarpeta, modo).toBe(false);
+            expect(e.indicadores.nube, modo).toBe(false);   // ni de prueba ni real: no entra en la regla "todo o nada"
+        }
+        for (const modo of ['donde', 'publicar', 'aportes']) {
+            const e = P.resolverEntorno({ [modo]: true, proyecto: 'area', notas: [] }, env, RAIZ);
+            expect(e.nube, modo).toBe(null);
+            expect(e.nubeRecordada, modo).toBe(false);
+        }
+        // el proyecto de siempre no mira origen.json
+        expect(P.resolverEntorno({ actualizar: true, notas: [] }, env, RAIZ).nubeRecordada).toBe(false);
+        // sin estado indicado se mira el estado REAL de esa PC (<LOCALAPPDATA>\BarackEquipo): ahi no hay nada anotado
+        expect(P.resolverEntorno({ chequear: true, proyecto: 'area', notas: [] }, { USERPROFILE: env.USERPROFILE, LOCALAPPDATA: env.LOCALAPPDATA }, RAIZ)).toMatchObject({ nube: null, nubeRecordada: false });
+        // en --instalar, la carpeta desde la que corre el programa le gana a la recordada; en --actualizar no
+        const otra = path.join(tmp, 'pendrive', 'Claude Barack');
+        fs.cpSync(pub, otra, { recursive: true });
+        expect(P.resolverEntorno({ instalar: true, proyecto: 'area', notas: [] }, env, path.join(otra, 'contenido'))).toMatchObject({ nube: otra, nubeDesdeCarpeta: true, nubeRecordada: false });
+        expect(P.resolverEntorno({ actualizar: true, proyecto: 'area', notas: [] }, env, path.join(otra, 'contenido'))).toMatchObject({ nube: pub, nubeDesdeCarpeta: false, nubeRecordada: true });
+        // la nube indicada (--nube o la variable) le gana, y esa si cuenta como "de prueba"
+        const indicada = dir('indicada');
+        expect(P.resolverEntorno({ actualizar: true, proyecto: 'area', nube: indicada, notas: [] }, env, RAIZ)).toMatchObject({ nube: indicada, nubeRecordada: false });
+        const porVariable = P.resolverEntorno({ actualizar: true, notas: [] }, { ...env, CLAUDE_AREA_NUBE: dir('nb') }, RAIZ);
+        expect(porVariable.nubeRecordada).toBe(false);
+        expect(porVariable.indicadores.nube).toBe(true);
+        // la nube POR NOMBRE le gana si trae una publicacion; si la carpeta esta pero todavia no bajo nada, vale la recordada
+        const conNube = dir('perfil-con-nube');
+        const enBiblioteca = path.join(conNube, 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General', 'CLAUDE POR AREA', '1- PUBLICADO');
+        fs.mkdirSync(enBiblioteca, { recursive: true });
+        const envConNube = { ...env, USERPROFILE: conNube };
+        expect(P.resolverEntorno({ chequear: true, proyecto: 'area', notas: [] }, envConNube, RAIZ)).toMatchObject({ nube: pub, nubeRecordada: true });
+        fs.copyFileSync(path.join(pub, 'VERSION.json'), path.join(enBiblioteca, 'VERSION.json'));
+        expect(P.resolverEntorno({ chequear: true, proyecto: 'area', notas: [] }, envConNube, RAIZ)).toMatchObject({ nube: enBiblioteca, nubeRecordada: false });
+        expect(P.resolverEntorno({ actualizar: true, proyecto: 'area', notas: [] }, envConNube, RAIZ)).toMatchObject({ nube: enBiblioteca, nubeRecordada: false });
+        // ROJO: a la carpeta recordada le falta el manifiesto, o ya no esta a la vista: todo sigue como antes (sin nube)
+        fs.renameSync(path.join(pub, 'MANIFIESTO.json'), path.join(pub, 'MANIFIESTO.json.aparte'));
+        expect(P.origenRecordado(pc.estado)).toBe(null);
+        expect(P.resolverEntorno({ chequear: true, proyecto: 'area', notas: [] }, env, RAIZ)).toMatchObject({ nube: null, nubeRecordada: false });
+        fs.renameSync(path.join(pub, 'MANIFIESTO.json.aparte'), path.join(pub, 'MANIFIESTO.json'));
+        expect(P.origenRecordado(pc.estado)).toBe(pub);
+        fs.renameSync(pub, `${pub} (desenchufada)`);
+        expect(P.origenRecordado(pc.estado)).toBe(null);
+        expect(P.resolverEntorno({ actualizar: true, proyecto: 'area', notas: [] }, env, RAIZ)).toMatchObject({ nube: null, nubeRecordada: false });
+        // la forma de la nube (para saber si hay un buzon al lado)
+        expect(P.tieneFormaDeNube(pub)).toBe(true);
+        expect(P.tieneFormaDeNube(path.join(tmp, 'x', 'claude por area', '1- publicado'))).toBe(true);
+        expect(P.tieneFormaDeNube(otra)).toBe(false);
+        expect(P.tieneFormaDeNube(path.join(tmp, 'descargas', '1- PUBLICADO'))).toBe(false);
+        expect(P.tieneFormaDeNube(null)).toBe(false);
+    });
+
+    it('VERDE desde la copia INSTALADA y sin decirle la nube: --chequear ve la version nueva de la carpeta recordada, --actualizar la baja y --ver dice de donde; en una copia con otro nombre no se escribe nada adentro', () => {
+        const armada = nubeArmada();
+        const copia = path.join(tmp, 'pendrive', 'Claude Barack');
+        fs.cpSync(armada.pub, copia, { recursive: true });
+        const pc = pcNueva('pc-planta', { settings: SETTINGS_PREVIO });
+        const env = entornoPc(pc);
+        const tareaAntes = ES_WINDOWS ? hayTareaDeWindows() : null;
+        const ins = spawnSync(process.execPath, [path.join(copia, 'contenido', 'programas', '_paquete.mjs'), '--instalar', '--proyecto', 'area', '--usuario-home', pc.claudeDir, '--area', 'Calidad', '--nombre', 'Ana Ruiz'], { encoding: 'utf8', env, timeout: 90000 });
+        expect(ins.status, ins.stdout + ins.stderr).toBe(0);
+        expect(ins.stdout).toContain('Instalado desde esta carpeta');
+        expect(ins.stdout).toContain('las novedades las busca acá');
+        expect(ins.stdout).not.toContain('no se actualiza sola');
+        // con carpetas de prueba la tarea NO se registra, y lo dice
+        expect(ins.stdout).toContain('Carpetas de prueba: no se deja la actualización automática.');
+        expect(ins.stdout).not.toContain('Se actualiza sola');
+        const origen = json(pc.estado, 'origen.json');
+        expect(mismaCarpeta(origen.publicado, copia)).toBe(true);
+        expect(origen.desde).toBe('carpeta');
+        const alDia = instalado(pc, ['--chequear', '--proyecto', 'area'], env);
+        expect(alDia.status, alDia.stdout + alDia.stderr).toBe(0);
+        expect(JSON.parse(alDia.stdout.trim())).toMatchObject({ estado: 'al_dia', instalada: 1, publicada: 1 });
+        // sale la version 2 en ESA carpeta (la del pendrive)
+        publicarOtra(armada, copia);
+        const antes = foto(path.join(tmp, 'pendrive'));
+        const ch = instalado(pc, ['--chequear', '--proyecto', 'area'], env);
+        expect(ch.status, ch.stdout + ch.stderr).toBe(2);
+        expect(JSON.parse(ch.stdout.trim())).toMatchObject({ estado: 'hay_novedades', motivo: 'version_nueva', instalada: 1, publicada: 2, firmada: true });
+        const ver = instalado(pc, ['--ver', '--proyecto', 'area'], env);
+        expect(ver.status, ver.stdout + ver.stderr).toBe(0);
+        expect(ver.stdout).toContain('la carpeta de donde se instaló esta PC');
+        expect(ver.stdout).toContain('version 2');
+        const act = instalado(pc, ['--actualizar', '--proyecto', 'area'], env);
+        expect(act.status, act.stdout + act.stderr).toBe(0);
+        expect(act.stdout).toContain('Actualizado a la version 2');
+        expect(act.stdout).toContain('firma verificada');
+        expect(json(pc.home, 'publicado/.claude/.paquete-instalado.json')).toMatchObject({ version: 2, firma: 'valida' });
+        expect(existe(pc.home, 'publicado/conocimiento/comun/novedad-v2.md')).toBe(true);
+        // una copia con otro nombre no tiene buzon: ni salud ni nada adentro de la carpeta
+        expect(act.stdout).not.toContain('Salud de esta PC');
+        expect(foto(path.join(tmp, 'pendrive'))).toEqual(antes);
+        expect(instalado(pc, ['--chequear', '--proyecto', 'area'], env).status).toBe(0);
+        // repetir «Instalar» desde la copia instalada (sin carpeta publicada debajo): usa la recordada y lo dice; la
+        // persona conserva el area que habia dicho, y tampoco aca se escribe nada adentro de la copia
+        const rep = instalado(pc, ['--instalar', '--proyecto', 'area', '--usuario-home', pc.claudeDir], env);
+        expect(rep.status, rep.stdout + rep.stderr).toBe(0);
+        expect(rep.stdout).toContain('versión 2, Ana Ruiz (área calidad');
+        expect(rep.stdout).toContain('desde la carpeta de donde se instaló esta PC');
+        expect(foto(path.join(tmp, 'pendrive'))).toEqual(antes);
+        // --sin-tarea: se acepta en --instalar (y lo dice); en otro comando es un error y no se hace nada
+        const sinTarea = instalado(pc, ['--instalar', '--proyecto', 'area', '--usuario-home', pc.claudeDir, '--sin-tarea'], env);
+        expect(sinTarea.status, sinTarea.stdout + sinTarea.stderr).toBe(0);
+        expect(sinTarea.stdout).toContain('Ya estaba instalado');
+        expect(sinTarea.stdout).toContain('Sin actualización automática (se pidió --sin-tarea)');
+        const mal = instalado(pc, ['--chequear', '--proyecto', 'area', '--sin-tarea'], env);
+        expect(mal.status).toBe(1);
+        expect(mal.stderr).toContain('--sin-tarea es de --instalar');
+        if (ES_WINDOWS) expect(hayTareaDeWindows()).toBe(tareaAntes);   // ninguna de estas corridas registro una tarea
+    });
+
+    it('con la forma de la nube (CLAUDE POR AREA\\1- PUBLICADO) la PC que se actualiza desde la carpeta recordada deja su salud en el buzon de al lado', () => {
+        const armada = nubeArmada();
+        const { pub, nubeRaiz } = armada;
+        const pc = pcNueva('pc-marta');
+        expect(instalar(pub, pc, ID.marta, { desdeCarpeta: true }).estado).toBe('instalado');
+        publicarOtra(armada, pub);
+        const act = instalado(pc, ['--actualizar', '--proyecto', 'area'], entornoPc(pc));
+        expect(act.status, act.stdout + act.stderr).toBe(0);
+        expect(act.stdout).toContain('Salud de esta PC');
+        expect(json(nubeRaiz, '4- BUZON/salud/PC-COMPRAS-01.json')).toMatchObject({ version_instalada: 2, version_publicada_vista: 2, firma_ok: true, estado: 'actualizado', errores: [] });
+        // con --home indicado, las reglas de la casa se regeneran como siempre
+        expect(existe(pc.home, '.claude/rules/casa.md')).toBe(true);
+    });
+
+    it('ROJO: la carpeta recordada alterada no actualiza (archivo cambiado: espera; manifiesto rehecho sin la clave: firma rechazada); desenchufada: sin_nube; con una version mas vieja: no retrocede', () => {
+        const armada = nubeArmada();
+        const copia = path.join(tmp, 'pendrive', 'Claude Barack');
+        fs.cpSync(armada.pub, copia, { recursive: true });
+        const v1 = path.join(tmp, 'guardada-v1');
+        fs.cpSync(copia, v1, { recursive: true });
+        const pc = pcNueva('pc-planta');
+        const env = entornoPc(pc);
+        expect(instalar(copia, pc, ID.pepe, { desdeCarpeta: true }).estado).toBe('instalado');
+        publicarOtra(armada, copia);
+        const v2 = path.join(tmp, 'guardada-v2');
+        fs.cpSync(copia, v2, { recursive: true });
+        const antes = foto(pc.home);
+        const version = () => json(pc.home, 'publicado/.claude/.paquete-instalado.json').version;
+        // (a) un archivo de la version nueva cambiado a mano en la carpeta: el hash no coincide con el manifiesto firmado
+        fs.appendFileSync(path.join(copia, 'contenido', 'conocimiento', 'comun', 'novedad-v2.md'), '- Renglón plantado a mano.\n');
+        const a1 = instalado(pc, ['--actualizar', '--proyecto', 'area'], env);
+        expect(a1.status, a1.stdout + a1.stderr).toBe(3);
+        expect(foto(pc.home)).toEqual(antes);
+        // (b) manifiesto y VERSION rehechos para que el archivo plantado "coincida", sin la clave: la firma no pasa
+        const malo = fs.readFileSync(path.join(copia, 'contenido', 'conocimiento', 'comun', 'novedad-v2.md'));
+        const man = json(copia, 'MANIFIESTO.json');
+        man.archivos['conocimiento/comun/novedad-v2.md'] = { ...man.archivos['conocimiento/comun/novedad-v2.md'], sha256: P.sha256(malo), bytes: malo.length };
+        const txt = P.jsonCanonico(man);
+        fs.writeFileSync(path.join(copia, 'MANIFIESTO.json'), txt);
+        const ver = json(copia, 'VERSION.json');
+        ver.manifest_sha256 = P.sha256(txt);
+        fs.writeFileSync(path.join(copia, 'VERSION.json'), P.jsonCanonico(ver));
+        const a2 = instalado(pc, ['--actualizar', '--proyecto', 'area'], env);
+        expect(a2.status, a2.stdout + a2.stderr).toBe(4);
+        expect(a2.stderr).toContain('verificación de firma');
+        expect(foto(pc.home)).toEqual(antes);
+        expect(version()).toBe(1);
+        // ... y el chequeo (que no verifica: solo mira) dice que hay algo; quien decide es --actualizar, que lo rechazo
+        expect(instalado(pc, ['--chequear', '--proyecto', 'area'], env).status).toBe(2);
+        // (c) la carpeta ya no esta a la vista (el pendrive desenchufado): sin_nube, y --actualizar no hace nada
+        fs.renameSync(path.join(tmp, 'pendrive'), path.join(tmp, 'pendrive-desenchufado'));
+        const c = instalado(pc, ['--chequear', '--proyecto', 'area'], env);
+        expect(c.status, c.stdout + c.stderr).toBe(3);
+        expect(JSON.parse(c.stdout.trim())).toMatchObject({ estado: 'sin_nube', instalada: 1, publicada: null });
+        const a3 = instalado(pc, ['--actualizar', '--proyecto', 'area'], env);
+        expect(a3.status).not.toBe(0);
+        expect(foto(pc.home)).toEqual(antes);
+        // (d) vuelve la carpeta, sana, con la version 2: actualiza. Y si despues aparece ahi la version 1: no retrocede
+        fs.cpSync(v2, copia, { recursive: true });
+        const a4 = instalado(pc, ['--actualizar', '--proyecto', 'area'], env);
+        expect(a4.status, a4.stdout + a4.stderr).toBe(0);
+        expect(version()).toBe(2);
+        fs.rmSync(copia, { recursive: true, force: true });
+        fs.cpSync(v1, copia, { recursive: true });
+        const conLaDos = foto(pc.home);
+        const a5 = instalado(pc, ['--actualizar', '--proyecto', 'area'], env);
+        expect(a5.status, a5.stdout + a5.stderr).toBe(4);
+        expect(a5.stderr).toContain('más vieja');
+        expect(version()).toBe(2);
+        expect(foto(pc.home)).toEqual(conLaDos);
+    });
+});
+
+describe('como se actualiza una PC: la tarea que actualiza sola se deja solo en una instalacion de verdad', () => {
+    const REAL = { home: false, destino: false, nube: false, estado: false, usuarioHome: false };
+
+    it('la decision: con todo real se registra; con UNA sola carpeta de prueba, un simulacro, --sin-tarea o una instalacion que no termino, no', () => {
+        expect(P.debeRegistrarTarea(REAL, { estado: 'instalado', plataforma: 'win32' })).toEqual({ registrar: true, motivo: null, indicadas: [] });
+        expect(P.debeRegistrarTarea(REAL, { estado: 'ya_instalado', plataforma: 'win32' }).registrar).toBe(true);
+        for (const k of Object.keys(REAL)) {
+            expect(P.debeRegistrarTarea({ ...REAL, [k]: true }, { estado: 'instalado', plataforma: 'win32' }), k).toEqual({ registrar: false, motivo: 'rutas_de_prueba', indicadas: [k] });
+        }
+        expect(P.debeRegistrarTarea(REAL, { estado: 'instalado', simular: true, plataforma: 'win32' })).toMatchObject({ registrar: false, motivo: 'simulado' });
+        expect(P.debeRegistrarTarea(REAL, { estado: 'instalado', sinTarea: true, plataforma: 'win32' })).toMatchObject({ registrar: false, motivo: 'sin_tarea' });
+        for (const estado of ['error', 'esperar', 'sin_clave', 'firma_rechazada', 'version_anterior', 'simulado', null, undefined]) {
+            expect(P.debeRegistrarTarea(REAL, { estado, plataforma: 'win32' }), String(estado)).toMatchObject({ registrar: false, motivo: 'no_instalado' });
+        }
+        // ante la duda, no: sin saber que rutas vinieron indicadas no se registra nada
+        expect(P.debeRegistrarTarea(undefined, { estado: 'instalado', plataforma: 'win32' }).registrar).toBe(false);
+        expect(P.debeRegistrarTarea(null, { estado: 'instalado', plataforma: 'win32' }).registrar).toBe(false);
+        expect(P.debeRegistrarTarea(REAL).registrar).toBe(false);
+        expect(P.debeRegistrarTarea(REAL, { estado: 'instalado', plataforma: 'linux' })).toMatchObject({ registrar: false, motivo: 'no_es_windows' });
+        // lo que ve la linea de comandos: las rutas indicadas salen de resolverEntorno (opcion o variable)
+        const real = { USERPROFILE: dir('perfil'), LOCALAPPDATA: dir('la') };
+        const a = { instalar: true, proyecto: 'area', notas: [] };
+        const decide = (args, env) => P.debeRegistrarTarea(P.resolverEntorno(args, env, RAIZ).indicadores, { estado: 'instalado', simular: !!args.simular, sinTarea: !!args['sin-tarea'], plataforma: 'win32' }).registrar;
+        expect(decide(a, real)).toBe(true);   // ninguna ruta indicada: es una instalacion de verdad
+        expect(decide(a, { ...real, CLAUDE_AREA_HOME: dir('h') })).toBe(false);
+        expect(decide(a, { ...real, CLAUDE_AREA_ESTADO: dir('e') })).toBe(false);
+        expect(decide(a, { ...real, CLAUDE_AREA_USUARIO_HOME: dir('u') })).toBe(false);
+        expect(decide(a, { ...real, CLAUDE_AREA_NUBE: dir('n') })).toBe(false);
+        expect(decide({ ...a, home: dir('h2') }, real)).toBe(false);
+        expect(decide({ ...a, 'usuario-home': dir('u2') }, real)).toBe(false);
+        expect(decide({ ...a, nube: dir('n2') }, real)).toBe(false);
+        expect(decide({ ...a, destino: dir('d2') }, real)).toBe(false);
+        expect(decide({ ...a, simular: true }, real)).toBe(false);
+        expect(decide({ ...a, 'sin-tarea': true }, real)).toBe(false);
+        expect(P.parsearArgs(['--instalar', '--proyecto', 'area', '--sin-tarea'])['sin-tarea']).toBe(true);
+        expect(P.parsearArgs(['--instalar', '--claude-dir', 'x'])['usuario-home']).toBe('x');   // el nombre viejo tambien cuenta como indicada
+    });
+
+    it('el lanzador, con un ejecutor de mentira: con carpetas de prueba NO se llama; con todo real corre powershell con el programa INSTALADO y -RegistrarTarea (tope 60 s); si falla, una linea de aviso y la instalacion igual sale con 0', () => {
+        const { pub } = nubeArmada();
+        const pc = pcNueva('pc-marta');
+        const r = instalar(pub, pc, ID.marta);
+        expect(r.estado).toBe('instalado');
+        const llamadas = [];
+        const lineas = [];
+        const decir = (s) => lineas.push(s);
+        const ejecutor = (resultado) => (exe, args, opciones) => { llamadas.push({ exe, args, opciones }); if (resultado instanceof Error) throw resultado; return resultado; };
+        const cerrar = (extra, resultado = { status: 0, stdout: '', stderr: '' }) => { llamadas.length = 0; lineas.length = 0; return P.cerrarInstalacion(r, { indicadores: REAL, decir, ejecutar: ejecutor(resultado), plataforma: 'win32', ...extra }); };
+        const FALLO = 'No se pudo dejar la actualización automática';
+
+        // con carpetas de prueba (lo que pasa en TODAS las pruebas y ensayos): el ejecutor no se llama
+        for (const k of ['home', 'estado', 'usuarioHome']) {
+            expect(cerrar({ indicadores: { ...REAL, [k]: true } }), k).toBe(0);
+            expect(llamadas, k).toEqual([]);
+            expect(lineas, k).toContain('  Carpetas de prueba: no se deja la actualización automática.');
+        }
+        // --sin-tarea y --simular: tampoco
+        expect(cerrar({ sinTarea: true })).toBe(0);
+        expect(llamadas).toEqual([]);
+        expect(lineas.join('\n')).toContain('--sin-tarea');
+        expect(cerrar({ simular: true })).toBe(0);
+        expect(llamadas).toEqual([]);
+
+        // todo real y el registro sale bien
+        expect(cerrar({})).toBe(0);
+        expect(llamadas).toHaveLength(1);
+        expect(llamadas[0].exe).toMatch(/powershell\.exe$/i);
+        expect(llamadas[0].args).toEqual(['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', path.join(pc.home, 'publicado', 'programas', 'sync_area.ps1'), '-RegistrarTarea']);
+        expect(llamadas[0].opciones.timeout).toBe(60000);
+        expect(P.LINEA_TAREA_OK).toBe('Se actualiza sola: al iniciar sesión y cada 4 horas, cuando esta PC vea la carpeta de donde se instaló.');
+        expect(lineas).toContain(`  ${P.LINEA_TAREA_OK}`);
+        expect(lineas.join('\n')).not.toContain(FALLO);
+        expect(lineas[0]).toContain('Instalado: versión 1, Marta Pérez');
+        // una PC que ya estaba instalada (se repite «Instalar»): tambien se deja
+        const repetida = instalar(pub, pc, ID.marta, { ahora: F(3) });
+        expect(repetida.estado).toBe('ya_instalado');
+        llamadas.length = 0;
+        expect(P.cerrarInstalacion(repetida, { indicadores: REAL, decir: () => {}, ejecutar: ejecutor({ status: 0 }), plataforma: 'win32' })).toBe(0);
+        expect(llamadas).toHaveLength(1);
+
+        // ROJO: el registro falla de cada forma posible -> aviso de una linea, sin la linea de "se actualiza sola", y codigo 0
+        const casos = [
+            [{ status: 1, stdout: 'No pude registrar la tarea: Acceso denegado.\r\n', stderr: '' }, 'Windows no dejó: Acceso denegado'],
+            [{ status: 2, stdout: '', stderr: '' }, 'el registro salió con código 2'],
+            [{ status: null, stdout: '', stderr: '', error: Object.assign(new Error('spawnSync powershell.exe ETIMEDOUT'), { code: 'ETIMEDOUT' }) }, 'tardó más de 60 segundos'],
+            [{ status: null, stdout: '', stderr: '', error: Object.assign(new Error('spawnSync powershell.exe ENOENT'), { code: 'ENOENT' }) }, 'esta PC no tiene PowerShell'],
+            [new Error('se rompió el ejecutor'), 'se rompió el ejecutor'],
+            [null, 'el registro salió con código desconocido'],   // el ejecutor no devolvio nada
+        ];
+        for (const [resultado, motivo] of casos) {
+            expect(cerrar({}, resultado), motivo).toBe(0);
+            expect(llamadas, motivo).toHaveLength(1);
+            expect(lineas, motivo).toContain(`  ${FALLO} (${motivo}): para actualizar esta PC se repite «Instalar».`);
+            expect(lineas.join('\n'), motivo).not.toContain('Se actualiza sola');
+        }
+        // un motivo larguisimo o con caracteres rotos se acorta: sigue siendo UNA linea
+        const largo = P.registrarTarea({ home: pc.home, ejecutar: () => ({ status: 1, stdout: `linea de antes\nNo pude registrar la tarea: ${'x'.repeat(400)} � fin`, stderr: '' }) });
+        expect(largo.ok).toBe(false);
+        expect(largo.motivo.length).toBeLessThan(140);
+        expect(largo.motivo).not.toMatch(/[\r\n�]/);
+        // lo instalado no trae el programa de la tarea: ni se intenta, y se dice
+        fs.renameSync(path.join(pc.home, 'publicado', 'programas', 'sync_area.ps1'), path.join(pc.home, 'publicado', 'programas', 'sync_area.ps1.aparte'));
+        expect(cerrar({})).toBe(0);
+        expect(llamadas).toEqual([]);
+        expect(lineas).toContain(`  ${FALLO} (lo instalado no trae el programa de la tarea): para actualizar esta PC se repite «Instalar».`);
+    });
+
+    it('el ejecutor de verdad (probado con un programa inofensivo, nunca con el registro): devuelve el codigo, junta la salida y corta al pasar el tope', () => {
+        const bien = P.ejecutarSinVentana(process.execPath, ['-e', "console.log('hola'); process.exit(3)"], { timeout: 30000, env: process.env });
+        expect(bien.status).toBe(3);
+        expect(bien.stdout).toContain('hola');
+        const lento = P.ejecutarSinVentana(process.execPath, ['-e', 'setTimeout(() => {}, 20000)'], { timeout: 400, env: process.env });
+        expect(lento.error && lento.error.code).toBe('ETIMEDOUT');
+        // el mismo corte, visto desde el lanzador (con el "registro" reemplazado por ese programa lento)
+        const home = dir('pc-lenta', 'ClaudeBarack');
+        esc(home, 'publicado/programas/sync_area.ps1', '# de mentira\n');
+        const r = P.registrarTarea({ home, topeMs: 1000, ejecutar: (exe, args, opciones) => P.ejecutarSinVentana(process.execPath, ['-e', 'setTimeout(() => {}, 20000)'], opciones) });
+        expect(r).toMatchObject({ ok: false, motivo: 'tardó más de 1 segundos' });
+    });
+});
+
+describe.skipIf(!ES_WINDOWS)('como se actualiza una PC: sync_area.ps1 con la carpeta recordada (sin registrar ninguna tarea)', () => {
+    const correrPs = (programa, args, env) => spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', programa, ...args], { encoding: 'utf8', env, timeout: 170000 });
+    const aviso = (estado, pcNombre) => esc(path.join(estado, 'avisos-pendientes', pcNombre), '2026-10-03T090000-servidor.json', JSON.stringify({ nivel: 'hoy', tipo: 'servidor', mensaje: 'x', cuando: '2026-10-03T09:00:00' }));
+
+    it('como la corre la tarea registrada (el programa de la copia INSTALADA, sin ninguna ruta): actualiza desde la carpeta recordada, sube los avisos a su buzon y completa la salud; con la carpeta desenchufada no es un error', () => {
+        const armada = nubeArmada();
+        const { pub, nubeRaiz } = armada;
+        const tareaAntes = hayTareaDeWindows();
+        // una "PC" entera adentro de la carpeta temporal: el estado es <LOCALAPPDATA>\BarackEquipo, igual que en una PC de
+        // verdad, y el programa corre desde <home>\publicado\programas. Asi se ejercita el camino REAL sin tocar esta PC.
+        const local = dir('pc-real', 'AppData', 'Local');
+        const pc = { home: path.join(tmp, 'pc-real', 'ClaudeBarack'), estado: path.join(local, 'BarackEquipo'), claudeDir: dir('pc-real', '.claude') };
+        expect(instalar(pub, pc, ID.marta).estado).toBe('instalado');
+        publicarOtra(armada, pub);
+        aviso(pc.estado, 'PC-COMPRAS-01');
+        const env = { ...sinVariables(), USERPROFILE: dir('pc-real', 'perfil'), LOCALAPPDATA: local };
+        // antes de correrla: el entorno que va a ver PowerShell es el de la carpeta temporal y no trae ninguna ruta indicada
+        const visto = spawnSync('powershell.exe', ['-NoProfile', '-Command', "$env:LOCALAPPDATA + '|' + $env:USERPROFILE + '|' + $env:CLAUDE_AREA_HOME + $env:CLAUDE_AREA_NUBE + $env:CLAUDE_AREA_ESTADO + '|'"], { encoding: 'utf8', env, timeout: 60000 });
+        expect(visto.stdout.trim()).toBe(`${local}|${env.USERPROFILE}||`);
+        const tarea = path.join(pc.home, 'publicado', 'programas', 'sync_area.ps1');
+        const r = correrPs(tarea, ['-SinTarea', '-SinInventario', '-PrioridadNormal'], env);
+        expect(r.status, r.stdout + r.stderr).toBe(0);
+        const st = json(pc.estado, 'estado.json');
+        const log = leer(pc.estado, 'sync.log');
+        expect(st.actualizar.resultado, JSON.stringify(st) + log).toBe('ok');
+        expect(st.nube).toBe('recordada');
+        expect(st.publicado).toBe(pub);
+        expect(json(pc.home, 'publicado/.claude/.paquete-instalado.json').version).toBe(2);
+        expect(existe(pc.home, 'publicado/conocimiento/comun/novedad-v2.md')).toBe(true);
+        // la carpeta recordada trae la forma de la nube: los avisos suben a su buzon y la salud se completa
+        expect(st.avisos).toMatchObject({ resultado: 'ok', pendientes: 1, movidos: 1, fallos: 0 });
+        expect(fs.readdirSync(path.join(nubeRaiz, '4- BUZON', 'avisos', 'PC-COMPRAS-01'))).toEqual(['2026-10-03T090000-servidor.json']);
+        expect(fs.readdirSync(path.join(pc.estado, 'avisos-pendientes', 'PC-COMPRAS-01'))).toEqual([]);
+        expect(st.salud.resultado).toBe('ok');
+        expect(st.errores).toEqual([]);
+        const salud = json(nubeRaiz, '4- BUZON/salud/PC-COMPRAS-01.json');
+        expect(salud).toMatchObject({ version_instalada: 2, firma_ok: true, estado: 'actualizado' });
+        expect(typeof salud.ve_Y).toBe('boolean');
+        expect(log).toContain('uso la carpeta de donde se instalo esta PC');
+        // ROJO: la carpeta ya no esta a la vista (pendrive desenchufado, red caida): nada cambia y NO es un error
+        fs.renameSync(nubeRaiz, path.join(tmp, 'nube-desenchufada'));
+        aviso(pc.estado, 'PC-COMPRAS-01');
+        const antes = foto(pc.home);
+        const r2 = correrPs(tarea, ['-SinTarea', '-SinInventario', '-PrioridadNormal'], env);
+        expect(r2.status, r2.stdout + r2.stderr).toBe(0);
+        const st2 = json(pc.estado, 'estado.json');
+        expect(st2.actualizar.resultado, JSON.stringify(st2)).toBe('sin_nube');
+        expect(st2.nube).toBe('sin_nube');
+        expect(st2.avisos.resultado).toBe('sin_nube');
+        expect(st2.salud.resultado).toBe('sin_nube');
+        expect(st2.errores).toEqual([]);
+        expect(foto(pc.home)).toEqual(antes);
+        expect(fs.readdirSync(path.join(pc.estado, 'avisos-pendientes', 'PC-COMPRAS-01'))).toHaveLength(1);   // el aviso espera en la cola
+        expect(fs.existsSync(nubeRaiz)).toBe(false);   // y no se crea ninguna carpeta donde estaba la nube
+        expect(hayTareaDeWindows()).toBe(tareaAntes);
+    });
+
+    it('como la corre la tarea registrada en una PC que SI ve la nube por nombre (la biblioteca, con su tilde): la encuentra sola, actualiza, sube los avisos y completa la salud', () => {
+        const armada = nubeArmada();
+        // la biblioteca sincronizada adentro del perfil de Windows de la "PC", con el nombre de verdad (lleva tilde)
+        const perfil = dir('pc-real', 'perfil');
+        const nubeRaiz = path.join(perfil, 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General', 'CLAUDE POR AREA');
+        copiarCarpeta(armada.nubeRaiz, nubeRaiz);
+        const pub = path.join(nubeRaiz, '1- PUBLICADO');
+        const local = dir('pc-real', 'AppData', 'Local');
+        const pc = { home: path.join(tmp, 'pc-real', 'ClaudeBarack'), estado: path.join(local, 'BarackEquipo'), claudeDir: dir('pc-real', '.claude') };
+        const inst = instalar(pub, pc, ID.marta);
+        expect(inst.estado, `${inst.mensaje || ''} ${inst.errores.join(' | ')}`).toBe('instalado');
+        expect(json(pc.estado, 'origen.json')).toMatchObject({ publicado: pub, desde: 'nube' });
+        publicarOtra(armada, pub);
+        aviso(pc.estado, 'PC-COMPRAS-01');
+        const env = { ...sinVariables(), USERPROFILE: perfil, LOCALAPPDATA: local };
+        expect(P.buscarNube(perfil, 'area')).toBe(pub);
+        const r = correrPs(path.join(pc.home, 'publicado', 'programas', 'sync_area.ps1'), ['-SinTarea', '-SinInventario', '-PrioridadNormal'], env);
+        expect(r.status, r.stdout + r.stderr).toBe(0);
+        const st = json(pc.estado, 'estado.json');
+        expect(st.actualizar.resultado, JSON.stringify(st) + leer(pc.estado, 'sync.log')).toBe('ok');
+        expect(st.nube).toBe('por_nombre');
+        expect(st.publicado).toBe(pub);
+        expect(json(pc.home, 'publicado/.claude/.paquete-instalado.json').version).toBe(2);
+        expect(st.avisos).toMatchObject({ resultado: 'ok', pendientes: 1, movidos: 1, fallos: 0 });
+        expect(fs.readdirSync(path.join(nubeRaiz, '4- BUZON', 'avisos', 'PC-COMPRAS-01'))).toEqual(['2026-10-03T090000-servidor.json']);
+        expect(st.salud.resultado).toBe('ok');
+        expect(st.errores).toEqual([]);
+        expect(json(nubeRaiz, '4- BUZON/salud/PC-COMPRAS-01.json')).toMatchObject({ version_instalada: 2, firma_ok: true, estado: 'actualizado' });
+        // la nube por nombre le gana a la recordada: aunque origen.json apunte a otra carpeta, se usa la de la biblioteca
+        fs.writeFileSync(path.join(pc.estado, 'origen.json'), P.jsonCanonico({ publicado: armada.pub, desde: 'carpeta', cuando: P.isoLocal(F(2)) }));
+        const r2 = correrPs(path.join(pc.home, 'publicado', 'programas', 'sync_area.ps1'), ['-SinTarea', '-SinInventario', '-PrioridadNormal'], env);
+        expect(r2.status, r2.stdout + r2.stderr).toBe(0);
+        expect(json(pc.estado, 'estado.json')).toMatchObject({ nube: 'por_nombre', publicado: pub });
+    });
+
+    it('con la PC y el estado de prueba y sin -Nube: corre solo si ese estado recuerda una carpeta a la vista; en una copia con otro nombre actualiza y no escribe nada adentro; con -RegistrarTarea esa excepcion no vale', () => {
+        const armada = nubeArmada();
+        // una carpeta con otro nombre, y con tilde (como la de un OneDrive de otra cuenta): origen.json la lleva tal cual
+        const copia = path.join(tmp, 'pendrive', 'Copia de Ingeniería');
+        copiarCarpeta(armada.pub, copia);
+        const pc = pcNueva('pc-planta');
+        const env = { ...sinVariables(), USERPROFILE: dir('perfil-vacio'), LOCALAPPDATA: dir('la-vacia') };
+        const args = ['-HomeDir', pc.home, '-EstadoDir', pc.estado, '-SinTarea', '-SinInventario', '-PrioridadNormal'];
+        // ROJO: sin nada recordado sigue siendo una mezcla de prueba y real: 2, y nada escrito
+        const sinRecuerdo = correrPs(SYNC, args, env);
+        expect(sinRecuerdo.status, sinRecuerdo.stdout + sinRecuerdo.stderr).toBe(2);
+        expect(sinRecuerdo.stdout).toContain('mezclando carpetas de prueba y reales');
+        expect(fs.readdirSync(pc.estado)).toEqual([]);
+        expect(fs.existsSync(pc.home)).toBe(false);
+        // VERDE: instalada desde la copia, sale la version 2 ahi
+        expect(instalar(copia, pc, ID.marta, { desdeCarpeta: true }).estado).toBe('instalado');
+        publicarOtra(armada, copia);
+        aviso(pc.estado, 'PC-COMPRAS-01');
+        const antes = foto(path.join(tmp, 'pendrive'));
+        const r = correrPs(SYNC, args, env);
+        expect(r.status, r.stdout + r.stderr).toBe(0);
+        const st = json(pc.estado, 'estado.json');
+        expect(st.actualizar.resultado, JSON.stringify(st) + leer(pc.estado, 'sync.log')).toBe('ok');
+        expect(st.nube).toBe('recordada');
+        expect(st.publicado).toBe(copia);   // la tilde llega entera
+        expect(json(pc.home, 'publicado/.claude/.paquete-instalado.json').version).toBe(2);
+        // una copia con otro nombre no tiene buzon: los avisos quedan en la cola y adentro de la copia no se escribe nada
+        expect(st.avisos.resultado).toBe('sin_nube');
+        expect(st.salud.resultado).toBe('sin_nube');
+        expect(st.errores).toEqual([]);
+        expect(fs.readdirSync(path.join(pc.estado, 'avisos-pendientes', 'PC-COMPRAS-01'))).toHaveLength(1);
+        expect(foto(path.join(tmp, 'pendrive'))).toEqual(antes);
+        expect(fs.readdirSync(tmp).filter((n) => /BUZON/i.test(n))).toEqual([]);
+        expect(leer(pc.estado, 'sync.log')).toContain('sin buzon');
+        // ROJO: con -RegistrarTarea la excepcion no vale (una tarea no se registra desde carpetas de prueba a medias).
+        // Va con -SinTarea: aunque la regla fallara, esta corrida no registraria nada.
+        const tareaAntes = hayTareaDeWindows();
+        const reg = correrPs(SYNC, ['-HomeDir', pc.home, '-EstadoDir', pc.estado, '-RegistrarTarea', '-SinTarea'], env);
+        expect(reg.status, reg.stdout + reg.stderr).toBe(2);
+        expect(reg.stdout).toContain('mezclando carpetas de prueba y reales');
+        expect(hayTareaDeWindows()).toBe(tareaAntes);
+        // ROJO: la carpeta recordada ya no esta a la vista: vuelve a ser una mezcla (2)
+        fs.renameSync(path.join(tmp, 'pendrive'), path.join(tmp, 'pendrive-desenchufado'));
+        expect(correrPs(SYNC, args, env).status).toBe(2);
+    });
+});
+

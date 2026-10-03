@@ -67,7 +67,15 @@
  * Codigos de salida: 0 bien · 1 error o rechazo · 3 la nube todavia no esta completa · 4 la PC no acepta lo
  * publicado (firma invalida o ausente, le falta la clave publica, o la version retrocede).
  * `--chequear`: 0 al_dia · 2 hay_novedades · 3 sin_nube o nube_incompleta · 5 sin_instalar.
+ *
+ * COMO SE ACTUALIZA UNA PC DEL PROYECTO `area` (03/10/2026)
+ *   - `--instalar` deja en `<estado>\origen.json` la carpeta publicada de la que instalo. Si la nube no se encuentra
+ *     por nombre, `--actualizar`, `--chequear`, `--ver` e `--instalar` usan ESA carpeta (si hoy esta a la vista). La
+ *     verificacion es la de siempre: clave fijada, manifiesto firmado, hash por archivo, la version no retrocede.
+ *   - Una instalacion DE VERDAD (ninguna ruta indicada, sin --simular) registra al final la tarea de Windows que
+ *     actualiza sola (`sync_area.ps1 -RegistrarTarea`); `--sin-tarea` no la registra. Si no se puede, avisa y sigue.
  */
+import { spawnSync } from 'node:child_process';
 import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, sign, verify } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -512,6 +520,17 @@ export function carpetaBuzon(nube) {
     const def = PROYECTOS.area;
     if (normTexto(path.basename(nube)) === normTexto(def.publicado)) return path.join(path.dirname(nube), def.buzon);
     return nube;
+}
+
+/**
+ * ¿La carpeta publicada trae la FORMA de la nube del proyecto de areas (`CLAUDE POR AREA\1- PUBLICADO`)? Solo ahi hay
+ * un `4- BUZON` al lado. Una copia con otro nombre (un pendrive, una carpeta de red) no tiene buzon: no se escribe
+ * nada adentro ni al lado.
+ */
+export function tieneFormaDeNube(nube) {
+    if (!nube) return false;
+    const def = PROYECTOS.area;
+    return normTexto(path.basename(nube)) === normTexto(def.publicado) && normTexto(path.basename(path.dirname(nube))) === normTexto(def.carpeta);
 }
 
 function buscarCarpetaEnBiblioteca(home, nombreCarpeta) {
@@ -1828,6 +1847,34 @@ export const MODO_PERMISOS_AREA = 'bypassPermissions';
 export const MODOS_DE_PERMISOS = ['default', 'acceptEdits', 'plan', 'auto', 'bypassPermissions'];
 export const REL_REGLAS_CASA = '.claude/rules/casa.md';
 export const MARCADOR_INSTALADO = 'instalado.json';
+/** `<estado>\origen.json`: de que carpeta publicada se instalo esta PC (03/10/2026). Es lo que deja actualizarla despues. */
+export const NOMBRE_ORIGEN = 'origen.json';
+
+/** Dos rutas son la misma carpeta (en Windows, sin distinguir mayusculas). */
+const mismaRuta = (a, b) => {
+    const n = (p) => { const r = path.resolve(String(p)); return process.platform === 'win32' ? r.toLowerCase() : r; };
+    return n(a) === n(b);
+};
+
+/** Lo que dice `<estado>\origen.json`, o null si no esta, no se entiende o no trae una ruta absoluta. Solo lee. */
+export function leerOrigen(estado) {
+    if (!estado) return null;
+    const o = leerJson(path.join(estado, NOMBRE_ORIGEN));
+    if (!o || typeof o !== 'object' || typeof o.publicado !== 'string' || !o.publicado.trim() || !path.isAbsolute(o.publicado)) return null;
+    return { publicado: path.resolve(o.publicado), desde: o.desde === 'carpeta' ? 'carpeta' : 'nube', cuando: typeof o.cuando === 'string' ? o.cuando : null };
+}
+
+/**
+ * La carpeta de la que se instalo esta PC, SOLO si hoy trae una publicacion (`VERSION.json` y `MANIFIESTO.json`); si
+ * no esta a la vista (un pendrive desenchufado, una carpeta de red caida) o no hay nada anotado, null. Lo que haya
+ * adentro se verifica despues igual que lo de la nube: esto solo dice DONDE mirar.
+ */
+export function origenRecordado(estado) {
+    const o = leerOrigen(estado);
+    if (!o) return null;
+    const hay = (nombre) => { try { return fs.statSync(path.join(o.publicado, nombre)).isFile(); } catch { return false; } };
+    return hay('VERSION.json') && hay('MANIFIESTO.json') ? o.publicado : null;
+}
 
 /** `<home>` del proyecto de areas: CLAUDE_AREA_HOME o `C:\ClaudeBarack` (las pruebas pasan siempre una carpeta temporal). */
 export function rutaHomePorDefecto(env = process.env) {
@@ -2121,7 +2168,7 @@ export function instalar({ nube, home, estado, claudeDir, clavePublica = null, i
     }
     // Instalando desde una carpeta (pendrive o copia): el buzon solo se usa si la carpeta trae la forma de la nube
     // (`1- PUBLICADO` con su `4- BUZON` al lado); si no, no se escribe nada adentro de lo publicado.
-    const hayBuzon = !desdeCarpeta || (normTexto(path.basename(nube)) === normTexto(PROYECTOS.area.publicado) && normTexto(path.basename(path.dirname(nube))) === normTexto(PROYECTOS.area.carpeta));
+    const hayBuzon = !desdeCarpeta || tieneFormaDeNube(nube);
     const publicado = path.join(home, 'publicado');
     res.publicado = publicado;
 
@@ -2230,6 +2277,22 @@ export function instalar({ nube, home, estado, claudeDir, clavePublica = null, i
 
     // 8) el marcador, AL FINAL (si ya estaba igual, no se reescribe: correr dos veces no cambia nada)
     paso('marcador');
+    // ... y justo antes, de DONDE se instalo: con eso `--actualizar` y `--chequear` encuentran despues la misma carpeta
+    // aunque la nube no se vea por nombre (un OneDrive de otra cuenta, una carpeta de red, un pendrive). Si ya dice lo
+    // mismo no se reescribe. Es solo un "donde mirar": lo que haya ahi se verifica igual que siempre.
+    const pOrigen = path.join(estado, NOMBRE_ORIGEN);
+    const origenPrevio = leerOrigen(estado);
+    const desde = desdeCarpeta ? 'carpeta' : 'nube';
+    const origenIgual = !!origenPrevio && mismaRuta(origenPrevio.publicado, nube) && origenPrevio.desde === desde;
+    res.origen = { ruta: pOrigen, publicado: path.resolve(nube), desde, escrito: false };
+    if (!origenIgual) {
+        anotar('de dónde se instaló (para actualizarse sola)', pOrigen);
+        if (!simular) {
+            // no frena la instalacion: sin este archivo la PC igual se actualiza si ve la nube por nombre
+            try { escribirAtomico(pOrigen, jsonCanonico({ publicado: path.resolve(nube), desde, cuando: isoLocal(ahora) })); res.origen.escrito = true; }
+            catch (e) { res.avisos.push(`no pude anotar de dónde se instaló (${e.code || e.message}): si esta PC no ve la nube por nombre, no se va a actualizar sola`); }
+        }
+    }
     const pMarcador = path.join(home, MARCADOR_INSTALADO);
     const previo = leerJson(pMarcador);
     const marcador = { formato: FORMATO, version: pub.version, area: perfil.area, usuario_windows: perfil.usuario_windows, pc: perfil.pc, plugin: `${NOMBRE_PLUGIN}@${NOMBRE_MARKETPLACE}`, claude_dir: claudeDir, clave: k.huella, instalado: previo && previo.instalado ? previo.instalado : isoLocal(ahora), ultima_vez: isoLocal(ahora), ...(desdeCarpeta ? { origen: 'carpeta' } : {}) };
@@ -2247,12 +2310,103 @@ export function instalar({ nube, home, estado, claudeDir, clavePublica = null, i
 }
 
 // ---------------------------------------------------------------------------------------------
+// LA TAREA QUE ACTUALIZA SOLA (03/10/2026): la registra `--instalar`, y solo en una instalacion DE VERDAD
+// ---------------------------------------------------------------------------------------------
+// `sync_area.ps1 -RegistrarTarea` existia y nadie lo llamaba: una PC instalada no se actualizaba nunca. Va en la
+// linea de comandos (main) y NO adentro de instalar(): las pruebas que llaman a la funcion no pueden registrar nada.
+// La decision y el lanzador estan separados para probarlos: la decision es pura; el lanzador recibe el ejecutor.
+
+/** El programa de la tarea, adentro de la copia instalada (relativo a `<home>`). */
+export const REL_PROGRAMA_TAREA = 'publicado/programas/sync_area.ps1';
+export const TOPE_TAREA_MS = 60000;
+export const LINEA_TAREA_OK = 'Se actualiza sola: al iniciar sesión y cada 4 horas, cuando esta PC vea la carpeta de donde se instaló.';
+export const lineaTareaFallo = (motivo) => `No se pudo dejar la actualización automática (${motivo}): para actualizar esta PC se repite «Instalar».`;
+
+/**
+ * ¿Hay que dejar la tarea de Windows que actualiza sola? Solo si la instalacion termino bien (`instalado` o
+ * `ya_instalado`), no es un simulacro, no se pidio `--sin-tarea` y NINGUNA ruta vino indicada por opcion o por variable
+ * (ni la carpeta de la PC, ni el estado, ni la configuracion de Claude, ni la nube): con una sola carpeta de prueba no
+ * se registra nada. Sin `indicadores` tampoco: ante la duda, no. Devuelve { registrar, motivo, indicadas }.
+ */
+export function debeRegistrarTarea(indicadores, { estado = null, simular = false, sinTarea = false, plataforma = process.platform } = {}) {
+    if (simular) return { registrar: false, motivo: 'simulado', indicadas: [] };
+    if (estado !== 'instalado' && estado !== 'ya_instalado') return { registrar: false, motivo: 'no_instalado', indicadas: [] };
+    if (sinTarea) return { registrar: false, motivo: 'sin_tarea', indicadas: [] };
+    if (!indicadores || typeof indicadores !== 'object') return { registrar: false, motivo: 'rutas_de_prueba', indicadas: ['(sin datos de las rutas)'] };
+    const indicadas = ['home', 'destino', 'nube', 'estado', 'usuarioHome'].filter((k) => indicadores[k]);
+    if (indicadas.length) return { registrar: false, motivo: 'rutas_de_prueba', indicadas };
+    if (plataforma !== 'win32') return { registrar: false, motivo: 'no_es_windows', indicadas: [] };
+    return { registrar: true, motivo: null, indicadas: [] };
+}
+
+/** Una linea corta y legible de lo que dijo un programa (para el aviso): la ultima con texto, sin caracteres rotos. */
+function motivoCorto(texto, max = 120) {
+    const lineas = String(texto || '').split(/\r?\n/).map((l) => l.replace(/\uFFFD/g, '?').replace(/\s+/g, ' ').trim()).filter(Boolean);
+    const ultima = (lineas[lineas.length - 1] || '').replace(/^No pude registrar la tarea:\s*/i, '').replace(/[.\s]+$/, '');
+    return ultima.length > max ? `${ultima.slice(0, max - 1)}…` : ultima;
+}
+
+/**
+ * Corre un programa SIN ventana y con tope de tiempo. En `registrarTarea` es lo unico que las pruebas reemplazan por
+ * uno de mentira (el de verdad registraria una tarea en la PC donde corren las pruebas).
+ */
+export function ejecutarSinVentana(exe, args, { timeout, env } = {}) {
+    return spawnSync(exe, args, { encoding: 'utf8', windowsHide: true, timeout, env, stdio: ['ignore', 'pipe', 'pipe'] });
+}
+
+/**
+ * Registra la tarea de Windows con el programa de la copia INSTALADA:
+ *   powershell.exe -NoProfile -ExecutionPolicy Bypass -File "<home>\publicado\programas\sync_area.ps1" -RegistrarTarea
+ * `ejecutar(exe, args, { timeout, env })` devuelve lo mismo que spawnSync ({ status, stdout, stderr, error }).
+ * Nunca lanza. Devuelve { ok, motivo, exe, args }.
+ */
+export function registrarTarea({ home, env = process.env, ejecutar = ejecutarSinVentana, topeMs = TOPE_TAREA_MS }) {
+    const programa = path.join(home, ...REL_PROGRAMA_TAREA.split('/'));
+    if (!fs.existsSync(programa)) return { ok: false, motivo: 'lo instalado no trae el programa de la tarea', exe: null, args: [] };
+    // por su ruta: en una PC con el PATH recortado "powershell.exe" a secas no se encuentra
+    const enWindows = path.join(env.SystemRoot || env.SYSTEMROOT || env.windir || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+    const exe = fs.existsSync(enWindows) ? enWindows : 'powershell.exe';
+    const args = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', programa, '-RegistrarTarea'];
+    let r;
+    try { r = ejecutar(exe, args, { timeout: topeMs, env }); }
+    catch (e) { return { ok: false, motivo: motivoCorto(e && e.message) || 'no se pudo abrir PowerShell', exe, args }; }
+    if (r && r.error) {
+        const motivo = r.error.code === 'ETIMEDOUT' ? `tardó más de ${Math.round(topeMs / 1000)} segundos`
+            : (r.error.code === 'ENOENT' ? 'esta PC no tiene PowerShell' : (motivoCorto(r.error.message) || 'no se pudo abrir PowerShell'));
+        return { ok: false, motivo, exe, args };
+    }
+    if (!r || r.status !== 0) {
+        const dicho = r ? motivoCorto(`${r.stdout || ''}\n${r.stderr || ''}`) : '';
+        return { ok: false, motivo: dicho ? `Windows no dejó: ${dicho}` : `el registro salió con código ${r ? r.status : 'desconocido'}`, exe, args };
+    }
+    return { ok: true, motivo: null, exe, args };
+}
+
+/**
+ * Lo que hace `--instalar` al terminar: decide y, si corresponde, registra la tarea. NUNCA lanza y NUNCA cambia el
+ * resultado de la instalacion: si no se pudo, devuelve la linea de aviso y la instalacion sigue saliendo con 0.
+ * Devuelve { intento, ok, motivo, linea } (`linea` es lo que se le muestra a la persona, o null).
+ */
+export function dejarActualizacionAutomatica({ indicadores, estado, simular = false, sinTarea = false, home, env = process.env, ejecutar = undefined, plataforma = process.platform }) {
+    const d = debeRegistrarTarea(indicadores, { estado, simular, sinTarea, plataforma });
+    if (!d.registrar) {
+        const linea = d.motivo === 'sin_tarea' ? 'Sin actualización automática (se pidió --sin-tarea): para actualizar esta PC se repite «Instalar».'
+            : (d.motivo === 'rutas_de_prueba' ? 'Carpetas de prueba: no se deja la actualización automática.' : null);
+        return { intento: false, ok: null, motivo: d.motivo, linea };
+    }
+    let r;
+    try { r = registrarTarea({ home, env, ...(ejecutar ? { ejecutar } : {}) }); }
+    catch (e) { r = { ok: false, motivo: motivoCorto(e && e.message) || 'falló el registro' }; }
+    return { intento: true, ok: !!r.ok, motivo: r.ok ? null : r.motivo, linea: r.ok ? LINEA_TAREA_OK : lineaTareaFallo(r.motivo) };
+}
+
+// ---------------------------------------------------------------------------------------------
 // Linea de comandos
 // ---------------------------------------------------------------------------------------------
 
 /** Las opciones que existen. Cualquier otra cosa es un error: un argumento mal escrito NO se ignora (01/10/2026: un `--help` ignorado instalo de verdad). */
 export const OPCIONES_CON_VALOR = ['nube', 'origen', 'destino', 'lista', 'nota', 'autor', 'que', 'aportar', 'perfil', 'pendrive', 'area', 'proyecto', 'clave', 'clave-publica', 'rollback', 'motivo', 'home', 'usuario-home', 'claude-dir', 'nombre', 'puesto', 'modo-permisos'];
-export const OPCIONES_BANDERA = ['publicar', 'actualizar', 'instalar', 'ver', 'aportes', 'donde', 'generar-clave', 'chequear', 'simular', 'forzar', 'reponer', 'sin-firma', 'nube-real', 'preguntar'];
+export const OPCIONES_BANDERA = ['publicar', 'actualizar', 'instalar', 'ver', 'aportes', 'donde', 'generar-clave', 'chequear', 'simular', 'forzar', 'reponer', 'sin-firma', 'nube-real', 'preguntar', 'sin-tarea'];
 
 export function parsearArgs(argv) {
     const a = { notas: [] };
@@ -2278,11 +2432,34 @@ export function parsearArgs(argv) {
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const say = (s = '') => console.log(s);
 
-function imprimirLista(titulo, items, max = 12) {
+function imprimirLista(titulo, items, max = 12, decir = say) {
     if (!items.length) return;
-    say(titulo);
-    for (const x of items.slice(0, max)) say(`    - ${x}`);
-    if (items.length > max) say(`    ... y ${items.length - max} mas`);
+    decir(titulo);
+    for (const x of items.slice(0, max)) decir(`    - ${x}`);
+    if (items.length > max) decir(`    ... y ${items.length - max} mas`);
+}
+
+/**
+ * El cierre de `--instalar` cuando QUEDO instalado (`instalado` o `ya_instalado`): lo que se le muestra a la persona, la
+ * tarea que actualiza sola y el codigo de salida, que es SIEMPRE 0: si la tarea no se pudo dejar, se avisa en una linea
+ * y la instalacion no falla por eso. La tarea se intenta solo en una instalacion de verdad (`debeRegistrarTarea`).
+ * `decir` recibe cada linea y `ejecutar` es el ejecutor del registro: los dos existen para las pruebas.
+ */
+export function cerrarInstalacion(r, { indicadores, simular = false, sinTarea = false, nube = null, nubeRecordada = false, decir = say, ejecutar = undefined, env = process.env, plataforma = process.platform } = {}) {
+    const quien = r.perfil.nombre
+        ? `${r.perfil.nombre} (área ${r.perfil.area}${r.declarado ? ', como lo dijo la persona' : ''})`
+        : `persona sin asignar (área ${r.perfil.area})${r.avisoSinPersona ? (r.desdeCarpeta ? ': quedó anotado en la carpeta de instalación' : ': el administrador ya tiene el aviso') : ''}`;
+    decir(`✓ ${r.estado === 'ya_instalado' ? 'Ya estaba instalado' : 'Instalado'}: versión ${r.version}, ${quien}.`);
+    if (!r.persona && !r.declarado) decir('  Esta persona no figura en la lista. Para que quede con su área: correr de nuevo con --area "<área>" --nombre "<nombre y apellido>" --puesto "<puesto>".');
+    if (nubeRecordada) decir(`  Instalado desde la carpeta de donde se instaló esta PC la primera vez (${nube}): las novedades las busca ahí.`);
+    else if (r.desdeCarpeta) decir('  Instalado desde esta carpeta (esta PC no ve la nube de Barack): las novedades las busca acá, cuando esta carpeta esté a la vista.');
+    decir(`  Abrí Claude en ${r.home} (tus archivos van en ${path.join(r.home, 'Trabajo')}).   Plugin: ${r.plugin.estado === 'habilitado' ? `habilitado en ${r.plugin.ruta}` : 'ya estaba habilitado'}${r.plugin.respaldo ? ` (respaldo: ${r.plugin.respaldo})` : ''}`);
+    if (r.casa && r.casa.migrado) decir(`  Las reglas viejas de Trabajo\\.claude\\rules pasaron a cuarentena: ${r.casa.migrado}`);
+    if (r.plugin.modo && r.plugin.modo.valor === 'bypassPermissions') decir('  Permisos: las conversaciones nuevas arrancan sin carteles («Omitir permisos»). Para que la app lo use, prender UNA vez en esta PC: Configuración de Claude > Claude Code > permitir el modo de omitir permisos.');
+    const tarea = dejarActualizacionAutomatica({ indicadores, estado: r.estado, simular, sinTarea, home: r.home, env, ejecutar, plataforma });
+    if (tarea.linea) decir(`  ${tarea.linea}`);
+    imprimirLista('  Avisos:', r.avisos, 10, decir);
+    return 0;
 }
 
 /**
@@ -2309,22 +2486,32 @@ export function resolverEntorno(a, env = process.env, raiz = RAIZ) {
     const proyecto = a.proyecto || (env.CLAUDE_AREA_NUBE ? 'area' : PROYECTO_POR_DEFECTO);
     if (!PROYECTOS[proyecto]) return { error: `--proyecto tiene que ser ${Object.keys(PROYECTOS).join(' o ')}` };
     const esArea = proyecto === 'area';
+    const estado = rutaEstadoPorDefecto(env);
     let nube = a.nube ? path.resolve(a.nube)
         : (esArea && env.CLAUDE_AREA_NUBE) ? path.join(path.resolve(env.CLAUDE_AREA_NUBE), PROYECTOS.area.publicado)
             : buscarNube(env.USERPROFILE || os.homedir(), proyecto);
-    // --instalar en una PC que no ve la nube de Barack (una PC de planta, un pendrive, una carpeta copiada): si este
-    // programa corre desde una carpeta publicada, se instala desde ESA carpeta. La nube, si esta a la vista, manda.
+    // Proyecto de areas, sin nube indicada, y la busqueda por nombre no dio una publicacion (no hay carpeta, o todavia
+    // le falta VERSION.json). La nube por nombre, si esta, manda siempre. Si no:
+    //   1) --instalar desde una carpeta publicada (un pendrive, una copia): se instala desde ESA carpeta;
+    //   2) si no, la carpeta de la que se instalo esta PC (`<estado>\origen.json`), si hoy esta a la vista. Vale para
+    //      --actualizar, --chequear, --ver e --instalar. Si no esta a la vista, todo sigue como antes (sin nube).
+    // Ninguna de las dos es "de prueba" ni "real" para la regla todo o nada: la primera es donde vive el programa y la
+    // segunda la dice el estado de la PC (que es de prueba o real segun sea el estado).
     let nubeDesdeCarpeta = false;
-    if (esArea && a.instalar && !a.nube && !env.CLAUDE_AREA_NUBE && !(nube && fs.existsSync(path.join(nube, 'VERSION.json')))) {
-        const aqui = publicadoDeEstePrograma(raiz);
+    let nubeRecordada = false;
+    if (esArea && !a.nube && !env.CLAUDE_AREA_NUBE && !(nube && fs.existsSync(path.join(nube, 'VERSION.json')))) {
+        const aqui = a.instalar ? publicadoDeEstePrograma(raiz) : null;
         if (aqui) { nube = aqui; nubeDesdeCarpeta = true; }
+        else if (a.instalar || a.actualizar || a.chequear || a.ver) {
+            const recordada = origenRecordado(estado);
+            if (recordada) { nube = recordada; nubeRecordada = true; }
+        }
     }
     const origen = path.resolve(a.origen || raiz);
     // la PC del proyecto de areas: --home, CLAUDE_AREA_HOME o C:\ClaudeBarack (y su `publicado\` es el destino)
     const homeIndicado = !!(a.home || env.CLAUDE_AREA_HOME);
     const home = a.home ? path.resolve(a.home) : (env.CLAUDE_AREA_HOME ? path.resolve(env.CLAUDE_AREA_HOME) : (esArea ? rutaHomePorDefecto(env) : null));
     const destino = path.resolve(a.destino || ((esArea && home) ? path.join(home, 'publicado') : raiz));
-    const estado = rutaEstadoPorDefecto(env);
     // CLAUDE_AREA_USUARIO_HOME vale lo mismo que --usuario-home: es la forma de probar el instalador de doble clic
     // (`Instalar.cmd` no recibe opciones) con las carpetas de prueba completas
     const usuarioHome = a['usuario-home'] || env.CLAUDE_AREA_USUARIO_HOME || null;
@@ -2334,8 +2521,11 @@ export function resolverEntorno(a, env = process.env, raiz = RAIZ) {
     // que rutas vinieron INDICADAS (prueba) y cuales se toman reales: la regla "todo o nada" de --instalar / --actualizar en area
     const indicadores = { home: homeIndicado, destino: !!a.destino, nube: !!(a.nube || env.CLAUDE_AREA_NUBE), estado: !!env.CLAUDE_AREA_ESTADO, usuarioHome: !!usuarioHome };
     const nubeAutomatica = !a.nube && !env.CLAUDE_AREA_NUBE;
-    return { proyecto, nube, origen, destino, home, homeIndicado, estado, claudeDir, clavePrivada, clavePublica, indicadores, nubeAutomatica, nubeDesdeCarpeta };
+    return { proyecto, nube, origen, destino, home, homeIndicado, estado, claudeDir, clavePrivada, clavePublica, indicadores, nubeAutomatica, nubeDesdeCarpeta, nubeRecordada };
 }
+
+/** Las rutas que cuentan para la regla "todo o nada": la nube no cuenta cuando es la carpeta del programa o la recordada. */
+const rutasQueCuentan = (cuales, { nubeDesdeCarpeta = false, nubeRecordada = false } = {}) => (nubeDesdeCarpeta || nubeRecordada ? cuales.filter((c) => c !== 'nube') : cuales);
 
 function imprimirUso() {
     say('Uso: node scripts/_paquete.mjs --publicar | --ver | --actualizar | --chequear | --aportar <ruta> | --aportes | --perfil "Nombre Apellido - Sector"');
@@ -2344,6 +2534,7 @@ function imprimirUso() {
     say('     PC nueva del proyecto de areas: --instalar --proyecto area [--simular] [--home <carpeta>] [--usuario-home <carpeta .claude>] [--clave-publica <archivo>] [--forzar]');
     say('       si la persona no figura en la lista: --area "<área>" --nombre "<nombre>" --puesto "<puesto>" (lo que dijo ella), o --preguntar (se lo pregunta en la consola)');
     say('       desde un pendrive o una carpeta copiada: corre igual; si la PC no ve la nube, instala desde la carpeta donde está este programa');
+    say('       al terminar deja la tarea que actualiza sola (al iniciar sesión y cada 4 horas); con --sin-tarea no la deja. Con carpetas de prueba nunca la deja');
     say('       (para PROBAR: CLAUDE_AREA_HOME, CLAUDE_AREA_NUBE, CLAUDE_AREA_ESTADO y --usuario-home, TODAS; una mezcla de prueba y real no corre)');
     say('     opciones: --nota "texto" · --simular · --forzar · --reponer · --area <id> · --proyecto area|ingenieria · --autor "..." · --que "..."');
     say('              --nube <carpeta> · --destino <carpeta> · --clave <archivo> · --clave-publica <archivo> · --sin-firma · --motivo "..." · --nube-real');
@@ -2379,18 +2570,19 @@ function main(extra = null) {
     if (extra) Object.assign(a, extra);   // lo que contesto la persona en la consola (--preguntar)
     const ent = resolverEntorno(a);
     if (ent.error) { console.error(`✗ ${ent.error}`); return 1; }
-    const { proyecto, nube, origen, destino, home, homeIndicado, estado, claudeDir, clavePrivada, clavePublica, indicadores, nubeAutomatica, nubeDesdeCarpeta } = ent;
+    const { proyecto, nube, origen, destino, home, homeIndicado, estado, claudeDir, clavePrivada, clavePublica, indicadores, nubeAutomatica, nubeDesdeCarpeta, nubeRecordada } = ent;
     const modos = ['publicar', 'actualizar', 'instalar', 'ver', 'aportar', 'aportes', 'perfil', 'pendrive', 'donde', 'generar-clave', 'chequear'].filter((k) => a[k]);
     if (modos.length !== 1) { imprimirUso(); return modos.length ? 1 : 0; }
     const modo = modos[0];
     if (a.rollback !== undefined && !/^\d+$/.test(String(a.rollback))) { console.error('✗ --rollback necesita el numero de una version publicada (ej: --rollback 3)'); return 1; }
     if (modo !== 'instalar' && (a.nombre !== undefined || a.puesto !== undefined || a.preguntar)) { console.error('✗ --nombre, --puesto y --preguntar son de --instalar. No se hizo nada.'); return 1; }
+    if (modo !== 'instalar' && a['sin-tarea']) { console.error('✗ --sin-tarea es de --instalar. No se hizo nada.'); return 1; }
 
     if (modo === 'instalar') {
         if (proyecto !== 'area' && !exigeFirma({ nube, proyecto })) { console.error('✗ --instalar es del proyecto de áreas: pasá --proyecto area (o la variable CLAUDE_AREA_NUBE)'); return 1; }
         // todo o nada: carpetas de prueba para la PC pero el settings.json real (o al reves) no corre. La carpeta desde la
-        // que corre el programa (un pendrive, una copia) no es ni de prueba ni la nube real: no entra en la cuenta.
-        const mezcla = mezclaPruebaReal(indicadores, nubeDesdeCarpeta ? ['home', 'estado', 'usuarioHome'] : ['home', 'nube', 'estado', 'usuarioHome']);
+        // que corre el programa (un pendrive, una copia) y la recordada no son ni de prueba ni la nube real: no entran en la cuenta.
+        const mezcla = mezclaPruebaReal(indicadores, rutasQueCuentan(['home', 'nube', 'estado', 'usuarioHome'], ent));
         if (mezcla) { console.error(`✗ ${mezcla} Para probar: CLAUDE_AREA_HOME, CLAUDE_AREA_NUBE, CLAUDE_AREA_ESTADO y --usuario-home, las cuatro.`); return 1; }
         // la PC del administrador no se instala sola de verdad
         if (!indicadores.home && !a.forzar) {
@@ -2403,7 +2595,7 @@ function main(extra = null) {
         const modoPermisos = pedido === undefined ? MODO_PERMISOS_AREA : (pedido === 'no' ? null : pedido);
         const declarado = (a.area !== undefined || a.nombre !== undefined || a.puesto !== undefined) ? { area: a.area ?? '', nombre: a.nombre ?? '', puesto: a.puesto ?? '' } : null;
         if (declarado && !String(declarado.area).trim()) { console.error('✗ Con --nombre o --puesto hace falta --area (el área que dijo la persona). No se hizo nada.'); return 1; }
-        const r = instalar({ nube, home, estado, claudeDir, clavePublica: a['clave-publica'] ? path.resolve(a['clave-publica']) : null, identidad: identidadLocal(), simular: !!a.simular, declarado, desdeCarpeta: nubeDesdeCarpeta, modoPermisos });
+        const r = instalar({ nube, home, estado, claudeDir, clavePublica: a['clave-publica'] ? path.resolve(a['clave-publica']) : null, identidad: identidadLocal(), simular: !!a.simular, declarado, desdeCarpeta: nubeDesdeCarpeta || nubeRecordada, modoPermisos });
         if (r.estado === 'simulado') {
             say(`Simulado: --instalar (versión ${r.version}, ${r.perfil.nombre || 'persona sin asignar'}, área ${r.perfil.area}) escribiría ${r.plan.length} cosa(s) y no escribió ninguna:`);
             for (const p of r.plan) say(`    - ${p.ruta}  (${p.que})`);
@@ -2417,17 +2609,7 @@ function main(extra = null) {
             for (const e of r.errores.slice(0, 20)) console.error(`    - ${e}`);
             return 1;
         }
-        const quien = r.perfil.nombre
-            ? `${r.perfil.nombre} (área ${r.perfil.area}${r.declarado ? ', como lo dijo la persona' : ''})`
-            : `persona sin asignar (área ${r.perfil.area})${r.avisoSinPersona ? (r.desdeCarpeta ? ': quedó anotado en la carpeta de instalación' : ': el administrador ya tiene el aviso') : ''}`;
-        say(`✓ ${r.estado === 'ya_instalado' ? 'Ya estaba instalado' : 'Instalado'}: versión ${r.version}, ${quien}.`);
-        if (!r.persona && !r.declarado) say('  Esta persona no figura en la lista. Para que quede con su área: correr de nuevo con --area "<área>" --nombre "<nombre y apellido>" --puesto "<puesto>".');
-        if (r.desdeCarpeta) say('  Instalado desde esta carpeta (esta PC no ve la nube de Barack): no se actualiza sola; para actualizarla se instala de nuevo desde una carpeta más nueva.');
-        say(`  Abrí Claude en ${r.home} (tus archivos van en ${path.join(r.home, 'Trabajo')}).   Plugin: ${r.plugin.estado === 'habilitado' ? `habilitado en ${r.plugin.ruta}` : 'ya estaba habilitado'}${r.plugin.respaldo ? ` (respaldo: ${r.plugin.respaldo})` : ''}`);
-        if (r.casa && r.casa.migrado) say(`  Las reglas viejas de Trabajo\\.claude\\rules pasaron a cuarentena: ${r.casa.migrado}`);
-        if (r.plugin.modo && r.plugin.modo.valor === 'bypassPermissions') say('  Permisos: las conversaciones nuevas arrancan sin carteles («Omitir permisos»). Para que la app lo use, prender UNA vez en esta PC: Configuración de Claude > Claude Code > permitir el modo de omitir permisos.');
-        imprimirLista('  Avisos:', r.avisos, 10);
-        return 0;
+        return cerrarInstalacion(r, { indicadores, simular: !!a.simular, sinTarea: !!a['sin-tarea'], nube, nubeRecordada });
     }
 
     if (modo === 'donde') {
@@ -2503,11 +2685,14 @@ function main(extra = null) {
         const enArea = exigeFirma({ nube, proyecto });
         if (enArea) {
             // todo o nada tambien aca: un --destino de prueba con la nube real escribiria la salud de una PC falsa en el buzon real
-            const mezcla = mezclaPruebaReal({ ...indicadores, home: indicadores.home || indicadores.destino }, ['home', 'nube', 'estado']);
+            // (la nube recordada no entra en la cuenta: la dice el estado de la PC, que es de prueba o real segun sea el)
+            const mezcla = mezclaPruebaReal({ ...indicadores, home: indicadores.home || indicadores.destino }, rutasQueCuentan(['home', 'nube', 'estado'], ent));
             if (mezcla) { console.error(`✗ ${mezcla}`); return 1; }
         }
-        // las reglas de la casa se regeneran solo con una carpeta de PC INDICADA (--home / CLAUDE_AREA_HOME): nunca con la real por defecto
-        const r = actualizar({ destino, nube, reponer: !!a.reponer, simular: !!a.simular, area: a.area || null, clavePublica, proyecto, home: enArea && homeIndicado ? home : null });
+        // las reglas de la casa se regeneran solo con una carpeta de PC INDICADA (--home / CLAUDE_AREA_HOME): nunca con la real por defecto.
+        // Con la nube recordada, la salud se deja solo si esa carpeta trae la forma de la nube (su `4- BUZON` al lado): en
+        // una copia con otro nombre no se escribe nada adentro (misma regla que al instalar desde una carpeta).
+        const r = actualizar({ destino, nube, reponer: !!a.reponer, simular: !!a.simular, area: a.area || null, clavePublica, proyecto, home: enArea && homeIndicado ? home : null, sinSalud: nubeRecordada && !tieneFormaDeNube(nube) });
         const pie = () => { if (r.salud) say(`  Salud de esta PC: ${r.salud}`); for (const av of r.avisos || []) say(`  Aviso: ${av}`); };
         if (r.estado === 'esperar') { say(`⏳ ${r.mensaje}`); pie(); return 3; }
         if (r.estado === 'ocupado') { say(`⏳ ${r.mensaje}`); return 3; }
@@ -2544,7 +2729,7 @@ function main(extra = null) {
         const r = ver({ destino, nube });
         say(r.instalada ? `Instalada en esta PC: version ${r.instalada.version} (${r.instalada.fecha})` : 'Instalada en esta PC: nada (esta PC no recibe la base, o todavia no se instalo)');
         if (r.estadoNube === 'sin_nube') say(`Nube: no encuentro la carpeta "${nombreNube(proyecto)}"`);
-        else if (r.publicada) say(`Publicada en la nube: version ${r.publicada.version} (${r.publicada.fecha}${r.publicada.firmada ? ', firmada' : ', sin firma'})`);
+        else if (r.publicada) say(`Publicada en ${nubeRecordada ? `la carpeta de donde se instaló esta PC (${nube})` : 'la nube'}: version ${r.publicada.version} (${r.publicada.fecha}${r.publicada.firmada ? ', firmada' : ', sin firma'})`);
         else say(`Nube: todavia no hay una version completa (${r.mensaje})`);
         if (r.instalada && r.publicada && r.publicada.version > r.instalada.version) say(`\nFaltan ${r.publicada.version - r.instalada.version} version(es). Lo nuevo:\n`);
         for (const n of r.novedades) say(`${n.texto}\n`);
@@ -2596,10 +2781,10 @@ async function conPreguntas() {
     const ent = resolverEntorno(a);
     if (ent.error || !ent.nube || !ent.home) return main();
     // lo que main() va a rechazar igual (mezcla de prueba y real, la PC del administrador) no merece preguntas
-    if (mezclaPruebaReal(ent.indicadores, ent.nubeDesdeCarpeta ? ['home', 'estado', 'usuarioHome'] : ['home', 'nube', 'estado', 'usuarioHome'])) return main();
+    if (mezclaPruebaReal(ent.indicadores, rutasQueCuentan(['home', 'nube', 'estado', 'usuarioHome'], ent))) return main();
     if (!ent.indicadores.home && !a.forzar && pcDelAdministrador({ env: process.env, home: ent.home, raizScript: RAIZ }).length) return main();
     let vista = null;
-    try { vista = instalar({ nube: ent.nube, home: ent.home, estado: ent.estado, claudeDir: ent.claudeDir, clavePublica: a['clave-publica'] ? path.resolve(a['clave-publica']) : null, identidad: identidadLocal(), simular: true, desdeCarpeta: ent.nubeDesdeCarpeta }); } catch { vista = null; }
+    try { vista = instalar({ nube: ent.nube, home: ent.home, estado: ent.estado, claudeDir: ent.claudeDir, clavePublica: a['clave-publica'] ? path.resolve(a['clave-publica']) : null, identidad: identidadLocal(), simular: true, desdeCarpeta: ent.nubeDesdeCarpeta || ent.nubeRecordada }); } catch { vista = null; }
     if (!vista || vista.estado !== 'simulado' || vista.persona || vista.declarado) return main();
     const { createInterface } = await import('node:readline/promises');
     const rl = createInterface({ input: process.stdin, output: process.stdout });

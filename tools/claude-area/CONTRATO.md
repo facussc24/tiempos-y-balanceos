@@ -15,7 +15,7 @@ acá, lo cambia ACÁ y lo dice en su informe: dos programas no pueden suponer fo
 | Lo que arma el administrador | `…\4- BUZON\TABLERO.md`, `INVENTARIO.md` y la lista `conocidos.json` (la carga el administrador). Los arman `tablero.mjs` e `inventario_resumen.mjs`; solo los ve el administrador | idem |
 | En cada PC | `C:\ClaudeBarack\` es la carpeta que la persona ABRE en Claude (la raíz: así `publicado\conocimiento\...` queda adentro y se lee sin pedir permiso). Adentro: `publicado\` (copia verificada de `contenido\`; se repone sola), `.claude\rules\casa.md` (las reglas de la casa, regeneradas en cada actualización), `CLAUDE.md` (de la persona, se crea una vez), `Trabajo\` (SUS archivos; con un `LEEME.txt` si está vacía), `perfil.json`, `instalado.json` (el marcador, se escribe al final) | variable `CLAUDE_AREA_HOME` |
 | Configuración de Claude del usuario | `%USERPROFILE%\.claude\settings.json`: el instalador agrega SOLO `extraKnownMarketplaces.barack` (directory → `<HOME>\publicado\marketplace`) `enabledPlugins["barack-area@barack"]` y, solo si la PC no tiene uno elegido, `permissions.defaultMode` (ver "El modo de permisos"), con respaldo `settings.json.respaldo-<fecha>` | variable `CLAUDE_CONFIG_DIR` (la misma que lee Claude) |
-| Estado de la PC | `%LOCALAPPDATA%\BarackEquipo\` (log, estado, clave pública en modo sin administrador) | variable `CLAUDE_AREA_ESTADO` |
+| Estado de la PC | `%LOCALAPPDATA%\BarackEquipo\` (log, estado, clave pública en modo sin administrador, y `origen.json`: de qué carpeta publicada se instaló la PC) | variable `CLAUDE_AREA_ESTADO` |
 | Clave privada de firma | `%USERPROFILE%\.claude-area\publicador.key` (solo la PC del administrador; nunca al repo ni a la nube) | variable `CLAUDE_AREA_CLAVE` |
 | Clave pública | `publicador.pub` (PEM): `C:\Program Files\Claude Barack\` con administrador, o `%LOCALAPPDATA%\BarackEquipo\` sin él | — |
 
@@ -95,7 +95,7 @@ no los interpreta por su cuenta. Lo que sigue es para saber qué esperar, no par
 
 | Qué | Variable del contrato | Opción | Sin nada |
 |---|---|---|---|
-| Nube publicada | `CLAUDE_AREA_NUBE` → `<ella>\1- PUBLICADO` (implica `--proyecto area`) | `--nube <carpeta>` | `--proyecto area` la busca por patrón en la biblioteca; por defecto sigue siendo `Base Claude Ingenieria` |
+| Nube publicada | `CLAUDE_AREA_NUBE` → `<ella>\1- PUBLICADO` (implica `--proyecto area`) | `--nube <carpeta>` | `--proyecto area` la busca por patrón en la biblioteca y, si no da una publicación, usa la carpeta de la que se instaló la PC (`<estado>\origen.json`; ver "Cómo se actualiza una PC"); por defecto sigue siendo `Base Claude Ingenieria` |
 | Destino en la PC | `CLAUDE_AREA_HOME` → `<ella>\publicado` | `--destino <carpeta>` | la carpeta de arriba de la carpeta del script |
 | Clave privada (solo quien publica) | `CLAUDE_AREA_CLAVE` | `--clave <archivo>` | `%USERPROFILE%\.claude-area\publicador.key` |
 | Clave pública (la PC que actualiza) | `CLAUDE_AREA_ESTADO` → `<ella>\publicador.pub` (y SOLO ahí) | `--clave-publica <archivo>` | `%ProgramFiles%\Claude Barack\` y después `%LOCALAPPDATA%\BarackEquipo\`; si no hay, la PC no exige firma y lo dice |
@@ -182,10 +182,11 @@ PC de planta no tienen Node.
 
 ## Instalar una PC nueva (`--instalar`, proyecto `area`) — 01/10/2026
 
-`node <1- PUBLICADO>\contenido\programas\_paquete.mjs --instalar --proyecto area --nube <1- PUBLICADO>` (es lo que
+`node <1- PUBLICADO>\contenido\programas\_paquete.mjs --instalar --proyecto area` (es lo que
 hace Claude cuando alguien abre esa carpeta y escribe "instalá": `1- PUBLICADO\CLAUDE.md`, fuente
-`tools/claude-area/hola/CLAUDE.md`). Opciones: `--home` (o `CLAUDE_AREA_HOME`), `--claude-dir` (o `CLAUDE_CONFIG_DIR`),
-`--clave-publica`, `CLAUDE_AREA_ESTADO`. Pasos, en este orden; cada uno repetible:
+`tools/claude-area/hola/CLAUDE.md`; sin ninguna ruta: una instalación de verdad no lleva ninguna, y con `--nube` sola se
+niega por "todo o nada"). Opciones: `--home` (o `CLAUDE_AREA_HOME`), `--claude-dir` (o `CLAUDE_CONFIG_DIR`),
+`--clave-publica`, `CLAUDE_AREA_ESTADO`, `--sin-tarea`. Pasos, en este orden; cada uno repetible:
 
 1. **La clave pública**: la indicada, si no la ya fijada en `<ESTADO>\publicador.pub`, si no (por única vez) la que
    viaja en `1- PUBLICADO\publicador.pub`, que queda fijada. **Riesgo (confianza en el primer uso):** quien pueda escribir
@@ -205,11 +206,56 @@ hace Claude cuando alguien abre esa carpeta y escribe "instalá": `1- PUBLICADO\
    publicado (no se borra); el `Trabajo\CLAUDE.md` de la persona no se toca.
 6. **El plugin**: `settings.json` del usuario con solo las dos claves de arriba, respaldo antes; un `settings.json` que no
    se entiende no se toca y la instalación queda sin marcador.
-7. **El marcador `instalado.json`**, al final, y `salud.json` con `estado: "instalado"`. Correrlo de nuevo con todo igual
-   da `ya_instalado` y no escribe nada.
+7. **De dónde se instaló y el marcador**: `<ESTADO>\origen.json` (si ya dice lo mismo no se reescribe) y, al final,
+   `instalado.json`; después `salud.json` con `estado: "instalado"`. Correrlo de nuevo con todo igual da `ya_instalado`
+   y no escribe nada.
+8. **La tarea que actualiza sola**, solo por línea de comandos y solo en una instalación de verdad (ver "Cómo se
+   actualiza una PC"). Si no se puede dejar, se avisa en una línea y la instalación sale igual con 0.
 
 Códigos de `--instalar`: 0 instalado o ya instalado · 1 error · 3 esperar · 4 sin clave, firma rechazada o versión que
 retrocede. El marcador se mira junto con `publicado\marketplace\.claude-plugin\marketplace.json`: los dos, o se repite.
+
+### Cómo se actualiza una PC (03/10/2026)
+
+Hasta ese día una PC instalada no se actualizaba nunca: ningún programa llamaba a `sync_area.ps1 -RegistrarTarea`, y
+`--actualizar` / `--chequear` buscaban la nube solo por nombre (una PC instalada desde un OneDrive de otra cuenta, una
+carpeta de red o un pendrive no la encontraba). Ahora:
+
+- **La PC recuerda de dónde se instaló.** `--instalar`, al terminar bien, deja `<ESTADO>\origen.json` (escritura
+  atómica; con `--simular` solo se anota en el plan):
+  ```jsonc
+  { "publicado": "<ruta absoluta de la carpeta publicada que se usó>", "desde": "nube|carpeta", "cuando": "2026-10-03T18:00:00" }
+  //   desde: "nube" = se encontró por nombre o se indicó; "carpeta" = la del programa (pendrive, copia) o la ya recordada
+  ```
+- **Cuál es la nube** (proyecto `area`, sin `--nube` ni `CLAUDE_AREA_NUBE`; `resolverEntorno`), en este orden: 1) la
+  buscada por nombre, si trae `VERSION.json`; 2) solo en `--instalar`, la carpeta publicada desde la que corre el
+  programa; 3) la de `origen.json`, si HOY tiene `VERSION.json` y `MANIFIESTO.json` (`nubeRecordada: true`). El punto 3
+  vale para `--actualizar`, `--chequear`, `--ver` e `--instalar`; `--donde` y `--publicar` siguen solo por nombre. Si la
+  carpeta recordada no está a la vista (pendrive desenchufado, red caída), todo sigue como antes: `sin_nube`.
+- **Lo que NO cambia**: la verificación (clave fijada en la PC, manifiesto firmado, hash de cada archivo, la versión
+  nunca retrocede): `origen.json` solo dice DÓNDE mirar, y una carpeta recordada alterada no instala nada (códigos 3 o
+  4). Para "todo o nada" la recordada cuenta igual que la carpeta del programa: ni de prueba ni real. Y la salud se deja
+  solo si esa carpeta trae la forma de la nube (`CLAUDE POR AREA\1- PUBLICADO`, con su `4- BUZON` al lado:
+  `tieneFormaDeNube`); en una copia con otro nombre no se escribe nada adentro.
+- **La tarea la deja `--instalar`**, en la línea de comandos (no adentro de la función `instalar()`: las pruebas que la
+  llaman no pueden registrar nada). Cuando terminó en `instalado` o `ya_instalado` y NINGUNA ruta vino indicada por
+  opción o variable (ni la PC, ni el estado, ni la configuración de Claude, ni la nube) ni es un `--simular`
+  (`debeRegistrarTarea`), corre sin ventana y con tope de 60 s (`registrarTarea`):
+  `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "<HOME>\publicado\programas\sync_area.ps1" -RegistrarTarea`.
+  Si sale bien dice `Se actualiza sola: al iniciar sesión y cada 4 horas, cuando esta PC vea la carpeta de donde se
+  instaló.`; si falla, `No se pudo dejar la actualización automática (<motivo corto>): para actualizar esta PC se
+  repite «Instalar».` y la instalación NO falla por eso (sale con 0). `--sin-tarea` no la registra. Repetir «Instalar»
+  en una PC ya instalada también la deja. La primera corrida de la tarea es a los 10 minutos, y después en cada inicio
+  de sesión y cada 4 horas.
+- **La tarea con la carpeta recordada** (`sync_area.ps1`): si la nube no se ve por nombre (o le falta `VERSION.json`) y
+  `origen.json` apunta a una carpeta a la vista, no le pasa `--nube` al programa (la elige él) y usa el buzón de esa
+  carpeta solo si trae la forma de la nube; si no, los avisos quedan en la cola local. Si no se ve ni la nube ni la
+  carpeta recordada, `estado.json` dice `actualizar: sin_nube` y no es un error. `estado.json` lleva `nube`:
+  `por_nombre` · `indicada` · `recordada` · `sin_nube`. Para probarla: `-HomeDir` y `-EstadoDir` sin `-Nube` corre solo
+  si ese estado recuerda una carpeta a la vista (y entonces NO busca la nube por nombre); con `-RegistrarTarea` no.
+- **Lo que no se probó**: el registro de verdad en el Programador de tareas de Windows (ninguna prueba ni ensayo
+  registra una tarea) y la corrida que lanza la tarea registrada (`conhost --headless`). Sí se probó lo que la tarea
+  corre: el programa de la copia instalada, sin ninguna ruta, en una PC entera armada en una carpeta temporal.
 
 ### El modo de permisos (03/10/2026)
 
@@ -228,7 +274,7 @@ elegido. `--modo-permisos <default|acceptEdits|plan|auto|bypassPermissions>` lo 
   opción ni acepta ningún cartel por la persona** (no escribe `skipDangerousModePermissionPrompt`): es un paso de quien
   instala, una vez por PC (hoja 8).
 - **Medido:** con el programa de la app y una configuración recién creada, la conversación arranca en
-  `bypassPermissions` (`ensayo_pc_nueva.sh`, 7 de 7). Qué hace la app si la opción no está prendida no se probó.
+  `bypassPermissions` (`ensayo_pc_nueva.sh`, 8 de 8). Qué hace la app si la opción no está prendida no se probó.
 - **Alternativa a evaluar después de la reunión:** el modo `auto` (la misma documentación lo recomienda en lugar de
   «Omitir permisos»: no pide permiso en lo de todos los días, un clasificador frena lo riesgoso, acepta aprobaciones
   dichas en la conversación y no necesita prender nada a mano). No se probó con los mails ni las presentaciones.
@@ -242,9 +288,10 @@ Una PC de planta no podía instalar, y si instalaba quedaba sin área.
   biblioteca no está a la vista (o su `1- PUBLICADO` todavía no trae `VERSION.json`), el programa instala desde la
   carpeta publicada **en la que él mismo vive** (`<carpeta>\contenido\programas\_paquete.mjs` con `VERSION.json` y
   `MANIFIESTO.json` arriba de `contenido\`: `publicadoDeEstePrograma`). Si la nube está a la vista, manda la nube. Lo
-  demás no cambia: clave fijada en el primer uso, manifiesto firmado, hash de cada archivo. Vale solo para
-  `--instalar`; `--actualizar` y `--chequear` siguen mirando la nube (una PC instalada así da `sin_nube`, con su
-  `instalada`, y no se actualiza sola: se instala de nuevo desde una carpeta más nueva). El marcador lleva
+  demás no cambia: clave fijada en el primer uso, manifiesto firmado, hash de cada archivo. Instalar desde la carpeta
+  del programa vale solo para `--instalar`; después, `--actualizar`, `--chequear` y `--ver` usan la carpeta RECORDADA
+  (`<estado>\origen.json`: ver "Cómo se actualiza una PC"), así que una PC instalada así se actualiza sola cuando esa
+  carpeta está a la vista con una versión más nueva; si no está a la vista da `sin_nube`, con su `instalada`. El marcador lleva
   `"origen": "carpeta"`. El buzón se usa solo si la carpeta trae la forma de la nube (`CLAUDE POR AREA\1- PUBLICADO`:
   el `4- BUZON` se crea al lado); en una copia con otro nombre, o en un `1- PUBLICADO` suelto, no se escribe nada. Para
   la regla "todo o nada", la carpeta del programa no cuenta ni como de prueba ni como real; por eso "la PC del
@@ -276,9 +323,13 @@ Una PC de planta no podía instalar, y si instalaba quedaba sin área.
 - **Ensayo sin tocar nada real:** `bash tools/claude-area/ensayo_pc_nueva.sh [área]` publica con una clave temporal,
   copia a un "pendrive", instala con el Node del pendrive sin Node ni Git en el PATH y sin nube, y arranca la primera
   conversación con el programa de la app y una configuración de Claude recién creada: el plugin se carga solo en esa
-  primera conversación y el aviso de arranque sabe quién es (medido el 03/10/2026 con el programa 2.1.286: 6 de 6,
-  instalación en 5 segundos). Lo que el ensayo no ve: instalar el programa Claude e iniciar sesión, los carteles de la
-  app, y lo que una PC de la empresa prohíba (crear `C:\ClaudeBarack`, correr un programa desde un pendrive).
+  primera conversación y el aviso de arranque sabe quién es. Después publica una versión 2 en la carpeta del pendrive y,
+  desde la copia instalada y sin decirle la nube, `--chequear` ve la novedad y `--actualizar` deja la versión 2 (con
+  `--paquete` ese paso se saltea, lo dice, y quedan 7 de 7: no está la clave que firmó). En ese mismo paso corre la tarea
+  de la copia instalada sin Node en el PATH (usa el del plugin). Medido el 03/10/2026 con el programa 2.1.286: 8 de 8,
+  instalación en 7 a 12 segundos. Lo que el ensayo no ve: instalar el programa Claude e iniciar sesión, los carteles de la
+  app, lo que una PC de la empresa prohíba (crear `C:\ClaudeBarack`, correr un programa desde un pendrive) y el
+  registro de la tarea de Windows (con carpetas de prueba el instalador no la deja).
 
 **Lo que no puede pasar (incidente del 01/10: un `--help` ignorado instaló de verdad y tocó el `settings.json` real):**
 - `--help` / `-h` muestran el uso y salen con 0 sin tocar nada. Una opción que el programa no conoce, o un argumento
@@ -290,7 +341,8 @@ Una PC de planta no podía instalar, y si instalaba quedaba sin área.
   cuatro; para instalar de verdad, ninguna. `--actualizar` en `area`: lo mismo con PC (`--home`/`--destino`), nube y
   estado; y las reglas de la casa se regeneran solo con una carpeta de PC indicada, nunca con la real por defecto. `sync_area.ps1`:
   `-HomeDir`/`-Nube`/`-EstadoDir` (o sus variables) las tres o ninguna, si no sale con 2 antes de escribir nada; la
-  tarea registrada no pasa ninguna.
+  tarea registrada no pasa ninguna. La nube que no cuenta en esta regla es la carpeta del programa y la recordada en
+  `origen.json` (ver "Cómo se actualiza una PC").
 - **La PC del administrador no se instala sola.** Una instalación de verdad (sin rutas de prueba) se niega si en la PC
   está la clave privada de firma en su lugar real, si la carpeta de la PC está adentro de un repo git, o si el programa
   corre desde el repo de origen (el que tiene la lista de publicación): código 1 con el motivo, salvo `--forzar`.
@@ -304,7 +356,8 @@ Una PC de planta no podía instalar, y si instalaba quedaba sin área.
 sin pisar: si el nombre existe agrega `-2`; `-Simular` solo lo lista), 3) `inventario.ps1` una vez por semana
 (marca `<ESTADO>\inventario-ultimo.txt`), 4) completa en la salud `politica`, `python`, `ve_Y`, `ve_Z`,
 `disco_libre_gb`, 5) mails: gancho sin uso. Deja `<ESTADO>\estado.json` y `sync.log`; sale siempre con 0. La tarea de
-Windows ("Barack - Claude por area": al iniciar sesión y cada 4 h, sin ventana) se registra SOLO con `-RegistrarTarea`;
+Windows ("Barack - Claude por area": al iniciar sesión y cada 4 h, sin ventana) se registra SOLO con `-RegistrarTarea`,
+que desde el 03/10/2026 llama `--instalar` al terminar una instalación de verdad (ver "Cómo se actualiza una PC");
 `-VerTarea` la muestra sin registrar.
 
 ## Lo que usa el plugin `barack-area` (aviso de arranque y controles) — 01/10/2026
@@ -331,7 +384,7 @@ frena cada control: `NOTAS.md` del plugin.
   `<pc>` = `perfil.json → pc`, o el nombre de Windows; solo letras, números, punto, guion y guion bajo.
   El mismo freno repetido dentro de 10 minutos no escribe otro archivo.
 - **Cola local**: si la nube no está, el aviso queda en `<ESTADO>\avisos-pendientes\<pc>\` con el mismo nombre y
-  formato. **Falta que la tarea de la PC los suba** a `4- BUZON\avisos\<pc>\` (mover, no copiar). Marcas propias
+  formato. Los sube la tarea de la PC a `4- BUZON\avisos\<pc>\` (mover, no copiar; paso 2 de `sync_area.ps1`). Marcas propias
   del plugin en `<ESTADO>\`: `avisos-recientes.json` y `aviso-<tipo>.txt`.
 - **Lo instalado no lo cambia el asistente**: Write, Edit o un comando directo sobre `<HOME>\publicado\`,
   `<HOME>\perfil.json`, `%USERPROFILE%\.claude\plugins\` o `%USERPROFILE%\.claude\settings*.json` se frenan (un
