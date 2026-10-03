@@ -1843,11 +1843,14 @@ export function buscarPersona(personas, { usuario, pc }) {
         || null;
 }
 
-/** ¿La lista de personas tiene a este usuario (o a esta PC) dado de baja? Una baja no puede declararse un area. */
-export function estaDeBaja(personas, { usuario, pc }) {
+/**
+ * ¿La lista de personas tiene a este USUARIO dado de baja? Una baja no puede declararse un area. Se mira solo el
+ * usuario de Windows: la PC de quien se fue la hereda otra persona, y esa si tiene que poder decir su area.
+ */
+export function estaDeBaja(personas, { usuario }) {
     const lista = personas && Array.isArray(personas.personas) ? personas.personas : [];
     const n = (s) => normTexto(String(s || ''));
-    return lista.some((p) => p && typeof p === 'object' && p.baja && ((n(p.usuario_windows) && n(p.usuario_windows) === n(usuario)) || (n(p.pc) && n(p.pc) === n(pc))));
+    return lista.some((p) => p && typeof p === 'object' && p.baja && n(p.usuario_windows) && n(p.usuario_windows) === n(usuario));
 }
 
 /** Como se le dice a cada area cuando se le habla a la persona (el orden es el del menu del instalador). */
@@ -1868,7 +1871,7 @@ export function areaDeclarada(texto) {
     if (AREAS.includes(t) && t !== AREA_COMUN) return t;
     const porNombre = AREAS_PARA_ELEGIR.find(([, nombre]) => normTexto(nombre) === t);
     if (porNombre) return porNombre[0];
-    return OTROS_NOMBRES_DE_AREA[t] || null;
+    return Object.hasOwn(OTROS_NOMBRES_DE_AREA, t) ? OTROS_NOMBRES_DE_AREA[t] : null;   // hasOwn: "constructor" no es un area
 }
 
 /**
@@ -2020,6 +2023,9 @@ export function regenerarCasa({ home, publicado, perfil = null, simular = false,
     return res;
 }
 
+/** El perfil de Windows de verdad (no el que diga la variable USERPROFILE), o null. */
+export function perfilDeWindows() { try { return os.userInfo().homedir || null; } catch { return null; } }
+
 /** ¿`ruta` esta adentro de un repo git? Devuelve la raiz del repo o null. */
 export function dentroDeRepoGit(ruta) {
     let d = path.resolve(ruta || '.');
@@ -2036,10 +2042,14 @@ export function dentroDeRepoGit(ruta) {
  * tiene la clave privada de firma en su lugar real, la carpeta de la PC esta adentro de un repo git, o este programa
  * corre desde el repo de origen (el que tiene la lista de publicacion). Devuelve la lista de motivos (vacia = no).
  */
-export function pcDelAdministrador({ env = process.env, home, raizScript = null }) {
+export function pcDelAdministrador({ env = process.env, home, raizScript = null, perfilReal = perfilDeWindows() }) {
     const motivos = [];
-    const clave = rutaClavePrivadaPorDefecto(env);
-    if (fs.existsSync(clave)) motivos.push(`tiene la clave privada de firma (${clave})`);
+    // la clave se busca donde dice el entorno Y en el perfil de Windows de verdad: una corrida con USERPROFILE cambiado
+    // (una prueba mal armada) no puede hacer pasar esta PC por una PC cualquiera
+    const claves = [rutaClavePrivadaPorDefecto(env)];
+    if (perfilReal) claves.push(path.join(perfilReal, '.claude-area', NOMBRE_CLAVE_PRIVADA));
+    const clave = claves.find((c) => fs.existsSync(c));
+    if (clave) motivos.push(`tiene la clave privada de firma (${clave})`);
     const repoHome = home ? dentroDeRepoGit(home) : null;
     if (repoHome) motivos.push(`la carpeta de la PC está adentro de un repo git (${repoHome})`);
     if (raizScript && dentroDeRepoGit(raizScript) && fs.existsSync(path.join(raizScript, ...REL_LISTA.split('/')))) motivos.push(`este programa corre desde el repo de origen (${raizScript})`);
@@ -2092,7 +2102,7 @@ export function instalar({ nube, home, estado, claudeDir, clavePublica = null, i
     }
     // Instalando desde una carpeta (pendrive o copia): el buzon solo se usa si la carpeta trae la forma de la nube
     // (`1- PUBLICADO` con su `4- BUZON` al lado); si no, no se escribe nada adentro de lo publicado.
-    const hayBuzon = !desdeCarpeta || normTexto(path.basename(nube)) === normTexto(PROYECTOS.area.publicado);
+    const hayBuzon = !desdeCarpeta || (normTexto(path.basename(nube)) === normTexto(PROYECTOS.area.publicado) && normTexto(path.basename(path.dirname(nube))) === normTexto(PROYECTOS.area.carpeta));
     const publicado = path.join(home, 'publicado');
     res.publicado = publicado;
 
@@ -2385,7 +2395,7 @@ function main(extra = null) {
         }
         const quien = r.perfil.nombre
             ? `${r.perfil.nombre} (área ${r.perfil.area}${r.declarado ? ', como lo dijo la persona' : ''})`
-            : `persona sin asignar (área ${r.perfil.area})${r.avisoSinPersona ? ': el administrador ya tiene el aviso' : ''}`;
+            : `persona sin asignar (área ${r.perfil.area})${r.avisoSinPersona ? (r.desdeCarpeta ? ': quedó anotado en la carpeta de instalación' : ': el administrador ya tiene el aviso') : ''}`;
         say(`✓ ${r.estado === 'ya_instalado' ? 'Ya estaba instalado' : 'Instalado'}: versión ${r.version}, ${quien}.`);
         if (!r.persona && !r.declarado) say('  Esta persona no figura en la lista. Para que quede con su área: correr de nuevo con --area "<área>" --nombre "<nombre y apellido>" --puesto "<puesto>".');
         if (r.desdeCarpeta) say('  Instalado desde esta carpeta (esta PC no ve la nube de Barack): no se actualiza sola; para actualizarla se instala de nuevo desde una carpeta más nueva.');
@@ -2569,7 +2579,15 @@ async function conPreguntas() {
     const { createInterface } = await import('node:readline/promises');
     const rl = createInterface({ input: process.stdin, output: process.stdout });
     let dicho = null;
-    try { dicho = await pedirPersona({ preguntar: (t) => rl.question(t), decir: say }); } catch { dicho = null; } finally { rl.close(); }
+    // Ctrl+C, Ctrl+Z o cerrar la ventana en medio de las preguntas CANCELA: no se instala a medias ni sin area por error
+    // (seguir sin area es apretar Enter en la primera pregunta)
+    const CORTE = Symbol('corte');
+    const cerrada = new Promise((resolver) => rl.once('close', () => resolver(CORTE)));
+    rl.on('SIGINT', () => rl.close());
+    const preguntar = async (t) => { const r = await Promise.race([rl.question(t), cerrada]); if (r === CORTE) throw new Error('cancelado'); return r; };
+    let cancelado = false;
+    try { dicho = await pedirPersona({ preguntar, decir: say }); } catch { cancelado = true; } finally { rl.close(); }
+    if (cancelado) { console.error('\n✗ Cancelado: no se instaló nada. Para instalar, abrir «Instalar» de nuevo.'); return 1; }
     say('');
     return main(dicho ? { area: dicho.area, nombre: dicho.nombre, puesto: dicho.puesto } : null);
 }
@@ -2586,7 +2604,10 @@ export function mensajeDeError(e) {
 }
 
 // Solo corre como script; importado (por el test) no hace nada.
-const comoScript = process.argv[1] && path.resolve(process.argv[1]).toLowerCase() === path.resolve(fileURLToPath(import.meta.url)).toLowerCase();
+// Se comparan las rutas REALES: si la carpeta se alcanza por un enlace (una union de carpetas), Node resuelve una y no
+// la otra, y sin esto el programa no hacia nada y salia con 0 (el instalador de doble clic decia LISTO).
+const rutaReal = (p) => { try { return fs.realpathSync.native(p); } catch { return path.resolve(p); } };
+const comoScript = process.argv[1] && rutaReal(process.argv[1]).toLowerCase() === rutaReal(fileURLToPath(import.meta.url)).toLowerCase();
 if (comoScript) {
     try { process.exitCode = process.argv.includes('--preguntar') ? await conPreguntas() : main(); }
     catch (e) { console.error(`✗ No se pudo terminar: ${mensajeDeError(e)} Lo que ya estaba no se borró; se puede repetir.`); process.exitCode = 1; }

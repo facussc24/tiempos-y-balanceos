@@ -695,13 +695,18 @@ describe('lo que no puede pasar: --help, opciones desconocidas, mezcla de prueba
     it('la PC del administrador no se instala sola: la clave privada en su lugar real, la carpeta de la PC en un repo git o el programa corriendo desde el repo de origen', () => {
         const perfilWindows = dir('perfil-windows');
         const env = { USERPROFILE: perfilWindows, LOCALAPPDATA: dir('la') };
-        expect(P.pcDelAdministrador({ env, home: path.join(tmp, 'pc', 'ClaudeBarack') })).toEqual([]);
+        // perfilReal: null = "esta PC no es la del administrador" (en la PC que publica, la clave real existe y la delata)
+        expect(P.pcDelAdministrador({ env, home: path.join(tmp, 'pc', 'ClaudeBarack'), perfilReal: null })).toEqual([]);
+        // con el perfil de Windows de verdad donde esta la clave, cambiar USERPROFILE no alcanza para esconderla
+        const perfilConClave = dir('perfil-con-clave');
+        esc(perfilConClave, '.claude-area/publicador.key', 'x');
+        expect(P.pcDelAdministrador({ env: { USERPROFILE: dir('perfil-falso'), LOCALAPPDATA: dir('la-falsa') }, home: path.join(tmp, 'pc', 'ClaudeBarack'), perfilReal: perfilConClave }).join(' ')).toContain('clave privada');
         esc(perfilWindows, '.claude-area/publicador.key', 'x');
         expect(P.pcDelAdministrador({ env, home: path.join(tmp, 'pc', 'ClaudeBarack') }).join(' ')).toContain('clave privada');
         const repo = dir('repo');
         fs.mkdirSync(path.join(repo, '.git'));
-        expect(P.pcDelAdministrador({ env: { USERPROFILE: dir('otro') }, home: path.join(repo, 'x', 'ClaudeBarack') }).join(' ')).toContain('repo git');
-        expect(P.pcDelAdministrador({ env: { USERPROFILE: dir('otro') }, home: dir('limpia'), raizScript: RAIZ }).join(' ')).toContain('repo de origen');
+        expect(P.pcDelAdministrador({ env: { USERPROFILE: dir('otro') }, home: path.join(repo, 'x', 'ClaudeBarack'), perfilReal: null }).join(' ')).toContain('repo git');
+        expect(P.pcDelAdministrador({ env: { USERPROFILE: dir('otro') }, home: dir('limpia'), raizScript: RAIZ, perfilReal: null }).join(' ')).toContain('repo de origen');
         expect(P.dentroDeRepoGit(dir('limpia'))).toBe(null);
         // por linea de comandos, una instalacion "de verdad" desde este repo se frena ANTES de tocar nada (solo lee):
         // la carpeta real C:\ClaudeBarack (que puede existir, con lo que sea) y el estado real quedan EXACTAMENTE igual
@@ -1085,7 +1090,7 @@ describe('la persona que no figura en la lista dice su area', () => {
         expect(P.areaDeclarada('logística')).toBe('logistica');
         expect(P.areaDeclarada('1')).toBe('produccion');
         expect(P.areaDeclarada('8')).toBe('ingenieria');
-        for (const no of ['', '  ', 'comun', 'común', '0', '9', '12', 'ventas', 'todas', null, undefined]) expect(P.areaDeclarada(no), String(no)).toBe(null);
+        for (const no of ['', '  ', 'comun', 'común', '0', '9', '12', 'ventas', 'todas', null, undefined, 'constructor', '__proto__', 'toString', 'hasOwnProperty']) expect(P.areaDeclarada(no), String(no)).toBe(null);
         // el menu nombra las ocho areas del contrato, una vez cada una
         expect(P.AREAS_PARA_ELEGIR.map(([id]) => id).sort()).toEqual(P.AREAS.filter((a) => a !== 'comun').sort());
     });
@@ -1115,6 +1120,13 @@ describe('la persona que no figura en la lista dice su area', () => {
         expect(json(ex.home, 'perfil.json').declarado).toBeUndefined();
         expect(rx.avisos.join(' ')).toContain('dado de baja');
         expect(existe(ex.home, 'publicado/conocimiento/calidad')).toBe(false);
+        // la PC de quien se fue la hereda otra persona: esa SI puede decir su area (la baja es del usuario, no de la PC)
+        const heredada = pcNueva('pc-heredada');
+        expect(instalar(pub, heredada, { usuario: 'nueva', pc: 'PC-EX' }, { declarado: { area: 'Calidad', nombre: 'Nueva Persona', puesto: '' } }).perfil).toMatchObject({ nombre: 'Nueva Persona', area: 'calidad', declarado: true });
+        // un area con nombre de cosa interna del programa no instala nada
+        const rara = pcNueva('pc-rara');
+        expect(instalar(pub, rara, ID.pepe, { declarado: { area: 'constructor', nombre: 'X', puesto: '' } }).estado).toBe('error');
+        expect(fs.existsSync(rara.home)).toBe(false);
         // sin nombre queda el usuario de Windows (el aviso de arranque necesita un nombre para saludar)
         const sinNombre = pcNueva('pc-sn');
         expect(instalar(pub, sinNombre, { usuario: 'jlopez', pc: 'PC-SN' }, { declarado: { area: '2', nombre: '', puesto: '' } }).perfil).toMatchObject({ nombre: 'jlopez', area: 'calidad', declarado: true });
@@ -1146,6 +1158,10 @@ describe('la persona que no figura en la lista dice su area', () => {
         expect(tres.dichas).toContain('No conozco el área "ventas"');
         expect(tres.dichas).toMatch(/1\. Producción[\s\S]*8\. Ingeniería/);
         expect((await con(['ventas', 'Calidad', 'Luis', ''])).r).toEqual({ area: 'calidad', nombre: 'Luis', puesto: '' });
+        // si la persona corta en medio (Ctrl+C, cierra la ventana) el corte sale para afuera: quien llama NO instala
+        await expect(P.pedirPersona({ preguntar: async () => { throw new Error('cancelado'); } })).rejects.toThrow('cancelado');
+        let n = 0;
+        await expect(P.pedirPersona({ preguntar: async () => { if (n++ === 0) return '2'; throw new Error('cancelado'); } })).rejects.toThrow('cancelado');
     });
 });
 
@@ -1238,6 +1254,13 @@ describe('una PC que no ve la nube: se instala desde la carpeta donde vive el pr
         expect(r.stdout).toContain('--area "<área>"');
         expect(json(pc.home, 'instalado.json')).toMatchObject({ area: 'comun', origen: 'carpeta' });
         expect(foto(path.join(tmp, 'pendrive'))).toEqual(antes);
+        // solo "1- PUBLICADO" copiada a Descargas (sin su carpeta madre): tampoco deja un "4- BUZON" suelto al lado
+        const descargas = path.join(tmp, 'descargas');
+        fs.cpSync(pub, path.join(descargas, '1- PUBLICADO'), { recursive: true });
+        const otraPc = pcNueva('pc-descargas');
+        const rd = correrDesde(path.join(descargas, '1- PUBLICADO'), ['--instalar', '--proyecto', 'area', '--usuario-home', otraPc.claudeDir, '--area', 'Compras', '--nombre', 'Ana'], { ...env, CLAUDE_AREA_HOME: otraPc.home, CLAUDE_AREA_ESTADO: otraPc.estado });
+        expect(rd.status, rd.stdout + rd.stderr).toBe(0);
+        expect(fs.readdirSync(descargas)).toEqual(['1- PUBLICADO']);
         // --preguntar, --nombre y --puesto son solo de --instalar; --nombre sin --area no alcanza
         const mal = correrDesde(copia, ['--chequear', '--preguntar'], env);
         expect(mal.status).toBe(1);
@@ -1278,6 +1301,17 @@ describe('una PC que no ve la nube: se instala desde la carpeta donde vive el pr
         expect(P.mensajeDeError({ code: 'EPERM', path: 'C:\\ClaudeBarack' })).toContain('Windows no deja crear o escribir (C:\\ClaudeBarack)');
         expect(P.mensajeDeError({ code: 'ENOSPC' })).toContain('no queda lugar');
         expect(P.mensajeDeError(new Error('otra cosa'))).toBe('otra cosa');
+    });
+
+    it.runIf(ES_WINDOWS)('si la carpeta se alcanza por un enlace de carpetas el programa igual corre (antes no hacia nada y salia con 0)', () => {
+        const { pub } = nubeArmada();
+        const enlace = path.join(tmp, 'enlace-a-publicado');
+        fs.symlinkSync(pub, enlace, 'junction');
+        const { pc, env } = pcDePlanta();
+        const r = correrDesde(enlace, ['--instalar', '--proyecto', 'area', '--usuario-home', pc.claudeDir, '--area', 'Calidad', '--nombre', 'Ana'], env);
+        expect(r.status, r.stdout + r.stderr).toBe(0);
+        expect(r.stdout).toContain('Instalado');
+        expect(existe(pc.home, 'instalado.json')).toBe(true);
     });
 
     it('el instalador de doble clic viaja en la raiz de lo publicado: ASCII, fines de linea de Windows, fuera de lo firmado, y llama al programa firmado con el Node del plugin', () => {

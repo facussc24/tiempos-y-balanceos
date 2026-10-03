@@ -22,6 +22,16 @@ echo  Sacale una foto a esta ventana y mandasela a Ingenieria.
 goto fin
 
 :listo
+rem LISTO se dice solo si quedo la marca de instalado (el programa pudo salir con 0 sin haber hecho nada).
+set "CASA=C:\ClaudeBarack"
+if defined CLAUDE_AREA_HOME set "CASA=%CLAUDE_AREA_HOME%"
+if exist "%CASA%\instalado.json" goto quedo
+echo  El programa termino pero NO quedo instalado.
+echo  Sacale una foto a esta ventana y mandasela a Ingenieria.
+set "COD=1"
+goto fin
+
+:quedo
 rem Con carpetas de prueba (las pruebas del programa) no se abre nada.
 if defined CLAUDE_AREA_HOME goto pasos
 rem El programa Claude, cuando esta instalado, registra los enlaces claude:// en Windows.

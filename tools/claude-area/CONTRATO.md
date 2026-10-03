@@ -223,9 +223,12 @@ Una PC de planta no podía instalar, y si instalaba quedaba sin área.
   demás no cambia: clave fijada en el primer uso, manifiesto firmado, hash de cada archivo. Vale solo para
   `--instalar`; `--actualizar` y `--chequear` siguen mirando la nube (una PC instalada así da `sin_nube`, con su
   `instalada`, y no se actualiza sola: se instala de nuevo desde una carpeta más nueva). El marcador lleva
-  `"origen": "carpeta"`. El buzón se usa solo si la carpeta trae la forma de la nube (`1- PUBLICADO` con `4- BUZON` al
-  lado); en una copia con otro nombre no se escribe nada adentro. Para la regla "todo o nada", la carpeta del programa
-  no cuenta ni como de prueba ni como real.
+  `"origen": "carpeta"`. El buzón se usa solo si la carpeta trae la forma de la nube (`CLAUDE POR AREA\1- PUBLICADO`:
+  el `4- BUZON` se crea al lado); en una copia con otro nombre, o en un `1- PUBLICADO` suelto, no se escribe nada. Para
+  la regla "todo o nada", la carpeta del programa no cuenta ni como de prueba ni como real; por eso "la PC del
+  administrador" busca la clave privada también en el perfil de Windows de verdad (`perfilDeWindows`), no solo donde
+  diga `USERPROFILE`. **Confianza en el primer uso:** en una PC sin clave fijada, la clave sale de la misma carpeta:
+  una carpeta armada por otro con su propia clave instala (igual que con la nube); desde la segunda vez se rechaza.
 - **`Instalar.cmd`** (fuente `tools/claude-area/hola/Instalar.cmd`; `armar_publicable.mjs` lo deja en la raíz de lo
   publicado, al lado del `CLAUDE.md` del "instalá", fuera de lo firmado, siempre con fines de línea de Windows): doble
   clic, sin abrir Claude. Corre `--instalar --proyecto area --preguntar` con el Node del plugin y devuelve su código

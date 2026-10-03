@@ -117,6 +117,12 @@ contratada por Apple); Outlook, PowerPoint e internet en la PC de planta. Inform
 iniciar sesión; el doble clic real en una PC ajena; una conversación completa en esa PC; la presentación en
 PowerPoint y el freno de borrado sobre la v5 (abren ventanas en la PC de Facundo: van en el ensayo con él).
 
+**La regla candidata v6 (no cambiar la fuerza de lo que dice un documento) NO se adopta por ahora.** Prueba A/B del
+03/10 (`examen/ab6/`: 14 preguntas, 2 tomas con las reglas v5 y 2 con la candidata, ayudantes Opus): en las cuatro
+tomas el alta de proveedor (B18) salió con la palabra del Manual («mínimo a alcanzar»); ninguna dijo «exigido». El
+rojo del examen no se reproduce: es un defecto raro (1 en 139) y dos tomas por versión no lo miden. Las respuestas con
+la candidata salieron más largas. Para medirlo haría falta repetir esa pregunta muchas veces en la app, en nivel Medio.
+
 **Error mío del día, para no repetir:** una prueba con teclas simuladas escribió en la ventana que Facundo tenía al
 frente. Memoria `feedback_no_teclear_ni_fotografiar_la_pantalla_de_fak`.
 
@@ -207,6 +213,19 @@ control: plugin cargado, perfil con área, Outlook clásico abierto, nube subida
     cada PC instalada hay que re-fijarla a mano.
 11. Las casillas reservadas reales (hoy la lista es una plantilla): es la decisión 2 de la reunión.
 12. Alguien de Calidad que lea las 8 respuestas por sector (hoja 9); IMDS; revisar la hoja 6.
+
+## Después de la reunión, en este orden
+
+1. Lo que traiga la prueba en la PC nueva (hoja 8) y lo que pregunte el director: cada pregunta que no supo entra al examen.
+2. **La actualización automática:** hoy nadie registra la tarea (`sync_area.ps1 -RegistrarTarea`). O `--instalar` la
+   registra (y se prueba en una PC), o se deja a mano; y el aviso de arranque deja de decir "se aplica sola".
+3. **La carpeta del proyecto en la nube** (con el OK de Facundo): se copia `C:\ClaudeBarack-para-llevar\CLAUDE POR AREA`
+   tal cual, con su historial. Para las demás áreas hace falta la carpeta compartida (decisión 3 de la reunión).
+4. El enlace que abre Claude solo al terminar de instalar: probarlo una vez y publicarlo (paquete v3).
+5. Leer el servidor sin cartel de permiso (decisión: hoy pide permiso cada vez que abre un original).
+6. Si una PC no deja crear `C:\ClaudeBarack`: otra ubicación (hoy solo avisa).
+7. Las casillas reservadas reales y la lista de personas.
+8. Resumir mails leyendo el buzón propio (decisión de qué se puede leer).
 
 ## Lo que NO se hace ahora (para no perder el foco)
 Tablero, inventario de programas, buscador, lista de las 85 personas, ordenar la nube. Están hechos o encaminados

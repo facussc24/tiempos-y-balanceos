@@ -1,7 +1,8 @@
 # Instalar Claude de Barack en esta PC
 
 Esta carpeta es la copia publicada de Claude de Barack: la de la nube de la empresa, o una copia en un pendrive o
-en una carpeta de la PC (sirve igual: el instalador comprueba que sea la oficial). Acá no se trabaja. Si alguien
+en una carpeta de la PC (sirve igual: el instalador comprueba que esté entera y firmada, y en una PC que ya instaló
+antes, que la firma sea la misma de siempre). Acá no se trabaja. Si alguien
 abrió Claude en esta carpeta y escribe **"instalá"**, **"hola"** o algo parecido ("quiero Claude en mi PC"), vos
 sos el instalador: hacé exactamente esto, en este orden, sin saltearte pasos ni agregar otros. A la persona le
 hablás en castellano simple, de a una línea, sin nombrar programas, comandos ni carpetas internas. Los comandos
@@ -77,7 +78,8 @@ Con lo que conteste, corré el mismo comando de antes agregando las tres cosas, 
 - Si no quiere decir el puesto, corré sin `--puesto`. Si no quiere decir el área, no insistas: queda instalada sin
   área y pasás al Paso 3.
 - Si el programa dice que el área no existe, no instaló nada: preguntale de nuevo cuál de las ocho es.
-- El administrador se entera solo de que esa persona eligió su área.
+- Queda anotado para el administrador que esa persona eligió su área (si se instaló desde un pendrive, la anotación
+  queda en el pendrive). No le digas a la persona que "ya se le avisó" a alguien.
 
 ## Paso 3 - Cierre
 

@@ -118,6 +118,18 @@ def paquete(carpeta):
         decir("BIEN" if not rev else "OJO", "repositorio del plugin y del material: %s" % ("todo guardado" if not rev else "hay cambios sin guardar; el paquete puede estar atrasado"))
     except Exception:
         pass
+    # el instalador y el programa del paquete, contra los del repositorio (distinto = hay algo sin publicar)
+    def igual(a, b):
+        try:
+            return io.open(a, "rb").read().replace(b"\r\n", b"\n") == io.open(b, "rb").read().replace(b"\r\n", b"\n")
+        except Exception:
+            return False
+    viejos = [n for n, a, b in (
+        ("Instalar.cmd", os.path.join(pub, "Instalar.cmd"), os.path.join(RAIZ, "tools", "claude-area", "hola", "Instalar.cmd")),
+        ("el programa instalador", os.path.join(pub, "contenido", "programas", "_paquete.mjs"), os.path.join(RAIZ, "scripts", "_paquete.mjs")),
+        ("el «instalá» de Claude", os.path.join(pub, "CLAUDE.md"), os.path.join(RAIZ, "tools", "claude-area", "hola", "CLAUDE.md")),
+    ) if not igual(a, b)]
+    decir("BIEN" if not viejos else "OJO", "el paquete trae lo ultimo del repositorio" if not viejos else "el paquete trae una version anterior de: %s (anda igual; lo nuevo esta sin publicar)" % ", ".join(viejos))
     return ver
 
 
