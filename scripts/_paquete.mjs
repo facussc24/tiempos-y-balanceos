@@ -201,7 +201,8 @@ function copiarVerificando(origen, destino, hashEsperado) {
         try { fs.unlinkSync(tmp); } catch { /* el temporal es nuestro */ }
         throw new Error(`la copia de ${path.basename(origen)} llego distinta a lo esperado`);
     }
-    fs.renameSync(tmp, destino);
+    // si el destino esta en uso (un programa corriendo no se puede reemplazar), el temporal no queda tirado
+    try { fs.renameSync(tmp, destino); } catch (e) { try { fs.unlinkSync(tmp); } catch { /* el temporal es nuestro */ } throw e; }
     return h;
 }
 
@@ -952,6 +953,10 @@ export function publicar({ origen, nube, lista, notas = [], simular = false, for
     // publica: los controles del plugin lo llaman por su ruta y sin el quedarian apagados.
     const ejecutables = new Set(lista && Array.isArray(lista.ejecutables) ? lista.ejecutables : []);
     for (const r of ejecutables) if (!archivos.has(r)) res.errores.push(`${r}: la lista lo declara en "ejecutables" y no está en lo que se publica`);
+    // En una vuelta a una version anterior no hay lista: lo que se vuelve a publicar ya paso la revision cuando se
+    // publico, y su contenido se acaba de comprobar contra el historial, por hash. Sus .exe valen como declarados
+    // (auditoria del 03/10/2026: sin esto, ninguna version con el Node del plugin se podia volver atras).
+    if (res.rollback) for (const rel of archivos.keys()) if (/[.]exe$/i.test(rel)) ejecutables.add(rel);
     for (const [rel, abs] of archivos) {
         const motivo = motivoRutaNoPermitida(rel, proyecto);
         if (motivo) res.errores.push(`${rel}: ${motivo}`);
@@ -1423,7 +1428,9 @@ function actualizarAdentro({ destino, nube, reponer = false, simular = false, ah
                 if (modo === 'tocado') {
                     copiarVerificando(origenNube, `${abs}${SUFIJO_NUEVA}`, hash);
                 } else {
-                    if (modo === 'actualizar') {
+                    // un programa (.exe) reemplazado no se respalda: esta como se publico, pesa decenas de MB y la version
+                    // anterior sigue en el historial de la nube
+                    if (modo === 'actualizar' && !/[.]exe$/i.test(rel)) {
                         const resp = path.join(carpetaRespaldo, ...rel.split('/'));
                         fs.mkdirSync(path.dirname(resp), { recursive: true });
                         fs.copyFileSync(abs, resp);

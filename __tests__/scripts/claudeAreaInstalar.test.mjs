@@ -1002,6 +1002,32 @@ describe('el Node del plugin viaja firmado, por su ruta exacta', () => {
         expect(dato.errores.join(' ')).toContain('conocimiento/comun/dato.bin: es una clave privada');
     });
 
+    it('volver a una version anterior sigue andando con el Node adentro, y la PC no guarda respaldo del programa reemplazado', () => {
+        // v1 publicada e instalada
+        const { pub, rutaClave, conocimiento } = nubeArmada();
+        const pc = pcNueva('pc-marta');
+        expect(instalar(pub, pc, ID.marta).estado).toBe('instalado');
+        // v2: cambia un documento y cambia el Node (otro contenido, tambien "MZ")
+        esc(conocimiento, 'comun/donde-vive.md', '- BOM: en el arb.\n- Procedimientos: en el servidor.\n- Hojas: en el servidor.\n- Nuevo renglon.\n');
+        const st2 = path.join(tmp, 'staging-2');
+        expect(A.armarPublicable({ pluginRepo: path.join(tmp, 'repo-plugin'), conocimiento, programasDe: RAIZ, salida: st2, ahora: F(2) }).estado).toBe('armado');
+        fs.writeFileSync(path.join(st2, ...A.REL_NODE.split('/')), Buffer.concat([Buffer.from('MZ'), Buffer.alloc(8192, 2)]));
+        const v2 = A.publicarPublicable({ salida: st2, nube: pub, clavePrivada: rutaClave, identidad: { usuario: '', pc: '' }, ahora: F(2) });
+        expect(v2.errores).toEqual([]);
+        expect(v2.version).toBe(2);
+        const act = instalar(pub, pc, ID.marta, { ahora: F(2, 12) });
+        expect(act.errores).toEqual([]);
+        const respaldos = Object.keys(foto(path.join(pc.home, 'publicado', '.claude'))).filter((r) => r.includes('_respaldo-paquete'));
+        expect(respaldos.some((r) => r.endsWith('donde-vive.md'))).toBe(true);
+        expect(respaldos.some((r) => r.endsWith('node.exe'))).toBe(false);
+        // la vuelta a la v1 (sin lista) se publica como v3, con el Node de la v1
+        const vuelta = P.publicar({ origen: st2, nube: pub, lista: null, rollback: 1, clavePrivada: rutaClave, proyecto: 'area', identidad: { usuario: '', pc: '' }, ahora: F(3) });
+        expect(vuelta.errores).toEqual([]);
+        expect(vuelta.estado).toBe('publicado');
+        expect(vuelta.version).toBe(3);
+        expect(json(pub, 'MANIFIESTO.json').archivos[A.REL_NODE].sha256).toBe(P.sha256Archivo(NODE_DE_MENTIRA));
+    });
+
     it('la lista: "ejecutables" va con la ruta exacta de un .exe que esta adentro de lo incluido', () => {
         const base = { incluir: [{ ruta: 'marketplace' }, { ruta: 'programas' }] };
         const errores = (ejecutables) => P.revisarLista({ ...base, ejecutables }, 'area').filter((e) => e.includes('ejecutables'));
