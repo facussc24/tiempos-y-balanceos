@@ -123,6 +123,12 @@ pisar un archivo que ya tiene, no armar un mail que nadie pidió, avisar cuando 
 las reglas (v6) y un freno nuevo en el plugin. Tabla completa: `examen/mejoras_recientes_2026-10-03.md`. Como cambian
 las reglas, van con su examen: la demostración y el paquete siguen en v5 hasta que la v6 lo rinda.
 
+**Estado de la v6 (03/10, 13:40):** las reglas están escritas y commiteadas en la rama `v6` del repo privado, en la
+copia de trabajo `C:/Dev/barack-claude-v6` (72 renglones; 1.154 pruebas en verde). `main` sigue en la v5. Falta: el freno
+de `.Quit()` / `Stop-Process` / `taskkill` de Office en el plugin, rearmar las ocho carpetas de área desde esa copia
+(`armar_demo_area.sh` tiene la ruta del repo fija: hay que pasarla por variable), los ocho botones del examen y los
+jueces (Opus: hace falta que Facundo lo vuelva a pedir, el pase de 12 horas venció).
+
 **Lo que encontró la segunda opinión (Fable, 03/10) y sigue abierto:** el código de ingreso de la cuenta le llega a
 otra persona; los carteles de permiso en vivo; nadie registra la tarea que actualiza sola (`sync_area.ps1
 -RegistrarTarea` no lo llama nadie: por eso la hoja 1 dejó de prometerlo); el importe real de la cuenta (está
