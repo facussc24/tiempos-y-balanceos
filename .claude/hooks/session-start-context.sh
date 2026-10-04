@@ -18,10 +18,15 @@
 #       menos de 1 KB.
 #   "lecciones" se acepta como alias de "inicio" (nombre viejo del modo).
 
-cat >/dev/null 2>&1   # drenar el JSON de stdin
+PAYLOAD="$(cat 2>/dev/null)"   # el JSON de stdin (trae session_id)
 
 ROOT="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || echo .)}"
 MODE="${1:-inicio}"
+
+# 03/10/2026: si Fak dejo a ESTA sesion trabajando hasta una hora y todavia no llego, se dice al arrancar, al
+# reanudar y al compactar (el latido muere si la app se reinicia y la consigna se puede perder al compactar).
+# Nada si no hay nada vigente. Regla trabajar-hasta-la-hora.md.
+hora_vigente() { printf '%s' "$PAYLOAD" | node "$ROOT/scripts/_lib/horaGuard.mjs" --contexto-hook 2>/dev/null; }
 
 if [ "$MODE" = "compact" ]; then
   cat << 'NUCLEO'
@@ -44,6 +49,7 @@ if [ "$MODE" = "compact" ]; then
    La sigla se justifica con S y O de ESA causa, nunca porque otro documento la tenia.
    Regla always-on caracteristicas-especiales.md; fuente core/amfe/caracteristicasEspeciales.data.json.
 NUCLEO
+  hora_vigente
   exit 0
 fi
 
@@ -54,4 +60,5 @@ bash "$ROOT/.claude/hooks/cerebro-guard.sh" 2>/dev/null
 # Va DESPUES del cerebro porque los datos viven en la memoria. Detalla hasta 10 (unos 5 KB) y
 # cuenta el resto; un dato mal escrito lo DICE por esta misma salida; si node falla, no frena.
 node "$ROOT/scripts/_seguimientos.mjs" --hook 2>/dev/null
+hora_vigente
 exit 0

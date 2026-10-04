@@ -75,7 +75,9 @@ Las reglas sin `paths:` ya estan en este contexto: `core-prohibiciones.md`, `tec
 `no-pfd-no-ho.md`, `autonomy-contract.md`, `git-deploy.md`, `consumos-entregables.md`,
 `caracteristicas-especiales.md` (criterio CC/SC, D/TLD y sus fuentes — pedido de Fak 11/09/2026),
 `nube-ingenieria.md` (regla dura de Fak 01/10/2026: se guarda solo en la nube de Ingenieria, nada en
-su nube personal `OneDrive - BARACK ARGENTINA SRL\`; hook `nube-personal-guard`).
+su nube personal `OneDrive - BARACK ARGENTINA SRL\`; hook `nube-personal-guard`),
+`trabajar-hasta-la-hora.md` (Fak 03/10/2026: si pone una hora no se cierra antes; lista en un archivo,
+hora fijada y latido con CronCreate; hooks `hora-prompt` y `hora-guard`).
 
 | Con `paths:` (cargan al tocar) | Ambito |
 |---|---|

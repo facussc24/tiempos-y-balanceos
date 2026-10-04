@@ -9,6 +9,12 @@
       "marca": "[EXPLICAR-MEJOR]",
       "desde": "2026-10-02T18:47:00Z",
       "_nota": "Alta: 02/10/2026 08:44 (a855d52d). Medido con `--llego --desde 2026-10-02T11:44:18Z`: entre el alta y el arreglo de la tarde debia llegar en 12 mensajes y llego en 7. De los 5 que faltaron, 3 venian con un aviso de la app adelante (dos en la sesion 61a9a9ac, entre ellos el del incidente, y el encargo de la sesion que lo arreglo) y 2 decian 'facil de entender' con el 'de' pegado, que la logica de ese momento no reconocia. `desde` es la hora en que el arreglo llego al checkout principal (02/10 15:46)."
+    },
+    {
+      "id": "hora-prompt",
+      "marca": "[TRABAJAR-HASTA]",
+      "desde": "2026-10-04T02:30:00Z",
+      "_nota": "Alta: 03/10/2026 23:30 (hora local). Aviso cuando Fak deja a Claude trabajando solo hasta una hora, y recordatorio mientras esa hora sigue vigente. Probado con sus dos mensajes textuales del 03/10 ('quedate labruadnoc omo minimo hasta esa hroa', 'continura hasta mañana a als 10am hasta esa hora no apres'). Medido sobre 1.712 mensajes: salta en 4."
     }
   ]
 }

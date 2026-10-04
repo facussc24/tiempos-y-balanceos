@@ -74,6 +74,11 @@ const COBERTURA = {
   'dev-server-guard.sh': { test: VARIOS, tipo: 'bloquea' },
   'pregunta-guard.sh': { test: VARIOS, tipo: 'aviso' },
   'cierre-guard.sh': { test: VARIOS, tipo: 'bloquea' },
+  // UserPromptSubmit + Stop (03/10/2026): cuando Fak deja a Claude trabajando solo hasta una hora, avisa lo que
+  // hay que armar (lista, hora fijada, latido) y frena el cierre antes de la hora. Origen: "quedate laburando hasta
+  // las 8" y el cierre a las 17:10. Regla trabajar-hasta-la-hora.md.
+  'hora-prompt.sh': { test: '__tests__/scripts/horaGuard.test.mjs', tipo: 'aviso' },
+  'hora-guard.sh': { test: '__tests__/scripts/horaGuard.test.mjs', tipo: 'bloquea' },
   'coordinador-guard.sh': { test: '__tests__/scripts/coordinadorGuard.test.mjs', tipo: 'bloquea' },
   'cerebro-guard.sh': { test: '.claude/hooks/cerebro-guard.test.sh', tipo: 'aviso' },
   // Inyecta contexto (SessionStart). El test unitario prueba que el texto sale entero y corto;

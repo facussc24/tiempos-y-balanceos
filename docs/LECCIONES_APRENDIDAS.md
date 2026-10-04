@@ -68,7 +68,7 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
-- **03/10 — Si Fak pone una hora («quedate laburando como mínimo hasta las 8»), no se cierra antes: cuando termino de contestar quedo parado hasta que alguien me despierte, así que queda algo corriendo que me devuelva el turno y la lista de lo que sigue** (paré a las 17:10 con trabajo pendiente: *"defendete"*). Graduado a la memoria `feedback_trabajar_hasta_la_hora_que_dijo_fak`.
+- **03/10 — Si Fak pone una hora («quedate laburando como mínimo hasta las 8»), no se cierra antes: cuando termino de contestar quedo parado hasta que alguien me despierte, así que queda algo corriendo que me devuelva el turno y la lista de lo que sigue** (paré a las 17:10 con trabajo pendiente: *"defendete"*). Graduado a la regla `trabajar-hasta-la-hora.md`, a los hooks `hora-prompt` y `hora-guard` (`scripts/_lib/horaGuard.mjs`) y a la memoria `feedback_trabajar_hasta_la_hora_que_dijo_fak`.
 
 - **03/10 — Teclas simuladas y fotos de pantalla no se usan sin saber que Fak no está en la PC: las teclas van a la ventana que tenga el foco** (una prueba mía escribió en su Chrome mientras buscaba su banco). Graduado a la memoria `feedback_no_teclear_ni_fotografiar_la_pantalla_de_fak`.
 

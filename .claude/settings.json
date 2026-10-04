@@ -96,6 +96,16 @@
             "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/explicar-prompt.sh\""
           }
         ]
+      },
+      {
+        "_comentario": "03/10/2026: cuando Fak deja a Claude trabajando solo HASTA UNA HORA ('quedate laburando como minimo hasta esa hora', 'labura hasta las 8', 'continua hasta manana a las 10am, hasta esa hora no pares', 'ponete un cronometro') recuerda lo que hay que armar antes de seguir: la lista de trabajo en un archivo, fijar la hora (node scripts/_lib/horaGuard.mjs --fijar) y el latido (CronCreate). Con una hora ya vigente recuerda que sigue vigente. Origen: Fak se fue a las 13:50 pidiendo trabajo hasta las 20, Claude cerro a las 17:10 con un resumen y quedo parado seis horas ('no te quedaste hasta las 8, decime por que, defendete'). Medido sobre 1.712 mensajes suyos: salta en 4, los 4 son pedidos de trabajar por tiempo. Nunca bloquea; que no se cierre antes lo frena hora-guard.sh (Stop). Logica y palabras: scripts/_lib/horaGuard.mjs + horaCanon.data.json. Test: horaGuard.test.mjs. Regla: trabajar-hasta-la-hora.md.",
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/hora-prompt.sh\""
+          }
+        ]
       }
     ],
     "InstructionsLoaded": [
@@ -145,6 +155,16 @@
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/cierre-guard.sh\""
+          }
+        ]
+      },
+      {
+        "_comentario": "03/10/2026: hora-guard. Con una hora de trabajo fijada por Fak (~/.claude/.trabajar-hasta.json, por sesion) frena el cierre del turno si no hay ningun aviso programado vivo (sin latido la sesion queda parada: se frena tambien en el segundo intento, hasta el tope de bloqueos de Claude Code) o si el mensaje final se despide como si el trabajo hubiera terminado; y frena una vez si el ultimo mensaje de Fak ponia una hora y no se fijo ni se escribio 'No aplica trabajar-hasta: ...'. Con hora vigente, latido vivo y un mensaje que no cierra, deja pasar. Usa session_crons y last_assistant_message del payload. Logica: scripts/_lib/horaGuard.mjs. Test: horaGuard.test.mjs (ROJO exit 2, VERDE exit 0).",
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/hora-guard.sh\""
           }
         ]
       }

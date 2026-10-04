@@ -1,0 +1,69 @@
+{
+  "_que_es": "Palabras con las que Fak deja a Claude trabajando solo hasta una hora (hook hora-prompt.sh y control de cierre hora-guard.sh; logica en horaGuard.mjs). Origen: 03/10/2026, pidio 'quedate laburando como minimo hasta esa hora' (las 20), Claude cerro a las 17:10 y quedo parado seis horas: 'no te quedaste hasta las 8, decime por que, defendete'.",
+  "_como_agregar": "Las palabras van sin tildes y en minuscula (asi las compara el programa). Una palabra nueva se mide contra los mensajes reales de Fak antes de dejarla: node scripts/_lib/horaGuard.mjs --medir <mensajes.jsonl> --muestra. Los casos reales viven en __tests__/scripts/horaGuard.test.mjs.",
+  "verbos": [
+    "labura",
+    "laburar",
+    "laburando",
+    "laburas",
+    "trabaja",
+    "trabajar",
+    "trabajando",
+    "quedate",
+    "segui",
+    "seguir",
+    "continua",
+    "continuar",
+    "avanza",
+    "avanzar",
+    "mejorar"
+  ],
+  "_verbos": "Con errores de tipeo: se comparan por distancia con trasposicion (labrua = labura, continura = continua, labruadnoc = laburando). 'mejorar' entra por 'algo para mejorar el diseno hasta esa hora'.",
+  "no_pares": [
+    "pares",
+    "frenes",
+    "detengas",
+    "cortes"
+  ],
+  "_no_pares": "Despues de un 'no' cercano: 'no pares', 'no apres', 'hasta esa hora no apres'.",
+  "reloj": [
+    "cronometro",
+    "cron",
+    "alarma",
+    "despertador"
+  ],
+  "_reloj": "'ponete un agente o un cronometro', 'poente un cronrormetro': Fak ya propone el mecanismo.",
+  "manana": [
+    "manana"
+  ],
+  "esa_hora": [
+    "hora"
+  ],
+  "_esa_hora": "'hasta esa hora' (hroa): la hora esta dicha antes en el mismo mensaje.",
+  "largo": [
+    "toda la noche",
+    "todo el dia",
+    "toda la madrugada",
+    "todo el fin de semana",
+    "hasta que vuelva",
+    "hasta que yo vuelva",
+    "hasta que llegue",
+    "hasta que te diga",
+    "hasta que te avise"
+  ],
+  "_largo": "Sin hora: 'te quiero dejar laburando todo el dia', 'segui hasta que vuelva'. Se avisa igual: hay que preguntarse hasta cuando y fijarlo (sin hora dicha, la mejor estimacion con lo que dijo; si no hay ninguna pista, 4 horas y se renueva).",
+  "parar": [
+    "para",
+    "pares",
+    "frena",
+    "corta",
+    "basta",
+    "deja"
+  ],
+  "_parar": "Con una hora vigente: 'para', 'ya esta, corta', 'deja asi'. Solo se avisa; quien termina el pedido es Claude con --terminar y el motivo.",
+  "ventana_palabras": 14,
+  "_ventana_palabras": "El verbo de trabajar (o el 'no pares', o el reloj) y el 'hasta <hora>' tienen que estar a esta distancia, en palabras. Sin esto, 'me lo enviaron ayer a las 21hs' o 'el consumo es hasta 10 veces mayor' dispararian.",
+  "marca": "[TRABAJAR-HASTA]",
+  "no_aplica": "No aplica trabajar-hasta:",
+  "latido_minutos": 20
+}
