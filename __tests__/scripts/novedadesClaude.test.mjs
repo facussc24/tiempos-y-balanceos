@@ -83,6 +83,46 @@ describe('novedadesClaude — el aviso del arranque', () => {
   });
 });
 
+describe('novedadesClaude — hasta donde queda leido (auditoria del 04/10)', () => {
+  const ahora = new Date('2026-10-12T12:00:00Z');
+  const previo = { cuentas: { trq212: { ultimo_id: '100', leido_hasta: '2026-09-01T00:00:00.000Z' } }, registro: { ultima_version: '2.1.288' }, ultima_corrida: '2026-09-01T00:00:00.000Z' };
+  const leida = (usuario, id, extra = {}) => ({ usuario, items: id ? [{ id }] : [], ...extra });
+
+  it('una corrida normal y entera avanza las cuentas, la version y la fecha de la ultima lectura', () => {
+    const n = N.estadoNuevo(previo, { porCuenta: [leida('trq212', '300'), leida('ClaudeDevs', '50')], versiones: [{ version: '2.1.289' }], ahora });
+    expect(n.cuentas.trq212).toEqual({ ultimo_id: '300', leido_hasta: ahora.toISOString() });
+    expect(n.cuentas.ClaudeDevs.ultimo_id).toBe('50');
+    expect(n.registro.ultima_version).toBe('2.1.289');
+    expect(n.ultima_corrida).toBe(ahora.toISOString());
+  });
+
+  it('con rango pedido (--desde, --dias) es una consulta: no mueve las cuentas ni la fecha', () => {
+    const n = N.estadoNuevo(previo, { porCuenta: [leida('trq212', '300')], pidioRango: true, ahora });
+    expect(n.cuentas.trq212).toEqual(previo.cuentas.trq212);
+    expect(n.ultima_corrida).toBe(previo.ultima_corrida);
+  });
+
+  it('una cuenta con error o que llego al tope de paginas no avanza, y la fecha de la ultima lectura tampoco', () => {
+    const n = N.estadoNuevo(previo, { porCuenta: [leida('trq212', '300', { tope: true }), leida('ClaudeDevs', null, { error: 'respondio 500' }), leida('lydiahallie', '7')], ahora });
+    expect(n.cuentas.trq212).toEqual(previo.cuentas.trq212);
+    expect(n.cuentas.ClaudeDevs).toBeUndefined();
+    expect(n.cuentas.lydiahallie.ultimo_id).toBe('7');
+    expect(n.ultima_corrida).toBe(previo.ultima_corrida);
+    // el registro de cambios caido tampoco deja mover la fecha, ni una corrida de una sola cuenta
+    expect(N.estadoNuevo(previo, { porCuenta: [leida('trq212', '300')], errorRegistro: 'respondio 500', ahora }).ultima_corrida).toBe(previo.ultima_corrida);
+    expect(N.estadoNuevo(previo, { porCuenta: [leida('trq212', '300')], unaSolaCuenta: true, ahora }).ultima_corrida).toBe(previo.ultima_corrida);
+  });
+
+  it('nunca retrocede y aguanta un estado roto', () => {
+    expect(N.estadoNuevo(previo, { porCuenta: [leida('trq212', '90')], ahora }).cuentas.trq212.ultimo_id).toBe('100');
+    for (const roto of [null, 'x', { cuentas: null, registro: 7 }]) {
+      const n = N.estadoNuevo(roto, { porCuenta: [leida('trq212', '5')], ahora });
+      expect(n.cuentas.trq212.ultimo_id).toBe('5');
+      expect(n.registro).toEqual({});
+    }
+  });
+});
+
 describe('novedadesClaude — el listado y el programa', () => {
   it('el listado dice que es dato, nombra cada cuenta, y avisa lo que no se pudo leer', () => {
     const { items, fuera } = N.filtrar([post('600')], 'trq212');

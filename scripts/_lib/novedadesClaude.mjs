@@ -99,6 +99,34 @@ export function avisoHook(estado, ahora = new Date(), dias = 7) {
   return `[NOVEDADES DE CLAUDE] ${cuanto} lo que publican Lydia Hallie, Thariq y Claude Devs y el registro de cambios de Claude Code. Toca: node scripts/_novedadesClaude.mjs, cruzar el listado con lo que ya tenemos y llevarle a Fak la lista corta (que nos sirve, que nos puede romper). El decide que se implementa: nada se aplica solo.`;
 }
 
+/**
+ * El estado que queda despues de una corrida. Avanza solo en lo que se leyo ENTERO, y nunca retrocede:
+ *  - una corrida con rango pedido (`--desde`, `--dias`) es una consulta: no mueve nada de las cuentas ni la fecha de la
+ *    ultima lectura (04/10/2026, auditor: con `--desde` corto lo del medio no aparecia mas en las corridas normales);
+ *  - una cuenta que dio error, o que llego al tope de paginas sin terminar, no avanza;
+ *  - la fecha de la ultima lectura (la que calla el aviso semanal) se mueve solo si se leyeron TODAS las fuentes enteras.
+ * `estado` puede venir roto (null, sin `cuentas`): se toma como vacio.
+ */
+export function estadoNuevo(estado, { porCuenta = [], versiones = [], errorRegistro = null, pidioRango = false, unaSolaCuenta = false, ahora = new Date() } = {}) {
+  const e = estado && typeof estado === 'object' ? estado : {};
+  const nuevo = { cuentas: { ...(e.cuentas && typeof e.cuentas === 'object' ? e.cuentas : {}) }, registro: { ...(e.registro && typeof e.registro === 'object' ? e.registro : {}) } };
+  if (e.ultima_corrida) nuevo.ultima_corrida = e.ultima_corrida;
+  let entero = !pidioRango && !unaSolaCuenta && !errorRegistro;
+  for (const c of porCuenta) {
+    if (c.error || c.tope) { entero = false; continue; }
+    if (pidioRango) continue;
+    const previo = nuevo.cuentas[c.usuario] || {};
+    const masNuevo = c.items && c.items.length ? c.items[0].id : null;
+    nuevo.cuentas[c.usuario] = {
+      ultimo_id: masNuevo && (!previo.ultimo_id || idMasNuevo(masNuevo, previo.ultimo_id)) ? masNuevo : previo.ultimo_id || null,
+      leido_hasta: ahora.toISOString(),
+    };
+  }
+  if (versiones.length && !errorRegistro) nuevo.registro.ultima_version = versiones[0].version;
+  if (entero) nuevo.ultima_corrida = ahora.toISOString();
+  return nuevo;
+}
+
 const corto = (t, n) => { const s = String(t || '').replace(/\s+/g, ' ').trim(); return s.length > n ? `${s.slice(0, n - 1)}…` : s; };
 const miles = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 

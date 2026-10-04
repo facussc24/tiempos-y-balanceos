@@ -236,7 +236,7 @@ function leidas(p) {
 export function avisoDe(texto, { estado = null, ahora = new Date() } = {}) {
   if (esAutomatico(texto)) return null;
   // el propio latido (un aviso programado, no Fak) nombra la hora: no es un pedido nuevo
-  if (/^\s*LATIDO\b/.test(sinAvisosAdelante(texto))) return null;
+  if (/^\s*LATIDO\b/i.test(sinAvisosAdelante(texto))) return null;
   const p = pideHasta(texto);
   if (p.pide && estado) {
     return `${MARCA} Ya hay una hora fijada: trabajar hasta las ${estado.hasta} (lista: ${estado.lista || 'sin archivo'}). Este mensaje de Fak también nombra una hora (${leidas(p)}): si la cambió, volvé a fijarla con --fijar; si es la misma, seguí con la lista y no cierres antes.`;
@@ -267,8 +267,41 @@ export function atender(j, deps = {}) {
 
 /** El ultimo mensaje que escribio Fak en el transcript: { texto, ms } (ms = cuando lo mando, o null). Solo lee. */
 export function ultimoDeFakConHora(transcriptPath) {
+  // El registro de una sesion larga pesa cientos de MB: se lee desde el FINAL, por tramos cada vez mas grandes, y se
+  // corta en el primer mensaje de Fak que aparece (04/10/2026, auditor: leerlo entero tardaba 1,5 s, y pasados los
+  // 512 MB Node no lo puede leer de una vez y el control dejaba pasar callado).
+  for (const lineas of colasDe(transcriptPath)) {
+    const r = ultimoEn(lineas);
+    if (r) return r;
+  }
+  return { texto: '', ms: null };
+}
+
+const TRAMOS_MB = [8, 64, 480];
+/** Los renglones del final del archivo, en tramos crecientes (el ultimo tramo, si entra, es el archivo entero). */
+function* colasDe(ruta) {
+  let fd = null;
   try {
-    const lineas = fs.readFileSync(transcriptPath, 'utf8').split('\n');
+    const total = fs.statSync(ruta).size;
+    fd = fs.openSync(ruta, 'r');
+    let leido = 0;
+    for (const mb of TRAMOS_MB) {
+      const n = Math.min(total, mb * 1048576);
+      if (n <= leido) break;
+      const buf = Buffer.alloc(n);
+      fs.readSync(fd, buf, 0, n, total - n);
+      const lineas = buf.toString('utf8').split('\n');
+      if (n < total) lineas.shift();                    // el primer renglon de un tramo viene cortado
+      yield lineas;
+      leido = n;
+      if (n === total) break;
+    }
+  } catch { /* sin registro no se sabe */ } finally { if (fd !== null) { try { fs.closeSync(fd); } catch { /* nada */ } } }
+}
+
+/** El ultimo mensaje de Fak en esos renglones: { texto, ms }, o null si no hay ninguno. */
+function ultimoEn(lineas) {
+  try {
     for (let k = lineas.length - 1; k >= 0; k--) {
       if (!lineas[k] || !(lineas[k].includes('"user"') || lineas[k].includes('"queue-operation"') || lineas[k].includes('"queued_command"'))) continue;
       let j = null; try { j = JSON.parse(lineas[k]); } catch { continue; }
@@ -292,12 +325,12 @@ export function ultimoDeFakConHora(transcriptPath) {
         }
       } else continue;
       if (typeof c !== 'string' || !c.trim() || esAutomatico(c)) continue;
-      if (/^\s*LATIDO\b/.test(sinAvisosAdelante(c))) continue;            // el latido es un aviso programado, no Fak
+      if (/^\s*LATIDO\b/i.test(sinAvisosAdelante(c))) continue;           // el latido es un aviso programado, no Fak
       const ms = typeof j.timestamp === 'string' ? Date.parse(j.timestamp) : NaN;
       return { texto: c, ms: Number.isFinite(ms) ? ms : null };
     }
-  } catch { /* sin transcript no se sabe */ }
-  return { texto: '', ms: null };
+  } catch { /* un renglon raro no frena la busqueda */ }
+  return null;
 }
 /** El ultimo mensaje que escribio Fak en el transcript (texto), o ''. */
 export const ultimoDeFak = (transcriptPath) => ultimoDeFakConHora(transcriptPath).texto;
@@ -362,7 +395,7 @@ export function decidirStop(payload = {}, deps = {}) {
 /** Una linea para el arranque o la compactacion (session-start-context.sh), o ''. */
 export function contexto({ sesion = null, ahora = new Date(), home } = {}) {
   const todo = leerTodo(home);
-  const vivos = Object.entries(todo).filter(([s, e]) => (!sesion || s === sesion) && !e.cumplido && aFecha(e.hasta) && aFecha(e.hasta).getTime() > ahora.getTime());
+  const vivos = Object.entries(todo).filter(([s, e]) => e && typeof e === 'object' && (!sesion || s === sesion) && !e.cumplido && aFecha(e.hasta) && aFecha(e.hasta).getTime() > ahora.getTime());
   if (!vivos.length) return '';
   return vivos.map(([s, e]) => `${MARCA} Pedido VIGENTE de Fak (sesión ${s.slice(0, 8)}): trabajar sin parar hasta las ${e.hasta}. Lista: ${e.lista || 'sin archivo'}. Latido: ${e.latido || 'SIN ARMAR'} (mirá con CronList que siga vivo; si no está, armalo de nuevo con CronCreate y registralo con --latido). No cierres con un resumen antes de esa hora.`).join('\n');
 }

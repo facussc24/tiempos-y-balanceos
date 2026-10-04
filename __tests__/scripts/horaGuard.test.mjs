@@ -252,6 +252,36 @@ describe('hora-guard (Stop) — decide si el turno puede cerrar', () => {
     expect(H.pideHasta(v.texto).pide).toBe(true);
     expect(v.ms).toBe(Date.parse('2026-10-04T15:50:24.689Z'));
   });
+
+  it('ultimoDeFakConHora: lee el registro desde el final por tramos, y aguanta un latido en minuscula y adjuntos raros (auditoria del 04/10)', () => {
+    const t = path.join(home, 'transcript-largo.jsonl');
+    const linea = (o) => JSON.stringify(o);
+    // el mensaje de Fak queda a mas de 8 MB del final: el primer tramo no lo trae y el segundo si
+    const relleno = linea({ type: 'assistant', timestamp: '2026-10-04T15:00:00.000Z', message: { content: [{ type: 'text', text: 'x'.repeat(4000) }] } });
+    const cola = Array.from({ length: 2300 }, () => relleno);
+    fs.writeFileSync(t, [
+      linea({ type: 'user', timestamp: '2026-10-04T13:50:00.000Z', message: { content: REALES.las10 } }),
+      ...cola,
+      linea({ type: 'user', timestamp: '2026-10-04T15:13:00.000Z', message: { content: 'Latido: mirá la hora y seguí hasta las 16.' } }),
+      linea({ type: 'attachment', timestamp: '2026-10-04T15:14:00.000Z', attachment: { type: 'queued_command', origin: { kind: 'human' }, prompt: { raro: true } } }),
+      linea({ type: 'attachment', timestamp: '2026-10-04T15:15:00.000Z', attachment: { type: 'queued_command', origin: { kind: 'human' }, prompt: null } }),
+      '{"type":"user","timestamp":"2026-10-04T15:16:00.000Z","message":{"content":"renglon cortado',
+    ].join('\n'));
+    expect(fs.statSync(t).size).toBeGreaterThan(8 * 1048576);
+    const u = H.ultimoDeFakConHora(t);
+    expect(u.texto).toBe(REALES.las10);
+    expect(u.ms).toBe(Date.parse('2026-10-04T13:50:00.000Z'));
+    fs.rmSync(t, { force: true });
+  });
+
+  it('contexto: una entrada rota del estado (null) no calla el pedido vigente de las demas', () => {
+    H.fijar({ sesion: 'viva', hasta: '2026-10-04 16:00', ahora: D('2026-10-04 12:52'), home });
+    const p = path.join(home, '.claude', '.trabajar-hasta.json');
+    const todo = JSON.parse(fs.readFileSync(p, 'utf8'));
+    todo.rota = null;
+    fs.writeFileSync(p, JSON.stringify(todo), 'utf8');
+    expect(H.contexto({ ahora: D('2026-10-04 13:00'), home })).toContain('2026-10-04 16:00');
+  });
 });
 
 describe('los wrappers hora-prompt.sh y hora-guard.sh llegan a horaGuard.mjs', () => {

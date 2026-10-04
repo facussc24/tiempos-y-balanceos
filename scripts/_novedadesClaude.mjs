@@ -21,7 +21,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { urlBusqueda, filtrar, versionesNuevas, listado, aDia, idMasNuevo, avisoHook } from './_lib/novedadesClaude.mjs';
+import { urlBusqueda, filtrar, versionesNuevas, listado, aDia, avisoHook, estadoNuevo } from './_lib/novedadesClaude.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const CANON = JSON.parse(fs.readFileSync(path.join(AQUI, '_lib', 'novedadesClaude.data.json'), 'utf8'));
@@ -39,7 +39,7 @@ for (let i = 0; i < args.length; i++) {
   process.exit(2);
 }
 
-const leerEstado = () => { try { return JSON.parse(fs.readFileSync(path.join(DESTINO, '_estado.json'), 'utf8')); } catch { return { cuentas: {}, registro: {} }; } };
+const leerEstado = () => { try { const e = JSON.parse(fs.readFileSync(path.join(DESTINO, '_estado.json'), 'utf8')); return e && typeof e === 'object' ? e : { cuentas: {}, registro: {} }; } catch { return { cuentas: {}, registro: {} }; } };
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function traer(url, comoTexto = false) {
@@ -52,20 +52,21 @@ async function traer(url, comoTexto = false) {
   } finally { clearTimeout(t); }
 }
 
-/** Todas las paginas de una cuenta desde `desde`, hasta el tope de paginas. */
+/** Todas las paginas de una cuenta desde `desde`, hasta el tope de paginas. `tope` = se corto por el tope y quedaba mas. */
 async function leerCuenta(usuario, desde) {
   const todos = [];
   let cursor = null;
+  let tope = true;
   for (let p = 0; p < CANON.paginas_maximo; p++) {
     const j = await traer(urlBusqueda(CANON.busqueda, usuario, desde, cursor));
     if (!j || j.code !== 200 || !Array.isArray(j.results)) throw new Error(`la busqueda no devolvio una lista (codigo ${j && j.code})`);
     todos.push(...j.results);
     const sig = j.cursor && j.cursor.bottom;
-    if (!j.results.length || !sig || sig === cursor) break;
+    if (!j.results.length || !sig || sig === cursor) { tope = false; break; }
     cursor = sig;
     await esperar(400);
   }
-  return todos;
+  return { todos, tope };
 }
 
 const ahora = new Date();
@@ -86,9 +87,9 @@ for (const c of cuentas) {
   // sin rango pedido: desde un dia antes de la ultima lectura (y se descarta lo ya visto por su numero)
   const desde = !pidioRango && previo.leido_hasta ? aDia(new Date(Date.parse(previo.leido_hasta) - 86400000)) : desdePedido;
   try {
-    const crudo = await leerCuenta(c.usuario, desde);
+    const { todos: crudo, tope } = await leerCuenta(c.usuario, desde);
     const { items, fuera } = filtrar(crudo, c.usuario, { minRespuesta: CANON.me_gusta_minimo_respuesta, ultimoId: pidioRango ? null : previo.ultimo_id || null });
-    porCuenta.push({ ...c, desde, items, fuera, crudo });
+    porCuenta.push({ ...c, desde, items, fuera, crudo, tope });
     leidas++;
   } catch (e) {
     porCuenta.push({ ...c, desde, items: [], fuera: {}, error: String(e && e.message ? e.message : e) });
@@ -119,17 +120,9 @@ for (const c of porCuenta) if (!c.error) fs.writeFileSync(path.join(DESTINO, 'cr
 const archivo = path.join(DESTINO, `novedades_${sello}.md`);
 fs.writeFileSync(archivo, texto, 'utf8');
 
-// el estado avanza solo en lo que se pudo leer, y nunca retrocede
-const nuevo = { cuentas: { ...(estado.cuentas || {}) }, registro: { ...(estado.registro || {}) }, ultima_corrida: ahora.toISOString() };
-for (const c of porCuenta) {
-  if (c.error) continue;
-  const previo = nuevo.cuentas[c.usuario] || {};
-  const masNuevo = c.items.length ? c.items[0].id : null;
-  nuevo.cuentas[c.usuario] = {
-    ultimo_id: masNuevo && (!previo.ultimo_id || idMasNuevo(masNuevo, previo.ultimo_id)) ? masNuevo : previo.ultimo_id || null,
-    leido_hasta: ahora.toISOString(),
-  };
-}
-if (versiones.length) nuevo.registro.ultima_version = versiones[0].version;
+// el estado avanza solo en lo que se leyo entero, y nunca retrocede (la cuenta la hace estadoNuevo)
+for (const c of porCuenta) if (c.tope) console.log(`@${c.usuario}: llego al tope de ${CANON.paginas_maximo} paginas y quedaba mas: esa cuenta no avanza; corre de nuevo con --cuenta ${c.usuario} --desde <una fecha mas cercana>.`);
+const nuevo = estadoNuevo(estado, { porCuenta, versiones, errorRegistro, pidioRango, unaSolaCuenta: !!op['--cuenta'], ahora });
+if (pidioRango) console.log('(rango pedido: es una consulta; no se movio hasta donde se leyo cada cuenta)');
 fs.writeFileSync(path.join(DESTINO, '_estado.json'), `${JSON.stringify(nuevo, null, 2)}\n`, 'utf8');
 console.log(`Listado: ${archivo}`);
