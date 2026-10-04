@@ -13,6 +13,9 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **04/10 — Una prueba de «esto se niega» se arma con el de mentira PUESTO y comprobado antes de la primera corrida** (al reproducir un error del instalador, un agente registró la tarea real de Windows en esta PC; la sacó y no llegó a correr). Graduado a la barrera de `tools/claude-area/sync_area.ps1` (solo registra desde la copia instalada) y a la memoria `project_claudes_por_area`.
+- **04/10 — Una hoja de alto fijo recorta lo que no entra sin avisar: después de tocar un papel se MIRA la imagen del PDF, no la cantidad de páginas** (a la hoja 3 impresa le faltaba la pregunta 6 y el título decía «12 preguntas»; lo cazó el revisor independiente). Graduado a la memoria `project_claudes_por_area`.
+- **04/10 — A un agente que abre Word o Excel se le pone tope de tiempo por corrida, y uno que no toca un archivo en 30 minutos se mira: no se espera** (uno se colgó 85 minutos en una llamada). Graduado a la memoria `project_claudes_por_area`.
 - **03/10 — Una prueba contra la carpeta de VERDAD deja su huella, y en la biblioteca de Ingeniería nada se borra: va con `--simular` o contra una copia** (instalé desde la nube real para probarla y quedaron dos archivos de una PC inventada en su buzón). Graduado a la memoria `project_claudes_por_area`.
 - **03/10 — «Borrá lo temporal al terminar» sin decir CUÁL termina en un borrado por comodín: un agente se llevó 38 borradores ajenos de la carpeta que comparten todos.** Graduado a la memoria `reference_notebook_capacidad_agentes_con_navegador` (carpeta propia con su nombre; se borra esa y nada más).
 - **03/10 — Cuando cambia un resultado, los papeles que lo citan no se enteran solos** (cuatro hojas para el dueño seguían con el examen fácil, 131/8/0, un día después de medir el real, 105/31/3; lo cazó un Fable independiente). Graduado a `tools/claude-area/puerta.py`, puerta D (`cifras_viejas`, `--autotest`).
