@@ -185,11 +185,11 @@
       "pedido": "02/10: «ver qué hacen las distintas personas en Barack… que sea un video que realmente los ilusione… a Ingeniería ya se los vendí, a los demás sectores aún no»",
       "en_el_video": true,
       "estado": "probado",
-      "prueba": ".sgc-cache/claude-por-area/examen/sectores_respuestas_v6.md",
-      "como_se_probo": "03/10 (reglas v6, nivel Medio): la pregunta de cada sector, en su carpeta instalada como la PC de ESE sector. Cada afirmación buscada en el extracto del documento citado, con el criterio más severo: ninguna cita inventada, ninguna revisión distinta, ningún número, plazo ni ruta cambiado. Calidad, Dirección e Ingeniería coinciden sin observación; Producción, Logística, Compras y RRHH coinciden con una observación de redacción; la de Mantenimiento agregó «sin instrumentos», dos palabras que el instructivo no dice. Las tomas del video son las del 02/10.",
+      "prueba": ".sgc-cache/claude-por-area/examen/sectores_respuestas_v7.md",
+      "como_se_probo": "04/10 (reglas v7, nivel Medio): la pregunta de cada sector, en su carpeta instalada como la PC de ESE sector. Un verificador independiente buscó cada afirmación en el extracto del documento citado, con el criterio más severo: 0 citas inventadas, 0 revisiones distintas, 0 números, plazos o rutas cambiados. Calidad coincide sin observación; las otras siete, con una observación de redacción: una frase de apertura que no es respuesta en Producción, Mantenimiento y RRHH (la hoja 9 la saca y lo avisa), una sección corrida en Logística e Ingeniería, un ofrecimiento propio en Compras y «tres documentos» donde cita cuatro en Dirección. Las tomas del video son las del 02/10.",
       "probado_sobre": {
         "1": "6e18f763c4d4",
-        "2": "a78e27052aa6",
+        "2": "19f88264ce57",
         "3": "e69d30871672"
       },
       "depende_de": [
