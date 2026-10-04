@@ -276,11 +276,24 @@ a quién preguntar que el documento no nombre»); D12 y D15 no dicen dónde est�
 - Qué plan de Microsoft 365 tiene Barack: de eso depende que una PC que solo tiene el Outlook nuevo pueda instalar el
   clásico (`examen/investigacion_outlook_clasico.md`; «Empresa Básico» no lo trae e instalar Office pide administrador).
 
-**Próximo paquete (se le muestra a Facundo antes de publicar):** que el asistente ayude a dejar el Outlook clásico andando
-y proponga tomar el control de la PC (`examen/investigacion_tomar_control_pc.md`: existe en Windows para cuentas Pro y Max,
-viene apagado, lo prende la persona y no puede operar ventanas de administrador; «Asistencia rápida» de Windows para que
-Facundo tome el control a distancia); cerrar el camino de leer mails por fuera del programa (`mail-guard`); contestar y
-reenviar un mail que ya existe; lo demás de la lista A de `examen/fable_organizador_2026-10-04.md`.
+**Próximo paquete (se le muestra a Facundo antes de publicar; nada sale antes de la reunión).** Al 04/10, 19:10, está
+armado en la rama `candidato-13` del repo privado (`3ceb1d9`, worktree `C:/Dev/barack-claude-outlook`; tanda completa
+3.683 de 3.683; cuatro miradas independientes con sus arreglos aplicados; los últimos ajustes piden una más antes de publicar; el detalle, en `examen/TARDE_2026-10-04.md` y en NOTAS
+de la rama):
+
+| Qué | Estado | Qué falta para publicarlo |
+|---|---|---|
+| Ayuda con el Outlook clásico (cómo abrirlo, a quién avisar) | Hecho | Saber qué plan de Microsoft 365 tiene Barack |
+| Leer o buscar en el correo solo con el buscador del asistente (`mail-guard`, regla `lectura`) | Hecho y medido contra 39.016 comandos reales (no frena Excel, Word ni PowerPoint) | Nada técnico. Es una red, no un candado |
+| El asistente propone hacer un paso por la persona en la Configuración de Windows (`manejar-la-pc`) | Hecho: un solo programa, con el sí de la persona, sin portapapeles | (1) probarlo en una PC de área; (2) que Facundo decida qué hacer con los clics que borran o desinstalan adentro de Configuración; (3) reglas versión 8 con examen (hoy dicen «ni cambiás configuraciones») |
+| Texto candidato de las reglas versión 8 (4 renglones) | Escrito en NOTAS, sin aplicar | El examen completo |
+| Contestar o reenviar un mail que ya existe | Sin empezar | Su prueba abre una ventana de Outlook: con Facundo delante o en una PC de prueba |
+
+El paquete 12 publicado tiene un hueco chico que esta rama cierra: una herramienta de navegador o de pantalla con un campo
+de más (`action: 'screenshot'`) pasa el control. Para usarlo el asistente tendría que agregarlo a propósito, y en las PC de
+área no hay navegador conectado ni control de la PC prendido.
+
+Lo demás de la lista A de `examen/fable_organizador_2026-10-04.md` sigue pendiente.
 
 ## Las etapas, en orden. Cada una tiene su puerta: no se pasa a la siguiente con la puerta en rojo.
 
