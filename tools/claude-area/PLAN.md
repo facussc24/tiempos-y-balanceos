@@ -246,6 +246,10 @@ los papeles no dicen «no ve el correo de otro»; un solo video, más lento.
 | Hojas | Sin mails compartidos, con «Cómo sigue» (el plan de Facundo), el examen v7, buscar en los mails, hoja 10 con 11 pasos, hoja 9 con las respuestas v7 | `exports/CLAUDES_POR_AREA_20261001/` y la carpeta para llevar |
 | Novedades de Claude (Lydia Hallie, Thariq, Claude Devs y el registro oficial) | `scripts/_novedadesClaude.mjs`, aviso semanal solo en la PC de Facundo; él decide qué se implementa | `.sgc-cache/x-seguimiento/` |
 
+| Revisión independiente de las hojas, después de publicarlas (un Opus que no las escribió, sobre los PDF de la carpeta para llevar) | 4 graves y 8 medias, corregidas y miradas en imagen: un cartel con un número del examen viejo, el piloto distinto en la hoja 6, frases «no se comparten / no se copian a la nube» (Facundo pidió no nombrarlo), la lista para tildar que el guion mandaba imprimir. El manual decía «no muestra los mails de Dirección ni de RRHH»: corregido | `examen/revision_hojas_2026-10-04_tarde.md` |
+| Auditoría de cierre del código de hoy (`auditor`, Opus) | Sin bloqueantes; 1 error menor y 6 de robustez, todos aplicados con su prueba (lector de novedades y freno de la hora) | commits `fb90226e`, `289a570e` |
+| Outlook clásico (pedido de Facundo): qué dice el asistente cuando la PC tiene el Outlook nuevo o no tiene el clásico | Rama `outlook-ayuda` del repo privado (`10701cd`), **sin publicar**: le dice a la persona cómo abrir «Outlook (classic)» y a quién avisar. Suite 3.496 de 3.496 | `C:\Dev\barack-claude-outlook` |
+
 **Lo publicado: PAQUETE 12** (reglas v7, plugin 0.4.3). Ensayo de PC nueva sobre la carpeta para llevar: 7 de 7. Nube
 idéntica (572 archivos, subió todo). Demostración reinstalada desde la carpeta para llevar. `main` del repo privado =
 `a5e25a8`; respaldo `barack-claude-20261004-1430.bundle`.
