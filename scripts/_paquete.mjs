@@ -2599,7 +2599,9 @@ export function cerrarInstalacion(r, { indicadores, simular = false, sinTarea = 
     if (!r.persona && !r.declarado) decir('  Esta persona no figura en la lista. Para que quede con su área: correr de nuevo con --area "<área>" --nombre "<nombre y apellido>" --puesto "<puesto>".');
     if (nubeRecordada) decir(`  Instalado desde la carpeta de donde se instaló esta PC la primera vez (${nube}): las novedades las busca ahí.`);
     else if (r.desdeCarpeta) decir('  Instalado desde esta carpeta (esta PC no ve la nube de Barack): las novedades las busca acá, cuando esta carpeta esté a la vista.');
-    decir(`  Abrí Claude en ${r.home} (tus archivos van en ${path.join(r.home, 'Trabajo')}).   Plugin: ${r.plugin.estado === 'habilitado' ? `habilitado en ${r.plugin.ruta}` : 'ya estaba habilitado'}${r.plugin.respaldo ? ` (respaldo: ${r.plugin.respaldo})` : ''}`);
+    // Lo que ve la persona no lleva nombres de programas ni rutas internas (CONTRATO): donde quedo habilitado y su respaldo
+    // van en lo que devuelve `instalar()` (`r.plugin`) y en `instalado.json`, no en la ventana (04/10/2026: se ve en vivo).
+    decir(`  Abrí Claude en ${r.home} (tus archivos van en ${path.join(r.home, 'Trabajo')}).`);
     if (r.casa && r.casa.migrado) decir(`  Las reglas viejas de Trabajo\\.claude\\rules pasaron a cuarentena: ${r.casa.migrado}`);
     if (r.plugin.modo && r.plugin.modo.valor === 'bypassPermissions') decir(lineaOmitirPermisos(omitirPermisosEnLaApp(env)));
     const tarea = dejarActualizacionAutomatica({ indicadores, estado: r.estado, simular, sinTarea, home: r.home, env, ejecutar, plataforma });
