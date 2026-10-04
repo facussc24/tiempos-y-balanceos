@@ -1,0 +1,15 @@
+{
+  "_que_es": "A quien se sigue para enterarse de las novedades de Claude Code (pedido de Fak, 04/10/2026). Lo lee scripts/_novedadesClaude.mjs. Una cuenta nueva se agrega aca.",
+  "cuentas": [
+    { "usuario": "lydiahallie", "quien": "Lydia Hallie, del equipo de Claude Code (consejos y funciones nuevas)" },
+    { "usuario": "trq212", "quien": "Thariq Shihipar, del equipo de Claude Code (skills, agentes, formas de trabajo)" },
+    { "usuario": "ClaudeDevs", "quien": "Claude Devs, la cuenta de Anthropic para desarrolladores (anuncios)" }
+  ],
+  "busqueda": "https://api.fxtwitter.com/2/search",
+  "_busqueda": "FxTwitter: un servicio publico de terceros que deja leer X sin iniciar sesion. Si un dia deja de andar, el programa lo dice y sigue con el registro de cambios oficial.",
+  "registro_de_cambios": "https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md",
+  "dias_por_defecto": 8,
+  "paginas_maximo": 8,
+  "me_gusta_minimo_respuesta": 50,
+  "versiones_primera_vez": 6
+}
