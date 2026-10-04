@@ -40,6 +40,9 @@ noche», «hasta que vuelva», «ponete un cronómetro»), ANTES de seguir con l
    valiendo: el techo de agentes, el cupo (mirarlo cada dos horas) y lo que el contrato de autonomía marca «preguntar».
    Lo que necesita a Fak se anota en la lista para cuando vuelva; no frena el resto.
 6. Si Fak dice que pare: `--terminar --porque "<sus palabras>"`.
+7. Si con una hora vigente Fak da más tiempo («te doy 1 hora más», 04/10/2026 a las 18:48 con el corte en 19:10), las
+   horas se suman a la hora que ya había (20:10), no al momento del mensaje: se vuelve a fijar con `--fijar`, con la
+   misma lista y el mismo latido, y a la lista se le agrega trabajo. El aviso ya dice la hora nueva.
 
 Fak también puede usar `/goal` (propio de Claude Code): sigue turno tras turno hasta que se cumple una condición.
 El que juzga no tiene reloj, así que la condición tiene que pedir que se muestre la hora en cada turno. Este

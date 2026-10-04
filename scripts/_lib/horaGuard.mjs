@@ -275,6 +275,14 @@ export function avisoDe(texto, { estado = null, ahora = new Date() } = {}) {
   // el propio latido (un aviso programado, no Fak) nombra la hora: no es un pedido nuevo
   if (/^\s*LATIDO\b/i.test(sinAvisosAdelante(texto))) return null;
   const p = pideHasta(texto);
+  if (p.pide && estado && p.duracion_horas) {
+    // «te doy 1 hora más» con una hora ya fijada: se suma a ESA hora, no al momento del mensaje (04/10/2026: el aviso
+    // decía «desde ahora» y con la hora fijada a las 19:10 un «1 hora más» de las 18:48 daba 19:48 en vez de 20:10).
+    const vigente = new Date(String(estado.hasta ?? '').replace(' ', 'T'));
+    const base = Number.isFinite(vigente.getTime()) && vigente > ahora ? vigente : ahora;
+    const nueva = enLocal(new Date(base.getTime() + p.duracion_horas * 3600000));
+    return `${MARCA} Ya hay una hora fijada: trabajar hasta las ${estado.hasta} (lista: ${estado.lista || 'sin archivo'}). Este mensaje de Fak pide ${p.duracion_horas} hora(s) más: se suman a la hora que ya había (si ya pasó, a este momento), así que la nueva es ${nueva} (ahora son las ${enLocal(ahora)}). Fijala con --fijar "${nueva}" (la misma lista y el mismo latido) y seguí; no cierres antes.`;
+  }
   if (p.pide && estado) {
     return `${MARCA} Ya hay una hora fijada: trabajar hasta las ${estado.hasta} (lista: ${estado.lista || 'sin archivo'}). Este mensaje de Fak también nombra una hora (${leidas(p)}): si la cambió, volvé a fijarla con --fijar; si es la misma, seguí con la lista y no cierres antes.`;
   }

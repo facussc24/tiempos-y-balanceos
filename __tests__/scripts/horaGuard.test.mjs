@@ -64,6 +64,15 @@ describe('horaGuard — ¿el mensaje pone una hora para trabajar?', () => {
     for (const t of NO_PIDEN) expect(H.avisoDe(t, { ahora }), t).toBe(null);
     const estado = { hasta: '2026-10-04 10:00', lista: 'C:\\x\\lista.md', latido: 'abc' };
     expect(H.avisoDe(REALES.las10, { estado, ahora })).toContain('Ya hay una hora fijada');
+    // «1 hora más» con una hora ya fijada se suma a ESA hora (mensaje textual del 04/10/2026, 18:48, con el corte en 19:10)
+    const tarde = { hasta: '2026-10-04 19:10', lista: 'C:\\x\\lista.md', latido: 'abc' };
+    const unaMas = H.avisoDe('te doy 1 hora mas labura tranuqilo', { estado: tarde, ahora: D('2026-10-04 18:48') });
+    expect(unaMas).toContain('--fijar "2026-10-04 20:10"');
+    expect(unaMas).not.toContain('19:48');
+    // gemelo: si la hora fijada ya pasó, se cuenta desde el momento del mensaje
+    expect(H.avisoDe('te doy 1 hora mas labura tranuqilo', { estado: tarde, ahora: D('2026-10-04 19:30') })).toContain('--fijar "2026-10-04 20:30"');
+    // y un mensaje que nombra una hora (no una duración) sigue con el aviso de siempre
+    expect(H.avisoDe(REALES.las10, { estado: tarde, ahora: D('2026-10-04 18:48') })).not.toContain('hora(s) más');
     expect(H.avisoDe('como va eso?', { estado, ahora })).toContain('Sigue vigente');
     expect(H.avisoDe('pará, dejalo así', { estado, ahora })).toContain('--terminar');
     expect(H.avisoDe('para que quede claro, seguí', { estado, ahora })).toContain('Sigue vigente');   // "para" preposicion
