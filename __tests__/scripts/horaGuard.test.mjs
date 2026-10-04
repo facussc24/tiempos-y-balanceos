@@ -176,6 +176,51 @@ describe('hora-guard (Stop) — decide si el turno puede cerrar', () => {
     // y un mensaje de Fak que no pone ninguna hora no frena nada
     expect(H.decidirStop({ session_id: 'otra', transcript_path: 'x', last_assistant_message: 'Listo.' }, { ahora, home, ultimoDeFak: () => NO_PIDEN[0] }).ok).toBe(true);
   });
+
+  it('VERDE: el pedido ya cumplido y cerrado con --terminar no se vuelve a pedir (04/10/2026, a las 10:00); ROJO: un mensaje NUEVO con otra hora, si', () => {
+    // el caso real: Fak escribio a las 23:10, se fijo a las 23:15 hasta las 10:00, a las 10:00 se cerro y va el resumen
+    const mandado = D('2026-10-03 23:10').getTime();
+    const lista = path.join(home, 'lista.md'); fs.writeFileSync(lista, '# lista\n');
+    H.fijar({ sesion, hasta: '2026-10-04 10:00', lista, ahora: D('2026-10-03 23:15'), home });
+    H.registrarLatido({ sesion, id: '94e959d4', home });
+    const alas10 = D('2026-10-04 10:00');
+    expect(H.terminar({ sesion, porque: 'llegaron las 10:00', ahora: alas10, home })).toMatchObject({ ok: true, vencio: true });
+    expect(H.leerEstado(sesion, home)).toMatchObject({ cumplido: '2026-10-04 10:00', hasta: '2026-10-04 10:00' });
+    expect(H.vigente(sesion, { ahora: alas10, home })).toBe(null);
+    const cierre = (leido, final = 'Trabajé hasta las 10. Todo el detalle, en una página.') => H.decidirStop({ session_id: sesion, transcript_path: 'x', last_assistant_message: final, session_crons: [] }, { ahora: alas10, home, ultimoDeFak: () => leido });
+    expect(cierre({ texto: REALES.las10, ms: mandado })).toMatchObject({ ok: true, motivo: 'nada_vigente' });   // con la hora del mensaje
+    expect(cierre(REALES.las10)).toMatchObject({ ok: true, motivo: 'nada_vigente' });                             // y sin ella
+    // ROJO: a las 10:19 Fak escribe de nuevo y pone otra hora; la marca del pedido viejo no lo tapa
+    const nuevo = { texto: REALES.las8, ms: D('2026-10-04 10:19').getTime() };
+    expect(cierre(nuevo, 'Dale, arranco.')).toMatchObject({ ok: false, motivo: 'hora_sin_fijar' });
+    // ROJO igual si el pedido viejo vencio y nunca se cerro con --terminar
+    const otra = 'sesion-sin-cerrar';
+    H.fijar({ sesion: otra, hasta: '2026-10-04 10:00', lista, ahora: D('2026-10-03 23:15'), home });
+    expect(H.decidirStop({ session_id: otra, transcript_path: 'x', last_assistant_message: 'Dale, arranco.' }, { ahora: D('2026-10-04 10:20'), home, ultimoDeFak: () => nuevo })).toMatchObject({ ok: false, motivo: 'hora_sin_fijar' });
+    // VERDE: se fija la hora nueva y ya no frena; de la marca vieja no se hereda el latido
+    const r = H.fijar({ sesion, hasta: '2026-10-04 12:00', lista, ahora: D('2026-10-04 10:24'), home });
+    expect(r.estado).toMatchObject({ hasta: '2026-10-04 12:00', latido: null });
+    expect(H.decidirStop({ session_id: sesion, transcript_path: 'x', last_assistant_message: 'Sigo con la lista.', session_crons: [{ id: 'b' }] }, { ahora: D('2026-10-04 10:25'), home, ultimoDeFak: () => nuevo }).ok).toBe(true);
+    // cerrar dos veces no rompe, y una marca no acepta latido
+    H.terminar({ sesion, porque: 'Fak dijo: pará, dejalo así', ahora: D('2026-10-04 10:30'), home });
+    expect(H.terminar({ sesion, ahora: D('2026-10-04 10:31'), home })).toMatchObject({ ok: true, nada: true });
+    expect(H.registrarLatido({ sesion, id: 'c', home }).ok).toBe(false);
+    expect(H.contexto({ ahora: D('2026-10-04 10:31'), home })).toBe('');
+  });
+
+  it('ultimoDeFakConHora: lee del registro el ultimo mensaje de Fak con su hora, salteando resultados de herramientas y avisos', () => {
+    const t = path.join(home, 'transcript.jsonl');
+    fs.writeFileSync(t, [
+      JSON.stringify({ type: 'user', timestamp: '2026-10-04T02:10:00.000Z', message: { content: REALES.las10 } }),
+      JSON.stringify({ type: 'assistant', timestamp: '2026-10-04T02:11:00.000Z', message: { content: [{ type: 'text', text: 'Dale.' }] } }),
+      JSON.stringify({ type: 'user', timestamp: '2026-10-04T02:12:00.000Z', message: { content: [{ type: 'tool_result', content: 'ok' }] } }),
+    ].join('\n'));
+    const u = H.ultimoDeFakConHora(t);
+    expect(u.texto).toBe(REALES.las10);
+    expect(u.ms).toBe(Date.parse('2026-10-04T02:10:00.000Z'));
+    expect(H.ultimoDeFak(t)).toBe(REALES.las10);
+    expect(H.ultimoDeFakConHora(path.join(home, 'no-esta.jsonl'))).toEqual({ texto: '', ms: null });
+  });
 });
 
 describe('los wrappers hora-prompt.sh y hora-guard.sh llegan a horaGuard.mjs', () => {
@@ -201,6 +246,23 @@ describe('los wrappers hora-prompt.sh y hora-guard.sh llegan a horaGuard.mjs', (
     expect(rojo.stderr).toContain(H.MARCA);
     const conLatido = correr('hora-guard.sh', { hook_event_name: 'Stop', session_id: 'prueba-hora', last_assistant_message: 'Sigo.', session_crons: [{ id: 'a' }] }, { HOME: home, USERPROFILE: home });
     expect(conLatido.status).toBe(0);
+  });
+
+  it('hora-guard.sh con el registro de la conversacion: pedido cumplido y cerrado -> exit 0; mensaje NUEVO de Fak con otra hora -> exit 2', () => {
+    const lista = path.join(home, 'lista.md'); fs.writeFileSync(lista, '# lista\n');
+    const t = path.join(home, 'transcript.jsonl');
+    const renglon = (texto, cuando) => JSON.stringify({ type: 'user', timestamp: new Date(cuando).toISOString(), message: { content: texto } });
+    const hace2h = Date.now() - 2 * 3600 * 1000;
+    fs.writeFileSync(t, `${renglon(REALES.las10, hace2h)}\n`);
+    expect(H.fijar({ sesion: 'prueba-cumplido', hasta: new Date(Date.now() + 60 * 1000), lista, ahora: new Date(hace2h + 5 * 60 * 1000), home }).ok).toBe(true);
+    expect(H.terminar({ sesion: 'prueba-cumplido', porque: 'llegó la hora que pidió Fak', home }).ok).toBe(true);
+    const payload = { hook_event_name: 'Stop', session_id: 'prueba-cumplido', transcript_path: t, last_assistant_message: 'Trabajé hasta las 10. Todo el detalle, en una página.', session_crons: [] };
+    const cumplido = correr('hora-guard.sh', payload, { HOME: home, USERPROFILE: home });
+    expect(cumplido.status).toBe(0);
+    fs.appendFileSync(t, `${renglon(REALES.las8, Date.now())}\n`);
+    const nuevo = correr('hora-guard.sh', payload, { HOME: home, USERPROFILE: home });
+    expect(nuevo.status).toBe(2);
+    expect(nuevo.stderr).toContain('no la fijaste');
   });
 
   it('session-start-context.sh: al compactar y al reanudar reimprime el pedido vigente de ESA sesion, y de ninguna otra', () => {

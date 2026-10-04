@@ -48,7 +48,9 @@ mecanismo no depende de eso.
 - **Hook `hora-guard.sh`** (Stop): con una hora vigente frena el cierre del turno si no hay ningún aviso programado
   vivo (lo dice `session_crons`; se frena también en el segundo intento) o si el mensaje se despide como si hubiera
   terminado; y frena una vez si el último mensaje de Fak ponía una hora y no se fijó. Salida honesta: un renglón
-  `No aplica trabajar-hasta: <motivo>`.
+  `No aplica trabajar-hasta: <motivo>`. Un pedido cumplido y cerrado con `--terminar` deja su marca en el estado: por
+  ese mismo mensaje no se vuelve a frenar; por uno nuevo de Fak, posterior a la última vez que se fijó, sí
+  (04/10/2026: a las 10:00 cerré el pedido de la noche y el control volvió a pedirme que fijara esa misma hora).
 - **`session-start-context.sh`**: al arrancar, reanudar y compactar reimprime el pedido vigente de ESA sesión.
 - Estado: `~/.claude/.trabajar-hasta.json`, por sesión. Tests en las dos direcciones, con sus mensajes textuales:
   `__tests__/scripts/horaGuard.test.mjs`.

@@ -166,14 +166,14 @@ export function fijar({ sesion, hasta, lista = null, pedido = null, ahora = new 
   if (d.getTime() - ahora.getTime() > 36 * 3600 * 1000) return { ok: false, error: 'es a mas de 36 horas: revisar la fecha' };
   if (lista && !fs.existsSync(lista)) return { ok: false, error: `no existe el archivo de la lista: ${lista}` };
   const todo = leerTodo(home);
-  const previo = todo[sesion] || {};
-  todo[sesion] = { hasta: enLocal(d), pedido: pedido || previo.pedido || null, lista: lista ? path.resolve(lista) : (previo.lista || null), latido: previo.latido || null, fijado: enLocal(ahora) };
+  const previo = todo[sesion] && !todo[sesion].cumplido ? todo[sesion] : {};   // de un pedido ya cerrado no se hereda nada
+  todo[sesion] = { hasta: enLocal(d), pedido: pedido || previo.pedido || null, lista: lista ? path.resolve(lista) : (previo.lista || null), latido: previo.latido || null, fijado: enLocal(ahora), fijado_ms: ahora.getTime() };
   guardarTodo(todo, home);
   return { ok: true, estado: todo[sesion] };
 }
 export function registrarLatido({ sesion, id, home } = {}) {
   const todo = leerTodo(home);
-  if (!sesion || !todo[sesion]) return { ok: false, error: 'no hay una hora fijada para esta sesion: primero --fijar' };
+  if (!sesion || !todo[sesion] || todo[sesion].cumplido) return { ok: false, error: 'no hay una hora fijada para esta sesion: primero --fijar' };
   if (!id || !String(id).trim()) return { ok: false, error: 'falta el id del aviso programado (el que devuelve CronCreate)' };
   todo[sesion].latido = String(id).trim();
   guardarTodo(todo, home);
@@ -182,17 +182,24 @@ export function registrarLatido({ sesion, id, home } = {}) {
 export function terminar({ sesion, porque = null, ahora = new Date(), home } = {}) {
   const todo = leerTodo(home);
   const e = sesion ? todo[sesion] : null;
-  if (!e) return { ok: true, estado: null, nada: true };
+  if (!e || e.cumplido) return { ok: true, estado: null, nada: true };
   const vencio = (aFecha(e.hasta) || ahora).getTime() <= ahora.getTime();
   if (!vencio && !(porque && String(porque).trim().length >= 8)) return { ok: false, error: `todavia no son las ${e.hasta}: para terminar antes hace falta --porque "<lo que dijo Fak>"` };
-  delete todo[sesion];
+  // No se borra: queda la MARCA de que ese pedido se atendio. El 04/10/2026, al llegar las 10:00, cerre con --terminar y
+  // el control de cierre, que ya no encontraba nada, volvio a pedir que fijara la hora del mismo mensaje de Fak.
+  todo[sesion] = { cumplido: enLocal(ahora), hasta: e.hasta, pedido: e.pedido || null, fijado: e.fijado || null, fijado_ms: Number.isFinite(e.fijado_ms) ? e.fijado_ms : null, porque: porque || null };
+  for (const [s, v] of Object.entries(todo)) {
+    if (s !== sesion && v && v.cumplido && aFecha(v.cumplido) && ahora.getTime() - aFecha(v.cumplido).getTime() > DIAS_MARCA * 86400000) delete todo[s];
+  }
   guardarTodo(todo, home);
   return { ok: true, estado: e, vencio };
 }
-/** vigente = hay hora fijada y todavia no llego. */
+/** Cuantos dias se guarda la marca de un pedido ya cumplido de OTRA sesion. */
+const DIAS_MARCA = 14;
+/** vigente = hay hora fijada, no se cerro y todavia no llego. */
 export function vigente(sesion, { ahora = new Date(), home } = {}) {
   const e = leerEstado(sesion, home);
-  if (!e) return null;
+  if (!e || e.cumplido) return null;
   const d = aFecha(e.hasta);
   return d && d.getTime() > ahora.getTime() ? { ...e, fecha: d } : null;
 }
@@ -258,8 +265,8 @@ export function atender(j, deps = {}) {
   } catch { return null; }
 }
 
-/** El ultimo mensaje que escribio Fak en el transcript (texto), o ''. Solo lee. */
-export function ultimoDeFak(transcriptPath) {
+/** El ultimo mensaje que escribio Fak en el transcript: { texto, ms } (ms = cuando lo mando, o null). Solo lee. */
+export function ultimoDeFakConHora(transcriptPath) {
   try {
     const lineas = fs.readFileSync(transcriptPath, 'utf8').split('\n');
     for (let k = lineas.length - 1; k >= 0; k--) {
@@ -272,10 +279,25 @@ export function ultimoDeFak(transcriptPath) {
         c = c.filter((b) => b && b.type === 'text').map((b) => b.text || '').join('');
       }
       if (typeof c !== 'string' || !c.trim() || esAutomatico(c)) continue;
-      return c;
+      const ms = typeof j.timestamp === 'string' ? Date.parse(j.timestamp) : NaN;
+      return { texto: c, ms: Number.isFinite(ms) ? ms : null };
     }
   } catch { /* sin transcript no se sabe */ }
-  return '';
+  return { texto: '', ms: null };
+}
+/** El ultimo mensaje que escribio Fak en el transcript (texto), o ''. */
+export const ultimoDeFak = (transcriptPath) => ultimoDeFakConHora(transcriptPath).texto;
+
+/**
+ * ¿Ese mensaje de Fak ya se atendio? Si: hay una hora fijada para la sesion (vigente, vencida o ya cerrada con --terminar)
+ * y se fijo DESPUES de que el lo mando. Un mensaje nuevo, posterior a la ultima vez que se fijo, no esta atendido.
+ * Sin la hora del mensaje no se puede comparar: vale que haya algo fijado (como antes del 04/10/2026).
+ */
+export function atendido(estado, msMensaje = null) {
+  if (!estado) return false;
+  const f = Number.isFinite(estado.fijado_ms) ? estado.fijado_ms : (aFecha(estado.fijado) ? aFecha(estado.fijado).getTime() + 59999 : null);
+  if (msMensaje == null || f == null) return true;
+  return f >= msMensaje;
 }
 
 // «terminé» va CON tilde, sin `\b` detras y cerrando la frase («Terminé.», «ya terminé con todo», «terminé por hoy»):
@@ -313,9 +335,11 @@ export function decidirStop(payload = {}, deps = {}) {
     return { ok: true, motivo: 'vigente_con_latido' };
   }
   // sin hora fijada: ¿el ultimo mensaje de Fak ponia una y no se atendio?
-  const leer = deps.ultimoDeFak || ultimoDeFak;
-  const ultimo = payload.transcript_path ? leer(payload.transcript_path) : '';
-  if (ultimo && pideHasta(ultimo).pide && !final.includes(NO_APLICA) && !leerEstado(payload.session_id, deps.home)) {
+  const leer = deps.ultimoDeFak || ultimoDeFakConHora;
+  const leido = payload.transcript_path ? leer(payload.transcript_path) : '';
+  const ultimo = typeof leido === 'string' ? leido : (leido && leido.texto) || '';
+  const msUltimo = leido && typeof leido === 'object' && Number.isFinite(leido.ms) ? leido.ms : null;
+  if (ultimo && pideHasta(ultimo).pide && !final.includes(NO_APLICA) && !atendido(leerEstado(payload.session_id, deps.home), msUltimo)) {
     return { ok: false, motivo: 'hora_sin_fijar', mensaje: `${MARCA} El último mensaje de Fak pone una hora para trabajar (${leidas(pideHasta(ultimo))}) y no la fijaste. Antes de cerrar el turno: la lista en un archivo, node scripts/_lib/horaGuard.mjs --fijar "AAAA-MM-DD HH:MM" --lista <archivo>, el latido con CronCreate y --latido <id>. Si no pide eso, un renglón que empiece con «${NO_APLICA}» y el motivo.` };
   }
   return { ok: true, motivo: 'nada_vigente' };
@@ -324,7 +348,7 @@ export function decidirStop(payload = {}, deps = {}) {
 /** Una linea para el arranque o la compactacion (session-start-context.sh), o ''. */
 export function contexto({ sesion = null, ahora = new Date(), home } = {}) {
   const todo = leerTodo(home);
-  const vivos = Object.entries(todo).filter(([s, e]) => (!sesion || s === sesion) && aFecha(e.hasta) && aFecha(e.hasta).getTime() > ahora.getTime());
+  const vivos = Object.entries(todo).filter(([s, e]) => (!sesion || s === sesion) && !e.cumplido && aFecha(e.hasta) && aFecha(e.hasta).getTime() > ahora.getTime());
   if (!vivos.length) return '';
   return vivos.map(([s, e]) => `${MARCA} Pedido VIGENTE de Fak (sesión ${s.slice(0, 8)}): trabajar sin parar hasta las ${e.hasta}. Lista: ${e.lista || 'sin archivo'}. Latido: ${e.latido || 'SIN ARMAR'} (mirá con CronList que siga vivo; si no está, armalo de nuevo con CronCreate y registralo con --latido). No cierres con un resumen antes de esa hora.`).join('\n');
 }
