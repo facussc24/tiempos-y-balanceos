@@ -45,7 +45,9 @@ Una PC instala lo `comun` más lo de su área.
   "outlook": "clasico|nuevo|cerrado|no", "python": true, "ve_Y": true, "ve_Z": true,
   "disco_libre_gb": 0, "errores": [], "estado": "instalado|actualizado|al_dia|esperar|error|firma_rechazada|sin_clave|version_anterior",
   "mensaje": null, "repuestos": [], "extranos": [], "escrito": "2026-10-01T18:00:00" }
-//   politica, python, ve_Y, ve_Z y disco_libre_gb los completa la tarea `sync_area.ps1` después de cada --actualizar.
+//   politica, python, ve_Y, ve_Z y disco_libre_gb los completa la tarea `sync_area.ps1` después de cada --actualizar, y desde el
+//   04/10/2026 tambien `node_origen` ("propio"|"path"|"nube": con que Node corrio la tarea) y `tarea_errores` (lo que fallo en esa
+//   corrida, hasta 5 de 300 caracteres). Son campos nuevos: el tablero todavia no los muestra.
 
 // inventario\<pc>.json
 { "pc": "", "usuario_windows": "", "relevado": "2026-10-01T18:00:00",
@@ -200,13 +202,18 @@ niega por "todo o nada"). Opciones: `--home` (o `CLAUDE_AREA_HOME`), `--claude-d
    vez), y un aviso `sin-persona` en `4- BUZON\avisos\<pc>\` (una sola vez por perfil escrito). `perfil.json` se
    escribe acá; si cambia, el anterior queda como `perfil.json.anterior-<fecha>`.
    **Dos usuarios de Windows en la misma PC** (03/10/2026): `perfil.json` e `instalado.json` viven en `<HOME>`, que es de los
-   dos. Si el perfil que había era de OTRO usuario (sin mayúsculas ni tildes: `LGomez` = `lgomez`) **no se frena** —una PC que
-   cambia de dueño tiene que poder reinstalarse—, se avisa: `instalar()` devuelve `cambioDeUsuario` `{ anterior, nuevo,
+   dos. Si la PC estaba instalada para OTRO usuario (sin mayúsculas ni tildes: `LGomez` = `lgomez`) **no se frena** —una PC
+   que cambia de dueño tiene que poder reinstalarse—, se avisa: `instalar()` devuelve `cambioDeUsuario` `{ anterior, nuevo,
    archivo, mensaje, aviso }` (y el mensaje en `avisos`), a la persona le sale una línea `Aviso: Esta PC estaba instalada para
    <anterior>: desde ahora el asistente es el de <nuevo>. El perfil anterior quedó guardado en <archivo>` y al administrador
    un aviso `cambio-de-usuario` en `4- BUZON\avisos\<pc>\` (el mismo camino que `sin-persona`, una vez por cambio; desde una
-   carpeta sin la forma de la nube, solo en pantalla). Ojo: la lista busca por usuario y **después por nombre de PC**, así que
-   un usuario que no figura en una PC que sí figura queda con el nombre de la persona de esa PC.
+   carpeta sin la forma de la nube, solo en pantalla). **Se compara contra `instalado.json`** (el marcador, que se escribe
+   AL FINAL: «lo instalado») y no contra `perfil.json`, que se reescribe en este paso: si el primer intento de Lucas se frena
+   después (candado de otra corrida, OneDrive bajando) el perfil ya es el suyo, y al repetir se avisa igual (`<archivo>` es
+   entonces la copia que dejó ese primer intento; si no se la encuentra, la frase termina sin él). Una reinstalación de la
+   MISMA persona no avisa, ni después de un intento ajeno frenado. El mensaje de «otra corrida copiando» dice «No se instaló
+   nada» (el perfil sí pudo escribirse). Ojo: la lista busca por usuario y **después por nombre de PC**, así que un usuario
+   que no figura en una PC que sí figura queda con el nombre de la persona de esa PC.
 4. **La copia**: `--actualizar` con el área del perfil hacia `<HOME>\publicado\` (nunca pisa, nunca borra).
 5. **La casa**: `<HOME>\.claude\rules\casa.md` (copia de `publicado\casa\CLAUDE.md` con un encabezado; se regenera en
    cada actualización), `<HOME>\CLAUDE.md` corto solo si no existe (es de la persona) y `Trabajo\` con un `LEEME.txt`
@@ -261,23 +268,40 @@ carpeta de red o un pendrive no la encontraba). Ahora:
   carpeta recordada, `estado.json` dice `actualizar: sin_nube` y no es un error. `estado.json` lleva `nube`:
   `por_nombre` · `indicada` · `recordada` · `sin_nube`. Para probarla: `-HomeDir` y `-EstadoDir` sin `-Nube` corre solo
   si ese estado recuerda una carpeta a la vista (y entonces NO busca la nube por nombre); con `-RegistrarTarea` no.
-- **Una carpeta recordada que no pasó la firma no recibe nada de la PC** (03/10/2026, auditoría del instalador). Con la
-  carpeta de `origen.json` (no la nube por nombre ni una indicada), si `--actualizar` sale con 4 (`firma_rechazada` o
-  `sin_clave`: la publicación viene firmada con OTRA clave, o la PC no tiene la clave) no se escribe NADA ahí: `actualizar()`
-  no deja la salud (`nubeRecordada`; lo dice en una línea) y la tarea no sube avisos, inventario ni salud (`estado.json`:
-  `avisos`, `inventario` y `salud` = `sin_firma`; los avisos esperan en la cola local y el inventario en su semana). La nube
-  por nombre o la indicada **sigue** recibiéndolos aunque la firma falle: así el administrador se entera. Límite: la tarea
-  solo ve el código 4, que también sale con `version_anterior` (firma buena, carpeta más vieja): en una carpeta recordada
-  tampoco se escribe en ese caso.
-- **El Node de la tarea** (03/10/2026): primero el propio, `<estado>\node\node.exe` (copia del que viaja con el plugin
-  instalado, a un temporal y de ahí al lugar; se repone cuando cambia el tamaño); el del PATH solo si no hay ninguno propio
-  **o si el propio ni arranca** (una copia dañada no deja a la PC sin actualizarse: el log dice `el Node propio no arranca`).
-  `estado.json` lleva `node` (el que corrió) y el log una línea `node: <ruta> (propio|path|nube)`.
-- **`-RegistrarTarea` con CUALQUIER ruta indicada se niega** (03/10/2026): `-HomeDir`, `-Nube`, `-EstadoDir` o sus variables
-  `CLAUDE_AREA_*`, aunque sean las tres de prueba, salen con 2 y una línea que lo dice, sin crear ni registrar nada (antes
-  con las tres registraba y pisaba la tarea real de la PC, que se llama siempre igual). `-VerTarea` sigue mostrando la
-  definición. La prueba solo ejercita ese camino, y corre con un `Register-ScheduledTask` de mentira (el módulo de tareas
-  se carga antes de definirlo y una sonda confirma que es el de mentira; sin eso, el módulo lo pisa al cargarse).
+- **A una carpeta recordada solo se le escribe si la firma verificó en esa corrida** (03/10/2026, invertida el 04/10/2026
+  tras la segunda auditoría: la primera versión era una lista de rechazos, y los estados que salen ANTES de verificar —código 3
+  `esperar`, p. ej. una publicación ajena a la que le falta `MANIFIESTO.sig`; código 1 por manifiesto roto— la saltaban). Con
+  la carpeta de `origen.json` (no la nube por nombre ni una indicada):
+  - **`actualizar()`** (`nubeRecordada: true`, lo pasa `--actualizar`) deja la salud **solo si `res.firma === 'valida'`**;
+    con cualquier otro resultado no escribe nada en esa carpeta y lo dice en una línea (`Aviso: No se dejó la salud…`).
+  - **La tarea** (`sync_area.ps1`) sube avisos, inventario y completa la salud **solo si el programa de la base salió con 0**.
+    Con cualquier otro resultado (3, 4, 1, cortado, no corrió) no se escribe nada y `estado.json` dice `sin_verificar` en
+    `avisos`, `inventario` y `salud` (los avisos esperan en la cola local; el inventario, en su semana).
+  - **`version_anterior`** (firma buena, carpeta más vieja que lo instalado; sale con 4 como `firma_rechazada` y `sin_clave`):
+    el programa de la base **sí** deja la salud (`estado: version_anterior`, la firma verificó). La tarea solo ve el código
+    4 y **no puede distinguirlo** de una firma rechazada sin cambiar los códigos de salida: ante la duda no sube avisos ni
+    inventario ni completa la salud, y `estado.json` dice `sin_verificar`, no `sin_firma`. Los avisos esperan en la cola.
+  - La nube por nombre o la indicada **sigue** recibiéndolo todo aunque la firma falle: así el administrador se entera.
+- **El Node de la tarea** (03/10/2026, ajustado el 04/10/2026): primero el propio, `<estado>\node\node.exe`, copia del que
+  viaja con el plugin instalado. **Se repone cuando no es igual al del plugin: por tamaño y, si el tamaño coincide, por hash
+  (SHA-256)** —una copia dañada del mismo tamaño no se reponía nunca—, copiando a un temporal (`node.exe.nuevo`) y moviéndolo
+  al lugar, los dos pasos con `-ErrorAction Stop`: si falla (otro programa lo tiene tomado) queda en el log (`no pude reponer
+  el Node propio…`) y el temporal queda al lado. **Si el propio ni arranca**, y no se acaba de reponer en esa corrida, lo
+  repone **una vez** desde el del plugin y reintenta (`lo repongo desde el del plugin y reintento una vez`); si sigue sin
+  arrancar, va al del PATH, y **si no hay ninguno en el PATH la corrida da `actualizar: error`** (las PC de planta no tienen
+  Node en el PATH: ahí lo único que salva es que el reintento deje el propio sano). `estado.json` lleva `node` (el que corrió),
+  el log `node: <ruta> (propio|path|nube)` y la salud, para el administrador, `node_origen` (`propio|path|nube`) y
+  `tarea_errores` (lo que falló en la corrida: hasta 5, de 300 caracteres) — el tablero todavía no los muestra.
+- **`-RegistrarTarea` se niega salvo desde la copia instalada de verdad** (03/10 y 04/10/2026). Dos frenos, ninguno depende
+  de cómo se lo llame: 1) con CUALQUIER ruta indicada (`-HomeDir`, `-Nube`, `-EstadoDir` o sus variables `CLAUDE_AREA_*`) sale
+  con 2 y una línea; 2) **la barrera**: solo registra si `$PSScriptRoot` (resuelto, sin mayúsculas) es
+  `C:\ClaudeBarack\publicado\programas`, que es exactamente la ruta con la que `_paquete.mjs --instalar` lo llama
+  (`<home>\publicado\programas\sync_area.ps1` con `home = rutaHomePorDefecto = C:\ClaudeBarack`). Desde el repo, un
+  temporal o un pendrive —aunque no se pase ninguna ruta, o venga vacía, o sea una «PC entera» armada en una carpeta
+  temporal— sale con 2 y una línea que dice desde dónde corre; la misma comprobación está pegada a `Registrar-Tarea`. Ante la
+  duda (ruta corta de Windows, carpeta enlazada) se niega. `-VerTarea` sigue mostrando la definición desde cualquier lado. La
+  prueba corre con un `Register-ScheduledTask` de mentira (el módulo de tareas se carga antes de definirlo y una sonda confirma
+  que es el de mentira; sin eso, el módulo lo pisa al cargarse y registra DE VERDAD) y aun así, desde el repo, no puede registrar.
 - **Una nube atrasada no es una novedad** (`chequear`): si la versión que se ve es MENOR que la instalada (OneDrive
   todavía no bajó la última, o la PC se instaló desde un pendrive más nuevo) devuelve `al_dia` con
   `motivo: "nube_atrasada"` (aunque haya archivos instalados tocados: de esa nube no se puede reponer nada), y el aviso
@@ -298,8 +322,8 @@ carpeta de red o un pendrive no la encontraba). Ahora:
   tarea con la MISMA definición (al iniciar sesión de ese usuario + cada 4 horas, `conhost --headless`, sin elevar),
   con otro nombre y una acción inofensiva. Y con la carpeta de la nube «solo en la nube» (490 archivos sin bajar) el
   `node.exe` arranca bajándose solo (9,7 s) y el instalador instala leyendo de ahí (65 s, código 0).
-- **Lo que no se probó**: el registro con la línea de comandos real, sin ninguna ruta indicada (por la regla de arriba ninguna
-  prueba lo puede correr); la tarea de verdad registrada por `--instalar` (ninguna prueba ni ensayo la registra) y la
+- **Lo que no se probó**: el registro con la línea de comandos real, desde `C:ClaudeBarackpublicadoprogramas` (por la barrera
+  de arriba ninguna prueba lo puede correr); la tarea de verdad registrada por `--instalar` (ninguna prueba ni ensayo la registra) y la
   corrida que lanza el Programador de tareas (`conhost --headless` con el programa de la copia instalada). Sí se probó
   lo que la tarea corre: el programa de la copia instalada, sin ninguna ruta, en una PC entera armada en una carpeta temporal.
 
@@ -410,7 +434,7 @@ Una PC de planta no podía instalar, y si instalaba quedaba sin área.
 (códigos 0/3/4), 2) mueve la cola local `<ESTADO>\avisos-pendientes\<pc>\*.json` a `4- BUZON\avisos\<pc>\` (uno por uno,
 sin pisar: si el nombre existe agrega `-2`; `-Simular` solo lo lista), 3) `inventario.ps1` una vez por semana
 (marca `<ESTADO>\inventario-ultimo.txt`), 4) completa en la salud `politica`, `python`, `ve_Y`, `ve_Z`,
-`disco_libre_gb`, 5) mails: gancho sin uso. Deja `<ESTADO>\estado.json` y `sync.log`; sale siempre con 0. La tarea de
+`disco_libre_gb`, `node_origen` y `tarea_errores`, 5) mails: gancho sin uso. Deja `<ESTADO>\estado.json` y `sync.log`; sale siempre con 0. La tarea de
 Windows ("Barack - Claude por area": al iniciar sesión y cada 4 h, sin ventana) se registra SOLO con `-RegistrarTarea`,
 que desde el 03/10/2026 llama `--instalar` al terminar una instalación de verdad (ver "Cómo se actualiza una PC");
 `-VerTarea` la muestra sin registrar.

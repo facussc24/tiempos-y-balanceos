@@ -944,6 +944,9 @@ describe.skipIf(!ES_WINDOWS)('sync_area.ps1: la tarea de la PC (sin registrar ni
         expect(typeof salud.python).toBe('boolean');
         expect(['si', 'no']).toContain(salud.politica);
         expect(salud.disco_libre_gb === null || typeof salud.disco_libre_gb === 'number').toBe(true);
+        // con que Node corrio la tarea y lo que fallo en la corrida (el administrador no lo veia: estado.json y el log son locales)
+        expect(['propio', 'path', 'nube']).toContain(salud.node_origen);
+        expect(salud.tarea_errores).toEqual([]);
         expect(leer(pc.estado, 'sync.log')).toContain('== sync termina (0 error(es))');
         // -VerTarea muestra y no registra
         const hayTarea = () => spawnSync('powershell.exe', ['-NoProfile', '-Command', "if (Get-ScheduledTask -TaskName 'Barack - Claude por area' -ErrorAction SilentlyContinue) { 'EXISTE' } else { 'NO_EXISTE' }"], { encoding: 'utf8', timeout: 60000 }).stdout.trim();
@@ -989,6 +992,8 @@ describe.skipIf(!ES_WINDOWS)('sync_area.ps1: la tarea de la PC (sin registrar ni
         expect(st.actualizar.resultado, JSON.stringify(st)).toBe('rechazado');
         expect(st.errores.join(' ')).toContain('no acepta lo publicado');
         expect(json(nubeRaiz, '4- BUZON/salud/PC-COMPRAS-01.json')).toMatchObject({ estado: 'firma_rechazada', firma_ok: false });
+        // y el administrador ve POR QUE: la salud lleva lo que fallo en la corrida de la tarea
+        expect(json(nubeRaiz, '4- BUZON/salud/PC-COMPRAS-01.json').tarea_errores.join(' ')).toContain('no acepta lo publicado');
     });
 });
 
@@ -2160,6 +2165,52 @@ describe.skipIf(!ES_WINDOWS)('sync_area.ps1: el Node propio de la PC va primero 
         expect(P.sha256Archivo(propio)).toBe(P.sha256Archivo(process.execPath));
         expect(st.node).toBe(propio);
         expect(log).toContain(`node: ${propio}`);
+        expect(existe(pc.estado, 'node/node.exe.nuevo')).toBe(false);   // se repuso por un temporal y el temporal ya no esta
+        // (segunda vuelta de la auditoria, error 3) Una copia propia DANADA DEL MISMO TAMANO se repone igual: se decide por HASH, no por tamano
+        fs.writeFileSync(propio, Buffer.alloc(fs.statSync(process.execPath).size, 7));
+        conNodeDeVerdad(() => publicarOtra(armada, pub, 3));
+        const r2 = correr(argsTarea(pc, nubeRaiz), entornoConPath([viejo, ...PATH_DE_WINDOWS]));
+        const log2 = leer(pc.estado, 'sync.log');
+        expect(r2.status, r2.stdout + r2.stderr + log2).toBe(0);
+        expect(fs.existsSync(marca), 'con la copia danada del mismo tamano la tarea cayo al Node del PATH').toBe(false);
+        expect(P.sha256Archivo(propio)).toBe(P.sha256Archivo(process.execPath));
+        expect(json(pc.estado, 'estado.json').actualizar.resultado, log2).toBe('ok');
+        expect(json(pc.home, 'publicado/.claude/.paquete-instalado.json').version).toBe(3);
+        expect(log2.split('== sync arranca').pop()).toContain('Node propio repuesto');   // lo dice la ULTIMA corrida, no una anterior
+        // VERDE: con la copia sana no se vuelve a copiar (ni se menciona)
+        conNodeDeVerdad(() => publicarOtra(armada, pub, 4));
+        const r3 = correr(argsTarea(pc, nubeRaiz), entornoConPath([viejo, ...PATH_DE_WINDOWS]));
+        expect(r3.status, r3.stdout + r3.stderr).toBe(0);
+        expect(fs.existsSync(marca)).toBe(false);
+        expect(leer(pc.estado, 'sync.log').split('== sync arranca').pop()).not.toContain('Node propio repuesto');
+    });
+
+    it('si no se puede reponer el Node propio (otro programa lo tiene tomado) queda en el log, el temporal queda al lado y la tarea sigue con el del PATH', async () => {
+        const { pub, nubeRaiz } = nubeArmada();   // el Node publicado es de mentira
+        const pc = pcNueva('pc-marta');
+        expect(instalar(pub, pc, ID.marta).estado).toBe('instalado');
+        const propio = path.join(pc.estado, 'node', 'node.exe');
+        fs.mkdirSync(path.dirname(propio), { recursive: true });
+        fs.writeFileSync(propio, Buffer.concat([Buffer.from('MZ'), Buffer.alloc(100, 7)]));   // vieja: hay que reponerla
+        // otro programa la tiene abierta sin compartirla (un PowerShell aparte, que se corta solo a los 90 s)
+        const lista = path.join(tmp, 'tomado.txt');
+        const dueno = spawn(POWERSHELL, ['-NoProfile', '-Command', `$f = [IO.File]::Open('${propio}', 'Open', 'Read', 'None'); Set-Content -LiteralPath '${lista}' -Value 'listo'; Start-Sleep -Seconds 90`], { stdio: 'ignore', windowsHide: true });
+        const termino = new Promise((resolve) => dueno.on('exit', resolve));
+        try {
+            for (let i = 0; i < 100 && !fs.existsSync(lista); i++) await new Promise((r) => setTimeout(r, 200));
+            expect(fs.existsSync(lista), 'el programa que toma el archivo no arranco').toBe(true);
+            const r = correr(argsTarea(pc, nubeRaiz), entornoConPath([path.dirname(process.execPath), ...PATH_DE_WINDOWS]));
+            const log = leer(pc.estado, 'sync.log');
+            expect(r.status, r.stdout + r.stderr + log).toBe(0);
+            expect(log).toContain('no pude reponer el Node propio');
+            expect(existe(pc.estado, 'node/node.exe.nuevo')).toBe(true);   // la copia paso por un temporal; el lugar real no se toco
+            const st = json(pc.estado, 'estado.json');
+            expect(st.actualizar.resultado, JSON.stringify(st) + log).toBe('ok');
+            expect(mismoArchivo(st.node, path.join(path.dirname(process.execPath), 'node.exe')), st.node).toBe(true);
+        } finally {
+            dueno.kill();
+            await termino;
+        }
     });
 
     it('VERDE: sin Node propio (ni uno del plugin del que copiarlo) usa el del PATH; y un propio que ni arranca no frena la tarea: cae al del PATH', () => {
@@ -2177,6 +2228,15 @@ describe.skipIf(!ES_WINDOWS)('sync_area.ps1: el Node propio de la PC va primero 
         expect(stA.actualizar.resultado, JSON.stringify(stA) + logA).toBe('ok');
         expect(mismoArchivo(stA.node, pathNode), stA.node).toBe(true);
         expect(logA).toContain('el Node propio no arranca');
+        // (a2) la copia ya esta (igual a la del plugin, no se repone al arrancar) y sigue sin arrancar: la tarea la repone UNA vez y
+        //      reintenta antes de ir al PATH (segunda vuelta de la auditoria, error 3); como el del plugin tambien esta danado, sigue con el del PATH
+        const a2 = correr(argsTarea(pc, nubeRaiz), entorno);
+        const logA2 = leer(pc.estado, 'sync.log').split('== sync arranca').pop();
+        expect(a2.status, a2.stdout + a2.stderr + logA2).toBe(0);
+        expect(logA2).toContain('lo repongo desde el del plugin y reintento una vez');
+        expect(logA2.split('reintento una vez').length - 1, 'reintenta UNA sola vez').toBe(1);
+        expect(logA2).toContain('sigo con el del PATH');
+        expect(json(pc.estado, 'estado.json').actualizar.resultado).toBe('ok');
         // (b) ninguno propio y el plugin sin su Node: el del PATH, y no se crea ninguna copia
         fs.rmSync(path.join(pc.estado, 'node'), { recursive: true, force: true });
         fs.rmSync(path.join(pc.home, 'publicado', ...A.REL_NODE.split('/')));
@@ -2189,8 +2249,8 @@ describe.skipIf(!ES_WINDOWS)('sync_area.ps1: el Node propio de la PC va primero 
     });
 });
 
-describe.skipIf(!ES_WINDOWS)('sync_area.ps1 -RegistrarTarea: con cualquier ruta indicada se niega (auditoria 03/10/2026, punto 2)', () => {
-    it('se niega con 2 y no escribe nada con la PC, la nube o el estado de prueba (por opcion o por variable); -VerTarea sigue mostrando la definicion', () => {
+describe.skipIf(!ES_WINDOWS)('sync_area.ps1 -RegistrarTarea: con cualquier ruta indicada se niega, y solo registra desde la copia instalada de verdad (auditoria 03/10/2026, punto 2 y segunda vuelta, flojera 4)', () => {
+    it('se niega con 2 y no escribe nada con la PC, la nube o el estado de prueba (por opcion o por variable), con rutas vacias, sin ninguna ruta y desde una PC entera armada en una carpeta temporal; -VerTarea sigue mostrando la definicion', () => {
         const marca = path.join(tmp, 'registro-de-mentira.txt');
         const envoltorio = path.join(tmp, 'envoltorio.ps1');
         const pc = pcNueva('pc');
@@ -2206,14 +2266,14 @@ describe.skipIf(!ES_WINDOWS)('sync_area.ps1 -RegistrarTarea: con cualquier ruta 
         fs.writeFileSync(sonda, [
             '$c = Get-Command Register-ScheduledTask; $g = Get-Command Get-ScheduledTask',
             "if ($c.CommandType -eq 'Function' -and -not $c.ModuleName -and $g.CommandType -eq 'Function' -and -not $g.ModuleName) { exit 0 } else { exit 1 }", ''].join('\r\n'));
-        const llamar = (args, extra = {}) => {
+        const llamar = (args, extra = {}, programa = SYNC) => {
             fs.writeFileSync(envoltorio, [
                 'Import-Module ScheduledTasks -ErrorAction Stop',
                 `function global:Register-ScheduledTask { Set-Content -LiteralPath '${marca}' -Value 'REGISTRO' }`,
                 'function global:Get-ScheduledTask { [pscustomobject]@{ TaskName = "de mentira"; State = "Ready" } }',
                 `& '${sonda}'`,
                 "if ($LASTEXITCODE -ne 0) { Write-Host 'ENVOLTORIO NO SIRVE: no se llamo al programa'; exit 99 }",
-                `& '${SYNC}' ${args}`,
+                `& '${programa}' ${args}`,
                 'exit $LASTEXITCODE', ''].join('\r\n'));
             return spawnSync(POWERSHELL, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', envoltorio], { encoding: 'utf8', env: { ...sinVariables(), LOCALAPPDATA: localVacio, ...extra }, timeout: 120000 });
         };
@@ -2237,6 +2297,46 @@ describe.skipIf(!ES_WINDOWS)('sync_area.ps1 -RegistrarTarea: con cualquier ruta 
             expect(fs.readdirSync(pc.estado), que).toEqual([]);
             expect(fs.existsSync(path.join(localVacio, 'BarackEquipo')), que).toBe(false);
         }
+        // La BARRERA que no depende de como se lo llame (segunda vuelta de la auditoria, flojera 4): solo registra el programa que corre
+        // desde la copia instalada de verdad (C:\ClaudeBarack\publicado\programas). Desde el repo, un temporal o un pendrive: 2, y nada.
+        const REAL = 'C:\\ClaudeBarack\\publicado\\programas';
+        const sinBarrera = [
+            ['sin ninguna ruta, desde el repo', '-RegistrarTarea', {}],
+            ['-HomeDir vacio (cuenta como "ninguna ruta")', "-RegistrarTarea -HomeDir ''", {}],
+            ['las tres opciones vacias', "-RegistrarTarea -HomeDir '' -Nube '' -EstadoDir ''", {}],
+            ['las variables definidas y vacias', '-RegistrarTarea', { CLAUDE_AREA_HOME: '', CLAUDE_AREA_NUBE: '', CLAUDE_AREA_ESTADO: '' }],
+        ];
+        for (const [que, args, extra] of sinBarrera) {
+            const r = llamar(args, extra);
+            expect(r.status, `${que}: ${r.stdout}${r.stderr}`).toBe(2);
+            expect(r.stdout, que).toContain(REAL);
+            expect(fs.existsSync(marca), `${que}: llego a registrar`).toBe(false);
+            expect(fs.existsSync(path.join(localVacio, 'BarackEquipo')), que).toBe(false);
+        }
+        // una PC ENTERA armada en una carpeta temporal (el programa en <temporal>\publicado\programas, LOCALAPPDATA cambiado, ninguna ruta pasada):
+        // antes pasaba el freno por "rutas indicadas" y la tarea habria quedado apuntando a una carpeta de prueba
+        const armada = nubeArmada();
+        const entera = { home: path.join(tmp, 'pc-entera', 'ClaudeBarack'), estado: path.join(localVacio, 'BarackEquipo'), claudeDir: dir('pc-entera', '.claude') };
+        expect(instalar(armada.pub, entera, ID.marta).estado).toBe('instalado');
+        const programaInstalado = path.join(entera.home, 'publicado', 'programas', 'sync_area.ps1');
+        const fotoPc = foto(entera.home);
+        const estadoAntes = fs.readdirSync(entera.estado).sort();
+        const dePcEntera = llamar('-RegistrarTarea', {}, programaInstalado);
+        expect(dePcEntera.status, dePcEntera.stdout + dePcEntera.stderr).toBe(2);
+        expect(dePcEntera.stdout).toContain(REAL);
+        expect(dePcEntera.stdout.toLowerCase()).toContain(path.join('pc-entera', 'ClaudeBarack', 'publicado', 'programas').toLowerCase());   // y dice desde donde corre (PowerShell puede mostrar la ruta larga en vez de la corta)
+        expect(fs.existsSync(marca)).toBe(false);
+        expect(foto(entera.home)).toEqual(fotoPc);
+        expect(fs.readdirSync(entera.estado).sort()).toEqual(estadoAntes);
+        // VERDE: -VerTarea sigue mostrando la definicion desde cualquier lado, tambien desde esa PC entera
+        const verDesdePc = llamar('-VerTarea', {}, programaInstalado);
+        expect(verDesdePc.status, verDesdePc.stdout + verDesdePc.stderr).toBe(0);
+        expect(verDesdePc.stdout).toContain('Barack - Claude por area');
+        expect(fs.existsSync(marca)).toBe(false);
+        expect(foto(entera.home)).toEqual(fotoPc);
+        // VERDE: lo que _paquete.mjs llama al terminar una instalacion de verdad es ESA ruta (<home>\publicado\programas\sync_area.ps1 con home = C:\ClaudeBarack)
+        expect(path.join('C:\\ClaudeBarack', ...P.REL_PROGRAMA_TAREA.split('/'))).toBe(`${REAL}\\sync_area.ps1`);
+        expect(P.rutaHomePorDefecto({})).toBe('C:\\ClaudeBarack');
         // VERDE: -VerTarea (con o sin rutas, y aunque venga con -RegistrarTarea) muestra la definicion y no registra ni escribe
         for (const args of [`-VerTarea -HomeDir ${q(pc.home)} -Nube ${q(nube)} -EstadoDir ${q(pc.estado)}`, `-VerTarea -RegistrarTarea -HomeDir ${q(pc.home)}`, '-VerTarea']) {
             const vt = llamar(args);
@@ -2301,6 +2401,26 @@ describe('una carpeta RECORDADA que no paso la firma no recibe nada de la PC (au
         const r4 = P.actualizar({ ...base, clavePublica: null });
         expect(r4.estado).toBe('sin_clave');
         expect(JSON.parse(leer(nubeRaiz, SALUD))).toMatchObject({ estado: 'sin_clave' });
+        // ROJO (segunda vuelta de la auditoria, error 1): los estados que salen ANTES de verificar la firma (`esperar`, `error`) no son
+        // rechazos pero tampoco son una firma buena: la carpeta ajena a la que se le saca MANIFIESTO.sig, o con el manifiesto roto
+        fs.rmSync(path.join(pub, 'MANIFIESTO.sig'));
+        const antes5 = foto(nubeRaiz);
+        const r5 = P.actualizar({ ...base, nubeRecordada: true });
+        expect(r5.estado).toBe('esperar');
+        expect(r5.firma).toBe('firma_pendiente');
+        expect(r5.salud).toBeUndefined();
+        expect(r5.avisos.join(' ')).toContain('la firma no verificó');
+        expect(foto(nubeRaiz)).toEqual(antes5);
+        fs.writeFileSync(path.join(pub, 'MANIFIESTO.json'), '{ roto');
+        const antes6 = foto(nubeRaiz);
+        const r6 = P.actualizar({ ...base, nubeRecordada: true });
+        expect(['esperar', 'error']).toContain(r6.estado);
+        expect(r6.salud).toBeUndefined();
+        expect(foto(nubeRaiz)).toEqual(antes6);
+        // VERDE: en la nube por nombre (o la indicada) siguen dejando la salud, aunque la firma no se haya podido verificar todavia
+        const r7 = P.actualizar({ ...base });
+        expect(['esperar', 'error']).toContain(r7.estado);
+        expect(typeof r7.salud).toBe('string');
     });
 
     it('--actualizar desde la copia instalada con la carpeta recordada alterada: sale con 4 y NO escribe nada en esa carpeta; con la firma buena deja la salud como siempre', () => {
@@ -2309,6 +2429,8 @@ describe('una carpeta RECORDADA que no paso la firma no recibe nada de la PC (au
         const pc = pcNueva('pc-marta');
         const env = entornoPc(pc);
         expect(instalar(pub, pc, ID.marta, { desdeCarpeta: true }).estado).toBe('instalado');
+        const v1 = path.join(tmp, 'guardada-v1');
+        copiarCarpeta(pub, v1);
         // VERDE (antes de alterar nada): con la firma buena la salud queda en el buzon de al lado
         publicarOtra(armada, pub);
         const buena = instalado(pc, ['--actualizar', '--proyecto', 'area'], env);
@@ -2325,6 +2447,23 @@ describe('una carpeta RECORDADA que no paso la firma no recibe nada de la PC (au
         expect(mala.stdout).toContain('la firma no verificó');
         expect(foto(nubeRaiz)).toEqual(antes);
         expect(json(pc.home, 'publicado/.claude/.paquete-instalado.json').version).toBe(2);
+        // ROJO (segunda vuelta, error 1): a esa publicacion ajena se le saca MANIFIESTO.sig: sale con 3 (esperar) y tampoco se escribe nada
+        fs.rmSync(path.join(pub, 'MANIFIESTO.sig'));
+        const antesSinSig = foto(nubeRaiz);
+        const sinSig = instalado(pc, ['--actualizar', '--proyecto', 'area'], env);
+        expect(sinSig.status, sinSig.stdout + sinSig.stderr).toBe(3);
+        expect(sinSig.stdout).not.toContain('Salud de esta PC');
+        expect(sinSig.stdout).toContain('la firma no verificó');
+        expect(foto(nubeRaiz)).toEqual(antesSinSig);
+        // La carpeta vuelve a una version MAS VIEJA pero con la firma BUENA (version_anterior, tambien codigo 4): la firma verifico, asi que el
+        // programa de la base SI deja la salud (con ese estado). Es lo unico que escribe: lo demas lo decide la tarea (ver su prueba)
+        fs.rmSync(pub, { recursive: true, force: true });
+        copiarCarpeta(v1, pub);
+        const vieja = instalado(pc, ['--actualizar', '--proyecto', 'area'], env);
+        expect(vieja.status, vieja.stdout + vieja.stderr).toBe(4);
+        expect(vieja.stderr).toContain('más vieja');
+        expect(vieja.stdout).toContain('Salud de esta PC');
+        expect(JSON.parse(leer(nubeRaiz, SALUD))).toMatchObject({ estado: 'version_anterior', firma_ok: true, version_instalada: 2 });
     });
 
     it.skipIf(!ES_WINDOWS)('la tarea (sync_area.ps1): con la carpeta recordada alterada no sube avisos ni inventario ni salud y los avisos quedan en la cola; con la nube indicada SI (el administrador se entera)', () => {
@@ -2361,9 +2500,9 @@ describe('una carpeta RECORDADA que no paso la firma no recibe nada de la PC (au
         expect(mala.status, mala.stdout + mala.stderr + log2).toBe(0);
         expect(st2.nube).toBe('recordada');
         expect(st2.actualizar.resultado, JSON.stringify(st2)).toBe('rechazado');
-        expect(st2.avisos.resultado).toBe('sin_firma');
-        expect(st2.inventario.resultado).toBe('sin_firma');
-        expect(st2.salud.resultado).toBe('sin_firma');
+        expect(st2.avisos.resultado).toBe('sin_verificar');
+        expect(st2.inventario.resultado).toBe('sin_verificar');
+        expect(st2.salud.resultado).toBe('sin_verificar');
         expect(log2).toContain('no escribo nada en la carpeta recordada');
         expect(foto(nubeRaiz)).toEqual(antes);   // ni avisos, ni inventario, ni salud
         expect(fs.readdirSync(path.join(pc.estado, 'avisos-pendientes', 'PC-COMPRAS-01'))).toEqual(['2026-10-03T100000-servidor.json']);
@@ -2376,6 +2515,61 @@ describe('una carpeta RECORDADA que no paso la firma no recibe nada de la PC (au
         expect(st3.actualizar.resultado).toBe('rechazado');
         expect(st3.avisos).toMatchObject({ resultado: 'ok', movidos: 1 });
         expect(JSON.parse(leer(nubeRaiz, SALUD))).toMatchObject({ estado: 'firma_rechazada', firma_ok: false });
+        // ROJO (segunda vuelta de la auditoria, error 1): a esa publicacion ajena se le saca MANIFIESTO.sig: el programa sale con 3 (esperar),
+        // la firma tampoco verifico y la carpeta recordada no recibe nada (antes recibia salud, aviso e inventario)
+        aviso('2026-10-03T110000-servidor.json');
+        fs.rmSync(path.join(pub, 'MANIFIESTO.sig'));
+        fs.rmSync(path.join(pc.estado, 'inventario-ultimo.txt'));
+        const antesSinSig = foto(nubeRaiz);
+        const sinSig = correrTarea();
+        const st4 = json(pc.estado, 'estado.json');
+        expect(sinSig.status, sinSig.stdout + sinSig.stderr + leer(pc.estado, 'sync.log')).toBe(0);
+        expect(st4.nube).toBe('recordada');
+        expect(st4.actualizar.resultado, JSON.stringify(st4)).toBe('esperando');
+        expect(st4.avisos.resultado).toBe('sin_verificar');
+        expect(st4.inventario.resultado).toBe('sin_verificar');
+        expect(st4.salud.resultado).toBe('sin_verificar');
+        expect(foto(nubeRaiz)).toEqual(antesSinSig);
+        expect(fs.readdirSync(path.join(pc.estado, 'avisos-pendientes', 'PC-COMPRAS-01'))).toEqual(['2026-10-03T110000-servidor.json']);
+        expect(existe(pc.estado, 'inventario-ultimo.txt')).toBe(false);
+    });
+
+    it.skipIf(!ES_WINDOWS)('la tarea con la carpeta recordada en una version MAS VIEJA pero de firma buena (codigo 4, version_anterior): la salud la deja el programa de la base, lo demas no sube y el estado no culpa a la firma', () => {
+        const armada = nubeArmada();
+        const { pub, nubeRaiz } = armada;
+        const local = dir('pc-real', 'AppData', 'Local');
+        const pc = { home: path.join(tmp, 'pc-real', 'ClaudeBarack'), estado: path.join(local, 'BarackEquipo'), claudeDir: dir('pc-real', '.claude') };
+        expect(instalar(pub, pc, ID.marta, { desdeCarpeta: true }).estado).toBe('instalado');
+        const v1 = path.join(tmp, 'guardada-v1');
+        copiarCarpeta(pub, v1);
+        const env = { ...sinVariables(), USERPROFILE: dir('pc-real', 'perfil'), LOCALAPPDATA: local };
+        const tarea = path.join(pc.home, 'publicado', 'programas', 'sync_area.ps1');
+        const correrTarea = () => spawnSync(POWERSHELL, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', tarea, '-SinTarea', '-PrioridadNormal', '-ForzarInventario', '-ClavesInventario', 'HKCU:\\Software\\ClaudeAreaNoExiste-xyz\\Uninstall'], { encoding: 'utf8', env, timeout: 170000 });
+        publicarOtra(armada, pub);
+        expect(json(pc.estado, 'origen.json')).toMatchObject({ desde: 'carpeta' });
+        const buena = correrTarea();
+        expect(buena.status, buena.stdout + buena.stderr).toBe(0);
+        expect(json(pc.home, 'publicado/.claude/.paquete-instalado.json').version).toBe(2);
+        // la carpeta vuelve a la version 1 (firma buena, mas vieja que la instalada)
+        fs.rmSync(pub, { recursive: true, force: true });
+        copiarCarpeta(v1, pub);
+        esc(path.join(pc.estado, 'avisos-pendientes', 'PC-COMPRAS-01'), '2026-10-03T120000-servidor.json', JSON.stringify({ nivel: 'hoy', tipo: 'servidor', mensaje: 'x', cuando: '2026-10-03T12:00:00' }));
+        fs.rmSync(path.join(pc.estado, 'inventario-ultimo.txt'));
+        const antes = foto(nubeRaiz);
+        const r = correrTarea();
+        const st = json(pc.estado, 'estado.json');
+        expect(r.status, r.stdout + r.stderr + leer(pc.estado, 'sync.log')).toBe(0);
+        expect(st.actualizar.resultado, JSON.stringify(st)).toBe('rechazado');
+        expect(st.avisos.resultado).toBe('sin_verificar');   // y no "sin_firma": la tarea no puede distinguir este 4 del de una firma rechazada
+        expect(st.inventario.resultado).toBe('sin_verificar');
+        expect(st.salud.resultado).toBe('sin_verificar');
+        // lo unico que cambio en la carpeta es la salud, que la dejo el programa de la base (la firma si verifico) con el estado verdadero
+        const despues = foto(nubeRaiz);
+        const SALUD_REL = '4- BUZON/salud/PC-COMPRAS-01.json';
+        expect(Object.keys(despues).sort()).toEqual(Object.keys(antes).sort());
+        for (const k of Object.keys(antes)) if (k !== SALUD_REL) expect(despues[k], k).toBe(antes[k]);
+        expect(JSON.parse(leer(nubeRaiz, SALUD_REL))).toMatchObject({ estado: 'version_anterior', firma_ok: true, version_instalada: 2, ve_Y: null });
+        expect(fs.readdirSync(path.join(pc.estado, 'avisos-pendientes', 'PC-COMPRAS-01'))).toEqual(['2026-10-03T120000-servidor.json']);
     });
 });
 
@@ -2423,6 +2617,54 @@ describe('dos usuarios de Windows en la misma PC: se avisa, no se frena (auditor
         const sin = [];
         P.cerrarInstalacion(c, { indicadores: { home: true, destino: false, nube: true, estado: true, usuarioHome: true }, sinTarea: true, decir: (s) => sin.push(s) });
         expect(sin.join('\n')).not.toContain('Esta PC estaba instalada para');
+    });
+
+    it('(segunda vuelta, error 2) si el primer intento de Lucas se frena DESPUES de escribir su perfil, al repetir igual se avisa: se compara con lo instalado (instalado.json), no con perfil.json', () => {
+        const armada = nubeArmada();
+        const { pub, nubeRaiz } = armada;
+        const pc = pcNueva('pc-compartida');
+        expect(instalar(pub, pc, marta).estado).toBe('instalado');
+        publicarOtra(armada, pub);   // hay algo para copiar: ahi es donde se toma el candado
+        const candado = path.join(pc.home, 'publicado', ...P.REL_LOCK.split('/'));
+        fs.writeFileSync(candado, `${process.pid} 2026-10-03T10:00:00\n`);   // otra corrida (un proceso que sigue vivo: este) esta copiando
+        const frenado = instalar(pub, pc, lucas, { ahora: F(3) });
+        expect(frenado.estado).toBe('esperar');
+        expect(frenado.mensaje).not.toContain('No se tocó nada');   // el perfil SI se escribio: el mensaje no lo niega
+        expect(json(pc.home, 'perfil.json')).toMatchObject({ usuario_windows: 'LGomez' });   // el perfil ya quedo de Lucas...
+        expect(json(pc.home, 'instalado.json').usuario_windows).toBe('marta');               // ... y lo instalado NO
+        expect(avisosDelBuzon(nubeRaiz).filter((x) => x.tipo === 'cambio-de-usuario')).toEqual([]);
+        fs.unlinkSync(candado);
+        // el reintento: antes daba cambioDeUsuario null (ni linea en pantalla ni aviso al buzon)
+        const rep = instalar(pub, pc, lucas, { ahora: F(4) });
+        expect(rep.estado).toBe('instalado');
+        const archivo = `${path.join(pc.home, 'perfil.json')}.anterior-${P.selloCarpeta(F(3))}`;   // la copia que dejo el PRIMER intento
+        const mensaje = `Esta PC estaba instalada para Marta Pérez (marta): desde ahora el asistente es el de Lucas Gómez (LGomez). El perfil anterior quedó guardado en ${archivo}`;
+        expect(rep.cambioDeUsuario).toMatchObject({ anterior: { usuario: 'marta', nombre: 'Marta Pérez', area: 'compras' }, nuevo: { usuario: 'LGomez', nombre: 'Lucas Gómez' }, archivo, mensaje });
+        expect(JSON.parse(fs.readFileSync(archivo, 'utf8'))).toMatchObject({ nombre: 'Marta Pérez', usuario_windows: 'marta' });
+        const delCambio = avisosDelBuzon(nubeRaiz).filter((x) => x.tipo === 'cambio-de-usuario');
+        expect(delCambio).toHaveLength(1);
+        expect(delCambio[0]).toMatchObject({ mensaje, usuario_windows: 'LGomez' });
+        const lineas = [];
+        P.cerrarInstalacion(rep, { indicadores: { home: true, destino: false, nube: true, estado: true, usuarioHome: true }, sinTarea: true, decir: (s) => lineas.push(s) });
+        expect(lineas.filter((l) => l.includes('Esta PC estaba instalada para'))).toEqual([`  Aviso: ${mensaje}`]);
+        // VERDE: la tercera vez, ya instalado para Lucas, no avisa otra vez
+        const otra = instalar(pub, pc, lucas, { ahora: F(5) });
+        expect(otra.estado).toBe('ya_instalado');
+        expect(otra.cambioDeUsuario).toBe(null);
+        expect(avisosDelBuzon(nubeRaiz).filter((x) => x.tipo === 'cambio-de-usuario')).toHaveLength(1);
+        // VERDE: la MISMA persona que reinstala despues de un intento ajeno frenado no avisa de nada (Lucas se frena y Marta vuelve a instalar)
+        const pc2 = pcNueva('pc-otra');
+        expect(instalar(pub, pc2, marta).estado).toBe('instalado');
+        publicarOtra(armada, pub, 3);
+        const candado2 = path.join(pc2.home, 'publicado', ...P.REL_LOCK.split('/'));
+        fs.writeFileSync(candado2, `${process.pid} 2026-10-03T10:00:00\n`);
+        expect(instalar(pub, pc2, lucas, { ahora: F(6) }).estado).toBe('esperar');
+        fs.unlinkSync(candado2);
+        const vuelve = instalar(pub, pc2, marta, { ahora: F(7) });
+        expect(vuelve.estado).toBe('instalado');
+        expect(vuelve.cambioDeUsuario).toBe(null);
+        expect(json(pc2.home, 'perfil.json')).toMatchObject({ nombre: 'Marta Pérez', usuario_windows: 'marta' });
+        expect(avisosDelBuzon(nubeRaiz).filter((x) => x.tipo === 'cambio-de-usuario')).toHaveLength(1);
     });
 
     it('quien no figura en la lista tambien avisa (y no hereda el area del anterior); --simular lo dice en futuro y no escribe; desde una carpeta sin buzon se muestra y no se escribe aviso', () => {

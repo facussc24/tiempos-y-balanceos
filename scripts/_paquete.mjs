@@ -1299,9 +1299,12 @@ function tomarLock(destino, ahora) {
  * Nunca borra. Antes de tocar nada verifica la nube completa y, si esta PC tiene la clave publica,
  * la firma. `simular` es el dry-run: devuelve el plan (archivo por archivo, cuarentena incluida) y no
  * escribe. Al final, salga como salga, deja la salud de esta PC en el buzon de la nube; con una excepcion:
- * `nubeRecordada` (la carpeta es la de `origen.json`, no la nube encontrada por nombre ni una indicada) y la firma NO
- * verifico (`firma_rechazada`, `sin_clave`) -> no se escribe nada en esa carpeta (auditoria del 03/10/2026, punto 3: nadie
- * sabe quien escribio ahi). La nube por nombre sigue recibiendo la salud aunque la firma falle: asi el administrador se entera.
+ * `nubeRecordada` (la carpeta es la de `origen.json`, no la nube encontrada por nombre ni una indicada) -> la salud se
+ * deja SOLO si la firma verifico en esta corrida (`res.firma === 'valida'`); con cualquier otro resultado no se escribe
+ * nada en esa carpeta (auditoria del 03/10/2026, punto 3: nadie sabe quien escribio ahi; regla invertida el 04/10/2026:
+ * antes era una lista de rechazos y los estados que salen ANTES de verificar —`esperar`, `error`— la saltaban).
+ * `version_anterior` (firma buena, carpeta mas vieja) SI deja la salud. La nube por nombre sigue recibiendola aunque la
+ * firma falle: asi el administrador se entera.
  */
 export function actualizar(opts) {
     const { nube, simular = false } = opts;
@@ -1309,7 +1312,7 @@ export function actualizar(opts) {
     // la identidad con la que se firma la salud: la del perfil de la PC si lo hay (misma regla que el plugin y la tarea), si no la de Windows
     const identidad = identidadDePerfil(opts.home, opts.identidad || identidadLocal());
     const res = actualizarAdentro({ ...opts, ahora, identidad });
-    if (opts.nubeRecordada && !simular && (res.estado === 'firma_rechazada' || res.estado === 'sin_clave')) {
+    if (opts.nubeRecordada && !simular && res.firma !== 'valida') {
         res.sinSalud = true;
         res.avisos.push('No se dejó la salud de esta PC en la carpeta de donde se instaló: la firma no verificó y ahí no se escribe nada.');
     }
@@ -2009,9 +2012,40 @@ export function cambioDeUsuario(previo, nuevo) {
 /** «Marta Pérez (marta)», o solo el usuario si el perfil no trae un nombre distinto. */
 const nombrarUsuario = (u) => (u.nombre && normTexto(u.nombre) !== normTexto(u.usuario) ? `${u.nombre} (${u.usuario})` : u.usuario);
 
-/** La frase que ve la persona y el administrador cuando la PC pasa de un usuario a otro. Termina en la ruta, sin punto: se copia entera. */
+/**
+ * La frase que ve la persona y el administrador cuando la PC pasa de un usuario a otro. Con `archivo` termina en la ruta,
+ * sin punto: se copia entera; sin `archivo` (no hay copia del perfil anterior que nombrar) termina en punto.
+ */
 export function mensajeCambioDeUsuario(cambio, archivo, simular = false) {
-    return `Esta PC estaba instalada para ${nombrarUsuario(cambio.anterior)}: desde ahora el asistente es el de ${nombrarUsuario(cambio.nuevo)}. El perfil anterior ${simular ? 'quedaría guardado' : 'quedó guardado'} en ${archivo}`;
+    const base = `Esta PC estaba instalada para ${nombrarUsuario(cambio.anterior)}: desde ahora el asistente es el de ${nombrarUsuario(cambio.nuevo)}.`;
+    return archivo ? `${base} El perfil anterior ${simular ? 'quedaría guardado' : 'quedó guardado'} en ${archivo}` : base;
+}
+
+/** El `perfil.json.anterior-<fecha>` mas nuevo de `<home>` que sea de ese usuario, o null (el nombre lleva la fecha: ordenado es cronologico). */
+function perfilAnteriorDe(home, usuario) {
+    let nombres = [];
+    try { nombres = fs.readdirSync(home).filter((n) => n.startsWith('perfil.json.anterior-')).sort().reverse(); } catch { return null; }
+    for (const n of nombres) {
+        const p = leerJson(path.join(home, n));
+        if (p && typeof p === 'object' && typeof p.usuario_windows === 'string' && normTexto(p.usuario_windows) === normTexto(usuario)) return { archivo: path.join(home, n), perfil: p };
+    }
+    return null;
+}
+
+/**
+ * ¿Para QUIEN estaba instalada esta PC? Manda `instalado.json` (el marcador, que se escribe AL FINAL de una instalacion que
+ * termino): `perfil.json` se reescribe a mitad de camino y, si un intento se frena despues, ya es el del usuario nuevo.
+ * Devuelve null si no hay a quien comparar (primera instalacion) o `{ quien, archivo, copiaNueva }`: `quien` con
+ * `{ usuario_windows, nombre, area }`; `copiaNueva` = true si ese es el perfil que se va a guardar ahora como
+ * `perfil.json.anterior-<fecha>`; si no, `archivo` es la copia que dejo un intento anterior (o null si no se la encuentra).
+ */
+export function quienEstabaInstalado({ marcador, perfilPrevio, home }) {
+    const usuarioDe = (p) => (p && typeof p === 'object' && !Array.isArray(p) && typeof p.usuario_windows === 'string' ? p.usuario_windows.trim() : '');
+    const delMarcador = usuarioDe(marcador);
+    if (!delMarcador) return perfilPrevio ? { quien: perfilPrevio, archivo: null, copiaNueva: true } : null;
+    if (usuarioDe(perfilPrevio) && normTexto(usuarioDe(perfilPrevio)) === normTexto(delMarcador)) return { quien: perfilPrevio, archivo: null, copiaNueva: true };
+    const guardado = perfilAnteriorDe(home, delMarcador);
+    return { quien: { usuario_windows: delMarcador, nombre: guardado ? String(guardado.perfil.nombre ?? '') : '', area: String(marcador.area ?? '') }, archivo: guardado ? guardado.archivo : null, copiaNueva: false };
 }
 
 /**
@@ -2281,10 +2315,14 @@ export function instalar({ nube, home, estado, claudeDir, clavePublica = null, i
     // Dos usuarios de Windows en la misma PC: `perfil.json` e `instalado.json` viven en `<home>` (C:\ClaudeBarack), que es de
     // los dos. Si instala Marta y despues Lucas, el perfil pasa a ser el de Lucas. NO se frena (una PC que cambia de dueño
     // tiene que poder reinstalarse): se AVISA a la persona y al administrador, y el perfil anterior queda guardado.
+    // Se compara contra lo INSTALADO (`instalado.json`, que se escribe AL FINAL) y no contra `perfil.json`, que se reescribe aca
+    // en el paso 3: si el primer intento de Lucas se frena despues (el candado de otra corrida, OneDrive todavia bajando), al
+    // repetir el perfil ya es el de Lucas y el cambio no se veria (auditoria del 04/10/2026, error 2).
     res.cambioDeUsuario = null;
-    const cambio = cambioDeUsuario(perfilPrevio, perfil);
-    if (cambio && perfilCambia) {
-        const archivoAnterior = `${pPerfil}.anterior-${selloCarpeta(ahora)}`;
+    const antes = quienEstabaInstalado({ marcador: leerJson(path.join(home, MARCADOR_INSTALADO)), perfilPrevio, home });
+    const cambio = antes ? cambioDeUsuario(antes.quien, perfil) : null;
+    if (cambio) {
+        const archivoAnterior = antes.copiaNueva ? (perfilActual !== null ? `${pPerfil}.anterior-${selloCarpeta(ahora)}` : null) : antes.archivo;
         res.cambioDeUsuario = { ...cambio, archivo: archivoAnterior, mensaje: mensajeCambioDeUsuario(cambio, archivoAnterior, simular), aviso: null };
         res.avisos.push(res.cambioDeUsuario.mensaje);
     }
@@ -2305,7 +2343,7 @@ export function instalar({ nube, home, estado, claudeDir, clavePublica = null, i
         // Antes salia "No quedó instalado (0 problema(s))", sin decir por que.
         if (act.estado === 'ocupado') {
             res.estado = 'esperar';
-            res.mensaje = 'En esta PC hay otra instalación o actualización corriendo en este momento. No se tocó nada: esperá un par de minutos y repetí «Instalar».';
+            res.mensaje = 'En esta PC hay otra instalación o actualización corriendo en este momento. No se instaló nada: esperá un par de minutos y repetí «Instalar».';
             return res;
         }
         res.estado = ['esperar', 'sin_clave', 'firma_rechazada', 'version_anterior'].includes(act.estado) ? act.estado : 'error';
