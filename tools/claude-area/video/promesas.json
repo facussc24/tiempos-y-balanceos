@@ -206,6 +206,31 @@
       "estado": "sin probar",
       "prueba": null,
       "que_falta": "El caso es real (21/09/2026: MDS de la 21-9689 rechazado por falta de norma, corregido y reenviado con 0 errores; lo hizo el Claude de Ingeniería a pedido de Facundo). Falta una imagen que se pueda mostrar (pantalla de IMDS con el estado, sin nombres de personas del cliente) y que Facundo confirme que se puede contar. 02/10 15:55: NO está en la narración del video por sector (voz_ilusiona/narracion.txt). Entra solo si Facundo da el OK para contarlo y se graba la toma con su clave."
+    },
+    {
+      "id": "busca-mails-propios",
+      "dice": "Busca en los mails de la persona, en su Outlook, cuando ella se lo pide, y se los resume",
+      "pedido": "04/10: «lo de leer mails es super util… eso debe implementarse ahora»",
+      "en_el_video": false,
+      "estado": "probado",
+      "prueba": ".sgc-cache/claude-por-area/examen/MANANA_2026-10-04.md",
+      "como_se_probo": "04/10, 12:41, en una conversación de la carpeta de demostración (PC de Dirección, reglas v7, candidato 11): buscó el último mail de una persona (fecha y hora iguales a las del buzón) y contó los recibidos de un día (coincide); no marcó ni movió nada. 04/10, 14:40: el programa tal como quedó instalado desde el paquete 12 (idéntico al del repositorio) corrió contra el Outlook real en solo lectura: código 0 y 3 resultados. Dos auditorías (auditoria_mail_y_chicos_2026-10-04.md). Falta: una conversación NUEVA sobre el paquete 12 (ensayo general, hoja 10, paso 10) y una PC con el Outlook nuevo.",
+      "probado_sobre": {
+        "5": "f636f2129b1f"
+      },
+      "depende_de": [
+        "5"
+      ]
+    },
+    {
+      "id": "lee-word-y-excel",
+      "dice": "Lee un Word, un Excel o un PowerPoint de una carpeta sin abrirlo a la vista",
+      "pedido": "04/10: «leer word y excel sin python… lo podes resolver ahora?»",
+      "en_el_video": false,
+      "estado": "probado",
+      "prueba": ".sgc-cache/claude-por-area/examen/MANANA_2026-10-04.md",
+      "como_se_probo": "04/10, 12:41, en la misma conversación de la demostración: leyó una planilla .xlsx de muestra (el número pedido, la hoja y la hoja oculta marcada). 04/10, 14:40: el programa instalado desde el paquete 12 leyó un .xlsx y un .docx de muestra (código 0). Dos auditorías del lector (auditoria_leer_2026-10-04.md y auditoria_leer_2_2026-10-04.md) y 172 pruebas. Falta: un .doc del servidor en una PC de planta (hoja 8, paso 10) y el ensayo general (hoja 10, paso 11).",
+      "probado_sobre": "no depende de las reglas"
     }
   ]
 }
