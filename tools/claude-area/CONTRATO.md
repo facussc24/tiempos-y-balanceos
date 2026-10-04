@@ -458,8 +458,9 @@ frena cada control: `NOTAS.md` del plugin.
   si la política de la PC define `CLAUDE_AREA_NUBE` en su bloque `env`, no hace falta buscar).
 - **Avisos de los controles**: un archivo por freno, `avisos\<pc>\<AAAA-MM-DD>T<hhmmss>-<tipo>.json`, con el formato
   de arriba (`nivel`, `tipo`, `mensaje`, `cuando`) más `pc`, `usuario_windows`, `area`, `origen: "barack-area"`,
-  `regla`, `herramienta` y `comando` (recortado a 400 caracteres). Tipos: `servidor`, `mail`, `instalado`, `oculto`
-  (nivel `hoy`), `control-con-error` (nivel `urgente`: un control falló por dentro), `sin-perfil`, `perfil-roto`.
+  `regla`, `herramienta` y `comando` (recortado a 400 caracteres). Tipos: `servidor`, `mail`, `instalado`, `oculto`,
+  `pc`, `office`, `otras`, `habilidad`, `agentes` y, desde el plugin 0.4.2, `sistema` (apagar la PC, instalar o bajar
+  programas, registro, tareas programadas, configuración, discos) (nivel `hoy`), `control-con-error` (nivel `urgente`: un control falló por dentro), `sin-perfil`, `perfil-roto`.
   `<pc>` = `perfil.json → pc`, o el nombre de Windows; solo letras, números, punto, guion y guion bajo.
   El mismo freno repetido dentro de 10 minutos no escribe otro archivo.
 - **Cola local**: si la nube no está, el aviso queda en `<ESTADO>\avisos-pendientes\<pc>\` con el mismo nombre y

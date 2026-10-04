@@ -278,7 +278,11 @@ export function ultimoDeFak(transcriptPath) {
   return '';
 }
 
-const CIERRE_RE = [/\bresumen (final|de la noche|del d[ií]a)\b/i, /\b(qued[oó] (todo )?(hecho|listo|terminado))\b/i, /\b(termin[eé]|ya termin[eé]|listo por hoy|eso es todo|hasta ac[aá] lleg)\b/i, /\b(cierro|doy por (cerrad|terminad))/i];
+// «terminé» va CON tilde, sin `\b` detras y cerrando la frase («Terminé.», «ya terminé con todo», «terminé por hoy»):
+// en JavaScript `\b` no ve la «é» como letra, asi que `termin[eé]\b` frenaba «cuando termine la suite, sigo» (un aviso de
+// que se sigue) y dejaba pasar «Terminé.» (04/10/2026, a la 1:42: el freno me corto un aviso de espera). «Terminé la hoja
+// 3 y sigo con la 4» cuenta una parte, no se despide.
+const CIERRE_RE = [/\bresumen (final|de la noche|del d[ií]a)\b/i, /\b(qued[oó] (todo )?(hecho|listo|terminado))\b/i, /(?<![\p{L}\d])terminé(?=\s*(?:[.!]|$|con todo|todo\b|por hoy))/iu, /\b(listo por hoy|eso es todo|hasta ac[aá] lleg)/i, /\b(cierro|doy por (cerrad|terminad))/i];
 /** ¿El mensaje final se despide como si el trabajo hubiera terminado? */
 export const declaraFin = (texto) => { const t = String(texto || ''); return CIERRE_RE.some((r) => r.test(t)); };
 

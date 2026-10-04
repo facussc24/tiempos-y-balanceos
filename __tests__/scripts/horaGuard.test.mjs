@@ -140,6 +140,18 @@ describe('hora-guard (Stop) — decide si el turno puede cerrar', () => {
     expect(stop({ session_crons: [{ id: 'a' }], last_assistant_message: 'Resumen final.', stop_hook_active: true }).ok).toBe(true);
   });
 
+  it('declaraFin: «Terminé.» se despide; «cuando termine la suite, sigo» y «terminé la hoja 3 y sigo» no (04/10/2026)', () => {
+    // ROJO: se despiden
+    for (const t of ['Terminé.', 'Ya terminé con todo', 'Terminé por hoy, mañana sigo', 'Terminé todo lo de la lista', 'Eso es todo', 'Resumen final para Facundo', 'Quedó todo listo']) {
+      expect(H.declaraFin(t), t).toBe(true);
+    }
+    // VERDE: avisos de que se sigue (el del 04/10 a la 1:42 era el primero, textual)
+    for (const t of ['Sigo trabajando: corre la suite completa del plugin en la rama principal; cuando termine, armo y ensayo el paquete 9.',
+      'Terminé la hoja 3 y sigo con la 4', 'Espero a que termine el agente', 'Hasta que termine el build no publico', 'Sigo con el punto 3 de la lista.']) {
+      expect(H.declaraFin(t), t).toBe(false);
+    }
+  });
+
   it('VERDE: hora vigente, latido vivo y un mensaje que no cierra -> pasa (espera el proximo latido)', () => {
     fijarHasta();
     expect(stop({ session_crons: [{ id: 'a' }] })).toMatchObject({ ok: true, motivo: 'vigente_con_latido' });
