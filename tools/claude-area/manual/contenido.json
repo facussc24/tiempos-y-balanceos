@@ -254,7 +254,7 @@
       "texto": [
         "Escribilo como se lo dirías a un compañero.",
         "Cuanto más concreto, mejor: la pieza, el proveedor, el documento.",
-        "También te arma una presentación de PowerPoint."
+        "También busca en tus mails y te arma una presentación de PowerPoint."
       ],
       "error_que_evita": "No saber por dónde empezar.",
       "a_confirmar": []
@@ -299,6 +299,7 @@
       "texto": [
         "Con el botón **+**, abajo de donde escribís, le pasás un archivo o una foto.",
         "Sirve para un PDF, un documento o una captura de pantalla.",
+        "Un Word o un Excel de una carpeta: decile dónde está y lo lee.",
         "Después decile qué querés: «resumime esto»."
       ],
       "error_que_evita": "Copiar y pegar a mano un documento entero.",
@@ -375,7 +376,7 @@
       ],
       "texto": [
         "No borra archivos ni manda un mail si no se lo pedís con tus palabras.",
-        "En el servidor solo lee. No muestra los mails de Dirección ni de RRHH.",
+        "En el servidor solo lee: no borra, no mueve ni cambia nombres.",
         "Le pasa a Ingeniería la lista de programas de la PC. No saca ninguno.",
         "Se puede equivocar: por eso dice de dónde sacó cada respuesta."
       ],
