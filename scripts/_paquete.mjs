@@ -1298,7 +1298,10 @@ function tomarLock(destino, ahora) {
  * @returns {{estado:'actualizado'|'al_dia'|'esperar'|'error'|'ocupado'|'simulado'|'firma_rechazada'|'sin_clave'|'version_anterior', ...}}
  * Nunca borra. Antes de tocar nada verifica la nube completa y, si esta PC tiene la clave publica,
  * la firma. `simular` es el dry-run: devuelve el plan (archivo por archivo, cuarentena incluida) y no
- * escribe. Al final, salga como salga, deja la salud de esta PC en el buzon de la nube.
+ * escribe. Al final, salga como salga, deja la salud de esta PC en el buzon de la nube; con una excepcion:
+ * `nubeRecordada` (la carpeta es la de `origen.json`, no la nube encontrada por nombre ni una indicada) y la firma NO
+ * verifico (`firma_rechazada`, `sin_clave`) -> no se escribe nada en esa carpeta (auditoria del 03/10/2026, punto 3: nadie
+ * sabe quien escribio ahi). La nube por nombre sigue recibiendo la salud aunque la firma falle: asi el administrador se entera.
  */
 export function actualizar(opts) {
     const { nube, simular = false } = opts;
@@ -1306,6 +1309,10 @@ export function actualizar(opts) {
     // la identidad con la que se firma la salud: la del perfil de la PC si lo hay (misma regla que el plugin y la tarea), si no la de Windows
     const identidad = identidadDePerfil(opts.home, opts.identidad || identidadLocal());
     const res = actualizarAdentro({ ...opts, ahora, identidad });
+    if (opts.nubeRecordada && !simular && (res.estado === 'firma_rechazada' || res.estado === 'sin_clave')) {
+        res.sinSalud = true;
+        res.avisos.push('No se dejó la salud de esta PC en la carpeta de donde se instaló: la firma no verificó y ahí no se escribe nada.');
+    }
     // salud: lo que esta PC cuenta de si misma, bien o mal. Nunca frena ni cambia el resultado.
     if (!simular && !opts.sinSalud && !res.sinSalud && nube && fs.existsSync(nube) && res.estado !== 'ocupado') {
         try { res.salud = escribirSalud({ nube, salud: armarSalud({ destino: opts.destino, res, identidad, ahora }) }); }
@@ -1986,6 +1993,28 @@ export function armarPerfil({ persona, identidad, declarado = null, previo = nul
 }
 
 /**
+ * ¿Esta PC estaba instalada para OTRO usuario de Windows? `previo` es el perfil.json que hay y `nuevo` el que se va a
+ * escribir. Devuelve null si no habia perfil, si alguno no dice su usuario o si es el mismo usuario (sin mayusculas ni
+ * tildes: `LGomez` y `lgomez` son el mismo); si no, `{ anterior, nuevo }`, cada uno con `{ usuario, nombre, area }`.
+ */
+export function cambioDeUsuario(previo, nuevo) {
+    if (!previo || typeof previo !== 'object' || Array.isArray(previo) || !nuevo || typeof nuevo !== 'object') return null;
+    const antes = String(previo.usuario_windows ?? '').trim();
+    const ahora = String(nuevo.usuario_windows ?? '').trim();
+    if (!antes || !ahora || normTexto(antes) === normTexto(ahora)) return null;
+    const quien = (p) => ({ usuario: String(p.usuario_windows).trim(), nombre: String(p.nombre ?? '').trim(), area: String(p.area ?? '').trim() });
+    return { anterior: quien(previo), nuevo: quien(nuevo) };
+}
+
+/** «Marta Pérez (marta)», o solo el usuario si el perfil no trae un nombre distinto. */
+const nombrarUsuario = (u) => (u.nombre && normTexto(u.nombre) !== normTexto(u.usuario) ? `${u.nombre} (${u.usuario})` : u.usuario);
+
+/** La frase que ve la persona y el administrador cuando la PC pasa de un usuario a otro. Termina en la ruta, sin punto: se copia entera. */
+export function mensajeCambioDeUsuario(cambio, archivo, simular = false) {
+    return `Esta PC estaba instalada para ${nombrarUsuario(cambio.anterior)}: desde ahora el asistente es el de ${nombrarUsuario(cambio.nuevo)}. El perfil anterior ${simular ? 'quedaría guardado' : 'quedó guardado'} en ${archivo}`;
+}
+
+/**
  * La clave publica con la que esta PC verifica lo publicado: la indicada (--clave-publica), si no la ya fijada en
  * `<estado>\publicador.pub`, y si no hay ninguna, por UNICA vez la que viaja al lado de lo publicado
  * (`1- PUBLICADO\publicador.pub`), que queda fijada. RIESGO (confianza en el primer uso): quien pueda escribir en
@@ -2249,6 +2278,16 @@ export function instalar({ nube, home, estado, claudeDir, clavePublica = null, i
     res.declarado = perfil.declarado === true;
     const textoPerfil = jsonCanonico(perfil);
     const perfilCambia = perfilActual !== textoPerfil;
+    // Dos usuarios de Windows en la misma PC: `perfil.json` e `instalado.json` viven en `<home>` (C:\ClaudeBarack), que es de
+    // los dos. Si instala Marta y despues Lucas, el perfil pasa a ser el de Lucas. NO se frena (una PC que cambia de dueño
+    // tiene que poder reinstalarse): se AVISA a la persona y al administrador, y el perfil anterior queda guardado.
+    res.cambioDeUsuario = null;
+    const cambio = cambioDeUsuario(perfilPrevio, perfil);
+    if (cambio && perfilCambia) {
+        const archivoAnterior = `${pPerfil}.anterior-${selloCarpeta(ahora)}`;
+        res.cambioDeUsuario = { ...cambio, archivo: archivoAnterior, mensaje: mensajeCambioDeUsuario(cambio, archivoAnterior, simular), aviso: null };
+        res.avisos.push(res.cambioDeUsuario.mensaje);
+    }
     if (perfilCambia) {
         if (perfilActual !== null) { anotar('copia del perfil anterior', `${pPerfil}.anterior-${selloCarpeta(ahora)}`); if (!simular) fs.copyFileSync(pPerfil, `${pPerfil}.anterior-${selloCarpeta(ahora)}`); }   // nada se pisa sin copia
         anotar(perfilActual === null ? 'perfil nuevo' : 'perfil actualizado', pPerfil);
@@ -2308,6 +2347,14 @@ export function instalar({ nube, home, estado, claudeDir, clavePublica = null, i
         else {
             try { res.avisoSinPersona = dejarAvisoInstalacion({ nube, identidad, area: perfil.area, tipo: 'sin-persona', mensaje: `${identidad.usuario || 'alguien'} en ${identidad.pc || 'una PC'} no figura en la lista de personas: ${quedo}`, ahora }); anotar('aviso "sin persona" al buzón', res.avisoSinPersona); }
             catch (e) { res.avisos.push(`no pude dejar el aviso de persona sin asignar: ${e.message}`); }
+        }
+    }
+    // ... y lo mismo si la PC cambio de usuario de Windows (el mismo camino: un aviso en el buzon, una sola vez por cambio de perfil)
+    if (res.cambioDeUsuario && hayBuzon) {
+        if (simular) anotar('aviso "cambio de usuario" al buzón', path.join(carpetaBuzon(nube), 'avisos', nombrePcCarpeta(identidad.pc)));
+        else {
+            try { res.cambioDeUsuario.aviso = dejarAvisoInstalacion({ nube, identidad, area: perfil.area, tipo: 'cambio-de-usuario', mensaje: res.cambioDeUsuario.mensaje, ahora }); anotar('aviso "cambio de usuario" al buzón', res.cambioDeUsuario.aviso); }
+            catch (e) { res.avisos.push(`no pude dejar el aviso de cambio de usuario: ${e.message}`); }
         }
     }
 
@@ -2509,6 +2556,8 @@ export function cerrarInstalacion(r, { indicadores, simular = false, sinTarea = 
         ? `${r.perfil.nombre} (área ${r.perfil.area}${r.declarado ? ', como lo dijo la persona' : ''})`
         : `persona sin asignar (área ${r.perfil.area})${r.avisoSinPersona ? (r.desdeCarpeta ? ': quedó anotado en la carpeta de instalación' : ': el administrador ya tiene el aviso') : ''}`;
     decir(`✓ ${r.estado === 'ya_instalado' ? 'Ya estaba instalado' : 'Instalado'}: versión ${r.version}, ${quien}.`);
+    // la PC era de otro usuario de Windows: se dice acá, bien visible (y el administrador tiene el mismo aviso en el buzón)
+    if (r.cambioDeUsuario) decir(`  Aviso: ${r.cambioDeUsuario.mensaje}`);
     if (!r.persona && !r.declarado) decir('  Esta persona no figura en la lista. Para que quede con su área: correr de nuevo con --area "<área>" --nombre "<nombre y apellido>" --puesto "<puesto>".');
     if (nubeRecordada) decir(`  Instalado desde la carpeta de donde se instaló esta PC la primera vez (${nube}): las novedades las busca ahí.`);
     else if (r.desdeCarpeta) decir('  Instalado desde esta carpeta (esta PC no ve la nube de Barack): las novedades las busca acá, cuando esta carpeta esté a la vista.');
@@ -2517,7 +2566,7 @@ export function cerrarInstalacion(r, { indicadores, simular = false, sinTarea = 
     if (r.plugin.modo && r.plugin.modo.valor === 'bypassPermissions') decir(lineaOmitirPermisos(omitirPermisosEnLaApp(env)));
     const tarea = dejarActualizacionAutomatica({ indicadores, estado: r.estado, simular, sinTarea, home: r.home, env, ejecutar, plataforma });
     if (tarea.linea) decir(`  ${tarea.linea}`);
-    imprimirLista('  Avisos:', r.avisos, 10, decir);
+    imprimirLista('  Avisos:', r.cambioDeUsuario ? r.avisos.filter((a) => a !== r.cambioDeUsuario.mensaje) : r.avisos, 10, decir);
     return 0;
 }
 
@@ -2751,7 +2800,7 @@ function main(extra = null) {
         // las reglas de la casa se regeneran solo con una carpeta de PC INDICADA (--home / CLAUDE_AREA_HOME): nunca con la real por defecto.
         // Con la nube recordada, la salud se deja solo si esa carpeta trae la forma de la nube (su `4- BUZON` al lado): en
         // una copia con otro nombre no se escribe nada adentro (misma regla que al instalar desde una carpeta).
-        const r = actualizar({ destino, nube, reponer: !!a.reponer, simular: !!a.simular, area: a.area || null, clavePublica, proyecto, home: enArea && homeIndicado ? home : null, sinSalud: nubeRecordada && !tieneFormaDeNube(nube) });
+        const r = actualizar({ destino, nube, reponer: !!a.reponer, simular: !!a.simular, area: a.area || null, clavePublica, proyecto, home: enArea && homeIndicado ? home : null, sinSalud: nubeRecordada && !tieneFormaDeNube(nube), nubeRecordada });
         const pie = () => { if (r.salud) say(`  Salud de esta PC: ${r.salud}`); for (const av of r.avisos || []) say(`  Aviso: ${av}`); };
         if (r.estado === 'esperar') { say(`⏳ ${r.mensaje}`); pie(); return 3; }
         if (r.estado === 'ocupado') { say(`⏳ ${r.mensaje}`); return 3; }

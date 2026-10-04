@@ -28,7 +28,16 @@
     -PrioridadNormal   no baja la prioridad del proceso (para pruebas)   -Verbose2  muestra el log en pantalla
   La tarea de Windows se registra SOLO con -RegistrarTarea (lo llama "_paquete.mjs --instalar" al terminar una
   instalacion de verdad, sin ninguna carpeta indicada); -VerTarea la muestra sin registrar nada; -SinTarea es lo que
-  pasa por defecto y existe para que las pruebas lo digan explicito.
+  pasa por defecto y existe para que las pruebas lo digan explicito. -RegistrarTarea con CUALQUIER ruta indicada
+  (-HomeDir, -Nube, -EstadoDir o sus variables CLAUDE_AREA_*) se niega: sale con 2 y no registra ni escribe nada.
+
+  EL NODE (03/10/2026): primero el propio de la PC (<estado>\node\node.exe, copia del que viaja con el plugin instalado,
+  que se repone si cambia); el del PATH solo si no hay ninguno propio o si el propio ni arranca. estado.json dice cual
+  uso (node) y el log tambien.
+
+  UNA CARPETA RECORDADA QUE NO PASO LA FIRMA (el programa de la base sale con 4 y la nube no es la de por nombre ni una
+  indicada) no recibe nada de esta PC: ni avisos, ni inventario, ni salud (estado.json: sin_firma; los avisos esperan
+  en la cola local). La nube por nombre o la indicada los sigue recibiendo aunque la firma falle.
 
   Solo ASCII en este archivo (powershell.exe 5.1 sin BOM lee UTF-8 como ANSI).
 #>
@@ -73,6 +82,20 @@ function Leer-Recordada([string]$dirEstado) {
 $homeIndicado = [bool]($HomeDir -or $env:CLAUDE_AREA_HOME)
 $nubeIndicada = [bool]($Nube -or $env:CLAUDE_AREA_NUBE)
 $estadoIndicado = [bool]($EstadoDir -or $env:CLAUDE_AREA_ESTADO)
+
+# -RegistrarTarea solo vale en una instalacion de VERDAD: sin ninguna ruta indicada. La tarea es una por usuario de
+# Windows y se llama siempre igual: registrarla con carpetas de prueba (aunque sean las tres) pisaria la tarea real de
+# esta PC y la dejaria apuntando a un programa de prueba que despues se borra. Se niega ANTES de crear o escribir nada.
+# -VerTarea no registra ni escribe, asi que sigue valiendo; -SinTarea es lo que pasa por defecto y tampoco registra.
+if ($RegistrarTarea -and -not $SinTarea -and -not $VerTarea -and ($homeIndicado -or $nubeIndicada -or $estadoIndicado)) {
+  $indicadas = @()
+  if ($homeIndicado) { $indicadas += 'la carpeta de la PC (-HomeDir / CLAUDE_AREA_HOME)' }
+  if ($nubeIndicada) { $indicadas += 'la nube (-Nube / CLAUDE_AREA_NUBE)' }
+  if ($estadoIndicado) { $indicadas += 'el estado (-EstadoDir / CLAUDE_AREA_ESTADO)' }
+  Write-Host ('No registro nada: -RegistrarTarea solo vale en una instalacion de verdad, sin ninguna ruta indicada, y esta corrida trae carpetas de prueba: ' + ($indicadas -join ', ') + '. Una tarea no se registra desde carpetas de prueba: pisaria la tarea real de esta PC.')
+  exit 2
+}
+
 $dePrueba = @()
 $reales = @()
 if ($homeIndicado) { $dePrueba += 'la carpeta de la PC (-HomeDir / CLAUDE_AREA_HOME)' } else { $reales += 'la carpeta de la PC' }
@@ -130,7 +153,7 @@ function Buscar-Exe([string]$nombre) {
 }
 
 # La carpeta publicada de la nube: la que se paso, la de la variable, o la que diga el programa (--donde).
-function Resolver-Publicado([string]$node, [string]$script) {
+function Resolver-Publicado([string]$programa) {
   $raiz = $null
   if ($Nube) { $raiz = $Nube } elseif ($env:CLAUDE_AREA_NUBE) { $raiz = $env:CLAUDE_AREA_NUBE }
   if ($raiz) {
@@ -138,16 +161,34 @@ function Resolver-Publicado([string]$node, [string]$script) {
     if ((Split-Path -Leaf $raiz) -eq '1- PUBLICADO') { return $raiz }
     return (Join-Path $raiz '1- PUBLICADO')
   }
-  if ($node -and $script) {
-    $d = Correr $node @($script, '--donde', '--proyecto', 'area') 2 $null
+  if ($script:node -and $programa) {
+    $d = Correr-Node @($programa, '--donde', '--proyecto', 'area') 2 $null
     if (-not $d.Cortado -and $d.Codigo -eq 0) { return ((($d.Salida -split '\r?\n') | Where-Object { $_.Trim() } | Select-Object -Last 1).Trim()) }
   }
   return $null
 }
 
+# Corre el programa de la base con Node: el propio de esta PC primero. Si ese ni arranca (una copia danada), sigue con
+# el del PATH (si lo hay) y lo deja anotado: una copia mala no puede dejar a la PC sin actualizarse.
+function Correr-Node([string[]]$argumentos, [int]$minutos, [string]$pub) {
+  $r = Correr $script:node $argumentos $minutos $pub
+  if ($r.NoArranco -and $script:nodeOrigen -eq 'propio') {
+    $otro = Buscar-Exe 'node'
+    if ($otro) {
+      Log ('el Node propio no arranca (' + $script:node + '): sigo con el del PATH (' + $otro + ')')
+      $script:node = $otro
+      $script:nodeOrigen = 'path'
+      $r = Correr $otro $argumentos $minutos $pub
+    } else { Log ('el Node propio no arranca (' + $script:node + ') y no hay otro en el PATH') }
+  }
+  return $r
+}
+
 # Corre un programa sin ventana, con tope de tiempo y las variables del contrato; si se pasa, lo corta.
+# NoArranco = true cuando el sistema ni pudo ponerlo en marcha (un .exe danado, que no es un programa de Windows).
 function Correr([string]$exe, [string[]]$argumentos, [int]$minutos, [string]$pub) {
-  $r = @{ Codigo = -1; Salida = ''; Cortado = $false }
+  $r = @{ Codigo = -1; Salida = ''; Cortado = $false; NoArranco = $false }
+  $arranco = $false
   try {
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName = $exe
@@ -163,6 +204,7 @@ function Correr([string]$exe, [string[]]$argumentos, [int]$minutos, [string]$pub
     $psi.EnvironmentVariables['CLAUDE_AREA_ESTADO'] = $EstadoDir
     if ($pub) { $psi.EnvironmentVariables['CLAUDE_AREA_NUBE'] = (Split-Path -Parent $pub) }
     $p = [System.Diagnostics.Process]::Start($psi)
+    $arranco = $true
     $salida = $p.StandardOutput.ReadToEndAsync()
     $err = $p.StandardError.ReadToEndAsync()
     if (-not $p.WaitForExit($minutos * 60 * 1000)) {
@@ -174,7 +216,7 @@ function Correr([string]$exe, [string[]]$argumentos, [int]$minutos, [string]$pub
     $p.WaitForExit()
     $r.Codigo = $p.ExitCode
     $r.Salida = ($salida.Result + $err.Result).Trim()
-  } catch { $r.Salida = "no arranco: $($_.Exception.Message)" }
+  } catch { $r.Salida = "no arranco: $($_.Exception.Message)"; $r.NoArranco = -not $arranco }
   return $r
 }
 function Escribir-Estado {
@@ -257,20 +299,29 @@ try {
   # ---- el programa de la base y Node -------------------------------------------------------------------
   $script = Join-Path $PSScriptRoot '_paquete.mjs'
   if (-not (Test-Path $script)) { $script = Join-Path $Publicado 'programas\_paquete.mjs' }
-  $node = Buscar-Exe 'node'
+  # El Node: PRIMERO el propio de esta PC, la copia en <estado>\node\node.exe del Node que viaja con el plugin
+  # (03/10/2026); el del PATH solo si no hay ninguno propio (un Node viejo del PATH fallaria en cada corrida). La copia
+  # existe porque un programa que esta corriendo no se puede reemplazar: la tarea corre con la copia y asi el actualizador
+  # puede reponer el del plugin. Se refresca desde el del plugin instalado cuando cambia (copia a un temporal y mueve).
   $nodePropio = Join-Path $EstadoDir 'node\node.exe'
-  # El Node que viaja con el plugin (03/10/2026). Si la PC no tiene Node, la tarea corre con una COPIA de ese en el
-  # estado de la PC: un programa que esta corriendo no se puede reemplazar, y asi el actualizador puede reponer el del plugin.
   $nodePlugin = Join-Path $Publicado 'marketplace\plugins\barack-area\bin\node.exe'
-  if (-not $node -and (Test-Path $nodePlugin)) {
-    $hayCopia = Test-Path $nodePropio
+  if (Test-Path -LiteralPath $nodePlugin) {
+    $hayCopia = Test-Path -LiteralPath $nodePropio
     if (-not $hayCopia -or ((Get-Item -LiteralPath $nodePlugin).Length -ne (Get-Item -LiteralPath $nodePropio).Length)) {
-      try { New-Item -ItemType Directory -Force -Path (Split-Path -Parent $nodePropio) | Out-Null; Copy-Item -LiteralPath $nodePlugin -Destination $nodePropio -Force } catch { Log "no pude copiar el Node del plugin al estado de la PC: $($_.Exception.Message)" }
+      $nodeNuevo = $nodePropio + '.nuevo'
+      try {
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $nodePropio) | Out-Null
+        Copy-Item -LiteralPath $nodePlugin -Destination $nodeNuevo -Force
+        Move-Item -LiteralPath $nodeNuevo -Destination $nodePropio -Force
+      } catch { Log "no pude copiar el Node del plugin al estado de la PC: $($_.Exception.Message)" }
     }
   }
-  if (-not $node -and (Test-Path $nodePropio)) { $node = $nodePropio }
+  $node = $null
+  $nodeOrigen = $null
+  if (Test-Path -LiteralPath $nodePropio) { $node = $nodePropio; $nodeOrigen = 'propio' }
+  else { $node = Buscar-Exe 'node'; if ($node) { $nodeOrigen = 'path' } }
   $Pub = $null
-  if (-not $soloRecordada) { $Pub = Resolver-Publicado $node $(if (Test-Path $script) { $script } else { $null }) }
+  if (-not $soloRecordada) { $Pub = Resolver-Publicado $(if (Test-Path $script) { $script } else { $null }) }
   # La nube recordada, con la MISMA regla que el programa de la base: la nube por nombre (o la indicada) manda si trae
   # una publicacion; si no, la carpeta de la que se instalo esta PC. En ese caso no se le pasa --nube: la elige el.
   $Recordada = $null
@@ -280,8 +331,9 @@ try {
   }
   if (-not $node -and $Pub) {
     $nodeNube = Join-Path (Split-Path -Parent $Pub) '1- PUBLICADO\contenido\marketplace\plugins\barack-area\bin\node.exe'
-    if (Test-Path $nodeNube) { $node = $nodeNube }
+    if (Test-Path $nodeNube) { $node = $nodeNube; $nodeOrigen = 'nube' }
   }
+  if ($node) { Log ('node: ' + $node + ' (' + $nodeOrigen + ')') }
   # El buzon (avisos, inventario, salud): el de la nube; con la recordada, solo si trae la forma de la nube.
   $PubBuzon = $Pub
   if ($Recordada) {
@@ -295,6 +347,12 @@ try {
   if ($PubBuzon) { $RaizBuzon = Split-Path -Parent $PubBuzon; $Buzon = Join-Path $RaizBuzon '4- BUZON' }
   $pc = Nombre-Pc
 
+  # Una carpeta RECORDADA cuya firma NO verifico (la publicacion viene firmada con otra clave, o esta PC no tiene la clave:
+  # codigo 4 del programa de la base) no recibe nada de esta PC: ni avisos, ni inventario, ni salud (03/10/2026). Quien
+  # escribio ahi puede no ser Barack, y el inventario es de la PC. La nube POR NOMBRE o la indicada sigue recibiendolos
+  # aunque la firma falle: asi el administrador se entera.
+  $sinFirmaRecordada = $false
+
   # ---- 1) actualizar ----------------------------------------------------------------------------------
   if ($SinActualizar) { Log 'actualizar: salteado (-SinActualizar)' }
   elseif (-not (Test-Path $script)) { $estado.actualizar = @{ resultado = 'sin_script'; detalle = "no esta $script" }; Fallo "no esta $script" }
@@ -307,7 +365,7 @@ try {
   else {
     $args1 = @($script, '--actualizar', '--proyecto', 'area', '--destino', $Publicado, '--home', $HomeDir)
     if ($Pub) { $args1 += @('--nube', $Pub) }
-    $b = Correr $node $args1 $MinutosActualizar $Pub
+    $b = Correr-Node $args1 $MinutosActualizar $Pub
     if ($b.Cortado) {
       $estado.actualizar = @{ resultado = 'cortado'; detalle = "paso de $MinutosActualizar min y lo corte" }
       Fallo "actualizar paso de $MinutosActualizar min y lo corte"
@@ -320,15 +378,23 @@ try {
     } elseif ($b.Codigo -eq 4) {
       $estado.actualizar = @{ resultado = 'rechazado'; detalle = (Resumir $b.Salida) }
       Fallo "la PC no acepta lo publicado (firma, clave o version): $(Resumir $b.Salida)"
+      if ($Recordada) { $sinFirmaRecordada = $true }
     } else {
       $estado.actualizar = @{ resultado = 'error'; detalle = (Resumir $b.Salida) }
       Fallo "actualizar salio con $($b.Codigo): $(Resumir $b.Salida)"
     }
   }
+  if ($sinFirmaRecordada) {
+    Log ('la carpeta de donde se instalo esta PC (' + $Recordada + ') no paso la firma: no escribo nada en la carpeta recordada (ni avisos, ni inventario, ni salud)')
+    $PubBuzon = $null
+    $Buzon = $null
+    $RaizBuzon = $null
+  }
 
   # ---- 2) la cola de avisos del plugin -> buzon (mover uno por uno, sin pisar; -Simular solo lo lista) ----
   $cola = Join-Path $EstadoDir ('avisos-pendientes\' + $pc)
   if ($SinAvisos) { Log 'avisos: salteado (-SinAvisos)' }
+  elseif ($sinFirmaRecordada) { $estado.avisos = @{ resultado = 'sin_firma' }; Log 'avisos: la carpeta recordada no paso la firma, quedan en la cola local' }
   elseif (-not $Buzon -or -not (Test-Path -LiteralPath $RaizBuzon)) { $estado.avisos = @{ resultado = 'sin_nube' }; Log 'avisos: no veo un buzon de la nube, quedan en la cola local' }
   elseif (-not (Test-Path $cola)) { $estado.avisos = @{ resultado = 'sin_cola'; movidos = 0 } }
   else {
@@ -364,6 +430,7 @@ try {
   }
   if ($SinInventario) { Log 'inventario: salteado (-SinInventario)' }
   elseif (-not $toca) { $estado.inventario = @{ resultado = 'no_toca' } }
+  elseif ($sinFirmaRecordada) { $estado.inventario = @{ resultado = 'sin_firma' }; Log 'inventario: la carpeta recordada no paso la firma, no lo subo' }
   elseif (-not $Buzon -or -not (Test-Path -LiteralPath $RaizBuzon)) { $estado.inventario = @{ resultado = 'sin_nube' } }
   elseif (-not (Test-Path $invScript)) { $estado.inventario = @{ resultado = 'sin_script' }; Fallo "no esta $invScript" }
   else {
@@ -381,7 +448,8 @@ try {
   }
 
   # ---- 4) salud: lo que el programa de la base no sabe ---------------------------------------------------
-  if ($Buzon -and (Test-Path -LiteralPath $RaizBuzon)) {
+  if ($sinFirmaRecordada) { $estado.salud = @{ resultado = 'sin_firma' } }
+  elseif ($Buzon -and (Test-Path -LiteralPath $RaizBuzon)) {
     $rutaSalud = Join-Path $Buzon ('salud\' + $pc + '.json')
     if (-not (Test-Path $rutaSalud)) { $estado.salud = @{ resultado = 'sin_salud' } }
     else {
@@ -406,6 +474,7 @@ try {
 
   # ---- 5) mails: gancho. Cuando se decida como suben, va aca (hoy no hace nada). --------------------------
 
+  $estado.node = $node
   $estado.errores = @($errores)
   Escribir-Estado
   Log "== sync termina ($($errores.Count) error(es))"

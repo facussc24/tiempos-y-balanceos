@@ -199,6 +199,14 @@ niega por "todo o nada"). Opciones: `--home` (o `CLAUDE_AREA_HOME`), `--claude-d
    bajas no cuentan. Si no figura: `perfil.json` con `area: "comun"` y `nombre: ""` (el aviso de arranque pregunta una
    vez), y un aviso `sin-persona` en `4- BUZON\avisos\<pc>\` (una sola vez por perfil escrito). `perfil.json` se
    escribe acá; si cambia, el anterior queda como `perfil.json.anterior-<fecha>`.
+   **Dos usuarios de Windows en la misma PC** (03/10/2026): `perfil.json` e `instalado.json` viven en `<HOME>`, que es de los
+   dos. Si el perfil que había era de OTRO usuario (sin mayúsculas ni tildes: `LGomez` = `lgomez`) **no se frena** —una PC que
+   cambia de dueño tiene que poder reinstalarse—, se avisa: `instalar()` devuelve `cambioDeUsuario` `{ anterior, nuevo,
+   archivo, mensaje, aviso }` (y el mensaje en `avisos`), a la persona le sale una línea `Aviso: Esta PC estaba instalada para
+   <anterior>: desde ahora el asistente es el de <nuevo>. El perfil anterior quedó guardado en <archivo>` y al administrador
+   un aviso `cambio-de-usuario` en `4- BUZON\avisos\<pc>\` (el mismo camino que `sin-persona`, una vez por cambio; desde una
+   carpeta sin la forma de la nube, solo en pantalla). Ojo: la lista busca por usuario y **después por nombre de PC**, así que
+   un usuario que no figura en una PC que sí figura queda con el nombre de la persona de esa PC.
 4. **La copia**: `--actualizar` con el área del perfil hacia `<HOME>\publicado\` (nunca pisa, nunca borra).
 5. **La casa**: `<HOME>\.claude\rules\casa.md` (copia de `publicado\casa\CLAUDE.md` con un encabezado; se regenera en
    cada actualización), `<HOME>\CLAUDE.md` corto solo si no existe (es de la persona) y `Trabajo\` con un `LEEME.txt`
@@ -253,6 +261,23 @@ carpeta de red o un pendrive no la encontraba). Ahora:
   carpeta recordada, `estado.json` dice `actualizar: sin_nube` y no es un error. `estado.json` lleva `nube`:
   `por_nombre` · `indicada` · `recordada` · `sin_nube`. Para probarla: `-HomeDir` y `-EstadoDir` sin `-Nube` corre solo
   si ese estado recuerda una carpeta a la vista (y entonces NO busca la nube por nombre); con `-RegistrarTarea` no.
+- **Una carpeta recordada que no pasó la firma no recibe nada de la PC** (03/10/2026, auditoría del instalador). Con la
+  carpeta de `origen.json` (no la nube por nombre ni una indicada), si `--actualizar` sale con 4 (`firma_rechazada` o
+  `sin_clave`: la publicación viene firmada con OTRA clave, o la PC no tiene la clave) no se escribe NADA ahí: `actualizar()`
+  no deja la salud (`nubeRecordada`; lo dice en una línea) y la tarea no sube avisos, inventario ni salud (`estado.json`:
+  `avisos`, `inventario` y `salud` = `sin_firma`; los avisos esperan en la cola local y el inventario en su semana). La nube
+  por nombre o la indicada **sigue** recibiéndolos aunque la firma falle: así el administrador se entera. Límite: la tarea
+  solo ve el código 4, que también sale con `version_anterior` (firma buena, carpeta más vieja): en una carpeta recordada
+  tampoco se escribe en ese caso.
+- **El Node de la tarea** (03/10/2026): primero el propio, `<estado>\node\node.exe` (copia del que viaja con el plugin
+  instalado, a un temporal y de ahí al lugar; se repone cuando cambia el tamaño); el del PATH solo si no hay ninguno propio
+  **o si el propio ni arranca** (una copia dañada no deja a la PC sin actualizarse: el log dice `el Node propio no arranca`).
+  `estado.json` lleva `node` (el que corrió) y el log una línea `node: <ruta> (propio|path|nube)`.
+- **`-RegistrarTarea` con CUALQUIER ruta indicada se niega** (03/10/2026): `-HomeDir`, `-Nube`, `-EstadoDir` o sus variables
+  `CLAUDE_AREA_*`, aunque sean las tres de prueba, salen con 2 y una línea que lo dice, sin crear ni registrar nada (antes
+  con las tres registraba y pisaba la tarea real de la PC, que se llama siempre igual). `-VerTarea` sigue mostrando la
+  definición. La prueba solo ejercita ese camino, y corre con un `Register-ScheduledTask` de mentira (el módulo de tareas
+  se carga antes de definirlo y una sonda confirma que es el de mentira; sin eso, el módulo lo pisa al cargarse).
 - **Una nube atrasada no es una novedad** (`chequear`): si la versión que se ve es MENOR que la instalada (OneDrive
   todavía no bajó la última, o la PC se instaló desde un pendrive más nuevo) devuelve `al_dia` con
   `motivo: "nube_atrasada"` (aunque haya archivos instalados tocados: de esa nube no se puede reponer nada), y el aviso
@@ -273,7 +298,8 @@ carpeta de red o un pendrive no la encontraba). Ahora:
   tarea con la MISMA definición (al iniciar sesión de ese usuario + cada 4 horas, `conhost --headless`, sin elevar),
   con otro nombre y una acción inofensiva. Y con la carpeta de la nube «solo en la nube» (490 archivos sin bajar) el
   `node.exe` arranca bajándose solo (9,7 s) y el instalador instala leyendo de ahí (65 s, código 0).
-- **Lo que no se probó**: la tarea de verdad registrada por `--instalar` (ninguna prueba ni ensayo la registra) y la
+- **Lo que no se probó**: el registro con la línea de comandos real, sin ninguna ruta indicada (por la regla de arriba ninguna
+  prueba lo puede correr); la tarea de verdad registrada por `--instalar` (ninguna prueba ni ensayo la registra) y la
   corrida que lanza el Programador de tareas (`conhost --headless` con el programa de la copia instalada). Sí se probó
   lo que la tarea corre: el programa de la copia instalada, sin ninguna ruta, en una PC entera armada en una carpeta temporal.
 
