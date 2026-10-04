@@ -118,7 +118,28 @@ export function pideHasta(texto) {
       if (cerca(i, idxVerbo) || cerca(i, idxNoPares)) { pide = true; sinHora = true; senales.push(`largo:${frase}`); }
     }
   }
-  return { pide, horas: pide ? horas : [], manana: pide && idxManana.length > 0, sin_hora: sinHora, senales: [...new Set(senales)] };
+  // Un pedido por DURACION: «metele 2 horas seguidas mas», «segui una hora mas», «labura 3 horas de corrido».
+  // 04/10/2026: «metelte 2 hora seugidas mas mientras voy a merendar» no avisaba (no trae «hasta» ni una hora de reloj).
+  // Hace falta: un numero de horas, un «mas / seguidas / de corrido» pegado, y un verbo de trabajar cerca.
+  // «hace 6 horas me dijiste…» es un reclamo en pasado: no cuenta.
+  let duracion = null;
+  if (!pide) {
+    const VD = CANON.ventana_duracion;
+    palabras.forEach((w, i) => {
+      if (duracion !== null) return;
+      const n = /^\d{1,2}$/.test(w) ? Number(w) : (Object.prototype.hasOwnProperty.call(CANON.numeros, w) ? CANON.numeros[w] : null);
+      if (n === null || n <= 0 || n > 24) return;
+      const sig = palabras[i + 1] || '';
+      if (!(sig === 'hs' || sig === 'h' || alguna(sig, CANON.horas_palabra))) return;
+      if (palabras.slice(Math.max(0, i - 2), i).some((x) => CANON.pasado.includes(x))) return;
+      const cola = palabras.slice(i + 2, i + 6);
+      const mas = cola.some((x) => x === 'mas' || alguna(x, CANON.duracion_mas));
+      const verbo = palabras.some((x, k) => Math.abs(k - i) <= VD && (esVerbo(x) || (!/ste$/.test(x) && alguna(x, CANON.verbos_duracion))));
+      if (mas && verbo) duracion = n;
+    });
+    if (duracion !== null) { pide = true; senales.push('duracion'); }
+  }
+  return { pide, horas: pide ? horas : [], manana: pide && idxManana.length > 0, sin_hora: sinHora, duracion_horas: duracion, senales: [...new Set(senales)] };
 }
 
 /** ¿El mensaje pide parar? Solo importa con una hora vigente. Palabra suelta al principio o "ya esta, <parar>". */
@@ -243,6 +264,7 @@ export function sesionActual({ cwd = process.cwd(), home = os.homedir() } = {}) 
 
 function leidas(p) {
   if (p.sin_hora) return 'no dice una hora: «toda la noche» / «todo el día»';
+  if (p.duracion_horas) return `pide ${p.duracion_horas} hora(s) más desde ahora: la hora de corte se calcula con \`date\``;
   const hs = p.horas.map((h) => `${h.hora}${h.minuto ? `:${dosDig(h.minuto)}` : ''}${h.sufijo ? ` ${h.sufijo}` : ''}`);
   return `${hs.length ? `hora leída: ${hs.join(', ')}` : 'dice «hasta esa hora» o «hasta mañana»'}${p.manana ? ' · nombra «mañana»' : ''}`;
 }
@@ -260,7 +282,7 @@ export function avisoDe(texto, { estado = null, ahora = new Date() } = {}) {
     return `${MARCA} Fak te deja trabajando solo hasta una hora (${leidas(p)}; ahora son las ${enLocal(ahora)}). Cuando terminás de contestar quedás PARADO hasta que algo te despierte: sin un aviso programado no hay trabajo. ANTES de seguir con lo que pide:\n`
       + '1. Escribí la lista de trabajo en un archivo: lo que pidió primero, y después qué auditar o mejorar por tu cuenta. El pedido es por TIEMPO, no por lista: cuando se acabe la lista, se le agrega, no se cierra.\n'
       + `2. Fijá la hora: node scripts/_lib/horaGuard.mjs --fijar "AAAA-MM-DD HH:MM" --lista <ese archivo> --pedido "<sus palabras>". Si la hora es ambigua («hasta 8»), es la próxima que tenga sentido con lo que dijo.\n`
-      + `3. Armá el latido con CronCreate (cada ${CANON.latido_minutos} minutos, en minutos que no sean :00 ni :30), con un prompt que mande a mirar la hora, leer la lista y seguir; y registralo: node scripts/_lib/horaGuard.mjs --latido <id>.\n`
+      + `3. Armá el latido con CronCreate (cada ${CANON.latido_minutos} minutos, en minutos que no sean :00 ni :30), con un prompt que mande a mirar la hora, correr node scripts/_colgados.mjs (lo que lanzaste y lleva 10 minutos quieto se MIRA, no se espera), leer la lista y seguir; y registralo: node scripts/_lib/horaGuard.mjs --latido <id>.\n`
       + '4. El resumen para Fak va cuando LLEGA la hora, no antes. Mientras tanto, lo hecho se anota en el archivo de la lista. Y nada que le muestre un cartel de aprobación: te quedarías colgado.\n'
       + `Si el mensaje no pide eso, escribí un renglón que empiece con «${NO_APLICA}» y el motivo.`;
   }

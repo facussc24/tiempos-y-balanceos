@@ -291,6 +291,28 @@ describe('hora-guard (Stop) — decide si el turno puede cerrar', () => {
     expect(H.vigente('con-hora', { ahora: D('2026-10-04 13:00'), home }).hasta).toBe('2026-10-04 16:00');
   });
 
+  it('pedido por DURACION («metele 2 horas seguidas mas»): salta con los cuatro mensajes reales de Fak; un reclamo o un dato en horas, no', () => {
+    const porDuracion = [
+      ['uh enotence metelte 2 hora seugidas mas mientras voy a merendar dale trnauqi no pasa nada pero que no vuelve a pasar eso de perder 5 5minutos', 2],   // 04/10/2026
+      ['me voy vuevlo manana segui laburando sobre el diseno mejroandodlo poenten un cronoemtor no lo se tenes 12 horas egudias labura tranuqilo ok? no pares', 12],
+      ['que paso ya temrianste? no no ? tquedate laburando aca 24 hora segudias mejorando ajsutando ahciendi msimauleciones', 24],
+      ['Ponete a laburar. Sí, tres horas seguidas, mínimo, cronometrate, metele, avanzad todo lo que puedas con el nido', 3],
+    ];
+    for (const [t, n] of porDuracion) {
+      const p = H.pideHasta(t);
+      expect(p.pide, t).toBe(true);
+      expect(p.duracion_horas ?? null, t).toBe(p.senales.includes('duracion') ? n : null);
+    }
+    expect(H.pideHasta(porDuracion[0][0])).toMatchObject({ pide: true, duracion_horas: 2, senales: ['duracion'] });
+    expect(H.avisoDe(porDuracion[0][0])).toContain('2 hora(s) más');
+    for (const t of [
+      'hace 2 horas mas o menos que labura la maquina y sigue sin calentar',          // pasado
+      'la moldeadora tardo 2 horas mas de lo normal en calentar',                      // un dato, sin verbo de trabajar
+      'el turno tiene 8 horas y la linea da 60 piezas por hora',
+      ...NO_PIDEN,
+    ]) expect(H.pideHasta(t).pide, t).toBe(false);
+  });
+
   it('contexto: una entrada rota del estado (null) no calla el pedido vigente de las demas', () => {
     H.fijar({ sesion: 'viva', hasta: '2026-10-04 16:00', ahora: D('2026-10-04 12:52'), home });
     const p = path.join(home, '.claude', '.trabajar-hasta.json');

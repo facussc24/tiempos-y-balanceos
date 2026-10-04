@@ -26,9 +26,15 @@ noche», «hasta que vuelva», «ponete un cronómetro»), ANTES de seguir con l
 2. **La hora fijada**: `node scripts/_lib/horaGuard.mjs --fijar "AAAA-MM-DD HH:MM" --lista <archivo> --pedido "<sus palabras>"`.
    Si es ambigua («hasta 8»), la próxima que tenga sentido con lo que dijo. Sin hora («toda la noche»), la mejor
    estimación; si no hay pista, 4 horas y se renueva.
-3. **El latido**: `CronCreate` recurrente cada 20 minutos (en minutos que no sean :00 ni :30) con un prompt que
-   empiece con `LATIDO`, mande a mirar la hora, leer la lista y seguir; y `--latido <id>`. El latido dispara solo con
-   la sesión inactiva y muere si la app se cierra: al arrancar o compactar, `CronList` y rearmarlo si falta.
+3. **El latido**: `CronCreate` recurrente cada 10 minutos (en minutos que no sean :00 ni :30) con un prompt que
+   empiece con `LATIDO`, mande a mirar la hora, **correr `node scripts/_colgados.mjs`**, leer la lista y seguir; y
+   `--latido <id>`. El latido dispara solo con la sesión inactiva y muere si la app se cierra: al arrancar o compactar,
+   `CronList` y rearmarlo si falta.
+   **Lo que lanzo y lleva 10 minutos quieto se MIRA, no se espera** (04/10/2026: cuatro conversaciones del examen
+   estuvieron 55 minutos esperando un cartel de permiso y yo esperaba «que terminen»; Fak: *"que no vuelva a pasar eso de
+   perder 55 minutos"*). `_colgados.mjs` lee los registros de las conversaciones y de los agentes y dice cuál está quieta
+   a mitad de un turno y qué espera (una herramienta sin resultado es casi siempre un cartel). Si espera un cartel y Fak
+   no está: `stop_session` y un mensaje para que siga por otro camino.
 4. **El resumen para Fak va cuando llega la hora**, no antes. Ahí: `--terminar`, `CronDelete` y el resumen.
 5. **Nada que le muestre un cartel de aprobación** mientras no está (me quedaría colgado), y los topes siguen
    valiendo: el techo de agentes, el cupo (mirarlo cada dos horas) y lo que el contrato de autonomía marca «preguntar».
@@ -43,8 +49,10 @@ mecanismo no depende de eso.
 
 - **Hook `hora-prompt.sh`** (UserPromptSubmit; lógica en `scripts/_lib/horaGuard.mjs`, palabras en
   `horaCanon.data.json`): con el mensaje de Fak que pone la hora, avisa los cuatro pasos. Medido sobre 1.712
-  mensajes suyos: salta en 4 y los 4 son pedidos de trabajar por tiempo; un reclamo en pasado («no te quedaste
-  hasta las 8») o «me lo enviaron a las 21hs» no disparan.
+  mensajes suyos: salta en 7 y los 7 son pedidos de trabajar por tiempo; un reclamo en pasado («no te quedaste
+  hasta las 8») o «me lo enviaron a las 21hs» no disparan. Desde el 04/10/2026 también reconoce el pedido por
+  DURACIÓN («metele 2 horas seguidas más», «tenés 12 horas seguidas, laburá tranquilo»): ese día no avisó y la hora la
+  fijé por mi lectura; la hora de corte se calcula con `date`.
 - **Hook `hora-guard.sh`** (Stop): con una hora vigente frena el cierre del turno si no hay ningún aviso programado
   vivo (lo dice `session_crons`; se frena también en el segundo intento) o si el mensaje se despide como si hubiera
   terminado; y frena una vez si el último mensaje de Fak ponía una hora y no se fijó. Salida honesta: un renglón

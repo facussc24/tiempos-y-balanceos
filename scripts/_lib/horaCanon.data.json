@@ -61,9 +61,16 @@
     "deja"
   ],
   "_parar": "Con una hora vigente: 'para', 'ya esta, corta', 'deja asi'. Solo se avisa; quien termina el pedido es Claude con --terminar y el motivo.",
+  "numeros": { "una": 1, "un": 1, "dos": 2, "tres": 3, "cuatro": 4, "cinco": 5, "seis": 6 },
+  "horas_palabra": ["hora", "horas", "horita", "horitas"],
+  "duracion_mas": ["seguidas", "seguida", "seguido", "corrido", "corridas"],
+  "verbos_duracion": ["metele", "metete", "laburate"],
+  "pasado": ["hace", "hacen", "hacia"],
+  "ventana_duracion": 6,
+  "_duracion": "Pedido por duracion (04/10/2026): «metelte 2 hora seugidas mas mientras voy a merendar». Numero de horas + «mas / seguidas / de corrido» en las 4 palabras siguientes + un verbo de trabajar a 6 palabras o menos. «hace 6 horas…» no cuenta.",
   "ventana_palabras": 14,
   "_ventana_palabras": "El verbo de trabajar (o el 'no pares', o el reloj) y el 'hasta <hora>' tienen que estar a esta distancia, en palabras. Sin esto, 'me lo enviaron ayer a las 21hs' o 'el consumo es hasta 10 veces mayor' dispararian.",
   "marca": "[TRABAJAR-HASTA]",
   "no_aplica": "No aplica trabajar-hasta:",
-  "latido_minutos": 20
+  "latido_minutos": 10
 }
