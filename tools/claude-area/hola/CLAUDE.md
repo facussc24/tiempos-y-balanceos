@@ -54,6 +54,7 @@ Esperá a que termine (menos de dos minutos). **No lo corras dos veces a la vez.
 |---|---|
 | Terminó bien (dice "Instalado" o "Ya estaba instalado") y nombra a la persona con su área | Pasá al Paso 3. |
 | Terminó bien pero dice "persona sin asignar" (no figura en la lista) | Pasá al Paso 2 bis. |
+| Terminó bien y además dice "Aviso: Esta PC estaba instalada para…" | Leéselo tal cual: desde ahora el asistente de esta PC es el de ella, y el de la otra persona quedó guardado (el aviso dice dónde). Si no era lo que quería, que le avise al administrador. No toques nada y pasá al Paso 3. |
 | Dice que OneDrive todavía está bajando (código 3), o que no encuentra la carpeta publicada de la nube | *"La copia de la nube todavía está bajando a esta PC. Probá de nuevo en un rato."* No insistas ni intentes bajarla vos. Si sigue igual al otro día: avisarle al administrador (la nube no está sincronizada en esta PC). |
 | Dice que esta parece la PC del administrador | Es la PC de Ingeniería: no se instala así. Decile que lo hable con el administrador. No pases `--forzar`. |
 | Dice que le falta la clave, que la copia no pasa la verificación o que la versión es más vieja (código 4) | *"Esta PC no puede comprobar que la copia de la nube sea la oficial de Barack. Avisale al administrador del sistema (Ingeniería): lo arregla él."* No toques nada ni busques otra forma de instalar. |
