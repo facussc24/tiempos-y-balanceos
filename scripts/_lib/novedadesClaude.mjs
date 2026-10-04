@@ -87,6 +87,18 @@ export function versionesNuevas(texto, ultimaVista = null, { primeraVez = 6 } = 
   return versiones.filter((v) => compararVersion(v.version, ultimaVista) > 0);
 }
 
+/**
+ * El renglon para el arranque de sesion: avisa si paso una semana (o `dias`) desde la ultima lectura, o si nunca se leyo.
+ * '' si no toca. Fak, 04/10/2026: que corra solo en SU PC los lunes; que se implementa lo decide el.
+ */
+export function avisoHook(estado, ahora = new Date(), dias = 7) {
+  const ultima = estado && estado.ultima_corrida ? Date.parse(estado.ultima_corrida) : NaN;
+  const pasaron = Number.isFinite(ultima) ? Math.floor((ahora.getTime() - ultima) / 86400000) : null;
+  if (pasaron !== null && pasaron < dias) return '';
+  const cuanto = pasaron === null ? 'Todavia no se leyo nunca' : `Pasaron ${pasaron} dias desde la ultima lectura de`;
+  return `[NOVEDADES DE CLAUDE] ${cuanto} lo que publican Lydia Hallie, Thariq y Claude Devs y el registro de cambios de Claude Code. Toca: node scripts/_novedadesClaude.mjs, cruzar el listado con lo que ya tenemos y llevarle a Fak la lista corta (que nos sirve, que nos puede romper). El decide que se implementa: nada se aplica solo.`;
+}
+
 const corto = (t, n) => { const s = String(t || '').replace(/\s+/g, ' ').trim(); return s.length > n ? `${s.slice(0, n - 1)}…` : s; };
 const miles = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 

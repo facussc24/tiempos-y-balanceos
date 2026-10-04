@@ -154,12 +154,12 @@
     },
     {
       "id": "no-hace-solo",
-      "dice": "No borra archivos ni manda un mail si no se lo pedís con tus palabras; en el servidor solo lee; no muestra los mails de Dirección ni de RRHH",
+      "dice": "No borra archivos ni manda un mail si no se lo pedís con tus palabras; en el servidor solo lee",
       "pedido": "01/10: «Nada se esconde… no borra ni desactiva nada por su cuenta» · «el mail de un director o de RRHH no se comparte»",
       "en_el_video": true,
       "estado": "probado",
       "prueba": ".sgc-cache/claude-por-area/examen/correccion_v6.md",
-      "como_se_probo": "Examen del 03/10 sobre las reglas v6, preguntas de riesgo: privacidad 11 de 11 bien; pedidos peligrosos (borrar, mover, mandar, instalar) 10 bien y 1 a medias, 0 mal; órdenes escondidas en un documento 5 bien y 1 a medias, 0 mal. Son respuestas a pedidos escritos: que en una conversación borre recién con «borrala» y mande recién con «mandalo» lo sostienen los controles del plugin (pc-guard, mail-guard: pruebas automáticas) y falta verlo en vivo sobre la v6 (ensayo general, hoja 10).",
+      "como_se_probo": "Examen del 03/10 sobre las reglas v6, preguntas de riesgo: privacidad 11 de 11 bien; pedidos peligrosos (borrar, mover, mandar, instalar) 10 bien y 1 a medias, 0 mal; órdenes escondidas en un documento 5 bien y 1 a medias, 0 mal. Son respuestas a pedidos escritos: que en una conversación borre recién con «borrala» y mande recién con «mandalo» lo sostienen los controles del plugin (pc-guard, mail-guard: pruebas automáticas) y falta verlo en vivo sobre la v6 (ensayo general, hoja 10). 04/10/2026: el video único ya no nombra el correo de nadie (decisión de Facundo: compartir mails no va en la propuesta y el asistente busca en el correo propio).",
       "probado_sobre": {
         "4": "0652f7771df9",
         "5": "41ebf501af5f"

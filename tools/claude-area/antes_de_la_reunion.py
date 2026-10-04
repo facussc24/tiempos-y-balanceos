@@ -13,7 +13,7 @@ import sys
 RAIZ = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CASA = r"C:\ClaudeBarack"
 ENTREGABLES = os.path.join(RAIZ, "exports", "CLAUDES_POR_AREA_20261001")
-VIDEOS = ["Video por sector - Claude en Barack.mp4", "Video tutorial - Claude en Barack (version 3).mp4"]
+VIDEOS = ["Video - Claude en Barack.mp4"]   # uno solo desde el 04/10/2026 (pedido de Facundo)
 HOJAS = ["1 - Propuesta para Direccion.pdf", "3 - Preguntas que puede hacer Direccion.pdf", "4 - Guion de la reunion.pdf",
          "5 - Que dato puede pasar por Claude.pdf", "8 - Prueba en una PC de planta.pdf"]
 PLUGIN_REPO = r"C:\Dev\barack-claude\plugins\barack-area"

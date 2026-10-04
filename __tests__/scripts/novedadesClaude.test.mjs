@@ -67,6 +67,22 @@ describe('novedadesClaude — el registro de cambios', () => {
   });
 });
 
+describe('novedadesClaude — el aviso del arranque', () => {
+  const hoy = new Date('2026-10-12T12:00:00Z');
+  it('avisa si nunca se leyo o si paso una semana; se calla si se leyo hace menos', () => {
+    expect(N.avisoHook(null, hoy)).toContain('Todavia no se leyo nunca');
+    expect(N.avisoHook({ ultima_corrida: '2026-10-04T14:30:50.120Z' }, hoy)).toContain('Pasaron 7 dias');
+    expect(N.avisoHook({ ultima_corrida: '2026-10-04T14:30:50.120Z' }, hoy)).toContain('El decide que se implementa');
+    expect(N.avisoHook({ ultima_corrida: '2026-10-06T14:30:50.120Z' }, hoy)).toBe('');
+    expect(N.avisoHook({ ultima_corrida: 'roto' }, hoy)).toContain('Todavia no se leyo nunca');
+  });
+  it('--hook no sale a internet ni guarda: con una carpeta vacia avisa; exit 0 siempre', () => {
+    const r = spawnSync(process.execPath, [path.join(process.cwd(), 'scripts', '_novedadesClaude.mjs'), '--hook'], { encoding: 'utf8', env: { ...process.env, BARACK_NOVEDADES_DIR: path.join(process.cwd(), 'no-existe-esta-carpeta') } });
+    expect(r.status).toBe(0);
+    expect(r.stdout).toContain('[NOVEDADES DE CLAUDE]');
+  });
+});
+
 describe('novedadesClaude — el listado y el programa', () => {
   it('el listado dice que es dato, nombra cada cuenta, y avisa lo que no se pudo leer', () => {
     const { items, fuera } = N.filtrar([post('600')], 'trq212');

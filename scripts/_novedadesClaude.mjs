@@ -12,6 +12,7 @@
  *   node scripts/_novedadesClaude.mjs --desde 2026-09-01
  *   node scripts/_novedadesClaude.mjs --cuenta trq212 solo esa cuenta
  *   node scripts/_novedadesClaude.mjs --simular       lee y muestra el resumen, sin guardar nada
+ *   node scripts/_novedadesClaude.mjs --hook          (arranque de sesion) un renglon si paso una semana sin leer; no sale a internet
  *
  * Deja en .sgc-cache/x-seguimiento/ (fuera de git): novedades_<fecha>.md (el listado), crudo/<fecha>_<cuenta>.json
  * y _estado.json (hasta donde se leyo cada cuenta y la ultima version vista). Sale con 1 si no pudo leer NADA.
@@ -20,14 +21,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { urlBusqueda, filtrar, versionesNuevas, listado, aDia, idMasNuevo } from './_lib/novedadesClaude.mjs';
+import { urlBusqueda, filtrar, versionesNuevas, listado, aDia, idMasNuevo, avisoHook } from './_lib/novedadesClaude.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const CANON = JSON.parse(fs.readFileSync(path.join(AQUI, '_lib', 'novedadesClaude.data.json'), 'utf8'));
 const DESTINO = process.env.BARACK_NOVEDADES_DIR || path.join(AQUI, '..', '.sgc-cache', 'x-seguimiento');
 
 const CON_VALOR = ['--dias', '--desde', '--cuenta'];
-const SIN_VALOR = ['--simular'];
+const SIN_VALOR = ['--simular', '--hook'];
 const args = process.argv.slice(2);
 const op = {};
 for (let i = 0; i < args.length; i++) {
@@ -69,6 +70,8 @@ async function leerCuenta(usuario, desde) {
 
 const ahora = new Date();
 const estado = leerEstado();
+// --hook (arranque de sesion): solo mira la fecha de la ultima lectura; no sale a internet ni guarda nada
+if (op['--hook']) { try { const a = avisoHook(estado, ahora); if (a) console.log(a); } catch { /* el arranque no se frena por esto */ } process.exit(0); }
 const cuentas = CANON.cuentas.filter((c) => !op['--cuenta'] || c.usuario.toLowerCase() === String(op['--cuenta']).toLowerCase());
 if (!cuentas.length) { console.log(`la cuenta ${op['--cuenta']} no esta en la lista (scripts/_lib/novedadesClaude.data.json)`); process.exit(2); }
 if (op['--desde'] && !/^\d{4}-\d{2}-\d{2}$/.test(op['--desde'])) { console.log('--desde va como AAAA-MM-DD'); process.exit(2); }

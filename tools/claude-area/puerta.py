@@ -42,6 +42,7 @@ VIDEOS = {
     "voz_v2": "Video tutorial - Claude en Barack (version 2).mp4",
     "voz_v3": "Video tutorial - Claude en Barack (version 3).mp4",
     "voz_ilusiona": "Video por sector - Claude en Barack.mp4",
+    "voz_unico": "Video - Claude en Barack.mp4",   # el unico que se muestra desde el 04/10/2026
 }
 EXAMENES = REPO / ".sgc-cache" / "claude-por-area" / "examen"
 
