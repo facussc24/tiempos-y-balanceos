@@ -221,6 +221,37 @@ describe('hora-guard (Stop) — decide si el turno puede cerrar', () => {
     expect(H.ultimoDeFak(t)).toBe(REALES.las10);
     expect(H.ultimoDeFakConHora(path.join(home, 'no-esta.jsonl'))).toEqual({ texto: '', ms: null });
   });
+
+  it('ultimoDeFakConHora: tambien lee lo que Fak escribio con la sesion ocupada (queda en cola), y no toma por suyo un aviso ni el latido', () => {
+    const t = path.join(home, 'transcript-cola.jsonl');
+    const linea = (o) => JSON.stringify(o);
+    fs.writeFileSync(t, [
+      linea({ type: 'user', timestamp: '2026-10-04T13:19:00.000Z', message: { content: 'hola ya me desperte' } }),
+      linea({ type: 'queue-operation', operation: 'enqueue', timestamp: '2026-10-04T14:10:00.000Z', content: REALES.las10 }),
+      linea({ type: 'queue-operation', operation: 'dequeue', timestamp: '2026-10-04T14:10:30.000Z' }),
+      linea({ type: 'queue-operation', operation: 'enqueue', timestamp: '2026-10-04T14:20:00.000Z', content: '<task-notification>\n<task-id>b5z6udqv3</task-id>\n</task-notification>' }),
+      linea({ type: 'user', timestamp: '2026-10-04T14:33:00.000Z', message: { content: 'LATIDO (aviso automático, no es Facundo). Mirá la hora y seguí hasta las 16.' } }),
+      linea({ type: 'assistant', timestamp: '2026-10-04T14:34:00.000Z', message: { content: [{ type: 'text', text: 'Sigo.' }] } }),
+    ].join('\n'));
+    const u = H.ultimoDeFakConHora(t);
+    expect(u.texto).toBe(REALES.las10);
+    expect(u.ms).toBe(Date.parse('2026-10-04T14:10:00.000Z'));
+    // sin lo de la cola, el ultimo seria el saludo de la mañana: un pedido de hora escrito a mitad de turno no se veia
+    fs.writeFileSync(t, linea({ type: 'user', timestamp: '2026-10-04T13:19:00.000Z', message: { content: 'hola ya me desperte' } }));
+    expect(H.ultimoDeFak(t)).toBe('hola ya me desperte');
+    // la otra forma: el mensaje entra a mitad de turno como adjunto, con avisos de la app adelante (asi llego «podes seguir hasta las 16»)
+    const aviso = '<system-reminder>\nThe user started your suggested background task.\n</system-reminder>';
+    fs.writeFileSync(t, [
+      linea({ type: 'user', timestamp: '2026-10-04T13:19:00.000Z', message: { content: 'hola ya me desperte' } }),
+      linea({ type: 'attachment', timestamp: '2026-10-04T15:50:24.689Z', attachment: { type: 'queued_command', commandMode: 'prompt', origin: { kind: 'human' }, humanTurn: true, prompt: [{ type: 'text', text: aviso }, { type: 'text', text: 'podes seguir hasta las 16' }] } }),
+      linea({ type: 'attachment', timestamp: '2026-10-04T15:58:00.000Z', attachment: { type: 'queued_command', commandMode: 'task-notification', origin: { kind: 'task-notification' }, prompt: '<task-notification>\n<task-id>x</task-id>\n</task-notification>' } }),
+      linea({ type: 'attachment', timestamp: '2026-10-04T15:59:00.000Z', attachment: { type: 'total_tokens_reminder' } }),
+    ].join('\n'));
+    const v = H.ultimoDeFakConHora(t);
+    expect(v.texto).toContain('podes seguir hasta las 16');
+    expect(H.pideHasta(v.texto).pide).toBe(true);
+    expect(v.ms).toBe(Date.parse('2026-10-04T15:50:24.689Z'));
+  });
 });
 
 describe('los wrappers hora-prompt.sh y hora-guard.sh llegan a horaGuard.mjs', () => {

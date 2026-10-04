@@ -270,15 +270,29 @@ export function ultimoDeFakConHora(transcriptPath) {
   try {
     const lineas = fs.readFileSync(transcriptPath, 'utf8').split('\n');
     for (let k = lineas.length - 1; k >= 0; k--) {
-      if (!lineas[k] || !lineas[k].includes('"user"')) continue;
+      if (!lineas[k] || !(lineas[k].includes('"user"') || lineas[k].includes('"queue-operation"') || lineas[k].includes('"queued_command"'))) continue;
       let j = null; try { j = JSON.parse(lineas[k]); } catch { continue; }
-      if (j.type !== 'user' || j.isSidechain || j.isMeta) continue;
-      let c = j.message && j.message.content;
-      if (Array.isArray(c)) {
-        if (c.some((b) => b && b.type === 'tool_result')) continue;
-        c = c.filter((b) => b && b.type === 'text').map((b) => b.text || '').join('');
-      }
+      if (j.isSidechain || j.isMeta) continue;
+      let c = null;
+      // Lo que Fak escribe mientras la sesion esta ocupada no vuelve a aparecer como turno `user`: queda en la cola
+      // (`enqueue`) o entra a mitad de turno como adjunto (`queued_command` de origen humano). El 04/10/2026, 66 de sus
+      // 110 mensajes de una sesion estaban solo asi, y «podes seguir hasta las 16» fue uno de ellos.
+      if (j.type === 'queue-operation') {
+        if (j.operation !== 'enqueue') continue;
+        c = j.content;
+      } else if (j.type === 'attachment') {
+        const a = j.attachment || {};
+        if (a.type !== 'queued_command' || !(a.humanTurn || (a.origin && a.origin.kind === 'human'))) continue;
+        c = Array.isArray(a.prompt) ? a.prompt.filter((b) => b && b.type === 'text').map((b) => b.text || '').join('\n') : a.prompt;
+      } else if (j.type === 'user') {
+        c = j.message && j.message.content;
+        if (Array.isArray(c)) {
+          if (c.some((b) => b && b.type === 'tool_result')) continue;
+          c = c.filter((b) => b && b.type === 'text').map((b) => b.text || '').join('');
+        }
+      } else continue;
       if (typeof c !== 'string' || !c.trim() || esAutomatico(c)) continue;
+      if (/^\s*LATIDO\b/.test(sinAvisosAdelante(c))) continue;            // el latido es un aviso programado, no Fak
       const ms = typeof j.timestamp === 'string' ? Date.parse(j.timestamp) : NaN;
       return { texto: c, ms: Number.isFinite(ms) ? ms : null };
     }
