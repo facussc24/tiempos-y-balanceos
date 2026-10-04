@@ -19,12 +19,10 @@ incidente vive en los snapshots.
 - **03/10 — Un freno que depende de un programa de la PC se prueba SIN ese programa: un control que no puede arrancar no frena nada** (los controles del asistente de área llamaban a `node` a secas y la instalación nombraba un Node que nadie publicaba). Graduado a `hooks.json` del plugin (Node propio, por su ruta), a `ejecutables` de `_paquete.mjs` y a la memoria `project_claudes_por_area`.
 - **02/10 — Un examen se toma como lo va a usar la gente (nivel, material de su área, PC instalada por el instalador), y el aviso de un documento va donde se LEE ese documento** (en mi nivel dio 131/8/0; en el de ellos, 105/31/3; un dato que estaba en otra tabla no se usó). Graduado a la memoria `project_claudes_por_area`.
 - **02/10 — De un flujograma o de un AMFE puede salir la PALABRA "reproceso", nunca su analisis (IATF 8.7.1.4; fue una no conformidad en 2019), y un AMFE escrito de cero se delata por el largo de sus frases** (12 palabras por causa contra 4 a 7; Calidad: "hecho con IA"). Graduado a la memoria `reference_iatf_retrabajo_8714_y_antecedentes_barack` y a `TOPE_PALABRAS` de `scripts/_lib/amfeAutoria.mjs`.
-- **01/10 — Guardar en la carpeta sincronizada no es subir a la nube: "está en la nube" se dice después de medirlo** (OneDrive trabado 20 h; 229 archivos que di por subidos). Graduado a `scripts/_nubeSubio.ps1` y a la memoria `reference_onedrive_sync_colgado_como_detectarlo`.
 - **30/09 — El límite de una máquina lo pone el MATERIAL puesto, no el trabajo más grande que ya salió** (papel de 90 cm). Graduado a `patrones-corte-plotter` §3 ter y a `reference_plotter_inkjet_software_htv2a`.
 - **15-28/09 — Un cartel del arb se LEE antes de contestarlo: es lo primero que se mira cuando no deja seguir (no mi teoría), lo que actúa a ciegas aprieta lo que esté abajo, el botón es `Omitir` y no `Anular`, y se cierra solo lo propio.** Graduado al skill `arb-operar`, a `_arbDescripcion.por_que_no_avanza()`, `_arbCargar.abrir()`, `_arbVer.cerrar_excel()`, `fallas-modales-y-export.md` y la memoria `feedback_bom_en_unidades_no_en_envase`.
 - **25/09 — Un estado que alguien escribió en un mail vale con su FECHA: va con quién lo dijo y cuándo (y el mail adjunto), o no va.** Graduado a la memoria `la_fecha_del_archivo_no_es_la_fecha_del_documento`.
 - **25/09 — Guardar por COM un libro ajeno para cambiar UNA celda se tiró imágenes "en celda" en 17 HO** (lo vio el respaldo, no el conteo de fotos). Graduado al skill `hojas-de-proceso` §3 bis.
-- **23/09 — Antes de borrar una carpeta se buscan ENLACES adentro:** `git worktree remove` entro por un `node_modules` enlazado y se llevo 38 paquetes de la instalacion principal. Graduado a la V5 de `borrado-masivo-guard`.
 - **22/09 — Lo que AFLOJA un control se prueba contra el VIEJO con los mismos intentos** (49 casos verdes; la comparacion saco 2 regresiones). Graduado a `un_control_se_audita_en_las_dos_direcciones`.
 - **22/09 — Un cambio de criterio se barre por su FRASE en todo el repo, y un guardian que falla sin bloquear esta apagado.** El placeholder prohibido el 21/09 seguia autorizado en `autonomy-contract.md` y lo escribian 5 scripts; y 388 veces un `cd` dejo los hooks sin archivo (exit 127, no bloquea). Graduado al test 5c de `hooksTienenTest` (`${CLAUDE_PROJECT_DIR}`).
 - **22/09 — La VARA también se audita, y lo primero que se le mira es la FECHA**: la tabla AP y las escalas O/D salían de un borrador de 2017 del AIAG-VDA. La tabla AP ya es la oficial (23/09); las escalas, pendientes. Memoria `project_tabla_ap_de_la_casa_es_el_borrador_2017`.
@@ -68,8 +66,6 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
-- **03/10 — Si Fak pone una hora («quedate laburando como mínimo hasta las 8»), no se cierra antes: cuando termino de contestar quedo parado hasta que alguien me despierte, así que queda algo corriendo que me devuelva el turno y la lista de lo que sigue** (paré a las 17:10 con trabajo pendiente: *"defendete"*). Graduado a la regla `trabajar-hasta-la-hora.md`, a los hooks `hora-prompt` y `hora-guard` (`scripts/_lib/horaGuard.mjs`) y a la memoria `feedback_trabajar_hasta_la_hora_que_dijo_fak`.
-
 - **03/10 — Teclas simuladas y fotos de pantalla no se usan sin saber que Fak no está en la PC: las teclas van a la ventana que tenga el foco** (una prueba mía escribió en su Chrome mientras buscaba su banco). Graduado a la memoria `feedback_no_teclear_ni_fotografiar_la_pantalla_de_fak`.
 
 - **03/10 — Cuando Fak cuenta lo que estuvo haciendo («hice mejoras en…»), es un pedido de revisarlo y traer lo que sirva, no contexto** (*"para algo que te había dicho"*). Graduado a la memoria `feedback_el_pedido_flojo_se_completa_con_el_objetivo`.
@@ -79,8 +75,6 @@ incidente vive en los snapshots.
 - **02/10 — Una mejora que Fak pidió se USA, y no está implementada hasta probarla con un mensaje REAL suyo** (pidió "fácil de entender" y contesté una tabla). Graduado a `mejora-implementada.md` y al chequeo 7 del `cierre-guard`.
 
 - **02/10 — Lo que hay que volver a pedir hasta que contesten no depende de acordarse: va a un seguimiento con fecha que se avisa solo; y lo que va a quien lo lee buscando el error sale corto, fácil y sin nada que suene a generado: el papel lo muestra la captura, no una cita mía de la norma.** Graduado a `scripts/_seguimientos.mjs` (arranque de sesion + tarea de lunes y viernes) y a las memorias `project_seguimientos_con_fecha` y `feedback_mails_a_calidad_cecilia_sin_flancos`.
-
-- **02/10 — REGLA DURA: Carlos Baptista va en todo mail que sale de Fak, como mínimo en copia** (*"es mi gerente... él debe saber que Sebas me pide cosas"*). Graduado a `mail-envio.md` punto 0 y a `scripts/_lib/gerenteCopia.py` (los que arman lo agregan; `_mailEnviar.py` aborta si falta).
 
 - **02/10 — En el arb la pantalla se toma UNA vez por cambio y se mira si responde; un alta son dos pasadas por código y la descripción va en MAYÚSCULAS** (dos veces el mismo día: *"una tarea rápida la transformás en un calvario"*, *"abrir cerrar abrir cerrar me pone ansioso"*, y se colgó sin que yo lo viera). Graduado a `_arbInsumoCampos.py` y a las memorias `feedback_arb_una_pasada_por_codigo_y_mayusculas` y `feedback_arb_una_sola_pasada_y_mirarlo`.
 
@@ -112,8 +106,6 @@ incidente vive en los snapshots.
 - **15/09 — Mirar un render NO es medirlo: lo que decide *pegado o no* es una DISTANCIA, y se mide.** Graduado a la memoria `reference_medir_una_hoja_de_matplotlib` (`medir.py` y su gemelo).
 
 - **30/09 — Quién va en un mail: el interno que nombro va; un EXTERNO nunca sin OK de Fak; un cambio solo de unidad va a los del hilo; difusión de BOM, Para Cejas/Rosello/Baptista y el resto en CC.** Graduado a `mail-envio.md` (freno de externos en `_mailEnviar.py`) y a la memoria `feedback_destinatarios_difusion_bom`.
-- **21 y 25/09 — La PRIMERA VEZ se pregunta, un documento vivo tiene UN solo lugar, y en el servidor del SGC va solo lo OFICIAL y en su lugar** (lo no oficial, a la nube de Ingeniería: *"no podes ir guardando los formatos donde se te cante"*). Graduado a `autonomy-contract.md` §F + el gate `apqp-cliente-guard`.
-- **21/09 — Cuando el cliente tiene su propia simbologia se escribe la del CLIENTE.** Graduado a `caracteristicasEspeciales.data.json` (tabla de conversion, IATF §8.3.3.3 d).
 
 ## Como agregar lecciones nuevas (ciclo de vida)
 

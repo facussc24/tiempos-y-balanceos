@@ -133,3 +133,23 @@ por leccion; una "graduada a X", 2 lineas). El techo de 26/28 KB queda como red.
 - **08/09 — En revisiones y caratulas no se escriben metadatos internos ni se citan normas; "Item cambiado" va centrado.** Graduado a la memoria `feedback_caratula_y_revisiones_sin_cocina_interna`.
 - **13/09 — La vara contra la que comparo un numero se elige por su MAGNITUD y por el MOMENTO, y casi siempre ya esta publicada.** Graduado a la memoria `feedback_la_vara_se_elige_por_magnitud_y_momento`.
 - **10/09 — El lenguaje del entregable son las palabras que usa Fak (no es acortar, es la palabra comun), y un script que barre una carpeta se prueba en un arbol.** Graduado a la memoria `feedback_lenguaje_del_entregable_palabras_de_fak`.
+
+## Graduadas enteras la noche del 03/10/2026 (salieron de LECCIONES: ya viven en una regla siempre cargada o en un hook)
+
+- **01/10 — Guardar en la carpeta sincronizada no es subir a la nube: "está en la nube" se dice después de medirlo** (OneDrive trabado 20 h; 229 archivos que di por subidos). Graduado a `scripts/_nubeSubio.ps1` y a la memoria `reference_onedrive_sync_colgado_como_detectarlo`.
+  - *Dónde vive ahora:* regla siempre cargada `nube-ingenieria.md` punto 4 + `scripts/_nubeSubio.ps1`
+
+- **23/09 — Antes de borrar una carpeta se buscan ENLACES adentro:** `git worktree remove` entro por un `node_modules` enlazado y se llevo 38 paquetes de la instalacion principal. Graduado a la V5 de `borrado-masivo-guard`.
+  - *Dónde vive ahora:* V5 de `borrado-masivo-guard` (hook)
+
+- **03/10 — Si Fak pone una hora («quedate laburando como mínimo hasta las 8»), no se cierra antes: cuando termino de contestar quedo parado hasta que alguien me despierte, así que queda algo corriendo que me devuelva el turno y la lista de lo que sigue** (paré a las 17:10 con trabajo pendiente: *"defendete"*). Graduado a la regla `trabajar-hasta-la-hora.md`, a los hooks `hora-prompt` y `hora-guard` (`scripts/_lib/horaGuard.mjs`) y a la memoria `feedback_trabajar_hasta_la_hora_que_dijo_fak`.
+  - *Dónde vive ahora:* regla siempre cargada `trabajar-hasta-la-hora.md` + hooks `hora-prompt` y `hora-guard`
+
+- **02/10 — REGLA DURA: Carlos Baptista va en todo mail que sale de Fak, como mínimo en copia** (*"es mi gerente... él debe saber que Sebas me pide cosas"*). Graduado a `mail-envio.md` punto 0 y a `scripts/_lib/gerenteCopia.py` (los que arman lo agregan; `_mailEnviar.py` aborta si falta).
+  - *Dónde vive ahora:* `mail-envio.md` punto 0 + `scripts/_lib/gerenteCopia.py` (aborta si falta) + memoria `feedback_carlos_baptista_siempre_en_copia`
+
+- **21 y 25/09 — La PRIMERA VEZ se pregunta, un documento vivo tiene UN solo lugar, y en el servidor del SGC va solo lo OFICIAL y en su lugar** (lo no oficial, a la nube de Ingeniería: *"no podes ir guardando los formatos donde se te cante"*). Graduado a `autonomy-contract.md` §F + el gate `apqp-cliente-guard`.
+  - *Dónde vive ahora:* regla siempre cargada `autonomy-contract.md` §F + gate `apqp-cliente-guard`
+
+- **21/09 — Cuando el cliente tiene su propia simbologia se escribe la del CLIENTE.** Graduado a `caracteristicasEspeciales.data.json` (tabla de conversion, IATF §8.3.3.3 d).
+  - *Dónde vive ahora:* regla siempre cargada `caracteristicas-especiales.md` + `caracteristicasEspeciales.data.json`
