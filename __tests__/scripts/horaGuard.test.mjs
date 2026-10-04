@@ -69,8 +69,13 @@ describe('horaGuard — ¿el mensaje pone una hora para trabajar?', () => {
     const unaMas = H.avisoDe('te doy 1 hora mas labura tranuqilo', { estado: tarde, ahora: D('2026-10-04 18:48') });
     expect(unaMas).toContain('--fijar "2026-10-04 20:10"');
     expect(unaMas).not.toContain('19:48');
-    // gemelo: si la hora fijada ya pasó, se cuenta desde el momento del mensaje
-    expect(H.avisoDe('te doy 1 hora mas labura tranuqilo', { estado: tarde, ahora: D('2026-10-04 19:30') })).toContain('--fijar "2026-10-04 20:30"');
+    // cruce de medianoche
+    expect(H.avisoDe('metele 2 horas mas', { estado: { ...tarde, hasta: '2026-10-04 23:30' }, ahora: D('2026-10-04 22:00') })).toContain('--fijar "2026-10-05 01:30"');
+    // gemelos: sin «más» es un tramo desde ahora, y con fracción la cuenta no se hace: queda el aviso de siempre
+    for (const t of ['tenés 12 horas seguidas, laburá tranquilo', 'labura 3 horas de corrido', 'seguí una hora y media más', 'laburá 1,5 horas más']) {
+      const a = H.avisoDe(t, { estado: tarde, ahora: D('2026-10-04 18:48') });
+      if (a) expect(a, t).not.toContain('se suman a la hora que ya había');
+    }
     // y un mensaje que nombra una hora (no una duración) sigue con el aviso de siempre
     expect(H.avisoDe(REALES.las10, { estado: tarde, ahora: D('2026-10-04 18:48') })).not.toContain('hora(s) más');
     expect(H.avisoDe('como va eso?', { estado, ahora })).toContain('Sigue vigente');
