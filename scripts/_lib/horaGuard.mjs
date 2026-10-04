@@ -194,6 +194,21 @@ export function terminar({ sesion, porque = null, ahora = new Date(), home } = {
   guardarTodo(todo, home);
   return { ok: true, estado: e, vencio };
 }
+/**
+ * Deja la marca de que el ultimo mensaje de Fak que nombraba una hora NO era un pedido de trabajar por tiempo (Claude lo
+ * dijo con el renglon «No aplica»). No pisa una hora vigente. Sin sesion no hace nada.
+ */
+export function descartar({ sesion, ahora = new Date(), home } = {}) {
+  if (!sesion) return { ok: false };
+  try {
+    const todo = leerTodo(home);
+    const e = todo[sesion];
+    if (e && typeof e === 'object' && !e.cumplido) return { ok: false, vigente: true };
+    todo[sesion] = { cumplido: enLocal(ahora), hasta: null, pedido: null, fijado: enLocal(ahora), fijado_ms: ahora.getTime(), porque: 'no aplica' };
+    guardarTodo(todo, home);
+    return { ok: true };
+  } catch { return { ok: false }; }
+}
 /** Cuantos dias se guarda la marca de un pedido ya cumplido de OTRA sesion. */
 const DIAS_MARCA = 14;
 /** vigente = hay hora fijada, no se cerro y todavia no llego. */
@@ -386,7 +401,14 @@ export function decidirStop(payload = {}, deps = {}) {
   const leido = payload.transcript_path ? leer(payload.transcript_path) : '';
   const ultimo = typeof leido === 'string' ? leido : (leido && leido.texto) || '';
   const msUltimo = leido && typeof leido === 'object' && Number.isFinite(leido.ms) ? leido.ms : null;
-  if (ultimo && pideHasta(ultimo).pide && !final.includes(NO_APLICA) && !atendido(leerEstado(payload.session_id, deps.home), msUltimo)) {
+  if (ultimo && pideHasta(ultimo).pide && !atendido(leerEstado(payload.session_id, deps.home), msUltimo)) {
+    if (final.includes(NO_APLICA)) {
+      // El renglon «No aplica» vale para ESE mensaje de ahi en mas, no solo para este cierre: se deja la marca. Antes,
+      // en el turno siguiente (el aviso de un agente, sin mensaje nuevo de Fak) el control volvia a frenar por el mismo
+      // mensaje (auditoria del 04/10/2026). Un mensaje NUEVO de Fak que ponga una hora vuelve a frenar.
+      descartar({ sesion: payload.session_id, ahora, home: deps.home });
+      return { ok: true, motivo: 'no_aplica' };
+    }
     return { ok: false, motivo: 'hora_sin_fijar', mensaje: `${MARCA} El último mensaje de Fak pone una hora para trabajar (${leidas(pideHasta(ultimo))}) y no la fijaste. Antes de cerrar el turno: la lista en un archivo, node scripts/_lib/horaGuard.mjs --fijar "AAAA-MM-DD HH:MM" --lista <archivo>, el latido con CronCreate y --latido <id>. Si no pide eso, un renglón que empiece con «${NO_APLICA}» y el motivo.` };
   }
   return { ok: true, motivo: 'nada_vigente' };

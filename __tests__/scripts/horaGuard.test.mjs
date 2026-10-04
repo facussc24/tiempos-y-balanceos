@@ -274,6 +274,23 @@ describe('hora-guard (Stop) — decide si el turno puede cerrar', () => {
     fs.rmSync(t, { force: true });
   });
 
+  it('«No aplica» vale para ESE mensaje de ahi en mas (no solo para un cierre); un mensaje NUEVO de Fak con una hora vuelve a frenar', () => {
+    const s = 'sesion-no-aplica';
+    const msViejo = D('2026-10-04 10:00').getTime();
+    const cierre = (final, ms, cuando) => H.decidirStop({ session_id: s, transcript_path: 'x', last_assistant_message: final },
+      { ahora: D(cuando), home, ultimoDeFak: () => ({ texto: REALES.las8, ms }) });
+    expect(cierre('Dale, arranco.', msViejo, '2026-10-04 10:01')).toMatchObject({ ok: false, motivo: 'hora_sin_fijar' });
+    expect(cierre(`${H.NO_APLICA} es un reclamo, no un pedido.`, msViejo, '2026-10-04 10:02')).toMatchObject({ ok: true, motivo: 'no_aplica' });
+    // el turno siguiente (el aviso de un agente, sin mensaje nuevo de Fak): ya no frena por el mismo mensaje
+    expect(cierre('Terminó el agente; sigo.', msViejo, '2026-10-04 10:20').ok).toBe(true);
+    // un mensaje nuevo, posterior a la marca, que pone una hora: frena
+    expect(cierre('Dale.', D('2026-10-04 11:00').getTime(), '2026-10-04 11:01')).toMatchObject({ ok: false, motivo: 'hora_sin_fijar' });
+    // y la marca no pisa una hora vigente
+    H.fijar({ sesion: 'con-hora', hasta: '2026-10-04 16:00', ahora: D('2026-10-04 12:52'), home });
+    expect(H.descartar({ sesion: 'con-hora', ahora: D('2026-10-04 13:00'), home })).toMatchObject({ ok: false, vigente: true });
+    expect(H.vigente('con-hora', { ahora: D('2026-10-04 13:00'), home }).hasta).toBe('2026-10-04 16:00');
+  });
+
   it('contexto: una entrada rota del estado (null) no calla el pedido vigente de las demas', () => {
     H.fijar({ sesion: 'viva', hasta: '2026-10-04 16:00', ahora: D('2026-10-04 12:52'), home });
     const p = path.join(home, '.claude', '.trabajar-hasta.json');
