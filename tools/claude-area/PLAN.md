@@ -195,6 +195,26 @@ la candidata salieron más largas. Para medirlo haría falta repetir esa pregunt
 **Error mío del día, para no repetir:** una prueba con teclas simuladas escribió en la ventana que Facundo tenía al
 frente. Memoria `feedback_no_teclear_ni_fotografiar_la_pantalla_de_fak`.
 
+## La noche del 03 al 04/10 (Facundo pidió trabajar solo hasta las 10:00; el detalle está en `examen/NOCHE_2026-10-03.md`)
+
+| Qué | Resultado | Dónde |
+|---|---|---|
+| Ensayo de dueño con las reglas v6, **a ciegas** (un mismo juez para v5 y v6, sin saber cuál es cuál) | v5: 17 bien, 5 a medias, 0 mal, 6 flojas delante del dueño. **v6: 19, 3, 0 y 1 floja.** Le sirve más la v6 en 9, la v5 en 3, iguales 10 | `examen/correccion_dueno_v6.md` |
+| Las 25 «a medias» del examen v6, una por una | 10 «el dato estaba y no lo usó», 6 «contestó incompleto», 4 «agregó algo propio», 3 falta de material, 2 discutibles. Ninguna inventó un dato técnico | `examen/a_medias_v6_analisis.md` |
+| Candidata v7 (3 cambios de reglas sin sumar renglones + 4 arreglos de conocimiento comprobados) | En una RAMA del repo privado (`v7-candidata`, `ee8ecdc`). **Sin examen: no se publica.** Tomarle el examen pide 8 conversaciones nuevas (clic de Facundo) | `C:\Dev\barack-claude-v7` |
+| Segunda revisión independiente de lo que ve Dirección | 6 graves y 12 medianas, comprobadas y corregidas en las hojas 1 a 11 (a la hoja 3 impresa le faltaba la pregunta 6; los mails compartidos estaban contados como hechos) | `examen/revision_segunda_2026-10-04.md` |
+| Pre-mortem del domingo y del lunes | 15 riesgos con cómo comprobarlos y plan B. Git no hace falta para la pestaña Code | `examen/pre_mortem_2026-10-04.md` |
+| Modo Auto | Configuración escrita, sin aplicar. El clasificador de fábrica frena `-ExecutionPolicy Bypass` | `examen/modo_auto_propuesta.md` |
+| Lo que dejó la auditoría del instalador | Arreglado en dos vueltas con auditor en el medio (`3a88322e`, `1e3e851c`): Node propio primero y por hash, carpeta recordada solo con firma verificada, aviso al cambiar de usuario, y la tarea de Windows solo se registra desde `C:\ClaudeBarack\publicado\programas` | `examen/auditoria_instalador_2026-10-04.md` |
+| Lo que el asistente corre de verdad (42 conversaciones) | 34 comandos en total. Una sola vez leyó un Excel del servidor, y lo hizo con Python, que una PC de oficina no tiene → herramienta `leer.ps1` (rama `leer-archivo`) | `examen/medir_controles_en_reales.mjs` |
+| Lo que hoy frena solo la regla escrita | Apagar la PC, instalar programas, bajar y ejecutar, registro, tareas programadas, cerrar sin guardar los documentos de la persona → control `sistema-guard` (rama `sistema-guard`, `1fdb932`) | `examen/sonda_controles.mjs` |
+
+**Incidente de la noche:** un agente, al reproducir un error del instalador, registró la tarea real de Windows en la PC de
+Ingeniería y la sacó; no llegó a correr. De ahí sale la barrera de arriba (desde el repo ya no se puede registrar).
+
+**Sigue abierto para Facundo:** el ensayo general (hoja 10), la prueba en otra PC (hoja 11), el código de ingreso de la
+cuenta, la opción «mejorar los modelos», y mirar cómo quedó dicha la pregunta 6 de la hoja 3 (la prueba de mails de septiembre).
+
 ## Las etapas, en orden. Cada una tiene su puerta: no se pasa a la siguiente con la puerta en rojo.
 
 ### A — Que el asistente HAGA lo que el video va a decir (hoy)
