@@ -185,9 +185,12 @@ def papeles():
         p = os.path.join(ENTREGABLES, f)
         decir("BIEN" if os.path.isfile(p) and os.path.getsize(p) > 10000 else "MAL", f if os.path.isfile(p) else f + ": FALTA")
     try:
-        r = subprocess.run([sys.executable, os.path.join(RAIZ, "tools", "claude-area", "puerta.py")], capture_output=True, text=True, timeout=300, encoding="utf-8", errors="replace")
+        # --rapido: las 3.496 pruebas del plugin tardan unos 9 minutos y abren Word y Excel a escondidas; se corren al
+        # publicar (puerta.py entero), no la mañana de la reunion. Con la suite adentro este paso se cortaba por tiempo
+        # y el control decia "no pude correr las puertas" (04/10/2026).
+        r = subprocess.run([sys.executable, os.path.join(RAIZ, "tools", "claude-area", "puerta.py"), "--rapido"], capture_output=True, text=True, timeout=300, encoding="utf-8", errors="replace")
         rojos = [l.strip() for l in r.stdout.splitlines() if "[ROJO" in l]
-        decir("BIEN" if not rojos else "OJO", "puertas del plan: %s" % ("todas en verde o amarillo" if not rojos else " | ".join(x[:110] for x in rojos)))
+        decir("BIEN" if not rojos else "OJO", "puertas del plan (sin repetir las pruebas del plugin): %s" % ("todas en verde o amarillo" if not rojos else " | ".join(x[:110] for x in rojos)))
     except Exception as e:
         decir("OJO", "no pude correr las puertas del plan (%s)" % str(e)[:60])
 
