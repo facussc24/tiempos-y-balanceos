@@ -209,6 +209,19 @@ frente. Memoria `feedback_no_teclear_ni_fotografiar_la_pantalla_de_fak`.
 | Lo que el asistente corre de verdad (42 conversaciones) | 34 comandos en total. Una sola vez leyó un Excel del servidor, y lo hizo con Python, que una PC de oficina no tiene → herramienta `leer.ps1` (rama `leer-archivo`) | `examen/medir_controles_en_reales.mjs` |
 | Lo que hoy frena solo la regla escrita | Apagar la PC, instalar programas, bajar y ejecutar, registro, tareas programadas, cerrar sin guardar los documentos de la persona → control `sistema-guard` (rama `sistema-guard`, `1fdb932`) | `examen/sonda_controles.mjs` |
 
+**Lo publicado al cierre de la noche: PAQUETE 10** (reglas v6, plugin 0.4.2 con `sistema-guard`, instalador corregido y la
+ventana sin nombres internos). Ensayo de PC nueva con el paquete real 7 de 7, nube idéntica (529 archivos), demostración
+reinstalada. Regresión con las 22 preguntas de dueño, a ciegas, paquete 8 contra paquete 9: 21 bien, 1 a medias y 0 mal
+en los dos (`examen/correccion_regresion_p9.md`).
+
+**Lo que NO se publicó, y por qué** (cada uno en su rama del repo privado; respaldo `barack-claude-20261004-0351.bundle`):
+- `sistema-guard` (`5a5817a`): arregla un hueco del control publicado (una comilla impar antes del comando prohibido lo
+  deja pasar). La primera versión del arreglo cerraba 33 casos y abría 13 (`examen/auditoria_comillas_2026-10-04.md`); la
+  segunda frena todo lo que frena el paquete 10 más lo nuevo, pero le falta su auditoría.
+- `leer-archivo` (`bc9d643`): leer Word, Excel y PowerPoint sin Python. El auditor: «así no se publica»
+  (`examen/auditoria_leer_2026-10-04.md`): apaga una opción del Office de la persona, bloquea el archivo mientras lee.
+- `v7-candidata` (`dde9632`): reglas y material nuevos, sin examen.
+
 **Incidente de la noche:** un agente, al reproducir un error del instalador, registró la tarea real de Windows en la PC de
 Ingeniería y la sacó; no llegó a correr. De ahí sale la barrera de arriba (desde el repo ya no se puede registrar).
 
