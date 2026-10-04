@@ -287,6 +287,7 @@ de la rama):
 | Leer o buscar en el correo solo con el buscador del asistente (`mail-guard`, regla `lectura`) | Hecho y medido contra 39.016 comandos reales (no frena Excel, Word ni PowerPoint) | Nada técnico. Es una red, no un candado |
 | El asistente propone hacer un paso por la persona en la Configuración de Windows (`manejar-la-pc`) | Hecho: un solo programa, con el sí de la persona, sin portapapeles | (1) probarlo en una PC de área; (2) que Facundo decida qué hacer con los clics que borran o desinstalan adentro de Configuración; (3) reglas versión 8 con examen (hoy dicen «ni cambiás configuraciones») |
 | Texto candidato de las reglas versión 8 (4 renglones) | Escrito en NOTAS, sin aplicar | El examen completo |
+| Comparar dos revisiones de un documento (habilidad de solo texto) | Hecho en la rama `comparar-revisiones` (`13b1cc9`, sale de `candidato-13`; tanda completa 3.683 de 3.683); probada con un caso de respuesta conocida y revisada contra las reglas de la casa | Dos Word de verdad en una PC de área y el examen |
 | Contestar o reenviar un mail que ya existe | Sin empezar | Su prueba abre una ventana de Outlook: con Facundo delante o en una PC de prueba |
 
 El paquete 12 publicado tiene un hueco chico que esta rama cierra: una herramienta de navegador o de pantalla con un campo
