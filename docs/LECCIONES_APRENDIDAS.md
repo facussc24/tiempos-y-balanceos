@@ -69,6 +69,8 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **04/10 — Lo útil que ya hacemos en Ingeniería es lo que el asistente de área tiene que traer: lo que falta se construye, o se dice HOY cuánto lleva; no se deja «para después» por mi cuenta ni se vuelve frase del producto** (puse en el video «No lee el correo de nadie»; para Fak era obvio que busca en los mails propios: *"ya estoy cansado de tus excusas"*). Graduado a la memoria `project_claudes_por_area`.
+
 - **03/10 — Teclas simuladas y fotos de pantalla no se usan sin saber que Fak no está en la PC: las teclas van a la ventana que tenga el foco** (una prueba mía escribió en su Chrome mientras buscaba su banco). Graduado a la memoria `feedback_no_teclear_ni_fotografiar_la_pantalla_de_fak`.
 
 - **03/10 — Cuando Fak cuenta lo que estuvo haciendo («hice mejoras en…»), es un pedido de revisarlo y traer lo que sirva, no contexto** (*"para algo que te había dicho"*). Graduado a la memoria `feedback_el_pedido_flojo_se_completa_con_el_objetivo`.
