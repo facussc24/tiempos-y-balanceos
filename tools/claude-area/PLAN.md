@@ -228,6 +228,56 @@ Ingeniería y la sacó; no llegó a correr. De ahí sale la barrera de arriba (d
 **Sigue abierto para Facundo:** el ensayo general (hoja 10), la prueba en otra PC (hoja 11), el código de ingreso de la
 cuenta, la opción «mejorar los modelos», y mirar cómo quedó dicha la pregunta 6 de la hoja 3 (la prueba de mails de septiembre).
 
+## El domingo 04/10 (Facundo, 10:19 a 16:00: «terminá el laburo»; el detalle está en `examen/MANANA_2026-10-04.md`)
+
+Lo que decidió Facundo ese día: la implementación la decide él (el dueño se la delegó); la cuenta es compartida; el piloto
+es Ingeniería y quizás Dirección y alguien de Producción, 1 o 2 semanas; **buscar y leer los mails PROPIOS va ya**;
+**compartir mails entre personas no va en el asistente de área ni en la propuesta** (solo a mano, en las PC que él diga), y
+los papeles no dicen «no ve el correo de otro»; un solo video, más lento.
+
+| Qué | Resultado | Dónde |
+|---|---|---|
+| Lector de Word, Excel y PowerPoint sin Python (`leer.ps1`) | Dos auditorías y sus arreglos (no toca opciones del Office de la persona, reconoce su Excel por su Id, tope de 90 s) | plugin 0.4.3, `NOTAS.md` |
+| Buscar y leer los mails propios (`mail_buscar.ps1`, solo lectura) | Probado en conversación como Dirección: encontró el último mail de una persona y contó los de un día, igual que el buzón; no marcó ni movió nada | `examen/auditoria_mail_y_chicos_2026-10-04.md` |
+| Leer un mail guardado (.msg), abrirle un archivo a la persona, explicar mejor | En el paquete, con sus pruebas | plugin 0.4.3 |
+| Reglas v7 (tres mejoras + el renglón de los mails) | Examen de 139: **108 bien, 31 a medias, 0 mal** (v6: 114/25/0). Comparación pareada y a ciegas con los mismos jueces: v6 24/23/0 y v7 24/23/0: la diferencia era de los jueces | `examen/correccion_v7.md`, `examen/pareado_v7.md` |
+| Las 22 preguntas de dueño, a ciegas, paquete 10 contra el 12 | 20 bien, 2 a medias, 0 mal en los dos | `examen/correccion_regresion_p11.md` |
+| Un solo video (4 minutos, voz más lenta, sin la parte de aprobar la edición de archivos) | Hecho; falta que Facundo lo escuche | `exports/CLAUDES_POR_AREA_20261001/Video - Claude en Barack.mp4` |
+| Hojas | Sin mails compartidos, con «Cómo sigue» (el plan de Facundo), el examen v7, buscar en los mails, hoja 10 con 11 pasos, hoja 9 con las respuestas v7 | `exports/CLAUDES_POR_AREA_20261001/` y la carpeta para llevar |
+| Novedades de Claude (Lydia Hallie, Thariq, Claude Devs y el registro oficial) | `scripts/_novedadesClaude.mjs`, aviso semanal solo en la PC de Facundo; él decide qué se implementa | `.sgc-cache/x-seguimiento/` |
+
+**Lo publicado: PAQUETE 12** (reglas v7, plugin 0.4.3). Ensayo de PC nueva sobre la carpeta para llevar: 7 de 7. Nube
+idéntica (572 archivos, subió todo). Demostración reinstalada desde la carpeta para llevar. `main` del repo privado =
+`a5e25a8`; respaldo `barack-claude-20261004-1430.bundle`.
+
+**Cómo se tomó el examen v7 (para no repetir el tropiezo):** las conversaciones de examen corren en modo de permisos
+`default`; con el lector nuevo, 4 de 8 fueron a buscar el original al servidor (o a la carpeta de la demostración) y
+quedaron 55 minutos esperando un cartel de permiso. Se destrabaron con `stop_session` y un aviso de que no había servidor.
+En una PC de área instalada (modo «Omitir permisos») ese cartel no aparece; **si la PC no tiene prendido ese modo, cada ida
+al servidor es un cartel.** Y un examen nuevo se compara con el anterior con los MISMOS jueces y a ciegas (`pareado_v7.py`):
+38 de 139 preguntas cambiaron de color entre dos tandas de jueces.
+
+**Para las próximas reglas** (lo que el pareado mostró un poco peor en la v7): G06 acepta «dicho por Pablo» como fuente de
+un pedido de cambio (antes pedía el papel); A03, F03 y F07 ya no dicen a quién pedírselo (efecto del renglón «no agregues…
+a quién preguntar que el documento no nombre»); D12 y D15 no dicen dónde está el registro ni qué se hace mientras tanto.
+
+**Sigue abierto para Facundo:**
+- El ensayo general (hoja 10, 11 pasos): cierra las 4 promesas que piden a la persona escribiendo (mail abierto, «mandalo»,
+  presentación, enseñarle una tarea) y prueba buscar en sus mails y leer un archivo. El paso 1 (una conversación NUEVA en
+  `C:\ClaudeBarack`) además devuelve el asistente a la carpeta de la demostración: después del examen quedó anotada la
+  carpeta de examen de Compras (`antes_de_la_reunion.py` lo marca MAL hasta entonces).
+- La prueba en otra PC desde la nube (hoja 11) y, en la planta, la hoja 8: ahí se ve por primera vez el lector abriendo
+  los originales del servidor.
+- Escuchar el video; apagar «mejorar los modelos»; el código de ingreso de la cuenta.
+- Qué plan de Microsoft 365 tiene Barack: de eso depende que una PC que solo tiene el Outlook nuevo pueda instalar el
+  clásico (`examen/investigacion_outlook_clasico.md`; «Empresa Básico» no lo trae e instalar Office pide administrador).
+
+**Próximo paquete (se le muestra a Facundo antes de publicar):** que el asistente ayude a dejar el Outlook clásico andando
+y proponga tomar el control de la PC (`examen/investigacion_tomar_control_pc.md`: existe en Windows para cuentas Pro y Max,
+viene apagado, lo prende la persona y no puede operar ventanas de administrador; «Asistencia rápida» de Windows para que
+Facundo tome el control a distancia); cerrar el camino de leer mails por fuera del programa (`mail-guard`); contestar y
+reenviar un mail que ya existe; lo demás de la lista A de `examen/fable_organizador_2026-10-04.md`.
+
 ## Las etapas, en orden. Cada una tiene su puerta: no se pasa a la siguiente con la puerta en rojo.
 
 ### A — Que el asistente HAGA lo que el video va a decir (hoy)
