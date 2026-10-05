@@ -888,7 +888,8 @@ describe('habilitarPlugin y perfil: las dos direcciones', () => {
 
 // =============================================================================================
 describe.skipIf(!ES_WINDOWS)('sync_area.ps1: la tarea de la PC (sin registrar ninguna tarea)', () => {
-    const ps = (args) => spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', SYNC, ...args], { encoding: 'utf8', timeout: 170000 });
+    // CLAUDE_AREA_SIN_OUTLOOK: ninguna de estas pruebas se engancha al Outlook de la PC donde corren
+    const ps = (args) => spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', SYNC, ...args], { encoding: 'utf8', timeout: 170000, env: { ...process.env, CLAUDE_AREA_SIN_OUTLOOK: '1' } });
 
     it('es ASCII puro, con CRLF o LF consistente, y parsea', () => {
         const b = fs.readFileSync(SYNC);
@@ -944,6 +945,11 @@ describe.skipIf(!ES_WINDOWS)('sync_area.ps1: la tarea de la PC (sin registrar ni
         expect(typeof salud.python).toBe('boolean');
         expect(['si', 'no']).toContain(salud.politica);
         expect(salud.disco_libre_gb === null || typeof salud.disco_libre_gb === 'number').toBe(true);
+        // el paso de los mails: quien corre la prueba no figura en la lista publicada -> apagado (la fila de Marta dice "sube",
+        // pero el usuario de Windows de esta PC no es Marta), y en la biblioteca no aparece ninguna carpeta de mails
+        expect(st.mails).toMatchObject({ resultado: 'apagado' });
+        expect(salud.mails).toBe('apagado');
+        expect(fs.existsSync(path.join(path.dirname(nubeRaiz), 'Claude Barack'))).toBe(false);
         // con que Node corrio la tarea y lo que fallo en la corrida (el administrador no lo veia: estado.json y el log son locales)
         expect(['propio', 'path', 'nube']).toContain(salud.node_origen);
         expect(salud.tarea_errores).toEqual([]);
@@ -958,6 +964,45 @@ describe.skipIf(!ES_WINDOWS)('sync_area.ps1: la tarea de la PC (sin registrar ni
         expect(vt.stdout).toContain('sync_area.ps1');
         expect(vt.stdout).toMatch(/PT4H/);
         expect(hayTarea()).toBe(antes);
+    });
+
+    it('el paso de los mails: la PC de una persona habilitada NO sube nada mientras la lista de lo privado este sin completar; la salud lo dice y -SinMails lo saltea', () => {
+        // la fila es del usuario de Windows que corre la prueba (el paso mira el usuario real, no el perfil de la carpeta)
+        const yo = { nombre: 'Quien Corre La Prueba', mail: 'prueba@ejemplo.com', usuario_windows: os.userInfo().username, pc: os.hostname(), area: 'compras', puesto: 'x', rol: 'usuario', mails: 'sube', baja: null };
+        const { pub, nubeRaiz } = nubeArmada({ extraConocimiento: {
+            'comun/personas.json': JSON.stringify({ personas: [...PERSONAS.personas, yo] }),
+            'comun/mails_privados.json': JSON.stringify({ direcciones: ['gerencia@ejemplo.com', 'TBD.dueno@ejemplo.com'] }),
+        } });
+        const hermana = path.join(path.dirname(nubeRaiz), 'Claude Barack');
+        fs.mkdirSync(hermana, { recursive: true });
+        const pc = pcNueva('pc-mails');
+        expect(instalar(pub, pc, ID.marta).estado).toBe('instalado');
+        expect(existe(pc.home, 'publicado/programas/mails_area.mjs')).toBe(true);
+        expect(existe(pc.home, 'publicado/programas/mails_outlook.ps1')).toBe(true);
+        const r = ps(['-HomeDir', pc.home, '-Nube', nubeRaiz, '-EstadoDir', pc.estado, '-SinTarea', '-SinInventario', '-PrioridadNormal']);
+        expect(r.status, r.stdout + r.stderr).toBe(0);
+        const st = json(pc.estado, 'estado.json');
+        expect(st.mails, leer(pc.estado, 'sync.log')).toMatchObject({ resultado: 'filtro_incompleto', codigo: 5 });
+        expect(st.errores).toEqual([]);                                  // no es una falla de la PC: falta completar la lista
+        expect(json(nubeRaiz, '4- BUZON/salud/PC-COMPRAS-01.json').mails).toBe('filtro_incompleto');
+        expect(fs.readdirSync(hermana)).toEqual([]);                     // nada salio de la PC
+        expect(fs.existsSync(path.join(pc.home, 'Trabajo')) ? fs.readdirSync(path.join(pc.home, 'Trabajo')).filter((n) => /^AVISO/i.test(n)) : []).toEqual([]);   // ni se le aviso a la persona algo que no pasa
+        expect(leer(pc.estado, 'sync.log')).toContain('mails -> ');
+        expect(json(pc.estado, 'mails-area-estado.json')).toMatchObject({ habilitada: false, subidos_total: 0, resultado: 'filtro_incompleto' });
+        // sin el paso de actualizar en la misma corrida nadie verifico las dos listas: los mails no corren
+        fs.rmSync(path.join(pc.estado, 'mails-area-estado.json'), { force: true });
+        const r3 = ps(['-HomeDir', pc.home, '-Nube', nubeRaiz, '-EstadoDir', pc.estado, '-SinTarea', '-SinInventario', '-SinActualizar', '-PrioridadNormal']);
+        expect(r3.status, r3.stdout + r3.stderr).toBe(0);
+        expect(json(pc.estado, 'estado.json').mails).toMatchObject({ resultado: 'sin_verificar' });
+        expect(existe(pc.estado, 'mails-area-estado.json')).toBe(false);
+        expect(json(nubeRaiz, '4- BUZON/salud/PC-COMPRAS-01.json').mails).toBe('sin_verificar');
+        expect(fs.readdirSync(hermana)).toEqual([]);
+        // -SinMails: el paso no corre
+        const r2 = ps(['-HomeDir', pc.home, '-Nube', nubeRaiz, '-EstadoDir', pc.estado, '-SinTarea', '-SinInventario', '-SinMails', '-PrioridadNormal']);
+        expect(r2.status, r2.stdout + r2.stderr).toBe(0);
+        expect(json(pc.estado, 'estado.json').mails).toMatchObject({ resultado: 'sin_uso' });
+        expect(existe(pc.estado, 'mails-area-estado.json')).toBe(false);
+        expect(json(nubeRaiz, '4- BUZON/salud/PC-COMPRAS-01.json').mails).toBe('sin_uso');
     });
 
     it('con una mezcla de prueba y real (solo -HomeDir) no hace nada: sale con 2 antes de escribir; -VerTarea sigue mostrando sin registrar', () => {

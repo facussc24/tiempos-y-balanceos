@@ -8,7 +8,9 @@
     2) AVISOS      sube la cola local de avisos del plugin (<estado>\avisos-pendientes\<pc>\) al buzon (mover, no copiar)
     3) INVENTARIO  una vez por semana, inventario.ps1 -> 4- BUZON\inventario\<pc>.json
     4) SALUD       completa en 4- BUZON\salud\<pc>.json lo que el programa de la base no sabe (disco, Y:, Z:, Python, politica)
-    5) MAILS       gancho: por ahora no hace nada
+    5) MAILS       node mails_area.mjs: sube a la nube de Ingenieria los mails de trabajo de ESTA PC, SOLO si la lista
+                   de personas publicada dice "mails": "sube" para su persona (apagado por defecto; sin Claude; solo lee
+                   Outlook). Corre antes de la salud, que anota como le fue. Solo con la nube de Barack a la vista.
 
   No borra nada en ningun lado. Sale siempre con 0: el detalle queda en <estado>\sync.log y estado.json.
   -Simular es el dry-run de los avisos: escribe en el log "origen -> destino" de cada uno y no mueve nada.
@@ -23,7 +25,7 @@
     -HomeDir     la carpeta de la PC (por defecto CLAUDE_AREA_HOME, o la de arriba de publicado\programas, o C:\ClaudeBarack)
     -Nube        la carpeta CLAUDE POR AREA o directamente su 1- PUBLICADO (por defecto CLAUDE_AREA_NUBE o se la pide al programa)
     -EstadoDir   donde viven log, estado y la clave publica (por defecto CLAUDE_AREA_ESTADO o %LOCALAPPDATA%\BarackEquipo)
-    -SinActualizar / -SinAvisos / -SinInventario   saltean un paso     -ForzarInventario  lo corre aunque no haya pasado la semana
+    -SinActualizar / -SinAvisos / -SinInventario / -SinMails   saltean un paso     -ForzarInventario  lo corre aunque no haya pasado la semana
     -ClavesInventario <claves del registro>         SOLO PRUEBAS: se las pasa a inventario.ps1 -Claves
     -PrioridadNormal   no baja la prioridad del proceso (para pruebas)   -Verbose2  muestra el log en pantalla
   La tarea de Windows se registra SOLO con -RegistrarTarea (lo llama "_paquete.mjs --instalar" al terminar una
@@ -60,6 +62,8 @@ param(
   [switch]$VerTarea,
   [int]$MinutosActualizar = 10,
   [int]$MinutosInventario = 5,
+  [switch]$SinMails,
+  [int]$MinutosMails = 12,
   [switch]$PrioridadNormal,
   [switch]$Verbose2
 )
@@ -507,6 +511,49 @@ try {
     } else { $estado.inventario = @{ resultado = 'error'; detalle = (Resumir $i.Salida) }; Fallo "inventario salio con $($i.Codigo): $(Resumir $i.Salida)" }
   }
 
+  # ---- 5) mails: los de trabajo de ESTA PC, solo si la lista publicada lo dice (va antes de la salud, que lo anota) ----
+  # corre SOLO el programa instalado (el que llego firmado y el paso 1 acaba de verificar), nunca una copia de al lado
+  $mailsScript = Join-Path $Publicado 'programas\mails_area.mjs'
+  $resumenMails = 'sin_uso'
+  $listaMails = $null
+  if ($SinMails) { Log 'mails: salteado (-SinMails)' }
+  elseif (-not (Test-Path $mailsScript)) { $resumenMails = 'sin_script'; $estado.mails = @{ resultado = $resumenMails } }
+  elseif (-not $node) { $resumenMails = 'sin_node'; $estado.mails = @{ resultado = $resumenMails } }
+  elseif ($Recordada -or $recordadaSinVerificar -or -not $RaizBuzon -or -not (Test-Path -LiteralPath $RaizBuzon)) {
+    # solo con la nube de Barack a la vista (por nombre o indicada): a una carpeta recordada (un pendrive, una copia) no van mails
+    $resumenMails = 'sin_nube'; $estado.mails = @{ resultado = $resumenMails }
+  }
+  elseif ($null -eq $estado.actualizar -or $estado.actualizar.resultado -ne 'ok') {
+    # quien sube y que queda afuera lo dicen dos listas de lo instalado: valen solo si ESTA corrida las repuso y les verifico
+    # la firma (paso 1 con resultado ok). Sin eso (salteado, cortado, rechazado, esperando, error) no sale ningun mail.
+    $resumenMails = 'sin_verificar'; $estado.mails = @{ resultado = $resumenMails }
+    Log 'mails: el paso de actualizar no verifico lo instalado en esta corrida; no leo ni subo nada (se reintenta)'
+  }
+  else {
+    $args5 = @($mailsScript, '--home', $HomeDir, '--raiz-nube', $RaizBuzon, '--estado', $EstadoDir, '--max-minutos', [string]([math]::Max(2, $MinutosMails - 2)))
+    if ($Simular) { $args5 += '--simular' }
+    $corridaMails = Correr-Node $args5 $MinutosMails $Pub
+    if ($corridaMails.Cortado) { $resumenMails = 'cortado'; $estado.mails = @{ resultado = $resumenMails }; Fallo "mails paso de $MinutosMails min y lo corte" }
+    else {
+      $resMails = $null
+      try {
+        $ultimo = (($corridaMails.Salida -split '\r?\n') | Where-Object { $_.Trim() } | Select-Object -Last 1)
+        if ($ultimo) { $resMails = $ultimo | ConvertFrom-Json }
+      } catch { $resMails = $null }
+      if ($null -ne $resMails -and $resMails.resultado) {
+        $resumenMails = [string]$resMails.resultado
+        $listaMails = $resMails.privados
+        $estado.mails = @{ resultado = $resumenMails; codigo = $corridaMails.Codigo; entrada = $resMails.entrada; cuarentena = $resMails.cuarentena; privado = $resMails.privado; en_espera = $resMails.en_espera; lista = $listaMails; detalle = $resMails.detalle }
+        if ($resumenMails -ne 'apagado') { Log ('mails -> ' + (Resumir $corridaMails.Salida)) }
+        if ($corridaMails.Codigo -eq 1) { Fallo ('mails: ' + (Resumir $corridaMails.Salida)) }
+      } else {
+        $resumenMails = 'error'
+        $estado.mails = @{ resultado = $resumenMails; codigo = $corridaMails.Codigo; detalle = (Resumir $corridaMails.Salida) }
+        Fallo ("mails salio con $($corridaMails.Codigo): " + (Resumir $corridaMails.Salida))
+      }
+    }
+  }
+
   # ---- 4) salud: lo que el programa de la base no sabe ---------------------------------------------------
   if ($recordadaSinVerificar) { $estado.salud = @{ resultado = 'sin_verificar' } }
   elseif ($Buzon -and (Test-Path -LiteralPath $RaizBuzon)) {
@@ -522,7 +569,7 @@ try {
         # con que Node corrio la tarea (propio | path | nube) y lo que fallo en esta corrida (hasta 5, cortados): estado.json y el
         # log son locales; sin esto una PC que cayo al Node del PATH, o que no pudo arrancar ninguno, se ve igual que una apagada
         $erroresCortos = @($errores | Select-Object -First 5 | ForEach-Object { $t = [string]$_; if ($t.Length -gt 300) { $t.Substring(0, 300) } else { $t } })
-        $valores = @{ ve_Y = [bool](Test-Path 'Y:\'); ve_Z = [bool](Test-Path 'Z:\'); disco_libre_gb = $libre; python = [bool](Buscar-Exe 'python'); politica = $politica; node_origen = $nodeOrigen; tarea_errores = $erroresCortos }
+        $valores = @{ ve_Y = [bool](Test-Path 'Y:\'); ve_Z = [bool](Test-Path 'Z:\'); disco_libre_gb = $libre; python = [bool](Buscar-Exe 'python'); politica = $politica; node_origen = $nodeOrigen; tarea_errores = $erroresCortos; mails = $resumenMails; mails_lista = $listaMails }
         foreach ($k in $valores.Keys) {
           if ($s.PSObject.Properties.Name -contains $k) { $s.$k = $valores[$k] } else { $s | Add-Member -NotePropertyName $k -NotePropertyValue $valores[$k] }
         }
@@ -534,8 +581,6 @@ try {
       } catch { $estado.salud = @{ resultado = 'error'; detalle = $_.Exception.Message }; Log "no pude completar la salud: $($_.Exception.Message)" }
     }
   } else { $estado.salud = @{ resultado = 'sin_nube' } }
-
-  # ---- 5) mails: gancho. Cuando se decida como suben, va aca (hoy no hace nada). --------------------------
 
   $estado.node = $node
   $estado.errores = @($errores)

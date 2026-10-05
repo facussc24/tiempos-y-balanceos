@@ -7,7 +7,7 @@
  *   marketplace/   .claude-plugin/marketplace.json (solo el plugin barack-area) + plugins/barack-area/** (sin tests)
  *   casa/          CLAUDE.md y donde-vive.md del plugin (las reglas de la casa)
  *   conocimiento/  comun/ y una carpeta por area, tal como las deja el agente de conocimiento
- *   programas/     _paquete.mjs, sync_area.ps1, inventario.ps1
+ *   programas/     _paquete.mjs, sync_area.ps1, inventario.ps1, mails_area.mjs, mails_outlook.ps1
  * Al publicar, ademas, `hola/CLAUDE.md` se copia a `<1- PUBLICADO>\CLAUDE.md`: es lo que lee Claude cuando alguien
  * abre esa carpeta y escribe "instala". Ese archivo queda FUERA de lo firmado (es el arranque; ver el informe).
  *
@@ -38,6 +38,8 @@ export const PROGRAMAS = [
     ['scripts/_paquete.mjs', 'programas/_paquete.mjs'],
     ['tools/claude-area/sync_area.ps1', 'programas/sync_area.ps1'],
     ['tools/claude-area/inventario.ps1', 'programas/inventario.ps1'],
+    ['tools/claude-area/mails_area.mjs', 'programas/mails_area.mjs'],
+    ['tools/claude-area/mails_outlook.ps1', 'programas/mails_outlook.ps1'],
 ];
 
 /** Donde viaja el Node del plugin (relativo al staging). Es la ruta que `hooks/hooks.json` del plugin llama y la que
