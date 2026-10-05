@@ -52,6 +52,7 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import glob
 import hashlib
 import json
 import os
@@ -308,15 +309,29 @@ def chequeos_estaticos(d: Dxf) -> list[str]:
     return fallas
 
 
+def _motor_de_autocad() -> list[str]:
+    """El .exe solo arranca: el AUDIT lo hacen los DLL del motor. Un parche que cambie solo un DLL tambien cambia la clave."""
+    carpeta = os.path.dirname(ACCORECONSOLE)
+    return [ACCORECONSOLE, os.path.join(carpeta, "accore.dll"),
+            *sorted(glob.glob(os.path.join(glob.escape(carpeta), "acdb[0-9]*.dll")))]
+
+
 def _clave_de_memoria(path: str) -> str | None:
     """Huella del archivo + el AutoCAD que lo va a juzgar. None si no se puede armar (entonces se audita)."""
+    if not path.lower().endswith(".dxf"):    # AutoCAD juzga tambien el NOMBRE: los mismos bytes como «algo.dxf.tmp» no abren
+        return None
     try:
         h = hashlib.sha256()
         with open(path, "rb") as fh:
             for bloque in iter(lambda: fh.read(1 << 20), b""):
                 h.update(bloque)
-        st = os.stat(ACCORECONSOLE)
-        return f"{h.hexdigest()}|{ACCORECONSOLE}|{st.st_size}|{int(st.st_mtime)}"
+        partes = [h.hexdigest(), ACCORECONSOLE]
+        for i, archivo in enumerate(_motor_de_autocad()):
+            if i and not os.path.exists(archivo):
+                continue
+            st = os.stat(archivo)
+            partes.append(f"{os.path.basename(archivo).lower()}:{st.st_size}:{int(st.st_mtime)}")
+        return "|".join(partes)
     except OSError:
         return None
 
@@ -326,17 +341,12 @@ def _leer_memoria() -> dict:
         with open(MEMORIA_AUDIT, encoding="utf-8") as fh:
             d = json.load(fh)
         return d if isinstance(d, dict) else {}
-    except (OSError, ValueError):
+    except (OSError, ValueError, RecursionError):
         return {}
 
 
-def _anotar_en_memoria(clave: str) -> None:
+def _guardar_memoria(d: dict) -> None:
     try:
-        d = _leer_memoria()
-        d[clave] = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
-        if len(d) > _TOPE_MEMORIA:
-            for vieja in list(d)[: len(d) - _TOPE_MEMORIA]:
-                del d[vieja]
         tmp = MEMORIA_AUDIT + ".tmp"
         with open(tmp, "w", encoding="utf-8") as fh:
             json.dump(d, fh)
@@ -345,18 +355,45 @@ def _anotar_en_memoria(clave: str) -> None:
         pass    # sin memoria se audita la proxima vez: no es un error
 
 
+def _anotar_en_memoria(clave: str) -> None:
+    d = _leer_memoria()
+    d[clave] = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+    if len(d) > _TOPE_MEMORIA:
+        for vieja in list(d)[: len(d) - _TOPE_MEMORIA]:
+            del d[vieja]
+    _guardar_memoria(d)
+
+
+def _olvidar_de_memoria(clave: str) -> None:
+    d = _leer_memoria()
+    if clave in d:
+        del d[clave]
+        _guardar_memoria(d)
+
+
 def audit_autocad(path: str) -> tuple[bool, str]:
-    """Abre el DXF con el motor de AutoCAD y corre AUDIT. (paso, salida)."""
+    """Abre el DXF con el motor de AutoCAD y corre AUDIT. (paso, salida). Los mismos bytes que ya dieron 0 no se reabren."""
     if not os.path.exists(ACCORECONSOLE):
         raise DxfInvalido(
             f"no encuentro accoreconsole.exe en {ACCORECONSOLE} — sin AutoCAD no se puede validar"
         )
-    clave = _clave_de_memoria(path) if USAR_MEMORIA else None
-    if clave:
+    # La clave se arma siempre: con --sin-memoria no se LEE, pero lo que AutoCAD diga ahora corrige lo anotado.
+    clave = _clave_de_memoria(path)
+    if clave and USAR_MEMORIA:
         cuando = _leer_memoria().get(clave)
         if cuando:
             return True, (f"0 errores: AutoCAD ya audito estos mismos bytes el {cuando} "
                           "(no se volvio a abrir; --sin-memoria lo fuerza)")
+    paso, detalle = _audit_de_verdad(path)
+    if clave:
+        if not paso:
+            _olvidar_de_memoria(clave)          # AutoCAD dijo que no: un OK viejo de esos bytes ya no vale
+        elif _clave_de_memoria(path) == clave:  # se anota solo si los bytes que vio AutoCAD son los de la huella
+            _anotar_en_memoria(clave)
+    return paso, detalle
+
+
+def _audit_de_verdad(path: str) -> tuple[bool, str]:
     with tempfile.TemporaryDirectory() as tmp:
         scr = os.path.join(tmp, "audit.scr")
         with open(scr, "wb") as fh:
@@ -379,8 +416,6 @@ def audit_autocad(path: str) -> tuple[bool, str]:
         l for l in salida.splitlines()
         if re.search(r"Duplicate|Invalid|Total errors|Erased|error", l, re.I)
     )
-    if errores == 0 and clave:
-        _anotar_en_memoria(clave)
     return errores == 0, detalle.strip()
 
 

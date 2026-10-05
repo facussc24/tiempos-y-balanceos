@@ -48,7 +48,7 @@ Lo que hay que saber para que funcione (cada uno me costo un intento):
 5. Lo que importa de la salida: `Total errors found N fixed M`. Si esa linea **no aparece**,
    AutoCAD no llego a auditar → no abrio el archivo, y arriba esta el motivo
    (`Invalid or incomplete DXF input -- drawing discarded`, `ErrorStatus=53`).
-6. Cada corrida tarda **8 a 17 s** (medido el 02/10/2026 sobre 48 corridas; la primera del día puede tardar un minuto). El validador recuerda el AUDIT que dio 0 errores por la huella del archivo: los mismos bytes no se vuelven a abrir (normalizar y después entregar el mismo archivo es una sola corrida); `--sin-memoria` lo fuerza. Para varios archivos, background y un solo reporte.
+6. Cada corrida tarda **8 a 17 s** (medido el 02/10/2026 sobre 48 corridas; la primera del día puede tardar un minuto). El validador recuerda el AUDIT que dio 0 errores por la huella del archivo: los mismos bytes no se vuelven a abrir (normalizar y después entregar el mismo archivo es una sola corrida); `--sin-memoria` lo fuerza, y si esa vez AutoCAD dice que no, el OK anotado se borra. La memoria vale para ese AutoCAD (el programa y los DLL del motor) y solo para nombres que terminan en `.dxf`. Para varios archivos, background y un solo reporte.
 
 Round-trip para normalizar con el writer de AutoCAD (cuando hay que reescribirlo todo):
 `_AUDIT Y` + `_SAVEAS` a DXF. Ojo que reescribe todas las tablas y puede cambiar el tipo de

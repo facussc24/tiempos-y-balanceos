@@ -516,7 +516,7 @@ def partir(entrada, salida, nombre, pos=None, sentido='auto', area=AREA_DEFAULT,
         escribir_dxf(crudo, seq)
         normalizar(crudo, norm)
         entregar_dxf(norm, os.path.join(salida, base + '.dxf'))
-        print(f'  {base}.dxf: AutoCAD lo abrio limpio y se copio')
+        print(f'  {base}.dxf: paso el control de AutoCAD y se copio')
 
     marco = [armar_mitad(izq, corte), armar_mitad(der, [list(q) for q in corte])]
     png = os.path.join(salida, f'{nombre} - control del corte.png')

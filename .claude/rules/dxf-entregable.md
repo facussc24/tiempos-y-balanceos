@@ -57,7 +57,8 @@ mas abajo del arbol) y decirselo a Fak. `entregar_dxf()` lo avisa solo.
   produce el entregable, no en la buena voluntad.
 - **Verificable** — `.venv-cad/Scripts/python.exe scripts/_validarDxfSelftest.py [--con-autocad]`:
   6 casos malos que tienen que ser rechazados (los dos lados del bug asimetrico incluidos) +
-  2 normalizados que tienen que pasar + la capa real de AutoCAD.
+  2 normalizados que tienen que pasar + la capa real de AutoCAD + la memoria del AUDIT (los mismos
+  bytes que ya dieron 0 errores no se reabren; 32 casos con un AutoCAD de mentira que cuenta las llamadas).
 - **Como se corre AutoCAD headless** → skill `autocad-verificar`.
 - Al normalizar, la geometria **no se toca**: `normalizar()` compara las secciones
   `ENTITIES` y `BLOCKS` byte por byte contra el original y aborta si cambiaron.
