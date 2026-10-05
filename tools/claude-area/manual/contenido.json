@@ -333,9 +333,9 @@
       "texto": [
         "Si no sabés, no toques nada: **Opus 5.5** en nivel **Medio**.",
         "Se cambian abajo a la derecha: clic en el modelo, o en el nivel («Esfuerzo»).",
-        "**Fable** y los niveles más altos gastan mucho: no se usan sin avisar."
+        "Para una tarea muy compleja podés subir el nivel a **Alto**. **Fable** gasta mucho más: no hace falta para lo de todos los días."
       ],
-      "error_que_evita": "Poner todo en el nivel más alto «para que salga mejor» y dejar sin cupo al resto.",
+      "error_que_evita": "Poner todo en el nivel más alto «para que salga mejor»: tarda más y no hace falta.",
       "a_confirmar": []
     },
 
