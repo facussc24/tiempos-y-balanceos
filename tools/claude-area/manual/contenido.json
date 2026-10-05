@@ -111,7 +111,7 @@
         }
       ],
       "texto": [
-        "Arriba a la izquierda hay dos botones juntos.",
+        "Arriba a la izquierda hay dos o tres botones juntos.",
         "El nuestro es el de la derecha: **</>**. Se llama Code. Hacé clic ahí.",
         "El otro, el del globito, es para charlar: acá no lo usamos."
       ],
@@ -196,7 +196,7 @@
         }
       ],
       "texto": [
-        "1. Escribí abajo y apretá **Enter**. Empezá por tu puesto.",
+        "1. Si Claude no te saludó por tu nombre, empezá por tu puesto.",
         "2. Claude busca la descripción de tu puesto y te dice de qué documento salió.",
         "Claude contesta distinto a un supervisor que a un comprador.",
         "No hace falta escribir bien: alcanza con que se entienda."
@@ -275,7 +275,7 @@
       ],
       "texto": [
         "Pedíselo con tus palabras: a quién va y qué necesitás.",
-        "Claude lo escribe y lo deja abierto en Outlook, sin mandarlo.",
+        "Claude lo escribe y lo deja abierto en Outlook (el clásico), sin mandarlo.",
         "Lo que no sabe lo deja entre corchetes: completalo vos.",
         "Leelo entero. Sale cuando apretás **Enviar**, o cuando le escribís **mandalo**."
       ],
