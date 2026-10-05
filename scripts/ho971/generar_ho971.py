@@ -41,7 +41,9 @@ FECHA = "05/10/2026"
 CAJETIN = dict(ho="HO-971", pieza="APB DE PUERTA — N 231 / N 267 / N 297 / N 328", modelo="PATAGONIA / VW427",
                cliente="VW / NOVAX", realizo="F.SANTORO", aprobo="C.BAPTISTA", fecha=FECHA, rev="B")
 AUDITIVA = os.path.join(base.EPP_DIR, "ico_12924.png")
-EPP = {"corte": [base.ICO_ROPA, base.ICO_CALZADO, AUDITIVA]}   # los de la HO vieja de la mesa de corte
+EPP = {"corte": [base.ICO_ROPA, base.ICO_CALZADO, AUDITIVA],   # los de la HO vieja de la mesa de corte
+       # + guantes donde se manipulan cuchillas (riesgo de corte que se ve en la foto; a confirmar por Fak)
+       "cuchilla": [base.ICO_ROPA, base.ICO_CALZADO, AUDITIVA, base.ICO_GUANTES]}
 
 
 def copiar_fotos():

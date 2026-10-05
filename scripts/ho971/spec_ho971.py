@@ -22,11 +22,11 @@ def f(nombre):
 HO = "fuente: HO-971 vieja, pestaña"
 
 # La aclaracion de la pestaña 22 de la HO vieja (F. Santoro, 10/03/2026), en el cuadro amarillo.
-AVISO_PARAMETROS = ("NO CAMBIAR LOS PARÁMETROS DE LA MÁQUINA, TAMPOCO LA VELOCIDAD. "
+AVISO_PARAMETROS = ("NO CAMBIAR LOS PARÁMETROS DE LA MÁQUINA DE CAPAS, TAMPOCO LA VELOCIDAD. "
                     "Cualquier ajuste lo hace solo mantenimiento.")
 
 HOJAS = [
-    dict(op="20", hoja_de=(1, 2), denominacion="PREPARACIÓN Y CARGA DE VINILO", sector="MESA DE CORTE", grilla=(5, 2),
+    dict(op="20", hoja_de=(1, 3), denominacion="PREPARACIÓN Y CARGA DE VINILO", sector="MESA DE CORTE", grilla=(4, 2),
          cuando="cada rollo", aviso=AVISO_PARAMETROS, epp="corte",
          pasos=[
              dict(texto="Verificar en la planilla de la mesa de corte el código del vinilo del próximo corte.",
@@ -57,20 +57,25 @@ HOJAS = [
              dict(texto="Volver a bajar los dos rodillos superiores a su posición.",
                   foto=f("20_rodillos_cerrar"), pie="Rodillos en posición",
                   fuentes=[HO + " 21, paso 3"]),
-             dict(texto="Mover el vinilo con los botones izquierdo y derecho del panel hasta que quede "
+         ]),
+    dict(op="20", hoja_de=(2, 3), denominacion="PREPARACIÓN Y CARGA DE VINILO", sector="MESA DE CORTE", grilla=(2, 2),
+         cuando="cada rollo", aviso=AVISO_PARAMETROS, epp="corte",
+         pasos=[
+             dict(texto="Mover el vinilo con los botones izquierdo y derecho de la pantalla hasta que quede "
                         "acomodado detrás de los rodillos.",
-                  fotos=[dict(foto=f("20_panel_botones"), pie="Botones del panel"),
+                  fotos=[dict(foto=f("20_pantalla_flechas"), pie="Botones izquierdo y derecho"),
                          dict(foto=f("20_vinilo_detras_rodillos"), pie="Vinilo tras los rodillos")],
                   fuentes=[HO + " 22, paso 1"]),
              dict(texto="Dejar un sobrante de vinilo y apretar Function y después el ícono de la tijera, "
                         "para que la máquina corte el sobrante y arranque desde cero.",
-                  foto=f("20_pantalla_tijera"), pie="Ícono de la tijera",
+                  fotos=[dict(foto=f("20_pantalla_function"), pie="Botón Function"),
+                         dict(foto=f("20_pantalla_tijera"), pie="Ícono de la tijera")],
                   fuentes=[HO + " 22, pasos 2 y 3"]),
              dict(texto="Retirar el sobrante y tirarlo en el cajón de scrap.",
                   sin_foto="falta foto del cajón de scrap de la mesa de corte",
                   fuentes=[HO + " 22, paso 4"]),
          ]),
-    dict(op="20", hoja_de=(2, 2), denominacion="PREPARACIÓN Y CARGA DE VINILO", sector="MESA DE CORTE",
+    dict(op="20", hoja_de=(3, 3), denominacion="PREPARACIÓN Y CARGA DE VINILO", sector="MESA DE CORTE",
          cuando="durante la marcha", aviso=AVISO_PARAMETROS, epp="corte",
          pasos=[
              dict(texto="Medir con la regla el largo que indica la planilla (largo de la tizada más la demasía).",
@@ -82,8 +87,8 @@ HOJAS = [
              dict(texto="Cargar la cantidad de capas y el largo de la capa con la demasía, como dice la planilla.",
                   foto=f("20_pantalla_capas"), pie="Pantalla: capas y largo",
                   fuentes=[HO + " 23, paso 3"]),
-             dict(texto="Verificar en la pantalla la velocidad y la tensión del producto. Si no coinciden con "
-                        "las del producto, no cambiarlas: avisar a mantenimiento.",
+             dict(texto="Verificar en la pantalla que la velocidad y la tensión sean las del instructivo de "
+                        "parámetros del producto. Si no coinciden, no cambiarlas: avisar a mantenimiento.",
                   misma_foto_que=3,
                   fuentes=[HO + " 23, paso 4", HO + " 22, aclaracion de parametros"]),
              dict(texto="Apretar Start en la pantalla para empezar el corte de las capas.",
@@ -99,7 +104,7 @@ HOJAS = [
                   fuentes=[HO + " 23, paso 7"]),
          ]),
     dict(op="21", hoja_de=(1, 2), denominacion="CORTE AUTOMÁTICO DE COMPONENTES", sector="MESA DE CORTE", grilla=(3, 2),
-         cuando="durante la marcha", aviso=AVISO_PARAMETROS, epp="corte",
+         cuando="durante la marcha", epp="cuchilla",
          pasos=[
              dict(texto="Apretar el botón verde de abajo de la mesa para pasar las capas cortadas a la mesa de corte.",
                   foto=f("21_botonera_mesa"), pie="Botonera de la mesa",
@@ -111,8 +116,8 @@ HOJAS = [
                         "costado de la mesa, y ahí apretar Stop.",
                   foto=f("21_lineas_rojas"), pie="Líneas rojas del costado",
                   fuentes=[HO + " 24, pasos 3 y 4"]),
-             dict(texto="Medir el ancho de la cuchilla con el calibre MC167, desde la punta hasta 10 cm hacia el "
-                        "centro, antes de cada corte. Tiene que dar 4 mm como mínimo.",
+             dict(texto="Medir el ancho de la cuchilla con el calibre MC167, desde la punta de la cuchilla hasta "
+                        "10 cm hacia su medio, antes de cada corte. Tiene que dar 4 mm como mínimo.",
                   foto=f("21_medir_cuchilla"), pie="Calibre MC167 en la cuchilla",
                   fuentes=[HO + " 25, paso 1", "mail de Fak a N. Perez 05/10/2026 10:02: cuchilla 4 mm minimo, calibre MC167"]),
              dict(texto="Abrir el control de corte en Cutting Control y cargar en el programa el mismo ancho de "
@@ -120,12 +125,12 @@ HOJAS = [
                   foto=f("21_cutting_control"), pie="Control de corte",
                   fuentes=[HO + " 25, pasos 2 y 3"]),
              dict(texto="Retirar con cuidado los pedazos si la cuchilla se quiebra, tirarlos en el cajón amarillo "
-                        "y pedir el cambio a mantenimiento por ARB.",
+                        "y pedir el cambio a mantenimiento por el sistema ARB.",
                   foto=f("21_cajon_cuchillas"), pie="Cajón amarillo",
                   fuentes=[HO + " 25, paso 4"]),
          ]),
     dict(op="21", hoja_de=(2, 2), denominacion="CORTE AUTOMÁTICO DE COMPONENTES", sector="MESA DE CORTE",
-         grilla=(3, 3), cuando="durante la marcha", aviso=AVISO_PARAMETROS, epp="corte",
+         grilla=(3, 3), cuando="durante la marcha", epp="corte",
          pasos=[
              dict(texto="Extender el nylon sobre las capas hasta tapar toda la zona de succión.",
                   foto=f("21_nylon"), pie="Mesa cubierta con el nylon",
@@ -139,6 +144,7 @@ HOJAS = [
              dict(texto="Llevar el cabezal con los botones de al lado de Shift hasta el extremo del vinilo, con "
                         "2,5 cm de margen como máximo por lado. Después llevarlo al otro extremo y verificar la "
                         "alineación con el láser rojo.",
+                  misma_foto_que=2,
                   fotos=[dict(foto=f("21_laser_riel"), pie="Láser rojo en el riel"),
                          dict(foto=f("21_laser_cruz"), pie="Cruz del láser")],
                   fuentes=[HO + " 26, paso 4"]),
@@ -167,14 +173,20 @@ HOJAS = [
 FALTA = [
     "OP 20: foto de la planilla de la mesa de corte y del cajón de scrap.",
     "OP 21: foto de la pantalla de Cutting Control con el archivo del APB (la que hay muestra programas de otras piezas).",
+    "OP 20: cual de los dos Start de la pantalla de la maquina de capas se aprieta (abajo hay «<- Start» y «Start ->»).",
+    "OP 20: foto del boton de bajada del rollo, de cerca; y del lado vista del vinilo.",
+    "OP 21: que archivo de Cutting Control se abre para cada codigo (N 231, N 267, N 297, N 328).",
+    "OP 21: como termina el corte: retirar las piezas, apagar la succion y que se hace con el nylon (no esta en la HO vieja).",
+    "OP 21: foto de cerca del boton Plato y del laser rojo; la foto del icono de inicio esta borrosa.",
+    "EPP: la hoja de la cuchilla lleva guantes por el riesgo de corte (deducido de la foto de cuchillas quebradas): que lo confirme Fak.",
 ]
 
 # Las fotos salen de la HO-971 vieja (xl/media del xlsx): nombre -> imagen de origen.
 ORIGEN_FOTOS = {
     "20_rollo_deposito": "image12.jpeg", "20_rollo_maquina": "image13.jpeg", "20_lado_vista": "image14.jpeg",
     "20_panel_capas": "image15.jpeg", "20_rodillos_abrir": "image21.jpeg", "20_vinilo_bajo_rodillos": "image22.jpeg",
-    "20_rodillos_cerrar": "image24.jpeg", "20_panel_botones": "image26.jpeg", "20_vinilo_detras_rodillos": "image27.jpeg",
-    "20_pantalla_tijera": ("image29.jpeg", (360, 60, 530, 360)), "20_medir_largo": "image31.jpeg", "20_pantalla_reset": "image32.jpeg",
+    "20_rodillos_cerrar": "image24.jpeg", "20_vinilo_detras_rodillos": "image27.jpeg",
+    "20_pantalla_tijera": ("image29.jpeg", (360, 230, 530, 360)), "20_pantalla_flechas": ("image29.jpeg", (360, 90, 530, 260)), "20_pantalla_function": ("image28.jpeg", (740, 300, 915, 534)), "20_medir_largo": "image31.jpeg", "20_pantalla_reset": "image32.jpeg",
     "20_pantalla_capas": "image33.jpeg", "20_acomodar_capa": "image34.jpeg", "20_botonera_mesa": "image30.jpeg",
     "21_botonera_mesa": "image30.jpeg", "21_panel_mesa": "image35.jpeg", "21_lineas_rojas": "image36.jpeg",
     "21_medir_cuchilla": "image40.jpeg", "21_cutting_control": ("image37.jpeg", (150, 40, 750, 330)), "21_cajon_cuchillas": "image41.jpeg",
