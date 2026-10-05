@@ -296,6 +296,24 @@ de más (`action: 'screenshot'`) pasa el control. Para usarlo el asistente tendr
 
 Lo demás de la lista A de `examen/fable_organizador_2026-10-04.md` sigue pendiente.
 
+## La noche del 04 al 05/10 (auditoría completa antes de la reunión; el detalle está en `examen/NOCHE_2026-10-04.md`)
+
+Facundo pidió una auditoría con los mejores revisores («no puede haber fallas mañana»), con tope de cupo en 70 %. Ocho
+revisores independientes y una segunda mirada. En el paquete 12 no apareció nada que frene instalar ni la demostración;
+lo que había que corregir estaba en los papeles. No se publicó nada.
+
+- **Probado:** instalar con el paquete tomado directo de la nube y los archivos sin bajar (como en otra PC): 7 de 7; la
+  bajada tarda unos 4 minutos y la instalación, segundos.
+- **Hojas corregidas:** 10 (ensayo), 11 (otra PC), 8 y 4 (guion): pasos que no salían como estaban escritos. Hoja 5: dos
+  frases que no podían estar. Retoques en 1, 3, 9 y el manual (la captura de la página 10 ya no muestra el modo «Manual»).
+- **Hoja nueva para Facundo:** «12 - Mañana en orden» (los pasos de la mañana, qué preguntar en vivo y qué no).
+- **Lo que mañana hay que saber:** lo que se escribe va sin comillas; «mandalo» y «borrala» solos en su mensaje; en la PC
+  de la reunión el área es la 7 (Dirección); la carpeta de la nube con «Mantener siempre en este dispositivo» antes de
+  instalar; la segunda vez el instalador no pregunta; no preguntar en vivo por la revisión por la Dirección.
+- **Para después de la reunión (en rama):** que «mandalo» y «borralo» se juzguen por su parte de la oración; el mensaje
+  de cerrar un programa con su ejemplo; el aviso de arranque que a veces dice «sin versión instalada»; mensajes del
+  instalador en castellano para dos errores; y el `CLAUDE.md` del instalador, que dice que no abre Claude.
+
 ## Las etapas, en orden. Cada una tiene su puerta: no se pasa a la siguiente con la puerta en rojo.
 
 ### A — Que el asistente HAGA lo que el video va a decir (hoy)
