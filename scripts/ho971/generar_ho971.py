@@ -43,7 +43,8 @@ CAJETIN = dict(ho="HO-971", pieza="APB DE PUERTA — N 231 / N 267 / N 297 / N 3
 AUDITIVA = os.path.join(base.EPP_DIR, "ico_12924.png")
 EPP = {"corte": [base.ICO_ROPA, base.ICO_CALZADO, AUDITIVA],   # los de la HO vieja de la mesa de corte
        # + guantes donde se manipulan cuchillas (riesgo de corte que se ve en la foto; a confirmar por Fak)
-       "cuchilla": [base.ICO_ROPA, base.ICO_CALZADO, AUDITIVA, base.ICO_GUANTES]}
+       "cuchilla": [base.ICO_ROPA, base.ICO_CALZADO, AUDITIVA, base.ICO_GUANTES],
+       "recepcion": [base.ICO_ROPA, base.ICO_CALZADO, base.ICO_GUANTES]}   # los de la pestaña 10 vieja
 
 
 def copiar_fotos():
@@ -80,7 +81,7 @@ def main():
         for a in avisos:
             print(f"      aviso: {a}")
     os.makedirs(SALIDA, exist_ok=True)
-    ruta = os.path.join(SALIDA, "20-21 - MESA DE CORTE.pptx")
+    ruta = os.path.join(SALIDA, "HO-971 - LAMINAS A3 NUEVAS.pptx")
     prs.save(ruta)
     fallas = CHK.revisar(ruta, {"*": {"secuencia": True}})
     if fallas:

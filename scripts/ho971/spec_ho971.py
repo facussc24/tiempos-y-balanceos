@@ -26,6 +26,30 @@ AVISO_PARAMETROS = ("NO CAMBIAR LOS PARÁMETROS DE LA MÁQUINA DE CAPAS, TAMPOCO
                     "Cualquier ajuste lo hace solo mantenimiento.")
 
 HOJAS = [
+    # 10: pasos de la HO vieja (pestaña 10, Logistica). El paso 3 de esa pestaña era basura ("ssss") y
+    # no se usa; "albaran" pasa a "remito", la palabra de Barack.
+    dict(op="10", denominacion="RECEPCIÓN DE MATERIA PRIMA", sector="LOGÍSTICA", cuando="cada arranque",
+         epp="recepcion", grilla=(2, 1),
+         pasos=[
+             dict(texto="Verificar que el embalaje recibido no esté dañado.",
+                  sin_foto="falta foto de la recepcion de un embalaje",
+                  fuentes=[HO + " 10, paso 1"]),
+             dict(texto="Verificar que el remito coincida con la orden de compra y el número de artículo.",
+                  sin_foto="falta foto del remito y la orden de compra",
+                  fuentes=[HO + " 10, paso 2"]),
+             dict(texto="Cargar la materia prima en ARB, imprimir la etiqueta, pegarla en el envase y colocar el "
+                        "cono azul: Logística la controló.",
+                  fotos=[dict(foto=f("10_cartel_colores"), pie="Código de colores"),
+                         dict(foto=f("10_tablero_conos"), pie="Conos de colores")],
+                  fuentes=[HO + " 10, paso 4"]),
+             dict(texto="Guardar la materia prima en su lugar del depósito, o enviarla a producción si hace falta.",
+                  sin_foto="falta foto del deposito de materia prima",
+                  fuentes=[HO + " 10, paso 5"]),
+             dict(texto="Hacer el remito de devolución y descontar la cantidad en ARB si parte del lote llegó en "
+                        "malas condiciones.",
+                  sin_foto="no corresponde foto: es un tramite en ARB",
+                  fuentes=[HO + " 10, paso 6"]),
+         ]),
     dict(op="20", hoja_de=(1, 3), denominacion="PREPARACIÓN Y CARGA DE VINILO", sector="MESA DE CORTE", grilla=(4, 2),
          cuando="cada rollo", aviso=AVISO_PARAMETROS, epp="corte",
          pasos=[
@@ -167,6 +191,47 @@ HOJAS = [
                   misma_foto_que=2,
                   fuentes=[HO + " 27, paso 4"]),
          ]),
+    # 30 y 41: pasos de la HO vieja (pestañas 30 y 41) con los valores del mail del 05/10/2026 y los
+    # codigos de hilo del arb (FX284-E0PTO sin "TK": el arb es la fuente). Fotos de los videos de
+    # 5- VIDEOS Y FOTOS\1- CLIENTES\NOVAX\APB\REFILADO Y COSTURA (12/12/2025), con su procedencia adentro.
+    dict(op="30", denominacion="REFILADO", sector="COSTURA", cuando="durante la marcha", epp="cuchilla",
+         pasos=[
+             dict(texto="Colocar en la refiladora el extremo del lado donde va la costura: ese lado se refila "
+                        "primero y el extremo opuesto no se refila.",
+                  foto=f("30_extremo_refiladora"), pie="Extremo en la refiladora",
+                  fuentes=[HO + " 30, paso 1", "Refilado 8 piezas.mp4 s10"]),
+             dict(texto="Pisar el pedal para que la máquina refile ese extremo.",
+                  foto=f("30_refilando"), pie="Refilado del extremo",
+                  fuentes=[HO + " 30, paso 2", "Refilado 8 piezas.mp4 s18"]),
+             dict(texto="Girar la pieza y refilar de la misma forma las dos puntas.",
+                  foto=f("30_girar_pieza"), pie="Pieza girada",
+                  fuentes=[HO + " 30, paso 3", "Refilado 8 piezas.mp4 s22"]),
+         ]),
+    dict(op="41", denominacion="COSTURA VISTA (1 SOLA LÍNEA)", sector="COSTURA", cuando="durante la marcha",
+         epp="corte",
+         pasos=[
+             dict(texto="Colocar la pieza en la máquina según la versión a producir. Verificar el código de pieza "
+                        "y tener a la vista la muestra patrón liberada por Calidad.",
+                  foto=f("41_pieza_maquina"), pie="Pieza en la máquina",
+                  fuentes=[HO + " 41, paso 1", "Costura vista 8 Piezas.mp4 s2"]),
+             dict(texto="Cargar el hilo: aguja N° 22 con hilo 20/3 FX483TK-E0PTO y bobina con hilo 30/3 FX284-E0PTO.",
+                  sin_foto="falta foto de los conos de hilo y de la aguja cargada",
+                  fuentes=[HO + " 41, paso 2", "mail de Fak a N. Perez 05/10/2026: aguja N 22 en la vista, bobina 30/3",
+                           "arb RELACIONES 05/10/2026: FX483TK-E0PTO y FX284-E0PTO"]),
+             dict(texto="Coser la costura vista de 1 sola línea sobre el borde superior: 6 puntadas en 25 mm "
+                        "(±0,5), a 4 mm (±0,5) del borde, con atraque de 3 a 4 puntadas al inicio y al final, "
+                        "una vez atrás y una adelante.",
+                  foto=f("41_costura_vista"), pie="Costura vista de una línea",
+                  fuentes=[HO + " 41, paso 3", "mail de Fak a N. Perez 05/10/2026: 6 en 25 mm, a 4 mm +-0,5, atraque",
+                           "Costura vista 8 Piezas.mp4 s6"]),
+             dict(texto="Cortar los hilos al terminar cada pieza y separarla. No coser piezas en cadena sin separarlas.",
+                  sin_foto="falta foto del corte de hilos al terminar la pieza",
+                  fuentes=[HO + " 41, paso 4"]),
+             dict(texto="Inspeccionar la línea vista: alineada y continua, sin puntadas flojas ni saltadas, y "
+                        "simétrica con la muestra patrón. Ante un desvío, aplicar el plan de reacción.",
+                  foto=f("41_piezas_cosidas"), pie="Piezas cosidas",
+                  fuentes=[HO + " 41, paso 5", "Costura vista 8 Piezas.mp4 s66"]),
+         ]),
 ]
 
 # Lo que ninguna fuente contesta todavia (no se imprime): va a la lista de lo que falta filmar o preguntar.
@@ -178,11 +243,12 @@ FALTA = [
     "OP 21: que archivo de Cutting Control se abre para cada codigo (N 231, N 267, N 297, N 328).",
     "OP 21: como termina el corte: retirar las piezas, apagar la succion y que se hace con el nylon (no esta en la HO vieja).",
     "OP 21: foto de cerca del boton Plato y del laser rojo; la foto del icono de inicio esta borrosa.",
-    "EPP: la hoja de la cuchilla lleva guantes por el riesgo de corte (deducido de la foto de cuchillas quebradas): que lo confirme Fak.",
+    "OP 20: el Start de la pantalla de la maquina de capas: preguntarle al operario de la mesa de corte cual se aprieta (Fak no lo sabe y la HO vieja no lo dice)."
 ]
 
 # Las fotos salen de la HO-971 vieja (xl/media del xlsx): nombre -> imagen de origen.
 ORIGEN_FOTOS = {
+    "10_cartel_colores": "image7.jpeg", "10_tablero_conos": "image8.jpeg",
     "20_rollo_deposito": "image12.jpeg", "20_rollo_maquina": "image13.jpeg", "20_lado_vista": "image14.jpeg",
     "20_panel_capas": "image15.jpeg", "20_rodillos_abrir": "image21.jpeg", "20_vinilo_bajo_rodillos": "image22.jpeg",
     "20_rodillos_cerrar": "image24.jpeg", "20_vinilo_detras_rodillos": "image27.jpeg",
