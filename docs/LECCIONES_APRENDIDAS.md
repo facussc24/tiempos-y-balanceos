@@ -52,6 +52,7 @@ incidente vive en los snapshots.
 - **El chequeo frena, no decide; y la objecion de Fak es un dato, no una opinion a refutar: ante un "no anda", preguntar como falla.** Graduado a la memoria `feedback_el_chequeo_frena_no_decide` (y `cad-3d.md` GATE 0).
 - **Un plan de accion heredado se arrastra fila por fila: fusionar dos filas pierde alcance, media fila que se cae no la ve nadie, y un issue no se cierra con evidencia de una parte del alcance.** Graduado a la memoria `plan_heredado_se_arrastra_fila_por_fila`.
 
+- **05/10 — Antes de preguntarle a Fak un dato técnico, buscar en SUS mails enviados de la semana: los valores de costura los había mandado ese día a las 10:02; y hot melt es rodillo, siempre** (*"ya deberías saber la respuesta"*). Graduado a la memoria `feedback_la_info_ya_la_tengo_no_preguntar`.
 - **05/10 — Para un código el arb es la fuente: lo que otra área usa y no está en el arb ni en ningún papel, lo tiene mal; en un mail, una sola pregunta y al final.** Graduado a la memoria `feedback_arb_es_la_fuente_de_un_codigo`.
 
 - **05/10 — Un largo que sale de un plano se calcula SUMANDO sus cotas, no midiendo el dibujo a escala** (cinta del apoyabrazos trasero: medí píxeles y dije «aproximado» con 69,54 + 13,96 + 13,6 escritas en la captura; Fak: *"eso tenés que usar"*).
