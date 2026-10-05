@@ -56,8 +56,11 @@ def pid(h):
 
 
 def pids_arb():
-    out = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq produc.exe', '/FO', 'CSV'],
-                         capture_output=True, text=True).stdout
+    try:
+        out = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq produc.exe', '/FO', 'CSV'],
+                             capture_output=True, text=True, timeout=20).stdout
+    except subprocess.TimeoutExpired:
+        out = ''   # tasklist colgado (WMI trabado, 30/09/2026): sigue el respaldo por la ventana
     pids = {int(l.split('","')[1]) for l in out.splitlines()[1:] if l.startswith('"produc.exe"')}
     if not pids:
         # tasklist va por WMI, y con WMI saturado sale "Infraccion de cuotas" / "Consulta no

@@ -82,9 +82,18 @@ def pid(h):
 
 
 def pids_arb():
-    out = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq produc.exe', '/FO', 'CSV'],
-                         capture_output=True, text=True).stdout
-    return {int(l.split('","')[1]) for l in out.splitlines()[1:] if l.startswith('"produc.exe"')}
+    try:
+        out = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq produc.exe', '/FO', 'CSV'],
+                             capture_output=True, text=True, timeout=20).stdout
+    except subprocess.TimeoutExpired:
+        out = ''   # tasklist colgado (WMI trabado, 30/09/2026): sigue el respaldo por la ventana
+    pids = {int(l.split('","')[1]) for l in out.splitlines()[1:] if l.startswith('"produc.exe"')}
+    if not pids:
+        # con WMI saturado tasklist no lista nada (05/10/2026): respaldo por la ventana principal
+        hw = u.FindWindowW('ProdWindow', None)
+        if hw:
+            pids = {pid(hw)}
+    return pids
 
 
 def raiz(h):
