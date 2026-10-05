@@ -564,6 +564,8 @@ async function* mailsDeOutlook({ lector, corte, idsPath, maxSegundos, env, conoc
     const args = ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', lector, '-Desde', isoLocal(corte), '-MaxSegundos', String(maxSegundos)];
     if (fs.existsSync(idsPath)) args.push('-Conocidos', idsPath);
     const hijo = spawn(ps, args, { env, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+    // si PowerShell no arranca (no esta, o la PC no lo deja correr) no hay lector: se dice, no se cae
+    hijo.on('error', () => { ctx.outlook = { estado: 'error', detalle: 'no pude arrancar el lector de Outlook (PowerShell)' }; });
     const cortar = () => { try { hijo.kill(); } catch { /* ya termino */ } };
     const reloj = setTimeout(() => { ctx.completa = false; cortar(); }, (maxSegundos + 90) * 1000);
     // El lector manda una linea cada 10 segundos mientras Outlook le contesta. Si Outlook muestra un cartel de seguridad

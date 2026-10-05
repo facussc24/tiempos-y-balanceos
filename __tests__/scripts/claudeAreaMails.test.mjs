@@ -872,7 +872,8 @@ describe('mails_area: como programa y en el paquete', () => {
         fs.mkdirSync(mia.estado, { recursive: true });
         fs.writeFileSync(path.join(mia.estado, ARCHIVO_ESTADO), JSON.stringify({ aviso_desde: '2020-01-01T10:00:00' }), 'utf8');
         const r2 = lanzar(instalado(mia), ['--home', mia.home, '--raiz-nube', mia.raizNube, '--estado', mia.estado, '--max-minutos', '2', '--fuente-jsonl', fuente(mia, [mail()])]);
-        expect(JSON.parse(r2.stdout.trim()).resultado).toBe('outlook_cerrado');
+        // en Windows el lector contesta «cerrado» (variable de prueba); donde no hay PowerShell, que no pudo arrancarlo. Nunca «ok».
+        expect(JSON.parse(r2.stdout.trim()).resultado).toBe(process.platform === 'win32' ? 'outlook_cerrado' : 'error');
         expect(nubeVacia(mia)).toBe(true);
     }, 60000);
     it('sin --home o sin --estado no corre (no usa las carpetas de verdad por descuido)', () => {
