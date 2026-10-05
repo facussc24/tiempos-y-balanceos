@@ -63,7 +63,7 @@
       "amfe": "161",
       "flujograma": {
         "id": "153",
-        "revVigente": "D",
+        "revVigente": "E",
         "estado": "VIGENTE"
       },
       "secuencia": [
@@ -82,13 +82,15 @@
         "80",
         "81",
         "82",
-        "83",
         "90",
+        "91",
+        "92",
+        "93",
         "100",
         "101",
         "110"
       ],
-      "nota": "Alineado el 09/09/2026 contra Flujograma 153 Rev.B y verificado de nuevo el 11/09/2026 contra la Rev.C. La mesa de corte se estandarizo a 20-22 (corte en decena 20: 20 preparacion, 21 corte, 22 control mylar, 23 WIP) unificando con el criterio de la casa aplicado en el Insert. El tapizado en el AMFE numera 80-82 cubriendo los tres pasos del flujograma (80 configuracion, 81 automatico, 82 refilado). Hay DOS reprocesos y los dos van en la secuencia: 100 REPROCESO: FALTA DE ADHESIVO (vuelve a la 71) y 101 REPROCESO: REACTIVACION DE ADHESIVO POR CALOR (vuelve a la 90); el 101 lo respalda la HO-971 pag. 25 y el AMFE 161 lo tiene desde el 09/09/2026 - hasta el 11/09 esta secuencia no lo declaraba y _verificarNumeracion.mjs lo marcaba como operacion del AMFE sin flujograma. La Rev.C del 11/09/2026 NO cambia la numeracion: solo alinea las marcas de caracteristicas especiales con el AMFE 161 (D/TLD y SC en la recepcion 10; SC en 20, 21, 30, 40, 41, 50, 70, 71, 80-82 y 100). Quedan resueltas las colisiones de numeracion. OPERACION 83 ENGRAMPADO (01/10/2026): Fak definio que en el APB de puerta la prensa tapiza y despues se engrampa a mano; el engrampado entra como operacion nueva 83 despues de 80-82. El AMFE 161 la tiene desde el 01/10/2026 (Supabase live) y el flujograma 153 Rev.D se emitio el 01/10/2026 (PNG en Gestion Ingenieria y PDF en el casillero 20 del legajo; la Rev.C quedo en OBSOLETO). La 83 lleva SC: 3 de sus 4 causas son S6 O6 (I-AC-005 rev.B: S 5 a 8 y O >= 4), asignadas por delegacion de Fak el 01/10/2026. La fila 58 del listado maestro de flujogramas quedo en Rev.D 01/10/2026 (OK de Fak del 01/10; scripts/_registrarRevFlujograma.py). Fuente del contenido: hojas HO-971 ENGRAMPADO de P. Gamboa (25 y 28/09/2026) y BOM del arb del 28/09/2026 (27 grampas delantero, 21 trasero).",
+      "nota": "Alineado el 09/09/2026 contra Flujograma 153 Rev.B y verificado de nuevo el 11/09/2026 contra la Rev.C. La mesa de corte se estandarizo a 20-22 (corte en decena 20: 20 preparacion, 21 corte, 22 control mylar, 23 WIP) unificando con el criterio de la casa aplicado en el Insert. El tapizado en el AMFE numera 80-82 cubriendo los tres pasos del flujograma (80 configuracion, 81 automatico, 82 refilado). Hay DOS reprocesos y los dos van en la secuencia: 100 REPROCESO: FALTA DE ADHESIVO (vuelve a la 71) y 101 REPROCESO: REACTIVACION DE ADHESIVO POR CALOR (vuelve a la 90); el 101 lo respalda la HO-971 pag. 25 y el AMFE 161 lo tiene desde el 09/09/2026 - hasta el 11/09 esta secuencia no lo declaraba y _verificarNumeracion.mjs lo marcaba como operacion del AMFE sin flujograma. La Rev.C del 11/09/2026 NO cambia la numeracion: solo alinea las marcas de caracteristicas especiales con el AMFE 161 (D/TLD y SC en la recepcion 10; SC en 20, 21, 30, 40, 41, 50, 70, 71, 80-82 y 100). Quedan resueltas las colisiones de numeracion. OPERACION 83 ENGRAMPADO (01/10/2026): Fak definio que en el APB de puerta la prensa tapiza y despues se engrampa a mano; el engrampado entra como operacion nueva 83 despues de 80-82. El AMFE 161 la tiene desde el 01/10/2026 (Supabase live) y el flujograma 153 Rev.D se emitio el 01/10/2026 (PNG en Gestion Ingenieria y PDF en el casillero 20 del legajo; la Rev.C quedo en OBSOLETO). La 83 lleva SC: 3 de sus 4 causas son S6 O6 (I-AC-005 rev.B: S 5 a 8 y O >= 4), asignadas por delegacion de Fak el 01/10/2026. La fila 58 del listado maestro de flujogramas quedo en Rev.D 01/10/2026 (OK de Fak del 01/10; scripts/_registrarRevFlujograma.py). Fuente del contenido: hojas HO-971 ENGRAMPADO de P. Gamboa (25 y 28/09/2026) y BOM del arb del 28/09/2026 (27 grampas delantero, 21 trasero). REV.E (05/10/2026), pedido de Carlos Baptista del 02/10/2026: semielaborado plastico + espuma PU que pasa por Deposito. Se agregan 60 TROQUELADO DE CINTA (Conversion de Cinta) y 71 ARMADO DE CINTA Y ESPUMA SOBRE EL PLASTICO (durante el curado), y se renumera desde el 60 (decision de Fak): PU 60 a 70, adhesivado 70-71 a 80-81, reproceso de adhesivo 100 a 82, tapizado 80-82 a 90-92, engrampado 83 a 93, control final 90 a 100. Flujograma 153 Rev.E emitido el 05/10/2026 y fila 58 del listado en Rev E. El AMFE 161 quedo alineado el 05/10/2026 (scripts/_flujoSemiPuApb161.mjs: 60 y 71 nuevas, copiadas del IP Pad, O=4, sin sigla). La HO-971 todavia tiene la numeracion de la Rev.D.",
       "fuente": "Flujograma 153 Rev.B (09/09/2026) y Rev.C (11/09/2026) + AMFE 161 Supabase live 2026-09-11 + HO-971 pag. 25",
       "secuenciaConfirmadaPor": [
         "flujograma 153 Rev.C (11/09/2026, datos en tools/flowchart/data/153-ARMREST-DOOR-PANEL.json; la numeracion es la misma de la Rev.B del 09/09/2026)",

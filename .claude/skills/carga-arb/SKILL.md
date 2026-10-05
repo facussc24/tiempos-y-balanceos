@@ -129,7 +129,9 @@ Las cargas las hace la sesion desde el 05/08/2026 (skill `arb-operar`, memoria
 `_arbAlta.py` / `_arbAltaLote.py`, y **cambiar el CODIGO de una linea que ya existe con
 `_arbSustituir.py`** (estrenado el 31/08 con el remache de ductos: 1/1, diff del archivo
 entero 1 alta / 1 baja / 0 cambios de mas). Fak, 31/08: *"incluso ahora las altas y bajas
-las hacen las sesiones, no yo"*. Lo unico sin probar sigue siendo **borrar** una linea.
+las hacen las sesiones, no yo"*. **Borrar una linea = poner su consumo en 0: el arb la borra**
+(Fak, 05/10/2026; se verifica en el export que la linea ya no esta). Y un **semielaborado con BOM
+propia va dado de alta dos veces: insumo Y articulo** con `Es Subproducto = S` (skill `arb-operar`).
 
 Lo que SI necesita a Fak: la pantalla `Inicio de Sesion` del arb, que pide usuario y
 contraseña. La sesion no tipea contraseñas. Por eso **el arb no se cierra sin consultarle**

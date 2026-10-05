@@ -7,9 +7,9 @@
   "header": {
     "title": "FLUJOGRAMA DE PROCESO DOOR PANEL",
     "documentCode": "I-IN-002/III",
-    "revision": "D",
+    "revision": "E",
     "date": "12/11/2025",
-    "revisionDate": "01/10/2026",
+    "revisionDate": "05/10/2026",
     "preparedBy": "FACUNDO SANTORO",
     "reviewedBy": "CARLOS BAPTISTA",
     "project": "PATAGONIA",
@@ -86,6 +86,14 @@
       "date": "01/10/2026",
       "item": "83",
       "details": "SE AGREGA LA OPERACION 83 ENGRAMPADO, CON SC, DESPUES DEL TAPIZADO (80-82).",
+      "pswDate": "",
+      "modifiedBy": "FS"
+    },
+    {
+      "rev": "E",
+      "date": "05/10/2026",
+      "item": "60 / 70-71 / 80-82 / 90-93 / 100",
+      "details": "SE AGREGA LA RAMA DE CONVERSIÓN DE CINTA (60 TROQUELADO DE CINTA) Y EL ARMADO DE CINTA Y ESPUMA SOBRE EL PLÁSTICO DURANTE EL CURADO (71). EL SEMIELABORADO PLÁSTICO + ESPUMA PU PASA POR DEPÓSITO ANTES DEL TAPIZADO. SE RENUMERAN: PU 60 A 70, ADHESIVADO 70-71 A 80-81, REPROCESO DE ADHESIVO 100 A 82, TAPIZADO 80-83 A 90-93, CONTROL FINAL 90 A 100.",
       "pswDate": "",
       "modifiedBy": "FS"
     }
@@ -211,50 +219,78 @@
         [
           {
             "type": "transfer",
-            "description": "TRASLADO A SECTOR DE INYECCIÓN PLÁSTICAS"
+            "description": "TRASLADO A SECTOR DE INYECCIÓN PLÁSTICA Y SECTOR DE CONVERSIÓN DE CINTA",
+            "branches": [
+              [
+                {
+                  "stepId": "50",
+                  "type": "operation",
+                  "description": "INYECCIÓN DE PIEZAS PLÁSTICAS",
+                  "critical": true,
+                  "criticalType": "SC",
+                  "criticalColor": "black"
+                },
+                {
+                  "stepId": "51",
+                  "type": "op-ins",
+                  "description": "CONTROL DE PIEZA INYECTADA"
+                },
+                {
+                  "type": "condition",
+                  "labelCondition": "¿PIEZA CONFORME?",
+                  "labelDown": "SI",
+                  "branchSide": {
+                    "labelNode": "NO",
+                    "direction": "left",
+                    "type": "terminal",
+                    "text": "PLAN DE REACCIÓN / SCRAP"
+                  }
+                },
+                {
+                  "type": "transfer",
+                  "description": "TRASLADO: PIEZA INYECTADA A SECTOR DE INYECCIÓN PU"
+                }
+              ],
+              [
+                {
+                  "stepId": "60",
+                  "type": "operation",
+                  "description": "TROQUELADO DE CINTA"
+                },
+                {
+                  "type": "transfer",
+                  "description": "TRASLADO: CINTA TROQUELADA A SECTOR DE INYECCIÓN PU"
+                }
+              ]
+            ]
           },
           {
-            "stepId": "50",
-            "type": "operation",
-            "description": "INYECCIÓN DE PIEZAS PLÁSTICAS",
-            "critical": true,
-            "criticalType": "SC",
-            "criticalColor": "black"
-          },
-          {
-            "stepId": "51",
-            "type": "op-ins",
-            "description": "CONTROL DE PIEZA INYECTADA"
-          },
-          {
-            "type": "condition",
-            "labelCondition": "¿PIEZA CONFORME?",
-            "labelDown": "SI",
-            "branchSide": {
-              "labelNode": "NO",
-              "direction": "left",
-              "type": "terminal",
-              "text": "PLAN DE REACCIÓN / SCRAP"
-            }
-          },
-          {
-            "type": "transfer",
-            "description": "TRASLADO A SECTOR DE INYECCIÓN PU"
-          },
-          {
-            "stepId": "60",
+            "stepId": "70",
             "type": "operation",
             "description": "INYECCIÓN PU (POLIURETANO)"
           },
           {
+            "stepId": "71",
+            "type": "operation",
+            "description": "ARMADO DE CINTA Y ESPUMA SOBRE EL PLÁSTICO (DURANTE EL CURADO)"
+          },
+          {
             "type": "transfer",
-            "description": "TRASLADO A SECTOR DE TAPIZADO"
+            "description": "TRASLADO A SECTOR DE DEPÓSITO: SEMIELABORADO PLÁSTICO + ESPUMA PU"
+          },
+          {
+            "type": "storage",
+            "description": "ALMACENADO EN DEPÓSITO: SEMIELABORADO PLÁSTICO + ESPUMA PU IDENTIFICADO (INGRESO Y EGRESO)"
+          },
+          {
+            "type": "transfer",
+            "description": "TRASLADO DESDE DEPÓSITO A SECTOR DE TAPIZADO"
           }
         ]
       ]
     },
     {
-      "stepId": "70",
+      "stepId": "80",
       "type": "operation",
       "description": "ADHESIVADO",
       "incomingConnector": "A",
@@ -263,7 +299,7 @@
       "criticalColor": "black"
     },
     {
-      "stepId": "71",
+      "stepId": "81",
       "type": "op-ins",
       "description": "INSPECCIÓN DE PIEZA ADHESIVADA",
       "critical": true,
@@ -288,7 +324,7 @@
             }
           },
           {
-            "stepId": "100",
+            "stepId": "82",
             "type": "operation",
             "description": "REPROCESO: FALTA DE ADHESIVO (TELA NO ADHERIDA AL SUSTRATO)",
             "critical": true,
@@ -299,15 +335,15 @@
             "type": "transfer",
             "description": "RE-ENTRADA AL FLUJO PRINCIPAL",
             "rework": {
-              "targetId": "71",
-              "label": "REVERIFICAR (A OP. 71)"
+              "targetId": "81",
+              "label": "REVERIFICAR (A OP. 81)"
             }
           }
         ]
       }
     },
     {
-      "stepId": "80",
+      "stepId": "90",
       "type": "operation",
       "description": "TAPIZADO CONFIGURACIÓN",
       "critical": true,
@@ -315,7 +351,7 @@
       "criticalColor": "black"
     },
     {
-      "stepId": "81",
+      "stepId": "91",
       "type": "operation",
       "description": "TAPIZADO AUTOMÁTICO",
       "critical": true,
@@ -323,7 +359,7 @@
       "criticalColor": "black"
     },
     {
-      "stepId": "82",
+      "stepId": "92",
       "type": "operation",
       "description": "TAPIZADO REFILADO MANUAL",
       "critical": true,
@@ -331,7 +367,7 @@
       "criticalColor": "black"
     },
     {
-      "stepId": "83",
+      "stepId": "93",
       "type": "operation",
       "description": "ENGRAMPADO",
       "critical": true,
@@ -339,7 +375,7 @@
       "criticalColor": "black"
     },
     {
-      "stepId": "90",
+      "stepId": "100",
       "type": "op-ins",
       "description": "CONTROL FINAL DE CALIDAD"
     },
@@ -369,8 +405,8 @@
             "type": "transfer",
             "description": "RE-ENTRADA AL FLUJO PRINCIPAL",
             "rework": {
-              "targetId": "90",
-              "label": "REVERIFICAR (A OP. 90)"
+              "targetId": "100",
+              "label": "REVERIFICAR (A OP. 100)"
             }
           }
         ]
@@ -389,5 +425,6 @@
       "type": "storage",
       "description": "ALMACENADO FINAL DE PRODUCTO TERMINADO"
     }
-  ]
+  ],
+  "_cambio_revE": "Pedido de Carlos Baptista, mail \"Modificación flujo de proceso – Armrest DP (APB)\" del 02/10/2026 14:19: la pieza plastica se inyecta y pasa a Inyeccion de PU; en paralelo la cinta se troquela en Conversion de Cinta y va a PU; durante el curado el operador arma la cinta y la espuma sobre el plastico; el semielaborado por mano entra a Deposito y de ahi abastece a Tapizado. Decisiones de Fak del 05/10/2026: la cinta es el Tesa 52110; el paso se llama Deposito (no WIP); se renumera desde el 60 para que la numeracion quede en orden. Semielaborados en el arb INY-APB0006..0009-V1 (cargados y verificados el 05/10/2026). La 60 y la 71 no llevan sigla: el AMFE 161 todavia no tiene sus causas."
 }

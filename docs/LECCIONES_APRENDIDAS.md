@@ -52,7 +52,7 @@ incidente vive en los snapshots.
 - **El chequeo frena, no decide; y la objecion de Fak es un dato, no una opinion a refutar: ante un "no anda", preguntar como falla.** Graduado a la memoria `feedback_el_chequeo_frena_no_decide` (y `cad-3d.md` GATE 0).
 - **Un plan de accion heredado se arrastra fila por fila: fusionar dos filas pierde alcance, media fila que se cae no la ve nadie, y un issue no se cierra con evidencia de una parte del alcance.** Graduado a la memoria `plan_heredado_se_arrastra_fila_por_fila`.
 
-- **05/10 — En un mail a otra área, el error de otro va como afirmación solo si está confirmado; lo que no se pudo descartar va como pregunta** (puse «en el arb es V1» del INY-TRL0005-V2 con un maestro de códigos de 38 días; Fak: *"¿está 100% confirmado que se equivocó?"*). Y antes de señalar un archivo ajeno, mirar si es el VIGENTE (`db_produccion` era una foto; memoria `reference_datos_produccion_pcp_federico`).
+- **05/10 — Para un código, el arb es la fuente: si otra área usa uno que no está en el arb ni en ningún papel, lo tiene mal y se dice así** (INY-TRL0005-V2 en el registro de PCP; Fak: *"si no aparece en ningún lado... el arb es la fuente"*). **En un mail, una sola pregunta y al final.** Y antes de señalar un archivo ajeno, mirar si es el VIGENTE (memoria `reference_datos_produccion_pcp_federico`).
 
 - **05/10 — Un largo que sale de un plano se calcula SUMANDO sus cotas, no midiendo el dibujo a escala** (cinta del apoyabrazos trasero: medí píxeles y dije «aproximado» con 69,54 + 13,96 + 13,6 escritas en la captura; Fak: *"eso tenés que usar"*).
 

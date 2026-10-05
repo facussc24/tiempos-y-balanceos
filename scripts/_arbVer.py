@@ -58,7 +58,15 @@ def pid(h):
 def pids_arb():
     out = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq produc.exe', '/FO', 'CSV'],
                          capture_output=True, text=True).stdout
-    return {int(l.split('","')[1]) for l in out.splitlines()[1:] if l.startswith('"produc.exe"')}
+    pids = {int(l.split('","')[1]) for l in out.splitlines()[1:] if l.startswith('"produc.exe"')}
+    if not pids:
+        # tasklist va por WMI, y con WMI saturado sale "Infraccion de cuotas" / "Consulta no
+        # valida" sin listar nada (05/10/2026): el arb parecia cerrado estando abierto.
+        # Respaldo: el proceso de la ventana principal del arb.
+        hw = u.FindWindowW('ProdWindow', None)
+        if hw:
+            pids = {pid(hw)}
+    return pids
 
 
 def ventanas():
