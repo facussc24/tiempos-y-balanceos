@@ -23,7 +23,8 @@
  *     cuarentena -> NO sube. Es una RED, no una garantia: sueldos, salud, sanciones, gremiales, claves y demas temas
  *                   personales, buscados por palabras en todo lo que subiria (asunto, texto, adjuntos, carpeta, nombres y
  *                   casillas). Un mail personal que no use ninguna de esas palabras pasa: se le dice a la persona.
- *     en espera  -> el mail de menos de un dia: todavia no sube (la persona tiene ese dia para borrarlo)
+ *     en espera  -> el mail de menos de un dia: todavia no sube (la persona tiene ese dia para borrarlo). Y el primer
+ *                   dia despues de prenderse la PC solo se deja el aviso: la primera copia es al dia siguiente.
  *     entrada    -> <biblioteca de Ingenieria>\Claude Barack\mails\_entrada\<persona>\<fecha-hora>.jsonl
  *
  * Reglas que cumple:
@@ -46,7 +47,7 @@
  * Uso (desde su instalacion, `<casa>\publicado\programas\`):
  *   node mails_area.mjs --home C:\ClaudeBarack --raiz-nube "<...>\CLAUDE POR AREA" --estado <carpeta de estado>
  *        [--simular] [--max-minutos 10] [--dias-atras 90]
- * Escribe UN renglon JSON con el resultado. Codigos: 0 bien (incluye "apagado", "pausado" y "parcial por tiempo") -
+ * Escribe UN renglon JSON con el resultado. Codigos: 0 bien (incluye "apagado", "primer_dia", "pausado" y "parcial por tiempo") -
  * 1 error - 3 la fila no trae la casilla o el buzon abierto es otro - 4 Outlook clasico no esta abierto o no contesta
  * (se reintenta) - 5 falta completar lo privado - 6 no se ve la carpeta de la nube.
  */
@@ -69,9 +70,9 @@ export const NOMBRE_AVISO = 'AVISO - los mails de trabajo de esta PC se comparte
 export const ARCHIVO_ESTADO = 'mails-area-estado.json';
 export const ARCHIVO_SUBIDOS = 'mails-area-subidos.txt';
 
-/** Sin tildes, en minusculas y con un solo espacio. */
+/** Sin tildes, en minusculas, con un solo espacio y sin los caracteres que no se ven (guion blando, ancho cero). */
 export function normalizar(s) {
-    return String(s ?? '').normalize('NFD').replace(/\p{M}+/gu, '').replace(/\s+/g, ' ').trim().toLowerCase();
+    return String(s ?? '').replace(/[­​-‏⁠﻿]/g, '').normalize('NFD').replace(/\p{M}+/gu, '').replace(/\s+/g, ' ').trim().toLowerCase();
 }
 
 /**
@@ -80,6 +81,13 @@ export function normalizar(s) {
  */
 export function paraTemas(s) {
     return normalizar(String(s ?? '').replace(/(\p{Ll})(\p{Lu})/gu, '$1 $2').normalize('NFD').replace(/\p{M}+/gu, '').replace(/[^\p{L}\s]+/gu, ' '));
+}
+/**
+ * Para buscar NOMBRES: «PedroErgo» -> «Pedro Ergo», «CVLerma» -> «CV Lerma» (donde cambia de minuscula a mayuscula, o
+ * despues de una sigla, hay otra palabra). La red de temas no usa el corte de la sigla: partiria «DNIs» o «RRHHs».
+ */
+export function separarPegadas(s) {
+    return String(s ?? '').replace(/(\p{Ll})(\p{Lu})/gu, '$1 $2').replace(/(\p{Lu})(\p{Lu}\p{Ll})/gu, '$1 $2');
 }
 
 const MES = '(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)';
@@ -137,7 +145,7 @@ export function nombraTema(crudo, palabrasExtra = []) {
 export const esDeAnthropic = (casilla) => /(?:^|[.@])(?:anthropic\.com|claude\.ai|claude\.com)$/.test(String(casilla));
 
 export const RE_CASILLA = /^[a-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+$/;
-const RE_CASILLA_EN_TEXTO = /[a-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+/gi;
+const RE_CASILLA_EN_TEXTO = /[a-z0-9._%+-]{1,64}@[a-z0-9-]+(?:\.[a-z0-9-]+)+/gi;      // hasta 64 antes de la arroba: sin tope, un texto largo sin espacios tarda
 const RE_DOMINIO = /^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/;
 const paraRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -213,6 +221,8 @@ export function personaQueSube(personas, { usuario, pc }) {
 
 /** Quien usa esta PC, para decidir si sube: lo que dice WINDOWS (no las variables de entorno ni `perfil.json`). */
 export function identidadReal() {
+    // Windows deja cambiar el nombre que contesta con esta variable: se saca antes de preguntar
+    delete process.env._CLUSTER_NETWORK_NAME_;
     let usuario = '';
     try { usuario = os.userInfo().username; } catch { usuario = ''; }
     return { usuario, pc: os.hostname() };
@@ -313,16 +323,31 @@ export function nombreEnPalabras(palabras, nombre) {
     return false;
 }
 
-/** El texto para buscarle casillas: en minusculas y con la arroba «armada» («paergo (at) barack…», «paergo @\nbarack…»). */
-const paraCasillas = (s) => String(s ?? '').toLowerCase().replace(/\s*(?:\(\s*at\s*\)|\[\s*at\s*\]|\{\s*at\s*\}|(?<=\s)arroba(?=\s))\s*/g, '@').replace(/\s*@\s*/g, '@');
+/**
+ * El texto para buscarle casillas: en minusculas y con la arroba y el punto «armados» («paergo (at) barack…»,
+ * «paergo @\nbarack…», «paergo%40barack…», «barack (dot) com»).
+ */
+const paraCasillas = (s) => String(s ?? '').toLowerCase()
+    .replace(/\s+/g, ' ')      // primero un solo espacio: con miles de espacios seguidos lo de abajo tardaria segundos
+    .replace(/\s*(?:\(\s*(?:at|a|arroba)\s*\)|\[\s*(?:at|a|arroba)\s*\]|\{\s*(?:at|a|arroba)\s*\}|%40|&#0*64;|&#x0*40;|=40|(?<=\s)(?:arroba|at)(?=\s))\s*/g, '@')
+    .replace(/\s*(?:\(\s*(?:dot|punto)\s*\)|\[\s*(?:dot|punto)\s*\])\s*/g, '.')
+    .replace(/[­​-‏⁠﻿]/g, '')
+    .replace(/\s*@\s*/g, '@');
+
+/** Todo lo de texto que trae un mail (lo que sube y lo que no): sus campos y sus casillas. */
+function textosDe(m) {
+    const listas = ['adjuntos', 'para_mails', 'cc_mails', 'cco_mails'].flatMap((k) => (Array.isArray(m[k]) ? m[k] : []));
+    return [m.id, m.asunto, m.cuerpo, m.carpeta, m.de, m.para, m.cc, m.de_mail, m.representa_mail, ...listas].filter((x) => typeof x === 'string');
+}
 
 /**
  * ¿El mail trae a alguien de lo privado adentro? Su casilla en cualquier lugar (un mail citado o reenviado), lo de antes
- * de la arroba cuando es inconfundible («paergo»), o su nombre y apellido en el asunto, el texto, un adjunto, la carpeta o
- * los nombres que muestra Outlook (una cita «Fulano escribio:», su firma, un reenvio).
+ * de la arroba cuando es inconfundible («paergo»), o su nombre y apellido —tambien pegados («PedroErgo.pdf») o adentro de
+ * una casilla («pedro.ergo@gmail.com»)— en cualquier campo: el identificador, el asunto, el texto, un adjunto, la carpeta,
+ * los nombres que muestra Outlook y las casillas (una cita «Fulano escribio:», su firma, un reenvio, su correo personal).
  */
 export function nombraPrivado(m, priv) {
-    const partes = [m.id, m.asunto, m.cuerpo, m.carpeta, m.de, m.para, m.cc, ...(Array.isArray(m.adjuntos) ? m.adjuntos : [])].map((x) => (typeof x === 'string' ? x : ''));
+    const partes = textosDe(m);
     const crudo = paraCasillas(partes.join('\n'));
     for (const c of crudo.match(RE_CASILLA_EN_TEXTO) || []) if (esDeAnthropic(c.replace(/\.$/, ''))) return true;
     for (const dir of priv.direcciones) {
@@ -333,9 +358,16 @@ export function nombraPrivado(m, priv) {
     }
     for (const d of priv.dominios) if (new RegExp(`@(?:[a-z0-9-]+\\.)*${paraRegex(d)}(?![a-z0-9-])`).test(crudo)) return true;
     if (priv.nombres.length || priv.apellidos.length) {
-        const palabras = palabrasDe(normalizar(partes.slice(1).join('\n')));
-        if (priv.nombres.some((nom) => nombreEnPalabras(palabras, nom))) return true;
-        if (priv.apellidos.some((a) => palabras.includes(a))) return true;
+        const palabras = palabrasDe(normalizar(separarPegadas(partes.join('\n'))));
+        const seguido = ` ${palabras.join(' ')} `;
+        for (const nom of priv.nombres) {
+            if (nombreEnPalabras(palabras, nom)) return true;
+            // pegado en una sola palabra: «pedroergo», «ergopedro», y la inicial con el apellido («pergo») como palabra entera
+            if (seguido.includes(nom.join('')) || seguido.includes([...nom].reverse().join(''))) return true;
+            if (seguido.includes(` ${nom[0][0]}${nom[nom.length - 1]} `)) return true;
+        }
+        // un apellido de la lista: como palabra, y los de 5 letras o mas tambien adentro de otra («cvlerma», «notavillagra»)
+        for (const a of priv.apellidos) if (a.length >= 5 ? seguido.includes(a) : palabras.includes(a)) return true;
     }
     return false;
 }
@@ -347,6 +379,11 @@ export function paraPublicar(m) {
     const out = {};
     for (const k of CAMPOS_DE_TEXTO) out[k] = typeof m[k] === 'string' ? m[k] : '';
     for (const k of CAMPOS_DE_LISTA) out[k] = Array.isArray(m[k]) ? m[k].map(String) : [];
+    // sale lo mismo que se miro: las casillas limpias y de la fecha solo la fecha
+    out.de_mail = casillaLimpia(out.de_mail);
+    out.para_mails = out.para_mails.map(casillaLimpia);
+    out.cc_mails = out.cc_mails.map(casillaLimpia);
+    out.fecha = (/^\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?/.exec(out.fecha) || [''])[0];
     return out;
 }
 
@@ -368,7 +405,9 @@ export function clasificar(m, priv) {
     for (const d of dirs) if (CASILLAS_DE_SECTOR.has(d.split('@')[0])) return 'cuarentena';
     if (NOMBRES_DE_SECTOR.test(normalizar(`${m.de ?? ''} ; ${m.para ?? ''} ; ${m.cc ?? ''}`))) return 'cuarentena';
     if (String(m.carpeta ?? '').split(/[\\/]/).some((parte) => CARPETAS_PERSONALES.has(normalizar(parte)))) return 'cuarentena';
-    const todo = [m.asunto, ...(m.adjuntos || []), m.cuerpo, m.carpeta, m.de, m.para, m.cc, ...dirs].map((x) => x ?? '').join('\n');
+    // quien lo mando lo marco en Outlook como personal, privado o confidencial (0 = normal)
+    if (m.reserva !== undefined && m.reserva !== 0) return 'cuarentena';
+    const todo = [m.id, m.asunto, ...(m.adjuntos || []), m.cuerpo, m.carpeta, m.de, m.para, m.cc, ...dirs].map((x) => x ?? '').join('\n');
     if (nombraTema(todo, priv.palabras)) return 'cuarentena';
     return 'entrada';
 }
@@ -397,6 +436,15 @@ function idsSubidos(ruta) {
     const ids = new Set();
     try { for (const ln of fs.readFileSync(ruta, 'utf8').split(/\r?\n/)) if (ln.trim()) ids.add(ln.trim()); } catch { /* todavia no hay */ }
     return ids;
+}
+
+/** Tira un error si la lista de lo ya subido no se va a poder escribir (no es un archivo, o no deja abrirlo para agregar). */
+function comprobarQueSePuedeAnotar(ruta) {
+    fs.mkdirSync(path.dirname(ruta), { recursive: true });
+    let st = null;
+    try { st = fs.statSync(ruta); } catch { st = null; }
+    if (st && !st.isFile()) throw new Error('la lista de lo ya subido no es un archivo');
+    fs.closeSync(fs.openSync(ruta, 'a'));
 }
 
 function anotarIds(ruta, lote) {
@@ -430,14 +478,16 @@ const TEXTO_AVISO = (desde) => [
     'copian los últimos 90 días; después, solo lo nuevo.',
     '',
     'CUÁNDO',
-    'Un mail se copia recién un día después de que llegó o de que lo mandaste: lo que borres antes no se copia.',
+    'La primera copia se hace un día después de la fecha de este aviso: hasta entonces no se copia nada.',
+    'Después, un mail se copia recién un día después de que llegó o de que lo mandaste: lo que borres antes no se copia.',
     'Se copian solos cuando el Outlook clásico está abierto con tu casilla (al iniciar sesión y cada 4 horas). Con el',
     'Outlook cerrado, o con el Outlook nuevo, no se copia nada.',
     '',
     'QUÉ NO SE COPIA',
     'Los mails con Dirección o Recursos Humanos, aunque vengan citados, reenviados o firmados adentro de otro. Los que',
-    'están en una carpeta tuya que se llame «Personal» o «Privado». Los borradores, los eliminados, el correo no deseado y',
-    'los chats guardados. Y los que nombran sueldos, salud, sanciones, temas gremiales, claves u otros temas personales.',
+    'están en una carpeta tuya que se llame «Personal» o «Privado», y los que Outlook tiene marcados como personales,',
+    'privados o confidenciales. Los borradores, los eliminados, el correo no deseado y los chats guardados.',
+    'Y los que nombran sueldos, salud, sanciones, temas gremiales, claves u otros temas personales.',
     'Eso último lo busca un programa por palabras: un mail personal que no use ninguna de esas palabras se copia igual.',
     'Lo que no quieras compartir, borralo en el día, pasalo a una carpeta «Personal», o avisá.',
     '',
@@ -473,9 +523,11 @@ export function dejarAvisoALaPersona(home, desde) {
 /** Otro aviso, con la fecha en el nombre (no pisa ninguno): el dia que se apaga, o el dia que se vuelve a prender. */
 function dejarAvisoDeCambio(home, ahora, prendido) {
     const carpeta = path.join(home, 'Trabajo');
+    // con la hora en el nombre: si se apaga y se prende el mismo dia, se ve cual es el ultimo
+    const cuando = `${diaMesAnio(ahora, '-')} a las ${dos(ahora.getHours())}.${dos(ahora.getMinutes())}`;
     const nombre = prendido
-        ? `AVISO - desde el ${diaMesAnio(ahora, '-')} los mails de esta PC se comparten de nuevo.txt`
-        : `AVISO - desde el ${diaMesAnio(ahora, '-')} los mails de esta PC ya no se comparten.txt`;
+        ? `AVISO - desde el ${cuando} los mails de esta PC se comparten de nuevo.txt`
+        : `AVISO - desde el ${cuando} los mails de esta PC ya no se comparten.txt`;
     const ruta = path.join(carpeta, nombre);
     if (fs.existsSync(ruta)) return false;
     const texto = prendido
@@ -519,6 +571,7 @@ async function* mailsDeOutlook({ lector, corte, idsPath, maxSegundos, env, conoc
     let perro = null;
     const pasear = () => { if (perro) clearTimeout(perro); perro = setTimeout(() => { ctx.colgado = true; ctx.completa = false; cortar(); }, segundosSinRespuesta * 1000); };
     let vioFin = false;
+    pasear();      // desde que arranca: si Outlook no contesta ni para decir de quien es el buzon, tambien se corta
     try {
         const rl = readline.createInterface({ input: hijo.stdout, crlfDelay: Infinity });
         for await (const ln of rl) {
@@ -526,8 +579,8 @@ async function* mailsDeOutlook({ lector, corte, idsPath, maxSegundos, env, conoc
             let j;
             try { j = JSON.parse(ln); } catch { continue; }
             if (!j || typeof j !== 'object') continue;
-            if (ctx.vioBuzon) pasear();
-            if (j.t === 'buzon') { ctx.buzon = casillaLimpia(j.casilla); ctx.vioBuzon = true; if (ctx.buzon !== ctx.casilla) break; pasear(); continue; }
+            pasear();
+            if (j.t === 'buzon') { ctx.buzon = casillaLimpia(j.casilla); ctx.vioBuzon = true; if (ctx.buzon !== ctx.casilla) break; continue; }
             if (j.t === 'latido') continue;
             if (j.t === 'estado') { ctx.outlook = { estado: String(j.estado || 'error'), detalle: String(j.detalle || '') }; continue; }
             if (j.t === 'fin') { vioFin = true; if (j.completa !== true) ctx.completa = false; ctx.revisados += Number(j.revisados) || 0; ctx.fallados += Number(j.fallados) || 0; continue; }
@@ -548,9 +601,9 @@ async function* mailsDeOutlook({ lector, corte, idsPath, maxSegundos, env, conoc
     }
 }
 
-const CODIGO = { apagado: 0, ok: 0, parcial: 0, privado: 0, simulado: 0, pausado: 0, sin_casilla: 3, otro_buzon: 3, outlook_cerrado: 4, outlook_nuevo: 4, sin_outlook: 4, outlook_no_responde: 4, sin_filtro: 5, filtro_incompleto: 5, sin_nube: 6, error: 1 };
+const CODIGO = { apagado: 0, ok: 0, parcial: 0, privado: 0, simulado: 0, pausado: 0, primer_dia: 0, sin_casilla: 3, otro_buzon: 3, outlook_cerrado: 4, outlook_nuevo: 4, sin_outlook: 4, outlook_no_responde: 4, sin_filtro: 5, filtro_incompleto: 5, sin_nube: 6, error: 1 };
 // Con estos resultados la PC sigue LISTA para subir (la fila dice "sube", lo privado esta completo y la persona tiene su aviso).
-const SIGUE_LISTA = new Set(['ok', 'parcial', 'pausado', 'otro_buzon', 'outlook_cerrado', 'outlook_nuevo', 'sin_outlook', 'outlook_no_responde', 'error', 'sin_nube']);
+const SIGUE_LISTA = new Set(['ok', 'parcial', 'pausado', 'primer_dia', 'otro_buzon', 'outlook_cerrado', 'outlook_nuevo', 'sin_outlook', 'outlook_no_responde', 'error', 'sin_nube']);
 
 /**
  * Una corrida. `opciones`: { home, raizNube, estado, simular, maxMinutos, diasAtras } y, SOLO PARA LAS PRUEBAS (no llegan
@@ -578,8 +631,9 @@ export async function correr(opciones) {
             // sin la nube a la vista en esta corrida: sigue como venia (si ya estaba lista, lo sigue estando)
             const habilitada = SIGUE_LISTA.has(resultado) && (lista || (resultado === 'sin_nube' && previo.habilitada === true));
             const nuevo = { ...previo, ...masEstado, habilitada, subidos_total: subidos, resultado, ultima: isoLocal(ahora) };
-            // se apago una PC que estaba lista: la persona se entera por escrito, igual que cuando se prendio
-            if (previo.habilitada === true && resultado === 'apagado') {
+            // se apago una PC a la que se le habia avisado que estaba prendida: la persona se entera por escrito, igual que
+            // cuando se prendio (aunque en el medio haya pasado por otro estado: lo que cuenta es que tiene aquel aviso)
+            if (resultado === 'apagado' && previo.aviso_desde && !previo.apagada_desde) {
                 try { dejarAvisoDeCambio(home, ahora, false); nuevo.apagada_desde = isoLocal(ahora); } catch { /* el aviso no frena el apagado */ }
             }
             for (const k of Object.keys(nuevo)) if (nuevo[k] === undefined || nuevo[k] === null) delete nuevo[k];
@@ -610,15 +664,24 @@ export async function correr(opciones) {
     // La PC esta lista: la persona se entera ANTES de que se lea nada.
     const desde = parsearFecha(previo.aviso_desde) || ahora;
     let avisoNuevo = false;
-    const marcas = { aviso_desde: isoLocal(desde).slice(0, 10) };
+    const marcas = { aviso_desde: isoLocal(desde) };
+    // se vuelve a prender despues de un apagado: el dia de espera corre de nuevo desde hoy
+    let prendidaDesde = desde;
     if (!simular) {
         try {
             avisoNuevo = dejarAvisoALaPersona(home, desde);
-            if (previo.apagada_desde) { dejarAvisoDeCambio(home, ahora, true); marcas.apagada_desde = null; }
+            if (previo.apagada_desde) { dejarAvisoDeCambio(home, ahora, true); marcas.apagada_desde = null; marcas.prendida_de_nuevo = isoLocal(ahora); prendidaDesde = ahora; }
+            else if (parsearFecha(previo.prendida_de_nuevo)) prendidaDesde = parsearFecha(previo.prendida_de_nuevo);
         } catch { return salir('error', { detalle: 'no pude dejarle el aviso a la persona: no leo nada' }); }
     }
     lista = true;
     const privados = `${priv.direcciones.size} casillas, ${priv.dominios.size} dominios, ${priv.nombres.length} nombres, ${priv.apellidos.length} apellidos`;
+
+    // El primer dia solo se avisa: la primera copia (que trae los ultimos 90 dias) es recien un dia despues, para que la
+    // persona pueda leer el aviso y sacar o pasar a su carpeta «Personal» lo que no quiera compartir.
+    if (!simular && ahora.getTime() - prendidaDesde.getTime() < GRACIA_HORAS * 3600000) {
+        return salir('primer_dia', { autor, privados, aviso_nuevo: avisoNuevo, detalle: 'la persona tiene su aviso desde hace menos de un dia: la primera copia es despues', estado: marcas });
+    }
 
     // Si Outlook no contesto dos veces seguidas (puede ser un cartel de seguridad en la pantalla), no se insiste por una semana.
     const pausa = parsearFecha(previo.pausado_hasta);
@@ -659,6 +722,8 @@ export async function correr(opciones) {
             if (c === 'entrada') suben.push(paraPublicar(m));
         }
         if (!simular) {
+            // antes de subir, que se pueda anotar: si no, cada corrida volveria a subir lo mismo
+            comprobarQueSePuedeAnotar(idsPath);
             if (suben.length) { escribirLote(carpetaMails, autor, suben, ahora); escritos += suben.length; }
             anotarIds(idsPath, lote);
         }
@@ -676,7 +741,7 @@ export async function correr(opciones) {
         }
         if (lote.length) volcar();
     } catch (e) {
-        return salir('error', { ...datos(), detalle: `no pude escribir en la nube: ${String(e && e.message ? e.message : e).slice(0, 200)}`, estado: marcas });
+        return salir('error', { ...datos(), detalle: `no pude escribir (en la nube o en la lista de lo ya subido): ${String(e && e.message ? e.message : e).slice(0, 200)}`, estado: marcas });
     }
 
     // Outlook dejo de contestar: se anota, y a la segunda seguida se pausa

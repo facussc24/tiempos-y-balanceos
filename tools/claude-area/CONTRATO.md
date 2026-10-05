@@ -442,8 +442,10 @@ que desde el 03/10/2026 llama `--instalar` al terminar una instalación de verda
 ### Los mails de trabajo de una PC habilitada (05/10/2026)
 
 Paso 5 de `sync_area.ps1` (corre antes de la salud): `mails_area.mjs` con el Node de la PC y `mails_outlook.ps1` para leer
-Outlook. Sin Claude, sin Python, y **apagado por defecto**. Pasó dos auditorías independientes el mismo día
-(`.sgc-cache/claude-por-area/examen/mails-auditoria/` y `mails-auditoria-2/`): lo que sigue es lo que quedó.
+Outlook. Sin Claude, sin Python, y **apagado por defecto**. Lo atacaron tres auditorías independientes el mismo día
+(`.sgc-cache/claude-por-area/examen/mails-auditoria/`, `-2/` y `-3/`: 9, 7 y 4 fallas, todas corregidas con su prueba).
+**Por la regla escrita antes de la tercera, la versión 17 se publicó con todas las filas en `no_sube`**: prender la primera
+PC lo decide el administrador. Lo que sigue es lo que quedó.
 
 **Qué es firme y qué es una red.** Firme: quién sube (solo la PC que dice la lista publicada), que solo agrega en su
 carpeta, que solo lee Outlook, y que **no sale ningún mail donde figure alguien de la lista de lo privado** (Dirección,
@@ -469,9 +471,11 @@ que sí dependen de ella: un día de espera antes de copiar cada mail, y una car
   - tiene una de esas casillas (o un dominio de la lista, con sus subdominios) en De, «en nombre de», Para, CC o **copia oculta**;
   - trae una de esas casillas en el asunto, el texto, un adjunto o la carpeta, también con la arroba disfrazada
     («(at)», espacios, partida en dos renglones) o sola la parte de antes de la arroba cuando es inconfundible (6 letras o más);
-  - trae el **nombre y apellido** de una persona de `nombres` en cualquiera de esos lugares o en los nombres que muestra
-    Outlook (juntos, al revés, con algo en el medio, o inicial y apellido): una cita «Fulano escribió:», un reenvío, su firma;
-  - trae un apellido de `apellidos` (los que solos ya dicen de quién se habla);
+  - trae el **nombre y apellido** de una persona de `nombres` en cualquiera de esos lugares, en el identificador del mail,
+    en los nombres que muestra Outlook o **adentro de una casilla** (`nombre.apellido@gmail.com`): juntos, al revés, con una
+    palabra en el medio, pegados (`NombreApellido.pdf`), o inicial y apellido. Una cita «Fulano escribió:», un reenvío, su
+    firma, su correo personal;
+  - trae un apellido de `apellidos` (los que solos ya dicen de quién se habla), también pegado a otra palabra;
   - viene de Anthropic (`anthropic.com`, `claude.ai`, `claude.com` y sus subdominios), o los nombra en el texto;
   - trae una casilla que no se puede leer (remitente, «en nombre de», un destinatario, **un grupo de correo**), no se le
     pudieron leer los adjuntos, o un campo tiene otra forma (el texto no es texto, la fecha no es fecha).
@@ -482,11 +486,14 @@ que sí dependen de ella: un día de espera antes de copiar cada mail, y una car
   palabras (con sus formas: «despedir», «sancionaron», «suspendido») y también adentro de una palabra pegada
   (`recibosueldo.pdf`). Mira **todo lo que subiría**: asunto, texto entero, nombres de adjuntos, carpeta, nombres de De /
   Para / CC y casillas. Además: una casilla de un sector de personal o de dirección de cualquier empresa (`rrhh@`,
-  `sueldos@`, `personal@`, `direccion@`), y una carpeta de Outlook que se llame «Personal» o «Privado». Más `palabras_extra`.
+  `sueldos@`, `personal@`, `direccion@`), una carpeta de Outlook que se llame «Personal» o «Privado», y el mail que Outlook
+  tiene marcado como personal, privado o confidencial (`reserva` distinto de 0). Más `palabras_extra`.
   Frena de más a propósito («suspendida la entrega», «accidente de trabajo: reporte»): medido sobre 671 mails reales de
   Ingeniería frena 15 por tema.
-- **Un día de espera**: el mail de menos de 24 horas no sube ni se anota; lo mira una corrida de más adelante. La persona
-  tiene ese día para borrarlo.
+- **Un día de espera, dos veces**: el día que la PC se prende (o se vuelve a prender) solo se deja el aviso
+  (`primer_dia`): la primera copia, que trae los últimos 90 días, es recién 24 horas después. Y después, el mail de menos
+  de 24 horas no sube ni se anota; lo mira una corrida de más adelante. La persona tiene ese día para borrarlo o pasarlo
+  a su carpeta «Personal».
 - **De quién es el buzón**: el lector dice la casilla del buzón principal antes del primer mail. Si no es la de la fila de la
   persona (o no se pudo saber): `otro_buzon` (código 3) y no sale nada. La casilla de la propia persona en lo privado: `privado`.
 - **Dónde**: `<biblioteca>\Claude Barack\mails\_entrada\<lo de antes de la arroba>\AAAAMMDD-HHMMSS.jsonl`, un mail por renglón,
@@ -501,7 +508,7 @@ que sí dependen de ella: un día de espera antes de copiar cada mail, y una car
   después lo nuevo, con 3 días de margen. Tope 10 minutos por corrida (la tarea lo corta a los 12), con una pausa corta
   por mail para no pesarle a Outlook; lo que falta sigue en la próxima.
 - **Si Outlook deja de contestar** (puede ser un cartel de seguridad en la pantalla de la persona): el lector manda un
-  latido cada 10 segundos; sin ninguna línea en 75 segundos se corta (`outlook_no_responde`). A la segunda vez seguida deja
+  latido cada 10 segundos; sin ninguna línea en 75 segundos, desde que arranca, se corta (`outlook_no_responde`). A la segunda vez seguida deja
   de intentar por 7 días (`pausado`) y se ve en la salud. Una lectura buena lo limpia.
 - **Estado local** (`<estado>\`): `mails-area-subidos.txt` (identificadores, uno por renglón) y `mails-area-estado.json`:
   `habilitada` (la PC pasó todos los controles y la persona ya tiene su aviso), `subidos_total` (acumulado: no baja nunca),
@@ -512,7 +519,8 @@ que sí dependen de ella: un día de espera antes de copiar cada mail, y una car
   los mails de trabajo de esta PC se comparten con Ingenieria.txt», que dice que está **prendido** (no que ya se copió), qué
   se copia, cuándo, qué no, y cómo se apaga. Si ya está y tiene algo escrito no se toca; vacío o borrado se vuelve a
   escribir con la fecha del día en que se prendió; si no lo puede escribir, no lee nada. El día que la fila se apaga deja
-  otro («…ya no se comparten»), y si se vuelve a prender, otro. La salud lleva `mails` (`apagado`, `ok`, `parcial`,
+  otro («…ya no se comparten», con la fecha y la hora en el nombre), y si se vuelve a prender, otro. La salud lleva `mails`
+  (`apagado`, `primer_dia`, `ok`, `parcial`,
   `pausado`, `otro_buzon`, `outlook_cerrado`, `outlook_nuevo`, `sin_outlook`, `outlook_no_responde`, `filtro_incompleto`,
   `sin_filtro`, `sin_casilla`, `privado`, `sin_nube`, `sin_verificar`, `cortado`, `error`, `sin_uso` con `-SinMails`) y
   `mails_lista` (cuántas casillas, dominios, nombres y apellidos de lo privado cargó esa PC).

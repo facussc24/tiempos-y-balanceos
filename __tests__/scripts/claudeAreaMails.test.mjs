@@ -70,7 +70,17 @@ function fuente(pc, renglones) {
     fs.writeFileSync(ruta, renglones.map((m) => JSON.stringify(m)).join('\n') + '\n', 'utf8');
     return ruta;
 }
-const corre = (pc, extra = {}) => correr({ home: pc.home, raizNube: pc.raizNube, estado: pc.estado, ahora: AHORA, env: ENV, identidad: SOY_CARLOS, lector: path.join(pc.t, 'no-existe.ps1'), ...extra });
+const ANTES = new Date(AHORA.getTime() - 26 * 3600000);   // 04/10/2026 14:00: el dia en que se prendio
+/** Una corrida tal cual, sin preparar nada. */
+const directo = (pc, extra = {}) => correr({ home: pc.home, raizNube: pc.raizNube, estado: pc.estado, ahora: AHORA, env: ENV, identidad: SOY_CARLOS, lector: path.join(pc.t, 'no-existe.ps1'), ...extra });
+/**
+ * Una corrida con el PRIMER DIA ya pasado: el dia que se prende la PC solo se deja el aviso, y la primera copia es al dia
+ * siguiente. Casi todas las pruebas miran lo que pasa despues, asi que antes corre ese primer dia (26 horas antes).
+ */
+const corre = async (pc, extra = {}) => {
+    if (!fs.existsSync(path.join(pc.estado, ARCHIVO_ESTADO))) await directo(pc, { ahora: ANTES, ...('identidad' in extra ? { identidad: extra.identidad } : {}), ...(extra.env ? { env: extra.env } : {}) });
+    return directo(pc, extra);
+};
 /** Todos los archivos que hay bajo una carpeta (rutas relativas). */
 function archivos(dir) {
     const out = [];
@@ -169,6 +179,42 @@ describe('mails_area: lo FIRME del filtro (Direccion, Recursos Humanos y lo que 
     it('algo que no es un mail no sube', () => { for (const x of [null, undefined, 'texto', 5, []]) expect(clasificar(x, priv)).toBe('privado'); });
     it('sin la lista de lo privado completa no sube nada, ni un mail de trabajo', () => {
         for (const p of [null, undefined, {}, listaPrivada(null), listaPrivada({ direcciones: ['dueno@barack.test'] })]) expect(clasificar(mail(), p)).toBe('privado');
+    });
+    // tercera auditoria (05/10/2026): el nombre o el apellido adentro de una CASILLA, pegado, o en el identificador del mail
+    const TERCERA = [
+        ['su correo personal con el nombre en la casilla', { de: 'D', de_mail: 'dueno.prueba@gmail.com' }],
+        ['la casilla de trabajo con otro dominio', { de: 'DP', de_mail: 'dueno@gmail.com', cuerpo: 'x' }, 'entrada'],     // «dueno» solo no dice nada (5 letras)
+        ['el apellido de la lista de apellidos en una casilla', { cc: 'Z', cc_mails: ['zzapellido@estudio.com.ar'] }],
+        ['el nombre al reves en una casilla de Para', { para: 'P', para_mails: ['prueba.dueno@hotmail.com'] }],
+        ['el nombre en la casilla de la copia oculta', { cco_mails: ['dueno.prueba@gmail.com'] }],
+        ['el nombre en «en nombre de»', { representa_mail: 'dueno.prueba@gmail.com' }],
+        ['la casilla privada con un + adentro', { de: 'R', de_mail: 'rrhh+avisos@barack.test' }, 'cuarentena'],          // otra casilla: la frena la red (rrhh)
+        ['adjunto con el nombre pegado', { adjuntos: ['DuenoPrueba.pdf'] }],
+        ['adjunto con el nombre pegado en minusculas', { adjuntos: ['duenoprueba.pdf'] }],
+        ['adjunto con el apellido pegado a otra palabra', { adjuntos: ['ContratoZzapellido.pdf'] }],
+        ['adjunto con el apellido pegado a una sigla', { adjuntos: ['CVZzapellido.docx'] }],
+        ['adjunto con el apellido pegado en minusculas', { adjuntos: ['notazzapellido2026.pdf'] }],
+        ['adjunto con la inicial y el apellido pegados', { adjuntos: ['FirmaDPrueba.png'] }],
+        ['la inicial y el apellido en una palabra', { cuerpo: 'firma: dprueba' }],
+        ['el nombre en el identificador del mail', { id: '<dueno.prueba.123@gmail.com>' }],
+        ['la casilla privada con %40', { cuerpo: 'dueno%40barack.test' }],
+        ['la casilla privada con &#64;', { cuerpo: 'dueno&#64;barack.test' }],
+        ['la casilla privada con (arroba)', { cuerpo: 'dueno (arroba) barack.test' }],
+        ['la casilla privada con « at »', { cuerpo: 'dueno at barack.test' }],
+        ['la casilla privada con (dot)', { cuerpo: 'dueno@barack (dot) test' }],
+        ['la casilla privada con un guion invisible adentro', { cuerpo: 'due­no@barack.test' }],
+        ['el nombre con un espacio que no corta', { cuerpo: 'Dueño Prueba' }],
+        ['el nombre con un caracter invisible adentro', { cuerpo: 'Due​ño Prueba' }],
+    ];
+    for (const [nombre, cambios, esperado = 'privado'] of TERCERA) it(`${nombre} -> ${esperado}`, () => expect(clasificar(mail(cambios), priv)).toBe(esperado));
+    it('un tema en el identificador del mail lo frena la red', () => expect(clasificar(mail({ id: '<recibo.de.sueldo.octubre@liquidaciones.com>' }), priv)).toBe('cuarentena'));
+    it('lo que Outlook tiene marcado como personal, privado o confidencial no sube', () => {
+        for (const reserva of [1, 2, 3, 9, '2', null]) expect(clasificar(mail({ reserva }), priv), String(reserva)).toBe('cuarentena');
+        expect(clasificar(mail({ reserva: 0 }), priv)).toBe('entrada');
+    });
+    it('sale lo mismo que se miro: las casillas limpias y de la fecha solo la fecha', () => {
+        const p = paraPublicar(mail({ de_mail: ' "Juan" <JPerez@Proveedor.com> ', para_mails: ['Carlos <c.prueba@barackmercosul.com>'], cc_mails: ['smtp:x@y.test;'], fecha: '2026-10-01 10:00 y algo mas' }));
+        expect([p.de_mail, p.para_mails, p.cc_mails, p.fecha]).toEqual(['jperez@proveedor.com', ['c.prueba@barackmercosul.com'], ['x@y.test'], '2026-10-01 10:00']);
     });
     it('lo que se publica es una lista cerrada de campos: uno de mas no sale', () => {
         const p = paraPublicar(mail({ cuerpo_html: '<p>recibo de sueldo</p>', cco_mails: ['x@barackmercosul.com'], representa_mail: 'y@barackmercosul.com', otro: { a: 1 } }));
@@ -439,7 +485,7 @@ describe('mails_area: una corrida', () => {
         const viejo = mail({ fecha: '2026-05-01 09:00', asunto: 'de hace cinco meses' });
         const r = await corre(pc, { fuenteJsonl: fuente(pc, [{ t: 'buzon', casilla: CASILLA }, buenos[0], ...malos, buenos[1], viejo]) });
         expect(r.codigo).toBe(0);
-        expect(r.resumen).toMatchObject({ resultado: 'ok', autor: 'c.prueba', nuevos: 8, en_espera: 0, entrada: 2, cuarentena: 1, privado: 5, privados: '2 casillas, 1 dominios, 1 nombres, 1 apellidos', aviso_nuevo: true });
+        expect(r.resumen).toMatchObject({ resultado: 'ok', autor: 'c.prueba', nuevos: 8, en_espera: 0, entrada: 2, cuarentena: 1, privado: 5, privados: '2 casillas, 1 dominios, 1 nombres, 1 apellidos', aviso_nuevo: false });
         const arriba = subidos(pc);
         expect(arriba.map((m) => m.id).sort()).toEqual(buenos.map((m) => m.id).sort());
         // lo que se publica no lleva la copia oculta, ni a nombre de quien, ni los campos internos, ni uno que no se conoce
@@ -450,9 +496,9 @@ describe('mails_area: una corrida', () => {
         expect(archivos(path.join(pc.t, 'biblioteca'))).toEqual([path.join('Claude Barack', 'mails', '_entrada', 'c.prueba', '20261005-160000.jsonl')]);
         const ids = fs.readFileSync(path.join(pc.estado, ARCHIVO_SUBIDOS), 'utf8').split('\n').filter(Boolean);
         expect(ids.sort()).toEqual([...buenos, ...malos].map((m) => m.id).sort());
-        expect(estadoDe(pc)).toMatchObject({ habilitada: true, subidos_total: 2, resultado: 'ok', completa: true, marca: '2026-10-05T16:00:00', aviso_desde: '2026-10-05', colgadas: 0 });
+        expect(estadoDe(pc)).toMatchObject({ habilitada: true, subidos_total: 2, resultado: 'ok', completa: true, marca: '2026-10-05T16:00:00', aviso_desde: '2026-10-04T14:00:00', colgadas: 0 });
         const aviso = fs.readFileSync(path.join(pc.home, 'Trabajo', NOMBRE_AVISO), 'utf8');
-        for (const frase of ['Desde el 05/10/2026, en esta PC está prendido', 'PARA APAGARLO', 'copia oculta', 'citados, reenviados o firmados', 'un día después', 'se copia igual', 'en qué carpeta', '«Personal»']) expect(aviso).toContain(frase);
+        for (const frase of ['Desde el 04/10/2026, en esta PC está prendido', 'La primera copia se hace un día después', 'privados o confidenciales', 'PARA APAGARLO', 'copia oculta', 'citados, reenviados o firmados', 'un día después', 'se copia igual', 'en qué carpeta', '«Personal»']) expect(aviso).toContain(frase);
         // ningun mail queda copiado en el disco de la PC: el estado solo tiene identificadores y cuentas
         for (const f of archivos(pc.estado)) expect(fs.readFileSync(path.join(pc.estado, f), 'utf8')).not.toContain('Plano nuevo');
 
@@ -558,7 +604,7 @@ describe('mails_area: una corrida', () => {
 
     it('--simular cuenta y no escribe nada: ni nube, ni estado, ni aviso', async () => {
         const pc = armarPc();
-        const r = await corre(pc, { simular: true, fuenteJsonl: fuente(pc, [mail(), mail({ asunto: 'Sancion' })]) });
+        const r = await directo(pc, { simular: true, fuenteJsonl: fuente(pc, [mail(), mail({ asunto: 'Sancion' })]) });
         expect(r.resumen).toMatchObject({ resultado: 'simulado', entrada: 1, cuarentena: 1 });
         expect(nubeVacia(pc)).toBe(true);
         expect(fs.existsSync(pc.estado)).toBe(false);
@@ -573,19 +619,65 @@ describe('mails_area: una corrida', () => {
         expect(r.resumen.resultado).toBe('apagado');
         expect(subidos(pc).map((m) => m.asunto)).not.toContain('despues de apagar');
         expect(estadoDe(pc)).toMatchObject({ habilitada: false, subidos_total: 1, resultado: 'apagado', apagada_desde: '2026-10-20T09:00:00' });
-        const fin = 'AVISO - desde el 20-10-2026 los mails de esta PC ya no se comparten.txt';
+        const fin = 'AVISO - desde el 20-10-2026 a las 09.00 los mails de esta PC ya no se comparten.txt';
         expect(avisosDe(pc)).toEqual([fin, NOMBRE_AVISO].sort());
         expect(fs.readFileSync(path.join(pc.home, 'Trabajo', fin), 'utf8')).toMatch(/Desde el 20\/10\/2026, los mails de esta PC ya no se copian/);
         // otra corrida apagada: no escribe otro aviso
         await corre(pc, { ahora: new Date(2026, 9, 21, 9, 0, 0) });
         expect(avisosDe(pc).length).toBe(2);
-        // se vuelve a prender: un aviso nuevo con su fecha, y el primero sigue como estaba
+        // se vuelve a prender: un aviso nuevo con su fecha y su hora, el primero sigue como estaba, y ese dia no copia nada
         fs.writeFileSync(path.join(pc.comun, 'personas.json'), JSON.stringify({ personas: [CARLOS] }), 'utf8');
-        const r3 = await corre(pc, { fuenteJsonl: fuente(pc, [mail({ fecha: '2026-10-30 10:00' })]), ahora: new Date(2026, 10, 1, 9, 0, 0) });
-        expect(r3.resumen.resultado).toBe('ok');
-        expect(avisosDe(pc)).toContain('AVISO - desde el 01-11-2026 los mails de esta PC se comparten de nuevo.txt');
-        expect(estadoDe(pc)).toMatchObject({ habilitada: true, subidos_total: 2 });
+        const f3 = fuente(pc, [mail({ fecha: '2026-10-30 10:00' })]);
+        const r3 = await corre(pc, { fuenteJsonl: f3, ahora: new Date(2026, 10, 1, 9, 0, 0) });
+        expect(r3.resumen.resultado).toBe('primer_dia');
+        expect(avisosDe(pc)).toContain('AVISO - desde el 01-11-2026 a las 09.00 los mails de esta PC se comparten de nuevo.txt');
+        expect(estadoDe(pc)).toMatchObject({ habilitada: true, subidos_total: 1, prendida_de_nuevo: '2026-11-01T09:00:00' });
         expect(estadoDe(pc)).not.toHaveProperty('apagada_desde');
+        const r4 = await corre(pc, { fuenteJsonl: f3, ahora: new Date(2026, 10, 2, 10, 0, 0) });
+        expect(r4.resumen).toMatchObject({ resultado: 'ok', entrada: 1 });
+        expect(estadoDe(pc)).toMatchObject({ habilitada: true, subidos_total: 2 });
+        expect(avisosDe(pc).length).toBe(3);
+    });
+
+    it('el dia que se prende solo se deja el aviso: la primera copia es un dia despues', async () => {
+        const pc = armarPc();
+        const f = fuente(pc, [mail({ fecha: '2026-09-20 10:00', asunto: 'de hace dos semanas' })]);
+        const r = await directo(pc, { fuenteJsonl: f });
+        expect(r).toMatchObject({ codigo: 0, resumen: { resultado: 'primer_dia', aviso_nuevo: true } });
+        expect(nubeVacia(pc)).toBe(true);
+        expect(hayAviso(pc)).toBe(true);
+        expect(estadoDe(pc)).toMatchObject({ habilitada: true, subidos_total: 0, resultado: 'primer_dia', aviso_desde: '2026-10-05T16:00:00' });
+        // 23 horas despues: todavia no
+        const r2 = await directo(pc, { fuenteJsonl: f, ahora: new Date(2026, 9, 6, 15, 0, 0) });
+        expect(r2.resumen.resultado).toBe('primer_dia');
+        expect(nubeVacia(pc)).toBe(true);
+        // 25 horas despues: ahi copia
+        const r3 = await directo(pc, { fuenteJsonl: f, ahora: new Date(2026, 9, 6, 17, 0, 0) });
+        expect(r3.resumen).toMatchObject({ resultado: 'ok', entrada: 1, aviso_nuevo: false });
+        expect(subidos(pc).map((m) => m.asunto)).toEqual(['de hace dos semanas']);
+    });
+
+    it('si se apaga despues de pasar por otro estado (la lista de lo privado rota), la persona igual recibe el aviso de que ya no', async () => {
+        const pc = armarPc();
+        await corre(pc, { fuenteJsonl: fuente(pc, [mail()]) });
+        fs.writeFileSync(path.join(pc.comun, 'mails_privados.json'), JSON.stringify({ ...PRIVADOS_OK, total_direcciones: 9 }), 'utf8');
+        expect((await corre(pc, { ahora: new Date(2026, 9, 6, 9, 0, 0) })).resumen.resultado).toBe('filtro_incompleto');
+        fs.writeFileSync(path.join(pc.comun, 'personas.json'), JSON.stringify({ personas: [{ ...CARLOS, mails: 'no_sube' }] }), 'utf8');
+        expect((await corre(pc, { ahora: new Date(2026, 9, 7, 9, 0, 0) })).resumen.resultado).toBe('apagado');
+        expect(avisosDe(pc)).toContain('AVISO - desde el 07-10-2026 a las 09.00 los mails de esta PC ya no se comparten.txt');
+        expect(estadoDe(pc).apagada_desde).toBe('2026-10-07T09:00:00');
+    });
+
+    it('si no se puede anotar lo que sube, no sube (si no, cada corrida repetiria lo mismo)', async () => {
+        const pc = armarPc();
+        await directo(pc, { ahora: ANTES });
+        fs.mkdirSync(path.join(pc.estado, ARCHIVO_SUBIDOS), { recursive: true });      // una carpeta donde va el archivo: no se puede escribir
+        for (let i = 0; i < 2; i++) {
+            const r = await directo(pc, { fuenteJsonl: fuente(pc, [mail(), mail()]), ahora: new Date(2026, 9, 5, 16, i, 0) });
+            expect(r.resumen.resultado).toBe('error');
+        }
+        expect(nubeVacia(pc)).toBe(true);
+        expect(estadoDe(pc).subidos_total).toBe(0);
     });
 
     it('el aviso: uno vacio se vuelve a escribir, y lleva la fecha del dia en que se prendio', async () => {
@@ -595,11 +687,11 @@ describe('mails_area: una corrida', () => {
         fs.writeFileSync(ruta, '', 'utf8');
         const r = await corre(pc, { fuenteJsonl: fuente(pc, [mail({ fecha: '2026-12-01 10:00' })]), ahora: new Date(2027, 0, 15, 9, 0, 0) });
         expect(r.resumen.aviso_nuevo).toBe(true);
-        expect(fs.readFileSync(ruta, 'utf8')).toContain('Desde el 05/10/2026, en esta PC está prendido');
+        expect(fs.readFileSync(ruta, 'utf8')).toContain('Desde el 04/10/2026, en esta PC está prendido');
         // borrado: tambien vuelve, con la misma fecha
         fs.rmSync(ruta);
         await corre(pc, { fuenteJsonl: fuente(pc, [mail({ fecha: '2026-12-02 10:00' })]), ahora: new Date(2027, 0, 16, 9, 0, 0) });
-        expect(fs.readFileSync(ruta, 'utf8')).toContain('Desde el 05/10/2026');
+        expect(fs.readFileSync(ruta, 'utf8')).toContain('Desde el 04/10/2026');
     });
 
     it('otro usuario de Windows en la PC de la persona habilitada: apagada', async () => {
@@ -679,6 +771,7 @@ describe('mails_outlook.ps1: solo lee', () => {
     const conPowerShell = process.platform === 'win32';
     it.runIf(conPowerShell)('sin Outlook clasico abierto dice "cerrado": no sube nada (codigo 4), pero la PC ya esta lista y la persona ya tiene su aviso', async () => {
         const pc = armarPc();
+        await directo(pc, { ahora: ANTES });      // el primer dia: solo el aviso
         const r = await correr({ home: pc.home, raizNube: pc.raizNube, estado: pc.estado, ahora: AHORA, env: { ...process.env, CLAUDE_AREA_SIN_OUTLOOK: '1' }, identidad: SOY_CARLOS, lector: LECTOR, maxMinutos: 2 });
         expect([r.codigo, r.resumen.resultado]).toEqual([4, 'outlook_cerrado']);
         expect(nubeVacia(pc)).toBe(true);
@@ -691,6 +784,7 @@ describe('mails_outlook.ps1: solo lee', () => {
         const colgado = path.join(pc.t, 'lector-colgado.ps1');
         fs.writeFileSync(colgado, `param([string]$Desde = '', [string]$Conocidos = '', [int]$MaxSegundos = 0)\r\n[Console]::Out.WriteLine('{"t":"buzon","casilla":"${CASILLA}"}')\r\n[Console]::Out.Flush()\r\nStart-Sleep -Seconds 40\r\n`, 'ascii');
         const opciones = { home: pc.home, raizNube: pc.raizNube, estado: pc.estado, env: { ...process.env }, identidad: SOY_CARLOS, lector: colgado, maxMinutos: 2, segundosSinRespuesta: 3 };
+        await directo(pc, { ahora: ANTES });      // el primer dia: solo el aviso
         const t0 = Date.now();
         const r1 = await correr({ ...opciones, ahora: AHORA });
         expect([r1.codigo, r1.resumen.resultado]).toEqual([4, 'outlook_no_responde']);
@@ -712,6 +806,23 @@ describe('mails_outlook.ps1: solo lee', () => {
         expect(r4.resumen.resultado).toBe('ok');
         expect(estadoDe(pc)).toMatchObject({ colgadas: 0, subidos_total: 1 });
         expect(estadoDe(pc)).not.toHaveProperty('pausado_hasta');
+    }, 120000);
+    it.runIf(conPowerShell)('si Outlook no contesta ni para decir de quien es el buzon, tambien se corta enseguida, cuenta y pausa', async () => {
+        const pc = armarPc();
+        const mudo = path.join(pc.t, 'lector-mudo.ps1');
+        fs.writeFileSync(mudo, "param([string]$Desde = '', [string]$Conocidos = '', [int]$MaxSegundos = 0)\r\nStart-Sleep -Seconds 40\r\n", 'ascii');
+        const opciones = { home: pc.home, raizNube: pc.raizNube, estado: pc.estado, env: { ...process.env }, identidad: SOY_CARLOS, lector: mudo, maxMinutos: 2, segundosSinRespuesta: 3 };
+        await directo(pc, { ahora: ANTES });
+        const t0 = Date.now();
+        const r1 = await correr({ ...opciones, ahora: AHORA });
+        expect([r1.codigo, r1.resumen.resultado]).toEqual([4, 'outlook_no_responde']);
+        expect(Date.now() - t0).toBeLessThan(25000);
+        expect(estadoDe(pc)).toMatchObject({ habilitada: true, colgadas: 1 });
+        const r2 = await correr({ ...opciones, ahora: new Date(2026, 9, 5, 20, 0, 0) });
+        expect(r2.resumen.resultado).toBe('outlook_no_responde');
+        expect(estadoDe(pc)).toMatchObject({ colgadas: 2, pausado_hasta: '2026-10-12T20:00:00' });
+        expect((await correr({ ...opciones, ahora: new Date(2026, 9, 6, 8, 0, 0) })).resumen.resultado).toBe('pausado');
+        expect(nubeVacia(pc)).toBe(true);
     }, 120000);
 });
 
@@ -757,6 +868,9 @@ describe('mails_area: como programa y en el paquete', () => {
         expect(nubeVacia(pc)).toBe(true);
         // y aunque la fila sea la de quien corre la prueba, la fuente de mentira no se usa (dice lo que dice el Outlook: cerrado)
         const mia = armarPc({ personas: [{ ...CARLOS, usuario_windows: os.userInfo().username, pc: os.hostname() }] });
+        // (con el primer dia ya pasado: el aviso es de hace dos dias)
+        fs.mkdirSync(mia.estado, { recursive: true });
+        fs.writeFileSync(path.join(mia.estado, ARCHIVO_ESTADO), JSON.stringify({ aviso_desde: '2020-01-01T10:00:00' }), 'utf8');
         const r2 = lanzar(instalado(mia), ['--home', mia.home, '--raiz-nube', mia.raizNube, '--estado', mia.estado, '--max-minutos', '2', '--fuente-jsonl', fuente(mia, [mail()])]);
         expect(JSON.parse(r2.stdout.trim()).resultado).toBe('outlook_cerrado');
         expect(nubeVacia(mia)).toBe(true);

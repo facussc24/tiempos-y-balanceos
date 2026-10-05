@@ -13,7 +13,7 @@
 #   {"t":"buzon","casilla":".."}     la casilla del buzon que se esta leyendo ("" si no se pudo saber); va antes de los mails
 #   {"t":"mail","id":..,"eid":..,"carpeta":..,"fecha":"AAAA-MM-DD HH:MM","de":..,"de_mail":..,"representa_mail":..,
 #    "para":..,"para_mails":[..],"cc":..,"cc_mails":[..],"cco_mails":[..],"asunto":..,"adjuntos":[..],
-#    "conversacion":..,"cuerpo":..,"sin_resolver":0}
+#    "conversacion":..,"cuerpo":..,"reserva":0,"sin_resolver":0}     (reserva: 0 normal, 1 personal, 2 privado, 3 confidencial)
 #   {"t":"latido","revisados":N}   cada 10 segundos mientras lee: si deja de llegar, Outlook no contesta (puede haber un cartel)
 #   {"t":"estado","estado":"cerrado|nuevo|no_instalado|no_responde|error","detalle":".."}   (y no sigue)
 #   {"t":"fin","completa":true|false,"revisados":N,"fallados":N}    (siempre el ultimo; fallados = mails que no se pudieron leer)
@@ -162,6 +162,8 @@ function LeerMail($m, [string]$carpeta, [string]$id, [string]$eid, $fecha) {
   $ccTexto = ''; try { $ccTexto = Texto $m.CC } catch { }
   $asunto = ''; try { $asunto = Texto $m.Subject } catch { }
   $conv = ''; try { $conv = Texto $m.ConversationID } catch { }
+  # como lo marco quien lo mando: 0 normal, 1 personal, 2 privado, 3 confidencial. Si no se puede leer, no es normal.
+  $reserva = 9; try { $reserva = [int]$m.Sensitivity } catch { $reserva = 9 }
   $deMail = DireccionDelRemitente $m
   $representa = DireccionDeQuienRepresenta $m
   # "en nombre de" otra persona sin que se pueda leer su casilla: el filtro no tiene contra que comparar
@@ -173,7 +175,7 @@ function LeerMail($m, [string]$carpeta, [string]$id, [string]$eid, $fecha) {
     para = $paraTexto; para_mails = $para.ToArray()
     cc = $ccTexto; cc_mails = $cc.ToArray(); cco_mails = $cco.ToArray()
     asunto = $asunto; adjuntos = $adj.ToArray(); conversacion = $conv
-    cuerpo = $cuerpo; sin_resolver = $sinResolver
+    cuerpo = $cuerpo; reserva = $reserva; sin_resolver = $sinResolver
   }
 }
 
