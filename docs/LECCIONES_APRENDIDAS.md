@@ -52,6 +52,10 @@ incidente vive en los snapshots.
 - **El chequeo frena, no decide; y la objecion de Fak es un dato, no una opinion a refutar: ante un "no anda", preguntar como falla.** Graduado a la memoria `feedback_el_chequeo_frena_no_decide` (y `cad-3d.md` GATE 0).
 - **Un plan de accion heredado se arrastra fila por fila: fusionar dos filas pierde alcance, media fila que se cae no la ve nadie, y un issue no se cierra con evidencia de una parte del alcance.** Graduado a la memoria `plan_heredado_se_arrastra_fila_por_fila`.
 
+- **05/10 — En un mail a otra área, el error de otro va como afirmación solo si está confirmado; lo que no se pudo descartar va como pregunta** (puse «en el arb es V1» del INY-TRL0005-V2 con un maestro de códigos de 38 días; Fak: *"¿está 100% confirmado que se equivocó?"*). Y antes de señalar un archivo ajeno, mirar si es el VIGENTE (`db_produccion` era una foto; memoria `reference_datos_produccion_pcp_federico`).
+
+- **05/10 — Un largo que sale de un plano se calcula SUMANDO sus cotas, no midiendo el dibujo a escala** (cinta del apoyabrazos trasero: medí píxeles y dije «aproximado» con 69,54 + 13,96 + 13,6 escritas en la captura; Fak: *"eso tenés que usar"*).
+
 ## Identidad de un dato
 
 - **Una fuente que sale de mi lado del mostrador no es una segunda fuente** (regla mia, test, memoria, export, cita de un subagente, o el numero que yo propuse y Fak solo eligio; 02/10: tampoco el proceso de la pieza vecina, Upper Trim no es IP Pad): si un documento puede zanjarlo, se abre el documento antes de actuar. Las formas de caer: memorias `verificar_contra_la_fuente_no_el_codigo`, `un_agente_no_es_independiente`, `dispositivo_adhesivado_insert`, `al_documento_entra_lo_que_dice_un_papel_de_esa_pieza`; `amfe.md` §12.
