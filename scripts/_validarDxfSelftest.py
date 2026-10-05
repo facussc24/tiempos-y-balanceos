@@ -198,7 +198,71 @@ def main() -> int:
                     print(f"        {det}")
                     fallidos.append("autocad:" + nombre)
         else:
-            print("== capa real SALTEADA (correr con --con-autocad; tarda ~40 s por archivo)")
+            print("== capa real SALTEADA (correr con --con-autocad; tarda unos 10 a 20 s en total)")
+
+    # ── la memoria del AUDIT: los mismos bytes no se vuelven a abrir; otros bytes, un AUDIT con errores o --sin-memoria, si.
+    # Sin AutoCAD de verdad: se cuenta cuantas veces se lo llama (el programa de mentira contesta lo que AutoCAD imprime).
+    print("== memoria del AUDIT (sin abrir AutoCAD: se cuentan las llamadas)")
+    import _validarDxf as V
+    llamadas = {"n": 0, "errores": 0}
+
+    class _Falso:
+        def __init__(self, errores: int) -> None:
+            self.stdout = f"Total errors found {errores} fixed 0\n".encode("utf-16-le")
+
+    def _correr_falso(*_a, **_k):
+        llamadas["n"] += 1
+        return _Falso(llamadas["errores"])
+
+    guardado = (V.subprocess.run, V.MEMORIA_AUDIT, V.USAR_MEMORIA, V.os.path.exists)
+    with tempfile.TemporaryDirectory() as tmpm:
+        try:
+            V.subprocess.run = _correr_falso
+            V.MEMORIA_AUDIT = os.path.join(tmpm, "memoria.json")
+            V.USAR_MEMORIA = True
+            if not os.path.exists(V.ACCORECONSOLE):      # en una PC sin AutoCAD la prueba usa un archivo cualquiera como «el programa»
+                V.ACCORECONSOLE = os.path.abspath(__file__)
+            a1 = os.path.join(tmpm, "a.dxf")
+            with open(a1, "wb") as fh:
+                fh.write(b"uno")
+
+            def caso(nombre: str, hacer, esperadas: int) -> None:
+                antes = llamadas["n"]
+                hacer()
+                ok = llamadas["n"] - antes == esperadas
+                print(f"  [{'OK ' if ok else 'MAL'}] {nombre}")
+                if not ok:
+                    print(f"        esperaba {esperadas} llamada(s) a AutoCAD y hubo {llamadas['n'] - antes}")
+                    fallidos.append("memoria:" + nombre)
+
+            caso("la primera vez audita", lambda: V.audit_autocad(a1), 1)
+            caso("los mismos bytes no se vuelven a abrir", lambda: V.audit_autocad(a1), 0)
+            paso, det = V.audit_autocad(a1)
+            if not (paso and "ya audito estos mismos bytes" in det):
+                print(f"  [MAL] el aviso de la memoria no dice que no se abrio: {det!r}")
+                fallidos.append("memoria:aviso")
+            copia = os.path.join(tmpm, "copia con otro nombre.dxf")
+            with open(copia, "wb") as fh:
+                fh.write(b"uno")
+            caso("una copia con otro nombre (mismos bytes) tampoco", lambda: V.audit_autocad(copia), 0)
+            with open(a1, "wb") as fh:
+                fh.write(b"dos")
+            caso("si cambia un byte, audita de nuevo", lambda: V.audit_autocad(a1), 1)
+            V.USAR_MEMORIA = False
+            caso("con --sin-memoria audita siempre", lambda: V.audit_autocad(a1), 1)
+            V.USAR_MEMORIA = True
+            malo_dxf = os.path.join(tmpm, "malo.dxf")
+            with open(malo_dxf, "wb") as fh:
+                fh.write(b"tres")
+            llamadas["errores"] = 2
+            caso("un AUDIT con errores no se recuerda (1)", lambda: V.audit_autocad(malo_dxf), 1)
+            caso("un AUDIT con errores no se recuerda (2)", lambda: V.audit_autocad(malo_dxf), 1)
+            llamadas["errores"] = 0
+            with open(V.MEMORIA_AUDIT, "w", encoding="utf-8") as fh:
+                fh.write("{esto no es json")
+            caso("con la memoria rota, audita (no se cae)", lambda: V.audit_autocad(copia), 1)
+        finally:
+            V.subprocess.run, V.MEMORIA_AUDIT, V.USAR_MEMORIA, V.os.path.exists = guardado
 
     print()
     if fallidos:

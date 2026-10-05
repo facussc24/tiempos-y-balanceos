@@ -51,6 +51,9 @@ Capa real (la que vale):
 from __future__ import annotations
 
 import argparse
+import datetime
+import hashlib
+import json
 import os
 import re
 import subprocess
@@ -58,6 +61,15 @@ import sys
 import tempfile
 
 ACCORECONSOLE = r"C:\Program Files\Autodesk\AutoCAD 2026\accoreconsole.exe"
+
+# Memoria del AUDIT (04/10/2026): los MISMOS bytes no se vuelven a abrir con AutoCAD. Medido en la sesion del 02/10:
+# 14 arranques de AutoCAD, varios sobre el archivo que se acababa de validar (normalizar y, un minuto despues, entregar).
+# El juez sigue siendo AutoCAD: se recuerda SOLO un AUDIT que dio 0 errores, por la huella del archivo y por el
+# accoreconsole que lo juzgo (si cambia AutoCAD, se audita de nuevo). `--sin-memoria` lo fuerza. Es un archivo temporal:
+# si se borra, no pasa nada.
+MEMORIA_AUDIT = os.path.join(tempfile.gettempdir(), "barack-validarDxf-memoria.json")
+USAR_MEMORIA = True
+_TOPE_MEMORIA = 400
 
 # Nombres que ezdxf mete en la tabla LTYPE y que AutoCAD rechaza como duplicados
 LTYPE_RESERVADOS = {"BYBLOCK", "BYLAYER"}
@@ -296,12 +308,55 @@ def chequeos_estaticos(d: Dxf) -> list[str]:
     return fallas
 
 
+def _clave_de_memoria(path: str) -> str | None:
+    """Huella del archivo + el AutoCAD que lo va a juzgar. None si no se puede armar (entonces se audita)."""
+    try:
+        h = hashlib.sha256()
+        with open(path, "rb") as fh:
+            for bloque in iter(lambda: fh.read(1 << 20), b""):
+                h.update(bloque)
+        st = os.stat(ACCORECONSOLE)
+        return f"{h.hexdigest()}|{ACCORECONSOLE}|{st.st_size}|{int(st.st_mtime)}"
+    except OSError:
+        return None
+
+
+def _leer_memoria() -> dict:
+    try:
+        with open(MEMORIA_AUDIT, encoding="utf-8") as fh:
+            d = json.load(fh)
+        return d if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def _anotar_en_memoria(clave: str) -> None:
+    try:
+        d = _leer_memoria()
+        d[clave] = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+        if len(d) > _TOPE_MEMORIA:
+            for vieja in list(d)[: len(d) - _TOPE_MEMORIA]:
+                del d[vieja]
+        tmp = MEMORIA_AUDIT + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump(d, fh)
+        os.replace(tmp, MEMORIA_AUDIT)
+    except OSError:
+        pass    # sin memoria se audita la proxima vez: no es un error
+
+
 def audit_autocad(path: str) -> tuple[bool, str]:
     """Abre el DXF con el motor de AutoCAD y corre AUDIT. (paso, salida)."""
     if not os.path.exists(ACCORECONSOLE):
         raise DxfInvalido(
             f"no encuentro accoreconsole.exe en {ACCORECONSOLE} — sin AutoCAD no se puede validar"
         )
+    clave = _clave_de_memoria(path) if USAR_MEMORIA else None
+    if clave:
+        cuando = _leer_memoria().get(clave)
+        if cuando:
+            return True, (f"0 errores: AutoCAD ya audito estos mismos bytes el {cuando} "
+                          "(no se volvio a abrir; --sin-memoria lo fuerza)")
     with tempfile.TemporaryDirectory() as tmp:
         scr = os.path.join(tmp, "audit.scr")
         with open(scr, "wb") as fh:
@@ -324,6 +379,8 @@ def audit_autocad(path: str) -> tuple[bool, str]:
         l for l in salida.splitlines()
         if re.search(r"Duplicate|Invalid|Total errors|Erased|error", l, re.I)
     )
+    if errores == 0 and clave:
+        _anotar_en_memoria(clave)
     return errores == 0, detalle.strip()
 
 
@@ -526,7 +583,12 @@ def main() -> int:
     ap.add_argument("--entregar", metavar="DESTINO",
                     help="copia al destino SOLO si pasa el gate de AutoCAD")
     ap.add_argument("--sin-autocad", action="store_true")
+    ap.add_argument("--sin-memoria", action="store_true",
+                    help="audita con AutoCAD aunque esos mismos bytes ya hayan dado 0 errores")
     a = ap.parse_args()
+    if a.sin_memoria:
+        global USAR_MEMORIA
+        USAR_MEMORIA = False
 
     if a.entregar:
         if len(a.dxf) != 1:
