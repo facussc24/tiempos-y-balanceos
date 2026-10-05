@@ -67,6 +67,8 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **04/10 — A Fak no se le nombra un papel por el número que le puse yo: se le muestra y se le dice qué es; y antes de decirle «eso lo hacés vos mañana» se mira si puede hacerlo YA y cuál es el mínimo** (*"no entiendo qué carajo es una hoja 10"*; el mínimo era un minuto, lo hizo en el momento y destapó un renglón de mis listas que pedía más de lo que el asistente promete). Graduado a la memoria `project_claudes_por_area`.
+
 - **04/10 — Lo útil que ya hacemos en Ingeniería es lo que el asistente de área tiene que traer: lo que falta se construye, o se dice HOY cuánto lleva; no se deja «para después» por mi cuenta ni se vuelve frase del producto** (puse en el video «No lee el correo de nadie»; para Fak era obvio que busca en los mails propios: *"ya estoy cansado de tus excusas"*). Graduado a la memoria `project_claudes_por_area`.
 
 - **04/10 — Lo que Fak ya dijo que deciden ellos no vuelve en el cierre como «decisión tuya»** (qué PC comparte mails: *"te dije que eso lo íbamos a decidir nosotros desde acá… te repito"*); **y la gente no pide una función que no sabe que existe: el asistente la propone** (*"ellos no saben que existe esa función y no te la van a pedir"*). Graduado a las memorias `project_mails_del_equipo_a_la_nube` y `project_claudes_por_area`.

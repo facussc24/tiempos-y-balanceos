@@ -310,9 +310,25 @@ lo que había que corregir estaba en los papeles. No se publicó nada.
 - **Lo que mañana hay que saber:** lo que se escribe va sin comillas; «mandalo» y «borrala» solos en su mensaje; en la PC
   de la reunión el área es la 7 (Dirección); la carpeta de la nube con «Mantener siempre en este dispositivo» antes de
   instalar; la segunda vez el instalador no pregunta; no preguntar en vivo por la revisión por la Dirección.
-- **Para después de la reunión (en rama):** que «mandalo» y «borralo» se juzguen por su parte de la oración; el mensaje
-  de cerrar un programa con su ejemplo; el aviso de arranque que a veces dice «sin versión instalada»; mensajes del
-  instalador en castellano para dos errores; y el `CLAUDE.md` del instalador, que dice que no abre Claude.
+- **La prueba de Facundo (04/10, 22:11):** conversación nueva en `C:\ClaudeBarack`, «Hola». Contestó «Hola, soy el
+  asistente de Barack Mercosul para Dirección. ¿En qué te ayudo?»; por dentro, el aviso de arranque llegó entero (versión
+  12, al día) y el modo era «Omitir permisos». Con eso `antes_de_la_reunion.py` quedó sin nada en MAL.
+- **Lo que esa prueba corrigió en los papeles:** las hojas 4, 8, 10, 11 y 12 y la página 6 del manual pedían que salude
+  por el nombre («si no, no seguir»). La regla de la casa es presentarse en una línea. El renglón quedó: dice que es el
+  asistente de Barack para el área y no pregunta quién sos; lo que frena es que conteste como un Claude cualquiera.
+- **Qué necesita una PC (verificado el 04/10 en el paquete 12 y en la documentación oficial):** el programa Claude al día
+  con cuenta paga y la sesión iniciada, y la carpeta de la nube o el pendrive. Node viaja adentro; Python no se usa; Git
+  es opcional (sin Git trabaja con PowerShell; solo lo piden las sesiones con copia de trabajo); los programas de
+  PowerShell corren con su permiso propio en cada llamada. Sin Outlook clásico (o con el nuevo) no busca ni manda mails
+  y deja el texto en el chat; sin PowerPoint deja los puntos en el chat. No está probado en una PC real sin Git ni sin
+  esos programas.
+- **Para después de la reunión, hecho en la rama `comparar-revisiones` del repo privado (sin publicar):** «mandalo» y
+  «borralo» se juzgan por su parte de la oración (`8788a8f`); el mensaje de cerrar un programa trae su ejemplo y el aviso
+  de arranque ya no dice «sin versión instalada» en una PC que la tiene (`7c30fdb`). Batería completa 3.752 de 3.752.
+- **Para después de la reunión, sin hacer** (son parte del paquete publicado y no se tocan la noche antes): el mensaje
+  del instalador cuando la nube no bajó los archivos («No quedó instalado (código N)» no dice que es la nube); el
+  `CLAUDE.md` del instalador, que dice que no abre Claude y promete «te saludo por tu nombre»; que funcione con el
+  Outlook nuevo (es otra forma de conectarse al correo).
 
 ## Las etapas, en orden. Cada una tiene su puerta: no se pasa a la siguiente con la puerta en rojo.
 
