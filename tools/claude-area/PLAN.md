@@ -322,9 +322,17 @@ lo que había que corregir estaba en los papeles. No se publicó nada.
   PowerShell corren con su permiso propio en cada llamada. Sin Outlook clásico (o con el nuevo) no busca ni manda mails
   y deja el texto en el chat; sin PowerPoint deja los puntos en el chat. No está probado en una PC real sin Git ni sin
   esos programas.
-- **Para después de la reunión, hecho en la rama `comparar-revisiones` del repo privado (sin publicar):** «mandalo» y
-  «borralo» se juzgan por su parte de la oración (`8788a8f`); el mensaje de cerrar un programa trae su ejemplo y el aviso
-  de arranque ya no dice «sin versión instalada» en una PC que la tiene (`7c30fdb`). Batería completa 3.752 de 3.752.
+- **Para después de la reunión, hecho en la rama `comparar-revisiones` del repo privado (sin publicar, `f105db0`):**
+  - «Mandalo nomás, no le cambies nada» **sigue frenando, a propósito.** Se probó tres veces aflojar ese freno y tres
+    auditorías independientes le encontraron cada vez un caso que pasaba de más (la última, uno real: «No, mandalo esta
+    tarde»). La regla estaba escrita antes de medir: a la tercera, afuera. La persona escribe «mandalo» solo, como ya dicen
+    las hojas.
+  - De ese trabajo quedó lo que frena **mejor** que la versión publicada: arrepentirse en la misma oración («mandalo,
+    pará») o en la que sigue («Mandalo. No.», «Mandalo. Mañana.»), cambiar a quién va («mandalo solo a Carlos») y los
+    momentos que la lista no conocía («mandalo esta tarde», «a las 5», «en un rato» contaban como pedido de ahora).
+    Medido: en 5.438 frases armadas para romperlo no afloja ninguna, y no cambia ninguno de 1.662 mensajes reales.
+  - El mensaje de cerrar un programa trae su ejemplo, sin comillas y con todos los programas; el aviso de arranque ya
+    no dice «sin versión instalada» en una PC que la tiene, y sin archivo instalado dice que no terminó de instalarse.
 - **Para después de la reunión, sin hacer** (son parte del paquete publicado y no se tocan la noche antes): el mensaje
   del instalador cuando la nube no bajó los archivos («No quedó instalado (código N)» no dice que es la nube); el
   `CLAUDE.md` del instalador, que dice que no abre Claude y promete «te saludo por tu nombre»; que funcione con el
