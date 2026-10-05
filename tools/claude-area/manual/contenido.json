@@ -196,7 +196,7 @@
         }
       ],
       "texto": [
-        "1. Preguntá. Si no te saludó por tu nombre, decile antes tu puesto.",
+        "1. Preguntá. Si te pregunta quién sos, decile nombre, área y puesto.",
         "2. Claude busca la descripción de tu puesto y te dice de qué documento salió.",
         "Claude contesta distinto a un supervisor que a un comprador.",
         "No hace falta escribir bien: alcanza con que se entienda."
