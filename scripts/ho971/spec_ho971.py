@@ -207,6 +207,31 @@ HOJAS = [
                   foto=f("30_girar_pieza"), pie="Pieza girada",
                   fuentes=[HO + " 30, paso 3", "Refilado 8 piezas.mp4 s22"]),
          ]),
+    # 40: pestaña 40 de la HO vieja + valores del mail del 05/10/2026. Fotos del video "Costura union 4
+    # piezas.mp4"; Fak confirmo el 05/10/2026 que es el APB de puerta Patagonia.
+    dict(op="40", denominacion="COSTURA UNIÓN", sector="COSTURA", cuando="durante la marcha", epp="corte",
+         pasos=[
+             dict(texto="Colocar los componentes sobre la mesa según la versión a producir. Verificar el código "
+                        "de pieza y tener a la vista la muestra patrón liberada por Calidad.",
+                  foto=f("40_componentes_mesa"), pie="Componentes sobre la mesa",
+                  fuentes=[HO + " 40, paso 1", "Costura union 4 piezas.mp4 s2"]),
+             dict(texto="Cargar el hilo: aguja N° 18 y, en aguja y bobina, hilo 30/3 FX284-E0PTO.",
+                  sin_foto="falta foto de los conos de hilo y de la aguja cargada",
+                  fuentes=[HO + " 40, paso 2", "mail de Fak a N. Perez 05/10/2026: aguja N 18 en la union, hilo 30/3",
+                           "arb RELACIONES 05/10/2026: FX284-E0PTO"]),
+             dict(texto="Coser la costura unión: 4 puntadas en 16 mm (±1), con margen de 8 mm (±1) y atraque de "
+                        "3 a 4 puntadas al inicio y al final, una vez atrás y una adelante.",
+                  foto=f("40_costura_union"), pie="Costura unión",
+                  fuentes=[HO + " 40, paso 3", "mail de Fak a N. Perez 05/10/2026: 4 en 16 mm +-1, margen 8 mm +-1, atraque",
+                           "Costura union 4 piezas.mp4 s10"]),
+             dict(texto="Cortar los hilos al terminar cada pieza y separarla. No coser piezas en cadena sin separarlas.",
+                  foto=f("40_separar_pieza"), pie="Pieza separada",
+                  fuentes=[HO + " 40, paso 4", "Costura union 4 piezas.mp4 s28"]),
+             dict(texto="Inspeccionar la costura: continua, sin puntadas flojas ni saltadas, y simétrica con la "
+                        "muestra patrón. Ante un desvío, aplicar el plan de reacción.",
+                  foto=f("40_piezas_cosidas"), pie="Piezas cosidas",
+                  fuentes=[HO + " 40, paso 5", "Costura union 4 piezas.mp4 s46"]),
+         ]),
     dict(op="41", denominacion="COSTURA VISTA (1 SOLA LÍNEA)", sector="COSTURA", cuando="durante la marcha",
          epp="corte",
          pasos=[

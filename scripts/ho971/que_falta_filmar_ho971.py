@@ -36,8 +36,7 @@ FILMAR = [
 PREGUNTAR = [
     ("20", "Mesa de corte", "Cuál de los dos Start de la pantalla de la máquina de capas se aprieta; y fotos de la planilla, del cajón de scrap y del botón de bajada del rollo."),
     ("21", "Mesa de corte", "Qué archivo de Cutting Control se abre para cada código; cómo termina el corte (retirar piezas, apagar la succión, el nylon); fotos de cerca del botón Plato y del láser."),
-    ("40", "Costura unión", "En el video de costura unión se cose una tela gris clara: ¿es el APB de puerta Patagonia? Si no, filmar la costura unión de esta pieza."),
-    ("41", "Costura vista", "Fotos de los conos de hilo con la aguja cargada y del corte de hilos al terminar la pieza."),
+    ("40 / 41", "Costura", "Fotos de los conos de hilo con la aguja cargada y del corte de hilos al terminar la pieza."),
     ("22 / 51 / 81 / 100", "Controles", "Son láminas de Calidad: la 51 delantero y trasero ya está; pedirle a Calidad la 22, la 81 y la 100."),
 ]
 
