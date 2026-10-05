@@ -69,7 +69,7 @@ incidente vive en los snapshots.
 
 - **04/10 — Lo útil que ya hacemos en Ingeniería es lo que el asistente de área tiene que traer: lo que falta se construye, o se dice HOY cuánto lleva; no se deja «para después» por mi cuenta ni se vuelve frase del producto** (puse en el video «No lee el correo de nadie»; para Fak era obvio que busca en los mails propios: *"ya estoy cansado de tus excusas"*). Graduado a la memoria `project_claudes_por_area`.
 
-- **04/10 — Lo que Fak ya dijo que deciden ellos no vuelve en el cierre como «decisión tuya»** (qué PC comparte mails: *"te dije que eso lo íbamos a decidir nosotros desde acá… te repito"*); **y la gente no pide una función que no sabe que existe: el asistente la propone** (*"ellos no saben que existe esa función y no te la van a pedir"*). Graduado a las memorias `project_mails_del_equipo_a_la_nube` y `project_claudes_por_area`.
+- **04/10 — Lo que Fak ya dijo que deciden ellos no vuelve en el cierre como «decisión tuya»** (qué PC comparte mails: *"te dije que eso lo íbamos a decidir nosotros desde acá… te repito"*); **y la gente no pide una función que no sabe que existe: el asistente la propone** (*"ellos no saben que existe esa función y no te la van a pedir"*); **y el orden de SU día no lo pongo yo** (05/10: di por hecho que presentaba antes de probar; *"no voy a presentar nada hasta que testeemos todo"*). Graduado a las memorias `project_mails_del_equipo_a_la_nube` y `project_claudes_por_area`.
 
 - **03/10 — Teclas simuladas y fotos de pantalla no se usan sin saber que Fak no está en la PC: las teclas van a la ventana que tenga el foco** (una prueba mía escribió en su Chrome mientras buscaba su banco). Graduado a la memoria `feedback_no_teclear_ni_fotografiar_la_pantalla_de_fak`.
 
