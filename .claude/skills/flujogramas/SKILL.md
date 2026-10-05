@@ -325,7 +325,10 @@ revisiones dice **textual que cambio**, operacion por operacion.
 Entrega:
 
 1. PNG → PDF a **150 DPI** (`pagina_pt = px * 72 / 150`), que es la convencion de los
-   documentos hermanos del legajo. Con `fitz`: `new_page(w_pt, h_pt)` + `insert_image`.
+   documentos hermanos del legajo. Con **Pillow**: `Image.open(png).convert('RGB').save(pdf,
+   'PDF', resolution=150.0)` → ~1,3 MB. **No con `fitz` + `insert_image(filename=png)`**: guarda la
+   imagen sin comprimir y el 153 Rev.E salio de **145 MB** al legajo (05/10/2026). Mirar el tamaño
+   del PDF antes de darlo por emitido.
 2. El editable vive en Gestion Ingenieria (`8. Flujograma Sinóptico`); emitirlo ahi se
    **pregunta** (`autonomy-contract.md` §F). La copia en PDF va al casillero
    **`20- Flujograma de proceso`** del legajo; para SMRC, a `05 Process Flow` del paquete
