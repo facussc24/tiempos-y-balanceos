@@ -13,7 +13,7 @@ No escribe en el arb ni en el servidor: solo el json de salida (por defecto, bas
 El producto se busca en el arb por su codigo EXACTO: hay 10 productos cargados dos veces con distinta
 grafia y distinta BOM (2HT857115 YZM y 2HT-857-115-YZM), y buscar "sin guiones" elige el equivocado.
 """
-import importlib.util, os, sys, re, collections, json, openpyxl
+import importlib.util, os, sys, collections, json, openpyxl
 sys.stdout.reconfigure(encoding='utf-8')
 if len(sys.argv) < 2:
     raise SystemExit(__doc__)
@@ -23,15 +23,12 @@ RAIZ = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 spec = importlib.util.spec_from_file_location('arbRelaciones', os.path.join(RAIZ, 'scripts', '_lib', 'arbRelaciones.py'))
 AR = importlib.util.module_from_spec(spec); spec.loader.exec_module(AR)
 rel, sello = AR.cargar()
-RX_DESC = re.compile(r'\bHILO|STCH|STITCH', re.I)
-RX_COD = re.compile(r'^(FX\d|BX\d|GM\d\dW|NEO|B737|COATS|H-(AB|TN)|58\d{4}\.X|83010\d\d$|HILO )', re.I)
-RX_NO = re.compile(r'^(COR-|MOI-|MC-)|CORTE|PIEZA COSTURADA', re.I)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from criterio_hilo import es_hilo as _es_hilo  # noqa: E402  (un solo criterio para scripts/hilos/)
 
 
 def es_hilo(f):
-    if RX_NO.search(f.codigo + ' ' + f.desc):
-        return False
-    return bool(RX_DESC.search(f.desc or '') or RX_COD.match(f.codigo or ''))
+    return _es_hilo(f.codigo, f.desc)
 
 
 # --- programa
