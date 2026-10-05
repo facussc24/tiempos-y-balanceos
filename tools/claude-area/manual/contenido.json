@@ -113,7 +113,7 @@
       "texto": [
         "Arriba a la izquierda hay dos o tres botones juntos.",
         "El nuestro es el de la derecha: **</>**. Se llama Code. Hacé clic ahí.",
-        "El otro, el del globito, es para charlar: acá no lo usamos."
+        "Los otros, como el del globito, son para charlar: acá no los usamos."
       ],
       "error_que_evita": "Escribir la pregunta en el chat común, que no conoce nada de Barack.",
       "a_confirmar": [
@@ -196,7 +196,7 @@
         }
       ],
       "texto": [
-        "1. Si Claude no te saludó por tu nombre, empezá por tu puesto.",
+        "1. Preguntá. Si no te saludó por tu nombre, decile antes tu puesto.",
         "2. Claude busca la descripción de tu puesto y te dice de qué documento salió.",
         "Claude contesta distinto a un supervisor que a un comprador.",
         "No hace falta escribir bien: alcanza con que se entienda."
