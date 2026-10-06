@@ -384,8 +384,10 @@ y, si hace falta, `cuenta` y `vistos`. Los tres frenos viven en `scripts/_lib/re
 - Cada mail de los ultimos 12 meses que habla del consumo de ese insumo va citado o en
   `vistos` (`<id>: motivo` o `hilo:<asunto>: motivo`, separados por `|`).
 - `fak:` como fuente = decision de Fak en el chat: pasa en amarillo y queda en el journal.
-- **Material de corte (vinilo, tela, punzonado, espuma) que cambia de consumo — freno 4,
-  06/10/2026:** el consumo tiene que estar ESCRITO (no armado con una cuenta) en un mail de
+- **Material de corte (vinilo, tela, punzonado, espuma) que cambia de consumo — chequeo 4,
+  06/10/2026. Es un AVISO en amarillo, no bloquea** (tres auditorias le encontraron huecos; la
+  regla `consumos-entregables.md` §6 la cumple quien carga: con ese aviso NO se sigue sin la
+  planilla o el mail de Pablo): el consumo tiene que estar ESCRITO (no armado con una cuenta) en un mail de
   Pablo Gamboa (`mail:<id>`), en el adjunto de un mail suyo **citando tambien ese mail en la
   misma fila**, o en una planilla de consumos o tizadas que este en el servidor `Y:` (Mesa de
   Corte, proyecto o PPAP; no en `Obsoleto` ni `Old`). Un margen que pida el gerente sobre ese

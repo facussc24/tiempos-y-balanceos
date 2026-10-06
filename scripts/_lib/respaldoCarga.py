@@ -49,6 +49,11 @@ POR QUE EXISTE (TPO del Top Roll de Patagonia, 20/08 -> 25/09/2026)
      columna `modulo`. Listas: `corte_fuente_oficial` de consumosCanon.data.json.
      NO cubre: las altas (`_arbAltaLote.py`) ni las sustituciones con cantidad
      (`_arbSustituir.py`), que escriben consumo sin pasar por aca.
+     ES UN AVISO (amarillo), NO BLOQUEA. Tres auditorias el 06/10/2026 le encontraron huecos a
+     tres versiones seguidas (la ultima: un archivo propio con el nombre de un adjunto de Pablo,
+     citando su mail; o el consumo de OTRA pieza copiado de una planilla oficial). Un freno que
+     no puede garantizar no se vende como garantia: avisa, y la regla la cumple quien carga
+     (`consumos-entregables.md` §6). No se le agrega una cuarta version.
 
 LIMITE CONOCIDO: solo ve el buzon de Fak y los archivos. Lo que se hablo en planta o por
 WhatsApp sin mail no lo encuentra: si existe, se cita como `fak:` o como archivo.
@@ -695,14 +700,14 @@ def revisar_fila(r, mails, unidad=False, ocr=None, textos_oc=None, desc_prod=Non
             juicio = [(ci,) + fuente_oficial_de_corte(fu, ci, mails, canon, adj) for fu, ci in verificadas]
             oficiales = [n for ci, ok_of, _ in juicio if ok_of for n in numeros(ci)]
             if not any(ok_of for _, ok_of, _ in juicio):
-                rojos.append('material de corte sin la planilla de Mesa de Corte ni un mail de Pablo Gamboa (%s). '
+                amarillos.append('AVISO, no bloquea: material de corte sin la planilla de Mesa de Corte ni un mail de Pablo Gamboa (%s). '
                              'Una tizada, una BOM o una cuenta propia no alcanzan: preguntarle a Pablo Gamboa '
                              'antes de cambiar el consumo'
                              % ('; '.join(sorted({mot for _, _, mot in juicio})) or 'ninguna fuente verificada'))
             elif not any(mismo(valor, x) for x in oficiales):
                 # el CONSUMO tiene que estar escrito en la fuente oficial: no se arma con una cuenta
                 # sobre numeros sueltos de ella, ni lo trae otra fuente que la acompaña
-                rojos.append('material de corte: el %s no figura en la planilla de Mesa de Corte ni en el mail de '
+                amarillos.append('AVISO, no bloquea: material de corte: el %s no figura en la planilla de Mesa de Corte ni en el mail de '
                              'Pablo Gamboa (sale de otra fuente o de una cuenta). El consumo se toma como lo da '
                              'Mesa de Corte: preguntarle a Pablo Gamboa' % r.get('valor_nuevo'))
 
@@ -983,7 +988,7 @@ def selftest():
     F = ['MP8404', '9PQ009-BK25-2']
 
     def corta(res):
-        return 'material de corte' in ' '.join(res[0][1])
+        return 'AVISO, no bloquea: material de corte' in ' '.join(res[0][2])      # es un aviso: va en los amarillos
 
     def fila(valor, actual, fuente, cita, cuenta='', vistos=VU, extra=None, cols=None):
         return revisar(tabla([F + [valor, actual, fuente, cita, cuenta, vistos] + (extra or [])], cols or C), **ku)
@@ -992,59 +997,59 @@ def selftest():
          insumos_de_corte(rel, canon_t) == {'9PQ009-BK25-2', '427TEL002COR01', '00173623-01-V20', 'V8080101I1600A'})
     caso('sin export no hay lista (y no una lista vacia callada)', insumos_de_corte(os.path.join(tmp, 'no.txt'), canon_t) is None)
     rojo, res = fila('0.07241379', '0.058', bom25, '2,1m2 Cantidad de piezas: 29', '2.1/29')
-    caso('31/07: el pano y las 29 piezas de la BOM de 2025 dan rojo', rojo and corta(res))
+    caso('31/07: el pano y las 29 piezas de la BOM de 2025 dan aviso', not rojo and corta(res))
     rojo, res = fila('0.08287537', '0.0724', mrk + '||' + mrk + '||' + mrk,
                      '<LENGTH>153.4729||<WIDTH>135.0000||<PLACED_ON_TABLE>25', '153.4729*135.0000/10000/25')
-    caso('una tizada .MRK sola da rojo (puede ser una prueba)', rojo and corta(res))
+    caso('una tizada .MRK sola da aviso (puede ser una prueba)', corta(res))     # el rojo de este caso es de la cuenta (10000)
     rojo, res = fila('0.0896', '0.0724', plan, '25;0,0896')
-    caso('con la planilla de Mesa de Corte del servidor: verde', not rojo)
+    caso('con la planilla de Mesa de Corte del servidor: verde', not rojo and not corta(res))
     rojo, res = fila('0.0896', '0.0724', plan_mia, '25;0,0896')
-    caso('la misma planilla fuera del servidor (la arme yo): rojo', rojo and corta(res))
+    caso('la misma planilla fuera del servidor (la arme yo): aviso', not rojo and corta(res))
     rojo, res = fila('0.0896', '0.0724', plan_obs, '25;0,0896')
-    caso('planilla en una carpeta de obsoletos: rojo', rojo and corta(res))
+    caso('planilla en una carpeta de obsoletos: aviso', not rojo and corta(res))
     rojo, res = fila('0.0896', '0.0724', plan_bom, '25;0,0896')
-    caso('archivo del servidor que es una BOM por el nombre: rojo', rojo and corta(res))
+    caso('archivo del servidor que es una BOM por el nombre: aviso', not rojo and corta(res))
     rojo, res = fila('0.0896', '0.0724', adjunto + '||mail:' + ID_PABLO, '25;0,0896||Planilla Upper Trim',
                      vistos=ID_JEFE[-17:] + ': visto')
-    caso('adjunto de un mail de Pablo Gamboa, citando ese mail: verde', not rojo)
+    caso('adjunto de un mail de Pablo Gamboa, citando ese mail: verde', not rojo and not corta(res))
     rojo, res = fila('0.0896', '0.0724', adjunto, '25;0,0896')
-    caso('archivo que se llama como un adjunto de Pablo, sin citar el mail: rojo', rojo and corta(res))
+    caso('archivo que se llama como un adjunto de Pablo, sin citar el mail: aviso', not rojo and corta(res))
     os.makedirs(os.path.join(servidor, 'Old'))
     plan_old = archivo(os.path.join(servidor, 'Old'), 'CONSUMOS TIZADAS 21-4-25.csv', PLAN)
     rojo, res = fila('0.0896', '0.0724', plan_old, '25;0,0896')
-    caso('planilla en una carpeta Old: rojo', rojo and corta(res))
+    caso('planilla en una carpeta Old: aviso', not rojo and corta(res))
     plan_guion = archivo(servidor, 'CONSUMO_BOM_UPPER_TRIM.csv', PLAN)
     rojo, res = fila('0.0896', '0.0724', plan_guion, '25;0,0896')
-    caso('BOM con guiones bajos en el nombre: rojo', rojo and corta(res))
+    caso('BOM con guiones bajos en el nombre: aviso', not rojo and corta(res))
     rojo, res = fila('0.064', '0.0724', plan + '||' + plan, 'UPPER TRIM;1,60||1,40;25', '1.60/25')
-    caso('cuenta propia con numeros sueltos de la planilla oficial: rojo', rojo and 'no figura en la planilla' in ' '.join(res[0][1]))
+    caso('cuenta propia con numeros sueltos de la planilla oficial: aviso', not rojo and 'no figura en la planilla' in ' '.join(res[0][2]))
     ficha = archivo(tmp, 'FT141 Espuma PU.doc', 'Densidad 35 kg/m3 espesor 3 mm')
     rojo, res = revisar(tabla([['MP8404', 'AD - ADFA15', '35', '30', ficha, 'Densidad 35 kg/m3', '', '']], C), **ku)
     caso('una ficha .doc se sigue leyendo como antes', not rojo)
     rojo, res = fila('0.0896 m2', '0.0724', plan, '25;0,0896')
     caso('valor_nuevo que no es un numero: rojo', rojo and 'no es un numero' in ' '.join(res[0][1]))
     rojo, res = fila('0.0896', '0.0724', 'mail:' + ID_PABLO, 'consumo 0,0896 m2 por pieza', vistos=ID_JEFE[-17:] + ': visto')
-    caso('con el mail de Pablo Gamboa: verde', not rojo)
+    caso('con el mail de Pablo Gamboa: verde', not rojo and not corta(res))
     rojo, res = fila('0.0896', '0.0724', 'mail:' + ID_JEFE, 'consumo 0,0896 m2 por pieza', vistos=ID_PABLO[-17:] + ': visto')
-    caso('con el mail de otra persona: rojo', rojo and corta(res))
+    caso('con el mail de otra persona: aviso', not rojo and corta(res))
     rojo, res = fila('0.07241379', '0.058', bom25 + '||mail:' + ID_ESTANTE, '2,1m2 Cantidad de piezas: 29||plano de la estanteria', '2.1/29')
-    caso('BOM + un mail de Pablo sobre otra cosa: rojo (el numero no sale de el)', rojo and 'no figura en la planilla' in ' '.join(res[0][1]))
+    caso('BOM + un mail de Pablo sobre otra cosa: aviso (el numero no sale de el)', not rojo and 'no figura en la planilla' in ' '.join(res[0][2]))
     rojo, res = fila('0.07241379', '0.058', bom25 + '||' + plan_otra, '2,1m2 Cantidad de piezas: 29||DUCTO;2,00', '2.1/29')
-    caso('BOM + la planilla oficial de otra pieza: rojo', rojo and 'no figura en la planilla' in ' '.join(res[0][1]))
+    caso('BOM + la planilla oficial de otra pieza: aviso', not rojo and 'no figura en la planilla' in ' '.join(res[0][2]))
     rojo, res = fila('0.0896', '0.0724', viejo_xls, '25;0,0896')
     caso('un .xls no se lee: rojo que lo dice', rojo and 'no se leer .xls' in ' '.join(res[0][1]))
     rojo, res = fila('0.0896', '0.0724', 'fak:', 'usa 0,0896')
-    caso('fak: sin nombrar a Pablo Gamboa: rojo', rojo and corta(res))
+    caso('fak: sin nombrar a Pablo Gamboa: aviso', not rojo and corta(res))
     rojo, res = fila('0.0896', '0.0724', 'fak:', 'Pablo me confirmo 0,0896')
-    caso('fak: "Pablo" a secas (hay otros Pablo): rojo', rojo and corta(res))
+    caso('fak: "Pablo" a secas (hay otros Pablo): aviso', not rojo and corta(res))
     rojo, res = fila('0.0896', '0.0724', 'fak:', 'Pablo Gamboa todavia no contesto, cargo 0,0896')
-    caso('fak: que nombra a Pablo Gamboa sin que confirme: rojo', rojo and corta(res))
+    caso('fak: que nombra a Pablo Gamboa sin que confirme: aviso', not rojo and corta(res))
     rojo, res = fila('0.0896', '0.0724', 'fak:', 'Pablo Gamboa me confirmo 0,0896')
-    caso('fak: con la confirmacion de Pablo Gamboa: pasa en amarillo', not rojo and res[0][2])
+    caso('fak: con la confirmacion de Pablo Gamboa: pasa sin el aviso de corte', not rojo and not corta(res))
     rojo, res = fila('0.0896', '0.0724', 'fak:', 'Carlos lo verifico con Pablo Gamboa: 0,0896')
-    caso('fak: verificado por Carlos con Pablo Gamboa: pasa en amarillo', not rojo and res[0][2])
+    caso('fak: verificado por Carlos con Pablo Gamboa: pasa sin el aviso de corte', not rojo and not corta(res))
     rojo, res = fila('0.0896', '0.0724', 'fak:', 'Carlos Baptista pidio cargar 5% mas sobre lo de Mesa de Corte: 0,0896')
-    caso('fak: margen que pidio el gerente sobre lo de Mesa de Corte: pasa en amarillo', not rojo and res[0][2])
+    caso('fak: margen que pidio el gerente sobre lo de Mesa de Corte: pasa sin el aviso de corte', not rojo and not corta(res))
     rojo, res = fila('0.0724', '0.0724', bom25, 'Cantidad de piezas: 29')
     caso('fila que no cambia el consumo: el freno de corte no salta', not corta(res))
     rojo, res = fila('0', '0.0724', 'fak:', 'sacar la linea, queda en 0')
@@ -1057,7 +1062,7 @@ def selftest():
     caso('un insumo que no es de corte: el freno de corte no salta', not corta(res))
     rojo, res = revisar(tabla([['MP9000', 'NUEVO-001', '0.07241379', '', bom25, '2,1m2 Cantidad de piezas: 29', '2.1/29', '', 'CO']],
                               C + ['modulo']), **ku)
-    caso('insumo nuevo con modulo CO en la tabla: rojo', rojo and corta(res))
+    caso('insumo nuevo con modulo CO en la tabla: aviso', not rojo and corta(res))
     caso('los patrones del canon llevan \\b de verdad (no la tecla de borrar)',
          all('\x08' not in str(v) for v in canon_corte().values()))
 

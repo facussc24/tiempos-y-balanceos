@@ -22,8 +22,10 @@ EJECUTAR (cargar en arb/Supabase, enviar a cliente):
    la planilla oficial de Mesa de Corte o la confirmacion de Pablo Gamboa** (Fak, 06/10/2026:
    *"no cambiamos el consumo sin un excel oficial o una confirmacion oficial... ante la duda le
    preguntamos a Pablo Gamboa"*). Una tizada (.MRK) sola no alcanza: puede ser una prueba. Tampoco
-   una BOM de proyecto, un flujograma ni una cuenta mia. Freno 4 de `respaldoCarga.py`
-   (BLOQUEANTE, listas en `corte_fuente_oficial` del canon): el consumo tiene que estar ESCRITO
+   una BOM de proyecto, un flujograma ni una cuenta mia. Chequeo 4 de `respaldoCarga.py`
+   (**AVISO en amarillo, no bloquea**: tres auditorias el 06/10/2026 le encontraron huecos a
+   tres versiones y se dejo de venderlo como garantia; la regla la cumplo yo. Listas en
+   `corte_fuente_oficial` del canon): el consumo tiene que estar ESCRITO
    en un mail de Pablo, en el adjunto de un mail suyo (citando ese mail) o en una planilla que
    este en el SERVIDOR; no se arma con una cuenta, y lo que arme yo no cuenta, este donde este.
    Un margen pedido por el gerente (06/10: Carlos, *"en la BOM cargar 5% mas"*) entra por `fak:`. `python scripts/_tizadaVsArb.py <producto>` compara el
