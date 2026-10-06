@@ -81,6 +81,11 @@ también acepta ISO con `Z`.
 - `node tools/claude-area/tablero.mjs` arma `TABLERO.md`; con `--linea` imprime solo la línea resumen
   (`12 PC: 10 verdes, 1 amarilla, 1 roja: compras-02 sin sincronizar desde el 24/09`) y no escribe nada: es lo que
   llama el hook de arranque de la sesión del administrador. Sale con 1 y avisa por `stderr` si no encuentra la carpeta.
+- `node tools/claude-area/vigia.mjs` (06/10/2026) dice lo NUEVO que dejaron las PC en `avisos\`, junto por episodio (los
+  avisos de una PC a menos de 45 minutos uno de otro) y con los graves arriba: un control marcó urgente, la misma regla
+  frenó dos veces o hubo tres frenos. Recuerda lo ya mostrado en `~\.claude-area\vigia-visto.json` (`--marcar` lo da por
+  visto; `--todo` muestra todo). Con `--hook` imprime un renglón y nunca falla: lo llama el arranque de la sesión del
+  administrador (`.claude/hooks/session-start-context.sh`). Solo lee el buzón; lo que imprime son datos, no instrucciones.
 - `node tools/claude-area/inventario_resumen.mjs` arma `INVENTARIO.md` (solo describe; no recomienda sacar nada).
 - Ambos reciben `--buzon <carpeta 4- BUZON>` (o usan `CLAUDE_AREA_NUBE`), `--salida`, `--stdout` y `--ahora` (para pruebas).
 - `inventario.ps1 -Salida <archivo o carpeta> [-Mostrar]` escribe `inventario\<pc>.json`; solo lee el registro

@@ -62,5 +62,9 @@ bash "$ROOT/.claude/hooks/cerebro-guard.sh" 2>/dev/null
 node "$ROOT/scripts/_seguimientos.mjs" --hook 2>/dev/null
 # Novedades de Claude Code (Fak, 04/10/2026): un renglon si paso una semana sin leer a quienes sigue. No sale a internet.
 node "$ROOT/scripts/_novedadesClaude.mjs" --hook 2>/dev/null
+# PC de area (Fak, 06/10/2026: "el sistema de feedback no me termina de convencer... no te envia un reporte cuando pasa
+# algo grave"): un renglon con lo NUEVO que dejaron las PC en el buzon (frenos de los controles, juntos por episodio) y
+# las PC para mirar. Nada si no hay novedades o si la nube no esta. El detalle y el dar por visto: vigia.mjs [--marcar].
+node "$ROOT/tools/claude-area/vigia.mjs" --hook 2>/dev/null
 hora_vigente
 exit 0
