@@ -54,6 +54,7 @@ Y_PRIMERA_FILA = 62
 Y_PIE = ALTO - 118
 FILAS_POR_PAGINA = int((Y_PIE - 24 - Y_PRIMERA_FILA) // LEADING)
 NOTA = 'NOTA: la informacion es fiel extracto del Maestro de Relaciones de ARB'
+TOLERANCIA_PISADA = 0.5     # pt que la caja de una letra puede montarse en la de la siguiente
 
 # El arbol del TXT: los niveles arrancan en las columnas 0, 7, 14 y 21 (.arb-cache/README.md)
 OFFSETS = (0, 7, 14, 21)
@@ -243,6 +244,15 @@ def descripciones_producto(path=None):
     return d
 
 
+def celdas_de(pieza, fila):
+    """Lo que se dibuja en un renglon, columna por columna (mismo orden que COLS). Lo usan
+    `pagina()` para dibujar y `validar_pdf()` para saber que tiene que leerse: con dos
+    definiciones el gate validaria otra hoja."""
+    nivel, rubro, medida, desc, unidad, consumo, modulo, proceso = fila
+    etiqueta = pieza if nivel == 0 else '  ' + '.' * nivel + ' ' + pieza
+    return [etiqueta, rubro, medida, desc, unidad, consumo_fmt(consumo), modulo, proceso]
+
+
 def pagina(doc, pieza, filas, fecha, actualizaciones, descripcion=''):
     p = doc.new_page(width=ANCHO, height=ALTO)
     y = 28
@@ -255,13 +265,15 @@ def pagina(doc, pieza, filas, fecha, actualizaciones, descripcion=''):
     p.draw_line(fitz.Point(28, y), fitz.Point(745, y), width=0.6)
     y = Y_PRIMERA_FILA
 
-    for nivel, rubro, medida, desc, unidad, consumo, modulo, proceso in filas:
-        etiqueta = pieza if nivel == 0 else '  ' + '.' * nivel + ' ' + pieza
+    for fila in filas:
+        celdas = celdas_de(pieza, fila)
+        etiqueta = celdas[0]
         # Un codigo de 14 caracteres con la sangria del sub-ensamble pisaba el digito del Rubro
         # (06/10/2026, semielaborados INY-...-V1): en ese renglon el Rubro se corre a la derecha.
+        # Corrido puede llegar a la Medida (codigo de 15 en un nivel 3; el export del 06/10/2026
+        # llega a nivel 2): para ese renglon este dibujo no tiene salida, y lo frena `validar_pdf()`.
         x_rubro = max(COLS[1][1], COLS[0][1] + (len(etiqueta) + 1) * FS * 0.6)
-        for (titulo_col, x), v in zip(COLS, [etiqueta, rubro, medida, desc, unidad,
-                                             consumo_fmt(consumo), modulo, proceso]):
+        for (titulo_col, x), v in zip(COLS, celdas):
             p.insert_text((x_rubro if titulo_col == 'Rubro' else x, y), v, fontname='cour', fontsize=FS)
         y += LEADING
 
@@ -275,22 +287,76 @@ def pagina(doc, pieza, filas, fecha, actualizaciones, descripcion=''):
     p.insert_text((30, y + 4), NOTA, fontname='cobo', fontsize=8)
 
 
+def como_se_lee(s):
+    """El export es cp1252 y se lee como latin-1: un byte 0x80-0x9F (la raya larga, 0x97)
+    queda como caracter de control, la hoja lo dibuja con su signo y al releerla vuelve como
+    ese signo. Sobre las 1.408 BOM del 06/10/2026 era la unica diferencia: una fila."""
+    return s.encode('latin-1', 'replace').decode('cp1252', 'replace')
+
+
+def renglones_leidos(page, n):
+    """Las palabras de cada uno de los `n` renglones de la tabla, de izquierda a derecha, como
+    las separa el lector del PDF. Cada palabra va al renglon de la linea de base mas cercana."""
+    filas = [[] for _ in range(n)]
+    for x0, y0, _x1, y1, palabra, *_ in page.get_text('words'):
+        i = round(((y0 + y1) / 2 - Y_PRIMERA_FILA) / LEADING)
+        if 0 <= i < n:
+            filas[i].append((x0, palabra))
+    return [[palabra for _x, palabra in sorted(f)] for f in filas]
+
+
+def caracteres_pisados(page, n):
+    """[(renglon, 'a', fin_de_a, 'b', inicio_de_b)]: letras de un mismo renglon de la tabla
+    cuyas cajas se montan. Dentro de una celda las letras vecinas se tocan justo, sin montarse."""
+    filas = [[] for _ in range(n)]
+    for bloque in page.get_text('rawdict')['blocks']:
+        for linea in bloque.get('lines', []):
+            for span in linea['spans']:
+                for c in span['chars']:
+                    i = round((c['origin'][1] - Y_PRIMERA_FILA) / LEADING)
+                    if c['c'].strip() and 0 <= i < n:
+                        filas[i].append((c['bbox'][0], c['bbox'][2], c['c']))
+    pisados = []
+    for i, letras in enumerate(filas):
+        letras.sort()
+        for (_x0a, x1a, a), (x0b, _x1b, b) in zip(letras, letras[1:]):
+            if x1a - x0b > TOLERANCIA_PISADA:
+                pisados.append((i, a, x1a, b, x0b))
+    return pisados
+
+
 def validar_pdf(path, boms, piezas):
-    """Releer el PDF generado y confirmar que CADA medida y CADA consumo estan ahi.
+    """Releer el PDF generado y confirmar que CADA renglon se lee como se escribio: las mismas
+    palabras, en el mismo orden, y cada columna separada de la de al lado.
 
     Lo que se difunde es el PDF, asi que la ultima palabra la tiene el PDF releido — no el
     parser que dice haberlo hecho bien. Sobre el 100% de las filas, nunca por muestreo: el
-    04/08/2026 se revisaron 2 paginas de 5 y las 2 eran las buenas."""
+    04/08/2026 se revisaron 2 paginas de 5 y las 2 eran las buenas.
+
+    Son DOS controles por renglon, porque cada uno ve lo que el otro no (medido el 06/10/2026):
+      - Las PALABRAS. Dos columnas que quedan a menos de un espacio, o que se pisan poco, se
+        releen como UNA palabra (`12MAT-A`): es lo que lee una persona, un codigo que no
+        existe. Hasta ese dia se buscaba la medida en el texto de la pagina entera, y `MAT-A`
+        seguia "estando".
+      - Las CAJAS de las letras. Pisadas de mas (unos 7 pt, mas de una letra) el lector las
+        devuelve como dos palabras sanas y el control de arriba da verde: asi pasaba el
+        incidente de ese dia, el Rubro dibujado arriba del codigo."""
     doc = fitz.open(path)
     faltan = []
     try:
         if doc.page_count != len(piezas):
             faltan.append(f'el PDF tiene {doc.page_count} paginas y se pidieron {len(piezas)} piezas')
         for i, pieza in enumerate(piezas[:doc.page_count]):
-            texto = doc[i].get_text()
-            for f in boms[pieza]:
-                if f[2] not in texto or consumo_fmt(f[5]) not in texto:
-                    faltan.append(f'pag {i + 1} ({pieza}): {f[2]} consumo {consumo_fmt(f[5])}')
+            leidos = renglones_leidos(doc[i], len(boms[pieza]))
+            for n, (f, leido) in enumerate(zip(boms[pieza], leidos), start=1):
+                esperado = [palabra for celda in celdas_de(pieza, f)
+                            for palabra in como_se_lee(celda).split()]
+                if leido != esperado:
+                    faltan.append(f'pag {i + 1} ({pieza}) renglon {n}: se lee {" ".join(leido)!r} '
+                                  f'y debia leerse {" ".join(esperado)!r}')
+            for n, a, fin, b, inicio in caracteres_pisados(doc[i], len(boms[pieza])):
+                faltan.append(f'pag {i + 1} ({pieza}) renglon {n + 1}: la letra {a!r} (termina en '
+                              f'{fin:.1f}) pisa a la {b!r} (empieza en {inicio:.1f})')
     finally:
         doc.close()
     return faltan
@@ -393,10 +459,11 @@ def main():
         raise
     if perdidas:
         os.remove(parcial)
-        sys.exit('ABORTA: el PDF tenia datos del origen que no llegaron a la hoja. No se '
-                 'genero ningun archivo.\n' +
+        sys.exit('ABORTA: el PDF releido no dice lo mismo que el origen: un dato no llego a la '
+                 'hoja, o dos columnas quedaron pisadas o pegadas. No se genero ningun '
+                 'archivo.\n' +
                  ''.join(f'        - {p}\n' for p in perdidas[:10]))
-    gates.append('PDF releido y completo')
+    gates.append('PDF releido renglon por renglon')
     os.replace(parcial, salida)
 
     print(f'OK  {salida}')

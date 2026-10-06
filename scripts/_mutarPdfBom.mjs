@@ -58,14 +58,35 @@ const MUTACIONES = [
         a: '    if False:\n        sys.exit(',
     },
     {
+        nombre: 'gate 5 no compara lo que se lee de cada renglon',
+        de: '                if leido != esperado:',
+        a: '                if False:',
+    },
+    {
+        nombre: 'gate 5 no mira si las cajas de las letras se pisan',
+        de: '            if x1a - x0b > TOLERANCIA_PISADA:',
+        a: '            if False:',
+    },
+    {
+        nombre: 'gate 5 solo relee la primera pagina',
+        de: '        for i, pieza in enumerate(piezas[:doc.page_count]):',
+        a: '        for i, pieza in enumerate(piezas[:1]):',
+    },
+    {
+        nombre: 'el Rubro no se corre cuando el codigo con sangria no entra en su columna',
+        de: 'x_rubro = max(COLS[1][1], COLS[0][1] + (len(etiqueta) + 1) * FS * 0.6)',
+        a: 'x_rubro = COLS[1][1]',
+    },
+    {
         nombre: 'el PDF se guarda con nombre final aunque falle el gate 5',
         de: '    parcial = salida + \'.parcial\'',
         a: '    parcial = salida',
-        sinTest: 'El gate 5 (releer el PDF) es defensa en profundidad: con los gates 1-4 puestos '
-            + 'no encontre ninguna entrada que lo haga fallar a el y no a uno anterior. Por eso '
-            + 'no hay fixture que distinga guardar en .parcial de guardar directo. Se deja el '
-            + 'rename atomico igual: si algun dia un gate anterior se afloja, es lo unico que '
-            + 'evita dejar un PDF con pinta de terminado en la carpeta desde la que se adjunta.',
+        sinTest: 'Desde el 06/10/2026 el gate 5 tiene entradas que lo hacen fallar a el y no a uno '
+            + 'anterior (columnas pisadas o pegadas, tests 14 y 14b). Igual ningun fixture '
+            + 'distingue guardar en .parcial de guardar directo: cuando el gate falla, el script '
+            + 'borra lo que escribio, se llame como se llame. El rename atomico cubre otra cosa, '
+            + 'que el proceso se corte entre el guardado y la relectura: es lo unico que evita '
+            + 'dejar un PDF con pinta de terminado en la carpeta desde la que se adjunta.',
     },
 ];
 
