@@ -257,9 +257,12 @@ def pagina(doc, pieza, filas, fecha, actualizaciones, descripcion=''):
 
     for nivel, rubro, medida, desc, unidad, consumo, modulo, proceso in filas:
         etiqueta = pieza if nivel == 0 else '  ' + '.' * nivel + ' ' + pieza
-        for (_, x), v in zip(COLS, [etiqueta, rubro, medida, desc, unidad,
-                                    consumo_fmt(consumo), modulo, proceso]):
-            p.insert_text((x, y), v, fontname='cour', fontsize=FS)
+        # Un codigo de 14 caracteres con la sangria del sub-ensamble pisaba el digito del Rubro
+        # (06/10/2026, semielaborados INY-...-V1): en ese renglon el Rubro se corre a la derecha.
+        x_rubro = max(COLS[1][1], COLS[0][1] + (len(etiqueta) + 1) * FS * 0.6)
+        for (titulo_col, x), v in zip(COLS, [etiqueta, rubro, medida, desc, unidad,
+                                             consumo_fmt(consumo), modulo, proceso]):
+            p.insert_text((x_rubro if titulo_col == 'Rubro' else x, y), v, fontname='cour', fontsize=FS)
         y += LEADING
 
     y = Y_PIE
