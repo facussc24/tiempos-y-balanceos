@@ -6,7 +6,7 @@ leccion es un bullet legible de hasta 600 caracteres; el detalle vive en la memo
 que cita (gate por bullet: regla `lecciones-consolidacion.md`). La historia completa de cada
 incidente vive en los snapshots.
 
-- **Snapshots** (la version larga de cada consolidacion): los tres ultimos son [2026-10-04](docs/_archive/LECCIONES_snapshot_2026-10-04.md) · [2026-10-05](docs/_archive/LECCIONES_snapshot_2026-10-05.md) · [2026-10-06](docs/_archive/LECCIONES_snapshot_2026-10-06.md) y el historico 2026-03-30 a 07-02, [2026H1](docs/_archive/LECCIONES_APRENDIDAS_2026H1_completo.md); los demas estan en `docs/_archive/`.
+- **Snapshots** (la version larga de cada consolidacion): los tres ultimos son [2026-10-02](docs/_archive/LECCIONES_snapshot_2026-10-02.md) · [2026-10-03](docs/_archive/LECCIONES_snapshot_2026-10-03.md) · [2026-10-04](docs/_archive/LECCIONES_snapshot_2026-10-04.md) · [2026-10-05](docs/_archive/LECCIONES_snapshot_2026-10-05.md) y el historico 2026-03-30 a 07-02, [2026H1](docs/_archive/LECCIONES_APRENDIDAS_2026H1_completo.md); los demas estan en `docs/_archive/`.
 - **Tabla incidente → regla**: `docs/_archive/INCIDENTES_REGLAS_AMFE.md`
 - Lo ya codificado no se repite aca: reglas de `.claude/rules/` y sus gates ejecutables
   (amfe.md + amfeValidator, database.md, verify-supabase-live.md, no-pfd-no-ho.md, techo-agentes.md, cad-3d.md).
@@ -14,7 +14,11 @@ incidente vive en los snapshots.
 ## Verificacion y evidencia
 
 - **05-06/10 — Un filtro que busca por palabras no se promete como garantía; y si Fak ya pidió algo y aceptó el riesgo, mi regla de freno no le gana a su pedido: se hace y el riesgo va en un renglón** (dejé apagados los mails de Carlos por tres auditorías con fallas; Fak: *"lo único que tenías que hacer era eso"*). Graduado a las memorias `project_mails_del_equipo_a_la_nube` y `project_claudes_por_area`.
-- **03-04/10 — Probar lo que construyo para otros (asistente de área), cinco reglas:** la prueba de «esto se niega» se arma con el de mentira puesto; una hoja de alto fijo se juzga mirando la imagen del PDF; a un agente con Word o Excel se le pone tope y el que no escribe hace 10 minutos se mira; dos exámenes se comparan con los MISMOS jueces, a ciegas y con la regla escrita antes; y nada se prueba contra la carpeta de verdad (`--simular` o copia). Graduado a la memoria `project_claudes_por_area`.
+- **04/10 — Una prueba de «esto se niega» se arma con el de mentira PUESTO y comprobado antes de la primera corrida.** Graduado a la barrera de `tools/claude-area/sync_area.ps1` (solo registra desde la copia instalada) y a la memoria `project_claudes_por_area`.
+- **04/10 — Una hoja de alto fijo recorta lo que no entra sin avisar: después de tocar un papel se MIRA la imagen del PDF, no la cantidad de páginas.** Graduado a la memoria `project_claudes_por_area`.
+- **04/10 — A un agente que abre Word o Excel se le pone tope de tiempo por corrida, y un agente o una conversación que no escribe hace 10 minutos se mira: no se espera.** Graduado a la memoria `project_claudes_por_area` y a `scripts/_colgados.mjs`.
+- **04/10 — Dos tandas de jueces distintos no se comparan por su total: un examen nuevo se mide contra el anterior con los MISMOS jueces y a ciegas, y la regla de «se publica o no» se escribe antes de mirar.** Graduado a `pareado_v7.py` (carpeta de examen) y a la memoria `project_claudes_por_area`.
+- **03/10 — Una prueba contra la carpeta de VERDAD deja su huella, y en la biblioteca de Ingeniería nada se borra: va con `--simular` o contra una copia**. Graduado a la memoria `project_claudes_por_area`.
 - **03/10 — «Borrá lo temporal al terminar» sin decir CUÁL termina en un borrado por comodín: un agente se llevó 38 borradores ajenos de la carpeta que comparten todos.** Graduado a la memoria `reference_notebook_capacidad_agentes_con_navegador` (carpeta propia con su nombre; se borra esa y nada más).
 - **03/10 — Un freno que depende de un programa de la PC se prueba SIN ese programa: un control que no puede arrancar no frena nada**. Graduado a `hooks.json` del plugin (Node propio, por su ruta), a `ejecutables` de `_paquete.mjs` y a la memoria `project_claudes_por_area`.
 - **02/10 — Un examen se toma como lo va a usar la gente (nivel, material de su área, PC instalada por el instalador), y el aviso de un documento va donde se LEE ese documento**. Graduado a la memoria `project_claudes_por_area`.
@@ -70,7 +74,7 @@ incidente vive en los snapshots.
 
 - **06/10 — Lo que corrijo en el archivo de OTRO se le muestra a Fak recién auditado, y cada celda cambiada lleva el ANTES, no la fuente** (le abrí el plan de control de Nico sin auditar: *"no me lo abras, auditalo... poneme el antes"*; la auditoría sacó 9 de 43 cambios que no eran 100 % seguros). **Y volver atrás un cambio no puede dejar un dato que se sabe falso**: dejé un código de hilo que no existe (*"ese hilo no existe más... es grave"*); lo dudoso es la PALABRA nueva, no el código inexistente. Graduado a la memoria `feedback_entregables_para_fak`.
 
-- **05-06/10 — Cuando Fak dice que algo «debería poder hacerse», se saca la pared (el riesgo va en un renglón y decide él), y un asistente para otros se diseña para RESOLVER: un freno que contesta «no puedo» o «hacelo vos» a un pedido normal es un error mío, y los avisos de las PC se leen** (*"habilitales todo"*; 06/10: *"se nos fue de la mano"*). Graduado a la memoria `project_claudes_por_area` y a `tools/claude-area/vigia.mjs`.
+- **05/10 — Cuando Fak dice que algo «debería poder hacerse», se saca la pared: no se le devuelve una lista de excepciones; el riesgo va en un renglón y decide él** (*"no no, qué carajo? habilitales todo"*). Graduado a la memoria `project_claudes_por_area`.
 
 - **04/10 — A Fak no se le nombra un papel por el número que le puse yo: se le muestra y se le dice qué es; y antes de decirle «eso lo hacés vos mañana» se mira si puede hacerlo YA y cuál es el mínimo**. Graduado a la memoria `project_claudes_por_area`.
 
