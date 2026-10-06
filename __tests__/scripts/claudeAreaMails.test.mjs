@@ -657,6 +657,23 @@ describe('mails_area: una corrida', () => {
         expect(subidos(pc).map((m) => m.asunto)).toEqual(['de hace dos semanas']);
     });
 
+    it('si la fila trae el dia en que la persona lo acordo y ya paso un dia, no hay primer dia de espera (y el aviso no lo promete)', async () => {
+        const pc = armarPc({ personas: [{ ...CARLOS, mails_acordado: '2026-10-03' }] });
+        const f = fuente(pc, [mail({ fecha: '2026-09-20 10:00', asunto: 'de hace dos semanas' })]);
+        const r = await directo(pc, { fuenteJsonl: f });
+        expect(r.resumen).toMatchObject({ resultado: 'ok', entrada: 1, aviso_nuevo: true });
+        const aviso = fs.readFileSync(path.join(pc.home, 'Trabajo', NOMBRE_AVISO), 'utf8');
+        expect(aviso).toContain('Desde el 05/10/2026, en esta PC está prendido');
+        expect(aviso).not.toContain('La primera copia se hace un día después');
+        expect(aviso).toContain('Un mail se copia recién un día después');
+        // acordado hoy mismo (menos de un dia), o con algo que no es una fecha: la espera sigue
+        for (const acordado of ['2026-10-05', 'ayer', 5]) {
+            const otra = armarPc({ personas: [{ ...CARLOS, mails_acordado: acordado }] });
+            expect((await directo(otra, { fuenteJsonl: fuente(otra, [mail()]) })).resumen.resultado, String(acordado)).toBe('primer_dia');
+            expect(fs.readFileSync(path.join(otra.home, 'Trabajo', NOMBRE_AVISO), 'utf8')).toContain('La primera copia se hace un día después');
+        }
+    });
+
     it('si se apaga despues de pasar por otro estado (la lista de lo privado rota), la persona igual recibe el aviso de que ya no', async () => {
         const pc = armarPc();
         await corre(pc, { fuenteJsonl: fuente(pc, [mail()]) });

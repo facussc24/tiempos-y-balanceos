@@ -469,7 +469,7 @@ export function escribirLote(carpetaMails, autor, lista, ahora) {
     return ruta;
 }
 
-const TEXTO_AVISO = (desde) => [
+const TEXTO_AVISO = (desde, conEspera = true) => [
     `Desde el ${desde}, en esta PC está prendido que tus mails de trabajo se copien a la nube de Ingeniería.`,
     '',
     'QUÉ SE COPIA',
@@ -478,8 +478,8 @@ const TEXTO_AVISO = (desde) => [
     'copian los últimos 90 días; después, solo lo nuevo.',
     '',
     'CUÁNDO',
-    'La primera copia se hace un día después de la fecha de este aviso: hasta entonces no se copia nada.',
-    'Después, un mail se copia recién un día después de que llegó o de que lo mandaste: lo que borres antes no se copia.',
+    ...(conEspera ? ['La primera copia se hace un día después de la fecha de este aviso: hasta entonces no se copia nada.'] : []),
+    'Un mail se copia recién un día después de que llegó o de que lo mandaste: lo que borres antes no se copia.',
     'Se copian solos cuando el Outlook clásico está abierto con tu casilla (al iniciar sesión y cada 4 horas). Con el',
     'Outlook cerrado, o con el Outlook nuevo, no se copia nada.',
     '',
@@ -509,14 +509,14 @@ const TEXTO_AVISO = (desde) => [
  * El aviso a la persona. Si ya esta (y tiene algo escrito) no se toca; vacio, se vuelve a escribir. La fecha es la del dia
  * en que se prendio (`desde`), no la del dia en que se escribe. Devuelve true si lo escribio ahora.
  */
-export function dejarAvisoALaPersona(home, desde) {
+export function dejarAvisoALaPersona(home, desde, conEspera = true) {
     const carpeta = path.join(home, 'Trabajo');
     const ruta = path.join(carpeta, NOMBRE_AVISO);
     let tamano = -1;
     try { tamano = fs.statSync(ruta).size; } catch { tamano = -1; }
     if (tamano > 0) return false;
     fs.mkdirSync(carpeta, { recursive: true });
-    fs.writeFileSync(ruta, `\uFEFF${TEXTO_AVISO(diaMesAnio(desde))}`, { encoding: 'utf8', flag: tamano === 0 ? 'w' : 'wx' });
+    fs.writeFileSync(ruta, `\uFEFF${TEXTO_AVISO(diaMesAnio(desde), conEspera)}`, { encoding: 'utf8', flag: tamano === 0 ? 'w' : 'wx' });
     return true;
 }
 
@@ -667,11 +667,15 @@ export async function correr(opciones) {
     const desde = parsearFecha(previo.aviso_desde) || ahora;
     let avisoNuevo = false;
     const marcas = { aviso_desde: isoLocal(desde) };
+    // Si la fila trae el dia en que la persona lo acordo (`mails_acordado`) y ya paso un dia desde entonces, no hay espera:
+    // ya lo sabia. Lo escribe quien publica; sin ese dato, la espera corre desde el aviso.
+    const acordado = parsearFecha(persona.mails_acordado);
+    const yaLoSabia = !!acordado && ahora.getTime() - acordado.getTime() >= GRACIA_HORAS * 3600000;
     // se vuelve a prender despues de un apagado: el dia de espera corre de nuevo desde hoy
     let prendidaDesde = desde;
     if (!simular) {
         try {
-            avisoNuevo = dejarAvisoALaPersona(home, desde);
+            avisoNuevo = dejarAvisoALaPersona(home, desde, !yaLoSabia);
             if (previo.apagada_desde) { dejarAvisoDeCambio(home, ahora, true); marcas.apagada_desde = null; marcas.prendida_de_nuevo = isoLocal(ahora); prendidaDesde = ahora; }
             else if (parsearFecha(previo.prendida_de_nuevo)) prendidaDesde = parsearFecha(previo.prendida_de_nuevo);
         } catch { return salir('error', { detalle: 'no pude dejarle el aviso a la persona: no leo nada' }); }
@@ -681,7 +685,7 @@ export async function correr(opciones) {
 
     // El primer dia solo se avisa: la primera copia (que trae los ultimos 90 dias) es recien un dia despues, para que la
     // persona pueda leer el aviso y sacar o pasar a su carpeta «Personal» lo que no quiera compartir.
-    if (!simular && ahora.getTime() - prendidaDesde.getTime() < GRACIA_HORAS * 3600000) {
+    if (!simular && !yaLoSabia && ahora.getTime() - prendidaDesde.getTime() < GRACIA_HORAS * 3600000) {
         return salir('primer_dia', { autor, privados, aviso_nuevo: avisoNuevo, detalle: 'la persona tiene su aviso desde hace menos de un dia: la primera copia es despues', estado: marcas });
     }
 
