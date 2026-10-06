@@ -129,3 +129,17 @@ archivo): como entra una leccion, la tabla de graduacion y el **gate por bullet*
 por leccion; una "graduada a X", 2 lineas). El techo de 26/28 KB queda como red. Enforcement:
 `scripts/_lib/cierreGuard.mjs`, corrido por `node scripts/_cierreSesion.mjs` y por el hook Stop
 `cierre-guard.sh`.
+
+## Graduadas enteras el 06/10/2026 (tarde): salen de LECCIONES porque ya las hace cumplir un control
+
+- **22/09 y 02/10 — Una foto sacada de un video no se juzga por una medida: se MIRA y se abre su FUENTE.** Graduado a `fotodevideo.py contacto` + `gate_fotos_miradas` y a `gate_foto_no_es_de_falla()` (`hojas-proceso.md`, Enforcement).
+  - Vive en: fotodevideo.py contacto, gate_fotos_miradas y gate_foto_no_es_de_falla()
+
+- **08/09 — Una mudanza que deja el origen ejecutable crea una segunda fuente: el origen se saca el mismo dia.** Graduado a la memoria `mudanza_que_deja_el_origen_ejecutable` y a `_gateRepoPublico.mjs` CHECK-3.
+  - Vive en: _gateRepoPublico.mjs CHECK-3 y memoria mudanza_que_deja_el_origen_ejecutable
+
+- **02/10 — Antes de escribir un ayudante de Office se busca el que ya hay: mi exportador nuevo repetía el `Quit()` sin resguardo que el 23/09 le cerró un deck a Fak** (lo cazó el auditor). Graduado: borrado; se usan `scripts/img/exportar_png.py` y `scripts/lamina_proceso/captura_planilla.py`.
+  - Vive en: core-prohibiciones §6 (reusar antes de crear); se usan scripts/img/exportar_png.py y captura_planilla.py
+
+- **23/09 — Una nota que junta dos momentos se escribe en el orden en que pasan** (el corte iba antes del RESET que lo dispara: *"no se entiende, es confusa"*). Lo que Fak corrige en un deck queda frenado en ESE deck: graduado a `_gate_corregido_por_fak()` del generador IMG y `gates_selftest.py`.
+  - Vive en: _gate_corregido_por_fak() del generador IMG y gates_selftest.py
