@@ -13,7 +13,7 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
-- **05-06/10 — Un filtro que busca por palabras no se promete como garantía (se separa lo FIRME de la RED y se le dice al dueño de los datos); y si Fak ya pidió algo y aceptó el riesgo, mi regla de freno no le gana a su pedido: se hace y el riesgo va en un renglón** (dejé apagados los mails de Carlos por tres auditorías con fallas; Fak: *"lo único que tenías que hacer era eso… con que el 90 % no pase está bien"*). Graduado a las memorias `project_mails_del_equipo_a_la_nube` y `project_claudes_por_area`.
+- **05-06/10 — Un filtro que busca por palabras no se promete como garantía; y si Fak ya pidió algo y aceptó el riesgo, mi regla de freno no le gana a su pedido: se hace y el riesgo va en un renglón** (dejé apagados los mails de Carlos por tres auditorías con fallas; Fak: *"lo único que tenías que hacer era eso"*). Graduado a las memorias `project_mails_del_equipo_a_la_nube` y `project_claudes_por_area`.
 - **04/10 — Una prueba de «esto se niega» se arma con el de mentira PUESTO y comprobado antes de la primera corrida.** Graduado a la barrera de `tools/claude-area/sync_area.ps1` (solo registra desde la copia instalada) y a la memoria `project_claudes_por_area`.
 - **04/10 — Una hoja de alto fijo recorta lo que no entra sin avisar: después de tocar un papel se MIRA la imagen del PDF, no la cantidad de páginas.** Graduado a la memoria `project_claudes_por_area`.
 - **04/10 — A un agente que abre Word o Excel se le pone tope de tiempo por corrida, y un agente o una conversación que no escribe hace 10 minutos se mira: no se espera.** Graduado a la memoria `project_claudes_por_area` y a `scripts/_colgados.mjs`.
