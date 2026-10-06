@@ -190,19 +190,20 @@
     "clasificacion": "Un insumo es de corte si su unidad es de superficie o lineal, su descripcion no cae en `no_es_de_mesa_regex`, y ademas tiene modulo de corte en algun renglon del export o su descripcion cae en `descripcion_corte_regex`. El modulo solo no sirve: la mitad de los renglones lo trae vacio y hay etiquetas, bolsas e hilo con CO (auditoria del 06/10/2026). Si la clasificacion se equivoca, la tabla lleva la columna `corte` con `si` o `no: <motivo>`.",
     "unidades_superficie": ["MT2", "M2"],
     "unidades_lineales": ["MTS", "MTL", "ML", "MT"],
-    "descripcion_corte_regex": "vinil|\\btela|microfib|suede|cuero|punz|fieltro|sanleather|sanveo|samfoam|san foam|alcantara|tejido|\\bpvc\\b|thinsulate|slimsulate|agulhado|\\bespuma|\\bfoam\\b|refuerzo|\\btnt\\b",
-    "no_es_de_mesa_regex": "\\btpo\\b|\\bhilo|perfil|\\bcinta|etiquet|aplix|velcro|burlete|\\bfilm\\b|cordon|adhesiv|sikamelt|\\btesa\\b|papel|servicio|embalaje|\\bpen\\b|rafia",
+    "descripcion_corte_regex": "vinil|\\btela|microfib|suede|cuero|punz|fieltro|sanleather|sanveo|samfoam|sanfoam|san foam|sanflex|sansuy|kroycar|\\btep\\b|\\bmanta\\b|\\breps\\b|\\bacst\\b|pu ester|alcantara|tejido|\\bpvc\\b|thinsulate|slimsulate|agulhado|\\bespuma|\\bfoam\\b|refuerzo|\\btnt\\b",
+    "no_es_de_mesa_regex": "\\btpo\\b|\\bhilo|perfil|\\bcinta|etiquet|aplix|velcro|burlete|\\bfilm\\b|cordon|adhesiv|sikamelt|\\btesa\\b|papel|servicio|embalaje|\\bpen\\b",
     "mail_de_regex": "gamboa",
-    "confirmacion_regex": "gamboa|mesa de corte",
-    "confirmacion_verbo_regex": "confirm|verific|\\bpaso\\b|\\bmando\\b|\\bdijo\\b|planilla|aprobo",
+    "confirmacion_regex": "gamboa|mesa de corte|baptista",
+    "confirmacion_verbo_regex": "confirm|verific|\\bpaso\\b|\\bmando\\b|\\bdijo\\b|\\bpidio\\b|planilla|aprobo",
+    "confirmacion_comentario": "Baptista: el gerente de Ingenieria revisa las tizadas y puede pedir un margen sobre el consumo de Mesa de Corte (06/10/2026: 'en la BOM cargar 5% mas'). El numero final va escrito en la cita de fak:, que queda en amarillo.",
     "confirmacion_niega_regex": "todavia no|sin confirmar|\\bno (lo |me )?(confirm|contest|respond|verific|paso|mando)|no es de mesa",
     "oficial_raices": [
       "Y:\\Ingenieria\\Librales Ingenieria\\Mesa de Corte",
       "Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\Proyecto",
       "Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES"
     ],
-    "oficial_raices_comentario": "Un archivo es oficial si esta en el servidor, bajo una de estas carpetas, o si es el adjunto de un mail de Pablo Gamboa (por nombre de archivo, este donde este la copia). Lo que arma Claude vive en el repo, en temporales o en la biblioteca de OneDrive: nunca en estas carpetas.",
-    "carpeta_excluye_regex": "obsolet",
+    "oficial_raices_comentario": "Un archivo es oficial si esta en el servidor, bajo una de estas carpetas (y no en una de versiones viejas), o si es el adjunto de un mail de Pablo Gamboa que la misma fila cita con mail:<id>. Lo que arma Claude vive en el repo, en temporales o en la biblioteca de OneDrive: nunca en estas carpetas.",
+    "carpeta_excluye_regex": "obsolet|(^|[\\\\/])old([\\\\/]|$)|backup mesa",
     "no_alcanza_ext": [
       ".mrk",
       ".dxf",
@@ -220,6 +221,6 @@
       ".pptx"
     ],
     "nombre_oficial_regex": "consumo|tizada|usos proyecto|piezas[ _]patagonia|caracteristicas piezas",
-    "nombre_excluye_regex": "\\bbom\\b|\\barb\\b|modificaciones|prueba|preliminar|borrador"
+    "nombre_excluye_regex": "(^|[^a-z])bom([^a-z]|$)|(^|[^a-z])arb([^a-z]|$)|modificaciones|prueba|preliminar|borrador|(^|[^a-z])test([^a-z]|$)|no usar"
   }
 }

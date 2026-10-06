@@ -221,8 +221,8 @@ def texto_de_archivo(path, ocr=None):
                 if getattr(sh, 'has_table', False) and sh.has_table:
                     partes.extend(c.text for fila in sh.table.rows for c in fila.cells)
         return ' '.join(partes), False
-    if ext in ('.xls', '.ppt', '.doc', '.docx'):
-        raise OSError('no se leer %s: guardarlo como .xlsx / .pptx / .pdf y citar ese' % ext)
+    if ext == '.xls':        # binario viejo de Excel: los numeros no se leen como texto
+        raise OSError('no se leer .xls: citar el mail que lo trae (mail:<id>) o una copia guardada como .xlsx')
     return io.open(path, encoding='utf-8', errors='replace').read(), False
 
 
@@ -528,10 +528,12 @@ def adjuntos_de(mails, quien_regex):
 
 
 def fuente_oficial_de_corte(fu, cita, mails, canon, adjuntos=None):
-    """(es_oficial, motivo). Oficial = un mail de Pablo Gamboa, el adjunto de un mail suyo, una
-    planilla que esta en el servidor en las carpetas de Mesa de Corte / proyecto / PPAP, o `fak:`
-    cuando dice que Pablo o Mesa de Corte lo confirmo. Es lista blanca: lo que arma Claude (repo,
-    temporales, biblioteca de OneDrive, Escritorio) no esta en ninguna de esas."""
+    """(es_oficial, motivo). Oficial = un mail de Pablo Gamboa, el adjunto de un mail suyo QUE LA
+    FILA TAMBIEN CITA (`adjuntos` = nombres de los adjuntos de esos mails: el nombre solo no
+    alcanza, cualquiera arma un archivo que se llame igual), una planilla que esta en el servidor
+    en las carpetas de Mesa de Corte / proyecto / PPAP, o `fak:` cuando dice que Pablo Gamboa o
+    Mesa de Corte lo confirmo. Es lista blanca: lo que arma Claude (repo, temporales, biblioteca
+    de OneDrive, Escritorio) no esta en ninguna de esas."""
     f = fu.strip()
     fl = f.lower()
     if fl == 'fak' or fl.startswith('fak:'):
@@ -550,9 +552,8 @@ def fuente_oficial_de_corte(fu, cita, mails, canon, adjuntos=None):
     ext = os.path.splitext(fl)[1]
     if ext in canon['no_alcanza_ext']:
         return False, '%s es una tizada o un patron: puede ser una prueba' % os.path.basename(f)
-    adjuntos = adjuntos_de(mails, canon['mail_de_regex']) if adjuntos is None else adjuntos
-    if base in adjuntos:
-        return True, 'adjunto de un mail de Pablo Gamboa'
+    if base in (adjuntos or ()):
+        return True, 'adjunto del mail de Pablo Gamboa que cita la fila'
     if ext not in canon['oficial_ext']:
         return False, '%s no es una planilla (%s)' % (os.path.basename(f), ext or 'sin extension')
     ruta = os.path.normcase(os.path.abspath(f))
@@ -560,8 +561,8 @@ def fuente_oficial_de_corte(fu, cita, mails, canon, adjuntos=None):
                  if ruta.startswith(os.path.normcase(os.path.abspath(r)) + os.sep)), None)
     if not raiz:
         return False, '%s no esta en las carpetas de Mesa de Corte del servidor ni es adjunto de un mail de Pablo' % os.path.basename(f)
-    if re.search(canon['carpeta_excluye_regex'], normalizar(os.path.dirname(ruta))):
-        return False, '%s esta en una carpeta de obsoletos' % os.path.basename(f)
+    if re.search(canon['carpeta_excluye_regex'], normalizar(os.path.dirname(ruta)[len(os.path.abspath(raiz)):])):
+        return False, '%s esta en una carpeta de versiones viejas u obsoletos' % os.path.basename(f)
     if not re.search(canon['nombre_oficial_regex'], base) or re.search(canon['nombre_excluye_regex'], base):
         return False, '%s no es una planilla de consumos o tizadas (por el nombre)' % os.path.basename(f)
     return True, 'planilla de Mesa de Corte en el servidor'
@@ -670,6 +671,9 @@ def revisar_fila(r, mails, unidad=False, ocr=None, textos_oc=None, desc_prod=Non
             rojos.append('el %s no aparece en ninguna cita (si sale de una cuenta, va en la columna cuenta)'
                          % r.get('valor_nuevo'))
 
+    if not unidad and valor is None:
+        rojos.append('valor_nuevo "%s" no es un numero' % r.get('valor_nuevo', ''))
+
     # 4. MATERIAL DE CORTE: planilla de Mesa de Corte o mail de Pablo Gamboa ----------------
     if not unidad and fuentes:
         canon = canon or canon_corte()
@@ -683,26 +687,24 @@ def revisar_fila(r, mails, unidad=False, ocr=None, textos_oc=None, desc_prod=Non
         actual = a_float(r.get('valor_esperado'))
         cambia = not (valor is not None and actual is not None and mismo(valor, actual))
         if es_corte and cambia and valor:                 # valor 0 = sacar la linea, no fijar un consumo
-            if 'adjuntos_gamboa' not in memo:
-                memo['adjuntos_gamboa'] = adjuntos_de(mails, canon['mail_de_regex'])
-            juicio = [(ci,) + fuente_oficial_de_corte(fu, ci, mails, canon, memo['adjuntos_gamboa'])
-                      for fu, ci in verificadas]
+            # adjuntos de los mails de Pablo Gamboa que ESTA fila cita: un archivo vale como adjunto
+            # suyo solo si la fila trae tambien el mail (el nombre del archivo solo no prueba nada)
+            citados_gamboa = [m for m in (buscar_mail(fu[5:], mails) for fu, _ in verificadas
+                                          if fu.lower().startswith('mail:')) if m]
+            adj = adjuntos_de(citados_gamboa, canon['mail_de_regex'])
+            juicio = [(ci,) + fuente_oficial_de_corte(fu, ci, mails, canon, adj) for fu, ci in verificadas]
             oficiales = [n for ci, ok_of, _ in juicio if ok_of for n in numeros(ci)]
             if not any(ok_of for _, ok_of, _ in juicio):
                 rojos.append('material de corte sin la planilla de Mesa de Corte ni un mail de Pablo Gamboa (%s). '
                              'Una tizada, una BOM o una cuenta propia no alcanzan: preguntarle a Pablo Gamboa '
                              'antes de cambiar el consumo'
                              % ('; '.join(sorted({mot for _, _, mot in juicio})) or 'ninguna fuente verificada'))
-            else:
-                # el numero tiene que salir DE la fuente oficial, no de otra que la acompaña
-                cuenta = r.get('cuenta', '')
-                pedidos = ([n for n in numeros(cuenta) if n not in UNIDAD_CONVERSION] if cuenta else [valor])
-                faltan = [n for n in pedidos
-                          if not any(mismo(n, x, 1e-9 if cuenta else TOL_VALOR) for x in oficiales)]
-                if faltan:
-                    rojos.append('material de corte: el %s no sale de la planilla de Mesa de Corte ni del mail de '
-                                 'Pablo Gamboa, sale de otra fuente. Preguntarle a Pablo Gamboa'
-                                 % ', '.join('%g' % x for x in faltan))
+            elif not any(mismo(valor, x) for x in oficiales):
+                # el CONSUMO tiene que estar escrito en la fuente oficial: no se arma con una cuenta
+                # sobre numeros sueltos de ella, ni lo trae otra fuente que la acompaña
+                rojos.append('material de corte: el %s no figura en la planilla de Mesa de Corte ni en el mail de '
+                             'Pablo Gamboa (sale de otra fuente o de una cuenta). El consumo se toma como lo da '
+                             'Mesa de Corte: preguntarle a Pablo Gamboa' % r.get('valor_nuevo'))
 
     # 2. ANTECEDENTES ---------------------------------------------------------
     productos = grupo if grupo is not None else ([r.get('producto')] if r.get('producto') else [])
@@ -1002,16 +1004,33 @@ def selftest():
     caso('planilla en una carpeta de obsoletos: rojo', rojo and corta(res))
     rojo, res = fila('0.0896', '0.0724', plan_bom, '25;0,0896')
     caso('archivo del servidor que es una BOM por el nombre: rojo', rojo and corta(res))
+    rojo, res = fila('0.0896', '0.0724', adjunto + '||mail:' + ID_PABLO, '25;0,0896||Planilla Upper Trim',
+                     vistos=ID_JEFE[-17:] + ': visto')
+    caso('adjunto de un mail de Pablo Gamboa, citando ese mail: verde', not rojo)
     rojo, res = fila('0.0896', '0.0724', adjunto, '25;0,0896')
-    caso('adjunto de un mail de Pablo Gamboa, guardado en cualquier lado: verde', not rojo)
+    caso('archivo que se llama como un adjunto de Pablo, sin citar el mail: rojo', rojo and corta(res))
+    os.makedirs(os.path.join(servidor, 'Old'))
+    plan_old = archivo(os.path.join(servidor, 'Old'), 'CONSUMOS TIZADAS 21-4-25.csv', PLAN)
+    rojo, res = fila('0.0896', '0.0724', plan_old, '25;0,0896')
+    caso('planilla en una carpeta Old: rojo', rojo and corta(res))
+    plan_guion = archivo(servidor, 'CONSUMO_BOM_UPPER_TRIM.csv', PLAN)
+    rojo, res = fila('0.0896', '0.0724', plan_guion, '25;0,0896')
+    caso('BOM con guiones bajos en el nombre: rojo', rojo and corta(res))
+    rojo, res = fila('0.064', '0.0724', plan + '||' + plan, 'UPPER TRIM;1,60||1,40;25', '1.60/25')
+    caso('cuenta propia con numeros sueltos de la planilla oficial: rojo', rojo and 'no figura en la planilla' in ' '.join(res[0][1]))
+    ficha = archivo(tmp, 'FT141 Espuma PU.doc', 'Densidad 35 kg/m3 espesor 3 mm')
+    rojo, res = revisar(tabla([['MP8404', 'AD - ADFA15', '35', '30', ficha, 'Densidad 35 kg/m3', '', '']], C), **ku)
+    caso('una ficha .doc se sigue leyendo como antes', not rojo)
+    rojo, res = fila('0.0896 m2', '0.0724', plan, '25;0,0896')
+    caso('valor_nuevo que no es un numero: rojo', rojo and 'no es un numero' in ' '.join(res[0][1]))
     rojo, res = fila('0.0896', '0.0724', 'mail:' + ID_PABLO, 'consumo 0,0896 m2 por pieza', vistos=ID_JEFE[-17:] + ': visto')
     caso('con el mail de Pablo Gamboa: verde', not rojo)
     rojo, res = fila('0.0896', '0.0724', 'mail:' + ID_JEFE, 'consumo 0,0896 m2 por pieza', vistos=ID_PABLO[-17:] + ': visto')
     caso('con el mail de otra persona: rojo', rojo and corta(res))
     rojo, res = fila('0.07241379', '0.058', bom25 + '||mail:' + ID_ESTANTE, '2,1m2 Cantidad de piezas: 29||plano de la estanteria', '2.1/29')
-    caso('BOM + un mail de Pablo sobre otra cosa: rojo (el numero no sale de el)', rojo and 'sale de otra fuente' in ' '.join(res[0][1]))
+    caso('BOM + un mail de Pablo sobre otra cosa: rojo (el numero no sale de el)', rojo and 'no figura en la planilla' in ' '.join(res[0][1]))
     rojo, res = fila('0.07241379', '0.058', bom25 + '||' + plan_otra, '2,1m2 Cantidad de piezas: 29||DUCTO;2,00', '2.1/29')
-    caso('BOM + la planilla oficial de otra pieza: rojo', rojo and 'sale de otra fuente' in ' '.join(res[0][1]))
+    caso('BOM + la planilla oficial de otra pieza: rojo', rojo and 'no figura en la planilla' in ' '.join(res[0][1]))
     rojo, res = fila('0.0896', '0.0724', viejo_xls, '25;0,0896')
     caso('un .xls no se lee: rojo que lo dice', rojo and 'no se leer .xls' in ' '.join(res[0][1]))
     rojo, res = fila('0.0896', '0.0724', 'fak:', 'usa 0,0896')
@@ -1024,6 +1043,8 @@ def selftest():
     caso('fak: con la confirmacion de Pablo Gamboa: pasa en amarillo', not rojo and res[0][2])
     rojo, res = fila('0.0896', '0.0724', 'fak:', 'Carlos lo verifico con Pablo Gamboa: 0,0896')
     caso('fak: verificado por Carlos con Pablo Gamboa: pasa en amarillo', not rojo and res[0][2])
+    rojo, res = fila('0.0896', '0.0724', 'fak:', 'Carlos Baptista pidio cargar 5% mas sobre lo de Mesa de Corte: 0,0896')
+    caso('fak: margen que pidio el gerente sobre lo de Mesa de Corte: pasa en amarillo', not rojo and res[0][2])
     rojo, res = fila('0.0724', '0.0724', bom25, 'Cantidad de piezas: 29')
     caso('fila que no cambia el consumo: el freno de corte no salta', not corta(res))
     rojo, res = fila('0', '0.0724', 'fak:', 'sacar la linea, queda en 0')

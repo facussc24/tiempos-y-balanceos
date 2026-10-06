@@ -30,7 +30,12 @@ describe('consumo de material de corte: planilla de Mesa de Corte o mail de Pabl
         expect(out).toMatch(/ok {4}con la planilla de Mesa de Corte del servidor: verde/);
         expect(out).toMatch(/ok {4}la misma planilla fuera del servidor \(la arme yo\): rojo/);
         expect(out).toMatch(/ok {4}planilla en una carpeta de obsoletos: rojo/);
-        expect(out).toMatch(/ok {4}adjunto de un mail de Pablo Gamboa, guardado en cualquier lado: verde/);
+        expect(out).toMatch(/ok {4}adjunto de un mail de Pablo Gamboa, citando ese mail: verde/);
+        // segunda auditoria del 06/10: el nombre del archivo solo no alcanza, ni una carpeta Old, ni una cuenta propia
+        expect(out).toMatch(/ok {4}archivo que se llama como un adjunto de Pablo, sin citar el mail: rojo/);
+        expect(out).toMatch(/ok {4}planilla en una carpeta Old: rojo/);
+        expect(out).toMatch(/ok {4}cuenta propia con numeros sueltos de la planilla oficial: rojo/);
+        expect(out).toMatch(/ok {4}una ficha \.doc se sigue leyendo como antes/);
         expect(out).toMatch(/ok {4}con el mail de Pablo Gamboa: verde/);
         expect(out).toMatch(/ok {4}con el mail de otra persona: rojo/);
         // lo que encontro la auditoria del 06/10: el numero tiene que salir DE la fuente oficial

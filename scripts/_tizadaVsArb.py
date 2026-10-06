@@ -65,7 +65,7 @@ def leer_mrk(datos, nombre=''):
     r = dict(nombre=nombre, fecha='%s-%s-%s' % (y if len(y) == 4 else '20' + y, mth, d), largo_cm=float(g('LENGTH')),
              ancho_cm=float(g('WIDTH')), piezas=puestas, juegos=sum(juegos) if juegos else puestas,
              eficiencia=float(g('EFFICIENCY')), area_juego_m2=round(sum(piezas), 4), patrones=len(piezas))
-    if r['juegos'] < 1 or r['largo_cm'] <= 0 or r['ancho_cm'] <= 0 or not piezas:
+    if r['juegos'] < 1 or r['largo_cm'] <= 0 or r['ancho_cm'] <= 0 or not piezas or r['area_juego_m2'] <= 0:
         raise ValueError('%s: tizada vacia' % nombre)
     # varios talles, o juegos declarados que no estan todos puestos en la mesa: no se medirla
     if len(juegos) > 1 or r['juegos'] * len(piezas) != puestas:
