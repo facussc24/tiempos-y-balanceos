@@ -243,6 +243,29 @@ def descripciones_producto(path=None):
     return d
 
 
+ANCHO_CAR = FS * 0.6        # Courier: cada caracter mide 0,6 del cuerpo
+
+
+def etiqueta_de(pieza, nivel):
+    return pieza if nivel == 0 else '  ' + '.' * nivel + ' ' + pieza
+
+
+def x_del_rubro(etiqueta):
+    """Donde arranca el Rubro de un renglon: en su columna, o corrido a la derecha si el codigo
+    con la sangria del sub-ensamble llega hasta ahi (06/10/2026: un codigo de 14 caracteres en
+    nivel 1, los semielaborados INY-...-V1, pisaba el digito del Rubro)."""
+    return max(COLS[1][1], COLS[0][1] + (len(etiqueta) + 1) * ANCHO_CAR)
+
+
+def renglones_que_pisan(boms):
+    """Renglones donde el Rubro corrido llega a menos de un caracter de la Medida. El gate 5 no
+    lo ve: busca la medida como parte del texto de la pagina, y pegada al Rubro sigue estando."""
+    x_medida = COLS[2][1]
+    return [f'{pieza} | nivel {f[0]} | rubro {f[1]!r} | {f[2]}'
+            for pieza, filas in boms.items() for f in filas
+            if x_del_rubro(etiqueta_de(pieza, f[0])) + (len(f[1]) + 1) * ANCHO_CAR > x_medida]
+
+
 def pagina(doc, pieza, filas, fecha, actualizaciones, descripcion=''):
     p = doc.new_page(width=ANCHO, height=ALTO)
     y = 28
@@ -256,10 +279,8 @@ def pagina(doc, pieza, filas, fecha, actualizaciones, descripcion=''):
     y = Y_PRIMERA_FILA
 
     for nivel, rubro, medida, desc, unidad, consumo, modulo, proceso in filas:
-        etiqueta = pieza if nivel == 0 else '  ' + '.' * nivel + ' ' + pieza
-        # Un codigo de 14 caracteres con la sangria del sub-ensamble pisaba el digito del Rubro
-        # (06/10/2026, semielaborados INY-...-V1): en ese renglon el Rubro se corre a la derecha.
-        x_rubro = max(COLS[1][1], COLS[0][1] + (len(etiqueta) + 1) * FS * 0.6)
+        etiqueta = etiqueta_de(pieza, nivel)
+        x_rubro = x_del_rubro(etiqueta)
         for (titulo_col, x), v in zip(COLS, [etiqueta, rubro, medida, desc, unidad,
                                              consumo_fmt(consumo), modulo, proceso]):
             p.insert_text((x_rubro if titulo_col == 'Rubro' else x, y), v, fontname='cour', fontsize=FS)
@@ -372,6 +393,12 @@ def main():
         sys.exit(f'ABORTA: estas BOMs no entran en una pagina (tope {FILAS_POR_PAGINA} filas) '
                  f'y se pisarian con el bloque ACTUALIZACIONES: {largas}.')
     gates.append('todas las BOMs entran en su pagina')
+
+    pisan = renglones_que_pisan(boms)
+    if pisan:
+        sys.exit('ABORTA: en estos renglones el codigo con su sangria empuja el Rubro hasta la '
+                 'columna Medida y se leerian pegados:\n' + ''.join(f'        - {r}\n' for r in pisan[:10]))
+    gates.append('ningun Rubro llega a la Medida')
 
     # ── El PDF se escribe con nombre provisorio: el nombre final se gana pasando el gate 5 ──
     salida = os.path.abspath(args.salida)

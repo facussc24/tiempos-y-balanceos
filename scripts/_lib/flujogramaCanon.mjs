@@ -261,11 +261,16 @@ export function revisarFlujograma(doc, { hermanos = null } = {}) {
     //     Fak, al revisarlo: *"el IP tiene eso muy largo... la idea era que no quede tan largo
     //     al pedo"*. Los hermanos dibujan el sector con su bloque: la o las operaciones, el
     //     control con su rombo y el almacenamiento. El paso a paso de la maquina es de la hoja.
-    //     Contado sobre los 9 del generador: el sector mas largo que esta bien tiene 5 pasos
-    //     (adhesivado del 159, con sus tres reprocesos; costura del 152); los dos mal, 7 y 9.
+    //     Se cuentan los puestos numerados de la decena, una vez por numero. No cuentan los
+    //     almacenamientos ni los REPROCESOS: son caminos alternativos de un control y la guia
+    //     pide listarlos todos de entrada (el adhesivado del 159 tiene tres).
+    //     Contado asi sobre los 9 del generador el 06/10/2026: los dos mal tenian 7 y 9; el
+    //     mas largo de los demas, 5 (la costura del 152 Rev.B, que tambien es un paso por pestaña).
+    //     Limites conocidos (auditoria del 06/10/2026): no ve un sector partido en dos decenas
+    //     sin traslado, ni pasos sin numero, ni un nodo colgado como `branchSide` suelto.
     const pasosPorDecena = new Map();
     for (const n of conNumero) {
-        if (NO_SON_PUESTOS.has(n.type)) continue;
+        if (NO_SON_PUESTOS.has(n.type) || esReproceso(n)) continue;
         const d = decena(n.stepId);
         if (!pasosPorDecena.has(d)) pasosPorDecena.set(d, new Set());
         pasosPorDecena.get(d).add(n.stepId);      // por numero: las ramas paralelas del 152 los repiten

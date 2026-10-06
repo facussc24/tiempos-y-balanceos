@@ -36,7 +36,7 @@ los 8 del generador, relevados el 22/09/2026):
 | `numero-repetido` | ningun numero dos veces, tampoco entre ramas paralelas |
 | `decimal-sin-madre` | un `90.1` exige que exista la operacion `90` (3 de 3 precedentes la tienen) |
 | `traslado-sin-cambiar-de-decena` | si hay traslado se cruzo de sector, asi que la decena cambia |
-| `sector-desglosado` | un sector no lleva un nodo por pestaña de la HO: 6 o mas pasos numerados en una decena frenan (§1.5; el 157 Rev.B tenia 7 y 9) |
+| `sector-desglosado` | un sector no lleva un nodo por pestaña de la HO: 6 o mas pasos numerados en una decena frenan, sin contar almacenamientos ni reprocesos (§1.5; el 157 Rev.B tenia 7 y 9) |
 | `opins-sobre-transformacion` | el simbolo OP+INSPECCION va **solo** sobre controles (18 de 18 en los hermanos; el 159 Rev.A tenia 11 y ninguno lo era) |
 | `control-sin-numero` | todo control es un nodo con numero — el de SU sector. Unica excepcion: `INSPECCION DE MATERIA PRIMA` |
 | `rombo-sin-control` | el rombo de conformidad cuelga de un control, no de una operacion de transformacion |
@@ -203,8 +203,17 @@ unificar**: *"no renumerar todo el flujograma en base a los insert y apb, la ide
 no deberias hacerme tantas preguntas, deberias saber que hacer"*. Las demas diferencias se le
 nombran en un renglon, sin opciones.
 
+⚠ **La HO desfasada no es un detalle: es lo que frena la carga en BeOn.** El 02/07/2026 la
+revision previa a la carga (L. Lattanzi, mail "RE: Carga en el BeOn de piezas Patagonia",
+14:54) devolvio el IP Pad porque el control con mylar era la 31 en el flujograma y el AMFE y la
+38 en la HO-985: *"ruptura de trazabilidad Proceso-Flujograma-AMFE-Plan de Control"*. Por eso
+la Rev.B habia quedado larga. Cuando se resume un sector, **a Fak se le dice en el mismo
+mensaje que HO queda con otro numero y en que pestañas**, y ese paquete no va a BeOn ni a un
+PPAP hasta que la HO se renumere contra el flujograma (la HO se toca con su OK).
+
 Enforcement: `sector-desglosado` en `scripts/_lib/flujogramaCanon.mjs` (rojo con 6 o mas pasos
-numerados en una decena; el sector mas largo que esta bien en el corpus tiene 5).
+numerados en una decena, sin contar almacenamientos ni reprocesos; contado asi, el sector mas
+largo que esta bien en el corpus tiene 4).
 
 ---
 

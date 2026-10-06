@@ -14,7 +14,7 @@ POR QUE EXISTE (Fak, 22/09/2026)
 
   - El PDF es de la familia ENTERA (todas sus piezas, de `_lib/bomLegajos.data.json`), no solo
     de las que cambiaron: lo que se archiva es el estado, no la modificacion.
-  - Lo arma `_pdfBomArb.py` desde el export (`C:\\tmp\\RELACIONES.TXT`) con sus 6 gates: correrlo
+  - Lo arma `_pdfBomArb.py` desde el export (`C:\\tmp\\RELACIONES.TXT`) con sus gates: correrlo
     despues de cargar Y de re-exportar, igual que el PDF de difusion (skill `carga-arb` §4).
   - Nada se borra: el anterior se MUEVE a la carpeta obsoleta que ya exista en la subcarpeta
     (`Obsoleto`, `Obsoletos`, `0_Obsoleto`...) o a una `Obsoleto` nueva.

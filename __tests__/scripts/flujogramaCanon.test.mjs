@@ -167,6 +167,40 @@ describe('canon de flujogramas', () => {
             }
         });
 
+        it('el borde: 6 pasos justos frenan y 5 no', () => {
+            const h = revisarFlujograma(conInyeccionDesglosada(5));      // 5 operaciones + el control = 6
+            expect(reglas(h)).toContain('sector-desglosado');
+            expect(h.find((x) => x.regla === 'sector-desglosado').detalle).toMatch(/decena 20 tiene 6 pasos/);
+            expect(reglas(revisarFlujograma(conInyeccionDesglosada(4)))).not.toContain('sector-desglosado');
+        });
+
+        it('un numero repetido en otra rama cuenta una sola vez', () => {
+            const d = conInyeccionDesglosada(4);     // 5 pasos
+            d.flow.push({ stepId: '20', type: 'operation', description: 'INYECCIÓN DE PIEZAS PLÁSTICAS' });
+            expect(reglas(revisarFlujograma(d))).not.toContain('sector-desglosado');
+        });
+
+        it('los reprocesos no cuentan: son caminos alternativos de un control; el mismo nodo sin ese nombre, si', () => {
+            const con = (descripcion) => {
+                const d = conInyeccionDesglosada(4);     // 5 pasos
+                const rama = d.flow.find((n) => n.branches).branches[1][0].branches[0];
+                rama.push({ stepId: '27', type: 'operation', description: descripcion });
+                return reglas(revisarFlujograma(d));
+            };
+            expect(con('REPROCESO: CORTE DE REBABA')).not.toContain('sector-desglosado');
+            expect(con('CORTE DE REBABA')).toContain('sector-desglosado');
+        });
+
+        it('la excepcion baja a aviso solo si nombra ESTA regla', () => {
+            const de = (excepciones) => {
+                const d = conInyeccionDesglosada(6);
+                d._excepciones_canon = excepciones;
+                return revisarFlujograma(d).find((x) => x.regla === 'sector-desglosado').gravedad;
+            };
+            expect(de({ 'corte-sin-control-mylar': 'otra regla' })).toBe('ROJO');
+            expect(de({ 'sector-desglosado': 'emitido asi; se corrige en la proxima' })).not.toBe('ROJO');
+        });
+
         it('un almacenamiento numerado no cuenta como paso', () => {
             const d = conInyeccionDesglosada(4);     // 5 pasos + un WIP con numero = sigue en 5
             const rama = d.flow.find((n) => n.branches).branches[1][0].branches[0];

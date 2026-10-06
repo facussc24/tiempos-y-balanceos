@@ -181,7 +181,7 @@ python scripts/_pdfBomArb.py --piezas "<PN1>,<PN2>" --fecha dd/mm/aaaa \
   (Fak, 28/08: *"no me dejes cosas en el escritorio"*).
 - **Mirar el PDF NO es verificarlo.** El 04/08/2026 se difundio uno con tres filas sin unidad
   ni consumo: se habian abierto 2 de las 5 paginas y las 2 estaban bien. El script hoy corre
-  cinco gates y aborta sin dejar archivo; si sale un PDF con el nombre final, es porque paso
+  sus gates (los enumera al terminar) y aborta sin dejar archivo; si sale un PDF con el nombre final, es porque paso
   todos. Mirarlo sigue siendo buena idea, pero como segunda lectura, nunca como la prueba.
 - **Si se toca `_pdfBomArb.py`**, correr las dos cosas:
   ```bash

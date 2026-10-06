@@ -268,6 +268,54 @@ describe('_pdfBomArb.py', () => {
         });
     });
 
+    describe('el Rubro no pisa el codigo ni llega a la Medida (06/10/2026)', () => {
+        /** Palabras de la pagina con su posicion: [x0, y0, x1, y1, texto]. Se mide el ARCHIVO. */
+        const palabrasPdf = (salida) => {
+            const py = `import fitz,json;d=fitz.open(r"${salida}");print(json.dumps([[list(w[:5]) for w in p.get_text("words")] for p in d]))`;
+            return JSON.parse(execFileSync('python', ['-c', py], { encoding: 'utf8' }));
+        };
+        const PZA = 'ABC-DEF00001-V1';        // 15 caracteres: el tope del campo en el arb
+        const renglonDe = (palabras, medida) => {
+            const m = palabras.find((w) => w[4] === medida);
+            return palabras.filter((w) => Math.abs(w[1] - m[1]) < 1).sort((a, b) => a[0] - b[0]);
+        };
+
+        it('13. un codigo largo en nivel 1 corre el Rubro: no lo pisa, y en nivel 0 queda en su columna', () => {
+            escribir({
+                filas: [
+                    fila(PZA, 'SUB-1', 'SUBENSAMBLE', 'UN', '1,00000000'),
+                    filaN1('SUB-1', 'MAT-C', 'MATERIAL DEL SUBENSAMBLE', 'MT2', '0,25000000'),
+                ],
+                articulos: [PZA],
+            });
+            const r = correr(PZA);
+            expect(r.ok).toBe(true);
+            const palabras = palabrasPdf(r.salida)[0];
+
+            const n1 = renglonDe(palabras, 'MAT-C');
+            const codigo = n1.find((w) => w[4] === PZA);
+            const medida = n1.find((w) => w[4] === 'MAT-C');
+            const rubro = n1.find((w) => w[4] === '1');
+            expect(codigo, 'el codigo se lee entero, sin nada pegado').toBeTruthy();
+            expect(rubro, 'el Rubro se lee como palabra aparte').toBeTruthy();
+            expect(rubro[0]).toBeGreaterThan(codigo[2] + 2);
+            expect(rubro[2]).toBeLessThan(medida[0] - 2);
+
+            const n0 = renglonDe(palabras, 'SUB-1');
+            expect(Math.abs(n0.find((w) => w[4] === '1')[0] - 120)).toBeLessThan(1.5);
+        });
+
+        it('14. ROJO: si el Rubro corrido llega a la Medida, aborta y no deja archivo', () => {
+            const n1ConRubro = (rubro) => `${'\t'.repeat(7)}${'SUB-1'.padEnd(15)}\t ${rubro.padEnd(5)}\t ${'MAT-C'.padEnd(14)}\t ${'MATERIAL'.padEnd(40)}\t ${'MT2'.padEnd(5)}\t   0,25000000\t`;
+            escribir({ filas: [fila(PZA, 'SUB-1', 'SUBENSAMBLE', 'UN', '1,00000000'), n1ConRubro('123')], articulos: [PZA] });
+            const r = correr(PZA);
+            expect(r.ok).toBe(false);
+            expect(r.stderr).toMatch(/Rubro hasta la\s+columna Medida/);
+            expect(fs.existsSync(r.salida)).toBe(false);
+            expect(fs.existsSync(`${r.salida}.parcial`)).toBe(false);
+        });
+    });
+
     describe('formato de numeros', () => {
         const evaluar = (expr) => execFileSync('python', ['-c',
             `import importlib.util as u;s=u.spec_from_file_location("m",r"${SCRIPT}");m=u.module_from_spec(s);s.loader.exec_module(m);print(repr(${expr}))`,

@@ -58,6 +58,16 @@ const MUTACIONES = [
         a: '    if False:\n        sys.exit(',
     },
     {
+        nombre: 'el Rubro vuelve a su columna fija aunque el codigo con sangria llegue hasta ahi',
+        de: '    return max(COLS[1][1], COLS[0][1] + (len(etiqueta) + 1) * ANCHO_CAR)',
+        a: '    return COLS[1][1]',
+    },
+    {
+        nombre: 'el gate del Rubro avisa en vez de abortar cuando llega a la Medida',
+        de: '    if pisan:\n        sys.exit(',
+        a: '    if pisan:\n        print(',
+    },
+    {
         nombre: 'el PDF se guarda con nombre final aunque falle el gate 5',
         de: '    parcial = salida + \'.parcial\'',
         a: '    parcial = salida',
