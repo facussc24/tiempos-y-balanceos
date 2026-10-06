@@ -23,9 +23,10 @@ EJECUTAR (cargar en arb/Supabase, enviar a cliente):
    *"no cambiamos el consumo sin un excel oficial o una confirmacion oficial... ante la duda le
    preguntamos a Pablo Gamboa"*). Una tizada (.MRK) sola no alcanza: puede ser una prueba. Tampoco
    una BOM de proyecto, un flujograma ni una cuenta mia. Freno 4 de `respaldoCarga.py`
-   (BLOQUEANTE, listas en `corte_fuente_oficial` del canon): el numero tiene que salir de un
-   mail de Pablo, del adjunto de un mail suyo o de una planilla que este en el SERVIDOR; lo que
-   arme yo no cuenta, este donde este. `python scripts/_tizadaVsArb.py <producto>` compara el
+   (BLOQUEANTE, listas en `corte_fuente_oficial` del canon): el consumo tiene que estar ESCRITO
+   en un mail de Pablo, en el adjunto de un mail suyo (citando ese mail) o en una planilla que
+   este en el SERVIDOR; no se arma con una cuenta, y lo que arme yo no cuenta, este donde este.
+   Un margen pedido por el gerente (06/10: Carlos, *"en la BOM cargar 5% mas"*) entra por `fak:`. `python scripts/_tizadaVsArb.py <producto>` compara el
    arb con la tizada mas nueva: es un aviso opcional para ir a preguntar, nunca la fuente.
    **Limite conocido:** el freno corre en `_arbCargar.py`; un alta (`_arbAltaLote.py`) o una
    sustitucion con cantidad (`_arbSustituir.py`) no pasan por el, asi que ahi la regla la cumplo

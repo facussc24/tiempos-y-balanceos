@@ -385,10 +385,11 @@ y, si hace falta, `cuenta` y `vistos`. Los tres frenos viven en `scripts/_lib/re
   `vistos` (`<id>: motivo` o `hilo:<asunto>: motivo`, separados por `|`).
 - `fak:` como fuente = decision de Fak en el chat: pasa en amarillo y queda en el journal.
 - **Material de corte (vinilo, tela, punzonado, espuma) que cambia de consumo — freno 4,
-  06/10/2026:** el numero (o cada numero de la `cuenta`) tiene que salir de un mail de Pablo
-  Gamboa (`mail:<id>`), del adjunto de un mail suyo (el archivo, guardado donde sea) o de una
-  planilla de consumos o tizadas que este en el servidor `Y:` (Mesa de Corte, proyecto o PPAP;
-  no en obsoletos). Una tizada `.MRK`, una BOM de proyecto, una cuenta propia o un archivo que
+  06/10/2026:** el consumo tiene que estar ESCRITO (no armado con una cuenta) en un mail de
+  Pablo Gamboa (`mail:<id>`), en el adjunto de un mail suyo **citando tambien ese mail en la
+  misma fila**, o en una planilla de consumos o tizadas que este en el servidor `Y:` (Mesa de
+  Corte, proyecto o PPAP; no en `Obsoleto` ni `Old`). Un margen que pida el gerente sobre ese
+  numero (06/10: *"en la BOM cargar 5% mas"*) entra por `fak:` con el numero final en la cita. Una tizada `.MRK`, una BOM de proyecto, una cuenta propia o un archivo que
   arme yo NO alcanzan (Pablo puede estar probando tizadas): se le pregunta a el. `fak:` vale
   solo si dice que Pablo Gamboa o Mesa de Corte lo confirmo. Si la clasificacion se equivoca, la
   tabla lleva la columna `corte` (`si` / `no: motivo`); un insumo nuevo, la columna `modulo`.

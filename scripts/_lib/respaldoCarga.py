@@ -37,10 +37,10 @@ POR QUE EXISTE (TPO del Top Roll de Patagonia, 20/08 -> 25/09/2026)
      alguno de los que imprimen las OC de ESE codigo en Z:\\arb\\oc\\ocauto\\BA.
 
   4. MATERIAL DE CORTE (06/10/2026, microfibra del Upper Trimming). Si el insumo se corta en
-     Mesa de Corte y la fila CAMBIA el consumo, el NUMERO (o cada numero de la cuenta) tiene
-     que salir de una fuente oficial: un mail de Pablo Gamboa, el adjunto de un mail suyo, o
-     una planilla de consumos o tizadas que este en el SERVIDOR (Mesa de Corte, proyecto o
-     PPAP; no en obsoletos). Es lista blanca: lo que arma Claude (repo, temporales, biblioteca
+     Mesa de Corte y la fila CAMBIA el consumo, el consumo tiene que estar ESCRITO (no armado
+     con una cuenta) en una fuente oficial: un mail de Pablo Gamboa, el adjunto de un mail suyo
+     que la misma fila cita, o una planilla de consumos o tizadas que este en el SERVIDOR (Mesa
+     de Corte, proyecto o PPAP; no en obsoletos ni Old). Es lista blanca: lo que arma Claude (repo, temporales, biblioteca
      de OneDrive) nunca es oficial. Una tizada (.MRK), un patron, una BOM o una cuenta propia
      no alcanzan: Pablo puede estar probando tizadas. `fak:` vale solo si dice que Pablo Gamboa
      o Mesa de Corte lo confirmo. Que insumo es de corte sale del export (unidad de superficie
