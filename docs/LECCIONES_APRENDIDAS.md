@@ -70,6 +70,8 @@ incidente vive en los snapshots.
 
 - **06/10 — Lo que corrijo en el archivo de OTRO se le muestra a Fak recién auditado, y cada celda cambiada lleva el ANTES, no la fuente** (le abrí el plan de control de Nico sin auditar: *"no me lo abras, auditalo... poneme el antes"*; la auditoría sacó 9 de 43 cambios que no eran 100 % seguros). **Y volver atrás un cambio no puede dejar un dato que se sabe falso**: dejé un código de hilo que no existe (*"ese hilo no existe más... es grave"*); lo dudoso es la PALABRA nueva, no el código inexistente. Graduado a la memoria `feedback_entregables_para_fak`.
 
+- **06/10 — Si Fak marca UN defecto de un documento («el IP tiene corte e inyección muy largos»), se corrige eso con el criterio ya escrito y se le muestra; no se le arma un menú de todo lo demás que se podría unificar** (le hice tres preguntas de opciones; Fak: *"no deberías hacerme tantas preguntas, deberías saber qué hacer... la idea era solo que no quede tan largo al pedo"*). Graduado al skill `flujogramas` §1.5 y al chequeo `sector-desglosado` del canon.
+
 - **06/10 — Una falla de foco en medio de una tanda del arb es Fak que volvió a la PC: se corta y se le avisa, no se reintenta** (reintenté y dos letras de su teclado cayeron en una celda; no se grabó). Graduado al skill `arb-operar`.
 
 - **05-06/10 — Cuando Fak dice que algo «debería poder hacerse», se saca la pared (el riesgo va en un renglón y decide él), y un asistente para otros se diseña para RESOLVER: un freno que contesta «no puedo» o «hacelo vos» a un pedido normal es un error mío, y los avisos de las PC se leen** (*"habilitales todo"*; 06/10: *"se nos fue de la mano"*). Graduado a la memoria `project_claudes_por_area` y a `tools/claude-area/vigia.mjs`.

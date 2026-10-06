@@ -5,9 +5,9 @@
   "header": {
     "title": "FLUJOGRAMA IP PAD",
     "documentCode": "I-IN-002/III",
-    "revision": "B",
+    "revision": "C",
     "date": "02/07/2026",
-    "revisionDate": "18/08/2026",
+    "revisionDate": "06/10/2026",
     "preparedBy": "FACUNDO SANTORO",
     "reviewedBy": "CARLOS BAPTISTA",
     "project": "PATAGONIA",
@@ -49,6 +49,14 @@
       "details": "SE DESGLOSA EL CORTE EN LAS OPERACIONES 30 A 37 Y EL CONTROL DE FORMA CON PLANTILLA MYLAR PASA A LA 38. SE SEPARA LA OPERACION 90 EN 90 ALINEACION DE COSTURA Y 91 TAPIZADO Y FIJADO SUPERIOR.",
       "pswDate": "",
       "modifiedBy": "FS"
+    },
+    {
+      "rev": "C",
+      "date": "06/10/2026",
+      "item": "20-26 / 30-38 / 50 / 60 / 80 / 130",
+      "details": "SE RESUME LA INYECCIÓN EN INYECCIÓN DE PIEZAS PLÁSTICAS (20) Y CONTROL DE PIEZA INYECTADA (21), Y EL CORTE EN PREPARACIÓN Y CARGA DE VINILO (30), CORTE AUTOMÁTICO DE COMPONENTES (31) Y CONTROL CON MYLAR (32). EL TROQUELADO DE ESPUMAS (50) SE HACE EN CONVERSIÓN DE CINTA, EN PARALELO A LA INYECCIÓN, Y LA ESPUMA TROQUELADA SE TRASLADA A INYECCIÓN PLÁSTICA, DONDE SE HACE EL ENSAMBLE SUSTRATO + ESPUMA (60). EL SEMIELABORADO PLÁSTICO + ESPUMA PASA POR DEPÓSITO ANTES DEL ADHESIVADO. LOS CONTROLES 80 Y 130 PASAN AL SÍMBOLO DE CONTROL.",
+      "pswDate": "",
+      "modifiedBy": "FS"
     }
   ],
   "flow": [
@@ -64,7 +72,7 @@
       "branchSide": {
         "labelNode": "NO",
         "type": "terminal",
-        "text": "RECLAMO A PROVEEDOR"
+        "text": "RECLAMO DE CALIDAD AL PROVEEDOR"
       }
     },
     {
@@ -77,7 +85,7 @@
     },
     {
       "type": "transfer",
-      "description": "TRASLADO DE ADHESIVO A LÍNEA",
+      "description": "TRASLADO DE ADHESIVO DESDE ALMACÉN A SECTOR DE ADHESIVADO",
       "branchSide": {
         "type": "connector",
         "text": "A",
@@ -96,56 +104,26 @@
         [
           {
             "type": "transfer",
-            "description": "TRASLADO A CORTE"
+            "description": "TRASLADO: VINILOS A SECTOR DE MESA DE CORTE"
           },
           {
             "stepId": "30",
             "type": "operation",
-            "description": "PREPARACIÓN Y CARGA DEL VINILO"
+            "description": "PREPARACIÓN Y CARGA DE VINILO"
           },
           {
             "stepId": "31",
             "type": "operation",
-            "description": "AJUSTE DE RODILLOS Y ALIMENTACIÓN DEL VINILO"
+            "description": "CORTE AUTOMÁTICO DE COMPONENTES"
           },
           {
             "stepId": "32",
-            "type": "operation",
-            "description": "AJUSTE DE MATERIAL EN LA MÁQUINA DE CORTE DE CAPAS"
-          },
-          {
-            "stepId": "33",
-            "type": "operation",
-            "description": "CONFIGURACIÓN Y CORTE AUTOMÁTICO DE CAPAS DE VINILO"
-          },
-          {
-            "stepId": "34",
-            "type": "operation",
-            "description": "AVANCE Y ALINEACIÓN DE VINILO EN MESA DE CORTE"
-          },
-          {
-            "stepId": "35",
-            "type": "operation",
-            "description": "MEDICIÓN DE CUCHILLA"
-          },
-          {
-            "stepId": "36",
-            "type": "operation",
-            "description": "PREPARACIÓN Y AJUSTE DE CORTE CON SUCCIÓN"
-          },
-          {
-            "stepId": "37",
-            "type": "operation",
-            "description": "INICIO DEL CORTE Y VERIFICACIÓN AUTOMÁTICA DE MEDIDAS"
-          },
-          {
-            "stepId": "38",
             "type": "op-ins",
-            "description": "CONTROL DE FORMA CON PLANTILLA MYLAR"
+            "description": "CONTROL CON MYLAR"
           },
           {
             "type": "condition",
-            "labelCondition": "¿CORTE OK?",
+            "labelCondition": "¿CORTE CONFORME?",
             "labelDown": "SI",
             "branchSide": {
               "labelNode": "NO",
@@ -160,7 +138,7 @@
           },
           {
             "type": "transfer",
-            "description": "TRASLADO A COSTURA"
+            "description": "TRASLADO A SECTOR DE COSTURA"
           },
           {
             "stepId": "40",
@@ -185,70 +163,47 @@
         [
           {
             "type": "transfer",
-            "description": "TRASLADO A INYECCION PLASTICA"
-          },
-          {
-            "stepId": "20",
-            "type": "operation",
-            "description": "SECADO Y CARGA DE MATERIAL"
-          },
-          {
-            "stepId": "21",
-            "type": "operation",
-            "description": "PURGA DEL CAÑÓN"
-          },
-          {
-            "stepId": "22",
-            "type": "operation",
-            "description": "ARRANQUE PROGRESIVO Y ATEMPERADO DEL MOLDE"
-          },
-          {
-            "stepId": "23",
-            "type": "operation",
-            "description": "VALIDACIÓN DE PIEZA Y GRABADO DEL PROGRAMA"
-          },
-          {
-            "stepId": "24",
-            "type": "operation",
-            "description": "PRODUCCIÓN AUTOMÁTICA Y CORTE DE COLADA"
-          },
-          {
-            "stepId": "25",
-            "type": "operation",
-            "description": "LIBERACIÓN DE PRIMERA PIEZA"
-          },
-          {
-            "stepId": "26",
-            "type": "op-ins",
-            "description": "CAMINO DE INSPECCIÓN"
-          },
-          {
-            "type": "condition",
-            "labelCondition": "¿INYECCIÓN OK?",
-            "labelDown": "SI",
-            "branchSide": {
-              "labelNode": "NO",
-              "direction": "left",
-              "type": "terminal",
-              "text": "SCRAP"
-            }
-          },
-          {
-            "type": "storage",
-            "description": "WIP - SUSTRATOS PLASTICOS"
-          },
-          {
-            "type": "transfer",
-            "description": "TRASLADO A SECTOR DE TROQUELADO"
-          },
-          {
-            "stepId": "50",
-            "type": "operation",
-            "description": "TROQUELADO DE ESPUMAS"
-          },
-          {
-            "type": "transfer",
-            "description": "TRASLADO A ENSAMBLE"
+            "description": "TRASLADO A SECTOR DE INYECCIÓN PLÁSTICA Y SECTOR DE CONVERSIÓN DE CINTA",
+            "branches": [
+              [
+                {
+                  "stepId": "20",
+                  "type": "operation",
+                  "description": "INYECCIÓN DE PIEZAS PLÁSTICAS"
+                },
+                {
+                  "stepId": "21",
+                  "type": "op-ins",
+                  "description": "CONTROL DE PIEZA INYECTADA"
+                },
+                {
+                  "type": "condition",
+                  "labelCondition": "¿PIEZA CONFORME?",
+                  "labelDown": "SI",
+                  "branchSide": {
+                    "labelNode": "NO",
+                    "direction": "left",
+                    "type": "terminal",
+                    "text": "SCRAP"
+                  }
+                },
+                {
+                  "type": "storage",
+                  "description": "WIP - SUSTRATOS PLASTICOS"
+                }
+              ],
+              [
+                {
+                  "stepId": "50",
+                  "type": "operation",
+                  "description": "TROQUELADO DE ESPUMAS"
+                },
+                {
+                  "type": "transfer",
+                  "description": "TRASLADO: ESPUMA TROQUELADA A SECTOR DE INYECCIÓN PLÁSTICA"
+                }
+              ]
+            ]
           },
           {
             "stepId": "60",
@@ -256,8 +211,12 @@
             "description": "ENSAMBLE SUSTRATO + ESPUMA"
           },
           {
+            "type": "transfer",
+            "description": "TRASLADO A SECTOR DE DEPÓSITO: SEMIELABORADO PLÁSTICO + ESPUMA"
+          },
+          {
             "type": "storage",
-            "description": "WIP - SUSTRATO + ESPUMA"
+            "description": "ALMACENADO EN DEPÓSITO: SEMIELABORADO PLÁSTICO + ESPUMA IDENTIFICADO (INGRESO Y EGRESO)"
           }
         ]
       ]
@@ -274,7 +233,7 @@
     },
     {
       "stepId": "80",
-      "type": "operation",
+      "type": "op-ins",
       "description": "CONTROL DE CALIDAD ADHESIVADO"
     },
     {
@@ -346,7 +305,7 @@
     },
     {
       "stepId": "130",
-      "type": "operation",
+      "type": "op-ins",
       "description": "CONTROL FINAL DE CALIDAD"
     },
     {
@@ -395,5 +354,6 @@
       "type": "storage",
       "description": "ALMACENADO FINAL DE PRODUCTO TERMINADO"
     }
-  ]
+  ],
+  "_cambio_revC": "DOS PEDIDOS DEL 06/10/2026. (1) Carlos Baptista, audio de WhatsApp a Fak de las 10:58: \"el flujo de material es espuma, va a conversion de cinta, ahi se adhesiva y se troquela la espuma. La espuma troquelada va a inyeccion plastica. En inyeccion plastica lo que hacen es, inyectan el plastico y le colocan la espuma y ahi tendriamos que llevar un semielaborado a deposito... lo mismo que hicimos para el apoyabrazo, pero ahora para el inserto y el IP\". Semielaborados en el arb INY-IPP0001-V1 (low) e INY-IPP0002-V1 (high), cargados el 06/10/2026. Deposito se dibuja sin numero, como en el 153 Rev.E. (2) Fak, al revisar el dibujo: \"no esta muy unificado el tema de inyeccion plastica y de corte, creo que es el IP que tiene eso muy largo... ya que emitimos una nueva rev de paso que quede perfecto\". La Rev.B tenia un nodo por cada pestaña de la HO-985 (inyeccion 20 a 26, corte 30 a 38); los hermanos 153 y 154 dibujan cada sector con su bloque: operacion, control con su rombo y almacenamiento. Nombres tomados del 153 y el 154. El ensamble conserva el 60 aunque se haga en Inyeccion Plastica, para que la numeracion se lea en orden despues del 50. NO se toco: el bloque de recepcion, la decena del control de adhesivado (80-81), los almacenamientos sin numero, las marcas de caracteristicas especiales ni los retrabajos. NUMERACION: 26 pasa a 21 y 38 pasa a 32; el AMFE 149 (filas \"20\", \"30\" y \"38\") y la HO-985 (pestañas 20 a 26 y 30 a 38) tienen que seguir al flujograma."
 }

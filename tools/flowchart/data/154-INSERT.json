@@ -8,9 +8,9 @@
   "header": {
     "title": "FLUJOGRAMA DE PROCESO INSERT PATAGONIA",
     "documentCode": "I-IN-002/III",
-    "revision": "C",
+    "revision": "D",
     "date": "12/11/2025",
-    "revisionDate": "11/09/2026",
+    "revisionDate": "06/10/2026",
     "preparedBy": "FACUNDO SANTORO",
     "reviewedBy": "CARLOS BAPTISTA",
     "project": "PATAGONIA",
@@ -153,6 +153,14 @@
       "details": "SE ALINEAN LAS CARACTERISTICAS ESPECIALES CON EL AMFE 158: D/TLD Y SC EN LA RECEPCION (10) Y SC EN 20, 21, 22, 50, 60, 71, 90, 91, 93, 100, 101, 102 Y 110.",
       "pswDate": "",
       "modifiedBy": "FS"
+    },
+    {
+      "rev": "D",
+      "date": "06/10/2026",
+      "item": "60-61 / 80-81",
+      "details": "LA ESPUMA TROQUELADA EN CONVERSIÓN DE CINTA SE TRASLADA AL SECTOR DE INYECCIÓN PLÁSTICA, DONDE SE HACE EL PREARMADO DE ESPUMA (80) SOBRE EL SUSTRATO. EL SEMIELABORADO PLÁSTICO + ESPUMA PASA POR DEPÓSITO ANTES DEL ADHESIVADO: EL ALMACENAMIENTO WIP 81 SE REEMPLAZA POR EL ALMACENADO EN DEPÓSITO.",
+      "pswDate": "",
+      "modifiedBy": "FS"
     }
   ],
   "flow": [
@@ -265,7 +273,7 @@
         [
           {
             "type": "transfer",
-            "description": "TRASLADO: ESPUMAS Y MATERIA PRIMA PLÁSTICA A LOS SECTORES DE TROQUELADO E INYECCIÓN",
+            "description": "TRASLADO: ESPUMAS Y MATERIA PRIMA PLÁSTICA A LOS SECTORES DE CONVERSIÓN DE CINTA E INYECCIÓN PLÁSTICA",
             "branches": [
               [
                 {
@@ -283,7 +291,7 @@
                 },
                 {
                   "type": "transfer",
-                  "description": "TRASLADO: PIEZAS TROQUELADAS A SECTOR DE PREARMADO"
+                  "description": "TRASLADO: ESPUMA TROQUELADA A SECTOR DE INYECCIÓN PLÁSTICA"
                 }
               ],
               [
@@ -315,10 +323,6 @@
                   "stepId": "72",
                   "type": "storage",
                   "description": "ALMACENAMIENTO EN MEDIOS WIP"
-                },
-                {
-                  "type": "transfer",
-                  "description": "TRASLADO: SUSTRATO A SECTOR DE PREARMADO DE ESPUMA"
                 }
               ]
             ]
@@ -329,13 +333,16 @@
             "description": "PREARMADO DE ESPUMA"
           },
           {
-            "stepId": "81",
+            "type": "transfer",
+            "description": "TRASLADO A SECTOR DE DEPÓSITO: SEMIELABORADO PLÁSTICO + ESPUMA"
+          },
+          {
             "type": "storage",
-            "description": "ALMACENAMIENTO EN MEDIOS WIP"
+            "description": "ALMACENADO EN DEPÓSITO: SEMIELABORADO PLÁSTICO + ESPUMA IDENTIFICADO (INGRESO Y EGRESO)"
           },
           {
             "type": "transfer",
-            "description": "TRASLADO: PIEZA PREARMADA AL SECTOR DE ADHESIVADO"
+            "description": "TRASLADO DESDE DEPÓSITO A SECTOR DE ADHESIVADO"
           }
         ]
       ]
@@ -469,5 +476,6 @@
       "type": "storage",
       "description": "ALMACENAMIENTO: PRODUCTO TERMINADO (FIFO)"
     }
-  ]
+  ],
+  "_cambio_revD": "Pedido de Carlos Baptista, audio de WhatsApp a Fak del 06/10/2026 10:58: \"el flujo de material es espuma, va a conversion de cinta, ahi se adhesiva y se troquela la espuma. La espuma troquelada va a inyeccion plastica. En inyeccion plastica lo que hacen es, inyectan el plastico y le colocan la espuma y ahi tendriamos que llevar un semielaborado a deposito. Eso es lo mismo que hicimos para inyeccion de poliuretano para el apoyabrazo, pero ahora para el inserto y el IP\". Mismo criterio que el 153 Rev.E (decisiones de Fak del 05/10/2026): el paso se llama Deposito (no WIP) y se dibuja sin numero. Semielaborados en el arb INY-INS0005..0008-V1 (plastico + espuma + Tesa 52110, cargados el 06/10/2026). No cambia ningun numero de operacion: la 60 y la 80 ya existian y el AMFE 158 ya las tiene; el almacenamiento WIP 81 pasa a ser el almacenado en Deposito. El traslado del sustrato a \"sector de prearmado\" se saca porque el prearmado se hace en Inyeccion Plastica."
 }

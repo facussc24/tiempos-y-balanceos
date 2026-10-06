@@ -47,6 +47,8 @@ const esControl = (t) => /\b(CONTROL|INSPECCI[OÓ]N|MURO DE CALIDAD)\b/i.test(St
  * lleva: "TRASLADO AL SECTOR DE INSPECCION FINAL" tiene la palabra y no es un puesto.
  */
 const NO_SON_PUESTOS = new Set(['transfer', 'storage', 'condition', 'terminal', 'connector']);
+/** Pasos numerados de un mismo sector (decena) a partir de los cuales es un desglose de la HO. */
+const TOPE_PASOS_POR_SECTOR = 6;
 const esNodoDeControl = (n) => !NO_SON_PUESTOS.has(n.type) && esControl(n.description);
 
 /**
@@ -251,6 +253,30 @@ export function revisarFlujograma(doc, { hermanos = null } = {}) {
     const bloque = (regla, detalle) => (excepciones[regla]
         ? aviso(regla, `${detalle} — excepcion declarada: ${excepciones[regla]}`)
         : rojo(regla, detalle));
+
+    // 13 bis. UN SECTOR ES UN BLOQUE, NO UN NODO POR PESTAÑA DE LA HOJA DE OPERACIONES.
+    //     06/10/2026: el 157 (IP Pad) Rev.B tenia la inyeccion en 7 pasos (20 a 26: secado,
+    //     purga, arranque, validacion, produccion, primera pieza, camino de inspeccion) y el
+    //     corte en 9 (30 a 38), uno por cada pestaña de la HO-985; el 152 tiene el corte igual.
+    //     Fak, al revisarlo: *"el IP tiene eso muy largo... la idea era que no quede tan largo
+    //     al pedo"*. Los hermanos dibujan el sector con su bloque: la o las operaciones, el
+    //     control con su rombo y el almacenamiento. El paso a paso de la maquina es de la hoja.
+    //     Contado sobre los 9 del generador: el sector mas largo que esta bien tiene 5 pasos
+    //     (adhesivado del 159, con sus tres reprocesos; costura del 152); los dos mal, 7 y 9.
+    const pasosPorDecena = new Map();
+    for (const n of conNumero) {
+        if (NO_SON_PUESTOS.has(n.type)) continue;
+        const d = decena(n.stepId);
+        if (!pasosPorDecena.has(d)) pasosPorDecena.set(d, new Set());
+        pasosPorDecena.get(d).add(n.stepId);      // por numero: las ramas paralelas del 152 los repiten
+    }
+    for (const [d, pasos] of pasosPorDecena) {
+        if (pasos.size >= TOPE_PASOS_POR_SECTOR) {
+            bloque('sector-desglosado',
+                `la decena ${d} tiene ${pasos.size} pasos (${[...pasos].join(', ')}): es un nodo por pestaña de la hoja de operaciones. El sector se dibuja con su bloque (operacion, control con rombo, almacenamiento), como el corte y la inyeccion del 153 y el 154`);
+        }
+    }
+
     const todasLasColumnas = [...columnas(doc.flow)];
     const siguienteEnSuColumna = (nodo) => {
         for (const col of todasLasColumnas) {

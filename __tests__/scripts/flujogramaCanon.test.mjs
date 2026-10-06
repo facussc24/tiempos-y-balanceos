@@ -137,6 +137,44 @@ describe('canon de flujogramas', () => {
         });
     });
 
+    describe('un sector es un bloque, no un nodo por pestaña de la HO (157 Rev.B, 06/10/2026)', () => {
+        /** La inyeccion del 157 Rev.B: 7 pasos numerados en la decena del 20. */
+        const INYECCION_REV_B = ['SECADO Y CARGA DE MATERIAL', 'PURGA DEL CAÑÓN', 'ARRANQUE PROGRESIVO Y ATEMPERADO DEL MOLDE',
+            'VALIDACIÓN DE PIEZA Y GRABADO DEL PROGRAMA', 'PRODUCCIÓN AUTOMÁTICA Y CORTE DE COLADA', 'LIBERACIÓN DE PRIMERA PIEZA'];
+        const conInyeccionDesglosada = (cuantos) => {
+            const d = structuredClone(leer('157-IP-PAD.json'));
+            const rama = d.flow.find((n) => n.branches).branches[1][0].branches[0];
+            const i = rama.findIndex((n) => n.stepId === '20');
+            const pasos = INYECCION_REV_B.slice(0, cuantos).map((description, k) => ({ stepId: String(20 + k), type: 'operation', description }));
+            rama.splice(i, 2, ...pasos, { stepId: String(20 + cuantos), type: 'op-ins', description: 'CONTROL DE PIEZA INYECTADA' });
+            return d;
+        };
+
+        it('ROJO: la inyeccion en 7 pasos, como la tenia la Rev.B', () => {
+            const h = revisarFlujograma(conInyeccionDesglosada(6));
+            expect(reglas(h)).toContain('sector-desglosado');
+            expect(h.find((x) => x.regla === 'sector-desglosado').detalle).toMatch(/decena 20 tiene 7 pasos/);
+        });
+
+        it('VERDE: 5 pasos en un sector no frenan (el adhesivado del 159 los tiene)', () => {
+            expect(reglas(revisarFlujograma(conInyeccionDesglosada(4)))).not.toContain('sector-desglosado');
+            expect(reglas(revisarFlujograma(ACTUAL))).not.toContain('sector-desglosado');
+        });
+
+        it('VERDE: ningun flujograma del generador queda desglosado, salvo con su excepcion declarada', () => {
+            for (const f of fs.readdirSync(DATA).filter((x) => x.endsWith('.json'))) {
+                expect(reglas(revisarFlujograma(leer(f))), f).not.toContain('sector-desglosado');
+            }
+        });
+
+        it('un almacenamiento numerado no cuenta como paso', () => {
+            const d = conInyeccionDesglosada(4);     // 5 pasos + un WIP con numero = sigue en 5
+            const rama = d.flow.find((n) => n.branches).branches[1][0].branches[0];
+            rama.push({ stepId: '27', type: 'storage', description: 'ALMACENAMIENTO EN MEDIOS WIP' });
+            expect(reglas(revisarFlujograma(d))).not.toContain('sector-desglosado');
+        });
+    });
+
     describe('el gate dice CUAL renglon lo frena', () => {
         it('cada hallazgo nombra el nodo, no solo la regla', () => {
             const d = conDefecto((c) => { c.flow.find((n) => n.stepId === '81').stepId = '80'; });
@@ -297,7 +335,13 @@ describe('canon de flujogramas', () => {
         });
 
         it('compararConHermanos no inventa diferencias en un hermano que esta completo', () => {
-            expect(compararConHermanos(leer('153-ARMREST-DOOR-PANEL.json'), sin('153-ARMREST-DOOR-PANEL'))).toEqual([]);
+            // Solo las FUERTES (dos tercios o mas de los hermanos): desde el 157 Rev.C (06/10/2026) su
+            // inyeccion se llama INYECCION y entra en la cuenta, y el 153 queda con una diferencia
+            // debil y cierta — 3 de 5 almacenan el sustrato despues del control y el 153 lo lleva
+            // directo a PU. Una debil avisa; no es una diferencia inventada.
+            const dif = compararConHermanos(leer('153-ARMREST-DOOR-PANEL.json'), sin('153-ARMREST-DOOR-PANEL'));
+            expect(dif.filter((d) => d.fuerte)).toEqual([]);
+            expect(dif.map((d) => `${d.sector}.${d.rasgo}`)).toEqual(['INYECCION.wip']);
         });
     });
 });

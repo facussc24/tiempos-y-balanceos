@@ -36,6 +36,7 @@ los 8 del generador, relevados el 22/09/2026):
 | `numero-repetido` | ningun numero dos veces, tampoco entre ramas paralelas |
 | `decimal-sin-madre` | un `90.1` exige que exista la operacion `90` (3 de 3 precedentes la tienen) |
 | `traslado-sin-cambiar-de-decena` | si hay traslado se cruzo de sector, asi que la decena cambia |
+| `sector-desglosado` | un sector no lleva un nodo por pestaña de la HO: 6 o mas pasos numerados en una decena frenan (§1.5; el 157 Rev.B tenia 7 y 9) |
 | `opins-sobre-transformacion` | el simbolo OP+INSPECCION va **solo** sobre controles (18 de 18 en los hermanos; el 159 Rev.A tenia 11 y ninguno lo era) |
 | `control-sin-numero` | todo control es un nodo con numero — el de SU sector. Unica excepcion: `INSPECCION DE MATERIA PRIMA` |
 | `rombo-sin-control` | el rombo de conformidad cuelga de un control, no de una operacion de transformacion |
@@ -178,6 +179,32 @@ no tiene ningun refilado antes de la costura** (su OP 40 es del sector Tapizado)
 AMFE 158 tampoco declara una OP 40**. Al reves tambien: antes de declarar que una operacion
 "no la respalda nadie", **abrir la hoja de operaciones** — el 18/08 quedo escrito que la
 OP 105 REFILADO POST-TAPIZADO existia solo en el Plan de Control, y era la OP 40 de la HO.
+
+### 1.5 Un sector es un BLOQUE: el paso a paso de la maquina es de la hoja de operaciones
+
+**El flujograma no lleva un nodo por cada pestaña de la HO.** Cada sector se dibuja con su
+bloque: la o las operaciones, el control con su rombo y el almacenamiento. Lo que la HO parte
+en hojas (secado, purga, arranque del molde, ajuste de rodillos, medicion de cuchilla...) queda
+adentro de la operacion.
+
+| Sector | Como se dibuja | Como NO (157 Rev.B y 152 Rev.B) |
+|---|---|---|
+| Mesa de corte | `PREPARACION Y CARGA DE VINILO` · `CORTE AUTOMATICO DE COMPONENTES` · `CONTROL CON MYLAR` + rombo · WIP | 9 pasos: carga, rodillos, ajuste, capas, avance, cuchilla, succion, corte, mylar |
+| Inyeccion plastica | `INYECCION DE PIEZAS PLASTICAS` · `CONTROL DE PIEZA INYECTADA` + rombo · WIP | 7 pasos: secado, purga, arranque, validacion, produccion, primera pieza, camino de inspeccion |
+
+Fak, 06/10/2026, al ver el IP Pad: *"no esta muy unificado el tema de inyeccion plastica y de
+corte, creo que es el IP que tiene eso muy largo... la idea era que no quede tan largo al pedo"*.
+
+**Y cuando Fak marca esto en un flujograma, se arregla ESO y nada mas:** se resumen los dos
+sectores dentro de sus decenas (20-21, 30-32), el AMFE los sigue con filas-rango (`20-21`, como
+la `70-71` del Insert: *"pone 70-71 y listo"*, 08/09/2026) y la HO queda anotada como desfasada.
+**No se renumera el resto del documento contra los hermanos ni se le lleva un menu de que mas
+unificar**: *"no renumerar todo el flujograma en base a los insert y apb, la idea era solo esa...
+no deberias hacerme tantas preguntas, deberias saber que hacer"*. Las demas diferencias se le
+nombran en un renglon, sin opciones.
+
+Enforcement: `sector-desglosado` en `scripts/_lib/flujogramaCanon.mjs` (rojo con 6 o mas pasos
+numerados en una decena; el sector mas largo que esta bien en el corpus tiene 5).
 
 ---
 
