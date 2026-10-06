@@ -47,6 +47,10 @@ const fila = (art, medida, desc, unidad, consumo, mod = 'TAP', proc = 'PRDTAP') 
 const filaN1 = (padre, medida, desc, unidad, consumo) =>
     `${'\t'.repeat(7)}${padre.padEnd(15)}\t 1    \t ${medida.padEnd(14)}\t ${desc.padEnd(40)}\t ${unidad.padEnd(5)}\t   ${consumo}\t`;
 
+/** Fila de cualquier nivel (arranca en la columna 7 x nivel) y con el rubro que se le pida. */
+const filaNivel = (nivel, padre, medida, desc, unidad, consumo, rubro = '1') =>
+    `${'\t'.repeat(7 * nivel)}${padre.padEnd(15)}\t ${rubro.padEnd(5)}\t ${medida.padEnd(14)}\t ${desc.padEnd(40)}\t ${unidad.padEnd(5)}\t   ${consumo}\tTAP       \tPRDTAP         \t`;
+
 /** El registro partido en dos renglones con la linea vacia en el medio: EL incidente. */
 const filaPartida = (art, medida, descIni, descFin, unidad, consumo, mod = 'COS', proc = 'PRDCOS') => [
     `${art.padEnd(15)}\t 1    \t ${medida.padEnd(14)}\t ${descIni}`,
@@ -90,6 +94,32 @@ function textoPdf(salida) {
     const py = `import fitz,json;d=fitz.open(r"${salida}");print(json.dumps([p.get_text() for p in d]))`;
     return JSON.parse(execFileSync('python', ['-c', py], { encoding: 'utf8' }));
 }
+
+/** Las palabras de cada renglon del PDF con su caja: [[x0, x1, texto], ...] de izquierda a
+ *  derecha, agrupadas por altura. Se lee del ARCHIVO, con una cuenta que no es la del script:
+ *  si no, el test validaria al gate contra si mismo. */
+function cajasPdf(salida) {
+    const py = [
+        'import fitz,json,collections',
+        `d=fitz.open(r"${salida}")`,
+        'out=[]',
+        'for p in d:',
+        '    r=collections.defaultdict(list)',
+        '    for w in p.get_text("words"):',
+        '        r[round(w[3])].append((w[0],w[2],w[4]))',
+        '    out.append([sorted(v) for _y,v in sorted(r.items())])',
+        'print(json.dumps(out))',
+    ].join('\n');
+    return JSON.parse(execFileSync('python', ['-c', py], { encoding: 'utf8' }));
+}
+
+/** Los renglones como texto. Dos columnas pegadas salen como UNA palabra. */
+const renglonesPdf = (salida) => cajasPdf(salida).map(pag => pag.map(r => r.map(c => c[2]).join(' ')));
+
+/** Palabras de un mismo renglon que se montan una sobre otra. El lector NO las junta cuando se
+ *  pisan de mas (unos 7 pt): salen como dos palabras sanas, y por texto no se ve nada. */
+const montadas = (salida) => cajasPdf(salida).flatMap(pag => pag.flatMap(r =>
+    r.slice(1).filter((c, i) => c[0] < r[i][1] - 0.5).map(c => c[2])));
 
 beforeEach(() => { dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pdfbom-')); });
 afterEach(() => { fs.rmSync(dir, { recursive: true, force: true }); });
@@ -268,51 +298,116 @@ describe('_pdfBomArb.py', () => {
         });
     });
 
-    describe('el Rubro no pisa el codigo ni llega a la Medida (06/10/2026)', () => {
-        /** Palabras de la pagina con su posicion: [x0, y0, x1, y1, texto]. Se mide el ARCHIVO. */
-        const palabrasPdf = (salida) => {
-            const py = `import fitz,json;d=fitz.open(r"${salida}");print(json.dumps([[list(w[:5]) for w in p.get_text("words")] for p in d]))`;
-            return JSON.parse(execFileSync('python', ['-c', py], { encoding: 'utf8' }));
-        };
-        const PZA = 'ABC-DEF00001-V1';        // 15 caracteres: el tope del campo en el arb
-        const renglonDe = (palabras, medida) => {
-            const m = palabras.find((w) => w[4] === medida);
-            return palabras.filter((w) => Math.abs(w[1] - m[1]) < 1).sort((a, b) => a[0] - b[0]);
-        };
+    describe('columnas pisadas o pegadas — gate 5, el PDF releido renglon por renglon', () => {
+        // El Rubro se corre a la derecha cuando el codigo con la sangria del sub-ensamble no
+        // entra en su columna (06/10/2026). Corrido, puede llegar a la Medida: ahi el lector
+        // del PDF —y una persona— lee `12MAT-N3`, un codigo que no existe. Hasta ese dia el
+        // gate 5 buscaba la medida en el texto de la pagina y `MAT-N3` "estaba".
+        const RAIZ_14 = 'PZA-CATORCE-14';
+        const RAIZ_15 = 'PZA-QUINCE-0015';
 
-        it('13. un codigo largo en nivel 1 corre el Rubro: no lo pisa, y en nivel 0 queda en su columna', () => {
+        it('13. VERDE: con un codigo de 14 en un sub-ensamble el Rubro se corre y se lee solo', () => {
+            expect(RAIZ_14).toHaveLength(14);
             escribir({
                 filas: [
-                    fila(PZA, 'SUB-1', 'SUBENSAMBLE', 'UN', '1,00000000'),
-                    filaN1('SUB-1', 'MAT-C', 'MATERIAL DEL SUBENSAMBLE', 'MT2', '0,25000000'),
+                    fila(RAIZ_14, 'SUB-1', 'SUBENSAMBLE', 'UN', '1,00000000'),
+                    filaNivel(1, 'SUB-1', 'MAT-N1', 'MATERIAL DEL SUBENSAMBLE', 'MT2', '0,25000000'),
                 ],
-                articulos: [PZA],
+                articulos: [RAIZ_14],
             });
-            const r = correr(PZA);
+            const r = correr(RAIZ_14);
+            expect(r.stderr ?? '').toBe('');
             expect(r.ok).toBe(true);
-            const palabras = palabrasPdf(r.salida)[0];
-
-            const n1 = renglonDe(palabras, 'MAT-C');
-            const codigo = n1.find((w) => w[4] === PZA);
-            const medida = n1.find((w) => w[4] === 'MAT-C');
-            const rubro = n1.find((w) => w[4] === '1');
-            expect(codigo, 'el codigo se lee entero, sin nada pegado').toBeTruthy();
-            expect(rubro, 'el Rubro se lee como palabra aparte').toBeTruthy();
-            expect(rubro[0]).toBeGreaterThan(codigo[2] + 2);
-            expect(rubro[2]).toBeLessThan(medida[0] - 2);
-
-            const n0 = renglonDe(palabras, 'SUB-1');
-            expect(Math.abs(n0.find((w) => w[4] === '1')[0] - 120)).toBeLessThan(1.5);
+            const [pag] = renglonesPdf(r.salida);
+            expect(pag).toContain(`. ${RAIZ_14} 1 MAT-N1 MATERIAL DEL SUBENSAMBLE MT2 0.25 TAP PRDTAP`);
+            // Y mirado por las cajas, no por el texto: sin el corrimiento el `1` queda ARRIBA
+            // del codigo, el lector igual devuelve las dos palabras sanas y el renglon de
+            // arriba se lee identico. Este es el control que no depende del gate.
+            expect(montadas(r.salida)).toEqual([]);
         });
 
-        it('14. ROJO: si el Rubro corrido llega a la Medida, aborta y no deja archivo', () => {
-            const n1ConRubro = (rubro) => `${'\t'.repeat(7)}${'SUB-1'.padEnd(15)}\t ${rubro.padEnd(5)}\t ${'MAT-C'.padEnd(14)}\t ${'MATERIAL'.padEnd(40)}\t ${'MT2'.padEnd(5)}\t   0,25000000\t`;
-            escribir({ filas: [fila(PZA, 'SUB-1', 'SUBENSAMBLE', 'UN', '1,00000000'), n1ConRubro('123')], articulos: [PZA] });
-            const r = correr(PZA);
+        it('14. ROJO: un Rubro de 2 digitos que PISA la Medida aborta y no deja archivo', () => {
+            expect(RAIZ_15).toHaveLength(15);
+            escribir({
+                filas: [
+                    fila(RAIZ_15, 'SUB-1', 'SUBENSAMBLE', 'UN', '1,00000000'),
+                    filaNivel(3, 'SUB-3', 'MAT-N3', 'MATERIAL DE NIVEL 3', 'UN', '2,00000000', '12'),
+                ],
+                articulos: [RAIZ_15],
+            });
+            const r = correr(RAIZ_15);
             expect(r.ok).toBe(false);
-            expect(r.stderr).toMatch(/Rubro hasta la\s+columna Medida/);
+            expect(r.stderr).toMatch(/pisadas o pegadas/);
+            expect(r.stderr).toContain('12MAT-N3');            // lo que se lee, y por eso frena
             expect(fs.existsSync(r.salida)).toBe(false);
             expect(fs.existsSync(`${r.salida}.parcial`)).toBe(false);
+        });
+
+        it('14b. ROJO: un Rubro que queda PEGADO a la Medida (sin pisarla) tambien aborta', () => {
+            // Con un digito no llega a pisarla: queda a 0,8 pt, menos que un espacio. En la
+            // hoja se lee igual que la pisada, un codigo con un 1 adelante.
+            escribir({
+                filas: [
+                    fila(RAIZ_15, 'SUB-1', 'SUBENSAMBLE', 'UN', '1,00000000'),
+                    filaNivel(3, 'SUB-3', 'MAT-N3', 'MATERIAL DE NIVEL 3', 'UN', '2,00000000', '1'),
+                ],
+                articulos: [RAIZ_15],
+            });
+            const r = correr(RAIZ_15);
+            expect(r.ok).toBe(false);
+            expect(r.stderr).toContain('1MAT-N3');
+            expect(fs.existsSync(r.salida)).toBe(false);
+        });
+
+        it('14c. ROJO: pisada de mas (Rubro de 3 digitos) se lee como palabras sanas, y aborta igual', () => {
+            // El lector junta en una palabra lo que se pisa hasta unos 7 pt. Con 10 pt devuelve
+            // `123` y `MAT-N3` por separado, y comparar palabras da verde: es como pasaba el
+            // incidente del 06/10. Lo ve el control de las cajas de las letras.
+            escribir({
+                filas: [
+                    fila(RAIZ_15, 'SUB-1', 'SUBENSAMBLE', 'UN', '1,00000000'),
+                    filaNivel(3, 'SUB-3', 'MAT-N3', 'MATERIAL DE NIVEL 3', 'UN', '2,00000000', '123'),
+                ],
+                articulos: [RAIZ_15],
+            });
+            const r = correr(RAIZ_15);
+            expect(r.ok).toBe(false);
+            expect(r.stderr).toMatch(/pisadas o pegadas/);
+            expect(r.stderr).toMatch(/la letra '2' .* pisa a la 'M'/);
+            expect(r.stderr).not.toContain('se lee');          // por palabras no habia nada que ver
+            expect(fs.existsSync(r.salida)).toBe(false);
+            expect(fs.existsSync(`${r.salida}.parcial`)).toBe(false);
+        });
+
+        it('14d. ROJO: el renglon malo en la SEGUNDA pagina tambien aborta (100% de las hojas)', () => {
+            // El 04/08/2026 se revisaron 2 paginas de 5 y las 2 eran las buenas.
+            escribir({
+                filas: [
+                    fila('PZA-1', 'MAT-A', 'MATERIAL', 'UN', '1,00000000'),
+                    fila(RAIZ_15, 'SUB-1', 'SUBENSAMBLE', 'UN', '1,00000000'),
+                    filaNivel(3, 'SUB-3', 'MAT-N3', 'MATERIAL DE NIVEL 3', 'UN', '2,00000000', '12'),
+                ],
+                articulos: ['PZA-1', RAIZ_15],
+            });
+            const r = correr(`PZA-1,${RAIZ_15}`);
+            expect(r.ok).toBe(false);
+            expect(r.stderr).toMatch(/pag 2 \(PZA-QUINCE-0015\) renglon 2/);
+            expect(r.stderr).not.toMatch(/pag 1 /);
+            expect(fs.existsSync(r.salida)).toBe(false);
+        });
+
+        it('15. VERDE: la raya larga del export (byte 0x97) se dibuja y no frena el PDF', () => {
+            // El export es cp1252 leido como latin-1. Es la unica fila real que el gate frenaba
+            // de mas, sobre las 1.408 BOM del 06/10/2026: un control que frena una BOM sana
+            // se termina salteando.
+            escribir({
+                filas: [fila('PZA-1', 'MAT-A', 'BRANCO \x97 LARGURA', 'MT2', '0,00622220')],
+                articulos: ['PZA-1'],
+            });
+            const r = correr('PZA-1');
+            expect(r.stderr ?? '').toBe('');
+            expect(r.ok).toBe(true);
+            expect(renglonesPdf(r.salida)[0]).toContain('PZA-1 1 MAT-A BRANCO — LARGURA MT2 0.0062222 TAP PRDTAP');
         });
     });
 
