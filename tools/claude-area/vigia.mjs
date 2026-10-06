@@ -53,6 +53,12 @@ export const QUE_ES = {
     'servidor/borra': 'quiso borrar algo del servidor',
     'sistema/instala': 'quiso instalar un programa',
     'sistema/apaga': 'quiso apagar o reiniciar la PC',
+    // el control del cierre del turno (plugin 0.8.0): estuvo por devolverle el problema a la persona
+    'derivo/no-puedo': 'estuvo por cerrar con un «no puedo…» y se le recordó lo que sabe hacer',
+    'derivo/no-me-dejan': 'estuvo por cerrar con un «no me dejan…» y se le recordó lo que sabe hacer',
+    'derivo/hacelo-vos': 'estuvo por cerrar con un «hacelo vos» y se le recordó lo que sabe hacer',
+    'derivo/pasaselo-vos': 'estuvo por cerrar con un «pasáselo vos a…» y se le recordó lo que sabe hacer',
+    'derivo/pedile-a': 'estuvo por cerrar con un «pedile a…» y se le recordó lo que sabe hacer',
 };
 
 const minus = (s) => String(s ?? '').trim().toLowerCase();
