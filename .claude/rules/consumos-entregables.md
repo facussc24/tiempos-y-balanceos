@@ -23,10 +23,14 @@ EJECUTAR (cargar en arb/Supabase, enviar a cliente):
    *"no cambiamos el consumo sin un excel oficial o una confirmacion oficial... ante la duda le
    preguntamos a Pablo Gamboa"*). Una tizada (.MRK) sola no alcanza: puede ser una prueba. Tampoco
    una BOM de proyecto, un flujograma ni una cuenta mia. Freno 4 de `respaldoCarga.py`
-   (BLOQUEANTE, listas en `corte_fuente_oficial` del canon). `python scripts/_tizadaVsArb.py
-   <producto>` compara el arb con la tizada mas nueva: es un aviso opcional para ir a preguntar,
-   nunca la fuente. Caso: microfibra del Upper Trimming, 0,0724 cargado el 31/07 con el paño y
-   las piezas de una BOM de 2025.
+   (BLOQUEANTE, listas en `corte_fuente_oficial` del canon): el numero tiene que salir de un
+   mail de Pablo, del adjunto de un mail suyo o de una planilla que este en el SERVIDOR; lo que
+   arme yo no cuenta, este donde este. `python scripts/_tizadaVsArb.py <producto>` compara el
+   arb con la tizada mas nueva: es un aviso opcional para ir a preguntar, nunca la fuente.
+   **Limite conocido:** el freno corre en `_arbCargar.py`; un alta (`_arbAltaLote.py`) o una
+   sustitucion con cantidad (`_arbSustituir.py`) no pasan por el, asi que ahi la regla la cumplo
+   yo: sin planilla o mail de Pablo, el consumo no se escribe. Caso: microfibra del Upper
+   Trimming, 0,0724 cargado el 31/07 (un alta) con el paño y las piezas de una BOM de 2025.
 
 Enforcement: hook `consumos-entregable-guard.sh` (PreToolUse, logica en
 `scripts/_lib/guardianes.mjs`) recuerda el checklist 1×/h al detectar trabajo de

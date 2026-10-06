@@ -384,12 +384,16 @@ y, si hace falta, `cuenta` y `vistos`. Los tres frenos viven en `scripts/_lib/re
 - Cada mail de los ultimos 12 meses que habla del consumo de ese insumo va citado o en
   `vistos` (`<id>: motivo` o `hilo:<asunto>: motivo`, separados por `|`).
 - `fak:` como fuente = decision de Fak en el chat: pasa en amarillo y queda en el journal.
-- **Material de corte (modulo CO / COB) que cambia de consumo — freno 4, 06/10/2026:** al menos
-  una fuente tiene que ser la planilla oficial de Mesa de Corte (Excel, PDF o PowerPoint de
-  consumos o tizadas, fuera del repo) o un mail de Pablo Gamboa. Una tizada `.MRK`, una BOM de
-  proyecto o una cuenta propia NO alcanzan (Pablo puede estar probando tizadas): se le pregunta
-  a el. `fak:` vale solo si la cita dice que Pablo o Mesa de Corte lo confirmo. Para un insumo
-  nuevo, la tabla lleva la columna `modulo`. Aviso opcional, nunca fuente:
+- **Material de corte (vinilo, tela, punzonado, espuma) que cambia de consumo — freno 4,
+  06/10/2026:** el numero (o cada numero de la `cuenta`) tiene que salir de un mail de Pablo
+  Gamboa (`mail:<id>`), del adjunto de un mail suyo (el archivo, guardado donde sea) o de una
+  planilla de consumos o tizadas que este en el servidor `Y:` (Mesa de Corte, proyecto o PPAP;
+  no en obsoletos). Una tizada `.MRK`, una BOM de proyecto, una cuenta propia o un archivo que
+  arme yo NO alcanzan (Pablo puede estar probando tizadas): se le pregunta a el. `fak:` vale
+  solo si dice que Pablo Gamboa o Mesa de Corte lo confirmo. Si la clasificacion se equivoca, la
+  tabla lleva la columna `corte` (`si` / `no: motivo`); un insumo nuevo, la columna `modulo`.
+  Un `.xls` no se lee: se guarda como `.xlsx`. Las altas y las sustituciones con cantidad no
+  pasan por este freno: ahi la regla se cumple a mano. Aviso opcional, nunca fuente:
   `python scripts/_tizadaVsArb.py <producto>` compara el arb con la tizada mas nueva.
 Solo el informe: `python scripts/_lib/respaldoCarga.py --revisar x.csv [--unidad]`.
 Nace del TPO del Top Roll: 0,2526 / 1,4 cargado el 20/08 con un 1,4 sin papel, rollo de

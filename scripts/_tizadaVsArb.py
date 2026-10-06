@@ -60,12 +60,17 @@ def leer_mrk(datos, nombre=''):
         return m.group(1).strip()
     d, mth, y = g('DATE').split('.')
     piezas = [float(a) for a in re.findall(r'<GEOM_INFO [^>]*AREA="([\d.]+)"', x)]
-    juegos = re.findall(r'<NB_OF_SETS>(\d+)</NB_OF_SETS>', x)
-    r = dict(nombre=nombre, fecha='20%s-%s-%s' % (y, mth, d), largo_cm=float(g('LENGTH')), ancho_cm=float(g('WIDTH')),
-             piezas=int(g('PLACED_ON_TABLE')), juegos=int(juegos[0]) if juegos else int(g('PLACED_ON_TABLE')),
+    juegos = [int(n) for n in re.findall(r'<NB_OF_SETS>(\d+)</NB_OF_SETS>', x)]
+    puestas = int(g('PLACED_ON_TABLE'))
+    r = dict(nombre=nombre, fecha='%s-%s-%s' % (y if len(y) == 4 else '20' + y, mth, d), largo_cm=float(g('LENGTH')),
+             ancho_cm=float(g('WIDTH')), piezas=puestas, juegos=sum(juegos) if juegos else puestas,
              eficiencia=float(g('EFFICIENCY')), area_juego_m2=round(sum(piezas), 4), patrones=len(piezas))
-    if r['juegos'] < 1 or r['largo_cm'] <= 0 or r['ancho_cm'] <= 0:
+    if r['juegos'] < 1 or r['largo_cm'] <= 0 or r['ancho_cm'] <= 0 or not piezas:
         raise ValueError('%s: tizada vacia' % nombre)
+    # varios talles, o juegos declarados que no estan todos puestos en la mesa: no se medirla
+    if len(juegos) > 1 or r['juegos'] * len(piezas) != puestas:
+        raise ValueError('%s: %s juegos declarados, %d patrones y %d piezas puestas: no cierra (varios talles o '
+                         'tizada a medio armar)' % (nombre, juegos, len(piezas), puestas))
     r['m2'] = r['largo_cm'] * r['ancho_cm'] / 1e4 / r['juegos']
     r['ml'] = r['largo_cm'] / 100.0 / r['juegos']
     return r
@@ -87,14 +92,14 @@ def veredicto(consumo_arb, unidad, tiz):
 
 
 def cambio_de_patron(tizadas):
-    """tizadas ordenadas de vieja a nueva -> texto si el area del juego cambio en la ultima."""
-    if len(tizadas) < 2:
+    """tizadas en cualquier orden -> texto con la cadena de tamaños si el area del juego cambio alguna vez."""
+    cadena = []
+    for t in sorted(tizadas, key=lambda t: t['fecha']):
+        if not cadena or abs(t['area_juego_m2'] / cadena[-1]['area_juego_m2'] - 1) > CAMBIO_PATRON:
+            cadena.append(t)
+    if len(cadena) < 2:
         return ''
-    a, b = tizadas[-2], tizadas[-1]
-    if a['area_juego_m2'] and abs(b['area_juego_m2'] / a['area_juego_m2'] - 1) > CAMBIO_PATRON:
-        return ('el patron cambio: %.4f m2 en %s (%s) y %.4f m2 en %s (%s)'
-                % (a['area_juego_m2'], a['nombre'], a['fecha'], b['area_juego_m2'], b['nombre'], b['fecha']))
-    return ''
+    return 'el patron cambio: ' + ' -> '.join('%.4f m2 (%s, %s)' % (t['area_juego_m2'], t['nombre'], t['fecha']) for t in cadena)
 
 
 def lineas_arb(texto, producto):
@@ -120,7 +125,7 @@ def export_mas_nuevo():
 
 def tizadas_de(carpetas):
     """Todas las tizadas de las carpetas, de vieja a nueva. Las de carpetas 'obsoleto' se leen pero no mandan."""
-    vivas, viejas = [], []
+    vivas, viejas, ilegibles = [], [], []
     for c in carpetas:
         if not os.path.isdir(c):
             raise OSError('no se ve la carpeta de tizadas: %s' % c)
@@ -131,12 +136,12 @@ def tizadas_de(carpetas):
                     try:
                         t = leer_mrk(open(p, 'rb').read(), a)
                     except ValueError as e:
-                        print('   (no se pudo leer %s: %s)' % (a, e))
+                        ilegibles.append('%s: %s' % (a, e))
                         continue
                     t['ruta'] = p
                     (viejas if re.search(r'obsolet', raiz, re.I) else vivas).append(t)
     orden = lambda t: (t['fecha'], os.path.getmtime(t['ruta']))        # noqa: E731
-    return sorted(vivas, key=orden), sorted(viejas, key=orden)
+    return sorted(vivas, key=orden), sorted(viejas, key=orden), ilegibles
 
 
 def revisar(productos, mapa, texto_arb):
@@ -144,12 +149,16 @@ def revisar(productos, mapa, texto_arb):
     for prod in productos:
         fam = next((f for f in mapa['familias'] if prod in f['productos']), None)
         if not fam:
-            print('%s: sin tizada en el mapa (%s). Si lleva material de corte, agregar su carpeta.' % (prod, os.path.basename(MAPA)))
+            print('%s: NO SE MIDIO - sin tizada en el mapa (%s). Si lleva material de corte, agregar su carpeta.'
+                  % (prod, os.path.basename(MAPA)))
+            peor = max(peor, 2)
             continue
         try:
-            vivas, viejas = tizadas_de(fam['carpetas'])
+            vivas, viejas, ilegibles = tizadas_de(fam['carpetas'])
         except OSError as e:
             print('%s: NO SE PUDO MEDIR - %s' % (prod, e)); peor = max(peor, 2); continue
+        for x in ilegibles:                      # puede ser la mas nueva: no se da un ok con la anterior
+            print('%s: NO SE PUDO LEER una tizada - %s' % (prod, x)); peor = max(peor, 2)
         if not vivas:
             print('%s: NO SE PUDO MEDIR - no hay ninguna tizada vigente en %s' % (prod, fam['carpetas'])); peor = max(peor, 2); continue
         tiz = vivas[-1]
@@ -166,7 +175,7 @@ def revisar(productos, mapa, texto_arb):
                       '(puede ser una prueba); el consumo no se cambia sin su planilla o su mail.' % (insumo, txt))
             else:
                 print('   [%s] %s: %s' % ('ok' if v == 'VERDE' else v, insumo, txt))
-        aviso = cambio_de_patron(viejas + vivas)
+        aviso = cambio_de_patron(viejas + vivas)        # toda la historia, no solo las dos ultimas
         if aviso:
             peor = max(peor, 1)
             print('   [AVISO] ' + aviso + '. Una planilla de consumo anterior a esa fecha puede haber quedado vieja.')
@@ -195,6 +204,16 @@ def selftest():
     dos = leer_mrk(mrk('01.10.26', '200.0', '140.0', 10, ['0.10', '0.05']), 'dos')
     assert dos['piezas'] == 20 and dos['juegos'] == 10 and abs(dos['m2'] - 0.28) < 1e-9 and dos['area_juego_m2'] == 0.15; casos += 1
     assert 'cambio' in cambio_de_patron([feb, sep]) and cambio_de_patron([sep, sep]) == '' and cambio_de_patron([sep]) == ''; casos += 3
+    # el cambio se ve aunque las dos ultimas sean iguales (R2 del 30/07 y la del 15/09), y en cualquier orden
+    r2 = leer_mrk(mrk('30.07.26', '33.03', '135.0000', 5, ['0.0634']), 'r2')
+    assert cambio_de_patron([sep, r2, feb]).count('->') == 1; casos += 1
+    assert leer_mrk(mrk('15.09.2026', '153.4729', '135.0000', 25, ['0.0634']), 'a')['fecha'] == '2026-09-15'; casos += 1
+    for malo in (mrk('15.09.26', '153', '135', 25, ['0.06']).replace(b'<PLACED_ON_TABLE>25', b'<PLACED_ON_TABLE>10'),      # a medio armar
+                 mrk('15.09.26', '153', '135', 10, ['0.06']).replace(b'</SIZE>', b'<NB_OF_SETS>15</NB_OF_SETS></SIZE>')):  # dos talles
+        try:
+            leer_mrk(malo, 'malo'); raise AssertionError('tenia que negarse')
+        except ValueError:
+            casos += 1
     arb = 'MP8404         \t 1    \t 9PQ009-BK25-2  \t MICROFIBER SUEDE \t MT2  \t   0,07240000\tCO        \tCUM            \t\nMP84040\t1\tX\tY\tMT2\t1,0\tCO\tCUM\n'
     assert lineas_arb(arb, 'MP8404') == [('9PQ009-BK25-2', 'MICROFIBER SUEDE', 'MT2', 0.0724)]; casos += 1   # codigo exacto
     for malo in (b'nada', mrk('15.09.26', '0', '135', 25, ['0.06'])):

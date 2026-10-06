@@ -8,7 +8,7 @@ Cambiar consumos en el ERP arb: contando y verificando, no tanteando.
     python scripts/_arbCargar.py --tabla carga.csv --apply
 
 LA TABLA: producto,insumo,valor_nuevo,valor_esperado,fuente,cita[,cuenta][,vistos]
-  Antes de escribir corren los tres frenos de `_lib/respaldoCarga.py` (25/09/2026, TPO del
+  Antes de escribir corren los frenos de `_lib/respaldoCarga.py` (25/09/2026, TPO del
   Top Roll): la cita tiene que estar en la fuente, cada numero de la cuenta en alguna cita,
   el ancho contra el de la OC, y cada mail que habla de ese consumo citado o en `vistos`.
   Con un rojo, --apply no escribe. Detalle y formato: docstring de ese archivo.
@@ -897,7 +897,7 @@ def agrupar(filas):
 # ---------------------------------------------------------------- main
 
 def respaldo(path):
-    """Los tres frenos de `_lib/respaldoCarga.py`: cada numero con su papel, los pedidos
+    """Los frenos de `_lib/respaldoCarga.py`: cada numero con su papel, los pedidos
     anteriores a la vista y el ancho contra la OC. Devuelve True si hay un rojo.
 
     Existe por el TPO del Top Roll (20/08/2026): se cargo 0,2526 / 1,4 con un 1,4 que ningun
