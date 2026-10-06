@@ -72,7 +72,7 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
-- **06/10 — Lo que corrijo en el archivo de OTRO se le muestra a Fak recién auditado, y cada celda cambiada lleva el ANTES, no la fuente** (le abrí el plan de control de Nico sin auditar: *"no me lo abras, auditalo... poneme el antes"*; la auditoría sacó 9 de 43 cambios que no eran 100 % seguros). Graduado a la memoria `feedback_entregables_para_fak`.
+- **06/10 — Lo que corrijo en el archivo de OTRO se le muestra a Fak recién auditado, y cada celda cambiada lleva el ANTES, no la fuente** (le abrí el plan de control de Nico sin auditar: *"no me lo abras, auditalo... poneme el antes"*; la auditoría sacó 9 de 43 cambios que no eran 100 % seguros). **Y volver atrás un cambio no puede dejar un dato que se sabe falso**: dejé un código de hilo que no existe (*"ese hilo no existe más... es grave"*); lo dudoso es la PALABRA nueva, no el código inexistente. Graduado a la memoria `feedback_entregables_para_fak`.
 
 - **05/10 — Cuando Fak dice que algo «debería poder hacerse», se saca la pared: no se le devuelve una lista de excepciones; el riesgo va en un renglón y decide él** (*"no no, qué carajo? habilitales todo"*). Graduado a la memoria `project_claudes_por_area`.
 

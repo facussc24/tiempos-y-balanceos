@@ -5,7 +5,7 @@
     py -3 scripts/novax/_pcNicoCorrecciones.py            # prueba: dice que cambiaria, no guarda
     py -3 scripts/novax/_pcNicoCorrecciones.py --apply    # guarda la copia corregida
 
-Cada celda que cambia queda en amarillo y con un comentario que dice lo que tenia ANTES (pedido de Fak,
+Cada celda que cambia queda en verde claro y con un comentario que dice lo que tenia ANTES (pedido de Fak,
 06/10/2026: "si pones una nota poneme el antes"; la fuente queda escrita en este archivo). Donde se sacaron
 filas, la celda de arriba queda en naranja con el texto de las filas que se sacaron. Antes de
 escribir, cada celda tiene que tener el texto viejo esperado: si Nicolas ya la cambio, se saltea y se avisa.
@@ -46,20 +46,27 @@ F = {
 
 # (celda, texto viejo que tiene que contener, valor nuevo o (viejo_sub, nuevo_sub), fuente)
 APB = [
-    ('B6', 'DE PARTE', 'Nº DE PARTE : N 231 / N 267 / N 297 / N 328', 'ARB'),
     ('A65', '', 'N 231 / N 267 / N 297 / N 328', 'ARB'),
     # Auditoria del 06/10: el color se deja como estaba (el arb corta la descripcion y no lo dice; la
     # HO-971 dice Jet Black para el hilo de union). Solo cambia el codigo, que manda el arb.
-    # El hilo vista (E85) no se toca: VW nombra Carbon Black y el arb y la HO-971 compran Jet Black.
+    # Hilo vista: el codigo 427 HIL-005-COS-01 no existe en el arb (Fak, 06/10: "ese hilo no existe mas");
+    # el arb y la HO-971 hoja 41 dicen Jet Black FX483TK-E0PTO 20/3.
     ('E77', '427-VIN-009', 'Vinilo de tapizado\nPVC Texture PR022\nCarbon Black (codigo\nVIN-SKM-001)', 'ARB'),
-    ('E82', '427-HIL-001', 'Hilo de union 30/3\nJet Black (codigo\nFX284-E0PTO)', 'ARB'),
+    # sin color: el arb dice "Negro Titan" para FX284-E0PTO y la HO-971 "Jet Black" (auditoria Opus 06/10)
+    ('E82', '427-HIL-001', 'Hilo de union 30/3\n(codigo FX284-E0PTO)', 'ARB'),
+    ('E85', 'HIL-005', 'Hilo de costura vista\n20/3 Jet Black (codigo\nFX483TK-E0PTO)', 'ARB'),
     ('H109', 'DK840400', 'DK/1840400', 'ARB'),
     ('H114', '5 - 8 mm', ('5 - 8 mm', '4 mm minimo'), 'CUCH'),
     ('I114', 'MC213', 'Calibre MC167', 'CUCH'),
     ('B122', 'Apoyabrazos delantero', ('Apoyabrazos delantero', 'APB de puerta (del. y tras.)'), 'FLUJ'),
-    ('H132', '427-HIL-001', 'Hilo de union 30/3 Jet Black (codigo FX284-E0PTO)', 'ARB'),
+    ('H132', '427-HIL-001', 'Hilo de union 30/3 (codigo FX284-E0PTO)', 'ARB'),
     ('H151', '4 mm', '4 mm  (+/- 0,5)', 'COST'),
-    ('H157', 'HIL-005', None, 'HO971'),      # se le agrega la bobina 30/3 (HO-971 hoja 41)
+    ('H153', '6 en 25 mm', '6 en 25 mm  (+/- 0,5)', 'COST'),   # al original le faltaba el parentesis
+    ('H157', 'HIL-005', 'Aguja: hilo vista 20/3 Jet Black (FX483TK-E0PTO)\nBobina: hilo 30/3 (FX284-E0PTO)', 'HO971'),
+    # texto suelto fuera de la tabla con el codigo inexistente 427 HIL-005-COS-01 (auditoria Opus 06/10)
+    ('O158', 'Hilo de costura', '', 'BORRAR_SUELTO'),
+    ('O159', 'Carbon Black', '', 'BORRAR_SUELTO'),
+    ('O160', 'HIL-005', '', 'BORRAR_SUELTO'),
     ('H160', '', 'Delantero 120 ± 5 g\nTrasero 115 ± 5 g', 'HO971'),
     ('H165', 'Controlar dimensional cotas',
      'Cota index: delantero 214 ±1 mm / trasero 173,5 ±1 mm, medida a los 20 min de inyectada', 'HO971'),
@@ -73,7 +80,6 @@ APB = [
 APB_BORRAR = [(147, 148, 'Paralelismo entre costuras', 'VISTA1')]
 
 INS = [
-    ('B6', 'DE PARTE', 'Nº DE PARTE : N 227 / N 389 a N 403', 'ARB'),
     ('A65', '', 'N 227 / N 389 a N 403', 'ARB'),
     ('E122', 'DK/1840400', ('DK/1840400', 'DK/1840600'), 'ARB'),
     ('H122', 'DK840400', 'DK/1840600', 'ARB'),
@@ -88,13 +94,14 @@ INS = [
 INS_BORRAR = [(172, 179, 'Peso', 'OTRA')]
 
 TR = [
-    ('B6', 'DE PARTE', 'Nº DE PARTE : N 216 / N 256 / N 285 / N 315', 'ARB'),
     ('A65', '', 'N 216 / N 256 / N 285 / N 315', 'ARB'),
     ('H91', 'DK840400', 'DK/1840400', 'ARB'),
     ('H135', 'Cantidad de grampas', 'Cantidad de grampas: 27 delantero / 34 trasero.\nSin daño por grampas', 'ARB'),
 ]
 
-AMARILLO = 65535  # RGB(255,255,0) en BGR
+# Verde claro y no amarillo: el original de Nicolas ya tiene celdas amarillas suyas (auditoria 06/10).
+# (el nombre AMARILLO queda por historia)
+AMARILLO = 206 * 65536 + 239 * 256 + 198  # RGB(198,239,206) en BGR
 NARANJA = 49407   # RGB(255,192,0) en BGR
 
 
@@ -143,7 +150,8 @@ def aplicar_celdas(ws, lista, apply, informe):
                 c.MergeArea.Font.Name = nombre
             if tam and c.Row > 70:
                 c.MergeArea.Font.Size = tam
-            if fuente == 'OTRA_TEXTO':
+            if fuente == 'BORRAR_SUELTO':
+                marcar(c, antes(actual) + ' (texto suelto fuera de la tabla, codigo que no existe en el arb)')
                 continue
             marcar(c, antes(actual))
 
@@ -157,7 +165,7 @@ def borrar_filas(ws, lista, apply, informe):
         informe.append(f'  {ws.Name.strip()}: borro filas {desde}-{hasta} ({F[fuente]})')
         if apply:
             sacado = ' / '.join(t for t in (texto(ws.Range(f'{col}{r}')).replace('\r', '').replace('\n', ' ').strip()
-                                            for r in range(desde, hasta + 1) for col in 'DEFHIJKLM') if t)
+                                            for r in range(desde, hasta + 1) for col in 'EH') if t)
             ws.Rows(f'{desde}:{hasta}').Delete()
             marcar(ws.Range(f'H{desde - 1}'), f'SE SACARON {hasta - desde + 1} FILAS DEBAJO DE ESTA. Decian: {sacado}',
                    NARANJA)
