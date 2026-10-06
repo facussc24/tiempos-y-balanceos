@@ -72,6 +72,8 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **06/10 — Lo que corrijo en el archivo de OTRO se le muestra a Fak recién auditado, y cada celda cambiada lleva el ANTES, no la fuente** (le abrí el plan de control de Nico sin auditar: *"no me lo abras, auditalo... poneme el antes"*; la auditoría sacó 9 de 43 cambios que no eran 100 % seguros). Graduado a la memoria `feedback_entregables_para_fak`.
+
 - **05/10 — Cuando Fak dice que algo «debería poder hacerse», se saca la pared: no se le devuelve una lista de excepciones; el riesgo va en un renglón y decide él** (*"no no, qué carajo? habilitales todo"*). Graduado a la memoria `project_claudes_por_area`.
 
 - **04/10 — A Fak no se le nombra un papel por el número que le puse yo: se le muestra y se le dice qué es; y antes de decirle «eso lo hacés vos mañana» se mira si puede hacerlo YA y cuál es el mínimo**. Graduado a la memoria `project_claudes_por_area`.
