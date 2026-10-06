@@ -1,11 +1,16 @@
 /**
- * pregunta-guard — que pregunta a Fak se frena y cual sale. Las dos direcciones, con preguntas REALES
- * (textuales de los transcripts del 05 y 06/10/2026 y de septiembre).
+ * pregunta-guard — que pregunta a Fak se PAUSA para repensarla y cual sale directo. Las dos direcciones,
+ * con preguntas REALES (textuales de los transcripts del 05 y 06/10/2026 y de septiembre).
  *
  * Origen: Fak, 06/10/2026, "no deberias hacerme tantas preguntas, deberias saber que hacer... investigalo
- * para que no vuelva a suceder". Medido sobre las 81 llamadas a AskUserQuestion del 01/09 al 06/10: el
- * control frena 18 de las 35 que Fak rechazo y ninguna de las 24 que el contrato de autonomia manda hacer.
- * Lo caro de este control es el VERDE: si frenara una confirmacion, saldria un mail o una emision sin su OK.
+ * para que no vuelva a suceder". Medido sobre las 81 llamadas a AskUserQuestion del 01/09 al 06/10/2026
+ * (35 rechazadas por el): este canon pausa 27 — 16 de las 35 rechazadas, 10 que contesto sin queja y 1
+ * confirmacion de contrato que venia con "(Recommended)".
+ *
+ * EL CONTROL FRENA, NO DECIDE. La primera version mandaba "ya decidiste, hace la recomendada" y la
+ * auditoria independiente de esa misma tarde la tumbo: frenaba 104 de 105 confirmaciones del contrato
+ * escritas de forma natural, y en un tercio de las reales Fak habia contestado otra cosa. Por eso lo
+ * que aca se prueba como ROJO es la pausa, y lo que NO puede pasar nunca es que el mensaje ordene hacer.
  *
  * Correr:  npx vitest run --pool=threads __tests__/scripts/preguntaGuard.test.mjs
  */
@@ -23,7 +28,7 @@ const hook = (payload, stdin) => {
     return { exit: r.status, out: r.stdout ?? '', err: r.stderr ?? '' };
 };
 
-// ── Las que Fak rechazo o contesto eligiendo siempre lo recomendado
+// ── Las que Fak rechazo, o que eran decision propia
 const QUE_MAS = q('Lo que ya tengo: la lista de las otras diferencias del IP Pad contra el Insert y el Armrest. ¿Qué más unifico en esta misma revisión?',
     ['Nada más por ahora', 'Control de adhesivado al 70', 'Recepción como el Insert', 'Almacenamientos con número'], 'Resto IP Pad');
 const OTROS_DOS = q('Lo que ya tengo: el Apoyacabezas (152) con el corte en 9 pasos y el Top Roll (155) sin el control de pieza inyectada dibujado. ¿Los unifico también?',
@@ -34,8 +39,9 @@ const CODIGOS = q('¿Cómo armo los 4 códigos del semielaborado plástico + PU 
     ['Nuevos INY-APB, 3 niveles (Recomendado)', 'Usar los CC-INY-APB de PCP', 'Meter el PU en el INY-APB actual'], 'Códigos');
 const POR_DONDE = q('¿Por dónde arranco, las hojas de proceso o el flujograma?', ['Hojas de proceso', 'Flujograma'], 'Orden');
 const QUE_ARRANCO = q('Tengo tres frentes abiertos. ¿Qué arranco ahora?', ['Armrest', 'Hojas de grampas', 'Mails pendientes'], 'Prioridad');
+const EN_INGLES = q('¿Cómo ordeno las carpetas de la tarea?', ['Por fecha (Recommended)', 'Por cliente'], 'Orden');
 
-// ── Las que el contrato de autonomia manda confirmar: salen SIEMPRE
+// ── Las que nombran lo que se confirma: salen directo
 const EMITIR = q('Los dos flujogramas (Insert 154 Rev.D e IP Pad 157 Rev.C) están abiertos en PDF. Emitirlos es: el dibujo nuevo a Gestión Ingeniería, el PDF al casillero 20 de cada legajo y las filas 59 y 62 del listado maestro. ¿Los emito?',
     ['Sí, emitilos', 'Primero los miro'], 'Flujogramas');
 const MAIL = q('El mail de difusión del cambio de BOM está en Borradores, con el texto de arriba y los dos PDF. ¿Lo envío?', ['Sí, envialo', 'Lo mando yo', 'Esperar'], 'Mail difusión');
@@ -44,16 +50,23 @@ const ARB = q('Lo que ya tengo: la tabla de carga del Armrest. Para cargarla en 
 const SUPABASE = q('Lo que ya tengo: la propuesta de arriba para el AMFE 161. Lo escribo en Supabase con backup y prueba en seco antes. ¿Avanzo así?',
     ['Sí, avanzá así', 'Sí, y con SC', 'Cambio algo'], 'AMFE');
 const MODO_PLAN = q('Pedís "modo plan" a mano en 36 de 77 sesiones. ¿Lo dejo fijo para que toda sesión arranque en modo plan?', ['Sí, fijo (Recomendado)', 'No'], 'Modo plan');
-// ── Lo que solo Fak sabe: sale, sin recomendacion
+// ── Lo que solo Fak sabe, o una confirmacion sin marca de recomendada: sale
 const CINTA = q('La cinta que se troquela en Conversión de Cinta, ¿es el Tesa 52110 (2 tiras de 20 × 2 cm por pieza)?', ['Sí, es el Tesa 52110', 'No, es otra'], 'Cinta');
 const MOLDES = q('¿Cuántos moldes de PU hay hoy para el apoyabrazo de puerta?', ['2', '4', 'Otro'], 'Moldes');
+const APLICO = q('Son 12 correcciones de severidad en el AMFE del Top Roll, con el antes y el después en la tabla de arriba. ¿Las aplico?', ['Sí, aplicalas', 'No'], 'AMFE');
+// ── Confirmaciones del contrato que NO nombran el sistema y venian con recomendada (auditoria 06/10)
+const REGENERAR = q('¿Regenero el plan de control desde el AMFE?', ['Sí, regenerarlo (Recomendado)', 'No'], 'Plan de control');
+const SIGLA = q('Hay 3 causas con S=9 sin sigla. ¿Les pongo CC?', ['Sí, CC (Recomendado)', 'No'], 'Siglas');
+const COZZUOL = q('¿Le paso el plano a Cozzuol?', ['Sí, hoy (Recomendado)', 'Esperar'], 'Plano');
+const REGENERAR_BIEN = q('El plan de control del Insert se regenera desde el AMFE 158 y pisa el que está cargado hoy. ¿Está bien?', ['Sí, regenerarlo', 'No'], 'Plan de control');
 
 describe('pregunta-guard — la logica', () => {
-    describe('ROJO: no sale', () => {
+    describe('ROJO: se pausa', () => {
         it.each([
             ['A', '¿Los unifico también? con una opcion recomendada (06/10/2026)', OTROS_DOS],
-            ['A', '¿Qué número le pongo? con "120 (Recomendado)" (05/10/2026)', NUMERO_120],
+            ['A', '¿Qué número le pongo? con "120 (Recomendado)" — Fak contesto OTRA cosa (05/10/2026)', NUMERO_120],
             ['A', '¿Cómo armo los 4 códigos? con "(Recomendado)" (05/10/2026)', CODIGOS],
+            ['A', 'la marca en ingles, "(Recommended)"', EN_INGLES],
             ['B', '¿Qué más unifico en esta misma revisión? (06/10/2026)', QUE_MAS],
             ['B', '¿Por dónde arranco? (21/09/2026)', POR_DONDE],
             ['B', '¿Qué arranco ahora? (03/09/2026)', QUE_ARRANCO],
@@ -63,15 +76,42 @@ describe('pregunta-guard — la logica', () => {
             expect(r.hallazgos[0].regla).toBe(regla);
         });
 
-        it('una llamada con tres preguntas se frena si UNA no pasa, y dice cual', () => {
+        it('una llamada con tres preguntas se pausa si UNA no pasa, y dice cual', () => {
             const r = evaluarPregunta({ questions: [EMITIR, QUE_MAS, CINTA] });
             expect(r.bloquea).toBe(true);
             expect(r.hallazgos).toHaveLength(1);
             expect(mensajeDeBloqueo(r.hallazgos)).toMatch(/Qué más unifico/);
         });
+
+        it('"emit" no se cuela por "semiterminado" ni por "remito"', () => {
+            expect(evaluarUna(q('¿Dejo la etiqueta en el semiterminado?', ['Sí (Recomendado)', 'No']))?.regla).toBe('A');
+            expect(evaluarUna(q('¿Anoto el remito en la planilla?', ['Sí (Recomendado)', 'No']))?.regla).toBe('A');
+        });
     });
 
-    describe('VERDE: sale', () => {
+    describe('EL MENSAJE NO ORDENA HACER (lo que tumbo a la primera version)', () => {
+        it.each([
+            ['regenerar el plan de control', REGENERAR],
+            ['asignar CC', SIGLA],
+            ['pasarle un plano a un externo', COZZUOL],
+        ])('una confirmacion del contrato que no nombra el sistema (%s) se pausa, y el mensaje le deja la salida', (_n, pregunta) => {
+            const r = evaluarPregunta({ questions: [pregunta] });
+            expect(r.bloquea).toBe(true);
+            const m = mensajeDeBloqueo(r.hallazgos);
+            expect(m).not.toMatch(/ya decidiste|hac[eé] la recomendada|no es algo que haya que confirmar/i);
+            expect(m).toMatch(/pausa, no una orden/);
+            expect(m).toMatch(/VOLVE A PREGUNTARLO/);
+            expect(m).toMatch(/Supabase/);
+            expect(m).toMatch(/CC\/SC/);
+            expect(m).toMatch(/En la duda entre 1 y 2, es 2/);
+        });
+
+        it('la misma confirmacion, vuelta a preguntar con lo concreto y sin la marca, PASA', () => {
+            expect(evaluarUna(REGENERAR_BIEN)).toBeNull();
+        });
+    });
+
+    describe('VERDE: sale directo', () => {
         it.each([
             ['emitir un flujograma', EMITIR],
             ['mandar un mail', MAIL],
@@ -80,9 +120,16 @@ describe('pregunta-guard — la logica', () => {
             ['la configuracion de Claude, aunque traiga recomendacion', MODO_PLAN],
             ['un dato que solo Fak tiene (la cinta)', CINTA],
             ['un dato de planta (cuantos moldes)', MOLDES],
+            ['"¿Las aplico?" sin marca de recomendada: la forma natural de una confirmacion', APLICO],
         ])('%s', (_nombre, pregunta) => {
             expect(evaluarUna(pregunta)).toBeNull();
             expect(evaluarPregunta({ questions: [pregunta] }).bloquea).toBe(false);
+        });
+
+        it('"¿Avanzo?", "¿Sigo?" y "¿Lo aplico ahora?" sin recomendada no se pausan', () => {
+            for (const t of ['¿Avanzo?', '¿Sigo?', '¿Lo aplico ahora?']) {
+                expect(evaluarUna(q(`Con el diff de arriba. ${t}`, ['Sí', 'No'])), t).toBeNull();
+            }
         });
 
         it('lo que no se puede leer no se frena', () => {
@@ -92,23 +139,27 @@ describe('pregunta-guard — la logica', () => {
         });
     });
 
-    it('todos los patrones del canon compilan y ninguno esta vacio', () => {
-        const canon = JSON.parse(fs.readFileSync(path.join(RAIZ, 'scripts', '_lib', 'preguntaCanon.data.json'), 'utf8'));
+    it('todos los patrones del canon compilan, no estan vacios y ninguno coincide con el texto vacio', () => {
+        const crudo = fs.readFileSync(path.join(RAIZ, 'scripts', '_lib', 'preguntaCanon.data.json'), 'utf8');
+        // un "\b" de JSON es un retroceso, no un borde de palabra: el patron tiene que traer "\\b"
+        expect(crudo.includes('\\u0008') || /[\u0008]/.test(JSON.stringify(JSON.parse(crudo)).replace(/\\\\b/g, ''))).toBe(false);
+        const canon = JSON.parse(crudo);
         for (const grupo of ['confirmable', 'recomendada', 'menu']) {
             expect(canon[grupo].patrones.length).toBeGreaterThan(0);
             for (const p of canon[grupo].patrones) {
                 expect(p.trim().length, `${grupo}: patron vacio`).toBeGreaterThan(1);
-                expect(() => new RegExp(p, 'i')).not.toThrow();
+                expect(/[\u0008]/.test(p), `${grupo}: "${p}" trae un retroceso en vez de \\b`).toBe(false);
+                expect(new RegExp(p, 'i').test(''), `${grupo}: "${p}" coincide con el vacio`).toBe(false);
             }
         }
     });
 });
 
 describe('pregunta-guard.sh — el hook, como lo llama Claude Code', () => {
-    it('ROJO: exit 2 y el motivo por stderr', () => {
+    it('ROJO: exit 2 y el motivo por stderr, sin nada por stdout', () => {
         const r = hook({ tool_name: 'AskUserQuestion', tool_input: { questions: [NUMERO_120, QUE_MAS] } });
         expect(r.exit).toBe(2);
-        expect(r.err).toMatch(/PREGUNTA-GUARD: esta pregunta no sale/);
+        expect(r.err).toMatch(/PREGUNTA-GUARD: repensa esta pregunta/);
         expect(r.err).toMatch(/\[A\]/);
         expect(r.err).toMatch(/\[B\]/);
         expect(r.out).toBe('');
@@ -123,8 +174,11 @@ describe('pregunta-guard.sh — el hook, como lo llama Claude Code', () => {
         expect(ctx.additionalContext).toMatch(/Lo que ya tengo/);
     });
 
-    it('VERDE: un payload ilegible deja pasar (exit 0)', () => {
-        expect(hook(null, '{roto').exit).toBe(0);
-        expect(hook(null, '').exit).toBe(0);
+    it('VERDE: un payload ilegible deja pasar (exit 0) y lo DICE', () => {
+        for (const stdin of ['{roto', '']) {
+            const r = hook(null, stdin);
+            expect(r.exit).toBe(0);
+            expect(JSON.parse(r.out).hookSpecificOutput.additionalContext).toMatch(/no pude leer la pregunta/);
+        }
     });
 });

@@ -1,11 +1,12 @@
 {
-  "_doc": "Que pregunta a Fak NO sale (hook pregunta-guard.sh, logica en preguntaGuard.mjs). Medido el 06/10/2026 sobre las 81 llamadas a AskUserQuestion del 01/09 al 06/10/2026: Fak rechazo 35 (\"no deberias hacerme tantas preguntas, deberias saber que hacer\", \"deja de preguntar pelotudeces\", \"ni deberias preguntarme\"). El recordatorio que habia desde el 05/09 llegaba DESPUES de escrita la pregunta y no cambio nada (8 de 20 antes, 27 de 61 despues). Los patrones se cambian ACA, con su caso en __tests__/scripts/preguntaGuard.test.mjs.",
+  "_doc": "Que FORMA de pregunta a Fak se pausa para repensarla (hook pregunta-guard.sh, logica en preguntaGuard.mjs). El control frena, no decide: no clasifica que se confirma y que no. Medido el 06/10/2026 sobre las 81 llamadas a AskUserQuestion del 01/09 al 06/10/2026: Fak rechazo 35. Los numeros de que pausa este canon estan en el encabezado del test. En un tercio de las pausadas por la regla A Fak habia contestado algo distinto de lo recomendado: por eso el mensaje no manda hacer nada. Los patrones se cambian ACA, con su caso en __tests__/scripts/preguntaGuard.test.mjs.",
   "confirmable": {
-    "_doc": "Lo que el contrato de autonomia manda confirmar: una pregunta que lo nombra pasa siempre, tenga o no recomendacion.",
+    "_doc": "ATAJO, no lista completa: una pregunta cuyo texto nombra una de estas cosas pasa sin pausa aunque traiga recomendada. Lo que el contrato manda confirmar y no esta aca (regenerar, propagar, CC/SC, una dependencia...) se pausa una vez y pasa al volver a preguntarlo sin la marca de recomendada.",
     "patrones": [
-      "emit",
+      "\\bemit",
       "emisi",
       "\\benv[ií][aoe]",
+      "\\breenv[ií]",
       "\\bmand[aoe]",
       "\\bmail",
       "correo",
@@ -13,16 +14,19 @@
       "\\bborr[aoe]",
       "elimin",
       "supabase",
-      "listado maestro",
-      "gesti[oó]n ingenier",
+      "listados? maestros?",
+      "gesti[oó]n (de )?ingenier",
       "\\bsgc\\b",
       "legajo",
       "\\bppap\\b",
+      "paquete del cliente",
       "servidor",
+      "\\bserver\\b",
       "\\barb\\b",
+      "\\berp\\b",
       "\\bgrab[aoe]",
       "\\bcarg[aoe]",
-      "dar de alta",
+      "d(ar|oy) de (alta|baja)",
       "\\binca\\b",
       "primera vez",
       "obsoleto",
@@ -46,20 +50,21 @@
     ]
   },
   "recomendada": {
-    "_doc": "Regla A. Si la pregunta trae una opcion recomendada y no es confirmable, ya hay decision: se hace y se dice por que.",
-    "patrones": ["recomm?endad"]
+    "_doc": "Regla A. Una opcion marcada como recomendada (en castellano o en ingles, que es como la herramienta la pide).",
+    "patrones": [
+      "recomm?end(ad|ed)"
+    ]
   },
   "menu": {
-    "_doc": "Regla B. Menu de alcance o de como seguir: lo que Fak pidio se hace con el criterio escrito y lo demas se le nombra en un renglon.",
+    "_doc": "Regla B. Forma de menu de alcance o de como seguir. No incluye \"¿Avanzo?\" ni \"¿Lo aplico ahora?\": son la forma natural de una confirmacion.",
     "patrones": [
       "¿qu[eé] m[aá]s\\b",
-      "¿(qu[eé]|cu[aá]l(es)?) (arranco|hago|sigo|seguimos|encaro|ataco)\\b",
+      "¿(qu[eé]|cu[aá]l(es)?) (arranco|sigo|seguimos|encaro|ataco)\\b",
       "¿por d[oó]nde (arranco|sigo|seguimos|empiezo|empezamos)",
-      "¿c[oó]mo (sigo|seguimos|avanzo|avanzamos|voy)\\b",
+      "¿c[oó]mo (sigo|seguimos)\\b",
       "ahora o despu[eé]s",
-      "¿(lo|la|los|las) (unifico|hago|aplico|reviso|corrijo|armo|sumo) (tambi[eé]n|ahora)",
-      "¿(unifico|hago|aplico|reviso|corrijo|armo|sumo) [^?]*tambi[eé]n\\?",
-      "¿(sigo|avanzo|contin[uú]o)\\?"
+      "¿(lo|la|los|las) (unifico|hago|aplico|reviso|corrijo|armo|sumo) tambi[eé]n",
+      "¿(unifico|hago|aplico|reviso|corrijo|armo|sumo) [^?]*tambi[eé]n\\?"
     ]
   }
 }

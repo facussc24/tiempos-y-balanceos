@@ -56,7 +56,7 @@
         ]
       },
       {
-        "_comentario": "04/09/2026: recordatorio NO bloqueante (additionalContext) en el momento exacto de preguntar. 37 AskUserQuestion en 2 semanas, 14 contestadas con fastidio o ya-te-lo-dije.",
+        "_comentario": "04/09/2026: nacio como recordatorio (additionalContext). 06/10/2026: PAUSA (exit 2) la pregunta con opcion recomendada o con forma de menu de alcance, para repensarla antes de que le llegue a Fak; el mensaje no ordena hacer nada (frena, no decide). Medido 01/09-06/10: 81 preguntas, 35 rechazadas; el recordatorio llegaba despues de escrita la pregunta. Logica: scripts/_lib/preguntaGuard.mjs. Test: preguntaGuard.test.mjs.",
         "matcher": "AskUserQuestion",
         "hooks": [
           {

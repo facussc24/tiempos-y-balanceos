@@ -1,24 +1,31 @@
 /**
- * preguntaGuard.mjs — que AskUserQuestion NO sale hacia Fak. Lo llama `.claude/hooks/pregunta-guard.sh`
- * (PreToolUse, matcher AskUserQuestion) con el JSON del hook por stdin.
+ * preguntaGuard.mjs — una PAUSA antes de que una pregunta de opciones le llegue a Fak. Lo llama
+ * `.claude/hooks/pregunta-guard.sh` (PreToolUse, matcher AskUserQuestion) con el JSON del hook por stdin.
  *
- *   exit 2 + motivo por stderr  -> la pregunta se frena y el motivo vuelve a Claude
+ *   exit 2 + motivo por stderr  -> la pregunta vuelve a Claude para que la repiense
  *   exit 0 + additionalContext  -> la pregunta sale, con el recordatorio de siempre
  *
- * POR QUE BLOQUEA (06/10/2026). Fak: "no deberias hacerme tantas preguntas, deberias saber que hacer...
+ * POR QUE FRENA (06/10/2026). Fak: "no deberias hacerme tantas preguntas, deberias saber que hacer...
  * investigalo para que no vuelva a suceder". Medido en los transcripts del 01/09 al 06/10: 81 llamadas,
- * 35 rechazadas por el. El recordatorio que este hook daba desde el 05/09 llega DESPUES de que la
- * pregunta ya esta escrita (60 de 60 veces) y no cambio la proporcion (8 de 20 antes, 27 de 61 despues).
+ * 35 rechazadas por el. El recordatorio que este hook daba desde el 04/09 llegaba DESPUES de que la
+ * pregunta ya estaba escrita (60 de 60 veces) y no cambio la proporcion (8 de 20 antes, 27 de 61 despues).
+ * Frenar una vez es la unica forma de que el criterio llegue ANTES.
  *
- * QUE FRENA, y solo eso (patrones en `preguntaCanon.data.json`):
- *   A. una opcion "(Recomendado)" en algo que el contrato de autonomia NO manda confirmar: si hay
- *      recomendacion, hay decision — se hace y se dice por que;
- *   B. un menu de alcance o de como seguir ("¿que mas unifico?", "¿por donde arranco?").
- * QUE NO FRENA NUNCA: lo que el contrato manda confirmar (mandar un mail, emitir, Supabase, el arb, un
- * listado maestro, el legajo o el servidor, borrar, la primera vez) y lo que solo Fak sabe, que va sin
- * recomendacion. Tampoco frena si no puede leer la pregunta: un control que no entiende deja pasar y avisa.
+ * EL CHEQUEO FRENA, NO DECIDE. La primera version (misma tarde) le decia a Claude "ya decidiste, hace la
+ * recomendada". La auditoria independiente la tumbo: un filtro por palabras no distingue una confirmacion
+ * del contrato de una pregunta de mas (frenaba 104 de 105 confirmaciones escritas de forma natural que no
+ * nombraban el sistema: "¿Regenero el plan de control?", "¿Les pongo CC?", "¿Le paso el plano a Cozzuol?"),
+ * y en un tercio de las reales que frenaba Fak habia contestado algo DISTINTO de lo recomendado. Por eso
+ * el mensaje no manda hacer nada: devuelve la pregunta con los dos caminos y la salida para cada uno.
  *
- * Se evalua pregunta por pregunta: una llamada con tres preguntas sale si las tres pasan.
+ * QUE DISPARA LA PAUSA (patrones en `preguntaCanon.data.json`):
+ *   A. una opcion marcada "(Recomendado)" / "(Recommended)";
+ *   B. forma de menu de alcance o de como seguir ("¿que mas unifico?", "¿por donde arranco?").
+ * Una pregunta que en su texto nombra lo que el contrato manda confirmar (mail, emitir, Supabase, arb...)
+ * pasa directo: es un atajo para no pausar lo obvio, NO una lista completa de lo que se confirma.
+ * COMO SE SALE: si era trabajo propio y reversible, no se pregunta; si habia que preguntarlo, se vuelve a
+ * preguntar con la ruta y el archivo, sin la marca de recomendada y sin forma de menu, y pasa.
+ *
  * Tests en las dos direcciones, con preguntas reales: `__tests__/scripts/preguntaGuard.test.mjs`.
  */
 import fs from 'node:fs';
@@ -40,28 +47,30 @@ export const RECORDATORIO = '[PREGUNTA-GUARD] Antes de preguntarle a Fak: ¿esto
     + 'algo en el SGC o el legajo, lo que hago por PRIMERA VEZ, mandar un mail, cerrar el arb. Y lo que SOLO Fak puede contestar '
     + '(una decision suya, un dato de planta que no esta escrito), sin opcion recomendada.';
 
-const QUE_SI = 'Se le confirma a Fak, con la ruta y el archivo: mandar un mail, emitir o dejar algo en el servidor, el legajo o un '
-    + 'listado maestro, escribir en Supabase, cargar o borrar en el arb, borrar, y lo que se hace por primera vez. Y se le pregunta lo '
-    + 'que SOLO el sabe (un dato de planta que ningun documento tiene, una decision suya), sin opcion recomendada.';
+const DOS_CAMINOS = [
+    'Esto es una pausa, no una orden: el control mira la FORMA de la pregunta y no sabe que se esta decidiendo. Elegi vos:',
+    '  1) Si lo que se decide es trabajo TUYO y REVERSIBLE (un nombre, un numero que fija una convencion, un orden, un formato, por',
+    '     donde seguir): no preguntes. Hace lo que el criterio escrito indica y decile a Fak en un renglon que elegiste y por que.',
+    '  2) Si toca algo que se le confirma — mandar o reenviar un mail, emitir, guardar o mover en el servidor, el legajo o un listado',
+    '     maestro, escribir en Supabase (corregir, regenerar, propagar, migrar, restaurar), cargar o dar de baja en el arb, borrar o',
+    '     pisar un archivo, asignar CC/SC, una dependencia, sacar una funcion, apagar un control, algo de otra persona, la primera vez',
+    '     de algo — o es un dato que SOLO Fak tiene: VOLVE A PREGUNTARLO, con la ruta y el archivo concretos ("esto va aca, ¿esta',
+    '     bien?"), sin la marca de recomendada y sin forma de menu. Asi pasa. En la duda entre 1 y 2, es 2.',
+    'Fak, 06/10/2026: "no deberias hacerme tantas preguntas, deberias saber que hacer". Y 21/09/2026: "si es tu primera vez haciendo',
+    'algo preguntame antes". Las dos valen.',
+].join('\n');
 
-/** Una pregunta de la llamada -> null si sale, o { regla, motivo } si se frena. */
+/** Una pregunta de la llamada -> null si sale, o { regla, motivo } si se pausa. */
 export function evaluarUna(q) {
     const texto = `${q?.question ?? ''} ${q?.header ?? ''}`;
     if (CONFIRMABLE.test(texto)) return null;
+    const corta = String(q?.question ?? '').slice(0, 110);
     const etiquetas = (q?.options ?? []).map((o) => String(o?.label ?? ''));
     if (etiquetas.some((e) => RECOMENDADA.test(e))) {
-        return {
-            regla: 'A',
-            motivo: `"${String(q.question).slice(0, 110)}" trae una opcion recomendada y no es algo que haya que confirmar: `
-                + 'ya decidiste. Hace la recomendada y decile a Fak en un renglon que elegiste y por que.',
-        };
+        return { regla: 'A', motivo: `"${corta}" trae una opcion recomendada: ya tenes una posicion tomada.` };
     }
     if (MENU.test(texto)) {
-        return {
-            regla: 'B',
-            motivo: `"${String(q.question).slice(0, 110)}" es un menu de alcance o de como seguir: se hace lo que Fak pidio con el `
-                + 'criterio ya escrito (skill, regla, hermanos) y lo demas se le nombra en un renglon, sin opciones.',
-        };
+        return { regla: 'B', motivo: `"${corta}" tiene forma de menu de alcance o de como seguir.` };
     }
     return null;
 }
@@ -74,10 +83,9 @@ export function evaluarPregunta(toolInput) {
 }
 
 export function mensajeDeBloqueo(hallazgos) {
-    return ['PREGUNTA-GUARD: esta pregunta no sale hacia Fak.',
+    return ['PREGUNTA-GUARD: repensa esta pregunta antes de que le llegue a Fak.',
         ...hallazgos.map((h) => `  [${h.regla}] ${h.motivo}`),
-        QUE_SI,
-        'Fak, 06/10/2026: "no deberias hacerme tantas preguntas, deberias saber que hacer". Medido: rechazo 35 de 81 preguntas en cinco semanas.',
+        DOS_CAMINOS,
     ].join('\n');
 }
 
@@ -86,12 +94,13 @@ if (esCli) {
     let crudo = '';
     try { crudo = fs.readFileSync(0, 'utf8'); } catch { /* sin stdin */ }
     let entrada = null;
-    try { entrada = JSON.parse(crudo); } catch { /* payload ilegible: deja pasar */ }
+    try { entrada = JSON.parse(crudo.replace(/^﻿/, '')); } catch { /* payload ilegible: deja pasar */ }
     const r = evaluarPregunta(entrada?.tool_input);
     if (r.bloquea) {
         process.stderr.write(mensajeDeBloqueo(r.hallazgos) + '\n');
         process.exit(2);
     }
-    process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: 'PreToolUse', additionalContext: RECORDATORIO } }) + '\n');
+    const aviso = entrada ? RECORDATORIO : `[PREGUNTA-GUARD] OJO: no pude leer la pregunta (payload ilegible), sale sin revisar. ${RECORDATORIO}`;
+    process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: 'PreToolUse', additionalContext: aviso } }) + '\n');
     process.exit(0);
 }
