@@ -9,7 +9,8 @@
         "Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\Proyecto\\VWA\\VW427-1LA_K-PATAGONIA\\00000-Varios a Revisar\\Consola Central_Upper Trim Panel\\02 - Seguimiento y Revisiones\\UPPER TRIMING",
         "Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\Proyecto\\VWA\\VW427-1LA_K-PATAGONIA\\00000-Varios a Revisar\\Consola Central_Upper Trim Panel\\07 - Obsoletos"
       ],
-      "fuente": "Carpetas abiertas el 06/10/2026: R2 (30/07) y Upper Trim DS R1 (15/09) en la primera; ONE/TWO (20/02) en Obsoletos."
+      "fuente": "Carpetas abiertas el 06/10/2026: R2 (30/07) y Upper Trim DS R1 (15/09) en la primera; ONE/TWO (20/02) en Obsoletos.",
+      "nota": "La tizada con la que se fijo el consumo vigente (UPN3, 06/10/2026, 40 piezas, 0,0616 m2) NO esta en estas carpetas: la presentacion de Mesa de Corte quedo en la carpeta de BOM de la biblioteca. Mientras no la guarden aca, el aviso contra Upper Trim DS R1 (0,0829) va a saltar y es esperado: R2 y DS R1 eran pruebas."
     }
   ]
 }
