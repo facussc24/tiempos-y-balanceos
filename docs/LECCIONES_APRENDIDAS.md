@@ -19,7 +19,6 @@ incidente vive en los snapshots.
 - **03/10 — Un freno que depende de un programa de la PC se prueba SIN ese programa: un control que no puede arrancar no frena nada**. Graduado a `hooks.json` del plugin (Node propio, por su ruta), a `ejecutables` de `_paquete.mjs` y a la memoria `project_claudes_por_area`.
 - **02/10 — Un examen se toma como lo va a usar la gente (nivel, material de su área, PC instalada por el instalador), y el aviso de un documento va donde se LEE ese documento**. Graduado a la memoria `project_claudes_por_area`.
 - **02/10 — De un flujograma o de un AMFE puede salir la PALABRA "reproceso", nunca su analisis (IATF 8.7.1.4; fue una no conformidad en 2019), y un AMFE escrito de cero se delata por el largo de sus frases** (12 palabras por causa contra 4 a 7; Calidad: "hecho con IA"). Graduado a la memoria `reference_iatf_retrabajo_8714_y_antecedentes_barack` y a `TOPE_PALABRAS` de `scripts/_lib/amfeAutoria.mjs`.
-- **15-28/09 — Un cartel del arb se LEE antes de contestarlo: es lo primero que se mira cuando no deja seguir (no mi teoría), lo que actúa a ciegas aprieta lo que esté abajo, el botón es `Omitir` y no `Anular`, y se cierra solo lo propio.** Graduado al skill `arb-operar`, a `_arbDescripcion.por_que_no_avanza()`, `_arbCargar.abrir()`, `_arbVer.cerrar_excel()`, `fallas-modales-y-export.md` y la memoria `feedback_bom_en_unidades_no_en_envase`.
 - **25/09 — Un estado que alguien escribió en un mail vale con su FECHA: va con quién lo dijo y cuándo (y el mail adjunto), o no va.** Graduado a la memoria `la_fecha_del_archivo_no_es_la_fecha_del_documento`.
 - **22/09 y 05/10 — Lo que AFLOJA un control se prueba contra el VIEJO con los mismos intentos, lo ataca OTRO, y el «a la tercera, afuera» se escribe antes de medir** (05/10: tres versiones de un freno aflojado pasaron mis pruebas y 1.662 mensajes reales; tres auditorías les encontraron un hueco; se sacó). Graduado a `un_control_se_audita_en_las_dos_direcciones` y a `project_claudes_por_area`.
 - **22/09 — Un cambio de criterio (o un número) se barre por su FRASE en todo el repo, y un guardián que falla sin bloquear está apagado.** Graduado al test 5c de `hooksTienenTest` (`${CLAUDE_PROJECT_DIR}`) y a `puerta.py` (puerta D).
@@ -76,7 +75,7 @@ incidente vive en los snapshots.
 
 - **06/10 — Si Fak marca UN defecto de un documento («el IP tiene corte e inyección muy largos») se corrige eso con el criterio escrito y se le muestra, sin menú de qué más unificar (*"no deberías hacerme tantas preguntas, deberías saber qué hacer"*); y el freno que armé para eso pausa la pregunta, no ordena hacer** (la primera versión decía «hacé la recomendada» y la auditoría la tumbó). Graduado al skill `flujogramas` §1.5, a `preguntaGuard.mjs` y a la memoria `feedback_con_recomendacion_no_se_pregunta`.
 
-- **06/10 — Una falla de foco en medio de una tanda del arb es Fak que volvió a la PC: se corta y se le avisa, no se reintenta** (reintenté y dos letras de su teclado cayeron en una celda; no se grabó). Graduado al skill `arb-operar`.
+- **06/10 — Antes de acortar un documento ya emitido se busca POR QUÉ era largo: el flujograma del IP Pad tenía un nodo por pestaña porque en julio la carga en BeOn se frenó por la numeración contra la HO-985, y lo emití corto sin decírselo a Fak** (lo cazó el auditor). Graduado al skill `flujogramas` §1.5.
 
 - **05-06/10 — Cuando Fak dice que algo «debería poder hacerse», se saca la pared (el riesgo va en un renglón y decide él), y un asistente para otros se diseña para RESOLVER: un freno que contesta «no puedo» o «hacelo vos» a un pedido normal es un error mío, y los avisos de las PC se leen** (*"habilitales todo"*; 06/10: *"se nos fue de la mano"*). Graduado a la memoria `project_claudes_por_area` y a `tools/claude-area/vigia.mjs`.
 
@@ -92,11 +91,7 @@ incidente vive en los snapshots.
 
 - **02/10 — Antes de tocar un patrón por lo que muestra un video, se le devuelve a Fak el dibujo con "llevo ESTO a ESTO" (emparejé la herradura al ancho de las patas y era al del arco); y un piquete es marca de COSTURA: se reubica por largo de costura, no en línea recta.** Graduado a las memorias `feedback_confirmar_la_zona_antes_de_modelar` y `project_apc_delantero_tela_tiras_ancho_parejo`.
 
-- **02/10 — Una mejora que Fak pidió se USA, y no está implementada hasta probarla con un mensaje REAL suyo** (pidió "fácil de entender" y contesté una tabla). Graduado a `mejora-implementada.md` y al chequeo 7 del `cierre-guard`.
-
 - **02/10 — Lo que hay que volver a pedir va a un seguimiento con fecha, y lo que va a quien busca el error sale corto y sin nada que suene a generado.** Graduado a `scripts/_seguimientos.mjs` y a las memorias `project_seguimientos_con_fecha` y `feedback_mails_a_calidad_cecilia_sin_flancos`.
-
-- **02/10 — En el arb la pantalla se toma UNA vez por cambio y se mira si responde; un alta son dos pasadas por código y la descripción va en MAYÚSCULAS**. Graduado a `_arbInsumoCampos.py` y a las memorias `feedback_arb_una_pasada_por_codigo_y_mayusculas` y `feedback_arb_una_sola_pasada_y_mirarlo`.
 
 - **01/10 — Cuando un entregable vuelve se relee el PRIMER pedido entero; lo que no aparece no se rellena con algo parecido, y "no hay" se dice después de listar sin filtro de palabras**. Graduado al hook `correccion-guard` y a `scripts/_materialAfuera.mjs` (`video-maquina.md`).
 
@@ -121,8 +116,6 @@ incidente vive en los snapshots.
 - **Lo que se entrega se juzga en su forma final —impreso, rasterizado, en el zoom en que se va a usar— y el control que lo juzga mide lo que el LECTOR ve, no lo que el codigo cree.** Graduado a `hojas-proceso.md` §5 + skill `hojas-de-proceso`, `_xlsxAPdf.py`, los dos controles de hoja de `cajetin.py`, y las memorias `ppap_novax_tapizadas_puerta` y `columnas_de_un_entregable` (ahi viven las cuatro reglas de columna).
 - **25/09 — Una hoja que manda seguir los pasos de una pantalla nombra primero las PIEZAS que se mueven** (*"era extremadamente dificil de comprender"*): hoja-mapa, una hoja por pieza, QUE se mueve antes que CON QUE boton. Memoria `project_hojas_proceso_img`.
 - **15/09 — Mirar un render NO es medirlo: lo que decide *pegado o no* es una DISTANCIA, y se mide.** Graduado a la memoria `reference_medir_una_hoja_de_matplotlib` (`medir.py` y su gemelo).
-
-- **30/09 — Quién va en un mail: el interno que nombro va; un EXTERNO nunca sin OK de Fak; un cambio solo de unidad va a los del hilo; difusión de BOM, Para Cejas/Rosello/Baptista y el resto en CC.** Graduado a `mail-envio.md` (freno de externos en `_mailEnviar.py`) y a la memoria `feedback_destinatarios_difusion_bom`.
 
 ## Como agregar lecciones nuevas (ciclo de vida)
 

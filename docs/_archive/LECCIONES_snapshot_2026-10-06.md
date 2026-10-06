@@ -143,3 +143,20 @@ por leccion; una "graduada a X", 2 lineas). El techo de 26/28 KB queda como red.
 
 - **23/09 — Una nota que junta dos momentos se escribe en el orden en que pasan** (el corte iba antes del RESET que lo dispara: *"no se entiende, es confusa"*). Lo que Fak corrige en un deck queda frenado en ESE deck: graduado a `_gate_corregido_por_fak()` del generador IMG y `gates_selftest.py`.
   - Vive en: _gate_corregido_por_fak() del generador IMG y gates_selftest.py
+
+## Graduadas enteras el 06/10/2026 (segunda pasada, 17:15): ya las hace cumplir una regla, un skill o un control
+
+- **15-28/09 — Un cartel del arb se LEE antes de contestarlo: es lo primero que se mira cuando no deja seguir (no mi teoría), lo que actúa a ciegas aprieta lo que esté abajo, el botón es `Omitir` y no `Anular`, y se cierra solo lo propio.** Graduado al skill `arb-operar`, a `_arbDescripcion.por_que_no_avanza()`, `_arbCargar.abrir()`, `_arbVer.cerrar_excel()`, `fallas-modales-y-export.md` y la memoria `feedback_bom_en_unidades_no_en_envase`.
+  - Vive en: skill arb-operar (reference/fallas-modales-y-export.md), _arbDescripcion.por_que_no_avanza(), _arbCargar.abrir() y _arbVer.cerrar_excel()
+
+- **06/10 — Una falla de foco en medio de una tanda del arb es Fak que volvió a la PC: se corta y se le avisa, no se reintenta** (reintenté y dos letras de su teclado cayeron en una celda; no se grabó). Graduado al skill `arb-operar`.
+  - Vive en: skill arb-operar ("Con Fak mirando, la pantalla se toma UNA vez por cambio y se vigila")
+
+- **02/10 — Una mejora que Fak pidió se USA, y no está implementada hasta probarla con un mensaje REAL suyo** (pidió "fácil de entender" y contesté una tabla). Graduado a `mejora-implementada.md` y al chequeo 7 del `cierre-guard`.
+  - Vive en: regla mejora-implementada.md y chequeos 3 y 7 del cierre-guard
+
+- **02/10 — En el arb la pantalla se toma UNA vez por cambio y se mira si responde; un alta son dos pasadas por código y la descripción va en MAYÚSCULAS**. Graduado a `_arbInsumoCampos.py` y a las memorias `feedback_arb_una_pasada_por_codigo_y_mayusculas` y `feedback_arb_una_sola_pasada_y_mirarlo`.
+  - Vive en: skill arb-operar (tabla de operaciones y "Con Fak mirando") y _arbInsumoCampos.py
+
+- **30/09 — Quién va en un mail: el interno que nombro va; un EXTERNO nunca sin OK de Fak; un cambio solo de unidad va a los del hilo; difusión de BOM, Para Cejas/Rosello/Baptista y el resto en CC.** Graduado a `mail-envio.md` (freno de externos en `_mailEnviar.py`) y a la memoria `feedback_destinatarios_difusion_bom`.
+  - Vive en: regla mail-envio.md (freno de externos en _mailEnviar.py) y skill carga-arb, "PARA y CC"
