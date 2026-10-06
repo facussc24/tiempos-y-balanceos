@@ -63,7 +63,7 @@ incidente vive en los snapshots.
 ## Consumos de material
 
 - **Un numero que no cuadra casi nunca es un error: es la misma cosa en otra magnitud, o el mismo numero con la merma adentro**, y se normaliza a la unidad que gobierna antes de reportar un desvio. Graduado a `consumos-entregables.md` + `_validarConsumos.mjs` + skill `verificacion-consumos`.
-- **22/09 — El consumo de vinilo o tela sale de la planilla que Pablo Gamboa manda por mail, no de lo que ya esta en el arb** (*"si no salen de ahi no podemos mandar el mail"*); despues se abre el .MRK. Memoria `consumo_se_verifica_en_el_marker_no_en_la_planilla`.
+- **22/09 y 06/10 — El consumo de vinilo o tela sale de la planilla y la tizada (.MRK) de Pablo Gamboa, no de lo que ya está en el arb ni de una cuenta mía** (06/10: el Upper Trim lo cargué con el paño de la cotización de 2025; Fak: *"¿desde cuándo vos proponés?"*). Se dice «patrón», no «molde». Graduado a la memoria `consumo_se_verifica_en_el_marker_no_en_la_planilla`.
 - **25/09 — Una difusion que corrige un error PROPIO dice solo el valor que queda, en el mail y en el PDF** (Fak: *"si ponemos el antes y el despues me escrachas"*). Graduado a la memoria `documento_no_confiesa_como_se_hizo`.
 
 ## Entregables y comunicacion con Fak
