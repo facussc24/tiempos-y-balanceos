@@ -5,7 +5,9 @@
     py -3 scripts/novax/_pcNicoCorrecciones.py            # prueba: dice que cambiaria, no guarda
     py -3 scripts/novax/_pcNicoCorrecciones.py --apply    # guarda la copia corregida
 
-Cada celda que cambia queda en amarillo y con un comentario que dice de donde sale el valor. Antes de
+Cada celda que cambia queda en amarillo y con un comentario que dice lo que tenia ANTES (pedido de Fak,
+06/10/2026: "si pones una nota poneme el antes"; la fuente queda escrita en este archivo). Donde se sacaron
+filas, la celda de arriba queda en naranja con el texto de las filas que se sacaron. Antes de
 escribir, cada celda tiene que tener el texto viejo esperado: si Nicolas ya la cambio, se saltea y se avisa.
 Lo que necesita filas nuevas (operaciones que faltan) no se toca: va a la lista para la reunion con Nicolas.
 
@@ -46,25 +48,23 @@ F = {
 APB = [
     ('B6', 'DE PARTE', 'Nº DE PARTE : N 231 / N 267 / N 297 / N 328', 'ARB'),
     ('A65', '', 'N 231 / N 267 / N 297 / N 328', 'ARB'),
-    ('E77', '427-VIN-009', 'Vinilo de tapizado\nPVC Texture PR022\n(codigo VIN-SKM-001)', 'ARB'),
-    ('E82', '427-HIL-001', 'Hilo de union 30/3\nNegro Titan (codigo\nFX284-E0PTO)', 'ARB'),
-    ('E85', 'HIL-005', 'Hilo de costura vista\n20/3 Jet Black (codigo\nFX483TK-E0PTO)', 'ARB'),
+    # Auditoria del 06/10: el color se deja como estaba (el arb corta la descripcion y no lo dice; la
+    # HO-971 dice Jet Black para el hilo de union). Solo cambia el codigo, que manda el arb.
+    # El hilo vista (E85) no se toca: VW nombra Carbon Black y el arb y la HO-971 compran Jet Black.
+    ('E77', '427-VIN-009', 'Vinilo de tapizado\nPVC Texture PR022\nCarbon Black (codigo\nVIN-SKM-001)', 'ARB'),
+    ('E82', '427-HIL-001', 'Hilo de union 30/3\nJet Black (codigo\nFX284-E0PTO)', 'ARB'),
     ('H109', 'DK840400', 'DK/1840400', 'ARB'),
     ('H114', '5 - 8 mm', ('5 - 8 mm', '4 mm minimo'), 'CUCH'),
     ('I114', 'MC213', 'Calibre MC167', 'CUCH'),
     ('B122', 'Apoyabrazos delantero', ('Apoyabrazos delantero', 'APB de puerta (del. y tras.)'), 'FLUJ'),
-    ('H132', '427-HIL-001', 'Hilo de union 30/3 Negro Titan (codigo FX284-E0PTO)', 'ARB'),
+    ('H132', '427-HIL-001', 'Hilo de union 30/3 Jet Black (codigo FX284-E0PTO)', 'ARB'),
     ('H151', '4 mm', '4 mm  (+/- 0,5)', 'COST'),
-    ('H157', 'HIL-005', 'Aguja: hilo vista 20/3 Jet Black (FX483TK-E0PTO)\nBobina: hilo 30/3 (FX284-E0PTO)', 'COST'),
-    ('O158', 'Hilo de costura', '', 'OTRA_TEXTO'),
-    ('O159', 'Carbon Black', '', 'OTRA_TEXTO'),
-    ('O160', 'HIL-005', '', 'OTRA_TEXTO'),
+    ('H157', 'HIL-005', None, 'HO971'),      # se le agrega la bobina 30/3 (HO-971 hoja 41)
     ('H160', '', 'Delantero 120 ± 5 g\nTrasero 115 ± 5 g', 'HO971'),
     ('H165', 'Controlar dimensional cotas',
      'Cota index: delantero 214 ±1 mm / trasero 173,5 ±1 mm, medida a los 20 min de inyectada', 'HO971'),
     ('A166', 'Operación 60', 'Operación 70', 'FLUJ'),
     ('A184', 'Operación 70', 'Operación 80', 'FLUJ'),
-    ('H185', 'Ver hoja de operaciones', '190 a 210 °C', 'HO971'),
     ('A191', 'Operación 80-82', 'Operación 90-93', 'FLUJ'),
     ('A203', 'Operación 90', 'Operación 100', 'FLUJ'),
     ('A211', '', 'Operación 110', 'FLUJ'),
@@ -91,11 +91,11 @@ TR = [
     ('B6', 'DE PARTE', 'Nº DE PARTE : N 216 / N 256 / N 285 / N 315', 'ARB'),
     ('A65', '', 'N 216 / N 256 / N 285 / N 315', 'ARB'),
     ('H91', 'DK840400', 'DK/1840400', 'ARB'),
-    ('H105', '', '3,0 m/min', 'HM'),
     ('H135', 'Cantidad de grampas', 'Cantidad de grampas: 27 delantero / 34 trasero.\nSin daño por grampas', 'ARB'),
 ]
 
 AMARILLO = 65535  # RGB(255,255,0) en BGR
+NARANJA = 49407   # RGB(255,192,0) en BGR
 
 
 def texto(c):
@@ -107,14 +107,16 @@ def texto(c):
     return str(v)
 
 
-def marcar(c, fuente):
+def marcar(c, nota, color=AMARILLO):
     m = c.MergeArea
-    m.Interior.Color = AMARILLO
-    try:
-        m.Cells(1, 1).ClearComments()
-        m.Cells(1, 1).AddComment('Ingenieria 06/10/2026: ' + fuente)
-    except Exception:
-        pass
+    m.Interior.Color = color
+    m.Cells(1, 1).ClearComments()
+    m.Cells(1, 1).AddComment(nota)
+
+
+def antes(txt):
+    txt = txt.replace('\r', '').strip()
+    return 'ANTES: ' + (txt if txt else '(vacia)')
 
 
 def aplicar_celdas(ws, lista, apply, informe):
@@ -143,7 +145,7 @@ def aplicar_celdas(ws, lista, apply, informe):
                 c.MergeArea.Font.Size = tam
             if fuente == 'OTRA_TEXTO':
                 continue
-            marcar(c, F[fuente])
+            marcar(c, antes(actual))
 
 
 def borrar_filas(ws, lista, apply, informe):
@@ -154,7 +156,11 @@ def borrar_filas(ws, lista, apply, informe):
             continue
         informe.append(f'  {ws.Name.strip()}: borro filas {desde}-{hasta} ({F[fuente]})')
         if apply:
+            sacado = ' / '.join(t for t in (texto(ws.Range(f'{col}{r}')).replace('\r', '').replace('\n', ' ').strip()
+                                            for r in range(desde, hasta + 1) for col in 'DEFHIJKLM') if t)
             ws.Rows(f'{desde}:{hasta}').Delete()
+            marcar(ws.Range(f'H{desde - 1}'), f'SE SACARON {hasta - desde + 1} FILAS DEBAJO DE ESTA. Decian: {sacado}',
+                   NARANJA)
 
 
 def top_roll_orden(ws, apply, informe):
@@ -170,9 +176,45 @@ def top_roll_orden(ws, apply, informe):
         ws.Rows('128:131').Cut()
         ws.Rows('123').Insert()
         ws.Range('A123').MergeArea.Cells(1, 1).Value = 'Operación 60'
-        marcar(ws.Range('A123'), F['TR'])
+        marcar(ws.Range('A123'), 'ANTES: Operación 70, y este bloque (refuerzos) iba debajo del de tweeter')
+        # el bloque de tweeter trae abajo la linea doble que separaba la 60 de la 70: entre la 70 y el
+        # control final (80) el original tenia linea fina en toda la fila
+        borde = ws.Range('A131:N131').Borders(9)          # xlEdgeBottom
+        borde.LineStyle, borde.Weight = 1, 2              # continua, fina
         ws.Range('A127').MergeArea.Cells(1, 1).Value = 'Operación 70'
-        marcar(ws.Range('A127'), F['TR'])
+        marcar(ws.Range('A127'), 'ANTES: Operación 60, y este bloque (tweeter) iba arriba del de refuerzos')
+
+
+def medidas(ws):
+    ultima = ws.UsedRange.Row + ws.UsedRange.Rows.Count - 1
+    return ([ws.Rows(r).RowHeight for r in range(1, ultima + 1)],
+            [ws.Columns(c).ColumnWidth for c in range(1, 17)])
+
+
+def fila_vieja_top_roll(r):
+    """Fila del original que ocupa hoy la fila r, despues de subir el bloque de refuerzos (128-131)."""
+    if r == 123:
+        return 128
+    if 124 <= r <= 126:
+        return r + 5
+    if r == 127:
+        return 123
+    if 128 <= r <= 131:
+        return r - 4
+    return r
+
+
+def reponer_medidas(ws, med, fila_vieja, editadas_viejas):
+    altos, anchos = med
+    for c, ancho in enumerate(anchos, start=1):
+        if ws.Columns(c).ColumnWidth != ancho:
+            ws.Columns(c).ColumnWidth = ancho
+    for r in range(1, len(altos) + 1):
+        vieja = fila_vieja(r)
+        if vieja > len(altos) or vieja in editadas_viejas:
+            continue
+        if ws.Rows(r).RowHeight != altos[vieja - 1]:
+            ws.Rows(r).RowHeight = altos[vieja - 1]
 
 
 def main():
@@ -186,13 +228,22 @@ def main():
     try:
         wb = xl.Workbooks.Open(DESTINO if apply else ORIGEN, 0, not apply)
         hojas = {s.Name.strip(): s for s in wb.Worksheets}
-        aplicar_celdas(hojas['PC APB'], APB, apply, informe)
-        borrar_filas(hojas['PC APB'], APB_BORRAR, apply, informe)
-        aplicar_celdas(hojas['PC INSERTO'], INS, apply, informe)
-        borrar_filas(hojas['PC INSERTO'], INS_BORRAR, apply, informe)
-        aplicar_celdas(hojas['PC  Top Roll'] if 'PC  Top Roll' in hojas else hojas['PC Top Roll'], TR, apply, informe)
-        top_roll_orden(hojas['PC  Top Roll'] if 'PC  Top Roll' in hojas else hojas['PC Top Roll'], apply, informe)
+        apb, ins, tr = hojas['PC APB'], hojas['PC INSERTO'], hojas['PC  Top Roll']
+        # Alto de filas y ancho de columnas del original: Excel los recalcula al guardar (la auditoria del
+        # 06/10 vio la fila 10 del encabezado de 435 a 276 twips) y se reponen al final, salvo en las filas
+        # cuyo texto cambio, que se dejan con el alto que Excel les da para que el texto nuevo entre.
+        med = {h.Name: medidas(h) for h in (apb, ins, tr)}
+        aplicar_celdas(apb, APB, apply, informe)
+        borrar_filas(apb, APB_BORRAR, apply, informe)
+        aplicar_celdas(ins, INS, apply, informe)
+        borrar_filas(ins, INS_BORRAR, apply, informe)
+        aplicar_celdas(tr, TR, apply, informe)
+        top_roll_orden(tr, apply, informe)
         if apply:
+            for h, lista, viejo in ((apb, APB, lambda r: r if r < 147 else r + 2),
+                                    (ins, INS, lambda r: r if r < 172 else r + 8),
+                                    (tr, TR, fila_vieja_top_roll)):
+                reponer_medidas(h, med[h.Name], viejo, {int(''.join(ch for ch in c if ch.isdigit())) for c, *_ in lista})
             wb.Save()
         wb.Close(False)
     finally:
