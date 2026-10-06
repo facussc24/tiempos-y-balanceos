@@ -217,8 +217,12 @@ def preparar(cfg):
     else:
         mail = ol.CreateItem(0)  # olMailItem
 
-    # Limpiar destinatarios heredados del Reply para no auto-enviarse el correo
-    if cfg.get('para') or cfg.get('cc'):
+    # Limpiar destinatarios heredados del Reply para no auto-enviarse el correo.
+    # Respondiendo a un mail RECIBIDO con solo "cc", el Para del Reply (el remitente) se
+    # conserva: limpiarlo dejaba el Para vacio y pasaba al remitente a CC (06/10/2026,
+    # respuesta a Carlos con Pablo en copia).
+    conserva_remitente = bool(cfg.get('responder_a_id')) and not cfg.get('para')
+    if (cfg.get('para') or cfg.get('cc')) and not conserva_remitente:
         while mail.Recipients.Count > 0:
             mail.Recipients.Remove(1)
 
