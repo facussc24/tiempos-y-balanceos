@@ -66,7 +66,13 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **06/10 — Un archivo que Fak nombra y no aparece con ese nombre no se cambia por el parecido sin mostrárselo («tomé este, de esta ruta, ¿es?» va ANTES de trabajar encima), y lo que se entrega tiene el tamaño del pedido** (pidió los tiempos de costura de hoy: cargué un libro de 12 hojas, le sumé una hoja con formato mío y recién al tercer reclamo quedó en dos hojas con cuatro filas: *"solo estos tiempos tienen que estar en el excel"*).
+
+- **06/10 — Una pregunta directa de Fak que llega mientras trabajo se contesta en el mensaje siguiente, antes de seguir** («¿puedo desconectar el celular ya?» esperó varias tandas mías con los videos ya copiados y verificados). Graduado a la memoria `reference_capacidades_de_proceso_y_toma_de_tiempos_por_video` (paso 1).
+
 - **06/10 — Lo que corrijo en el archivo de OTRO se le muestra a Fak recién auditado, y cada celda cambiada lleva el ANTES, no la fuente** (le abrí el plan de control de Nico sin auditar: *"no me lo abras, auditalo... poneme el antes"*; la auditoría sacó 9 de 43 cambios que no eran 100 % seguros). **Y volver atrás un cambio no puede dejar un dato que se sabe falso**: dejé un código de hilo que no existe (*"ese hilo no existe más... es grave"*); lo dudoso es la PALABRA nueva, no el código inexistente. Graduado a la memoria `feedback_entregables_para_fak`.
+
+- **06/10 — En el entregable va lo que contesta la pregunta; lo que no pude hacer se dice, no se reemplaza por algo parecido con el título de lo pedido** (apoyacabezas delantero: a «¿cosen las piezas del plano?» le sumé el 3D pintado como «cómo quedaría armada» y una hoja de fuentes; Fak: *"al pedo hiciste eso, no muestres info de más"*, sacó las dos). Graduado a la memoria `feedback_responder_el_scope_exacto`.
 
 - **06/10 — Si Fak marca UN defecto de un documento («el IP tiene corte e inyección muy largos») se corrige eso con el criterio escrito y se le muestra, sin menú de qué más unificar (*"no deberías hacerme tantas preguntas, deberías saber qué hacer"*); y el freno que armé para eso pausa la pregunta, no ordena hacer** (la primera versión decía «hacé la recomendada» y la auditoría la tumbó). Graduado al skill `flujogramas` §1.5, a `preguntaGuard.mjs` y a la memoria `feedback_con_recomendacion_no_se_pregunta`.
 

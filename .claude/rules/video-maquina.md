@@ -63,14 +63,15 @@ nombre de la maquina.
 
 ## El procedimiento, en orden
 
-1. **Indexar el telefono** (barato, no copia nada) → `INDICE_TELEFONO.tsv` (carpeta, archivo,
-   creado, bytes; con BOM: es lo que lee `--cruzar`). El script que lo generaba, `tel_indice.ps1`,
-   no esta en el repo ni en `C:\Dev\_telefono`: TBD, rehacerlo en `scripts/video/` antes de la
-   proxima bajada. La carpeta `_b` del iPhone duplica la `_a`: se descarta.
+1. **Indexar el telefono** (barato, no copia nada) → `INDICE_TELEFONO_<mes>.tsv` (carpeta, archivo,
+   creado, bytes; con BOM: es lo que lee `--cruzar`):
+   `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/video/tel_indice.ps1` (el mes en
+   curso; `-Mes 202609` para otro). La carpeta `_b` del iPhone duplica la `_a`: el script la descarta.
 2. **CRUZAR contra la biblioteca ANTES de bajar un byte**:
    `node scripts/_videoBiblioteca.mjs --cruzar <indice.tsv>`.
 3. Bajar **solo lo que falta**, a transito **fuera de OneDrive** (`C:\Dev\_telefono`), con
-   verificacion de bytes.
+   verificacion de bytes: `scripts/video/tel_copiar.ps1 -Mes <mes> -Archivos IMG_x.MOV,IMG_y.MOV
+   -Destino C:\Dev\_telefono\<tarea>` (de a uno, y espera a que la cola del archivo deje de ser ceros).
 4. **`ffprobe`**: el tamaño no prueba nada — Explorer PREASIGNA el archivo entero, asi que un
    truncado pesa lo mismo que uno completo.
 5. **Renombrar con el formato de arriba** y mover a la carpeta de su cliente/maquina.
