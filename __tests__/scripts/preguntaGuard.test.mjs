@@ -58,7 +58,10 @@ const APLICO = q('Son 12 correcciones de severidad en el AMFE del Top Roll, con 
 const REGENERAR = q('¿Regenero el plan de control desde el AMFE?', ['Sí, regenerarlo (Recomendado)', 'No'], 'Plan de control');
 const SIGLA = q('Hay 3 causas con S=9 sin sigla. ¿Les pongo CC?', ['Sí, CC (Recomendado)', 'No'], 'Siglas');
 const COZZUOL = q('¿Le paso el plano a Cozzuol?', ['Sí, hoy (Recomendado)', 'Esperar'], 'Plano');
-const REGENERAR_BIEN = q('El plan de control del Insert se regenera desde el AMFE 158 y pisa el que está cargado hoy. ¿Está bien?', ['Sí, regenerarlo', 'No'], 'Plan de control');
+// Sin ninguna palabra del atajo `confirmable`: pasa SOLO por ir sin la marca (con "cargado" en el texto pasaba igual con la marca puesta).
+const TEXTO_REGENERAR = 'El plan de control del Insert se regenera desde el AMFE 158 y reemplaza al que está hoy. ¿Está bien?';
+const REGENERAR_BIEN = q(TEXTO_REGENERAR, ['Sí, regenerarlo', 'No'], 'Plan de control');
+const REGENERAR_CON_MARCA = q(TEXTO_REGENERAR, ['Sí, regenerarlo (Recomendado)', 'No'], 'Plan de control');
 
 describe('pregunta-guard — la logica', () => {
     describe('ROJO: se pausa', () => {
@@ -94,20 +97,39 @@ describe('pregunta-guard — la logica', () => {
             ['regenerar el plan de control', REGENERAR],
             ['asignar CC', SIGLA],
             ['pasarle un plano a un externo', COZZUOL],
-        ])('una confirmacion del contrato que no nombra el sistema (%s) se pausa, y el mensaje le deja la salida', (_n, pregunta) => {
+            ['un menu de alcance (regla B)', QUE_MAS],
+        ])('una pregunta pausada (%s) recibe los dos caminos, y el renglon del motivo no manda nada', (_n, pregunta) => {
             const r = evaluarPregunta({ questions: [pregunta] });
             expect(r.bloquea).toBe(true);
             const m = mensajeDeBloqueo(r.hallazgos);
-            expect(m).not.toMatch(/ya decidiste|hac[eé] la recomendada|no es algo que haya que confirmar/i);
+            expect(m).not.toMatch(/ya decidiste|posicion tomada|hac[eé] la recomendada|no es algo que haya que confirmar/i);
+            // el renglon [A] / [B] describe que disparo la pausa: no puede traer un verbo de hacer
+            const motivos = m.split('\n').filter((l) => /^\s*\[[AB]\]/.test(l));
+            expect(motivos.length).toBeGreaterThan(0);
+            for (const l of motivos) expect(l).not.toMatch(/hac[eé]|ejecut|se hace|no preguntes|sin opciones/i);
+            // y los dos caminos van siempre, condicionados
             expect(m).toMatch(/pausa, no una orden/);
+            expect(m).toMatch(/1\) Si lo que se decide es trabajo TUYO y REVERSIBLE/);
+            expect(m).toMatch(/2\) Si toca algo que se le confirma/);
             expect(m).toMatch(/VOLVE A PREGUNTARLO/);
             expect(m).toMatch(/Supabase/);
             expect(m).toMatch(/CC\/SC/);
             expect(m).toMatch(/En la duda entre 1 y 2, es 2/);
         });
 
-        it('la misma confirmacion, vuelta a preguntar con lo concreto y sin la marca, PASA', () => {
+        it('el motivo cita QUE disparo la pausa: la etiqueta marcada o el fragmento de menu', () => {
+            expect(evaluarUna(REGENERAR).motivo).toMatch(/Sí, regenerarlo \(Recomendado\)/);
+            expect(evaluarUna(QUE_MAS).motivo).toMatch(/por "¿Qué más"/);
+        });
+
+        it('la misma confirmacion pasa SOLO por ir sin la marca: con la marca se pausa, sin ella sale', () => {
+            expect(evaluarUna(REGENERAR_CON_MARCA)?.regla).toBe('A');
             expect(evaluarUna(REGENERAR_BIEN)).toBeNull();
+        });
+
+        it('la palabra "recomendado" suelta en una opcion no es la marca', () => {
+            const p = q('¿Le contesto a Novax con el consumo corregido?', ['Sí, con el consumo recomendado por Pablo Gamboa (0,2526)', 'No']);
+            expect(evaluarUna(p)).toBeNull();
         });
     });
 
@@ -132,6 +154,16 @@ describe('pregunta-guard — la logica', () => {
             }
         });
 
+        it('"¿Qué hago con…?" sin marca no se pausa: suele ser un archivo o un dato de otro', () => {
+            expect(evaluarUna(q('¿Qué hago con el archivo de Pablo que está en la carpeta vieja?', ['Dejarlo', 'Pasarlo a la carpeta nueva']))).toBeNull();
+        });
+
+        it('el encabezado tambien cuenta para el atajo de lo que se confirma', () => {
+            const conMarca = ['Sí, hoy (Recomendado)', 'Esperar'];
+            expect(evaluarUna(q('¿Sale hoy?', conMarca, 'Otra cosa'))?.regla).toBe('A');
+            expect(evaluarUna(q('¿Sale hoy?', conMarca, 'Mail difusión'))).toBeNull();
+        });
+
         it('lo que no se puede leer no se frena', () => {
             expect(evaluarPregunta(undefined).bloquea).toBe(false);
             expect(evaluarPregunta({ questions: 'roto' }).bloquea).toBe(false);
@@ -141,8 +173,7 @@ describe('pregunta-guard — la logica', () => {
 
     it('todos los patrones del canon compilan, no estan vacios y ninguno coincide con el texto vacio', () => {
         const crudo = fs.readFileSync(path.join(RAIZ, 'scripts', '_lib', 'preguntaCanon.data.json'), 'utf8');
-        // un "\b" de JSON es un retroceso, no un borde de palabra: el patron tiene que traer "\\b"
-        expect(crudo.includes('\\u0008') || /[\u0008]/.test(JSON.stringify(JSON.parse(crudo)).replace(/\\\\b/g, ''))).toBe(false);
+        // un "\b" de JSON es un retroceso, no un borde de palabra: el patron tiene que traer "\\b" (se mira abajo, patron por patron)
         const canon = JSON.parse(crudo);
         for (const grupo of ['confirmable', 'recomendada', 'menu']) {
             expect(canon[grupo].patrones.length).toBeGreaterThan(0);

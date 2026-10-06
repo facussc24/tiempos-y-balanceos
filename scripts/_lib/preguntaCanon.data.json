@@ -50,9 +50,9 @@
     ]
   },
   "recomendada": {
-    "_doc": "Regla A. Una opcion marcada como recomendada (en castellano o en ingles, que es como la herramienta la pide).",
+    "_doc": "Regla A. Una opcion con la MARCA de recomendada entre parentesis (en castellano o en ingles, que es como la herramienta la pide). La palabra suelta no cuenta: \"el consumo recomendado por Pablo\" no es una marca. Las 70 marcas reales van entre parentesis.",
     "patrones": [
-      "recomm?end(ad|ed)"
+      "\\(\\s*recomm?end(ad[oa]|ed)\\s*\\)"
     ]
   },
   "menu": {

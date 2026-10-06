@@ -51,11 +51,13 @@ const DOS_CAMINOS = [
     'Esto es una pausa, no una orden: el control mira la FORMA de la pregunta y no sabe que se esta decidiendo. Elegi vos:',
     '  1) Si lo que se decide es trabajo TUYO y REVERSIBLE (un nombre, un numero que fija una convencion, un orden, un formato, por',
     '     donde seguir): no preguntes. Hace lo que el criterio escrito indica y decile a Fak en un renglon que elegiste y por que.',
-    '  2) Si toca algo que se le confirma — mandar o reenviar un mail, emitir, guardar o mover en el servidor, el legajo o un listado',
-    '     maestro, escribir en Supabase (corregir, regenerar, propagar, migrar, restaurar), cargar o dar de baja en el arb, borrar o',
-    '     pisar un archivo, asignar CC/SC, una dependencia, sacar una funcion, apagar un control, algo de otra persona, la primera vez',
-    '     de algo — o es un dato que SOLO Fak tiene: VOLVE A PREGUNTARLO, con la ruta y el archivo concretos ("esto va aca, ¿esta',
-    '     bien?"), sin la marca de recomendada y sin forma de menu. Asi pasa. En la duda entre 1 y 2, es 2.',
+    '  2) Si toca algo que se le confirma — mandar o reenviar un mail, pasarle algo a un externo, emitir, guardar o mover en el',
+    '     servidor, el legajo, el paquete o un sistema del cliente o un listado maestro, escribir en Supabase (corregir, regenerar,',
+    '     propagar, migrar, restaurar, crear una familia o un AMFE de cero), cargar o dar de baja en el arb o cerrarlo, borrar o pisar',
+    '     un archivo, asignar CC/SC, una dependencia, una funcion nueva de la app, un refactor o sacar una funcion, apagar un control,',
+    '     algo de otra persona, la primera vez de algo — o es un dato que SOLO Fak tiene: VOLVE A PREGUNTARLO, con la ruta y el',
+    '     archivo concretos ("esto va aca, ¿esta bien?"), sin la marca de recomendada y sin la forma de menu que se cita arriba.',
+    '     Asi pasa. En la duda entre 1 y 2, es 2.',
     'Fak, 06/10/2026: "no deberias hacerme tantas preguntas, deberias saber que hacer". Y 21/09/2026: "si es tu primera vez haciendo',
     'algo preguntame antes". Las dos valen.',
 ].join('\n');
@@ -66,11 +68,14 @@ export function evaluarUna(q) {
     if (CONFIRMABLE.test(texto)) return null;
     const corta = String(q?.question ?? '').slice(0, 110);
     const etiquetas = (q?.options ?? []).map((o) => String(o?.label ?? ''));
-    if (etiquetas.some((e) => RECOMENDADA.test(e))) {
-        return { regla: 'A', motivo: `"${corta}" trae una opcion recomendada: ya tenes una posicion tomada.` };
+    // El motivo cita QUE lo disparo: una pausa que no dice por que no se puede destrabar.
+    const marcada = etiquetas.find((e) => RECOMENDADA.test(e));
+    if (marcada) {
+        return { regla: 'A', motivo: `"${corta}" trae una opcion con la marca de recomendada: "${marcada.slice(0, 70)}".` };
     }
-    if (MENU.test(texto)) {
-        return { regla: 'B', motivo: `"${corta}" tiene forma de menu de alcance o de como seguir.` };
+    const menu = MENU.exec(texto);
+    if (menu) {
+        return { regla: 'B', motivo: `"${corta}" tiene forma de menu de alcance o de como seguir, por "${menu[0]}".` };
     }
     return null;
 }
