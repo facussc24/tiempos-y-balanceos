@@ -1,0 +1,65 @@
+{
+  "_doc": "Que pregunta a Fak NO sale (hook pregunta-guard.sh, logica en preguntaGuard.mjs). Medido el 06/10/2026 sobre las 81 llamadas a AskUserQuestion del 01/09 al 06/10/2026: Fak rechazo 35 (\"no deberias hacerme tantas preguntas, deberias saber que hacer\", \"deja de preguntar pelotudeces\", \"ni deberias preguntarme\"). El recordatorio que habia desde el 05/09 llegaba DESPUES de escrita la pregunta y no cambio nada (8 de 20 antes, 27 de 61 despues). Los patrones se cambian ACA, con su caso en __tests__/scripts/preguntaGuard.test.mjs.",
+  "confirmable": {
+    "_doc": "Lo que el contrato de autonomia manda confirmar: una pregunta que lo nombra pasa siempre, tenga o no recomendacion.",
+    "patrones": [
+      "emit",
+      "emisi",
+      "\\benv[ií][aoe]",
+      "\\bmand[aoe]",
+      "\\bmail",
+      "correo",
+      "borrador",
+      "\\bborr[aoe]",
+      "elimin",
+      "supabase",
+      "listado maestro",
+      "gesti[oó]n ingenier",
+      "\\bsgc\\b",
+      "legajo",
+      "\\bppap\\b",
+      "servidor",
+      "\\barb\\b",
+      "\\bgrab[aoe]",
+      "\\bcarg[aoe]",
+      "dar de alta",
+      "\\binca\\b",
+      "primera vez",
+      "obsoleto",
+      "renombr",
+      "public[aoe]",
+      "instal",
+      "papelera",
+      "\\bhook",
+      "\\bclaude\\b",
+      "plugin",
+      "compact",
+      "\\btokens\\b",
+      "modo plan",
+      "gemini",
+      "\\btu (cuenta|usuario|clave|sesi[oó]n)",
+      "\\bbeon\\b",
+      "\\bimds\\b",
+      "\\bkpm\\b",
+      "portal",
+      "al cliente"
+    ]
+  },
+  "recomendada": {
+    "_doc": "Regla A. Si la pregunta trae una opcion recomendada y no es confirmable, ya hay decision: se hace y se dice por que.",
+    "patrones": ["recomm?endad"]
+  },
+  "menu": {
+    "_doc": "Regla B. Menu de alcance o de como seguir: lo que Fak pidio se hace con el criterio escrito y lo demas se le nombra en un renglon.",
+    "patrones": [
+      "¿qu[eé] m[aá]s\\b",
+      "¿(qu[eé]|cu[aá]l(es)?) (arranco|hago|sigo|seguimos|encaro|ataco)\\b",
+      "¿por d[oó]nde (arranco|sigo|seguimos|empiezo|empezamos)",
+      "¿c[oó]mo (sigo|seguimos|avanzo|avanzamos|voy)\\b",
+      "ahora o despu[eé]s",
+      "¿(lo|la|los|las) (unifico|hago|aplico|reviso|corrijo|armo|sumo) (tambi[eé]n|ahora)",
+      "¿(unifico|hago|aplico|reviso|corrijo|armo|sumo) [^?]*tambi[eé]n\\?",
+      "¿(sigo|avanzo|contin[uú]o)\\?"
+    ]
+  }
+}

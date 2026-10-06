@@ -409,7 +409,7 @@ describe('timeout-guard con node directo (settings.json) — el mismo veredicto 
 });
 
 // ───────────────────────────────────────────── pregunta-guard (AskUserQuestion): solo aviso
-describe('pregunta-guard.sh (AskUserQuestion) — recordatorio por additionalContext, nunca bloquea', () => {
+describe('pregunta-guard.sh (AskUserQuestion) — sin nada que frenar, recordatorio por additionalContext (el bloqueo: preguntaGuard.test.mjs)', () => {
   it('exit 0 y el JSON con el recordatorio; con payload ilegible tambien 0', () => {
     const r = hook('pregunta-guard.sh', { tool_name: 'AskUserQuestion', tool_input: { questions: [] } });
     expect(r.exit).toBe(0);

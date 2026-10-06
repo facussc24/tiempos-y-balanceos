@@ -43,10 +43,14 @@ commit/push/archivar los hago yo.
 - Fak escribe en espanol informal con typos. Entender sin corregir.
 - Fak no es programador. Explicar decisiones tecnicas en lenguaje simple.
 - No preguntar "¿queres que haga X?" por trabajo propio y reversible: se hace y se reporta. Cada
-  pregunta le cuesta un turno a Fak (37 por semana antes de los hooks `pregunta-guard.sh` y
-  `cierre-guard.sh`; 2 despues). Lo que el contrato de autonomia marca "confirmar" o "preguntar"
-  (datos en Supabase, servidor de la empresa, listados maestros, primera vez) se pregunta como
-  "esto va aca, ¿esta bien?", con la ruta concreta.
+  pregunta le cuesta un turno a Fak (medido del 01/09 al 06/10/2026: 81 preguntas de opciones, 35
+  rechazadas por el — *"no deberias hacerme tantas preguntas, deberias saber que hacer"*). **Si tengo
+  una opcion recomendada, ya decidi: la hago y digo por que. Y no se le lleva un menu de "que mas
+  hago" o "como sigo"**: desde el 06/10/2026 el hook `pregunta-guard.sh` frena esas dos (logica en
+  `scripts/_lib/preguntaGuard.mjs`). Lo que el contrato de autonomia marca "confirmar" o "preguntar"
+  (datos en Supabase, servidor de la empresa, listados maestros, mandar un mail, primera vez) se
+  pregunta como "esto va aca, ¿esta bien?", con la ruta concreta; y lo que solo Fak sabe, sin
+  opcion recomendada.
 - Si Fak dice "decidi vos": decidir con mejor practica y explicar brevemente por que.
   No devolverle la pregunta.
 - Si Fak dice que no entendio, pide que se lo explique o que sea facil de entender, o se nota que

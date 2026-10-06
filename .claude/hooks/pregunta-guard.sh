@@ -1,17 +1,30 @@
 #!/usr/bin/env bash
-# pregunta-guard.sh — PreToolUse, matcher: AskUserQuestion. NO bloquea.
+# pregunta-guard.sh — PreToolUse, matcher: AskUserQuestion. Wrapper fino: la logica vive en
+# scripts/_lib/preguntaGuard.mjs y los patrones en scripts/_lib/preguntaCanon.data.json.
 #
-# Devuelve additionalContext (exit 0): el recordatorio llega en el momento exacto en que
-# estoy por preguntar, sin frenar la herramienta. Medido 04/09/2026: 37 AskUserQuestion en
-# dos semanas, 14 contestadas con fastidio o "ya te lo dije" ("no lo puedo creer, en algun
-# lugar tiene que estar", "deja de preguntar pelotudeces"); 10 en una sola sesion el 01/09.
-# La regla ya existia en CLAUDE.md y en dos memorias; el texto no llegaba a tiempo.
+# BLOQUEA (exit 2) una pregunta a Fak cuando:
+#   A. trae una opcion "(Recomendado)" y no es algo que el contrato de autonomia mande confirmar;
+#   B. es un menu de alcance o de como seguir ("¿que mas unifico?", "¿por donde arranco?").
+# Deja pasar (exit 0, con el recordatorio por additionalContext) lo que se confirma — mandar un mail,
+# emitir, Supabase, el arb, un listado maestro, el legajo, borrar, la primera vez — y lo que solo Fak sabe.
 #
-# Es un recordatorio y no un candado a proposito: preguntar lo que SOLO Fak sabe es
-# correcto, y una lista de patrones no distingue eso en castellano.
-cat >/dev/null 2>&1   # drenar el JSON de stdin
-
+# Por que dejo de ser un recordatorio (06/10/2026): Fak, "no deberias hacerme tantas preguntas, deberias
+# saber que hacer... investigalo para que no vuelva a suceder". Medido del 01/09 al 06/10: 81 preguntas, 35
+# rechazadas; el recordatorio llegaba despues de escrita la pregunta y no cambio nada (8 de 20 antes del
+# hook, 27 de 61 despues). Contra esas 81: frena 18 de las 35 rechazadas y ninguna de las 24 de contrato.
+#
+# Si no puede correr (sin node o sin la logica) deja pasar y lo DICE: un control que no lee la pregunta
+# no puede frenarla, y frenar a ciegas dejaria sin confirmar un mail o una emision.
+# Test: __tests__/scripts/preguntaGuard.test.mjs (ROJO exit 2 y VERDE exit 0, con preguntas reales)
+set -uo pipefail
+RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+GUARD="${RAIZ}/scripts/_lib/preguntaGuard.mjs"
+ENTRADA="$(cat 2>/dev/null || true)"
+if command -v node >/dev/null 2>&1 && [ -f "$GUARD" ]; then
+  printf '%s' "$ENTRADA" | node "$GUARD"
+  exit $?
+fi
 cat <<'EOF'
-{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"[PREGUNTA-GUARD] Antes de preguntarle a Fak: ¿esto lo contesta un archivo, un mail (python scripts/_mails.py --buscar), un transcript, el Escritorio o el propio repo? Si no lo buscaste, buscalo primero. Si igual hace falta preguntar, la pregunta lleva un renglon 'Lo que ya tengo:' con lo que encontraste y por que no alcanza. Un OK para hacer mi propio trabajo no se pide: la respuesta es SI, se hace y se reporta. SI se pregunta, con la ruta y el archivo concretos, lo que el contrato de autonomia manda confirmar: escribir en Supabase, un listado maestro, emitir o dejar algo en el SGC o el legajo, lo que hago por PRIMERA VEZ, mandar un mail, cerrar el arb. Y lo que SOLO Fak puede contestar (una decision suya, un dato de planta que no esta escrito). Un '¿cual de estas...?' va solo si los caminos llevan a trabajo distinto y ningun documento decide; si no, elegi con la mejor practica y deci por que."}}
+{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"[PREGUNTA-GUARD] OJO: el control de preguntas NO pudo correr en esta PC (falta node o scripts/_lib/preguntaGuard.mjs), asi que esta pregunta sale sin revisar. Antes de preguntarle a Fak: ¿lo contesta un archivo, un mail, un transcript o el repo? Un OK para trabajo propio no se pide, y una pregunta con opcion recomendada tampoco: se hace y se dice por que. Lo que ya tengo: va en un renglon."}}
 EOF
 exit 0

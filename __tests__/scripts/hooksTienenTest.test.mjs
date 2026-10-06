@@ -72,7 +72,9 @@ const COBERTURA = {
   'mcp-write-gate.sh': { test: VARIOS, tipo: 'bloquea' },
   'supabase-write-flag.sh': { test: VARIOS, tipo: 'observa' },
   'dev-server-guard.sh': { test: VARIOS, tipo: 'bloquea' },
-  'pregunta-guard.sh': { test: VARIOS, tipo: 'aviso' },
+  // PreToolUse AskUserQuestion (06/10/2026): dejo de ser un recordatorio. Frena la pregunta con opcion recomendada
+  // fuera de lo que el contrato manda confirmar, y el menu de alcance. Origen: 35 de 81 preguntas rechazadas por Fak.
+  'pregunta-guard.sh': { test: '__tests__/scripts/preguntaGuard.test.mjs', tipo: 'bloquea' },
   'cierre-guard.sh': { test: VARIOS, tipo: 'bloquea' },
   // UserPromptSubmit + Stop (03/10/2026): cuando Fak deja a Claude trabajando solo hasta una hora, avisa lo que
   // hay que armar (lista, hora fijada, latido) y frena el cierre antes de la hora. Origen: "quedate laburando hasta
