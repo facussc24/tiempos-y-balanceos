@@ -36,6 +36,14 @@ POR QUE EXISTE (TPO del Top Roll de Patagonia, 20/08 -> 25/09/2026)
      (0,5 a 2,5 m, o 500 a 2500 mm salvo el 1000), ese ancho tiene que coincidir (+-2 %) con
      alguno de los que imprimen las OC de ESE codigo en Z:\\arb\\oc\\ocauto\\BA.
 
+  4. MATERIAL DE CORTE (06/10/2026, microfibra del Upper Trimming). Si el insumo se corta en
+     Mesa de Corte (modulo CO / COB del export, o columna `modulo` de la tabla) y la fila
+     CAMBIA el consumo, al menos una fuente tiene que ser la planilla oficial de Mesa de Corte
+     (un Excel, PDF o PowerPoint de consumos o tizadas que NO este en el repo ni en temporales)
+     o un mail de Pablo Gamboa. Una tizada (.MRK), un patron, una BOM o una cuenta propia no
+     alcanzan: Pablo puede estar probando tizadas. `fak:` vale si la cita dice que Pablo o
+     Mesa de Corte lo confirmo. Listas: `corte_fuente_oficial` de consumosCanon.data.json.
+
 LIMITE CONOCIDO: solo ve el buzon de Fak y los archivos. Lo que se hablo en planta o por
 WhatsApp sin mail no lo encuentra: si existe, se cita como `fak:` o como archivo.
 """
@@ -48,6 +56,7 @@ import json
 import os
 import re
 import sys
+import tempfile
 import unicodedata
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -56,6 +65,9 @@ OC_CARPETA = os.path.join('Z:', os.sep, 'arb', 'oc', 'ocauto', 'BA')
 OC_INDICE = os.path.join(RAIZ, '.arb-cache', 'oc_items.jsonl')
 ARTICULO = r'C:\tmp\ARTICULO.TXT'
 RELACIONES = r'C:\tmp\RELACIONES.TXT'
+
+CANON = os.path.join(RAIZ, 'scripts', '_lib', 'consumosCanon.data.json')
+CARPETAS_PROPIAS = [RAIZ, tempfile.gettempdir()]     # lo que arme yo no es fuente oficial
 
 VENTANA_DIAS = 365
 TOL_VALOR = 0.001        # 0,1 %: regla consumos-entregables
@@ -448,6 +460,42 @@ def _cubierto(m, citados, vistos):
 
 # ------------------------------------------------------------------------- revisar
 
+def canon_corte():
+    """Las listas del freno 4. Si el canon no se puede leer, se cae: un freno que no arranca no frena."""
+    return json.load(io.open(CANON, encoding='utf-8'))['corte_fuente_oficial']
+
+
+def insumos_de_corte(relaciones=RELACIONES, canon=None):
+    """Codigos de insumo que en el export tienen modulo de corte (CO / COB)."""
+    modulos = set((canon or canon_corte())['modulos'])
+    out = set()
+    if os.path.exists(relaciones):
+        for ln in io.open(relaciones, encoding='latin-1'):
+            c = [x.strip() for x in ln.split('\t')]
+            if len(c) >= 7 and c[2] and c[6].upper() in modulos:
+                out.add(c[2])
+    return out
+
+
+def fuente_oficial_de_corte(fu, cita, mails, canon):
+    """¿Esta fuente es la planilla de Mesa de Corte, un mail de Pablo Gamboa o su confirmacion?"""
+    f = fu.strip()
+    fl = f.lower()
+    if fl == 'fak' or fl.startswith('fak:'):
+        return bool(re.search(canon['confirmacion_regex'], normalizar(cita)))
+    if fl.startswith('mail:'):
+        m = buscar_mail(f[5:], mails)
+        return bool(m and re.search(canon['mail_de_regex'], normalizar(m.get('de', ''))))
+    ext = os.path.splitext(fl)[1]
+    if ext in canon['no_alcanza_ext'] or ext not in canon['oficial_ext']:
+        return False
+    ruta = os.path.normcase(os.path.abspath(f))
+    if any(ruta.startswith(os.path.normcase(os.path.abspath(c)) + os.sep) for c in CARPETAS_PROPIAS):
+        return False
+    base = normalizar(os.path.basename(f))
+    return bool(re.search(canon['nombre_oficial_regex'], base)) and not re.search(canon['nombre_excluye_regex'], base)
+
+
 def leer_filas(path):
     with io.open(path, encoding='utf-8-sig', newline='') as f:
         filas = []
@@ -460,7 +508,7 @@ def leer_filas(path):
 
 def revisar_fila(r, mails, unidad=False, ocr=None, textos_oc=None, desc_prod=None,
                  desc_ins=None, hoy=None, cache_texto=None, grupo=None, indexados=None,
-                 memo=None):
+                 memo=None, corte=None, canon=None):
     """Devuelve (rojos, amarillos, notas) de UNA fila."""
     rojos, amarillos, notas = [], [], []
     cache_texto = {} if cache_texto is None else cache_texto
@@ -548,6 +596,18 @@ def revisar_fila(r, mails, unidad=False, ocr=None, textos_oc=None, desc_prod=Non
             rojos.append('el %s no aparece en ninguna cita (si sale de una cuenta, va en la columna cuenta)'
                          % r.get('valor_nuevo'))
 
+    # 4. MATERIAL DE CORTE: planilla de Mesa de Corte o mail de Pablo Gamboa ----------------
+    if not unidad and fuentes:
+        canon = canon or canon_corte()
+        es_corte = insumo in (corte or ()) or r.get('modulo', '').strip().upper() in canon['modulos']
+        actual = a_float(r.get('valor_esperado'))
+        cambia = not (valor is not None and actual is not None and mismo(valor, actual))
+        if es_corte and cambia and not any(fuente_oficial_de_corte(fu, ci, mails, canon)
+                                           for fu, ci in zip(fuentes, citas)):
+            rojos.append('material de corte sin la planilla de Mesa de Corte ni un mail de Pablo Gamboa: '
+                         'una tizada (.MRK), una BOM o una cuenta propia no alcanzan (puede ser una '
+                         'prueba). Preguntarle a Pablo Gamboa antes de cambiar el consumo')
+
     # 2. ANTECEDENTES ---------------------------------------------------------
     productos = grupo if grupo is not None else ([r.get('producto')] if r.get('producto') else [])
     vistos = _vistos(r.get('vistos'))
@@ -575,7 +635,7 @@ def piezas_que_usan(relaciones=RELACIONES):
 
 
 def revisar(path, unidad=False, mails=None, ocr=None, textos_oc=None, desc=None, hoy=None,
-            imprimir=True, usos=None):
+            imprimir=True, usos=None, corte=None):
     """Informe de toda la tabla. Devuelve (hay_rojo, resumen)."""
     filas = leer_filas(path)
     mails = _cache_mails() if mails is None else mails
@@ -593,11 +653,13 @@ def revisar(path, unidad=False, mails=None, ocr=None, textos_oc=None, desc=None,
         if r.get('producto'):
             piezas.setdefault(k, set()).add(r['producto'])
     cache_texto, memo, rojos_tot, amar_tot = {}, {}, 0, 0
+    canon = None if unidad else canon_corte()
+    corte = (set() if unidad else insumos_de_corte(canon=canon)) if corte is None else corte
     resumen = []
     for r in filas:
         k = r.get('codigo') if unidad else r.get('insumo')
         ro, am, no = revisar_fila(r, mails, unidad, ocr, textos_oc, desc_prod, desc_ins, hoy,
-                                  cache_texto, sorted(piezas.get(k, [])), indexados, memo)
+                                  cache_texto, sorted(piezas.get(k, [])), indexados, memo, corte, canon)
         rojos_tot += len(ro)
         amar_tot += len(am)
         etiqueta = '%s %s' % (r.get('producto', ''), k) if not unidad else k
@@ -679,7 +741,8 @@ def selftest():
         return p
 
     C = ['producto', 'insumo', 'valor_nuevo', 'valor_esperado', 'fuente', 'cita', 'cuenta', 'vistos']
-    kw = dict(mails=mails, textos_oc=oc_haartz, desc=desc, hoy=hoy, ocr=ocr_falso, imprimir=False)
+    kw = dict(mails=mails, textos_oc=oc_haartz, desc=desc, hoy=hoy, ocr=ocr_falso, imprimir=False,
+              corte=frozenset())     # los casos de abajo no dependen del export de esta PC
 
     print('frenos del arb — el caso real del 20/08 tiene que dar ROJO por los tres lados')
     # el 20/08 tal como se cargo: sin papel para el 1,4
@@ -714,11 +777,13 @@ def selftest():
     rojo, res = revisar(p, **kw)
     caso('valor que esta en la cita, sin cuenta: verde (id por sufijo)', not rojo)
     p = tabla([['N 390', '1246030223', '0.128', '0.179', planilla, 'consumo ML 0.128', '', '']], C)
-    rojo, res = revisar(p, mails=[], textos_oc=oc_sansuy, desc=({}, {}), hoy=hoy, imprimir=False)
+    rojo, res = revisar(p, mails=[], textos_oc=oc_sansuy, desc=({}, {}), hoy=hoy, imprimir=False,
+                        corte=frozenset())
     caso('Sansuy 22/09 con la planilla de Gamboa: verde', not rojo)
     p = tabla([['N 390', '1246030223', '0.128', '0.179', planilla + '||' + planilla,
                 'M2 0.1792||ancho 1.4', '0.1792/1.4', '']], C)
-    rojo, res = revisar(p, mails=[], textos_oc=oc_sansuy, desc=({}, {}), hoy=hoy, imprimir=False)
+    rojo, res = revisar(p, mails=[], textos_oc=oc_sansuy, desc=({}, {}), hoy=hoy, imprimir=False,
+                        corte=frozenset())
     caso('Sansuy 0,1792/1,4 con OC de 1400 mm: verde', not rojo)
 
     print('lo mal armado tiene que dar ROJO')
@@ -763,6 +828,81 @@ def selftest():
          rojo and 'CARLOS1707TPO0001' in ' '.join(res[0][1]))
     p = tabla([['427VIN005COR01', 'MT2', 'MTL', '', '', '']], CU)
     caso('unidad sin fuente: rojo', revisar(p, unidad=True, usos=usos, **kw)[0])
+
+    print('material de corte: planilla de Mesa de Corte o mail de Pablo Gamboa (Upper Trim, 31/07)')
+    global CARPETAS_PROPIAS
+    propias_antes = CARPETAS_PROPIAS
+    mio = os.path.join(tmp, 'repo')
+    os.makedirs(mio)
+    CARPETAS_PROPIAS = [mio]
+    ID_PABLO = 'E' * 40 + 'PABLOUPPERTRIM001'
+    ID_JEFE = 'F' * 40 + 'CARLOSUPPERTRIM01'
+    mails_ut = [
+        {'id': ID_PABLO, 'fecha': '2026-09-24 10:00', 'de': 'Pablo Gamboa', 'asunto': 'Planilla Upper Trim',
+         'adjuntos': '', 'cuerpo': 'Upper trim patron R2: 25 piezas, largo con demasia 1,60 m, consumo 0,0896 m2 por pieza'},
+        {'id': ID_JEFE, 'fecha': '2026-09-24 11:00', 'de': 'Carlos Baptista', 'asunto': 'Upper Trim',
+         'adjuntos': '', 'cuerpo': 'Para el upper trim usemos consumo 0,0896 m2 por pieza'},
+    ]
+    bom25 = os.path.join(tmp, 'PATAGONIA_UPPER_TRIM_PANEL_(BOM).txt')
+    io.open(bom25, 'w', encoding='utf-8').write('Tizada de corte: M2 de pano: 1,5mx1,4m = 2,1m2 Cantidad de piezas: 29')
+    mrk = os.path.join(tmp, 'Upper Trim DS R1.MRK')
+    io.open(mrk, 'w', encoding='utf-8').write('<LENGTH>153.4729</LENGTH><WIDTH>135.0000</WIDTH><PLACED_ON_TABLE>25</PLACED_ON_TABLE>')
+    plan = os.path.join(tmp, 'CONSUMOS UPPER TRIM R2.csv')
+    io.open(plan, 'w', encoding='utf-8').write('UPPER TRIM;1,60;1,40;25;0,0896')
+    plan_mia = os.path.join(mio, 'CONSUMOS UPPER TRIM R2.csv')
+    io.open(plan_mia, 'w', encoding='utf-8').write('UPPER TRIM;1,60;1,40;25;0,0896')
+    rel = os.path.join(tmp, 'RELACIONES.TXT')
+    io.open(rel, 'w', encoding='latin-1').write(
+        'MP8404         \t 1    \t 9PQ009-BK25-2  \t MICROFIBER SUEDE \t MT2  \t   0,07240000\tCO        \tCUM            \t\n'
+        'MP8404         \t 1    \t AD - ADFA15    \t ADHESIVO FA      \t LTS  \t   0,02050000\tTAP       \tPRDTAP         \t\n'
+        'MP8146         \t 1    \t 427TEL002COR01 \t THINSULATE       \t MT2  \t   1,06870000\tCOB       \tCUMB           \t\n')
+    CT = {'9PQ009-BK25-2'}
+    ku = dict(mails=mails_ut, textos_oc={}, desc=({}, {}), hoy=hoy, imprimir=False, corte=CT)
+    VU = ID_PABLO[-17:] + ': visto | ' + ID_JEFE[-17:] + ': visto'
+
+    def corta(res):
+        return 'material de corte' in ' '.join(res[0][1])
+
+    caso('el export dice cuales son de corte (CO y COB, no TAP)',
+         insumos_de_corte(rel) == {'9PQ009-BK25-2', '427TEL002COR01'})
+    p = tabla([['MP8404', '9PQ009-BK25-2', '0.07241379', '0.058', bom25, '2,1m2 Cantidad de piezas: 29', '2.1/29', VU]], C)
+    rojo, res = revisar(p, **ku)
+    caso('31/07: el pano y las 29 piezas de la BOM de 2025 dan rojo', rojo and corta(res))
+    p = tabla([['MP8404', '9PQ009-BK25-2', '0.08287537', '0.0724', mrk + '||' + mrk + '||' + mrk,
+                '<LENGTH>153.4729||<WIDTH>135.0000||<PLACED_ON_TABLE>25', '153.4729*135.0000/10000/25', VU]], C)
+    rojo, res = revisar(p, **ku)
+    caso('una tizada .MRK sola da rojo (puede ser una prueba)', rojo and corta(res))
+    p = tabla([['MP8404', '9PQ009-BK25-2', '0.0896', '0.0724', plan, '25;0,0896', '', VU]], C)
+    rojo, res = revisar(p, **ku)
+    caso('con la planilla de Mesa de Corte: verde', not rojo)
+    p = tabla([['MP8404', '9PQ009-BK25-2', '0.0896', '0.0724', plan_mia, '25;0,0896', '', VU]], C)
+    rojo, res = revisar(p, **ku)
+    caso('la misma planilla armada adentro del repo: rojo', rojo and corta(res))
+    p = tabla([['MP8404', '9PQ009-BK25-2', '0.0896', '0.0724', 'mail:' + ID_PABLO, 'consumo 0,0896 m2 por pieza', '',
+                ID_JEFE[-17:] + ': visto']], C)
+    rojo, res = revisar(p, **ku)
+    caso('con el mail de Pablo Gamboa: verde', not rojo)
+    p = tabla([['MP8404', '9PQ009-BK25-2', '0.0896', '0.0724', 'mail:' + ID_JEFE, 'consumo 0,0896 m2 por pieza', '',
+                ID_PABLO[-17:] + ': visto']], C)
+    rojo, res = revisar(p, **ku)
+    caso('con el mail de otra persona: rojo', rojo and corta(res))
+    p = tabla([['MP8404', '9PQ009-BK25-2', '0.0896', '0.0724', 'fak:', 'usa 0,0896', '', VU]], C)
+    rojo, res = revisar(p, **ku)
+    caso('fak: sin nombrar a Pablo: rojo', rojo and corta(res))
+    p = tabla([['MP8404', '9PQ009-BK25-2', '0.0896', '0.0724', 'fak:', 'Pablo Gamboa me confirmo 0,0896', '', VU]], C)
+    rojo, res = revisar(p, **ku)
+    caso('fak: con la confirmacion de Pablo: pasa en amarillo', not rojo and res[0][2])
+    p = tabla([['MP8404', '9PQ009-BK25-2', '0.0724', '0.0724', bom25, 'Cantidad de piezas: 29', '', VU]], C)
+    rojo, res = revisar(p, **ku)
+    caso('fila que no cambia el consumo: el freno de corte no salta', not corta(res))
+    p = tabla([['MP8404', 'AD - ADFA15', '0.07241379', '0.03', bom25, '2,1m2 Cantidad de piezas: 29', '2.1/29', '']], C)
+    rojo, res = revisar(p, **ku)
+    caso('un insumo que no es de corte: el freno de corte no salta', not corta(res))
+    p = tabla([['MP9000', 'NUEVO-001', '0.07241379', '', bom25, '2,1m2 Cantidad de piezas: 29', '2.1/29', '', 'CO']],
+              C + ['modulo'])
+    rojo, res = revisar(p, **ku)
+    caso('insumo nuevo con modulo CO en la tabla: rojo', rojo and corta(res))
+    CARPETAS_PROPIAS = propias_antes
 
     print('piezas sueltas')
     caso('anchos: "X 1400MM ANCHO"', anchos_del_bloque('ESPESOR X 1400MM ANCHO C/') == [1.4])

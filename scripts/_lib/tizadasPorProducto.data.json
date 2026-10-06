@@ -1,0 +1,15 @@
+{
+  "_comentario": "Mapa producto del arb -> carpeta donde Mesa de Corte guarda las tizadas (.MRK) de su material de corte. Lo lee scripts/_tizadaVsArb.py. Una familia se agrega cuando se toca su BOM, y la carpeta se confirma ABRIENDOLA (no por el nombre). Las subcarpetas con 'obsoleto' en el nombre se leen pero no mandan.",
+  "familias": [
+    {
+      "familia": "Upper Trimming (Cozzuol, VW427)",
+      "productos": ["MP8404", "MP8405"],
+      "insumo_empieza": "9PQ009",
+      "carpetas": [
+        "Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\Proyecto\\VWA\\VW427-1LA_K-PATAGONIA\\00000-Varios a Revisar\\Consola Central_Upper Trim Panel\\02 - Seguimiento y Revisiones\\UPPER TRIMING",
+        "Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\Proyecto\\VWA\\VW427-1LA_K-PATAGONIA\\00000-Varios a Revisar\\Consola Central_Upper Trim Panel\\07 - Obsoletos"
+      ],
+      "fuente": "Carpetas abiertas el 06/10/2026: R2 (30/07) y Upper Trim DS R1 (15/09) en la primera; ONE/TWO (20/02) en Obsoletos."
+    }
+  ]
+}

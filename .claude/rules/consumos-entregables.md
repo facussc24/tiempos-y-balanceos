@@ -18,6 +18,16 @@ EJECUTAR (cargar en arb/Supabase, enviar a cliente):
    (`scripts/_lib/respaldoCarga.py`, BLOQUEANTE; formato en el skill `arb-operar`).
    Caso: TPO del Top Roll, 0,2526 / 1,4 con un 1,4 sin papel y el pedido de Carlos sin leer.
 
+6. **El consumo de un material de corte (vinilo, tela, microfibra) no se carga ni se cambia sin
+   la planilla oficial de Mesa de Corte o la confirmacion de Pablo Gamboa** (Fak, 06/10/2026:
+   *"no cambiamos el consumo sin un excel oficial o una confirmacion oficial... ante la duda le
+   preguntamos a Pablo Gamboa"*). Una tizada (.MRK) sola no alcanza: puede ser una prueba. Tampoco
+   una BOM de proyecto, un flujograma ni una cuenta mia. Freno 4 de `respaldoCarga.py`
+   (BLOQUEANTE, listas en `corte_fuente_oficial` del canon). `python scripts/_tizadaVsArb.py
+   <producto>` compara el arb con la tizada mas nueva: es un aviso opcional para ir a preguntar,
+   nunca la fuente. Caso: microfibra del Upper Trimming, 0,0724 cargado el 31/07 con el paño y
+   las piezas de una BOM de 2025.
+
 Enforcement: hook `consumos-entregable-guard.sh` (PreToolUse, logica en
 `scripts/_lib/guardianes.mjs`) recuerda el checklist 1×/h al detectar trabajo de
 consumos/entregables — como `additionalContext`, no bloquea. Que cuenta como "trabajo de

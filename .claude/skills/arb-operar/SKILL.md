@@ -17,8 +17,8 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 > | Alta de CÓDIGOS en el maestro, leer la ficha, `Es Sub-Producto` | `_arbInsumoCampos.py` (`--leer`, `--alta tabla.csv --como <HERMANO>`, `--subproducto`) | 12/12 y 2/2 el 23/09 · 3/3 y 2/2 el 02/10 (`--comprado`). **Dos pasadas por código**: `--apply` y un `--leer` al final; la descripción, en MAYÚSCULAS |
 > | Cambiar la `Descripción` del maestro | `_arbDescripcion.py`; dentro del formulario se TABULA (`reference/maestro-de-insumos.md`) | 3/3 el 01/09 |
 > | Borrar líneas | **Se pone el consumo en 0 y el arb borra la línea** (dato de Fak, 05/10/2026): `_arbCargar.py` con `valor_nuevo` 0; verificar en el export que la línea DESAPARECIÓ | **16/16 el 05/10** (Armrest DP: el diff del arb entero dio solo las bajas pedidas) |
-> | Semielaborado nuevo con BOM propia | **Va en DOS maestros**: INSUMO (`_arbInsumoCampos.py --alta`, Es Sub-Producto S) **y ARTÍCULO** en `Productos Terminados` → botón `Productos Terminados` (`Maestro de Productos Terminados - BA`), con `Es Subproducto S/N/D = S`. Sin el artículo, Relaciones contesta `Artículo No Existe` y no deja cargarle BOM (Fak, 05/10/2026: *"semielaborados deben ser también producto"*). Ficha del hermano `INY-APB0001-V1`: Línea `095` · Unidad `UNID` · Doble Medida `N` · Es Subproducto `S` · Stock Negativo `N` · Fabricación Propia `S` · Cliente `95`; en `Altas` los flags vienen en `N` por defecto (Es Subproducto y Fabricación Propia hay que cambiarlos a `S`) y Producción Máxima / Mínimo Días en `0.0000`; para salir, solapa `Escape` (651,67) + `Sí` | 4/4 el 05/10 con un script de prueba (scratchpad), todavía sin script en el repo |
-> | Salir de `Maestro de Relaciones` sin crashear | Solapa **`Escape`** (click 410,68 de la ventana) → cartel `Desea Finalizar ??` → click real en **`Sí`**. Es la salida del propio programa, no un `WM_CLOSE` | 2/2 el 05/10, arb sano después. Ojo: después de varios exports sale el cartel de Visual C++ (`HEAP CORRUPTION`): `Omitir` y seguir |
+> | Semielaborado nuevo con BOM propia | **Va en DOS maestros**: INSUMO (`_arbInsumoCampos.py --alta`, Es Sub-Producto S) **y ARTÍCULO** en `Productos Terminados` → botón `Productos Terminados` (`Maestro de Productos Terminados - BA`), con `Es Subproducto S/N/D = S`. Sin el artículo, Relaciones contesta `Artículo No Existe` y no deja cargarle BOM (Fak, 05/10/2026: *"semielaborados deben ser también producto"*). Ficha del hermano `INY-APB0001-V1`: Línea `095` · Unidad `UNID` · Doble Medida `N` · Es Subproducto `S` · Stock Negativo `N` · Fabricación Propia `S` · Cliente `95`; en `Altas` los flags vienen en `N` por defecto (Es Subproducto y Fabricación Propia hay que cambiarlos a `S`) y Producción Máxima / Mínimo Días en `0.0000`; para salir, solapa `Escape` (651,67) + `Sí`. **Script: `_arbArticulo.py`** (`abrir`, `alta COD "DESC" --apply`, `leer`, `export` del maestro de artículos, `salir`) | 4/4 el 05/10 · **6/6 el 06/10** (Insert e IP Pad con espuma, ya con el script del repo; verificado en el export de `ARTICULO.TXT`) |
+> | Salir de `Maestro de Relaciones` sin crashear | Solapa **`Escape`** (click 410,68 de la ventana) → cartel `Desea Finalizar ??` → click real en **`Sí`**. Es la salida del propio programa, no un `WM_CLOSE`. Script: `_arbArticulo.py salir-relaciones` (y `omitir` para el cartel de Visual C++) | 2/2 el 05/10, arb sano después. Ojo: después de varios exports sale el cartel de Visual C++ (`HEAP CORRUPTION`): `Omitir` y seguir |
 >
 > **Con Fak mirando, la pantalla se toma UNA vez por cambio y se vigila** (Fak, 02/10/2026: *"me
 > molesta que tomes el control de la pc y hagas esa boludez de abrir cerrar abrir cerrar"*,
@@ -32,6 +32,16 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 > - **Arb colgado: lo resuelvo yo.** `python scripts/_arbVer.py colgado` (sale 0 si esta colgado
 >   y el vigilante activo) → `touch ~/.claude/.arb-cerrar-ok` → `taskkill //F //PID <pid>` →
 >   esperar al vigilante. A Fak se le avisa, no se le pide nada (regla `arb-no-cerrar.md`).
+> - **Un `no pude poner el foco` o `la ventana no esta activa` en medio de una tanda es Fak que
+>   volvio a la PC: se corta ahi y se le avisa. No se reintenta.** El 06/10/2026 reintente la
+>   pieza y dos letras de su teclado cayeron en la celda del codigo (quedo `st46030223` en
+>   pantalla, sin grabar, y el arb abrio `Insumo No Existe`). La PC quieta se mide ANTES de cada
+>   toma (`GetLastInputInfo`), no solo al empezar: mis propios clicks la ponen en cero, asi que
+>   durante la tanda la unica señal es esa falla de foco.
+> - **Dos carteles de Visual C++ seguidos despues de un export y `Responding: False` = colgado**
+>   (06/10/2026, tras 6 exports en 12 minutos): `Omitir` ya no lo saca. Se cierra y lo reabre el
+>   vigilante (tardo 2 min); lo primero al volver es exportar y comparar con el ultimo export
+>   bueno. Para no llegar ahi: un export por tanda, no uno por material.
 > - Un codigo viejo puede traer **basura en `Posee PAPP/PSW`** y deja `&Acepta` apagado: desde
 >   el 02/10 `_arbDescripcion.aceptar()` la trata como vacio (pone `S`) y, si el TAB no cae en el
 >   boton, dice el cartel o el campo y deja la foto en `~/arb_fotos/fallo_maestro.png`.
@@ -374,6 +384,13 @@ y, si hace falta, `cuenta` y `vistos`. Los tres frenos viven en `scripts/_lib/re
 - Cada mail de los ultimos 12 meses que habla del consumo de ese insumo va citado o en
   `vistos` (`<id>: motivo` o `hilo:<asunto>: motivo`, separados por `|`).
 - `fak:` como fuente = decision de Fak en el chat: pasa en amarillo y queda en el journal.
+- **Material de corte (modulo CO / COB) que cambia de consumo — freno 4, 06/10/2026:** al menos
+  una fuente tiene que ser la planilla oficial de Mesa de Corte (Excel, PDF o PowerPoint de
+  consumos o tizadas, fuera del repo) o un mail de Pablo Gamboa. Una tizada `.MRK`, una BOM de
+  proyecto o una cuenta propia NO alcanzan (Pablo puede estar probando tizadas): se le pregunta
+  a el. `fak:` vale solo si la cita dice que Pablo o Mesa de Corte lo confirmo. Para un insumo
+  nuevo, la tabla lleva la columna `modulo`. Aviso opcional, nunca fuente:
+  `python scripts/_tizadaVsArb.py <producto>` compara el arb con la tizada mas nueva.
 Solo el informe: `python scripts/_lib/respaldoCarga.py --revisar x.csv [--unidad]`.
 Nace del TPO del Top Roll: 0,2526 / 1,4 cargado el 20/08 con un 1,4 sin papel, rollo de
 835 mm y el pedido de Carlos del 17/07 sin mirar (memoria `reference_tabla_consumo_mesa_corte`).

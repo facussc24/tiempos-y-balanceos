@@ -178,5 +178,34 @@
     ],
     "enforcement": "scripts/_arbUnidad.py no pasa un insumo a una unidad de esta lista con --apply.",
     "fuente": "Fak 28/09/2026, grampas de Patagonia: 'es mejor dejar en el sistema la cantidad de grampas en unidades porque si ponemos en caja alguien que lee el apqp no va a saber cuantas grampas trae cada caja'. Ademas la unidad CAJ esta anulada en el arb ('Unidad Esta Anulado')."
+  },
+  "corte_fuente_oficial": {
+    "regla_corta": "El consumo de un material de corte (vinilo, tela, microfibra) no se carga ni se cambia sin la planilla oficial de Mesa de Corte o la confirmacion de Pablo Gamboa.",
+    "regla": "Una tizada (.MRK) o un patron solos no son fuente: Pablo puede estar probando tizadas. Tampoco una BOM de proyecto, un flujograma ni una cuenta propia. Ante la duda se le pregunta a Pablo Gamboa; el chequeo contra la tizada (scripts/_tizadaVsArb.py) es un aviso opcional, nunca la fuente del numero.",
+    "fuente": "Fak 06/10/2026 (Upper Trimming: el 31/07 se cargo 0,0724 con el pano y las piezas de la BOM de agosto de 2025; la planilla de Pablo decia 0,058): \"no cambiamos el consumo sin un excel oficial o una confirmacion oficial... ante la duda le preguntamos a Pablo Gamboa\", \"capaz Pablo Gamboa esta probando tizadas y sacamos el consumo de ahi y eso no va\".",
+    "modulos": [
+      "CO",
+      "COB"
+    ],
+    "mail_de_regex": "gamboa",
+    "confirmacion_regex": "gamboa|\bpablo\b|mesa de corte",
+    "no_alcanza_ext": [
+      ".mrk",
+      ".dxf",
+      ".dwg",
+      ".dsn",
+      ".plt",
+      ".bak"
+    ],
+    "oficial_ext": [
+      ".xlsx",
+      ".xlsm",
+      ".xls",
+      ".csv",
+      ".pdf",
+      ".pptx"
+    ],
+    "nombre_oficial_regex": "consumo|tizada|usos proyecto|piezas[ _]patagonia|caracteristicas piezas",
+    "nombre_excluye_regex": "\bbom\b|modificaciones|\barb\b"
   }
 }
