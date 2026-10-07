@@ -215,6 +215,15 @@ python scripts/_bomLegajo.py <familia> --fecha dd/mm/aaaa --act "..." --apply
 - El script no borra nada: mueve el anterior a la carpeta obsoleta que ya exista en esa
   subcarpeta (`Obsoleto`, `Obsoletos`, `0_Obsoleto`) o crea `Obsoleto`, y recien despues de
   que el PDF nuevo quedo escrito.
+- **El que avisa si falto es `node scripts/_cierreSesion.mjs`** (`scripts/_lib/bomLegajoCheck.mjs`).
+  Si hay una difusion guardada DESPUES del PDF del legajo, compara la BOM pieza por pieza (sin
+  el bloque ACTUALIZACIONES): da rojo si una pieza difiere o si la difusion trae una pieza que
+  el PDF del legajo no tiene; volver a guardar una difusion con la misma BOM no lo pone en rojo
+  (06/10/2026). Por eso el orden es difusion primero y legajo despues: una difusion con paginas
+  de semielaborados (`INY-...-V1`) guardada despues del legajo queda en rojo, porque el PDF del
+  legajo no los lleva como pagina. **Lo que el control NO ve es una baja de pieza** (la difusion
+  trae las que quedan, iguales): ahi se saca la pieza de `bomLegajos.data.json` y se regenera
+  el PDF del legajo sin esperar el aviso.
 
 ## 5. El cuerpo del mail
 

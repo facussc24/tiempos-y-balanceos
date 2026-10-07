@@ -1,7 +1,7 @@
 {
   "_fuente": "Fak 22/09/2026: cada vez que se modifica una BOM, la BOM ultimo nivel del arb va al legajo APQP, casillero 7, subcarpeta de BOM; la anterior pasa a Obsoleto. 'sino siempre me va a quedar desactualizado el apqp'.",
   "_como": "python scripts/_bomLegajo.py <familia> --fecha dd/mm/aaaa --act \"...\" [--apply]. Una familia = TODAS sus piezas, no solo las que cambiaron.",
-  "_control": "scripts/_cierreSesion.mjs marca FALTA si el PDF de difusion mas nuevo de la carpeta 'biblioteca' de una familia es posterior a su BOM ultimo nivel del legajo. 'biblioteca' es relativa a 'raiz_biblioteca' (~ = carpeta del usuario).",
+  "_control": "scripts/_cierreSesion.mjs marca FALTA si un PDF de difusion de la carpeta 'biblioteca' de una familia es posterior a su BOM ultimo nivel del legajo Y trae una BOM que ese PDF del legajo no tiene (se compara pieza por pieza, sin el bloque ACTUALIZACIONES: scripts/_lib/bomLegajoCheck.mjs). 'biblioteca' es relativa a 'raiz_biblioteca' (~ = carpeta del usuario).",
   "raiz_biblioteca": "~\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\2. CONSUMO DE MATERIAL BOM\\BOMS",
   "familias": {
     "Insert": {
