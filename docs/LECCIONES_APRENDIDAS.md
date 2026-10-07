@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **07/10 — Lo que deja otra IA (Gemini) se audita, pero una «decisión de Fak» que cuenta se verifica PREGUNTANDO, no se deshace antes de la respuesta**: volví a poner la columna derecha del plan de reacción que Gemini sacó porque chocaba con el canon, y era pedido de Fak (*"habíamos dicho que eso se debía corregir"*). Lo que sí estaba mal: sector inventado, HO-994 sin fila en el listado, la portada (*"esa imagen no debe estar"*), hojas sin número.
+
 - **05-06/10 — Un filtro que busca por palabras no se promete como garantía; y si Fak ya pidió algo y aceptó el riesgo, mi regla de freno no le gana a su pedido: se hace y el riesgo va en un renglón** (dejé apagados los mails de Carlos por tres auditorías con fallas; Fak: *"lo único que tenías que hacer era eso"*). Graduado a las memorias `project_mails_del_equipo_a_la_nube` y `project_claudes_por_area`.
 - **03-04/10 — Probar lo que construyo para otros (asistente de área), cinco reglas:** la prueba de «esto se niega» se arma con el de mentira puesto; una hoja de alto fijo se juzga mirando la imagen del PDF; a un agente con Word o Excel se le pone tope y el que no escribe hace 10 minutos se mira; dos exámenes se comparan con los MISMOS jueces, a ciegas y con la regla escrita antes; y nada se prueba contra la carpeta de verdad (`--simular` o copia). Graduado a la memoria `project_claudes_por_area`.
 - **03/10 — «Borrá lo temporal al terminar» sin decir CUÁL termina en un borrado por comodín: un agente se llevó 38 borradores ajenos de la carpeta que comparten todos.** Graduado a la memoria `reference_notebook_capacidad_agentes_con_navegador` (carpeta propia con su nombre; se borra esa y nada más).
@@ -46,6 +48,8 @@ incidente vive en los snapshots.
 - **El chequeo frena, no decide; y la objecion de Fak es un dato, no una opinion a refutar: ante un "no anda", preguntar como falla.** Graduado a la memoria `feedback_el_chequeo_frena_no_decide` (y `cad-3d.md` GATE 0).
 - **Un plan de accion heredado se arrastra fila por fila: fusionar dos filas pierde alcance, media fila que se cae no la ve nadie, y un issue no se cierra con evidencia de una parte del alcance.** Graduado a la memoria `plan_heredado_se_arrastra_fila_por_fila`.
 
+- **07/10 — Un mail que Fak pide «con lo que encuentres» lleva UNA pregunta y lo mínimo para entenderla, no el informe del agente pegado** (al de Pablo sobre 9465/9466 le metí arb, hilo, tela y las hojas cortadas: 611 caracteres, dos temas; Fak: *"es una remada, ni se entiende... olvidate"*). Lo junta el agente; el mail lo recorta uno antes de abrirlo.
+
 - **05/10 — Cuando el cierre-guard frena un «si querés, te armo X», se arma lo que Fak PIDIÓ, no lo que yo propuse de más** (armé dos mails, uno a Marianna que nadie pidió; Fak: *"solo vamos a mandar uno... a Nico el AMFE y el flujograma para que actualice"*). Graduado a la memoria `feedback_el_pedido_se_ejecuta_como_viene`.
 - **05/10 — Antes de preguntarle a Fak un dato técnico, buscar en SUS mails enviados de la semana: los valores de costura los había mandado ese día a las 10:02; y hot melt es rodillo, siempre** (*"ya deberías saber la respuesta"*). Graduado a la memoria `feedback_la_info_ya_la_tengo_no_preguntar`.
 - **05/10 — Para un código el arb es la fuente: lo que otra área usa y no está en el arb ni en ningún papel, lo tiene mal; en un mail, una sola pregunta y al final.** Graduado a la memoria `feedback_arb_es_la_fuente_de_un_codigo`.
@@ -64,6 +68,8 @@ incidente vive en los snapshots.
 - **25/09 — Una difusion que corrige un error PROPIO dice solo el valor que queda, en el mail y en el PDF** (Fak: *"si ponemos el antes y el despues me escrachas"*). Graduado a la memoria `documento_no_confiesa_como_se_hizo`.
 
 ## Entregables y comunicacion con Fak
+
+- **07/10 — Con Fak se habla en castellano también en los avisos cortos mientras trabajo** (una tanda entera de avisos y el cierre me salieron en inglés: *"dejá de hablar en inglés"*). Y un pedido de videos para alguien que tiene editor es de ORIGINALES completos: preguntar o deducir el uso antes de editar (*"él quería videos completos... tiene una editorial de videos"*).
 
 - **06/10 — Un archivo que Fak nombra y no aparece con ese nombre no se cambia por el parecido sin mostrárselo («tomé este, de esta ruta, ¿es?» va ANTES de trabajar encima), y lo que se entrega tiene el tamaño del pedido** (pidió los tiempos de costura de hoy: cargué un libro de 12 hojas, le sumé una hoja con formato mío y recién al tercer reclamo quedó en dos hojas con cuatro filas: *"solo estos tiempos tienen que estar en el excel"*).
 
