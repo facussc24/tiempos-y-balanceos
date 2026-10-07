@@ -19,7 +19,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-    correr, clasificar, cargarPrivados, personaQueSube, carpetaDeMails, autorDe, carpetaSegura, normalizar, paraTemas, nombraTema, casillaLimpia,
+    correr, clasificar, cargarPrivados, personaQueSube, carpetaDeMails, carpetaDeMailsIndicada, autorDe, carpetaSegura, normalizar, paraTemas, nombraTema, casillaLimpia,
     esDeAnthropic, identidadReal, mismaPc, nombreEnPalabras, paraPublicar, NOMBRE_AVISO, ARCHIVO_ESTADO, ARCHIVO_SUBIDOS, GRACIA_HORAS, escribirLote,
 } from '../../tools/claude-area/mails_area.mjs';
 import { buscarPersona } from '../../scripts/_paquete.mjs';
@@ -751,6 +751,44 @@ describe('mails_area: nombres y carpetas', () => {
         expect(carpetaDeMails(path.join(pc.raizNube, '1- PUBLICADO'))).toBeNull();
         expect(carpetaDeMails(path.join(pc.t, 'no-esta', 'CLAUDE POR AREA'))).toBeNull();
         expect(carpetaDeMails('')).toBeNull();
+    });
+    it('la carpeta de mails dicha por su ruta: existe, se llama «mails» y esta adentro de la biblioteca de Ingenieria', () => {
+        const t = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-area-mails-'));
+        temporales.push(t);
+        const bien = path.join(t, 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General', '_CUARENTENA_Claude Barack', 'mails');
+        const afuera = path.join(t, 'pendrive', 'Claude Barack', 'mails');
+        const otroNombre = path.join(t, 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General', 'Claude Barack', 'correos');
+        const deSiempre = path.join(t, 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General', 'Claude Barack', 'mails');
+        const otraCarpeta = path.join(t, 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General', '1- GENERAL', 'mails');
+        for (const d of [bien, afuera, otroNombre, deSiempre, otraCarpeta]) fs.mkdirSync(d, { recursive: true });
+        expect(carpetaDeMailsIndicada(bien)).toBe(bien);
+        expect(carpetaDeMailsIndicada(deSiempre)).toBe(deSiempre);
+        expect(carpetaDeMailsIndicada(afuera)).toBeNull();
+        expect(carpetaDeMailsIndicada(otroNombre)).toBeNull();
+        expect(carpetaDeMailsIndicada(otraCarpeta)).toBeNull();
+        // una carpeta de mails que es un enlace a otro lado tampoco (junction: no pide permisos de administrador)
+        const enlace = path.join(t, 'otra PC', 'Ingeniería y Proyecto - General', 'Claude Barack');
+        fs.mkdirSync(path.dirname(enlace), { recursive: true });
+        fs.symlinkSync(path.join(t, 'pendrive', 'Claude Barack'), enlace, 'junction');
+        expect(fs.existsSync(path.join(enlace, 'mails'))).toBe(true);
+        expect(carpetaDeMailsIndicada(path.join(enlace, 'mails'))).toBeNull();
+        expect(carpetaDeMailsIndicada(path.join(t, 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General', 'no-esta', 'mails'))).toBeNull();
+        expect(carpetaDeMailsIndicada('')).toBeNull();
+    });
+    it('una PC que sube solo sus mails: con --carpeta-mails sube ahi sin «CLAUDE POR AREA», y afuera de la biblioteca no sube', async () => {
+        const pc = armarPc({ personas: [{ ...CARLOS, mails_acordado: '2026-10-01' }], conHermana: false, nombreRaiz: 'no se usa' });
+        const destino = path.join(pc.t, 'biblioteca', 'Ingeniería y Proyecto - General', '_CUARENTENA_Claude Barack', 'mails');
+        fs.mkdirSync(destino, { recursive: true });
+        const trabajo = mail({ asunto: 'Plano nuevo' });
+        const r = await corre(pc, { raizNube: undefined, carpetaMails: destino, fuenteJsonl: fuente(pc, [{ t: 'buzon', casilla: CASILLA }, trabajo, mail({ asunto: 'Recibo de sueldo' })]) });
+        expect(r.resumen).toMatchObject({ resultado: 'ok', entrada: 1, cuarentena: 1 });
+        expect(archivos(path.join(destino, '_entrada'))).toEqual([path.join('c.prueba', '20261005-160000.jsonl')]);
+        const pc2 = armarPc({ personas: [{ ...CARLOS, mails_acordado: '2026-10-01' }], conHermana: false, nombreRaiz: 'no se usa' });
+        const afuera = path.join(pc2.t, 'pendrive', 'mails');
+        fs.mkdirSync(afuera, { recursive: true });
+        const r2 = await corre(pc2, { raizNube: undefined, carpetaMails: afuera, fuenteJsonl: fuente(pc2, [mail()]) });
+        expect([r2.codigo, r2.resumen.resultado]).toEqual([6, 'sin_nube']);
+        expect(archivos(afuera)).toEqual([]);
     });
 });
 

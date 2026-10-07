@@ -47,6 +47,8 @@
  * Uso (desde su instalacion, `<casa>\publicado\programas\`):
  *   node mails_area.mjs --home C:\ClaudeBarack --raiz-nube "<...>\CLAUDE POR AREA" --estado <carpeta de estado>
  *        [--simular] [--max-minutos 10] [--dias-atras 90]
+ *   o, en una PC que sube solo sus mails (sin la tarea del asistente), en vez de --raiz-nube:
+ *        --carpeta-mails "<biblioteca de Ingenieria>\...\mails"
  * Escribe UN renglon JSON con el resultado. Codigos: 0 bien (incluye "apagado", "primer_dia", "pausado" y "parcial por tiempo") -
  * 1 error - 3 la fila no trae la casilla o el buzon abierto es otro - 4 Outlook clasico no esta abierto o no contesta
  * (se reintenta) - 5 falta completar lo privado - 6 no se ve la carpeta de la nube.
@@ -421,6 +423,21 @@ export function carpetaDeMails(raizNube) {
     return esCarpeta(hermana) && !esEnlace(hermana) ? path.join(hermana, 'mails') : null;
 }
 
+/**
+ * La carpeta de mails dicha por su ruta (`--carpeta-mails`), para una PC que sube SOLO sus mails, sin el resto del
+ * asistente: el 07/10/2026 la PC de Carlos quedo sin la tarea completa y «CLAUDE POR AREA» paso a cuarentena, y Fak quiere
+ * seguir recibiendo sus mails. Tiene que existir, llamarse «mails», colgar de «Claude Barack» (o «_CUARENTENA_Claude
+ * Barack»), estar adentro de la biblioteca de Ingenieria y no ser un enlace (ni ella ni la de arriba): a un pendrive, a
+ * una copia o a otra carpeta de la biblioteca (que nadie lee como mails) no van.
+ */
+export function carpetaDeMailsIndicada(ruta) {
+    if (!ruta) return null;
+    const r = path.resolve(ruta);
+    if (normalizar(path.basename(r)) !== 'mails' || !esCarpeta(r) || esEnlace(r) || esEnlace(path.dirname(r))) return null;
+    if (!/^(?:_cuarentena_)?claude barack$/.test(normalizar(path.basename(path.dirname(r))))) return null;
+    return r.split(/[\\/]+/).map(normalizar).includes('ingenieria y proyecto - general') ? r : null;
+}
+
 /** El nombre de la carpeta de la persona: lo de antes de la arroba de su casilla (con el dominio si no es el de la empresa). */
 export function autorDe(persona) {
     const mail = casillaLimpia(persona?.mail);
@@ -659,8 +676,8 @@ export async function correr(opciones) {
     if (!casilla || !autor) return salir('sin_casilla', { detalle: 'la fila de la persona no trae su casilla de mail' });
     if (esPrivada(casilla, priv)) return salir('privado', { detalle: 'la casilla de esta persona esta en la lista de lo privado' });
 
-    // 3) a donde: la carpeta de mails de la biblioteca de Ingenieria
-    const carpetaMails = carpetaDeMails(opciones.raizNube);
+    // 3) a donde: la carpeta de mails de la biblioteca de Ingenieria (al lado de «CLAUDE POR AREA», o dicha por su ruta)
+    const carpetaMails = opciones.carpetaMails ? carpetaDeMailsIndicada(opciones.carpetaMails) : carpetaDeMails(opciones.raizNube);
     if (!carpetaMails) return salir('sin_nube', { detalle: 'no veo la biblioteca de Ingenieria (se reintenta)' });
 
     // La PC esta lista: la persona se entera ANTES de que se lea nada.
@@ -791,7 +808,7 @@ if (esElPrograma) {
     if (path.basename(aqui).toLowerCase() !== 'programas' || path.basename(path.dirname(aqui)).toLowerCase() !== 'publicado' || !mismaRuta(a.home, path.resolve(aqui, '..', '..'))) {
         fin({ resultado: 'error', detalle: 'este programa corre solo desde su instalacion y con las listas de esa instalacion' }, 1);
     }
-    correr({ home: a.home, raizNube: a.raizNube, estado: a.estado, simular: a.simular, maxMinutos: a.maxMinutos, diasAtras: a.diasAtras })
+    correr({ home: a.home, raizNube: a.raizNube, carpetaMails: a.carpetaMails, estado: a.estado, simular: a.simular, maxMinutos: a.maxMinutos, diasAtras: a.diasAtras })
         .then(({ codigo, resumen }) => fin(resumen, codigo))
         .catch((e) => fin({ resultado: 'error', detalle: String(e && e.message ? e.message : e).slice(0, 200) }, 1));
 }

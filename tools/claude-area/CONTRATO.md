@@ -532,6 +532,19 @@ que sí dependen de ella: un día de espera antes de copiar cada mail, y una car
 - **Lo que no ve** (está dicho en el aviso de la persona): un mail personal que no use ninguna palabra de la red, y alguien
   de Dirección o de Recursos Humanos que no esté en la lista. Lo que ya subió no lo retira este programa: lo saca Ingeniería.
 - **Las pruebas no tocan Outlook**: con `CLAUDE_AREA_SIN_OUTLOOK=1` el lector contesta «cerrado» sin engancharse.
+- **Una PC que sube SOLO sus mails** (07/10/2026, Carlos: la «actualización limpia» le sacó la tarea completa y
+  `CLAUDE POR AREA` / `Claude Barack` pasaron a `_CUARENTENA_…`): `mails_solo/instalar_mails_solo.ps1` (lo lanza
+  `Mails-<persona>.cmd`) registra la tarea «Barack - mails de <persona>» (al iniciar sesión, 10 minutos después, y cada
+  4 horas, lo que dice el aviso de la persona), que corre `mails_solo/subir_mails.ps1` → `mails_area.mjs --carpeta-mails
+  <biblioteca>\…\mails`. La carpeta dicha por su ruta tiene que existir, llamarse «mails», colgar de `Claude Barack` (o
+  `_CUARENTENA_Claude Barack`), estar adentro de la biblioteca de Ingeniería y no ser un enlace. Los controles del programa
+  (la fila, lo privado, el buzón, el día de gracia, el aviso) son los mismos; **lo que cambia**: no hay paquete firmado
+  (el instalador toma las listas publicadas, y cada pasada solo toma de la nube lo que APAGA —la fila de la PC que ya no
+  dice `sube`— o ENDURECE —una lista de lo privado que tiene todo lo de la instalada—; prender o aflojar es volver a
+  correr el instalador), y el tablero no ve esta PC: cada pasada deja `<carpeta de mails>\_salud\<PC>.json` (el resultado
+  y las cuentas, sin ningún mail). Estado en `%LOCALAPPDATA%\BarackMails`; si no hay lista de lo ya subido, se arma con los
+  `id` de lo que ya está en `_entrada\<persona>\`, y sin ninguno el instalador no sigue (la primera pasada volvería a subir
+  todo). Si la tarea del asistente vuelve y ve `CLAUDE POR AREA`, esta no sube (dos tareas subirían dos veces).
 
 ## Lo que usa el plugin `barack-area` (aviso de arranque y controles) — 01/10/2026
 
