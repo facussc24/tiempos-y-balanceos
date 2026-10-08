@@ -36,8 +36,11 @@ const RAIZ = path.resolve(AQUI, '..');
 const DIR_ENCARGOS = path.join(RAIZ, '.claude', 'state', 'encargos');
 const SALIDA = path.join(RAIZ, '.claude', 'state', 'tablero.md');
 const DIR_SESIONES = path.join(os.homedir(), '.claude', 'projects', 'C--Dev-BarackMercosul');
+const RUTA_NOCTURNO = path.join(RAIZ, '.claude', 'state', 'nocturno.json');
 
 export const MINUTOS_VIEJO = 60;
+/** La noche corre una vez por dia: pasadas 26 h sin una nueva, la que hay ya no dice nada de hoy. */
+export const HORAS_NOCHE_VIEJA = 26;
 
 /**
  * Una carpeta es LEGIBLE si se puede saber que es sin adivinar: o tiene notas escritas
@@ -105,6 +108,28 @@ export function filasSesiones(dir = DIR_SESIONES, { ahora = Date.now(), horas = 
     .sort((a, b) => b.ultimaActividadMs - a.ultimaActividadMs);
 }
 
+/**
+ * FUENTE nocturno — lo que dejo la noche de Claude (scripts/_nocturno.mjs) en .claude/state/nocturno.json.
+ * null si nunca corrio. La foto es la hora en que TERMINO la noche: si tiene mas de HORAS_NOCHE_VIEJA,
+ * `vieja` (la ultima noche no corrio o fallo antes de escribir) y no se reporta como de hoy.
+ */
+export function filasNocturno(ruta = RUTA_NOCTURNO, { ahora = Date.now() } = {}) {
+  let e;
+  try { e = JSON.parse(fs.readFileSync(ruta, 'utf8')); } catch { return null; }
+  if (!e || typeof e !== 'object') return null;
+  const finMs = Number(e.finMs);
+  const horas = Number.isFinite(finMs) ? Math.round(((ahora - finMs) / 3600000) * 10) / 10 : null;
+  return {
+    fuente: 'nocturno',
+    linea: String(e.lineaTablero || '(sin linea)'),
+    finMs: Number.isFinite(finMs) ? finMs : null,
+    horas,
+    vieja: horas == null || horas > HORAS_NOCHE_VIEJA,
+    mails: Array.isArray(e.mails) ? e.mails : [],
+    reporte: e.reporte || null,
+  };
+}
+
 const hhmm = (ms) => new Date(ms).toTimeString().slice(0, 5);
 const minutosDesde = (ms, ahora = Date.now()) => Math.round((ahora - ms) / 60000);
 
@@ -132,7 +157,7 @@ export function chequear({ escritorio, encargos, sesiones }, { ahora = Date.now(
   return problemas;
 }
 
-export function armarMarkdown({ escritorio, encargos, sesiones }, ahora = Date.now()) {
+export function armarMarkdown({ escritorio, encargos, sesiones, nocturno = null }, ahora = Date.now()) {
   const L = [];
   const foto = hhmm(ahora);
   L.push(`# Tablero — foto ${new Date(ahora).toISOString().slice(0, 10)} ${foto}`);
@@ -152,6 +177,15 @@ export function armarMarkdown({ escritorio, encargos, sesiones }, ahora = Date.n
     const marca = min > MINUTOS_VIEJO ? '  ⚠ VIEJO — volver a mirar' : '';
     L.push(`- \`${s.id.slice(0, 8)}\` · ultima actividad ${hhmm(s.ultimaActividadMs)} (hace ${min} min)${marca}`);
   });
+  L.push('');
+
+  L.push(`## Noche (fuente: nocturno · foto ${nocturno?.finMs ? hhmm(nocturno.finMs) : foto})`);
+  if (!nocturno) L.push('_Sin noche registrada (node scripts/_claude.mjs --check dice que falta)._');
+  else {
+    L.push(`- ${nocturno.linea}${nocturno.vieja ? `  ⚠ VIEJO — es de hace ${nocturno.horas ?? '?'} h, volver a mirar` : ''}`);
+    nocturno.mails.forEach((m) => L.push(`  - mail [${m.area || 'otra'}] ${m.asunto} — ${m.linea}${m.dias ? ` (${m.dias} d)` : ''}`));
+    if (nocturno.reporte) L.push(`  - hallazgos para verificar: \`${path.relative(RAIZ, nocturno.reporte)}\` (candidatos: se verifican contra Supabase antes de nombrarlos)`);
+  }
   L.push('');
 
   const alaVista = escritorio.filter((f) => f.ubicacion === 'raiz');
@@ -175,6 +209,7 @@ function main() {
     escritorio: filasEscritorio(RUTA_ESCRITORIO, { ahora }),
     encargos: filasEncargos(),
     sesiones: filasSesiones(DIR_SESIONES, { ahora }),
+    nocturno: filasNocturno(RUTA_NOCTURNO, { ahora }),
   };
 
   if (args.includes('--check') || args.includes('--solo-encargos')) {

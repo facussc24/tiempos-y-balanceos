@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **08/10 — Los créditos de API del plan Max NO cubren Claude Code: el modelo que se elija ahí no los gasta ni los ahorra; solo los gasta código que llama a la API con la clave de la organización vinculada** (un informe proponía «Opus por defecto para aprovechar los créditos»; la documentación oficial dice lo contrario). Los precios se leen de la tabla oficial, no de un informe: tenía mal Sonnet y las lecturas de caché. Regla `api-claude.md`.
+
 - **07/10 — Antes de decir «no puedo leer el correo de X», se busca en la nube del equipo; no se afirma de memoria** (le dije a Fak que el correo de Carlos no lo podía leer y sus mails ya suben a la nube de Ingeniería, como los de la PC de Marcelo: *"si lo podés leer, está en la nube... ¿desde cuándo no recordás eso?"*). `_mails.py --buscar` mira los dos lados, `--buzones` dice hasta cuándo llega cada buzón y el cierre-guard (chequeo 8) frena la frase si el turno no buscó. Memoria `reference_acceso_mails_outlook`.
 
 - **07/10 — «El estándar» se COMPARA contra una hoja real de la casa (la HO de Excel), no contra lo que dejó la sesión anterior**: con el plan de reacción deshice lo que hizo Gemini, lo volví a poner como él y seguía mal (blanco a la derecha, letra chica, otro texto). Fak: *"te lo dije 300 veces, no es el estándar que decidimos"*. Era el ARMADO: plan debajo de las fotos, ciclo de control al lado. Graduado al canon 4.5 y a `bloque_plan()`.

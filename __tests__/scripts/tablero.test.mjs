@@ -13,7 +13,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { filasEscritorio, tieneNotas, chequear, MINUTOS_VIEJO } from '../../scripts/_tablero.mjs';
+import { filasEscritorio, tieneNotas, chequear, MINUTOS_VIEJO, filasNocturno, armarMarkdown, HORAS_NOCHE_VIEJA } from '../../scripts/_tablero.mjs';
 
 let base;
 
@@ -99,5 +99,46 @@ describe('tablero · --check, los tres modos en que el tablero miente', () => {
       { id: 'E2', a: 'barackmercosul-c7', entregable: 'otro' },
     ];
     expect(chequear({ escritorio, encargos, sesiones: [] }, sinSalida)).toEqual([]);
+  });
+});
+
+describe('tablero · la noche de Claude (fuente: nocturno)', () => {
+  const ahora = new Date(2026, 9, 8, 9, 0).getTime();
+  const noche = (horasAtras) => ({
+    fecha: '2026-10-08', finMs: ahora - horasAtras * 3600000,
+    lineaTablero: 'Noche 08/10 06:31 · pre-auditoría AMFE: 3 revisados · 4 mails resumidos · $0,41 (mes $12,30 de $100, verde)',
+    mails: [{ asunto: 'BOM IP Pad', linea: 'pide la BOM actualizada', area: 'ingenieria', dias: 7 }],
+    reporte: path.join(base, 'reports', 'staging', 'PREAUDITORIA_AMFE_20261008.md'),
+  });
+  const escribir = (nombre, e) => { const f = path.join(base, nombre); fs.writeFileSync(f, JSON.stringify(e)); return f; };
+
+  it('9. ausente: null, y el tablero dice que no hay noche (no inventa una)', () => {
+    expect(filasNocturno(path.join(base, 'no-existe.json'), { ahora })).toBeNull();
+    const md = armarMarkdown({ escritorio: [], encargos: [], sesiones: [], nocturno: null }, ahora);
+    expect(md).toMatch(/## Noche \(fuente: nocturno · foto/);
+    expect(md).toMatch(/Sin noche registrada/);
+  });
+
+  it('10. fresca: la linea, cada mail con su area y el reporte; sin VIEJO', () => {
+    const n = filasNocturno(escribir('noche-fresca.json', noche(2.5)), { ahora });
+    expect(n).toMatchObject({ fuente: 'nocturno', horas: 2.5, vieja: false });
+    const md = armarMarkdown({ escritorio: [], encargos: [], sesiones: [], nocturno: n }, ahora);
+    expect(md).toMatch(/- Noche 08\/10 06:31 · pre-auditoría AMFE/);
+    expect(md).toMatch(/mail \[ingenieria\] BOM IP Pad — pide la BOM actualizada \(7 d\)/);
+    expect(md).toMatch(/PREAUDITORIA_AMFE_20261008\.md/);
+    expect(md).not.toMatch(/VIEJO/);
+  });
+
+  it(`11. vieja (mas de ${HORAS_NOCHE_VIEJA} h): se marca VIEJO y no se reporta como de hoy`, () => {
+    const n = filasNocturno(escribir('noche-vieja.json', noche(HORAS_NOCHE_VIEJA + 4)), { ahora });
+    expect(n.vieja).toBe(true);
+    const md = armarMarkdown({ escritorio: [], encargos: [], sesiones: [], nocturno: n }, ahora);
+    expect(md).toMatch(/⚠ VIEJO — es de hace 30 h/);
+  });
+
+  it('12. un JSON roto es "sin noche", no un tablero que se cae', () => {
+    const f = path.join(base, 'noche-rota.json');
+    fs.writeFileSync(f, '{roto');
+    expect(filasNocturno(f, { ahora })).toBeNull();
   });
 });

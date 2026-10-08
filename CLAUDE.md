@@ -20,6 +20,11 @@ solo lectura. Los flujogramas los genero yo por script y las HO se arman a pedid
    el `@import` de abajo. No releerlo; si un tema tiene memoria propia, esa si se lee al tocarlo.
 2. Si Fak menciona un producto: leer su AMFE/CP en Supabase live antes de hacer cambios.
 3. PDFs de referencia: leerlos con el metodo de `docs/COMO_LEER_PDF.md`.
+4. **Noche de Claude (API)**: si existe `.claude/state/nocturno.json` de hoy, leerlo
+   (`node scripts/_nocturno.mjs --estado`); los hallazgos de `reports/staging/PREAUDITORIA_AMFE_*.md`
+   son candidatos y se verifican contra Supabase antes de nombrarlos. Si hay clave y la tarea nocturna
+   no esta agendada (`node scripts/_claude.mjs --check`), `node scripts/_nocturno.mjs --agendar` y
+   avisar en una linea (regla `api-claude.md`).
 
 @docs/LECCIONES_APRENDIDAS.md
 
@@ -103,6 +108,7 @@ hora fijada y latido con CronCreate; hooks `hora-prompt` y `hora-guard`).
 | `lecciones-consolidacion.md` | `docs/LECCIONES_APRENDIDAS.md` — ciclo de vida de una leccion y gate por bullet |
 | `mejora-implementada.md` | hooks, skills, reglas, `settings.json`, guardianes y sus canones — una mejora no esta implementada hasta probarla con un mensaje real de Fak (`node scripts/_probarMejora.mjs`) y decirle si las sesiones abiertas la toman solas |
 | `documentacion-oficial.md` | `4- MANUALES`, `0-Documentacion cliente`, `1. Imput`, `normas-vw` — el original de un tercero manda y nada mio comparte su carpeta (hook `documentacion-oficial-guard.sh`) |
+| `api-claude.md` | `scripts/_lib/claudeApi.mjs`, `_preauditarAmfe.mjs`, `_nocturno.*`, `_claude.mjs` — los creditos de API del plan Max NO cubren Claude Code; la noche no escribe en Supabase/arb/Outlook (test `candadosNocturno`); la clave nunca se imprime |
 | `video-maquina.md` | `_videoBiblioteca.mjs`, `*.MOV` / `*.MP4`, material del telefono — va a `5- VIDEOS Y FOTOS`, se cruza por `(IMG_xxxx)` antes de bajar del celular y el master no se borra (hook `video-maquina-guard.sh`) |
 
 **Skills** (on-demand): son el sistema de roles y cargan solo al usarse (decision Fak 2026-08-09:

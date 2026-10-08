@@ -3,7 +3,8 @@
   "cuentas": [
     { "usuario": "lydiahallie", "quien": "Lydia Hallie, del equipo de Claude Code (consejos y funciones nuevas)" },
     { "usuario": "trq212", "quien": "Thariq Shihipar, del equipo de Claude Code (skills, agentes, formas de trabajo)" },
-    { "usuario": "ClaudeDevs", "quien": "Claude Devs, la cuenta de Anthropic para desarrolladores (anuncios)" }
+    { "usuario": "ClaudeDevs", "quien": "Claude Devs, la cuenta de Anthropic para desarrolladores (anuncios)" },
+    { "usuario": "bcherny", "quien": "Boris Cherny, creador de Claude Code (agregado 08/10/2026 con la noche de Claude)" }
   ],
   "busqueda": "https://api.fxtwitter.com/2/search",
   "_busqueda": "FxTwitter: un servicio publico de terceros que deja leer X sin iniciar sesion. Si un dia deja de andar, el programa lo dice y sigue con el registro de cambios oficial.",
