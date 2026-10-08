@@ -150,7 +150,7 @@
       "rev": "C",
       "date": "11/09/2026",
       "item": "10 / 20-22 / 50 / 60 / 71 / 90-93 / 100-102 / 110",
-      "details": "SE ALINEAN LAS CARACTERISTICAS ESPECIALES CON EL AMFE 158: D/TLD Y SC EN LA RECEPCION (10) Y SC EN 20, 21, 22, 50, 60, 71, 90, 91, 93, 100, 101, 102 Y 110.",
+      "details": "ALINEACION DE LAS CARACTERISTICAS ESPECIALES CON EL AMFE 158: D/TLD Y SC EN LA RECEPCION (10) Y SC EN 20, 21, 22, 50, 60, 71, 90, 91, 93, 100, 101, 102 Y 110.",
       "pswDate": "",
       "modifiedBy": "FS"
     },
@@ -393,7 +393,7 @@
             "description": "RE-ENTRADA AL FLUJO PRINCIPAL",
             "rework": {
               "targetId": "91",
-              "label": "REVERIFICAR (A OP. 91)"
+              "label": "VUELVE A OP. 91"
             }
           }
         ]

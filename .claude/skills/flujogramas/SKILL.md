@@ -234,7 +234,7 @@ largo que esta bien en el corpus tiene 4).
 - **Un retrabajo escrito adentro de una caja terminal es un retrabajo que no se dibujo.**
   `RETRABAJO DE COSTURA / SCRAP` como texto de un terminal no es el retrabajo: es su nombre.
   El camino completo es `¿SE PUEDE RETRABAJAR?` → NO: `SCRAP`; SI: operacion numerada
-  `REPROCESO: <defecto concreto>` → `RE-ENTRADA AL FLUJO PRINCIPAL` con `REVERIFICAR (A OP. NN)`
+  `REPROCESO: <defecto concreto>` → `RE-ENTRADA AL FLUJO PRINCIPAL` con `VUELVE A OP. NN`
   apuntando **al control que lo rechazo**. En el generador lo usan 5 de 8.
 - **Un decimal exige su operacion madre.** `90.1` y `90.2` sin que exista un `90` no tiene
   precedente: los 3 casos de decimal del corpus tienen el padre presente.
@@ -242,7 +242,7 @@ largo que esta bien en el corpus tiene 4).
 - **Nada de texto debajo de un terminal**: *"al scrap no hace falta aclararle nada"*. El
   detalle tecnico va al Plan de Control o al procedimiento, no al dibujo.
 - El **traslado de vuelta al flujo** va separado del paso de reproceso, con su rotulo
-  `REVERIFICAR (A OP. XX)`.
+  `VUELVE A OP. XX` (hasta el 08/10/2026 decia `REVERIFICAR`, palabra que Barack no usa: no pasa el control de vocabulario).
 - **Varios reprocesos del mismo control son caminos ALTERNATIVOS, no una fila.** Cada uno es
   para su defecto: dibujarlos uno debajo del otro dice que toda pieza rechazada pasa por
   todos (en el 159, re-limpiar una pieza que ya tenia primer y adhesivo). Van en columnas
@@ -388,7 +388,7 @@ impresos. El PNG de siempre escalado a A3 deja la letra en unos 4 pt. Tres propu
   columna que agrandan la letra, `armar_final.py`, `verificar_final.py`, `verificar_junto.py`).
 - Piso: **8 pt** de letra medida en el PDF y **10 mm** de margen; una hoja A3 por flujograma
   (vertical o apaisada, la que dé letra más grande). Si B no llega a 8 pt, va C.
-- Las flechas de REVERIFICAR / RETRABAJO llegan a la línea que entra a SU operación; líneas de
+- Las flechas de VUELVE A OP. llegan a la línea que entra a SU operación; líneas de
   0,8 pt o más y colores oscuros, para que se lea en blanco y negro.
 - Se arma desde el JSON **commiteado** (`git show HEAD:`), no del de trabajo con cambios sin emitir.
 - Salida del 08/10/2026 (los 8 de Patagonia, 8,2 a 10,7 pt):

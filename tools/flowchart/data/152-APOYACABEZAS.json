@@ -99,7 +99,7 @@
       "rev": "B",
       "date": "18/08/2026",
       "item": "20-28 / 30-34 / 40-42 / 50-52 / 60 / 70-72 / 80",
-      "details": "SE DESGLOSA EL CORTE EN LAS OPERACIONES 20 A 27 Y EL CONTROL CON PLANTILLA MYLAR PASA A LA 28, ALINEANDO CON LA HOJA DE OPERACIONES. SE ABREN TRES RAMAS DE COSTURA, UNA POR VARIANTE. SE RENUMERA EL TRAMO DE ENFUNDADO A EMBALAJE.",
+      "details": "SE SEPARA EL CORTE EN LAS OPERACIONES 20 A 27 Y EL CONTROL CON PLANTILLA MYLAR PASA A LA 28, COMO EN LA HOJA DE OPERACIONES. TRES RAMAS DE COSTURA, UNA POR VARIANTE. CAMBIA LA NUMERACION DEL ENFUNDADO AL EMBALAJE.",
       "pswDate": "",
       "modifiedBy": "FS"
     }
@@ -401,7 +401,7 @@
             "description": "RE-ENTRADA AL FLUJO PRINCIPAL",
             "rework": {
               "targetId": "60",
-              "label": "REVERIFICAR (A OP. 60)"
+              "label": "VUELVE A OP. 60"
             }
           }
         ]

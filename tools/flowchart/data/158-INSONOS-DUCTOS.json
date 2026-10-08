@@ -124,7 +124,7 @@
         [
           {
             "type": "transfer",
-            "description": "MP8137 / MP8149 / MP8150 / MP8151 - SOLO CORTE, SE ENVIAN"
+            "description": "MP8137 / MP8149 / MP8150 / MP8151 - SOLO CORTE, PASAN A INSPECCION FINAL"
           }
         ],
         [
@@ -161,7 +161,7 @@
           {
             "stepId": "50",
             "type": "operation",
-            "description": "PREARMADO: COLOCACION DE TIRAS DE ESPUMA Y REMACHADO DE BRAQUETS"
+            "description": "PREARMADO: COLOCACION DE TIRAS DE ESPUMA Y REMACHADO DE BRACKETS"
           },
           {
             "stepId": "60",

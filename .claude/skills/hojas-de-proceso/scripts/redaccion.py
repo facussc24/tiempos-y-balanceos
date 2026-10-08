@@ -77,6 +77,17 @@ def cargar(ruta=DATOS):
         return json.load(f)
 
 
+def _vocabulario_planta():
+    """La lista blanca de palabras de Barack (Fak, 08/10/2026: «jamas podes poner algo que yo no
+    pueda defender o que no entienda»). Vive en scripts/_lib/ del repo, con su gemelo JS para los
+    flujogramas. Si no se encuentra FALLA: un gate que no halla su lista y sigue esta apagado."""
+    lib = os.path.normpath(os.path.join(BASE, "..", "..", "..", "scripts", "_lib"))
+    if lib not in sys.path:
+        sys.path.insert(0, lib)
+    import vocabulario_planta
+    return vocabulario_planta
+
+
 def revisar_vocabulario(texto, datos=None):
     """Devuelve [(termino_encontrado, reemplazo, motivo, fuente)] del texto."""
     datos = datos or cargar()
@@ -237,6 +248,18 @@ def gate_redaccion(hoja, datos=None):
             rojos.append(f"{op} {donde}: dice \"{hallado}\" -> va \"{reemplazo}\".\n"
                          f"        {motivo}\n        fuente: {fuente}")
 
+    # Vocabulario de planta (BLOQUEANTE, 08/10/2026): lista blanca. Una palabra pasa si Barack la
+    # usa (sus hojas, sus procedimientos, lo que dice Fak) o si esta aprobada con fuente.
+    vp = _vocabulario_planta()
+    hallazgos_v = vp.revisar_textos([(f"{op} {donde}", txt) for donde, txt in campos])
+    if hallazgos_v:
+        rojos.append(
+            f"{len(vp.resumir(hallazgos_v))} palabra(s) que Barack no usa:\n"
+            + vp.texto_de_hallazgos(hallazgos_v) + "\n"
+            "        Fak, 08/10/2026: \"jamas podes poner algo que yo no pueda defender o que no\n"
+            "        entienda\". Se cambia por la palabra de planta, o se aprueba con su fuente en\n"
+            "        scripts/_lib/vocabularioPlanta.data.json.")
+
     for donde, txt in campos:
         raros = revisar_idioma(txt)
         if raros:
@@ -307,8 +330,12 @@ def _cli():
         estado, det = revisar_voz(txt)
         for hallado, reemplazo, motivo, fuente in h:
             print(f"  vocabulario: \"{hallado}\" -> \"{reemplazo}\"  ({motivo})")
+        vp = _vocabulario_planta()
+        fuera = vp.revisar_textos([("texto", txt)])
+        if fuera:
+            print(vp.texto_de_hallazgos(fuera))
         print(f"  voz: {estado} ({det})")
-        return 1 if (h or estado == "narrativo") else 0
+        return 1 if (h or fuera or estado == "narrativo") else 0
     if len(sys.argv) == 4 and sys.argv[1] == "spec":
         import importlib.util
         ruta, nombre = sys.argv[2], sys.argv[3]

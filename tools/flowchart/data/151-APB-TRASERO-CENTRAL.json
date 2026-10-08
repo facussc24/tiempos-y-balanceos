@@ -37,7 +37,7 @@
       "rev": "B",
       "date": "18/08/2026",
       "item": "61",
-      "details": "SE AGREGA LA OPERACION 61 MONTAJE DE PORTAVASOS Y MARCO, QUE ESTABA INCLUIDA DENTRO DEL TAPIZADO. SE REEMITE EN EL FORMATO NUEVO.",
+      "details": "SE AGREGA LA OPERACION 61 MONTAJE DE PORTAVASOS Y MARCO, QUE ESTABA INCLUIDA DENTRO DEL TAPIZADO. ACTUALIZACION EN FORMATO NUEVO.",
       "pswDate": "",
       "modifiedBy": "FS"
     }
@@ -154,7 +154,7 @@
             "description": "TRASLADO A OP 70",
             "rework": {
               "targetId": "70",
-              "label": "REVERIFICAR (A OP. 70)"
+              "label": "VUELVE A OP. 70"
             }
           }
         ]

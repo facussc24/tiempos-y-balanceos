@@ -332,7 +332,7 @@
       "claveSupabase": "AMFE-UT-PAT",
       "flujograma": {
         "id": "160",
-        "revVigente": "A",
+        "revVigente": "B",
         "estado": "VIGENTE"
       },
       "secuencia": [
@@ -341,19 +341,16 @@
         "21",
         "30",
         "31",
-        "32",
         "40",
         "41",
         "42",
         "50",
         "60",
         "70",
-        "71",
-        "72",
         "80"
       ],
-      "nota": "Emitidos juntos el 01/10/2026 y rehechos ese mismo dia (Fak rechazo la primera version: al corte le faltaba el control con mylar): el flujograma 160 Rev.A y el AMFE 174 Rev.A nacen alineados (el generador del AMFE lee las operaciones del JSON del flujograma, en su orden, y frena si no coinciden). 21 es el control con mylar del corte; 31 la inspeccion de pieza adhesivada y 32 su reproceso (falta de adhesivo); 71 y 72 son los reprocesos del control final. El paso 22 del flujograma es el almacenamiento WIP del corte y no lleva AMFE. La pieza no tiene hoja de operaciones propia; las hojas de la prensa de embossing (HO sin numero, Rev.A del 24/09/2026) corresponden a la operacion 60.",
-      "fuente": "AMFE-UT-PAT Supabase live 2026-10-01 + tools/flowchart/data/160-UPPER-TRIM-PANEL.json",
+      "nota": "Emitidos juntos el 01/10/2026 y rehechos ese mismo dia (Fak rechazo la primera version: al corte le faltaba el control con mylar): el flujograma 160 Rev.A y el AMFE 174 Rev.A nacen alineados (el generador del AMFE lee las operaciones del JSON del flujograma, en su orden, y frena si no coinciden). 21 es el control con mylar del corte; 31 la inspeccion de pieza adhesivada. Rev. B (OK de Fak 08/10/2026, pedido de Cozzuol del 02/10): los reprocesos 32, 71 y 72 de la Rev. A ya no se declaran; el repaso de adhesivo quedo dentro de la 31 y la reactivacion de bordes y la limpieza, dentro de la 70 (TERMINACION Y CONTROL FINAL DE CALIDAD). El paso 22 del flujograma es el almacenamiento WIP del corte y no lleva AMFE. La pieza no tiene hoja de operaciones propia; las hojas de la prensa de embossing (HO sin numero, Rev.A del 24/09/2026) corresponden a la operacion 60.",
+      "fuente": "AMFE-UT-PAT Supabase live 2026-10-08 + tools/flowchart/data/160-UPPER-TRIM-PANEL.json",
       "secuenciaConfirmadaPor": [
         "flujograma 160 Rev.A generado el 01/10/2026 desde tools/flowchart/data/"
       ]

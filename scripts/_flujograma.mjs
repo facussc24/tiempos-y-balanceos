@@ -27,6 +27,15 @@
  *       node scripts/_flujograma.mjs 151                 (render a tmp, para mirar)
  *       node scripts/_flujograma.mjs 151 --out <carpeta>
  *       node scripts/_flujograma.mjs --todos --out <carpeta>
+ *       node scripts/_flujograma.mjs --solo-vocabulario [clave...]   (solo mide las palabras; no dibuja)
+ *
+ * VOCABULARIO (Fak, 08/10/2026): un flujograma salio con «RESTITUCION DE CONTROL DE MATERIA PRIMA
+ * (IQC) CON CUARENTENA» y Fak: «no se entiende un carajo... jamas podes poner algo que yo no pueda
+ * defender o que no entienda». Antes de dibujar, TODOS los textos del JSON (cajetin, productos,
+ * historial de revisiones, pasos, condiciones, ramas, retrabajos, leyenda) pasan por la lista
+ * blanca de `_lib/vocabularioPlanta.mjs`. Una palabra que Barack no usa frena la generacion con
+ * codigo 1 y se lista con el renglon donde esta. No hay llave para saltearlo: se corrige la palabra
+ * o se aprueba con fuente en `_lib/vocabularioPlanta.data.json`.
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, rmSync, statSync } from 'fs';
@@ -36,6 +45,7 @@ import { spawnSync } from 'child_process';
 import { build } from 'esbuild';
 import { chromium } from 'playwright';
 import { revisarFlujograma } from './_lib/flujogramaCanon.mjs';
+import { revisarVocabularioFlujograma, textoDeHallazgos, resumir } from './_lib/vocabularioPlanta.mjs';
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const RAIZ = resolve(AQUI, '..');
@@ -57,6 +67,24 @@ if (tiene('--lista') || argv.length === 0) {
     console.log(l.length ? `Flujogramas disponibles:\n  ${l.join('\n  ')}` : `No hay datos en ${DATA}`);
     console.log(`\nUso: node scripts/_flujograma.mjs <clave> [--out <carpeta>]`);
     process.exit(0);
+}
+
+// Solo vocabulario: mide las palabras de cada JSON y sale, sin dibujar nada ni abrir el navegador.
+if (tiene('--solo-vocabulario')) {
+    // `--archivo <ruta.json>` mide un JSON que no esta en tools/flowchart/data (de otro motor, o de prueba).
+    const archivo = flag('--archivo');
+    const lista = argv.filter((a, i) => !a.startsWith('--') && argv[i - 1] !== '--archivo');
+    const cuales = archivo ? [archivo] : (lista.length ? lista : clavesDisponibles());
+    let mal = 0;
+    for (const clave of cuales) {
+        const f = archivo ? resolve(archivo) : join(DATA, `${clave}.json`);
+        if (!existsSync(f)) { console.error(`  ✗ ${clave}: no existe ${f}`); mal++; continue; }
+        const h = revisarVocabularioFlujograma(JSON.parse(readFileSync(f, 'utf8')));
+        const n = Object.keys(resumir(h)).length;
+        console.log(`${n ? '✗' : '✓'} ${clave}: ${n} palabra(s) fuera`);
+        if (n) { console.log(textoDeHallazgos(h)); mal++; }
+    }
+    process.exit(mal ? 1 : 0);
 }
 
 const claves = tiene('--todos') ? clavesDisponibles() : argv.filter(a => !a.startsWith('--') && argv[argv.indexOf(a) - 1] !== '--out');
@@ -121,13 +149,22 @@ try {
             console.warn(`  ⚠ ${clave}: ${h.regla} — ${h.detalle}`);
         }
         const rojos = hallazgos.filter((x) => x.gravedad === 'ROJO');
-        if (rojos.length && !process.argv.includes('--sin-canon')) {
+        const frenaElCanon = rojos.length && !process.argv.includes('--sin-canon');
+        if (frenaElCanon) {
             console.error(`\n  ✗ ${clave}: ${rojos.length} problema(s) contra el canon de flujogramas`);
             for (const h of rojos) console.error(`      ${h.regla} — ${h.detalle}`);
             console.error(`\n  Las convenciones y de donde sale cada una: skill \`flujogramas\`.`);
             console.error(`  Para dibujarlo igual y mirarlo: --sin-canon (no se entrega asi).\n`);
-            continue;
         }
+        // Vocabulario (08/10/2026): lista blanca de palabras de Barack. BLOQUEANTE y sin llave para saltearlo.
+        const fuera = revisarVocabularioFlujograma(datos);
+        if (fuera.length) {
+            console.error(`\n  ✗ ${clave}: ${Object.keys(resumir(fuera)).length} palabra(s) que Barack no usa. NO SE GENERA.`);
+            console.error(textoDeHallazgos(fuera));
+            console.error(`\n  Se reemplaza por la palabra que la planta usa. Si es correcta, se aprueba con su fuente`);
+            console.error(`  (un documento de Barack o un mensaje de Fak) en scripts/_lib/vocabularioPlanta.data.json.\n`);
+        }
+        if (frenaElCanon || fuera.length) continue;
 
         datos.logoUrl = logoDataUri;   // el motor cae a un logo de TEXTO si no lo recibe
 

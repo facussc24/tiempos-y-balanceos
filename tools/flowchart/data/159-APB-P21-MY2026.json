@@ -221,7 +221,7 @@
             "description": "RE-ENTRADA AL FLUJO PRINCIPAL",
             "rework": {
               "targetId": "71",
-              "label": "REVERIFICAR (A OP. 71)"
+              "label": "VUELVE A OP. 71"
             }
           }
         ],
@@ -318,7 +318,7 @@
             "description": "RE-ENTRADA AL FLUJO PRINCIPAL",
             "rework": {
               "targetId": "100",
-              "label": "REVERIFICAR (A OP. 100)"
+              "label": "VUELVE A OP. 100"
             }
           }
         ]
