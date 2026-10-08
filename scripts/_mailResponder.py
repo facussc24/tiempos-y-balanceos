@@ -93,6 +93,10 @@ def responder(cfg):
     j = html.find('>', i) + 1 if i >= 0 else 0
     rp.HTMLBody = html[:j] + bloque + html[j:]
     rp.Save()
+    # Queda anotado cuando lo vio Fak: el hook mail-guard no deja mandarlo si su ultimo mensaje
+    # es anterior a este borrador (Fak, 08/10/2026).
+    from _prepararMail import registrar_borrador
+    registrar_borrador(rp, rp.Subject)
 
     h = rp.HTMLBody or ''
     print('\nRespuesta abierta en Outlook y guardada en Borradores (sin transmitir).')

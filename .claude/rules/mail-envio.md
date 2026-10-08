@@ -14,7 +14,8 @@ paths:
 1. **Un mail que Fak ya mando NO SE TOCA.** Si esta mal, se le reporta que esta mal y decide el.
    Sacarlo de la Bandeja de salida para "arreglarlo" es intervenir un envio que el ya autorizo.
 2. **El default sigue siendo `.Display()`**, no `.Send()` (memoria `dejar_el_mail_listo_para_enviar`).
-   Se envia solo si Fak lo pide explicitamente para ESE mail.
+   Se envia solo si Fak lo pide explicitamente para ESE mail **y despues de haberlo visto armado**
+   (seccion de abajo: un "mandalo" escrito antes de que exista el borrador no alcanza).
 3. **Cuando hay que enviar, se envia por `scripts/_mailEnviar.py`.** Es el unico camino con gate.
 
 ```bash
@@ -22,6 +23,43 @@ python scripts/_mailEnviar.py --buscar "<parte del asunto>"            # dry-run
 python scripts/_mailEnviar.py --buscar "<parte del asunto>" --enviar
 python scripts/_mailEnviar.py --selftest                               # sin Outlook
 ```
+
+## El OK va DESPUES del borrador — BLOQUEANTE desde el 08/10/2026
+
+Fak escribio *"arma el mail y mandalo"*; arme el borrador y lo envie en el mismo turno, sin que el lo
+viera. El link del cuerpo no andaba. Fak: *"como enviaste el primero si no te dije que lo envies?...
+yo siempre reviso los mails cuando te autorice"*, *"fue un error demasiado grave... pone un
+bloqueante... un poco mas estricto"*.
+
+**La regla:** el borrador se arma con `_prepararMail.py`, `_mailResponder.py` o `_reenviarMail.py`
+(los tres lo abren en la pantalla de Fak y anotan la hora real en `.mail-cache/borradores_claude.json`,
+campo `armado_epoch`). Se le dice a Fak que lo revise y se ESPERA su respuesta. `_mailEnviar.py
+--enviar` corre solo si hay un mensaje de Fak **posterior** a esa hora. Aunque el pedido diga "mandalo":
+primero lo ve, despues sale.
+
+**Enforcement:** hook `mail-guard` (logica en `scripts/_lib/mailOkFak.mjs`), bloquea:
+- el ultimo mensaje real de Fak es anterior al borrador (o no se puede leer);
+- el borrador no lo armo ninguno de los tres scripts (un `.Save()` armado a mano no cuenta como visto);
+- el registro no tiene `armado_epoch` (borrador de antes del control: se rearma).
+
+**No tiene escape**: `--forzar` saltea el anti-duplicado, no esto. Si el control se equivoca, Fak aprieta
+Enviar en la ventana que ya tiene abierta. Un aviso de tarea, el feedback de un hook o lo que deja otra
+sesion no cuentan como mensaje de Fak. Test con el caso real: `__tests__/scripts/mailOkFak.test.mjs`.
+Ojo: `guardado_ts` del registro sale de Outlook con la hora local leida como UTC (3 h corrida); con ese
+campo el envio del incidente pasaba.
+
+## Un link a la nube se le PIDE a OneDrive, no se arma — 08/10/2026
+
+El link del mail del incidente lo arme a mano desde el registro de OneDrive y no abria: la carpeta
+sincronizada `Ingeniería y Proyecto - General` es la subcarpeta `General` de la biblioteca, no su raiz.
+Fak: *"el link ese de mierda no anda"*.
+
+El link bueno lo da el verbo **«Copiar vínculo»** de OneDrive sobre la carpeta o el archivo (por
+`Shell.Application`, y se lee el portapapeles); sale `https://barackmercosulms.sharepoint.com/:f:/s/...`.
+Comando: memoria `reference_link_nube_se_pide_a_onedrive`. El navegador de la app no tiene la sesion de
+Microsoft de Fak, asi que ahi no se puede probar: el link va en el borrador y Fak lo abre antes de
+aprobar el envio (la seccion de arriba ya lo obliga a verlo). Un archivo de mas de ~20 MB no va
+adjunto: va el link.
 
 ## Quien aprieta Enviar cuando hay varias sesiones — 2026-08-31
 

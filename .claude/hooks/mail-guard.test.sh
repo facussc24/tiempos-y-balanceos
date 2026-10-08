@@ -52,10 +52,17 @@ probar guard "destinatarios como string en .To (incidente 08/09)" \
 probar guard "lo mismo en .CC, metido con Edit" \
   '{"tool_name":"Edit","tool_input":{"file_path":"x.py","new_string":"ol=Dispatch(\"Outlook.Application\")\nmail=ol.CreateItem(0)\nmail.CC = destinatarios_cc\nmail.Display()"}}' 2
 
+probar guard "_mailEnviar --enviar sin OK de Fak despues del borrador (08/10)" \
+  '{"tool_name":"Bash","tool_input":{"command":"python scripts/_mailEnviar.py --buscar \"APB TRA CEN\" --enviar"}}' 2
+probar guard "lo mismo con --forzar: no es escape" \
+  '{"tool_name":"Bash","tool_input":{"command":"python scripts/_mailEnviar.py --id ABC --forzar --enviar"}}' 2
+
 echo
 echo "DEJA PASAR (no envia, o va por la via autorizada):"
-probar guard "la via autorizada _mailEnviar.py" \
-  '{"tool_name":"Bash","tool_input":{"command":"python scripts/_mailEnviar.py --buscar \"APB TRA CEN\" --enviar"}}' 0
+probar guard "la via autorizada _mailEnviar.py, en dry-run" \
+  '{"tool_name":"Bash","tool_input":{"command":"python scripts/_mailEnviar.py --buscar \"APB TRA CEN\""}}' 0
+probar guard "el selftest de _mailEnviar.py" \
+  '{"tool_name":"Bash","tool_input":{"command":"python scripts/_mailEnviar.py --selftest"}}' 0
 probar guard "solo Display (deja el borrador abierto)" \
   '{"tool_name":"Bash","tool_input":{"command":"python -c \"import win32com.client as w; w.Dispatch(\\\"Outlook.Application\\\").CreateItem(0).Display()\""}}' 0
 probar guard "leer mails con _mails.py" \

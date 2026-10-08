@@ -4,6 +4,7 @@
  *
  *   node scripts/_liberarDisco.mjs              # dry-run: lista y cuenta, no borra nada
  *   node scripts/_liberarDisco.mjs --aplicar    # borra
+ *   --sesion <id>: la conversacion en curso, que nunca se toca (sus temporales)
  *
  * Que borra (y por que se puede):
  *   - backups/<timestamp>/  snapshots viejos de Supabase. Se conservan los 12 mas
@@ -68,9 +69,51 @@ function planVideo() {
     .filter((p) => existsSync(p));
 }
 
+/**
+ * Carpetas temporales de conversaciones de Claude (`%TEMP%\claude\<proyecto>\<sesion>`): nadie las limpia
+ * y vuelven a juntar GB (02/10/2026: 6,65 GB; 08/10/2026: 9,8 GB). Se borran las que no tienen ningun
+ * archivo tocado en las ultimas 12 h — asi no se pisa una conversacion abierta — y nunca la de
+ * `--sesion <id>` (la que corre el comando).
+ */
+function planTempClaude() {
+  const base = join(process.env.TEMP || process.env.TMP || '', 'claude');
+  if (!base || !existsSync(base)) return [];
+  const iSes = process.argv.indexOf('--sesion');
+  const actual = iSes >= 0 ? process.argv[iSes + 1] : '';
+  const limite = Date.now() - 12 * 3600 * 1000;
+  const ultimoCambio = (ruta) => {
+    let max = 0;
+    const pila = [ruta];
+    while (pila.length) {
+      const p = pila.pop();
+      let entradas;
+      try { entradas = readdirSync(p, { withFileTypes: true }); } catch { continue; }
+      for (const e of entradas) {
+        const hijo = join(p, e.name);
+        try { max = Math.max(max, statSync(hijo).mtimeMs); } catch { /* ignorar */ }
+        if (e.isDirectory()) pila.push(hijo);
+      }
+    }
+    return max;
+  };
+  const rutas = [];
+  for (const proy of readdirSync(base, { withFileTypes: true })) {
+    if (!proy.isDirectory()) continue;
+    let sesiones;
+    try { sesiones = readdirSync(join(base, proy.name), { withFileTypes: true }); } catch { continue; }
+    for (const s of sesiones) {
+      if (!s.isDirectory() || (actual && s.name === actual)) continue;
+      const ruta = join(base, proy.name, s.name);
+      if (ultimoCambio(ruta) < limite) rutas.push(ruta);
+    }
+  }
+  return rutas;
+}
+
 const grupos = [
   { nombre: 'snapshots de backup viejos', rutas: planBackups() },
   { nombre: 'intermedios de render de video', rutas: planVideo() },
+  { nombre: 'temporales de Claude (> 12 h)', rutas: planTempClaude() },
 ];
 
 let totalBytes = 0;

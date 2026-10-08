@@ -45,6 +45,7 @@ import path from 'node:path';
 import { sinCuerposHeredoc, sinCuerposHeredocDeGit, sinArgumentosDeCommit, analizarComando, comandosSimples, separarHeredocs } from './shellTexto.mjs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { pedidoDeEnvio, evaluarEnvio } from './mailOkFak.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const RAIZ = path.resolve(AQUI, '..', '..');
@@ -1305,6 +1306,30 @@ GUARDIANES['mail-guard'] = (ctx) => {
       return aviso(`[MAIL-GUARD — voz del mail. Regla: .claude/rules/mail-envio.md]\n\n${salida}\n\n`
         + 'El mail sale a nombre de Fak. Los numeros salen de sus 935 mails:\n'
         + '  node scripts/_vozFak.mjs --revisar "<archivo>"   (vuelve a medirlo)');
+    }
+  }
+
+  // 0-ter) El OK de Fak tiene que ser POSTERIOR al borrador (incidente 08/10/2026: "arma el mail y
+  // mandalo" escrito antes de que el borrador existiera; Fak: "yo siempre reviso los mails... pone
+  // un bloqueante"). Logica y caso en scripts/_lib/mailOkFak.mjs. Sin escape: --forzar no lo saltea.
+  if (/^(Bash|PowerShell)$/i.test(ctx.tool) && pedidoDeEnvio(ctx.cmd)) {
+    let tp = '';
+    try { tp = String(JSON.parse(ctx.raw).transcript_path || ''); } catch { tp = ''; }
+    const v = evaluarEnvio({ cmd: ctx.cmd, transcriptPath: tp, raizRepo: RAIZ });
+    if (!v.ok) {
+      return bloqueo(`
+[MAIL-GUARD — BLOQUEO. Regla: .claude/rules/mail-envio.md ("El OK va despues del borrador")]
+
+No se manda: ${v.motivo}.
+
+Un mail sale solo si Fak lo VIO armado en su pantalla y DESPUES dijo que se mande.
+Un "mandalo" escrito antes de que el borrador exista no es el OK de ese borrador
+(08/10/2026: asi salio el mail a Paulo con un link que no andaba).
+
+Que hacer: dejarle el borrador abierto, decirle que lo revise y esperar su respuesta.
+Si contesta que se mande, recien ahi se corre el --enviar. Si apuro, el lo manda
+apretando Enviar en la ventana que ya tiene abierta.
+`);
     }
   }
 

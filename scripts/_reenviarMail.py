@@ -110,6 +110,11 @@ def reenviar(cfg):
         j = html.find('>', i) + 1 if i >= 0 else 0
         fw.HTMLBody = html[:j] + bloque + html[j:]
     fw.Save()
+    # Queda anotado cuando lo vio Fak: el hook mail-guard no deja mandarlo si su ultimo mensaje
+    # es anterior a este borrador (Fak, 08/10/2026).
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from _prepararMail import registrar_borrador
+    registrar_borrador(fw, fw.Subject)
 
     h = fw.HTMLBody or ''
     print('\nReenvio abierto en Outlook y guardado en Borradores (sin transmitir).')

@@ -145,6 +145,10 @@ def registrar_borrador(mail, asunto):
         'clave': clave_asunto(asunto),
         'guardado': time.strftime('%Y-%m-%d %H:%M'),
         'guardado_ts': mail.LastModificationTime.timestamp(),
+        # Hora REAL en que quedo armado en la pantalla de Fak. `guardado_ts` sale de Outlook con la hora
+        # local leida como UTC (3 h corrida); sirve para compararla con otras de Outlook, no con el reloj.
+        # La usa el hook mail-guard (scripts/_lib/mailOkFak.mjs): el OK de Fak tiene que ser posterior.
+        'armado_epoch': time.time(),
     })
     escribir_registro(entradas)
 
