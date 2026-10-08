@@ -65,7 +65,7 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
-- **07/10 — Una toma de tiempos por video se entrega como TIEMPOS + VIDEO RECORTADO de evidencia, no se sale a buscar en qué planilla cargarla** (*"no me pidieron planilla, solo los tiempos y el video recortado"*). Y del celular se baja lo que Fak nombra (*"grabé 4 o 5 a las 13 hs"*): bajé los 11 del día. Es el 06/10 de nuevo: el entregable tiene el tamaño del pedido.
+- **07-08/10 — Toma de tiempos por video = TIEMPOS + VIDEO RECORTADO adentro del PowerPoint, sin planilla** (*"no me pidieron planilla"*); del celular, solo lo que Fak nombra. El rato en que el operario prueba cómo poner una pieza nueva no es proceso (*"desde que realmente se pone a laburar"*). Memoria `project_tiempos_forrado_ductos_patagonia`.
 
 - **07/10 — Con Fak se habla en castellano también en los avisos cortos mientras trabajo** (una tanda entera de avisos y el cierre me salieron en inglés: *"dejá de hablar en inglés"*). Y un pedido de videos para alguien que tiene editor es de ORIGINALES completos: preguntar o deducir el uso antes de editar (*"él quería videos completos... tiene una editorial de videos"*).
 
