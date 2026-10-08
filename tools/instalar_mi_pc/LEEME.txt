@@ -1,0 +1,21 @@
+MI ASISTENTE COMPLETO EN OTRA PC
+
+QUÉ HACE
+Deja en esa PC tu asistente entero, igual al de tu PC de Ingeniería:
+  - el repo con las reglas, los skills del proyecto y las instrucciones de trabajo (carpeta C:\Dev\BarackMercosul),
+  - tu memoria, tus skills y reglas globales, tus subagentes, tus hooks, tu settings y tus claves (todo eso viaja por la nube),
+  - y apaga el asistente "por área" si alguien lo instaló antes (ese es el recortado, que no instala programas).
+No borra nada de esa PC.
+
+QUÉ HAY QUE HACER (una sola vez, en la PC nueva)
+  1. Hacé doble clic en  Instalar-Mi-PC.cmd
+  2. Esperá a que diga LISTO (la primera vez tarda unos minutos: baja el repo y varios miles de archivos de la nube).
+  3. Cerrá el programa del asistente, abrilo de nuevo y elegí la carpeta  C:\Dev\BarackMercosul
+
+Si algo no se puede (por ejemplo la red de la empresa bloquea GitHub), la ventana dice el motivo.
+
+PARA MANTENERLO AL DÍA
+  En tu PC de Ingeniería:  node scripts/_nube.mjs --subir --aplicar
+  En la otra PC:           volver a hacer doble clic en este archivo.
+
+Dudas: Facundo Santoro (Ingeniería).

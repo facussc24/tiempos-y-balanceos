@@ -71,6 +71,8 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **08/10 — «Un instalador idéntico al de Carlos pero para mí» era SU asistente entero (skills + memoria + perfil sin frenos), no el de mails: ante un pedido con dos lecturas se arma lo principal que dijo y lo accesorio («de paso, los mails») va después** (armé solo los mails y Gemini lo mandó a instalar el paquete «por área», recortado; Fak: *"le pedí que me pase mi Claude entero... hiciste cagada"*). Y lo que Fak va a usar se deja en UNA carpeta con doble clic numerados. Memoria `project_instalar_mi_asistente_pc_nueva`.
+
 - **08/10 — Lo que escribo en un entregable lo tiene que poder defender Fak: si un operario o un gerente no lo entiende, no va** (en la revisión del flujograma 153 escribí «RESTITUCION DE CONTROL DE MATERIA PRIMA (IQC) CON CUARENTENA»; Fak: *"no se entiende un carajo... jamás podés poner algo que yo no pueda defender"*). Y un flujograma para imprimir se juzga por si se entiende el FLUJO, no solo por la letra: el A3 de una hoja llegó a 8 pt con todo pegado (*"demasiado junto"*).
 
 - **07-08/10 — Toma de tiempos por video = TIEMPOS + VIDEO RECORTADO adentro del PowerPoint, sin planilla** (*"no me pidieron planilla"*); del celular, solo lo que Fak nombra. El rato en que el operario prueba cómo poner una pieza nueva no es proceso (*"desde que realmente se pone a laburar"*). Un link a la nube se le pide a OneDrive, no se arma: el mío no abría. Memorias `project_tiempos_forrado_ductos_patagonia`, `reference_link_nube_se_pide_a_onedrive`.

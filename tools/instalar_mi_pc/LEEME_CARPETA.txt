@@ -1,0 +1,15 @@
+INSTALAR EN UNA PC NUEVA
+
+Esta carpeta se abre desde la PC nueva (tiene que ver la nube de Ingeniería).
+Cada subcarpeta tiene un solo archivo para hacer doble clic.
+
+  1- Mi asistente completo
+        Deja tu asistente entero en esa PC: tus skills, tu memoria, tus reglas y tus claves.
+        Si la PC tenía instalado el asistente "por área", lo apaga.
+
+  2- Mails de Calidad
+        Copia los mails de las cuentas de Calidad de esa PC a la nube de Ingeniería.
+
+Para las dos hace falta que la PC tenga sincronizada la biblioteca de Ingeniería con tu cuenta.
+
+Dudas: Facundo Santoro (Ingeniería).

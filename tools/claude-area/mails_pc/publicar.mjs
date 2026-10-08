@@ -19,7 +19,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { buscarBiblioteca } from '../../../scripts/_lib/nubeRutas.mjs';
 
-export const CARPETA = 'INSTALAR MAILS EN LA PC DE CALIDAD';
+export const CARPETA = 'INSTALAR EN UNA PC NUEVA/2- Mails de Calidad';
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const AREA = path.resolve(AQUI, '..');
 /** [origen, destino dentro de CARPETA, se pisa si ya existe] */
