@@ -393,6 +393,10 @@ impresos. El PNG de siempre escalado a A3 deja la letra en unos 4 pt. Tres propu
 - Se arma desde el JSON **commiteado** (`git show HEAD:`), no del de trabajo con cambios sin emitir.
 - Salida del 08/10/2026 (los 8 de Patagonia, 8,2 a 10,7 pt):
   `exports/flujogramas_a3_propuestas/FINAL/`.
+- **Propuesta D (aire), 08/10/2026**: Fak vio el B *"demasiado junto"*. D deja 9 pt, 6 a 13 mm entre figuras y parte en 2 hojas
+  A3 el que no entra (conector de hoja "CONTINÚA EN HOJA 2"). Motor `tools/flowchart/propuestas/D_aire/` (`render.mjs <clave> --png`,
+  `cortes.mjs` para elegir el corte que deja las dos hojas parejas, `armar_D.py`); salida `exports/flujogramas_a3_propuestas/D_aire/`.
+  Falta que Fak elija entre B y D.
 
 ## Anti-patrones
 

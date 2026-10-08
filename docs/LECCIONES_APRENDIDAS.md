@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **08/10 — Lo que cambia otro modelo (Gemini) en un documento se audita como contenido, no como ortografía**: al limpiar palabras renombró operaciones que tienen que coincidir con el AMFE (EDGE FOLDING → PLEGADO DE BORDES), dio vuelta un historial ("se eliminan rombos de scrap" pasó a "control de scrap") y armó el A3 desde lo commiteado, con el 160 viejo y la frase del IQC. Se compara cada texto contra la versión anterior y el AMFE antes de imprimir.
+
 - **08/10 — Ningún documento dice que lo hizo Claude o una IA, y al tocar un documento ajeno se revisa ENTERO, no solo mis celdas** (el listado de HO tenía "Claude" en CREADO POR desde junio y una pestaña oculta «para el próximo Claude»; la mantuve dos meses y dos agentes lo reportaron como dato; Fak: *"es un error gravísimo"*). Graduado a `core-prohibiciones.md` §9, `_sinFirmaIA.py`, `firma-ia-guard` y chequeo 9 del cierre-guard; memoria `feedback_ningun_documento_dice_que_lo_hizo_claude`.
 
 - **08/10 — Los créditos de API del plan Max NO cubren Claude Code: el modelo que se elija ahí no los gasta ni los ahorra; solo los gasta código que llama a la API con la clave de la organización vinculada** (un informe proponía «Opus por defecto para aprovechar los créditos»; la documentación oficial dice lo contrario). Los precios se leen de la tabla oficial, no de un informe: tenía mal Sonnet y las lecturas de caché. Regla `api-claude.md`.
