@@ -1,0 +1,5 @@
+{
+  "_que_es": "Que cuentas del Outlook de la notebook de Calidad se copian: las de la empresa cuya casilla trae alguna de estas palabras (o una casilla entera). Para sumar una cuenta, se agrega aca y se vuelve a hacer doble clic en Mails-PC-Calidad.cmd.",
+  "incluir": ["calidad"],
+  "dias_atras": 3650
+}

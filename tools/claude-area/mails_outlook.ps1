@@ -8,7 +8,11 @@
 #
 # Uso (Windows PowerShell 5.1, sin dependencias):
 #   powershell -NoProfile -ExecutionPolicy Bypass -File mails_outlook.ps1 -Desde 2026-07-01T00:00:00 [-Conocidos <archivo>]
-#              [-MaxSegundos 780] [-MaxCuerpo 20000] [-PausaMs 20]
+#              [-MaxSegundos 780] [-MaxCuerpo 20000] [-PausaMs 20] [-Buzon <casilla>]
+#   powershell -NoProfile -ExecutionPolicy Bypass -File mails_outlook.ps1 -Listar
+# -Buzon lee el buzon de ESA casilla en vez del principal (una PC con mas de una cuenta de Outlook: la de Calidad, 08/10/2026).
+# -Listar no lee ningun mail: solo dice que buzones (cuentas, compartidos, archivos de datos) tiene el Outlook abierto:
+#   {"t":"casilla","casilla":"..","nombre":"..","tipo":"principal|delegado|adicional|publica|no_exchange|otro","predeterminada":true|false}
 # Salida (UTF-8, un objeto JSON por renglon):
 #   {"t":"buzon","casilla":".."}     la casilla del buzon que se esta leyendo ("" si no se pudo saber); va antes de los mails
 #   {"t":"mail","id":..,"eid":..,"carpeta":..,"fecha":"AAAA-MM-DD HH:MM","de":..,"de_mail":..,"representa_mail":..,
@@ -30,7 +34,9 @@ param(
   [string]$Conocidos = '',
   [int]$MaxSegundos = 780,
   [int]$MaxCuerpo = 20000,
-  [int]$PausaMs = 20
+  [int]$PausaMs = 20,
+  [string]$Buzon = '',
+  [switch]$Listar
 )
 $ErrorActionPreference = 'Stop'
 $script:Utf8 = New-Object System.Text.UTF8Encoding($false)
@@ -40,6 +46,7 @@ $PROP_ID_INTERNET = 'http://schemas.microsoft.com/mapi/proptag/0x1035001F'
 $PROP_SMTP_REMITENTE = 'http://schemas.microsoft.com/mapi/proptag/0x5D01001F'
 $PROP_SMTP_REPRESENTA = 'http://schemas.microsoft.com/mapi/proptag/0x5D02001F'
 $PROP_SMTP_DESTINATARIO = 'http://schemas.microsoft.com/mapi/proptag/0x39FE001F'
+$PROP_DUENO_BUZON = 'http://schemas.microsoft.com/mapi/proptag/0x661B0102'
 $RE_CASILLA = '^[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)+$'
 # Carpetas que no se leen NUNCA. Si Outlook no puede decir cuales son, no se lee nada:
 #   Eliminados (3), Bandeja de salida (4), Borradores (16), Correo no deseado (23)
@@ -179,27 +186,95 @@ function LeerMail($m, [string]$carpeta, [string]$id, [string]$eid, $fecha) {
   }
 }
 
-# La casilla del buzon principal (el que se lee), o '' si no se pudo saber.
-function CasillaDelBuzon($ns) {
-  try {
-    $sid = [string]$ns.DefaultStore.StoreID
-    $n = $ns.Accounts.Count
-    for ($i = 1; $i -le $n; $i++) {
-      $cuenta = $ns.Accounts.Item($i)
-      $entrega = $null
-      try { $entrega = $cuenta.DeliveryStore } catch { $entrega = $null }
-      if ($null -ne $entrega -and ([string]$entrega.StoreID) -eq $sid) {
-        $c = Casilla (Texto $cuenta.SmtpAddress)
-        if ($c) { return $c }
+# La casilla de un buzon (el principal o cualquier otro del Outlook), o '' si no se pudo saber.
+# Primero la cuenta que entrega en ese buzon; el principal sigue por el usuario actual (como siempre); uno compartido o
+# adicional por el dueno del buzon; y al final el nombre del buzon, si es una casilla (pasa con el principal de Exchange).
+function CasillaDeLaStore($ns, $store, [bool]$principal) {
+  $sid = ''
+  try { $sid = [string]$store.StoreID } catch { $sid = '' }
+  if ($sid) {
+    try {
+      $n = $ns.Accounts.Count
+      for ($i = 1; $i -le $n; $i++) {
+        $cuenta = $ns.Accounts.Item($i)
+        $entrega = $null
+        try { $entrega = $cuenta.DeliveryStore } catch { $entrega = $null }
+        if ($null -ne $entrega -and ([string]$entrega.StoreID) -eq $sid) {
+          $c = Casilla (Texto $cuenta.SmtpAddress)
+          if ($c) { return $c }
+        }
       }
+    } catch { }
+  }
+  if ($principal) {
+    try {
+      $eu = $ns.CurrentUser.AddressEntry.GetExchangeUser()
+      if ($null -ne $eu) { $c = Casilla (Texto $eu.PrimarySmtpAddress); if ($c) { return $c } }
+    } catch { }
+    try { $c = Casilla (Texto $ns.CurrentUser.Address); if ($c) { return $c } } catch { }
+  } else {
+    try {
+      $dueno = $store.PropertyAccessor.BinaryToString($store.PropertyAccessor.GetProperty($PROP_DUENO_BUZON))
+      $entrada = $ns.GetAddressEntryFromID($dueno)
+      $eu = $entrada.GetExchangeUser()
+      if ($null -ne $eu) { $c = Casilla (Texto $eu.PrimarySmtpAddress); if ($c) { return $c } }
+      try { $c = Casilla (Texto $entrada.PropertyAccessor.GetProperty($PROP_SMTP_DESTINATARIO)); if ($c) { return $c } } catch { }
+    } catch { }
+  }
+  try { $c = Casilla (Texto $store.DisplayName); if ($c) { return $c } } catch { }
+  # ultimo recurso para uno compartido: resolver su nombre en la libreta de la empresa (solo mira, no escribe nada)
+  if (-not $principal) {
+    try {
+      $r = $ns.CreateRecipient([string]$store.DisplayName)
+      if ($r.Resolve()) {
+        $eu = $r.AddressEntry.GetExchangeUser()
+        if ($null -ne $eu) { $c = Casilla (Texto $eu.PrimarySmtpAddress); if ($c) { return $c } }
+      }
+    } catch { }
+  }
+  return ''
+}
+
+# Entre dos buzones con la misma casilla (el real y un archivo .pst o uno en linea con el mismo nombre) se lee el real:
+# primero el principal (Exchange principal), despues los de Exchange (delegado, adicional), al final cualquier otro (.pst).
+function RangoDeBuzon($ns, $store) {
+  if (EsElPrincipal $ns $store) { return 0 }
+  try {
+    $t = [int]$store.ExchangeStoreType
+    if ($t -eq 0) { return 0 }
+    if ($t -eq 1 -or $t -eq 4) { return 1 }
+    if ($t -eq 2) { return 3 }
+    if ($t -eq 3) { return 4 }
+  } catch { }
+  return 5
+}
+
+function EsElPrincipal($ns, $store) {
+  try { return ([string]$store.StoreID) -eq ([string]$ns.DefaultStore.StoreID) } catch { return $false }
+}
+
+function TipoDeBuzon($store) {
+  try {
+    switch ([int]$store.ExchangeStoreType) {
+      0 { return 'principal' }
+      1 { return 'delegado' }
+      2 { return 'publica' }
+      3 { return 'no_exchange' }
+      4 { return 'adicional' }
     }
   } catch { }
+  return 'otro'
+}
+
+# Todos los buzones del Outlook (en el orden que los da Outlook). Si no deja listarlos, al menos el principal.
+function BuzonesDelOutlook($ns) {
+  $lista = New-Object System.Collections.Generic.List[object]
   try {
-    $eu = $ns.CurrentUser.AddressEntry.GetExchangeUser()
-    if ($null -ne $eu) { $c = Casilla (Texto $eu.PrimarySmtpAddress); if ($c) { return $c } }
+    $n = $ns.Stores.Count
+    for ($i = 1; $i -le $n; $i++) { try { $lista.Add($ns.Stores.Item($i)) } catch { } }
   } catch { }
-  try { $c = Casilla (Texto $ns.CurrentUser.Address); if ($c) { return $c } } catch { }
-  return ''
+  if ($lista.Count -eq 0) { try { $lista.Add($ns.DefaultStore) } catch { } }
+  return ,$lista
 }
 
 # OJO: PowerShell no distingue mayusculas en los nombres: una variable $conocidos seria el parametro -Conocidos (texto).
@@ -229,23 +304,65 @@ if ($null -eq $outlook) { Terminar 'no_responde' 'Outlook esta abierto pero no r
 $ns = $null
 try { $ns = $outlook.GetNamespace('MAPI') } catch { Terminar 'no_responde' 'Outlook no deja leer el buzon' 4 }
 
-# Las carpetas que no se leen nunca tienen que poder identificarse TODAS: si una falla, no se lee nada.
+# -Listar: que buzones tiene este Outlook (no se lee ningun mail)
+if ($Listar) {
+  foreach ($b in (BuzonesDelOutlook $ns)) {
+    $esPrincipal = EsElPrincipal $ns $b
+    $nombreBuzon = ''
+    try { $nombreBuzon = Texto $b.DisplayName } catch { $nombreBuzon = '' }
+    Renglon ([ordered]@{ t = 'casilla'; casilla = (CasillaDeLaStore $ns $b $esPrincipal); nombre = $nombreBuzon; tipo = (TipoDeBuzon $b); predeterminada = $esPrincipal })
+  }
+  Renglon ([ordered]@{ t = 'fin'; completa = $true; revisados = 0; fallados = 0 })
+  exit 0
+}
+
+# El buzon que se lee: el principal, o el de la casilla de -Buzon (una PC con mas de una cuenta)
+$store = $null
+if ($Buzon) {
+  $deseada = Casilla $Buzon
+  if (-not $deseada) { Terminar 'error' 'la casilla de -Buzon no tiene forma de casilla' 1 }
+  $mejor = 99
+  foreach ($b in (BuzonesDelOutlook $ns)) {
+    if ((CasillaDeLaStore $ns $b (EsElPrincipal $ns $b)) -eq $deseada) {
+      $rango = RangoDeBuzon $ns $b
+      if ($rango -lt $mejor) { $store = $b; $mejor = $rango }
+    }
+  }
+  if ($null -eq $store) { Terminar 'error' 'Outlook no tiene un buzon con esa casilla' 1 }
+} else {
+  try { $store = $ns.DefaultStore } catch { Terminar 'no_responde' 'no pude abrir el buzon principal' 4 }
+}
+$esPrincipal = EsElPrincipal $ns $store
+
+# Las carpetas que no se leen nunca tienen que poder identificarse: si una falla en el buzon principal, no se lee nada.
+# En un buzon que no es el principal (compartido), si Outlook no puede decir cual es alguna carpeta (salida, borradores,
+# eliminados o no deseado), se apartan por nombre con variantes en espanol, ingles y portugues.
 $fuera = New-Object 'System.Collections.Generic.HashSet[string]'
+$nombresFueraDeEsteBuzon = New-Object System.Collections.Generic.List[string]
+$NOMBRES_DE_ESAS = @{
+  3  = @('elementos eliminados', 'deleted items', 'itens excluidos')
+  4  = @('bandeja de salida', 'outbox', 'caixa de saida')
+  16 = @('borradores', 'drafts', 'rascunhos')
+  23 = @('correo no deseado', 'correo electronico no deseado', 'junk email', 'lixo eletronico')
+}
 foreach ($k in $CARPETAS_FUERA) {
   $idCarpeta = ''
-  try { $idCarpeta = [string]$ns.GetDefaultFolder($k).EntryID } catch { $idCarpeta = '' }
-  if (-not $idCarpeta) { Terminar 'no_responde' ('Outlook no pudo decir cual es la carpeta ' + $k + ' (eliminados, salida, borradores o no deseado): no leo nada') 4 }
-  [void]$fuera.Add($idCarpeta)
+  try { $idCarpeta = [string]$store.GetDefaultFolder($k).EntryID } catch { $idCarpeta = '' }
+  if ($idCarpeta) { [void]$fuera.Add($idCarpeta) }
+  elseif (-not $esPrincipal) {
+    if ($NOMBRES_DE_ESAS.ContainsKey($k)) { foreach ($nm in $NOMBRES_DE_ESAS[$k]) { $nombresFueraDeEsteBuzon.Add($nm) } }
+  }
+  else { Terminar 'no_responde' ('Outlook no pudo decir cual es la carpeta ' + $k + ' (eliminados, salida, borradores o no deseado): no leo nada') 4 }
 }
-foreach ($k in $CARPETAS_FUERA_SI_ESTAN) { try { [void]$fuera.Add([string]$ns.GetDefaultFolder($k).EntryID) } catch { } }
+foreach ($k in $CARPETAS_FUERA_SI_ESTAN) { try { [void]$fuera.Add([string]$store.GetDefaultFolder($k).EntryID) } catch { } }
 
 $revisados = 0
 $fallados = 0
 $ultimoLatido = 0.0
 $completa = $true
 $raiz = $null
-try { $raiz = $ns.DefaultStore.GetRootFolder() } catch { Terminar 'no_responde' 'no pude abrir el buzon principal' 4 }
-Renglon ([ordered]@{ t = 'buzon'; casilla = (CasillaDelBuzon $ns) })
+try { $raiz = $store.GetRootFolder() } catch { Terminar 'no_responde' 'no pude abrir el buzon' 4 }
+Renglon ([ordered]@{ t = 'buzon'; casilla = (CasillaDeLaStore $ns $store $esPrincipal) })
 $pila = New-Object System.Collections.Stack
 $pila.Push(@($raiz, ''))
 try {
@@ -259,6 +376,7 @@ try {
       $nombre = [string]$carpeta.Name
     } catch { continue }
     if ($NOMBRES_FUERA -contains (SinTildes $nombre)) { continue }
+    if ($nombresFueraDeEsteBuzon.Contains((SinTildes $nombre))) { continue }
     $p = $nombre
     if ($ruta) { $p = $ruta + ' / ' + $nombre }
     $esDeMails = $true

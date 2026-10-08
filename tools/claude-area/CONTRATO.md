@@ -545,6 +545,28 @@ que sí dependen de ella: un día de espera antes de copiar cada mail, y una car
   y las cuentas, sin ningún mail). Estado en `%LOCALAPPDATA%\BarackMails`; si no hay lista de lo ya subido, se arma con los
   `id` de lo que ya está en `_entrada\<persona>\`, y sin ninguno el instalador no sigue (la primera pasada volvería a subir
   todo). Si la tarea del asistente vuelve y ve `CLAUDE POR AREA`, esta no sube (dos tareas subirían dos veces).
+- **Una PC con MÁS DE UNA cuenta de Outlook** (08/10/2026, la notebook de Calidad de Facundo Santoro: los mails de las
+  cuentas de Calidad tienen que aparecer en su PC): `mails_pc.mjs` + `mails_pc/` (`instalar.ps1` lo lanza
+  `Mails-PC-Calidad.cmd`; la tarea «Barack - mails de Calidad» corre `subir.ps1`). Es el mismo programa y el mismo filtro,
+  corrido una vez por cuenta: le pregunta al Outlook abierto qué buzones tiene (`mails_outlook.ps1 -Listar`), elige los de
+  la empresa cuya casilla dice «calidad» (`casillas.json`) que no son de lo privado ni los sacó Ingeniería, y corre
+  `mails_area.mjs` (`correr`, con las opciones solo-programáticas `persona`, `buzonPorCasilla`, `sinEspera`, `graciaHoras`)
+  una vez por cuenta, leyendo ese buzón (`-Buzon <casilla>`), con su carpeta `_entrada\<casilla>`, su estado y su lista de lo
+  ya subido. **Lo que cambia respecto de Carlos**: no hay fila en la lista de personas (la configuración la deja el
+  instalador con el nombre de la PC y el usuario de Windows, y el programa no lee nada si no coinciden), no hay día de
+  espera ni aviso (quien lo instala es quien lo pidió), trae el historial entero (3650 días, lo más nuevo primero) y corre
+  cada 2 horas. De la nube toma solo `<mails>\_control\<PC>.json`, que **solo puede apagar o sacar cuentas** (`apagado`,
+  `excluir`); sumar una cuenta es editar `casillas.json` y volver a correr el instalador. En un buzón que no es el principal
+  (un compartido), si Outlook no dice cuál es su carpeta de eliminados, borradores, salida o correo no deseado, el lector las
+  aparta por nombre; en el principal sigue valiendo «si no puede decirlo, no se lee nada». Estado en
+  `%LOCALAPPDATA%\BarackMailsPC`; cada pasada deja `<carpeta de mails>\_salud\<PC>.json`. Pruebas:
+  `__tests__/scripts/mailsPcCalidad.test.mjs`. Publicar: `node tools/claude-area/mails_pc/publicar.mjs --aplicar`.
+- **La PC de Ingeniería de Fak sube SU casilla con el mismo instalador** (08/10/2026, Fak: *"asegurate de que todos mis
+  mails estén cargados en la nube y se carguen siempre automáticamente"*): `instalar.ps1 -Raiz %LOCALAPPDATA%\BarackMailsFak
+  -SoloCasillas f.santoro@barackmercosul.com -NombreTarea "Barack - mis mails a la nube"`. `-SoloCasillas` reemplaza a
+  `casillas.json` y `-NombreTarea` a la tarea de Calidad (en PowerShell `$Tarea` y `$TAREA` son la misma variable: por eso
+  los nombres distintos). Mismo filtro de lo privado; sus mails caen en `_entrada\f.santoro\`. Es aparte de la copia local
+  de `scripts/_syncMailsDiario.ps1` (`.mail-cache/`), que sigue igual.
 
 ## Lo que usa el plugin `barack-area` (aviso de arranque y controles) — 01/10/2026
 

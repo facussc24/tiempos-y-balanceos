@@ -1,0 +1,39 @@
+MAILS DE LAS CUENTAS DE CALIDAD A LA NUBE DE INGENIERÍA
+(para la notebook de Calidad que le dieron a Facundo Santoro)
+
+QUÉ HACE
+Copia los mails de las cuentas de Calidad que tiene el Outlook de esa notebook a la nube de Ingeniería, para poder
+buscarlos desde la PC de Ingeniería. Es el mismo programa y el mismo filtro que ya se usa con los mails de Carlos:
+lo de Dirección y Recursos Humanos, y los temas personales (sueldos, salud, sanciones, claves), no se copia.
+Solo lee: no manda, no borra y no cambia nada de los mails.
+
+
+QUÉ HAY QUE HACER (en la notebook de Calidad, una sola vez)
+
+  1. Abrí el Outlook CLÁSICO (el de siempre, el de la O azul; no el "Nuevo Outlook") y fijate que estén las cuentas
+     de Calidad. Dejalo abierto.
+
+  2. Hacé doble clic en   Mails-PC-Calidad.cmd   (está al lado de este archivo).
+
+  3. Esperá hasta que la ventana diga LISTO (menos de un minuto) y cerrala.
+
+Si en cambio dice "TODAVÍA NO COPIA NADA", el motivo está escrito en la ventana. No hace falta copiar nada: el
+resultado ya queda guardado en la nube de Ingeniería.
+
+Esta carpeta tiene que verse en la notebook (Explorador de archivos, BARACK ARGENTINA SRL, Ingeniería y Proyecto -
+General). Si no aparece, primero hay que sincronizar la biblioteca de Ingeniería en esa PC.
+
+
+DESPUÉS
+
+  - Se copia solo: cada vez que se prende la PC (10 minutos después) y cada 2 horas, con el Outlook clásico abierto.
+    Primero trae lo más nuevo y después sigue con lo viejo hasta tener todo (puede llevar un par de días).
+  - Deja el Outlook clásico abriéndose solo al prender la PC (minimizado), porque sin él abierto no se puede leer
+    nada. Para sacarlo: Win+R, escribir  shell:startup  y borrar el atajo "Outlook clasico (mails de Calidad)".
+  - Las cuentas que se copian son las de la empresa cuya casilla dice "calidad". Las demás (la propia, la de otra
+    persona) no se copian: la ventana las lista una por una con el motivo.
+  - Para sumar otra cuenta: agregarla en  programa\casillas.json  y volver a hacer doble clic en el .cmd.
+  - Para apagarlo desde Ingeniería: se deja un archivo con el nombre de la PC en  mails\_control  de la nube
+    (de ahí solo se puede apagar o sacar cuentas, nunca sumar).
+
+Dudas: Facundo Santoro (Ingeniería).

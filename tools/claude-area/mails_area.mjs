@@ -576,10 +576,12 @@ async function* mailsDeJsonl(ruta, corte, conocidos, ctx) {
 }
 
 /** Mails del Outlook clasico abierto, por el lector en PowerShell (solo lectura). Deja en ctx lo que paso. */
-async function* mailsDeOutlook({ lector, corte, idsPath, maxSegundos, env, conocidos, segundosSinRespuesta }, ctx) {
+async function* mailsDeOutlook({ lector, corte, idsPath, maxSegundos, env, conocidos, segundosSinRespuesta, buzon }, ctx) {
     const ps = path.join(env.SystemRoot || env.SYSTEMROOT || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
     const args = ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', lector, '-Desde', isoLocal(corte), '-MaxSegundos', String(maxSegundos)];
     if (fs.existsSync(idsPath)) args.push('-Conocidos', idsPath);
+    // una PC con mas de una cuenta de Outlook (mails_pc.mjs): el lector lee el buzon de esa casilla, no el principal
+    if (buzon) args.push('-Buzon', buzon);
     const hijo = spawn(ps, args, { env, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
     // si PowerShell no arranca (no esta, o la PC no lo deja correr) no hay lector: se dice, no se cae
     hijo.on('error', () => { ctx.outlook = { estado: 'error', detalle: 'no pude arrancar el lector de Outlook (PowerShell)' }; });
@@ -627,6 +629,10 @@ const SIGUE_LISTA = new Set(['ok', 'parcial', 'pausado', 'primer_dia', 'otro_buz
 /**
  * Una corrida. `opciones`: { home, raizNube, estado, simular, maxMinutos, diasAtras } y, SOLO PARA LAS PRUEBAS (no llegan
  * por la linea de comandos): { fuenteJsonl, lector, ahora, env, identidad, segundosSinRespuesta }.
+ * Y SOLO PARA mails_pc.mjs (una PC con varias cuentas de Outlook, que corre este mismo paso una vez por cuenta; tampoco llegan
+ * por la linea de comandos): { persona (la fila, en vez de buscarla en la lista publicada), buzonPorCasilla (el lector lee el
+ * buzon de esa casilla, no el principal), sinEspera (la persona es quien lo instalo y lo pidio: sin el dia de espera ni el
+ * aviso), graciaHoras (cuanto espera un mail antes de subir, en vez de GRACIA_HORAS) }.
  * Devuelve { codigo, resumen } y no tira excepciones por lo esperable.
  */
 export async function correr(opciones) {
@@ -664,8 +670,10 @@ export async function correr(opciones) {
     // 1) ¿esta PC sube? Solo si la lista publicada lo dice para ESTA persona en ESTA PC.
     const comun = path.join(home, 'publicado', 'conocimiento', 'comun');
     const identidad = opciones.identidad && typeof opciones.identidad === 'object' ? opciones.identidad : identidadReal();
-    const persona = personaQueSube(leerJson(path.join(comun, 'personas.json')), identidad);
+    const persona = opciones.persona && typeof opciones.persona === 'object' ? opciones.persona : personaQueSube(leerJson(path.join(comun, 'personas.json')), identidad);
     if (!persona || persona.mails !== 'sube') return salir('apagado');
+    const sinEspera = opciones.sinEspera === true;
+    const gracia = Number.isFinite(opciones.graciaHoras) && opciones.graciaHoras >= 0 ? opciones.graciaHoras : GRACIA_HORAS;
 
     // 2) lo privado: sin la lista completa no sale nada
     const priv = cargarPrivados(path.join(comun, 'mails_privados.json'));
@@ -687,10 +695,10 @@ export async function correr(opciones) {
     // Si la fila trae el dia en que la persona lo acordo (`mails_acordado`) y ya paso un dia desde entonces, no hay espera:
     // ya lo sabia. Lo escribe quien publica; sin ese dato, la espera corre desde el aviso.
     const acordado = parsearFecha(persona.mails_acordado);
-    const yaLoSabia = !!acordado && ahora.getTime() - acordado.getTime() >= GRACIA_HORAS * 3600000;
+    const yaLoSabia = sinEspera || (!!acordado && ahora.getTime() - acordado.getTime() >= GRACIA_HORAS * 3600000);
     // se vuelve a prender despues de un apagado: el dia de espera corre de nuevo desde hoy
     let prendidaDesde = desde;
-    if (!simular) {
+    if (!simular && !sinEspera) {
         try {
             avisoNuevo = dejarAvisoALaPersona(home, desde, !yaLoSabia);
             if (previo.apagada_desde) { dejarAvisoDeCambio(home, ahora, true); marcas.apagada_desde = null; marcas.prendida_de_nuevo = isoLocal(ahora); prendidaDesde = ahora; }
@@ -716,7 +724,7 @@ export async function correr(opciones) {
     let corte;
     if (previo.marca && parsearFecha(previo.marca)) corte = diasAtras(parsearFecha(previo.marca), MARGEN_DIAS);
     else corte = parsearFecha(previo.corte_inicial) || diasAtras(ahora, dias);
-    const hasta = new Date(ahora.getTime() - GRACIA_HORAS * 3600000);
+    const hasta = new Date(ahora.getTime() - gracia * 3600000);
 
     const conocidos = idsSubidos(idsPath);
     const maxMin = Number(opciones.maxMinutos) > 0 ? Number(opciones.maxMinutos) : MAX_MINUTOS;
@@ -727,7 +735,7 @@ export async function correr(opciones) {
     else {
         if (!fs.existsSync(lector)) return salir('error', { detalle: 'no esta el lector de Outlook', estado: marcas });
         const sinRespuesta = Number(opciones.segundosSinRespuesta) > 0 ? Number(opciones.segundosSinRespuesta) : SEGUNDOS_SIN_RESPUESTA;
-        fuente = mailsDeOutlook({ lector, corte, idsPath, maxSegundos: Math.max(30, Math.round(maxMin * 60) - 60), env, conocidos, segundosSinRespuesta: sinRespuesta }, ctx);
+        fuente = mailsDeOutlook({ lector, corte, idsPath, maxSegundos: Math.max(30, Math.round(maxMin * 60) - 60), env, conocidos, segundosSinRespuesta: sinRespuesta, buzon: opciones.buzonPorCasilla === true ? casilla : '' }, ctx);
     }
 
     const cuenta = { privado: 0, cuarentena: 0, entrada: 0 };
