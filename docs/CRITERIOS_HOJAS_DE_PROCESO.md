@@ -54,7 +54,7 @@ El formulario SGC `I-IN-002.4-R01` posee un bloque inferior denominado **CICLO D
 En la primera versión de la celda Hotmelt, se habían completado artificialmente 85 campos de control con valores inventados (*"Inspeccionar con calibre digital"*, *"1 pieza cada 30 minutos"*, *"Registro RC"*).  
 Fak ordenó el **vaciado inmediato y total** de los campos en las 17 láminas:
 - No se carga absolutamente nada hasta que Aseguramiento de la Calidad emita formalmente su Plan de Control aprobado para ese Part Number.
-- Las celdas de la tabla deben conservarse con sus bordes negros (`1 pt`), sus cabeceras azul oscuro (`#44546A`) y texto blanco, pero **el cuerpo de las filas debe entregarse completamente limpio / vacío (o con "TBD" si un campo requiere indicación explícita)**.
+- Las celdas de la tabla deben conservarse con sus bordes negros (`1 pt`), sus cabeceras azul oscuro (`#44546A`) y texto blanco, pero **el cuerpo de las filas debe entregarse completamente limpio / vacío**. Sin "TBD": una hoja con TBD no se imprime (Fak, 07/10/2026, sobre una hoja llena de TBD: *"al pedo la vamos a imprimir"*).
 - **Prohibición de siglas no autorizadas:** En caso de completarse a futuro por Calidad, la columna *Resp.* solo admite `OP` (Operador de Producción), `OC` (Operador de Calidad) o `Insp.` (Inspector). La columna *Registro* solo admite `Set up` o `-`. Queda estrictamente prohibido usar siglas inventadas como `"RC"` (Registro de Calidad).
 
 ---
@@ -250,7 +250,7 @@ El formulario de Barack Argentina está diseñado para reproducirse en escala 1:
 │ │    Ancho: 21.65 cm, Alto: 3.10 cm                      │    6.40 cm    │ │
 │ ├────────────────────────────────────────────────────────┴───────────────┤ │  Y = 18.10 / 18.30
 │ │ 6. PLAN DE REACCIÓN ANTE NO CONFORME (Alto: 2.00 cm)                   │ │
-│ │    3 Fases fijas (Arial Bold) a la izq. / Acciones específicas a der.  │ │
+│ │    Disparador + 3 fases fijas (Arial Bold) a la izq. Nada a la der.    │ │
 │ └────────────────────────────────────────────────────────────────────────┘ │  Y = 20.30
 │ MARGEN INFERIOR (0.70 cm)                                                  │
 └────────────────────────────────────────────────────────────────────────────┘  Y = 21.00
@@ -298,7 +298,7 @@ El formulario de Barack Argentina está diseñado para reproducirse en escala 1:
      - Metadatos de cabecera: `Pt(8)` etiquetas, `Pt(9.5)` valores en negrita.
 2. **Arial (Fuente Obligatoria de Seguridad y Plan de Reacción):**  
    - El SGC de Barack estipula que el bloque inferior de **PLAN DE REACCIÓN ANTE NO CONFORME** debe redactarse obligatoriamente en tipografía **Arial**, para brindar máxima visibilidad ante incidentes.  
-   - Las 3 frases fijas van en `Arial Pt(8.5)` Bold, y las acciones de contingencia a la derecha en `Arial Pt(8.5)` Regular.
+   - Las 3 frases fijas van en `Arial Pt(8.5)` Bold. Sin columna de acciones a la derecha (ver 4.5).
 
 ---
 
@@ -320,14 +320,20 @@ La redacción de los pasos debe seguir un patrón gramatical riguroso:
   2. La HO debe indicar una **acción positiva concreta de verificación**, no un lamento:  
      *Forma correcta:* **"Verificar que no haya piezas metálicas ni impurezas sobre la lámina antes de iniciar el ciclo de conformado."**
 * **Tratamiento de Datos No Confirmados:**  
-  Queda prohibido imprimir leyendas como "BORRADOR", "SUJETO A REVISIÓN" o "PENDIENTE DE VALIDACIÓN" cruzando la lámina. Si un dato técnico exacto no está disponible en la documentación fuente, **no se escribe `TBD` en la descripción** (Fak, 24/09/2026: *"no puede haber ni 1 TBD... el TBD del numero de hoja si"*): el paso se redacta genérico con la información disponible, sin inventar el valor, y el faltante va a la lista de pendientes. `TBD` solo en el cajetín (N° de operación, HO, sector).
+  Queda prohibido imprimir leyendas como "BORRADOR", "SUJETO A REVISIÓN" o "PENDIENTE DE VALIDACIÓN" cruzando la lámina, y tampoco va **"PRELIMINAR"** en el título ni en ningún lado (orden de Carlos Baptista; Fak, 07/10/2026: *"debemos eliminar la palabra preliminar de las hojas... debemos respetarla"*). Si un dato técnico exacto no está disponible en la documentación fuente, **no se escribe `TBD` en la descripción** (Fak, 24/09/2026: *"no puede haber ni 1 TBD... el TBD del numero de hoja si"*): el paso se redacta genérico con la información disponible, sin inventar el valor, y el faltante va a la lista de pendientes. `TBD` solo en el cajetín de una hoja que todavía se está armando (N° de operación, HO, sector); **una hoja que va a planta no lleva ni uno**, tampoco en el cajetín (Fak, 07/10/2026: *"hojas sin número"*, *"al pedo la vamos a imprimir"*).
 
 ---
 
 ### 4.5 El Plan de Reacción Ante No Conforme (Estructura SGC Inmutable)
 El bloque inferior de la hoja (`PLN_Y = 18.30 cm`, `Alto: 2.00 cm`) está regulado por el procedimiento de calidad de Barack.
 
-#### Estructura Fija de Dos Columnas:
+**Como en las HO de Excel, y es el ARMADO de la hoja, no solo el bloque** (Fak, 07/10/2026, al revisar el paquete de impresión: *"habíamos dicho que eso se debía corregir"* y después *"no es el estándar que decidimos... a la derecha queda todo blanco, está mal aprovechado el espacio"*):
+- El plan va **abajo a la izquierda, debajo de las imágenes**, con el ancho de las imágenes. A su derecha va el **ciclo de control** (y arriba de este, los elementos de seguridad). Ninguna franja a lo ancho con media hoja en blanco.
+- Banda gris con `PLAN DE REACCION ANTE NO CONFORME` y abajo, en Arial 10,5, los cuatro renglones de siempre: `SI DETECTA "PRODUCTO" O "PROCESO" NO CONFORME` (DETECTA subrayado y en negrita, NO CONFORME en rojo), `DETENGA LA OPERACIÓN`, `NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR`, `ESPERE LA DEFINICION DEL LIDER O SUPERVISOR` (el verbo subrayado y en negrita). **Siempre ese texto**: un disparador propio de la máquina no va.
+- Sin columna de acciones específicas a la derecha (la que este canon pedía hasta ese día).
+- Lo dibuja `bloque_plan()` de `scripts/img/generar_hojas_img.py`; la geometría nueva está en sus constantes (`IMG_BODY_H`, `EPP_Y`, `CIC_X`, `PLN_X`). El dibujo ASCII de 4.1 es el armado VIEJO.
+
+#### Estructura:
 1. **Columna Izquierda (Ancho: 15.20 cm):**
    - **Disparador del problema:** En recuadro gris tenue (`#F2F2F2`) con tipografía Arial negrita en mayúsculas:  
      *Ejemplos:*  
@@ -338,7 +344,7 @@ El bloque inferior de la hoja (`PLN_Y = 18.30 cm`, `Alto: 2.00 cm`) está regula
      1. **`DETENGA LA OPERACIÓN`**  
      2. **`NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR`**  
      3. **`ESPERE LA DEFINICION DEL LIDER O SUPERVISOR`**  
-2. **Columna Derecha (Ancho: 13.10 cm restante):**
+2. ~~**Columna Derecha (Ancho: 13.10 cm restante):**~~ **SACADA el 07/10/2026** (ver arriba). Lo que decía, para la historia:
    - **Acciones Específicas de Contingencia del Puesto (Arial Pt 8.5):**  
      Instrucciones concretas y directas para el operador mientras aguarda la llegada del supervisor.  
      *Ejemplo estándar:*  
@@ -401,7 +407,7 @@ Antes de entregar cualquier presentación PowerPoint (`.pptx`), exportación en 
        - Logo de Barack sobre fondo blanco (sin relleno azul).
        - Redacción en infinitivo instruccional puro ("Verificar", "Montar", "Accionar").
        - Puntos críticos VW señalizados con triángulo amarillo (#FFD700) en foto y ▲ en texto.
-       - Plan de Reacción en Arial Bold con las 3 fases fijas del SGC a la izquierda y acciones del puesto a la derecha.
+       - Plan de Reacción como en las HO de Excel: abajo a la izquierda, debajo de las imágenes, con el ciclo de control a su derecha y sin columna de acciones (ver 4.5).
 
 [ ] 6. ARCHIVO CERRADO Y VERIFICADO:
        - PowerPoint cerrado antes de la generación para evitar bloqueos de archivo.

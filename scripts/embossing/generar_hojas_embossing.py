@@ -17,8 +17,13 @@ Fuentes (todo lo que dice una hoja sale de aca, con su pagina o su segundo):
   Los dos en `...\\Upper Trimming\\_BACKUP_UpperTrim_2026-07-01\\APQP\\28- Corrida de Produccion
   \\01- Try Out Embossing Machine JFortune`.
 
-N° de operacion: TBD. El Upper Trim no tiene flujograma en el Listado Maestro (llega hasta el
-159) y la numeracion la manda el flujograma (no-pfd-no-ho.md). Las hojas van TBD.1 a TBD.6.
+N° de operacion: 60, EMBOSSING DEL LOGO DE CARGA del flujograma 160 Rev.A (01/10/2026); la
+numeracion la manda el flujograma (no-pfd-no-ho.md) y cada hoja es una parte: 60.1 a 60.6.
+Sector TAPIZADO: en el flujograma 160 la tela cortada y el sustrato van al sector de tapizado
+antes de la 30, y no hay otro traslado hasta el de embalaje, despues de la 70.
+HO-994: el proximo libre del listado al 07/10/2026 (`python scripts/_hoNumeros.py`); la fila
+del listado se escribe con el OK de Fak (autonomy-contract.md §F).
+Para imprimir va sin portada (skill hojas-de-proceso §3 bis): `--sin-portada`.
 
 Lo que ninguna fuente dice NO se escribe (core-prohibiciones §1): va a `falta.txt`.
 
@@ -62,30 +67,30 @@ EPP_MOLDE = [G.ICO_ROPA, G.ICO_CALZADO, G.ICO_GUANTES]
 
 CAJETIN = dict(
     titulo_hoja="HOJA DE OPERACIONES",
-    ho="HO-TBD",
+    ho="HO-994",
     form="I-IN-002.4-R01",
     modelo="PATAGONIA",
     cliente="COZZUOL",
-    sector="TBD",
+    sector="TAPIZADO",
     pieza="UPPER TRIM PANEL — 2HC.864.263.C (ONE) / 2HC.864.263.B (TWO WIRELESS)",
     puesto="-",
     realizo="F. Santoro",
-    aprobo="",          # sin firmar: lo aprueba C. Baptista cuando lo vea
-    fecha="24/09/2026",
-    rev="-",
+    aprobo="C. Baptista",
+    fecha="07/10/2026",
+    rev="A",
 )
 
 PORTADA = dict(
     titulo="HOJAS DE PROCESO — PRENSA DE EMBOSSING",
     subtitulo="Marcado del logo de carga inalámbrica sobre la tela · UPPER TRIM PANEL PATAGONIA",
-    ho="HO-TBD",
+    ho="HO-994",
     form="I-IN-002.4-R01",
-    op_flujo="TBD",
+    op_flujo="60 — EMBOSSING DEL LOGO DE CARGA",
     cliente_modelo="COZZUOL / VW PATAGONIA",
     pieza="UPPER TRIM PANEL — 2HC.864.263.C / 2HC.864.263.B",
     maquina="Prensa servo con molde calefaccionado — Suzhou Jfortune",
     firmas="F. Santoro / C. Baptista",
-    fecha_rev="24/09/2026",
+    fecha_rev="07/10/2026  ·  Rev. A",
     foto=_f("m_portada.jpg"),
 )
 
@@ -101,7 +106,7 @@ MATERIALES = [
 HOJAS = [
     # ── PRENDER ──────────────────────────────────────────────────────────────
     dict(
-        op="TBD.1",
+        op="60.1",
         denominacion="ENCENDIDO DE LA PRENSA",
         modo="rotulada",
         imagenes=[_f("r1_tablero.jpg")],
@@ -135,7 +140,7 @@ HOJAS = [
     ),
 
     dict(
-        op="TBD.2",
+        op="60.2",
         denominacion="AJUSTE Y CONTROL DE TEMPERATURA DEL MOLDE",
         modo="rotulada",
         imagenes=[_f("r2_temperatura.jpg")],
@@ -173,7 +178,7 @@ HOJAS = [
     ),
 
     dict(
-        op="TBD.3",
+        op="60.3",
         denominacion="ARRANQUE EN AUTOMATICO Y RETORNO A ORIGEN",
         modo="rotulada",
         imagenes=[_f("r3_pantalla.jpg")],
@@ -205,7 +210,7 @@ HOJAS = [
 
     # ── PRODUCIR ─────────────────────────────────────────────────────────────
     dict(
-        op="TBD.4",
+        op="60.4",
         denominacion="EMBOSSING DEL LOGO CON MANDO BIMANUAL",
         modo="secuencia",
         columnas=True,            # fotos verticales: tres columnas, no 2 arriba y 1 abajo
@@ -255,7 +260,7 @@ HOJAS = [
 
     # ── SET UP ───────────────────────────────────────────────────────────────
     dict(
-        op="TBD.5",
+        op="60.5",
         denominacion="AJUSTE DE PARAMETROS DE CARRERA",
         modo="rotulada",
         imagenes=[_f("r5_parametros.jpg")],
@@ -293,7 +298,7 @@ HOJAS = [
     ),
 
     dict(
-        op="TBD.6",
+        op="60.6",
         denominacion="CAMBIO DE MOLDE",
         hoja_de=(1, 2),
         modo="secuencia",
@@ -335,7 +340,7 @@ HOJAS = [
     ),
 
     dict(
-        op="TBD.6",
+        op="60.6",
         denominacion="CAMBIO DE MOLDE",
         hoja_de=(2, 2),
         modo="secuencia",
@@ -367,7 +372,7 @@ HOJAS = [
             "locating pin before insertion»; la foto es la Fig. 1 de la pag. 7 (el molde con su "
             "cable). Nota: manual pag. 7: «For wiring, connect by color: the heater cartridge "
             "wires are red and blue; the thermocouple wires are white and orange»; temperatura, "
-            "parametros y origen, hojas TBD.2, TBD.5 y TBD.3",
+            "parametros y origen, hojas 60.2, 60.5 y 60.3",
         ],
         epp=EPP_MOLDE,
         disparador="SI EL CONECTOR NO SALE O NO ENTRA SIN FORZARLO",
@@ -404,7 +409,7 @@ def gate_fuentes_sin_otra_maquina(hojas):
                 raise SystemExit(f"hoja {h['op']}: cita {f[:40]}, que es de otra maquina")
 
 
-def compilar():
+def compilar(sin_portada=False):
     gate_materiales(HOJAS)
     gate_fuentes_sin_otra_maquina(HOJAS)
     G.PLANCHA_DECK = PLANCHA
@@ -413,8 +418,9 @@ def compilar():
     prs = Presentation()
     prs.slide_width = Cm(G.W)
     prs.slide_height = Cm(G.H)
-    indice = [(h["op"], G._denominacion_con_hoja(h)) for h in HOJAS]
-    G.portada(prs, PORTADA, logo=G.LOGO_BARACK, foto=PORTADA["foto"], indice=indice)
+    if not sin_portada:
+        indice = [(h["op"], G._denominacion_con_hoja(h)) for h in HOJAS]
+        G.portada(prs, PORTADA, logo=G.LOGO_BARACK, foto=PORTADA["foto"], indice=indice)
 
     reparto_3 = G._REPARTO[3]
     for h in HOJAS:
@@ -430,7 +436,7 @@ def compilar():
         print(f"  [OK] {h['op']}  {G._denominacion_con_hoja(h)}")
 
     prs.save(SALIDA)
-    print(f"\n{len(HOJAS) + 1} laminas -> {SALIDA}")
+    print(f"\n{len(HOJAS) + (0 if sin_portada else 1)} laminas -> {SALIDA}")
 
 
 if __name__ == "__main__":
@@ -439,4 +445,5 @@ if __name__ == "__main__":
             _s.reconfigure(encoding="utf-8", errors="replace")
         except Exception:
             pass
-    compilar()
+    # para imprimir va sin portada (Fak, 02/10/2026: skill hojas-de-proceso §3 bis)
+    compilar(sin_portada="--sin-portada" in sys.argv[1:])

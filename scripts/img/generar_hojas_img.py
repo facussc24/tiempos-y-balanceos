@@ -61,19 +61,29 @@ M = 0.70
 X0, X1 = M, W - M                        # 0.70 .. 29.00 (ancho útil 28.30 cm)
 HDR_Y, HDR_H = M, 4.00                   # 0.70 .. 4.70 cm
 
-BODY_Y, BODY_H = 4.90, 9.90              # 4.90 .. 14.80 cm
+# Armado igual al de las HO de Excel (Fak, 07/10/2026: "no es el estandar que decidimos... a la
+# derecha queda todo blanco, esta mal aprovechado el espacio"): a la IZQUIERDA las imagenes y,
+# debajo, el plan de reaccion; a la DERECHA la descripcion, los elementos de seguridad y, abajo,
+# el ciclo de control. Ninguna franja queda a lo ancho con media hoja en blanco.
+BODY_Y = 4.90
 IMG_W = 16.20
 IMG_X = X0
 DSC_X = X0 + IMG_W + 0.25                # 17.15 cm
 DSC_W = X1 - DSC_X                       # 11.85 cm
+IMG_BODY_H = 17.45 - BODY_Y              # imagenes: 4.90 .. 17.45 cm
+DSC_BODY_H = 15.00 - BODY_Y              # descripcion: 4.90 .. 15.00 cm
+BODY_H = DSC_BODY_H                      # (nombre viejo, lo leen los one-shots)
 
-CIC_Y, CIC_H = 15.00, 3.10               # 15.00 .. 18.10 cm
-EPP_W = 6.40
-CIC_W = X1 - X0 - EPP_W - 0.25           # 21.65 cm
-EPP_X = X0 + CIC_W + 0.25                # 22.60 cm
+EPP_X, EPP_W = DSC_X, DSC_W
+EPP_Y, EPP_H = 15.15, 2.30               # 15.15 .. 17.45 cm
 
-PLN_Y = 18.30                            # 18.30 .. 20.30 cm
-PLN_H = H - M - PLN_Y                    # 2.00 cm
+CIC_X, CIC_W = DSC_X, DSC_W
+CIC_Y = 17.60
+CIC_H = H - M - CIC_Y                    # 17.60 .. 20.30 cm
+
+PLN_X, PLN_W = X0, IMG_W
+PLN_Y = 17.60
+PLN_H = H - M - PLN_Y                    # 17.60 .. 20.30 cm
 
 # ─── RUTAS DE ACTIVOS LOCALES ────────────────────────────────────────────────
 BASE_DIR = r"c:\Dev\BarackMercosul\scripts\img"
@@ -323,7 +333,7 @@ def bloque_imagenes(slide, imagenes, pies=None, numerar=True):
     """Una foto por paso, numerada, con su pie. El indice+1 ES el numero del paso."""
     _banda(slide, IMG_X, BODY_Y, IMG_W, 0.60, "IMÁGENES", size=12)
     y0 = BODY_Y + 0.60
-    h = BODY_H - 0.60
+    h = IMG_BODY_H - 0.60
     _caja(slide, IMG_X, y0, IMG_W, h, BLANCO, borde=NEGRO, ancho=Pt(1))
 
     faltan = [i for i in imagenes if not os.path.exists(i)]
@@ -375,7 +385,7 @@ def bloque_imagenes(slide, imagenes, pies=None, numerar=True):
 def bloque_pasos(slide, pasos, nota=None, parametros=None):
     _banda(slide, DSC_X, BODY_Y, DSC_W, 0.60, "DESCRIPCION DE LA OPERACIÓN", size=12)
     y = BODY_Y + 0.60
-    h = BODY_H - 0.60
+    h = DSC_BODY_H - 0.60
     sh = _caja(slide, DSC_X, y, DSC_W, h, BLANCO, borde=NEGRO, ancho=Pt(1))
     tf = sh.text_frame
     tf.word_wrap = True
@@ -451,12 +461,12 @@ COLS_CIC = [("Características a controlar", 8.0), ("Método de control", 5.6),
             ("Resp.", 2.7), ("Frec.", 2.9), ("Registro", 3.4)]
 
 def bloque_ciclo(slide, filas=None):
-    _banda(slide, X0, CIC_Y, CIC_W, 0.55, "CICLO DE CONTROL", size=12)
+    _banda(slide, CIC_X, CIC_Y, CIC_W, 0.55, "CICLO DE CONTROL", size=12)
     y = CIC_Y + 0.55
     total = sum(w for _, w in COLS_CIC)
     anchos = [w / total * CIC_W for _, w in COLS_CIC]
     hh = 0.48
-    x = X0
+    x = CIC_X
     for (lab, _), an in zip(COLS_CIC, anchos):
         _celda(slide, x, y, an, hh, lab, relleno=AZUL, color=BLANCO, size=8.5, bold=True)
         x += an
@@ -465,7 +475,7 @@ def bloque_ciclo(slide, filas=None):
     filas = filas or [("", "", "", "", ""), ("", "", "", "", "")]
     fh = (CIC_Y + CIC_H - y) / len(filas)
     for f in filas:
-        x = X0
+        x = CIC_X
         for val, an in zip(f, anchos):
             _celda(slide, x, y, an, fh, str(val), size=8.5)
             x += an
@@ -473,9 +483,9 @@ def bloque_ciclo(slide, filas=None):
 
 # ─── 5. ELEMENTOS DE SEGURIDAD (EPP) ─────────────────────────────────────────
 def bloque_epp(slide, iconos, refs=("OP - Operador de Producción",)):
-    _banda(slide, EPP_X, CIC_Y, EPP_W, 0.55, "ELEMENTOS DE SEGURIDAD", size=9, azul=AZUL2)
-    y = CIC_Y + 0.55
-    h = CIC_H - 0.55 - 0.44 * len(refs)
+    _banda(slide, EPP_X, EPP_Y, EPP_W, 0.55, "ELEMENTOS DE SEGURIDAD", size=9, azul=AZUL2)
+    y = EPP_Y + 0.55
+    h = EPP_H - 0.55 - 0.44 * len(refs)
     _caja(slide, EPP_X, y, EPP_W, h, BLANCO, borde=NEGRO, ancho=Pt(1))
     
     iconos_ok = [ic for ic in (iconos or []) if os.path.exists(ic)]
@@ -498,43 +508,44 @@ FIJAS = ["DETENGA LA OPERACIÓN",
          "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
          "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR"]
 
-def bloque_plan(slide, disparador, acciones=None):
-    _banda(slide, X0, PLN_Y, X1 - X0, 0.48, "PLAN DE REACCION ANTE NO CONFORME", size=11)
-    y = PLN_Y + 0.48
-    hh = PLN_H - 0.48
-    izq = 15.20
+GRIS_PLAN = RGBColor(0xBF, 0xBF, 0xBF)   # banda gris del plan en las HO de Excel
+ROJO_PLAN = RGBColor(0xFF, 0x00, 0x00)
 
-    _celda(slide, X0, y, izq, hh * 0.28, disparador, size=8.5, bold=True,
-           fuente="Arial", relleno=GRISF, align=PP_ALIGN.LEFT, margen=0.15)
-    fy = y + hh * 0.28
-    fh = (hh * 0.72) / 3
-    for t in FIJAS:
-        _celda(slide, X0, fy, izq, fh, t, size=8.5, bold=True, fuente="Arial",
-               align=PP_ALIGN.LEFT, margen=0.15)
-        fy += fh
+# Los cuatro renglones del plan, como en las HO de Excel: (texto, negrita, subrayado, color).
+PLAN_ESTANDAR = [
+    [("SI ", False, False, NEGRO), ("DETECTA", True, True, NEGRO),
+     (' "PRODUCTO" O "PROCESO" ', False, False, NEGRO), ("NO CONFORME", True, False, ROJO_PLAN)],
+    [("DETENGA", True, True, NEGRO), (" LA OPERACIÓN", False, False, NEGRO)],
+    [("NOTIFIQUE", True, True, NEGRO), (" DE INMEDIATO A SU LIDER O SUPERVISOR", False, False, NEGRO)],
+    [("ESPERE", True, True, NEGRO), (" LA DEFINICION DEL LIDER O SUPERVISOR", False, False, NEGRO)],
+]
 
-    der = X1 - X0 - izq
-    sh = _caja(slide, X0 + izq, y, der, hh, BLANCO, borde=NEGRO, ancho=Pt(1))
+
+def bloque_plan(slide, disparador=None, acciones=None):
+    """El plan de reaccion de las HO de Excel, abajo a la izquierda, debajo de las imagenes
+    (Fak, 07/10/2026: "no es el estandar que decidimos"). Siempre el mismo texto: el
+    `disparador` y las `acciones` del spec de cada hoja ya no se dibujan."""
+    banda = 0.50
+    _celda(slide, PLN_X, PLN_Y, PLN_W, banda, "PLAN DE REACCION ANTE NO CONFORME",
+           relleno=GRIS_PLAN, size=10.5, bold=True, fuente="Arial", color=NEGRO)
+    sh = _caja(slide, PLN_X, PLN_Y + banda, PLN_W, PLN_H - banda, BLANCO, borde=NEGRO, ancho=Pt(1.5))
     tf = sh.text_frame
     tf.word_wrap = True
-    tf.vertical_anchor = MSO_ANCHOR.TOP
-    tf.margin_left = tf.margin_right = Cm(0.20)
-    tf.margin_top = Cm(0.10)
-
-    acciones = acciones or [
-        "1. Segregar e identificar el material afectado en el cajón de scrap / contenedor rojo.",
-        "2. Dar aviso según procedimiento P-09/I.",
-        "3. No reiniciar la producción sin autorización del Líder o Supervisor."
-    ]
-    for i, t in enumerate(acciones):
+    tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+    tf.margin_left = tf.margin_right = Cm(0.15)
+    tf.margin_top = tf.margin_bottom = Cm(0.05)
+    for i, renglon in enumerate(PLAN_ESTANDAR):
         p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
         p.alignment = PP_ALIGN.LEFT
-        p.space_after = Pt(2)
-        r = p.add_run()
-        r.text = t
-        r.font.size = Pt(8.5)
-        r.font.name = "Arial"
-        r.font.color.rgb = NEGRO
+        p.space_after = Pt(1.5)
+        for texto, negrita, subrayado, color in renglon:
+            r = p.add_run()
+            r.text = texto
+            r.font.name = "Arial"
+            r.font.size = Pt(10.5)
+            r.font.bold = negrita
+            r.font.underline = subrayado
+            r.font.color.rgb = color
 
 # ─── 7. PORTADA LIMPIA CORPORATIVA ───────────────────────────────────────────
 def portada(prs, d, logo=None, foto=None, indice=None):

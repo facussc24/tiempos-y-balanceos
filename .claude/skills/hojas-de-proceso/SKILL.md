@@ -1,6 +1,6 @@
 ---
 name: hojas-de-proceso
-description: Hojas de proceso / hojas de operaciones (HO) de Barack, formulario I-IN-002.4-R01 en PowerPoint — que le manda cada paso al operario y con que palabras, que foto va en cada paso, como se prepara una pantalla de HMI para que se lea impresa, donde se guarda la hoja y que numero de HO lleva. El canon es `docs/CRITERIOS_HOJAS_DE_PROCESO.md`; trae `hojalib`, el gate de redaccion, el gate que rechaza la hoja y sus selftests.
+description: Hojas de proceso / hojas de operaciones (HO) de Barack, formulario I-IN-002.4-R01 en PowerPoint — que le manda cada paso al operario y con que palabras, que foto va en cada paso, como se prepara una pantalla de HMI para que se lea impresa, donde se guarda la hoja y que numero de HO lleva, y los errores que Fak ya marco (logo, plan de reaccion, numero, TBD, hoja cortada) para buscarlos antes de mostrar o imprimir un paquete. El canon es `docs/CRITERIOS_HOJAS_DE_PROCESO.md`; trae `hojalib`, el gate de redaccion, el gate que rechaza la hoja y sus selftests.
 ---
 
 # Una hoja de proceso se lee de pie, al lado de la maquina, impresa en A4
@@ -28,7 +28,7 @@ secciones ganan sobre cualquier criterio que yo derive solo.
 | **3.2** | **La tabla de terminos prohibidos**: el castellano de planta argentino |
 | **4.1 a 4.3** | Geometria, paleta y tipografias del formulario |
 | **4.4** | **Infinitivo obligatorio**, tono sobrio; `TBD` solo en el cajetin, nunca en la descripcion (Fak 24/09/2026) |
-| **4.5** | Las tres fases fijas del plan de reaccion |
+| **4.5** | El plan de reaccion: su texto fijo **y el ARMADO de la hoja** (abajo a la izquierda, el ciclo de control a su derecha). Lo corrigio Fak tres veces el 07/10/2026: ver §7 bis, E1 |
 | **6** | El checklist de auditoria pre-entrega |
 
 **Un canon huerfano no gobierna nada** (21/09/2026: 26 de 27 pasos narrando la maquina y una
@@ -254,6 +254,11 @@ py -3 .claude/skills/hojas-de-proceso/scripts/hoja_proceso_check.py "<deck.pptx>
 ```
 
 Sale con codigo 1 y no se entrega. `--jerarquia 20.2=0,20.4=0` sirve para chequear sin spec.
+
+**Ese gate mira UNA hoja por vez.** Antes de mostrar o imprimir un **paquete** (varias hojas, de varios
+autores, algunas salidas de Excel) se busca ademas lo de §7 bis y se corre
+`python scripts/_revisarPaqueteHO.py <pdf>` (pasos en el skill `imprimir`). El 07/10/2026 Fak
+encontro a ojo, en el paquete de planta, hojas con el logo viejo, con otro plan de reaccion y cortadas abajo.
 
 ---
 
@@ -579,7 +584,8 @@ CICLO DE CONTROL · ELEMENTOS DE SEGURIDAD · PLAN DE REACCION.
   C. Baptista**: las hojas de proceso de Ingenieria las aprueba Carlos Baptista. Lo cumplen
   `portada()` de `scripts/img/generar_hojas_img.py` y de `scripts/hotmelt/hoja_pptx.py`.
 - **Resp.** solo `OP` / `OC` / `Insp.`  · **Registro** solo `Set up` o `-`, nunca "RC".
-- Pasos: frases cortas, en infinitivo (canon 4.4), una accion por renglon. Sin "BORRADOR" ni "pendiente".
+- Pasos: frases cortas, en infinitivo (canon 4.4), una accion por renglon. Sin "BORRADOR" ni "pendiente",
+  **ni "PRELIMINAR"** (orden de Carlos Baptista, Fak 07/10/2026 14:46; ver §7 bis, E5).
 - **Sin foto -> recuadro VACIO**, no una leyenda que diga que falta.
 - **Ni un TBD en la descripcion** (pasos, notas, parametros, pies, plan de reaccion) —
   Fak, 24/09/2026: *"no puede haber ni 1 TBD... el TBD del numero de hoja si, pero que sea
@@ -644,6 +650,8 @@ de copiar los gates.
 | **Regresion** | idioma, vocabulario, voz, cocina y TBD, en ROJO y en VERDE | `redaccion_selftest.py` |
 | **Dura (deck)** | un material que entra o sale de la operacion y ninguna hoja nombra | `gate_materiales_del_deck()` del generador |
 | **Dura** | una NOTA que le cuenta al operario un hueco mio ("no esta documentado", "preguntar antes") | `COCINA` en `_gate_texto_para_el_operario()` |
+| **Paquete** | un PDF armado con errores de los de §7 bis (los de otro autor y los de Excel no pasan por ningun generador) | `python scripts/_revisarPaqueteHO.py <pdf>` (lo escribio otra sesion el 07/10/2026; codigos a esa fecha: E1 `PLAN_NO_ESTANDAR`, E2 `LOGO_VIEJO`, E3 `HOJA_CHICA` y `CORTADA`, E4 `SIN_HO` y `SIN_OP`, E5 `PALABRA_PROHIBIDA`, portada `PORTADA`; la lista vigente esta en su encabezado) |
+| **A ojo** | el ARMADO del plan de reaccion (E1), restos de Excel y texto cortado (E3), una hoja esqueleto sin la palabra TBD (E5), y que lo que entra sea una HO de este producto | sin gate: lo mira quien arma, y despues un agente independiente sobre el PDF (skill `imprimir`) |
 
 ```bash
 py -3 .claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py     # tiene que dar "0 fallan"
@@ -661,6 +669,8 @@ la busca por contenido.
 
 ## 7. Antes de entregar
 
+- [ ] **si es un PAQUETE para imprimir o pasar a planta: la tabla de §7 bis, fila por fila, sobre el PDF**
+      (y `python scripts/_revisarPaqueteHO.py <pdf>`, skill `imprimir`)
 - [ ] `hojalib_selftest.py` en verde ("0 fallan")
 - [ ] `hoja_proceso_check.py` en verde sobre el deck
 - [ ] **las laminas miradas una por una**, renderizadas — no el script, el archivo publicado
@@ -684,6 +694,33 @@ la busca por contenido.
       vio a ojo (08/09, tres veces el 21/09 — *"no me explicas que debo hacer yo"* —, 22/09). Es un
       paso de proceso, sin gate automatico: por eso esta en esta lista. Un agente al que le paso mis
       supuestos no es independiente (memoria `un_agente_no_es_independiente_si_le_paso_mis_supuestos`)
+
+---
+
+## 7 bis. Los errores que Fak ya marcó en el paquete de planta (07/10/2026)
+
+Salieron de revisar a ojo el paquete de hojas que se iba a imprimir. Los gates de arriba miran una
+hoja por vez y no ven nada de esto: varias hojas vienen de otro autor o de Excel. Horas de Buenos
+Aires; las citas llevan el tipeo corregido, las palabras son de Fak. Los números de hoja que él cita (48,
+55, 173) coinciden con el paquete de 175 páginas de esa mañana
+(`exports\IMPRESION_0710_FINAL\3_HOJAS_DE_PROCESO_A4_depurado.pdf`: la 48 es el armado de espuma del inserto de
+Pablo, con logo violeta; la 55, la HO-985 OP 21; la 173, la HO-983 OP 40 costura de planas, cortada abajo).
+
+**Si al revisar aparece uno de estos errores, se le dice a Fak en una línea («ojo, la hoja X tiene
+tal error») y se corrige antes de la auditoría** (Fak, 15:58: *«así las próximas ya los conocés y me
+decís: ojo, acá hay aún un error»*). Se miran sobre el PDF, no sobre el script ni el generador.
+
+| # | Error (como se ve impreso) | Fak (fecha y hora) | Qué se hace |
+|---|---|---|---|
+| **E1** | **El plan de reacción no es el estándar**: un disparador propio (la 55 era la HO-985 OP 21 con *«SI DETECTA 3 PIEZAS NO CONFORMES CONSECUTIVAS (REBABAS/FLASHES)…»*; el embossing, *«SI LA PRENSA NO ENCIENDE O LA PANTALLA NO RESPONDE»*), una columna de acciones propias a la derecha, o una franja angosta con media hoja en blanco | 13:24: *«el plan de reacción no conforme, como que algunas hojas no están respetando el formato estándar»* · 14:37: *«en la 55 sigue mal el plan de no conforme… habíamos dicho que eso se debía corregir»* · 15:22: *«te lo dije 300 veces, no es el estándar que decidimos… a la derecha queda todo blanco, está mal aprovechado el espacio de estas HO»* | Armado y texto del **canon 4.5** (`bloque_plan()` de `scripts/img/generar_hojas_img.py`). Se compara con una HO de Excel del servidor, nunca con la hoja anterior (LECCIONES 07/10). Vale también para las hojas de otro autor |
+| **E2** | **Logo que no es el oficial**: el violeta con MERCOSUL en letra grande (el oficial es azul, con MERCOSUL chico debajo de una línea). Lo traían 18 páginas del paquete: las hojas A3 de Pablo Gamboa y los caminos de grampas | 14:37: *«la hoja 48 tiene mal el logo, ese violeta no es el oficial de Barack, error grave… sí o sí hay que corregirlo»* | El único es `barack_logo.png`, carpeta `INGENIERIA BARACK (NUNCA BORRAR)` de la nube de Ingeniería (constante `LOGO_BARACK` del generador), sobre celda blanca (canon 4.2). Se mira la esquina de TODAS las hojas, también las ajenas |
+| **E3** | **La hoja no llena su página**: sale chica con franja blanca, **cortada abajo**, o con la marca *«Página 1»* del Excel | 14:37: tres capturas, una con la HO-971 OP 80 ocupando poco más de la mitad del ancho del papel (la frase que la acompaña está ilegible; se leyó de la captura) y *«en la 54 se ve la página 1 del Excel»* · 14:47: *«en la hoja 173 veo cortada la parte de abajo… hay que corregir eso también»* | Se juzga sobre el PDF: lo IMPRESO llena el papel, nada queda cortado, sin restos de la interfaz de Excel. Se mide lo que no es blanco, no la caja de dibujo (hallazgo técnico del 07/10, no frase de Fak: un elemento invisible lejos de la hoja engañaba la cuenta en 4 hojas del APB) |
+| **E4** | **Falta el N° de operación o el N° de HO (arriba a la derecha)**, o el N° no coincide con el flujograma | 12:43: *«hojas sin número»* · 13:24: *«hojas sin número de operación, hojas sin número arriba a la derecha también»* · 14:39: *«fijate si tiene número, etcétera»* · 09:53 pidió la tabla de si *«los números de AMFEs, flujogramas y HO coinciden»* | Toda hoja lleva los dos. El N° de operación sale del flujograma (`no-pfd-no-ho.md`, `node scripts/_verificarNumeracion.mjs`); el de HO, del listado (`python scripts/_hoNumeros.py`, §3 bis). Un decimal (60.1) tiene que poder explicarse: *«¿por qué están en 60.1?… no me lo explicaste»* (14:37; antes, 13:24: *«antes no lo hacíamos, no digo que esté mal, pero me llamó la atención»*). Qué se hace con las de máquina: sin decidir, ver skill `imprimir` |
+| **E5** | **Dice TBD, PENDIENTE, FOTOS PENDIENTES o PRELIMINAR** | 10:39, sobre la HO-971 OP 70 (foto *«FOTOS PENDIENTES / TBD»*, paso *«PENDIENTE / TBD - Cargar descripción»*, ciclo *«PENDIENTE / TBD»*): *«esa está mal puesta, encima dice todo TBD, o sea al pedo la vamos a imprimir… revisá eso y otro tipo de errores»* · 14:46: *«debemos eliminar la palabra preliminar de las hojas, fue una orden de Carlos Baptista y debemos respetarla»* | Una hoja esqueleto (sin fotos ni pasos) **no se imprime ni se pasa a planta**: se hace de verdad o queda afuera, y va a la lista de lo que falta. A planta ni el cajetín lleva TBD (sin N° no se imprime, E4); el `TBD` del cajetín es solo para trabajar (§4). CICLO DE CONTROL vacío (canon 1.2), no *«PENDIENTE / TBD»*. Ni «PRELIMINAR» en ningún lado |
+| **E6** | **Hoja de otro autor que entra sin revisar** (la costura del APB trasero central de Pablo Gamboa, que él le pasó a Carlos) | 14:39: *«buscala, así actualizamos, por favor, y revisá errores conocidos antes de pasarlas… o sea, fijate si tiene número, etcétera»* | Pasa por E1 a E5 igual que las propias. Lo que se corrija en un archivo ajeno se le muestra a Fak con el ANTES de cada cambio, ya auditado (LECCIONES 06/10) |
+
+Lo que va y lo que no va en el paquete (portada, esquema de palletizado, embalaje WIP, hojas repetidas
+por producto, hojas de Pablo) y los pasos para imprimir: skill `imprimir`.
 
 ---
 

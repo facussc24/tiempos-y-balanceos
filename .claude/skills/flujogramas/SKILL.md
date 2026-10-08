@@ -365,6 +365,7 @@ Entrega:
    'PDF', resolution=150.0)` → ~1,3 MB. **No con `fitz` + `insert_image(filename=png)`**: guarda la
    imagen sin comprimir y el 153 Rev.E salio de **145 MB** al legajo (05/10/2026). Mirar el tamaño
    del PDF antes de darlo por emitido.
+   **Para IMPRIMIR (§5 bis)** no sirve ese PDF: va el A3 de abajo.
 2. El editable vive en Gestion Ingenieria (`8. Flujograma Sinóptico`); emitirlo ahi se
    **pregunta** (`autonomy-contract.md` §F). La copia en PDF va al casillero
    **`20- Flujograma de proceso`** del legajo; para SMRC, a `05 Process Flow` del paquete
@@ -377,6 +378,21 @@ Entrega:
    verificar que la fila es la del producto correcto.
 4. Actualizar `scripts/_lib/numeracionPatagonia.data.json` y correr
    `node scripts/_verificarNumeracion.mjs`.
+
+### 5 bis. Impreso en A3: una hoja, letra de 8 pt o más
+
+Fak, 07/10/2026, con el paquete de impresión para Carlos: los flujogramas tienen que leerse
+impresos. El PNG de siempre escalado a A3 deja la letra en unos 4 pt. Tres propuestas
+(A paginado, B compacto, C en columnas), auditadas entre sí por agentes: ganó **B**.
+- Motor: `tools/flowchart/propuestas/B_final/` (`render.mjs`, `buscar.mjs` busca los anchos de
+  columna que agrandan la letra, `armar_final.py`, `verificar_final.py`, `verificar_junto.py`).
+- Piso: **8 pt** de letra medida en el PDF y **10 mm** de margen; una hoja A3 por flujograma
+  (vertical o apaisada, la que dé letra más grande). Si B no llega a 8 pt, va C.
+- Las flechas de REVERIFICAR / RETRABAJO llegan a la línea que entra a SU operación; líneas de
+  0,8 pt o más y colores oscuros, para que se lea en blanco y negro.
+- Se arma desde el JSON **commiteado** (`git show HEAD:`), no del de trabajo con cambios sin emitir.
+- Salida del 08/10/2026 (los 8 de Patagonia, 8,2 a 10,7 pt):
+  `exports/flujogramas_a3_propuestas/FINAL/`.
 
 ## Anti-patrones
 

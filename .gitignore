@@ -131,6 +131,12 @@ REGISTRO_TIEMPOS_INYECCION.xlsx
 # Flujogramas: artefactos de build del generador (tools/flowchart).
 # El motor, los datos y el CSS SI se versionan; los PNG y el bundle no.
 tools/flowchart/.build/
+# Flujogramas A3 para imprimir (skill flujogramas §5 bis): se versionan el motor B (el elegido) y el C
+# (respaldo); sus .build, la copia de datos que uso el agente y las propuestas descartadas, no
+tools/flowchart/propuestas/*/.build/
+tools/flowchart/propuestas/B_final/datos/
+tools/flowchart/propuestas/A_paginado/
+tools/flowchart/propuestas/B_compacto/
 
 # Clave del QR de verificacion — NUNCA al repo (es publico)
 .qr-secret

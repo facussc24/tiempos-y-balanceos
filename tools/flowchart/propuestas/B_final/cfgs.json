@@ -1,0 +1,71 @@
+{
+ "152-APOYACABEZAS": {
+  "F": 10,
+  "descMax": 34,
+  "descMax3": 19,
+  "descMaxSide": 28,
+  "labelMax": 12,
+  "gap": 0.4
+ },
+ "153-ARMREST-DOOR-PANEL": {
+  "F": 10,
+  "descMax2": 18,
+  "labelMax": 7,
+  "gap": 0.4,
+  "descMax": 34,
+  "sideLine": 2.2
+ },
+ "158-INSONOS-DUCTOS": {
+  "F": 10,
+  "descMax3": 30,
+  "gap": 0.55,
+  "labelMax": 6,
+  "prodCols": 1,
+  "descMax": 52,
+  "colGap": 0.8
+ },
+ "151-APB-TRASERO-CENTRAL": {
+  "F": 10,
+  "labelMax": 12,
+  "minW": 100,
+  "gap": 0.4,
+  "descMax": 34,
+  "descMaxSide": 28
+ },
+ "154-INSERT": {
+  "F": 10,
+  "descMax": 18,
+  "nestF": 0.8,
+  "gap": 0.4,
+  "colGap": 0.8,
+  "sideLine": 2.2,
+  "labelMax": 12
+ },
+ "157-IP-PAD": {
+  "F": 10,
+  "descMax2": 20,
+  "revMinW": 60,
+  "colGap": 0.8,
+  "descMax": 34,
+  "nestF": 0.8,
+  "gap": 0.4,
+  "sideLine": 2.2,
+  "labelMax": 6
+ },
+ "160-UPPER-TRIM-PANEL": {
+  "F": 10,
+  "descMax": 18,
+  "descMax2": 16,
+  "labelMax": 6,
+  "sideClear": 1,
+  "colGap": 0.8,
+  "gap": 1.25
+ },
+ "155-TOP-ROLL": {
+  "F": 10,
+  "descMax2": 26,
+  "colGap": 0.8,
+  "sideLine": 2.2,
+  "gap": 1.2
+ }
+}
