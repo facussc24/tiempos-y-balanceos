@@ -3,12 +3,15 @@
 #
 # La logica vive en scripts/_lib/cierreGuard.mjs (node): el ultimo mensaje del asistente
 # trae comillas, markdown y saltos de linea, y parsear eso con sed es donde esta casa ya
-# se comio verdes falsos. Siete cosas mide; las cinco primeras, en el orden en que se miran:
+# se comio verdes falsos. Ocho cosas mide; las cinco primeras, en el orden en que se miran:
 #   1. el turno termina pidiendo permiso para hacer mi propio trabajo   -> exit 2
 #   2. entregue algo afuera del repo y el cierre no dice la RUTA          -> exit 2
 #   6. termina anunciando trabajo ("Sigo con eso.") y no corre nada que lo espere -> exit 2
 #   7. Fak pidio que se lo explique ("no entiendo", "faicl de entender") y el turno no cargo el
 #      skill explicar-mejor ni mostro un dibujo o una pagina (02/10/2026)  -> exit 2
+#   8. el mensaje dice que no tengo acceso a los mails de un companero ("el correo de Carlos no lo puedo
+#      leer, solo tengo acceso al tuyo") y el turno no miro la nube del equipo (_mails.py --buscar/--buzones)
+#      (07/10/2026: los mails de Carlos y de la PC de Marcelo ya estan en la nube de Ingenieria)  -> exit 2
 #   3. declaro un cierre ("listo", "pusheado") con pendientes medibles   -> exit 2, 1x/20 min por sesion
 #      (entre ellos: una pieza del sistema sin probar con un mensaje real, regla mejora-implementada.md)
 #   (y dos mas: entregable sin abrir y cierre-informe —

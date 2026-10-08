@@ -208,6 +208,38 @@
     "prueba_re": "(^|[;&|(\\n]\\s*)node\\s+\\S*_probarMejora\\.mjs\\b[^\\n;|&]*--mensaje",
     "sesiones_re": "sesion(es)? (que )?(ya )?(estan |esten |estaban )?abiertas?|reabr"
   },
+  "mails_equipo": {
+    "_que_es": "Chequeo 8 (07/10/2026): el mensaje dice que no tengo acceso a los mails de un companero y en este turno no mire la nube del equipo. El caso: sesion f14f5aae, 07/10, a Fak: 'El correo de Carlos no lo puedo leer: solo tengo acceso al tuyo.' Era FALSO: los mails de trabajo de Carlos (cbaptista) y de la PC que era de Marcelo (lucca.tuccio) ya suben solos a la nube de Ingenieria (memoria project_mails_del_equipo_a_la_nube) y scripts/_mails.py --buscar los lee desde ese dia. Fak: 'si lo podes leer esta en la nube' · 'desde cuando no recordas eso?' · 'fiajte eso enteonce sosea como evitar que te vuevlas a euqivocar en esto'. El hook mira el mensaje final ENTERO (la negacion puede estar en el medio) normalizado como el resto del guard (sin tildes ni markdown), y NO bloquea si en el turno corrio una busqueda que incluye la nube (busco_re, sin --solo-fak) o abri algo de mails\\_entrada, ni si el mensaje trae un renglon 'No aplica mails-del-equipo: <motivo>'. Frena, no decide: la negacion puede ser verdad (Pedro no comparte sus mails) y entonces se mira y se dice 'no esta en la nube', no 'no puedo leerlo'. Cada regex lleva su fuente; una frase nueva se agrega ACA con su caso, nunca suelta en el codigo. Un adjunto no cuenta (la nube guarda solo sus NOMBRES: 'no puedo abrir el adjunto del mail de Carlos' es verdad).",
+    "niega_re": [
+      {
+        "re": "\\bno (?:puedo|logro|pude|podria|llego a|alcanzo a|tengo como) (?:leer|ver|abrir|consultar|revisar|mirar|acceder a|entrar a|buscar en)\\b(?:(?!adjunt|archivo|pdf|excel|planilla|plano|foto|imagen)[^.?!\\n]){0,40}?\\b(?:correos?|mails?|e-?mails?|casillas?|buzon(?:es)?|bandejas?)\\b[^.?!\\n]{0,12}\\b(?:de|del)\\s+(?!fak\\b|facu\\b|facundo\\b|santoro\\b|vos\\b|ti\\b)\\w",
+        "fuente": "'no puedo leer el correo/los mails de <otra persona>': f14f5aae 07/10 'El correo de Carlos no lo puedo leer' (el orden sujeto-primero va en la regla 3). El nombre despues de 'de' no puede ser Fak: leer SU casilla si se puede."
+      },
+      {
+        "re": "\\bno tengo acceso (?:a|al|a la|a los|a las|para (?:leer|ver|abrir))\\b(?:(?!adjunt|archivo|pdf|excel|planilla|plano|foto|imagen)[^.?!\\n]){0,30}?\\b(?:correos?|mails?|e-?mails?|casillas?|buzon(?:es)?|bandejas?)\\b[^.?!\\n]{0,12}\\b(?:de|del)\\s+(?!fak\\b|facu\\b|facundo\\b|santoro\\b|vos\\b|ti\\b)\\w",
+        "fuente": "'no tengo acceso al correo/buzon/mails de X' (la forma que usa reference_acceso_mails_outlook.md: 'acceso al buzon de Fak y nada mas'); f14f5aae 07/10"
+      },
+      {
+        "re": "\\b(?:el|los|la|las)\\s+(?:correos?|mails?|e-?mails?|casillas?|buzon(?:es)?|bandejas?)\\s+(?:de|del)\\s+(?!fak\\b|facu\\b|facundo\\b|santoro\\b|vos\\b|ti\\b)\\w[^.?!\\n]{0,40}?\\bno (?:(?:lo|los|la|las) (?:puedo|logro|pude|veo|leo|alcanzo|accedo|tengo|encuentro)|puedo (?:leerl[oa]s?|verl[oa]s?|abrirl[oa]s?))\\b",
+        "fuente": "f14f5aae 07/10 1112: 'El correo de Carlos no lo puedo leer: solo tengo acceso al tuyo.' Pide el pronombre ('no lo/los puedo'): 'el correo de Carlos llega hasta el 05/10, no tengo nada posterior' no es una negacion de acceso."
+      },
+      {
+        "re": "\\b(?:solo|solamente|unicamente|nada mas que)\\s+(?:tengo acceso|puedo (?:leer|ver|acceder)|veo|leo|accedo)\\b[^.?!\\n]{0,25}?\\b(?:al tuyo|a los tuyos|a tu|a tus|tu (?:correos?|mails?|buzon|casilla|bandeja)|tus (?:correos|mails))\\b",
+        "fuente": "f14f5aae 07/10 1112: '...solo tengo acceso al tuyo.' La parte 'solo (tengo acceso a) lo tuyo' es lo que dejaba afuera a la nube del equipo."
+      },
+      {
+        "re": "\\bno (?:tengo|hay) (?:forma|manera|modo|como) de (?:leer|ver|abrir|acceder a)\\b(?:(?!adjunt|archivo|pdf|excel|planilla|plano|foto|imagen)[^.?!\\n]){0,40}?\\b(?:correos?|mails?|e-?mails?|casillas?|buzon(?:es)?|bandejas?)\\b[^.?!\\n]{0,12}\\b(?:de|del)\\s+(?!fak\\b|facu\\b|facundo\\b|santoro\\b|vos\\b|ti\\b)\\w",
+        "fuente": "variante de la regla 1 ('no tengo forma de leer el correo de Carlos'), la otra manera de decir lo mismo; sin caso medido todavia"
+      },
+      {
+        "re": "\\bno (?:puedo|logro) (?:leer|ver|abrir|acceder a)\\b[^.?!\\n]{0,12}\\b(?:su|sus)\\s+(?:correos?|mails?|e-?mails?|buzon(?:es)?|casillas?)\\b",
+        "fuente": "'no puedo leer su correo' hablando de Carlos o de otra persona (el 'su' no es nunca Fak: a Fak se le dice 'tu'); sin caso medido todavia"
+      }
+    ],
+    "busco_re": "(?:^|[;&|(\\n]\\s*)(?:python3?|py)\\s+(?:-\\S+\\s+)*\\S*_mails\\.py\\b[^\\n;|&]*--(?:buscar|buzones|ver)\\b|mails[\\\\/]_entrada",
+    "busco_excluye_re": "--solo-fak\\b",
+    "no_aplica_re": "no aplica mails-del-equipo\\s*:"
+  },
   "lecciones": {
     "_que_es": "Gate de docs/LECCIONES_APRENDIDAS.md. Desde el 04/09/2026 el archivo entra al system prompt por @import desde CLAUDE.md (el hook lo recortaba a 2 KB desde el 03/08). El techo por bytes se queda como red; lo que evita la pelea por bytes es el gate POR BULLET: una leccion graduada no conserva su narrativa.",
     "aviso_bytes": 26624,

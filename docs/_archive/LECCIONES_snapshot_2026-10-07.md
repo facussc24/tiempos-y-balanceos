@@ -6,7 +6,7 @@ leccion es un bullet legible de hasta 600 caracteres; el detalle vive en la memo
 que cita (gate por bullet: regla `lecciones-consolidacion.md`). La historia completa de cada
 incidente vive en los snapshots.
 
-- **Snapshots** (la version larga de cada consolidacion): los tres ultimos son [2026-10-05](docs/_archive/LECCIONES_snapshot_2026-10-05.md) · [2026-10-06](docs/_archive/LECCIONES_snapshot_2026-10-06.md) · [2026-10-07](docs/_archive/LECCIONES_snapshot_2026-10-07.md) y el historico 2026-03-30 a 07-02, [2026H1](docs/_archive/LECCIONES_APRENDIDAS_2026H1_completo.md); los demas estan en `docs/_archive/`.
+- **Snapshots** (la version larga de cada consolidacion): los tres ultimos son [2026-10-04](docs/_archive/LECCIONES_snapshot_2026-10-04.md) · [2026-10-05](docs/_archive/LECCIONES_snapshot_2026-10-05.md) · [2026-10-06](docs/_archive/LECCIONES_snapshot_2026-10-06.md) y el historico 2026-03-30 a 07-02, [2026H1](docs/_archive/LECCIONES_APRENDIDAS_2026H1_completo.md); los demas estan en `docs/_archive/`.
 - **Tabla incidente → regla**: `docs/_archive/INCIDENTES_REGLAS_AMFE.md`
 - Lo ya codificado no se repite aca: reglas de `.claude/rules/` y sus gates ejecutables
   (amfe.md + amfeValidator, database.md, verify-supabase-live.md, no-pfd-no-ho.md, techo-agentes.md, cad-3d.md).
@@ -19,11 +19,17 @@ incidente vive en los snapshots.
 
 - **05-06/10 — Un filtro que busca por palabras no se promete como garantía; y si Fak ya pidió algo y aceptó el riesgo, mi regla de freno no le gana a su pedido: se hace y el riesgo va en un renglón** (dejé apagados los mails de Carlos por tres auditorías con fallas; Fak: *"lo único que tenías que hacer era eso"*). Graduado a las memorias `project_mails_del_equipo_a_la_nube` y `project_claudes_por_area`.
 - **03-04/10 — Probar lo que construyo para otros (asistente de área), cinco reglas:** la prueba de «esto se niega» se arma con el de mentira puesto; una hoja de alto fijo se juzga mirando la imagen del PDF; a un agente con Word o Excel se le pone tope y el que no escribe hace 10 minutos se mira; dos exámenes se comparan con los MISMOS jueces, a ciegas y con la regla escrita antes; y nada se prueba contra la carpeta de verdad (`--simular` o copia). Graduado a la memoria `project_claudes_por_area`.
+- **03/10 — «Borrá lo temporal al terminar» sin decir CUÁL termina en un borrado por comodín: un agente se llevó 38 borradores ajenos de la carpeta que comparten todos.** Graduado a la memoria `reference_notebook_capacidad_agentes_con_navegador` (carpeta propia con su nombre; se borra esa y nada más).
+- **03/10 — Un freno que depende de un programa de la PC se prueba SIN ese programa: un control que no puede arrancar no frena nada**. Graduado a `hooks.json` del plugin (Node propio, por su ruta), a `ejecutables` de `_paquete.mjs` y a la memoria `project_claudes_por_area`.
+- **02/10 — Un examen se toma como lo va a usar la gente (nivel, material de su área, PC instalada por el instalador), y el aviso de un documento va donde se LEE ese documento**. Graduado a la memoria `project_claudes_por_area`.
 - **02/10 — De un flujograma o de un AMFE puede salir la PALABRA "reproceso", nunca su analisis (IATF 8.7.1.4; fue una no conformidad en 2019), y un AMFE escrito de cero se delata por el largo de sus frases** (12 palabras por causa contra 4 a 7; Calidad: "hecho con IA"). Graduado a la memoria `reference_iatf_retrabajo_8714_y_antecedentes_barack` y a `TOPE_PALABRAS` de `scripts/_lib/amfeAutoria.mjs`.
+- **25/09 — Un estado que alguien escribió en un mail vale con su FECHA: va con quién lo dijo y cuándo (y el mail adjunto), o no va.** Graduado a la memoria `la_fecha_del_archivo_no_es_la_fecha_del_documento`.
 - **22/09 y 05/10 — Lo que AFLOJA un control se prueba contra el VIEJO con los mismos intentos, lo ataca OTRO, y el «a la tercera, afuera» se escribe antes de medir** (05/10: tres versiones de un freno aflojado pasaron mis pruebas y 1.662 mensajes reales; tres auditorías les encontraron un hueco; se sacó). Graduado a `un_control_se_audita_en_las_dos_direcciones` y a `project_claudes_por_area`.
 - **22/09 — Un cambio de criterio (o un número) se barre por su FRASE en todo el repo, y un guardián que falla sin bloquear está apagado.** Graduado al test 5c de `hooksTienenTest` (`${CLAUDE_PROJECT_DIR}`) y a `puerta.py` (puerta D).
 - **22/09 — La VARA también se audita, y lo primero que se le mira es la FECHA**: la tabla AP y las escalas O/D salían de un borrador de 2017 del AIAG-VDA. La tabla AP ya es la oficial (23/09); las escalas, pendientes. Memoria `project_tabla_ap_de_la_casa_es_el_borrador_2017`.
+- **22/09 — Whisper no se calla cuando no entiende: INVENTA, y una transcripción alucinada pasa el gate igual que una buena.** Graduado a la memoria `extraer_video_audio_local` (una pasada por idioma, fusión por `avg_logprob`, repeticiones marcadas `(ALUCINA)`).
 - **22/09 — Un gate contesta lo que le preguntan: los obstáculos se listan del CONJUNTO, no del subconjunto, centrado y simetría también se miden, y un control que frena dice CUÁL renglón lo frena.** Graduado a `chequeo_centrado.py` y a la memoria `dispositivo_adhesivado_insert`.
+- **21/09 — Cortar un listado para leerlo es una decisión sobre los DATOS, y un control que queda rojo por trabajo pendiente se termina ignorando.** Graduado a `video-maquina.md` y a la memoria `videos_y_fotos_de_maquina_donde_van`.
 - **21/09 — Antes de ejecutar un pedido que toca a un cliente, se abre el sistema del CLIENTE: ahi esta si el trabajo ya se hizo y por que esta trabado** (un 8D cerrado hacia semanas en KPM; un "agregale la norma" que era un PPAP rechazado en IMDS). Memorias `8d_11010843_tapa_amarok`, `project_imds_barack`.
 - **10-13/09 — Una contradicción adentro del entregable es un ROJO, no una nota al pie; la frase que resume números la arma el CÓDIGO.** Graduado a la memoria `contradiccion_en_el_entregable_es_rojo`.
 - **11/09 — El system prompt es la foto del arranque: antes de concluir que algo quedó sin hacer, mirar el disco y el `git log`.** Graduado a la memoria `el_system_prompt_es_la_foto_del_arranque`.
@@ -64,8 +70,6 @@ incidente vive en los snapshots.
 - **25/09 — Una difusion que corrige un error PROPIO dice solo el valor que queda, en el mail y en el PDF** (Fak: *"si ponemos el antes y el despues me escrachas"*). Graduado a la memoria `documento_no_confiesa_como_se_hizo`.
 
 ## Entregables y comunicacion con Fak
-
-- **07/10 — Una toma de tiempos por video se entrega como TIEMPOS + VIDEO RECORTADO de evidencia, no se sale a buscar en qué planilla cargarla** (*"no me pidieron planilla, solo los tiempos y el video recortado"*). Y del celular se baja lo que Fak nombra (*"grabé 4 o 5 a las 13 hs"*): bajé los 11 del día. Es el 06/10 de nuevo: el entregable tiene el tamaño del pedido.
 
 - **07/10 — Con Fak se habla en castellano también en los avisos cortos mientras trabajo** (una tanda entera de avisos y el cierre me salieron en inglés: *"dejá de hablar en inglés"*). Y un pedido de videos para alguien que tiene editor es de ORIGINALES completos: preguntar o deducir el uso antes de editar (*"él quería videos completos... tiene una editorial de videos"*).
 

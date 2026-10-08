@@ -9,7 +9,7 @@
  * El 10/09/2026 (Ola A) suma dos chequeos, salidos de las 29 sesiones del 02 al 10/09: ~42
  * correcciones de Fak por afirmar o entregar sin abrir el resultado, ~17 por informe largo.
  *
- * Siete cosas mide, en este orden, sobre el ULTIMO mensaje del asistente:
+ * Ocho cosas mide, en este orden, sobre el ULTIMO mensaje del asistente:
  *   1. la COLA (ultimos 500 caracteres) pide permiso  → exit 2 siempre
  *   2. en este turno escribi/copie algo afuera del repo y el texto no dice la RUTA → exit 2
  *   6. el ultimo parrafo ANUNCIA trabajo ("Sigo con eso.") y no corre nada en segundo plano que el
@@ -19,6 +19,10 @@
  *      explicarGuard) y en el turno no cargue el skill `explicar-mejor`, ni mostre un dibujo o una pagina,
  *      ni entregue un archivo → exit 2 (02/10/2026: el skill estaba en la lista y conteste una tabla).
  *      Salida: un renglon "No aplica explicar-mejor: <motivo>". Si ademas bloquea el 1 o el 6, va en ese aviso.
+ *   8. el mensaje dice que no tengo acceso a los mails de un companero ("el correo de Carlos no lo puedo leer, solo tengo
+ *      acceso al tuyo") y en el turno no corrio `_mails.py --buscar|--buzones|--ver` (sin --solo-fak) ni abri nada de
+ *      mails\_entrada → exit 2 (07/10/2026: eran falsas; los mails del equipo ya estan en la nube). Cualquier turno, no solo
+ *      cierres. Salida: un renglon "No aplica mails-del-equipo: <motivo>". Frases en cierreCanon `mails_equipo`.
  *   3. el texto DECLARA cierre ("listo", "pusheado") y hay pendientes medibles → exit 2,
  *      una vez cada 20 minutos por sesion (cooldown), para no repetir el mismo texto. Entre los
  *      pendientes, desde el 02/10/2026: una pieza del sistema (hook, skill, regla, guardian) escrita y
@@ -833,6 +837,68 @@ const detalleExplicar = (ex) => `Su mensaje: «${ex.pedido}».\n`
   + `Carga el skill ahora, elegi el escalon y rehace la respuesta con esa forma${ex.estado ? ': pide el ESTADO de una tarea o proyecto, que es el escalon 3 (texto corto y UNA pagina en exports/explicaciones/, mostrada con SendUserFile)' : ''}. `
   + 'Si no aplica (habla de un entregable para otra persona, o las palabras son de un tercero), decilo en un renglon que empiece con "No aplica explicar-mejor:" y el motivo.';
 
+// ---------------------------------------------------------------------------------------
+// Chequeo 8: el mensaje dice que no tengo acceso a los mails de un companero y no mire la nube del equipo
+// ---------------------------------------------------------------------------------------
+// 07/10/2026: "El correo de Carlos no lo puedo leer: solo tengo acceso al tuyo." Era falso: los mails de Carlos y de la PC
+// que era de Marcelo suben solos a la nube de Ingenieria y `scripts/_mails.py --buscar` los lee. Fak: "si lo podes leer,
+// esta en la nube... desde cuando no recordas eso?". Las frases y las excepciones viven en cierreCanon.data.json
+// (`mails_equipo`), cada una con su caso. Frena, no decide: si la negacion es verdad (Pedro no comparte sus mails), se mira
+// y se dice "no esta en la nube", no "no puedo leerlo".
+
+const MQ = CANON.mails_equipo;
+const MQ_NIEGA = MQ.niega_re.map((p) => ({ ...p, regex: rx(p.re) }));
+const MQ_BUSCO = rx(MQ.busco_re);
+const MQ_BUSCO_EXCLUYE = rx(MQ.busco_excluye_re);
+const MQ_NO_APLICA = rx(MQ.no_aplica_re);
+const MQ_RUTA = /mails[\\/]_entrada/i;
+const MQ_MENCION = /mails-del-equipo/i;            // el renglon "No aplica ..." vive en un texto sin tool_use: la pasada solo lee esas lineas si lo nombran
+const turnoDeMails = () => ({ busco: false, noAplica: false });
+
+/** Anota en `t` (el turno en curso) si un tool_use miro la nube de mails del equipo: `_mails.py --buscar|--buzones|--ver`
+ *  sin `--solo-fak` (solo cuenta como COMANDO, no un grep que nombra el script), o abrir algo de `mails\_entrada`. */
+function registrarMails(b, t) {
+  const nombre = b.name || '';
+  const input = b.input || {};
+  if (/^(Bash|PowerShell)$/.test(nombre)) {
+    const cmd = soloLineasDeComando(String(input.command || ''));
+    if ((MQ_BUSCO.test(cmd) && !MQ_BUSCO_EXCLUYE.test(cmd)) || MQ_RUTA.test(cmd)) t.busco = true;
+  } else if (/^(Read|Grep|Glob)$/.test(nombre)) {
+    if (MQ_RUTA.test(`${input.file_path || ''} ${input.path || ''} ${input.pattern || ''}`)) t.busco = true;
+  }
+}
+
+/**
+ * Chequeo 8. `texto` es el mensaje final; `rel` lo que devuelve relevarTranscript (`mails`: lo que el turno hizo desde el
+ * ultimo mensaje de Fak). Mira el mensaje ENTERO (la negacion puede estar en el medio), normalizado como el resto del guard.
+ * No bloquea si ninguna regla de `niega_re` calza, si en el turno se miro la nube (`busco`) o si el mensaje, este o uno
+ * anterior del mismo turno, trae el renglon "No aplica mails-del-equipo: <motivo>".
+ */
+export function evaluarMailsEquipo(texto, rel = {}) {
+  const n = normalizar(texto);
+  const hallada = MQ_NIEGA.map((p) => ({ p, m: n.match(p.regex) })).find((x) => x.m);
+  if (!hallada) return { bloquea: false };
+  const t = rel?.mails || {};
+  if (t.busco) return { bloquea: false, motivo: 'miro la nube del equipo en este turno' };
+  if (t.noAplica || MQ_NO_APLICA.test(n)) return { bloquea: false, motivo: 'dice que no aplica' };
+  // la frase se muestra hasta el final de la oracion ("El correo de Carlos no lo puedo leer"), no hasta donde calzo la regla
+  const desde = hallada.m.index ?? n.indexOf(hallada.m[0]);
+  const resto = n.slice(desde);
+  const fin = resto.search(/[.?!]/);
+  return { bloquea: true, frase: resto.slice(0, fin > 0 ? fin : 140).slice(0, 140), fuente: hallada.p.fuente };
+}
+
+const detalleMails = (mq) => `El mensaje dice «${mq.frase}»: que no tenes acceso a los mails de un companero. `
+  + 'El 07/10/2026 eso era FALSO: los mails de trabajo de Carlos Baptista (cbaptista) y de la PC que era de Marcelo Nieve (lucca.tuccio) '
+  + 'ya suben solos a la nube de Ingenieria y `scripts/_mails.py --buscar` los lee. Fak: "si lo podes leer, esta en la nube... desde cuando no recordas eso?" '
+  + '(memoria project_mails_del_equipo_a_la_nube).\n'
+  + 'Antes de decir que no se puede, mira (en este turno):\n'
+  + '  python scripts/_mails.py --buzones                       (que buzones hay, cuantos mails y hasta que fecha llega cada uno)\n'
+  + '  python scripts/_mails.py --buscar "<tema>" [--buzon carlos]   (busca en el buzon de Fak Y en los del equipo)\n'
+  + 'Si despues de mirar la persona no figura, decile a Fak eso ("no esta en la nube", y hasta que fecha llega lo que si esta), '
+  + 'no "no puedo leerlo". La carpeta _cuarentena de esa nube (lo que el filtro aparto por privado) no se lee nunca. '
+  + 'Si la frase no es sobre acceso a los mails de otra persona, escribi un renglon que empiece con "No aplica mails-del-equipo:" y el motivo.';
+
 // Ventana de un comando OPACO: desde que se lanzo hasta que volvio su resultado. Lo que quedo sucio con
 // fecha adentro de una ventana lo pudo escribir ese comando (auditoria 01/10/2026: `python scripts/gen.py
 // --out x` junto a un Write dejaba afuera a `x`, porque con UN archivo atribuido ya no se miraba lo opaco).
@@ -871,7 +937,7 @@ async function pasada(archivo, st, { completa, repo }) {
   for await (const linea of rl) {
     if (!linea.includes('"tool_use"') && !linea.includes('"type":"user"')
       && !linea.includes('<task-notification>') && !linea.includes('"queued_command"')
-      && !(completa && CX_MENCION.test(linea))) continue;
+      && !(completa && (CX_MENCION.test(linea) || MQ_MENCION.test(linea)))) continue;
     let obj;
     try { obj = JSON.parse(linea); } catch { continue; }
     if (completa && !st.inicio && obj.timestamp) st.inicio = Date.parse(obj.timestamp) || 0;
@@ -883,7 +949,7 @@ async function pasada(archivo, st, { completa, repo }) {
       const a = obj.attachment;
       const t = sinAvisosAdelante(textoDeBloques(a.prompt));
       if (completa && !(a.origin?.kind && a.origin.kind !== 'human') && t.trim() && !esAutomatico(t)) {
-        st.ultimoMensajeFak = t; st.ultimoMensajeFakTs = obj.timestamp || ''; st.explicar = turnoDeExplicar(); st.encargo = false;
+        st.ultimoMensajeFak = t; st.ultimoMensajeFakTs = obj.timestamp || ''; st.explicar = turnoDeExplicar(); st.mails = turnoDeMails(); st.encargo = false;
       }
       continue;
     }
@@ -891,7 +957,7 @@ async function pasada(archivo, st, { completa, repo }) {
       cerrarVentanas(st, obj);
       cerrarPruebas(st, obj);
       if (completa && esMensajeRealDeUsuario(obj)) {
-        st.ejemplo = null; st.ultimoMensajeFak = textoDeUsuario(obj); st.ultimoMensajeFakTs = obj.timestamp || ''; st.explicar = turnoDeExplicar();
+        st.ejemplo = null; st.ultimoMensajeFak = textoDeUsuario(obj); st.ultimoMensajeFakTs = obj.timestamp || ''; st.explicar = turnoDeExplicar(); st.mails = turnoDeMails();
         st.encargo = CX_ENCARGO.test(crudoDeUsuario(obj));           // el primer mensaje de una sesion lanzada por otra
       } else if (completa && linea.includes('<command-name>') && linea.includes(`/${CX.skill}<`)) st.explicar.skill = true;   // Fak lo cargo a mano
       continue;
@@ -903,6 +969,7 @@ async function pasada(archivo, st, { completa, repo }) {
       // El renglon "No aplica explicar-mejor:" vale para todo el turno: si despues un aviso de tarea despierta
       // la sesion y hay otro cierre, no se vuelve a pedir (auditoria 02/10: 4 turnos reales con 2 cierres o mas).
       if (completa && b.type === 'text' && CX_NO_APLICA.test(normalizar(b.text))) st.explicar.noAplica = true;
+      if (completa && b.type === 'text' && MQ_NO_APLICA.test(normalizar(b.text))) st.mails.noAplica = true;
       if (b.type !== 'tool_use') continue;
       st.seq++;
       const orden = Date.parse(obj.timestamp || '') || st.seq;
@@ -935,6 +1002,7 @@ async function pasada(archivo, st, { completa, repo }) {
       if (e) st.ejemplo = e;
       registrarEntregables(b, st, repo);
       registrarExplicar(b, st.explicar);
+      registrarMails(b, st.mails);
     }
   }
 }
@@ -969,7 +1037,7 @@ export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
   const st = {
     ejemplo: null, huboComando: false, huboOpaco: false, inicio: 0, tocados: new Set(), ultimoMensajeFak: '', ultimoMensajeFakTs: '', ent: new Map(), seq: 0,
     bg: nuevoBackground(), ventanas: [], abiertas: new Map(), sinVentana: false,
-    explicar: turnoDeExplicar(), encargo: false,
+    explicar: turnoDeExplicar(), mails: turnoDeMails(), encargo: false,
     sis: { archivos: new Set(), deMensajes: new Set(), escrito: 0, probado: 0, pruebas: new Map() },
   };
   await pasada(transcriptPath, st, { completa: true, repo });
@@ -999,6 +1067,8 @@ export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
     ultimoMensajeFak: st.ultimoMensajeFak,
     // chequeo 7: lo que el turno hizo desde el ultimo mensaje de Fak (skill cargado, dibujo, pagina, archivo enviado)
     explicar: st.explicar,
+    // chequeo 8: si en el turno miro la nube de mails del equipo (o dijo que el aviso no aplica)
+    mails: st.mails,
     encargo: st.encargo,
     // pendiente de "mejora sin probar": las piezas del sistema que la sesion escribio; de esas, las que un mensaje
     // de Fak ejercita (deMensajes); y si despues de la ultima escritura de estas corrio la prueba y volvio bien
@@ -1164,11 +1234,15 @@ export async function decidir(payload = {}, deps = {}) {
   const fuera = await d.fueraEnEsteTurno(payload.transcript_path);
   const ex = evaluarExplicar(texto, fuera);
   const conExplicar = (r) => (ex.bloquea ? { ...r, detalle: `${r.detalle}\nADEMAS, Fak pidio que se lo expliques y contestaste sin cambiar la forma. ${detalleExplicar(ex)}` } : r);
+  // Chequeo 8: lo mismo, el turno se frena una sola vez: si otro chequeo bloquea, el de los mails del equipo va en el mismo aviso.
+  const mq = evaluarMailsEquipo(texto, fuera);
+  const conMails = (r) => (mq.bloquea ? { ...r, detalle: `${r.detalle}\nADEMAS, el mensaje niega el acceso a los mails de un companero. ${detalleMails(mq)}` } : r);
+  const conExtras = (r) => conMails(conExplicar(r));
 
   // 1. La cola pide permiso para mi propio trabajo.
   const p = evaluarPermiso(texto);
   if (p.bloquea) {
-    return conExplicar({
+    return conExtras({
       ok: false,
       titulo: 'CIERRE-GUARD: el turno termina pidiendo permiso para hacer tu propio trabajo',
       detalle: `La cola del mensaje dice "${p.frase}". Patron nacido del incidente: ${p.fuente}.\n`
@@ -1192,7 +1266,7 @@ export async function decidir(payload = {}, deps = {}) {
   // 6. Termina anunciando trabajo ("Sigo con eso.") y no corre nada que lo espere.
   const an = evaluarAnuncio(texto, fuera?.bg);
   if (an.bloquea) {
-    return conExplicar({
+    return conExtras({
       ok: false,
       titulo: 'CIERRE-GUARD: el turno termina anunciando trabajo que no hiciste',
       detalle: `El ultimo parrafo dice "${an.frase}" y ${an.motivo}: si el turno termina aca, nadie lo hace. `
@@ -1204,10 +1278,19 @@ export async function decidir(payload = {}, deps = {}) {
 
   // 7. Fak pidio que se lo explique (o que sea facil de entender) y el turno contesto sin cambiar la forma.
   if (ex.bloquea) {
-    return {
+    return conMails({
       ok: false,
       titulo: 'CIERRE-GUARD: Fak pidio que se lo expliques y contestaste sin cambiar la forma',
       detalle: detalleExplicar(ex),
+    });
+  }
+
+  // 8. El mensaje dice que no tengo acceso a los mails de un companero y en este turno no mire la nube del equipo.
+  if (mq.bloquea) {
+    return {
+      ok: false,
+      titulo: 'CIERRE-GUARD: el mensaje dice que no tenes acceso a los mails de un companero, y esos mails estan en la nube',
+      detalle: detalleMails(mq),
     };
   }
 

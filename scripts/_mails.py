@@ -7,13 +7,24 @@ local y este script lo lee desde ahi. No hay credenciales aca: usa la sesion que
 Outlook ya tiene abierta, como haria una macro de VBA.
 
     python scripts/_mails.py --sync                 # vuelca el buzon al cache (incremental)
-    python scripts/_mails.py --buscar "aplix"       # busca en asunto y cuerpo
+    python scripts/_mails.py --buscar "aplix"       # busca en asunto y cuerpo, en el buzon de Fak Y en
+                                                    # los mails del equipo que ya estan en la nube
     python scripts/_mails.py --buscar "bom" --desde 2026-01-01 --carpeta "Bandeja"
-    python scripts/_mails.py --ver <id>             # un mail completo
-    python scripts/_mails.py --adjuntos <id>        # extrae sus adjuntos
-    python scripts/_mails.py --stats                # que hay en el cache
+    python scripts/_mails.py --buscar "bom" --buzon carlos     # solo lo de ese buzon (nombre, casilla o persona)
+    python scripts/_mails.py --buscar "bom" --solo-fak         # sin mirar la nube del equipo
+    python scripts/_mails.py --buzones              # que buzones puedo leer, cuantos mails y hasta cuando
+    python scripts/_mails.py --ver <id>             # un mail completo (el id sale del --buscar)
+    python scripts/_mails.py --adjuntos <id>        # extrae sus adjuntos (solo si el mail esta en el buzon de Fak)
+    python scripts/_mails.py --stats                # que hay en el cache de Fak
     python scripts/_mails.py --sin-respuesta        # pedidos de la Bandeja sin mail de Fak a 5 dias
                                  [--dias 5] [--ventana 45] [--json]   (lo corre _escritorio.mjs)
+
+LOS MAILS DEL EQUIPO (agregado el 07/10/2026): los de trabajo de algunos companeros (hoy Carlos Baptista y la PC
+que era de Marcelo Nieve) suben solos a la nube de Ingenieria, en
+`<biblioteca>\\<_CUARENTENA_>Claude Barack\\mails\\_entrada\\<persona>\\*.jsonl`, y esta herramienta los lee de ahi
+(solo lectura). Antes de decir "no puedo leer el correo de X": `--buzones` y `--buscar`. Hermana de `_entrada` esta
+`_cuarentena\\`, lo que el filtro aparto por privado: NO SE LEE NUNCA (ver `_en_cuarentena`). La nube guarda solo los
+NOMBRES de los adjuntos, no los archivos.
 
 ATENCION — el repo es PUBLICO. El cache va a .mail-cache/ (gitignoreado). Nunca
 commitear contenido de mails ni pegarlo en archivos del repo.
@@ -22,6 +33,8 @@ Enviar, responder o borrar mails NO se hace desde aca: es a mano, por Fak.
 """
 import argparse
 import datetime
+import glob
+import hashlib
 import io
 import json
 import os
@@ -36,6 +49,14 @@ ADJ = os.path.join(CACHE, 'adjuntos')
 ESTADO = os.path.join(CACHE, 'sync-state.json')
 
 MAX_CUERPO = 20000   # un mail con 300 reenviados no aporta mas que sus primeras paginas
+
+# Mails del equipo en la nube de Ingenieria. BARACK_MAIL_EQUIPO = la carpeta `mails` (la que tiene `_entrada`
+# adentro): la usan los tests para no tocar la real; vacia = sin nube (solo el buzon de Fak).
+BUZON_FAK = 'Fak'
+ORGANIZACION = 'BARACK ARGENTINA SRL'
+CUARENTENA = '_cuarentena'        # hermana de `_entrada`: lo que el filtro aparto por privado. NO SE LEE NUNCA.
+CARPETA_EQUIPO_RE = re.compile(r'claude barack', re.I)    # `Claude Barack` y `_CUARENTENA_Claude Barack`
+TOLERANCIA_MIN = 3        # minutos entre la copia de quien envia y la de quien recibe el mismo mail
 
 
 def _limpiar(txt):
@@ -92,6 +113,311 @@ def _guardar_estado(estado):
             json.dump(estado, f)
     except Exception:
         pass
+
+
+# ───────────────────────────────────────────────── mails del equipo (nube de Ingenieria)
+#
+# Por que existe (07/10/2026): le dije a Fak "el correo de Carlos no lo puedo leer, solo tengo acceso al tuyo" y era
+# FALSO: los mails de trabajo de Carlos (cbaptista) y de la PC que era de Marcelo (lucca.tuccio) ya suben solos a la
+# nube de Ingenieria, y esta herramienta solo miraba el Outlook de Fak. Fak: "si lo podes leer, esta en la nube...
+# desde cuando no recordas eso?". Ahora `--buscar` mira los dos lados y cada resultado dice de que buzon sale.
+#
+# Solo lectura. Solo `_entrada\<persona>\*.jsonl`. `_cuarentena\` (hermana de `_entrada`: lo que el filtro aparto por
+# privado) no se abre nunca: ni por la ruta, ni por un enlace que apunte ahi (`_en_cuarentena`).
+
+def _partes(ruta):
+    return [p.lower() for p in re.split(r'[\\/]+', str(ruta)) if p]
+
+
+def _en_cuarentena(ruta):
+    """True si la ruta, o a donde apunta si es un enlace, pasa por una carpeta que se llame `_cuarentena`.
+
+    Exacto: `_CUARENTENA_Claude Barack` (la carpeta que contiene a todo) NO es `_cuarentena`."""
+    return CUARENTENA in _partes(os.path.abspath(ruta)) or CUARENTENA in _partes(os.path.realpath(ruta))
+
+
+def _adentro(ruta_real, base_real):
+    try:
+        return os.path.normcase(os.path.commonpath([ruta_real, base_real])) == os.path.normcase(base_real)
+    except ValueError:        # otro disco
+        return False
+
+
+def _carpetas_equipo():
+    """Las carpetas `mails` de la nube del equipo que esta PC tiene a la vista (cada una trae `_entrada\\<persona>`).
+
+    Se buscan en la biblioteca de Ingenieria (`BARACK ARGENTINA SRL\\Ingenieria y Proyecto - General`), nunca en la
+    nube personal de Fak. El nombre de la carpeta cambio de `Claude Barack` a `_CUARENTENA_Claude Barack`: se acepta
+    cualquiera que nombre `Claude Barack` y tenga `mails\\_entrada` adentro. Si la carpeta se mueve otra vez, la
+    ruta se pasa con BARACK_MAIL_EQUIPO."""
+    env = os.environ.get('BARACK_MAIL_EQUIPO')
+    if env is not None:
+        return [env] if env.strip() else []
+    org = os.path.join(os.path.expanduser('~'), ORGANIZACION)
+    try:
+        bibliotecas = [n for n in os.listdir(org) if re.match(r'^Ingenier.{1,2}a y Proyecto - General$', n, re.I)]
+    except OSError:
+        return []
+    out = []
+    for b in sorted(bibliotecas):
+        raiz = os.path.join(org, b)
+        try:
+            hijos = sorted(os.listdir(raiz))
+        except OSError:
+            continue
+        for h in hijos:
+            if CARPETA_EQUIPO_RE.search(h) and os.path.isdir(os.path.join(raiz, h, 'mails', '_entrada')):
+                out.append(os.path.join(raiz, h, 'mails'))
+    return out
+
+
+def _personas_de(base):
+    """[(persona, carpeta)] de `<base>\\_entrada\\<persona>`. Nunca entra a `_cuarentena`, ni por la ruta ni por un
+    enlace (una junction de `_entrada` hacia `_cuarentena` no se sigue), ni sale de `_entrada`."""
+    entrada = os.path.join(base, '_entrada')
+    if _en_cuarentena(base) or not os.path.isdir(entrada) or _en_cuarentena(entrada):
+        return []
+    real_entrada = os.path.realpath(entrada)
+    if not _adentro(real_entrada, os.path.realpath(base)):
+        return []
+    try:
+        nombres = sorted(os.listdir(entrada))
+    except OSError:
+        return []
+    out = []
+    for nombre in nombres:
+        if nombre[:1] in ('_', '.'):
+            continue
+        d = os.path.join(entrada, nombre)
+        if not os.path.isdir(d) or _en_cuarentena(d) or not _adentro(os.path.realpath(d), real_entrada):
+            continue
+        out.append((nombre, d))
+    return out
+
+
+def _leer_persona(carpeta):
+    """(registros, ultima_subida) de los `*.jsonl` de una persona. Un renglon roto se salta, como en el cache de Fak."""
+    registros, subida = [], 0
+    for ruta in sorted(glob.glob(os.path.join(glob.escape(carpeta), '*.jsonl'))):
+        if _en_cuarentena(ruta):
+            continue
+        try:
+            subida = max(subida, os.path.getmtime(ruta))
+            with io.open(ruta, encoding='utf-8') as f:
+                for linea in f:
+                    linea = linea.strip()
+                    if not linea:
+                        continue
+                    try:
+                        r = json.loads(linea)
+                    except Exception:
+                        continue
+                    if isinstance(r, dict):
+                        registros.append(r)
+        except OSError:
+            continue
+    return registros, subida
+
+
+def _texto(x):
+    return '' if x is None else str(x)
+
+
+def _campos(m):
+    """Los campos de un mail como los usa todo este script, con texto aunque falten."""
+    out = dict(m)
+    for k in ('id', 'carpeta', 'fecha', 'de', 'de_mail', 'para', 'cc', 'asunto', 'cuerpo'):
+        out[k] = _texto(m.get(k))
+    adj = m.get('adjuntos') or []
+    out['adjuntos'] = [_texto(a) for a in adj] if isinstance(adj, list) else [_texto(adj)]
+    return out
+
+
+def _liviano(s):
+    """Para cruzar el MISMO mail entre buzones: minusculas y solo palabras. No hace falta sacar tildes: las dos copias
+    salen del mismo Outlook."""
+    return ' '.join(re.findall(r'\w+', _texto(s).lower()))
+
+
+def _clave_cruce(m):
+    """Un mail que esta en el buzon de Fak y en el de un companero es el MISMO si coinciden quien lo manda, el asunto,
+    el arranque del texto y A QUIEN va. Medido el 07/10/2026 contra la nube real: el remitente se compara por su NOMBRE
+    (en el cache de Fak el 78% de las casillas son un DN de Exchange, no una direccion), y los destinatarios se
+    exigen: los avisos de un robot (portal VW, INCA) llegan como un mail aparte a cada persona, con el mismo texto
+    y otro 'para', y esos NO son el mismo mail."""
+    return (_liviano(m['de']), _liviano(m['asunto']), _liviano(m['cuerpo'][:400])[:120], _liviano(m['para']))
+
+
+def _minutos(fecha):
+    """'2026-10-05 14:00' -> minutos desde el dia 1 (a mano: strptime, 11 mil veces, tardaba 0,7 s)."""
+    f = fecha[:16]
+    if len(f) != 16 or f[4] != '-' or f[7] != '-' or f[10] != ' ' or f[13] != ':':
+        return None
+    try:
+        return datetime.date(int(f[0:4]), int(f[5:7]), int(f[8:10])).toordinal() * 1440 + int(f[11:13]) * 60 + int(f[14:16])
+    except ValueError:
+        return None
+
+
+def _idn(i):
+    return _texto(i).strip().strip('<>').lower()
+
+
+def _corto(i):
+    return 'nube:' + hashlib.sha1(_texto(i).encode('utf-8', 'replace')).hexdigest()[:12]
+
+
+def _mas_comun(valores):
+    cuenta = {}
+    for v in valores:
+        if v:
+            cuenta[v] = cuenta.get(v, 0) + 1
+    return max(cuenta.items(), key=lambda kv: kv[1])[0] if cuenta else ''
+
+
+def _identidad(mails):
+    """(casilla, nombre) del dueno de un buzon, sacados de sus propios mails: la casilla es el principio de la carpeta
+    (`cbaptista@... / Bandeja de entrada`) y el nombre, el que figura como remitente en sus Elementos enviados."""
+    carpetas = {}
+    for m in mails:
+        carpetas[m['carpeta']] = carpetas.get(m['carpeta'], 0) + 1
+    casillas = {}
+    for c, n in carpetas.items():
+        pref = c.split(' / ')[0].strip().lower()
+        if '@' in pref:
+            casillas[pref] = casillas.get(pref, 0) + n
+    casilla = max(casillas.items(), key=lambda kv: kv[1])[0] if casillas else ''
+    enviadas = {c for c in carpetas if _tipo_carpeta(c) == 'enviados'}      # una vez por carpeta, no por mail
+    nombre = _mas_comun(m['de'] for m in mails if m['carpeta'] in enviadas)
+    return casilla, nombre
+
+
+def _unificar(solo_fak=False):
+    """Todos los mails que puedo leer, cada uno UNA vez, con los buzones en que esta.
+
+      mails    lista de mails (los campos del cache de Fak mas `buzones`, `en_outlook`, `ids`, `id_mostrar`)
+      por_id   cualquier id con el que se pueda pedir un mail (EntryID de Fak, Message-ID, id corto `nube:...`)
+      buzones  nombre -> {nombre, casilla, persona, total, ultimo, subida, origen}
+      equipo   las carpetas `mails` de la nube que se leyeron ([] = esta PC no la ve o se pidio --solo-fak)
+
+    El buzon de Fak se lee como siempre (`_leer_cache`). Los del equipo, de `_entrada\\<persona>`. Entre buzones del
+    equipo, el mismo mail se junta por su Message-ID; con el de Fak, por `_clave_cruce`."""
+    mails, buzones = [], {}
+    fak = []
+    for m in _leer_cache().values():
+        x = _campos(m)
+        x.update(buzones=[BUZON_FAK], en_outlook=x['id'], ids=[x['id']], id_mostrar=x['id'])
+        fak.append(x)
+    mails.extend(fak)
+    if fak:
+        casilla, nombre = _identidad(fak)
+        buzones[BUZON_FAK] = {'nombre': BUZON_FAK, 'casilla': casilla, 'persona': nombre, 'total': len(fak),
+                              'ultimo': max((x['fecha'] for x in fak if x['fecha']), default=''),
+                              'subida': 0, 'origen': 'cache local (.mail-cache)'}
+    equipo = [] if solo_fak else _carpetas_equipo()
+    leidas = []
+    nube = {}
+    for base in equipo:
+        for persona, carpeta in _personas_de(base):
+            registros, subida = _leer_persona(carpeta)
+            if not registros:
+                continue
+            propios = [_campos(r) for r in registros]
+            casilla, nombre = _identidad(propios)
+            info = buzones.setdefault(persona, {'nombre': persona, 'casilla': casilla, 'persona': nombre, 'total': 0,
+                                                'ultimo': '', 'subida': 0, 'origen': 'nube del equipo'})
+            info['subida'] = max(info['subida'], subida)
+            leidas.append(base)
+            vistos = set()
+            for r, x in zip(registros, propios):
+                mid = x['id'].strip()
+                eid = _texto(r.get('eid')).strip()
+                clave = mid or 'sin-id:%s:%s' % (persona, eid or len(vistos))
+                if (persona, clave) in vistos:
+                    continue
+                vistos.add((persona, clave))
+                info['total'] += 1
+                if x['fecha'] > info['ultimo']:
+                    info['ultimo'] = x['fecha']
+                previo = nube.get(clave)
+                if previo is not None:                       # el mismo Message-ID en otro buzon del equipo
+                    if persona not in previo['buzones']:
+                        previo['buzones'].append(persona)
+                    if eid and eid not in previo['ids']:
+                        previo['ids'].append(eid)
+                    continue
+                x.update(buzones=[persona], en_outlook='', id_mostrar=_corto(clave))
+                x['ids'] = [i for i in (mid, eid, x['id_mostrar']) if i]
+                x['id'] = x['id_mostrar']
+                nube[clave] = x
+    if nube:
+        # Primero lo barato (el asunto tal cual y la hora, que descartan casi todo) y recien despues la clave entera.
+        indice = {}
+        for f in fak:
+            d = _minutos(f['fecha'])
+            if d is not None:
+                indice.setdefault(_liviano(f['asunto']), []).append((d, f))
+        for x in nube.values():
+            destino, mejor = None, None
+            t = _minutos(x['fecha'])
+            if t is None:
+                mails.append(x)
+                continue
+            clave = None
+            for d, f in indice.get(_liviano(x['asunto']), []):
+                if abs(t - d) > TOLERANCIA_MIN:
+                    continue
+                clave = clave or _clave_cruce(x)
+                if _clave_cruce(f) != clave:
+                    continue
+                cual = (abs(t - d), 'sincroniz' in _liviano(f['carpeta']))     # a igual hora, la carpeta de verdad
+                if mejor is None or cual < mejor:
+                    destino, mejor = f, cual
+            if destino is None:
+                mails.append(x)
+                continue
+            destino['buzones'].extend(b for b in x['buzones'] if b not in destino['buzones'])
+            destino['ids'].extend(i for i in x['ids'] if i not in destino['ids'])
+    por_id, por_norm = {}, {}
+    for x in mails:
+        for i in x['ids']:
+            por_id.setdefault(i, x)
+            por_norm.setdefault(_idn(i), x)
+    return {'mails': mails, 'por_id': por_id, 'por_norm': por_norm, 'buzones': buzones,
+            'equipo': sorted(set(leidas)), 'esperada': equipo,
+            'compartidos': sum(1 for x in mails if len(x['buzones']) > 1)}
+
+
+def _buscar_id(u, q):
+    """Un mail por cualquiera de sus ids; el corto `nube:<hex>` tambien por un prefijo que no se repita."""
+    q = _texto(q).strip()
+    m = u['por_id'].get(q) or u['por_norm'].get(_idn(q))
+    if m or not q.lower().startswith('nube:') or len(q) < 11:
+        return m
+    hallados = {id(x): x for k, x in u['por_id'].items() if k.lower().startswith(q.lower())}
+    return next(iter(hallados.values())) if len(hallados) == 1 else None
+
+
+def _etiqueta_buzon(m):
+    """`Fak` · `cbaptista (nube del equipo)` · `Fak + cbaptista (el mismo mail en 2 buzones)`."""
+    b = m['buzones']
+    if len(b) > 1:
+        return '%s  (el mismo mail en %d buzones)' % (' + '.join(b), len(b))
+    return b[0] if b[0] == BUZON_FAK else '%s  (nube del equipo)' % b[0]
+
+
+def _del_buzon(m, q, buzones):
+    """--buzon: el texto esta en el nombre del buzon, en su casilla o en el nombre de su duena/o."""
+    q = q.strip().lower()
+    for b in m['buzones']:
+        i = buzones.get(b, {})
+        if q in ' '.join([b, i.get('casilla', ''), i.get('persona', '')]).lower():
+            return True
+    return False
+
+
+def _fecha_subida(ts):
+    return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M') if ts else ''
 
 
 def evaluar_parcial(revisados, fechas_cache, estado, hoy=None):
@@ -246,13 +572,28 @@ def sync(full=False):
     return 2 if parcial else 0
 
 
-def buscar(terminos, desde=None, hasta=None, carpeta=None, solo_asunto=False, limite=40):
-    cache = _leer_cache()
-    if not cache:
+def _linea_buzones(u, solo_fak):
+    """Una linea con cada buzon que se miro y hasta que mail llega: la prueba de que el de Carlos esta (o no)."""
+    partes = ['%s %d (hasta %s)' % (b['nombre'], b['total'], b['ultimo'] or 's/f') for b in u['buzones'].values()]
+    if solo_fak:
+        partes.append('nube del equipo: no miro (--solo-fak)')
+    elif not u['equipo']:
+        partes.append('nube del equipo: NO la veo en esta PC (python scripts/_mails.py --buzones)')
+    return 'buzones: ' + '  |  '.join(partes)
+
+
+def buscar(terminos, desde=None, hasta=None, carpeta=None, solo_asunto=False, limite=40, buzon=None, solo_fak=False):
+    u = _unificar(solo_fak=solo_fak)
+    if not u['mails']:
         sys.exit('El cache esta vacio. Corre primero:  python scripts/_mails.py --sync')
+    if buzon and not any(_del_buzon(m, buzon, u['buzones']) for m in u['mails']):
+        sys.exit('Ningun buzon coincide con "%s". Buzones que puedo leer: %s.  (python scripts/_mails.py --buzones)'
+                 % (buzon, ', '.join(u['buzones']) or 'ninguno'))
     ts = [t.lower() for t in terminos]
     hits = []
-    for m in cache.values():
+    for m in u['mails']:
+        if buzon and not _del_buzon(m, buzon, u['buzones']):
+            continue
         if desde and (m['fecha'] or '') < desde:
             continue
         if hasta and (m['fecha'] or '') > hasta + '~':
@@ -264,24 +605,31 @@ def buscar(terminos, desde=None, hasta=None, carpeta=None, solo_asunto=False, li
         if all(t in heno for t in ts):
             hits.append(m)
     hits.sort(key=lambda m: m['fecha'] or '')
-    print('cache: %d mails  |  coincidencias: %d%s' % (
-        len(cache), len(hits), '  (muestro las ultimas %d)' % limite if len(hits) > limite else ''))
+    n_fak = sum(1 for m in u['mails'] if BUZON_FAK in m['buzones'])
+    de_donde = '%d de Fak' % n_fak
+    if len(u['mails']) > n_fak:
+        de_donde += ' + %d solo del equipo (nube)' % (len(u['mails']) - n_fak)
+    print('cache: %s  |  coincidencias: %d%s' % (
+        de_donde, len(hits), '  (muestro las ultimas %d)' % limite if len(hits) > limite else ''))
+    print(_linea_buzones(u, solo_fak))
     print()
     for m in hits[-limite:]:
         print('[%s]  %s' % (m['fecha'], m['asunto']))
         print('    de: %-30s  carpeta: %s' % (m['de'][:30], m['carpeta']))
+        print('    %s: %s' % ('buzones' if len(m['buzones']) > 1 else 'buzon', _etiqueta_buzon(m)))
         if m['para']:
             print('    para: %s' % m['para'][:90])
         if m['adjuntos']:
             print('    ADJUNTOS: %s' % ' | '.join(m['adjuntos']))
-        print('    id: %s' % m['id'])
+        print('    id: %s' % m['id_mostrar'])
         print()
 
 
 def ver(eid):
-    m = _leer_cache().get(eid)
+    u = _unificar()
+    m = _buscar_id(u, eid)
     if not m:
-        sys.exit('No encontre ese id en el cache.')
+        sys.exit('No encontre ese id en el cache de Fak ni en la nube del equipo.')
     print('=' * 78)
     print('ASUNTO   %s' % m['asunto'])
     print('DE       %s <%s>' % (m['de'], m['de_mail']))
@@ -290,13 +638,31 @@ def ver(eid):
         print('CC       %s' % m['cc'])
     print('FECHA    %s' % m['fecha'])
     print('CARPETA  %s' % m['carpeta'])
+    print('BUZONES  %s' % _etiqueta_buzon(m))
     if m['adjuntos']:
-        print('ADJUNTOS %s' % ' | '.join(m['adjuntos']))
+        print('ADJUNTOS %s%s' % (' | '.join(m['adjuntos']),
+                                 '' if m['en_outlook'] else '   (solo los nombres: los archivos no estan en la nube)'))
     print('=' * 78)
     print(m['cuerpo'])
 
 
 def adjuntos(eid, destino=None):
+    u = _unificar()
+    m = _buscar_id(u, eid)
+    if m is None and (eid.strip().lower().startswith('nube:') or eid.strip().startswith('<')):
+        sys.exit('No encontre ese id en el cache de Fak ni en la nube del equipo.')
+    if m is not None and not m['en_outlook'] and not m['adjuntos']:
+        print('Ese mail (buzon %s, nube del equipo) no tiene adjuntos.' % ' + '.join(m['buzones']))
+        return
+    if m is not None and not m['en_outlook']:
+        # un mail que solo esta en la nube del equipo: el programa que sube los mails guarda los NOMBRES de los adjuntos
+        sys.exit('Ese mail es de la nube del equipo (buzon %s) y sus ARCHIVOS no estan en la nube: el programa que sube '
+                 'los mails guarda solo los nombres de los adjuntos.\nAdjuntos (solo nombres): %s\n'
+                 'Para tenerlos: pedirselos a quien lo recibio, buscar ese nombre en el servidor o en la carpeta de la '
+                 'tarea, o abrir el mismo mail en el buzon de Fak si tambien le llego a el. No se escribio nada en %s.'
+                 % (' + '.join(m['buzones']), ' | '.join(m['adjuntos']) or '(ninguno)', destino or ADJ))
+    if m is not None:
+        eid = m['en_outlook']         # mail del buzon de Fak (con el id de Fak o con el de la nube): se saca de su Outlook
     ns = _outlook()
     try:
         m = ns.GetItemFromID(eid)
@@ -332,6 +698,39 @@ def stats():
     print()
     for c, n in sorted(porc.items(), key=lambda x: -x[1])[:15]:
         print('  %-58s %6d' % (c[:58], n))
+
+
+def buzones():
+    """Que buzones puedo leer, cuantos mails tiene cada uno y hasta cuando llega. Es la respuesta a "¿puedo leer lo de X?"
+    ANTES de decir que no."""
+    u = _unificar()
+    info = u['buzones']
+    print('BUZONES QUE PUEDO LEER (solo lectura)')
+    print()
+    filas = []
+    for b in info.values():
+        donde = b['origen']
+        if b['subida']:
+            donde += ', ultima subida %s' % _fecha_subida(b['subida'])
+        filas.append((b['nombre'], b['casilla'] + (' (%s)' % b['persona'] if b['persona'] else ''), '%d' % b['total'],
+                      b['ultimo'], donde))
+    if BUZON_FAK not in info:
+        filas.insert(0, (BUZON_FAK, '', '0', '', 'cache de Fak vacio: python scripts/_mails.py --sync'))
+    ancho = max([len(f[1]) for f in filas] + [len('casilla (persona)')])
+    for f in [('buzon', 'casilla (persona)', 'mails', 'mail mas nuevo', 'de donde sale')] + filas:
+        print('  %-14s %-*s %7s  %-17s  %s' % (f[0], ancho, f[1], f[2], f[3], f[4]))
+    print()
+    if u['equipo']:
+        print('nube del equipo: %s' % '  |  '.join(u['equipo']))
+        print('  solo se lee _entrada\\<persona>; la carpeta _cuarentena (lo que el filtro aparto por privado) no se abre nunca.')
+        print('  %d mails estan en mas de un buzon y se muestran una sola vez. De la nube NO salen los archivos adjuntos, solo sus nombres.'
+              % u['compartidos'])
+    else:
+        print('nube del equipo: NO la veo en esta PC. La busque en %s\\Ingenieria y Proyecto - General\\*Claude Barack\\mails\\_entrada.'
+              % os.path.join(os.path.expanduser('~'), ORGANIZACION))
+        print('  Si la carpeta se movio: BARACK_MAIL_EQUIPO=<ruta de la carpeta mails>. Mientras tanto solo tengo el buzon de Fak.')
+    print()
+    print('Quien no figura aca no comparte sus mails: a Fak se le dice que no esta en la nube, no que no se puede leer.')
 
 
 # ─────────────────────────────────────────────────────────── pedidos sin respuesta
@@ -730,6 +1129,9 @@ def main():
     ap.add_argument('--hasta', metavar='AAAA-MM-DD')
     ap.add_argument('--carpeta', metavar='TEXTO')
     ap.add_argument('--limite', type=int, default=40)
+    ap.add_argument('--buzon', metavar='TEXTO', help='con --buscar: solo los mails de ese buzon (nombre, casilla o persona)')
+    ap.add_argument('--solo-fak', action='store_true', help='con --buscar: sin mirar los mails del equipo de la nube')
+    ap.add_argument('--buzones', action='store_true', help='que buzones puedo leer, cuantos mails y hasta cuando llega cada uno')
     ap.add_argument('--ver', metavar='ID')
     ap.add_argument('--adjuntos', metavar='ID')
     ap.add_argument('--out', metavar='CARPETA')
@@ -746,13 +1148,15 @@ def main():
     elif a.sync:
         sys.exit(sync(full=a.full))
     elif a.buscar:
-        buscar(a.buscar, a.desde, a.hasta, a.carpeta, a.asunto, a.limite)
+        buscar(a.buscar, a.desde, a.hasta, a.carpeta, a.asunto, a.limite, buzon=a.buzon, solo_fak=a.solo_fak)
     elif a.ver:
         ver(a.ver)
     elif a.adjuntos:
         adjuntos(a.adjuntos, a.out)
     elif a.stats:
         stats()
+    elif a.buzones:
+        buzones()
     elif a.sin_respuesta:
         sys.exit(sin_respuesta(dias=a.dias, ventana=a.ventana, como_json=a.json))
     else:
