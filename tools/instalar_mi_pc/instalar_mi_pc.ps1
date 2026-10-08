@@ -37,9 +37,18 @@ Write-Host '  MI ASISTENTE COMPLETO EN ESTA PC' -ForegroundColor Cyan
 if ($Ensayo) { Write-Host '  (ENSAYO: no se escribe ni se baja nada)' -ForegroundColor DarkGray }
 Write-Host ''
 
-# 1) la biblioteca de Ingenieria (la que contiene este archivo) y la carpeta de la nube con mi memoria y mi configuracion
+# 1) de donde sale mi memoria y mi configuracion: de este pendrive (carpeta "nube" al lado de "programa"), o si no, de la
+#    biblioteca de Ingenieria (la que contiene este archivo)
+$paquete = Split-Path -Parent $aqui
+$desdePendrive = (Test-Path -LiteralPath (Join-Path $paquete 'nube\claude-memoria')) -and (Test-Path -LiteralPath (Join-Path $paquete 'nube\claude-config'))
 $bib = $null
-if ($Biblioteca) { $bib = $Biblioteca }
+$nube = $null
+if ($desdePendrive) {
+  $nube = Join-Path $paquete 'nube'
+  $env:BARACK_NUBE_CEREBRO = $nube
+  Ok ('tu memoria y tu configuracion vienen en este pendrive: ' + $nube)
+}
+elseif ($Biblioteca) { $bib = $Biblioteca }
 else {
   $d = $aqui
   while ($d) {
@@ -53,24 +62,25 @@ else {
     foreach ($b in @(Get-ChildItem -LiteralPath $org -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -like 'Ingenier*a y Proyecto - General' })) { $bib = $b.FullName; break }
   }
 }
-if (-not $bib -or -not (Test-Path -LiteralPath $bib -PathType Container)) { Mal 'no encuentro en esta PC la biblioteca de Ingenieria. Tiene que estar sincronizada con tu cuenta (Explorador: BARACK ARGENTINA SRL > Ingenieria y Proyecto - General).' }
-$nube = $null
-foreach ($d in @(Get-ChildItem -LiteralPath $bib -Directory -ErrorAction SilentlyContinue)) {
-  if ((Test-Path -LiteralPath (Join-Path $d.FullName 'claude-memoria')) -and (Test-Path -LiteralPath (Join-Path $d.FullName 'claude-config'))) { $nube = $d.FullName; break }
+if (-not $desdePendrive) {
+  if (-not $bib -or -not (Test-Path -LiteralPath $bib -PathType Container)) { Mal 'no encuentro en esta PC la biblioteca de Ingenieria. Tiene que estar sincronizada con tu cuenta (Explorador: BARACK ARGENTINA SRL > Ingenieria y Proyecto - General).' }
+  foreach ($d in @(Get-ChildItem -LiteralPath $bib -Directory -ErrorAction SilentlyContinue)) {
+    if ((Test-Path -LiteralPath (Join-Path $d.FullName 'claude-memoria')) -and (Test-Path -LiteralPath (Join-Path $d.FullName 'claude-config'))) { $nube = $d.FullName; break }
+  }
+  if (-not $nube) { Mal 'no veo en la nube de Ingenieria la carpeta con tu memoria y tu configuracion. Tiene permiso solo para tu cuenta: sincroniza la biblioteca con tu cuenta (SharePoint > Documentos > Sincronizar) y espera a que termine.' }
+  Ok ('tu memoria y tu configuracion: ' + $nube)
+  $esperada = Join-Path $env:USERPROFILE 'BARACK ARGENTINA SRL'
+  if (-not $bib.StartsWith($esperada, [System.StringComparison]::OrdinalIgnoreCase)) { Ojo ('la biblioteca esta en ' + $bib + ' y el programa que baja la memoria la busca en ' + $esperada + ': si no la encuentra, avisa.') }
 }
-if (-not $nube) { Mal 'no veo en la nube de Ingenieria la carpeta con tu memoria y tu configuracion. Tiene permiso solo para tu cuenta: sincroniza la biblioteca con tu cuenta (SharePoint > Documentos > Sincronizar) y espera a que termine.' }
-Ok ('tu memoria y tu configuracion: ' + $nube)
-$esperada = Join-Path $env:USERPROFILE 'BARACK ARGENTINA SRL'
-if (-not $bib.StartsWith($esperada, [System.StringComparison]::OrdinalIgnoreCase)) { Ojo ('la biblioteca esta en ' + $bib + ' y el programa que baja la memoria la busca en ' + $esperada + ': si no la encuentra, avisa.') }
 
 # 2) Node (para bajar la memoria) y Git (para bajar el repo)
 $node = $null
 $c = Get-Command node -ErrorAction SilentlyContinue
 if ($c) { $node = $c.Source }
 if (-not $node) {
-  foreach ($p in @((Join-Path $env:LOCALAPPDATA 'BarackMailsPC\node\node.exe'), (Join-Path $env:LOCALAPPDATA 'MiAsistente\node\node.exe'))) { if (Test-Path -LiteralPath $p) { $node = $p; break } }
+  foreach ($p in @((Join-Path $paquete 'node\node.exe'), (Join-Path $env:LOCALAPPDATA 'BarackMailsPC\node\node.exe'), (Join-Path $env:LOCALAPPDATA 'MiAsistente\node\node.exe'))) { if (Test-Path -LiteralPath $p) { $node = $p; break } }
 }
-if (-not $node) {
+if (-not $node -and $bib) {
   foreach ($d in @(Get-ChildItem -LiteralPath $bib -Directory -ErrorAction SilentlyContinue)) {
     $n = Join-Path $d.FullName '1- PUBLICADO\contenido\marketplace\plugins\barack-area\bin\node.exe'
     if (Test-Path -LiteralPath $n) {
@@ -108,11 +118,18 @@ if (Test-Path -LiteralPath (Join-Path $Repo 'scripts\_nube.mjs')) {
   }
 }
 elseif ($Ensayo) {
-  if ($git) { Haria ('git clone --depth 1 ' + $URL + ' ' + $Repo) } else { Haria ('bajar el zip de ' + $URL + ' y dejarlo en ' + $Repo) }
+  if (Test-Path -LiteralPath (Join-Path $paquete 'repo.zip')) { Haria ('abrir el repo.zip del pendrive en ' + $Repo) }
+  elseif ($git) { Haria ('git clone --depth 1 ' + $URL + ' ' + $Repo) } else { Haria ('bajar el zip de ' + $URL + ' y dejarlo en ' + $Repo) }
 }
 else {
   New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Repo) | Out-Null
-  if ($git) {
+  if (Test-Path -LiteralPath (Join-Path $paquete 'repo.zip')) {
+    Write-Host '  Abriendo el repo que viene en el pendrive (sin internet)...'
+    try { Expand-Archive -LiteralPath (Join-Path $paquete 'repo.zip') -DestinationPath $Repo -Force } catch { Mal ('no pude abrir el repo del pendrive: ' + $_.Exception.Message) }
+    if (-not (Test-Path -LiteralPath (Join-Path $Repo 'scripts\_nube.mjs'))) { Mal 'el repo del pendrive no trae scripts\_nube.mjs.' }
+    if ($git) { Ojo 'el repo viene del pendrive, sin historial de git: para sincronizarlo con GitHub mas adelante hay que conectarlo (se hace despues).' }
+  }
+  elseif ($git) {
     Write-Host '  Bajando el repo de GitHub (puede tardar unos minutos)...'
     & $git clone --depth 1 ($URL + '.git') $Repo
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath (Join-Path $Repo 'scripts\_nube.mjs'))) { Mal 'no pude bajar el repo con git. Puede ser que la red de la empresa bloquee GitHub.' }
@@ -185,6 +202,7 @@ if ($Ensayo) { Write-Host '  ENSAYO TERMINADO: no se toco nada.' -ForegroundColo
 Write-Host '  LISTO.' -ForegroundColor Green
 Write-Host ('  Cerra el Claude que tengas abierto, abrilo de nuevo y elegi la carpeta  ' + $Repo) -ForegroundColor Green
 Write-Host '  (la primera vez te pide confiar en la carpeta: decile que si).'
+if ($desdePendrive) { Write-Host '  Ya podes sacar el pendrive.' -ForegroundColor Green }
 if ($advertencias.Count -gt 0) {
   Write-Host ''
   Write-Host '  Para tener en cuenta:' -ForegroundColor Yellow

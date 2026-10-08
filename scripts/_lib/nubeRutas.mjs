@@ -28,6 +28,8 @@ export const ORGANIZACION = 'BARACK ARGENTINA SRL';
 export const BIBLIOTECA_CANONICA = 'Ingeniería y Proyecto - General';
 /** Carpeta, adentro de la biblioteca, donde vive mi memoria (aprobada por Fak el 01/10/2026). */
 export const CARPETA_EN_INGENIERIA = 'Claude Fak';
+/** Variable que apunta a una copia de esa carpeta fuera de la nube (un pendrive): ver `buscarNube`. */
+export const VARIABLE_CEREBRO = 'BARACK_NUBE_CEREBRO';
 
 /** Nombre de la OneDrive personal en la notebook de Fak y subcarpeta vieja: solo para `buscarNubeVieja`. */
 export const CANONICA = 'OneDrive - BARACK ARGENTINA SRL';
@@ -57,7 +59,12 @@ export function buscarBiblioteca(home = homedir()) {
  *   PC la tiene sincronizada (exista o no la carpeta, para que `--subir --aplicar` la cree ahi); si no
  *   la tiene, la ruta canonica debajo de `home`, que no existe y hace que `--bajar` lo diga.
  */
-export function buscarNube(home = homedir()) {
+export function buscarNube(home = homedir(), env = process.env) {
+    // Una PC que se arma desde un pendrive (08/10/2026, notebook de Calidad): la copia de la memoria viaja en una carpeta
+    // con la misma forma que `Claude Fak` y se dice con esta variable. Solo vale si esa carpeta existe y trae la memoria,
+    // y NUNCA si apunta a la nube personal (regla nube-ingenieria.md).
+    const forzada = env && env[VARIABLE_CEREBRO];
+    if (forzada && esCarpeta(join(forzada, 'claude-memoria')) && !/OneDrive - BARACK/i.test(forzada)) return forzada;
     const bib = buscarBiblioteca(home);
     return join(bib || join(home, ORGANIZACION, BIBLIOTECA_CANONICA), CARPETA_EN_INGENIERIA);
 }

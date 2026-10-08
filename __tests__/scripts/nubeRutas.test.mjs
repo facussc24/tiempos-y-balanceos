@@ -95,6 +95,30 @@ describe('buscarNube — desde el 01/10/2026 apunta SIEMPRE a la biblioteca de I
         expect(buscarNube(h)).toBe(join(h, ORGANIZACION, BIBLIOTECA_CANONICA, CARPETA_EN_INGENIERIA));
     });
 
+    // 08/10/2026: una PC armada desde un pendrive trae la copia de la memoria en una carpeta con la forma de `Claude Fak`
+    it('VERDE: BARACK_NUBE_CEREBRO apuntando a una carpeta con la memoria (un pendrive) gana sobre la biblioteca', () => {
+        const h = home();
+        carpeta(carpeta(h, ORGANIZACION), BIBLIOTECA_CANONICA);
+        const pen = carpeta(h, 'pendrive');
+        carpeta(pen, 'claude-memoria');
+        expect(buscarNube(h, { BARACK_NUBE_CEREBRO: pen })).toBe(pen);
+    });
+    it.each([
+        ['una carpeta que no existe', () => join(tmpdir(), 'no-existe-xyz-123')],
+        ['una carpeta sin la memoria adentro', () => carpeta(home(), 'vacia')],
+    ])('ROJO: BARACK_NUBE_CEREBRO apuntando a %s no se usa', (_q, ruta) => {
+        const h = home();
+        const bib = carpeta(carpeta(h, ORGANIZACION), BIBLIOTECA_CANONICA);
+        expect(buscarNube(h, { BARACK_NUBE_CEREBRO: ruta() })).toBe(join(bib, CARPETA_EN_INGENIERIA));
+    });
+    it('ROJO: BARACK_NUBE_CEREBRO apuntando a la nube personal no se usa (regla nube-ingenieria)', () => {
+        const h = home();
+        const bib = carpeta(carpeta(h, ORGANIZACION), BIBLIOTECA_CANONICA);
+        const personal = carpeta(h, CANONICA);
+        carpeta(personal, 'claude-memoria');
+        expect(buscarNube(h, { BARACK_NUBE_CEREBRO: personal })).toBe(join(bib, CARPETA_EN_INGENIERIA));
+    });
+
     it('con dos bibliotecas de nombre parecido elige la que tiene la carpeta de Ingenieria', () => {
         const h = home();
         const org = carpeta(h, ORGANIZACION);
