@@ -172,7 +172,7 @@ if [ "$TOOL" != "Workflow" ]; then
   else
     case "$MODELO" in
       ""|sonnet|claude-sonnet-*) ;;
-      opus|claude-opus-*|fable|claude-fable-*)
+      opus|claude-opus-*|fable|claude-fable-*|haiku|claude-haiku-*)
         pase_modelo_vigente || rechazar "Se pidio model=$MODELO y no hay pase vigente: ~/.claude/.agent-opus-ok (vale 12 h; Claude lo escribe solo si Fak lo pidio TEXTUAL en el chat, y lo dice)." ;;
       *) rechazar "Se pidio model=$MODELO." ;;
     esac
