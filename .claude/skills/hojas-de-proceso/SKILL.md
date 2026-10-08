@@ -551,10 +551,23 @@ que ir guardándolas donde sí van, o sea `Y:\BARACK\CALIDAD\DOCUMENTACION SGC\H
 
 **Un número por PIEZA, no por sector** (decisión de Carlos Baptista, contada por Fak el
 01/10/2026: *"las hojas de proceso ahora están unificadas, no se separan más por sectores,
-número único"*). 971 = APB de puerta, 990 = Insert, 992 = Top Roll: todas las operaciones de la
-pieza van en ese número y cada hoja lleva el **N° de operación del flujograma**. La hoja de una
-**máquina** (encendido, limpieza, alarmas) no es de una pieza: va a `2- SECTORES` con número
-propio y sus operaciones numeradas 10, 20, 30… como la HO 118 de la costura CNC.
+número único"*). 971 = APB de puerta, 990 = Insert, 992 = Top Roll, 994 = Upper Trim: todas las
+operaciones de la pieza van en ese número y cada hoja lleva el **N° de operación del flujograma**.
+Una operación no tiene un número de HO aparte.
+
+**Lo único que va con número propio es lo que queda AFUERA del proceso de la pieza** (Fak,
+08/10/2026: *"lo que queda aparte son las hojas que aclaran cosas aparte... que no están dentro
+del proceso, como un cambio de molde"*; *"no quiero que me vuelvas a preguntar"*). Cómo se decide,
+sin preguntarle:
+
+| Pregunta | Sí → | Ejemplos |
+|---|---|---|
+| ¿Es lo que el operario hace para producir la pieza en ese puesto (cargar, operar, controlar, sacar, reponer material)? | Hoja de la **pieza**: número de la pieza, N° de operación del flujograma (60; si se parte, 60.1, 60.2) | embossing del logo (994 · 60); control de receta, montaje y cambio de rollo, empalme, arranque y parada de la laminadora (992 · 20.1 a 20.8) |
+| ¿Prepara, ajusta o cambia la MÁQUINA y no es el paso a paso de la pieza? | Hoja de **máquina**: número propio, en `2- SECTORES`, operaciones 10, 20, 30… | prender y calentar, set-up y parámetros, cambio de molde o de herramienta, limpieza, alarmas: laminadora hot melt (993), prensa de embossing (995), costura CNC (118) |
+
+La hoja de la pieza nombra la de máquina cuando la necesita (*"La prensa se prende y se prepara
+con la HO-995"*; *"el encendido... está en la HO-993"*). Las dos filas van al listado con el OK
+de Fak (§F), como cualquier número nuevo.
 
 **¿Cada hoja puede tener su revisión dentro del mismo número?** Ni el SGC ni las normas lo
 obligan ni lo prohíben (barrido del 01/10/2026: I-IN-002, P-05, P-09, I-AC-008, IATF 16949,
@@ -570,8 +583,9 @@ Van el `.pptx` y su `.pdf`, con nombre `HO-<N> - HOJAS DE PROCESO - <PIEZA> - Re
 generador puede escribir en el scratchpad para mirarla, pero la entrega va ahí. Los decks de
 HOTMELT y MOLDEADORA IMG se mudaron el 25/09 de `INSTRUCCIONES OPERATIVAS` a
 `1- CLIENTES\NOVAX\Tapizadas puerta\TOP ROLL\` (son del Top Roll Patagonia, N 216/256/285/315); el de
-la PRENSA EMBOSSING se mudo el mismo 24/09 a `1- CLIENTES\COZZUOL\00_VW427-1LA_K-PATAGONIA\00- Upper Trimming\` (sin
-numero de HO todavia: `HO-TBD - ...`, el numero lo pone el listado).
+la PRENSA EMBOSSING se mudo el mismo 24/09 a `1- CLIENTES\COZZUOL\00_VW427-1LA_K-PATAGONIA\00- Upper Trimming\`;
+el 08/10/2026 se partio en HO-994 (la pieza, operacion 60) y HO-995 (la maquina, a `2- SECTORES`),
+las dos sin fila en el listado todavia.
 
 ## 4. Lo fijo del formulario I-IN-002.4-R01
 

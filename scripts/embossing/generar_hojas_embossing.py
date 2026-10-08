@@ -17,12 +17,16 @@ Fuentes (todo lo que dice una hoja sale de aca, con su pagina o su segundo):
   Los dos en `...\\Upper Trimming\\_BACKUP_UpperTrim_2026-07-01\\APQP\\28- Corrida de Produccion
   \\01- Try Out Embossing Machine JFortune`.
 
-N° de operacion: 60, EMBOSSING DEL LOGO DE CARGA del flujograma 160 Rev.A (01/10/2026); la
-numeracion la manda el flujograma (no-pfd-no-ho.md) y cada hoja es una parte: 60.1 a 60.6.
+Salen DOS juegos de hojas (Fak, 08/10/2026: *"lo que queda aparte son las hojas que aclaran cosas
+aparte... que no estan dentro del proceso, como un cambio de molde"*; skill hojas-de-proceso §3 bis):
+  - HO-994, la de la PIEZA: la operacion 60, EMBOSSING DEL LOGO DE CARGA del flujograma 160 Rev.A
+    (la numeracion la manda el flujograma, no-pfd-no-ho.md). Es una sola hoja: va como 60.
+  - HO-995, la de la MAQUINA: prender, temperatura, arranque, parametros de carrera y cambio de
+    molde, numeradas 10, 20, 30... como la 993 de la laminadora hot melt. Va a `2- SECTORES`.
 Sector TAPIZADO: en el flujograma 160 la tela cortada y el sustrato van al sector de tapizado
 antes de la 30, y no hay otro traslado hasta el de embalaje, despues de la 70.
-HO-994: el proximo libre del listado al 07/10/2026 (`python scripts/_hoNumeros.py`); la fila
-del listado se escribe con el OK de Fak (autonomy-contract.md §F).
+HO-994 y HO-995: los proximos libres del listado al 08/10/2026 (`python scripts/_hoNumeros.py`);
+las filas del listado se escriben con el OK de Fak (autonomy-contract.md §F).
 Para imprimir va sin portada (skill hojas-de-proceso §3 bis): `--sin-portada`.
 
 Lo que ninguna fuente dice NO se escribe (core-prohibiciones §1): va a `falta.txt`.
@@ -52,7 +56,8 @@ sys.modules["generar_hojas_img"] = G
 _spec.loader.exec_module(G)
 
 A = os.path.join(AQUI, "assets")
-SALIDA = os.path.join(AQUI, "HOJAS DE PROCESO - PRENSA EMBOSSING.pptx")
+SALIDA = {"HO-994": os.path.join(AQUI, "HO-994 - HOJAS DE PROCESO - UPPER TRIM PANEL - Rev.A.pptx"),
+          "HO-995": os.path.join(AQUI, "HO-995 - HOJAS DE PROCESO - PRENSA DE EMBOSSING - Rev.A.pptx")}
 PLANCHA = os.path.join(A, "_plancha_del_deck.jpg")
 
 
@@ -79,6 +84,10 @@ CAJETIN = dict(
     fecha="07/10/2026",
     rev="A",
 )
+# la hoja de la maquina: como la 993 de la laminadora, el COD. DE PIEZA nombra la maquina
+CAJETIN_MAQUINA = dict(CAJETIN, ho="HO-995", pieza="PRENSA DE EMBOSSING JFORTUNE — UPPER TRIM PANEL",
+                       fecha="08/10/2026")
+CAJETINES = {"HO-994": CAJETIN, "HO-995": CAJETIN_MAQUINA}
 
 PORTADA = dict(
     titulo="HOJAS DE PROCESO — PRENSA DE EMBOSSING",
@@ -93,6 +102,10 @@ PORTADA = dict(
     fecha_rev="07/10/2026  ·  Rev. A",
     foto=_f("m_portada.jpg"),
 )
+PORTADAS = {"HO-994": PORTADA,
+            "HO-995": dict(PORTADA, titulo="HOJAS DE PROCESO — PRENSA DE EMBOSSING (MÁQUINA)",
+                           ho="HO-995", op_flujo="Hoja de máquina: prender, preparar y cambiar el molde",
+                           fecha_rev="08/10/2026  ·  Rev. A")}
 
 # Que entra y que sale de la operacion. Sin flujograma ni AMFE del Upper Trim, sale de la
 # cotizacion del proveedor y del manual.
@@ -106,7 +119,8 @@ MATERIALES = [
 HOJAS = [
     # ── PRENDER ──────────────────────────────────────────────────────────────
     dict(
-        op="60.1",
+        ho="HO-995",
+        op="10",
         denominacion="ENCENDIDO DE LA PRENSA",
         modo="rotulada",
         imagenes=[_f("r1_tablero.jpg")],
@@ -140,7 +154,8 @@ HOJAS = [
     ),
 
     dict(
-        op="60.2",
+        ho="HO-995",
+        op="20",
         denominacion="AJUSTE Y CONTROL DE TEMPERATURA DEL MOLDE",
         modo="rotulada",
         imagenes=[_f("r2_temperatura.jpg")],
@@ -178,7 +193,8 @@ HOJAS = [
     ),
 
     dict(
-        op="60.3",
+        ho="HO-995",
+        op="30",
         denominacion="ARRANQUE EN AUTOMATICO Y RETORNO A ORIGEN",
         modo="rotulada",
         imagenes=[_f("r3_pantalla.jpg")],
@@ -210,7 +226,8 @@ HOJAS = [
 
     # ── PRODUCIR ─────────────────────────────────────────────────────────────
     dict(
-        op="60.4",
+        ho="HO-994",
+        op="60",
         denominacion="EMBOSSING DEL LOGO CON MANDO BIMANUAL",
         modo="secuencia",
         columnas=True,            # fotos verticales: tres columnas, no 2 arriba y 1 abajo
@@ -233,7 +250,8 @@ HOJAS = [
         ],
         # auditoria independiente 24/09 (B3): la seguridad del bimanual estaba en el
         # instructivo de Carlos (pags. 2 y 8) y se habia perdido
-        nota="Hacer el ciclo solo con la prensa en automático y en origen (hoja de arranque). "
+        nota="La prensa se prende y se prepara con la HO-995. Hacer el ciclo solo en automático "
+             "y en origen. "
              "No trabar ni puentear ningún botón. El molde está caliente: trabajar con guantes.",
         fuentes=[
             "preview.mp4 s=67,5 a 70,5: las manos llevan la pieza debajo del molde; manual "
@@ -260,7 +278,8 @@ HOJAS = [
 
     # ── SET UP ───────────────────────────────────────────────────────────────
     dict(
-        op="60.5",
+        ho="HO-995",
+        op="40",
         denominacion="AJUSTE DE PARAMETROS DE CARRERA",
         modo="rotulada",
         imagenes=[_f("r5_parametros.jpg")],
@@ -298,7 +317,8 @@ HOJAS = [
     ),
 
     dict(
-        op="60.6",
+        ho="HO-995",
+        op="50",
         denominacion="CAMBIO DE MOLDE",
         hoja_de=(1, 2),
         modo="secuencia",
@@ -340,7 +360,8 @@ HOJAS = [
     ),
 
     dict(
-        op="60.6",
+        ho="HO-995",
+        op="50",
         denominacion="CAMBIO DE MOLDE",
         hoja_de=(2, 2),
         modo="secuencia",
@@ -372,7 +393,7 @@ HOJAS = [
             "locating pin before insertion»; la foto es la Fig. 1 de la pag. 7 (el molde con su "
             "cable). Nota: manual pag. 7: «For wiring, connect by color: the heater cartridge "
             "wires are red and blue; the thermocouple wires are white and orange»; temperatura, "
-            "parametros y origen, hojas 60.2, 60.5 y 60.3",
+            "parametros y origen, operaciones 20, 40 y 30 de la HO-995",
         ],
         epp=EPP_MOLDE,
         disparador="SI EL CONECTOR NO SALE O NO ENTRA SIN FORZARLO",
@@ -415,28 +436,31 @@ def compilar(sin_portada=False):
     G.PLANCHA_DECK = PLANCHA
     G.gate_fotos_miradas(HOJAS, PORTADA.get("foto"))
 
-    prs = Presentation()
-    prs.slide_width = Cm(G.W)
-    prs.slide_height = Cm(G.H)
-    if not sin_portada:
-        indice = [(h["op"], G._denominacion_con_hoja(h)) for h in HOJAS]
-        G.portada(prs, PORTADA, logo=G.LOGO_BARACK, foto=PORTADA["foto"], indice=indice)
+    # un deck por HO: la de la pieza (994) y la de la maquina (995)
+    for ho, salida in SALIDA.items():
+        hojas = [h for h in HOJAS if h["ho"] == ho]
+        prs = Presentation()
+        prs.slide_width = Cm(G.W)
+        prs.slide_height = Cm(G.H)
+        if not sin_portada:
+            indice = [(h["op"], G._denominacion_con_hoja(h)) for h in hojas]
+            G.portada(prs, PORTADAS[ho], logo=G.LOGO_BARACK, foto=PORTADA["foto"], indice=indice)
 
-    reparto_3 = G._REPARTO[3]
-    for h in HOJAS:
-        d = dict(CAJETIN)
-        d.update(h)
-        if h.get("columnas"):
-            G._REPARTO[3] = [(0.0, 0.0, 1 / 3, 1.0), (1 / 3, 0.0, 1 / 3, 1.0),
-                             (2 / 3, 0.0, 1 / 3, 1.0)]
-        try:
-            G.hoja(prs, d, logo=G.LOGO_BARACK)
-        finally:
-            G._REPARTO[3] = reparto_3
-        print(f"  [OK] {h['op']}  {G._denominacion_con_hoja(h)}")
+        reparto_3 = G._REPARTO[3]
+        for h in hojas:
+            d = dict(CAJETINES[ho])
+            d.update(h)
+            if h.get("columnas"):
+                G._REPARTO[3] = [(0.0, 0.0, 1 / 3, 1.0), (1 / 3, 0.0, 1 / 3, 1.0),
+                                 (2 / 3, 0.0, 1 / 3, 1.0)]
+            try:
+                G.hoja(prs, d, logo=G.LOGO_BARACK)
+            finally:
+                G._REPARTO[3] = reparto_3
+            print(f"  [OK] {ho} {h['op']}  {G._denominacion_con_hoja(h)}")
 
-    prs.save(SALIDA)
-    print(f"\n{len(HOJAS) + (0 if sin_portada else 1)} laminas -> {SALIDA}")
+        prs.save(salida)
+        print(f"{len(hojas) + (0 if sin_portada else 1)} laminas -> {salida}\n")
 
 
 if __name__ == "__main__":
