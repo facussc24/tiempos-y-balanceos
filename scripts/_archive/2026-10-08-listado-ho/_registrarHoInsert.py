@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 """
+ARCHIVADO 08/10/2026 — NO USAR COMO MODELO: escribia en una pestaña oculta del listado que nombraba
+a Claude (_CONTEXTO_CLAUDE). Fak mando borrarla: mi contexto va a la memoria, nunca adentro de un
+documento de la empresa (scripts/_sinFirmaIA.py lo frena).
+
 _registrarHoInsert.py — registra la HO 990 (INSERT PATAGONIA) en el Listado Maestro de Hojas de Proceso.
 
 Ruta: Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\HOJAS DE OPERACIONES\\3- LISTADO\\Listado hojas de proceso.xlsx

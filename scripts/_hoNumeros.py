@@ -5,7 +5,7 @@ listado maestro. Solo lee.
     python scripts/_hoNumeros.py            # choques, numeros sin fila, proximo libre
     python scripts/_hoNumeros.py --q3       # ademas lee el cajetin (Q3) de cada Excel (lento, red)
 
-Criterio de Fak (25/09/2026, hoja oculta _CONTEXTO_CLAUDE del listado):
+Criterio de Fak (25/09/2026; pestaña CRITERIO del listado y memoria reference_listado_ho_historia_numeracion):
 - El numero es de la HOJA, no del codigo: varias piezas que se hacen igual van en la misma HO,
   una pagina por codigo (025, 952, 984, 913).
 - Si dos hojas tienen el mismo numero, se lo queda la fila del listado. Un numero que se deja de

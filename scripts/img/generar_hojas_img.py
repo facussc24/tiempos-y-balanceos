@@ -1404,10 +1404,12 @@ def compilar_deck():
     salida_desktop = os.path.join(DESKTOP_DIR, "HOJAS DE PROCESO - MAQUINA IMG.pptx")
     salida_repo = os.path.join(BASE_DIR, "HOJAS DE PROCESO - MAQUINA IMG.pptx")
 
+    prs.core_properties.author = prs.core_properties.last_modified_by = 'Facundo Santoro'; prs.core_properties.comments = ''  # sin firma de programa (Fak, 08/10/2026: scripts/_lib/firmaIA.py)
     prs.save(salida_repo)
     print(f"\n[OK] Presentacion guardada en:")
     print(f"  1. {salida_repo}")
     try:
+        prs.core_properties.author = prs.core_properties.last_modified_by = 'Facundo Santoro'; prs.core_properties.comments = ''  # sin firma de programa (Fak, 08/10/2026: scripts/_lib/firmaIA.py)
         prs.save(salida_desktop)
         print(f"  2. {salida_desktop}")
     except PermissionError:

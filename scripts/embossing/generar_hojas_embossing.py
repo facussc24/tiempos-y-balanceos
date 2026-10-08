@@ -459,6 +459,7 @@ def compilar(sin_portada=False):
                 G._REPARTO[3] = reparto_3
             print(f"  [OK] {ho} {h['op']}  {G._denominacion_con_hoja(h)}")
 
+        prs.core_properties.author = prs.core_properties.last_modified_by = 'Facundo Santoro'; prs.core_properties.comments = ''  # sin firma de programa (Fak, 08/10/2026: scripts/_lib/firmaIA.py)
         prs.save(salida)
         print(f"{len(hojas) + (0 if sin_portada else 1)} laminas -> {salida}\n")
 

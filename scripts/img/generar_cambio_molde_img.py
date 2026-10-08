@@ -584,9 +584,11 @@ def compilar():
         gh.hoja(prs, d, logo=gh.LOGO_BARACK)
         print(f"  [OK] {h['op']} {gh._denominacion_con_hoja(h)}")
     salida = os.path.join(BASE_DIR, SALIDA)
+    prs.core_properties.author = prs.core_properties.last_modified_by = 'Facundo Santoro'; prs.core_properties.comments = ''  # sin firma de programa (Fak, 08/10/2026: scripts/_lib/firmaIA.py)
     prs.save(salida)
     print(f"\n[OK] {salida}")
     try:
+        prs.core_properties.author = prs.core_properties.last_modified_by = 'Facundo Santoro'; prs.core_properties.comments = ''  # sin firma de programa (Fak, 08/10/2026: scripts/_lib/firmaIA.py)
         prs.save(os.path.join(gh.DESKTOP_DIR, SALIDA))
         print(f"[OK] copia en {gh.DESKTOP_DIR}")
     except PermissionError:

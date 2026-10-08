@@ -526,7 +526,7 @@ que ir guardándolas donde sí van, o sea `Y:\BARACK\CALIDAD\DOCUMENTACION SGC\H
 | Lo viejo (2011-2024) | `...\HOJAS DE OPERACIONES\9- HISTORICO (NO USAR)\` (era `Revisar`): no se toca ni se usa |
 | Hoja de un sector / máquina | `...\HOJAS DE OPERACIONES\2- SECTORES\<sector>\` |
 | Retrabajo | `...\HOJAS DE OPERACIONES\4- RETRABAJOS\` |
-| El número | `...\HOJAS DE OPERACIONES\3- LISTADO\Listado hojas de proceso.xlsx` (hoja oculta `_CONTEXTO_CLAUDE`) |
+| El número | `...\HOJAS DE OPERACIONES\3- LISTADO\Listado hojas de proceso.xlsx` (pestañas INDICE y CRITERIO; el próximo libre lo da `python scripts/_hoNumeros.py`). CREADO POR = la persona (`F.Santoro`), nunca "Claude", y en el libro no va ninguna pestaña ni nota para mí (Fak, 08/10/2026; la historia que vivía en la pestaña oculta borrada está en la memoria `reference_listado_ho_historia_numeracion`) |
 
 **El número** (Fak, 25/09/2026, al resolver 13 números repetidos: *"no quiero pasar de 999"*):
 - **Es de la HOJA, no del código.** Si varias piezas se hacen igual, van en la misma HO, con una

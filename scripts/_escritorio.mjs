@@ -34,6 +34,7 @@ import { fileURLToPath } from 'node:url';
 import ExcelJS from 'exceljs';
 
 import { RUTA_ESCRITORIO, RUTA_TAREAS_CERRADAS } from './_lib/serverPaths.mjs';
+import { firmaIaEnTexto } from './_lib/firmaIA.mjs';
 import { leerMsg } from './_leerMsg.mjs';
 import { claveHilo,
     MAILS_JSONL, leerMailsDesde, cruzarMailsConTareas, fechaCorte, fechaLocal,
@@ -123,6 +124,10 @@ export function validarCierre({ cerrada, quien, que, donde }) {
         if (/[\r\n]/.test(v)) errores.push(`${flag} no puede tener saltos de linea`);
         if (v.length < minimo) errores.push(`${flag} es demasiado corto (${v.length}, minimo ${minimo})`);
         if (RELLENO.test(v)) errores.push(`${flag} es relleno ("${v}"), tiene que decir algo concreto`);
+        // El listado de cerradas lo ve el equipo: ningun documento nombra a Claude ni a una IA (Fak,
+        // 08/10/2026). Tampoco una ruta del repo (.claude/skills/...), que en el listado de 2026 aparecia en 5 celdas.
+        const firma = firmaIaEnTexto(v);
+        if (firma.length) errores.push(`${flag} nombra a Claude o a una IA («${firma[0].texto}»): el listado lo ve el equipo`);
     }
     return errores;
 }
@@ -268,6 +273,9 @@ export async function leerIndice(archivo, anio) {
 async function escribirIndice(archivo, anio, filas) {
     const p = rutaIndice(archivo, anio);
     const wb = new ExcelJS.Workbook();
+    // ExcelJS deja "Unknown" de autor: el listado es de Ingenieria (Fak, 08/10/2026, firmaIA).
+    wb.creator = 'Facundo Santoro';
+    wb.lastModifiedBy = 'Facundo Santoro';
     const hoja = wb.addWorksheet(`Tareas cerradas ${anio}`);
     hoja.columns = COLUMNAS.map(({ header, key, width }) => ({ header, key, width }));
     hoja.getRow(1).font = { bold: true };
@@ -488,6 +496,12 @@ async function cmdArchivar(escritorio, archivo, { nombre, cerrada, quien, que, d
 
     const anio = anioDe(cerrada);
     const tarea = nombreCanonico(cerrada, nombreSinExtension(base, esDir));
+    // El nombre de la carpeta queda en el listado y en la biblioteca: tampoco nombra a Claude (Fak, 08/10/2026).
+    const firmaNombre = firmaIaEnTexto(tarea);
+    if (firmaNombre.length) {
+        bad(`"${tarea}" nombra a Claude o a una IA: la carpeta y su fila los ve el equipo. Renombrala antes de archivar.`);
+        return 1;
+    }
     const destino = path.join(carpetaAnio(archivo, anio), tarea);
     if (fs.existsSync(destino)) { bad(`Ya existe "${anio}\\${tarea}". Renombrar antes de archivar.`); return 1; }
     // Una fila "reabierta" NO cuenta como duplicado: reabrir existe justamente para volver a

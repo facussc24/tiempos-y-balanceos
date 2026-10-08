@@ -1,0 +1,33 @@
+{
+  "fuente": "Fak, 08/10/2026, al ver 'Claude' en la columna CREADO POR del listado de hojas de proceso: \"es un error gravisimo, no puede volver a suceder nunca algo asi... en ningun tipo de documento\"; y de la hoja oculta _CONTEXTO_CLAUDE: \"tampoco hace falta, nunca mas crear algo asi... eliminalo donde lo encuentres\"",
+  "regla": "Ningun documento de Barack (Excel, PowerPoint, Word, PDF, mail, DXF, nombre de archivo, pestaña o carpeta) dice ni deja ver que lo hizo Claude o una IA: ni en una celda, ni en una pestaña oculta, ni en una nota, ni en un comentario, ni en las propiedades del archivo.",
+  "bloqueante": [
+    { "id": "claude", "re": "(?<![a-z])(?<!jean-)claude(?![a-z])", "que": "nombra a Claude" },
+    { "id": "claude-pegado", "re": "(?<!jean-)claude(?!l)", "que": "nombra a Claude (texto partido en el archivo)", "solo_unido": true },
+    { "id": "anthropic", "re": "anthropic", "que": "nombra a Anthropic" },
+    { "id": "chatgpt", "re": "chat\\s?gpt|openai", "que": "nombra a ChatGPT / OpenAI" },
+    { "id": "gemini", "re": "(?<![a-z])gemini(?![a-z])", "que": "nombra a Gemini" },
+    { "id": "copilot", "re": "(?<![a-z])copilot(?![a-z])", "que": "nombra a Copilot" },
+    { "id": "inteligencia-artificial", "re": "inteligencia\\s+artificial|artificial\\s+intelligence", "que": "habla de inteligencia artificial" },
+    { "id": "hecho-con-ia", "re": "(?<![a-z])(hech[oa]s?|generad[oa]s?|cread[oa]s?|elaborad[oa]s?|redactad[oa]s?|asistid[oa]s?|armad[oa]s?|escrit[oa]s?|made|generated|created|written)\\s+(con|por|mediante|usando|with|by|using)\\s+(una\\s+|la\\s+|an\\s+)?(ia|ai)(?![a-z])", "que": "dice que lo hizo una IA" },
+    { "id": "ia-generado", "re": "(?<![a-z])(ia|ai)[\\s-](generated|generad[oa])", "que": "dice que lo hizo una IA" },
+    { "id": "generado-por-libreria", "re": "generated\\s+(using|by)\\s+python-(pptx|docx)", "que": "las propiedades del archivo dicen que lo genero un programa" },
+    { "id": "complemento-claude", "re": "WA200009404", "que": "marca del complemento Claude para Excel / PowerPoint (se saca con quitar_complemento_claude)" },
+    { "id": "llm", "re": "(?<![A-Za-z])LLM(?![A-Za-z])", "que": "nombra un modelo de lenguaje", "distingue_mayusculas": true, "no_en_binario": true },
+    { "id": "proximo-claude", "re": "para\\s+el\\s+pr[oó]ximo\\s+(claude|asistente|agente)|seg[uú]n\\s+el\\s+usuario", "que": "texto escrito para el asistente, no para la gente" }
+  ],
+  "aviso": [
+    { "id": "ia-suelta", "re": "(?<![A-Za-z])IA(?![A-Za-z])", "que": "dice IA (revisar: puede ser un codigo)", "distingue_mayusculas": true }
+  ],
+  "metadata_programa": {
+    "que": "autor o ultimo en guardar es el nombre de una libreria (el archivo lo armo un programa)",
+    "valores": ["python-pptx", "python-docx", "openpyxl", "steve canny", "xlsxwriter", "exceljs", "sheetjs", "reportlab", "anonymous", "unknown", "(unspecified)", "python", "pymupdf", "matplotlib"]
+  },
+  "rutas_excluidas": {
+    "fuente": "Carpetas que llevan 'Claude' en el nombre por decision de Fak y no son documentos de la empresa: la configuracion y la memoria (nube-ingenieria.md, 01/10/2026) y el asistente de area que se publica a los compañeros (project_claudes_por_area). Lo que esta adentro no sale como documento de Barack.",
+    "contiene": ["\\Claude Fak\\", "/Claude Fak/", "\\.claude\\", "/.claude/", "\\claude-area\\", "/claude-area/",
+                 "\\CLAUDES_POR_AREA", "/CLAUDES_POR_AREA", "\\_CUARENTENA_CLAUDE POR AREA\\", "\\_CUARENTENA_Claude Barack\\",
+                 "\\Base Claude Ingenieria\\", "\\0- INSTALAR CLAUDE (entrar aca)\\", "\\ACTUALIZACION_CLAUDE_LIMPIO\\"],
+    "nota_contiene": "Las ultimas siete son el asistente de area (exports/CLAUDES_POR_AREA_*, y en la nube de Ingenieria su instalador, su base y sus cuarentenas) y una copia de la configuracion: hablan de Claude porque el producto ES Claude (barrido del 08/10/2026)."
+  }
+}

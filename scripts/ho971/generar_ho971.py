@@ -82,6 +82,7 @@ def main():
             print(f"      aviso: {a}")
     os.makedirs(SALIDA, exist_ok=True)
     ruta = os.path.join(SALIDA, "HO-971 - LAMINAS A3 NUEVAS.pptx")
+    prs.core_properties.author = prs.core_properties.last_modified_by = 'Facundo Santoro'; prs.core_properties.comments = ''  # sin firma de programa (Fak, 08/10/2026: scripts/_lib/firmaIA.py)
     prs.save(ruta)
     fallas = CHK.revisar(ruta, {"*": {"secuencia": True}})
     if fallas:

@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **08/10 — Ningún documento dice que lo hizo Claude o una IA, y al tocar un documento ajeno se revisa ENTERO, no solo mis celdas** (el listado de HO tenía "Claude" en CREADO POR desde junio y una pestaña oculta «para el próximo Claude»; la mantuve dos meses y dos agentes lo reportaron como dato; Fak: *"es un error gravísimo"*). Graduado a `core-prohibiciones.md` §9, `_sinFirmaIA.py`, `firma-ia-guard` y chequeo 9 del cierre-guard; memoria `feedback_ningun_documento_dice_que_lo_hizo_claude`.
+
 - **08/10 — Los créditos de API del plan Max NO cubren Claude Code: el modelo que se elija ahí no los gasta ni los ahorra; solo los gasta código que llama a la API con la clave de la organización vinculada** (un informe proponía «Opus por defecto para aprovechar los créditos»; la documentación oficial dice lo contrario). Los precios se leen de la tabla oficial, no de un informe: tenía mal Sonnet y las lecturas de caché. Regla `api-claude.md`.
 
 - **07/10 — Antes de decir «no puedo leer el correo de X», se busca en la nube del equipo; no se afirma de memoria** (le dije a Fak que el correo de Carlos no lo podía leer y sus mails ya suben a la nube de Ingeniería, como los de la PC de Marcelo: *"si lo podés leer, está en la nube... ¿desde cuándo no recordás eso?"*). `_mails.py --buscar` mira los dos lados, `--buzones` dice hasta cuándo llega cada buzón y el cierre-guard (chequeo 8) frena la frase si el turno no buscó. Memoria `reference_acceso_mails_outlook`.
@@ -66,6 +68,8 @@ incidente vive en los snapshots.
 - **25/09 — Una difusion que corrige un error PROPIO dice solo el valor que queda, en el mail y en el PDF** (Fak: *"si ponemos el antes y el despues me escrachas"*). Graduado a la memoria `documento_no_confiesa_como_se_hizo`.
 
 ## Entregables y comunicacion con Fak
+
+- **08/10 — Lo que escribo en un entregable lo tiene que poder defender Fak: si un operario o un gerente no lo entiende, no va** (en la revisión del flujograma 153 escribí «RESTITUCION DE CONTROL DE MATERIA PRIMA (IQC) CON CUARENTENA»; Fak: *"no se entiende un carajo... jamás podés poner algo que yo no pueda defender"*). Y un flujograma para imprimir se juzga por si se entiende el FLUJO, no solo por la letra: el A3 de una hoja llegó a 8 pt con todo pegado (*"demasiado junto"*).
 
 - **07-08/10 — Toma de tiempos por video = TIEMPOS + VIDEO RECORTADO adentro del PowerPoint, sin planilla** (*"no me pidieron planilla"*); del celular, solo lo que Fak nombra. El rato en que el operario prueba cómo poner una pieza nueva no es proceso (*"desde que realmente se pone a laburar"*). Un link a la nube se le pide a OneDrive, no se arma: el mío no abría. Memorias `project_tiempos_forrado_ductos_patagonia`, `reference_link_nube_se_pide_a_onedrive`.
 

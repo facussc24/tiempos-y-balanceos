@@ -218,6 +218,7 @@ def generar(nombre, pdf=True):
             print(f"      aviso: {a}")
     os.makedirs(SALIDA, exist_ok=True)
     ruta = os.path.join(SALIDA, j["archivo"] + ".pptx")
+    prs.core_properties.author = prs.core_properties.last_modified_by = 'Facundo Santoro'; prs.core_properties.comments = ''  # sin firma de programa (Fak, 08/10/2026: scripts/_lib/firmaIA.py)
     prs.save(ruta)
     print(f"[{nombre}] {len(j['hojas'])} hojas -> {ruta}")
     # el control duro del skill, sobre el ARCHIVO que quedo: fotos de menos de 25 cm2, mas de

@@ -44,6 +44,28 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_li
 from vozMail import mostrar_voz                                          # noqa: E402
 from outlookUi import asegurar_outlook, cartel_de_seguridad, vigilando   # noqa: E402
 from gerenteCopia import GERENTE_NOMBRE, falta_gerente, selftest as selftest_gerente  # noqa: E402
+import firmaIA                                                                    # noqa: E402
+
+
+def firma_ia_del_mail(it):
+    """Hallazgos BLOQUEANTES de "lo hizo Claude o una IA" en el asunto, el cuerpo, el nombre y el
+    CONTENIDO de cada adjunto (Fak, 08/10/2026: ningun documento de Barack nombra a Claude ni a una
+    IA, ni en lo oculto: pestañas, propiedades, la marca del complemento de Excel)."""
+    import tempfile
+    hs = firmaIA.revisar_texto(str(it.Subject or ''), 'mail', 'asunto', con_avisos=False)
+    hs += firmaIA.revisar_texto(str(it.Body or ''), 'mail', 'cuerpo', con_avisos=False)
+    with tempfile.TemporaryDirectory() as td:
+        for k in range(it.Attachments.Count):
+            a = it.Attachments.Item(k + 1)
+            fn = str(a.FileName or f'adjunto{k}')
+            hs += firmaIA.revisar_texto(fn, fn, 'nombre del adjunto', con_avisos=False)
+            if os.path.splitext(fn)[1].lower() in firmaIA.DOCUMENTO and not re.match(r'(?i)image\d+\.', fn):
+                p = os.path.join(td, f'{k}_{fn}')
+                a.SaveAsFile(p)
+                for h in firmaIA.revisar_archivo(p):
+                    h.archivo = fn
+                    hs.append(h)
+    return [h for h in hs if h.nivel == 'BLOQUEANTE']
 
 VENTANA_HORAS = 72          # cuanto para atras se mira Enviados
 DOMINIO_INTERNO = '@barackmercosul.com'
@@ -264,6 +286,8 @@ def main() -> int:
                     help='deja mandar a destinatarios de fuera de Barack — solo con OK de Fak para ESE mail')
     ap.add_argument('--sin-gerente', action='store_true', dest='sin_gerente',
                     help='deja mandar sin Carlos Baptista en el mail — solo con OK de Fak para ESE mail')
+    ap.add_argument('--sin-chequeo-firma', action='store_true', dest='sin_chequeo_firma',
+                    help='saltea el chequeo de "lo hizo Claude/IA" — solo con OK de Fak para ESE mail (falso positivo: un tercero citado)')
     ap.add_argument('--selftest', action='store_true')
     a = ap.parse_args()
 
@@ -298,6 +322,21 @@ def main() -> int:
     print(f"BORRADOR: {cand['asunto']}")
     print(f"  Para: {cand['para']}   CC: {cand['cc']}")
     print(f"  Adj : {cand['adjuntos']}")
+
+    # 1a. GATE — ningun documento dice que lo hizo Claude o una IA (regla dura de Fak, 08/10/2026)
+    firma = firma_ia_del_mail(it)
+    if firma:
+        print(f"\n  *** EL MAIL NOMBRA A CLAUDE O A UNA IA ({len(firma)}) ***")
+        for h in firma[:15]:
+            print(h.renglon())
+        if not a.sin_chequeo_firma:
+            print("\nABORTA. Se saca del cuerpo o del adjunto (python scripts/_sinFirmaIA.py --arreglar <archivo> --apply")
+            print("para la marca del complemento y las propiedades) y se rearma el borrador. Si es un tercero citado")
+            print("en el hilo y Fak lo ve: --sin-chequeo-firma.")
+            return 3
+        print("  --sin-chequeo-firma activo: sigo igual.")
+    else:
+        print("  Firma de IA: ninguna (cuerpo, asunto y adjuntos).")
 
     # 1b. GATE — destinatarios de fuera de Barack (regla dura de Fak, 30/09/2026)
     direcciones = _direcciones(it)

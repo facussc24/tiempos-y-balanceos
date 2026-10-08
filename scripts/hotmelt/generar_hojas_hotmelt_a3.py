@@ -1368,6 +1368,7 @@ def generar_deck_a3(lista_hojas, subtitulo_portada, ruta_pptx, titulo_indice="Í
         d.update(h)
         hoja_a3(prs, d, logo=LOGO_BARACK)
 
+    prs.core_properties.author = prs.core_properties.last_modified_by = 'Facundo Santoro'; prs.core_properties.comments = ''  # sin firma de programa (Fak, 08/10/2026: scripts/_lib/firmaIA.py)
     prs.save(ruta_pptx)
     print(f"\n[OK] Presentación A3 generada: {ruta_pptx} ({len(lista_hojas)} hojas)")
     return ruta_pptx

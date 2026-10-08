@@ -75,6 +75,10 @@ def main():
 
     if not os.path.exists(a.pdf):
         raise SystemExit('No existe: %s' % a.pdf)
+    # Ningun documento dice que lo hizo Claude o una IA (regla dura de Fak, 08/10/2026): no se imprime.
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib'))
+    import firmaIA
+    firmaIA.exigir_sin_firma([a.pdf], 'imprimir')
     if not os.path.exists(GS):
         raise SystemExit('Falta Ghostscript en %s (viene con PDFCreator)' % GS)
     imp = IMPRESORAS['a3' if a.a3 else 'a4']

@@ -10,3 +10,16 @@
 7. **No se resucita el modulo PFD/HO de la app ni se ofrece una HO por cuenta propia**: los
    flujogramas salen del generador del repo y las HO solo a pedido de Fak (regla `no-pfd-no-ho.md`).
 8. **PDFs, propios o de terceros: editar es trabajo normal y no se frena** (memoria `editar_pdfs_es_libre_salvo_el_qr_ajeno`): layout, texto, imagenes, unir, partir, OCR, traducir; el QR de Barack se modifica lo que haga falta. **El unico limite** es el QR/hash/firma **antifraude de un tercero** (laboratorio, certificadora, portal del cliente) que resuelve contra el sistema del emisor: ese no se altera ni se reapunta, y ninguna edicion se hace "indetectable". Si ese QR no coincide con el contenido, se dice con la diferencia al lado y se sigue con el resto del pedido.
+9. **Ningun documento de Barack dice ni deja ver que lo hizo Claude o una IA** (Fak, 08/10/2026:
+   el listado de hojas de proceso decia "Claude" en CREADO POR de 14 filas, tenia una pestaña oculta
+   `_CONTEXTO_CLAUDE` y la marca del complemento "Claude para Excel"; *"es un error gravisimo, no
+   puede volver a suceder nunca... en ningun tipo de documento"*). Ni en una celda, una pestaña
+   oculta, una nota, un comentario, las propiedades del archivo (autor, "generated using
+   python-pptx") ni en el nombre de un archivo o carpeta. **Autor = la persona** (`F.Santoro`;
+   `Facundo Santoro` en las propiedades). **Mi contexto va a la memoria o al repo, nunca adentro de un
+   documento** (*"contexto claude tampoco hace falta, nunca mas crear algo asi"*). Lo que no se toca:
+   una imagen o un archivo que ES de una IA no se renombra para que parezca real (se le avisa a Fak).
+   Enforcement: detector `python scripts/_sinFirmaIA.py <archivo>` (+ `--arreglar --apply` para la
+   marca del complemento y las propiedades; canon `scripts/_lib/firmaIA.data.json`), guardian
+   `firma-ia-guard` (PreToolUse) y chequeo 9 del `cierre-guard` (documentos escritos en el turno).
+   Memoria `feedback_ningun_documento_dice_que_lo_hizo_claude`.

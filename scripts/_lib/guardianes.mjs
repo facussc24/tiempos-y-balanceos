@@ -186,7 +186,7 @@ export function ctxDesdeEnv(env) {
  */
 const SOLO_SHELL = ['supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'commit-rutas-guard', 'arb-cerrar-guard', 'script-inline-guard', 'secretos-guard'];
 const SOLO_ARCHIVO = ['file-guard', 'causas-ajenas-guard'];
-const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard', 'documentacion-oficial-guard', 'video-maquina-guard', 'caracteristicas-especiales-guard', 'apqp-cliente-guard', 'nube-personal-guard'];
+const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard', 'documentacion-oficial-guard', 'video-maquina-guard', 'caracteristicas-especiales-guard', 'apqp-cliente-guard', 'nube-personal-guard', 'firma-ia-guard'];
 export const TODOS = ['file-guard', 'supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'commit-rutas-guard', 'script-inline-guard', 'secretos-guard', ...LOS_CUATRO, 'arb-cerrar-guard', 'causas-ajenas-guard'];
 
 export function matriz(tool) {
@@ -333,6 +333,91 @@ Como se arregla:
   - Si tenes la fuente, citala en la misma frase: "mail del 11/12/2025", "fuente: FT120".
   - Si es una inferencia, marcala: "probablemente", "no consta", "sin registro", "TBD".
   - Una coincidencia numerica NO es una fuente.`);
+};
+
+// ── firma-ia-guard ─────────────────────────────────────────────────────────
+// Ningun documento de Barack dice que lo hizo Claude o una IA (Fak, 08/10/2026: el listado de
+// hojas de proceso tenia "Claude" en CREADO POR de 14 filas y una pestaña oculta
+// "_CONTEXTO_CLAUDE"; *"es un error gravisimo, no puede volver a suceder nunca... en ningun tipo de
+// documento"*). Este guardian frena en la ESCRITURA, mirando el texto del comando o del archivo:
+//   1. un campo de autoria con una IA de valor   (CREADO POR / Elaboro / author / creator = Claude)
+//   2. una IA escrita en un objeto de documento  (.Value = 'Claude', ws['J74'] = ..., create_sheet('..CLAUDE'),
+//      core_properties.author = ..., add_paragraph('.. Claude ..'))
+//   3. un archivo o carpeta con "claude" en el nombre adentro del servidor Y:\ o de la nube de Ingenieria
+//   4. un Write/Edit de un archivo que vive en Y:\, en la nube de Ingenieria o en exports/ con una IA en el texto
+// Lo que un script escribe por dentro no se ve aca: eso lo ataja el detector (`scripts/_sinFirmaIA.py`)
+// en el cierre del turno y en los que mandan, imprimen o archivan. Tests: __tests__/scripts/firmaIAGuard.test.mjs.
+const IA_NOMBRES = String.raw`claude|anthropic|chat\s?gpt|openai|gemini|copilot`;
+const FIRMA_CAMPO = String.raw`(?:cread[oa][_\s-]+por|elaborad[oa][_\s-]+por|hech[oa][_\s-]+por|realizad[oa][_\s-]+por|modificad[oa][_\s-]+por|preparad[oa][_\s-]+por|redactad[oa][_\s-]+por|elabor[oó]|realiz[oó]|confeccion[oó]|prepar[oó]|redact[oó]|modific[oó]|autor(?:es)?|authors?|creator|created[_\s]?by|modified[_\s]?by|updated[_\s]?by|last[_\s]?modified[_\s]?by|lastmodifiedby)(?![a-záéíóú])`;
+const FIRMA_AUTORIA_RE = new RegExp(String.raw`${FIRMA_CAMPO}["'\]\x60]?\s*[:=,]?\s*[(\[]?\s*[fFrRbBuU]?["'\x60]?\s*(?:${IA_NOMBRES}|ia(?![a-z])|ai(?![a-z]))`, 'i');
+// Una pasada por tipo de comilla: un `python -c "ws.Value = 'Claude'"` tiene el literal simple ADENTRO del doble.
+const FIRMA_LITERALES_RE = ['"', "'", '\x60'].map((q) => new RegExp(String.raw`${q}([^${q}\n]*?(?:${IA_NOMBRES})[^${q}\n]*?)${q}`, 'gi'));
+const FIRMA_PREFIJO_RE = /(?:\.(?:value2?|formula|text|name|caption|title|author|comments?|subject|keywords|description|last_modified_by|lastmodifiedby|creator|category)\s*=\s*|\]\s*=\s*|\b(?:create_sheet|add_paragraph|add_run|add_textbox|add_heading|add_slide|add_comment|add_table|setcellvalue|insert_text|write_string|write_rich_string|cell|Sheets\.Add|Worksheets\.Add|Add)\s*\([^()\n]*?)$/i;
+const FIRMA_RAIZ_RE = /(?:^|[\s"'=])(?:[yY]:[\\/]|\/y\/|[^"'\n]*Ingenier[ií]a y Proyecto)/;
+const FIRMA_EXENTOS_RE = /(?:[\\/]\.claude[\\/]|[\\/]memory[\\/]|[\\/]docs[\\/]|[\\/]__tests__[\\/]|[\\/]_archive[\\/]|[\\/]claude-area[\\/]|CLAUDES_POR_AREA|CLAUDE POR AREA|Claude Barack|Base Claude Ingenieria|INSTALAR CLAUDE|ACTUALIZACION_CLAUDE|[\\/]Claude Fak[\\/]|firmaIA|_sinFirmaIA|_limpiarListadoHoClaude|guardianes\.mjs|cierreGuard\.mjs|CLAUDE\.md$|LECCIONES_APRENDIDAS\.md$|MEMORY\.md$|\.claude[\\/])/i;
+// Comandos que solo leen o que guardan texto que no es un documento (un mensaje de commit lleva
+// "Co-Authored-By: Claude" por convencion del repo, y no sale de aca como documento de Barack).
+const FIRMA_COMANDO_LECTURA_RE = /^\s*(?:git|grep|rg|egrep|ls|dir|head|tail|less|find|wc|stat|Get-ChildItem|Select-String)\b/i;
+
+/** Lo que frena (texto) o null. `texto` es el comando o el contenido del archivo; `archivo` la ruta del Write/Edit. */
+export function firmaIaEnEscritura(texto, archivo = '') {
+  const t = String(texto ?? '');
+  const f = String(archivo ?? '');
+  if (f && FIRMA_EXENTOS_RE.test(f)) return null;
+  if (!f && FIRMA_COMANDO_LECTURA_RE.test(t)) return null;
+  const m1 = FIRMA_AUTORIA_RE.exec(t);
+  if (m1) return `un campo de AUTORIA con una IA de valor: «${m1[0].slice(0, 80)}»`;
+  for (const linea of t.split('\n')) {
+    for (const re of FIRMA_LITERALES_RE) {
+      re.lastIndex = 0;
+      let m;
+      while ((m = re.exec(linea))) {
+        const antes = linea.slice(Math.max(0, m.index - 120), m.index);
+        if (FIRMA_PREFIJO_RE.test(antes)) return `una IA escrita ADENTRO de un documento: «${(antes.slice(-40) + m[0]).trim().slice(0, 110)}»`;
+        re.lastIndex = m.index + 1;   // un literal "abierto" de mas no tapa el siguiente
+      }
+    }
+  }
+  if (!f) {
+    // 3. nombre de archivo o carpeta en el servidor o en la nube de Ingenieria
+    const rutas = t.match(/(?:[A-Za-z]:[\\/]|\/[a-z]\/)[^"'\n|;&<>]*/g) || [];
+    for (const r of rutas) {
+      if (!/claude/i.test(r) || FIRMA_EXENTOS_RE.test(r)) continue;
+      if (/^(?:[yY]:[\\/]|\/y\/)/.test(r) || /Ingenier[ií]a y Proyecto/i.test(r)) {
+        return `un archivo o carpeta con "Claude" en el nombre en el servidor o la nube: «${r.slice(0, 110)}»`;
+      }
+    }
+  } else if (FIRMA_RAIZ_RE.test(' ' + f) || /[\\/]exports[\\/]/i.test(f)) {
+    // 4. el archivo vive donde se entregan documentos
+    const m4 = new RegExp(String.raw`(?<![a-z])(?:${IA_NOMBRES})(?![a-z])|inteligencia\s+artificial`, 'i').exec(t);
+    if (m4) return `un documento en ${/[\\/]exports[\\/]/i.test(f) ? 'exports/' : 'el servidor o la nube'} que nombra a «${m4[0]}»`;
+    if (/claude/i.test(path.basename(f))) return `un archivo con "Claude" en el nombre: «${path.basename(f)}»`;
+  }
+  return null;
+}
+
+GUARDIANES['firma-ia-guard'] = (ctx) => {
+  let motivo = null;
+  if (ctx.ok) {
+    const tool = ctx.toolL;
+    if (tool === 'write' || tool === 'edit') motivo = firmaIaEnEscritura(ctx.content ?? '', ctx.file ?? '');
+    else motivo = firmaIaEnEscritura(ctx.cmd ?? ctx.cmd6 ?? '', '');
+  } else {
+    motivo = firmaIaEnEscritura(`${ctx.rescate?.cmd ?? ''}\n${ctx.rescate?.content ?? ''}`, ctx.rescate?.file ?? '');
+  }
+  if (!motivo) return null;
+  return bloqueo(`[FIRMA-IA] BLOQUEADO: estas por escribir ${motivo}
+
+Regla de Fak (08/10/2026): ningun documento de Barack dice ni deja ver que lo hizo Claude o una IA
+— ni en una celda, ni en una pestaña oculta, ni en una nota, ni en las propiedades del archivo, ni
+en el nombre. *"Es un error gravisimo, no puede volver a suceder nunca"* (el listado de hojas de
+proceso decia "Claude" en CREADO POR y tenia una pestaña oculta "_CONTEXTO_CLAUDE").
+
+  · Autor / CREADO POR / Elaboro = la persona: F.Santoro (Facundo Santoro en las propiedades).
+  · Mi contexto (notas, historia, "proximo numero") va a la memoria o al repo, NUNCA adentro del documento.
+  · Despues de escribir: python scripts/_sinFirmaIA.py <archivo>
+
+Regla: .claude/rules/core-prohibiciones.md §9`);
 };
 
 // ── supabase-guard (solo deteccion; el backup lo corre el .sh) ─────────────
@@ -1263,9 +1348,10 @@ const TEXTO_HO = `[HO-GUARD — gate de numeracion ANTES de armar una Hoja de Op
    Si no hay registro asociado va "-", no se inventa un codigo. Frases cortas: las
    columnas son angostas y un texto largo se CORTA.
 6. LISTADO MAESTRO (3- LISTADO\\Listado hojas de proceso.xlsx): la fila nueva, en el
-   bloque de su sector, + la hoja oculta _CONTEXTO_CLAUDE con el proximo numero libre, se
-   PREPARA en la misma tanda en que se arma la hoja y se ESCRIBE con el OK de Fak
-   (registro compartido, autonomy-contract.md §F).
+   bloque de su sector, se PREPARA en la misma tanda en que se arma la hoja y se ESCRIBE
+   con el OK de Fak (registro compartido, autonomy-contract.md §F). CREADO POR = la persona
+   (F.Santoro), NUNCA "Claude"; y en el libro no va ninguna pestaña ni nota para mi (la
+   oculta _CONTEXTO_CLAUDE se borro el 08/10/2026 por orden de Fak).
    El numero es de la HOJA, no del codigo, y no se pasa de 999 (Fak 25/09/2026): antes de
    dar uno y al cerrar, python scripts/_hoNumeros.py (sale 1 si hay un numero repetido).
 7. Con ese OK, el .xlsx lo edito YO con Excel COM (Fak, 19/08/2026: "automaticemos eso

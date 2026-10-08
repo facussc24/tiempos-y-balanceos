@@ -156,6 +156,7 @@ def armar(pdf=True):
     os.makedirs(SALIDA, exist_ok=True)
     nombre = "HO-992 - 20.10 CAMBIO DE ROLLO EN EL ENROLLADOR POR ALARMA"
     ruta = os.path.join(SALIDA, nombre + ".pptx")
+    prs.core_properties.author = prs.core_properties.last_modified_by = 'Facundo Santoro'; prs.core_properties.comments = ''  # sin firma de programa (Fak, 08/10/2026: scripts/_lib/firmaIA.py)
     prs.save(ruta)
     print("hoja ->", ruta)
     fallas = CHK.revisar(ruta, {"*": {"secuencia": True}})

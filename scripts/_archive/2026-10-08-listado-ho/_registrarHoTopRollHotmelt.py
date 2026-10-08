@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 """
+ARCHIVADO 08/10/2026 — NO USAR COMO MODELO: escribia en una pestaña oculta del listado que nombraba
+a Claude (_CONTEXTO_CLAUDE). Fak mando borrarla: mi contexto va a la memoria, nunca adentro de un
+documento de la empresa (scripts/_sinFirmaIA.py lo frena).
+
 _registrarHoTopRollHotmelt.py — registra en el Listado Maestro de Hojas de Proceso la HO 992
 (TOP ROLL PATAGONIA) y la HO 993 (LAMINADORA HOT MELT, hoja de maquina).
 

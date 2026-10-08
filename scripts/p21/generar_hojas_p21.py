@@ -423,6 +423,7 @@ def main():
         print(f"  [OK] {h['op']} {h['denominacion']}")
     os.makedirs(a.salida, exist_ok=True)
     out = os.path.join(a.salida, "HO-991 - HOJAS DE PROCESO - APB P21 HILO NARANJA - Rev.A.pptx")
+    prs.core_properties.author = prs.core_properties.last_modified_by = 'Facundo Santoro'; prs.core_properties.comments = ''  # sin firma de programa (Fak, 08/10/2026: scripts/_lib/firmaIA.py)
     prs.save(out)
     print("\nGuardado:", out)
     ff = faltan_fotos()

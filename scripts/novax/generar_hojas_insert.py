@@ -943,12 +943,14 @@ def main():
 
     # Guardar localmente
     out_local = os.path.join(BASE_DIR, "tmp", "HO-990_INSERT_PATAGONIA_REV.A.pptx")
+    prs.core_properties.author = prs.core_properties.last_modified_by = 'Facundo Santoro'; prs.core_properties.comments = ''  # sin firma de programa (Fak, 08/10/2026: scripts/_lib/firmaIA.py)
     prs.save(out_local)
     print(f"\n¡Éxito! Archivo guardado localmente en: {out_local}")
 
     # Guardar en servidor PPAP NOVAX si está disponible
     out_server = r"Y:\BARACK\CALIDAD\DOCUMENTACION SGC\PPAP CLIENTES\NOVAX\Tapizadas puerta\26- Instrucciones de Proceso\INSERT\HO-990_INSERT_PATAGONIA_REV.A.pptx"
     try:
+        prs.core_properties.author = prs.core_properties.last_modified_by = 'Facundo Santoro'; prs.core_properties.comments = ''  # sin firma de programa (Fak, 08/10/2026: scripts/_lib/firmaIA.py)
         prs.save(out_server)
         print(f"¡Guardado en servidor PPAP NOVAX!: {out_server}")
     except Exception as e:

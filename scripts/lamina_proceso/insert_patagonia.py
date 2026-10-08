@@ -175,5 +175,6 @@ cp = prs.core_properties
 cp.author = cp.last_modified_by = "Ingeniería - Barack Mercosul"
 cp.title = "Proceso de fabricación - Insert Patagonia"
 cp.subject = cp.comments = cp.keywords = ""
+prs.core_properties.author = prs.core_properties.last_modified_by = 'Facundo Santoro'; prs.core_properties.comments = ''  # sin firma de programa (Fak, 08/10/2026: scripts/_lib/firmaIA.py)
 prs.save(SALIDA)
 print("OK", SALIDA, "w1=%.1f H2=%.1f wh=%.1f" % (w1, H2, wh))

@@ -39,9 +39,12 @@ historica de solo lectura.
   sabe se escribe generico con lo que hay, sin inventar un valor, y el hueco va a la lista de
   pendientes y al mail; el `TBD` queda solo en el cajetin (skill `hojas-de-proceso`). No se
   redactan por analogia con otra pieza "parecida" (`core-prohibiciones` §1). El listado
-  maestro (`3- LISTADO\Listado hojas de proceso.xlsx` + hoja oculta `_CONTEXTO_CLAUDE`) manda
+  maestro (`3- LISTADO\Listado hojas de proceso.xlsx`, pestañas INDICE y CRITERIO) manda
   la numeracion de HO; la fila nueva se prepara en la misma tanda y se escribe con el OK de Fak
-  (registro compartido: `autonomy-contract.md` §F).
+  (registro compartido: `autonomy-contract.md` §F). En CREADO POR va la persona (`F.Santoro`),
+  nunca "Claude", y **en el libro no se crea ninguna pestaña, nota ni texto para mi**: la pestaña
+  oculta `_CONTEXTO_CLAUDE` se borro el 08/10/2026 por orden de Fak y su historia esta en la
+  memoria `reference_listado_ho_historia_numeracion` (regla `core-prohibiciones.md` §9).
 - `ho_documents` y `hoRepository`: referencia historica, capa de lectura. Los tipos
   (`pfdTypes.ts`, `hojaOperacionesTypes.ts`) quedan para leer historicos.
 

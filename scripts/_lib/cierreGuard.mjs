@@ -62,7 +62,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import readline from 'node:readline';
-import { execSync } from 'node:child_process';
+import { execSync, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { soloLineasDeComando, separarHeredocs, comandosSimples } from './shellTexto.mjs';
 import { sinAvisosAdelante, esAutomatico } from './correccionGuard.mjs';
@@ -1065,6 +1065,7 @@ export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
     entregables,
     sinMirar: entregables.filter((e) => !e.mirado),
     ultimoMensajeFak: st.ultimoMensajeFak,
+    ultimoMensajeFakTs: st.ultimoMensajeFakTs,
     // chequeo 7: lo que el turno hizo desde el ultimo mensaje de Fak (skill cargado, dibujo, pagina, archivo enviado)
     explicar: st.explicar,
     // chequeo 8: si en el turno miro la nube de mails del equipo (o dijo que el aviso no aplica)
@@ -1213,7 +1214,70 @@ export function reclamar(sid, clave) {
 // Decision
 // ---------------------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------------------
+// Chequeo 9: un documento escrito en este turno dice que lo hizo Claude o una IA
+// ---------------------------------------------------------------------------------------
+// Fak, 08/10/2026: el listado de hojas de proceso decia "Claude" en CREADO POR, tenia una pestaña
+// oculta "_CONTEXTO_CLAUDE" y la marca del complemento "Claude para Excel". *"Es un error gravisimo,
+// no puede volver a suceder nunca... en ningun tipo de documento"*. El guardian PreToolUse
+// (firma-ia-guard) frena lo que se ve en el comando; lo que un script escribe por dentro lo ve este
+// chequeo: corre el detector (`scripts/_sinFirmaIA.py`) sobre los documentos escritos en el turno.
+// Salida honesta para un falso positivo: el renglon "No aplica firma-ia: <motivo>".
+const EXT_DOC_FIRMA = /\.(xlsx|xlsm|xltx|docx|docm|dotx|pptx|pptm|potx|pdf|csv|msg|eml|dxf|plt)$/i;
+const NO_APLICA_FIRMA = /No aplica firma-ia:\s*\S/i;
+
+function documentosRecientes(dir, desde, out, tope = 300) {
+  let entradas = [];
+  try { entradas = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+  for (const e of entradas) {
+    if (out.length >= tope) return;
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) documentosRecientes(p, desde, out, tope);
+    else if (EXT_DOC_FIRMA.test(e.name) && !e.name.startsWith('~$')) {
+      try { if (fs.statSync(p).mtimeMs >= desde) out.push(p); } catch { /* borrado en el medio */ }
+    }
+  }
+}
+
+/** Documentos escritos en el turno: los entregables que nombra el transcript y lo de `exports/`, con fecha
+ *  posterior al ultimo mensaje de Fak (un minuto de margen). */
+export function documentosDelTurno(fuera = {}, repo = REPO) {
+  const ts = Date.parse(fuera?.ultimoMensajeFakTs || '');
+  if (!ts) return [];   // sin el mensaje de Fak no se sabe donde empieza el turno (y un relevador falso no barre el disco)
+  const desde = ts - 60_000;
+  const out = [];
+  for (const e of fuera?.entregables || []) {
+    const r = aWindows(e.ruta || '');
+    if (!EXT_DOC_FIRMA.test(r)) continue;
+    try { if (fs.statSync(r).mtimeMs >= desde) out.push(r); } catch { /* ya no esta */ }
+  }
+  documentosRecientes(path.join(repo, 'exports'), desde, out);
+  return [...new Set(out)];
+}
+
+/** Corre el detector; devuelve los hallazgos BLOQUEANTES (lista vacia si no hay o si no pudo correr). */
+export function correrDetectorFirma(rutas, repo = REPO) {
+  if (!rutas.length) return [];
+  try {
+    const salida = execFileSync('python', [path.join(repo, 'scripts', '_sinFirmaIA.py'), '--json', '--sin-avisos', '--incluir-nube', ...rutas],
+      { encoding: 'utf8', env: { ...process.env, PYTHONIOENCODING: 'utf-8' }, timeout: 90_000, maxBuffer: 20 * 1024 * 1024 });
+    return JSON.parse(salida || '[]');
+  } catch (e) {
+    // sale 1 con hallazgos: el JSON viene en stdout igual
+    try { return JSON.parse(e.stdout || '[]'); } catch { return []; }
+  }
+}
+
+export function evaluarFirmaIA(texto, rutas, correr = correrDetectorFirma) {
+  if (NO_APLICA_FIRMA.test(texto || '')) return { bloquea: false, motivo: 'no aplica (dicho en el mensaje)' };
+  if (!rutas?.length) return { bloquea: false, motivo: 'sin documentos en el turno' };
+  const hs = correr(rutas).filter((h) => h.nivel === 'BLOQUEANTE');
+  if (!hs.length) return { bloquea: false, motivo: 'documentos limpios' };
+  return { bloquea: true, hallazgos: hs };
+}
+
 const DEPS_REALES = {
+  firmaIA: correrDetectorFirma,
   fueraEnEsteTurno: relevarTranscript,
   pendientes: relevarPendientes,
   enCooldown: cooldownVigente,
@@ -1238,6 +1302,22 @@ export async function decidir(payload = {}, deps = {}) {
   const mq = evaluarMailsEquipo(texto, fuera);
   const conMails = (r) => (mq.bloquea ? { ...r, detalle: `${r.detalle}\nADEMAS, el mensaje niega el acceso a los mails de un companero. ${detalleMails(mq)}` } : r);
   const conExtras = (r) => conMails(conExplicar(r));
+
+  // 9. Un documento escrito en este turno nombra a Claude o a una IA. Va primero: es lo mas grave.
+  const fi = evaluarFirmaIA(texto, documentosDelTurno(fuera), d.firmaIA);
+  if (fi.bloquea) {
+    const lista = fi.hallazgos.slice(0, 12).map((h) => `- ${h.archivo} — ${h.lugar}: «${String(h.texto).slice(0, 80)}»`).join('\n');
+    return conExtras({
+      ok: false,
+      titulo: 'CIERRE-GUARD: un documento escrito en este turno dice que lo hizo Claude o una IA',
+      detalle: `${lista}\n`
+        + 'Regla de Fak (08/10/2026): ningun documento de Barack nombra a Claude ni a una IA, ni en lo que se ve ni en lo oculto '
+        + '(pestañas ocultas, notas, comentarios, propiedades). Sacalo del archivo y del generador: '
+        + '`python scripts/_sinFirmaIA.py --arreglar <archivo> --apply` arregla la marca del complemento y las propiedades; '
+        + 'una celda o un texto se corrige a mano (CREADO POR = F.Santoro). Si es un falso positivo, el mensaje lleva el renglon '
+        + '"No aplica firma-ia: <motivo>".',
+    });
+  }
 
   // 1. La cola pide permiso para mi propio trabajo.
   const p = evaluarPermiso(texto);

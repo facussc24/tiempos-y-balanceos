@@ -133,6 +133,7 @@ class Mazo(object):
         self.texto(s, 0.5, y, 12.35, 0.9, [(t, 13, GRIS, False) for t in renglones], 13)
 
     def guardar(self, path):
+        self.prs.core_properties.author = self.prs.core_properties.last_modified_by = 'Facundo Santoro'; self.prs.core_properties.comments = ''  # sin firma de programa (Fak, 08/10/2026: scripts/_lib/firmaIA.py)
         self.prs.save(path)
         return path
 

@@ -170,6 +170,7 @@ def armar():
         _txt(_caja(slide, M, H - M - 1.0, W - 2 * M, 1.0, GRIS, ROJO, Pt(1.25)),
              COMO, size=10, bold=False, color=NEGRO)
 
+    prs.core_properties.author = prs.core_properties.last_modified_by = 'Facundo Santoro'; prs.core_properties.comments = ''  # sin firma de programa (Fak, 08/10/2026: scripts/_lib/firmaIA.py)
     prs.save(SALIDA_PPTX)
     print(f"[OK] {SALIDA_PPTX}  ({len(TOMAS)} páginas, {n} tomas)")
     return SALIDA_PPTX

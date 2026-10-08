@@ -1,4 +1,8 @@
 """
+ARCHIVADO 08/10/2026 — NO USAR COMO MODELO: escribia en una pestaña oculta del listado que nombraba
+a Claude (_CONTEXTO_CLAUDE). Fak mando borrarla: mi contexto va a la memoria, nunca adentro de un
+documento de la empresa (scripts/_sinFirmaIA.py lo frena).
+
 _registrarHoListado.py — registra las HO de ductos en el listado maestro de hojas de proceso.
 
 `Y:\\...\\HOJAS DE OPERACIONES\\3- LISTADO\\Listado hojas de proceso.xlsx`
