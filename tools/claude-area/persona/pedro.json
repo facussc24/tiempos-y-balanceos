@@ -1,0 +1,13 @@
+{
+  "_fuente": "Lo que Pedro declaro al instalar el asistente por area el 05/10/2026 (aviso sin-persona de DESKTOP-G7CJF7R: nombre Pedro Ergo, puesto Director) y su salud del 07/10/2026 (usuario de Windows Pedro). El mail sale de las firmas de sus mails (paergo@barackmercosul.com).",
+  "clave": "pedro",
+  "nombre": "Pedro Ergo",
+  "nombre_corto": "Pedro",
+  "puesto": "Director",
+  "area": "direccion",
+  "mail": "paergo@barackmercosul.com",
+  "usuario_windows": "Pedro",
+  "pc": "DESKTOP-G7CJF7R",
+  "conocimiento": ["comun", "direccion"],
+  "nombre_instalador": "Instalar Claude - Pedro Ergo.cmd"
+}
