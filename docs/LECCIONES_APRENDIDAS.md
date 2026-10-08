@@ -65,7 +65,7 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
-- **07-08/10 — Toma de tiempos por video = TIEMPOS + VIDEO RECORTADO adentro del PowerPoint, sin planilla** (*"no me pidieron planilla"*); del celular, solo lo que Fak nombra. El rato en que el operario prueba cómo poner una pieza nueva no es proceso (*"desde que realmente se pone a laburar"*). Memoria `project_tiempos_forrado_ductos_patagonia`.
+- **07-08/10 — Toma de tiempos por video = TIEMPOS + VIDEO RECORTADO adentro del PowerPoint, sin planilla** (*"no me pidieron planilla"*); del celular, solo lo que Fak nombra. El rato en que el operario prueba cómo poner una pieza nueva no es proceso (*"desde que realmente se pone a laburar"*). Un link a la nube se le pide a OneDrive, no se arma: el mío no abría. Memorias `project_tiempos_forrado_ductos_patagonia`, `reference_link_nube_se_pide_a_onedrive`.
 
 - **07/10 — Con Fak se habla en castellano también en los avisos cortos mientras trabajo** (una tanda entera de avisos y el cierre me salieron en inglés: *"dejá de hablar en inglés"*). Y un pedido de videos para alguien que tiene editor es de ORIGINALES completos: preguntar o deducir el uso antes de editar (*"él quería videos completos... tiene una editorial de videos"*).
 
