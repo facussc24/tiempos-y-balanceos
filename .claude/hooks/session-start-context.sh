@@ -60,6 +60,10 @@ bash "$ROOT/.claude/hooks/cerebro-guard.sh" 2>/dev/null
 # Va DESPUES del cerebro porque los datos viven en la memoria. Detalla hasta 10 (unos 5 KB) y
 # cuenta el resto; un dato mal escrito lo DICE por esta misma salida; si node falla, no frena.
 node "$ROOT/scripts/_seguimientos.mjs" --hook 2>/dev/null
+# Hilos abiertos (Fak, 08/10/2026: un mail de Carlos con el consumo corregido quedo sin ver en una tarea
+# abierta; "nunca mas puede volver a pasar"): por cada tarea del Escritorio, los mails del mismo hilo
+# POSTERIORES al ultimo .msg guardado en la carpeta. Nada si no hay ninguno. Detalle: _hilosAbiertos.mjs.
+node "$ROOT/scripts/_hilosAbiertos.mjs" --hook 2>/dev/null
 # Novedades de Claude Code (Fak, 04/10/2026): un renglon si paso una semana sin leer a quienes sigue. No sale a internet.
 node "$ROOT/scripts/_novedadesClaude.mjs" --hook 2>/dev/null
 # PC de area (Fak, 06/10/2026: "el sistema de feedback no me termina de convencer... no te envia un reporte cuando pasa

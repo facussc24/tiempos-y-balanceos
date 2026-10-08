@@ -77,6 +77,10 @@ async function medirSesion(archivo) {
   };
   let ultimoTextoAsistente = null;
   let recienCompacto = false;
+  // Un mismo mensaje del asistente ocupa VARIAS lineas del transcript (una por bloque de contenido) y
+  // todas repiten `message.id` y `usage`: contarlas todas inflaba los turnos ~2,15 veces (medido el
+  // 08/10/2026 sobre 246 sesiones: 123.029 "turnos" que eran ~57.000). Se cuenta un id una sola vez.
+  const idsVistos = new Set();
   const rl = readline.createInterface({ input: fs.createReadStream(archivo, 'utf8'), crlfDelay: Infinity });
   for await (const linea of rl) {
     let o;
@@ -94,6 +98,16 @@ async function medirSesion(archivo) {
     }
     if (o.type === 'system' && LIMITE.test(String(o.content || o.message || ''))) { s.limites++; continue; }
     if (o.type !== 'assistant') continue;
+    const idMsg = o.message?.id;
+    if (idMsg) {
+      if (idsVistos.has(idMsg)) {
+        // la misma respuesta, otro bloque: solo interesa si trae texto nuevo para el "ultimo texto"
+        const t2 = textoDe(o.message);
+        if (t2.trim()) ultimoTextoAsistente = t2;
+        continue;
+      }
+      idsVistos.add(idMsg);
+    }
     const u = o.message?.usage;
     if (u) {
       const total = (u.input_tokens || 0) + (u.cache_creation_input_tokens || 0) + (u.cache_read_input_tokens || 0);

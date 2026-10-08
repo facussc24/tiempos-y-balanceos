@@ -19,32 +19,40 @@
  *      (reloj corrido entre PCs, o un --bajar previo que preserva el timestamp), el
  *      archivo editado NO sube, no da error, y el resumen lo muestra igual que
  *      "no habia nada que subir".
+ *
+ * LA TERCERA DIRECCION, `intercambiar` (08/10/2026): dos PC de Fak editan la misma copia
+ * (la de Ingenieria y la notebook de Calidad). Ahi NO hay fuente de verdad: ninguna puede
+ * espejar (/MIR borraria lo que la otra agrego) y las dos tienen que proteger lo mas nuevo
+ * del destino. Es la bajada y la subida con los mismos flags: /E (o nada en un archivo
+ * suelto) + /XO, nunca /MIR. "Gana el archivo mas nuevo, nada se borra". Se usa para las dos
+ * piernas de `_nube.mjs --sincronizar`, intercambiando origen y destino.
  */
 
 /**
  * @param {object} o
  * @param {string} o.origen
  * @param {string} o.destino
- * @param {'subir'|'bajar'} o.direccion
+ * @param {'subir'|'bajar'|'intercambiar'} o.direccion
  * @param {string} [o.soloArchivo]  nombre de un archivo suelto, en vez de una carpeta
  * @param {boolean} [o.listar]      /L: enumera lo que haria, sin tocar nada
  * @returns {string[]} argumentos para spawnSync('robocopy', ...)
  */
 export function construirFlags({ origen, destino, direccion, soloArchivo, listar }) {
-    if (direccion !== 'subir' && direccion !== 'bajar') {
-        throw new Error(`direccion invalida: ${JSON.stringify(direccion)} (esperaba 'subir' o 'bajar')`);
+    if (direccion !== 'subir' && direccion !== 'bajar' && direccion !== 'intercambiar') {
+        throw new Error(`direccion invalida: ${JSON.stringify(direccion)} (esperaba 'subir', 'bajar' o 'intercambiar')`);
     }
     const flags = [origen, destino];
 
     if (soloArchivo) {
         flags.push(soloArchivo);          // (1) un solo archivo, sin recursion
     } else {
-        // (2) espejo solo al subir carpetas: la PC es la fuente de verdad
+        // (2) espejo solo al subir carpetas: la PC es la fuente de verdad. Al intercambiar
+        //     no hay fuente de verdad: /E, nunca /MIR.
         flags.push(direccion === 'subir' ? '/MIR' : '/E');
     }
 
-    // (3) proteger lo mas nuevo del destino, en la bajada y para todo tipo de origen
-    if (direccion === 'bajar') flags.push('/XO');
+    // (3) proteger lo mas nuevo del destino: en la bajada y en las dos piernas del intercambio
+    if (direccion === 'bajar' || direccion === 'intercambiar') flags.push('/XO');
 
     flags.push('/NFL', '/NDL', '/NJH', '/R:2', '/W:2', '/XD', 'node_modules', '__pycache__');
     if (listar) flags.push('/L');

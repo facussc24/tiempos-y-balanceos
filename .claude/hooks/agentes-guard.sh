@@ -10,21 +10,29 @@
 #   Workflow           -> DENEGADO siempre. Es un script que multiplica agentes sin que
 #                         nadie vea la cuenta (cap por fase != cap total). Ese fue el bug.
 #   Agent / Task       -> maximo LIMITE spawns por ventana de VENTANA_SEG (10 desde el 30/09/2026).
-#                         Y SIEMPRE Sonnet 5.5 con esfuerzo xhigh, el anteultimo (Fak, 30/09/2026):
-#                         pasa solo un subagent_type cuya definicion (en <proyecto>/.claude/agents
-#                         o ~/.claude/agents) diga `model: sonnet` y `effort: xhigh`. Los built-in
-#                         (general-purpose, Explore, Plan, claude...) no dejan fijar el esfuerzo y
-#                         `fork` corre en el modelo de la sesion: se rechazan y se usa `investigador`
+#                         Pasa solo un subagent_type cuya definicion (en <proyecto>/.claude/agents o
+#                         ~/.claude/agents) diga `model: sonnet` (el default) y `effort: xhigh`. Los
+#                         built-in (general-purpose, Explore, Plan, claude...) no dejan fijar el esfuerzo
+#                         y `fork` corre en el modelo de la sesion: se rechazan y se usa `investigador`
 #                         (todas las herramientas) o `explorador` (solo lectura), en ~/.claude/agents.
 #                         EXCEPCION: la auditoria final (`auditor`, `auditor-cliente`) corre en OPUS
 #                         con effort xhigh (Fak, 30/09/2026); ver AUDITORES mas abajo.
+#   MODELO POR TAREA (Fak, 08/10/2026: "es absurdo que solo se pueda usar Sonnet"; hasta ese dia la
+#   regla era Sonnet siempre). La llamada elige el modelo segun el trabajo (regla techo-agentes.md):
+#                         haiku  = buscar, leer, listar, extraer (barato; muchos en paralelo)
+#                         sonnet = escribir, programar, analizar UNA fuente (default de la definicion)
+#                         opus   = criterio, cruzar fuentes, decidir, auditar contenido
+#                         fable  = revisor independiente de un cambio grande
+#                         Opus y Fable son "pesados": hasta PESADOS_MAX por ventana (los auditores no
+#                         cuentan). El esfuerzo lo fija la definicion (xhigh); la llamada puede bajarlo
+#                         (low|medium|high) y NUNCA pedir max ("el anteultimo", Fak 30/09/2026).
 #
 # Escape para Fak (no hace falta editar este script):
 #   echo 15 > ~/.claude/.agent-limit          # sube el techo a 15
-#   echo 0  > ~/.claude/.agent-limit          # 0 = sin limite (apaga el CONTEO)
+#   echo 0  > ~/.claude/.agent-limit          # 0 = sin limite (apaga el CONTEO, tambien el de pesados)
 #   touch ~/.claude/.workflow-ok              # permite UN Workflow (se consume al usarlo)
-#   touch ~/.claude/.agent-opus-ok            # 12 h: un agente comun puede pedirse con model opus o fable
-# La regla de esfuerzo (xhigh) no tiene escape, y el `echo 0` apaga el conteo, no la regla de modelo.
+#   touch ~/.claude/.agent-opus-ok            # 12 h: levanta el cupo de PESADOS_MAX Opus/Fable por ventana
+# La regla de esfuerzo (nunca max) no tiene escape.
 #
 # El override VENCE a las 12 horas (A6, 10/09/2026): se respeta solo si el archivo tiene menos
 # de VENCE_SEG desde su ultima modificacion; pasado eso se retira y vuelve el techo de 10 solo.
@@ -40,9 +48,20 @@
 
 set -uo pipefail
 
-LIMITE_DEFAULT=10        # Fak, 30/09/2026 (era 5 desde el 06/08)
+LIMITE_DEFAULT=10        # Fak, 30/09/2026 (era 5 desde el 06/08). Desde el 08/10 se lee como "10 Sonnet": ver PESOS.
 VENTANA_SEG=600          # 10 min — una ventana de trabajo real
 VENCE_SEG=43200          # 12 h — vida util de ~/.claude/.agent-limit
+
+# PRESUPUESTO POR COSTO (08/10/2026). Fak: "ese techo de 10 lo puse yo, ni siquiera se si es correcto... que nos
+# optimicemos de entrada". Diez agentes iguales no cuestan lo mismo: por la tabla oficial de precios Haiku 5.5 sale
+# $0.10/M de entrada, Sonnet 5.5 $2, Opus 5.5 $4 y Fable 5.1 $10 (08/10/2026). El techo pasa a ser un presupuesto
+# en PUNTOS por ventana: el techo de LIMITE agentes vale LIMITE x PESO_SONNET puntos (10 -> 40), y cada llamada
+# descuenta el peso de su modelo. Asi 40 busquedas en Haiku cuestan lo que 10 Sonnet o 5 Opus o 2 Fable.
+PESO_HAIKU=1
+PESO_SONNET=4
+PESO_OPUS=8
+PESO_FABLE=20
+PESADOS_MAX=3            # (historico; ya no gobierna: el presupuesto por puntos lo reemplaza)
 
 BASE="${HOME}/.claude"
 LOG="${BASE}/.agent-spawns.log"
@@ -123,22 +142,24 @@ leer_def() {
 
 rechazar() {
   cat >&2 <<EOF
-BLOQUEADO: los subagentes corren en Sonnet 5.5 con esfuerzo xhigh, y la auditoria final
-(auditor, auditor-cliente) en Opus con xhigh (Fak, 30/09/2026).
+BLOQUEADO: los subagentes pasan por una definicion propia (sonnet + effort xhigh) y el modelo se
+elige por tarea: haiku (buscar/leer/extraer), sonnet (escribir/programar), opus (criterio/cruzar
+fuentes), fable (revisor de un cambio grande). La auditoria final (auditor, auditor-cliente) va en
+Opus (Fak, 30/09 y 08/10/2026).
 $1
 
 Que hacer: relanzar con subagent_type "investigador" (todas las herramientas) o "explorador"
-(solo lectura); los dos viven en ~/.claude/agents con model: sonnet y effort: xhigh. Un agente
-propio pasa si su definicion dice esas dos lineas. Excepcion: `auditor` y `auditor-cliente` van en opus.
+(solo lectura), que viven en ~/.claude/agents, pasando model: haiku|sonnet|opus|fable segun el
+trabajo y, si hace falta, effort: low|medium|high (nunca max). Excepcion: \`auditor\` y
+\`auditor-cliente\` van en opus.
 EOF
   exit 2
 }
 
-# Pase de Fak para lanzar agentes COMUNES en Opus o Fable (01/10/2026: "si habia una regla que te
-# impedia desplegar otros Opus la puse yo mismo y yo mismo te puedo decir que era demasiado
-# estricta"). ~/.claude/.agent-opus-ok vale 12 h desde su ultima modificacion, igual que
-# .agent-limit; pasado eso se retira y la regla vuelve sola a Sonnet. El modelo va EXPLICITO en la
-# llamada (model: opus | fable) sobre un agente cuya definicion sigue diciendo sonnet + xhigh.
+# Pase de Fak que LEVANTA el cupo de PESADOS_MAX Opus/Fable por ventana (01/10/2026: "si habia una
+# regla que te impedia desplegar otros Opus la puse yo mismo..."; 08/10/2026: Opus y Fable ya pasan
+# sin pase, hasta PESADOS_MAX). ~/.claude/.agent-opus-ok vale 12 h desde su ultima modificacion,
+# igual que .agent-limit; pasado eso se retira y el cupo vuelve solo.
 PASE_MODELO="${BASE}/.agent-opus-ok"
 pase_modelo_vigente() {
   [ -f "$PASE_MODELO" ] || return 1
@@ -146,7 +167,7 @@ pase_modelo_vigente() {
   mod=$(stat -c %Y "$PASE_MODELO" 2>/dev/null || echo 0)
   if [ "$mod" -gt 0 ] 2>/dev/null && [ $((AHORA - mod)) -gt "$VENCE_SEG" ]; then
     rm -f "$PASE_MODELO"
-    echo "agentes-guard: el pase ~/.claude/.agent-opus-ok tenia mas de 12 h y se retiro; los agentes comunes vuelven a Sonnet." >&2
+    echo "agentes-guard: el pase ~/.claude/.agent-opus-ok tenia mas de 12 h y se retiro; vuelve el cupo de $PESADOS_MAX Opus/Fable por ventana." >&2
     return 1
   fi
   return 0
@@ -154,14 +175,20 @@ pase_modelo_vigente() {
 
 # La auditoria final la hace OPUS, no Sonnet (Fak, 30/09/2026: "la auditoria la deberia hacer un
 # Opus... es la auditoria final, Sonnet no se si puede hacerla"). Estos agentes DEBEN declarar
-# `model: opus` (y effort: xhigh); el resto, `model: sonnet`.
+# `model: opus` (y effort: xhigh); el resto, `model: sonnet` en la definicion (la llamada elige).
 AUDITORES=" auditor auditor-cliente "
 
+PESADO=0   # 1 = la llamada pide Opus o Fable para un agente comun (cuenta en el cupo de PESADOS_MAX)
 if [ "$TOOL" != "Workflow" ]; then
   campo subagent_type; SUBTIPO=$CAMPO
   campo model; MODELO=$CAMPO
+  campo effort; ESFUERZO=$CAMPO
   [ -z "$SUBTIPO" ] && rechazar "La llamada no dice subagent_type: correria general-purpose, que no deja fijar el esfuerzo."
-  [ "$SUBTIPO" = "fork" ] && rechazar "Un fork corre en el modelo de la sesion principal, no en Sonnet."
+  [ "$SUBTIPO" = "fork" ] && rechazar "Un fork corre en el modelo de la sesion principal: no se le puede elegir modelo ni esfuerzo."
+  case "$ESFUERZO" in
+    ""|low|medium|high|xhigh) ;;
+    *) rechazar "Se pidio effort=$ESFUERZO: el maximo es xhigh, el anteultimo (Fak, 30/09/2026)." ;;
+  esac
   ES_AUDITOR=0
   case "$AUDITORES" in *" $SUBTIPO "*) ES_AUDITOR=1 ;; esac
   if [ "$ES_AUDITOR" = "1" ]; then
@@ -171,11 +198,22 @@ if [ "$TOOL" != "Workflow" ]; then
     esac
   else
     case "$MODELO" in
-      ""|sonnet|claude-sonnet-*) ;;
-      opus|claude-opus-*|fable|claude-fable-*|haiku|claude-haiku-*)
-        pase_modelo_vigente || rechazar "Se pidio model=$MODELO y no hay pase vigente: ~/.claude/.agent-opus-ok (vale 12 h; Claude lo escribe solo si Fak lo pidio TEXTUAL en el chat, y lo dice)." ;;
-      *) rechazar "Se pidio model=$MODELO." ;;
+      ""|sonnet|claude-sonnet-*|haiku|claude-haiku-*) ;;
+      opus|claude-opus-*|fable|claude-fable-*) PESADO=1 ;;
+      *) rechazar "Se pidio model=$MODELO: los modelos validos son haiku, sonnet, opus o fable." ;;
     esac
+  fi
+  # El peso de ESTA llamada en el presupuesto. Los auditores no descuentan: la auditoria final es obligatoria.
+  # Con el pase de Fak (.agent-opus-ok) Opus y Fable descuentan como Sonnet: el lo autorizo a gastar.
+  PESO=$PESO_SONNET
+  if [ "$ES_AUDITOR" = "1" ]; then PESO=0
+  else
+    case "$MODELO" in
+      haiku|claude-haiku-*) PESO=$PESO_HAIKU ;;
+      opus|claude-opus-*) PESO=$PESO_OPUS ;;
+      fable|claude-fable-*) PESO=$PESO_FABLE ;;
+    esac
+    if [ "$PESADO" = "1" ] && pase_modelo_vigente; then PESO=$PESO_SONNET; fi
   fi
 
   DEF=""
@@ -195,11 +233,16 @@ if [ "$TOOL" != "Workflow" ]; then
     esac
     [ "$D_ESFUERZO" = "xhigh" ] || rechazar "La definicion $DEF no dice effort: xhigh."
   elif [ -n "$DEF" ]; then
+    # La definicion fija el piso: sonnet+xhigh (investigador, explorador) o haiku+medium (buscador, 08/10/2026).
+    # Opus o Fable en una definicion comun no: eso se pide en la llamada y descuenta su peso.
     case "$D_MODELO" in
-      sonnet|claude-sonnet-*) ;;
-      *) rechazar "La definicion $DEF no dice model: sonnet." ;;
+      sonnet|claude-sonnet-*) [ "$D_ESFUERZO" = "xhigh" ] || rechazar "La definicion $DEF no dice effort: xhigh." ;;
+      haiku|claude-haiku-*)
+        case "$D_ESFUERZO" in medium|high|xhigh) ;; *) rechazar "La definicion $DEF (haiku) no dice effort: medium, high o xhigh." ;; esac
+        # un agente definido en haiku descuenta como haiku aunque la llamada no diga modelo
+        [ -z "$MODELO" ] && PESO=$PESO_HAIKU ;;
+      *) rechazar "La definicion $DEF no dice model: sonnet ni haiku." ;;
     esac
-    [ "$D_ESFUERZO" = "xhigh" ] || rechazar "La definicion $DEF no dice effort: xhigh."
   else
     # Pase de UNA sesion para los built-in: ~/.claude/.agent-builtin-ok con el session_id adentro.
     # Existe porque un agente nuevo de ~/.claude/agents puede tardar en cargar en la sesion donde
@@ -248,9 +291,13 @@ EOF
   exit 2
 fi
 
-# ---------------------------------------------------------------- Agent/Task: ventana deslizante
+# ---------------------------------------------------------------- Agent/Task: ventana deslizante por PUNTOS
+# Cada linea del log: "<epoch> <tool> <peso>", con el peso en puntos de la llamada. Las lineas viejas
+# ("pesado"/"liviano" o sin peso) cuentan como Sonnet.
+PRESUPUESTO=$((LIMITE * PESO_SONNET))
 CORTE=$((AHORA - VENTANA_SEG))
 USADOS=0
+PUNTOS=0
 ANTIGUO=""
 VIGENTES=""
 if [ -f "$LOG" ]; then
@@ -260,36 +307,40 @@ if [ -f "$LOG" ]; then
     if [ "$TS" -ge "$CORTE" ]; then
       VIGENTES+="$LINEA"$'\n'
       USADOS=$((USADOS + 1))
+      P=${LINEA##* }
+      [[ $P =~ ^[0-9]+$ ]] || P=$PESO_SONNET
+      PUNTOS=$((PUNTOS + P))
       [ -z "$ANTIGUO" ] && ANTIGUO=$TS
     fi
   done < "$LOG"
 fi
 printf '%s' "$VIGENTES" > "$LOG"
 
-if [ "$USADOS" -ge "$LIMITE" ]; then
+if [ $((PUNTOS + PESO)) -gt "$PRESUPUESTO" ]; then
   MIN=$((VENTANA_SEG / 60))
   ESPERA="?"
   if [ -n "$ANTIGUO" ]; then
     ESPERA=$(( (ANTIGUO + VENTANA_SEG - AHORA) / 60 + 1 ))
   fi
   cat >&2 <<EOF
-BLOQUEADO: techo de subagentes alcanzado ($USADOS/$LIMITE en los ultimos $MIN minutos).
+BLOQUEADO: presupuesto de subagentes agotado ($PUNTOS/$PRESUPUESTO puntos en los ultimos $MIN minutos; esta llamada pesa $PESO).
+Pesos por costo (precios oficiales 08/10/2026): haiku $PESO_HAIKU · sonnet $PESO_SONNET · opus $PESO_OPUS · fable $PESO_FABLE.
 
-Este techo lo puso Fak el 2026-08-06 despues de que 40 subagentes le consumieran el
-limite de uso y lo dejaran 4 horas sin poder trabajar (el 30/09/2026 lo subio de 5 a 10,
-en Sonnet). No es una sugerencia.
+El techo nacio el 2026-08-06, cuando 40 subagentes le consumieron el limite de uso a Fak y lo
+dejaron 4 horas sin poder trabajar. Desde el 08/10/2026 se mide por costo, no por cantidad.
 
 NO reintentes ni reformules la llamada. Lo que corresponde:
   - Hace el trabajo vos, directo. Si ya identificaste el archivo o la query, leelo.
-    El fan-out casi nunca gana contra 10 lecturas dirigidas.
-  - Si te faltan agentes para algo realmente ancho: espera ~$ESPERA min, o que Fak suba el
-    techo:   echo 15 > ~/.claude/.agent-limit   (vale 12 h). Si Fak ya lo pidio TEXTUAL en el
-    chat ("usa agentes en paralelo", "no me importa gastar tokens"), escribilo vos y decilo.
+  - Si es buscar, leer o extraer: relanzalo en haiku (pesa $PESO_HAIKU). Si es escribir, sonnet ($PESO_SONNET).
+  - Si te falta presupuesto para algo realmente ancho: espera ~$ESPERA min, o que Fak lo suba:
+        echo 15 > ~/.claude/.agent-limit   (vale 12 h; 15 = 60 puntos). Si Fak ya lo pidio TEXTUAL
+    en el chat ("usa agentes en paralelo", "no me importa gastar tokens"), escribilo vos y decilo.
+  - La auditoria final (auditor, auditor-cliente) no descuenta: lanzala igual.
   - Reportale a Fak que llegaste al techo y por que lo necesitabas. No lo escondas.
 EOF
   exit 2
 fi
 
-# Permitido: registrar el spawn
-printf '%s %s\n' "$AHORA" "$TOOL" >> "$LOG"
+# Permitido: registrar el spawn con su peso
+printf '%s %s %s\n' "$AHORA" "$TOOL" "$PESO" >> "$LOG"
 exit 0

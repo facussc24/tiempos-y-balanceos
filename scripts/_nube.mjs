@@ -39,6 +39,19 @@
  *    node scripts/_nube.mjs --bajar          dry-run de la bajada
  *    node scripts/_nube.mjs --bajar --aplicar
  *    node scripts/_nube.mjs --liberar        deja la copia SOLO en la nube (0 bytes en disco)
+ *
+ * DOS PC DE FAK (08/10/2026: la de Ingenieria y la notebook de Calidad, CATA)
+ *    node scripts/_nube.mjs --sincronizar [--aplicar]
+ *        Las dos direcciones a la vez, sin espejo: gana el archivo mas nuevo, nada se borra, y lo
+ *        local que se va a pisar y esta PC edito despues de su ultimo sync se guarda antes en
+ *        <nube>\_conflictos\<PC>\<fecha>\. Solo memoria, reglas, skills, agentes, comandos, hooks,
+ *        planes y las claves: los caches (.sgc-cache, .arb-cache, .mail-cache) y settings.json
+ *        quedan para --subir/--bajar a mano (el buzon lo escriben las dos PC y los settings traen
+ *        rutas de la PC de origen). Si el repo esta limpio y atras de GitHub, lo trae (--ff-only).
+ *        Logica pura y probada: scripts/_lib/nubeSincronizar.mjs.
+ *    node scripts/_nube.mjs --registrar-tarea     tarea de Windows "Barack - mi asistente al dia":
+ *        al iniciar sesion (5 min despues, para que OneDrive llegue) y cada 2 h; corre _nubeSync.ps1
+ *    node scripts/_nube.mjs --desregistrar-tarea
  */
 import { spawnSync, execSync } from 'child_process';
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
@@ -47,6 +60,10 @@ import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { construirFlags } from './_lib/nubeFlags.mjs';
 import { buscarNube, buscarNubeVieja } from './_lib/nubeRutas.mjs';
+import {
+    recorrer, planDeIntercambio, resguardarConflictos, estadoConSync, ultimoSyncDe, lineaPlan, selloFecha,
+} from './_lib/nubeSincronizar.mjs';
+import { psRun } from './_lib/powershell.mjs';
 
 const HOME = homedir();
 // El repo es el padre de scripts/, no una ruta fija: si se clona en otra carpeta, el
@@ -63,7 +80,7 @@ const NUBE_VIEJA = buscarNubeVieja(HOME);
 // TRANSICION (01/10/2026, regla nube-ingenieria.md). La copia pasa de la OneDrive personal de Fak a
 // `Claude Fak` en la nube de Ingenieria. Mientras esa carpeta este vacia y la vieja siga existiendo,
 // se LEE de la vieja (leer de ahi no rompe la regla). SUBIR va siempre a Ingenieria.
-const EN_TRANSICION = !process.argv.includes('--subir')
+const EN_TRANSICION = !process.argv.includes('--subir') && !process.argv.includes('--sincronizar')
     && !existsSync(join(NUBE_INGENIERIA, 'claude-memoria')) && existsSync(join(NUBE_VIEJA, 'claude-memoria'));
 const NUBE = EN_TRANSICION ? NUBE_VIEJA : NUBE_INGENIERIA;
 
@@ -94,9 +111,16 @@ const subir = args.includes('--subir');
 const bajar = args.includes('--bajar');
 const aplicar = args.includes('--aplicar');
 const liberar = args.includes('--liberar');
+const sincronizar = args.includes('--sincronizar');
+const registrarTarea = args.includes('--registrar-tarea');
+const desregistrarTarea = args.includes('--desregistrar-tarea');
 
 if (subir && bajar) {
     console.error('\n[X] --subir y --bajar juntos no. Una direccion por vez.\n');
+    process.exit(1);
+}
+if (sincronizar && (subir || bajar || liberar)) {
+    console.error('\n[X] --sincronizar va solo (ya son las dos direcciones).\n');
     process.exit(1);
 }
 
@@ -174,8 +198,48 @@ if (liberar) {
     process.exit(0);
 }
 
+// ── --registrar-tarea / --desregistrar-tarea: "Barack - mi asistente al dia" ────
+// Igual que las otras tareas del repo (_nocturno, _arbVigilante): conhost --headless + powershell
+// -File, al iniciar sesion y repetida, sin administrador. El .ps1 deja el log en .claude/state/.
+const NOMBRE_TAREA = 'Barack - mi asistente al dia';
+if (registrarTarea || desregistrarTarea) {
+    const ps1 = join(REPO, 'scripts', '_nubeSync.ps1');
+    const comillas = (s) => String(s).replace(/'/g, "''");
+    try {
+        if (desregistrarTarea) {
+            psRun(`Unregister-ScheduledTask -TaskName '${NOMBRE_TAREA}' -Confirm:$false -ErrorAction SilentlyContinue\n'OK'`, { timeout: 60000 });
+            console.log(`\n  [OK] Tarea "${NOMBRE_TAREA}" sacada de esta PC.\n`);
+            process.exit(0);
+        }
+        if (!existsSync(ps1)) { console.error(`\n[X] No existe ${ps1}\n`); process.exit(1); }
+        const script = [
+            "$ErrorActionPreference = 'Stop'",
+            `$nombre = '${comillas(NOMBRE_TAREA)}'`,
+            `$ps1 = '${comillas(ps1)}'`,
+            `$repo = '${comillas(REPO)}'`,
+            "$accion = New-ScheduledTaskAction -Execute (Join-Path $env:SystemRoot 'System32\\conhost.exe') -Argument ('--headless powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"' + $ps1 + '\"') -WorkingDirectory $repo",
+            '$alEntrar = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME',
+            "$alEntrar.Delay = 'PT5M'",
+            '$cada2h = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(10) -RepetitionInterval (New-TimeSpan -Hours 2)',
+            '$ajustes = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 30) -Priority 6',
+            '$quien = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Limited',
+            'Register-ScheduledTask -TaskName $nombre -Action $accion -Trigger @($alEntrar, $cada2h) -Settings $ajustes -Principal $quien -Force | Out-Null',
+            "'OK'",
+        ].join('\n');
+        const out = psRun(script, { timeout: 60000 });
+        if (!/OK/.test(out)) { console.error(`\n[X] PowerShell no confirmo: ${out.trim().slice(0, 300)}\n`); process.exit(1); }
+        console.log(`\n  [OK] Tarea "${NOMBRE_TAREA}" registrada: al iniciar sesion (5 min despues) y cada 2 h.`);
+        console.log(`       Corre: node scripts/_nube.mjs --sincronizar --aplicar   (log en .claude\\state\\nube-sync.log)`);
+        console.log(`       Para probarla ya: schtasks /run /tn "${NOMBRE_TAREA}"\n`);
+        process.exit(0);
+    } catch (e) {
+        console.error(`\n[X] No pude ${desregistrarTarea ? 'sacar' : 'registrar'} la tarea: ${String(e.message || e).slice(0, 400)}\n`);
+        process.exit(1);
+    }
+}
+
 // ── Sin flags: solo informar ────────────────────────────────────────────────────
-if (!subir && !bajar) {
+if (!subir && !bajar && !sincronizar) {
     const estadoPath = join(NUBE, '_ESTADO.json');
     if (existsSync(estadoPath)) {
         const e = JSON.parse(readFileSync(estadoPath, 'utf8'));
@@ -200,7 +264,7 @@ if (!subir && !bajar) {
 // Bajar de una carpeta que no existe salteaba las 13 piezas y terminaba diciendo
 // "se bajarian --", que se lee igual que "no habia nada que traer". Una lista vacia
 // nunca puede significar "no pude leer" (misma leccion que _backup.mjs).
-if (bajar && !existsSync(NUBE)) {
+if ((bajar || sincronizar) && !existsSync(NUBE)) {
     console.error(`\n[X] NO EXISTE en esta PC la carpeta de la nube de Ingenieria con la memoria de Claude:\n    ${NUBE}\n`);
     console.error('    Sin eso no hay nada que bajar. Suele ser una de tres:');
     console.error('      1. Esta PC no tiene sincronizada la biblioteca de Ingenieria con la cuenta de Fak');
@@ -211,6 +275,107 @@ if (bajar && !existsSync(NUBE)) {
     console.error('\n    NO seguir trabajando como si estuviera todo: sin memorias ni .env.local');
     console.error('    la sesion no puede leer Supabase ni sabe como trabaja Fak.\n');
     process.exit(1);
+}
+
+// ── --sincronizar: las dos PC de Fak sobre la misma copia ───────────────────────
+// Gana el mas nuevo por archivo (robocopy /E /XO en las dos piernas), nada se borra, y lo que esta
+// PC edito despues de su ultimo sync y la nube trae mas nuevo se resguarda antes de pisarlo.
+if (sincronizar) {
+    const PC = process.env.COMPUTERNAME || 'desconocida';
+    const SINCRONIZABLES = new Set(['memoria', 'reglas', 'skills', 'agentes', 'comandos', 'hooks', 'planes']);
+    const estadoPath = join(NUBE, '_ESTADO.json');
+    let estado = null;
+    try { estado = JSON.parse(readFileSync(estadoPath, 'utf8')); } catch { estado = null; }
+    const ultimo = ultimoSyncDe(estado, PC);
+    const sello = selloFecha();
+
+    console.log('\n  Modo: SINCRONIZAR  (nube <-> esta PC: gana el mas nuevo, nada se borra)');
+    console.log(`  ${aplicar ? '>> APLICANDO DE VERDAD' : '>> DRY-RUN — no se copia nada'}`);
+    console.log(`  Ultimo sync de esta PC (${PC}): ${ultimo ? new Date(ultimo).toLocaleString('es-AR', { hour12: false }) : 'nunca — todo lo que se pise se resguarda'}\n`);
+
+    let total = 0; let conflictosGuardados = 0; let fallosSync = 0; const avisos = [];
+    for (const [clave, local, sub] of PIEZAS) {
+        if (!SINCRONIZABLES.has(clave)) continue;
+        const enNube = join(NUBE, sub);
+        const plan = planDeIntercambio({ local: recorrer(local), nube: recorrer(enNube), ultimoSync: ultimo });
+        console.log(lineaPlan(clave, plan));
+        if (!plan.bajan.length && !plan.suben.length) continue;
+        if (aplicar) {
+            if (plan.conflictos.length) {
+                const r = resguardarConflictos({ localDir: local, nubeRaiz: NUBE, pieza: clave, conflictos: plan.conflictos, pc: PC, sello });
+                conflictosGuardados += r.guardados.length;
+                for (const f of r.fallos) avisos.push(`no pude resguardar ${clave}/${f}`);
+                if (r.carpeta) console.log(`               resguardo en ${r.carpeta}`);
+            }
+            mkdirSync(local, { recursive: true });
+            mkdirSync(enNube, { recursive: true });
+        }
+        for (const [origen, destino] of [[enNube, local], [local, enNube]]) {
+            if (!existsSync(origen)) continue;
+            const r = robocopy(origen, destino, { direccion: 'intercambiar', listar: !aplicar });
+            total += r.archivos;
+            if (r.err) { fallosSync++; console.log(`               [X] ${r.err}`); }
+        }
+    }
+    for (const [dir, nombre, sub] of SUELTOS) {
+        if (nombre === 'settings.json') continue;   // trae rutas de la PC de origen: lo deja ajustar_settings.mjs al instalar
+        const enNube = join(NUBE, sub);
+        let n = 0;
+        for (const [origen, destino] of [[enNube, dir], [dir, enNube]]) {
+            if (!existsSync(join(origen, nombre))) continue;
+            if (aplicar) mkdirSync(destino, { recursive: true });
+            const r = robocopy(origen, destino, { direccion: 'intercambiar', listar: !aplicar, soloArchivo: nombre });
+            n += r.archivos;
+            if (r.err) { fallosSync++; console.log(`    ${nombre.padEnd(11)} [X] ${r.err}`); }
+        }
+        total += n;
+        console.log(`    ${nombre.padEnd(11)} ${n ? `${n} archivo${n === 1 ? '' : 's'}` : 'al dia'}`);
+    }
+
+    // El codigo viaja por GitHub, no por la nube: si el repo esta limpio y atras, se trae; si tiene
+    // commits sin pushear, se avisa (la otra PC no los ve). Sin red, se dice y se sigue.
+    const git = estadoGitCompleto();
+    if (!git) avisos.push('git: no pude consultar GitHub (sin red o sin origin); el codigo no se toco');
+    else {
+        if (git.adelante > 0) avisos.push(`git: ${git.adelante} commit(s) sin pushear — la otra PC no los ve hasta el push`);
+        if (git.detras > 0 && !git.limpio) avisos.push(`git: hay ${git.detras} commit(s) nuevos en GitHub pero el arbol tiene cambios: no se trae nada`);
+        if (git.detras > 0 && git.limpio) {
+            if (aplicar) {
+                try {
+                    execSync('git pull --ff-only --quiet origin main', { cwd: REPO, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 120000 });
+                    console.log(`    repo        trajo ${git.detras} commit(s) de GitHub`);
+                } catch (e) { avisos.push(`git pull fallo: ${String(e.message || e).split('\n')[0].slice(0, 200)}`); }
+            } else console.log(`    repo        traeria ${git.detras} commit(s) de GitHub`);
+        } else if (git.detras === 0) console.log('    repo        al dia con GitHub');
+    }
+
+    if (aplicar && fallosSync === 0) {
+        const commit = (() => { try { return execSync('git rev-parse --short HEAD', { cwd: REPO, encoding: 'utf8' }).trim(); } catch { return '?'; } })();
+        mkdirSync(NUBE, { recursive: true });
+        writeFileSync(estadoPath, JSON.stringify(estadoConSync(estado, { pc: PC, archivos: total, conflictos: conflictosGuardados, commitRepo: commit }), null, 2), 'utf8');
+    }
+
+    console.log('\n' + '-'.repeat(74));
+    for (const a of avisos) console.log(`  [!] ${a}`);
+    if (fallosSync) { console.log(`  [X] ${fallosSync} copia(s) fallaron. Revisar arriba.`); process.exit(1); }
+    console.log(aplicar
+        ? `  [OK] Sincronizado: ${humano(total)} movidos${conflictosGuardados ? `, ${conflictosGuardados} conflicto(s) resguardado(s)` : ''}.`
+        : `  [DRY-RUN] Se moverian ${humano(total)}. Agregar --aplicar para hacerlo.`);
+    console.log('-'.repeat(74) + '\n');
+    process.exit(0);
+}
+
+/** Limpio / detras / adelante contra origin/main, con fetch. null si no se pudo consultar. */
+function estadoGitCompleto() {
+    const g = (cmd, timeout = 30000) => execSync(cmd, { cwd: REPO, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout }).trim();
+    try {
+        const limpio = g('git status --porcelain') === '';
+        g('git fetch --quiet origin main', 60000);
+        const detras = parseInt(g('git rev-list --count main..origin/main'), 10);
+        const adelante = parseInt(g('git rev-list --count origin/main..main'), 10);
+        if (!Number.isFinite(detras) || !Number.isFinite(adelante)) return null;
+        return { limpio, detras, adelante };
+    } catch { return null; }
 }
 
 // ── Subida / bajada ─────────────────────────────────────────────────────────────

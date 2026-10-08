@@ -512,9 +512,9 @@ describe('supabase-guard.sh — corre _backup.mjs ANTES de un .mjs destructivo; 
   });
 });
 
-// ─────────────── agentes-guard (~/.claude/hooks): techo de 10 subagentes, siempre Sonnet en xhigh (30/09)
+// ─────────────── agentes-guard (~/.claude/hooks): techo de 10 subagentes; el modelo por tarea (08/10); auditoria en Opus
 const AGENTES = path.join(os.homedir(), '.claude', 'hooks', 'agentes-guard.sh');
-describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de 10 en 10 min, Sonnet xhigh, Workflow denegado', () => {
+describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de 10 en 10 min, modelo por tarea, Workflow denegado', () => {
   const home = path.join(TMP, 'home');
   const proyecto = path.join(TMP, 'proyecto-agentes');
   fs.mkdirSync(path.join(home, '.claude', 'agents'), { recursive: true });
@@ -534,36 +534,87 @@ describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de
     for (const n of ['.agent-spawns.log', '.agent-limit', '.workflow-ok', '.agent-builtin-ok', '.agent-opus-ok']) fs.rmSync(archivo(n), { force: true });
   });
 
-  it('pase de modelo (Fak, 01/10): con .agent-opus-ok un agente comun pasa en opus o fable; sin pase o vencido, no', () => {
-    const inv = (model) => correr('Agent', { subagent_type: 'investigador', model, prompt: 'x' });
-    // ROJO sin pase
-    expect(inv('opus').err).toMatch(/model=opus y no hay pase vigente/);
-    expect(inv('fable').exit).toBe(2);
-    // VERDE con pase
-    fs.writeFileSync(archivo('.agent-opus-ok'), '');
+  it('presupuesto por costo (Fak, 08/10): haiku 1 · sonnet 4 · opus 8 · fable 20 puntos; el techo de 10 vale 40 puntos', () => {
+    const inv = (model, extra = {}) => correr('Agent', { subagent_type: 'investigador', model, prompt: 'x', ...extra });
+    // 3 haiku (3) + sonnet (7) + opus (15) + fable (35): todo pasa
+    expect(inv('haiku').exit).toBe(0);
+    expect(inv('claude-haiku-5-5').exit).toBe(0);
+    expect(inv('haiku').exit).toBe(0);
+    expect(inv('sonnet').exit).toBe(0);
     expect(inv('opus').exit).toBe(0);
     expect(inv('fable').exit).toBe(0);
-    expect(inv('claude-opus-5-5').exit).toBe(0);
-    // el pase no abre lo demas: otro modelo, el esfuerzo, los built-in y la auditoria siguen igual
-    expect(inv('haiku').err).toMatch(/model=haiku/);
+    // ROJO: otro opus (8) pasaria los 40
+    const otro = inv('claude-opus-5-5');
+    expect(otro.exit).toBe(2);
+    expect(otro.err).toMatch(/presupuesto de subagentes agotado \(35\/40 puntos/);
+    expect(otro.err).toMatch(/esta llamada pesa 8/);
+    // un haiku (1) todavia entra (36); la auditoria final no descuenta; un sonnet llega justo a 40
+    expect(inv('haiku').exit).toBe(0);
+    expect(correr('Agent', { subagent_type: 'auditor', model: 'opus', prompt: 'x' }).exit).toBe(0);
+    expect(inv('sonnet').exit).toBe(0);
+    // y el siguiente haiku ya no (41 > 40)
+    expect(inv('haiku').exit).toBe(2);
+    // el log guarda el peso de cada llamada
+    const log = fs.readFileSync(archivo('.agent-spawns.log'), 'utf8').trim().split('\n');
+    expect(log.map((l) => l.split(' ')[2])).toEqual(['1', '1', '1', '4', '8', '20', '1', '0', '4']);
+  });
+
+  it('el pase de Fak (.agent-opus-ok): Opus y Fable descuentan como Sonnet; vencido a las 13 h se retira', () => {
+    const inv = (model) => correr('Agent', { subagent_type: 'investigador', model, prompt: 'x' });
+    // sin pase: el sexto opus (48) no entra en 40
+    for (let i = 0; i < 5; i++) expect(inv('opus').exit, `opus ${i + 1}`).toBe(0);
+    expect(inv('opus').exit).toBe(2);
+    // con pase: el mismo sexto opus pesa 4 -> 5x8 ya registrados = 40... el log viejo sigue pesando 8 cada uno,
+    // asi que se arranca de nuevo para medir el pase solo
+    fs.rmSync(archivo('.agent-spawns.log'), { force: true });
+    fs.writeFileSync(archivo('.agent-opus-ok'), '');
+    for (let i = 0; i < 10; i++) expect(inv('opus').exit, `opus con pase ${i + 1}`).toBe(0);   // 10 x 4 = 40
+    expect(inv('fable').exit).toBe(2);                                                            // 44 > 40
+    // ROJO: un pase de hace 13 h no vale y se retira (y el opus vuelve a pesar 8)
+    fs.rmSync(archivo('.agent-spawns.log'), { force: true });
+    const hace13h = Date.now() / 1000 - 13 * 3600;
+    fs.utimesSync(archivo('.agent-opus-ok'), hace13h, hace13h);
+    expect(inv('opus').exit).toBe(0);
+    expect(fs.existsSync(archivo('.agent-opus-ok'))).toBe(false);
+    expect(fs.readFileSync(archivo('.agent-spawns.log'), 'utf8').trim().split(' ')[2]).toBe('8');
+  });
+
+  it('buscador (haiku + medium en la definicion) pesa 1 aunque la llamada no diga modelo; una definicion haiku con effort low se rechaza', () => {
+    def(home, 'buscador', 'model: haiku\neffort: medium\n');
+    def(home, 'haiku-flojo', 'model: haiku\neffort: low\n');
+    fs.writeFileSync(archivo('.agent-limit'), '2');   // 8 puntos
+    for (let i = 0; i < 8; i++) expect(correr('Agent', { subagent_type: 'buscador', prompt: 'x' }).exit, `buscador ${i + 1}`).toBe(0);
+    const noveno = correr('Agent', { subagent_type: 'buscador', prompt: 'x' });
+    expect(noveno.exit).toBe(2);
+    expect(noveno.err).toMatch(/\(8\/8 puntos/);
+    expect(correr('Agent', { subagent_type: 'haiku-flojo', prompt: 'x' }).err).toMatch(/no dice effort: medium, high o xhigh/);
+  });
+
+  it('esfuerzo y modelos: la llamada puede bajar el esfuerzo, nunca max; un modelo que no existe se rechaza', () => {
+    const inv = (model, extra = {}) => correr('Agent', { subagent_type: 'investigador', model, prompt: 'x', ...extra });
+    expect(inv('haiku', { effort: 'medium' }).exit).toBe(0);
+    expect(inv('sonnet', { effort: 'low' }).exit).toBe(0);
+    expect(inv('sonnet', { effort: 'max' }).err).toMatch(/effort=max/);
+    expect(inv('gpt').err).toMatch(/model=gpt/);
     expect(correr('Agent', { subagent_type: 'en-max', model: 'opus', prompt: 'x' }).err).toMatch(/no dice effort: xhigh/);
     expect(correr('Agent', { subagent_type: 'general-purpose', model: 'opus', prompt: 'x' }).exit).toBe(2);
     expect(correr('Agent', { subagent_type: 'auditor', model: 'sonnet', prompt: 'x' }).err).toMatch(/auditoria final y corre en Opus/);
-    // ROJO: un pase de hace 13 h no vale y se retira
-    const hace13h = Date.now() / 1000 - 13 * 3600;
-    fs.utimesSync(archivo('.agent-opus-ok'), hace13h, hace13h);
-    expect(inv('opus').exit).toBe(2);
-    expect(fs.existsSync(archivo('.agent-opus-ok'))).toBe(false);
   });
 
-  it('ROJO: Workflow siempre; el undecimo Agent dentro de la ventana', () => {
+  it('.agent-limit=0 apaga el presupuesto entero (apaga el CONTEO); la regla de esfuerzo sigue', () => {
+    fs.writeFileSync(archivo('.agent-limit'), '0');
+    for (let i = 0; i < 7; i++) expect(correr('Agent', { subagent_type: 'investigador', model: 'opus', prompt: 'x' }).exit).toBe(0);   // 56 > 40
+    expect(correr('Agent', { subagent_type: 'investigador', model: 'opus', effort: 'max', prompt: 'x' }).exit).toBe(2);
+  });
+
+  it('ROJO: Workflow siempre; el undecimo Agent (Sonnet, 4 puntos) dentro de la ventana', () => {
     const wf = correr('Workflow', {});
     expect(wf.exit).toBe(2);
     expect(wf.err).toMatch(/Workflow esta deshabilitada/);
     for (let i = 0; i < 10; i++) expect(correr('Agent').exit, `spawn ${i + 1}`).toBe(0);
     const once = correr('Task');
     expect(once.exit).toBe(2);
-    expect(once.err).toMatch(/techo de subagentes alcanzado \(10\/10/);
+    expect(once.err).toMatch(/presupuesto de subagentes agotado \(40\/40 puntos/);
   });
 
   it('VERDE: los escapes de Fak — .agent-limit=0 apaga el techo; .workflow-ok habilita UN Workflow', () => {
@@ -583,7 +634,7 @@ describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de
     for (let i = 0; i < 10; i++) expect(correr('Agent').exit, `spawn ${i + 1}`).toBe(0);
     const once = correr('Agent');
     expect(once.exit).toBe(2);
-    expect(once.err).toMatch(/techo de subagentes alcanzado \(10\/10/);
+    expect(once.err).toMatch(/presupuesto de subagentes agotado \(40\/40 puntos/);
     expect(fs.existsSync(archivo('.agent-limit'))).toBe(false);
   });
 
@@ -597,13 +648,13 @@ describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de
     expect(correr('Agent', { subagent_type: 'investigador', prompt: 'lanzá "subagent_type": "fork"' }).exit).toBe(0);
   });
 
-  it('ROJO: built-in, fork, sin tipo, model distinto de sonnet, o definicion sin sonnet/xhigh — y no gastan cupo', () => {
+  it('ROJO: built-in, fork, sin tipo, model desconocido, o definicion sin sonnet/xhigh — y no gastan cupo', () => {
     const casos = [
       [{ subagent_type: 'general-purpose', prompt: 'x' }, /no tiene definicion propia/],
       [{ subagent_type: 'Explore', prompt: 'x' }, /no tiene definicion propia/],
       [{ prompt: 'x' }, /no dice subagent_type/],
       [{ subagent_type: 'fork', prompt: 'x' }, /fork corre en el modelo/],
-      [{ subagent_type: 'investigador', model: 'opus', prompt: 'x' }, /model=opus/],
+      [{ subagent_type: 'investigador', model: 'gemini', prompt: 'x' }, /model=gemini/],
       [{ subagent_type: 'en-max', prompt: 'x' }, /no dice effort: xhigh/],
       [{ subagent_type: 'en-opus', prompt: 'x' }, /no dice model: sonnet/],
       [{ subagent_type: 'auditor-cliente', prompt: 'x' }, /no dice model: opus/],

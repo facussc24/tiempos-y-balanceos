@@ -68,6 +68,8 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **08/10 — Cuando Fak delega «decidí todo vos», sus números y reglas anteriores son DATOS a revisar, no límites**: mantuve su techo de 10 agentes y el «solo Sonnet» porque él los había dicho, y dejé la investigación para después; Fak: *"la caja soy yo... pensá fuera de la caja... eficiencia es trabajar de la mejor forma, no ahorrar tokens"*. Fase 1 eficiencia (presupuesto por costo de modelo), fase 2 investigación grande con agentes, también de lo que él no conoce. Memoria `feedback_la_caja_soy_yo_pensar_fuera_de_lo_que_dijo_fak`.
+
 - **08/10 — Mi Claude para OTRA persona va filtrado y con SU identidad** (a Carlos la memoria cruda le dejó "el usuario es Facundo"); y una pregunta de Fak no es una orden de diseño. Graduado a `validarTexto()` de `tools/claude-area/persona/armar.mjs` y a `project_claude_para_pedro`.
 
 - **08/10 — «Un instalador idéntico al de Carlos pero para mí» era SU asistente entero (skills + memoria + perfil sin frenos), no el de mails: ante un pedido con dos lecturas se arma lo principal que dijo y lo accesorio («de paso, los mails») va después** (armé solo los mails y Gemini lo mandó a instalar el paquete «por área», recortado; Fak: *"le pedí que me pase mi Claude entero... hiciste cagada"*). Y lo que Fak va a usar se deja en UNA carpeta con doble clic numerados. Memoria `project_instalar_mi_asistente_pc_nueva`.

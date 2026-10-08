@@ -184,6 +184,20 @@ if ($tarea) {
   else { try { Unregister-ScheduledTask -TaskName $TAREA_POR_AREA -Confirm:$false; Ok 'saque la tarea del asistente por area' } catch { Ojo ('no pude sacar la tarea del asistente por area: ' + $_.Exception.Message) } }
 }
 
+# 6 bis) la tarea que mantiene esta PC y la de Ingenieria iguales (08/10/2026): corre
+#        node scripts\_nube.mjs --sincronizar --aplicar al iniciar sesion y cada 2 h (gana el mas nuevo, nada se borra).
+if ($Ensayo) { Haria 'registrar la tarea "Barack - mi asistente al dia" (sincroniza tu memoria y configuracion cada 2 h)' }
+elseif (Test-Path -LiteralPath (Join-Path $Repo 'scripts\_nube.mjs')) {
+  try {
+    Push-Location $Repo
+    $salidaTarea = (& $node 'scripts\_nube.mjs' --registrar-tarea 2>&1 | Out-String)
+    $codigoTarea = $LASTEXITCODE
+    Pop-Location
+    if ($codigoTarea -eq 0) { Ok 'tarea "Barack - mi asistente al dia" registrada: tu memoria y tu configuracion se mantienen iguales en las dos PC' }
+    else { Ojo ('no pude registrar la tarea que sincroniza las dos PC: ' + (($salidaTarea.Trim() -split "`n") | Select-Object -Last 1)) }
+  } catch { Ojo ('no pude registrar la tarea que sincroniza las dos PC: ' + $_.Exception.Message) }
+}
+
 # 7) los programas que usan los scripts del repo (npm install): solo si hay npm
 if ((Test-Path -LiteralPath (Join-Path $Repo 'package.json')) -and -not (Test-Path -LiteralPath (Join-Path $Repo 'node_modules'))) {
   if (-not $hayNpm) { Ojo 'esta PC no tiene Node completo (npm): los scripts que usan Supabase no van a andar hasta instalar Node LTS (nodejs.org) y correr "npm install" en la carpeta del repo.' }

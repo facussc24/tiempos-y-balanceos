@@ -80,6 +80,36 @@ describe('/E — recursion', () => {
     });
 });
 
+describe('intercambiar — las dos PC de Fak sobre la misma copia (08/10/2026)', () => {
+    // Ninguna de las dos PC es la fuente de verdad: /MIR borraria lo que la otra agrego, y sin
+    // /XO una pierna pisaria el archivo mas nuevo de la otra. "Gana el mas nuevo, nada se borra".
+    it('una carpeta va con /E y /XO, nunca /MIR', () => {
+        const f = construirFlags({ ...base, direccion: 'intercambiar' });
+        expect(f).toContain('/E');
+        expect(f).toContain('/XO');
+        expect(f).not.toContain('/MIR');
+    });
+
+    it('un archivo suelto va con /XO, sin /E ni /MIR', () => {
+        const f = construirFlags({ ...base, direccion: 'intercambiar', soloArchivo: '.env.local' });
+        expect(f).toContain('/XO');
+        expect(f).not.toContain('/E');
+        expect(f).not.toContain('/MIR');
+        expect(f.slice(0, 3)).toEqual(['O', 'D', '.env.local']);
+    });
+
+    it('las dos piernas llevan los MISMOS flags: solo cambian origen y destino', () => {
+        const ida = construirFlags({ origen: 'NUBE', destino: 'PC', direccion: 'intercambiar' });
+        const vuelta = construirFlags({ origen: 'PC', destino: 'NUBE', direccion: 'intercambiar' });
+        expect(ida.slice(2)).toEqual(vuelta.slice(2));
+    });
+
+    it('no toca lo que ya hacian subir y bajar', () => {
+        expect(construirFlags({ ...base, direccion: 'subir' })).toContain('/MIR');
+        expect(construirFlags({ ...base, direccion: 'bajar' })).not.toContain('/MIR');
+    });
+});
+
 describe('forma general', () => {
     it('origen y destino van primero, y el nombre del archivo suelto tercero', () => {
         const f = construirFlags({ ...base, direccion: 'subir', soloArchivo: '.qr-secret' });

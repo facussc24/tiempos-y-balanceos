@@ -52,6 +52,10 @@ const COBERTURA = {
   // PreToolUse via _dispatcher (01/10/2026): nada se guarda en la nube PERSONAL de Fak; el trabajo
   // va a la biblioteca de Ingenieria. Regla nube-ingenieria.md ("regla dura, no podemos volver a fallar").
   'nube-personal-guard.sh': { test: '__tests__/scripts/nubePersonalGuard.test.mjs', tipo: 'bloquea' },
+  // PreToolUse via _dispatcher (08/10/2026): ningun documento de Barack dice que lo hizo Claude o una IA
+  // (core-prohibiciones.md §9). El wrapper fino se agrego el 08/10 a la noche: el guardian estaba en
+  // guardianes.mjs desde fda8f920 sin wrapper y el test 4a (y el CI) quedaron en rojo.
+  'firma-ia-guard.sh': { test: '__tests__/scripts/firmaIAGuard.test.mjs', tipo: 'bloquea' },
   // PreToolUse via _dispatcher (02/10/2026): un `git commit` sin rutas se lleva lo que otra sesion tenga
   // en el indice (cee8f1b2 salio con 12 archivos ajenos). Regla git-deploy.md, paso 2.
   'commit-rutas-guard.sh': { test: '__tests__/scripts/commitRutasGuard.test.mjs', tipo: 'bloquea' },
