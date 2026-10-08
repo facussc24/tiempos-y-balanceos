@@ -102,7 +102,7 @@ const FlowNode = ({ node, isLast, hasBranches, converges }) => {
           <div className="absolute right-1/2 mr-10 top-1/2 -translate-y-1/2 w-[90px] h-[100px] -mt-[50px] -z-10 border-l-[1.5px] border-b-[1.5px] border-[#93C5FD] rounded-bl-xl">
              <div className="absolute top-0 left-[-4.5px] w-2 h-2 border-t-[1.5px] border-r-[1.5px] border-[#60A5FA] transform -rotate-45"></div>
              <div className="absolute bottom-[-10px] right-2 text-[8.5px] font-bold text-[#60A5FA] whitespace-nowrap bg-white/90 px-1 border border-[#93C5FD] rounded-md shadow-sm z-10">
-               {node.rework.label || `RETRABAJO (A OP. ${node.rework.targetId})`}
+               {node.rework.label || `VUELVE A OP. ${node.rework.targetId}`}
              </div>
           </div>
         )}

@@ -263,7 +263,7 @@
             "description": "TRASLADO A OP 80",
             "rework": {
               "targetId": "80",
-              "label": "RETRABAJO (A OP. 80)"
+              "label": "VUELVE A OP. 80"
             }
           }
         ]
@@ -335,7 +335,7 @@
             "description": "TRASLADO A OP 130",
             "rework": {
               "targetId": "130",
-              "label": "RETRABAJO (A OP. 130)"
+              "label": "VUELVE A OP. 130"
             }
           }
         ]
