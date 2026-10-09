@@ -30,7 +30,10 @@ cabeza. Enforcement: hook `consumos-entregable-guard.sh` + este checklist +
      **PROHIBIDO decir "no documentado" sin listar el folder y PEGAR la salida**
      (papelón BOM 127 Rev6 vs Rev7).
    - Vinilo/tela de SERIE: tabla tizadas Mesa de Corte (`CONSUMOS TIZADAS
-     <fecha>.xlsx`, hoja por cliente, col ML) — le gana al arb y a BOMs.
+     <fecha>.xlsx`, hoja por cliente, col ML) — le gana al arb y a BOMs **solo si es la
+     planilla oficial que esta en el SERVIDOR o lo confirma Pablo Gamboa por mail**: una
+     tizada (.MRK) sola puede ser una prueba y no alcanza; tampoco una BOM de proyecto, un
+     flujograma ni una cuenta mia (Fak 06/10/2026, `consumos-entregables.md` §6).
      Ver memoria `reference_tabla_consumo_mesa_corte`.
    - Unidades: **NO se eligen, SE BUSCAN en el maestro del arb, y BOM = maestro =
      FACTURA del proveedor** (la OC copia la etiqueta del maestro, no prueba nada:
