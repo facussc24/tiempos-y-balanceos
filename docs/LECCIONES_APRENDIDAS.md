@@ -13,9 +13,11 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
-- **09/10 — Un despertador que nunca se vio llegar no existe: se cuenta en el registro ANTES de confiarle una noche** (CronCreate: 0 mensajes en 16 sesiones; el 03/10 y el 08/10 la sesión se quedó quieta horas mientras el control decía «latido vivo»). Graduado a la cola (`COLA_CAMBIOS_CODIGO.md`: tarea programada de la app en vez de CronCreate) y a `trabajar-hasta-la-hora.md`.
+- **09/10 — El control de la PC de Fak queda prendido hasta cerrar la sesión y nadie lo suelta desde el chat: antes de pedirlo se le dice, y al terminar de usarlo se avisa en el momento** (*"¿seguís tomando el control? ¿es un error?"*, *"no puedo cortarlo yo... encima no sabés que no puedo"*). Y un pedido largo a la API va por streaming y sin fallback: sin streaming se corta a los 10 min y el fallback devolvió otro modelo (US$2,3 perdidos). Graduado a `feedback_control_de_la_pc_no_se_suelta_solo`, `llamarLargo()` y `_apiTarea.mjs`.
 
-- **09/10 — En una noche solo, el cupo de 5 h se mira CADA HORA y cerca del fin del contexto o del cupo no se lanzan agentes** (a las 23:40 iba 93 % con el control mirando cada 2 h; se cortó a las 23:55 con 2 h de pedido por delante; Fak: *"se cortan y consumimos tokens al pedo"*). Graduado a `trabajar-hasta-la-hora.md` punto 5 y al latido.
+- **09/10 — Un despertador que nunca se vio llegar no existe: se cuenta en el registro ANTES de confiarle una noche** (CronCreate: 0 mensajes en 16 sesiones; dos noches quietas con el control diciendo «latido vivo»). Graduado a la cola (H2) y a `trabajar-hasta-la-hora.md`.
+
+- **09/10 — En una noche solo, el cupo de 5 h se mira CADA HORA y cerca del fin del contexto o del cupo no se lanzan agentes** (23:40 al 93 % mirando cada 2 h; corte a las 23:55 con 2 h de pedido; Fak: *"se cortan y consumimos tokens al pedo"*). Graduado a `trabajar-hasta-la-hora.md` punto 5.
 
 - **08/10 — Lo que cambia otro modelo (Gemini) en un documento se audita como contenido, no como ortografía** (renombró operaciones que coinciden con el AMFE, dio vuelta un historial y armó el A3 con el 160 viejo). Cada texto se compara contra la versión anterior y el AMFE antes de imprimir.
 
