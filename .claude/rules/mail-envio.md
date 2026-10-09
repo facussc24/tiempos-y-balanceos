@@ -272,6 +272,7 @@ contra el archivo del legajo, y mover a Elementos eliminados los que quedaron su
 | Nada de ese asunto en la **Bandeja de salida** | Evita encolar dos veces |
 | Outlook **abierto como programa del usuario, ANTES del `Dispatch`** | Un Outlook que levanta el `Dispatch` queda sin ventana (`Explorers.Count == 0`, no transmite) y el script **se cuelga** en `GetInspector`/`Display()`. Lo abre `asegurar_outlook()` de `scripts/_lib/outlookUi.py`, corriendo el `.exe` |
 | **El cartel de seguridad de Outlook se ve, no se adivina** | El *Object Model Guard* (*"Un programa intenta enviar correo en su nombre"*) es MODAL: bloquea el `Send()` y la corrida muere muda por timeout. `vigilando()` lo detecta por el TEXTO de los hijos del `#32770` y lo grita en el momento |
+| **La ventana del borrador abierta se cierra GUARDANDO antes del `Send()`** | `_prepararMail.py` deja el borrador abierto para que Fak lo vea, y con esa ventana Outlook rechaza el `Send()` (*"hay un cuadro de dialogo modal abierto"*). El 09/10/2026 le dije a Fak que apretara Enviar el; Fak: *"nunca mas podes decirme no puedo, lo solucionas"*. Paso 4b de `_mailEnviar.py`: `Inspector.Close(0)` y se relee el item |
 | Post-envio: cola vacia **y** item nuevo en Enviados | "Se envio?" se mira en Enviados por fecha, nunca en el borrador |
 
 ## Lo que NO prueba nada

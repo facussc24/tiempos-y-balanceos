@@ -72,6 +72,7 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **09/10 — Un «no puedo» a Fak es un problema mío a resolver, no una tarea suya** (el envío falló por la ventana abierta del borrador y le dije que apretara Enviar; *"nunca más podés decirme no puedo"*). Graduado a `_mailEnviar.py` paso 4b y `mail-envio.md`.
 - **09/10 — El historial de revisiones también confiesa: una corrección por observación interna, antes de que el documento salga, no abre revisión** (la Rev. B del 160/174 decía «OP 32 se integra a la 31; 71 y 72 a la 70»; Fak: *"no nos delates de que eliminamos reprocesos... mantenele la revisión A"*). Graduado a `documento_no_confiesa_como_se_hizo`.
 
 - **09/10 — El alcance de un reclamo lo marca DÓNDE va el material del reclamo, no la frase amplia del pedido** («todas las telas de PWA»): le metí las telas de serie, que no llevan el fieltro de 1000 g/m², antes de mirar en qué piezas entra. Fak: *"¿lo que pidió no es solo de proyecto?"*. Primero se ubica el material en las BOM/AMFE, después se arma la lista de documentos.
