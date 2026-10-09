@@ -35,7 +35,7 @@ PLANES = {
         'archivo': 'PC 581D TELAS PLANAS HILUX - Rev.A.xlsx',
     },
     'termo': {
-        'pieza': '21-9640 / 21-9641 / 21-9642 / 21-9643', 'hoja': '582D',
+        'pieza': '21-9640 / 21-9641 / 21-9642 / 21-9643 / 304883 / 304884', 'hoja': '582D',
         'descripcion': 'TELAS TERMOFORMADAS HILUX 582D',
         'archivo': 'PC 582D TELAS TERMOFORMADAS HILUX - Rev.A.xlsx',
     },

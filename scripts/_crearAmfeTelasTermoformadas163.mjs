@@ -51,7 +51,7 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { connectSupabase, readAmfe, saveAmfe } from './_lib/amfeIo.mjs';
 import { runWithValidation } from './_lib/dryRunGuard.mjs';
 import { validateAmfeDoc, printIssues } from './_lib/amfeValidator.mjs';
-import { crearConstructores, chequeosDeAutoria, leerBomDelArb, materialesContraBom, sinAcentos } from './_lib/amfeAutoria.mjs';
+import { crearConstructores, chequeosDeAutoria, leerBomDelArb, materialesContraBom } from './_lib/amfeAutoria.mjs';
 
 const APPLY = process.argv.includes('--apply');
 const ID = 'c5201ba9-1225-4663-b7a1-5430f9ee8912';
@@ -437,16 +437,16 @@ const doc = {
   revisions: [
     { rev: 'A', date: '13/03/2026', item: 'N/A', details: 'EMISION INICIAL.', pswDate: '', modifiedBy: 'FS' },
     { rev: 'A', date: FECHA, item: 'TODAS',
-      details: 'SE ALINEA AL FLUJOGRAMA REV B: HORNO, CORTE LASER CON RETRABAJO MANUAL, PLEGADO DE PESTAÑAS, ULTRASONIDO, ADHESIVADO Y APLICACION DE REFUERZOS (PEGADO, SIN COSTURA). AGUJAS ROTAS EN FIELTRO Y TRICAPA CON CONTROL TACTIL EN RECEPCION Y TROQUELADO (RECLAMO PWA 20/08/2026).',
+      details: 'SECUENCIA SEGUN FLUJOGRAMA REV B: CALENTAMIENTO EN HORNO, CORTE LASER CON RETRABAJO MANUAL, PLEGADO DE PESTAÑAS, ULTRASONIDO, ADHESIVADO Y APLICACION DE REFUERZOS. AGUJAS ROTAS EN FIELTRO Y TRICAPA CON CONTROL TACTIL EN RECEPCION Y TROQUELADO (RECLAMO PWA 20/08/2026).',
       pswDate: '', modifiedBy: 'FS' },
   ],
 };
 
 // Chequeos
-const { errores, stats, candidatas } = chequeosDeAutoria(doc, { controlDeConducta: null });
-const numerosMios = doc.operations.map((o) => `${o.opNumber} ${sinAcentos(o.name)}`);
-const numerosFlujo = OPS_FLUJOGRAMA.map(([n, nom]) => `${n} ${sinAcentos(nom)}`);
-if (JSON.stringify(numerosMios) !== JSON.stringify(numerosFlujo)) errores.push(`las operaciones no son las del flujograma Rev B:\n    AMFE ${numerosMios.join(' | ')}`);
+// El flujograma Rev B esta en PDF (no hay JSON en tools/flowchart/data): se arma su secuencia desde
+// OPS_FLUJOGRAMA y la libreria controla numeros, orden y nombres.
+const FLUJO = { flow: OPS_FLUJOGRAMA.map(([n, d]) => ({ stepId: n, description: d, type: 'operation' })) };
+const { errores, stats, candidatas } = chequeosDeAutoria(doc, { flujograma: FLUJO });
 for (const op of doc.operations) for (const w of op.workElements) for (const f of w.functions) for (const fm of f.failures) for (const c of fm.causes) {
   if ([HO, OPERARIO].includes(c.preventionControl) && c.occurrence !== O_CONDUCTA) errores.push(`OP${op.opNumber}: control de conducta con O=${c.occurrence}`);
   if (c.specialChar === 'CC' && fm.severity < 9) errores.push(`OP${op.opNumber}: CC con S=${fm.severity}`);

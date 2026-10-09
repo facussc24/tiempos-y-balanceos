@@ -42,7 +42,7 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { connectSupabase, readAmfe, saveAmfe } from './_lib/amfeIo.mjs';
 import { runWithValidation } from './_lib/dryRunGuard.mjs';
 import { validateAmfeDoc, printIssues } from './_lib/amfeValidator.mjs';
-import { crearConstructores, chequeosDeAutoria, leerBomDelArb, materialesContraBom, sinAcentos } from './_lib/amfeAutoria.mjs';
+import { crearConstructores, chequeosDeAutoria, leerBomDelArb, materialesContraBom } from './_lib/amfeAutoria.mjs';
 
 const APPLY = process.argv.includes('--apply');
 const ID = '57011560-d4c1-4a8a-83f0-ed37a2bab1d5';
@@ -51,9 +51,9 @@ const FECHA = '09/10/2026';
 const CODIGOS = ['21-9463', '21-9464', '21-9465', '21-9466', '21-9467', '21-9468', '21-9469', '21-9470', '21-9471', '21-9472', '21-9474', '21-9475'];
 
 const OPS_FLUJOGRAMA = [
-  ['10', 'RECEPCION DE MATERIALES'], ['15', 'PREPARACION DE CORTE'], ['20', 'CORTE DE TELA'],
+  ['10', 'RECEPCION DE MATERIALES'], ['15', 'PREPARACION DE CORTE'], ['20', 'CORTE DE VINILO Y TELA'],
   ['30', 'TROQUELADO DE APLIX'], ['40', 'TROQUELADO DE REFUERZO'], ['50', 'COSTURA RECTA / OVERLOCK'],
-  ['60', 'APLICACION DE APLIX'], ['70', 'INSPECCION FINAL'], ['80', 'EMBALAJE'],
+  ['60', 'APLICACION DE DOTS APLIX'], ['70', 'INSPECCION FINAL'], ['80', 'EMBALAJE'],
 ];
 
 const FOCO = 'Funcion Interna: Entregar telas planas cosidas, con refuerzos y aplix, sin cuerpos extraños, conformes al plano'
@@ -257,7 +257,7 @@ const OP50 = operacion('50', 'COSTURA RECTA / OVERLOCK',
     ]),
   ]);
 
-const OP60 = operacion('60', 'APLICACION DE APLIX',
+const OP60 = operacion('60', 'APLICACION DE DOTS APLIX',
   'Pegar la cantidad de aplix de cada codigo sobre los orificios guia', [
     we('Man', 'Operador de produccion', [
       funcion('Colocar cada aplix sobre su orificio guia', '', [
@@ -321,15 +321,19 @@ const doc = {
   revisions: [
     { rev: 'A', date: '13/03/2026', item: 'N/A', details: 'EMISION INICIAL.', pswDate: '', modifiedBy: 'FS' },
     { rev: 'A', date: FECHA, item: 'TODAS',
-      details: 'SE ALINEA AL FLUJOGRAMA 150 REV B-1 Y SE UNIFICA CON EL AMFE 157 DE PROYECTO: ALTA DEL TROQUELADO DE REFUERZO; CARA LISA / FELPUDA EN PREPARACION DE CORTE. AGUJAS ROTAS EN LOS REFUERZOS CON CONTROL TACTIL EN RECEPCION Y TROQUELADO (RECLAMO PWA 20/08/2026).',
+      details: 'SECUENCIA SEGUN FLUJOGRAMA 150 REV B-1: ALTA DEL TROQUELADO DE REFUERZO (OP 40); CARA LISA / FELPUDA EN PREPARACION DE CORTE (OP 15). AGUJAS ROTAS EN LOS REFUERZOS CON CONTROL TACTIL EN RECEPCION Y TROQUELADO (RECLAMO PWA 20/08/2026).',
       pswDate: '', modifiedBy: 'FS' },
   ],
 };
 
-const { errores, stats, candidatas } = chequeosDeAutoria(doc, {});
-const mios = doc.operations.map((o) => `${o.opNumber} ${sinAcentos(o.name)}`);
-const flujo = OPS_FLUJOGRAMA.map(([n, nom]) => `${n} ${sinAcentos(nom)}`);
-if (JSON.stringify(mios) !== JSON.stringify(flujo)) errores.push(`las operaciones no son las del flujograma 150 Rev B-1:\n    AMFE ${mios.join(' | ')}`);
+// El flujograma 150 Rev B-1 esta en PDF: se arma su secuencia desde OPS_FLUJOGRAMA (con sus nombres
+// tal cual) y la libreria controla numeros, orden y nombres. UNICA diferencia admitida, informada a
+// Fak el 09/10/2026: la OP 20 del flujograma dice "vinilo" y la pieza no tiene vinilo (BOM del arb).
+const FLUJO = { flow: OPS_FLUJOGRAMA.map(([n, d]) => ({ stepId: n, description: d, type: 'operation' })) };
+const DIFERENCIA_INFORMADA = 'OP 20: el flujograma dice "CORTE DE VINILO Y TELA" y el AMFE "CORTE DE TELA"';
+const chequeo = chequeosDeAutoria(doc, { flujograma: FLUJO });
+const errores = chequeo.errores.filter((e) => e !== DIFERENCIA_INFORMADA);
+const { stats, candidatas } = chequeo;
 for (const op of doc.operations) for (const w of op.workElements) for (const f of w.functions) for (const fm of f.failures) for (const c of fm.causes) {
   if ([HO, OPERARIO].includes(c.preventionControl) && c.occurrence !== O_CONDUCTA) errores.push(`OP${op.opNumber}: control de conducta con O=${c.occurrence}`);
   if (c.specialChar === 'CC' && fm.severity < 9) errores.push(`OP${op.opNumber}: CC con S=${fm.severity}`);
