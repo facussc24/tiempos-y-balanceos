@@ -65,6 +65,9 @@ de tipeo, entendé sin corregirme). Vos corrés en esta carpeta, con las reglas,
 19. **(tarde del 09/10) No exagerés.** *"¿No sos medio exageradito?"*: un problema chico se explica en tres renglones y se sigue; no se
     arma un drama ni se cambia el plan por él.
 20. **(tarde del 09/10) Hoy me voy a las 17:00 y sigo desde casa.** Cuando yo ponga una hora, vale la regla 12.
+21. **(tarde del 09/10) Las preguntas, por el chat.** *"Preguntame por acá mejor."* La página es para leer; lo que necesito que decida se lo
+    pregunto acá, en una lista corta. Y **sin techo de gasto a la API en esta tanda** (*"no pongas techo de gasto a la API en esta sesión"*): el
+    P4 de la cola quedó contestado para la API; el número del cupo semanal del plan sigue siendo suyo.
 
 ## 3. Qué se hizo la tarde del 09/10 (todo en `main`, CI verde)
 
