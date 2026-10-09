@@ -1,6 +1,7 @@
 # Prompt para la sesión nueva — 09/10/2026, versión 2 (la completa)
 
-Pegar tal cual en un chat nuevo abierto en `C:\Dev\BarackMercosul`. **Modelo de esa sesión: Fable 5.1**: es la que
+Pegar tal cual en un chat nuevo abierto en `C:\Dev\BarackMercosul` (**siempre en esta carpeta**: sin carpeta no hay
+reglas, ni guardianes, ni skills, ni memoria, ni programas; es otro Claude). **Modelo de esa sesión: Fable 5.1**: es la que
 orquesta un programa de varias horas con decisiones de arquitectura y delega la ejecución en ayudantes (Opus, Sonnet,
 Haiku) según la tabla de la sección 8; es el caso que la guía oficial reserva a Fable («agent sessions that run for
 hours, multistep deep research»). Las sesiones de código del día a día, en Opus 5.5. Es largo a propósito:
@@ -189,6 +190,14 @@ Si encontrás un error nuevo en un chat mío, entra a esta lista con su arreglo 
 
 ## 6. Qué hacer, en qué orden (de a uno, cerrado y commiteado antes del siguiente)
 
+0. **La clave de la API, conmigo al lado (lo primero, si estoy; si no, cuando vuelva).** Me guiás paso a paso, en
+   castellano simple: abrís en el navegador la consola de Anthropic (`https://platform.claude.com/`), me decís dónde
+   está la sección de claves («API keys») y cómo crear una clave **en la organización que tiene vinculado mi plan Max**
+   (los $200 de créditos son de esa organización; si la consola no muestra créditos ahí, me lo decís y paramos). En el
+   momento de pegarla corrés `node scripts/_claude.mjs --pegar-clave`: abre un cuadro de Windows con el texto tapado y
+   yo la pego ahí. **Vos nunca la ves, nunca la escribís ni la pedís por el chat.** Después `node scripts/_claude.mjs
+   --check`, `--probar`, la primera noche a mano con `--simular` y de día, y recién después `--agendar`. Mientras tanto
+   seguís con el punto 1: la clave no frena nada.
 1. **La síntesis** (A3): lanzás UN `investigador` en Opus (xhigh) que lea F1 §4-§5, los ocho R y la cola, y devuelva
    la cola completa en tres listas (hacer ya con tamaño / proponerme / descartar con motivo), y después UN
    `investigador` en Fable que la revise con ojos nuevos (qué falta, qué riesgo). Antes de lanzarlos me decís en una
