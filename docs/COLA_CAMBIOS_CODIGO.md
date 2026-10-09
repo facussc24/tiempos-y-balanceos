@@ -27,7 +27,6 @@ Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabra
 7. H4 · mediano · el cierre rehace un turno que terminó en inglés · pasó tres veces, con enojo escrito
 8. H8 + H7 · mediano y chico · decir qué agentes se lanzan antes de lanzarlos y medir cuántos Sonnet eran búsquedas · lo pidió dos veces el mismo día
 9. H14 + P26 · mediano · entregables de exports/ en el cierre y TBD antes de imprimir · son los controles que faltan donde salen las cosas
-10. H41 · mediano · arreglar el puntero viejo de CLAUDE.md · hoy fabricó una carpeta duplicada; dos minutos
 11. H20 + H21 · mediano · novedades siguiendo los links y lectura por ventanas · pedido del 08/10, dos veces
 12. H23 + H24 · mediano · lo crítico de cuatro skills arriba del corte y descripciones con «Usar cuando» · ahí se corta «un número por pieza»
 13. H25 + H26 + H27 · chico y mediano · condición del 06/10 en consumos y vigilante del arb · tres textos que contradicen reglas de Fak
@@ -51,7 +50,7 @@ Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabra
 - [ ] H7 · 2026-10-09 · chico · A2a · D1 #12 · contar en los transcripts de la semana cuántos lanzamientos Sonnet eran búsquedas, con el método de _tokens.mjs y R4 (o sumar --lanzamientos a _agentes.mjs) · solo lectura · 08/10: 13 Sonnet y 1 Haiku (F1 2.2); --historial muestra las subas del límite, no los lanzamientos (_agentes.mjs:13, S2)
 - [ ] H14 · 2026-10-09 · mediano · A28 · R4 #1 · esEntregableFuera cuenta exports/** (menos .build) como entregable, pero solo lo escrito en el turno y nombrado como final; test con un intermedio que no frena · _lib/cierreGuard.mjs:663-668, test · 112 entregables desde el 01/09 (R4); 536 archivos hoy (S2); :666 da falso
 - [ ] P26 · 2026-10-09 · mediano · A38 · R4 #7 · _imprimir.py revisa el PDF antes de mandarlo y lista los TBD como aviso, sin preguntar y respetando el TBD del cajetín · _imprimir.py, test · 07/10 10:39 *"dice todo TBD"*; la firma ya se revisa en :80-81 (fda8f920); aprieta el control, no lo afloja (S2)
-- [ ] H41 · 2026-10-09 · mediano · A19a · R7 §3 · CLAUDE.md:140 pasa a apuntar a scripts/_archive/, y _cpTelasHiluxCorrecciones.mjs se muda de scripts/archive/ ahí · CLAUDE.md, scripts/archive/ · ed619533 (11:53) creó scripts/archive/; _archive/ tiene 307 archivos (S2)
+
 - [ ] H20 · 2026-10-08 · mediano · A6a · Fak 08/10 20:43 *"los links que pasa Claude Devs"* · _novedadesClaude.mjs sigue los links de cada posteo, guarda el artículo en .sgc-cache/x-seguimiento/articulos/ y la noche lo resume · _novedadesClaude.mjs, _lib/novedadesClaude.mjs, test · grep: el código no sigue links
 - [ ] H21 · 2026-10-09 · mediano · A6b · R2 #25 · guardar lo leído aunque falle una página, leer por ventanas until: y sumar la cuenta alexalbert__ · los archivos de H20 y novedadesClaude.data.json · R2 #25: 404 en la consulta profunda, 4 de 4 por ventanas
 - [ ] H23 · 2026-10-09 · mediano · A16a · R5 §1.1, §3.1 · subir a los primeros ~19.000 caracteres lo que se pierde al compactar: la caja de hojas-de-proceso (con «un número por PIEZA», hoy en :552), Seguridad de arb-operar, los anti-patrones y «número en el NOMBRE DEL ARCHIVO» de flujogramas, el §4 de cad-design · 4 SKILL.md · R5; :552 está a 36.915 bytes (S2)
@@ -89,7 +88,7 @@ Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabra
 - [ ] H51 · 2026-10-09 · mediano · R4 #10 · video-maquina-guard avisa, sin frenar, si el espacio libre no alcanza para la copia más 5 GB; medir antes cuánto suma por cada Bash · _lib/guardianes.mjs, test · R4 C14; C: quedó en 21 MB (LECCIONES 30/09); ~700 ms por hook (reference_hooks_costo)
 - [ ] H52 · 2026-10-09 · mediano · F1 O9 · aviso, sin freno, en el control de voz de _mailEnviar.py por el «¿» de apertura en mails y documentos en la voz de Fak; explicar-mejor no se toca · _mailEnviar.py, test · Fak 05/10 11:57 *"en las preguntas no pongas 2 ?, solo al final"*; alcance resuelto por S2
 - [ ] H53 · 2026-10-09 · mediano · cola · el export Excel del Plan de Control saca «OP » antes del parseInt, con test de «OP 10» y npm run build · modules/controlPlan/controlPlanExcelExport.ts:369-371, su test · parseInt('OP 10') da NaN; mediano y sin apuro (S2: los PC salen por otro camino, f4f1ffe7)
-- [ ] H54 · 2026-10-09 · chico · R7 §3 · sumar Microsoft/ (caché de PowerShell en la raíz) a .gitignore y averiguar qué test la crea · .gitignore · git status: ModuleAnalysisCache sin commitear
+
 - [ ] H55 · 2026-10-09 · chico · R7 §3 · documentar _xlsxCorregirTexto.py y _xlsxRenombrarHojas.py en una memoria de referencia · memoria · git grep: 0 referencias (R7)
 - [ ] H56 · 2026-10-09 · chico · F1 O15 · averiguar por qué ingenieria@barackmercosul.com no aparece en _mails.py --buzones (mirar en Outlook si es casilla de Fak) y, si lo es, hacer que suba · _mails.py · Fak 08/10 14:23; S2: f.santoro@ y calidad@ suben, ingenieria@ no
 - [ ] H58 · 2026-10-09 · chico · D1 #5 · revisar en su listado que el AMFE del 174 diga Rev. A (el 160 ya figura en Rev. A, S2) · solo lectura · 58f2fa33, 37f9d0ec
@@ -254,6 +253,8 @@ Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabra
 
 ## Hechos
 
+- [x] H41 · 2026-10-09 · mediano · A19a · R7 §3 · CLAUDE.md:140 pasa a apuntar a scripts/_archive/, y _cpTelasHiluxCorrecciones.mjs se muda de scripts/archive/ ahí · CLAUDE.md, scripts/archive/ · ed619533 (11:53) creó scripts/archive/; _archive/ tiene 307 archivos (S2) · **HECHO 09/10 16:36** · 173f051d (las sesiones abiertas siguen con el CLAUDE.md viejo: se reabren)
+- [x] H54 · 2026-10-09 · chico · R7 §3 · sumar Microsoft/ (caché de PowerShell en la raíz) a .gitignore y averiguar qué test la crea · .gitignore · git status: ModuleAnalysisCache sin commitear · **HECHO 09/10 16:36** · 173f051d
 - [x] P48 · chico · A42d · R2 #17, R7 · git worktree prune y borrar 11 worktrees viejos (898 MB) · .claude/worktrees/ · C: con 7,5 GB libres · **Sí, después de mirar get_storage_usage.** · **HECHO 09/10 16:35** (Fak: *"si no sirven para nada borralos"*): 11 worktrees borrados con git worktree remove; lo no guardado de dos (arbArticulos.py + test + patch; una página) rescatado a la nube, carpeta mía repo-privado/worktrees-rescate-2026-10-09
 - [x] P46 · chico · A42b · R7 §3 · ordenar los sueltos de la raíz: STEP, PDF y PNG del carro y del dispositivo a su carpeta; amfe_head.txt se borra; generar_cuadro_hotpress.py va a scripts/hotmelt/ · raíz del repo · STEP de 14,8 MB suelto en un repo público (R7) · **Sí: su material se mueve, no se borra.** · **HECHO 09/10 16:35** (Fak: *"todas las mierdas no aprobadas subilas a la nube"*): los 9 sueltos de la raíz en la nube de Ingeniería, carpeta mía no-aprobado-2026-10-09; generar_cuadro_hotpress.py a scripts/hotmelt/ (sin versionar)
 - [x] X7 · 2026-10-09 · mediano · yo · ~~_cierreSesion.mjs lee el último run del CI y dice «no pude leer» si no contesta~~ · 0243035c
@@ -265,4 +266,4 @@ Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabra
 - [x] HOY-3 · 2026-10-09 · chico · Fak · ~~"en todas las tareas que puedas usá la API": scripts/_apiTarea.mjs, el puente pedido + adjuntos -> API -> archivo, con candados (ni secretos ni más de 2 MB) y 8 tests~~ · e79715c4 + 82939e7a (timeout) + 8a3638b1 (streaming) + 2fd31a24 (sin fallback)
 - [x] HOY-4 · 2026-10-09 · Fak · ~~(era P3) la clave de la API pegada (por la terminal), --check y --probar verdes, primera noche real de día ($0,98: 6 AMFE, 12 mails, prioridades, novedades) y la tarea "Barack - Noche de Claude (API)" agendada a las 06:30; el ciclo renueva el 30 (BARACK_API_CICLO_DIA=30 como variable de usuario)~~ · commit 62f0ae43 (regla api-claude.md)
 
-<!-- control: HACER YA 69 · PROPONER 79 · DESCARTADO 51 · HECHOS 10 · origen S1 09/10 + S2 09/10 -->
+<!-- control: HACER YA 67 · PROPONER 79 · DESCARTADO 51 · HECHOS 12 · origen S1 09/10 + S2 09/10 -->
