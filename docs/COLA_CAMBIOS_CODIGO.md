@@ -42,3 +42,4 @@ Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabra
 ## Hechos
 
 (nada todavía)
+- [ ] 2026-10-09 · mediano · yo · **el settings de Claude no viaja entre las dos PC de Fak**: `_nube.mjs --sincronizar` saltea `settings.json` (trae rutas de la PC de origen), así que un cambio de configuración (el 08/10: `advisorModel` y `model`) no llega a la CATA; la copia de la nube era del 07/10 y la subí a mano el 09/10. Arreglo: que `--sincronizar` suba el settings de la PC donde cambió y, al bajar, lo pase por `ajustar_settings.mjs` (rutas de usuario, sin `env.PATH`, por área apagado) en vez de copiarlo; test en las dos direcciones · `scripts/_nube.mjs`, `tools/instalar_mi_pc/ajustar_settings.mjs`
