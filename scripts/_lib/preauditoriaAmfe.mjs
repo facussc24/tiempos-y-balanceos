@@ -328,6 +328,32 @@ export function amfesACorrer(filas, estado, { todos = false, soloAmfe = null } =
   });
 }
 
+/** Cuantos AMFE como maximo revisa UNA corrida de la noche (la pasada completa de 21 se reparte en varias noches). */
+export const TOPE_AMFE_POR_NOCHE = 6;
+
+const orden = (a, b) => { const x = String(a ?? ''); const y = String(b ?? ''); return x < y ? -1 : x > y ? 1 : 0; };
+
+/**
+ * El tope por corrida. De los AMFE que habria que revisar (`aCorrer`, ya filtrados por `amfesACorrer`),
+ * se eligen hasta `max`; el resto son `diferidos` y NO se tocan: no entran al estado, asi que la noche
+ * siguiente siguen en la lista (o sea: "quedan para la noche siguiente" sin guardar nada aparte).
+ *   - modo incremental: los de `updated_at` mas VIEJO primero (desempate por numero), de modo que lo que
+ *     cambio hace poco espera y lo que lleva mas tiempo sin mirarse pasa;
+ *   - con `todos`: los que NUNCA se revisaron o hace mas que se revisaron, para que repetir la pasada
+ *     completa con tope vaya rotando y no revise siempre los mismos.
+ * Sin `max` (o 0, o algo que no es un entero), todos entran, en el orden en que vinieron.
+ */
+export function elegirParaNoche(aCorrer, estado, { max = null, todos = false } = {}) {
+  const lista = Array.isArray(aCorrer) ? [...aCorrer] : [];
+  const tope = Number.isInteger(max) && max > 0 ? max : null;
+  if (!tope || lista.length <= tope) return { elegidos: lista, diferidos: [] };
+  const e = normalizarEstado(estado);
+  const viejoPrimero = (a, b) => orden(a.updated_at, b.updated_at) || orden(a.amfe_number, b.amfe_number);
+  const revisadoDe = (f) => e.revisados[f.amfe_number]?.revisado || '';
+  lista.sort(todos ? (a, b) => orden(revisadoDe(a), revisadoDe(b)) || viejoPrimero(a, b) : viejoPrimero);
+  return { elegidos: lista.slice(0, tope), diferidos: lista.slice(tope) };
+}
+
 /** El estado despues de la noche: que se reviso (con su updated_at) y que hallazgos ya se vieron. */
 export function estadoNuevo(estado, resultados, { ahora = new Date(), topeVistos = 3000 } = {}) {
   const e = normalizarEstado(estado);
@@ -352,8 +378,30 @@ export function marcarNuevos(amfeNumber, mantenidos, estado) {
 // Estimacion (para --simular) y reporte
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Tokens aproximados de un texto en castellano (3,5 caracteres por token). Solo para estimar. */
-export const tokensAprox = (texto) => Math.ceil(String(texto ?? '').length / 3.5);
+/** Caracteres por token del castellano con el tokenizador viejo (medido en el repo el 08/10/2026). */
+export const CARACTERES_POR_TOKEN = 3.5;
+/**
+ * Los modelos 4.7 en adelante usan un tokenizador que da hasta 30 % MAS tokens para el mismo texto
+ * (documentacion de Anthropic, leida el 08/10/2026). Como no se sabe cuanto da en este castellano
+ * hasta contarlo con la clave (`count_tokens` es gratis), `--simular` muestra el rango x1,0 a x1,3.
+ */
+export const MARGEN_TOKENIZADOR = 1.3;
+
+/**
+ * Cuantos caracteres entran en un token: BARACK_TOKENS_POR_CARACTER, o 3,5. (El nombre de la variable
+ * dice "tokens por caracter" pero lo que se guarda es el recorrido inverso, caracteres por token: es
+ * el numero que se mide y se recalibra con `count_tokens`.) Un valor fuera de 1 a 10 se ignora.
+ */
+export function caracteresPorToken(env = process.env) {
+  const v = Number(String(env?.BARACK_TOKENS_POR_CARACTER ?? '').trim().replace(',', '.'));
+  return Number.isFinite(v) && v >= 1 && v <= 10 ? v : CARACTERES_POR_TOKEN;
+}
+
+/** Tokens aproximados de un texto en castellano (3,5 caracteres por token por defecto). Solo para estimar. */
+export const tokensAprox = (texto, { env = process.env } = {}) => Math.ceil(String(texto ?? '').length / caracteresPorToken(env));
+
+/** El tope de un rango de tokens APROXIMADOS (x1,3). Lo medido con `count_tokens` no se infla. */
+export const tokensConMargen = (tokens) => Math.ceil(Number(tokens || 0) * MARGEN_TOKENIZADOR);
 
 const fechaCorta = (iso) => String(iso ?? '').slice(0, 16).replace('T', ' ');
 
@@ -361,7 +409,7 @@ const fechaCorta = (iso) => String(iso ?? '').slice(0, 16).replace('T', ' ');
  * El archivo para la SESION DE LA MANANA. Dice arriba para quien es y que hacer con el. Nunca se
  * le manda a Fak tal cual: el verifica contra la fuente y lleva 4 renglones.
  */
-export function armarReporte({ fecha, resultados, saltados = [], costoUsd = 0, presupuesto = null, estado } = {}) {
+export function armarReporte({ fecha, resultados, saltados = [], diferidos = [], enCurso = 0, costoUsd = 0, presupuesto = null, estado } = {}) {
   const L = [];
   const total = resultados.reduce((s, r) => s + (r.mantenidos?.length || 0), 0);
   const nuevos = resultados.reduce((s, r) => s + (r.mantenidos?.filter((h) => h.nuevo).length || 0), 0);
@@ -369,8 +417,13 @@ export function armarReporte({ fecha, resultados, saltados = [], costoUsd = 0, p
   L.push(`# Pre-auditoría nocturna de AMFE — ${fecha}`, '');
   L.push('**Para la sesión de Claude de la mañana, no para Fak.** Cada hallazgo de acá lo señaló un modelo (Sonnet) y lo dejó pasar otro (Opus) tratando de refutarlo; igual es una CANDIDATA, no una verdad. Antes de decir una palabra: abrir el AMFE en Supabase, verificar la cita contra la fuente, descartar lo que sea convención de la casa, y llevarle a Fak solo lo confirmado, en 4 renglones, sin informe. Nada de acá se aplica solo. Un AP=H sin acción nunca es hallazgo.', '');
   L.push(`- AMFE revisados esta noche: ${resultados.length - errores.length}${saltados.length ? ` · sin cambios desde la última revisión (no se tocaron): ${saltados.length}` : ''}${errores.length ? ` · con error: ${errores.length}` : ''}`);
+  if (diferidos.length) {
+    const nombres = diferidos.slice(0, 8).map((d) => d.amfe_number ?? d).join(', ');
+    L.push(`- Quedaron para la próxima noche (tope por noche): ${diferidos.length} (${nombres}${diferidos.length > 8 ? ', …' : ''})`);
+  }
+  if (enCurso > 0) L.push(`- De esta corrida NO terminaron: ${enCurso} (si la corrida ya terminó, se cortó antes: lo revisado hasta acá quedó guardado y el resto vuelve a entrar la próxima noche)`);
   L.push(`- Hallazgos que sobrevivieron al refutador: ${total} (${nuevos} nuevos; el resto ya se había visto otra noche)`);
-  L.push(`- Costo de la noche: $${costoUsd.toFixed(2)}${presupuesto ? ` · mes: $${presupuesto.gastadoUsd.toFixed(2)} de $${presupuesto.presupuestoUsd} (${presupuesto.semaforo})` : ''}`);
+  L.push(`- Costo de la noche: $${costoUsd.toFixed(2)}${presupuesto ? ` · ${presupuesto.ciclo?.texto ?? 'mes'}: $${presupuesto.gastadoUsd.toFixed(2)} de $${presupuesto.presupuestoUsd} (${presupuesto.semaforo})` : ''}`);
   L.push('');
   for (const r of resultados) {
     L.push(`## ${r.amfe_number} — ${r.project_name || ''}`.trim());
@@ -395,9 +448,10 @@ export function armarReporte({ fecha, resultados, saltados = [], costoUsd = 0, p
 }
 
 /** Una linea para el tablero: lo que paso, sin adjetivos. */
-export function lineaResumen({ revisados = 0, saltados = 0, hallazgos = 0, nuevos = 0, errores = 0, costoUsd = 0 } = {}) {
+export function lineaResumen({ revisados = 0, saltados = 0, diferidos = 0, hallazgos = 0, nuevos = 0, errores = 0, costoUsd = 0 } = {}) {
   const partes = [`pre-auditoría AMFE: ${revisados} revisado${revisados === 1 ? '' : 's'}`];
   if (saltados) partes.push(`${saltados} sin cambios`);
+  if (diferidos) partes.push(`${diferidos} para la próxima noche`);
   partes.push(hallazgos ? `${hallazgos} hallazgo${hallazgos === 1 ? '' : 's'} para verificar (${nuevos} nuevo${nuevos === 1 ? '' : 's'})` : 'sin hallazgos que sobrevivan');
   if (errores) partes.push(`${errores} con error`);
   partes.push(`$${costoUsd.toFixed(2)}`);

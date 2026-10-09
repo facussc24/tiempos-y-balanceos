@@ -1,18 +1,22 @@
 /**
  * claudeApi.mjs — la UNICA puerta del repo a la API de Anthropic (los creditos del plan Max).
  *
- * POR QUE EXISTE (08/10/2026). El plan Max trae creditos mensuales para la API ($100 el Max 5x,
- * $200 el Max 20x) que vencen cada mes y NO se pueden gastar en Claude Code: solo se gastan con
- * una clave de API de la organizacion vinculada al plan (platform.claude.com, "Promotional
- * credits"). Lo que Fak hace en Claude Code sigue saliendo del plan, no de aca. Este modulo
+ * POR QUE EXISTE (08/10/2026). El plan Max trae creditos para la API ($100 el Max 5x, $200 el Max
+ * 20x) que vencen al final de cada CICLO DE FACTURACION (no el dia 1 del mes) y NO se pueden gastar
+ * en Claude Code: solo se gastan con una clave de API de la organizacion vinculada al plan
+ * (platform.claude.com, "Promotional credits"). Lo que Fak hace en Claude Code sigue saliendo del
+ * plan, no de aca. Este modulo
  * concentra lo que hace falta para que los scripts del repo los usen bien y sin sorpresas:
  *   - los modelos y sus roles (Opus orquesta y sintetiza; Sonnet implementa; Haiku hace volumen;
  *     Fable solo para deliberar a pedido), con los precios OFICIALES para calcular el gasto;
  *   - la clave (ANTHROPIC_API_KEY, del entorno o de .env.local; nunca se imprime);
  *   - el armado del pedido: cache de prompt, esfuerzo, salida en JSON con esquema y el fallback
  *     del lado del servidor cuando un clasificador rechaza (no existe para Haiku);
- *   - el ledger de gasto en .sgc-cache/api/ledger_AAAA-MM.jsonl (fuera de git) y el semaforo
- *     contra el presupuesto del mes (BARACK_API_PRESUPUESTO_USD, por defecto 100);
+ *   - el ledger de gasto en .sgc-cache/api/ledger_AAAA-MM.jsonl (fuera de git; se escribe solo por
+ *     escrituraSegura.mjs) y el semaforo contra el presupuesto del CICLO de facturacion
+ *     (BARACK_API_PRESUPUESTO_USD, por defecto 170 = el credito del Max 20x con 15 % de colchon;
+ *     BARACK_API_CICLO_DIA = dia del mes en que se renueva, por defecto 1) y el tope de gasto de UNA
+ *     corrida de la noche (BARACK_API_TOPE_CORRIDA_USD, por defecto 8);
  *   - lotes (Message Batches, mitad de precio) y el patron orquestador-workers (mapaReduce).
  *
  * CANDADOS. Este modulo NO toca Supabase, ni el arb, ni Outlook: habla con la API y escribe el
@@ -35,6 +39,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Anthropic from '@anthropic-ai/sdk';
+import { agregarSeguro } from './escrituraSegura.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const RAIZ = path.resolve(AQUI, '..', '..');
@@ -313,8 +318,8 @@ export function registrarGasto(r, { tarea = '', lote = false, dir = DIR_API, aho
     id: r.id ?? null,
     ...(r.fallback && r.fallback.length ? { fallback: r.fallback } : {}),
   };
-  fs.mkdirSync(dir, { recursive: true });
-  fs.appendFileSync(rutaLedger(mesLocal(ahora), dir), `${JSON.stringify(entrada)}\n`, 'utf8');
+  // por la puerta segura: el ledger solo puede caer en .sgc-cache (o en la carpeta de BARACK_API_DIR)
+  agregarSeguro(rutaLedger(mesLocal(ahora), dir), `${JSON.stringify(entrada)}\n`);
   return entrada;
 }
 
@@ -349,26 +354,104 @@ export function resumenLedger(entradas) {
   return r;
 }
 
-/** El presupuesto del mes en USD: BARACK_API_PRESUPUESTO_USD, o 100 (el credito del Max 5x). */
+/** Credito del Max 20x ($200 por ciclo) menos 15 % de colchon: las estimaciones de costo tienen +/-30 %. */
+export const PRESUPUESTO_DEFECTO_USD = 170;
+/** Lo que puede gastar UNA corrida de la noche antes de frenar los pasos que faltan (3 a 5 veces lo normal). */
+export const TOPE_CORRIDA_DEFECTO_USD = 8;
+
+const positivo = (v, defecto) => { const x = Number(v); return Number.isFinite(x) && x > 0 ? x : defecto; };
+
+/** El presupuesto del ciclo en USD: BARACK_API_PRESUPUESTO_USD, o 170 (el credito del Max 20x con colchon). */
 export function presupuestoMensualUsd(env = process.env) {
-  const v = Number(env.BARACK_API_PRESUPUESTO_USD);
-  return Number.isFinite(v) && v > 0 ? v : 100;
+  return positivo(env.BARACK_API_PRESUPUESTO_USD, PRESUPUESTO_DEFECTO_USD);
 }
 
 /**
- * Semaforo del mes: verde (< 80 %), amarillo (80-99 %), rojo (100 % o mas). Es monitoreo pasivo,
+ * El tope de gasto de UNA corrida de la noche: BARACK_API_TOPE_CORRIDA_USD, o 8. Lo lee _nocturno.mjs
+ * antes de cada paso. Es aparte del tope del ciclo: este corta una corrida que se descontrola (un bucle,
+ * un lote enorme) el mismo dia, no a fin de mes.
+ */
+export function topeCorridaUsd(env = process.env) {
+  return positivo(env.BARACK_API_TOPE_CORRIDA_USD, TOPE_CORRIDA_DEFECTO_USD);
+}
+
+/**
+ * El dia del mes en que se renueva el ciclo de facturacion: BARACK_API_CICLO_DIA (1 a 31). Sin la
+ * variable, o con un valor que no es un dia, 1 (= el mes calendario). Los creditos del plan vencen al
+ * final de CADA CICLO, que no empieza el 1 salvo que el plan se haya contratado ese dia.
+ */
+export function cicloDia(env = process.env) {
+  const crudo = String(env.BARACK_API_CICLO_DIA ?? '').trim();
+  if (!/^\d{1,2}$/.test(crudo)) return 1;
+  const v = Number(crudo);
+  return v >= 1 && v <= 31 ? v : 1;
+}
+
+const diasDelMes = (anio, mes0) => new Date(anio, mes0 + 1, 0).getDate();
+/** Medianoche local del `dia` de ese mes; si el mes es mas corto (31 en febrero), su ultimo dia. */
+const inicioEn = (anio, mes0, dia) => new Date(anio, mes0, Math.min(dia, diasDelMes(anio, mes0)));
+const diaIso = (f) => `${f.getFullYear()}-${p2(f.getMonth() + 1)}-${p2(f.getDate())}`;
+const ddmm = (f) => `${p2(f.getDate())}/${p2(f.getMonth() + 1)}`;
+
+/**
+ * El ciclo de facturacion que contiene a `fecha` cuando se renueva el dia `dia`:
+ *   { dia, mes: 'AAAA-MM' (el mes en que arranca), desde, hasta (ultimo dia incluido), proximo (primer
+ *     dia del ciclo siguiente), texto: 'ciclo del 07/09 al 06/10' }
+ * Con dia = 1 es el mes calendario. Un gasto del 28/09 y uno del 03/10 caen en el mismo ciclo si se
+ * renueva el 7. Fechas LOCALES: despues de las 21:00 el dia UTC ya es el siguiente.
+ */
+export function cicloDe(fecha = new Date(), dia = 1) {
+  const d = Number.isInteger(dia) && dia >= 1 && dia <= 31 ? dia : 1;
+  let desde = inicioEn(fecha.getFullYear(), fecha.getMonth(), d);
+  if (fecha < desde) desde = inicioEn(fecha.getFullYear(), fecha.getMonth() - 1, d);
+  const proximo = inicioEn(desde.getFullYear(), desde.getMonth() + 1, d);
+  const hasta = new Date(proximo.getFullYear(), proximo.getMonth(), proximo.getDate() - 1);
+  return {
+    dia: d, mes: diaIso(desde).slice(0, 7), desde: diaIso(desde), hasta: diaIso(hasta), proximo: diaIso(proximo),
+    texto: `ciclo del ${ddmm(desde)} al ${ddmm(hasta)}`,
+  };
+}
+
+/**
+ * Las entradas del ledger que caen en un ciclo. El ledger se parte por MES CALENDARIO (un archivo por
+ * mes, ledger_AAAA-MM.jsonl: el nombre no cambia aunque cambie el dia del ciclo), asi que un ciclo que
+ * arranca el 7 lee los dos archivos que toca y se queda con las entradas cuya fecha (`ts`) cae adentro.
+ */
+export function leerLedgerCiclo(ciclo, dir = DIR_API) {
+  const meses = [...new Set([ciclo.desde.slice(0, 7), ciclo.hasta.slice(0, 7)])];
+  return meses.flatMap((m) => leerLedger(m, dir)).filter((e) => {
+    const dia = String(e?.ts ?? '').slice(0, 10);
+    return dia >= ciclo.desde && dia < ciclo.proximo;
+  });
+}
+
+/**
+ * Semaforo del ciclo: verde (< 80 %), amarillo (80-99 %), rojo (100 % o mas). Es monitoreo pasivo,
  * no un freno por llamada: el unico que frena es el job nocturno antes de ARRANCAR si esta en rojo.
  */
-export function estadoPresupuesto({ gastadoUsd = 0, presupuestoUsd = 100 } = {}) {
+export function estadoPresupuesto({ gastadoUsd = 0, presupuestoUsd = PRESUPUESTO_DEFECTO_USD } = {}) {
   const porcentaje = presupuestoUsd > 0 ? Math.round((gastadoUsd / presupuestoUsd) * 1000) / 10 : 0;
   const semaforo = porcentaje >= 100 ? 'rojo' : porcentaje >= 80 ? 'amarillo' : 'verde';
   return { gastadoUsd: Math.round(gastadoUsd * 100) / 100, presupuestoUsd, porcentaje, semaforo };
 }
 
-/** El semaforo del mes leyendo el ledger real. */
-export function presupuestoDelMes({ mes = mesLocal(), dir = DIR_API, env = process.env } = {}) {
-  const gastadoUsd = resumenLedger(leerLedger(mes, dir)).totalUsd;
-  return { mes, ...estadoPresupuesto({ gastadoUsd, presupuestoUsd: presupuestoMensualUsd(env) }) };
+/**
+ * El semaforo del CICLO de facturacion leyendo el ledger real. Sin `mes`, el ciclo que contiene a
+ * `ahora`; con `mes` ('AAAA-MM'), el ciclo que ARRANCA en ese mes (con el dia en 1, el mes calendario).
+ * Se llama "del mes" por historia: lo usan _preauditarAmfe, _nocturno y _claude.
+ */
+export function presupuestoDelMes({ mes = null, dir = DIR_API, env = process.env, ahora = new Date() } = {}) {
+  const dia = cicloDia(env);
+  let ciclo;
+  if (mes) {
+    const m = /^(\d{4})-(\d{2})$/.exec(String(mes));
+    if (!m || +m[2] < 1 || +m[2] > 12) throw new ErrorApi('api', `presupuestoDelMes: el mes va como AAAA-MM, no "${mes}"`);
+    ciclo = cicloDe(inicioEn(+m[1], +m[2] - 1, dia), dia);
+  } else {
+    ciclo = cicloDe(ahora, dia);
+  }
+  const gastadoUsd = resumenLedger(leerLedgerCiclo(ciclo, dir)).totalUsd;
+  return { mes: ciclo.mes, ciclo, ...estadoPresupuesto({ gastadoUsd, presupuestoUsd: presupuestoMensualUsd(env) }) };
 }
 
 /** '$1,23' con coma decimal, como lo lee Fak. */

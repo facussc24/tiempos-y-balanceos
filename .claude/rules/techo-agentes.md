@@ -6,6 +6,14 @@ fable 20**. Diez Sonnet siguen valiendo lo mismo que antes (40); con lo mismo en
 Haiku, 5 Opus o 2 Fable. El esfuerzo es `xhigh` (el anteultimo; `max` nunca se pide). La tool
 `Workflow` esta DESHABILITADA.
 
+**Que tiene fuente y que no (Fak lo pregunto el 08/10 a la noche):** los PESOS salen de la tabla oficial
+de precios. La ventana de 10 minutos y el 40 NO tienen fuente externa: la ventana la puso una sesion el
+06/08 tras el incidente y el 40 son los 10 Sonnet de Fak en puntos. Nadie publico pesa por precio ni usa
+ventana (investigacion R8, 08/10). Lo respaldado es medir contra el CUPO REAL: Claude Code expone a los
+mods (`session.measure`) el % usado de las ventanas de 5 h y semanal, y `agent.spawn` deja aceptar,
+cambiar o negar el modelo de cada subagente. **Fase 3: reemplazar la ventana por un mod que pese por
+precio y frene por cupo real**; hasta entonces el presupuesto por puntos es la red de seguridad.
+
 Historia: techo de 5 (06/08/2026, dos incidentes de 21 y 40 agentes); 10 solo en Sonnet (Fak, 30/09);
 **08/10/2026, Fak: "ese techo de 10 lo puse yo, ni siquiera se si es correcto... es absurdo que solo se
 pueda usar Sonnet... eficiencia no significa siempre ahorrar tokens, significa trabajar de la mejor
@@ -31,9 +39,18 @@ descontar. Aplica a todos los proyectos de esta PC, no solo Barack.
 | Auditoria final de una tarea de codigo (`auditor`, `auditor-cliente`) | opus (lo exige la definicion) | xhigh | 0 | siempre |
 
 La llamada puede bajar el esfuerzo con `effort: low|medium|high`. **La auditoria final la hace Opus,
-no Sonnet** (Fak, 30/09/2026) y no descuenta: es obligatoria. El "advisor tool" de la API (un modelo
-barato ejecuta y consulta a uno caro) no existe en Claude Code: esta tabla es su equivalente; donde si
-sirve es en la noche de Claude (`api-claude.md`).
+no Sonnet** (Fak, 30/09/2026) y no descuenta: es obligatoria.
+
+**El advisor SI existe en Claude Code** (corregido el 08/10/2026 a la noche; hasta esa hora esta regla
+decia que no): `/advisor <modelo>`, `advisorModel` en `~/.claude/settings.json` o `claude --advisor`.
+Es experimental, anda en la app de escritorio desde la v2.1.260 (esta PC: 2.1.293), y **los subagentes
+lo heredan**: un `investigador` en Sonnet consulta a Opus antes de decidir un camino, cuando un error se
+repite y antes de dar algo por terminado (doc: https://code.claude.com/docs/en/advisor). Desde el
+08/10/2026 `advisorModel: "opus"` queda puesto en el settings de Fak: es el "modelo barato ejecuta,
+modelo caro asesora" que el pidio, adentro de Claude Code. Gasta cupo del plan (Fable de asesor iria a
+creditos de uso y pide un consentimiento: no se activa). `/advisor off` lo apaga; el guardian no lo
+cuenta porque no es una llamada a Agent. Cuando la sesion principal es Opus 5.5, el asesor Opus es una
+segunda opinion; cuando es Fable, Claude Code no le aplica asesor Opus (solo Fable 5.1).
 
 ## Que agente se lanza
 

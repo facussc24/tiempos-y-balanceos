@@ -1,0 +1,5 @@
+# Archivos ignorados por git que Claude Code copia a cada worktree nuevo (doc: code.claude.com/docs/en/worktrees).
+# 08/10/2026: sin esto, una sesion en worktree arrancaba sin .env.local y daba "52 rojos que no existian"
+# (memoria reference_worktree_sin_env_local). Un worktree que no ve Supabase no es un entorno: es un vacio.
+.env.local
+.qr-secret

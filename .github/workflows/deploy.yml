@@ -70,7 +70,12 @@ jobs:
       # Version PINEADA = la probada en la notebook. La ultima de pip imprime una
       # advertencia de deprecacion por stdout al hacer `import fitz`, y los tests
       # de pdfBomArb parsean stdout (el JSON y el "ok" quedan contaminados).
-      - run: pip install PyMuPDF==1.27.2.2
+      # Los tests de revisarPaqueteHO (numpy, Pillow) y de firmaIASelftest (openpyxl,
+      # python-pptx, python-docx) corren scripts Python que importan esos paquetes al
+      # arrancar: sin ellos mueren con ModuleNotFoundError y el test sale rojo
+      # (CI rojo desde el 08/10/2026). Versiones = las de la notebook; las seis tienen
+      # wheel para Python 3.12 en Linux (consultado en PyPI).
+      - run: pip install PyMuPDF==1.27.2.2 Pillow==11.2.1 numpy==2.4.4 openpyxl==3.1.5 python-pptx==1.0.2 python-docx==1.2.0
       - run: npm ci
       # `--reporter=github-actions` publica cada test en rojo como ANOTACION del job.
       # Sin eso, lo unico que queda afuera es "Process completed with exit code 1": el log

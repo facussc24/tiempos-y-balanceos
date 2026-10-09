@@ -28,7 +28,19 @@ const ARCHIVOS = [
   'scripts/_lib/preauditoriaAmfe.mjs',
   'scripts/_lib/claudeApi.mjs',
   'scripts/_lib/supabaseSoloLectura.mjs',
+  'scripts/_lib/escrituraSegura.mjs',
+  // 08/10/2026: pasos nuevos de la noche (propuestas de skills, prueba de disparo, vigilante de precios)
+  'scripts/_lib/transcriptsFak.mjs',
+  'scripts/_lib/propuestasSkills.mjs',
+  'scripts/_propuestasSkills.mjs',
+  'scripts/_lib/disparoSkills.mjs',
+  'scripts/_pruebaDisparoSkills.mjs',
+  'scripts/_lib/vigilarPrecios.mjs',
+  'scripts/_vigilarPrecios.mjs',
 ];
+
+/** La unica puerta de escritura de la noche (candado 1): el unico archivo que puede usar `fs` para escribir. */
+const PUERTA_DE_ESCRITURA = 'scripts/_lib/escrituraSegura.mjs';
 
 // El envio de Outlook se arma por partes para que este archivo no tenga el texto literal (el
 // mail-guard frena los archivos que lo traen junto con otras senales de Outlook).
@@ -44,6 +56,20 @@ const PROHIBIDOS = [
   { que: 'mandar mails', re: /_mailEnviar|SendAndReceive/ },
   { que: 'mandar un mail de Outlook', re: ENVIO_OUTLOOK },
   { que: 'lanzar Claude Code', re: /(spawn|exec)\w*\(\s*['"`]claude\b/ },
+];
+
+/**
+ * Candado 1 ("la noche solo deja archivos en carpetas ignoradas"): ningun archivo de la noche escribe,
+ * renombra, copia, crea ni borra con `fs` directo. Todo pasa por escrituraSegura.mjs (escribirSeguro /
+ * agregarSeguro), que rechaza cualquier ruta fuera de .claude/state, .sgc-cache y reports/staging. Solo
+ * se miran los .mjs: el .ps1 escribe su log con PowerShell y es el envoltorio de Windows.
+ */
+const ESCRITURAS_DIRECTAS = [
+  { que: 'writeFile / writeFileSync', re: /\bwriteFile(Sync)?\s*\(/ },
+  { que: 'appendFile / appendFileSync', re: /\bappendFile(Sync)?\s*\(/ },
+  { que: 'un stream de escritura', re: /\bcreateWriteStream\s*\(/ },
+  { que: 'renombrar o copiar', re: /\b(rename|copyFile|cp)(Sync)?\s*\(/ },
+  { que: 'crear o borrar carpetas y archivos', re: /\b(mkdir|rm|rmdir|unlink)(Sync)?\s*\(/ },
 ];
 
 /**
@@ -71,6 +97,19 @@ describe('candados de la noche · el texto de cada archivo', () => {
       expect(/\bconnectSupabase\w*\b|\bcreateClient\b/.test(leer(rel)), `${rel} se conecta a Supabase sin el envoltorio`).toBe(false);
     }
     expect(leer('scripts/_preauditarAmfe.mjs')).toMatch(/conectarSoloLectura/);
+  });
+
+  it.each(ARCHIVOS.filter((r) => r.endsWith('.mjs') && r !== PUERTA_DE_ESCRITURA))('2b. %s no escribe con fs directo (solo por escrituraSegura.mjs)', (rel) => {
+    const hallados = ESCRITURAS_DIRECTAS.filter((p) => p.re.test(leer(rel))).map((p) => p.que);
+    expect(hallados, `${rel} escribe con fs directo (${hallados.join(', ')}): usar escribirSeguro / agregarSeguro`).toEqual([]);
+  });
+
+  it('2c. la puerta de escritura SI usa fs para escribir (si no, el barrido de arriba no probaria nada) y los que escriben pasan por ella', () => {
+    const hallados = ESCRITURAS_DIRECTAS.filter((p) => p.re.test(leer(PUERTA_DE_ESCRITURA))).map((p) => p.que);
+    expect(hallados).toEqual(expect.arrayContaining(['writeFile / writeFileSync', 'appendFile / appendFileSync', 'renombrar o copiar', 'crear o borrar carpetas y archivos']));
+    for (const rel of ['scripts/_nocturno.mjs', 'scripts/_preauditarAmfe.mjs', 'scripts/_lib/claudeApi.mjs']) {
+      expect(leer(rel), `${rel} tiene que importar escrituraSegura.mjs`).toMatch(/from '\.\/(_lib\/)?escrituraSegura\.mjs'/);
+    }
   });
 
   it('3. el .ps1 es ASCII puro (powershell.exe lo lee como ANSI)', () => {
@@ -104,5 +143,30 @@ describe('candados de la noche · gemelos rojos (cada patron caza lo que dice)',
 
   it('VERDE: nombrar `claude -p` en un comentario no es lanzarlo', () => {
     expect(PROHIBIDOS[7].re.test('// nunca lanza `claude -p` ni procesos en cadena')).toBe(false);
+  });
+});
+
+describe('candados de la noche · escritura segura (gemelos rojos y verdes del barrido de fs directo)', () => {
+  const rojos = {
+    'writeFile / writeFileSync': ["fs.writeFileSync(ruta, texto, 'utf8')", "await fsp.writeFile(ruta, texto)", 'writeFileSync(tmp, t)'],
+    'appendFile / appendFileSync': ["fs.appendFileSync(RUTA_LOG, linea, 'utf8')", 'await fs.promises.appendFile(r, t)'],
+    'un stream de escritura': ['fs.createWriteStream(ruta)'],
+    'renombrar o copiar': ['fs.renameSync(tmp, ruta)', 'fs.copyFileSync(a, b)', 'fs.cpSync(a, b, { recursive: true })', 'await fsp.rename(a, b)'],
+    'crear o borrar carpetas y archivos': ['fs.mkdirSync(dir, { recursive: true })', 'fs.rmSync(dir)', 'fs.unlinkSync(f)', 'fs.rmdirSync(d)'],
+  };
+
+  it.each(ESCRITURAS_DIRECTAS.map((p) => [p.que, p.re]))('ROJO: "%s" se caza', (que, re) => {
+    expect(rojos[que].length).toBeGreaterThan(0);
+    for (const texto of rojos[que]) expect(re.test(texto), texto).toBe(true);
+  });
+
+  it('VERDE: leer, mirar, listar y usar la puerta segura no son escrituras directas', () => {
+    const verdes = [
+      "fs.readFileSync(ruta, 'utf8')", 'fs.existsSync(ruta)', 'fs.statSync(ruta).mtimeMs', 'fs.readdirSync(dir)', 'fs.createReadStream(jsonl)',
+      'escribirSeguro(RUTA_ESTADO, texto)', 'agregarSeguro(RUTA_LOG, linea)', 'const confirmar = (x) => x', 'resumen.rmSync',
+    ];
+    for (const texto of verdes) {
+      expect(ESCRITURAS_DIRECTAS.filter((p) => p.re.test(texto)).map((p) => p.que), texto).toEqual([]);
+    }
   });
 });

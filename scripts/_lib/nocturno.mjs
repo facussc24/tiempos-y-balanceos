@@ -19,7 +19,7 @@
 export const NOMBRE_TAREA = 'Barack - Noche de Claude (API)';
 export const HORA_TAREA = '06:30';
 /** El orden en que corren. `--solo <paso>` acepta uno de estos. */
-export const PASOS = Object.freeze(['preauditoria', 'mails', 'novedades']);
+export const PASOS = Object.freeze(['preauditoria', 'mails', 'prioridades', 'novedades']);
 export const HORAS_VIEJO = 26;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -27,43 +27,74 @@ export const HORAS_VIEJO = 26;
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * ¿Arranca la noche? Con el presupuesto del mes en rojo NO (salvo `sinTope`): es el unico freno
- * del gasto, y es pasivo (no corta una llamada a mitad, decide antes de empezar).
+ * ¿Arranca la noche? Con el presupuesto del CICLO en rojo NO (salvo `sinTope`): es el freno del
+ * gasto del ciclo, y es pasivo (no corta una llamada a mitad, decide antes de empezar). El otro
+ * freno, el de UNA corrida, lo aplica `correrPasos` antes de cada paso.
  */
 export function debeArrancar(presupuesto, { sinTope = false } = {}) {
   if (!presupuesto) return { ok: true, motivo: '' };
   if (presupuesto.semaforo === 'rojo' && !sinTope) {
-    return { ok: false, motivo: `presupuesto del mes en rojo: $${Number(presupuesto.gastadoUsd).toFixed(2)} de $${presupuesto.presupuestoUsd}. No arranco (--sin-tope para forzar).` };
+    return { ok: false, motivo: `presupuesto del ciclo en rojo (${presupuesto.ciclo?.texto ?? 'mes'}): $${Number(presupuesto.gastadoUsd).toFixed(2)} de $${presupuesto.presupuestoUsd}. No arranco (--sin-tope para forzar).` };
   }
   return { ok: true, motivo: '' };
 }
+
+/** Pasos seguidos en error a partir de los cuales la noche se frena sola. */
+export const MAX_ERRORES_SEGUIDOS = 3;
 
 /**
  * Corre los pasos en orden. Cada paso: { nombre, correr: async () => ({ detalle, costoUsd?, saltado?, datos? }) }.
  * Un paso que tira queda 'error' con el mensaje; uno que devuelve `saltado` queda 'saltado'; con
  * `solo` los demas quedan 'saltado'. Nunca tira: devuelve [{ nombre, estado, detalle, costoUsd, datos }].
+ *
+ * DOS CORTES, los dos antes de arrancar un paso (la noche decide, no corta una llamada a mitad):
+ *   - TOPE POR CORRIDA. `topeCorridaUsd` (null = sin tope): si lo gastado en ESTA corrida (la suma del
+ *     costoUsd de los pasos ya hechos, tambien los que fallaron: se cobraron) SUPERA el tope, los pasos
+ *     que faltan quedan 'saltado' con el detalle "tope por corrida ($X de $8)". Es el tope de Anthropic
+ *     para una corrida que se descontrola (3 a 5 veces el costo normal); el otro tope es el del ciclo.
+ *   - PASOS SIN RESULTADO. Si `maxErroresSeguidos` pasos EJECUTADOS quedan en error uno detras de otro
+ *     (un 'ok' reinicia la cuenta; un 'saltado' no cuenta ni reinicia), la noche se frena: algo de
+ *     fondo anda mal (sin red, clave vencida) y seguir solo gasta. Los que faltan quedan 'saltado'.
+ * Las filas afectadas llevan `corte` ('tope_corrida' | 'errores_seguidos') y `corteDetalle`.
  */
-export async function correrPasos(pasos, { solo = null, alTerminar = () => {} } = {}) {
+export async function correrPasos(pasos, { solo = null, alTerminar = () => {}, topeCorridaUsd = null, maxErroresSeguidos = MAX_ERRORES_SEGUIDOS } = {}) {
   const out = [];
+  let gastado = 0;
+  let seguidos = 0;
+  let corte = null;                       // { motivo, detalle } una vez decidido, vale para el resto
   for (const p of pasos) {
     let fila;
     if (solo && p.nombre !== solo) {
       fila = { nombre: p.nombre, estado: 'saltado', detalle: `--solo ${solo}`, costoUsd: 0, datos: null };
     } else {
-      try {
-        const r = (await p.correr()) || {};
-        fila = {
-          nombre: p.nombre,
-          estado: r.saltado ? 'saltado' : 'ok',
-          detalle: String(r.detalle ?? ''),
-          costoUsd: Number(r.costoUsd) || 0,
-          datos: r.datos ?? null,
-        };
-      } catch (e) {
-        fila = {
-          nombre: p.nombre, estado: 'error', detalle: String(e?.message ?? e).slice(0, 400),
-          costoUsd: Number(e?.costoUsd ?? e?.respuesta?.costoUsd) || 0, datos: null,
-        };
+      if (!corte && topeCorridaUsd != null && gastado > topeCorridaUsd) {
+        corte = { motivo: 'tope_corrida', detalle: `tope por corrida (${plata(gastado)} de $${Number(topeCorridaUsd)})` };
+      }
+      if (corte) {
+        fila = { nombre: p.nombre, estado: 'saltado', detalle: corte.detalle, costoUsd: 0, datos: null, corte: corte.motivo, corteDetalle: corte.detalle };
+      } else {
+        try {
+          const r = (await p.correr()) || {};
+          fila = {
+            nombre: p.nombre,
+            estado: r.saltado ? 'saltado' : 'ok',
+            detalle: String(r.detalle ?? ''),
+            costoUsd: Number(r.costoUsd) || 0,
+            datos: r.datos ?? null,
+          };
+        } catch (e) {
+          fila = {
+            nombre: p.nombre, estado: 'error', detalle: String(e?.message ?? e).slice(0, 400),
+            costoUsd: Number(e?.costoUsd ?? e?.respuesta?.costoUsd) || 0, datos: null,
+          };
+        }
+        gastado += fila.costoUsd;
+        if (fila.estado === 'error') seguidos += 1; else if (fila.estado === 'ok') seguidos = 0;
+        if (seguidos >= maxErroresSeguidos) {
+          corte = { motivo: 'errores_seguidos', detalle: `${seguidos} pasos seguidos en error: se frena la noche` };
+          fila.corte = corte.motivo;
+          fila.corteDetalle = corte.detalle;
+        }
       }
     }
     out.push(fila);
@@ -176,9 +207,62 @@ export function lineasDeMails(pedidos, respuesta) {
 // Novedades de Claude
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** ¿Toca leer novedades esta noche? Los lunes, o si `avisoHook` dice que paso una semana. */
+/**
+ * ¿Toca el resumen LARGO (Sonnet, hasta 8 renglones, sobre la semana)? Los lunes, o si `avisoHook` dice
+ * que paso una semana sin una lectura completa. Desde el 08/10/2026 la lectura corre todos los dias; lo
+ * que cambia con el dia es el resumen: el diario es corto y con Haiku.
+ */
 export function tocaNovedades(ahora, aviso) {
   return ahora.getDay() === 1 || !!String(aviso ?? '').trim();
+}
+
+/**
+ * Que hacer con las novedades de hoy, puro. `hayNovedades`: ¿el texto a resumir trae algo (un posteo o una
+ * version nueva)? Sin eso no vale una llamada. Con algo nuevo: el lunes (o pasada una semana) Sonnet con el
+ * resumen largo; cualquier otro dia Haiku `low` con el corto. Devuelve { accion: 'saltar' | 'haiku' |
+ * 'sonnet', modelo, effort, system, maxTokens, tarea, largo }.
+ */
+export function planNovedades(ahora, aviso, hayNovedades) {
+  if (!hayNovedades) return { accion: 'saltar', largo: false };
+  if (tocaNovedades(ahora, aviso)) {
+    return { accion: 'sonnet', modelo: 'sonnet', effort: 'medium', system: SYSTEM_NOVEDADES, maxTokens: 8000, tarea: 'nocturno:novedades', largo: true };
+  }
+  return { accion: 'haiku', modelo: 'haiku', effort: 'low', system: SYSTEM_NOVEDADES_DIARIO, maxTokens: 4000, tarea: 'nocturno:novedades-diario', largo: false };
+}
+
+/**
+ * El texto del resumen LARGO: los listados de la semana. Como la lectura corre todos los dias y su
+ * estado avanza todos los dias, el listado del lunes trae SOLO lo del dia; la semana se arma juntando los
+ * `novedades_*.md` de los ultimos `dias`. `listados`: [{ f, ms, texto }]. Los que no traen nada nuevo se
+ * saltean; el mas nuevo va primero; `tope` caracteres en total (lo mas viejo es lo que se corta).
+ */
+export function juntarListados(listados, { ahoraMs = Date.now(), dias = 7, tope = 120000 } = {}) {
+  const desde = ahoraMs - dias * 86400000;
+  const piezas = (Array.isArray(listados) ? listados : [])
+    .filter((x) => x && Number(x.ms) >= desde && !novedadesSinCambios(x.texto))
+    .sort((a, b) => b.ms - a.ms)
+    .map((x) => `## ${x.f}\n\n${String(x.texto).trim()}`);
+  let total = 0;
+  const entran = [];
+  for (const pieza of piezas) {
+    if (entran.length && total + pieza.length > tope) break;
+    entran.push(pieza);
+    total += pieza.length;
+  }
+  return entran.join('\n\n---\n\n');
+}
+
+/**
+ * Resume las novedades segun el plan. `llamarModelo(opciones)` se inyecta (en la noche es `llamar` con el
+ * cliente; en el test, uno de mentira): devuelve { texto, costoUsd }. Con plan 'saltar' no llama a nadie.
+ * Un resumen vacio es un error (con el costo adentro: se cobro), nunca un "sin novedades" mudo.
+ */
+export async function resumirNovedades({ plan, texto, llamarModelo }) {
+  if (!plan || plan.accion === 'saltar') return { resumen: null, costoUsd: 0, modelo: null, llamo: false };
+  const resp = await llamarModelo({ modelo: plan.modelo, effort: plan.effort, system: plan.system, usuario: texto, maxTokens: plan.maxTokens, tarea: plan.tarea });
+  const resumen = String(resp?.texto ?? '').trim();
+  if (!resumen) throw Object.assign(new Error('el resumen de novedades vino vacio'), { costoUsd: Number(resp?.costoUsd) || 0 });
+  return { resumen, costoUsd: Number(resp?.costoUsd) || 0, modelo: plan.modelo, llamo: true };
 }
 
 /** Un listado de _novedadesClaude.mjs sin posteos ni versiones nuevas no vale una llamada. */
@@ -194,6 +278,221 @@ export const SYSTEM_NOVEDADES = `Leés el listado de novedades de Claude Code (p
 
 Solo lo que está en el listado; cada renglón con la URL del posteo o "registro de cambios <versión>". Sin introducción ni cierre. Si no hay nada que sirva ni que pueda romper, un solo renglón: "- sin novedades que nos toquen".`;
 
+/** El resumen de todos los dias: lo mismo pero corto (Haiku) y sobre lo de hoy. El de los lunes (Sonnet) es el largo. */
+export const SYSTEM_NOVEDADES_DIARIO = `Leés lo nuevo de hoy sobre Claude Code (posteos públicos del equipo de Anthropic y el registro de cambios oficial) para un repo de ingeniería de procesos que usa Claude Code todos los días con hooks, skills, subagentes, scripts en Node y la API de Anthropic. Devolvés como mucho 4 renglones, en castellano rioplatense simple, cada uno con la forma:
+
+- nos sirve: <qué y para qué, en una frase> — <URL>
+- nos puede romper: <qué y por qué, en una frase> — <URL>
+
+Solo lo que está en el texto; cada renglón con la URL del posteo o "registro de cambios <versión>". Sin introducción ni cierre. Si no hay nada que sirva ni que pueda romper, un solo renglón: "- sin novedades que nos toquen".`;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Prioridades: hasta 4 renglones que ordenan lo que YA existe
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// Casi todo es codigo; el modelo solo ORDENA. Las entradas son cosas que ya existen y que otro script
+// ya calcula (seguimientos con fecha, hilos de tareas abiertas con mails nuevos, la cola del Escritorio,
+// los mails sin respuesta que acaba de resumir el paso `mails` y el resultado de los pasos de esta
+// misma noche). Cada entrada lleva una FUENTE de una lista cerrada que arma el codigo:
+//   seguimiento:<id> · hilo:<tarea> · mail:<asunto> · escritorio:<carpeta> · noche:<paso>
+// y el codigo DESCARTA todo renglon cuya fuente no este en la entrada: un renglon sin fuente real es un
+// invento (regla: la maquina puede matar un hallazgo, nunca aprobar un dato). Es una SUGERENCIA para la
+// sesion de la manana, que la contrasta con la fuente antes de decirle algo a Fak.
+
+export const TOPE_PRIORIDADES = 4;
+const TOPE_ESCRITORIO = 80;
+const TOPE_ESCRITORIO_EN_ESPERA = 20;
+const TOPE_HILOS = 10;
+
+/** Para comparar fuentes: sin diferencia de mayusculas ni de espacios repetidos. */
+export const normalizarFuente = (f) => String(f ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+
+const fechaCorta = (ms) => { const d = new Date(ms); return `${p2(d.getDate())}/${p2(d.getMonth() + 1)}`; };
+
+/** Las lineas "- <id>: ..." de `node scripts/_seguimientos.mjs --hook`. Si dice que NO SE PUDO LEER, eso tambien es una entrada. */
+export function entradasSeguimientos(textoHook) {
+  const out = [];
+  const texto = String(textoHook ?? '');
+  for (const linea of texto.split(/\r?\n/)) {
+    const m = /^- ([A-Za-z0-9_.-]+): (.+)$/.exec(linea.trim());
+    if (m) out.push({ fuente: `seguimiento:${m[1]}`, texto: corto(m[2], 400) });
+  }
+  if (/NO SE PUDO LEER/i.test(texto)) {
+    out.push({ fuente: 'noche:seguimientos', texto: 'no se pudo leer la memoria de seguimientos con fecha: mientras tanto nadie avisa que toca insistir' });
+  }
+  return out;
+}
+
+/** `cruce` de `_hilosAbiertos.mjs --json`: tareas del Escritorio con mails del mismo hilo que la carpeta no tiene. */
+export function entradasHilos(cruce) {
+  return (Array.isArray(cruce) ? cruce : []).slice(0, TOPE_HILOS).map((t) => {
+    const nuevos = Array.isArray(t.nuevos) ? t.nuevos : [];
+    const u = nuevos[nuevos.length - 1] || {};
+    const n = nuevos.length;
+    return {
+      fuente: `hilo:${corto(t.nombre, 80)}`,
+      texto: `${n} mail${n === 1 ? '' : 's'} nuevo${n === 1 ? '' : 's'} del mismo hilo desde el ${t.desde ? fechaCorta(t.desde) : '?'}; el último, ${String(u.fecha ?? '').slice(0, 10)} de ${corto(u.de, 30)}: «${corto(u.asunto, 60)}»${t.enEspera ? ' (la tarea está en _EN ESPERA)' : ''}`,
+    };
+  });
+}
+
+/** Carpetas del Escritorio: SOLO el nombre y los dias (por la fecha del archivo, que es aproximada: OneDrive la pisa). */
+export function entradasEscritorio(carpetas) {
+  const lista = Array.isArray(carpetas) ? carpetas : [];
+  const raiz = lista.filter((c) => !c.enEspera).slice(0, TOPE_ESCRITORIO);
+  const espera = lista.filter((c) => c.enEspera).slice(0, TOPE_ESCRITORIO_EN_ESPERA);
+  return [...raiz, ...espera].map((c) => ({
+    fuente: `escritorio:${corto(c.nombre, 80)}`,
+    texto: `carpeta sin cambios hace ${Math.max(0, Number(c.dias) || 0)} día${Number(c.dias) === 1 ? '' : 's'} (por la fecha del archivo, aproximado)${c.enEspera ? ' · está en _EN ESPERA (baja prioridad)' : ''}`,
+  }));
+}
+
+/** Lo que dejo el paso `mails` de esta noche (la salida de `lineasDeMails`). */
+export function entradasMails(lineas) {
+  return (Array.isArray(lineas) ? lineas : []).map((m) => ({
+    fuente: `mail:${corto(m.asunto, 120)}`,
+    texto: `${Number(m.dias) || 0} días sin respuesta · de ${corto(m.de, 30)} · área ${m.area || 'otra'}: ${corto(m.linea, 120)}`,
+  }));
+}
+
+/** Los pasos de esta noche que ya corrieron: un error se dice; la pre-auditoria dice cuantos hallazgos dejo para verificar. */
+export function entradasNoche({ pasos = [], hallazgos = null } = {}) {
+  const out = [];
+  for (const p of pasos) {
+    if (p.estado === 'error') out.push({ fuente: `noche:${p.nombre}`, texto: `el paso ${p.nombre} de esta noche falló: ${corto(p.detalle, 150)}` });
+  }
+  if (hallazgos && hallazgos.total > 0) {
+    out.push({ fuente: 'noche:preauditoria', texto: `la pre-auditoría de AMFE dejó ${hallazgos.total} hallazgo${hallazgos.total === 1 ? '' : 's'} para verificar (${hallazgos.nuevos || 0} nuevo${hallazgos.nuevos === 1 ? '' : 's'}) en el reporte de reports/staging` });
+  }
+  return out;
+}
+
+/**
+ * Junta las entradas de todas las fuentes. Cada fuente de DATOS se pide con una funcion (`leer`) que se
+ * inyecta: si una tira, el paso sigue con las otras y el motivo queda en `avisos` (no se pierde en silencio).
+ * `fuentes`: { seguimientos: () => texto, hilos: () => cruce, escritorio: () => carpetas }.
+ * Dos entradas con la misma fuente (dos mails con el mismo asunto) quedan en una: la primera.
+ * Devuelve { entradas: [{ fuente, texto }], avisos: [texto] }.
+ */
+export function reunirEntradas({ fuentes = {}, mails = [], pasos = [], hallazgos = null } = {}) {
+  const avisos = [];
+  const leer = (nombre, fn, entradas) => {
+    if (typeof fn !== 'function') return [];
+    try { return entradas(fn()); } catch (e) { avisos.push(`${nombre}: ${corto(e?.message ?? e, 120)}`); return []; }
+  };
+  const todas = [
+    ...leer('seguimientos', fuentes.seguimientos, entradasSeguimientos),
+    ...leer('hilos abiertos', fuentes.hilos, entradasHilos),
+    ...entradasMails(mails),
+    ...leer('Escritorio', fuentes.escritorio, entradasEscritorio),
+    ...entradasNoche({ pasos, hallazgos }),
+  ];
+  const vistas = new Set();
+  const entradas = [];
+  for (const e of todas) {
+    const k = normalizarFuente(e.fuente);
+    if (!k || vistas.has(k)) continue;
+    vistas.add(k);
+    entradas.push(e);
+  }
+  return { entradas, avisos };
+}
+
+export const SYSTEM_PRIORIDADES = `Ordenás lo que tiene pendiente Facundo, ingeniero de procesos de Barack Mercosul (autopartista argentina), para que la sesión de la mañana sepa por dónde empezar. Te paso una lista de ENTRADAS; cada una empieza con su FUENTE entre corchetes (por ejemplo [seguimiento:reunion-amfe-calidad]). Son cosas que ya existen: seguimientos con fecha (hay que volver a insistir en una fecha), tareas abiertas del Escritorio que tienen mails nuevos en su hilo, mails que nadie contestó, carpetas del Escritorio y resultados de la noche.
+
+Devolvés hasta 4 renglones, del más urgente al menos urgente. Cada renglón: "fuente" (copiada EXACTA de una entrada de la lista; si la copiás distinta, el renglón se descarta), "texto" (qué hacer hoy, en una frase de hasta 120 caracteres, en castellano rioplatense simple) y "porque" (por qué hoy, hasta 80 caracteres: vencido, respuesta nueva, N días sin contestar, hoy toca insistir).
+
+Reglas: usá solo lo que dicen las entradas; no inventes plazos, nombres, números ni mails que no estén. No propongas qué contestar ni qué valores poner: decí qué mirar o hacer. Lo que está en _EN ESPERA es de baja prioridad: solo si algo más lo hace urgente. Si hay menos de 4 cosas que valgan la pena, devolvé menos; si no hay ninguna, una lista vacía. Devolvés SOLO el JSON del esquema.`;
+
+/** El esquema, con la lista cerrada de fuentes como `enum` (ademas el codigo vuelve a filtrar). */
+export function schemaPrioridades(fuentes) {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    required: ['renglones'],
+    properties: {
+      renglones: {
+        type: 'array',
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['fuente', 'texto', 'porque'],
+          properties: {
+            fuente: { type: 'string', enum: [...fuentes] },
+            texto: { type: 'string', description: 'que hacer hoy, hasta 120 caracteres' },
+            porque: { type: 'string', description: 'por que hoy, hasta 80 caracteres' },
+          },
+        },
+      },
+    },
+  };
+}
+
+/** El mensaje: una linea por entrada, "[fuente] texto". `fecha` es el dia de la noche, ya escrito ("jueves 08/10/2026"). */
+export function armarPedidoPrioridades(entradas, { fecha = '' } = {}) {
+  const lista = entradas.map((e) => `[${e.fuente}] ${e.texto}`).join('\n');
+  return {
+    usuario: `Hoy es ${fecha || 'hoy'}.\n\nENTRADAS:\n${lista}\n\nDevolvé el JSON con hasta ${TOPE_PRIORIDADES} renglones, del más urgente al menos urgente.`,
+    schema: schemaPrioridades(entradas.map((e) => e.fuente)),
+  };
+}
+
+/**
+ * Lo que volvio del modelo contra lo que se le mando. Se DESCARTA todo renglon cuya fuente no este en
+ * las entradas (comparada sin mayusculas ni espacios repetidos; se queda con la fuente escrita por el
+ * codigo, no la del modelo), el que viene sin texto y el que repite una fuente. Maximo 4.
+ * Devuelve { renglones: [{ fuente, texto, porque }], descartados: [{ fuente, motivo }] }.
+ */
+export function filtrarRenglones(respuesta, entradas, { tope = TOPE_PRIORIDADES } = {}) {
+  const canonica = new Map(entradas.map((e) => [normalizarFuente(e.fuente), e.fuente]));
+  const renglones = [];
+  const descartados = [];
+  const usadas = new Set();
+  for (const r of Array.isArray(respuesta?.renglones) ? respuesta.renglones : []) {
+    const clave = normalizarFuente(r?.fuente);
+    const texto = corto(r?.texto, 140);
+    if (!canonica.has(clave)) { descartados.push({ fuente: corto(r?.fuente, 80), motivo: 'su fuente no estaba en la entrada' }); continue; }
+    if (usadas.has(clave)) { descartados.push({ fuente: canonica.get(clave), motivo: 'fuente repetida' }); continue; }
+    if (!texto) { descartados.push({ fuente: canonica.get(clave), motivo: 'sin texto' }); continue; }
+    if (renglones.length >= tope) { descartados.push({ fuente: canonica.get(clave), motivo: `pasaba el tope de ${tope}` }); continue; }
+    usadas.add(clave);
+    renglones.push({ fuente: canonica.get(clave), texto, porque: corto(r?.porque, 100) });
+  }
+  return { renglones, descartados };
+}
+
+/** "1. [fuente] que hacer · por que hoy" */
+export const lineaRenglon = (r, i) => `${i + 1}. [${r.fuente}] ${r.texto}${r.porque ? ` · ${r.porque}` : ''}`;
+
+/** El contenido de .claude/state/prioridades.md: dice arriba para quien es. */
+export function textoPrioridades({ renglones, descartados = [], fecha = '', avisos = [] }) {
+  const L = [`# Prioridades sugeridas por la noche — ${fecha}`, ''];
+  L.push('**Para la sesión de Claude de la mañana, no para Fak.** Son sugerencias de un modelo que ordena cosas que ya existen; cada renglón nombra su fuente entre corchetes. Antes de decirle algo a Fak se contrasta con esa fuente (el seguimiento, el hilo, el mail, la carpeta) y se descarta lo que ya no sea cierto.', '');
+  if (renglones.length) L.push(...renglones.map(lineaRenglon));
+  else L.push('Sin prioridades esta noche (no había entradas, o ninguna valía un renglón).');
+  if (descartados.length) L.push('', `_Descartados por el código: ${descartados.length} (${descartados.map((d) => `${d.fuente || '?'}: ${d.motivo}`).join('; ')})_`);
+  if (avisos.length) L.push('', `_Fuentes que no se pudieron leer: ${avisos.join('; ')}_`);
+  return `${L.join('\n')}\n`;
+}
+
+/**
+ * El paso entero con el modelo inyectado. `llamarModelo(opciones)` -> { json, costoUsd }. Sin entradas NO se
+ * llama al modelo (0 entradas no es un pedido). Devuelve { renglones, descartados, entradas, llamo, costoUsd, detalle }.
+ */
+export async function generarPrioridades({ entradas, llamarModelo, fecha = '' }) {
+  if (!entradas.length) {
+    return { renglones: [], descartados: [], entradas: 0, llamo: false, costoUsd: 0, detalle: '0 entradas: no se llamó al modelo' };
+  }
+  const resp = await llamarModelo({ modelo: 'sonnet', effort: 'medium', system: SYSTEM_PRIORIDADES, ...armarPedidoPrioridades(entradas, { fecha }), maxTokens: 8000, tarea: 'nocturno:prioridades' });
+  const costoUsd = Number(resp?.costoUsd) || 0;
+  if (!Array.isArray(resp?.json?.renglones)) throw Object.assign(new Error('la respuesta de prioridades no trae la lista "renglones"'), { costoUsd });
+  const { renglones, descartados } = filtrarRenglones(resp.json, entradas);
+  return {
+    renglones, descartados, entradas: entradas.length, llamo: true, costoUsd,
+    detalle: `${renglones.length} ${renglones.length === 1 ? 'renglón' : 'renglones'} de ${entradas.length} entradas${descartados.length ? ` (${descartados.length} descartado${descartados.length === 1 ? '' : 's'} por el código)` : ''}`,
+  };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Estado de la noche y linea del tablero
 // ─────────────────────────────────────────────────────────────────────────────
@@ -206,9 +505,11 @@ const plata = (x) => `$${(Math.round((Number(x) || 0) * 100) / 100).toFixed(2).r
 /**
  * La linea que lee el tablero:
  * "Noche 08/10 06:31 · pre-auditoría AMFE: 3 revisados · 2 hallazgos para verificar (1 nuevo) ·
- *  4 mails resumidos · novedades: sin cambios · $0,41 (mes $12,30 de $100, verde)"
+ *  4 mails resumidos · prioridades: 4 · novedades: sin cambios · $0,41 (mes $12,30 de $170, verde)"
+ * Si el paso `prioridades` no corrio, esa parte no aparece. Si la noche se corto sola, termina en
+ * "CORTADA: tope por corrida ($9,00 de $8)" o "CORTADA: 3 pasos seguidos en error: se frena la noche".
  */
-export function lineaTablero({ fin, pasos = [], costoUsd = 0, presupuesto = null, noArranco = '' } = {}) {
+export function lineaTablero({ fin, pasos = [], costoUsd = 0, presupuesto = null, noArranco = '', prioridades = null } = {}) {
   const f = fin instanceof Date ? fin : new Date(fin ?? Date.now());
   const partes = [`Noche ${ddmm(f)} ${hhmm(f)}`];
   if (noArranco) {
@@ -225,12 +526,20 @@ export function lineaTablero({ fin, pasos = [], costoUsd = 0, presupuesto = null
       if (mails.estado === 'error') partes.push(`mails: ERROR (${corto(mails.detalle, 80)})`);
       else if (mails.estado === 'ok') partes.push(mails.detalle || 'mails: ok');
     }
+    const pri = paso('prioridades');
+    if (pri) {
+      if (pri.estado === 'error') partes.push(`prioridades: ERROR (${corto(pri.detalle, 60)})`);
+      else if (pri.estado === 'ok') partes.push(`prioridades: ${Array.isArray(prioridades) ? prioridades.length : (pri.detalle || 'ok')}`);
+    }
     const nov = paso('novedades');
     if (nov) {
       if (nov.estado === 'error') partes.push(`novedades: ERROR (${corto(nov.detalle, 60)})`);
       else if (nov.estado === 'ok') partes.push(`novedades: ${nov.detalle || 'ok'}`);
-      else if (nov.estado === 'saltado' && !/^--solo/.test(nov.detalle)) partes.push('novedades: no tocaba');
+      else if (nov.estado === 'saltado' && !nov.corte && !/^--solo/.test(nov.detalle)) partes.push('novedades: no tocaba');
     }
+    // la noche se corto sola (tope por corrida o pasos seguidos en error): que se vea en la linea
+    const cortada = pasos.find((p) => p.corte);
+    if (cortada) partes.push(`CORTADA: ${cortada.corteDetalle || cortada.detalle}`);
   }
   const mes = presupuesto ? ` (mes ${plata(presupuesto.gastadoUsd)} de $${presupuesto.presupuestoUsd}, ${presupuesto.semaforo})` : '';
   partes.push(`${plata(costoUsd)}${mes}`);
@@ -238,7 +547,7 @@ export function lineaTablero({ fin, pasos = [], costoUsd = 0, presupuesto = null
 }
 
 /** El JSON de .claude/state/nocturno.json (lo lee el tablero y la sesion de la manana). */
-export function armarEstado({ inicio, fin, pasos = [], presupuesto = null, noArranco = '', mails = [], hallazgos = null, reporte = null, resumenNovedades = null }) {
+export function armarEstado({ inicio, fin, pasos = [], presupuesto = null, noArranco = '', mails = [], hallazgos = null, reporte = null, resumenNovedades = null, prioridades = null }) {
   const costoUsd = Math.round(pasos.reduce((s, p) => s + (Number(p.costoUsd) || 0), 0) * 1e6) / 1e6;
   const fi = fin instanceof Date ? fin : new Date(fin);
   const ini = inicio instanceof Date ? inicio : new Date(inicio);
@@ -248,12 +557,15 @@ export function armarEstado({ inicio, fin, pasos = [], presupuesto = null, noArr
     inicio: local(ini),
     fin: local(fi),
     finMs: fi.getTime(),
-    pasos: pasos.map(({ nombre, estado, detalle, costoUsd: c }) => ({ nombre, estado, detalle, costoUsd: Number(c) || 0 })),
+    pasos: pasos.map(({ nombre, estado, detalle, costoUsd: c, corte }) => ({ nombre, estado, detalle, costoUsd: Number(c) || 0, ...(corte ? { corte } : {}) })),
     costoUsd,
     presupuesto,
     noArranco: noArranco || null,
-    lineaTablero: lineaTablero({ fin: fi, pasos, costoUsd, presupuesto, noArranco }),
+    // si la noche se frena sola (tope por corrida, pasos seguidos en error), el motivo queda anotado aca
+    corte: (() => { const c = pasos.find((p) => p.corte); return c ? { motivo: c.corte, detalle: c.corteDetalle || c.detalle } : null; })(),
+    lineaTablero: lineaTablero({ fin: fi, pasos, costoUsd, presupuesto, noArranco, prioridades }),
     mails,
+    prioridades: Array.isArray(prioridades) ? prioridades : [],
     hallazgos,
     reporte,
     resumenNovedades,

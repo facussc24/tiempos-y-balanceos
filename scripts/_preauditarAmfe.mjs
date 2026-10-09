@@ -10,8 +10,10 @@
  * La logica pura vive en scripts/_lib/preauditoriaAmfe.mjs; las reglas, en .claude/rules/api-claude.md.
  *
  * Uso:
- *   node scripts/_preauditarAmfe.mjs                   los AMFE que cambiaron desde la ultima revision
- *   node scripts/_preauditarAmfe.mjs --simular         no gasta: proyecta, cuenta tokens y estima el costo
+ *   node scripts/_preauditarAmfe.mjs                   los AMFE que cambiaron desde la ultima revision, hasta 6 por corrida
+ *                                                      (los de updated_at mas viejo primero; el resto queda para la noche siguiente)
+ *   node scripts/_preauditarAmfe.mjs --max 3           otro tope por corrida (a mano, con --todos o --amfe no hay tope salvo que se pida)
+ *   node scripts/_preauditarAmfe.mjs --simular         no gasta: proyecta, cuenta tokens (o los aproxima, con rango x1,0 a x1,3) y estima el costo
  *   node scripts/_preauditarAmfe.mjs --todos           los 21 enteros, cambien o no
  *   node scripts/_preauditarAmfe.mjs --amfe AMFE-HF-PAT  uno solo
  *   node scripts/_preauditarAmfe.mjs --json            el resultado como JSON (para otro script)
@@ -28,10 +30,11 @@ import {
 } from './_lib/claudeApi.mjs';
 import { conectarSoloLectura, leerAmfesVivos } from './_lib/supabaseSoloLectura.mjs';
 import { parseData } from './_lib/amfeIo.mjs';
+import { escribirSeguro } from './_lib/escrituraSegura.mjs';
 import {
   proyectarAmfe, conocidosDelValidador, SYSTEM_REVISOR, armarPedidoRevisor, filtrarHallazgos,
-  SYSTEM_REFUTADOR, armarPedidoRefutador, aplicarVeredictos, amfesACorrer, estadoNuevo, marcarNuevos,
-  normalizarEstado, tokensAprox, armarReporte, lineaResumen,
+  SYSTEM_REFUTADOR, armarPedidoRefutador, aplicarVeredictos, amfesACorrer, elegirParaNoche, estadoNuevo, marcarNuevos,
+  normalizarEstado, tokensAprox, tokensConMargen, armarReporte, lineaResumen, TOPE_AMFE_POR_NOCHE,
 } from './_lib/preauditoriaAmfe.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
@@ -54,13 +57,11 @@ const SALIDA_SUPUESTA = { revisor: 4000, refutador: 5000 };
 
 const leerJson = (ruta) => { try { return JSON.parse(fs.readFileSync(ruta, 'utf8')); } catch { return null; } };
 
-/** Escribe a .tmp y renombra: un corte a mitad nunca deja un archivo a medias. */
-export function escribirAtomico(ruta, texto) {
-  fs.mkdirSync(path.dirname(ruta), { recursive: true });
-  const tmp = `${ruta}.tmp`;
-  fs.writeFileSync(tmp, texto, 'utf8');
-  fs.renameSync(tmp, ruta);
-}
+/**
+ * Alias de la escritura segura (scripts/_lib/escrituraSegura.mjs): a .tmp y renombrar, y SOLO en las
+ * carpetas permitidas de la noche. Queda exportado con el nombre viejo para no romper imports.
+ */
+export const escribirAtomico = escribirSeguro;
 
 const diaCompacto = (ahora) => selloLocal(ahora).slice(0, 10).replace(/-/g, '');
 
@@ -114,19 +115,53 @@ async function estimarUno(cliente, fila) {
     try { tokens = await contarTokens(cliente, { modelo: REVISOR.modelo, system: SYSTEM_REVISOR, usuario: pedido.usuario }); medido = true; } catch { /* se aproxima */ }
   }
   if (tokens == null) tokens = tokensAprox(SYSTEM_REVISOR) + tokensAprox(pedido.usuario);
+  // Lo aproximado es un RANGO (x1,0 a x1,3: el tokenizador nuevo da hasta 30 % mas); lo medido con
+  // count_tokens ya es el tokenizador real y no se infla.
+  const tokensMax = medido ? tokens : tokensConMargen(tokens);
   const revisor = estimarUsd(REVISOR.modelo, { entrada: tokens, salida: SALIDA_SUPUESTA.revisor });
   const refutador = estimarUsd(REFUTADOR.modelo, { entrada: tokens + 1500, salida: SALIDA_SUPUESTA.refutador });
-  return { amfe_number: fila.amfe_number, operaciones: proyeccion.operaciones, causas: proyeccion.causas.size, tokens, medido, revisor, refutador };
+  const revisorMax = estimarUsd(REVISOR.modelo, { entrada: tokensMax, salida: SALIDA_SUPUESTA.revisor });
+  const refutadorMax = estimarUsd(REFUTADOR.modelo, { entrada: tokensMax + 1500, salida: SALIDA_SUPUESTA.refutador });
+  return {
+    amfe_number: fila.amfe_number, operaciones: proyeccion.operaciones, causas: proyeccion.causas.size,
+    tokens, tokensMax, medido, revisor, refutador, revisorMax, refutadorMax,
+  };
 }
 
 /**
- * La pasada entera. Devuelve { revisados, saltados, hallazgos, nuevos, errores, costoUsd, reporte, linea }.
+ * El nombre del reporte de ESTA corrida. El del dia (PREAUDITORIA_AMFE_AAAAMMDD.md) si todavia no existe;
+ * si ya hay uno de otra corrida del mismo dia (la primera pasada completa se reparte en varias corridas
+ * por el tope), con la hora: una corrida nueva no pisa los hallazgos de la anterior.
+ */
+export function rutaReporte(dirReportes, ahora = new Date()) {
+  const dia = diaCompacto(ahora);
+  const delDia = path.join(dirReportes, `PREAUDITORIA_AMFE_${dia}.md`);
+  if (!fs.existsSync(delDia)) return delDia;
+  const hora = selloLocal(ahora).slice(11);
+  const conHora = path.join(dirReportes, `PREAUDITORIA_AMFE_${dia}_${hora.slice(0, 5).replace(':', '')}.md`);
+  if (!fs.existsSync(conHora)) return conHora;
+  return path.join(dirReportes, `PREAUDITORIA_AMFE_${dia}_${hora.replace(/:/g, '')}.md`);
+}
+
+const redondeo6 = (x) => Math.round(x * 1e6) / 1e6;
+
+/**
+ * La pasada entera. Devuelve { revisados, saltados, diferidos, hallazgos, nuevos, errores, costoUsd, reporte, linea }.
  * Con `simular` no escribe nada ni gasta; devuelve ademas `estimacion`.
  * Tira ErrorApi 'sin_clave' si falta la clave (salvo simulando) y un Error con `codigo: 2` si `amfe`
  * no existe.
+ *
+ * `max` es el tope de AMFE por corrida (la noche pasa TOPE_AMFE_POR_NOCHE): se revisan los de
+ * `updated_at` mas viejo y el resto queda `diferido` para la noche siguiente, sin tocar el estado. Con
+ * `amfe` (se pidio ese) no hay tope.
+ *
+ * INCREMENTAL. El estado (`estado.json`) y el reporte se escriben DESPUES DE CADA AMFE, no al final:
+ * el envoltorio de Windows corta el proceso a los 55 minutos, y una corrida cortada tiene que conservar
+ * lo ya revisado (y ya pagado). Las dos escrituras van juntas y sin `await` en el medio: un AMFE nunca
+ * queda marcado como revisado sin que sus hallazgos esten en el reporte.
  */
 export async function correr({
-  simular = false, todos = false, amfe = null, cliente = null, sb = null, ahora = new Date(),
+  simular = false, todos = false, amfe = null, max = null, cliente = null, sb = null, ahora = new Date(),
   dir = DIR_PREAUDITORIA, dirReportes = DIR_REPORTES, dirLedger = DIR_API, concurrencia = 3, log = () => {},
 } = {}) {
   let api = cliente;
@@ -135,62 +170,82 @@ export async function correr({
   const filas = await leerAmfesVivos(base, { minimo: 1 });
   const rutaEstado = path.join(dir, 'estado.json');
   const estado = normalizarEstado(leerJson(rutaEstado));
-  const aCorrer = amfesACorrer(filas, estado, { todos, soloAmfe: amfe });
-  if (amfe && !aCorrer.length) {
+  const hayQueRevisar = amfesACorrer(filas, estado, { todos, soloAmfe: amfe });
+  if (amfe && !hayQueRevisar.length) {
     const e = new Error(`no encuentro el AMFE "${amfe}" entre los ${filas.length} vivos (${filas.map((f) => f.amfe_number).slice(0, 8).join(', ')}…).`);
     e.codigo = 2;
     throw e;
   }
-  const elegidos = new Set(aCorrer.map((f) => f.amfe_number));
-  const saltados = amfe ? [] : filas.filter((f) => !elegidos.has(f.amfe_number));
-  log(`${filas.length} AMFE vivos · a revisar: ${aCorrer.length} · sin cambios desde la ultima revision: ${saltados.length}`);
+  // el tope por corrida: los que no entran NO se tocan y vuelven a la lista la noche siguiente
+  const { elegidos: aCorrer, diferidos } = elegirParaNoche(hayQueRevisar, estado, { max: amfe ? null : max, todos });
+  const porRevisar = new Set(hayQueRevisar.map((f) => f.amfe_number));
+  const saltados = amfe ? [] : filas.filter((f) => !porRevisar.has(f.amfe_number));
+  log(`${filas.length} AMFE vivos · a revisar: ${aCorrer.length}${diferidos.length ? ` (${diferidos.length} quedan para la proxima noche)` : ''} · sin cambios desde la ultima revision: ${saltados.length}`);
 
   if (simular) {
     const estimacion = await enParalelo(aCorrer, concurrencia, (f) => estimarUno(api, f));
-    const revisor = estimacion.reduce((s, x) => s + (x.revisor || 0), 0);
-    const refutador = estimacion.reduce((s, x) => s + (x.refutador || 0), 0);
+    const suma = (campo) => estimacion.reduce((s, x) => s + (x[campo] || 0), 0);
+    const [revisor, refutador, revisorMax, refutadorMax] = ['revisor', 'refutador', 'revisorMax', 'refutadorMax'].map(suma);
+    const nota = diferidos.length ? ` · ${diferidos.length} quedan para la próxima noche` : '';
     return {
-      simulado: true, revisados: 0, saltados: saltados.length, hallazgos: 0, nuevos: 0,
+      simulado: true, revisados: 0, saltados: saltados.length, diferidos: diferidos.length, hallazgos: 0, nuevos: 0,
       errores: estimacion.filter((x) => x.error).length, costoUsd: 0, reporte: null, estimacion,
       estimadoUsd: { soloRevisor: revisor, probable: revisor + refutador / 2, tope: revisor + refutador },
-      linea: `simulado: ${aCorrer.length} AMFE a revisar · ${usd(revisor)} el revisor · hasta ${usd(revisor + refutador)} si todos pasan al refutador`,
+      // el mismo calculo con +30 % de tokens en lo aproximado (igual al de arriba si todo se midio con count_tokens)
+      estimadoMaxUsd: { soloRevisor: revisorMax, probable: revisorMax + refutadorMax / 2, tope: revisorMax + refutadorMax },
+      linea: `simulado: ${aCorrer.length} AMFE a revisar · ${usd(revisor)} el revisor · hasta ${usd(revisor + refutador)} si todos pasan al refutador${nota}`,
     };
   }
 
-  const resultados = await enParalelo(aCorrer, concurrencia, async (f) => {
+  // ── la pasada: estado y reporte se guardan AMFE por AMFE ──
+  const rutaInforme = rutaReporte(dirReportes, ahora);
+  const fecha = selloLocal(ahora).slice(0, 16);
+  const hechos = new Array(aCorrer.length);          // en el orden de aCorrer, aunque terminen desordenados
+  let estadoActual = estado;
+  const guardar = () => {
+    const parciales = hechos.filter(Boolean);
+    escribirSeguro(rutaEstado, `${JSON.stringify(estadoActual, null, 2)}\n`);
+    escribirSeguro(rutaInforme, armarReporte({
+      fecha, resultados: parciales, saltados, diferidos, enCurso: aCorrer.length - parciales.length,
+      costoUsd: redondeo6(parciales.reduce((s, r) => s + (r.costoUsd || 0), 0)),
+      presupuesto: presupuestoDelMes({ dir: dirLedger }), estado: estadoActual,
+    }));
+  };
+  await enParalelo(aCorrer, concurrencia, async (f, i) => {
     const r = await revisarUno(api, f, estado, { dirLedger });
     log(`  ${f.amfe_number}: ${r.error ? `ERROR ${r.error}` : `${r.mantenidos.length} hallazgo(s) · propuso ${r.propuestos} · ${usd(r.costoUsd)}`}`);
+    // sin await de aca hasta guardar(): el resultado, el estado y el reporte quedan o no quedan juntos
+    hechos[i] = r;
+    if (!r.error) estadoActual = estadoNuevo(estadoActual, [r], { ahora });
+    guardar();
     return r;
   });
+  if (!aCorrer.length) guardar();                     // nada que revisar: igual queda el estado y el reporte del dia
 
-  const costoUsd = Math.round(resultados.reduce((s, r) => s + (r.costoUsd || 0), 0) * 1e6) / 1e6;
-  const estado2 = estadoNuevo(estado, resultados, { ahora });
-  escribirAtomico(rutaEstado, `${JSON.stringify(estado2, null, 2)}\n`);
-  const fecha = selloLocal(ahora).slice(0, 16);
+  const resultados = hechos.filter(Boolean);
+  const costoUsd = redondeo6(resultados.reduce((s, r) => s + (r.costoUsd || 0), 0));
   const presupuesto = presupuestoDelMes({ dir: dirLedger });
-  const reporte = path.join(dirReportes, `PREAUDITORIA_AMFE_${diaCompacto(ahora)}.md`);
-  escribirAtomico(reporte, armarReporte({ fecha, resultados, saltados, costoUsd, presupuesto, estado: estado2 }));
-
   const errores = resultados.filter((r) => r.error).length;
   const resumen = {
     revisados: resultados.length - errores,
     saltados: saltados.length,
+    diferidos: diferidos.length,
     hallazgos: resultados.reduce((s, r) => s + r.mantenidos.length, 0),
     nuevos: resultados.reduce((s, r) => s + r.mantenidos.filter((h) => h.nuevo).length, 0),
     errores,
     costoUsd,
   };
-  return { ...resumen, reporte, linea: lineaResumen(resumen), presupuesto };
+  return { ...resumen, reporte: rutaInforme, linea: lineaResumen(resumen), presupuesto };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CLI
 // ─────────────────────────────────────────────────────────────────────────────
 
-const USO = 'uso: node scripts/_preauditarAmfe.mjs [--simular] [--todos | --amfe <numero>] [--json]';
+const USO = `uso: node scripts/_preauditarAmfe.mjs [--simular] [--todos | --amfe <numero>] [--max <N>] [--json]   (--max por defecto ${TOPE_AMFE_POR_NOCHE}; con --todos o --amfe, sin tope)`;
 
 async function main(argv) {
-  const CON_VALOR = ['--amfe'];
+  const CON_VALOR = ['--amfe', '--max'];
   const SIN_VALOR = ['--simular', '--todos', '--json'];
   const op = {};
   for (let i = 0; i < argv.length; i++) {
@@ -201,24 +256,34 @@ async function main(argv) {
     return 2;
   }
   if (op['--todos'] && op['--amfe']) { console.error(`--todos y --amfe juntos no: uno u otro.\n${USO}`); return 2; }
+  if (op['--max'] !== undefined && !/^[1-9]\d{0,3}$/.test(op['--max'])) { console.error(`--max va con un numero entero de 1 en adelante, no "${op['--max']}". No hago nada.\n${USO}`); return 2; }
   const comoJson = !!op['--json'];
+  // sin --max: el tope de la noche para la pasada incremental; una pasada pedida a mano (--todos, --amfe) va entera
+  const max = op['--max'] !== undefined ? Number(op['--max']) : (op['--todos'] || op['--amfe']) ? null : TOPE_AMFE_POR_NOCHE;
   try {
     const r = await correr({
-      simular: !!op['--simular'], todos: !!op['--todos'], amfe: op['--amfe'] || null,
+      simular: !!op['--simular'], todos: !!op['--todos'], amfe: op['--amfe'] || null, max,
       log: comoJson ? () => {} : (t) => console.log(t),
     });
     if (comoJson) { console.log(JSON.stringify(r)); return r.errores ? 1 : 0; }
     if (r.simulado) {
       for (const x of r.estimacion) {
         console.log(x.error ? `  ${x.amfe_number}: ${x.error}`
-          : `  ${x.amfe_number}: ${x.operaciones} op · ${x.causas} causas · ${x.tokens} tokens${x.medido ? '' : ' (aprox.)'} · revisor ${usd(x.revisor)} · refutador ${usd(x.refutador)}`);
+          : `  ${x.amfe_number}: ${x.operaciones} op · ${x.causas} causas · ${x.tokens} tokens${x.medido ? '' : ` (aprox.: hasta ${x.tokensMax} con el tokenizador nuevo)`} · revisor ${usd(x.revisor)} · refutador ${usd(x.refutador)}`);
       }
-      console.log(`Estimado: ${usd(r.estimadoUsd.soloRevisor)} solo el revisor · ${usd(r.estimadoUsd.probable)} probable · ${usd(r.estimadoUsd.tope)} tope. (simulado: no se gasto ni se guardo nada)`);
+      const e = r.estimadoUsd;
+      const m = r.estimadoMaxUsd;
+      console.log(`Estimado: ${usd(e.soloRevisor)} solo el revisor · ${usd(e.probable)} probable · ${usd(e.tope)} tope.`);
+      if (m && Math.round(m.tope * 100) !== Math.round(e.tope * 100)) {
+        console.log(`Con +30 % de tokens (el tokenizador nuevo, en lo aproximado): ${usd(m.soloRevisor)} solo el revisor · ${usd(m.probable)} probable · ${usd(m.tope)} tope.`);
+      }
+      if (r.diferidos) console.log(`${r.diferidos} AMFE quedan para la proxima noche (tope --max ${max}).`);
+      console.log('(simulado: no se gasto ni se guardo nada)');
       return r.errores ? 1 : 0;
     }
     console.log(r.linea);
     console.log(`Reporte (para la sesion de la manana, no para Fak): ${r.reporte}`);
-    if (r.presupuesto) console.log(`Mes: ${usd(r.presupuesto.gastadoUsd)} de ${usd(r.presupuesto.presupuestoUsd)} (${r.presupuesto.semaforo})`);
+    if (r.presupuesto) console.log(`${r.presupuesto.ciclo?.texto ?? 'Mes'}: ${usd(r.presupuesto.gastadoUsd)} de ${usd(r.presupuesto.presupuestoUsd)} (${r.presupuesto.semaforo})`);
     return r.errores ? 1 : 0;
   } catch (e) {
     if (e instanceof ErrorApi && e.tipo === 'sin_clave') { console.error(e.message); return 3; }

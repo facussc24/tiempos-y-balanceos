@@ -2,8 +2,9 @@
  * _claude.mjs — el tablero de control de la API de Anthropic (los creditos mensuales del plan Max).
  *
  * Los creditos NO cubren Claude Code: solo se gastan con una clave de API de la organizacion
- * vinculada al plan. Este script dice si esa clave esta, si anda, cuanto se gasto en el mes y si la
- * noche de Claude esta agendada; y deja pegar la clave sin que pase por el chat.
+ * vinculada al plan, y vencen al final de cada CICLO de facturacion (BARACK_API_CICLO_DIA = el dia en
+ * que se renueva; por defecto 1). Este script dice si esa clave esta, si anda, cuanto se gasto en el
+ * ciclo y si la noche de Claude esta agendada; y deja pegar la clave sin que pase por el chat.
  *
  * Uso:
  *   node scripts/_claude.mjs --check                que hay y que falta (la clave nunca se muestra)
@@ -11,7 +12,7 @@
  *                                                   escribe en .env.local (con copia antes), la prueba
  *                                                   y, si anda, agenda la noche
  *   node scripts/_claude.mjs --probar               una llamada minima a Haiku ("OK") y su costo
- *   node scripts/_claude.mjs --ledger [--mes 2026-10]  gasto del mes por modelo y por tarea
+ *   node scripts/_claude.mjs --ledger [--mes 2026-10]  gasto del ciclo (el actual, o el que arranca en ese mes) por modelo y por tarea
  *   node scripts/_claude.mjs --preguntar "texto" [--modelo opus|sonnet|haiku|fable]
  *
  * Sale con 0 ok · 1 algo anda mal · 2 argumento · 3 falta la clave · 4 se cancelo el cuadro.
@@ -22,7 +23,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import {
-  crearCliente, leerClave, llamar, verificarAcceso, presupuestoDelMes, leerLedger, resumenLedger, mesLocal,
+  crearCliente, leerClave, llamar, verificarAcceso, presupuestoDelMes, leerLedgerCiclo, resumenLedger, cicloDia, topeCorridaUsd,
   selloLocal, usd, resolverModelo, MENSAJE_SIN_CLAVE, ErrorApi,
 } from './_lib/claudeApi.mjs';
 import { psRun } from './_lib/powershell.mjs';
@@ -212,9 +213,11 @@ async function check() {
     else { mal(`acceso: ${acceso.detalle}`); falta.push('que la API acepte la clave (ver el error de arriba)'); codigo = 1; }
   }
 
+  // los creditos vencen por CICLO de facturacion, no por mes calendario (BARACK_API_CICLO_DIA, por defecto 1)
   const p = presupuestoDelMes();
-  (p.semaforo === 'rojo' ? mal : ok)(`presupuesto ${p.mes}: ${usd(p.gastadoUsd)} de ${usd(p.presupuestoUsd)} (${p.porcentaje} %, ${p.semaforo})`);
-  if (p.semaforo === 'rojo') falta.push('el mes esta en rojo: la noche no arranca hasta el mes que viene (o --sin-tope)');
+  (p.semaforo === 'rojo' ? mal : ok)(`presupuesto, ${p.ciclo.texto}: ${usd(p.gastadoUsd)} de ${usd(p.presupuestoUsd)} (${p.porcentaje} %, ${p.semaforo})`);
+  if (p.semaforo === 'rojo') falta.push(`el ciclo esta en rojo: la noche no arranca hasta que se renueve (el ${p.ciclo.proximo}) o con --sin-tope`);
+  console.log(`  · el ciclo arranca el dia ${cicloDia()}${process.env.BARACK_API_CICLO_DIA ? '' : ' (por defecto; si el plan se renueva otro dia, fijar BARACK_API_CICLO_DIA)'} · la noche frena sola si UNA corrida pasa de ${usd(topeCorridaUsd())} (BARACK_API_TOPE_CORRIDA_USD)`);
 
   let tarea = { agendada: false };
   try { tarea = leerEstadoTarea(psRun(comandoEstadoTarea(), { timeout: 30000 })); } catch (e) { tarea = { agendada: false, error: String(e?.message ?? e).split(/\r?\n/)[0] }; }
@@ -256,10 +259,11 @@ async function probar() {
 const col = (s, n) => String(s).padEnd(n);
 const num = (x) => String(Math.round(Number(x) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
+/** El gasto de un CICLO de facturacion: el actual, o (con `mes`) el que arranca en ese mes. */
 function ledger(mes) {
-  const r = resumenLedger(leerLedger(mes));
   const p = presupuestoDelMes({ mes });
-  console.log(`Gasto de la API en ${mes}: ${usd(r.totalUsd)} de ${usd(p.presupuestoUsd)} (${p.porcentaje} %, ${p.semaforo}) · ${r.llamadas} llamada(s)${r.desde ? ` · ${r.desde} a ${r.hasta}` : ''}`);
+  const r = resumenLedger(leerLedgerCiclo(p.ciclo));
+  console.log(`Gasto de la API en el ${p.ciclo.texto}: ${usd(r.totalUsd)} de ${usd(p.presupuestoUsd)} (${p.porcentaje} %, ${p.semaforo}) · ${r.llamadas} llamada(s)${r.desde ? ` · ${r.desde} a ${r.hasta}` : ''}`);
   if (!r.llamadas) return 0;
   console.log(`\n  ${col('modelo', 20)}${col('llamadas', 10)}${col('entrada', 12)}${col('salida', 12)}${col('cache leido', 13)}USD`);
   for (const [m, x] of Object.entries(r.porModelo).sort((a, b) => b[1].usd - a[1].usd)) {
@@ -303,7 +307,7 @@ async function main(argv) {
   try {
     if (op['--check']) return await check();
     if (op['--pegar-clave']) return await pegarClave();
-    if (op['--ledger']) return ledger(op['--mes'] || mesLocal());
+    if (op['--ledger']) return ledger(op['--mes'] || null);
     if (op['--probar']) return await probar();
     return await preguntar(op['--preguntar'], op['--modelo'] || 'opus');
   } catch (e) {

@@ -37,7 +37,7 @@ noche», «hasta que vuelva», «ponete un cronómetro»), ANTES de seguir con l
    no está: `stop_session` y un mensaje para que siga por otro camino.
 4. **El resumen para Fak va cuando llega la hora**, no antes. Ahí: `--terminar`, `CronDelete` y el resumen.
 5. **Nada que le muestre un cartel de aprobación** mientras no está (me quedaría colgado), y los topes siguen
-   valiendo: el techo de agentes, el cupo (mirarlo cada dos horas) y lo que el contrato de autonomía marca «preguntar».
+   valiendo: el techo de agentes, el cupo (mirarlo **cada hora** con `get_usage`, no cada dos: el 08/10 a las 23:40 la ventana de 5 h estaba al 93 % con el corte a las 02:00 y el reinicio a las 03:20; pasado el **85 %** de esa ventana no se lanzan subagentes, se termina a mano lo abierto, y con menos del 10 % de contexto libre tampoco: un agente que vuelve despues de compactar se pierde, Fak 08/10) y lo que el contrato de autonomía marca «preguntar».
    Lo que necesita a Fak se anota en la lista para cuando vuelva; no frena el resto.
 6. Si Fak dice que pare: `--terminar --porque "<sus palabras>"`.
 7. Si con una hora vigente Fak da más tiempo («te doy 1 hora más», 04/10/2026 a las 18:48 con el corte en 19:10), las

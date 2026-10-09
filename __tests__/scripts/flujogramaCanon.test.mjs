@@ -239,9 +239,11 @@ describe('canon de flujogramas', () => {
         const mutar160 = (fn) => { const c = structuredClone(U160); fn(c); return c; };
         const ramaCorte = (c) => c.flow.find((n) => n.branches).branches[0];
 
-        /** El 160 tal como lo emiti a las 14:45: una sola columna y ningun control intermedio. */
+        /** El 160 tal como lo emiti a las 14:45: una sola columna y ningun control intermedio.
+         *  Va en Rev.A a proposito: el 160 real ya paso a Rev.B (08/10/2026) y en Rev.B la
+         *  diferencia con los hermanos solo avisa; el ROJO de esa regla es de la Rev.A. */
         const PRIMERA_VERSION = {
-            header: U160.header, products: U160.products, revisions: U160.revisions,
+            header: { ...U160.header, revision: 'A' }, products: U160.products, revisions: U160.revisions,
             flow: [
                 { stepId: '10', type: 'operation', description: 'RECEPCIÓN DE MATERIA PRIMA' },
                 { type: 'inspection', description: 'INSPECCIÓN DE MATERIA PRIMA' },

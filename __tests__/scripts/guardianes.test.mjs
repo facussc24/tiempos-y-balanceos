@@ -314,8 +314,12 @@ describe('mail-guard (casos de mail-guard.test.sh)', () => {
     expect(ev(escribir('x.py', 'import win32com.client\nol=win32com.client.Dispatch("Outlook.Application")\nm=ol.CreateItem(0)\nm.Send()')).exit).toBe(2);
     expect(ev(editar('x.py', 'ol=Dispatch("Outlook.Application")\nmsg=ol.CreateItem(0)\nmsg.Send()')).exit).toBe(2);
   });
-  it('deja pasar la via autorizada, Display, ReplyAll sin enviar, leer mails y un Send que no es Outlook', () => {
-    expect(ev(bash('python scripts/_mailEnviar.py --buscar "APB TRA CEN" --enviar')).exit).toBe(0);
+  it('bloquea _mailEnviar --enviar sin el OK de Fak despues del borrador (08/10), y --forzar no es escape', () => {
+    expect(ev(bash('python scripts/_mailEnviar.py --buscar "APB TRA CEN" --enviar')).exit).toBe(2);
+    expect(ev(bash('python scripts/_mailEnviar.py --id ABC --forzar --enviar')).exit).toBe(2);
+  });
+  it('deja pasar la via autorizada en dry-run, Display, ReplyAll sin enviar, leer mails y un Send que no es Outlook', () => {
+    expect(ev(bash('python scripts/_mailEnviar.py --buscar "APB TRA CEN"')).exit).toBe(0);
     expect(ev(bash('python -c "import win32com.client as w; w.Dispatch(\\"Outlook.Application\\").CreateItem(0).Display()"')).exit).toBe(0);
     expect(ev(bash('python scripts/_mails.py --buscar Nieve')).exit).toBe(0);
     expect(ev(bash('node -e "socket.Send()"')).exit).toBe(0);

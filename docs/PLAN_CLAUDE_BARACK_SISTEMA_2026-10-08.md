@@ -51,9 +51,12 @@ Opus 5.5 por defecto y en Fable para mejoras grandes de código (decisión del 0
 mide si está bien calibrado: `scripts/_tokens.mjs`, que desde hoy cuenta cada mensaje una sola vez
 (antes inflaba 2,15 veces).
 
-Lo que NO se hace: el «advisor tool» de la API no existe en Claude Code (es una herramienta de la API:
-un modelo barato ejecuta y consulta a uno caro). Donde sí sirve es en la noche de Claude: el refutador de
-la pre-auditoría puede ser Sonnet con Opus de asesor. Va en la fase 3, cuando haya clave.
+**Corrección 08/10 a la noche (lo trajo la investigación R1):** el «advisor tool» SÍ existe en Claude
+Code: `/advisor`, `advisorModel`, `--advisor` (experimental; en la app desde la v2.1.260; los
+subagentes lo heredan). Queda activado `advisorModel: "opus"` en el settings de Fak: los agentes en
+Sonnet consultan a Opus en los puntos de decisión, y la sesión en Opus tiene una segunda opinión.
+Reversible con `/advisor off`. En la API, el advisor para el refutador de la pre-auditoría se
+DESCARTA por costo (R3: sale más caro que Opus solo porque el asesor relee el AMFE entero).
 
 ### 1.2 Dos circuitos de actualización, no uno
 
@@ -65,6 +68,14 @@ la pre-auditoría puede ser Sonnet con Opus de asesor. Va en la fase 3, cuando h
 De ellos hacia Fak: `--aportar` deja la mejora en `BUZON\aportes\<autor>\`; `vigia.mjs` me la muestra al
 arrancar; yo la reviso contra el repo y, si entra, va a la próxima versión. **Fak decide con una línea
 mía («Carlos mandó X; ¿entra?»)**, no revisando archivos.
+
+**Criterio de Fak para el circuito del equipo (08/10, 23:30):** Carlos va a armar SUS propias skills y sus
+caminos. Lo que le baja de Fak es solo lo seguro y probado que mejore SU flujo; **nada invasivo: no se le
+borra ni se le pisa nada**. Y la instalación deja de ser un doble clic que decide solo: el paquete llega
+por la nube con un prompt, y **el Claude de SU PC lo instala junto con Carlos**, que dice qué aplica y qué
+no (Fak: *«capaz siempre es mejor que un Claude en su PC decida la mejor forma de instalar el paquete
+junto con Carlos»*). Esto cambia `_paquete.mjs`: deja el paquete y el prompt en su buzón en vez de
+instalar. Se diseña a fondo en la fase 2/3; nada se publica sin el sí de Fak.
 
 «100 % probado» para el circuito del equipo significa, en este orden: pruebas del repo en verde, el
 filtro `validarTexto` (nada de Facundo en el paquete), el ensayo de instalación en una PC de mentira, y un
@@ -149,6 +160,10 @@ Lo que sí es nuestro y hay que revisar (fase 3): los guardianes de ESTE repo vi
 completo». Están calibrados para frenar lo irreversible (mails, servidor, arb, Supabase). Se audita que
 ninguno conteste «no puedo» sin dar el camino (regla de Fak, 06/10: «un control que contesta no puedo es
 un error mío de diseño»).
+
+**Pedro (Fak, 08/10 23:30: *«sigo preocupado por lo que le pasamos a Pedro»*):** lo instalado en su PC
+(el pendrive del 08/10) se revisa en la fase 2 con el mismo criterio que Carlos: qué le quedó, qué frena,
+y si se corrige o se saca. Nada se toca en su PC sin el sí de Fak.
 
 ### 1.7 El mail que no vi: hilos abiertos
 

@@ -1,28 +1,45 @@
 /**
- * _nocturno.mjs — la noche de Claude: gasta los creditos mensuales de la API (plan Max) en trabajo
- * util mientras la notebook no se usa, y deja el resultado para la sesion de la manana.
+ * _nocturno.mjs — la noche de Claude: gasta los creditos de la API (plan Max) en trabajo util mientras
+ * la notebook no se usa, y deja el resultado para la sesion de la manana.
  *
  * Pasos (cada uno independiente: el que falla queda 'error' y los demas siguen):
- *   0. clave presente (si no, exit 3) y presupuesto del mes (en rojo no arranca, salvo --sin-tope)
- *   1. preauditoria  la pre-auditoria de los AMFE que cambiaron (scripts/_preauditarAmfe.mjs)
+ *   0. clave presente (si no, exit 3) y presupuesto del CICLO de facturacion (en rojo no arranca, salvo --sin-tope)
+ *   1. preauditoria  la pre-auditoria de los AMFE que cambiaron (scripts/_preauditarAmfe.mjs), hasta 6 por
+ *                    noche (los de updated_at mas viejo primero; el resto queda para la noche siguiente). El
+ *                    estado y el reporte se guardan AMFE por AMFE: una corrida cortada conserva lo hecho.
  *   2. mails         hasta 12 pedidos sin respuesta, una linea cada uno con su area (Haiku). Se
  *                    ETIQUETA el area, no se filtra nada.
- *   3. novedades     los lunes (o si paso una semana): _novedadesClaude.mjs y un resumen de 8
- *                    renglones "nos sirve / nos puede romper" (Sonnet)
+ *   3. prioridades   hasta 4 renglones "[fuente] que hacer · por que hoy" que ORDENAN lo que ya existe
+ *                    (seguimientos con fecha, hilos de tareas abiertas con mails nuevos, mails sin
+ *                    respuesta, carpetas del Escritorio, lo que dejo esta misma noche). Una llamada a
+ *                    Sonnet; el codigo descarta todo renglon cuya fuente no este en la entrada. Va a
+ *                    .claude/state/prioridades.md: es una sugerencia para la sesion de la manana, no para Fak.
+ *   4. novedades     TODOS los dias: _novedadesClaude.mjs y, si trae algo nuevo, un resumen corto de hasta 4
+ *                    renglones con Haiku; los lunes (o pasada una semana) el resumen largo de hasta 8 con
+ *                    Sonnet sobre los listados de la semana ("nos sirve / nos puede romper")
  * Deja .claude/state/nocturno.json (lo lee el tablero y la sesion de la manana) y una linea en
- * .sgc-cache/api/nocturno.log. No toca el repo, ni Supabase (solo lectura), ni el arb, ni Outlook.
+ * .sgc-cache/api/nocturno.log. No toca el repo, ni Supabase (solo lectura), ni el arb, ni Outlook: todo lo
+ * que escribe ESTE proceso pasa por scripts/_lib/escrituraSegura.mjs (solo .claude/state, .sgc-cache y
+ * reports/staging). Los scripts que lanza aparte (_novedadesClaude.mjs, _hilosAbiertos.mjs) escriben por su
+ * cuenta en esas mismas carpetas ignoradas, sin pasar por esa puerta.
  * La logica pura vive en scripts/_lib/nocturno.mjs; las reglas, en .claude/rules/api-claude.md.
+ *
+ * DOS FRENOS ademas del presupuesto del ciclo, los dos antes de cada paso:
+ *   - tope por corrida: BARACK_API_TOPE_CORRIDA_USD (por defecto $8). Si lo gastado en ESTA corrida lo
+ *     supera, los pasos que faltan quedan 'saltado' ("tope por corrida ($X de $8)") y la noche sale con 1.
+ *   - tres pasos seguidos en error: la noche se frena y lo anota.
+ *   --sin-tope levanta el del ciclo y el de la corrida.
  *
  * Uso:
  *   node scripts/_nocturno.mjs                    la noche entera (lo corre la tarea de Windows)
  *   node scripts/_nocturno.mjs --simular          que haria y cuanto costaria, sin gastar ni guardar
- *   node scripts/_nocturno.mjs --solo mails       un paso solo (preauditoria | mails | novedades)
- *   node scripts/_nocturno.mjs --sin-tope         corre aunque el presupuesto del mes este en rojo
- *   node scripts/_nocturno.mjs --estado           la ultima noche: linea, pasos y edad
+ *   node scripts/_nocturno.mjs --solo mails       un paso solo (preauditoria | mails | prioridades | novedades)
+ *   node scripts/_nocturno.mjs --sin-tope         corre aunque el presupuesto del ciclo este en rojo o la corrida pase su tope
+ *   node scripts/_nocturno.mjs --estado           la ultima noche: linea, pasos, prioridades y edad
  *   node scripts/_nocturno.mjs --agendar          registra la tarea diaria de las 06:30 (pide la clave)
  *   node scripts/_nocturno.mjs --desagendar       la borra
  *
- * Sale con 0 ok · 1 fallo un paso · 2 argumento · 3 falta la clave.
+ * Sale con 0 ok · 1 fallo un paso o la noche se corto sola · 2 argumento · 3 falta la clave.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -30,27 +47,35 @@ import readline from 'node:readline';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
-  crearCliente, leerClave, llamar, estimarUsd, presupuestoDelMes, selloLocal, usd, MENSAJE_SIN_CLAVE, DIR_API,
+  crearCliente, leerClave, llamar, estimarUsd, presupuestoDelMes, topeCorridaUsd, selloLocal, usd, MENSAJE_SIN_CLAVE, DIR_API,
 } from './_lib/claudeApi.mjs';
-import { correr as correrPreauditoria, escribirAtomico } from './_preauditarAmfe.mjs';
-import { tokensAprox } from './_lib/preauditoriaAmfe.mjs';
+import { correr as correrPreauditoria } from './_preauditarAmfe.mjs';
+import { tokensAprox, TOPE_AMFE_POR_NOCHE } from './_lib/preauditoriaAmfe.mjs';
+import { escribirSeguro, agregarSeguro } from './_lib/escrituraSegura.mjs';
 import { claveHilo, MAILS_JSONL } from './_lib/mailCache.mjs';
 import { cuerpoPropio } from './_lib/vozGate.mjs';
 import { avisoHook } from './_lib/novedadesClaude.mjs';
 import { psRun } from './_lib/powershell.mjs';
+import { listar, ESCRITORIO_DEFAULT, esEnEspera, clasificarEntrada, diasDesde } from './_escritorio.mjs';
 import {
   PASOS, NOMBRE_TAREA, HORA_TAREA, debeArrancar, correrPasos, elegirPedidos, emparejarMails, recortarCuerpo,
-  SYSTEM_MAILS, armarPedidoMails, lineasDeMails, tocaNovedades, novedadesSinCambios, SYSTEM_NOVEDADES,
+  SYSTEM_MAILS, armarPedidoMails, lineasDeMails, tocaNovedades, novedadesSinCambios, planNovedades, juntarListados, resumirNovedades,
+  reunirEntradas, armarPedidoPrioridades, SYSTEM_PRIORIDADES, generarPrioridades, textoPrioridades, lineaRenglon,
   armarEstado, edadHoras, comandoAgendar, comandoDesagendar, comandoEstadoTarea, leerEstadoTarea,
 } from './_lib/nocturno.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const RAIZ = path.resolve(AQUI, '..');
 export const RUTA_ESTADO = path.join(RAIZ, '.claude', 'state', 'nocturno.json');
+export const RUTA_PRIORIDADES = path.join(RAIZ, '.claude', 'state', 'prioridades.md');
 const RUTA_LOG = path.join(DIR_API, 'nocturno.log');
 const DIR_NOVEDADES = process.env.BARACK_NOVEDADES_DIR || path.join(RAIZ, '.sgc-cache', 'x-seguimiento');
 
 const leerJson = (ruta) => { try { return JSON.parse(fs.readFileSync(ruta, 'utf8')); } catch { return null; } };
+const DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const p2 = (x) => String(x).padStart(2, '0');
+/** "jueves 08/10/2026": el dia de la noche, escrito para el modelo (que no tiene reloj). */
+const fechaEscrita = (f) => `${DIAS_SEMANA[f.getDay()]} ${p2(f.getDate())}/${p2(f.getMonth() + 1)}/${f.getFullYear()}`;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Paso 2: mails sin respuesta
@@ -105,7 +130,61 @@ async function pasoMails({ cliente, simular }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Paso 3: novedades de Claude
+// Paso 3: prioridades del dia
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** El texto de `_seguimientos.mjs --hook` (siempre sale 0; vacio si no hay nada abierto o no hay memoria en esta PC). */
+function seguimientosHook() {
+  const r = spawnSync(process.execPath, [path.join(AQUI, '_seguimientos.mjs'), '--hook'], { encoding: 'utf8', timeout: 30000, cwd: RAIZ, windowsHide: true });
+  if (r.error) throw new Error(`no pude correr _seguimientos.mjs --hook: ${r.error.message}`);
+  return String(r.stdout || '');
+}
+
+/** El `cruce` de `_hilosAbiertos.mjs --json` (el JSON sale en varias lineas: se parsea la salida entera). */
+function hilosAbiertos() {
+  const r = spawnSync(process.execPath, [path.join(AQUI, '_hilosAbiertos.mjs'), '--json'], { encoding: 'utf8', timeout: 180000, cwd: RAIZ, windowsHide: true, maxBuffer: 32 * 1024 * 1024 });
+  if (r.error || r.status !== 0) throw new Error(`_hilosAbiertos.mjs --json: ${String(r.stderr || r.error?.message || `salio con ${r.status}`).trim().slice(0, 200)}`);
+  const datos = JSON.parse(String(r.stdout || '').trim());
+  return Array.isArray(datos?.cruce) ? datos.cruce : [];
+}
+
+/** Las carpetas del Escritorio (la cola de tareas) con sus dias sin cambios; `_EN ESPERA` se abre una por una. Solo nombres y dias. */
+function carpetasDelEscritorio(ahora) {
+  const ms = ahora.getTime();
+  const out = [];
+  for (const e of listar(ESCRITORIO_DEFAULT)) {
+    const clase = clasificarEntrada(e.nombre, e.dir);
+    if (clase === 'tarea') {
+      out.push({ nombre: e.nombre, dias: diasDesde(e.mtime, ms), enEspera: false });
+    } else if (clase === 'espera' && esEnEspera(e.nombre)) {
+      for (const t of listar(e.ruta)) {
+        if (clasificarEntrada(t.nombre, t.dir) === 'tarea') out.push({ nombre: t.nombre, dias: diasDesde(t.mtime, ms), enEspera: true });
+      }
+    }
+  }
+  return out.sort((a, b) => a.dias - b.dias);
+}
+
+async function pasoPrioridades({ cliente, simular, ahora, hechos, datos }) {
+  const { entradas, avisos } = reunirEntradas({
+    fuentes: { seguimientos: seguimientosHook, hilos: hilosAbiertos, escritorio: () => carpetasDelEscritorio(ahora) },
+    mails: datos.mails, pasos: hechos, hallazgos: datos.hallazgos,
+  });
+  const aviso = avisos.length ? ` · no se pudo leer: ${avisos.join('; ')}` : '';
+  const fecha = fechaEscrita(ahora);
+  if (simular) {
+    if (!entradas.length) return { detalle: `0 entradas: no llamaria al modelo (simulado)${aviso}`, datos: [] };
+    const est = estimarUsd('sonnet', { entrada: tokensAprox(SYSTEM_PRIORIDADES) + tokensAprox(armarPedidoPrioridades(entradas, { fecha }).usuario), salida: 2500 });
+    return { detalle: `${entradas.length} entradas para ordenar (simulado, ~${usd(est)})${aviso}`, datos: [] };
+  }
+  const r = await generarPrioridades({ entradas, fecha, llamarModelo: (opciones) => llamar(cliente, opciones) });
+  escribirSeguro(RUTA_PRIORIDADES, textoPrioridades({ renglones: r.renglones, descartados: r.descartados, fecha: selloLocal(ahora).slice(0, 16), avisos }));
+  datos.prioridades = r.renglones;
+  return { detalle: `${r.detalle}${aviso}`, costoUsd: r.costoUsd, datos: r.renglones };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Paso 4: novedades de Claude
 // ─────────────────────────────────────────────────────────────────────────────
 
 const listados = () => {
@@ -116,25 +195,34 @@ const listados = () => {
   } catch { return []; }
 };
 
+/** Los listados de los ultimos 7 dias con su texto (para el resumen largo del lunes). */
+const listadosDeLaSemana = (ahoraMs) => listados()
+  .filter((x) => x.ms >= ahoraMs - 7 * 86400000).slice(0, 12)
+  .map((x) => ({ f: x.f, ms: x.ms, texto: fs.readFileSync(path.join(DIR_NOVEDADES, x.f), 'utf8') }));
+
 async function pasoNovedades({ cliente, simular, ahora }) {
   const aviso = avisoHook(leerJson(path.join(DIR_NOVEDADES, '_estado.json')) || {}, ahora);
-  if (!tocaNovedades(ahora, aviso)) return { saltado: true, detalle: 'no tocaba (los lunes, o si paso una semana)' };
-  if (simular) return { detalle: 'tocaba: correria _novedadesClaude.mjs y un resumen con Sonnet (simulado)' };
+  const largo = tocaNovedades(ahora, aviso);
+  if (simular) {
+    return { detalle: `correria _novedadesClaude.mjs y, si trae algo nuevo, un resumen ${largo ? 'largo con Sonnet (la semana)' : 'corto con Haiku (lo de hoy)'} (simulado)` };
+  }
   const desde = Date.now() - 1000;
   const r = spawnSync(process.execPath, [path.join(AQUI, '_novedadesClaude.mjs')], { encoding: 'utf8', timeout: 10 * 60 * 1000, cwd: RAIZ, windowsHide: true });
   if (r.status !== 0) throw new Error(`_novedadesClaude.mjs salio con ${r.status}: ${String(r.stderr || r.stdout || r.error?.message || '').trim().slice(-200)}`);
   const nuevo = listados().find((x) => x.ms >= desde);
   if (!nuevo) throw new Error('_novedadesClaude.mjs no dejo un listado nuevo: resultado vacio');
-  const texto = fs.readFileSync(path.join(DIR_NOVEDADES, nuevo.f), 'utf8');
-  if (novedadesSinCambios(texto)) return { detalle: 'sin cambios', datos: { listado: nuevo.f } };
-  const resp = await llamar(cliente, { modelo: 'sonnet', effort: 'medium', system: SYSTEM_NOVEDADES, usuario: texto, maxTokens: 8000, tarea: 'nocturno:novedades' });
-  const resumen = resp.texto.trim();
-  if (!resumen) throw Object.assign(new Error('el resumen de novedades vino vacio'), { costoUsd: resp.costoUsd });
+  const hoy = fs.readFileSync(path.join(DIR_NOVEDADES, nuevo.f), 'utf8');
+  // la lectura corre todos los dias y su estado avanza todos los dias: el listado de hoy trae SOLO lo de hoy;
+  // el resumen largo del lunes necesita la semana
+  const texto = largo ? juntarListados(listadosDeLaSemana(ahora.getTime()), { ahoraMs: ahora.getTime() }) : hoy;
+  const plan = planNovedades(ahora, aviso, !novedadesSinCambios(texto));
+  if (plan.accion === 'saltar') return { detalle: 'sin cambios', datos: { listado: nuevo.f } };
+  const res = await resumirNovedades({ plan, texto, llamarModelo: (opciones) => llamar(cliente, opciones) });
   const sello = selloLocal(ahora).replace(/[: ]/g, '').replace(/-/g, '').slice(0, 12);
   const ruta = path.join(DIR_NOVEDADES, `resumen_${sello}.md`);
-  escribirAtomico(ruta, `# Novedades de Claude — resumen de la noche (${selloLocal(ahora).slice(0, 16)})\n\nDe ${nuevo.f}. Para la sesion de la manana: se cruza con lo que ya tenemos antes de proponerle algo a Fak; nada se aplica solo.\n\n${resumen}\n`);
-  const renglones = resumen.split(/\r?\n/).filter((l) => l.trim().startsWith('-')).length;
-  return { detalle: `${renglones} renglon(es) en ${path.basename(ruta)}`, costoUsd: resp.costoUsd, datos: { listado: nuevo.f, resumen: ruta } };
+  escribirSeguro(ruta, `# Novedades de Claude — resumen ${plan.largo ? 'de la semana' : 'de hoy'} (${selloLocal(ahora).slice(0, 16)})\n\nDe ${nuevo.f}${plan.largo ? ' y los listados de los ultimos 7 dias' : ''}. Para la sesion de la manana: se cruza con lo que ya tenemos antes de proponerle algo a Fak; nada se aplica solo.\n\n${res.resumen}\n`);
+  const renglones = res.resumen.split(/\r?\n/).filter((l) => l.trim().startsWith('-')).length;
+  return { detalle: `${renglones} renglon(es) en ${path.basename(ruta)} (${res.modelo})`, costoUsd: res.costoUsd, datos: { listado: nuevo.f, resumen: ruta } };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -142,9 +230,8 @@ async function pasoNovedades({ cliente, simular, ahora }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function guardarEstado(estado) {
-  escribirAtomico(RUTA_ESTADO, `${JSON.stringify(estado, null, 2)}\n`);
-  fs.mkdirSync(path.dirname(RUTA_LOG), { recursive: true });
-  fs.appendFileSync(RUTA_LOG, `${selloLocal()}  ${estado.lineaTablero}\n`, 'utf8');
+  escribirSeguro(RUTA_ESTADO, `${JSON.stringify(estado, null, 2)}\n`);
+  agregarSeguro(RUTA_LOG, `${selloLocal()}  ${estado.lineaTablero}\n`);
 }
 
 async function noche({ simular, solo, sinTope }) {
@@ -163,14 +250,15 @@ async function noche({ simular, solo, sinTope }) {
     return 0;
   }
 
-  const datos = { hallazgos: null, reporte: null, mails: [], resumenNovedades: null };
+  const datos = { hallazgos: null, reporte: null, mails: [], resumenNovedades: null, prioridades: null };
+  const hechos = [];                         // los pasos ya terminados: el de prioridades mira lo que dejaron
   const pasos = await correrPasos([
     {
       nombre: 'preauditoria',
       correr: async () => {
-        const r = await correrPreauditoria({ simular, cliente, ahora: inicio });
+        const r = await correrPreauditoria({ simular, cliente, ahora: inicio, max: TOPE_AMFE_POR_NOCHE });
         if (simular) return { detalle: r.linea };
-        datos.hallazgos = { revisados: r.revisados, saltados: r.saltados, total: r.hallazgos, nuevos: r.nuevos, errores: r.errores };
+        datos.hallazgos = { revisados: r.revisados, saltados: r.saltados, diferidos: r.diferidos, total: r.hallazgos, nuevos: r.nuevos, errores: r.errores };
         datos.reporte = r.reporte;
         if (r.errores && !r.revisados) throw Object.assign(new Error(`los ${r.errores} AMFE a revisar dieron error (ver ${path.basename(r.reporte)})`), { costoUsd: r.costoUsd });
         return { detalle: r.linea.replace(/ · \$[\d.]+$/, ''), costoUsd: r.costoUsd };
@@ -181,12 +269,20 @@ async function noche({ simular, solo, sinTope }) {
       correr: async () => { const r = await pasoMails({ cliente, simular }); datos.mails = r.datos || []; return r; },
     },
     {
+      nombre: 'prioridades',
+      correr: () => pasoPrioridades({ cliente, simular, ahora: inicio, hechos, datos }),
+    },
+    {
       nombre: 'novedades',
       correr: async () => { const r = await pasoNovedades({ cliente, simular, ahora: inicio }); datos.resumenNovedades = r.datos?.resumen ?? null; return r; },
     },
   ], {
     solo,
-    alTerminar: (p) => console.log(`[${p.estado}] ${p.nombre}: ${p.detalle}${p.costoUsd ? ` (${usd(p.costoUsd)})` : ''}`),
+    topeCorridaUsd: sinTope ? null : topeCorridaUsd(),
+    alTerminar: (p) => {
+      hechos.push(p);
+      console.log(`[${p.estado}] ${p.nombre}: ${p.detalle}${p.costoUsd ? ` (${usd(p.costoUsd)})` : ''}`);
+    },
   });
 
   const estado = armarEstado({ inicio, fin: new Date(), pasos, presupuesto: presupuestoDelMes(), ...datos });
@@ -196,8 +292,10 @@ async function noche({ simular, solo, sinTope }) {
     guardarEstado(estado);
     console.log(estado.lineaTablero);
     if (datos.reporte) console.log(`Reporte de la pre-auditoria (para la sesion de la manana): ${datos.reporte}`);
+    if (datos.prioridades) console.log(`Prioridades sugeridas (para la sesion de la manana): ${path.relative(RAIZ, RUTA_PRIORIDADES)}`);
   }
-  return pasos.some((p) => p.estado === 'error') ? 1 : 0;
+  if (estado.corte) console.log(`La noche se corto sola: ${estado.corte.detalle}.`);
+  return pasos.some((p) => p.estado === 'error' || p.corte) ? 1 : 0;
 }
 
 function mostrarEstado() {
@@ -206,8 +304,10 @@ function mostrarEstado() {
   const h = edadHoras(e);
   console.log(e.lineaTablero);
   console.log(`de hace ${h ?? '?'} h${h != null && h > 26 ? ' — VIEJO: la ultima noche no corrio o fallo antes de escribir' : ''}`);
+  if (e.corte) console.log(`  SE CORTO SOLA: ${e.corte.detalle}`);
   for (const p of e.pasos || []) console.log(`  [${p.estado}] ${p.nombre}: ${p.detalle}`);
   for (const m of e.mails || []) console.log(`  mail [${m.area}] ${m.asunto} — ${m.linea}`);
+  (e.prioridades || []).forEach((r, i) => console.log(`  prioridad ${lineaRenglon(r, i)}`));
   if (e.reporte) console.log(`  reporte: ${e.reporte}`);
   return 0;
 }

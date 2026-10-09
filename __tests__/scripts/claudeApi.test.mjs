@@ -13,11 +13,21 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import * as A from '../../scripts/_lib/claudeApi.mjs';
 
 let dir;
-beforeEach(() => { dir = fs.mkdtempSync(path.join(os.tmpdir(), 'claudeapi-test-')); });
-afterEach(() => { try { fs.rmSync(dir, { recursive: true, force: true }); } catch { /* temp */ } });
+let apiDirPrevio;
+beforeEach(() => {
+  dir = fs.mkdtempSync(path.join(os.tmpdir(), 'claudeapi-test-'));
+  // el ledger se escribe por escrituraSegura.mjs: solo en .sgc-cache o en la carpeta que diga BARACK_API_DIR
+  apiDirPrevio = process.env.BARACK_API_DIR;
+  process.env.BARACK_API_DIR = dir;
+});
+afterEach(() => {
+  if (apiDirPrevio === undefined) delete process.env.BARACK_API_DIR; else process.env.BARACK_API_DIR = apiDirPrevio;
+  try { fs.rmSync(dir, { recursive: true, force: true }); } catch { /* temp */ }
+});
 
 const respuesta = (extra = {}) => ({
   id: 'msg_1', model: 'claude-sonnet-5-5', stop_reason: 'end_turn',
@@ -149,19 +159,106 @@ describe('claudeApi · ledger y presupuesto', () => {
     expect(A.estadoPresupuesto({ gastadoUsd: 85, presupuestoUsd: 100 }).semaforo).toBe('amarillo');
     expect(A.estadoPresupuesto({ gastadoUsd: 100, presupuestoUsd: 100 }).semaforo).toBe('rojo');
     expect(A.presupuestoMensualUsd({ BARACK_API_PRESUPUESTO_USD: '200' })).toBe(200);
-    expect(A.presupuestoMensualUsd({})).toBe(100);
+    expect(A.presupuestoMensualUsd({})).toBe(170);                  // Max 20x ($200) con 15 % de colchon
+    expect(A.presupuestoMensualUsd({ BARACK_API_PRESUPUESTO_USD: 'cien' })).toBe(170);
+    expect(A.estadoPresupuesto({ gastadoUsd: 140 }).presupuestoUsd).toBe(170);
+    expect(A.estadoPresupuesto({ gastadoUsd: 140 }).semaforo).toBe('amarillo');
   });
 
   it('presupuestoDelMes lee el ledger real del mes', () => {
     A.registrarGasto({ modelo: 'claude-opus-5-5', usage: {}, costoUsd: 90 }, { dir, ahora: new Date(2026, 9, 1) });
-    const p = A.presupuestoDelMes({ mes: '2026-10', dir, env: {} });
+    const p = A.presupuestoDelMes({ mes: '2026-10', dir, env: { BARACK_API_PRESUPUESTO_USD: '100' } });
     expect(p).toMatchObject({ mes: '2026-10', gastadoUsd: 90, semaforo: 'amarillo' });
+    expect(A.presupuestoDelMes({ mes: '2026-10', dir, env: {} })).toMatchObject({ presupuestoUsd: 170, semaforo: 'verde' });
+    expect(() => A.presupuestoDelMes({ mes: 'octubre', dir, env: {} })).toThrow(/AAAA-MM/);
+  });
+
+  it('el tope por corrida de la noche: 8 por defecto, o el de BARACK_API_TOPE_CORRIDA_USD', () => {
+    expect(A.topeCorridaUsd({})).toBe(8);
+    expect(A.topeCorridaUsd({ BARACK_API_TOPE_CORRIDA_USD: '12.5' })).toBe(12.5);
+    expect(A.topeCorridaUsd({ BARACK_API_TOPE_CORRIDA_USD: '-3' })).toBe(8);
+    expect(A.topeCorridaUsd({ BARACK_API_TOPE_CORRIDA_USD: 'x' })).toBe(8);
   });
 
   it('fechas locales: mesLocal y selloLocal no se corren a UTC', () => {
     const f = new Date(2026, 9, 31, 23, 30, 5);
     expect(A.mesLocal(f)).toBe('2026-10');
     expect(A.selloLocal(f)).toBe('2026-10-31 23:30:05');
+  });
+
+  it('el ledger no escribe fuera de las carpetas permitidas (candado 1): tira y no crea nada', () => {
+    const raiz = path.resolve(fileURLToPath(import.meta.url), '../../..');
+    const prohibida = path.join(raiz, 'scripts');
+    expect(() => A.registrarGasto({ modelo: 'claude-opus-5-5', usage: {}, costoUsd: 1 }, { dir: prohibida, ahora: new Date(2026, 9, 1) })).toThrow(/escrituraSegura/);
+    expect(fs.existsSync(path.join(prohibida, 'ledger_2026-10.jsonl'))).toBe(false);
+  });
+});
+
+describe('claudeApi · el ciclo de facturacion (los creditos vencen por ciclo, no por mes calendario)', () => {
+  it('cicloDia: 1 por defecto; un dia de 1 a 31 se respeta; otra cosa cae a 1', () => {
+    expect(A.cicloDia({})).toBe(1);
+    expect(A.cicloDia({ BARACK_API_CICLO_DIA: '7' })).toBe(7);
+    expect(A.cicloDia({ BARACK_API_CICLO_DIA: '07' })).toBe(7);
+    expect(A.cicloDia({ BARACK_API_CICLO_DIA: '31' })).toBe(31);
+    for (const malo of ['0', '32', 'abc', '-1', '7.5', '']) expect(A.cicloDia({ BARACK_API_CICLO_DIA: malo }), malo).toBe(1);
+  });
+
+  it('con el dia en 1 el ciclo es el mes calendario', () => {
+    expect(A.cicloDe(new Date(2026, 9, 8))).toEqual({
+      dia: 1, mes: '2026-10', desde: '2026-10-01', hasta: '2026-10-31', proximo: '2026-11-01', texto: 'ciclo del 01/10 al 31/10',
+    });
+  });
+
+  it('un gasto del 28 y uno del 03 caen en el MISMO ciclo si se renueva el 7; el 06 a la noche tambien, el 07 ya no', () => {
+    const a = A.cicloDe(new Date(2026, 8, 28, 12), 7);
+    const b = A.cicloDe(new Date(2026, 9, 3, 6, 30), 7);
+    const c = A.cicloDe(new Date(2026, 9, 6, 23, 59, 59), 7);
+    expect(a).toMatchObject({ desde: '2026-09-07', hasta: '2026-10-06', proximo: '2026-10-07', mes: '2026-09', texto: 'ciclo del 07/09 al 06/10' });
+    expect(b).toEqual(a);
+    expect(c).toEqual(a);
+    const d = A.cicloDe(new Date(2026, 9, 7, 0, 0, 0), 7);
+    expect(d).toMatchObject({ desde: '2026-10-07', hasta: '2026-11-06', mes: '2026-10' });
+    expect(A.cicloDe(new Date(2026, 8, 6), 7).desde).toBe('2026-08-07');
+  });
+
+  it('el ciclo cruza el cambio de año', () => {
+    expect(A.cicloDe(new Date(2027, 0, 3), 7)).toMatchObject({ desde: '2026-12-07', hasta: '2027-01-06' });
+    expect(A.cicloDe(new Date(2026, 11, 7), 7)).toMatchObject({ desde: '2026-12-07', hasta: '2027-01-06', proximo: '2027-01-07' });
+  });
+
+  it('el dia 31 en un mes corto se corre al ultimo dia del mes', () => {
+    expect(A.cicloDe(new Date(2026, 1, 15), 31)).toMatchObject({ desde: '2026-01-31', hasta: '2026-02-27', proximo: '2026-02-28' });
+    expect(A.cicloDe(new Date(2026, 1, 28), 31)).toMatchObject({ desde: '2026-02-28', hasta: '2026-03-30', proximo: '2026-03-31' });
+    expect(A.cicloDe(new Date(2026, 2, 31), 31)).toMatchObject({ desde: '2026-03-31', proximo: '2026-04-30' });
+    expect(A.cicloDe(new Date(2028, 1, 29), 30)).toMatchObject({ desde: '2028-02-29', proximo: '2028-03-30' });   // bisiesto
+  });
+
+  it('presupuestoDelMes suma el gasto del ciclo en los DOS archivos del ledger y deja afuera lo de otros ciclos', () => {
+    const gasto = (usd, ahora) => A.registrarGasto({ modelo: 'claude-opus-5-5', usage: {}, costoUsd: usd }, { dir, ahora });
+    gasto(100, new Date(2026, 8, 6, 22));    // ciclo anterior (06/09, antes del 07)
+    gasto(10, new Date(2026, 8, 28, 10));    // ledger_2026-09, ciclo 07/09 al 06/10
+    gasto(20, new Date(2026, 9, 3, 6, 31));  // ledger_2026-10, mismo ciclo
+    gasto(1, new Date(2026, 9, 6, 23, 59));  // ultimo minuto del ciclo
+    gasto(5, new Date(2026, 9, 7, 6, 31));   // ciclo siguiente
+    const env = { BARACK_API_CICLO_DIA: '7' };
+    const enElCiclo = A.presupuestoDelMes({ dir, env, ahora: new Date(2026, 9, 3, 7) });
+    expect(enElCiclo).toMatchObject({ mes: '2026-09', gastadoUsd: 31, presupuestoUsd: 170, semaforo: 'verde' });
+    expect(enElCiclo.ciclo.texto).toBe('ciclo del 07/09 al 06/10');
+    // el ciclo siguiente solo ve lo suyo
+    expect(A.presupuestoDelMes({ dir, env, ahora: new Date(2026, 9, 8) }).gastadoUsd).toBe(5);
+    // pidiendo el mes: el ciclo que ARRANCA en ese mes
+    expect(A.presupuestoDelMes({ mes: '2026-09', dir, env }).gastadoUsd).toBe(31);
+    expect(A.presupuestoDelMes({ mes: '2026-08', dir, env }).gastadoUsd).toBe(100);
+    // gemelo: con el ciclo en 1 (mes calendario) el mismo ledger da otra cuenta
+    expect(A.presupuestoDelMes({ dir, env: {}, ahora: new Date(2026, 9, 3) }).gastadoUsd).toBe(26);
+  });
+
+  it('leerLedgerCiclo devuelve solo las entradas del ciclo', () => {
+    A.registrarGasto({ modelo: 'claude-opus-5-5', usage: {}, costoUsd: 3 }, { dir, ahora: new Date(2026, 9, 3) });
+    A.registrarGasto({ modelo: 'claude-opus-5-5', usage: {}, costoUsd: 4 }, { dir, ahora: new Date(2026, 9, 20) });
+    expect(A.leerLedgerCiclo(A.cicloDe(new Date(2026, 9, 5), 7), dir).map((e) => e.costoUsd)).toEqual([3]);    // 07/09 al 06/10
+    expect(A.leerLedgerCiclo(A.cicloDe(new Date(2026, 9, 10), 7), dir).map((e) => e.costoUsd)).toEqual([4]);   // 07/10 al 06/11
+    expect(A.leerLedgerCiclo(A.cicloDe(new Date(2026, 9, 10), 1), dir).map((e) => e.costoUsd)).toEqual([3, 4]);
   });
 });
 
