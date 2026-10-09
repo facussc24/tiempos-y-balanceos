@@ -6,7 +6,7 @@
   "_activado": "OP 40: la ficha tecnica del adhesivo FA de Fenoclor (HT.AD FA) dice que el pegado se hace por REACTIVACION con calor (infrarrojo, flash o aire caliente) y posterior prensado. Confirmado por Fak el 01/10/2026. La lista de herramentales de la pieza no tiene un horno ni otra maquina para eso, por eso el nombre no dice con que equipo. El unico papel de la pieza que nombra una fuente de calor es el flujo de proceso de la cotizacion (20/08/2025), y la nombra para el virolado manual: pistola de calor. Para el activado antes de posicionar, ningun papel dice con que.",
   "_troquelado": "OP 50: con el dispositivo troquelador neumatico cotizado el 27/08/2026 (Fak, 01/10/2026: 'asumamos que si'). La lista de herramentales y la cotizacion lo llaman troquelado.",
   "_nombres": "VIROLADO + REFILADO es el nombre de la casa para el cierre de bordes (flujogramas 105, 106, 107, 126, 127 del servidor). EMBOSSING es como lo llaman las hojas de proceso de la prensa y los mails de Carlos Baptista.",
-  "_reprocesos": "Rev. B, OK de Fak el 08/10/2026 (seguir el pedido de Cozzuol). Calidad reviso la Rev. A el 02/10/2026 (marcas de Cecilia Rodriguez sobre el flujograma y notas de Agustina) y pidio que los reprocesos 32, 71 y 72 no se dibujen: 'poner como operacion de terminacion'. Segun Fak, lo pidio el cliente (Cozzuol) en la visita del 02/10. Hasta ese dia entraban por el criterio de Fak del 23/09/2026 (todos los reprocesos conocidos y posibles desde la Rev. A). Las tareas no desaparecen: el repaso de adhesivo queda dentro de la 31 y la reactivacion de bordes y la limpieza de adhesivo dentro de la 70, y sus modos de falla siguen analizados en el AMFE 174 (IATF 16949 8.7.1.4 y RAC N 2 de la auditoria de 2019: un retrabajo sin analisis en el AMFE y sin instruccion fue una no conformidad). Lo que no pasa el control va a SCRAP.",
+  "_reprocesos": "09/10/2026, Fak: el documento queda en REV. A con una sola linea de historial (el historial no puede decir que se sacaron reprocesos); la Rev. B se crea despues de la reunion de AMFE. Contenido con OK de Fak el 08/10/2026 (seguir el pedido de Cozzuol). Calidad reviso la Rev. A el 02/10/2026 (marcas de Cecilia Rodriguez sobre el flujograma y notas de Agustina) y pidio que los reprocesos 32, 71 y 72 no se dibujen: 'poner como operacion de terminacion'. Segun Fak, lo pidio el cliente (Cozzuol) en la visita del 02/10. Hasta ese dia entraban por el criterio de Fak del 23/09/2026 (todos los reprocesos conocidos y posibles desde la Rev. A). Las tareas no desaparecen: el repaso de adhesivo queda dentro de la 31 y la reactivacion de bordes y la limpieza de adhesivo dentro de la 70, y sus modos de falla siguen analizados en el AMFE 174 (IATF 16949 8.7.1.4 y RAC N 2 de la auditoria de 2019: un retrabajo sin analisis en el AMFE y sin instruccion fue una no conformidad). Lo que no pasa el control va a SCRAP.",
   "_no_aplica": {
     "ADHESIVADO.reproceso": "Calidad y el cliente (Cozzuol), 02/10/2026: no se declara como reproceso; el repaso de adhesivo es parte de la operacion 31 y esta analizado en el AMFE 174.",
     "ADHESIVADO.retrabajo": "Idem: la pieza que no pasa la inspeccion va a SCRAP.",
@@ -16,9 +16,9 @@
   "header": {
     "title": "FLUJOGRAMA DE PROCESO UPPER TRIM PANEL — CONSOLA CENTRAL",
     "documentCode": "I-IN-002/III",
-    "revision": "B",
+    "revision": "A",
     "date": "01/10/2026",
-    "revisionDate": "08/10/2026",
+    "revisionDate": "01/10/2026",
     "preparedBy": "FACUNDO SANTORO",
     "reviewedBy": "CARLOS BAPTISTA",
     "project": "VW427 PATAGONIA",
@@ -27,15 +27,14 @@
     "specialChars": [ { "mark": "D/TLD", "meaning": "CARACTERÍSTICA CRÍTICA" } ],
     "footerNote": "Para toda operación marcada con D/TLD es obligatorio consultar el Plan de Control del UPPER TRIM PANEL y el AMFE 174 de esa operación."
   },
-  "_dtld": "Asignada por Fak el 08/10/2026 (propuesta del 02/10). Calidad pidio marcar la inflamabilidad ('proceso 10, poner D'). La marca de una operacion es la union de las siglas de sus causas en el AMFE 174: operacion 10 (microfibra sin antiflama, S=9 O=8; material sin liberar, S=9 O=4) y operacion 20 (se corta la version sin antiflama, S=9 O=8). Critica = S 9 o 10; para VW se escribe D/TLD.",
+  "_dtld": "09/10/2026: observacion del cliente (Cozzuol), transmitida por Fak: se saca la D/TLD del CORTE (operacion 20); queda solo en la 10. Pendiente alinear el AMFE 174 (causa de la 20 se corta la version sin antiflama, S=9 O=8). Antes: asignada por Fak el 08/10/2026 (propuesta del 02/10). Calidad pidio marcar la inflamabilidad ('proceso 10, poner D'). La marca de una operacion es la union de las siglas de sus causas en el AMFE 174: operacion 10 (microfibra sin antiflama, S=9 O=8; material sin liberar, S=9 O=4) y operacion 20 (se corta la version sin antiflama, S=9 O=8). Critica = S 9 o 10; para VW se escribe D/TLD.",
   "_conjuntos": "El plano 2HC.864.263 (C00610730_05, hoja 4) no le da numero propio a la cubierta suede ni a su sustrato (items 17 a 20): los numeros son de los CONJUNTOS. La cubierta SINGLE va en el .C y en el .D (agregado el 25/11/2025); el 'sin logo' / 'con logo' del plano es la tampografia del marco decorativo plastico, otra pieza: la cubierta lleva en los dos el simbolo de carga por embossing; la DUAL, en el .B. Hasta el 02/10/2026 esta tabla decia 'N de pieza cliente' y al SINGLE le faltaba el .D.",
   "products": [
     { "code": "MP8405", "level": "", "description": "SINGLE 50W SUEDE COVER FRAME", "version": "2HC.864.263.C / .D" },
     { "code": "MP8404", "level": "", "description": "DUAL 50W SUEDE COVER FRAME", "version": "2HC.864.263.B" }
   ],
   "revisions": [
-    { "rev": "A", "date": "01/10/2026", "item": "N/A.", "details": "EMISIÓN INICIAL DEL FLUJOGRAMA DEL UPPER TRIM PANEL DE CONSOLA CENTRAL.", "pswDate": "", "modifiedBy": "FS" },
-    { "rev": "B", "date": "08/10/2026", "item": "10, 20, 31, 32, 70, 71, 72", "details": "OP 32 SE INTEGRA A LA OP 31 (REPASO DE ADHESIVO). OP 71 Y 72 PASAN A LA OP 70, QUE PASA A TERMINACIÓN Y CONTROL FINAL DE CALIDAD. LO QUE NO PASA UN CONTROL VA A SCRAP. OP 10 Y 20: CARACTERÍSTICA D/TLD.", "pswDate": "", "modifiedBy": "FS" }
+    { "rev": "A", "date": "01/10/2026", "item": "N/A.", "details": "EMISIÓN INICIAL DEL FLUJOGRAMA DEL UPPER TRIM PANEL DE CONSOLA CENTRAL.", "pswDate": "", "modifiedBy": "FS" }
   ],
   "flow": [
     { "stepId": "10", "type": "operation", "description": "RECEPCIÓN DE MATERIA PRIMA", "critical": true, "criticalType": "D/TLD", "criticalColor": "black" },
@@ -49,7 +48,7 @@
       "branches": [
         [
           { "type": "transfer", "description": "TRASLADO DE MICROFIBRA A SECTOR DE MESA DE CORTE" },
-          { "stepId": "20", "type": "operation", "description": "CORTE DE MICROFIBRA", "critical": true, "criticalType": "D/TLD", "criticalColor": "black" },
+          { "stepId": "20", "type": "operation", "description": "CORTE DE MICROFIBRA" },
           { "stepId": "21", "type": "op-ins", "description": "CONTROL CON MYLAR" },
           { "type": "condition", "labelCondition": "¿CORTE CONFORME?", "labelDown": "SI",
             "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
