@@ -1,5 +1,5 @@
 /**
- * _agujasFieltroPwa.mjs — agrega a los 4 AMFE de telas de PWA la falla "agujas rotas en el
+ * _agujasFieltroPwa.mjs — agrega a los 2 AMFE de telas Hilux de PWA (157 planas y 163 termoformadas) la falla "agujas rotas en el
  * fieltro" (reclamo PWA del 20/08/2026, fieltro 1000 g/m2) con el control tactil de recepcion
  * y el de troquelado, y lo deja en el historial de revisiones.
  *
@@ -25,12 +25,11 @@
  *   - O=10 en recepcion: no hay control PREVENTIVO en Barack (el control tactil es deteccion);
  *     P2 SETEC pag. 104-105, sin control preventivo = 10. Baja cuando el proveedor cierre su D7.
  *   - O=8 en troquelado: la prevencion es el control de recepcion (P2: prevencion poco efectiva).
- *   - D=8 donde el control tactil es al 100% (troquelado; recepcion de 160/AMFE-1/AMFE-2 cuenta el
- *     troquelado aguas abajo); D=9 en el 159, que no tiene troquelado y la cobertura del control de
- *     recepcion no esta escrita (P3 SETEC pag. 109-111; amfe.md §13).
+ *   - D=9 en recepcion y en troquelado: la cobertura del control tactil no esta escrita (pregunta a
+ *     Manuel); P3 SETEC pag. 109-111, sin 100 % = 9 (amfe.md §13).
  *   - AP por calculateAP.
  *
- * REVISION: 159 y 160 son serie y salen hoy al cliente -> H. AMFE-1 (157) y AMFE-2 (163) salen
+ * REVISION: AMFE-1 (157) y AMFE-2 (163) salen
  * titulados PRELIMINAR -> siguen A, con la fila en el historial (amfe.md §4bis y memoria
  * revision_no_sube_si_no_entro_en_serie).
  * NUMERO: el Excel emitido del 163 imprime "N° DE AMFE: AMFE-2" (el id interno de la app); el listado
