@@ -72,6 +72,10 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **09/10 — El alcance de un reclamo lo marca DÓNDE va el material del reclamo, no la frase amplia del pedido** («todas las telas de PWA»): le metí las telas de serie, que no llevan el fieltro de 1000 g/m², antes de mirar en qué piezas entra. Fak: *"¿lo que pidió no es solo de proyecto?"*. Primero se ubica el material en las BOM/AMFE, después se arma la lista de documentos.
+
+- **09/10 — Una hoja de preguntas para una reunión se arma DESPUÉS de buscar en el servidor qué ya contesta un papel, y se escribe para mostrarse a los otros** (la primera traía «¿cuánto dura la mezcla?» con la ficha del GV diciendo 4 a 8 h; Fak: *"preguntaste muchas cosas que ya sabemos... que no parezca IA, la muestro en la reunión"*). Y el modelo de cada agente se elige por tarea: buscar va en Haiku.
+
 - **09/10 — Fak SUGIERE y yo decido con evidencia; no le devuelvo su lista textual** («lo que me pediste y dónde quedó cada cosa» le molestó: *"deja de tomar literal todo lo que pido... no quiero parches, quiero decisiones en base a investigaciones"*), **y el código es sagrado: el tamaño del cambio decide el camino**. Graduado a `codigo-madre.md` y a `docs/COLA_CAMBIOS_CODIGO.md`.
 
 - **08/10 — Cuando Fak delega «decidí todo vos», sus números y reglas anteriores son DATOS a revisar, no límites** (mantuve su techo de 10 agentes «solo Sonnet»; Fak: *"la caja soy yo... eficiencia es trabajar de la mejor forma, no ahorrar tokens"*). Graduado a `techo-agentes.md` (presupuesto por costo) y a la memoria `feedback_la_caja_soy_yo_pensar_fuera_de_lo_que_dijo_fak`.
