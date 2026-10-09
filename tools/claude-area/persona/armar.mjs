@@ -241,7 +241,7 @@ export function armar(opciones) {
 
     // 3) ayudantes, CLAUDE.md, persona, instalador
     fs.mkdirSync(path.join(staging, 'agentes'), { recursive: true });
-    for (const a of ['investigador.md', 'explorador.md']) fs.copyFileSync(path.join(AQUI, 'plantillas', 'agentes', a), path.join(staging, 'agentes', a));
+    for (const a of ['investigador.md', 'explorador.md', 'buscador.md']) fs.copyFileSync(path.join(AQUI, 'plantillas', 'agentes', a), path.join(staging, 'agentes', a));
     fs.copyFileSync(path.join(AQUI, 'plantillas', 'CLAUDE.md'), path.join(staging, 'CLAUDE.md'));
     fs.copyFileSync(path.join(AQUI, 'instalar.ps1'), path.join(staging, 'instalar.ps1'));
     fs.copyFileSync(path.join(AQUI, 'desinstalar.ps1'), path.join(staging, 'desinstalar.ps1'));

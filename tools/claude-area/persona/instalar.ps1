@@ -334,7 +334,7 @@ Hacer ('habilidades: ' + (($skills | ForEach-Object { $_.Name }) -join ', ')) {
     Copy-Item -LiteralPath $k.FullName -Destination $dst -Recurse -Force
   }
 }
-Hacer 'ayudantes: investigador y explorador' {
+Hacer 'ayudantes: investigador, explorador y buscador' {
   $ad = Join-Path $claudeDir 'agents'
   if (-not (Test-Path -LiteralPath $ad)) { New-Item -ItemType Directory -Path $ad -Force | Out-Null }
   foreach ($g in (Get-ChildItem -LiteralPath (Join-Path $aqui 'agentes') -File)) {
@@ -378,7 +378,7 @@ Hacer 'anotar lo que se instalo (lo usa el desinstalador)' {
   $marca = [pscustomobject]@{
     persona = $persona.nombre; puesto = $persona.puesto; instalado = (Get-Date -Format s); paquete = $persona.fecha_paquete
     pc = $env:COMPUTERNAME; usuario = $env:USERNAME
-    memoria_dir = $memDir; memorias = @($nuestros); skills = @($skills | ForEach-Object { $_.Name }); agentes = @('investigador.md', 'explorador.md')
+    memoria_dir = $memDir; memorias = @($nuestros); skills = @($skills | ForEach-Object { $_.Name }); agentes = @('investigador.md', 'explorador.md', 'buscador.md')
     herramientas = $CarpetaHerramientas; herramientas_creada = [bool]($hayHerr -and $herrCreada)
     playwright_creadas = @(@($pwPrevias) + @($pwNuevas) | Select-Object -Unique)
     previo = $previo
@@ -416,7 +416,7 @@ try {
 $controles += ,@('sabe quien sos', ((Test-Path -LiteralPath $cmDest) -and ((Leer $cmDest).Contains($persona.nombre))))
 $controles += ,@('memoria copiada', (@(Get-ChildItem -LiteralPath $memDir -File -ErrorAction SilentlyContinue).Count -ge $memFiles.Count))
 $controles += ,@('habilidades copiadas', (@($skills | Where-Object { -not (Test-Path -LiteralPath (Join-Path $claudeDir ('skills\' + $_.Name + '\SKILL.md'))) }).Count -eq 0))
-$controles += ,@('ayudantes copiados', ((Test-Path -LiteralPath (Join-Path $claudeDir 'agents\investigador.md')) -and (Test-Path -LiteralPath (Join-Path $claudeDir 'agents\explorador.md'))))
+$controles += ,@('ayudantes copiados', ((Test-Path -LiteralPath (Join-Path $claudeDir 'agents\investigador.md')) -and (Test-Path -LiteralPath (Join-Path $claudeDir 'agents\explorador.md')) -and (Test-Path -LiteralPath (Join-Path $claudeDir 'agents\buscador.md'))))
 $controles += ,@('reglas del asistente por area afuera', (-not (Test-Path -LiteralPath (Join-Path $CarpetaBarack '.claude\rules\casa.md'))))
 if (-not $SinTarea) { $controles += ,@('tarea de Windows afuera', ($null -eq (Get-ScheduledTask -TaskName 'Barack - Claude por area' -ErrorAction SilentlyContinue))) }
 if ($hayHerr) {
