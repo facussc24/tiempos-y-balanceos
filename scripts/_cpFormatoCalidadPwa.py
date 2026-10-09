@@ -30,16 +30,14 @@ ROJO = 255
 
 PLANES = {
     'planas': {
-        'pieza': '21-9463', 'hoja': '21-9463',
+        'pieza': '21-9463 a 21-9472 / 21-9474 / 21-9475', 'hoja': '581D',
         'descripcion': 'TELAS PLANAS HILUX 581D',
-        'archivo': 'PC 21-9463 TELAS PLANAS HILUX - Rev.A.xlsx',
-        'troquelado': 'OP 50',
+        'archivo': 'PC 581D TELAS PLANAS HILUX - Rev.A.xlsx',
     },
     'termo': {
         'pieza': '21-9640 / 21-9641 / 21-9642 / 21-9643', 'hoja': '582D',
         'descripcion': 'TELAS TERMOFORMADAS HILUX 582D',
         'archivo': 'PC 582D TELAS TERMOFORMADAS HILUX - Rev.A.xlsx',
-        'troquelado': 'OP 60',
     },
 }
 
@@ -95,8 +93,8 @@ def armar(xl, plantilla_wb, clave, cfg, carpeta_json, salida):
         ws.Range(f'F{r}:M{r}').Merge()
     filas_rev = [
         ('A', h.get('date') or '', 'N/A', 'EMISION INICIAL.', ''),
-        ('A', '09/10/2026', f"OP10 / {cfg['troquelado'].replace(' ', '')}",
-         'Se agrega control tactil de presencia de agujas en el fieltro en recepcion y en troquelado (reclamo PWA 20/08/2026).', 'FS'),
+        ('A', '09/10/2026', 'TODAS',
+         'Se alinea al flujograma y al AMFE vigentes; se agregan materiales, parametros de las hojas de operaciones y control tactil de agujas en recepcion y troquelado (reclamo PWA 20/08/2026).', 'FS'),
     ]
     for i, (r_, f_, item, det, mod) in enumerate(filas_rev):
         fila = 9 + i
@@ -106,6 +104,8 @@ def armar(xl, plantilla_wb, clave, cfg, carpeta_json, salida):
         ws.Range(f'F{fila}').Value = det
         ws.Range(f'O{fila}').Value = mod
     ws.Range('F10').Interior.Color = AMARILLO
+    ws.Range('F10').WrapText = True
+    ws.Rows(10).RowHeight = 27
 
     # ── Filas del plan ─────────────────────────────────────────────────────
     zona = ws.Range(f'B{PRIMERA}:O200')
@@ -123,6 +123,7 @@ def armar(xl, plantilla_wb, clave, cfg, carpeta_json, salida):
         ws.Range(f'B{PRIMERA}:O{ultima}').Borders(b).Weight = 2
 
     grupos = []
+    mats = []
     for i, it in enumerate(items):
         fila = PRIMERA + i
         op = it['processStepNumber']
@@ -136,9 +137,20 @@ def armar(xl, plantilla_wb, clave, cfg, carpeta_json, salida):
             ws.Range(f'B{fila}').Value = f'Operación {n}.'
             ws.Range(f'C{fila}').Value = it.get('processDescription', '')
             ws.Range(f'D{fila}').Value = it.get('machineDeviceTool', '') or '--'
-        ws.Range(f'E{fila}').Value = g[3]
-        ws.Range(f'F{fila}').Value = it.get('productCharacteristic', '')
-        ws.Range(f'G{fila}').Value = it.get('processCharacteristic', '') or '--'
+        mat = (it.get('componentMaterial') or '').strip()
+        if op == 'OP 10' and mat:
+            # Recepcion como la escribe Calidad: el material en PRODUCTO (combinado sobre sus filas),
+            # la caracteristica que se controla al lado y el N° por material.
+            if not mats or mats[-1][0] != mat:
+                mats.append([mat, fila, fila])
+            mats[-1][2] = fila
+            ws.Range(f'E{fila}').Value = len(mats)
+            ws.Range(f'F{fila}').Value = mat
+            ws.Range(f'G{fila}').Value = it.get('productCharacteristic', '') or it.get('processCharacteristic', '')
+        else:
+            ws.Range(f'E{fila}').Value = g[3]
+            ws.Range(f'F{fila}').Value = it.get('productCharacteristic', '') or '--'
+            ws.Range(f'G{fila}').Value = it.get('processCharacteristic', '') or '--'
         sigla = it.get('specialCharClass', '') or '--'
         ws.Range(f'H{fila}').Value = sigla
         if sigla in ('CC', 'SC'):
@@ -153,6 +165,10 @@ def armar(xl, plantilla_wb, clave, cfg, carpeta_json, salida):
         ws.Range(f'O{fila}').Value = it.get('reactionPlan', '')
         if es_agujas(it):
             ws.Range(f'E{fila}:O{fila}').Interior.Color = AMARILLO
+    for _, f1, f2 in mats:
+        if f2 > f1:
+            for col in 'EF':
+                ws.Range(f'{col}{f1}:{col}{f2}').Merge()
     for op, f1, f2, _ in grupos:
         if f2 > f1:
             for col in 'BCD':
@@ -162,18 +178,23 @@ def armar(xl, plantilla_wb, clave, cfg, carpeta_json, salida):
     ws.Range(f'B{PRIMERA}:O{ultima}').VerticalAlignment = -4108
     ws.Range(f'{PRIMERA}:{ultima}').EntireRow.AutoFit()
     for r in range(PRIMERA, ultima + 1):
-        if ws.Rows(r).RowHeight < 30:
-            ws.Rows(r).RowHeight = 30
+        if ws.Rows(r).RowHeight < 24:
+            ws.Rows(r).RowHeight = 24
 
     ws.PageSetup.PrintArea = f'$B$2:$O${ultima}'
     ws.ResetAllPageBreaks()
-    ws.HPageBreaks.Add(ws.Range('B24'))     # hoja 1: revisiones y firmas; hoja 2: encabezado y filas
     nb.BuiltinDocumentProperties('Author').Value = 'Facundo Santoro'
     nb.BuiltinDocumentProperties('Last Author').Value = 'Facundo Santoro'
     destino = os.path.abspath(os.path.join(salida, cfg['archivo']))
     if os.path.exists(destino):
         os.remove(destino)
     nb.SaveAs(destino, 51)
+    # El PDF sale con la pagina del formato de Calidad (vertical, ajustado al ancho). _xlsxAPdf.py
+    # fuerza apaisado para el AMFE y parte el encabezado de este formulario: no se usa para el plan.
+    pdf = destino[:-5] + '.pdf'
+    if os.path.exists(pdf):
+        os.remove(pdf)
+    nb.ExportAsFixedFormat(0, pdf)
     nb.Close(False)
     print('OK', destino, len(items), 'filas')
 
