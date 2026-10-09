@@ -7,8 +7,9 @@
  * Uso:
  *   node scripts/_apiTarea.mjs --tarea <nombre> --pedido <archivo.md> [--adjunto <ruta>]... --salida <archivo>
  *                              [--modelo opus|sonnet|haiku|fable] [--effort low|medium|high|xhigh]
- *                              [--sistema <archivo>] [--max-tokens N] [--estimar]
+ *                              [--sistema <archivo>] [--max-tokens N] [--timeout-min N] [--estimar]
  *
+ *   --timeout-min cuanto se espera la respuesta (30 por defecto: una salida larga de Opus pasa los 10 min)
  *   --pedido     el texto del pedido (un .md con las instrucciones); va tal cual como mensaje del usuario
  *   --adjunto    cada archivo va adentro del mensaje, entre <archivo ruta="..."> y </archivo>; varios, en orden
  *   --salida     donde se guarda el texto de la respuesta (crea la carpeta si falta)
@@ -66,7 +67,7 @@ export function leerAdjuntos(rutas, { raiz = process.cwd() } = {}) {
 const USO = 'uso: node scripts/_apiTarea.mjs --tarea <nombre> --pedido <archivo.md> [--adjunto <ruta>]... --salida <archivo> [--modelo opus|sonnet|haiku|fable] [--effort low|medium|high|xhigh] [--sistema <archivo>] [--max-tokens N] [--estimar]';
 
 export function leerArgumentos(argv) {
-  const CON_VALOR = ['--tarea', '--pedido', '--adjunto', '--salida', '--modelo', '--effort', '--sistema', '--max-tokens'];
+  const CON_VALOR = ['--tarea', '--pedido', '--adjunto', '--salida', '--modelo', '--effort', '--sistema', '--max-tokens', '--timeout-min'];
   const op = { adjuntos: [] };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -85,6 +86,10 @@ export function leerArgumentos(argv) {
   if (!EFFORTS.includes(op.effort)) throw new ErrorApi('api', `--effort va con ${EFFORTS.join('|')} (max nunca se pide: regla techo-agentes.md)`);
   op.maxTokens = op['max-tokens'] ? Number(op['max-tokens']) : 32000;
   if (!Number.isInteger(op.maxTokens) || op.maxTokens < 256) throw new ErrorApi('api', '--max-tokens tiene que ser un entero (>= 256)');
+  // Una respuesta larga de Opus tarda mas de los 10 min que espera crearCliente() por defecto (09/10/2026:
+  // "Request timed out" con 40.000 tokens de salida). 30 min por defecto; se puede subir.
+  op.timeoutMin = op['timeout-min'] ? Number(op['timeout-min']) : 30;
+  if (!Number.isInteger(op.timeoutMin) || op.timeoutMin < 1 || op.timeoutMin > 120) throw new ErrorApi('api', '--timeout-min tiene que ser un entero entre 1 y 120');
   return op;
 }
 
@@ -96,7 +101,7 @@ async function main(argv) {
   const usuario = armarMensaje({ pedido, adjuntos });
   const system = op.sistema ? fs.readFileSync(path.resolve(op.sistema), 'utf8') : undefined;
   const comun = { modelo: op.modelo, effort: op.effort, usuario, system, cacheTtl: system ? '5m' : null, maxTokens: op.maxTokens };
-  const cliente = crearCliente();
+  const cliente = crearCliente({ timeoutMs: op.timeoutMin * 60 * 1000 });
 
   const entrada = await contarTokens(cliente, comun);
   const techo = estimarUsd(op.modelo, { entrada, salida: op.maxTokens });

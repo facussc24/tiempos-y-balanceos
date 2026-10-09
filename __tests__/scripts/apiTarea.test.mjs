@@ -57,7 +57,13 @@ describe('_apiTarea · argumentos', () => {
     expect(op.modelo).toBe('opus');
     expect(op.effort).toBe('high');
     expect(op.maxTokens).toBe(32000);
+    expect(op.timeoutMin).toBe(30);
     expect(op.estimar).toBe(true);
+    expect(leerArgumentos(['--tarea', 't', '--pedido', 'p.md', '--salida', 's', '--timeout-min', '45']).timeoutMin).toBe(45);
+  });
+  it('ROJO — un tiempo de espera fuera de rango', () => {
+    expect(() => leerArgumentos(['--tarea', 't', '--pedido', 'p.md', '--salida', 's', '--timeout-min', '0'])).toThrow(/timeout-min/);
+    expect(() => leerArgumentos(['--tarea', 't', '--pedido', 'p.md', '--salida', 's', '--timeout-min', '500'])).toThrow(/timeout-min/);
   });
   it('ROJO — sin --salida (y sin --estimar), con effort max, con un argumento desconocido o un modelo inventado', () => {
     expect(() => leerArgumentos(['--tarea', 't', '--pedido', 'p.md'])).toThrow(/--salida/);
