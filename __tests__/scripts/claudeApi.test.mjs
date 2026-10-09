@@ -279,6 +279,29 @@ describe('claudeApi · la clave', () => {
   });
 });
 
+describe('claudeApi · llamarLargo (streaming) con un cliente falso', () => {
+  const clienteStream = (res, registro = []) => ({
+    beta: { messages: { stream: (p) => { registro.push(p); return { finalMessage: async () => (typeof res === 'function' ? res(p) : res) }; } } },
+  });
+  it('manda los mismos parametros que llamar (con la beta), junta el texto final y anota el gasto', async () => {
+    const registro = [];
+    const r = await A.llamarLargo(clienteStream(respuesta(), registro), { modelo: 'opus', effort: 'medium', usuario: 'hola', maxTokens: 64000, tarea: 'largo', dirLedger: dir });
+    expect(registro[0].model).toBe(A.MODELOS.opus);
+    expect(registro[0].max_tokens).toBe(64000);
+    expect(registro[0].betas).toBeTruthy();
+    expect(r.texto).toBe('{"hallazgos":[]}');
+    expect(r.costoUsd).toBeGreaterThan(0);
+    expect(A.leerLedgerCiclo(A.cicloDe(new Date(), 1), dir).map((e) => e.tarea)).toEqual(['largo']);
+  });
+  it('ROJO — una respuesta cortada por max_tokens tira, igual que llamar', async () => {
+    await expect(A.llamarLargo(clienteStream(respuesta({ stop_reason: 'max_tokens' })), { modelo: 'sonnet', usuario: 'x', dirLedger: dir })).rejects.toThrow(/max_tokens/);
+  });
+  it('ROJO — si el stream falla, el error dice la tarea', async () => {
+    const roto = { beta: { messages: { stream: () => { throw new Error('se cayo'); } } } };
+    await expect(A.llamarLargo(roto, { modelo: 'haiku', usuario: 'x', tarea: 'T', dirLedger: dir })).rejects.toThrow(/\(T\).*se cayo/);
+  });
+});
+
 describe('claudeApi · llamar con un cliente falso', () => {
   it('manda los parametros armados (con la beta), devuelve el JSON y anota el gasto', async () => {
     const registro = [];

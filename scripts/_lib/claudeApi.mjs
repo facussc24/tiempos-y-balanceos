@@ -481,6 +481,28 @@ export async function llamar(cliente, opciones = {}) {
   return tolerar ? r : exigirRespuestaUtil(r, { tarea });
 }
 
+/**
+ * Igual que llamar(), pero por STREAMING: para respuestas largas (miles de tokens de salida) la conexion
+ * sin streaming se corta a los ~10 min con "Request timed out" aunque el cliente tenga un timeout mayor
+ * (medido el 09/10/2026 con Opus y 32.000-64.000 tokens de salida, timeout de 40 min). El texto se junta
+ * al final (`finalMessage()`): nada se usa a medias, mismo ledger, mismos errores que llamar().
+ */
+export async function llamarLargo(cliente, opciones = {}) {
+  const { tarea = '', registrar = true, tolerar = false, dirLedger = DIR_API, ahora } = opciones;
+  const { params, betas, conSchema } = armarParametros(opciones);
+  const t0 = Date.now();
+  let res;
+  try {
+    const stream = cliente.beta.messages.stream(betas.length ? { ...params, betas } : params);
+    res = await stream.finalMessage();
+  } catch (e) {
+    throw new ErrorApi('api', `la API fallo${tarea ? ` (${tarea})` : ''}: ${e?.status ? `HTTP ${e.status} ` : ''}${e?.message ?? e}`, { causa: e });
+  }
+  const r = interpretarRespuesta(res, { modelo: params.model, conSchema, duracionMs: Date.now() - t0 });
+  if (registrar) registrarGasto(r, { tarea, dir: dirLedger, ahora: ahora ?? new Date() });
+  return tolerar ? r : exigirRespuestaUtil(r, { tarea });
+}
+
 /** Cuantos tokens de entrada tiene un pedido, SIN gastar (count_tokens es gratis). */
 export async function contarTokens(cliente, opciones = {}) {
   const { params } = armarParametros({ ...opciones, fallbacks: false });

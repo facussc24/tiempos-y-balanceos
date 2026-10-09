@@ -25,7 +25,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  crearCliente, llamar, contarTokens, estimarUsd, resolverModelo, usd, MENSAJE_SIN_CLAVE, ErrorApi,
+  crearCliente, llamarLargo, contarTokens, estimarUsd, resolverModelo, usd, MENSAJE_SIN_CLAVE, ErrorApi,
 } from './_lib/claudeApi.mjs';
 
 export const TOPE_ADJUNTO_BYTES = 2 * 1024 * 1024;
@@ -109,7 +109,8 @@ async function main(argv) {
   console.log(`${op.tarea}: ${resolverModelo(op.modelo)} ${op.effort} · entrada ${entrada.toLocaleString('es-AR')} tokens · ${adjuntos.length} adjunto(s) · costo estimado ${usd(tipico)} (tope ${usd(techo)} si llena los ${op.maxTokens} tokens de salida)`);
   if (op.estimar) return 0;
 
-  const r = await llamar(cliente, { ...comun, tarea: `sesion:${op.tarea}` });
+  // Por streaming: sin streaming la conexion se corta a los ~10 min aunque el timeout sea mayor (09/10/2026).
+  const r = await llamarLargo(cliente, { ...comun, tarea: `sesion:${op.tarea}` });
   const salida = path.resolve(op.salida);
   fs.mkdirSync(path.dirname(salida), { recursive: true });
   fs.writeFileSync(salida, r.texto.endsWith('\n') ? r.texto : `${r.texto}\n`, 'utf8');
