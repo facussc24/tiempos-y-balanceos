@@ -139,7 +139,11 @@ Las **82 propuestas** se le muestran a Fak en la página de la cola y él contes
 antes de su sí, salvo las de etiqueta «aviso» que se hacen si él no dice que no. Las «solo vos» son suyas (la CATA, Pedro, las
 limpiezas, el techo de cupo, `/skill-doctor` y `/doctor prompt-audit`, que él tipea).
 
-## 6. Arrancá así
+## 5 bis. Las respuestas de Fak a las propuestas (09/10 16:55, por el chat)
+
+Están anotadas fila por fila en la cola (buscá «Fak 09/10 16:55»). Lo que más cambia el orden: **sin techo de gasto** (ni cupo ni API: P4); **SÍ a toda la tanda de guardianes aflojados** (P11-P22, probada por otro a ciegas) y a los guardianes que corrigen (P30-P32); **SÍ a las piezas grandes** (planes de control P6, skill mail P61, cierre incremental P9+P10, mods P34→P33, auditoría ciega P28, vigía P35); **SÍ a la nube única** (P56: «solucionalo vos»: simulado y mover) y al circuito del equipo (P57); **P55 (AMFE fuera de Supabase, a la nube) es PRIORIDAD ALTA**: *"es algo grave, quiero que estén en otro lugar... así todos pueden hacer los AMFE"*; **la API se gasta en lo que yo crea mejor** (P69-P74). Configuración: apagar agent teams y You should know (P36-P37), autoContinue (P38), Remote Control sin teléfono (P39), autoMode en CATA/Pedro (P40, no prioritario), permisos recurrentes (P25), PermissionRequest con hora fijada (P41), 90 días de conversaciones + subirlas a la nube (P42, HOY-6), limpiar settings.local (P44). Lo que decido yo: P50 (módulos vacíos: con evidencia), P64 (vale la cabecera). Lo que espera: Pedro (P58, depende de él), CATA el martes 14/10, y **todo lo que es tareas de Barack (P53, P54, P60, P66) va después del código**: *"primero quiero hacer lo del código; apenas terminemos, lo primero que voy a lanzar es un Claude para que analice mis tareas pendientes"*. Cowork descartado (X57).
+
+
 
 Mirá en qué modelo corrés: si no es Fable 5.1, decímelo en la primera línea. Leé `docs/COLA_CAMBIOS_CODIGO.md` (entera) y las reglas
 de la sección 2. Fijate si existen `exports/explicaciones/cola-de-cambios-2026-10-09.html` y
