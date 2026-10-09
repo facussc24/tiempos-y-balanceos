@@ -137,7 +137,7 @@ node scripts/_auditAll.mjs --summary   # salud de los AMFEs en Supabase
 
 ## Estructura del proyecto (codigo en la RAIZ, no hay src/)
 
-- `utils/repositories/` (repositorios tipados) es el UNICO acceso a datos. One-shots viejos: `scripts/archive/`.
+- `utils/repositories/` (repositorios tipados) es el UNICO acceso a datos. One-shots viejos: `scripts/_archive/`.
 - NO hardcodear API keys (`VITE_*`). `logger.ts` en vez de console.log. NO `as any` ni `@ts-ignore`.
 - Familias de producto (herencia maestro→variante): tablas `product_families`,
   `family_documents`, `family_change_proposals`; motor en `core/inheritance/`.

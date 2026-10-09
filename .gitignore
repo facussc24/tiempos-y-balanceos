@@ -187,3 +187,6 @@ scripts/img/**/_*.png
 
 # Modelos de recorte y mejora de fotos de las laminas de proceso (rembg, ~430 MB) — no van al repo
 scripts/lamina_proceso/modelos/
+
+# cache de PowerShell que algun test deja en la raiz (R7, H54)
+Microsoft/
