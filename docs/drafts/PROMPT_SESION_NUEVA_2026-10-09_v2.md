@@ -269,7 +269,9 @@ llamada que el guardián frenó.
 
 ## 11. Arrancá así
 
-Leé los cinco archivos de la sección 4 (los R los lee el Opus). Después me escribís un solo mensaje con: (a) el
+Primero mirá en qué modelo corrés (lo dice tu propio arranque): si no es Fable 5.1, decímelo en la primera línea
+antes de cualquier otra cosa, porque el 09/10 el asistente aplicó «Opus por defecto» a una sesión que era de Fable y
+yo lo tuve que corregir. Leé los cinco archivos de la sección 4 (los R los lee el Opus). Después me escribís un solo mensaje con: (a) el
 estado en tres renglones (qué hay sin commitear y de quién, la clave y la noche, el CI), (b) qué dos agentes vas a
 lanzar para la síntesis y cuánto pesan, (c) el orden en que vas a tomar los medianos de la sección 6 y por qué ese
 orden. Y arrancás con el punto 1 sin esperar mi sí: es trabajo tuyo y reversible.
