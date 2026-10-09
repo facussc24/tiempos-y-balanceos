@@ -110,13 +110,12 @@ Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabra
 
 ### Solo vos
 
-- [ ] P2 · sin código · A43c · R2 · usar el reinicio de límite que no se usó (Settings > Usage) · — · ClaudeDevs 22/09 y 28/09 (R2) · **Sí, en una semana con el semanal alto: vence el 22/10.**
 - [ ] P4 · sin código · F1 §6 #8 · techo de cupo semanal para las noches solas y techo del ciclo de la API (hoy $170 de 200, lo puso una sesión) · — · Fak 04/10 *"podés llegar hasta el 70 %"*; api-claude.md:71 (S2) · **Que diga los dos números; hasta medir una semana uso su 70 %.** (HOY-5: sigue abierta) · **Fak 09/10 16:25: «no pongas techo de gasto a la API en esta sesión»** (la API sin techo; el del cupo semanal del plan sigue sin número)
 - [ ] P8 · sin código · A24b · R1, R2 #9 · tipear una vez /skill-doctor y /doctor prompt-audit: la sesión no puede hacerlo, el resto de P8 va en S2-4 · — · nunca se tipearon en 20 transcripts (S2) · **Sí: son dos renglones y me dicen qué skills sobran.**
 - [ ] P40 · chico · A43f · R1, R8 · autoMode.environment en la CATA y en la PC de Pedro (/auto-mode-setup) · ~/.claude/settings.json de cada PC · freno del IMDS en la CATA (plan §1.6) · **Sí, en cada PC con Fak al lado.**
-- [ ] P46 · chico · A42b · R7 §3 · ordenar los sueltos de la raíz: STEP, PDF y PNG del carro y del dispositivo a su carpeta; amfe_head.txt se borra; generar_cuadro_hotpress.py va a scripts/hotmelt/ · raíz del repo · STEP de 14,8 MB suelto en un repo público (R7) · **Sí: su material se mueve, no se borra.**
+
 - [ ] P47 · chico · A42c · R7 §3 · mover a scripts/_archive/ los 11 scripts de una sola vez sin referencia, extract_amfe.py y HANDOFF_PWA_2026-06-24.md · scripts/ · git grep: 0 (R7) · **Sí: nadie los usa y se pueden traer de vuelta.**
-- [ ] P48 · chico · A42d · R2 #17, R7 · git worktree prune y borrar 11 worktrees viejos (898 MB) · .claude/worktrees/ · C: con 7,5 GB libres · **Sí, después de mirar get_storage_usage.**
+
 - [ ] P50 · sin código · R7 §3 · pantallas sin terminar («Implement via backend») de Solicitud, Manuales y Formatos · modules/solicitud, modules/engineering · 27 marcadores; la app las carga (R7) · **Que diga si esos módulos siguen vivos: sacar una función se pregunta.**
 - [ ] P53 · mediano (la regla, después) · A33 · F1 O14 · cuándo sube la letra de un documento APQP · — · 09/10 09:25 *"no nos delates... mantené la revisión A"* · **Que le escriba a la sesión que espera; la regla dura sale de su respuesta.**
 - [ ] P54 · sin código · A34 · F1 O1 · manual de AMFE con fotos: cuándo va SC y cuándo CC · biblioteca de Ingeniería · pedido del 01/10 12:58 · **Después de P6; que diga cuándo.**
@@ -201,6 +200,7 @@ Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabra
 
 ## DESCARTADO CON MOTIVO
 
+- X56 · (era P2) usar el reinicio de límite semanal · Fak 09/10 16:3x: *"no lo tenemos, ya verifiqué en Uso"*
 - X1 · síntesis Opus más revisor Fable (A3) · cumplida con S1 y S2; se cierra con esta cola
 - X2 · requirements-ci.txt (A18) · las versiones ya están fijas en deploy.yml:78 desde 544508d2
 - X3 · línea de /goal en la regla (A25a) · trabajar-hasta-la-hora.md ya nombra /goal; el otro uso lo tendría que tipear Fak
@@ -254,6 +254,8 @@ Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabra
 
 ## Hechos
 
+- [x] P48 · chico · A42d · R2 #17, R7 · git worktree prune y borrar 11 worktrees viejos (898 MB) · .claude/worktrees/ · C: con 7,5 GB libres · **Sí, después de mirar get_storage_usage.** · **HECHO 09/10 16:35** (Fak: *"si no sirven para nada borralos"*): 11 worktrees borrados con git worktree remove; lo no guardado de dos (arbArticulos.py + test + patch; una página) rescatado a la nube, carpeta mía repo-privado/worktrees-rescate-2026-10-09
+- [x] P46 · chico · A42b · R7 §3 · ordenar los sueltos de la raíz: STEP, PDF y PNG del carro y del dispositivo a su carpeta; amfe_head.txt se borra; generar_cuadro_hotpress.py va a scripts/hotmelt/ · raíz del repo · STEP de 14,8 MB suelto en un repo público (R7) · **Sí: su material se mueve, no se borra.** · **HECHO 09/10 16:35** (Fak: *"todas las mierdas no aprobadas subilas a la nube"*): los 9 sueltos de la raíz en la nube de Ingeniería, carpeta mía no-aprobado-2026-10-09; generar_cuadro_hotpress.py a scripts/hotmelt/ (sin versionar)
 - [x] X7 · 2026-10-09 · mediano · yo · ~~_cierreSesion.mjs lee el último run del CI y dice «no pude leer» si no contesta~~ · 0243035c
 - [x] X8 · 2026-10-09 · mediano · Fak (09:29) · ~~_mailEnviar.py cierra la ventana del borrador antes de los controles, y solo la de ese borrador~~ · 2c2374dd, 58309048 (la prueba queda en S2-3 y P81)
 - [x] X9 · 2026-10-09 · chico · yo · ~~skills: explicar-mejor, escalón 3 (ruta y captura; lo de otra área va como pregunta), y ficha de proveedor por material (D1 #6, #7, #14)~~ · 8e523620
@@ -263,4 +265,4 @@ Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabra
 - [x] HOY-3 · 2026-10-09 · chico · Fak · ~~"en todas las tareas que puedas usá la API": scripts/_apiTarea.mjs, el puente pedido + adjuntos -> API -> archivo, con candados (ni secretos ni más de 2 MB) y 8 tests~~ · e79715c4 + 82939e7a (timeout) + 8a3638b1 (streaming) + 2fd31a24 (sin fallback)
 - [x] HOY-4 · 2026-10-09 · Fak · ~~(era P3) la clave de la API pegada (por la terminal), --check y --probar verdes, primera noche real de día ($0,98: 6 AMFE, 12 mails, prioridades, novedades) y la tarea "Barack - Noche de Claude (API)" agendada a las 06:30; el ciclo renueva el 30 (BARACK_API_CICLO_DIA=30 como variable de usuario)~~ · commit 62f0ae43 (regla api-claude.md)
 
-<!-- control: HACER YA 69 · PROPONER 82 · DESCARTADO 50 · HECHOS 8 · origen S1 09/10 + S2 09/10 -->
+<!-- control: HACER YA 69 · PROPONER 79 · DESCARTADO 51 · HECHOS 10 · origen S1 09/10 + S2 09/10 -->

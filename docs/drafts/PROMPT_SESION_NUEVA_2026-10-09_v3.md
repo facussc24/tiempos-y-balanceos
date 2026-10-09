@@ -103,6 +103,7 @@ de tipeo, entendé sin corregirme). Vos corrés en esta carpeta, con las reglas,
   --salida .sgc-cache/investigacion-2026-10-09/API_A1_despertador_opus.md --modelo opus --effort medium --max-tokens 64000`.
   **Un diseño de la API es una propuesta: se lee entero cada archivo que toca, se aplica a mano, se corren los tests y se prueba con un
   mensaje real antes de darlo por hecho.**
+- **16:35, con el sí de Fak por el chat:** los 11 worktrees viejos borrados (lo no guardado de dos, rescatado en la nube: `Claude Fak\repo-privado\worktrees-rescate-2026-10-09\`); los 9 archivos sueltos de la raíz movidos a `Claude Fak\no-aprobado-2026-10-09\` de la nube de Ingeniería; el reinicio de límite semanal NO existe en su plan (P2 → X56). Disco C: 6,9 GB libres (sigue bajo 10).
 - Memorias nuevas: `reference_api_claude_clave_y_ciclo`, `feedback_control_de_la_pc_no_se_suelta_solo`. LECCIONES con la lección de la
   tarde (está en 26,9 KB: la próxima consolidación la baja de 26,6).
 - **Lo que otras sesiones dejaron sin commitear y NO se toca**: `scripts/_lib/amfeAutoria.mjs` y su test, `scripts/_crearAmfeUpperTrimming.mjs`,
