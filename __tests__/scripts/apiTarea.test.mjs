@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { armarMensaje, esSecreto, leerAdjuntos, leerArgumentos, TOPE_ADJUNTO_BYTES } from '../../scripts/_apiTarea.mjs';
+import { armarMensaje, esSecreto, leerAdjuntos, leerArgumentos, leerTextoSeguro, validarSalida, rutaReal, TOPE_ADJUNTO_BYTES } from '../../scripts/_apiTarea.mjs';
 
 describe('_apiTarea · armar el mensaje', () => {
   it('el pedido va primero y cada adjunto entre etiquetas con su ruta', () => {
@@ -47,6 +47,31 @@ describe('_apiTarea · candados', () => {
   });
   it('ROJO — un adjunto que no existe', () => {
     expect(() => leerAdjuntos(['no/existe.md'])).toThrow(/no existe/);
+  });
+  it('ROJO — las formas que esquivaban el chequeo por texto (auditor 09/10): barra final, punto, ::$DATA, ruta con ..', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'apitarea-'));
+    fs.mkdirSync(path.join(dir, 'sub'));
+    fs.writeFileSync(path.join(dir, '.env.local'), 'ANTHROPIC_API_KEY=sk-ant-falsa\n');
+    fs.writeFileSync(path.join(dir, '.qr-secret'), 'x\n');
+    for (const r of ['.env.local/', '.env.local\\', './.env.local/.', '.env.local/.', 'sub/..\\.env.local/.', '.env.local::$DATA', '.qr-secret/', path.join(dir, '.env.local') + '/']) {
+      expect(esSecreto(r, { raiz: dir }), r).toBe(true);
+      expect(() => leerAdjuntos([r], { raiz: dir }), r).toThrow(/secretos/);
+      expect(() => leerTextoSeguro(r, { raiz: dir, que: 'pedido' }), r).toThrow(/secretos/);
+    }
+    expect(rutaReal('.env.local/', { raiz: dir }).toLowerCase()).toBe(fs.realpathSync.native(path.join(dir, '.env.local')).toLowerCase());
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+  it('el pedido y el system pasan por el mismo candado; la salida se valida antes de pagar', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'apitarea-'));
+    fs.writeFileSync(path.join(dir, 'pedido.md'), 'hola\n');
+    fs.mkdirSync(path.join(dir, 'carpeta'));
+    expect(leerTextoSeguro('pedido.md', { raiz: dir, que: 'pedido' })).toBe('hola\n');
+    expect(() => leerTextoSeguro('no.md', { raiz: dir, que: 'pedido' })).toThrow(/no existe el pedido/);
+    expect(() => validarSalida('carpeta', { raiz: dir })).toThrow(/carpeta/);
+    expect(() => validarSalida('.env.local', { raiz: dir })).toThrow(/secretos/);
+    expect(() => validarSalida('pedido.md', { raiz: dir, entradas: ['pedido.md'] })).toThrow(/pisar/);
+    expect(validarSalida('nueva/salida.md', { raiz: dir }).toLowerCase()).toBe(path.join(dir, 'nueva', 'salida.md').toLowerCase());
+    fs.rmSync(dir, { recursive: true, force: true });
   });
 });
 

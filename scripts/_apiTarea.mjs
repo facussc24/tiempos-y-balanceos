@@ -32,9 +32,39 @@ export const TOPE_ADJUNTO_BYTES = 2 * 1024 * 1024;
 export const EFFORTS = ['low', 'medium', 'high', 'xhigh'];
 const SECRETO_RE = /(^|[\\/])(\.env(\.[\w.-]+)?|\.qr-secret)$/i;
 
-/** true si la ruta es un archivo de secretos: esos no se mandan nunca. */
-export function esSecreto(ruta) {
-  return SECRETO_RE.test(String(ruta ?? '').trim());
+/**
+ * La ruta REAL que se va a abrir: sin barra final, sin `::$DATA`, sin nombre corto 8.3 ni enlaces
+ * (`realpathSync.native`). El candado mira ESTO, no el texto del argumento (auditor 09/10/2026: con
+ * `.env.local/`, `.env.local::$DATA` o `ENV~1.LOC` el chequeo por texto dejaba pasar la clave).
+ */
+export function rutaReal(ruta, { raiz = process.cwd() } = {}) {
+  const limpia = String(ruta ?? '').trim().replace(/::\$DATA$/i, '');
+  const abs = path.resolve(raiz, limpia);
+  try { return fs.realpathSync.native(abs); } catch { return abs; }
+}
+
+/** true si la ruta (la real, y tambien el texto tal cual) es un archivo de secretos: esos no se mandan nunca. */
+export function esSecreto(ruta, opciones = {}) {
+  const texto = String(ruta ?? '').trim().replace(/::\$DATA$/i, '').replace(/[\\/]+\.?$/, '');
+  return SECRETO_RE.test(path.basename(rutaReal(ruta, opciones))) || SECRETO_RE.test(texto);
+}
+
+/** Lee un archivo de texto que va a la API (el pedido, el system) con el mismo candado que los adjuntos. */
+export function leerTextoSeguro(ruta, { raiz = process.cwd(), que = 'archivo' } = {}) {
+  if (esSecreto(ruta, { raiz })) throw new ErrorApi('api', `no se manda un archivo de secretos como ${que}: ${ruta}`);
+  const real = rutaReal(ruta, { raiz });
+  if (!fs.existsSync(real) || fs.statSync(real).isDirectory()) throw new ErrorApi('api', `no existe el ${que} ${ruta}`);
+  return fs.readFileSync(real, 'utf8');
+}
+
+/** La salida se valida ANTES de pagar: ni una carpeta, ni un secreto, ni uno de los archivos que entran. */
+export function validarSalida(ruta, { raiz = process.cwd(), entradas = [] } = {}) {
+  const real = rutaReal(ruta, { raiz });
+  if (esSecreto(ruta, { raiz })) throw new ErrorApi('api', `--salida no puede ser un archivo de secretos: ${ruta}`);
+  if (fs.existsSync(real) && fs.statSync(real).isDirectory()) throw new ErrorApi('api', `--salida es una carpeta, tiene que ser un archivo: ${ruta}`);
+  const mismos = entradas.map((e) => rutaReal(e, { raiz }).toLowerCase());
+  if (mismos.includes(real.toLowerCase())) throw new ErrorApi('api', `--salida no puede pisar un archivo que entra al pedido: ${ruta}`);
+  return real;
 }
 
 /**
@@ -55,12 +85,12 @@ export function armarMensaje({ pedido, adjuntos = [] }) {
 /** Lee los adjuntos con sus candados. Tira con el motivo si uno no se puede mandar. */
 export function leerAdjuntos(rutas, { raiz = process.cwd() } = {}) {
   return rutas.map((r) => {
-    if (esSecreto(r)) throw new ErrorApi('api', `no se manda un archivo de secretos: ${r}`);
-    const abs = path.resolve(raiz, r);
-    if (!fs.existsSync(abs)) throw new ErrorApi('api', `no existe el adjunto ${r}`);
+    if (esSecreto(r, { raiz })) throw new ErrorApi('api', `no se manda un archivo de secretos: ${r}`);
+    const abs = rutaReal(r, { raiz });
+    if (!fs.existsSync(abs) || fs.statSync(abs).isDirectory()) throw new ErrorApi('api', `no existe el adjunto ${r}`);
     const bytes = fs.statSync(abs).size;
     if (bytes > TOPE_ADJUNTO_BYTES) throw new ErrorApi('api', `el adjunto ${r} pesa ${Math.round(bytes / 1024)} KB: el tope son ${TOPE_ADJUNTO_BYTES / 1024 / 1024} MB (recortalo antes)`);
-    return { ruta: path.relative(raiz, abs).replace(/\\/g, '/'), texto: fs.readFileSync(abs, 'utf8') };
+    return { ruta: path.relative(rutaReal(raiz), abs).replace(/\\/g, '/'), texto: fs.readFileSync(abs, 'utf8') };
   });
 }
 
@@ -96,10 +126,11 @@ export function leerArgumentos(argv) {
 async function main(argv) {
   let op;
   try { op = leerArgumentos(argv); } catch (e) { console.error(e.message); return 2; }
-  const pedido = fs.readFileSync(path.resolve(op.pedido), 'utf8');
+  const pedido = leerTextoSeguro(op.pedido, { que: 'pedido' });
   const adjuntos = leerAdjuntos(op.adjuntos);
   const usuario = armarMensaje({ pedido, adjuntos });
-  const system = op.sistema ? fs.readFileSync(path.resolve(op.sistema), 'utf8') : undefined;
+  const system = op.sistema ? leerTextoSeguro(op.sistema, { que: 'system' }) : undefined;
+  const salida = op.estimar ? null : validarSalida(op.salida, { entradas: [op.pedido, ...op.adjuntos, ...(op.sistema ? [op.sistema] : [])] });
   // fallbacks: false — un pedido a Opus tiene que volver de Opus; el 09/10/2026 el fallback del servidor
   // devolvio "claude-opus-4-8" y el trabajo se perdio. Un rechazo es un error y se ve, no se tapa con otro modelo.
   const comun = { modelo: op.modelo, effort: op.effort, usuario, system, cacheTtl: system ? '5m' : null, maxTokens: op.maxTokens, fallbacks: false };
@@ -113,7 +144,6 @@ async function main(argv) {
 
   // Por streaming: sin streaming la conexion se corta a los ~10 min aunque el timeout sea mayor (09/10/2026).
   const r = await llamarLargo(cliente, { ...comun, tarea: `sesion:${op.tarea}` });
-  const salida = path.resolve(op.salida);
   fs.mkdirSync(path.dirname(salida), { recursive: true });
   fs.writeFileSync(salida, r.texto.endsWith('\n') ? r.texto : `${r.texto}\n`, 'utf8');
   console.log(`Respuesta guardada en ${path.relative(process.cwd(), salida)} (${r.texto.length.toLocaleString('es-AR')} caracteres) · costo real ${usd(r.costoUsd)} · ${r.usage.input_tokens ?? 0} entrada / ${r.usage.output_tokens ?? 0} salida · ${Math.round(r.duracionMs / 1000)} s${r.fallback?.length ? ` · fallback ${r.fallback.join(', ')}` : ''}${r.modeloRespuesta && r.modeloRespuesta !== r.modelo ? ` · OJO: contesto ${r.modeloRespuesta}` : ''}`);
