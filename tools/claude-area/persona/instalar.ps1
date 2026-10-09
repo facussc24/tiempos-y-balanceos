@@ -67,7 +67,7 @@ $sello = Get-Date -Format 'yyyy-MM-dd_HHmmss'
 $respUsuario = Join-Path $claudeDir ('respaldos\antes-de-instalar-' + $sello)
 # La carpeta de memoria se deriva de -CarpetaBarack como lo hace Claude Code (C:\ClaudeBarack -> C--ClaudeBarack):
 # con otra carpeta la memoria quedaba huerfana (revision S2, 09/10/2026).
-$memDir = Join-Path $claudeDir ('projects\' + ($CarpetaBarack -replace '[:\\/]', '-') + '\memory')
+$memDir = Join-Path $claudeDir ('projects\' + ($CarpetaBarack.TrimEnd('\') -replace '[^A-Za-z0-9]', '-') + '\memory')
 $conDir = Join-Path $claudeDir 'conocimiento-barack'
 $herrZip = Join-Path $aqui 'herramientas'
 $hayHerr = Test-Path -LiteralPath (Join-Path $herrZip 'repo.zip')
