@@ -26,7 +26,7 @@ noche», «hasta que vuelva», «ponete un cronómetro»), ANTES de seguir con l
 2. **La hora fijada**: `node scripts/_lib/horaGuard.mjs --fijar "AAAA-MM-DD HH:MM" --lista <archivo> --pedido "<sus palabras>"`.
    Si es ambigua («hasta 8»), la próxima que tenga sentido con lo que dijo. Sin hora («toda la noche»), la mejor
    estimación; si no hay pista, 4 horas y se renueva.
-3. **El latido**: `CronCreate` recurrente cada 10 minutos (en minutos que no sean :00 ni :30) con un prompt que
+3. **El latido** (⚠ ver «09/10: el latido por CronCreate nunca disparó», abajo): `CronCreate` recurrente cada 10 minutos (en minutos que no sean :00 ni :30) con un prompt que
    empiece con `LATIDO`, mande a mirar la hora, **correr `node scripts/_colgados.mjs`**, leer la lista y seguir; y
    `--latido <id>`. El latido dispara solo con la sesión inactiva y muere si la app se cierra: al arrancar o compactar,
    `CronList` y rearmarlo si falta.
@@ -47,6 +47,27 @@ noche», «hasta que vuelva», «ponete un cronómetro»), ANTES de seguir con l
 Fak también puede usar `/goal` (propio de Claude Code): sigue turno tras turno hasta que se cumple una condición.
 El que juzga no tiene reloj, así que la condición tiene que pedir que se muestre la hora en cada turno. Este
 mecanismo no depende de eso.
+
+## 09/10/2026: el latido por CronCreate nunca disparó (medido)
+
+En los transcripts de esta carpeta: **0 mensajes LATIDO en 16 sesiones** (las 15 del 08/10 y la de la noche, con
+35 menciones de CronCreate); un one-shot `* * * * *` seguía sin disparar 8 minutos después con la sesión quieta.
+La doc oficial (code.claude.com/docs/en/scheduled-tasks) dice que dispara «while Claude Code is running and
+idle»; en la app de escritorio no se vio nunca. Por eso el 03/10 y el 08/10 la sesión se quedó quieta horas mientras
+el hook `hora-guard` daba el latido por vivo: **miraba que el cron existiera (`session_crons`), no que latiera**.
+
+Lo que sí disparó (probado el 09/10 a las 06:39): una **tarea programada de la app de escritorio**
+(`mcp__scheduled-tasks__create_scheduled_task`): arrancó sola a los 50 s en una sesión nueva. Corre con la app
+abierta (si estaba cerrada, corre al abrirla), cada corrida es una sesión nueva sin memoria de esta, y con
+`notifyOnCompletion` **avisa a la sesión que la creó cuando termina**: ese aviso es el latido. Hasta que
+`horaGuard --latido` y el hook acepten ese id (cola `docs/COLA_CAMBIOS_CODIGO.md`, mediano), el paso 3 se
+hace así: tarea programada cada 10 minutos (`*/10 * * * *` en minutos que no sean :00/:30) **cuyo prompt no
+hace nada** («contestá en una línea la hora y terminá»; sin herramientas no hay carteles), `notifyOnCompletion: true`:
+el aviso de «terminó» es lo que despierta a ESTA sesión, y el trabajo lo hace esta sesión con la lista. Se borra
+al terminar el pedido. ⚠ La corrida de prueba del 09/10 arrancó en **modo plan** (lo pone el `permissions.defaultMode`
+del settings para toda sesión nueva) y se quedó esperando el cartel de salir del plan: por eso el prompt del latido
+no puede necesitar ni una herramienta. El `CronCreate` se sigue creando solo para que el hook no frene, sabiendo
+que no late.
 
 ## Enforcement
 

@@ -7,6 +7,16 @@ con la fecha y el commit; cada tanto se archiva lo tachado al final.
 
 Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabras) · dónde (archivo o área)`
 
+## Orden sugerido para hoy, 09/10 (lo decido yo; Fak corrige)
+
+1. **La clave de la API** (acción de Fak, 2 minutos): sin ella la noche no corre y nada de lo construido se usa. `node scripts/_claude.mjs --pegar-clave`.
+2. **Enganchar los tres programas nuevos como pasos de la noche** (mediano): propuestas de skills, prueba de disparo y vigilante de precios ya están probados; falta que `nocturno.mjs` los llame, con su test y una corrida real con la clave.
+3. **Novedades siguiendo los links** (mediano): pedido de Fak del 08/10; es lo que hace que lo de Claude Devs entre el mismo día.
+4. **Cierre en inglés** (mediano): es un control nuevo del Stop hook; se hace con Fak en la PC para verlo funcionar en un turno real antes de darlo por implementado.
+5. **Skills cortadas a 20.000** (mediano): recién después de confirmar el corte con evidencia propia (fila de abajo).
+6. **Poda de lo fijo de cada sesión** (grande, necesita su sí): la de más efecto sobre «repetís errores que ya estaban anotados», y la más delicada.
+7. Los chicos cuando haya un hueco: `firma-ia-guard` mayúsculas, `_test_com.py`, worktrees (con su sí), apóstrofo del vigilante.
+
 ## Pendientes
 
 - [ ] 2026-10-08 · mediano · Fak · "los links que pasa Claude Devs donde explica a fondo las cosas": que `_novedadesClaude.mjs` siga los links de los posteos (claude.com/blog, platform.claude.com, code.claude.com, releases de GitHub), guarde el artículo en `.sgc-cache/x-seguimiento/articulos/` y la noche lo resuma · `scripts/_novedadesClaude.mjs`
@@ -27,6 +37,7 @@ Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabra
 - [ ] 2026-10-09 · chico · auditor · `candadosNocturno.test.mjs:67`: el candado textual no ve `writeSync`/`openSync`, `import { writeFileSync as w }`, `fs['writeFileSync']` ni un `spawnSync` nuevo hacia un script que escriba. Sumar esos patrones (y sus gemelos rojos) · `__tests__/scripts/candadosNocturno.test.mjs`
 - [ ] 2026-10-09 · mediano · auditor · `nocturno.mjs:70`: el tope por corrida se mira solo entre pasos (la pre-auditoría, primera, no tiene tope adentro: ~$1,27 por 6 AMFE); y si `guardar()` tira adentro de `enParalelo` (`_preauditarAmfe.mjs:214`) los otros workers siguen llamando a la API sin que ese gasto entre al contador (el ledger sí lo anota) · `scripts/_lib/nocturno.mjs`, `scripts/_preauditarAmfe.mjs`
 - [ ] 2026-10-09 · chico · auditor · `vigilarPrecios.mjs:454`: si la página pasa a escribir «don’t» con apóstrofo tipográfico, `sinAcumulacion` da `false` (falla con ruido: DISTINTO y código 3, no en silencio) · `scripts/_lib/vigilarPrecios.mjs`
+- [ ] 2026-10-09 · mediano · yo · **el latido de «trabajar hasta la hora» no anda**: CronCreate no entregó ni un mensaje en 16 sesiones (medido 09/10 06:36; el one-shot tampoco disparó con la sesión quieta). Cambiar el mecanismo a la tarea programada de la app (`create_scheduled_task` cada 10 min con aviso a la sesión al terminar) y que `horaGuard.mjs --latido` y el hook `hora-guard` acepten ese id en vez de `session_crons`; probar con un mensaje real de Fak (`_probarMejora.mjs`) · `scripts/_lib/horaGuard.mjs`, `.claude/hooks/hora-guard.sh`, `.claude/rules/trabajar-hasta-la-hora.md`
 
 ## Hechos
 
