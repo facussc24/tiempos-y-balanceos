@@ -60,7 +60,7 @@ $marcaRuta = Join-Path $claudeDir 'barack-instalado.json'
 $marca = $null
 if (Test-Path -LiteralPath $marcaRuta) { try { $marca = (Leer $marcaRuta) | ConvertFrom-Json } catch { $marca = $null } }
 if (-not $CarpetaHerramientas) { $CarpetaHerramientas = Prop $marca 'herramientas'; if (-not $CarpetaHerramientas) { $CarpetaHerramientas = 'C:\BarackHerramientas' } }
-$memDir = Prop $marca 'memoria_dir'; if (-not $memDir) { $memDir = Join-Path $claudeDir 'projects\C--ClaudeBarack\memory' }
+$memDir = Prop $marca 'memoria_dir'; if (-not $memDir) { $memDir = Join-Path $claudeDir ('projects\' + ($CarpetaBarack -replace '[:\\/]', '-') + '\memory') }
 # la primera copia que dejo el instalador tiene lo que habia ANTES de todo: de ahi se devuelve
 $respaldos = @(Get-ChildItem -LiteralPath (Join-Path $claudeDir 'respaldos') -Directory -Filter 'antes-de-instalar-*' -ErrorAction SilentlyContinue | Sort-Object Name)
 $primero = $null; if ($respaldos.Count) { $primero = $respaldos[0].FullName }

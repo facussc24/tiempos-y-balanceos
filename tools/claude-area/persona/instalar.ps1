@@ -65,7 +65,9 @@ $persona = (Leer (Join-Path $aqui 'persona.json')) | ConvertFrom-Json
 $claudeDir = Join-Path $CarpetaUsuario '.claude'
 $sello = Get-Date -Format 'yyyy-MM-dd_HHmmss'
 $respUsuario = Join-Path $claudeDir ('respaldos\antes-de-instalar-' + $sello)
-$memDir = Join-Path $claudeDir 'projects\C--ClaudeBarack\memory'
+# La carpeta de memoria se deriva de -CarpetaBarack como lo hace Claude Code (C:\ClaudeBarack -> C--ClaudeBarack):
+# con otra carpeta la memoria quedaba huerfana (revision S2, 09/10/2026).
+$memDir = Join-Path $claudeDir ('projects\' + ($CarpetaBarack -replace '[:\\/]', '-') + '\memory')
 $conDir = Join-Path $claudeDir 'conocimiento-barack'
 $herrZip = Join-Path $aqui 'herramientas'
 $hayHerr = Test-Path -LiteralPath (Join-Path $herrZip 'repo.zip')
