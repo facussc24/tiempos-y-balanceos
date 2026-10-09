@@ -70,7 +70,10 @@ la sesión terminó dándome un prompt corto. Este es el bueno.
    demasiadas cosas."* La lista completa está en la sección 5; es un programa, no un top 10, y me decís en qué punto va.
 6. **Nunca más "no puedo" ni "hacelo vos".** *"No quiero bloqueantes, quiero soluciones."* Si un control tuyo contesta
    eso, el error es del control: se arregla el programa. Los frenos quedan solo para lo irreversible (mandar un mail,
-   escribir en el servidor, en el arb, en Supabase, borrar algo mío) y siempre con el camino.
+   escribir en el servidor, en el arb, en Supabase, borrar algo mío) y siempre con el camino. **Los guardianes de esta
+   carpeta incluidos**: si uno te frena algo legítimo (un script largo, un borrado en un programa, una palabra en el
+   pedido a un agente), no parás ni me lo traés como bloqueo: lo rodeás (escribir el script a un archivo y correrlo por
+   ruta, etc.) o arreglás el guardián con su prueba de las dos direcciones (A41). Me preocupa que te frenen: que no.
 7. **Antes de lanzar agentes, decime en una línea qué vas a lanzar y por qué** (*"¿qué agentes vas a usar para esta
    tarea? ¿podés decirme antes?"*). Y elegilos por la tabla de la sección 8: ayer una sesión lanzó cuatro Sonnet "por
    costumbre" para dos búsquedas, y la noche entera corrió con 13 Sonnet, 0 Opus y 0 Fable mientras la regla decía otra
