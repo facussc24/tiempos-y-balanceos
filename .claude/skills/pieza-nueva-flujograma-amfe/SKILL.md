@@ -83,6 +83,12 @@ La columna "sin papel" es lo que se le dice a Fak al cerrar, en una lista corta.
 pregunta: Fak no siempre conoce el proceso de una pieza nueva (*"por ahora no te puedo dar
 respuestas"*).
 
+**Una ficha técnica de proveedor se filtra por el material de ESA pieza antes de usarla.** El
+09/10/2026 la hoja de la reunión del Upper Trim llevó la condición de limpieza de la ficha del
+adhesivo (superficies limpias con alcohol) que la ficha pide para polipropileno; la pieza no es
+polipropileno. Fak: *"al pedo pusiste eso"*. De una ficha genérica entra solo lo que aplica al
+material y al proceso de la pieza, y se dice para cuál aplica.
+
 ## 2. El flujograma sale de dos hermanos, y Fak lo mira antes de emitir
 
 Skill `flujogramas` §0 bis. En corto: se eligen los dos flujogramas más parecidos (mismo

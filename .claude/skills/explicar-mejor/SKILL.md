@@ -88,6 +88,11 @@ después se ofrece en un renglón; no se ejecuta ni se arregla nada en paralelo.
 - Arriba, la respuesta en una oración grande. Después el dibujo. Después las partes.
 - Cada parte tiene plegado su "de dónde sale": el documento, la fecha y el código. Ahí sí van los
   códigos. La persona lo abre solo si lo necesita.
+- **Cada documento que la página nombra lleva su ruta (para copiar y abrir) y su captura.** Fak,
+  09/10/2026, sobre la hoja de la reunión con Calidad: *"de nuevo no está la ruta para abrirlo...
+  lo importante es tener, mientras voy leyendo, las rutas y fotos"*. Un nombre solo no sirve.
+- **Lo que decide OTRA área va como pregunta, nunca como propuesta nuestra** (*"eso es de Calidad,
+  lo estás escribiendo..."*, 09/10/2026). Cada punto de una hoja de reunión dice quién lo decide.
 - Lo interactivo va cuando ayuda a entender: plegar, filtrar, pasar el mouse, mover un número y ver
   qué cambia. Animación de adorno, no.
 - **Es descartable.** Se guarda en `exports/explicaciones/` (fuera de git). No va a la biblioteca de

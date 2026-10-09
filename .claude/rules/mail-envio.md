@@ -135,6 +135,12 @@ otro esta de mas"*.
 - **No se recuerda lo obvio ni se agrega relleno.** El test: *¿el que lee tiene que hacer algo
   con esto hoy?* Si no, afuera. Al mail para Gamboa le sume siete codigos que nadie iba a
   tocar: *"los agregaste y aclaraste de mas, es un error conocido tuyo"*.
+- **Una pregunta en el mail es la que el otro puede contestar, no mi hueco interno** (09/10/2026,
+  mail a Manuel por el IMDS). No va: *"para completar el plan de control me falta saber si el
+  control tactil se hace en cada plancha o por muestreo"* (eso se resuelve antes o se pregunta
+  aparte; Fak lo saco). Y la pregunta se arma desde lo que el otro tiene: no *"¿en el peso medido
+  va el calculado o los pesa Calidad?"*, sino *"¿ya tenes los pesos medidos, o los peso yo?"*
+  (Fak: *"deberiamos preguntarle si el ya tiene los pesos o debo pesarlo"*).
 
 ## Quien va en el mail — reglas de Fak del 30/09/2026 y del 02/10/2026
 
