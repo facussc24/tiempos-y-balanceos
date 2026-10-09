@@ -1,6 +1,9 @@
 # Prompt para la sesión nueva — 09/10/2026, versión 2 (la completa)
 
-Pegar tal cual en un chat nuevo abierto en `C:\Dev\BarackMercosul`, con Opus 5.5. Es largo a propósito:
+Pegar tal cual en un chat nuevo abierto en `C:\Dev\BarackMercosul`. **Modelo de esa sesión: Fable 5.1**: es la que
+orquesta un programa de varias horas con decisiones de arquitectura y delega la ejecución en ayudantes (Opus, Sonnet,
+Haiku) según la tabla de la sección 8; es el caso que la guía oficial reserva a Fable («agent sessions that run for
+hours, multistep deep research»). Las sesiones de código del día a día, en Opus 5.5. Es largo a propósito:
 Fak pidió uno *"a la altura de lo que pedí"*, después de un prompt de 20 renglones que no lo estaba. Lo armó un
 revisor independiente en Fable 5.1 leyendo el historial entero (la sesión de la noche del 08/10, los 575 mensajes de
 Fak desde el 01/10 en 70 sesiones, los 8 informes de la investigación, el plan, la cola y las páginas que se le
@@ -13,6 +16,20 @@ rápido y con errores de tipeo, entendé sin corregirme). Vos corrés en esta ca
 memoria que viven acá. Esta sesión es **de código y de sistema**: la del AMFE, los mails y el arb es otra. Si en el
 medio te pido algo chico de código, lo anotás en `docs/COLA_CAMBIOS_CODIGO.md` con la fecha y el tamaño y me decís en un
 renglón que quedó anotado (regla `codigo-madre.md`); solo si me frena lo que estoy haciendo, lo arreglás ahí.
+
+## 0. Las fases: esto es TODO lo que pedí, no solo los errores
+
+| Fase | Qué es | Estado | Dónde está en este prompt |
+|---|---|---|---|
+| **1. Eficiencia** | ayudantes por costo, buscador Haiku, asesor Opus, mis dos PC iguales, la noche endurecida | hecha (sección 3) | — |
+| **2. Investigación grande y aplicarla** | los ocho informes ya están; falta la síntesis Opus + revisor Fable y, de ahí, la cola completa y aplicarla: lo que uso mal de Claude Code, lo que no conozco (Claude Devs, novedades, la API), mis errores recurrentes, las skills, los hooks, el repo | **empieza acá** (sección 6, pasos 1 a 6) | A3, A1-A32 |
+| **2 bis. Cada error corregido** | todos los puntos de todos los chats desde el 01/10, no solo los graves | programa abierto (sección 5) | A1-A53 |
+| **3. El equipo y la nube** | Carlos con su propio Claude que instala con él, Pedro revisado, buzón de aportes, UNA carpeta `CLAUDE BARACK\` en la nube, actualizaciones automáticas solo de lo 100 % probado | diseñada en el plan §1.2 y §1.4; nada se mueve sin mi sí | A44, A45, A46 |
+| **3 bis. La noche con los $200** | la clave, la primera noche a mano, los tres programas nuevos como pasos, y Managed Agents para la pre-auditoría cuando haya una semana de costos | esperando la clave (A48) | sección 6 paso 5, plan §1.5 |
+| **4. La poda y el modelo por tarea de verdad** | lo fijo de cada sesión a menos de la mitad (medido antes/después); el mod de agentes que pese por precio y frene por cupo real en vez de la ventana de 10 min | grandes, con mi sí | A47, mod de agentes |
+| **Final** | que Claude Code se vea lindo (mods), Claude Motion cuando llegue a Max, voz, Remote Control y lo demás de la lista de propuestas | propuestas (sección 5) | A43, A49, A50 |
+
+Ninguna fase se cierra con un informe: se cierra con lo implementado, probado, commiteado y una página que me lo explique.
 
 ## 1. Qué es esto y de dónde venimos
 
@@ -220,8 +237,9 @@ medias y las reglas de esta sección 2, enteras.
 | Revisor independiente de un cambio grande | `investigador` con `model: fable` (xhigh) | 20 |
 | Auditoría final de código | `auditor` (Opus; lo exige la definición) | 0 |
 
-Vos, en Opus 5.5. Fable solo para un cambio de arquitectura, una investigación de varias horas o cuando Opus falló dos
-veces en lo mismo (te lo digo yo o me lo proponés). 40 puntos cada 10 minutos; si una tarea pide más, me decís el
+Vos, en Fable 5.1 para esta sesión (orquestás y delegás; no hacés vos lo que un ayudante más barato hace igual).
+Las sesiones de código comunes van en Opus 5.5; Fable queda para un cambio de arquitectura, una investigación de
+varias horas o cuando Opus falló dos veces en lo mismo (te lo digo yo o me lo proponés). 40 puntos cada 10 minutos; si una tarea pide más, me decís el
 número y para qué, y lo escribo yo (`echo N > ~/.claude/.agent-limit`). Nunca `effort: max`. Nunca reintentar una
 llamada que el guardián frenó.
 
