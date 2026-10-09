@@ -293,6 +293,13 @@ describe('claudeApi · llamarLargo (streaming) con un cliente falso', () => {
     expect(r.costoUsd).toBeGreaterThan(0);
     expect(A.leerLedgerCiclo(A.cicloDe(new Date(), 1), dir).map((e) => e.tarea)).toEqual(['largo']);
   });
+  it('un id de modelo que la tabla no conoce se cobra como el pedido y queda a la vista en modeloRespuesta', async () => {
+    const r = await A.llamarLargo(clienteStream(respuesta({ model: 'claude-opus-4-8' })), { modelo: 'opus', usuario: 'x', tarea: 'raro', dirLedger: dir });
+    expect(r.modelo).toBe(A.MODELOS.opus);
+    expect(r.modeloRespuesta).toBe('claude-opus-4-8');
+    expect(r.costoUsd).toBeGreaterThan(0);
+    expect(A.leerLedgerCiclo(A.cicloDe(new Date(), 1), dir).map((e) => e.tarea)).toEqual(['raro']);
+  });
   it('ROJO — una respuesta cortada por max_tokens tira, igual que llamar', async () => {
     await expect(A.llamarLargo(clienteStream(respuesta({ stop_reason: 'max_tokens' })), { modelo: 'sonnet', usuario: 'x', dirLedger: dir })).rejects.toThrow(/max_tokens/);
   });

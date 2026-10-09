@@ -250,10 +250,15 @@ export function interpretarRespuesta(res, { modelo, conSchema = false, lote = fa
   const contenido = Array.isArray(res?.content) ? res.content : [];
   const texto = contenido.filter((b) => b && b.type === 'text').map((b) => b.text).join('\n').trim();
   const usage = res?.usage || {};
-  const idModelo = resolverModelo(res?.model || modelo);
+  // El servidor puede contestar con un id que la tabla no conoce (09/10/2026: un pedido a Opus volvio como
+  // "claude-opus-4-8" por el fallback del servidor y resolverModelo() tiraba DESPUES de pagar, sin ledger).
+  // Se cobra como el modelo pedido y el id real queda en `modeloRespuesta` para que se vea.
+  let idModelo;
+  try { idModelo = resolverModelo(res?.model || modelo); } catch { idModelo = resolverModelo(modelo); }
   const r = {
     id: res?.id ?? null,
     modelo: idModelo,
+    modeloRespuesta: res?.model ?? null,
     stopReason: res?.stop_reason ?? null,
     texto,
     json: null,

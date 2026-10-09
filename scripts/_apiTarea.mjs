@@ -100,7 +100,9 @@ async function main(argv) {
   const adjuntos = leerAdjuntos(op.adjuntos);
   const usuario = armarMensaje({ pedido, adjuntos });
   const system = op.sistema ? fs.readFileSync(path.resolve(op.sistema), 'utf8') : undefined;
-  const comun = { modelo: op.modelo, effort: op.effort, usuario, system, cacheTtl: system ? '5m' : null, maxTokens: op.maxTokens };
+  // fallbacks: false — un pedido a Opus tiene que volver de Opus; el 09/10/2026 el fallback del servidor
+  // devolvio "claude-opus-4-8" y el trabajo se perdio. Un rechazo es un error y se ve, no se tapa con otro modelo.
+  const comun = { modelo: op.modelo, effort: op.effort, usuario, system, cacheTtl: system ? '5m' : null, maxTokens: op.maxTokens, fallbacks: false };
   const cliente = crearCliente({ timeoutMs: op.timeoutMin * 60 * 1000 });
 
   const entrada = await contarTokens(cliente, comun);
@@ -114,7 +116,7 @@ async function main(argv) {
   const salida = path.resolve(op.salida);
   fs.mkdirSync(path.dirname(salida), { recursive: true });
   fs.writeFileSync(salida, r.texto.endsWith('\n') ? r.texto : `${r.texto}\n`, 'utf8');
-  console.log(`Respuesta guardada en ${path.relative(process.cwd(), salida)} (${r.texto.length.toLocaleString('es-AR')} caracteres) · costo real ${usd(r.costoUsd)} · ${r.usage.input_tokens ?? 0} entrada / ${r.usage.output_tokens ?? 0} salida · ${Math.round(r.duracionMs / 1000)} s${r.fallback?.length ? ` · fallback ${r.fallback.join(', ')}` : ''}`);
+  console.log(`Respuesta guardada en ${path.relative(process.cwd(), salida)} (${r.texto.length.toLocaleString('es-AR')} caracteres) · costo real ${usd(r.costoUsd)} · ${r.usage.input_tokens ?? 0} entrada / ${r.usage.output_tokens ?? 0} salida · ${Math.round(r.duracionMs / 1000)} s${r.fallback?.length ? ` · fallback ${r.fallback.join(', ')}` : ''}${r.modeloRespuesta && r.modeloRespuesta !== r.modelo ? ` · OJO: contesto ${r.modeloRespuesta}` : ''}`);
   return 0;
 }
 
