@@ -458,6 +458,66 @@ Buscar por nombre con *  →  abrir el material  →  MDS > Save as > new versio
 
 Resultado: `NO TEJIDO 100 Gr` paso de **1** a **2**, *Internally released*, 0 errores.
 
+## Lo aprendido operando (08/10/2026, apoyacabezas Patagonia, desde la notebook de Calidad)
+
+### Antes de tocar: el permiso se pide con las palabras de la carga
+
+El clasificador de permisos frena **cualquier escritura** en IMDS (tipear un peso en un borrador,
+no solo `Send`) como *"Unrequested Commit in a Connected App"*, aunque Fak haya dicho "hacelo
+vos". Antes de la primera escritura de la tanda se le pide un OK que nombre la carga: **que
+campos, en cuantos MDS, y "sin enviar"**. No se esquiva el freno.
+
+### "¿Ya esta aprobado?" se contesta desde la bandeja de enviados
+
+`Functions → Outbox → MDS` (**Alt+Shift+O**) → filtro `Name` (ej. `IP PAD*`) → `Search`. Sin
+filtros pregunta *"Continue anyway?"* y corta en 500. La columna **Status** es la respuesta:
+
+| Status | Que quiere decir |
+|---|---|
+| `not yet browsed` / `browsed` | el cliente no lo abrio / lo abrio, sin decidir |
+| `in process at recipient` | el cliente lo recibio y lo esta procesando: **todavia NO aprobado** |
+| `accepted` / `rejected` | decidido (el motivo del rechazo sale en *Reason for denial*) |
+| `cancelled by sender` | lo retiramos nosotros (un borrador reemplazado) |
+
+Una version nueva (`1.01`) en proceso no borra que la anterior (`1`) este `accepted`: decir las dos.
+
+### El buscador: cuatro trampas que costaron media hora
+
+1. **Comodin al principio (`*HEADREST*`) da 0** y deja el aviso *"result is very big"*. Lo que
+   anda: **Part/Item No. con comodin al final** (`2HC.88*` = todos los apoyacabezas y apoyabrazos
+   Patagonia) o nombre con comodin al final.
+2. **Los campos se llenan con `form_input`**, no con teclas: el `ctrl+a` de la herramienta
+   `computer` escribio una **"a" literal** en el campo (`a2HC.88*`, y en ID el aviso *"Please enter
+   a positive integer value in the field MDS ID"*).
+3. **Los avisos del IMDS se cierran con `Escape`.** El clic en `OK` no respondia (ni real ni por
+   codigo) y la captura seguia mostrando el cartel.
+4. **La tabla de resultados es virtual**: una fila fuera de la vista NO esta en el DOM, y parece
+   que no existe. Hacer `scrollIntoView` sobre las vecinas, o buscar mas especifico. Para abrir
+   una fila sirve un `dblclick` por codigo sobre su celda (abrir no escribe nada).
+
+### Leer pesos sin abrir un reporte
+
+Al clickear un nodo del arbol, el panel *Details* trae `Measured weight per item` (es un
+**input**: `innerText` no lo muestra, hay que leer `.value`) y `Calculated weight per item`. Los
+nodos del arbol estan cada ~17,7 px desde y=147 con el viewport en 1536 px. Un nodo
+`Component (received MDS)` es una pieza que nos manda el proveedor (ej. el asta KD de VW): su
+peso es del proveedor y no se toca.
+
+### El peso medido es la pieza ENTERA, con lo que manda el cliente adentro
+
+En los borradores de los apoyacabezas el *Measured weight* estaba cargado **sin el asta y el EPP
+que manda VW** (370 g medidos contra 799 g calculados: 116 % de desvio). El peso del componente
+es el de la pieza como sale, con todo lo que tiene colgado. El unico apoyacabezas terminado por
+Calidad (delantero Titan Black, `1507316955`) lo tiene asi: 999 g medidos, 999,8 calculados.
+
+### Una tabla de pesos se valida sumandola antes de cargarla
+
+La tabla de requerimientos de los apoyacabezas trae tres fundas para vinilo (Lib B, AEKO,
+Tricapa); **la que va es la que cierra con el total** (`espuma + funda AEKO + asta/EPP = Total
+Obj AEKO`). Y la misma suma encontro una fila que no cierra (trasero central tela: 626 escrito,
+656 sumado): eso se pregunta, no se elige. Lo que la tabla NO dice (como repartir el peso de una
+funda de dos colores entre sus dos partes) tampoco se completa: va como pregunta.
+
 ## Lo que los manuales NO dicen (no inventarlo)
 
 - **No hay capitulo de Volkswagen** en el manual v15.0. Lo unico de VW es que pide **DUNS**
