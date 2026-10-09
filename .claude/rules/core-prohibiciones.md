@@ -23,3 +23,12 @@
    marca del complemento y las propiedades; canon `scripts/_lib/firmaIA.data.json`), guardian
    `firma-ia-guard` (PreToolUse) y chequeo 9 del `cierre-guard` (documentos escritos en el turno).
    Memoria `feedback_ningun_documento_dice_que_lo_hizo_claude`.
+   **09/10/2026, dos cosas más de Fak sobre el mismo PowerPoint (el IMDS de Patagonia armado en CATA):** (a) *"usaste un
+   logo no oficial de Barack, gravísimo"*: **el logo de Barack sale de UN solo archivo**,
+   `Ingeniería y Proyecto - General\VARIOS\Logo y color barack\barack_logo.png` (copia en `tools/flowchart/assets/`;
+   memoria `feedback_logo_oficial_barack_en_todo_documento`; el de `INGENIERIA BARACK (NUNCA BORRAR)` que usa
+   `generar_hojas_img.py` es el mismo archivo, hash `5d9207e12856`); el `LOGO BARACK.png` suelto de la raíz NO es oficial;
+   ninguno bajado, redibujado ni recortado de otro documento. (b) *"las primeras fotos parecen hechas con IA... me da
+   una fea sensación"*: en un documento de la empresa van **fotos reales o capturas de pantalla**; nada generado,
+   estilizado ni «mejorado» con IA, salvo que Fak lo pida para ese documento. Gate pendiente en `_sinFirmaIA.py`
+   (cola `docs/COLA_CAMBIOS_CODIGO.md`).
