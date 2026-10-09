@@ -20,7 +20,7 @@ y `.../pricing`). Traspaso completo: `docs/drafts/HANDOFF_API_CLAUDE_2026-10-08.
 
 - El plan Max trae creditos de API por ciclo ($100 el Max 5x, $200 el Max 20x). **Vencen al final de cada
   CICLO DE FACTURACION (no el dia 1 del mes) y no se acumulan.** El dia en que se renueva el ciclo es
-  `BARACK_API_CICLO_DIA` (1 a 31; por defecto 1 = mes calendario, y es una suposicion hasta que Fak diga
+  `BARACK_API_CICLO_DIA` (1 a 31; por defecto 1 = mes calendario, y en esta PC esta FIJADO EN 30 como variable de usuario de Windows: `setx BARACK_API_CICLO_DIA 30`, 09/10/2026, claude.ai > Facturacion dice «Proximo credito: 30 oct 2026», memoria `reference_api_claude_clave_y_ciclo`; en otra PC es una suposicion hasta que Fak diga
   su fecha de renovacion). Un dia que el mes no tiene (31 en febrero) cae en el ultimo dia del mes.
 - **NO cubren Claude Code** ni el uso extra de las apps. El modelo que se elija en Claude Code (Opus,
   Fable) sale del plan, no de los creditos: cambiar el default **no gasta ni ahorra un centavo** de aca.
@@ -130,6 +130,7 @@ disparo de skills (`_pruebaDisparoSkills.mjs`). Hasta que se cableen, corren a m
 - `node scripts/_claude.mjs --check` dice que falta (clave, acceso, presupuesto, tarea agendada, edad de
   la ultima noche). **La tarea nocturna se agenda recien con la clave** (`--pegar-clave` lo hace solo si
   la API responde; si no, `node scripts/_nocturno.mjs --agendar`).
+- **Desde la app de Claude el cuadro de `--pegar-clave` NO se ve** (09/10/2026: el proceso y su ventana existen, pero no aparecen ni lanzado desde la consola interna de la sesion ni desde la terminal del panel). Lo que anduvo: pegarla en la terminal del panel con `Read-Host -AsSecureString` (asteriscos) y la misma escritura que `scriptPegarClave()`. En la cola: que `--pegar-clave` detecte la app y pida por terminal. Memoria `reference_api_claude_clave_y_ciclo`.
 
 ## 6. Para quien es lo que deja la noche
 
