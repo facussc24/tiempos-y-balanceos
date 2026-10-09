@@ -133,10 +133,11 @@ async function pasoMails({ cliente, simular }) {
 // Paso 3: prioridades del dia
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** El texto de `_seguimientos.mjs --hook` (siempre sale 0; vacio si no hay nada abierto o no hay memoria en esta PC). */
+/** El texto de `_seguimientos.mjs --hook` (vacio si no hay nada abierto o no hay memoria en esta PC). Si el script se cae
+ *  (sale distinto de 0) es un ERROR del paso, no "0 seguimientos": un vacio por rotura no es un resultado (auditor 09/10/2026). */
 function seguimientosHook() {
   const r = spawnSync(process.execPath, [path.join(AQUI, '_seguimientos.mjs'), '--hook'], { encoding: 'utf8', timeout: 30000, cwd: RAIZ, windowsHide: true });
-  if (r.error) throw new Error(`no pude correr _seguimientos.mjs --hook: ${r.error.message}`);
+  if (r.error || r.status !== 0) throw new Error(`_seguimientos.mjs --hook: ${String(r.stderr || r.error?.message || `salio con ${r.status}`).trim().slice(0, 200)}`);
   return String(r.stdout || '');
 }
 

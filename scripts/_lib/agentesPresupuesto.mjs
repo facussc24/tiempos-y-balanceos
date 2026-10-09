@@ -42,8 +42,12 @@ export function resumenVentana(lineas, { ahora = Math.floor(Date.now() / 1000), 
 export function limiteVigente({ contenido = null, modificadoSeg = null, ahora = Math.floor(Date.now() / 1000) } = {}) {
     if (contenido == null) return { limite: LIMITE_DEFAULT, origen: 'default', venceEnSeg: null };
     if (modificadoSeg != null && ahora - modificadoSeg > VENCE_SEG) return { limite: LIMITE_DEFAULT, origen: 'vencido', venceEnSeg: 0 };
-    const n = Number(String(contenido).replace(/[^0-9]/g, '').slice(0, 4));
-    if (!Number.isFinite(n)) return { limite: LIMITE_DEFAULT, origen: 'default', venceEnSeg: null };
+    // Igual que el guardian (agentes-guard.sh): lee SOLO la primera linea, se queda con los digitos y, si no queda
+    // nada (archivo vacio o con letras), aplica el default. Hallazgo del auditor 09/10/2026: antes '1\n5' daba 15 y
+    // un archivo vacio daba 0 ("sin conteo") mientras el guardian aplicaba 10.
+    const digitos = String(contenido).split(/\r?\n/)[0].replace(/[^0-9]/g, '').slice(0, 4);
+    if (!digitos) return { limite: LIMITE_DEFAULT, origen: 'default', venceEnSeg: null };
+    const n = Number(digitos);
     return { limite: n, origen: 'override', venceEnSeg: modificadoSeg == null ? null : Math.max(0, modificadoSeg + VENCE_SEG - ahora) };
 }
 

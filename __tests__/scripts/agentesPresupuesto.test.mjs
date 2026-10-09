@@ -55,6 +55,13 @@ describe('limiteVigente — igual que el guardian: 12 h desde la ultima modifica
     it('0 = sin conteo', () => {
         expect(presupuestoPuntos(limiteVigente({ contenido: '0', modificadoSeg: T, ahora: T }).limite)).toBe(Infinity);
     });
+    it('lee SOLO la primera linea, como el guardian: "1\\n5" es 1, no 15 (auditor 09/10/2026)', () => {
+        expect(limiteVigente({ contenido: '1\n5', modificadoSeg: T, ahora: T }).limite).toBe(1);
+    });
+    it('archivo vacio o con letras = default 10 (el guardian hace lo mismo), no "sin conteo"', () => {
+        expect(limiteVigente({ contenido: '', modificadoSeg: T, ahora: T })).toEqual({ limite: 10, origen: 'default', venceEnSeg: null });
+        expect(limiteVigente({ contenido: 'abc\n', modificadoSeg: T, ahora: T }).limite).toBe(10);
+    });
 });
 
 describe('registro y texto', () => {
