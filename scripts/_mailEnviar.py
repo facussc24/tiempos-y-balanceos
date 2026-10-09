@@ -318,6 +318,26 @@ def main() -> int:
             print(f"   - {x.LastModificationTime} | {x.Subject} | {x.To}")
         return 1
     it = cands[0]
+    # 1-bis. con --enviar: la ventana abierta del borrador (la deja _prepararMail.py para que Fak lo
+    #        vea) hace fallar el Send() con "hay un cuadro de dialogo modal abierto" (09/10/2026; Fak:
+    #        "nunca mas podes decirme no puedo"). Se cierra GUARDANDO (olSave = 0) ANTES de los gates,
+    #        para que revisen lo que de verdad sale. Solo la ventana de ESTE item: una respuesta que
+    #        Fak este escribiendo en el mismo hilo no se toca.
+    if a.enviar:
+        cerradas = 0
+        for i in range(ol.Inspectors.Count, 0, -1):
+            ins = ol.Inspectors.Item(i)
+            try:
+                eid = str(ins.CurrentItem.EntryID or '')
+                mismo = bool(eid) and ns.CompareEntryIDs(eid, it.EntryID)
+            except Exception:
+                continue
+            if mismo:
+                ins.Close(0)
+                cerradas += 1
+        if cerradas:
+            print("  Cerre la ventana abierta del borrador (guardado) para poder enviar.")
+            it = ns.GetItemFromID(it.EntryID)
     cand = _campos(it)
     print(f"BORRADOR: {cand['asunto']}")
     print(f"  Para: {cand['para']}   CC: {cand['cc']}")
@@ -432,23 +452,6 @@ def main() -> int:
     if not a.enviar:
         print("\nDRY-RUN: no se envio nada. Agrega --enviar cuando este OK.")
         return 0
-
-    # 4b. la ventana del borrador abierta (la deja _prepararMail.py para que Fak lo vea) hace
-    #     fallar el Send() con "hay un cuadro de dialogo modal abierto" (09/10/2026). Se cierra
-    #     GUARDANDO (olSave = 0) y se vuelve a leer el item. Fak: "nunca mas podes decirme no puedo".
-    cerradas = 0
-    for i in range(ol.Inspectors.Count, 0, -1):
-        ins = ol.Inspectors.Item(i)
-        try:
-            asunto_ins = str(ins.CurrentItem.Subject or '')
-        except Exception:
-            continue
-        if normalizar_asunto(asunto_ins) == normalizar_asunto(cand['asunto']):
-            ins.Close(0)
-            cerradas += 1
-    if cerradas:
-        print(f"\n  Cerre {cerradas} ventana(s) abierta(s) del borrador (guardado) para poder enviar.")
-        it = ns.GetItemFromID(it.EntryID)
 
     # 5. enviar — vigilado: si Outlook saca el cartel de seguridad, el Send() se queda
     #    bloqueado esperando un clic y el script se colgaba MUDO hasta el timeout.
