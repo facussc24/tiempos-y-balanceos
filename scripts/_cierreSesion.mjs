@@ -277,6 +277,59 @@ function chequearGit() {
     }
 }
 
+export const REPO_GITHUB = 'facussc24/tiempos-y-balanceos';
+
+/**
+ * Estado del CI del ultimo push (regla git-deploy, paso 4). Puro: recibe lo que trajo `leerUltimoRunCI`.
+ * `run` = la corrida mas nueva del workflow en GitHub ({ head_sha, status, conclusion, html_url }) o null;
+ * `sha` = HEAD local; `error` = por que no se pudo leer. NUNCA da ok sin haber leido: el 08/10/2026 el CI
+ * estuvo rojo 17 corridas seguidas y nadie aviso (hallazgo R7). Rojo = falta; no leido = aviso.
+ */
+export function evaluarCI({ sha, run, error }) {
+    const tablero = `https://github.com/${REPO_GITHUB}/actions`;
+    if (error) return { estado: 'aviso', detalle: `no pude leer el CI (${error}) — mirarlo a mano: ${tablero}` };
+    if (!run) return { estado: 'aviso', detalle: `GitHub no devolvio ninguna corrida del CI — mirarlo a mano: ${tablero}` };
+    const corto = String(run.head_sha ?? '').slice(0, 8);
+    const head = String(sha ?? '').slice(0, 8);
+    const esHead = Boolean(corto) && Boolean(head) && corto === head;
+    const url = run.html_url ?? tablero;
+    if (run.status !== 'completed') return { estado: 'aviso', detalle: `CI en curso para ${corto} (${run.status}) — volver a mirar antes de cerrar: ${url}` };
+    if (run.conclusion === 'success') {
+        if (esHead) return { estado: 'ok', detalle: `CI verde para ${corto} (el HEAD)` };
+        return { estado: 'aviso', detalle: `CI verde para ${corto}, pero el HEAD local ${head || '?'} todavia no corrio (¿falta el push?): ${url}` };
+    }
+    return { estado: 'falta', detalle: `CI ROJO para ${corto} (${run.conclusion}) — arreglarlo antes de cerrar: ${url}` };
+}
+
+/**
+ * Trae la corrida mas nueva del workflow por la API publica de GitHub (esta PC no tiene login de `gh`:
+ * memoria gh_cli_sin_login_ci_por_api). Con tope de tiempo: esperar sin tope no es supervisar.
+ */
+export async function leerUltimoRunCI({ fetchFn = globalThis.fetch, timeoutMs = 8000, shaLocal } = {}) {
+    let sha = shaLocal ?? null;
+    if (sha == null) { try { sha = git('rev-parse HEAD'); } catch { /* sin git */ } }
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), timeoutMs);
+    try {
+        const r = await fetchFn(`https://api.github.com/repos/${REPO_GITHUB}/actions/runs?per_page=1`, {
+            signal: ctl.signal,
+            headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'barack-cierreSesion' },
+        });
+        if (!r.ok) return { sha, run: null, error: `HTTP ${r.status}${r.status === 403 ? ' (probablemente el limite de la API sin login)' : ''}` };
+        const j = await r.json();
+        const run = Array.isArray(j?.workflow_runs) ? (j.workflow_runs[0] ?? null) : null;
+        return { sha, run, error: null };
+    } catch (e) {
+        return { sha, run: null, error: e?.name === 'AbortError' ? `sin respuesta en ${timeoutMs / 1000} s` : (e?.message ?? String(e)) };
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+async function chequearCI() {
+    return evaluarCI(await leerUltimoRunCI());
+}
+
 function chequearBuild(saltear) {
     if (saltear) return { estado: 'aviso', detalle: 'salteado con --sin-build — correr npm run build antes del commit (git-deploy.md)' };
     const t0 = Date.now();
@@ -484,6 +537,7 @@ async function main(argv) {
         { paso: 'Backup Supabase posterior a la ultima escritura', ...evaluarBackup({ escritura: ultimaEscrituraSupabase(tmp), backup: ultimoBackupValido(tmp) }) },
         { paso: 'Build de produccion', ...chequearBuild(sinBuild) },
         { paso: 'Git: commit + push (regla git-deploy)', ...chequearGit() },
+        { paso: 'CI de GitHub: la ultima corrida del push (regla git-deploy, paso 4)', ...(await chequearCI()) },
         { paso: 'Escritorio: cola de tareas y archivo de cerradas', ...(await chequearEscritorio()) },
         { paso: 'Cerebro: wikilinks, indice, rutas citadas y tablas de reglas (_cerebroLint)', ...chequearCerebro() },
         { paso: 'Skills/agents/commands: los carga Claude Code (claude plugin validate)', ...chequearComponentesClaude() },

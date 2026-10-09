@@ -22,7 +22,8 @@
    habito (855 de 887 commits de 10 dias iban sin rutas), no un candado.
 3. **`git push origin main`**.
 4. **Verificar CI** — `gh` no tiene login en esta PC (memoria `gh_cli_sin_login_ci_por_api`); el
-   ultimo run se lee por API y se mira `status` / `conclusion`:
+   ultimo run se lee por API y se mira `status` / `conclusion`. Desde el 09/10/2026 lo mide
+   `node scripts/_cierreSesion.mjs` (paso «CI de GitHub»: rojo = falta, no leido = aviso, nunca verde sin leer):
    ```bash
    curl -s "https://api.github.com/repos/facussc24/tiempos-y-balanceos/actions/runs?per_page=1"
    ```

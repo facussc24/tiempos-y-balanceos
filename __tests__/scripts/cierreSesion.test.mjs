@@ -11,6 +11,7 @@ import {
     carpetaTemporal, leerEpochFlag, clasificarPorcelain,
     evaluarGit, evaluarBackup, evaluarLecciones, evaluarComponentesClaude, evaluarDisco, veredicto,
     LECCIONES_AVISO, LECCIONES_TOPE,
+    evaluarCI, leerUltimoRunCI,
 } from '../../scripts/_cierreSesion.mjs';
 
 describe('carpetaTemporal', () => {
@@ -84,6 +85,66 @@ describe('evaluarGit', () => {
     });
     it('lo versionado manda sobre el push: primero se commitea, despues se mide el push', () => {
         expect(evaluarGit({ ...base, versionados: ['a.ts'], sinPush: 3 }).estado).toBe('falta');
+    });
+});
+
+describe('evaluarCI (regla git-deploy paso 4; hallazgo R7: 17 corridas rojas sin aviso)', () => {
+    const verde = { head_sha: 'abcdef1234567890', status: 'completed', conclusion: 'success', html_url: 'https://github.com/x/y/actions/runs/1' };
+    it('no poder leer el CI AVISA, nunca da verde', () => {
+        const r = evaluarCI({ sha: 'abcdef12', run: null, error: 'HTTP 403 (probablemente el limite de la API sin login)' });
+        expect(r.estado).toBe('aviso');
+        expect(r.detalle).toMatch(/no pude leer el CI/);
+        expect(r.detalle).toMatch(/github\.com\/facussc24\/tiempos-y-balanceos\/actions/);
+    });
+    it('sin corridas devueltas tampoco es verde', () => {
+        expect(evaluarCI({ sha: 'abcdef12', run: null, error: null }).estado).toBe('aviso');
+    });
+    it('verde para el HEAD local = ok', () => {
+        const r = evaluarCI({ sha: 'abcdef1234567890', run: verde, error: null });
+        expect(r.estado).toBe('ok');
+        expect(r.detalle).toMatch(/abcdef12/);
+    });
+    it('verde pero de OTRO commit: avisa que el HEAD todavia no corrio (falta el push)', () => {
+        const r = evaluarCI({ sha: '9999999999', run: verde, error: null });
+        expect(r.estado).toBe('aviso');
+        expect(r.detalle).toMatch(/todavia no corrio/);
+    });
+    it('rojo BLOQUEA y dice cual corrida', () => {
+        const r = evaluarCI({ sha: 'abcdef1234567890', run: { ...verde, conclusion: 'failure' }, error: null });
+        expect(r.estado).toBe('falta');
+        expect(r.detalle).toMatch(/CI ROJO para abcdef12 \(failure\)/);
+        expect(r.detalle).toMatch(/actions\/runs\/1/);
+    });
+    it('en curso avisa: hay que volver a mirar antes de cerrar', () => {
+        const r = evaluarCI({ sha: 'abcdef1234567890', run: { ...verde, status: 'in_progress', conclusion: null }, error: null });
+        expect(r.estado).toBe('aviso');
+        expect(r.detalle).toMatch(/en curso/);
+    });
+});
+
+describe('leerUltimoRunCI (API publica de GitHub, con tope de tiempo)', () => {
+    it('devuelve la corrida mas nueva con el sha local', async () => {
+        const fetchFn = async () => ({ ok: true, status: 200, json: async () => ({ workflow_runs: [{ head_sha: 'aaa', status: 'completed', conclusion: 'success' }] }) });
+        const r = await leerUltimoRunCI({ fetchFn, shaLocal: 'aaa' });
+        expect(r.error).toBeNull();
+        expect(r.run.head_sha).toBe('aaa');
+        expect(r.sha).toBe('aaa');
+    });
+    it('un 403 (limite de la API) vuelve como error legible, no como excepcion', async () => {
+        const fetchFn = async () => ({ ok: false, status: 403, json: async () => ({}) });
+        const r = await leerUltimoRunCI({ fetchFn, shaLocal: 'aaa' });
+        expect(r.run).toBeNull();
+        expect(r.error).toMatch(/HTTP 403/);
+    });
+    it('sin red: el error de fetch vuelve como texto', async () => {
+        const fetchFn = async () => { throw new Error('getaddrinfo ENOTFOUND api.github.com'); };
+        const r = await leerUltimoRunCI({ fetchFn, shaLocal: 'aaa' });
+        expect(r.error).toMatch(/ENOTFOUND/);
+    });
+    it('sin respuesta: corta a los timeoutMs y lo dice', async () => {
+        const fetchFn = (_url, { signal }) => new Promise((_res, rej) => { signal.addEventListener('abort', () => { const e = new Error('abortado'); e.name = 'AbortError'; rej(e); }); });
+        const r = await leerUltimoRunCI({ fetchFn, shaLocal: 'aaa', timeoutMs: 20 });
+        expect(r.error).toMatch(/sin respuesta en 0.02 s/);
     });
 });
 

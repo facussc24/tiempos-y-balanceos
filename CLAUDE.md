@@ -87,7 +87,10 @@ Las reglas sin `paths:` ya estan en este contexto: `core-prohibiciones.md`, `tec
 `nube-ingenieria.md` (regla dura de Fak 01/10/2026: se guarda solo en la nube de Ingenieria, nada en
 su nube personal `OneDrive - BARACK ARGENTINA SRL\`; hook `nube-personal-guard`),
 `trabajar-hasta-la-hora.md` (Fak 03/10/2026: si pone una hora no se cierra antes; lista en un archivo,
-hora fijada y latido con CronCreate; hooks `hora-prompt` y `hora-guard`).
+hora fijada y latido con CronCreate; hooks `hora-prompt` y `hora-guard`),
+`codigo-madre.md` (Fak 09/10/2026: el codigo es sagrado; el tamaño del cambio decide el camino —chico
+directo, mediano con plan corto + auditor, grande con investigacion + su si + revisor—; los pedidos chicos de la
+semana van a `docs/COLA_CAMBIOS_CODIGO.md`).
 
 | Con `paths:` (cargan al tocar) | Ambito |
 |---|---|

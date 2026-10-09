@@ -145,6 +145,28 @@ Lo que se le suma, siempre «solo lectura + propuesta para la mañana», nunca a
 Lo que NO: diseños 3D de noche (Fak mismo lo bajó de prioridad; y la noche no toca el repo ni los
 archivos de trabajo), escribir en Supabase, el arb u Outlook (candados de `api-claude.md`).
 
+**Managed Agents (Fak, 09/10 00:20: *"hace 2 horas Claude Devs publicó 'how to build automations with
+Claude Managed Agents', fijate si sirve"*).** El artículo exacto no apareció en la búsqueda (00:35); la
+fuente es la doc oficial (https://platform.claude.com/docs/en/managed-agents/scheduled-deployments y
+`.../webhooks`). Qué es: un agente definido en la consola de Anthropic (modelo, prompt, herramientas,
+skills) que corre en un sandbox de la nube; un *scheduled deployment* lo lanza solo con un cron, cada
+corrida es una sesión nueva que arranca, hace su tarea y termina; puede llevar repos de GitHub y memoria;
+los webhooks avisan los cambios de estado. Se paga con los créditos de la API: tokens más tiempo de sesión.
+
+Qué sirve para la noche y qué no:
+
+| Paso de la noche | ¿Managed Agents? | Por qué |
+|---|---|---|
+| Pre-auditoría de AMFE | **Candidato (fase 3)** | Lee Supabase por red y deja un informe: todo pasa por internet. Ventaja: corre aunque la notebook esté apagada; y el repo entra por GitHub |
+| Mails sin respuesta, hilos del Escritorio, prioridades | **No** | Leen archivos de esta PC (`.mail-cache`, el Escritorio, `.claude/state`); la nube no los ve |
+| Novedades de Claude | Podría, pero no vale la pena | Es una lectura chica; la tarea de Windows alcanza |
+
+Decisión: la noche sigue como está (tarea de Windows + `node` con la API, candados en código y test). Managed
+Agents queda anotado para la fase 3, solo para la pre-auditoría, y recién cuando la clave esté puesta y se
+haya visto una semana de costos reales del ciclo. Lo que sí tomo ya de su diseño: *«unattended runs need
+self-sufficient prompts»* y el alcance cerrado de herramientas, que es lo que los 5 candados ya hacen.
+
+
 ### 1.6 Lo «restrictivo» en la notebook de Calidad y en la PC de Pedro
 
 Dos causas distintas, las dos ya con solución:
@@ -172,6 +194,72 @@ los `.msg` que la originaron, arma la clave del hilo y busca en `.mail-cache/mai
 ese hilo **posteriores** al último `.msg` guardado. Si hay, lo dice al arrancar la sesión (una línea por
 tarea) y el detalle con `node scripts/_hilosAbiertos.mjs`. Es la red para el caso de Carlos y el
 consumo: la respuesta llegó, la tarea seguía abierta y nadie cruzó las dos cosas.
+
+### 1.8 Cómo se toca el código madre (Fak, 09/10 00:20: «el código es sagrado»)
+
+Fak: *"no quiero parches, quiero decisiones tomadas en base a investigaciones... mejoras o correcciones al
+código deben ser analizadas... yo laburo sobre ese código todos los días"*. La regla operativa quedó en
+`.claude/rules/codigo-madre.md` (always-on). Acá, por qué quedó así.
+
+**Fuente:** la guía oficial de buenas prácticas de Claude Code (https://code.claude.com/docs/en/best-practices,
+leída el 09/10/2026 00:30). Lo que dice y cómo lo aplico:
+
+| La guía oficial dice | Qué decido |
+|---|---|
+| *«Planning is most useful when you're uncertain about the approach, when the change modifies multiple files, or when you're unfamiliar with the code... If you could describe the diff in one sentence, skip the plan»* | Tres tamaños: **chico** (diff en una oración, directo), **mediano** (varios archivos o cambia comportamiento: plan corto escrito antes + auditor), **grande** (feature, refactor, sistema Claude: investigación + plan en `docs/` + sí de Fak + revisor independiente) |
+| *«Give Claude a way to verify its work... If you can't verify it, don't ship it»* y *«a Stop hook runs your check as a script and blocks the turn from ending until it passes»* | Cada cambio lleva su test; el build antes del push ya lo exige `git-deploy.md`; el `cierre-guard` es ese Stop hook |
+| *«Before treating a task as done, have a subagent review the diff in a fresh context and report gaps»*; *«tell the reviewer to flag only gaps that affect correctness or the stated requirements»* | El auditor Opus al cerrar un mediano o grande (ya era regla); Fable solo si cambia la arquitectura. Lo que el revisor marque de estilo se ignora: evita sobre-ingeniería |
+| *«The kitchen sink session: you start with one task, then ask something unrelated... Fix: /clear between unrelated tasks»* | Los pedidos chicos de Fak durante la semana van a la **cola `docs/COLA_CAMBIOS_CODIGO.md`** y se hacen en una sesión de código, de a uno; no dentro de la sesión de un AMFE o de un mail. Excepción: si frena su tarea, se arregla ahí y se anota |
+| *«Worktrees: run separate CLI sessions in isolated git checkouts so edits don't collide»* | Dos cambios de código a la vez = dos worktrees (la app de escritorio los crea sola). Un solo cambio = esta carpeta |
+| *«After two failed corrections, /clear and write a better initial prompt»* | Es la lección del 01 y 12/09 («después de la segunda corrección se barre la tabla entera»): a la segunda corrección sobre lo mismo, sesión nueva con el pedido rehecho, no un tercer parche |
+| *«For larger features, have Claude interview you first... write a complete spec... start a fresh session to execute it»* | Para un **grande**, una sola tanda de preguntas al principio (no las 81 repartidas que Fak rechazó en septiembre), un plan escrito, y la implementación en una sesión limpia |
+
+**Nuestros datos que lo respaldan:** 57 «no era lo pedido» en los mensajes de Fak (R4), 3 deploys rotos por
+un paquete sin instalar (memoria `incidente_deploy_html_to_image_2026-04-13`), un commit con 12 archivos de
+otra sesión (02/10) y 17 corridas rojas del CI sin que nadie avisara (08/10). Cada uno es un cambio que salió
+sin su control.
+
+**Permisos, carpetas, fases** (Fak: *"no me importa si son 30 fases o abrir nuevas sesiones o permisos de
+administrador"*): no hace falta permiso de administrador ni otra carpeta para nada de esto. Las fases son las
+que hagan falta; cada una cierra con tests, build, auditor, commit y el aviso de si las sesiones abiertas
+toman el cambio.
+
+### 1.9 Qué modelo para qué (para trabajar mañana «con todos los agentes»)
+
+Fak: *"mañana me gustaría laburar con este Claude pero con los agentes todos, Opus, Fable si corresponde...
+¿Fable solo para casos específicos o siempre? vos decidís"*. **Fuente:** la guía oficial «Choosing the right
+model» (https://platform.claude.com/docs/en/about-claude/models/choosing-a-model, 09/10/2026) y la tabla de
+precios (vigilada por `_vigilarPrecios.mjs`).
+
+| Lugar | Modelo | Por qué (frase de la guía) |
+|---|---|---|
+| **Sesión principal de código** | **Opus 5.5** (ya es el default en `settings.json` desde el 08/10) | *«Most workloads start with Claude Opus 5.5... complex agentic coding, large-scale refactoring, complex systems engineering»* |
+| **Fable 5.1, casos específicos** | cambio de arquitectura del repo o del sistema Claude; investigación de varias horas; cuando Opus falló dos veces en lo mismo | *«If your evals at xhigh or max effort still fall short on demanding reasoning or long-horizon agentic work, move to Claude Fable 5.1»*; cuesta 2,5× Opus y tiene su propio límite semanal (26 % usado al 09/10 00:25) |
+| **Subagentes** | Haiku busca · Sonnet escribe un frente · Opus decide/cruza · Fable revisa un cambio grande (tabla de `techo-agentes.md`) | *«Haiku 5.5: ... sub-agent tasks»*; *«an orchestrator that delegates bulk work to lower-cost workers»* |
+| **Asesor** | `advisorModel: opus` (puesto el 08/10) | *«an executor that escalates hard decisions to an advisor»* |
+| **Esfuerzo** | subagentes en xhigh (regla de Fak 30/09); la sesión principal con el default del modelo | *«Tuning effort is often a better lever than switching models»* |
+
+Respuesta corta a Fak: **Fable, solo para los casos de la tabla; el resto, Opus.** Y el cupo semanal se mira
+cada hora: al 09/10 00:25 iba 51 % de la semana (reinicia el 15/10) con 6 días por delante.
+
+### 1.10 Lo que encontré yo, sin que me lo pidieran (con su evidencia)
+
+1. **Lo fijo de cada sesión pesa ~36.000 tokens** (CLAUDE.md + LECCIONES + 8 reglas always-on; medido con
+   `get_usage`: «Memory files 35.772 tokens»; más 30.000 de herramientas y 21.000 de MCP). La guía oficial:
+   *«If Claude keeps doing something you don't want despite having a rule against it, the file is probably
+   too long and the rule is getting lost... Bloated CLAUDE.md files cause Claude to ignore your actual
+   instructions»*. Es la explicación más simple de los 26 «repetís el error / dejalo registrado» de R4.
+   Propuesta (grande, con tu sí): podar a menos de 15.000 tokens moviendo el detalle a skills y memorias,
+   que cargan a pedido, y medir antes/después. En la cola.
+2. **El modo auto es el modo de arranque de fábrica desde la v2.1.283** (*«a separate classifier model reviews
+   most actions... blocks only what looks risky»*). Confirma la causa 2 de §1.6 (CATA): el freno del IMDS no
+   era nuestro. La solución sigue siendo la regla `autoMode.allow` o «omitir permisos» en esa carpeta.
+3. **Existe `/code-review`**, un revisor del diff en un subagente limpio, y `/verify` para probar la app
+   corriendo. Para un cambio mediano puede reemplazar al auditor Opus a mano; se prueba en la semana.
+4. **Routines** (nube de Anthropic, corre con la PC apagada) y las **tareas programadas de la app de
+   escritorio** existen como alternativa oficial a la tarea de Windows de la noche. No cambio nada: la
+   noche necesita archivos locales (mails, Escritorio) que la nube no ve.
+5. **Managed Agents** (lo que Fak vio en Claude Devs): ver §1.5.
 
 ## 2. Fases
 

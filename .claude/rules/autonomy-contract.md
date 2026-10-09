@@ -31,6 +31,7 @@ Si dudo entre dos filas, aplico la mas restrictiva. Principios: hacer sin pregun
 |---|---|
 | Fix de typo/bug obvio + test + push | Libre (regla git-deploy) |
 | Feature no trivial / refactor | Plan primero, Fak aprueba |
+| Cualquier cambio al codigo: el camino por tamaño (chico / mediano / grande) | Regla `codigo-madre.md` (Fak 09/10/2026); pedidos chicos de la semana → `docs/COLA_CAMBIOS_CODIGO.md` |
 | Remover feature / borrar archivos | Siempre preguntar |
 | Cambiar dependencias | Confirmar antes |
 | Tocar boton dev-login | **Prohibido** (regla dev-login) |
