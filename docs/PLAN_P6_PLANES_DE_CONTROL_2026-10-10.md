@@ -85,3 +85,112 @@ sin color. **Son los chequeos de la skill.**
 
 Nada urgente: ya dijo que sí. Cuando pida la primera base preliminar, se le muestra el `.xls` generado sobre la
 plantilla oficial con los TBD listados, y él decide si va a Calidad.
+
+## 7. Revisión por la API (Opus, 10/10/2026 20:38, US$0,33; informe completo en `.sgc-cache/sesion-2026-10-10/API_P6_revision_opus.md`)
+
+Lo que cambia del plan de arriba. Verificado contra el código donde la API no lo veía: la sigla de una causa SÍ
+existe en el AMFE (`specialChar` de la causa; `amfeValidator.mjs:978`), y el flujograma vigente es UNO solo,
+`tools/flowchart/data/*.json` (`pfd_documents` es histórico de solo lectura, regla `no-pfd-no-ho.md`).
+
+### 7.1 Gates corregidos y nuevos
+
+- **Gate 0 (nuevo, antes de generar)**: revisión de cada entrada registrada, y la lista de operaciones del
+  flujograma que no tienen operación en el AMFE (el 153 Rev. E tiene 51, 60, 71, 81, 82 y 101 que el AMFE 161
+  no analiza). Esas filas salen igual, con la característica de la HO o `TBD`, marcadas «sin análisis AMFE»:
+  la diferencia es del AMFE, no del plan.
+- **Gate 1 (corregido)**: «una fila por operación» da verde con la 41 de una sola fila y faltan atraque y
+  alineación. Cada `qcItem` o punto clave de calidad de la HO tiene su fila; cada causa del AMFE con control
+  de detección tiene su fila (gate 8). Transporte y almacenamiento sin característica van a la lista para Fak,
+  no a una fila forzada.
+- **Gate 2 (corregido)**: el mapeo material → familia de recepción no existe (las ET-SATO no tienen familia;
+  el último nivel del arb trae semielaborados propios que no se reciben). Tabla explícita código → familia con
+  marca compra/fabricación; lo que no está en la tabla va a recepción con instrumento `TBD`.
+- **Gate 3 (corregido, el error más grave del plan)**: la sigla es de la CARACTERÍSTICA, no de la operación, y
+  en el plan **no se calcula: se copia** del `specialChar` de las causas vinculadas por id (`amfeCauseIds`),
+  que asignó Fak en el AMFE, más lo que el cliente designó en el plano (hoja de características especiales:
+  entrada que faltaba, I-AC-005 §5.2). El cálculo por S/O va a una hoja aparte «Propuesta de siglas»
+  (característica, causa, S máxima de la falla, O, regla) y la columna del plan queda vacía donde no hay
+  asignación. La `D` no sale de la palabra «flamabilidad»: sale del plano o de la norma del cliente.
+- **Gate 4 (corregido)**: «sin papel» miraba solo números y solo presencia. Toda celda de contenido
+  (especificación, instrumento, frecuencia, parámetro, máquina) lleva `sourceRef` (documento, revisión,
+  ubicación); texto inventado («5 capas», «sello WQ») cae igual que un número; si dos papeles difieren
+  (HO-971 190-210 °C vs receta 185 °C; vencimiento 6 meses vs 179 días) el valor es `CONFLICTO` con los dos
+  valores en la lista. **El AMFE no es papel para una especificación** (Fak 18:58: tiene controles inventados).
+- **Gates nuevos por los errores del 06/10 que ninguno cubría**: (a) instrumento contra el cronograma de
+  calibración (existe, área correcta, certificado OK: el MC212); (b) la máquina de la fila y su set up son los de
+  esa operación en la HO o el flujograma (el set up de la 30 con texto de máquina de coser); (c) todas las
+  fichas de embalaje vigentes de la pieza tienen fila (GE-280 y GE-276); (d) código de la BOM contra código de
+  la HO (`FX284TK` vs `FX284` → `CONFLICTO`); (e) celda vacía prohibida: vale o `TBD` (parámetros de la 70 y
+  la 80).
+- **Gate 6 (corregido)**: `P-10/I` es de recepción. Para proceso la frecuencia sale de la HO; si no está,
+  `TBD`. La fase (prototipo / prelanzamiento / producción) es una ENTRADA: sin ella no se sabe qué muestreo
+  aplica.
+- **Gate 7 (corregido)**: «la costura vista» no está en ningún dato. El control final acepta solo
+  características marcadas apariencia/función en una fuente (plano, HO de la 100, especificación del cliente);
+  nada de heurística por palabras.
+- **Gate 9 (nuevo)**: las acciones recomendadas del AMFE entran al plan solo con estado implementado; una
+  `Pendiente` copiada declara un control que no se hace. Las demás van a la lista.
+- **S/R**: SI/NO sale de la asignación (hay CC o D de seguridad/reglamentaria); sin asignación, `TBD`.
+- **`.xls`**: xlutils pierde logo y formato; completar la plantilla oficial por Excel COM. `_sinFirmaIA.py`
+  limpia también Autor, Guardado por, autor de comentarios, propiedades personalizadas y hojas ocultas.
+
+### 7.2 Gate 8 (AMFE ↔ plan): diseño
+
+Tres capas, en este orden: (1) **vínculo por id** (`amfeCauseIds`; las filas de HO, recepción o embalaje con
+`sourceRef`): la herramienta **nunca** vincula por parecido de texto; (2) **instrumento + frecuencia + tamaño de
+muestra**: el instrumento se identifica por código de catálogo o calibración (MC212, cámara de flamabilidad,
+Mylar) o término exacto del catálogo; (3) **texto**: se muestra, nunca decide.
+
+Cuatro correcciones al gate 8 del §4: el control de detección puede estar **aguas abajo** (una causa de la 41
+detectada en el control final 100: AIAG-VDA 2019 paso 5), así que el vínculo cruza operaciones; «actual» =
+implementado (lo planificado es acción del paso 6 y no entra como control); las filas de set up, parámetros y
+poka-yoke se vinculan al control de **prevención**, no al de detección; la frecuencia se compara solo si el
+`detectionControl` la trae.
+
+| Estado | Condición | Qué hace |
+|---|---|---|
+| OK | vínculo + instrumento coincide + frecuencia coincide o el AMFE no la tiene | nada |
+| GENÉRICO | el AMFE dice «inspección visual» y no hay instrumento identificable | propone cambiar el AMFE (y re-evaluar la D: una inspección visual no sostiene una D baja, puede cambiar el AP) |
+| DIFERENTE | los dos concretos y distintos | frena; decide Fak |
+| SIN FILA | causa con control y el plan sin fila | lista (se agrega la fila solo si hay papel; si no, el AMFE declara un control que no existe) |
+| SIN CAUSA | fila del plan sin causa | lista, separando recepción y requisito de cliente |
+
+Quién manda: ninguno por default (IATF 8.5.1.1: el plan incorpora las salidas del análisis de riesgo y se
+revisa cuando cambia). La verdad es lo que se hace y tiene papel. La herramienta no toca el AMFE.
+
+### 7.3 Modelo de datos: JSON intermedio, no Supabase
+
+Un JSON propio, superconjunto de `cp_documents.items` (mismos nombres más campos opcionales), y un render al
+`.xls`; los gates corren sobre el JSON (directo al `.xls` no se testea). **No se escribe en `cp_documents`**: el
+plan es de Calidad y quedarían dos «vigentes». Lo que falta: `productCharacteristic` / `processCharacteristic`
+separados (columnas PRODUCTO y PROCESO del formulario), `characteristicNumber` (globo del plano o `TBD`;
+recepción `1.0`, `2.0`), `classification` como lista (`CC` + `D`), encabezado (`phase`, `cpNumber`, proveedor,
+contacto, equipo, código de cliente, fechas original/revisión/FUM, `srCharacteristic`), `revisions[]`,
+`approvals`, y por fila `sourceRef[]`, `status` (`OK` / `TBD` / `CONFLICTO`), `hoQcItemId`, `materialCode`,
+`materialFamily`.
+
+### 7.4 Etapas con respuesta conocida (el APB Patagonia que Calidad corrigió el 06/10)
+
+1. **Lectura de fuentes, JSON intermedio y gates 0, 1, 2, 4, 6 y los del 06/10. Sin `.xls`.** Tiene que
+   salir: operaciones 51, 60, 71, 81, 82, 101 sin análisis; GE-280 y GE-276; ET-SATO con instrumento `TBD`;
+   `CONFLICTO` hotmelera y hilo; `TBD` parámetros 70 y 80; filas de atraque y alineación de la 41 desde la
+   HO-971; MC212 marcado; set up de la 30 sin texto de costura. Aprobación: cero celdas con valor sin
+   `sourceRef`.
+2. **Propuesta de siglas, gate 7 y gate 8.** La propuesta sobre el AMFE 161 en la hoja aparte y la columna
+   vacía; con la asignación, la columna igual a la asignación; el control final marcado («4 en 16 mm» es la
+   costura de unión, no la vista «6 en 25 ±0,5»); el reporte del gate 8 con un gemelo rojo por estado.
+3. **Render sobre la plantilla oficial I-AC-005.1 Rev. C, limpieza y lectura de vuelta.** Bloqueada hasta el
+   servidor. Respuesta conocida: en las 36 celdas del 06/10 el `.xls` nunca trae el valor ANTES.
+
+### 7.5 Las tres pruebas antes de mostrarle el primer `.xls` a Fak
+
+1. **No inventa (mutación)**: sin la HO-971 en las entradas, todo lo que venía de ella pasa a `TBD` y no
+   sobrevive ninguno; lo mismo sin una ficha de embalaje y sin el plan de recepción de una familia.
+2. **Regresión contra el 06/10**: ningún valor ANTES reaparece; cada ítem pendiente del APB aparece como fila,
+   `TBD`, `CONFLICTO` o diferencia del gate 8.
+3. **Archivo entregable**: se abre en el Excel de Calidad; plantilla intacta (logo, celdas combinadas, área de
+   impresión, revisión en rojo); S/R una marca o `TBD`; siglas solo desde la asignación; «Claude», «IA»,
+   «Fable», «Anthropic» en celdas, comentarios, metadatos y hojas ocultas: cero.
+
+Lo que la revisión confirmó que está bien: la trampa de la hoja `Rev.`, que la herramienta no mande nada a
+Calidad, y los `TBD` listados.

@@ -41,6 +41,10 @@ Próximas (de a una o dos, sin pisar archivos): paso 12 H23+H24 (skills) · 13 H
 - 19:30 · hija 2 cerró el paso 15 (H5+H6, `82edf1c1`): **los 15 pasos del orden de trabajo están hechos** (9 a 15 hoy, 1 a 8 anoche). Dejó HOY-21 (el test de idioma que corre el detector real). Hija 3 sigue con P55 etapa 1.
 - 19:05 · Fak pegó tres investigaciones nuevas → HOY-18 (GitHub, segunda pasada), HOY-19 (funciones nuevas en las skills, Outlook), HOY-20 (CATIA por código: instalada en esta PC y con automatización COM, medido). Y preguntó en qué fase va lo de investigar: en la 2 (ya pasó una vez el 08/10).
 - 20:16 · hija 3 cerró **P55 etapa 1** (`979fdcf8`: la copia de Supabase en la nube se mantiene sola; auditor: 295 tests, 3 errores reales corregidos; informe `.sgc-cache/sesion-2026-10-10/P55_etapa1_auditor.md`). Encargo E261010-73da cerrado. Recibe **HOY-20** (CATIA por código, encargo E261010-36a1), contexto 49 %.
+- 20:30 · renglón de la hora. Cupo 5 h: 7 % (reinicia 00:39), semanal 31 %, Fable 45 %. CI verde en 19581cd2, 979fdcf8 y 0a49d7f6. Hija 2 (HOY-17, contexto 49 %): código y tests escritos, espera su auditor Opus desde las 20:03. Hija 3 (HOY-20, contexto 54 %): CATIA V5 R21 arrancó por COM sin ventana (54 s), la pieza de prueba dio el volumen esperado; sigue con sondas y análisis. Nada colgado. API: 1 pedido mío en 2 h; ledger de la PC US$1,85.
+- 20:35 · **medido: una corrida disparada por el RELOJ arranca en bypass** con el `defaultMode` del settings general (re-armé `prueba-modo-reloj-20261010` con fireAt 20:35; sesión `local_3320e192`: primer mensaje en `bypassPermissions`, modelo Fable del selector). Importa porque `seguimiento-reunion-amfe` dispara por reloj el lunes 12/10 08:43: ya no va a pedir carteles. Queda anotarlo en la skill `lanzar-sesion-hija` cuando la hija 2 la commitee (la está editando).
+- 20:35 · **hija 4** lanzada (`hija-skills-funciones-nuevas-20261010`, sesión `local_34ba1fc9`, encargo E261010-dd4e, HOY-19: funciones nuevas en las skills, Outlook por COM en seco, pedidos reales de Fak clasificados por la API). Arrancó en bypass; frenada y reenviada → Opus desde el segundo turno, medido. RAM libre antes de lanzarla: 5,6 GB.
+- 20:38 · revisión del plan P6 (planes de control) por la API (Opus, US$0,33, 149 s): 11 huecos (gate 3 asignaba siglas por operación: la sigla es de la característica y sale del AMFE que asigna Fak; falta gate 0 AMFE↔flujograma; gate 4 no veía texto inventado ni conflictos entre papeles; 5 errores del 06/10 sin gate; mapeo material→familia inexistente; P-10 no cubre proceso) + diseño del gate 8 (vínculo por id → instrumento+frecuencia → texto; cinco estados; quién manda) + modelo de datos (JSON intermedio, no Supabase) + 3 etapas con respuesta conocida (APB) + 3 pruebas. Va a la sección 7 del plan.
 - Tareas que quedan para limpiar en Programadas cuando Fak esté (borrar una tarea archiva sus sesiones y eso pide cartel): `prueba-modo-reloj-20261010`, `hija-novedades-h20-h21-20261010` (su corrida abortada), `sesion-sistema-claude-fase2-20261009`.
 
 ## Trabajo que puedo hacer solo (cuando se acabe lo pedido)
@@ -62,13 +66,12 @@ Próximas (de a una o dos, sin pisar archivos): paso 12 H23+H24 (skills) · 13 H
 
 ## No pude verificar
 
-- Que una corrida disparada por el reloj (cron/fireAt) arranque ahora en bypass: sin `defaultMode` toma el default de la app/CLI, que no medí (está en «Trabajo que puedo hacer solo»).
 - El aviso `notifyOnCompletion` de una tarea nunca se vio llegar: no lo uso; vigilo con `get_usage` + `list_events` + `_hijaEstado.mjs`.
 
 ## Lo que necesita a Fak (para cuando vuelva)
 
-- **P84** (el modo de arranque de las hijas): (a) `permissions.defaultMode: bypassPermissions` en su `~/.claude/settings.json` o (b) tareas fijas en Programadas. Preguntado 11:35.
-- **P55** (plan `docs/PLAN_P55_AMFE_EN_LA_NUBE_2026-10-10.md`): ¿edita AMFE adentro de la app o solo mira y exporta? · ¿quiénes son "todos" y con qué herramienta? · OK a la etapa 1 (escribe en `1- GENERAL\AMFE\DATOS\` de la biblioteca y en Supabase).
+- ~~P84~~ contestada 18:40 (*"pensá la mejor manera"*): resuelta con (a), el settings general.
+- ~~P55~~ contestada 18:58: no usa la app; "todos" = el Excel editable de cada AMFE en la carpeta de Ingeniería del server (etapa 1b, cuando haya server); AMFE y plan de control con los mismos controles (gate 8 de P6).
 
 - Lo que el contrato marca preguntar: Supabase, servidor, arb, mails, listados maestros, la primera vez.
 - Si quiere que una tarea por reloj arranque en bypass: la crea él desde Programadas con el selector de modo (la creada por MCP no guarda modo).
