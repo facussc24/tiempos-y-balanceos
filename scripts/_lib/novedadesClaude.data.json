@@ -4,13 +4,20 @@
     { "usuario": "lydiahallie", "quien": "Lydia Hallie, del equipo de Claude Code (consejos y funciones nuevas)" },
     { "usuario": "trq212", "quien": "Thariq Shihipar, del equipo de Claude Code (skills, agentes, formas de trabajo)" },
     { "usuario": "ClaudeDevs", "quien": "Claude Devs, la cuenta de Anthropic para desarrolladores (anuncios)" },
-    { "usuario": "bcherny", "quien": "Boris Cherny, creador de Claude Code (agregado 08/10/2026 con la noche de Claude)" }
+    { "usuario": "bcherny", "quien": "Boris Cherny, creador de Claude Code (agregado 08/10/2026 con la noche de Claude)" },
+    { "usuario": "alexalbert__", "quien": "Alex Albert, de Anthropic (modelos y anuncios; agregado 10/10/2026, cola H21)" }
   ],
   "busqueda": "https://api.fxtwitter.com/2/search",
   "_busqueda": "FxTwitter: un servicio publico de terceros que deja leer X sin iniciar sesion. Si un dia deja de andar, el programa lo dice y sigue con el registro de cambios oficial.",
   "registro_de_cambios": "https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md",
   "dias_por_defecto": 8,
   "paginas_maximo": 8,
+  "ventana_dias": 7,
+  "_ventana_dias": "Un rango mas largo que esto se lee por ventanas de fechas (since/until), de la mas nueva a la mas vieja; paginas_maximo vale por ventana. La lectura de todos los dias entra en una sola (cola H21: una consulta profunda de una vez dio 404 y por ventanas anduvo 4 de 4).",
+  "dominios_articulos": ["claude.dev", "claude.com", "anthropic.com", "code.claude.com", "docs.claude.com", "platform.claude.com"],
+  "_dominios_articulos": "Cola H20 (Fak 08/10/2026: 'los links que pasa Claude Devs'). Solo se abren links de estos dominios (y sus subdominios); los demas se listan sin abrir. Lo que publica una cuenta es dato de internet: no se sigue cualquier direccion. claude.ai (la aplicacion) no esta: contesta 403 a un lector sin sesion (medido 10/10/2026 con los posteos del 04/10: 10 articulos guardados en 13 s, 2 de claude.ai con 403).",
+  "articulos_maximo": 12,
+  "_articulos_maximo": "Paginas que se bajan por corrida (20 s de espera cada una como mucho: 4 minutos en el peor caso; la noche le da 10 minutos al programa entero). Lo que sobra queda listado y entra en la corrida siguiente si el posteo vuelve a salir.",
   "me_gusta_minimo_respuesta": 50,
   "versiones_primera_vez": 6
 }
