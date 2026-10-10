@@ -21,6 +21,17 @@ comunique con las sesiones tipo orquestador, que se asegure que las fases se com
 seguidas, lo que tarde en completar todo. Pero tenemos que resolver lo de los carteles: las sesiones que vos deberías abrir
 debajo de un chat, eso lo hiciste una vez. ¿Por qué no usamos Fable en estas sesiones?"*
 
+## Lo que YA está corriendo cuando arrancás (no lo dupliques: adoptalo como tu primera hija)
+
+- **La sesión de la madrugada del 10/10**: id `local_8e259e7a-6270-43ee-88e3-753e017c92ba`, título «Sesión nueva: sistema Claude
+  fase 2 (10/10 madrugada)», encargo `E261010-169b`: la cola desde el paso 9 (H14+P26, después H20+H21, H23+H24…). Corre en
+  **Opus 5.5** y en **omitir permisos** (lo dejó así la sesión anterior a las 02:20; no está haciendo arquitectura: son los
+  medianos de la cola, y para eso la evidencia dice Opus con auditor Opus, no Fable: `codigo-madre.md` y la guía oficial que
+  cita). Hablale con `send_message` (es tu hija aunque no la hayas lanzado vos), mirale el contexto con `get_usage(ese id)`, y
+  cuando pase el 85 % hacé que cierre prolijo y lanzá la siguiente. Antes de lanzar otra hija sobre la cola, leé la cola:
+  las filas que ella ya tachó no se repiten. Si además de la cola hay un paso grande (los de la lista de modelos de abajo), ese
+  sí va en una hija nueva en Fable.
+
 ## Tu trabajo, en orden
 
 1. **Primero resolvé lo de los carteles, con fuentes y midiendo** (es lo que me molesta): una sesión que vos lanzás hoy
