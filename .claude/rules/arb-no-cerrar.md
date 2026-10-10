@@ -40,9 +40,17 @@ el nombre de la PC y el usuario real del arb es `FACUNDO`.
 | ✅ `python scripts/_arbVer.py reset` con Relaciones CERRADA | solo la **abre** por click; ese camino anda |
 | ✅ Fak aprieta **"ARB - reiniciar"** en su Escritorio | `scripts/_arbLanzar.py --reiniciar`: le pregunta, cierra el arb trabado, lo abre y entra con la clave que Fak guardo en el Administrador de credenciales de Windows (30/09/2026). **Lo aprieta Fak**: el script se niega si lo lanza una sesion de Claude (`CLAUDECODE`) |
 
-**Vigilante (30/09/2026):** con "ARB - activar vigilante" Fak deja una tarea de Windows que cada 3 min
-reabre el arb si esta CERRADO y nadie usa la PC (no cierra un arb colgado; un login fallido la pausa).
-No habilita a cerrar un arb SANO: cerrarlo "para que el vigilante lo reabra" sigue prohibido.
+**Vigilante (30/09/2026):** una tarea de Windows que cada 3 min reabre el arb si esta CERRADO y nadie
+usa la PC (no cierra un arb colgado; un login fallido la pausa). **Lo activa Claude** (Fak, 30/09/2026:
+*"activa el vigilante, eso lo podes hacer vos, no requiere contraseñas"*):
+`powershell -ExecutionPolicy Bypass -File scripts/_arbVigilante.ps1 -Activar -SinMensaje` (siempre con
+`-SinMensaje`: sin esa marca sale un cartel que espera el click de Fak y el comando queda colgado; y con
+`/`, no con `\`: la herramienta Bash se come la barra invertida). **Antes de reactivar un vigilante
+PAUSADO se lee el motivo** (`~/arb_fotos/vigilante_estado.txt` y el final de `lanzador.log`): si dice
+`a mano` se reactiva; si dice `login fallido` **NO se reactiva** —seria otro intento con la misma clave,
+y reintentar puede bloquear la cuenta— y se le avisa a Fak. El programa se niega solo en ese caso cuando
+lo corre Claude (sale con 3). Fak tambien puede activarlo, con el boton "ARB - activar vigilante" de su
+Escritorio. Si lo active yo, se le dice en el cierre. No habilita a cerrar un arb SANO: cerrarlo "para que el vigilante lo reabra" sigue prohibido.
 
 ## Arb COLGADO: lo resuelvo yo, sin pedirle nada a Fak — 02/10/2026
 

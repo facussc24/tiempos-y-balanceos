@@ -29,7 +29,7 @@ cabeza. Enforcement: hook `consumos-entregable-guard.sh` + este checklist +
      ACTUAL (`...\2. CONSUMO DE MATERIAL BOM\BOMS\`). Parsear el int de la Rev.
      **PROHIBIDO decir "no documentado" sin listar el folder y PEGAR la salida**
      (papelón BOM 127 Rev6 vs Rev7).
-   - Vinilo/tela de SERIE: tabla tizadas Mesa de Corte (`CONSUMOS TIZADAS
+   - Material de corte (vinilo, tela, microfibra): tabla tizadas Mesa de Corte (`CONSUMOS TIZADAS
      <fecha>.xlsx`, hoja por cliente, col ML) — le gana al arb y a BOMs **solo si es la
      planilla oficial que esta en el SERVIDOR o lo confirma Pablo Gamboa por mail**: una
      tizada (.MRK) sola puede ser una prueba y no alcanza; tampoco una BOM de proyecto, un

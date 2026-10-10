@@ -254,6 +254,47 @@ describe('consumos-entregable-guard — lista canonica, probada contra los dispa
     expect(recuerda(bash('grep -nE "RELACIONES|ARTICULO|INSUMOS" scripts/_arbVer.py | head -15'))).toBe(false);
     expect(recuerda(bash('for f in feedback_formato_carga_arb feedback_destino_material; do cat "$M/$f.md"; done'))).toBe(false);
   });
+  // Cola H25 + H26 (10/10/2026). Fak, 06/10/2026: "no cambiamos el consumo sin un excel oficial o una confirmacion
+  // oficial... ante la duda le preguntamos a Pablo Gamboa". La regla (consumos-entregables.md §6) lo decia; el
+  // recordatorio del guardian y el canon seguian diciendo "la tabla de tizadas le gana al arb" SIN la condicion, y el
+  // recordatorio es lo que se lee justo antes de cargar. Los cuatro lugares dicen lo mismo, o este test da rojo.
+  it('H26: el recordatorio trae la condicion del 06/10 entera (que cuenta, que no cuenta y los dos caminos que admite la regla)', () => {
+    const texto = rec(bash('node scripts/_validarConsumos.mjs "tabla P703.xlsx"')).replace(/\s+/g, ' ');
+    expect(texto).toContain('Material de corte (vinilo, tela, microfibra): el consumo no se carga ni se cambia sin la PLANILLA OFICIAL de Mesa de Corte que esta en el SERVIDOR o la confirmacion de Pablo Gamboa');
+    expect(texto).toContain('un mail suyo, o el adjunto de un mail suyo citando ese mail');
+    expect(texto).toContain('"no cambiamos el consumo sin un excel oficial o una confirmacion oficial... ante la duda le preguntamos a Pablo Gamboa"');
+    expect(texto).toContain('Una tizada (.MRK) sola puede ser una prueba y no alcanza; tampoco una BOM de proyecto, un flujograma ni una cuenta mia');
+    expect(texto).toContain('Un margen pedido por el gerente entra por `fak:`');
+    expect(texto).not.toMatch(/fuente autoritativa = tabla tizadas/);
+  });
+  it('H25 + H26: la regla, la skill, el canon y el guardian dicen la MISMA condicion, con el mismo alcance; ninguno la deja afuera', () => {
+    const leer = (rel) => fs.readFileSync(path.join(RAIZ, rel), 'utf8');
+    const plano = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[*`]/g, '').replace(/\s+/g, ' ').toLowerCase();
+    const canon = JSON.parse(leer('scripts/_lib/consumosCanon.data.json'));
+    const lugares = {
+      'regla consumos-entregables.md': leer('.claude/rules/consumos-entregables.md'),
+      'skill verificacion-consumos': leer('.claude/skills/verificacion-consumos/SKILL.md'),
+      'canon _manuales': canon.invariantes._manuales.join(' '),
+      'recordatorio del guardian': rec(bash('node scripts/_validarConsumos.mjs "tabla P703.xlsx"')),
+    };
+    for (const [donde, texto] of Object.entries(lugares)) {
+      const t = plano(texto);
+      // el alcance: los tres materiales de corte (el caso que origino la regla fue microfibra)
+      expect(t, donde).toMatch(/\(vinilo, tela, microfibra\)/);
+      // lo que cuenta como fuente
+      expect(t, donde).toMatch(/planilla oficial/);
+      expect(t, donde).toMatch(/en el servidor/);
+      expect(t, donde).toMatch(/pablo gamboa/);
+      // lo que no alcanza
+      expect(t, donde).toMatch(/tizada \(\.mrk\) sola (puede ser una prueba y )?no alcanza/);
+      expect(t, donde).toMatch(/06\/10\/2026/);
+      // la frase vieja, sin condicion, no vuelve
+      expect(t, donde).not.toMatch(/fuente autoritativa/);
+      // y si alguno dice que la tabla "le gana al arb", la condicion viene pegada en la misma oracion
+      for (const m of t.matchAll(/le gana al arb[^.;]*/g)) expect(m[0], donde).toMatch(/solo si/);
+    }
+  });
+
   it('la lista vive en consumosCanon.data.json, no en el codigo', () => {
     const canon = JSON.parse(fs.readFileSync(path.join(RAIZ, 'scripts/_lib/consumosCanon.data.json'), 'utf8'));
     expect(Array.isArray(canon.guard_disparadores)).toBe(true);
@@ -329,6 +370,54 @@ describe('mail-guard (casos de mail-guard.test.sh)', () => {
 
 // ───────────────────────────────────────────────────────────── arb-cerrar-guard
 describe('arb-cerrar-guard (casos de arb-cerrar-guard.test.sh + el bypass por segunda linea)', () => {
+  // Cola H27 (10/10/2026). Fak, 30/09/2026: "activa el vigilante, eso lo podes hacer vos, no requiere contraseñas".
+  // La regla arb-no-cerrar.md decia que el vigilante lo dejaba Fak con su boton; la skill arb-operar ya decia que lo
+  // activa Claude. La regla, la skill, el programa y el guardian tienen que estar de acuerdo.
+  it('H27: activar el vigilante lo hace Claude, con -SinMensaje; la regla y la skill dicen lo mismo, con la excepcion del login fallido', () => {
+    const leer = (rel) => fs.readFileSync(path.join(RAIZ, rel), 'utf8');
+    for (const rel of ['.claude/rules/arb-no-cerrar.md', '.claude/skills/arb-operar/SKILL.md']) {
+      const t = leer(rel).replace(/\s+/g, ' ');
+      // el comando, con `/` (la herramienta Bash se come la barra invertida: auditor 10/10)
+      expect(t, rel).toContain('-File scripts/_arbVigilante.ps1 -Activar -SinMensaje');
+      expect(t, rel).not.toContain('scripts\\_arbVigilante.ps1 -Activar');
+      expect(t, rel).toContain('activa el vigilante, eso lo podes hacer vos, no requiere contraseñas');
+      expect(t, rel).toMatch(/\*\*(Lo activa Claude|Activar el vigilante lo hace Claude)\*\*/);
+      // la excepcion: pausado por login fallido NO se reactiva (seria otro intento con la misma clave)
+      expect(t, rel).toMatch(/Antes de reactivar un vigilante PAUSADO se lee el motivo/);
+      expect(t, rel).toMatch(/`login fallido` (\*\*)?NO se reactiva(\*\*)? —seria otro intento con la misma clave/);
+    }
+    const regla = leer('.claude/rules/arb-no-cerrar.md').replace(/\s+/g, ' ');
+    expect(regla).not.toMatch(/con "ARB - activar vigilante" Fak deja una tarea/);
+    expect(regla).toMatch(/cerrarlo "para que el vigilante lo reabra" sigue prohibido/);
+    expect(regla).toMatch(/Si lo active yo, se le dice en el cierre/);
+    // el guardian no frena activarlo (frena cerrar el arb, no abrirlo), por Bash ni por PowerShell
+    expect(ev(bash('powershell -ExecutionPolicy Bypass -File scripts/_arbVigilante.ps1 -Activar -SinMensaje')).exit).toBe(0);
+    expect(ev(ps('powershell -ExecutionPolicy Bypass -File scripts/_arbVigilante.ps1 -Activar -SinMensaje')).exit).toBe(0);
+    expect(ev(bash('taskkill //F //IM produc.exe')).exit).toBe(2);
+  });
+
+  // El control vive en el programa, no en la memoria de la sesion: corrido por Claude (CLAUDECODE) nunca muestra el
+  // cartel y se NIEGA a reactivar un vigilante pausado por login fallido. Se prueba con el programa de verdad y una
+  // carpeta de usuario de mentira: la negativa sale ANTES de tocar el estado o la tarea de Windows.
+  it.skipIf(process.platform !== 'win32')('H27: _arbVigilante.ps1 se niega a reactivar un vigilante pausado por login fallido cuando lo corre Claude', () => {
+    const casa = fs.mkdtempSync(path.join(os.tmpdir(), 'vigilante-'));
+    const estado = path.join(casa, 'arb_fotos', 'vigilante_estado.txt');
+    fs.mkdirSync(path.dirname(estado), { recursive: true });
+    const PAUSADO = 'PAUSADO 10/10 09:00 login fallido';
+    fs.writeFileSync(estado, `${PAUSADO}\r\n`);
+    try {
+      const r = spawnSync('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', path.join(RAIZ, 'scripts', '_arbVigilante.ps1'), '-Activar'],
+        { encoding: 'utf8', env: { ...process.env, USERPROFILE: casa, CLAUDECODE: '1' }, timeout: 60000 });
+      expect(r.status, r.stderr).toBe(3);
+      expect(r.stdout).toMatch(/NO lo activo: el vigilante esta pausado por un login fallido/);
+      expect(fs.readFileSync(estado, 'utf8').trim()).toBe(PAUSADO);          // no toco el estado
+    } finally { fs.rmSync(casa, { recursive: true, force: true }); }
+    const src = fs.readFileSync(path.join(RAIZ, 'scripts', '_arbVigilante.ps1'), 'utf8');
+    expect(src).toMatch(/if \(\$SinMensaje -or \$env:CLAUDECODE\) \{ Write-Output \$texto; return \}/);
+    // la negativa esta antes de escribir ACTIVO y de registrar la tarea
+    expect(src.indexOf("exit 3")).toBeLessThan(src.indexOf("Set-Content -Path $estado -Value ('ACTIVO"));
+    expect(src).not.toMatch(/[^\x00-\x7F]/);                                 // powershell.exe lo lee como ANSI: sin tildes
+  });
   const INCIDENTE = bash('python - <<PY\nimport ctypes\nu=ctypes.windll.user32\nif cls(h) in ("ProdWindow","TabCtrl"): found.append(h)\nfor h in found: u.PostMessageW(h,0x0010,0,0)\nPY');
   it('bloquea matar el proceso: taskkill, Stop-Process, .Kill(), .CloseMainWindow(), os.kill, wmic, shutdown', () => {
     expect(ev(bash('taskkill /IM produc.exe /F')).err).toMatch(/matar el proceso del arb/);

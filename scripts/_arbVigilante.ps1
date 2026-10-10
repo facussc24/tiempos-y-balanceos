@@ -22,7 +22,9 @@ $estado  = Join-Path $env:USERPROFILE 'arb_fotos\vigilante_estado.txt'
 Add-Type -AssemblyName System.Windows.Forms
 
 function Mensaje($texto) {
-  if ($SinMensaje) { Write-Output $texto; return }
+  # Una sesion de Claude (CLAUDECODE) nunca muestra el cartel: quedaria esperando un click de Fak
+  # (01/10/2026). Es lo mismo que pasar -SinMensaje; asi la regla no depende de acordarse de la marca.
+  if ($SinMensaje -or $env:CLAUDECODE) { Write-Output $texto; return }
   [System.Windows.Forms.MessageBox]::Show($texto, 'ARB') | Out-Null
 }
 
@@ -36,6 +38,17 @@ if ($Pausar) {
 
 if (-not $Activar) { Mensaje 'Usar -Activar o -Pausar.'; exit 1 }
 if (-not (Test-Path $python)) { Mensaje ('No encuentro Python en ' + $python); exit 1 }
+
+# Un vigilante PAUSADO por login fallido no lo reactiva una sesion de Claude: seria otro intento con la
+# misma clave y reintentar puede bloquear la cuenta (regla arb-no-cerrar.md; _arbLanzar.py). Fak si puede,
+# con su boton: el sabe si ya corrigio la clave. Sale con 3 y no toca el estado ni la tarea.
+if ($env:CLAUDECODE -and (Test-Path $estado)) {
+  $previo = (Get-Content -Path $estado -TotalCount 1)
+  if ($previo -match '^PAUSADO' -and $previo -match 'login') {
+    Write-Output ('NO lo activo: el vigilante esta pausado por un login fallido (' + $previo + '). Reactivarlo seria otro intento con la misma clave. Avisarle a Fak: lo reactiva el con "ARB - activar vigilante" cuando la clave este bien.')
+    exit 3
+  }
+}
 
 Set-Content -Path $estado -Value ('ACTIVO {0}' -f (Get-Date -Format 'dd/MM HH:mm'))
 

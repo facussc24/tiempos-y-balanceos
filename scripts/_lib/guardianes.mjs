@@ -664,7 +664,12 @@ const TEXTO_CONSUMOS = `[CONSUMOS-GUARD — checklist canonico ANTES de entregar
    la UNIDAD no se elige, SE BUSCA en INSUMOS.txt.
 2. BOM: listar el folder de consumo ACTUAL y tomar la Rev de numero MAYOR (parsear int).
    PROHIBIDO decir "no documentado" sin pegar la salida del listado.
-3. Vinilo/tela de SERIE: fuente autoritativa = tabla tizadas Mesa de Corte (col ML), no el arb/BOM.
+3. Material de corte (vinilo, tela, microfibra): el consumo no se carga ni se cambia sin la PLANILLA
+   OFICIAL de Mesa de Corte que esta en el SERVIDOR o la confirmacion de Pablo Gamboa (un mail suyo,
+   o el adjunto de un mail suyo citando ese mail). Fak 06/10/2026: "no cambiamos el consumo sin un
+   excel oficial o una confirmacion oficial... ante la duda le preguntamos a Pablo Gamboa". Una tizada
+   (.MRK) sola puede ser una prueba y no alcanza; tampoco una BOM de proyecto, un flujograma ni una
+   cuenta mia. Un margen pedido por el gerente entra por \`fak:\`. Detalle: consumos-entregables.md §6.
 4. Auditoria de valores: tolerancia 0,1% (2% tapa typos reales) + invariantes que cierran
    + node scripts/_validarConsumos.mjs + UN AGENTE INDEPENDIENTE ademas del script propio.
 5. Entregable ejecutable: mostrar a Fak el dato crudo before→after con columna

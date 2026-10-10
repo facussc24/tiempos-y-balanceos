@@ -135,7 +135,7 @@
     ],
     "_manuales": [
       "Suma de vinilos de variantes = consumo RL1 (tabla tizadas Mesa de Corte)",
-      "Vinilo/tela de SERIE: fuente autoritativa = CONSUMOS TIZADAS <fecha>.xlsx col ML, le gana al arb y a BOMs de ingenieria"
+      "Material de corte (vinilo, tela, microfibra): el consumo no se carga ni se cambia sin la planilla oficial de Mesa de Corte que esta en el SERVIDOR (CONSUMOS TIZADAS <fecha>.xlsx, col ML) o la confirmacion de Pablo Gamboa (un mail suyo, o el adjunto de un mail suyo citando ese mail); una tizada (.MRK) sola puede ser una prueba y no alcanza, tampoco una BOM de proyecto, un flujograma ni una cuenta propia; un margen pedido por el gerente entra por fak: (Fak 06/10/2026: 'no cambiamos el consumo sin un excel oficial o una confirmacion oficial... ante la duda le preguntamos a Pablo Gamboa'; consumos-entregables.md §6)"
     ]
   },
   "guard_comentario": "Disparadores del hook consumos-entregable-guard (recordatorio 1x/h, additionalContext). Lista CANONICA desde 05/09/2026: antes la palabra suelta \"consumo\" disparaba con memorias, commits y el nombre del propio hook (26 disparos 15/08-04/09, la mitad sin trabajo de consumos detras). Se prueba contra esa poblacion en __tests__/scripts/guardianes.test.mjs. Las regex se aplican con flag i sobre comando + file_path.",

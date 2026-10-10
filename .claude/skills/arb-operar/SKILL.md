@@ -109,7 +109,7 @@ con `python scripts/_arbVer.py estado` hasta `ProdWindow` habilitada y seguir. S
 abre en 6 min: una linea a Fak — *"doble click en ARB"* (o activar el vigilante si esta pausado).
 Un arb COLGADO ya no se le lleva a Fak: se cierra y lo reabre el vigilante (02/10/2026, arriba). **Activar el vigilante lo hace Claude** (Fak, 30/09/2026:
 *"activa el vigilante, eso lo podes hacer vos, no requiere contraseñas"*): `powershell -ExecutionPolicy
-Bypass -File scripts\_arbVigilante.ps1 -Activar -SinMensaje` (**siempre con `-SinMensaje`**: sin esa
+Bypass -File scripts/_arbVigilante.ps1 -Activar -SinMensaje` (con `/`: la herramienta Bash se come la `\`; **siempre con `-SinMensaje`**: sin esa
 marca sale un cartel que espera el click de Fak y el comando queda colgado — 01/10/2026, Fak:
 *"deberias hacerlo automaticamente"*). **Antes de reactivar un vigilante PAUSADO se lee el
 motivo** (segunda palabra en adelante de `vigilante_estado.txt` y el final de `lanzador.log`): si
