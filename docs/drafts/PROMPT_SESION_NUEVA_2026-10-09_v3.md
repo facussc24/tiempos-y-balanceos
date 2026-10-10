@@ -43,7 +43,9 @@ de tipeo, entendé sin corregirme). Vos corrés en esta carpeta, con las reglas,
     libre no lanzás más agentes. **Antes del 95 % de contexto cerrás prolijo**: commit con rutas, la cola al día, y el prompt para la
     sesión siguiente en `docs/drafts/`, tan completo como este.
 12. **Si te dejo trabajando solo hasta una hora o "toda la noche"**, no se cierra antes: lista en archivo, hora fijada, el latido (hoy: una
-    tarea programada de la app que no hace nada y avisa al terminar; el `CronCreate` no disparó nunca; el arreglo es la H2 de la cola),
+    `node scripts/_latido.mjs` lanzado con Bash en segundo plano, descripción que empiece con «LATIDO»; su aviso de «terminó» te
+    despierta: exit 0 = seguir y relanzar, exit 4 = ya no hay hora, no se relanza; hecho el 09/10 a la noche, cola H2; el `CronCreate`
+    no dispara en la app y la tarea programada tampoco avisa),
     el cupo cada hora, y cuando la lista se acaba se le agrega trabajo de la cola que no necesite mi sí.
 13. **Mis PC, el equipo y la nube.** Mis dos PC tienen que quedar iguales solas. A Carlos le baja solo lo seguro y probado. Pedro se
     revisa. La nube de Ingeniería es un desastre: una sola carpeta para lo de Claude, con mi sí antes de mover nada. En mi nube

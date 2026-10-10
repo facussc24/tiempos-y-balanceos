@@ -159,7 +159,7 @@
         ]
       },
       {
-        "_comentario": "03/10/2026: hora-guard. Con una hora de trabajo fijada por Fak (~/.claude/.trabajar-hasta.json, por sesion) frena el cierre del turno si no hay ningun aviso programado vivo (sin latido la sesion queda parada: se frena tambien en el segundo intento, hasta el tope de bloqueos de Claude Code) o si el mensaje final se despide como si el trabajo hubiera terminado; y frena una vez si el ultimo mensaje de Fak ponia una hora y no se fijo ni se escribio 'No aplica trabajar-hasta: ...'. Con hora vigente, latido vivo y un mensaje que no cierra, deja pasar. Usa session_crons y last_assistant_message del payload. Logica: scripts/_lib/horaGuard.mjs. Test: horaGuard.test.mjs (ROJO exit 2, VERDE exit 0).",
+        "_comentario": "03/10/2026: hora-guard. Con una hora de trabajo fijada por Fak (~/.claude/.trabajar-hasta.json, por sesion) frena el cierre del turno si no hay ningun latido vivo (09/10: el proceso de scripts/_latido.mjs en segundo plano; un CronCreate ya no cuenta porque en la app no dispara) (sin latido la sesion queda parada: se frena tambien en el segundo intento, hasta el tope de bloqueos de Claude Code) o si el mensaje final se despide como si el trabajo hubiera terminado; y frena una vez si el ultimo mensaje de Fak ponia una hora y no se fijo ni se escribio 'No aplica trabajar-hasta: ...'. Con hora vigente, latido vivo y un mensaje que no cierra, deja pasar. Usa session_id y last_assistant_message del payload y la señal ~/.claude/.latido/<sesion>.json. Logica: scripts/_lib/horaGuard.mjs. Test: horaGuard.test.mjs (ROJO exit 2, VERDE exit 0).",
         "matcher": "",
         "hooks": [
           {

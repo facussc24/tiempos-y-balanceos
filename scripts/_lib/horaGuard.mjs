@@ -5,23 +5,24 @@
  * Claude trabajo hasta las 17:10, escribio un resumen y termino el turno. Como nada lo volvio a despertar, quedo
  * parado seis horas ("no te quedaste hasta las 8, decime por que, defendete"). El pedido era POR TIEMPO y se trato
  * como una lista: cuando se acabo la lista, se dio por terminado. Y una sesion no sigue sola: al terminar de contestar
- * queda parada hasta que llega un mensaje, el aviso de algo que quedo corriendo, o un aviso programado (CronCreate).
+ * queda parada hasta que llega un mensaje o el aviso de algo que quedo corriendo (el latido: ver la seccion 2 bis).
  *
  * Tres piezas:
  *   1. hora-prompt.sh (UserPromptSubmit): si el mensaje de Fak pone una hora para trabajar ("labura hasta las 8",
  *      "continua hasta manana a las 10am, hasta esa hora no pares", "ponete un cronometro"), avisa lo que hay que
- *      armar ANTES de seguir: fijar la hora, el latido (CronCreate) y la lista de trabajo en un archivo.
+ *      armar ANTES de seguir: fijar la hora, el latido (scripts/_latido.mjs en segundo plano) y la lista en un archivo.
  *   2. El estado: ~/.claude/.trabajar-hasta.json, por sesion: hasta cuando, el latido y la lista. Lo escribe Claude
  *      con --fijar / --latido / --terminar (el hook no adivina la hora: "hasta 8" puede ser las 20 de hoy).
  *   3. hora-guard.sh (Stop): frena el cierre del turno si (a) Fak puso una hora y no se fijo ni se dijo
- *      "No aplica trabajar-hasta: ..."; (b) hay una hora vigente y no hay latido registrado; (c) hay una hora vigente
+ *      "No aplica trabajar-hasta: ..."; (b) hay una hora vigente y ningun latido VIVO (su proceso); (c) hay una hora vigente
  *      y el mensaje final declara un cierre. Frena una vez por turno (stop_hook_active), como el cierre-guard.
  * Lo que NO hace: no mantiene la sesion despierta (eso es el latido) ni decide que trabajo hacer (eso es la lista).
  *
  *   node scripts/_lib/horaGuard.mjs --hook                 # stdin: JSON de UserPromptSubmit
  *   node scripts/_lib/horaGuard.mjs --stop                 # stdin: JSON de Stop (exit 2 = frena)
  *   node scripts/_lib/horaGuard.mjs --fijar "2026-10-04 10:00" --lista <archivo> [--pedido "..."] [--sesion <id>]
- *   node scripts/_lib/horaGuard.mjs --latido <id del CronCreate> [--sesion <id>]
+ *   node scripts/_latido.mjs [--minutos 9]               # EL LATIDO, en segundo plano (Bash run_in_background)
+ *   node scripts/_lib/horaGuard.mjs --latido <id> [--sesion <id>]   # (viejo: registraba un CronCreate; ya no cuenta)
  *   node scripts/_lib/horaGuard.mjs --terminar --porque "<motivo>" [--sesion <id>]
  *   node scripts/_lib/horaGuard.mjs --estado | --contexto  # lo vigente (--contexto: una linea para el arranque)
  *   node scripts/_lib/horaGuard.mjs --medir <mensajes.jsonl> [--muestra]    # filas {ses,t}
@@ -156,6 +157,91 @@ export function pideParar(texto) {
 // ---------------------------------------------------------------------------------------------
 
 export const rutaEstado = (home = os.homedir()) => path.join(home, '.claude', '.trabajar-hasta.json');
+
+// ---------------------------------------------------------------------------------------------
+// 2 bis. El latido: un programa en segundo plano que despierta a la sesion (09/10/2026, cola H2)
+// ---------------------------------------------------------------------------------------------
+//
+// Lo que se midio antes de elegirlo (transcripts de esta carpeta):
+//   - CronCreate: 0 mensajes LATIDO en 16 sesiones; en la app de escritorio no dispara. Y el control lo daba por vivo
+//     porque miraba que EXISTIERA (`session_crons`), no que latiera: dos noches quietas (03/10 y 08/10).
+//   - Tarea programada de la app con aviso al terminar: su aviso a la sesion que la creo no aparece en ningun registro
+//     (la prueba del 09/10 06:39 quedo trabada en modo plan y la tarea ya no existe).
+//   - El aviso de "termino" de un programa lanzado en segundo plano (Bash con run_in_background): desde el 03/10, de
+//     163 que llegaron con la sesion recien callada, 88 la despertaron y el resto entro al turno que seguia abierto
+//     (`absorbed_mid_turn`); ninguno se perdio. Es lo unico que se vio funcionar.
+// Por eso el latido es `scripts/_latido.mjs` en segundo plano: deja una SEÑAL (este archivo, con su numero de proceso y
+// cuando despierta), espera, imprime que hacer y termina; su aviso despierta a la sesion, que lo vuelve a lanzar. El
+// control de cierre mira que ESE proceso este vivo: lo que importa es que algo vaya a despertar, no que exista un aviso.
+
+/** Cuanto espera el latido por defecto: menos de 10 minutos, el tope de un comando de la herramienta Bash. */
+export const LATIDO_MINUTOS = CANON.latido_fondo_minutos || 9;
+/** Margen despues de la hora en que debia despertar, por si la PC estaba cargada. */
+export const GRACIA_LATIDO_MS = 3 * 60000;
+const limpiarId = (s) => String(s || '').replace(/[^A-Za-z0-9_-]/g, '_');
+/** Cada cuanto el latido refresca su señal, y cuanto puede pasar sin refrescarla antes de darlo por muerto. */
+export const REFRESCO_LATIDO_MS = 30000;
+export const SIN_REFRESCO_MS = 2 * 60000;
+/** Codigo de salida del latido cuando no hay (o ya no hay) una hora vigente: el aviso de Claude Code lo muestra. */
+export const SALIDA_SIN_HORA = 4;
+const dirLatido = (home = os.homedir()) => path.join(home, '.claude', '.latido');
+/** Una señal POR PROCESO (auditor 09/10): dos latidos a la vez no se pisan, y uno que termina borra solo la suya. */
+export const rutaLatido = (sesion, home = os.homedir(), pid = process.pid) => path.join(dirLatido(home), `${limpiarId(sesion)}.${pid}.json`);
+/** Las señales de una sesion (las de todos sus latidos). */
+export function leerLatidos(sesion, home) {
+  if (!sesion) return [];
+  const pre = `${limpiarId(sesion)}.`;
+  try {
+    return fs.readdirSync(dirLatido(home)).filter((n) => n.startsWith(pre) && n.endsWith('.json'))
+      .map((n) => { try { const j = JSON.parse(fs.readFileSync(path.join(dirLatido(home), n), 'utf8')); return j && typeof j === 'object' ? j : null; } catch { return null; } })
+      .filter(Boolean);
+  } catch { return []; }
+}
+/** La señal mas reciente de la sesion, o null. */
+export const leerLatido = (sesion, home) => leerLatidos(sesion, home).sort((a, b) => (b.latido_ms || 0) - (a.latido_ms || 0))[0] || null;
+/** ¿Sigue vivo ese proceso? (en Windows tambien: process.kill con 0 no mata, pregunta) */
+export function procesoVivo(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try { process.kill(pid, 0); return true; } catch (e) { return e && e.code === 'EPERM'; }
+}
+/** Escribe (o refresca) la señal del latido: `latido_ms` es la ultima vez que dio señales de vida. */
+export function escribirLatido({ sesion, pid = process.pid, minutos = LATIDO_MINUTOS, ahora = new Date(), inicio = null, home } = {}) {
+  if (!sesion) throw new Error('el latido no sabe de que sesion es (CLAUDE_CODE_SESSION_ID o --sesion)');
+  const p = rutaLatido(sesion, home, pid);
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  const desde = inicio instanceof Date ? inicio : ahora;
+  const senal = { sesion, pid, inicio: enLocal(desde), inicio_ms: desde.getTime(), despierta_ms: desde.getTime() + Math.round(minutos * 60000), minutos, latido_ms: ahora.getTime() };
+  const tmp = `${p}.tmp`;
+  fs.writeFileSync(tmp, `${JSON.stringify(senal, null, 2)}\n`, 'utf8');
+  fs.renameSync(tmp, p);
+  return senal;
+}
+/** La borra el propio latido al terminar: solo la suya. */
+export function borrarLatido({ sesion, pid = process.pid, home } = {}) {
+  try { fs.unlinkSync(rutaLatido(sesion, home, pid)); return true; } catch { return false; }
+}
+/**
+ * ¿Hay un latido vivo para la sesion? Vivo = alguna señal cuyo proceso sigue corriendo, que se refresco hace menos de
+ * 2 minutos (un numero de proceso que Windows le dio a OTRO programa no la refresca: auditor 09/10, Windows reusa un
+ * numero libre en segundos) y que todavia no paso la hora en que debia despertar (mas el margen).
+ * Devuelve { vivo, motivo, senal } con la mejor señal que haya.
+ */
+export function latidoVivo(sesion, { ahora = new Date(), home, vivo = procesoVivo } = {}) {
+  const senales = leerLatidos(sesion, home);
+  if (!senales.length) return { vivo: false, motivo: 'sin_senal', senal: null };
+  let peor = null;
+  for (const senal of senales) {
+    let motivo = 'vivo';
+    if (!vivo(senal.pid)) motivo = 'proceso_terminado';
+    else if (!(Number(senal.latido_ms ?? senal.inicio_ms) + SIN_REFRESCO_MS > ahora.getTime())) motivo = 'sin_refrescar';
+    else if (!(Number(senal.despierta_ms) + GRACIA_LATIDO_MS > ahora.getTime())) motivo = 'paso_su_hora';
+    if (motivo === 'vivo') return { vivo: true, motivo, senal };
+    peor = peor || { vivo: false, motivo, senal };
+  }
+  return peor;
+}
+/** Como se lanza, para los avisos (lo hace Claude con la herramienta Bash, en segundo plano). */
+export const COMO_LANZAR = `Bash con run_in_background:true, comando «node scripts/_latido.mjs» y una descripción que empiece con «LATIDO» (espera ${LATIDO_MINUTOS} minutos y termina; su aviso de «terminó» te despierta: con «exit code 0» seguí y relanzalo, con «exit code ${SALIDA_SIN_HORA}» ya no hay hora vigente y NO se relanza)`;
 
 export function leerTodo(home) {
   try { const j = JSON.parse(fs.readFileSync(rutaEstado(home), 'utf8')); return j && typeof j === 'object' && !Array.isArray(j) ? j : {}; }
@@ -292,15 +378,15 @@ export function avisoDe(texto, { estado = null, ahora = new Date() } = {}) {
   }
   if (p.pide) {
     return `${MARCA} Fak te deja trabajando solo hasta una hora (${leidas(p)}; ahora son las ${enLocal(ahora)}). Cuando terminás de contestar quedás PARADO hasta que algo te despierte: sin un aviso programado no hay trabajo. ANTES de seguir con lo que pide:\n`
-      + '1. Escribí la lista de trabajo en un archivo: lo que pidió primero, y después qué auditar o mejorar por tu cuenta. El pedido es por TIEMPO, no por lista: cuando se acabe la lista, se le agrega, no se cierra.\n'
+      + '1. Escribí la lista de trabajo en un archivo: lo que pidió primero, y después qué auditar o mejorar por tu cuenta. El pedido es por TIEMPO, no por lista: cuando se acabe la lista, se le agrega, no se cierra. La lista lleva tres secciones además de lo pedido: «Trabajo que puedo hacer solo» (lo de la cola que no necesita su sí, para cuando se acabe lo pedido), «Decidí distinto de lo pedido» (qué y por qué, con la fuente) y «No pude verificar» (lo que queda sin probar, dicho como tal).\n'
       + `2. Fijá la hora: node scripts/_lib/horaGuard.mjs --fijar "AAAA-MM-DD HH:MM" --lista <ese archivo> --pedido "<sus palabras>". Si la hora es ambigua («hasta 8»), es la próxima que tenga sentido con lo que dijo.\n`
-      + `3. Armá el latido con CronCreate (cada ${CANON.latido_minutos} minutos, en minutos que no sean :00 ni :30), con un prompt que mande a mirar la hora, correr node scripts/_colgados.mjs (lo que lanzaste y lleva 10 minutos quieto se MIRA, no se espera), leer la lista y seguir; y registralo: node scripts/_lib/horaGuard.mjs --latido <id>.\n`
+      + `3. Lanzá el latido: ${COMO_LANZAR}. Cada vez que te despierta: mirá la hora, corré node scripts/_colgados.mjs (lo que lanzaste y lleva 10 minutos quieto se MIRA, no se espera), leé la lista, seguí y relanzalo. CronCreate no sirve: en la app no dispara.\n`
       + '4. El resumen para Fak va cuando LLEGA la hora, no antes. Mientras tanto, lo hecho se anota en el archivo de la lista. Y nada que le muestre un cartel de aprobación: te quedarías colgado.\n'
       + `Si el mensaje no pide eso, escribí un renglón que empiece con «${NO_APLICA}» y el motivo.`;
   }
   if (estado) {
-    if (pideParar(texto)) return `${MARCA} Hay un pedido vigente de trabajar hasta las ${estado.hasta}. Si Fak te está diciendo que pares, terminalo: node scripts/_lib/horaGuard.mjs --terminar --porque "<sus palabras>" y borrá el latido (CronDelete ${estado.latido || '<id>'}). Si no, sigue vigente.`;
-    return `${MARCA} Sigue vigente: trabajar hasta las ${estado.hasta} (lista: ${estado.lista || 'sin archivo'}; latido: ${estado.latido || 'SIN ARMAR'}). Contestale a Fak y seguí con la lista; no cierres antes.`;
+    if (pideParar(texto)) return `${MARCA} Hay un pedido vigente de trabajar hasta las ${estado.hasta}. Si Fak te está diciendo que pares, terminalo: node scripts/_lib/horaGuard.mjs --terminar --porque "<sus palabras>" (el latido que esté corriendo termina solo y no se relanza). Si no, sigue vigente.`;
+    return `${MARCA} Sigue vigente: trabajar hasta las ${estado.hasta} (lista: ${estado.lista || 'sin archivo'}). Contestale a Fak y seguí con la lista; no cierres antes, y antes de terminar el turno fijate que el latido esté corriendo (si no: ${COMO_LANZAR}).`;
   }
   return null;
 }
@@ -414,14 +500,16 @@ export function decidirStop(payload = {}, deps = {}) {
   const ahora = deps.ahora || new Date();
   const final = String(payload.last_assistant_message || '');
   const e = vigente(payload.session_id, { ahora, home: deps.home });
-  // El latido: Claude Code le pasa al hook los avisos programados vivos de la sesion (`session_crons`). Si ese dato
-  // viene, manda el (un latido registrado que ya murio no cuenta); si no viene, vale el que se registro con --latido.
-  const crons = Array.isArray(payload.session_crons) ? payload.session_crons : null;
-  const hayLatido = crons ? crons.length > 0 : !!(e && e.latido);
-  if (e && !hayLatido) {
+  // El latido (09/10/2026, cola H2): cuenta solo un `_latido.mjs` en segundo plano con su proceso VIVO. Un CronCreate
+  // (`session_crons`) ya no cuenta: existe pero en la app no dispara, y por darlo por vivo se perdieron dos noches.
+  const lat = e ? (deps.latidoVivo || latidoVivo)(payload.session_id, { ahora, home: deps.home }) : null;
+  if (e && !lat.vivo) {
     // sin latido se frena SIEMPRE (tambien en el segundo intento del mismo turno): cerrar asi es quedar parado. El tope
     // de bloqueos seguidos de Claude Code corta un bucle.
-    return { ok: false, motivo: 'sin_latido', mensaje: `${MARCA} Fak pidió trabajar hasta las ${e.hasta} y no hay ningún aviso programado vivo en esta sesión: si cerrás el turno ahora, quedás parado y nadie te despierta. Armalo con CronCreate (cada ${CANON.latido_minutos} minutos, con un prompt que mande a mirar la hora, leer ${e.lista || 'la lista'} y seguir) y registralo: node scripts/_lib/horaGuard.mjs --latido <id>.` };
+    const por = lat.motivo === 'proceso_terminado' ? 'el último latido ya terminó (te despertó) y no lo relanzaste'
+      : lat.motivo === 'paso_su_hora' ? 'el latido que había pasó su hora sin terminar'
+        : lat.motivo === 'sin_refrescar' ? 'el latido dejó de dar señales (su proceso ya no la refresca)' : 'no hay ningún latido corriendo';
+    return { ok: false, motivo: 'sin_latido', mensaje: `${MARCA} Fak pidió trabajar hasta las ${e.hasta} y ${por}: si cerrás el turno ahora, quedás parado y nadie te despierta. Lanzalo: ${COMO_LANZAR}. Después leé ${e.lista || 'la lista'} y seguí.` };
   }
   if (payload.stop_hook_active) return { ok: true, motivo: 'stop_hook_active' };
   if (e) {
@@ -443,7 +531,7 @@ export function decidirStop(payload = {}, deps = {}) {
       descartar({ sesion: payload.session_id, ahora, home: deps.home });
       return { ok: true, motivo: 'no_aplica' };
     }
-    return { ok: false, motivo: 'hora_sin_fijar', mensaje: `${MARCA} El último mensaje de Fak pone una hora para trabajar (${leidas(pideHasta(ultimo))}) y no la fijaste. Antes de cerrar el turno: la lista en un archivo, node scripts/_lib/horaGuard.mjs --fijar "AAAA-MM-DD HH:MM" --lista <archivo>, el latido con CronCreate y --latido <id>. Si no pide eso, un renglón que empiece con «${NO_APLICA}» y el motivo.` };
+    return { ok: false, motivo: 'hora_sin_fijar', mensaje: `${MARCA} El último mensaje de Fak pone una hora para trabajar (${leidas(pideHasta(ultimo))}) y no la fijaste. Antes de cerrar el turno: la lista en un archivo, node scripts/_lib/horaGuard.mjs --fijar "AAAA-MM-DD HH:MM" --lista <archivo>, y el latido (${COMO_LANZAR}). Si no pide eso, un renglón que empiece con «${NO_APLICA}» y el motivo.` };
   }
   return { ok: true, motivo: 'nada_vigente' };
 }
@@ -453,7 +541,10 @@ export function contexto({ sesion = null, ahora = new Date(), home } = {}) {
   const todo = leerTodo(home);
   const vivos = Object.entries(todo).filter(([s, e]) => e && typeof e === 'object' && (!sesion || s === sesion) && !e.cumplido && aFecha(e.hasta) && aFecha(e.hasta).getTime() > ahora.getTime());
   if (!vivos.length) return '';
-  return vivos.map(([s, e]) => `${MARCA} Pedido VIGENTE de Fak (sesión ${s.slice(0, 8)}): trabajar sin parar hasta las ${e.hasta}. Lista: ${e.lista || 'sin archivo'}. Latido: ${e.latido || 'SIN ARMAR'} (mirá con CronList que siga vivo; si no está, armalo de nuevo con CronCreate y registralo con --latido). No cierres con un resumen antes de esa hora.`).join('\n');
+  return vivos.map(([s, e]) => {
+    const l = latidoVivo(s, { ahora, home });
+    return `${MARCA} Pedido VIGENTE de Fak (sesión ${s.slice(0, 8)}): trabajar sin parar hasta las ${e.hasta}. Lista: ${e.lista || 'sin archivo'}. Latido: ${l.vivo ? `corriendo (despierta a las ${enLocal(new Date(l.senal.despierta_ms)).slice(11)})` : `NO está corriendo: lanzalo (${COMO_LANZAR})`}. No cierres con un resumen antes de esa hora.`;
+  }).join('\n');
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -472,22 +563,24 @@ function medir(ruta) {
 
 const comoScript = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (comoScript) {
-  const sesion = arg('--sesion') || sesionActual();
+  // la sesion: la que se pasa, si no la que Claude Code le da al comando (CLAUDE_CODE_SESSION_ID); recien despues la
+  // del registro mas nuevo, que con dos sesiones abiertas en esta carpeta puede ser la de otra (09/10/2026)
+  const sesion = arg('--sesion') || process.env.CLAUDE_CODE_SESSION_ID || sesionActual();
   if (process.argv.includes('--hook')) {
     leerStdin((j) => { const aviso = atender(j); if (aviso) process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: aviso } })); });
   } else if (process.argv.includes('--stop')) {
     leerStdin((j) => { let r = { ok: true }; try { r = decidirStop(j || {}); } catch { r = { ok: true }; } if (!r.ok) { process.stderr.write(`${r.mensaje}\n`); process.exit(2); } });
   } else if (process.argv.includes('--fijar')) {
     const r = fijar({ sesion, hasta: arg('--fijar'), lista: arg('--lista'), pedido: arg('--pedido') });
-    console.log(r.ok ? `Fijado: trabajar hasta las ${r.estado.hasta} (sesión ${String(sesion).slice(0, 8)}; lista: ${r.estado.lista || 'sin archivo'}; latido: ${r.estado.latido || 'falta: CronCreate y --latido <id>'})` : `✗ ${r.error}`);
+    console.log(r.ok ? `Fijado: trabajar hasta las ${r.estado.hasta} (sesión ${String(sesion).slice(0, 8)}; lista: ${r.estado.lista || 'sin archivo'}; latido: ${latidoVivo(sesion).vivo ? 'corriendo' : 'falta lanzarlo: ' + COMO_LANZAR})` : `✗ ${r.error}`);
     process.exit(r.ok ? 0 : 1);
   } else if (process.argv.includes('--latido')) {
     const r = registrarLatido({ sesion, id: arg('--latido') });
-    console.log(r.ok ? `Latido ${r.estado.latido} registrado para trabajar hasta las ${r.estado.hasta}` : `✗ ${r.error}`);
+    console.log(r.ok ? `Anotado ${r.estado.latido}, pero un id de CronCreate ya NO cuenta como latido (en la app no dispara). El latido es: ${COMO_LANZAR}.` : `✗ ${r.error}`);
     process.exit(r.ok ? 0 : 1);
   } else if (process.argv.includes('--terminar')) {
     const r = terminar({ sesion, porque: arg('--porque') });
-    console.log(r.ok ? (r.nada ? 'No había ninguna hora fijada.' : `Terminado el pedido de trabajar hasta las ${r.estado.hasta}${r.vencio ? ' (ya había llegado la hora)' : ''}. Borrá el latido con CronDelete ${r.estado.latido || ''}.`) : `✗ ${r.error}`);
+    console.log(r.ok ? (r.nada ? 'No había ninguna hora fijada.' : `Terminado el pedido de trabajar hasta las ${r.estado.hasta}${r.vencio ? ' (ya había llegado la hora)' : ''}. El latido que esté corriendo termina solo: no lo relances.`) : `✗ ${r.error}`);
     process.exit(r.ok ? 0 : 1);
   } else if (process.argv.includes('--contexto-hook')) {
     // SessionStart: solo lo de ESA sesion (el session_id viene en el JSON de stdin); sin id, nada

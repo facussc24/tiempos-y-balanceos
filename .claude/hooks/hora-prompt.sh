@@ -5,7 +5,7 @@
 # UserPromptSubmit, matcher vacio. Con cada mensaje de Fak:
 #   - si lo deja trabajando solo hasta una hora ("quedate laburando como minimo hasta esa hora", "labura hasta las 8",
 #     "continua hasta manana a las 10am, hasta esa hora no pares", "ponete un cronometro"), le recuerda a Claude lo
-#     que hay que armar ANTES de seguir: la lista en un archivo, fijar la hora (--fijar) y el latido (CronCreate);
+#     que hay que armar ANTES de seguir: la lista en un archivo, fijar la hora (--fijar) y el latido (scripts/_latido.mjs en segundo plano);
 #   - si ya hay una hora vigente, le recuerda que sigue vigente (o como terminarla si Fak dice que pare).
 # Que no se cierre antes de la hora lo mide el cierre del turno: hora-guard.sh.
 #

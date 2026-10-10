@@ -59,7 +59,10 @@ describe('horaGuard — ¿el mensaje pone una hora para trabajar?', () => {
     const aviso = H.avisoDe(REALES.las8, { ahora });
     expect(aviso.startsWith(H.MARCA)).toBe(true);
     expect(aviso).toContain('--fijar');
-    expect(aviso).toContain('CronCreate');
+    expect(aviso).toContain('node scripts/_latido.mjs');
+    expect(aviso).toContain('run_in_background');
+    // H3: la lista de la tanda larga lleva sus tres secciones
+    for (const s of ['Trabajo que puedo hacer solo', 'Decidí distinto de lo pedido', 'No pude verificar']) expect(aviso).toContain(s);
     expect(aviso).toContain(H.NO_APLICA);
     for (const t of NO_PIDEN) expect(H.avisoDe(t, { ahora }), t).toBe(null);
     const estado = { hasta: '2026-10-04 10:00', lista: 'C:\\x\\lista.md', latido: 'abc' };
@@ -121,7 +124,8 @@ describe('horaGuard — el estado: fijar, latido, terminar', () => {
     const c = H.contexto({ ahora, home });
     expect(c).toContain('2026-10-04 10:00');
     expect(c).toContain('lista.md');
-    expect(c).toContain('SIN ARMAR');
+    expect(c).toContain('NO está corriendo');
+    expect(c).toContain('_latido.mjs');
     expect(H.contexto({ ahora: D('2026-10-04 11:00'), home })).toBe('');
   });
 });
@@ -133,25 +137,34 @@ describe('hora-guard (Stop) — decide si el turno puede cerrar', () => {
     const lista = path.join(home, 'lista.md'); fs.writeFileSync(lista, '# lista\n');
     return H.fijar({ sesion, hasta, lista, ahora: D('2026-10-03 13:55'), home });
   };
-  const stop = (extra) => H.decidirStop({ session_id: sesion, last_assistant_message: 'Sigo con el punto 3 de la lista.', ...extra }, { ahora, home, ultimoDeFak: () => '' });
+  const MUERTO = () => ({ vivo: false, motivo: 'sin_senal' });
+  const VIVO = () => ({ vivo: true, motivo: 'vivo' });
+  const stop = (extra, latidoVivo = MUERTO) => H.decidirStop({ session_id: sesion, last_assistant_message: 'Sigo con el punto 3 de la lista.', ...extra }, { ahora, home, ultimoDeFak: () => '', latidoVivo });
 
-  it('ROJO: hora vigente y ningun aviso programado vivo -> frena, tambien en el segundo intento del turno', () => {
+  it('ROJO: hora vigente y ningun latido vivo -> frena, tambien en el segundo intento del turno', () => {
     fijarHasta();
-    expect(stop({ session_crons: [] })).toMatchObject({ ok: false, motivo: 'sin_latido' });
-    expect(stop({ session_crons: [], stop_hook_active: true })).toMatchObject({ ok: false, motivo: 'sin_latido' });
-    expect(stop({})).toMatchObject({ ok: false, motivo: 'sin_latido' });                              // sin el dato y sin registro
-    // un latido registrado que ya murio (la app se reinicio) no cuenta si Claude Code dice que no hay ninguno
+    expect(stop({})).toMatchObject({ ok: false, motivo: 'sin_latido' });
+    expect(stop({ stop_hook_active: true })).toMatchObject({ ok: false, motivo: 'sin_latido' });
+    expect(stop({}).mensaje).toContain('node scripts/_latido.mjs');
+    // un id registrado con --latido (el CronCreate viejo) no cuenta
     H.registrarLatido({ sesion, id: 'viejo', home });
-    expect(stop({ session_crons: [] })).toMatchObject({ ok: false, motivo: 'sin_latido' });
+    expect(stop({})).toMatchObject({ ok: false, motivo: 'sin_latido' });
+  });
+
+  it('ROJO (H2, las noches del 03/10 y del 08/10): un CronCreate VIVO ya no cuenta como latido: en la app no dispara', () => {
+    fijarHasta();
+    expect(stop({ session_crons: [{ id: 'c8b47335', cron: '7,17,27,37,47,57 * * * *' }] })).toMatchObject({ ok: false, motivo: 'sin_latido' });
+    // y el mensaje dice por que, segun lo que haya pasado con el latido
+    expect(stop({}, () => ({ vivo: false, motivo: 'proceso_terminado' })).mensaje).toContain('ya terminó (te despertó) y no lo relanzaste');
   });
 
   it('ROJO: hora vigente, latido vivo y el mensaje se despide como si hubiera terminado (el caso del 03/10 a las 17:10)', () => {
     fijarHasta();
-    const r = stop({ session_crons: [{ id: 'a' }], last_assistant_message: 'Lo que quedó hecho: ... Resumen final para Facundo.' });
+    const r = stop({ last_assistant_message: 'Lo que quedó hecho: ... Resumen final para Facundo.' }, VIVO);
     expect(r).toMatchObject({ ok: false, motivo: 'cierre_antes_de_hora' });
     expect(r.mensaje).toContain('2026-10-03 20:00');
     // una sola vez por turno: el segundo intento pasa (no hay bucle), porque el latido lo va a despertar
-    expect(stop({ session_crons: [{ id: 'a' }], last_assistant_message: 'Resumen final.', stop_hook_active: true }).ok).toBe(true);
+    expect(stop({ last_assistant_message: 'Resumen final.', stop_hook_active: true }, VIVO).ok).toBe(true);
   });
 
   it('declaraFin: «Terminé.» se despide; «cuando termine la suite, sigo» y «terminé la hoja 3 y sigo» no (04/10/2026)', () => {
@@ -168,25 +181,23 @@ describe('hora-guard (Stop) — decide si el turno puede cerrar', () => {
 
   it('VERDE: hora vigente, latido vivo y un mensaje que no cierra -> pasa (espera el proximo latido)', () => {
     fijarHasta();
-    expect(stop({ session_crons: [{ id: 'a' }] })).toMatchObject({ ok: true, motivo: 'vigente_con_latido' });
-    H.registrarLatido({ sesion, id: 'a', home });
-    expect(stop({})).toMatchObject({ ok: true, motivo: 'vigente_con_latido' });                        // sin el dato, vale el registrado
+    expect(stop({}, VIVO)).toMatchObject({ ok: true, motivo: 'vigente_con_latido' });
   });
 
   it('VERDE: llego la hora, o es otra sesion, o es un agente -> pasa', () => {
     fijarHasta();
-    expect(H.decidirStop({ session_id: sesion, last_assistant_message: 'Resumen final.', session_crons: [] }, { ahora: D('2026-10-03 20:01'), home, ultimoDeFak: () => '' }).ok).toBe(true);
+    expect(H.decidirStop({ session_id: sesion, last_assistant_message: 'Resumen final.' }, { ahora: D('2026-10-03 20:01'), home, ultimoDeFak: () => '', latidoVivo: MUERTO }).ok).toBe(true);
     expect(H.decidirStop({ session_id: 'otra', last_assistant_message: 'Resumen final.' }, { ahora, home, ultimoDeFak: () => '' }).ok).toBe(true);
-    expect(stop({ agent_id: 'x', session_crons: [] }).ok).toBe(true);
+    expect(stop({ agent_id: 'x' }).ok).toBe(true);
   });
 
   it('ROJO: el ultimo mensaje de Fak ponia una hora y no se fijo; VERDE: se fijo, o el cierre dice que no aplica', () => {
-    const sinFijar = (final, extra = {}) => H.decidirStop({ session_id: sesion, transcript_path: 'x', last_assistant_message: final, ...extra }, { ahora, home, ultimoDeFak: () => REALES.las8 });
+    const sinFijar = (final, extra = {}) => H.decidirStop({ session_id: sesion, transcript_path: 'x', last_assistant_message: final, ...extra }, { ahora, home, ultimoDeFak: () => REALES.las8, latidoVivo: VIVO });
     expect(sinFijar('Dale, arranco.')).toMatchObject({ ok: false, motivo: 'hora_sin_fijar' });
     expect(sinFijar('Dale, arranco.', { stop_hook_active: true }).ok).toBe(true);
     expect(sinFijar(`${H.NO_APLICA} es un reclamo, no un pedido.`).ok).toBe(true);
     fijarHasta();
-    expect(sinFijar('Dale, arranco.', { session_crons: [{ id: 'a' }] }).ok).toBe(true);
+    expect(sinFijar('Dale, arranco.').ok).toBe(true);
     // y un mensaje de Fak que no pone ninguna hora no frena nada
     expect(H.decidirStop({ session_id: 'otra', transcript_path: 'x', last_assistant_message: 'Listo.' }, { ahora, home, ultimoDeFak: () => NO_PIDEN[0] }).ok).toBe(true);
   });
@@ -201,7 +212,7 @@ describe('hora-guard (Stop) — decide si el turno puede cerrar', () => {
     expect(H.terminar({ sesion, porque: 'llegaron las 10:00', ahora: alas10, home })).toMatchObject({ ok: true, vencio: true });
     expect(H.leerEstado(sesion, home)).toMatchObject({ cumplido: '2026-10-04 10:00', hasta: '2026-10-04 10:00' });
     expect(H.vigente(sesion, { ahora: alas10, home })).toBe(null);
-    const cierre = (leido, final = 'Trabajé hasta las 10. Todo el detalle, en una página.') => H.decidirStop({ session_id: sesion, transcript_path: 'x', last_assistant_message: final, session_crons: [] }, { ahora: alas10, home, ultimoDeFak: () => leido });
+    const cierre = (leido, final = 'Trabajé hasta las 10. Todo el detalle, en una página.') => H.decidirStop({ session_id: sesion, transcript_path: 'x', last_assistant_message: final }, { ahora: alas10, home, ultimoDeFak: () => leido });
     expect(cierre({ texto: REALES.las10, ms: mandado })).toMatchObject({ ok: true, motivo: 'nada_vigente' });   // con la hora del mensaje
     expect(cierre(REALES.las10)).toMatchObject({ ok: true, motivo: 'nada_vigente' });                             // y sin ella
     // ROJO: a las 10:19 Fak escribe de nuevo y pone otra hora; la marca del pedido viejo no lo tapa
@@ -214,7 +225,7 @@ describe('hora-guard (Stop) — decide si el turno puede cerrar', () => {
     // VERDE: se fija la hora nueva y ya no frena; de la marca vieja no se hereda el latido
     const r = H.fijar({ sesion, hasta: '2026-10-04 12:00', lista, ahora: D('2026-10-04 10:24'), home });
     expect(r.estado).toMatchObject({ hasta: '2026-10-04 12:00', latido: null });
-    expect(H.decidirStop({ session_id: sesion, transcript_path: 'x', last_assistant_message: 'Sigo con la lista.', session_crons: [{ id: 'b' }] }, { ahora: D('2026-10-04 10:25'), home, ultimoDeFak: () => nuevo }).ok).toBe(true);
+    expect(H.decidirStop({ session_id: sesion, transcript_path: 'x', last_assistant_message: 'Sigo con la lista.' }, { ahora: D('2026-10-04 10:25'), home, ultimoDeFak: () => nuevo, latidoVivo: () => ({ vivo: true }) }).ok).toBe(true);
     // cerrar dos veces no rompe, y una marca no acepta latido
     H.terminar({ sesion, porque: 'Fak dijo: pará, dejalo así', ahora: D('2026-10-04 10:30'), home });
     expect(H.terminar({ sesion, ahora: D('2026-10-04 10:31'), home })).toMatchObject({ ok: true, nada: true });
@@ -337,6 +348,71 @@ describe('hora-guard (Stop) — decide si el turno puede cerrar', () => {
   });
 });
 
+describe('el latido en segundo plano (H2, 09/10/2026)', () => {
+  const sesion = 'sesion-latido';
+  it('latidoVivo: señal de un proceso vivo, refrescada y antes de su hora -> vivo; si no, dice por que', () => {
+    const ahora = new Date(2026, 9, 9, 23, 0);
+    expect(H.latidoVivo(sesion, { ahora, home })).toMatchObject({ vivo: false, motivo: 'sin_senal' });
+    H.escribirLatido({ sesion, pid: 4242, minutos: 9, ahora, home });
+    expect(H.latidoVivo(sesion, { ahora, home, vivo: () => true })).toMatchObject({ vivo: true });
+    expect(H.latidoVivo(sesion, { ahora, home, vivo: () => false })).toMatchObject({ vivo: false, motivo: 'proceso_terminado' });
+    // sin refrescar 3 minutos: un numero de proceso que Windows le dio a otro programa no la refresca (auditor 09/10)
+    expect(H.latidoVivo(sesion, { ahora: new Date(ahora.getTime() + 3 * 60000), home, vivo: () => true })).toMatchObject({ vivo: false, motivo: 'sin_refrescar' });
+    // refrescada a los 10 minutos, pero ya paso su hora (9 + 3 de margen) a los 13
+    H.escribirLatido({ sesion, pid: 4242, minutos: 9, ahora: new Date(ahora.getTime() + 12.5 * 60000), inicio: ahora, home });
+    expect(H.latidoVivo(sesion, { ahora: new Date(ahora.getTime() + 11 * 60000), home, vivo: () => true }).vivo).toBe(true);
+    expect(H.latidoVivo(sesion, { ahora: new Date(ahora.getTime() + 13 * 60000), home, vivo: () => true })).toMatchObject({ vivo: false, motivo: 'paso_su_hora' });
+    // procesoVivo de verdad: este proceso vive; un pid absurdo no
+    expect(H.procesoVivo(process.pid)).toBe(true);
+    expect(H.procesoVivo(0)).toBe(false);
+    expect(H.procesoVivo(2147483646)).toBe(false);
+  });
+
+  it('dos latidos a la vez no se pisan: cada uno tiene su señal y borra solo la suya (auditor 09/10)', () => {
+    const ahora = new Date(2026, 9, 9, 23, 0);
+    H.escribirLatido({ sesion, pid: 111, ahora, home });
+    H.escribirLatido({ sesion, pid: 222, ahora, home });
+    expect(H.leerLatidos(sesion, home)).toHaveLength(2);
+    expect(H.borrarLatido({ sesion, pid: 222, home })).toBe(true);
+    expect(H.leerLatidos(sesion, home).map((s) => s.pid)).toEqual([111]);
+    expect(H.latidoVivo(sesion, { ahora, home, vivo: (pid) => pid === 111 }).vivo).toBe(true);
+    expect(H.borrarLatido({ sesion, pid: 999, home })).toBe(false);
+  });
+
+  it('scripts/_latido.mjs: sin hora vigente no arranca (sale con 4); con hora deja la señal, la refresca, la borra y sale con 0', async () => {
+    const { main, textoAlDespertar } = await import('../../scripts/_latido.mjs');
+    const env = { CLAUDE_CODE_SESSION_ID: sesion };
+    // ROJO: sin hora fijada sale con 4 y no deja señal (el aviso de «terminó» trae el código, no lo impreso)
+    expect(await main(['--minutos', '0.05'], { env, home, log: () => {}, esperar: async () => {} })).toBe(H.SALIDA_SIN_HORA);
+    expect(H.leerLatidos(sesion, home)).toEqual([]);
+    const lista = path.join(home, 'lista.md'); fs.writeFileSync(lista, '# lista\n');
+    const t0 = new Date();
+    expect(H.fijar({ sesion, hasta: new Date(t0.getTime() + 3 * 3600000), lista, ahora: t0, home }).ok).toBe(true);
+    const salida = [];
+    const vistas = [];
+    const code = await main(['--minutos', '1.5'], {
+      env, home, log: (s) => salida.push(s), pid: 31337,
+      esperar: async () => { vistas.push(H.latidoVivo(sesion, { home, vivo: (p) => p === 31337 }).vivo); },
+    });
+    expect(code).toBe(0);
+    expect(vistas).toEqual([true, true, true]);                  // 90 s en tramos de 30: vivo en cada uno
+    expect(H.leerLatidos(sesion, home)).toEqual([]);             // al despertar la borra: hay que relanzarlo
+    expect(salida.join('\n')).toMatch(/^LATIDO \d{2}:\d{2}: Fak pidió trabajar hasta las/);
+    expect(salida.join('\n')).toContain('Relanzá el latido');
+    // ROJO: si la hora se termino mientras esperaba, despierta con 4 (no se relanza)
+    const code4 = await main(['--minutos', '0.05'], {
+      env, home, log: () => {}, esperar: async () => { H.terminar({ sesion, porque: 'Fak dijo: pará, dejalo así', home }); },
+    });
+    expect(code4).toBe(H.SALIDA_SIN_HORA);
+    expect(textoAlDespertar({ estado: null })).toContain('No lo relances');
+    expect(H.COMO_LANZAR).toContain(`exit code ${H.SALIDA_SIN_HORA}`);
+    // argumentos
+    expect(await main(['--minutos', '20'], { env, home, log: () => {} })).toBe(2);
+    expect(await main([], { env: {}, home, log: () => {} })).toBe(2);
+    expect(await main(['--rapido'], { env, home, log: () => {} })).toBe(2);
+  });
+});
+
 describe('los wrappers hora-prompt.sh y hora-guard.sh llegan a horaGuard.mjs', () => {
   const correr = (hook, payload, env = {}) => spawnSync('bash', [path.join(RAIZ, '.claude', 'hooks', hook)], { input: JSON.stringify(payload), encoding: 'utf8', env: { ...process.env, ...env } });
 
@@ -355,10 +431,11 @@ describe('los wrappers hora-prompt.sh y hora-guard.sh llegan a horaGuard.mjs', (
     const lista = path.join(home, 'lista.md'); fs.writeFileSync(lista, '# lista\n');
     const manana = new Date(Date.now() + 3 * 3600 * 1000);
     expect(H.fijar({ sesion: 'prueba-hora', hasta: manana, lista, home }).ok).toBe(true);
-    const rojo = correr('hora-guard.sh', { hook_event_name: 'Stop', session_id: 'prueba-hora', last_assistant_message: 'Sigo.', session_crons: [] }, { HOME: home, USERPROFILE: home });
-    expect(rojo.status).toBe(2);
+    const rojo = correr('hora-guard.sh', { hook_event_name: 'Stop', session_id: 'prueba-hora', last_assistant_message: 'Sigo.', session_crons: [{ id: 'a' }] }, { HOME: home, USERPROFILE: home });
+    expect(rojo.status).toBe(2);                                                    // un CronCreate vivo no alcanza
     expect(rojo.stderr).toContain(H.MARCA);
-    const conLatido = correr('hora-guard.sh', { hook_event_name: 'Stop', session_id: 'prueba-hora', last_assistant_message: 'Sigo.', session_crons: [{ id: 'a' }] }, { HOME: home, USERPROFILE: home });
+    H.escribirLatido({ sesion: 'prueba-hora', pid: process.pid, minutos: 9, home }); // la señal de un latido vivo (este proceso)
+    const conLatido = correr('hora-guard.sh', { hook_event_name: 'Stop', session_id: 'prueba-hora', last_assistant_message: 'Sigo.' }, { HOME: home, USERPROFILE: home });
     expect(conLatido.status).toBe(0);
   });
 
@@ -370,7 +447,7 @@ describe('los wrappers hora-prompt.sh y hora-guard.sh llegan a horaGuard.mjs', (
     fs.writeFileSync(t, `${renglon(REALES.las10, hace2h)}\n`);
     expect(H.fijar({ sesion: 'prueba-cumplido', hasta: new Date(Date.now() + 60 * 1000), lista, ahora: new Date(hace2h + 5 * 60 * 1000), home }).ok).toBe(true);
     expect(H.terminar({ sesion: 'prueba-cumplido', porque: 'llegó la hora que pidió Fak', home }).ok).toBe(true);
-    const payload = { hook_event_name: 'Stop', session_id: 'prueba-cumplido', transcript_path: t, last_assistant_message: 'Trabajé hasta las 10. Todo el detalle, en una página.', session_crons: [] };
+    const payload = { hook_event_name: 'Stop', session_id: 'prueba-cumplido', transcript_path: t, last_assistant_message: 'Trabajé hasta las 10. Todo el detalle, en una página.' };
     const cumplido = correr('hora-guard.sh', payload, { HOME: home, USERPROFILE: home });
     expect(cumplido.status).toBe(0);
     fs.appendFileSync(t, `${renglon(REALES.las8, Date.now())}\n`);

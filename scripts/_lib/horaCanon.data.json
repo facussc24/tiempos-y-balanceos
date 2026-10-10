@@ -72,5 +72,7 @@
   "_ventana_palabras": "El verbo de trabajar (o el 'no pares', o el reloj) y el 'hasta <hora>' tienen que estar a esta distancia, en palabras. Sin esto, 'me lo enviaron ayer a las 21hs' o 'el consumo es hasta 10 veces mayor' dispararian.",
   "marca": "[TRABAJAR-HASTA]",
   "no_aplica": "No aplica trabajar-hasta:",
-  "latido_minutos": 10
+  "latido_minutos": 10,
+  "_latido_fondo": "09/10/2026 (cola H2): el latido es scripts/_latido.mjs en segundo plano y espera menos de 10 minutos, el tope de un comando de la herramienta Bash. latido_minutos queda solo para un CronCreate, que en la app no dispara.",
+  "latido_fondo_minutos": 9
 }

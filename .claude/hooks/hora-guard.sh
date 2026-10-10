@@ -2,7 +2,8 @@
 # hora-guard.sh — wrapper fino del control de cierre "trabajar hasta la hora". Logica: scripts/_lib/horaGuard.mjs.
 #
 # Stop. Frena el cierre del turno (exit 2) cuando:
-#   - Fak fijo una hora para trabajar y no hay ningun aviso programado vivo (sin latido la sesion queda parada);
+#   - Fak fijo una hora para trabajar y no hay ningun latido vivo (scripts/_latido.mjs en segundo plano; sin latido la
+#     sesion queda parada; un CronCreate ya no cuenta: en la app no dispara);
 #   - hay una hora vigente y el mensaje final se despide como si el trabajo hubiera terminado;
 #   - el ultimo mensaje de Fak ponia una hora y no se fijo ni se escribio "No aplica trabajar-hasta: ...".
 # Con una hora vigente, latido vivo y un mensaje que no cierra, deja pasar: la sesion espera el proximo latido.
