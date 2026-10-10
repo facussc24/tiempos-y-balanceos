@@ -30,6 +30,10 @@ Próximas (de a una o dos, sin pisar archivos): paso 12 H23+H24 (skills) · 13 H
 - 11:58-12:08 · con las hijas frenadas por el modo (P84), trabajo de orquestador: plan P55 (`docs/PLAN_P55_AMFE_EN_LA_NUBE_2026-10-10.md`, commit `733890a2`) y nota P6 (`docs/PLAN_P6_PLANES_DE_CONTROL_2026-10-10.md`; el servidor no se ve desde esta red: `server` no resuelve, IP 192.168.1.40 de otra red).
 - 12:15 · plan P9+P10 (`docs/PLAN_P9_P10_HOOKS_INCREMENTAL_2026-10-10.md`): cierre incremental con estado por sesión y test de igualdad contra la pasada completa; un node por mensaje y uno por cierre; despliegue en un commit con vuelta atrás. Listo para una hija Fable cuando P84 se resuelva.
 - 12:20 · el auditor Opus de la hija de la madrugada quedó colgado desde las 11:54 en un Bash (sin python vivo en la PC): le mandé un aviso (pase `.encargo-libre`, «delivered», su turno arrancó) para que lo frene con TaskStop y cierre P26 con lo que tenga o con un auditor acotado (120 s por comando).
+- 14:40-18:40 · **error mío**: me quedé esperando la respuesta de Fak a P84 sin avanzar lo que no dependía de ella (la etapa 1 de P55). Fak 18:40: *"¿te quedaste esperándome? es gravísimo"*. Lección anotada en LECCIONES (bullet 09-10/10 del «no puedo»).
+- 18:40 · Fak: *"pensá la mejor manera"* → decidí (a): `permissions.defaultMode: bypassPermissions` en su settings general (respaldo `settings.json.antes-bypass-20261010-1840`).
+- 18:45 · hija 2 (`local_218252c2`, paso 15 H5+H6) **arrancó en bypass sin cartel**: el camino sin clic queda probado de punta a punta.
+- 18:47 · hija 3 (`hija-amfe-nube-etapa1-20261010`, P55 etapa 1: Supabase → nube + escritura doble; la vuelta nube → Supabase queda apagada hasta su sí).
 - Tareas que quedan para limpiar en Programadas cuando Fak esté (borrar una tarea archiva sus sesiones y eso pide cartel): `prueba-modo-reloj-20261010`, `hija-novedades-h20-h21-20261010` (su corrida abortada), `sesion-sistema-claude-fase2-20261009`.
 
 ## Trabajo que puedo hacer solo (cuando se acabe lo pedido)

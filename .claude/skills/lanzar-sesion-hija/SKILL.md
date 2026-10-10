@@ -48,9 +48,11 @@ B.0. **El modo con el que va a arrancar, ANTES de lanzar.** Una corrida de tarea
    `permissionMode` guardado en la tarea (solo lo escribe el selector de la pantalla Programadas: la creada por
    MCP no lo trae, `update_scheduled_task` no lo acepta y editar `scheduled-tasks.json` a mano no sirve, la app
    lo tiene en memoria) o, si no hay, el que resuelve el settings de Claude Code (`permissions.defaultMode` de
-   `~/.claude/settings.json`; el del repo no vale para bypass). Lo que está vigente se anota acá cuando Fak lo
-   decide (10/10/2026: pendiente de su respuesta; hasta entonces una hija lanzada por B arranca en `default` y
-   pide carteles: NO lanzar hijas sin Fak hasta tenerlo).
+   `~/.claude/settings.json`; el del repo no vale para bypass). **Resuelto el 10/10/2026 18:40** (Fak: *"pensá la
+   mejor manera"*): `permissions.defaultMode: "bypassPermissions"` en `~/.claude/settings.json` (respaldo al lado:
+   `settings.json.antes-bypass-20261010-1840`). Medido a las 18:45 con la hija `local_218252c2`: primer mensaje en
+   `bypassPermissions`, sin cartel. Si en otra PC de Fak falta esa línea, una hija arranca en `default`: se mira con
+   `_hijaEstado.mjs` al minuto.
 
 1. **El encargo** (regla `coordinador.md`; el guardián bloquea cualquier otra prosa hacia otra sesión):
    ```bash
