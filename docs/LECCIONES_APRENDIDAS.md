@@ -15,11 +15,11 @@ incidente vive en los snapshots.
 
 - **09-10/10 — Un control que suma trabajo a un chequeo con tope de tiempo se mide en el MODO en que corre ese chequeo** (el logo y las frases nuevas llevaron el detector de 55 a 90 s; el cierre lo corta a los 90 y lee «vacío» como limpio: quedó ciego hasta que el auditor lo midió). Y el auditor Opus encontró un error real en 3 de 4 cambios de la noche: no se saltea. Graduado al auditor (`metodo_correr_no_solo_leer`) y a `_sinFirmaIA.py` (lo caro solo con avisos pedidos).
 
-- **09/10 — El control de la PC de Fak queda prendido hasta cerrar la sesión y nadie lo suelta desde el chat: antes de pedirlo se le dice, y al terminar de usarlo se avisa en el momento** (*"no puedo cortarlo yo... encima no sabés que no puedo"*). Y un pedido largo a la API va por streaming y sin fallback (sin streaming se corta a los 10 min; el fallback devolvió otro modelo). Graduado a `feedback_control_de_la_pc_no_se_suelta_solo` y `llamarLargo()`.
+- **09/10 — El control de la PC de Fak queda prendido hasta cerrar la sesión: antes de pedirlo se le dice, y al terminar se avisa en el momento; un pedido largo a la API va por streaming y sin fallback.** Graduado a `feedback_control_de_la_pc_no_se_suelta_solo` y `llamarLargo()`.
 
-- **09/10 — Un despertador que nunca se vio llegar no existe: se cuenta en el registro ANTES de confiarle una noche** (CronCreate: 0 mensajes en 16 sesiones; dos noches quietas con el control diciendo «latido vivo»). Graduado a la cola (H2) y a `trabajar-hasta-la-hora.md`.
+- **09/10 — Un despertador que nunca se vio llegar no existe: se cuenta en el registro ANTES de confiarle una noche.** Graduado a `trabajar-hasta-la-hora.md` (el latido es `_latido.mjs` en segundo plano desde el 09/10).
 
-- **09/10 — En una noche solo, el cupo de 5 h se mira CADA HORA y cerca del fin del contexto o del cupo no se lanzan agentes** (23:40 al 93 % mirando cada 2 h; corte a las 23:55 con 2 h de pedido; Fak: *"se cortan y consumimos tokens al pedo"*). Graduado a `trabajar-hasta-la-hora.md` punto 5.
+- **09/10 — En una noche solo, el cupo de 5 h se mira CADA HORA y cerca del fin del contexto o del cupo no se lanzan agentes** (*"se cortan y consumimos tokens al pedo"*). Graduado a `trabajar-hasta-la-hora.md` punto 5.
 
 - **08/10 — Lo que cambia otro modelo (Gemini) en un documento se audita como contenido, no como ortografía** (renombró operaciones, dio vuelta un historial, armó el A3 con el 160 viejo). Cada texto se compara contra la versión anterior y el AMFE antes de imprimir.
 
@@ -32,7 +32,7 @@ incidente vive en los snapshots.
 - **07/10 — «El estándar» se COMPARA contra una hoja real de la casa (la HO de Excel), no contra lo que dejó la sesión anterior** (Fak: *"te lo dije 300 veces, no es el estándar que decidimos"*; era el ARMADO: plan debajo de las fotos, ciclo de control al lado). Graduado al canon 4.5 y a `bloque_plan()`.
 
 - **22/09-06/10 — Lo que construyo para otros, o lo que AFLOJA un control, lo prueba OTRO**: contra el viejo, a ciegas, con el corte escrito antes de medir y nunca contra la carpeta de verdad; y si Fak ya aceptó el riesgo, mi freno no le gana a su pedido. Graduado a `un_control_se_audita_en_las_dos_direcciones` y `project_claudes_por_area`.
-- **02/10 — De un flujograma o de un AMFE puede salir la PALABRA «reproceso», nunca su análisis (IATF 8.7.1.4; NC en 2019), y un AMFE escrito de cero se delata por el largo de sus frases.** Graduado a `reference_iatf_retrabajo_8714_y_antecedentes_barack` y a `TOPE_PALABRAS` de `amfeAutoria.mjs`.
+- **02 y 09/10 — De un flujograma, un AMFE o una hoja de reunión puede salir la PALABRA «reproceso», nunca su análisis ni por qué se sacó** (IATF 8.7.1.4; 09/10: *"esto sacalo"*), **y un AMFE escrito de cero se delata por el largo de sus frases.** Graduado a `reference_iatf_retrabajo_8714_y_antecedentes_barack`, `TOPE_PALABRAS` de `amfeAutoria.mjs` y los avisos `reproceso-delata` / `antes-despues` de `_sinFirmaIA.py`.
 - **22/09 — Un cambio de criterio (o un número) se barre por su FRASE en todo el repo, y un guardián que falla sin bloquear está apagado.** Graduado al test 5c de `hooksTienenTest` (`${CLAUDE_PROJECT_DIR}`) y a `puerta.py` (puerta D).
 - **22/09 — La VARA también se audita, y lo primero que se le mira es la FECHA**: la tabla AP y las escalas O/D salían de un borrador de 2017 del AIAG-VDA. La tabla AP ya es la oficial (23/09); las escalas, pendientes. Memoria `project_tabla_ap_de_la_casa_es_el_borrador_2017`.
 - **22/09 — Un gate contesta lo que le preguntan: los obstáculos se listan del CONJUNTO, no del subconjunto, centrado y simetría también se miden, y un control que frena dice CUÁL renglón lo frena.** Graduado a `chequeo_centrado.py` y a la memoria `dispositivo_adhesivado_insert`.
@@ -40,7 +40,7 @@ incidente vive en los snapshots.
 - **10-13/09 — Una contradicción adentro del entregable es un ROJO, no una nota al pie; la frase que resume números la arma el CÓDIGO.** Graduado a la memoria `contradiccion_en_el_entregable_es_rojo`.
 - **11/09 — El system prompt es la foto del arranque: antes de concluir que algo quedó sin hacer, mirar el disco y el `git log`.** Graduado a la memoria `el_system_prompt_es_la_foto_del_arranque`.
 - **08-13/09 — Lo que pasa del otro lado no lo veo, y lo que apunta a un lugar vacío no falla: el vacío se lee como «roto»; un default que ninguna corrida usa falla sin romperse.** Memorias `worktree_sin_env_local`, `hablarle_a_otra_pc`, `dispositivo_adhesivado_insert`.
-- **Antes de construir un control propio, correr el que ya viene; en una interfaz ajena el límite y la causa casi siempre están de mi lado; y con un camino cerrado se busca la herramienta de la propia app antes de frenar** (01/10: *"buscale la solución a las cosas, no pares"*). Graduado a `claude_plugin_cli`, `crlf_en_claude_md_reglas_y_memory`, `reference_capturar_la_app_claude_sin_clics` y al skill `arb-operar`.
+- **Antes de construir un control propio, correr el que ya viene; en una interfaz ajena el límite casi siempre está de mi lado; con un camino cerrado se busca otro antes de frenar** (*"buscale la solución, no pares"*). Graduado a `claude_plugin_cli`, `crlf_en_claude_md_reglas_y_memory`, `reference_capturar_la_app_claude_sin_clics` y `arb-operar`.
 - **11/09 — Un dry-run verde no prueba el `--apply`, y lo que escribe frena ante un argumento que no conoce.** Graduado a la memoria `no_entregable_ejecutable_sin_verificar` y a `_paquete.mjs`.
 - **07/09 — Un cero puede ser del sistema y no del hecho, y la columna la nombra el que manda el dato.** Antes de concluir desde un campo, mirar si la poblacion de ese campo lo llena. Memoria `datos_produccion_pcp_federico`.
 - **07/09 — Un sistema se diseña para el que lo va a usar, y su estado se declara cuando es verdad.** Antes de poner un control, escribir que ve el que no lo pidio; el marcador de "instalado" va en el ultimo paso. Memoria `project_claude_barack_fase0`.
@@ -64,7 +64,7 @@ incidente vive en los snapshots.
 
 ## Identidad de un dato
 
-- **Una fuente que sale de mi lado del mostrador no es una segunda fuente** (regla mía, test, memoria, export, cita de un subagente, el número que yo propuse, el proceso de la pieza vecina): si un documento puede zanjarlo, se abre antes de actuar. Graduado a `amfe.md` §12 y a las memorias `verificar_contra_la_fuente_no_el_codigo`, `un_agente_no_es_independiente`, `al_documento_entra_lo_que_dice_un_papel_de_esa_pieza`.
+- **Una fuente que sale de mi lado del mostrador (una regla mía, un test, un agente, el número que yo propuse) no es una segunda fuente: si un documento puede zanjarlo, se abre antes de actuar.** Graduado a `amfe.md` §12 y a `verificar_contra_la_fuente_no_el_codigo`, `un_agente_no_es_independiente`, `al_documento_entra_lo_que_dice_un_papel_de_esa_pieza`.
 - **En la BOM va el codigo del proveedor; el interno es el parche hasta que el proveedor da el suyo.** Que un codigo interno aparezca en OC significa que ese material todavia no tiene codigo de proveedor, no que sea la regla. Graduado a la memoria `codigo_de_proveedor_le_gana_al_interno`.
 
 ## Consumos de material
@@ -75,8 +75,6 @@ incidente vive en los snapshots.
 - **25/09 — Una difusion que corrige un error PROPIO dice solo el valor que queda, en el mail y en el PDF** (Fak: *"si ponemos el antes y el despues me escrachas"*). Graduado a la memoria `documento_no_confiesa_como_se_hizo`.
 
 ## Entregables y comunicacion con Fak
-
-- **09/10 — La hoja de una reunión decía *"pedido del cliente de no poner reprocesos. Que quede escrito en el acta"*: la confesión que la lección del 02/10 prohíbe, otra vez** (Fak: *"esto sacalo"*). Graduado a `_sinFirmaIA.py` (avisos `reproceso-delata` y `antes-despues`, se ven al imprimir y al mandar).
 
 - **09/10 — Un «no puedo» a Fak es un problema mío a resolver, no una tarea suya** (el envío falló por la ventana abierta del borrador y le dije que apretara Enviar; *"nunca más podés decirme no puedo"*). Graduado a `_mailEnviar.py` paso 4b y `mail-envio.md`.
 - **09/10 — El historial de revisiones también confiesa: una corrección por observación interna, antes de que el documento salga, no abre revisión** (la Rev. B del 160/174 decía «OP 32 se integra a la 31; 71 y 72 a la 70»; Fak: *"no nos delates de que eliminamos reprocesos... mantenele la revisión A"*). Graduado a `documento_no_confiesa_como_se_hizo`.
@@ -99,7 +97,7 @@ incidente vive en los snapshots.
 
 - **07-08/10 — Toma de tiempos por video = TIEMPOS + VIDEO RECORTADO adentro del PowerPoint, sin planilla; el rato en que el operario prueba no es proceso; un link a la nube se le pide a OneDrive.** Memorias `project_tiempos_forrado_ductos_patagonia`, `reference_link_nube_se_pide_a_onedrive`.
 
-- **07/10 — Con Fak se habla en castellano también en los avisos cortos mientras trabajo** (una tanda entera de avisos y el cierre me salieron en inglés: *"dejá de hablar en inglés"*). Y un pedido de videos para alguien que tiene editor es de ORIGINALES completos: preguntar o deducir el uso antes de editar (*"él quería videos completos... tiene una editorial de videos"*).
+- **07/10 — Con Fak se habla en castellano también en los avisos cortos** (*"dejá de hablar en inglés"*; graduado al chequeo 10 del cierre-guard, `idioma.mjs`). **Y un pedido de videos para alguien que tiene editor es de ORIGINALES completos**: preguntar o deducir el uso antes de editar.
 
 - **06/10 — Un archivo que Fak nombra y no aparece con ese nombre no se cambia por el parecido sin mostrárselo ANTES («tomé este, de esta ruta, ¿es?»), y lo que se entrega tiene el tamaño del pedido** (*"solo estos tiempos tienen que estar en el excel"*).
 
