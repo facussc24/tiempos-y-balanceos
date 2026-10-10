@@ -34,6 +34,10 @@ Próximas (de a una o dos, sin pisar archivos): paso 12 H23+H24 (skills) · 13 H
 - 18:40 · Fak: *"pensá la mejor manera"* → decidí (a): `permissions.defaultMode: bypassPermissions` en su settings general (respaldo `settings.json.antes-bypass-20261010-1840`).
 - 18:45 · hija 2 (`local_218252c2`, paso 15 H5+H6) **arrancó en bypass sin cartel**: el camino sin clic queda probado de punta a punta.
 - 18:47 · hija 3 (`hija-amfe-nube-etapa1-20261010`, P55 etapa 1: Supabase → nube + escritura doble; la vuelta nube → Supabase queda apagada hasta su sí).
+- 18:48 · las hijas 2 y 3 arrancaron su primer turno en Fable (el selector de la app quedó en Fable por mi sesión) y una hija hace todo en un turno: las frené (sin cartel) y les reenvié el mismo encargo por mensaje → el turno nuevo sale en Opus. Anotado en la skill.
+- 18:50 · Fak: *"usás principalmente los créditos de la API para todo esto"* (regla 17 de la v3; hoy no la había usado: error). Primer uso: revisión del plan P55 por la API (Opus, US$0,30, 88 s): 9 huecos reales (la base del sync no puede ser el manifest, lápidas, hash de los dos lados, copias de conflicto de OneDrive…) y las 3 pruebas obligatorias → sección 7 del plan y aviso a la hija 3 (frenada y relanzada para que lo lea antes de escribir código).
+- 18:55 · Fak: *"te pongo reglas y te las olvidás... ¿cómo te vas a asegurar?"* → HOY-17 en la cola: cada regla de la tanda con control ejecutable (API, no esperar a Fak, modelo de las hijas, chequeo de la hora). Es la próxima hija.
+- 18:58 · Fak contestó P55: no usa la app (la etapa 3 se cae); "todos" = el Excel editable de cada AMFE siempre en la carpeta de Ingeniería del server (etapa 1b, necesita el server); AMFE y plan de control tienen que tener los mismos controles (gate 8 de P6).
 - Tareas que quedan para limpiar en Programadas cuando Fak esté (borrar una tarea archiva sus sesiones y eso pide cartel): `prueba-modo-reloj-20261010`, `hija-novedades-h20-h21-20261010` (su corrida abortada), `sesion-sistema-claude-fase2-20261009`.
 
 ## Trabajo que puedo hacer solo (cuando se acabe lo pedido)
