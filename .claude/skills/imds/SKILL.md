@@ -190,6 +190,20 @@ MDS en vez de **referenciarlo** nunca se entera de que el material tenia norma
 > ⛔ **Una vez que el cliente ACEPTA, el MDS ya no se puede borrar** (pag. 80 y 253).
 > Send/Propose **no los disparo solo**: los aprueba Fak, con la pantalla a la vista.
 
+> ⛔ **REGLA (Fak, 09/10/2026): antes de aprobar, aceptar, someter o mandar CUALQUIER cosa en
+> IMDS, se le pregunta SI O SI al gerente de Calidad (Manuel Meszaros).** El circuito es:
+> 1. dejar **todos los borradores listos y guardados** (check 0 errores), sin enviar;
+> 2. armar **un solo mail** al gerente de Calidad pidiendo confirmacion, con **un PowerPoint
+>    adjunto** (Fak, 09/10/2026: *"siempre pasarle asi al gerente de calidad con fotos"*): por cada
+>    MDS, **ANTES y DESPUES** (captura del IMDS de cada uno + la tabla de valores), **POR QUE** se
+>    cambio (la fuente: tabla, audio, plano), la captura del **check en 0 errores**, y al final
+>    las **dudas abiertas** escritas como pregunta corta. Facil de leer para aprobar rapido.
+>    ⇒ **La captura del ANTES se saca al abrir el MDS, antes del primer cambio** (`save_to_disk`):
+>    despues ya no se puede recuperar;
+> 3. recien con su OK (y el de Fak) se hace `Send`/`Propose`/`Release`/`Accept`.
+> Vale tambien para **aceptar un MDS recibido** de un proveedor o de VW: el emisor ve el cambio
+> de estado y no se deshace. Guardar un borrador NO necesita esta confirmacion.
+
 **Antes de mandar, la Recipient Data** (tips Component, pag. 18 y 52-53): Supplier Code
 (normalmente **DUNS**), y **part number + descripcion DEL CLIENTE** — el cliente ve esos, no
 los nuestros. Y el aviso que cuesta caro: *"Slight differences such as an extra dash or a
@@ -517,6 +531,88 @@ Tricapa); **la que va es la que cierra con el total** (`espuma + funda AEKO + as
 Obj AEKO`). Y la misma suma encontro una fila que no cierra (trasero central tela: 626 escrito,
 656 sumado): eso se pregunta, no se elige. Lo que la tabla NO dice (como repartir el peso de una
 funda de dos colores entre sus dos partes) tampoco se completa: va como pregunta.
+
+## Lo aprendido operando (09/10/2026, 12 apoyacabezas en una tanda)
+
+### Las piezas KD que manda VW vienen con el NOMBRE en el Part/Item No.
+`BOLT/SCREW-SECOND ROW SEAT`, `FRAME ASSEMBLY-ARMREST`... en vez de `2HC.075.701.GS`. Buscar en el
+Inbox (**Alt+Shift+I**) por `2HC*` NO las trae: buscar por **ID**, o tildar `transmitted` con rango
+de fechas. **Abrir un MDS recibido lo pasa a `browsed`** (el emisor lo ve).
+
+### El navegador: tres trampas que cuestan media hora cada una
+1. **Chrome frena la pestaña de fondo**: el arbol queda en *"Fetching Data..."* hasta que algo la
+   redibuja. Una captura chiquita (`screenshot` a escala 0,1) la destraba. Una espera con
+   `await`/`setTimeout` en JS **cuelga la herramienta** (45 s y error): no usarla.
+2. **Alt+Shift+S a veces no guarda y no avisa.** Guardar con el **disquete de la barra** (x≈370,
+   y≈51), dos veces, y confirmar que la pestaña dice `Ingredients` **sin asterisco**.
+3. **El primer clic despues de escribir un valor puede perderse** (sigue seleccionado el nodo
+   anterior). Antes de CADA escritura leer `Type` + `ID / Version` del panel y frenar si no es el
+   esperado: asi se evito escribir en el nodo equivocado varias veces. Abrir un MDS con otro ya
+   abierto puede reabrir el anterior: controlar el ID despues de abrir.
+
+### Cargar un peso: el calculado se corre al guardar
+Despues del primer guardado el calculado sube 5-7 g (redondeo del semicomponente por m²). Circuito:
+material y nodo de la espuma -> semicomponente y nodo de la funda -> medido = calculado -> guardar
+-> medido = calculado nuevo -> guardar -> `MDS > Check`.
+
+### Los arboles no son todos iguales
+Laterales (y centrales con dos hilos): vinilo 147, semi 164, hilos 182/200, espuma 200, material
+217/235. Centrales Titan (un hilo): espuma 182 -> al desplegar, material en 217. **Mirar el arbol
+desplegado antes de cada tanda**; las coordenadas valen con el viewport en 1536 px.
+
+### Aceptar un MDS recibido y sumar piezas KD a una declaracion (09/10/2026, apoyabrazo)
+- **Accept** esta en gris desde la lista del Inbox (y con varias filas seleccionadas): hay que
+  **abrir el MDS** (doble clic) y despues `MDS > Accept`. Corre el check y pide confirmar
+  (Accept / Reject / Cancel). Las advertencias no frenan; leerlas: *"Forwarding allowed: No"* y
+  *"part number + supplier code ya usados"* aparecieron en piezas KD de VW.
+- **Nueva version de un MDS liberado:** el submenu `MDS > Save as > new version` se cierra al
+  cruzar el mouse. Lo que anduvo: abrir el menu, hover sobre *Save as* y disparar por JS
+  `mouseover/mousedown/mouseup/click` sobre el `tr` cuyo id termina en `pt_cmiMenuSaveAsNewVersion`.
+  Queda `ID / 1.01` (la siguiente desde la misma liberada sale `1.02`).
+- **Agregar un componente recibido:** raiz seleccionada -> icono `Add component` (x≈555, y≈106)
+  -> en el buscador tildar **accepted MDSs**, ID, `Search`, `Apply`. **Entra con Quantity 0**:
+  ponerle la cantidad (input `insQuantity`) antes de guardar.
+- Para una pieza con dos proveedores, emparejar por el MDS de adentro (Part/Item No del
+  fabricante y fecha) y decirlo como inferencia.
+
+## Antes de mandar a VW: el part number y las reglas de rechazo (Guia IMDS de VW V4.0, 17.03.2026)
+
+**Formato del Part/Item No. en Recipient data** (§3.1, p.10; confirmado por Manuel 09/10/2026: "si lo
+pones de manera errada se lo rechaza por codigo de producto"). Lleva SIEMPRE el color si la pieza VW lo tiene:
+| Caso | Numero VW | En IMDS |
+|---|---|---|
+| con letra de indice y color | 2HC 881 901 A GFV | `2HC.881.901.A .GFV` (letra, 1 espacio, punto, color) |
+| sin letra, con color | 2HC 885 081 RL1 | `2HC.885.081.  .RL1` (punto, **2 espacios**, punto) |
+| sin color | 2HC 881 901 A | `2HC.881.901.A` (sin espacio al final) |
+La pantalla de IMDS junta los dos espacios en uno: leer el VALOR del campo, no el texto renderizado.
+El codigo con color sale del ARB (`2HC885901C DZS` -> `2HC.885.901.C .DZS`).
+
+**Reglas que rechazan** (§3.6, p.12-13):
+- `MULTIPLE_SUPPLIER_PART_NUMBER_PER_DAY`: **cada part number se manda UNA vez por dia**; si sale dos veces el
+  mismo dia se rechazan todas. ⇒ las V1 y V2 (mismo ID, mismo numero) **nunca el mismo dia**.
+- `DIFFERENT_ITEM_NUMBERS`: todas las versiones de un ID con el mismo part number. ⇒ no "corregir" el formato
+  de un ID ya aceptado sin comparar con el valor aceptado.
+- `INVALID_PART_NUMBER` / `TEIVON_CHECK`: numero que no existe en el sistema de VW (p. ej. el codigo interno).
+- `MISSING/INVALID_SUPPLIER_NUMBER`: DUNS de la planta, formato `97-889-0452`.
+- `MISSING_DRAWING_NUMBER/LEVEL`: numero y fecha de dibujo en Recipient data (`DD.MM.YYYY`).
+- Name: el del plano de VW (ingles o aleman).
+- §2.11 (p.9): VW pide multi-sourcing en UNA hoja cuando hay subproveedores distintos de la misma pieza; Manuel
+  (09/10) dijo que VW le indico declarar con un proveedor ahora y el otro despues (V1 ahora, V2 mas adelante).
+Control antes de cada envio: `imds_gate.py` (destinatario, DUNS, part number exacto, check 0/0, pesos, que no
+salga el mismo numero dos veces en el dia).
+
+**Como se mando la tanda del 09-10/10/2026 (16 MDS, sin errores):**
+- Listar solo lo que va: en MDS/Module Search, Name `*V1` + Part `2HC.885.9*` (sin el filtro de Name salen
+  25 filas y la lista no scrollea con la rueda). Doble clic en la fila → pestaña Recipient data.
+- En cada uno leer en pantalla: Company `Volkswagen AG [107]`, Supplier Code `97-889-0452`, Part/Item No.
+  (los dos espacios se confirman leyendo el texto con JS, la pantalla los junta) y **Drawing No.** — el plano
+  tiene que ser coherente con los hermanos (central Andino tenia `2HC.885.900.C` en una pieza .B; se dejo
+  `2HC.885.900` como Dark Slate/Titan, guardar con el boton de la barra y ver que quede gris).
+- Clic en el destinatario (110,153) → Send (125,129) → el cartel trae el check: si dice 0 Error / 0 Warning,
+  Send del cartel (467,440). Queda `Handshake` / `not yet browsed`.
+- Si la captura se cuelga ("renderer frozen"), la accion igual se hizo: sacar una captura chica (scale 0.2) y seguir.
+- El freno de permisos de la app paro un Send cuando el pedido no nombraba la pieza; se destrabo cuando Fak
+  escribio la lista de IDs a mandar. Pedirle eso de entrada: "mandá estos: <ID/version>…, las V2 no".
 
 ## Lo que los manuales NO dicen (no inventarlo)
 
