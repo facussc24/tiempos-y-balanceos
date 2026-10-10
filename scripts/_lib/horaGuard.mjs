@@ -184,6 +184,10 @@ export const REFRESCO_LATIDO_MS = 30000;
 export const SIN_REFRESCO_MS = 2 * 60000;
 /** Codigo de salida del latido cuando no hay (o ya no hay) una hora vigente: el aviso de Claude Code lo muestra. */
 export const SALIDA_SIN_HORA = 4;
+/** Codigo de salida del latido cuando desperto con la hora vigente Y hay un aviso de las reglas de la tanda (10/10/2026,
+ *  HOY-17: parado esperando a Fak, o 2 horas sin un pedido a la API). Se sigue y se relanza igual que con 0; ademas se
+ *  corre `node scripts/_orquestador.mjs --hora`, que dice cual es. Es un aviso, no un freno. */
+export const SALIDA_AVISO = 5;
 const dirLatido = (home = os.homedir()) => path.join(home, '.claude', '.latido');
 /** Una señal POR PROCESO (auditor 09/10): dos latidos a la vez no se pisan, y uno que termina borra solo la suya. */
 export const rutaLatido = (sesion, home = os.homedir(), pid = process.pid) => path.join(dirLatido(home), `${limpiarId(sesion)}.${pid}.json`);
@@ -241,7 +245,7 @@ export function latidoVivo(sesion, { ahora = new Date(), home, vivo = procesoViv
   return peor;
 }
 /** Como se lanza, para los avisos (lo hace Claude con la herramienta Bash, en segundo plano). */
-export const COMO_LANZAR = `Bash con run_in_background:true, comando «node scripts/_latido.mjs» y una descripción que empiece con «LATIDO» (espera ${LATIDO_MINUTOS} minutos y termina; su aviso de «terminó» te despierta: con «exit code 0» seguí y relanzalo, con «exit code ${SALIDA_SIN_HORA}» ya no hay hora vigente y NO se relanza)`;
+export const COMO_LANZAR = `Bash con run_in_background:true, comando «node scripts/_latido.mjs» y una descripción que empiece con «LATIDO» (espera ${LATIDO_MINUTOS} minutos y termina; su aviso de «terminó» te despierta: con «exit code 0» seguí y relanzalo; con «exit code ${SALIDA_AVISO}» también seguí y relanzalo, y además corré «node scripts/_orquestador.mjs --hora»: hay un aviso (llevás varios despertares sin avanzar esperando a Fak, o 2 horas sin un pedido a la API); con «exit code ${SALIDA_SIN_HORA}» ya no hay hora vigente y NO se relanza)`;
 
 export function leerTodo(home) {
   try { const j = JSON.parse(fs.readFileSync(rutaEstado(home), 'utf8')); return j && typeof j === 'object' && !Array.isArray(j) ? j : {}; }
@@ -413,8 +417,13 @@ export function ultimoDeFakConHora(transcriptPath) {
 }
 
 const TRAMOS_MB = [8, 64, 480];
-/** Los renglones del final del archivo, en tramos crecientes (el ultimo tramo, si entra, es el archivo entero). */
-function* colasDe(ruta) {
+/** Un renglon del registro (texto crudo): si es un mensaje que escribio Fak, { texto, ms }; si no, null.
+ *  Es la misma regla de `ultimoEn`, expuesta para quien recorre el registro renglon por renglon (tandaReglas.mjs). */
+export const mensajeDeFakEn = (linea) => ultimoEn([linea]);
+
+/** Los renglones del final del archivo, en tramos crecientes (el ultimo tramo, si entra, es el archivo entero).
+ *  Exportada el 10/10/2026 (HOY-17) para tandaReglas.mjs: el registro se lee siempre desde el final. */
+export function* colasDe(ruta) {
   let fd = null;
   try {
     const total = fs.statSync(ruta).size;

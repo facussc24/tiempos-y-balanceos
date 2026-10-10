@@ -10,6 +10,9 @@
  * LO QUE LA SESION VE ES EL CODIGO DE SALIDA, no lo que se imprime (auditor 09/10/2026: el aviso de un programa en
  * segundo plano trae su descripcion y su "exit code", no su salida). Por eso:
  *   0  desperto con la hora vigente: seguir y relanzarlo
+ *   5  igual que 0 (seguir y relanzarlo) y ADEMAS hay un aviso de las reglas de la tanda (scripts/_lib/tandaReglas.mjs):
+ *      varios despertares seguidos sin avanzar con una pregunta abierta a Fak, o 2 horas sin un pedido a la API. El
+ *      detalle lo imprime `node scripts/_orquestador.mjs --hora`. Es un aviso, no un freno (10/10/2026, HOY-17).
  *   4  no hay (o ya no hay) una hora vigente para esta sesion: NO se relanza; no arranca si no hay hora
  *   2  argumento o sin sesion
  * Lo impreso queda en el archivo de salida del aviso, para quien lo abra.
@@ -22,8 +25,9 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  escribirLatido, borrarLatido, vigente, enLocal, LATIDO_MINUTOS, COMO_LANZAR, REFRESCO_LATIDO_MS, SALIDA_SIN_HORA,
+  escribirLatido, borrarLatido, vigente, enLocal, LATIDO_MINUTOS, COMO_LANZAR, REFRESCO_LATIDO_MS, SALIDA_SIN_HORA, SALIDA_AVISO,
 } from './_lib/horaGuard.mjs';
+import { alDespertar } from './_lib/tandaReglas.mjs';
 
 /** Lo que imprime al despertar (queda en el archivo de salida del aviso). */
 export function textoAlDespertar({ estado, ahora = new Date() } = {}) {
@@ -40,7 +44,7 @@ export function textoAlDespertar({ estado, ahora = new Date() } = {}) {
 
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export async function main(argv, { env = process.env, home, ahora = () => new Date(), esperar = dormir, log = console.log, pid = process.pid } = {}) {
+export async function main(argv, { env = process.env, home, ahora = () => new Date(), esperar = dormir, log = console.log, pid = process.pid, medir = alDespertar } = {}) {
   const op = {};
   for (let i = 0; i < argv.length; i++) {
     if ((argv[i] === '--minutos' || argv[i] === '--sesion') && i + 1 < argv.length) { op[argv[i]] = argv[++i]; continue; }
@@ -59,6 +63,9 @@ export async function main(argv, { env = process.env, home, ahora = () => new Da
   }
   const inicio = ahora();
   const senal = escribirLatido({ sesion, pid, minutos, ahora: inicio, home });
+  let momento = inicio;
+  let estado = null;
+  let avisos = [];
   try {
     // espera por tramos y refresca la señal en cada uno: el control sabe que ESTE proceso sigue dando señales
     let falta = senal.despierta_ms - senal.inicio_ms;
@@ -68,13 +75,25 @@ export async function main(argv, { env = process.env, home, ahora = () => new Da
       falta -= tramo;
       if (falta > 0) escribirLatido({ sesion, pid, minutos, ahora: ahora(), inicio, home });
     }
+    momento = ahora();
+    estado = vigente(sesion, { ahora: momento, home });
+    // Las reglas de la tanda (HOY-17, 10/10/2026): anota este despertar y mira si la sesion lleva varios sin avanzar
+    // esperando a Fak, o 2 horas sin un pedido a la API. Es un AVISO: con el se sigue y se relanza igual que con 0.
+    // Falla abierto: si no se puede medir (sin registro, sin git, un error), sale con 0 como siempre. Se mide con la
+    // señal todavia puesta (leer el registro y preguntarle a git tarda): si la sesion cerrara justo ahi, el control
+    // de cierre no tiene que ver «sin latido».
+    if (estado) {
+      try { avisos = medir({ sesion, ahora: momento, inicioMs: inicio.getTime(), lista: estado.lista || null, home }).avisos || []; } catch { avisos = []; }
+      if (!Array.isArray(avisos)) avisos = [];
+    }
   } finally {
     borrarLatido({ sesion, pid, home });
   }
-  const momento = ahora();
-  const estado = vigente(sesion, { ahora: momento, home });
   log(textoAlDespertar({ estado, ahora: momento }));
-  return estado ? 0 : SALIDA_SIN_HORA;
+  if (!estado) return SALIDA_SIN_HORA;
+  if (!avisos.length) return 0;
+  log(['', 'AVISOS DE LAS REGLAS DE LA TANDA (no frenan; el detalle, con node scripts/_orquestador.mjs --hora):', ...avisos.map((a) => `- ${a}`)].join('\n'));
+  return SALIDA_AVISO;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {

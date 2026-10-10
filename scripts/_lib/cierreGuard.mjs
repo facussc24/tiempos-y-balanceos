@@ -37,6 +37,8 @@
  *      mensajes objetados de los que no, ni en cierres ni en todo turno (cierreCanon, _medicion_22_09).
  *      Desde el 10/10/2026 (H5) ese mismo aviso suma un renglon si lo que necesito de Fak no esta al
  *      inicio (`evaluarOrdenCierre`, canon `cierre_orden`): un aviso adentro de este freno, no un freno nuevo.
+ *   Los frenos 3 y 5 suman ademas, para una sesion con una hora vigente, el aviso de las reglas de la tanda (HOY-17:
+ *   2 horas sin un pedido a la API, o el latido con varios despertares sin avance): `avisoParaCierre`, tandaReglas.mjs.
  * Con stop_hook_active=true (segundo Stop del mismo turno) siempre deja pasar: sin loops.
  *
  * Toda frase vive en cierreCanon.data.json con su fuente (incidente + fecha). Una frase nueva
@@ -72,6 +74,7 @@ import { soloLineasDeComando, separarHeredocs, comandosSimples } from './shellTe
 import { sinAvisosAdelante, esAutomatico } from './correccionGuard.mjs';
 import { pideExplicar, pideEstado, CANON as CANON_EXPLICAR } from './explicarGuard.mjs';
 import { esIngles } from './idioma.mjs';
+import { avisoParaCierre } from './tandaReglas.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const REPO = path.resolve(AQUI, '..', '..');
@@ -1516,6 +1519,7 @@ const DEPS_REALES = {
   marcar: marcarRecordatorio,
   yaReclamado,
   reclamar,
+  avisoTanda: avisoParaCierre,
 };
 
 /** @returns {Promise<{ok:boolean, titulo?:string, detalle?:string, motivo?:string}>} */
@@ -1534,6 +1538,9 @@ export async function decidir(payload = {}, deps = {}) {
   const mq = evaluarMailsEquipo(texto, fuera);
   const conMails = (r) => (mq.bloquea ? { ...r, detalle: `${r.detalle}\nADEMAS, el mensaje niega el acceso a los mails de un companero. ${detalleMails(mq)}` } : r);
   const conExtras = (r) => conMails(conExplicar(r));
+  // Las reglas de la tanda (HOY-17, 10/10/2026): un renglon que se SUMA a un freno que ya salia (chequeos 3 y 5), solo
+  // para una sesion con una hora vigente. No frena nada por si mismo y, si no se puede medir, no dice nada.
+  const tanda = () => { try { return d.avisoTanda({ sesion: payload.session_id, registro: payload.transcript_path }) || ''; } catch { return ''; } };
 
   // 9. Un documento escrito en este turno nombra a Claude o a una IA. Va primero: es lo mas grave.
   const fi = evaluarFirmaIA(texto, documentosDelTurno(fuera), d.firmaIA);
@@ -1634,7 +1641,8 @@ export async function decidir(payload = {}, deps = {}) {
         ok: false,
         titulo: 'CIERRE-GUARD: el mensaje declara cierre y hay pendientes medibles',
         detalle: pend.map((x) => `- ${x}`).join('\n')
-          + '\nSi es un cierre real, resolvelos antes de cerrar. Si no lo es, segui: este aviso no se repite por 20 minutos.',
+          + '\nSi es un cierre real, resolvelos antes de cerrar. Si no lo es, segui: este aviso no se repite por 20 minutos.'
+          + tanda(),
       };
     }
   }
@@ -1676,7 +1684,7 @@ export async function decidir(payload = {}, deps = {}) {
         + 'en el archivo o la memoria (memoria no_hacer_informes). Reescribilo corto. Si Fak pidio el detalle con esas palabras, este aviso '
         + 'no aplica (se lee su ultimo mensaje). Lo que Fak objeta no es el largo sino lo que no se entiende de una lectura '
         + '(medicion 22/09, cierreCanon cierre_largo): palabras de planta, sin siglas ni rotulos inventados. No se repite por 20 minutos.'
-        + avisoOrden,
+        + avisoOrden + tanda(),
     };
   }
   return { ok: true };

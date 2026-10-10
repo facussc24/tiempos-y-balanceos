@@ -79,10 +79,14 @@ B.0. **El modo con el que va a arrancar, ANTES de lanzar.** Una corrida de tarea
    `set_session_title`. **Como una hija hace casi todo en un solo turno, el cambio de modelo no llegaría nunca**:
    apenas `_hijaEstado.mjs` dice ARRANCÓ BIEN, `stop_session` (desde bypass no pide cartel) y reenviar el MISMO
    encargo por `send_message`: ese turno nuevo sale en el modelo pedido. Medido el 10/10 18:50.
-5. **Medir que arrancó bien**, al minuto y a los cinco:
+5. **Medir que arrancó bien**, al minuto y a los cinco, **siempre con el modelo pedido** (paso fijo desde el 10/10,
+   cola HOY-17: sin `--espera-modelo` el control da «arrancó bien» a una hija que corre en Fable):
    ```bash
-   node scripts/_hijaEstado.mjs <session_id> [--espera-modelo claude-opus-5-5]
+   node scripts/_hijaEstado.mjs <session_id> --espera-modelo claude-opus-5-5
    ```
+   Se corre otra vez después del reenvío del paso 4: ahí tiene que salir sin el OJO del modelo. Después, en cada
+   renglón de la hora, `node scripts/_orquestador.mjs --hora` lista todas las hijas con su modelo, su modo, cuándo
+   escribieron y su último commit.
    Lee los registros (no lo que la hija dice): modo del PRIMER mensaje, si entró en modo plan, turnos, última
    escritura y herramientas sin resultado (un cartel). Sale 1 con OJOs. Con una hija parada: `stop_session` y
    relanzar por otro camino; **nunca esperar «a que termine»** (04/10: 55 minutos).
