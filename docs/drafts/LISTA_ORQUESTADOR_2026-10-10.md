@@ -29,6 +29,7 @@ Próximas (de a una o dos, sin pisar archivos): paso 12 H23+H24 (skills) · 13 H
 - 11:56 · commit `2d8f8d53` (12 archivos, solo mi alcance + la cola) y push. Cola: HOY-7 cerrado, HOY-8 hecho en parte, P84 (la decisión de Fak), HOY-14 (falso positivo del guardián de firma).
 - 11:58-12:08 · con las hijas frenadas por el modo (P84), trabajo de orquestador: plan P55 (`docs/PLAN_P55_AMFE_EN_LA_NUBE_2026-10-10.md`, commit `733890a2`) y nota P6 (`docs/PLAN_P6_PLANES_DE_CONTROL_2026-10-10.md`; el servidor no se ve desde esta red: `server` no resuelve, IP 192.168.1.40 de otra red).
 - 12:15 · plan P9+P10 (`docs/PLAN_P9_P10_HOOKS_INCREMENTAL_2026-10-10.md`): cierre incremental con estado por sesión y test de igualdad contra la pasada completa; un node por mensaje y uno por cierre; despliegue en un commit con vuelta atrás. Listo para una hija Fable cuando P84 se resuelva.
+- 12:20 · el auditor Opus de la hija de la madrugada quedó colgado desde las 11:54 en un Bash (sin python vivo en la PC): le mandé un aviso (pase `.encargo-libre`, «delivered», su turno arrancó) para que lo frene con TaskStop y cierre P26 con lo que tenga o con un auditor acotado (120 s por comando).
 - Tareas que quedan para limpiar en Programadas cuando Fak esté (borrar una tarea archiva sus sesiones y eso pide cartel): `prueba-modo-reloj-20261010`, `hija-novedades-h20-h21-20261010` (su corrida abortada), `sesion-sistema-claude-fase2-20261009`.
 
 ## Trabajo que puedo hacer solo (cuando se acabe lo pedido)
