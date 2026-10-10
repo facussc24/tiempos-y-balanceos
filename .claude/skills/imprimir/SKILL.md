@@ -32,6 +32,12 @@ convierte el PDF al lenguaje de la impresora (PCL XL), **ajusta cada hoja al pap
 hace falta**, y manda los bytes directo a la impresora (puerto 9100). No usa la cola de Windows:
 la impresora de arriba está instalada con un driver que traba la cola.
 
+Antes de mandar, el script revisa el PDF y lo dice con renglones `OJO (imprimir)`: firma de IA (eso
+sí frena), logo no oficial, frases que delatan y **los TBD que quedaron escritos, con su página**
+(`scripts/_lib/tbdImpresion.py`; el TBD del cajetín de una hoja de proceso no cuenta). Los `OJO` no
+frenan: se leen, y si un TBD no tenía que salir se corrige antes de imprimir. Para verlos sin
+imprimir: `--seco`.
+
 Si el script no está (otra PC), el mismo camino a mano:
 
 ```bash

@@ -79,6 +79,10 @@ def main():
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib'))
     import firmaIA
     firmaIA.exigir_sin_firma([a.pdf], 'imprimir')
+    # Los TBD que quedaron escritos se listan ANTES de mandar (Fak, 07/10/2026, con la hoja impresa: "dice todo
+    # TBD"). Avisa y sigue: no frena ni pregunta; el TBD del cajetin de una hoja de proceso no cuenta (cola P26).
+    import tbdImpresion
+    tbdImpresion.avisar([a.pdf], a.paginas, 'imprimir')
     if not os.path.exists(GS):
         raise SystemExit('Falta Ghostscript en %s (viene con PDFCreator)' % GS)
     imp = IMPRESORAS['a3' if a.a3 else 'a4']
