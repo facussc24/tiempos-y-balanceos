@@ -157,7 +157,7 @@ Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabra
 
 - [ ] P52 · mediano · A32 · F1 O11 · reporte automático hacia Fak de lo «grave» del asistente por área · tools/claude-area/vigia.mjs · Fak 06/10 *"debería enviarte un reporte"* · **Primero me fijo si ya existe; si no existe, sí.**
 - [ ] P56 · grande · A44b · F1 S4 · mover lo de Claude a la carpeta única CLAUDE BARACK\ de la nube · _nube.mjs y los programas que buscan por nombre · ver H48 · **Sí, después de ver el --simular de H48.** · **Fak 09/10 16:55**: *"solucionalo vos, solo eso"* → SÍ al simulado y a mover (con el simulado mostrado antes)
-- [ ] P57 · grande · A45 · F1 S3, S15 · circuito del equipo (paquete, instalación por su Claude, buzón de aportes), con sha/ref fijo en el marketplace y sha256 en el paquete · _paquete.mjs · plan §1.2; R8:39 · **Sí, después de P58.** · **Fak 09/10 16:55**: SÍ (*"obvio, apruebo"*)
+
 - [ ] P59 · grande · A47 · plan §1.10 · podar lo que entra fijo en cada sesión (~36.000 tokens), midiendo antes y después; primeros cortes de R7 §4 (~11 KB) y las líneas que suman H5, H6, H8 y H46 · CLAUDE.md, LECCIONES, reglas · R7:174-176 · **Sí, con la medición a la vista y vuelta atrás por git.**
 - [ ] P61 · grande · R5 §3.5 · skill mail, a partir de la del plugin por área y de mail-envio.md · .claude/skills/mail/ · 190 mensajes de Fak: el tema más frecuente (R5) · **Sí: de las nuevas, es la que más le cambia el día.** · **Fak 09/10 16:55**: SÍ (preguntó si ya existía una skill de mails: no, hay una regla y scripts)
 - [ ] P67 · mediano · R5 §3.3 · fusionar injection-process y amfe-cookbook (con audit-amfe, fix-amfe-gaps y amfe-healer) en amfe-domain, y autocad-verificar en patrones-corte-plotter · skills · 0 cargas en 30 días (R5) · **Sí; los comandos quedan apagados si Fak no los escribe.**
@@ -193,10 +193,11 @@ Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabra
 - [ ] P65 · mediano · R5 §3.2 · cad-design y cad-3d.md: los gates en un solo lugar · skill + regla · hay dos numeraciones (R5) · **Sí.**
 - [ ] P68 · mediano · R5 §3.3 · rule-enforcement-gate pasa a ser una regla con paths: .claude/rules/** · — · 2 cargas, la última el 31/08 (R5) · **Sí.**
 - [ ] P80 · sin código · R1, R2 #14 · contarle, sin pedirle nada: /btw, Ctrl+X Ctrl+K y el cierre ordenado al llegar al límite de 5 h · — · (sin evidencia propia: lo afirman R1 y R2) · **Solo contarlo en la página.**
-- [ ] S2-8 · mediano · A22b · R2 #4 (parte de H40) · aviso de versión mínima 2.1.293 en el chequeo de salud de las PC por área (Carlos, Pedro, CATA) · _paquete.mjs (líneas 31-43, 514, 1301-1316) · corre en las PC de otros al actualizar (S2) · **Sí, junto con P57 y P58.**
 
 ## DESCARTADO CON MOTIVO
 
+- X59 · (era S2-8) A22b · R2 #4 (parte de H40) · **Fak 09/10 19:40**: *"descartamos actualizaciones automáticas con todos, ya fue, no lo dejes anotado"* (Pedro y Carlos siguen por pendrive)
+- X58 · (era P57) A45 · F1 S3, S15 · **Fak 09/10 19:40**: *"descartamos actualizaciones automáticas con todos, ya fue, no lo dejes anotado"* (Pedro y Carlos siguen por pendrive)
 - X57 · (era P77) Cowork para Carlos, Federico y Pedro · **Fak 09/10 16:55**: *"¿por qué haría eso?"*
 - X56 · (era P2) usar el reinicio de límite semanal · Fak 09/10 16:3x: *"no lo tenemos, ya verifiqué en Uso"*
 - X1 · síntesis Opus más revisor Fable (A3) · cumplida con S1 y S2; se cierra con esta cola
@@ -270,4 +271,4 @@ Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabra
 - [x] HOY-3 · 2026-10-09 · chico · Fak · ~~"en todas las tareas que puedas usá la API": scripts/_apiTarea.mjs, el puente pedido + adjuntos -> API -> archivo, con candados (ni secretos ni más de 2 MB) y 8 tests~~ · e79715c4 + 82939e7a (timeout) + 8a3638b1 (streaming) + 2fd31a24 (sin fallback)
 - [x] HOY-4 · 2026-10-09 · Fak · ~~(era P3) la clave de la API pegada (por la terminal), --check y --probar verdes, primera noche real de día ($0,98: 6 AMFE, 12 mails, prioridades, novedades) y la tarea "Barack - Noche de Claude (API)" agendada a las 06:30; el ciclo renueva el 30 (BARACK_API_CICLO_DIA=30 como variable de usuario)~~ · commit 62f0ae43 (regla api-claude.md)
 
-<!-- control: HACER YA 68 · PROPONER 73 · DESCARTADO 52 · HECHOS 17 · origen S1 09/10 + S2 09/10 -->
+<!-- control: HACER YA 68 · PROPONER 71 · DESCARTADO 54 · HECHOS 17 · origen S1 09/10 + S2 09/10 -->
