@@ -23,7 +23,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import {
-  crearCliente, leerClave, llamar, verificarAcceso, presupuestoDelMes, leerLedgerCiclo, resumenLedger, cicloDia, topeCorridaUsd,
+  crearCliente, leerClave, claveActiva, llamar, verificarAcceso, presupuestoDelMes, leerLedgerCiclo, resumenLedger, cicloDia, topeCorridaUsd,
   selloLocal, usd, resolverModelo, MENSAJE_SIN_CLAVE, ErrorApi,
 } from './_lib/claudeApi.mjs';
 import { psRun } from './_lib/powershell.mjs';
@@ -199,7 +199,8 @@ async function check() {
   if (sdk) ok(`SDK @anthropic-ai/sdk ${sdk} instalado`);
   else { mal('falta el SDK @anthropic-ai/sdk'); falta.push('npm install (el SDK esta en package.json)'); codigo = 1; }
 
-  const clave = leerClave();
+  const activa = claveActiva();
+  const clave = activa.clave;
   if (!clave) {
     mal('clave ANTHROPIC_API_KEY: NO esta (ni en el entorno ni en .env.local)');
     falta.push('vincular la organizacion en claude.ai (Configuracion > Facturacion > API credits)');
@@ -207,7 +208,12 @@ async function check() {
     falta.push('pegarla:  node scripts/_claude.mjs --pegar-clave');
     codigo = 3;
   } else {
-    ok('clave ANTHROPIC_API_KEY: esta (no se muestra)');
+    if (activa.origen === 'secundaria') {
+      const h = activa.hasta;
+      const vence = new Date(Number(h.slice(0, 4)), Number(h.slice(4, 6)) - 1, Number(h.slice(6, 8)));
+      const dias = Math.round((vence - new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())) / 86400000);
+      ok(`clave: la prestada que vence el ${h.slice(6, 8)}/${h.slice(4, 6)} (en ${dias} dia${dias === 1 ? '' : 's'}); despues sigue sola la principal (no se muestra)`);
+    } else ok(`clave ANTHROPIC_API_KEY: esta (${activa.origen}; no se muestra)`);
     const acceso = await verificarAcceso(crearCliente());
     if (acceso.ok) ok(`acceso: ${acceso.detalle}`);
     else { mal(`acceso: ${acceso.detalle}`); falta.push('que la API acepte la clave (ver el error de arriba)'); codigo = 1; }

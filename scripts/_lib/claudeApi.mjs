@@ -168,15 +168,36 @@ export const MENSAJE_SIN_CLAVE = [
   'Con eso los scripts gastan los creditos del mes; Claude Code sigue igual, no usa esta clave.',
 ].join('\n');
 
+/** 'AAAAMMDD' local de una fecha (para comparar vencimientos sin horas ni zonas). */
+const aaaammdd = (f) => `${f.getFullYear()}${p2(f.getMonth() + 1)}${p2(f.getDate())}`;
+
 /**
- * La clave: del entorno, o de .env.local. Devuelve null si no hay. NUNCA se imprime ni se loguea
- * (el secretos-guard frena los comandos que la leerian; este modulo la lee por dentro).
+ * La clave activa, con su origen. Desde el 09/10/2026 puede haber mas de una: ademas de
+ * `ANTHROPIC_API_KEY` (la principal, la del plan de Fak), lineas `ANTHROPIC_API_KEY_HASTA_AAAAMMDD=...`
+ * con claves prestadas que vencen ese dia (la del dueno de la empresa, $100 hasta el 20/10/2026).
+ * Regla: se gasta primero la que vence antes, mientras no haya vencido; vencida, se sigue con la
+ * principal sin tocar nada. El entorno (`ANTHROPIC_API_KEY`) le gana a todo, como siempre.
+ * Devuelve { clave, origen: 'entorno'|'secundaria'|'principal'|null, hasta: 'AAAAMMDD'|null }.
+ * NUNCA se imprime ni se loguea la clave (el secretos-guard frena los comandos que la leerian).
  */
-export function leerClave({ env = process.env, archivoEnv = path.join(RAIZ, '.env.local') } = {}) {
+export function claveActiva({ env = process.env, archivoEnv = path.join(RAIZ, '.env.local'), hoy = new Date() } = {}) {
   const directa = String(env.ANTHROPIC_API_KEY ?? '').trim();
-  if (directa) return directa;
-  const local = String(leerEnv(archivoEnv).ANTHROPIC_API_KEY ?? '').trim();
-  return local || null;
+  if (directa) return { clave: directa, origen: 'entorno', hasta: null };
+  const local = leerEnv(archivoEnv);
+  const limite = aaaammdd(hoy);
+  const prestadas = Object.entries(local)
+    .map(([k, v]) => ({ m: /^ANTHROPIC_API_KEY_HASTA_(\d{8})$/.exec(k), clave: String(v ?? '').trim() }))
+    .filter((x) => x.m && x.clave && x.m[1] >= limite)
+    .map((x) => ({ clave: x.clave, hasta: x.m[1] }))
+    .sort((a, b) => a.hasta.localeCompare(b.hasta));
+  if (prestadas.length) return { clave: prestadas[0].clave, origen: 'secundaria', hasta: prestadas[0].hasta };
+  const principal = String(local.ANTHROPIC_API_KEY ?? '').trim();
+  return principal ? { clave: principal, origen: 'principal', hasta: null } : { clave: null, origen: null, hasta: null };
+}
+
+/** La clave: del entorno, o de .env.local (la prestada vigente primero). Devuelve null si no hay. */
+export function leerClave(opciones = {}) {
+  return claveActiva(opciones).clave;
 }
 
 /**

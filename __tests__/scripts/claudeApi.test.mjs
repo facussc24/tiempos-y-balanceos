@@ -273,6 +273,20 @@ describe('claudeApi · la clave', () => {
     expect(A.leerClave({ env: {}, archivoEnv: env })).toBeNull();
   });
 
+  it('claveActiva: la prestada que vence antes se gasta primero; vencida, sigue la principal; el entorno gana', () => {
+    const env = path.join(dir, '.env.prueba');
+    fs.writeFileSync(env, 'ANTHROPIC_API_KEY=sk-ant-principal\nANTHROPIC_API_KEY_HASTA_20261020=sk-ant-dueno\nANTHROPIC_API_KEY_HASTA_20261105=sk-ant-otra\n');
+    const el9 = new Date(2026, 9, 9), el20 = new Date(2026, 9, 20), el21 = new Date(2026, 9, 21), dic = new Date(2026, 11, 1);
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el9 })).toEqual({ clave: 'sk-ant-dueno', origen: 'secundaria', hasta: '20261020' });
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el20 }).clave).toBe('sk-ant-dueno');
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el21 })).toEqual({ clave: 'sk-ant-otra', origen: 'secundaria', hasta: '20261105' });
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: dic })).toEqual({ clave: 'sk-ant-principal', origen: 'principal', hasta: null });
+    expect(A.claveActiva({ env: { ANTHROPIC_API_KEY: 'sk-ant-entorno' }, archivoEnv: env, hoy: el9 }).origen).toBe('entorno');
+    expect(A.leerClave({ env: {}, archivoEnv: env, hoy: el9 })).toBe('sk-ant-dueno');
+    fs.writeFileSync(env, 'ANTHROPIC_API_KEY_HASTA_20261020=sk-ant-dueno\n');
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: dic })).toEqual({ clave: null, origen: null, hasta: null });
+  });
+
   it('el mensaje sin clave dice los tres pasos y el comando para pegarla', () => {
     expect(A.MENSAJE_SIN_CLAVE).toMatch(/Vincular organizacion/);
     expect(A.MENSAJE_SIN_CLAVE).toMatch(/--pegar-clave/);
