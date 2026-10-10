@@ -163,6 +163,7 @@ const redondeo6 = (x) => Math.round(x * 1e6) / 1e6;
 export async function correr({
   simular = false, todos = false, amfe = null, max = null, cliente = null, sb = null, ahora = new Date(),
   dir = DIR_PREAUDITORIA, dirReportes = DIR_REPORTES, dirLedger = DIR_API, concurrencia = 3, log = () => {},
+  topeUsd = null,
 } = {}) {
   let api = cliente;
   if (!api && (!simular || leerClave())) api = crearCliente();
@@ -201,17 +202,29 @@ export async function correr({
   const rutaInforme = rutaReporte(dirReportes, ahora);
   const fecha = selloLocal(ahora).slice(0, 16);
   const hechos = new Array(aCorrer.length);          // en el orden de aCorrer, aunque terminen desordenados
+  const porTope = [];                                 // los que no arrancaron porque la pasada ya paso su tope
   let estadoActual = estado;
+  const gastado = () => hechos.reduce((s, r) => s + (r?.costoUsd || 0), 0);
   const guardar = () => {
     const parciales = hechos.filter(Boolean);
     escribirSeguro(rutaEstado, `${JSON.stringify(estadoActual, null, 2)}\n`);
     escribirSeguro(rutaInforme, armarReporte({
-      fecha, resultados: parciales, saltados, diferidos, enCurso: aCorrer.length - parciales.length,
+      fecha, resultados: parciales, saltados, diferidos, porTope, enCurso: aCorrer.length - parciales.length - porTope.length,
       costoUsd: redondeo6(parciales.reduce((s, r) => s + (r.costoUsd || 0), 0)),
       presupuesto: presupuestoDelMes({ dir: dirLedger }), estado: estadoActual,
     }));
   };
   await enParalelo(aCorrer, concurrencia, async (f, i) => {
+    // TOPE ADENTRO (09/10/2026, cola H18): la noche mira su tope por corrida solo ENTRE pasos; con 6 AMFE y el
+    // refutador Opus, esta pasada sola puede pasarlo. Antes de arrancar cada AMFE se mira lo ya gastado: el que
+    // no arranca NO toca el estado y vuelve a la lista la noche siguiente, como un diferido.
+    // Lo gastado cuenta solo los AMFE TERMINADOS: con concurrencia 3 los tres primeros arrancan siempre, y lo que se
+    // puede pasar es el tope mas hasta 3 AMFE en curso (~$0,35 cada uno con refutador). Es un freno pasivo, como el de la noche.
+    if (topeUsd != null && gastado() > topeUsd) {
+      porTope.push(f);
+      log(`  ${f.amfe_number}: no arranca, la pasada ya gasto ${usd(gastado())} (tope ${usd(topeUsd)})`);
+      return null;
+    }
     const r = await revisarUno(api, f, estado, { dirLedger });
     log(`  ${f.amfe_number}: ${r.error ? `ERROR ${r.error}` : `${r.mantenidos.length} hallazgo(s) · propuso ${r.propuestos} · ${usd(r.costoUsd)}`}`);
     // sin await de aca hasta guardar(): el resultado, el estado y el reporte quedan o no quedan juntos
@@ -220,7 +233,8 @@ export async function correr({
     guardar();
     return r;
   });
-  if (!aCorrer.length) guardar();                     // nada que revisar: igual queda el estado y el reporte del dia
+  // nada que revisar, o todo frenado por el tope: igual queda el estado y el reporte del dia
+  if (!aCorrer.length || porTope.length) guardar();
 
   const resultados = hechos.filter(Boolean);
   const costoUsd = redondeo6(resultados.reduce((s, r) => s + (r.costoUsd || 0), 0));
@@ -229,7 +243,8 @@ export async function correr({
   const resumen = {
     revisados: resultados.length - errores,
     saltados: saltados.length,
-    diferidos: diferidos.length,
+    diferidos: diferidos.length + porTope.length,
+    porTope: porTope.length,
     hallazgos: resultados.reduce((s, r) => s + r.mantenidos.length, 0),
     nuevos: resultados.reduce((s, r) => s + r.mantenidos.filter((h) => h.nuevo).length, 0),
     errores,

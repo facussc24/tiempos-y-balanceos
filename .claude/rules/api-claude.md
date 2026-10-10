@@ -55,7 +55,8 @@ el `node` del Programador de tareas: por eso los candados son codigo y test, no 
    `.tmp` + renombrar, `agregarSeguro` para el log y el ledger): rechaza con un Error, antes de crear
    nada, cualquier ruta fuera de esas tres carpetas o de las que indiquen `BARACK_API_DIR`,
    `BARACK_PREAUDITORIA_DIR`, `BARACK_NOVEDADES_DIR` y `BARACK_PRECIOS_DIR` (un valor que abriria el repo entero se ignora; se
-   compara la ruta real, sin enlaces que salgan). Los tests con carpetas temporales —tambien los que
+   compara la ruta real nativa —nombre corto 8.3, junctions— y la identidad de disco, y se ignora una variable que
+   sea un recurso de red como `\\localhost\C$\...`: cola H16, 09/10/2026). Los tests con carpetas temporales —tambien los que
    pasan `dirLedger`— fijan una de esas variables en `beforeEach`. **Limite**: los scripts que la noche
    lanza como procesos aparte escriben por su cuenta (`_novedadesClaude.mjs` en `.sgc-cache/x-seguimiento/`,
    `_hilosAbiertos.mjs` en `.claude/state/hilos-cache.json`): caen en carpetas ignoradas pero no pasan
@@ -76,6 +77,8 @@ el `node` del Programador de tareas: por eso los candados son codigo y test, no 
      noche, como recomienda Anthropic). `_nocturno.mjs` lo mira antes de cada paso: si lo gastado en ESTA
      corrida lo supera, los pasos que faltan quedan `saltado` ("tope por corrida ($X de $8)") y la noche
      sale con codigo 1. `--sin-tope` levanta los dos.
+     **El mismo tope se mira ADENTRO de la pre-auditoria** (cola H18): antes de arrancar cada AMFE; los que no arrancan
+     vuelven la noche siguiente sin tocar el estado. Con concurrencia 3 se puede pasar por lo que ya estaba en curso.
 5. **Un paso que falla no deja nada a medias ni tumba a los demas**: cada paso con su try/catch, todo se
    escribe a `.tmp` y se renombra, y el envoltorio `_nocturno.ps1` marca ERROR si `node` sale bien pero
    no escribio `.claude/state/nocturno.json` (resultado vacio es error). **Con tres pasos seguidos en

@@ -329,7 +329,7 @@ async function noche({ simular, solo, sinTope }) {
         // el tope por corrida tambien ADENTRO de la pasada (cola H18): es el primer paso, lo gastado hasta aca es 0
         const r = await correrPreauditoria({ simular, cliente, ahora: inicio, max: TOPE_AMFE_POR_NOCHE, topeUsd: sinTope ? null : topeCorridaUsd() });
         if (simular) return { detalle: r.linea };
-        datos.hallazgos = { revisados: r.revisados, saltados: r.saltados, diferidos: r.diferidos, total: r.hallazgos, nuevos: r.nuevos, errores: r.errores };
+        datos.hallazgos = { revisados: r.revisados, saltados: r.saltados, diferidos: r.diferidos, porTope: r.porTope ?? 0, total: r.hallazgos, nuevos: r.nuevos, errores: r.errores };
         datos.reporte = r.reporte;
         if (r.errores && !r.revisados) throw Object.assign(new Error(`los ${r.errores} AMFE a revisar dieron error (ver ${path.basename(r.reporte)})`), { costoUsd: r.costoUsd });
         return { detalle: r.linea.replace(/ · \$[\d.]+$/, ''), costoUsd: r.costoUsd };

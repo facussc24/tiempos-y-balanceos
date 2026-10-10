@@ -409,7 +409,7 @@ const fechaCorta = (iso) => String(iso ?? '').slice(0, 16).replace('T', ' ');
  * El archivo para la SESION DE LA MANANA. Dice arriba para quien es y que hacer con el. Nunca se
  * le manda a Fak tal cual: el verifica contra la fuente y lleva 4 renglones.
  */
-export function armarReporte({ fecha, resultados, saltados = [], diferidos = [], enCurso = 0, costoUsd = 0, presupuesto = null, estado } = {}) {
+export function armarReporte({ fecha, resultados, saltados = [], diferidos = [], porTope = [], enCurso = 0, costoUsd = 0, presupuesto = null, estado } = {}) {
   const L = [];
   const total = resultados.reduce((s, r) => s + (r.mantenidos?.length || 0), 0);
   const nuevos = resultados.reduce((s, r) => s + (r.mantenidos?.filter((h) => h.nuevo).length || 0), 0);
@@ -420,6 +420,10 @@ export function armarReporte({ fecha, resultados, saltados = [], diferidos = [],
   if (diferidos.length) {
     const nombres = diferidos.slice(0, 8).map((d) => d.amfe_number ?? d).join(', ');
     L.push(`- Quedaron para la próxima noche (tope por noche): ${diferidos.length} (${nombres}${diferidos.length > 8 ? ', …' : ''})`);
+  }
+  if (porTope.length) {
+    const nombres = porTope.slice(0, 8).map((d) => d.amfe_number ?? d).join(', ');
+    L.push(`- No arrancaron porque la corrida ya había gastado su tope de plata (vuelven la próxima noche): ${porTope.length} (${nombres}${porTope.length > 8 ? ', …' : ''})`);
   }
   if (enCurso > 0) L.push(`- De esta corrida NO terminaron: ${enCurso} (si la corrida ya terminó, se cortó antes: lo revisado hasta acá quedó guardado y el resto vuelve a entrar la próxima noche)`);
   L.push(`- Hallazgos que sobrevivieron al refutador: ${total} (${nuevos} nuevos; el resto ya se había visto otra noche)`);
@@ -448,10 +452,10 @@ export function armarReporte({ fecha, resultados, saltados = [], diferidos = [],
 }
 
 /** Una linea para el tablero: lo que paso, sin adjetivos. */
-export function lineaResumen({ revisados = 0, saltados = 0, diferidos = 0, hallazgos = 0, nuevos = 0, errores = 0, costoUsd = 0 } = {}) {
+export function lineaResumen({ revisados = 0, saltados = 0, diferidos = 0, porTope = 0, hallazgos = 0, nuevos = 0, errores = 0, costoUsd = 0 } = {}) {
   const partes = [`pre-auditoría AMFE: ${revisados} revisado${revisados === 1 ? '' : 's'}`];
   if (saltados) partes.push(`${saltados} sin cambios`);
-  if (diferidos) partes.push(`${diferidos} para la próxima noche`);
+  if (diferidos) partes.push(`${diferidos} para la próxima noche${porTope ? ` (${porTope} por el tope de la corrida)` : ''}`);
   partes.push(hallazgos ? `${hallazgos} hallazgo${hallazgos === 1 ? '' : 's'} para verificar (${nuevos} nuevo${nuevos === 1 ? '' : 's'})` : 'sin hallazgos que sobrevivan');
   if (errores) partes.push(`${errores} con error`);
   partes.push(`$${costoUsd.toFixed(2)}`);

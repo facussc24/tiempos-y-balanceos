@@ -11,6 +11,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
+import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -99,6 +100,56 @@ describe('escrituraSegura · que rutas deja pasar', () => {
     const r = rutaPermitida(path.join(base, 'salida', 'x.txt'), { env });
     expect(r.ok).toBe(false);
     expect(r.motivo).toMatch(/enlace/);
+  });
+
+  // H16 (09/10/2026): en Windows el repo tiene nombre corto 8.3 (en esta PC C:\Dev\BARACK~1) y el realpathSync
+  // comun de Node no lo expande: una variable que nombrara el repo por ese nombre pasaba por "carpeta de afuera".
+  // En Linux (el CI) no hay nombres cortos: el caso no se puede armar y el test no corre.
+  const nombreCorto = (() => {
+    if (process.platform !== 'win32') return null;
+    try {
+      const salida = execSync(`cmd /c dir /x "${path.dirname(RAIZ)}"`, { encoding: 'utf8', windowsHide: true });
+      const linea = salida.split(/\r?\n/).find((l) => l.trimEnd().endsWith(` ${path.basename(RAIZ)}`));
+      const partes = linea ? linea.trim().split(/\s+/) : [];
+      const corto = partes.length >= 2 ? partes[partes.length - 2] : '';
+      return /~\d/.test(corto) ? path.join(path.dirname(RAIZ), corto) : null;
+    } catch { return null; }
+  })();
+
+  it.skipIf(!nombreCorto)('ROJO: el repo nombrado por su nombre corto 8.3 no abre ni el repo ni una carpeta versionada', () => {
+    for (const v of [nombreCorto, path.join(nombreCorto, 'scripts')]) {
+      const env = { BARACK_API_DIR: v };
+      expect(carpetasPermitidas({ env }).map((c) => c.origen), v).not.toContain('BARACK_API_DIR');
+      expect(rutaPermitida(path.join(nombreCorto, 'scripts', 'x.mjs'), { env }).ok, v).toBe(false);
+    }
+  });
+
+  // El auditor del 09/10 encontro la misma puerta por el recurso administrativo de la propia PC (\\localhost\C$\...):
+  // realpathSync.native lo devuelve tal cual y la comparacion por ruta no lo veia. Solo si ese recurso se puede abrir.
+  const porRecurso = (() => {
+    if (process.platform !== 'win32' || !/^[A-Za-z]:\\/.test(RAIZ)) return null;
+    const unc = `\\\\localhost\\${RAIZ[0]}$${RAIZ.slice(2)}`;
+    try { return fs.existsSync(path.join(unc, 'package.json')) ? unc : null; } catch { return null; }
+  })();
+
+  it.skipIf(!porRecurso)('ROJO: el repo nombrado por \\\\localhost\\C$ no abre ni el repo ni una carpeta versionada', () => {
+    for (const v of [porRecurso, path.join(porRecurso, 'scripts'), path.join(porRecurso, '.sgc-cache')]) {
+      const env = { BARACK_API_DIR: v };
+      expect(carpetasPermitidas({ env }).map((c) => c.origen), v).not.toContain('BARACK_API_DIR');
+    }
+    expect(rutaPermitida(path.join(porRecurso, 'scripts', 'x.mjs'), { env: { BARACK_API_DIR: path.join(porRecurso, 'scripts') } }).ok).toBe(false);
+  });
+
+  it('VERDE: una carpeta temporal de afuera sigue permitida (por la ruta larga y por la que da el sistema)', () => {
+    const env = { BARACK_API_DIR: tmp };
+    expect(carpetasPermitidas({ env }).map((c) => c.origen)).toContain('BARACK_API_DIR');
+    expect(rutaPermitida(path.join(tmp, 'sub', 'x.json'), { env }).ok).toBe(true);
+  });
+
+  it.skipIf(!nombreCorto)('VERDE: por el nombre corto, una carpeta ignorada del repo sigue permitida', () => {
+    expect(rutaPermitida(path.join(nombreCorto, '.sgc-cache', 'api', 'x.json'), { env: {} }).ok).toBe(true);
+    const env = { BARACK_API_DIR: path.join(nombreCorto, '.sgc-cache', 'api') };
+    expect(carpetasPermitidas({ env }).map((c) => c.origen)).toContain('BARACK_API_DIR');
   });
 });
 

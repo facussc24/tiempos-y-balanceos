@@ -557,18 +557,25 @@ export async function verificarAcceso(cliente) {
 // Paralelo acotado, lotes y orquestador-workers
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Corre `fn(item, i)` sobre todos los items con a lo sumo `n` a la vez. Devuelve los resultados en orden. */
+/**
+ * Corre `fn(item, i)` sobre todos los items con a lo sumo `n` a la vez. Devuelve los resultados en orden.
+ * Si un `fn` tira, ningun trabajador toma un item NUEVO, los que ya estaban en curso terminan (ya se estan
+ * pagando) y recien ahi sube el PRIMER error (09/10/2026, cola H18: con `Promise.all` pelado el error subia
+ * enseguida pero los otros trabajadores seguian tomando items y pagando llamadas que nadie esperaba).
+ */
 export async function enParalelo(items, n, fn) {
   const lista = [...items];
   const out = new Array(lista.length);
   let i = 0;
+  let fallo = null;                            // { error } del primero que tiro
   const trabajador = async () => {
-    while (i < lista.length) {
+    while (!fallo && i < lista.length) {
       const k = i++;
-      out[k] = await fn(lista[k], k);
+      try { out[k] = await fn(lista[k], k); } catch (e) { fallo ??= { error: e }; }
     }
   };
   await Promise.all(Array.from({ length: Math.max(1, Math.min(n, lista.length)) }, trabajador));
+  if (fallo) throw fallo.error;
   return out;
 }
 

@@ -457,6 +457,24 @@ describe('preauditoria · la pasada entera con API y base falsas', () => {
     expect(r2).toMatchObject({ revisados: 1, saltados: 2, errores: 0 });
   });
 
+  it('H18: con topeUsd, pasado el tope no arranca otro AMFE; los que no arrancaron no tocan el estado y vuelven la noche siguiente', async () => {
+    const filas = ['A', 'B', 'C', 'D'].map((n, i) => fila(`2026-09-1${i}T10:00`, `AMFE-${n}`));
+    // cada AMFE cuesta ~$0,018 (Sonnet, 5000 de entrada y 800 de salida, sin refutador): A y B suman $0,036 > $0,03
+    const api = apiQueSeCuelga();
+    const r = await correr(opciones({ cliente: api, sb: base(filas), concurrencia: 1, topeUsd: 0.03 }));
+    expect(r).toMatchObject({ revisados: 2, porTope: 2, diferidos: 2, errores: 0 });
+    expect(api.llamadas).toBe(2);
+    expect(Object.keys(leerEstado().revisados).sort()).toEqual(['AMFE-A', 'AMFE-B']);
+    expect(r.linea).toMatch(/2 para la próxima noche \(2 por el tope de la corrida\)/);
+    expect(fs.readFileSync(r.reporte, 'utf8')).toContain('tope de plata (vuelven la próxima noche): 2 (AMFE-C, AMFE-D)');
+    expect(fs.readFileSync(r.reporte, 'utf8')).not.toContain('(tope por noche)');
+    // gemelo: sin tope (o la noche siguiente) siguen los que faltaban
+    const api2 = apiQueSeCuelga();
+    const r2 = await correr(opciones({ cliente: api2, sb: base(filas), concurrencia: 1, ahora: new Date(2026, 9, 9, 6, 31) }));
+    expect(r2).toMatchObject({ revisados: 2, saltados: 2, porTope: 0 });
+    expect(api2.llamadas).toBe(2);
+  });
+
   it('un reporte por corrida: una segunda corrida el mismo dia no pisa el de la primera', async () => {
     const filas = [fila('2026-09-10T10:00', 'AMFE-A'), fila('2026-09-11T10:00', 'AMFE-B')];
     const r1 = await correr(opciones({ cliente: apiQueSeCuelga(), sb: base(filas), max: 1 }));

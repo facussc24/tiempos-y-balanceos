@@ -361,6 +361,23 @@ describe('claudeApi · paralelo acotado y lotes', () => {
     expect(out).toEqual([10, 20, 30, 40, 50, 60, 70]);
   });
 
+  it('H18: si un item tira, nadie toma uno nuevo, los que estaban en curso terminan y sube el PRIMER error', async () => {
+    const empezados = [];
+    const terminados = [];
+    const corrida = A.enParalelo([1, 2, 3, 4, 5, 6, 7, 8], 2, async (x) => {
+      empezados.push(x);
+      await new Promise((r) => setTimeout(r, x === 1 ? 5 : 30));
+      if (x === 1) throw new Error('fallo el guardado del 1');
+      if (x === 2) { terminados.push(x); return x; }
+      terminados.push(x);
+      return x;
+    });
+    await expect(corrida).rejects.toThrow('fallo el guardado del 1');
+    // el 1 fallo mientras el 2 estaba en curso: el 2 termina (ya se estaba pagando) y nadie arranca el 3
+    expect(empezados).toEqual([1, 2]);
+    expect(terminados).toEqual([2]);
+  });
+
   it('lote: espera a que termine (al segundo retrieve), recoge por id y cobra la mitad', async () => {
     let consultas = 0;
     const cliente = {
