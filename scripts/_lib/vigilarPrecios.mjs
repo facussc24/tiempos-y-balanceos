@@ -451,7 +451,9 @@ export function parsearCreditos(md) {
     teamTope: tope,
     vencimiento,
     venceAlFinalDelCiclo: /billing cycle/i.test(vencimiento),
-    sinAcumulacion: /no roll ?over|(?:do(?:es)?(?:n'?t| not)|not)\s+roll ?over/i.test(vencimiento),
+    // 10/10/2026 (cola H19): la pagina escribe «doesn’t» con apostrofo tipografico (U+2019) y la version
+    // anterior solo aceptaba el recto: el vigilante fallaba con ruido (codigo 3).
+    sinAcumulacion: /no roll ?over|(?:do(?:es)?(?:n['’]?t| not)|not)\s+roll ?over/i.test(vencimiento),
     cubreClaudeCode,
   };
 }

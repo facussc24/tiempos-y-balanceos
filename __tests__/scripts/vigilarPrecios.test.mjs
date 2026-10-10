@@ -262,6 +262,14 @@ describe('vigilarPrecios · creditos', () => {
     expect(c.vencimiento).not.toMatch(/\*\*/);
   });
 
+  it('H19 (10/10/2026): «don’t roll over» con apostrofo tipografico (U+2019) tambien es «sin acumulacion»; sin la frase, no', () => {
+    const tipografico = real().creditos.replace("don't roll over", 'don’t roll over');
+    expect(tipografico).toContain('don’t roll over');
+    expect(V.parsearCreditos(tipografico).sinAcumulacion).toBe(true);
+    const sinFrase = real().creditos.replace(', with no rollover', ', carried over to the next cycle').replace("and don't roll over", 'and carry over');
+    expect(V.parsearCreditos(sinFrase).sinAcumulacion).toBe(false);
+  });
+
   it('con la pagina real de hoy no hay ninguna diferencia (Team solo se informa)', () => {
     const filas = V.compararCreditos(V.parsearCreditos(real().creditos));
     expect(filas.filter((f) => f.estado === 'DISTINTO')).toEqual([]);
