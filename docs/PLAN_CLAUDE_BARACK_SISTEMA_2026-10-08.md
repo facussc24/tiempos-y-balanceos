@@ -8,7 +8,7 @@ informes de Gemini (`INFORME_MAESTRO_API_CLAUDE_BARACK.txt`, `docs/PLAN_MAESTRO_
 las memorias del asistente por área y de la nube, y la documentación oficial de Anthropic (advisor tool,
 créditos de API, modos de permiso).
 
-## 0. Lo que Fak pidió, en sus palabras (resumido)
+## 0. Lo que Fak pidió (resumido)
 
 1. Que yo decida qué agentes usar para cada tarea («capaz es una tarea rápida... Opus medio... si es más
    compleja...»), con la documentación como base. Que el techo de Sonnet solo es «absurdo»; el de 10

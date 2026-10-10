@@ -77,6 +77,44 @@ describe('correccionGuard — la sesion del 01/10/2026, con sus entregas (biblio
   it('el aviso largo trae lo que Fak dijo despues del pedido (las correcciones de la tanda)', () => {
     expect(avisos[3]).toMatch(/enteinste/); expect(avisos[3]).toMatch(/pataognia/);
   });
+  // Cola H30 (10/10/2026). El punto 3 del aviso largo pedia "la lista de lo que pide el pedido original (cosa por cosa,
+  // con sus palabras)". Fak, 08/10 21:44, sobre un cierre armado asi: "deja de tomar literal todo lo que pido... no quiero
+  // parches, quiero decisiones en base a investigaciones"; 10/10: "decime: mira, creo que en realidad lo que queres es esto".
+  it('H30: el aviso largo pide COTEJAR para uno y DECIDIR para Fak; ya no manda escribirle la lista con sus palabras', () => {
+    const plano = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').toLowerCase();
+    for (const largo of [avisos[2], avisos[3]]) {
+      const p3 = plano(largo.split('\n').find((r) => r.startsWith('3. ')) || '');
+      // (a) el cotejo contra el pedido sigue siendo obligatorio, en las dos direcciones, y es trabajo propio
+      expect(p3).toMatch(/coteja para vos, una por una, cada cosa que nombra el pedido \(punto 1\) y cada correccion \(punto 2\) contra el entregable/);
+      expect(p3).toMatch(/lo que fak nombro y el entregable no trae/);
+      expect(p3).toMatch(/lo que el entregable trae y el no nombro/);
+      expect(p3).toMatch(/el cotejo no se le muestra/);
+      // (b) lo que se le escribe es la decision, con evidencia
+      expect(p3).toMatch(/decidi con evidencia que queria/);
+      expect(p3).toMatch(/creo que lo que queres es esto/);
+      expect(p3).toMatch(/la evidencia al lado/);
+      // (c) apartarse del pedido se DICE: lo que se deja afuera y lo que se agrega llevan su por que
+      expect(p3).toMatch(/si dejas afuera algo que el nombro, nombralo y deci por que/);
+      expect(p3).toMatch(/lo que agregas y el pedido no nombra va con una frase que diga por que/);
+      expect(p3).toMatch(/no tiene ese por que, se saca\. lo que falta se busca o se dice que no existe\.$/);
+      // (d) la instruccion vieja no vuelve, con estas palabras ni con otras
+      expect(p3).toMatch(/no le devuelvas su pedido en forma de lista con sus palabras/);
+      expect(p3).not.toMatch(/escribi(le)? (al principio de tu respuesta )?la lista/);
+      expect(p3).not.toMatch(/arranca (la respuesta )?con (la|una) lista/);
+      // (e) las citas de Fak, como las dijo (08/10/2026 21:44): cada una entre sus comillas
+      expect(largo).toContain('"deja de tomar literal todo lo que pido"');
+      expect(largo).toContain('"quiero decisiones tomadas en base a investigaciones"');
+      // (f) el comentario del codigo no se cuela en el aviso, y los otros puntos siguen
+      expect(largo).not.toMatch(/\/\/|cola H30|Auditor/);
+      expect(largo.split('\n').length).toBe(6);
+      expect(largo).toMatch(/1\. Pedido original, textual: «/);
+      expect(largo).toMatch(/4\. Lo que no aparece NO se rellena con algo parecido/);
+      expect(largo).toMatch(/5\. Una palabra del pedido se lee por lo que nombra Fak/);
+    }
+    // el aviso corto (primera correccion) no cambia: relee el pedido entero y nada mas
+    expect(avisos[1]).toMatch(/relee ENTERO/);
+    expect(avisos[1]).not.toMatch(/DECIDI con evidencia/);
+  });
   it('un mensaje largo en medio de la tanda NO pisa el pedido ni pone el contador en cero', () => {
     const r = paso(e, 'esta s100% seguro del nombre d elas mauqinas sean esos no? de donde los aquaste? manten la evnidenica a amno digamos pro si me lo llega a preugntar');
     expect(r.estado.pedido).toBe(e.pedido); expect(r.estado.n).toBe(e.n);

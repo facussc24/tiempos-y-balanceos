@@ -217,7 +217,13 @@ export function avisoLargo({ pedido, correcciones = [], cabeza }) {
     `[CORRECCION-GUARD] ${cabeza} Para: no parchees el ultimo reclamo.`,
     `1. Pedido original, textual: ${citaPedido(pedido)}`,
     `2. Lo que Fak dijo despues, en esta tanda: ${correcciones.map((x) => `«${x}»`).join(' · ')}`,
-    '3. ANTES de producir nada, escribi al principio de tu respuesta la lista de lo que pide el pedido original (cosa por cosa, con sus palabras) y al lado que parte del entregable lo cumple. Lo que no esta en la lista SE SACA. Lo que falta se busca o se dice que no existe.',
+    // Punto 3 (cola H30, 10/10/2026). Hasta ese dia mandaba ESCRIBIRLE a Fak "la lista de lo que pide el pedido original (cosa
+    // por cosa, con sus palabras)". Fak, 08/10/2026 21:44, sobre un cierre armado asi: "no quiero parches, quiero decisiones
+    // tomadas en base a investigaciones" y, mas abajo en el mismo mensaje, "deja de tomar literal todo lo que pido"; y el
+    // 10/10: "vos debes decirmelo: 'mira, creo que en realidad lo que queres es esto'". Dos reglas suyas, las dos servidas: el
+    // cotejo contra el pedido (leccion del 01/10) se sigue haciendo, cosa por cosa, pero es trabajo MIO; lo que se le escribe es
+    // la decision. (Auditor 10/10: la primera version de este cambio habia perdido el cotejo.)
+    '3. ANTES de producir nada, COTEJA para vos, una por una, cada cosa que nombra el pedido (punto 1) y cada correccion (punto 2) contra el entregable, en las dos direcciones: lo que Fak nombro y el entregable no trae, y lo que el entregable trae y el no nombro. Con eso DECIDI con evidencia que queria: lo que pide es una sugerencia dicha a las apuradas, no una especificacion (Fak: "deja de tomar literal todo lo que pido"; "quiero decisiones tomadas en base a investigaciones"). Que diga que algo esta mal es un dato; como se arregla lo decidis vos. Arranca la respuesta con una oracion del tipo "creo que lo que queres es esto: ..." y la evidencia al lado (el documento, la medicion o el mensaje suyo que lo sostiene). NO le devuelvas su pedido en forma de lista con sus palabras: el cotejo no se le muestra. Si dejas afuera algo que el nombro, nombralo y deci por que. Lo que agregas y el pedido no nombra va con una frase que diga por que; lo que el entregable trae, no responde al pedido ni a las correcciones y no tiene ese por que, SE SACA. Lo que falta se busca o se dice que no existe.',
     '4. Lo que no aparece NO se rellena con algo parecido (otra pieza, otro proyecto, otra parte del proceso). Se busca adentro de carpetas de tareas, zips y documentos, con las palabras de planta y no con las tuyas (node scripts/_materialAfuera.mjs lista las fotos y videos que estan fuera de la biblioteca), y recien despues se dice "no hay".',
     '5. Una palabra del pedido se lee por lo que nombra Fak, no por lo que significa en los documentos de la casa ("proceso" de una maquina es la maquina trabajando, no el flujograma).',
   ].join('\n');
