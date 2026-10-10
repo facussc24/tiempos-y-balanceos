@@ -81,6 +81,21 @@ Memoria `feedback_la_caja_soy_yo_pensar_fuera_de_lo_que_dijo_fak`, LECCIONES 08-
 - **Una pregunta a Fak no frena el resto** (18:40: *"¿te quedaste esperándome? es gravísimo"*): lo que no depende
   de la respuesta se hace mientras tanto; si Fak dijo «decidí vos» ese día, se decide.
 
+## Estado a las 19:41 del 10/10 (lo último que escribió la v5 antes de compactar al 94 %)
+
+- **Hijas vivas** (las dos en Opus y bypass, lanzadas con la skill): **hija 2** `local_218252c2` (tarea
+  `hija-cierre-h5-h6-20261010`): cerró el paso 15 (`82edf1c1`) y recibió **HOY-17** (encargo `E261010-4d0d`: los
+  controles ejecutables de las reglas de la tanda). **Hija 3** `local_c5fa43f0` (tarea `hija-amfe-nube-etapa1-20261010`):
+  **P55 etapa 1** (encargo `E261010-73da`, con la revisión por la API ya incorporada). Vigilarlas con
+  `_hijaEstado.mjs`, cerrar sus encargos con `--cerrar` cuando el commit esté en `git log`.
+- **Los 15 pasos del orden de trabajo están hechos.** Sigue: HOY-17 (en curso) → HOY-18 (GitHub), HOY-19 (funciones
+  nuevas en las skills, Outlook), HOY-20 (CATIA por código: está instalada y expone `CATIA.Application` por COM; se
+  prueba cuando Fak no la use) → el resto de HACER YA (H17, H22, H28…) → las grandes (P6 con el gate AMFE = plan de
+  control, P9+P10, P33, P56; P55 etapa 1b necesita el server).
+- **La API de GitHub devuelve 403** por consultas sin login (límite por hora): el CI se mira una vez por hora, no por commit.
+- **Fak está en el chat a ratos**: contesta corto, decide, y lo que dice va a la LISTA y a la cola con sus palabras.
+- Latido: relanzarlo apenas arranque esta sesión (`node scripts/_latido.mjs` en segundo plano, descripción «LATIDO»).
+
 ## Lo que no se repite (además de la lista de la v5)
 
 - Buscar una herramienta por un nombre adivinado y concluir «0 llamadas» (el nombre real era `mcp__ccd_session__…`).
