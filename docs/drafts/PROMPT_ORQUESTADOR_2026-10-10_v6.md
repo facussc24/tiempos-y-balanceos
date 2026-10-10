@@ -62,7 +62,7 @@ Memoria `feedback_la_caja_soy_yo_pensar_fuera_de_lo_que_dijo_fak`, LECCIONES 08-
    - P6 (planes de control): `docs/PLAN_P6_PLANES_DE_CONTROL_2026-10-10.md` (`392c1834`); el servidor no se ve desde esta
      red (`server` no resuelve, IP 192.168.1.40 de otra red): la parte del servidor queda para cuando la PC esté en Barack.
    - P9+P10 (cierre incremental + un node por mensaje/cierre): `docs/PLAN_P9_P10_HOOKS_INCREMENTAL_2026-10-10.md`.
-7. **Cola**: HOY-7 cerrado, HOY-8 hecho en parte, HOY-14 nuevo (falso positivo del `firma-ia-guard` al escribir un id de
+7. **Cola**: HOY-7 cerrado, HOY-8 hecho en parte, HOY-16 nuevo (falso positivo del `firma-ia-guard` al escribir un id de
    modelo en el JSON interno de la app), P84 nuevo. El resto del orden de trabajo sigue: 11 H20+H21 · 12 H23+H24 ·
    13 H25-H27 · 14 H30+H31 · 15 H5+H6 · después H17, H19, H22, H28… · grandes con sí: P6, P9+P10, P33, P55, P56.
 8. **Cupo a las 12:10**: 5 h al 21 % (reinicia 14:40), semanal 22 %, Fable 33 %. Disco C 9,8 GB. LECCIONES 26,4 KB.
