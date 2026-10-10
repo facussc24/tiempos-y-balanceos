@@ -112,8 +112,12 @@ B.0. **El modo con el que va a arrancar, ANTES de lanzar.** Una corrida de tarea
 
 - La tarea creada por MCP no guarda modo ni modelo propios (`scheduled-tasks.json` no los tiene;
   `update_scheduled_task` no los acepta): una corrida **disparada por el reloj** (cron/fireAt) no hereda de nadie y
-  toma el settings; por eso el `defaultMode: plan` del repo se sacó el 10/10 (HOY-8). Para una tarea por reloj que
-  tenga que arrancar en bypass, la crea Fak desde la pantalla Programadas con el selector de modo.
+  toma el settings; por eso el `defaultMode: plan` del repo se sacó el 10/10 (HOY-8). **Medido el 10/10 20:35**
+  (`prueba-modo-reloj-20261010` re-armada con `fireAt`, sesión `local_3320e192`): con el `defaultMode:
+  bypassPermissions` del settings general, la corrida por reloj arrancó en `bypassPermissions` sin cartel (y en el
+  modelo del selector, Fable). A las 11:44, sin esa línea, la misma tarea había arrancado en `default`. Vale para
+  `seguimiento-reunion-amfe` (lunes y viernes 08:30). En una PC sin esa línea, la crea Fak desde Programadas con el
+  selector de modo.
 - `open_session_in` no acepta una sesión lanzada por B (solo las de `start_session`): Fak la abre desde Programadas.
 - Fuentes: doc oficial `desktop-scheduled-tasks` («Each task has its own permission mode… the run stalls until you
   approve»), `permission-modes` («bypassPermissions en el settings del proyecto no toma efecto»), descripciones de

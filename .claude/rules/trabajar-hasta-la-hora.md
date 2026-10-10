@@ -33,7 +33,10 @@ noche», «hasta que vuelva», «ponete un cronómetro»), ANTES de seguir con l
    (`~/.claude/.latido/<sesión>.<proceso>.json`, refrescada cada 30 s), espera 9 minutos y termina: **su aviso de
    «terminó» despierta a la sesión**. Lo que la sesión ve en el aviso es el **código de salida**, no lo impreso: con
    `exit code 0`, mirar la hora, **correr `node scripts/_colgados.mjs`**, leer la lista, seguir y **relanzarlo**; con
-   `exit code 4` ya no hay hora vigente y **no se relanza** (sin hora vigente tampoco arranca). El control de cierre mira que ESE proceso esté vivo. Por qué así y no `CronCreate` ni una tarea
+   `exit code 4` ya no hay hora vigente y **no se relanza** (sin hora vigente tampoco arranca); con **`exit code 5`**
+   (desde el 10/10/2026, cola HOY-17) también se sigue y se relanza, y además se corre `node scripts/_orquestador.mjs --hora`:
+   hay un aviso de las reglas de la tanda (varios despertares seguidos sin avanzar con una pregunta abierta a Fak, o 2 horas
+   de trabajo sin un pedido a la API). El control de cierre mira que ESE proceso esté vivo. Por qué así y no `CronCreate` ni una tarea
    programada: lo medido, en la sección de abajo.
    **Lo que lanzo y lleva 10 minutos quieto se MIRA, no se espera** (04/10/2026: cuatro conversaciones del examen
    estuvieron 55 minutos esperando un cartel de permiso y yo esperaba «que terminen»; Fak: *"que no vuelva a pasar eso de
