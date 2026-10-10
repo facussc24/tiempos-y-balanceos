@@ -85,6 +85,11 @@ poder trabajar). La historia, las citas de Fak y los tres errores que los explic
 3. **Una tarea grande que pide Fable o varios Opus** (una investigacion, una auditoria de fondo): se
    hace, descontando lo que vale. Si el presupuesto no alcanza, se le dice a Fak el numero real
    (`puntos que hacen falta`) y para que; con su pedido textual se escribe el escape.
+4. **Antes de lanzar, un renglon en el chat: cuales, con que modelo y por que** (Fak, 09/10/2026, 08:06 y 08:23:
+   *"¿que agentes vas a usar para esta tarea? ¿podes decirme antes de hacerlo?"*). Es INFORMAR, no preguntar: no se
+   espera un si. Medido el 09/10: desde el 03/10 se lanzaron 143 Sonnet, 156 Opus, 9 Haiku y 6 Fable; 89 de los
+   Sonnet declaraban solo lectura (cuantos de esos eran busquedas puras, que un `buscador` hacia igual, se lee a mano:
+   es el numero que decide la P5 de la cola).
 
 **Nunca reintentar una llamada bloqueada por el guard.** Si el hook corta, el trabajo se hace a mano
 y se le avisa a Fak que se llego al techo.

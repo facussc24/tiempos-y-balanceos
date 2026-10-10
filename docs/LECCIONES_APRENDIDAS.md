@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **09-10/10 — Un control que suma trabajo a un chequeo con tope de tiempo se mide en el MODO en que corre ese chequeo** (el logo y las frases nuevas llevaron el detector de 55 a 90 s; el cierre lo corta a los 90 y lee «vacío» como limpio: quedó ciego hasta que el auditor lo midió). Y el auditor Opus encontró un error real en 3 de 4 cambios de la noche: no se saltea. Graduado al auditor (`metodo_correr_no_solo_leer`) y a `_sinFirmaIA.py` (lo caro solo con avisos pedidos).
+
 - **09/10 — El control de la PC de Fak queda prendido hasta cerrar la sesión y nadie lo suelta desde el chat: antes de pedirlo se le dice, y al terminar de usarlo se avisa en el momento** (*"no puedo cortarlo yo... encima no sabés que no puedo"*). Y un pedido largo a la API va por streaming y sin fallback (sin streaming se corta a los 10 min; el fallback devolvió otro modelo). Graduado a `feedback_control_de_la_pc_no_se_suelta_solo` y `llamarLargo()`.
 
 - **09/10 — Un despertador que nunca se vio llegar no existe: se cuenta en el registro ANTES de confiarle una noche** (CronCreate: 0 mensajes en 16 sesiones; dos noches quietas con el control diciendo «latido vivo»). Graduado a la cola (H2) y a `trabajar-hasta-la-hora.md`.
@@ -74,7 +76,7 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
-- **09/10 — La hoja de una reunión decía *"pedido del cliente de no poner reprocesos. Que quede escrito en el acta"*: la confesión que la lección del 02/10 prohíbe, otra vez** (Fak: *"esto sacalo"*). Gate pendiente: H11 de la cola.
+- **09/10 — La hoja de una reunión decía *"pedido del cliente de no poner reprocesos. Que quede escrito en el acta"*: la confesión que la lección del 02/10 prohíbe, otra vez** (Fak: *"esto sacalo"*). Graduado a `_sinFirmaIA.py` (avisos `reproceso-delata` y `antes-despues`, se ven al imprimir y al mandar).
 
 - **09/10 — Un «no puedo» a Fak es un problema mío a resolver, no una tarea suya** (el envío falló por la ventana abierta del borrador y le dije que apretara Enviar; *"nunca más podés decirme no puedo"*). Graduado a `_mailEnviar.py` paso 4b y `mail-envio.md`.
 - **09/10 — El historial de revisiones también confiesa: una corrección por observación interna, antes de que el documento salga, no abre revisión** (la Rev. B del 160/174 decía «OP 32 se integra a la 31; 71 y 72 a la 70»; Fak: *"no nos delates de que eliminamos reprocesos... mantenele la revisión A"*). Graduado a `documento_no_confiesa_como_se_hizo`.
