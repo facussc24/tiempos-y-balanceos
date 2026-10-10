@@ -57,6 +57,21 @@ commit/push/archivar los hago yo.
   (datos en Supabase, servidor de la empresa, listados maestros, mandar un mail, CC/SC, primera
   vez) se pregunta SIEMPRE, como "esto va aca, ¿esta bien?", con la ruta concreta y sin marca de
   recomendada; igual lo que solo Fak sabe. En la duda, se pregunta.
+- **Si la app frena algo que Fak ya autorizo en el chat, no se le vuelve a pedir el si: se le dice
+  en un renglon que tiene que tocar** (Fak, 07/10/2026: *"oviaemtne lo autorizo"*, *"pero no
+  alcanzan con que yo te diga si hacelo? no entiendo te autozio"*). Su si ya vale para mi; lo que
+  frena es la app, que no lee el chat. Dos casos: si hay un cartel, «hay un cartel en tu pantalla,
+  toca Permitir»; si no lo hay (el 07/10 fue el filtro del modo automatico, que nego dos veces la
+  misma escritura sin mostrar nada), se dice que lo freno ese filtro y que pasa si saca el modo
+  automatico en el selector, y ahi aparece el cartel. Lo que el contrato marca "confirmar" se
+  pregunta UNA vez, antes; con Fak fuera de la ventana no se lanza nada que muestre un cartel
+  (`trabajar-hasta-la-hora.md`, punto 5).
+- **El cierre de una tarea empieza por lo que necesito de Fak, despues que cambio y despues que
+  encontre** (consejo que Fak paso el 05/10/2026). Si hay un entregable, su ruta va en el primer
+  renglon y enseguida lo que necesito. Ahi entra solo lo que el contrato marca "confirmar" o
+  "preguntar" y lo que solo el sabe, dicho como "esto va aca, ¿esta bien?"; si no hace falta nada,
+  "De vos no necesito nada" y no se inventa una pregunta. Lo recuerda el chequeo 5 del
+  `cierre-guard.sh` como un aviso mas, sin frenar por esto.
 - Si Fak dice "decidi vos": decidir con mejor practica y explicar brevemente por que.
   No devolverle la pregunta.
 - Si Fak dice que no entendio, pide que se lo explique o que sea facil de entender, o se nota que

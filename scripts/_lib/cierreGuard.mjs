@@ -35,6 +35,8 @@
  *      → exit 2, 1x/20 min; exento si Fak pidio el detalle o la sesion esta en modo plan.
  *      Re-medido el 22/09/2026 contra 65 "no entendi / sintetiza" de Fak: el largo no separa los
  *      mensajes objetados de los que no, ni en cierres ni en todo turno (cierreCanon, _medicion_22_09).
+ *      Desde el 10/10/2026 (H5) ese mismo aviso suma un renglon si lo que necesito de Fak no esta al
+ *      inicio (`evaluarOrdenCierre`, canon `cierre_orden`): un aviso adentro de este freno, no un freno nuevo.
  * Con stop_hook_active=true (segundo Stop del mismo turno) siempre deja pasar: sin loops.
  *
  * Toda frase vive en cierreCanon.data.json con su fuente (incidente + fecha). Una frase nueva
@@ -276,6 +278,51 @@ export function evaluarLargo(texto, cfg = CANON.cierre_largo) {
   if (noVacias > cfg.max_lineas) motivos.push(`${noVacias} lineas (maximo ${cfg.max_lineas})`);
   if (tablas > cfg.max_tablas) motivos.push(`${tablas} tablas (maximo ${cfg.max_tablas})`);
   return { largo: motivos.length > 0, chars: t.length, lineas: noVacias, tablas, motivos };
+}
+
+// ---------------------------------------------------------------------------------------
+// Aviso DENTRO del chequeo 5 (cola H5, 10/10/2026): el cierre empieza por lo que necesito de Fak
+// ---------------------------------------------------------------------------------------
+// El 05/10 Fak paso el consejo de cerrar cada corrida en tres partes: lo que esta frenado esperandolo a el, lo que
+// cambio y lo que se encontro. Medido el 10/10: de 188 cierres desde el 01/10, 20 traian algo que necesitaba de el
+// y casi siempre estaba despues del primer parrafo (con las frases que quedaron en el canon `cierre_orden`: 14 cierres, los 14 enterrados). NO es un freno (Fak, 09/10: "me preocupa que
+// tenga muchos bloqueantes"): esta funcion solo MIDE, y `decidir` suma su renglon al aviso que el chequeo 5 ya da.
+// Limite conocido y aceptado: un cierre corto no pasa por el chequeo 5 y no recibe el aviso (un hook Stop que deja
+// pasar no le muestra nada al modelo). Medido por el auditor el 10/10: de esos 14 cierres, solo 1 era un informe; el
+// aviso habria llegado en 1 de 14. Lo que maneja la conducta es el renglon de CLAUDE.md; esto es un recordatorio mas.
+// Otros limites (auditor): mide por PARRAFO (un pedido al final de una lista sin lineas en blanco cuenta como del
+// parrafo donde empieza la lista) y no conoce frases sin caso real, como "necesito tu OK para…".
+
+const ORD = CANON.cierre_orden;
+const ORD_NECESITO = ORD.necesito_re.map((p) => ({ ...p, regex: rx(p.re) }));
+const ORD_NADA = rx(ORD.nada_re);
+const ORD_TITULO = /^(#{1,6}\s+[^\n]+|\*\*[^*\n]+\*\*:?)$/;              // un parrafo que es solo un titulo
+const ORD_RUTA_REL = /[\w.-]+\/[\w./-]*[\w-]+\.[a-z0-9]{2,5}\b/i;        // exports/X/hoja.pdf, docs/x.md
+
+/**
+ * ¿Donde dice el mensaje lo que necesita de Fak? Devuelve:
+ *   necesita  — alguna frase de `necesito_re` aparece (false si antes el mensaje dice que no necesita nada: `nada_re`)
+ *   alInicio  — esta en el primer parrafo, o en el segundo cuando el primero trae la RUTA del entregable
+ *   parrafo / parrafos / frase — donde aparecio (1 = el primero) y con que palabras
+ *   aviso     — necesita y NO esta al inicio: lo unico que `decidir` usa
+ */
+export function evaluarOrdenCierre(texto) {
+  const parrafos = String(texto ?? '').trim().split(/\r?\n\s*\r?\n/).map((p) => p.trim()).filter(Boolean);
+  // "De vos no necesito nada" vale este donde este: es la salida honesta de todo el mensaje (auditor 10/10).
+  if (ORD_NADA.test(normalizar(texto))) return { necesita: false, alInicio: false, aviso: false, motivo: 'dice que no necesita nada de Fak' };
+  // Parrafos de gracia adelante: un titulo solo ("## Cierre", "**Resumen**") y el que trae la ruta del entregable,
+  // absoluta o relativa (`exports/X/hoja.pdf`). Antes de eso no hay "inicio" que medir (auditor 10/10, H5).
+  let tope = 0;
+  if (parrafos[tope] && ORD_TITULO.test(parrafos[tope])) tope++;
+  if (parrafos[tope] && (tieneRuta(parrafos[tope]) || ORD_RUTA_REL.test(parrafos[tope]))) tope++;
+  for (let i = 0; i < parrafos.length; i++) {
+    const n = normalizar(parrafos[i]);
+    const hallada = ORD_NECESITO.map((p) => n.match(p.regex)).find(Boolean);
+    if (!hallada) continue;
+    const alInicio = i <= tope;
+    return { necesita: true, alInicio, aviso: !alInicio, parrafo: i + 1, parrafos: parrafos.length, frase: hallada[0] };
+  }
+  return { necesita: false, alInicio: false, aviso: false };
 }
 
 // ---------------------------------------------------------------------------------------
@@ -1614,6 +1661,13 @@ export async function decidir(payload = {}, deps = {}) {
   const largo = evaluarLargo(texto);
   if (largo.largo && payload.permission_mode !== 'plan' && !pideDetalle(fuera?.ultimoMensajeFak) && !d.enCooldown(sid, 'largo')) {
     d.marcar(sid, 'largo');
+    // Aviso de orden (H5): viaja en este freno, que ya existia; no agrega ninguno. Ver `evaluarOrdenCierre`.
+    const orden = evaluarOrdenCierre(texto);
+    const avisoOrden = orden.aviso
+      ? `\nADEMAS, el orden: lo que necesitas de Fak («${orden.frase}») esta en el parrafo ${orden.parrafo} de ${orden.parrafos}. `
+        + 'Va PRIMERO (con la ruta del entregable adelante si hay una), despues que cambio y despues que encontraste '
+        + '(CLAUDE.md, "Como interactuar con Fak").'
+      : '';
     return {
       ok: false,
       titulo: 'CIERRE-GUARD: el cierre es un informe',
@@ -1621,7 +1675,8 @@ export async function decidir(payload = {}, deps = {}) {
         + 'El cierre pasa el test de un mail: que recomiendo, el comando o la ruta, y lo que le cambia una decision; el detalle ya vive '
         + 'en el archivo o la memoria (memoria no_hacer_informes). Reescribilo corto. Si Fak pidio el detalle con esas palabras, este aviso '
         + 'no aplica (se lee su ultimo mensaje). Lo que Fak objeta no es el largo sino lo que no se entiende de una lectura '
-        + '(medicion 22/09, cierreCanon cierre_largo): palabras de planta, sin siglas ni rotulos inventados. No se repite por 20 minutos.',
+        + '(medicion 22/09, cierreCanon cierre_largo): palabras de planta, sin siglas ni rotulos inventados. No se repite por 20 minutos.'
+        + avisoOrden,
     };
   }
   return { ok: true };
