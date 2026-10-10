@@ -15,6 +15,27 @@ síntesis corta a Fak, su sí, hija en sesión aparte, tests, revisor independie
   en el navegador, o Claude con los scripts del repo), y **si él edita AMFE dentro de la app o solo mira y exporta**.
   Son las dos preguntas abiertas del plan del 30/09 (`docs/auto-mejora/2026-09-30-automejora-10-frentes.md` §4).
 
+### Las respuestas de Fak (10/10/2026 18:58, por el chat)
+
+- **La app no cuenta**: *"no edito los AMFE dentro de la app, al pedo hice la app, ni siquiera la miro, solo te
+  pido todo a vos; me da igual esa app"*. → La etapa 3 (la app con adaptador de archivos) **se cae**: no hay que
+  migrar la app; cuando los scripts no dependan de Supabase, la app de los AMFE queda como está o se apaga.
+- **"Que todos puedan hacer los AMFE" = que estén siempre los EDITABLES en el server, en la carpeta de
+  Ingeniería, "solo eso"**. El editable de un AMFE en esta casa es el Excel del formulario (`I-AC-005`), no un JSON.
+  → Entra una **etapa 1b**: el Excel editable de cada AMFE vive en la carpeta de Ingeniería del server (donde ya
+  viven los maestros: memoria `gestion_ingenieria_es_el_maestro`) y se regenera cada vez que el AMFE cambia por
+  script (`_exportAmfeOficial`, con el marcador de auditoría o `--sin-auditoria` para la copia editable interna);
+  y la vuelta (alguien edita el Excel → el importador `reference_amfe_xlsx_importer` lo trae a los datos) se hace
+  por fecha y hash, sin pisar. La copia JSON en la nube (etapa 1, en curso) sigue: es lo que leen los scripts en
+  cualquier PC.
+- **Etapa 1**: *"no sé, qué sé yo"* → la decido yo: va (ya está en curso en la hija 3, solo la mitad Supabase →
+  archivos).
+- **Aviso suyo para las skills**: *"la skill de AMFE y la del plan de control van muy relacionadas porque deben
+  estar alineadas; muchas veces los detectivos [controles de detección] del AMFE no coinciden con los del plan de
+  control, o los AMFE de hoy tienen controles medio inventados o genéricos; ahora estamos más cancheros con los
+  planes de control... luego tenemos que arreglar esas skills"*. → Va como gate del plan P6 (controles del AMFE =
+  controles del plan de control, en las dos direcciones) y como fila de la cola.
+
 ## 1. Qué hay hoy (medido el 10/10/2026, no de memoria)
 
 | Pieza | Estado |
@@ -88,7 +109,40 @@ Recomendación: **A ahora (es la etapa 1), B como etapa 3 si Fak edita en la app
 - La copia de la nube ya está vieja: la etapa 1 arranca con una exportación fresca y `--verificar` (898 → lo que haya hoy).
 - Claves: ninguna va a la nube (el export ya se revisó sin claves); `_gateRepoPublico` sigue para el repo.
 
-## 7. Fuentes
+## 7. Revisión independiente por la API (Opus, 10/10 19:00, US$0,30; `.sgc-cache/sesion-2026-10-10/API_P55_revision_opus.md`)
+
+Lo que cambia el diseño de la etapa 1 (se le pasó a la hija 3 el mismo día):
+
+1. **La base del sync no puede ser `_manifest.json`** (un solo archivo que OneDrive sincroniza aparte de los
+   documentos: la PC B puede recibir el manifest nuevo con el documento viejo y «ver un cambio» que no existe; y dos PC
+   lo reescriben a la vez). La base vive **en cada PC, sin sincronizar** (TEMP o `.claude/state`), o adentro de cada
+   documento (`_base_sha`).
+2. **Hace falta un registro de borrados** (lápidas): sin eso, «nunca borra» resucita en Supabase un documento que se
+   borró en la app.
+3. **`updated_at` no decide qué es más nuevo**: `saveHo` y `savePfd` no lo tocan, la tabla no tiene trigger y es la
+   hora de cada PC. Cambios por **hash de contenido de los dos lados**; `saveHo`/`savePfd` pasan a actualizarlo.
+4. **El exportador de hoy pisa lo editado en la nube** (`escribirArchivos` escribe siempre que difiere): no escribir si
+   el archivo cambió respecto de la base; dejar conflicto.
+5. **Leer-modificar-guardar sin versión**: `saveAmfe` recibe el sha esperado y aborta si el actual es otro.
+6. **Copias de conflicto de OneDrive (`<id>-PCNOMBRE.json`) y archivos deshidratados**: la corrida aborta, no los lee
+   como «no existe». Lo del «.tmp al lado» no es como escribe OneDrive (lo de las escrituras propias sí: temporal +
+   rename).
+7. **Si Supabase se pausa, la escritura doble no puede dejar de escribir el archivo**: hoy `saveAmfe` falla en el
+   UPDATE antes de escribir; el archivo se escribe igual y la diferencia se reporta. Y `.env.local` **nunca** va a la
+   biblioteca (es la clave con permiso de escritura).
+8. **Al subir de la nube a Supabase va solo `data`, por `saveAmfe`** (los contadores derivados se recalculan), nunca la
+   fila entera del archivo.
+9. **`drafts` y `document_locks` no se sincronizan en las dos direcciones; los catálogos en archivo único
+   (`products.json`) chocan por el archivo entero**: una fila por archivo o solo bajada.
+10. **Las tres pruebas obligatorias de la etapa 1**: idempotencia (guardar y sincronizar enseguida = 0 escrituras);
+    no pisar lo ajeno (archivo cambiado en la carpeta + fila cambiada en el Supabase falso → no escribe, conflicto
+    registrado; ilegible / deshidratado / copia `-PC` → aborta; Supabase con error o 0 filas → no toca la carpeta);
+    falla parcial (Supabase bien y el archivo falla, y al revés → reportado y reparado en la corrida siguiente, sin
+    archivos truncados ni manifest que describa lo que no está).
+11. Sobre la etapa 3 (ya caída por la respuesta de Fak): el intérprete SQL propio era la peor base; la alternativa
+    era SQLite real en el navegador (sql.js / wa-sqlite) o la app en solo lectura.
+
+## 8. Fuentes
 
 `utils/database.ts` (DbAdapter, InMemoryAdapter línea 1028, SupabaseAdapter 1733, getDatabase 2003) ·
 `utils/db/sqlTranslate.ts` · `utils/repositories/index.ts` · `scripts/_lib/amfeIo.mjs` (saveAmfe 213) ·

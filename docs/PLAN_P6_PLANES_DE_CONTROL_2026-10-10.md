@@ -64,6 +64,11 @@ sin color. **Son los chequeos de la skill.**
   operación, y `D` para flamabilidad; (4) ninguna especificación numérica sin papel (hoja de proceso, ficha, plano);
   lo que no tenga papel va `TBD` y a la lista para Calidad; (5) `Característica S/R` una sola marca; (6) frecuencias
   según `P-10`, nunca inventadas; (7) el control final mira la característica visible/funcional, no la oculta.
+- **Gate 8 (Fak, 10/10 18:58)**: *"los controles de detección del AMFE no coinciden con los del plan de control, o
+  los AMFE tienen controles medio inventados o genéricos"* → el control de detección de cada causa del AMFE tiene que
+  ser el método del plan de control de esa operación (mismo instrumento, misma frecuencia), y al revés: una fila del
+  plan sin causa en el AMFE o una causa con un control que el plan no tiene se listan como diferencia. La app ya
+  tiene el vínculo (`cp.items[].amfeCauseIds`): se usa. Y la skill de AMFE recibe el mismo gate (fila nueva en la cola).
 - **Lo que no hace**: no asigna siglas (las calcula y las muestra con S y O; asigna Fak), no inventa parámetros, no
   manda nada a Calidad (eso lo decide Fak, por mail con `_mailEnviar.py`).
 
