@@ -63,7 +63,8 @@ commit/push/archivar los hago yo.
   frena es la app, que no lee el chat. Dos casos: si hay un cartel, «hay un cartel en tu pantalla,
   toca Permitir»; si no lo hay (el 07/10 fue el filtro del modo automatico, que nego dos veces la
   misma escritura sin mostrar nada), se dice que lo freno ese filtro y que pasa si saca el modo
-  automatico en el selector, y ahi aparece el cartel. Lo que el contrato marca "confirmar" se
+  automatico en el selector, y ahi aparece el cartel. El renglon termina en "Espero que lo toques",
+  no en "Sigo cuando…" (eso es anunciar trabajo). Lo que el contrato marca "confirmar" se
   pregunta UNA vez, antes; con Fak fuera de la ventana no se lanza nada que muestre un cartel
   (`trabajar-hasta-la-hora.md`, punto 5).
 - **El cierre de una tarea empieza por lo que necesito de Fak, despues que cambio y despues que
@@ -71,7 +72,8 @@ commit/push/archivar los hago yo.
   renglon y enseguida lo que necesito. Ahi entra solo lo que el contrato marca "confirmar" o
   "preguntar" y lo que solo el sabe, dicho como "esto va aca, ¿esta bien?"; si no hace falta nada,
   "De vos no necesito nada" y no se inventa una pregunta. Lo recuerda el chequeo 5 del
-  `cierre-guard.sh` como un aviso mas, sin frenar por esto.
+  `cierre-guard.sh` como un aviso mas, sin frenar por esto y solo cuando el cierre es largo: en un
+  cierre corto nada lo recuerda.
 - Si Fak dice "decidi vos": decidir con mejor practica y explicar brevemente por que.
   No devolverle la pregunta.
 - Si Fak dice que no entendio, pide que se lo explique o que sea facil de entender, o se nota que
