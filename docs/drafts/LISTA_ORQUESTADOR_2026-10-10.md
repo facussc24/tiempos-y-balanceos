@@ -24,6 +24,9 @@ Próximas (de a una o dos, sin pisar archivos): paso 12 H23+H24 (skills) · 13 H
 
 - 11:44 · prueba por reloj (`prueba-modo-reloj-20261010`, sesión `local_3225f44a`): sin `defaultMode` en el settings, la corrida disparada por el reloj arranca en **default** (y tomó el modelo Fable del selector). Confirma: el modo sale de la tarea o del settings; sin ninguno, `default`.
 - 11:45 · la hija de la madrugada subió H14 (`b2f56ae1`, CI verde); P26 (`_imprimir.py` + test) sigue sin commitear.
+- 11:48 · auditor Opus del cambio: 3 errores reales (el modo no se hereda; el control juzgaba con el modo del primer mensaje y mandaba frenar un vitest largo de la madrugada; «0 llamadas» a start_session era falso: busqué `ccd_session_mgmt__start_session` y el nombre real es `ccd_session__start_session`, hubo 6 el 08/10) y 8 de robustez. Aplicados; tests 25/25.
+- 11:52 · fijado el momento: `start_session` estaba en las herramientas de todas las sesiones hasta la del 09/10 17:21 y falta desde la primera posterior a la actualización de la app 2.31226.1 (instalada 17:04-17:05; primera sin ella 17:26). El bundle viejo (2.31226.0) también la tenía: es el interruptor remoto, no el código.
+- 11:56 · commit `2d8f8d53` (12 archivos, solo mi alcance + la cola) y push. Cola: HOY-7 cerrado, HOY-8 hecho en parte, P84 (la decisión de Fak), HOY-14 (falso positivo del guardián de firma).
 - Tareas que quedan para limpiar en Programadas cuando Fak esté (borrar una tarea archiva sus sesiones y eso pide cartel): `prueba-modo-reloj-20261010`, `hija-novedades-h20-h21-20261010` (su corrida abortada), `sesion-sistema-claude-fase2-20261009`.
 
 ## Trabajo que puedo hacer solo (cuando se acabe lo pedido)
@@ -49,6 +52,9 @@ Próximas (de a una o dos, sin pisar archivos): paso 12 H23+H24 (skills) · 13 H
 - El aviso `notifyOnCompletion` de una tarea nunca se vio llegar: no lo uso; vigilo con `get_usage` + `list_events` + `_hijaEstado.mjs`.
 
 ## Lo que necesita a Fak (para cuando vuelva)
+
+- **P84** (el modo de arranque de las hijas): (a) `permissions.defaultMode: bypassPermissions` en su `~/.claude/settings.json` o (b) tareas fijas en Programadas. Preguntado 11:35.
+- **P55** (plan `docs/PLAN_P55_AMFE_EN_LA_NUBE_2026-10-10.md`): ¿edita AMFE adentro de la app o solo mira y exporta? · ¿quiénes son "todos" y con qué herramienta? · OK a la etapa 1 (escribe en `1- GENERAL\AMFE\DATOS\` de la biblioteca y en Supabase).
 
 - Lo que el contrato marca preguntar: Supabase, servidor, arb, mails, listados maestros, la primera vez.
 - Si quiere que una tarea por reloj arranque en bypass: la crea él desde Programadas con el selector de modo (la creada por MCP no guarda modo).
