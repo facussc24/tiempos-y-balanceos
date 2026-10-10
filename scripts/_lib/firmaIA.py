@@ -130,6 +130,117 @@ def revisar_texto(texto: str, archivo: str = '', lugar: str = 'texto', unido: st
     return out
 
 
+# ---------------------------------------------------------------- el logo de Barack (cola H9, 09/10/2026)
+#
+# Fak, 09/10/2026: "usaste un logo no oficial de barack, gravisimo". El oficial es UN archivo
+# (VARIOS\Logo y color barack\barack_logo.png; copia en tools/flowchart/assets/). Lo que se mide de una imagen
+# no es su hash (un programa que la vuelve a guardar lo cambia: 124 copias del oficial en exports/ dan distinto
+# hash y la misma imagen) sino una HUELLA: sobre blanco, recortada al dibujo, achicada a 24x12 en color. Distancia
+# = diferencia media por canal (0-255). Lo medido el 09/10 esta en el canon (`logo`), con los umbrales.
+
+_RAIZ_REPO = os.path.dirname(os.path.dirname(AQUI))
+_LOGOS: dict | None = None
+
+
+def huella_imagen(crudo: bytes, max_lado: int = 5000, proporcion: tuple | None = None):
+    """(huella_hex, (ancho, alto)) de una imagen, o None si no se puede leer, pasa `max_lado` o no tiene la `proporcion`
+    (ancho/alto) pedida: las dos cosas se miran en la cabecera, antes de decodificar (una foto 4:3 no se abre)."""
+    try:
+        from PIL import Image
+    except ImportError:
+        return None
+    try:
+        im = Image.open(io.BytesIO(crudo))
+        w, h = im.size                       # solo la cabecera: una foto grande se descarta sin decodificarla
+        if max(w, h) > max_lado or not h or (proporcion and not (proporcion[0] <= w / h <= proporcion[1])):
+            return None
+        im = im.convert('RGBA')
+        fondo = Image.new('RGBA', im.size, (255, 255, 255, 255))
+        im = Image.alpha_composite(fondo, im).convert('RGB')
+        caja = im.convert('L').point(lambda v: 255 if v < 245 else 0).getbbox()
+        if caja:
+            im = im.crop(caja)
+        px = im.resize((24, 12), Image.LANCZOS).getdata()
+        return ''.join(f'{c:02x}' for p in px for c in p), (w, h)
+    except Exception:
+        return None
+
+
+def distancia_huellas(a: str, b: str) -> float:
+    va, vb = bytes.fromhex(a), bytes.fromhex(b)
+    return sum(abs(x - y) for x, y in zip(va, vb)) / max(1, len(va))
+
+
+def _logos() -> dict:
+    """Las referencias del canon, con la huella del oficial calculada de la copia del repo (y su hash verificado)."""
+    global _LOGOS
+    if _LOGOS is None:
+        with open(CANON_PATH, encoding='utf-8') as f:
+            L = json.load(f).get('logo') or {}
+        ofi = L.get('oficial') or {}
+        huella_ofi = None
+        try:
+            crudo = open(os.path.join(_RAIZ_REPO, ofi.get('copia_repo', '')), 'rb').read()
+            import hashlib
+            if hashlib.sha256(crudo).hexdigest() == ofi.get('sha256'):
+                h = huella_imagen(crudo)
+                huella_ofi = h[0] if h else None
+        except OSError:
+            pass
+        _LOGOS = {'oficial': ofi, 'huella_oficial': huella_ofi, 'no_oficiales': L.get('no_oficiales') or [],
+                  'umbral': L.get('umbral') or {}, 'proporcion': L.get('proporcion') or [1.5, 6.5]}
+    return _LOGOS
+
+
+def revisar_imagen(crudo: bytes, archivo: str, lugar: str, logo_bloquea: bool = False) -> list[Hallazgo]:
+    """¿La imagen es el logo de Barack NO oficial, o se parece al oficial sin serlo? Por defecto es AVISO: se imprime y
+    se manda igual, con el aviso (exigir_sin_firma lo muestra como OJO). Con `logo_bloquea` el no oficial FRENA.
+    Por que no frena siempre (medido el 09/10/2026): el de letras finas esta ADENTRO del formulario de hoja de proceso de
+    la casa (HO 21-9463 a 9475, termoformado, las de embalaje en PowerPoint); frenar ahi bloquearia corregir una HO de
+    Calidad en su propio formulario. `--logo-bloquea` queda listo para prenderlo en el cierre del turno cuando Fak diga si
+    el formulario tambien pasa al oficial. Solo mira imagenes con forma de logo (mas anchas que altas)."""
+    L = _logos()
+    if not crudo or len(crudo) > 8 * 1024 * 1024:
+        return []
+    import hashlib
+    sha = hashlib.sha256(crudo).hexdigest()
+    for n in L['no_oficiales']:
+        if sha == n.get('sha256'):
+            return [Hallazgo(archivo, lugar, 'logo-no-oficial', f'logo de Barack NO oficial ({n.get("como", "otro dibujo")}): va el oficial, {L["oficial"].get("ruta", "")}', 'mismo archivo', 'BLOQUEANTE' if logo_bloquea else 'AVISO')]
+    if not L['huella_oficial']:
+        _avisar_logo_apagado()
+        return []
+    h = huella_imagen(crudo, proporcion=tuple(L['proporcion']))
+    if not h:
+        return []
+    huella, (w, hgt) = h
+    ruta_ofi = L['oficial'].get('ruta', 'VARIOS\\Logo y color barack\\barack_logo.png')
+    for n in L['no_oficiales']:
+        d = distancia_huellas(huella, n.get('huella', '')) if n.get('huella') else 999
+        if d <= float(L['umbral'].get('no_oficial', 5)):
+            return [Hallazgo(archivo, lugar, 'logo-no-oficial',
+                             f'logo de Barack NO oficial ({n.get("como", "otro dibujo")}): va el oficial, {ruta_ofi}',
+                             f'imagen {w}x{hgt}, distancia {d:.1f}', 'BLOQUEANTE' if logo_bloquea else 'AVISO')]
+    if L['huella_oficial']:
+        d = distancia_huellas(huella, L['huella_oficial'])
+        if float(L['umbral'].get('oficial', 10)) < d <= float(L['umbral'].get('parecido', 35)):
+            return [Hallazgo(archivo, lugar, 'logo-parecido',
+                             f'parece el logo de Barack pero no es el archivo oficial (recortado, re-guardado u otro color): va {ruta_ofi}',
+                             f'imagen {w}x{hgt}, distancia {d:.1f}', 'AVISO')]
+    return []
+
+
+_EXT_IMAGEN_ZIP = ('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tif', '.tiff', '.webp')
+_AVISADO = {'logo': False}
+
+
+def _avisar_logo_apagado():
+    """El chequeo del logo no puede correr (sin PIL, o la copia del oficial no esta o cambio): se dice UNA vez, no se calla."""
+    if not _AVISADO['logo']:
+        _AVISADO['logo'] = True
+        print('  OJO: el chequeo del logo de Barack no corre en esta PC (falta Pillow o la copia oficial del repo no coincide): solo se compara por hash', file=sys.stderr)
+
+
 # ---------------------------------------------------------------- OOXML (Excel, Word, PowerPoint)
 
 def _xml_a_texto(xml: str) -> tuple[str, str]:
@@ -228,7 +339,7 @@ def _metadata_core(xml: str, archivo: str) -> list[Hallazgo]:
     return out
 
 
-def _revisar_ooxml(ruta: str, nombre: str) -> list[Hallazgo]:
+def _revisar_ooxml(ruta: str, nombre: str, logo_bloquea: bool = False, con_avisos: bool = True) -> list[Hallazgo]:
     out: list[Hallazgo] = []
     with zipfile.ZipFile(ruta) as z:
         pestanas = _mapa_pestanas(z)
@@ -236,6 +347,10 @@ def _revisar_ooxml(ruta: str, nombre: str) -> list[Hallazgo]:
         for parte in z.namelist():
             pl = parte.lower()
             if not (pl.endswith('.xml') or pl.endswith('.rels') or pl.endswith('.txt') or pl.endswith('.vml')):
+                if '/media/' in pl and pl.endswith(_EXT_IMAGEN_ZIP):
+                    if con_avisos or logo_bloquea:
+                        out += revisar_imagen(z.read(parte), nombre, f'imagen ({parte})', logo_bloquea)
+                    continue
                 if pl.endswith('.bin') and 'vbaproject' in pl:
                     crudo = z.read(parte)
                     out += _revisar_bytes(crudo, nombre, f'macros ({parte})')
@@ -253,7 +368,8 @@ def _revisar_ooxml(ruta: str, nombre: str) -> list[Hallazgo]:
                 if k not in vistos:
                     vistos.add(k)
                     out.append(h)
-            if hs and (pl == 'xl/sharedstrings.xml' or pl.startswith('xl/worksheets/') or 'comment' in pl):
+            # solo un BLOQUEANTE justifica cargar el libro entero con openpyxl (unos 4,5 s por HO de 17 MB): un aviso no
+            if any(h.nivel == 'BLOQUEANTE' for h in hs) and (pl == 'xl/sharedstrings.xml' or pl.startswith('xl/worksheets/') or 'comment' in pl):
                 partes_con_texto = True
             if pl == 'docprops/core.xml':
                 out += _metadata_core(xml, nombre)
@@ -271,7 +387,7 @@ def _revisar_ooxml(ruta: str, nombre: str) -> list[Hallazgo]:
 
 # ---------------------------------------------------------------- PDF
 
-def _revisar_pdf(ruta: str, nombre: str) -> list[Hallazgo]:
+def _revisar_pdf(ruta: str, nombre: str, logo_bloquea: bool = False, con_avisos: bool = True) -> list[Hallazgo]:
     out: list[Hallazgo] = []
     try:
         import fitz  # PyMuPDF
@@ -299,9 +415,30 @@ def _revisar_pdf(ruta: str, nombre: str) -> list[Hallazgo]:
                 out += revisar_texto(titulo, nombre, f'marcador (pagina {pag})', con_avisos=False)
         except Exception:
             pass
+        vistas = set()
+        vistas_bytes = set()                 # el mismo logo guardado como objeto aparte en cada pagina se mira una vez
+        mirar_logo = con_avisos or logo_bloquea
+        lo, hi = _logos()['proporcion']
         for i, pag in enumerate(doc, start=1):
             t = pag.get_text() or ''
             out += revisar_texto(t, nombre, f'pagina {i}')
+            # las imagenes con forma de logo (la proporcion se mira antes de extraerlas): cola H9
+            for img in (pag.get_images(full=True) if mirar_logo else []):
+                xref, ancho, alto = img[0], img[2], img[3]
+                if xref in vistas or not alto or not (lo <= ancho / alto <= hi):
+                    continue
+                vistas.add(xref)
+                try:
+                    crudo = (doc.extract_image(xref) or {}).get('image')
+                except Exception:
+                    crudo = None
+                if crudo:
+                    import hashlib
+                    hb = hashlib.sha1(crudo).hexdigest()
+                    if hb in vistas_bytes:
+                        continue
+                    vistas_bytes.add(hb)
+                    out += revisar_imagen(crudo, nombre, f'imagen en pagina {i}', logo_bloquea)
             for a in pag.annots() or []:
                 info = a.info or {}
                 for k in ('content', 'title', 'subject'):
@@ -330,7 +467,7 @@ def _revisar_bytes(crudo: bytes, nombre: str, lugar: str) -> list[Hallazgo]:
     return out
 
 
-def _revisar_msg(ruta: str, nombre: str) -> list[Hallazgo]:
+def _revisar_msg(ruta: str, nombre: str, logo_bloquea: bool = False, con_avisos: bool = True) -> list[Hallazgo]:
     out: list[Hallazgo] = []
     try:
         import extract_msg
@@ -349,7 +486,7 @@ def _revisar_msg(ruta: str, nombre: str) -> list[Hallazgo]:
                     p = os.path.join(td, os.path.basename(an))
                     with open(p, 'wb') as f:
                         f.write(datos)
-                    for h in revisar_archivo(p, raiz=td):
+                    for h in revisar_archivo(p, raiz=td, logo_bloquea=logo_bloquea, con_avisos=con_avisos):
                         h.archivo = f'{nombre} → adjunto {an}'
                         out.append(h)
     finally:
@@ -381,7 +518,7 @@ def en_la_nube(ruta: str) -> bool:
         return False
 
 
-def revisar_archivo(ruta: str, raiz: str | None = None, max_mb: float = 60) -> list[Hallazgo]:
+def revisar_archivo(ruta: str, raiz: str | None = None, max_mb: float = 60, logo_bloquea: bool = False, con_avisos: bool = True) -> list[Hallazgo]:
     """Hallazgos de UN archivo (contenido + nombre debajo de `raiz`)."""
     nombre = ruta
     ext = os.path.splitext(ruta)[1].lower()
@@ -398,17 +535,20 @@ def revisar_archivo(ruta: str, raiz: str | None = None, max_mb: float = 60) -> l
     try:
         if ext in OOXML:
             try:
-                out += _revisar_ooxml(ruta, nombre)
+                out += _revisar_ooxml(ruta, nombre, logo_bloquea, con_avisos)
             except zipfile.BadZipFile:
                 out += _revisar_bytes(open(ruta, 'rb').read(), nombre, 'contenido (no es un zip valido)')
         elif ext == '.pdf':
-            out += _revisar_pdf(ruta, nombre)
+            out += _revisar_pdf(ruta, nombre, logo_bloquea, con_avisos)
         elif ext == '.msg':
-            out += _revisar_msg(ruta, nombre)
+            out += _revisar_msg(ruta, nombre, logo_bloquea, con_avisos)
         elif ext in TEXTO:
             out += _revisar_texto_plano(ruta, nombre)
         elif ext in BINARIO_LEGADO or ext in IMAGEN:
-            out += _revisar_bytes(open(ruta, 'rb').read(), nombre, 'contenido' if ext in BINARIO_LEGADO else 'datos de la imagen')
+            crudo = open(ruta, 'rb').read()
+            out += _revisar_bytes(crudo, nombre, 'contenido' if ext in BINARIO_LEGADO else 'datos de la imagen')
+            if ext in IMAGEN and (con_avisos or logo_bloquea):
+                out += revisar_imagen(crudo, nombre, 'la imagen', logo_bloquea)
     except PermissionError as e:
         out.append(Hallazgo(nombre, 'archivo', 'ilegible', f'abierto por otro programa ({e})', '', 'AVISO'))
     except Exception as e:  # un archivo raro no frena el barrido, pero se dice
@@ -447,7 +587,7 @@ def recorrer(rutas: list[str], desde_ts: float | None = None, incluir_nube: bool
 
 
 def revisar(rutas: list[str], desde_ts: float | None = None, incluir_nube: bool = False,
-            max_mb: float = 60, con_avisos: bool = True):
+            max_mb: float = 60, con_avisos: bool = True, logo_bloquea: bool = False):
     """(hallazgos, revisados, salteados_en_la_nube)."""
     hallazgos: list[Hallazgo] = []
     revisados = 0
@@ -456,7 +596,7 @@ def revisar(rutas: list[str], desde_ts: float | None = None, incluir_nube: bool 
         if not incluir_nube and en_la_nube(p):
             nube.append(p)
             continue
-        hs = revisar_archivo(p, raiz=raiz, max_mb=max_mb)
+        hs = revisar_archivo(p, raiz=raiz, max_mb=max_mb, logo_bloquea=logo_bloquea, con_avisos=con_avisos)
         revisados += 1
         hallazgos += [h for h in hs if con_avisos or h.nivel == 'BLOQUEANTE']
     return hallazgos, revisados, nube
@@ -465,7 +605,11 @@ def revisar(rutas: list[str], desde_ts: float | None = None, incluir_nube: bool 
 def exigir_sin_firma(rutas: list[str], quien: str = '') -> None:
     """Para los generadores y los que mandan o imprimen: si algun archivo nombra a Claude o a una
     IA, imprime donde y sale con 1. No pregunta ni tiene escape: el texto se saca del archivo."""
-    hs, _, _ = revisar(list(rutas), incluir_nube=True, con_avisos=False)
+    todos, _, _ = revisar(list(rutas), incluir_nube=True, con_avisos=True)
+    hs = [h for h in todos if h.nivel == 'BLOQUEANTE']
+    # el logo en un documento ajeno y las frases que delatan son AVISO: se imprime o se manda igual, pero se dice (H9, H11)
+    for h in (x for x in todos if x.nivel == 'AVISO' and (x.regla.startswith('logo-') or x.regla in ('reproceso-delata', 'antes-despues'))):
+        print(f'  OJO{(" (" + quien + ")") if quien else ""}: {h.archivo} — {h.lugar}: {h.que}', file=sys.stderr)
     if hs:
         print(f'\n✋ FIRMA DE IA EN EL DOCUMENTO{(" (" + quien + ")") if quien else ""} — no sale así '
               '(regla de Fak, 08/10/2026: ningún documento dice que lo hizo Claude o una IA):', file=sys.stderr)

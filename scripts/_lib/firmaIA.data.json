@@ -17,6 +17,8 @@
     { "id": "proximo-claude", "re": "para\\s+el\\s+pr[oó]ximo\\s+(claude|asistente|agente)|seg[uú]n\\s+el\\s+usuario", "que": "texto escrito para el asistente, no para la gente" }
   ],
   "aviso": [
+    {"id": "reproceso-delata", "re": "(no\\s+(poner|figur\\w*|mostrar|escribir|incluir|dejar|nombrar)|que\\s+no\\s+(aparezca|figure|se\\s+vea|quede)|sac(ar|amos|aron|[aá]|alo)\\s+(los|el|las)|elimin(ar|amos|aron|[oó])\\s+(los|el|las)|borr(ar|amos|aron)\\s+(los|el|las)|a\\s+pedido\\s+del?\\s+cliente|pidi[oó]\\s+(que\\s+)?no)\\s*[^.\\n]{0,25}reproces|reproces\\w*\\s*[^.\\n]{0,25}(a\\s+pedido\\s+del?\\s+cliente|que\\s+quede\\s+(escrito\\s+)?en\\s+el\\s+acta|no\\s+(figur|aparez|se\\s+pon))", "que": "cuenta que se sacaron reprocesos a pedido (Fak 09/10: «esto sacalo»; IATF 8.7.1.4): «Reproceso: eliminación de hilo» es un nombre de operación y no cuenta", "fuente": "cola H11; hoja de reunion del 09/10: «pedido del cliente de no poner reprocesos. Que quede escrito en el acta»"},
+    {"id": "antes-despues", "re": "antes\\s+(dec[ií]a|era|figuraba|ten[ií]a)|(valor|dato|consumo|n[uú]mero)\\s+(anterior|corregido|err[oó]neo|equivocado)|se\\s+corrigi[oó]\\s+(el|un|nuestro)\\s+error|fe\\s+de\\s+erratas|por\\s+(un|nuestro)\\s+error", "que": "muestra el antes y el despues de una correccion propia (Fak 25/09: «si ponemos el antes y el despues me escrachas»): va solo el valor que queda", "fuente": "cola H11; memoria documento_no_confiesa_como_se_hizo"},
     { "id": "ia-suelta", "re": "(?<![A-Za-z])IA(?![A-Za-z])", "que": "dice IA (revisar: puede ser un codigo)", "distingue_mayusculas": true }
   ],
   "metadata_programa": {
@@ -29,5 +31,33 @@
                  "\\CLAUDES_POR_AREA", "/CLAUDES_POR_AREA", "\\_CUARENTENA_CLAUDE POR AREA\\", "\\_CUARENTENA_Claude Barack\\",
                  "\\Base Claude Ingenieria\\", "\\0- INSTALAR CLAUDE (entrar aca)\\", "\\ACTUALIZACION_CLAUDE_LIMPIO\\"],
     "nota_contiene": "Las ultimas siete son el asistente de area (exports/CLAUDES_POR_AREA_*, y en la nube de Ingenieria su instalador, su base y sus cuarentenas) y una copia de la configuracion: hablan de Claude porque el producto ES Claude (barrido del 08/10/2026)."
+  },
+  "logo": {
+    "nivel": "AVISO en todos lados; --logo-bloquea lo hace frenar (no prendido en el cierre: el de letras finas esta en el formulario de HO de la casa, medido el 09/10/2026; espera la decision de Fak)",
+    "fuente": "Fak, 09/10/2026, sobre el PowerPoint de IMDS: \"usaste un logo no oficial de barack, gravisimo\" (memoria feedback_logo_oficial_barack_en_todo_documento; core-prohibiciones.md §9). Cola H9.",
+    "oficial": {
+      "ruta": "VARIOS\\Logo y color barack\\barack_logo.png (biblioteca de Ingenieria)",
+      "copia_repo": "tools/flowchart/assets/barack_logo.png",
+      "sha256": "6798d5bc388318b17386055d1c27b8c2dfa83ae168a78b185a89e81953449657"
+    },
+    "no_oficiales": [
+      {
+        "id": "letras-finas-con-raya",
+        "como": "letras finas con una raya en el medio, el LOGO BARACK.png suelto de la raiz de la nube",
+        "sha256": "fee45eb8189ddb795d8b582060b164bc7a706d57bda63525dd796a921f294cba",
+        "huella": "fffffffdfdfeffffffb4b5d69e9fcae9e9f3e9e9f3c9cae1f7f7fb999ac7b3b4d5fdfdfed8d9ead2d2e6fdfefebabad9c9c9e1aeafd3bbbcdacdcee4f4f4f9fffffffffffffffffffffffffdfdfeffffffc7c8e1b4b4d6dfe0eee2e2efa2a3ccfafafcbebfdcb9bad9f3f3f8cdcde3b6b6d7e4e5f0c0c1ddffffffd5d5e8b6b7d7f7f7fafffffffefefffffffffffffffffffffdfdfeffffffbbbcda9697c5f1f1f7e5e5f1a8a9cfededf59899c7b9b9d8fdfdfed7d8e9b3b4d5cacbe2cccde3fdfdfedfdfed7e7fb8fcfdfefefefefffffffffffffffffffdfdfefbfbfdfdfdfec5c6dfbebfdcc1c1ddd9daeaa1a2cbd3d3e7aaabd0abacd1f7f7fbc8c8e1a7a8cfbebfdbc3c4deffffffe2e2ef9192c2c5c6dffffffffbfbfdfdfdfefdfdfeffffffffffffffffffbebfdcb7b8d7c6c6e0fcfcfde7e7f2a7a7cec6c6dfc5c6dfbabad9ffffffd3d4e7c4c5dfbebfdbd9d9eacdcde4c8c9e1abacd1f1f1f7ffffffffffffffffff9d9ec9a0a1cb9d9ec99091c29394c39d9ec9999ac79c9dc98e90c18f90c19c9dc98f90c1999ac79697c59a9bc79495c48485bb9597c59697c59394c39899c6a1a2cc9e9fca9e9fc9e4e5f0dadaeae6e7f2e6e6f1dadaebd4d4e7d7d8e9d6d6e8dcddecececf4e0e1eecfcfe4e5e6f1dedeedd1d1e6ececf4ddddecd7d8e9dadaeae2e2efd8d9ead4d5e8e1e1eee5e6f1ffffffa0a1cbf1f1f7cacbe2b5b6d6b4b5d6d7d7e9acadd1b3b4d6eaeaf3c9c9e1d0d1e5d5d5e8cccde3cccde3d3d3e7cbcbe2d6d7e9a8a9cfeeeef5d0d0e5a8a9cff4f4f9fffffffefeffaeafd3c7c7e0bcbcdac4c5dfbfbfdcfafafcbcbcdac7c8e0b9bad9c1c2ddffffffcbcce3cbcbe2fcfcfda0a1cba9aad0ffffffb2b3d5f1f2f7e4e4f0b5b6d6f3f3f8fefefeffffffcacae2abacd1bdbedbcacae29d9ec9dfdfeda5a5cdaaabd0dadaebc0c1ddfcfcfdc9c9e1cfd0e5f8f8fbb9bad9b7b8d7b0b1d3bcbddaeeeef6e0e0edb2b3d4f2f2f8ffffffffffffdedeeda8a9cfbbbcdac9cae1c8c8e1ffffffb0b1d4a9aad0dadaeab6b6d7ffffffd5d5e8cacae2f7f7fab0b1d3ffffffabacd1adaed2f6f6fae2e3efb6b7d7f5f5f9fbfbfdfefefebebfdbe8e8f2babbd9b0b1d3a3a4ccbebfdba6a7cec2c3ddc2c3debbbcdab8b9d8e7e8f2c1c2ddc1c1ddcecfe4bbbcdacdcde4d2d2e6c0c1dde8e8f2a7a8cfb2b3d5dfdfed"
+      }
+    ],
+    "umbral": {
+      "_medido": "09/10/2026 sobre 2.331 imagenes chicas de los pptx/xlsx de exports/ y variantes armadas del oficial. Oficial re-guardado por Excel/PowerPoint: 0 (124 imagenes); a la mitad 7,3; al doble 2,9; con borde blanco 18,2; en gris 26,9; en violeta 29,9; en JPEG calidad 70 31,6. El no oficial queda a 42,3 del oficial (en medio de las fotos comunes, 35-80): por eso se lo compara contra SU huella; sus copias en hojas reales dan 0,5-0,7.",
+      "oficial": 10,
+      "parecido": 35,
+      "no_oficial": 5
+    },
+    "proporcion": [
+      1.5,
+      6.5
+    ],
+    "_proporcion": "ancho/alto: oficial 2,0, no oficial 3,3, la variante oscura 3,2, el JPEG recortado del flujograma 2,75. Una foto 4:3 (1,33), una captura 16:9 (1,78) o un icono cuadrado no se miran ni se decodifican (auditor 09/10: con 1,5 entraban 430 capturas de un PDF)."
   }
 }

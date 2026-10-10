@@ -30,5 +30,10 @@
    `generar_hojas_img.py` es el mismo archivo, hash `5d9207e12856`); el `LOGO BARACK.png` suelto de la raíz NO es oficial;
    ninguno bajado, redibujado ni recortado de otro documento. (b) *"las primeras fotos parecen hechas con IA... me da
    una fea sensación"*: en un documento de la empresa van **fotos reales o capturas de pantalla**; nada generado,
-   estilizado ni «mejorado» con IA, salvo que Fak lo pida para ese documento. Gate pendiente en `_sinFirmaIA.py`
-   (cola `docs/COLA_CAMBIOS_CODIGO.md`).
+   estilizado ni «mejorado» con IA, salvo que Fak lo pida para ese documento. **Gate del logo (09/10, cola H9):**
+   `_sinFirmaIA.py` compara cada imagen con forma de logo contra el oficial y contra los no oficiales conocidos (canon
+   `firmaIA.data.json`, `logo`) y avisa `logo-no-oficial` / `logo-parecido`; el aviso se ve al imprimir (`_imprimir.py`) y al
+   mandar (`_mailEnviar.py`). Es AVISO y no freno porque el de letras finas esta adentro del formulario de HO de la casa
+   (HO 21-9463 a 9475, termoformado): si Fak decide que el formulario tambien pasa al oficial, `--logo-bloquea` ya esta.
+   **Fotos: no hay gate** (medido 09/10: de 1.931 fotos reales adentro de pptx/xlsx de `exports/`, ninguna conserva datos de
+   camara, Office los saca); el criterio es de conducta.

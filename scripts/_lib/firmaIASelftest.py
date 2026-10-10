@@ -115,20 +115,59 @@ def _pdf(p, texto='HO-990 Rev.A', autor='Facundo Santoro'):
     return p
 
 
+def _imagen_png(dibujo, ancho=600, alto=200, gris=False):
+    """Una imagen PNG en memoria: `dibujo(draw, ancho, alto)` pinta sobre blanco."""
+    import io
+    from PIL import Image, ImageDraw
+    im = Image.new('RGB', (ancho, alto), 'white')
+    dibujo(ImageDraw.Draw(im), ancho, alto)
+    if gris:
+        im = im.convert('L').convert('RGB')
+    b = io.BytesIO()
+    im.save(b, 'PNG')
+    return b.getvalue()
+
+
+def _letras_finas(d, w, h):
+    """Un falso 'logo no oficial' para el CI: dos bandas de trazos finos y una raya en el medio."""
+    for i in range(6):
+        d.rectangle([40 + i * 90, 20, 50 + i * 90, h // 2 - 15], fill=(60, 60, 150))
+        d.rectangle([20 + i * 95, h // 2 + 15, 30 + i * 95, h - 20], fill=(60, 60, 150))
+    d.rectangle([10, h // 2 - 4, w - 10, h // 2 + 4], fill=(60, 60, 150))
+
+
+def _pptx_con_imagen(p, crudo):
+    import io
+    from pptx import Presentation
+    from pptx.util import Inches
+    prs = Presentation()
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    s.shapes.add_picture(io.BytesIO(crudo), Inches(0.3), Inches(0.3), width=Inches(2))
+    s.shapes.add_textbox(Inches(1), Inches(3), Inches(6), Inches(1)).text_frame.text = 'Colocar la pieza en el nido.'
+    prs.core_properties.author = 'Facundo Santoro'
+    prs.core_properties.last_modified_by = 'Facundo Santoro'
+    prs.core_properties.comments = ''
+    prs.core_properties.title = 'HO-990'
+    prs.save(p)
+    return p
+
+
 def correr() -> int:
     fallas = 0
     n = 0
 
-    def caso(nombre, ruta, debe_frenar, debe_decir=None, debe_avisar=None):
+    def caso(nombre, ruta, debe_frenar, debe_decir=None, debe_avisar=None, logo_bloquea=False, sin_avisos=False):
         nonlocal fallas, n
         n += 1
-        hs = firmaIA.revisar_archivo(ruta, raiz=os.path.dirname(ruta))
+        hs = firmaIA.revisar_archivo(ruta, raiz=os.path.dirname(ruta), logo_bloquea=logo_bloquea)
         bloq = [h for h in hs if h.nivel == 'BLOQUEANTE']
         ok = bool(bloq) == debe_frenar
         if ok and debe_decir:
             ok = any(debe_decir in (h.lugar + ' ' + h.texto + ' ' + h.regla) for h in bloq)
         if ok and debe_avisar:
             ok = any(debe_avisar == h.regla for h in hs if h.nivel == 'AVISO')
+        if ok and sin_avisos:
+            ok = not [h for h in hs if h.regla.startswith('logo-') or h.regla in ('reproceso-delata', 'antes-despues')]
         print(f'  {"ok  " if ok else "MAL "}  {nombre}')
         if not ok:
             fallas += 1
@@ -167,6 +206,45 @@ def correr() -> int:
         caso('HO en PowerPoint con propiedades puestas', _pptx(j('v5.pptx')), False)
         caso('PDF de una HO', _pdf(j('v6.pdf')), False)
         caso('IA como codigo: aviso, no freno', _xlsx(j('v7.xlsx'), {'E9': '2HC.858.417 IA'}), False, debe_avisar='ia-suelta')
+
+        print('FRASES QUE DELATAN (cola H11) — aviso, no freno')
+        caso('09/10: «pedido del cliente de no poner reprocesos... el acta»', _docx(j('fd1.docx'), 'Pedido del cliente de no poner reprocesos. Que quede escrito en el acta.'), False, debe_avisar='reproceso-delata')
+        caso('25/09: el antes y el despues de una correccion propia', _docx(j('fd2.docx'), 'El consumo antes decía 0,08 kg; queda 0,023 kg.'), False, debe_avisar='antes-despues')
+        caso('«OP 80 REPROCESO DE COSTURA» en un flujograma: nada', _docx(j('fd3.docx'), 'OP 80 REPROCESO DE COSTURA'), False, sin_avisos=True)
+        caso('nombres de operación reales (auditor 09/10): «Reproceso: eliminación de hilo sobrante», «...de arrugas en horno», «Reproceso de costura o scrap / Pieza rechazada por cliente»: nada',
+             _docx(j('fd5.docx'), 'Reproceso: eliminación de hilo sobrante. Reproceso: eliminación de arrugas en horno. Reproceso de costura o scrap / Pieza rechazada por cliente. Sacabocado exacto, impacta en el acta compacta.'), False, sin_avisos=True)
+        caso('«eliminamos los reprocesos a pedido del cliente»: avisa', _docx(j('fd6.docx'), 'Se eliminaron los reprocesos de la OP 32 a pedido del cliente.'), False, debe_avisar='reproceso-delata')
+        caso('«Antes de coser, verificar la tensión»: nada', _docx(j('fd4.docx'), 'Antes de coser, verificar la tensión del hilo.'), False, sin_avisos=True)
+
+        print('LOGO DE BARACK (cola H9) — el no oficial frena en un documento PROPIO y avisa en uno ajeno')
+        import hashlib
+        L = firmaIA._logos()
+        guardado = list(L['no_oficiales'])
+        falso = _imagen_png(_letras_finas)
+        L['no_oficiales'] = guardado + [{'id': 'falso-ci', 'como': 'falso para el CI', 'sha256': hashlib.sha256(falso).hexdigest(),
+                                         'huella': firmaIA.huella_imagen(falso)[0]}]
+        try:
+            caso('no oficial en un PowerPoint propio (--logo-bloquea): FRENA', _pptx_con_imagen(j('lg1.pptx'), falso), True, 'logo-no-oficial', logo_bloquea=True)
+            caso('el mismo en un PowerPoint ajeno: aviso, no freno', _pptx_con_imagen(j('lg2.pptx'), falso), False, debe_avisar='logo-no-oficial')
+            import io
+            from PIL import Image
+            Image.open(io.BytesIO(falso)).resize((900, 300), Image.LANCZOS).save(j('lg3.png'))   # el mismo, re-guardado mas grande
+            caso('no oficial re-guardado más grande, suelto: frena con --logo-bloquea', j('lg3.png'), True, 'logo-no-oficial', logo_bloquea=True)
+        finally:
+            L['no_oficiales'] = guardado
+        oficial = open(os.path.join(os.path.dirname(os.path.dirname(AQUI)), 'tools', 'flowchart', 'assets', 'barack_logo.png'), 'rb').read()
+        caso('el logo OFICIAL en un PowerPoint: nada', _pptx_con_imagen(j('lg4.pptx'), oficial), False, sin_avisos=True, logo_bloquea=True)
+        import io
+        from PIL import Image
+        gris = io.BytesIO(); Image.open(io.BytesIO(oficial)).convert('L').save(gris, 'PNG')
+        caso('el oficial pasado a gris: aviso "parece el logo"', _pptx_con_imagen(j('lg5.pptx'), gris.getvalue()), False, debe_avisar='logo-parecido', logo_bloquea=True)
+        foto = _imagen_png(lambda d, w, h: d.ellipse([50, 50, w - 50, h - 50], fill=(120, 90, 60)), ancho=800, alto=600)
+        caso('una foto 4:3: ni se mira', _pptx_con_imagen(j('lg6.pptx'), foto), False, sin_avisos=True, logo_bloquea=True)
+        real = os.path.join(os.path.expanduser('~'), 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General', 'LOGO BARACK.png')
+        if os.path.exists(real):
+            caso('el LOGO BARACK.png real de la raiz de la nube: frena con --logo-bloquea', real, True, 'logo-no-oficial', logo_bloquea=True)
+        else:
+            print('  --    (el LOGO BARACK.png real no esta en esta PC: ese caso se saltea)')
 
         print('ARREGLO — quitar_complemento_claude')
         p = _con_complemento(_xlsx(j('x.xlsx'), {'J74': 'F.Santoro'}))

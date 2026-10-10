@@ -324,6 +324,16 @@ Calibrado en las dos direcciones: `python scripts/_lib/outlookUi.py` (9 casos �
 del guard en sus dos idiomas dan rojo, y otros avisos de Outlook, el titulo pelado y el vacio dan
 verde; mas que `vigilando` devuelve lo de `fn` y no se come su excepcion).
 
+## Un numero con unidad en el mail lleva su papel — 09/10/2026 (cola H12)
+
+Mail de las 11:28 a Carlos («Espuma Mentvil en rollo de 2 m»): «Hoy viene de 1,55 m... el Tesa 52110 viene de 1,50 m,
+asi que con 2 m quedan 50 cm», sin adjunto y sin decir de donde salian. Fak, 11:29, ya enviado: *"¿de donde sacaste eso?"*.
+`_mailEnviar.py` (dry-run y `--enviar`) lista como **OJO, sin frenar**, cada numero con unidad del cuerpo que no esta en el
+texto de ningun adjunto ni tiene su fuente en la misma oracion (segun, me aviso/dijo, el mail de, la planilla, el arb, la
+BOM, el plano, la ficha, la OC, INCA, el calculo de, medido/pese...). Logica y casos: `scripts/_lib/numerosMail.py --selftest`
+(los dos mails reales del 09/10: el de Mentvil avisa 1,55 m, 1,50 m y 50 cm; el de la BOM con «el calculo de troquelado de
+Pablo Gamboa: 0,0992 m²» no). Fak ve el borrador y decide: la fuente se escribe o el numero se saca.
+
 ## Enforcement
 
 - **Hook `mail-guard.sh`** (PreToolUse, `Bash|PowerShell|Write|Edit`, registrado en `_dispatcher.sh`):

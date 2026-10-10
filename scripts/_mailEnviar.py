@@ -45,6 +45,7 @@ from vozMail import mostrar_voz                                          # noqa:
 from outlookUi import asegurar_outlook, cartel_de_seguridad, vigilando   # noqa: E402
 from gerenteCopia import GERENTE_NOMBRE, falta_gerente, selftest as selftest_gerente  # noqa: E402
 import firmaIA                                                                    # noqa: E402
+import numerosMail  # noqa: E402
 
 
 def firma_ia_del_mail(it):
@@ -53,7 +54,7 @@ def firma_ia_del_mail(it):
     IA, ni en lo oculto: pestañas, propiedades, la marca del complemento de Excel)."""
     import tempfile
     hs = firmaIA.revisar_texto(str(it.Subject or ''), 'mail', 'asunto', con_avisos=False)
-    hs += firmaIA.revisar_texto(str(it.Body or ''), 'mail', 'cuerpo', con_avisos=False)
+    hs += firmaIA.revisar_texto(str(it.Body or ''), 'mail', 'cuerpo', con_avisos=True)
     with tempfile.TemporaryDirectory() as td:
         for k in range(it.Attachments.Count):
             a = it.Attachments.Item(k + 1)
@@ -65,7 +66,33 @@ def firma_ia_del_mail(it):
                 for h in firmaIA.revisar_archivo(p):
                     h.archivo = fn
                     hs.append(h)
-    return [h for h in hs if h.nivel == 'BLOQUEANTE']
+    return [h for h in hs if h.nivel == 'BLOQUEANTE'], [h for h in hs if h.nivel == 'AVISO' and h.regla in AVISOS_QUE_SE_MUESTRAN]
+
+
+def numeros_sin_papel_del_mail(it):
+    """Los numeros con unidad del cuerpo que no estan en el texto de ningun adjunto ni tienen su fuente en la oracion
+    (scripts/_lib/numerosMail.py, cola H12). Los adjuntos se bajan a una carpeta temporal y se leen lo mejor que se pueda."""
+    import tempfile
+    textos = []
+    with tempfile.TemporaryDirectory() as td:
+        for k in range(it.Attachments.Count):
+            a = it.Attachments.Item(k + 1)
+            fn = str(a.FileName or f'adjunto{k}')
+            if re.match(r'(?i)image\d+\.', fn):
+                continue
+            p = os.path.join(td, f'{k}_{fn}')
+            try:
+                a.SaveAsFile(p)
+                textos.append(numerosMail.texto_de_adjunto(p))
+            except Exception:
+                continue
+    return numerosMail.numeros_sin_papel(str(it.Body or ''), textos)
+
+
+# Avisos del detector que se muestran antes de mandar, sin frenar (cola H9 y H11, 09/10/2026): el logo de Barack que
+# no es el oficial en un adjunto, y las frases que nos delatan (el motivo de sacar reprocesos, el antes y el despues
+# de una correccion propia). La decision es de Fak, que ve el borrador antes de que salga.
+AVISOS_QUE_SE_MUESTRAN = ('logo-no-oficial', 'logo-parecido', 'reproceso-delata', 'antes-despues')
 
 VENTANA_HORAS = 72          # cuanto para atras se mira Enviados
 DOMINIO_INTERNO = '@barackmercosul.com'
@@ -138,6 +165,8 @@ def destinatarios_externos(direcciones):
 # ── selftest ────────────────────────────────────────────────────────────────
 
 def selftest() -> int:
+    if numerosMail.selftest():
+        return 1
     casos = []
 
     def chk(nombre, obtenido, esperado):
@@ -344,7 +373,9 @@ def main() -> int:
     print(f"  Adj : {cand['adjuntos']}")
 
     # 1a. GATE — ningun documento dice que lo hizo Claude o una IA (regla dura de Fak, 08/10/2026)
-    firma = firma_ia_del_mail(it)
+    firma, avisos_doc = firma_ia_del_mail(it)
+    for h in avisos_doc[:10]:
+        print(f"  OJO: {h.archivo} — {h.lugar}: {h.que} → «{h.texto}»")
     if firma:
         print(f"\n  *** EL MAIL NOMBRA A CLAUDE O A UNA IA ({len(firma)}) ***")
         for h in firma[:15]:
@@ -357,6 +388,16 @@ def main() -> int:
         print("  --sin-chequeo-firma activo: sigo igual.")
     else:
         print("  Firma de IA: ninguna (cuerpo, asunto y adjuntos).")
+
+    # 1a bis. AVISO — un numero con unidad en el cuerpo lleva su papel (cola H12; Fak 09/10 11:29 «¿de dónde sacaste eso?»,
+    #         con el mail de la espuma Mentvil ya enviado). No frena: Fak ve el borrador y decide.
+    sin_papel = numeros_sin_papel_del_mail(it)
+    if sin_papel:
+        print(f"\n  NÚMEROS SIN PAPEL ({len(sin_papel)}): no están en ningún adjunto ni la oración dice de dónde salen")
+        for r in numerosMail.renglones_aviso(sin_papel)[:10]:
+            print(r)
+    else:
+        print("  Números con unidad: todos con papel (en un adjunto o con su fuente en la oración).")
 
     # 1b. GATE — destinatarios de fuera de Barack (regla dura de Fak, 30/09/2026)
     direcciones = _direcciones(it)

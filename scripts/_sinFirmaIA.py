@@ -11,6 +11,8 @@ Uso:
   python scripts/_sinFirmaIA.py <carpeta> --desde 2026-03-01   # solo lo modificado desde esa fecha
   python scripts/_sinFirmaIA.py <...> --json                   # salida para otro programa
   python scripts/_sinFirmaIA.py <...> --sin-avisos              # solo lo que frena
+  python scripts/_sinFirmaIA.py <...> --logo-bloquea            # el logo NO oficial frena (listo para el cierre del turno si Fak
+                                                                 decide que el formulario de HO pasa al oficial; hoy es aviso)
   python scripts/_sinFirmaIA.py <...> --incluir-nube            # tambien los de OneDrive "solo en la nube" (los baja)
   python scripts/_sinFirmaIA.py --selftest
   python scripts/_sinFirmaIA.py --arreglar <archivos o carpetas> [--apply]
@@ -37,6 +39,7 @@ def main() -> int:
     ap.add_argument('--json', action='store_true')
     ap.add_argument('--sin-avisos', action='store_true')
     ap.add_argument('--incluir-nube', action='store_true')
+    ap.add_argument('--logo-bloquea', action='store_true')
     ap.add_argument('--max-mb', type=float, default=60)
     ap.add_argument('--selftest', action='store_true')
     ap.add_argument('--arreglar', action='store_true')
@@ -50,7 +53,7 @@ def main() -> int:
     if a.arreglar:
         return arreglar(a.rutas, a.apply)
     desde = dt.datetime.strptime(a.desde, '%Y-%m-%d').timestamp() if a.desde else None
-    hs, n, nube = firmaIA.revisar(a.rutas, desde, a.incluir_nube, a.max_mb, not a.sin_avisos)
+    hs, n, nube = firmaIA.revisar(a.rutas, desde, a.incluir_nube, a.max_mb, not a.sin_avisos, logo_bloquea=a.logo_bloquea)
     bloq = [h for h in hs if h.nivel == 'BLOQUEANTE']
     if a.json:
         print(firmaIA.a_json(hs))
