@@ -1,6 +1,6 @@
 ---
 name: patrones-corte-plotter
-description: Patrones de corte 2D en DXF y PLT/HPGL para mesa de corte y plotter — leer el DXF, mover puntos de anclaje y piquetes, generar el PLT y demostrar con numeros que el cambio salio exacto. Cubre tambien tizadas, mix de plotter, partir en 2 una pieza que no entra en el plotter y comparar las dos manos. Trae los 3 gates que evitan los errores caros.
+description: Patrones de corte 2D en DXF y PLT/HPGL para mesa de corte y plotter — leer el DXF, mover puntos de anclaje y piquetes, generar el PLT y demostrar con numeros que el cambio salio exacto. Cubre tambien tizadas, mix de plotter, partir en 2 una pieza que no entra en el plotter y comparar las dos manos. Usar cuando Fak hable de plotter, DXF o PLT, tizadas, piquetes o anclajes de un patron, o pida partir o mezclar piezas para cortar. Trae los 3 gates que evitan los errores caros.
 ---
 
 # patrones-corte-plotter — mover puntos sin equivocarse

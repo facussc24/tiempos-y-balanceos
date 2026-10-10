@@ -1,6 +1,6 @@
 ---
 name: product-map
-description: Mapa completo de productos Barack Mercosul — familias (13 al 22/09/2026), part numbers, variantes, documentos por familia. Equipo APQP con nombres y roles. Roles validos para controles CP/HO. Usar cuando se trabaja con familias de producto, part numbers, cross-document, headers APQP, o asignacion de responsables.
+description: Mapa completo de productos Barack Mercosul — familias, part numbers, variantes, documentos por familia. Equipo APQP con nombres y roles. Roles validos para controles CP/HO. Usar cuando se trabaja con familias de producto, part numbers, cross-document, headers APQP, o asignacion de responsables.
 user-invocable: false
 ---
 

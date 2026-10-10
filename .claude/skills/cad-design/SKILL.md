@@ -5,7 +5,7 @@ description: >
   medirlo, registrarlo contra otra pieza (ICP), modelar/modificar parametrico, verificar
   interferencia y holguras, y exportar STEP + STL + GLB + renders. Usar cuando Fak pida
   "diseñá/modificá esto en 3D", pase un archivo 3D (STEP/STL/IGES) para editar, pida un
-  posicionador/fixture/utillaje impreso, o cualquier modelado de pieza. Incluye el entorno,
+  dispositivo, posicionador, fixture o utillaje impreso, o cualquier modelado de pieza. Incluye el entorno,
   la librería cadlib + CLIs genéricos y los errores caros que NO hay que repetir.
 ---
 
@@ -16,6 +16,14 @@ Capacidad probada en el caso Posicionador Top Roll Trasero (ver
 las fuentes). La librería y los CLIs viven en `.claude/skills/cad-design/scripts/` (`cadlib/` +
 un CLI por gate, todos con `--help`). Acá se los nombra pelados (`gate_zona.py`); la ruta completa
 es esa, **no** el `scripts/` de la raíz del repo, que es otro.
+
+## 4. Verificar antes de cerrar — REGLA DURA
+
+Render → MIRARLO → corregir, DESPUÉS de cada cambio (no post-export). Criterio CADGenBench
+en orden: 1) validez (watertight/manifold), 2) forma, 3) interface/fit contra la pieza
+destino, 4) topología (nº de agujeros/features). Más: reproducir cualquier choque que
+reporte el cliente; tolerancias de impresión 0,3-0,5 mm/lado en vanos, panza ≥2 mm,
+inserto heat-set + pin anti-giro.
 
 ## 0. LOS GATES (bloqueantes)
 
@@ -339,14 +347,6 @@ Todo junto: `--find --only-free --measure`. Motor en `cadlib.topo`; test: `topo_
   es lo que hace `geom._load(keep=...)` (verificado end-to-end: 9405 → 356 pts).
 - Ajuste de plano con nubes grandes: covarianza 3×3 (`geom.fit_plane`), **nunca**
   `np.linalg.svd(pts-ctr)` con `full_matrices=True` — con 490k puntos pide 1,75 TiB.
-
-## 4. Verificar antes de cerrar — REGLA DURA
-
-Render → MIRARLO → corregir, DESPUÉS de cada cambio (no post-export). Criterio CADGenBench
-en orden: 1) validez (watertight/manifold), 2) forma, 3) interface/fit contra la pieza
-destino, 4) topología (nº de agujeros/features). Más: reproducir cualquier choque que
-reporte el cliente; tolerancias de impresión 0,3-0,5 mm/lado en vanos, panza ≥2 mm,
-inserto heat-set + pin anti-giro.
 
 ## 5. Por qué cada gate dice lo que dice
 

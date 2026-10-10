@@ -69,6 +69,14 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 > Sale con reintentos, y reintentar es seguro. Lo marcado `CONFIRMADO`/`medido` se probó; lo
 > demás es hipótesis y **no se ejecuta sin verificar antes**.
 
+> ⚠️ **NO HAY BACKUP DE DATOS DEL ARB.** `Z:\arb\prod\BAK` tiene sólo archivos `.DTF`
+> (definiciones de tabla, 1996-2019) — **no datos**; los datos viven en el servidor
+> Pervasive, fuera de alcance por red.
+> **El único respaldo es el export**: guarda el valor anterior de cada celda, así que un
+> consumo mal cargado se deshace tipeando el viejo. **Un alta no se deshace así**, por eso va de
+> a una, con foto antes del ENTER y verificada contra el export (`_arbAlta.py`, `_arbAltaLote.py`).
+> Antes de una tanda: exportar y guardar ese export.
+
 ## Qué es
 
 `Z:\arb\prod\produc.exe` — **"Producción y Almacenes", ARB Sistemas**, versión 14.05.26.
@@ -596,13 +604,8 @@ sin correrlo). La crónica de dónde salió cada uno: `reference/bitacora-tandas
 
 ## Seguridad — antes de que el robot escriba
 
-1. ⚠️ **NO HAY BACKUP DE DATOS DEL ARB.** `Z:\arb\prod\BAK` tiene sólo archivos `.DTF`
-   (definiciones de tabla, 1996-2019) — **no datos**; los datos viven en el servidor
-   Pervasive, fuera de alcance por red.
-   **El único respaldo es el export**: guarda el valor anterior de cada celda, así que un
-   consumo mal cargado se deshace tipeando el viejo. **Un alta no se deshace así**, por eso va de
-   a una, con foto antes del ENTER y verificada contra el export (`_arbAlta.py`, `_arbAltaLote.py`).
-   **Borrar una línea sigue fuera de alcance.** Antes de una tanda: exportar y guardar ese export.
+1. No hay backup de datos del arb: está arriba, antes de «Qué es» (el único respaldo es el export).
+   **Borrar una línea sigue fuera de alcance.**
 2. **Probar con UNA sola fila**, la de menor impacto, y **verificar contra el export**
    (`RELACIONES.TXT`, celda por celda, tolerancia 0,1%) antes de seguir con el resto.
 3. **Nunca tantear teclas en la solapa de Altas.** Una tecla de más da de alta un insumo o

@@ -1,6 +1,6 @@
 ---
 name: editar-video
-description: Editar video en Barack — armar un institucional o una recorrida de planta desde tomas crudas, elegir que sirve con criterio medido, mejorar color y nitidez, y entregar un master que abra en cualquier lado. Incluye lo que NO sirve (upscaling con IA, estabilizar material de gimbal), medido en esta maquina.
+description: Editar video en Barack — armar un institucional o una recorrida de planta desde tomas crudas, elegir que sirve con criterio medido, mejorar color y nitidez, y entregar un master que abra en cualquier lado. Usar cuando Fak pida armar o editar un video (institucional, recorrida de planta) desde tomas crudas. Si pide los videos originales sin editar, o un recorte de maquina para una hoja de proceso, no es esta skill. Incluye lo que NO sirve (upscaling con IA, estabilizar material de gimbal), medido en esta maquina.
 ---
 
 # editar-video — armar un video que se pueda mostrar

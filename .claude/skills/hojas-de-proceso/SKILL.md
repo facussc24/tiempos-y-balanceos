@@ -1,6 +1,6 @@
 ---
 name: hojas-de-proceso
-description: Hojas de proceso / hojas de operaciones (HO) de Barack, formulario I-IN-002.4-R01 en PowerPoint — que le manda cada paso al operario y con que palabras, que foto va en cada paso, como se prepara una pantalla de HMI para que se lea impresa, donde se guarda la hoja y que numero de HO lleva, y los errores que Fak ya marco (logo, plan de reaccion, numero, TBD, hoja cortada) para buscarlos antes de mostrar o imprimir un paquete. El canon es `docs/CRITERIOS_HOJAS_DE_PROCESO.md`; trae `hojalib`, el gate de redaccion, el gate que rechaza la hoja y sus selftests.
+description: Hojas de proceso / hojas de operaciones (HO) de Barack, formulario I-IN-002.4-R01 en PowerPoint (A4, o A3 con una foto por paso) — que le manda cada paso al operario y con que palabras, que foto va en cada paso, como se prepara una pantalla de HMI para que se lea impresa, donde se guarda la hoja y que numero de HO lleva, y los errores que Fak ya marco (logo, plan de reaccion, numero, TBD, hoja cortada) para buscarlos antes de mostrar o imprimir un paquete. Usar cuando Fak pida armar, corregir o revisar una hoja de proceso (o una filmina de una), y siempre antes de mostrar o imprimir un paquete para planta. El canon es `docs/CRITERIOS_HOJAS_DE_PROCESO.md`; trae `hojalib`, el gate de redaccion, el gate que rechaza la hoja y sus selftests.
 ---
 
 # Una hoja de proceso se lee de pie, al lado de la maquina, impresa en A4
@@ -11,6 +11,17 @@ Cada gate de abajo nacio de una hoja que Fak devolvio; los casos, con fecha y ci
 `reference/casos.md`.
 
 ---
+
+> **Si ves esta skill cortada (pasa tras un compactado): hacé `Read` del SKILL.md desde §7 antes de entregar o
+> imprimir.** Al entregar: `hojalib_selftest.py` y `hoja_proceso_check.py` en verde; las láminas miradas una por
+> una; ningún `TBD` en la descripción (solo en el cajetín). Si es un paquete para planta: tabla §7 bis (E1 a E6)
+> fila por fila sobre el PDF, también para hojas de otro autor. Dónde se guarda y qué número lleva: §3 bis.
+
+**Un número por PIEZA, no por sector** (decisión de Carlos Baptista, contada por Fak el
+01/10/2026: *"las hojas de proceso ahora están unificadas, no se separan más por sectores,
+número único"*). 971 = APB de puerta, 990 = Insert, 992 = Top Roll, 994 = Upper Trim: todas las
+operaciones de la pieza van en ese número y cada hoja lleva el **N° de operación del flujograma**.
+Una operación no tiene un número de HO aparte.
 
 ## 0. LOS GATES (bloqueantes). Los 0.x se contestan antes de escribir; 1 a 3, al armar y al entregar
 
@@ -549,11 +560,7 @@ que ir guardándolas donde sí van, o sea `Y:\BARACK\CALIDAD\DOCUMENTACION SGC\H
   de `xl/sharedStrings.xml`. Guardarla con Excel por COM se tiró de 1 a 3 imágenes "en celda"
   por libro en las telas PWA (25/09/2026; se volvió al respaldo).
 
-**Un número por PIEZA, no por sector** (decisión de Carlos Baptista, contada por Fak el
-01/10/2026: *"las hojas de proceso ahora están unificadas, no se separan más por sectores,
-número único"*). 971 = APB de puerta, 990 = Insert, 992 = Top Roll, 994 = Upper Trim: todas las
-operaciones de la pieza van en ese número y cada hoja lleva el **N° de operación del flujograma**.
-Una operación no tiene un número de HO aparte.
+(«Un número por PIEZA, no por sector» está arriba, antes de los gates.)
 
 **Lo único que va con número propio es lo que queda AFUERA del proceso de la pieza** (Fak,
 08/10/2026: *"lo que queda aparte son las hojas que aclaran cosas aparte... que no están dentro

@@ -1,6 +1,6 @@
 ---
 name: flujogramas
-description: Flujogramas de proceso de Barack (formulario I-IN-002/III) con el generador de `tools/flowchart/` — criterio de numeracion, convenciones de dibujo validadas por Fak, trampas del motor y como se entrega. Tambien cuando el AMFE y el Plan de Control no cierran con el flujograma.
+description: Flujogramas de proceso de Barack (formulario I-IN-002/III) con el generador de `tools/flowchart/` — criterio de numeracion, convenciones de dibujo validadas por Fak, trampas del motor, como se entrega y como se imprime en A3. Usar cuando Fak pida armar, corregir, rehacer, emitir o imprimir un flujograma (de una pieza o para BeOn), o cuando el AMFE, el Plan de Control o la hoja de operaciones no cierran con el flujograma.
 ---
 
 # El flujograma manda la numeracion, y se juzga renderizado
@@ -12,6 +12,43 @@ flujograma** — nunca al reves, aunque la HO sea mas nueva.
 > Los flujogramas los hace esta sesion desde el **18/08/2026** (Fak: *"vos sos el que hace
 > los flujogramas ahora, te lo habia dicho ya"*). No se le pasa un prompt para que los
 > dibuje el. Regla: `no-pfd-no-ho.md`.
+
+Formulario oficial **I-IN-002/III**. El **numero del flujograma va en el NOMBRE DEL
+ARCHIVO** (`FLUJOGRAMA_154-INSERT.pdf`), no en el cajetin: el campo "CODIGO DEL DOCUMENTO"
+lleva el codigo del formulario. `FECHA DE EMISION` y `FECHA DE REVISION` son **dos campos
+distintos**. **No existen** los campos "APROBADO POR" ni "RESPONSABLE DE AREA".
+
+## Anti-patrones
+
+❌ Juzgar el flujograma por el JSON o por la vista general del PNG.
+❌ Alinear el flujograma a la HO. La HO es la que se renumera.
+❌ Meter dos sectores en una decena, o un sector en tres.
+❌ Agregar una operacion o un control que ningun documento ni Fak respalda. **Ojo, que esta
+   regla se lee al reves con facilidad:** el control con mylar del corte, el control de
+   adhesivado y el control final NO son "un control que nadie respalda" — los respaldan los
+   flujogramas hermanos y Fak (*"siempre en corte hay control con mylar"*, 01/10/2026). Lo que no
+   se agrega es una operacion PROPIA de la pieza que ningun papel de la pieza nombra.
+❌ **Armar un flujograma nuevo desde los documentos de la pieza en vez de desde sus hermanos**
+   (el 160, 01/10/2026). Sale prolijo, pasa los chequeos de dibujo y le faltan los bloques.
+❌ **Emitir (servidor, legajo, listado) antes de que Fak lo haya mirado.** El 160 se emitio con
+   su OK a los numeros y se tuvo que rehacer una hora despues: el PNG se le muestra ANTES.
+❌ Asignar CC/SC por cuenta propia, o copiarlas de la revision anterior. La marca de cada
+   operacion es la union de las siglas de sus causas en el AMFE (`caracteristicas-especiales.md`
+   §3); una marca heredada que el AMFE no sostiene se informa como diferencia, no se copia.
+   Asignarlas es de Fak o del cliente (`core-prohibiciones.md` §2).
+❌ Agregar una clase Tailwind nueva al JSX esperando que aplique.
+❌ **Empezar a numerar sin abrir dos flujogramas vigentes del mismo cliente y familia.** Fak,
+   22/09/2026: *"¿no revisas los demas flujogramas antes de hacer este?"*.
+❌ **Heredar una bifurcacion de un flujograma MULTIPRODUCTO.** El REV.03 del P21 cubria varias
+   piezas, asi que su rombo *"¿el sustrato lleva primer?"* tenia sentido ahi. Traido a un
+   documento de UNA pieza, la rama NO no tenia a donde ir y quedo saliendo a un conector que no
+   aterrizaba en ningun lado. En un documento de una pieza, cada condicion se resuelve contra
+   ESA pieza antes de dibujarla.
+❌ **Escribir el retrabajo adentro del texto de una caja terminal** en vez de dibujarlo.
+   ⚠ **Pero antes de dibujar un reproceso se le pregunta a Fak**: el criterio está en revisión desde
+   el 02/10/2026 (Calidad y el cliente pidieron que no se dibujen como tales; detalle en §2).
+❌ **Correr el generador con `--sin-canon` y entregar igual.** Ese flag es para mirar, no para
+   entregar.
 
 ## 0. El canon CORRE, no se lee
 
@@ -350,10 +387,7 @@ cada corrida. Eso no dice nada del contenido.
 
 ## 5. El documento y la entrega
 
-Formulario oficial **I-IN-002/III**. El **numero del flujograma va en el NOMBRE DEL
-ARCHIVO** (`FLUJOGRAMA_154-INSERT.pdf`), no en el cajetin: el campo "CODIGO DEL DOCUMENTO"
-lleva el codigo del formulario. `FECHA DE EMISION` y `FECHA DE REVISION` son **dos campos
-distintos**. **No existen** los campos "APROBADO POR" ni "RESPONSABLE DE AREA".
+(El formulario, el número en el nombre del archivo y los campos que no existen: arriba, antes del §0.)
 
 La **revision solo sube en un hito oficial** (prelanzamiento / PPAP / ECN) y la fila de
 revisiones dice **textual que cambio**, operacion por operacion.
@@ -397,33 +431,3 @@ impresos. El PNG de siempre escalado a A3 deja la letra en unos 4 pt. Tres propu
   A3 el que no entra (conector de hoja "CONTINÚA EN HOJA 2"). Motor `tools/flowchart/propuestas/D_aire/` (`render.mjs <clave> --png`,
   `cortes.mjs` para elegir el corte que deja las dos hojas parejas, `armar_D.py`); salida `exports/flujogramas_a3_propuestas/D_aire/`.
   Falta que Fak elija entre B y D.
-
-## Anti-patrones
-
-❌ Juzgar el flujograma por el JSON o por la vista general del PNG.
-❌ Alinear el flujograma a la HO. La HO es la que se renumera.
-❌ Meter dos sectores en una decena, o un sector en tres.
-❌ Agregar una operacion o un control que ningun documento ni Fak respalda. **Ojo, que esta
-   regla se lee al reves con facilidad:** el control con mylar del corte, el control de
-   adhesivado y el control final NO son "un control que nadie respalda" — los respaldan los
-   flujogramas hermanos y Fak (*"siempre en corte hay control con mylar"*, 01/10/2026). Lo que no
-   se agrega es una operacion PROPIA de la pieza que ningun papel de la pieza nombra.
-❌ **Armar un flujograma nuevo desde los documentos de la pieza en vez de desde sus hermanos**
-   (el 160, 01/10/2026). Sale prolijo, pasa los chequeos de dibujo y le faltan los bloques.
-❌ **Emitir (servidor, legajo, listado) antes de que Fak lo haya mirado.** El 160 se emitio con
-   su OK a los numeros y se tuvo que rehacer una hora despues: el PNG se le muestra ANTES.
-❌ Asignar CC/SC por cuenta propia, o copiarlas de la revision anterior. La marca de cada
-   operacion es la union de las siglas de sus causas en el AMFE (`caracteristicas-especiales.md`
-   §3); una marca heredada que el AMFE no sostiene se informa como diferencia, no se copia.
-   Asignarlas es de Fak o del cliente (`core-prohibiciones.md` §2).
-❌ Agregar una clase Tailwind nueva al JSX esperando que aplique.
-❌ **Empezar a numerar sin abrir dos flujogramas vigentes del mismo cliente y familia.** Fak,
-   22/09/2026: *"¿no revisas los demas flujogramas antes de hacer este?"*.
-❌ **Heredar una bifurcacion de un flujograma MULTIPRODUCTO.** El REV.03 del P21 cubria varias
-   piezas, asi que su rombo *"¿el sustrato lleva primer?"* tenia sentido ahi. Traido a un
-   documento de UNA pieza, la rama NO no tenia a donde ir y quedo saliendo a un conector que no
-   aterrizaba en ningun lado. En un documento de una pieza, cada condicion se resuelve contra
-   ESA pieza antes de dibujarla.
-❌ **Escribir el retrabajo adentro del texto de una caja terminal** en vez de dibujarlo.
-❌ **Correr el generador con `--sin-canon` y entregar igual.** Ese flag es para mirar, no para
-   entregar.
