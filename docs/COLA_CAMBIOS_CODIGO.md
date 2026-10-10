@@ -35,6 +35,8 @@ Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabra
 
 ## HACER YA (trabajo reversible del repo; no necesita su sí)
 
+- [ ] HOY-7 · 2026-10-09 · chico · Fak 22:25 (*"me apareció un cartel para aprobar, no fue tan automático"*) · al lanzar una sesión nueva desde otra (tarea manual + run_scheduled_task + modelo/modo/título) a Fak le salta un cartel de aprobación: medir cuál de los pasos lo dispara (la tarea, el cambio de modelo o el de modo) y si una regla `allow` lo evita; la receta está en la memoria `reference_lanzar_una_sesion_nueva_desde_la_sesion` · `.claude/settings.json`, memoria · evidencia: sesión local_1aebbb4f del 09/10 22:23
+
 - [ ] HOY-6 · 2026-10-09 · mediano · Fak 16:55 (*"subilas a la nube... ¿se borran las viejas?"*) · los registros de conversaciones de Claude Code (`~/.claude/projects/C--Dev-BarackMercosul*/*.jsonl`) viajan a la nube de Ingeniería como pieza de `_nube.mjs --sincronizar` (solo subir, nunca borrar; son la fuente de los informes de errores) y `cleanupPeriodDays` pasa a 90 (P42) · `scripts/_nube.mjs`, `~/.claude/settings.json`, test · evidencia: la doc borra transcripts a los 30 días; R4 leyó desde el 01/09
 
 - [ ] H1 · 2026-10-09 · chico · A51 · F1 Q12 · medir con _tokens.mjs --desde 2026-10-09 lo que gastaron S1 y el Fable, y los tokens del buscador antes y después de omitClaudeMd; decírselo en un renglón · solo lectura · Fak 12:13 *"quiero ver cuántos nos consume ese agente independiente"*; R2:40
@@ -271,4 +273,4 @@ Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabra
 - [x] HOY-3 · 2026-10-09 · chico · Fak · ~~"en todas las tareas que puedas usá la API": scripts/_apiTarea.mjs, el puente pedido + adjuntos -> API -> archivo, con candados (ni secretos ni más de 2 MB) y 8 tests~~ · e79715c4 + 82939e7a (timeout) + 8a3638b1 (streaming) + 2fd31a24 (sin fallback)
 - [x] HOY-4 · 2026-10-09 · Fak · ~~(era P3) la clave de la API pegada (por la terminal), --check y --probar verdes, primera noche real de día ($0,98: 6 AMFE, 12 mails, prioridades, novedades) y la tarea "Barack - Noche de Claude (API)" agendada a las 06:30; el ciclo renueva el 30 (BARACK_API_CICLO_DIA=30 como variable de usuario)~~ · commit 62f0ae43 (regla api-claude.md)
 
-<!-- control: HACER YA 68 · PROPONER 71 · DESCARTADO 54 · HECHOS 17 · origen S1 09/10 + S2 09/10 -->
+<!-- control: HACER YA 69 · PROPONER 71 · DESCARTADO 54 · HECHOS 17 · origen S1 09/10 + S2 09/10 -->

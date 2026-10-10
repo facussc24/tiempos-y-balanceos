@@ -152,7 +152,8 @@ limpiezas, el techo de cupo, `/skill-doctor` y `/doctor prompt-audit`, que él t
 - Settings de Fak con su sí: agent teams y You should know apagados, 90 días de conversaciones (P36, P37, P42; respaldo al
   lado). `settings.local.json` limpio (P44). SDK a devDependencies (P51, `59233299`, build verde). P46 y P48 hechas
   (sueltos a la nube, worktrees borrados). Cowork descartado (X57). P2 no existe en su plan (X56).
-- **H15 (los tres programas como pasos de la noche) sigue abierto:** dos pedidos a la API fallaron (uno «terminated»
+- **H15: el diseño de Opus por la API SÍ llegó al cuarto intento** (`.sgc-cache/investigacion-2026-10-09/API_H15a_codigo_opus.md`, 17 KB: plan de 8 puntos, diffs de `nocturno.mjs` y `_nocturno.mjs`, cómo probar, dudas). Es una propuesta: se lee entero cada archivo, se aplica a mano, tests, `--simular`. Los tres intentos anteriores fallaron (el texto de abajo cuenta por qué) y sirven de aviso para los próximos pedidos: effort medium, 64.000 tokens de salida, pocos adjuntos.
+- **Antes decía:** dos pedidos a la API fallaron (uno «terminated»
   con 9 adjuntos; el chico, ver si dejó `.sgc-cache/investigacion-2026-10-09/API_H15a_codigo_opus.md`). Los adjuntos
   pesan 250 KB: conviene hacerlo a mano o con un `investigador` Opus del plan, leyendo `nocturno.mjs` entero.
 - La sesión de la tarde cerró con el contexto al ~80 %. Gasto de la API del día: ~US$5 registrados.
