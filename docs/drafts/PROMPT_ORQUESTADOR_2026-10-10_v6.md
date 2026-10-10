@@ -67,6 +67,20 @@ Memoria `feedback_la_caja_soy_yo_pensar_fuera_de_lo_que_dijo_fak`, LECCIONES 08-
    13 H25-H27 · 14 H30+H31 · 15 H5+H6 · después H17, H19, H22, H28… · grandes con sí: P6, P9+P10, P33, P55, P56.
 8. **Cupo a las 12:10**: 5 h al 21 % (reinicia 14:40), semanal 22 %, Fable 33 %. Disco C 9,8 GB. LECCIONES 26,4 KB.
 
+## Dos cosas que Fak dijo a las 18:40 (después de escrita esta versión)
+
+- **P84 quedó resuelta**: Fak dijo *"pensá la mejor manera"* y la v5 puso `permissions.defaultMode:
+  "bypassPermissions"` en `~/.claude/settings.json` (respaldo `settings.json.antes-bypass-20261010-1840`). Medido:
+  la hija 2 (`local_218252c2`, H5+H6) y la hija 3 (`local_c5fa43f0`, P55 etapa 1) arrancaron en bypass sin cartel.
+  **Las hijas se lanzan ya** (skill `lanzar-sesion-hija`), de a una o dos.
+- **La API se usa para todo lo que no necesita herramientas** (regla 17 de la v3; Fak 18:50: *"usás
+  principalmente los créditos de la API para todo esto, para no consumir tanto del cupo semanal; tenés dos
+  claves"*). La v5 no la usó en todo el día: error. Van por `node scripts/_apiTarea.mjs`: revisar un diff antes del
+  auditor, revisar un plan, sintetizar, redactar la página de explicaciones. Y cada encargo a una hija le dice que
+  pase su diff por la API (Opus, effort medium) antes del auditor con herramientas, que sigue siendo obligatorio.
+- **Una pregunta a Fak no frena el resto** (18:40: *"¿te quedaste esperándome? es gravísimo"*): lo que no depende
+  de la respuesta se hace mientras tanto; si Fak dijo «decidí vos» ese día, se decide.
+
 ## Lo que no se repite (además de la lista de la v5)
 
 - Buscar una herramienta por un nombre adivinado y concluir «0 llamadas» (el nombre real era `mcp__ccd_session__…`).

@@ -74,9 +74,11 @@ B.0. **El modo con el que va a arrancar, ANTES de lanzar.** Una corrida de tarea
    aquella «arrancó en bypass»). El 10/10 10:53 un cambio a bypass sobre una sesión andando volvió en 38 ms sin
    que se sepa si hubo cartel: no está medido en las dos direcciones, no se cuenta como camino.
 4. **Modelo y título** (en la misma tanda): `set_session_model` (desde una sesión en bypass no pide cartel; **aplica
-   desde el segundo turno de la hija**: el primero sale en el modelo por defecto del settings, hoy Opus) y
-   `set_session_title`. Para una hija en Fable: que el primer turno sea corto (leer y contestar «listo») y recién
-   después el trabajo, o aceptar que el primer turno vaya en Opus.
+   desde el segundo turno de la hija**: el primero sale en el modelo que tenga el selector de la app, que es el de la
+   ÚLTIMA sesión que Fak abrió: el 10/10 18:45 las hijas 2 y 3 arrancaron en Fable porque el orquestador era Fable) y
+   `set_session_title`. **Como una hija hace casi todo en un solo turno, el cambio de modelo no llegaría nunca**:
+   apenas `_hijaEstado.mjs` dice ARRANCÓ BIEN, `stop_session` (desde bypass no pide cartel) y reenviar el MISMO
+   encargo por `send_message`: ese turno nuevo sale en el modelo pedido. Medido el 10/10 18:50.
 5. **Medir que arrancó bien**, al minuto y a los cinco:
    ```bash
    node scripts/_hijaEstado.mjs <session_id> [--espera-modelo claude-opus-5-5]
