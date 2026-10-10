@@ -17,7 +17,7 @@ Reglas de la tanda: las 21 de la v3 §2, más la del 10/10 ~11:10 (*"todo lo que
 
 | Sesión | Encargo | Modelo / modo | Qué hace | Estado |
 |---|---|---|---|---|
-| `local_8e259e7a` (madrugada) | E261010-72c7 cerrado 12:28 (H14 `b2f56ae1`, P26 `7e1caa35`, CI verde) → **E261010-f52a: paso 11, H20+H21** | Opus 5.5 / bypass (es la única sesión en bypass: por eso la reutilizo) | H20+H21 | contexto 54 % a las 12:28 |
+| `local_8e259e7a` (madrugada) | E261010-72c7 (H14 `b2f56ae1`, P26 `7e1caa35`) → E261010-f52a (paso 11, H20+H21, `14adcfc9`, 13:07) → E261010-03ba (paso 12, H23+H24, `69ee710a`, 13:38) → **E261010-e2eb: paso 13, H25+H26+H27** (13:47) | Opus 5.5 / bypass (es la única sesión en bypass: por eso la reutilizo) | H25-H27 | contexto 73 % a las 13:46; al 85 % para |
 | `local_e4632689` (hija 1) | E261010-8c59 | Opus 5.5 desde el 2.º turno / bypass heredado | paso 11: H20+H21 novedades | lanzada 11:26, abortada 11:28 (arrancó en default) |
 
 Próximas (de a una o dos, sin pisar archivos): paso 12 H23+H24 (skills) · 13 H25-H27 (consumos) · 14 H30+H31 · 15 H5+H6 · después H17, H19, H22, H28… · grandes en Fable: P6, P9+P10, P33, P55, P56 (con su sí ya dado el 09/10 16:55; el plan en `docs/` igual se le muestra).
