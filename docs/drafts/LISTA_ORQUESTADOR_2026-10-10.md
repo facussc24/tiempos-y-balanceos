@@ -40,6 +40,7 @@ Próximas (de a una o dos, sin pisar archivos): paso 12 H23+H24 (skills) · 13 H
 - 18:58 · Fak contestó P55: no usa la app (la etapa 3 se cae); "todos" = el Excel editable de cada AMFE siempre en la carpeta de Ingeniería del server (etapa 1b, necesita el server); AMFE y plan de control tienen que tener los mismos controles (gate 8 de P6).
 - 19:30 · hija 2 cerró el paso 15 (H5+H6, `82edf1c1`): **los 15 pasos del orden de trabajo están hechos** (9 a 15 hoy, 1 a 8 anoche). Dejó HOY-21 (el test de idioma que corre el detector real). Hija 3 sigue con P55 etapa 1.
 - 19:05 · Fak pegó tres investigaciones nuevas → HOY-18 (GitHub, segunda pasada), HOY-19 (funciones nuevas en las skills, Outlook), HOY-20 (CATIA por código: instalada en esta PC y con automatización COM, medido). Y preguntó en qué fase va lo de investigar: en la 2 (ya pasó una vez el 08/10).
+- 20:16 · hija 3 cerró **P55 etapa 1** (`979fdcf8`: la copia de Supabase en la nube se mantiene sola; auditor: 295 tests, 3 errores reales corregidos; informe `.sgc-cache/sesion-2026-10-10/P55_etapa1_auditor.md`). Encargo E261010-73da cerrado. Recibe **HOY-20** (CATIA por código, encargo E261010-36a1), contexto 49 %.
 - Tareas que quedan para limpiar en Programadas cuando Fak esté (borrar una tarea archiva sus sesiones y eso pide cartel): `prueba-modo-reloj-20261010`, `hija-novedades-h20-h21-20261010` (su corrida abortada), `sesion-sistema-claude-fase2-20261009`.
 
 ## Trabajo que puedo hacer solo (cuando se acabe lo pedido)
