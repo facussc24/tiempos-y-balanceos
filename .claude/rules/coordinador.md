@@ -18,7 +18,7 @@ formulario validado**. Mismo patron que ya funciona dos veces en esta casa: `_ma
 node scripts/_encargo.mjs --a "<sesion>" --entregable "<UNO>" --origen fak \
      --cuerpo "<texto>" [--fuente <ruta>] [--supuesto "<...>" | --sin-supuestos] \
      [--etapa proyecto|serie] [--ok-fak "<cita>" --hora HH:MM] \
-     [--carpeta "<carpeta de la tarea en el Escritorio>"] [--skill <nombre>]... [--sin-arranque]
+     [--carpeta "<carpeta de la tarea en el Escritorio>"] [--skill <nombre>]... [--sin-arranque] [--lanzada]
 ```
 Se pega la salida **tal cual**. Al final de todo encargo va el bloque **ARRANQUE** (desde el
 05/09/2026, canon `plantillaArranque`): modo plan, la carpeta de la tarea, leer los archivos
@@ -27,6 +27,15 @@ sintesis con la ruta primero). Es lo que Fak tipeaba a mano en cada sesion ("mod
 en dos semanas). `--skill` se valida contra `.claude/skills/` y `--carpeta` contra el disco; una
 linea nueva de la plantilla se prueba en `encargo.test.mjs` (pasa por los mismos candados). Un mensaje que no es encargo (un gracias, un aviso):
 `touch ~/.claude/.encargo-libre` — vale una vez, mientras el archivo este vacio.
+
+**`--lanzada` (10/10/2026, cola HOY-8 con el si de Fak):** el encargo va a una sesion que LANZA otra
+sesion y Fak no esta en su ventana. La linea 1 del ARRANQUE pasa de «entra en modo plan» a «NO entres
+en modo plan»: el modo plan espera un clic que nadie va a dar (la hija de la madrugada del 10/10 quedo
+parada asi a la 01:33). Como se lanza la hija (tarea manual + `run_scheduled_task`; arranca con el modo
+guardado en la tarea o, si no hay, con el del settings, NUNCA con el de la que la lanza; el cambio de modo
+desde afuera es lo que muestra el cartel) y como se mide que arranco bien (`node scripts/_hijaEstado.mjs
+<id>`): skill **`lanzar-sesion-hija`**. Un mensaje por `send_message` SI entra a una sesion lanzada asi
+(medido el 10/10: «delivered» con la hija en turno; «queued» o «undelivered» si esta parada: se lee el resultado).
 
 ## Los 7 candados, uno por error real
 

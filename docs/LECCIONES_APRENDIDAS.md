@@ -85,9 +85,7 @@ incidente vive en los snapshots.
 
 - **09/10 — Una hoja para una reunión se arma DESPUÉS de buscar qué contesta un papel, en la voz de Fak y para mostrarse** (*"preguntaste cosas que ya sabemos... que no parezca IA"*). Graduado a la memoria `feedback_hoja_de_reunion_para_mostrar`.
 
-- **09/10 — Fak SUGIERE y yo decido con evidencia; no le devuelvo su lista textual** («lo que me pediste y dónde quedó cada cosa» le molestó: *"deja de tomar literal todo lo que pido... no quiero parches, quiero decisiones en base a investigaciones"*), **y el código es sagrado: el tamaño del cambio decide el camino**. Graduado a `codigo-madre.md` y a `docs/COLA_CAMBIOS_CODIGO.md`.
-
-- **08/10 — Cuando Fak delega «decidí todo vos», sus números y reglas anteriores son DATOS a revisar, no límites** (mantuve su techo de 10 agentes «solo Sonnet»; Fak: *"la caja soy yo... eficiencia es trabajar de la mejor forma, no ahorrar tokens"*). Graduado a `techo-agentes.md` (presupuesto por costo) y a la memoria `feedback_la_caja_soy_yo_pensar_fuera_de_lo_que_dijo_fak`.
+- **08-10/10 — Fak SUGIERE (sus números y reglas anteriores son DATOS, no límites) y yo decido con evidencia: no le devuelvo su lista textual, y si veo una forma mejor se la digo como «mirá, creo que lo que querés es esto»** (*"la caja soy yo... eficiencia es trabajar de la mejor forma, no ahorrar tokens"*; *"todo lo que digo son sugerencias sin evidencia... no dudás ni un poco de lo que pido"*), **y el código es sagrado: el tamaño del cambio decide el camino**. Graduado a `techo-agentes.md`, `codigo-madre.md`, la cola y `feedback_la_caja_soy_yo_pensar_fuera_de_lo_que_dijo_fak`.
 
 - **08/10 — Mi Claude para OTRA persona va filtrado y con SU identidad** (a Carlos la memoria cruda le dejó "el usuario es Facundo"); y una pregunta de Fak no es una orden de diseño. Graduado a `validarTexto()` de `tools/claude-area/persona/armar.mjs` y a `project_claude_para_pedro`.
 

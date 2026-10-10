@@ -122,9 +122,12 @@ Code en cada sesion; el detalle vive en su `SKILL.md` bajo `.claude/skills/`.
 `lecciones-consolidacion.md` (lo miden `_cierreSesion.mjs` y el hook Stop).
 
 **Modelo y sesion (decision Fak 04/09/2026):** Fable 5.1 para mejoras de codigo importantes,
-Opus (hoy Opus 5.5) para el resto; no tocar el selector por cuenta propia. `permissions.defaultMode: plan`
-esta en el settings, pero Claude Desktop fija bypass para esta carpeta y lo pisa: el modo plan lo pide
-la plantilla de `_encargo.mjs`. Auto-compacta a 1M tokens (settings globales); el hook Stop
+Opus (hoy Opus 5.5) para el resto; no tocar el selector por cuenta propia. El modo de permisos lo elige el
+selector de la app (el `defaultMode: plan` del settings del repo se saco el 10/10/2026, cola HOY-8: dejaba
+en plan a una sesion disparada por el reloj); una sesion lanzada desde otra arranca con el modo guardado en
+su tarea o, si no hay, con el del settings, nunca con el de la que la lanza (skill `lanzar-sesion-hija`), y
+el modo plan lo pide la plantilla de `_encargo.mjs` solo cuando Fak esta en la ventana (`--lanzada` lo
+saca). Auto-compacta a 1M tokens (settings globales); el hook Stop
 `cierre-guard.sh` corta el turno si termina pidiendo permiso para mi propio trabajo o si entregue
 afuera del repo sin decir la ruta.
 

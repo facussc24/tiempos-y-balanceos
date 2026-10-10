@@ -67,6 +67,33 @@ describe('plantilla de arranque · lo que Fak tipeaba a mano sale fijo', () => {
     expect(lineasArranque({ sinArranque: true })).toEqual([]);
   });
 
+  it('--lanzada (10/10/2026, HOY-8): la linea 1 dice NO entrar en modo plan y el resto del bloque queda igual', () => {
+    const t = armarTexto({ ...base(), carpeta: 'C:\\Escritorio\\Tarea', skills: ['carga-arb'], lanzada: true });
+    expect(t).toContain(CANON.plantillaArranque.titulo);
+    expect(t).toMatch(/1\. Esta sesión la lanzó OTRA sesión y Fak no está en la ventana: NO entres en modo plan/);
+    expect(t).not.toMatch(/Entrá en modo plan/);
+    expect(t).toMatch(/2\. La tarea vive en el Escritorio: C:\\Escritorio\\Tarea/);
+    expect(t).toMatch(/3\. Leé ENTERO cada archivo fuente/);
+    expect(t).toMatch(/4\. Cargá con la tool Skill, antes de empezar: carga-arb\./);
+    expect(t).toMatch(/5\. Al cerrar: node scripts\/_cierreSesion\.mjs --sin-build en verde/);
+    // sin --lanzada, la linea 1 sigue pidiendo el modo plan (Fak esta y aprueba el QUE)
+    expect(armarTexto(base())).toMatch(/1\. Entrá en modo plan/);
+    expect(lineasArranque({ lanzada: true })[1]).toBe(`  1. ${CANON.plantillaArranque.lineaLanzada}`);
+  });
+
+  it('--lanzada pasa los candados del guardian igual que el encargo comun, y --sin-arranque le gana', () => {
+    const t = armarTexto({ ...base(), lanzada: true });
+    expect(detectarSegundaTarea(t)).toEqual([]);
+    expect(detectarIrreversibles(t)).toEqual([]);
+    const r = decidir(
+      { tool_name: 'SendMessage', tool_input: { to: 'barackmercosul-c9', message: t } },
+      { hayEscape: () => false, leerEncargo: () => ({ id: 'E260905-abcd', texto: t, cerrado: null }) },
+    );
+    expect(r.ok, JSON.stringify(r)).toBe(true);
+    expect(armarTexto({ ...base(), lanzada: true, sinArranque: true })).not.toMatch(/modo plan/);
+    expect(parseArgs(['--a', 'barackmercosul-c9', '--lanzada']).lanzada).toBe(true);
+  });
+
   it('el texto completo pasa los candados del guardian: ni conector de segunda tarea, ni accion irreversible, ni autorizacion reenviada', () => {
     const t = armarTexto({ ...base(), carpeta: 'C:\\Escritorio\\Tarea', skills: skillsDisponibles() });
     expect(detectarSegundaTarea(t)).toEqual([]);
@@ -80,7 +107,7 @@ describe('plantilla de arranque · lo que Fak tipeaba a mano sale fijo', () => {
 
   it('cada linea de la plantilla, sola, tampoco dispara un candado (una linea nueva se prueba aca antes de ir al canon)', () => {
     const P = CANON.plantillaArranque;
-    for (const l of [...P.lineas, P.conCarpeta, P.sinCarpeta, P.conSkills, P.titulo]) {
+    for (const l of [...P.lineas, P.lineaLanzada, P.conCarpeta, P.sinCarpeta, P.conSkills, P.titulo]) {
       expect(detectarSegundaTarea(l), l).toEqual([]);
       expect(detectarIrreversibles(l), l).toEqual([]);
     }
