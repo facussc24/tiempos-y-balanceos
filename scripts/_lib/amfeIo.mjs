@@ -203,6 +203,70 @@ export async function listPfds(sb) {
 // ─── Write por tabla (con guards + verify) ──────────────────────────────────
 
 /**
+ * ESCRITURA DOBLE (etapa 1 de P55, 10/10/2026): despues de guardar en Supabase, el documento se escribe
+ * tambien en la copia de la biblioteca de Ingenieria (`_lib/datosNube.mjs`, `espejarGuardado`).
+ *
+ * NUNCA rompe el guardado: si la nube falla (biblioteca sin sincronizar, archivo tomado, archivo que cambio
+ * en la nube) avisa por consola y sigue; la pasada `_datosSincronizar.mjs` lo repara o lo lista.
+ * Se apaga con `opts.nube === false` o `BARACK_DATOS_NUBE=0`; `opts.nubeDir` cambia la carpeta (tests).
+ * Corriendo en vitest no toca la carpeta real si no se le pasa una.
+ *
+ * `soloArchivo` (columnas que se iban a guardar, `data` como objeto): Supabase NO contesto. El documento se
+ * escribe igual en el archivo para no perder el trabajo y queda anotado como pendiente.
+ *
+ * El import es dinamico a proposito: `datosNube.mjs` importa `_datosExportar.mjs`, que importa este archivo.
+ * @returns {Promise<{escrito: boolean, motivo?: string, ruta?: string}|null>}
+ */
+async function espejarEnNube(sb, tabla, id, opts = {}, soloArchivo = null, filaAnterior = null) {
+    if (opts.nube === false || process.env.BARACK_DATOS_NUBE === '0') return null;
+    try {
+        const { espejarGuardado } = await import('./datosNube.mjs');
+        const r = await espejarGuardado({ sb, tabla, id, dir: opts.nubeDir ?? null, rutaEstado: opts.nubeEstado ?? null, soloArchivo, filaAnterior });
+        const callado = ['sin_carpeta', 'sin_copia_inicial'].includes(r.motivo) && process.env.VITEST;
+        if (r.motivo && !callado) console.warn(`  [copia en la nube] ${tabla}/${id}: ${r.escrito ? 'escrito, pero ' : 'NO se escribio: '}${r.motivo}`);
+        return r;
+    } catch (e) {
+        console.warn(`  [copia en la nube] ${tabla}/${id}: NO se escribio (${e?.message ?? e}). El guardado en Supabase no depende de esto; lo repara node scripts/_datosSincronizar.mjs --aplicar`);
+        return { escrito: false, motivo: String(e?.message ?? e) };
+    }
+}
+
+/**
+ * La fila como esta en Supabase JUSTO ANTES de guardar (o null). La escritura doble la usa para saber si el
+ * archivo de la nube es contenido de Supabase (lo escribio otra PC al guardar) o lo edito alguien a mano.
+ * Solo se lee cuando hace falta (el archivo no esta como esta PC lo dejo): en el caso normal no se suma una
+ * lectura a cada guardado ni una espera con Supabase caido. Si falla, se sigue sin ella.
+ */
+async function filaAntesDeGuardar(sb, tabla, id, opts = {}) {
+    if (opts.nube === false || process.env.BARACK_DATOS_NUBE === '0') return null;
+    try {
+        const { necesitaFilaAnterior } = await import('./datosNube.mjs');
+        if (!necesitaFilaAnterior({ tabla, id, dir: opts.nubeDir ?? null, rutaEstado: opts.nubeEstado ?? null })) return null;
+        const { data } = await sb.from(tabla).select('*').eq('id', id).single();
+        return data ?? null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Supabase rechazo el guardado: se intenta dejar el documento en el archivo de la nube y se devuelve el
+ * Error que hay que tirar, diciendo donde quedo. El guardado sigue siendo un error para quien llamo.
+ */
+async function errorDeGuardado(sb, tabla, id, opts, payload, doc, mensaje, { error, status, filaAnterior }) {
+    // Solo una CAIDA se copia al archivo. Si la base o su puerta contestaron y rechazaron el pedido (un
+    // `code` de Postgres/PostgREST: columna que no existe, permiso; o un 4xx: clave mala, sin sesion) es un
+    // error del script o de la configuracion, y un documento asi no se escribe en la biblioteca.
+    const rechazo = !!error?.code || (Number(status) >= 400 && Number(status) < 500);
+    if (rechazo) return new Error(mensaje);
+    const r = await espejarEnNube(sb, tabla, id, opts, { ...payload, data: doc }, filaAnterior);
+    const cola = r?.escrito || (r && !r.motivo)
+        ? ` — OJO: el documento quedo guardado SOLO en el archivo de la nube (${r.ruta}); Supabase quedo atras (node scripts/_datosSincronizar.mjs --pendientes)`
+        : '';
+    return new Error(`${mensaje}${cola}`);
+}
+
+/**
  * Guarda un AMFE. Obliga JSON.stringify (data es TEXT).
  * Verifica post-write leyendo de vuelta y parseando.
  * @param {object} sb
@@ -265,8 +329,9 @@ export async function saveAmfe(sb, id, doc, opts = {}) {
         throw new Error(`saveAmfe WRITE GUARD: data must be string, got ${typeof payload.data}`);
     }
 
-    const { error } = await sb.from('amfe_documents').update(payload).eq('id', id);
-    if (error) throw new Error(`SAVE amfe/${id}: ${error.message}`);
+    const filaAnterior = await filaAntesDeGuardar(sb, 'amfe_documents', id, opts);
+    const { error, status } = await sb.from('amfe_documents').update(payload).eq('id', id);
+    if (error) throw await errorDeGuardado(sb, 'amfe_documents', id, opts, payload, doc, `SAVE amfe/${id}: ${error.message}`, { error, status, filaAnterior });
 
     // Verify round-trip
     const { data: verify, error: vErr } = await sb.from('amfe_documents')
@@ -279,6 +344,7 @@ export async function saveAmfe(sb, id, doc, opts = {}) {
     if (!parsed || !Array.isArray(parsed.operations)) {
         throw new Error(`VERIFY amfe/${id}: operations array broken after write`);
     }
+    await espejarEnNube(sb, 'amfe_documents', id, opts, null, filaAnterior);
 }
 
 export async function saveCp(sb, id, doc, opts = {}) {
@@ -291,24 +357,32 @@ export async function saveCp(sb, id, doc, opts = {}) {
         ...(opts.extraFields || {}),
     };
     if (typeof payload.data !== 'string') throw new Error('saveCp: data must be string');
-    const { error } = await sb.from('cp_documents').update(payload).eq('id', id);
-    if (error) throw new Error(`SAVE cp/${id}: ${error.message}`);
+    const filaAnterior = await filaAntesDeGuardar(sb, 'cp_documents', id, opts);
+    const { error, status } = await sb.from('cp_documents').update(payload).eq('id', id);
+    if (error) throw await errorDeGuardado(sb, 'cp_documents', id, opts, payload, doc, `SAVE cp/${id}: ${error.message}`, { error, status, filaAnterior });
+    await espejarEnNube(sb, 'cp_documents', id, opts, null, filaAnterior);
 }
 
 export async function saveHo(sb, id, doc, opts = {}) {
     guardDataShape(doc, 'ho');
-    const payload = { data: JSON.stringify(doc), ...(opts.extraFields || {}) };
+    // 10/10/2026: `updated_at` tampoco se mueve solo aca (mismo caso que saveAmfe y saveCp): una HO
+    // corregida por script quedaba con la fecha de la escritura anterior.
+    const payload = { data: JSON.stringify(doc), updated_at: new Date().toISOString(), ...(opts.extraFields || {}) };
     if (typeof payload.data !== 'string') throw new Error('saveHo: data must be string');
-    const { error } = await sb.from('ho_documents').update(payload).eq('id', id);
-    if (error) throw new Error(`SAVE ho/${id}: ${error.message}`);
+    const filaAnterior = await filaAntesDeGuardar(sb, 'ho_documents', id, opts);
+    const { error, status } = await sb.from('ho_documents').update(payload).eq('id', id);
+    if (error) throw await errorDeGuardado(sb, 'ho_documents', id, opts, payload, doc, `SAVE ho/${id}: ${error.message}`, { error, status, filaAnterior });
+    await espejarEnNube(sb, 'ho_documents', id, opts, null, filaAnterior);
 }
 
 export async function savePfd(sb, id, doc, opts = {}) {
     guardDataShape(doc, 'pfd');
-    const payload = { data: JSON.stringify(doc), ...(opts.extraFields || {}) };
+    const payload = { data: JSON.stringify(doc), updated_at: new Date().toISOString(), ...(opts.extraFields || {}) };
     if (typeof payload.data !== 'string') throw new Error('savePfd: data must be string');
-    const { error } = await sb.from('pfd_documents').update(payload).eq('id', id);
-    if (error) throw new Error(`SAVE pfd/${id}: ${error.message}`);
+    const filaAnterior = await filaAntesDeGuardar(sb, 'pfd_documents', id, opts);
+    const { error, status } = await sb.from('pfd_documents').update(payload).eq('id', id);
+    if (error) throw await errorDeGuardado(sb, 'pfd_documents', id, opts, payload, doc, `SAVE pfd/${id}: ${error.message}`, { error, status, filaAnterior });
+    await espejarEnNube(sb, 'pfd_documents', id, opts, null, filaAnterior);
 }
 
 // ─── Legacy fm-level sync (VDA 2019 migracion) ──────────────────────────────

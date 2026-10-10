@@ -39,11 +39,11 @@ describe('nocturno · arranque y pasos', () => {
     let corrio = 0;
     const pasos = await N.correrPasos(N.PASOS.map((nombre) => ({ nombre, correr: async () => { corrio++; return { detalle: nombre }; } })), { solo: 'mails' });
     expect(corrio).toBe(1);
-    expect(pasos.map((p) => `${p.nombre}:${p.estado}`)).toEqual(['preauditoria:saltado', 'mails:ok', 'prioridades:saltado', 'novedades:saltado', 'vigilante:saltado', 'propuestas:saltado', 'disparo:saltado']);
+    expect(pasos.map((p) => `${p.nombre}:${p.estado}`)).toEqual(['datos:saltado', 'preauditoria:saltado', 'mails:ok', 'prioridades:saltado', 'novedades:saltado', 'vigilante:saltado', 'propuestas:saltado', 'disparo:saltado']);
   });
 
   it('el orden de la noche: prioridades va despues de mails (usa lo que dejo) y los semanales van al final', () => {
-    expect(N.PASOS).toEqual(['preauditoria', 'mails', 'prioridades', 'novedades', 'vigilante', 'propuestas', 'disparo']);
+    expect(N.PASOS).toEqual(['datos', 'preauditoria', 'mails', 'prioridades', 'novedades', 'vigilante', 'propuestas', 'disparo']);
     expect(N.PASOS.slice(-N.PASOS_SEMANALES.length)).toEqual([...N.PASOS_SEMANALES]);
   });
 });
@@ -243,6 +243,23 @@ describe('nocturno · estado y linea del tablero', () => {
   it('la linea tiene la forma acordada', () => {
     expect(N.lineaTablero({ fin, pasos, costoUsd: 0.41, presupuesto: verde }))
       .toBe('Noche 08/10 06:31 · pre-auditoría AMFE: 3 revisados · 2 hallazgos para verificar (1 nuevo) · 4 mails resumidos · novedades: sin cambios · $0,41 (mes $12,30 de $100, verde)');
+  });
+
+  // 10/10/2026, etapa 1 de P55: el paso `datos` (la copia de Supabase en la biblioteca de Ingenieria)
+  it('la copia en la nube solo ocupa lugar si escribio algo o si fallo', () => {
+    const dato = (estado, detalle) => ({ nombre: 'datos', estado, detalle, costoUsd: 0 });
+    const linea = (d) => N.lineaTablero({ fin, pasos: [d, ...pasos], costoUsd: 0 });
+    expect(linea(dato('ok', '899 filas en 19 tablas · 0 archivo(s) escritos · 111 sin cambios'))).not.toMatch(/copia en la nube/);
+    expect(linea(dato('ok', '899 filas en 19 tablas · 3 archivo(s) escritos · 108 sin cambios'))).toMatch(/copia en la nube: 899 filas en 19 tablas · 3 archivo\(s\) escritos/);
+    expect(linea(dato('error', '899 filas en 19 tablas · 0 archivo(s) escritos · 110 sin cambios · 1 PENDIENTE(S) sin pisar'))).toMatch(/copia en la nube: ERROR \(.*1 PENDIENTE/);
+    expect(linea(dato('error', 'abortado: Supabase no contesto bien'))).toMatch(/copia en la nube: ERROR \(abortado/);
+  });
+
+  it('leerSalidaDatos toma la ultima linea JSON de la salida del proceso aparte, o null', () => {
+    expect(N.leerSalidaDatos('  auth OK\n  carpeta: C:\\x\n\nSincronizado: ...\n{"ok":true,"linea":"899 filas","escritos":2}\n')).toEqual({ ok: true, linea: '899 filas', escritos: 2 });
+    expect(N.leerSalidaDatos('se colgo y no dijo nada')).toBeNull();
+    expect(N.leerSalidaDatos('{ roto')).toBeNull();
+    expect(N.leerSalidaDatos('')).toBeNull();
   });
 
   it('un paso con error se ve en la linea; uno que no tocaba tambien', () => {

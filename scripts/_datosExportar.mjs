@@ -11,6 +11,11 @@
  *   node scripts/_datosExportar.mjs                   exporta (escribe SOLO en la carpeta destino)
  *   node scripts/_datosExportar.mjs --verificar       relee Supabase y compara contra los archivos
  *   node scripts/_datosExportar.mjs --out <carpeta>   otra carpeta destino (por defecto, la de la nube)
+ *   node scripts/_datosExportar.mjs --pisar           exporta a la carpeta de la nube PISANDO lo que haya
+ *
+ * Desde el 10/10/2026 (etapa 1, P55) la carpeta de la nube se mantiene con `_datosSincronizar.mjs`, que
+ * no pisa un archivo que cambio en la nube. Este script escribe todo archivo que difiere, asi que contra
+ * la carpeta de la nube solo exporta con `--pisar` (la primera copia, o reconstruirla a proposito).
  *
  * SOLO LECTURA sobre Supabase: login, `select` y el RPC `exec_sql_read`. Nada de escrituras
  * (un test lee este archivo y falla si aparece alguna). No borra archivos: los que quedan
@@ -400,7 +405,7 @@ async function bajarTabla(sb, tabla, pk) {
 }
 
 /** Tablas que se exportan: con filas y no excluidas. Devuelve tambien lo que queda afuera. */
-function clasificarTablas(conteos) {
+export function clasificarTablas(conteos) {
     const exportables = [], excluidas = {}, vacias = [];
     for (const [tabla, n] of conteos) {
         if (n === 0) vacias.push(tabla);
@@ -414,7 +419,7 @@ function clasificarTablas(conteos) {
  * Baja una tabla y la deja lista: plan de archivos o el motivo por el que no se puede.
  * Un descuadre contra el conteo real (RLS, paginacion, cambio en el medio) invalida la tabla.
  */
-async function prepararTablaViva(sb, tabla, esperadas, pk) {
+export async function prepararTablaViva(sb, tabla, esperadas, pk) {
     if (!pk || pk.length === 0) return { error: `${tabla}: no tiene clave primaria (no se adivina la clave)` };
     const { filas, error } = await bajarTabla(sb, tabla, pk);
     if (error) return { error: `${tabla}: no se pudo leer (${error})` };
@@ -560,7 +565,7 @@ async function main() {
     }
     const dir = resolve(destino);
     const raizRepo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-    if (dir === raizRepo || dir.startsWith(raizRepo + sep)) {
+    if (dir.toLowerCase() === raizRepo.toLowerCase() || dir.toLowerCase().startsWith((raizRepo + sep).toLowerCase())) {
         console.error(`\n✗ ABORTADO — la carpeta destino (${dir}) esta adentro del repo de la app. Los datos van a la nube de Ingenieria.\n`);
         process.exit(1);
     }
@@ -575,6 +580,13 @@ async function main() {
     console.log('  auth OK (solo lectura)');
     const modoVerificar = args.includes('--verificar');
     console.log(`  destino: ${dir}`);
+    const nube = carpetaNube();
+    if (!modoVerificar && !args.includes('--pisar') && nube && resolve(nube).toLowerCase() === dir.toLowerCase()) {
+        console.error('\n✗ ABORTADO — la carpeta de la nube se actualiza con `node scripts/_datosSincronizar.mjs --aplicar`,'
+            + '\n  que no pisa un archivo que cambio en la nube. Este script escribe todo lo que difiere:'
+            + '\n  contra la nube solo corre con --pisar (primera copia o reconstruccion a proposito).\n');
+        process.exit(1);
+    }
 
     try {
         if (modoVerificar) {

@@ -47,6 +47,8 @@ import { CANON as CANON_CIERRE, evaluarBullets } from './_lib/cierreGuard.mjs';
 import { relevarBomLegajo, evaluarBomLegajo } from './_lib/bomLegajoCheck.mjs';
 import { relevarCerebro, lintCerebro, dirMemoriaDe, resumir as resumirCerebro } from './_lib/cerebroLint.mjs';
 import { chequearAvisos } from './_lib/probarMejora.mjs';
+import { carpetaNube } from './_datosExportar.mjs';
+import { evaluarCopiaNube, leerEstado as leerEstadoNube, rutaEstadoPorDefecto } from './_lib/datosNube.mjs';
 export const LECCIONES_AVISO = CANON_CIERRE.lecciones.aviso_bytes;
 export const LECCIONES_TOPE = CANON_CIERRE.lecciones.tope_bytes;
 
@@ -385,6 +387,22 @@ function ultimoBackupValido(tmp) {
     return null;
 }
 
+/**
+ * La copia de Supabase en la biblioteca de Ingenieria (etapa 1 de P55). NO va a la red ni a Supabase: lee la
+ * base local que deja `_datosSincronizar.mjs` (este chequeo corre tambien desde el cierre del turno, que
+ * tiene tope de tiempo). Lo que mide: pendientes sin resolver, y una escritura en Supabase posterior a la
+ * ultima pasada. La pasada la corro yo: `node scripts/_datosSincronizar.mjs --aplicar`.
+ */
+function chequearCopiaNube(tmp) {
+    try {
+        const dir = carpetaNube();
+        const estado = dir ? leerEstadoNube(rutaEstadoPorDefecto(dir), dir) : null;
+        return evaluarCopiaNube({ estado, hayCarpeta: !!dir, escrituraEpoch: ultimaEscrituraSupabase(tmp) });
+    } catch (e) {
+        return { estado: 'aviso', detalle: `no se pudo leer el estado de la copia de la nube: ${e.message}` };
+    }
+}
+
 function chequearLecciones() {
     try {
         return evaluarLecciones(fs.statSync(path.join(REPO, 'docs', 'LECCIONES_APRENDIDAS.md')).size);
@@ -535,6 +553,7 @@ async function main(argv) {
         { paso: 'LECCIONES_APRENDIDAS bajo el gate de consolidacion', ...chequearLecciones() },
         { paso: 'LECCIONES_APRENDIDAS: gate por bullet (graduar, no comprimir)', ...chequearLeccionesBullets() },
         { paso: 'Backup Supabase posterior a la ultima escritura', ...evaluarBackup({ escritura: ultimaEscrituraSupabase(tmp), backup: ultimoBackupValido(tmp) }) },
+        { paso: 'Copia de los documentos en la nube de Ingenieria al dia con Supabase (P55)', ...chequearCopiaNube(tmp) },
         { paso: 'Build de produccion', ...chequearBuild(sinBuild) },
         { paso: 'Git: commit + push (regla git-deploy)', ...chequearGit() },
         { paso: 'CI de GitHub: la ultima corrida del push (regla git-deploy, paso 4)', ...(await chequearCI()) },

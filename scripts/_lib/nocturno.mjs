@@ -23,7 +23,18 @@ export const HORA_TAREA = '06:30';
  * los tres ultimos (PASOS_SEMANALES) una vez por semana y al final, para que una corrida cortada ya haya hecho
  * lo diario.
  */
-export const PASOS = Object.freeze(['preauditoria', 'mails', 'prioridades', 'novedades', 'vigilante', 'propuestas', 'disparo']);
+export const PASOS = Object.freeze(['datos', 'preauditoria', 'mails', 'prioridades', 'novedades', 'vigilante', 'propuestas', 'disparo']);
+/**
+ * `datos` (10/10/2026, etapa 1 de P55): la copia de Supabase en la biblioteca de Ingenieria. Va PRIMERO porque
+ * no usa modelo ni gasta, y asi una noche cortada por tiempo o por el tope igual la deja al dia. Corre como
+ * proceso aparte (`_datosSincronizar.mjs --aplicar`): lee Supabase y escribe archivos en la biblioteca, que
+ * esta fuera de las carpetas de `escrituraSegura`. La noche solo lee su codigo de salida y su linea.
+ */
+export function leerSalidaDatos(stdout) {
+  const ultima = String(stdout ?? '').trim().split(/\r?\n/).reverse().find((l) => l.trim().startsWith('{'));
+  if (!ultima) return null;
+  try { const j = JSON.parse(ultima); return j && typeof j === 'object' ? j : null; } catch { return null; }
+}
 /**
  * Los pasos semanales (09/10/2026, cola H15; frecuencia de R3 §2: vigilante ~$0, propuestas de skills ~$2-2,5,
  * disparo ~$0,01). Cada uno corre si su ultima corrida COMPLETA tiene DIAS_SEMANAL dias o mas; esa fecha la anota
@@ -619,6 +630,10 @@ export function lineaTablero({ fin, pasos = [], costoUsd = 0, presupuesto = null
     partes.push(`no arrancó: ${noArranco}`);
   } else {
     const paso = (n) => pasos.find((p) => p.nombre === n);
+    // la copia en la nube solo ocupa lugar si escribio algo o si fallo (sin cambios, que es lo normal, no se dice)
+    const dat = paso('datos');
+    if (dat?.estado === 'error') partes.push(`copia en la nube: ERROR (${corto(dat.detalle, 90)})`);
+    else if (dat?.estado === 'ok' && !/ 0 archivo\(s\) escritos/.test(dat.detalle)) partes.push(`copia en la nube: ${corto(dat.detalle, 90)}`);
     const pre = paso('preauditoria');
     if (pre) {
       if (pre.estado === 'error') partes.push(`pre-auditoría AMFE: ERROR (${corto(pre.detalle, 80)})`);

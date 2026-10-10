@@ -60,7 +60,13 @@ el `node` del Programador de tareas: por eso los candados son codigo y test, no 
    pasan `dirLedger`— fijan una de esas variables en `beforeEach`. **Limite**: los scripts que la noche
    lanza como procesos aparte escriben por su cuenta (`_novedadesClaude.mjs` en `.sgc-cache/x-seguimiento/`,
    `_hilosAbiertos.mjs` en `.claude/state/hilos-cache.json`): caen en carpetas ignoradas pero no pasan
-   por la puerta.
+   por la puerta. **Una sola escritura sale de esas carpetas (10/10/2026, etapa 1 de P55): el paso `datos`
+   lanza `_datosSincronizar.mjs --aplicar`, tambien proceso aparte, que escribe en la carpeta `DATOS` de la
+   biblioteca de Ingenieria** (la copia de Supabase; Fak, 09/10: *"quiero que estén en otro lugar, en la nube"*).
+   Sobre Supabase es de solo lectura (`select` y el RPC `exec_sql_read`, que el cliente de la noche no tiene:
+   por eso no corre adentro del proceso de la noche), no pisa un archivo que cambio en la nube, no borra y no
+   sube nada. Su enforcement es `__tests__/scripts/datosNube.test.mjs` (sin escrituras a Supabase ni borrados
+   en el texto, con gemelo rojo; aborta ante la duda), no `candadosNocturno`.
 2. **A Supabase se entra solo por `supabaseSoloLectura.mjs`**: expone `from().select()` y nada mas; un
    `update`/`insert`/`upsert`/`delete`/`rpc` tira (el usuario de `.env.local` SI puede escribir).
 3. **`__tests__/scripts/candadosNocturno.test.mjs`** lee el texto de los archivos de la noche y falla si
@@ -91,8 +97,12 @@ noche revisa como mucho 6 (`--max`, los de `updated_at` mas viejo primero; los d
 siguiente sin tocar el estado). Una segunda corrida del mismo dia no pisa el reporte de la primera
 (`PREAUDITORIA_AMFE_AAAAMMDD_HHMM.md`).
 
-**Pasos de la noche, en orden**: `preauditoria` · `mails` · `prioridades` · `novedades` (todas las noches) ·
+**Pasos de la noche, en orden**: `datos` · `preauditoria` · `mails` · `prioridades` · `novedades` (todas las noches) ·
 `vigilante` · `propuestas` · `disparo` (**semanales**, desde el 09/10/2026, cola H15).
+- `datos` (10/10/2026) va primero: no usa modelo y deja la copia de la nube al dia aunque la noche se corte. Un
+  archivo que no se piso (pendiente) o una corrida abortada dejan el paso en `error`: la sesion de la mañana corre
+  `node scripts/_datosSincronizar.mjs --pendientes`. Si la noche no arranca (sin clave, ciclo en rojo), este paso
+  tampoco corre: lo cubre el chequeo del cierre de sesion.
 - Los semanales corren al final, cuando su ultima corrida COMPLETA tiene 7 dias o mas. Esa fecha la anota la propia
   noche en `.claude/state/nocturno-semanal.json` y SOLO si el paso salio completo (`corridaCompleta` de `nocturno.mjs`:
   vigilante con las tres paginas leidas y sin avisos; propuestas con al menos 3 de cada 4 skills revisados; disparo

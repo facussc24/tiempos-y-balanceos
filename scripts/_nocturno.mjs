@@ -4,6 +4,9 @@
  *
  * Pasos (cada uno independiente: el que falla queda 'error' y los demas siguen):
  *   0. clave presente (si no, exit 3) y presupuesto del CICLO de facturacion (en rojo no arranca, salvo --sin-tope)
+ *   0b. datos        la copia de Supabase en la biblioteca de Ingenieria (etapa 1 de P55): un proceso aparte,
+ *                    _datosSincronizar.mjs --aplicar, que lee Supabase y escribe los archivos que cambiaron.
+ *                    No pisa lo que cambio en la nube, no borra, no sube nada a Supabase. Sin modelo.
  *   1. preauditoria  la pre-auditoria de los AMFE que cambiaron (scripts/_preauditarAmfe.mjs), hasta 6 por
  *                    noche (los de updated_at mas viejo primero; el resto queda para la noche siguiente). El
  *                    estado y el reporte se guardan AMFE por AMFE: una corrida cortada conserva lo hecho.
@@ -27,7 +30,8 @@
  * .sgc-cache/api/nocturno.log. No toca el repo, ni Supabase (solo lectura), ni el arb, ni Outlook: todo lo
  * que escribe ESTE proceso pasa por scripts/_lib/escrituraSegura.mjs (solo .claude/state, .sgc-cache y
  * reports/staging). Los scripts que lanza aparte (_novedadesClaude.mjs, _hilosAbiertos.mjs) escriben por su
- * cuenta en esas mismas carpetas ignoradas, sin pasar por esa puerta.
+ * cuenta en esas mismas carpetas ignoradas, sin pasar por esa puerta. La UNICA escritura fuera de esas
+ * carpetas es la de _datosSincronizar.mjs, tambien proceso aparte: la carpeta DATOS de la biblioteca.
  * La logica pura vive en scripts/_lib/nocturno.mjs; las reglas, en .claude/rules/api-claude.md.
  *
  * DOS FRENOS ademas del presupuesto del ciclo, los dos antes de cada paso:
@@ -39,7 +43,7 @@
  * Uso:
  *   node scripts/_nocturno.mjs                    la noche entera (lo corre la tarea de Windows)
  *   node scripts/_nocturno.mjs --simular          que haria y cuanto costaria, sin gastar ni guardar
- *   node scripts/_nocturno.mjs --solo mails       un paso solo (preauditoria | mails | prioridades | novedades |
+ *   node scripts/_nocturno.mjs --solo mails       un paso solo (datos | preauditoria | mails | prioridades | novedades |
  *                                                 vigilante | propuestas | disparo; un semanal con --solo corre aunque no toque)
  *   node scripts/_nocturno.mjs --sin-tope         corre aunque el presupuesto del ciclo este en rojo o la corrida pase su tope
  *   node scripts/_nocturno.mjs --estado           la ultima noche: linea, pasos, prioridades y edad
@@ -69,7 +73,7 @@ import { correr as correrPropuestas } from './_propuestasSkills.mjs';
 import { correr as correrDisparo } from './_pruebaDisparoSkills.mjs';
 import { correr as correrVigilante } from './_lib/vigilarPrecios.mjs';
 import {
-  PASOS, NOMBRE_TAREA, HORA_TAREA, debeArrancar, correrPasos, elegirPedidos, emparejarMails, recortarCuerpo,
+  PASOS, NOMBRE_TAREA, HORA_TAREA, debeArrancar, correrPasos, leerSalidaDatos, elegirPedidos, emparejarMails, recortarCuerpo,
   SYSTEM_MAILS, armarPedidoMails, lineasDeMails, tocaNovedades, novedadesSinCambios, planNovedades, juntarListados, resumirNovedades,
   reunirEntradas, armarPedidoPrioridades, SYSTEM_PRIORIDADES, generarPrioridades, textoPrioridades, lineaRenglon,
   armarEstado, edadHoras, comandoAgendar, comandoDesagendar, comandoEstadoTarea, leerEstadoTarea,
@@ -239,6 +243,24 @@ async function pasoNovedades({ cliente, simular, ahora }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Paso 0: la copia de Supabase en la biblioteca de Ingenieria (etapa 1 de P55, 10/10/2026)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Proceso aparte: `_datosSincronizar.mjs` lee Supabase (solo lectura) y escribe archivos en la biblioteca.
+ * No pisa un archivo que cambio en la nube, no borra y no sube nada a Supabase. Sin modelo: costo 0.
+ * Un pendiente (archivo que no se piso) o una corrida abortada es un ERROR del paso: que se vea a la mañana.
+ */
+function pasoDatos({ simular }) {
+  const args = [path.join(AQUI, '_datosSincronizar.mjs'), simular ? '--simular' : '--aplicar', '--json'];
+  const r = spawnSync(process.execPath, args, { encoding: 'utf8', timeout: 5 * 60 * 1000, cwd: RAIZ, windowsHide: true, maxBuffer: 16 * 1024 * 1024 });
+  const j = leerSalidaDatos(r.stdout);
+  if (!j) throw new Error(`_datosSincronizar.mjs salio con ${r.status} y sin resultado: ${String(r.stderr || r.error?.message || '').trim().slice(-200)}`);
+  if (r.status !== 0 || !j.ok) throw new Error(j.abortado ? `abortado: ${j.abortado}` : (j.linea || `salio con ${r.status}`));
+  return { detalle: `${j.linea}${simular ? ' (simulado)' : ''}`, datos: { escritos: j.escritos, totalFilas: j.totalFilas } };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Pasos 5 a 7: los semanales (vigilante de precios, propuestas de skills, prueba de disparo)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -323,6 +345,7 @@ async function noche({ simular, solo, sinTope }) {
   const ctxSemanal = { solo, ahora: inicio, simular };
   const guardarSemanal = (nombre) => (r) => { if (r?.datos) datos.semanales[nombre] = r.datos; return r; };
   const pasos = await correrPasos([
+    { nombre: 'datos', correr: async () => pasoDatos({ simular }) },
     {
       nombre: 'preauditoria',
       correr: async () => {
