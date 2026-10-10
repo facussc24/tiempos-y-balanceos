@@ -88,12 +88,17 @@ noche revisa como mucho 6 (`--max`, los de `updated_at` mas viejo primero; los d
 siguiente sin tocar el estado). Una segunda corrida del mismo dia no pisa el reporte de la primera
 (`PREAUDITORIA_AMFE_AAAAMMDD_HHMM.md`).
 
-**Pasos de la noche, en orden**: `preauditoria` · `mails` · `prioridades` · `novedades`.
-**Todavia NO son pasos de la noche** (08/10/2026, escritos y con test, falta cablearlos en `nocturno.mjs` y probar
-su llamada a la API): el vigilante de precios (`_vigilarPrecios.mjs`, semanal: compara la tabla oficial con `PRECIOS`
-y los creditos; el guardado de fixtures es un script aparte, `_guardarFixturesPrecios.mjs`, que escribe en el repo y por
-eso no es de la noche), las propuestas de skills (`_propuestasSkills.mjs`, lee los transcripts de Fak) y la prueba de
-disparo de skills (`_pruebaDisparoSkills.mjs`). Hasta que se cableen, corren a mano desde la sesion.
+**Pasos de la noche, en orden**: `preauditoria` · `mails` · `prioridades` · `novedades` (todas las noches) ·
+`vigilante` · `propuestas` · `disparo` (**semanales**, desde el 09/10/2026, cola H15).
+- Los semanales corren al final, cuando su ultima corrida COMPLETA tiene 7 dias o mas. Esa fecha la anota la propia
+  noche en `.claude/state/nocturno-semanal.json` y SOLO si el paso salio completo (`corridaCompleta` de `nocturno.mjs`:
+  vigilante con las tres paginas leidas y sin avisos; propuestas con al menos 3 de cada 4 skills revisados; disparo
+  terminado): una corrida que fallo (sin red, 529) o salio a medias se reintenta la noche siguiente, y una corrida a mano
+  de los scripts sueltos no cuenta. `--solo <paso>` lo fuerza (y si sale completo, cuenta). `vigilante` no usa modelo; sus
+  diferencias son el hallazgo del paso, no un error, pero sin la pagina de PRECIOS el paso es un error (no puede decir
+  "sin cambios"); el guardado de fixtures, `_guardarFixturesPrecios.mjs`, escribe en el repo y no es de la noche.
+  `propuestas` (~$2,5: revisor Sonnet + refutador Opus) y `disparo` (Haiku, centavos) leen los transcripts de Fak una
+  sola vez entre los dos. Lo que dejan es para la sesion de la manana (`--estado` dice donde).
 - `prioridades`: hasta 4 renglones `1. [fuente] que hacer · por que hoy` que ORDENAN cosas que ya existen
   (seguimientos con fecha, hilos de tareas del Escritorio con mails nuevos, los mails que acaba de resumir
   el paso anterior, carpetas del Escritorio con sus dias, lo que dejo la noche). Una llamada a Sonnet

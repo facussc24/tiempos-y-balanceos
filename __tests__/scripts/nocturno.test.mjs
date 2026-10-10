@@ -39,11 +39,103 @@ describe('nocturno · arranque y pasos', () => {
     let corrio = 0;
     const pasos = await N.correrPasos(N.PASOS.map((nombre) => ({ nombre, correr: async () => { corrio++; return { detalle: nombre }; } })), { solo: 'mails' });
     expect(corrio).toBe(1);
-    expect(pasos.map((p) => `${p.nombre}:${p.estado}`)).toEqual(['preauditoria:saltado', 'mails:ok', 'prioridades:saltado', 'novedades:saltado']);
+    expect(pasos.map((p) => `${p.nombre}:${p.estado}`)).toEqual(['preauditoria:saltado', 'mails:ok', 'prioridades:saltado', 'novedades:saltado', 'vigilante:saltado', 'propuestas:saltado', 'disparo:saltado']);
   });
 
-  it('el orden de la noche: prioridades va despues de mails (usa lo que dejo)', () => {
-    expect(N.PASOS).toEqual(['preauditoria', 'mails', 'prioridades', 'novedades']);
+  it('el orden de la noche: prioridades va despues de mails (usa lo que dejo) y los semanales van al final', () => {
+    expect(N.PASOS).toEqual(['preauditoria', 'mails', 'prioridades', 'novedades', 'vigilante', 'propuestas', 'disparo']);
+    expect(N.PASOS.slice(-N.PASOS_SEMANALES.length)).toEqual([...N.PASOS_SEMANALES]);
+  });
+});
+
+describe('nocturno · pasos semanales (vigilante, propuestas, disparo: cola H15)', () => {
+  const hoy = new Date(2026, 9, 10, 6, 30);
+
+  it('ultimaCorrida / anotarCorrida: el registro propio de la noche, por paso', () => {
+    expect(N.ultimaCorrida('vigilante', null)).toBeNull();
+    expect(N.ultimaCorrida('vigilante', { vigilante: 'basura' })).toBeNull();
+    let reg = N.anotarCorrida(null, 'propuestas', '2026-10-09');
+    reg = N.anotarCorrida(reg, 'disparo', '2026-10-08');
+    expect(reg).toEqual({ propuestas: '2026-10-09', disparo: '2026-10-08' });
+    expect(N.ultimaCorrida('propuestas', reg)).toBe('2026-10-09');
+    expect(N.ultimaCorrida('vigilante', reg)).toBeNull();
+    expect(() => N.ultimaCorrida('mails', reg)).toThrow(/desconocido/);
+    expect(() => N.anotarCorrida(reg, 'disparo', '9/10')).toThrow(/fecha/);
+  });
+
+  it('corridaCompleta (auditoria 09/10): una corrida que fallo o salio a medias NO cuenta como la de la semana', () => {
+    const ok = { ok: true };
+    // ROJO: todos los skills en error (sin red, 529): antes la semana se perdia porque igual quedaba el _resumen.md
+    expect(N.corridaCompleta('propuestas', { resumen: { revisados: 0, errores: 3 } })).toBe(false);
+    expect(N.corridaCompleta('propuestas', { resumen: { revisados: 2, errores: 2 } })).toBe(false);
+    // VERDE: 20 revisados; 3 de 4 bien tambien cuenta (un skill que falla siempre no repite la pasada cada noche)
+    expect(N.corridaCompleta('propuestas', { resumen: { revisados: 20, errores: 0 } })).toBe(true);
+    expect(N.corridaCompleta('propuestas', { resumen: { revisados: 15, errores: 5 } })).toBe(true);
+    // vigilante: las tres paginas y sin avisos
+    expect(N.corridaCompleta('vigilante', { precios: ok, creditos: ok, deprecaciones: ok, errores: [] })).toBe(true);
+    expect(N.corridaCompleta('vigilante', { precios: ok, creditos: { ok: false }, deprecaciones: ok, errores: [{ seccion: 'creditos', mensaje: 'x' }] })).toBe(false);
+    expect(N.corridaCompleta('vigilante', { precios: ok, creditos: ok, deprecaciones: ok, errores: [{ seccion: 'pricing', tipo: 'invariante', mensaje: 'falta Haiku' }] })).toBe(false);
+    expect(N.corridaCompleta('disparo', { resumen: { mensajes: 200 } })).toBe(true);
+    expect(N.corridaCompleta('disparo', { resumen: { mensajes: 0 } })).toBe(false);
+  });
+
+  it('tocaSemanal: nunca corrio o 7+ dias -> toca; 6 dias -> no; cuenta dias de calendario, no horas', () => {
+    expect(N.tocaSemanal(null, hoy)).toEqual({ toca: true, dias: null });
+    expect(N.tocaSemanal('basura', hoy)).toEqual({ toca: true, dias: null });
+    expect(N.tocaSemanal('2026-10-03', hoy)).toEqual({ toca: true, dias: 7 });
+    expect(N.tocaSemanal('2026-10-04', hoy)).toEqual({ toca: false, dias: 6 });
+    expect(N.tocaSemanal('2026-10-10', hoy)).toEqual({ toca: false, dias: 0 });
+    // a las 23:59 del dia 6 sigue sin tocar; a las 00:01 del dia 7 ya toca
+    expect(N.tocaSemanal('2026-10-04', new Date(2026, 9, 10, 23, 59)).toca).toBe(false);
+    expect(N.tocaSemanal('2026-10-04', new Date(2026, 9, 11, 0, 1)).toca).toBe(true);
+    // cruza fin de mes
+    expect(N.tocaSemanal('2026-09-30', new Date(2026, 9, 7, 6, 30))).toEqual({ toca: true, dias: 7 });
+  });
+
+  it('detalleVigilante: diferencias son el hallazgo (no error); sin la pagina de PRECIOS si es error; lo no leido se nombra', () => {
+    const ok = { ok: true };
+    expect(N.detalleVigilante({ precios: ok, creditos: ok, deprecaciones: ok, diferencias: [], errores: [] })).toBe('sin cambios en lo leído');
+    expect(N.detalleVigilante({ precios: ok, creditos: { ok: false }, deprecaciones: ok, diferencias: [{ modelo: 'claude-sonnet-5-5', campo: 'salida' }], errores: [{ seccion: 'creditos', mensaje: 'HTTP 500' }] }))
+      .toBe('1 diferencia con lo nuestro: claude-sonnet-5-5 salida · sin leer creditos (HTTP 500)');
+    const muchas = Array.from({ length: 5 }, (_, i) => ({ modelo: `m${i}`, campo: 'entrada' }));
+    expect(N.detalleVigilante({ precios: ok, creditos: ok, deprecaciones: ok, diferencias: muchas })).toMatch(/^5 diferencias con lo nuestro: m0 entrada, m1 entrada, m2 entrada…$/);
+    // ROJO (lo que reprodujo el auditor): a la tabla le falta un modelo -> la pagina de precios no se entiende -> error, no "sin cambios"
+    expect(() => N.detalleVigilante({ precios: { ok: false }, creditos: ok, deprecaciones: ok, diferencias: [], errores: [{ seccion: 'pricing', tipo: 'modelo', mensaje: 'el modelo "Claude Haiku 5.5" no figura en la tabla' }] }))
+      .toThrow(/página de precios.*Haiku 5\.5 no figura|página de precios.*no figura/);
+    // un aviso de invariante con la pagina leida se nombra
+    expect(N.detalleVigilante({ precios: ok, creditos: ok, deprecaciones: ok, diferencias: [], errores: [{ seccion: 'pricing', tipo: 'invariante', mensaje: 'cache 1h no es 2x' }] }))
+      .toBe('sin cambios en lo leído · 1 aviso: cache 1h no es 2x');
+  });
+
+  it('la linea del tablero muestra un semanal que corrio o fallo, y calla el que no tocaba', () => {
+    const fin = new Date(2026, 9, 10, 6, 40);
+    const base = [{ nombre: 'mails', estado: 'ok', detalle: '4 mails resumidos', costoUsd: 0 }];
+    const l = N.lineaTablero({
+      fin, costoUsd: 2.5,
+      pasos: [...base,
+        { nombre: 'vigilante', estado: 'ok', detalle: 'sin cambios', costoUsd: 0 },
+        { nombre: 'propuestas', estado: 'error', detalle: 'HTTP 529', costoUsd: 0 },
+        { nombre: 'disparo', estado: 'saltado', detalle: 'no toca: corrió hace 2 días (2026-10-08)', costoUsd: 0 }],
+    });
+    expect(l).toBe('Noche 10/10 06:40 · 4 mails resumidos · precios: sin cambios · propuestas de skills: ERROR (HTTP 529) · $2,50');
+  });
+
+  it('un semanal que no toca queda "saltado" y no corta la noche ni cuenta como error seguido', async () => {
+    const pasos = await N.correrPasos([
+      { nombre: 'preauditoria', correr: async () => { throw new Error('a'); } },
+      { nombre: 'mails', correr: async () => { throw new Error('b'); } },
+      { nombre: 'vigilante', correr: async () => ({ saltado: true, detalle: 'no toca' }) },
+      { nombre: 'propuestas', correr: async () => ({ detalle: '3 para verificar de 20 revisados', costoUsd: 2.4 }) },
+    ]);
+    expect(pasos.map((p) => p.estado)).toEqual(['error', 'error', 'saltado', 'ok']);
+    expect(pasos.some((p) => p.corte)).toBe(false);
+  });
+
+  it('el estado guarda donde dejo su salida cada semanal (y null si ninguno corrio)', () => {
+    const args = { inicio: new Date(2026, 9, 10, 6, 30), fin: new Date(2026, 9, 10, 6, 40), pasos: [] };
+    expect(N.armarEstado(args).semanales).toBeNull();
+    expect(N.armarEstado({ ...args, semanales: {} }).semanales).toBeNull();
+    expect(N.armarEstado({ ...args, semanales: { disparo: { archivo: 'x.md' } } }).semanales).toEqual({ disparo: { archivo: 'x.md' } });
   });
 });
 

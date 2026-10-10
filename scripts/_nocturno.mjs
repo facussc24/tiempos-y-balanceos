@@ -17,6 +17,12 @@
  *   4. novedades     TODOS los dias: _novedadesClaude.mjs y, si trae algo nuevo, un resumen corto de hasta 4
  *                    renglones con Haiku; los lunes (o pasada una semana) el resumen largo de hasta 8 con
  *                    Sonnet sobre los listados de la semana ("nos sirve / nos puede romper")
+ *   5-7. SEMANALES, al final (corren si su ultima corrida COMPLETA, anotada por la noche en
+ *                    .claude/state/nocturno-semanal.json, tiene 7 dias o mas; --solo <paso> los fuerza):
+ *        vigilante   _lib/vigilarPrecios.mjs: baja pricing, creditos y deprecaciones y compara con PRECIOS (sin modelo)
+ *        propuestas  _propuestasSkills.mjs: revisor Sonnet + refutador Opus sobre los 20 skills mas usados (~$2,5)
+ *        disparo     _pruebaDisparoSkills.mjs: Haiku dice que skill cargaria para mensajes reales de Fak (~$0,01)
+ *                    Los dos ultimos leen los transcripts UNA vez entre los dos.
  * Deja .claude/state/nocturno.json (lo lee el tablero y la sesion de la manana) y una linea en
  * .sgc-cache/api/nocturno.log. No toca el repo, ni Supabase (solo lectura), ni el arb, ni Outlook: todo lo
  * que escribe ESTE proceso pasa por scripts/_lib/escrituraSegura.mjs (solo .claude/state, .sgc-cache y
@@ -33,7 +39,8 @@
  * Uso:
  *   node scripts/_nocturno.mjs                    la noche entera (lo corre la tarea de Windows)
  *   node scripts/_nocturno.mjs --simular          que haria y cuanto costaria, sin gastar ni guardar
- *   node scripts/_nocturno.mjs --solo mails       un paso solo (preauditoria | mails | prioridades | novedades)
+ *   node scripts/_nocturno.mjs --solo mails       un paso solo (preauditoria | mails | prioridades | novedades |
+ *                                                 vigilante | propuestas | disparo; un semanal con --solo corre aunque no toque)
  *   node scripts/_nocturno.mjs --sin-tope         corre aunque el presupuesto del ciclo este en rojo o la corrida pase su tope
  *   node scripts/_nocturno.mjs --estado           la ultima noche: linea, pasos, prioridades y edad
  *   node scripts/_nocturno.mjs --agendar          registra la tarea diaria de las 06:30 (pide la clave)
@@ -57,11 +64,16 @@ import { cuerpoPropio } from './_lib/vozGate.mjs';
 import { avisoHook } from './_lib/novedadesClaude.mjs';
 import { psRun } from './_lib/powershell.mjs';
 import { listar, ESCRITORIO_DEFAULT, esEnEspera, clasificarEntrada, diasDesde } from './_escritorio.mjs';
+import { leerTranscripts } from './_lib/transcriptsFak.mjs';
+import { correr as correrPropuestas } from './_propuestasSkills.mjs';
+import { correr as correrDisparo } from './_pruebaDisparoSkills.mjs';
+import { correr as correrVigilante } from './_lib/vigilarPrecios.mjs';
 import {
   PASOS, NOMBRE_TAREA, HORA_TAREA, debeArrancar, correrPasos, elegirPedidos, emparejarMails, recortarCuerpo,
   SYSTEM_MAILS, armarPedidoMails, lineasDeMails, tocaNovedades, novedadesSinCambios, planNovedades, juntarListados, resumirNovedades,
   reunirEntradas, armarPedidoPrioridades, SYSTEM_PRIORIDADES, generarPrioridades, textoPrioridades, lineaRenglon,
   armarEstado, edadHoras, comandoAgendar, comandoDesagendar, comandoEstadoTarea, leerEstadoTarea,
+  ultimaCorrida, anotarCorrida, corridaCompleta, tocaSemanal, detalleVigilante,
 } from './_lib/nocturno.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
@@ -227,6 +239,58 @@ async function pasoNovedades({ cliente, simular, ahora }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Pasos 5 a 7: los semanales (vigilante de precios, propuestas de skills, prueba de disparo)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * El registro de la ultima corrida COMPLETA de cada semanal (.claude/state, ignorado por git). Lo escribe solo la
+ * noche, y solo cuando el paso salio completo (`corridaCompleta`): una corrida que fallo o salio a medias no se
+ * anota y la noche siguiente la reintenta. Una corrida a mano de los scripts sueltos no cuenta.
+ */
+export const RUTA_SEMANAL = path.join(RAIZ, '.claude', 'state', 'nocturno-semanal.json');
+
+/**
+ * Envuelve un paso semanal: si su ultima corrida completa tiene menos de 7 dias queda 'saltado' (salvo --solo ese
+ * paso). `correr` devuelve { detalle, costoUsd, datos, completa }; con `completa` (y sin simular) se anota la fecha.
+ */
+export function semanal(nombre, { solo, ahora, simular, ruta = RUTA_SEMANAL }, correr) {
+  return async () => {
+    const ultima = ultimaCorrida(nombre, leerJson(ruta));
+    const t = tocaSemanal(ultima, ahora);
+    if (!t.toca && solo !== nombre) return { saltado: true, detalle: `no toca: la última completa fue hace ${t.dias} día${t.dias === 1 ? '' : 's'} (${ultima})` };
+    const r = await correr();
+    if (r?.completa && !simular) {
+      escribirSeguro(ruta, `${JSON.stringify(anotarCorrida(leerJson(ruta), nombre, selloLocal(ahora).slice(0, 10)), null, 2)}\n`);
+    } else if (!simular) {
+      r.detalle = `${r.detalle} · incompleta: se reintenta la próxima noche`;
+    }
+    return r;
+  };
+}
+
+async function pasoVigilante({ simular, ahora }) {
+  // simulando usa las paginas guardadas y no escribe nada; de verdad baja las tres paginas y guarda su JSON
+  const r = await correrVigilante({ simular, guardar: !simular, ahora });
+  return { detalle: `${detalleVigilante(r)}${simular ? ' (simulado, páginas guardadas)' : ''}`, datos: { json: r.rutaJson ?? null, diferencias: r.diferencias?.length ?? 0 }, completa: corridaCompleta('vigilante', r) };
+}
+
+async function pasoPropuestas({ cliente, simular, ahora, transcripts }) {
+  const r = await correrPropuestas({ simular, cliente, transcripts: await transcripts(), ahora });
+  if (simular) return { detalle: `${r.resumen.linea.replace(/^simulado: /, '')} (simulado, ~${usd(r.estimadoUsd.probable)} probable)` };
+  const s = r.resumen;
+  if (s.errores && !s.revisados) throw Object.assign(new Error(`los ${s.errores} skills a revisar dieron error (ver ${s.dir})`), { costoUsd: s.costoUsd });
+  return { detalle: `${s.propuestas} para verificar de ${s.revisados} revisado${s.revisados === 1 ? '' : 's'}${s.errores ? ` · ${s.errores} con error` : ''}`, costoUsd: s.costoUsd, datos: { dir: s.dir }, completa: corridaCompleta('propuestas', r) };
+}
+
+async function pasoDisparo({ cliente, simular, ahora, transcripts }) {
+  const r = await correrDisparo({ simular, cliente, transcripts: await transcripts(), ahora });
+  if (simular) return { detalle: `${r.resumen.linea.replace(/^simulado: /, '')} (simulado)` };
+  const s = r.resumen;
+  const pct = s.mensajes ? Math.round((s.exactos / s.mensajes) * 100) : 0;
+  return { detalle: `${pct} % coincide en ${s.mensajes} mensajes · ${s.peores.length} descriptions a mirar`, costoUsd: s.costoUsd, datos: { archivo: s.archivo }, completa: corridaCompleta('disparo', r) };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // La noche
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -251,13 +315,19 @@ async function noche({ simular, solo, sinTope }) {
     return 0;
   }
 
-  const datos = { hallazgos: null, reporte: null, mails: [], resumenNovedades: null, prioridades: null };
+  const datos = { hallazgos: null, reporte: null, mails: [], resumenNovedades: null, prioridades: null, semanales: {} };
   const hechos = [];                         // los pasos ya terminados: el de prioridades mira lo que dejaron
+  // propuestas y disparo leen los mismos transcripts (~40 s): una sola lectura, y solo si alguno toca
+  let lectura = null;
+  const transcripts = () => (lectura ??= leerTranscripts({ ahora: inicio, desde: new Date(inicio.getTime() - 90 * 86400e3), tope: 20000 }));
+  const ctxSemanal = { solo, ahora: inicio, simular };
+  const guardarSemanal = (nombre) => (r) => { if (r?.datos) datos.semanales[nombre] = r.datos; return r; };
   const pasos = await correrPasos([
     {
       nombre: 'preauditoria',
       correr: async () => {
-        const r = await correrPreauditoria({ simular, cliente, ahora: inicio, max: TOPE_AMFE_POR_NOCHE });
+        // el tope por corrida tambien ADENTRO de la pasada (cola H18): es el primer paso, lo gastado hasta aca es 0
+        const r = await correrPreauditoria({ simular, cliente, ahora: inicio, max: TOPE_AMFE_POR_NOCHE, topeUsd: sinTope ? null : topeCorridaUsd() });
         if (simular) return { detalle: r.linea };
         datos.hallazgos = { revisados: r.revisados, saltados: r.saltados, diferidos: r.diferidos, total: r.hallazgos, nuevos: r.nuevos, errores: r.errores };
         datos.reporte = r.reporte;
@@ -277,6 +347,9 @@ async function noche({ simular, solo, sinTope }) {
       nombre: 'novedades',
       correr: async () => { const r = await pasoNovedades({ cliente, simular, ahora: inicio }); datos.resumenNovedades = r.datos?.resumen ?? null; return r; },
     },
+    { nombre: 'vigilante', correr: semanal('vigilante', ctxSemanal, () => pasoVigilante({ simular, ahora: inicio }).then(guardarSemanal('vigilante'))) },
+    { nombre: 'propuestas', correr: semanal('propuestas', ctxSemanal, () => pasoPropuestas({ cliente, simular, ahora: inicio, transcripts }).then(guardarSemanal('propuestas'))) },
+    { nombre: 'disparo', correr: semanal('disparo', ctxSemanal, () => pasoDisparo({ cliente, simular, ahora: inicio, transcripts }).then(guardarSemanal('disparo'))) },
   ], {
     solo,
     topeCorridaUsd: sinTope ? null : topeCorridaUsd(),
@@ -310,6 +383,7 @@ function mostrarEstado() {
   for (const m of e.mails || []) console.log(`  mail [${m.area}] ${m.asunto} — ${m.linea}`);
   (e.prioridades || []).forEach((r, i) => console.log(`  prioridad ${lineaRenglon(r, i)}`));
   if (e.reporte) console.log(`  reporte: ${e.reporte}`);
+  for (const [n, d] of Object.entries(e.semanales || {})) console.log(`  ${n}: ${d.json || d.dir || d.archivo || '-'}`);
   return 0;
 }
 

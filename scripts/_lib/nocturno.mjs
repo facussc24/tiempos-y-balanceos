@@ -18,8 +18,22 @@
 
 export const NOMBRE_TAREA = 'Barack - Noche de Claude (API)';
 export const HORA_TAREA = '06:30';
-/** El orden en que corren. `--solo <paso>` acepta uno de estos. */
-export const PASOS = Object.freeze(['preauditoria', 'mails', 'prioridades', 'novedades']);
+/**
+ * El orden en que corren. `--solo <paso>` acepta uno de estos. Los cuatro primeros corren todas las noches;
+ * los tres ultimos (PASOS_SEMANALES) una vez por semana y al final, para que una corrida cortada ya haya hecho
+ * lo diario.
+ */
+export const PASOS = Object.freeze(['preauditoria', 'mails', 'prioridades', 'novedades', 'vigilante', 'propuestas', 'disparo']);
+/**
+ * Los pasos semanales (09/10/2026, cola H15; frecuencia de R3 §2: vigilante ~$0, propuestas de skills ~$2-2,5,
+ * disparo ~$0,01). Cada uno corre si su ultima corrida COMPLETA tiene DIAS_SEMANAL dias o mas; esa fecha la anota
+ * la propia noche en .claude/state/nocturno-semanal.json SOLO cuando el paso salio completo (ver `corridaCompleta`),
+ * asi una noche con la notebook apagada no pierde la semana y una que fallo (sin red, 529) se reintenta la noche
+ * siguiente. `--solo <paso>` lo fuerza. (Hasta la auditoria del 09/10 la fecha salia de que existiera su archivo de
+ * salida, y los programas lo escriben tambien cuando todo fallo: la semana se perdia.)
+ */
+export const PASOS_SEMANALES = Object.freeze(['vigilante', 'propuestas', 'disparo']);
+export const DIAS_SEMANAL = 7;
 export const HORAS_VIEJO = 26;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -101,6 +115,95 @@ export async function correrPasos(pasos, { solo = null, alTerminar = () => {}, t
     alTerminar(fila);
   }
   return out;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pasos semanales: cuando tocan
+// ─────────────────────────────────────────────────────────────────────────────
+
+const FECHA_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * La ultima corrida COMPLETA de un paso semanal, leida del registro que lleva la noche
+ * (`.claude/state/nocturno-semanal.json` = { vigilante: 'AAAA-MM-DD', propuestas: ..., disparo: ... }).
+ * Devuelve 'AAAA-MM-DD' o null (nunca corrio completo, o el registro no se entiende).
+ */
+export function ultimaCorrida(paso, registro) {
+  if (!PASOS_SEMANALES.includes(paso)) throw new Error(`ultimaCorrida: paso semanal desconocido "${paso}"`);
+  const f = registro && typeof registro === 'object' ? registro[paso] : null;
+  return typeof f === 'string' && FECHA_RE.test(f) ? f : null;
+}
+
+/** El registro con la corrida completa de `paso` anotada en `fecha` ('AAAA-MM-DD'). Puro: devuelve uno nuevo. */
+export function anotarCorrida(registro, paso, fecha) {
+  if (!PASOS_SEMANALES.includes(paso)) throw new Error(`anotarCorrida: paso semanal desconocido "${paso}"`);
+  if (!FECHA_RE.test(String(fecha))) throw new Error(`anotarCorrida: fecha invalida "${fecha}"`);
+  const base = registro && typeof registro === 'object' && !Array.isArray(registro) ? registro : {};
+  return { ...base, [paso]: fecha };
+}
+
+/**
+ * ¿La corrida de un semanal cuenta como la de la semana? Solo si salio COMPLETA; si no, el paso puede quedar 'ok'
+ * (con lo que si se leyo, para la manana) pero la semana no se da por hecha y la noche siguiente lo reintenta.
+ *   vigilante   las tres paginas leidas y sin avisos de invariante (una fila que falta en la tabla es un aviso)
+ *   propuestas  al menos un skill revisado y no mas de 1 de cada 4 con error (un skill que falla siempre no puede
+ *               hacer que la pasada entera, ~$2,5, se repita todas las noches)
+ *   disparo     termino (el programa tira si no) con al menos un mensaje evaluado
+ */
+export function corridaCompleta(paso, r) {
+  if (paso === 'vigilante') {
+    const errores = Array.isArray(r?.errores) ? r.errores : [];
+    return ['precios', 'creditos', 'deprecaciones'].every((k) => r?.[k]?.ok) && !errores.length;
+  }
+  if (paso === 'propuestas') {
+    const s = r?.resumen ?? {};
+    const revisados = Number(s.revisados) || 0;
+    const errores = Number(s.errores) || 0;
+    return revisados > 0 && errores * 4 <= revisados + errores;
+  }
+  if (paso === 'disparo') return (Number(r?.resumen?.mensajes) || 0) > 0;
+  return false;
+}
+
+/**
+ * ¿Toca el paso semanal hoy? `ultima` 'AAAA-MM-DD' o null (nunca corrio: toca). Se cuentan dias de
+ * calendario local, no horas: la noche corre a las 06:30 pero la notebook puede prenderse mas tarde.
+ * Devuelve { toca, dias } (dias = null si nunca corrio).
+ */
+export function tocaSemanal(ultima, ahora = new Date(), dias = DIAS_SEMANAL) {
+  if (!ultima || !/^\d{4}-\d{2}-\d{2}$/.test(String(ultima))) return { toca: true, dias: null };
+  const [a, m, d] = String(ultima).split('-').map(Number);
+  const f = ahora instanceof Date ? ahora : new Date(ahora);
+  const hoy = Date.UTC(f.getFullYear(), f.getMonth(), f.getDate());
+  const pasaron = Math.round((hoy - Date.UTC(a, m - 1, d)) / 86400000);
+  return { toca: pasaron >= dias, dias: pasaron };
+}
+
+/**
+ * El detalle del paso `vigilante` a partir del resultado de vigilarPrecios.correr(). Las diferencias son el
+ * HALLAZGO del paso (no un error): van en el detalle para que la sesion de la manana las vea. Sin la pagina de
+ * PRECIOS el paso es un error: "sin cambios" sin haberla leido seria mentira (auditoria del 09/10). Cada pagina que
+ * no se leyo y cada aviso (una fila que falta en la tabla) se nombran con su motivo.
+ */
+export function detalleVigilante(r) {
+  const errores = Array.isArray(r?.errores) ? r.errores : [];
+  const dif = Array.isArray(r?.diferencias) ? r.diferencias : [];
+  const motivo = (seccion) => errores.filter((e) => e.seccion === seccion).map((e) => corto(e.mensaje, 70)).join('; ') || 'sin detalle';
+  if (!r?.precios?.ok) {
+    throw new Error(`no se pudo leer la página de precios de Anthropic (${motivo('pricing')}): sin ella no se sabe si algo cambió`);
+  }
+  const partes = [];
+  if (dif.length) {
+    partes.push(`${dif.length} diferencia${dif.length === 1 ? '' : 's'} con lo nuestro: ${dif.slice(0, 3).map((x) => `${x.modelo || x.seccion || '?'} ${x.campo}`).join(', ')}${dif.length > 3 ? '…' : ''}`);
+  } else {
+    partes.push('sin cambios en lo leído');
+  }
+  for (const [k, seccion] of [['creditos', 'creditos'], ['deprecaciones', 'deprecaciones']]) {
+    if (!r?.[k]?.ok) partes.push(`sin leer ${k} (${motivo(seccion)})`);
+  }
+  const avisos = errores.filter((e) => e.tipo === 'invariante' || (e.seccion === 'pricing' && r.precios.ok));
+  if (avisos.length) partes.push(`${avisos.length} aviso${avisos.length === 1 ? '' : 's'}: ${avisos.slice(0, 2).map((e) => corto(e.mensaje, 70)).join('; ')}`);
+  return partes.join(' · ');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -537,6 +640,13 @@ export function lineaTablero({ fin, pasos = [], costoUsd = 0, presupuesto = null
       else if (nov.estado === 'ok') partes.push(`novedades: ${nov.detalle || 'ok'}`);
       else if (nov.estado === 'saltado' && !nov.corte && !/^--solo/.test(nov.detalle)) partes.push('novedades: no tocaba');
     }
+    // los semanales: solo si corrieron (un 'saltado' porque no tocaba no ocupa lugar en la linea)
+    for (const [n, etiqueta] of [['vigilante', 'precios'], ['propuestas', 'propuestas de skills'], ['disparo', 'disparo de skills']]) {
+      const s = paso(n);
+      if (!s) continue;
+      if (s.estado === 'error') partes.push(`${etiqueta}: ERROR (${corto(s.detalle, 60)})`);
+      else if (s.estado === 'ok') partes.push(`${etiqueta}: ${corto(s.detalle, 90)}`);
+    }
     // la noche se corto sola (tope por corrida o pasos seguidos en error): que se vea en la linea
     const cortada = pasos.find((p) => p.corte);
     if (cortada) partes.push(`CORTADA: ${cortada.corteDetalle || cortada.detalle}`);
@@ -547,7 +657,7 @@ export function lineaTablero({ fin, pasos = [], costoUsd = 0, presupuesto = null
 }
 
 /** El JSON de .claude/state/nocturno.json (lo lee el tablero y la sesion de la manana). */
-export function armarEstado({ inicio, fin, pasos = [], presupuesto = null, noArranco = '', mails = [], hallazgos = null, reporte = null, resumenNovedades = null, prioridades = null }) {
+export function armarEstado({ inicio, fin, pasos = [], presupuesto = null, noArranco = '', mails = [], hallazgos = null, reporte = null, resumenNovedades = null, prioridades = null, semanales = null }) {
   const costoUsd = Math.round(pasos.reduce((s, p) => s + (Number(p.costoUsd) || 0), 0) * 1e6) / 1e6;
   const fi = fin instanceof Date ? fin : new Date(fin);
   const ini = inicio instanceof Date ? inicio : new Date(inicio);
@@ -569,6 +679,8 @@ export function armarEstado({ inicio, fin, pasos = [], presupuesto = null, noArr
     hallazgos,
     reporte,
     resumenNovedades,
+    // donde dejo su salida cada semanal que corrio esta noche (vigilante: json; propuestas: dir; disparo: archivo)
+    semanales: semanales && Object.keys(semanales).length ? semanales : null,
   };
 }
 
