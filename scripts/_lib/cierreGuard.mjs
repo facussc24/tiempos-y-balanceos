@@ -67,6 +67,7 @@ import { fileURLToPath } from 'node:url';
 import { soloLineasDeComando, separarHeredocs, comandosSimples } from './shellTexto.mjs';
 import { sinAvisosAdelante, esAutomatico } from './correccionGuard.mjs';
 import { pideExplicar, pideEstado, CANON as CANON_EXPLICAR } from './explicarGuard.mjs';
+import { esIngles } from './idioma.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const REPO = path.resolve(AQUI, '..', '..');
@@ -1316,6 +1317,19 @@ export async function decidir(payload = {}, deps = {}) {
         + '`python scripts/_sinFirmaIA.py --arreglar <archivo> --apply` arregla la marca del complemento y las propiedades; '
         + 'una celda o un texto se corrige a mano (CREADO POR = F.Santoro). Si es un falso positivo, el mensaje lleva el renglon '
         + '"No aplica firma-ia: <motivo>".',
+    });
+  }
+
+  // 10. El turno termina en ingles (cola H4, 09/10/2026). Fak, 07/10: "deja de hablar en ingles"; R4: 65 turnos en
+  // ingles desde el 01/09, 7 justo despues de compactar; 09/10 08:56 otra vez. Frena una vez (stop_hook_active) y pide
+  // el mismo mensaje en castellano. Lo que no es prosa (codigo, rutas, citas) no cuenta: idioma.mjs.
+  if (esIngles(texto)) {
+    return conExtras({
+      ok: false,
+      titulo: 'CIERRE-GUARD: el turno termina en ingles',
+      detalle: 'Con Fak se habla en castellano, tambien en los avisos cortos (Fak, 07/10/2026: "deja de hablar en ingles"; '
+        + 'paso 65 veces desde el 01/09, 7 de ellas justo despues de compactar). Escribi el mismo mensaje en castellano '
+        + 'rioplatense y cerra. Una cita en ingles entre comillas o un bloque de codigo no cuentan.',
     });
   }
 

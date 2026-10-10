@@ -33,6 +33,7 @@ import path from 'node:path';
 import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { evaluarPermiso } from './_lib/cierreGuard.mjs';
+import { esIngles } from './_lib/idioma.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(AQUI, '..');
@@ -47,15 +48,8 @@ const DESDE = desdeTexto ? new Date(`${desdeTexto}T00:00:00`) : new Date(Date.no
 const slug = REPO.replace(/[:\\/]/g, '-');
 const DIR = valor('--dir', path.join(os.homedir(), '.claude', 'projects', slug));
 
-const ING = /\b(the|and|is|are|with|this|that|I'll|Let me|I've|Here's|Now|Looking|Checking|Running|Done|Fixed)\b/g;
-const ESP = /\b(el|la|los|las|que|de|con|para|una|un|ya|esto|esta|dale|listo|sigo|ahora)\b/gi;
-function esIngles(texto) {
-  const p = String(texto).replace(/```[\s\S]*?```/g, ' ').trim().slice(0, 300);
-  if (p.length < 20) return false;
-  const i = (p.match(ING) || []).length;
-  const e = (p.match(ESP) || []).length;
-  return i >= 3 && i > e * 2;
-}
+// 09/10/2026 (cola H4): la misma definicion que usa el cierre del turno (idioma.mjs); antes vivia aca y se le pasaban los
+// finales cortos en ingles ("Transcribing the two new audios first.").
 const LIMITE = /(usage limit|l[ií]mite de uso|hit your limit|rate limit|out of (usage|credits)|weekly limit|se restableci[oó]|reached your)/i;
 
 function textoDe(msg) {
