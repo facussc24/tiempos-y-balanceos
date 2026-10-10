@@ -136,7 +136,11 @@ describe('explicarGuard — "facil de entender"', () => {
   });
   it('lo que manda otra sesion no son palabras de Fak (lista unica `no_es_de_fak`), venga o no con un aviso adelante', () => {
     const deOtra = '<cross-session-message from="local_20b5">no entendi nada, explicame mejor</cross-session-message>';
-    for (const t of [deOtra, AVISO_APP + deOtra, `Another Claude session sent a message: ${deOtra}`, 'This session is being continued from a previous conversation. Fak: no entiendo, explicame'])
+    // 09/10/2026: el encargo que arranca una sesion lanzada por una tarea programada tampoco (asi llego el de la fase 2;
+    // horaGuard lo tomaba como el ultimo mensaje de Fak)
+    const programada = ['[SCHEDULED TASK - AUTOMATED FIRING OF A CONFIGURED PROMPT]', 'This turn was started automatically by a schedule',
+      '<scheduled-task name="x">no entendi nada, explicame mejor</scheduled-task>'].join('\n');
+    for (const t of [deOtra, AVISO_APP + deOtra, `Another Claude session sent a message: ${deOtra}`, 'This session is being continued from a previous conversation. Fak: no entiendo, explicame', programada, '<scheduled-task name="y">labura hasta las 8</scheduled-task>'])
       expect(avisoDe(t), t.slice(0, 50)).toBeNull();
   });
   it('"facil de entender" pide explicar aunque ademas pida corto: gana el aviso de explicar', () => {
