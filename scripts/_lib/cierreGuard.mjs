@@ -29,6 +29,8 @@
  *      sin probar con un mensaje real de Fak, o un cierre que no dice si las sesiones abiertas la toman.
  *   4. declara cierre y en la sesion escribi un ENTREGABLE afuera del repo (pdf, xlsx, step…)
  *      que no abri despues de su ultima escritura → exit 2, una vez por (archivo, escritura).
+ *      Desde el 10/10/2026 (H14) tambien lo de `exports/`, pero solo lo escrito en el turno y
+ *      nombrado en el mensaje de cierre (`entregablesSinAbrir`).
  *   5. declara cierre y el mensaje es un INFORME (mas de 3.000 caracteres, 35 lineas o 2 tablas)
  *      → exit 2, 1x/20 min; exento si Fak pidio el detalle o la sesion esta en modo plan.
  *      Re-medido el 22/09/2026 contra 65 "no entendi / sintetiza" de Fak: el largo no separa los
@@ -748,6 +750,49 @@ function registrarEntregables(b, st, repo) {
   }
 }
 
+// H14 (10/10/2026): MIRADAS del turno, para lo escrito en `exports/`. Va APARTE de `registrarEntregables` a
+// proposito: ese mecanismo (lo de afuera del repo) no cambia. Aca se guarda el TEXTO de cada cosa que pudo abrir
+// un archivo (la ruta de un Read, un comando con un verificador de `mira_re`, la entrada de una tool MCP) y su
+// hora; despues `entregablesSinAbrir` busca ahi el NOMBRE del archivo. Por nombre y no por ruta porque, medido por
+// el auditor sobre 339 verificaciones reales de exports/, 228 no traen la ruta entera (`cd` a la carpeta y nombre
+// pelado, `python -c`, barras dobles). La hora es la del RESULTADO del comando, no la de cuando se lanzo: generar
+// y verificar en el mismo comando es mirar (caso real f14f5aae, 07/10 18:35). Un Read que vuelve con error no cuenta.
+const MIRADAS_MAX = 600;
+const MIRADA_TXT_MAX = 8000;
+function registrarMirada(b, st, ts) {
+  const nombre = b.name || '';
+  const input = b.input || {};
+  let txt = '';
+  if (nombre === 'Read') {
+    const r = aWindows(input.file_path || '');
+    if (EXT_ENTREGABLE.test(r)) txt = r;
+  } else if (/^(Bash|PowerShell)$/.test(nombre)) {
+    const cmd = String(input.command || '');
+    if (MIRA.test(cmd)) txt = cmd;
+  } else if (nombre.startsWith('mcp__')) {
+    txt = JSON.stringify(input);
+  }
+  if (!txt) return;
+  const m = { txt: textoPlano(txt.slice(0, MIRADA_TXT_MAX)), ts, esRead: nombre === 'Read' };
+  st.miradas.push(m);
+  if (st.miradas.length > MIRADAS_MAX) st.miradas.shift();
+  if (b.id) st.miradasPorId.set(b.id, m);
+}
+
+/** El resultado de una mirada: su hora pasa a ser la del resultado; si volvio con error, no fue una mirada. */
+function cerrarMiradas(st, obj) {
+  const bloques = obj.message?.content;
+  if (!st.miradasPorId.size || !Array.isArray(bloques)) return;
+  for (const b of bloques) {
+    if (b.type !== 'tool_result' || !st.miradasPorId.has(b.tool_use_id)) continue;
+    const m = st.miradasPorId.get(b.tool_use_id);
+    st.miradasPorId.delete(b.tool_use_id);
+    if (b.is_error) { const i = st.miradas.indexOf(m); if (i >= 0) st.miradas.splice(i, 1); continue; }
+    const fin = Date.parse(obj.timestamp || '');
+    if (Number.isFinite(fin) && fin > m.ts) m.ts = fin;
+  }
+}
+
 // ---------------------------------------------------------------------------------------
 // Relevadores (leen el mundo). En los tests se inyectan versiones falsas.
 // ---------------------------------------------------------------------------------------
@@ -957,7 +1002,11 @@ async function pasada(archivo, st, { completa, repo }) {
     if (obj.type === 'user') {
       cerrarVentanas(st, obj);
       cerrarPruebas(st, obj);
+      cerrarMiradas(st, obj);
       if (completa && esMensajeRealDeUsuario(obj)) {
+        // turnoTs: donde empieza el turno para el chequeo 4 de exports/. Lo mueve solo un mensaje que ABRE un turno, no
+        // uno que Fak escribe mientras trabajo (queued_command, arriba): ese no corta lo que ya se genero (auditor R3).
+        st.turnoTs = obj.timestamp || ''; st.miradas = []; st.miradasPorId = new Map();
         st.ejemplo = null; st.ultimoMensajeFak = textoDeUsuario(obj); st.ultimoMensajeFakTs = obj.timestamp || ''; st.explicar = turnoDeExplicar(); st.mails = turnoDeMails();
         st.encargo = CX_ENCARGO.test(crudoDeUsuario(obj));           // el primer mensaje de una sesion lanzada por otra
       } else if (completa && linea.includes('<command-name>') && linea.includes(`/${CX.skill}<`)) st.explicar.skill = true;   // Fak lo cargo a mano
@@ -973,6 +1022,7 @@ async function pasada(archivo, st, { completa, repo }) {
       if (completa && b.type === 'text' && MQ_NO_APLICA.test(normalizar(b.text))) st.mails.noAplica = true;
       if (b.type !== 'tool_use') continue;
       st.seq++;
+      registrarMirada(b, st, Date.parse(obj.timestamp || '') || 0);   // tambien lo que abre un subagente (el auditor)
       const orden = Date.parse(obj.timestamp || '') || st.seq;
       const pieza = (r) => {
         if (!MEJ_SISTEMA.test(r)) return;
@@ -1027,6 +1077,9 @@ async function pasada(archivo, st, { completa, repo }) {
  *                       fecha adentro de una ventana se suma a `tocados` (lo pudo escribir ese comando)
  *   entregables      — archivos de entrega escritos afuera, con `mirado` (hubo Read, verificador
  *                       o tool MCP sobre ese archivo DESPUES de su ultima escritura)
+ *   miradas           — [{ txt, ts, esRead }] del turno: el texto (minuscula, con /) de cada Read, verificador o tool
+ *                       MCP y la hora de su resultado (H14: ahi se busca el nombre de lo escrito en exports/)
+ *   turnoTs           — hora del mensaje que ABRIO el turno (uno escrito a mitad del turno no lo mueve)
  *   sinMirar          — los entregables con mirado=false
  *   ultimoMensajeFak  — texto del ultimo mensaje real de Fak (para el chequeo 5)
  *   bg                — { total, delTurno, lista }: trabajo en segundo plano lanzado y sin su aviso
@@ -1036,7 +1089,7 @@ async function pasada(archivo, st, { completa, repo }) {
 export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
   if (!transcriptPath || !fs.existsSync(transcriptPath)) return { fuera: false };
   const st = {
-    ejemplo: null, huboComando: false, huboOpaco: false, inicio: 0, tocados: new Set(), ultimoMensajeFak: '', ultimoMensajeFakTs: '', ent: new Map(), seq: 0,
+    ejemplo: null, huboComando: false, huboOpaco: false, inicio: 0, tocados: new Set(), ultimoMensajeFak: '', ultimoMensajeFakTs: '', ent: new Map(), miradas: [], miradasPorId: new Map(), turnoTs: '', seq: 0,
     bg: nuevoBackground(), ventanas: [], abiertas: new Map(), sinVentana: false,
     explicar: turnoDeExplicar(), mails: turnoDeMails(), encargo: false,
     sis: { archivos: new Set(), deMensajes: new Set(), escrito: 0, probado: 0, pruebas: new Map() },
@@ -1065,6 +1118,8 @@ export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
     ventanas: st.ventanas,
     entregables,
     sinMirar: entregables.filter((e) => !e.mirado),
+    miradas: st.miradas.map(({ txt, ts, esRead }) => ({ txt, ts, esRead })),
+    turnoTs: st.turnoTs,
     ultimoMensajeFak: st.ultimoMensajeFak,
     ultimoMensajeFakTs: st.ultimoMensajeFakTs,
     // chequeo 7: lo que el turno hizo desde el ultimo mensaje de Fak (skill cargado, dibujo, pagina, archivo enviado)
@@ -1277,8 +1332,137 @@ export function evaluarFirmaIA(texto, rutas, correr = correrDetectorFirma) {
   return { bloquea: true, hallazgos: hs };
 }
 
+// ---------------------------------------------------------------------------------------
+// Chequeo 4 en `exports/` (cola H14, 10/10/2026)
+// ---------------------------------------------------------------------------------------
+// `exports/` es donde viven casi todos los entregables (R4 #1: 112 pptx, xlsx y pdf desde el 01/09) y el chequeo 4
+// no lo veia: `esEntregableFuera` da falso adentro del repo. Lo escrito ahi se lee del DISCO, no del comando:
+// medido sobre 251 transcripts desde el 01/10, el archivo casi nunca aparece en el texto del comando que lo genera
+// (lo escribe un programa por dentro). Se reclama solo lo modificado despues del ultimo mensaje de Fak, que el
+// mensaje de cierre NOMBRA y que no se miro despues de su fecha: en exports/ tambien quedan renders, carpetas
+// `_trabajo` y lo que escribe otra sesion; nada de eso se declara listo.
+
+const EXT_DOC_ENTREGA = /\.(xlsx|xlsm|xls|pptx|docx|pdf|dxf|plt|hpgl)$/i;
+const EXT_IMAGEN = /\.(png|jpe?g)$/i;
+const NOMBRE_CHAR = /[a-z0-9áéíóúñü_]/i;
+/** Barras a `/`, tildes compuestas (NFC), minuscula. */
+const textoPlano = (t) => String(t ?? '').replace(/\\+/g, '/').normalize('NFC').toLowerCase();
+
+/** Entregables de `<repo>/exports` escritos despues del mensaje que abrio el turno (`turnoTs`; si falta, el ultimo
+ *  mensaje de Fak), sin `.build` ni lo de `excluir_re` y sin temporales `~$`. La fecha es la mas nueva entre la de
+ *  modificacion y la de creacion: una copia hecha con Copy-Item, robocopy o `copyFileSync` conserva la fecha de
+ *  modificacion del origen, pero nace hoy (auditor R4). Sin la hora del turno no se sabe donde empieza: lista vacia.
+ *  El tope es una red contra un arbol descomunal, no un filtro: 5.000 (exports/ tiene ~4.200 archivos y el barrido
+ *  entero tarda 0,2 s; con 400 se cortaba en orden alfabetico antes de llegar al entregable, auditor R1). */
+export function exportsDelTurno(fuera = {}, repo = REPO, tope = 5000) {
+  const desde = Date.parse(fuera?.turnoTs || fuera?.ultimoMensajeFakTs || '');
+  if (!desde) return [];
+  const out = [];
+  const raiz = path.join(repo, 'exports');
+  const andar = (dir) => {
+    let entradas = [];
+    try { entradas = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of entradas) {
+      if (out.length >= tope) return;
+      const p = path.join(dir, e.name);
+      // el filtro de carpetas mira la ruta RELATIVA al repo: con el repo colgado de `.claude` (un worktree) la
+      // absoluta calzaba entera y no se barria nada (auditor R9)
+      const rel = path.relative(repo, p).replace(/\\/g, '/');
+      if (e.isDirectory()) { if (!EXCLUIR_ENTREGABLE.test(`/${rel}/`)) andar(p); continue; }
+      if (!EXT_ENTREGABLE.test(e.name) || e.name.startsWith('~$')) continue;
+      let fecha = 0;
+      try { const s = fs.statSync(p); fecha = Math.max(s.mtimeMs, s.birthtimeMs || 0); } catch { continue; }
+      if (fecha < desde) continue;
+      out.push({ nombre: e.name.toLowerCase(), rel, mtimeMs: fecha });
+    }
+  };
+  andar(raiz);
+  return out;
+}
+
+/** ¿El texto (ya pasado por `textoPlano`) nombra `aguja` como nombre entero? No calza adentro de otro nombre:
+ *  ni "22.pdf" en "hoja22.pdf" ni en "HO-971-22.pdf" (adelante tampoco puede haber un guion o un punto). */
+function nombraEntero(t, aguja) {
+  for (let i = t.indexOf(aguja); i >= 0; i = t.indexOf(aguja, i + 1)) {
+    const antes = t[i - 1];
+    const despues = t[i + aguja.length];
+    if (!(antes && (NOMBRE_CHAR.test(antes) || antes === '-' || antes === '.')) && !(despues && NOMBRE_CHAR.test(despues))) return true;
+  }
+  return false;
+}
+
+/**
+ * ¿El mensaje de cierre nombra este archivo de exports/? Tres formas, de la mas segura a la mas amplia:
+ *   - el nombre con su extension;
+ *   - el nombre sin extension, solo si tiene forma de nombre de archivo (8 caracteres o mas y un `_`, un `-` o un
+ *     numero): medido el 10/10, sin esa condicion "contacto.png" y "entera.png" calzaban con palabras comunes
+ *     de 20 cierres que no hablaban de esos archivos;
+ *   - su CARPETA (`exports/X/`), si es un documento (xlsx, pptx, pdf, dxf…) que esta directamente en ella: es
+ *     como se cierra casi siempre ("quedo en exports/X/"). Una imagen o lo de una subcarpeta no entra por aca. La
+ *     carpeta tiene que estar escrita entera: no vale como comienzo de otra ruta (`exports/X/otro.pdf`), de otra
+ *     carpeta (`…/APB` en "…/APB CEN/": por eso un espacio detras no la cierra) ni colgada de otra (`docs/exports/X`).
+ */
+export function cierreNombra(texto, archivo) {
+  const t = textoPlano(texto);
+  const n = textoPlano(archivo?.nombre);
+  if (!n) return false;
+  if (nombraEntero(t, n)) return true;
+  const stem = sinExtension(n);
+  if (stem.length >= 8 && /[_\d-]/.test(stem) && nombraEntero(t, stem)) return true;
+  if (!EXT_DOC_ENTREGA.test(n)) return false;
+  const carpeta = textoPlano(archivo.rel).split('/').slice(0, -1).join('/');
+  if (!carpeta || carpeta === 'exports') return false;
+  for (let i = t.indexOf(carpeta); i >= 0; i = t.indexOf(carpeta, i + 1)) {
+    const antes = t[i - 1];
+    if (antes && (NOMBRE_CHAR.test(antes) || antes === '/' || antes === '-' || antes === '.')) {
+      // adelante solo puede venir la raiz del repo (…/barackmercosul/exports/x): cualquier otra carpeta es otra ruta
+      const previo = t.slice(Math.max(0, i - 40), i);
+      if (!/(^|[\s`'"(\[])([a-z]:)?[^\s`'"]*barackmercosul\/$/.test(previo)) continue;
+    }
+    const resto = t.slice(i + carpeta.length);
+    if (/^\/?([`'")\]*]|[.,;:]+(\s|$)|\n|$)/.test(resto)) return true;
+  }
+  return false;
+}
+
+/** ¿Esta mirada abrio ese archivo? Su texto lo nombra entero; o es el Read de una imagen con el mismo nombre (el
+ *  render del documento). No vale cualquier archivo con la misma raiz (un .csv de entrada, auditor R2). */
+function miradaNombra(m, nombre, carpeta = '') {
+  if (nombraEntero(m.txt, nombre)) return true;
+  // un verificador que trabaja sobre la CARPETA del archivo (`f=$(ls exports/X/HO-992*.pdf); pdftoppm "$f" …`): la
+  // ruta va en una variable o con comodin y el nombre entero no aparece (27 + 3 de los comandos reales medidos)
+  if (!m.esRead && carpeta && carpeta !== 'exports' && m.txt.includes(`${carpeta}/`)) return true;
+  if (!m.esRead || !EXT_IMAGEN.test(m.txt)) return false;
+  return sinExtension(m.txt.split('/').pop()) === sinExtension(nombre);
+}
+
+/**
+ * Chequeo 4: los entregables sin abrir que el cierre tiene que reclamar. Lo de afuera del repo, todo, como desde
+ * el 10/09 (`fuera.sinMirar`). Lo de exports/ (`deExports`, de `exportsDelTurno`): lo que el cierre nombra y no
+ * tiene una mirada (`fuera.miradas`: Read, verificador o tool MCP cuyo texto lo nombra) que haya terminado despues
+ * de su fecha en disco, con 2 s de margen.
+ * Limites conocidos (auditor 10/10, todos del lado de dejar pasar): la mirada va por NOMBRE, asi que abrir otro
+ * archivo que se llama igual en otra carpeta cuenta (43 % de los documentos de exports/ repiten nombre); un
+ * comando que nombra el archivo (o su carpeta) y trae una palabra de `mira_re` en otro tramo cuenta aunque no lo
+ * abra; y el texto de una tool MCP que lo nombra, tambien. Del lado de frenar de mas queda uno: mirar un render
+ * que tiene OTRO nombre sin que ningun comando nombre el archivo ni su carpeta (frena una vez y dice que abrirlo).
+ */
+export function entregablesSinAbrir(texto, fuera = {}, deExports = []) {
+  const out = [...(fuera?.sinMirar || [])];
+  const miradas = Array.isArray(fuera?.miradas) ? fuera.miradas : [];
+  for (const a of deExports || []) {
+    if (!cierreNombra(texto, a)) continue;
+    const nombre = textoPlano(a.nombre);
+    const carpeta = textoPlano(a.rel).split('/').slice(0, -1).join('/');
+    const mirado = miradas.some((m) => m.ts >= a.mtimeMs - 2000 && miradaNombra(m, nombre, carpeta));
+    if (!mirado) out.push({ nombre: a.nombre, ruta: a.rel, escritoEn: Math.round(a.mtimeMs), mirado: false, origen: 'exports' });
+  }
+  return out;
+}
+
 const DEPS_REALES = {
   firmaIA: correrDetectorFirma,
+  exportsDelTurno,
   fueraEnEsteTurno: relevarTranscript,
   pendientes: relevarPendientes,
   enCooldown: cooldownVigente,
@@ -1408,13 +1592,16 @@ export async function decidir(payload = {}, deps = {}) {
     }
   }
 
-  // 4. Entregable escrito afuera y nunca abierto despues (una vez por archivo y escritura).
-  const sinMirar = (fuera?.sinMirar || []).filter((e) => !d.yaReclamado(sid, `${e.nombre}@${e.escritoEn}`));
+  // 4. Entregable escrito afuera (o en exports/, en este turno y nombrado en el cierre) y nunca abierto despues
+  //    (una vez por archivo y escritura).
+  const sinMirar = entregablesSinAbrir(texto, fuera, d.exportsDelTurno(fuera)).filter((e) => !d.yaReclamado(sid, `${e.nombre}@${e.escritoEn}`));
   if (sinMirar.length) {
     for (const e of sinMirar) d.reclamar(sid, `${e.nombre}@${e.escritoEn}`);
     return {
       ok: false,
-      titulo: 'CIERRE-GUARD: escribiste un entregable afuera del repo y no lo abriste despues',
+      titulo: sinMirar.every((e) => e.origen === 'exports')
+        ? 'CIERRE-GUARD: el cierre nombra un entregable de exports/ escrito en este turno y no lo abriste despues'
+        : 'CIERRE-GUARD: escribiste un entregable afuera del repo y no lo abriste despues',
       detalle: `Sin mirar desde su ultima escritura: ${sinMirar.map((e) => e.ruta).join(' · ')}.\n`
         + 'El juez es el archivo que quedo en la carpeta, no el script que lo genero (LECCIONES 03-04/09 y 08/09: '
         + 'el pptx viejo, el margen que no se veia en el HTML, el texto recortado que solo se ve en el PDF). Abrilo antes de decir listo: '
