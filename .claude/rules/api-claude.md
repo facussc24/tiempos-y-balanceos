@@ -41,7 +41,15 @@ y `.../pricing`). Traspaso completo: `docs/drafts/HANDOFF_API_CLAUDE_2026-10-08.
 
 El esfuerzo va siempre explicito (Opus y Haiku 5.5 arrancan en `medium`). Opus y Sonnet llevan el
 fallback del servidor (`fallbacks: 'default'`); Haiku no lo tiene. Una respuesta rechazada, cortada por
-`max_tokens` o con JSON roto es un **error** (`ErrorApi`), nunca un resultado a medias.
+`max_tokens` o con JSON roto es un **error** (`ErrorApi`), nunca un resultado a medias. Excepcion a pedido:
+`_apiTarea.mjs --guardar-cortada` guarda la respuesta cortada con un aviso arriba y sale con **codigo 4** (no 0: quien
+lanza lotes se entera; 11/10/2026: 16 respuestas, $20, se cortaron en 32.000 tokens y se perdieron enteras; con `effort`
+alto el pensamiento gasta la mayor parte del tope, asi que un borrador de codigo va con `--max-tokens 128000`, el maximo
+de Fable, Opus y Sonnet medido ese dia). La noche no la usa.
+- **Una prestada sin saldo se marca sola** (`.sgc-cache/api/prestada_agotada_<hasta>`): ante un 400 «credit balance is too
+  low» con una clave prestada, `claudeApi.mjs` la marca, reintenta UNA vez con la clave que sigue y el reemplazo vale para
+  el resto del proceso (11/10/2026 02:15: la prestada de Pedro se agoto en medio de 12 pedidos). La marca no vence: si
+  recargan esa prestada, se borra a mano (`--check` lo avisa).
 
 ## 3. Los 5 candados de la noche (`scripts/_nocturno.mjs`, tarea de Windows 06:30)
 

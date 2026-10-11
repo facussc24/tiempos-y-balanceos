@@ -25,7 +25,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  crearCliente, llamarLargo, contarTokens, estimarUsd, resolverModelo, usd, MENSAJE_SIN_CLAVE, ErrorApi,
+  crearCliente, llamarLargo, contarTokens, estimarUsd, resolverModelo, usd, MENSAJE_SIN_CLAVE, ErrorApi, exigirRespuestaUtil,
 } from './_lib/claudeApi.mjs';
 
 export const TOPE_ADJUNTO_BYTES = 2 * 1024 * 1024;
@@ -94,7 +94,7 @@ export function leerAdjuntos(rutas, { raiz = process.cwd() } = {}) {
   });
 }
 
-const USO = 'uso: node scripts/_apiTarea.mjs --tarea <nombre> --pedido <archivo.md> [--adjunto <ruta>]... --salida <archivo> [--modelo opus|sonnet|haiku|fable] [--effort low|medium|high|xhigh] [--sistema <archivo>] [--max-tokens N] [--estimar]';
+const USO = 'uso: node scripts/_apiTarea.mjs --tarea <nombre> --pedido <archivo.md> [--adjunto <ruta>]... --salida <archivo> [--modelo opus|sonnet|haiku|fable] [--effort low|medium|high|xhigh] [--sistema <archivo>] [--max-tokens N] [--guardar-cortada] [--estimar]';
 
 export function leerArgumentos(argv) {
   const CON_VALOR = ['--tarea', '--pedido', '--adjunto', '--salida', '--modelo', '--effort', '--sistema', '--max-tokens', '--timeout-min'];
@@ -102,6 +102,10 @@ export function leerArgumentos(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--estimar') { op.estimar = true; continue; }
+    // Por defecto una respuesta cortada por max_tokens se tira (regla api-claude.md §2). Con esta bandera se
+    // GUARDA con un aviso arriba: el 11/10/2026 tres borradores de codigo ($4,96) se cortaron en 32.000 tokens
+    // y se perdieron enteros; un borrador a medias se puede completar, uno tirado no.
+    if (a === '--guardar-cortada') { op.guardarCortada = true; continue; }
     if (CON_VALOR.includes(a) && i + 1 < argv.length) {
       const v = argv[++i];
       if (a === '--adjunto') op.adjuntos.push(v); else op[a.slice(2)] = v;
@@ -143,11 +147,18 @@ async function main(argv) {
   if (op.estimar) return 0;
 
   // Por streaming: sin streaming la conexion se corta a los ~10 min aunque el timeout sea mayor (09/10/2026).
-  const r = await llamarLargo(cliente, { ...comun, tarea: `sesion:${op.tarea}` });
+  const r = await llamarLargo(cliente, { ...comun, tarea: `sesion:${op.tarea}`, tolerar: Boolean(op.guardarCortada) });
+  // Con --guardar-cortada solo se tolera el corte por max_tokens: un rechazo sigue siendo un error (respuesta vacia).
+  if (op.guardarCortada && r.rechazo) exigirRespuestaUtil(r, { tarea: `sesion:${op.tarea}` });
   fs.mkdirSync(path.dirname(salida), { recursive: true });
-  fs.writeFileSync(salida, r.texto.endsWith('\n') ? r.texto : `${r.texto}\n`, 'utf8');
+  const aviso = r.truncado
+    ? `> ⚠ RESPUESTA CORTADA por max_tokens (${op.maxTokens.toLocaleString('es-AR')} tokens de salida, ${r.usage.output_tokens ?? '?'} usados): falta el final. Pedir la continuacion o subir --max-tokens.\n\n`
+    : '';
+  fs.writeFileSync(salida, `${aviso}${r.texto.endsWith('\n') ? r.texto : `${r.texto}\n`}`, 'utf8');
+  if (r.truncado) console.log(`CORTADA por max_tokens (${op.tarea}): se guardo a medias en ${path.relative(process.cwd(), salida)}${r.texto.trim() ? '' : ' (SIN TEXTO: el corte cayo mientras pensaba)'}`);
   console.log(`Respuesta guardada en ${path.relative(process.cwd(), salida)} (${r.texto.length.toLocaleString('es-AR')} caracteres) · costo real ${usd(r.costoUsd)} · ${r.usage.input_tokens ?? 0} entrada / ${r.usage.output_tokens ?? 0} salida · ${Math.round(r.duracionMs / 1000)} s${r.fallback?.length ? ` · fallback ${r.fallback.join(', ')}` : ''}${r.modeloRespuesta && r.modeloRespuesta !== r.modelo ? ` · OJO: contesto ${r.modeloRespuesta}` : ''}`);
-  return 0;
+  // Una respuesta cortada guardada sale con 4, no con 0: quien lanza lotes y mira solo el codigo se entera (auditor Opus 03:00).
+  return r.truncado ? 4 : 0;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

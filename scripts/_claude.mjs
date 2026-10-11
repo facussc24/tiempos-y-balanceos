@@ -24,7 +24,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import {
   crearCliente, leerClave, claveActiva, llamar, verificarAcceso, presupuestoDelMes, leerLedgerCiclo, resumenLedger, cicloDia, topeCorridaUsd,
-  selloLocal, usd, resolverModelo, MENSAJE_SIN_CLAVE, ErrorApi,
+  selloLocal, usd, resolverModelo, MENSAJE_SIN_CLAVE, ErrorApi, clavesPrestadas, prestadaAgotada, DIR_API,
 } from './_lib/claudeApi.mjs';
 import { psRun } from './_lib/powershell.mjs';
 import {
@@ -214,6 +214,11 @@ async function check() {
       const dias = Math.round((vence - new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())) / 86400000);
       ok(`clave: la prestada que vence el ${h.slice(6, 8)}/${h.slice(4, 6)} (en ${dias} dia${dias === 1 ? '' : 's'}); despues sigue sola la principal (no se muestra)`);
     } else ok(`clave ANTHROPIC_API_KEY: esta (${activa.origen}; no se muestra)`);
+    // Una prestada marcada «sin saldo» se saltea en silencio y la marca no vence: se dice, con el archivo para borrarla
+    // si la recargaron (auditor Opus 11/10/2026).
+    for (const p of clavesPrestadas()) {
+      if (prestadaAgotada(p.hasta)) console.log(`  · la prestada que vence el ${p.hasta.slice(6, 8)}/${p.hasta.slice(4, 6)} esta marcada SIN SALDO y no se usa; si la recargaron, borrar ${path.join(DIR_API, `prestada_agotada_${p.hasta}`)}`);
+    }
     const acceso = await verificarAcceso(crearCliente());
     if (acceso.ok) ok(`acceso: ${acceso.detalle}`);
     else { mal(`acceso: ${acceso.detalle}`); falta.push('que la API acepte la clave (ver el error de arriba)'); codigo = 1; }

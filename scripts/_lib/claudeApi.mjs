@@ -180,14 +180,34 @@ const aaaammdd = (f) => `${f.getFullYear()}${p2(f.getMonth() + 1)}${p2(f.getDate
  * Devuelve { clave, origen: 'entorno'|'secundaria'|'principal'|null, hasta: 'AAAAMMDD'|null }.
  * NUNCA se imprime ni se loguea la clave (el secretos-guard frena los comandos que la leerian).
  */
-export function claveActiva({ env = process.env, archivoEnv = path.join(RAIZ, '.env.local'), hoy = new Date() } = {}) {
+/**
+ * Marca "esta prestada ya no tiene saldo": un archivo en DIR_API (la noche puede escribirlo: pasa por escrituraSegura).
+ * 11/10/2026: la prestada de $100 se agota en medio de una tanda y, sin la marca, hasta su fecha de vencimiento
+ * TODAS las llamadas fallaban con "credit balance is too low" aunque la principal tuviera saldo.
+ */
+const archivoAgotada = (hasta, dir) => path.join(dir, `prestada_agotada_${hasta}`);
+export function prestadaAgotada(hasta, { dir = DIR_API } = {}) { return fs.existsSync(archivoAgotada(hasta, dir)); }
+export function marcarPrestadaAgotada(hasta, { dir = DIR_API, ahora = new Date() } = {}) {
+  agregarSeguro(archivoAgotada(hasta, dir), `${selloLocal(ahora)} sin saldo (credit balance is too low)\n`);
+}
+
+/** Todas las prestadas de .env.local, vencidas o no, marcadas o no: [{ clave, hasta }]. Para saber si una clave ES una prestada. */
+export function clavesPrestadas({ archivoEnv = path.join(RAIZ, '.env.local') } = {}) {
+  const local = leerEnv(archivoEnv);
+  return Object.entries(local)
+    .map(([k, v]) => ({ m: /^ANTHROPIC_API_KEY_HASTA_(\d{8})$/.exec(k), clave: String(v ?? '').trim() }))
+    .filter((x) => x.m && x.clave)
+    .map((x) => ({ clave: x.clave, hasta: x.m[1] }));
+}
+
+export function claveActiva({ env = process.env, archivoEnv = path.join(RAIZ, '.env.local'), hoy = new Date(), dirMarcas = DIR_API } = {}) {
   const directa = String(env.ANTHROPIC_API_KEY ?? '').trim();
   if (directa) return { clave: directa, origen: 'entorno', hasta: null };
   const local = leerEnv(archivoEnv);
   const limite = aaaammdd(hoy);
   const prestadas = Object.entries(local)
     .map(([k, v]) => ({ m: /^ANTHROPIC_API_KEY_HASTA_(\d{8})$/.exec(k), clave: String(v ?? '').trim() }))
-    .filter((x) => x.m && x.clave && x.m[1] >= limite)
+    .filter((x) => x.m && x.clave && x.m[1] >= limite && !prestadaAgotada(x.m[1], { dir: dirMarcas }))
     .map((x) => ({ clave: x.clave, hasta: x.m[1] }))
     .sort((a, b) => a.hasta.localeCompare(b.hasta));
   if (prestadas.length) return { clave: prestadas[0].clave, origen: 'secundaria', hasta: prestadas[0].hasta };
@@ -492,13 +512,54 @@ export const usd = (x) => `$${(Math.round(n(x) * 100) / 100).toFixed(2).replace(
  * Tira ErrorApi si la respuesta no sirve, salvo `tolerar:true` (devuelve la respuesta con el
  * `rechazo` / `truncado` / `jsonInvalido` adentro).
  */
+const RE_SIN_SALDO = /credit balance is too low/i;
+/** Clave vieja -> cliente de reemplazo, en ESTE proceso: la primera llamada que cae por saldo cambia la clave para todas las que siguen. */
+const reemplazos = new Map();
+const clienteVigente = (cliente) => (cliente?.apiKey && reemplazos.get(cliente.apiKey)) || cliente;
+
+/**
+ * Corre `fn(cliente)`. Si la API contesta 400 "credit balance is too low" y la clave del cliente es una PRESTADA,
+ * la marca agotada, arma un cliente con la clave que sigue (otra prestada o la principal) y reintenta UNA vez.
+ * Con la clave del entorno o la principal no hay a donde ir: el error sube como siempre.
+ * `respaldo`: { env, archivoEnv, dirMarcas, crear(clave) -> cliente } para los tests; por defecto, lo real.
+ * 11/10/2026 02:15: la prestada se agoto en medio de 12 pedidos; el primero que fallaba era count_tokens, que no
+ * pasaba por aca, y el cliente viejo seguia en uso: por eso el reemplazo vale para todas las llamadas del proceso.
+ */
+async function conRespaldoDeClave(clienteDado, fn, { tarea = '', respaldo = {} } = {}) {
+  const cliente = clienteVigente(clienteDado);
+  try {
+    return await fn(cliente);
+  } catch (e) {
+    if (!(e?.status === 400 && RE_SIN_SALDO.test(String(e?.message ?? '')))) throw e;
+    // Sin la clave del cliente a la vista no se marca nada (fallar al lado seguro: auditor Opus 03:00, punto 8).
+    if (!cliente.apiKey) throw e;
+    const { env = process.env, archivoEnv, dirMarcas = DIR_API, crear } = respaldo;
+    const op = { env, ...(archivoEnv ? { archivoEnv } : {}), dirMarcas };
+    // La clave del cliente tiene que ser UNA prestada (marcada o no): con varios pedidos en paralelo, o con otro proceso
+    // que ya dejo la marca, la activa de ahora ya es la principal y los pedidos en vuelo con la prestada se caian igual
+    // (auditor Opus 03:00, punto 1). La del entorno o la principal no tienen a donde ir.
+    const prestada = clavesPrestadas(op).find((p) => p.clave === cliente.apiKey);
+    if (!prestada) throw e;
+    if (!prestadaAgotada(prestada.hasta, { dir: dirMarcas })) marcarPrestadaAgotada(prestada.hasta, { dir: dirMarcas });
+    const siguiente = claveActiva(op);
+    if (!siguiente.clave || siguiente.clave === cliente.apiKey) throw e;
+    let nuevo = reemplazos.get(cliente.apiKey);
+    if (!nuevo || nuevo.apiKey !== siguiente.clave) {
+      console.error(`clave prestada (hasta ${prestada.hasta}) sin saldo${tarea ? ` (${tarea})` : ''}: sigo con la ${siguiente.origen}`);
+      nuevo = (crear ?? ((clave) => new Anthropic({ apiKey: clave, timeout: cliente.timeout, maxRetries: cliente.maxRetries })))(siguiente.clave);
+      reemplazos.set(cliente.apiKey, nuevo);
+    }
+    return fn(nuevo);
+  }
+}
+
 export async function llamar(cliente, opciones = {}) {
-  const { tarea = '', registrar = true, tolerar = false, dirLedger = DIR_API, ahora } = opciones;
+  const { tarea = '', registrar = true, tolerar = false, dirLedger = DIR_API, ahora, respaldoClave } = opciones;
   const { params, betas, conSchema } = armarParametros(opciones);
   const t0 = Date.now();
   let res;
   try {
-    res = await cliente.beta.messages.create(betas.length ? { ...params, betas } : params);
+    res = await conRespaldoDeClave(cliente, (c) => c.beta.messages.create(betas.length ? { ...params, betas } : params), { tarea, respaldo: respaldoClave });
   } catch (e) {
     throw new ErrorApi('api', `la API fallo${tarea ? ` (${tarea})` : ''}: ${e?.status ? `HTTP ${e.status} ` : ''}${e?.message ?? e}`, { causa: e });
   }
@@ -514,13 +575,12 @@ export async function llamar(cliente, opciones = {}) {
  * al final (`finalMessage()`): nada se usa a medias, mismo ledger, mismos errores que llamar().
  */
 export async function llamarLargo(cliente, opciones = {}) {
-  const { tarea = '', registrar = true, tolerar = false, dirLedger = DIR_API, ahora } = opciones;
+  const { tarea = '', registrar = true, tolerar = false, dirLedger = DIR_API, ahora, respaldoClave } = opciones;
   const { params, betas, conSchema } = armarParametros(opciones);
   const t0 = Date.now();
   let res;
   try {
-    const stream = cliente.beta.messages.stream(betas.length ? { ...params, betas } : params);
-    res = await stream.finalMessage();
+    res = await conRespaldoDeClave(cliente, (c) => c.beta.messages.stream(betas.length ? { ...params, betas } : params).finalMessage(), { tarea, respaldo: respaldoClave });
   } catch (e) {
     throw new ErrorApi('api', `la API fallo${tarea ? ` (${tarea})` : ''}: ${e?.status ? `HTTP ${e.status} ` : ''}${e?.message ?? e}`, { causa: e });
   }
@@ -534,7 +594,8 @@ export async function contarTokens(cliente, opciones = {}) {
   const { params } = armarParametros({ ...opciones, fallbacks: false });
   const pedido = { model: params.model, messages: params.messages };
   if (params.system) pedido.system = params.system;
-  const r = await cliente.messages.countTokens(pedido);
+  // Tambien con respaldo: es gratis, pero sin saldo contesta el mismo 400 y era lo primero que fallaba (11/10/2026).
+  const r = await conRespaldoDeClave(cliente, (c) => c.messages.countTokens(pedido), { tarea: 'count_tokens', respaldo: opciones.respaldoClave });
   return n(r?.input_tokens);
 }
 

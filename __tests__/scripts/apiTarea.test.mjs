@@ -86,6 +86,10 @@ describe('_apiTarea · argumentos', () => {
     expect(op.estimar).toBe(true);
     expect(leerArgumentos(['--tarea', 't', '--pedido', 'p.md', '--salida', 's', '--timeout-min', '45']).timeoutMin).toBe(45);
   });
+  it('--guardar-cortada es opcional y apagada por defecto (una respuesta cortada se tira, salvo que se pida guardarla)', () => {
+    expect(leerArgumentos(['--tarea', 't', '--pedido', 'p.md', '--salida', 's']).guardarCortada).toBeUndefined();
+    expect(leerArgumentos(['--tarea', 't', '--pedido', 'p.md', '--salida', 's', '--guardar-cortada']).guardarCortada).toBe(true);
+  });
   it('ROJO — un tiempo de espera fuera de rango', () => {
     expect(() => leerArgumentos(['--tarea', 't', '--pedido', 'p.md', '--salida', 's', '--timeout-min', '0'])).toThrow(/timeout-min/);
     expect(() => leerArgumentos(['--tarea', 't', '--pedido', 'p.md', '--salida', 's', '--timeout-min', '500'])).toThrow(/timeout-min/);

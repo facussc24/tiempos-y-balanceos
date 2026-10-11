@@ -273,18 +273,30 @@ describe('claudeApi · la clave', () => {
     expect(A.leerClave({ env: {}, archivoEnv: env })).toBeNull();
   });
 
-  it('claveActiva: la prestada que vence antes se gasta primero; vencida, sigue la principal; el entorno gana', () => {
+  it('claveActiva: la prestada que vence antes se gasta primero; vencida, sigue la principal; el entorno gana (dirMarcas de prueba: la marca REAL de una prestada agotada no entra)', () => {
     const env = path.join(dir, '.env.prueba');
     fs.writeFileSync(env, 'ANTHROPIC_API_KEY=sk-ant-principal\nANTHROPIC_API_KEY_HASTA_20261020=sk-ant-dueno\nANTHROPIC_API_KEY_HASTA_20261105=sk-ant-otra\n');
     const el9 = new Date(2026, 9, 9), el20 = new Date(2026, 9, 20), el21 = new Date(2026, 9, 21), dic = new Date(2026, 11, 1);
-    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el9 })).toEqual({ clave: 'sk-ant-dueno', origen: 'secundaria', hasta: '20261020' });
-    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el20 }).clave).toBe('sk-ant-dueno');
-    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el21 })).toEqual({ clave: 'sk-ant-otra', origen: 'secundaria', hasta: '20261105' });
-    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: dic })).toEqual({ clave: 'sk-ant-principal', origen: 'principal', hasta: null });
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el9, dirMarcas: dir })).toEqual({ clave: 'sk-ant-dueno', origen: 'secundaria', hasta: '20261020' });
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el20, dirMarcas: dir }).clave).toBe('sk-ant-dueno');
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el21, dirMarcas: dir })).toEqual({ clave: 'sk-ant-otra', origen: 'secundaria', hasta: '20261105' });
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: dic, dirMarcas: dir })).toEqual({ clave: 'sk-ant-principal', origen: 'principal', hasta: null });
     expect(A.claveActiva({ env: { ANTHROPIC_API_KEY: 'sk-ant-entorno' }, archivoEnv: env, hoy: el9 }).origen).toBe('entorno');
-    expect(A.leerClave({ env: {}, archivoEnv: env, hoy: el9 })).toBe('sk-ant-dueno');
+    expect(A.leerClave({ env: {}, archivoEnv: env, hoy: el9, dirMarcas: dir })).toBe('sk-ant-dueno');
     fs.writeFileSync(env, 'ANTHROPIC_API_KEY_HASTA_20261020=sk-ant-dueno\n');
-    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: dic })).toEqual({ clave: null, origen: null, hasta: null });
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: dic, dirMarcas: dir })).toEqual({ clave: null, origen: null, hasta: null });
+  });
+
+  it('una prestada marcada «sin saldo» se saltea y sigue la principal; sin marca se usa (las dos direcciones)', () => {
+    const env = path.join(dir, '.env.prueba');
+    fs.writeFileSync(env, 'ANTHROPIC_API_KEY=sk-ant-principal\nANTHROPIC_API_KEY_HASTA_20261020=sk-ant-dueno\n');
+    const el9 = new Date(2026, 9, 9);
+    expect(A.prestadaAgotada('20261020', { dir })).toBe(false);
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el9, dirMarcas: dir }).clave).toBe('sk-ant-dueno');
+    A.marcarPrestadaAgotada('20261020', { dir, ahora: new Date(2026, 9, 11, 2, 15) });
+    expect(A.prestadaAgotada('20261020', { dir })).toBe(true);
+    expect(fs.readFileSync(path.join(dir, 'prestada_agotada_20261020'), 'utf8')).toMatch(/2026-10-11 02:15.*sin saldo/);
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el9, dirMarcas: dir })).toEqual({ clave: 'sk-ant-principal', origen: 'principal', hasta: null });
   });
 
   it('el mensaje sin clave dice los tres pasos y el comando para pegarla', () => {
@@ -320,6 +332,60 @@ describe('claudeApi · llamarLargo (streaming) con un cliente falso', () => {
   it('ROJO — si el stream falla, el error dice la tarea', async () => {
     const roto = { beta: { messages: { stream: () => { throw new Error('se cayo'); } } } };
     await expect(A.llamarLargo(roto, { modelo: 'haiku', usuario: 'x', tarea: 'T', dirLedger: dir })).rejects.toThrow(/\(T\).*se cayo/);
+  });
+  it('prestada sin saldo: la marca agotada y reintenta UNA vez con la principal; la principal sin saldo sube el error; otro 400 no dispara el respaldo', async () => {
+    const env = path.join(dir, '.env.prueba');
+    fs.writeFileSync(env, 'ANTHROPIC_API_KEY=sk-ant-principal\nANTHROPIC_API_KEY_HASTA_20991231=sk-ant-dueno\n');
+    const sinSaldo = () => { const e = new Error('400 {"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing."}}'); e.status = 400; throw e; };
+    const usados = [];
+    const crear = (clave) => { usados.push(clave); return { apiKey: clave, ...clienteStream(respuesta()) }; };
+    const respaldoClave = { env: {}, archivoEnv: env, dirMarcas: dir, crear };
+    // VERDE: la prestada contesta sin saldo -> marca + un reintento con la principal, y la respuesta es la de la principal
+    const prestado = { apiKey: 'sk-ant-dueno', timeout: 5, maxRetries: 0, ...clienteStream(() => sinSaldo()) };
+    const r = await A.llamarLargo(prestado, { modelo: 'haiku', usuario: 'x', tarea: 'saldo', dirLedger: dir, respaldoClave });
+    expect(r.texto).toBe('{"hallazgos":[]}');
+    expect(usados).toEqual(['sk-ant-principal']);
+    expect(A.prestadaAgotada('20991231', { dir })).toBe(true);
+    expect(A.leerLedgerCiclo(A.cicloDe(new Date(), 1), dir).map((e) => e.tarea)).toEqual(['saldo']);
+    // VERDE: la SEGUNDA llamada con el mismo cliente viejo ya va directo al reemplazo (sin otro cliente nuevo ni otro 400)
+    const r2 = await A.llamarLargo(prestado, { modelo: 'haiku', usuario: 'y', tarea: 'saldo-bis', dirLedger: dir, respaldoClave });
+    expect(r2.texto).toBe('{"hallazgos":[]}');
+    expect(usados).toEqual(['sk-ant-principal']);
+    // VERDE: count_tokens tambien pasa por el respaldo (era lo primero que fallaba el 11/10)
+    const contador = { apiKey: 'sk-ant-dueno-c', messages: { countTokens: async () => sinSaldo() } };
+    fs.writeFileSync(env, 'ANTHROPIC_API_KEY=sk-ant-principal\nANTHROPIC_API_KEY_HASTA_20991229=sk-ant-dueno-c\n');
+    const crearContador = (clave) => { usados.push(clave); return { apiKey: clave, messages: { countTokens: async () => ({ input_tokens: 7 }) } }; };
+    expect(await A.contarTokens(contador, { modelo: 'haiku', usuario: 'x', respaldoClave: { ...respaldoClave, crear: crearContador } })).toBe(7);
+    expect(usados).toEqual(['sk-ant-principal', 'sk-ant-principal']);
+    expect(A.prestadaAgotada('20991229', { dir })).toBe(true);
+    // VERDE (auditor Opus 11/10 03:00, punto 1): TRES pedidos en paralelo con el mismo cliente prestado -> los tres salen, con
+    // UN solo cliente de reemplazo; y un cliente prestado en OTRO proceso, con la marca ya puesta por este, tambien salta.
+    const paralelo = { apiKey: 'sk-ant-dueno-p', ...clienteStream(() => sinSaldo()) };
+    fs.writeFileSync(env, 'ANTHROPIC_API_KEY=sk-ant-principal\nANTHROPIC_API_KEY_HASTA_20991228=sk-ant-dueno-p\n');
+    const antes = usados.length;
+    const tres = await Promise.all([1, 2, 3].map((i) => A.llamarLargo(paralelo, { modelo: 'haiku', usuario: `p${i}`, tarea: `par${i}`, dirLedger: dir, respaldoClave })));
+    expect(tres.map((x) => x.texto)).toEqual(['{"hallazgos":[]}', '{"hallazgos":[]}', '{"hallazgos":[]}']);
+    expect(usados.length).toBe(antes + 1);
+    A.marcarPrestadaAgotada('20991227', { dir });                        // la marca la dejo otro proceso
+    fs.writeFileSync(env, 'ANTHROPIC_API_KEY=sk-ant-principal\nANTHROPIC_API_KEY_HASTA_20991227=sk-ant-dueno-o\n');
+    const otroProceso = { apiKey: 'sk-ant-dueno-o', ...clienteStream(() => sinSaldo()) };
+    expect((await A.llamarLargo(otroProceso, { modelo: 'haiku', usuario: 'x', tarea: 'otro-proc', dirLedger: dir, respaldoClave })).texto).toBe('{"hallazgos":[]}');
+    // ROJO: un cliente sin apiKey a la vista no marca nada y el error sube (fallar al lado seguro)
+    const sinClave = { ...clienteStream(() => sinSaldo()) };
+    fs.writeFileSync(env, 'ANTHROPIC_API_KEY=sk-ant-principal\nANTHROPIC_API_KEY_HASTA_20991226=sk-ant-dueno-s\n');
+    await expect(A.llamarLargo(sinClave, { modelo: 'haiku', usuario: 'x', dirLedger: dir, respaldoClave })).rejects.toThrow(/credit balance/);
+    expect(A.prestadaAgotada('20991226', { dir })).toBe(false);
+    // ROJO: la principal tambien sin saldo -> el error sube, sin bucle ni cliente nuevo
+    const nFijo = usados.length;
+    const principal = { apiKey: 'sk-ant-principal', ...clienteStream(() => sinSaldo()) };
+    await expect(A.llamarLargo(principal, { modelo: 'haiku', usuario: 'x', tarea: 'saldo2', dirLedger: dir, respaldoClave })).rejects.toThrow(/credit balance/);
+    expect(usados.length).toBe(nFijo);
+    // ROJO: un 400 que no es de saldo no toca la clave ni marca nada (clave distinta: no tiene reemplazo)
+    fs.writeFileSync(env, 'ANTHROPIC_API_KEY=sk-ant-principal\nANTHROPIC_API_KEY_HASTA_20991230=sk-ant-dueno-2\n');
+    const otro = { apiKey: 'sk-ant-dueno-2', ...clienteStream(() => { const e = new Error('max_tokens: 1000000 > 128000'); e.status = 400; throw e; }) };
+    await expect(A.llamarLargo(otro, { modelo: 'haiku', usuario: 'x', dirLedger: dir, respaldoClave })).rejects.toThrow(/max_tokens/);
+    expect(usados.length).toBe(nFijo);
+    expect(A.prestadaAgotada('20991230', { dir })).toBe(false);
   });
 });
 
