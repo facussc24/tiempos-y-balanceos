@@ -19,6 +19,15 @@ Outlook ya tiene abierta, como haria una macro de VBA.
     python scripts/_mails.py --sin-respuesta        # pedidos de la Bandeja sin mail de Fak a 5 dias
                                  [--dias 5] [--ventana 45] [--json]   (lo corre _escritorio.mjs)
 
+Cuatro lecturas mas (cola HOY-19a a d, 10/10/2026; la logica y su selftest, en scripts/_lib/mailsLectura.py):
+    python scripts/_mails.py --nuevos               # lo que llego desde el ultimo mail del cache, en segundos:
+                                 [--desde AAAA-MM-DD]   ordena cada carpeta por fecha y corta (no recorre todo, como --sync)
+    python scripts/_mails.py --abrir <id>           # MUESTRA ese mail en Outlook, en la pantalla de Fak. No lo guarda ni
+                                                    # lo mueve; si estaba sin leer, Outlook lo marca como leido al abrirlo
+    python scripts/_mails.py --adjuntos <id> --abrir   # extrae los adjuntos y los abre con scripts/_abrir.mjs
+    python scripts/_mails.py --borradores [--json]  # los borradores con su edad, sus adjuntos y si los armo un programa
+    python scripts/_mails.py --agenda [--dias 7] [--json]   # reuniones de los proximos dias y tareas sin completar
+
 LOS MAILS DEL EQUIPO (agregado el 07/10/2026): los de trabajo de algunos companeros (hoy Carlos Baptista y la PC
 que era de Marcelo Nieve) suben solos a la nube de Ingenieria, en
 `<biblioteca>\\<_CUARENTENA_>Claude Barack\\mails\\_entrada\\<persona>\\*.jsonl`, y esta herramienta los lee de ahi
@@ -29,7 +38,8 @@ NOMBRES de los adjuntos, no los archivos.
 ATENCION — el repo es PUBLICO. El cache va a .mail-cache/ (gitignoreado). Nunca
 commitear contenido de mails ni pegarlo en archivos del repo.
 
-Enviar, responder o borrar mails NO se hace desde aca: es a mano, por Fak.
+Enviar, responder o borrar mails NO se hace desde aca: es a mano, por Fak. Nada de este archivo guarda, mueve,
+borra ni transmite un item de Outlook; `--abrir` solo muestra una ventana.
 """
 import argparse
 import datetime
@@ -40,6 +50,9 @@ import json
 import os
 import re
 import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib'))
+import mailsLectura  # noqa: E402
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # BARACK_MAIL_CACHE: otra carpeta de cache (la usan los tests para no tocar el real).
@@ -472,6 +485,32 @@ def evaluar_parcial(revisados, fechas_cache, estado, hoy=None):
     return False, '', estado
 
 
+def _registro(m, eid, p):
+    """El renglon del cache de un mail de Outlook. Lo usan `--sync` y `--nuevos`: una sola forma de guardar un mail."""
+    try:
+        fecha = m.ReceivedTime.strftime('%Y-%m-%d %H:%M')
+    except Exception:
+        fecha = ''
+    adjuntos = []
+    try:
+        for k in range(1, m.Attachments.Count + 1):
+            adjuntos.append(str(m.Attachments.Item(k).FileName))
+    except Exception:
+        pass
+    return {
+        'id': eid,
+        'carpeta': p,
+        'fecha': fecha,
+        'de': str(getattr(m, 'SenderName', '') or ''),
+        'de_mail': str(getattr(m, 'SenderEmailAddress', '') or ''),
+        'para': str(getattr(m, 'To', '') or ''),
+        'cc': str(getattr(m, 'CC', '') or ''),
+        'asunto': str(getattr(m, 'Subject', '') or ''),
+        'adjuntos': adjuntos,
+        'cuerpo': _limpiar(getattr(m, 'Body', '')),
+    }
+
+
 def sync(full=False):
     ns = _outlook()
     previos = {} if full else _leer_cache()
@@ -493,28 +532,7 @@ def sync(full=False):
                     continue
                 if getattr(m, 'Class', 43) != 43:      # 43 = olMail
                     continue
-                try:
-                    fecha = m.ReceivedTime.strftime('%Y-%m-%d %H:%M')
-                except Exception:
-                    fecha = ''
-                adjuntos = []
-                try:
-                    for k in range(1, m.Attachments.Count + 1):
-                        adjuntos.append(str(m.Attachments.Item(k).FileName))
-                except Exception:
-                    pass
-                nuevos.append({
-                    'id': eid,
-                    'carpeta': p,
-                    'fecha': fecha,
-                    'de': str(getattr(m, 'SenderName', '') or ''),
-                    'de_mail': str(getattr(m, 'SenderEmailAddress', '') or ''),
-                    'para': str(getattr(m, 'To', '') or ''),
-                    'cc': str(getattr(m, 'CC', '') or ''),
-                    'asunto': str(getattr(m, 'Subject', '') or ''),
-                    'adjuntos': adjuntos,
-                    'cuerpo': _limpiar(getattr(m, 'Body', '')),
-                })
+                nuevos.append(_registro(m, eid, p))
             except Exception:
                 pass
         try:
@@ -672,13 +690,230 @@ def adjuntos(eid, destino=None):
     if not os.path.isdir(destino):
         os.makedirs(destino)
     n = 0
+    rutas = []
     for k in range(1, m.Attachments.Count + 1):
         a = m.Attachments.Item(k)
         ruta = os.path.join(destino, re.sub(r'[^\w.\- ]', '_', str(a.FileName)))
         a.SaveAsFile(ruta)
         print('  %-45s %9d bytes' % (a.FileName, os.path.getsize(ruta)))
+        rutas.append(ruta)
         n += 1
     print('%d adjuntos en %s' % (n, destino))
+    return rutas
+
+
+# ─────────────────────────────────────────── cuatro lecturas mas de Outlook (cola HOY-19a a d, 10/10/2026)
+#
+# La logica vive en scripts/_lib/mailsLectura.py (se prueba contra un Outlook de mentira). Aca va la consola.
+
+def _vigilado(fn, que):
+    """Corre una lectura de Outlook avisando en el momento si Outlook saca su cartel de seguridad (sin esto la corrida
+    se queda colgada y muda). Si el modulo del vigia no esta, corre igual."""
+    try:
+        from outlookUi import vigilando
+    except Exception:
+        return fn()
+    return vigilando(fn, descripcion=que)[0]
+
+
+def abrir_adjuntos(rutas, lanzar=None):
+    """Abre cada adjunto ya extraido con scripts/_abrir.mjs, que confirma que quedo una ventana abierta.
+    Devuelve cuantos NO se vieron abiertos; si no habia nada para abrir, lo dice y devuelve 1 (no es un «abierto»).
+
+    Se saltea solo la imagen pegada de una firma, que Outlook nombra `image001.png` (tres cifras) u `Outlook-xxxx.png`.
+    `image0.jpeg` es la foto que manda un telefono: esa SI se abre (auditor 10/10: habia 2 mails asi en el cache)."""
+    import subprocess
+
+    def con_node(r):
+        try:
+            return subprocess.call(['node', os.path.join(RAIZ, 'scripts', '_abrir.mjs'), r])
+        except OSError as e:
+            print('  no pude lanzar scripts/_abrir.mjs (%s). La ruta: %s' % (e, r))
+            return 1
+    lanzar = lanzar or con_node
+    de_firma = re.compile(r'(?i)^(image\d{3}\.(png|jpe?g|gif)|outlook-[\w\-]+\.(png|jpe?g))$')
+    abribles = [r for r in rutas if not de_firma.match(os.path.basename(r))]
+    if not abribles:
+        print('NADA PARA ABRIR: %s. No decirle a Fak que hay algo abierto.'
+              % ('el mail no trae adjuntos' if not rutas else 'los %d adjuntos son imagenes de la firma' % len(rutas)))
+        return 1
+    sin_ver = 0
+    for r in abribles:
+        if lanzar(r) != 0:
+            sin_ver += 1
+    return sin_ver
+
+
+def _outlook_de_la_persona():
+    """Outlook para las cuatro lecturas nuevas. Si esta cerrado se lo abre como programa de la persona ANTES de
+    conectarse: uno levantado por la automatizacion queda sin ventana y despues traba un envio (regla mail-envio.md).
+    Si no se lo puede abrir, se corta aca en vez de dejar un Outlook fantasma."""
+    try:
+        from outlookUi import asegurar_outlook
+    except Exception:
+        return _outlook()
+    try:
+        asegurar_outlook(log=lambda *a: None)
+    except Exception as e:
+        sys.exit('Outlook esta cerrado y no lo pude abrir (%s). Abrilo y reintenta.' % e)
+    return _outlook()
+
+
+def nuevos(desde=None, como_json=False):
+    """`--nuevos`: lo que llego desde el ultimo mail del cache. Los agrega al cache y los lista."""
+    previos = _leer_cache()
+    if not previos:
+        sys.exit('El cache esta vacio: la primera vez va entero.  python scripts/_mails.py --sync')
+    if desde:
+        try:
+            corte = datetime.datetime.strptime(desde, '%Y-%m-%d')
+        except ValueError:
+            sys.exit('--desde va como AAAA-MM-DD')
+    else:
+        corte = mailsLectura.corte_desde_cache(m.get('fecha', '') for m in previos.values())
+        if corte is None:
+            sys.exit('El cache no tiene fechas para saber desde cuando mirar: usar --desde AAAA-MM-DD o --sync.')
+    ns = _outlook_de_la_persona()
+    lista, info = _vigilado(lambda: mailsLectura.nuevos(ns, previos, corte, _registro), 'la lectura de mails nuevos')
+    incompleto = bool(info['topadas'] or info['fallidas'])
+    if lista:
+        with io.open(MAILS, 'a', encoding='utf-8') as f:
+            for m in lista:
+                f.write(json.dumps(m, ensure_ascii=False) + '\n')
+    try:
+        import time
+        with io.open(os.path.join(CACHE, 'sync.log'), 'a', encoding='utf-8') as f:
+            f.write('%s\tmirados=%d\tnuevos=%d\ttotal=%d\tNUEVOS\tdesde %s\n' % (
+                time.strftime('%Y-%m-%d %H:%M'), info['mirados'], len(lista), len(previos) + len(lista),
+                corte.strftime('%Y-%m-%d %H:%M')))
+    except Exception:
+        pass
+    if como_json:
+        print(json.dumps({'desde': corte.strftime('%Y-%m-%d %H:%M'), 'info': info, 'nuevos': [
+            {k: m[k] for k in ('id', 'carpeta', 'fecha', 'de', 'asunto', 'adjuntos')} for m in lista]}, ensure_ascii=False))
+        return 0          # con --json el que llama lee info.topadas e info.fallidas
+    print('desde                : %s  (el ultimo mail del cache menos %d dias; --desde lo cambia)'
+          % (corte.strftime('%Y-%m-%d %H:%M'), mailsLectura.MARGEN_DIAS) if not desde else 'desde                : %s' % desde)
+    print('mirados en Outlook   : %d  en %d carpetas de mail' % (info['mirados'], info['carpetas']))
+    print('nuevos al cache      : %d' % len(lista))
+    print('total en el cache    : %d' % (len(previos) + len(lista)))
+    if info['sin_ordenar']:
+        print('  (no se dejaron ordenar y se recorrieron enteras: %s)' % ' | '.join(info['sin_ordenar']))
+    if info['topadas']:
+        print('  *** corte por tope en: %s — para estar seguro: python scripts/_mails.py --sync' % ' | '.join(info['topadas']))
+    if info['fallidas']:
+        print('  *** NO se pudieron leer: %s — lo que haya ahi no esta en esta lista: python scripts/_mails.py --sync' % ' | '.join(info['fallidas']))
+    print()
+    for m in lista:
+        print('[%s]  %s' % (m['fecha'], m['asunto']))
+        print('    de: %-30s  carpeta: %s' % (m['de'][:30], m['carpeta']))
+        if m['adjuntos']:
+            print('    ADJUNTOS: %s' % ' | '.join(m['adjuntos']))
+        print('    id: %s' % m['id'])
+        print()
+    print('Esto mira solo lo recibido despues de esa fecha, y deja de mirar una carpeta tras %d mails viejos seguidos.' % mailsLectura.RACHA_VIEJOS)
+    print('No trae: un mail viejo que nunca entro al cache, ni lo que Outlook todavia no termino de bajar. Eso lo trae --sync.')
+    return 2 if incompleto else 0
+
+
+def abrir(eid):
+    """`--abrir <id>`: muestra el mail en Outlook. Sale con 0 si se ve su ventana, 1 si no."""
+    u = _unificar()
+    m = _buscar_id(u, eid)
+    if m is not None and not m['en_outlook']:
+        sys.exit('Ese mail es de la nube del equipo (buzon %s): no esta en el Outlook de Fak, asi que no se puede abrir '
+                 'ahi. Su texto:  python scripts/_mails.py --ver %s' % (' + '.join(m['buzones']), m['id_mostrar']))
+    if m is not None:
+        eid = m['en_outlook']
+    ns = _outlook_de_la_persona()    # sin una ventana de Outlook de la persona, mostrar un mail se cuelga
+    try:
+        r = _vigilado(lambda: mailsLectura.abrir(ns, eid), 'la apertura del mail')
+    except Exception as e:
+        sys.exit('No pude abrir ese mail en Outlook: %s' % e)
+    if not r['ventana']:
+        print('NO SE VE ABIERTO: [%s] %s — Outlook no muestra una ventana de ese mail. No decirle a Fak que esta abierto.'
+              % (r['fecha'], r['asunto']))
+        return 1
+    print('ABIERTO en Outlook: [%s] %s  (de %s)' % (r['fecha'], r['asunto'], r['de']))
+    if r['sin_leer']:
+        print('  OJO: estaba SIN LEER y Outlook lo marca como leido al abrirlo, igual que si lo abriera Fak.')
+    return 0
+
+
+def listar_borradores(como_json=False):
+    """`--borradores`: solo lista. Mover o borrar un borrador no se hace desde aca (cola HOY-19k, con el si de Fak)."""
+    try:
+        with io.open(os.path.join(CACHE, 'borradores_claude.json'), encoding='utf-8') as f:
+            registro = json.load(f)
+    except Exception:
+        registro = []
+    ns = _outlook_de_la_persona()
+    lista = _vigilado(lambda: mailsLectura.borradores(ns, registro), 'la lectura de borradores')
+    res = mailsLectura.resumen_borradores(lista)
+    if como_json:
+        print(json.dumps({'resumen': res, 'borradores': lista}, ensure_ascii=False))
+        return 0
+    print('BORRADORES DE OUTLOOK: %d  (solo lectura: aca no se mueve ni se borra ninguno)' % res['total'])
+    for texto, n in res['tramos']:
+        print('  %-20s %3d' % (texto, n))
+    print('  con adjuntos: %d  |  armados por un programa del repo: %d  |  con el asunto repetido: %d  |  el mas viejo: %d dias'
+          % (res['con_adjuntos'], res['de_programa'], res['repetidos'], res['mas_viejo']))
+    print()
+    for b in lista:
+        marcas = ' '.join(x for x in ('[programa]' if b['de_programa'] else '', '[REPETIDO]' if b['repetido'] else '',
+                                      '[%d adj]' % b['adjuntos'] if b['adjuntos'] else '') if x)
+        print('  %4s d  %s  %-60s  -> %s  %s' % ('?' if b['dias'] is None else b['dias'], b['modificado'][:10],
+                                                 (b['asunto'] or '(sin asunto)')[:60], (b['para'] or '(sin destinatario)')[:40], marcas))
+    print()
+    print('Un borrador viejo con el asunto de un mail que ya salio se puede mandar por error (regla mail-envio.md).')
+    print('Los [programa] los reemplaza solo _prepararMail.py al rehacer el mail; el resto los decide Fak.')
+    return 0
+
+
+def ver_agenda(dias=7, como_json=False):
+    """`--agenda`: reuniones de los proximos dias y tareas sin completar. Sale con 2 si el control del filtro da rojo."""
+    ns = _outlook_de_la_persona()
+    a = _vigilado(lambda: mailsLectura.agenda(ns, dias=dias), 'la lectura del calendario')
+    try:                                     # copia para la sesion de la manana; carpeta ignorada por git
+        if not os.path.isdir(CACHE):
+            os.makedirs(CACHE)
+        with io.open(os.path.join(CACHE, 'agenda.json'), 'w', encoding='utf-8') as f:
+            json.dump(a, f, ensure_ascii=False)
+    except Exception:
+        pass
+    if como_json:
+        print(json.dumps(a, ensure_ascii=False))
+        return 0          # con --json el que llama lee control.ok (un codigo distinto de 0 le haria tirar el JSON)
+    c = a['control']
+    print('AGENDA de Outlook, del %s al %s  (%d dias)' % (a['desde'], a['hasta'], dias))
+    if not c['ok']:
+        print()
+        print('  *** NO CONFIAR EN ESTA AGENDA: %s ***' % c['motivo'])
+        print('  filtro usado: %s' % a['filtro'])
+    print()
+    dia = ''
+    for x in a['citas']:
+        if x['inicio'][:10] != dia:
+            dia = x['inicio'][:10]
+            print('  %s' % dia)
+        print('     %s-%s  %-55s %s%s%s' % (
+            'todo ' if x['todo_el_dia'] else x['inicio'][11:], 'el dia' if x['todo_el_dia'] else x['fin'][11:],
+            x['asunto'][:55], ('en ' + x['lugar'][:25] + '  ') if x['lugar'] else '',
+            '[se repite] ' if x['se_repite'] else '', '' if x['reunion'] else '[sin invitados]'))
+    if not a['citas']:
+        print('  (ninguna cita en esos dias)')
+    print()
+    print('TAREAS de Outlook sin completar: %d' % len(a['tareas']))
+    for t in a['tareas']:
+        print('     %-60s %s' % (t['asunto'][:60], ('vence %s%s' % (t['vence'], '  VENCIDA' if t['vencida'] else '')) if t['vence'] else 'sin fecha'))
+    print()
+    print('control del filtro: %s  (citas sueltas contadas a mano en el rango: %d; cita de prueba: %s)'
+          % ('ok' if c['ok'] else 'ROJO', c['sueltas_a_mano'], c['sonda']))
+    if c['ok'] and c['sonda'] != 'ok':
+        print('  OJO: el formato de fecha del filtro quedo SIN COMPROBAR (%s). Si la lista parece corta, desconfiar.' % c['sonda'])
+    print('Entra lo que se solapa con el rango (tambien lo de hoy que ya empezo). Es el calendario de Fak; una reunion')
+    print('no es una tarea suya. No se leen organizador ni invitados.')
+    return 0 if c['ok'] else 2
 
 
 def stats():
@@ -1138,27 +1373,44 @@ def main():
     ap.add_argument('--stats', action='store_true')
     ap.add_argument('--selftest', action='store_true', help='probar el detector de sync parcial y el de pedidos sin respuesta (sin Outlook)')
     ap.add_argument('--sin-respuesta', action='store_true', help='pedidos de la Bandeja dirigidos a Fak sin mail suyo en el hilo')
-    ap.add_argument('--dias', type=int, default=5, help='con --sin-respuesta: dias sin respuesta para listar (default 5)')
+    ap.add_argument('--dias', type=int, default=None, help='con --sin-respuesta: dias sin respuesta para listar (default 5); con --agenda: cuantos dias mostrar (default 7)')
     ap.add_argument('--ventana', type=int, default=45, help='con --sin-respuesta: cuantos dias para atras mirar (default 45)')
-    ap.add_argument('--json', action='store_true', help='con --sin-respuesta: salida JSON (la lee _escritorio.mjs)')
+    ap.add_argument('--json', action='store_true', help='con --sin-respuesta, --nuevos, --borradores o --agenda: salida JSON')
+    ap.add_argument('--nuevos', action='store_true', help='lo que llego desde el ultimo mail del cache, sin recorrer el buzon (--desde lo cambia)')
+    ap.add_argument('--abrir', nargs='?', const=True, metavar='ID',
+                    help='mostrar ese mail en Outlook (uno sin leer queda leido); con --adjuntos <id>, abrir en pantalla los adjuntos extraidos')
+    ap.add_argument('--borradores', action='store_true', help='listar los borradores de Outlook con su edad (solo lectura)')
+    ap.add_argument('--agenda', action='store_true', help='reuniones de los proximos dias (--dias, default 7) y tareas sin completar')
     a = ap.parse_args()
 
     if a.selftest:
         sys.exit(selftest())
     elif a.sync:
         sys.exit(sync(full=a.full))
+    elif a.nuevos:
+        sys.exit(nuevos(desde=a.desde, como_json=a.json))
     elif a.buscar:
         buscar(a.buscar, a.desde, a.hasta, a.carpeta, a.asunto, a.limite, buzon=a.buzon, solo_fak=a.solo_fak)
     elif a.ver:
         ver(a.ver)
     elif a.adjuntos:
-        adjuntos(a.adjuntos, a.out)
+        rutas = adjuntos(a.adjuntos, a.out)
+        if a.abrir:
+            sys.exit(1 if abrir_adjuntos(rutas or []) else 0)
+    elif a.abrir:
+        if a.abrir is True:
+            ap.error('--abrir va con el id del mail (sale de --buscar), o junto con --adjuntos <id>')
+        sys.exit(abrir(a.abrir))
+    elif a.borradores:
+        sys.exit(listar_borradores(como_json=a.json))
+    elif a.agenda:
+        sys.exit(ver_agenda(dias=7 if a.dias is None else a.dias, como_json=a.json))
     elif a.stats:
         stats()
     elif a.buzones:
         buzones()
     elif a.sin_respuesta:
-        sys.exit(sin_respuesta(dias=a.dias, ventana=a.ventana, como_json=a.json))
+        sys.exit(sin_respuesta(dias=5 if a.dias is None else a.dias, ventana=a.ventana, como_json=a.json))
     else:
         ap.print_help()
 

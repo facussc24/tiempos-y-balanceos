@@ -339,6 +339,11 @@ Pablo Gamboa: 0,0992 m²» no). Fak ve el borrador y decide: la fuente se escrib
 - **Hook `mail-guard.sh`** (PreToolUse, `Bash|PowerShell|Write|Edit`, registrado en `_dispatcher.sh`):
   bloquea cualquier `.Send()` / `SendAndReceive` sobre Outlook que no pase por `_mailEnviar.py`.
   Deja pasar `.Display()`, `.Save()`, `ReplyAll()` y la lectura con `_mails.py`.
+- **Las lecturas de `_mails.py` no escriben en Outlook** (10/10/2026, cola HOY-19a a d): `--nuevos` (lo que llegó desde
+  el último mail del cache, en segundos), `--abrir <id>` (muestra el mail; uno sin leer queda leído), `--borradores`
+  (lista con la edad; mover o borrar es otra cosa y pide el sí de Fak) y `--agenda` (reuniones y tareas; sale con un
+  control del formato de fecha y, si da rojo, no se usa). Lógica en `scripts/_lib/mailsLectura.py`; lo prueba
+  `__tests__/scripts/mailsLectura.test.mjs` contra un Outlook de mentira que anota todo lo que no sea una lectura.
 - **`_mailEnviar.py --selftest`**: 14 casos (duplicados, incluido el del incidente, y
   destinatarios de afuera: proveedor, dominio parecido, DN de Exchange, sin direccion).
 - **`mail-guard.test.sh`**: 15 casos de regresion del hook, por el guardian suelto Y por el despachador
