@@ -9,7 +9,8 @@
  *     -> { terminado, corte, paso, gastadoUsd, busquedas, bloqueos, entregable, resumen, mensajes }
  *
  * Herramientas del modelo: leer_archivo · escribir_archivo (solo <carpeta>/trabajo) · correr_comando (lista
- * blanca + guardianes + tope de tiempo + recorte a 4 KB) · leer_pdf · terminar (la unica salida limpia) y
+ * blanca + guardianes + tope de tiempo + recorte a 4 KB; un .py corre adentro de la caja de agenteCaja.py, que
+ * vigila lo que el script hace mientras corre) · leer_pdf · terminar (la unica salida limpia) y
  * web_search del servidor. Lo prohibido vuelve como tool_result con is_error y "No reintentar"; el segundo
  * bloqueo corta. Los topes (pasos, reloj, dolares) se miran ANTES de cada llamada. Un paso = una llamada.
  * No toca claudeApi.mjs: usa armarParametros/interpretarRespuesta/registrarGasto y suma lo que falta encima.
@@ -20,8 +21,8 @@ import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { armarParametros, interpretarRespuesta, resolverModelo, costoUsd, registrarGasto, selloLocal, usd } from './claudeApi.mjs';
-import { escribirSeguro, agregarSeguro } from './escrituraSegura.mjs';
-import { rutaReal, esSecreto } from '../_apiTarea.mjs';
+import { escribirSeguro, agregarSeguro, rutaReal as rutaRealHastaDondeExista } from './escrituraSegura.mjs';
+import { esSecreto } from '../_apiTarea.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const RAIZ = path.resolve(AQUI, '..', '..');
@@ -48,19 +49,31 @@ const S = { type: 'string' };
 const N = { type: 'integer' };
 const h = (name, description, properties, required) => ({ name, description, input_schema: { type: 'object', properties, required, additionalProperties: false } });
 
-/** `web_search` corre del lado del servidor: nunca llega como tool_use, sus resultados vienen en el content. */
+/**
+ * `web_search` corre del lado del servidor: nunca llega como tool_use, sus resultados vienen en el content.
+ * `busquedas` es lo que QUEDA de la corrida: `max_uses` vale por pedido, asi que el bucle le pasa el resto en cada
+ * paso y, cuando no queda ninguna, la herramienta no va (HOY-24b: el tope era por pedido y no por corrida).
+ */
 export function armarHerramientas(busquedas = TOPES_DEFECTO.busquedas) {
+  const quedan = Math.max(0, Math.floor(n(busquedas)));
   return [
     h('leer_archivo', 'Lee un archivo de texto del repo o de la carpeta de trabajo (hasta 20 KB por lectura; desde/hasta son lineas desde 1). Una ruta relativa sale de la carpeta de trabajo.', { ruta: S, desde: N, hasta: N }, ['ruta']),
     h('escribir_archivo', 'Escribe (pisa) un archivo SOLO adentro de la carpeta de trabajo. Mantene notas.md con tu avance.', { ruta: S, texto: S }, ['ruta', 'texto']),
-    h('correr_comando', `Corre un comando de bash en la carpeta de trabajo. Lista blanca: ls, cat, grep, head, tail, wc, pwd, git de lectura, python o node sobre un archivo. Sin ; & $ \` < > ni heredoc. La salida llega recortada a ${RECORTE_BYTES} bytes; la completa queda en salidas/.`, { cmd: S, segundos: { ...N, description: `tope de tiempo (120 por defecto, maximo ${COMANDO_MAX_S})` } }, ['cmd']),
+    h('correr_comando', `Corre un comando de bash en la carpeta de trabajo. Lista blanca: ls, cat, grep, head, tail, wc, pwd (sobre el repo o la carpeta de trabajo), git de lectura y python sobre un .py que hayas escrito en la carpeta de trabajo. El .py corre adentro de una caja: no escribe fuera de la carpeta de trabajo, no abre programas ni sale a la red, y de COM usa solo CATIA. Rutas con barras normales; sin ; & $ \` < > \\ { } ( ) ! # ni heredoc, y sin ~ al principio de una palabra. La salida llega recortada a ${RECORTE_BYTES} bytes; la completa queda en salidas/.`, { cmd: S, segundos: { ...N, description: `tope de tiempo (120 por defecto, maximo ${COMANDO_MAX_S})` } }, ['cmd']),
     h('leer_pdf', 'Extrae el texto de un PDF (hasta 20 paginas por llamada; sin `paginas`, las primeras 20).', { ruta: S, paginas: { type: 'array', items: N } }, ['ruta']),
     h('terminar', 'La UNICA salida limpia: el entregable (ruta o texto) y un resumen de lo hecho y de lo que quedo pendiente.', { entregable: S, resumen: S }, ['entregable', 'resumen']),
-    { type: HERRAMIENTA_BUSQUEDA, name: 'web_search', max_uses: busquedas },
+    ...(quedan > 0 ? [{ type: HERRAMIENTA_BUSQUEDA, name: 'web_search', max_uses: quedan }] : []),
   ];
 }
 
 // ── politica (pura) ───────────────────────────────────────────────────────────
+
+/**
+ * La ruta real: enlaces resueltos y nombre corto 8.3 expandido HASTA DONDE EXISTE; lo que todavia no existe se agrega
+ * tal cual. Con el realpath pelado, un archivo nuevo en una carpeta nombrada por su nombre corto (`C:\Users\FACUND~1`)
+ * quedaba sin expandir y daba «fuera de la carpeta de trabajo» (medido el 11/10/2026 con una carpeta del temporal).
+ */
+const rutaReal = (ruta) => rutaRealHastaDondeExista(String(ruta ?? '').trim().replace(/::\$DATA$/i, ''));
 
 /** ¿`ruta` cae ADENTRO de `base`? Compara rutas reales (enlaces, 8.3) y sin distinguir mayusculas (Windows). */
 export function dentroDe(ruta, base) {
@@ -70,39 +83,180 @@ export function dentroDe(ruta, base) {
 
 const VERBOS = new Set(['ls', 'cat', 'grep', 'head', 'tail', 'wc', 'pwd']);
 const GIT_LECTURA = new Set(['status', 'log', 'show', 'diff', 'ls-files', 'grep', 'rev-parse', 'blame', 'branch']);
+// `git branch <nombre>` crea y `-D` borra: de branch pasa solo lo que LISTA, sin ningun nombre suelto.
+const GIT_BRANCH_LISTA = new Set(['--list', '-l', '-a', '--all', '-r', '--remotes', '-v', '-vv', '--show-current']);
+// Opciones de git que escriben un archivo, abren un programa o leen fuera del repo (HOY-24b): --output escribe donde le
+// digan, -O abre un paginador (`git grep -O<programa>`), --no-index y --contents leen cualquier ruta, -f/--file lee una
+// lista, y --untracked / --no-exclude-standard hacen que `git grep` busque tambien en lo que git ignora (`.env.local`).
+const GIT_OPCION_PROHIBIDA = /^(--output($|=)|-O|--open-files-in-pager|--no-index$|--contents($|=)|--ext-diff$|--textconv$|-f$|--file($|=)|--untracked$|--no-exclude-standard$)/;
+const INTERPRETE_PYTHON = /^(python(3(\.\d+)?)?|py)(\.exe)?$/i;   // el nombre pelado: lo resuelve el PATH, no una ruta del agente
+const OPCION_PYTHON = new Set(['-u', '-B']);
+const COMODIN = /[*?[\]]/;
+const SECRETO_EN_GIT = /(^|[\\/:])(\.env(\.[\w.-]+)?|\.qr-secret)$/i;   // `HEAD:.env.local` tambien nombra un secreto
+export const RUTA_CAJA = path.join(AQUI, 'agenteCaja.py');
+const RUTA_CANON = path.join(AQUI, 'agenteCanon.data.json');
+
+/** Los scripts del repo que el agente puede correr (rutas relativas a la raiz, con barras normales). La lista vive en el canon. */
+export function scriptsDelRepo(ruta = RUTA_CANON) {
+  try { const l = JSON.parse(fs.readFileSync(ruta, 'utf8')).scripts_repo_permitidos; return Array.isArray(l) ? l.map(String) : []; } catch { return []; }
+}
+
+const misma = (a, b) => path.relative(rutaReal(a).toLowerCase(), rutaReal(b).toLowerCase()) === '';
+/** ¿`abs` es el repo o la carpeta de la corrida, o cae adentro de alguno de los dos? (lo que el agente puede LEER) */
+const enLoLegible = (abs, carpeta) => [RAIZ, carpeta].filter(Boolean).some((b) => misma(abs, b) || dentroDe(abs, b));
+
 /**
- * Lista blanca de correr_comando (diseño §4): el motivo si no pasa, null si pasa. Estricta a proposito: comandos
- * simples unidos por | o &&; nada de ; & $ ` < > ni heredoc, porque ahi se esconde cualquier cosa.
+ * Las palabras de un comando: separadas por espacios, cada una entera entre comillas o entera sin comillas. Bash pega
+ * `".."/".."` en una sola palabra y aca se leian tres: por eso unas comillas pegadas a otra cosa no se aceptan (null).
  */
-export function comandoPermitido(cmd, { carpeta } = {}) {
-  const c = String(cmd ?? '');
-  if (!c.trim()) return 'comando vacio';
-  if (/[;&`$<>\n]|\|\|/.test(c.replace(/&&/g, ' '))) return 'solo comandos simples unidos por | o && (sin ; & $ ` < > ni heredoc)';
-  const tramos = [[]];
-  for (const t of c.match(/"(?:[^"\\]|\\.)*"|'[^']*'|\S+/g) ?? []) {
-    if (t === '|' || t === '&&') tramos.push([]); else tramos[tramos.length - 1].push(t.replace(/^["']|["']$/g, ''));
+export function partirComando(c) {
+  const palabras = [];
+  const re = /\s*(?:"([^"]*)"|'([^']*)'|([^\s"']+))(?=\s|$)/y;
+  let i = 0;
+  while (i < c.length && c.slice(i).trim()) {
+    re.lastIndex = i;
+    const m = re.exec(c);
+    if (!m) return null;
+    palabras.push({ texto: m[1] ?? m[2] ?? m[3], suelta: m[3] !== undefined, desde: m.index, hasta: re.lastIndex });
+    i = re.lastIndex;
   }
-  for (const p of tramos) {
-    if (!p.length) return 'un tramo vacio';
-    const secreto = p.find((t) => esSecreto(t));
-    if (secreto) return `nombra un archivo de secretos (${secreto})`;
-    const v = path.basename(p[0]).toLowerCase().replace(/\.exe$/, '');
-    if (VERBOS.has(v)) continue;
-    if (v === 'git') { if (!GIT_LECTURA.has(p[1])) return `git ${p[1] ?? ''}: solo lectura (${[...GIT_LECTURA].join(', ')})`; continue; }
-    if (/^(python[\d.]*|py|node)$/.test(v)) {
-      if (p[1] === '-m') { if (!/^(pytest|unittest)$/.test(p[2] ?? '')) return `${v} -m solo con pytest o unittest`; continue; }
-      if (p.some((t, i) => i > 0 && /^(-c|-e|-p|--eval|-)$/.test(t))) return `${v} solo corre un archivo por ruta (sin -c, -e, -p ni stdin)`;
-      const script = p.slice(1).find((t) => !t.startsWith('-'));
-      if (!script) return `${v} sin script`;
-      if (v === 'node' && !/\.(mjs|cjs|js)$/i.test(script)) return 'node solo sobre un .mjs/.js';
-      // python del entorno de CAD y node sobre scripts propios: el archivo vive en el repo o en la carpeta de trabajo
-      const abs = path.resolve(carpeta ? path.join(carpeta, 'trabajo') : RAIZ, script);
-      if (!dentroDe(abs, RAIZ) && !(carpeta && dentroDe(abs, carpeta))) return `${script} no esta en el repo ni en la carpeta de trabajo`;
-      continue;
-    }
-    return `"${v}" no esta en la lista blanca (${[...VERBOS].join(', ')}, git de lectura, python/node sobre un archivo)`;
+  return palabras;
+}
+
+/** Un patron de bash (`*`, `?`, `[...]`) sobre UN nombre, como expresion regular. Los nombres con punto adelante no entran (ver abajo). */
+const patronDeNombre = (glob) => new RegExp(`^${glob.replace(/[.+^${}()|\\]/g, '\\$&').replace(/\[!/g, '[^').replace(/\*/g, '.*').replace(/\?/g, '.')}$`, 'i');
+
+/**
+ * Una ruta que `ls`, `cat`, `grep`… van a leer: adentro del repo o de la carpeta de la corrida. Con comodines, solo en
+ * el nombre del archivo, y CADA nombre que el comodin alcanza se mira como si viniera escrito: su ruta real (un enlace
+ * que sale del repo no pasa) y que no sea un archivo de secretos. Un comodin que empieza con punto no pasa: es la forma
+ * de alcanzar `.env.local` sin nombrarlo (auditor, 11/10/2026).
+ */
+function rutaDeLectura(t, { carpeta, trabajo, listar = (d) => fs.readdirSync(d) }) {
+  if (t === '-' || t === '--') return null;
+  const fuera = (x) => `${x} esta fuera del repo y de la carpeta de trabajo`;
+  const corte = t.search(COMODIN);
+  if (corte < 0) return enLoLegible(path.resolve(trabajo, t), carpeta) ? null : fuera(t);
+  if (t.slice(corte).includes('/')) return `${t}: los comodines van solo en el nombre del archivo, no en una carpeta`;
+  const dir = path.resolve(trabajo, t.slice(0, t.lastIndexOf('/', corte) + 1) || '.');
+  const nombre = t.slice(t.lastIndexOf('/', corte) + 1);
+  if (nombre.startsWith('.')) return `${t}: un comodin que empieza con punto alcanza los archivos ocultos; el nombre va completo`;
+  if (!enLoLegible(dir, carpeta)) return fuera(t);
+  let entradas = [];
+  try { entradas = listar(dir); } catch { entradas = []; }   // la carpeta no existe: el comodin no alcanza nada
+  let patron;
+  try { patron = patronDeNombre(nombre); } catch { return `${t}: no entiendo ese comodin`; }
+  for (const e of entradas.filter((x) => !x.startsWith('.') && patron.test(x))) {
+    const abs = path.join(dir, e);
+    if (esSecreto(abs)) return `${t} alcanza un archivo de secretos (${e})`;
+    if (!enLoLegible(abs, carpeta)) return `${t} alcanza ${e}, que sale del repo (un enlace hacia afuera)`;
   }
   return null;
+}
+
+// Opciones de los verbos de lectura que hacen que el programa RECORRA carpetas por su cuenta: ahi lee lo que nadie
+// nombro (los secretos del repo con `grep -r`, la nube detras del enlace `docs-local` con `grep -R` o `ls -R`:
+// auditor, 11/10/2026). Sin recorrido, cada archivo es una palabra del comando y pasa por rutaDeLectura.
+const RECORRE = { grep: /^(-[A-Za-z0-9]*[rRd][A-Za-z0-9]*|--recursive|--dereference-recursive|--directories(=.*)?)$/, ls: /^(-[A-Za-z0-9]*R[A-Za-z0-9]*|--recursive)$/ };
+// `wc --files0-from=lista` cuenta los archivos que diga una lista: sirve para medir un archivo de afuera sin nombrarlo.
+const OPCION_DE_LECTURA_PROHIBIDA = /^--files0-from($|=)/;
+
+/**
+ * Analiza un comando contra la lista blanca (diseño §4 + HOY-24b). Devuelve { motivo } si no pasa o { tramos } si pasa:
+ * cada tramo trae sus palabras, de donde a donde va en el texto y, si es python, que corre (para meterlo en la caja).
+ * Estricta a proposito. Lo que cambio el 11/10/2026, cada punto por un ataque que pasaba en el sandbox del auditor:
+ *   - el verbo es el nombre pelado (`./cat` era un script del agente con nombre de verbo);
+ *   - lo que leen ls/cat/grep/head/tail/wc cae en el repo o en la carpeta de la corrida (`cat` leia cualquier ruta);
+ *   - git: solo lectura de verdad (`diff --output=` escribia, `branch -D` borraba);
+ *   - python: un .py de la carpeta de trabajo o de la lista del canon, sin opciones raras; node quedo afuera (su modelo
+ *     de permisos no corta la red ni deja excluir los secretos del repo: Node 22.20, `node --help`).
+ */
+export function analizarComando(cmd, { carpeta, scriptsRepo = scriptsDelRepo() } = {}) {
+  const c = String(cmd ?? '');
+  if (!c.trim()) return { motivo: 'comando vacio' };
+  if (/[;&`$<>\n\\{}()!#]|\|\|/.test(c.replace(/&&/g, ' '))) return { motivo: 'solo comandos simples unidos por | o && (sin ; & $ ` < > \\ { } ( ) ! # ni heredoc; las rutas con barras normales)' };
+  const palabras = partirComando(c);
+  if (!palabras) return { motivo: 'unas comillas pegadas a otra palabra: cada palabra va entera entre comillas o entera sin comillas' };
+  const trabajo = carpeta ? path.join(carpeta, 'trabajo') : RAIZ;
+  const tramos = [{ palabras: [], desde: 0, hasta: c.length, une: null }];
+  for (const p of palabras) {
+    const ultimo = tramos[tramos.length - 1];
+    if (p.suelta && (p.texto === '|' || p.texto === '&&')) { ultimo.hasta = p.desde; tramos.push({ palabras: [], desde: p.hasta, hasta: c.length, une: p.texto }); continue; }
+    if (p.suelta && /\||&&/.test(p.texto)) return { motivo: '| y && van separados por espacios' };
+    // bash cambia ~ por la carpeta del usuario solo al principio de una palabra; adentro (`FACUND~1`) es parte del nombre
+    if (p.texto.startsWith('~')) return { motivo: `${p.texto}: ~ al principio es la carpeta del usuario; la ruta va completa` };
+    ultimo.palabras.push(p.texto);
+  }
+  for (const tramo of tramos) {
+    const p = tramo.palabras;
+    if (!p.length) return { motivo: 'un tramo vacio' };
+    const secreto = p.find((t) => esSecreto(t) || SECRETO_EN_GIT.test(t));
+    if (secreto) return { motivo: `nombra un archivo de secretos (${secreto})` };
+    const v = p[0].toLowerCase().replace(/\.exe$/, '');
+    if (VERBOS.has(v)) {
+      for (const t of p.slice(1)) {
+        if (t.startsWith('-') && t !== '-' && t !== '--') {
+          if (!/^(-[A-Za-z0-9]+|--[a-z][a-z0-9-]*(=[\w.,:+%*?-]*)?)$/.test(t)) return { motivo: `${v} ${t}: una opcion con una ruta adentro no pasa (la ruta va suelta)` };
+          if (RECORRE[v]?.test(t)) return { motivo: `${v} ${t}: sin recorrer carpetas (cada archivo va nombrado; para buscar en el repo, git grep)` };
+          if (OPCION_DE_LECTURA_PROHIBIDA.test(t)) return { motivo: `${v} ${t}: esa opcion lee una lista de archivos que nadie reviso` };
+          continue;
+        }
+        const mal = rutaDeLectura(t, { carpeta, trabajo });
+        if (mal) return { motivo: mal };
+      }
+      continue;
+    }
+    if (v === 'git') {
+      if (!GIT_LECTURA.has(p[1])) return { motivo: `git ${p[1] ?? ''}: solo lectura (${[...GIT_LECTURA].join(', ')})` };
+      const prohibida = p.slice(2).find((t) => GIT_OPCION_PROHIBIDA.test(t));
+      if (prohibida) return { motivo: `git ${p[1]} ${prohibida}: esa opcion escribe un archivo, abre un programa o lee fuera del repo` };
+      if (p[1] === 'branch') { const otra = p.slice(2).find((t) => !GIT_BRANCH_LISTA.has(t)); if (otra) return { motivo: `git branch ${otra}: de branch solo se lista (${[...GIT_BRANCH_LISTA].join(', ')})` }; }
+      continue;
+    }
+    if (INTERPRETE_PYTHON.test(p[0])) {
+      let i = 1;
+      const opciones = [];
+      while (i < p.length && OPCION_PYTHON.has(p[i])) opciones.push(p[i++]);
+      if (p[i] === '-m') {
+        if (!/^(pytest|unittest)$/.test(p[i + 1] ?? '')) return { motivo: 'python -m solo con pytest o unittest' };
+        tramo.python = { interprete: p[0], opciones, modulo: p[i + 1], args: p.slice(i + 2) };
+        continue;
+      }
+      const script = p[i];
+      if (!script || script.startsWith('-')) return { motivo: `python solo corre un archivo .py por ruta (opciones que pasan: ${[...OPCION_PYTHON].join(', ')}; sin -c ni stdin)` };
+      if (!/\.py$/i.test(script)) return { motivo: `${script}: python solo corre un archivo .py` };
+      const abs = path.resolve(trabajo, script);
+      const delAgente = Boolean(carpeta) && dentroDe(abs, trabajo);
+      const delCanon = dentroDe(abs, RAIZ) && scriptsRepo.includes(path.relative(rutaReal(RAIZ), rutaReal(abs)).replace(/\\/g, '/'));
+      if (!delAgente && !delCanon) return { motivo: `${script}: python corre solo un .py de la carpeta de trabajo o uno de la lista del canon (agenteCanon.data.json)` };
+      tramo.python = { interprete: p[0], opciones, script, abs, args: p.slice(i + 1) };
+      continue;
+    }
+    return { motivo: `"${p[0]}" no esta en la lista blanca (${[...VERBOS].join(', ')}, git de lectura, python sobre un .py de la carpeta de trabajo)` };
+  }
+  return { tramos };
+}
+
+/** Lista blanca de correr_comando: el motivo si no pasa, null si pasa. */
+export function comandoPermitido(cmd, opciones = {}) {
+  return analizarComando(cmd, opciones).motivo ?? null;
+}
+
+const entreComillas = (t) => `'${String(t).replace(/'/g, `'\\''`)}'`;
+/**
+ * El comando que de verdad se corre: igual al pedido, salvo que cada python va por la caja (agenteCaja.py), que vigila
+ * lo que el script hace mientras corre. Tira Bloqueo si el comando no pasa la lista blanca (no deberia llegar aca).
+ */
+export function comandoEnCaja(cmd, opciones = {}) {
+  const c = String(cmd ?? '');
+  const a = analizarComando(c, opciones);
+  if (a.motivo) throw new Bloqueo(a.motivo);
+  return a.tramos.map((t) => {
+    const py = t.python;
+    const texto = !py ? c.slice(t.desde, t.hasta).trim()
+      : [py.interprete, '-P', ...py.opciones, entreComillas(RUTA_CAJA.replace(/\\/g, '/')), ...(py.modulo ? ['-m', py.modulo] : [entreComillas(py.script)]), ...py.args.map(entreComillas)].join(' ');
+    return (t.une ? `${t.une} ` : '') + texto;
+  }).join(' ');
 }
 
 const PROHIBIDO = [
@@ -112,9 +266,21 @@ const PROHIBIDO = [
   [/\b(requests|urllib3?|http\.client|httpx|aiohttp|socket|fetch|axios|undici)\b/i, 'salir a la red'],
   [/\.env(\.[\w.-]+)?\b|\.qr-secret|ANTHROPIC_API_KEY/i, 'secretos'], [/\bclaude\s+-p\b|claude\.exe/i, 'lanzar claude'],
 ];
-/** Lo que no puede traer un archivo que el agente escribe o ejecuta (patrones de candadosNocturno + propios). Motivo o null. */
-export function escanear(texto) {
-  for (const [re, que] of PROHIBIDO) { const m = re.exec(String(texto ?? '')); if (m) return `${que} ("${m[0]}")`; }
+// Solo para lo que es CODIGO (un .py): lo que la caja no ve porque no pasa por Python (HOY-24b). Un modulo compilado
+// (pywin32) o un objeto COM hace lo suyo sin avisar: de COM pasa solo el ProgID de CATIA, escrito en el script.
+const PROHIBIDO_CODIGO = [
+  [/\b(subprocess|os\.(system|popen|startfile|exec[lv]p?e?|spawn[lv]p?e?)|ShellExecute(Ex)?|WinExec|CreateProcess)\b/, 'abrir otro programa'],
+  [/\b(win32(file|process|pipe|security|service|net|clipboard|event|job|ts|cred|crypt)|win32api\.\w+|WScript|Scripting\.FileSystemObject|Shell\.Application|ctypes|comtypes|cffi)\b/, 'salir de la caja por Win32 o COM'],
+  [/\b(Dispatch(Ex|WithEvents)?|EnsureDispatch|GetObject|GetActiveObject|CreateObject)\s*\(\s*(?!["']CATIA\.)/, 'un objeto COM que no es CATIA'],
+  [/(?<![.\w])(eval|exec|compile|__import__)\s*\(|\b(importlib|runpy)\b|\bgc\.get_\w+|addaudithook|__closure__|cell_contents|__code__|__globals__|__builtins__|__subclasses__/, 'codigo armado en el momento'],
+];
+const ES_TEXTO = /\.(md|txt|json|csv|log)$/i;
+/**
+ * Lo que no puede traer un archivo que el agente escribe o ejecuta (patrones de candadosNocturno + propios). Motivo o
+ * null. `codigo: false` (unas notas, un informe) saltea la lista que solo tiene sentido para un script.
+ */
+export function escanear(texto, { codigo = true } = {}) {
+  for (const [re, que] of [...PROHIBIDO, ...(codigo ? PROHIBIDO_CODIGO : [])]) { const m = re.exec(String(texto ?? '')); if (m) return `${que} ("${m[0]}")`; }
   return null;
 }
 
@@ -135,8 +301,25 @@ export function tapar(texto) {
     .replace(/^(\s*[\w.-]*(KEY|TOKEN|SECRET|PASSWORD|PASS)[\w.-]*\s*[=:]).*$/gim, '$1 ***');
 }
 
-/** El entorno de los procesos hijos, sin la clave ni los secretos de la casa (diseño §4). */
-export const entornoLimpio = (env = process.env) => Object.fromEntries(Object.entries(env).filter(([k]) => !/^ANTHROPIC_API_KEY|^SUPABASE|TOKEN|SECRET|PASSWORD/i.test(k)));
+/**
+ * El entorno de los procesos hijos, sin la clave ni los secretos de la casa (diseño §4). Tampoco viajan las variables
+ * VITE_* (ahi estan la direccion de Supabase y el usuario de prueba), nada que diga KEY, ni las PYTHON* (PYTHONPATH o
+ * PYTHONSTARTUP cargarian codigo antes que la caja).
+ */
+export const entornoLimpio = (env = process.env) => Object.fromEntries(Object.entries(env).filter(([k]) => !/^ANTHROPIC_API_KEY|^SUPABASE|^VITE_|^PYTHON|TOKEN|SECRET|PASSWORD|KEY/i.test(k)));
+
+/** Lo que la caja de Python necesita saber: donde se escribe, que se lee y un temporal propio adentro de la corrida. */
+export function entornoDeCaja(carpeta, env = process.env) {
+  const trabajo = path.join(carpeta, 'trabajo');
+  const tmp = path.join(carpeta, 'tmp');
+  return {
+    ...entornoLimpio(env),
+    AGENTE_CAJA_ESCRIBE: [trabajo, tmp].join(path.delimiter),
+    AGENTE_CAJA_LEE: [RAIZ, carpeta].join(path.delimiter),
+    TEMP: tmp, TMP: tmp, TMPDIR: tmp,
+    PYTHONIOENCODING: 'utf-8', PYTHONUTF8: '1',
+  };
+}
 
 /** El motivo del corte si NO hay que hacer la proxima llamada, null si se puede. Puro: se chequea antes de pagar. */
 export function chequearTopes(estado, topes, { modelo, maxTokens, ahora }) {
@@ -152,10 +335,12 @@ export function chequearTopes(estado, topes, { modelo, maxTokens, ahora }) {
 /**
  * El guardian de la casa: arma el JSON que ve el hook PreToolUse (tool_name + tool_input + cwd) y corre los
  * guardianes de esa herramienta sin marcar recordatorios. Motivo (primera linea de cada bloqueo) o null.
+ * `escapes: false`: un permiso de un solo uso que Fak dejo para su sesion (`~/.claude/.nube-personal-ok` y los otros)
+ * no lo usa ni lo consume el agente.
  */
 export async function guardianReal(herramienta, entrada, cwd) {
   const { evaluar } = await import('./guardianes.mjs');
-  const { res } = evaluar(JSON.stringify({ tool_name: herramienta, tool_input: entrada, cwd, session_id: 'agente-api' }), { marcar: false });
+  const { res } = evaluar(JSON.stringify({ tool_name: herramienta, tool_input: entrada, cwd, session_id: 'agente-api' }), { marcar: false, escapes: false });
   return res.bloqueos.length ? res.bloqueos.map((b) => `${b.guardian}: ${b.texto.trim().split('\n')[0]}`).join(' | ') : null;
 }
 
@@ -171,7 +356,7 @@ export async function permitir(nombre, entrada, { carpeta, guardian }) {
     case 'escribir_archivo': {
       if (!dentroDe(abs, trabajo)) return `${e.ruta} esta fuera de la carpeta de trabajo (${trabajo})`;
       if (esSecreto(abs)) return `${e.ruta} es un archivo de secretos`;
-      const mal = escanear(e.texto);
+      const mal = escanear(e.texto, { codigo: !ES_TEXTO.test(abs) });
       return mal ? `el texto trae ${mal}` : guardian('Write', { file_path: abs, content: String(e.texto ?? '') }, trabajo);
     }
     case 'correr_comando': {
@@ -272,13 +457,18 @@ export function ejecutorReal({ carpeta, env = process.env, escribir = escribirSe
       return { texto: `escrito ${path.relative(trabajo, abs(ruta))} (${Buffer.byteLength(t)} bytes)`, codigo: 0 };
     },
     async correr_comando({ cmd, segundos }) {
-      // lo que el comando va a EJECUTAR se escanea antes: el guardian lee el texto del comando, no lo que hace un .py (diseño §1)
-      for (const tok of String(cmd ?? '').match(/[^\s"']+\.(py|mjs|cjs|js|sh)\b/gi) ?? []) {
-        if (!fs.existsSync(abs(tok))) continue;
-        const mal = escanear(fs.readFileSync(abs(tok), 'utf8'));
-        if (mal) throw new Bloqueo(`${tok} trae ${mal}`);
+      // Dos capas sobre lo que el comando va a EJECUTAR, porque el guardian lee el texto del comando y no lo que hace un
+      // .py (diseño §1): el texto del script se escanea antes, y el script corre adentro de la caja (agenteCaja.py).
+      const analisis = analizarComando(cmd, { carpeta });
+      if (analisis.motivo) throw new Bloqueo(analisis.motivo);
+      for (const { python: py } of analisis.tramos) {
+        if (!py?.abs || !fs.existsSync(py.abs)) continue;
+        const mal = escanear(fs.readFileSync(py.abs, 'utf8'));
+        if (mal) throw new Bloqueo(`${py.script} trae ${mal}`);
       }
-      return correrBash(cmd, { cwd: trabajo, segundos: Math.min(n(segundos) || 120, COMANDO_MAX_S), env: entornoLimpio(env), bash });
+      const entorno = entornoDeCaja(carpeta, env);
+      fs.mkdirSync(entorno.TEMP, { recursive: true });
+      return correrBash(comandoEnCaja(cmd, { carpeta }), { cwd: trabajo, segundos: Math.min(n(segundos) || 120, COMANDO_MAX_S), env: entorno, bash });
     },
     async leer_pdf({ ruta, paginas }) {
       // A VERIFICAR: pypdf en el python de la PC. La imagen de la pagina queda para otro commit.
@@ -342,7 +532,7 @@ export async function correrAgente({
     if (freno) { estado.corte = freno; break; }
     marcarCache(mensajes);
     const { params } = armarParametros({ modelo: id, system, mensajes, maxTokens, effort, cacheTtl: '1h', fallbacks: false });
-    params.tools = armarHerramientas(t.busquedas);
+    params.tools = armarHerramientas(t.busquedas - estado.busquedas);   // lo que queda de la corrida, no el tope entero cada vez
     const t0 = ahora();
     let res;
     try { res = await cliente.beta.messages.create(params); } catch (e) { estado.corte = `api: ${tapar(e?.message ?? e)}`; break; }

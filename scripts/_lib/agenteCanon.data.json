@@ -1,0 +1,5 @@
+{
+  "_que_es": "Lista de scripts del repo que el agente por API puede correr con python (rutas relativas a la raiz, con barras normales). Lo que no esta aca no corre: el agente solo ejecuta los .py que escribe en su carpeta de trabajo. Cola HOY-24b, 11/10/2026.",
+  "_como_se_agrega": "Un script entra con su fuente: se lee entero, se confirma que no escribe fuera de lo que recibe por argumento, que no usa Supabase, Outlook, el arb ni la red, y se prueba una corrida adentro de la caja (scripts/_lib/agenteCaja.py). Un script que guarda en la nube, manda un mail o toca datos no entra.",
+  "scripts_repo_permitidos": []
+}

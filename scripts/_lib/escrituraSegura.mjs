@@ -60,7 +60,7 @@ const misma = (a, b) => path.relative(a, b) === '';
  * el repo por su nombre corto pasaba por "carpeta de afuera". El nativo lo lleva al nombre largo y resuelve
  * junctions y mayusculas.
  */
-function rutaReal(ruta) {
+export function rutaReal(ruta) {
   let actual = path.resolve(ruta);
   const resto = [];
   while (!fs.existsSync(actual)) {

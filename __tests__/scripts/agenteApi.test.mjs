@@ -102,8 +102,8 @@ describe('agenteApi: el bucle', () => {
 
 describe('agenteApi: la politica, pura', () => {
   it('lista blanca de comandos', () => {
-    for (const c of ['ls -la', 'git log -3 --oneline', 'python x.py --salida a.json', 'node scripts/_tokens.mjs', 'grep -n foo a.txt | head -5', 'python -m pytest tests']) expect(comandoPermitido(c, { carpeta: CARPETA }), c).toBeNull();
-    for (const c of ['rm -rf x', 'git push', 'python -c "print(1)"', 'node -e 1', 'ls; cat x', 'echo $HOME', 'cat .env.local', 'cat x > y', 'curl http://a', '', `python ${path.join(os.tmpdir(), 'x.py')}`]) expect(comandoPermitido(c, { carpeta: CARPETA }), c).toBeTruthy();
+    for (const c of ['ls -la', 'git log -3 --oneline', 'python x.py --salida a.json', 'grep -n foo a.txt | head -5', 'python -m pytest tests']) expect(comandoPermitido(c, { carpeta: CARPETA }), c).toBeNull();
+    for (const c of ['rm -rf x', 'git push', 'python -c "print(1)"', 'node -e 1', 'ls; cat x', 'echo $HOME', 'cat .env.local', 'cat x > y', 'curl http://a', '', 'node scripts/_tokens.mjs', `python ${path.join(os.tmpdir(), 'x.py')}`]) expect(comandoPermitido(c, { carpeta: CARPETA }), c).toBeTruthy();
   });
 
   it('escaneo de lo escrito, recorte, tapador, topes de pasos y reloj, herramienta de busqueda', () => {
