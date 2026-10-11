@@ -13,7 +13,7 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
-- **10/10 — La «respuesta conocida» de un plan también se mide antes de codear el gate que la espera**: el plan P6 decía que el AMFE 161 no analizaba las operaciones 51/60/71/81/82/101 (lo escribió una revisión por la API sin mirar Supabase); el AMFE vivo del 05/10 las tiene todas: faltaban en el plan de Calidad. Un gate escrito para esa frase habría dado rojo contra el dato bueno. Memoria: el §7.4 del plan quedó con lo medido.
+- **10/10 — La «respuesta conocida» de un plan también se mide contra la fuente viva antes de codear el gate que la espera** (la del P6 estaba al revés). Graduado a `feedback_la_respuesta_conocida_se_mide_antes_del_gate`.
 
 - **09-10/10 — Un control que suma trabajo a un chequeo con tope de tiempo se mide en el MODO en que corre ese chequeo** (el logo y las frases nuevas llevaron el detector de 55 a 90 s; el cierre lo corta a los 90 y lee «vacío» como limpio: quedó ciego hasta que el auditor lo midió). Y el auditor Opus encontró un error real en 3 de 4 cambios de la noche: no se saltea. Graduado al auditor (`metodo_correr_no_solo_leer`) y a `_sinFirmaIA.py` (lo caro solo con avisos pedidos).
 
@@ -83,7 +83,7 @@ incidente vive en los snapshots.
 
 - **09/10 — El alcance de un reclamo lo marca DÓNDE va el material del reclamo, no la frase amplia del pedido** («todas las telas de PWA»): le metí las telas de serie, que no llevan el fieltro de 1000 g/m², antes de mirar en qué piezas entra. Fak: *"¿lo que pidió no es solo de proyecto?"*. Primero se ubica el material en las BOM/AMFE, después se arma la lista de documentos.
 
-- **09/10 — Un PowerPoint para un gerente se arma como lo haría un ingeniero de la casa: blanco, título simple, tablas y capturas reales; nada de portada oscura ni tarjetas de colores** (*"parece hecho con IA"*). **Y el logo es SOLO el oficial** (`VARIOS\Logo y color barack\barack_logo.png`; el suelto de la raíz no: *"gravísimo"*). Memoria `feedback_logo_oficial_barack_en_todo_documento`.
+- **09/10 — Un PowerPoint para un gerente se arma como lo haría un ingeniero de la casa (blanco, tablas y capturas reales; *"parece hecho con IA"*) y el logo es SOLO el oficial.** Graduado a `feedback_powerpoint_para_un_gerente_como_ingeniero_de_la_casa` y `feedback_logo_oficial_barack_en_todo_documento`.
 
 - **09/10 — Una hoja para una reunión se arma DESPUÉS de buscar qué contesta un papel, en la voz de Fak y para mostrarse** (*"preguntaste cosas que ya sabemos... que no parezca IA"*). Graduado a la memoria `feedback_hoja_de_reunion_para_mostrar`.
 
