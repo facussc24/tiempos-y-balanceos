@@ -26,6 +26,7 @@
  * Una fase que no corrio en esa pasada (el cierre corta en el primer chequeo que frena) no figura.
  *
  * Si el registro no se puede escribir, no se dice nada y el cierre sigue igual: esto no puede romper un cierre.
+ * Pasados 10 MB (~10 meses) el registro rota a `claude-hooks-tiempos.1.jsonl` (`rotarSiPesa`); el lector lee solo el actual.
  *
  *   node scripts/_hooksTiempos.mjs [--desde AAAA-MM-DD] [--hook cierre-guard] [--json]
  */
@@ -50,10 +51,23 @@ export function rutaRegistro(env = process.env) {
 /** El registro de verdad de esta PC, para el lector (que no escribe): no depende de estar o no en un test. */
 export const rutaRegistroReal = () => path.join(os.tmpdir(), NOMBRE);
 
+/** Tope del registro: crece ~1 MB por mes (fila P9), asi que 10 MB son meses de datos y nunca una semana de medicion. */
+export const TOPE_REGISTRO_BYTES = 10 * 1048576;
+/**
+ * Rotacion: pasado el tope, el registro pasa a `<nombre>.1.<ext>` (pisa al anterior) y el renglon siguiente arranca uno
+ * nuevo. Renombrar es O(1) y no pierde nada; el lector lee solo el actual. La corrida en la que rota queda partida
+ * (su `inicio` lo escribio el .sh en el viejo): una cada ~10 meses, se acepta. En Windows el rename falla (EPERM)
+ * si otro proceso lo tiene abierto: no pasa nada, se intenta en la proxima.
+ */
+export function rotarSiPesa(ruta, { tope = TOPE_REGISTRO_BYTES, stat = fs.statSync, renombrar = fs.renameSync } = {}) {
+  try { if (stat(ruta).size <= tope) return false; } catch { return false; }
+  try { renombrar(ruta, ruta.replace(/(\.[A-Za-z0-9]+)?$/, '.1$1')); return true; } catch { return false; }
+}
+
 /** Un renglon al registro. No tira nunca y no dice nada si falla. Sin ruta (medicion apagada) no hace nada. */
-export function anotar(obj, { ruta = rutaRegistro() } = {}) {
+export function anotar(obj, { ruta = rutaRegistro(), rotar = rotarSiPesa } = {}) {
   if (!ruta) return false;
-  try { fs.appendFileSync(ruta, `${JSON.stringify(obj)}\n`, 'utf8'); return true; } catch { return false; }
+  try { rotar(ruta); fs.appendFileSync(ruta, `${JSON.stringify(obj)}\n`, 'utf8'); return true; } catch { return false; }
 }
 
 /** ¿El registro de conversacion es el de una sesion real de Claude Code? (vive en ~/.claude/projects) */
@@ -111,7 +125,8 @@ export async function correrMedido({ decidir, depsReales, payload, hook = 'cierr
     for (const [pieza, fase] of Object.entries(FASES)) if (typeof depsReales?.[pieza] === 'function') deps[pieza] = crono.envolver(fase, depsReales[pieza]);
     const inicioSh = Number(env.CLAUDE_HOOKS_TIEMPOS_T0);            // epoch ms en que arranco el .sh
     base = {
-      ev: 'fases', hook, id: String(env.CLAUDE_HOOKS_TIEMPOS_ID || `node.${process.pid}.${ahoraMs}`), t: ahoraMs,
+      // el nombre lo manda el .sh que escribio `inicio` y `fin` (P10: stop-hooks); sin variable, cierre-guard como siempre
+      ev: 'fases', hook: String(env.CLAUDE_HOOKS_TIEMPOS_HOOK || hook), id: String(env.CLAUDE_HOOKS_TIEMPOS_ID || `node.${process.pid}.${ahoraMs}`), t: ahoraMs,
       sesion: String(payload?.session_id || '').slice(0, 8), modo: String(payload?.permission_mode || ''),
       real: esSesionReal(payload?.transcript_path),               // false: lo lanzo una prueba, no una sesion
       segundo_stop: Boolean(payload?.stop_hook_active),
