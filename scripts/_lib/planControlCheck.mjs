@@ -34,6 +34,7 @@ import fs from 'node:fs';
 import { esVacioHo, expandirNumeros } from './planControlFuentes.mjs';
 import { sinAcentos } from './amfeAutoria.mjs';
 import { normalizarSigla, esSinMarca } from './amfeValidator.mjs';
+import { codigoInstrumento } from './controlCanon.mjs';
 
 export const TBD = 'TBD';
 export const CONFLICTO = 'CONFLICTO';
@@ -51,8 +52,6 @@ export const CAMPOS_FORMULARIO = [
 export const CAMPOS_ENCABEZADO = ['documentNumber', 'partName', 'partNumber', 'companyName', 'customerName', 'coreTeam', 'preparedBy', 'phase', 'revisionLevel'];
 /** Fuentes que valen como papel para una FRECUENCIA (§7.1 gate 6). */
 const FUENTES_FRECUENCIA = { recepcion: ['recepcion'], proceso: ['ho', 'ficha'] };
-/** Codigos de instrumento de la casa (cronograma de calibracion): MC + 3 cifras (MC167, MC184, MC212, MC406). Otro formato no se reconoce: limite conocido. */
-const RE_INSTRUMENTO = /\bMC\s?-?\s?(\d{3})\b/i;
 /** Codigos con la forma de los hilos del arb (FX284-E0PTO, FX483TK-E0PTO): es lo unico que `codigosEnHo` reconoce; un DK/1840400 o un ET-SATO-100X60 mal escrito en la HO no se detecta (limite conocido). */
 const RE_CODIGO = /\b[A-Z]{2,}\d{2,}[A-Z0-9]*-[A-Z0-9]{3,}\b/g;
 const RE_SET_UP = /set\s*-?\s*up/i;
@@ -61,7 +60,7 @@ const ES_STORAGE = (p) => p.tipo === 'storage';
 const sha = (s) => crypto.createHash('sha1').update(String(s)).digest('hex').slice(0, 10);
 const norm = (s) => sinAcentos(String(s ?? '')).replace(/\s+/g, ' ').trim();
 const mayus = (s) => String(s ?? '').toUpperCase();
-export const codigoInstrumento = (texto) => { const m = String(texto ?? '').match(RE_INSTRUMENTO); return m ? `MC${m[1]}` : ''; };
+export { codigoInstrumento };   // vive en controlCanon.mjs (lo comparte el validador de AMFE)
 
 // ---------------------------------------------------------------------------
 // Construccion del plan

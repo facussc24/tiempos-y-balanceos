@@ -22,15 +22,14 @@
  *
  * Los hallazgos salen con la misma forma que los de la etapa 1: { gate, nivel, op, itemId, mensaje }.
  */
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { nivelPorCriterio, nivelDeSigla, normalizarSigla, esSinMarca, CARACTERISTICAS_ESPECIALES } from './amfeValidator.mjs';
 import { sinAcentos } from './amfeAutoria.mjs';
-import { TBD, CONFLICTO, FRENO, AVISO, codigoInstrumento } from './planControlCheck.mjs';
+import { TBD, CONFLICTO, FRENO, AVISO } from './planControlCheck.mjs';
+import { CANON, instrumentoDe, frecuenciasDe, esIdentificable } from './controlCanon.mjs';
 
-const AQUI = path.dirname(fileURLToPath(import.meta.url));
-export const CANON = JSON.parse(fs.readFileSync(path.join(AQUI, 'planControlCanon.data.json'), 'utf8'));
+// el catalogo y la identificacion de un control viven en controlCanon.mjs (los comparte el validador de AMFE)
+export { CANON, instrumentoDe, frecuenciasDe, esIdentificable };
+
 
 /** Los cinco del §7.2 mas FILA SIN METODO (revision por la API, 11/10/2026): vinculo hecho y la fila sin instrumento con papel; no es SIN FILA porque el arreglo es otro. */
 export const ESTADOS = ['OK', 'GENERICO', 'DIFERENTE', 'FILA SIN METODO', 'SIN FILA', 'SIN CAUSA'];
@@ -42,47 +41,6 @@ const esCritica = (causa) => Number(causa.S) >= CARACTERISTICAS_ESPECIALES.crite
 // ---------------------------------------------------------------------------
 // Identificar un control: codigo de calibracion o termino exacto del canon
 // ---------------------------------------------------------------------------
-
-/** El termino aparece como palabra(s) entera(s) en el texto (ya normalizados los dos). */
-function contieneTermino(textoNorm, termino) {
-  const t = norm(termino).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(`(^|[^A-Z0-9])${t}([^A-Z0-9]|$)`).test(textoNorm);
-}
-
-/**
- * Lo que identifica al control en un texto: { codigo, tipo, clase, referencias[] } o null.
- * `codigo` = MC### si lo trae; `tipo` = el primer instrumento del canon (en su orden: los terminos
- * largos van antes que «calibre»); `referencias` = los terminos de clase referencia (pieza patron).
- * Un control con solo una referencia NO es identificable (canon: clases_identificables).
- */
-export function instrumentoDe(texto, canon = CANON) {
-  let t = norm(texto);
-  if (!t) return null;
-  const codigo = codigoInstrumento(texto);
-  // el termino mas largo primero, y lo que ya coincidio se saca del texto: «contra calibre» es
-  // CALIBRE_DE_CONTROL y no ademas CALIBRE. Un control puede traer MAS de un instrumento.
-  const terminos = canon.instrumentos.flatMap((i) => i.terminos.map((x) => ({ id: i.id, clase: i.clase, x: norm(x) }))).sort((a, b) => b.x.length - a.x.length);
-  const tipos = []; const otros = [];
-  for (const term of terminos) {
-    if (!contieneTermino(t, term.x)) continue;
-    t = t.split(term.x).join(' ');
-    const lista = canon.clases_identificables.includes(term.clase) ? tipos : otros;
-    if (!lista.includes(term.id)) lista.push(term.id);
-  }
-  if (!codigo && !tipos.length && !otros.length) return null;
-  // un comodin («Calibre / Instrumento») no dice cual: sin codigo, el control no queda identificado
-  const comodin = (canon.no_identifica || []).find((x) => contieneTermino(norm(texto), x));
-  if (comodin && !codigo) return { codigo: '', tipos: [], referencias: [...otros, ...tipos].sort(), clase: 'referencia', comodin };
-  return { codigo, tipos: tipos.sort(), referencias: otros.sort(), clase: codigo || tipos.length ? 'instrumento' : 'referencia' };
-}
-/** true si el control tiene instrumento identificable (codigo o termino de una clase identificable). */
-export const esIdentificable = (ins) => !!ins && ins.clase === 'instrumento';
-
-/** Frecuencias que el texto trae, por termino exacto del canon (puede haber mas de una). */
-export function frecuenciasDe(texto, canon = CANON) {
-  const t = norm(texto);
-  return canon.frecuencias.filter((f) => f.terminos.some((x) => contieneTermino(t, x))).map((f) => f.id);
-}
 
 /**
  * El plan cubre el instrumento del AMFE: mismo codigo si los dos lo traen, y TODOS los tipos que

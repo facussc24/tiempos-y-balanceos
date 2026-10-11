@@ -34,6 +34,15 @@ import {
 import { scanForbidden } from './forbiddenContent.mjs';
 import { revisarEquipo } from './nomina.mjs';
 import { calculateAP } from './amfeIo.mjs';
+import { clasificarControl, frecuenciasDe } from './controlCanon.mjs';
+
+/**
+ * DETECCION_GENERICA — el predicado. true si el control de deteccion tiene texto, no es la ausencia
+ * declarada («Sin ...») y no nombra ni un instrumento del catalogo ni un medio que el catalogo
+ * todavia no tiene (panel, alarma, sensor, ensayo, certificado). Mismo criterio que el gate 8 del
+ * plan de control: fuente unica `planControlCanon.data.json`.
+ */
+export const esDeteccionGenerica = (detectionControl) => clasificarControl(detectionControl).clase === 'generico';
 
 const SUSPICIOUS_OP_PATTERNS = [
     'CLASIFICACION Y SEGREGACION',
@@ -967,6 +976,24 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         if (!missD && esDeteccionSinControlDeclarado(c.detectionControl, c.detection)) {
                             issues.push({ ...cCtx, type: 'DETECCION_SIN_CONTROL_DECLARADO',
                                 detail: `D=${Number(c.detection)} sin control de deteccion declarado. Tabla P3: sin metodo establecido va D=10` });
+                        }
+
+                        // DETECCION_GENERICA (WARNING) — el control de deteccion no nombra con que se detecta.
+                        // Fak, 10/10/2026: "los detectivos del amfe no coinciden con los del plan de
+                        // control o los amfes de hoy tienen controles medio inventados o genericos".
+                        // Es el MISMO criterio del gate 8 del plan de control (planControlAmfe.mjs): un
+                        // control se identifica por un codigo MC### o un instrumento del catalogo
+                        // (planControlCanon.data.json, via controlCanon.mjs). «Inspeccion visual»,
+                        // «Visual», «Inspeccion de calidad» no lo tienen. Lo que nombra un panel, una
+                        // alarma, un sensor, un ensayo o un certificado NO entra aca: eso el catalogo
+                        // todavia no lo tiene y se lista aparte (`node scripts/_medirDeteccionGenerica.mjs`).
+                        // Avisa, no corrige y no bloquea: si el control REAL es mirar la pieza, el texto
+                        // esta bien y lo que hay que mirar es la D (inspeccion humana = 8, amfe.md §13).
+                        // NUNCA se completa un instrumento para apagar el aviso (amfe.md §6).
+                        if (esDeteccionGenerica(c.detectionControl)) {
+                            const frec = frecuenciasDe(c.detectionControl);
+                            issues.push({ ...cCtx, type: 'DETECCION_GENERICA',
+                                detail: `control de deteccion sin instrumento del catalogo ("${String(c.detectionControl).slice(0, 60)}")${frec.length ? '' : ' y sin frecuencia'}; D=${Number(c.detection) || '?'}. Si en planta se usa un instrumento, nombrarlo como lo nombra el plan de control; si es solo visual, revisar la D (inspeccion humana: 8)` });
                         }
 
                         // CAUSE_S9_SIN_CC (WARNING) — S>=9 sin caracteristica especial declarada.
