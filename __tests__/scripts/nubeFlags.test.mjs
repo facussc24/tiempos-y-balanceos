@@ -98,6 +98,15 @@ describe('intercambiar — las dos PC de Fak sobre la misma copia (08/10/2026)',
         expect(f.slice(0, 3)).toEqual(['O', 'D', '.env.local']);
     });
 
+    it('un comodin como archivo suelto (los *.jsonl de las charlas, HOY-6) va tercero, con /XO, sin /E ni /MIR', () => {
+        const f = construirFlags({ ...base, direccion: 'intercambiar', soloArchivo: '*.jsonl' });
+        expect(f.slice(0, 3)).toEqual(['O', 'D', '*.jsonl']);
+        expect(f).toContain('/XO');
+        expect(f).not.toContain('/E');
+        expect(f).not.toContain('/MIR');
+        expect(f).not.toContain('/PURGE');
+    });
+
     it('las dos piernas llevan los MISMOS flags: solo cambian origen y destino', () => {
         const ida = construirFlags({ origen: 'NUBE', destino: 'PC', direccion: 'intercambiar' });
         const vuelta = construirFlags({ origen: 'PC', destino: 'NUBE', direccion: 'intercambiar' });

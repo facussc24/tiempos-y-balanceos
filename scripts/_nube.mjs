@@ -10,9 +10,12 @@
  *    corrompe el historial. El unico caso donde harian falta commits que no estan en
  *    GitHub es si quedaron sin pushear — este script lo chequea y avisa.
  *
- *  - Los TRANSCRIPTS de sesion (~/.claude/projects/ *.jsonl, 1,6 GB) tampoco: son el
- *    diario de cada charla, no el conocimiento. Lo destilado ya vive en memory/ y en
- *    docs/LECCIONES_APRENDIDAS.md.
+ *  - Los REGISTROS de las charlas de ESTE repo (~/.claude/projects/C--Dev-BarackMercosul*\*.jsonl)
+ *    SI suben desde el 09/10/2026 (HOY-6), pero solo con --sincronizar y solo PC -> nube: son la fuente
+ *    de los informes de errores y Claude Code los borra en la PC a los `cleanupPeriodDays` dias. Nunca
+ *    bajan ni se borran alla (por eso no van en --subir, que es espejo). Los de otros proyectos siguen
+ *    sin viajar: lo destilado vive en memory/ y en docs/LECCIONES_APRENDIDAS.md. Logica y motivos:
+ *    scripts/_lib/nubeRegistros.mjs.
  *
  *  - .venv-cad tampoco: un venv copiado entre PCs no arranca (las rutas quedan escritas
  *    adentro de los scripts del entorno). Se rehace con pip.
@@ -49,6 +52,8 @@
  *        quedan para --subir/--bajar a mano (el buzon lo escriben las dos PC y los settings traen
  *        rutas de la PC de origen). Si el repo esta limpio y atras de GitHub, lo trae (--ff-only).
  *        Logica pura y probada: scripts/_lib/nubeSincronizar.mjs.
+ *        Ademas (09/10/2026): sube los registros de las charlas de este repo (solo PC -> nube, HOY-6) y
+ *        avisa si esta PC borra registros antes de los 90 dias o si Claude Code esta atras de 2.1.293 (H40).
  *    node scripts/_nube.mjs --registrar-tarea     tarea de Windows "Barack - mi asistente al dia":
  *        al iniciar sesion (5 min despues, para que OneDrive llegue) y cada 2 h; corre _nubeSync.ps1
  *    node scripts/_nube.mjs --desregistrar-tarea
@@ -63,6 +68,8 @@ import { buscarNube, buscarNubeVieja } from './_lib/nubeRutas.mjs';
 import {
     recorrer, planDeIntercambio, resguardarConflictos, estadoConSync, ultimoSyncDe, lineaPlan, selloFecha,
 } from './_lib/nubeSincronizar.mjs';
+import { carpetasDeRegistros, subirRegistros, leerSettings, avisoLimpieza, PREFIJO_REGISTROS } from './_lib/nubeRegistros.mjs';
+import { leerVersionClaude, avisoVersion } from './_lib/nubeVersion.mjs';
 import { psRun } from './_lib/powershell.mjs';
 
 const HOME = homedir();
@@ -332,6 +339,24 @@ if (sincronizar) {
         console.log(`    ${nombre.padEnd(11)} ${n ? `${n} archivo${n === 1 ? '' : 's'}` : 'al dia'}`);
     }
 
+    // Registros de las charlas de este repo (HOY-6, 09/10/2026): una sola pierna, PC -> nube, sin espejo.
+    // No bajan (cada PC tiene las suyas) ni se borran alla: la nube es lo que sobrevive al cleanupPeriodDays.
+    const carpetasReg = carpetasDeRegistros(join(CLAUDE, 'projects'));
+    if (!carpetasReg) avisos.push(`registros: no pude leer ${join(CLAUDE, 'projects')}; no subi ninguna charla`);
+    else if (!carpetasReg.length) console.log(`    registros   -- (no hay carpetas ${PREFIJO_REGISTROS}* en projects)`);
+    else {
+        const reg = subirRegistros({ carpetas: carpetasReg, nube: NUBE, robocopy, aplicar });
+        for (const r of reg.resultados) console.log(`    registros   ${r.err ? '[X] ' + r.err : humano(r.archivos).padEnd(16) + r.nombre}`);
+        total += reg.archivos;
+        fallosSync += reg.fallos;
+    }
+    // Para que ese archivo sirva hacen falta dos cosas que son por PC y no viajan: no borrar antes de los
+    // 90 dias (settings.json, P42) y un Claude Code que no este atras de la minima (H40, R2 #4).
+    const avLimpieza = avisoLimpieza(leerSettings(join(CLAUDE, 'settings.json')));
+    if (avLimpieza) avisos.push(avLimpieza);
+    const avVersion = avisoVersion(leerVersionClaude());
+    if (avVersion) avisos.push(avVersion);
+
     // El codigo viaja por GitHub, no por la nube: si el repo esta limpio y atras, se trae; si tiene
     // commits sin pushear, se avisa (la otra PC no los ve). Sin red, se dice y se sigue.
     const git = estadoGitCompleto();
@@ -500,6 +525,10 @@ function leeme() {
         '                    arranca de cero.',
         '  claude-config/    rules, skills, agents, commands, hooks, settings.json.',
         '                    Las reglas y los guards que evitan que repita errores.',
+        '  claude-registros/ Los registros .jsonl de las charlas de este repo, una',
+        '                    carpeta por proyecto. Solo suben (--sincronizar): la PC',
+        '                    los borra a los 90 dias, aca quedan. De aca salen los',
+        '                    informes de errores.',
         '  repo-privado/     .env.local (Supabase), .qr-secret, y los caches',
         '                    .sgc-cache (documentos del SGC) y .arb-cache (ERP).',
         '                    Nada de esto puede ir a GitHub: el repo es publico.',
@@ -514,9 +543,9 @@ function leeme() {
         '  * El repo con su historial -> esta en GitHub, se clona. Meterlo tambien',
         '    aca seria duplicarlo, y OneDrive corrompe .git si sincroniza mientras',
         '    git escribe.',
-        '  * Los transcripts de cada sesion (1,6 GB) -> es el diario de las charlas,',
-        '    no el conocimiento. Lo que vale ya esta destilado en claude-memoria/ y',
-        '    en docs/LECCIONES_APRENDIDAS.md (que si viaja en el repo).',
+        '  * Los registros de charlas de OTROS proyectos (los de este repo si estan,',
+        '    en claude-registros/). Lo que vale ya esta destilado en claude-memoria/',
+        '    y en docs/LECCIONES_APRENDIDAS.md (que si viaja en el repo).',
         '  * .venv-cad -> un entorno de Python copiado entre PCs no arranca. pip.',
         '  * Las contrasenas del servidor, del Wi-Fi y de los navegadores. Windows',
         '    las cifra contra la PC. Esas hay que tenerlas a mano aparte.',

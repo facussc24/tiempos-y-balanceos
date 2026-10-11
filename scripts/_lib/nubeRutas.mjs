@@ -35,8 +35,8 @@ export const VARIABLE_CEREBRO = 'BARACK_NUBE_CEREBRO';
 export const CANONICA = 'OneDrive - BARACK ARGENTINA SRL';
 export const CARPETA_CEREBRO = 'Barack-cerebro';
 
-/** true si en `p` hay una carpeta, sea directa o del otro lado de un enlace. */
-function esCarpeta(p) {
+/** true si en `p` hay una carpeta, sea directa o del otro lado de un enlace. La usa tambien nubeRegistros.mjs. */
+export function esCarpeta(p) {
     try { return statSync(p).isDirectory(); } catch { return false; }
 }
 
