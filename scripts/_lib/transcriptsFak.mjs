@@ -3,22 +3,29 @@
  *
  * QUE SACA. De los archivos .jsonl de `~/.claude/projects/` que empiezan con `C--Dev-BarackMercosul` (la
  * carpeta del repo y las de sus worktrees; hoy son ~3,4 GB solo en la principal) devuelve dos cosas:
- *   1. los MENSAJES REALES DE FAK: `{ fecha, sesion, texto, cargas, skillsAntes }`. `cargas` son los
- *      skills que se cargaron en el turno que ese mensaje abrio; `skillsAntes`, los que ya se habian
- *      cargado antes en la misma sesion (un skill ya cargado no se vuelve a cargar: sin eso, un
- *      mensaje que calza con un skill ya cargado pasaria por "debia cargarse y no se cargo").
+ *   1. los MENSAJES REALES DE FAK: `{ fecha, sesion, texto, cargas, skillsAntes, aMitadDeTurno }`. `cargas`
+ *      son los skills que se cargaron respondiendo a ese mensaje (desde el hasta el siguiente mensaje de Fak
+ *      o aviso); `skillsAntes`, los que ya se habian cargado antes en la misma sesion (un skill ya cargado
+ *      no se vuelve a cargar: sin eso, un mensaje que calza con un skill ya cargado pasaria por "debia
+ *      cargarse y no se cargo"); `aMitadDeTurno`, si Fak lo escribio mientras el modelo trabajaba.
  *   2. las CARGAS DE SKILLS: `{ fecha, sesion, skill, mensajeAnterior, mismoTurno, siguientes }`. Un
  *      `tool_use` con `name: "Skill"` y su `input.skill`. `mensajeAnterior` es el ultimo mensaje real de
  *      Fak antes de la carga; `mismoTurno` dice si la carga llego en el turno que ese mensaje abrio (si
  *      entre medio entro un aviso de tarea o de un hook, la carga NO la disparo ese mensaje);
  *      `siguientes`, los 3 mensajes reales de Fak que vinieron despues.
  *
- * QUE ES "UN MENSAJE REAL DE FAK". Se usa `origin.kind` cuando el transcript lo trae (`human` si; `peer`,
- * `task-notification` no) y, si falta (los transcripts viejos), las mismas reglas de `esFakReal` de
- * scripts/_tokens.mjs mas la lista UNICA `no_es_de_fak` de correccionCanon.data.json (no hay otra copia
- * de esa lista: si el archivo no se puede leer, esto TIRA, no sigue con una lista inventada). Los avisos
- * `<system-reminder>` se sacan del texto. Quedan afuera las lineas de subagentes (`isSidechain`) y las
- * carpetas `<uuid>/` de cada sesion (en ellas el primer "user" es un encargo, no Fak).
+ * QUE ES "UN MENSAJE REAL DE FAK". Tiene dos formas en el transcript: el turno de usuario (`type: user`) que
+ * ABRE un turno, y el ADJUNTO EN COLA (`type: attachment`, `attachment.type: queued_command`, texto en
+ * `attachment.prompt`) que guarda lo que Fak escribe MIENTRAS el modelo trabaja y el modelo recibe a mitad
+ * de turno (HOY-19n: el auditor conto 708 en 30 dias contra 1.004 turnos). En las dos se usa `origin.kind`
+ * cuando el transcript lo trae (`human` si; `peer`, `task-notification` no) y, si falta (los transcripts
+ * viejos), las mismas reglas de `esFakReal` de scripts/_tokens.mjs mas la lista UNICA `no_es_de_fak` de
+ * correccionCanon.data.json (no hay otra copia de esa lista: si el archivo no se puede leer, esto TIRA, no
+ * sigue con una lista inventada). Los avisos `<system-reminder>` se sacan del texto. Quedan afuera las
+ * lineas de subagentes (`isSidechain`) y las carpetas `<uuid>/` de cada sesion (en ellas el primer "user"
+ * es un encargo, no Fak). Un mensaje a mitad de turno pasa a ser el actual: la carga que venga despues se
+ * le atribuye a el, que es lo ultimo que leyo el modelo, y no al que abrio el turno. Un adjunto en cola que
+ * NO es de Fak corta el turno como un aviso.
  *
  * VOLUMEN. Se descartan los archivos por `mtime` antes de abrirlos, y cada linea se prefiltra por texto
  * antes del JSON.parse (las lineas de resultados de herramientas son enormes y no sirven). El prefiltro
@@ -149,6 +156,21 @@ export function mensajeDeFak(obj, noEsDeFak) {
   return textoDeFak(obj.message, noEsDeFak);
 }
 
+/**
+ * ¿Es lo que Fak escribio a mitad de turno? Un adjunto en cola (`attachment.type: queued_command`) de origen
+ * humano. El `origin.kind` puede venir arriba o adentro del adjunto; si falta, valen las reglas de siempre
+ * (igual que mensajeDeFak). Lo que entro por la cola y no es de Fak (un aviso de tarea) devuelve ''.
+ */
+export function mensajeEnCola(obj, noEsDeFak) {
+  if (!obj || obj.type !== 'attachment' || obj.isSidechain) return '';
+  const adj = obj.attachment;
+  if (!adj || adj.type !== 'queued_command' || typeof adj.prompt !== 'string') return '';
+  const kind = obj.origin?.kind ?? adj.origin?.kind;
+  if (kind !== undefined && kind !== null && kind !== 'human') return '';
+  // el mismo filtro que un turno de Fak: sin avisos y sin lo que arranca como automatico
+  return textoDeFak({ content: adj.prompt }, noEsDeFak);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // La maquina de estados de UNA sesion (pura: se prueba sin disco)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -170,6 +192,22 @@ export function cargasDeSkill(obj) {
 export const nombreCorto = (skill) => String(skill).split(':').pop();
 
 /**
+ * Suma un mensaje de Fak al estado: pasa a ser el ultimo y el actual, y alimenta los `siguientes` de las
+ * cargas pendientes. Devuelve null si `vistos` ya lo tenia (un resume repite el historial): asi el turno
+ * de usuario y el adjunto en cola comparten una sola logica y no se duplica.
+ */
+function sumarMensaje(est, obj, texto, { fecha, siguientes, vistos, aMitadDeTurno }) {
+  const clave = obj.uuid ? `m:${obj.uuid}` : null;
+  if (clave && vistos) { if (vistos.has(clave)) return null; vistos.add(clave); }
+  const mensaje = { fecha, sesion: est.id, texto, cargas: [], skillsAntes: [...est.skillsAntes], aMitadDeTurno };
+  est.ultimo = mensaje;
+  est.actual = mensaje;
+  for (const c of est.pendientes) if (c.siguientes.length < siguientes) c.siguientes.push(texto);
+  est.pendientes = est.pendientes.filter((c) => c.siguientes.length < siguientes);
+  return mensaje;
+}
+
+/**
  * Procesa un objeto ya parseado. Muta `est`. Devuelve { mensaje, cargas } con lo nuevo (o null / []).
  * `vistos` (opcional) es un Set de ids para no contar dos veces lo que un archivo o un resume repite.
  */
@@ -182,20 +220,27 @@ export function procesarObjeto(est, obj, { noEsDeFak, siguientes = SIGUIENTES_PO
     if (esResultadoDeHerramienta(obj)) return salida;
     const texto = mensajeDeFak(obj, noEsDeFak);
     if (texto) {
-      const clave = obj.uuid ? `m:${obj.uuid}` : null;
-      if (clave && vistos) { if (vistos.has(clave)) return salida; vistos.add(clave); }
-      const mensaje = { fecha, sesion: est.id, texto, cargas: [], skillsAntes: [...est.skillsAntes] };
-      est.ultimo = mensaje;
-      est.actual = mensaje;
-      for (const c of est.pendientes) if (c.siguientes.length < siguientes) c.siguientes.push(texto);
-      est.pendientes = est.pendientes.filter((c) => c.siguientes.length < siguientes);
-      salida.mensaje = mensaje;
+      salida.mensaje = sumarMensaje(est, obj, texto, { fecha, siguientes, vistos, aMitadDeTurno: false });
       return salida;
     }
     // otro turno de usuario con texto (aviso de tarea, de hook, resumen de compactado, otra sesion): el
     // turno ya no es el de un mensaje de Fak, y una carga que venga ahora no la disparo el.
     const crudo = typeof obj.message?.content === 'string' ? obj.message.content : JSON.stringify(obj.message?.content ?? '');
     if (quitarAvisos(crudo) || obj.isMeta || obj.isCompactSummary) est.actual = null;
+    return salida;
+  }
+
+  if (obj.type === 'attachment') {
+    const adj = obj.attachment;
+    if (!adj || adj.type !== 'queued_command') return salida; // prompt_snapshot y demas adjuntos no son mensajes
+    const texto = mensajeEnCola(obj, noEsDeFak);
+    if (texto) {
+      salida.mensaje = sumarMensaje(est, obj, texto, { fecha, siguientes, vistos, aMitadDeTurno: true });
+      return salida;
+    }
+    // entro algo por la cola a mitad de turno que no es de Fak (un aviso de tarea): corta el turno como lo
+    // corta un aviso entre turnos, para no atribuirle a Fak la carga que venga despues.
+    if (typeof adj.prompt === 'string' && quitarAvisos(adj.prompt)) est.actual = null;
     return salida;
   }
 
@@ -222,14 +267,16 @@ export function procesarObjeto(est, obj, { noEsDeFak, siguientes = SIGUIENTES_PO
 const MARCA_USUARIO = Buffer.from('"type":"user"');
 const MARCA_RESULTADO = Buffer.from('"tool_use_id"');
 const MARCA_SKILL = Buffer.from('"name":"Skill","input"');
+// el adjunto en cola no trae "type":"user": sin este marcador el prefiltro lo tiraba (HOY-19n)
+const MARCA_COLA = Buffer.from('"type":"queued_command"');
 
 /** ¿Vale la pena parsear esta linea (string o Buffer)? Solo un prefiltro; la decision real va despues del JSON.parse. */
 export function lineaInteresa(linea) {
   if (typeof linea === 'string') {
-    if (linea.includes('"name":"Skill","input"')) return true;
+    if (linea.includes('"name":"Skill","input"') || linea.includes('"type":"queued_command"')) return true;
     return linea.includes('"type":"user"') && !linea.includes('"tool_use_id"');
   }
-  if (linea.includes(MARCA_SKILL)) return true;
+  if (linea.includes(MARCA_SKILL) || linea.includes(MARCA_COLA)) return true;
   return linea.includes(MARCA_USUARIO) && !linea.includes(MARCA_RESULTADO);
 }
 
@@ -237,9 +284,11 @@ export function lineaInteresa(linea) {
  * Recorre un archivo por bloques de bytes (no por readline: con lineas de megas era ~20 veces mas lento,
  * 4 MB/s contra 120-160 MB/s medidos el 08/10/2026) y entrega SOLO las lineas que pasan el prefiltro,
  * ya decodificadas. Parte por el byte 0x0A, que nunca cae adentro de un caracter UTF-8 de varios bytes.
- * `cuenta.lineas` queda con el total de lineas vistas.
+ * `cuenta.lineas` queda con el total de lineas vistas. `interesa` reemplaza el prefiltro: por defecto es
+ * `lineaInteresa`; `_resumenSesion.mjs` pasa uno que suma las lineas de asistente con `tool_use`, para
+ * no duplicar este lector.
  */
-export async function* lineasInteresantes(ruta, cuenta = { lineas: 0 }) {
+export async function* lineasInteresantes(ruta, cuenta = { lineas: 0 }, interesa = lineaInteresa) {
   let resto = null;
   for await (const bloque of fs.createReadStream(ruta, { highWaterMark: 4 << 20 })) {
     const buf = resto && resto.length ? Buffer.concat([resto, bloque]) : bloque;
@@ -248,7 +297,7 @@ export async function* lineasInteresantes(ruta, cuenta = { lineas: 0 }) {
     while (fin !== -1) {
       const linea = buf.subarray(ini, fin);
       cuenta.lineas++;
-      if (lineaInteresa(linea)) yield linea.toString('utf8');
+      if (interesa(linea)) yield linea.toString('utf8');
       ini = fin + 1;
       fin = buf.indexOf(10, ini);
     }
@@ -256,7 +305,7 @@ export async function* lineasInteresantes(ruta, cuenta = { lineas: 0 }) {
   }
   if (resto && resto.length) {
     cuenta.lineas++;
-    if (lineaInteresa(resto)) yield resto.toString('utf8');
+    if (interesa(resto)) yield resto.toString('utf8');
   }
 }
 
@@ -289,8 +338,9 @@ export async function leerArchivo(ruta, { noEsDeFak, desde = null, hasta = null,
 
 /**
  * Lee todo lo que haya desde `desde` (por defecto 90 dias antes de `ahora`), de lo mas nuevo a lo mas
- * viejo, hasta `tope` mensajes. Devuelve { mensajes, cargas, archivos, bytes, lineas, truncado, desde }
- * con mensajes y cargas ordenados por fecha ascendente.
+ * viejo, hasta `tope` mensajes. Devuelve { mensajes, cargas, archivos, bytes, lineas, truncado, desde,
+ * mensajesAMitadDeTurno } con mensajes y cargas ordenados por fecha ascendente. El conteo aparte de los
+ * de mitad de turno es para repetir la medicion de HOY-19 sin gastar (se compara contra los 708 / 1.004).
  */
 export async function leerTranscripts({
   carpetas, base = BASE_TRANSCRIPTS, repo = RAIZ_REPO, desde, hasta = null, ahora = new Date(),
@@ -320,5 +370,6 @@ export async function leerTranscripts({
   const porFecha = (x, y) => String(x.fecha ?? '').localeCompare(String(y.fecha ?? ''));
   mensajes.sort(porFecha);
   cargas.sort(porFecha);
-  return { mensajes, cargas, archivos: leidos, archivosEncontrados: archivos.length, bytes, lineas, truncado, desde: desdeFecha.toISOString() };
+  const mensajesAMitadDeTurno = mensajes.filter((m) => m.aMitadDeTurno).length;
+  return { mensajes, cargas, archivos: leidos, archivosEncontrados: archivos.length, bytes, lineas, truncado, desde: desdeFecha.toISOString(), mensajesAMitadDeTurno };
 }

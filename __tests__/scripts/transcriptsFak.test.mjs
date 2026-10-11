@@ -25,6 +25,8 @@ const base = (extra) => ({ uuid: `u${++n}`, timestamp: ts(extra?.dia), sessionId
 const humano = (texto, extra = {}) => base({ type: 'user', message: { role: 'user', content: texto }, origin: { kind: 'human' }, ...extra });
 const cargaSkill = (skill, id, extra = {}) => base({ type: 'assistant', message: { role: 'assistant', content: [{ type: 'tool_use', id, name: 'Skill', input: { skill } }] }, ...extra });
 const resultado = (id) => base({ type: 'user', message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: id, content: 'ok' }] } });
+/** Lo que Fak escribe mientras el modelo trabaja: un adjunto en cola de origen humano (`extra` pisa el origin). */
+const enCola = (texto, extra = {}) => base({ type: 'attachment', attachment: { type: 'queued_command', prompt: texto }, origin: { kind: 'human' }, ...extra });
 const jsonl = (objs) => objs.map((o) => JSON.stringify(o)).join('\n') + '\n';
 const escribir = (rel, objs, mtime = null) => {
   const ruta = path.join(dir, rel);
@@ -186,6 +188,90 @@ describe('transcriptsFak · una sesion entera', () => {
     const ruta = escribir('c/sin-fin.jsonl', JSON.stringify(humano('ultima linea sin salto')));
     const r = await T.leerArchivo(ruta, { noEsDeFak: NO_ES });
     expect(r.mensajes.map((m) => m.texto)).toEqual(['ultima linea sin salto']);
+  });
+});
+
+describe('transcriptsFak · lo que Fak escribe a mitad de turno (adjuntos en cola, HOY-19n)', () => {
+  it('mensajeEnCola: un queued_command de origen humano es de Fak (origin arriba, adentro o ausente)', () => {
+    expect(T.mensajeEnCola(enCola('seguí con lo otro cuando termines'), NO_ES)).toBe('seguí con lo otro cuando termines');
+    expect(T.mensajeEnCola(base({ type: 'attachment', attachment: { type: 'queued_command', prompt: 'dale', origin: { kind: 'human' } } }), NO_ES)).toBe('dale');
+    expect(T.mensajeEnCola(base({ type: 'attachment', attachment: { type: 'queued_command', prompt: 'dale' } }), NO_ES)).toBe('dale');
+    // los avisos adentro del texto se sacan, como en un turno normal
+    expect(T.mensajeEnCola(enCola('<system-reminder>hook</system-reminder>\nmirá el imds'), NO_ES)).toBe('mirá el imds');
+  });
+
+  it('mensajeEnCola (rojo): lo que entra por la cola y no es de Fak devuelve vacio', () => {
+    expect(T.mensajeEnCola(enCola('termino la tarea de fondo', { origin: { kind: 'task-notification' } }), NO_ES)).toBe('');
+    expect(T.mensajeEnCola(enCola('me lo manda otra sesion', { origin: { kind: 'peer' } }), NO_ES)).toBe('');
+    expect(T.mensajeEnCola(base({ type: 'attachment', attachment: { type: 'queued_command', prompt: 'x', origin: { kind: 'task-notification' } } }), NO_ES)).toBe('');
+    expect(T.mensajeEnCola(enCola('encargo de un subagente', { isSidechain: true }), NO_ES)).toBe('');
+    expect(T.mensajeEnCola(enCola('<task-notification>x</task-notification>'), NO_ES)).toBe('');
+    expect(T.mensajeEnCola(enCola('Intentar nuevamente'), NO_ES)).toBe('');
+    expect(T.mensajeEnCola(enCola('<system-reminder>solo un aviso</system-reminder>'), NO_ES)).toBe('');
+    expect(T.mensajeEnCola(base({ type: 'attachment', attachment: { type: 'queued_command' } }), NO_ES)).toBe(''); // sin prompt
+    expect(T.mensajeEnCola(base({ type: 'attachment', attachment: { type: 'prompt_snapshot', tools: [] } }), NO_ES)).toBe('');
+    expect(T.mensajeEnCola(humano('un turno normal no es un adjunto'), NO_ES)).toBe('');
+  });
+
+  it('lineaInteresa deja pasar el adjunto en cola (string y Buffer) y sigue cortando los otros adjuntos', () => {
+    expect(T.lineaInteresa(JSON.stringify(enCola('hola')))).toBe(true);
+    expect(T.lineaInteresa(Buffer.from(JSON.stringify(enCola('hola'))))).toBe(true);
+    const snapshot = JSON.stringify(base({ type: 'attachment', attachment: { type: 'prompt_snapshot', tools: [{ name: 'Bash' }] } }));
+    expect(T.lineaInteresa(snapshot)).toBe(false);
+    expect(T.lineaInteresa(Buffer.from(snapshot))).toBe(false);
+  });
+
+  it('en la sesion: el de mitad de turno sale con aMitadDeTurno, pasa a ser el actual y se lleva la carga que viene despues', async () => {
+    const ruta = escribir('c/cola.jsonl', [
+      humano('Necesito cargar el consumo nuevo en el arb'),
+      cargaSkill('arb-operar', 't1'),
+      resultado('t1'),
+      enCola('y de paso fijate el imds de esa pieza'),
+      cargaSkill('imds', 't2'),
+      resultado('t2'),
+      humano('gracias, listo'),
+    ]);
+    const r = await T.leerArchivo(ruta, { noEsDeFak: NO_ES, vistos: new Set() });
+    expect(r.mensajes.map((m) => [m.texto, m.aMitadDeTurno])).toEqual([
+      ['Necesito cargar el consumo nuevo en el arb', false],
+      ['y de paso fijate el imds de esa pieza', true],
+      ['gracias, listo', false],
+    ]);
+    const [abre, mitad] = r.mensajes;
+    expect(abre.cargas).toEqual(['arb-operar']); // la de imds ya no es suya
+    expect(mitad.cargas).toEqual(['imds']);
+    expect(mitad.skillsAntes).toEqual(['arb-operar']);
+    expect(mitad.sesion).toBe('ses-1');
+    expect(r.cargas.find((c) => c.skill === 'imds')).toMatchObject({ mensajeAnterior: 'y de paso fijate el imds de esa pieza', mismoTurno: true });
+    expect(r.cargas.find((c) => c.skill === 'arb-operar').siguientes).toEqual(['y de paso fijate el imds de esa pieza', 'gracias, listo']);
+  });
+
+  it('en la sesion (rojo): un adjunto en cola que no es de Fak no suma mensaje y corta el turno; uno repetido no se cuenta dos veces', async () => {
+    const ruta = escribir('c/cola-rojo.jsonl', [
+      humano('arrancá con el arb'),
+      enCola('termino la tarea de fondo', { origin: { kind: 'task-notification' } }),
+      cargaSkill('imds', 't3'),
+      enCola('seguí', { uuid: 'rep-1' }),
+      enCola('seguí', { uuid: 'rep-1' }), // el resume repite la linea
+    ]);
+    const r = await T.leerArchivo(ruta, { noEsDeFak: NO_ES, vistos: new Set() });
+    expect(r.mensajes.map((m) => m.texto)).toEqual(['arrancá con el arb', 'seguí']);
+    expect(r.mensajes[0].cargas).toEqual([]);
+    expect(r.cargas[0]).toMatchObject({ skill: 'imds', mismoTurno: false, mensajeAnterior: 'arrancá con el arb' });
+    expect(r.cargas[0].siguientes).toEqual(['seguí']);
+    const sinVistos = await T.leerArchivo(ruta, { noEsDeFak: NO_ES });
+    expect(sinVistos.mensajes).toHaveLength(3); // sin `vistos` no hay dedupe, como con los turnos
+  });
+
+  it('leerTranscripts cuenta aparte los de mitad de turno; `desde` tambien los recorta', async () => {
+    const objs = [humano('viejo', { dia: 1 }), enCola('viejo en cola', { dia: 1 }), humano('nuevo', { dia: 6 }), enCola('nuevo en cola', { dia: 6 })];
+    const ruta = escribir('a/s1.jsonl', objs);
+    const r = await T.leerTranscripts({ carpetas: [path.join(dir, 'a')], desde: new Date('2026-09-01T00:00:00Z'), noEsDeFak: NO_ES });
+    expect(r.mensajes).toHaveLength(4);
+    expect(r.mensajesAMitadDeTurno).toBe(2);
+    const recorte = await T.leerArchivo(ruta, { noEsDeFak: NO_ES, desde: new Date('2026-10-03T00:00:00Z') });
+    expect(recorte.mensajes.map((m) => m.texto)).toEqual(['nuevo', 'nuevo en cola']);
+    expect(recorte.mensajes.filter((m) => m.aMitadDeTurno)).toHaveLength(1);
   });
 });
 
