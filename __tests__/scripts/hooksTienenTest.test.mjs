@@ -110,10 +110,15 @@ const COBERTURA = {
 /** En el disco pero no cableados. Borrarlos es decision de Fak (autonomy-contract C). */
 const HUERFANOS = {
   'session-close-guard.sh': 'reemplazado por cierre-guard.sh el 04/09/2026; pendiente el OK de Fak para borrarlo',
-  // cola P10, 10/10/2026: escritos y probados (tienen fila en COBERTURA) pero todavia sin cablear en settings.json;
-  // salen de aca en el commit que los cablea (prompt-hooks en C2; stop-hooks en C3, tras la medicion de P9).
-  'prompt-hooks.sh': 'cola P10: listo, se cablea en C2 (UserPromptSubmit); hasta entonces nadie lo llama',
-  'stop-hooks.sh': 'cola P10: listo, se cablea en C3 (Stop) despues de la medicion de P9; hasta entonces nadie lo llama',
+  // cola P10, 10/10/2026: escrito y probado (tiene fila en COBERTURA) pero todavia sin cablear en settings.json;
+  // sale de aca en el commit que lo cablea (C3, tras la medicion de P9 y con T1 y T2 del auditor arreglados).
+  'stop-hooks.sh': 'cola P10: se cablea en C3 (Stop) despues de la medicion de P9; hasta entonces nadie lo llama',
+  // cola P10 C2 (11/10/2026): reemplazados por prompt-hooks.sh en settings.json; siguen sueltos (los corren sus tests y
+  // el de igualdad) hasta el OK de Fak para borrarlos (autonomy-contract C).
+  'caracteristicas-especiales-prompt.sh': 'reemplazado por prompt-hooks.sh (cola P10 C2); pendiente el OK de Fak para borrarlo',
+  'correccion-guard.sh': 'reemplazado por prompt-hooks.sh (cola P10 C2); pendiente el OK de Fak para borrarlo',
+  'explicar-prompt.sh': 'reemplazado por prompt-hooks.sh (cola P10 C2); pendiente el OK de Fak para borrarlo',
+  'hora-prompt.sh': 'reemplazado por prompt-hooks.sh (cola P10 C2); pendiente el OK de Fak para borrarlo',
 };
 
 const enDisco = fs.readdirSync(HOOKS).filter((f) => f.endsWith('.sh') && !f.endsWith('.test.sh'));

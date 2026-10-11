@@ -9,7 +9,9 @@ export default defineConfig({
     environment: 'jsdom', // Simulates browser environment for React/DOM related logic if needed
     // `mods/**/*.test.ts`: las pruebas de la cascara de un mod importan 'claude-code/testing' y las corre
     // `claude plugin test <mod>` (lo hace `scripts/_modsInstalar.mjs` antes de copiar); las de vitest de un mod son .mjs.
-    exclude: ['node_modules', 'dist', 'e2e', '.claude/worktrees/**', 'mods/**/*.test.ts'],
+    // `.sgc-cache/**`: copias de trabajo ignoradas por git (11/10/2026: dos tests guardados ahi como evidencia
+    // dejaban la suite local en rojo por un import que desde esa carpeta no resuelve).
+    exclude: ['node_modules', 'dist', 'e2e', '.claude/worktrees/**', 'mods/**/*.test.ts', '.sgc-cache/**'],
     // Medido 2026-08-07 en la notebook: la suite COMPLETA con el pool por defecto
     // (`forks`) rompe con "Failed to start forks worker" / "Timeout waiting for worker
     // to respond" — 3 archivos fallados y 9 tests en rojo que NO tienen nada roto:

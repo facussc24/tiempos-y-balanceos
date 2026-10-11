@@ -15,6 +15,7 @@ import {
   REPO, DATOS, AVISO_APP, RESPUESTA_COMUN, hooksDe, probarMensaje, claseDe, sesionesAbiertas, mensajesConAviso, llego, chequearAvisos,
 } from '../../scripts/_lib/probarMejora.mjs';
 import { leerArgumentos } from '../../scripts/_probarMejora.mjs';
+import { PIEZAS_REALES } from '../../scripts/_lib/promptHooks.mjs';
 import { declaraCierre, evaluarPermiso, evaluarAnuncio, CANON } from '../../scripts/_lib/cierreGuard.mjs';
 
 const INCIDENTE = 'che ene que estaod esta hace que sea faicl de entender esta taare adigmaos le pdoemos apsar las hojas de rpcoeos anico?';
@@ -53,7 +54,7 @@ describe('_probarMejora — un mensaje real por los hooks de verdad (bash -> nod
   it('ROJO→VERDE del incidente: el mensaje de Fak recibe el aviso de explicar en las DOS formas, y el cierre frena una respuesta comun', () => {
     const r = probarMensaje(INCIDENTE, { espera: 'EXPLICAR-MEJOR' });
     expect(r.fallas).toEqual([]);
-    const ex = r.mensajes.find((m) => m.hook === 'explicar-prompt.sh');
+    const ex = r.mensajes.find((m) => m.hook === 'prompt-hooks.sh');   // desde el 11/10/2026 los cuatro avisos salen de un solo hook
     expect(ex.pelado).toMatch(/\[EXPLICAR-MEJOR\]/);
     expect(ex.pelado).toMatch(/escalon 3/);
     expect(ex.conAviso).toBe(ex.pelado);
@@ -106,9 +107,10 @@ describe('_probarMejora — un mensaje real por los hooks de verdad (bash -> nod
   }, LARGO);
   it('los hooks que corre son los de settings.json, y cada aviso en prueba tiene su hook ahi', () => {
     const cmds = hooksDe(REPO, 'UserPromptSubmit');
-    expect(cmds.length).toBeGreaterThanOrEqual(3);
+    // Un solo hook de mensajes (cola P10 C2): cada aviso en prueba es una pieza de su tabla.
+    expect(cmds.some((c) => c.includes('prompt-hooks.sh'))).toBe(true);
     for (const a of DATOS.avisos) {
-      expect(cmds.some((c) => c.includes(`${a.id}.sh`)), a.id).toBe(true);
+      expect(PIEZAS_REALES.some((p) => p.nombre === a.id), a.id).toBe(true);
       expect(a.marca).toMatch(/^\[[A-Z-]+\]$/);
       expect(Number.isFinite(Date.parse(a.desde)), a.desde).toBe(true);
     }

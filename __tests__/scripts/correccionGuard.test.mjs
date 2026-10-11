@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { PIEZAS_REALES } from '../../scripts/_lib/promptHooks.mjs';
 import { CASOS, senales, esCorreccion, esAprobacion, esNeutro, paso, registrarEntrega, claveDe, distancia, normalizar, sanear, atender, leerEntregas, entregasDeLinea } from '../../scripts/_lib/correccionGuard.mjs';
 
 const RAIZ = process.cwd();
@@ -241,9 +242,11 @@ describe('correccion-guard.sh — corrido como lo corre Claude Code (bash + JSON
   it('stdin roto, vacio o con tipos raros: exit 0, sin salida, no rompe el turno', () => {
     for (const stdin of ['{no es json', '', 'null', '{"hook_event_name":"UserPromptSubmit","prompt":{"a":1},"session_id":["x"],"transcript_path":5}']) { const r = hook(null, { stdin }); expect(r.exit).toBe(0); expect(r.out.trim()).toBe(''); }
   });
-  it('esta cableado en UserPromptSubmit con ${CLAUDE_PROJECT_DIR}', () => {
+  // Desde el 11/10/2026 (cola P10 C2) no tiene renglon propio en settings.json: corre adentro de prompt-hooks.sh.
+  it('esta cableado en UserPromptSubmit: prompt-hooks.sh en settings.json y esta pieza en su tabla', () => {
     const s = JSON.parse(fs.readFileSync(path.join(RAIZ, '.claude', 'settings.json'), 'utf8'));
-    expect(s.hooks.UserPromptSubmit.some((g) => g.matcher === '' && g.hooks.some((h) => h.command === 'bash "${CLAUDE_PROJECT_DIR}/.claude/hooks/correccion-guard.sh"'))).toBe(true);
+    expect(s.hooks.UserPromptSubmit.some((g) => g.matcher === '' && g.hooks.some((h) => h.command === 'bash "${CLAUDE_PROJECT_DIR}/.claude/hooks/prompt-hooks.sh"'))).toBe(true);
+    expect(PIEZAS_REALES.find((p) => p.nombre === 'correccion-guard')).toMatchObject({ modulo: './correccionGuard.mjs', exportacion: 'atender' });
   });
 });
 

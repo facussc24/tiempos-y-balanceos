@@ -68,42 +68,12 @@
     ],
     "UserPromptSubmit": [
       {
-        "_comentario": "11/09/2026: cuando el mensaje de Fak nombra las caracteristicas especiales (CC/SC, D/TLD, critica, significativa, la sigla, las marcas del flujograma, el I-AC-005) inyecta el criterio canonico como additionalContext, SIN cooldown. Pedido textual de Fak: 'siempre que te preguntes, recuerdes todo esto... me gustan esas memorias pero a veces no las lees'. Texto y disparadores en core/amfe/caracteristicasEspeciales.data.json (la misma fuente del validador, la app y el guard PreToolUse). Nunca bloquea. Test: hooksVarios.test.mjs.",
+        "_comentario": "11/10/2026 (cola P10 C2; si de Fak 09/10 16:55): UN solo hook por mensaje. Hasta entonces eran cuatro (caracteristicas-especiales-prompt, correccion-guard, explicar-prompt, hora-prompt): 4 bash + 4 node por cada mensaje de Fak, 2.800 a 3.786 ms cada uno y 62 cancelados en el mes (R6). Ahora prompt-hooks.sh -> scripts/_lib/promptHooks.mjs lee el payload una vez y corre las mismas cuatro piezas, en el mismo orden y con el mismo texto cada una, en un solo JSON (separadas por una linea en blanco). Las piezas: (1) 11/09/2026 caracteristicas especiales: cuando Fak nombra CC/SC, D/TLD, critica, significativa, la sigla, las marcas del flujograma o el I-AC-005 inyecta el criterio canonico sin cooldown ('siempre que te preguntes, recuerdes todo esto'; core/amfe/caracteristicasEspeciales.data.json, logica en scripts/_lib/caracteristicasEspecialesPrompt.mjs); (2) 02/10/2026 correccion-guard: 2a correccion en la misma tanda, o 2 versiones de la misma carpeta y Fak sigue objetando -> el PEDIDO ORIGINAL textual (fotos de las prensas Hot Press; scripts/_lib/correccionGuard.mjs + correccionCanon.data.json); (3) 02/10/2026 explicar-prompt: 'no entiendo', 'explicame mejor', 'facil de entender' -> skill explicar-mejor; 'sintetiza' -> 1 a 4 renglones; 'entendes?' no dispara (scripts/_lib/explicarGuard.mjs + explicarCanon.data.json); (4) 03/10/2026 hora-prompt: 'labura hasta las 8', 'ponete un cronometro' -> lista, --fijar y latido antes de seguir ('no te quedaste hasta las 8, defendete'; scripts/_lib/horaGuard.mjs + horaCanon.data.json). Ninguna bloquea; una pieza que falla no tumba a las otras, y si node no termina bien el .sh sale con 1 (la app lo muestra como error del hook; nunca con 2, que borraria el mensaje). OJO: las cuatro comparten ahora el tope de 10.000 caracteres que Claude Code le pone a lo que inyecta UN hook (el caso mas largo de hoy suma 9.243: lo mide promptHooks.cuatro.test.mjs; si un aviso crece, ese test se pone rojo). Los cuatro .sh viejos siguen en el disco como wrappers sueltos (los corren sus tests) hasta el OK de Fak para borrarlos. Tests: promptHooks.test.mjs (dobles), promptHooks.gate.test.mjs (las piezas reales y el .sh con un modulo roto), promptHooks.cuatro.test.mjs (las cuatro reales en el mismo mensaje: orden, separador y tope), promptHooks.igualdad.test.mjs (20 mensajes reales: fusionado = cuatro sueltos) y los de cada pieza (hooksVarios, correccionGuard, explicarGuard, horaGuard).",
         "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/caracteristicas-especiales-prompt.sh\""
-          }
-        ]
-      },
-      {
-        "_comentario": "02/10/2026: cuando un entregable vuelve (2a correccion de Fak dentro de la misma tanda, o 2 versiones entregadas de la misma carpeta y Fak sigue objetando) inyecta el PEDIDO ORIGINAL textual y exige contrastar el entregable contra el antes de rehacer. Las entregas (SendUserFile) las lee del transcript, solo el tramo nuevo. Origen: 01/10/2026, fotos de las prensas Hot Press (tres entregas distintas respondiendo solo a la ultima correccion). Medido: en 15 de 54 sesiones con entregas lo mismo volvio 3 veces o mas. Nunca bloquea. Logica y palabras: scripts/_lib/correccionGuard.mjs + correccionCanon.data.json. Test: correccionGuard.test.mjs.",
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/correccion-guard.sh\""
-          }
-        ]
-      },
-      {
-        "_comentario": "02/10/2026: cuando Fak dice que no entendio ('no entiendo', 'noe nteidno') o pide que se lo expliquen ('explicame mejor') recuerda el skill explicar-mejor: no repetir lo mismo mas largo, cambiar la forma (texto corto -> dibujo -> pagina). Si pide corto ('sintetiza', 'mucho texto') recuerda responder en 1 a 4 renglones. 'entendes?' es muletilla y no dispara. Pedido de Fak tras probar la escalera del post de Karpathy: 'aplicarlo permanente para cuando alguien quiere y pide una mejor explicacion o nota que no entiende'. Medido: salta en 166 de 1.592 mensajes suyos. El aviso dice cuando no aplica (un entregable, palabras de un tercero) y que ante un aviso de correccion-guard manda ese. Nunca bloquea. 02/10/2026, a la tarde: 'facil de entender' pasa de 'corto' a senal de explicar, el pedido del ESTADO de una tarea suma el renglon de la pagina (escalon 3), un mensaje que llega con un aviso de la app adelante ya no se toma por automatico, y que el skill se cargo lo exige el cierre del turno (cierre-guard, chequeo 7). Re-medido sobre 2.723 mensajes: aviso de explicar en 167, solo corto en 54. Logica y palabras: scripts/_lib/explicarGuard.mjs + explicarCanon.data.json. Test: explicarGuard.test.mjs.",
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/explicar-prompt.sh\""
-          }
-        ]
-      },
-      {
-        "_comentario": "03/10/2026: cuando Fak deja a Claude trabajando solo HASTA UNA HORA ('quedate laburando como minimo hasta esa hora', 'labura hasta las 8', 'continua hasta manana a las 10am, hasta esa hora no pares', 'ponete un cronometro') recuerda lo que hay que armar antes de seguir: la lista de trabajo en un archivo, fijar la hora (node scripts/_lib/horaGuard.mjs --fijar) y el latido (CronCreate). Con una hora ya vigente recuerda que sigue vigente. Origen: Fak se fue a las 13:50 pidiendo trabajo hasta las 20, Claude cerro a las 17:10 con un resumen y quedo parado seis horas ('no te quedaste hasta las 8, decime por que, defendete'). Medido sobre 1.712 mensajes suyos: salta en 4, los 4 son pedidos de trabajar por tiempo. Nunca bloquea; que no se cierre antes lo frena hora-guard.sh (Stop). Logica y palabras: scripts/_lib/horaGuard.mjs + horaCanon.data.json. Test: horaGuard.test.mjs. Regla: trabajar-hasta-la-hora.md.",
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/hora-prompt.sh\""
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/prompt-hooks.sh\""
           }
         ]
       }
