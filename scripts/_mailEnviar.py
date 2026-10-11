@@ -23,9 +23,17 @@ USO
     python scripts/_mailEnviar.py --buscar "APB TRA CEN" --enviar
     python scripts/_mailEnviar.py --id <EntryID> --enviar
     python scripts/_mailEnviar.py --selftest                          # sin Outlook
+    python scripts/_mailEnviar.py --buscar "APB TRA CEN" --a-las "2026-10-12 08:00"            # dry-run: dice la hora
+    python scripts/_mailEnviar.py --buscar "APB TRA CEN" --a-las "2026-10-12 08:00" --enviar   # lo deja programado
 
   Dry-run por default, como todo script del proyecto que escribe.
   --forzar solo si Fak lo autoriza EXPLICITAMENTE para ese mail puntual.
+
+PROGRAMAR LA SALIDA (--a-las, cola HOY-19i, 11/10/2026)
+  Mismo circuito y mismos controles: lo unico que cambia es que, justo antes del envio, al borrador se le fija la
+  hora de entrega diferida de Outlook (y se relee: si no quedo la hora pedida, no sale). Despues se mira donde quedo
+  el mail y se anota en .mail-cache/programados.jsonl. Los controles corren AL PROGRAMAR, no a la hora de salida: si
+  un dato cambia despues, el mail sale igual. La logica y lo medido, en scripts/_lib/mailDiferido.py.
 
 DESTINATARIOS DE AFUERA (regla dura de Fak, 30/09/2026)
   Si alguno de los destinatarios no es @barackmercosul.com, ABORTA salvo --externos-ok.
@@ -35,6 +43,7 @@ DESTINATARIOS DE AFUERA (regla dura de Fak, 30/09/2026)
   --externos-ok solo con el OK de Fak para ESE mail.
 """
 import argparse
+import datetime
 import os
 import re
 import sys
@@ -46,6 +55,9 @@ from outlookUi import asegurar_outlook, cartel_de_seguridad, vigilando   # noqa:
 from gerenteCopia import GERENTE_NOMBRE, falta_gerente, selftest as selftest_gerente  # noqa: E402
 import firmaIA                                                                    # noqa: E402
 import numerosMail  # noqa: E402
+import mailDiferido  # noqa: E402
+
+PROGRAMADOS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.mail-cache', 'programados.jsonl')
 
 
 def firma_ia_del_mail(it):
@@ -317,6 +329,8 @@ def main() -> int:
                     help='deja mandar sin Carlos Baptista en el mail — solo con OK de Fak para ESE mail')
     ap.add_argument('--sin-chequeo-firma', action='store_true', dest='sin_chequeo_firma',
                     help='saltea el chequeo de "lo hizo Claude/IA" — solo con OK de Fak para ESE mail (falso positivo: un tercero citado)')
+    ap.add_argument('--a-las', dest='a_las', metavar='"AAAA-MM-DD HH:MM"',
+                    help='programa la salida para esa hora (entrega diferida de Outlook) en vez de mandarlo en el momento')
     ap.add_argument('--selftest', action='store_true')
     a = ap.parse_args()
 
@@ -324,6 +338,13 @@ def main() -> int:
         return selftest() or selftest_gerente()
     if not (a.buscar or a.id):
         ap.error('falta --buscar o --id')
+    # La hora se valida ANTES de hablar con Outlook: una hora pasada o mal escrita no llega a tocar nada.
+    cuando = None
+    if a.a_las is not None:
+        cuando, motivo = mailDiferido.leer_hora(a.a_las)
+        if cuando is None:
+            print(f"ABORTA: {motivo}.")
+            return 2
 
     import win32com.client as win32
     import pythoncom
@@ -371,6 +392,20 @@ def main() -> int:
     print(f"BORRADOR: {cand['asunto']}")
     print(f"  Para: {cand['para']}   CC: {cand['cc']}")
     print(f"  Adj : {cand['adjuntos']}")
+    ya_puesta = mailDiferido.hora_puesta(it)
+    if cuando:
+        print(f"  SALIDA PROGRAMADA: se pidió para el {mailDiferido.texto_aviso(cuando)} (no en el momento), si pasa los controles.")
+        print("    Los controles de abajo corren ahora, no a esa hora: si un dato cambia después, sale igual.")
+        print("    Sin verificar: si Outlook tiene que estar abierto a esa hora para que salga.")
+        if ya_puesta and ya_puesta != cuando:
+            print(f"    OJO: el borrador ya traía otra hora programada ({ya_puesta:%Y-%m-%d %H:%M}); se reemplaza por la pedida.")
+    elif ya_puesta:
+        print(f"  OJO: este borrador YA TIENE una hora de entrega programada ({ya_puesta:%Y-%m-%d %H:%M}), puesta a mano o por")
+        print("    una corrida anterior: si se envía, no sale en el momento sino a esa hora.")
+        if a.enviar:
+            print("\nABORTA, no se envio nada: un envio comun no manda un borrador que tiene una hora programada.")
+            print(f'  Si esa es la hora que se quiere: --a-las "{ya_puesta:%Y-%m-%d %H:%M}". Si no, rearmar el borrador.')
+            return 3
 
     # 1a. GATE — ningun documento dice que lo hizo Claude o una IA (regla dura de Fak, 08/10/2026)
     firma, avisos_doc = firma_ia_del_mail(it)
@@ -436,7 +471,6 @@ def main() -> int:
 
     # 2. GATE — ¿ya hay algo parecido en Enviados?
     print(f"\nGATE anti-duplicado (Enviados, ultimas {VENTANA_HORAS} h)")
-    import datetime
     corte = datetime.datetime.now() - datetime.timedelta(hours=VENTANA_HORAS)
     sent = ns.GetDefaultFolder(5).Items
     sent.Sort("[SentOn]", True)
@@ -469,6 +503,11 @@ def main() -> int:
                  if normalizar_asunto(str(x.Subject or '')) == normalizar_asunto(cand['asunto'])]
     if encolados:
         print(f"\nABORTA: ya hay {len(encolados)} item(s) de este asunto en la Bandeja de salida.")
+        for x in encolados:
+            h = mailDiferido.hora_puesta(x)
+            if h:
+                print(f"   - uno está PROGRAMADO para el {mailDiferido.texto_aviso(h)} -> {x.To}. Mientras espera, no sale otro")
+                print("     de este asunto. Para cancelarlo: en Outlook, Bandeja de salida, arrastrarlo a Borradores.")
         return 2
     print(f"  Bandeja de salida: {out.Items.Count} item(s), ninguno de este asunto.")
 
@@ -491,12 +530,56 @@ def main() -> int:
             time.sleep(5)
 
     if not a.enviar:
-        print("\nDRY-RUN: no se envio nada. Agrega --enviar cuando este OK.")
+        if cuando:
+            print(f"\nDRY-RUN: no se envio ni se programo nada. Con --enviar quedaria programado para el {mailDiferido.texto_aviso(cuando)}.")
+        else:
+            print("\nDRY-RUN: no se envio nada. Agrega --enviar cuando este OK.")
         return 0
+
+    # 4c. con --a-las: fijar la hora de entrega diferida y CONFIRMARLA antes de enviar. Si no quedo la hora pedida
+    #     (medido 11/10/2026: mal escrita queda 3 h corrida), el mail no sale.
+    if cuando:
+        ok, motivo, it = mailDiferido.programar(it, cuando, releer=lambda x: ns.GetItemFromID(x.EntryID))
+        if not ok:
+            print(f"\nABORTA, no se envio nada: {motivo}.")
+            return 1
+        print(f"\n  Hora de salida fijada en el borrador y confirmada por dos vias: {mailDiferido.texto_aviso(cuando)}")
+    antes_de_enviar = datetime.datetime.now()
+
+    def ultimos_enviados(n=40):
+        """Los enviados mas nuevos primero (ordenados por Outlook), para buscar ESTE mail sin recorrer toda la carpeta."""
+        lista = []
+        try:
+            col = ns.GetDefaultFolder(5).Items
+            col.Sort("[SentOn]", True)
+            x = col.GetFirst()
+            while x is not None and len(lista) < n:
+                lista.append(x)
+                x = col.GetNext()
+        except Exception:
+            pass
+        return lista
+
+    def sacar_hora_si_sigue_en_borradores():
+        """Si el envio no llego a hacerse, el borrador quedo con la hora puesta: se la saca, o lo dice bien fuerte."""
+        for b in mailDiferido.del_mismo_asunto(drafts.Items, cand['asunto'], normalizar_asunto):
+            if mailDiferido.hora_puesta(b):
+                if mailDiferido.quitar(b):
+                    print("  El borrador sigue en Borradores: le saque la hora programada, quedo como estaba.")
+                else:
+                    print("  *** OJO: el borrador sigue en Borradores CON UNA HORA PROGRAMADA y no pude sacarsela. ***")
+                    print("  *** Si se manda a mano, no sale en el momento. Mirarlo antes de tocarlo.             ***")
 
     # 5. enviar — vigilado: si Outlook saca el cartel de seguridad, el Send() se queda
     #    bloqueado esperando un clic y el script se colgaba MUDO hasta el timeout.
-    _, cartel = vigilando(it.Send, descripcion='el envio')
+    try:
+        _, cartel = vigilando(it.Send, descripcion='el envio')
+    except Exception as e:
+        if not cuando:
+            raise
+        print(f"\n*** EL ENVIO FALLO despues de fijar la hora: {e}")
+        sacar_hora_si_sigue_en_borradores()
+        return 1
     if cartel:
         print("  (hubo cartel de seguridad de Outlook y se respondio; sigo)")
     try:
@@ -504,27 +587,76 @@ def main() -> int:
     except Exception as e:
         print(f"  (SendAndReceive aviso: {e})")
 
-    # 6. verificar DE VERDAD que salio
+    # 6a. con --a-las no se espera a que salga: se mira DONDE QUEDO y se dice lo que se ve, sin suponer.
+    if cuando:
+        estado, texto = 'no-aparece', ''
+        for i in range(6):
+            time.sleep(5)
+            estado, texto = mailDiferido.donde_quedo(out.Items, ultimos_enviados(), cand['asunto'], cand['para'],
+                                                     cuando, normalizar_asunto, desde=antes_de_enviar)
+            if estado != 'no-aparece':
+                break
+        anotado = True
+        try:
+            mailDiferido.registrar(PROGRAMADOS, dict(
+                asunto=cand['asunto'], para=cand['para'], cc=cand['cc'], adjuntos=cand['adjuntos'],
+                a_las=cuando.strftime(mailDiferido.FORMATO), pedido=antes_de_enviar.strftime('%Y-%m-%d %H:%M:%S'),
+                estado=estado, visto=texto))
+        except Exception as e:
+            anotado = False
+            print(f"  (no pude anotar en {PROGRAMADOS}: {e})")
+        if estado == 'programado':
+            print(f"\nPROGRAMADO — {cand['asunto']}: {texto}.")
+            print(f"  Para: {cand['para']}   CC: {cand['cc']}")
+            print("  Sale solo a esa hora, sin volver a pasar por los controles. Sin verificar: si Outlook tiene que estar")
+            print("  abierto a esa hora, y como se cancela (lo esperable: en Outlook, Bandeja de salida, pasarlo a Borradores;")
+            print("  ese borrador conserva la hora).")
+            if anotado:
+                print(f"  Anotado en {PROGRAMADOS}")
+            return 0
+        print(f"\n*** NO QUEDO PROGRAMADO COMO SE PIDIO — {cand['asunto']}: {texto}.")
+        if estado == 'salio':
+            return 4          # ya salio: NO es un «reintentar»
+        if estado == 'no-aparece':
+            sacar_hora_si_sigue_en_borradores()
+        return 1
+
+    # 6. verificar DE VERDAD que salio. Se mira la cola de ESTE asunto, no la cola entera: un mail programado de otro
+    #    tema que espera su hora en la Bandeja de salida no es este mail y no puede hacerlo figurar como trabado.
+    #    Un item de la cola que no se deja leer cuenta como «sigue en cola».
+    en_cola = mailDiferido.sigue_en_cola(out.Items, cand['asunto'], normalizar_asunto)
     for i in range(24):
-        if out.Items.Count == 0:
+        if not en_cola:
             break
         time.sleep(5)
-    if out.Items.Count:
-        x = out.Items.Item(1)
+        en_cola = mailDiferido.sigue_en_cola(out.Items, cand['asunto'], normalizar_asunto)
+    if en_cola:
+        x = en_cola[0]
         try:
             f = x.PropertyAccessor.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x0E070003")
             print(f"\n*** SIGUE EN COLA. PR_MESSAGE_FLAGS=0x{f:08X} "
                   f"UNSENT={bool(f & 0x08)} SUBMIT={bool(f & 0x04)}")
-            if f & 0x08 and not f & 0x04:
+            h = mailDiferido.hora_puesta(x)
+            if h:
+                print(f"    Tiene una hora de entrega programada ({mailDiferido.texto_aviso(h)}): espera esa hora. No mandarlo de nuevo.")
+            elif f & 0x08 and not f & 0x04:
                 print("    Es un borrador parado en la Bandeja de salida: no va a salir nunca.")
                 print("    Se destraba moviendolo a Borradores y haciendo Send() desde ahi.")
         except Exception:
-            print("\n*** SIGUE EN COLA (no pude leer los flags)")
+            print("\n*** SIGUE EN COLA (no pude leer el item ni sus flags)")
         return 1
 
-    sent = ns.GetDefaultFolder(5).Items
-    sent.Sort("[SentOn]", True)
-    x = sent.GetFirst()
+    # el mail que se muestra como prueba es ESTE (mismo asunto, enviado despues de mandar), no el primero de Enviados
+    x = None
+    for i in range(6):
+        x = mailDiferido.en_enviados(ultimos_enviados(), cand['asunto'], normalizar_asunto, antes_de_enviar)
+        if x is not None:
+            break
+        time.sleep(5)
+    if x is None:
+        print(f"\nSALIO DE LA COLA — {cand['asunto']}: ya no esta en la Bandeja de salida, pero todavia NO lo veo en Enviados.")
+        print("  Mirar Enviados antes de dar nada por hecho. No mandarlo de nuevo sin mirar.")
+        return 0
     print(f"\nENVIADO — [{x.SentOn}] {x.Subject}")
     print(f"  Para: {x.To}   CC: {x.CC}")
     print(f"  Adj : {[x.Attachments.Item(k + 1).FileName for k in range(x.Attachments.Count)]}")

@@ -61,6 +61,42 @@ Microsoft de Fak, asi que ahi no se puede probar: el link va en el borrador y Fa
 aprobar el envio (la seccion de arriba ya lo obliga a verlo). Un archivo de mas de ~20 MB no va
 adjunto: va el link.
 
+## Programar la salida para una hora: `--a-las` — 11/10/2026 (cola HOY-19i)
+
+Fak, 01/10/2026 23:13: *"programale el mail... para enviarse mañana 8am"*. Se hace con el mismo circuito:
+
+```bash
+python scripts/_mailEnviar.py --buscar "<asunto>" --a-las "2026-10-12 08:00"            # dry-run: dice la hora
+python scripts/_mailEnviar.py --buscar "<asunto>" --a-las "2026-10-12 08:00" --enviar
+```
+
+- **Nada del control se afloja**: el OK de Fak después de ver el borrador, los destinatarios, el gerente, los
+  duplicados y la voz corren igual. Lo único distinto es que, justo antes del envío, al borrador se le fija la hora de
+  entrega diferida de Outlook, se relee por dos vías y, si no quedó la hora pedida, **no sale**.
+- **Los controles corren al programar, no a la hora de salida**: si un dato cambia después, el mail sale igual. Por
+  eso no se programa a más de 14 días, y una hora pasada o a menos de 5 minutos se rechaza.
+- **La hora se escribe con cuidado** (medido el 11/10/2026 sobre un borrador de prueba): escrita «pelada» queda
+  **3 horas corrida** (pedí 08:00, quedó 11:00); el módulo la escribe como Outlook la devuelve y la confirma.
+  Si no se confirma por las dos vías, o si el envío falla después de fijarla, al borrador se le saca la hora (y si
+  no se puede, lo dice fuerte: un borrador con hora puesta mandado a mano no sale en el momento).
+- **Un envío común (sin `--a-las`) no manda un borrador que ya trae una hora programada**: aborta y la nombra.
+- **Después del envío no se espera a que salga**: se mira dónde quedó. «PROGRAMADO» se dice solo si se lo vio en la
+  Bandeja de salida con esa hora. Si quedó con otra hora, no figura como entregado o no aparece, sale con 1; si ya
+  figura en Enviados (salió en el momento), sale con 4. En ninguno de esos casos se manda de nuevo sin mirar Outlook.
+  Queda anotado en `.mail-cache/programados.jsonl`.
+- **Mientras espera, el control de la Bandeja de salida frena otro mail del mismo asunto**, y dice que hay uno
+  programado. **Cancelarlo es a mano y no está probado**: lo esperable es pasarlo de la Bandeja de salida a
+  Borradores (ese borrador conserva la hora). No hay comando.
+- La verificación de «salió» de un envío común mira la cola de **ese asunto**, no la cola entera (un programado de
+  otro tema que espera su hora no lo hace figurar como trabado); un ítem de la cola que no se deja leer cuenta como
+  «sigue en cola»; y «ENVIADO» muestra **ese** mail, buscado en Enviados por asunto y hora, no el primero de la lista.
+- ⚠ **Sin verificar** (no se mandó ningún mail al hacerlo): todo lo de después del envío. Que el programado quede en
+  la Bandeja de salida hasta la hora, cómo figura ahí, si Outlook tiene que estar abierto a esa hora y cómo se
+  cancela. **La primera vez va a la casilla de Fak, con él mirando**, antes de usarlo con un mail de verdad.
+
+Lógica en `scripts/_lib/mailDiferido.py` (no manda nada); test `__tests__/scripts/mailDiferido.test.mjs` (38 casos con
+un Outlook de mentira, y que el circuito siga teniendo un solo envío, con la hora fijada antes y solo con `--a-las`).
+
 ## Quien aprieta Enviar cuando hay varias sesiones — 2026-08-31
 
 **El OK de Fak para un mail no se acepta reenviado por otra sesion.** Ni siquiera de la
