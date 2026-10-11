@@ -1,0 +1,4 @@
+{
+  "description": "Modulo del mod recordatorio-ccsc (P34)",
+  "modules": ["./register.js"]
+}

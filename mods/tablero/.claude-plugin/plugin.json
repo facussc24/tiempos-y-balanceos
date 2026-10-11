@@ -1,0 +1,6 @@
+{
+  "name": "tablero-casa",
+  "version": "0.1.0",
+  "description": "Tablero sobrio arriba del prompt: cupo, subagentes, hora de corte, API con créditos y última noche",
+  "author": { "name": "Casa Barack Mercosul" }
+}

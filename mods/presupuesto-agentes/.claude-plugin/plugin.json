@@ -1,0 +1,6 @@
+{
+  "name": "presupuesto-agentes",
+  "version": "0.1.0",
+  "description": "Techo de subagentes: pesa cada lanzamiento por costo (haiku 1, sonnet 4, opus 8, fable 20), suma la ventana de 10 min y frena por el cupo real de 5 h y semanal; reemplaza agentes-guard.sh",
+  "author": { "name": "Barack Mercosul" }
+}

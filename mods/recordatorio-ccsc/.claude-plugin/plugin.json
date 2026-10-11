@@ -1,0 +1,6 @@
+{
+  "name": "recordatorio-ccsc",
+  "version": "0.1.0",
+  "description": "Le recuerda al modelo el criterio de caracteristicas especiales (CC/SC) cuando el turno toca siglas o flujogramas; una vez por hora como mucho, sin frenar nada",
+  "author": { "name": "Barack Mercosul" }
+}

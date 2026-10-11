@@ -1,0 +1,4 @@
+{
+  "description": "El módulo del tablero",
+  "modules": ["./register.mjs"]
+}

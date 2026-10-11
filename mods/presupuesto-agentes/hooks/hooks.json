@@ -1,0 +1,4 @@
+{
+  "description": "Modulo del mod presupuesto-agentes (P33)",
+  "modules": ["./register.js"]
+}
