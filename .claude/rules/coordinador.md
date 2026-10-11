@@ -37,6 +37,15 @@ desde afuera es lo que muestra el cartel) y como se mide que arranco bien (`node
 <id>`): skill **`lanzar-sesion-hija`**. Un mensaje por `send_message` SI entra a una sesion lanzada asi
 (medido el 10/10: «delivered» con la hija en turno; «queued» o «undelivered» si esta parada: se lee el resultado).
 
+**La hija hereda la hora de la que la lanza (10/10/2026, cola P41b):** con `--lanzada`, si la sesión que arma el
+encargo tiene una hora de trabajo vigente (`trabajar-hasta-la-hora.md`; la sesión sale de `CLAUDE_CODE_SESSION_ID` y sin ese id no se adivina otra),
+el ARRANQUE suma como punto 2 el comando `node scripts/_lib/permisoGuard.mjs --heredar <id de la madre>`, y el JSON
+del encargo guarda `hereda` (`madre`, `hasta`, `lista`). La hija se anota y el hook `permiso-guard` le aplica la hora
+de la madre: un cartel de permiso con nadie en la ventana se contesta solo y queda en la lista de la madre. **No se le
+fija una hora propia**: con una, `hora-guard` no la dejaría cerrar el turno antes de la hora de la madre, y su trabajo
+es un entregable. Sin hora vigente en la que lanza, el renglón no sale. Qué hijas se anotaron:
+`node scripts/_lib/permisoGuard.mjs --heredadas`. Tests: `encargo.test.mjs` y `permisoGuard.test.mjs`.
+
 ## Los 7 candados, uno por error real
 
 | # | Regla | Nace de |

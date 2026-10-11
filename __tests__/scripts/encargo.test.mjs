@@ -20,8 +20,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   armarTexto, lineasArranque, parseArgs, validarEncargo, validarArranque, skillsDisponibles,
-  detectarSegundaTarea, detectarIrreversibles,
+  detectarSegundaTarea, detectarIrreversibles, horaDeLaMadre,
 } from '../../scripts/_encargo.mjs';
+import { spawnSync } from 'node:child_process';
+import { fijar, terminar, enLocal, vigente } from '../../scripts/_lib/horaGuard.mjs';
 import { decidir } from '../../scripts/_lib/coordinadorGuard.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -94,6 +96,91 @@ describe('plantilla de arranque · lo que Fak tipeaba a mano sale fijo', () => {
     expect(parseArgs(['--a', 'barackmercosul-c9', '--lanzada']).lanzada).toBe(true);
   });
 
+  describe('--lanzada con una hora de trabajo vigente en la que lanza: la hija la hereda (10/10/2026, cola P41b)', () => {
+    const MADRE = 'ae95ec7e-065a-4443-9058-d97fa9820e10';
+    const hereda = { madre: MADRE, hasta: '2026-10-11 23:00', lista: 'C:\\Dev\\BarackMercosul\\docs\\drafts\\LISTA_ORQUESTADOR_2026-10-10.md' };
+
+    it('VERDE: el punto 2 del ARRANQUE trae el comando con el id de la madre, su hora y su lista; el resto se corre un numero', () => {
+      const t = armarTexto({ ...base(), lanzada: true, hereda });
+      expect(t).toMatch(/1\. Esta sesión la lanzó OTRA sesión/);
+      expect(t).toContain(`2. La sesión que te lanzó tiene una hora de trabajo fijada por Fak (hasta las 2026-10-11 23:00)`);
+      expect(t).toContain(`con este comando, tal cual: node scripts/_lib/permisoGuard.mjs --heredar ${MADRE} · Con eso,`);
+      expect(t).toContain(`queda anotado en la lista de la que te lanzó (${hereda.lista})`);
+      expect(t).toMatch(/No fijes una hora propia y no lances un latido/);
+      expect(t).toMatch(/3\. Carpeta de la tarea: ninguna declarada/);
+      expect(t).toMatch(/5\. Al cerrar:/);
+      expect(t).not.toMatch(/\{hasta\}|\{madre\}|\{lista\}|\{hereda\}/);
+    });
+
+    it('ROJO: sin hora vigente en la que lanza (hereda null) el renglon no aparece; tampoco sin --lanzada ni con --sin-arranque', () => {
+      for (const t of [armarTexto({ ...base(), lanzada: true }), armarTexto({ ...base(), lanzada: true, hereda: null }), armarTexto({ ...base(), hereda }), armarTexto({ ...base(), lanzada: true, hereda, sinArranque: true }), armarTexto({ ...base(), lanzada: true, hereda: { madre: MADRE } })]) {
+        expect(t).not.toMatch(/--heredar|hora de trabajo fijada/);
+      }
+      expect(armarTexto({ ...base(), lanzada: true })).toMatch(/2\. Carpeta de la tarea/);
+    });
+
+    it('el encargo con el renglon pasa los candados del guardian (ni segunda tarea, ni irreversible) y el guardian lo deja salir', () => {
+      const t = armarTexto({ ...base(), lanzada: true, hereda });
+      expect(detectarSegundaTarea(t)).toEqual([]);
+      expect(detectarIrreversibles(t)).toEqual([]);
+      const r = decidir(
+        { tool_name: 'SendMessage', tool_input: { to: 'barackmercosul-c9', message: t } },
+        { hayEscape: () => false, leerEncargo: () => ({ id: 'E260905-abcd', texto: t, cerrado: null }) },
+      );
+      expect(r.ok, JSON.stringify(r)).toBe(true);
+    });
+
+    it('horaDeLaMadre: lee la hora de la sesion que arma el encargo (CLAUDE_CODE_SESSION_ID); sin hora vigente, null', () => {
+      const home = fs.mkdtempSync(path.join(os.tmpdir(), 'encargo-hora-'));
+      try {
+        const lista = path.join(home, 'lista.md'); fs.writeFileSync(lista, '# lista\n');
+        const en3h = new Date(Date.now() + 3 * 3600 * 1000);
+        expect(fijar({ sesion: MADRE, hasta: en3h, lista, home }).ok).toBe(true);
+        // VERDE: la madre tiene hora -> { madre, hasta, lista }
+        expect(horaDeLaMadre({ vigente, env: { CLAUDE_CODE_SESSION_ID: MADRE }, home })).toEqual({ madre: MADRE, hasta: enLocal(en3h), lista: path.resolve(lista) });
+        // ROJO: otra sesion, sin hora propia, no toma la de la madre
+        expect(horaDeLaMadre({ vigente, env: { CLAUDE_CODE_SESSION_ID: 'otra-sesion-sin-hora' }, home })).toBe(null);
+        // ROJO: la hora ya vencio, o se cerro
+        expect(horaDeLaMadre({ vigente, env: { CLAUDE_CODE_SESSION_ID: MADRE }, home, ahora: new Date(Date.now() + 4 * 3600 * 1000) })).toBe(null);
+        // ROJO: sin el id de la sesion NO se adivina otra (con dos sesiones con hora, la mas reciente no era la madre)
+        expect(horaDeLaMadre({ vigente, env: {}, home })).toBe(null);
+        expect(horaDeLaMadre({ vigente, env: { CLAUDE_CODE_SESSION_ID: 'x; rm' }, home })).toBe(null);
+        // sin la funcion de la hora (el modulo no cargo) tampoco: el encargo sale sin el renglon
+        expect(horaDeLaMadre({ env: { CLAUDE_CODE_SESSION_ID: MADRE }, home })).toBe(null);
+        expect(terminar({ sesion: MADRE, porque: 'Fak dijo que pare, ya esta', home }).ok).toBe(true);
+        expect(horaDeLaMadre({ vigente, env: { CLAUDE_CODE_SESSION_ID: MADRE }, home })).toBe(null);
+      } finally { fs.rmSync(home, { recursive: true, force: true }); }
+    });
+
+    it('por la linea de comandos: con hora vigente el texto y el JSON del encargo guardan la hora heredada; sin hora, hereda es null', () => {
+      const home = fs.mkdtempSync(path.join(os.tmpdir(), 'encargo-cli-'));
+      const creados = [];
+      try {
+        const lista = path.join(home, 'lista.md'); fs.writeFileSync(lista, '# lista\n');
+        expect(fijar({ sesion: MADRE, hasta: new Date(Date.now() + 3 * 3600 * 1000), lista, home }).ok).toBe(true);
+        const correr = (sesion) => spawnSync('node', [path.join(RAIZ, 'scripts', '_encargo.mjs'), '--a', 'prueba-hija-p41b', '--entregable', 'Prueba del renglon de la hora heredada', '--origen', 'continuidad',
+          '--cuerpo', 'Prueba del test encargo.test.mjs: no hay nada que hacer con este texto.', '--sin-supuestos', '--lanzada'],
+        { encoding: 'utf8', env: { ...process.env, HOME: home, USERPROFILE: home, CLAUDE_CODE_SESSION_ID: sesion } });
+        const con = correr(MADRE);
+        expect(con.status, con.stderr).toBe(0);
+        const id = con.stdout.match(/^\[ENCARGO (E[\w-]+)\]/)[1]; creados.push(id);
+        expect(con.stdout).toContain(`--heredar ${MADRE} · Con eso,`);
+        const j = JSON.parse(fs.readFileSync(path.join(RAIZ, '.claude', 'state', 'encargos', `${id}.json`), 'utf8'));
+        expect(j.hereda).toMatchObject({ madre: MADRE, lista: path.resolve(lista) });
+        expect(j.texto).toBe(con.stdout.trimEnd());
+        const sin = correr('una-sesion-sin-hora');
+        expect(sin.status, sin.stderr).toBe(0);
+        const id2 = sin.stdout.match(/^\[ENCARGO (E[\w-]+)\]/)[1]; creados.push(id2);
+        expect(sin.stdout).not.toMatch(/--heredar/);
+        expect(JSON.parse(fs.readFileSync(path.join(RAIZ, '.claude', 'state', 'encargos', `${id2}.json`), 'utf8')).hereda).toBe(null);
+      } finally {
+        // los encargos de prueba se CIERRAN (nada se borra: regla del propio _encargo.mjs), para no dejar abiertos
+        for (const id of creados) spawnSync('node', [path.join(RAIZ, 'scripts', '_encargo.mjs'), '--cerrar', id], { encoding: 'utf8' });
+        fs.rmSync(home, { recursive: true, force: true });
+      }
+    });
+  });
+
   it('el texto completo pasa los candados del guardian: ni conector de segunda tarea, ni accion irreversible, ni autorizacion reenviada', () => {
     const t = armarTexto({ ...base(), carpeta: 'C:\\Escritorio\\Tarea', skills: skillsDisponibles() });
     expect(detectarSegundaTarea(t)).toEqual([]);
@@ -107,7 +194,7 @@ describe('plantilla de arranque · lo que Fak tipeaba a mano sale fijo', () => {
 
   it('cada linea de la plantilla, sola, tampoco dispara un candado (una linea nueva se prueba aca antes de ir al canon)', () => {
     const P = CANON.plantillaArranque;
-    for (const l of [...P.lineas, P.lineaLanzada, P.conCarpeta, P.sinCarpeta, P.conSkills, P.titulo]) {
+    for (const l of [...P.lineas, P.lineaLanzada, P.lineaHeredaHora, P.conCarpeta, P.sinCarpeta, P.conSkills, P.titulo]) {
       expect(detectarSegundaTarea(l), l).toEqual([]);
       expect(detectarIrreversibles(l), l).toEqual([]);
     }

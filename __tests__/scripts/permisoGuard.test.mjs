@@ -181,6 +181,120 @@ describe('permiso-guard — decide (las dos direcciones)', () => {
   });
 });
 
+describe('permiso-guard — una sesion LANZADA hereda la hora de la que la lanzo (cola P41b)', () => {
+  const MADRE = 'madre-con-hora-0001';
+  const hija = (extra = {}) => pedido({ session_id: 'hija-lanzada-0001', ...extra });
+
+  it('VERDE: una hija que no se anoto no tiene hora, aunque la madre si: no decide', () => {
+    fijar(MADRE);
+    expect(P.decidir(hija(), { home })).toEqual({ niega: false, motivo: 'sin_hora' });
+  });
+
+  it('ROJO: la hija se anota (--heredar) y un cartel suyo se niega y queda en la lista de la MADRE', () => {
+    fijar(MADRE);
+    const h = P.heredar({ sesion: 'hija-lanzada-0001', madre: MADRE, home });
+    expect(h).toMatchObject({ ok: true, madre: MADRE, hora: { lista: path.resolve(lista) } });
+    const r = P.decidir(hija(), { home });
+    expect(r.niega).toBe(true);
+    expect(r.motivo).toBe('nadie_en_la_ventana_hora_de_la_madre');
+    expect(r.salida.hookSpecificOutput.decision.message).toContain('Fak le pidió a la sesión que te lanzó trabajar hasta las');
+    expect(seccion()).toMatch(/Cartel negado .* · Bash: `git push origin main` · sesión hija-lan; no había nadie en la ventana/);
+    // la hija NO queda con una hora propia: hora-guard no la obliga a seguir hasta la hora de la madre
+    expect(H.vigente('hija-lanzada-0001', { home })).toBe(null);
+    expect(H.decidirStop({ session_id: 'hija-lanzada-0001', last_assistant_message: 'Terminé. Resumen final.' }, { home }).ok).toBe(true);
+  });
+
+  it('la hija sigue a la madre: si la madre termina su hora, la hija deja de negar; si la vuelve a fijar, niega otra vez', () => {
+    fijar(MADRE);
+    P.heredar({ sesion: 'hija-lanzada-0001', madre: MADRE, home });
+    expect(P.decidir(hija(), { home }).niega).toBe(true);
+    expect(H.terminar({ sesion: MADRE, porque: 'Fak dijo que pare, ya esta', home }).ok).toBe(true);
+    expect(P.decidir(hija({ tool_input: { command: 'echo 2' } }), { home }).motivo).toBe('sin_hora');
+    fijar(MADRE);
+    expect(P.decidir(hija({ tool_input: { command: 'echo 3' } }), { home }).niega).toBe(true);
+  });
+
+  it('VERDE: si Fak le escribe a la hija en SU ventana, esta: el cartel se le muestra', () => {
+    fijar(MADRE);
+    P.heredar({ sesion: 'hija-lanzada-0001', madre: MADRE, home });
+    expect(P.decidir(hija({ transcript_path: registroConFak(1) }), { home }).motivo).toBe('fak_presente');
+  });
+
+  it('un solo nivel: la hija de una hija no hereda de la abuela; y la hora propia le gana a la heredada', () => {
+    fijar(MADRE);
+    P.heredar({ sesion: 'hija-lanzada-0001', madre: MADRE, home });
+    P.heredar({ sesion: 'nieta-0001', madre: 'hija-lanzada-0001', home });
+    expect(P.horaPara('nieta-0001', { home })).toBe(null);
+    fijar('hija-lanzada-0001');
+    expect(P.horaPara('hija-lanzada-0001', { home }).heredada_de).toBeUndefined();
+  });
+
+  it('la anotacion vence a los 14 dias: una hija vieja no hereda una hora nueva de la madre', () => {
+    P.heredar({ sesion: 'hija-lanzada-0001', madre: MADRE, home, ahora: new Date(Date.now() - 15 * 86400000) });
+    fijar(MADRE);
+    expect(P.horaPara('hija-lanzada-0001', { home })).toBe(null);
+    expect(P.decidir(hija(), { home }).motivo).toBe('sin_hora');
+    P.heredar({ sesion: 'hija-lanzada-0001', madre: MADRE, home, ahora: new Date(Date.now() - 13 * 86400000) });
+    expect(P.horaPara('hija-lanzada-0001', { home }).heredada_de).toBe(MADRE);
+  });
+
+  it('ROJO: el cartel es por el PROPIO comando de anotarse (hija en modo normal, sin anotar): el hook la anota y lo dice, no la deja colgada', () => {
+    fijar(MADRE);
+    const r = P.decidir(hija({ tool_input: { command: `node scripts/_lib/permisoGuard.mjs --heredar ${MADRE}` } }), { home });
+    expect(r.niega).toBe(true);
+    expect(r.motivo).toBe('anotada_por_el_hook');
+    expect(r.salida.hookSpecificOutput.decision).toMatchObject({ behavior: 'deny' });
+    expect(r.salida.hookSpecificOutput.decision.message).toContain('ya no hace falta correrlo: quedaste anotada como lanzada por la sesión madre-co');
+    expect(P.horaPara('hija-lanzada-0001', { home }).heredada_de).toBe(MADRE);
+    expect(fs.readFileSync(lista, 'utf8')).toBe(LISTA_REAL);          // no es un pendiente para Fak: no se anota en la lista
+    // el cartel siguiente ya se niega como el de cualquier hija anotada
+    expect(P.decidir(hija(), { home }).motivo).toBe('nadie_en_la_ventana_hora_de_la_madre');
+  });
+
+  it('VERDE: el comando de anotarse NO anota si la madre no tiene hora, si viene con algo pegado, o si es otro comando que lo nombra', () => {
+    const cmd = `node scripts/_lib/permisoGuard.mjs --heredar ${MADRE}`;
+    expect(P.decidir(hija({ tool_input: { command: cmd } }), { home }).motivo).toBe('sin_hora');   // la madre sin hora
+    fijar(MADRE);
+    for (const c of [`${cmd} && git push origin main`, `echo x; ${cmd}`, `${cmd} --sesion otra-sesion-0001`, `cat nota.txt # ${cmd}`, `node otro/permisoGuard.mjs --heredar ${MADRE}`]) {
+      expect(P.decidir(hija({ tool_input: { command: c } }), { home }), c).toEqual({ niega: false, motivo: 'sin_hora' });
+    }
+    expect(fs.existsSync(P.rutaHeredadas(home))).toBe(false);
+  });
+
+  it('por la linea de comandos: un punto pegado al id no rompe (el renglon del encargo puede terminar la oracion ahi); otra opcion no es un id', () => {
+    fijar(MADRE);
+    const env = { ...process.env, HOME: home, USERPROFILE: home, CLAUDE_CODE_SESSION_ID: 'hija-lanzada-0001' };
+    const correr = (...args) => spawnSync('node', [path.join(RAIZ, 'scripts', '_lib', 'permisoGuard.mjs'), ...args], { encoding: 'utf8', env });
+    expect(correr('--heredar', `${MADRE}.`).status).toBe(0);
+    expect(P.horaPara('hija-lanzada-0001', { home }).heredada_de).toBe(MADRE);
+    const mal = correr('--heredar', '--sesion', 'otra-sesion-0001');
+    expect(mal.status).toBe(1);
+    expect(correr('--heredadas').stdout).toContain('hija-lan ← madre-co');
+  });
+
+  it('--heredar rechaza lo que no es un id de sesion, y no deja a una sesion ser su propia madre', () => {
+    expect(P.heredar({ sesion: '', madre: MADRE, home }).ok).toBe(false);
+    expect(P.heredar({ sesion: 'hija-lanzada-0001', madre: '', home }).ok).toBe(false);
+    expect(P.heredar({ sesion: 'hija-lanzada-0001', madre: 'abc; rm -rf', home }).ok).toBe(false);
+    expect(P.heredar({ sesion: 'hija-lanzada-0001', madre: 'hija-lanzada-0001', home }).ok).toBe(false);
+    expect(fs.existsSync(P.rutaHeredadas(home))).toBe(false);
+  });
+
+  it('por la linea de comandos, como lo corre la hija: toma su sesion de CLAUDE_CODE_SESSION_ID y despues el hook real la niega', () => {
+    fijar(MADRE);
+    const env = { ...process.env, HOME: home, USERPROFILE: home, CLAUDE_CODE_SESSION_ID: 'hija-lanzada-0001' };
+    const r = spawnSync('node', [path.join(RAIZ, 'scripts', '_lib', 'permisoGuard.mjs'), '--heredar', MADRE], { encoding: 'utf8', env });
+    expect(r.status, r.stderr).toBe(0);
+    expect(r.stdout).toContain('Anotado: te lanzó la sesión madre-co, que tiene hora de trabajo hasta las');
+    const hook = spawnSync('bash', [path.join(RAIZ, '.claude', 'hooks', 'permiso-guard.sh')], { input: JSON.stringify(hija()), encoding: 'utf8', env });
+    expect(hook.status).toBe(0);
+    expect(JSON.parse(hook.stdout).hookSpecificOutput.decision.behavior).toBe('deny');
+    expect(seccion()).toContain('sesión hija-lan');
+    const sinMadre = spawnSync('node', [path.join(RAIZ, 'scripts', '_lib', 'permisoGuard.mjs'), '--heredar'], { encoding: 'utf8', env });
+    expect(sinMadre.status).toBe(1);
+  });
+});
+
 describe('permiso-guard — el renglon en la lista', () => {
   it('el mismo pedido repetido no suma renglones; uno distinto si', () => {
     fijar('prueba-permiso');

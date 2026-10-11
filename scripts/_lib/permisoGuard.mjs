@@ -65,6 +65,58 @@ export function registrar(campos, { home, ahora = new Date() } = {}) {
   } catch { return false; }
 }
 
+// ---------------------------------------------------------------------------------------------
+// 0. La hora de una sesion LANZADA por otra: la de la que la lanzo (cola P41b, 10/10/2026)
+// ---------------------------------------------------------------------------------------------
+//
+// La hora de trabajar-hasta es por sesion y solo la tiene la que hablo con Fak (el orquestador). Una sesion que ESA
+// lanza no tiene hora propia, asi que un cartel suyo quedaba colgado igual que antes (auditor de P41: el caso del
+// 04/10 eran cuatro sesiones lanzadas). No se le fija una hora propia: con una, `hora-guard` no la dejaria cerrar el
+// turno antes de la hora de la madre, y su trabajo es UN entregable. Se anota de quien es hija y este hook, si la
+// sesion no tiene hora, mira la de la madre: si la madre termina o renueva su hora, la hija lo sigue sola.
+// La anota la propia hija al arrancar (`--heredar <madre>`): el renglon lo pone `_encargo.mjs --lanzada`.
+
+export const rutaHeredadas = (home = os.homedir()) => path.join(home, '.claude', '.permiso-heredado.json');
+/** El comando de anotarse, entero y solo (nada antes ni despues): `node scripts/_lib/permisoGuard.mjs --heredar <id>`. */
+const RE_HEREDAR = /^node\s+"?(?:[^\s"&|;<>]*[\\/])?scripts[\\/]_lib[\\/]permisoGuard\.mjs"?\s+--heredar\s+([A-Za-z0-9_-]{6,80})[.]?$/;
+const DIAS_HEREDADA = 14;
+function leerHeredadas(home) {
+  try { const j = JSON.parse(fs.readFileSync(rutaHeredadas(home), 'utf8')); return j && typeof j === 'object' && !Array.isArray(j) ? j : {}; } catch { return {}; }
+}
+/** Anota que `sesion` fue lanzada por `madre`. No exige que la madre tenga hora en este momento (puede fijarla despues). */
+export function heredar({ sesion, madre, home, ahora = new Date() } = {}) {
+  const limpio = (s) => String(s || '').trim();
+  if (!limpio(sesion)) return { ok: false, error: 'no sé de qué sesión soy (CLAUDE_CODE_SESSION_ID o --sesion <id>)' };
+  if (!limpio(madre) || !/^[A-Za-z0-9_-]{6,80}$/.test(limpio(madre))) return { ok: false, error: 'falta el id de la sesión que te lanzó (--heredar <id>)' };
+  if (limpio(madre) === limpio(sesion)) return { ok: false, error: 'la sesión que te lanzó no podés ser vos' };
+  try {
+    const todo = leerHeredadas(home);
+    for (const [s, v] of Object.entries(todo)) if (!v || !Number.isFinite(v.ms) || ahora.getTime() - v.ms > DIAS_HEREDADA * 86400000) delete todo[s];
+    todo[limpio(sesion)] = { madre: limpio(madre), cuando: enLocal(ahora), ms: ahora.getTime() };
+    const p = rutaHeredadas(home);
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    const tmp = `${p}.${process.pid}.tmp`;
+    fs.writeFileSync(tmp, `${JSON.stringify(todo, null, 2)}\n`, 'utf8');
+    fs.renameSync(tmp, p);
+    const e = vigente(limpio(madre), { ahora, home });
+    return { ok: true, madre: limpio(madre), hora: e ? { hasta: e.hasta, lista: e.lista || null } : null };
+  } catch (e) { return { ok: false, error: String((e && e.message) || e) }; }
+}
+/**
+ * La hora que vale para una sesion: la suya, o la de la sesion que la lanzo (un solo nivel: la hija de una hija no
+ * hereda de la abuela). Devuelve el estado (con `heredada_de` cuando viene de la madre) o null.
+ */
+export function horaPara(sesion, { ahora = new Date(), home } = {}) {
+  const propia = vigente(sesion, { ahora, home });
+  if (propia) return propia;
+  const h = sesion ? leerHeredadas(home)[sesion] : null;
+  if (!h || typeof h.madre !== 'string' || h.madre === sesion) return null;
+  // la anotacion vence sola: una hija de hace semanas no hereda una hora nueva de la madre (auditor P41b)
+  if (!Number.isFinite(h.ms) || ahora.getTime() - h.ms > DIAS_HEREDADA * 86400000) return null;
+  const deMadre = vigente(h.madre, { ahora, home });
+  return deMadre ? { ...deMadre, heredada_de: h.madre } : null;
+}
+
 /** Cuantos permisos nego este hook a esa sesion en los ultimos minutos (del registro). Si no se puede leer, 0. */
 export function negadasRecientes(sesion, { home, ahora = new Date(), minutos = CANON.ventana_repetidos_min } = {}) {
   try {
@@ -292,8 +344,20 @@ export function decidir(payload, deps = {}) {
   if (payload.hook_event_name && payload.hook_event_name !== 'PermissionRequest') return { niega: false, motivo: 'otro_evento' };
   if (typeof payload.tool_name !== 'string' || !payload.tool_name.trim()) return { niega: false, motivo: 'sin_herramienta' };
   const ahora = deps.ahora || new Date();
-  const e = vigente(payload.session_id, { ahora, home: deps.home });
-  if (!e) return { niega: false, motivo: 'sin_hora' };
+  let e = horaPara(payload.session_id, { ahora, home: deps.home });
+  if (!e) {
+    // El cartel es por el PROPIO comando de anotarse (una hija en modo normal, todavia sin anotar): sin esto quedaria
+    // colgada justo en el paso que la protege (auditor P41b). Si la madre que nombra tiene hora vigente, el hook la
+    // anota el mismo y sigue como con cualquier otro cartel. Anotar solo habilita a NEGAR: no se permite nada.
+    const m = payload.tool_input && typeof payload.tool_input.command === 'string' ? payload.tool_input.command.trim().match(RE_HEREDAR) : null;
+    if (m && payload.session_id && vigente(m[1], { ahora, home: deps.home }) && heredar({ sesion: payload.session_id, madre: m[1], home: deps.home, ahora }).ok) {
+      e = horaPara(payload.session_id, { ahora, home: deps.home });
+      if (e && !fakPresente(payload.transcript_path, { ahora, leer: deps.ultimoDeFak }).presente) {
+        return { niega: true, motivo: 'anotada_por_el_hook', herramienta: 'Bash', resumen: resumenDe(payload), salida: salidaDeny(`${MARCA} No hay nadie en la ventana para aprobar este comando, pero ya no hace falta correrlo: quedaste anotada como lanzada por la sesión ${m[1].slice(0, 8)} (hora de trabajo hasta las ${e.hasta}). Seguí con el encargo. Si más adelante la app te muestra un cartel de permiso, se va a contestar «no» y va a quedar anotado en la lista de la que te lanzó.`) };
+      }
+    }
+    if (!e) return { niega: false, motivo: 'sin_hora' };
+  }
   const { herramienta, resumen, clave, renglon } = renglonDe(payload, { ahora });
   if (esPregunta(payload.tool_name)) return { niega: false, motivo: 'es_una_pregunta', herramienta, resumen };
   const pres = fakPresente(payload.transcript_path, { ahora, leer: deps.ultimoDeFak });
@@ -304,8 +368,9 @@ export function decidir(payload, deps = {}) {
     : `No lo pude anotar en la lista (${anotado.como === 'sin_lista' ? 'la hora fijada no tiene un archivo de lista' : anotado.como === 'tope' ? 'ya hay muchos carteles negados anotados' : 'no se pudo escribir'}): anotalo vos en «Lo que necesita a Fak», con la herramienta y lo que pedía.`;
   const van = negadasRecientes(payload.session_id, { home: deps.home, ahora }) + 1;
   const repetido = van >= CANON.aviso_repetidos ? ` Ya van ${van} permisos negados en ${CANON.ventana_repetidos_min} minutos en esta sesión: dejá de intentar cosas que piden permiso y pasá a un trabajo que no lo necesite.` : '';
-  const mensaje = `${MARCA} No hay nadie en la ventana: Fak pidió trabajar hasta las ${e.hasta} y este permiso (${herramienta}) no lo va a aprobar nadie ahora, así que se contesta «no» en vez de quedar esperando. ${donde} ${NO_ESQUIVAR}${repetido}`;
-  return { niega: true, motivo: 'nadie_en_la_ventana', anotado, herramienta, resumen, van, salida: salidaDeny(mensaje) };
+  const quien = e.heredada_de ? `Fak le pidió a la sesión que te lanzó trabajar hasta las ${e.hasta}` : `Fak pidió trabajar hasta las ${e.hasta}`;
+  const mensaje = `${MARCA} No hay nadie en la ventana: ${quien} y este permiso (${herramienta}) no lo va a aprobar nadie ahora, así que se contesta «no» en vez de quedar esperando. ${donde} ${NO_ESQUIVAR}${repetido}`;
+  return { niega: true, motivo: e.heredada_de ? 'nadie_en_la_ventana_hora_de_la_madre' : 'nadie_en_la_ventana', anotado, herramienta, resumen, van, salida: salidaDeny(mensaje) };
 }
 
 /** Corre el hook sobre el texto crudo de stdin. Devuelve lo que hay que imprimir ('' = nada). No tira nunca. */
@@ -323,7 +388,7 @@ export function correr(crudo, deps = {}) {
     // Se rompio. Si para ESA sesion hay una hora vigente y no es una pregunta, no decidir es dejar el cartel colgado:
     // se niega igual, con un motivo generico. Si no se puede saber si hay hora, no se decide.
     let hora = null;
-    try { hora = obj && typeof obj.tool_name === 'string' && obj.tool_name.trim() && !esPregunta(obj.tool_name) ? vigente(obj.session_id, { home: deps.home }) : null; } catch { hora = null; }
+    try { hora = obj && typeof obj.tool_name === 'string' && obj.tool_name.trim() && !esPregunta(obj.tool_name) ? horaPara(obj.session_id, { home: deps.home }) : null; } catch { hora = null; }
     registrar(['ERROR', hora ? 'se_rompio_niega_igual' : 'se_rompio', sesion, '', (obj && obj.tool_name) || '', String((e && e.stack) || e)], { home: deps.home });
     if (!hora) return '';
     return JSON.stringify(salidaDeny(`${MARCA} No hay nadie en la ventana: Fak pidió trabajar hasta las ${hora.hasta} y este permiso no lo va a aprobar nadie ahora. El control falló al anotarlo: anotalo vos en «Lo que necesita a Fak» de la lista, con la herramienta y lo que pedía. ${NO_ESQUIVAR}`));
@@ -345,9 +410,25 @@ if (comoScript) {
     process.stdin.on('data', (d) => { raw += d; });
     process.stdin.on('end', () => { const out = correr(raw); if (out) process.stdout.write(out); process.exitCode = 0; });
     process.stdin.on('error', () => { registrar(['ERROR', 'sin_stdin', '', '', '', '']); process.exitCode = 0; });
+  } else if (process.argv.includes('--heredar')) {
+    // lo corre una sesion LANZADA por otra, al arrancar: `--heredar <id de la que la lanzo>`
+    const i = process.argv.indexOf('--heredar'); const j = process.argv.indexOf('--sesion');
+    // un punto o una coma pegados al id (el renglon del encargo termina la oracion ahi) no son parte del id; y lo
+    // que sigue a --heredar no puede ser otra opcion
+    const valor = (k) => { const v = k >= 0 ? String(process.argv[k + 1] || '') : ''; return v.startsWith('--') ? '' : v.replace(/[.,;:)]+$/, ''); };
+    const r = heredar({ sesion: valor(j) || process.env.CLAUDE_CODE_SESSION_ID, madre: valor(i) });
+    if (!r.ok) { console.log(`✗ ${r.error}`); process.exitCode = 1; } else {
+      console.log(r.hora
+        ? `Anotado: te lanzó la sesión ${r.madre.slice(0, 8)}, que tiene hora de trabajo hasta las ${r.hora.hasta}. Si la app te muestra un cartel de permiso y no hay nadie, se contesta «no» y queda anotado en ${r.hora.lista || 'el registro (esa hora no tiene lista)'}. No fijes una hora propia ni lances un latido.`
+        : `Anotado: te lanzó la sesión ${r.madre.slice(0, 8)}. Ahora no tiene una hora de trabajo vigente, así que un cartel de permiso se muestra como siempre; si la fija, vale también para vos.`);
+    }
+  } else if (process.argv.includes('--heredadas')) {
+    const todo = leerHeredadas();
+    const filas = Object.entries(todo).filter(([, v]) => v && typeof v === 'object').map(([s, v]) => { const e = horaPara(s); return `${s.slice(0, 8)} ← ${String(v.madre).slice(0, 8)} (${v.cuando}) · ${e ? `hora vigente hasta las ${e.hasta}` : 'sin hora vigente'}`; });
+    console.log(filas.length ? filas.join('\n') : 'Ninguna sesión lanzada anotó de quién es hija.');
   } else if (process.argv.includes('--registro')) {
     try { console.log(fs.readFileSync(rutaRegistro(), 'utf8').trimEnd().split('\n').slice(-40).join('\n')); } catch { console.log('El registro está vacío: el hook todavía no corrió en esta PC.'); }
   } else {
-    console.log('uso: --hook (stdin: JSON de PermissionRequest) | --registro');
+    console.log('uso: --hook (stdin: JSON de PermissionRequest) | --heredar <id de la sesión que te lanzó> [--sesion <id>] | --heredadas | --registro');
   }
 }

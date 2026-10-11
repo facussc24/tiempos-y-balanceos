@@ -95,7 +95,9 @@ una hora. Lo que sí está probado: el script, la señal, el control en las dos 
   números en `permisoCanon.data.json`): con una hora vigente para ESA sesión y sin una señal de Fak en los últimos
   3 minutos (un mensaje suyo o su respuesta a una pregunta), un cartel de permiso se contesta solo con «no» y el pedido queda anotado en «Lo que necesita a Fak» de
   la lista (`- **Cartel negado…**`); el motivo dice que no se consiga lo mismo por otro lado. Sin hora, con Fak en la
-  ventana o ante una pregunta (`AskUserQuestion`) no decide. Nunca contesta «sí». Cada corrida deja una línea en
+  ventana o ante una pregunta (`AskUserQuestion`) no decide. Nunca contesta «sí». Una sesión LANZADA por la que tiene
+  la hora la hereda (cola P41b): se anota con `permisoGuard.mjs --heredar <id>` (el renglón lo pone
+  `_encargo.mjs --lanzada`), sin hora propia ni latido, y sus carteles negados van a la lista de la madre. Cada corrida deja una línea en
   `~/.claude/.permiso-guard.log` (`node scripts/_lib/permisoGuard.mjs --registro`). Límites: en «omitir permisos» la
   app casi no muestra carteles, así que ahí casi no corre; y ⚠ **no se lo vio correr en una sesión real** (la línea
   de comandos no tiene la sesión iniciada): la primera línea del registro es la prueba. Test `permisoGuard.test.mjs`.

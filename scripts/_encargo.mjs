@@ -34,6 +34,9 @@
  *   La linea 1 del ARRANQUE pasa de "entra en modo plan" a "NO entres en modo plan": el modo plan
  *   espera un clic que nadie va a dar (la hija de la madrugada del 10/10 quedo parada asi). El QUE
  *   ya lo aprueba el encargo; el plan corto va al chat.
+ *   Y si la sesion que arma el encargo tiene una hora de trabajo vigente (trabajar-hasta-la-hora.md), el ARRANQUE
+ *   suma el renglon para que la hija se anote como lanzada por ella (`permisoGuard.mjs --heredar <id>`, cola P41b):
+ *   el hook permiso-guard le aplica la hora de la madre. El JSON del encargo guarda `hereda`.
  *
  *   node scripts/_encargo.mjs --origen hallazgo --hallazgo "<linea>" --carpeta "<carpeta>"
  *        (no arma encargo: lo anota en el HALLAZGOS.md de esa carpeta y devuelve la ruta)
@@ -282,23 +285,41 @@ export function skillsDisponibles(raiz = RAIZ) {
  * Con `lanzada` la primera linea es `lineaLanzada` (NO entrar en modo plan: la sesion la lanzo otra
  * sesion y Fak no esta para aprobar el plan); las demas quedan iguales.
  */
-export function lineasArranque({ carpeta, skills = [], sinArranque = false, lanzada = false } = {}) {
+export function lineasArranque({ carpeta, skills = [], sinArranque = false, lanzada = false, hereda = null } = {}) {
   if (sinArranque) return [];
   const P = CANON.plantillaArranque;
   const lista = [...new Set(skills)];   // --skill repetido no se imprime dos veces
   const out = [P.titulo];
   let n = 0;
-  const lineas = lanzada ? [P.lineaLanzada, ...P.lineas.slice(1)] : P.lineas;
+  // Con `lanzada` y una hora vigente en la que lanza (`hereda`), el punto 2 le dice a la hija que se anote como hija
+  // de esa sesion (cola P41b): el hook permiso-guard le aplica la hora de la madre. Sin `lanzada` no sale nunca.
+  const conHora = lanzada && hereda && hereda.madre && hereda.hasta;
+  const lineas = lanzada ? [P.lineaLanzada, ...(conHora ? ['{hereda}'] : []), ...P.lineas.slice(1)] : P.lineas;
   for (const l of lineas) {
     let texto = l;
-    if (l === '{carpeta}') texto = carpeta ? P.conCarpeta.replace('{carpeta}', carpeta) : P.sinCarpeta;
+    if (l === '{hereda}') texto = P.lineaHeredaHora.replace('{hasta}', () => hereda.hasta).replace('{madre}', () => hereda.madre).replace('{lista}', () => hereda.lista || 'esa hora no tiene un archivo de lista: queda en el registro');
+    else if (l === '{carpeta}') texto = carpeta ? P.conCarpeta.replace('{carpeta}', carpeta) : P.sinCarpeta;
     else if (l === '{skills}') { if (!lista.length) continue; texto = P.conSkills.replace('{skills}', lista.join(', ')); }
     out.push(`  ${++n}. ${texto}`);
   }
   return out;
 }
 
-export function armarTexto({ id, a, entregable, origen, etapa, cuerpo, fuentes, condicionales, supuestos, okFak, hora, carpeta, skills = [], sinArranque = false, lanzada = false }) {
+/**
+ * La hora de trabajo vigente de la sesion que ARMA el encargo (la madre), para que una hija lanzada la herede.
+ * La sesion sale de CLAUDE_CODE_SESSION_ID, que Claude Code le da a cada comando. Si no viene, o ese id no tiene
+ * una hora vigente, devuelve null: NO se adivina otra sesion (auditor P41b: con dos sesiones con hora, la «mas
+ * reciente» no era la madre, y a la hija le quedaba atada la hora de una sesion que no la lanzo).
+ * `vigente` es la funcion de scripts/_lib/horaGuard.mjs: la pasa quien llama (main la importa en el momento), para
+ * que este archivo, que tambien carga el guardian del coordinador, no dependa del canon de la hora al cargarse.
+ */
+export function horaDeLaMadre({ vigente, env = process.env, home, ahora = new Date() } = {}) {
+  const id = String(env.CLAUDE_CODE_SESSION_ID || '').trim();
+  if (typeof vigente !== 'function' || !/^[A-Za-z0-9_-]{6,80}$/.test(id)) return null;
+  try { const e = vigente(id, { ahora, home }); return e ? { madre: id, hasta: e.hasta, lista: e.lista || null } : null; } catch { return null; }
+}
+
+export function armarTexto({ id, a, entregable, origen, etapa, cuerpo, fuentes, condicionales, supuestos, okFak, hora, carpeta, skills = [], sinArranque = false, lanzada = false, hereda = null }) {
   const L = [];
   L.push(`[ENCARGO ${id}]`);
   L.push(`PARA: ${a}`);
@@ -326,7 +347,7 @@ export function armarTexto({ id, a, entregable, origen, etapa, cuerpo, fuentes, 
     L.push(`OK REENVIADO — NO habilita a enviar nada por tu cuenta. Fak dijo${hora ? `, ${hora}` : ''}, textual: "${okFak}"`);
     L.push('Si lo que sigue es un envio de mail o algo irreversible, la autorizacion te la tiene que dar el a vos, en tu ventana.');
   }
-  const arranque = lineasArranque({ carpeta, skills, sinArranque, lanzada });
+  const arranque = lineasArranque({ carpeta, skills, sinArranque, lanzada, hereda });
   if (arranque.length) { L.push(''); L.push(...arranque); }
   L.push('');
   L.push('Si algo de este encargo no cierra, PARA y avisame antes de seguir.');
@@ -405,7 +426,7 @@ export function validarArranque(a, { existe = fs.existsSync, disponibles = skill
   return errores;
 }
 
-function main() {
+async function main() {
   const a = parseArgs(process.argv.slice(2));
   fs.mkdirSync(DIR_ESTADO, { recursive: true });
 
@@ -459,7 +480,13 @@ function main() {
   }
 
   const id = `E${new Date().toISOString().slice(2, 10).replace(/-/g, '')}-${crypto.randomBytes(2).toString('hex')}`;
+  // P41b: una hija lanzada hereda la hora de trabajo de la que la lanza (solo con --lanzada y con arranque)
+  let hereda = null;
+  if (a.lanzada && !a['sin-arranque']) {
+    try { const H = await import('./_lib/horaGuard.mjs'); hereda = horaDeLaMadre({ vigente: H.vigente }); } catch { hereda = null; }   // sin el modulo de la hora el encargo sale igual, sin el renglon
+  }
   const texto = armarTexto({
+    hereda,
     id, a: a.a, entregable: a.entregable, origen: a.origen, etapa: a.etapa, cuerpo: a.cuerpo,
     fuentes: (a.fuente || []).filter((f) => f !== true),
     condicionales: (a['fuente-condicional'] || []).filter((f) => f !== true),
@@ -475,6 +502,7 @@ function main() {
     id, a: a.a, entregable: a.entregable, origen: a.origen, etapa: a.etapa || null,
     carpeta: a.carpeta && a.carpeta !== true ? a.carpeta : null, skills: [...new Set((a.skill || []).filter((s) => s !== true))],
     lanzada: !!a.lanzada,
+    hereda,     // { madre, hasta, lista } si la hija hereda la hora de la que la lanza; null si no
     creado: new Date().toISOString(), hash: hashCuerpo(texto), cerrado: null,
     // El texto completo queda guardado para que el guardian compare LITERAL lo que se manda
     // contra lo que se valido. Sin esto, escribir el marcador a mano alcanzaria para pasar.
@@ -483,7 +511,9 @@ function main() {
 
   console.log(texto);
   console.error(`\n[registrado ${id} — pegá el texto TAL CUAL; si lo editás, el guardián lo bloquea por hash]`);
+  if (hereda) console.error(`[la hija hereda la hora de trabajo de la sesión ${hereda.madre.slice(0, 8)} (hasta las ${hereda.hasta})]`);
+  else if (a.lanzada && !a['sin-arranque']) console.error('[esta sesión no tiene una hora de trabajo vigente (o no vino CLAUDE_CODE_SESSION_ID): el ARRANQUE no lleva el renglón de heredar la hora]');
   return 0;
 }
 
-if (process.argv[1]?.endsWith('_encargo.mjs')) process.exit(main());
+if (process.argv[1]?.endsWith('_encargo.mjs')) process.exit(await main());
