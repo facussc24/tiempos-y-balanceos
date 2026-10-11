@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {
   lineaInteresaResumen, eventosDeHerramienta, leerSesion, parsearGitLog, argumentosGitLog, relativaA,
-  cotejarConGit, armarPagina, resumirSesion, elegirSesion, diaLocal, main,
+  cotejarConGit, armarPagina, armarHtml, carpetaDe, resumirSesion, elegirSesion, diaLocal, main,
 } from '../../scripts/_resumenSesion.mjs';
 import { lineasInteresantes, lineaInteresa } from '../../scripts/_lib/transcriptsFak.mjs';
 
@@ -165,5 +165,72 @@ describe('main (CLI)', () => {
     const c = await main(['--archivo', ruta, '--salida', salida, '--cotejar'], { ejecutar: () => GIT_MAL, tz: 'UTC', consola, noEsDeFak: NO_ES_DE_FAK });
     expect(c).toBe(2);
     await expect(main(['--loquesea'], { consola, noEsDeFak: NO_ES_DE_FAK })).rejects.toThrow(/desconocido/);
+  });
+});
+
+describe('la página para leer (HTML)', () => {
+  const consola = { log() {}, error() {} };
+  const base = { sesion: 'abc12345-0000', cwd: CWD, dia: '2026-10-09', tz: 'UTC', cargas: [] };
+  const commit = (hash, fecha, asunto, archivos) => ({ hash, fecha, asunto, archivos });
+
+  it('verde: lo pedido y lo guardado en orden de hora, los números arriba y los archivos por carpeta', async () => {
+    const s = await leerSesion(ruta, { noEsDeFak: NO_ES_DE_FAK });
+    const html = resumirSesion(s, { ejecutar: () => GIT_OK, tz: 'UTC' }).html();
+    expect(html).toMatch(/^<!doctype html>/);
+    expect(html).toContain('<h1>Sesión del 09/10/2026</h1>');
+    expect(html).toContain('<b>1</b><span>pedido tuyo</span>');
+    expect(html).toContain('<b>2</b><span>archivos tocados</span>');
+    expect(html).toContain('Armá la página de la sesión');
+    expect(html.indexOf('>Pediste<')).toBeLessThan(html.indexOf('>Quedó guardado<'));
+    expect(html).toContain('<p class="bien">Sí: el cambio guardado tiene todos sus archivos');
+    expect(html).toContain('<summary>scripts · 1 archivo</summary>');
+    expect(html).not.toMatch(/https?:\/\//);   // un solo archivo, sin nada de afuera
+    expect(html).not.toContain('Intentar nuevamente');   // el botón de la app no es un pedido
+  });
+
+  it('rojo: lo que se escribe en un pedido no se vuelve HTML, y la barra vertical va pelada', () => {
+    const html = armarHtml({ ...base, mensajes: [{ fecha: '2026-10-09T13:00:00.000Z', texto: 'poné <b>esto</b> & "eso" | lo otro <script>alert(1)</script>' }], eventos: [], commits: [] });
+    expect(html).toContain('poné &lt;b&gt;esto&lt;/b&gt; &amp; &quot;eso&quot; | lo otro &lt;script&gt;alert(1)&lt;/script&gt;');
+    expect(html).not.toContain('<script>');
+    expect(html).toContain('Ese día no se guardó ningún cambio');
+  });
+
+  it('una sesión que cruza la medianoche dice cuándo cambia el día', () => {
+    const html = armarHtml({ ...base, eventos: [], commits: [], mensajes: [
+      { fecha: '2026-10-09T23:50:00.000Z', texto: 'antes de las doce' }, { fecha: '2026-10-10T00:10:00.000Z', texto: 'después de las doce' }] });
+    const donde = ['<strong>09/10/2026</strong>', 'antes de las doce', '<strong>10/10/2026</strong>', 'después de las doce'].map((t) => html.indexOf(t));
+    expect(donde[0]).toBeGreaterThan(0);
+    expect(donde).toEqual(donde.slice().sort((x, y) => x - y));
+  });
+
+  it('los cambios guardados con archivos que la sesión no tocó se avisan, hasta seis y «y N más»', () => {
+    const commits = Array.from({ length: 9 }, (_, i) => commit(`h${i}`, `2026-10-09T1${i}:00:00.000Z`, `cambio ${i}`, [`otra/carpeta/a${i}.md`]));
+    const html = armarHtml({ ...base, mensajes: [], eventos: [], commits });
+    expect(html).toContain('9 cambios guardados traen archivos que esta sesión no tocó');
+    expect(html).toContain('· cambio 5</li>');
+    expect(html).not.toContain('· cambio 6</li>');
+    expect(html).toContain('y 3 más');
+  });
+
+  it('sin nada: la página igual se arma y lo dice', () => {
+    const html = armarHtml({ ...base, mensajes: [], eventos: [], commits: [] });
+    expect(html).toContain('No hay pedidos ni cambios guardados ese día.');
+    expect(html).toContain('<b>0</b><span>pedidos tuyos</span>');
+  });
+
+  it('carpetaDe agrupa a dos niveles', () => {
+    expect(carpetaDe('scripts/_lib/x.mjs')).toBe('scripts/_lib');
+    expect(carpetaDe('docs/a.md')).toBe('docs');
+    expect(carpetaDe('package.json')).toBe('(raíz)');
+    expect(carpetaDe('a\\b\\c\\d.txt')).toBe('a/b');
+  });
+
+  it('main: --salida-html escribe la página al lado del Markdown; sin --html no la escribe', async () => {
+    const md = path.join(dir, 'p3.md');
+    const html = path.join(dir, 'p3.html');
+    expect(await main(['--archivo', ruta, '--salida', md], { ejecutar: () => GIT_OK, tz: 'UTC', consola, noEsDeFak: NO_ES_DE_FAK })).toBe(0);
+    expect(fs.existsSync(html)).toBe(false);
+    expect(await main(['--archivo', ruta, '--salida', md, '--salida-html', html], { ejecutar: () => GIT_OK, tz: 'UTC', consola, noEsDeFak: NO_ES_DE_FAK })).toBe(0);
+    expect(fs.readFileSync(html, 'utf8')).toContain('<h1>Sesión del 09/10/2026</h1>');
   });
 });

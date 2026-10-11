@@ -16,6 +16,11 @@
  *   node scripts/_resumenSesion.mjs --sesion 3f2a          # por prefijo del id (busca en lo tocado desde --fecha)
  *   node scripts/_resumenSesion.mjs --archivo <ruta.jsonl> # un transcript puntual
  *   --salida <ruta.md>   dónde escribir (por defecto .sgc-cache/resumen-sesion/<día>_<id8>.md)
+ *   --html               además, la página para LEER: lo pedido y lo guardado en orden de hora, los archivos por carpeta
+ *                        (por defecto al lado del Markdown, .sgc-cache/resumen-sesion/<día>_<id8>.html; no va a
+ *                        exports/: nombra rutas de `.claude/` y copia los pedidos tal cual, y exports/ es para los
+ *                        documentos de la empresa, que el control de firmas revisa)
+ *   --salida-html <ruta> lo mismo, en esa ruta
  *   --cotejar            código de salida 2 si algún commit del día tiene archivos que la sesión no tocó
  */
 import fs from 'node:fs';
@@ -241,13 +246,117 @@ export function armarPagina({ sesion, ruta, cwd, dia, mensajes, cargas, eventos,
   return { pagina: L.join('\n'), cotejo, archivos, filas };
 }
 
+// ── La página para leer (HTML) ────────────────────────────────────────────────
+
+const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const TOPE_LISTA = 6;   // lo que entra en una lista de aviso antes de «y N más»
+/** `recortar` deja el texto listo para una celda de Markdown (escapa la barra vertical); en la página HTML esa barra va pelada. */
+const sinBarraDeTabla = (t) => String(t).split('\\|').join('|');
+const diaLargo = (dia) => { const [a, m, d] = String(dia).split('-'); return `${d}/${m}/${a}`; };
+/** La carpeta de un archivo, a dos niveles (`scripts/_lib`, `docs`), para agrupar sin mostrar 200 renglones. */
+export const carpetaDe = (ruta) => { const p = String(ruta).replace(/\\/g, '/').split('/'); return p.length === 1 ? '(raíz)' : p.slice(0, Math.min(2, p.length - 1)).join('/'); };
+
+const ESTILO = `
+  :root { --tinta: #1c2430; --suave: #5b6675; --raya: #dfe4ea; --fondo: #f6f7f9; --pedido: #0b5cad; --guardado: #1d7a46; --aviso: #a15c00; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fondo); color: var(--tinta); font: 16px/1.5 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 900px; margin: 0 auto; padding: 28px 16px 60px; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 19px; margin: 34px 0 10px; }
+  .sub { color: var(--suave); margin: 0 0 18px; }
+  .numeros { display: flex; flex-wrap: wrap; gap: 12px; }
+  .numero { flex: 1 1 160px; background: #fff; border: 1px solid var(--raya); border-radius: 10px; padding: 12px 16px; }
+  .numero b { display: block; font-size: 30px; line-height: 1.1; }
+  .numero span { color: var(--suave); font-size: 14px; }
+  ol.tiempo { list-style: none; margin: 0; padding: 0; }
+  ol.tiempo li { display: grid; grid-template-columns: 58px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--raya); }
+  .hora { color: var(--suave); font-variant-numeric: tabular-nums; }
+  ol.tiempo li.dia { border-bottom: 2px solid var(--tinta); padding: 18px 0 6px; }
+  .aviso ul { margin: 6px 0 0; padding-left: 20px; }
+  .que { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .pedido .que { color: var(--pedido); }
+  .guardado .que { color: var(--guardado); }
+  .texto { margin: 2px 0 0; overflow-wrap: anywhere; }
+  .archivos { color: var(--suave); font-size: 14px; margin: 2px 0 0; overflow-wrap: anywhere; }
+  .aviso { background: #fff7e8; border: 1px solid #f0d9a8; border-radius: 10px; padding: 12px 16px; color: var(--aviso); }
+  .bien { background: #edf8f1; border: 1px solid #bfe3cc; border-radius: 10px; padding: 12px 16px; color: var(--guardado); }
+  details { background: #fff; border: 1px solid var(--raya); border-radius: 10px; margin: 8px 0; padding: 8px 14px; }
+  summary { cursor: pointer; font-weight: 600; }
+  details ul { margin: 8px 0 4px; padding-left: 20px; overflow-wrap: anywhere; }
+  code { font: 14px Consolas, monospace; }
+  @media print { body { background: #fff; } details { break-inside: avoid; } }
+`;
+
+/**
+ * La misma sesión, para LEERLA: lo que Fak pidió y lo que quedó guardado, en orden de hora, con los archivos agrupados
+ * por carpeta y plegados. Sale de los mismos datos que el Markdown (no hay relato ni resumen escrito por nadie): la
+ * tabla completa, comando por comando, sigue estando en el .md. Un solo archivo, sin nada de afuera, se imprime bien.
+ */
+export function armarHtml({ sesion, cwd, dia, mensajes, eventos, commits, tz }) {
+  const base = cwd || RAIZ_REPO;
+  const archivos = resumirArchivos(eventos, base);
+  const cotejo = cotejarConGit(archivos.map((a) => a.ruta), commits);
+  const h = (iso) => horaLocal(iso, tz);
+  const filas = [
+    ...mensajes.map((m) => ({ fecha: m.fecha, clase: 'pedido', que: 'Pediste', texto: sinBarraDeTabla(recortar(m.texto, 400)), archivos: [] })),
+    ...cotejo.commits.map((c) => ({ fecha: c.fecha, clase: 'guardado', que: 'Quedó guardado', texto: c.asunto, archivos: c.archivos })),
+  ].sort(porFecha);
+  const porCarpeta = new Map();
+  for (const a of archivos) { const k = carpetaDe(a.ruta); porCarpeta.set(k, [...(porCarpeta.get(k) ?? []), a]); }
+  const sinGuardar = cotejo.soloEnSesion;
+  const ajenos = cotejo.commits.filter((c) => c.faltan.length);
+  const L = ['<!doctype html>', '<html lang="es">', '<head>', '<meta charset="utf-8">', '<meta name="viewport" content="width=device-width, initial-scale=1">',
+    `<title>Sesión del ${esc(diaLargo(dia))}</title>`, `<style>${ESTILO}</style>`, '</head>', '<body>', '<main>',
+    `<h1>Sesión del ${esc(diaLargo(dia))}</h1>`,
+    `<p class="sub">Qué pediste, qué archivos se tocaron y qué quedó guardado. Sesión <code>${esc(String(sesion).slice(0, 8))}</code>.</p>`,
+    '<div class="numeros">',
+    `<div class="numero"><b>${mensajes.length}</b><span>${mensajes.length === 1 ? 'pedido tuyo' : 'pedidos tuyos'}</span></div>`,
+    `<div class="numero"><b>${archivos.length}</b><span>${archivos.length === 1 ? 'archivo tocado' : 'archivos tocados'}</span></div>`,
+    `<div class="numero"><b>${commits.length}</b><span>${commits.length === 1 ? 'cambio guardado ese día' : 'cambios guardados ese día'}</span></div>`,
+    '</div>',
+    '<h2>En orden de hora</h2>'];
+  if (!filas.length) L.push('<p class="sub">No hay pedidos ni cambios guardados ese día.</p>');
+  else {
+    L.push('<ol class="tiempo">');
+    let diaAnterior = null;
+    for (const f of filas) {
+      // una sesión puede cruzar la medianoche: cuando cambia el día se dice, si no las horas parecen volver atrás
+      const d = diaLocal(f.fecha, tz);
+      if (d && d !== diaAnterior) { L.push(`<li class="dia"><span></span><strong>${esc(diaLargo(d))}</strong></li>`); diaAnterior = d; }
+      L.push(`<li class="${f.clase}"><span class="hora">${esc(h(f.fecha))}</span><div><span class="que">${f.que}</span><p class="texto">${esc(f.texto)}</p>`
+        + (f.archivos.length ? `<p class="archivos">${f.archivos.length === 1 ? '1 archivo' : `${f.archivos.length} archivos`}: ${f.archivos.slice(0, 6).map((a) => `<code>${esc(a)}</code>`).join(', ')}${f.archivos.length > 6 ? ` y ${f.archivos.length - 6} más` : ''}</p>` : '')
+        + '</div></li>');
+    }
+    L.push('</ol>');
+  }
+  L.push('<h2>¿Lo guardado coincide con lo que se tocó?</h2>');
+  if (!commits.length) L.push('<p class="sub">Ese día no se guardó ningún cambio: no hay nada que comparar.</p>');
+  else if (!ajenos.length) L.push(`<p class="bien">Sí: ${commits.length === 1 ? 'el cambio guardado tiene' : `los ${commits.length} cambios guardados tienen`} todos sus archivos entre los que tocó esta sesión.</p>`);
+  else {
+    L.push(`<div class="aviso">${ajenos.length === 1 ? 'Un cambio guardado trae' : `${ajenos.length} cambios guardados traen`} archivos que esta sesión no tocó (los hizo otra sesión, o se cambiaron a mano):<ul>`
+      + ajenos.slice(0, TOPE_LISTA).map((c) => `<li>${esc(h(c.fecha))} · ${esc(sinBarraDeTabla(recortar(c.asunto, 110)))}</li>`).join('')
+      + (ajenos.length > TOPE_LISTA ? `<li>y ${ajenos.length - TOPE_LISTA} más (la lista completa está en la tabla de la sesión)</li>` : '') + '</ul></div>');
+  }
+  if (sinGuardar.length) L.push(`<p class="aviso">${sinGuardar.length === 1 ? 'Un archivo tocado no está' : `${sinGuardar.length} archivos tocados no están`} en ningún cambio guardado de ese día: ${sinGuardar.slice(0, 12).map((a) => `<code>${esc(a)}</code>`).join(', ')}${sinGuardar.length > 12 ? ` y ${sinGuardar.length - 12} más` : ''}.</p>`);
+  L.push('<h2>Archivos tocados, por carpeta</h2>');
+  if (!archivos.length) L.push('<p class="sub">Ninguno.</p>');
+  for (const [carpeta, lista] of [...porCarpeta.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))) {
+    L.push(`<details><summary>${esc(carpeta)} · ${lista.length === 1 ? '1 archivo' : `${lista.length} archivos`}</summary><ul>`
+      + lista.map((a) => `<li><code>${esc(a.ruta)}</code> · ${a.veces === 1 ? '1 vez' : `${a.veces} veces`} · ${esc(h(a.primera))}${a.ultima !== a.primera ? ` a ${esc(h(a.ultima))}` : ''}</li>`).join('')
+      + '</ul></details>');
+  }
+  L.push('</main>', '</body>', '</html>', '');
+  return L.join('\n');
+}
+
 /** De una sesión leída a la página: el día es el pedido o el del último dato con fecha; pide los commits. */
 export function resumirSesion(leida, { dia = null, ejecutar = ejecutarGit, tz } = {}) {
   const ultimo = leida.mensajes.at(-1) ?? leida.eventos.at(-1) ?? null;
   const diaFinal = dia ?? (ultimo ? diaLocal(ultimo.fecha, tz) : null);
   if (!diaFinal) throw new Error(`la sesión ${leida.sesion} no tiene fechas: no sé de qué día pedir el git log`);
   const commits = commitsDelDia(diaFinal, { ejecutar });
-  return { dia: diaFinal, ...armarPagina({ ...leida, dia: diaFinal, commits, tz }) };
+  const datos = { ...leida, dia: diaFinal, commits, tz };
+  return { dia: diaFinal, ...armarPagina(datos), html: () => armarHtml(datos) };
 }
 
 /** La sesión pedida por prefijo de id o, si no, la que más pedidos de Fak tiene en `dia`. */
@@ -262,10 +371,12 @@ export function elegirSesion(sesiones, { sesion = null, dia = null, tz } = {}) {
 }
 
 export function parsearArgs(argv) {
-  const a = { fecha: null, sesion: null, archivo: null, salida: null, cotejar: false };
+  const a = { fecha: null, sesion: null, archivo: null, salida: null, cotejar: false, html: false, salidaHtml: null };
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i];
     if (k === '--cotejar') a.cotejar = true;
+    else if (k === '--html') a.html = true;
+    else if (k === '--salida-html') { a.salidaHtml = argv[++i] ?? null; a.html = true; }
     else if (['--fecha', '--sesion', '--archivo', '--salida'].includes(k)) { a[k.slice(2)] = argv[++i] ?? null; }
     else throw new Error(`argumento desconocido: ${k}`);
   }
@@ -293,6 +404,12 @@ export async function main(argv = process.argv.slice(2), { ejecutar = ejecutarGi
   fs.mkdirSync(path.dirname(salida), { recursive: true });
   fs.writeFileSync(salida, r.pagina, 'utf8');
   consola.log(`Página: ${salida}`);
+  if (args.html) {
+    const salidaHtml = args.salidaHtml ? path.resolve(args.salidaHtml) : path.join(CARPETA_SALIDA, `${r.dia}_${String(elegida.sesion).slice(0, 8)}.html`);
+    fs.mkdirSync(path.dirname(salidaHtml), { recursive: true });
+    fs.writeFileSync(salidaHtml, r.html(), 'utf8');
+    consola.log(`Para leer: ${salidaHtml}`);
+  }
   consola.log(`${elegida.mensajes.length} pedidos · ${r.archivos.length} archivos · ${r.cotejo.commits.length} commits · cotejo ${r.cotejo.ok ? 'OK' : 'FALLA'}`);
   if (sesiones.length > 1) consola.log(`Otras sesiones vistas: ${sesiones.filter((s) => s !== elegida).map((s) => String(s.sesion).slice(0, 8)).join(', ')}`);
   return args.cotejar && !r.cotejo.ok ? 2 : 0;
