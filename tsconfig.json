@@ -42,6 +42,7 @@
     "dist",
     "src-tauri",
     "modules/old",
-    ".claude/worktrees/**"
+    ".claude/worktrees/**",
+    "mods/**/*.test.ts"
   ]
 }

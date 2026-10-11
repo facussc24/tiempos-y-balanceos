@@ -1,7 +1,7 @@
 // vitest, sin la app: solo los módulos puros. Desde la raíz del repo:
 //   npx vitest run mods/tablero/tests/tablero.test.mjs --pool=threads
 import { describe, expect, test } from 'vitest'
-import { armarCupo, leerEstado, leerLedger, leerHora, leerAgentes, msModificado, tramo } from '../hooks/estado.mjs'
+import { armarCupo, juntarAgentes, leerEstado, leerLedger, leerHora, leerAgentes, leerAgentesMod, msModificado, tramo } from '../hooks/estado.mjs'
 import { dibujar, textoPlano, faltan, usd, barra } from '../hooks/dibujo.mjs'
 
 // 11/10/2026 20:50 en hora LOCAL: los archivos de la casa están en hora local y el test
@@ -128,6 +128,34 @@ describe('rojo: sin archivos no rompe, una línea rota se saltea', () => {
 
   test('un log de agentes con basura no suma', () => {
     expect(leerAgentes('basura\n\n' + `${seg(AHORA)} Agent 2\n`, AHORA)).toEqual({ puntos: 2, lanzados: 1, tope: 40 })
+  })
+
+  test('el registro del mod presupuesto-agentes: cuenta las PERMITIR de la ventana y toma el tope de la última decisión', () => {
+    const iso = (ms) => new Date(ms).toISOString()
+    const log = [
+      `${iso(AHORA - 15 * 60_000)} agent.spawn PERMITIR investigador model=sonnet peso=4 cupo[five_hour=5%] def=x :: 4/40 puntos en la ventana`, // fuera de la ventana
+      `${iso(AHORA - 3 * 60_000)} session.start surface=desktop raiz=C:/Dev/BarackMercosul`,
+      `${iso(AHORA - 2 * 60_000)} agent.spawn PERMITIR buscador model=(definicion) peso=1 cupo[seven_day=61%] def=x :: 1/60 puntos en la ventana`,
+      `${iso(AHORA - 60_000)} agent.spawn PERMITIR auditor model=(definicion) peso=0 cupo[seven_day=61%] def=x :: auditoria final: pasa sin descontar`,
+      `${iso(AHORA - 30_000)} agent.spawn NEGAR investigador model=fable peso=20 cupo[seven_day=61%] def=x :: Presupuesto de subagentes agotado: 41/60 puntos en los ultimos 10 minutos; esta llamada pesa 20`,
+      'basura',
+    ].join('\n') + '\n'
+    expect(leerAgentesMod(log, AHORA)).toEqual({ puntos: 1, lanzados: 2, tope: 60 })
+    expect(leerAgentesMod(null, AHORA)).toEqual({ puntos: null, lanzados: null, tope: 40 })
+    expect(leerAgentesMod('', AHORA)).toEqual({ puntos: 0, lanzados: 0, tope: 40 })
+  })
+
+  test('los dos libros no se suman: vale el que más puntos tiene, con el tope que dijo el mod', async () => {
+    const bash = { puntos: 8, lanzados: 3, tope: 40 }
+    expect(juntarAgentes(bash, { puntos: null, lanzados: null, tope: 40 })).toEqual(bash)
+    expect(juntarAgentes({ puntos: null, lanzados: null, tope: 40 }, { puntos: 5, lanzados: 2, tope: 60 })).toEqual({ puntos: 5, lanzados: 2, tope: 60 })
+    expect(juntarAgentes(bash, { puntos: 8, lanzados: 3, tope: 60 })).toEqual({ puntos: 8, lanzados: 3, tope: 60 })
+    expect(juntarAgentes({ puntos: 0, lanzados: 0, tope: 40 }, { puntos: 9, lanzados: 3, tope: 40 })).toEqual({ puntos: 9, lanzados: 3, tope: 40 })
+    // de punta a punta: sin el libro del bash (el día que se retire), el tablero muestra lo del mod
+    const iso = new Date(AHORA - 60_000).toISOString()
+    const archivos = { '/casa/mods-log/presupuesto-agentes.log': `${iso} agent.spawn PERMITIR investigador model=opus peso=8 cupo[] def=x :: 8/40 puntos en la ventana\n` }
+    const s = await leerEstado(fsFalso(archivos), reloj, DONDE)
+    expect(s.agentes).toEqual({ puntos: 8, lanzados: 1, tope: 40, corriendo: 2 })
   })
 
   test('cupo sin lectura (antes del primer session.measure)', () => {

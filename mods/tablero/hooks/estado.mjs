@@ -61,6 +61,39 @@ export function leerAgentes(texto, ahora) {
   return { puntos, lanzados, tope: TOPE_PUNTOS }
 }
 
+// mods-log/presupuesto-agentes.log, el registro del mod que pesa los lanzamientos: una línea por decisión,
+// '<ISO> agent.spawn PERMITIR <tipo> model=… peso=<n> cupo[…] def=… :: <a>/<tope> puntos…'. Cuentan las
+// PERMITIR de la ventana vigente; el tope es el de la última decisión de la ventana (el mod lo baja con la
+// semana en ámbar), o el de siempre si ninguna lo dice.
+export function leerAgentesMod(texto, ahora) {
+  if (texto == null) return { puntos: null, lanzados: null, tope: TOPE_PUNTOS }
+  let puntos = 0
+  let lanzados = 0
+  let tope = TOPE_PUNTOS
+  for (const linea of texto.split('\n')) {
+    const m = /^(\S+) agent\.spawn (PERMITIR|NEGAR) .*?\bpeso=(\d+)\b/.exec(linea.trim())
+    if (!m) continue
+    const t = Date.parse(m[1])
+    if (!Number.isFinite(t) || t > ahora || ahora - t > VENTANA_AGENTES_MS) continue
+    const deLaDecision = /(\d+)\/(\d+) puntos/.exec(linea)
+    if (deLaDecision) tope = Number(deLaDecision[2])
+    if (m[2] !== 'PERMITIR') continue
+    lanzados += 1
+    puntos += Number(m[3])
+  }
+  return { puntos, lanzados, tope }
+}
+
+// Dos libros de lo mismo: el del guardián bash (.agent-spawns.log) y el del mod. Mientras conviven anotan los mismos
+// lanzamientos, así que NO se suman: vale el que más puntos tiene en la ventana (el otro quedó atrás o ya no escribe),
+// con el tope que dijo el mod si lo dijo. Sin ninguno de los dos, «sin datos».
+export function juntarAgentes(deBash, deMod) {
+  if (deBash.puntos == null) return deMod
+  if (deMod.puntos == null) return deBash
+  const base = deMod.puntos > deBash.puntos ? deMod : deBash
+  return { ...base, tope: deMod.tope }
+}
+
 // .trabajar-hasta.json: { <sesión>: { hasta, pedido, fijado_ms, cumplido? } }.
 // Vigente = sin `cumplido` y con `hasta` por delante; se prefiere la de esta sesión.
 export function leerHora(texto, ahora, sesion) {
@@ -133,8 +166,9 @@ export async function leerEstado(fs, reloj, vivo = {}) {
   const casa = vivo.casa ?? '~/.claude'
   const repo = vivo.repo ?? '.'
   const nocturno = `${repo}/.claude/state/nocturno.json`
-  const [spawns, hora, ledger, noche, nocheStat, enCurso] = await Promise.all([
+  const [spawns, spawnsMod, hora, ledger, noche, nocheStat, enCurso] = await Promise.all([
     fs.leer(`${casa}/.agent-spawns.log`),
+    fs.leer(`${casa}/mods-log/presupuesto-agentes.log`),
     fs.leer(`${casa}/.trabajar-hasta.json`),
     fs.leer(`${repo}/.sgc-cache/api/ledger_${hoy.slice(0, 7)}.jsonl`),
     fs.leer(nocturno),
@@ -145,7 +179,7 @@ export async function leerEstado(fs, reloj, vivo = {}) {
     ahora,
     identidad: { casa: vivo.nombreCasa ?? null, proyecto: vivo.proyecto ?? null },
     cupo: armarCupo(vivo.limites),
-    agentes: { ...leerAgentes(spawns, ahora), corriendo: vivo.corriendo ?? null },
+    agentes: { ...juntarAgentes(leerAgentes(spawns, ahora), leerAgentesMod(spawnsMod, ahora)), corriendo: vivo.corriendo ?? null },
     hora: leerHora(hora, ahora, vivo.sesion),
     api: { ...leerLedger(ledger, hoy), mes: hoy.slice(0, 7), enCurso: Array.isArray(enCurso) ? enCurso.length : null },
     noche: leerNoche(noche, nocheStat),

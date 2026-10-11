@@ -14,14 +14,18 @@ mods (`session.measure`) el % usado de las ventanas de 5 h y semanal, y `agent.s
 cambiar o negar el modelo de cada subagente. **Fase 3: reemplazar la ventana por un mod que pese por
 precio y frene por cupo real**; hasta entonces el presupuesto por puntos es la red de seguridad.
 
-**Fase 3, estado al 11/10/2026 (escrito por la API, auditado, NO instalado):** el mod esta ESCRITO en `mods/presupuesto-agentes/` (P33). La politica
-vive en `hooks/presupuesto.mjs` (pura, sin `$`; test `__tests__/mods/presupuesto-agentes.test.mjs`):
-replica este guardian punto por punto y suma el freno por cupo real (mas de 85 % de la ventana de 5 h o
-mas de 60 % de la semanal: no sale ningun subagente nuevo salvo la auditoria final; ese freno no tiene
-escape por archivo). Todavia NO esta instalado: la copia va en `~/.claude/mods/presupuesto-agentes/` y la
-ruta en `CLAUDE_CODE_PLUGIN_DIRS` (`env` de `~/.claude/settings.json`); mientras conviven, bash corta
-primero (PreToolUse) y el mod ve solo lo que bash dejo pasar; bash se apaga ULTIMO, tras una semana de
-registro coherente en `~/.claude/mods-log/presupuesto-agentes.log`. Pasos: `mods/presupuesto-agentes/README.md`.
+**Fase 3, instalada el 11/10/2026 (mod `presupuesto-agentes`, P33; convive con este guardian):** el mod vive en
+`mods/presupuesto-agentes/` y carga en todas las sesiones NUEVAS desde una copia fuera del repo (marketplace `mods-casa`,
+`~/.claude/mods-casa/`). La politica (`hooks/presupuesto.mjs`, pura; test `__tests__/mods/presupuesto-agentes.test.mjs`)
+replica este guardian y suma el freno por cupo real: con la ventana de 5 h por encima de 85 % o la semanal por encima
+de 60 %, no sale ningun subagente nuevo salvo la auditoria final. Ese freno tiene su escape, igual que los otros:
+`touch ~/.claude/.agent-cupo-ok` (12 h), que escribo solo con el pedido textual de Fak. Falla abierto: si el mod falla,
+la llamada pasa y decide el bash. Mientras conviven, bash corta primero (PreToolUse) y el mod ve lo que bash dejo pasar;
+el bash se apaga ULTIMO, con dos dias de registro coherente en `~/.claude/mods-log/presupuesto-agentes.log` (cada
+decision dice el cupo leido y de que carpeta salio la definicion). Instalar, ver el estado y volver atras:
+`node scripts/_modsInstalar.mjs [--aplicar | --estado | --quitar --aplicar]`; detalle en `mods/presupuesto-agentes/README.md`.
+El otro mod instalado, `tablero-casa` (HOY-25), solo muestra: cupo, agentes, hora de corte, API y noche, arriba del
+cuadro donde se escribe.
 
 Historia: techo de 5 (06/08/2026, dos incidentes de 21 y 40 agentes); 10 solo en Sonnet (Fak, 30/09);
 **08/10/2026, Fak: "ese techo de 10 lo puse yo, ni siquiera se si es correcto... es absurdo que solo se
@@ -113,6 +117,7 @@ echo 15 > ~/.claude/.agent-limit    # 15 Sonnet = 60 puntos cada 10 min (vale 12
 echo 0 > ~/.claude/.agent-limit     # apaga el CONTEO (idem, 12 h); la regla de esfuerzo sigue
 touch ~/.claude/.workflow-ok        # habilita UN Workflow (se consume al usarlo)
 touch ~/.claude/.agent-opus-ok      # 12 h: Opus y Fable descuentan como Sonnet (4)
+touch ~/.claude/.agent-cupo-ok      # 12 h: el mod deja de frenar por cupo real (5 h > 85 %, semana > 60 %)
 ```
 
 Fak no corre comandos: cuando lo pide ("usa mas agentes", "no me importa gastar tokens", "usa mas

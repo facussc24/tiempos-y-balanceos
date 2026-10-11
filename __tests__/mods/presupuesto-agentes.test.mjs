@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { PESOS, VENCE_MS, VENTANA_MS, decidir, leerFrontmatter, leerLimite } from '../../mods/presupuesto-agentes/hooks/presupuesto.mjs'
+import { PESOS, VENCE_MS, VENTANA_MS, cupoReal, decidir, leerFrontmatter, leerLimite, lineaDeRegistro } from '../../mods/presupuesto-agentes/hooks/presupuesto.mjs'
 
 const AHORA = 1_760_000_000_000
 const SONNET = { name: 'investigador', model: 'sonnet', effort: 'xhigh' }
@@ -29,6 +29,39 @@ describe('verde: deja pasar', () => {
     expect(d.estadoNuevo.lanzamientos).toHaveLength(1) // no se agrego nada
   })
 
+  test('justo en el borde no frena: 60 % semanal y 85 % de las 5 h todavia pasan', () => {
+    const d = decidir(evento({ model: 'fable', rateLimits: [{ kind: 'seven_day', percentUsed: 60 }, { kind: 'five_hour', percentUsed: 85 }] }), estado(), AHORA)
+    expect(d.accion).toBe('permitir')
+    expect(d.motivo).toContain('20/40')
+  })
+
+  test('el auditor pasa aunque su definicion no se haya encontrado o no se haya podido leer', () => {
+    const lleno = [{ kind: 'five_hour', percentUsed: 99 }, { kind: 'seven_day', percentUsed: 99 }]
+    for (const extra of [{ definicion: null }, { definicion: null, definicionError: true }]) {
+      const d = decidir(evento({ subagentType: 'auditor', model: undefined, rateLimits: lleno, ...extra }), estado(40), AHORA)
+      expect(d.accion).toBe('permitir')
+      expect(d.peso).toBe(0)
+    }
+    expect(decidir(evento({ subagentType: 'auditor-cliente', model: 'opus', definicion: null }), estado(), AHORA).accion).toBe('permitir')
+  })
+
+  test('si las definiciones no se pudieron leer no se niega por «sin definicion»: siguen el cupo y la ventana', () => {
+    const sinLeer = { definicion: null, definicionError: true }
+    const pasa = decidir(evento(sinLeer), estado(), AHORA)
+    expect(pasa.accion).toBe('permitir')
+    expect(pasa.motivo).toContain('4/40')
+    expect(decidir(evento(sinLeer), estado(40), AHORA).motivo).toContain('40/40')
+    expect(decidir(evento({ ...sinLeer, rateLimits: [{ kind: 'seven_day', percentUsed: 61 }] }), estado(), AHORA).motivo).toContain('semanal')
+  })
+
+  test('un libro con una entrada rota se repara solo: lo que no es un lanzamiento se tira', () => {
+    const roto = { lanzamientos: [null, { ts: AHORA - 60_000, tipo: 'x', modelo: 'sonnet', peso: 4 }, 'basura', { tipo: 'sin fecha' }], escapes: {} }
+    const d = decidir(evento(), roto, AHORA)
+    expect(d.accion).toBe('permitir')
+    expect(d.estadoNuevo.lanzamientos.map((l) => l.peso)).toEqual([4, 4])
+    expect(decidir(evento(), { lanzamientos: 'no es una lista', escapes: {} }, AHORA).accion).toBe('permitir')
+  })
+
   test('lo que quedo fuera de la ventana de 10 min no cuenta', () => {
     const viejo = { lanzamientos: [{ ts: AHORA - VENTANA_MS - 1, tipo: 'x', modelo: 'fable', peso: 20 }], escapes: {} }
     const d = decidir(evento({ model: 'fable' }), viejo, AHORA)
@@ -53,10 +86,14 @@ describe('rojo: niega con motivo legible', () => {
     expect(d.motivo).toContain('5 horas')
   })
 
-  test('al 61 % de la semanal tambien', () => {
-    const d = decidir(evento({ rateLimits: [{ kind: 'seven_day', percentUsed: 61 }] }), estado(), AHORA)
+  test('al 61 % de la semanal tambien: no sale ninguno, ni una busqueda en haiku', () => {
+    const semana = [{ kind: 'five_hour', percentUsed: 10 }, { kind: 'seven_day', percentUsed: 61 }]
+    const d = decidir(evento({ rateLimits: semana }), estado(), AHORA)
     expect(d.accion).toBe('negar')
     expect(d.motivo).toContain('semanal')
+    expect(d.motivo).toContain('61 %')
+    expect(d.motivo).toContain('.agent-cupo-ok')
+    expect(decidir(evento({ model: 'haiku', rateLimits: semana }), estado(), AHORA).accion).toBe('negar')
   })
 
   test('effort max se niega aunque todo lo demas este bien', () => {
@@ -91,6 +128,22 @@ describe('escapes por archivo (valen 12 h)', () => {
     expect(decidir(evento({ model: 'fable', rateLimits: [{ kind: 'five_hour', percentUsed: 86 }] }), estado(0, escapes), AHORA).accion).toBe('negar')
   })
 
+  test('.agent-cupo-ok saltea el freno por cupo real durante 12 h; vencido se ignora', () => {
+    const rojo = [{ kind: 'five_hour', percentUsed: 95 }, { kind: 'seven_day', percentUsed: 90 }]
+    const conPase = decidir(evento({ model: 'fable', rateLimits: rojo }), estado(0, { cupoOk: { mtimeMs: AHORA - 3_600_000 } }), AHORA)
+    expect(conPase.accion).toBe('permitir')
+    expect(conPase.motivo).toContain('20/40')
+    const vencido = decidir(evento({ rateLimits: rojo }), estado(0, { cupoOk: { mtimeMs: AHORA - VENCE_MS - 1 } }), AHORA)
+    expect(vencido.accion).toBe('negar')
+    expect(vencido.motivo).toContain('5 horas')
+  })
+
+  test('.agent-cupo-ok no levanta la ventana de 10 min: con 40 puntos usados un Sonnet no entra', () => {
+    const d = decidir(evento(), estado(40, { cupoOk: { mtimeMs: AHORA } }), AHORA)
+    expect(d.accion).toBe('negar')
+    expect(d.motivo).toContain('40/40')
+  })
+
   test('.agent-opus-ok hace que Opus descuente como Sonnet', () => {
     expect(decidir(evento({ model: 'opus' }), estado(0, { opusOk: { mtimeMs: AHORA } }), AHORA).peso).toBe(PESOS.sonnet)
   })
@@ -100,6 +153,28 @@ describe('escapes por archivo (valen 12 h)', () => {
     expect(decidir(builtin, estado(0, { builtinOk: { sessionId: 's1' } }), AHORA).accion).toBe('permitir')
     expect(decidir({ ...builtin, model: 'haiku' }, estado(0, { builtinOk: { sessionId: 's1' } }), AHORA).accion).toBe('negar')
     expect(decidir(builtin, estado(0, { builtinOk: { sessionId: 'otra' } }), AHORA).accion).toBe('negar')
+  })
+})
+
+describe('lectura del cupo real', () => {
+  test('toma el % mas alto de cada ventana, ignora otras ventanas y da null sin lectura', () => {
+    expect(cupoReal([{ kind: 'seven_day', percentUsed: 55 }, { kind: 'seven_day', percentUsed: 77 }, { kind: 'five_hour', percentUsed: 4 }, { kind: 'spend_limit', percentUsed: 120 }]))
+      .toEqual({ cincoHoras: 4, semana: 77 })
+    expect(cupoReal([])).toEqual({ cincoHoras: null, semana: null })
+    expect(cupoReal(undefined)).toEqual({ cincoHoras: null, semana: null })
+    expect(cupoReal([{ kind: 'five_hour' }, null])).toEqual({ cincoHoras: null, semana: null })
+  })
+
+  test('sin lectura de cupo no se frena por cupo: decide solo la ventana de 10 min', () => {
+    expect(decidir(evento({ rateLimits: [] }), estado(), AHORA).accion).toBe('permitir')
+  })
+})
+
+describe('el renglon del registro', () => {
+  test('fecha ISO, la decision en mayusculas, el peso, el cupo, de donde salio la definicion y el motivo', () => {
+    expect(lineaDeRegistro({ ahora: Date.UTC(2026, 9, 11, 13, 5, 0), accion: 'permitir', tipo: 'buscador', model: undefined, peso: 1, cupo: 'five_hour=5%', def: 'C:/x/.claude/agents', motivo: '1/40 puntos en la ventana' }))
+      .toBe('2026-10-11T13:05:00.000Z agent.spawn PERMITIR buscador model=(definicion) peso=1 cupo[five_hour=5%] def=C:/x/.claude/agents :: 1/40 puntos en la ventana')
+    expect(lineaDeRegistro({ ahora: 0, accion: 'negar', tipo: 'x', model: 'fable', peso: 20, cupo: 'sin lectura', motivo: 'm' })).toContain(' NEGAR x model=fable peso=20 cupo[sin lectura] def=sin :: m')
   })
 })
 

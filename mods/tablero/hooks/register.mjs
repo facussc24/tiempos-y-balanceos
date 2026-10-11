@@ -34,6 +34,31 @@ async function carpetaCasa($) {
   return String(perfil).replaceAll('\\', '/').replace(/\/$/, '') + '/.claude'
 }
 
+// Registro del tablero: ~/.claude/mods-log/tablero.log, un renglón cuando el mod carga y otro la PRIMERA vez que la app
+// le pide dibujar la banda (y el panel). Nadie puede mirar la pantalla desde afuera: ese renglón es la prueba de que la
+// app llamó al dibujo, con qué ancho. Acotado a 200 renglones; si no se puede escribir, el tablero sigue igual.
+let fila = Promise.resolve()
+const pedidos = new Set()   // qué sitios ya pidió dibujar la app en esta sesión
+async function anotar($, texto) {
+  const escribir = async () => {
+    try {
+      const ruta = (await carpetaCasa($)) + '/mods-log/tablero.log'
+      let previo = ''
+      try { previo = await $.fs.read(ruta) } catch { previo = '' }
+      const lineas = String(previo ?? '').split('\n').filter(Boolean).slice(-199)
+      lineas.push(`${new Date(await $.clock.now()).toISOString()} ${texto}`)
+      await $.fs.write(ruta, lineas.join('\n') + '\n')
+    } catch { /* sin registro el tablero no cambia */ }
+  }
+  fila = fila.then(escribir, escribir)   // de a uno: dos renglones a la vez se pisarían
+  return fila
+}
+function anotarPedido($, sitio, e) {
+  if (pedidos.has(sitio)) return
+  pedidos.add(sitio)
+  void anotar($, `ui.render ${sitio} ancho=${e.props?.bodyColumns ?? '?'} (primera vez que la app pide dibujarlo en esta sesion)`)
+}
+
 async function refrescar($) {
   try {
     let agentes = []
@@ -74,6 +99,7 @@ export function register(on) {
       await $.command.register({ name: 'tablero', description: 'Abre el tablero de la casa en un panel', immediate: true })
     } catch { /* sin /tablero el tablero sigue en la banda */ }
     void refrescar($) // sin await: la sesión arranca ya y la banda se llena sola
+    void anotar($, `session.start mod=${String($.plugin.root).replaceAll('\\', '/')}`)
     return next(e)
   })
 
@@ -95,6 +121,7 @@ export function register(on) {
   // La banda es compartida: lo de los otros mods va debajo del tablero, no se tapa.
   // Si el dibujo falla, la banda queda como sin este mod (lo que dibujaron los otros).
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    anotarPedido($, 'AbovePrompt', e)
     const deOtros = await next(e)
     try {
       return dibujar(estado, $.ui.resolve(e), { ancho: e.props?.bodyColumns, debajo: deOtros })
@@ -105,6 +132,7 @@ export function register(on) {
 
   on('ui.render', { component: 'Pane' }, async ($, e, next) => {
     if (e.requestId !== PANEL) return next(e)
+    anotarPedido($, 'Pane', e)
     try {
       return dibujar(estado, $.ui.resolve(e), { ancho: e.props?.bodyColumns })
     } catch {

@@ -3,7 +3,10 @@ export const PESOS = { haiku: 1, sonnet: 4, opus: 8, fable: 20 }
 export const LIMITE_DEFAULT = 10
 export const VENTANA_MS = 10 * 60_000
 export const VENCE_MS = 12 * 3_600_000 // vida de los escapes por archivo (A6, 10/09/2026)
-// Por encima de esto no sale ningun subagente nuevo salvo la auditoria final: es lo que evita el incidente del 06/08.
+// Cupo real: por encima de esto no sale ningun subagente nuevo salvo la auditoria final. El 85 % de la ventana de 5 h
+// es lo que evita otro 06/08 (regla trabajar-hasta-la-hora.md, punto 5); el 60 % de la semanal es el tope con el que
+// las tandas dejan de lanzar sesiones (regla techo-agentes.md, «Fase 3»). El escape ~/.claude/.agent-cupo-ok (12 h)
+// saltea este freno; lo escribe la sesion solo con el pedido textual de Fak, como los otros.
 export const UMBRAL_5H = 85
 export const UMBRAL_SEMANAL = 60
 export const AUDITORES = ['auditor', 'auditor-cliente']
@@ -42,12 +45,33 @@ function vigente(escape, ahora) {
   return Boolean(escape) && typeof escape.mtimeMs === 'number' && ahora - escape.mtimeMs <= VENCE_MS
 }
 
+// El % mas alto que trae cada ventana (five_hour, seven_day); null si no hay lectura. Si una ventana viniera repetida
+// vale la mas llena; una ventana con otro nombre (el spend_limit de un gateway) no se mira.
+export function cupoReal(rateLimits) {
+  const mayor = (kind) => {
+    const v = (Array.isArray(rateLimits) ? rateLimits : [])
+      .filter((r) => r && r.kind === kind && Number.isFinite(r.percentUsed))
+      .map((r) => r.percentUsed)
+    return v.length ? Math.max(...v) : null
+  }
+  return { cincoHoras: mayor('five_hour'), semana: mayor('seven_day') }
+}
+
+// Una linea del registro del mod (~/.claude/mods-log/presupuesto-agentes.log). La arma UNA funcion porque la lee el
+// tablero (mods/tablero/hooks/estado.mjs, `leerAgentesMod`): el test __tests__/mods/registroDelMod.test.mjs cruza los dos.
+export function lineaDeRegistro({ ahora, accion, tipo, model, peso, cupo, def, motivo }) {
+  return `${new Date(ahora).toISOString()} agent.spawn ${String(accion).toUpperCase()} ${tipo} model=${model ?? '(definicion)'} peso=${peso} cupo[${cupo}] def=${def ?? 'sin'} :: ${motivo}`
+}
+
 function negar(motivo, estado, peso) {
   return { accion: 'negar', motivo, estadoNuevo: estado, peso }
 }
 
-// evento: { subagentType, model, effort, fork, definicion, rateLimits, sessionId }
-// estado: { lanzamientos: [{ ts, tipo, modelo, peso }], escapes: { limite, opusOk, builtinOk } }
+// evento: { subagentType, model, effort, fork, definicion, definicionError, rateLimits, sessionId }
+//   definicion       lo leido del frontmatter, o null si no se encontro
+//   definicionError  true si no se encontro PORQUE no se pudo leer (la carpeta existe y no se dejo listar, o un .md no
+//                    se dejo abrir): ahi no se niega por «sin definicion»; decide el guardian bash, que lee por su cuenta
+// estado: { lanzamientos: [{ ts, tipo, modelo, peso }], escapes: { limite, opusOk, builtinOk, cupoOk } }
 // ahora:  milisegundos desde la epoca; el reloj se inyecta para poder testear la ventana sin esperar
 export function decidir(evento, estado, ahora) {
   const tipo = evento.subagentType ?? ''
@@ -55,7 +79,8 @@ export function decidir(evento, estado, ahora) {
   const esAuditor = AUDITORES.includes(tipo)
   const escapes = estado.escapes ?? {}
   // Lo que quedo fuera de la ventana se tira: el estado nuevo vuelve siempre acotado a 10 min.
-  const base = { ...estado, lanzamientos: (estado.lanzamientos ?? []).filter((l) => l.ts >= ahora - VENTANA_MS) }
+  // Una entrada que no es un lanzamiento (un libro a medio escribir) tambien se tira: asi el libro se repara solo.
+  const base = { ...estado, lanzamientos: (Array.isArray(estado.lanzamientos) ? estado.lanzamientos : []).filter((l) => l && Number.isFinite(l.ts) && l.ts >= ahora - VENTANA_MS) }
 
   // Por campo (`e.fork`) o por nombre (`subagent_type: fork`, que es lo que mira el bash).
   if (evento.fork || tipo === 'fork') return negar('Un fork corre en el modelo de la sesion principal: no se le puede elegir modelo ni esfuerzo.', base, 0)
@@ -86,6 +111,10 @@ export function decidir(evento, estado, ahora) {
     } else {
       return negar(`La definicion de "${tipo}" no dice model: sonnet ni haiku.`, base, 0)
     }
+  } else if (esAuditor || evento.definicionError) {
+    // La auditoria final pasa SIEMPRE: si su definicion no se encontro o no se pudo leer, no es este mod el que la frena
+    // (el guardian bash, que corre antes, ya la valido con CLAUDE_PROJECT_DIR). Y si las definiciones no se pudieron
+    // leer, tampoco se niega a nadie por «sin definicion»: seria negar por un error propio. Siguen el cupo y la ventana.
   } else {
     // Sin definicion solo pasa el pase de UNA sesion (~/.claude/.agent-builtin-ok con el session_id) y con model sonnet explicito.
     const pase = escapes.builtinOk
@@ -98,12 +127,15 @@ export function decidir(evento, estado, ahora) {
   // La auditoria final es obligatoria: pasa siempre y no descuenta, aunque el cupo o la ventana esten llenos.
   if (esAuditor) return { accion: 'permitir', motivo: 'auditoria final: pasa sin descontar', estadoNuevo: base, peso: 0 }
 
-  // Cupo real antes que nada: por encima del umbral no sale nada nuevo y no hay escape por archivo (el escape era para la ventana).
-  for (const rl of evento.rateLimits ?? []) {
-    const umbral = rl.kind === 'five_hour' ? UMBRAL_5H : rl.kind === 'seven_day' ? UMBRAL_SEMANAL : null
-    if (umbral !== null && rl.percentUsed > umbral) {
-      const nombre = rl.kind === 'five_hour' ? 'de 5 horas' : 'semanal'
-      return negar(`Cupo real: la ventana ${nombre} esta al ${rl.percentUsed} % (tope ${umbral} %). No sale ningun subagente nuevo hasta que baje; la auditoria final (auditor, auditor-cliente) si pasa. Hace el trabajo vos y avisale a Fak.`, base, peso)
+  // Cupo real antes que nada: por encima del umbral no sale nada nuevo. Con ~/.claude/.agent-cupo-ok vigente (Fak lo
+  // pidio textual) este freno no se mira; la ventana de 10 min sigue valiendo.
+  if (!vigente(escapes.cupoOk, ahora)) {
+    const { cincoHoras, semana } = cupoReal(evento.rateLimits)
+    const lleno = cincoHoras !== null && cincoHoras > UMBRAL_5H ? { nombre: 'de 5 horas', pct: cincoHoras, tope: UMBRAL_5H }
+      : semana !== null && semana > UMBRAL_SEMANAL ? { nombre: 'semanal', pct: semana, tope: UMBRAL_SEMANAL }
+        : null
+    if (lleno) {
+      return negar(`Cupo real: la ventana ${lleno.nombre} esta al ${lleno.pct} % (tope ${lleno.tope} %). No sale ningun subagente nuevo hasta que baje; la auditoria final (auditor, auditor-cliente) si pasa. Hace el trabajo vos y avisale a Fak. Si Fak lo pidio textual en el chat, escribi \`touch ~/.claude/.agent-cupo-ok\` (vale 12 h) y decilo.`, base, peso)
     }
   }
 
