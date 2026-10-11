@@ -11,7 +11,7 @@ const reloj = { ahora: async () => AHORA }
 const seg = (ms) => Math.floor(ms / 1000)
 const DONDE = { casa: '/casa', repo: '/repo', sesion: 'ses-1', nombreCasa: 'Barack Mercosul', proyecto: 'BarackMercosul', corriendo: 2 }
 
-// El resumen que deja la puerta de la API (scripts/_lib/claudeApi.mjs, saldoPorClave): los números del 11/10/2026
+// El resumen que deja la puerta de la API (scripts/_lib/claudeApi.mjs, saldoPorClave), con la forma del real
 const SALDO = {
   actualizado: '2026-10-11 11:47:32',
   ciclo: { desde: '2026-09-30', hasta: '2026-10-29', proximo: '2026-10-30', texto: 'ciclo del 30/09 al 29/10' },

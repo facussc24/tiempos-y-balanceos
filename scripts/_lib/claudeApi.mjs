@@ -525,6 +525,13 @@ export function presupuestoDelMes({ mes = null, dir = DIR_API, env = process.env
 export const CREDITO_PLAN_USD = 200;
 export const creditoPlanUsd = (env = process.env) => positivo(env.BARACK_API_CREDITO_USD, CREDITO_PLAN_USD);
 
+/**
+ * Lo que traia cada clave prestada cuando se pego, por su fecha de vencimiento (dato de Fak, 09/10/2026: la del dueno
+ * de la empresa, $100 hasta el 20/10). Solo acota el reparto ESTIMADO: una prestada agotada no pudo pagar mas de lo
+ * que tenia, asi que lo que la hora le atribuye de mas es de la clave del plan.
+ */
+export const CREDITO_PRESTADAS_USD = { 20261020: 100 };
+
 export const rutaSaldo = (dir = DIR_API) => path.join(dir, 'saldo.json');
 const RE_MARCA_AGOTADA = /^prestada_agotada_(\d{8})$/;
 
@@ -549,7 +556,7 @@ function marcasDeAgotada(dir) {
  * `estimado` queda en true. `quedanUsd` es el credito del plan menos lo anotado aca: una cuenta del ledger, NO el
  * saldo que muestra Anthropic (ese no se puede leer con la clave).
  */
-export function saldoPorClave({ dir = DIR_API, env = process.env, ahora = new Date() } = {}) {
+export function saldoPorClave({ dir = DIR_API, env = process.env, ahora = new Date(), creditoPrestadas = CREDITO_PRESTADAS_USD } = {}) {
   const ciclo = cicloDe(ahora, cicloDia(env));
   const marcas = marcasDeAgotada(dir);
   const hoy = aaaammdd(ahora);
@@ -565,6 +572,20 @@ export function saldoPorClave({ dir = DIR_API, env = process.env, ahora = new Da
     gastado.set(nombre, (gastado.get(nombre) ?? 0) + n(e.costoUsd));
   }
   const r2 = (x) => Math.round(x * 100) / 100;
+  // El reparto por hora es grueso (un pedido se anota cuando TERMINA): si a una prestada agotada le atribuye mas de lo
+  // que tenia, el sobrante lo pago la clave del plan. Sin este tope «quedan» salia de mas (11/10/2026: 107,04 contra
+  // los 100 de la prestada daba 44 de saldo del plan; son 37). Con las lineas etiquetadas no se toca nada.
+  if (estimado) {
+    for (const m of marcas) {
+      const tope = Number(creditoPrestadas?.[m.hasta]);
+      const k = `prestada-${m.hasta}`;
+      const atribuido = gastado.get(k) ?? 0;
+      if (Number.isFinite(tope) && tope >= 0 && atribuido > tope) {
+        gastado.set(k, tope);
+        gastado.set('principal', (gastado.get('principal') ?? 0) + (atribuido - tope));
+      }
+    }
+  }
   const credito = creditoPlanUsd(env);
   const dePrincipal = gastado.get('principal') ?? 0;
   const claves = [{ nombre: 'principal', gastadoUsd: r2(dePrincipal), creditoUsd: credito, quedanUsd: r2(Math.max(0, credito - dePrincipal)) }];

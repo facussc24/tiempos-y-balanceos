@@ -88,12 +88,32 @@ describe('saldoPorClave: gastado y lo que queda, por clave', () => {
   it('las lineas viejas (sin etiqueta) se reparten por la hora en que la prestada quedo sin saldo, y lo dice: estimado', () => {
     ledger('2026-10', [fila('2026-10-10 22:00:00', 60), fila('2026-10-11 02:18:48', 47.04), fila('2026-10-11 02:24:26', 155.89)]);
     fs.writeFileSync(path.join(dir, 'prestada_agotada_20261020'), '2026-10-11 02:21:34 sin saldo (credit balance is too low)\n');
-    const s = A.saldoPorClave({ dir, env: ENV, ahora: EL_11 });
-    expect(s.estimado).toBe(true);
-    expect(s.claves).toEqual([
+    // sin saber cuanto traia la prestada, el reparto queda como lo da la hora
+    const crudo = A.saldoPorClave({ dir, env: ENV, ahora: EL_11, creditoPrestadas: {} });
+    expect(crudo.estimado).toBe(true);
+    expect(crudo.claves).toEqual([
       { nombre: 'principal', gastadoUsd: 155.89, creditoUsd: 200, quedanUsd: 44.11 },
       { nombre: 'prestada', hasta: '20261020', gastadoUsd: 107.04, agotada: true, vencida: false },
     ]);
+    // con el dato (traia $100): una prestada agotada no pudo pagar mas de lo que tenia; el sobrante es del plan
+    const s = A.saldoPorClave({ dir, env: ENV, ahora: EL_11 });
+    expect(A.CREDITO_PRESTADAS_USD[20261020]).toBe(100);
+    expect(s.claves).toEqual([
+      { nombre: 'principal', gastadoUsd: 162.93, creditoUsd: 200, quedanUsd: 37.07 },
+      { nombre: 'prestada', hasta: '20261020', gastadoUsd: 100, agotada: true, vencida: false },
+    ]);
+    // el total no cambia: se mueve de una clave a la otra
+    expect(s.claves[0].gastadoUsd + s.claves[1].gastadoUsd).toBeCloseTo(crudo.claves[0].gastadoUsd + crudo.claves[1].gastadoUsd, 2);
+  });
+  it('el tope de la prestada no toca nada si lo atribuido es menos de lo que traia, ni cuando las lineas dicen su clave', () => {
+    fs.writeFileSync(path.join(dir, 'prestada_agotada_20261020'), '2026-10-11 02:21:34 sin saldo (credit balance is too low)\n');
+    ledger('2026-10', [fila('2026-10-10 22:00:00', 60), fila('2026-10-11 03:00:00', 10)]);
+    expect(A.saldoPorClave({ dir, env: ENV, ahora: EL_11 }).claves.map((c) => c.gastadoUsd)).toEqual([10, 60]);
+    // etiquetadas (cuenta exacta): aunque la prestada figure con mas de 100, no se reparte nada
+    ledger('2026-10', [fila('2026-10-10 22:00:00', 130, 'prestada-20261020'), fila('2026-10-11 03:00:00', 10, 'principal')]);
+    const exacto = A.saldoPorClave({ dir, env: ENV, ahora: EL_11 });
+    expect(exacto.estimado).toBe(false);
+    expect(exacto.claves.map((c) => c.gastadoUsd)).toEqual([10, 130]);
   });
   it('sin ninguna marca, una linea sin etiqueta es de la principal (y sigue siendo estimado)', () => {
     ledger('2026-10', [fila('2026-10-10 22:00:00', 12)]);

@@ -48,7 +48,7 @@ NO commitear lo ajeno que ya estaba modificado al arrancar: `.env.example`, `__t
 1. **La clave actual del usuario de desarrollo está publicada** en la rama pública `gh-pages` del repo (commit `b685a744` del 30/08; `assets/index-DgWvDWRX.js`). Medido: mail y clave de `.env.local` de hoy están en ese archivo. Dos pasos, los dos suyos: `node scripts/_rotarPasswordDev.mjs` en una terminal, y borrar la rama `gh-pages`. Fila HOY-36.
 2. **La semana pasó el 60 % (61 % a las 11:55): el mod nuevo ya no deja salir ningún subagente** (salvo la auditoría) en las sesiones nuevas, hasta el vie 16/10 13:00. **El 60 no es un número suyo**: entró con el borrador que escribió la API; los suyos son 75 % para cerrar una sesión y 60/65 para lanzar hijas. Si quiere agentes igual: que lo diga y se escribe `touch ~/.claude/.agent-cupo-ok` (12 h). Alternativa que probé y saqué porque nadie la pidió (lo marcó el auditor): entre 60 y 85 % dejar salir pocos (10 puntos cada 10 min) en vez de ninguno; negar también una búsqueda en Haiku manda ese trabajo al modelo de la sesión, que cuesta más. Es decisión suya.
 3. **El tablero**: Fak ya vio la banda (captura, 11:35) y marcó cuatro cosas; corregidas e instaladas (`c2e18522`). La ve en una sesión nueva o con `/reload-plugins`. Falta que la mire de nuevo y que pruebe `/tablero` (el panel). Si molesta: `claude plugin disable tablero-casa@mods-casa`.
-3 bis. **La tarea de la noche está frenada hasta el 30/10** porque su tope suma las dos claves (US$ 262,93 de 170). Con la cuenta por clave, de la del plan salieron ≈ US$ 156 de 200. Si quiere que vuelva a correr (≈ US$ 1 a 3 por noche de los ≈ US$ 40 que quedan): fila HOY-49.
+3 bis. **La tarea de la noche está frenada hasta el 30/10** porque su tope suma las dos claves (US$ 262,93 de 170). Con la cuenta por clave, de la del plan salieron ≈ US$ 163 (96 % del tope de 170: amarillo, no rojo). Si quiere que vuelva a correr (≈ US$ 1 a 3 por noche de los ≈ US$ 37 que quedan): fila HOY-49.
 3 ter. Los cuatro `.sh` viejos de mensajes quedaron sin uso (`caracteristicas-especiales-prompt`, `correccion-guard`, `explicar-prompt`, `hora-prompt`): borrarlos es borrar archivos → su sí.
 4. `window.__cleanupAmfeActions()` está en producción (HOY-37): sacarla es sacar una función de la app → su sí.
 5. Borrar de Programadas las dos tareas de prueba de hoy.
@@ -56,6 +56,7 @@ NO commitear lo ajeno que ya estaba modificado al arrancar: `.env.example`, `__t
 
 ## Decidí distinto de lo pedido
 
+- **La banda nueva y el gasto por clave (`c2e18522`) salieron ANTES de su auditoría y sin el plan corto escrito**: Fak estaba mirando la banda y la corrección era suya. Toca `claudeApi.mjs`, que es la puerta de la noche. La auditoría se pidió enseguida (agente `a32aeb14a3f6e74d7`, «Tercera vuelta»); vuelta atrás del tablero: `~/.claude/mods-casa/_anteriores/tablero-20261011-115451`.
 - **Marketplace en una copia (`~/.claude/mods-casa/`), no en `mods/` del repo**: un marketplace de ruta local carga en el lugar; con `mods/` una edición a medias quedaba viva en todas las sesiones. La copia cambia solo con `scripts/_modsInstalar.mjs --aplicar` (valida y prueba antes).
 - **El agente por API ya no corre `node`, y de Python corre solo sus propios `.py`**, adentro de una caja en tiempo real (`scripts/_lib/agenteCaja.py`). Node 22.20 no corta la red ni deja excluir los secretos del repo; un script del repo puede guardar en la nube o escribir en Supabase aunque su texto no lo diga. Lista de scripts del repo permitidos: `scripts/_lib/agenteCanon.data.json`, vacía.
 - **P14-P18 y P10 se trabajan en un worktree y entran a `main` de una vez**: `guardianes.mjs` y los hooks corren en vivo; un parche que deja el archivo roto frena a todas las sesiones.
@@ -67,7 +68,7 @@ NO commitear lo ajeno que ya estaba modificado al arrancar: `.env.example`, `__t
 
 - ~~Que la banda del tablero se vea en la app~~: **Fak la vio a las 11:35** (captura). Lo que sigue sin verse: la banda NUEVA en su pantalla (está instalada; el dibujo con los datos reales de esta PC lo corrí yo: ninguna fila pasa de 93 columnas) y el panel `/tablero`.
 - El hook único de mensajes en una sesión real: **sí se vio una vez** (el mensaje de Fak de las 11:35 recibió `[EXPLICAR-MEJOR]` por `prompt-hooks.sh`). No se vio: un mensaje real con las cuatro piezas a la vez, ni un corte de la app a los 30 s (`hook_cancelled`): fila HOY-47.
-- El gasto por clave de los pedidos de ANTES del 11/10 es estimado (el registro no anotaba la clave): la prestada tenía US$ 100 y el reparto por hora le atribuye 107,04; de la del plan salieron entre 156 y 163.
+- El gasto por clave de los pedidos de ANTES del 11/10 es estimado (el registro no anotaba la clave): el reparto por hora le atribuía 107,04 a la prestada, que tenía US$ 100; desde las 12:27 el sobrante se le carga al plan (`CREDITO_PRESTADAS_USD`): plan 162,93 gastados, quedan ≈ 37,07. No es el saldo que muestra Anthropic.
 - Un lanzamiento negado por cupo real en una sesión de verdad (la semana estaba en 58 %): está probado con el motor de pruebas.
 - (el CI de `02e1321b` se leyó: verde)
 
