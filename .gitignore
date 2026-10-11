@@ -190,3 +190,7 @@ scripts/lamina_proceso/modelos/
 
 # cache de PowerShell que algun test deja en la raiz (R7, H54)
 Microsoft/
+
+# 10/10/2026 (cola P41): restos del hook permiso-guard si un proceso muere mientras anota en la lista de la tanda
+*.permiso.lock
+*.permiso.tmp

@@ -108,6 +108,19 @@
         ]
       }
     ],
+    "PermissionRequest": [
+      {
+        "_comentario": "10/10/2026 (cola P41, si de Fak 09/10 16:55): permiso-guard. PermissionRequest corre cuando la app esta por mostrar un cartel de permiso. Con una hora de trabajo fijada por Fak para ESA sesion (~/.claude/.trabajar-hasta.json) y sin un mensaje suyo en los ultimos 3 minutos, contesta deny con el motivo ('no hay nadie en la ventana') y anota el pedido en 'Lo que necesita a Fak' de la lista de la tanda. Sin hora fijada, con Fak en la ventana o si la herramienta es una pregunta (AskUserQuestion, ExitPlanMode) no imprime nada y el cartel se muestra como siempre. NUNCA contesta allow. Sale siempre con 0 (en este evento el codigo 2 no hace nada); lo que falla queda en ~/.claude/.permiso-guard.log, igual que cada corrida. En modo 'omitir permisos' la app casi no muestra carteles: sirve para las sesiones en modo normal, automatico o aceptar ediciones. Origen: 04/10/2026, 55 minutos esperando un cartel. Logica: scripts/_lib/permisoGuard.mjs + permisoCanon.data.json. Test: permisoGuard.test.mjs.",
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/permiso-guard.sh\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
     "InstructionsLoaded": [
       {
         "_comentario": "10/09/2026 (C5): registra en .claude/.instrucciones-cargadas.log (gitignoreado) cada CLAUDE.md, regla, @import y memoria que Claude Code cargo de verdad, con su load_reason. Convierte la leccion del 04/09 (lo que un hook inyecta se verifica en el transcript) en un registro que se mira despues de cada actualizacion de Claude Code. Test: hooksVarios.test.mjs.",

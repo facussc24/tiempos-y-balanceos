@@ -1,0 +1,19 @@
+{
+  "_que_es": "Canon del hook permiso-guard.sh (evento PermissionRequest; logica en permisoGuard.mjs). Cola P41, con el si de Fak del 09/10/2026 16:55 ('obvio que lo apruebo'; pregunto que carteles: los de permiso de la app cuando no esta). Origen: 04/10/2026, cuatro conversaciones estuvieron 55 minutos esperando un cartel de permiso que nadie iba a tocar. Con una hora fijada por trabajar-hasta para ESA sesion y sin un mensaje reciente de Fak, el cartel se contesta solo con deny y el pedido queda anotado en la lista de la tanda. Sin hora fijada no decide nada. NUNCA contesta allow.",
+  "_como_cambiar": "Un numero o una lista de aca se cambia con su caso al lado y se vuelve a correr __tests__/scripts/permisoGuard.test.mjs. Lo que AFLOJA el control (mas minutos de presencia, mas herramientas en no_decide) lo prueba otro (LECCIONES 22/09-06/10).",
+  "marca": "[PERMISO-GUARD]",
+  "presencia_minutos": 3,
+  "_presencia_minutos": "Si el ultimo mensaje ESCRITO por Fak en el registro de la sesion tiene menos de estos minutos, Fak esta en la ventana: el hook no decide y el cartel se le muestra. La v6 del orquestador (10/10) dice que Fak 'esta en el chat a ratos' aun con la hora fijada. El hook corre UNA vez, cuando aparece el cartel: si no decide, ese cartel espera para siempre. Por eso la ventana es corta (3; el plan decia 10 y la revision por la API del 10/10 marco que con 10 un cartel a los 5 minutos de irse Fak repite el cuelgue del 04/10). Negarle un cartel a Fak presente se arregla solo: lo ve anotado, dice 'hacelo' y el siguiente cartel le aparece. No tiene fuente externa: es un numero mio.",
+  "no_decide": ["AskUserQuestion", "ExitPlanMode"],
+  "_no_decide": "Herramientas que son una PREGUNTA a Fak, no un permiso: no se contestan solas. Fak 09/10/2026 16:55 sobre P38: askUserQuestionTimeout 'nunca', por lo que el contrato marca 'preguntar siempre'.",
+  "seccion_re": "^##\\s+Lo que necesita a Fak",
+  "_seccion_re": "El mismo titulo que lee tandaReglas.mjs (tandaCanon.data.json, parado.seccion_lista_re): un cartel negado cuenta como algo abierto que espera a Fak, y eso es buscado. Limite (auditor 10/10/2026): si el comando negado trae la palabra 'contestada', 'respondido', 'resuelta' o 'decidido', tandaReglas lo toma por un renglon ya cerrado y no lo cuenta; el renglon igual queda en la lista.",
+  "_presencia_que_cuenta": "Como señal de que Fak esta cuentan tres cosas del registro de esa sesion: un mensaje que escribio, su respuesta a una pregunta (AskUserQuestion) y un corte suyo (Esc). Aprobar un cartel no deja una marca propia en el registro, asi que no se puede contar.",
+  "seccion_titulo": "## Lo que necesita a Fak (para cuando vuelva)",
+  "tope_resumen": 200,
+  "tope_renglones": 30,
+  "_tope_renglones": "Cuantos renglones de 'Cartel negado' puede haber en la seccion: pasado eso se niega igual y queda solo en el registro (~/.claude/.permiso-guard.log), para no llenar la lista si algo pide lo mismo en bucle con textos distintos.",
+  "ventana_repetidos_min": 10,
+  "aviso_repetidos": 4,
+  "_repetidos": "Si en ventana_repetidos_min minutos este hook ya nego aviso_repetidos permisos a la misma sesion (contados del registro), el motivo suma un renglon mas fuerte: dejar de intentar cosas que piden permiso. No usa interrupt: frenar a Claude con una hora vigente es dejarlo parado hasta el proximo latido, y no hay un caso medido de bucle que lo justifique."
+}

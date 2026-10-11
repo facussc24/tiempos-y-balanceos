@@ -85,6 +85,10 @@ const COBERTURA = {
   // las 8" y el cierre a las 17:10. Regla trabajar-hasta-la-hora.md.
   'hora-prompt.sh': { test: '__tests__/scripts/horaGuard.test.mjs', tipo: 'aviso' },
   'hora-guard.sh': { test: '__tests__/scripts/horaGuard.test.mjs', tipo: 'bloquea' },
+  // PermissionRequest (10/10/2026, cola P41): con una hora fijada para esa sesion y sin Fak en la ventana, el cartel de
+  // permiso se contesta solo con deny y queda anotado en la lista. Su ROJO es «niega» (sale con 0: en este evento el
+  // codigo 2 no hace nada) y su VERDE es «no decide». Origen: 04/10, 55 minutos esperando un cartel.
+  'permiso-guard.sh': { test: '__tests__/scripts/permisoGuard.test.mjs', tipo: 'bloquea' },
   'coordinador-guard.sh': { test: '__tests__/scripts/coordinadorGuard.test.mjs', tipo: 'bloquea' },
   'cerebro-guard.sh': { test: '.claude/hooks/cerebro-guard.test.sh', tipo: 'aviso' },
   // Inyecta contexto (SessionStart). El test unitario prueba que el texto sale entero y corto;

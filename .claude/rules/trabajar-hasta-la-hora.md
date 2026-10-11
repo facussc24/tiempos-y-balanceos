@@ -91,6 +91,14 @@ una hora. Lo que sí está probado: el script, la señal, el control en las dos 
   `No aplica trabajar-hasta: <motivo>`. Un pedido cumplido y cerrado con `--terminar` deja su marca en el estado: por
   ese mismo mensaje no se vuelve a frenar; por uno nuevo de Fak, posterior a la última vez que se fijó, sí
   (04/10/2026: a las 10:00 cerré el pedido de la noche y el control volvió a pedirme que fijara esa misma hora).
+- **Hook `permiso-guard.sh`** (PermissionRequest, 10/10/2026, cola P41; lógica en `scripts/_lib/permisoGuard.mjs`,
+  números en `permisoCanon.data.json`): con una hora vigente para ESA sesión y sin una señal de Fak en los últimos
+  3 minutos (un mensaje suyo, su respuesta a una pregunta o un corte con Esc), un cartel de permiso se contesta solo con «no» y el pedido queda anotado en «Lo que necesita a Fak» de
+  la lista (`- **Cartel negado…**`); el motivo dice que no se consiga lo mismo por otro lado. Sin hora, con Fak en la
+  ventana o ante una pregunta (`AskUserQuestion`) no decide. Nunca contesta «sí». Cada corrida deja una línea en
+  `~/.claude/.permiso-guard.log` (`node scripts/_lib/permisoGuard.mjs --registro`). Límites: en «omitir permisos» la
+  app casi no muestra carteles, así que ahí casi no corre; y ⚠ **no se lo vio correr en una sesión real** (la línea
+  de comandos no tiene la sesión iniciada): la primera línea del registro es la prueba. Test `permisoGuard.test.mjs`.
 - **`session-start-context.sh`**: al arrancar, reanudar y compactar reimprime el pedido vigente de ESA sesión.
 - Estado: `~/.claude/.trabajar-hasta.json`, por sesión. Tests en las dos direcciones, con sus mensajes textuales:
   `__tests__/scripts/horaGuard.test.mjs`.
