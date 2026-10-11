@@ -85,6 +85,12 @@ const COBERTURA = {
   // las 8" y el cierre a las 17:10. Regla trabajar-hasta-la-hora.md.
   'hora-prompt.sh': { test: '__tests__/scripts/horaGuard.test.mjs', tipo: 'aviso' },
   'hora-guard.sh': { test: '__tests__/scripts/horaGuard.test.mjs', tipo: 'bloquea' },
+  // UserPromptSubmit (10/10/2026, cola P10): UN solo node por mensaje; corre las cuatro piezas de arriba
+  // (caracteristicas-especiales-prompt, correccion-guard, explicar-prompt, hora-prompt) en orden y junta el texto. No bloquea.
+  'prompt-hooks.sh': { test: '__tests__/scripts/promptHooks.test.mjs', tipo: 'aviso' },
+  // Stop (10/10/2026, cola P10): UN solo node para el cierre: cierre-guard y despues hora-guard, las dos siempre;
+  // exit = el mas alto. ROJO exit 2 / VERDE exit 0 en su test.
+  'stop-hooks.sh': { test: '__tests__/scripts/stopHooks.test.mjs', tipo: 'bloquea' },
   // PermissionRequest (10/10/2026, cola P41): con una hora fijada para esa sesion y sin Fak en la ventana, el cartel de
   // permiso se contesta solo con deny y queda anotado en la lista. Su ROJO es «niega» (sale con 0: en este evento el
   // codigo 2 no hace nada) y su VERDE es «no decide». Origen: 04/10, 55 minutos esperando un cartel.
@@ -104,6 +110,10 @@ const COBERTURA = {
 /** En el disco pero no cableados. Borrarlos es decision de Fak (autonomy-contract C). */
 const HUERFANOS = {
   'session-close-guard.sh': 'reemplazado por cierre-guard.sh el 04/09/2026; pendiente el OK de Fak para borrarlo',
+  // cola P10, 10/10/2026: escritos y probados (tienen fila en COBERTURA) pero todavia sin cablear en settings.json;
+  // salen de aca en el commit que los cablea (prompt-hooks en C2; stop-hooks en C3, tras la medicion de P9).
+  'prompt-hooks.sh': 'cola P10: listo, se cablea en C2 (UserPromptSubmit); hasta entonces nadie lo llama',
+  'stop-hooks.sh': 'cola P10: listo, se cablea en C3 (Stop) despues de la medicion de P9; hasta entonces nadie lo llama',
 };
 
 const enDisco = fs.readdirSync(HOOKS).filter((f) => f.endsWith('.sh') && !f.endsWith('.test.sh'));
