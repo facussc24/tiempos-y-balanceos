@@ -1,0 +1,61 @@
+PLANES DE CONTROL PUERTAS PATAGONIA - LO QUE QUEDA PARA COMPLETAR CON NICO (06/10/2026)
+
+Lo seguro ya esta corregido en la copia (36 celdas en verde claro, cada una con un comentario
+que dice lo que tenia ANTES; donde se sacaron filas, la celda de arriba en naranja). Lo
+auditaron cuatro revisores el 06/10 y se dejo afuera todo lo que no era 100 % seguro:
+  PC APB PATAGONIA Rev 0 - correcciones de Ingenieria 06-10-2026.xls
+
+Lo que queda necesita filas nuevas o un dato que no esta escrito en ningun papel:
+
+APB DE PUERTA
+  - Hilo de union: la HO-971 dice Jet Black FX284TK-E0PTO y el arb FX284-E0PTO "Negro Titan".
+    En el plan quedo el codigo del arb, sin color. Corregir la HO-971.
+  - Control final (100): dice "largo de puntada 4 en 16 mm", que es la costura de union (oculta);
+    la que se ve es la vista, 6 en 25 mm +-0,5. Definir que mira el control final.
+  - Costura vista (41): no tiene fila de atraque (3 a 4 puntadas, una vez atras y una adelante).
+    Y la HO-971 controla la alineacion de la linea vista, que quedo sin fila.
+  - Embalaje: hay dos fichas vigentes, GE-280 (carton, quedo en el plan) y GE-276 (cajon plastico).
+  - Temperatura de la hotmelera: la HO-971 dice 190 a 210 C; la receta de la maquina esta en
+    185 C desde el 26/08. Confirmar en la maquina.
+  - Nº de parte de la caratula: no entra en la celda; los 4 codigos estan en "Num. de la pieza".
+  - Separar la "Operacion 20" en 20 preparacion, 21 corte y 22 control con Mylar (+-1 mm).
+  - Agregar las operaciones nuevas del flujograma 153 Rev.E: 51 control de pieza inyectada,
+    60 troquelado de cinta, 71 armado de cinta y espuma, 81 inspeccion de pieza adhesivada,
+    82 reproceso falta de adhesivo y 101 reproceso reactivacion por calor.
+  - Refilado (30): el set up tiene texto de maquina de coser.
+  - Inyeccion PU (70) y hot melt (80): parametros sin valor (relevar en la maquina).
+  - Vinilo: espesor y gramaje (ficha del proveedor). Etiquetas: no figuran.
+  - Control final: que calibre, que instructivo y que es el "sello WQ".
+  - Columna de caracteristicas especiales vacia (siglas del AMFE 161).
+
+CARATULA DE LAS TRES HOJAS
+  - "Caracteristica S/R" tiene marcados el SI y el NO a la vez.
+  - Calibre MC212 de grampas en recepcion: en el cronograma de calibracion figura en Conversion
+    de Cintas, "control de proceso", certificado externo NO OK. Confirmar con Calidad.
+  - Etiquetas ET-SATO-100X60 y ET-SATO-50X20: estan en la BOM de las tres piezas y en ninguna
+    recepcion.
+
+INSERT
+  - Falta la 111 clasificacion y segregacion de producto no conforme (flujograma 154).
+  - Espuma: el arb dice densidad 35 kg/m3 (sin tolerancia); en el plan dice TBD.
+  - Vinilos: los certificados Sansuy del servidor son de otra version (espuma 2 mm con forro);
+    falta el del S085 negro.
+  - Embalaje: hay fichas GE-282 (carton, 24 por medio) y GE-278 (cajon plastico).
+  - Hilo de union FX284-E0PTO en recepcion, con flamabilidad.
+  - Separar 20/21/22 y 70/71; agregar 91 inspeccion de pieza adhesivada y 93 reproceso.
+  - Costura CNC: el margen (la tabla de costura dice "separacion 8 mm +-1").
+  - Corte: de donde sale "5 capas".
+  - Adhesivo: dos criterios de vencimiento (6 meses y 179 dias); vida util de la mezcla.
+  - Embalaje: TBD. Siglas del AMFE 158.
+
+TOP ROLL
+  - Embalaje: hay fichas GE-281 (carton, 20 por medio) y GE-277 (cajon plastico).
+  - "Color: DL100" en el PC/ABS: DL100 es el grado del material, no un color.
+  - Agregar la 40 trimming corte final.
+  - "Tweeter INY-TRL0009-V1": en el arb los traseros llevan REJILLA ALTAVOZ 2HC.868.184/183
+    (confirmar con Pablo Gamboa).
+  - TPO: espesor, ancho y gramaje (ficha). Hot melt: adherencia y cantidad de adhesivo.
+  - Termoformado IMG: parametros. Plegado de bordes (50): filas vacias y engrampado.
+  - Hot melt: velocidad de la maquina (la pantalla del 28/08 muestra 3 m/min en los rodillos,
+    pero no hay un campo "velocidad de linea"). Confirmar.
+  - Embalaje: TBD. Siglas del AMFE 162.

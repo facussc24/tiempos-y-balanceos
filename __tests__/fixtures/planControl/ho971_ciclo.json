@@ -1,0 +1,1506 @@
+{
+ "sourceId": "HO-971",
+ "doc": "HO-971",
+ "hojas": [
+  {
+   "hoja": "10",
+   "op": "10",
+   "nombre": "RECEPCIÓN DE MATERIA PRIMA",
+   "sector": "Logística",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "1. Comprobar que el embalaje recibido no esté dañado,",
+     "celda": "I11"
+    },
+    {
+     "n": "2",
+     "texto": "2. Corroborar que sea correcta la orden de pedido con el albarán de entrega, posteriormente comprobar el defecto y el número de artículo.",
+     "celda": "I12"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/10/I32",
+     "hoja": "10",
+     "op": "10",
+     "fila": 32,
+     "remite": true,
+     "caracteristica": "Según plan de control",
+     "metodo": "Según plan de control",
+     "resp": "Según plan de control",
+     "frec": "Según plan de control",
+     "registro": "Según plan de control"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B33"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B34"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B35"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B36"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n RECEPCIÓN DE MATERIA PRIMA \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. Comprobar que el embalaje recibido no esté dañado, \n 1. Comprobar que el embalaje recibido no esté dañado, \n 2. Corroborar que sea correcta la orden de pedido con el albarán de entrega, posteriormente comprobar el defecto y el número de artículo. \n 2. Corroborar que sea correcta la orden de pedido con el albarán de entrega, posteriormente comprobar el defecto y el número de artículo. \n 2. Corroborar que sea correcta la orden de pedido con el albarán de entrega, posteriormente comprobar el defecto y el número de artículo. \n 3. Si alguno de los pasos 1 y 2 no están OK. Devolver mercadería al proveedor. \n 3. Si alguno de los pasos 1 y 2 no están OK. Devolver mercadería al proveedor. \n 3. Si alguno de los pasos 1 y 2 no están OK. Devolver mercadería al proveedor. \n 4. En el caso de ser satisfactorios los pasos 1 y 2, cargar materia prima al sistema ARB para poder generar etiqueta y pegarla en el envase. Posteriormente tomar y colocar el cono azul sobre la materia prima para señalizar que la inspección la controló el sector logística; Ver recuadro AZUL en REF 1 y 2. \n 4. En el caso de ser satisfactorios los pasos 1 y 2, cargar materia prima al sistema ARB para poder generar etiqueta y pegarla en el envase. Posteriormente tomar y colocar el cono azul sobre la materia prima para señalizar que la inspección la controló el sector logística; Ver recuadro AZUL en REF 1 y 2. \n 4. En el caso de ser satisfactorios los pasos 1 y 2, cargar materia prima al sistema ARB para poder generar etiqueta y pegarla en el envase. Posteriormente tomar y colocar el cono azul sobre la materia prima para señalizar que la inspección la controló el sector logística; Ver recuadro AZUL en REF 1 y 2. \n 4. En el caso de ser satisfactorios los pasos 1 y 2, cargar materia prima al sistema ARB para poder generar etiqueta y pegarla en el envase. Posteriormente tomar y colocar el cono azul sobre la materia prima para señalizar que la inspección la controló el sector logística; Ver recuadro AZUL en REF 1 y 2. \n 4. En el caso de ser satisfactorios los pasos 1 y 2, cargar materia prima al sistema ARB para poder generar etiqueta y pegarla en el envase. Posteriormente tomar y colocar el cono azul sobre la materia prima para señalizar que la inspección la controló el sector logística; Ver recuadro AZUL en REF 1 y 2. \n 5. Almacenar la materia prima en su lugar designado dentro del depósito o enviar a producción de ser necesario. \n 5. Almacenar la materia prima en su lugar designado dentro del depósito o enviar a producción de ser necesario. \n 5. Almacenar la materia prima en su lugar designado dentro del depósito o enviar a producción de ser necesario. \n 6. Si se da el caso de el cual parte del lote está en malas condiciones a pesar que en la inspección cumplió con los requisitos. Generar remito de devolución descontando la cantidad a devolver del sistema ARB. \n 6. Si se da el caso de el cual parte del lote está en malas condiciones a pesar que en la inspección cumplió con los requisitos. Generar remito de devolución descontando la cantidad a devolver del sistema ARB. \n 6. Si se da el caso de el cual parte del lote está en malas condiciones a pesar que en la inspección cumplió con los requisitos. Generar remito de devolución descontando la cantidad a devolver del sistema ARB. \n 6. Si se da el caso de el cual parte del lote está en malas condiciones a pesar que en la inspección cumplió con los requisitos. Generar remito de devolución descontando la cantidad a devolver del sistema ARB. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Según plan de control \n Según plan de control \n Según plan de control \n Según plan de control \n Según plan de control \n Según plan de control"
+  },
+  {
+   "hoja": "20",
+   "op": "20",
+   "nombre": "Preparación y Carga del Vinilo",
+   "sector": "MESA DE CORTE",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Revisar la planilla de la mesa de corte para identificar el vinilo correspondiente al próximo corte, confirmar el código de material y asegurarse de que sea el correcto antes de proceder.",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "Buscar el rollo y transportarlo: ir al depósito de materia prima en el sector de la mesa de corte, seleccionar el rollo indicado en la planilla y llevarlo con precaución hasta la máquina.",
+     "celda": "J14"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/20/I40",
+     "hoja": "20",
+     "op": "20",
+     "fila": 40,
+     "remite": false,
+     "caracteristica": "Verificación del código de material en el vinilo",
+     "metodo": "Visual - planilla de corte",
+     "resp": "OP",
+     "frec": "1",
+     "registro": "N/A"
+    },
+    {
+     "id": "HO-971/20/I43",
+     "hoja": "20",
+     "op": "20",
+     "fila": 43,
+     "remite": false,
+     "caracteristica": "Posición del lado vista del vinilo según la planilla de corte",
+     "metodo": "Visual - planilla de corte",
+     "resp": "OP",
+     "frec": "1",
+     "registro": "N/A"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B42"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B43"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B44"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B45"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n Preparación y Carga del Vinilo \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n Revisar la planilla de la mesa de corte para identificar el vinilo correspondiente al próximo corte, confirmar el código de material y asegurarse de que sea el correcto antes de proceder. \n Revisar la planilla de la mesa de corte para identificar el vinilo correspondiente al próximo corte, confirmar el código de material y asegurarse de que sea el correcto antes de proceder. \n Revisar la planilla de la mesa de corte para identificar el vinilo correspondiente al próximo corte, confirmar el código de material y asegurarse de que sea el correcto antes de proceder. \n 2. \n Buscar el rollo y transportarlo: ir al depósito de materia prima en el sector de la mesa de corte, seleccionar el rollo indicado en la planilla y llevarlo con precaución hasta la máquina. \n Buscar el rollo y transportarlo: ir al depósito de materia prima en el sector de la mesa de corte, seleccionar el rollo indicado en la planilla y llevarlo con precaución hasta la máquina. \n Buscar el rollo y transportarlo: ir al depósito de materia prima en el sector de la mesa de corte, seleccionar el rollo indicado en la planilla y llevarlo con precaución hasta la máquina. \n 3. \n Colocar el rollo en la máquina: verificar que la máquina esté en posición elevada, ubicar el rollo en la parte trasera, alinearlo correctamente y cortar el plástico protector; revisar la planilla para saber cómo debe colocarse el lado vista del vinilo. Si indica “lado vista abajo”, el rollo se coloca de manera que el lado vista quede hacia afuera (al alimentarlo, el lado vista termina mirando hacia adentro). Si indica “lado vista arriba”, el rollo se coloca con el lado vista hacia adentro (al alimentarlo, el lado vista termina mirando hacia afuera). \n Colocar el rollo en la máquina: verificar que la máquina esté en posición elevada, ubicar el rollo en la parte trasera, alinearlo correctamente y cortar el plástico protector; revisar la planilla para saber cómo debe colocarse el lado vista del vinilo. Si indica “lado vista abajo”, el rollo se coloca de manera que el lado vista quede hacia afuera (al alimentarlo, el lado vista termina mirando hacia adentro). Si indica “lado vista arriba”, el rollo se coloca con el lado vista hacia adentro (al alimentarlo, el lado vista termina mirando hacia afuera). \n Colocar el rollo en la máquina: verificar que la máquina esté en posición elevada, ubicar el rollo en la parte trasera, alinearlo correctamente y cortar el plástico protector; revisar la planilla para saber cómo debe colocarse el lado vista del vinilo. Si indica “lado vista abajo”, el rollo se coloca de manera que el lado vista quede hacia afuera (al alimentarlo, el lado vista termina mirando hacia adentro). Si indica “lado vista arriba”, el rollo se coloca con el lado vista hacia adentro (al alimentarlo, el lado vista termina mirando hacia afuera). \n Colocar el rollo en la máquina: verificar que la máquina esté en posición elevada, ubicar el rollo en la parte trasera, alinearlo correctamente y cortar el plástico protector; revisar la planilla para saber cómo debe colocarse el lado vista del vinilo. Si indica “lado vista abajo”, el rollo se coloca de manera que el lado vista quede hacia afuera (al alimentarlo, el lado vista termina mirando hacia adentro). Si indica “lado vista arriba”, el rollo se coloca con el lado vista hacia adentro (al alimentarlo, el lado vista termina mirando hacia afuera). \n Colocar el rollo en la máquina: verificar que la máquina esté en posición elevada, ubicar el rollo en la parte trasera, alinearlo correctamente y cortar el plástico protector; revisar la planilla para saber cómo debe colocarse el lado vista del vinilo. Si indica “lado vista abajo”, el rollo se coloca de manera que el lado vista quede hacia afuera (al alimentarlo, el lado vista termina mirando hacia adentro). Si indica “lado vista arriba”, el rollo se coloca con el lado vista hacia adentro (al alimentarlo, el lado vista termina mirando hacia afuera). \n Colocar el rollo en la máquina: verificar que la máquina esté en posición elevada, ubicar el rollo en la parte trasera, alinearlo correctamente y cortar el plástico protector; revisar la planilla para saber cómo debe colocarse el lado vista del vinilo. Si indica “lado vista abajo”, el rollo se coloca de manera que el lado vista quede hacia afuera (al alimentarlo, el lado vista termina mirando hacia adentro). Si indica “lado vista arriba”, el rollo se coloca con el lado vista hacia adentro (al alimentarlo, el lado vista termina mirando hacia afuera). \n Colocar el rollo en la máquina: verificar que la máquina esté en posición elevada, ubicar el rollo en la parte trasera, alinearlo correctamente y cortar el plástico protector; revisar la planilla para saber cómo debe colocarse el lado vista del vinilo. Si indica “lado vista abajo”, el rollo se coloca de manera que el lado vista quede hacia afuera (al alimentarlo, el lado vista termina mirando hacia adentro). Si indica “lado vista arriba”, el rollo se coloca con el lado vista hacia adentro (al alimentarlo, el lado vista termina mirando hacia afuera). \n Colocar el rollo en la máquina: verificar que la máquina esté en posición elevada, ubicar el rollo en la parte trasera, alinearlo correctamente y cortar el plástico protector; revisar la planilla para saber cómo debe colocarse el lado vista del vinilo. Si indica “lado vista abajo”, el rollo se coloca de manera que el lado vista quede hacia afuera (al alimentarlo, el lado vista termina mirando hacia adentro). Si indica “lado vista arriba”, el rollo se coloca con el lado vista hacia adentro (al alimentarlo, el lado vista termina mirando hacia afuera). \n 4. \n Bajar el rollo a la posición de trabajo manteniendo presionado el botón (ver imagen de referencia N°5) y asegurarse de que quede bien colocado antes de continuar con el siguiente paso. \n Bajar el rollo a la posición de trabajo manteniendo presionado el botón (ver imagen de referencia N°5) y asegurarse de que quede bien colocado antes de continuar con el siguiente paso. \n Bajar el rollo a la posición de trabajo manteniendo presionado el botón (ver imagen de referencia N°5) y asegurarse de que quede bien colocado antes de continuar con el siguiente paso. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Características a controlar \n Verificación del código de material en el vinilo \n Verificación del código de material en el vinilo \n Verificación del código de material en el vinilo \n Verificación del código de material en el vinilo \n Posición del lado vista del vinilo según la planilla de corte \n Posición del lado vista del vinilo según la planilla de corte \n Posición del lado vista del vinilo según la planilla de corte \n Posición del lado vista del vinilo según la planilla de corte"
+  },
+  {
+   "hoja": "20.1",
+   "op": "20",
+   "nombre": "Ajuste de Rodillos y Alimentación del Vinilo",
+   "sector": "MESA DE CORTE",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Acomodar los rodillos moviéndolos en las direcciones indicadas por las flechas comenzando por el del lado izquierdo girándolo hacia la izquierda y luego el de la derecha.",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "Pasar el vinilo manualmente hacia el lado de la mesa asegurándose de que pase por debajo de los rodillos.",
+     "celda": "J14"
+    }
+   ],
+   "ciclo": [],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B34"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B35"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B36"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B37"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n Ajuste de Rodillos y Alimentación del Vinilo \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n Acomodar los rodillos moviéndolos en las direcciones indicadas por las flechas comenzando por el del lado izquierdo girándolo hacia la izquierda y luego el de la derecha. \n Acomodar los rodillos moviéndolos en las direcciones indicadas por las flechas comenzando por el del lado izquierdo girándolo hacia la izquierda y luego el de la derecha. \n Acomodar los rodillos moviéndolos en las direcciones indicadas por las flechas comenzando por el del lado izquierdo girándolo hacia la izquierda y luego el de la derecha. \n 2. \n Pasar el vinilo manualmente hacia el lado de la mesa asegurándose de que pase por debajo de los rodillos. \n Pasar el vinilo manualmente hacia el lado de la mesa asegurándose de que pase por debajo de los rodillos. \n 3. \n Volver a colocar ambos rodillos superiores en su posición anterior. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Características a controlar"
+  },
+  {
+   "hoja": "20.2",
+   "op": "20",
+   "nombre": "Ajuste de Material en la Máquina de Corte de Capas",
+   "sector": "MESA DE CORTE",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Utilizando el panel de control en la máquina de corte de capas de vinilo, presionar el botón izquierdo y derecho para mover el vinilo, acomodándolo correctamente detrás de los rodillos como se observa en la imagen N°2.",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "Dejar un poco de material sobrante y dirigirse nuevamente al panel de control.",
+     "celda": "J14"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/20.2/I38",
+     "hoja": "20.2",
+     "op": "20",
+     "fila": 38,
+     "remite": false,
+     "caracteristica": "Verificación de correcta alineación del vinilo detrás de los rodillos",
+     "metodo": "Visual",
+     "resp": "OP",
+     "frec": "1",
+     "registro": "N/A"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B40"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B41"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B42"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B43"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n Ajuste de Material en la Máquina de Corte de Capas \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n Utilizando el panel de control en la máquina de corte de capas de vinilo, presionar el botón izquierdo y derecho para mover el vinilo, acomodándolo correctamente detrás de los rodillos como se observa en la imagen N°2. \n Utilizando el panel de control en la máquina de corte de capas de vinilo, presionar el botón izquierdo y derecho para mover el vinilo, acomodándolo correctamente detrás de los rodillos como se observa en la imagen N°2. \n Utilizando el panel de control en la máquina de corte de capas de vinilo, presionar el botón izquierdo y derecho para mover el vinilo, acomodándolo correctamente detrás de los rodillos como se observa en la imagen N°2. \n 2. \n Dejar un poco de material sobrante y dirigirse nuevamente al panel de control. \n Dejar un poco de material sobrante y dirigirse nuevamente al panel de control. \n 3. \n Presionar el botón Function y luego presionar el ícono de tijeras en la zona inferior izquierda para que la máquina realice el corte del material sobrante, permitiendo iniciar desde el punto 0 el corte de las capas. \n Presionar el botón Function y luego presionar el ícono de tijeras en la zona inferior izquierda para que la máquina realice el corte del material sobrante, permitiendo iniciar desde el punto 0 el corte de las capas. \n Presionar el botón Function y luego presionar el ícono de tijeras en la zona inferior izquierda para que la máquina realice el corte del material sobrante, permitiendo iniciar desde el punto 0 el corte de las capas. \n 4. \n Retirar el material sobrante y colocarlo en el cajón de scrap. \n ⚠ Aclaración Importante: Los parámetros establecidos, incluida la velocidad de la máquina, no deben ser alterados bajo ninguna circunstancia. Cualquier ajuste o modificación de estos valores debe ser realizado exclusivamente por el equipo de mantenimiento. \n ⚠ Aclaración Importante: Los parámetros establecidos, incluida la velocidad de la máquina, no deben ser alterados bajo ninguna circunstancia. Cualquier ajuste o modificación de estos valores debe ser realizado exclusivamente por el equipo de mantenimiento. \n ⚠ Aclaración Importante: Los parámetros establecidos, incluida la velocidad de la máquina, no deben ser alterados bajo ninguna circunstancia. Cualquier ajuste o modificación de estos valores debe ser realizado exclusivamente por el equipo de mantenimiento. \n ⚠ Aclaración Importante: Los parámetros establecidos, incluida la velocidad de la máquina, no deben ser alterados bajo ninguna circunstancia. Cualquier ajuste o modificación de estos valores debe ser realizado exclusivamente por el equipo de mantenimiento. \n ⚠ Aclaración Importante: Los parámetros establecidos, incluida la velocidad de la máquina, no deben ser alterados bajo ninguna circunstancia. Cualquier ajuste o modificación de estos valores debe ser realizado exclusivamente por el equipo de mantenimiento. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Características a controlar \n Verificación de correcta alineación del vinilo detrás de los rodillos \n Verificación de correcta alineación del vinilo detrás de los rodillos \n Verificación de correcta alineación del vinilo detrás de los rodillos \n Verificación de correcta alineación del vinilo detrás de los rodillos"
+  },
+  {
+   "hoja": "21",
+   "op": "21",
+   "nombre": "Configuración y Corte Automático de Capas de Vinilo",
+   "sector": "MESA DE CORTE",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Medir con una regla el largo indicado en la planilla de mesa de corte (largo de la tizada + demasía) para luego asegurarse de que la máquina funcione correctamente y coloque el largo indicado.",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "Dirigirse al panel de control y, en caso de que Current Layers indique un valor mayor a 0, presionar Reset para reiniciarlo a 0.",
+     "celda": "J14"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/21/I38",
+     "hoja": "21",
+     "op": "21",
+     "fila": 38,
+     "remite": false,
+     "caracteristica": "Verificar la velocidad y tensión del vinilo",
+     "metodo": "Instructivo de parámetros - Visual",
+     "resp": "OP",
+     "frec": "Inicio turno / Mantenimiento / Corte de energía / Problema de calidad",
+     "registro": "Set up"
+    },
+    {
+     "id": "HO-971/21/I41",
+     "hoja": "21",
+     "op": "21",
+     "fila": 41,
+     "remite": false,
+     "caracteristica": "Verificación del largo de la capa incluyendo la demasía",
+     "metodo": "Regla",
+     "resp": "OP",
+     "frec": "Primera capa en cada tizada",
+     "registro": "N/A"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B40"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B41"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B42"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B43"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n Configuración y Corte Automático de Capas de Vinilo \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n Medir con una regla el largo indicado en la planilla de mesa de corte (largo de la tizada + demasía) para luego asegurarse de que la máquina funcione correctamente y coloque el largo indicado. \n Medir con una regla el largo indicado en la planilla de mesa de corte (largo de la tizada + demasía) para luego asegurarse de que la máquina funcione correctamente y coloque el largo indicado. \n Medir con una regla el largo indicado en la planilla de mesa de corte (largo de la tizada + demasía) para luego asegurarse de que la máquina funcione correctamente y coloque el largo indicado. \n 2. \n Dirigirse al panel de control y, en caso de que Current Layers indique un valor mayor a 0, presionar Reset para reiniciarlo a 0. \n Dirigirse al panel de control y, en caso de que Current Layers indique un valor mayor a 0, presionar Reset para reiniciarlo a 0. \n 3. \n Ingresar la cantidad de capas a cortar revisando nuevamente la planilla de mesa de corte y establecer el largo de la capa incluyendo la demasía. \n Ingresar la cantidad de capas a cortar revisando nuevamente la planilla de mesa de corte y establecer el largo de la capa incluyendo la demasía. \n 4. \n Verificar la velocidad y tensión del vinilo según instructivo con los parámetros para cada producto (Ver ciclo de control) \n Verificar la velocidad y tensión del vinilo según instructivo con los parámetros para cada producto (Ver ciclo de control) \n 5. \n Presionar el botón Start para iniciar el corte automático. \n 6. \n Una vez que la máquina llegue a la posición final, tomar la punta del vinilo para acomodar la capa y repetir el proceso hasta completar todas las capas, asegurándose de que queden bien alineadas. \n Una vez que la máquina llegue a la posición final, tomar la punta del vinilo para acomodar la capa y repetir el proceso hasta completar todas las capas, asegurándose de que queden bien alineadas. \n Una vez que la máquina llegue a la posición final, tomar la punta del vinilo para acomodar la capa y repetir el proceso hasta completar todas las capas, asegurándose de que queden bien alineadas. \n 7. \n Presionar el botón verde (superior) ubicado debajo de la mesa para mover fácilmente el vinilo sobre la misma. Apagarlo con el inferior rojo al finalizar \n Presionar el botón verde (superior) ubicado debajo de la mesa para mover fácilmente el vinilo sobre la misma. Apagarlo con el inferior rojo al finalizar \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Características a controlar \n Verificar la velocidad y tensión del vinilo \n Verificar la velocidad y tensión del vinilo \n Verificar la velocidad y tensión del vinilo \n Verificar la velocidad y tensión del vinilo \n Verificación del largo de la capa incluyendo la demasía \n Verificación del largo de la capa incluyendo la demasía \n Verificación del largo de la capa incluyendo la demasía \n Verificación del largo de la capa incluyendo la demasía"
+  },
+  {
+   "hoja": "21.1",
+   "op": "21",
+   "nombre": "Avance y alineación de vinilo en mesa de corte",
+   "sector": "MESA DE CORTE",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Presioná el botón verde (superior) que está debajo de la mesa, junto a la máquina de corte de capas, para mover las capas de vinilo cortado hacia la mesa de corte.",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "Dirigite al panel de la mesa de corte y presioná el botón de feed para iniciar el movimiento.",
+     "celda": "J14"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/21.1/I34",
+     "hoja": "21.1",
+     "op": "21",
+     "fila": 34,
+     "remite": false,
+     "caracteristica": "Alineación del vinilo y ubicación hasta las líneas rojas",
+     "metodo": "Verificación visual, confirmando que el vinilo esté recto y coincida con las marcas rojas",
+     "resp": "OP",
+     "frec": "1",
+     "registro": "N/A"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B36"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B37"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B38"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B39"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n Avance y alineación de vinilo en mesa de corte \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n Presioná el botón verde (superior) que está debajo de la mesa, junto a la máquina de corte de capas, para mover las capas de vinilo cortado hacia la mesa de corte. \n Presioná el botón verde (superior) que está debajo de la mesa, junto a la máquina de corte de capas, para mover las capas de vinilo cortado hacia la mesa de corte. \n Presioná el botón verde (superior) que está debajo de la mesa, junto a la máquina de corte de capas, para mover las capas de vinilo cortado hacia la mesa de corte. \n 2. \n Dirigite al panel de la mesa de corte y presioná el botón de feed para iniciar el movimiento. \n Dirigite al panel de la mesa de corte y presioná el botón de feed para iniciar el movimiento. \n 3. \n Mové manualmente el vinilo hacia la mesa, asegurándote de que las capas queden bien alineadas y el vinilo se mantenga recto durante todo el proceso. \n Mové manualmente el vinilo hacia la mesa, asegurándote de que las capas queden bien alineadas y el vinilo se mantenga recto durante todo el proceso. \n Mové manualmente el vinilo hacia la mesa, asegurándote de que las capas queden bien alineadas y el vinilo se mantenga recto durante todo el proceso. \n 4. \n Dejá que el vinilo se desplace hasta llegar a las líneas rojas marcadas a un costado de la mesa y, en ese punto, presioná el botón Stop en el panel de control para fijar la posición y detener el movimiento. \n Dejá que el vinilo se desplace hasta llegar a las líneas rojas marcadas a un costado de la mesa y, en ese punto, presioná el botón Stop en el panel de control para fijar la posición y detener el movimiento. \n Dejá que el vinilo se desplace hasta llegar a las líneas rojas marcadas a un costado de la mesa y, en ese punto, presioná el botón Stop en el panel de control para fijar la posición y detener el movimiento. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Características a controlar \n Alineación del vinilo y ubicación hasta las líneas rojas \n Alineación del vinilo y ubicación hasta las líneas rojas \n Alineación del vinilo y ubicación hasta las líneas rojas \n Alineación del vinilo y ubicación hasta las líneas rojas \n Alineación del vinilo y ubicación hasta las líneas rojas \n Alineación del vinilo y ubicación hasta las líneas rojas \n Alineación del vinilo y ubicación hasta las líneas rojas"
+  },
+  {
+   "hoja": "21.2",
+   "op": "21",
+   "nombre": "Medición de cuchilla",
+   "sector": "MESA DE CORTE",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Medir con calibre (paquímetro) MC167 antes de cada corte desde la punta de la cuchilla hasta 10 centímetros hacia el centro de la misma",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "Seleccionar la herramienta \"cutting control\"",
+     "celda": "J13"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/21.2/I37",
+     "hoja": "21.2",
+     "op": "21",
+     "fila": 37,
+     "remite": false,
+     "caracteristica": "ANCHO DE CUCHILLA ( 4 mm min.)",
+     "metodo": "CON CALIBRE MC167",
+     "resp": "OP",
+     "frec": "Antes de cada corte",
+     "registro": "Set up"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B39"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B40"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B41"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B42"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n Medición de cuchilla \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n Medir con calibre (paquímetro) MC167 antes de cada corte desde la punta de la cuchilla hasta 10 centímetros hacia el centro de la misma \n Medir con calibre (paquímetro) MC167 antes de cada corte desde la punta de la cuchilla hasta 10 centímetros hacia el centro de la misma \n 2. \n Seleccionar la herramienta \"cutting control\" \n 3. \n Revisar parámetros de cuchilla y setear el mismo ancho que tenga la cuchilla en el programa (no debe haber diferencia) \n Revisar parámetros de cuchilla y setear el mismo ancho que tenga la cuchilla en el programa (no debe haber diferencia) \n 4. \n En caso de que se quiebre la cuchilla retirar el desperdicio con precaución y colocarlo en el cajón amarillo, posteriormente se debe reportar por ARB a mantenimiento para que realice el cambio correspondiente. \n En caso de que se quiebre la cuchilla retirar el desperdicio con precaución y colocarlo en el cajón amarillo, posteriormente se debe reportar por ARB a mantenimiento para que realice el cambio correspondiente. \n En caso de que se quiebre la cuchilla retirar el desperdicio con precaución y colocarlo en el cajón amarillo, posteriormente se debe reportar por ARB a mantenimiento para que realice el cambio correspondiente. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Características a controlar \n ANCHO DE CUCHILLA ( 4 mm min.) \n ANCHO DE CUCHILLA ( 4 mm min.) \n ANCHO DE CUCHILLA ( 4 mm min.)"
+  },
+  {
+   "hoja": "21.3",
+   "op": "21",
+   "nombre": "Preparación y ajuste de corte con succión",
+   "sector": "MESA DE CORTE",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Extendé el rollo de nylon sobre las capas de vinilo hasta cubrirlas por completo, asegurándote de que la zona de succión quede totalmente tapada.",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "Acercate al panel de control junto al cabezal de la máquina de corte, presioná el botón Start y luego Cutting para activar la succión de aire.",
+     "celda": "J13"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/21.3/I34",
+     "hoja": "21.3",
+     "op": "21",
+     "fila": 34,
+     "remite": false,
+     "caracteristica": "Alineación correcta del cabezal y margen (2,5 cm/lado)",
+     "metodo": "Verificación visual y uso del láser rojo",
+     "resp": "OP",
+     "frec": "Antes de cada corte",
+     "registro": "N/A"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B36"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B37"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B38"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B39"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n Preparación y ajuste de corte con succión \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n Extendé el rollo de nylon sobre las capas de vinilo hasta cubrirlas por completo, asegurándote de que la zona de succión quede totalmente tapada. \n Extendé el rollo de nylon sobre las capas de vinilo hasta cubrirlas por completo, asegurándote de que la zona de succión quede totalmente tapada. \n 2. \n Acercate al panel de control junto al cabezal de la máquina de corte, presioná el botón Start y luego Cutting para activar la succión de aire. \n Acercate al panel de control junto al cabezal de la máquina de corte, presioná el botón Start y luego Cutting para activar la succión de aire. \n 3. \n En la computadora, abrí el programa Cutting Control, hacé clic en el ícono de la imagen de referencia N°2 y elegí el archivo que querés cortar. \n En la computadora, abrí el programa Cutting Control, hacé clic en el ícono de la imagen de referencia N°2 y elegí el archivo que querés cortar. \n 4. \n Con los botones junto al botón Shift, mové el cabezal hasta el extremo del vinilo más cercano, dejando un margen máximo de 2,5 cm por lado (5 cm en total a lo ancho y a lo largo). Después, desplazalo hasta el otro extremo y verificá la alineación usando el láser rojo (imagen de referencia N°4). \n Con los botones junto al botón Shift, mové el cabezal hasta el extremo del vinilo más cercano, dejando un margen máximo de 2,5 cm por lado (5 cm en total a lo ancho y a lo largo). Después, desplazalo hasta el otro extremo y verificá la alineación usando el láser rojo (imagen de referencia N°4). \n Con los botones junto al botón Shift, mové el cabezal hasta el extremo del vinilo más cercano, dejando un margen máximo de 2,5 cm por lado (5 cm en total a lo ancho y a lo largo). Después, desplazalo hasta el otro extremo y verificá la alineación usando el láser rojo (imagen de referencia N°4). \n Con los botones junto al botón Shift, mové el cabezal hasta el extremo del vinilo más cercano, dejando un margen máximo de 2,5 cm por lado (5 cm en total a lo ancho y a lo largo). Después, desplazalo hasta el otro extremo y verificá la alineación usando el láser rojo (imagen de referencia N°4). \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Características a controlar \n Alineación correcta del cabezal y margen (2,5 cm/lado) \n Alineación correcta del cabezal y margen (2,5 cm/lado) \n Alineación correcta del cabezal y margen (2,5 cm/lado) \n Alineación correcta del cabezal y margen (2,5 cm/lado) \n Alineación correcta del cabezal y margen (2,5 cm/lado) \n Alineación correcta del cabezal y margen (2,5 cm/lado) \n Alineación correcta del cabezal y margen (2,5 cm/lado)"
+  },
+  {
+   "hoja": "21.4",
+   "op": "21",
+   "nombre": "Inicio del corte y verificación automática de medidas",
+   "sector": "MESA DE CORTE",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Dirigite a la computadora y hacé clic en el botón que se ve en la imagen de referencia N°1 para comenzar el corte. Cuando aparezca el cartel de la imagen N°2, presioná el botón Start ubicado debajo de la pantalla (REF 3).",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "La máquina va a chequear con sus sensores que el vinilo cumpla con las medidas necesarias. Una vez hecho esto, andá al panel de control junto al cabezal de la mesa de corte y apretá Start.",
+     "celda": "J14"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/21.4/I36",
+     "hoja": "21.4",
+     "op": "21",
+     "fila": 36,
+     "remite": false,
+     "caracteristica": "Posición del cabezal y elevación del plato",
+     "metodo": "Visual",
+     "resp": "OP",
+     "frec": "Antes de cada corte",
+     "registro": "N/A"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B38"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B39"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B40"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B41"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n Inicio del corte y verificación automática de medidas \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n Dirigite a la computadora y hacé clic en el botón que se ve en la imagen de referencia N°1 para comenzar el corte. Cuando aparezca el cartel de la imagen N°2, presioná el botón Start ubicado debajo de la pantalla (REF 3). \n Dirigite a la computadora y hacé clic en el botón que se ve en la imagen de referencia N°1 para comenzar el corte. Cuando aparezca el cartel de la imagen N°2, presioná el botón Start ubicado debajo de la pantalla (REF 3). \n Dirigite a la computadora y hacé clic en el botón que se ve en la imagen de referencia N°1 para comenzar el corte. Cuando aparezca el cartel de la imagen N°2, presioná el botón Start ubicado debajo de la pantalla (REF 3). \n 2. \n La máquina va a chequear con sus sensores que el vinilo cumpla con las medidas necesarias. Una vez hecho esto, andá al panel de control junto al cabezal de la mesa de corte y apretá Start. \n La máquina va a chequear con sus sensores que el vinilo cumpla con las medidas necesarias. Una vez hecho esto, andá al panel de control junto al cabezal de la mesa de corte y apretá Start. \n La máquina va a chequear con sus sensores que el vinilo cumpla con las medidas necesarias. Una vez hecho esto, andá al panel de control junto al cabezal de la mesa de corte y apretá Start. \n 3. \n La máquina va a bajar el cabezal; en ese momento, presioná el botón inferior de movimiento (Plato) para elevarlo manualmente. \n La máquina va a bajar el cabezal; en ese momento, presioná el botón inferior de movimiento (Plato) para elevarlo manualmente. \n 4. \n Con el plato arriba, volvé a presionar Start en el panel de control y después volvé a la computadora para presionar Enter, de esa forma inicia el corte. \n Con el plato arriba, volvé a presionar Start en el panel de control y después volvé a la computadora para presionar Enter, de esa forma inicia el corte. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Características a controlar \n Posición del cabezal y elevación del plato \n Posición del cabezal y elevación del plato \n Posición del cabezal y elevación del plato"
+  },
+  {
+   "hoja": "22",
+   "op": "22",
+   "nombre": "CONTROL CON MYLAR",
+   "sector": "MESA DE CORTE",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Identificar la plantilla Mylar correspondiente a la pieza/material a controlar según la planilla de corte (cada referencia y material tiene su plantilla codificada).",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "Apoyar la pieza sobre la plantilla y centrarla, haciendo coincidir el contorno de la pieza con el área OK marcada en la plantilla.",
+     "celda": "J13"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/22/I40",
+     "hoja": "22",
+     "op": "22",
+     "fila": 40,
+     "remite": false,
+     "caracteristica": "Identificación correcta de plantilla Mylar (según referencia y material en planilla de corte)",
+     "metodo": "Visual - planilla de corte",
+     "resp": "OP / CC",
+     "frec": "Inicio turno / Mantenimiento / Corte de energía / Problema de calidad",
+     "registro": "Set Up"
+    },
+    {
+     "id": "HO-971/22/I43",
+     "hoja": "22",
+     "op": "22",
+     "fila": 43,
+     "remite": false,
+     "caracteristica": "Contorno de la pieza dentro del área OK de la plantilla (tolerancia ±1 mm)",
+     "metodo": "Visual - plantilla Mylar",
+     "resp": "OP / CC",
+     "frec": "Inicio turno / Mantenimiento / Corte de energía / Problema de calidad",
+     "registro": "Set Up"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B42"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B43"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B44"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B45"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n CONTROL CON MYLAR \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1 \n Identificar la plantilla Mylar correspondiente a la pieza/material a controlar según la planilla de corte (cada referencia y material tiene su plantilla codificada). \n Identificar la plantilla Mylar correspondiente a la pieza/material a controlar según la planilla de corte (cada referencia y material tiene su plantilla codificada). \n 2 \n Apoyar la pieza sobre la plantilla y centrarla, haciendo coincidir el contorno de la pieza con el área OK marcada en la plantilla. \n Apoyar la pieza sobre la plantilla y centrarla, haciendo coincidir el contorno de la pieza con el área OK marcada en la plantilla. \n 3 \n Verificar visualmente que el contorno completo de la pieza quede dentro del área OK (banda de tolerancia ±1 mm) marcada en la plantilla. \n Verificar visualmente que el contorno completo de la pieza quede dentro del área OK (banda de tolerancia ±1 mm) marcada en la plantilla. \n 4 \n Pieza OK: el contorno coincide con el área OK en todo su perímetro → continuar con el flujo. Pieza NO CONFORME: el contorno sobresale del área OK (pieza más grande) o no llega al área OK (pieza más chica), aunque sea en un solo punto del perímetro. \n Pieza OK: el contorno coincide con el área OK en todo su perímetro → continuar con el flujo. Pieza NO CONFORME: el contorno sobresale del área OK (pieza más grande) o no llega al área OK (pieza más chica), aunque sea en un solo punto del perímetro. \n Pieza OK: el contorno coincide con el área OK en todo su perímetro → continuar con el flujo. Pieza NO CONFORME: el contorno sobresale del área OK (pieza más grande) o no llega al área OK (pieza más chica), aunque sea en un solo punto del perímetro. \n Pieza OK: el contorno coincide con el área OK en todo su perímetro → continuar con el flujo. Pieza NO CONFORME: el contorno sobresale del área OK (pieza más grande) o no llega al área OK (pieza más chica), aunque sea en un solo punto del perímetro. \n 5 \n Pieza NO CONFORME: identificar con tarjeta de material rechazado y proceder según P-13 (Control de Producto No Conforme) y P-14 (Acciones correctivas y preventivas). \n Pieza NO CONFORME: identificar con tarjeta de material rechazado y proceder según P-13 (Control de Producto No Conforme) y P-14 (Acciones correctivas y preventivas). \n Pieza NO CONFORME: identificar con tarjeta de material rechazado y proceder según P-13 (Control de Producto No Conforme) y P-14 (Acciones correctivas y preventivas). \n ⚠ NOTA CRÍTICA: el control es bidireccional. La pieza no debe quedar ni más grande ni más chica que el área OK marcada en la plantilla. Una pieza más chica también es NO CONFORME aunque \"entre\" en la plantilla. \n ⚠ NOTA CRÍTICA: el control es bidireccional. La pieza no debe quedar ni más grande ni más chica que el área OK marcada en la plantilla. Una pieza más chica también es NO CONFORME aunque \"entre\" en la plantilla. \n ⚠ NOTA CRÍTICA: el control es bidireccional. La pieza no debe quedar ni más grande ni más chica que el área OK marcada en la plantilla. Una pieza más chica también es NO CONFORME aunque \"entre\" en la plantilla. \n ⚠ NOTA CRÍTICA: el control es bidireccional. La pieza no debe quedar ni más grande ni más chica que el área OK marcada en la plantilla. Una pieza más chica también es NO CONFORME aunque \"entre\" en la plantilla. \n CICLO DE CONTROL \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Características a controlar \n Identificación correcta de plantilla Mylar (según referencia y material en planilla de corte) \n Identificación correcta de plantilla Mylar (según referencia y material en planilla de corte) \n Identificación correcta de plantilla Mylar (según referencia y material en planilla de corte) \n Identificación correcta de plantilla Mylar (según referencia y material en planilla de corte) \n Contorno de la pieza dentro del área OK de la plantilla (tolerancia ±1 mm) \n Contorno de la pieza dentro del área OK de la plantilla (tolerancia ±1 mm) \n Contorno de la pieza dentro del área OK de la plantilla (tolerancia ±1 mm) \n Contorno de la pieza dentro del área OK de la plantilla (tolerancia ±1 mm)"
+  },
+  {
+   "hoja": "30",
+   "op": "30",
+   "nombre": "REFILADO",
+   "sector": "COSTURA",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Tomar la pieza a refilar y colocar en la máquina refiladora el extremo del lado donde va la costura. (Ese lado se refila primero; el extremo opuesto no se refila).",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "Pisar el pedal para accionar la máquina y refilar ese extremo.",
+     "celda": "J13"
+    }
+   ],
+   "ciclo": [],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B31"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B32"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B33"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B34"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n REFILADO \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n Tomar la pieza a refilar y colocar en la máquina refiladora el extremo del lado donde va la costura. (Ese lado se refila primero; el extremo opuesto no se refila). \n Tomar la pieza a refilar y colocar en la máquina refiladora el extremo del lado donde va la costura. (Ese lado se refila primero; el extremo opuesto no se refila). \n 2. \n Pisar el pedal para accionar la máquina y refilar ese extremo. \n 3. \n Girar la pieza y refilar de la misma forma ambas puntas. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar"
+  },
+  {
+   "hoja": "40",
+   "op": "40",
+   "nombre": "COSTURA UNIÓN",
+   "sector": "COSTURA",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Colocar los componentes sobre la mesa según la versión a producir. Verificar el código de pieza y tener a la vista la muestra patrón liberada por Calidad.",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "Cargar hilo en aguja y bobina: Nm 30/3 PET Jet Black FX284-E0PTO (igual en las 4 versiones). Costura de unión oculta.",
+     "celda": "J13"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/40/I26",
+     "hoja": "40",
+     "op": "40",
+     "fila": 26,
+     "remite": false,
+     "caracteristica": "Toma 8 mm (±1) / Puntadas 4 en 16 mm (±1)",
+     "metodo": "-",
+     "resp": "-",
+     "frec": "-",
+     "registro": "-"
+    },
+    {
+     "id": "HO-971/40/I28",
+     "hoja": "40",
+     "op": "40",
+     "fila": 28,
+     "remite": false,
+     "caracteristica": "Continuidad de costura (sin saltos ni flojas)",
+     "metodo": "-",
+     "resp": "-",
+     "frec": "-",
+     "registro": "-"
+    },
+    {
+     "id": "HO-971/40/I30",
+     "hoja": "40",
+     "op": "40",
+     "fila": 30,
+     "remite": false,
+     "caracteristica": "Atraque inicio/fin: 3 a 4 puntadas",
+     "metodo": "-",
+     "resp": "-",
+     "frec": "-",
+     "registro": "-"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B28"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B29"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B30"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B31"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n COSTURA UNIÓN \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n Colocar los componentes sobre la mesa según la versión a producir. Verificar el código de pieza y tener a la vista la muestra patrón liberada por Calidad. \n Colocar los componentes sobre la mesa según la versión a producir. Verificar el código de pieza y tener a la vista la muestra patrón liberada por Calidad. \n 2. \n Cargar hilo en aguja y bobina: Nm 30/3 PET Jet Black FX284-E0PTO (igual en las 4 versiones). Costura de unión oculta. \n Cargar hilo en aguja y bobina: Nm 30/3 PET Jet Black FX284-E0PTO (igual en las 4 versiones). Costura de unión oculta. \n 3. \n Realizar la costura de unión a máquina: 4 puntadas en 16 mm (±1), toma 8 mm (±1), atraque 3-4 puntadas al inicio y al final. \n Realizar la costura de unión a máquina: 4 puntadas en 16 mm (±1), toma 8 mm (±1), atraque 3-4 puntadas al inicio y al final. \n 4. \n Al terminar cada pieza, CORTAR LOS HILOS y SEPARAR la pieza. No coser piezas en cadena continua sin separarlas. \n Al terminar cada pieza, CORTAR LOS HILOS y SEPARAR la pieza. No coser piezas en cadena continua sin separarlas. \n 5. \n Inspeccionar: continuidad de costura, sin puntadas flojas ni saltadas y simetría vs muestra patrón. Ante desvío aplicar Plan de Reacción ante No Conforme. \n Inspeccionar: continuidad de costura, sin puntadas flojas ni saltadas y simetría vs muestra patrón. Ante desvío aplicar Plan de Reacción ante No Conforme. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Toma 8 mm (±1) / Puntadas 4 en 16 mm (±1) \n Toma 8 mm (±1) / Puntadas 4 en 16 mm (±1) \n Toma 8 mm (±1) / Puntadas 4 en 16 mm (±1) \n Continuidad de costura (sin saltos ni flojas) \n Continuidad de costura (sin saltos ni flojas) \n Continuidad de costura (sin saltos ni flojas) \n Atraque inicio/fin: 3 a 4 puntadas \n Atraque inicio/fin: 3 a 4 puntadas \n Atraque inicio/fin: 3 a 4 puntadas"
+  },
+  {
+   "hoja": "41",
+   "op": "41",
+   "nombre": "COSTURA VISTA (1 sola línea)",
+   "sector": "COSTURA",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Colocar la pieza sobre la mesa según la versión a producir. Verificar el código de pieza y tener a la vista la muestra patrón liberada por Calidad.",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "Cargar hilo: aguja Nm 20/3 Jet Black FX483TK-E0PTO y bobina Nm 30/3 Jet Black FX284-E0PTO (igual en las 4 versiones).",
+     "celda": "J13"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/41/I27",
+     "hoja": "41",
+     "op": "41",
+     "fila": 27,
+     "remite": false,
+     "caracteristica": "Toma 4 mm (±1) / Puntadas 6 en 25 mm (±0,5)",
+     "metodo": "-",
+     "resp": "-",
+     "frec": "-",
+     "registro": "-"
+    },
+    {
+     "id": "HO-971/41/I29",
+     "hoja": "41",
+     "op": "41",
+     "fila": 29,
+     "remite": false,
+     "caracteristica": "Alineación y continuidad de la línea vista",
+     "metodo": "-",
+     "resp": "-",
+     "frec": "-",
+     "registro": "-"
+    },
+    {
+     "id": "HO-971/41/I31",
+     "hoja": "41",
+     "op": "41",
+     "fila": 31,
+     "remite": false,
+     "caracteristica": "Atraque inicio/fin: 3 a 4 puntadas",
+     "metodo": "-",
+     "resp": "-",
+     "frec": "-",
+     "registro": "-"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B29"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B30"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B31"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B32"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n COSTURA VISTA (1 sola línea) \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n Colocar la pieza sobre la mesa según la versión a producir. Verificar el código de pieza y tener a la vista la muestra patrón liberada por Calidad. \n Colocar la pieza sobre la mesa según la versión a producir. Verificar el código de pieza y tener a la vista la muestra patrón liberada por Calidad. \n 2. \n Cargar hilo: aguja Nm 20/3 Jet Black FX483TK-E0PTO y bobina Nm 30/3 Jet Black FX284-E0PTO (igual en las 4 versiones). \n Cargar hilo: aguja Nm 20/3 Jet Black FX483TK-E0PTO y bobina Nm 30/3 Jet Black FX284-E0PTO (igual en las 4 versiones). \n 3. \n Realizar la costura vista de 1 sola línea sobre el borde superior: 6 puntadas en 25 mm (±0,5), toma 4 mm (±1), atraque 3-4 al inicio y al final. \n Realizar la costura vista de 1 sola línea sobre el borde superior: 6 puntadas en 25 mm (±0,5), toma 4 mm (±1), atraque 3-4 al inicio y al final. \n 4. \n Al terminar cada pieza, CORTAR LOS HILOS y SEPARAR la pieza. No coser piezas en cadena continua sin separarlas. \n Al terminar cada pieza, CORTAR LOS HILOS y SEPARAR la pieza. No coser piezas en cadena continua sin separarlas. \n 5. \n Inspeccionar: alineación y continuidad de la línea vista, sin puntadas flojas ni saltadas y simetría vs muestra patrón. Ante desvío aplicar Plan de Reacción ante No Conforme. \n Inspeccionar: alineación y continuidad de la línea vista, sin puntadas flojas ni saltadas y simetría vs muestra patrón. Ante desvío aplicar Plan de Reacción ante No Conforme. \n Inspeccionar: alineación y continuidad de la línea vista, sin puntadas flojas ni saltadas y simetría vs muestra patrón. Ante desvío aplicar Plan de Reacción ante No Conforme. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Toma 4 mm (±1) / Puntadas 6 en 25 mm (±0,5) \n Toma 4 mm (±1) / Puntadas 6 en 25 mm (±0,5) \n Toma 4 mm (±1) / Puntadas 6 en 25 mm (±0,5) \n Alineación y continuidad de la línea vista \n Alineación y continuidad de la línea vista \n Alineación y continuidad de la línea vista \n Atraque inicio/fin: 3 a 4 puntadas \n Atraque inicio/fin: 3 a 4 puntadas \n Atraque inicio/fin: 3 a 4 puntadas"
+  },
+  {
+   "hoja": "50",
+   "op": "50",
+   "nombre": "INYECCIÓN DE PIEZAS PLÁSTICAS",
+   "sector": "INYECCIÓN",
+   "rev": "A",
+   "fecha": "2026-04-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "CARGA DE MATERIAL: Colocar el bolsón de materia prima al pie de máquina. Verificar que la aspiradora funcione correctamente, que los filtros estén limpios y que la presión de aire sea la correcta. Si el material requiere pre-secado (ej. Policarbonato/ABS), verificar que la tolva secadora esté operativa (80°C a 120°C, 2 a 4 hs según material).",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "SET-UP DE MÁQUINA: Verificar que el sistema de refrigeración por agua esté activo en la primera zona del tornillo (zona de alimentación). Setear la temperatura de cada zona según el tipo de material. Configurar velocidad, presión y tiempos de inyección. Confirmar que TODOS los parámetros sean correctos antes de iniciar producción.",
+     "celda": "J16"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/50/I33",
+     "hoja": "50",
+     "op": "50",
+     "fila": 33,
+     "remite": false,
+     "caracteristica": "Aspecto visual de pieza (llenado, rebabas, quemaduras, flashes)",
+     "metodo": "Visual / Patrón",
+     "resp": "OP",
+     "frec": "1",
+     "registro": "Planilla de control"
+    },
+    {
+     "id": "HO-971/50/I36",
+     "hoja": "50",
+     "op": "50",
+     "fila": 36,
+     "remite": false,
+     "caracteristica": "Control dimensional según plano",
+     "metodo": "Calibre / Instrumento",
+     "resp": "OP",
+     "frec": "Según plan de control",
+     "registro": "Planilla de control"
+    },
+    {
+     "id": "HO-971/50/I39",
+     "hoja": "50",
+     "op": "50",
+     "fila": 39,
+     "remite": false,
+     "caracteristica": "Parámetros de máquina (temp., presión, velocidad, refrigeración)",
+     "metodo": "Pantalla de máquina",
+     "resp": "OP",
+     "frec": "Inicio turno / Cada set-up",
+     "registro": "Hoja de set-up"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B38"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B39"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B40"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B41"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n INYECCIÓN DE PIEZAS PLÁSTICAS \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1 \n CARGA DE MATERIAL: Colocar el bolsón de materia prima al pie de máquina. Verificar que la aspiradora funcione correctamente, que los filtros estén limpios y que la presión de aire sea la correcta. Si el material requiere pre-secado (ej. Policarbonato/ABS), verificar que la tolva secadora esté operativa (80°C a 120°C, 2 a 4 hs según material). \n CARGA DE MATERIAL: Colocar el bolsón de materia prima al pie de máquina. Verificar que la aspiradora funcione correctamente, que los filtros estén limpios y que la presión de aire sea la correcta. Si el material requiere pre-secado (ej. Policarbonato/ABS), verificar que la tolva secadora esté operativa (80°C a 120°C, 2 a 4 hs según material). \n CARGA DE MATERIAL: Colocar el bolsón de materia prima al pie de máquina. Verificar que la aspiradora funcione correctamente, que los filtros estén limpios y que la presión de aire sea la correcta. Si el material requiere pre-secado (ej. Policarbonato/ABS), verificar que la tolva secadora esté operativa (80°C a 120°C, 2 a 4 hs según material). \n CARGA DE MATERIAL: Colocar el bolsón de materia prima al pie de máquina. Verificar que la aspiradora funcione correctamente, que los filtros estén limpios y que la presión de aire sea la correcta. Si el material requiere pre-secado (ej. Policarbonato/ABS), verificar que la tolva secadora esté operativa (80°C a 120°C, 2 a 4 hs según material). \n CARGA DE MATERIAL: Colocar el bolsón de materia prima al pie de máquina. Verificar que la aspiradora funcione correctamente, que los filtros estén limpios y que la presión de aire sea la correcta. Si el material requiere pre-secado (ej. Policarbonato/ABS), verificar que la tolva secadora esté operativa (80°C a 120°C, 2 a 4 hs según material). \n 2 \n SET-UP DE MÁQUINA: Verificar que el sistema de refrigeración por agua esté activo en la primera zona del tornillo (zona de alimentación). Setear la temperatura de cada zona según el tipo de material. Configurar velocidad, presión y tiempos de inyección. Confirmar que TODOS los parámetros sean correctos antes de iniciar producción. \n SET-UP DE MÁQUINA: Verificar que el sistema de refrigeración por agua esté activo en la primera zona del tornillo (zona de alimentación). Setear la temperatura de cada zona según el tipo de material. Configurar velocidad, presión y tiempos de inyección. Confirmar que TODOS los parámetros sean correctos antes de iniciar producción. \n SET-UP DE MÁQUINA: Verificar que el sistema de refrigeración por agua esté activo en la primera zona del tornillo (zona de alimentación). Setear la temperatura de cada zona según el tipo de material. Configurar velocidad, presión y tiempos de inyección. Confirmar que TODOS los parámetros sean correctos antes de iniciar producción. \n SET-UP DE MÁQUINA: Verificar que el sistema de refrigeración por agua esté activo en la primera zona del tornillo (zona de alimentación). Setear la temperatura de cada zona según el tipo de material. Configurar velocidad, presión y tiempos de inyección. Confirmar que TODOS los parámetros sean correctos antes de iniciar producción. \n SET-UP DE MÁQUINA: Verificar que el sistema de refrigeración por agua esté activo en la primera zona del tornillo (zona de alimentación). Setear la temperatura de cada zona según el tipo de material. Configurar velocidad, presión y tiempos de inyección. Confirmar que TODOS los parámetros sean correctos antes de iniciar producción. \n 3 \n CONTROL DE PIEZA INYECTADA: Inspeccionar visualmente cada pieza verificando: falta de llenado (piezas incompletas o con huecos), rebabas, orificios tapados, quemaduras y flashes (marcas visibles en la superficie). Verificar dimensiones con el calibre correspondiente según plano de control. \n CONTROL DE PIEZA INYECTADA: Inspeccionar visualmente cada pieza verificando: falta de llenado (piezas incompletas o con huecos), rebabas, orificios tapados, quemaduras y flashes (marcas visibles en la superficie). Verificar dimensiones con el calibre correspondiente según plano de control. \n CONTROL DE PIEZA INYECTADA: Inspeccionar visualmente cada pieza verificando: falta de llenado (piezas incompletas o con huecos), rebabas, orificios tapados, quemaduras y flashes (marcas visibles en la superficie). Verificar dimensiones con el calibre correspondiente según plano de control. \n CONTROL DE PIEZA INYECTADA: Inspeccionar visualmente cada pieza verificando: falta de llenado (piezas incompletas o con huecos), rebabas, orificios tapados, quemaduras y flashes (marcas visibles en la superficie). Verificar dimensiones con el calibre correspondiente según plano de control. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Características a controlar \n Aspecto visual de pieza (llenado, rebabas, quemaduras, flashes) \n Aspecto visual de pieza (llenado, rebabas, quemaduras, flashes) \n Aspecto visual de pieza (llenado, rebabas, quemaduras, flashes) \n Aspecto visual de pieza (llenado, rebabas, quemaduras, flashes) \n Control dimensional según plano \n Control dimensional según plano \n Control dimensional según plano \n Control dimensional según plano \n Parámetros de máquina (temp., presión, velocidad, refrigeración) \n Parámetros de máquina (temp., presión, velocidad, refrigeración) \n Parámetros de máquina (temp., presión, velocidad, refrigeración) \n Parámetros de máquina (temp., presión, velocidad, refrigeración)"
+  },
+  {
+   "hoja": "51",
+   "op": "51",
+   "nombre": "Control pieza inyectada — APB DELANTERO",
+   "sector": "INYECCIÓN",
+   "rev": "A",
+   "fecha": "2026-04-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "1-Verificar que la pieza esté correctamente inyectada según camino de control y ayudas visuales.",
+     "celda": "I11"
+    },
+    {
+     "n": "2",
+     "texto": "2-Verificar el peso según nominal y tolerancias definidos.",
+     "celda": "I12"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/51/I23",
+     "hoja": "51",
+     "op": "51",
+     "fila": 23,
+     "remite": false,
+     "caracteristica": "Aspecto con criterio de biblia de defecto y pieza patrón.",
+     "metodo": "Visual",
+     "resp": "Insp.",
+     "frec": "1",
+     "registro": "RC"
+    },
+    {
+     "id": "HO-971/51/I25",
+     "hoja": "51",
+     "op": "51",
+     "fila": 25,
+     "remite": false,
+     "caracteristica": "Peso 120 +/- 5g",
+     "metodo": "Balanza",
+     "resp": "Insp.",
+     "frec": "Al inicio, medio y fin de producción.",
+     "registro": "SET UP"
+    },
+    {
+     "id": "HO-971/51/I26",
+     "hoja": "51",
+     "op": "51",
+     "fila": 26,
+     "remite": false,
+     "caracteristica": "Cota index 214 +/- 1mm",
+     "metodo": "Calibre Vernier",
+     "resp": "Insp.",
+     "frec": "Al inicio, medio y fin de producción.",
+     "registro": "SET UP"
+    },
+    {
+     "id": "HO-971/51/I27",
+     "hoja": "51",
+     "op": "51",
+     "fila": 27,
+     "remite": false,
+     "caracteristica": "Control en calibre DIM",
+     "metodo": "Contra calibre",
+     "resp": "Insp.",
+     "frec": "Al inicio, medio y fin de producción.",
+     "registro": "SET UP"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B24"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B25"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B26"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B27"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n Control pieza inyectada — APB DELANTERO \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1-Verificar que la pieza esté correctamente inyectada según camino de control y ayudas visuales. \n 1-Verificar que la pieza esté correctamente inyectada según camino de control y ayudas visuales. \n 2-Verificar el peso según nominal y tolerancias definidos. \n 2-Verificar el peso según nominal y tolerancias definidos. \n 3-Verificar cota index según nominal y tolerancias definidos luego de 20min de estabilización de la pieza inyectada. \n 3-Verificar cota index según nominal y tolerancias definidos luego de 20min de estabilización de la pieza inyectada. \n 4-Colocar identificación de pieza inyectada \n 4-Colocar identificación de pieza inyectada \n Controlar con calibre versus calibre luego de 20min de estabilización de la pieza inyectada. Registrar valores según frecuencias definidas en SET UP. \n Controlar con calibre versus calibre luego de 20min de estabilización de la pieza inyectada. Registrar valores según frecuencias definidas en SET UP. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Aspecto con criterio de biblia de defecto y pieza patrón. \n Aspecto con criterio de biblia de defecto y pieza patrón. \n Aspecto con criterio de biblia de defecto y pieza patrón. \n Peso 120 +/- 5g \n Peso 120 +/- 5g \n Cota index 214 +/- 1mm \n Cota index 214 +/- 1mm \n Control en calibre DIM \n Control en calibre DIM \n Control en calibre DIM"
+  },
+  {
+   "hoja": "51.1",
+   "op": "51",
+   "nombre": "Control pieza inyectada — APB TRASERO",
+   "sector": "INYECCIÓN",
+   "rev": "A",
+   "fecha": "2026-04-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "1-Verificar que la pieza esté correctamente inyectada según camino de control y ayudas visuales.",
+     "celda": "I11"
+    },
+    {
+     "n": "2",
+     "texto": "2-Verificar el peso según nominal y tolerancias definidos.",
+     "celda": "I12"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/51.1/I23",
+     "hoja": "51.1",
+     "op": "51",
+     "fila": 23,
+     "remite": false,
+     "caracteristica": "Aspecto con criterio de biblia de defecto y pieza patrón.",
+     "metodo": "Visual",
+     "resp": "Insp.",
+     "frec": "1",
+     "registro": "RC"
+    },
+    {
+     "id": "HO-971/51.1/I25",
+     "hoja": "51.1",
+     "op": "51",
+     "fila": 25,
+     "remite": false,
+     "caracteristica": "Peso 115 +/- 5g",
+     "metodo": "Balanza",
+     "resp": "Insp.",
+     "frec": "Al inicio, medio y fin de producción.",
+     "registro": "SET UP"
+    },
+    {
+     "id": "HO-971/51.1/I26",
+     "hoja": "51.1",
+     "op": "51",
+     "fila": 26,
+     "remite": false,
+     "caracteristica": "Cota index 173,5 +/- 1mm",
+     "metodo": "Calibre Vernier",
+     "resp": "Insp.",
+     "frec": "Al inicio, medio y fin de producción.",
+     "registro": "SET UP"
+    },
+    {
+     "id": "HO-971/51.1/I27",
+     "hoja": "51.1",
+     "op": "51",
+     "fila": 27,
+     "remite": false,
+     "caracteristica": "Control en calibre DIM",
+     "metodo": "Contra calibre",
+     "resp": "Insp.",
+     "frec": "Al inicio, medio y fin de producción.",
+     "registro": "SET UP"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B24"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B25"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B26"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B27"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n Control pieza inyectada — APB TRASERO \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1-Verificar que la pieza esté correctamente inyectada según camino de control y ayudas visuales. \n 1-Verificar que la pieza esté correctamente inyectada según camino de control y ayudas visuales. \n 2-Verificar el peso según nominal y tolerancias definidos. \n 2-Verificar el peso según nominal y tolerancias definidos. \n 3-Verificar cota index según nominal y tolerancias definidos luego de 20min de estabilización de la pieza inyectada. \n 3-Verificar cota index según nominal y tolerancias definidos luego de 20min de estabilización de la pieza inyectada. \n 4-Colocar identificación de pieza inyectada \n 4-Colocar identificación de pieza inyectada \n Controlar con calibre versus calibre luego de 20min de estabilización de la pieza inyectada. Registrar valores según frecuencias definidas en SET UP. \n Controlar con calibre versus calibre luego de 20min de estabilización de la pieza inyectada. Registrar valores según frecuencias definidas en SET UP. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Aspecto con criterio de biblia de defecto y pieza patrón. \n Aspecto con criterio de biblia de defecto y pieza patrón. \n Aspecto con criterio de biblia de defecto y pieza patrón. \n Peso 115 +/- 5g \n Peso 115 +/- 5g \n Cota index 173,5 +/- 1mm \n Cota index 173,5 +/- 1mm \n Control en calibre DIM \n Control en calibre DIM \n Control en calibre DIM"
+  },
+  {
+   "hoja": "70",
+   "op": "70",
+   "nombre": "INYECCIÓN PU (POLIURETANO)",
+   "sector": "INYECCIÓN",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "PENDIENTE / TBD - Cargar descripción de la operación.",
+     "celda": "J11"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/70/I23",
+     "hoja": "70",
+     "op": "70",
+     "fila": 23,
+     "remite": false,
+     "caracteristica": "PENDIENTE / TBD",
+     "metodo": "TBD",
+     "resp": "OP",
+     "frec": "TBD",
+     "registro": "-"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B24"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B25"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B26"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B27"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n INYECCIÓN PU (POLIURETANO) \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n PENDIENTE / TBD - Cargar descripción de la operación. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n PENDIENTE / TBD \n PENDIENTE / TBD \n PENDIENTE / TBD"
+  },
+  {
+   "hoja": "80",
+   "op": "80",
+   "nombre": "ADHESIVADO",
+   "sector": "ADHESIVADO",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Tomar el vinilo y colocarlo con el lado vista hacia arriba sobre el rodillo de la máquina hotmelt.",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "Con una pinza, sujetar la pieza y acompañarla hasta que pase completamente por el rodillo, asegurando una adhesión pareja antes de retirarla.",
+     "celda": "J13"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/80/I30",
+     "hoja": "80",
+     "op": "80",
+     "fila": 30,
+     "remite": false,
+     "caracteristica": "Temperatura de la máquina en grados °C entre 190 y 210",
+     "metodo": "Visual",
+     "resp": "OP",
+     "frec": "Inicio de turno",
+     "registro": "Set up"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B31"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B32"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B33"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B34"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n ADHESIVADO \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n Tomar el vinilo y colocarlo con el lado vista hacia arriba sobre el rodillo de la máquina hotmelt. \n Tomar el vinilo y colocarlo con el lado vista hacia arriba sobre el rodillo de la máquina hotmelt. \n 2. \n Con una pinza, sujetar la pieza y acompañarla hasta que pase completamente por el rodillo, asegurando una adhesión pareja antes de retirarla. \n Con una pinza, sujetar la pieza y acompañarla hasta que pase completamente por el rodillo, asegurando una adhesión pareja antes de retirarla. \n 3. \n Dejar reposar la pieza sobre la estantería hasta que el pegamento esté seco \n NO APRESURAR EL PROCESO DE ADHESIVADO: RETIRAR LA PIEZA ANTES DE TIEMPO DEBILITA EL PEGADO. \n NO APRESURAR EL PROCESO DE ADHESIVADO: RETIRAR LA PIEZA ANTES DE TIEMPO DEBILITA EL PEGADO. \n NO APRESURAR EL PROCESO DE ADHESIVADO: RETIRAR LA PIEZA ANTES DE TIEMPO DEBILITA EL PEGADO. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Temperatura de la máquina en grados °C entre 190 y 210 \n Temperatura de la máquina en grados °C entre 190 y 210 \n Temperatura de la máquina en grados °C entre 190 y 210"
+  },
+  {
+   "hoja": "81",
+   "op": "81",
+   "nombre": "INSPECCIÓN DE PIEZA ADHESIVADA",
+   "sector": "ADHESIVADO / CALIDAD",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Tomar pieza adhesivada y pesarla en la balanza.",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "Una vez que las piezas se encuentren secas depositarlas en un cajón hasta completarlo para su posterior traslado a línea",
+     "celda": "J12"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/81/I26",
+     "hoja": "81",
+     "op": "81",
+     "fila": 26,
+     "remite": false,
+     "caracteristica": "Peso del vinilo adhesivado: PENDIENTE / TBD",
+     "metodo": "Balanza",
+     "resp": "OP",
+     "frec": "100%",
+     "registro": "-"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B27"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B28"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B29"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B30"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n INSPECCIÓN DE PIEZA ADHESIVADA \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n Tomar pieza adhesivada y pesarla en la balanza. \n 2. \n Una vez que las piezas se encuentren secas depositarlas en un cajón hasta completarlo para su posterior traslado a línea \n Una vez que las piezas se encuentren secas depositarlas en un cajón hasta completarlo para su posterior traslado a línea \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Peso del vinilo adhesivado: PENDIENTE / TBD \n Peso del vinilo adhesivado: PENDIENTE / TBD \n Peso del vinilo adhesivado: PENDIENTE / TBD"
+  },
+  {
+   "hoja": "82",
+   "op": "82",
+   "nombre": "REPROCESO: FALTA DE ADHESIVO",
+   "sector": "ADHESIVADO",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Recibir la pieza rechazada en inspección por falta de adhesión (tela no adherida al sustrato plástico por falta de adhesivo).",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "Evaluar si la pieza es recuperable: si la tela y el sustrato no sufrieron daño, se puede reprocesar; si están dañados, va a SCRAP.",
+     "celda": "J13"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/82/I30",
+     "hoja": "82",
+     "op": "82",
+     "fila": 30,
+     "remite": false,
+     "caracteristica": "PENDIENTE / TBD",
+     "metodo": "TBD",
+     "resp": "OP",
+     "frec": "TBD",
+     "registro": "-"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B31"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B32"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B33"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B34"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n REPROCESO: FALTA DE ADHESIVO \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n Recibir la pieza rechazada en inspección por falta de adhesión (tela no adherida al sustrato plástico por falta de adhesivo). \n Recibir la pieza rechazada en inspección por falta de adhesión (tela no adherida al sustrato plástico por falta de adhesivo). \n 2. \n Evaluar si la pieza es recuperable: si la tela y el sustrato no sufrieron daño, se puede reprocesar; si están dañados, va a SCRAP. \n Evaluar si la pieza es recuperable: si la tela y el sustrato no sufrieron daño, se puede reprocesar; si están dañados, va a SCRAP. \n 3. \n Si es recuperable, re-aplicar adhesivo y readherir la tela al sustrato según la operación de Adhesivado (op 80). \n Si es recuperable, re-aplicar adhesivo y readherir la tela al sustrato según la operación de Adhesivado (op 80). \n 4. \n Re-ingresar la pieza al flujo: vuelve a Inspección de pieza adhesivada (op 81) para reverificar. Ante nuevo desvío aplicar Plan de Reacción ante No Conforme. \n Re-ingresar la pieza al flujo: vuelve a Inspección de pieza adhesivada (op 81) para reverificar. Ante nuevo desvío aplicar Plan de Reacción ante No Conforme. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n PENDIENTE / TBD \n PENDIENTE / TBD \n PENDIENTE / TBD"
+  },
+  {
+   "hoja": "90",
+   "op": "90",
+   "nombre": "CONFIGURACIÓN MÁQUINA TAPIZADO AUTOMÁTICO",
+   "sector": "Tapizado",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "1. Encender la pantalla táctil presionándola si se encuentra apagada. (Foto 1)",
+     "celda": "I11"
+    },
+    {
+     "n": "2",
+     "texto": "2. Seleccionar el botón \"Mantenimiento\" en la pantalla. (Foto 1)",
+     "celda": "I12"
+    }
+   ],
+   "ciclo": [],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B37"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B38"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B39"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B40"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n CONFIGURACIÓN MÁQUINA TAPIZADO AUTOMÁTICO \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. Encender la pantalla táctil presionándola si se encuentra apagada. (Foto 1) \n 1. Encender la pantalla táctil presionándola si se encuentra apagada. (Foto 1) \n 2. Seleccionar el botón \"Mantenimiento\" en la pantalla. (Foto 1) \n 2. Seleccionar el botón \"Mantenimiento\" en la pantalla. (Foto 1) \n 3. Seleccionar el botón \"Mov. Manuales\". (Foto 2) \n 3. Seleccionar el botón \"Mov. Manuales\". (Foto 2) \n 4. Seleccionar el modo automático presionando \"OP50_AUTO\". (Foto 3) \n 4. Seleccionar el modo automático presionando \"OP50_AUTO\". (Foto 3) \n 5. Verificar en pantalla que el modo automático quedó activo antes de iniciar la producción. \n 5. Verificar en pantalla que el modo automático quedó activo antes de iniciar la producción. \n 5. Verificar en pantalla que el modo automático quedó activo antes de iniciar la producción. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar"
+  },
+  {
+   "hoja": "91",
+   "op": "91",
+   "nombre": "TAPIZADO AUTOMÁTICO",
+   "sector": "Tapizado",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "1. Presionar ambos botones de seguridad simultáneamente hasta que quede encendida únicamente la luz verde. (Foto 1)",
+     "celda": "I11"
+    },
+    {
+     "n": "2",
+     "texto": "2. Colocar las piezas plásticas en la parte superior de la máquina con la parte sobresaliente orientada hacia adelante. El vacío se activa automáticamente. (Foto 2)",
+     "celda": "I13"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/91/I36",
+     "hoja": "91",
+     "op": "91",
+     "fila": 36,
+     "remite": false,
+     "caracteristica": "Tiempo de máquina seteado en 35 segundos",
+     "metodo": "Visual",
+     "resp": "OP",
+     "frec": "Inicio de turno",
+     "registro": "Set up"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B37"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B38"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B39"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B40"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n TAPIZADO AUTOMÁTICO \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. Presionar ambos botones de seguridad simultáneamente hasta que quede encendida únicamente la luz verde. (Foto 1) \n 1. Presionar ambos botones de seguridad simultáneamente hasta que quede encendida únicamente la luz verde. (Foto 1) \n 1. Presionar ambos botones de seguridad simultáneamente hasta que quede encendida únicamente la luz verde. (Foto 1) \n 2. Colocar las piezas plásticas en la parte superior de la máquina con la parte sobresaliente orientada hacia adelante. El vacío se activa automáticamente. (Foto 2) \n 2. Colocar las piezas plásticas en la parte superior de la máquina con la parte sobresaliente orientada hacia adelante. El vacío se activa automáticamente. (Foto 2) \n 2. Colocar las piezas plásticas en la parte superior de la máquina con la parte sobresaliente orientada hacia adelante. El vacío se activa automáticamente. (Foto 2) \n 2. Colocar las piezas plásticas en la parte superior de la máquina con la parte sobresaliente orientada hacia adelante. El vacío se activa automáticamente. (Foto 2) \n 3. Colocar el vinilo alineando el borde con el molde, asegurando que quede por debajo de las trabas metálicas para su correcta sujeción. (Foto 3) \n 3. Colocar el vinilo alineando el borde con el molde, asegurando que quede por debajo de las trabas metálicas para su correcta sujeción. (Foto 3) \n 3. Colocar el vinilo alineando el borde con el molde, asegurando que quede por debajo de las trabas metálicas para su correcta sujeción. (Foto 3) \n 4. Presionar ambos botones de seguridad nuevamente para iniciar el ciclo automático de tapizado. Soltar los botones una vez que la puerta se cierre por completo. (Foto 4) \n 4. Presionar ambos botones de seguridad nuevamente para iniciar el ciclo automático de tapizado. Soltar los botones una vez que la puerta se cierre por completo. (Foto 4) \n 4. Presionar ambos botones de seguridad nuevamente para iniciar el ciclo automático de tapizado. Soltar los botones una vez que la puerta se cierre por completo. (Foto 4) \n 4. Presionar ambos botones de seguridad nuevamente para iniciar el ciclo automático de tapizado. Soltar los botones una vez que la puerta se cierre por completo. (Foto 4) \n 5. Al abrirse la puerta, retirar las piezas tapizadas presionando suavemente desde los costados para evitar daño con las trabas metálicas. (Foto 5) \n 5. Al abrirse la puerta, retirar las piezas tapizadas presionando suavemente desde los costados para evitar daño con las trabas metálicas. (Foto 5) \n 5. Al abrirse la puerta, retirar las piezas tapizadas presionando suavemente desde los costados para evitar daño con las trabas metálicas. (Foto 5) \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Tiempo de máquina seteado en 35 segundos \n Tiempo de máquina seteado en 35 segundos \n Tiempo de máquina seteado en 35 segundos"
+  },
+  {
+   "hoja": "92",
+   "op": "92",
+   "nombre": "REFILADO MANUAL",
+   "sector": "Tapizado",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Tomar la pieza tapizada y colocarla en el dispositivo de refilado, haciendo coincidir el perno metálico con el orificio de la pieza. (Foto 1)",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "Refilar la pieza con la herramienta de corte, asegurando que todos los orificios queden libres de vinilo. (Foto 2)",
+     "celda": "J14"
+    }
+   ],
+   "ciclo": [],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B43"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B44"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B45"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B46"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n REFILADO MANUAL \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n Tomar la pieza tapizada y colocarla en el dispositivo de refilado, haciendo coincidir el perno metálico con el orificio de la pieza. (Foto 1) \n Tomar la pieza tapizada y colocarla en el dispositivo de refilado, haciendo coincidir el perno metálico con el orificio de la pieza. (Foto 1) \n Tomar la pieza tapizada y colocarla en el dispositivo de refilado, haciendo coincidir el perno metálico con el orificio de la pieza. (Foto 1) \n 2. \n Refilar la pieza con la herramienta de corte, asegurando que todos los orificios queden libres de vinilo. (Foto 2) \n Refilar la pieza con la herramienta de corte, asegurando que todos los orificios queden libres de vinilo. (Foto 2) \n Refilar la pieza con la herramienta de corte, asegurando que todos los orificios queden libres de vinilo. (Foto 2) \n 3. \n Con una espátula, despegar el borde del vinilo en la zona indicada en amarillo en la imagen de referencia. (Foto 3) \n Con una espátula, despegar el borde del vinilo en la zona indicada en amarillo en la imagen de referencia. (Foto 3) \n Con una espátula, despegar el borde del vinilo en la zona indicada en amarillo en la imagen de referencia. (Foto 3) \n 4. \n Verificar visualmente que el refilado sea uniforme, sin exceso de vinilo ni orificios obstruidos. \n Verificar visualmente que el refilado sea uniforme, sin exceso de vinilo ni orificios obstruidos. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar"
+  },
+  {
+   "hoja": "100",
+   "op": "100",
+   "nombre": "CONTROL FINAL DE CALIDAD",
+   "sector": "Tapizado",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "1 - Tomar la pieza y verificar que no contenga arrugas, vinilo dañado, hundimiento, manchas, vinilo quemado, despegues, marcas, grumos y que la costura esté correcta, sin hilos sueltos ni desalineada. (Foto 1)",
+     "celda": "I11"
+    },
+    {
+     "n": "2",
+     "texto": "2 - Revisar el refilado de la pieza y verificar que no haya exceso de refilado, exceso de vinilo ni gaps (espacios) entre el plástico y el vinilo. Revisar que la costura no presente defectos. (Foto 2)",
+     "celda": "I12"
+    }
+   ],
+   "ciclo": [],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B30"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B31"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B32"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B33"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n CONTROL FINAL DE CALIDAD \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1 - Tomar la pieza y verificar que no contenga arrugas, vinilo dañado, hundimiento, manchas, vinilo quemado, despegues, marcas, grumos y que la costura esté correcta, sin hilos sueltos ni desalineada. (Foto 1) \n 1 - Tomar la pieza y verificar que no contenga arrugas, vinilo dañado, hundimiento, manchas, vinilo quemado, despegues, marcas, grumos y que la costura esté correcta, sin hilos sueltos ni desalineada. (Foto 1) \n 2 - Revisar el refilado de la pieza y verificar que no haya exceso de refilado, exceso de vinilo ni gaps (espacios) entre el plástico y el vinilo. Revisar que la costura no presente defectos. (Foto 2) \n 2 - Revisar el refilado de la pieza y verificar que no haya exceso de refilado, exceso de vinilo ni gaps (espacios) entre el plástico y el vinilo. Revisar que la costura no presente defectos. (Foto 2) \n 3 - Girar la pieza y verificar que el plástico, las trabas y que no contengan roturas/quiebres ni deformaciones. (Foto 2) \n 3 - Girar la pieza y verificar que el plástico, las trabas y que no contengan roturas/quiebres ni deformaciones. (Foto 2) \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n Características a controlar"
+  },
+  {
+   "hoja": "101",
+   "op": "101",
+   "nombre": "REPROCESO: REACTIVACIÓN DE ADHESIVO POR CALOR",
+   "sector": "CALIDAD",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Recibir la pieza rechazada en el Control Final de Calidad (op 100) por defecto detectado en el producto terminado. (Adhesivo sin activar)",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "Evaluar el defecto y determinar si la pieza es recuperable mediante retrabajo o si debe ir a SCRAP.",
+     "celda": "J13"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/101/I30",
+     "hoja": "101",
+     "op": "101",
+     "fila": 30,
+     "remite": false,
+     "caracteristica": "PENDIENTE / TBD",
+     "metodo": "TBD",
+     "resp": "OP",
+     "frec": "TBD",
+     "registro": "-"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B31"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B32"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B33"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B34"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n REPROCESO: REACTIVACIÓN DE ADHESIVO POR CALOR \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n Recibir la pieza rechazada en el Control Final de Calidad (op 100) por defecto detectado en el producto terminado. (Adhesivo sin activar) \n Recibir la pieza rechazada en el Control Final de Calidad (op 100) por defecto detectado en el producto terminado. (Adhesivo sin activar) \n 2. \n Evaluar el defecto y determinar si la pieza es recuperable mediante retrabajo o si debe ir a SCRAP. \n Evaluar el defecto y determinar si la pieza es recuperable mediante retrabajo o si debe ir a SCRAP. \n 3 \n Si es recuperable, utilizar pistola de calor para reactivar el adhesivo en la zona detectada y volver a tapizar. \n Si es recuperable, utilizar pistola de calor para reactivar el adhesivo en la zona detectada y volver a tapizar. \n 4 \n Re-ingresar la pieza al flujo: vuelve al Control Final (op 100) para reverificar. Ante nuevo desvío aplicar Plan de Reacción ante No Conforme. \n Re-ingresar la pieza al flujo: vuelve al Control Final (op 100) para reverificar. Ante nuevo desvío aplicar Plan de Reacción ante No Conforme. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n PENDIENTE / TBD \n PENDIENTE / TBD \n PENDIENTE / TBD"
+  },
+  {
+   "hoja": "110",
+   "op": "110",
+   "nombre": "EMBALAJE DE PRODUCTO TERMINADO",
+   "sector": "Tapizado",
+   "rev": "1",
+   "fecha": "2026-03-10",
+   "pasos": [
+    {
+     "n": "1",
+     "texto": "Tomar las piezas OK y colocarlas en la caja de cartón (420x540x300mm) con divisores internos, ubicando una pieza por compartimento hasta completar 24 piezas por caja. Las paredes de la caja son de 3mm.",
+     "celda": "J11"
+    },
+    {
+     "n": "2",
+     "texto": "Armar el pallet (1200x1000mm) colocando 4 cajas por piso. Cada piso contiene 96 piezas (4 cajas x 24 piezas). Apilar 2 o 3 pisos según indicación.",
+     "celda": "J14"
+    }
+   ],
+   "ciclo": [
+    {
+     "id": "HO-971/110/I31",
+     "hoja": "110",
+     "op": "110",
+     "fila": 31,
+     "remite": false,
+     "caracteristica": "24 piezas por caja",
+     "metodo": "Visual / Conteo",
+     "resp": "OP",
+     "frec": "Cada caja",
+     "registro": "N/A"
+    },
+    {
+     "id": "HO-971/110/I33",
+     "hoja": "110",
+     "op": "110",
+     "fila": 33,
+     "remite": false,
+     "caracteristica": "Disposición correcta en pallet (4 cajas/piso)",
+     "metodo": "Visual",
+     "resp": "OP",
+     "frec": "Cada pallet",
+     "registro": "N/A"
+    }
+   ],
+   "reaccion": [
+    {
+     "texto": "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME",
+     "celda": "B32"
+    },
+    {
+     "texto": "DETENGA LA OPERACIÓN",
+     "celda": "B33"
+    },
+    {
+     "texto": "NOTIFIQUE DE INMEDIATO A SU LIDER O SUPERVISOR",
+     "celda": "B34"
+    },
+    {
+     "texto": "ESPERE LA DEFINICION DEL LIDER O SUPERVISOR",
+     "celda": "B35"
+    }
+   ],
+   "texto": "HOJA DE OPERACIONES \n HOJA DE OPERACIONES \n DENOMINACION DE LA OPERACIÓN \n EMBALAJE DE PRODUCTO TERMINADO \n COD. DE PIEZA / DESCRIPCION \n N231 - N267 - N297 - N328 / APB Puerta \n DESCRIPCION DE LA OPERACIÓN \n DESCRIPCION DE LA OPERACIÓN \n 1. \n Tomar las piezas OK y colocarlas en la caja de cartón (420x540x300mm) con divisores internos, ubicando una pieza por compartimento hasta completar 24 piezas por caja. Las paredes de la caja son de 3mm. \n Tomar las piezas OK y colocarlas en la caja de cartón (420x540x300mm) con divisores internos, ubicando una pieza por compartimento hasta completar 24 piezas por caja. Las paredes de la caja son de 3mm. \n Tomar las piezas OK y colocarlas en la caja de cartón (420x540x300mm) con divisores internos, ubicando una pieza por compartimento hasta completar 24 piezas por caja. Las paredes de la caja son de 3mm. \n 2. \n Armar el pallet (1200x1000mm) colocando 4 cajas por piso. Cada piso contiene 96 piezas (4 cajas x 24 piezas). Apilar 2 o 3 pisos según indicación. \n Armar el pallet (1200x1000mm) colocando 4 cajas por piso. Cada piso contiene 96 piezas (4 cajas x 24 piezas). Apilar 2 o 3 pisos según indicación. \n 3. \n Verificar visualmente que cada pieza quede correctamente ubicada en su compartimento y que la caja esté completa antes de cerrarla. \n Verificar visualmente que cada pieza quede correctamente ubicada en su compartimento y que la caja esté completa antes de cerrarla. \n CICLO DE CONTROL \n CICLO DE CONTROL \n Características a controlar \n Características a controlar \n 24 piezas por caja \n 24 piezas por caja \n 24 piezas por caja \n Disposición correcta en pallet (4 cajas/piso) \n Disposición correcta en pallet (4 cajas/piso) \n Disposición correcta en pallet (4 cajas/piso) \n Disposición correcta en pallet (4 cajas/piso)"
+  }
+ ]
+}

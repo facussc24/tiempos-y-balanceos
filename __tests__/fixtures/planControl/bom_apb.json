@@ -1,0 +1,426 @@
+{
+ "sourceId": "BOM-ARB",
+ "doc": "BOM ultimo nivel del arb (BOM_OFICIAL_PATAGONIA_ULTIMO_NIVEL_ARB.xlsx, hoja BOM_COMPLETA_FILTRABLE)",
+ "materiales": [
+  {
+   "codigo": "427ADH002ADH01",
+   "descripcion": "HB FULLER CQ-7080-5",
+   "unidad": "KG",
+   "nivel": "0",
+   "modulo": "TAP",
+   "productos": [
+    "N 231",
+    "N 267",
+    "N 297",
+    "N 328"
+   ],
+   "consumos": [
+    0.048,
+    0.048,
+    0.048,
+    0.048
+   ],
+   "filas": [
+    252,
+    266,
+    280,
+    294
+   ],
+   "seAbre": false,
+   "hijos": []
+  },
+  {
+   "codigo": "52110",
+   "descripcion": "ROLLO TESA 1500MM X 200M",
+   "unidad": "MT2",
+   "nivel": "0",
+   "modulo": "TRO",
+   "productos": [
+    "N 231",
+    "N 267",
+    "N 297",
+    "N 328"
+   ],
+   "consumos": [
+    0.008,
+    0.008,
+    0.008,
+    0.008
+   ],
+   "filas": [
+    253,
+    267,
+    281,
+    295
+   ],
+   "seAbre": false,
+   "hijos": []
+  },
+  {
+   "codigo": "DISSACOL HR",
+   "descripcion": "DESMOLDANTE DISSACOL HR 20 LT",
+   "unidad": "BI",
+   "nivel": "0",
+   "modulo": "PIP",
+   "productos": [
+    "N 231",
+    "N 267",
+    "N 297",
+    "N 328"
+   ],
+   "consumos": [
+    0.000926,
+    0.000926,
+    0.000926,
+    0.000926
+   ],
+   "filas": [
+    254,
+    268,
+    282,
+    296
+   ],
+   "seAbre": false,
+   "hijos": []
+  },
+  {
+   "codigo": "DK/1840400",
+   "descripcion": "GRAMPA DK 84-04",
+   "unidad": "UN",
+   "nivel": "0",
+   "modulo": "TAP",
+   "productos": [
+    "N 231",
+    "N 267",
+    "N 297",
+    "N 328"
+   ],
+   "consumos": [
+    27,
+    27,
+    21,
+    21
+   ],
+   "filas": [
+    255,
+    269,
+    283,
+    297
+   ],
+   "seAbre": false,
+   "hijos": []
+  },
+  {
+   "codigo": "ET-SATO-100X60",
+   "descripcion": "ETIQUETA TERMICA 100X60 IMPRESORA SATO",
+   "unidad": "UNID",
+   "nivel": "0",
+   "modulo": "TAP",
+   "productos": [
+    "N 231",
+    "N 267",
+    "N 297",
+    "N 328"
+   ],
+   "consumos": [
+    0.0555,
+    0.0555,
+    0.0555,
+    0.0555
+   ],
+   "filas": [
+    256,
+    270,
+    284,
+    298
+   ],
+   "seAbre": false,
+   "hijos": []
+  },
+  {
+   "codigo": "ET-SATO-50X20",
+   "descripcion": "ETIQUETA AUTOADHESIVA",
+   "unidad": "UN",
+   "nivel": "0",
+   "modulo": "TAP",
+   "productos": [
+    "N 231",
+    "N 231",
+    "N 267",
+    "N 267",
+    "N 297",
+    "N 297",
+    "N 328",
+    "N 328"
+   ],
+   "consumos": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "filas": [
+    257,
+    262,
+    271,
+    276,
+    285,
+    290,
+    299,
+    304
+   ],
+   "seAbre": false,
+   "hijos": []
+  },
+  {
+   "codigo": "FX284-E0PTO",
+   "descripcion": "Hilo union Negro Titan Pantone 19-4205 T",
+   "unidad": "KG",
+   "nivel": "0",
+   "modulo": "COS",
+   "productos": [
+    "N 231",
+    "N 267",
+    "N 297",
+    "N 328"
+   ],
+   "consumos": [
+    0.000544,
+    0.000544,
+    0.000544,
+    0.000544
+   ],
+   "filas": [
+    258,
+    272,
+    286,
+    300
+   ],
+   "seAbre": false,
+   "hijos": []
+  },
+  {
+   "codigo": "FX483TK-E0PTO",
+   "descripcion": "HILO JET BLACK 20/3",
+   "unidad": "KG",
+   "nivel": "0",
+   "modulo": "COS",
+   "productos": [
+    "N 231",
+    "N 267",
+    "N 297",
+    "N 328"
+   ],
+   "consumos": [
+    0.000351,
+    0.000351,
+    0.000351,
+    0.000351
+   ],
+   "filas": [
+    259,
+    273,
+    287,
+    301
+   ],
+   "seAbre": false,
+   "hijos": []
+  },
+  {
+   "codigo": "INY-APB0002-V1",
+   "descripcion": "APOYABRAZO INYECTADO DELANTERO IZQUIERDO",
+   "unidad": "UNID",
+   "nivel": "0",
+   "modulo": "TAP",
+   "productos": [
+    "N 231"
+   ],
+   "consumos": [
+    1
+   ],
+   "filas": [
+    260
+   ],
+   "seAbre": true,
+   "hijos": [
+    "22020541",
+    "ET-SATO-50X20"
+   ]
+  },
+  {
+   "codigo": "22020541",
+   "descripcion": "MG47-BK1066-BAG-00-00-00",
+   "unidad": "KG",
+   "nivel": ".1",
+   "modulo": "",
+   "productos": [
+    "N 231",
+    "N 267",
+    "N 297",
+    "N 328"
+   ],
+   "consumos": [
+    0.14,
+    0.14,
+    0.14,
+    0.14
+   ],
+   "filas": [
+    261,
+    275,
+    289,
+    303
+   ],
+   "seAbre": false,
+   "hijos": []
+  },
+  {
+   "codigo": "ISO-PLUS 1355",
+   "descripcion": "COMPONENTE PARA POLIURETANO",
+   "unidad": "KG",
+   "nivel": "0",
+   "modulo": "PIP",
+   "productos": [
+    "N 231",
+    "N 267",
+    "N 297",
+    "N 328"
+   ],
+   "consumos": [
+    0.0426,
+    0.0426,
+    0.0426,
+    0.0426
+   ],
+   "filas": [
+    263,
+    277,
+    291,
+    305
+   ],
+   "seAbre": false,
+   "hijos": []
+  },
+  {
+   "codigo": "POLI-PLUSFF636",
+   "descripcion": "COMPONENTE PARA POLIURETANO",
+   "unidad": "KG",
+   "nivel": "0",
+   "modulo": "PIP",
+   "productos": [
+    "N 231",
+    "N 267",
+    "N 297",
+    "N 328"
+   ],
+   "consumos": [
+    0.0774,
+    0.0774,
+    0.0774,
+    0.0774
+   ],
+   "filas": [
+    264,
+    278,
+    292,
+    306
+   ],
+   "seAbre": false,
+   "hijos": []
+  },
+  {
+   "codigo": "VIN-SKM-001",
+   "descripcion": "'Vinilo PVC Texture PR022 PVC de 1mm + 3",
+   "unidad": "MT2",
+   "nivel": "0",
+   "modulo": "CO",
+   "productos": [
+    "N 231",
+    "N 267",
+    "N 297",
+    "N 328"
+   ],
+   "consumos": [
+    0.091,
+    0.091,
+    0.08493,
+    0.08493
+   ],
+   "filas": [
+    265,
+    279,
+    293,
+    307
+   ],
+   "seAbre": false,
+   "hijos": []
+  },
+  {
+   "codigo": "INY-APB0001-V1",
+   "descripcion": "APOYABRAZO INYECTADO DELANTERO DERECHO",
+   "unidad": "UNID",
+   "nivel": "0",
+   "modulo": "TAP",
+   "productos": [
+    "N 267"
+   ],
+   "consumos": [
+    1
+   ],
+   "filas": [
+    274
+   ],
+   "seAbre": true,
+   "hijos": [
+    "22020541",
+    "ET-SATO-50X20"
+   ]
+  },
+  {
+   "codigo": "INY-APB0004-V1",
+   "descripcion": "APOYABRAZO INYECTADO TRASERO IZQUIERDO",
+   "unidad": "UNID",
+   "nivel": "0",
+   "modulo": "TAP",
+   "productos": [
+    "N 297"
+   ],
+   "consumos": [
+    1
+   ],
+   "filas": [
+    288
+   ],
+   "seAbre": true,
+   "hijos": [
+    "22020541",
+    "ET-SATO-50X20"
+   ]
+  },
+  {
+   "codigo": "INY-APB0003-V1",
+   "descripcion": "APOYABRAZO INYECTADO TRASERO DERECHO",
+   "unidad": "UNID",
+   "nivel": "0",
+   "modulo": "TAP",
+   "productos": [
+    "N 328"
+   ],
+   "consumos": [
+    1
+   ],
+   "filas": [
+    302
+   ],
+   "seAbre": true,
+   "hijos": [
+    "22020541",
+    "ET-SATO-50X20"
+   ]
+  }
+ ]
+}

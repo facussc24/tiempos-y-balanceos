@@ -1,0 +1,1001 @@
+{
+ "header": {
+  "scope": "ARMREST DOOR PANEL PATAGONIA",
+  "partNumber": "N 231 / N 267 / N 297 / N 328",
+  "applicableParts": "N 231, N 267, N 297, N 328",
+  "responsibleEngineer": "Carlos Baptista (Ingeniería)",
+  "coreTeam": [
+   "Carlos Baptista (Ingenieria)",
+   "Manuel Meszaros (Calidad)",
+   "Marianna Vera (Produccion)"
+  ],
+  "approvedBy": "Gonzalo Cal",
+  "amfeDate": "12/02/2026",
+  "subject": "ARMREST DOOR PANEL",
+  "client": "VWA",
+  "location": "PLANTA HURLINGHAM",
+  "organization": "BARACK MERCOSUL",
+  "elaboratedBy": "Carlos Baptista",
+  "revDate": "05/10/2026",
+  "rev": "A",
+  "plantApproval": "Gonzalo Cal",
+  "reviewedBy": "Carlos Baptista",
+  "companyName": "BARACK MERCOSUL",
+  "preparedBy": "Facundo Santoro",
+  "processResponsible": "Carlos Baptista",
+  "confidentiality": "Confidencial",
+  "customerName": "VWA",
+  "revisionLevel": "A",
+  "amfeNumber": "161",
+  "modelYear": "VW427-1LA_K - PATAGONIA"
+ },
+ "operations": [
+  {
+   "id": "b164a1c9-62c6-4c79-93aa-f702c8d748e7",
+   "operationNumber": "10",
+   "opNumber": "10",
+   "operationName": "RECEPCION DE MATERIA PRIMA",
+   "name": "RECEPCION DE MATERIA PRIMA",
+   "workElements": [
+    {
+     "id": "e0a7597a-ca6e-4271-ab27-672d392b5bc4",
+     "name": "Autoelevador",
+     "type": "Machine",
+     "functions": [
+      {
+       "id": "0039a47a-160a-4d22-ac6d-bf9f8e696846",
+       "description": "Garantizar la estabilidad y la integridad física del material durante el transporte interno",
+       "failures": [
+        {
+         "id": "5457d511-01e7-43df-b973-f896c5b2141d",
+         "description": "Material / pieza golpeada o dañada durante transporte",
+         "severity": 5,
+         "effectLocal": "Retrabajo",
+         "effectNextLevel": "Problemas en el ensamble final",
+         "effectEndUser": "Potencial reclamo de aspecto/comfort",
+         "causes": [
+          {
+           "id": "c00851cc-6f05-4857-a1f9-712ee95b700c",
+           "description": "Falla en sistema hidráulico de descenso de uñas o frenos desajustados",
+           "severity": 5,
+           "occurrence": 6,
+           "detection": 7,
+           "preventionControl": "Checklist diario de autoelevador y mantenimiento preventivo periódico",
+           "detectionControl": "Inspección previa al uso en cada turno",
+           "specialChar": "SC",
+           "characteristicNumber": ""
+          },
+          {
+           "id": "da9b6b66-4973-4345-b6dd-58122b4a7ad3",
+           "description": "Operador del autoelevador deposita material sin protecciones (lonas/cunas) durante el almacenaje",
+           "severity": 5,
+           "occurrence": 5,
+           "detection": 8,
+           "preventionControl": "Procedimientos de Logística sobre estiba segura y uso de Embalajes Cubiertos o cerrados",
+           "detectionControl": "Inspección Visual de daños/suciedad en el embalaje al recibir",
+           "specialChar": "SC",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fcbfe4fd-b361-442e-b62d-6169d3072969",
+   "operationNumber": "20",
+   "opNumber": "20",
+   "operationName": "PREPARACIÓN Y CARGA DE VINILO",
+   "name": "PREPARACIÓN Y CARGA DE VINILO",
+   "workElements": [
+    {
+     "id": "f7269705-1e9b-40bf-a1bb-f8ed81103075",
+     "name": "Cortadora de panos",
+     "type": "Machine",
+     "functions": [
+      {
+       "id": "96de4356-bea1-4714-8ffe-aba23c0bf8dc",
+       "description": "Ejecutar el corte del material de forma constante, pareja y conforme a la longitud requerida",
+       "failures": [
+        {
+         "id": "e24e51e5-66c0-414c-afd7-3a52fc40fb22",
+         "description": "Corte fuera de medida (pano mas corto o mas largo que la especificacion)",
+         "severity": 7,
+         "effectLocal": "Perdida de material (scrap)",
+         "effectNextLevel": "Imposibilidad de ensamblar la pieza correctamente",
+         "effectEndUser": "Retrabajo o falla estetica",
+         "causes": [
+          {
+           "id": "cfad6882-c1d1-4489-9db2-87a309cb0d9e",
+           "description": "Error del operario al regular la medida con la regla metalica fija",
+           "severity": 7,
+           "occurrence": 5,
+           "detection": 8,
+           "preventionControl": "Medicion de la primera capa usando la regla metalica fija como referencia",
+           "detectionControl": "Inspección visual del primer corte",
+           "specialChar": "SC",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "e7d23f85-67a3-4432-9851-2d83542a9c11",
+   "operationNumber": "21",
+   "opNumber": "21",
+   "operationName": "CORTE AUTOMÁTICO DE COMPONENTES",
+   "name": "CORTE AUTOMÁTICO DE COMPONENTES",
+   "workElements": [
+    {
+     "id": "673a7289-3f2b-4713-b821-91f00c275eb3",
+     "name": "Cortadora automatica BMA090/BMA089",
+     "type": "Machine",
+     "functions": [
+      {
+       "id": "4e75cdc4-ba49-40ab-8142-aafaa585ab6d",
+       "description": "Cortar los paneles de vinilo segun programa Cutter Control",
+       "failures": [
+        {
+         "id": "6360a183-1008-4d26-bb6b-8858111871a1",
+         "description": "Desviación en el corte de los pliegos",
+         "severity": 7,
+         "effectLocal": "Retrabajo",
+         "effectNextLevel": "Parada de línea entre una hora y un turno de producción completo",
+         "effectEndUser": "Degradación de la función secundaria del vehículo",
+         "causes": [
+          {
+           "id": "fad4bc09-7014-4421-a36e-5cdac0d31fee",
+           "description": "Parámetros de corte mal ingresados",
+           "severity": 7,
+           "occurrence": 2,
+           "detection": 6,
+           "preventionControl": "La maquina alinea y corta automáticamente el vinilo",
+           "detectionControl": "Set up de lanzamiento / Regla / Inspección visual",
+           "specialChar": "",
+           "characteristicNumber": ""
+          },
+          {
+           "id": "6534e9d8-8081-4753-82e1-94f9904d268e",
+           "description": "Falla en la maquina",
+           "severity": 6,
+           "occurrence": 2,
+           "detection": 6,
+           "preventionControl": "La maquina alinea y corta automáticamente el vinilo / Instructivo para colocar correctamente tensión y velocidad de rollo",
+           "detectionControl": "Set up de lanzamiento / Regla / Inspección visual",
+           "specialChar": "",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "576de770-74e9-46b0-a0f1-7e7fdfb27c7f",
+   "operationNumber": "22",
+   "opNumber": "22",
+   "operationName": "CONTROL CON MYLAR",
+   "name": "CONTROL CON MYLAR",
+   "workElements": [
+    {
+     "id": "d64d7c46-cf99-435f-ba6a-ad42a227adb4",
+     "name": "Mylar de control",
+     "type": "Measurement",
+     "functions": [
+      {
+       "id": "b11dd1ef-f841-4618-a88e-bda41f282d78",
+       "description": "Suministrar plantilla patrón dimensional para verificación de corte de vinilo",
+       "failures": [
+        {
+         "id": "4f47c6cd-d22a-482a-a211-5e7881f5a9b1",
+         "description": "Mylar de control con rayaduras, deformación o pérdida de líneas de referencia",
+         "severity": 5,
+         "effectLocal": "Alineación imprecisa sobre la pieza cortada",
+         "effectNextLevel": "Dificultad para detectar piezas fuera de contorno",
+         "effectEndUser": "Desviación en costura o tapizado",
+         "causes": [
+          {
+           "id": "15bf3bde-b158-4195-982c-d4a4d2706c69",
+           "description": "Almacenamiento inadecuado o flexión forzada",
+           "severity": 5,
+           "occurrence": 2,
+           "detection": 8,
+           "preventionControl": "Soporte rígido de almacenamiento en puesto de control",
+           "detectionControl": "Verificación visual del estado del mylar al inicio de turno",
+           "specialChar": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "bcafa534-f52d-4110-a1b3-e4f6e142aa7e",
+   "operationNumber": "30",
+   "opNumber": "30",
+   "operationName": "REFILADO",
+   "name": "REFILADO",
+   "workElements": [
+    {
+     "id": "4079a016-9283-4616-9d48-3234fdd507fd",
+     "name": "Maquina refiladora",
+     "type": "Machine",
+     "functions": [
+      {
+       "id": "99376a9f-42a8-4514-adb6-e3feb80fdba7",
+       "description": "Generar el contorno refilado con precision segun especificacion",
+       "failures": [
+        {
+         "id": "d662c0f9-d17a-4848-b316-a5977b82fb37",
+         "description": "Refilado fuera de especificaciones",
+         "severity": 5,
+         "effectLocal": "Retrabajo en línea",
+         "effectNextLevel": "Clasificacion adicional de productos defectuosos",
+         "effectEndUser": "Degradacion de la funcion secundaria del vehiculo",
+         "causes": [
+          {
+           "id": "c76ab1cb-beac-413e-b45f-41ca55084076",
+           "description": "Cuchilla desafilada o desgastada",
+           "severity": 5,
+           "occurrence": 6,
+           "detection": 6,
+           "preventionControl": "Mantenimiento Preventivo",
+           "detectionControl": "Verificación de Primera Pieza (Puesta a Punto)",
+           "specialChar": "SC",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "37c42c53-8738-4e35-97cf-390cf283c35a",
+   "operationNumber": "40",
+   "opNumber": "40",
+   "operationName": "COSTURA UNION",
+   "name": "COSTURA UNION",
+   "workElements": [
+    {
+     "id": "536089f9-e31e-496d-aaf4-202ea07328cc",
+     "name": "Maquina de coser",
+     "type": "Machine",
+     "functions": [
+      {
+       "id": "9547b99f-bd74-4d4f-8874-f918f33036fa",
+       "description": "Realizar la union de paneles de vinilo mediante costura",
+       "failures": [
+        {
+         "id": "a57df89c-5de6-4b56-8a8d-1dc10f70a19c",
+         "description": "Costura descosida o débil",
+         "severity": 8,
+         "effectLocal": "Impacta en producción, genera scrap o retrabajos",
+         "effectNextLevel": "Puede causar fallas en ensamble y rechazo del lote",
+         "effectEndUser": "Defecto estético sin impacto funcional ni de seguridad",
+         "causes": [
+          {
+           "id": "81fbc92b-5e0f-449a-a185-21982c88c1cd",
+           "description": "Tensión de hilo incorrecta",
+           "severity": 5,
+           "occurrence": 4,
+           "detection": 4,
+           "preventionControl": "Las costureras configuran la máquina según hojas de operaciones",
+           "detectionControl": "Calibre para verificar puntadas",
+           "specialChar": "SC",
+           "characteristicNumber": ""
+          },
+          {
+           "id": "d9b1ea67-c5ca-450b-b787-cd54c3514f49",
+           "description": "Puntadas demasiado largas",
+           "severity": 8,
+           "occurrence": 4,
+           "detection": 4,
+           "preventionControl": "Las costureras configuran la máquina según hojas de operaciones. / Set up diario de configuración de máquina, mediante un set-up de control de lanzamiento",
+           "detectionControl": "Calibre para verificar puntadas / Inspección visual",
+           "specialChar": "SC",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "6f8b1a0f-381e-48c5-8b5e-01f54b0795e5",
+   "operationNumber": "41",
+   "opNumber": "41",
+   "operationName": "COSTURA VISTA (1 SOLA LÍNEA)",
+   "name": "COSTURA VISTA (1 SOLA LÍNEA)",
+   "workElements": [
+    {
+     "id": "0cdfa3e1-1b5b-43ef-bd6a-a6d2230c0d65",
+     "name": "Maquina de coser",
+     "type": "Machine",
+     "functions": [
+      {
+       "id": "ce4bfe3f-1318-4d60-a284-f95c72b89dcd",
+       "description": "Ejecutar costura vista de 1 sola linea conforme a especificacion",
+       "failures": [
+        {
+         "id": "6c3d718a-43dd-46fd-8fbd-f56f35839776",
+         "description": "Costura descosida o debil",
+         "severity": 5,
+         "effectLocal": "Retrabajo fuera de línea",
+         "effectNextLevel": "Parada de línea de produccion menor a una hora",
+         "effectEndUser": "Degradacion de la funcion secundaria del vehiculo",
+         "causes": [
+          {
+           "id": "53c9310d-217a-42a4-ac9d-caa94209f1c0",
+           "description": "Tension de hilo incorrecta",
+           "severity": 5,
+           "occurrence": 4,
+           "detection": 8,
+           "preventionControl": "Las maquinas poseen regulacion de tension con fijacion de hilo",
+           "detectionControl": "Inspección visual",
+           "specialChar": "SC",
+           "characteristicNumber": ""
+          },
+          {
+           "id": "a884a85a-95c4-4ca9-94f2-3b75ddc83e0c",
+           "description": "Puntadas demasiado largas",
+           "severity": 5,
+           "occurrence": 4,
+           "detection": 8,
+           "preventionControl": "Las maquinas poseen regulacion de largo de puntada",
+           "detectionControl": "Visual",
+           "specialChar": "SC",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "87e168e5-fcf4-4b2e-885b-567a9e2c8089",
+   "operationNumber": "50",
+   "opNumber": "50",
+   "operationName": "INYECCIÓN DE PIEZAS PLÁSTICAS",
+   "name": "INYECCIÓN DE PIEZAS PLÁSTICAS",
+   "workElements": [
+    {
+     "id": "0ac7dfb5-bb28-47f9-b965-2b616f2d2bfd",
+     "name": "Maquina inyectora de plástico",
+     "type": "Machine",
+     "functions": [
+      {
+       "id": "6a97c3ac-22de-4d7b-b002-1a6ea1b34d03",
+       "description": "Inyectar el material en el molde controlando los parámetros de proceso (presión, temperatura, tiempo)",
+       "failures": [
+        {
+         "id": "856bf848-662c-4b14-9fd6-c3c775d0aa62",
+         "description": "Pieza incompleta",
+         "severity": 7,
+         "effectLocal": "Scrap (pieza incompleta)",
+         "effectNextLevel": "Ajuste de velocidad o presión de inyección y rearranque de lote",
+         "effectEndUser": "Pieza no montable en el modulo del vehiculo (bloqueo de ensamble en cliente)",
+         "causes": [
+          {
+           "id": "808af06c-2416-4790-99e5-89f3aae0e6e0",
+           "description": "Parámetros de proceso desajustados",
+           "severity": 6,
+           "occurrence": 2,
+           "detection": 8,
+           "preventionControl": "Hoja de parámetros + alarmas en panel",
+           "detectionControl": "Inspección visual 100% + pieza patron",
+           "specialChar": "",
+           "characteristicNumber": ""
+          },
+          {
+           "id": "492a89af-f282-4c92-be62-5eedafc6a964",
+           "description": "Punto de inyección obstruido en el molde",
+           "severity": 6,
+           "occurrence": 2,
+           "detection": 6,
+           "preventionControl": "Limpieza del molde + mantenimiento preventivo",
+           "detectionControl": "Primera pieza + autocontrol 100%",
+           "specialChar": "",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "d8ece5ac-c04a-4de5-8b68-2a39c13aba4b",
+   "operationNumber": "51",
+   "opNumber": "51",
+   "operationName": "CONTROL DE PIEZA INYECTADA",
+   "name": "CONTROL DE PIEZA INYECTADA",
+   "workElements": [
+    {
+     "id": "16be790b-f08e-4dcc-a404-86cdf458fd74",
+     "name": "Operador de Producción",
+     "type": "Man",
+     "functions": [
+      {
+       "id": "a0738055-7f18-4be9-93a4-5f8ba8c64f89",
+       "description": "Validar la primera pieza inyectada antes de liberar el lote",
+       "failures": [
+        {
+         "id": "afc243e2-5c85-4b1d-9792-e65e1410b42a",
+         "description": "Liberacion de primera pieza no conforme",
+         "severity": 7,
+         "effectLocal": "Se libera el lote con defecto de inyeccion",
+         "effectNextLevel": "Piezas defectuosas avanzan a inyeccion PU",
+         "effectEndUser": "Defecto visible o funcional en el habitaculo",
+         "causes": [
+          {
+           "id": "a5b690ba-5bf6-4a61-9124-4a59380ab1d9",
+           "description": "Comparacion con pieza patron omitida",
+           "severity": 7,
+           "occurrence": 3,
+           "detection": 8,
+           "preventionControl": "Pieza patron en el puesto",
+           "detectionControl": "Comparacion con pieza patron 100%",
+           "specialChar": "",
+           "characteristicNumber": ""
+          },
+          {
+           "id": "16ed93b0-5056-4152-9cc4-954e85f19b20",
+           "description": "Autocontrol al arranque no realizado",
+           "severity": 7,
+           "occurrence": 3,
+           "detection": 5,
+           "preventionControl": "Instruccion de liberacion de primera pieza",
+           "detectionControl": "Registro de primera pieza firmado",
+           "specialChar": "",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "a4d6c5a5-0963-4ee2-92f9-2f9b4c7c0388",
+   "operationNumber": "60",
+   "opNumber": "60",
+   "operationName": "TROQUELADO DE CINTA",
+   "name": "TROQUELADO DE CINTA",
+   "workElements": [
+    {
+     "id": "f26974ce-ad69-4ed1-863f-f7ecfdf6d0ac",
+     "name": "Troqueladora",
+     "type": "Machine",
+     "functions": [
+      {
+       "id": "f3bf9d8b-2bbb-47a9-9d36-988127e7ab0d",
+       "description": "Troquelar la cinta a la medida y forma definidas",
+       "failures": [
+        {
+         "id": "9d64d7b6-38ea-4b93-ac69-fe99755f473f",
+         "description": "Cinta fuera de dimension",
+         "severity": 7,
+         "effectLocal": "Scrap de la cinta mal troquelada",
+         "effectNextLevel": "Armado de cinta y espuma desalineado sobre el plastico",
+         "effectEndUser": "Bulto perceptible al tacto en el apoyabrazos",
+         "causes": [
+          {
+           "id": "3e4c9706-5b91-4792-a50e-3c9a68f4e142",
+           "description": "Desgaste de la matriz de troquelado",
+           "severity": 7,
+           "occurrence": 4,
+           "detection": 8,
+           "preventionControl": "Plan de mantenimiento preventivo de matrices",
+           "detectionControl": "Inspeccion visual dimensional post-troquelado",
+           "specialChar": "",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "f82f52be-70b6-47bc-8a3d-a09603e51feb",
+   "operationNumber": "70",
+   "opNumber": "70",
+   "operationName": "INYECCIÓN PU (POLIURETANO)",
+   "name": "INYECCIÓN PU (POLIURETANO)",
+   "workElements": [
+    {
+     "id": "95e027a5-8824-4543-b192-2084441f44b4",
+     "name": "Inyectora de PUR",
+     "type": "Machine",
+     "functions": [
+      {
+       "id": "640c120b-9fd9-4262-8841-b71ec64d352d",
+       "description": "Inyectar poliuretano sobre el sustrato plástico asegurando cobertura y espesor uniforme",
+       "failures": [
+        {
+         "id": "34c01f20-3e10-4c14-bcb7-df3faeca42d2",
+         "description": "Vertido incorrecto de mezcla sobre molde",
+         "severity": 7,
+         "effectLocal": "Scrap de pieza",
+         "effectNextLevel": "Retrabajo o clasificacion adicional",
+         "effectEndUser": "Defecto visual o funcional",
+         "causes": [
+          {
+           "id": "d20f6f8c-977f-48bc-a2ad-5d61116eee1d",
+           "description": "Error de operario",
+           "severity": 7,
+           "occurrence": 3,
+           "detection": 8,
+           "preventionControl": "Uso de ayudas visuales / hoja de operaciones",
+           "detectionControl": "Control visual del operario",
+           "specialChar": "",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "446a80b3-f8d5-4b32-ba43-231ffc425b55",
+   "operationNumber": "71",
+   "opNumber": "71",
+   "operationName": "ARMADO DE CINTA Y ESPUMA SOBRE EL PLASTICO",
+   "name": "ARMADO DE CINTA Y ESPUMA SOBRE EL PLASTICO",
+   "workElements": [
+    {
+     "id": "c6d78614-3ca4-48f3-ae26-225699d31473",
+     "name": "Film adhesivo Tesa 52110",
+     "type": "Material",
+     "functions": [
+      {
+       "id": "3b9e557b-7adb-4203-b2a5-1b27fff7d528",
+       "description": "Adherir la cinta y la espuma al plastico",
+       "failures": [
+        {
+         "id": "876ede8f-077a-4b42-a7a7-07b594678594",
+         "description": "Cinta faltante o mal adherida",
+         "severity": 6,
+         "effectLocal": "Espuma se despega del plastico",
+         "effectNextLevel": "Delaminacion en el tapizado",
+         "effectEndUser": "Burbujas o despegue visible en el apoyabrazos",
+         "causes": [
+          {
+           "id": "0e7653fa-be69-4008-a9c7-83a4b1e88641",
+           "description": "Cinta mal posicionada o incompleta",
+           "severity": 6,
+           "occurrence": 4,
+           "detection": 8,
+           "preventionControl": "Autocontrol segun P-09/I",
+           "detectionControl": "Inspeccion visual",
+           "specialChar": "",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "6c1ae2af-e16d-4a99-88d7-d399f5a15500",
+   "operationNumber": "80",
+   "opNumber": "80",
+   "operationName": "ADHESIVADO",
+   "name": "ADHESIVADO",
+   "workElements": [
+    {
+     "id": "f9fa8f90-2a9f-4f89-8853-0ed7bd552bd5",
+     "name": "Línea de Adhesivado Hot Melt",
+     "type": "Machine",
+     "functions": [
+      {
+       "id": "38768d50-1ff9-4723-b350-f6e581f0d888",
+       "description": "Aplicar adhesivo de forma uniforme y controlada",
+       "failures": [
+        {
+         "id": "4b8f7bc3-a5f5-4710-bb4d-70f443274b6a",
+         "description": "Adhesión insuficiente o fuera de especificacion",
+         "severity": 8,
+         "effectLocal": "Scrap (100% de la produccion debe ser descartada)",
+         "effectNextLevel": "Parada de línea de ensamblaje en el cliente",
+         "effectEndUser": "Degradacion de la funcion primaria del vehiculo / reclamo de aspecto",
+         "causes": [
+          {
+           "id": "c2239669-05e5-4f6d-b249-d7c14347aa3d",
+           "description": "Temperatura de rodillo fuera de rango o rodillos sucios",
+           "severity": 8,
+           "occurrence": 4,
+           "detection": 9,
+           "preventionControl": "Limpieza periódica de rodillos aplicadores y control de temperatura de fusión",
+           "detectionControl": "Ensayo de adherencia por lote y control visual",
+           "specialChar": "SC",
+           "characteristicNumber": ""
+          },
+          {
+           "id": "39a8b74e-9498-40e0-811b-aa1b81a7a448",
+           "description": "Proporcion de mezcla incorrecta",
+           "severity": 8,
+           "occurrence": 7,
+           "detection": 8,
+           "preventionControl": "Hoja de proceso detalla como realizar la mezcla correctamente",
+           "detectionControl": "Inspección visual: el operador mira la mezcla",
+           "specialChar": "SC",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "cb96ea3d-9e1b-4e68-9f6f-9b2eaf98382e",
+   "operationNumber": "81",
+   "opNumber": "81",
+   "operationName": "INSPECCIÓN DE PIEZA ADHESIVADA",
+   "name": "INSPECCIÓN DE PIEZA ADHESIVADA",
+   "workElements": [
+    {
+     "id": "01091ce5-cab6-43a9-98bb-edb2ce26891d",
+     "name": "Operador de Producción",
+     "type": "Man",
+     "functions": [
+      {
+       "id": "dd43a656-7b9b-4974-bdc8-cc3abe24e820",
+       "description": "Tomar pieza adhesivada, inspeccionar criterios visuales y colocar en scrap o medio OK",
+       "failures": [
+        {
+         "id": "1af270ac-ca2f-4680-a60a-50577dfeb13b",
+         "description": "Pieza dañada (rasgadura en el kit, mancha)",
+         "severity": 5,
+         "effectLocal": "Retrabajo fuera de línea",
+         "effectNextLevel": "Producto defectuoso desencadena un plan de reaccion importante",
+         "effectEndUser": "Degradacion de la funcion secundaria del vehiculo",
+         "causes": [
+          {
+           "id": "a53bfa03-1e42-4400-87fb-5ceb7c3dcf8e",
+           "description": "El operador no sigue el procedimiento de revision visual establecido en el kit",
+           "severity": 5,
+           "occurrence": 5,
+           "detection": 8,
+           "preventionControl": "Instruccion de revision visual de pieza en el kit",
+           "detectionControl": "Inspección visual de la pieza y del embalaje",
+           "specialChar": "SC",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "e0ac96dc-ac4c-42fe-b708-d4046e56ba9e",
+   "operationNumber": "82",
+   "opNumber": "82",
+   "operationName": "REPROCESO: FALTA DE ADHESIVO",
+   "name": "REPROCESO: FALTA DE ADHESIVO",
+   "workElements": [
+    {
+     "id": "2b253da6-5530-478f-9aaa-9481fa730ba2",
+     "name": "Operador de Calidad",
+     "type": "Man",
+     "functions": [
+      {
+       "id": "592ea377-5789-4471-9f49-8a7239e8f499",
+       "description": "Aplicar adhesivo en las areas omitidas utilizando la herramienta asignada (brocha/pistola), garantizando la continuidad de la capa adhesiva y la limpieza de la pieza",
+       "failures": [
+        {
+         "id": "3bd8855a-b55a-4695-adb1-a636f5823d51",
+         "description": "Falta de adhesivo / cobertura incompleta",
+         "severity": 7,
+         "effectLocal": "Scrap del 100%",
+         "effectNextLevel": "Paro de línea / problemas de ensamble",
+         "effectEndUser": "Apariencia / ruido",
+         "causes": [
+          {
+           "id": "ecbda55d-7c78-4114-aa43-52417d75c41f",
+           "description": "Omision por fatiga o distraccion: el operador olvida aplicar adhesivo en una seccion especifica por falta de ayudas visuales",
+           "severity": 7,
+           "occurrence": 5,
+           "detection": 8,
+           "preventionControl": "Instrucciones de proceso y ayudas visuales disponibles en el puesto",
+           "detectionControl": "Inspección de calidad",
+           "specialChar": "SC",
+           "characteristicNumber": ""
+          },
+          {
+           "id": "b2c6cd6d-76bc-4af8-a310-16b2ff8fcaeb",
+           "description": "Instruccion deficiente: la hoja de operación estandar de reproceso no especifica el patron de recorrido",
+           "severity": 7,
+           "occurrence": 4,
+           "detection": 3,
+           "preventionControl": "La hoja de instruccion detalla el metodo de aplicacion y el patron de recorrido",
+           "detectionControl": "Inspección de calidad",
+           "specialChar": "SC",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "656f2a36-97f1-4d7a-9ec6-2e56258c6e08",
+   "operationNumber": "90-92",
+   "opNumber": "90-92",
+   "operationName": "TAPIZADO CONFIGURACION, AUTOMATICO Y REFILADO MANUAL",
+   "name": "TAPIZADO CONFIGURACION, AUTOMATICO Y REFILADO MANUAL",
+   "workElements": [
+    {
+     "id": "c4b91d99-28c8-46f8-bb8a-f5d6aedfa6bf",
+     "name": "Prensa de tapizado",
+     "type": "Machine",
+     "functions": [
+      {
+       "id": "62aca6b3-4932-44a3-8131-0acf2afbd106",
+       "description": "Posicionar sustrato y vinilo en molde, accionar ciclo de prensado y conformar borde",
+       "failures": [
+        {
+         "id": "913a9e3c-836a-4368-a55b-b28e42666344",
+         "description": "Arrugas o pliegues en vinilo",
+         "severity": 4,
+         "effectLocal": "Retrabajo parcial o en estación",
+         "effectNextLevel": "Plan de reacción menor",
+         "effectEndUser": "Defecto visual notorio",
+         "causes": [
+          {
+           "id": "0bf077a1-f645-473c-886f-f6e302a2e939",
+           "description": "Tensión inadecuada al enfundar",
+           "severity": 3,
+           "occurrence": 5,
+           "detection": 8,
+           "preventionControl": "Instrucción estandar de enfundado",
+           "detectionControl": "Inspección visual",
+           "specialChar": "",
+           "characteristicNumber": ""
+          },
+          {
+           "id": "a1c57790-4ba0-4903-9bb0-59e0fd04c67c",
+           "description": "Mal posicionamiento de espuma",
+           "severity": 4,
+           "occurrence": 5,
+           "detection": 8,
+           "preventionControl": "Instrucción estandar de enfundado",
+           "detectionControl": "Inspección visual",
+           "specialChar": "",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "d0414f92-5730-487b-a95b-5463fd940381",
+   "operationNumber": "93",
+   "opNumber": "93",
+   "operationName": "ENGRAMPADO",
+   "name": "ENGRAMPADO",
+   "workElements": [
+    {
+     "id": "3d489331-4780-43d4-aff0-0fef7d18db16",
+     "name": "Engrampadora neumatica",
+     "type": "Machine",
+     "functions": [
+      {
+       "id": "492c9c50-9648-4871-8b0c-a0fbe5789ecf",
+       "description": "Fijar el borde del vinilo al sustrato con grampas en todo el contorno",
+       "failures": [
+        {
+         "id": "db5456f6-cf12-4fbd-b318-63b3f6cd8e86",
+         "description": "Vinilo sin fijar en el contorno de la pieza",
+         "severity": 6,
+         "effectLocal": "Pieza con el vinilo despegado del sustrato, retrabajo fuera de linea",
+         "effectNextLevel": "Retrabajo o rechazo de la pieza antes del despacho",
+         "effectEndUser": "Vinilo levantado a la vista en el apoyabrazos de puerta del vehiculo",
+         "causes": [
+          {
+           "id": "5213af54-5eaa-498c-a627-0abf59a604da",
+           "description": "Grampas en cantidad o posicion distinta a la definida",
+           "severity": 6,
+           "occurrence": 6,
+           "detection": 8,
+           "preventionControl": "Hoja de operacion con la secuencia de engrampado",
+           "detectionControl": "Conteo de grampas con el camino de inspeccion, 100%",
+           "specialChar": "SC",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "06834c1e-6ca2-49bf-80c7-21d0feceb222",
+   "operationNumber": "100",
+   "opNumber": "100",
+   "operationName": "CONTROL FINAL DE CALIDAD",
+   "name": "CONTROL FINAL DE CALIDAD",
+   "workElements": [
+    {
+     "id": "115fb05d-e28e-4ca2-b353-c3d71f220aad",
+     "name": "Maquina de coser (costura vista)",
+     "type": "Machine",
+     "functions": [
+      {
+       "id": "6688f530-d766-4a7f-8980-4ac029b7e54e",
+       "description": "Verificar alineacion y estetica de costura decorativa",
+       "failures": [
+        {
+         "id": "22715dfc-748f-4c7c-a69b-6c15e1c0323a",
+         "description": "Pieza con rebaba visible",
+         "severity": 3,
+         "effectLocal": "Separamos la pieza, requiere retrabajo parcial en estación (corte o recorte)",
+         "effectNextLevel": "Plan de reacción menor",
+         "effectEndUser": "Defecto moderado perceptible",
+         "causes": [
+          {
+           "id": "981c2d81-1274-4066-a5d8-f3d626e3ae42",
+           "description": "Fuga leve de PUR durante inyección (por mala posición o presión)",
+           "severity": 3,
+           "occurrence": 4,
+           "detection": 8,
+           "preventionControl": "Control del volumen y presión del PUR para evitar que se genere rebaba",
+           "detectionControl": "Inspección visual con iluminación dirigida y estándar visual con muestra límite",
+           "specialChar": "",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "4b7a6ad2-3ff2-4da0-9f46-551faa574158",
+   "operationNumber": "101",
+   "opNumber": "101",
+   "operationName": "REPROCESO: REACTIVACIÓN DE ADHESIVO POR CALOR",
+   "name": "REPROCESO: REACTIVACIÓN DE ADHESIVO POR CALOR",
+   "workElements": [
+    {
+     "id": "b016cecf-16ad-4046-b7be-89ccf05fa87c",
+     "name": "Pistola térmica con regulación digital",
+     "type": "Machine",
+     "functions": [
+      {
+       "id": "87d484e1-97a1-4d01-aed6-460541896327",
+       "description": "Generar caudal de aire caliente a temperatura regulada para reactivación térmica del adhesivo",
+       "failures": [
+        {
+         "id": "c02ec3e7-6b2d-4105-977d-9b14ab664361",
+         "description": "Temperatura fuera de rango de reactivación",
+         "severity": 7,
+         "effectLocal": "Adhesivo no reactiva o degradación térmica superficial",
+         "effectNextLevel": "Retrabajo ineficaz o daño de pieza",
+         "effectEndUser": "Defecto visual o desprendimiento en servicio",
+         "causes": [
+          {
+           "id": "d6402ce9-bf58-4433-857e-e624c096be07",
+           "description": "Descalibración o selección incorrecta de temperatura en display",
+           "severity": 7,
+           "occurrence": 3,
+           "detection": 4,
+           "preventionControl": "Equipo con display digital y bloqueo de set-point según instrucción",
+           "detectionControl": "Verificación periódica de temperatura de salida con pirómetro/termómetro infrarrojo calibrado",
+           "specialChar": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "e46f879c-9992-4e51-8715-e06ad52eada2",
+   "operationNumber": "110",
+   "opNumber": "110",
+   "operationName": "EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO",
+   "name": "EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO",
+   "workElements": [
+    {
+     "id": "bf88ea3b-b620-4163-92cf-78d91d0b12e4",
+     "name": "Proceso de embalaje",
+     "type": "Method",
+     "functions": [
+      {
+       "id": "b32b3886-e8e5-4a9e-b82a-615e04f241b4",
+       "description": "Embalar piezas terminadas con separadores adecuados",
+       "failures": [
+        {
+         "id": "a0acc141-eb25-4b8e-a5df-f41c6a8e9959",
+         "description": "Pieza deformada por mal posicionamiento en el embalaje",
+         "severity": 8,
+         "effectLocal": "Daño permanente en la espuma o en la costura",
+         "effectNextLevel": "Paro de línea temporal o devolución del lote",
+         "effectEndUser": "Defecto notorio y disconformidad inmediata",
+         "causes": [
+          {
+           "id": "bdec641a-2d6f-46cf-8eb5-0bdd0727b264",
+           "description": "Las piezas se colocan sin separadores adecuados, con contacto directo o presión entre ellas, lo que genera deformación durante el almacenamiento o traslado",
+           "severity": 8,
+           "occurrence": 3,
+           "detection": 8,
+           "preventionControl": "Uso de separadores, bandejas o estructuras que mantienen la forma del apoyabrazos durante el embalaje y almacenaje",
+           "detectionControl": "Inspección visual del operador al momento de ubicar las piezas en el embalaje, verificando que no haya contacto directo, presión excesiva o mala colocación",
+           "specialChar": "",
+           "characteristicNumber": ""
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "revisions": [
+  {
+   "rev": "A",
+   "date": "20/08/2026",
+   "item": "61",
+   "details": "SE AGREGA LA OP 61 CONTROL DE PIEZA INYECTADA (FLUJOGRAMA 153 REV.B), ENTRE INYECCION PLASTICA (60) E INYECCION PU (70). INCORPORACIÓN DE ESTACIÓN Y CONTROL DE PIEZA INYECTADA SEGÚN FLUJOGRAMA 153 REV. B",
+   "pswDate": "",
+   "modifiedBy": "FS"
+  }
+ ]
+}

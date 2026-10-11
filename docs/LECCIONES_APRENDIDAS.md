@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **10/10 — La «respuesta conocida» de un plan también se mide antes de codear el gate que la espera**: el plan P6 decía que el AMFE 161 no analizaba las operaciones 51/60/71/81/82/101 (lo escribió una revisión por la API sin mirar Supabase); el AMFE vivo del 05/10 las tiene todas: faltaban en el plan de Calidad. Un gate escrito para esa frase habría dado rojo contra el dato bueno. Memoria: el §7.4 del plan quedó con lo medido.
+
 - **09-10/10 — Un control que suma trabajo a un chequeo con tope de tiempo se mide en el MODO en que corre ese chequeo** (el logo y las frases nuevas llevaron el detector de 55 a 90 s; el cierre lo corta a los 90 y lee «vacío» como limpio: quedó ciego hasta que el auditor lo midió). Y el auditor Opus encontró un error real en 3 de 4 cambios de la noche: no se saltea. Graduado al auditor (`metodo_correr_no_solo_leer`) y a `_sinFirmaIA.py` (lo caro solo con avisos pedidos).
 
 - **09/10 — El control de la PC de Fak queda prendido hasta cerrar la sesión: antes de pedirlo se le dice, y al terminar se avisa en el momento; un pedido largo a la API va por streaming y sin fallback.** Graduado a `feedback_control_de_la_pc_no_se_suelta_solo` y `llamarLargo()`.

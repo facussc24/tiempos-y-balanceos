@@ -176,6 +176,57 @@ contacto, equipo, código de cliente, fechas original/revisión/FUM, `srCharacte
    `CONFLICTO` hotmelera y hilo; `TBD` parámetros 70 y 80; filas de atraque y alineación de la 41 desde la
    HO-971; MC212 marcado; set up de la 30 sin texto de costura. Aprobación: cero celdas con valor sin
    `sourceRef`.
+   **Hecha el 10/10/2026 (hija 6, Fable; commit en `git log` con «P6 etapa 1»)**: `scripts/_lib/planControlFuentes.mjs`
+   (lectores), `scripts/_lib/planControlCheck.mjs` (`armarPlan()` + los gates, cada uno con gemelo rojo),
+   `scripts/_planControl.mjs APB` (Supabase solo lectura), `scripts/_lib/planControlEntradas.data.json` (las
+   entradas declaradas del APB), `__tests__/scripts/planControlCheck.test.mjs` (31 tests sobre fixtures de
+   `__tests__/fixtures/planControl/`, sin Supabase; 31 tests). Diseño del JSON revisado por la API (Opus, US$0,17,
+   `.sgc-cache/sesion-2026-10-10/API_P6_diseno_json_opus.md`): se tomaron el `catalog` por fuente (los gates
+   leen solo el JSON), `sourceRef.loc` estructurado, `rowOrigin`, `instrumentCode`, ids deterministas, el
+   estado de fila derivado y la mutación comparada por `sourceRef`; lo de IATF 8.5.1.1 (primera/última
+   pieza, error proofing) queda para la etapa 2. Diff revisado por la API antes del auditor (Opus, US$0,31,
+   `.sgc-cache/sesion-2026-10-10/API_P6_revision_diff_opus.md`, 25 puntos): se aplicaron los reales (el plan de
+   reacción se lee del bloque de la HO en vez de un texto fijo; cada convención del formulario entra solo con su
+   clave escrita en las entradas; el encabezado, el origen de fila, los conflictos y los pendientes colgados
+   entran al gate 4; el gate 1 frena con una HO sin ítems; el vínculo causa→fila es solo por tabla explícita, nunca
+   por el número 1.0/2.0 del formulario; la descripción de las fichas se recortó a lo que dice el txt; el ciclo de
+   control se cierra en el pie de la hoja; rangos «90 al 93» y «92-90»). Límites que quedaron escritos en el código:
+   `codigosEnHo` solo reconoce códigos con la forma de los hilos (FX284-E0PTO) y `codigoInstrumento` solo MC + 3
+   cifras.
+   Auditor Opus al final (`.sgc-cache/auditorias/P6_etapa1_auditor_2026-10-10.md`): tres errores reales, aplicados
+   (un rol «OP / CC» expandido sin leyenda en la HO; la columna B combinada duplicaba el plan de reacción en las
+   hojas 51; la característica de la hotmelera seguía mostrando «190 y 210» con la especificación en CONFLICTO:
+   ahora las dos celdas van a CONFLICTO). Lo que dejó como riesgo y queda abierto: el gate de calibración lee el
+   plan viejo por fuera del JSON (diagnóstico), el gate 0 solo avisa (por diseño), «Según plan de control» puede
+   entrar como frecuencia si la HO lo escribe ahí, los flujogramas 152 y 158 tienen números de paso repetidos (ids
+   repetidos si se usaran), recepción = 10 y embalaje = 110 están fijos.
+   **Lo medido sobre el APB live (75 filas, 373 pendientes, 2 FRENO, 198 avisos, cero celdas con valor sin
+   `sourceRef`; `exports/PLAN_CONTROL_APB_20261010/`)**, contra lo que esperaba esta sección:
+   - **51, 60, 71, 81, 82, 101**: el AMFE 161 vivo (`AMFE-ARM-PAT`, rev A del 05/10/2026) **sí las analiza**: el
+     gate 0 da cero. Las seis faltaban en el **plan de Calidad**, no en el AMFE (el 06/10 lo dijo así y el §7.1
+     lo leyó al revés). Salen del cruce flujograma ↔ plan existente, junto con la 21 y la 22 (que Calidad tenía
+     adentro de la 20); el gemelo rojo del gate 0 (AMFE sin esas seis) las lista exactas.
+   - **GE-280 y GE-276**: una fila cada una con el nombre (lo dice el txt del 06/10, leído) y el contenido TBD.
+   - **ET-SATO**: dos filas de recepción con instrumento TBD y sin familia; los INY-APB000x no se reciben.
+   - **CONFLICTO hotmelera**: la HO-971 (Excel del 07/10, hoja 80) dice 190-210 y la receta de la máquina
+     (pantalla HMI del 26/08, fuente declarada) 185 °C: la fila queda en CONFLICTO con los dos valores.
+   - **CONFLICTO hilo**: la HO-971 de esta PC **ya dice FX284-E0PTO** (se corrigió el 07/10): hoy no hay
+     conflicto; con el texto del 06/10 (FX284TK-E0PTO) la fila del hilo queda en CONFLICTO (probado en el test).
+   - **70 y 80**: la HO tiene la 70 en «PENDIENTE / TBD» y en la 80 solo la temperatura: todo lo demás TBD; el
+     plan de Calidad tiene 9 parámetros de la 70 y 4 de la 80 en «Ver hoja de operaciones».
+   - **41**: atraque (3 a 4 puntadas) y alineación de la línea vista salen de la hoja 41 de la HO, con su celda.
+   - **MC212**: FRENO (certificado externo NO OK, control de proceso en Conversión de Cintas; el dato es del txt
+     del 06/10, el cronograma no se ve desde acá). Es el único FRENO del APB: el plan «no aprueba» hasta que
+     Calidad lo confirme. MC167 (cuchilla) queda como aviso sin dato.
+   - **Set up de la 30**: la fila sale TBD sin ninguna referencia a la 40/41; el set up del plan de Calidad
+     (30, 40 y 41 con el mismo texto) no tiene ni una palabra en la HO de su operación.
+   - **Mutación sin HO**: cero celdas citan la HO, lo que solo venía de ella pasa a TBD, no aparece ningún valor
+     nuevo y el gate 1 frena por «fuente HO ausente» (no aprueba en vacío).
+   - **Siglas**: en el APB vivo ninguna causa tiene `characteristicNumber` y no hay tabla de vínculos, así que
+     las 171 causas con control quedan listadas «sin fila» (aviso) y la columna de siglas vacía: es lo esperado
+     de la etapa 1; vincularlas es el gate 8 (etapa 2).
+   - **Lo que no se vio desde esta red** (sigue): planes de recepción por familia (tabla código → familia de
+     EJEMPLO en las entradas), fichas GE-280/GE-276, cronograma de calibración, plantilla I-AC-005.1 vacía.
 2. **Propuesta de siglas, gate 7 y gate 8.** La propuesta sobre el AMFE 161 en la hoja aparte y la columna
    vacía; con la asignación, la columna igual a la asignación; el control final marcado («4 en 16 mm» es la
    costura de unión, no la vista «6 en 25 ±0,5»); el reporte del gate 8 con un gemelo rojo por estado.

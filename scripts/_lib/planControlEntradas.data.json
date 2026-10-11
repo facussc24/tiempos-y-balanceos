@@ -1,0 +1,97 @@
+{
+  "_doc": "Entradas DECLARADAS por pieza para scripts/_planControl.mjs (P6 etapa 1). Aca va lo que no esta en un papel que el programa pueda leer solo: que archivos leer, la fase, y las tablas que viven en el servidor y no se ven desde esta red. Lo marcado EJEMPLO no es un dato real: es una forma de probar el gate hasta que se lea el papel de verdad (core-prohibiciones.md §1). Cada entrada declarada lleva su fuente.",
+  "APB": {
+    "pieza": "APB DE PUERTA",
+    "partName": "APOYABRAZOS DE PUERTA (ARMREST DOOR PANEL)",
+    "codigos": ["N 231", "N 267", "N 297", "N 328"],
+    "preparedBy": "F. Santoro",
+    "phase": "prelanzamiento",
+    "phaseFuente": "encargo E261011-49e9 del orquestador (10/10/2026): etapa de la pieza = PROYECTO; Patagonia no esta en serie",
+    "flujograma": "tools/flowchart/data/153-ARMREST-DOOR-PANEL.json",
+    "amfe": { "amfe_number": "AMFE-ARM-PAT", "numeroCasa": "161" },
+    "ho": { "doc": "HO-971", "path": "exports/HO_CORREGIDAS_20261007/APB/APB PATAGONIA HO 971.xlsx", "nota": "Excel I-IN-002.4-R01 Rev 1 (10/03/2026) con las correcciones del 07/10/2026; las laminas A3 nuevas (Rev B, 05/10/2026) cubren solo 10 a 41 y 93" },
+    "bom": { "path": "exports/BOM_OFICIAL_PATAGONIA_ULTIMO_NIVEL_ARB.xlsx", "hoja": "BOM_COMPLETA_FILTRABLE" },
+    "planExistente": { "path": "exports/PC_NICO_20261006/PC APB PATAGONIA Rev 0 - correcciones de Ingenieria 06-10-2026.xls", "hoja": "PC APB", "doc": "PC APB PATAGONIA Rev 0 (N. Perez, 25/09/2026) con las 36 correcciones de Ingenieria del 06/10/2026" },
+    "procedimientos": {
+      "P-10": { "path": ".sgc-cache/sgc/P-10 Inspeccion y ensayos.md", "doc": "P-10 Inspeccion y ensayos (cache del SGC)", "recepcion": "§5.1: el material que ingresa se inspecciona segun el Plan de Control de Recepcion; el auditor de recepcion verifica la documentacion del proveedor" },
+      "P-14": { "path": ".sgc-cache/sgc/P-14 No conformidad y accion correctiva.md", "doc": "P-14 No conformidad y accion correctiva (cache del SGC)" },
+      "I-AC-005": { "path": ".sgc-cache/sgc/I-AC-005 Emision y control del AMFE y plan de control.md", "doc": "I-AC-005 rev.B Emision y control del AMFE y plan de control (cache del SGC)" }
+    },
+    "convenciones": {
+      "doc": "Convenciones del formulario I-AC-005.1 tal como las usa Calidad en PC APB PATAGONIA Rev 0 (N. Perez, 25/09/2026). Cada clave es una convencion que el programa puede citar; sin clave, la celda queda TBD.",
+      "fuente": "exports/PC_NICO_20261006/original/PC APB PATAGONIA Rev 0.xls",
+      "formulario": "el plan va en el formulario I-AC-005.1 (I-AC-005 rev.B §5.2, Anexo I); la hoja 'Rev.' del libro es la revision del FORMULARIO, no del plan",
+      "naEnProductoDeSetUp": "la fila 'Set up de Maquina' lleva N/A en PRODUCTO (filas 114, 119, 121, 140, 159...)",
+      "naColumnaQueNoAplica": "en una fila con caracteristica de PRODUCTO la columna PROCESO queda sin uso, y al reves (filas 77 a 112: PRODUCTO = material, PROCESO = caracteristica); se escribe N/A para que la celda no quede en blanco",
+      "naMaquinaRecepcion": "en recepcion la columna MAQUINA no se usa (filas 77 a 112, vacias): se escribe N/A",
+      "setUpDeMaquina": "cada operacion de proceso arranca con una fila 'Set up de Maquina' (filas 114, 119, 121, 140, 159, 166, 184, 191)",
+      "numeracionPorOperacion": "las caracteristicas se numeran 1.0, 2.0, 3.0 dentro de cada operacion; en recepcion un numero por material",
+      "metodoRecepcion": "en recepcion METODOS DE CONTROL Y REGISTROS dice 'P-10/I.' (filas 77 a 112)",
+      "reaccionRecepcion": "en recepcion PLAN DE REACCION dice 'P-14.' (filas 77 a 112)",
+      "emisionInicial": "la tabla REVISIONES arranca en 0 / N/A / EMISION INICIAL (fila 11)",
+      "registroSetUp": "en la HO, un item del ciclo de control con Registro = 'Set up' es una verificacion de puesta a punto (fila de set up); los demas son controles sobre la pieza"
+    },
+    "roles": {
+      "_fuente": "HO-971, cada hoja: 'Referencia: OP - Operador de Produccion' (celda P del ciclo de control); 'Insp - Inspector calidad' (hojas 51 y 51.1). Solo lo que una leyenda de la HO define; 'OP / CC' y 'OP / Calidad' no tienen leyenda y quedan tal cual",
+      "OP": "Operador de produccion",
+      "Insp.": "Inspector de calidad"
+    },
+    "maquinas": {
+      "_doc": "Maquina de cada operacion, SOLO si la nombra la HO de esa operacion (el gate lo verifica contra el texto de la hoja). Lo que la HO no nombra queda TBD.",
+      "20": { "machineDeviceTool": "Maquina de corte de capas de vinilo", "sourceId": "HO-971", "sheet": "20", "nota": "hoja 20: 'panel de control en la maquina de corte de capas de vinilo'" },
+      "21": { "machineDeviceTool": "Mesa de corte", "sourceId": "HO-971", "sheet": "21", "nota": "hoja 21: 'planilla de mesa de corte'" },
+      "30": { "machineDeviceTool": "Maquina refiladora", "sourceId": "HO-971", "sheet": "30", "nota": "hoja 30, paso 1: 'colocar en la maquina refiladora el extremo'" },
+      "80": { "machineDeviceTool": "Maquina hotmelt", "sourceId": "HO-971", "sheet": "80", "nota": "hoja 80, paso 1: 'rodillo de la maquina hotmelt'" }
+    },
+    "recepcion": {
+      "_doc": "EJEMPLO. Los planes de recepcion por familia viven en Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\Recepcion De Materiales\\1 - Planes de control\\<familia>\\ y NO se ven desde esta red. La familia de cada codigo esta puesta a mano para probar el gate 2; el instrumento, la especificacion y la frecuencia salen de ESOS planes y hasta leerlos van TBD.",
+      "readable": false,
+      "familias": {
+        "VIN-SKM-001": { "familia": "VINILO", "compra": true },
+        "FX284-E0PTO": { "familia": "HILOS", "compra": true },
+        "FX483TK-E0PTO": { "familia": "HILOS", "compra": true },
+        "427ADH002ADH01": { "familia": "ADHESIVOS", "compra": true },
+        "52110": { "familia": "ADHESIVOS", "compra": true, "nota": "film adhesivo Tesa 52110" },
+        "POLI-PLUSFF636": { "familia": "ESPUMA", "compra": true, "nota": "poliol" },
+        "ISO-PLUS 1355": { "familia": "ESPUMA", "compra": true, "nota": "isocianato" },
+        "DISSACOL HR": { "familia": "ADHESIVOS", "compra": true, "nota": "desmoldante: la familia es una suposicion de EJEMPLO" },
+        "22020541": { "familia": "SUSTRATOS PLASTICOS", "compra": true, "nota": "MG47 BK1066" },
+        "DK/1840400": { "familia": "GRAMPAS", "compra": true },
+        "ET-SATO-100X60": { "familia": null, "compra": true, "nota": "etiqueta: sin familia de recepcion conocida (06/10/2026: 'estan en la BOM de las tres piezas y en ninguna recepcion')" },
+        "ET-SATO-50X20": { "familia": null, "compra": true, "nota": "etiqueta: sin familia de recepcion conocida" }
+      }
+    },
+    "fichasEmbalaje": {
+      "_doc": "Las fichas viven en el servidor (17. Fichas de embalaje) y no se ven desde esta red: de cada una entra el NOMBRE (lo dice la fuente de abajo), no el contenido.",
+      "fuente": { "id": "NICO-20261006", "doc": "QUE QUEDA PARA LA REUNION CON NICO.txt (Ingenieria, 06/10/2026): 'Embalaje: hay dos fichas vigentes, GE-280 (carton, quedo en el plan) y GE-276 (cajon plastico)'", "path": "exports/PC_NICO_20261006/QUE QUEDA PARA LA REUNION CON NICO.txt" },
+      "vigentes": [
+        { "doc": "GE-280", "que": "carton", "readable": false },
+        { "doc": "GE-276", "que": "cajon plastico", "readable": false }
+      ]
+    },
+    "calibracion": {
+      "_fuente": "exports/PC_NICO_20261006/QUE QUEDA PARA LA REUNION CON NICO.txt (06/10/2026): 'Calibre MC212 de grampas en recepcion: en el cronograma de calibracion figura en Conversion de Cintas, control de proceso, certificado externo NO OK'. El cronograma vive en el servidor y no se ve desde esta red: lo que no esta aca queda sin dato.",
+      "readable": false,
+      "instrumentos": {
+        "MC212": { "area": "Conversion de Cintas", "uso": "control de proceso", "certificadoExterno": "NO OK" }
+      }
+    },
+    "fuentesDeclaradas": [
+      {
+        "id": "RECETA-HOTMELT-20260826",
+        "kind": "declarada",
+        "doc": "Receta de la maquina hotmelt: consigna de temperatura de los rodillos en la pantalla HMI",
+        "fecha": "2026-08-26",
+        "loc": "memoria reference_maquina_hotmelt_parametros (videos 0383 y 0394 del 26/08/2026; fotogramas en la nube 5- VIDEOS Y FOTOS\\1- CLIENTES\\NOVAX\\TOP ROLL\\MAQUINA HOTMELT)",
+        "readable": true,
+        "valores": [
+          { "hoQcItemId": "HO-971/80/I30", "field": "specification", "valor": "185 °C (consigna de los dos rodillos desde el 26/08/2026)" }
+        ]
+      }
+    ],
+    "vinculos": {
+      "_doc": "Vinculos explicitos causa del AMFE -> fila del plan ({ causeId, itemKey }). Es la UNICA forma de vincular: ni por parecido de texto ni por numero de caracteristica (el 1.0/2.0 de la fila lo pone el formulario, no el plano). Sin vinculo, la causa se lista 'sin fila' y la columna de siglas queda vacia.",
+      "causaAFila": []
+    }
+  }
+}
