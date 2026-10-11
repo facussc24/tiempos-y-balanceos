@@ -13,15 +13,15 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **10-11/10 — Una tanda de hijas se mide por el cupo SEMANAL y por el de 5 h, cada hora: con tres o cuatro sesiones a la vez el semanal subía ~4 puntos por hora y Fak la cortó a la 1** (*«ya usamos demasiado de la semana»*); cerca del fin del cupo o del contexto no se lanzan agentes; **y una sesión con herramientas no se pasa a los créditos de la API** (`claude -p` con clave: «Credit balance is too low»). Graduado a `trabajar-hasta-la-hora.md` punto 5, al prompt v7 (dos hijas, tope 60/65 %) y a `reference_api_claude_clave_y_ciclo`.
+
 - **10-11/10 — Lo que la API afirma de un dato que no vio se mide antes de codear** (P6, dos veces; la última, la S de la causa por la del modo de falla). Graduado a `feedback_la_respuesta_conocida_se_mide_antes_del_gate`.
 
-- **09-10/10 — Un control que suma trabajo a un chequeo con tope de tiempo se mide en el MODO en que corre ese chequeo** (el logo y las frases nuevas llevaron el detector de 55 a 90 s; el cierre lo corta a los 90 y lee «vacío» como limpio: quedó ciego hasta que el auditor lo midió). Y el auditor Opus encontró un error real en 3 de 4 cambios de la noche: no se saltea. Graduado al auditor (`metodo_correr_no_solo_leer`) y a `_sinFirmaIA.py` (lo caro solo con avisos pedidos).
+- **09-10/10 — Un control que suma trabajo a un chequeo con tope de tiempo se mide en el MODO en que corre ese chequeo** (el detector pasó de 55 a 90 s y el cierre leyó «vacío» como limpio), **y el auditor Opus no se saltea** (un error real en 3 de 4 cambios; el 11/10 cazó 9 escrituras que pasaban en la primera versión de HOY-16). Graduado al auditor (`metodo_correr_no_solo_leer`) y a `_sinFirmaIA.py`.
 
 - **09/10 — El control de la PC de Fak queda prendido hasta cerrar la sesión: antes de pedirlo se le dice, y al terminar se avisa en el momento; un pedido largo a la API va por streaming y sin fallback.** Graduado a `feedback_control_de_la_pc_no_se_suelta_solo` y `llamarLargo()`.
 
 - **09/10 — Un despertador que nunca se vio llegar no existe: se cuenta en el registro ANTES de confiarle una noche.** Graduado a `trabajar-hasta-la-hora.md` (el latido es `_latido.mjs` en segundo plano desde el 09/10).
-
-- **09/10 — En una noche solo, el cupo de 5 h se mira CADA HORA y cerca del fin del contexto o del cupo no se lanzan agentes** (*"se cortan y consumimos tokens al pedo"*). Graduado a `trabajar-hasta-la-hora.md` punto 5.
 
 - **08/10 — Lo que cambia otro modelo (Gemini) en un documento se audita como contenido, no como ortografía** (renombró operaciones, dio vuelta un historial, armó el A3 con el 160 viejo). Cada texto se compara contra la versión anterior y el AMFE antes de imprimir.
 
