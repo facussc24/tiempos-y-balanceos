@@ -344,6 +344,17 @@ Pablo Gamboa: 0,0992 m²» no). Fak ve el borrador y decide: la fuente se escrib
   (lista con la edad; mover o borrar es otra cosa y pide el sí de Fak) y `--agenda` (reuniones y tareas; sale con un
   control del formato de fecha y, si da rojo, no se usa). Lógica en `scripts/_lib/mailsLectura.py`; lo prueba
   `__tests__/scripts/mailsLectura.test.mjs` contra un Outlook de mentira que anota todo lo que no sea una lectura.
+- **La única escritura de `_mails.py` es pasar borradores viejos a Elementos eliminados** (11/10/2026, cola HOY-19k, con
+  el sí de Fak del 10/10 23:58): `--limpiar-borradores` guarda la lista de los de más de 90 días en
+  `exports/BORRADORES_OUTLOOK_<fecha>/lista.md` sin mover nada, y `--limpiar-borradores --mover` mueve solo los de esa
+  lista, uno por uno, anotando cada uno en el momento (`movimientos.jsonl`) y el resumen al final (`movimientos.md`).
+  Nunca borra ni vacía Eliminados; no mueve el que armó un programa, el que se modificó después de la lista, el que
+  está abierto ni el que, medido contra el propio borrador, no pasa de los días de la lista (piso de 30). No hace nada
+  si Outlook está cerrado (no lo abre), si el registro de los programas existe y no se puede leer, o si no puede
+  confirmar que Outlook NO vacía Eliminados al cerrarse; y no pisa una lista con la que ya se movió. Sin verificar: si
+  el servidor borra solo lo viejo de Eliminados. Lógica aparte, en `scripts/_lib/mailsBorradores.py`; test
+  `__tests__/scripts/mailsBorradores.test.mjs` (mover sí, borrar nunca); la noche no lo puede llamar
+  (`candadosNocturno.test.mjs`). La carpeta de salida tiene asuntos y destinatarios: está en `.gitignore`.
 - **`_mailEnviar.py --selftest`**: 14 casos (duplicados, incluido el del incidente, y
   destinatarios de afuera: proveedor, dominio parecido, DN de Exchange, sin direccion).
 - **`mail-guard.test.sh`**: 15 casos de regresion del hook, por el guardian suelto Y por el despachador

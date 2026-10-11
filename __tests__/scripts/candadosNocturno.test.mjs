@@ -55,6 +55,7 @@ const PROHIBIDOS = [
   { que: 'tocar el arb', re: /produc\.exe/i },
   { que: 'mandar mails', re: /_mailEnviar|SendAndReceive/ },
   { que: 'mandar un mail de Outlook', re: ENVIO_OUTLOOK },
+  { que: 'mover borradores de Outlook (lo unico de _mails.py que escribe)', re: /--limpiar-borradores|--mover\b|mailsBorradores/ },
   { que: 'lanzar Claude Code', re: /(spawn|exec)\w*\(\s*['"`]claude\b/ },
 ];
 
@@ -129,6 +130,7 @@ describe('candados de la noche · gemelos rojos (cada patron caza lo que dice)',
     'mandar mails': "spawnSync('python', ['scripts/_mailEnviar.py'])",
     'mandar un mail de Outlook': ['mail', '.Se', 'nd()'].join(''),
     'lanzar Claude Code': "spawn('claude', ['-p', 'audita'])",
+    'mover borradores de Outlook (lo unico de _mails.py que escribe)': "spawnSync('python', ['scripts/_mails.py', '--limpiar-borradores', '--mover'])",
   };
 
   it.each(PROHIBIDOS.map((p) => [p.que, p.re]))('ROJO: "%s" se caza', (que, re) => {

@@ -54,6 +54,8 @@ AUDIT_FUNCIONAL.md
 exports/test-*
 # Paginas descartables del skill explicar-mejor (no son entregables)
 exports/explicaciones/
+# listas de borradores de Outlook (asuntos y destinatarios): scripts/_mails.py --limpiar-borradores
+exports/BORRADORES_OUTLOOK_*/
 *.bak
 /*.mjs
 !eslint.config.mjs

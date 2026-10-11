@@ -28,6 +28,12 @@ Cuatro lecturas mas (cola HOY-19a a d, 10/10/2026; la logica y su selftest, en s
     python scripts/_mails.py --borradores [--json]  # los borradores con su edad, sus adjuntos y si los armo un programa
     python scripts/_mails.py --agenda [--dias 7] [--json]   # reuniones de los proximos dias y tareas sin completar
 
+Y la unica que ESCRIBE en Outlook (cola HOY-19k, 11/10/2026, con el si de Fak; logica en scripts/_lib/mailsBorradores.py):
+    python scripts/_mails.py --limpiar-borradores           # lista los borradores de mas de 90 dias y la guarda en
+                                 [--viejos 90] [--out CARPETA]   exports/BORRADORES_OUTLOOK_<fecha>/lista.md. No mueve nada.
+    python scripts/_mails.py --limpiar-borradores --mover   # pasa a Elementos eliminados los de ESA lista, uno por uno,
+                                                            # y deja movimientos.md. Nunca borra ni vacia Eliminados.
+
 LOS MAILS DEL EQUIPO (agregado el 07/10/2026): los de trabajo de algunos companeros (hoy Carlos Baptista y la PC
 que era de Marcelo Nieve) suben solos a la nube de Ingenieria, en
 `<biblioteca>\\<_CUARENTENA_>Claude Barack\\mails\\_entrada\\<persona>\\*.jsonl`, y esta herramienta los lee de ahi
@@ -38,8 +44,9 @@ NOMBRES de los adjuntos, no los archivos.
 ATENCION — el repo es PUBLICO. El cache va a .mail-cache/ (gitignoreado). Nunca
 commitear contenido de mails ni pegarlo en archivos del repo.
 
-Enviar, responder o borrar mails NO se hace desde aca: es a mano, por Fak. Nada de este archivo guarda, mueve,
-borra ni transmite un item de Outlook; `--abrir` solo muestra una ventana.
+Enviar, responder o borrar mails NO se hace desde aca: es a mano, por Fak. Nada de este archivo guarda, borra ni
+transmite un item de Outlook; `--abrir` solo muestra una ventana. La unica excepcion es `--limpiar-borradores --mover`,
+que pasa borradores viejos a Elementos eliminados (se recuperan de ahi) y vive en scripts/_lib/mailsBorradores.py.
 """
 import argparse
 import datetime
@@ -53,6 +60,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib'))
 import mailsLectura  # noqa: E402
+import mailsBorradores  # noqa: E402
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # BARACK_MAIL_CACHE: otra carpeta de cache (la usan los tests para no tocar el real).
@@ -841,7 +849,7 @@ def abrir(eid):
 
 
 def listar_borradores(como_json=False):
-    """`--borradores`: solo lista. Mover o borrar un borrador no se hace desde aca (cola HOY-19k, con el si de Fak)."""
+    """`--borradores`: solo lista. Pasar los viejos a Elementos eliminados es `--limpiar-borradores` (abajo)."""
     try:
         with io.open(os.path.join(CACHE, 'borradores_claude.json'), encoding='utf-8') as f:
             registro = json.load(f)
@@ -867,7 +875,167 @@ def listar_borradores(como_json=False):
     print()
     print('Un borrador viejo con el asunto de un mail que ya salio se puede mandar por error (regla mail-envio.md).')
     print('Los [programa] los reemplaza solo _prepararMail.py al rehacer el mail; el resto los decide Fak.')
+    print('Los de mas de 90 dias se listan y se pasan a Elementos eliminados con --limpiar-borradores (y --mover).')
     return 0
+
+
+def _registro_programas(ruta=None):
+    """Los borradores que armaron los programas (`.mail-cache/borradores_claude.json`): esos no se mueven.
+    Devuelve (lista, estado): estado 'ok', 'ausente' (no hay archivo: lista vacia) o 'ilegible' (hay archivo y no se
+    pudo leer: lista None, y el que llama NO mueve nada, porque no sabe cuales son de un programa)."""
+    ruta = ruta or os.path.join(CACHE, 'borradores_claude.json')
+    if not os.path.exists(ruta):
+        return [], 'ausente'
+    try:
+        with io.open(ruta, encoding='utf-8') as f:
+            r = json.load(f)
+    except Exception:
+        return None, 'ilegible'
+    if not isinstance(r, (list, dict)) or (r and not mailsLectura.ids_de_registro(r)):
+        return None, 'ilegible'           # tiene filas y de ninguna sale un id: cambio de forma
+    return r, 'ok'
+
+
+def _outlook_abierto(pids=None):
+    """True si Outlook ya esta corriendo. `--limpiar-borradores` no lo abre: abrirlo le pone una ventana en la pantalla
+    a Fak, y esta funcion puede correr sin que el este mirando. Si no se puede saber, se contesta que no (conectarse a
+    un Outlook cerrado lo levanta sin ventana)."""
+    if pids is None:
+        try:
+            from outlookUi import _pids_outlook as pids
+        except Exception:
+            return False
+    try:
+        return bool(pids())
+    except Exception:
+        return False
+
+
+def _vacia_al_cerrar(leer=None):
+    """Si Outlook esta configurado para vaciar Elementos eliminados al cerrarse (ahi mover seria borrar).
+    True, False o None si no se pudo leer. Lo puesto por una politica de la empresa le gana a la preferencia.
+    `leer(clave)` devuelve el valor de EmptyTrash, None si la clave existe sin ese valor, o tira OSError si no hay clave."""
+    if leer is None:
+        try:
+            import winreg
+        except ImportError:
+            return None
+
+        def leer(clave):
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, clave) as k:
+                try:
+                    return winreg.QueryValueEx(k, 'EmptyTrash')[0]
+                except OSError:
+                    return None
+    visto = False
+    for base in (r'Software\Policies\Microsoft\Office\%s\Outlook\Preferences', r'Software\Microsoft\Office\%s\Outlook\Preferences'):
+        for version in ('16.0', '15.0'):
+            try:
+                v = leer(base % version)
+            except OSError:
+                continue
+            except Exception:
+                return None
+            visto = True
+            if v is not None:
+                return bool(v)
+    return False if visto else None       # hay preferencias de Outlook y ninguna lo prende: es el valor por defecto
+
+
+def limpiar_borradores(mover=False, dias=None, carpeta=None, vacia=None):
+    """`--limpiar-borradores`: guarda la lista de los borradores viejos; con `--mover`, pasa a Elementos eliminados los
+    de la lista ya guardada. Sale con 0 si hizo lo pedido, 1 si algun item dio error o la cuenta no cierra, 3 si no
+    hizo nada (y dice por que)."""
+    vacia = vacia or _vacia_al_cerrar
+    carpeta = carpeta or os.path.join(RAIZ, 'exports', 'BORRADORES_OUTLOOK_%s' % datetime.date.today().strftime('%Y%m%d'))
+    f_md, f_json, f_mov, f_log = (os.path.join(carpeta, n) for n in ('lista.md', 'lista.json', 'movimientos.md', 'movimientos.jsonl'))
+    if dias is not None and dias < mailsBorradores.DIAS_MINIMO:
+        print('NO SE HIZO: --viejos no puede ser menos de %d dias: un borrador de este mes puede estar esperando.' % mailsBorradores.DIAS_MINIMO)
+        return 3
+    if not _outlook_abierto():
+        print('NO SE HIZO: Outlook esta cerrado (o no pude saber si esta abierto) y esta funcion no lo abre. Con Outlook abierto, reintentar.')
+        return 3
+    registro, estado_registro = _registro_programas()
+    if registro is None:
+        print('NO SE HIZO: el registro de los borradores que arman los programas (.mail-cache/borradores_claude.json) no se')
+        print('puede leer, asi que no se cuales estan en uso. No listo ni muevo nada hasta que se pueda leer.')
+        return 3
+    if not mover:
+        if os.path.exists(f_mov) or os.path.exists(f_log):
+            print('NO SE HIZO: con la lista de %s ya se movieron borradores. No la piso: es el registro de lo que se movio.' % carpeta)
+            print('Para una lista nueva:  python scripts/_mails.py --limpiar-borradores --out <otra carpeta>')
+            return 3
+        dias = mailsBorradores.DIAS if dias is None else dias
+        ns = _outlook()
+        todos, viejos = _vigilado(lambda: mailsBorradores.candidatos(ns, registro, dias=dias), 'la lectura de borradores')
+        p = mailsBorradores.plan(todos, viejos, dias=dias)
+        v = vacia()
+        notas = ['Elementos eliminados %s' % ('SE VACÍA al cerrar Outlook en esta PC: mover sería borrar, no se mueve nada'
+                                              if v else 'no se vacía al cerrar Outlook en esta PC' if v is False
+                                              else 'al cerrar Outlook: no se pudo leer la configuración, así que no se mueve nada'),
+                 'Sin verificar: si el servidor de correo borra solo lo que lleva mucho tiempo en Elementos eliminados']
+        if estado_registro == 'ausente':
+            notas.append('En esta PC no hay registro de borradores armados por un programa: ninguno figura como «de un programa»')
+        if not os.path.isdir(carpeta):
+            os.makedirs(carpeta)
+        with io.open(f_json, 'w', encoding='utf-8') as f:
+            json.dump(p, f, ensure_ascii=False, indent=1)
+        with io.open(f_md, 'w', encoding='utf-8') as f:
+            f.write(mailsBorradores.texto_lista(p, notas))
+        de_prog = sum(1 for c in p['candidatos'] if c['de_programa'])
+        print('BORRADORES DE OUTLOOK: %d  |  de mas de %d dias: %d  |  de esos, armados por un programa (no se mueven): %d'
+              % (len(todos), dias, len(viejos), de_prog))
+        print('lista guardada: %s' % f_md)
+        if v is False:
+            print('No se movio nada. Para pasarlos a Elementos eliminados:  python scripts/_mails.py --limpiar-borradores --mover')
+        else:
+            print('No se movio nada, y --mover tampoco va a mover: %s.'
+                  % ('Outlook vacia Elementos eliminados al cerrarse' if v else 'no pude leer si Outlook vacia Elementos eliminados al cerrarse'))
+        return 0
+    try:
+        with io.open(f_json, encoding='utf-8') as f:
+            p = json.load(f)
+        if not isinstance(p, dict) or not isinstance(p.get('candidatos'), list):
+            raise ValueError('forma')
+    except Exception:
+        print('NO SE HIZO: no hay una lista guardada (o no se puede leer) en %s. Primero:  python scripts/_mails.py --limpiar-borradores' % carpeta)
+        return 3
+    if dias is not None and dias != p.get('dias'):
+        print('NO SE HIZO: la lista guardada es de mas de %s dias y pediste --viejos %d. Con --mover se mueve lo que dice la lista:' % (p.get('dias'), dias))
+        print('sacar --viejos, o hacer una lista nueva con ese numero en otra carpeta (--out).')
+        return 3
+    v = vacia()
+    if v is not False:
+        print('NO SE HIZO: %s, asi que mover podria ser borrar.'
+              % ('en esta PC Outlook vacia Elementos eliminados al cerrarse' if v else 'no pude leer si Outlook vacia Elementos eliminados al cerrarse'))
+        return 3
+    print('lista del %s, de mas de %s dias: %d borradores' % (p.get('hecha', '?'), p.get('dias', '?'), len(p['candidatos'])))
+
+    def anotar(fila):                    # un renglon por item, en el momento: si la corrida se corta, lo movido quedo escrito
+        with io.open(f_log, 'a', encoding='utf-8') as f:
+            f.write(json.dumps(dict(fila, cuando=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')), ensure_ascii=False) + '\n')
+
+    ns = _outlook()
+    try:
+        r = _vigilado(lambda: mailsBorradores.mover(ns, p, registro, al_fila=anotar), 'el movimiento de borradores a Elementos eliminados')
+    except RuntimeError as e:
+        print('NO SE HIZO: %s' % e)
+        return 3
+    with io.open(f_mov, 'a', encoding='utf-8') as f:
+        f.write(mailsBorradores.texto_movimientos(r, p) + '\n')
+    print('en la lista: %d  |  movidos a Elementos eliminados: %d  |  omitidos: %d  |  con error: %d'
+          % (len(r['filas']), r['movidos'], r['omitidos'], r['errores']))
+    print('borradores antes: %s  |  despues: %s' % (r['antes'], '?' if r['despues'] is None else r['despues']))
+    if not r['cierra']:
+        print('  *** OJO: la diferencia entre antes y despues no coincide con los movidos. Mirar Elementos eliminados. ***')
+    for fila in r['filas']:
+        if fila['resultado'] != 'movido':
+            print('  %-8s %s  %-50s  %s' % (fila['resultado'], fila['modificado'][:10], (fila['asunto'] or '(sin asunto)')[:50], fila['motivo']))
+    print('registro: %s' % f_mov)
+    print('Ninguno se borro: los movidos estan en Elementos eliminados y se recuperan arrastrandolos a Borradores.')
+    if r['errores'] or not r['cierra']:
+        return 1
+    return 0 if r['movidos'] else 3
 
 
 def ver_agenda(dias=7, como_json=False):
@@ -1355,7 +1523,7 @@ def main():
         sys.stdout.reconfigure(errors='replace')
     except Exception:
         pass
-    ap = argparse.ArgumentParser(description='Mails de Outlook (solo lectura)')
+    ap = argparse.ArgumentParser(description='Mails de Outlook: todo es lectura, salvo --limpiar-borradores --mover')
     ap.add_argument('--sync', action='store_true', help='volcar el buzon al cache (incremental)')
     ap.add_argument('--full', action='store_true', help='con --sync: rehacer el cache de cero')
     ap.add_argument('--buscar', nargs='+', metavar='TERMINO')
@@ -1381,10 +1549,18 @@ def main():
                     help='mostrar ese mail en Outlook (uno sin leer queda leido); con --adjuntos <id>, abrir en pantalla los adjuntos extraidos')
     ap.add_argument('--borradores', action='store_true', help='listar los borradores de Outlook con su edad (solo lectura)')
     ap.add_argument('--agenda', action='store_true', help='reuniones de los proximos dias (--dias, default 7) y tareas sin completar')
+    ap.add_argument('--limpiar-borradores', action='store_true',
+                    help='listar los borradores viejos y guardar la lista en exports/BORRADORES_OUTLOOK_<fecha>/ (no mueve nada sin --mover)')
+    ap.add_argument('--mover', action='store_true', help='con --limpiar-borradores: pasar a Elementos eliminados los de la lista ya guardada')
+    ap.add_argument('--viejos', type=int, default=None, metavar='DIAS', help='con --limpiar-borradores: desde cuantos dias es viejo (default 90, minimo 30)')
     a = ap.parse_args()
 
+    if a.mover and not a.limpiar_borradores:
+        ap.error('--mover va con --limpiar-borradores')
     if a.selftest:
         sys.exit(selftest())
+    elif a.limpiar_borradores:
+        sys.exit(limpiar_borradores(mover=a.mover, dias=a.viejos, carpeta=a.out))
     elif a.sync:
         sys.exit(sync(full=a.full))
     elif a.nuevos:
