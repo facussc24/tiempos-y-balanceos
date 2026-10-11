@@ -109,3 +109,9 @@ Desde 2026-07-03 las revisiones van en la **tabla REVISIONES de la Caratula** (f
       `amfeDate` / `revisionDate` — ver `HEADER_ALIASES` en `amfeCaratulaSheet.ts`).
 - [ ] Fechas en DD/MM/YYYY y con el día correcto (bug de zona horaria corregido 2026-08-03).
 - [ ] 0 causas sin S/O/D (validar con `amfeValidator`).
+- [ ] Controles de detección genéricos **mirados antes de exportar** (no frena el export):
+      `node scripts/_medirDeteccionGenerica.mjs --amfe <número>` lista las causas cuyo control no
+      nombra un instrumento del catálogo (aviso `DETECCION_GENERICA`). El control se escribe con
+      instrumento + frecuencia, como en el plan de control; «actual» = implementado y con papel.
+      Si es solo visual queda así y se revisa la D (`amfe.md` §13); no se completa un instrumento que nadie
+      confirmó (`amfe.md` §6).

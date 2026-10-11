@@ -85,7 +85,8 @@ export function clasificarControl(texto, canon = CANON) {
   const frecuencias = frecuenciasDe(limpio, canon);
   const fuera = fueraDelCatalogoDe(limpio, canon);
   const t = norm(limpio);
-  const noExiste = (canon.no_existe_prefijos || []).some((p) => t === norm(p) || t.startsWith(`${norm(p)} `));
+  const empiezaCon = (p) => t === norm(p) || new RegExp(`^${norm(p)}([^A-Z0-9]|$)`).test(t);
+  const noExiste = (canon.no_existe_prefijos || []).some(empiezaCon) && !(canon.no_existe_excepciones || []).some(empiezaCon);
   const clase = !limpio || /^[-—–]+$/.test(limpio) ? 'vacio'
     : noExiste ? 'declarado_inexistente'
     : esIdentificable(ins) ? 'identificado'

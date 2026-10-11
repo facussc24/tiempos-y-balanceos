@@ -3,7 +3,7 @@
  *
  * Fak, 10/10/2026: "los detectivos del amfe no coinciden con los del plan de control o los amfes
  * de hoy tienen controles medio inventados o genericos". Medido el 11/10/2026 sobre los 21 AMFE
- * vivos: 1.269 de 2.080 causas detectan con un control generico («Visual» 138
+ * vivos: 1.249 de 2.080 causas detectan con un control generico («Visual» 138
  * veces, «Control visual del operario» 99, «Inspección visual» 62).
  *
  * Lo que estos tests protegen:
@@ -81,6 +81,8 @@ describe('DETECCION_GENERICA: avisa cuando el control no dice con que se detecta
             'Panel de presión + inspección visual 100%': ['PANEL'],
             'Ensayo laboratorio FMVSS 302, 1 pieza por lote': ['ENSAYO'],
             'Verificación de certificado de inflamabilidad del proveedor': ['DOCUMENTAL'],
+            'Control de temperatura con pirometro': ['INSTRUMENTO_SIN_CATALOGAR'],
+            'Inspeccion dimensional por muestreo': ['MEDICION_SIN_INSTRUMENTO'],
             'Medicion con luxometro segun el plan de mediciones': ['INSTRUMENTO_SIN_CATALOGAR', 'MEDICION_SIN_INSTRUMENTO'],
         };
         for (const [t, fuera] of Object.entries(casos)) {
@@ -95,6 +97,13 @@ describe('DETECCION_GENERICA: avisa cuando el control no dice con que se detecta
     it('verde: la ausencia declarada («Sin ...») y el control vacio no son un control generico (los avisa otro check)', () => {
         expect(clasificarControl('Sin ensayo de adherencia en la serie').clase).toBe('declarado_inexistente');
         expect(clasificarControl('No hay control').clase).toBe('declarado_inexistente');
+        // «TBD — definir el control», «Pendiente» y «Ninguna: ...» tampoco son un control (auditor 11/10/2026: 28 causas vivas)
+        for (const t of ['TBD — definir el control de deteccion', 'Pendiente', 'Ninguna: no se controla']) { expect(clasificarControl(t).clase).toBe('declarado_inexistente'); expect(avisos(t)).toEqual([]); }
+        // «Sin contacto: sensor con interlock» SI es un control (amfe.md lo cita): no es la ausencia declarada
+        expect(clasificarControl('Sin contacto: sensor con interlock').clase).toBe('fuera_del_catalogo');
+        // mirar una etiqueta es un control visual: «etiqueta» no lo saca de generico
+        expect(clasificarControl('Verificación de etiqueta del material por lote').clase).toBe('generico');
+        expect(clasificarControl('Control con mylar').clase).toBe('identificado');
         expect(clasificarControl('Sinterizado visual').clase).toBe('generico');   // «sin» es palabra entera, no prefijo
         for (const t of ['', '-', '   ']) { expect(clasificarControl(t).clase).toBe('vacio'); expect(esDeteccionGenerica(t)).toBe(false); }
         expect(avisos('Sin control').length).toBe(0);
@@ -107,6 +116,8 @@ describe('DETECCION_GENERICA: avisa cuando el control no dice con que se detecta
         expect(r.critical.some((i) => i.type === 'DETECCION_GENERICA')).toBe(false);
         expect(avisos('Visual', 10).length).toBe(1);
         expect(avisos('Visual', 3)[0].detail).toMatch(/D=3/);
+        // la pista no fija un numero: la D depende primero de la cobertura (muestreo 9, visual al 100% 8)
+        expect(avisos('Visual', 3)[0].detail).toMatch(/primero la cobertura: muestreo 9; visual al 100% 8/);
     });
 });
 
@@ -127,7 +138,7 @@ describe('una sola fuente: el AMFE y el plan de control dicen lo mismo del mismo
         expect(m.causas).toBe(171);
         expect(m.identificado).toBe(21);
         expect(m.generico + m.fuera_del_catalogo + m.declarado_inexistente + m.vacio).toBe(150);
-        expect({ generico: m.generico, fuera: m.fuera_del_catalogo, sinFrecuencia: m.genericoSinFrecuencia }).toEqual({ generico: 127, fuera: 23, sinFrecuencia: 78 });
+        expect({ generico: m.generico, fuera: m.fuera_del_catalogo, sinFrecuencia: m.genericoSinFrecuencia }).toEqual({ generico: 128, fuera: 22, sinFrecuencia: 80 });
         const validador = validateAmfeDoc(JSON.parse(JSON.stringify(AMFE_161)), 'APB', '161').warning.filter((i) => i.type === 'DETECCION_GENERICA').length;
         expect(validador).toBe(m.generico);
         // y cada causa generica del validador es una causa que el gate 8 llamaria GENERICO

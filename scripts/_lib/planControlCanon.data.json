@@ -2,43 +2,245 @@
   "_doc": "Catalogo del gate 8 (AMFE <-> plan de control, plan P6 §7.2). Un control se IDENTIFICA por un codigo de calibracion (MC + 3 cifras) o por un termino EXACTO de esta lista; el texto libre nunca decide. Se amplia ACA, con su fuente; nada de regex nuevas en el codigo.",
   "instrumentos_fuente": "Terminos tal como aparecen en los papeles de la casa: HO-971 (calibre MC167, regla, plantilla Mylar, balanza, calibre Vernier, contra calibre / calibre DIM, manometro), plan de Calidad PC APB PATAGONIA Rev 0 (regla metalica, calibre de control, balanza, cinta metrica, camara de flamabilidad, pieza patron, muestra patron) y memoria reference_planes_control_recepcion_barack (camara de flamabilidad MC184, cinta metrica MC406, calibre MC413, balanza electronica).",
   "instrumentos": [
-    { "id": "CALIBRE_DE_CONTROL", "clase": "instrumento", "terminos": ["calibre de control", "contra calibre", "calibre dim", "calibre gabarit"] },
-    { "id": "CAMARA_FLAMABILIDAD", "clase": "instrumento", "terminos": ["camara de flamabilidad", "camara de inflamabilidad"] },
-    { "id": "CINTA_METRICA", "clase": "instrumento", "terminos": ["cinta metrica"] },
-    { "id": "PLANTILLA_MYLAR", "clase": "instrumento", "terminos": ["plantilla mylar", "mylar de control"] },
-    { "id": "CALIBRE", "clase": "instrumento", "terminos": ["calibre", "vernier"] },
-    { "id": "BALANZA", "clase": "instrumento", "terminos": ["balanza"] },
-    { "id": "REGLA", "clase": "instrumento", "terminos": ["regla"] },
-    { "id": "MANOMETRO", "clase": "instrumento", "terminos": ["manometro"] },
-    { "id": "PATRON", "clase": "referencia", "terminos": ["pieza patron", "muestra patron", "muestra limite", "patron de color", "patron de aspecto"] }
+    {
+      "id": "CALIBRE_DE_CONTROL",
+      "clase": "instrumento",
+      "terminos": [
+        "calibre de control",
+        "contra calibre",
+        "calibre dim",
+        "calibre gabarit"
+      ]
+    },
+    {
+      "id": "CAMARA_FLAMABILIDAD",
+      "clase": "instrumento",
+      "terminos": [
+        "camara de flamabilidad",
+        "camara de inflamabilidad"
+      ]
+    },
+    {
+      "id": "CINTA_METRICA",
+      "clase": "instrumento",
+      "terminos": [
+        "cinta metrica"
+      ]
+    },
+    {
+      "id": "PLANTILLA_MYLAR",
+      "clase": "instrumento",
+      "terminos": [
+        "plantilla mylar",
+        "mylar de control",
+        "con mylar"
+      ]
+    },
+    {
+      "id": "CALIBRE",
+      "clase": "instrumento",
+      "terminos": [
+        "calibre",
+        "vernier"
+      ]
+    },
+    {
+      "id": "BALANZA",
+      "clase": "instrumento",
+      "terminos": [
+        "balanza"
+      ]
+    },
+    {
+      "id": "REGLA",
+      "clase": "instrumento",
+      "terminos": [
+        "regla"
+      ]
+    },
+    {
+      "id": "MANOMETRO",
+      "clase": "instrumento",
+      "terminos": [
+        "manometro"
+      ]
+    },
+    {
+      "id": "PATRON",
+      "clase": "referencia",
+      "terminos": [
+        "pieza patron",
+        "muestra patron",
+        "muestra limite",
+        "patron de color",
+        "patron de aspecto"
+      ]
+    }
   ],
   "instrumentos_limites": "«mylar» suelto no esta: en el AMFE 161 «verificacion visual del estado del mylar» mira AL mylar, no CON el mylar. El canon no tiene terminos para paneles, alarmas, sensores, pirometros ni ensayos de laboratorio: un control que detecta con eso sale hoy «sin instrumento identificable» (auditor 11/10/2026: al menos 12 de las 149 del AMFE 161). Se agregan aca, con su fuente, cuando Calidad diga como los nombra.",
-  "no_identifica": ["instrumento", "instrumentos", "equipo de medicion"],
-  "no_identifica_comentario": "Comodines: «Calibre / Instrumento» (HO-971, hoja 50) no dice cual. Sin un codigo MC al lado, el control no queda identificado.",
-  "fuera_del_catalogo_doc": "Lo que un control de deteccion NOMBRA y el catalogo de instrumentos todavia no tiene. NO los convierte en instrumentos: los separa de la inspeccion visual pelada, para que el aviso DETECCION_GENERICA y su conteo no los mezclen. Cada termino sale de un texto real de los AMFE vivos (medicion del 11/10/2026 sobre los 21 AMFE de Supabase). Pasar uno a `instrumentos` es decision de Ingenieria / Calidad (como se llama, si tiene codigo de calibracion).",
-  "fuera_del_catalogo": [
-    { "id": "ALARMA", "terminos": ["alarma", "alarmas", "zumbador"], "ejemplo": "Alarma de desviacion de caudal con parada automatica" },
-    { "id": "SENSOR", "terminos": ["sensor", "sensores"], "ejemplo": "Sensores PT100 en cabezal mezclador con lectura continua de temperatura" },
-    { "id": "PANEL", "terminos": ["panel", "pantalla"], "ejemplo": "Panel de presión + inspección visual 100%" },
-    { "id": "AUTOMATICO", "terminos": ["deteccion automatica", "verificacion automatica", "parada automatica", "monitoreo"], "ejemplo": "Deteccion automatica de rotura de hilo en maquina" },
-    { "id": "SISTEMA", "terminos": ["sistema"], "ejemplo": "El sistema obliga a registrar lote y código en recepción y verifica contra base de datos." },
-    { "id": "ENSAYO", "terminos": ["ensayo", "laboratorio"], "ejemplo": "Ensayo laboratorio FMVSS 302, 1 pieza por lote" },
-    { "id": "INSTRUMENTO_SIN_CATALOGAR", "terminos": ["decibelimetro", "luxometro", "dinamometro", "medidor de espesor", "camara climatica", "metodo aguja"], "ejemplo": "Medicion con luxometro segun el plan de mediciones" },
-    { "id": "MEDICION_SIN_INSTRUMENTO", "terminos": ["medicion", "pesaje", "pesada", "control dimensional", "caudal"], "ejemplo": "Pesaje por muestreo" },
-    { "id": "DOCUMENTAL", "terminos": ["certificado", "remito", "etiqueta", "rotulo", "documental"], "ejemplo": "Verificación de certificado del proveedor por lote" }
+  "no_identifica": [
+    "instrumento",
+    "instrumentos",
+    "equipo de medicion"
   ],
-  "no_existe_prefijos": ["sin", "no hay", "no se"],
-  "no_existe_doc": "Convencion de la casa: un control que no existe se escribe «Sin ...» / «No hay ...» (skill pieza-nueva-flujograma-amfe). No es un control generico: es la ausencia declarada, y lleva D=10.",
-  "clases_identificables": ["instrumento"],
+  "no_identifica_comentario": "Comodines: «Calibre / Instrumento» (HO-971, hoja 50) no dice cual. Sin un codigo MC al lado, el control no queda identificado.",
+  "fuera_del_catalogo_doc": "Lo que un control de deteccion NOMBRA y el catalogo de instrumentos todavia no tiene. NO los convierte en instrumentos: los separa de la inspeccion visual pelada, para que el aviso DETECCION_GENERICA y su conteo no los mezclen. Cada termino sale de un texto real de los AMFE vivos (medicion del 11/10/2026 sobre los 21 AMFE de Supabase). Pasar uno a `instrumentos` es decision de Ingenieria / Calidad (como se llama, si tiene codigo de calibracion). Auditoria del 11/10/2026: «etiqueta» y «rotulo» se sacaron (mirar una etiqueta es un control visual); se sumaron pirometro, codigo de barras, ensayos, inspeccion dimensional, registro e informe.",
+  "fuera_del_catalogo": [
+    {
+      "id": "ALARMA",
+      "terminos": [
+        "alarma",
+        "alarmas",
+        "zumbador"
+      ],
+      "ejemplo": "Alarma de desviacion de caudal con parada automatica"
+    },
+    {
+      "id": "SENSOR",
+      "terminos": [
+        "sensor",
+        "sensores"
+      ],
+      "ejemplo": "Sensores PT100 en cabezal mezclador con lectura continua de temperatura"
+    },
+    {
+      "id": "PANEL",
+      "terminos": [
+        "panel",
+        "pantalla"
+      ],
+      "ejemplo": "Panel de presión + inspección visual 100%"
+    },
+    {
+      "id": "AUTOMATICO",
+      "terminos": [
+        "deteccion automatica",
+        "verificacion automatica",
+        "parada automatica",
+        "monitoreo"
+      ],
+      "ejemplo": "Deteccion automatica de rotura de hilo en maquina"
+    },
+    {
+      "id": "SISTEMA",
+      "terminos": [
+        "sistema"
+      ],
+      "ejemplo": "El sistema obliga a registrar lote y código en recepción y verifica contra base de datos."
+    },
+    {
+      "id": "ENSAYO",
+      "terminos": [
+        "ensayo",
+        "ensayos",
+        "laboratorio"
+      ],
+      "ejemplo": "Ensayo laboratorio FMVSS 302, 1 pieza por lote"
+    },
+    {
+      "id": "INSTRUMENTO_SIN_CATALOGAR",
+      "terminos": [
+        "decibelimetro",
+        "luxometro",
+        "dinamometro",
+        "medidor de espesor",
+        "camara climatica",
+        "metodo aguja",
+        "pirometro",
+        "codigo de barras"
+      ],
+      "ejemplo": "Medicion con luxometro segun el plan de mediciones"
+    },
+    {
+      "id": "MEDICION_SIN_INSTRUMENTO",
+      "terminos": [
+        "medicion",
+        "pesaje",
+        "pesada",
+        "control dimensional",
+        "caudal",
+        "inspeccion dimensional"
+      ],
+      "ejemplo": "Pesaje por muestreo"
+    },
+    {
+      "id": "DOCUMENTAL",
+      "terminos": [
+        "certificado",
+        "remito",
+        "documental",
+        "registro",
+        "informe"
+      ],
+      "ejemplo": "Verificación de certificado del proveedor por lote"
+    }
+  ],
+  "no_existe_prefijos": [
+    "sin",
+    "no hay",
+    "no se",
+    "tbd",
+    "ninguna",
+    "ninguno",
+    "pendiente"
+  ],
+  "no_existe_doc": "Convencion de la casa: un control que no existe se escribe «Sin ...» / «No hay ...» (skill pieza-nueva-flujograma-amfe); «TBD ...», «Pendiente ...» y «Ninguna: ...» tampoco son un control. No es un control generico: es la ausencia declarada, y lleva D=10. Excepcion: «Sin contacto: sensor con interlock» es un control de verdad (amfe.md / skill).",
+  "clases_identificables": [
+    "instrumento"
+  ],
   "clases_comentario": "Una REFERENCIA (pieza patron, muestra limite) acompaña a una inspeccion visual: dice contra que se mira, pero la deteccion sigue siendo humana (AIAG-VDA 2019, tabla D: inspeccion visual/tactil/audible, con o sin patron, es deteccion humana). Por eso no alcanza para sacar al control de GENERICO; se muestra al lado. Un certificado del proveedor tampoco es un instrumento de Barack. Si Calidad decide otra cosa, se agrega 'referencia' a clases_identificables.",
   "frecuencias_fuente": "Frecuencias tal como las escriben la HO-971 y el AMFE 161.",
   "frecuencias": [
-    { "id": "100%", "terminos": ["100%", "100 %"] },
-    { "id": "POR_LOTE", "terminos": ["por lote", "cada lote"] },
-    { "id": "POR_ENTREGA", "terminos": ["por entrega", "al recibir"] },
-    { "id": "INICIO_DE_TURNO", "terminos": ["inicio de turno", "inicio turno", "inicio y fin de turno"] },
-    { "id": "ANTES_DE_CADA_CORTE", "terminos": ["antes de cada corte"] },
-    { "id": "PRIMERA_PIEZA", "terminos": ["primera pieza"] },
-    { "id": "POR_MUESTREO", "terminos": ["por muestreo", "sobre muestra"] }
+    {
+      "id": "100%",
+      "terminos": [
+        "100%",
+        "100 %"
+      ]
+    },
+    {
+      "id": "POR_LOTE",
+      "terminos": [
+        "por lote",
+        "cada lote"
+      ]
+    },
+    {
+      "id": "POR_ENTREGA",
+      "terminos": [
+        "por entrega",
+        "al recibir"
+      ]
+    },
+    {
+      "id": "INICIO_DE_TURNO",
+      "terminos": [
+        "inicio de turno",
+        "inicio turno",
+        "inicio y fin de turno"
+      ]
+    },
+    {
+      "id": "ANTES_DE_CADA_CORTE",
+      "terminos": [
+        "antes de cada corte"
+      ]
+    },
+    {
+      "id": "PRIMERA_PIEZA",
+      "terminos": [
+        "primera pieza"
+      ]
+    },
+    {
+      "id": "POR_MUESTREO",
+      "terminos": [
+        "por muestreo",
+        "sobre muestra"
+      ]
+    }
+  ],
+  "no_existe_excepciones": [
+    "sin contacto"
   ]
 }

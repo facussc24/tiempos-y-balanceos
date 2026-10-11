@@ -140,6 +140,15 @@ Reglas de contenido que no tienen chequeo y por eso van acá:
 - **Un control se declara si existe para esta pieza.** Lo que no existe se escribe como "Sin
   ..." y el AMFE dice dónde falta control; no se rellena. Lo que falta de verdad (hoja de
   proceso, muestra patrón, ensayo de serie) se lista en el encabezado del generador.
+- **El control de detección dice con qué se detecta, igual que el plan de control** (Fak,
+  10/10/2026: *"los detectivos del amfe no coinciden con los del plan de control"*): instrumento +
+  frecuencia, con el nombre que usa la HO o el plan (`Calibre MC167 antes de cada corte`). «Actual»
+  es lo implementado y con papel; lo planificado es una acción. Si el control real es mirar la
+  pieza, se escribe eso, con el alcance que de verdad tiene (el «100%» solo si se sabe), y la D se
+  revisa con `amfe.md` §13 (visual al 100 % = 8; muestreo = 9): el validador lo lista como
+  `DETECCION_GENERICA` (aviso, no frena) y **no se le inventa un instrumento para apagarlo**. El
+  catálogo es uno solo, `scripts/_lib/planControlCanon.data.json`; cuánto hay de genérico en un
+  AMFE: `node scripts/_medirDeteccionGenerica.mjs --amfe <número>`.
 - Un estado del proyecto no es una causa: "la cuna todavía no está liberada" no va; va el
   mecanismo (*"se posiciona a mano"*). El gate de export frena la primera forma.
 - La causa describe lo que se sabe. Si no se sabe con qué herramienta se hace, la causa no la

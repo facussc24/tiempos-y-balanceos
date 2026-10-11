@@ -988,12 +988,12 @@ export function validateAmfeDoc(doc, productName = '', amfeNumber = '') {
                         // alarma, un sensor, un ensayo o un certificado NO entra aca: eso el catalogo
                         // todavia no lo tiene y se lista aparte (`node scripts/_medirDeteccionGenerica.mjs`).
                         // Avisa, no corrige y no bloquea: si el control REAL es mirar la pieza, el texto
-                        // esta bien y lo que hay que mirar es la D (inspeccion humana = 8, amfe.md §13).
+                        // esta bien y lo que hay que mirar es la D (amfe.md §13: primero la cobertura).
                         // NUNCA se completa un instrumento para apagar el aviso (amfe.md §6).
                         if (esDeteccionGenerica(c.detectionControl)) {
                             const frec = frecuenciasDe(c.detectionControl);
                             issues.push({ ...cCtx, type: 'DETECCION_GENERICA',
-                                detail: `control de deteccion sin instrumento del catalogo ("${String(c.detectionControl).slice(0, 60)}")${frec.length ? '' : ' y sin frecuencia'}; D=${Number(c.detection) || '?'}. Si en planta se usa un instrumento, nombrarlo como lo nombra el plan de control; si es solo visual, revisar la D (inspeccion humana: 8)` });
+                                detail: `control de deteccion sin instrumento del catalogo ("${String(c.detectionControl).slice(0, 60)}")${frec.length ? '' : ' y sin frecuencia'}; D=${Number(c.detection) || '?'}. Si en planta se usa un instrumento, nombrarlo como lo nombra el plan de control; si es solo visual, revisar la D con amfe.md §13 (primero la cobertura: muestreo 9; visual al 100% 8)` });
                         }
 
                         // CAUSE_S9_SIN_CC (WARNING) — S>=9 sin caracteristica especial declarada.
