@@ -77,6 +77,7 @@ test('la plata de la API por clave y la tarea de la madrugada salen de sus dos a
   expect(await ui.find({ type: 'Text', text: 'US$ 156' })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: 'US$ 44' })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: '· quedan ≈' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: 'plan: gastado ≈' })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: 'agotada' })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: 'hoy 06:30' })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: 'no corrió' })).toBeDefined()

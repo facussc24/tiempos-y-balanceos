@@ -382,7 +382,8 @@ export function registrarGasto(r, { tarea = '', lote = false, dir = DIR_API, aho
     duracionMs: r.duracionMs ?? 0,
     id: r.id ?? null,
     ...(r.fallback && r.fallback.length ? { fallback: r.fallback } : {}),
-    ...(clave ? { clave: String(clave) } : {}),
+    // solo una etiqueta de etiquetaClave(): cualquier otro texto no se escribe (si alguien pasara la clave misma, no queda)
+    ...(RE_ETIQUETA_CLAVE.test(String(clave ?? '')) ? { clave: String(clave) } : {}),
   };
   // por la puerta segura: el ledger solo puede caer en .sgc-cache (o en la carpeta de BARACK_API_DIR)
   agregarSeguro(rutaLedger(mesLocal(ahora), dir), `${JSON.stringify(entrada)}\n`);
@@ -532,6 +533,19 @@ export const creditoPlanUsd = (env = process.env) => positivo(env.BARACK_API_CRE
  */
 export const CREDITO_PRESTADAS_USD = { 20261020: 100 };
 
+/**
+ * Los pedidos de ANTES de que el ledger anotara la clave (el ultimo es del 11/10/2026 03:50; desde `c2e18522` todos la
+ * anotan): quien los pago queda FIJO aca. Antes se deducia de las marcas de «agotada» que hubiera en la carpeta, y
+ * borrar la marca de una prestada recargada (lo que manda api-claude.md §2) o que apareciera otra prestada movia el
+ * reparto de estos pedidos viejos (auditor, 11/10/2026: de 37 de saldo a 0 o a 193). La prestada de $100 se uso desde
+ * que el codigo conocio una segunda clave (`3d49cc82`, 09/10 22:16:31) hasta que quedo sin saldo (11/10 02:21:34); lo
+ * anterior y lo posterior lo pago la clave del plan.
+ */
+export const REPARTO_SIN_ETIQUETA = [{ desde: '2026-10-09 22:16:31', hasta: '2026-10-11 02:21:34', clave: 'prestada-20261020' }];
+
+/** Las etiquetas que escribe etiquetaClave(): lo unico que entra al campo `clave` del ledger (nunca un texto libre). */
+const RE_ETIQUETA_CLAVE = /^(principal|entorno|prestada-\d{8})$/;
+
 export const rutaSaldo = (dir = DIR_API) => path.join(dir, 'saldo.json');
 const RE_MARCA_AGOTADA = /^prestada_agotada_(\d{8})$/;
 
@@ -551,39 +565,39 @@ function marcasDeAgotada(dir) {
  *   { actualizado, ciclo: { desde, hasta, proximo, texto }, estimado,
  *     claves: [{ nombre: 'principal', gastadoUsd, creditoUsd, quedanUsd },
  *              { nombre: 'prestada', hasta: 'AAAAMMDD', gastadoUsd, agotada, vencida }, { nombre: 'entorno', gastadoUsd }] }
- * Cada linea del ledger dice quien pago (`clave`). Las de antes del 11/10/2026 no lo dicen: se reparten por la hora en
- * que la prestada quedo sin saldo (hasta esa hora, a la prestada, porque se gasta primero; despues, a la principal) y
+ * Cada linea del ledger dice quien pago (`clave`). Las de antes del 11/10/2026 no lo dicen: se reparten con la tabla
+ * fija REPARTO_SIN_ETIQUETA (el tramo en que se uso la prestada; el resto, a la principal), no con las marcas que haya, y
  * `estimado` queda en true. `quedanUsd` es el credito del plan menos lo anotado aca: una cuenta del ledger, NO el
  * saldo que muestra Anthropic (ese no se puede leer con la clave).
  */
-export function saldoPorClave({ dir = DIR_API, env = process.env, ahora = new Date(), creditoPrestadas = CREDITO_PRESTADAS_USD } = {}) {
+export function saldoPorClave({ dir = DIR_API, env = process.env, ahora = new Date(), creditoPrestadas = CREDITO_PRESTADAS_USD, repartoViejo = REPARTO_SIN_ETIQUETA } = {}) {
   const ciclo = cicloDe(ahora, cicloDia(env));
   const marcas = marcasDeAgotada(dir);
   const hoy = aaaammdd(ahora);
   const gastado = new Map();
+  const sinEtiqueta = new Map();   // lo repartido por la tabla de arriba, por clave: solo eso es estimado
   let estimado = false;
   for (const e of leerLedgerCiclo(ciclo, dir)) {
-    let nombre = typeof e.clave === 'string' && e.clave ? e.clave : null;
+    let nombre = RE_ETIQUETA_CLAVE.test(String(e.clave ?? '')) ? e.clave : null;
     if (!nombre) {
       estimado = true;
-      const m = marcas.find((x) => x.cuando && String(e.ts ?? '') <= x.cuando);
-      nombre = m ? `prestada-${m.hasta}` : 'principal';
+      const ts = String(e.ts ?? '');
+      nombre = repartoViejo.find((x) => ts >= x.desde && ts <= x.hasta)?.clave ?? 'principal';
+      sinEtiqueta.set(nombre, (sinEtiqueta.get(nombre) ?? 0) + n(e.costoUsd));
     }
     gastado.set(nombre, (gastado.get(nombre) ?? 0) + n(e.costoUsd));
   }
   const r2 = (x) => Math.round(x * 100) / 100;
-  // El reparto por hora es grueso (un pedido se anota cuando TERMINA): si a una prestada agotada le atribuye mas de lo
-  // que tenia, el sobrante lo pago la clave del plan. Sin este tope «quedan» salia de mas (11/10/2026: 107,04 contra
-  // los 100 de la prestada daba 44 de saldo del plan; son 37). Con las lineas etiquetadas no se toca nada.
-  if (estimado) {
-    for (const m of marcas) {
-      const tope = Number(creditoPrestadas?.[m.hasta]);
-      const k = `prestada-${m.hasta}`;
-      const atribuido = gastado.get(k) ?? 0;
-      if (Number.isFinite(tope) && tope >= 0 && atribuido > tope) {
-        gastado.set(k, tope);
-        gastado.set('principal', (gastado.get('principal') ?? 0) + (atribuido - tope));
-      }
+  // El reparto por hora es grueso (un pedido se anota cuando TERMINA): si a una prestada le atribuye mas de lo que
+  // traia, el sobrante lo pago la clave del plan. Sin este tope «quedan» salia de mas (11/10/2026: 102,17 contra los 100
+  // de la prestada). El tope mira SOLO lo repartido sin etiqueta: lo que una linea etiquetada dice no se mueve (una
+  // prestada recargada puede pasar de su primer credito).
+  for (const [k, repartido] of sinEtiqueta) {
+    const m = /^prestada-(\d{8})$/.exec(k);
+    const tope = m ? Number(creditoPrestadas?.[m[1]]) : NaN;
+    if (Number.isFinite(tope) && tope >= 0 && repartido > tope) {
+      gastado.set(k, gastado.get(k) - (repartido - tope));
+      gastado.set('principal', (gastado.get('principal') ?? 0) + (repartido - tope));
     }
   }
   const credito = creditoPlanUsd(env);

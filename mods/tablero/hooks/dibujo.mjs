@@ -38,6 +38,9 @@ export function textoPlano(n) {
   return n.children.map(textoPlano).filter(Boolean).join(' ')
 }
 
+// Cuánto ocupa una fila en la banda: la etiqueta (7 columnas) y cada celda con sus 2 de separación
+export const largoFila = (celdas) => 7 + celdas.reduce((a, c) => a + 2 + textoPlano(c).length, 0)
+
 export function dibujar(estado, el = crudo, opciones = {}) {
   const { Box, Text } = el
   const s = estado ?? {}
@@ -47,6 +50,10 @@ export function dibujar(estado, el = crudo, opciones = {}) {
   // Etiqueta fija de 7 columnas: las cifras caen siempre en el mismo lugar
   const fila = (etiqueta, celdas) => Box({ flexDirection: 'row', columnGap: 2, children: [dim(etiqueta.padEnd(7)), ...celdas] })
   const nada = [dim('sin datos')]
+  // Una fila más ancha que la banda se parte en dos renglones (o se corta). Cada fila se arma en varias formas, de la
+  // más completa a la más corta, y va la primera que entra; si ninguna entra, la más corta (auditor, 11/10/2026: con
+  // una prestada con saldo, una noche con error o «renueva mañana» la fila pasaba de las 93 y 95 columnas que pidió la app).
+  const elegir = (formas) => formas.find((celdas) => largoFila(celdas) <= ancho) ?? formas.at(-1)
 
   const ventana = (nombre, v, renueva) => (v == null
     ? [dim(nombre), dim('—')]
@@ -54,14 +61,20 @@ export function dibujar(estado, el = crudo, opciones = {}) {
       ...(renueva ? [dim('renueva ' + renueva)] : [])])
 
   // La ventana de 5 h renueva siempre dentro de las próximas horas: alcanza la hora. La de la semana lleva el día
-  // (el dueño, 11/10/2026: «renueva pusiste hora pero no día… el de semana necesita día también»); con la banda
-  // angosta va sin la fecha («vie 13:00») para que la fila no se parta.
+  // (el dueño, 11/10/2026: «renueva pusiste hora pero no día… el de semana necesita día también»). Si no entra todo,
+  // primero se va la fecha («vie 13:00»), después la hora de las 5 h, y recién al final el día de la semana.
   const cupo = s.cupo ?? {}
-  const deSemana = cupo.semana?.renuevaMs != null && s.ahora != null
-    ? cuando(cupo.semana.renuevaMs, s.ahora, { corto: ancho < 104 })
-    : cupo.semana?.renueva
+  const conDia = cupo.semana?.renuevaMs != null && s.ahora != null
+  const semanaLarga = conDia ? cuando(cupo.semana.renuevaMs, s.ahora) : cupo.semana?.renueva
+  const semanaCorta = conDia ? cuando(cupo.semana.renuevaMs, s.ahora, { corto: true }) : cupo.semana?.renueva
+  const armarCupo = (de5h, deSemana) => [...ventana('5 h', cupo.cincoHoras, de5h), dim('·'), ...ventana('semana', cupo.semana, deSemana)]
   const filaCupo = cupo.cincoHoras || cupo.semana
-    ? [...ventana('5 h', cupo.cincoHoras, cupo.cincoHoras?.renueva), dim('·'), ...ventana('semana', cupo.semana, deSemana)]
+    ? elegir([
+      armarCupo(cupo.cincoHoras?.renueva, semanaLarga),
+      armarCupo(cupo.cincoHoras?.renueva, semanaCorta),
+      armarCupo(null, semanaCorta),
+      armarCupo(null, null),
+    ])
     : nada
 
   const ag = s.agentes ?? {}
@@ -70,45 +83,73 @@ export function dibujar(estado, el = crudo, opciones = {}) {
     dim('· últimos 10 min'), fuerte(`${ag.puntos}/${ag.tope} pts`, COLOR[tramo((ag.puntos / ag.tope) * 100)]),
   ]
 
+  // El pedido se recorta a lo que quede de ancho después de las dos primeras celdas; si no queda lugar, no va
   const h = s.hora
-  const filaHora = h == null ? [dim('sin hora fijada')] : [
-    fuerte('laburando hasta ' + h.hasta),
-    dim('· faltan ' + faltan(h.faltanMin) + (h.propia ? '' : ' (otra sesión)')),
-    dim(recortar('«' + h.pedido + '»', Math.max(20, ancho - 52))), // lo que quede de ancho; corto, no se corta la banda
-  ]
-
-  // La plata de la API: por clave, lo gastado y lo que queda. «≈» cuando parte de la cuenta es estimada (pedidos
-  // viejos sin la clave anotada). Lo que queda es crédito del plan menos lo anotado, no el saldo de Anthropic.
-  const api = s.api
-  let filaApi = nada
-  if (api?.plan) {
-    const p = api.plan
-    const usado = p.credito ? tramo((p.gastado / p.credito) * 100) : 'sin'
-    filaApi = api.viejo
-      ? [dim('plan:'), fuerte('renovó' + (api.renueva ? ' el ' + api.renueva : '')), dim('· todavía sin gasto anotado')]
-      : [
-        dim('plan: gastado'), fuerte(usdRedondo(p.gastado)),
-        ...(p.quedan == null ? [] : [dim('· quedan' + (api.estimado ? ' ≈' : '')), fuerte(usdRedondo(p.quedan), COLOR[usado])]),
-        ...(api.renueva ? [dim('hasta el ' + api.renueva)] : []),
-      ]
-    for (const x of api.prestadas ?? []) {
-      filaApi.push(...(x.agotada ? [dim('· prestada:'), fuerte('agotada')] : [dim('· prestada: gastado'), fuerte(usdRedondo(x.gastado)), dim('vence el ' + x.hasta)]))
-    }
+  let filaHora = [dim('sin hora fijada')]
+  if (h != null) {
+    const cabeza = [fuerte('laburando hasta ' + h.hasta), dim('· faltan ' + faltan(h.faltanMin) + (h.propia ? '' : ' (otra sesión)'))]
+    const lugar = ancho - largoFila(cabeza) - 2
+    filaHora = lugar >= 8 ? [...cabeza, dim(recortar('«' + h.pedido + '»', lugar))] : cabeza
   }
 
-  // La tarea automática de la madrugada: si corrió o no, por qué, y si dejó algo para mirar
+  // La plata de la API: por clave, lo gastado y lo que queda. «≈» en los dos números cuando parte de la cuenta es
+  // estimada (pedidos viejos sin la clave anotada). Lo que queda es crédito del plan menos lo anotado, no el saldo
+  // que muestra Anthropic.
+  const api = s.api
+  let filaApi = nada
+  if (api?.plan && api.viejo) {
+    filaApi = elegir([
+      [dim('plan:'), fuerte('renovó' + (api.renueva ? ' el ' + api.renueva : '')), dim('· todavía sin gasto anotado')],
+      [dim('plan:'), fuerte('renovó' + (api.renueva ? ' el ' + api.renueva : ''))],
+    ])
+  } else if (api?.plan) {
+    const p = api.plan
+    const usado = p.credito ? tramo((p.gastado / p.credito) * 100) : 'sin'
+    const aprox = api.estimado ? ' ≈' : ''
+    const plan = (conFecha) => [
+      dim('plan: gastado' + aprox), fuerte(usdRedondo(p.gastado)),
+      ...(p.quedan == null ? [] : [dim('· quedan' + aprox), fuerte(usdRedondo(p.quedan), COLOR[usado])]),
+      ...(conFecha && api.renueva ? [dim('hasta el ' + api.renueva)] : []),
+    ]
+    const prestadas = api.prestadas ?? []
+    const detalle = prestadas.flatMap((x) => (x.agotada
+      ? [dim('· prestada:'), fuerte('agotada')]
+      : [dim('· prestada: gastado'), fuerte(usdRedondo(x.gastado)), dim('vence el ' + x.hasta)]))
+    const corto = prestadas.flatMap((x) => [dim('· prestada:'), fuerte(x.agotada ? 'agotada' : usdRedondo(x.gastado))])
+    const cuenta = prestadas.length ? [dim(`· ${prestadas.length} ${prestadas.length === 1 ? 'prestada' : 'prestadas'}`)] : []
+    filaApi = elegir([
+      [...plan(true), ...detalle], [...plan(true), ...corto], [...plan(false), ...corto],
+      [...plan(true), ...cuenta], [...plan(false), ...cuenta], plan(false),
+    ])
+  }
+
+  // La tarea automática de la madrugada: si corrió o no, y por qué no. Lo que la noche deja para revisar (sus
+  // «prioridades») NO va acá: son sugerencias sin verificar para la sesión de la mañana, no para el dueño.
   const n = s.noche
   let filaNoche = nada
   if (n) {
     const dia = cuando(n.cuandoMs, s.ahora) ?? 'sin fecha'
-    const cola = []
-    if (!n.corrio) cola.push(fuerte('no corrió', COLOR.ambar), ...(n.motivo ? [dim('· ' + n.motivo)] : []))
-    else {
-      cola.push(n.conError ? fuerte(`corrió con ${n.conError} de ${n.pasos} pasos con error`, COLOR.rojo) : fuerte(n.cortada ? 'se cortó antes de terminar' : 'corrió bien', n.cortada ? COLOR.ambar : COLOR.verde))
-      if (n.paraMirar != null) cola.push(dim(n.paraMirar ? `· dejó ${n.paraMirar} ${n.paraMirar === 1 ? 'cosa' : 'cosas'} para mirar` : '· no dejó nada para mirar'))
-      if (n.costoUsd) cola.push(dim('· ' + usd(n.costoUsd)))
+    const larga = [dim('tarea automática de'), fuerte(dia)]
+    const corta = [dim('tarea de'), fuerte(dia)]
+    let estadoLargo
+    let estadoCorto
+    if (!n.corrio) {
+      estadoCorto = [fuerte('no corrió', COLOR.ambar)]
+      estadoLargo = n.motivo ? [...estadoCorto, dim('· ' + n.motivo)] : estadoCorto
+    } else if (n.conError) {
+      estadoLargo = [fuerte(`corrió con ${n.conError} de ${n.pasos} pasos con error`, COLOR.rojo)]
+      estadoCorto = [fuerte(`con errores (${n.conError} de ${n.pasos})`, COLOR.rojo)]
+    } else if (n.cortada) {
+      estadoLargo = [fuerte('se cortó antes de terminar', COLOR.ambar)]
+      estadoCorto = [fuerte('se cortó', COLOR.ambar)]
+    } else {
+      estadoLargo = [fuerte('corrió bien', COLOR.verde)]
+      estadoCorto = estadoLargo
     }
-    filaNoche = [dim('tarea automática de'), fuerte(dia), ...cola]
+    const costo = n.corrio && n.costoUsd ? [dim('· ' + usd(n.costoUsd))] : []
+    filaNoche = elegir([
+      [...larga, ...estadoLargo, ...costo], [...larga, ...estadoLargo], [...corta, ...estadoLargo], [...corta, ...estadoCorto],
+    ])
   }
 
   const id = s.identidad ?? {}
