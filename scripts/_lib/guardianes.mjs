@@ -1916,7 +1916,7 @@ const ARB_LECTOR = /^\s*(grep|rg|cat|sed -n|head|tail|less|type|wc|git (log|show
 const ARB_ENCADENA = /(\||;|&&)\s*(ba)?sh|python|powershell|pwsh|xargs|-exec|node\s/i;
 const ARB_MATAR = /taskkill|stop-process|pkill|killall|[^a-z]kill\s|\.kill\(|os\.kill|closemainwindow|wmic[^|\n]*(delete|terminate|call)|shutdown\s*\//i;
 const ARB_CERRAR = /WM_CLOSE|0x0010|0x10[^0-9a-f]|DestroyWindow|EndTask|SC_CLOSE|0xF060|pywinauto|pyautogui|sendkeys|%\{F4\}|alt.{0,3}f4|\.close\(\)/i;
-GUARDIANES['arb-cerrar-guard'] = (ctx, { env }) => {
+GUARDIANES['arb-cerrar-guard'] = (ctx, { env, escapes }) => {
   // Red de seguridad: si el parseo fallo, miro el comando rescatado + el JSON crudo.
   let cmd = ctx.ok ? ctx.cmd : `${ctx.rescate.cmd}\n${ctx.raw}`;
   if (!cmd.trim()) return null;
@@ -1955,7 +1955,7 @@ GUARDIANES['arb-cerrar-guard'] = (ctx, { env }) => {
   }
   if (!motivo) return null;
   const ok = path.join(dirHome(env), '.claude', '.arb-cerrar-ok');
-  if (fs.existsSync(ok)) {
+  if (escapes !== false && fs.existsSync(ok)) {
     try { fs.unlinkSync(ok); } catch { /* si no se pudo consumir, igual se deja pasar esta vez */ }
     return aviso('ARB-CERRAR-GUARD: habilitado por ~/.claude/.arb-cerrar-ok (consumido). Cerrando el arb.');
   }
@@ -2022,13 +2022,15 @@ const APQP_REGISTRA = /(^|[;&|]+\s*)(py|python3?|node)\b[^\n;&|]*_registrar[A-Za
 const APQP_CIERRE = `Regla: .claude/rules/autonomy-contract.md §F — "la PRIMERA VEZ se pregunta".
 Que va en cada casillero del legajo APQP: skill \`apqp-legajo\`.`;
 
-GUARDIANES['apqp-cliente-guard'] = (ctx, { env } = {}) => {
+GUARDIANES['apqp-cliente-guard'] = (ctx, { env, escapes } = {}) => {
   let tool, cmd, file;
   if (ctx.ok) { tool = ctx.toolL; cmd = ctx.cmd6; file = ctx.fileL; }
   else { tool = ctx.rescate.tool; file = ctx.rescate.file; cmd = `${ctx.rescate.cmd} ${ctx.raw.replace(/\n/g, ' ')}`; }
   const todo = `${cmd} ${file}`;
   if (APQP_EXCEPCION.test(todo)) return null;
-  const esEscritura = tool === 'write' || tool === 'edit';
+  // `toolL` es el nombre LIMPIO, no en minuscula: por el despachador llega «Write» / «Edit» (hasta el 11/10/2026 se
+  // comparaba con 'write' y esta rama no corria nunca en vivo; los tests armaban el contexto a mano en minuscula).
+  const esEscritura = /^(?:write|edit)$/i.test(tool);
 
   // 1. El paquete del cliente
   const destino = esEscritura ? file : ultimaRuta(cmd);
@@ -2059,7 +2061,7 @@ ${APQP_CIERRE}`);
     // que poder abrirse. Un gate que no se puede pasar ni con autorizacion no se respeta, se
     // esquiva — y ahi deja de existir. Se consume al usarlo para que valga por UNA carga.
     const okListado = path.join(dirHome(env ?? process.env), '.claude', '.apqp-listado-ok');
-    if (fs.existsSync(okListado)) {
+    if (escapes !== false && fs.existsSync(okListado)) {
       try { fs.unlinkSync(okListado); } catch { /* si no se puede borrar, igual paso: el aviso queda */ }
       return aviso(`[APQP-CLIENTE] Paso con el OK de Fak (se consumio ~/.claude/.apqp-listado-ok).
 Despues de cargar: releer la fila y verificar que la de al lado quedo intacta.`);
@@ -2114,11 +2116,13 @@ export function escribeEnNubePersonal(cmd, cwd = null) {
   return '';
 }
 
-GUARDIANES['nube-personal-guard'] = (ctx, { env } = {}) => {
+GUARDIANES['nube-personal-guard'] = (ctx, { env, escapes } = {}) => {
   let destino = '';
   if (ctx.ok) {
     const tool = ctx.toolL;
-    if (tool === 'write' || tool === 'edit') destino = enNubePersonal(ctx.fileL) ? ctx.fileL : '';
+    // `toolL` llega «Write» / «Edit» por el despachador (nombre limpio, no en minuscula): sin la `i` un Write a la nube
+    // personal pasaba en vivo y solo se frenaban los comandos de consola (medido el 11/10/2026 con `evaluar`).
+    if (/^(?:write|edit)$/i.test(tool)) destino = enNubePersonal(ctx.fileL) ? ctx.fileL : '';
     else destino = escribeEnNubePersonal(ctx.cmd ?? ctx.cmd6 ?? '', ctx.cwd || null);
   } else {
     // JSON roto: no hay comando confiable. Regla sobre el texto entero, hacia el lado seguro.
@@ -2128,7 +2132,7 @@ GUARDIANES['nube-personal-guard'] = (ctx, { env } = {}) => {
   if (!destino) return null;
   // Escape de UN uso, igual que apqp-cliente-guard: si Fak dijo que ESE archivo va ahi, el freno se abre.
   const ok = path.join(dirHome(env ?? process.env), '.claude', '.nube-personal-ok');
-  if (fs.existsSync(ok)) {
+  if (escapes !== false && fs.existsSync(ok)) {
     try { fs.unlinkSync(ok); } catch { /* si no se puede borrar, igual paso: el aviso queda */ }
     return aviso('[NUBE-PERSONAL] Paso con el OK de Fak (se consumio ~/.claude/.nube-personal-ok).');
   }
@@ -2470,7 +2474,7 @@ export function correr(nombres, ctx, deps = {}) {
     const g = GUARDIANES[n];
     if (!g) continue;
     let v;
-    try { v = g(ctx, { ahora, env }); } catch (e) {
+    try { v = g(ctx, { ahora, env, escapes: deps.escapes }); } catch (e) {
       const texto = `[${n}] ERROR interno del guardian — se bloquea por seguridad (un guardian que no corre parece un guardian que aprobo):\n${e && e.stack || e}`;
       if (reparando) {
         res.contextos.push({ guardian: n, texto: `${texto}\n[CARRIL DE AUTO-REPARACION] Este Edit/Write es sobre un archivo de los guardianes (${ctx.file}): pasa igual para que se pueda arreglar. Cualquier otra herramienta sigue bloqueada hasta que el guardian vuelva a correr.` });
@@ -2525,11 +2529,16 @@ export function resolver(res, { ahora = Math.floor(Date.now() / 1000), marcar = 
   return { exit: 0, stderr: err.length ? `${err.join('\n')}\n` : '', stdout, contexto };
 }
 
-/** Todo junto: JSON crudo → { ctx, res, salida }. `nombres` pisa la matriz (modo --solo). */
-export function evaluar(raw, { nombres, ahora, env, marcar } = {}) {
+/**
+ * Todo junto: JSON crudo → { ctx, res, salida }. `nombres` pisa la matriz (modo --solo).
+ * `escapes: false` es para quien CONSULTA a los guardianes sin ser la sesion de Fak (el agente por API): los permisos de
+ * un solo uso (`~/.claude/.arb-cerrar-ok`, `.apqp-listado-ok`, `.nube-personal-ok`) ni se usan ni se consumen. Sin eso,
+ * una consulta con `marcar: false` se llevaba el permiso que Fak habia dejado para otra cosa (cola HOY-24b, 11/10/2026).
+ */
+export function evaluar(raw, { nombres, ahora, env, marcar, escapes } = {}) {
   const ctx = parsear(raw);
   const lista = nombres ?? matriz(ctx.tool);
-  const res = correr(lista, ctx, { ahora, env });
+  const res = correr(lista, ctx, { ahora, env, escapes });
   return { ctx, res, salida: resolver(res, { ahora, marcar, env }) };
 }
 

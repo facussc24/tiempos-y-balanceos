@@ -17,7 +17,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { GUARDIANES } from '../../scripts/_lib/guardianes.mjs';
+import { GUARDIANES, evaluar } from '../../scripts/_lib/guardianes.mjs';
 
 const LEGAJO = 'Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\REYDEL-SMRC\\APB P21\\P21 SSRT-MY2026 HILO NARANJA\\APQP';
 // El paquete del cliente vive adentro de `1. Imput`, junto al resto de lo que mando el
@@ -154,5 +154,36 @@ describe('apqp-cliente-guard', () => {
         // y no se consumio el flag, porque no es lo que ese flag autoriza
         expect(fs.existsSync(path.join(home, '.claude', '.apqp-listado-ok'))).toBe(true);
         fs.rmSync(home, { recursive: true, force: true });
+    });
+});
+
+// Por el camino real: el JSON del hook pasa por parsear(), que deja `toolL` con la mayuscula del nombre («Write»).
+// Hasta el 11/10/2026 el guardian comparaba con 'write' y la rama de Write/Edit no corria nunca en vivo: los casos de
+// arriba pasaban porque arman el contexto a mano, en minuscula.
+describe('apqp-cliente-guard por el camino real (evaluar con el JSON del hook)', () => {
+    const json = (tool, file) => JSON.stringify({ tool_name: tool, tool_input: { file_path: file, content: 'x', new_string: 'x' }, cwd: 'C:\\Dev\\BarackMercosul', session_id: 'test' });
+    const bloqueos = (tool, file, opciones = {}) => evaluar(json(tool, file), { nombres: ['apqp-cliente-guard'], env: { HOME: os.tmpdir() }, marcar: false, ...opciones }).res.bloqueos.length;
+
+    it('ROJO: un Write o un Edit sobre un listado maestro, y adentro del paquete del cliente', () => {
+        expect(bloqueos('Write', LISTADO)).toBe(1);
+        expect(bloqueos('Edit', LISTADO)).toBe(1);
+        expect(bloqueos('Write', `${PAQUETE}\\FLUJOGRAMA 159.pdf`)).toBe(1);
+    });
+
+    it('VERDE: un Write cualquiera del repo', () => {
+        expect(bloqueos('Write', 'C:\\Dev\\BarackMercosul\\scripts\\_algo.mjs')).toBe(0);
+        expect(bloqueos('Edit', 'C:\\Dev\\BarackMercosul\\.claude\\rules\\autonomy-contract.md')).toBe(0);
+    });
+
+    it('quien consulta sin ser la sesion de Fak (escapes: false) no usa ni consume el permiso del listado', () => {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'apqp-esc-'));
+        const marca = path.join(home, '.claude', '.apqp-listado-ok');
+        fs.mkdirSync(path.join(home, '.claude'), { recursive: true });
+        fs.writeFileSync(marca, '');
+        const env = { HOME: home };
+        expect(bloqueos('Write', LISTADO, { env, escapes: false })).toBe(1);
+        expect(fs.existsSync(marca)).toBe(true);
+        expect(bloqueos('Write', LISTADO, { env })).toBe(0);
+        expect(fs.existsSync(marca)).toBe(false);
     });
 });

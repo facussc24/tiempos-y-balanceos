@@ -14,7 +14,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { GUARDIANES, matriz, escribeEnNubePersonal } from '../../scripts/_lib/guardianes.mjs';
+import { GUARDIANES, matriz, escribeEnNubePersonal, evaluar } from '../../scripts/_lib/guardianes.mjs';
 
 const PERSONAL = 'C:\\Users\\Alguien\\OneDrive - BARACK ARGENTINA SRL';
 const PERSONAL_POSIX = '/c/Users/Alguien/OneDrive - BARACK ARGENTINA SRL';
@@ -74,6 +74,25 @@ describe('nube-personal-guard', () => {
             const env = { HOME: home, USERPROFILE: home };
             expect(correr(c(), env)?.tipo).toBe('aviso');
             expect(correr(c(), env)?.tipo).toBe('bloqueo');
+        } finally { fs.rmSync(home, { recursive: true, force: true }); }
+    });
+
+    it('quien consulta sin ser la sesion de Fak (escapes: false) no usa ni consume esa marca', () => {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'np-ok-'));
+        try {
+            const marca = path.join(home, '.claude', '.nube-personal-ok');
+            fs.mkdirSync(path.join(home, '.claude'));
+            fs.writeFileSync(marca, '');
+            const env = { HOME: home, USERPROFILE: home };
+            const payload = JSON.stringify({ tool_name: 'Write', tool_input: { file_path: `${PERSONAL}\\x.pdf`, content: 'x' }, cwd: 'C:\\Dev\\BarackMercosul', session_id: 'agente-api' });
+            // la consulta del agente por API: bloquea aunque la marca este, y la marca sigue ahi
+            const consulta = evaluar(payload, { nombres: ['nube-personal-guard'], env, marcar: false, escapes: false });
+            expect(consulta.res.bloqueos.map((b) => b.guardian)).toEqual(['nube-personal-guard']);
+            expect(fs.existsSync(marca)).toBe(true);
+            // la sesion de Fak: pasa una vez y la consume, como siempre
+            const sesion = evaluar(payload, { nombres: ['nube-personal-guard'], env });
+            expect(sesion.res.bloqueos).toEqual([]);
+            expect(fs.existsSync(marca)).toBe(false);
         } finally { fs.rmSync(home, { recursive: true, force: true }); }
     });
 
