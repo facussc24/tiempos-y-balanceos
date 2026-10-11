@@ -425,9 +425,12 @@ describe('pregunta-guard.sh (AskUserQuestion) — sin nada que frenar, recordato
 describe('cierre-guard.sh (Stop) — el wrapper llega a cierreGuard.mjs con el JSON del Stop', () => {
   const transcript = path.join(TMP, 'transcript-vacio.jsonl');
   fs.writeFileSync(transcript, '');
+  // exports/ de prueba VACIO (HOY-12, 11/10/2026): el hook real barria el exports/ de la PC buscando documentos posteriores al
+  // mensaje de Fak (del 02/09: cientos) y el detector en python se comia sus 90 s; el test del chequeo 6 daba rojo por tiempo.
+  const exportsVacio = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-exports-vacio-'));
   const stop = (last_assistant_message, extra = {}) => hook('cierre-guard.sh', {
     hook_event_name: 'Stop', stop_hook_active: false, transcript_path: posix(transcript), last_assistant_message, ...extra,
-  });
+  }, { env: { VITEST: 'true', CIERRE_GUARD_EXPORTS_PRUEBA: exportsVacio } });
 
   it('ROJO: el turno termina pidiendo permiso para mi propio trabajo → 2 con el motivo', () => {
     const r = stop('Tengo el script listo y probado en dry-run. ¿Arranco?');

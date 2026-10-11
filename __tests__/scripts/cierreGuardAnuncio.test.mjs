@@ -154,7 +154,10 @@ describe('chequeo 6 · relevarTranscript + decidir, de punta a punta', () => {
     fs.writeFileSync(f, lineas.join('\n') + '\n');
     return f;
   };
-  const deps = { pendientes: () => [], enCooldown: () => false, marcar: () => {}, yaReclamado: () => false, reclamar: () => {} };
+  // firmaIA y exportsDelTurno falsos (HOY-12, 11/10/2026): sin ellos `decidir` barria el exports/ REAL de la PC con un mensaje de
+  // Fak de 2026-09-21 (cientos de documentos "posteriores") y el detector en python se comia sus 90 s: los tres tests de abajo
+  // daban rojo por tiempo, no por el chequeo 6.
+  const deps = { pendientes: () => [], enCooldown: () => false, marcar: () => {}, yaReclamado: () => false, reclamar: () => {}, firmaIA: () => [], exportsDelTurno: () => [] };
   // e5b1b3cc 21/09: Fak escribe 12:11, la busqueda del plano se lanza 12:21 y termina 15:15.
   const busqueda = [
     fak('2026-09-21T12:11:41.634Z', 'no hace falta definir una accion eso lo decidimos nosotros'),
