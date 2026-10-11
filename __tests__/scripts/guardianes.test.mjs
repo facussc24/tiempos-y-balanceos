@@ -29,7 +29,7 @@ vi.setConfig({ testTimeout: 60_000 });
 import {
   parsear, matriz, correr, resolver, evaluar, GUARDIANES, TODOS, NOMBRES,
   medirInline, sinCuerposHeredoc, frasesCausalesSinFuente, ultimaRuta, INLINE_MAX, comandoTocaSecreto,
-  esArchivoDeReparacion,
+  esArchivoDeReparacion, queCorre,
 } from '../../scripts/_lib/guardianes.mjs';
 
 const RAIZ = process.cwd();
@@ -1240,5 +1240,89 @@ describe('recordatorios: una vez por sesion (clave session_id), el texto igual',
     const b = correr(deSesion('s-bash', CAD));
     expect(b.status).toBe(0);
     expect(b.stdout).toBe('');
+  });
+});
+
+// ═════════════════════════════════════════════════════════════ P14 / P15 / P18 (11/10/2026, tanda P12-P22)
+// R6 §4A: arb-cerrar, mail y borrado-masivo frenaban al que CITA el patron (un grep, un commit, un test, un script que
+// limpia su propio temporal). El criterio pasa a ser el verbo y el destino. Cada control va en las dos direcciones.
+// La via autorizada para mandar un mail sigue siendo scripts/_mailEnviar.py: aca solo se prueba quien NO manda nada.
+describe('arb-cerrar-guard P14 — se mira lo que CORRE: nombrar taskkill no mata nada; un taskkill real sigue frenando', () => {
+  const g = (p) => ev(p, { nombres: ['arb-cerrar-guard'] });
+  it('VERDE — tests y documentacion que nombran taskkill: commit, test runner, echo a un .md, sed -i, grep, heredoc a un .md, un script por ruta', () => {
+    for (const c of [
+      'git commit -m "fix(arb-cerrar): taskkill sobre produc.exe queda frenado" -- scripts/_lib/guardianes.mjs',
+      'npx vitest run __tests__/scripts/guardianes.test.mjs -t "taskkill /IM produc.exe"',
+      'echo "  taskkill /IM produc.exe /F -> frenado" >> docs/LECCIONES_APRENDIDAS.md',
+      "sed -i 's/taskkill \\/IM produc.exe/taskkill \\/F \\/IM produc.exe/' .claude/hooks/arb-cerrar-guard.test.sh",
+      // antes frenaba: la exencion vieja de lectores contaba el `python` del nombre del archivo como "encadena a un interprete"
+      'grep -n "taskkill.*produc" docs/notas-python.md | head -3',
+      "cat > docs/arb-notas.md <<'EOF'\nNunca: taskkill /IM produc.exe /F\nEOF",
+      'python scripts/_arbVer.py --nota "taskkill produc no"',
+    ]) expect(g(bash(c)).exit, c).toBe(0);
+  });
+  it('ROJO — un taskkill que corre: suelto, bash -c, eval, cmd //c, xargs, find -exec, $(...), por stdin, guardado en un .sh, powershell -Command', () => {
+    for (const c of [
+      'taskkill /IM produc.exe /F',
+      'bash -c "taskkill /IM produc.exe /F"',
+      'eval "taskkill /IM produc.exe /F"',
+      'cmd //c "taskkill /F /IM produc.exe"',
+      'echo produc.exe | xargs taskkill /F /IM',
+      'find /c/Dev -name "*.lock" -exec taskkill /IM produc.exe \\;',
+      'echo "$(taskkill /IM produc.exe /F)"',
+      'echo "taskkill /IM produc.exe /F" | bash',
+      "cat > /c/tmp/matar.sh <<'EOF'\ntaskkill /IM produc.exe /F\nEOF",
+      'powershell -Command "Get-Process produc | Stop-Process -Force"',
+    ]) { const r = g(bash(c)); expect(r.exit, c).toBe(2); expect(r.err, c).toMatch(/ARB-CERRAR-GUARD/); }
+    // PowerShell: el comando entero es codigo, el verbo no manda
+    expect(g(ps('Get-Process produc | Stop-Process -Force')).exit).toBe(2);
+  });
+  it('queCorre: el texto que corre es el codigo pegado, los $(...) y los verbos desconocidos; grep, echo a un .md y el -m de un commit quedan afuera', () => {
+    const { corre, visible } = queCorre('grep -n taskkill x.md; echo "kill" >> docs/a.md; python -c "os.kill(p, 9)"; taskkill /PID 12 && git commit -m "taskkill produc" -- a.md');
+    expect(corre).toMatch(/os\.kill\(p, 9\)/);
+    expect(corre).toMatch(/taskkill \/PID 12/);
+    expect(corre).not.toMatch(/grep|echo|git commit/);
+    expect(visible).not.toMatch(/taskkill produc/);
+    expect(queCorre('echo "$(taskkill /IM produc.exe)"').corre).toMatch(/taskkill/);
+    expect(queCorre('echo x | bash').corre).toMatch(/echo x \| bash/);          // stdin: no se sabe que le llega
+    expect(queCorre('ls', { porVerbo: false }).corre.trim()).toBe('ls');
+  });
+});
+
+describe('mail-guard P15 — tests, documentacion y el propio guardian que nombran .Send() no mandan nada', () => {
+  const g = (p) => ev(p, { nombres: ['mail-guard'] });
+  const SEND = 'import win32com.client\nol = win32com.client.Dispatch("Outlook.Application")\nm = ol.CreateItem(0)\nm.Send()';
+  it('VERDE — un Write/Edit de un test, el guardian, la regla, un hook, una memoria, las LECCIONES, una skill, un .txt', () => {
+    for (const f of [
+      'C:\\Dev\\BarackMercosul\\__tests__\\scripts\\mailGuard.test.mjs',
+      'C:\\Dev\\BarackMercosul\\scripts\\_lib\\guardianes.mjs',
+      'C:\\Dev\\BarackMercosul\\.claude\\rules\\mail-envio.md',
+      'C:\\Dev\\BarackMercosul\\.claude\\hooks\\mail-guard.test.sh',
+      'C:\\Users\\FacundoS-PC\\.claude\\projects\\C--Dev-BarackMercosul\\memory\\feedback_mail.md',
+      'C:\\Dev\\BarackMercosul\\docs\\LECCIONES_APRENDIDAS.md',
+      'C:\\Dev\\BarackMercosul\\.claude\\skills\\mail\\SKILL.md',
+      'C:\\tmp\\notas.txt',
+    ]) {
+      expect(g(escribir(f, SEND)).exit, f).toBe(0);
+      expect(g(editar(f, `${SEND}\nm.To = "x@y"`)).exit, f).toBe(0);   // tampoco la regla del .To como string
+    }
+  });
+  it('VERDE — en Bash: grep, sed -n, el -m de un commit, el test runner, un heredoc a las LECCIONES', () => {
+    for (const c of [
+      'grep -rn "\\.Send()\\|Outlook.Application" scripts/ __tests__/',
+      "sed -n '/Outlook.Application/,/\\.Send()/p' scripts/_prepararMail.py",
+      'git commit -m "fix(mail): Outlook.Application + .Send() suelto queda frenado" -- scripts/_lib/guardianes.mjs',
+      'npx vitest run __tests__/scripts/guardianes.test.mjs -t "Outlook.Application .Send()"',
+      `cat >> docs/LECCIONES_APRENDIDAS.md <<'EOF'\n${SEND}\nEOF`,
+    ]) expect(g(bash(c)).exit, c).toBe(0);
+  });
+  it('ROJO — el .Send() que corre: python -c, un heredoc a python, guardado en un .py, un Write de un .py que no es test, PowerShell', () => {
+    for (const p of [
+      bash('python -c "import win32com.client as w; m = w.Dispatch(\\"Outlook.Application\\").CreateItem(0); m.Send()"'),
+      bash(`python - <<'PY'\n${SEND}\nPY`),
+      bash(`cat > scripts/_mandar.py <<'PY'\n${SEND}\nPY`),
+      escribir('C:\\Dev\\BarackMercosul\\scripts\\_mandar.py', SEND),
+      ps('$ol = New-Object -ComObject Outlook.Application; $m = $ol.CreateItem(0); $m.Send()'),
+    ]) { const r = g(p); expect(r.exit, JSON.stringify(p.tool_input)).toBe(2); expect(r.err).toMatch(/MAIL-GUARD/); }
   });
 });

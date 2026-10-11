@@ -1673,6 +1673,84 @@ GUARDIANES['ho-numeracion-guard'] = (ctx, { env }) => {
   return recordatorio(path.join(dirTmp(env), 'claude-ho-numeracion-guard.flag'), TEXTO_HO);
 };
 
+// ── que parte de un comando de shell CORRE (P14 + P15, 11/10/2026) ─────────
+// arb-cerrar-guard y mail-guard buscaban `taskkill` y `.Send()` en el TEXTO ENTERO del comando. R6 §4A: 9 de 10 frenos
+// del arb y 10 de 10 del mail eran un grep, un sed -i, el -m de un commit, el filtro del test runner o el propio
+// guardian nombrando el patron como dato. El criterio pasa a ser el VERBO, como en firma-ia (HOY-16): se mira lo que
+// CORRE. `corre` es el texto donde se buscan los verbos y el codigo peligroso; `visible` es el comando sin la prosa
+// (mensaje de commit, heredocs que van a cat/tee/git o a un .md), donde se mira el CONTEXTO (a que proceso, que
+// ventana), que puede quedar fuera del tramo que corre (`T=Produccion; python -c "...WM_CLOSE..."`).
+//   · un verbo que lee o guarda texto (echo, grep, sed, git, npx, python/node corriendo un ARCHIVO): sus argumentos
+//     son datos, no suma;
+//   · un interprete con codigo pegado (python -c, node -e, powershell -Command, bash -c, cmd /c, eval): suma ese codigo;
+//   · un interprete que lee de stdin (bash, python -, node solos): suma el comando ENTERO, no se sabe que le llega;
+//   · un heredoc que alimenta a un interprete: suma su cuerpo; el que va a cat/tee/echo/git es prosa;
+//   · un heredoc, un echo, un printf o un tee que se GUARDAN en un archivo que no es prosa ni cita los patrones como
+//     dato (un .py, un .sh): suman, porque eso corre despues por ruta y el guardian ya no lo ve;
+//   · cualquier otro verbo (taskkill, wmic, Stop-Process, kill, shutdown, un programa propio) suma entero; y lo que no
+//     se puede desarmar (una sustitucion de proceso, un `$(` sin cerrar) suma el comando entero: no se adivina.
+// En PowerShell (y si la herramienta no tiene nombre) el comando entero es codigo: `porVerbo: false`.
+// Archivos que CITAN los patrones peligrosos como dato: tests, hooks, este modulo, reglas, skills, memorias, docs.
+const CITA_PATRONES_RE = /(?:__tests__|\.test\.|\.spec\.|(?:^|[\\/])\.claude[\\/](?:hooks|rules|skills)[\\/]|(?:^|[\\/])scripts[\\/]_lib[\\/]guardianes\.mjs$|(?:^|[\\/])(?:memory|docs)[\\/]|LECCIONES_APRENDIDAS|MEMORY\.md$|CLAUDE\.md$)/i;
+const CORRE_TEXTO_RE = /(?:^|[\\/])(?:echo|printf|grep|egrep|fgrep|rg|ag|sed|awk|cat|head|tail|less|more|wc|sort|uniq|cut|tr|tee|ls|dir|find|stat|file|diff|cmp|jq|git|gh|npx|npm|pnpm|yarn|vitest|test|\[|\[\[|true|false|touch|mkdir|cp|mv|rm|cd|pwd|date|basename|dirname|type|which|column|nl|tac|rev|paste|comm|md5sum|sha256sum|base64|iconv|cygpath|code)(?:\.exe)?$/i;
+const CORRE_INTERPRETE_RE = /(?:^|[\\/])(?:python[\d.]*|py|node|powershell|pwsh|bash|sh|zsh|dash|cmd|perl|ruby|php)(?:\.exe)?$/i;
+const CORRE_INLINE_RE = /^(?:-c(?:om(?:m(?:a(?:n(?:d)?)?)?)?)?|-e|--eval|-p|--print|\/\/?[ck])$/i;   // lo que sigue es codigo
+const CORRE_ENVOLTORIO_RE = /^(?:xargs|timeout|nohup|sudo|env|command|builtin|exec|winpty|time|nice|start)$/i;
+const CORRE_HD_INTERPRETE_RE = /(?:^|[\s|;&(])(?:python[\d.]*|py|node|bash|sh|zsh|dash|powershell|pwsh|cmd|perl|ruby|php|eval)(?:\.exe)?(?=\s|$)/i;
+const CORRE_HD_ARCHIVO_RE = /(?:>{1,2}\s*|\btee\s+(?:-[a-z]+\s+)*)("[^"]*"|'[^']*'|[^\s;&|<>]+)/i;
+/** Prosa (.md/.txt/...) o un archivo que cita los patrones como dato: lo que se guarda ahi no corre. */
+const esProsaOCita = (f) => { const x = String(f ?? '').trim().replace(/^["']|["']$/g, ''); return x === '/dev/null' || /^&\d/.test(x) || BM_PROSA.test(x) || CITA_PATRONES_RE.test(x); };
+
+/** { corre, visible } de un comando de shell (ver arriba). `porVerbo: false` = el comando entero es codigo. */
+export function queCorre(cmd, { porVerbo = true, prof = 0 } = {}) {
+  const sinProsa = sinArgumentosDeCommit(String(cmd ?? ''));   // el -m de un commit es prosa
+  const { lineas, cuerpos } = separarHeredocs(sinProsa);
+  const codigo = [];
+  for (const h of cuerpos) {
+    if (h.deGit) continue;
+    const dueno = String(h.dueno ?? '');
+    const guardado = dueno.match(CORRE_HD_ARCHIVO_RE);
+    if (CORRE_HD_INTERPRETE_RE.test(dueno) || (guardado && !esProsaOCita(guardado[1]))) codigo.push(h.cuerpo);
+  }
+  const visible = [lineas, ...codigo].join('\n');
+  // una sustitucion de proceso `<(...)` no se desarma; mas de cuatro niveles de `$(...)` tampoco
+  if (!porVerbo || prof > 4 || /[<>]\(/.test(lineas)) return { corre: visible, visible };
+  const corre = [...codigo];
+  for (const c of comandosSimples(lineas)) {
+    const p = [...c.palabras];
+    let desarmado = true;
+    for (const w of p) {
+      const subs = sustitucionesDe(w);
+      if (subs === null) { desarmado = false; break; }
+      for (const s of subs) corre.push(queCorre(s, { prof: prof + 1 }).corre);
+    }
+    // adelante del verbo pueden ir palabras de la shell, asignaciones y envoltorios con sus opciones
+    while (p.length && (FIRMA_PALABRA_SHELL.has(p[0]) || /^[A-Za-z_][A-Za-z0-9_]*\+?=/.test(p[0]) || CORRE_ENVOLTORIO_RE.test(p[0]))) {
+      if (CORRE_ENVOLTORIO_RE.test(p.shift())) while (p.length && p[0].startsWith('-')) p.shift();
+    }
+    const verbo = p[0] ?? '';
+    const args = p.slice(1);
+    if (!desarmado) { corre.push(c.crudo); continue; }
+    if (!verbo || FIRMA_ESTRUCTURA.has(verbo)) continue;
+    if (/^eval$/i.test(verbo)) { corre.push(args.join(' ')); continue; }
+    if (CORRE_INTERPRETE_RE.test(verbo)) {
+      const i = args.findIndex((a) => CORRE_INLINE_RE.test(a));
+      if (i >= 0) corre.push(args.slice(i + 1).join(' '));
+      else if (!args.some((a) => a !== '-' && !a.startsWith('-'))) return { corre: visible, visible };   // lee de stdin
+      continue;                                                                                        // corre un ARCHIVO: sus argumentos son datos
+    }
+    const guarda = c.redirs.some((r) => /^\d?>{1,2}$/.test(r.op) && !esProsaOCita(r.t))
+      || (/^tee$/i.test(verbo) && args.some((a) => !a.startsWith('-') && !esProsaOCita(a)));
+    const ejecuta = (/^find$/i.test(verbo) && args.some((a) => FIRMA_FIND_ESCRIBE.test(a)))
+      || (/^awk$/i.test(verbo) && /system|\|/.test(args.join(' ')));
+    // un tee a un .sh/.py recibe por la cañeria lo que otro imprimio (`echo "..." | tee matar.sh`): suma la linea entera
+    if (guarda && /^tee$/i.test(verbo)) { corre.push(lineas); continue; }
+    if (CORRE_TEXTO_RE.test(verbo) && !guarda && !ejecuta) continue;
+    corre.push(c.crudo);
+  }
+  return { corre: corre.join('\n'), visible };
+}
+
 // ── mail-guard ─────────────────────────────────────────────────────────────
 // Bloquea cualquier envio de mail por Outlook que NO pase por scripts/_mailEnviar.py, el unico
 // camino con gate anti-duplicado. INCIDENTE 2026-08-14: Fak mando el mail del AMFE 150, quedo
@@ -1724,7 +1802,16 @@ apretando Enviar en la ventana que ya tiene abierta.
     }
   }
 
-  const target = `${ctx.cmd6} ${ctx.fileL} ${ctx.body6}`;
+  // P15 (11/10/2026, R6 §4A: 10 de 10 frenos eran tests, demos o el propio guardian): se revisa lo que CORRE. En un
+  // Write/Edit decide el archivo: un test, un hook, este modulo, una regla, una skill, una memoria, las LECCIONES o un
+  // .md/.txt CITAN el .Send() como dato y no mandan nada. En Bash decide `queCorre`: el codigo pegado a un interprete,
+  // un heredoc que va a python o se guarda en un .py, un verbo desconocido; un grep, un sed -i o el -m de un commit
+  // que lo nombran, no. En PowerShell el comando entero es codigo.
+  const esEscritura = /^(?:write|edit)$/i.test(ctx.toolL);
+  if (esEscritura && (BM_PROSA.test(ctx.fileL) || CITA_PATRONES_RE.test(ctx.fileL))) return null;
+  const target = esEscritura ? ctx.body6
+    : /^(?:bash|powershell)$/i.test(ctx.toolL) ? limpiar(queCorre(ctx.cmd, { porVerbo: ctx.tool === 'Bash' }).corre).slice(0, CORTE)
+      : `${ctx.cmd6} ${ctx.fileL} ${ctx.body6}`;
   // 1) Tiene que oler a Outlook. 2) Tiene que haber un envio real (Display/Save/ReplyAll no
   // envian). 3) Si va por la via autorizada, pasa.
   if (!/Outlook\.Application|olMailItem|GetDefaultFolder|MailItem|CreateItem\(/i.test(target)) return null;
@@ -1732,9 +1819,8 @@ apretando Enviar en la ventana que ya tiene abierta.
   // 0) Destinatarios como STRING en .To/.CC/.BCC. Incidente 08/09/2026: asi quedan con
   //    Address vacia y Exchange rebota ("Ninguna de sus cuentas pudo enviar a este
   //    destinatario"). El 10/09 el mismo patron seguia vivo en _reenviarMail.py.
-  //    Se exime a los archivos que DESCRIBEN el patron, si no el guardian se bloquea solo.
-  const meta = /guardianes\.mjs|mail-envio\.md|mail-guard\.test\.sh|LECCIONES_APRENDIDAS/i;
-  if (!meta.test(ctx.fileL) && !meta.test(ctx.cmd6) &&
+  //    Los archivos que DESCRIBEN el patron (CITA_PATRONES_RE) no pasan por aca: si no el guardian se bloquea solo.
+  if (!CITA_PATRONES_RE.test(ctx.fileL) && !CITA_PATRONES_RE.test(ctx.cmd6) &&
       /\.(To|CC|BCC)\s*=[^=]/i.test(target)) {
     return bloqueo(`
 [MAIL-GUARD — BLOQUEO. Regla: .claude/rules/mail-envio.md]
@@ -1979,35 +2065,30 @@ ${VID_CIERRE}`);
 // descarta una edicion sin grabar) ni `_arbVer.py reset`. Los 8 bypasses que encontro el
 // auditor del 31/08 estan en arb-cerrar-guard.test.sh.
 // ESCAPE (lo usa Fak): touch ~/.claude/.arb-cerrar-ok — vale para UN comando y se consume.
-const ARB_LECTOR = /^\s*(grep|rg|cat|sed -n|head|tail|less|type|wc|git (log|show|diff|blame))\s/i;
-const ARB_ENCADENA = /(\||;|&&)\s*(ba)?sh|python|powershell|pwsh|xargs|-exec|node\s/i;
-const ARB_MATAR = /taskkill|stop-process|pkill|killall|[^a-z]kill\s|\.kill\(|os\.kill|closemainwindow|wmic[^|\n]*(delete|terminate|call)|shutdown\s*\//i;
+// P14 (11/10/2026, R6 §4A: 9 de 10 frenos eran un grep, un sed -i, un commit o el test runner nombrando `taskkill`):
+// se mira lo que CORRE (`queCorre`, arriba de mail-guard). Un taskkill de verdad —en posicion de comando, pegado a un
+// interprete, en un heredoc que va a python o a bash, en un `$(...)`, por xargs, por find -exec, guardado en un .sh—
+// sigue frenando. La exencion vieja ("empieza con un lector y no encadena") se va: su regex contaba `python` o `node`
+// en cualquier lado de la linea (hasta en el nombre de un archivo) y dejaba de eximir.
+const ARB_SESION = /(^|[;&|]\s*)(shutdown\s+\/|logoff|restart-computer|stop-computer)/im;
+const ARB_MATAR = /taskkill|stop-process|pkill|killall|(?:^|[^a-z])kill\s|\.kill\(|os\.kill|closemainwindow|wmic[^|\n]*(delete|terminate|call)|shutdown\s*\//i;
 const ARB_CERRAR = /WM_CLOSE|0x0010|0x10[^0-9a-f]|DestroyWindow|EndTask|SC_CLOSE|0xF060|pywinauto|pyautogui|sendkeys|%\{F4\}|alt.{0,3}f4|\.close\(\)/i;
 GUARDIANES['arb-cerrar-guard'] = (ctx, { env, escapes }) => {
   // Red de seguridad: si el parseo fallo, miro el comando rescatado + el JSON crudo.
-  let cmd = ctx.ok ? ctx.cmd : `${ctx.rescate.cmd}\n${ctx.raw}`;
+  const cmd = ctx.ok ? ctx.cmd : `${ctx.rescate.cmd}\n${ctx.raw}`;
   if (!cmd.trim()) return null;
-  // 0. No estorbar al que audita o documenta este mismo tema: un comando de SOLO LECTURA no
-  //    cierra nada. Pide DOS cosas: arranca con un lector Y no encadena a nada que ejecute
-  //    (`cat script.sh | bash` arranca con cat y corre codigo arbitrario). Se ancla al inicio
-  //    del comando ENTERO — el grep original miraba linea por linea, y una segunda linea que
-  //    empezara con `grep` eximia a un `taskkill` de la primera.
-  if (ARB_LECTOR.test(cmd) && !ARB_ENCADENA.test(cmd)) return null;
-  // 0b. El CUERPO de un heredoc es CONTENIDO, no comando (un commit que documenta este
-  //     guardian se autobloqueaba, 31/08). Solo si lo maneja algo que escribe o versiona:
-  //     `python - <<PY` se come el cuerpo por stdin y ahi el heredoc ES codigo.
-  if (/<</.test(cmd) && /^\s*(git|cat|tee|echo|printf)\s/im.test(cmd) && !/\|\s*((ba)?sh|python|powershell|pwsh|node)/i.test(cmd)) {
-    cmd = sinCuerposHeredoc(cmd);
-  }
+  // Con JSON sano se mira lo que corre (en PowerShell el comando entero es codigo); con JSON roto no hay comando
+  // confiable y vale la regla vieja sobre el texto entero: no se adivina.
+  const { corre, visible } = ctx.ok ? queCorre(cmd, { porVerbo: ctx.tool === 'Bash' }) : { corre: cmd, visible: cmd };
   let motivo = '';
   // 1a. cerrar sesion / apagar: se lleva puesto el arb sin nombrarlo
-  if (/(^|[;&|]\s*)(shutdown\s+\/|logoff|restart-computer|stop-computer)/im.test(cmd)) motivo = 'cerrar la sesion de Windows o apagar (se lleva puesto el arb)';
+  if (ARB_SESION.test(corre)) motivo = 'cerrar la sesion de Windows o apagar (se lleva puesto el arb)';
   // 1. matar el proceso del arb (lista canonica de verbos, no un regex parcial)
-  if (ARB_MATAR.test(cmd)) {
-    if (/produc/i.test(cmd)) motivo = 'matar el proceso del arb (produc.exe)';
+  if (ARB_MATAR.test(corre)) {
+    if (/produc/i.test(visible)) motivo = 'matar el proceso del arb (produc.exe)';
     else {
       // por PID pelado: se RESUELVE contra el sistema — solo aca, que es raro
-      const pids = [...new Set([...cmd.matchAll(/(\/pid[\s:=]+|os\.kill\(\s*|-id\s+)([0-9]{2,7})/gi)].map((m) => m[2]))];
+      const pids = [...new Set([...visible.matchAll(/(\/pid[\s:=]+|os\.kill\(\s*|-id\s+)([0-9]{2,7})/gi)].map((m) => m[2]))];
       for (const p of pids) {
         const r = spawnSync('tasklist', ['/FI', `PID eq ${p}`], { encoding: 'utf8' });
         if (/produc/i.test(r.stdout || '')) { motivo = `matar el proceso del arb (PID ${p} es produc.exe)`; break; }
@@ -2016,9 +2097,9 @@ GUARDIANES['arb-cerrar-guard'] = (ctx, { env, escapes }) => {
   }
   // 2. cerrar la VENTANA PRINCIPAL: `ProdWindow` es la CLASE (señal fuerte); por titulo se
   //    exige que NO nombre un `Maestro ...`, porque ahi el WM_CLOSE es el de descartar edicion.
-  if (!motivo && ARB_CERRAR.test(cmd)) {
-    if (/ProdWindow/.test(cmd)) motivo = 'cerrar la ventana principal del arb (clase ProdWindow)';
-    else if (/Producci/i.test(cmd) && !/Maestro/i.test(cmd)) motivo = 'cerrar la ventana principal del arb (titulo Produccion)';
+  if (!motivo && ARB_CERRAR.test(corre)) {
+    if (/ProdWindow/.test(visible)) motivo = 'cerrar la ventana principal del arb (clase ProdWindow)';
+    else if (/Producci/i.test(visible) && !/Maestro/i.test(visible)) motivo = 'cerrar la ventana principal del arb (titulo Produccion)';
   }
   if (!motivo) return null;
   const ok = path.join(dirHome(env), '.claude', '.arb-cerrar-ok');
