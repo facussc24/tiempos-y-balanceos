@@ -74,7 +74,8 @@ export function correrHook(cmd, payload, raiz, env = {}, { tmp = TMP(), tope = 6
   try {
     r = spawnSync('bash', ['-c', cmd], {
       cwd: raiz, timeout: tope, stdio: fds,
-      env: { ...process.env, CLAUDE_PROJECT_DIR: barras(raiz), ...env },
+      // CLAUDE_HOOKS_TIEMPOS=off: una prueba que lanza el cierre no va al registro de tiempos de verdad (plan P9, C0)
+      env: { ...process.env, CLAUDE_PROJECT_DIR: barras(raiz), CLAUDE_HOOKS_TIEMPOS: process.env.CLAUDE_HOOKS_TIEMPOS || 'off', ...env },
     });
   } finally { for (const fd of fds) fs.closeSync(fd); }
   const [stdout, stderr] = archivos.map((f) => { try { return fs.readFileSync(f, 'utf8'); } catch { return ''; } });

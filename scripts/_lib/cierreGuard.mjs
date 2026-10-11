@@ -1543,7 +1543,9 @@ export async function decidir(payload = {}, deps = {}) {
   const tanda = () => { try { return d.avisoTanda({ sesion: payload.session_id, registro: payload.transcript_path }) || ''; } catch { return ''; } };
 
   // 9. Un documento escrito en este turno nombra a Claude o a una IA. Va primero: es lo mas grave.
-  const fi = evaluarFirmaIA(texto, documentosDelTurno(fuera), d.firmaIA);
+  // `d.medir` (plan P9, C0) solo cronometra: corre la misma funcion y devuelve lo mismo. Sin el, se llama directo.
+  const medir = typeof d.medir === 'function' ? d.medir : (_fase, f) => f();
+  const fi = evaluarFirmaIA(texto, medir('documentos', () => documentosDelTurno(fuera)), d.firmaIA);
   if (fi.bloquea) {
     const lista = fi.hallazgos.slice(0, 12).map((h) => `- ${h.archivo} — ${h.lugar}: «${String(h.texto).slice(0, 80)}»`).join('\n');
     return conExtras({
@@ -1698,7 +1700,16 @@ const esDirecto = Boolean(process.argv[1] && /cierreGuard\.mjs$/i.test(process.a
 if (esDirecto) {
   let payload = {};
   try { payload = JSON.parse(fs.readFileSync(0, 'utf8') || '{}'); } catch { payload = {}; }
-  decidir(payload)
+  // MEDICION (10/10/2026, plan P9 commit C0): la misma decision, con el tiempo de cada fase anotado en
+  // <tmp>/claude-hooks-tiempos.jsonl (hooksTiempos.mjs). Si el medidor no carga, se decide sin medir, como siempre.
+  // El modulo se importa ACA y no arriba: un medidor roto no puede dejar al cierre sin cargar.
+  const decidirMidiendo = async () => {
+    let M = null;
+    try { M = await import('./hooksTiempos.mjs'); } catch { M = null; }
+    if (!M || typeof M.correrMedido !== 'function') return decidir(payload);
+    return M.correrMedido({ decidir, depsReales: DEPS_REALES, payload });
+  };
+  decidirMidiendo()
     .then((r) => {
       if (r.ok) process.exit(0);
       process.stderr.write(`${r.titulo}\n${r.detalle}\n`);
