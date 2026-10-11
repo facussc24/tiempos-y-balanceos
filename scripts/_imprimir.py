@@ -71,6 +71,7 @@ def main():
     ap.add_argument('--a3', action='store_true', help='A3 color en la impresora de arriba (C2004)')
     ap.add_argument('--paginas', help='por ejemplo 1-3,7')
     ap.add_argument('--seco', action='store_true', help='no manda nada: arma el archivo y una vista previa')
+    ap.add_argument('--conservar', action='store_true', help='deja la carpeta temporal entera (por defecto se borra lo que ya se mando)')
     a = ap.parse_args()
 
     if not os.path.exists(a.pdf):
@@ -88,41 +89,94 @@ def main():
     imp = IMPRESORAS['a3' if a.a3 else 'a4']
     paginas = rango_paginas(a.paginas) if a.paginas else None
 
+    limpiar_viejas()
     tmp = tempfile.mkdtemp(prefix='imprimir_')
-    pxl = os.path.join(tmp, 'trabajo.pxl')
-    convertir(a.pdf, imp, paginas, pxl)
-    print('Archivo de impresion: %s (%d KB) -> %s %s' % (pxl, os.path.getsize(pxl) // 1024, imp['nombre'], imp['ip']))
+    try:
+        pxl = os.path.join(tmp, 'trabajo.pxl')
+        convertir(a.pdf, imp, paginas, pxl)
+        print('Archivo de impresion: %s (%d KB) -> %s %s' % (pxl, os.path.getsize(pxl) // 1024, imp['nombre'], imp['ip']))
 
-    if a.seco:
-        png = os.path.join(tmp, 'vista_previa.png')
-        convertir(a.pdf, imp, None, png, device='png16m')
-        print('Vista previa de la primera hoja: %s' % png)
-        print('SECO: no se mando nada.')
-        return
+        if a.seco:
+            png = os.path.join(tmp, 'vista_previa.png')
+            convertir(a.pdf, imp, None, png, device='png16m')
+            if not a.conservar:
+                # El archivo de impresion de una corrida en seco puede pesar cientos de MB (cola HOY-13: 956 MB
+                # de 2 paginas de un paquete de HO) y nadie lo manda: va a la Papelera y queda la vista previa.
+                a_papelera(pxl)
+                print('Vista previa de la primera hoja: %s (el archivo de impresion fue a la Papelera; --conservar lo deja)' % png)
+            else:
+                print('Vista previa de la primera hoja: %s' % png)
+            print('SECO: no se mando nada.')
+            return
 
-    antes = contador(imp['ip'])
-    with socket.create_connection((imp['ip'], 9100), timeout=30) as s:
-        with open(pxl, 'rb') as f:
-            s.sendall(f.read())
-    print('Mandado. Contador antes: %s' % antes)
-    if antes is None:
-        print('No pude leer el contador: mirar la bandeja.')
-        return
-    # el contador tarda; se lee hasta que deja de subir
-    ultimo, quieto = antes, 0
-    for _ in range(60):
-        time.sleep(5)
-        ahora = contador(imp['ip'])
-        if ahora is None:
+        antes = contador(imp['ip'])
+        with socket.create_connection((imp['ip'], 9100), timeout=30) as s:
+            with open(pxl, 'rb') as f:
+                s.sendall(f.read())
+        print('Mandado. Contador antes: %s' % antes)
+        if antes is None:
+            print('No pude leer el contador: mirar la bandeja.')
+            return
+        # el contador tarda; se lee hasta que deja de subir
+        ultimo, quieto = antes, 0
+        for _ in range(60):
+            time.sleep(5)
+            ahora = contador(imp['ip'])
+            if ahora is None:
+                continue
+            if ahora == ultimo and ahora > antes:
+                quieto += 1
+                if quieto >= 3:
+                    break
+            else:
+                quieto = 0
+            ultimo = ahora
+        print('Contador despues: %s  ->  %s hojas impresas' % (ultimo, ultimo - antes))
+    finally:
+        # Lo que ya se mando no sirve mas: la carpeta va a la Papelera (cola HOY-13: 1,08 GB de tres corridas
+        # viejas con C: en 7 GB). En seco queda la carpeta con la vista previa; con --conservar queda todo.
+        if not a.seco and not a.conservar:
+            a_papelera(tmp)
+
+
+def a_papelera(ruta):
+    """Manda un archivo o una carpeta a la Papelera de Windows. Nunca un borrado permanente: es la regla de la
+    casa (incidente 2026-08-07) y se deshace con un click. Devuelve True si Windows lo acepto."""
+    if not os.path.exists(ruta):
+        return False
+    metodo = 'DeleteDirectory' if os.path.isdir(ruta) else 'DeleteFile'
+    ps = ("Add-Type -AssemblyName Microsoft.VisualBasic; "
+          "[Microsoft.VisualBasic.FileIO.FileSystem]::%s('%s','OnlyErrorDialogs','SendToRecycleBin')"
+          % (metodo, os.path.abspath(ruta).replace("'", "''")))
+    r = subprocess.run(['powershell', '-NoProfile', '-NonInteractive', '-Command', ps], capture_output=True, text=True)
+    return r.returncode == 0 and not os.path.exists(ruta)
+
+
+def limpiar_viejas(horas=24):
+    """Manda a la Papelera las carpetas imprimir_* del TEMP que quedaron de corridas anteriores (mas viejas que
+    `horas`): las de una corrida en seco con su vista previa y las de una corrida que se corto antes del finally.
+    Solo ese prefijo, solo en el TEMP, y dice cuantas movio."""
+    raiz = tempfile.gettempdir()
+    limite = time.time() - horas * 3600
+    try:
+        nombres = os.listdir(raiz)
+    except OSError:
+        return []
+    movidas = []
+    for n in nombres:
+        ruta = os.path.join(raiz, n)
+        if not n.startswith('imprimir_') or not os.path.isdir(ruta):
             continue
-        if ahora == ultimo and ahora > antes:
-            quieto += 1
-            if quieto >= 3:
-                break
-        else:
-            quieto = 0
-        ultimo = ahora
-    print('Contador despues: %s  ->  %s hojas impresas' % (ultimo, ultimo - antes))
+        try:
+            if os.path.getmtime(ruta) > limite:
+                continue
+        except OSError:
+            continue
+        if a_papelera(ruta):
+            movidas.append(ruta)
+    if movidas:
+        print('Carpetas de corridas viejas que fueron a la Papelera: %d' % len(movidas))
+    return movidas
 
 
 if __name__ == '__main__':
