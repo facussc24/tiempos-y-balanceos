@@ -13,12 +13,12 @@
  * si miro la nube. Medido contra los 16.336 bloques de texto de Claude en 286 transcripts: las seis reglas calzan en UN
  * solo mensaje (el del incidente); sin falsos rojos (cierreCanon, `mails_equipo`).
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterAll } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { decidir, relevarTranscript, evaluarMailsEquipo, CANON } from '../../scripts/_lib/cierreGuard.mjs';
+import { decidir, relevarTranscript, evaluarMailsEquipo, CANON, VAR_EXPORTS_PRUEBA } from '../../scripts/_lib/cierreGuard.mjs';
 
 // Lo que Fak escribio y lo que se le contesto, textual (transcript f14f5aae, 07/10/2026)
 const FAK_1 = 'como que no esta en la nube bsucaste ne los maisl de carlos?';
@@ -37,7 +37,8 @@ const archivo = (lineas) => {
   fs.writeFileSync(f, lineas.join('\n') + '\n');
   return f;
 };
-const deps = { pendientes: () => [], enCooldown: () => false, marcar: () => {}, yaReclamado: () => false, reclamar: () => {} };
+// HOY-12: el registro es del 07/10; sin estos dos el chequeo 9 y el 4 barren el exports/ real desde esa fecha
+const deps = { pendientes: () => [], enCooldown: () => false, marcar: () => {}, yaReclamado: () => false, reclamar: () => {}, firmaIA: () => [], exportsDelTurno: () => [] };
 async function cierre(lineas, texto = INCIDENTE, extra = {}) {
   const f = archivo(lineas);
   try { return await decidir({ session_id: 's8', transcript_path: f, last_assistant_message: texto, ...extra }, deps); } finally { fs.unlinkSync(f); }
@@ -203,7 +204,13 @@ describe('chequeo 8 · las reglas viven en el canon, cada una con su fuente', ()
 
 describe('cierre-guard.sh — el hook de verdad (bash -> node) con el transcript del incidente', () => {
   const HOOK = path.join(process.cwd(), '.claude', 'hooks', 'cierre-guard.sh');
-  const correr = (payload) => spawnSync('bash', [HOOK], { input: JSON.stringify(payload), encoding: 'utf8' });
+  // HOY-12: una carpeta de exports VACIA para el hook, asi el chequeo 9 y el 4 no barren el exports/ real de la PC desde
+  // el 07/10 (la fecha del registro). La variable vale solo con VITEST puesto (raizExports): una sesion real la ignora.
+  const vacio = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-exports-vacio-'));
+  afterAll(() => fs.rmSync(vacio, { recursive: true, force: true }));
+  const correr = (payload) => spawnSync('bash', [HOOK], {
+    input: JSON.stringify(payload), encoding: 'utf8', env: { ...process.env, VITEST: 'true', [VAR_EXPORTS_PRUEBA]: vacio },
+  });
   it('ROJO: exit 2 y el motivo por stderr · VERDE: con la nube mirada, exit 0', () => {
     const rojo = archivo([fak(1, FAK_1), bash(2, 'python scripts/_mails.py --sync'), dice(3, INCIDENTE)]);
     const verde = archivo([fak(1, FAK_1), bash(2, 'python scripts/_mails.py --buscar carlos'), dice(3, INCIDENTE)]);

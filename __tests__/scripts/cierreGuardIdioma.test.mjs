@@ -53,7 +53,8 @@ describe('idioma · esIngles', () => {
 });
 
 describe('cierre-guard · chequeo 10: el turno termina en ingles', () => {
-  const deps = { pendientes: () => [], enCooldown: () => false, marcar: () => {}, yaReclamado: () => false, reclamar: () => {} };
+  // HOY-21/HOY-12: sin estos dos, el registro del 09/10 hacia correr el detector de firma sobre el exports/ real (17-31 s)
+  const deps = { pendientes: () => [], enCooldown: () => false, marcar: () => {}, yaReclamado: () => false, reclamar: () => {}, firmaIA: () => [], exportsDelTurno: () => [] };
   const transcript = () => {
     const f = path.join(os.tmpdir(), `cg-idioma-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}.jsonl`);
     fs.writeFileSync(f, `${JSON.stringify({ type: 'user', timestamp: '2026-10-09T12:00:00.000Z', origin: { kind: 'human' }, message: { role: 'user', content: 'dale, segui con eso' } })}\n`);

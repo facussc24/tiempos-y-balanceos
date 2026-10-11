@@ -14,12 +14,12 @@
  *   3. el pendiente de "mejora sin probar" (regla mejora-implementada.md) al declarar un cierre.
  * Los transcripts se arman con las formas que escribe Claude Code (origin, isMeta, isCompactSummary, queued_command).
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterAll } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { decidir, relevarTranscript, evaluarExplicar, pendientesDeMejora, REPO, CANON } from '../../scripts/_lib/cierreGuard.mjs';
+import { decidir, relevarTranscript, evaluarExplicar, pendientesDeMejora, REPO, CANON, VAR_EXPORTS_PRUEBA } from '../../scripts/_lib/cierreGuard.mjs';
 import { CANON as CANON_EXPLICAR } from '../../scripts/_lib/explicarGuard.mjs';
 
 const INCIDENTE = 'che ene que estaod esta hace que sea faicl de entender esta taare adigmaos le pdoemos apsar las hojas de rpcoeos anico?';
@@ -45,7 +45,8 @@ const archivo = (lineas) => {
   fs.writeFileSync(f, lineas.join('\n') + '\n');
   return f;
 };
-const deps = { pendientes: () => [], enCooldown: () => false, marcar: () => {}, yaReclamado: () => false, reclamar: () => {} };
+// HOY-12: el registro es del 02/10; sin estos dos el chequeo 9 y el 4 barren el exports/ real desde esa fecha
+const deps = { pendientes: () => [], enCooldown: () => false, marcar: () => {}, yaReclamado: () => false, reclamar: () => {}, firmaIA: () => [], exportsDelTurno: () => [] };
 async function cierre(lineas, texto = RESPUESTA, extra = {}) {
   const f = archivo(lineas);
   try { return await decidir({ session_id: 's7', transcript_path: f, last_assistant_message: texto, ...extra }, deps); } finally { fs.unlinkSync(f); }
@@ -197,7 +198,13 @@ describe('chequeo 7 · convive con los otros chequeos: un turno se frena una sol
 
 describe('cierre-guard.sh — el hook de verdad (bash -> node) con el transcript del incidente', () => {
   const HOOK = path.join(process.cwd(), '.claude', 'hooks', 'cierre-guard.sh');
-  const correr = (payload) => spawnSync('bash', [HOOK], { input: JSON.stringify(payload), encoding: 'utf8' });
+  // HOY-12: una carpeta de exports VACIA para el hook, asi el chequeo 9 y el 4 no barren el exports/ real de la PC desde
+  // el 02/10 (la fecha del registro). La variable vale solo con VITEST puesto (raizExports): una sesion real la ignora.
+  const vacio = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-exports-vacio-'));
+  afterAll(() => fs.rmSync(vacio, { recursive: true, force: true }));
+  const correr = (payload) => spawnSync('bash', [HOOK], {
+    input: JSON.stringify(payload), encoding: 'utf8', env: { ...process.env, VITEST: 'true', [VAR_EXPORTS_PRUEBA]: vacio },
+  });
   it('ROJO: exit 2 y el motivo por stderr · VERDE: con el skill cargado, exit 0', () => {
     const rojo = archivo([...incidente, dice(17, RESPUESTA)]);
     const verde = archivo([...incidente, usa(17, 'Skill', { skill: 'explicar-mejor' }), dice(18, RESPUESTA)]);

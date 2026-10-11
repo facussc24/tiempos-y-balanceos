@@ -1332,6 +1332,16 @@ export function reclamar(sid, clave) {
 const EXT_DOC_FIRMA = /\.(xlsx|xlsm|xltx|docx|docm|dotx|pptx|pptm|potx|pdf|csv|msg|eml|dxf|plt)$/i;
 const NO_APLICA_FIRMA = /No aplica firma-ia:\s*\S/i;
 
+// HOY-12 (10/10/2026): los tests que corren el hook de verdad con un registro viejo barrian el exports/ REAL de la PC
+// (66 rojos locales, de 17 a 30 min la familia; en el CI pasaban porque ahi exports/ no existe). Les damos otra carpeta,
+// pero SOLO adentro de vitest: en una sesion real el hook mira siempre <repo>/exports, aunque la variable quede puesta.
+export const VAR_EXPORTS_PRUEBA = 'CIERRE_GUARD_EXPORTS_PRUEBA';
+export function raizExports(repo = REPO, env = process.env) {
+  const alt = String(env?.[VAR_EXPORTS_PRUEBA] ?? '').trim();
+  if (alt && env?.VITEST) return alt;
+  return path.join(repo, 'exports');
+}
+
 function documentosRecientes(dir, desde, out, tope = 300) {
   let entradas = [];
   try { entradas = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
@@ -1346,8 +1356,8 @@ function documentosRecientes(dir, desde, out, tope = 300) {
 }
 
 /** Documentos escritos en el turno: los entregables que nombra el transcript y lo de `exports/`, con fecha
- *  posterior al ultimo mensaje de Fak (un minuto de margen). */
-export function documentosDelTurno(fuera = {}, repo = REPO) {
+ *  posterior al ultimo mensaje de Fak (un minuto de margen). `raiz` es la carpeta de exports (ver `raizExports`). */
+export function documentosDelTurno(fuera = {}, repo = REPO, raiz = raizExports(repo)) {
   const ts = Date.parse(fuera?.ultimoMensajeFakTs || '');
   if (!ts) return [];   // sin el mensaje de Fak no se sabe donde empieza el turno (y un relevador falso no barre el disco)
   const desde = ts - 60_000;
@@ -1357,7 +1367,7 @@ export function documentosDelTurno(fuera = {}, repo = REPO) {
     if (!EXT_DOC_FIRMA.test(r)) continue;
     try { if (fs.statSync(r).mtimeMs >= desde) out.push(r); } catch { /* ya no esta */ }
   }
-  documentosRecientes(path.join(repo, 'exports'), desde, out);
+  documentosRecientes(raiz, desde, out);
   return [...new Set(out)];
 }
 
@@ -1398,26 +1408,27 @@ const NOMBRE_CHAR = /[a-z0-9áéíóúñü_]/i;
 /** Barras a `/`, tildes compuestas (NFC), minuscula. */
 const textoPlano = (t) => String(t ?? '').replace(/\\+/g, '/').normalize('NFC').toLowerCase();
 
-/** Entregables de `<repo>/exports` escritos despues del mensaje que abrio el turno (`turnoTs`; si falta, el ultimo
- *  mensaje de Fak), sin `.build` ni lo de `excluir_re` y sin temporales `~$`. La fecha es la mas nueva entre la de
- *  modificacion y la de creacion: una copia hecha con Copy-Item, robocopy o `copyFileSync` conserva la fecha de
- *  modificacion del origen, pero nace hoy (auditor R4). Sin la hora del turno no se sabe donde empieza: lista vacia.
- *  El tope es una red contra un arbol descomunal, no un filtro: 5.000 (exports/ tiene ~4.200 archivos y el barrido
- *  entero tarda 0,2 s; con 400 se cortaba en orden alfabetico antes de llegar al entregable, auditor R1). */
-export function exportsDelTurno(fuera = {}, repo = REPO, tope = 5000) {
+/** Entregables de exports escritos despues del mensaje que abrio el turno (`turnoTs`; si falta, el ultimo mensaje de
+ *  Fak), sin `.build` ni lo de `excluir_re` y sin temporales `~$`. `raiz` es la carpeta de exports: `<repo>/exports`, o
+ *  la de prueba de HOY-12 (ver `raizExports`). La fecha es la mas nueva entre la de modificacion y la de creacion: una
+ *  copia hecha con Copy-Item, robocopy o `copyFileSync` conserva la fecha de modificacion del origen, pero nace hoy
+ *  (auditor R4). Sin la hora del turno no se sabe donde empieza: lista vacia. El tope es una red contra un arbol
+ *  descomunal, no un filtro: 5.000 (exports/ tiene ~4.200 archivos y el barrido entero tarda 0,2 s; con 400 se cortaba
+ *  en orden alfabetico antes de llegar al entregable, auditor R1). */
+export function exportsDelTurno(fuera = {}, repo = REPO, tope = 5000, raiz = raizExports(repo)) {
   const desde = Date.parse(fuera?.turnoTs || fuera?.ultimoMensajeFakTs || '');
   if (!desde) return [];
   const out = [];
-  const raiz = path.join(repo, 'exports');
   const andar = (dir) => {
     let entradas = [];
     try { entradas = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
     for (const e of entradas) {
       if (out.length >= tope) return;
       const p = path.join(dir, e.name);
-      // el filtro de carpetas mira la ruta RELATIVA al repo: con el repo colgado de `.claude` (un worktree) la
-      // absoluta calzaba entera y no se barria nada (auditor R9)
-      const rel = path.relative(repo, p).replace(/\\/g, '/');
+      // relativa a la RAIZ de exports, con `exports/` adelante: con la carpeta real da lo mismo que `path.relative(repo, p)`,
+      // y con la de prueba (HOY-12) el filtro y cierreNombra siguen viendo `exports/X/`. Nunca la absoluta: con el repo
+      // colgado de `.claude` (un worktree) calzaba entera con excluir_re y no se barria nada (auditor R9)
+      const rel = `exports/${path.relative(raiz, p).replace(/\\/g, '/')}`;
       if (e.isDirectory()) { if (!EXCLUIR_ENTREGABLE.test(`/${rel}/`)) andar(p); continue; }
       if (!EXT_ENTREGABLE.test(e.name) || e.name.startsWith('~$')) continue;
       let fecha = 0;
