@@ -148,7 +148,11 @@ def a_papelera(ruta):
     ps = ("Add-Type -AssemblyName Microsoft.VisualBasic; "
           "[Microsoft.VisualBasic.FileIO.FileSystem]::%s('%s','OnlyErrorDialogs','SendToRecycleBin')"
           % (metodo, os.path.abspath(ruta).replace("'", "''")))
-    r = subprocess.run(['powershell', '-NoProfile', '-NonInteractive', '-Command', ps], capture_output=True, text=True)
+    try:
+        r = subprocess.run(['powershell', '-NoProfile', '-NonInteractive', '-Command', ps], capture_output=True, text=True)
+    except OSError:
+        # sin PowerShell (otra plataforma): no hay Papelera, no se borra nada y se dice que no se pudo
+        return False
     return r.returncode == 0 and not os.path.exists(ruta)
 
 
