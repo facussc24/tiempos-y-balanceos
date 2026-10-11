@@ -352,9 +352,19 @@ const FIRMA_CAMPO = String.raw`(?:cread[oa][_\s-]+por|elaborad[oa][_\s-]+por|hec
 const FIRMA_AUTORIA_RE = new RegExp(String.raw`${FIRMA_CAMPO}["'\]\x60]?\s*[:=,]?\s*[(\[]?\s*[fFrRbBuU]?["'\x60]?\s*(?:${IA_NOMBRES}|ia(?![a-z])|ai(?![a-z]))`, 'i');
 // Una pasada por tipo de comilla: un `python -c "ws.Value = 'Claude'"` tiene el literal simple ADENTRO del doble.
 const FIRMA_LITERALES_RE = ['"', "'", '\x60'].map((q) => new RegExp(String.raw`${q}([^${q}\n]*?(?:${IA_NOMBRES})[^${q}\n]*?)${q}`, 'gi'));
-const FIRMA_PREFIJO_RE = /(?:\.(?:value2?|formula|text|name|caption|title|author|comments?|subject|keywords|description|last_modified_by|lastmodifiedby|creator|category)\s*=\s*|\]\s*=\s*|\b(?:create_sheet|add_paragraph|add_run|add_textbox|add_heading|add_slide|add_comment|add_table|setcellvalue|insert_text|write_string|write_rich_string|cell|Sheets\.Add|Worksheets\.Add|Add)\s*\([^()\n]*?)$/i;
+const FIRMA_PREFIJO_RE = /(?:\.(?:value2?|formula|text|name|caption|title|author|comments?|subject|keywords|description|last_modified_by|lastmodifiedby|creator|category)\s*=\s*|\]\s*=\s*|\b(?:create_sheet|add_paragraph|add_run|add_textbox|add_heading|add_slide|add_comment|add_table|setcellvalue|insert_text|write_string|write_rich_string|cell)\s*\([^()\n]*?)$/i;
+// P16 (11/10/2026, R6: 3 de 6 falsos): el `Add(` de COM (`Sheets.Add(`, `Comments.Add(rng, …)`) va aparte y SIN la
+// bandera i. Con ella, el `.add(` de un Set o de una lista (`carpetas.add('Claude Fak')`, `s.add('CLAUDE.md')`) contaba
+// como escribir en un documento.
+const FIRMA_PREFIJO_ADD_RE = /\bAdd\s*\([^()\n]*?$/;
+// El archivo CLAUDE.md (la configuracion del repo) y la carpeta «Claude Fak» (la de Fak en la nube) son NOMBRES, no
+// una firma: `cfg['memoria'] = 'CLAUDE.md'`, `rutas['config'] = 'Claude Fak'`. Solo el nombre exacto, con o sin ruta
+// adelante: una celda que diga «Claude» o «Claude Fak S.A.» sigue frenando.
+const FIRMA_NOMBRE_PROPIO_RE = /^(?:[^\n]*[\\/])?(?:CLAUDE\.md|Claude Fak)[\\/]?$/i;
 const FIRMA_RAIZ_RE = /(?:^|[\s"'=])(?:[yY]:[\\/]|\/y\/|[^"'\n]*Ingenier[ií]a y Proyecto)/;
-const FIRMA_EXENTOS_RE = /(?:[\\/]\.claude[\\/]|[\\/]memory[\\/]|[\\/]docs[\\/]|[\\/]__tests__[\\/]|[\\/]_archive[\\/]|[\\/]claude-area[\\/]|CLAUDES_POR_AREA|CLAUDE POR AREA|Claude Barack|Base Claude Ingenieria|INSTALAR CLAUDE|ACTUALIZACION_CLAUDE|[\\/]Claude Fak[\\/]|firmaIA|_sinFirmaIA|_limpiarListadoHoClaude|guardianes\.mjs|cierreGuard\.mjs|CLAUDE\.md$|LECCIONES_APRENDIDAS\.md$|MEMORY\.md$|\.claude[\\/])/i;
+// P16: «Claude Fak» y CLAUDE.md quedan exentos tambien SIN barra final (`cd ".../Claude Fak" && node …`): el nombre
+// exacto seguido de barra, comilla o fin. Un espacio NO alcanza: «Claude Fak notas» o «Claude Fakultad» son otra carpeta.
+const FIRMA_EXENTOS_RE = /(?:[\\/]\.claude[\\/]|[\\/]memory[\\/]|[\\/]docs[\\/]|[\\/]__tests__[\\/]|[\\/]_archive[\\/]|[\\/]claude-area[\\/]|CLAUDES_POR_AREA|CLAUDE POR AREA|Claude Barack|Base Claude Ingenieria|INSTALAR CLAUDE|ACTUALIZACION_CLAUDE|[\\/]Claude Fak(?=[\\/"']|$)|firmaIA|_sinFirmaIA|_limpiarListadoHoClaude|guardianes\.mjs|cierreGuard\.mjs|CLAUDE\.md(?=["']|$)|LECCIONES_APRENDIDAS\.md$|MEMORY\.md$|\.claude[\\/])/i;
 // Comandos que solo leen o que guardan texto que no es un documento (un mensaje de commit lleva
 // "Co-Authored-By: Claude" por convencion del repo, y no sale de aca como documento de Barack).
 //
@@ -547,8 +557,10 @@ export function firmaIaEnEscritura(texto, archivo = '', { bash = false } = {}) {
       let m;
       while ((m = re.exec(linea))) {
         const antes = linea.slice(Math.max(0, m.index - 120), m.index);
-        if (interno && FIRMA_ID_MODELO_RE.test(m[1].trim())) { re.lastIndex = m.index + 1; continue; }
-        if (FIRMA_PREFIJO_RE.test(antes)) return `una IA escrita ADENTRO de un documento: «${(antes.slice(-40) + m[0]).trim().slice(0, 110)}»`;
+        const literal = m[1].trim();
+        if (interno && FIRMA_ID_MODELO_RE.test(literal)) { re.lastIndex = m.index + 1; continue; }
+        if (FIRMA_NOMBRE_PROPIO_RE.test(literal)) { re.lastIndex = m.index + 1; continue; }   // P16: un nombre, no una firma
+        if (FIRMA_PREFIJO_RE.test(antes) || FIRMA_PREFIJO_ADD_RE.test(antes)) return `una IA escrita ADENTRO de un documento: «${(antes.slice(-40) + m[0]).trim().slice(0, 110)}»`;
         re.lastIndex = m.index + 1;   // un literal "abierto" de mas no tapa el siguiente
       }
     }

@@ -308,3 +308,52 @@ describe('firma-ia-guard', () => {
         expect(firmaIaEnEscritura('ws.Cells(1,1).Value = "HO 990"', '')).toBeNull();
     });
 });
+
+// ── P16 (11/10/2026, tanda P12-P22; A41e + A21a, R7 §6 y R6: 3 de 6 frenos de la regla 2 eran falsos) ─────────────
+// Tres huecos del mismo tipo: una PALABRA que parecia una firma y no lo era. `Add(` con la bandera i contaba el `.add(`
+// de un Set o de una lista; CLAUDE.md y la carpeta «Claude Fak» son nombres propios, no una firma; y la carpeta sin
+// barra final (`cd ".../Claude Fak" && …`) quedaba afuera de la exencion. Los gemelos rojos: una celda que diga
+// «Claude» (el caso del listado) o «Claude Fak S.A.», el `.Add(` de COM con una IA adentro, y una carpeta de la nube
+// que solo se llame PARECIDO a «Claude Fak», siguen frenando.
+const VERDES_P16 = [
+    ['el .add( de un Set de Python (antes: `Add(` con bandera i lo contaba como COM)', ctx('Bash', { cmd: `python -c "vistos = set(); vistos.add('Claude Barack'); print(len(vistos))"` })],
+    ['el .add( de un Set de JS', ctx('Bash', { cmd: `node -e "const s = new Set(); s.add('Claude Barack'); console.log(s.size)"` })],
+    ['CLAUDE.md como valor de una clave (antes: `] =` lo contaba como una celda)', ctx('Bash', { cmd: `node -e "cfg['memoria'] = 'CLAUDE.md'; fs.writeFileSync('tmp/cfg.json', JSON.stringify(cfg))"` })],
+    ['la carpeta Claude Fak como valor de una clave', ctx('Bash', { cmd: `python -c "rutas['config'] = 'Claude Fak'; print(rutas)"` })],
+    ['CLAUDE.md con la ruta del repo adelante', ctx('Bash', { cmd: `python -c "cfg['archivo'] = 'C:/Dev/BarackMercosul/CLAUDE.md'"` })],
+    ['la carpeta Claude Fak sin barra final: cd y despues un script (antes se exigia la barra)', ctx('Bash', { cmd: `cd "${NP}/Claude Fak" && node scripts/_nube.mjs --subir memoria` })],
+    ['la carpeta Claude Fak entre comillas simples, sin barra, como argumento', ctx('Bash', { cmd: `python scripts/_x.py --carpeta '${NP}/Claude Fak'` })],
+];
+const ROJOS_P16 = [
+    ['una celda que diga Claude (el caso del listado): el gemelo rojo de la fila', ctx('Bash', { cmd: `python -c "ws.Cells(r, 10).Value = 'Claude'"` })],
+    ['una celda que diga Claude Fak S.A. (el nombre exacto es un nombre; con algo mas, no)', ctx('Bash', { cmd: `python -c "ws['J74'] = 'Claude Fak S.A.'"` })],
+    ['una celda que diga «ver CLAUDE.md»', ctx('Bash', { cmd: `python -c "ws['J74'] = 'ver CLAUDE.md'"` })],
+    ['el .Add( de COM con una IA adentro: un comentario de celda', ctx('Bash', { cmd: `python -c "ws.Comments.Add(rng, 'revisado por Claude')"` })],
+    ['el .Add( de COM por PowerShell', ctx('PowerShell', { cmd: `$ws.Comments.Add($rng, 'Claude')` })],
+    ['una carpeta de la nube que se llama parecido: Claude Fakultad', ctx('Bash', { cmd: `mkdir -p "${NP}/2- PROYECTOS/Claude Fakultad"` })],
+    ['una carpeta de la nube que arranca igual: Claude Fak notas', ctx('Bash', { cmd: `mkdir -p "${NP}/Claude Fak notas"` })],
+    ['un documento en la nube que nombra la carpeta Claude Fak (la regla 4 no se toca)', ctx('Write', { file: `${NUBE}\\1- GENERAL\\nota.txt`, content: 'Los archivos estan en la carpeta Claude Fak.' })],
+];
+
+describe('firma-ia-guard · P16: Add( distingue mayusculas; CLAUDE.md y «Claude Fak» son nombres, no una firma', () => {
+    for (const [nombre, c] of VERDES_P16) it(`VERDE: ${nombre}`, () => {
+        expect(bloquea(c)).toBe(false);
+        expect(bloquea(ctxVivo(c.tool, { cmd: c.cmd }))).toBe(false);          // como lo arma el despachador
+    });
+    for (const [nombre, c] of ROJOS_P16) it(`ROJO: ${nombre}`, () => {
+        expect(bloquea(c)).toBe(true);
+        expect(bloquea(ctxVivo(c.tool, { cmd: c.cmd, file: c.file, content: c.content }))).toBe(true);
+    });
+    it('por evaluar() con el JSON como llega del despachador: el Set pasa con 0, la celda con Claude sale con 2', () => {
+        const exit = (tool, input) => G.evaluar(JSON.stringify({ tool_name: tool, tool_input: input }), { nombres: ['firma-ia-guard'], marcar: false, env: {} }).salida.exit;
+        expect(exit('Bash', { command: `python -c "vistos = set(); vistos.add('Claude Barack')"` })).toBe(0);
+        expect(exit('Bash', { command: `cd "${NP}/Claude Fak" && node scripts/_nube.mjs --subir memoria` })).toBe(0);
+        expect(exit('Bash', { command: `python -c "ws.Cells(r, 10).Value = 'Claude'"` })).toBe(2);
+        expect(exit('Bash', { command: `python -c "ws.Comments.Add(rng, 'Claude')"` })).toBe(2);
+    });
+    it('firmaIaEnEscritura: el motivo dice que es una celda, no una ruta', () => {
+        expect(firmaIaEnEscritura(`ws['J74'] = 'Claude Fak S.A.'`, '')).toMatch(/ADENTRO de un documento/);
+        expect(firmaIaEnEscritura(`rutas['config'] = 'Claude Fak'`, '')).toBeNull();
+        expect(firmaIaEnEscritura(`s.add('Claude Barack')`, '')).toBeNull();
+    });
+});
