@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // Instala (o actualiza) en esta PC los mods de la casa para TODAS las sesiones de Claude Code.
 //
 //   node scripts/_modsInstalar.mjs                     que haria (no toca nada)
