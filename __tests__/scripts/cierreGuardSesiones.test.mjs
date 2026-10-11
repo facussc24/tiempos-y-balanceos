@@ -106,7 +106,7 @@ describe('cierre-guard · pendientes solo de ESTA sesion (falso positivo 2)', ()
   it('decidir le pasa los tocados al relevador de pendientes (y null si no hubo transcript)', async () => {
     let recibido = 'no-llamado';
     const base = { session_id: 's-sesiones', last_assistant_message: 'Listo, commiteado y pusheado.' };
-    const deps = { pendientes: (t) => { recibido = t; return []; }, enCooldown: () => false, marcar: () => {} };
+    const deps = { pendientes: (t) => { recibido = t; return []; }, enCooldown: () => false, marcar: () => {}, firmaIA: () => [], exportsDelTurno: () => [] };
     expect((await decidir(base, { ...deps, fueraEnEsteTurno: async () => ({ fuera: false, tocados: new Set(['scripts/a.mjs']) }) })).ok).toBe(true);
     expect([...recibido]).toEqual(['scripts/a.mjs']);
     expect((await decidir(base, { ...deps, fueraEnEsteTurno: async () => ({ fuera: false }) })).ok).toBe(true);
@@ -239,7 +239,7 @@ describe('cierre-guard · relevarTranscript: ultimo mensaje de Fak, subagentes y
 });
 
 describe('cierre-guard · A1: un entregable escrito afuera y nunca abierto no se declara listo', () => {
-  const deps = { pendientes: () => [], enCooldown: () => false, marcar: () => {}, yaReclamado: () => false, reclamar: () => {} };
+  const deps = { pendientes: () => [], enCooldown: () => false, marcar: () => {}, yaReclamado: () => false, reclamar: () => {}, firmaIA: () => [], exportsDelTurno: () => [] };   // sin esto el chequeo 9 barre el exports/ real de esta PC (HOY-12)
   const cierre = (f, extra = {}) => decidir({ session_id: 's-a1', transcript_path: f, last_assistant_message: `Listo, quedó en ${DESK}\\difusion.pdf.`, ...extra }, deps);
 
   it('esEntregableFuera: pdf/xlsx/step afuera si; repo, scratchpad, TEMP, .claude y .txt no', () => {

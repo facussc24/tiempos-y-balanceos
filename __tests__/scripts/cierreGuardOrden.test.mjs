@@ -93,6 +93,42 @@ describe('evaluarOrdenCierre · mide donde esta lo que necesito de Fak', () => {
   it('cada frase del canon trae su fuente (ninguna a ojo)', () => {
     for (const p of CANON.cierre_orden.necesito_re) expect(String(p.fuente || '').length).toBeGreaterThan(10);
   });
+
+  // Los dos mutantes que el auditor de H5 dejo vivos (H8 de AUDITOR_H5_H6_2026-10-10.md), mas las alternativas del
+  // canon que no tenian caso.
+  it.each([
+    'De vos no necesito nada.',
+    'No necesito nada de vos.',
+    'Nada pendiente de tu lado.',
+  ])('«%s» vale este donde este: al final, despues de una frase enterrada, tambien apaga el aviso', (nada) => {
+    const texto = `Cerré los cuatro puntos.\n\nEl build pasa.\n\nLa fila del listado era una decisión tuya y quedó como la dejaste.\n\nQué encontré: una foto de otra pieza.\n\n${nada}`;
+    expect(evaluarOrdenCierre(texto)).toMatchObject({ necesita: false, aviso: false });
+    // el mismo texto sin esa frase SI avisa: lo que lo apaga es la frase, no el resto
+    expect(evaluarOrdenCierre(texto.replace(`\n\n${nada}`, ''))).toMatchObject({ necesita: true, aviso: true, parrafo: 3 });
+  });
+
+  it.each([
+    ['tenes que decidir', 'Subí todo.\n\nEl build pasa.\n\nEso no tenés que decidirlo hoy: lo que tenés que decidir es de Calidad.'],
+    ['lo decidis vos', 'Subí todo.\n\nEl build pasa.\n\nEl nombre del archivo lo decidís vos cuando lo mandes.'],
+    ['para vos:', 'Subí todo.\n\nEl build pasa.\n\nPara vos: el PDF abre en cualquier lado.'],
+    ['espero tu…', 'Subí todo.\n\nEl build pasa.\n\nEspero tu aviso cuando estés en la planta.'],
+  ])('candidata SACADA del canon por falsos positivos, enterrada no avisa: «%s»', (_, texto) => {
+    expect(evaluarOrdenCierre(texto)).toMatchObject({ necesita: false, aviso: false });
+  });
+
+  it.each([
+    ['necesito que me digas', 'necesito que me digas'],
+    ['necesito que me confirmes', 'necesito que me confirmes'],
+    ['necesito que confirmes', 'necesito que confirmes'],
+    ['necesito que elijas', 'necesito que elijas'],
+    ['necesito que me pases', 'necesito que me pases'],
+    ['falta tu visto bueno', 'falta tu visto bueno'],
+    ['falta tu si', 'falta tu si'],
+  ])('cada alternativa del canon, enterrada, AVISA: «%s»', (frase, hallada) => {
+    const r = evaluarOrdenCierre(`Cambié la hoja 3.\n\nEncontré una foto de otra pieza.\n\nPara cerrar ${frase} el número de plano.`);
+    expect(r).toMatchObject({ necesita: true, aviso: true, parrafo: 3 });
+    expect(r.frase).toBe(hallada);
+  });
 });
 
 describe('cierre-guard · el aviso de orden viaja en el chequeo 5 y NO agrega un freno', () => {
