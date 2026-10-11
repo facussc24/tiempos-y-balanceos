@@ -39,7 +39,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Anthropic from '@anthropic-ai/sdk';
-import { agregarSeguro } from './escrituraSegura.mjs';
+import { agregarSeguro, escribirSeguro } from './escrituraSegura.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const RAIZ = path.resolve(AQUI, '..', '..');
@@ -215,6 +215,21 @@ export function claveActiva({ env = process.env, archivoEnv = path.join(RAIZ, '.
   return principal ? { clave: principal, origen: 'principal', hasta: null } : { clave: null, origen: null, hasta: null };
 }
 
+/**
+ * Con que clave se pago un pedido, como ETIQUETA para el ledger: 'prestada-AAAAMMDD', 'principal' o 'entorno'.
+ * Nunca la clave. null si no se reconoce (un cliente de prueba). Pedido de Fak, 11/10/2026: el gasto separado por
+ * clave ("disponible, gastado, y separar entre cada api"); hasta ese dia el ledger no decia quien pagaba.
+ */
+export function etiquetaClave(apiKey, { env = process.env, archivoEnv = path.join(RAIZ, '.env.local') } = {}) {
+  const clave = String(apiKey ?? '').trim();
+  if (!clave) return null;
+  const prestada = clavesPrestadas({ archivoEnv }).find((p) => p.clave === clave);
+  if (prestada) return `prestada-${prestada.hasta}`;
+  if (String(leerEnv(archivoEnv).ANTHROPIC_API_KEY ?? '').trim() === clave) return 'principal';
+  if (String(env.ANTHROPIC_API_KEY ?? '').trim() === clave) return 'entorno';
+  return null;
+}
+
 /** La clave: del entorno, o de .env.local (la prestada vigente primero). Devuelve null si no hay. */
 export function leerClave(opciones = {}) {
   return claveActiva(opciones).clave;
@@ -347,8 +362,12 @@ export const selloLocal = (f = new Date()) => `${f.getFullYear()}-${p2(f.getMont
 
 export const rutaLedger = (mes = mesLocal(), dir = DIR_API) => path.join(dir, `ledger_${mes}.jsonl`);
 
-/** Agrega una linea al ledger del mes. Devuelve la entrada escrita. */
-export function registrarGasto(r, { tarea = '', lote = false, dir = DIR_API, ahora = new Date() } = {}) {
+/**
+ * Agrega una linea al ledger del mes. Devuelve la entrada escrita. `clave`: la etiqueta de etiquetaClave() (quien
+ * pago); sin ella la linea no lleva el campo. Despues deja al dia el resumen por clave (saldo.json); si ese resumen
+ * falla, el gasto ya quedo anotado y no se pierde.
+ */
+export function registrarGasto(r, { tarea = '', lote = false, dir = DIR_API, ahora = new Date(), clave = null } = {}) {
   const u = r.usage || {};
   const entrada = {
     ts: selloLocal(ahora),
@@ -363,9 +382,11 @@ export function registrarGasto(r, { tarea = '', lote = false, dir = DIR_API, aho
     duracionMs: r.duracionMs ?? 0,
     id: r.id ?? null,
     ...(r.fallback && r.fallback.length ? { fallback: r.fallback } : {}),
+    ...(clave ? { clave: String(clave) } : {}),
   };
   // por la puerta segura: el ledger solo puede caer en .sgc-cache (o en la carpeta de BARACK_API_DIR)
   agregarSeguro(rutaLedger(mesLocal(ahora), dir), `${JSON.stringify(entrada)}\n`);
+  try { escribirSaldo({ dir, ahora }); } catch { /* el resumen se rehace en la proxima llamada o con --check */ }
   return entrada;
 }
 
@@ -500,6 +521,69 @@ export function presupuestoDelMes({ mes = null, dir = DIR_API, env = process.env
   return { mes: ciclo.mes, ciclo, ...estadoPresupuesto({ gastadoUsd, presupuestoUsd: presupuestoMensualUsd(env) }) };
 }
 
+/** Credito de API que trae el plan por ciclo: $200 el Max 20x (api-claude.md §1). BARACK_API_CREDITO_USD lo cambia. */
+export const CREDITO_PLAN_USD = 200;
+export const creditoPlanUsd = (env = process.env) => positivo(env.BARACK_API_CREDITO_USD, CREDITO_PLAN_USD);
+
+export const rutaSaldo = (dir = DIR_API) => path.join(dir, 'saldo.json');
+const RE_MARCA_AGOTADA = /^prestada_agotada_(\d{8})$/;
+
+/** Las prestadas marcadas sin saldo en `dir`: [{ hasta, cuando: 'AAAA-MM-DD HH:MM:SS' | null }] (la hora de la primera marca). */
+function marcasDeAgotada(dir) {
+  let nombres = [];
+  try { nombres = fs.readdirSync(dir); } catch { return []; }
+  return nombres.map((nombre) => RE_MARCA_AGOTADA.exec(nombre)).filter(Boolean).map((m) => {
+    let cuando = null;
+    try { cuando = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.exec(fs.readFileSync(path.join(dir, m[0]), 'utf8'))?.[0] ?? null; } catch { /* sin hora */ }
+    return { hasta: m[1], cuando };
+  }).sort((a, b) => a.hasta.localeCompare(b.hasta));
+}
+
+/**
+ * El gasto del ciclo separado por clave, para mostrarle a Fak "gastado / quedan" (11/10/2026):
+ *   { actualizado, ciclo: { desde, hasta, proximo, texto }, estimado,
+ *     claves: [{ nombre: 'principal', gastadoUsd, creditoUsd, quedanUsd },
+ *              { nombre: 'prestada', hasta: 'AAAAMMDD', gastadoUsd, agotada, vencida }, { nombre: 'entorno', gastadoUsd }] }
+ * Cada linea del ledger dice quien pago (`clave`). Las de antes del 11/10/2026 no lo dicen: se reparten por la hora en
+ * que la prestada quedo sin saldo (hasta esa hora, a la prestada, porque se gasta primero; despues, a la principal) y
+ * `estimado` queda en true. `quedanUsd` es el credito del plan menos lo anotado aca: una cuenta del ledger, NO el
+ * saldo que muestra Anthropic (ese no se puede leer con la clave).
+ */
+export function saldoPorClave({ dir = DIR_API, env = process.env, ahora = new Date() } = {}) {
+  const ciclo = cicloDe(ahora, cicloDia(env));
+  const marcas = marcasDeAgotada(dir);
+  const hoy = aaaammdd(ahora);
+  const gastado = new Map();
+  let estimado = false;
+  for (const e of leerLedgerCiclo(ciclo, dir)) {
+    let nombre = typeof e.clave === 'string' && e.clave ? e.clave : null;
+    if (!nombre) {
+      estimado = true;
+      const m = marcas.find((x) => x.cuando && String(e.ts ?? '') <= x.cuando);
+      nombre = m ? `prestada-${m.hasta}` : 'principal';
+    }
+    gastado.set(nombre, (gastado.get(nombre) ?? 0) + n(e.costoUsd));
+  }
+  const r2 = (x) => Math.round(x * 100) / 100;
+  const credito = creditoPlanUsd(env);
+  const dePrincipal = gastado.get('principal') ?? 0;
+  const claves = [{ nombre: 'principal', gastadoUsd: r2(dePrincipal), creditoUsd: credito, quedanUsd: r2(Math.max(0, credito - dePrincipal)) }];
+  const prestadas = new Set(marcas.map((m) => m.hasta));
+  for (const k of gastado.keys()) { const m = /^prestada-(\d{8})$/.exec(k); if (m) prestadas.add(m[1]); }
+  for (const hasta of [...prestadas].sort()) {
+    claves.push({ nombre: 'prestada', hasta, gastadoUsd: r2(gastado.get(`prestada-${hasta}`) ?? 0), agotada: marcas.some((m) => m.hasta === hasta), vencida: hasta < hoy });
+  }
+  for (const [k, v] of gastado) if (k !== 'principal' && !/^prestada-\d{8}$/.test(k)) claves.push({ nombre: k, gastadoUsd: r2(v) });
+  return { actualizado: selloLocal(ahora), ciclo: { desde: ciclo.desde, hasta: ciclo.hasta, proximo: ciclo.proximo, texto: ciclo.texto }, estimado, claves };
+}
+
+/** Deja el resumen por clave en saldo.json (por la puerta segura). Lo lee la banda del tablero. */
+export function escribirSaldo(opciones = {}) {
+  const s = saldoPorClave(opciones);
+  escribirSeguro(rutaSaldo(opciones.dir ?? DIR_API), `${JSON.stringify(s, null, 2)}\n`);
+  return s;
+}
+
 /** '$1,23' con coma decimal, como lo lee Fak. */
 export const usd = (x) => `$${(Math.round(n(x) * 100) / 100).toFixed(2).replace('.', ',')}`;
 
@@ -558,13 +642,14 @@ export async function llamar(cliente, opciones = {}) {
   const { params, betas, conSchema } = armarParametros(opciones);
   const t0 = Date.now();
   let res;
+  let usado = null;   // el cliente que contesto: si la prestada se quedo sin saldo, es el de reemplazo
   try {
-    res = await conRespaldoDeClave(cliente, (c) => c.beta.messages.create(betas.length ? { ...params, betas } : params), { tarea, respaldo: respaldoClave });
+    res = await conRespaldoDeClave(cliente, (c) => { usado = c; return c.beta.messages.create(betas.length ? { ...params, betas } : params); }, { tarea, respaldo: respaldoClave });
   } catch (e) {
     throw new ErrorApi('api', `la API fallo${tarea ? ` (${tarea})` : ''}: ${e?.status ? `HTTP ${e.status} ` : ''}${e?.message ?? e}`, { causa: e });
   }
   const r = interpretarRespuesta(res, { modelo: params.model, conSchema, duracionMs: Date.now() - t0 });
-  if (registrar) registrarGasto(r, { tarea, dir: dirLedger, ahora: ahora ?? new Date() });
+  if (registrar) registrarGasto(r, { tarea, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(usado?.apiKey, respaldoClave ?? {}) });
   return tolerar ? r : exigirRespuestaUtil(r, { tarea });
 }
 
@@ -579,13 +664,14 @@ export async function llamarLargo(cliente, opciones = {}) {
   const { params, betas, conSchema } = armarParametros(opciones);
   const t0 = Date.now();
   let res;
+  let usado = null;
   try {
-    res = await conRespaldoDeClave(cliente, (c) => c.beta.messages.stream(betas.length ? { ...params, betas } : params).finalMessage(), { tarea, respaldo: respaldoClave });
+    res = await conRespaldoDeClave(cliente, (c) => { usado = c; return c.beta.messages.stream(betas.length ? { ...params, betas } : params).finalMessage(); }, { tarea, respaldo: respaldoClave });
   } catch (e) {
     throw new ErrorApi('api', `la API fallo${tarea ? ` (${tarea})` : ''}: ${e?.status ? `HTTP ${e.status} ` : ''}${e?.message ?? e}`, { causa: e });
   }
   const r = interpretarRespuesta(res, { modelo: params.model, conSchema, duracionMs: Date.now() - t0 });
-  if (registrar) registrarGasto(r, { tarea, dir: dirLedger, ahora: ahora ?? new Date() });
+  if (registrar) registrarGasto(r, { tarea, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(usado?.apiKey, respaldoClave ?? {}) });
   return tolerar ? r : exigirRespuestaUtil(r, { tarea });
 }
 
@@ -685,7 +771,7 @@ export async function recogerLote(cliente, loteId, { tarea = '', conSchema = {},
     const id = String(r.custom_id);
     if (r.result?.type === 'succeeded') {
       const resp = interpretarRespuesta(r.result.message, { modelo: modelos[id] || r.result.message?.model, conSchema: !!conSchema[id], lote: true });
-      registrarGasto(resp, { tarea, lote: true, dir: dirLedger, ahora: ahora ?? new Date() });
+      registrarGasto(resp, { tarea, lote: true, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(cliente?.apiKey) });
       resultados[id] = resp;
     } else {
       resultados[id] = { error: r.result?.type || 'sin resultado', detalle: r.result?.error?.message ?? r.result?.error?.type ?? null };

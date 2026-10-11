@@ -20,7 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { armarParametros, interpretarRespuesta, resolverModelo, costoUsd, registrarGasto, selloLocal, usd } from './claudeApi.mjs';
+import { armarParametros, interpretarRespuesta, resolverModelo, costoUsd, registrarGasto, etiquetaClave, selloLocal, usd } from './claudeApi.mjs';
 import { escribirSeguro, agregarSeguro, rutaReal as rutaRealHastaDondeExista } from './escrituraSegura.mjs';
 import { esSecreto } from '../_apiTarea.mjs';
 
@@ -508,7 +508,7 @@ async function ejecutarHerramienta(uso, paso, k, ctx) {
   }
 }
 
-const registrarEnLedger = (r, tarea) => registrarGasto(r, { tarea });
+const registrarEnLedger = (r, tarea, clave = null) => registrarGasto(r, { tarea, clave });
 
 /**
  * Un paso = una llamada al modelo; sus tool_use se ejecutan en orden y los tool_result vuelven en UN mensaje
@@ -541,7 +541,7 @@ export async function correrAgente({
     const costo = Math.round((r.costoUsd + busq * PRECIO_BUSQUEDA_USD) * 1e6) / 1e6;   // costoUsd ignora las busquedas: se suman aca
     estado.paso++; estado.gastadoUsd = Math.round((estado.gastadoUsd + costo) * 1e6) / 1e6; estado.busquedas += busq;
     estado.ultimaEntrada = tokensEntrada(r.usage);
-    registrar({ ...r, costoUsd: costo }, `agente:${corrida}`);
+    registrar({ ...r, costoUsd: costo }, `agente:${corrida}`, etiquetaClave(cliente?.apiKey));
     const contenido = Array.isArray(res?.content) ? res.content : [];
     mensajes.push({ role: 'assistant', content: contenido });
     const linea = { n: estado.paso, hora: selloLocal(new Date(ahora())), modelo: r.modeloRespuesta ?? id, stop: r.stopReason, duracionMs: r.duracionMs, busquedas: busq, costoUsd: costo, acumuladoUsd: estado.gastadoUsd, herramientas: [] };

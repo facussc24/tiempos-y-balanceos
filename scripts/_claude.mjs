@@ -24,7 +24,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import {
   crearCliente, leerClave, claveActiva, llamar, verificarAcceso, presupuestoDelMes, leerLedgerCiclo, resumenLedger, cicloDia, topeCorridaUsd,
-  selloLocal, usd, resolverModelo, MENSAJE_SIN_CLAVE, ErrorApi, clavesPrestadas, prestadaAgotada, DIR_API,
+  selloLocal, usd, resolverModelo, MENSAJE_SIN_CLAVE, ErrorApi, clavesPrestadas, prestadaAgotada, DIR_API, escribirSaldo,
 } from './_lib/claudeApi.mjs';
 import { psRun } from './_lib/powershell.mjs';
 import {
@@ -229,6 +229,17 @@ async function check() {
   (p.semaforo === 'rojo' ? mal : ok)(`presupuesto, ${p.ciclo.texto}: ${usd(p.gastadoUsd)} de ${usd(p.presupuestoUsd)} (${p.porcentaje} %, ${p.semaforo})`);
   if (p.semaforo === 'rojo') falta.push(`el ciclo esta en rojo: la noche no arranca hasta que se renueve (el ${p.ciclo.proximo}) o con --sin-tope`);
   console.log(`  · el ciclo arranca el dia ${cicloDia()}${process.env.BARACK_API_CICLO_DIA ? '' : ' (por defecto; si el plan se renueva otro dia, fijar BARACK_API_CICLO_DIA)'} · la noche frena sola si UNA corrida pasa de ${usd(topeCorridaUsd())} (BARACK_API_TOPE_CORRIDA_USD)`);
+  // El mismo gasto, separado por clave (lo que lee la banda del tablero: saldo.json queda al dia con esta corrida).
+  // «quedan» es el credito del plan menos lo anotado en el ledger, no el saldo que muestra Anthropic.
+  try {
+    const s = escribirSaldo();
+    const aprox = s.estimado ? ' (aprox.: hay pedidos de antes del 11/10 sin la clave anotada)' : '';
+    for (const c of s.claves) {
+      if (c.nombre === 'principal') console.log(`  · clave del plan: gastado ${usd(c.gastadoUsd)} · quedan ${usd(c.quedanUsd)} de ${usd(c.creditoUsd)}${aprox}`);
+      else if (c.nombre === 'prestada') console.log(`  · clave prestada (vence el ${c.hasta.slice(6, 8)}/${c.hasta.slice(4, 6)}): gastado ${usd(c.gastadoUsd)}${c.agotada ? ' · sin saldo' : ''}${c.vencida ? ' · vencida' : ''}`);
+      else console.log(`  · clave ${c.nombre}: gastado ${usd(c.gastadoUsd)}`);
+    }
+  } catch (e) { console.log(`  · no pude armar el gasto por clave: ${String(e?.message ?? e).split(/\r?\n/)[0]}`); }
 
   let tarea = { agendada: false };
   try { tarea = leerEstadoTarea(psRun(comandoEstadoTarea(), { timeout: 30000 })); } catch (e) { tarea = { agendada: false, error: String(e?.message ?? e).split(/\r?\n/)[0] }; }

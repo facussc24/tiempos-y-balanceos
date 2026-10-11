@@ -25,7 +25,7 @@ export function msLocal(texto) {
 export function horaLocal(iso) {
   const ms = Date.parse(iso ?? '')
   if (!Number.isFinite(ms)) return null
-  const d = new Date(ms)
+  const d = new Date(Math.round(ms / 60_000) * 60_000) // al minuto: 16:59:59 se lee 17:00
   return `${dos(d.getHours())}:${dos(d.getMinutes())}`
 }
 
@@ -41,7 +41,9 @@ export function armarCupo(limites) {
   const ventana = (kind) => {
     const l = lista.find((x) => x && x.kind === kind)
     if (!l || typeof l.percentUsed !== 'number') return null
-    return { pct: l.percentUsed, tramo: tramo(l.percentUsed), renueva: horaLocal(l.resetsAt) }
+    const renuevaMs = Date.parse(l.resetsAt ?? '')
+    // `renuevaMs`: para que el dibujo le ponga el día a la ventana de la semana («renueva vie 16/10 13:00»)
+    return { pct: l.percentUsed, tramo: tramo(l.percentUsed), renueva: horaLocal(l.resetsAt), renuevaMs: Number.isFinite(renuevaMs) ? renuevaMs : null }
   }
   return { cincoHoras: ventana('five_hour'), semana: ventana('seven_day') }
 }
@@ -116,22 +118,32 @@ export function leerHora(texto, ahora, sesion) {
   }
 }
 
-// ledger_AAAA-MM.jsonl: una línea JSON por llamada ({ ts, tarea, modelo, costoUsd, ... }).
-// Una línea rota se saltea y se cuenta: el tablero no se cae por un write a medias.
-export function leerLedger(texto, hoy) {
-  if (texto == null) return { hoy: null, ciclo: null, llamadas: null, rotas: 0 }
-  const r = { hoy: 0, ciclo: 0, llamadas: 0, rotas: 0 }
-  for (const linea of texto.split('\n')) {
-    if (!linea.trim()) continue
-    let fila
-    try { fila = JSON.parse(linea) } catch { r.rotas += 1; continue }
-    const costo = Number(fila?.costoUsd)
-    if (!Number.isFinite(costo)) { r.rotas += 1; continue }
-    r.llamadas += 1
-    r.ciclo += costo
-    if (typeof fila.ts === 'string' && fila.ts.startsWith(hoy)) r.hoy += costo
+// saldo.json: el gasto de la API del ciclo, separado por clave. Lo deja scripts/_lib/claudeApi.mjs después de cada
+// pedido (y `node scripts/_claude.mjs --check`): acá no se suma nada, se lee. El dueño, 11/10/2026: «los dólares de la
+// api no los entiendo, ¿no era más fácil poner disponible, gastado, y separar entre cada api?».
+//   { ciclo: { proximo: 'AAAA-MM-DD' }, estimado, claves: [{ nombre: 'principal', gastadoUsd, creditoUsd, quedanUsd },
+//     { nombre: 'prestada', hasta: 'AAAAMMDD', gastadoUsd, agotada }, { nombre: <otra>, gastadoUsd }] }
+// `viejo`: el ciclo del resumen ya se renovó y nadie gastó todavía (el resumen se rehace con el próximo pedido).
+// Una prestada vencida no se muestra; «vencida» se decide contra HOY, no contra el día en que se escribió el archivo.
+export function leerSaldo(texto, hoy) {
+  if (texto == null) return null
+  let datos
+  try { datos = JSON.parse(texto) } catch { return null }
+  const claves = Array.isArray(datos?.claves) ? datos.claves.filter((c) => c && typeof c === 'object') : null
+  if (!claves) return null
+  const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null)
+  const proximo = /^\d{4}-\d{2}-\d{2}$/.test(datos?.ciclo?.proximo ?? '') ? datos.ciclo.proximo : null
+  const hoyPegado = String(hoy ?? '').replaceAll('-', '')
+  const p = claves.find((c) => c.nombre === 'principal')
+  return {
+    estimado: datos.estimado === true,
+    renueva: proximo ? `${proximo.slice(8, 10)}/${proximo.slice(5, 7)}` : null,
+    viejo: proximo != null && hoy != null && proximo <= hoy,
+    plan: p && num(p.gastadoUsd) != null ? { gastado: p.gastadoUsd, quedan: num(p.quedanUsd), credito: num(p.creditoUsd) } : null,
+    prestadas: claves
+      .filter((c) => c.nombre === 'prestada' && /^\d{8}$/.test(c.hasta ?? '') && c.hasta >= hoyPegado)
+      .map((c) => ({ hasta: `${c.hasta.slice(6, 8)}/${c.hasta.slice(4, 6)}`, gastado: num(c.gastadoUsd) ?? 0, agotada: c.agotada === true })),
   }
-  return r
 }
 
 // Fecha de modificación de un stat de $.fs.stat: el extracto dice `mtimeMs` (número);
@@ -145,16 +157,35 @@ export function msModificado(stat) {
   return Number.isFinite(ms) ? ms : null
 }
 
-// nocturno.json: se muestra lo que se conoce del formato (la lista `prioridades`) y la
-// fecha de modificación del archivo; los demás campos no se adivinan (ver A VERIFICAR)
+// nocturno.json: lo que dejó la tarea automática de la madrugada (scripts/_nocturno.mjs, 06:30). Se dice si corrió o
+// no y por qué, con palabras que se entiendan sin conocer el programa (el dueño, 11/10/2026, sobre «noche 2026-10-11 ·
+// 0 prioridades»: «lo de noche no se entiende tampoco»).
+//   { cuandoMs, corrio, motivo, cortada, pasos, conError, paraMirar, costoUsd }
+// `cuandoMs` sale de `inicio` ('AAAA-MM-DD HH:MM:SS', hora local) y, si falta, de la fecha del archivo.
+// `motivo`: por qué no arrancó, en corto; un texto que no se reconoce va recortado, tal cual.
 export function leerNoche(texto, stat) {
   if (texto == null) return null
   let datos
   try { datos = JSON.parse(texto) } catch { return null }
-  const ms = msModificado(stat)
+  if (!datos || typeof datos !== 'object') return null
+  const pasos = Array.isArray(datos.pasos) ? datos.pasos.filter((p) => p && typeof p === 'object') : []
+  const corridos = pasos.filter((p) => p.estado === 'ok' || p.estado === 'error')
+  const noArranco = typeof datos.noArranco === 'string' ? datos.noArranco.trim() : ''
+  let motivo = null
+  if (noArranco) {
+    motivo = /presupuesto|tope/i.test(noArranco) ? 'la API pasó su tope de gasto'
+      : /clave/i.test(noArranco) ? 'falta la clave de la API'
+        : noArranco.length > 60 ? noArranco.slice(0, 59).trimEnd() + '…' : noArranco
+  }
   return {
-    fecha: ms == null ? null : fechaLocal(ms),
-    prioridades: Array.isArray(datos?.prioridades) ? datos.prioridades.length : null,
+    cuandoMs: msLocal(datos.inicio) ?? msModificado(stat),
+    corrio: !noArranco,
+    motivo,
+    cortada: !noArranco && Boolean(datos.corte),
+    pasos: corridos.length,
+    conError: corridos.filter((p) => p.estado === 'error').length,
+    paraMirar: Array.isArray(datos.prioridades) ? datos.prioridades.length : null,
+    costoUsd: typeof datos.costoUsd === 'number' && Number.isFinite(datos.costoUsd) ? datos.costoUsd : null,
   }
 }
 
@@ -166,14 +197,13 @@ export async function leerEstado(fs, reloj, vivo = {}) {
   const casa = vivo.casa ?? '~/.claude'
   const repo = vivo.repo ?? '.'
   const nocturno = `${repo}/.claude/state/nocturno.json`
-  const [spawns, spawnsMod, hora, ledger, noche, nocheStat, enCurso] = await Promise.all([
+  const [spawns, spawnsMod, hora, saldo, noche, nocheStat] = await Promise.all([
     fs.leer(`${casa}/.agent-spawns.log`),
     fs.leer(`${casa}/mods-log/presupuesto-agentes.log`),
     fs.leer(`${casa}/.trabajar-hasta.json`),
-    fs.leer(`${repo}/.sgc-cache/api/ledger_${hoy.slice(0, 7)}.jsonl`),
+    fs.leer(`${repo}/.sgc-cache/api/saldo.json`),
     fs.leer(nocturno),
     fs.stat(nocturno),
-    fs.listar(`${repo}/.sgc-cache/api/en-curso`), // carpeta PROPUESTA (borrador §4): hoy no existe → «—»
   ])
   return {
     ahora,
@@ -181,7 +211,7 @@ export async function leerEstado(fs, reloj, vivo = {}) {
     cupo: armarCupo(vivo.limites),
     agentes: { ...juntarAgentes(leerAgentes(spawns, ahora), leerAgentesMod(spawnsMod, ahora)), corriendo: vivo.corriendo ?? null },
     hora: leerHora(hora, ahora, vivo.sesion),
-    api: { ...leerLedger(ledger, hoy), mes: hoy.slice(0, 7), enCurso: Array.isArray(enCurso) ? enCurso.length : null },
+    api: leerSaldo(saldo, hoy),
     noche: leerNoche(noche, nocheStat),
   }
 }

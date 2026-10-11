@@ -1,8 +1,8 @@
 // vitest, sin la app: solo los módulos puros. Desde la raíz del repo:
 //   npx vitest run mods/tablero/tests/tablero.test.mjs --pool=threads
 import { describe, expect, test } from 'vitest'
-import { armarCupo, juntarAgentes, leerEstado, leerLedger, leerHora, leerAgentes, leerAgentesMod, msModificado, tramo } from '../hooks/estado.mjs'
-import { dibujar, textoPlano, faltan, usd, barra } from '../hooks/dibujo.mjs'
+import { armarCupo, juntarAgentes, leerEstado, leerSaldo, leerNoche, leerHora, leerAgentes, leerAgentesMod, msModificado, tramo } from '../hooks/estado.mjs'
+import { dibujar, textoPlano, faltan, usd, usdRedondo, barra, cuando } from '../hooks/dibujo.mjs'
 
 // 11/10/2026 20:50 en hora LOCAL: los archivos de la casa están en hora local y el test
 // construye «ahora» igual, así da lo mismo en qué zona corra
@@ -10,6 +10,26 @@ const AHORA = new Date(2026, 9, 11, 20, 50).getTime()
 const reloj = { ahora: async () => AHORA }
 const seg = (ms) => Math.floor(ms / 1000)
 const DONDE = { casa: '/casa', repo: '/repo', sesion: 'ses-1', nombreCasa: 'Barack Mercosul', proyecto: 'BarackMercosul', corriendo: 2 }
+
+// El resumen que deja la puerta de la API (scripts/_lib/claudeApi.mjs, saldoPorClave): los números del 11/10/2026
+const SALDO = {
+  actualizado: '2026-10-11 11:47:32',
+  ciclo: { desde: '2026-09-30', hasta: '2026-10-29', proximo: '2026-10-30', texto: 'ciclo del 30/09 al 29/10' },
+  estimado: true,
+  claves: [
+    { nombre: 'principal', gastadoUsd: 155.89, creditoUsd: 200, quedanUsd: 44.11 },
+    { nombre: 'prestada', hasta: '20261020', gastadoUsd: 107.04, agotada: true, vencida: false },
+  ],
+}
+// La noche del 11/10/2026, tal como quedó: no arrancó por el tope de gasto
+const NOCHE_NO = {
+  fecha: '2026-10-11', inicio: '2026-10-11 06:30:13', pasos: [], costoUsd: 0, prioridades: [],
+  noArranco: 'presupuesto del ciclo en rojo (ciclo del 30/09 al 29/10): $262.93 de $170. No arranco (--sin-tope para forzar).', corte: null,
+}
+const NOCHE_BIEN = {
+  fecha: '2026-10-11', inicio: '2026-10-11 06:30:13', costoUsd: 0.98, prioridades: [{}, {}, {}], noArranco: '', corte: null,
+  pasos: [{ nombre: 'datos', estado: 'ok' }, { nombre: 'preauditoria', estado: 'ok' }, { nombre: 'mails', estado: 'ok' }, { nombre: 'vigilante', estado: 'saltado' }],
+}
 
 const ARCHIVOS = {
   '/casa/.agent-spawns.log': [
@@ -22,51 +42,78 @@ const ARCHIVOS = {
     vieja: { hasta: '2026-10-09 07:30', cumplido: '2026-10-09 06:32', pedido: 'ya cerrada', fijado_ms: 1 },
     'ses-1': { hasta: '2026-10-11 23:00', pedido: 'te dejo modo full auto 48 hs seguidas', fijado_ms: 2 },
   }),
-  '/repo/.sgc-cache/api/ledger_2026-10.jsonl': [
-    '{"ts":"2026-10-11 01:59:33","tarea":"sesion:auditoria-tanda-12","modelo":"claude-opus-5-5","costoUsd":1.278272}',
-    '{"ts":"2026-10-11 02:00:10","tarea":"sesion:auditoria-tanda-10","modelo":"claude-opus-5-5","costoUsd":1.462904}',
-    '{"ts":"2026-10-03 10:00:00","tarea":"otra","modelo":"claude-haiku","costoUsd":0.5}',
-  ].join('\n') + '\n',
-  '/repo/.claude/state/nocturno.json': JSON.stringify({ prioridades: [{}, {}, {}, {}] }),
+  '/repo/.sgc-cache/api/saldo.json': JSON.stringify(SALDO),
+  '/repo/.claude/state/nocturno.json': JSON.stringify(NOCHE_NO),
 }
-const CARPETAS = { '/repo/.sgc-cache/api/en-curso': [{ name: 'a.json' }, { name: 'b.json' }] }
 
 const fsFalso = (archivos = {}, carpetas = {}) => ({
   leer: async (ruta) => archivos[ruta] ?? null,
   stat: async (ruta) => (ruta in archivos ? { mtimeMs: AHORA - 22 * 3600_000 } : null), // 10/10 22:50
   listar: async (ruta) => carpetas[ruta] ?? null,
 })
+const EN_5_DIAS = new Date(2026, 9, 16, 13, 0).getTime() // viernes 16/10 13:00
 const LIMITES = [
   { kind: 'five_hour', percentUsed: 62, resetsAt: new Date(AHORA + 130 * 60_000).toISOString() },
   { kind: 'seven_day', percentUsed: 31 },
 ]
+const LIMITES_CON_DIA = [LIMITES[0], { kind: 'seven_day', percentUsed: 60, resetsAt: new Date(EN_5_DIAS - 338).toISOString() }] // 12:59:59,662, como lo da la app
 
 describe('verde: con los archivos de ejemplo da los números esperados', () => {
   test('leerEstado junta todo', async () => {
-    const s = await leerEstado(fsFalso(ARCHIVOS, CARPETAS), reloj, { ...DONDE, limites: LIMITES })
-    expect(s.cupo.cincoHoras).toMatchObject({ pct: 62, tramo: 'ambar', renueva: '23:00' })
-    expect(s.cupo.semana).toMatchObject({ pct: 31, tramo: 'verde', renueva: null })
+    const s = await leerEstado(fsFalso(ARCHIVOS), reloj, { ...DONDE, limites: LIMITES })
+    expect(s.cupo.cincoHoras).toMatchObject({ pct: 62, tramo: 'ambar', renueva: '23:00', renuevaMs: AHORA + 130 * 60_000 })
+    expect(s.cupo.semana).toMatchObject({ pct: 31, tramo: 'verde', renueva: null, renuevaMs: null })
     expect(s.agentes).toEqual({ puntos: 8, lanzados: 3, tope: 40, corriendo: 2 })
     expect(s.hora).toMatchObject({ hasta: '23:00', faltanMin: 130, propia: true })
-    expect(s.api.hoy).toBeCloseTo(2.741176, 6)
-    expect(s.api.ciclo).toBeCloseTo(3.241176, 6)
-    expect(s.api).toMatchObject({ llamadas: 3, rotas: 0, enCurso: 2, mes: '2026-10' })
-    expect(s.noche).toEqual({ fecha: '2026-10-10', prioridades: 4 })
+    expect(s.api).toEqual({
+      estimado: true, renueva: '30/10', viejo: false,
+      plan: { gastado: 155.89, quedan: 44.11, credito: 200 },
+      prestadas: [{ hasta: '20/10', gastado: 107.04, agotada: true }],
+    })
+    expect(s.noche).toEqual({
+      cuandoMs: new Date(2026, 9, 11, 6, 30).getTime(), corrio: false, motivo: 'la API pasó su tope de gasto',
+      cortada: false, pasos: 0, conError: 0, paraMirar: 0, costoUsd: 0,
+    })
   })
 
   test('dibujar pone los textos esperados, cada uno en su fila', async () => {
-    const s = await leerEstado(fsFalso(ARCHIVOS, CARPETAS), reloj, { ...DONDE, limites: LIMITES })
+    const s = await leerEstado(fsFalso(ARCHIVOS), reloj, { ...DONDE, limites: LIMITES })
     const t = textoPlano(dibujar(s, undefined, { ancho: 120 }))
     expect(t).toContain('Barack Mercosul · BarackMercosul')
     expect(t).toContain('5 h 62 % ██████░░░░ renueva 23:00')
     expect(t).toContain('semana 31 % ███░░░░░░░')
-    expect(t).toContain('corren 2 · 10 min 8/40 pts')
+    expect(t).toContain('corren 2 · últimos 10 min 8/40 pts')
     expect(t).toContain('laburando hasta 23:00 · faltan 2 h 10')
     expect(t).toContain('«te dejo modo full auto 48 hs seguidas»')
-    expect(t).toContain('hoy US$ 2,74 · octubre US$ 3,24 · 3 llamadas · en curso 2')
-    expect(t).toContain('2026-10-10 · 4 prioridades')
+    // la plata de la API: por clave, gastado y lo que queda; «≈» porque parte de la cuenta es estimada
+    expect(t).toContain('plan: gastado US$ 156 · quedan ≈ US$ 44 hasta el 30/10 · prestada: agotada')
+    expect(t).toContain('tarea automática de hoy 06:30 no corrió · la API pasó su tope de gasto')
+    // lo que el dueño no entendió el 11/10/2026 no vuelve a la banda
+    for (const viejo of ['llamadas', 'en curso', 'prioridades', 'octubre']) expect(t).not.toContain(viejo)
     // en una banda angosta el pedido se recorta, la banda no
     expect(textoPlano(dibujar(s, undefined, { ancho: 60 }))).toContain('«te dejo modo full…')
+  })
+
+  test('la ventana de la semana lleva el día; con la banda angosta, sin la fecha; la de 5 h solo la hora', async () => {
+    const s = await leerEstado(fsFalso(ARCHIVOS), reloj, { ...DONDE, limites: LIMITES_CON_DIA })
+    const ancha = textoPlano(dibujar(s, undefined, { ancho: 120 }))
+    expect(ancha).toContain('semana 60 % ██████░░░░ renueva vie 16/10 13:00')
+    expect(ancha).toContain('5 h 62 % ██████░░░░ renueva 23:00 ·')
+    const angosta = textoPlano(dibujar(s, undefined, { ancho: 100 }))
+    expect(angosta).toContain('semana 60 % ██████░░░░ renueva vie 13:00')
+    expect(angosta).not.toContain('16/10')
+  })
+
+  test('ninguna fila pasa del ancho de la banda con los datos reales del 11/10 (se partiría en dos renglones)', async () => {
+    const s = await leerEstado(fsFalso(ARCHIVOS), reloj, { ...DONDE, limites: LIMITES_CON_DIA })
+    const texto = (n) => (typeof n === 'string' ? n : (n.children ?? []).map(texto).join(''))
+    for (const ancho of [93, 100, 120]) {
+      // la fila del corte se adapta sola (recorta el pedido); las demás tienen que entrar con 2 espacios entre celdas
+      for (const fila of dibujar(s, undefined, { ancho }).children.filter((f) => f.type === 'Box')) {
+        const largo = fila.children.map(texto).join('  ').length
+        expect(largo, `ancho ${ancho}: ${fila.children.map(texto).join('  ')}`).toBeLessThanOrEqual(ancho)
+      }
+    }
   })
 
   test('tramos y formatos', () => {
@@ -74,8 +121,24 @@ describe('verde: con los archivos de ejemplo da los números esperados', () => {
     expect(faltan(130)).toBe('2 h 10')
     expect(faltan(5)).toBe('5 min')
     expect(usd(38.7)).toBe('US$ 38,70')
+    expect(usdRedondo(155.89)).toBe('US$ 156')
+    expect(usdRedondo(44.11)).toBe('US$ 44')
     expect(barra(100)).toBe('██████████')
     expect(barra(0)).toBe('░░░░░░░░░░')
+  })
+
+  test('cuando: hoy, mañana, ayer y, si no, el día de la semana con su fecha (o sin ella, en corto)', () => {
+    const en = (...a) => new Date(...a).getTime()
+    expect(cuando(en(2026, 9, 11, 23, 0), AHORA)).toBe('hoy 23:00')
+    expect(cuando(en(2026, 9, 12, 1, 0), AHORA)).toBe('mañana 01:00')
+    expect(cuando(en(2026, 9, 10, 6, 30), AHORA)).toBe('ayer 06:30')
+    expect(cuando(EN_5_DIAS, AHORA)).toBe('vie 16/10 13:00')
+    expect(cuando(EN_5_DIAS, AHORA, { corto: true })).toBe('vie 13:00')
+    expect(cuando(en(2026, 9, 7, 6, 30), AHORA)).toBe('mié 07/10 06:30')
+    // la app da 12:59:59,662: se lee 13:00
+    expect(cuando(EN_5_DIAS - 338, AHORA)).toBe('vie 16/10 13:00')
+    expect(cuando(null, AHORA)).toBeNull()
+    expect(cuando(EN_5_DIAS, null)).toBeNull()
   })
 
   test('msModificado acepta mtimeMs (número) o mtime (Date o ISO); null si no hay', () => {
@@ -87,12 +150,78 @@ describe('verde: con los archivos de ejemplo da los números esperados', () => {
   })
 })
 
+describe('la plata de la API: lo que se lee de saldo.json', () => {
+  const dibujo = (api) => textoPlano(dibujar({ ahora: AHORA, api }, undefined, { ancho: 120 }))
+  test('con todo anotado por clave no lleva «≈»; una prestada con saldo dice lo gastado y cuándo vence', () => {
+    const api = leerSaldo(JSON.stringify({
+      ciclo: { proximo: '2026-10-30' }, estimado: false,
+      claves: [{ nombre: 'principal', gastadoUsd: 60.5, creditoUsd: 200, quedanUsd: 139.5 }, { nombre: 'prestada', hasta: '20261020', gastadoUsd: 30, agotada: false }],
+    }), '2026-10-11')
+    expect(dibujo(api)).toContain('plan: gastado US$ 61 · quedan US$ 140 hasta el 30/10 · prestada: gastado US$ 30 vence el 20/10')
+    expect(dibujo(api)).not.toContain('≈')
+  })
+  test('una prestada vencida no se muestra (se decide contra hoy, no contra el día en que se escribió el archivo)', () => {
+    const texto = JSON.stringify({ ...SALDO, claves: [SALDO.claves[0], { nombre: 'prestada', hasta: '20261020', gastadoUsd: 107.04, agotada: true, vencida: false }] })
+    expect(leerSaldo(texto, '2026-10-20').prestadas).toHaveLength(1)   // el último día todavía cuenta
+    expect(leerSaldo(texto, '2026-10-21').prestadas).toEqual([])
+    expect(dibujo(leerSaldo(texto, '2026-10-21'))).not.toContain('prestada')
+  })
+  test('cuando el ciclo ya renovó y nadie gastó todavía, no muestra los números del ciclo viejo', () => {
+    const api = leerSaldo(JSON.stringify(SALDO), '2026-10-30')
+    expect(api.viejo).toBe(true)
+    const t = dibujo(api)
+    expect(t).toContain('plan: renovó el 30/10 · todavía sin gasto anotado')
+    expect(t).not.toContain('US$ 156')
+  })
+  test('un saldo.json roto, sin claves o sin la del plan: «sin datos», no un número inventado', () => {
+    expect(leerSaldo('{ rot', '2026-10-11')).toBeNull()
+    expect(leerSaldo(JSON.stringify({ ciclo: {} }), '2026-10-11')).toBeNull()
+    expect(leerSaldo(null, '2026-10-11')).toBeNull()
+    const sinPlan = leerSaldo(JSON.stringify({ claves: [{ nombre: 'prestada', hasta: '20261020', gastadoUsd: 5, agotada: false }] }), '2026-10-11')
+    expect(sinPlan.plan).toBeNull()
+    expect(dibujo(sinPlan)).toContain('sin datos')
+    const sinNumero = leerSaldo(JSON.stringify({ claves: [{ nombre: 'principal', gastadoUsd: 'mucho' }] }), '2026-10-11')
+    expect(sinNumero.plan).toBeNull()
+  })
+})
+
+describe('la tarea automática de la madrugada: lo que se lee de nocturno.json', () => {
+  const dibujo = (noche) => textoPlano(dibujar({ ahora: AHORA, noche }, undefined, { ancho: 120 }))
+  test('corrió bien: lo dice, con lo que dejó para mirar y lo que gastó; los pasos salteados no cuentan', () => {
+    const n = leerNoche(JSON.stringify(NOCHE_BIEN), null)
+    expect(n).toMatchObject({ corrio: true, motivo: null, cortada: false, pasos: 3, conError: 0, paraMirar: 3, costoUsd: 0.98 })
+    expect(dibujo(n)).toContain('tarea automática de hoy 06:30 corrió bien · dejó 3 cosas para mirar · US$ 0,98')
+  })
+  test('corrió con pasos en error, o se cortó sola: lo dice en vez de «bien»', () => {
+    const conError = leerNoche(JSON.stringify({ ...NOCHE_BIEN, pasos: [{ estado: 'ok' }, { estado: 'error' }, { estado: 'error' }], prioridades: [] }), null)
+    expect(dibujo(conError)).toContain('corrió con 2 de 3 pasos con error · no dejó nada para mirar')
+    const cortada = leerNoche(JSON.stringify({ ...NOCHE_BIEN, corte: { motivo: 'tope por corrida' }, prioridades: [{}] }), null)
+    expect(dibujo(cortada)).toContain('se cortó antes de terminar · dejó 1 cosa para mirar')
+  })
+  test('no arrancó: el motivo en corto; uno que no se reconoce va tal cual, recortado', () => {
+    expect(leerNoche(JSON.stringify({ ...NOCHE_NO, noArranco: 'falta la clave ANTHROPIC_API_KEY' }), null).motivo).toBe('falta la clave de la API')
+    const raro = leerNoche(JSON.stringify({ ...NOCHE_NO, noArranco: 'x'.repeat(200) }), null)
+    expect(raro.motivo).toHaveLength(60)
+    expect(raro.motivo.endsWith('…')).toBe(true)
+    expect(dibujo(leerNoche(JSON.stringify({ ...NOCHE_NO, noArranco: 'sin red' }), null))).toContain('no corrió · sin red')
+  })
+  test('sin `inicio` usa la fecha del archivo; de ayer dice «ayer»; roto o vacío da null', () => {
+    const sinInicio = leerNoche(JSON.stringify({ ...NOCHE_BIEN, inicio: undefined }), { mtimeMs: AHORA - 22 * 3600_000 })
+    expect(dibujo(sinInicio)).toContain('tarea automática de ayer 22:50')
+    expect(dibujo(leerNoche(JSON.stringify({ ...NOCHE_BIEN, inicio: '2026-10-10 06:30:00' }), null))).toContain('de ayer 06:30')
+    expect(dibujo(leerNoche(JSON.stringify({ ...NOCHE_BIEN, inicio: undefined }), null))).toContain('sin fecha')
+    expect(leerNoche('{ rot', null)).toBeNull()
+    expect(leerNoche('null', null)).toBeNull()
+    expect(leerNoche(null, null)).toBeNull()
+  })
+})
+
 describe('rojo: sin archivos no rompe, una línea rota se saltea', () => {
   test('sin ningún archivo: «sin datos» en cada fila y nada tira', async () => {
     const s = await leerEstado(fsFalso(), reloj, { sesion: 'ses-1' })
     expect(s.hora).toBeNull()
     expect(s.noche).toBeNull()
-    expect(s.api).toMatchObject({ hoy: null, ciclo: null, llamadas: null, rotas: 0, enCurso: null })
+    expect(s.api).toBeNull()
     expect(s.agentes).toMatchObject({ puntos: null, lanzados: null, corriendo: null })
     expect(s.cupo).toEqual({ cincoHoras: null, semana: null })
     const t = textoPlano(dibujar(s))
@@ -102,17 +231,6 @@ describe('rojo: sin archivos no rompe, una línea rota se saltea', () => {
 
   test('sin estado (todavía no se leyó nada) también dibuja', () => {
     expect(textoPlano(dibujar(null))).toContain('sin datos')
-  })
-
-  test('un ledger con una línea rota se saltea esa línea y cuenta el resto', () => {
-    const texto = [
-      '{"ts":"2026-10-11 01:00:00","costoUsd":1}',
-      '{"ts":"2026-10-11 02:00:00","cost',          // write a medias
-      '',
-      '{"ts":"2026-10-11 03:00:00","costoUsd":"x"}', // costo que no es número
-      '{"ts":"2026-10-11 04:00:00","costoUsd":2}',
-    ].join('\n')
-    expect(leerLedger(texto, '2026-10-11')).toEqual({ hoy: 3, ciclo: 3, llamadas: 2, rotas: 2 })
   })
 
   test('un .trabajar-hasta.json roto o sin vigente da null', () => {

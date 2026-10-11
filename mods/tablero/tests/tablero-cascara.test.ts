@@ -64,6 +64,25 @@ test('sin archivos y sin lectura de cupo la banda igual se dibuja («sin datos»
   expect(await ui.find({ type: 'Text', text: 'lo de otro mod' })).toBeDefined()
 })
 
+test('la plata de la API por clave y la tarea de la madrugada salen de sus dos archivos, dichas en claro', async ($, on) => {
+  const saldo = { ciclo: { proximo: '2026-10-30' }, estimado: true, claves: [{ nombre: 'principal', gastadoUsd: 155.89, creditoUsd: 200, quedanUsd: 44.11 }, { nombre: 'prestada', hasta: '20261020', gastadoUsd: 107.04, agotada: true }] }
+  const noche = { inicio: '2026-10-11 06:30:13', pasos: [], prioridades: [], costoUsd: 0, noArranco: 'presupuesto del ciclo en rojo: $262.93 de $170' }
+  const { clock } = armar(on, {
+    'C:/Dev/Proyecto/.sgc-cache/api/saldo.json': JSON.stringify(saldo),
+    'C:/Dev/Proyecto/.claude/state/nocturno.json': JSON.stringify(noche),
+  })
+  await $.session.start({ surface: 'desktop', isInteractive: true, cwd: 'C:/Dev/Proyecto' })
+  await clock.settle()
+  const ui = await $.ui.mount({ ...BANDA, surface: 'desktop' })
+  expect(await ui.find({ type: 'Text', text: 'US$ 156' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: 'US$ 44' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: '· quedan ≈' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: 'agotada' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: 'hoy 06:30' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: 'no corrió' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: '· la API pasó su tope de gasto' })).toBeDefined()
+})
+
 test('antes de la primera lectura (sin session.start) la banda no rompe', async ($, on) => {
   armar(on)
   const ui = await $.ui.mount({ ...BANDA, surface: 'desktop' })
