@@ -13,23 +13,17 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
-- **10-11/10 — Una tanda de hijas se mide por el cupo SEMANAL y por el de 5 h, cada hora: con tres o cuatro sesiones a la vez el semanal subía ~4 puntos por hora y Fak la cortó a la 1** (*«ya usamos demasiado de la semana»*); cerca del fin del cupo o del contexto no se lanzan agentes; **y una sesión con herramientas no se pasa a los créditos de la API** (`claude -p` con clave: «Credit balance is too low»). Graduado a `trabajar-hasta-la-hora.md` punto 5, al prompt v7 (dos hijas, tope 60/65 %) y a `reference_api_claude_clave_y_ciclo`.
+- **10-11/10 — Una tanda de hijas se mide por el cupo SEMANAL y por el de 5 h, cada hora: con tres o cuatro sesiones a la vez el semanal subía ~4 puntos por hora y Fak la cortó a la 1** (*«ya usamos demasiado de la semana»*). Graduado a `trabajar-hasta-la-hora.md` punto 5, al prompt v7 (dos hijas, tope 60/65 %) y a `reference_api_claude_clave_y_ciclo` (`claude -p` no va por créditos).
 
-- **10-11/10 — Lo que la API afirma de un dato que no vio se mide antes de codear** (P6, dos veces; la última, la S de la causa por la del modo de falla). Graduado a `feedback_la_respuesta_conocida_se_mide_antes_del_gate`.
+- **11/10 — «La API piensa, yo integro» funciona, pero lo que escribe la API se AUDITA antes de commitear: el auditor Opus encontró 3 errores reales en la primera tanda y 2 en la segunda.** Y con esfuerzo alto el pensamiento gasta el tope de salida: 16 respuestas cortadas y tiradas (US$ 20) hasta medir el tope real (128.000) y guardar lo cortado. Graduado a `api-claude.md` §2 y §5, al aplicador y a `project_tanda_orquestador_2026-10-10_donde_quedo`; lo que la API afirma de un dato que no vio se mide antes de codear (`feedback_la_respuesta_conocida_se_mide_antes_del_gate`).
 
 - **09-10/10 — Un control que suma trabajo a un chequeo con tope de tiempo se mide en el MODO en que corre ese chequeo** (el detector pasó de 55 a 90 s y el cierre leyó «vacío» como limpio), **y el auditor Opus no se saltea** (un error real en 3 de 4 cambios; el 11/10 cazó 9 escrituras que pasaban en la primera versión de HOY-16). Graduado al auditor (`metodo_correr_no_solo_leer`) y a `_sinFirmaIA.py`.
 
-- **09/10 — El control de la PC de Fak queda prendido hasta cerrar la sesión: antes de pedirlo se le dice, y al terminar se avisa en el momento; un pedido largo a la API va por streaming y sin fallback.** Graduado a `feedback_control_de_la_pc_no_se_suelta_solo` y `llamarLargo()`.
-
-- **09/10 — Un despertador que nunca se vio llegar no existe: se cuenta en el registro ANTES de confiarle una noche.** Graduado a `trabajar-hasta-la-hora.md`.
-
-- **08/10 — Lo que cambia otro modelo (Gemini) en un documento se audita como contenido, no como ortografía.** Graduado a `feedback_lo_que_cambia_otro_modelo_se_audita_como_contenido`.
+- **09/10 — Un despertador que nunca se vio llegar no existe, y el control de la PC de Fak queda prendido hasta cerrar la sesión.** Graduado a `trabajar-hasta-la-hora.md` y `feedback_control_de_la_pc_no_se_suelta_solo`; lo de Gemini (08/10), a `feedback_lo_que_cambia_otro_modelo_se_audita_como_contenido`.
 
 - **08/10 — Ningún documento dice que lo hizo Claude o una IA, y al tocar un documento ajeno se revisa ENTERO, no solo mis celdas** (el listado de HO decía "Claude" en CREADO POR desde junio y tenía una pestaña oculta «para el próximo Claude»; Fak: *"es un error gravísimo"*). Graduado a `core-prohibiciones.md` §9, `_sinFirmaIA.py`, `firma-ia-guard` y chequeo 9 del cierre-guard.
 
 - **08/10 — Los créditos de API del plan Max NO cubren Claude Code: solo los gasta código que llama a la API con la clave; los precios se leen de la tabla oficial, no de un informe.** Graduado a `api-claude.md` y al vigilante `_vigilarPrecios.mjs`.
-
-- **07/10 — Antes de decir «no puedo leer el correo de X», se busca en la nube del equipo; no se afirma de memoria** (los mails de Carlos ya suben a la nube). Graduado a `_mails.py --buscar` / `--buzones`, al chequeo 8 del cierre-guard y a la memoria `reference_acceso_mails_outlook`.
 
 - **07/10 — «El estándar» se COMPARA contra una hoja real de la casa (la HO de Excel), no contra lo que dejó la sesión anterior** (Fak: *"te lo dije 300 veces, no es el estándar que decidimos"*; era el ARMADO: plan debajo de las fotos, ciclo de control al lado). Graduado al canon 4.5 y a `bloque_plan()`.
 
@@ -87,7 +81,7 @@ incidente vive en los snapshots.
 
 - **09/10 — Una hoja para una reunión se arma DESPUÉS de buscar qué contesta un papel, en la voz de Fak y para mostrarse** (*"preguntaste cosas que ya sabemos... que no parezca IA"*). Graduado a la memoria `feedback_hoja_de_reunion_para_mostrar`.
 
-- **08-10/10 — Fak SUGIERE (sus números y reglas anteriores son DATOS, no límites) y yo decido con evidencia: no le devuelvo su lista textual, y si veo una forma mejor se la digo como «mirá, creo que lo que querés es esto»** (*"la caja soy yo... eficiencia es trabajar de la mejor forma, no ahorrar tokens"*; *"todo lo que digo son sugerencias sin evidencia... no dudás ni un poco de lo que pido"*), **y el código es sagrado: el tamaño del cambio decide el camino**. Graduado a `techo-agentes.md`, `codigo-madre.md`, la cola y `feedback_la_caja_soy_yo_pensar_fuera_de_lo_que_dijo_fak`.
+- **08-10/10 — Fak SUGIERE (sus números y reglas son DATOS, no límites) y yo decido con evidencia; si veo una forma mejor se la digo como «mirá, creo que lo que querés es esto»** (*"la caja soy yo... eficiencia es trabajar de la mejor forma, no ahorrar tokens"*), **y el código es sagrado: el tamaño del cambio decide el camino**. Graduado a `techo-agentes.md`, `codigo-madre.md` y `feedback_la_caja_soy_yo_pensar_fuera_de_lo_que_dijo_fak`.
 
 - **08/10 — Mi Claude para OTRA persona va filtrado y con SU identidad** (a Carlos la memoria cruda le dejó "el usuario es Facundo"); y una pregunta de Fak no es una orden de diseño. Graduado a `validarTexto()` de `tools/claude-area/persona/armar.mjs` y a `project_claude_para_pedro`.
 
