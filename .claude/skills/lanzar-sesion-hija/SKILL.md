@@ -62,7 +62,12 @@ B.0. **El modo con el que va a arrancar, ANTES de lanzar.** Una corrida de tarea
    ```
    `--lanzada` cambia la línea 1 del ARRANQUE: **NO entrar en modo plan** (nadie aprobaría el plan: la hija de la
    madrugada del 10/10 quedó parada con dos `ExitPlanMode`). El QUÉ lo aprueba el encargo. El modelo pedido se
-   escribe en el cuerpo («Modelo: Opus 5.5») para que la hija sepa en qué corre.
+   escribe en el cuerpo («Modelo: Opus 5.5») para que la hija sepa en qué corre. **Desde el 10/10 22:30 (cola
+   P41b, commit `2574c13b`)**: si la sesión que arma el encargo tiene una hora vigente de `trabajar-hasta`, el
+   ARRANQUE suma el punto 2 con `node scripts/_lib/permisoGuard.mjs --heredar <madre>`: la hija se anota como
+   lanzada por esa sesión, hereda su hora (no fija una propia ni lanza latido: un entregable, un turno) y el hook
+   `permiso-guard` le contesta «no» a un cartel de permiso y lo anota en la lista de la madre. Quiénes se
+   anotaron: `node scripts/_lib/permisoGuard.mjs --heredadas`. Medido con las hijas 5 y 6 el 10/10.
 2. **La tarea**, manual: `mcp__scheduled-tasks__create_scheduled_task` con `taskId` kebab con fecha
    (`hija-<tema>-<AAAAMMDD>`), `prompt` = el texto del encargo **TAL CUAL**, `title` legible, sin `cronExpression`
    ni `fireAt`, `notifyOnCompletion: false` (ese aviso nunca se vio llegar: `trabajar-hasta-la-hora.md`).
