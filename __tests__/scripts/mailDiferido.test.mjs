@@ -133,6 +133,16 @@ describe('_mailEnviar.py: un solo envio, la hora fijada antes y solo con --a-las
         expect(codigo).not.toMatch(/x = sent\.GetFirst\(\)/);
         expect(codigo).toMatch(/if estado == 'salio':\s+return 4/);
     });
+    it('una bandera recortada no vale por --enviar, y la hora se le saca solo al borrador que se mandaba', () => {
+        expect(codigo).toMatch(/argparse\.ArgumentParser\([^\n]*allow_abbrev=False\)/);
+        const r = py([CIRCUITO, '--buscar', 'x', '--envi']);
+        if (!/No module named|ModuleNotFoundError|ImportError|AttributeError/.test(r.stderr)) {      // en el CI de Linux el circuito no importa (es de Windows)
+            expect(r.status).toBe(2);
+            expect(r.stderr).toMatch(/unrecognized arguments: --envi/);
+        }
+        expect(codigo).toContain('ns.CompareEntryIDs(str(b.EntryID or \'\'), id_del_borrador)');
+        expect(codigo).toMatch(/if es_este and mailDiferido\.hora_puesta\(b\):/);
+    });
     it('el registro de programados va a su archivo, no al de los borradores que lee el control del OK', () => {
         expect(codigo).toContain("'.mail-cache', 'programados.jsonl'");
         expect(codigo).not.toContain('borradores_claude.json');

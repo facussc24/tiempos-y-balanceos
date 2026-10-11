@@ -315,7 +315,9 @@ def _campos(item):
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description='Envia un borrador de Outlook con gate anti-duplicado.')
+    # allow_abbrev=False: una bandera recortada (--envi) no puede valer por --enviar; el control del OK de Fak
+    # (mail-guard) mira el texto del comando y una recortada se le escapaba (auditor, 11/10/2026).
+    ap = argparse.ArgumentParser(description='Envia un borrador de Outlook con gate anti-duplicado.', allow_abbrev=False)
     ap.add_argument('--buscar', help='texto del asunto del borrador a enviar')
     ap.add_argument('--id', help='EntryID exacto del borrador')
     ap.add_argument('--enviar', action='store_true', help='ejecuta (sin esto es dry-run)')
@@ -545,6 +547,7 @@ def main() -> int:
             return 1
         print(f"\n  Hora de salida fijada en el borrador y confirmada por dos vias: {mailDiferido.texto_aviso(cuando)}")
     antes_de_enviar = datetime.datetime.now()
+    id_del_borrador = str(it.EntryID or '')
 
     def ultimos_enviados(n=40):
         """Los enviados mas nuevos primero (ordenados por Outlook), para buscar ESTE mail sin recorrer toda la carpeta."""
@@ -563,7 +566,11 @@ def main() -> int:
     def sacar_hora_si_sigue_en_borradores():
         """Si el envio no llego a hacerse, el borrador quedo con la hora puesta: se la saca, o lo dice bien fuerte."""
         for b in mailDiferido.del_mismo_asunto(drafts.Items, cand['asunto'], normalizar_asunto):
-            if mailDiferido.hora_puesta(b):
+            try:        # solo ESTE borrador: otro del mismo asunto con una hora puesta a mano no se toca
+                es_este = bool(id_del_borrador) and bool(ns.CompareEntryIDs(str(b.EntryID or ''), id_del_borrador))
+            except Exception:
+                es_este = False
+            if es_este and mailDiferido.hora_puesta(b):
                 if mailDiferido.quitar(b):
                     print("  El borrador sigue en Borradores: le saque la hora programada, quedo como estaba.")
                 else:
