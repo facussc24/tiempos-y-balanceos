@@ -24,8 +24,10 @@
  * sigue con una lista inventada). Los avisos `<system-reminder>` se sacan del texto. Quedan afuera las
  * lineas de subagentes (`isSidechain`) y las carpetas `<uuid>/` de cada sesion (en ellas el primer "user"
  * es un encargo, no Fak). Un mensaje a mitad de turno pasa a ser el actual: la carga que venga despues se
- * le atribuye a el, que es lo ultimo que leyo el modelo, y no al que abrio el turno. Un adjunto en cola que
- * NO es de Fak corta el turno como un aviso.
+ * le atribuye a el, que es lo ultimo que leyo el modelo, y no al que abrio el turno. El `prompt` del
+ * adjunto puede ser texto o una lista de bloques (Fak pego una imagen): cuentan sus bloques de texto. Un
+ * adjunto en cola que NO es de Fak (una nota de tarea) NO abre turno nuevo: las cargas que siguen son del
+ * turno de Fak, pero salen con `mismoTurno: false` (11/10/2026: cortarlo dejaba cargas en "ninguna").
  *
  * VOLUMEN. Se descartan los archivos por `mtime` antes de abrirlos, y cada linea se prefiltra por texto
  * antes del JSON.parse (las lineas de resultados de herramientas son enormes y no sirven). El prefiltro
@@ -156,6 +158,10 @@ export function mensajeDeFak(obj, noEsDeFak) {
   return textoDeFak(obj.message, noEsDeFak);
 }
 
+/** El texto crudo del `prompt` de un adjunto en cola: el string, o sus bloques `text` si vino como lista (imagen pegada). */
+export const textoDePrompt = (p) => (typeof p === 'string' ? p
+  : Array.isArray(p) ? p.filter((b) => b && b.type === 'text').map((b) => String(b.text ?? '')).join('\n') : '');
+
 /**
  * ¿Es lo que Fak escribio a mitad de turno? Un adjunto en cola (`attachment.type: queued_command`) de origen
  * humano. El `origin.kind` puede venir arriba o adentro del adjunto; si falta, valen las reglas de siempre
@@ -164,7 +170,8 @@ export function mensajeDeFak(obj, noEsDeFak) {
 export function mensajeEnCola(obj, noEsDeFak) {
   if (!obj || obj.type !== 'attachment' || obj.isSidechain) return '';
   const adj = obj.attachment;
-  if (!adj || adj.type !== 'queued_command' || typeof adj.prompt !== 'string') return '';
+  // con una imagen pegada el prompt llega como LISTA de bloques: tirarla perdia 34 mensajes de Fak en 14 dias (11/10/2026)
+  if (!adj || adj.type !== 'queued_command' || (typeof adj.prompt !== 'string' && !Array.isArray(adj.prompt))) return '';
   const kind = obj.origin?.kind ?? adj.origin?.kind;
   if (kind !== undefined && kind !== null && kind !== 'human') return '';
   // el mismo filtro que un turno de Fak: sin avisos y sin lo que arranca como automatico
@@ -202,6 +209,7 @@ function sumarMensaje(est, obj, texto, { fecha, siguientes, vistos, aMitadDeTurn
   const mensaje = { fecha, sesion: est.id, texto, cargas: [], skillsAntes: [...est.skillsAntes], aMitadDeTurno };
   est.ultimo = mensaje;
   est.actual = mensaje;
+  est.interrumpido = false; // mensaje nuevo de Fak: turno limpio (nuevaSesion no lo trae: undefined vale false) 11/10/2026
   for (const c of est.pendientes) if (c.siguientes.length < siguientes) c.siguientes.push(texto);
   est.pendientes = est.pendientes.filter((c) => c.siguientes.length < siguientes);
   return mensaje;
@@ -238,9 +246,10 @@ export function procesarObjeto(est, obj, { noEsDeFak, siguientes = SIGUIENTES_PO
       salida.mensaje = sumarMensaje(est, obj, texto, { fecha, siguientes, vistos, aMitadDeTurno: true });
       return salida;
     }
-    // entro algo por la cola a mitad de turno que no es de Fak (un aviso de tarea): corta el turno como lo
-    // corta un aviso entre turnos, para no atribuirle a Fak la carga que venga despues.
-    if (typeof adj.prompt === 'string' && quitarAvisos(adj.prompt)) est.actual = null;
+    // entro por la cola algo que no es de Fak (una nota de tarea). A mitad de turno NO abre turno: el modelo
+    // sigue con el de Fak, asi que `actual` no se corta (cortarlo dejo en "ninguna" a 16 mensajes que si
+    // tenian cargas, 11/10/2026); se marca y la carga que siga sale con mismoTurno false. Lista o texto.
+    if (quitarAvisos(textoDePrompt(adj.prompt))) est.interrumpido = true;
     return salida;
   }
 
@@ -252,7 +261,8 @@ export function procesarObjeto(est, obj, { noEsDeFak, siguientes = SIGUIENTES_PO
         fecha, sesion: est.id, skill: c.skill, nombre: nombreCorto(c.skill),
         mensajeAnterior: est.ultimo ? est.ultimo.texto : null,
         fechaMensajeAnterior: est.ultimo ? est.ultimo.fecha : null,
-        mismoTurno: !!(est.actual && est.actual === est.ultimo),
+        // una nota de tarea a mitad de turno no le saca la carga al turno de Fak, pero si la certeza (11/10/2026)
+        mismoTurno: !!(est.actual && est.actual === est.ultimo && !est.interrumpido),
         siguientes: [],
       };
       if (est.actual) est.actual.cargas.push(c.skill);

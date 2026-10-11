@@ -246,7 +246,7 @@ describe('transcriptsFak · lo que Fak escribe a mitad de turno (adjuntos en col
     expect(r.cargas.find((c) => c.skill === 'arb-operar').siguientes).toEqual(['y de paso fijate el imds de esa pieza', 'gracias, listo']);
   });
 
-  it('en la sesion (rojo): un adjunto en cola que no es de Fak no suma mensaje y corta el turno; uno repetido no se cuenta dos veces', async () => {
+  it('en la sesion (rojo): un adjunto en cola que no es de Fak no suma mensaje ni corta el turno (la carga sale con mismoTurno false); uno repetido no se cuenta dos veces', async () => {
     const ruta = escribir('c/cola-rojo.jsonl', [
       humano('arrancá con el arb'),
       enCola('termino la tarea de fondo', { origin: { kind: 'task-notification' } }),
@@ -256,11 +256,61 @@ describe('transcriptsFak · lo que Fak escribe a mitad de turno (adjuntos en col
     ]);
     const r = await T.leerArchivo(ruta, { noEsDeFak: NO_ES, vistos: new Set() });
     expect(r.mensajes.map((m) => m.texto)).toEqual(['arrancá con el arb', 'seguí']);
-    expect(r.mensajes[0].cargas).toEqual([]);
+    expect(r.mensajes[0].cargas).toEqual(['imds']); // la nota de tarea no le saca la carga al turno de Fak (11/10/2026)
     expect(r.cargas[0]).toMatchObject({ skill: 'imds', mismoTurno: false, mensajeAnterior: 'arrancá con el arb' });
     expect(r.cargas[0].siguientes).toEqual(['seguí']);
     const sinVistos = await T.leerArchivo(ruta, { noEsDeFak: NO_ES });
     expect(sinVistos.mensajes).toHaveLength(3); // sin `vistos` no hay dedupe, como con los turnos
+  });
+
+  it('a mitad de turno con el prompt como LISTA (texto + imagen pegada): se cuenta con su texto y cierra el turno; si no es de Fak, no (11/10/2026)', async () => {
+    const lista = [{ type: 'text', text: 'mirá esta captura del imds' }, { type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'iVBORw0KGgo=' } }, { type: 'text', text: 'es la pieza 4410' }];
+    expect(T.mensajeEnCola(enCola(lista), NO_ES)).toBe('mirá esta captura del imds\nes la pieza 4410');
+    expect(T.mensajeEnCola(enCola(lista, { origin: { kind: 'task-notification' } }), NO_ES)).toBe('');
+    const ruta = escribir('c/cola-lista.jsonl', [
+      humano('Necesito cargar el consumo nuevo en el arb'),
+      cargaSkill('arb-operar', 'l1'),
+      resultado('l1'),
+      enCola(lista),
+      cargaSkill('imds', 'l2'),
+      resultado('l2'),
+      humano('gracias, listo'),
+    ]);
+    const r = await T.leerArchivo(ruta, { noEsDeFak: NO_ES, vistos: new Set() });
+    expect(r.mensajes.map((m) => [m.texto, m.aMitadDeTurno])).toEqual([
+      ['Necesito cargar el consumo nuevo en el arb', false],
+      ['mirá esta captura del imds\nes la pieza 4410', true],
+      ['gracias, listo', false],
+    ]);
+    const [abre, mitad] = r.mensajes;
+    expect(abre.cargas).toEqual(['arb-operar']); // la lista cerro su turno: la de imds ya no es suya
+    expect(mitad.cargas).toEqual(['imds']);
+    expect(r.cargas.find((c) => c.skill === 'imds')).toMatchObject({ mensajeAnterior: 'mirá esta captura del imds\nes la pieza 4410', mismoTurno: true });
+    expect(T.lineaInteresa(JSON.stringify(enCola(lista)))).toBe(true);
+  });
+
+  it('el que abre turno conserva sus cargas aunque a mitad de turno entre una nota de tarea (texto o lista); uno de Fak si se las lleva (11/10/2026)', async () => {
+    const ruta = escribir('c/cola-cargas.jsonl', [
+      base({ type: 'user', message: { role: 'user', content: [{ type: 'text', text: 'te pego el plano, cargalo en el arb' }, { type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'iVBORw0KGgo=' } }] }, origin: { kind: 'human' } }),
+      enCola('<task-notification>termino la tarea de fondo</task-notification>', { origin: { kind: 'task-notification' } }),
+      cargaSkill('arb-operar', 'k1'),
+      resultado('k1'),
+      enCola([{ type: 'text', text: '<task-notification>otra tarea</task-notification>' }], { origin: { kind: 'task-notification' } }),
+      cargaSkill('carga-arb', 'k2'),
+      resultado('k2'),
+      enCola('ahora fijate el imds'),
+      cargaSkill('imds', 'k3'),
+    ]);
+    const r = await T.leerArchivo(ruta, { noEsDeFak: NO_ES, vistos: new Set() });
+    expect(r.mensajes.map((m) => m.texto)).toEqual(['te pego el plano, cargalo en el arb', 'ahora fijate el imds']);
+    const [abre, mitad] = r.mensajes;
+    expect(abre.cargas).toEqual(['arb-operar', 'carga-arb']); // antes del arreglo: [] (el "ninguna" mal rotulado)
+    expect(mitad.cargas).toEqual(['imds']); // un mensaje de Fak a mitad de turno sigue cerrando el turno
+    expect(r.cargas.map((c) => [c.skill, c.mensajeAnterior, c.mismoTurno])).toEqual([
+      ['arb-operar', 'te pego el plano, cargalo en el arb', false],
+      ['carga-arb', 'te pego el plano, cargalo en el arb', false],
+      ['imds', 'ahora fijate el imds', true],
+    ]);
   });
 
   it('leerTranscripts cuenta aparte los de mitad de turno; `desde` tambien los recorta', async () => {
