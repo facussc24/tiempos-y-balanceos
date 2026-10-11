@@ -21,9 +21,9 @@ incidente vive en los snapshots.
 
 - **09/10 — El control de la PC de Fak queda prendido hasta cerrar la sesión: antes de pedirlo se le dice, y al terminar se avisa en el momento; un pedido largo a la API va por streaming y sin fallback.** Graduado a `feedback_control_de_la_pc_no_se_suelta_solo` y `llamarLargo()`.
 
-- **09/10 — Un despertador que nunca se vio llegar no existe: se cuenta en el registro ANTES de confiarle una noche.** Graduado a `trabajar-hasta-la-hora.md` (el latido es `_latido.mjs` en segundo plano desde el 09/10).
+- **09/10 — Un despertador que nunca se vio llegar no existe: se cuenta en el registro ANTES de confiarle una noche.** Graduado a `trabajar-hasta-la-hora.md`.
 
-- **08/10 — Lo que cambia otro modelo (Gemini) en un documento se audita como contenido, no como ortografía** (renombró operaciones, dio vuelta un historial, armó el A3 con el 160 viejo). Cada texto se compara contra la versión anterior y el AMFE antes de imprimir.
+- **08/10 — Lo que cambia otro modelo (Gemini) en un documento se audita como contenido, no como ortografía.** Graduado a `feedback_lo_que_cambia_otro_modelo_se_audita_como_contenido`.
 
 - **08/10 — Ningún documento dice que lo hizo Claude o una IA, y al tocar un documento ajeno se revisa ENTERO, no solo mis celdas** (el listado de HO decía "Claude" en CREADO POR desde junio y tenía una pestaña oculta «para el próximo Claude»; Fak: *"es un error gravísimo"*). Graduado a `core-prohibiciones.md` §9, `_sinFirmaIA.py`, `firma-ia-guard` y chequeo 9 del cierre-guard.
 
