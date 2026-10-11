@@ -17,6 +17,9 @@ import * as ho from '../../scripts/_lib/horaGuard.mjs';
 import { PIEZAS_REALES, correr } from '../../scripts/_lib/promptHooks.mjs';
 
 const TOPE = 10000;
+// El caso armado abajo no es el peor posible: con el aviso «ya entregaste N versiones» y una carpeta larga de la
+// biblioteca el auditor midio hasta 9.544 (11/10/2026). Por eso el test corta antes: 400 caracteres de aire.
+const TOPE_DEL_TEST = 9600;
 const SEPARADOR = '\n\n';
 const MARCAS = ['[CARACTERISTICAS ESPECIALES', '[CORRECCION-GUARD]', '[EXPLICAR-MEJOR]', '[TRABAJAR-HASTA]'];
 // La tanda: un pedido, una correccion y la segunda correccion, que ademas nombra CC/SC, pide que se lo expliquen y
@@ -82,6 +85,24 @@ describe('prompt-hooks: las cuatro piezas reales en el mismo mensaje', () => {
     const total = [CE, CO, EX, HO].reduce((a, t) => a + t.length, 0) + SEPARADOR.length * 3;
     // Si esto se pone rojo: un aviso crecio. Acortarlo (o achicar lo que guarda correccion-guard) antes que subir el tope,
     // que no es nuestro: lo pone Claude Code.
-    expect(total, `las cuatro juntas suman ${total}`).toBeLessThan(TOPE);
+    expect(total, `las cuatro juntas suman ${total}`).toBeLessThan(TOPE_DEL_TEST);
+  });
+
+  // Quien edite una de estas piezas tiene que probarla con un mensaje real antes de cerrar (regla
+  // mejora-implementada.md): eso lo exige el cierre con las tres listas de su canon. Si una pieza se cae de una lista,
+  // el control deja de pedirlo sin que nada avise (mutante N04 del auditor, 11/10/2026).
+  it('el canon del cierre nombra las piezas del hook unico en sus tres listas', () => {
+    const canon = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'scripts', '_lib', 'cierreCanon.data.json'), 'utf8')).mejora;
+    const piezas = [
+      '.claude/hooks/prompt-hooks.sh', '.claude/hooks/stop-hooks.sh',
+      'scripts/_lib/promptHooks.mjs', 'scripts/_lib/stopHooks.mjs', 'scripts/_lib/hookComun.mjs', 'scripts/_lib/caracteristicasEspecialesPrompt.mjs',
+      ...PIEZAS_REALES.map((p) => `scripts/_lib/${p.modulo.replace('./', '')}`),
+    ];
+    for (const lista of ['mensajes_re', 'sistema_re', 'piezas_re']) {
+      const re = new RegExp(canon[lista]);
+      for (const p of piezas) expect(re.test(p), `${p} falta en ${lista}`).toBe(true);
+    }
+    // y no se abrio de mas: un modulo cualquiera de scripts/_lib no entra
+    for (const lista of ['mensajes_re', 'sistema_re', 'piezas_re']) expect(new RegExp(canon[lista]).test('scripts/_lib/amfeIo.mjs')).toBe(false);
   });
 });
