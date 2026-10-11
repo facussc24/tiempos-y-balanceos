@@ -174,27 +174,24 @@ def corregir(origen, destino, cambios, apply):
     return len(saltados) + verificar(origen, destino, esperado)
 
 
-def _norm(v):
-    return v.replace('\r\n', '\n').replace('\r', '\n') if isinstance(v, str) else v
-
-
 def verificar(origen, destino, esperado):
-    import openpyxl
-    a = openpyxl.load_workbook(origen, read_only=True, data_only=True)
-    b = openpyxl.load_workbook(destino, read_only=True, data_only=True)
+    # La lectura de los dos libros es la de `_xlsxComparar.py` (una sola, cola HOY-18a): {hoja: {celda: valor}}
+    # con el valor calculado. Las celdas vacias no vienen, por eso se suman las celdas ESPERADAS de cada hoja.
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from _xlsxComparar import leer_libro, _norm
+    a = leer_libro(origen, data_only=True)
+    b = leer_libro(destino, data_only=True)
     errores = 0
-    for ws in a.worksheets:
-        wb2 = b[ws.title]
-        va = {(c.coordinate): c.value for fila in ws.iter_rows() for c in fila if hasattr(c, 'coordinate')}
-        vb = {(c.coordinate): c.value for fila in wb2.iter_rows() for c in fila if hasattr(c, 'coordinate')}
-        for k in set(va) | set(vb):
-            key = (ws.title, k)
+    for hoja, va in a.items():
+        vb = b[hoja]
+        for k in set(va) | set(vb) | {c for (h, c) in esperado if h == hoja}:
+            key = (hoja, k)
             if key in esperado:
                 # el XML guarda "\r\n" literal y el lector lo normaliza a "\n": se comparan normalizados
                 if _norm(vb.get(k)) != _norm(esperado[key]):
-                    print('  ERROR %s!%s quedo %r y se esperaba %r' % (ws.title, k, vb.get(k), esperado[key])); errores += 1
+                    print('  ERROR %s!%s quedo %r y se esperaba %r' % (hoja, k, vb.get(k), esperado[key])); errores += 1
             elif va.get(k) != vb.get(k):
-                print('  ERROR %s!%s cambio sin pedirlo: %r -> %r' % (ws.title, k, va.get(k), vb.get(k))); errores += 1
+                print('  ERROR %s!%s cambio sin pedirlo: %r -> %r' % (hoja, k, va.get(k), vb.get(k))); errores += 1
     print('  verificacion: %s' % ('OK, solo cambiaron las %d celdas pedidas' % len(esperado) if not errores else '%d ERRORES' % errores))
     return errores
 
