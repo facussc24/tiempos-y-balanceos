@@ -560,6 +560,18 @@ export function contexto({ sesion = null, ahora = new Date(), home } = {}) {
 // Linea de comandos
 // ---------------------------------------------------------------------------------------------
 
+/**
+ * Contrato de pieza de los hooks fusionados (cola P10): lo mismo que `--hook` y `--stop`, sin leer stdin, sin escribir
+ * y sin salir del proceso. promptHooks.mjs llama a `atenderPrompt` y stopHooks.mjs a `correrStop`; los dos reciben
+ * SOLO el pedido (el segundo parametro de atender/decidirStop es para los tests, no para quien los llama en vivo).
+ */
+export const atenderPrompt = (j) => atender(j);
+export function correrStop(payload) {
+  let r = { ok: true };
+  try { r = decidirStop(payload || {}); } catch { r = { ok: true }; }   // igual que `--stop`: si tira, deja pasar
+  return r.ok ? { rc: 0, stderr: '' } : { rc: 2, stderr: String(r.mensaje ?? '') };
+}
+
 function leerStdin(cb) { let raw = ''; process.stdin.on('data', (d) => { raw += d; }); process.stdin.on('end', () => { let j = null; try { j = JSON.parse(raw); } catch { j = null; } cb(j); }); }
 const arg = (n) => { const i = process.argv.indexOf(n); return i >= 0 && i + 1 < process.argv.length ? process.argv[i + 1] : null; };
 

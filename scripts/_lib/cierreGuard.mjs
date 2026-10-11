@@ -1703,6 +1703,20 @@ export async function decidir(payload = {}, deps = {}) {
   return { ok: true };
 }
 
+/**
+ * La decision del cierre como la pide un hook Stop: { rc: 0 } deja terminar, { rc: 2, stderr } devuelve el aviso.
+ * La usan el CLI de abajo (cierre-guard.sh) y el Stop fusionado (stopHooks.mjs, cola P10): un solo camino para los dos.
+ * Si algo tira adentro, TIRA: el CLI lo convierte en exit 0 (un guardian roto no frena el cierre) y stopHooks lo anota.
+ * El medidor (hooksTiempos.mjs) se importa aca y no arriba: un medidor roto o ausente no puede dejar al cierre sin
+ * decidir; en ese caso se decide sin medir, como siempre. `importarMedidor` y `decidirFn` se inyectan en los tests.
+ */
+export async function correrStop(payload = {}, { importarMedidor = () => import('./hooksTiempos.mjs'), decidirFn = decidir } = {}) {
+  let M = null;
+  try { M = await importarMedidor(); } catch { M = null; }
+  const r = !M || typeof M.correrMedido !== 'function' ? await decidirFn(payload) : await M.correrMedido({ decidir: decidirFn, depsReales: DEPS_REALES, payload });
+  return r.ok ? { rc: 0, stderr: '' } : { rc: 2, stderr: `${r.titulo}\n${r.detalle}` };
+}
+
 // ---------------------------------------------------------------------------------------
 // CLI (hook Stop): lee el JSON por stdin, exit 0 deja terminar, exit 2 devuelve el stderr.
 // ---------------------------------------------------------------------------------------
@@ -1712,18 +1726,11 @@ if (esDirecto) {
   let payload = {};
   try { payload = JSON.parse(fs.readFileSync(0, 'utf8') || '{}'); } catch { payload = {}; }
   // MEDICION (10/10/2026, plan P9 commit C0): la misma decision, con el tiempo de cada fase anotado en
-  // <tmp>/claude-hooks-tiempos.jsonl (hooksTiempos.mjs). Si el medidor no carga, se decide sin medir, como siempre.
-  // El modulo se importa ACA y no arriba: un medidor roto no puede dejar al cierre sin cargar.
-  const decidirMidiendo = async () => {
-    let M = null;
-    try { M = await import('./hooksTiempos.mjs'); } catch { M = null; }
-    if (!M || typeof M.correrMedido !== 'function') return decidir(payload);
-    return M.correrMedido({ decidir, depsReales: DEPS_REALES, payload });
-  };
-  decidirMidiendo()
-    .then((r) => {
-      if (r.ok) process.exit(0);
-      process.stderr.write(`${r.titulo}\n${r.detalle}\n`);
+  // <tmp>/claude-hooks-tiempos.jsonl (hooksTiempos.mjs): ver correrStop, arriba.
+  correrStop(payload)
+    .then(({ rc, stderr }) => {
+      if (rc === 0) process.exit(0);
+      process.stderr.write(`${stderr}\n`);
       process.exit(2);
     })
     .catch(() => process.exit(0));                   // un guardian roto no frena el cierre
