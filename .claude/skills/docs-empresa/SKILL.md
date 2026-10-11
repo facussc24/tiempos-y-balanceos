@@ -4,8 +4,10 @@ description: >
   Mapa de documentos reales de Barack (servidor Y:, OneDrive, repo, docs-local) + cache
   local `.sgc-cache/`. Usar cuando se necesite un dato de: manual SGC, procedimientos
   P-xx, instructivos I-xx, 8D, alertas, informes tecnicos, specs de cliente, normas VW,
-  manuales AIAG/VDA, biblias de defectos, HOs, auditorias. Reemplaza a NotebookLM
-  (retirado 2026-07-23): acceso DIRECTO a originales + extractos cacheados con cita de fuente.
+  manuales AIAG/VDA, biblias de defectos, HOs, auditorias; o cuando haya que buscar fotos
+  o videos de una maquina, de una pieza o de un proceso (donde estan y con que se buscan).
+  Reemplaza a NotebookLM (retirado 2026-07-23): acceso DIRECTO a originales + extractos
+  cacheados con cita de fuente.
 ---
 
 # docs-empresa — donde vive cada documento y como consultarlo
@@ -47,6 +49,56 @@ Raiz servidor: `//SERVER/compartido/BARACK/CALIDAD/DOCUMENTACION SGC/` (= `SGC_R
 | Docs Patagonia curados (36) | `docs-local/` (junction a OneDrive, creado y verificado el 11/09/2026: trae `INDEX.md`, `normas-vw/`, `projects/`, `shared/`; como se rehace si se rompe: memoria `reference_docs_local_onedrive_junction`) | leer directo |
 | ERP arb (BOMs, insumos) | `.arb-cache/` + skill `verificacion-consumos` | ya cacheado |
 | APQP vivos (AMFE/CP) | Supabase live (UNICA verdad — `verify-supabase-live.md`) | NO cachear |
+
+## Fotos y videos de una máquina, una pieza o un proceso — dónde están y con qué se buscan
+
+La regla `video-maquina.md` trae el detalle, pero carga sola recién al tocar un video: cuando Fak pide **buscar**
+uno (02/10/2026: *"busca le vide de cmaibo de molde en la amquina d eip core"*; 01/10: *"la foto de la pieza
+entnera ? no esta en ningun lado del server?"*) no está en el contexto. Lo que hace falta para buscar, acá:
+
+**Dónde viven** (biblioteca de Ingeniería, la ve todo el equipo; verificado en disco el 10/10/2026):
+
+```
+~\BARACK ARGENTINA SRL\Ingeniería y Proyecto - General\INGENIERIA BARACK (NUNCA BORRAR)\5- VIDEOS Y FOTOS\
+    1- CLIENTES\<CLIENTE>\<PROYECTO>\<PIEZA o MAQUINA>\     (ej. NOVAX\TOP ROLL\MAQUINA MOLDEADORA IMG)
+    2- SECTORES\<SECTOR>\
+    2. FOTOS DE PIEZAS FONDO BLANCO\<CLIENTE>\<PIEZA>\
+    3- INSTITUCIONAL\<AAAA-MM-DD - tema>\
+```
+
+Además hay dos carpetas de herramientas (`_HERRAMIENTAS\` y `_HERRAMIENTAS - buscador de fotogramas\`). En las tres
+carpetas de máquina de `NOVAX\TOP ROLL\`, en la raíz van solo los originales, con el nombre
+`AAAA-MM-DD - lo que se ve (IMG_xxxx).MOV`; las transcripciones, los fotogramas y los casos están adentro de
+`.claude\`, y hay un `_INDICE - que hay en cada video.txt` para leer de corrido. **En el resto de la biblioteca el
+nombre NO dice lo que se ve** (medido el 10/10/2026: 188 de 14.571 archivos tienen ese formato): ahí se busca por la
+CARPETA (cliente, proyecto, pieza o máquina) y se mira si la carpeta trae un `INDICE` en `.txt` (el de `EDGE FOLDING`
+dice de qué va cada video).
+
+**Con qué se busca, en este orden** (los tres solo leen; medidos el 10/10/2026):
+
+| Paso | Comando | Qué da |
+|---|---|---|
+| 1. Lo que ya está archivado | `node scripts/_videoBiblioteca.mjs --indice` (menos de 1 s; filtrar la salida con `grep -i "<palabra>"`) | un renglón por CLAVE (el `IMG_xxxx`, o el nombre del archivo si no tiene), con la ruta del primero que encontró: 14.507 renglones para 14.571 archivos ese día. **Si dos archivos de carpetas distintas se llaman igual, sale uno solo** (64 tapados, 19 videos): encontrada la carpeta, se lista con `ls` de un nivel |
+| 2. Lo que está sin archivar | `node scripts/_materialAfuera.mjs` (de 15 a 30 s; `--buscar <palabra>` solo MARCA carpetas, no recorta) | todo lo que hay fuera de la biblioteca (Escritorio y `_EN ESPERA`, Descargas, adjuntos, `C:\Dev\_telefono`), carpeta por carpeta. Los zip los nombra y no los abre: hay que mirarlos |
+| 3. El servidor | `node scripts/_catalogoServidor.mjs --buscar "palabras"` | nombres y fechas de los archivos del servidor al día del listado (decir esa fecha); el del 01/10/2026 tiene 284 videos y 9.542 fotos |
+
+- **La palabra se busca sin tilde y por su raíz**: en esta consola `grep -i "inyección"` da 0 y `grep -i "inyecci"`
+  da 14. Y con las palabras de planta y el nombre de la máquina o la pieza, no con las mías.
+- **«No hay foto ni video de X» se dice recién después de los TRES pasos**, mirando las carpetas con videos o zip
+  aunque su nombre no diga la palabra (01/10/2026: el video de la prensa estaba en una carpeta de tarea que no decía
+  «hot press», y las fotos adentro de un zip). **Y se dice qué NO se miró**: ningún programa recorre el resto de la
+  biblioteca de Ingeniería (por ejemplo `1- GENERAL\TAREAS CERRADAS\`, donde también hay fotos), y el paso 1 no ve
+  otras extensiones que mov, mp4, m4v, jpg, png y heic.
+- **Si piden los videos para alguien que edita, son los ORIGINALES completos**, no un recorte (Fak, 07/10/2026:
+  *"lso videos origngiales videos sin editar"*). Un archivo de más de ~20 MB no va adjunto: va el link de OneDrive
+  (`mail-envio.md`).
+- **Antes de bajar algo del celular se cruza contra la biblioteca**: `scripts/video/tel_indice.ps1` arma el índice
+  del teléfono y `node scripts/_videoBiblioteca.mjs --cruzar <indice.tsv>` dice qué ya está. El `(IMG_xxxx)` del
+  nombre es lo que permite cruzar. Sin ese cruce el guardián no deja copiar.
+- **El original no se borra nunca** para hacer lugar: se sube y se deja «solo en línea» (`attrib +U -P`).
+- `--indice-maquinas` no es una búsqueda: ESCRIBE el índice de texto adentro de la biblioteca.
+- Abrir un video lo baja entero de la nube: para ver qué hay alcanza el nombre, o la transcripción y los
+  fotogramas de `.claude\`.
 
 ## Lo relevado el 01/10/2026 (proyecto "Claudes por área") — usarlo antes de ir al servidor
 
