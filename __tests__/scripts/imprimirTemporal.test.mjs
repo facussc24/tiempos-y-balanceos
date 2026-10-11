@@ -19,9 +19,13 @@ const SCRIPT = path.join(RAIZ, 'scripts', '_imprimir.py');
 const GS = 'C:\\Program Files\\PDFCreator\\Ghostscript\\Bin\\gswin32c.exe';
 // un PDF versionado y sin nombre de IA adentro (docs/VOZ_DE_FAK.pdf nombra a Claude y el gate de firma lo frena, bien)
 const PDF = path.join(RAIZ, 'public', 'ref-flujograma.pdf');
-const hayPython = spawnSync('python', ['--version'], { encoding: 'utf8' }).status === 0;
+// La Papelera es de Windows (PowerShell + Microsoft.VisualBasic): en el CI de GitHub (Linux) las dos pruebas que
+// corren el script se saltean en voz alta; el 10/10 a las 22:14 el CI quedo rojo porque corrian igual y la carpeta
+// «vieja» no iba a ninguna Papelera.
+const esWindows = process.platform === 'win32';
+const hayPython = esWindows && spawnSync('python', ['--version'], { encoding: 'utf8' }).status === 0;
 const puedeCorrer = hayPython && fs.existsSync(GS) && fs.existsSync(PDF);
-if (!puedeCorrer) console.warn('SALTEADO imprimirTemporal: faltan python, Ghostscript o public/ref-flujograma.pdf en esta PC');
+if (!puedeCorrer) console.warn('SALTEADO imprimirTemporal: hace falta Windows, python, Ghostscript y public/ref-flujograma.pdf');
 
 describe('_imprimir.py: la carpeta temporal (HOY-13)', () => {
   const src = fs.readFileSync(SCRIPT, 'utf8');
