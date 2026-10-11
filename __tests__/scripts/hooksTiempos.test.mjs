@@ -50,8 +50,14 @@ describe('una corrida completa deja inicio + fases + fin, con el mismo id', () =
     expect(fases).toMatchObject({ sesion: 'sesion-d', modo: 'default', real: false, segundo_stop: false, ok: true, bytes_registro: fs.statSync(transcript).size, bytes_leidos: fs.statSync(transcript).size, subagentes: 0 });
     expect(fases.arranque_ms).toBeGreaterThanOrEqual(0);
     expect(fases.arranque_ms).toBeLessThan(fin.ms + 1);
-    expect(Object.keys(fases.fases).sort()).toEqual(['documentos', 'relevar', 'resto']);   // no declara cierre: no hay git, exports ni tanda
-    expect(fases.veces).toEqual({ relevar: 1, documentos: 1 });
+    // No declara cierre: no hay git, exports ni tanda. La fase «firma» depende de la PC: corre solo si en exports/ hay
+    // un documento con fecha posterior al mensaje de Fak (en el CI los archivos del repo nacen al clonarlo, y ahi
+    // el detector corre: el CI del 11/10 quedo rojo por exigir que no estuviera).
+    const sinFirma = (o) => Object.keys(o).filter((k) => k !== 'firma').sort();
+    expect(sinFirma(fases.fases)).toEqual(['documentos', 'relevar', 'resto']);
+    expect(sinFirma(fases.veces)).toEqual(['documentos', 'relevar']);
+    expect(fases.veces).toMatchObject({ relevar: 1, documentos: 1 });
+    if (fases.veces.firma !== undefined) expect(fases.veces.firma).toBe(1);
     expect(fases.total_ms).toBeLessThanOrEqual(fin.ms);
   });
 
