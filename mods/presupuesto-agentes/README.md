@@ -4,7 +4,7 @@ Mod de Claude Code (probado con la 2.1.293, Windows 11) que hace en `agent.spawn
 
 - Pesa cada subagente por costo (haiku 1, sonnet 4, opus 8, fable 20) y suma la ventana de 10 min (40 puntos).
 - **Cupo real**: con la ventana de 5 h por encima de 85 % o la semanal por encima de 60 % no sale ningún subagente nuevo.
-- La auditoría final (`auditor`, `auditor-cliente`) pasa siempre y no descuenta, también si su definición no se encuentra o no se puede leer.
+- La auditoría final (`auditor`, `auditor-cliente`) no descuenta y pasa también si su definición no se encuentra o no se puede leer. Se niega, igual que en el guardián bash, en tres casos: si la llamada pide un `model` que no es opus, si la definición encontrada dice otro modelo o esfuerzo, y si es un `fork`.
 - **Falla abierto** (`FALLA_CERRADA = false` en `hooks/register.js`): si el hook falla o tarda más de 10 s, la llamada pasa, decide el guardián bash (que sigue puesto) y queda un renglón `agent.spawn ERROR` en el registro. Si las definiciones no se pudieron leer (`def=error`) tampoco se niega por «sin definición».
 - En `turn.step`, un subagente que pida `effort: max` se rebaja a `xhigh`.
 
@@ -32,7 +32,7 @@ Vencidos se ignoran, no se borran. `.workflow-ok` no aplica: Workflow no pasa po
 ```bash
 node scripts/_modsInstalar.mjs --aplicar          # valida, prueba, copia a ~/.claude/mods-casa, instala y verifica
 node scripts/_modsInstalar.mjs --estado           # instalado o no, las dos copias al día o no, últimas líneas del registro
-node scripts/_modsInstalar.mjs --quitar --aplicar # desinstala los mods y saca el marketplace (lo verifica en la lista)
+node scripts/_modsInstalar.mjs --quitar --aplicar # desinstala los mods (lo verifica en la lista) y saca el marketplace (eso todavía no lo verifica: mirar con `claude plugin marketplace list`)
 ```
 
 Las sesiones nuevas lo toman solas; una ya abierta, con `/reload-plugins`. Apagar uno solo: `claude plugin disable presupuesto-agentes@mods-casa` y mirar con `claude plugin list`.

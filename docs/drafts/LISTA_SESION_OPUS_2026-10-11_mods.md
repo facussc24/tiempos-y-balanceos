@@ -22,6 +22,13 @@ NO commitear lo ajeno que ya estaba modificado al arrancar: `.env.example`, `__t
 
 **ACTUALIZACIÓN 11:01 (después del auditor de P14-P18):** veredicto: P14+P15 entran solo con 5 arreglos, P16 con uno, **P18 no entra** (informe `.sgc-cache/auditorias/P14-P18_auditor_2026-10-11.md`). **No entran hoy.** Lo único que entró a `main` es lo que endurece: commit **`18e131af`** (pusheado; falta leer su CI): `nube-personal-guard` y `apqp-cliente-guard` ven un Write/Edit por el camino real + `escapes:false`. Aplicado a mano sobre `main` (no por cherry-pick). La fila P14 de la cola ya tiene el veredicto. La rama `p14-p18` queda con P14-P18 SIN arreglar y con P9 rotación + P10 C1a + C1b encima: **si el auditor de P10 dice SÍ, los tres commits de P10 (`79240008`, `2b873644`, `1d6582b2`) se traen a `main` por cherry-pick, SIN los de P14-P18** (tocan otros archivos: `hooksTiempos.mjs`, los módulos nuevos, `horaGuard.mjs`, `cierreGuard.mjs`, `caracteristicas-especiales-prompt.sh`, tests). HOY-28 (borrado) NO se hace hoy: P18 hay que rehacerlo y va junto.
 
+**ACTUALIZACIÓN 12:10 (lo que pasó después de las 11:01; manda sobre la tabla de abajo):**
+- **Mods**: commiteados (`1f083674`); el CI quedó rojo por una línea (`#!` en `scripts/_modsInstalar.mjs`, lo cazó el auditor en su 2ª vuelta) → arreglado en `502ca143`. Lo que el auditor dejó anotado: filas HOY-45 y HOY-46.
+- **P10**: el auditor dijo SÍ a los tres commits y SÍ CON ARREGLO al cableado. En `main`: `81879443` (P9 rotación), `34858545` y `fce2b9bd` (P10 C1a y C1b, por cherry-pick, sin P14-P18) y **`48811ad7` (C2: UserPromptSubmit con UN hook, `prompt-hooks.sh`)** con sus tres condiciones y el `.sh` que sale con 1. CI de `48811ad7`: verde. Respaldo: `.claude/settings.json.antes-P10-C2-20261011` (ignorado por git). La suite COMPLETA local encontró tres tests que daban por sentado los cuatro renglones (correccionGuard, probarMejora, hooksTienenTest): actualizados en el mismo commit. Segunda vuelta del auditor pedida (agente `ad07d93baf1b4853e`). C3 (Stop) NO va: fila HOY-47.
+- **11:35, Fak escribió** (único mensaje suyo además del pedido): vio la banda y marcó lo que no se entendía. Hecho en `c2e18522` (pusheado; instalado con `--aplicar` a las 11:55): gasto de la API por clave (`saldo.json`, `etiquetaClave`, `saldoPorClave` en `claudeApi.mjs`), fila api «plan: gastado · quedan · hasta el 30/10 · prestada: agotada», la noche dicha en claro, la semana con día. Auditoría pedida al auditor de los mods (agente `a32aeb14a3f6e74d7`, «Tercera vuelta»).
+- **11:55: la semana pasó a 61 %**: el mod de presupuesto ya niega subagentes nuevos (salvo auditoría) en las sesiones nuevas.
+- Sin commitear al escribir esto: `.claude/rules/techo-agentes.md` (cita corregida), `mods/presupuesto-agentes/README.md` (dos frases), `docs/COLA_CAMBIOS_CODIGO.md`, esta lista. Después de commitear el README: `node scripts/_modsInstalar.mjs --aplicar` (el README viaja en la copia).
+
 ## Estado por paso
 
 | Paso | Qué | Estado |
@@ -39,8 +46,10 @@ NO commitear lo ajeno que ya estaba modificado al arrancar: `.env.example`, `__t
 ## Lo que necesita a Fak (va PRIMERO en el cierre)
 
 1. **La clave actual del usuario de desarrollo está publicada** en la rama pública `gh-pages` del repo (commit `b685a744` del 30/08; `assets/index-DgWvDWRX.js`). Medido: mail y clave de `.env.local` de hoy están en ese archivo. Dos pasos, los dos suyos: `node scripts/_rotarPasswordDev.mjs` en una terminal, y borrar la rama `gh-pages`. Fila HOY-36.
-2. **Con la semana por encima de 60 % (hoy 59 %) el mod nuevo no deja salir ningún subagente** (salvo la auditoría) en las sesiones nuevas, hasta el 16/10 13:00. Es lo que dice la regla escrita. Si quiere agentes igual: que lo diga y se escribe `touch ~/.claude/.agent-cupo-ok` (12 h). Alternativa que probé y saqué porque nadie la pidió (lo marcó el auditor): entre 60 y 85 % dejar salir pocos (10 puntos cada 10 min) en vez de ninguno; negar también una búsqueda en Haiku manda ese trabajo al modelo de la sesión, que cuesta más. Es decisión suya.
-3. **El tablero**: abrir una sesión nueva y mirar arriba del cuadro donde se escribe (cupo, agentes, corte, api, noche); `/tablero` abre el panel. `node scripts/_modsInstalar.mjs --estado` dice si la app ya le pidió dibujar la banda. Si molesta: `claude plugin disable tablero-casa@mods-casa`.
+2. **La semana pasó el 60 % (61 % a las 11:55): el mod nuevo ya no deja salir ningún subagente** (salvo la auditoría) en las sesiones nuevas, hasta el vie 16/10 13:00. **El 60 no es un número suyo**: entró con el borrador que escribió la API; los suyos son 75 % para cerrar una sesión y 60/65 para lanzar hijas. Si quiere agentes igual: que lo diga y se escribe `touch ~/.claude/.agent-cupo-ok` (12 h). Alternativa que probé y saqué porque nadie la pidió (lo marcó el auditor): entre 60 y 85 % dejar salir pocos (10 puntos cada 10 min) en vez de ninguno; negar también una búsqueda en Haiku manda ese trabajo al modelo de la sesión, que cuesta más. Es decisión suya.
+3. **El tablero**: Fak ya vio la banda (captura, 11:35) y marcó cuatro cosas; corregidas e instaladas (`c2e18522`). La ve en una sesión nueva o con `/reload-plugins`. Falta que la mire de nuevo y que pruebe `/tablero` (el panel). Si molesta: `claude plugin disable tablero-casa@mods-casa`.
+3 bis. **La tarea de la noche está frenada hasta el 30/10** porque su tope suma las dos claves (US$ 262,93 de 170). Con la cuenta por clave, de la del plan salieron ≈ US$ 156 de 200. Si quiere que vuelva a correr (≈ US$ 1 a 3 por noche de los ≈ US$ 40 que quedan): fila HOY-49.
+3 ter. Los cuatro `.sh` viejos de mensajes quedaron sin uso (`caracteristicas-especiales-prompt`, `correccion-guard`, `explicar-prompt`, `hora-prompt`): borrarlos es borrar archivos → su sí.
 4. `window.__cleanupAmfeActions()` está en producción (HOY-37): sacarla es sacar una función de la app → su sí.
 5. Borrar de Programadas las dos tareas de prueba de hoy.
 6. Un verificador mostró en su salida la línea de `scripts/hotmelt/datos_privados.py` con la clave del HMI (queda en el registro de esa sesión, que se sincroniza a la nube de Ingeniería). Esa clave ya estaba en la historia pública de git (memoria `project_automejora_2026-09-30_diez_frentes`); cambiarla en la máquina es de él o de planta.
@@ -56,7 +65,9 @@ NO commitear lo ajeno que ya estaba modificado al arrancar: `.env.example`, `__t
 
 ## No pude verificar
 
-- Que la banda del tablero **se vea** en la app: una sesión lanzada por tarea no está en pantalla y la app no pidió el dibujo. `open_session_in` no acepta esas sesiones.
+- ~~Que la banda del tablero se vea en la app~~: **Fak la vio a las 11:35** (captura). Lo que sigue sin verse: la banda NUEVA en su pantalla (está instalada; el dibujo con los datos reales de esta PC lo corrí yo: ninguna fila pasa de 93 columnas) y el panel `/tablero`.
+- El hook único de mensajes en una sesión real: **sí se vio una vez** (el mensaje de Fak de las 11:35 recibió `[EXPLICAR-MEJOR]` por `prompt-hooks.sh`). No se vio: un mensaje real con las cuatro piezas a la vez, ni un corte de la app a los 30 s (`hook_cancelled`): fila HOY-47.
+- El gasto por clave de los pedidos de ANTES del 11/10 es estimado (el registro no anotaba la clave): la prestada tenía US$ 100 y el reparto por hora le atribuye 107,04; de la del plan salieron entre 156 y 163.
 - Un lanzamiento negado por cupo real en una sesión de verdad (la semana estaba en 58 %): está probado con el motor de pruebas.
 - (el CI de `02e1321b` se leyó: verde)
 
@@ -66,6 +77,8 @@ NO commitear lo ajeno que ya estaba modificado al arrancar: `.env.example`, `__t
 - Aflojé un umbral (60 % → tramos) razonando solo; el auditor lo frenó. Un umbral de la regla no se cambia sin el pedido de Fak aunque el argumento parezca bueno: va como propuesta.
 - La doc decía «un marketplace local carga en el lugar» y la app de escritorio cargó la copia de la caché: se midió con un renglón en el registro (`mod=`), no se dedujo.
 - Un subagente que busca dónde está una clave la imprime: en el encargo hay que decir «grep -l» o «-c», no «no la repitas».
+- Pusheé los mods habiendo corrido solo las pruebas de los archivos tocados: el CI quedó rojo por una convención del repo (un `#!` en un script). Antes de un push que agrega archivos o cambia `settings.json`, la suite COMPLETA; en el segundo intento (el cableado) esa corrida encontró tres pruebas más que dependían de lo que cambiaba.
+- La banda la escribí con mis palabras (`api hoy/octubre`, `283 llamadas · en curso`, `noche · 0 prioridades`) y Fak no la entendió. Corrección suya del 11/10 11:35; el criterio quedó en la memoria `feedback_lenguaje_del_entregable_palabras_de_fak`.
 
 ## Registro (horas medidas: `date`, «Start at» de vitest, hora de cada commit)
 
@@ -78,3 +91,6 @@ NO commitear lo ajeno que ya estaba modificado al arrancar: `.env.example`, `__t
 - Verificadores HOY-27 y HOY-26: vuelven; repetí borrado y `gh-pages`.
 - 10:32 primera instalación · 10:35 actualización · 10:38 sesión de prueba (mods cargan y deciden) · 10:45 actualización con el registro del tablero · 10:46 segunda sesión de prueba (el tablero carga; no dibuja sin pantalla).
 - 10:49 cupo 59 %; segunda vuelta del auditor de los mods pedida; 17 filas nuevas en la cola.
+- 11:02 `1f083674` (mods) → CI rojo (shebang) · 11:16 cupo 60 %; `502ca143` · 11:18 cherry-pick de P9/P10 y push (`fce2b9bd`, CI verde a las 11:24).
+- 11:26-11:35 suite completa (4 rojos por el cableado, 1 ajeno) · 11:35 mensaje de Fak sobre la banda · 11:42 `48811ad7` (C2) y push (CI verde).
+- 11:45-11:54 gasto por clave + banda nueva; 11:55 instalada; cupo 61 % · 11:56-12:06 suite completa (verde para lo tocado) · `c2e18522` y push · auditorías pedidas a los dos auditores (reanudados).

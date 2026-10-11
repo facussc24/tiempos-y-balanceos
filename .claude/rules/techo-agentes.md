@@ -16,7 +16,7 @@ precio y frene por cupo real**; hasta entonces el presupuesto por puntos es la r
 
 **Fase 3, instalada el 11/10/2026 (mod `presupuesto-agentes`, P33; convive con este guardian):** el mod vive en
 `mods/presupuesto-agentes/` y carga en todas las sesiones NUEVAS desde una copia fuera del repo (marketplace `mods-casa`,
-`~/.claude/mods-casa/`). La politica (`hooks/presupuesto.mjs`, pura; test `__tests__/mods/presupuesto-agentes.test.mjs`)
+`~/.claude/mods-casa/`). La politica (`mods/presupuesto-agentes/hooks/presupuesto.mjs`, pura; test `__tests__/mods/presupuesto-agentes.test.mjs`)
 replica este guardian y suma el freno por cupo real: con la ventana de 5 h por encima de 85 % o la semanal por encima
 de 60 %, no sale ningun subagente nuevo salvo la auditoria final. Ese freno tiene su escape, igual que los otros:
 `touch ~/.claude/.agent-cupo-ok` (12 h), que escribo solo con el pedido textual de Fak. Falla abierto: si el mod falla,

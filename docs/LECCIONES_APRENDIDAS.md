@@ -6,24 +6,22 @@ leccion es un bullet legible de hasta 600 caracteres; el detalle vive en la memo
 que cita (gate por bullet: regla `lecciones-consolidacion.md`). La historia completa de cada
 incidente vive en los snapshots.
 
-- **Snapshots** (la version larga de cada consolidacion): los tres ultimos son [2026-10-06](docs/_archive/LECCIONES_snapshot_2026-10-06.md) · [2026-10-07](docs/_archive/LECCIONES_snapshot_2026-10-07.md) · [2026-10-08](docs/_archive/LECCIONES_snapshot_2026-10-08.md) y el historico 2026-03-30 a 07-02, [2026H1](docs/_archive/LECCIONES_APRENDIDAS_2026H1_completo.md); los demas estan en `docs/_archive/`.
+- **Snapshots** (la version larga de cada consolidacion): los tres ultimos son [2026-10-07](docs/_archive/LECCIONES_snapshot_2026-10-07.md) · [2026-10-08](docs/_archive/LECCIONES_snapshot_2026-10-08.md) · [2026-10-11](docs/_archive/LECCIONES_snapshot_2026-10-11.md) y el historico 2026-03-30 a 07-02, [2026H1](docs/_archive/LECCIONES_APRENDIDAS_2026H1_completo.md); los demas estan en `docs/_archive/`.
 - **Tabla incidente → regla**: `docs/_archive/INCIDENTES_REGLAS_AMFE.md`
 - Lo ya codificado no se repite aca: reglas de `.claude/rules/` y sus gates ejecutables
   (amfe.md + amfeValidator, database.md, verify-supabase-live.md, no-pfd-no-ho.md, techo-agentes.md, cad-3d.md).
 
 ## Verificacion y evidencia
 
+- **11/10 — Antes de un push que agrega archivos o toca `settings.json` va la suite COMPLETA, no las pruebas de lo tocado (el CI quedó rojo por un `#!`), y un umbral de una regla no lo aflojo yo: va como propuesta (y ese 60 % ni era de Fak: lo había escrito la API).** Graduado a `feedback_suite_completa_antes_del_push` y `feedback_un_numero_de_la_regla_no_lo_cambio_yo`.
+
+- **11/10 — Un subagente al que se le pide ubicar dónde está una clave la imprime en su salida: el encargo dice con qué buscar (`grep -l`, `-c`), no «no la repitas».**
+
 - **10-11/10 — Una tanda de hijas se mide por el cupo SEMANAL y por el de 5 h, cada hora: con tres o cuatro sesiones a la vez el semanal subía ~4 puntos por hora y Fak la cortó a la 1** (*«ya usamos demasiado de la semana»*). Graduado a `trabajar-hasta-la-hora.md` punto 5, al prompt v7 (dos hijas, tope 60/65 %) y a `reference_api_claude_clave_y_ciclo` (`claude -p` no va por créditos).
 
 - **11/10 — «La API piensa, yo integro» funciona, pero lo que escribe la API se AUDITA antes de commitear: el auditor Opus encontró 3 errores reales en la primera tanda y 2 en la segunda.** Y con esfuerzo alto el pensamiento gasta el tope de salida: 16 respuestas cortadas y tiradas (US$ 20) hasta medir el tope real (128.000) y guardar lo cortado. Graduado a `api-claude.md` §2 y §5, al aplicador y a `project_tanda_orquestador_2026-10-10_donde_quedo`; lo que la API afirma de un dato que no vio se mide antes de codear (`feedback_la_respuesta_conocida_se_mide_antes_del_gate`).
 
 - **09-10/10 — Un control que suma trabajo a un chequeo con tope de tiempo se mide en el MODO en que corre ese chequeo** (el detector pasó de 55 a 90 s y el cierre leyó «vacío» como limpio), **y el auditor Opus no se saltea** (un error real en 3 de 4 cambios; el 11/10 cazó 9 escrituras que pasaban en la primera versión de HOY-16). Graduado al auditor (`metodo_correr_no_solo_leer`) y a `_sinFirmaIA.py`.
-
-- **09/10 — Un despertador que nunca se vio llegar no existe, y el control de la PC de Fak queda prendido hasta cerrar la sesión.** Graduado a `trabajar-hasta-la-hora.md` y `feedback_control_de_la_pc_no_se_suelta_solo`; lo de Gemini (08/10), a `feedback_lo_que_cambia_otro_modelo_se_audita_como_contenido`.
-
-- **08/10 — Ningún documento dice que lo hizo Claude o una IA, y al tocar un documento ajeno se revisa ENTERO, no solo mis celdas** (el listado de HO decía "Claude" en CREADO POR desde junio y tenía una pestaña oculta «para el próximo Claude»; Fak: *"es un error gravísimo"*). Graduado a `core-prohibiciones.md` §9, `_sinFirmaIA.py`, `firma-ia-guard` y chequeo 9 del cierre-guard.
-
-- **08/10 — Los créditos de API del plan Max NO cubren Claude Code: solo los gasta código que llama a la API con la clave; los precios se leen de la tabla oficial, no de un informe.** Graduado a `api-claude.md` y al vigilante `_vigilarPrecios.mjs`.
 
 - **07/10 — «El estándar» se COMPARA contra una hoja real de la casa (la HO de Excel), no contra lo que dejó la sesión anterior** (Fak: *"te lo dije 300 veces, no es el estándar que decidimos"*; era el ARMADO: plan debajo de las fotos, ciclo de control al lado). Graduado al canon 4.5 y a `bloque_plan()`.
 
@@ -71,6 +69,8 @@ incidente vive en los snapshots.
 - **25/09 — Una difusion que corrige un error PROPIO dice solo el valor que queda, en el mail y en el PDF** (Fak: *"si ponemos el antes y el despues me escrachas"*). Graduado a la memoria `documento_no_confiesa_como_se_hizo`.
 
 ## Entregables y comunicacion con Fak
+
+- **11/10 — Una pantalla que Fak mira todos los días se escribe con SUS palabras, como un entregable: la banda decía «283 llamadas · en curso» y «noche · 0 prioridades»** (*"no era más fácil poner disponible, gastado, y separar entre cada api"*; *"renueva pusiste hora pero no día"*). Graduado a `feedback_lenguaje_del_entregable_palabras_de_fak`.
 
 - **09-10/10 — Un «no puedo» a Fak es un problema mío, y una pregunta que le hago NO frena el resto: lo que no depende de ella se hace mientras tanto** (le dije que apretara Enviar: *"nunca más podés decirme no puedo"*; el 10/10 estuve 4 h parado esperando su respuesta sobre el modo de las hijas con la etapa 1 de los AMFE libre: *"es gravísimo"*). Graduado a `_mailEnviar.py` paso 4b, `mail-envio.md` y `feedback_la_caja_soy_yo_pensar_fuera_de_lo_que_dijo_fak`.
 - **09/10 — El historial de revisiones también confiesa: una corrección por observación interna, antes de que el documento salga, no abre revisión** (la Rev. B del 160/174 decía «OP 32 se integra a la 31; 71 y 72 a la 70»; Fak: *"no nos delates de que eliminamos reprocesos... mantenele la revisión A"*). Graduado a `documento_no_confiesa_como_se_hizo`.
