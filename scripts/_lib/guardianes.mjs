@@ -576,7 +576,12 @@ GUARDIANES['firma-ia-guard'] = (ctx) => {
   if (ctx.ok) {
     const tool = ctx.toolL;
     if (tool === 'write' || tool === 'edit') motivo = firmaIaEnEscritura(ctx.content ?? '', ctx.file ?? '');
-    else motivo = firmaIaEnEscritura(ctx.cmd ?? ctx.cmd6 ?? '', '', { bash: tool === 'bash' });
+    // OJO (11/10/2026, medido): el despachador pasa el nombre de la herramienta con mayuscula («Bash», «Write»), asi
+    // que la comparacion de arriba con 'write' / 'edit' NUNCA da verdadero en vivo: el contenido de un Write o un Edit
+    // no se revisa (los tests arman el contexto en minuscula y no lo veian). NO se corrige aca: activarla frenaria 39
+    // de 17.770 Write/Edit de 12 dias, casi todos legitimos (las paginas de exports/explicaciones). Es una decision
+    // aparte, anotada en docs/COLA_CAMBIOS_CODIGO.md (fila HOY-16b). El camino de lectura de Bash si se compara bien:
+    else motivo = firmaIaEnEscritura(ctx.cmd ?? ctx.cmd6 ?? '', '', { bash: /^bash$/i.test(String(tool)) });
   } else {
     motivo = firmaIaEnEscritura(`${ctx.rescate?.cmd ?? ''}\n${ctx.rescate?.content ?? ''}`, ctx.rescate?.file ?? '');
   }

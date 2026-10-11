@@ -162,6 +162,29 @@ describe('firma-ia-guard · HOY-16: las formas que encontro el auditor en la pri
     });
 });
 
+// El contexto COMO LO ARMA EL DESPACHADOR en vivo: `toolL` conserva la mayuscula del nombre («Bash», «Write»). Los
+// casos de arriba lo arman en minuscula, y por eso el 11/10/2026 los tests daban verde y la prueba en vivo freno.
+const ctxVivo = (tool, { cmd = '', file = '', content = '' } = {}) => ({ ...ctx(tool, { cmd, file, content }), toolL: tool });
+
+describe('firma-ia-guard · con el contexto como lo arma el despachador (el nombre de la herramienta con mayuscula)', () => {
+    it('VERDE: los dos casos reales del 10/10 pasan tambien asi', () => {
+        expect(bloquea(ctxVivo('Bash', { cmd: REALES.lectura_1212 }))).toBe(false);
+        expect(bloquea(ctxVivo('Bash', { cmd: REALES.registro_interno_1130 }))).toBe(false);
+    });
+    it('ROJO: los gemelos de Bash frenan igual; y la lectura por PowerShell no usa el camino de Bash', () => {
+        for (const [nombre, c] of [...ROJOS_HOY16, ...ROJOS_AUDITOR]) if (c.tool === 'Bash') expect(bloquea(ctxVivo('Bash', { cmd: c.cmd })), nombre).toBe(true);
+        expect(bloquea(ctxVivo('PowerShell', { cmd: `echo "x"; ls "${NP}/2- PROYECTOS/Hecho por Claude"` }))).toBe(true);
+    });
+    it('PENDIENTE, anterior a HOY-16 (cola HOY-16b): en vivo el contenido de un Write o un Edit NO se revisa', () => {
+        // El guardian compara con 'write' / 'edit' y recibe «Write» / «Edit»: mira un comando vacio. Este test fija lo que
+        // pasa HOY para que se vea; el dia que se decida activarlo (frenaria 39 de 17.770 escrituras de 12 dias, casi
+        // todas legitimas), estas dos aserciones se dan vuelta.
+        const rojoDeWrite = ROJOS.find(([, c]) => c.tool === 'Write')[1];
+        expect(bloquea(rojoDeWrite)).toBe(true);                                             // como lo arman los tests
+        expect(bloquea(ctxVivo('Write', { file: rojoDeWrite.file, content: rojoDeWrite.content }))).toBe(false);   // como llega en vivo
+    });
+});
+
 describe('firma-ia-guard · HOY-16: mira el verbo y el destino, no si la ruta dice Claude', () => {
     for (const [nombre, c] of VERDES_HOY16) it(`VERDE: ${nombre}`, () => expect(GUARDIANES['firma-ia-guard'](c, { env: {} })?.texto ?? null).toBeNull());
     for (const [nombre, c] of ROJOS_HOY16) it(`ROJO: ${nombre}`, () => expect(bloquea(c)).toBe(true));
