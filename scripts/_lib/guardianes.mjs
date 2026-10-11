@@ -357,22 +357,197 @@ const FIRMA_RAIZ_RE = /(?:^|[\s"'=])(?:[yY]:[\\/]|\/y\/|[^"'\n]*Ingenier[ií]a y
 const FIRMA_EXENTOS_RE = /(?:[\\/]\.claude[\\/]|[\\/]memory[\\/]|[\\/]docs[\\/]|[\\/]__tests__[\\/]|[\\/]_archive[\\/]|[\\/]claude-area[\\/]|CLAUDES_POR_AREA|CLAUDE POR AREA|Claude Barack|Base Claude Ingenieria|INSTALAR CLAUDE|ACTUALIZACION_CLAUDE|[\\/]Claude Fak[\\/]|firmaIA|_sinFirmaIA|_limpiarListadoHoClaude|guardianes\.mjs|cierreGuard\.mjs|CLAUDE\.md$|LECCIONES_APRENDIDAS\.md$|MEMORY\.md$|\.claude[\\/])/i;
 // Comandos que solo leen o que guardan texto que no es un documento (un mensaje de commit lleva
 // "Co-Authored-By: Claude" por convencion del repo, y no sale de aca como documento de Barack).
+//
+// HOY-16 (11/10/2026, con el si de Fak del 10/10 23:57 a «¿aflojo el guardian de firma para dos casos que hoy frena
+// de mas?»). El criterio es el VERBO (¿el comando escribe?) y el DESTINO (¿un documento de Barack o el registro
+// interno de la app?), nunca «si la ruta dice Claude, pasa». Tres cambios, los dos primeros aflojan y el tercero aprieta:
+//   (a) Un comando de Bash de SOLO LECTURA no frena aunque no EMPIECE por un verbo de lectura (`esSoloLectura`): cada
+//       comando simple de la linea y de sus sustituciones tiene que ser un verbo de lectura conocido. Caso: el
+//       inventario del 10/10 12:12 (echo, for, find, wc, awk, ls, grep sobre la carpeta «Claude Fak»). Es estricto a
+//       proposito: sin git, sin interpretes, sin redireccion a un archivo, sin heredoc, sin sustitucion de proceso, sin
+//       comentarios, sin `$'…'`; awk y sed solo en su forma de imprimir. Lo que no reconoce cuenta como escritura.
+//   (b) La regla 2 no frena el ID DE UN MODELO (`claude-opus-5-5`) cuando lo que el comando nombra es SOLO el registro
+//       interno de la app o temporales (`destinoEsRegistroInterno`). Caso: 10/10 11:30, scheduled-tasks.json.
+//   (c) El camino viejo (la linea EMPIEZA con un verbo de lectura o con git, `FIRMA_COMANDO_LECTURA_RE`) dejaba pasar
+//       todo lo que viniera despues en la misma linea: `ls; python -c "ws['J74'] = …"` no frenaba (lo mostraron los
+//       gemelos rojos de firmaIAGuard.test.mjs antes de tocar nada). Ahora ademas cada comando simple de esa linea
+//       tiene que leer o ser de git (`lineaLeeOEsGit`). Medido contra 68.715 comandos reales de 12 dias.
+// Auditor del 11/10/2026 (.sgc-cache/auditorias/HOY16_firma_ia_guard_auditor_2026-10-11.md): la primera version de
+// (a) contaba a git en cualquier lugar de la linea y miraba awk/sed/uniq de mas: 9 escrituras pasaban. De ahi lo estricto.
+// Agujero ANTERIOR que sigue (no es de este cambio): una linea que EMPIEZA con git y escribe afuera del repo
+// (`git archive -o`, `git diff --output=`) pasa, como pasaba.
 const FIRMA_COMANDO_LECTURA_RE = /^\s*(?:git|grep|rg|egrep|ls|dir|head|tail|less|find|wc|stat|Get-ChildItem|Select-String)\b/i;
+const FIRMA_LEE = new Set(['echo', 'printf', 'ls', 'dir', 'grep', 'egrep', 'fgrep', 'cat', 'head', 'tail', 'wc', 'stat', 'du', 'df',
+  'basename', 'dirname', 'cygpath', 'cut', 'tr', 'true', 'false', 'test', '[', '[[', 'pwd', 'date', 'cd', 'which', 'type']);
+// palabras de la shell que van ADELANTE de un comando y no son el comando
+const FIRMA_PALABRA_SHELL = new Set(['if', 'then', 'else', 'elif', 'do', 'while', 'until', '!']);
+// comandos simples que son estructura (un `for d in a b c` solo nombra la lista; `fi`, `done` cierran)
+const FIRMA_ESTRUCTURA = new Set(['for', 'fi', 'done', 'break', 'continue']);
+const FIRMA_FIND_ESCRIBE = /^-(?:delete|exec|ok|fprint|fls)/;                   // por prefijo: -execdir, -okdir, -fprintf, -fprint0
+// Lo que un texto no puede traer para contar como lectura: `$'…'` (escapes), `${x@P}` y parecidos, sustitucion de
+// proceso `<( )` `>( )`, una barra invertida delante de un guion o de una letra de opcion (`\-o`), un comentario.
+const FIRMA_LECTURA_PROHIBIDO_RE = /\$'|\$\{[^}]*[@!][^}]*\}|[<>]\(|\\-/;
+/** ¿El texto trae una forma que el partidor de comandos no lee bien? El comentario se busca FUERA de las comillas
+ *  (un `#12` adentro del mensaje de un commit no es un comentario; un `# don't` si, y su comilla se traga lo de abajo). */
+function firmaFormaDudosa(t) {
+  if (FIRMA_LECTURA_PROHIBIDO_RE.test(t)) return true;
+  return /(?:^|\s)#/.test(String(t).replace(/"(?:[^"\\\n]|\\.)*"|'[^'\n]*'/g, '""'));
+}
+
+/** El cierre de una sustitucion `$(` que arranca en i (en el `$`), respetando comillas y parentesis. -1 si no cierra. */
+function cierreSustitucion(s, i) {
+  let prof = 0;
+  for (let j = i + 1; j < s.length; j++) {
+    const c = s[j];
+    if (c === '\\') { j++; continue; }
+    if (c === '"' || c === "'" || c === '\x60') { const k = s.indexOf(c, j + 1); if (k < 0) return -1; j = k; continue; }
+    if (c === '(') prof++;
+    else if (c === ')') { prof--; if (prof === 0) return j; }
+  }
+  return -1;
+}
+/** Las sustituciones de comando de una palabra (`$(...)` y backticks): su texto de adentro, o null si alguna no cierra. */
+function sustitucionesDe(palabra) {
+  const out = [];
+  const s = String(palabra ?? '');
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === '\x60') { const k = s.indexOf('\x60', i + 1); if (k < 0) return null; out.push(s.slice(i + 1, k)); i = k; continue; }
+    if (s[i] !== '$' || s[i + 1] !== '(') continue;
+    const j = cierreSustitucion(s, i);
+    if (j < 0) return null;
+    out.push(s.slice(i + 2, j));
+    i = j;
+  }
+  return out;
+}
+
+/** ¿Este comando simple solo lee? */
+function comandoSimpleLee(c, prof) {
+  // toda redireccion de salida tiene que ir a /dev/null; de entrada, solo `<` (un heredoc no se sabe que alimenta)
+  for (const r of c.redirs) {
+    if (r.op === '<') continue;
+    if (!/^>{1,2}$/.test(r.op) || String(r.t).trim() !== '/dev/null') return false;
+  }
+  const palabras = [...c.palabras];
+  // lo que venga adentro de una sustitucion tambien tiene que leer
+  for (const w of palabras) {
+    const subs = sustitucionesDe(w);
+    if (subs === null) return false;
+    for (const s of subs) if (!lineaSoloLee(s, prof + 1)) return false;
+  }
+  while (palabras.length && (FIRMA_PALABRA_SHELL.has(palabras[0]) || /^[A-Za-z_][A-Za-z0-9_]*=/.test(palabras[0]))) palabras.shift();
+  if (!palabras.length) return true;                                           // una asignacion o una palabra de la shell sola
+  const verbo = palabras[0];
+  const args = palabras.slice(1);
+  if (FIRMA_ESTRUCTURA.has(verbo)) return true;
+  if (verbo === 'find') return !args.some((a) => FIRMA_FIND_ESCRIBE.test(a));
+  // sort, uniq: solo adentro de una cañeria, sin archivos (un segundo argumento de uniq es su SALIDA; sort tiene -o)
+  if (verbo === 'sort' || verbo === 'uniq') return args.every((a) => /^-[a-zA-Z0-9,.]+$/.test(a) && !/o/.test(a));
+  // awk: un solo programa, sin opciones, que no escribe ni lanza nada
+  // (un `$variable` de la shell adentro del programa —viene de comillas dobles— puede esconder el `>`: no cuenta como lectura;
+  //  el `$1` de un programa entre comillas simples llega marcado distinto por `comandosSimples` y si pasa)
+  if (verbo === 'awk') return args.length >= 1 && !args.some((a) => a.startsWith('-')) && !/[>|]|system|getline|close|fflush|print\s*>|\$[A-Za-z_{(]|\x60/.test(args[0]);
+  // sed: solo `sed -n '<rango>p' archivo…`
+  if (verbo === 'sed') return args.length >= 2 && args[0] === '-n' && /^\d+(?:,(?:\d+|\$))?p$/.test(args[1]) && !args.slice(2).some((a) => a.startsWith('-'));
+  return FIRMA_LEE.has(verbo);
+}
+function lineaSoloLee(texto, prof = 0) {
+  const t = String(texto ?? '');
+  if (prof > 4 || firmaFormaDudosa(t)) return false;
+  const { lineas, cuerpos } = separarHeredocs(t);
+  if (cuerpos.length) return false;                                            // un heredoc alimenta a un programa: no se sabe que hace
+  const cmds = comandosSimples(lineas);
+  return cmds.length > 0 && cmds.every((c) => comandoSimpleLee(c, prof));
+}
+/**
+ * ¿El comando de Bash entero es de SOLO LECTURA? Cada comando simple de la linea (y de sus sustituciones) tiene que
+ * ser un verbo de lectura conocido, sin redireccion a un archivo, sin `-exec`/`-delete`, sin heredoc. Lo que no se
+ * conoce (git, un interprete, cp, xargs, tee, curl, un programa propio) cuenta como escritura.
+ */
+export function esSoloLectura(texto) { return lineaSoloLee(texto, 0); }
+
+/**
+ * (c) Para el camino viejo: la linea EMPIEZA con un verbo de lectura o con git; ademas, cada comando simple tiene que
+ * leer o ser de git (un commit escribe el repo y su mensaje, no un documento de Barack). El cuerpo de un heredoc que
+ * alimenta a git es el mensaje del commit. Si la linea trae otra cosa (un interprete, cp, una redireccion), no esta
+ * exenta: se le aplican las reglas, que frenan solo si ven una IA escrita en un documento.
+ */
+function lineaLeeOEsGit(texto) {
+  const { lineas, cuerpos } = separarHeredocs(String(texto ?? ''));
+  if (cuerpos.some((c) => !c.deGit)) return false;
+  if (firmaFormaDudosa(lineas)) return false;
+  const cmds = comandosSimples(lineas);
+  return cmds.length > 0 && cmds.every((c) => {
+    const p = c.palabras.filter((w, i, a) => !(a.slice(0, i + 1).every((x) => FIRMA_PALABRA_SHELL.has(x))));
+    // git: sin una variable adelante (GIT_EXTERNAL_DIFF=…), sin `-c` (un alias que corre otra cosa) y sin las formas
+    // que escriben un archivo afuera del repo (--output, -o, archive, bundle, format-patch, difftool, config)
+    if (p[0] === 'git') return !p.slice(1).some((a) => /^(?:-c|-o|--output|--exec-path|--ext-diff|archive|bundle|format-patch|difftool|config)(?:$|=)/.test(a) || /^-o./.test(a));
+    // un cmdlet de lectura de PowerShell, tal como lo aceptaba la regla vieja
+    if (/^(?:Get-ChildItem|Select-String|rg|less)$/i.test(p[0] || '') && c.redirs.every((r) => r.op === '<' || String(r.t).trim() === '/dev/null' || /^\$null$/i.test(String(r.t).trim()))) return true;
+    return comandoSimpleLee(c, 0);
+  });
+}
+
+// (b) El id de un modelo: claude-opus-5-5, claude-sonnet-5-5, claude-3-5-sonnet-20241022. Nada mas: «claude-fak» o
+// «Claude-Contexto-HO» no son un id (auditor 11/10: la primera version aceptaba cualquier nombre con dos guiones).
+const FIRMA_ID_MODELO_RE = /^claude-(?:(?:opus|sonnet|haiku|fable|mythos|instant)-\d+(?:-\d+)*|\d+(?:-\d+)*-(?:opus|sonnet|haiku)(?:-\d{8}|-latest)?)$/;
+// el registro interno de la app y de Claude Code: no son documentos de Barack
+const FIRMA_INTERNO_RE = /^(?:[A-Za-z]:[\\/]Users[\\/][^\\/]+|\/[a-z]\/Users\/[^/]+)[\\/](?:AppData[\\/]Roaming[\\/]Claude|AppData[\\/]Local[\\/]AnthropicClaude|\.claude)(?:[\\/]|$)/;
+const FIRMA_TEMPORAL_RE = /^(?:(?:[A-Za-z]:[\\/]Users[\\/][^\\/]+|\/[a-z]\/Users\/[^/]+)[\\/]AppData[\\/]Local[\\/]Temp|\/tmp|\/dev\/null)(?:[\\/]|$)/;
+const FIRMA_DOCUMENTO_RE = /\.(?:xlsx|xlsm|xlsb|xltx|xltm|xlt|xls|xla|xlam|docx|docm|dotx|dotm|dot|doc|pptx|pptm|potx|potm|pot|ppsx|ppsm|pps|ppt|pdf|csv|tsv|msg|eml|dxf|dwg|plt|hpgl|odt|ods|odp|rtf)(?![a-z])|openpyxl|xlsxwriter|xlwings|pandas|to_excel|to_csv|csv\.writer|win32com|comtypes|pptx|docx|odfpy|workbook|worksheet|\.Application|New-Object|Export-Csv|ImportExcel|\.(?:Range|Cells|Sheets|Worksheets|Slides|Shapes|Value2?)\b/i;
+// lo que tiene forma de ruta: trae una barra, o una barra invertida entre dos caracteres de nombre
+const FIRMA_TOKEN_RUTA_RE = /[^\s"'\x60|;&<>()=,\[\]{}]*(?:\/|(?<=[\w.$%~:-])\\(?=[\w.$%~-]))[^\s"'\x60|;&<>(),\[\]{}]*/g;
+/**
+ * ¿Lo que el comando nombra es SOLO el registro interno de la app (AppData\Roaming\Claude, AppData\Local\
+ * AnthropicClaude, ~/.claude) y temporales? De un `python - <<EOF` no se puede saber que archivo abre, asi que se
+ * mira TODO el texto y cualquier cosa que no se pueda ubicar lo descalifica:
+ *   - cada cosa con forma de ruta tiene que ser absoluta y del registro interno o temporal, o colgar de una variable
+ *     definida en el mismo comando con una ruta asi (`D="…/AppData/Roaming/Claude/…"; … "$D/x.json"`); sin `..`;
+ *   - por lo menos una es del registro interno;
+ *   - ningun nombre de archivo suelto entre comillas (`'listado.json'`), ningun documento por extension, ninguna
+ *     libreria ni objeto de Office.
+ */
+export function destinoEsRegistroInterno(texto) {
+  const t = String(texto ?? '');
+  if (FIRMA_DOCUMENTO_RE.test(t)) return false;
+  if (/["'\x60][^"'\x60\s\\/]+\.[A-Za-z0-9]{2,5}["'\x60]/.test(t)) return false;        // 'notas.txt', "listado.json": un archivo relativo
+  const clase = (r) => (FIRMA_INTERNO_RE.test(r) ? 'interno' : FIRMA_TEMPORAL_RE.test(r) ? 'temporal' : null);
+  // variables definidas en el comando con una ruta ubicable: NOMBRE="ruta" / NOMBRE=ruta
+  const vars = new Map();
+  for (const m of t.matchAll(/(?:^|[\s;&|(])([A-Za-z_][A-Za-z0-9_]*)=(?:"([^"\n]*)"|'([^'\n]*)'|([^\s;&|"']+))/g)) {
+    const c = clase(m[2] ?? m[3] ?? m[4] ?? '');
+    vars.set(m[1], vars.has(m[1]) && vars.get(m[1]) !== c ? null : c);          // redefinida con otra clase: no se sabe
+  }
+  let hayInterno = false;
+  for (const r of t.match(FIRMA_TOKEN_RUTA_RE) || []) {
+    if (/(?:^|[\\/])\.\.(?:[\\/]|$)/.test(r)) return false;
+    let c = clase(r);
+    if (!c) {
+      const v = r.match(/^\$([A-Za-z_][A-Za-z0-9_]*)[\\/]/);                    // "$D/scheduled-tasks.json"
+      c = v ? vars.get(v[1]) ?? null : null;
+    }
+    if (!c) return false;
+    if (c === 'interno') hayInterno = true;
+  }
+  return hayInterno;
+}
 
 /** Lo que frena (texto) o null. `texto` es el comando o el contenido del archivo; `archivo` la ruta del Write/Edit. */
-export function firmaIaEnEscritura(texto, archivo = '') {
+export function firmaIaEnEscritura(texto, archivo = '', { bash = false } = {}) {
   const t = String(texto ?? '');
   const f = String(archivo ?? '');
   if (f && FIRMA_EXENTOS_RE.test(f)) return null;
-  if (!f && FIRMA_COMANDO_LECTURA_RE.test(t)) return null;
+  if (!f && ((bash && esSoloLectura(t)) || (FIRMA_COMANDO_LECTURA_RE.test(t) && lineaLeeOEsGit(t)))) return null;
   const m1 = FIRMA_AUTORIA_RE.exec(t);
   if (m1) return `un campo de AUTORIA con una IA de valor: «${m1[0].slice(0, 80)}»`;
+  const interno = !f && destinoEsRegistroInterno(t);   // (b): solo exime al id de un modelo, abajo
   for (const linea of t.split('\n')) {
     for (const re of FIRMA_LITERALES_RE) {
       re.lastIndex = 0;
       let m;
       while ((m = re.exec(linea))) {
         const antes = linea.slice(Math.max(0, m.index - 120), m.index);
+        if (interno && FIRMA_ID_MODELO_RE.test(m[1].trim())) { re.lastIndex = m.index + 1; continue; }
         if (FIRMA_PREFIJO_RE.test(antes)) return `una IA escrita ADENTRO de un documento: «${(antes.slice(-40) + m[0]).trim().slice(0, 110)}»`;
         re.lastIndex = m.index + 1;   // un literal "abierto" de mas no tapa el siguiente
       }
@@ -401,7 +576,7 @@ GUARDIANES['firma-ia-guard'] = (ctx) => {
   if (ctx.ok) {
     const tool = ctx.toolL;
     if (tool === 'write' || tool === 'edit') motivo = firmaIaEnEscritura(ctx.content ?? '', ctx.file ?? '');
-    else motivo = firmaIaEnEscritura(ctx.cmd ?? ctx.cmd6 ?? '', '');
+    else motivo = firmaIaEnEscritura(ctx.cmd ?? ctx.cmd6 ?? '', '', { bash: tool === 'bash' });
   } else {
     motivo = firmaIaEnEscritura(`${ctx.rescate?.cmd ?? ''}\n${ctx.rescate?.content ?? ''}`, ctx.rescate?.file ?? '');
   }
