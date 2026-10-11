@@ -18,8 +18,9 @@ evidencia (un mensaje de Fak con fecha, o una capacidad de la herramienta medida
 - **Salen 14 filas nuevas**: 9 en HACER YA (lectura, texto de skill o el lector de mensajes, reversible) y 5 en
   PROPONER A FAK (programar un envío, convocar una reunión, limpiar borradores y dos skills nuevas).
 - **Límite que encontró el auditor**: los 1.004 mensajes medidos son los que abren un turno. Lo que Fak escribe
-  mientras la sesión trabaja (unos 704 mensajes más en la misma ventana) no entró: el lector que ya existía no los
-  lee. El orden de las funciones se sostiene; los conteos son un piso. Arreglar el lector es la fila HOY-19n.
+  mientras la sesión trabaja (unos 700 más en la misma ventana) no estaba: el lector que ya existía no los lee. Se
+  midieron aparte (sección 2.4): el orden de las funciones no cambia, y suben los borradores de Outlook, que Fak pidió
+  borrar cuatro veces más. Arreglar el lector es la fila HOY-19n.
 - **Lo que no se propone**, porque Fak no lo usa ni lo pidió. Medido: 0 reglas de Outlook, 6 categorías definidas y 0
   mails categorizados, 0 contactos, 0 subcarpetas en la Bandeja de entrada.
 
@@ -109,6 +110,37 @@ conexión; si las carpetas `Archivo` y `Files` del buzón tienen algo de Fak (se
 casilla del perfil, por eso no aparece en `--buzones`. Si es un alias de `f.santoro@` o una cuenta sin buzón lo sabe
 Fak.
 
+### 2.4 Los mensajes de mitad de turno (medidos después de la auditoría)
+
+Lo que Fak escribe mientras la sesión trabaja no estaba en los 1.004. Se tomaron los que juntó el auditor (adjuntos
+en cola de origen humano, misma ventana): 700, 695 después de sacar avisos y encargos. Se clasificaron con el mismo
+pedido y el mismo modelo (8 lotes, US$ 0,42). Sin muestra verificada a mano: valen como contraste.
+
+| | Abren un turno | A mitad de turno |
+|---|---|---|
+| Mensajes | 1.004 | 695 |
+| Pedidos nuevos | 398 | 165 |
+| Pedidos de trabajo de Barack | 254 | 119 |
+| Cubre · a medias · no cubre | 149 · 30 · 73 | 75 · 11 · 32 |
+| Mail | 75 | 36 |
+| Archivos (abrir, buscar, nube) | 45 | 24 |
+| PowerPoint, Excel, PDF | 14 | 8 |
+
+**El orden no cambia**: mail primero, archivos después. Lo que sí cambia:
+
+- **Borradores de Outlook: Fak pidió borrarlos cuatro veces más.** 21/09 14:47 *"borra todos los borraodres solo me
+  molestan"*; 05/10 10:08 *"siempre dejas muchos borrados inluso despeus de enviar el ultimo mail... que depsue stnego
+  que borrar manualemtne eso no emg usta"*; 06/10 12:39 *"elimina los borradores tarea cerrada"*; 01/10 10:37. Sube
+  HOY-19d y HOY-19k al principio de su grupo.
+- **PowerPoint de evidencia: tres pedidos más** (02/10 12:47 *"un wpoer point con footos de eviendeinca"*; 06/10
+  11:51; 02/10 16:06 *"el antes y el despues en una hoja con fondo blanco"*). Con los 2 de antes son 5 pedidos y 2
+  correcciones: HOY-19l deja de ser floja.
+- **«Confirmame que subió todo a la nube»** (01/10 09:33, 09/10 16:11): ya existe `scripts/_nubeSubio.ps1`
+  (`nube-ingenieria.md`). No nace fila.
+- **Pendrive** (copiar, verificar, expulsar: 7 mensajes del 02/10, 08/10 y 09/10): operaciones sueltas de la entrega
+  del instalador; no es una función de skill. No nace fila.
+- Mandar un archivo al plotter, video tutorial con voz, transcribir un video en chino: un trabajo cada uno.
+
 ## 3. Las funciones que faltan
 
 Orden: primero lo que Fak pide más seguido y es solo lectura. Tamaño según `codigo-madre.md`. «HY» = HACER YA,
@@ -119,15 +151,15 @@ Orden: primero lo que Fak pide más seguido y es solo lectura. Tamaño según `c
 | HOY-19a | mail (`_mails.py`) | **`--nuevos`**: traer lo que llegó desde la última lectura sin recorrer el buzón, con el método que ya usa `tools/claude-area/mails_outlook.ps1` (ordenar por fecha y cortar) o con el filtro de Outlook | Medido: `--sync` tarda 35 s para 0 nuevos; el filtro cuenta los de la semana en 0,01 s (traerlos no se midió). Fak: 28/09 11:18 *"Luciano me acaba de enviar un mail podes verficailro"*; 25/09 08:04 *"gonzalo cal me acaba de preguntar algo por mail"*; 09/10 09:43 *"fijat eque carjao me paso pablo gamboa... dice que me envio cosas"*; 22/09 14:28 | mediano | HY |
 | HOY-19b | mail (`_mails.py`) | **`--abrir <id>`**: mostrar en Outlook el mail original, y abrir un adjunto en pantalla en un paso (`--adjuntos`, que lo baja a `.mail-cache/adjuntos` como hoy, + `_abrir.mjs`). Abrir un mail en su ventana puede dejarlo marcado como leído: se mide con un mail propio y, si pasa, se vuelve a dejar sin leer | Fak: 23/09 12:22 *"abrime el mail original de hilo anrnaja asi abroi la carpeta desde ahi"*; 06/10 14:11 *"abrime el mial ese que dice que es de 1,45"*; 09/10 12:51 *"los ultimso mails abrime el pdf quiero velro"*; 08/10 16:57 *"apsame la foto de ese mail"*. Hoy `--ver` imprime texto y `--adjuntos` extrae sin abrir | mediano | HY |
 | HOY-19c | mail (`_mails.py`) y prioridades de la noche | **`--agenda`**: leer las reuniones de los próximos días y las tareas de Outlook, y sumarlas a «qué tengo pendiente» | Medido: 4 series de reuniones que se repiten (24 citas en 14 días) y 7 tareas sin completar que hoy nadie mira; ninguna reunión suelta cargada desde agosto, así que rinde de verdad si se aprueba HOY-19j. **La evidencia es la capacidad medida: ningún mensaje de Fak nombra el calendario**; los que siguen piden ordenar pendientes, que hoy atienden `--sin-respuesta`, `_seguimientos.mjs` y las prioridades de la noche. Fak: 08/10 08:24 *"revisa mis mails mist ares pedneintes decime prioridda numero 1"*; 09/10 14:21 *"Que tarea podemos ahcer pensando en nivel de urgenica"*; 21/09 07:42 *"rol orgniazador de teareas ayudame"* | mediano | HY |
-| HOY-19d | mail (`_mails.py`) | **`--borradores`**: listar los borradores con su edad, si llevan adjuntos y si los armó un programa (solo lectura) | Medido: 40 borradores, 30 de más de 90 días, 24 con adjuntos. `mail-envio.md`: un borrador viejo del mismo asunto es «una bomba con el asunto correcto». Fak 21/09 14:46 *"borra vos los dos borradores duplicados y todos los que esten viejos tamiben"* | chico | HY |
+| HOY-19d | mail (`_mails.py`) | **`--borradores`**: listar los borradores con su edad, si llevan adjuntos y si los armó un programa (solo lectura) | Medido: 40 borradores, 30 de más de 90 días, 24 con adjuntos. `mail-envio.md`: un borrador viejo del mismo asunto es «una bomba con el asunto correcto». Fak 21/09 14:46 *"borra vos los dos borradores duplicados y todos los que esten viejos tamiben"* y cuatro veces más (sección 2.4) | chico | HY |
 | HOY-19e | `hojas-de-proceso` | **Inventario**: qué hojas hay de una pieza o proyecto, cuál es la última versión y cuáles están completas | Fak: 05/10 12:22 *"de patagonia que hojas de preoceos de costura tenemos lsisatas"* y 12:30 *"revisa que esten compeltas las incompeltas no me srienv"*; 07/10 08:50 *"deberian estar todas... la ultima veriso"*. La skill tiene `_hoNumeros.py` (números) y el gate de una hoja; no tiene el listado por proyecto | mediano | HY |
 | HOY-19f | `arb-operar` | **Historia de una línea**: cuándo cambió un código, una unidad o un consumo, leyendo los exports fechados que ya se guardan | Fak: 21/09 08:51 *"Como que cambia el codigo del upper trimming? en que omoento cambio?"*; 22/09 09:29 *"porque esta en kg en arb? osea cual es elorigen de ese cambio... revisa mails viejos boms viejas"*. Hay 42 exports `RELACIONES_<fecha>` en `.arb-cache/` (25/08 al 08/10) y 32 fotos más en `.arb-cache/pre-cambio/` (desde el 07/08): 74. `candidatos_relaciones` de `scripts/_lib/arbRelaciones.py` ya lista las dos carpetas; ningún programa las compara. Es lectura de archivos: no toca el arb | mediano | HY |
 | HOY-19g | `docs-empresa` (descripción) y `video-maquina.md` | **Buscar fotos y videos de una máquina o pieza** en la biblioteca: que la skill que rutea diga dónde y con qué (`_videoBiblioteca.mjs --indice`, `_materialAfuera.mjs`) | Fak: 02/10 09:38 *"busca le vide de cmaibo de molde en la amquina d eip core"*; 01/10 08:59 *"la foto de la pieza entnera ? no esta en ningun lado del server?"*; 07/10 14:15 *"lso videos origngiales videos sin editar"*; y la tanda de las prensas del 01/10 (LECCIONES: «"no hay" se dice después de listar sin filtro de palabras»). La regla carga solo al tocar un `.MOV` o el programa: en una búsqueda no entra | mediano (cambia cuándo se dispara una skill, como H24) | HY |
 | HOY-19h | `cad-design` (**no se tocó**: el 10/10 la tenía la hija de CATIA) | (1) **Foto de un 3D recibido en un paso**: la descripción no nombra «mostrame / foto de un 3D que llegó»; `render_step.py` existe para STEP; para un CATPart hace falta CATIA por programa (HOY-20, probado el 10/10, espera una confirmación de Fak). (2) **Buscar un 3D por nombre o por quién lo hizo** fuera de los dispositivos | Para (2): Fak 08/10 09:33 *"refuerzos 3d de pwa... que siempre imprimre paulo... fiajte si los ecnontras"* y 10:11. `indice_dispositivos.py --buscar` cubre solo dispositivos. Para (1) no hay pedido que lo sostenga: el 09/10 12:57 Fak pidió *"una foto del 3d"*, recibió recortes del plano 2D y corrigió eso; ese día no había archivo 3D (lo leyó el auditor en el registro de la sesión). Queda como mejora de descripción, sin apuro | mediano | HY, después de que Fak conteste HOY-20 |
 | HOY-19i | mail (`_prepararMail.py` + `_mailEnviar.py`) | **Programar el envío** de un mail ya aprobado para una hora (entrega diferida de Outlook) | Fak 01/10 23:13 *"progrma ale mail con el ultimo pwoer point par aenviarse mañana 8am podes hacerlo correomcent o es muy difciicl eso nunca lo habimaos hecho"*. Outlook lo trae; **no se probó porque es escribir**. Choca con tres controles de `mail-envio.md` (abajo) | grande (nunca se hizo y toca el control de envío) | PF · tu sí |
 | HOY-19j | mail (programa nuevo) | **Convocar una reunión** por Outlook: armarla y dejarla abierta en pantalla, como un borrador; y el recordatorio | Fak 02/10 11:49 *"organicemos una reunion de amfe... pone encopai ca rlos poen a ciclelia como dirigido a ella la reuneiuon manuel en copia"*; 09/10 08:54 *"mandale sotro mail recordandoles que tenemos la reunion en 1 hora"*. Hoy la reunión se avisa por mail suelto y no queda en el calendario (medido: ninguna cita suelta desde el 26/08). Solo cuando Fak la pide para esa reunión; ningún recordatorio sale solo (el seguimiento de la reunión de AMFE ya lo lleva `scripts/_seguimientos.mjs`, que nació de ese mismo mensaje). Se leyó un solo calendario, el de Fak | grande (programa nuevo que termina en un envío) | PF · tu sí |
-| HOY-19k | mail | **Limpiar borradores viejos**: mover a Eliminados los que nadie tocó en N días, con la lista de HOY-19d a la vista | Mismo dato de HOY-19d. Mover es escribir en Outlook | chico | PF · tu sí |
-| HOY-19l | skill nueva `presentacion-evidencia` | **PowerPoint simple de evidencia** para un gerente: blanco, fotos y capturas reales, logo oficial, tabla, una idea por hoja | 38 mensajes nombran PowerPoint o presentación en 30 días. De los 6 pedidos de PowerPoint sin skill, el auditor dejó 2 que son de esto (02/10 y 05/10) más 2 correcciones (09/10); los otros eran una presentación personal, un «abrilo» y el del 01/10, que ese mismo día pasó a ser la skill `superficie-vinilo-3d`. Fak: 02/10 11:36 *"nenceisot ver la evidenica en un pwoer point con fotos asi ajdunto eso en el mail"*; 09/10 11:20 *"parec ehecho con ia... el wpoer point me da una fea snesasion"*; 09/10 14:20 *"un pwoer point simple"*. Evidencia floja: decidir con Fak si alcanza. Toca **X43** de la cola (descartada porque no se había medido el trabajo de Office por programa, que esta medición tampoco contesta) | mediano | PF · aviso |
+| HOY-19k | mail | **Limpiar borradores viejos**: mover a Eliminados los que nadie tocó en N días, con la lista de HOY-19d a la vista | Mismo dato de HOY-19d. Fak 05/10 10:08 *"siempre dejas muchos borrados... que depsue stnego que borrar manualemtne eso no emg usta capaz se peude solucico"*. Mover es escribir en Outlook, y 30 de los 40 son de antes de que existieran estos programas: por eso con la lista a la vista | chico | PF · tu sí |
+| HOY-19l | skill nueva `presentacion-evidencia` | **PowerPoint simple de evidencia** para un gerente: blanco, fotos y capturas reales, logo oficial, tabla, una idea por hoja | 38 mensajes nombran PowerPoint o presentación en 30 días. De los 6 pedidos de PowerPoint sin skill, el auditor dejó 2 que son de esto (02/10 y 05/10) más 2 correcciones (09/10); los otros eran una presentación personal, un «abrilo» y el del 01/10, que ese mismo día pasó a ser la skill `superficie-vinilo-3d`. Fak: 02/10 11:36 *"nenceisot ver la evidenica en un pwoer point con fotos asi ajdunto eso en el mail"*; 09/10 11:20 *"parec ehecho con ia... el wpoer point me da una fea snesasion"*; 09/10 14:20 *"un pwoer point simple"*. Con los de mitad de turno (sección 2.4) son 5 pedidos y 2 correcciones. Toca **X43** de la cola (descartada porque no se había medido el trabajo de Office por programa, que esta medición tampoco contesta) | mediano | PF · aviso |
 | HOY-19m | skill nueva `tiempos-por-video` | **Toma de tiempos desde un video**: tiempos por ciclo, qué tramo no cuenta, video recortado adentro del PowerPoint | Fak: 07/10 15:53 *"necniestoamso lso tiempso... hay que recortar algunas partes"*; 08/10 08:47 *"ese timepoque etarda en acomodaorloa l rpicncipio no pdmeos consideararlo"*; 08/10 08:33 *"lso videos recordtados... dentor del wpoer point"*. Los tres mensajes son de una sola sesión y un solo trabajo (R5 ya había contado uno el 08/10); además hay una lección del 07-08/10. El método vive en una memoria de referencia que solo entra si el índice la trae | mediano | PF · aviso |
 | HOY-19n | lector de mensajes (`transcriptsFak.mjs`) | **Leer también lo que Fak escribe a mitad de un turno** (adjuntos en cola de origen humano), como ya hacen `horaGuard.mjs`, `cierreGuard.mjs` y `mailOkFak.mjs` | Auditor 10/10: 708 mensajes así en 30 días, 704 fuera de esta medición. El mismo lector alimenta la prueba de disparo y las propuestas de skills de la noche | mediano | HY |
 
@@ -161,6 +193,7 @@ Orden: primero lo que Fak pide más seguido y es solo lectura. Tamaño según `c
 | HOY-19g | `.claude/skills/docs-empresa/SKILL.md` (descripción y una fila del mapa) | `node scripts/_probarMejora.mjs` con el mensaje real del 01/10; prueba de disparo | cambia cuándo se dispara una skill: medir antes y después |
 | HOY-19h | `.claude/skills/cad-design/` | prueba de disparo con los dos mensajes del 09/10 | choca con el cambio de CATIA (HOY-20) si se hace antes |
 | HOY-19i | `_prepararMail.py`, `_mailEnviar.py`, `mail-envio.md`, `mailOkFak.mjs`, tests | primero a la casilla de Fak, con él mirando | un mail programado con un dato que cambió sale igual: el control de «revalidar justo antes» deja de correr |
+| HOY-19n | `scripts/_lib/transcriptsFak.mjs`, su test | que el total de 30 días dé los dos grupos de 2.4; la prueba de disparo y las propuestas de la noche antes y después | cambia la muestra de dos pasos de la noche: avisarlo en el resumen de esa noche |
 | HOY-19j | programa nuevo, `mail-envio.md`, `mail-guard` | con un Outlook falso; después una reunión de prueba consigo mismo | una convocatoria es un envío: tiene que pasar por los mismos controles (gerente en copia, nadie de afuera) |
 
 Las medianas van por el camino mediano de `codigo-madre.md` (plan corto, leer entero lo que se toca, tests, auditor
@@ -192,8 +225,8 @@ Nada de esto se probó en CATIA.
 
 ## 6. Lo que quedó sin medir
 
-- **Los mensajes de mitad de turno**: unos 704 en la ventana (41 % de lo que Fak escribió). No se clasificaron. La
-  fila HOY-19n arregla el lector; después conviene repetir esta medición, que cuesta menos de un dólar.
+- **Los mensajes de mitad de turno** se clasificaron (sección 2.4) pero sin muestra verificada a mano, y con un
+  extractor de una sola vez; la fila HOY-19n lo deja en el lector de la casa.
 - **La salida de la corrida de `--sync`** (35 s, 3.249 items) no quedó guardada en un archivo: está en el registro de
   la sesión y en `.mail-cache/sync.log`.
 - **El cuerpo de cada skill contra cada pedido**: se cotejó solo para las filas de la tabla 3, no para los 149
@@ -215,5 +248,5 @@ Nada de esto se probó en CATIA.
 - Filas nuevas: `docs/COLA_CAMBIOS_CODIGO.md`, HOY-19a a HOY-19h y HOY-19n en HACER YA, y HOY-19i a HOY-19m en
   PROPONER A FAK.
 - Auditor Opus: `.sgc-cache/sesion-2026-10-10/auditor_HOY19.md` (6 errores reales, 11 de robustez, 6 falsos
-  positivos). Aplicados los 6 y los de robustez que cambian una fila; no se aplicó repetir la medición con los
-  mensajes de mitad de turno.
+  positivos). Aplicados los 6 y los de robustez que cambian una fila; los mensajes de mitad de turno se midieron
+  después (sección 2.4).
