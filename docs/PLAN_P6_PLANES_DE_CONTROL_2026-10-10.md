@@ -194,3 +194,25 @@ contacto, equipo, código de cliente, fechas original/revisión/FUM, `srCharacte
 
 Lo que la revisión confirmó que está bien: la trampa de la hoja `Rev.`, que la herramienta no mande nada a
 Calidad, y los `TBD` listados.
+
+### 7.6 Seis casos de prueba más para el gate 8 (cola HOY-18e, 10/10/2026)
+
+Tomados de la lista de chequeos de `migmcc/quality-docs-validator` (MIT; leído el 10/10/2026 en la segunda pasada
+por GitHub, `docs/PLAN_HOY18_GITHUB_SEGUNDA_PASADA_2026-10-10.md` §4). **No se toma su programa**: se toman los seis
+casos como pruebas del gate 8 y de los gates de arriba, cada uno con el criterio de la casa. Ese repo corta la
+«severidad alta» en S ≥ 8 y declara sus hallazgos «potenciales, para que los juzgue un ingeniero»; acá la crítica
+es S 9-10 (`caracteristicas-especiales.md`) y lo que decide es el estado del reporte del §7.2.
+
+| Caso del repo | Lo que mira | Cómo entra acá |
+|---|---|---|
+| `UNMATCHED_PROCESS_STEP` | una operación que está en uno solo de los dos documentos, en los dos sentidos | gate 0 (flujograma → AMFE) y gate 8 `SIN FILA` / `SIN CAUSA` por operación; aviso, no freno |
+| `MISSING_CONTROL` | fila del plan sin método de control | gate «celda vacía prohibida» (§7.1, errores del 06/10): vale o `TBD`; freno |
+| `SPECIAL_CHARACTERISTIC_NOT_CONTROLLED` | característica especial del AMFE que el plan no marca | gate 3: la sigla del plan se copia del `specialChar` de las causas vinculadas; una causa con sigla y fila sin sigla es `DIFERENTE`; freno |
+| `MISSING_REACTION_PLAN` | severidad alta sin plan de reacción | toda fila lleva plan de reacción (el formulario lo exige, columna `PLAN DE REACCIÓN`); sin papel va `TBD`; para S 9-10 es freno, para el resto aviso |
+| `WEAK_DETECTION_METHOD` | el control de detección es «inspección visual» | estado `GENÉRICO` del §7.2 (propone cambiar el AMFE y re-evaluar la D) |
+| `HIGH_SEVERITY_WEAK_CONTROL` | severidad alta con control débil | `GENÉRICO` sobre una causa con S 9-10: sube a freno (`DIFERENTE`) porque una CC no puede quedar con un control que no se puede identificar |
+
+Caso de respuesta conocida (el APB del 06/10, §7.4): el `UNMATCHED` tiene que listar 51, 60, 71, 81, 82 y 101; el
+`SPECIAL_CHARACTERISTIC_NOT_CONTROLLED`, la columna de características especiales vacía frente a las siglas del AMFE
+161; el `MISSING_CONTROL`, los parámetros de la 70 y la 80. Lo que pidió Fak el 10/10 18:58 (que los controles de
+detección del AMFE y los del plan sean los mismos) no está en ese repo: es el §7.2 entero.
