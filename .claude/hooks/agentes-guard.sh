@@ -45,6 +45,11 @@
 # y el hook llego a 12 s por llamada.
 #
 # Salida: exit 2 = bloquea la tool call y manda stderr a Claude como feedback.
+#         exit 0 con JSON en stdout = la llamada PASA y el JSON lleva un AVISO (additionalContext)
+#         que el modelo lee sin frenar. Hoy hay uno solo: «¿esto es buscar o decidir?» (P5 de la
+#         cola, 10/10/2026): un Sonnet con un pedido de busqueda pasa igual, descuenta igual, y se
+#         anota en ~/.claude/.agent-busquedas.log para medir cuantos eran busquedas (lo que H7 no
+#         pudo contar a mano).
 
 set -uo pipefail
 
@@ -68,6 +73,17 @@ LOG="${BASE}/.agent-spawns.log"
 ARCHIVO_LIMITE="${BASE}/.agent-limit"
 PASE_WORKFLOW="${BASE}/.workflow-ok"
 PASE_BUILTIN="${BASE}/.agent-builtin-ok"
+LOG_BUSQUEDAS="${BASE}/.agent-busquedas.log"   # P5: "<epoch> <subagent_type> <palabra>" por Sonnet con pedido de busqueda
+
+# P5 (A2b; Fak 09/10/2026 08:06 pregunto que agentes se usan y D1 #12 pidio contar cuantos Sonnet eran
+# busquedas). Las palabras son las de las dos filas de la tabla de techo-agentes.md, en sus formas rioplatenses
+# y de shell: BUSQUEDA = buscar, listar, leer, extraer un dato, contar, verificar un formato, traer una cita;
+# TRABAJO = escribir, programar, ensayar, analizar, investigar, decidir, cruzar, auditar. Si el texto trae lo
+# primero y nada de lo segundo, parece una busqueda. Es heuristica: por eso AVISA y no frena.
+RE_BUSQUEDA='(busc(a|á|ar|ame|ate)|list(a|á|ar|ame)|lee(r|me|lo|la)|le(e|é) (el|la|los|las|qu)|extra(e|é|er|eme)|cont(a|á|ar|ame) (cu|los|las|qu)|verific(a|á|ar) (el|la|si|que)|tra(e|é)(me|r)? (el|la|un|una|los|las)|encontr|ubic(a|á|ar)|d(o|ó)nde (est|se|hay|qued)|grep|find |locate|solo lectura|sin modificar|no (modifiques|escribas|toques)|read.only|search|look for)'
+RE_TRABAJO='(escrib|program|implement|arregl|corr(e|i)g|ensay|analiz|investig|decid|cruz(a|á|ar)|audit|redact|dise(ñ|n)(a|á|ar|o)|refactor|cre(a|á)(r|me)? (el|la|un|una)|arm(a|á|ar) (el|la|un|una)|hac(e|é)(r|me|lo)? (el|la|un|una)|prob(a|á|ar) (que|si|el|la|con)|teste|commit|edit(a|á|ar)|modific(a|á|ar) |write|fix |analy|review|revis(a|á|ar) (el|la|si|que)|propon|sintetiz|resum(i|í))'
+AVISO=""      # texto del aviso P5; vacio = la llamada pasa callada (set -u: se inicializa siempre)
+PALABRA=""    # la forma que disparo el aviso, para el registro (los espacios van como _)
 
 [ -d "$BASE" ] || mkdir -p "$BASE" 2>/dev/null
 
@@ -81,6 +97,30 @@ PLANO=${PLANO//$'\r'/}
 campo() {
   local re="\"$1\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
   if [[ $PLANO =~ $re ]]; then CAMPO=${BASH_REMATCH[1]}; else CAMPO=""; fi
+}
+
+# Primeros $2 caracteres de un campo de texto largo (prompt, description), en minusculas, en $FRAGMENTO.
+# campo() corta en la primera comilla, y adentro de un prompt las comillas vienen escapadas (\"): aca
+# primero se vacian los escapes (\\ \" \n \t -> espacio) sobre una copia del payload y recien despues se
+# toma el campo entero hasta su comilla de cierre. Asi un prompt que cita algo se lee igual, y el texto
+# NO sigue de largo hasta el campo siguiente (si siguiera, "subagent_type":"investigador" metia «investig»
+# en el texto y tapaba todos los avisos cuando el prompt era corto). Sin {n,m}: no toca RE_DUP_MAX.
+fragmento() {
+  local s re esc
+  s=$PLANO
+  for esc in '\\' '\"' '\n' '\t'; do s=${s//"$esc"/ }; done
+  re="\"$1\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
+  if [[ $s =~ $re ]]; then FRAGMENTO=${BASH_REMATCH[1]:0:$2}; FRAGMENTO=${FRAGMENTO,,}; else FRAGMENTO=""; fi
+}
+
+# Unica salida "pasa". Con AVISO puesto lo manda por JSON (additionalContext: el modelo lo lee, nada se
+# frena) y anota la llamada para medir. Sin AVISO no imprime nada, como siempre.
+permitir() {
+  if [ -n "$AVISO" ]; then
+    printf '%s %s %s\n' "$AHORA" "${SUBTIPO:-?}" "${PALABRA// /_}" >> "$LOG_BUSQUEDAS"
+    printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"%s"}}\n' "$AVISO"
+  fi
+  exit 0
 }
 
 # tool_name del payload. Si no se puede leer, asumimos que ES un spawn (fallar bloqueando:
@@ -261,10 +301,42 @@ if [ "$TOOL" != "Workflow" ]; then
       rechazar "\"$SUBTIPO\" no tiene definicion propia (built-in o inexistente): no se le puede fijar modelo y esfuerzo."
     fi
   fi
+
+  # ¿Es Sonnet de verdad? El modelo explicito manda; sin modelo, lo dice la definicion (un buscador sin
+  # modelo es haiku). Opus y Fable con pase descuentan como Sonnet pero no son Sonnet: no se les avisa.
+  ES_SONNET=0
+  case "$MODELO" in
+    sonnet|claude-sonnet-*) ES_SONNET=1 ;;
+    "") [ -n "$DEF" ] && case "$D_MODELO" in sonnet|claude-sonnet-*) ES_SONNET=1 ;; esac ;;
+  esac
+
+  # P5: un Sonnet con un pedido de busqueda. AVISO, no freno (Fak: "no quiero bloqueantes, quiero soluciones"):
+  # la llamada sigue y descuenta sus 4 puntos; se le dice para que la proxima vaya en buscador (haiku, 1 punto)
+  # y se anota para tener el numero que H7 dejo pendiente. Los auditores no entran: su modelo lo fija la definicion.
+  if [ "$ES_SONNET" = "1" ] && [ "$ES_AUDITOR" = "0" ]; then
+    fragmento description 240; TEXTO="$FRAGMENTO "
+    fragmento prompt 500; TEXTO+="$FRAGMENTO"
+    # las negaciones ("no escribas", "sin modificar") son senial de busqueda, no de trabajo: se sacan antes
+    # de buscar los verbos de trabajo, si no "escrib" taparia justo los pedidos de solo lectura
+    LIMPIO=$TEXTO
+    for NEG in "no escrib" "sin escrib" "no modifi" "sin modifi" "no edit" "no toqu" "no cambi"; do
+      LIMPIO=${LIMPIO//"$NEG"/}
+    done
+    if [[ $TEXTO =~ $RE_BUSQUEDA ]]; then
+      PALABRA=${BASH_REMATCH[1]}
+      if ! [[ $LIMPIO =~ $RE_TRABAJO ]]; then
+        # sin comillas ni barras: va adentro de un JSON armado a mano
+        PALABRA=${PALABRA//\"/}; PALABRA=${PALABRA//\\/}
+        AVISO="AVISO (agentes-guard, P5): este Sonnet lleva un pedido que parece una busqueda (dice «${PALABRA}»). ¿Es buscar o decidir? La llamada ya paso y desconto ${PESO_SONNET} puntos; no la relances. Si solo hay que ubicar, leer o extraer, la proxima va en buscador (haiku, pesa ${PESO_HAIKU}); si hay que escribir, analizar o cruzar fuentes, esta bien asi. Quedo anotada en ~/.claude/.agent-busquedas.log para medir cuantas eran busquedas (H7)."
+      else
+        PALABRA=""
+      fi
+    fi
+  fi
 fi
 
 # Limite 0 = techo desactivado a proposito por Fak (por 12 h); la regla de arriba ya corrio
-[ "$LIMITE" = "0" ] && exit 0
+[ "$LIMITE" = "0" ] && permitir
 
 # ---------------------------------------------------------------- Workflow: denegado
 if [ "$TOOL" = "Workflow" ]; then
@@ -343,4 +415,5 @@ fi
 
 # Permitido: registrar el spawn con su peso
 printf '%s %s %s\n' "$AHORA" "$TOOL" "$PESO" >> "$LOG"
+permitir   # P5: sale con 0; con AVISO puesto imprime el JSON y anota. No vuelve: el exit 0 de abajo queda de respaldo.
 exit 0

@@ -14,6 +14,15 @@ mods (`session.measure`) el % usado de las ventanas de 5 h y semanal, y `agent.s
 cambiar o negar el modelo de cada subagente. **Fase 3: reemplazar la ventana por un mod que pese por
 precio y frene por cupo real**; hasta entonces el presupuesto por puntos es la red de seguridad.
 
+**Fase 3, estado al 11/10/2026 (escrito por la API, auditado, NO instalado):** el mod esta ESCRITO en `mods/presupuesto-agentes/` (P33). La politica
+vive en `hooks/presupuesto.mjs` (pura, sin `$`; test `__tests__/mods/presupuesto-agentes.test.mjs`):
+replica este guardian punto por punto y suma el freno por cupo real (mas de 85 % de la ventana de 5 h o
+mas de 60 % de la semanal: no sale ningun subagente nuevo salvo la auditoria final; ese freno no tiene
+escape por archivo). Todavia NO esta instalado: la copia va en `~/.claude/mods/presupuesto-agentes/` y la
+ruta en `CLAUDE_CODE_PLUGIN_DIRS` (`env` de `~/.claude/settings.json`); mientras conviven, bash corta
+primero (PreToolUse) y el mod ve solo lo que bash dejo pasar; bash se apaga ULTIMO, tras una semana de
+registro coherente en `~/.claude/mods-log/presupuesto-agentes.log`. Pasos: `mods/presupuesto-agentes/README.md`.
+
 Historia: techo de 5 (06/08/2026, dos incidentes de 21 y 40 agentes); 10 solo en Sonnet (Fak, 30/09);
 **08/10/2026, Fak: "ese techo de 10 lo puse yo, ni siquiera se si es correcto... es absurdo que solo se
 pueda usar Sonnet... eficiencia no significa siempre ahorrar tokens, significa trabajar de la mejor
@@ -81,15 +90,18 @@ poder trabajar). La historia, las citas de Fak y los tres errores que los explic
 1. **Se DONDE mirar?** -> leerlo yo. Grep/Read/query directa. Casi siempre gana.
 2. **No se donde mirar, y son fuentes independientes?** -> `buscador` (haiku) para ubicar y extraer;
    `investigador` (sonnet) cuando hay que escribir o analizar; Opus solo para el que decide o cruza.
-   Cada uno con su fuente, contados y explicitos.
+   Cada uno con su fuente, contados y explicitos. **Si le mando a un Sonnet un pedido de busqueda** (las
+   palabras de la primera fila de la tabla y ninguna de la segunda), el guardian lo deja pasar y me avisa
+   «¿esto es buscar o decidir?»: no relanzo esa llamada (ya desconto), pero la proxima igual va en `buscador`.
 3. **Una tarea grande que pide Fable o varios Opus** (una investigacion, una auditoria de fondo): se
    hace, descontando lo que vale. Si el presupuesto no alcanza, se le dice a Fak el numero real
    (`puntos que hacen falta`) y para que; con su pedido textual se escribe el escape.
 4. **Antes de lanzar, un renglon en el chat: cuales, con que modelo y por que** (Fak, 09/10/2026, 08:06 y 08:23:
    *"¿que agentes vas a usar para esta tarea? ¿podes decirme antes de hacerlo?"*). Es INFORMAR, no preguntar: no se
    espera un si. Medido el 09/10: desde el 03/10 se lanzaron 143 Sonnet, 156 Opus, 9 Haiku y 6 Fable; 89 de los
-   Sonnet declaraban solo lectura (cuantos de esos eran busquedas puras, que un `buscador` hacia igual, se lee a mano:
-   es el numero que decide la P5 de la cola).
+   Sonnet declaraban solo lectura; cuantos eran busquedas puras no se separo a mano. Desde P5 (10/10) el guardian
+   anota cada Sonnet con pedido de busqueda en `~/.claude/.agent-busquedas.log` (`<epoch> <agente> <palabra>`):
+   ese registro es el numero, se lee cuando haya una semana de uso.
 
 **Nunca reintentar una llamada bloqueada por el guard.** Si el hook corta, el trabajo se hace a mano
 y se le avisa a Fak que se llego al techo.
