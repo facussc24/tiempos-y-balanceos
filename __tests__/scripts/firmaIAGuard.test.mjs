@@ -34,18 +34,20 @@ const bloquea = (c) => GUARDIANES['firma-ia-guard'](c, { env: {} })?.tipo === 'b
 const ROJOS = [
     ['COM: la columna CREADO POR con Claude (el caso del listado)', ctx('Bash', { cmd: `python -c "ws.Cells(r, 10).Value = 'Claude'"` })],
     ['openpyxl: una celda con Claude', ctx('Bash', { cmd: `python x.py && python -c "ws['J74'] = 'Claude'"` })],
-    ['openpyxl: cell(value=Claude)', ctx('Write', { file: 'C:\\Dev\\BarackMercosul\\scripts\\_cargarHo.py', content: `ws.cell(row=r, column=10, value="Claude")` })],
-    ['la pestaña oculta para el proximo Claude', ctx('Write', { file: 'C:\\Dev\\BarackMercosul\\scripts\\_registrar.py', content: `ctx = wb.create_sheet('_CONTEXTO_CLAUDE')\nctx.sheet_state = 'hidden'` })],
     ['COM: texto para el proximo Claude en una celda', ctx('PowerShell', { cmd: `$ws.Range('A1').Value2 = 'CONTEXTO PARA EL PRÓXIMO CLAUDE'` })],
-    ['propiedades del archivo: autor Claude', ctx('Edit', { file: 'C:\\Dev\\BarackMercosul\\scripts\\img\\hojalib.py', content: `prs.core_properties.author = "Claude"` })],
-    ['un dato con autor IA', ctx('Write', { file: 'C:\\Dev\\BarackMercosul\\tools\\flowchart\\data\\170.json', content: `{"elaboro": "Claude", "fecha": "08/10/2026"}` })],
     ['CREADO POR: IA', ctx('Bash', { cmd: `node scripts/x.mjs --creado-por "IA"` })],
-    ['un parrafo de Word con hecho con Claude', ctx('Write', { file: 'C:\\Dev\\BarackMercosul\\scripts\\_informe.py', content: `doc.add_paragraph("Informe armado con Claude")` })],
     ['un archivo con Claude en el nombre en el servidor', ctx('Bash', { cmd: `cp notas.txt "Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/3- LISTADO/_CONTEXTO_CLAUDE.txt"` })],
     ['una carpeta con Claude en el nombre en la nube de Ingenieria', ctx('Bash', { cmd: `mkdir -p "${NUBE}\\2- PROYECTOS\\Hecho por Claude"` })],
     ['un Write en el servidor que nombra a Claude', ctx('Write', { file: 'Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\VW\\nota.txt', content: 'Revisado con Claude el 08/10.' })],
     ['un Write en exports que nombra a ChatGPT', ctx('Write', { file: 'C:\\Dev\\BarackMercosul\\exports\\TIEMPOS\\tabla.csv', content: 'op;tiempo;fuente\n10;2:47;ChatGPT' })],
     ['un Write en la nube de Ingenieria que habla de inteligencia artificial', ctx('Write', { file: `${NUBE}\\1- GENERAL\\resumen.md`, content: 'Preparado con inteligencia artificial.' })],
+    // HOY-16c (11/10/2026, 5 de 5.339): los cinco que hasta hoy eran Write/Edit de un .py o un .json del repo (ahora en
+    // VERDES_HOY16C), en su forma de comando: lo que el script HACE sigue frenando por Bash.
+    ['openpyxl: cell(value=Claude), por Bash', ctx('Bash', { cmd: `python -c "ws.cell(row=r, column=10, value='Claude')"` })],
+    ['la pestaña oculta para el proximo Claude, por Bash', ctx('Bash', { cmd: `python -c "ctx = wb.create_sheet('_CONTEXTO_CLAUDE'); ctx.sheet_state = 'hidden'"` })],
+    ['propiedades del archivo: autor Claude, por Bash', ctx('Bash', { cmd: `python -c "prs.core_properties.author = 'Claude'"` })],
+    ['un dato con autor IA, por Bash al JSON del flujograma', ctx('Bash', { cmd: `node -e "d.elaboro = 'Claude'; fs.writeFileSync('tools/flowchart/data/170.json', JSON.stringify(d))"` })],
+    ['un parrafo de Word con hecho con Claude, por Bash', ctx('Bash', { cmd: `python -c "doc.add_paragraph('Informe armado con Claude')"` })],
 ];
 
 const VERDES = [
@@ -175,13 +177,106 @@ describe('firma-ia-guard · con el contexto como lo arma el despachador (el nomb
         for (const [nombre, c] of [...ROJOS_HOY16, ...ROJOS_AUDITOR]) if (c.tool === 'Bash') expect(bloquea(ctxVivo('Bash', { cmd: c.cmd })), nombre).toBe(true);
         expect(bloquea(ctxVivo('PowerShell', { cmd: `echo "x"; ls "${NP}/2- PROYECTOS/Hecho por Claude"` }))).toBe(true);
     });
-    it('PENDIENTE, anterior a HOY-16 (cola HOY-16b): en vivo el contenido de un Write o un Edit NO se revisa', () => {
-        // El guardian compara con 'write' / 'edit' y recibe «Write» / «Edit»: mira un comando vacio. Este test fija lo que
-        // pasa HOY para que se vea; el dia que se decida activarlo (frenaria 39 de 17.770 escrituras de 12 dias, casi
-        // todas legitimas), estas dos aserciones se dan vuelta.
-        const rojoDeWrite = ROJOS.find(([, c]) => c.tool === 'Write')[1];
-        expect(bloquea(rojoDeWrite)).toBe(true);                                             // como lo arman los tests
-        expect(bloquea(ctxVivo('Write', { file: rojoDeWrite.file, content: rojoDeWrite.content }))).toBe(false);   // como llega en vivo
+    const deArchivo = (c) => c.tool === 'Write' || c.tool === 'Edit';
+    it('ROJO (HOY-16b): en vivo el contenido de un Write o un Edit SE revisa (hasta el 11/10 miraba un comando vacio)', () => {
+        for (const [nombre, c] of ROJOS) if (deArchivo(c)) expect(bloquea(ctxVivo(c.tool, { file: c.file, content: c.content })), nombre).toBe(true);
+    });
+    it('VERDE (HOY-16b): los Write y Edit de todos los dias pasan igual en vivo', () => {
+        for (const [nombre, c] of VERDES) if (deArchivo(c)) expect(bloquea(ctxVivo(c.tool, { file: c.file, content: c.content })), nombre).toBe(false);
+    });
+    it('HOY-16b, por evaluar() con el JSON como llega del despachador: rojo sale con 2, verde con 0', () => {
+        const exit = (tool, input) => G.evaluar(JSON.stringify({ tool_name: tool, tool_input: input }), { nombres: ['firma-ia-guard'], marcar: false, env: {} }).salida.exit;
+        const CSV = 'C:\\Dev\\BarackMercosul\\exports\\TIEMPOS\\tabla.csv';
+        expect(exit('Write', { file_path: CSV, content: 'op;tiempo;fuente\n10;2:47;ChatGPT' })).toBe(2);
+        expect(exit('Edit', { file_path: 'Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\VW\\nota.txt', old_string: 'x', new_string: 'Revisado con Claude el 08/10.' })).toBe(2);
+        expect(exit('Write', { file_path: CSV, content: 'op;tiempo;fuente\n10;2:47;video IMG_0383' })).toBe(0);
+        expect(exit('Write', { file_path: 'C:\\Dev\\BarackMercosul\\exports\\explicaciones\\cierre.html', content: '<p>Claude revisa el cierre</p>' })).toBe(0);
+    });
+});
+
+// ── HOY-16c (11/10/2026): un script no es un documento, el TEMP no es de la empresa. Medido con
+// `node scripts/_medirFirmaWrite.mjs` sobre 12 dias: 5.339 Write/Edit, frenaria 5. Dos eran documentos de verdad (un LEEME.txt en
+// la nube de Ingenieria; el armar.py de una guia sobre la IA, legitima); tres eran SCRIPTS (.py, .mjs) en exports/ o en el TEMP de
+// la sesion, y uno era el medidor de este mismo control con un fixture «CREADO POR = Claude». Lo que un script PRODUCE lo revisa
+// _sinFirmaIA.py al escribirse o imprimirse. Las dos excepciones valen SOLO para el contenido de un Write / Edit con JSON sano.
+const TEMP = 'C:\\Users\\FACUND~1\\AppData\\Local\\Temp';
+const EXPORTS = 'C:\\Dev\\BarackMercosul\\exports';
+const VERDES_HOY16C = [
+    // los tres de la medicion, en su forma
+    ['un .py en exports/ con la IA en un campo de autoria (el fixture del medidor)', 'Write', `${EXPORTS}\\UPPER_TRIM_CONSUMO_VINILO_20261006\\armar.py`, `CASOS = [("CREADO POR", "Claude"), ("CREADO POR", "F.Santoro")]  # fixture`],
+    ['un .mjs en el TEMP de la sesion (nombre corto FACUND~1) que nombra a la IA', 'Write', `${TEMP}\\x\\scratchpad\\medir.mjs`, `const CASO = { 'CREADO POR': 'Claude' };`],
+    ['un .html en el TEMP, con barras normales, que nombra a la IA', 'Write', 'C:/Users/x/AppData/Local/Temp/y/pagina.html', '<p>Autor: Claude</p>'],
+    ['un .py en el TEMP, todo en minuscula (el armar.py de ppt_pedro)', 'Write', 'c:/users/x/appdata/local/temp/ppt_pedro/armar.py', `cp.title = 'Claude en Barack - Como empezar'`],
+    ['un .txt en el /tmp de msys', 'Write', '/tmp/nota.txt', 'Autor: Claude'],
+    // hasta el 11/10 eran ROJOS de este archivo: scripts del repo que ponen una IA en un documento al CORRER. Lo que hacen sigue
+    // frenando por Bash (sus gemelos python -c estan en ROJOS) y el documento que producen lo frena _sinFirmaIA.py.
+    ['openpyxl: cell(value=Claude) en un .py del repo', 'Write', 'C:\\Dev\\BarackMercosul\\scripts\\_cargarHo.py', `ws.cell(row=r, column=10, value="Claude")`],
+    ['la pestaña oculta para el proximo Claude en un .py del repo', 'Write', 'C:\\Dev\\BarackMercosul\\scripts\\_registrar.py', `ctx = wb.create_sheet('_CONTEXTO_CLAUDE')\nctx.sheet_state = 'hidden'`],
+    ['propiedades del archivo: autor Claude en un .py del repo', 'Edit', 'C:\\Dev\\BarackMercosul\\scripts\\img\\hojalib.py', `prs.core_properties.author = "Claude"`],
+    ['un parrafo de Word con hecho con Claude en un .py del repo', 'Write', 'C:\\Dev\\BarackMercosul\\scripts\\_informe.py', `doc.add_paragraph("Informe armado con Claude")`],
+];
+const ROJOS_HOY16C = [
+    ['un .csv en exports/ con la IA en la columna de autoria', 'Write', `${EXPORTS}\\TIEMPOS\\_p.csv`, 'op;tiempo;creado por\n10;2:47;Claude'],
+    ['un .txt en la nube de Ingenieria que nombra a la IA (el LEEME.txt de la medicion)', 'Write', `${NUBE}\\1- GENERAL\\AMFE\\DATOS\\LEEME.txt`, 'Carpeta ordenada con Claude el 01/10/2026.'],
+    // un .py en la nube FRENA: ahi lo ve el equipo, como el _trabajo de HOY-16b; la excepcion de scripts es para afuera del servidor
+    // y de la nube, y medido no cuesta nada (ninguno de los 5 frenos en 12 dias era un script en la nube)
+    ['un .py en la nube de Ingenieria que nombra a la IA', 'Write', `${NUBE}\\1- GENERAL\\AMFE\\DATOS\\armar.py`, '# armado con Claude\nprint(1)'],
+    ['un .json en el servidor con la IA en un campo de autoria', 'Edit', 'Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\HOJAS DE OPERACIONES\\3- LISTADO\\datos.json', '{"creado_por": "Claude"}'],
+    // un .json es un DATO, no un script (auditor Opus 11/10 03:00): el 170.json del flujograma se dibuja en el cajetin como «Elaborado por»
+    ['un Edit de un .json del repo con la IA en un campo de autoria', 'Edit', 'C:\\Dev\\BarackMercosul\\tools\\flowchart\\data\\170.json', `{"elaboro": "Claude", "fecha": "08/10/2026"}`],
+    ['un script en exports/ con claude en el NOMBRE (el nombre si se mira, regla 4)', 'Write', `${EXPORTS}\\HO\\notas_claude.py`, 'print(1)'],
+    ['salir del TEMP con ..', 'Write', `${TEMP}\\..\\..\\..\\Desktop\\nota.txt`, 'Autor: Claude'],
+    ['una carpeta que solo se llama parecido al TEMP', 'Write', 'C:\\Users\\x\\AppData\\Local\\Temporal\\nota.txt', 'Autor: Claude'],
+    ['un .txt en exports/ con un campo de autoria', 'Write', `${EXPORTS}\\HO\\nota.txt`, 'Elaboro: Claude'],
+    ['una extension que solo termina parecido (.jsonld no es .json)', 'Write', `${EXPORTS}\\HO\\datos.jsonld`, '{"author": "Claude"}'],
+];
+
+describe('firma-ia-guard · HOY-16c: un script no es un documento y el TEMP no es de la empresa (11/10/2026, 5 de 5.339)', () => {
+    for (const [nombre, tool, f, c] of VERDES_HOY16C) it(`VERDE: ${nombre}`, () => {
+        expect(bloquea(ctxVivo(tool, { file: f, content: c }))).toBe(false);
+        expect(bloquea(ctx(tool, { file: f, content: c }))).toBe(false);
+        expect(firmaIaEnEscritura(c, f)).not.toBeNull();   // sin la excepcion frenaba: el verde lo da la excepcion
+    });
+    for (const [nombre, tool, f, c] of ROJOS_HOY16C) it(`ROJO: ${nombre}`, () => {
+        expect(bloquea(ctxVivo(tool, { file: f, content: c }))).toBe(true);
+        expect(bloquea(ctx(tool, { file: f, content: c }))).toBe(true);
+    });
+    it('por evaluar() con el JSON como llega del despachador: el .csv de exports y el .txt de la nube salen con 2; el .py de exports, el .mjs y el .html del TEMP con 0', () => {
+        const exit = (tool, input) => G.evaluar(JSON.stringify({ tool_name: tool, tool_input: input }), { nombres: ['firma-ia-guard'], marcar: false, env: {} }).salida.exit;
+        expect(exit('Write', { file_path: `${EXPORTS}\\TIEMPOS\\_p.csv`, content: 'op;tiempo;creado por\n10;2:47;Claude' })).toBe(2);
+        expect(exit('Edit', { file_path: `${NUBE}\\1- GENERAL\\AMFE\\DATOS\\LEEME.txt`, old_string: 'x', new_string: 'Carpeta ordenada con Claude.' })).toBe(2);
+        expect(exit('Write', { file_path: `${EXPORTS}\\UPPER_TRIM_CONSUMO_VINILO_20261006\\armar.py`, content: 'CASOS = [("CREADO POR", "Claude")]' })).toBe(0);
+        expect(exit('Write', { file_path: `${TEMP}\\x\\scratchpad\\medir.mjs`, content: `const CASO = { 'CREADO POR': 'Claude' };` })).toBe(0);
+        expect(exit('Write', { file_path: 'C:/Users/x/AppData/Local/Temp/y/pagina.html', content: '<p>Autor: Claude</p>' })).toBe(0);
+    });
+    it('auditor Opus 11/10 03:00: ninguna excepcion vale en la nube ni en el servidor; un .json es un dato; .sgc-cache es interno; preparedBy es autoria', () => {
+        const exit = (tool, input) => G.evaluar(JSON.stringify({ tool_name: tool, tool_input: input }), { nombres: ['firma-ia-guard'], marcar: false, env: {} }).salida.exit;
+        // ROJO: `exports\explicaciones` y `_trabajo` solo cuentan adentro del repo; en la nube o en Y: los ve el equipo
+        expect(exit('Write', { file_path: `${NUBE}\\2- PROYECTOS\\exports\\X\\_trabajo\\LISTADO.csv`, content: 'creado por;Claude' })).toBe(2);
+        expect(exit('Write', { file_path: 'Y:\\BARACK\\CALIDAD\\exports\\explicaciones\\a.csv', content: 'creado por;Claude' })).toBe(2);
+        // ROJO: un AppData\Local\Temp del servidor no es la carpeta temporal del usuario
+        expect(exit('Write', { file_path: 'Y:\\BARACK\\AppData\\Local\\Temp\\x.csv', content: 'creado por;Claude' })).toBe(2);
+        // ROJO: un .json es un dato, no un script (el 170.json del flujograma se dibuja en el cajetin)
+        expect(exit('Write', { file_path: `${EXPORTS}\\X\\datos.json`, content: '{"creado_por": "Claude"}' })).toBe(2);
+        expect(exit('Write', { file_path: 'C:\\Dev\\BarackMercosul\\tools\\flowchart\\data\\x.json', content: '{"preparedBy": "Claude"}' })).toBe(2);
+        // VERDE: la cache interna del repo nunca sale de la PC (notas de investigacion que nombran a la IA a proposito)
+        expect(exit('Write', { file_path: 'C:\\Dev\\BarackMercosul\\.sgc-cache\\investigacion-2026-10-11\\HALLAZGOS.md', content: 'autor: claude\n' })).toBe(0);
+        // VERDE sigue: el .py de exports del repo y el .mjs del TEMP del usuario
+        expect(exit('Write', { file_path: `${EXPORTS}\\X\\armar.py`, content: 'AUTOR = "Claude"' })).toBe(0);
+    });
+    it('ROJO: con el JSON roto las excepciones no valen (red de seguridad, hacia el lado de frenar)', () => {
+        const roto = { ok: false, raw: '', rescate: { tool: 'Write', cmd: '', file: `${TEMP}\\x\\scratchpad\\medir.mjs`, content: `const CASO = { 'CREADO POR': 'Claude' };` } };
+        expect(bloquea(roto)).toBe(true);
+    });
+    it('esScript y esArchivoTemporal: por extension exacta y por carpeta, sin ..', () => {
+        for (const si of ['a.py', 'a.MJS', 'x/a.cjs', 'a.js', 'a.ts', 'a.sh', 'a.ps1']) expect(G.esScript(si), si).toBe(true);
+        // .json / .jsonl / .yml son DATOS (auditor Opus 11/10 03:00: un datos.json en exports con "creado_por": "Claude" pasaba)
+        for (const no of ['a.txt', 'a.csv', 'a.html', 'a.pyc', 'a.jsonld', 'a.py.bak', 'a.json', 'a.jsonl', 'a.yml', '']) expect(G.esScript(no), no).toBe(false);
+        for (const si of [`${TEMP}\\a.txt`, 'C:/Users/x/AppData/Local/Temp/a.txt', '/c/Users/x/AppData/Local/Temp/a', 'c:\\users\\x\\appdata\\local\\temp\\a', '/tmp/a']) expect(G.esArchivoTemporal(si), si).toBe(true);
+        // anclada al TEMP del usuario: un AppData\Local\Temp en el servidor no es temporal (auditor Opus 11/10 03:00)
+        for (const no of [`${TEMP}\\..\\a.txt`, 'C:\\Users\\x\\AppData\\Local\\Temporal\\a', 'C:\\Users\\x\\AppData\\Roaming\\Temp\\a', 'C:\\Dev\\BarackMercosul\\tmp\\a', 'tmp/a', 'Y:\\BARACK\\AppData\\Local\\Temp\\x.csv', '']) expect(G.esArchivoTemporal(no), no).toBe(false);
+        for (const si of ['C:\\Dev\\BarackMercosul\\.sgc-cache\\investigacion-2026-10-11\\HALLAZGOS.md', '/c/Dev/BarackMercosul/.sgc-cache/x/a.md']) expect(G.esCacheInterna(si), si).toBe(true);
+        for (const no of ['C:\\Dev\\BarackMercosul\\.sgc-cache\\..\\exports\\a.csv', 'C:\\Dev\\BarackMercosul\\exports\\a.md', '']) expect(G.esCacheInterna(no), no).toBe(false);
     });
 });
 

@@ -348,7 +348,7 @@ Como se arregla:
 // Lo que un script escribe por dentro no se ve aca: eso lo ataja el detector (`scripts/_sinFirmaIA.py`)
 // en el cierre del turno y en los que mandan, imprimen o archivan. Tests: __tests__/scripts/firmaIAGuard.test.mjs.
 const IA_NOMBRES = String.raw`claude|anthropic|chat\s?gpt|openai|gemini|copilot`;
-const FIRMA_CAMPO = String.raw`(?:cread[oa][_\s-]+por|elaborad[oa][_\s-]+por|hech[oa][_\s-]+por|realizad[oa][_\s-]+por|modificad[oa][_\s-]+por|preparad[oa][_\s-]+por|redactad[oa][_\s-]+por|elabor[oó]|realiz[oó]|confeccion[oó]|prepar[oó]|redact[oó]|modific[oó]|autor(?:es)?|authors?|creator|created[_\s]?by|modified[_\s]?by|updated[_\s]?by|last[_\s]?modified[_\s]?by|lastmodifiedby)(?![a-záéíóú])`;
+const FIRMA_CAMPO = String.raw`(?:cread[oa][_\s-]+por|elaborad[oa][_\s-]+por|hech[oa][_\s-]+por|realizad[oa][_\s-]+por|modificad[oa][_\s-]+por|preparad[oa][_\s-]+por|redactad[oa][_\s-]+por|elabor[oó]|realiz[oó]|confeccion[oó]|prepar[oó]|redact[oó]|modific[oó]|autor(?:es)?|authors?|creator|created[_\s]?by|prepared[_\s]?by|modified[_\s]?by|updated[_\s]?by|last[_\s]?modified[_\s]?by|lastmodifiedby)(?![a-záéíóú])`;
 const FIRMA_AUTORIA_RE = new RegExp(String.raw`${FIRMA_CAMPO}["'\]\x60]?\s*[:=,]?\s*[(\[]?\s*[fFrRbBuU]?["'\x60]?\s*(?:${IA_NOMBRES}|ia(?![a-z])|ai(?![a-z]))`, 'i');
 // Una pasada por tipo de comilla: un `python -c "ws.Value = 'Claude'"` tiene el literal simple ADENTRO del doble.
 const FIRMA_LITERALES_RE = ['"', "'", '\x60'].map((q) => new RegExp(String.raw`${q}([^${q}\n]*?(?:${IA_NOMBRES})[^${q}\n]*?)${q}`, 'gi'));
@@ -571,22 +571,59 @@ export function firmaIaEnEscritura(texto, archivo = '', { bash = false } = {}) {
   return null;
 }
 
-GUARDIANES['firma-ia-guard'] = (ctx) => {
-  let motivo = null;
-  if (ctx.ok) {
-    const tool = ctx.toolL;
-    if (tool === 'write' || tool === 'edit') motivo = firmaIaEnEscritura(ctx.content ?? '', ctx.file ?? '');
-    // OJO (11/10/2026, medido): el despachador pasa el nombre de la herramienta con mayuscula («Bash», «Write»), asi
-    // que la comparacion de arriba con 'write' / 'edit' NUNCA da verdadero en vivo: el contenido de un Write o un Edit
-    // no se revisa (los tests arman el contexto en minuscula y no lo veian). NO se corrige aca: activarla frenaria 39
-    // de 17.770 Write/Edit de 12 dias, casi todos legitimos (las paginas de exports/explicaciones). Es una decision
-    // aparte, anotada en docs/COLA_CAMBIOS_CODIGO.md (fila HOY-16b). El camino de lectura de Bash si se compara bien:
-    else motivo = firmaIaEnEscritura(ctx.cmd ?? ctx.cmd6 ?? '', '', { bash: /^bash$/i.test(String(tool)) });
-  } else {
-    motivo = firmaIaEnEscritura(`${ctx.rescate?.cmd ?? ''}\n${ctx.rescate?.content ?? ''}`, ctx.rescate?.file ?? '');
-  }
-  if (!motivo) return null;
-  return bloqueo(`[FIRMA-IA] BLOQUEADO: estas por escribir ${motivo}
+// ── HOY-16b: el contenido de un Write / Edit ───────────────────────────────
+// Dos carpetas de exports/ no son entregables y nombran a Claude a proposito: las paginas que le explican el sistema a
+// Fak (exports/explicaciones/) y los archivos de trabajo de una tarea (exports/<tarea>/_trabajo/, indices de busqueda).
+// Segun la fila HOY-16b (medicion del 11/10/2026), 26 de los 39 Write/Edit de 12 dias que frenaria activar la revision
+// en vivo caen ahi. Se vuelve a medir con `node scripts/_medirFirmaWrite.mjs` antes de activar nada.
+// Solo adentro de exports/: un `_trabajo` en la nube o en el servidor lo ve el equipo y se sigue revisando.
+// Con `..` en la ruta no hay excepcion: por ahi se sale a una carpeta de entregables.
+const FIRMA_EXPORTS_INTERNOS_RE = /[\\/]exports[\\/](?:explicaciones|(?:[^\\/]+[\\/])*_trabajo)[\\/]/i;
+export function esExportInterno(archivo) {
+  const f = String(archivo ?? '');
+  return FIRMA_EXPORTS_INTERNOS_RE.test(f) && !/(?:^|[\\/])\.\.(?:[\\/]|$)/.test(f);
+}
+// ── HOY-16c (11/10/2026): un script no es un documento, el TEMP no es de la empresa ──
+// Medido con `node scripts/_medirFirmaWrite.mjs` sobre 12 dias: 5.339 Write/Edit, frenaria 5. Dos eran documentos de
+// verdad (un LEEME.txt en la nube; el armar.py de una guia sobre la IA, legitima); tres, SCRIPTS (.py, .mjs) en exports/
+// o en el TEMP de la sesion, y uno era el medidor de este mismo control con un fixture «CREADO POR = Claude».
+//   1. Un script, por extension, no se revisa por contenido (nombra a la IA en una ruta o en un fixture; lo que PRODUCE
+//      lo revisa scripts/_sinFirmaIA.py al escribirse o imprimirse). Su NOMBRE si (regla 4). En el servidor o en la nube
+//      de Ingenieria se revisa entero: ahi lo ve el equipo, mismo criterio que el `_trabajo` de HOY-16b.
+//   2. Bajo AppData\Local\Temp (\ o /, mayusculas indistintas, tambien el nombre corto FACUND~1) o bajo /tmp no se revisa
+//      nada; con `..` no hay excepcion, igual que en exports/. Es otra regex que FIRMA_TEMPORAL_RE (la de Bash): esa no se toca.
+// Solo para el contenido de un Write / Edit con JSON sano: Bash y la red del JSON roto no cambian. Van como constantes al
+// lado de las otras: este guardian no lee firmaIA.data.json (ese canon es del detector).
+// Auditor Opus 03:00: un .json / .jsonl / .yml son DATOS, no scripts (un `datos.json` en exports con "creado_por": "Claude"
+// pasaba; el 170.json del flujograma se dibuja en el cajetin): quedan afuera de la lista.
+const FIRMA_SCRIPT_RE = /\.(?:py|mjs|cjs|js|ts|sh|ps1)$/i;
+// Anclada a la carpeta temporal del USUARIO (C:\Users\<x>\AppData\Local\Temp, tambien /c/Users/... y FACUND~1) y a /tmp:
+// un `Y:\BARACK\AppData\Local\Temp\x.csv` del servidor no es temporal (auditor Opus 03:00).
+const FIRMA_TEMPORAL_ARCHIVO_RE = /^(?:[A-Za-z]:|\/[A-Za-z])?[\\/]Users[\\/][^\\/]+[\\/]AppData[\\/]Local[\\/]Temp(?:[\\/]|$)|^\/tmp(?:\/|$)/i;
+// La cache interna del repo (.sgc-cache/, ignorada por git) guarda notas de investigacion que nombran a la IA a proposito
+// (medido 11/10/2026 con los subagentes: 5 de 6 frenos de 12 dias eran eso). Nunca sale de la PC: no se revisa.
+const FIRMA_CACHE_INTERNA_RE = /(?:^|[\\/])\.sgc-cache[\\/]/i;
+export function esScript(archivo) { return FIRMA_SCRIPT_RE.test(String(archivo ?? '')); }
+export function esArchivoTemporal(archivo) {
+  const f = String(archivo ?? '');
+  return FIRMA_TEMPORAL_ARCHIVO_RE.test(f) && !/(?:^|[\\/])\.\.(?:[\\/]|$)/.test(f);
+}
+export function esCacheInterna(archivo) {
+  const f = String(archivo ?? '');
+  return FIRMA_CACHE_INTERNA_RE.test(f) && !/(?:^|[\\/])\.\.(?:[\\/]|$)/.test(f);
+}
+/** Lo que frena en el contenido de un Write / Edit, o null. Las excepciones valen SOLO aca: el JSON roto no las usa. */
+export function firmaIaEnArchivo(contenido, archivo) {
+  // Ninguna excepcion vale en el servidor ni en la nube de Ingenieria: un `...\exports\explicaciones\a.csv` en Y: o un
+  // `_trabajo` en la nube los ve el equipo (auditor Opus 03:00: la regex de exports aceptaba cualquier tramo `\exports\`).
+  const enLaCasa = FIRMA_RAIZ_RE.test(' ' + String(archivo ?? ''));
+  if (!enLaCasa && (esExportInterno(archivo) || esArchivoTemporal(archivo) || esCacheInterna(archivo))) return null;
+  // un script afuera del servidor y de la nube: se mira el NOMBRE (contenido vacio), no el contenido
+  const soloElNombre = esScript(archivo) && !FIRMA_RAIZ_RE.test(' ' + String(archivo ?? ''));
+  return firmaIaEnEscritura(soloElNombre ? '' : contenido, archivo);
+}
+
+const textoFirmaIa = (motivo) => `[FIRMA-IA] BLOQUEADO: estas por escribir ${motivo}
 
 Regla de Fak (08/10/2026): ningun documento de Barack dice ni deja ver que lo hizo Claude o una IA
 — ni en una celda, ni en una pestaña oculta, ni en una nota, ni en las propiedades del archivo, ni
@@ -597,7 +634,23 @@ proceso decia "Claude" en CREADO POR y tenia una pestaña oculta "_CONTEXTO_CLAU
   · Mi contexto (notas, historia, "proximo numero") va a la memoria o al repo, NUNCA adentro del documento.
   · Despues de escribir: python scripts/_sinFirmaIA.py <archivo>
 
-Regla: .claude/rules/core-prohibiciones.md §9`);
+Regla: .claude/rules/core-prohibiciones.md §9`;
+
+// HOY-16b (activado el 11/10/2026 03:00 por decision de la sesion, con la medicion de 12 dias como evidencia; Fak a la
+// 01:35: «yo no quiero responder nada»): en vivo el despachador pasa «Write» / «Edit» con mayuscula y los tests viejos arman el
+// contexto en minuscula. Se compara sin distinguir, para que el control del contenido corra igual en los dos lados.
+const FIRMA_TOOL_ARCHIVO_RE = /^(?:write|edit)$/i;
+GUARDIANES['firma-ia-guard'] = (ctx) => {
+  let motivo = null;
+  if (ctx.ok) {
+    const tool = String(ctx.toolL ?? '');
+    if (FIRMA_TOOL_ARCHIVO_RE.test(tool)) motivo = firmaIaEnArchivo(ctx.content ?? '', ctx.file ?? '');
+    else motivo = firmaIaEnEscritura(ctx.cmd ?? ctx.cmd6 ?? '', '', { bash: /^bash$/i.test(tool) });
+  } else {
+    // JSON roto: sin la excepcion de exports/. Es la red de seguridad y falla hacia el lado de frenar.
+    motivo = firmaIaEnEscritura(`${ctx.rescate?.cmd ?? ''}\n${ctx.rescate?.content ?? ''}`, ctx.rescate?.file ?? '');
+  }
+  return motivo ? bloqueo(textoFirmaIa(motivo)) : null;
 };
 
 // ── supabase-guard (solo deteccion; el backup lo corre el .sh) ─────────────
