@@ -8,7 +8,7 @@
   "_no_decide": "Herramientas que son una PREGUNTA a Fak, no un permiso: no se contestan solas. Fak 09/10/2026 16:55 sobre P38: askUserQuestionTimeout 'nunca', por lo que el contrato marca 'preguntar siempre'.",
   "seccion_re": "^##\\s+Lo que necesita a Fak",
   "_seccion_re": "El mismo titulo que lee tandaReglas.mjs (tandaCanon.data.json, parado.seccion_lista_re): un cartel negado cuenta como algo abierto que espera a Fak, y eso es buscado. Limite (auditor 10/10/2026): si el comando negado trae la palabra 'contestada', 'respondido', 'resuelta' o 'decidido', tandaReglas lo toma por un renglon ya cerrado y no lo cuenta; el renglon igual queda en la lista.",
-  "_presencia_que_cuenta": "Como señal de que Fak esta cuentan tres cosas del registro de esa sesion: un mensaje que escribio, su respuesta a una pregunta (AskUserQuestion) y un corte suyo (Esc). Aprobar un cartel no deja una marca propia en el registro, asi que no se puede contar.",
+  "_presencia_que_cuenta": "Como señal de que Fak esta cuentan dos cosas del registro de esa sesion: un mensaje que escribio y su respuesta a una pregunta (AskUserQuestion). Un corte (Esc) NO cuenta: cuando otra sesion frena a esta con stop_session queda escrito igual que un Esc de Fak (medido 10/10/2026, sesion 2762936c). Aprobar un cartel no deja una marca propia en el registro, asi que tampoco se puede contar.",
   "seccion_titulo": "## Lo que necesita a Fak (para cuando vuelva)",
   "tope_resumen": 200,
   "tope_renglones": 30,

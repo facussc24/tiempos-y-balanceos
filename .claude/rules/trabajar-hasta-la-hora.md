@@ -93,7 +93,7 @@ una hora. Lo que sí está probado: el script, la señal, el control en las dos 
   (04/10/2026: a las 10:00 cerré el pedido de la noche y el control volvió a pedirme que fijara esa misma hora).
 - **Hook `permiso-guard.sh`** (PermissionRequest, 10/10/2026, cola P41; lógica en `scripts/_lib/permisoGuard.mjs`,
   números en `permisoCanon.data.json`): con una hora vigente para ESA sesión y sin una señal de Fak en los últimos
-  3 minutos (un mensaje suyo, su respuesta a una pregunta o un corte con Esc), un cartel de permiso se contesta solo con «no» y el pedido queda anotado en «Lo que necesita a Fak» de
+  3 minutos (un mensaje suyo o su respuesta a una pregunta), un cartel de permiso se contesta solo con «no» y el pedido queda anotado en «Lo que necesita a Fak» de
   la lista (`- **Cartel negado…**`); el motivo dice que no se consiga lo mismo por otro lado. Sin hora, con Fak en la
   ventana o ante una pregunta (`AskUserQuestion`) no decide. Nunca contesta «sí». Cada corrida deja una línea en
   `~/.claude/.permiso-guard.log` (`node scripts/_lib/permisoGuard.mjs --registro`). Límites: en «omitir permisos» la

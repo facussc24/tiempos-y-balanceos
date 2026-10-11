@@ -100,19 +100,28 @@ describe('permiso-guard — decide (las dos direcciones)', () => {
     const hace = (seg) => new Date(Date.now() - seg * 1000).toISOString();
     const mensaje = JSON.stringify({ type: 'user', timestamp: hace(600), message: { content: DE_FAK } });
     // la forma real de una respuesta a AskUserQuestion en el registro (sesion 829f7135, 12/09/2026)
-    const respuesta = JSON.stringify({ type: 'user', timestamp: hace(30), message: { content: [{ type: 'tool_result', tool_use_id: 'toolu_01', content: 'User has answered your questions' }] }, toolUseResult: { questions: [{ header: 'Caballete' }], answers: { Caballete: 'Sacalo' } } });
-    const corte = JSON.stringify({ type: 'user', timestamp: hace(30), message: { content: [{ type: 'text', text: '[Request interrupted by user]' }] } });
+    const respuesta = (seg) => JSON.stringify({ type: 'user', timestamp: hace(seg), message: { content: [{ type: 'tool_result', tool_use_id: 'toolu_01', content: 'User has answered your questions' }] }, toolUseResult: { questions: [{ header: 'Caballete' }], answers: { Caballete: 'Sacalo' } } });
     const resultadoComun = JSON.stringify({ type: 'user', timestamp: hace(5), message: { content: [{ type: 'tool_result', tool_use_id: 'toolu_02', content: 'ok' }] }, toolUseResult: { stdout: 'ok' } });
     fs.writeFileSync(t, `${mensaje}\n${resultadoComun}\n`);
     expect(P.decidir(pedido({ transcript_path: t }), { home }).niega, 'el resultado de un comando no es presencia').toBe(true);
     fs.writeFileSync(lista, LISTA_REAL);
-    for (const [que, renglon] of [['respuesta', respuesta], ['corte', corte]]) {
-      fs.writeFileSync(t, `${mensaje}\n${renglon}\n${resultadoComun}\n`);
-      expect(P.ultimaSenalDeFak(t).que).toBe(que);
-      expect(P.decidir(pedido({ transcript_path: t }), { home }).motivo, que).toBe('fak_presente');
-    }
-    // lo mismo de hace 10 minutos ya no cuenta
-    fs.writeFileSync(t, `${mensaje}\n${respuesta.replace(hace(30).slice(0, 16), hace(900).slice(0, 16))}\n`);
+    fs.writeFileSync(t, `${mensaje}\n${respuesta(30)}\n${resultadoComun}\n`);
+    expect(P.ultimaSenalDeFak(t).que).toBe('respuesta');
+    expect(P.decidir(pedido({ transcript_path: t }), { home }).motivo).toBe('fak_presente');
+    // la misma respuesta de hace 15 minutos ya no cuenta
+    fs.writeFileSync(t, `${mensaje}\n${respuesta(900)}\n`);
+    expect(P.decidir(pedido({ transcript_path: t }), { home }).niega).toBe(true);
+  });
+
+  it('ROJO: un corte del turno NO cuenta como presencia (otra sesion que frena a esta queda escrita igual que un Esc de Fak)', () => {
+    fijar('prueba-permiso');
+    const t = path.join(home, 'transcript.jsonl');
+    const hace = (seg) => new Date(Date.now() - seg * 1000).toISOString();
+    // la forma real (sesion 2762936c, 10/10/2026: el orquestador la freno con stop_session para reenviarle el encargo)
+    const corte = JSON.stringify({ type: 'user', timestamp: hace(20), isSidechain: false, userType: 'external', message: { role: 'user', content: [{ type: 'text', text: '[Request interrupted by user]' }] } });
+    const encargo = JSON.stringify({ type: 'user', timestamp: hace(15), message: { content: 'Another Claude session sent a message:\n<cross-session-message from="local_x">[ENCARGO E1]</cross-session-message>' } });
+    fs.writeFileSync(t, `${corte}\n${encargo}\n`);
+    expect(P.ultimaSenalDeFak(t)).toBe(null);
     expect(P.decidir(pedido({ transcript_path: t }), { home }).niega).toBe(true);
   });
 

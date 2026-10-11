@@ -146,12 +146,12 @@ export function resumenDe(payload = {}, tope = CANON.tope_resumen) {
 
 /**
  * La ultima señal de que Fak estuvo en ESA ventana: un mensaje que escribio (la regla de horaGuard: no un aviso, no
- * otra sesion, no una tarea programada), la respuesta a una pregunta (AskUserQuestion) o un corte suyo (Esc).
+ * otra sesion, no una tarea programada) o su respuesta a una pregunta (AskUserQuestion).
  * Auditor 10/10/2026: con solo el mensaje escrito, contestar una pregunta hacia 30 s daba «ausente»; en la sesion
  * 829f7135, 3 de sus 4 respuestas llegaron a 7, 9 y 77 minutos de su ultimo mensaje.
  * Lee SOLO el final del registro (el primer tramo, 8 MB): lo que este mas atras tiene mas de 3 minutos casi seguro,
  * y leer un registro de 294 MB entero costaba 2,7 s y 1,1 GB de memoria.
- * @returns {{ texto: string, ms: number, que: 'mensaje'|'respuesta'|'corte' } | null}
+ * @returns {{ texto: string, ms: number, que: 'mensaje'|'respuesta' } | null}
  */
 export function ultimaSenalDeFak(transcriptPath) {
   for (const lineas of colasDe(transcriptPath)) {
@@ -160,13 +160,14 @@ export function ultimaSenalDeFak(transcriptPath) {
       if (!l) continue;
       const m = mensajeDeFakEn(l);
       if (m && Number.isFinite(m.ms)) return { ...m, que: 'mensaje' };
-      const respuesta = l.includes('"toolUseResult":{"questions"') && l.includes('"answers"');
-      const corte = l.includes('[Request interrupted by user');
-      if (!respuesta && !corte) continue;
+      // Un corte («[Request interrupted by user]») NO cuenta: cuando otra sesion frena a esta con stop_session queda
+      // escrito igual que un Esc de Fak, sin nada que lo distinga (medido 10/10/2026 en la sesion 2762936c: el
+      // orquestador la freno para reenviarle el encargo). Contarlo dejaria colgado un cartel de una sesion lanzada.
+      if (!(l.includes('"toolUseResult":{"questions"') && l.includes('"answers"'))) continue;
       let j = null; try { j = JSON.parse(l); } catch { continue; }
       if (j.type !== 'user' || j.isSidechain) continue;
       const ms = typeof j.timestamp === 'string' ? Date.parse(j.timestamp) : NaN;
-      if (Number.isFinite(ms)) return { texto: respuesta ? '(contestó una pregunta)' : '(cortó el turno)', ms, que: respuesta ? 'respuesta' : 'corte' };
+      if (Number.isFinite(ms)) return { texto: '(contestó una pregunta)', ms, que: 'respuesta' };
     }
     break;                                                    // solo el primer tramo
   }
