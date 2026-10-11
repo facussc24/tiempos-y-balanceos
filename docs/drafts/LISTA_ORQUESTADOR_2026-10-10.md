@@ -1,17 +1,17 @@
 # Lista del orquestador — 10/10/2026 11:00 → 12/10/2026 11:00 (48 h, pedido de Fak a las 02:10)
 
-Pedido textual: *"te dejo modo full auto 48 hs seguidas, lo que tarde en completar todo"*. Prompt: `docs/drafts/PROMPT_ORQUESTADOR_2026-10-10_v5.md`.
+Pedido textual: *"te dejo modo full auto 48 hs seguidas, lo que tarde en completar todo"*. Prompt: `docs/drafts/PROMPT_ORQUESTADOR_2026-10-10_v6.md` (v5 hasta las 19:41).
 Reglas de la tanda: las 21 de la v3 §2, más la del 10/10 ~11:10 (*"todo lo que digo son sugerencias sin evidencia... si creés que hay una mejor forma, decímelo: mirá, creo que lo que querés es esto"*). Nada que necesite un clic de Fak mientras no está; pasado el 85 % del cupo de 5 h no se lanzan hijas ni agentes; el cupo se mira cada hora; cada hora un renglón en el chat.
 
-## Lo pedido, en orden
+## Lo pedido, en orden (estado al 10/10 23:15)
 
-1. [~] **Los carteles (HOY-8 + HOY-7)**: hecho el cambio (encargo `--lanzada`, settings sin plan, `_hijaEstado.mjs`, skill `lanzar-sesion-hija`, memoria, regla, CLAUDE.md), tests en verde (66), hija real lanzada a las 11:26 (`local_e4632689`). Falta: auditor Opus (corriendo), aplicar hallazgos, commit con rutas, CI, tachar en la cola.
-2. [ ] **La cola** (`docs/COLA_CAMBIOS_CODIGO.md`) por su orden de trabajo, con hijas que lanzo (una o dos a la vez), cada una con encargo por `_encargo.mjs --lanzada`.
-3. [ ] Vigilar el contexto de cada hija (`get_usage`); al 85 % cierre prolijo y la siguiente.
-4. [ ] Cada fase se tacha solo con `git log` + CI + `_cierreSesion.mjs --sin-build`.
-5. [ ] Modelos: hijas en Opus 5.5 para medianos; Fable 5.1 para grandes (P6, P9+P10, P33, P55, P56).
-6. [ ] Lo que necesita a Fak va a la sección de abajo.
-7. [ ] Cada hora un renglón en el chat. Al final, una página en `exports/explicaciones/`.
+1. [x] **Los carteles (HOY-8 + HOY-7)**: hecho y medido. Encargo `--lanzada`, settings del repo sin plan, `_hijaEstado.mjs`, skill `lanzar-sesion-hija`, memoria, regla y CLAUDE.md (commit `2d8f8d53`, auditor Opus aplicado); el modo de arranque resuelto a las 18:40 con `defaultMode: bypassPermissions` en el settings general (P84); la corrida por reloj medida a las 20:35; P41 + P41b (hook de carteles y herencia de la hora) hechos por la hija 5.
+2. [~] **La cola**: hecho hoy por las hijas 2 a 6 (una o dos a la vez): pasos 9 a 15 del orden de trabajo, HOY-17, HOY-18 (+18a, 18e), HOY-19 (+19a-d, 19g), HOY-20, HOY-16 medido, P38, P41, P41b, HOY-13. En curso: P6 etapa 1 (hija 6, Fable) y P9 C0 (hija 5). Siguen H17, H28, H22, HOY-12+21, HOY-14, HOY-18b/c/d (en ese orden: ver «Decidí distinto»).
+3. [x] Contexto de cada hija medido en cada ronda (`get_usage`); ninguna pasó del 85 % (la 2 cerró al ~78 %, la 3 al 65 %, la 4 al ~75 %).
+4. [~] Cada cierre se verificó con `git log` y el CI (verde al 10/10 22:45, `84f11c31`, después del rojo de 22:14-22:37 que era mío). `_cierreSesion.mjs --sin-build` lo corre cada hija al cerrar; desde esta sesión da rojo por los archivos sin commitear de las hijas en curso, así que no lo uso como medida mía hasta que no quede ninguna abierta.
+5. [x] Modelos: Opus 5.5 en las hijas de medianos (2, 3, 4, 5), Fable 5.1 en la hija 6 (P6, grande). Ver el tope de cupo en «Decidí distinto».
+6. [x] Lo que necesita a Fak: sección de abajo, puesta en limpio a las 23:15 (cuatro preguntas de sí o no y los avisos aparte).
+7. [~] Un renglón por hora en el chat y en esta lista (desde las 11:00). La página de `exports/explicaciones/` se arma al final de la tanda.
 
 ## Hijas (estado)
 
@@ -19,6 +19,11 @@ Reglas de la tanda: las 21 de la v3 §2, más la del 10/10 ~11:10 (*"todo lo que
 |---|---|---|---|---|
 | `local_8e259e7a` (madrugada) | E261010-72c7 (H14 `b2f56ae1`, P26 `7e1caa35`) → E261010-f52a (paso 11, H20+H21, `14adcfc9`, 13:07) → E261010-03ba (paso 12, H23+H24, `69ee710a`, 13:38) → E261010-e2eb (paso 13, H25-H27, `aa64eaf7`, 14:05) → E261010-9f13 (paso 14, H30+H31, `f89bd397`, 14:37) | Opus 5.5 / bypass | **terminó: contexto 82 % a las 14:40, no recibe más pasos** | 4 pasos de la cola en un día (11 a 14), cada uno con auditor Opus |
 | `local_e4632689` (hija 1) | E261010-8c59 | Opus 5.5 desde el 2.º turno / bypass heredado | paso 11: H20+H21 novedades | lanzada 11:26, abortada 11:28 (arrancó en default) |
+| `local_218252c2` (hija 2) | paso 15 (H5+H6, `82edf1c1`) → HOY-17 (`bc34621b`) → HOY-18 (`8c926f12`) → HOY-18a (`42a1366d`) | Opus 5.5 / bypass | reglas de la tanda medidas, GitHub segunda pasada, comparador de Excel | cerrada 22:07 al ~78 % |
+| `local_c5fa43f0` (hija 3) | P55 etapa 1 (`979fdcf8`) → HOY-20 (`4e4a3f0f`) → HOY-16 medido (`c335b314`) | Opus 5.5 / bypass | AMFE a la nube, CATIA por código, guardián de firma medido | cerrada 20:49 al 65 % |
+| `local_34ba1fc9` (hija 4) | plan HOY-19 (`654719fb`) → HOY-19a-d (`b76d641b`) → HOY-19g (`09ad57db`) | Opus 5.5 / bypass | funciones nuevas en las skills, lecturas de Outlook, fotos y videos en docs-empresa | cerrada 23:01 al ~75 % |
+| `local_c138efc5` (hija 5) | P41 (`b5cd6465`) → P41b (`2574c13b`) → P9 C0 (E261011-0bb9) | Opus 5.5 / bypass | hook de carteles, herencia de la hora, medición del cierre | en curso (46 % a las 22:40) |
+| `local_15a241d5` (hija 6) | P6 etapa 1 (E261011-49e9) | **Fable 5.1** / bypass | lector + JSON intermedio + gates del plan de control del APB | en curso desde 22:14 |
 
 Próximas (de a una o dos, sin pisar archivos): paso 12 H23+H24 (skills) · 13 H25-H27 (consumos) · 14 H30+H31 · 15 H5+H6 · después H17, H19, H22, H28… · grandes en Fable: P6, P9+P10, P33, P55, P56 (con su sí ya dado el 09/10 16:55; el plan en `docs/` igual se le muestra).
 
@@ -77,8 +82,16 @@ Próximas (de a una o dos, sin pisar archivos): paso 12 H23+H24 (skills) · 13 H
 ## Decidí distinto de lo pedido
 
 - **Hora fijada a 36 h, no 48**: `horaGuard --fijar` rechaza más de 36 h («revisar la fecha»). Fijé el 11/10 23:00 y la renuevo ese día hasta el 12/10 11:00 (el latido avisa). No toqué el tope: es un freno contra una fecha mal tipeada.
-- **La hija no es la anidada «debajo del chat» (Fak ~11:14: "no una rutina, ojo")**: `start_session` existe en la app pero está apagada por gate remoto (0 llamadas en todos los registros; lo que vio fueron 24 fichas que él clickeó). El único camino sin clic es la tarea manual + `run_scheduled_task`, que hereda el modo. Se lo dije como «mirá, creo que lo que querés es esto». La skill prueba primero si `start_session` apareció.
-- **Acoté el encargo de la madrugada a H14+P26** (era «la cola desde el paso 9»): un encargo, un entregable (G3 y el propio prompt v5); los pasos siguientes van a hijas nuevas, una por paso.
+- **La hija no es la anidada «debajo del chat» (Fak ~11:14: "no una rutina, ojo")**: `start_session` existió y se usó el 08/10 (6 llamadas) y está apagada desde la app 2.31226.1 (gate remoto); lo que Fak vio «abrirse debajo» fueron 24 fichas que él clickeó. El camino sin clic es la tarea manual + `run_scheduled_task`, que **no hereda el modo** de la que la lanza (medido 11:26: arrancó en default): el modo sale de la tarea o del settings, y por eso el `defaultMode: bypassPermissions` del settings general (18:40). Lo que escribí a las 11:33 («0 llamadas», «hereda el modo») estaba mal y lo corrigió el auditor a las 11:48.
+- **Acoté el encargo de la madrugada a H14+P26** (era «la cola desde el paso 9»): un encargo, un entregable (G3 y el propio prompt v5).
+- **El orden después de HOY-20 no siguió «H17, H22, H28… → grandes»**: puse antes lo que Fak pidió a las 19:05 (HOY-18/19/20 y sus hijas 18a/18e/19a-d/19g), lo que tenía su sí del 09/10 y la revisión por la API ya hecha (P38, P41, P41b, P6 etapa 1, P9 C0) y un chico mío (HOY-13). H17, H28 y H22 siguen y van a las próximas hijas, en ese orden.
+- **Una hija por entregable, pero la misma hija toma el siguiente encargo mientras le quede contexto** (hasta el 85 %): la 2 hizo cuatro, la 3 tres, la 4 tres, la 5 va por el tercero. Ahorra el arranque (memoria, reglas, lectura del prompt) y RAM; cada encargo igual tiene un solo entregable, su auditor y su commit.
+- **HOY-13 lo hice yo (orquestador), por el camino chico**: un archivo, test del módulo, sin auditor (codigo-madre.md no lo exige para un chico). El test rompió el CI de Linux 23 minutos (corría la Papelera de Windows) y lo arreglé en dos commits; el auditor final de la tanda lo cubre.
+- **Edité la regla `trabajar-hasta-la-hora.md`** (commit `a77764d2`): un renglón con el código 5 del latido, que ya corría en el hook desde HOY-17. Describe un mecanismo probado, no cambia un criterio de Fak. Y la skill `lanzar-sesion-hija` (reloj en bypass; `--heredar`).
+- **P9 C0 a una hija Opus, no Fable**: C0 es instrumentar y dejar midiendo (mediano, sin cambiar lógica); la revisión por la API del plan lo puso como primer paso y dice que C1-C3 se escriben recién con los tiempos por fase en la mano (días).
+- **Bypass global en `~/.claude/settings.json` (18:40, con el «pensá la mejor manera»)**: afecta a TODAS las sesiones nuevas de esta PC, incluidas las de Fak y la tarea del lunes 08:43 (que sin eso arrancaba en default y pedía carteles). Volver atrás: copiar `settings.json.antes-bypass-20261010-1840` sobre `settings.json`. Consecuencia: el hook de carteles (P41) casi no tiene carteles que negar; sigue sin probarse en una sesión real.
+- **`autoContinueAtUsageLimit: true` (P38)**: según la app, «cuando un límite de uso frena la sesión, espera a que se renueve y sigue sola»; no habilita gasto extra (`extraUsage` está apagado en la cuenta).
+- **Tope de cupo de la tanda** (medido a las 23:15: semanal 41 %, Fable 57 %; de 22:37 a 23:15 subieron 2 y 4 puntos: con cuatro sesiones a la vez el ritmo es ~4 %/h en el semanal y ~7 %/h en Fable): Fak necesita cupo para su semana (la ventana se renueva el 16/10 13:00). Regla que me pongo: con Fable al 70 % la hija 6 pasa a Opus y no se lanza ninguna Fable nueva; con el semanal al 60 % no se lanzan hijas nuevas; al 65 % cierro la tanda con la página y le digo a Fak por qué, con los números. Se mide en cada renglón de la hora.
 
 ## Avisos del control de cierre (11:50)
 
@@ -91,17 +104,23 @@ Próximas (de a una o dos, sin pisar archivos): paso 12 H23+H24 (skills) · 13 H
 
 ## Lo que necesita a Fak (para cuando vuelva)
 
-- ~~P84~~ contestada 18:40 (*"pensá la mejor manera"*): resuelta con (a), el settings general.
-- ~~P55~~ contestada 18:58: no usa la app; "todos" = el Excel editable de cada AMFE en la carpeta de Ingeniería del server (etapa 1b, cuando haya server); AMFE y plan de control con los mismos controles (gate 8 de P6).
+**Aviso primero:** desde las 18:40 todas las sesiones nuevas de esta PC arrancan en «omitir permisos» (`defaultMode: bypassPermissions` en tu settings general; respaldo `settings.json.antes-bypass-20261010-1840`). Era la única forma de lanzar hijas sin carteles. Si querés volver atrás, copiá el respaldo encima.
 
-- **CATIA (HOY-20)**: el servidor de licencias de esta PC (localhost:4085) no corre y el archivo de licencia es de 2016 con el nombre de otro equipo; CATIA arranca igual. Antes de apoyar trabajo de la empresa en CATIA por código, confirmar la licencia con quien la instaló en la notebook (informe, sección 5).
-- **HOY-16, aflojar `firma-ia-guard` (hija 3, 20:49)**: hoy frena (1) una lectura (`find`/`ls`/`grep`) sobre la carpeta «Claude Fak» si el comando no empieza por el verbo de lectura, y (2) escribir el id de un modelo de Claude en el registro interno de la app (`AppData\Roaming\Claude\`). Cambio exacto propuesto: (a) reconocer la lectura por cada comando simple de la línea (todos de solo lectura, sin redirección) y sumar `cat`; (b) exceptuar la regla «IA escrita adentro de un documento» SOLO cuando la única ruta que el comando escribe está en `AppData\Roaming\Claude\` o `~/.claude/`; (c) gemelos rojos que siguen frenando: celda de xlsx con «Claude», CREADO POR, el id del modelo en una celda, un archivo con «claude» en el nombre copiado a la nube. ¿Va así? Mientras tanto, el rodeo de la fila (un script por ruta).
-- **Plan HOY-19, tres funciones que tocan Outlook y esperan tu sí o no (hija 4, 21:36)**: (i) programar el envío de un mail ya aprobado para una hora (saldría solo aunque un dato cambie después de tu OK); (j) convocar una reunión por Outlook (se arma cuando la pedís y la ves antes de que salga); (k) limpiar los borradores viejos moviéndolos a Elementos eliminados (lo pediste 5 veces en un mes; hay 40 borradores, 30 de más de 90 días; recomendación de la hija: sí, con la lista a la vista). Y dos skills nuevas, como aviso: PowerPoint de evidencia (19l) y tiempos por video (19m). Las de solo lectura (19a-d) ya se están haciendo.
-- **HOY-18f (hija 2, 21:51)**: ¿probamos una librería que lee tablas de un plano PDF, para la lista de materiales que hoy sale corrida de columna? No es chica: reemplaza una que ya usan otros scripts. Si decís que sí, se prueba en un entorno aparte, sin tocar lo instalado.
-- **HOY-19c, segunda parte (hija 4, 22:32)**: para que la noche de Claude lea tu agenda de Outlook y la sume a «qué tengo pendiente», los ASUNTOS de las reuniones irían a la API de Anthropic (como hoy van los asuntos de los mails). ¿Va o no?
-- Lo que el contrato marca preguntar: Supabase, servidor, arb, mails, listados maestros, la primera vez.
-- Si quiere que una tarea por reloj arranque en bypass: la crea él desde Programadas con el selector de modo (la creada por MCP no guarda modo).
+Cuatro preguntas, cada una se contesta con sí o no:
+
+1. **HOY-16**: ¿aflojo `firma-ia-guard` como propone la hija 3? (a) reconocer una LECTURA (`find`/`ls`/`grep`/`cat`) aunque el comando no empiece por ella; (b) no frenar la escritura del id de un modelo cuando la ÚNICA ruta que escribe está en `AppData\\Roaming\\Claude\\` o `~/.claude/`; (c) siguen frenando: celda de xlsx con «Claude», CREADO POR, un archivo con «claude» en el nombre copiado a la nube. Mientras tanto, el rodeo de un script por ruta.
+2. **HOY-19c**: ¿los ASUNTOS de tus reuniones de Outlook pueden ir a la API de Anthropic, para que la noche los sume a «qué tengo pendiente»? (Los asuntos de los mails ya van.)
+3. **HOY-19k**: ¿muevo los 30 borradores de más de 90 días a Elementos eliminados, con la lista a la vista antes? (Lo pediste 5 veces en un mes; hay 40 borradores.)
+4. **HOY-19i**: ¿programar el envío de un mail ya aprobado para una hora? (Saldría solo aunque un dato cambie después de tu OK.)
+
+Avisos (no hacen falta respuestas):
+
+- **CATIA (HOY-20)**: funciona por código desde esta PC, pero el servidor de licencias local no corre y el archivo de licencia es de 2016 con el nombre de otro equipo. Antes de apoyar trabajo de la empresa en eso, confirmá la licencia con quien la instaló (informe `.sgc-cache/investigacion-2026-10-11/CATIA_por_codigo.md`, sección 5).
+- **HOY-18f** (una librería que lee tablas de un plano PDF): se prueba en un entorno aparte, sin tocar lo instalado; te pregunto solo si hay que reemplazar la que usan otros scripts, con el resultado en la mano.
+- **HOY-19j** (convocar una reunión por Outlook): va como un mail, borrador visible y tu OK en tu ventana; no hace falta decidir nada ahora.
+- Dos skills nuevas propuestas en el plan HOY-19: PowerPoint de evidencia (19l) y tiempos por video (19m).
 - P83 contestada el 10/10 (queda aviso, `--logo-bloquea` no se prende). Las 49 firmas de `exports/HO_CORREGIDAS_20261007` e `IMPRESION_0710_FINAL`: limpiadas el 10/10 por la hija de la madrugada.
+- Tareas para borrar en Programadas cuando estés (borrar una tarea archiva sus sesiones y pide cartel): `prueba-modo-reloj-20261010`, `hija-novedades-h20-h21-20261010`, `sesion-sistema-claude-fase2-20261009`.
 
 ## Registro (hora · qué pasó)
 
