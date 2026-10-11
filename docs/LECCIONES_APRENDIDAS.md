@@ -13,7 +13,7 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
-- **10-11/10 — Lo que la API afirma de un dato que no vio se mide antes de codear** (P6, dos veces: la última, siglas con la S de la causa y no la del modo de falla). Graduado a `feedback_la_respuesta_conocida_se_mide_antes_del_gate`.
+- **10-11/10 — Lo que la API afirma de un dato que no vio se mide antes de codear** (P6, dos veces; la última, la S de la causa por la del modo de falla). Graduado a `feedback_la_respuesta_conocida_se_mide_antes_del_gate`.
 
 - **09-10/10 — Un control que suma trabajo a un chequeo con tope de tiempo se mide en el MODO en que corre ese chequeo** (el logo y las frases nuevas llevaron el detector de 55 a 90 s; el cierre lo corta a los 90 y lee «vacío» como limpio: quedó ciego hasta que el auditor lo midió). Y el auditor Opus encontró un error real en 3 de 4 cambios de la noche: no se saltea. Graduado al auditor (`metodo_correr_no_solo_leer`) y a `_sinFirmaIA.py` (lo caro solo con avisos pedidos).
 
