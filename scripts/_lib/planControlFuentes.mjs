@@ -123,8 +123,14 @@ export function leerAmfe(doc, { numeroCasa = '', amfeNumber = '' } = {}) {
               opId: op.id,
               elemento: String(we.name || we.description || ''),
               falla: String(falla.description || ''),
+              fallaId: falla.id,
               causa: String(c.description || c.cause || ''),
-              S: Number(c.severity ?? falla.severity ?? 0),
+              // La S es del MODO DE FALLA y la comparten todas sus causas (amfeValidator.mjs: `sevFm ??
+              // c.severity`; memoria reference_amfe_severidad_del_modo_de_falla). `SCausa` es la severity
+              // suelta que arrastran algunas causas: no se usa para nada, solo se informa si difiere.
+              S: Number(falla.severity) || Number(c.severity) || 0,
+              SCausa: c.severity === undefined || c.severity === null || c.severity === '' ? null : Number(c.severity),
+              specialCharSource: String(c.specialCharSource || '').trim(),
               O: Number(c.occurrence ?? 0),
               D: Number(c.detection ?? 0),
               preventionControl: String(c.preventionControl || ''),

@@ -1,0 +1,49 @@
+{
+ "_doc": "EJEMPLO para los tests y para probar el gate 8: NO es una asignacion real. Vinculos causa del AMFE 161 -> fila del plan del APB elegidos para que salga cada estado con datos reales. Nadie de Ingenieria ni de Calidad los definio: la tabla real va en scripts/_lib/planControlEntradas.data.json (vinculos.causaAFila) cuando se decida.",
+ "causaAFila": [
+  {
+   "_caso": "OK sin frecuencia en el AMFE: «Pesaje en balanza calibrada» contra la fila Balanza de la 51",
+   "causeId": "8649d6b1-a03a-41da-ba22-7a1442dce9b3",
+   "itemKey": "setup:HO-971/51/I25",
+   "control": "deteccion"
+  },
+  {
+   "_caso": "GENERICO: «verificación visual del estado del mylar» mira AL mylar, no CON el mylar; contra la plantilla Mylar de la 22",
+   "causeId": "15bf3bde-b158-4195-982c-d4a4d2706c69",
+   "itemKey": "setup:HO-971/22/I43",
+   "control": "deteccion"
+  },
+  {
+   "_caso": "GENERICO: «Inspección visual» (SC, S5) contra la costura vista de la 41",
+   "causeId": "53c9310d-217a-42a4-ac9d-caa94209f1c0",
+   "itemKey": "ho:HO-971/41/I27"
+  },
+  {
+   "_caso": "FILA SIN METODO: «Calibre para verificar puntadas» contra la fila de la 40, que en la HO tiene el metodo en «-»",
+   "causeId": "81fbc92b-5e0f-449a-a185-21982c88c1cd",
+   "itemKey": "ho:HO-971/40/I26"
+  },
+  {
+   "_caso": "DIFERENTE por instrumento, aguas abajo (50 -> 51): «calibre por muestreo» contra «Contra calibre»",
+   "causeId": "13634826-a2e4-4f6f-a847-a1a974cdd8b9",
+   "itemKey": "setup:HO-971/51/I27",
+   "control": "deteccion"
+  },
+  {
+   "_caso": "DIFERENTE que frena: critica S9 (D/TLD) con «Verificación de certificado», sin instrumento, contra la recepcion del vinilo",
+   "causeId": "34327bf9-2908-4309-be8b-2a53e4a4a18c",
+   "itemKey": "bom:VIN-SKM-001"
+  },
+  {
+   "_caso": "GENERICO aguas abajo (41 -> 100): «Visual» contra la fila TBD del control final",
+   "causeId": "0a2c5bf9-bfe7-49ed-8c89-08d50a015174",
+   "itemKey": "sin-ho:100"
+  },
+  {
+   "_caso": "solo prevencion: manometro en el set up de la 93; su control de deteccion queda SIN FILA",
+   "causeId": "2290f05f-53b0-4b9c-b00d-5853a98f6744",
+   "itemKey": "setup:93",
+   "control": "prevencion"
+  }
+ ]
+}

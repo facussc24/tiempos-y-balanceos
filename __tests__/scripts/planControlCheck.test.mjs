@@ -204,7 +204,7 @@ describe('respuesta conocida: el APB del 06/10/2026', () => {
     const rojo = clonar(plan);
     rojo.items.find((i) => i.id === fila.id).conflicts = [];
     expect(frenos(gate4SourceRef(rojo)).some((x) => /CONFLICTO sin dos valores/.test(x.mensaje))).toBe(true);
-    const sinReceta = armar({ entradas: entradas((e) => { e.fuentesDeclaradas[0].readable = false; }) });
+    const sinReceta = armar({ entradas: entradas((e) => { e.fuentesDeclaradas.find((f) => f.id === 'RECETA-HOTMELT-20260826').readable = false; }) });
     const filaSinReceta = sinReceta.items.find((i) => i.hoQcItemId === 'HO-971/80/I30');
     expect(filaSinReceta.specification).toMatch(/190 y 210/);
     expect(filaSinReceta.status).toBe(TBD);
@@ -275,10 +275,9 @@ describe('respuesta conocida: el APB del 06/10/2026', () => {
     expect(gateMaquinaSetUp(plan)).toEqual([]);
     expect(comparacion.setUpAjeno.filter((x) => x.op === '30')).toEqual([expect.objectContaining({ enPropia: 0 })]);
   });
-  it('gate 1: cada operacion y cada item de la HO tienen fila; las causas del AMFE sin fila se listan como aviso; sin fila para un item, frena', () => {
+  it('gate 1: cada operacion y cada item de la HO tienen fila; sin fila para un item, frena (las causas sin fila las lista el gate 8)', () => {
     const g1 = gate1Filas(plan);
     expect(frenos(g1)).toEqual([]);
-    expect(g1.filter((x) => /causa sin fila/.test(x.mensaje)).length).toBeGreaterThan(10);
     expect(g1.filter((x) => /remite al plan de control/.test(x.mensaje)).map((x) => x.op)).toEqual(['10']);
     const rojo = clonar(plan);
     rojo.items = rojo.items.filter((i) => i.hoQcItemId !== 'HO-971/41/I31');
@@ -327,7 +326,7 @@ describe('gemelos rojos de los gates que el plan sano no dispara', () => {
     expect(fila.sourceRef.specialCharClass[0]).toEqual({ sourceId: 'AMFE-161', kind: 'amfe', loc: { opId: op41.id, causeId: causa.id } });
     expect(fila.notes.some((n) => /sigla SC copiada de la causa/.test(n))).toBe(true);
     expect(frenos(gate4SourceRef(verde))).toEqual([]);
-    expect(gate1Filas(verde).filter((x) => x.mensaje.includes(causa.id))).toEqual([]);
+    expect(verde.vinculosInvalidos).toEqual([]);
     const porNumero = clonar(AMFE_DOC);
     porNumero.operations.find((o) => o.operationNumber === '41').workElements[0].functions[0].failures[0].causes[0].characteristicNumber = '1.0';
     expect(armar({ amfe: amfe(porNumero) }).items.filter((i) => i.amfeCauseIds.length)).toEqual([]);

@@ -1,0 +1,30 @@
+{
+  "_doc": "Catalogo del gate 8 (AMFE <-> plan de control, plan P6 §7.2). Un control se IDENTIFICA por un codigo de calibracion (MC + 3 cifras) o por un termino EXACTO de esta lista; el texto libre nunca decide. Se amplia ACA, con su fuente; nada de regex nuevas en el codigo.",
+  "instrumentos_fuente": "Terminos tal como aparecen en los papeles de la casa: HO-971 (calibre MC167, regla, plantilla Mylar, balanza, calibre Vernier, contra calibre / calibre DIM, manometro), plan de Calidad PC APB PATAGONIA Rev 0 (regla metalica, calibre de control, balanza, cinta metrica, camara de flamabilidad, pieza patron, muestra patron) y memoria reference_planes_control_recepcion_barack (camara de flamabilidad MC184, cinta metrica MC406, calibre MC413, balanza electronica).",
+  "instrumentos": [
+    { "id": "CALIBRE_DE_CONTROL", "clase": "instrumento", "terminos": ["calibre de control", "contra calibre", "calibre dim", "calibre gabarit"] },
+    { "id": "CAMARA_FLAMABILIDAD", "clase": "instrumento", "terminos": ["camara de flamabilidad", "camara de inflamabilidad"] },
+    { "id": "CINTA_METRICA", "clase": "instrumento", "terminos": ["cinta metrica"] },
+    { "id": "PLANTILLA_MYLAR", "clase": "instrumento", "terminos": ["plantilla mylar", "mylar de control"] },
+    { "id": "CALIBRE", "clase": "instrumento", "terminos": ["calibre", "vernier"] },
+    { "id": "BALANZA", "clase": "instrumento", "terminos": ["balanza"] },
+    { "id": "REGLA", "clase": "instrumento", "terminos": ["regla"] },
+    { "id": "MANOMETRO", "clase": "instrumento", "terminos": ["manometro"] },
+    { "id": "PATRON", "clase": "referencia", "terminos": ["pieza patron", "muestra patron", "muestra limite", "patron de color", "patron de aspecto"] }
+  ],
+  "instrumentos_limites": "«mylar» suelto no esta: en el AMFE 161 «verificacion visual del estado del mylar» mira AL mylar, no CON el mylar. El canon no tiene terminos para paneles, alarmas, sensores, pirometros ni ensayos de laboratorio: un control que detecta con eso sale hoy «sin instrumento identificable» (auditor 11/10/2026: al menos 12 de las 149 del AMFE 161). Se agregan aca, con su fuente, cuando Calidad diga como los nombra.",
+  "no_identifica": ["instrumento", "instrumentos", "equipo de medicion"],
+  "no_identifica_comentario": "Comodines: «Calibre / Instrumento» (HO-971, hoja 50) no dice cual. Sin un codigo MC al lado, el control no queda identificado.",
+  "clases_identificables": ["instrumento"],
+  "clases_comentario": "Una REFERENCIA (pieza patron, muestra limite) acompaña a una inspeccion visual: dice contra que se mira, pero la deteccion sigue siendo humana (AIAG-VDA 2019, tabla D: inspeccion visual/tactil/audible, con o sin patron, es deteccion humana). Por eso no alcanza para sacar al control de GENERICO; se muestra al lado. Un certificado del proveedor tampoco es un instrumento de Barack. Si Calidad decide otra cosa, se agrega 'referencia' a clases_identificables.",
+  "frecuencias_fuente": "Frecuencias tal como las escriben la HO-971 y el AMFE 161.",
+  "frecuencias": [
+    { "id": "100%", "terminos": ["100%", "100 %"] },
+    { "id": "POR_LOTE", "terminos": ["por lote", "cada lote"] },
+    { "id": "POR_ENTREGA", "terminos": ["por entrega", "al recibir"] },
+    { "id": "INICIO_DE_TURNO", "terminos": ["inicio de turno", "inicio turno", "inicio y fin de turno"] },
+    { "id": "ANTES_DE_CADA_CORTE", "terminos": ["antes de cada corte"] },
+    { "id": "PRIMERA_PIEZA", "terminos": ["primera pieza"] },
+    { "id": "POR_MUESTREO", "terminos": ["por muestreo", "sobre muestra"] }
+  ]
+}

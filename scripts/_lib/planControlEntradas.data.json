@@ -78,6 +78,14 @@
     },
     "fuentesDeclaradas": [
       {
+        "id": "COSTURA-EVIDENCIA-20261005",
+        "kind": "declarada",
+        "doc": "Costura Patagonia - valores y evidencia 05-10-2026 simple.pptx (Ingenieria): valores de costura por pieza con la norma LAH.000.881.N v6, planos y mails de VW",
+        "fecha": "2026-10-05",
+        "loc": "exports/PC_NICO_20261006/fuentes/Costura Patagonia - valores y evidencia 05-10-2026 simple.pptx (hojas 2 y 6; leido el 10/10/2026)",
+        "readable": true
+      },
+      {
         "id": "RECETA-HOTMELT-20260826",
         "kind": "declarada",
         "doc": "Receta de la maquina hotmelt: consigna de temperatura de los rodillos en la pantalla HMI",
@@ -89,8 +97,30 @@
         ]
       }
     ],
+    "caracteristicasDeclaradas": {
+      "_doc": "Gate 7: caracteristicas que una FUENTE marca apariencia / funcion / oculta. El control final del plan acepta solo las de apariencia o funcion, por referencia (characteristicRef = id). `hoQcItemId` es el item de la HO que define la caracteristica; `claves` son los numeros que la identifican y sirven SOLO para diagnosticar el plan viejo de Calidad (texto libre). Lo que no esta aca no esta marcado: no se deduce por palabras.",
+      "lista": [
+        {
+          "id": "COSTURA-UNION-APB",
+          "descripcion": "la costura de union (4 puntadas en 16 mm)",
+          "visibilidad": "oculta",
+          "hoQcItemId": "HO-971/40/I26",
+          "claves": ["4", "16"],
+          "enSuLugar": "la que se ve es la costura vista, 6 puntadas en 25 mm ±0,5",
+          "fuente": { "sourceId": "HO-971", "sheet": "40", "cell": "J13", "cita": "Cargar hilo en aguja y bobina: Nm 30/3 PET Jet Black FX284-E0PTO (igual en las 4 versiones). Costura de unión oculta." }
+        },
+        {
+          "id": "COSTURA-VISTA-APB",
+          "descripcion": "la costura vista de 1 sola linea (6 puntadas en 25 mm ±0,5)",
+          "visibilidad": "apariencia",
+          "hoQcItemId": "HO-971/41/I27",
+          "claves": ["6", "25"],
+          "fuente": { "sourceId": "COSTURA-EVIDENCIA-20261005", "cita": "hoja 2: APB de puerta, costura vista 6 ±0,5 en 25 mm, a 4 ±0,5 mm; hoja 6 (evidencia 2): 'VW lo pidió así para que combine con la consola central', mail de Diego Pandolfi (VW) del 26/11/2025" }
+        }
+      ]
+    },
     "vinculos": {
-      "_doc": "Vinculos explicitos causa del AMFE -> fila del plan ({ causeId, itemKey }). Es la UNICA forma de vincular: ni por parecido de texto ni por numero de caracteristica (el 1.0/2.0 de la fila lo pone el formulario, no el plano). Sin vinculo, la causa se lista 'sin fila' y la columna de siglas queda vacia.",
+      "_doc": "Vinculos explicitos causa del AMFE -> fila del plan ({ causeId, itemKey, control?: 'deteccion' | 'prevencion' }; el vinculo puede cruzar operaciones: una causa de la 41 detectada en la 100). Es la UNICA forma de vincular: ni por parecido de texto ni por numero de caracteristica (el 1.0/2.0 de la fila lo pone el formulario, no el plano). Sin vinculo, la causa se lista 'sin fila' y la columna de siglas queda vacia.",
       "causaAFila": []
     }
   }

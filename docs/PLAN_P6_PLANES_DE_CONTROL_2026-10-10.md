@@ -230,6 +230,59 @@ contacto, equipo, código de cliente, fechas original/revisión/FUM, `srCharacte
 2. **Propuesta de siglas, gate 7 y gate 8.** La propuesta sobre el AMFE 161 en la hoja aparte y la columna
    vacía; con la asignación, la columna igual a la asignación; el control final marcado («4 en 16 mm» es la
    costura de unión, no la vista «6 en 25 ±0,5»); el reporte del gate 8 con un gemelo rojo por estado.
+   **Hecha el 10-11/10/2026 (hija 6, Opus 5.5; commit en `git log` con «P6 etapa 2»)**:
+   `scripts/_lib/planControlAmfe.mjs` (`propuestaDeSiglas()`, `gate3Siglas()`, `gate7ControlFinal()`,
+   `cruceAmfePlan()` / `gate8AmfeVsPlan()`, `casosCruce()`), `scripts/_lib/planControlCanon.data.json` (el
+   catálogo de instrumentos y frecuencias, con su fuente), la CLI con `--vinculos <json>` y la hoja aparte
+   `propuesta_siglas.md`, `__tests__/scripts/planControlAmfe.test.mjs` (28 tests; 59 con la etapa 1) y la tabla de
+   vínculos de EJEMPLO `__tests__/fixtures/planControl/vinculos_ejemplo.json`. Diseño revisado por la API antes de
+   codear (Opus, `.sgc-cache/sesion-2026-10-10/API_P6_gate8_diseno_opus.md`) y auditor Opus al final
+   (`.sgc-cache/auditorias/P6_etapa2_auditor_2026-10-10.md`: 4 errores reales, los cuatro aplicados).
+   **Lo medido sobre el APB live** (`exports/PLAN_CONTROL_APB_20261011/`: `reporte.md` y `propuesta_siglas.md`;
+   75 filas, 5 FRENO, 97 avisos):
+   - **Propuesta de siglas**: 171 causas, 50 con sigla en el AMFE 161 y **las 50 dentro del criterio** (0 fuera
+     de regla, igual que `validateAmfeDoc`), **4 sin sigla que el criterio marca significativas** (las de la 60 y
+     la 71, S5-7 O4, que quedaron sin asignar el 05/10), 3 críticas S9 (las D/TLD de flamabilidad; la marca la
+     designa el plano, no leído). 23 causas arrastran una severidad propia distinta de la de su modo de falla
+     (`CAUSE_SEVERITY_PROPIA` del validador): no se usa, se lista. La columna del plan queda vacía (0 filas con sigla).
+   - **Con la tabla de EJEMPLO** (8 vínculos): 5 filas con sigla, cada una igual a la unión de las siglas de sus
+     causas y con la causa de origen anotada; el gate 3 frena una sigla de más, de menos, o que ninguna fuente
+     reconoce (`W`).
+   - **Gate 7**: el plan de Calidad mira «Largo de puntada 4 mm (4 puntadas 16 ±1 mm)» en el control final
+     (fila 206): sale FRENO, es la costura de unión que la HO-971 (hoja 40) marca oculta. Las otras 7 filas del
+     control final de Calidad se listan como «falta marcar». En el plan generado la 100 está en TBD (la HO no
+     tiene ítems): aviso. Nada escribe todavía `characteristicRef` en una fila (el camino verde del plan generado
+     existe solo en los tests, hasta que la HO de la 100 tenga ítems).
+   - **Gate 8 hoy**: NO EVALUADO (cero vínculos), y eso **frena**: **171 SIN FILA** y **75 SIN CAUSA** (12
+     recepción, 2 requisito de cliente, 61 proceso). Con la tabla de EJEMPLO: OK 1, GENÉRICO 3, DIFERENTE 2,
+     FILA SIN MÉTODO 2, SIN FILA 164.
+   - **§7.6**: UNMATCHED 21, 22, 51, 60, 71, 81, 82, 101 contra el plan de Calidad (cero contra el AMFE);
+     MISSING_CONTROL **49 filas** (70 y 80 incluidas, y también 40, 41, 100…); SPECIAL_CHARACTERISTIC_NOT_CONTROLLED
+     las 50 siglas (FRENO: la base no se emite como plan hasta vincular); MISSING_REACTION_PLAN 6 filas (60, 71 y
+     93, que no tienen hoja en el Excel de la HO); WEAK_DETECTION_METHOD **150 de 171** causas con un control de
+     detección sin instrumento del canon (número de partida del HOY-22; ojo: al menos 12 nombran panel, alarma,
+     detección automática o un ensayo, que el canon todavía no tiene); HIGH_SEVERITY_WEAK_CONTROL las 3 D/TLD, que
+     detectan con «verificación de certificado». Niveles: lo que el §7.6 llama «freno» en MISSING_CONTROL es la
+     celda vacía (la frena `gateCeldaVacia` de la etapa 1); un TBD se lista. UNMATCHED avisa, salvo una operación
+     del flujograma sin ninguna fila en el plan generado, que frena igual que el gate 1.
+   **Decidido distinto del §7.2 / del encargo, con su porqué**:
+   - Seis estados y no cinco: **FILA SIN MÉTODO** (vínculo hecho, la fila sin instrumento con papel) no se mezcla
+     con SIN FILA, porque el arreglo es otro (completar la HO, no vincular).
+   - El vínculo es **solo por tabla explícita** (el encargo decía «desde operación + característica»): las 171
+     causas tienen `characteristicNumber` vacío; por eso hoy hay 171 sin fila. Cruza operaciones (41 → 100).
+   - «Pieza patrón» y «verificación de certificado» **no** son instrumento identificable (canon,
+     `clases_identificables`): son inspección humana y control documental. Si Calidad decide otra cosa, se cambia ahí.
+   - El gate 7 acepta por **referencia** (`characteristicRef`) en el plan generado; las claves numéricas quedan solo
+     para diagnosticar el texto libre del plan viejo.
+   - Gate 8 sin vínculos = **FRENO** (no aviso): una base que no se cruzó con el AMFE no aprueba en vacío.
+   **Error propio corregido antes del commit**: la primera versión calculaba el nivel con la severidad suelta de
+   la causa (lo sugirió la revisión de la API y lo seguí); en los AMFE de la casa la S es del modo de falla
+   (`amfeValidator.mjs`, memoria `reference_amfe_severidad_del_modo_de_falla`). Daba 3 SC «fuera de regla» que no lo
+   están. Lo encontró el auditor; ahora un test compara la propuesta con `validateAmfeDoc`.
+   **Abierto**: la tabla real de vínculos causa → fila (nadie la definió; sin ella el gate 8 no evalúa);
+   primera/última pieza y error proofing de IATF 8.5.1.1; la tabla sigla interna → símbolo del cliente; el gate 9;
+   términos del canon para paneles, alarmas y ensayos; si una fila de set up vinculada por prevención debe llevar
+   la sigla de la causa (hoy la lleva, con el origen anotado).
 3. **Render sobre la plantilla oficial I-AC-005.1 Rev. C, limpieza y lectura de vuelta.** Bloqueada hasta el
    servidor. Respuesta conocida: en las 36 celdas del 06/10 el `.xls` nunca trae el valor ANTES.
 

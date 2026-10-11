@@ -33,6 +33,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import { esVacioHo, expandirNumeros } from './planControlFuentes.mjs';
 import { sinAcentos } from './amfeAutoria.mjs';
+import { normalizarSigla, esSinMarca } from './amfeValidator.mjs';
 
 export const TBD = 'TBD';
 export const CONFLICTO = 'CONFLICTO';
@@ -72,7 +73,7 @@ function filaVacia(op, nombre, section, rowKind, key) {
   Object.assign(item, {
     componentMaterial: '', specialCharClass: '', classification: [], controlProcedure: '',
     amfeCauseIds: [], linkedAmfeOperationId: '', amfeFailureId: '', hoQcItemId: '', flowOpId: '', bomLineId: '', packagingSheetId: '',
-    materialCode: '', materialFamily: '', instrumentCode: '', rowOrigin: [], sourceRef: {}, conflicts: [], notes: [], status: 'OK',
+    materialCode: '', materialFamily: '', instrumentCode: '', amfeLinks: [], rowOrigin: [], sourceRef: {}, conflicts: [], notes: [], status: 'OK',
   });
   return item;
 }
@@ -148,7 +149,9 @@ export function armarPlan({ flujograma, amfe = null, ho = null, bom = null, plan
   const bomLines = (bom?.materiales || []).map((m) => ({ ...m, id: `bom:${mayus(m.codigo)}`, sourceRef: refBom(bom, m) }));
   const packagingSheets = (entradas.fichasEmbalaje?.vigentes || []).map((f) => ({ id: `ficha:${f.doc}`, ...f }));
   const gages = Object.entries(entradas.calibracion?.instrumentos || {}).map(([codigo, g]) => ({ codigo, ...g }));
-  const catalog = { flowOps, amfeOps, amfeCauses, hoSheets, hoQcItems, bomLines, packagingSheets, gages };
+  // caracteristicas que una fuente marca apariencia / funcion / oculta (gate 7): declaradas en las entradas, con su cita
+  const declaredCharacteristics = (entradas.caracteristicasDeclaradas?.lista || []).map((d) => ({ ...d }));
+  const catalog = { flowOps, amfeOps, amfeCauses, hoSheets, hoQcItems, bomLines, packagingSheets, gages, declaredCharacteristics };
 
   const items = [];
   const pendientes = [];
@@ -377,7 +380,21 @@ export function armarPlan({ flujograma, amfe = null, ho = null, bom = null, plan
       if ((item[c] === TBD || item[c] === CONFLICTO) && !pendientes.some((p) => p.itemId === item.id && p.field === c)) pendiente(item, c, `${item.processStepNumber}: ${c}`, 'sin papel');
     }
   }
-  return { header: H, revisions, approvals, sources, catalog, items, pendientes, discrepanciasCodigo: discrepancias };
+  // un vinculo que apunta a una causa o a una fila que no existe no se ignora: lo frena el gate 8
+  const vinculosInvalidos = [];
+  const paresVistos = new Set();
+  for (const v of entradas.vinculos?.causaAFila || []) {
+    const par = `${v.causeId}|${v.itemKey}`;
+    const motivo = [
+      !amfeCauses.some((c) => c.id === v.causeId) ? 'la causa no esta en el AMFE leido' : '',
+      !items.some((i) => i.key === v.itemKey) ? 'la fila no existe en el plan' : '',
+      v.control !== undefined && !['prevencion', 'deteccion'].includes(v.control) ? `control "${v.control}" no es "prevencion" ni "deteccion"` : '',
+      paresVistos.has(par) ? 'el par causa-fila esta repetido' : '',
+    ].filter(Boolean).join(' y ');
+    paresVistos.add(par);
+    if (motivo) vinculosInvalidos.push({ causeId: v.causeId, itemKey: v.itemKey, motivo });
+  }
+  return { header: H, revisions, approvals, sources, catalog, items, pendientes, discrepanciasCodigo: discrepancias, vinculosInvalidos };
 }
 
 /**
@@ -385,17 +402,28 @@ export function armarPlan({ flujograma, amfe = null, ho = null, bom = null, plan
  * { causeId, itemKey }). Ni por texto ni por numero: el `characteristicNumber` de la fila lo pone
  * el formulario (1.0, 2.0 por operacion) y el de la causa, el plano; no son el mismo numero.
  * La sigla de la fila = union de los `specialChar` de las causas vinculadas (copiada, no calculada).
+ * El vinculo CRUZA operaciones (una causa de la 41 puede detectarse en el control final 100:
+ * AIAG-VDA 2019 paso 5). `control` dice contra que control del AMFE se compara la fila en el
+ * gate 8 ('prevencion' | 'deteccion'); sin dato, una fila de set up compara contra prevencion y
+ * las demas contra deteccion (§7.2).
  */
-function vincularCausas(item, amfeCauses, amfe, entradas, amfeOp) {
-  if (!amfe || !amfeOp) return;
-  const explicitos = (entradas.vinculos?.causaAFila || []).filter((v) => v.itemKey === item.key).map((v) => v.causeId);
-  const causas = amfeCauses.filter((c) => c.opId === amfeOp.id && explicitos.includes(c.id));
+function vincularCausas(item, amfeCauses, amfe, entradas) {
+  if (!amfe) return;
+  const links = [];
+  for (const v of (entradas.vinculos?.causaAFila || []).filter((x) => x.itemKey === item.key)) {
+    const c = amfeCauses.find((x) => x.id === v.causeId);
+    if (c && !links.some((l) => l.causeId === c.id)) links.push({ causeId: c.id, control: ['prevencion', 'deteccion'].includes(v.control) ? v.control : (item.rowKind === 'setup' ? 'prevencion' : 'deteccion') });
+  }
+  const causas = links.map((l) => amfeCauses.find((x) => x.id === l.causeId));
+  item.amfeLinks = links;
   item.amfeCauseIds = causas.map((c) => c.id);
-  const siglas = [...new Set(causas.map((c) => c.specialChar).filter(Boolean))];
+  // la sigla se copia normalizada («D / TLD» y «D/TLD» son la misma; «-» y «N/A» no son una sigla)
+  const sigla = (c) => (esSinMarca(c.specialChar) ? '' : normalizarSigla(c.specialChar));
+  const siglas = [...new Set(causas.map(sigla).filter(Boolean))];
   item.classification = siglas;
-  item.specialCharClass = siglas.join(' / ');
-  item.sourceRef.specialCharClass = causas.filter((c) => c.specialChar).map((c) => refAmfe(amfe, c));
-  for (const c of causas.filter((c) => c.specialChar)) item.notes.push(`sigla ${c.specialChar} copiada de la causa "${c.causa}" (S${c.S} O${c.O}, ${c.id})`);
+  item.specialCharClass = siglas.join(' + ');
+  item.sourceRef.specialCharClass = causas.filter(sigla).map((c) => refAmfe(amfe, c));
+  for (const c of causas.filter(sigla)) item.notes.push(`sigla ${sigla(c)} copiada de la causa "${c.causa}" (S${c.S} O${c.O}, control de ${links.find((l) => l.causeId === c.id).control}, ${c.id})`);
 }
 
 export function codigosEnHo(hoSheets) {
@@ -446,7 +474,7 @@ export function gate0FlujogramaVsAmfe(plan) {
 /** Gate 1: cada operacion tiene fila; cada item del ciclo de control de la HO tiene fila; las causas del AMFE sin fila se listan. */
 export function gate1Filas(plan) {
   const out = [];
-  const { flowOps, hoQcItems, amfeCauses } = plan.catalog;
+  const { flowOps, hoQcItems } = plan.catalog;
   const hoLegible = plan.sources.some((s) => s.kind === 'ho' && s.readable);
   if (!hoLegible) out.push(h('gate1', FRENO, '', '', 'fuente HO ausente o ilegible: sin hoja de operaciones no hay items de control que cubrir (el gate no aprueba en vacio)'));
   else if (!hoQcItems.length) out.push(h('gate1', FRENO, '', '', 'la HO se leyo pero no tiene ningun item de ciclo de control: o las hojas no se llaman como la operacion, o falta "Características a controlar" (el gate no aprueba en vacio)'));
@@ -457,8 +485,7 @@ export function gate1Filas(plan) {
     if (!plan.items.some((i) => String(i.hoQcItemId).split(' + ').includes(c.id))) out.push(h('gate1', FRENO, c.op, '', `el item "${c.caracteristica}" de la HO (hoja ${c.hoja}, fila ${c.fila}) no tiene fila`));
   }
   for (const c of hoQcItems.filter((x) => x.remite)) out.push(h('gate1', AVISO, c.op, '', `la HO (hoja ${c.hoja}, fila ${c.fila}) remite al plan de control ("${c.caracteristica}"): esa operacion no tiene controles propios en la HO`));
-  const sinFila = amfeCauses.filter((c) => c.detectionControl && !plan.items.some((i) => i.amfeCauseIds.includes(c.id)));
-  for (const c of sinFila) out.push(h('gate1', AVISO, c.op, '', `causa sin fila: "${c.causa}" (${c.falla}; control de deteccion "${c.detectionControl}"; ${c.id})`));
+  // las causas del AMFE sin fila las lista el gate 8 (planControlAmfe.mjs), con su estado
   return out;
 }
 
@@ -674,7 +701,7 @@ export function compararConPlanExistente(plan, planExistente) {
 // Reporte
 // ---------------------------------------------------------------------------
 
-export function reporteMarkdown(plan, hallazgos, comparacion = null) {
+export function reporteMarkdown(plan, hallazgos, comparacion = null, extra = '') {
   const L = [];
   const frenos = hallazgos.filter((x) => x.nivel === FRENO);
   L.push(`# Plan de control (base preliminar, JSON intermedio) — ${plan.header.partName}`);
@@ -711,6 +738,7 @@ export function reporteMarkdown(plan, hallazgos, comparacion = null) {
     L.push(`- Set up cuyo texto no sale de la HO de esa operacion (${comparacion.setUpAjeno.length}): ${comparacion.setUpAjeno.map((x) => `OP ${x.op} (fila ${x.fila}): ${x.enPropia} de ${x.tokens} palabras en su HO${x.deOtra ? `; la HO de la ${x.deOtra} si las tiene` : ''}: "${x.spec}"`).join(' · ') || 'ninguno'}`);
     L.push('');
   }
+  if (extra) { L.push(extra); L.push(''); }
   L.push('## Pendientes (lo que no tiene papel o tiene dos)');
   for (const p of plan.pendientes) L.push(`- OP ${p.op} · ${p.field} · ${p.que} — ${p.porque}`);
   return L.join('\n');
