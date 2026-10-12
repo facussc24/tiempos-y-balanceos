@@ -1439,17 +1439,79 @@ export function documentosDelTurno(fuera = {}, repo = REPO, raiz = raizExports(r
   return [...new Set(out)];
 }
 
-/** Corre el detector; devuelve los hallazgos BLOQUEANTES (lista vacia si no hay o si no pudo correr). */
-export function correrDetectorFirma(rutas, repo = REPO) {
-  if (!rutas.length) return [];
+/** Corre el detector UNA vez sobre `rutas`. Devuelve los hallazgos, o null si no pudo correr (no hay JSON). */
+function detectorCrudo(rutas, repo) {
   try {
     const salida = execFileSync('python', [path.join(repo, 'scripts', '_sinFirmaIA.py'), '--json', '--sin-avisos', '--incluir-nube', ...rutas],
       { encoding: 'utf8', env: { ...process.env, PYTHONIOENCODING: 'utf-8' }, timeout: 90_000, maxBuffer: 20 * 1024 * 1024 });
     return JSON.parse(salida || '[]');
   } catch (e) {
-    // sale 1 con hallazgos: el JSON viene en stdout igual
-    try { return JSON.parse(e.stdout || '[]'); } catch { return []; }
+    // sale 1 con hallazgos: el JSON viene en stdout igual; sin JSON (tope de 90 s, python roto) no se sabe nada
+    try { const j = JSON.parse(e.stdout || ''); return Array.isArray(j) ? j : null; } catch { return null; }
   }
+}
+
+// Cada documento se revisa UNA vez (12/10/2026, medido: un turno comun tiene 23-32 documentos en exports/ y el
+// detector tarda ~0,26 s por documento; una charla larga sin mensaje de Fak llega al techo de 300 y tarda 76-78 s,
+// al borde del tope de 90 s, en CADA cierre). El resultado de un documento depende solo de el y del detector, asi que
+// se guarda por ruta + tamaño + fecha, y la version del detector (nombre/tamaño/fecha de _sinFirmaIA.py, firmaIA.py y
+// su canon) invalida todo. Lo que NO se guarda nunca: una corrida sin JSON (tope, error) ni una cuyos hallazgos no se
+// puedan atribuir a una ruta pedida (asi no queda un «limpio» falso). Mismo lugar que el estado del registro (C1).
+const FIRMA_CACHE_MAX = 5000;
+const clavePath = (r) => path.resolve(String(r)).toLowerCase();
+function dirCacheFirma(env = process.env) {
+  const v = String(env.CIERRE_ESTADO_DIR || '').trim();
+  if (v.toLowerCase() === 'off') return null;
+  if (v) return v;
+  return env.VITEST ? null : path.join(os.tmpdir(), 'claude-cierre-guard');
+}
+function versionDetector(repo) {
+  const partes = [path.join(repo, 'scripts', '_sinFirmaIA.py'), path.join(repo, 'scripts', '_lib', 'firmaIA.py'), path.join(repo, 'scripts', '_lib', 'firmaIA.data.json')];
+  return partes.map((p) => { try { const s = fs.statSync(p); return `${path.basename(p)}:${s.size}:${Math.round(s.mtimeMs)}`; } catch { return `${path.basename(p)}:-`; } }).join('|');
+}
+
+/** Corre el detector sobre lo que no se reviso antes; devuelve los hallazgos (lista vacia si no hay o si no pudo correr). */
+export function correrDetectorFirma(rutas, repo = REPO, { env = process.env, crudo = detectorCrudo } = {}) {
+  if (!rutas.length) return [];
+  const dir = dirCacheFirma(env);
+  if (!dir) return crudo(rutas, repo) || [];
+  const archivoCache = path.join(dir, 'firma-documentos.json');
+  const version = versionDetector(repo);
+  let cache = null;
+  try { cache = JSON.parse(fs.readFileSync(archivoCache, 'utf8')); } catch { cache = null; }
+  if (!cache || cache.version !== version || typeof cache.docs !== 'object' || !cache.docs) cache = { version, docs: {} };
+  const out = []; const faltan = []; const huella = new Map();
+  for (const r of rutas) {
+    let s = null;
+    try { s = fs.statSync(r); } catch { s = null; }
+    const k = clavePath(r);
+    const h = s ? `${s.size}:${Math.round(s.mtimeMs)}` : null;
+    const g = h && cache.docs[k];
+    if (g && g.h === h && Array.isArray(g.hallazgos)) out.push(...g.hallazgos);
+    else { faltan.push(r); huella.set(k, h); }
+  }
+  if (!faltan.length) return out;
+  const nuevos = crudo(faltan, repo);
+  if (!nuevos) return out;                       // no corrio: como antes, sin hallazgos de lo que faltaba, y no se guarda nada
+  out.push(...nuevos);
+  const porDoc = new Map([...huella.keys()].map((k) => [k, []]));
+  // un adjunto de un mail sale como «mail.msg → adjunto x.xlsx»: es del .msg pedido
+  const deDoc = (x) => clavePath(String(x?.archivo || '').split(' → ')[0]);
+  const atribuibles = nuevos.every((x) => porDoc.has(deDoc(x)));
+  if (!atribuibles) return out;                  // un hallazgo de una ruta que no se pidio: no se guarda nada de esta corrida
+  for (const x of nuevos) porDoc.get(deDoc(x)).push(x);
+  for (const [k, hs] of porDoc) { const h = huella.get(k); if (h) cache.docs[k] = { h, hallazgos: hs, t: Date.now() }; }
+  const claves = Object.keys(cache.docs);
+  if (claves.length > FIRMA_CACHE_MAX) {
+    for (const k of claves.sort((a, b) => (cache.docs[a].t || 0) - (cache.docs[b].t || 0)).slice(0, claves.length - FIRMA_CACHE_MAX)) delete cache.docs[k];
+  }
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    const tmp = `${archivoCache}.${process.pid}.${Date.now()}.tmp`;
+    fs.writeFileSync(tmp, JSON.stringify(cache));
+    try { fs.renameSync(tmp, archivoCache); } catch { try { fs.unlinkSync(tmp); } catch { /* se fue */ } }
+  } catch { /* guardar no puede romper el cierre */ }
+  return out;
 }
 
 export function evaluarFirmaIA(texto, rutas, correr = correrDetectorFirma) {
