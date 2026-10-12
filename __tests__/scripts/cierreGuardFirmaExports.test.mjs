@@ -43,7 +43,8 @@ const correrHook = (transcript, env) => spawnSync('bash', [HOOK], {
   encoding: 'utf8', env,
 });
 const conVitest = (dir) => ({ ...process.env, VITEST: 'true', [VAR_EXPORTS_PRUEBA]: dir });
-const sinVitest = (dir) => { const e = { ...process.env, [VAR_EXPORTS_PRUEBA]: dir }; delete e.VITEST; return e; };
+// sin VITEST el .sh mide: CLAUDE_HOOKS_TIEMPOS=off para que estas corridas no caigan en el registro de tiempos real
+const sinVitest = (dir) => { const e = { ...process.env, [VAR_EXPORTS_PRUEBA]: dir, CLAUDE_HOOKS_TIEMPOS: 'off' }; delete e.VITEST; return e; };
 
 describe('raizExports: la carpeta de prueba vale solo adentro de vitest', () => {
   const real = path.join(REPO, 'exports');

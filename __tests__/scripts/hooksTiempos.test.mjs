@@ -131,6 +131,23 @@ describe('una prueba que lanza el hook no ensucia el registro de verdad', () => 
     expect(r.total.max).toBe(500);
     expect(T.resumir(ev, { ahora: 100000, conPruebas: true })).toMatchObject({ corridas: 2, domina: { fase: 'firma' } });
   });
+
+  it('un renglon de antes de `real` (11/10 02:20) se juzga por la forma de la sesion: "s7" o "" es una prueba, 8 hexadecimales una sesion', () => {
+    expect(T.esCorridaReal({ sesion: 'ae95ec7e' })).toBe(true);
+    expect(T.esCorridaReal({ sesion: 's7' })).toBe(false);
+    expect(T.esCorridaReal({ sesion: '' })).toBe(false);
+    expect(T.esCorridaReal({ sesion: 'prueba-m' })).toBe(false);
+    expect(T.esCorridaReal({ sesion: 'ae95ec7e', real: false })).toBe(false);   // si dice `real`, manda `real`
+    expect(T.esCorridaReal({ sesion: 's7', real: true })).toBe(true);
+    expect(T.esCorridaReal(undefined)).toBe(true);                             // sin renglon de fases (una matada) se cuenta
+    // el caso del 12/10: tres corridas de firma de pruebas viejas (sin `real`) hacian decir «Domina: firma»
+    const ev = [
+      { ev: 'inicio', hook: 'cierre-guard', id: 'r', t: 1000 }, { ev: 'fases', hook: 'cierre-guard', id: 'r', t: 1100, sesion: 'ae95ec7e', fases: { relevar: 900 } }, { ev: 'fin', hook: 'cierre-guard', id: 'r', t: 2100, rc: 0, ms: 1000 },
+      { ev: 'inicio', hook: 'cierre-guard', id: 'v', t: 3000 }, { ev: 'fases', hook: 'cierre-guard', id: 'v', t: 3100, sesion: 's7', fases: { firma: 62738 } }, { ev: 'fin', hook: 'cierre-guard', id: 'v', t: 66000, rc: 2, ms: 63000 },
+    ];
+    expect(T.resumir(ev, { ahora: 100000 })).toMatchObject({ corridas: 1, domina: { fase: 'relevar' } });
+    expect(T.resumir(ev, { ahora: 100000, conPruebas: true }).domina.fase).toBe('firma');
+  });
 });
 
 describe('medir no cambia la decision del cierre', () => {
@@ -225,7 +242,7 @@ describe('el lector: una corrida matada es un inicio sin fin', () => {
   const AHORA = 1_800_000_000_000;
   const corrida = (id, t, { fin = true, ms = 500, rc = 0, fases = { relevar: 200, firma: 100, resto: 10 }, arranque = 150 } = {}) => [
     { ev: 'inicio', hook: 'cierre-guard', id, t },
-    ...(fases ? [{ ev: 'fases', hook: 'cierre-guard', id, t: t + arranque, arranque_ms: arranque, total_ms: ms - arranque, fases, bytes_registro: 4_000_000 }] : []),
+    ...(fases ? [{ ev: 'fases', hook: 'cierre-guard', id, t: t + arranque, real: true, arranque_ms: arranque, total_ms: ms - arranque, fases, bytes_registro: 4_000_000 }] : []),
     ...(fin ? [{ ev: 'fin', hook: 'cierre-guard', id, t: t + ms, rc, ms }] : []),
   ];
 

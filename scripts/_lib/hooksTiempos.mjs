@@ -177,6 +177,18 @@ export function leerRegistro(ruta = rutaRegistro()) {
   return { eventos, rotos, existe: true };
 }
 
+/**
+ * ¿El renglon de fases es de una sesion real? Desde el 11/10/2026 02:20 lo dice `real`. Los renglones de antes no lo
+ * traen: ahi decide la forma de la sesion (los 8 primeros caracteres de un id de Claude Code son hexadecimales; las
+ * pruebas usaban "", "s7", "prueba-m"). Sin esto, las 3 corridas de 57 a 70 s de la firma —todas de pruebas, con
+ * registros de menos de 2 KB— salian como «Domina: firma» (12/10/2026: 0 corridas de firma en 116 cierres reales).
+ */
+export function esCorridaReal(fases) {
+  if (!fases) return true;                      // inicio/fin sin renglon de fases: no hay con que decidir, se cuenta
+  if (typeof fases.real === 'boolean') return fases.real;
+  return /^[0-9a-f]{8}$/i.test(String(fases.sesion || ''));
+}
+
 /** Cuanto se espera el `fin` de una corrida antes de darla por matada (el tope de un hook es de 60 s por defecto). */
 export const GRACIA_MATADO_MS = 5 * 60000;
 
@@ -195,7 +207,7 @@ export function resumir(eventos, { desde = null, hook = 'cierre-guard', ahora = 
     corridas.set(e.id, c);
   }
   const todas = [...corridas.values()].filter((c) => {
-    if (!conPruebas && c.fases && c.fases.real === false) return false;      // la lanzo una prueba, no una sesion
+    if (!conPruebas && !esCorridaReal(c.fases)) return false;               // la lanzo una prueba, no una sesion
     const t = (c.inicio || c.fases || c.fin || {}).t;
     return desde == null || (Number.isFinite(t) && t >= desde);
   });
