@@ -64,7 +64,14 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
 - ~~H37: investigar los 194 casos de código 127 (solo lectura), que es lo que destraba P30.~~ HECHA 23:50.
 - Los textos que todavía nombran los cuatro hooks viejos de mensajes (`CLAUDE.md`, dos reglas, `explicar-mejor/SKILL.md`).
 - HOY-45 (instalador de mods: R-B y R-C, decir la verdad cuando el marketplace queda registrado o un mod está apagado).
-- Diseñar P18 con los requisitos del auditor (sin aplicarlo).
+- ~~Diseñar P18 con los requisitos del auditor (sin aplicarlo).~~ HECHO 00:04: medición previa y plan corto en su fila de la cola.
+- Agregado a la 01:22, cuando el control de la hora pidió seguir (auditar y probar, solo lectura):
+  - ~~`_probarMejora.mjs --mensaje` con el último mensaje real de Fak.~~ 01:23, sin fallas.
+  - ~~Las horas de esta lista contra git.~~ 01:23: las 19 que dicen la hora de un commit calzan.
+  - ~~La nube, medida otra vez.~~ 01:24: lo mío subió; queda el archivo ajeno del 31/07.
+  - ~~Leer ENTERO el informe del auditor de HOY-57 (había leído su resumen).~~ 01:29: coincide con el resumen; lo que deja está en la fila HOY-64. Dato de más: también frena un apagado agendado con `schtasks`.
+  - ~~Repasar los números del resumen final contra su fuente antes de escribirlo.~~ 01:30.
+  - ~~El aviso falso del cierre, medido desde su propia función.~~ 01:33: de 639 entregables «escritos» que cuenta el control en toda la historia, 30 son un dato guardado como texto por `cat` o `tee` (el caso del aviso falso) y 104 van a un intérprete (bien contados). Nota y arreglo propuesto en la fila HOY-61. 01:32 CI del último push (`68d0fd03`): completed success.
 
 ## Lo que necesita a Fak
 
