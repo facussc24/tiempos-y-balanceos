@@ -9,6 +9,10 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
 
 ## SI LA SESIÓN SE COMPACTÓ, LEER ESTO PRIMERO
 
+- **Estado a las 23:37 del 11/10: los puntos 1, 2, 3 y 4 están EN MAIN y pusheados.** Los tres controles (firma, arb y
+  mail) entraron a las 23:27 (`5fa79fad` … `3cc041eb`, siete commits); el módulo `scripts/_lib/guardianes.mjs` de main
+  tiene la huella `bb013b71` (`git hash-object`), la misma de la copia que midió el auditor. Lo que sigue es la sección
+  «Trabajo que puedo hacer solo». Los renglones de abajo cuentan cómo se llegó; las dos copias siguen en disco.
 - Se trabaja en DOS copias aparte del repo, nunca sobre el checkout principal (sus hooks están en vivo):
   - `.claude/worktrees/p14-p18`, rama `guardianes-afinados`: un commit, `c57b8747` = **HOY-28** (el agujero del borrado).
     Lo está auditando el agente `a4754b9d81dd6ef1f`; su informe va a `.sgc-cache/auditorias/HOY-28_auditor_2026-10-11.md`.
@@ -30,8 +34,8 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
 | # | Qué | Estado |
 |---|---|---|
 | 1 | **HOY-28**: el control de borrado deja pasar un borrado permanente | **EN MAIN y en vivo desde las 22:08** (`135608bd` + `1269458c`). Auditor: SÍ con dos renglones, aplicados tal cual, y sus 8 tests (informe `.sgc-cache/auditorias/HOY-28_auditor_2026-10-11.md`). Suite completa: solo los dos rojos locales ajenos (HOY-50). Pusheado (`712ce919`), **CI verde** (leído 22:24) |
-| 2 | **P16** (firma) con el arreglo del auditor | Hecho en g2 (`83cd507d`, `a64b0d11`), 142 tests, diferencial −9 falsos / +0. **Auditor pedido 22:11** (mismo agente `a4754b9d81dd6ef1f`; informe en `.sgc-cache/auditorias/P14-P16_auditor_2026-10-11.md`) |
-| 3 | **P14 + P15** (arb y mail miran lo que corre) con los 5 arreglos de la sección 6 del informe `.sgc-cache/auditorias/P14-P18_auditor_2026-10-11.md` | Hecho en g2 (`00c9ac68` + `b7a55160`): los cinco arreglos + dos más; arnés: quedan solo los rebuscados; 134 tests; diferencial arb −9 / +5, mail −14 / +2. Lo medido: `.sgc-cache/auditorias/P14-P16_arreglos_medido_2026-10-11.md`. **Auditor pedido 22:11**. Para entrar a main (con su SÍ): cherry-pick de `52404ed8 83cd507d a64b0d11 00c9ac68 b7a55160` (g2 tiene además `3b4e24bc`, que ya está en main) |
+| 2 | **P16** (firma) con el arreglo del auditor | **EN MAIN y en vivo desde las 23:27** (`5fa79fad` + `4504933b` + `9e06069d`). Auditor: SÍ sin arreglos (informe `.sgc-cache/auditorias/P14-P16_auditor_2026-10-11.md`). Contra la historia entera deja de frenar 9 falsos y no empieza a frenar nada |
+| 3 | **P14 + P15** (arb y mail miran lo que corre) con los 5 arreglos de la sección 6 del informe `.sgc-cache/auditorias/P14-P18_auditor_2026-10-11.md` | **EN MAIN y en vivo desde las 23:27** (`0604d558` + `e7141e3f` + `a5bee431`; pruebas `3cc041eb`). Auditor: SÍ con dos arreglos (B1 y B2), aplicados tal cual con su parche; entraron las 12 pruebas que pidió y una más, y los cinco mutantes que quedaban vivos ahora mueren. Diferencial: arb −9 / +5, mail −14 / +2. Por el despachador real de main, 20 casos como se esperaba; los seis del borrado siguen frenando. Suite completa: solo los tres rojos locales ajenos (HOY-50). Lo que queda, en la cola: HOY-54 a HOY-60 |
 | 4 | **Avisos del cierre (P10 C3)**: dejarlo LISTO sin cablear | Hecho en el worktree `p14-p18`, rama `cierre-listo`, commit `5de5ab45` (T1, T2, test del `.sh` con exit 2 y con los módulos de apoyo rotos, `cierreGuardExplicar` sin contar cuatro). 183 tests. Auditor: SÍ, ningún error real; pidió un arreglo más (R12) que se hizo (`3a1d2348`). **EN MAIN desde las 22:47, sin cablear** (`94f5b6ff`, `cbc0f75e`). Lo que falta para cablearlo está en la fila HOY-47 de la cola. El cableado NO: espera la medición que termina ~17/10 |
 | 5 | P18 (borrado en scripts que se escriben): rehacer | NO esta noche: es otro trabajo (requisitos en la sección 6 del mismo informe) |
 | 6 | Mejoras de velocidad (C1 y P30) | NO: C1 espera la medición del 17/10; P30 va después de la investigación H37 |
@@ -48,7 +52,7 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
 
 ## Trabajo que puedo hacer solo (cuando se acabe lo de arriba)
 
-- H37: investigar los 194 casos de código 127 (solo lectura), que es lo que destraba P30.
+- ~~H37: investigar los 194 casos de código 127 (solo lectura), que es lo que destraba P30.~~ HECHA 23:50.
 - Los textos que todavía nombran los cuatro hooks viejos de mensajes (`CLAUDE.md`, dos reglas, `explicar-mejor/SKILL.md`).
 - HOY-45 (instalador de mods: R-B y R-C, decir la verdad cuando el marketplace queda registrado o un mod está apagado).
 - Diseñar P18 con los requisitos del auditor (sin aplicarlo).
@@ -58,16 +62,26 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
 - (sigue de antes) El freno de agentes al 60 % de la semana rige hasta el vie 16/10 13:00; la tarea de las 06:30 sigue
   frenada hasta el 30/10 (HOY-49); borrar los cuatro `.sh` viejos; `__cleanupAmfeActions` (HOY-37); las dos tareas de
   prueba de Programadas.
+- (nuevo, de H37) **HOY-62**: una sesión que la app abre sin carpeta y después entra al repo trabaja sin los controles
+  del repo. El arreglo de fondo es poner los controles de las reglas duras (arb, mail, borrado, firma, nube personal,
+  secretos) en la configuración general de Claude Code, que vale para todas las sesiones de la PC: es un cambio
+  grande y va con su sí. Mientras tanto: abrir las sesiones eligiendo la carpeta `C:\Dev\BarackMercosul`.
 
 ## Decidí distinto de lo pedido
 
 - Fak dijo «ya implementaste 1 y quedan 2». La cuenta real: de las tres, la primera (los controles) está a medias (dos
   partes hechas, una por hacer) y es la que sigo; la segunda se puede dejar lista pero no cablear; la tercera no se puede
   tocar hasta el 17/10. Se lo dije antes de arrancar.
+- El auditor dejó tres mejoras más, medidas y con parche, que NO entraron (HOY-54, HOY-55 y HOY-56): su SÍ era para los
+  dos arreglos obligatorios; una de las tres afloja un control y ninguna tiene veredicto propio. Quedan en la cola.
 
 ## No pude verificar
 
-- (se completa durante la noche)
+- Nada de lo que los controles frenan corrió de verdad (ni un cierre del arb, ni un mail, ni un documento): «frena» y
+  «pasa» son veredictos del control, medidos por el despachador real.
+- `_probarMejora.mjs --mensaje` no aplica a estos tres controles: no leen mensajes de Fak, miran comandos y archivos.
+  Lo que ocupó su lugar fue la pasada de 20 casos por el despachador de main.
+- La herramienta PowerShell tiene 3 usos en toda la historia: sus casos no tienen contra qué medirse.
 
 ## Registro (horas medidas con `date` o del commit)
 
@@ -80,4 +94,10 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
 - 22:18 suite completa en main: 2 rojos locales ajenos. Push `712ce919`; 22:24 CI verde.
 - 22:20-22:24 punto 4 (aviso único del cierre, sin cablear) en la rama `cierre-listo`: `5de5ab45`. 22:24 pedida la verificación al auditor de P10.
 - 22:28 cola: HOY-28 hecha y tres filas nuevas (`ba8389a2`). 22:46 volvió el auditor de P10: SÍ; R12 aplicado (`3a1d2348`). 22:47 punto 4 en main y pusheado.
-- Un aviso falso del control del cierre a las 22:30: dijo que escribí `C:/Users/Alguien/…/x.pdf` «afuera del repo»; es un dato de prueba de `nubePersonalGuard.test.mjs` que salió en la salida de una corrida de tests. No existe. Para la cola.
+- Un aviso falso del control del cierre a las 22:30: dijo que escribí `C:/Users/Alguien/…/x.pdf` «afuera del repo»; es un dato de prueba de `nubePersonalGuard.test.mjs` que salió en la salida de una corrida de tests. No existe. Para la cola (anotado 23:35: HOY-61).
+- 23:13 volvió el informe del auditor de la firma, el arb y el mail: firma SÍ; arb y mail SÍ con dos arreglos (B1 y B2), con su parche. 23:14 apliqué el parche en g2 (`git apply`; el cambio de las 23:14:29 que el auditor anotó como «de otra sesión» fue este): el módulo quedó con la huella `bb013b71`, igual a su copia `mut/fix`. 417 pruebas y las dos suites de consola en verde. 23:21 commit `11656581`.
+- 23:23 las pruebas que pidió el auditor (`7e2845a3`, 421 en verde, solo el archivo de pruebas). 23:26 sus cinco mutantes vivos, corridos de nuevo sobre el módulo arreglado: mueren los cinco (copia del armador en `scratchpad/mut2/`).
+- 23:27 cherry-pick de los siete commits a main; `git diff` contra la rama `guardianes-p16` vacío en los tres archivos; el módulo carga; por el despachador real de main, 20 casos del auditor como se esperaba (4 normales, 4 del arb, 3 del mail, 3 de firma, 6 liberados) y los casos del borrado siguen frenando; las dos suites de consola en verde. 23:27 a 23:37 suite completa: 7.792 pasan, fallan los tres ajenos de HOY-50. 23:37 push (`3cc041eb`).
+- 23:43 CI de `3cc041eb`: completed success. Las sesiones abiertas toman los tres controles solas (el despachador carga el módulo de main en cada llamada).
+- 23:40 a 23:50 **H37 hecha** (solo lectura): informe `.sgc-cache/investigacion-2026-10-11/H37_codigo_127_2026-10-11.md`. Los 194 eran el hook llamado con ruta relativa, arreglado el 22/09. Lo que queda abierto es otra cosa: una sesión que la app abre sin carpeta y después entra al repo trabaja sin los controles del repo (08/10, dos sesiones). Cola: H37 hecha, fila nueva HOY-62, notas en P30, P31, H38 y X27.
+- 23:30 a 23:35 la cola: P14, P15 y P16 hechas; filas nuevas HOY-54 a HOY-61. Los cuatro parches del auditor quedaron en `.sgc-cache/auditorias/P14-P16_parches/` y su memoria del worktree pasó a `.claude/agent-memory/auditor/` de main con lo que pidió sumarle.
