@@ -809,7 +809,14 @@ function registrarEntregables(b, st, repo) {
 // y verificar en el mismo comando es mirar (caso real f14f5aae, 07/10 18:35). Un Read que vuelve con error no cuenta.
 const MIRADAS_MAX = 600;
 const MIRADA_TXT_MAX = 8000;
-function registrarMirada(b, st, ts) {
+/** Una mirada vale si termino hasta 2 s antes de la fecha del archivo (entregablesSinAbrir y el corte de H6). */
+export const MARGEN_MIRADA_MS = 2000;
+// Orden total (hora, texto, Read): la respuesta no puede depender del orden en que se leyeron los registros (H6).
+const cmp = (a, b) => (a === b ? 0 : a < b ? -1 : 1);              // con Infinity la resta da NaN
+const ordenMirada = (a, b) => cmp(a.ts, b.ts) || cmp(a.txt, b.txt) || cmp(Number(a.esRead), Number(b.esRead));
+const ordenVentana = (a, b) => cmp(a[0], b[0]) || cmp(a[1], b[1]);
+
+function registrarMirada(b, st, ts, sub = false) {
   const nombre = b.name || '';
   const input = b.input || {};
   let txt = '';
@@ -824,10 +831,50 @@ function registrarMirada(b, st, ts) {
   }
   if (!txt) return;
   const m = { txt: textoPlano(txt.slice(0, MIRADA_TXT_MAX)), ts, esRead: nombre === 'Read' };
-  st.miradas.push(m);
-  if (st.miradas.length > MIRADAS_MAX) st.miradas.shift();
+  if (sub) {
+    // H6: aparte. Detras del turno del principal, pasadas las 600, el shift se llevaba justo las del turno.
+    m.sub = true;
+    st.miradasSub.push(m);
+    if (st.miradasSub.length > 2 * MIRADAS_SUB_MAX) podarMiradasSub(st);
+  } else {
+    st.miradas.push(m);
+    if (st.miradas.length > MIRADAS_MAX) st.miradas.shift();
+  }
   if (b.id) st.miradasPorId.set(b.id, m);
 }
+
+/** Techo de las miradas de subagentes DEL TURNO: no decide nada, solo cuida la memoria (y el estado que guarda C1). */
+const MIRADAS_SUB_MAX = 5000;
+const corteDelTurno = (st) => Date.parse(st.turnoTs || '') - MARGEN_MIRADA_MS;
+
+/** Se van las cerradas de antes del turno (el turno solo avanza: no vuelven a decidir nada); las abiertas quedan
+ *  siempre (su hora todavia cambia). Solo si las del turno pasan el techo, quedan las mas nuevas. */
+function podarMiradasSub(st) {
+  const corte = corteDelTurno(st);
+  const abiertas = new Set(st.miradasPorId.values());
+  let cerradas = st.miradasSub.filter((m) => !abiertas.has(m) && (!Number.isFinite(corte) || m.ts >= corte));
+  if (cerradas.length > MIRADAS_SUB_MAX) cerradas = cerradas.sort(ordenMirada).slice(-MIRADAS_SUB_MAX);
+  const quedan = new Set(cerradas);
+  st.miradasSub = st.miradasSub.filter((m) => abiertas.has(m) || quedan.has(m));
+}
+
+/** Las del turno del principal (como siempre) y TODAS las de subagentes que terminaron desde el turno menos el margen
+ *  (12/10/2026: con un tope de 600 el viejo y el nuevo se quedaban con 600 distintas en un turno de 1 GB y 40
+ *  subagentes; sin tope en el turno, lo nuevo contiene a lo viejo). Lo de antes del turno no decidia nada:
+ *  entregablesSinAbrir solo mira archivos con fecha posterior al turno. */
+function miradasDelTurno(st) {
+  const corte = corteDelTurno(st);
+  const abiertas = new Set(st.miradasPorId.values());
+  const sub = st.miradasSub.filter((m) => !Number.isFinite(corte) || m.ts >= corte);   // sin hora de turno: todas, como antes
+  // el techo se aplica aca igual que en la poda: la respuesta no depende de CUANDO se podo (pasada completa o de a tramos)
+  let cerradas = sub.filter((m) => !abiertas.has(m));
+  if (cerradas.length > MIRADAS_SUB_MAX) cerradas = cerradas.sort(ordenMirada).slice(-MIRADAS_SUB_MAX);
+  const deSub = [...cerradas, ...sub.filter((m) => abiertas.has(m))].sort(ordenMirada);
+  return [...st.miradas, ...deSub].map(({ txt, ts, esRead }) => ({ txt, ts, esRead }));
+}
+
+/** Para guardar el estado entre cierres (C1): lo que ya no puede decidir nada se va antes de escribirlo. */
+export function podarParaGuardar(st) { podarMiradasSub(st); }
 
 /** El resultado de una mirada: su hora pasa a ser la del resultado; si volvio con error, no fue una mirada. */
 function cerrarMiradas(st, obj) {
@@ -837,7 +884,7 @@ function cerrarMiradas(st, obj) {
     if (b.type !== 'tool_result' || !st.miradasPorId.has(b.tool_use_id)) continue;
     const m = st.miradasPorId.get(b.tool_use_id);
     st.miradasPorId.delete(b.tool_use_id);
-    if (b.is_error) { const i = st.miradas.indexOf(m); if (i >= 0) st.miradas.splice(i, 1); continue; }
+    if (b.is_error) { const lista = m.sub ? st.miradasSub : st.miradas; const i = lista.indexOf(m); if (i >= 0) lista.splice(i, 1); continue; }
     const fin = Date.parse(obj.timestamp || '');
     if (Number.isFinite(fin) && fin > m.ts) m.ts = fin;
   }
@@ -1028,83 +1075,93 @@ function cerrarPruebas(st, obj) {
   }
 }
 
-async function pasada(archivo, st, { completa, repo }) {
+// H6 (plan P9 §6.1): el incremental va a leer principal y subagentes intercalados; la respuesta no puede cambiar
+// por eso. `seq` es del principal, las miradas de subagentes van a su lista y una hora que falta en un subagente
+// cuenta como "despues de todo", no como un numero chico que se compara contra horas de verdad.
+export async function pasada(archivo, st, opts) {
   const rl = readline.createInterface({ input: fs.createReadStream(archivo, 'utf8'), crlfDelay: Infinity });
-  for await (const linea of rl) {
-    if (!linea.includes('"tool_use"') && !linea.includes('"type":"user"')
-      && !linea.includes('<task-notification>') && !linea.includes('"queued_command"')
-      && !(completa && (CX_MENCION.test(linea) || MQ_MENCION.test(linea)))) continue;
-    let obj;
-    try { obj = JSON.parse(linea); } catch { continue; }
-    if (completa && !st.inicio && obj.timestamp) st.inicio = Date.parse(obj.timestamp) || 0;
-    if (completa) registrarBackground(st.bg, obj, linea);
-    // Lo que Fak escribe MIENTRAS trabajo entra como attachment queued_command (commandMode prompt). Lo que
-    // encola OTRA sesion trae origin.kind 'peer' (42 en dos meses) y no es de Fak; con una imagen adjunta el
-    // prompt es una lista de bloques (24), no una cadena.
-    if (obj.type === 'attachment' && obj.attachment?.type === 'queued_command' && obj.attachment.commandMode === 'prompt') {
-      const a = obj.attachment;
-      const t = sinAvisosAdelante(textoDeBloques(a.prompt));
-      if (completa && !(a.origin?.kind && a.origin.kind !== 'human') && t.trim() && !esAutomatico(t)) {
-        st.ultimoMensajeFak = t; st.ultimoMensajeFakTs = obj.timestamp || ''; st.explicar = turnoDeExplicar(); st.mails = turnoDeMails(); st.encargo = false;
+  for await (const linea of rl) procesarLinea(linea, st, opts);
+}
+
+/** Un renglon del registro sobre el estado `st`. Lo usan la pasada completa (arriba) y la de a tramos (C1,
+ *  cierreIncremental.mjs): la misma logica, renglon por renglon, para que las dos no puedan diferir. */
+export function procesarLinea(linea, st, { completa, repo }) {
+  if (!linea.includes('"tool_use"') && !linea.includes('"type":"user"')
+    && !linea.includes('<task-notification>') && !linea.includes('"queued_command"')
+    && !(completa && (CX_MENCION.test(linea) || MQ_MENCION.test(linea)))) return;
+  let obj;
+  try { obj = JSON.parse(linea); } catch { return; }
+  if (completa && !st.inicio && obj.timestamp) st.inicio = Date.parse(obj.timestamp) || 0;
+  if (completa) registrarBackground(st.bg, obj, linea);
+  // Lo que Fak escribe MIENTRAS trabajo entra como attachment queued_command (commandMode prompt). Lo que
+  // encola OTRA sesion trae origin.kind 'peer' (42 en dos meses) y no es de Fak; con una imagen adjunta el
+  // prompt es una lista de bloques (24), no una cadena.
+  if (obj.type === 'attachment' && obj.attachment?.type === 'queued_command' && obj.attachment.commandMode === 'prompt') {
+    const a = obj.attachment;
+    const t = sinAvisosAdelante(textoDeBloques(a.prompt));
+    if (completa && !(a.origin?.kind && a.origin.kind !== 'human') && t.trim() && !esAutomatico(t)) {
+      st.ultimoMensajeFak = t; st.ultimoMensajeFakTs = obj.timestamp || ''; st.explicar = turnoDeExplicar(); st.mails = turnoDeMails(); st.encargo = false;
+    }
+    return;
+  }
+  if (obj.type === 'user') {
+    cerrarVentanas(st, obj);
+    cerrarPruebas(st, obj);
+    cerrarMiradas(st, obj);
+    if (completa && esMensajeRealDeUsuario(obj)) {
+      // turnoTs: donde empieza el turno para el chequeo 4 de exports/. Lo mueve solo un mensaje que ABRE un turno, no
+      // uno que Fak escribe mientras trabajo (queued_command, arriba): ese no corta lo que ya se genero (auditor R3).
+      st.turnoTs = obj.timestamp || ''; st.miradas = [];
+      // lo abierto de un subagente sigue esperando su resultado: el turno nuevo solo vacia lo del principal (H6)
+      for (const [id, m] of st.miradasPorId) if (!m.sub) st.miradasPorId.delete(id);
+      st.ejemplo = null; st.ultimoMensajeFak = textoDeUsuario(obj); st.ultimoMensajeFakTs = obj.timestamp || ''; st.explicar = turnoDeExplicar(); st.mails = turnoDeMails();
+      st.encargo = CX_ENCARGO.test(crudoDeUsuario(obj));           // el primer mensaje de una sesion lanzada por otra
+    } else if (completa && linea.includes('<command-name>') && linea.includes(`/${CX.skill}<`)) st.explicar.skill = true;   // Fak lo cargo a mano
+    return;
+  }
+  if (obj.type !== 'assistant') return;
+  const bloques = obj.message?.content;
+  if (!Array.isArray(bloques)) return;
+  for (const b of bloques) {
+    // El renglon "No aplica explicar-mejor:" vale para todo el turno: si despues un aviso de tarea despierta
+    // la sesion y hay otro cierre, no se vuelve a pedir (auditoria 02/10: 4 turnos reales con 2 cierres o mas).
+    if (completa && b.type === 'text' && CX_NO_APLICA.test(normalizar(b.text))) st.explicar.noAplica = true;
+    if (completa && b.type === 'text' && MQ_NO_APLICA.test(normalizar(b.text))) st.mails.noAplica = true;
+    if (b.type !== 'tool_use') continue;
+    if (completa) st.seq++;                                       // seq por archivo: el de los entregables es del principal
+    const hora = Date.parse(obj.timestamp || '');
+    registrarMirada(b, st, hora || 0, !completa);                 // tambien lo que abre un subagente (el auditor), en su lista
+    const orden = hora || (completa ? st.seq : Infinity);
+    const pieza = (r) => {
+      if (!MEJ_SISTEMA.test(r)) return;
+      const limpia = r.replace(MEJ_WORKTREE, '');
+      st.sis.archivos.add(limpia);
+      if (MEJ_MENSAJES.test(limpia)) { st.sis.deMensajes.add(limpia); st.sis.escrito = Math.max(st.sis.escrito, orden); }
+    };
+    const rel = rutaRelativaAlRepo(b, repo);
+    if (rel) { st.tocados.add(rel); pieza(rel); }
+    if (/^(Bash|PowerShell)$/.test(b.name || '')) {
+      st.huboComando = true;
+      // Solo lo que el comando ESCRIBE (30/09/2026): nombrar un archivo en un cat o un grep no lo toca.
+      const e = escrituraEnComando(b.input?.command, repo);
+      for (const r of e.escritos) {
+        st.tocados.add(r);
+        if (!e.soloIndice.has(r)) pieza(r);               // `git add` despues de la prueba no es un cambio nuevo
       }
-      continue;
+      if (e.opaco) { st.huboOpaco = true; abrirVentana(st, b, obj); }
+      // La prueba cuenta cuando VUELVE sin error (cerrarPruebas): un grep que nombra el script, o una que fallo, no.
+      if (completa && b.id && MEJ_PRUEBA.test(soloLineasDeComando(String(b.input?.command || '')))) st.sis.pruebas.set(b.id, orden);
+    } else if (/^(Agent|Task)$/.test(b.name || '')) {
+      st.huboComando = true;
+      st.huboOpaco = true;                              // un agente puede escribir donde no se ve (y su transcript puede faltar)
+      abrirVentana(st, b, obj);
     }
-    if (obj.type === 'user') {
-      cerrarVentanas(st, obj);
-      cerrarPruebas(st, obj);
-      cerrarMiradas(st, obj);
-      if (completa && esMensajeRealDeUsuario(obj)) {
-        // turnoTs: donde empieza el turno para el chequeo 4 de exports/. Lo mueve solo un mensaje que ABRE un turno, no
-        // uno que Fak escribe mientras trabajo (queued_command, arriba): ese no corta lo que ya se genero (auditor R3).
-        st.turnoTs = obj.timestamp || ''; st.miradas = []; st.miradasPorId = new Map();
-        st.ejemplo = null; st.ultimoMensajeFak = textoDeUsuario(obj); st.ultimoMensajeFakTs = obj.timestamp || ''; st.explicar = turnoDeExplicar(); st.mails = turnoDeMails();
-        st.encargo = CX_ENCARGO.test(crudoDeUsuario(obj));           // el primer mensaje de una sesion lanzada por otra
-      } else if (completa && linea.includes('<command-name>') && linea.includes(`/${CX.skill}<`)) st.explicar.skill = true;   // Fak lo cargo a mano
-      continue;
-    }
-    if (obj.type !== 'assistant') continue;
-    const bloques = obj.message?.content;
-    if (!Array.isArray(bloques)) continue;
-    for (const b of bloques) {
-      // El renglon "No aplica explicar-mejor:" vale para todo el turno: si despues un aviso de tarea despierta
-      // la sesion y hay otro cierre, no se vuelve a pedir (auditoria 02/10: 4 turnos reales con 2 cierres o mas).
-      if (completa && b.type === 'text' && CX_NO_APLICA.test(normalizar(b.text))) st.explicar.noAplica = true;
-      if (completa && b.type === 'text' && MQ_NO_APLICA.test(normalizar(b.text))) st.mails.noAplica = true;
-      if (b.type !== 'tool_use') continue;
-      st.seq++;
-      registrarMirada(b, st, Date.parse(obj.timestamp || '') || 0);   // tambien lo que abre un subagente (el auditor)
-      const orden = Date.parse(obj.timestamp || '') || st.seq;
-      const pieza = (r) => {
-        if (!MEJ_SISTEMA.test(r)) return;
-        const limpia = r.replace(MEJ_WORKTREE, '');
-        st.sis.archivos.add(limpia);
-        if (MEJ_MENSAJES.test(limpia)) { st.sis.deMensajes.add(limpia); st.sis.escrito = Math.max(st.sis.escrito, orden); }
-      };
-      const rel = rutaRelativaAlRepo(b, repo);
-      if (rel) { st.tocados.add(rel); pieza(rel); }
-      if (/^(Bash|PowerShell)$/.test(b.name || '')) {
-        st.huboComando = true;
-        // Solo lo que el comando ESCRIBE (30/09/2026): nombrar un archivo en un cat o un grep no lo toca.
-        const e = escrituraEnComando(b.input?.command, repo);
-        for (const r of e.escritos) {
-          st.tocados.add(r);
-          if (!e.soloIndice.has(r)) pieza(r);               // `git add` despues de la prueba no es un cambio nuevo
-        }
-        if (e.opaco) { st.huboOpaco = true; abrirVentana(st, b, obj); }
-        // La prueba cuenta cuando VUELVE sin error (cerrarPruebas): un grep que nombra el script, o una que fallo, no.
-        if (completa && b.id && MEJ_PRUEBA.test(soloLineasDeComando(String(b.input?.command || '')))) st.sis.pruebas.set(b.id, orden);
-      } else if (/^(Agent|Task)$/.test(b.name || '')) {
-        st.huboComando = true;
-        st.huboOpaco = true;                              // un agente puede escribir donde no se ve (y su transcript puede faltar)
-        abrirVentana(st, b, obj);
-      }
-      if (!completa) continue;
-      const e = evaluarToolUse(b, repo);
-      if (e) st.ejemplo = e;
-      registrarEntregables(b, st, repo);
-      registrarExplicar(b, st.explicar);
-      registrarMails(b, st.mails);
-    }
+    if (!completa) continue;
+    const e = evaluarToolUse(b, repo);
+    if (e) st.ejemplo = e;
+    registrarEntregables(b, st, repo);
+    registrarExplicar(b, st.explicar);
+    registrarMails(b, st.mails);
   }
 }
 
@@ -1138,22 +1195,38 @@ async function pasada(archivo, st, { completa, repo }) {
  */
 export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
   if (!transcriptPath || !fs.existsSync(transcriptPath)) return { fuera: false };
-  const st = {
-    ejemplo: null, huboComando: false, huboOpaco: false, inicio: 0, tocados: new Set(), ultimoMensajeFak: '', ultimoMensajeFakTs: '', ent: new Map(), miradas: [], miradasPorId: new Map(), turnoTs: '', seq: 0,
+  const st = nuevoEstadoRelevamiento();
+  await pasada(transcriptPath, st, { completa: true, repo });
+  for (const f of subagentesDe(transcriptPath)) {
+    try { await pasada(f, st, { completa: false, repo }); } catch { /* un transcript roto no frena el cierre */ }
+  }
+  return resultadoRelevamiento(st);
+}
+
+/** El estado vacio de una pasada. Afuera de relevarTranscript porque el incremental (C1) lo va a guardar entre Stops. */
+export function nuevoEstadoRelevamiento() {
+  return {
+    ejemplo: null, huboComando: false, huboOpaco: false, inicio: 0, tocados: new Set(), ultimoMensajeFak: '', ultimoMensajeFakTs: '', ent: new Map(),
+    miradas: [], miradasSub: [], miradasPorId: new Map(), turnoTs: '', seq: 0,
     bg: nuevoBackground(), ventanas: [], abiertas: new Map(), sinVentana: false,
     explicar: turnoDeExplicar(), mails: turnoDeMails(), encargo: false,
     sis: { archivos: new Set(), deMensajes: new Set(), escrito: 0, probado: 0, pruebas: new Map() },
   };
-  await pasada(transcriptPath, st, { completa: true, repo });
-  const dirSub = path.join(String(transcriptPath).replace(/\.jsonl$/i, ''), 'subagents');
-  let subagentes = [];
-  try { subagentes = fs.readdirSync(dirSub).filter((f) => /\.jsonl$/i.test(f)); } catch { /* sin subagentes */ }
-  for (const f of subagentes) {
-    try { await pasada(path.join(dirSub, f), st, { completa: false, repo }); } catch { /* un transcript roto no frena el cierre */ }
-  }
-  const atribuibles = st.tocados.size > 0 || !st.huboOpaco ? st.tocados : null;
-  for (const ini of st.abiertas.values()) st.ventanas.push([ini, Infinity]);   // sin resultado todavia: sigue abierta
-  if (st.sinVentana && st.inicio) st.ventanas.push([st.inicio, Infinity]);
+}
+
+/** Los registros de los subagentes de una sesion (rutas completas). */
+export function subagentesDe(transcriptPath) {
+  const dir = path.join(String(transcriptPath).replace(/\.jsonl$/i, ''), 'subagents');
+  try { return fs.readdirSync(dir).filter((f) => /\.jsonl$/i.test(f)).map((f) => path.join(dir, f)); } catch { return []; }
+}
+
+/** La respuesta de relevarTranscript, SIN tocar `st` (H8): las ventanas eternas que se suman aca no pueden quedar en
+ *  un estado que se sigue leyendo. Lo que no tiene orden propio sale ordenado (H6). */
+export function resultadoRelevamiento(st) {
+  const atribuibles = st.tocados.size > 0 || !st.huboOpaco ? new Set(st.tocados) : null;
+  const ventanas = [...st.ventanas, ...[...st.abiertas.values()].map((ini) => [ini, Infinity])];   // sin resultado: sigue abierta
+  if (st.sinVentana && st.inicio) ventanas.push([st.inicio, Infinity]);
+  ventanas.sort(ordenVentana);
   const entregables = [...st.ent.entries()].map(([nombre, e]) => ({
     nombre, ruta: e.ruta, escritoEn: e.escritoEn, mirado: e.miradoEn > e.escritoEn,
   }));
@@ -1165,23 +1238,18 @@ export async function relevarTranscript(transcriptPath, { repo = REPO } = {}) {
     inicio: st.inicio || undefined,
     huboComando: st.huboComando,
     huboOpaco: st.huboOpaco,
-    ventanas: st.ventanas,
+    ventanas,
     entregables,
     sinMirar: entregables.filter((e) => !e.mirado),
-    miradas: st.miradas.map(({ txt, ts, esRead }) => ({ txt, ts, esRead })),
+    miradas: miradasDelTurno(st),
     turnoTs: st.turnoTs,
     ultimoMensajeFak: st.ultimoMensajeFak,
     ultimoMensajeFakTs: st.ultimoMensajeFakTs,
-    // chequeo 7: lo que el turno hizo desde el ultimo mensaje de Fak (skill cargado, dibujo, pagina, archivo enviado)
-    explicar: st.explicar,
-    // chequeo 8: si en el turno miro la nube de mails del equipo (o dijo que el aviso no aplica)
-    mails: st.mails,
+    explicar: { ...st.explicar },                   // chequeo 7
+    mails: { ...st.mails },                         // chequeo 8
     encargo: st.encargo,
-    // pendiente de "mejora sin probar": las piezas del sistema que la sesion escribio; de esas, las que un mensaje
-    // de Fak ejercita (deMensajes); y si despues de la ultima escritura de estas corrio la prueba y volvio bien
-    sistema: { archivos: [...st.sis.archivos], deMensajes: [...st.sis.deMensajes], probada: st.sis.probado > 0 && st.sis.probado >= st.sis.escrito },
-    // chequeo 6: lo que sigue corriendo; delTurno = lanzado despues del ultimo mensaje de Fak
-    bg: {
+    sistema: { archivos: [...st.sis.archivos].sort(), deMensajes: [...st.sis.deMensajes].sort(), probada: st.sis.probado > 0 && st.sis.probado >= st.sis.escrito },
+    bg: {                                           // chequeo 6; delTurno = lanzado despues del ultimo mensaje de Fak
       total: lista.length,
       delTurno: lista.filter((p) => !st.ultimoMensajeFakTs || p.ts > st.ultimoMensajeFakTs).length,
       lista,
@@ -1515,7 +1583,7 @@ export function entregablesSinAbrir(texto, fuera = {}, deExports = []) {
     if (!cierreNombra(texto, a)) continue;
     const nombre = textoPlano(a.nombre);
     const carpeta = textoPlano(a.rel).split('/').slice(0, -1).join('/');
-    const mirado = miradas.some((m) => m.ts >= a.mtimeMs - 2000 && miradaNombra(m, nombre, carpeta));
+    const mirado = miradas.some((m) => m.ts >= a.mtimeMs - MARGEN_MIRADA_MS && miradaNombra(m, nombre, carpeta));
     if (!mirado) out.push({ nombre: a.nombre, ruta: a.rel, escritoEn: Math.round(a.mtimeMs), mirado: false, origen: 'exports' });
   }
   return out;
