@@ -159,10 +159,11 @@ export async function readAmfe(sb, id) {
 }
 
 export async function readCp(sb, id) {
-    const row = await readRow(sb, 'cp_documents', id, ['id', 'cp_number', 'data']);
+    // la columna es control_plan_number (cp_number no existe: con ese nombre readCp fallaba siempre, 12/10/2026)
+    const row = await readRow(sb, 'cp_documents', id, ['id', 'control_plan_number', 'data']);
     const doc = parseData(row.data);
     if (!doc) throw new Error(`CP ${id}: data is null or unparseable`);
-    return { id: row.id, cp_number: row.cp_number, row, doc };
+    return { id: row.id, cp_number: row.control_plan_number, row, doc };
 }
 
 export async function readHo(sb, id) {

@@ -66,11 +66,12 @@ sale[0].fn.failures.splice(sale[0].i, 1);
 logChange(apply, `borrar "${SALE}" (${sale[0].fm.causes.length} causas) de ${sale[0].we.name}`);
 
 // 4. Planes de control que apuntan a las causas borradas
-const { data: cps, error } = await sb.from('cp_documents').select('id, cp_number');
+const { data: cps, error } = await sb.from('cp_documents').select('id');
 if (error) throw new Error(error.message);
 const cpCambios = [];
 for (const r of cps) {
-    const { doc } = await readCp(sb, r.id);
+    const { doc, cp_number } = await readCp(sb, r.id);
+    r.cp_number = cp_number;
     let n = 0;
     for (const it of doc.items || []) {
         if (!Array.isArray(it.amfeCauseIds)) continue;
