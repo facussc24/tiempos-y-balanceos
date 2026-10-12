@@ -13,6 +13,11 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
   mail) entraron a las 23:27 (`5fa79fad` … `3cc041eb`, siete commits); el módulo `scripts/_lib/guardianes.mjs` de main
   tiene la huella `bb013b71` (`git hash-object`), la misma de la copia que midió el auditor. Lo que sigue es la sección
   «Trabajo que puedo hacer solo». Los renglones de abajo cuentan cómo se llegó; las dos copias siguen en disco.
+- **Abierto a las 00:33 del 12/10: el punto 4b** (HOY-57 + A1 + B4) está en la copia `g2`, rama `arb-apagar`
+  (`da73ce13`, `b7b52dc4`, `575cd4ec`), esperando al auditor. Con su SÍ: `git -C /c/Dev/BarackMercosul cherry-pick`
+  de los commits que apruebe, `git diff arb-apagar -- <los tres archivos>` vacío, despachador por ruta absoluta,
+  suite completa con `--root`, push y CI. Sin su SÍ antes de la hora: queda en la copia y se anota. Mientras corre,
+  solo lectura. Ya están hechos: memorias, lección, disco liberado, nube subida, cola al día.
 - Se trabaja en DOS copias aparte del repo, nunca sobre el checkout principal (sus hooks están en vivo):
   - `.claude/worktrees/p14-p18`, rama `guardianes-afinados`: un commit, `c57b8747` = **HOY-28** (el agujero del borrado).
     Lo está auditando el agente `a4754b9d81dd6ef1f`; su informe va a `.sgc-cache/auditorias/HOY-28_auditor_2026-10-11.md`.
@@ -37,6 +42,7 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
 | 2 | **P16** (firma) con el arreglo del auditor | **EN MAIN y en vivo desde las 23:27** (`5fa79fad` + `4504933b` + `9e06069d`). Auditor: SÍ sin arreglos (informe `.sgc-cache/auditorias/P14-P16_auditor_2026-10-11.md`). Contra la historia entera deja de frenar 9 falsos y no empieza a frenar nada |
 | 3 | **P14 + P15** (arb y mail miran lo que corre) con los 5 arreglos de la sección 6 del informe `.sgc-cache/auditorias/P14-P18_auditor_2026-10-11.md` | **EN MAIN y en vivo desde las 23:27** (`0604d558` + `e7141e3f` + `a5bee431`; pruebas `3cc041eb`). Auditor: SÍ con dos arreglos (B1 y B2), aplicados tal cual con su parche; entraron las 12 pruebas que pidió y una más, y los cinco mutantes que quedaban vivos ahora mueren. Diferencial: arb −9 / +5, mail −14 / +2. Por el despachador real de main, 20 casos como se esperaba; los seis del borrado siguen frenando. Suite completa: solo los tres rojos locales ajenos (HOY-50). Lo que queda, en la cola: HOY-54 a HOY-60 |
 | 4 | **Avisos del cierre (P10 C3)**: dejarlo LISTO sin cablear | Hecho en el worktree `p14-p18`, rama `cierre-listo`, commit `5de5ab45` (T1, T2, test del `.sh` con exit 2 y con los módulos de apoyo rotos, `cierreGuardExplicar` sin contar cuatro). 183 tests. Auditor: SÍ, ningún error real; pidió un arreglo más (R12) que se hizo (`3a1d2348`). **EN MAIN desde las 22:47, sin cablear** (`94f5b6ff`, `cbc0f75e`). Lo que falta para cablearlo está en la fila HOY-47 de la cola. El cableado NO: espera la medición que termina ~17/10 |
+| 4b | **HOY-57** (agregado 00:20): apagar la PC o cerrar la sesión de Windows se frena como se escriba, más dos refuerzos del auditor (A1 firma, B4 mail) | Hecho en la copia `.claude/worktrees/g2`, **rama `arb-apagar`** (sale de main en `41e00f56`): `da73ce13` HOY-57, `b7b52dc4` A1, `575cd4ec` B4. 435 pruebas y las dos suites de consola en verde; el módulo queda con la huella `6bd76403`. Diferencial del arb contra 112.162 llamadas reales: 0 aflojan, 4 pasan a frenar (dos apagados reales, del 31/08 y del 02/10, y dos arneses de prueba de otros guardianes). Lo medido: `.sgc-cache/auditorias/HOY-57_medido_2026-10-12/`. **Auditor Opus pedido 00:33**; su informe va a `.sgc-cache/auditorias/HOY-57_auditor_2026-10-12.md`. Entra a main SOLO con su SÍ, commit por commit, con la receta de la memoria `reference_entrar_a_main_desde_un_worktree` |
 | 5 | P18 (borrado en scripts que se escriben): rehacer | NO esta noche: es otro trabajo (requisitos en la sección 6 del mismo informe) |
 | 6 | Mejoras de velocidad (C1 y P30) | NO: C1 espera la medición del 17/10; P30 va después de la investigación H37 |
 
@@ -72,6 +78,13 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
 - Fak dijo «ya implementaste 1 y quedan 2». La cuenta real: de las tres, la primera (los controles) está a medias (dos
   partes hechas, una por hacer) y es la que sigo; la segunda se puede dejar lista pero no cablear; la tercera no se puede
   tocar hasta el 17/10. Se lo dije antes de arrancar.
+- **P30 queda en espera, y Fak le había dado el sí** (09/10: «SÍ, grandes, con revisor»). Por qué: medí en toda la
+  historia al menos 11 frenos por un control roto, en tres momentos de un par de minutos, y ninguno desde el 08/10;
+  desde el 09/10 los controles se cambian en una copia aparte y entran de una vez, que tapa la causa. Un cambio grande
+  para algo que ya no pasa no rinde. Se reabre si vuelve a aparecer un freno así. Fuente: nota en la fila P30 de la cola.
+- **El disco: borré 6,63 GB con `_liberarDisco.mjs --aplicar`** (00:17), sin poder deshacerlo: 75 carpetas temporales
+  de conversaciones de Claude sin cambios en más de 12 horas y 57 copias viejas de respaldo de Supabase (quedan las 12
+  más nuevas y la primera de cada día). Nada de Fak. El disco tenía 8,4 GB libres y el control de cierre lo marcaba.
 - El auditor dejó tres mejoras más, medidas y con parche, que NO entraron (HOY-54, HOY-55 y HOY-56): su SÍ era para los
   dos arreglos obligatorios; una de las tres afloja un control y ninguna tiene veredicto propio. Quedan en la cola.
 
@@ -104,4 +117,6 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
 - 00:05 el latido salió con 5 otra vez (aviso «0 pedidos a la API»): no aplica, esta noche no se usa la API. 00:06 dos memorias nuevas (la sesión sin carpeta; la receta para entrar a main desde una copia), la de «dónde quedó» al día y una lección. El índice de la memoria quedó cerca de su tope: 18 ganchos acortados, sin borrar punteros (cola HOY-63).
 - Entre las 00:08 y las 00:14 `_cierreSesion.mjs --sin-build`: faltaban dos cosas. El disco C: tenía 8,4 GB libres: 00:17 `_liberarDisco.mjs --aplicar` sacó 6,63 GB (75 temporales de Claude de más de 12 h y 57 copias viejas de respaldo, con su regla de conservar las 12 más nuevas y la primera de cada día); quedaron 15 GB. Lo otro: 7 archivos modificados que no son de esta sesión (ya estaban así al arrancar): no se tocan.
 - 00:18 lectura parcial de la medición del cierre (130 corridas): lo que más pesa es el control de la firma, no releer el registro (nota en la fila P9). 00:18 CI del último push (`4f269332`): completed success. 00:18 los casos de los tres auditores y los diferenciales, copiados a `.sgc-cache/auditorias/casos_2026-10-11/` (el temporal de la sesión se limpia solo a las 12 h).
+- 00:19 `_nube.mjs --subir --aplicar` (345 archivos). 00:20 quedaban 295 por subir; **00:33 medido otra vez: subió todo lo mío**; queda 1 archivo pendiente que no es de esta sesión (`…\1- GENERAL\TAREAS CERRADAS\2026\LISTADO DE TAREAS CERRADAS 2026.xlsx`, con fecha 31/07).
+- 00:20 a 00:33 **HOY-57** (plan corto dicho en el chat antes de tocar): reglas nuevas que se suman a la vieja; 39 formas de apagar frenan y 33 usos normales pasan (queda `findstr`, que no está entre los lectores); commits `da73ce13` (00:29), `b7b52dc4` (00:30) y `575cd4ec` (00:31) en la rama `arb-apagar` de la copia; diferencial 00:29 a 00:31; auditor pedido 00:33.
 - 23:30 a 23:35 la cola: P14, P15 y P16 hechas; filas nuevas HOY-54 a HOY-61. Los cuatro parches del auditor quedaron en `.sgc-cache/auditorias/P14-P16_parches/` y su memoria del worktree pasó a `.claude/agent-memory/auditor/` de main con lo que pidió sumarle.
