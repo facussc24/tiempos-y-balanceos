@@ -1696,10 +1696,41 @@ const CORRE_TEXTO_RE = /(?:^|[\\/])(?:echo|printf|grep|egrep|fgrep|rg|ag|sed|awk
 const CORRE_INTERPRETE_RE = /(?:^|[\\/])(?:python[\d.]*|py|node|powershell|pwsh|bash|sh|zsh|dash|cmd|perl|ruby|php)(?:\.exe)?$/i;
 const CORRE_INLINE_RE = /^(?:-c(?:om(?:m(?:a(?:n(?:d)?)?)?)?)?|-e|--eval|-p|--print|\/\/?[ck])$/i;   // lo que sigue es codigo
 const CORRE_ENVOLTORIO_RE = /^(?:xargs|timeout|nohup|sudo|env|command|builtin|exec|winpty|time|nice|start)$/i;
-const CORRE_HD_INTERPRETE_RE = /(?:^|[\s|;&(])(?:python[\d.]*|py|node|bash|sh|zsh|dash|powershell|pwsh|cmd|perl|ruby|php|eval)(?:\.exe)?(?=\s|$)/i;
 const CORRE_HD_ARCHIVO_RE = /(?:>{1,2}\s*|\btee\s+(?:-[a-z]+\s+)*)("[^"]*"|'[^']*'|[^\s;&|<>]+)/i;
 /** Prosa (.md/.txt/...) o un archivo que cita los patrones como dato: lo que se guarda ahi no corre. */
-const esProsaOCita = (f) => { const x = String(f ?? '').trim().replace(/^["']|["']$/g, ''); return x === '/dev/null' || /^&\d/.test(x) || BM_PROSA.test(x) || CITA_PATRONES_RE.test(x); };
+const esProsaOCita = (f) => { const x = String(f ?? '').trim().replace(/^["']|["']$/g, ''); return x === '/dev/null' || /^&\d/.test(x) || BM_PROSA.test(x) || citaSinCorrer(x); };
+// Los cinco arreglos del auditor (11/10/2026, informe P14-P18, seccion 6) viven de aca para abajo.
+// (1) Un archivo que SE EJECUTA no queda exento por la carpeta donde vive: en `.claude/skills/`, `.claude/hooks/`,
+// `docs/` y `memory/` tambien hay scripts que corren. La carpeta exime solo lo que no corre; siguen exentos, corran o
+// no, los tests de JS y de consola, este modulo y los envoltorios de los guardianes, que citan el patron por oficio.
+const EXT_CORRE_RE = /\.(?:py|pyw|ps1|psm1|sh|bash|bat|cmd|js|mjs|cjs|ts|vbs|wsf|pl|rb|php)$/i;
+const CITA_SIEMPRE_RE = /(?:__tests__|\.(?:test|spec)\.(?:mjs|cjs|js|ts|tsx|sh)$|(?:^|[\\/])scripts[\\/]_lib[\\/]guardianes\.mjs$|(?:^|[\\/])\.claude[\\/]hooks[\\/](?:[a-z-]+-guard|_dispatcher)(?:\.test)?\.sh$)/i;
+const citaSinCorrer = (f) => { const x = String(f ?? ''); return CITA_SIEMPRE_RE.test(x) || (CITA_PATRONES_RE.test(x) && !EXT_CORRE_RE.test(x)); };
+// (2) El cuerpo de un heredoc es CODIGO salvo que lo reciba un verbo de texto (cat, tee, echo, printf) que lo manda a
+// la salida o a un archivo de prosa. Antes era al reves (codigo solo si el dueño era un interprete conocido escrito
+// pelado) y `ruta/python.exe - <<EOF` o `$PY - <<EOF` no se miraban: 820 de los 14.740 heredocs reales tienen esa forma.
+const CORRE_HD_TEXTO_RE = /(?:^|[\\/])(?:cat|tee|echo|printf)(?:\.exe)?$/i;
+function verboDeComando(c) {
+  const p = [...c.palabras];
+  while (p.length && (p[0] === '' || FIRMA_PALABRA_SHELL.has(p[0]) || /^[A-Za-z_][A-Za-z0-9_]*\+?=/.test(p[0]) || CORRE_ENVOLTORIO_RE.test(p[0]))) {
+    if (CORRE_ENVOLTORIO_RE.test(p.shift())) while (p.length && (p[0].startsWith('-') || /^\d+[smhd]?$/.test(p[0]))) p.shift();
+  }
+  return { verbo: p[0] ?? '', args: p.slice(1) };
+}
+function duenoEsTexto(dueno) {
+  let cs;
+  try { cs = comandosSimples(dueno); } catch { return false; }
+  const k = cs.findIndex((c) => c.redirs.some((r) => /^<</.test(r.op)));
+  if (k < 0) return false;                                           // no se ve quien lo recibe: codigo
+  if (!CORRE_HD_TEXTO_RE.test(verboDeComando(cs[k]).verbo)) return false;
+  // `cat <<EOF | python -`: el texto termina en un interprete que lee de stdin
+  for (const c of cs.slice(k + 1)) {
+    const { verbo, args } = verboDeComando(c);
+    if (/^(?:eval|xargs)$/i.test(verbo)) return false;
+    if (CORRE_INTERPRETE_RE.test(verbo) && !args.some((a) => a !== '-' && !a.startsWith('-'))) return false;
+  }
+  return true;
+}
 
 /** { corre, visible } de un comando de shell (ver arriba). `porVerbo: false` = el comando entero es codigo. */
 export function queCorre(cmd, { porVerbo = true, prof = 0 } = {}) {
@@ -1710,7 +1741,7 @@ export function queCorre(cmd, { porVerbo = true, prof = 0 } = {}) {
     if (h.deGit) continue;
     const dueno = String(h.dueno ?? '');
     const guardado = dueno.match(CORRE_HD_ARCHIVO_RE);
-    if (CORRE_HD_INTERPRETE_RE.test(dueno) || (guardado && !esProsaOCita(guardado[1]))) codigo.push(h.cuerpo);
+    if (!duenoEsTexto(dueno) || (guardado && !esProsaOCita(guardado[1]))) codigo.push(h.cuerpo);
   }
   const visible = [lineas, ...codigo].join('\n');
   // una sustitucion de proceso `<(...)` no se desarma; mas de cuatro niveles de `$(...)` tampoco
@@ -1725,7 +1756,8 @@ export function queCorre(cmd, { porVerbo = true, prof = 0 } = {}) {
       for (const s of subs) corre.push(queCorre(s, { prof: prof + 1 }).corre);
     }
     // adelante del verbo pueden ir palabras de la shell, asignaciones y envoltorios con sus opciones
-    while (p.length && (FIRMA_PALABRA_SHELL.has(p[0]) || /^[A-Za-z_][A-Za-z0-9_]*\+?=/.test(p[0]) || CORRE_ENVOLTORIO_RE.test(p[0]))) {
+    // (4) una palabra vacia no es el verbo: `start "" taskkill …` (el titulo vacio de `start`)
+    while (p.length && (p[0] === '' || FIRMA_PALABRA_SHELL.has(p[0]) || /^[A-Za-z_][A-Za-z0-9_]*\+?=/.test(p[0]) || CORRE_ENVOLTORIO_RE.test(p[0]))) {
       if (CORRE_ENVOLTORIO_RE.test(p.shift())) while (p.length && p[0].startsWith('-')) p.shift();
     }
     const verbo = p[0] ?? '';
@@ -1734,9 +1766,16 @@ export function queCorre(cmd, { porVerbo = true, prof = 0 } = {}) {
     if (!verbo || FIRMA_ESTRUCTURA.has(verbo)) continue;
     if (/^eval$/i.test(verbo)) { corre.push(args.join(' ')); continue; }
     if (CORRE_INTERPRETE_RE.test(verbo)) {
-      const i = args.findIndex((a) => CORRE_INLINE_RE.test(a));
+      // (3) tambien es codigo: una bandera JUNTA que termina en c o e (`bash -lc`, `sh -ec`, `python -Ic`, `node -pe`;
+      // no en PowerShell ni cmd, donde `-NoProfile` termina en e) y lo posicional de `powershell` / `pwsh` sin `-File`
+      // (`powershell "Stop-Process …"`).
+      const esPS = /(?:^|[\\/])(?:powershell|pwsh)(?:\.exe)?$/i.test(verbo);
+      const esCmd = /(?:^|[\\/])cmd(?:\.exe)?$/i.test(verbo);
+      const i = args.findIndex((a) => CORRE_INLINE_RE.test(a) || (!esPS && !esCmd && /^-[A-Za-z]{1,3}[ce]$/.test(a)));
+      const posicional = args.some((a) => a !== '-' && !a.startsWith('-'));
       if (i >= 0) corre.push(args.slice(i + 1).join(' '));
-      else if (!args.some((a) => a !== '-' && !a.startsWith('-'))) return { corre: visible, visible };   // lee de stdin
+      else if (esPS && posicional && !args.some((a) => /^-f(?:ile)?$/i.test(a))) corre.push(args.join(' '));
+      else if (!posicional) return { corre: visible, visible };                                          // lee de stdin
       continue;                                                                                        // corre un ARCHIVO: sus argumentos son datos
     }
     const guarda = c.redirs.some((r) => /^\d?>{1,2}$/.test(r.op) && !esProsaOCita(r.t))
@@ -1808,7 +1847,10 @@ apretando Enviar en la ventana que ya tiene abierta.
   // un heredoc que va a python o se guarda en un .py, un verbo desconocido; un grep, un sed -i o el -m de un commit
   // que lo nombran, no. En PowerShell el comando entero es codigo.
   const esEscritura = /^(?:write|edit)$/i.test(ctx.toolL);
-  if (esEscritura && (BM_PROSA.test(ctx.fileL) || CITA_PATRONES_RE.test(ctx.fileL))) return null;
+  if (esEscritura && (BM_PROSA.test(ctx.fileL) || citaSinCorrer(ctx.fileL))) return null;
+  // (5) el unico camino autorizado se puede editar: `scripts/_mailEnviar.py` queda exento por su nombre de archivo
+  // (antes pasaba porque el nombre entraba en el texto mirado; ahora en un Write/Edit se mira solo el contenido).
+  if (esEscritura && /(?:^|[\\/])scripts[\\/]_mailEnviar\.py$/i.test(ctx.fileL)) return null;
   const target = esEscritura ? ctx.body6
     : /^(?:bash|powershell)$/i.test(ctx.toolL) ? limpiar(queCorre(ctx.cmd, { porVerbo: ctx.tool === 'Bash' }).corre).slice(0, CORTE)
       : `${ctx.cmd6} ${ctx.fileL} ${ctx.body6}`;
@@ -1820,7 +1862,9 @@ apretando Enviar en la ventana que ya tiene abierta.
   //    Address vacia y Exchange rebota ("Ninguna de sus cuentas pudo enviar a este
   //    destinatario"). El 10/09 el mismo patron seguia vivo en _reenviarMail.py.
   //    Los archivos que DESCRIBEN el patron (CITA_PATRONES_RE) no pasan por aca: si no el guardian se bloquea solo.
-  if (!CITA_PATRONES_RE.test(ctx.fileL) && !CITA_PATRONES_RE.test(ctx.cmd6) &&
+  // (5) sin la exencion por el TEXTO del comando: que nombre `docs/` o `__tests__` (un adjunto, un cat al lado) no
+  // apaga el control; alcanza con que `target` ya es solo lo que corre.
+  if (!citaSinCorrer(ctx.fileL) &&
       /\.(To|CC|BCC)\s*=[^=]/i.test(target)) {
     return bloqueo(`
 [MAIL-GUARD — BLOQUEO. Regla: .claude/rules/mail-envio.md]
@@ -2070,7 +2114,9 @@ ${VID_CIERRE}`);
 // interprete, en un heredoc que va a python o a bash, en un `$(...)`, por xargs, por find -exec, guardado en un .sh—
 // sigue frenando. La exencion vieja ("empieza con un lector y no encadena") se va: su regex contaba `python` o `node`
 // en cualquier lado de la linea (hasta en el nombre de un archivo) y dejaba de eximir.
-const ARB_SESION = /(^|[;&|]\s*)(shutdown\s+\/|logoff|restart-computer|stop-computer)/im;
+// (el tramo que corre llega con un espacio adelante: ` shutdown //l` despues de `cd x &&`. Auditor, 11/10/2026.)
+// Tambien adentro de un subshell o de un `if … then …` (pasaban antes y despues del cambio: informe, seccion 7).
+const ARB_SESION = /(^\s*|[;&|({]\s*|\b(?:then|do|else)\s+)(shutdown\s+\/|logoff|restart-computer|stop-computer)/im;
 const ARB_MATAR = /taskkill|stop-process|pkill|killall|(?:^|[^a-z])kill\s|\.kill\(|os\.kill|closemainwindow|wmic[^|\n]*(delete|terminate|call)|shutdown\s*\//i;
 const ARB_CERRAR = /WM_CLOSE|0x0010|0x10[^0-9a-f]|DestroyWindow|EndTask|SC_CLOSE|0xF060|pywinauto|pyautogui|sendkeys|%\{F4\}|alt.{0,3}f4|\.close\(\)/i;
 GUARDIANES['arb-cerrar-guard'] = (ctx, { env, escapes }) => {

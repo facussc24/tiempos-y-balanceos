@@ -1326,3 +1326,76 @@ describe('mail-guard P15 — tests, documentacion y el propio guardian que nombr
     ]) { const r = g(p); expect(r.exit, JSON.stringify(p.tool_input)).toBe(2); expect(r.err).toMatch(/MAIL-GUARD/); }
   });
 });
+
+// Los cinco arreglos del auditor sobre P14/P15 (11/10/2026, informe P14-P18, seccion 6). El primer P14/P15 liberaba bien
+// los falsos positivos pero dejaba pasar 58 formas de peligro que el control viejo frenaba; dos eran la manera normal
+// de correr Python aca (`ruta/python.exe - <<EOF`, `$PY - <<EOF`: 820 de 14.740 heredocs reales). Cada arreglo, con su rojo.
+describe('arb-cerrar y mail — los arreglos del auditor sobre «mirar lo que corre»', () => {
+  const arb = (p) => ev(p, { nombres: ['arb-cerrar-guard'] });
+  const mail = (p) => ev(p, { nombres: ['mail-guard'] });
+  const PY = '/c/Users/FacundoS-PC/AppData/Local/Programs/Python/Python313/python';
+  const SEND = 'import win32com.client as win32\nol = win32.Dispatch("Outlook.Application")\nit = ol.GetNamespace("MAPI").GetDefaultFolder(16).Items.Item(1)\nit.Send()';
+  const CERRAR = "import ctypes\nu = ctypes.windll.user32\nh = u.FindWindowW('ProdWindow', None)\nu.PostMessageW(h, 0x0010, 0, 0)";
+  it('ROJO (1): un heredoc a un Python por RUTA, por VARIABLE, con timeout o despues de un cd es codigo', () => {
+    for (const dueno of [`PY=${PY}; $PY - <<'EOF'`, `"${PY}.exe" - <<'EOF'`, `PY=${PY} timeout 100 $PY - <<'EOF'`, ".venv-cad/Scripts/python.exe - <<'EOF'", `cd /c/Dev && ${PY} - <<'EOF'`]) {
+      expect(mail(bash(`${dueno}\n${SEND}\nEOF`)).exit, dueno).toBe(2);
+      expect(arb(bash(`${dueno}\n${CERRAR}\nEOF`)).exit, dueno).toBe(2);
+    }
+    // el texto sale de un cat y termina en un interprete que lee de stdin
+    expect(arb(bash(`cat <<'EOF' | ${PY}.exe -\nimport os; os.system('taskkill /F /IM produc.exe')\nEOF`)).exit).toBe(2);
+  });
+  it('VERDE (1): un heredoc que va a cat o a tee hacia la salida o hacia prosa sigue siendo prosa', () => {
+    for (const c of [
+      "cat > notas.md <<'EOF'\nel taskkill /F /IM produc.exe queda frenado\nEOF",
+      "cat <<'EOF'\nit.Send() no se usa: Outlook.Application va por _mailEnviar.py\nEOF",
+      "tee -a docs/nota.txt <<'EOF'\ntaskkill /IM produc.exe\nEOF",
+    ]) { expect(arb(bash(c)).exit, c).toBe(0); expect(mail(bash(c)).exit, c).toBe(0); }
+  });
+  it('ROJO (2): cerrar la sesion o apagar despues de otro comando, en un subshell o adentro de un if', () => {
+    for (const c of ['cd /c/Dev && shutdown //l', 'echo fin; logoff', 'sleep 5 && shutdown //r //t 0', 'echo x | tee log.txt; shutdown //s //t 0', '( shutdown //l )', 'if true; then shutdown //l; fi']) expect(arb(bash(c)).exit, c).toBe(2);
+  });
+  it('ROJO (3): powershell con el comando posicional, y banderas juntas que terminan en c o e', () => {
+    for (const c of [
+      'powershell "Stop-Process -Name produc -Force"', 'powershell Stop-Process -Name produc -Force', 'powershell -NoProfile "Get-Process produc | Stop-Process -Force"',
+      'bash -lc "taskkill //F //IM produc.exe"', 'sh -ec "taskkill //F //IM produc.exe"', "python -Ic \"import os; os.system('taskkill /F /IM produc.exe')\"",
+      "node -pe \"require('child_process').execSync('taskkill /F /IM produc.exe')\"",
+    ]) expect(arb(bash(c)).exit, c).toBe(2);
+    expect(mail(bash('powershell "$o = New-Object -ComObject Outlook.Application; $m = $o.CreateItem(0); $m.Send()"')).exit).toBe(2);
+  });
+  it('VERDE (3): powershell -File corre un archivo (sus argumentos son datos) y una bandera suelta no es codigo', () => {
+    for (const c of [
+      'powershell -NoProfile -ExecutionPolicy Bypass -File scripts/_nubeSubio.ps1 taskkill produc',
+      'python -u scripts/x.py --nota "taskkill produc.exe"',
+      'node --experimental-vm-modules scripts/x.mjs taskkill produc',
+    ]) expect(arb(bash(c)).exit, c).toBe(0);
+  });
+  it('ROJO (4): start con el titulo vacio no esconde el comando', () => {
+    expect(arb(bash('start "" taskkill /F /IM produc.exe')).exit).toBe(2);
+  });
+  it('ROJO (5): un script que MANDA no queda exento por la carpeta donde vive', () => {
+    for (const f of [
+      'C:\\Dev\\BarackMercosul\\.claude\\skills\\mail\\scripts\\mandar.py', 'C:\\Dev\\BarackMercosul\\.claude\\skills\\mail\\scripts\\mandar.ps1',
+      'C:\\Dev\\BarackMercosul\\.claude\\hooks\\avisar.sh', 'C:\\Dev\\BarackMercosul\\docs\\herramientas\\mandar.py',
+      'C:\\Dev\\BarackMercosul\\tools\\memory\\mandar.py', 'C:\\Dev\\BarackMercosul\\scripts\\mandar.test.py',
+    ]) expect(mail(escribir(f, SEND)).exit, f).toBe(2);
+  });
+  it('VERDE (5): lo que cita el patron y no corre sigue exento; los tests, el guardian y el camino autorizado tambien', () => {
+    for (const f of [
+      'C:\\Dev\\BarackMercosul\\.claude\\skills\\mail\\SKILL.md', 'C:\\Dev\\BarackMercosul\\docs\\LECCIONES_APRENDIDAS.md',
+      'C:\\Dev\\BarackMercosul\\__tests__\\scripts\\mailGuard.test.mjs', 'C:\\Dev\\BarackMercosul\\.claude\\hooks\\mail-guard.test.sh',
+      'C:\\Dev\\BarackMercosul\\.claude\\hooks\\mail-guard.sh', 'C:\\Dev\\BarackMercosul\\scripts\\_lib\\guardianes.mjs',
+      'C:\\Dev\\BarackMercosul\\scripts\\_mailEnviar.py',
+    ]) expect(mail(escribir(f, SEND)).exit, f).toBe(0);
+  });
+  // (el caso del destinatario como texto va en el describe de abajo: comparte la constante de este)
+  it.each([['solo'], ['con un cat de __tests__ despues']])('ROJO (5): el destinatario como texto frena aunque el comando nombre docs/ o __tests__ (%s)', (forma) => {
+    const r = mail(bash(`python - <<'EOF'\n${destinatarioComoTexto(SEND)}\nEOF${forma === 'solo' ? '' : '\ncat __tests__/scripts/x.test.mjs | head -3'}`));
+    expect(r.exit).toBe(2);
+    expect(r.err).toMatch(/destinatarios como string/);
+  });
+});
+
+/** El codigo de `base` (que ya arma el item), mostrando en vez de mandar, con el destinatario puesto como texto y un adjunto que vive en docs/. */
+function destinatarioComoTexto(base) {
+  return `${base.replace('it.Send()', 'it.Display()')}\nit.To = "alguien@barack.com"\nit.Attachments.Add(r"C:\\Dev\\BarackMercosul\\docs\\informe.pdf")`;
+}
