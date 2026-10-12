@@ -12,7 +12,7 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
 - Se trabaja en DOS copias aparte del repo, nunca sobre el checkout principal (sus hooks están en vivo):
   - `.claude/worktrees/p14-p18`, rama `guardianes-afinados`: un commit, `c57b8747` = **HOY-28** (el agujero del borrado).
     Lo está auditando el agente `a4754b9d81dd6ef1f`; su informe va a `.sgc-cache/auditorias/HOY-28_auditor_2026-10-11.md`.
-    NO editar esa copia mientras el auditor corre.
+    (Desde las 22:20 esa copia está en la rama `cierre-listo`, commit `5de5ab45`: el punto 4 de abajo. La rama `guardianes-afinados` tiene HOY-28 completo, ya en main.)
   - `.claude/worktrees/g2`, rama `guardianes-p16` (sale de `c57b8747`): `52404ed8` (P16 original) + `83cd507d` +
     `a64b0d11` (el arreglo del auditor y dos ajustes). Sin enlace a `node_modules`: los tests se corren con
     `node /c/Dev/BarackMercosul/node_modules/vitest/vitest.mjs run <archivos> --pool=threads` desde esa carpeta.
@@ -29,10 +29,10 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
 
 | # | Qué | Estado |
 |---|---|---|
-| 1 | **HOY-28**: el control de borrado deja pasar un borrado permanente | **EN MAIN y en vivo desde las 22:08** (`135608bd` + `1269458c`). Auditor: SÍ con dos renglones, aplicados tal cual, y sus 8 tests (informe `.sgc-cache/auditorias/HOY-28_auditor_2026-10-11.md`). Falta: suite completa, push, CI |
+| 1 | **HOY-28**: el control de borrado deja pasar un borrado permanente | **EN MAIN y en vivo desde las 22:08** (`135608bd` + `1269458c`). Auditor: SÍ con dos renglones, aplicados tal cual, y sus 8 tests (informe `.sgc-cache/auditorias/HOY-28_auditor_2026-10-11.md`). Suite completa: solo los dos rojos locales ajenos (HOY-50). Pusheado (`712ce919`), **CI verde** (leído 22:24) |
 | 2 | **P16** (firma) con el arreglo del auditor | Hecho en g2 (`83cd507d`, `a64b0d11`), 142 tests, diferencial −9 falsos / +0. **Auditor pedido 22:11** (mismo agente `a4754b9d81dd6ef1f`; informe en `.sgc-cache/auditorias/P14-P16_auditor_2026-10-11.md`) |
 | 3 | **P14 + P15** (arb y mail miran lo que corre) con los 5 arreglos de la sección 6 del informe `.sgc-cache/auditorias/P14-P18_auditor_2026-10-11.md` | Hecho en g2 (`00c9ac68` + `b7a55160`): los cinco arreglos + dos más; arnés: quedan solo los rebuscados; 134 tests; diferencial arb −9 / +5, mail −14 / +2. Lo medido: `.sgc-cache/auditorias/P14-P16_arreglos_medido_2026-10-11.md`. **Auditor pedido 22:11**. Para entrar a main (con su SÍ): cherry-pick de `52404ed8 83cd507d a64b0d11 00c9ac68 b7a55160` (g2 tiene además `3b4e24bc`, que ya está en main) |
-| 4 | **Avisos del cierre (P10 C3)**: dejarlo LISTO sin cablear | Sin empezar. Arreglar T1 (`scripts/_lib/stopHooks.mjs:16`, import estático de `hooksTiempos.mjs`), T2 (`scripts/_lib/probarMejora.mjs:128`, filtra `/cierre-guard/`), un test del `.sh` que frene con exit 2 y `cierreGuardExplicar.test.mjs:303` («4 o más» hooks). El cableado NO: espera la medición que termina ~17/10 |
+| 4 | **Avisos del cierre (P10 C3)**: dejarlo LISTO sin cablear | Hecho en el worktree `p14-p18`, rama `cierre-listo`, commit `5de5ab45` (T1, T2, test del `.sh` con exit 2 y con los módulos de apoyo rotos, `cierreGuardExplicar` sin contar cuatro). 183 tests. **Auditor pedido 22:24** (agente `ad07d93baf1b4853e`, «Tercera vuelta» en `.sgc-cache/auditorias/P10_hooks_fusionados_auditor_2026-10-11.md`). Entra a main con su SÍ: `git cherry-pick 5de5ab45`. El cableado NO: espera la medición que termina ~17/10 |
 | 5 | P18 (borrado en scripts que se escriben): rehacer | NO esta noche: es otro trabajo (requisitos en la sección 6 del mismo informe) |
 | 6 | Mejoras de velocidad (C1 y P30) | NO: C1 espera la medición del 17/10; P30 va después de la investigación H37 |
 
@@ -77,3 +77,5 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
 - 21:50 Fak: «te dejo laburando tranquilo». 21:54 esta lista y la hora fijada.
 - 21:55-22:10 P14+P15 en g2 con los cinco arreglos (`b7a55160`). Después de las 22:03 (último despertar anotado) el latido salió con 5 (aviso «0 pedidos a la API»): no aplica, esta noche no se usa la API (regla de arriba); relanzado.
 - Volvió el auditor de HOY-28: SÍ con dos renglones. 22:08 `b7b68173` en la copia (hora del commit). Enseguida, cherry-pick a main (`135608bd`, `1269458c`), módulo cargado y los seis casos frenando en vivo; suite completa lanzada. 22:11 (`date`) segunda auditoría pedida (firma, arb y mail).
+- 22:18 suite completa en main: 2 rojos locales ajenos. Push `712ce919`; 22:24 CI verde.
+- 22:20-22:24 punto 4 (aviso único del cierre, sin cablear) en la rama `cierre-listo`: `5de5ab45`. 22:24 pedida la verificación al auditor de P10.
