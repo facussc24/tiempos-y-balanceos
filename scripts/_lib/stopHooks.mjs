@@ -19,8 +19,11 @@ import { fileURLToPath } from 'node:url';
 // rotos este archivo no cargaba, el .sh salia con 1 y el turno terminaba sin que frenaran ni el cierre ni la hora (el
 // cierre-guard suelto si frenaba: su medidor se importa adentro de un try). Si el medidor no carga, no se anota; si la
 // libreria comun no carga, valen las versiones minimas de abajo. Las dos piezas se cargan una por una, cada una en su try.
-let anotar = () => {};
-try { ({ anotar } = await import('./hooksTiempos.mjs')); } catch { /* sin medidor: se sigue sin anotar */ }
+let anotarCrudo = null;
+try { ({ anotar: anotarCrudo } = await import('./hooksTiempos.mjs')); } catch { /* sin medidor: se sigue sin anotar */ }
+// El try de arriba cubre el import, no la funcion que trae (auditor, R12): si el modulo carga sin `anotar`, o si
+// `anotar` tira, el error salia desde adentro de un catch y el proceso moria con 1 antes de que decidiera la hora.
+const anotar = (...args) => { try { if (typeof anotarCrudo === 'function') anotarCrudo(...args); } catch { /* anotar nunca frena ni rompe */ } };
 let comun = {};
 try { comun = await import('./hookComun.mjs'); } catch { /* sin la libreria comun: lo minimo, aca abajo */ }
 const esPrograma = comun.esPrograma ?? ((url, argv1 = process.argv[1]) => {

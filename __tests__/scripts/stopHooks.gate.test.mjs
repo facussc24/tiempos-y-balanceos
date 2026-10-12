@@ -57,6 +57,19 @@ describe('stop-hooks.sh: el camino real (bash -> node)', () => {
     expect(r.status).toBe(2);
     expect(r.stderr).toContain('FRENO DEL CIERRE');
   }, 30000);
+  // R12 del auditor: el medidor carga pero no trae `anotar`, o `anotar` tira, y ademas una pieza tira: la otra decide igual
+  it.each([
+    ['sin exportar anotar', 'export const otraCosa = 1;\n'],
+    ['con un anotar que tira', "export function anotar() { throw new Error('disco lleno'); }\n"],
+  ])('ROJO: con hooksTiempos.mjs %s y una pieza que tira, la otra frena igual', (nombre, medidor) => {
+    const tmp = copiaMinima();
+    fs.writeFileSync(path.join(tmp, 'scripts', '_lib', 'hooksTiempos.mjs'), medidor);
+    fs.writeFileSync(path.join(tmp, 'scripts', '_lib', 'cierreGuard.mjs'), "export const correrStop = async () => { throw new Error('canon roto'); };\n");
+    fs.writeFileSync(path.join(tmp, 'scripts', '_lib', 'horaGuard.mjs'), "export const correrStop = async () => ({ rc: 2, stderr: 'FRENO DE LA HORA' });\n");
+    const r = correrSh(path.join(tmp, '.claude', 'hooks', 'stop-hooks.sh'), { hook_event_name: 'Stop', session_id: 'gate-sh-r12', stop_hook_active: false }, tmp);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain('FRENO DE LA HORA');
+  }, 30000);
   it('VERDE: si ninguna pieza frena sale con 0 y sin texto', () => {
     const tmp = copiaMinima();
     fs.writeFileSync(path.join(tmp, 'scripts', '_lib', 'cierreGuard.mjs'), "export const correrStop = async () => ({ rc: 0, stderr: '' });\n");
