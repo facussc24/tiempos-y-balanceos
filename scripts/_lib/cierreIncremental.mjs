@@ -4,7 +4,8 @@
  * Por que (medido el 12/10/2026, `.sgc-cache/auditorias/P9_C1_tiempos_ANTES_2026-10-12.json`): en 116 cierres reales
  * releer el registro fue el 65 % del tiempo del control de cierre, y crece con la charla: 1,3 s con 39 MB, 10 s con una
  * de 280 MB + 474 MB de subagentes. Y no lo relee uno solo: `dev-server-guard.sh` (via `archivosSesion.mjs`) hace la
- * misma pasada en paralelo. Los dos comparten el estado guardado aca.
+ * misma pasada en paralelo. Los dos usan este camino; comparten el estado si el repo que pasan resuelve a la misma
+ * ruta (dev-server-guard pasa `$(pwd)`: con la conversion de rutas de Git Bash, si; si no, cada uno guarda el suyo).
  *
  * Que hace: guarda, por registro y por repo, hasta que byte leyo cada archivo (el principal y los de sus subagentes) y el
  * estado acumulado de la pasada (`st` de cierreGuard.mjs, entero, con `v8.serialize`: conserva Map, Set, Infinity y las
@@ -56,9 +57,19 @@ export function versionCodigo(dir = AQUI) {
   const h = crypto.createHash('sha1').update(`f${FORMATO}|${process.versions.node}`);
   // los que empiezan con punto son los oraculos temporales de las pruebas (.cierreGuard.oraculo-*.mjs): no son codigo vivo
   const nombres = fs.readdirSync(dir).filter((f) => /\.(mjs|data\.json)$/i.test(f) && !f.startsWith('.')).sort();
-  for (const n of nombres) { const s = fs.statSync(path.join(dir, n)); h.update(`|${n}:${s.size}:${Math.round(s.mtimeMs)}`); }
-  versionCache = { dir, v: h.digest('hex') };
+  let masNueva = 0;
+  for (const n of nombres) { const s = fs.statSync(path.join(dir, n)); masNueva = Math.max(masNueva, s.mtimeMs); h.update(`|${n}:${s.size}:${Math.round(s.mtimeMs)}`); }
+  versionCache = { dir, v: h.digest('hex'), masNueva };
   return versionCache.v;
+}
+
+/**
+ * Auditor 12/10/2026 (R1): el codigo y los canones se cargaron al ARRANCAR el proceso; si algo de `_lib` cambio despues
+ * (otra sesion editando), la etiqueta de version seria la nueva con la logica vieja. En ese caso no se guarda el estado.
+ */
+export function codigoCambioAlCorrer(dir = AQUI, inicio = Date.now() - process.uptime() * 1000) {
+  versionCodigo(dir);
+  return versionCache.masNueva >= inicio - 2000;
 }
 
 const sha1 = (buf) => crypto.createHash('sha1').update(buf).digest('hex');
@@ -135,7 +146,8 @@ export function ultimaLectura() { return { ...ultima }; }
 
 /**
  * Lo mismo que `relevarTranscript(transcriptPath, { repo })`, leyendo solo lo nuevo desde el cierre anterior.
- * Nunca tira: ante cualquier problema, la pasada completa de siempre.
+ * Lo guardado nunca la hace tirar: ante cualquier problema, la pasada completa de siempre (que tira, como siempre, si
+ * el registro mismo no se puede leer).
  */
 export async function relevarIncremental(transcriptPath, { repo = REPO, env = process.env } = {}) {
   const completa = async (motivo) => {
@@ -214,7 +226,7 @@ async function incremental(transcriptPath, repo, dir, intento = 0) {
     }
     const respuesta = resultadoRelevamiento(paraResponder);
     podarParaGuardar(st);
-    guardar(archivoEstado, { formato: FORMATO, version, transcript: path.resolve(transcriptPath), repo: path.resolve(repo), archivos: nuevos, st });
+    if (!codigoCambioAlCorrer()) guardar(archivoEstado, { formato: FORMATO, version, transcript: path.resolve(transcriptPath), repo: path.resolve(repo), archivos: nuevos, st });
     limpiarViejos(dir);
     ultima = { modo: motivo === 'de a tramos' ? 'incremental' : 'completa', bytes, motivo };
     return respuesta;
