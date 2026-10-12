@@ -54,7 +54,8 @@ let versionCache = null;
 export function versionCodigo(dir = AQUI) {
   if (versionCache && versionCache.dir === dir) return versionCache.v;
   const h = crypto.createHash('sha1').update(`f${FORMATO}|${process.versions.node}`);
-  const nombres = fs.readdirSync(dir).filter((f) => /\.(mjs|data\.json)$/i.test(f)).sort();
+  // los que empiezan con punto son los oraculos temporales de las pruebas (.cierreGuard.oraculo-*.mjs): no son codigo vivo
+  const nombres = fs.readdirSync(dir).filter((f) => /\.(mjs|data\.json)$/i.test(f) && !f.startsWith('.')).sort();
   for (const n of nombres) { const s = fs.statSync(path.join(dir, n)); h.update(`|${n}:${s.size}:${Math.round(s.mtimeMs)}`); }
   versionCache = { dir, v: h.digest('hex') };
   return versionCache.v;
