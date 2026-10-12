@@ -149,12 +149,12 @@ describe('mejoras para otra persona, por la nube', () => {
     const det = armarMejoras({ persona, paquete: p, anterior: ant, fecha: 'x' })[1].detalle.join('\n');
     expect(det).toMatch(/\*\*leer-planos\*\*: Leer planos de cliente\./);
     expect(det).not.toMatch(/\*\*: >/);
-    expect(det).toMatch(/sin lo personal de Facundo[\s\S]*leer-planos/);
+    expect(det).toMatch(/sin el mail, la PC ni las copias fijas de Facundo[\s\S]*leer-planos/);
   });
 
   it('el CLAUDE.md no da por hechos los ayudantes ni las fichas, y el arb no queda bajo los ayudantes', () => {
     const t = claudeMdPara(persona, '12/10/2026');
-    expect(t).toMatch(/Si en `~\\\.claude\\agents\\` están `buscador\.md`/);
+    expect(t).toContain('Tus ayudantes son los que haya en `~\\.claude\\agents\\` (con la mejora 3 son tres)');
     expect(t).toMatch(/Si existe `~\\\.claude\\fichas-barack`/);
     expect(t.indexOf('**arb:**')).toBeLessThan(t.indexOf('## Tus ayudantes'));
     expect(t).toMatch(/programas \(`python scripts/);
