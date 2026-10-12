@@ -82,6 +82,27 @@ describe('C1 · de a tramos = completa', () => {
     expect((await igual(c)).modo).toBe('incremental');
   });
 
+  it('rojo si se cuenta en letras: con muchas ñ la diferencia pasa un renglon entero y una mirada saldria dos veces', async () => {
+    const c = caso();
+    fs.writeFileSync(c.tp, renglones([fak(0, 'ñ'.repeat(400)), uso(1, 'r1', 'Read', { file_path: 'C:\\x\\hoja.pdf' }), res(1, 'r1')]));
+    await igual(c);
+    fs.appendFileSync(c.tp, renglones([uso(2, 'r2', 'Read', { file_path: 'C:\\x\\otra.pdf' }), res(2, 'r2')]));
+    await igual(c);
+    const r = await relevarIncremental(c.tp, { repo: c.repo, env: c.env });
+    expect(r.miradas).toHaveLength(2);
+  });
+
+  it('rojo si el renglon pendiente se guarda: una mirada sin su \\n, y despues su \\n, cuenta una sola vez', async () => {
+    const c = caso();
+    fs.writeFileSync(c.tp, renglones([fak(0, 'revisá la hoja')]));
+    await igual(c);
+    fs.appendFileSync(c.tp, JSON.stringify(uso(1, 'r1', 'Read', { file_path: 'C:\\x\\hoja.pdf' })));   // entero, sin \n
+    await igual(c);
+    fs.appendFileSync(c.tp, `\n${renglones([res(1, 'r1')])}`);
+    await igual(c);
+    expect((await relevarIncremental(c.tp, { repo: c.repo, env: c.env })).miradas).toHaveLength(1);
+  });
+
   it('verde: un subagente que aparece despues, y otro que crece, se leen de a tramos', async () => {
     const c = caso();
     fs.writeFileSync(c.tp, renglones(turno1));
