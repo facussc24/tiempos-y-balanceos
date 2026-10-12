@@ -78,6 +78,9 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
 - (sigue de antes) El freno de agentes al 60 % de la semana rige hasta el vie 16/10 13:00; la tarea de las 06:30 sigue
   frenada hasta el 30/10 (HOY-49); borrar los cuatro `.sh` viejos; `__cleanupAmfeActions` (HOY-37); las dos tareas de
   prueba de Programadas.
+- **CONTESTADO por Fak el 12/10 (anotado 10:27): NO se hace.** *"normalmente siempre elijo esta carpeta, así que no pasa
+  nada... si elijo sin carpeta capaz es para hacer cambios muy grandes y está mejor que no tenga controles"*. Queda
+  como estaba; lo de abajo es la pregunta que se le hizo.
 - (nuevo, de H37) **HOY-62**: una sesión que la app abre sin carpeta y después entra al repo trabaja sin los controles
   del repo. El arreglo de fondo es poner los controles de las reglas duras (arb, mail, borrado, firma, nube personal,
   secretos) en la configuración general de Claude Code, que vale para todas las sesiones de la PC: es un cambio
