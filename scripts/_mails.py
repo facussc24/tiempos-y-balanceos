@@ -61,6 +61,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib'))
 import mailsLectura  # noqa: E402
 import mailsBorradores  # noqa: E402
+from sinElevar import es_error_elevacion, relanzar_si_elevado  # noqa: E402
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # BARACK_MAIL_CACHE: otra carpeta de cache (la usan los tests para no tocar el real).
@@ -90,6 +91,7 @@ def _limpiar(txt):
 
 
 def _outlook():
+    relanzar_si_elevado()             # como administrador no se puede hablar con el Outlook de Fak (sinElevar.py)
     try:
         import win32com.client
     except ImportError:
@@ -97,6 +99,9 @@ def _outlook():
     try:
         return win32com.client.Dispatch('Outlook.Application').GetNamespace('MAPI')
     except Exception as e:
+        if es_error_elevacion(e):
+            sys.exit('No pude hablar con Outlook (%s): uno de los dos corre como administrador y el otro no.\n'
+                     'Si el que esta elevado es Outlook, cerrarlo y abrirlo normal (sin "Ejecutar como administrador").' % e)
         sys.exit('No pude hablar con Outlook clasico (%s).\n'
                  'Abrilo y reintenta:  "C:\\Program Files\\Microsoft Office\\root\\Office16\\OUTLOOK.EXE"' % e)
 
@@ -756,6 +761,7 @@ def _outlook_de_la_persona():
     """Outlook para las cuatro lecturas nuevas. Si esta cerrado se lo abre como programa de la persona ANTES de
     conectarse: uno levantado por la automatizacion queda sin ventana y despues traba un envio (regla mail-envio.md).
     Si no se lo puede abrir, se corta aca en vez de dejar un Outlook fantasma."""
+    relanzar_si_elevado()             # antes de abrirlo: uno elevado levantaria un Outlook elevado
     try:
         from outlookUi import asegurar_outlook
     except Exception:

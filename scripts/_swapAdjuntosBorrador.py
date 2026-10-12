@@ -46,6 +46,9 @@ def main():
             print(f'   {f}')
         sys.exit(1)
 
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib'))
+    from sinElevar import relanzar_si_elevado
+    relanzar_si_elevado()   # como administrador no se habla con el Outlook de Fak: se repite sin elevar (sinElevar.py)
     ns = win32.Dispatch('Outlook.Application').GetNamespace('MAPI')
     borradores = ns.GetDefaultFolder(OL_FOLDER_DRAFTS)
 

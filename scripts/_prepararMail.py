@@ -172,6 +172,8 @@ def preparar(cfg):
     # timeout, sin salida y sin borrador. Ademas, a un Outlook nacido de la automatizacion el
     # Object Model Guard le saca el cartel "un programa intenta enviar correo en su nombre".
     from outlookUi import asegurar_outlook
+    from sinElevar import relanzar_si_elevado
+    relanzar_si_elevado()   # como administrador no se habla con el Outlook de Fak: se repite sin elevar (sinElevar.py)
     try:
         import win32com.client as win32
     except ImportError:

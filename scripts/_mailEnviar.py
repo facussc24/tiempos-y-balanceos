@@ -54,6 +54,7 @@ from vozMail import mostrar_voz                                          # noqa:
 from outlookUi import asegurar_outlook, cartel_de_seguridad, vigilando   # noqa: E402
 from gerenteCopia import GERENTE_NOMBRE, falta_gerente, selftest as selftest_gerente  # noqa: E402
 import firmaIA                                                                    # noqa: E402
+from sinElevar import relanzar_si_elevado                                         # noqa: E402
 import numerosMail  # noqa: E402
 import mailDiferido  # noqa: E402
 
@@ -348,6 +349,7 @@ def main() -> int:
             print(f"ABORTA: {motivo}.")
             return 2
 
+    relanzar_si_elevado()   # como administrador no se habla con el Outlook de Fak: se repite sin elevar (sinElevar.py)
     import win32com.client as win32
     import pythoncom
     pythoncom.CoInitialize()

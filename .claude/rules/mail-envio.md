@@ -348,8 +348,28 @@ hacerle un bypass porque no te das cuenta y te impide mandar los mails"*.
 **Por que no se apaga:** ese cartel existe justo para que un programa no mande correo a nombre
 de Fak sin que el se entere — apagarlo es tocar una configuracion de seguridad de su maquina, y
 no es mia esa decision. El interruptor soportado vive en *Archivo -> Opciones -> Centro de
-confianza -> Configuracion -> Acceso mediante programacion*, y lo aprieta el. En esta PC la
-sesion **no es administradora**, asi que lo mas probable es que le aparezca gris.
+confianza -> Configuracion -> Acceso mediante programacion*, y lo aprieta el. La cuenta de Fak
+normalmente **no corre elevada** (pero puede: seccion de abajo), asi que lo mas probable es que le aparezca gris.
+
+## Consola de administrador: Outlook no contesta — 12/10/2026
+
+Fak pidio borrar borradores y `_mails.py` daba *"No pude hablar con Outlook clasico (-2146959355, 'Error en la
+ejecucion de servidor')"* con Outlook abierto y respondiendo; Fak: *"sigue sin responder? ... solucionalo... puede
+volver a pasar"*. Es `0x80080005`: **Windows no deja que un proceso elevado hable por COM con un Outlook sin elevar**.
+La sesion colgaba de un `claude.exe daemon` arrancado esa manana desde una ventana "como administrador"; el sync
+programado (permisos normales) andaba con el mismo Outlook. Si Outlook esta cerrado es peor: el proceso elevado lo
+levanta elevado y despues fallan el sync y toda sesion normal.
+
+**Regla: un proceso elevado no habla con Outlook.** Los seis scripts que lo tocan (`_mails.py`, `_mailEnviar.py`,
+`_prepararMail.py`, `_mailResponder.py`, `_reenviarMail.py`, `_swapAdjuntosBorrador.py`) llaman a
+`relanzar_si_elevado()` de `scripts/_lib/sinElevar.py` ANTES de `asegurar_outlook()` y del `Dispatch`: si estan
+elevados, repiten el mismo comando con permisos normales por una tarea programada de un solo uso (como
+`_arbVigilante.ps1`) y salen con su codigo. Los argumentos viajan en JSON, no por cmd (un asunto con `5 %` o acentos
+llega intacto); el codigo de salida lo escribe el stub (los 1/3/4 de `_mailEnviar` y `--limpiar-borradores` llegan
+iguales); la tarea arranca con bateria (por defecto Windows la deja en cola para siempre). La salida aparece toda al
+final. Con permisos normales no hace nada. `python scripts/_lib/sinElevar.py --selftest` (sin Outlook) y `--probar`
+(crea y borra una tarea: texto raro y codigo 3 tienen que volver iguales, y el hijo sin elevar).
+Lo de fondo lo arregla Fak: abrir Claude **sin** "Ejecutar como administrador".
 
 **Lo que NO es la causa** (verificado el 15/09/2026, no supuesto): Windows Defender estaba
 activo, al dia y con tiempo real prendido (`root/SecurityCenter2`), y no habia **ninguna**
