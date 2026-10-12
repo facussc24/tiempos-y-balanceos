@@ -9,6 +9,8 @@
  * Solo lee los registros reales; escribe en el temporal de la PC y lo borra.
  *
  *   node scripts/_cierreIncrementalIgualdad.mjs --base HEAD [--max 20 | 0 = todos] [--pasos 6] [--semilla 1] [--dir <carpeta>]
+ *   ... --reales [--cortes 12] [--recientes]   los cortes son los CIERRES de verdad (auditor 12/10/2026): el principal en
+ *       cada renglon `stop_hook_summary`, cada subagente en su ultimo renglon con hora <= la de ese cierre
  * Sale con 0 si no hubo ninguna diferencia, 1 si hubo alguna (y las lista), 2 si un argumento esta mal.
  */
 import fs from 'node:fs';
@@ -28,6 +30,31 @@ const pasos = Math.max(2, Number(arg('--pasos', '6')));
 let semilla = Number(arg('--semilla', '1')) || 1;
 const azar = () => { semilla = (semilla * 1103515245 + 12345) % 2147483648; return semilla / 2147483648; };
 const dirReg = arg('--dir', path.join(os.homedir(), '.claude', 'projects', 'C--Dev-BarackMercosul'));
+const reales = argv.includes('--reales');
+const maxCortes = Math.max(1, Number(arg('--cortes', '12')));
+
+// [{ fin: byte despues del renglon, ts }] de cada renglon con hora; y en el principal, donde empieza cada cierre
+function renglonesConHora(archivo, marca) {
+  const buf = fs.readFileSync(archivo); const out = []; const cierres = [];
+  let ini = 0;
+  while (ini < buf.length) {
+    let i = buf.indexOf(0x0a, ini); if (i < 0) i = buf.length;
+    const m = buf.indexOf('"timestamp":"', ini);
+    if (m >= 0 && m < i) { const ts = Date.parse(buf.toString('utf8', m + 13, m + 37).split('"')[0]); if (Number.isFinite(ts)) out.push({ fin: Math.min(i + 1, buf.length), ts }); }
+    if (marca) { const k = buf.indexOf(marca, ini); if (k >= 0 && k < i && m >= 0 && m < i) cierres.push({ ini, ts: out[out.length - 1].ts }); }
+    ini = i + 1;
+  }
+  return { out, cierres };
+}
+/** Para cada paso, hasta que byte va cada archivo (0 = todavia no aparecio). El ultimo paso: todo. */
+function planReal(archivos) {
+  const { cierres } = renglonesConHora(archivos[0].orig, '"subtype":"stop_hook_summary"');
+  const elegidos = cierres.length <= maxCortes ? cierres : Array.from({ length: maxCortes }, (_, j) => cierres[Math.floor((j + 1) * cierres.length / (maxCortes + 1))]);
+  const subs = archivos.slice(1).map((a) => renglonesConHora(a.orig).out);
+  const plan = elegidos.map((c) => [c.ini, ...subs.map((rs) => { let h = 0; for (const r of rs) if (r.ts <= c.ts) h = r.fin; return h; })]);
+  plan.push(archivos.map((a) => a.tam));
+  return { plan, cierres: cierres.length };
+}
 
 // lo que se compara: todo lo que devuelve relevarTranscript; los Set van ordenados (su orden no decide nada)
 const plano = (r) => JSON.stringify(r, (k, v) => (v instanceof Set ? [...v].sort() : v === Infinity ? 'Infinity' : v));
@@ -48,7 +75,8 @@ let rc = 0;
 try {
   const oraculo = await import(pathToFileURL(tmpOraculo).href);
   let regs = fs.readdirSync(dirReg).filter((f) => /\.jsonl$/i.test(f)).map((f) => path.join(dirReg, f));
-  regs = regs.map((f) => ({ f, s: fs.statSync(f).size })).sort((a, b) => b.s - a.s).map((x) => x.f);
+  const orden = argv.includes('--recientes') ? (x) => x.m : (x) => x.s;
+  regs = regs.map((f) => ({ f, s: fs.statSync(f).size, m: fs.statSync(f).mtimeMs })).sort((a, b) => orden(b) - orden(a)).map((x) => x.f);
   if (max > 0) regs = regs.slice(0, max);
   let total = 0; let malos = 0; let cortesMedioRenglon = 0; let incrementales = 0;
   for (const [n, reg] of regs.entries()) {
@@ -60,12 +88,15 @@ try {
     const archivos = [{ orig: reg, dst, aparece: 0 }, ...subs.map((f) => ({ orig: path.join(subOrig, f), dst: path.join(raiz, nombre, 'subagents', f), aparece: Math.floor(azar() * pasos) }))];
     for (const a of archivos) { a.tam = fs.statSync(a.orig).size; a.escrito = 0; a.fd = fs.openSync(a.orig, 'r'); }
     let difsReg = 0;
+    const real = reales ? planReal(archivos) : null;
+    const nPasos = real ? real.plan.length : pasos;
     try {
-      for (let p = 0; p < pasos; p++) {
-        for (const a of archivos) {
-          if (p < a.aparece) continue;
-          // el ultimo paso llega al final; los otros cortan en un byte al azar del tramo que les toca
-          const hasta = p === pasos - 1 ? a.tam : Math.min(a.tam, Math.max(a.escrito, Math.floor(a.tam * ((p + azar()) / pasos))));
+      for (let p = 0; p < nPasos; p++) {
+        for (const [ia, a] of archivos.entries()) {
+          if (!real && p < a.aparece) continue;
+          if (real && !real.plan[p][ia] && !a.escrito) continue;          // el subagente todavia no existia en ese cierre
+          // el ultimo paso llega al final; los otros cortan en un byte al azar del tramo que les toca (o en el cierre real)
+          const hasta = real ? Math.max(a.escrito, real.plan[p][ia]) : p === pasos - 1 ? a.tam : Math.min(a.tam, Math.max(a.escrito, Math.floor(a.tam * ((p + azar()) / pasos))));
           fs.mkdirSync(path.dirname(a.dst), { recursive: true });
           const largo = hasta - a.escrito;
           const b = Buffer.alloc(largo);
@@ -80,16 +111,16 @@ try {
         if (u.modo === 'incremental') incrementales++;
         total++;
         const d = diferencia(esperado, obtenido);
-        if (d.length) { difsReg++; malos++; console.log(`  DIFIERE ${path.basename(reg).slice(0, 8)} paso ${p + 1}/${pasos} (${u.modo}, ${u.motivo}): ${d.join(', ')}`); }
+        if (d.length) { difsReg++; malos++; console.log(`  DIFIERE ${path.basename(reg).slice(0, 8)} paso ${p + 1}/${nPasos} (${u.modo}, ${u.motivo}): ${d.join(', ')}`); }
       }
     } finally { for (const a of archivos) fs.closeSync(a.fd); }
     const mb = archivos.reduce((s, a) => s + a.tam, 0) / 1048576;
-    console.log(`${path.basename(reg).slice(0, 8)} ${mb.toFixed(1).padStart(7)} MB ${String(subs.length).padStart(3)} sub  ${difsReg ? `${difsReg} DIFERENCIAS` : 'igual en todos los pasos'}`);
+    console.log(`${path.basename(reg).slice(0, 8)} ${mb.toFixed(1).padStart(7)} MB ${String(subs.length).padStart(3)} sub  ${difsReg ? `${difsReg} DIFERENCIAS` : 'igual en todos los pasos'}${real ? ` (${nPasos - 1} de ${real.cierres} cierres reales + el final)` : ''}`);
     fs.rmSync(path.join(raiz, nombre), { recursive: true, force: true }); fs.rmSync(dst, { force: true });
   }
   console.log(`\n${regs.length} registros · ${total} cierres simulados (${incrementales} de a tramos, ${cortesMedioRenglon} cortes a mitad de renglon) · ${malos} con diferencias`);
   if (malos) rc = 1;
-  if (incrementales < total - regs.length) { console.log('OJO: hubo cierres que no leyeron de a tramos (ver el motivo): la prueba no ejercito el camino nuevo'); rc = 1; }
+  if (!reales && incrementales < total - regs.length) { console.log('OJO: hubo cierres que no leyeron de a tramos (ver el motivo): la prueba no ejercito el camino nuevo'); rc = 1; }
 } finally {
   try { fs.unlinkSync(tmpOraculo); } catch { /* empieza con punto: se borra a mano */ }
   fs.rmSync(raiz, { recursive: true, force: true });
