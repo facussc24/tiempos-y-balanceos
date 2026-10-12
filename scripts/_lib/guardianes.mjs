@@ -359,7 +359,7 @@ const FIRMA_PREFIJO_RE = /(?:\.(?:value2?|formula|text|name|caption|title|author
 const FIRMA_PREFIJO_ADD_RE = /\bAdd\s*\([^()\n]*?$/;
 // ...pero el `.add(` de una COLECCION de un documento cuenta en cualquier caja: COM no distingue mayusculas y xlwings
 // lo escribe en minuscula (`wb.sheets.add('_CONTEXTO_…')`, `wb.Names.add(…)`, `ws.Comments.add(…)`). Auditor, 11/10/2026.
-const FIRMA_PREFIJO_COLECCION_RE = /\b(?:sheets|worksheets|names|comments|shapes|slides|paragraphs|tables|charts|pictures|notes)\.add\s*\([^()\n]*?$/i;
+const FIRMA_PREFIJO_COLECCION_RE = /(?:\b(?:sheets|worksheets|names|comments|shapes|slides|paragraphs|tables|charts|pictures|notes)|[\w$\])]\.[A-Za-z_]\w*)\.add\s*\([^()\n]*?$/i;
 // (El borrador de P16 traia ademas una excepcion por «nombre propio»: un literal que fuera exactamente `CLAUDE.md` o
 // `Claude Fak` no contaba. El auditor la saco el 11/10/2026: no liberaba ninguno de los 39 frenos reales de la historia
 // y dejaba pasar una celda o una pestaña con ese nombre.)

@@ -341,6 +341,13 @@ const ROJOS_P16 = [
     ['COM en minuscula: Comments.add', ctx('Bash', { cmd: `python -c "ws.Comments.add(rng, 'revisado por Claude')"` })],
     ['el .Add( de COM con una IA adentro: un comentario de celda', ctx('Bash', { cmd: `python -c "ws.Comments.Add(rng, 'revisado por Claude')"` })],
     ['el .Add( de COM por PowerShell', ctx('PowerShell', { cmd: `$ws.Comments.Add($rng, 'Claude')` })],
+    // A1 del auditor (12/10/2026): un `.add(` en minuscula sobre una coleccion que NO esta en la lista, colgada de un objeto
+    ['propiedad del documento en minuscula', ctx('Bash', { cmd: `python -c "wb.CustomDocumentProperties.add('Generado con', False, 4, 'Claude')"` })],
+    ['variable de un documento de Word en minuscula', ctx('Bash', { cmd: `python -c "doc.Variables.add('origen', 'Claude')"` })],
+    ['marcador de Word en minuscula', ctx('Bash', { cmd: `python -c "doc.Bookmarks.add('claude_ctx')"` })],
+    ['estilo de un libro en minuscula', ctx('Bash', { cmd: `python -c "wb.Styles.add('Claude')"` })],
+    ['propiedad del documento en minuscula por PowerShell', ctx('PowerShell', { cmd: `$wb.CustomDocumentProperties.add('Generado con', $false, 4, 'Claude')` })],
+    ['variable de Word en minuscula por PowerShell', ctx('PowerShell', { cmd: `$doc.Variables.add('origen', 'Claude')` })],
     ['una carpeta de la nube que se llama parecido: Claude Fakultad', ctx('Bash', { cmd: `mkdir -p "${NP}/2- PROYECTOS/Claude Fakultad"` })],
     ['una carpeta de la nube que arranca igual: Claude Fak notas', ctx('Bash', { cmd: `mkdir -p "${NP}/Claude Fak notas"` })],
     ['un documento en la nube que nombra la carpeta Claude Fak (la regla 4 no se toca)', ctx('Write', { file: `${NUBE}\\1- GENERAL\\nota.txt`, content: 'Los archivos estan en la carpeta Claude Fak.' })],
