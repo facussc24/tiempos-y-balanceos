@@ -125,7 +125,9 @@ export function probarMensaje(mensaje, { raiz = REPO, espera = null, tmp = TMP()
     { type: 'user', timestamp: new Date(ahora).toISOString(), origin: { kind: 'human' }, message: { role: 'user', content: [{ type: 'text', text: AVISO_APP }, { type: 'text', text: mensaje }] } },
     { type: 'assistant', timestamp: new Date(ahora + 1000).toISOString(), message: { content: [{ type: 'text', text: RESPUESTA_COMUN }] } },
   ].map((o) => JSON.stringify(o)).join('\n') + '\n');
-  const cierre = hooksDe(raiz, 'Stop').filter((c) => /cierre-guard/.test(c)).map((cmd) => {
+  // el cierre se prueba por el hook que este cableado: cierre-guard.sh suelto o el Stop fusionado (stop-hooks.sh). Con el
+  // filtro viejo, el dia que se cablee el fusionado esta prueba dejaba de correr el cierre y decia «sin fallas» (auditor, T2).
+  const cierre = hooksDe(raiz, 'Stop').filter((c) => /cierre-guard|stop-hooks/.test(c)).map((cmd) => {
     const r = correrHook(cmd, { hook_event_name: 'Stop', session_id: sid, transcript_path: transcript, last_assistant_message: RESPUESTA_COMUN, stop_hook_active: false }, raiz, {}, { tmp, tope });
     if (r.colgado) fallas.push(`${r.hook}: no termino en ${tope / 1000} s`);
     else if (r.status !== 0 && r.status !== 2) fallas.push(`${r.hook}: salio con ${r.status}`);

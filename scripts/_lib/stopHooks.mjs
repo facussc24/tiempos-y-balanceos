@@ -13,8 +13,35 @@
  */
 import os from 'node:os';
 import path from 'node:path';
-import { anotar } from './hooksTiempos.mjs';
-import { cargarPiezas, esPrograma, leerStdin, parsearPayload } from './hookComun.mjs';
+import { fileURLToPath } from 'node:url';
+
+// Nada de la casa se importa de forma ESTATICA (auditor, 11/10/2026, T1): con `hooksTiempos.mjs` o `hookComun.mjs`
+// rotos este archivo no cargaba, el .sh salia con 1 y el turno terminaba sin que frenaran ni el cierre ni la hora (el
+// cierre-guard suelto si frenaba: su medidor se importa adentro de un try). Si el medidor no carga, no se anota; si la
+// libreria comun no carga, valen las versiones minimas de abajo. Las dos piezas se cargan una por una, cada una en su try.
+let anotar = () => {};
+try { ({ anotar } = await import('./hooksTiempos.mjs')); } catch { /* sin medidor: se sigue sin anotar */ }
+let comun = {};
+try { comun = await import('./hookComun.mjs'); } catch { /* sin la libreria comun: lo minimo, aca abajo */ }
+const esPrograma = comun.esPrograma ?? ((url, argv1 = process.argv[1]) => {
+  try { return path.resolve(String(argv1 || '')).toLowerCase() === fileURLToPath(url).toLowerCase(); } catch { return false; }
+});
+const leerStdin = comun.leerStdin ?? ((stream = process.stdin) => new Promise((resolve) => {
+  let s = ''; stream.setEncoding('utf8');
+  stream.on('data', (d) => { s += d; }); stream.on('end', () => resolve(s)); stream.on('error', () => resolve(s));
+}));
+const parsearPayload = comun.parsearPayload ?? ((s) => { try { const p = JSON.parse(s); if (p && typeof p === 'object') return p; } catch { /* no era JSON */ } return {}; });
+const cargarPiezas = comun.cargarPiezas ?? (async (tabla, { avisar = () => {}, marca = '[HOOKS]' } = {}) => {
+  const piezas = [];
+  for (const p of tabla) {
+    try {
+      const fn = (await import(new URL(p.modulo, import.meta.url).href))?.[p.exportacion];
+      if (typeof fn !== 'function') throw new Error(`no exporta ${p.exportacion}`);
+      piezas.push({ nombre: p.nombre, fn });
+    } catch (e) { avisar(`${marca} pieza ${p.nombre} apagada: ${String(e?.message || e).slice(0, 120)}\n`); }
+  }
+  return piezas;
+});
 
 export const MARCA = '[STOP-HOOKS]';
 /** Donde queda lo que falla adentro (una pieza que tira o que no carga). Adentro de vitest no se escribe: una prueba no es una corrida (leccion de hooksTiempos, 10/10/2026). */

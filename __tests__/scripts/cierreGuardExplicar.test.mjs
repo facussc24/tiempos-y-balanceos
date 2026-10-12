@@ -300,7 +300,9 @@ describe('pendiente de "mejora sin probar" (chequeo 3)', () => {
     const s = JSON.parse(fs.readFileSync(path.join(REPO, '.claude', 'settings.json'), 'utf8'));
     const re = new RegExp(CANON.mejora.mensajes_re, 'i');
     const scripts = [...s.hooks.UserPromptSubmit, ...s.hooks.Stop].flatMap((g) => g.hooks.map((h) => h.command.match(/\.claude\/hooks\/[\w.-]+\.sh/)?.[0])).filter(Boolean);
-    expect(scripts.length).toBeGreaterThanOrEqual(4);
+    // no se cuenta cuantos son (eran 4 sueltos; fusionados quedan 2): tiene que haber al menos uno de mensajes y el del cierre
+    expect(scripts.some((h) => /prompt-hooks|explicar-prompt/.test(h)), 'falta el hook de mensajes').toBe(true);
+    expect(scripts.some((h) => /cierre-guard|stop-hooks/.test(h)), 'falta el hook del cierre').toBe(true);
     // dev-server-guard mira servidores de desarrollo, no lo que escribe Fak: _probarMejora no lo corre
     for (const h of scripts.filter((x) => !x.includes('dev-server-guard'))) expect(re.test(h), `${h} lee mensajes de Fak y no esta en cierreCanon mejora.mensajes_re`).toBe(true);
   });
