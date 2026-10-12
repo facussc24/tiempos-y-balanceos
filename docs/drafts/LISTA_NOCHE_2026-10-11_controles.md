@@ -14,8 +14,8 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
   tiene la huella `bb013b71` (`git hash-object`), la misma de la copia que midió el auditor. Lo que sigue es la sección
   «Trabajo que puedo hacer solo». Los renglones de abajo cuentan cómo se llegó; las dos copias siguen en disco.
 - **12/10 00:52: el punto 4b (HOY-57 + A1 + B4) también está EN MAIN** (`d05143c1`, `7fcb2951`, `3b1e7e2a`), con el SÍ
-  del auditor; el módulo de main tiene la huella `6bd76403`. Falta solo lo de después de entrar: suite completa
-  (lanzada 00:52, registro en `scratchpad/suite_hoy57_main.log`), push y CI. Si un hook deja de contestar:
+  del auditor; el módulo de main tiene la huella `6bd76403`. Lo de después de entrar está hecho: suite completa (01:01),
+  push (01:02) y CI verde (01:11). Si un hook deja de contestar:
   `git -C /c/Dev/BarackMercosul revert` de esos tres en el mismo turno. Ya están hechos: memorias, lección, disco
   liberado, nube subida, cola al día. A la 01:55: `_cierreSesion.mjs` completo (con build), `--terminar` y el resumen.
 - Se trabaja en DOS copias aparte del repo, nunca sobre el checkout principal (sus hooks están en vivo):
@@ -25,9 +25,12 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
   - `.claude/worktrees/g2`, rama `guardianes-p16` (sale de `c57b8747`): `52404ed8` (P16 original) + `83cd507d` +
     `a64b0d11` (el arreglo del auditor y dos ajustes). Sin enlace a `node_modules`: los tests se corren con
     `node /c/Dev/BarackMercosul/node_modules/vitest/vitest.mjs run <archivos> --pool=threads` desde esa carpeta.
-- Lo medido de HOY-28: `.sgc-cache/auditorias/HOY-28_diferencial_2026-10-11.md`. Scripts en el scratchpad de la sesión
-  (`hoy28_casos.mjs`, `diferencial_guardianes.mjs` para p14-p18, `diferencial_g2.mjs` para g2, `aud_p14p18/h.mjs` con
-  `AUD_NUEVO=<ruta del módulo>`).
+- Lo medido de HOY-28: `.sgc-cache/auditorias/HOY-28_diferencial_2026-10-11.md`. **Los scripts y casos NO se buscan en
+  el temporal de la sesión (se limpia a las 12 h): sus copias están en `.sgc-cache/auditorias/casos_2026-10-11/`**
+  (`hoy28_casos.mjs`, `diferencial_guardianes.mjs`, `diferencial_g2.mjs`, las carpetas `aud_hoy28/`, `aud_p14p18/` y
+  `aud_p14p16/` con `h.test.mjs`, `mutar.test.mjs` y el despachador, y `mutantes_sobre_el_arreglado_preparar.mjs`) y
+  en `.sgc-cache/auditorias/HOY-57_medido_2026-10-12/` (casos, diferencial y el del permiso para apagar). Los
+  resultados de las suites completas están en el registro de abajo, no en un archivo.
 - Para ENTRAR a `main` (cada commit solo con el SÍ de su auditor): `git -C /c/Dev/BarackMercosul cherry-pick <hash>`,
   importar `scripts/_lib/guardianes.mjs` desde main con node, un payload por `bash .claude/hooks/_dispatcher.sh`
   (uno normal → 0; uno de los seis del agujero → 2), suite COMPLETA (`npx vitest run --pool=threads`, ~9 min), push,
@@ -95,6 +98,13 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
 - `_probarMejora.mjs --mensaje` no aplica a estos tres controles: no leen mensajes de Fak, miran comandos y archivos.
   Lo que ocupó su lugar fue la pasada de 20 casos por el despachador de main.
 - La herramienta PowerShell tiene 3 usos en toda la historia: sus casos no tienen contra qué medirse.
+- **El plan corto de HOY-57 (cambio mediano) no quedó en el registro del chat.** Lo escribí antes de crear la rama (qué,
+  por qué, que las reglas se suman sin tocar la vieja, pruebas en las dos direcciones, qué puede romper), pero a la
+  01:16 lo busqué en el archivo de la sesión y no está; el asesor tampoco lo vio. Vale como no dicho: la regla
+  `codigo-madre.md` pide ese plan en el chat ANTES. El qué y el porqué quedaron en el comentario del código y en el
+  commit `d05143c1`, y el auditor lo revisó entero antes de entrar. Y las horas: tres veces en el día anoté una hora o
+  un hecho de memoria y no medido (22:22, 00:12 y esto). Cola HOY-65.
+- Nada corrió de verdad tampoco en la segunda tanda: ni un apagado, ni un mail, ni un documento.
 
 ## Registro (horas medidas con `date` o del commit)
 
@@ -109,7 +119,7 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
 - 22:28 cola: HOY-28 hecha y tres filas nuevas (`ba8389a2`). 22:46 volvió el auditor de P10: SÍ; R12 aplicado (`3a1d2348`). 22:47 punto 4 en main y pusheado.
 - Un aviso falso del control del cierre a las 22:30: dijo que escribí `C:/Users/Alguien/…/x.pdf` «afuera del repo»; es un dato de prueba de `nubePersonalGuard.test.mjs` que salió en la salida de una corrida de tests. No existe. Para la cola (anotado 23:35: HOY-61).
 - 23:13 volvió el informe del auditor de la firma, el arb y el mail: firma SÍ; arb y mail SÍ con dos arreglos (B1 y B2), con su parche. 23:14 apliqué el parche en g2 (`git apply`; el cambio de las 23:14:29 que el auditor anotó como «de otra sesión» fue este): el módulo quedó con la huella `bb013b71`, igual a su copia `mut/fix`. 417 pruebas y las dos suites de consola en verde. 23:21 commit `11656581`.
-- 23:23 las pruebas que pidió el auditor (`7e2845a3`, 421 en verde, solo el archivo de pruebas). 23:26 sus cinco mutantes vivos, corridos de nuevo sobre el módulo arreglado: mueren los cinco (copia del armador en `scratchpad/mut2/`).
+- 23:23 las pruebas que pidió el auditor (`7e2845a3`, 421 en verde, solo el archivo de pruebas). 23:26 sus cinco mutantes vivos, corridos de nuevo sobre el módulo arreglado: mueren los cinco (el preparador quedó en `.sgc-cache/auditorias/casos_2026-10-11/mutantes_sobre_el_arreglado_preparar.mjs`).
 - 23:27 cherry-pick de los siete commits a main; `git diff` contra la rama `guardianes-p16` vacío en los tres archivos; el módulo carga; por el despachador real de main, 20 casos del auditor como se esperaba (4 normales, 4 del arb, 3 del mail, 3 de firma, 6 liberados) y los casos del borrado siguen frenando; las dos suites de consola en verde. 23:27 a 23:37 suite completa: 7.792 pasan, fallan los tres ajenos de HOY-50. 23:37 push (`3cc041eb`).
 - 23:43 CI de `3cc041eb`: completed success. Las sesiones abiertas toman los tres controles solas (el despachador carga el módulo de main en cada llamada).
 - 23:40 a 23:50 **H37 hecha** (solo lectura): informe `.sgc-cache/investigacion-2026-10-11/H37_codigo_127_2026-10-11.md`. Los 194 eran el hook llamado con ruta relativa, arreglado el 22/09. Lo que queda abierto es otra cosa: una sesión que la app abre sin carpeta y después entra al repo trabaja sin los controles del repo (08/10, dos sesiones). Cola: H37 hecha, fila nueva HOY-62, notas en P30, P31, H38 y X27.
@@ -118,6 +128,7 @@ trabajo y cupo). Sesión `4dde7a6e`, Opus 5.5.
 - Entre las 00:08 y las 00:14 `_cierreSesion.mjs --sin-build`: faltaban dos cosas. El disco C: tenía 8,4 GB libres: 00:17 `_liberarDisco.mjs --aplicar` sacó 6,63 GB (75 temporales de Claude de más de 12 h y 57 copias viejas de respaldo, con su regla de conservar las 12 más nuevas y la primera de cada día); quedaron 15 GB. Lo otro: 7 archivos modificados que no son de esta sesión (ya estaban así al arrancar): no se tocan.
 - 00:18 lectura parcial de la medición del cierre (130 corridas): lo que más pesa es el control de la firma, no releer el registro (nota en la fila P9). 00:18 CI del último push (`4f269332`): completed success. 00:18 los casos de los tres auditores y los diferenciales, copiados a `.sgc-cache/auditorias/casos_2026-10-11/` (el temporal de la sesión se limpia solo a las 12 h).
 - 00:19 `_nube.mjs --subir --aplicar` (345 archivos). 00:20 quedaban 295 por subir; **00:33 medido otra vez: subió todo lo mío**; queda 1 archivo pendiente que no es de esta sesión (`…\1- GENERAL\TAREAS CERRADAS\2026\LISTADO DE TAREAS CERRADAS 2026.xlsx`, con fecha 31/07).
-- 00:20 a 00:33 **HOY-57** (plan corto dicho en el chat antes de tocar): reglas nuevas que se suman a la vieja; 39 formas de apagar frenan y 33 usos normales pasan (queda `findstr`, que no está entre los lectores); commits `da73ce13` (00:29), `b7b52dc4` (00:30) y `575cd4ec` (00:31) en la rama `arb-apagar` de la copia; diferencial 00:29 a 00:31; auditor pedido 00:33.
+- 00:20 a 00:33 **HOY-57** (el plan corto: ver «No pude verificar»): reglas nuevas que se suman a la vieja; 39 formas de apagar frenan y 33 usos normales pasan (queda `findstr`, que no está entre los lectores); commits `da73ce13` (00:29), `b7b52dc4` (00:30) y `575cd4ec` (00:31) en la rama `arb-apagar` de la copia; diferencial 00:29 a 00:31; auditor pedido 00:33.
 - 00:36 la causa del aviso falso del cierre, leída en el registro de la sesión (fila HOY-61). 00:51 volvió el auditor del punto 4b: SÍ a los tres commits. 00:52 cherry-pick a main, comprobaciones por ruta absoluta y suite completa lanzada. 00:52 a 01:01 suite completa: 7.806 pasan, fallan los tres ajenos de HOY-50. 01:02 push (`bd850542`). 01:04 `_cierreSesion.mjs` completo: build de producción bien; lo único que marca son 7 archivos modificados el 08 y 09/10 por otras sesiones (el generador del AMFE del Upper Trimming y su prueba, dos informes de `docs/auto-mejora`, `LEEME_CARPETA.txt`, `.env.example`), que no son de esta sesión y no se tocan. 01:11 CI de `bd850542`: completed success. Las sesiones abiertas toman los controles solas. Cola: HOY-55, HOY-56 y HOY-57 hechas; fila nueva HOY-64.
+- 01:13 el asesor marcó tres cosas, hechas entre la 01:15 y la 01:22: el plan corto que no está en el registro (arriba, «No pude verificar»; cola HOY-65), qué pasa si Fak pide apagar la PC (medido: la sesión escribe el permiso de un solo uso y reintenta; anotado en la memoria `feedback_no_cerrar_arb_sin_consultar`) y las rutas de esta lista que apuntaban al temporal. 01:16 la nube, medida otra vez: lo mío subió; sigue pendiente el mismo archivo ajeno del 31/07.
 - 23:30 a 23:35 la cola: P14, P15 y P16 hechas; filas nuevas HOY-54 a HOY-61. Los cuatro parches del auditor quedaron en `.sgc-cache/auditorias/P14-P16_parches/` y su memoria del worktree pasó a `.claude/agent-memory/auditor/` de main con lo que pidió sumarle.

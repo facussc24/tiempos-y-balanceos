@@ -15,7 +15,7 @@ incidente vive en los snapshots.
 
 - **11/10 — Antes de un push que agrega archivos o toca `settings.json` va la suite COMPLETA, no las pruebas de lo tocado (el CI quedó rojo por un `#!`), y un umbral de una regla no lo aflojo yo: va como propuesta (y ese 60 % ni era de Fak: lo había escrito la API).** Graduado a `feedback_suite_completa_antes_del_push` y `feedback_un_numero_de_la_regla_no_lo_cambio_yo`.
 
-- **11/10 — La hora que va a un registro sale de `date` o del commit, nunca de memoria** (en la lista de la noche anoté «22:22» y «22:25» sin medir; era la segunda vez en el día), **y con la sesión parada en un worktree lo de main se prueba con `git -C` y rutas absolutas: si no, se prueba la copia.** Graduado a `reference_entrar_a_main_desde_un_worktree`.
+- **11-12/10 — Lo que va a un registro (una hora, «lo dije en el chat») se MIDE antes de escribirlo: `date`, el commit o el archivo de la sesión, nunca de memoria** (tres veces en un día, la última minutos después de anotar esta lección: la lección sola no alcanza, cola HOY-65), **y con la sesión parada en un worktree lo de main se prueba con `git -C` y rutas absolutas.** Graduado a `reference_entrar_a_main_desde_un_worktree`.
 
 - **11/10 — Un subagente al que se le pide ubicar dónde está una clave la imprime en su salida: el encargo dice con qué buscar (`grep -l`, `-c`), no «no la repitas».**
 
