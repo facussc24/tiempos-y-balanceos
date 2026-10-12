@@ -357,6 +357,9 @@ const FIRMA_PREFIJO_RE = /(?:\.(?:value2?|formula|text|name|caption|title|author
 // bandera i. Con ella, el `.add(` de un Set o de una lista (`carpetas.add('Claude Fak')`, `s.add('CLAUDE.md')`) contaba
 // como escribir en un documento.
 const FIRMA_PREFIJO_ADD_RE = /\bAdd\s*\([^()\n]*?$/;
+// ...pero el `.add(` de una COLECCION de un documento cuenta en cualquier caja: COM no distingue mayusculas y xlwings
+// lo escribe en minuscula (`wb.sheets.add('_CONTEXTO_…')`, `wb.Names.add(…)`, `ws.Comments.add(…)`). Auditor, 11/10/2026.
+const FIRMA_PREFIJO_COLECCION_RE = /\b(?:sheets|worksheets|names|comments|shapes|slides|paragraphs|tables|charts|pictures|notes)\.add\s*\([^()\n]*?$/i;
 // (El borrador de P16 traia ademas una excepcion por «nombre propio»: un literal que fuera exactamente `CLAUDE.md` o
 // `Claude Fak` no contaba. El auditor la saco el 11/10/2026: no liberaba ninguno de los 39 frenos reales de la historia
 // y dejaba pasar una celda o una pestaña con ese nombre.)
@@ -365,7 +368,7 @@ const FIRMA_RAIZ_RE = /(?:^|[\s"'=])(?:[yY]:[\\/]|\/y\/|[^"'\n]*Ingenier[ií]a y
 // exacto seguido de barra, comilla o fin. Un espacio NO alcanza: «Claude Fak notas» o «Claude Fakultad» son otra carpeta.
 // La carpeta exenta es la de la BIBLIOTECA de Ingenieria: una carpeta «Claude Fak» en el servidor (`Y:\...`) no lo es
 // (auditor, 11/10/2026).
-const FIRMA_EXENTOS_RE = /(?:[\\/]\.claude[\\/]|[\\/]memory[\\/]|[\\/]docs[\\/]|[\\/]__tests__[\\/]|[\\/]_archive[\\/]|[\\/]claude-area[\\/]|CLAUDES_POR_AREA|CLAUDE POR AREA|Claude Barack|Base Claude Ingenieria|INSTALAR CLAUDE|ACTUALIZACION_CLAUDE|Ingenier[ií]a y Proyecto - General[^"'\n]*?[\\/]Claude Fak(?=[\\/"']|$)|firmaIA|_sinFirmaIA|_limpiarListadoHoClaude|guardianes\.mjs|cierreGuard\.mjs|CLAUDE\.md(?=["']|$)|LECCIONES_APRENDIDAS\.md$|MEMORY\.md$|\.claude[\\/])/i;
+const FIRMA_EXENTOS_RE = /(?:[\\/]\.claude[\\/]|[\\/]memory[\\/]|[\\/]docs[\\/]|[\\/]__tests__[\\/]|[\\/]_archive[\\/]|[\\/]claude-area[\\/]|CLAUDES_POR_AREA|CLAUDE POR AREA|Claude Barack|Base Claude Ingenieria|INSTALAR CLAUDE|ACTUALIZACION_CLAUDE|Ingenier[ií]a y Proyecto - General(?:[\\/][^\\/"'\n]+[\\/]\.\.)?[\\/]Claude Fak(?=[\\/"']|$)|firmaIA|_sinFirmaIA|_limpiarListadoHoClaude|guardianes\.mjs|cierreGuard\.mjs|CLAUDE\.md(?=["']|$)|LECCIONES_APRENDIDAS\.md$|MEMORY\.md$|\.claude[\\/])/i;
 // Comandos que solo leen o que guardan texto que no es un documento (un mensaje de commit lleva
 // "Co-Authored-By: Claude" por convencion del repo, y no sale de aca como documento de Barack).
 //
@@ -560,7 +563,7 @@ export function firmaIaEnEscritura(texto, archivo = '', { bash = false } = {}) {
         const antes = linea.slice(Math.max(0, m.index - 120), m.index);
         const literal = m[1].trim();
         if (interno && FIRMA_ID_MODELO_RE.test(literal)) { re.lastIndex = m.index + 1; continue; }
-        if (FIRMA_PREFIJO_RE.test(antes) || FIRMA_PREFIJO_ADD_RE.test(antes)) return `una IA escrita ADENTRO de un documento: «${(antes.slice(-40) + m[0]).trim().slice(0, 110)}»`;
+        if (FIRMA_PREFIJO_RE.test(antes) || FIRMA_PREFIJO_ADD_RE.test(antes) || FIRMA_PREFIJO_COLECCION_RE.test(antes)) return `una IA escrita ADENTRO de un documento: «${(antes.slice(-40) + m[0]).trim().slice(0, 110)}»`;
         re.lastIndex = m.index + 1;   // un literal "abierto" de mas no tapa el siguiente
       }
     }

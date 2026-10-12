@@ -334,6 +334,11 @@ const ROJOS_P16 = [
     ['CLAUDE.md como valor de una clave: vuelve a frenar (no se distingue de una celda)', ctx('Bash', { cmd: `node -e "cfg['memoria'] = 'CLAUDE.md'; fs.writeFileSync('tmp/cfg.json', JSON.stringify(cfg))"` })],
     ['una carpeta con ese nombre en el SERVIDOR no es la carpeta exenta', ctx('Bash', { cmd: `mkdir -p "/y/BARACK/CALIDAD/DOCUMENTACION SGC/Claude Fak"` })],
     ['idem con barra final y un archivo adentro', ctx('Bash', { cmd: `cp notas.txt "Y:/BARACK/CALIDAD/DOCUMENTACION SGC/Claude Fak/notas.txt"` })],
+    ['una carpeta con ese nombre ADENTRO de un proyecto de la biblioteca tampoco es la exenta', ctx('Bash', { cmd: `mkdir -p "${NP}/2- PROYECTOS/PATAGONIA/Claude Fak"` })],
+    // el .add( de una coleccion de un documento cuenta en cualquier caja (COM no distingue; xlwings lo escribe en minuscula)
+    ['xlwings: sheets.add con la pestaña del incidente', ctx('Bash', { cmd: `python -c "import xlwings as xw; wb = xw.books.active; wb.sheets.add('_CONTEXTO_CLAUDE')"` })],
+    ['COM en minuscula: Names.add', ctx('Bash', { cmd: `python -c "wb.Names.add('CLAUDE_CTX', '=A1')"` })],
+    ['COM en minuscula: Comments.add', ctx('Bash', { cmd: `python -c "ws.Comments.add(rng, 'revisado por Claude')"` })],
     ['el .Add( de COM con una IA adentro: un comentario de celda', ctx('Bash', { cmd: `python -c "ws.Comments.Add(rng, 'revisado por Claude')"` })],
     ['el .Add( de COM por PowerShell', ctx('PowerShell', { cmd: `$ws.Comments.Add($rng, 'Claude')` })],
     ['una carpeta de la nube que se llama parecido: Claude Fakultad', ctx('Bash', { cmd: `mkdir -p "${NP}/2- PROYECTOS/Claude Fakultad"` })],
