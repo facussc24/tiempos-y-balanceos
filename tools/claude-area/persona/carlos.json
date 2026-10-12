@@ -1,0 +1,11 @@
+{
+  "_fuente": "Carlos Baptista, Gerente de Ingenieria: el puesto lo dice la actualizacion del 07/10/2026 (`ACTUALIZACION_CLAUDE_LIMPIO\\LEEME_ACTUALIZACION.txt` en la nube de Ingenieria); el mail sale de las memorias de mails del equipo (cbaptista@barackmercosul.com). Su Claude trabaja en C:\\ClaudeBarack. No se arma instalador para el: sus mejoras van por la nube (tools/claude-area/mejoras/, pedido de Facundo del 12/10/2026).",
+  "clave": "carlos",
+  "nombre": "Carlos Baptista",
+  "nombre_corto": "Carlos",
+  "puesto": "Gerente de Ingenieria",
+  "area": "ingenieria",
+  "mail": "cbaptista@barackmercosul.com",
+  "conocimiento": ["comun", "ingenieria"],
+  "nombre_instalador": "Instalar Claude - Carlos Baptista.cmd"
+}
