@@ -1415,8 +1415,17 @@ ${DOC_CIERRE}`);
 // `permissions.deny` cita `rm -rf` y `Remove-Item -Recurse` justamente para PROHIBIRLOS en las PCs
 // de Claude Barack. Sin la excepcion, el guardian bloqueaba escribir la regla que lo replica.
 const BM_EXCEPCION = /(__tests__|\.test\.|\.spec\.|[/\\]hooks[/\\]([a-z-]+-guard|_dispatcher)\.sh$|[/\\]_lib[/\\]guardianes\.mjs$|[/\\]managed-settings(\.[a-z]+)?\.json$)/i;
-// V3: el patron del borrado PERMANENTE (sin Papelera).
-const BM_V3 = /(Remove-Item[^|;\n]*-(Force|Recurse)|rm +-[a-z]*r[a-z]*f|rm +-[a-z]*f[a-z]*r|DeletePermanently|shutil\.rmtree|fs\.rmSync)/i;
+// V3: el patron del borrado PERMANENTE (sin Papelera). Un `rm` cuenta en cuanto es RECURSIVO, se escriba como se
+// escriba: -rf, -fr, -r -f, -R, --recursive --force (11/10/2026, cola HOY-28: solo se veian las banderas pegadas
+// con la r y la f juntas, y `rm -r -f`, `rm --recursive --force` y `rm -R` sobre una carpeta del dueno pasaban).
+// `git rm -r` no cuenta: saca del indice y queda en el historial (y en un archivo de prueba aparece como texto).
+const BM_RM_RECURSIVO = /(?<![\w.-])(?<!\bgit\s{1,4})rm +(?:-{1,2}[a-z-]+ +)*(?:-[a-z]*r[a-z]*|--recursive)(?![a-z-])/i;
+const BM_V3 = new RegExp(`(Remove-Item[^|;\\n]*-(Force|Recurse)|${BM_RM_RECURSIVO.source}|DeletePermanently|shutil\\.rmtree|fs\\.rmSync)`, 'i');
+// Las palabras que eximen por nombrar un temporal. Valen para un SCRIPT que se escribe (ahi todavia no se resuelve a
+// que apunta cada borrado) y para el codigo pegado en un comando; NO para un borrado que el analisis del comando
+// resolvio a otra carpeta. `dist` es la carpeta entera: `/distribucion` no es `/dist` (HOY-28).
+const BM_PALABRA_EFIMERA = /(scratchpad|[/\\]tmp[/\\]|AppData[/\\]Local[/\\]Temp|node_modules|[/\\]dist(?![\w-])|\.venv)/i;
+const BM_GIT_RM = /(^|[;&|]|\s)git\s+rm\b/i;
 // V1 (22/09/2026): el -Include ignorado solo hace dano si despues se MUEVE, COPIA o BORRA lo listado.
 // Un listado de solo lectura con -Recurse -Include (4af94165 07/09, b2ae0714 15/09) no toca nada.
 // Los alias cortos cuentan solo en posicion de COMANDO (principio de linea o despues de | ; { ( &):
@@ -1464,6 +1473,41 @@ function borraSoloEfimero(ctx) {
     && b.objetivos.every((o) => o.ok && BM_EFIMERO.test(o.valor)));
 }
 
+/**
+ * Los borrados PERMANENTES de un comando de shell que apuntan a algo que NO es un temporal resuelto: una ruta fuera
+ * de los efimeros, una variable que no se pudo resolver o ningun destino. Devuelve sus textos ([] = ninguno).
+ * Es lo que cierra HOY-28 (11/10/2026): hasta ese dia alcanzaba con que el comando NOMBRARA `/tmp/`, `scratchpad` o
+ * `node_modules` en cualquier lado para que un `rm -rf` sobre una carpeta del dueno pasara
+ * (`rm -rf Y:/INGENIERIA/otra ; ls node_modules`). La palabra ya no tapa un destino que si se pudo leer.
+ */
+export function borradosPermanentesFueraDeEfimero(cmd, cwd) {
+  const an = analizarComando(sinCuerposHeredocDeGit(cmd), { cwd: cwd || null });
+  // La ruta se lee como la lee el sistema antes de compararla: `/c/tmp/x` es `C:/tmp/x`, `./tmp/x` es `tmp/x`, y un
+  // `..` sube (`/tmp/../Users/x` NO es un temporal). Medido el 11/10/2026 contra 110.742 comandos reales: sin esto
+  // se frenaban tres limpiezas de temporales escritas con `/c/tmp/` o `./tmp/`.
+  const normal = (v) => {
+    const x = String(v).replace(/\\/g, '/').replace(/^\/([A-Za-z])\//, (m, d) => `${d.toUpperCase()}:/`);
+    const raiz = /^[A-Za-z]:\//.test(x) ? x.slice(0, 3) : x.startsWith('/') ? '/' : '';
+    const partes = [];
+    for (const p of x.slice(raiz.length).split('/')) {
+      if (p === '' || p === '.') continue;
+      if (p === '..') { if (!partes.length) return x; partes.pop(); continue; }   // sube mas alla de lo conocido: sin tocar
+      partes.push(p);
+    }
+    return raiz + partes.join('/');
+  };
+  // `node_modules` y `.venv` son efimeros esten donde esten: una ruta relativa que los nombra lo es aunque no se sepa
+  // el directorio de la sesion (sin variables sin resolver adentro).
+  const efimero = (o) => {
+    const v = normal(o.valor);
+    return (o.ok && BM_EFIMERO.test(v)) || (!/[$\x60]/.test(v) && !/(^|\/)\.\.(\/|$)/.test(v) && /(^|\/)(node_modules|\.venv)(\/|$)/i.test(v));
+  };
+  return an.borrados
+    .filter((b) => BM_V3.test(limpiar(b.crudo)))
+    .filter((b) => b.sinObjetivo || !b.objetivos.length || !b.objetivos.every(efimero))
+    .map((b) => b.crudo.trim());
+}
+
 GUARDIANES['borrado-masivo-guard'] = (ctx) => {
   let tool, cmd, file, body;
   if (ctx.ok) {
@@ -1503,9 +1547,12 @@ GUARDIANES['borrado-masivo-guard'] = (ctx) => {
   // el historial) y scratchpad/temporales (efimeros, no son cosas de Fak). Desde 22/09 tambien
   // pasan: un archivo de prosa que lo cita, y un comando de shell cuyos rm apuntan SOLO a
   // temporales (el objetivo resuelto, no la palabra en cualquier lado).
-  const excluido = /(^|[;&|]|\s)git\s+rm\b/i.test(haystack)
-    || /(scratchpad|[/\\]tmp[/\\]|AppData[/\\]Local[/\\]Temp|node_modules|[/\\]dist[/\\]?|\.venv)/i.test(haystack);
-  if (!excluido && !(esEscritura && BM_PROSA.test(file)) && BM_V3.test(haystack) && !(esShell && borraSoloEfimero(ctx))) motivo += 'V3';
+  // 11/10/2026 (HOY-28): en un comando, la palabra no exime un borrado cuyo destino se leyo y no es un temporal.
+  const excluido = BM_GIT_RM.test(haystack) || BM_PALABRA_EFIMERA.test(haystack);
+  // (el analisis del comando se paga solo si el patron aparece: este guardian corre en cada comando de cada sesion)
+  const fueraDeEfimero = esShell && BM_V3.test(ctx.cmd) ? borradosPermanentesFueraDeEfimero(ctx.cmd, ctx.cwd) : [];
+  if (fueraDeEfimero.length) motivo += 'V3';
+  else if (!excluido && !(esEscritura && BM_PROSA.test(file)) && BM_V3.test(haystack) && !(esShell && borraSoloEfimero(ctx))) motivo += 'V3';
   // V4: script que borra/mueve en lote sin dry-run. Los tokens se buscan con los comentarios
   // afuera (05/09/2026: un comentario que decia "no usa fs.rename ni mv" bloqueo dos Write).
   // `mv`/`rm` pelados son verbos solo en scripts de shell; en .py/.mjs/.js cuentan como comando

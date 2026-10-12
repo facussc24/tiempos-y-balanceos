@@ -957,6 +957,83 @@ describe('borrado-masivo-guard 22/09 — lo que SIGUE bloqueando', () => {
   });
 });
 
+// Cola HOY-28 (11/10/2026). Repetido ese dia sobre el checkout principal: de seis borrados permanentes a una carpeta
+// del servidor pasaban cinco. Dos agujeros: (1) alcanzaba con NOMBRAR `/tmp/`, `scratchpad`, `node_modules` o algo que
+// empezara con `/dist` en cualquier parte del comando; (2) el patron solo veia la r y la f pegadas (`-rf`, `-fr`).
+describe('borrado-masivo-guard HOY-28 — la palabra no tapa un destino que se pudo leer, y un rm recursivo es recursivo como se escriba', () => {
+  const conCwd = (command, cwd = 'C:\\Dev\\BarackMercosul') => ({ tool_name: 'Bash', tool_input: { command }, cwd });
+  const g = (p) => ev(p, { nombres: ['borrado-masivo-guard'] });
+  const TEMP = 'C:/Users/FacundoS-PC/AppData/Local/Temp';
+  it('ROJO: los seis del 11/10 (cinco pasaban)', () => {
+    for (const c of [
+      'rm -rf Y:/INGENIERIA/otra',
+      'rm -rf Y:/INGENIERIA/distribucion',
+      'rm -rf Y:/INGENIERIA/otra ; ls node_modules',
+      'rm -r -f Y:/INGENIERIA/otra',
+      'rm --recursive --force Y:/INGENIERIA/otra',
+      'rm -R Y:/INGENIERIA/otra',
+    ]) expect(g(conCwd(c)).err, c).toMatch(/V3/);
+  });
+  it('ROJO: nombrar un temporal al lado no exime (comentario, otro comando, otro destino, una variable resuelta)', () => {
+    for (const c of [
+      'rm -rf "C:/Users/FacundoS-PC/Documents/Planos" # limpio el scratchpad',
+      'ls /tmp/x; rm -rf "C:/Users/FacundoS-PC/Documents/Planos"',
+      'echo .venv; rm -f -r Y:/BARACK/CALIDAD',
+      `rm -rf ${TEMP}/x Y:/INGENIERIA/otra`,
+      `D=Y:/INGENIERIA/otra; rm -rf "$D" ; ls ${TEMP}`,
+      'git rm -r --cached viejo && rm -rf Y:/INGENIERIA/otra',
+      "Remove-Item 'C:/Users/FacundoS-PC/Documents/Planos' -Recurse -Force; ls node_modules",
+      'rm --force --recursive Y:/INGENIERIA/otra',
+      '/usr/bin/rm -fR Y:/INGENIERIA/otra',
+    ]) expect(g(conCwd(c)).exit, c).toBe(2);
+  });
+  it('VERDE: los borrados de temporales siguen pasando, con las banderas que sean', () => {
+    for (const c of [
+      `rm -rf ${TEMP}/claude/x/scratchpad/copia`,
+      'rm -rf "$TEMP/claude/x/scratchpad/copia"',
+      'rm -rf /tmp/prueba',
+      'rm -rf node_modules',
+      'rm -rf tmp/amfe158',
+      `rm -r -f ${TEMP}/x`,
+      `rm --recursive --force ${TEMP}/x`,
+      `SP=${TEMP}/claude/s/scratchpad; rm -rf "$SP/copia" "$SP/otra"`,
+      'Remove-Item "$env:TEMP\\x" -Recurse -Force',
+    ]) expect(g(conCwd(c)).exit, c).toBe(0);
+  });
+  it('VERDE: lo que no es un borrado recursivo no se toca (git rm, un archivo suelto, palabras que terminan en rm)', () => {
+    for (const c of [
+      'git rm -rf --cached docs/viejo',
+      `rm -f ${TEMP}/a.txt`,
+      'rm notas.txt',
+      'docker run --rm -r imagen',
+      'xterm -r',
+      'npm run confirm -r',
+    ]) expect(g(conCwd(c)).exit, c).toBe(0);
+  });
+  it('la ruta se lee como la lee el sistema: `/c/tmp` es C:\\tmp, `./tmp` es tmp, y un `..` que sale del temporal no es temporal', () => {
+    // VERDE: tres limpiezas reales de temporales (02/09, 10/08 y 02/10/2026) que se frenaban sin esto
+    for (const c of ['rm -rf /c/tmp/dron/fps1/V5; mkdir -p /c/tmp/dron/fps1/V5', 'rm -rf ./tmp/_audit_mut', 'rm -rf ./node_modules/.cache']) expect(g(conCwd(c)).exit, c).toBe(0);
+    // ROJO: el nombre del temporal adelante y la carpeta del dueno atras
+    for (const c of ['rm -rf /tmp/../c/Users/FacundoS-PC/Documents', `rm -rf ${TEMP}/../../../Documents/Planos`, 'rm -rf node_modules/../modules', 'rm -rf /c/tmpx/planos']) expect(g(conCwd(c)).exit, c).toBe(2);
+  });
+  it('lo que no se sabe a que apunta frena aunque el comando nombre un temporal (una variable que sale de otro comando)', () => {
+    expect(g(conCwd('SP=$(cat /tmp/sp.txt); rm -rf "$SP/ia/base"')).exit).toBe(2);
+    expect(g(conCwd('rm -rf "$(cygpath -u "$(cat T.txt)")" ; ls /tmp/x')).exit).toBe(2);
+  });
+  it('`git rm -r` no es un borrado permanente, tampoco como texto adentro de un archivo de prueba', () => {
+    expect(g(conCwd('git rm -r --cached build/')).exit).toBe(0);
+    expect(g(escribir('C:\\tmp\\caso.json', '{"tool_name":"Bash","tool_input":{"command":"git rm -r --cached build/"}}')).exit).toBe(0);
+  });
+  it('un script que se ESCRIBE: el rm recursivo se ve con cualquier bandera, y `/distribucion` no es `/dist`', () => {
+    expect(g(escribir('C:\\tmp\\limpiar.sh', 'rm -r -f "$1"\n')).exit).toBe(2);
+    expect(g(escribir('C:\\tmp\\limpiar.sh', 'rm --recursive "$1"\n')).exit).toBe(2);
+    expect(g(escribir('C:\\tmp\\limpiar.sh', 'rm -rf Y:/INGENIERIA/distribucion\n')).exit).toBe(2);
+    // la palabra sigue eximiendo en un script (ahi el destino todavia no se resuelve: cola P18)
+    expect(g(escribir('C:\\tmp\\limpiar.sh', 'rm -rf ./dist\n')).exit).toBe(0);
+    expect(g(escribir('C:\\tmp\\limpiar.sh', 'rm -rf "$TMPDIR/scratchpad/x"\n')).exit).toBe(0);
+  });
+});
+
 describe('push-guard 22/09 — mira SOLO lo que va en el push (repo con upstream)', () => {
   const repo = path.join(TMP, 'repo-up');
   const origen = path.join(TMP, 'origen.git');
