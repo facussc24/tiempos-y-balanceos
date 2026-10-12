@@ -1393,6 +1393,45 @@ describe('arb-cerrar y mail — los arreglos del auditor sobre «mirar lo que co
     expect(r.exit).toBe(2);
     expect(r.err).toMatch(/destinatarios como string/);
   });
+
+  // Segunda vuelta del auditor (11/10/2026, informe P14-P16). B1: de donde toma su programa un interprete. B2: la carpeta
+  // de tests no exime lo que corre. Y los comandos que distinguen a los mutantes que quedaban vivos.
+  const UNA = SEND.replace(/\n/g, '; ');   // el mismo envio en un renglon, para un echo
+  const MATAR_PY = "import os; os.system('taskkill /F /IM produc.exe')";
+  it('ROJO (B1): un interprete que lee su programa de stdin mira el comando entero, lleve los argumentos que lleve', () => {
+    for (const c of [
+      'echo "Stop-Process -Name produc -Force" | powershell -NoProfile -Command -',
+      'echo "taskkill //F //IM produc.exe" | bash -e',
+      'echo "taskkill //F //IM produc.exe" | bash -s -- uno',
+      'echo "taskkill //F //IM produc.exe" | bash -o pipefail',
+      'echo taskkill /F /IM produc.exe | cmd //q',
+      'echo taskkill /F /IM produc.exe | cmd //k',
+      `echo "${MATAR_PY}" | python - uno`,
+      `echo "${MATAR_PY}" | python -X utf8`,
+      `echo "${MATAR_PY}" | $PY -`,
+      `cat <<'EOF' | python - salida.txt\n${MATAR_PY}\nEOF`,
+      `cat <<'EOF' | pythonw -\n${MATAR_PY}\nEOF`,
+      'CMD="taskkill //F //IM produc.exe"; $CMD',
+    ]) expect(arb(bash(c)).exit, c).toBe(2);
+    for (const dueno of [`PY=${PY}; cat <<'EOF' | $PY -`, `PY=${PY}; cat <<'EOF' | "$PY" -`, "cat <<'EOF' | python - salida.txt"]) expect(mail(bash(`${dueno}\n${SEND}\nEOF`)).exit, dueno).toBe(2);
+  });
+  it('VERDE (B1): probar un guardian por cañeria, pasarle texto a un programa que lee de stdin y python -m no corren ese texto', () => {
+    for (const c of [
+      `echo '{"tool_name":"Bash","tool_input":{"command":"taskkill /F /IM produc.exe"}}' | bash "$H"`,
+      "printf 'No usar taskkill /F /IM produc.exe\\n' | node scripts/_vozFak.mjs --revisar -",
+      'python -m pytest -q; grep -c "taskkill.*produc" docs/x.md',
+    ]) expect(arb(bash(c)).exit, c).toBe(0);
+  });
+  it('ROJO (B2): la carpeta de tests no exime un archivo que corre, ni escrito ni guardado por la consola', () => {
+    for (const f of ['C:\\Dev\\BarackMercosul\\__tests__\\scripts\\mandarDePrueba.py', 'C:\\Dev\\BarackMercosul\\__tests__\\consola\\enviar.ps1']) expect(mail(escribir(f, SEND)).exit, f).toBe(2);
+    expect(mail(escribir('C:\\Dev\\BarackMercosul\\__tests__\\scripts\\armar.py', destinatarioComoTexto(SEND))).exit).toBe(2);
+    for (const c of [`echo '${UNA}' > __tests__/scripts/x.py`, `cat > __tests__/scripts/x.py <<'EOF'\n${SEND}\nEOF`, `echo '${UNA}' > .claude/skills/mail/x.py`]) expect(mail(bash(c)).exit, c).toBe(2);
+  });
+  it('ROJO (mutantes que quedaban vivos): en PowerShell el comando entero es codigo; tee a un .sh y un > a un .bat guardan codigo', () => {
+    expect(arb(ps('echo "Stop-Process -Name produc -Force" | Invoke-Expression')).exit).toBe(2);
+    expect(mail(ps(`echo '${UNA}' | iex`)).exit).toBe(2);
+    for (const c of ['echo "taskkill //F //IM produc.exe" | tee matar.sh', 'echo "taskkill /F /IM produc.exe" > matar.bat']) expect(arb(bash(c)).exit, c).toBe(2);
+  });
 });
 
 /** El codigo de `base` (que ya arma el item), mostrando en vez de mandar, con el destinatario puesto como texto y un adjunto que vive en docs/. */
