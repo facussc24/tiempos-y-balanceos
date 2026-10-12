@@ -75,6 +75,26 @@ def xml_tarea(python, stub, pedido, tope=TOPE, usuario=None):
 ''' % (escape(usuario), int(tope) + 60, escape(conhost), escape(args))
 
 
+def _aviso(txt):
+    """Los avisos propios van a stderr: un `--json` de stdout tiene que salir limpio para el que lo parsea."""
+    sys.stderr.write(txt + '\n')
+    sys.stderr.flush()
+
+
+def _mostrar(txt):
+    """Repite la salida del hijo. El hijo escribe UTF-8 y la consola elevada puede no serlo: un caracter que no entra
+    se reemplaza, nunca revienta (si reventara aca, `_mailEnviar` ya mando el mail y se perderia su codigo real)."""
+    enc = getattr(sys.stdout, 'encoding', None) or 'utf-8'
+    buf = getattr(sys.stdout, 'buffer', None)
+    sys.stdout.flush()
+    if buf is not None:
+        buf.write(txt.encode(enc, errors='replace'))
+        buf.flush()
+    else:
+        sys.stdout.write(txt.encode(enc, errors='replace').decode(enc, errors='replace'))
+    sys.stdout.flush()
+
+
 def _schtasks(*args):
     r = subprocess.run(['schtasks'] + list(args), capture_output=True)
     return r.returncode, (r.stdout + r.stderr).decode('cp850', errors='replace').strip()
@@ -97,27 +117,26 @@ def correr_sin_elevar(argv, cwd=None, tope=TOPE, python=None):
     try:
         rc, txt = _schtasks('/create', '/tn', nombre, '/xml', xml, '/f')
         if rc != 0:
-            print('NO SE HIZO: no pude crear la tarea para correr sin permisos de administrador (%s).' % txt)
+            _aviso('NO SE HIZO: no pude crear la tarea para correr sin permisos de administrador (%s).' % txt)
             return 125
         rc, txt = _schtasks('/run', '/tn', nombre)
         if rc != 0:
-            print('NO SE HIZO: no pude arrancar la tarea sin permisos de administrador (%s).' % txt)
+            _aviso('NO SE HIZO: no pude arrancar la tarea sin permisos de administrador (%s).' % txt)
             return 125
         t0 = time.time()
         while not os.path.exists(codigo):
             espera = time.time() - t0
             if not os.path.exists(arranco) and espera > ESPERA_ARRANQUE:
-                print('NO SE HIZO: Windows no arranco la tarea en %d s (quedo en cola). No se corrio nada.' % ESPERA_ARRANQUE)
+                _aviso('NO SE HIZO: Windows no arranco la tarea en %d s (quedo en cola). No se corrio nada.' % ESPERA_ARRANQUE)
                 return 125
             if espera > tope:
-                print('*** CORTE POR TIEMPO (%d s): el comando puede haber hecho parte del trabajo. Mirar Outlook antes de repetir.' % tope)
+                _aviso('*** CORTE POR TIEMPO (%d s): el comando puede haber hecho parte del trabajo. Mirar Outlook antes de repetir.' % tope)
                 return 124
             time.sleep(0.5)
         time.sleep(0.2)
         if os.path.exists(salida):
             with open(salida, encoding='utf-8', errors='replace') as f:
-                sys.stdout.write(f.read())
-            sys.stdout.flush()
+                _mostrar(f.read())
         with open(codigo, encoding='utf-8') as f:
             return int(f.read().strip() or 1)
     finally:
@@ -135,9 +154,8 @@ def relanzar_si_elevado(argv=None):
     if os.environ.get(MARCA) or not elevado():
         return
     argv = list(sys.argv if argv is None else argv)
-    print('(Esta consola corre como administrador y Outlook no: Windows no los deja hablar. '
-          'Repito el comando con permisos normales; la salida aparece al terminar.)')
-    sys.stdout.flush()
+    _aviso('(Esta consola corre como administrador y Outlook no: Windows no los deja hablar. '
+           'Repito el comando con permisos normales; la salida aparece al terminar.)')
     sys.exit(correr_sin_elevar(argv))
 
 
@@ -186,28 +204,26 @@ def selftest():
 
 
 def probar():
-    """Prueba de verdad (crea y borra una tarea): el texto con acentos, % y & y el codigo 3 tienen que volver iguales."""
-    texto = 'revisión 5 % & "comillas" Ingeniería'
-    salida = []
-    real = sys.stdout
-
-    class Copia:
-        def write(self, s):
-            salida.append(s)
-
-        def flush(self):
-            pass
-    sys.stdout = Copia()
+    """Prueba de verdad (crea y borra una tarea). La salida del hijo pasa por la consola REAL (la elevada suele ser
+    cp1252: un '✓' la hacia reventar), y el texto se compara contra lo que el hijo escribio en un archivo UTF-8."""
+    texto = 'revisión 5 % & "comillas" Ingeniería ✓ →'
+    eco = os.path.join(tempfile.gettempdir(), 'barack_sin_elevar_eco_%s.txt' % uuid.uuid4().hex[:8])
+    hijo = ('import sys,ctypes,io; t=sys.argv[1]; io.open(sys.argv[2],"w",encoding="utf-8").write(t); print(t); '
+            'print("elevado", bool(ctypes.windll.shell32.IsUserAnAdmin())); sys.exit(3)')
     try:
-        rc = correr_sin_elevar(['-c', 'import sys,ctypes; print(sys.argv[1]); '
-                                      'print("elevado", bool(ctypes.windll.shell32.IsUserAnAdmin())); sys.exit(3)', texto],
-                               tope=120)
+        rc = correr_sin_elevar(['-c', hijo, texto, eco], tope=120)
+        with open(eco, encoding='utf-8') as f:
+            llego = f.read()
+    except Exception as e:
+        print('FALLA la prueba: %r' % e)
+        return 1
     finally:
-        sys.stdout = real
-    txt = ''.join(salida)
-    print(txt.rstrip())
+        try:
+            os.remove(eco)
+        except OSError:
+            pass
     fallas = 0
-    for nombre, bien in (('codigo 3', rc == 3), ('texto intacto', texto in txt), ('hijo sin elevar', 'elevado False' in txt)):
+    for nombre, bien in (('codigo 3', rc == 3), ('texto intacto', llego == texto)):
         print('%s %s' % ('ok  ' if bien else 'FALLA', nombre))
         fallas += not bien
     return fallas

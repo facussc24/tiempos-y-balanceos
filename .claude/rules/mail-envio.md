@@ -368,8 +368,13 @@ elevados, repiten el mismo comando con permisos normales por una tarea programad
 llega intacto); el codigo de salida lo escribe el stub (los 1/3/4 de `_mailEnviar` y `--limpiar-borradores` llegan
 iguales); la tarea arranca con bateria (por defecto Windows la deja en cola para siempre). La salida aparece toda al
 final. Con permisos normales no hace nada. `python scripts/_lib/sinElevar.py --selftest` (sin Outlook) y `--probar`
-(crea y borra una tarea: texto raro y codigo 3 tienen que volver iguales, y el hijo sin elevar).
-Lo de fondo lo arregla Fak: abrir Claude **sin** "Ejecutar como administrador".
+(crea y borra una tarea: texto raro y codigo 3 tienen que volver iguales, y el hijo sin elevar). Los avisos propios
+van a stderr (un `--json` sale limpio) y la salida del hijo se repite sin reventar en una consola cp1252.
+⚠ **Sin verificar** por este camino: solo se corrio `--borradores` (lectura) y el borrado del 12/10. El `Display()` de
+`_prepararMail` y el `Send()` + `vigilando()` + `Inspector.Close` de `_mailEnviar` relanzados todavia no se vieron:
+la primera vez, con Fak mirando.
+Lo de fondo lo arregla Fak: abrir Claude **sin** "Ejecutar como administrador" (el `claude.exe daemon` queda elevado
+hasta que se reinicia, y cada sesion de fondo lo hereda).
 
 **Lo que NO es la causa** (verificado el 15/09/2026, no supuesto): Windows Defender estaba
 activo, al dia y con tiempo real prendido (`root/SecurityCenter2`), y no habia **ninguna**
