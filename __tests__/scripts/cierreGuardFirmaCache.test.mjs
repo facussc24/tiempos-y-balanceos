@@ -9,7 +9,8 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { correrDetectorFirma, REPO } from '../../scripts/_lib/cierreGuard.mjs';
+import { execFileSync, spawn } from 'node:child_process';
+import { correrDetectorFirma, REPO, ARGS_DETECTOR } from '../../scripts/_lib/cierreGuard.mjs';
 
 let raiz; let n = 0;
 beforeAll(() => { raiz = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'cg-firma-'))); });
@@ -111,5 +112,81 @@ describe('firma: cada documento se revisa una vez', () => {
     expect(r1.filter((h) => h.nivel === 'BLOQUEANTE').length).toBeGreaterThan(0);
     expect(r2).toEqual(r1);
     expect(t2 - t1).toBeLessThan((t1 - t0) / 2);
+  }, 60_000);
+});
+
+// Auditor 12/10/2026: los casos que el primer juego no veia (mutantes vivos: clave sin fecha, version con solo el canon o
+// sin fecha, version sin las opciones) y los dos falsos verdes medidos (archivo bloqueado en un cierre, python sin PyMuPDF).
+describe('firma: lo guardado no tapa lo que hoy frenaria', () => {
+  it('rojo: el mismo tamaño con otra fecha se vuelve a revisar', () => {
+    const c = caso(); const d = detector();
+    const a = c.doc('a.csv', 'AUTOR;Fulano');
+    correrDetectorFirma([a], REPO, { env: c.env, crudo: d.crudo });
+    const t = fs.statSync(a).mtime;
+    fs.writeFileSync(a, 'AUTOR;Claude');
+    fs.utimesSync(a, t, new Date(t.getTime() + 10_000));
+    expect(correrDetectorFirma([a], REPO, { env: c.env, crudo: d.crudo })).toHaveLength(1);
+    expect(d.pedidos).toHaveLength(2);
+  });
+
+  for (const f of ['_sinFirmaIA.py', '_lib/firmaIA.py']) {
+    it(`rojo: si cambia ${f} (mismo tamaño, otra fecha) se revisa todo de nuevo`, () => {
+      const c = caso(); const d = detector();
+      const repo = path.join(c.dir, 'repo');
+      fs.mkdirSync(path.join(repo, 'scripts', '_lib'), { recursive: true });
+      for (const g of ['_sinFirmaIA.py', '_lib/firmaIA.py', '_lib/firmaIA.data.json']) fs.writeFileSync(path.join(repo, 'scripts', g), 'v1');
+      const a = c.doc('a.csv', 'nada');
+      correrDetectorFirma([a], repo, { env: c.env, crudo: d.crudo });
+      const p = path.join(repo, 'scripts', f);
+      const t = fs.statSync(p).mtime;
+      fs.writeFileSync(p, 'v2');
+      fs.utimesSync(p, t, new Date(t.getTime() + 10_000));
+      correrDetectorFirma([a], repo, { env: c.env, crudo: d.crudo });
+      expect(d.pedidos).toHaveLength(2);
+    });
+  }
+
+  it('rojo: si cambian las opciones del detector (p. ej. --logo-bloquea) se revisa todo de nuevo', () => {
+    const c = caso(); const d = detector();
+    const a = c.doc('a.csv', 'nada');
+    correrDetectorFirma([a], REPO, { env: c.env, crudo: d.crudo });
+    correrDetectorFirma([a], REPO, { env: c.env, crudo: d.crudo, args: [...ARGS_DETECTOR, '--logo-bloquea'] });
+    expect(d.pedidos).toHaveLength(2);
+  });
+
+  it('rojo: un documento que el detector no pudo mirar entero (ilegible, revision-parcial) no se guarda', () => {
+    const c = caso();
+    const a = c.doc('a.csv', 'x'); const b = c.doc('b.csv', 'y');
+    let veces = 0;
+    const crudo = (rutas) => { veces++; return veces === 1 ? [{ archivo: a, nivel: 'AVISO', regla: 'ilegible' }, { archivo: b, nivel: 'AVISO', regla: 'revision-parcial' }] : []; };
+    expect(correrDetectorFirma([a, b], REPO, { env: c.env, crudo })).toEqual([]);   // el aviso no sale del cierre
+    correrDetectorFirma([a, b], REPO, { env: c.env, crudo });
+    expect(veces).toBe(2);
+  });
+
+  it.skipIf(process.platform !== 'win32')('con el detector de verdad: un CSV con «Claude» abierto por otro programa en un cierre frena en el siguiente', async () => {
+    const c = caso();
+    const f = c.doc('listado_bloqueado.csv', 'CODIGO;CREADO POR\n1;Claude\n');
+    const ps = spawn('powershell', ['-NoProfile', '-Command',
+      `$fs=[System.IO.File]::Open('${f}','Open','ReadWrite','None'); Write-Output 'LOCK'; Start-Sleep -Seconds 6; $fs.Close()`]);
+    let s = ''; ps.stdout.on('data', (x) => { s += x; });
+    const fin = new Promise((r) => ps.on('exit', r));
+    while (!s.includes('LOCK')) await new Promise((r) => setTimeout(r, 100));
+    correrDetectorFirma([f], REPO, { env: c.env });            // bloqueado: el detector no lo puede leer
+    await fin;
+    expect(correrDetectorFirma([f], REPO, { env: c.env }).filter((h) => h.nivel === 'BLOQUEANTE').length).toBeGreaterThan(0);
+  }, 60_000);
+
+  it('con el detector de verdad: un cierre con el python sin PyMuPDF no deja el PDF como limpio', () => {
+    const c = caso();
+    const pdf = path.join(c.dir, 'informe.pdf');
+    execFileSync('python', ['-c', 'import sys, fitz; d = fitz.open(); d.new_page().insert_text((72, 72), "Hoja preparada por Claude"); d.save(sys.argv[1], deflate=True)', pdf]);
+    expect(fs.readFileSync(pdf).includes('Claude')).toBe(false);   // el texto va comprimido: los bytes solos no lo ven
+    const shim = path.join(c.dir, 'shim'); fs.mkdirSync(shim);
+    fs.writeFileSync(path.join(shim, 'fitz.py'), 'raise ImportError("PyMuPDF roto")\n');
+    const antes = process.env.PYTHONPATH;
+    process.env.PYTHONPATH = shim;
+    try { correrDetectorFirma([pdf], REPO, { env: c.env }); } finally { if (antes === undefined) delete process.env.PYTHONPATH; else process.env.PYTHONPATH = antes; }
+    expect(correrDetectorFirma([pdf], REPO, { env: c.env }).filter((h) => h.nivel === 'BLOQUEANTE').length).toBeGreaterThan(0);
   }, 60_000);
 });

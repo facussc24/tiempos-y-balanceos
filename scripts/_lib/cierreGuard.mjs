@@ -1439,10 +1439,13 @@ export function documentosDelTurno(fuera = {}, repo = REPO, raiz = raizExports(r
   return [...new Set(out)];
 }
 
+// Las opciones con que el cierre corre el detector. Entran en la version de lo guardado: prender --logo-bloquea (o sacar
+// --marcar-parciales) revisa todo de nuevo. Si entra --logo-bloquea, la copia del logo oficial tambien va en la version.
+export const ARGS_DETECTOR = Object.freeze(['--json', '--sin-avisos', '--marcar-parciales', '--incluir-nube']);
 /** Corre el detector UNA vez sobre `rutas`. Devuelve los hallazgos, o null si no pudo correr (no hay JSON). */
-function detectorCrudo(rutas, repo) {
+function detectorCrudo(rutas, repo, args = ARGS_DETECTOR) {
   try {
-    const salida = execFileSync('python', [path.join(repo, 'scripts', '_sinFirmaIA.py'), '--json', '--sin-avisos', '--incluir-nube', ...rutas],
+    const salida = execFileSync('python', [path.join(repo, 'scripts', '_sinFirmaIA.py'), ...args, ...rutas],
       { encoding: 'utf8', env: { ...process.env, PYTHONIOENCODING: 'utf-8' }, timeout: 90_000, maxBuffer: 20 * 1024 * 1024 });
     return JSON.parse(salida || '[]');
   } catch (e) {
@@ -1458,6 +1461,11 @@ function detectorCrudo(rutas, repo) {
 // su canon) invalida todo. Lo que NO se guarda nunca: una corrida sin JSON (tope, error) ni una cuyos hallazgos no se
 // puedan atribuir a una ruta pedida (asi no queda un «limpio» falso). Mismo lugar que el estado del registro (C1).
 const FIRMA_CACHE_MAX = 5000;
+// Lo que el detector NO pudo mirar entero sale como AVISO aun con --sin-avisos (--marcar-parciales): archivo abierto por otro
+// programa, que no se pudo bajar de la nube, python sin PyMuPDF o sin extract_msg. Ese documento no se guarda: se vuelve a
+// mirar en el cierre siguiente (auditor 12/10/2026: un CSV con «Claude» bloqueado en un cierre quedaba limpio para siempre).
+const REVISION_INCOMPLETA = new Set(['ilegible', 'revision-parcial']);
+const completos = (hs) => hs.filter((x) => !REVISION_INCOMPLETA.has(x?.regla));
 const clavePath = (r) => path.resolve(String(r)).toLowerCase();
 function dirCacheFirma(env = process.env) {
   const v = String(env.CIERRE_ESTADO_DIR || '').trim();
@@ -1465,18 +1473,18 @@ function dirCacheFirma(env = process.env) {
   if (v) return v;
   return env.VITEST ? null : path.join(os.tmpdir(), 'claude-cierre-guard');
 }
-function versionDetector(repo) {
+function versionDetector(repo, args = ARGS_DETECTOR) {
   const partes = [path.join(repo, 'scripts', '_sinFirmaIA.py'), path.join(repo, 'scripts', '_lib', 'firmaIA.py'), path.join(repo, 'scripts', '_lib', 'firmaIA.data.json')];
-  return partes.map((p) => { try { const s = fs.statSync(p); return `${path.basename(p)}:${s.size}:${Math.round(s.mtimeMs)}`; } catch { return `${path.basename(p)}:-`; } }).join('|');
+  return [`args:${args.join(' ')}`, ...partes.map((p) => { try { const s = fs.statSync(p); return `${path.basename(p)}:${s.size}:${Math.round(s.mtimeMs)}`; } catch { return `${path.basename(p)}:-`; } })].join('|');
 }
 
 /** Corre el detector sobre lo que no se reviso antes; devuelve los hallazgos (lista vacia si no hay o si no pudo correr). */
-export function correrDetectorFirma(rutas, repo = REPO, { env = process.env, crudo = detectorCrudo } = {}) {
+export function correrDetectorFirma(rutas, repo = REPO, { env = process.env, crudo = detectorCrudo, args = ARGS_DETECTOR } = {}) {
   if (!rutas.length) return [];
   const dir = dirCacheFirma(env);
-  if (!dir) return crudo(rutas, repo) || [];
+  if (!dir) return completos(crudo(rutas, repo, args) || []);
   const archivoCache = path.join(dir, 'firma-documentos.json');
-  const version = versionDetector(repo);
+  const version = versionDetector(repo, args);
   let cache = null;
   try { cache = JSON.parse(fs.readFileSync(archivoCache, 'utf8')); } catch { cache = null; }
   if (!cache || cache.version !== version || typeof cache.docs !== 'object' || !cache.docs) cache = { version, docs: {} };
@@ -1491,16 +1499,16 @@ export function correrDetectorFirma(rutas, repo = REPO, { env = process.env, cru
     else { faltan.push(r); huella.set(k, h); }
   }
   if (!faltan.length) return out;
-  const nuevos = crudo(faltan, repo);
+  const nuevos = crudo(faltan, repo, args);
   if (!nuevos) return out;                       // no corrio: como antes, sin hallazgos de lo que faltaba, y no se guarda nada
-  out.push(...nuevos);
+  out.push(...completos(nuevos));
   const porDoc = new Map([...huella.keys()].map((k) => [k, []]));
   // un adjunto de un mail sale como «mail.msg → adjunto x.xlsx»: es del .msg pedido
   const deDoc = (x) => clavePath(String(x?.archivo || '').split(' → ')[0]);
   const atribuibles = nuevos.every((x) => porDoc.has(deDoc(x)));
   if (!atribuibles) return out;                  // un hallazgo de una ruta que no se pidio: no se guarda nada de esta corrida
   for (const x of nuevos) porDoc.get(deDoc(x)).push(x);
-  for (const [k, hs] of porDoc) { const h = huella.get(k); if (h) cache.docs[k] = { h, hallazgos: hs, t: Date.now() }; }
+  for (const [k, hs] of porDoc) { const h = huella.get(k); if (h && completos(hs).length === hs.length) cache.docs[k] = { h, hallazgos: hs, t: Date.now() }; }
   const claves = Object.keys(cache.docs);
   if (claves.length > FIRMA_CACHE_MAX) {
     for (const k of claves.sort((a, b) => (cache.docs[a].t || 0) - (cache.docs[b].t || 0)).slice(0, claves.length - FIRMA_CACHE_MAX)) delete cache.docs[k];

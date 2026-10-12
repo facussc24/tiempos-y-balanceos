@@ -392,7 +392,8 @@ def _revisar_pdf(ruta: str, nombre: str, logo_bloquea: bool = False, con_avisos:
     try:
         import fitz  # PyMuPDF
     except ImportError:
-        return _revisar_bytes(open(ruta, 'rb').read(), nombre, 'PDF (sin PyMuPDF: bytes)')
+        return _revisar_bytes(open(ruta, 'rb').read(), nombre, 'PDF (sin PyMuPDF: bytes)') + [
+            Hallazgo(nombre, 'PDF', 'revision-parcial', 'sin PyMuPDF: solo se miraron los bytes', '', 'AVISO')]
     try:
         doc = fitz.open(ruta)
     except Exception as e:
@@ -471,6 +472,10 @@ def _revisar_msg(ruta: str, nombre: str, logo_bloquea: bool = False, con_avisos:
     out: list[Hallazgo] = []
     try:
         import extract_msg
+    except ImportError:
+        return _revisar_bytes(open(ruta, 'rb').read(), nombre, 'mail (bytes)') + [
+            Hallazgo(nombre, 'mail', 'revision-parcial', 'sin extract_msg: solo se miraron los bytes', '', 'AVISO')]
+    try:
         m = extract_msg.Message(ruta)
     except Exception:
         return _revisar_bytes(open(ruta, 'rb').read(), nombre, 'mail (bytes)')
@@ -587,8 +592,8 @@ def recorrer(rutas: list[str], desde_ts: float | None = None, incluir_nube: bool
 
 
 def revisar(rutas: list[str], desde_ts: float | None = None, incluir_nube: bool = False,
-            max_mb: float = 60, con_avisos: bool = True, logo_bloquea: bool = False):
-    """(hallazgos, revisados, salteados_en_la_nube)."""
+            max_mb: float = 60, con_avisos: bool = True, logo_bloquea: bool = False, siempre: tuple = ()):
+    """(hallazgos, revisados, salteados_en_la_nube). `siempre`: reglas de AVISO que salen aunque no se pidan avisos."""
     hallazgos: list[Hallazgo] = []
     revisados = 0
     nube: list[str] = []
@@ -598,7 +603,7 @@ def revisar(rutas: list[str], desde_ts: float | None = None, incluir_nube: bool 
             continue
         hs = revisar_archivo(p, raiz=raiz, max_mb=max_mb, logo_bloquea=logo_bloquea, con_avisos=con_avisos)
         revisados += 1
-        hallazgos += [h for h in hs if con_avisos or h.nivel == 'BLOQUEANTE']
+        hallazgos += [h for h in hs if con_avisos or h.nivel == 'BLOQUEANTE' or h.regla in siempre]
     return hallazgos, revisados, nube
 
 
