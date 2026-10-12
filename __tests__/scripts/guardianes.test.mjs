@@ -1024,6 +1024,28 @@ describe('borrado-masivo-guard HOY-28 — la palabra no tapa un destino que se p
     expect(g(conCwd('git rm -r --cached build/')).exit).toBe(0);
     expect(g(escribir('C:\\tmp\\caso.json', '{"tool_name":"Bash","tool_input":{"command":"git rm -r --cached build/"}}')).exit).toBe(0);
   });
+  // Los ocho que pidio el auditor (11/10/2026): salen de los mutantes que quedaban vivos y de dos regresiones del
+  // primer arreglo (la mirada atras de git cruzaba el renglon; un `\n` escrito escondia el verbo).
+  it('ROJO: `.git` en el renglon de arriba no exime el borrado de abajo, y un salto de renglon ESCRITO no esconde el verbo', () => {
+    expect(g(conCwd('cd C:/Dev/BarackMercosul/.git\nrm -rf Y:/INGENIERIA/otra')).exit).toBe(2);
+    expect(g(conCwd('GIT_DIR=/c/x/.git rm -rf Y:/INGENIERIA/otra')).exit).toBe(2);
+    expect(g(conCwd('printf \'#!/bin/bash\\nrm -rf "$1"\\n\' > limpiar.sh')).exit).toBe(2);
+  });
+  it('ROJO: el `..` que pasa la raiz, la barra invertida, un borrado sin destino y una variable sin resolver con la palabra al lado', () => {
+    expect(g(conCwd('rm -rf /tmp/../../c/Users/FacundoS-PC/Documents')).exit).toBe(2);
+    expect(g({ tool_name: 'PowerShell', tool_input: { command: 'Remove-Item "$env:TEMP\\..\\..\\..\\Documents\\Planos" -Recurse -Force' }, cwd: 'C:\\Dev\\BarackMercosul' }).exit).toBe(2);
+    expect(g({ tool_name: 'PowerShell', tool_input: { command: "Get-ChildItem 'Y:\\INGENIERIA\\otra' | Remove-Item -Recurse -Force; ls node_modules" }, cwd: 'C:\\Dev\\BarackMercosul' }).exit).toBe(2);
+    expect(g(conCwd('rm -rf "$X/node_modules"')).exit).toBe(2);
+  });
+  it('VERDE: un archivo suelto al lado de un borrado de temporal no cuenta, y `.venv` relativo pasa aunque no se sepa el directorio', () => {
+    expect(g(conCwd(`rm -rf ${TEMP}/x && rm notas.txt`)).exit).toBe(0);
+    expect(g(bash('rm -rf .venv')).exit).toBe(0);
+  });
+  it('el patron no tarda de mas con muchas opciones largas adelante (antes: 2,5 s con 24)', () => {
+    const t0 = Date.now();
+    g(conCwd(`rm ${Array.from({ length: 40 }, (_, i) => `--opcion-larga-${i}`).join(' ')} notas.txt`));
+    expect(Date.now() - t0).toBeLessThan(500);
+  });
   it('un script que se ESCRIBE: el rm recursivo se ve con cualquier bandera, y `/distribucion` no es `/dist`', () => {
     expect(g(escribir('C:\\tmp\\limpiar.sh', 'rm -r -f "$1"\n')).exit).toBe(2);
     expect(g(escribir('C:\\tmp\\limpiar.sh', 'rm --recursive "$1"\n')).exit).toBe(2);

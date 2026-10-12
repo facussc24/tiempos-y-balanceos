@@ -1419,7 +1419,11 @@ const BM_EXCEPCION = /(__tests__|\.test\.|\.spec\.|[/\\]hooks[/\\]([a-z-]+-guard
 // escriba: -rf, -fr, -r -f, -R, --recursive --force (11/10/2026, cola HOY-28: solo se veian las banderas pegadas
 // con la r y la f juntas, y `rm -r -f`, `rm --recursive --force` y `rm -R` sobre una carpeta del dueno pasaban).
 // `git rm -r` no cuenta: saca del indice y queda en el historial (y en un archivo de prueba aparece como texto).
-const BM_RM_RECURSIVO = /(?<![\w.-])(?<!\bgit\s{1,4})rm +(?:-{1,2}[a-z-]+ +)*(?:-[a-z]*r[a-z]*|--recursive)(?![a-z-])/i;
+// Auditor, 11/10/2026: `git` exime solo en el MISMO renglon y como palabra suelta (no `.git`, `/git`, `-git`: un
+// `cd repo/.git` arriba escondia el borrado de abajo); un `\n` o `\t` ESCRITO adelante no esconde el verbo
+// (`printf '#!/bin/bash\nrm -rf "$1"\n' > limpiar.sh`); y las banderas de adelante admiten una sola lectura (con dos, el
+// verbo seguido de 24 opciones largas tardaba 2,5 s).
+const BM_RM_RECURSIVO = /(?:(?<![\w.-])|(?<=\\[nrt]))(?<!(?<![\w./\\-])git[ \t]{1,4})rm +(?:--?[a-z][a-z-]* +)*(?:-[a-z]*r[a-z]*|--recursive)(?![a-z-])/i;
 const BM_V3 = new RegExp(`(Remove-Item[^|;\\n]*-(Force|Recurse)|${BM_RM_RECURSIVO.source}|DeletePermanently|shutil\\.rmtree|fs\\.rmSync)`, 'i');
 // Las palabras que eximen por nombrar un temporal. Valen para un SCRIPT que se escribe (ahi todavia no se resuelve a
 // que apunta cada borrado) y para el codigo pegado en un comando; NO para un borrado que el analisis del comando
@@ -1491,7 +1495,8 @@ export function borradosPermanentesFueraDeEfimero(cmd, cwd) {
     const partes = [];
     for (const p of x.slice(raiz.length).split('/')) {
       if (p === '' || p === '.') continue;
-      if (p === '..') { if (!partes.length) return x; partes.pop(); continue; }   // sube mas alla de lo conocido: sin tocar
+      // un `..` que sube mas alla de la raiz no vuelve a parecer un temporal (auditor: `/tmp/../../c/Users/…` pasaba)
+      if (p === '..') { if (partes.length) partes.pop(); else if (!raiz) return '..'; continue; }
       partes.push(p);
     }
     return raiz + partes.join('/');
