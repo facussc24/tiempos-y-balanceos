@@ -148,6 +148,25 @@ describe('una prueba que lanza el hook no ensucia el registro de verdad', () => 
     expect(T.resumir(ev, { ahora: 100000 })).toMatchObject({ corridas: 1, domina: { fase: 'relevar' } });
     expect(T.resumir(ev, { ahora: 100000, conPruebas: true }).domina.fase).toBe('firma');
   });
+
+  it('P9 C1: el renglon dice como se leyo el registro (de a tramos o completo) y los bytes leidos de verdad; el resumen los cuenta', async () => {
+    const r2 = path.join(dir, `c1-${Date.now()}.jsonl`);
+    const piezas = { fueraEnEsteTurno: async () => ({ fuera: false }), ultimaLectura: () => ({ modo: 'incremental', bytes: 1234, motivo: 'de a tramos' }) };
+    await T.correrMedido({ decidir: async (p, d) => { await d.fueraEnEsteTurno('x'); return { ok: true }; }, depsReales: piezas, payload: { last_assistant_message: PASA }, env: { CLAUDE_HOOKS_TIEMPOS: r2 } });
+    const f = T.leerRegistro(r2).eventos.find((e) => e.ev === 'fases');
+    expect(f).toMatchObject({ lectura: 'incremental', lectura_motivo: 'de a tramos', bytes_leidos: 1234 });
+    // sin el dato (un cierre de antes), como siempre: sin campo `lectura`
+    const r3 = path.join(dir, `c1b-${Date.now()}.jsonl`);
+    await T.correrMedido({ decidir: async (p, d) => { await d.fueraEnEsteTurno('x'); return { ok: true }; }, depsReales: { fueraEnEsteTurno: piezas.fueraEnEsteTurno }, payload: { last_assistant_message: PASA }, env: { CLAUDE_HOOKS_TIEMPOS: r3 } });
+    expect(T.leerRegistro(r3).eventos.find((e) => e.ev === 'fases').lectura).toBeUndefined();
+    const ev = [
+      { ev: 'inicio', hook: 'cierre-guard', id: 'a', t: 1 }, { ev: 'fases', hook: 'cierre-guard', id: 'a', t: 2, real: true, lectura: 'incremental', bytes_leidos: 100, fases: { relevar: 5 } }, { ev: 'fin', hook: 'cierre-guard', id: 'a', t: 3, rc: 0, ms: 2 },
+      { ev: 'inicio', hook: 'cierre-guard', id: 'b', t: 4 }, { ev: 'fases', hook: 'cierre-guard', id: 'b', t: 5, real: true, lectura: 'completa', bytes_leidos: 9000, fases: { relevar: 900 } }, { ev: 'fin', hook: 'cierre-guard', id: 'b', t: 6, rc: 0, ms: 2 },
+    ];
+    const r = T.resumir(ev, { ahora: 100 });
+    expect(r.lectura).toEqual({ incremental: 1, completa: 1 });
+    expect(T.textoResumen(r)).toMatch(/1 de a tramos · 1 completas/);
+  });
 });
 
 describe('medir no cambia la decision del cierre', () => {

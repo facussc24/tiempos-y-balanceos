@@ -139,9 +139,14 @@ export async function correrMedido({ decidir, depsReales, payload, hook = 'cierr
       const fases = crono.fases();
       const medido = Object.values(fases).reduce((a, b) => a + b, 0);
       const reg = bytesDelRegistro(payload?.transcript_path);
+      // P9 C1 (12/10/2026): el cierre lee de a tramos; `lectura` dice como leyo (incremental | completa y por que) y
+      // `bytes_leidos` lo que leyo de verdad. Sin ese dato (un cierre viejo), leidos = el registro entero, como antes.
+      let lectura = null;
+      try { lectura = typeof depsReales?.ultimaLectura === 'function' ? depsReales.ultimaLectura() : null; } catch { lectura = null; }
+      const leidos = !crono.veces().relevar ? 0 : (lectura && Number.isFinite(lectura.bytes) ? lectura.bytes : reg.bytes);
       anotar({ ...base, total_ms: Math.round(total), fases: { ...fases, resto: Math.max(0, Math.round(total - medido)) }, veces: crono.veces(),
-        // hoy el cierre relee el registro entero en cada pasada: leidos = registro. Cuando lea de a tramos (P9), leidos baja.
-        bytes_registro: reg.bytes, bytes_leidos: crono.veces().relevar ? reg.bytes : 0, subagentes: reg.subagentes, ...extra }, { ruta: rutaRegistro(env) });
+        bytes_registro: reg.bytes, bytes_leidos: leidos, subagentes: reg.subagentes,
+        ...(lectura && lectura.modo ? { lectura: lectura.modo, lectura_motivo: String(lectura.motivo || '').slice(0, 60) } : {}), ...extra }, { ruta: rutaRegistro(env) });
     } catch { /* medir no puede romper el cierre */ }
   };
   try {
@@ -234,6 +239,9 @@ export function resumir(eventos, { desde = null, hook = 'cierre-guard', ahora = 
     fases,
     domina: domina ? { fase: domina[0], parte: sumaTotal > 0 ? domina[1].suma / sumaTotal : 0 } : null,
     registro: stats(conFases.map((c) => c.fases.bytes_registro).filter((x) => Number.isFinite(x) && x > 0)),
+    // P9 C1: como leyo el registro cada corrida (las de antes del 12/10 no lo dicen)
+    lectura: conFases.reduce((a, c) => { const m = c.fases.lectura; if (m) a[m] = (a[m] || 0) + 1; return a; }, {}),
+    leidos: stats(conFases.filter((c) => c.fases.lectura).map((c) => c.fases.bytes_leidos).filter((x) => Number.isFinite(x))),
     matadas_lista: matadas.map((c) => ({ id: c.inicio.id, t: c.inicio.t, fases: c.fases ? c.fases.fases : null })),
     primera: todas.map((c) => (c.inicio || c.fases || c.fin).t).filter(Number.isFinite).reduce((a, b) => (a == null || b < a ? b : a), null),
   };
@@ -249,6 +257,8 @@ export function textoResumen(r, { hook = 'cierre-guard' } = {}) {
   L.push(`${hook}: ${r.corridas} corridas${r.primera ? ` desde el ${fecha(r.primera)}` : ''} · ${r.completas} completas · ${r.matadas} MATADAS (inicio sin fin)${r.en_curso ? ` · ${r.en_curso} en curso` : ''} · ${r.frenadas} frenaron el cierre`);
   L.push(`Total por corrida: p50 ${seg(r.total.p50)} · p90 ${seg(r.total.p90)} · máximo ${seg(r.total.max)}`);
   if (r.registro.n) L.push(`Registro releído por corrida: p50 ${(r.registro.p50 / 1048576).toFixed(1)} MB · máximo ${(r.registro.max / 1048576).toFixed(1)} MB`);
+  const lec = r.lectura || {};
+  if (Object.keys(lec).length) L.push(`Lectura del registro (desde el 12/10): ${lec.incremental || 0} de a tramos · ${lec.completa || 0} completas · leído de verdad p50 ${((r.leidos?.p50 || 0) / 1048576).toFixed(2)} MB, máximo ${((r.leidos?.max || 0) / 1048576).toFixed(1)} MB`);
   L.push('');
   L.push('fase         corridas    p50      p90      máximo   parte del tiempo');
   const suma = Object.values(r.fases).reduce((a, f) => a + f.suma, 0) || 1;

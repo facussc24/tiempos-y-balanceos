@@ -1264,7 +1264,7 @@ export const escribioFueraEnEsteTurno = relevarTranscript;
  *  (sin transcript, o sesion con comandos sin archivo atribuible). Lo usa dev-server-guard.sh
  *  via scripts/_lib/archivosSesion.mjs. */
 export async function archivosTocadosEnSesion(transcriptPath, opts) {
-  const r = await relevarTranscript(transcriptPath, opts);
+  const r = await relevarConEstado(transcriptPath, opts);
   return r.tocados instanceof Set ? r.tocados : null;
 }
 
@@ -1589,10 +1589,31 @@ export function entregablesSinAbrir(texto, fuera = {}, deExports = []) {
   return out;
 }
 
+/**
+ * El relevador de los hooks (este cierre y dev-server-guard via archivosTocadosEnSesion): lee el registro DE A TRAMOS
+ * desde el cierre anterior (plan P9, C1: cierreIncremental.mjs, que vuelve a la pasada completa ante cualquier duda).
+ * Se importa al usarlo y no arriba: si ese modulo no carga, el cierre lee entero como siempre. `ultimaLecturaRelevamiento`
+ * dice como leyo la ultima vez (el medidor de tiempos lo anota: `lectura` y `bytes_leidos`).
+ */
+let lecturaUltima = { modo: null, bytes: NaN, motivo: '' };
+export function ultimaLecturaRelevamiento() { return { ...lecturaUltima }; }
+export async function relevarConEstado(transcriptPath, opts = {}) {
+  let I = null;
+  try { I = await import('./cierreIncremental.mjs'); } catch { I = null; }
+  if (!I || typeof I.relevarIncremental !== 'function') {
+    lecturaUltima = { modo: 'completa', bytes: NaN, motivo: 'el modulo de a tramos no cargo' };
+    return relevarTranscript(transcriptPath, opts);
+  }
+  const r = await I.relevarIncremental(transcriptPath, opts);
+  try { lecturaUltima = I.ultimaLectura(); } catch { /* solo informa */ }
+  return r;
+}
+
 const DEPS_REALES = {
   firmaIA: correrDetectorFirma,
   exportsDelTurno,
-  fueraEnEsteTurno: relevarTranscript,
+  fueraEnEsteTurno: relevarConEstado,
+  ultimaLectura: ultimaLecturaRelevamiento,
   pendientes: relevarPendientes,
   enCooldown: cooldownVigente,
   marcar: marcarRecordatorio,
