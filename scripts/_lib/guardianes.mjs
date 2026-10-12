@@ -2136,7 +2136,39 @@ ${VID_CIERRE}`);
 // (el tramo que corre llega con un espacio adelante: ` shutdown //l` despues de `cd x &&`. Auditor, 11/10/2026.)
 // Tambien adentro de un subshell o de un `if … then …` (pasaban antes y despues del cambio: informe, seccion 7).
 const ARB_SESION = /(^\s*|[;&|({]\s*|\b(?:then|do|else)\s+)(shutdown\s+\/|logoff|restart-computer|stop-computer)/im;
-const ARB_MATAR = /taskkill|stop-process|pkill|killall|(?:^|[^a-z])kill\s|\.kill\(|os\.kill|closemainwindow|wmic[^|\n]*(delete|terminate|call)|shutdown\s*\//i;
+// HOY-57 (12/10/2026; auditor de P14-P16, seccion 2): formas NATURALES de apagar o cerrar la sesion que la regla de
+// arriba no veia, y que pasaban desde antes de P14. Se SUMAN: la regla de arriba no se toca, asi el cambio solo puede
+// frenar mas. Todas se buscan en lo que CORRE: un commit, un grep o un documento que las nombra no llega aca.
+//  - `shutdown` con una bandera, escrita con barra, doble barra o guion (en Git Bash el guion es la forma normal),
+//    con `.exe`, con la carpeta adelante, detras de un envoltorio o de una variable, adentro de un codigo pegado
+//    (`os.system('shutdown /s')`) o como lista (`['shutdown', '/r']`). `-a` (anular un apagado) y `-?` no apagan.
+const ARB_APAGAR = /\bshutdown(?:\.exe)?(?:["']\s*,\s*["']|["']?\s+["']?)(?:\/{1,2}|-)(?!a\b|\?)[a-z]/i;
+//  - los cmdlets de PowerShell en cualquier posicion (`$null = Restart-Computer`) y las llamadas del sistema.
+const ARB_APAGAR_CMDLET = /\b(?:restart|stop)-computer\b/i;
+const ARB_APAGAR_API = /\bwmic\b[^|\n]*\bos\b[^|\n]*\bcall\s+(?:reboot|shutdown|win32shutdown)\b|\bWin32Shutdown(?:Tracker)?\b|\bExitWindowsEx\b|\bInitiate(?:System)?Shutdown(?:Ex)?[AW]?\b/i;
+//  - `logoff` como una cadena que ES el comando (`os.system('logoff')`, `['logoff']`). Una clave `'logoff': …` no.
+const ARB_LOGOFF_CADENA = /["'](?:[\w.:~$-]*[\\/])?logoff(?:\.exe)?(?:\s[^"'\n]*)?["'](?!\s*:)/i;
+//  - y la regla de arriba otra vez, sobre el texto sin lo que va ADELANTE del verbo: variables (`X=1 logoff`),
+//    envoltorios (`timeout 5 logoff`, `nohup …`, `start "" …`) y la carpeta (`C:/Windows/System32/logoff.exe`).
+const ARB_ADELANTE = /(^[ \t]*|[;&|({]\s*|\b(?:then|do|else)\s+)(?:[A-Za-z_]\w*=\S*[ \t]+|(?:timeout(?:\.exe)?(?:[ \t]+(?:\/{1,2}t|-[A-Za-z-]+(?:=\S+)?))*[ \t]+\d+(?:\.\d+)?[smhd]?|nohup|sudo|command|exec|env|call|start(?:[ \t]+""|[ \t]+\/{1,2}[a-z]+)*)[ \t]+)/gim;
+const ARB_CARPETA = /(^[ \t]*|[;&|({]\s*|\b(?:then|do|else)\s+)["']?(?:[\w.:~$-]*[\\/])+(?=(?:shutdown|logoff)(?:\.exe)?\b)/gim;
+function sinLoDeAdelante(corre) {
+  let t = String(corre ?? '');
+  for (let i = 0; i < 6; i++) { const n = t.replace(ARB_ADELANTE, '$1'); if (n === t) break; t = n; }
+  return t.replace(ARB_CARPETA, '$1');
+}
+/** ¿Lo que corre apaga la PC o cierra la sesion de Windows? Devuelve la regla que lo dice, o ''. */
+export function apagaOCierraSesion(corre) {
+  const t = String(corre ?? '');
+  if (ARB_SESION.test(t)) return 'verbo';
+  if (ARB_APAGAR.test(t)) return 'shutdown con bandera';
+  if (ARB_APAGAR_CMDLET.test(t)) return 'cmdlet';
+  if (ARB_APAGAR_API.test(t)) return 'llamada del sistema';
+  if (ARB_LOGOFF_CADENA.test(t)) return 'logoff como cadena';
+  if (ARB_SESION.test(sinLoDeAdelante(t))) return 'verbo detras de una variable, un envoltorio o una carpeta';
+  return '';
+}
+const ARB_MATAR =/taskkill|stop-process|pkill|killall|(?:^|[^a-z])kill\s|\.kill\(|os\.kill|closemainwindow|wmic[^|\n]*(delete|terminate|call)|shutdown\s*\//i;
 const ARB_CERRAR = /WM_CLOSE|0x0010|0x10[^0-9a-f]|DestroyWindow|EndTask|SC_CLOSE|0xF060|pywinauto|pyautogui|sendkeys|%\{F4\}|alt.{0,3}f4|\.close\(\)/i;
 GUARDIANES['arb-cerrar-guard'] = (ctx, { env, escapes }) => {
   // Red de seguridad: si el parseo fallo, miro el comando rescatado + el JSON crudo.
@@ -2147,7 +2179,7 @@ GUARDIANES['arb-cerrar-guard'] = (ctx, { env, escapes }) => {
   const { corre, visible } = ctx.ok ? queCorre(cmd, { porVerbo: ctx.tool === 'Bash' }) : { corre: cmd, visible: cmd };
   let motivo = '';
   // 1a. cerrar sesion / apagar: se lleva puesto el arb sin nombrarlo
-  if (ARB_SESION.test(corre)) motivo = 'cerrar la sesion de Windows o apagar (se lleva puesto el arb)';
+  if (apagaOCierraSesion(corre)) motivo = 'cerrar la sesion de Windows o apagar (se lleva puesto el arb)';
   // 1. matar el proceso del arb (lista canonica de verbos, no un regex parcial)
   if (ARB_MATAR.test(corre)) {
     if (/produc/i.test(visible)) motivo = 'matar el proceso del arb (produc.exe)';

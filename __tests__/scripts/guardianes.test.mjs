@@ -29,7 +29,7 @@ vi.setConfig({ testTimeout: 60_000 });
 import {
   parsear, matriz, correr, resolver, evaluar, GUARDIANES, TODOS, NOMBRES,
   medirInline, sinCuerposHeredoc, frasesCausalesSinFuente, ultimaRuta, INLINE_MAX, comandoTocaSecreto,
-  esArchivoDeReparacion, queCorre,
+  esArchivoDeReparacion, queCorre, apagaOCierraSesion,
 } from '../../scripts/_lib/guardianes.mjs';
 
 const RAIZ = process.cwd();
@@ -1431,6 +1431,67 @@ describe('arb-cerrar y mail — los arreglos del auditor sobre «mirar lo que co
     expect(arb(ps('echo "Stop-Process -Name produc -Force" | Invoke-Expression')).exit).toBe(2);
     expect(mail(ps(`echo '${UNA}' | iex`)).exit).toBe(2);
     for (const c of ['echo "taskkill //F //IM produc.exe" | tee matar.sh', 'echo "taskkill /F /IM produc.exe" > matar.bat']) expect(arb(bash(c)).exit, c).toBe(2);
+  });
+});
+
+// HOY-57 (12/10/2026): formas NATURALES de apagar la PC o cerrar la sesion de Windows que la regla vieja no veia
+// (auditor de P14-P16, seccion 2). Las reglas nuevas se SUMAN a la vieja: lo que ya frenaba sigue frenando.
+describe('arb-cerrar-guard HOY-57 — apagar o cerrar la sesion, se escriba como se escriba', () => {
+  const arb = (p) => ev(p, { nombres: ['arb-cerrar-guard'] });
+  const rojo = (p, nota) => { const r = arb(p); expect(r.exit, nota).toBe(2); expect(r.err, nota).toMatch(/cerrar la sesion de Windows o apagar/); };
+  it('ROJO — shutdown con guiones, con .exe, con la carpeta adelante, detras de un envoltorio o de una variable', () => {
+    for (const c of [
+      'shutdown -s -t 0', 'shutdown -r -t 60', 'shutdown.exe /s /t 0', 'shutdown.exe -l', 'C:/Windows/System32/shutdown.exe /l',
+      '"C:/Windows/System32/shutdown.exe" -s', '/c/Windows/System32/shutdown -s -t 0', 'MSYS_NO_PATHCONV=1 shutdown /l',
+      'timeout 5 shutdown //s //t 0', 'nohup shutdown //r //t 60 &', 'start shutdown /s', 'start "" shutdown -s -t 0',
+      'cd /c/Dev && sleep 3; shutdown -s -t 0', 'cmd //c "shutdown -s -t 0"', 'bash -c "shutdown -s -t 0"', 'echo ok && shutdown -h now',
+    ]) rojo(bash(c), c);
+  });
+  it('ROJO — desde un codigo pegado, una lista de argumentos, wmic y las llamadas del sistema', () => {
+    for (const c of [
+      `python -c "import os; os.system('shutdown /s /t 0')"`, `python -c "import os; os.system('shutdown -s -t 0')"`,
+      `python -c "import subprocess; subprocess.run(['shutdown', '/r', '/t', '0'])"`, `node -e "require('child_process').execSync('shutdown.exe -s')"`,
+      `python - <<'EOF'\nimport subprocess\nsubprocess.run(["shutdown", "-s", "-t", "0"])\nEOF`,
+      'wmic os where primary=1 call reboot', 'wmic os where Primary=TRUE call Win32Shutdown 6',
+      'powershell -c "(Get-WmiObject Win32_OperatingSystem).Win32Shutdown(6)"', `python -c "import ctypes; ctypes.windll.user32.ExitWindowsEx(0, 0)"`,
+    ]) rojo(bash(c), c);
+  });
+  it('ROJO — logoff y los cmdlets detras de una variable, un envoltorio, la carpeta o una asignacion', () => {
+    for (const c of [
+      'timeout 5 logoff', 'MSYS_NO_PATHCONV=1 logoff', 'C:/Windows/System32/logoff.exe', 'nohup logoff &', 'start "" logoff', 'env X=1 logoff',
+      `python -c "import os; os.system('logoff')"`, `python -c "import subprocess; subprocess.run(['logoff'])"`,
+      'powershell -c "$null = Restart-Computer -Force"',
+    ]) rojo(bash(c), c);
+    for (const c of ['Start-Process shutdown -ArgumentList "/s","/t","0"', 'shutdown -s -t 0', '& shutdown.exe /r']) rojo(ps(c), c);
+  });
+  it('ROJO — lo que ya frenaba sigue frenando (la regla vieja no se toco)', () => {
+    for (const c of ['shutdown /s /t 0', 'shutdown //l', 'logoff', 'echo fin; logoff', 'cd /c/Dev && shutdown //l', 'powershell -c "Restart-Computer"']) rojo(bash(c), c);
+    rojo(ps('Restart-Computer -Force'), 'ps');
+  });
+  it('VERDE — nombrar esas formas no apaga nada: commit, busquedas, test runner, texto a un .md, argumentos a un script, mirar el archivo', () => {
+    for (const c of [
+      'git commit -m "doc: shutdown -s -t 0 queda frenado" -- docs/x.md', 'grep -rn "shutdown -s" docs/ scripts/', 'rg -n "shutdown\\.exe /s" .claude/',
+      'git grep -n "shutdown -s"', 'git log --grep "shutdown -s" --oneline', 'npx vitest run __tests__/scripts/guardianes.test.mjs -t "shutdown -s -t 0"',
+      'echo "no usar shutdown -s -t 0" >> docs/LECCIONES_APRENDIDAS.md', "cat > docs/nota.md <<'EOF'\nshutdown.exe /s apaga la PC y cierra el arb\nlogoff tambien\nEOF",
+      'python scripts/x.py --nota "shutdown -s -t 0"', "sed -n '/shutdown -s/p' scripts/x.sh", 'ls -la C:/Windows/System32/shutdown.exe', 'where shutdown',
+      'which shutdown logoff', 'head -20 docs/apagar.md | grep -c "Restart-Computer"', 'cat scripts/_lib/guardianes.mjs | grep -n "Win32Shutdown"',
+      "awk '/shutdown -s/ {print NR}' x.sh", `cat > casos.json <<'EOF'\n{"logoff": "cerrar sesion", "nota": "x"}\nEOF`,
+    ]) expect(arb(bash(c)).exit, c).toBe(0);
+  });
+  it('VERDE — los envoltorios y las variables de adelante no frenan por si solos, y anular un apagado o pedir la ayuda no apaga', () => {
+    for (const c of [
+      'timeout 5 node scripts/x.mjs', 'start "" notepad docs/x.md', 'nohup node scripts/_latido.mjs &', 'MSYS_NO_PATHCONV=1 git log --oneline -3',
+      'shutdown -a', 'shutdown --help', 'shutdown -?',
+    ]) expect(arb(bash(c)).exit, c).toBe(0);
+  });
+  it('apagaOCierraSesion: cada regla nueva tiene un caso que solo ella frena, y un texto comun no calza en ninguna', () => {
+    expect(apagaOCierraSesion('shutdown /s')).toBe('verbo');
+    expect(apagaOCierraSesion("os.system('shutdown -s -t 0')")).toBe('shutdown con bandera');
+    expect(apagaOCierraSesion('$null = Restart-Computer -Force')).toBe('cmdlet');
+    expect(apagaOCierraSesion('wmic os where primary=1 call reboot')).toBe('llamada del sistema');
+    expect(apagaOCierraSesion("subprocess.run(['logoff'])")).toBe('logoff como cadena');
+    expect(apagaOCierraSesion('timeout 5 logoff')).toBe('verbo detras de una variable, un envoltorio o una carpeta');
+    for (const t of ['node scripts/x.mjs', "casos = {'logoff': 'cerrar sesion'}", 'shutdown -a', 'el shutdown de la linea', 'ls C:/Windows/System32/shutdown.exe', 'timeout 5 node x.mjs']) expect(apagaOCierraSesion(t), t).toBe('');
   });
 });
 
