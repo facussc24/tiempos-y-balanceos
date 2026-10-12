@@ -30,6 +30,10 @@ describe('validarTexto: lo que es de Facundo no sale', () => {
         ['Calidad dijo "hecho con IA"', 'IA'],
         ['no entendi un carajo', 'mala palabra'],
         ['el link ese de mierda', 'mala palabra'],
+        ['Texto corto, voz de Facundo (`_vozFak.mjs`)', 'Fak pegado al nombre de un programa'],
+        ['escribile a facundox@gmail.com', 'su gmail personal'],
+        ['Datos grabados: contraseña HMI **4321**; rodillos', 'una contraseña escrita'],
+        ['la contrasena de operador es **98765**', 'una contraseña escrita sin tilde'],
     ];
     for (const [t, que] of frena) it(`frena: ${que}`, () => { expect(validarTexto(t, 'x.md').length).toBeGreaterThan(0); });
 
@@ -42,11 +46,25 @@ describe('validarTexto: lo que es de Facundo no sale', () => {
         'el mail de Pedro es paergo@barackmercosul.com',
         'Mail a Carlos con copia a Manuel (asunto Upper Trimming)',
         'Fakir no es un nombre de la casa',
+        'APB de puerta: FAKOM pide Carbon Black 135 TEX',
+        'un dato Fake no sirve',
+        'La hoja esta PROTEGIDA CON CONTRASEÑA de VW. Se escriben solo los campos de entrada',
+        'Si alguna vez pide contrasena, la escribe Facundo.',
+        'el proveedor manda desde ventas@gmail.com',
     ];
     for (const t of pasa) it(`pasa: ${t}`, () => { expect(validarTexto(t, 'x.md')).toEqual([]); });
 });
 
 describe('limpiarTexto: cambia lo de Facundo y deja la cita entera', () => {
+    it('una contraseña escrita en negrita sale y el resto del renglon queda', () => {
+        const { texto } = limpiarTexto('  Datos grabados: contraseña HMI **4321**; rodillos a 130°C\n', { archivo: 'x.md' });
+        expect(texto).toBe('  Datos grabados: rodillos a 130°C\n');
+        expect(validarTexto(texto, 'x.md')).toEqual([]);
+    });
+    it('en ppap-motherson la voz es la de la persona, no la de un programa de Facundo', () => {
+        const { texto } = limpiarTexto('- Texto corto, voz de Fak (`_vozFak.mjs`): que se adjunta\n', { archivo: 'ppap-motherson/SKILL.md' });
+        expect(texto).toBe('- Texto corto, en la voz de la persona: que se adjunta\n');
+    });
     it('Fak pasa a Facundo, tambien "Fak (yo)"', () => {
         const { texto } = limpiarTexto('Fak dijo que si. Fak (yo) hago el 3.', { archivo: 'a.md' });
         expect(texto).toBe('Facundo dijo que si. Facundo hago el 3.');

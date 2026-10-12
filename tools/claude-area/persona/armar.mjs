@@ -36,7 +36,9 @@ export function validarTexto(texto, ruta = '') {
     const prob = [];
     const reglas = [
         [/(?<![\p{L}\d])fak(?![\p{L}\d])/iu, 'nombra a "Fak" (el usuario del paquete es otra persona)'],
-        [/f\.santoro@|santorofacundo|facundo\.santoro@/i, 'trae el mail de Facundo'],
+        [/f\.santoro@|santorofacundo|facundo\.santoro@|facundo[\w.]*@gmail\./i, 'trae el mail de Facundo'],
+        [/(?<=[\p{Ll}_])Fak(?![\p{Ll}])/u, 'nombra a "Fak" pegado a otra palabra (un programa suyo, `_vozFak`)'],
+        [/contrase(ñ|n)a[^\n]{0,40}\*\*\d{3,}\*\*/iu, 'trae una contraseña escrita'],
         [/FacundoS-PC|C:[\\/]+Users[\\/]+facun(?![\p{L}])/iu, 'trae una ruta de la PC de Facundo'],
         [/siempre en (copia|CC)/i, 'trae una regla de copias fijas'],
         [/Carlos[^.\n]{0,60}(m[ií]nimo|siempre)[^.\n]{0,30}(copia|\bCC\b)/i, 'trae la regla de Carlos en copia'],
@@ -53,6 +55,7 @@ export function validarTexto(texto, ruta = '') {
 const REEMPLAZOS = {
     'reference_impresoras_ricoh_red_barack.md': [['Se llamaba `impresora de mierda`; desde', 'Desde']],
     'reference_caracteristicas_especiales_notacion_barack.md': [['"¿Qué carajo es W?"', '"¿Qué es W?"']],
+    'ppap-motherson/SKILL.md': [['- Texto corto, voz de Fak (`_vozFak.mjs`): ', '- Texto corto, en la voz de la persona: ']],
     'explicar-mejor/SKILL.md': [
         ['6. Abrila con el programa de arriba (la skill `leer-archivo`, sección "Abrirle el archivo"):', '6. Abrila en pantalla:'],
         ['"${CLAUDE_PLUGIN_ROOT}/bin/node.exe" "${CLAUDE_PLUGIN_ROOT}/herramientas/abrir.mjs" \'<ruta del .html>\'', 'powershell -NoProfile -Command "Start-Process \'<ruta del .html>\'"'],
@@ -95,6 +98,9 @@ const SUAVIZAR = [
     [new RegExp(`${L}como un pelotudo de${R}`, 'giu'), 'como a un chico de'],
     [new RegExp(`${L}a prueba de boludos${R}`, 'giu'), 'a prueba de todo'],
     [new RegExp(`${L}es una remada${R}`, 'giu'), 'es muy largo'],
+    // una clave escrita en negrita (la del HMI de la hotmelt): no va en lo que se sincroniza (regla de
+    // reference_maquina_hotmelt_parametros.md). Sin los digitos aca: este archivo va al repo publico.
+    [new RegExp(`${L}contrase(ñ|n)a( HMI| de operador)? \\*\\*\\d{3,}\\*\\*;? ?`, 'giu'), ''],
 ];
 
 /** Limpia un texto: rutas de la PC de Fak, reemplazos, lineas a sacar, "Fak" -> "Facundo", links a memorias que no van. */
