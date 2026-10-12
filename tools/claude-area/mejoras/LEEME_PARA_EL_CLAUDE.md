@@ -27,7 +27,8 @@ Dos cosas antes de empezar:
 4. Controlá que llegó entera: el sha256 de cada archivo de `origen` tiene que ser el del catálogo. Si alguno no
    coincide o falta (la nube todavía no lo bajó entero), esa mejora no se ofrece hoy y se lo decís en un renglón.
 5. Cada `destino` empieza con `MEMORIA/`, `SKILLS/`, `AGENTES/` o `FICHAS/` (o es `CLAUDE_MD`), termina en `.md`
-   o `.txt` y no tiene `..` ni `:`; el `en` de `reemplaza` es `MEMORIA`. Una mejora que no cumple no se instala.
+   o `.txt`, no tiene `:` y ningún tramo de la ruta (entre `/`) es `..` (un nombre con puntos, como
+   `Contingencia F...md`, está bien); el `en` de `reemplaza` es `MEMORIA`. Una mejora que no cumple no se instala.
 
 ## 2. Contáselas a {{NOMBRE_CORTO}}
 
@@ -86,9 +87,11 @@ Reglas, sin excepción:
 
 1. Anotá en `~\.claude\mejoras-instaladas.json` (creálo si no existe; si existe, actualizá el renglón de ese `id`
    y dejá los demás) un renglón por mejora que se ofreció («a medias» = se instaló una parte; la `nota` dice cuál):
-   `{ "id", "version", "fecha", "estado": "instalada" | "no la quiso" | "a medias", "nota" }` (y en la de
-   `CLAUDE_MD`, `"bloque_sha256"`: la huella de lo que quedó entre las marcas). Ahí también va lo que
-   {{NOMBRE_CORTO}} decidió dejar suyo («dejó su versión de arb-operar»).
+   `{ "id", "version", "fecha", "estado": "instalada" | "no la quiso" | "a medias", "nota" }`. El archivo es una
+   lista (un arreglo JSON) de esos objetos. En la que trae `CLAUDE_MD` va además `"bloque_sha256"`: la huella del
+   texto entre las dos marcas, sin las marcas y sin los saltos de línea del principio y del final. Lo que
+   {{NOMBRE_CORTO}} decidió dejar suyo va en `"suyo": [{ "destino", "sha256_suyo", "sha256_ingenieria" }]` (y en la
+   `nota`, en palabras: «dejó su versión de arb-operar»): se le vuelve a preguntar solo si `sha256_ingenieria` cambia.
 2. Decile en pocos renglones qué quedó instalado, qué no y dónde está el respaldo.
 3. Decile que cierre Claude y lo abra de nuevo: la memoria y el `CLAUDE.md` se leen al arrancar.
 
