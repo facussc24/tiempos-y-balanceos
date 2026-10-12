@@ -1432,6 +1432,18 @@ describe('arb-cerrar y mail — los arreglos del auditor sobre «mirar lo que co
     expect(mail(ps(`echo '${UNA}' | iex`)).exit).toBe(2);
     for (const c of ['echo "taskkill //F //IM produc.exe" | tee matar.sh', 'echo "taskkill /F /IM produc.exe" > matar.bat']) expect(arb(bash(c)).exit, c).toBe(2);
   });
+  // B4 del auditor (12/10/2026): el texto que mira el control del mail en un comando ya no se corta a 6.000 caracteres.
+  it('ROJO (B4): un envio que corre no se escapa por un texto largo en el mismo comando', () => {
+    const relleno = Array.from({ length: 600 }, (_, i) => `x${i} = ${i} * 2`).join('\n');
+    const pegado = `python -c "${UNA.replace(/"/g, '\\"')}"`;
+    expect(relleno.length).toBeGreaterThan(6000);
+    // los cuerpos de heredoc van adelante de lo demas: el envio quedaba despues del corte
+    expect(mail(bash(`${pegado}\ncat > "$SP/calculo.py" <<'EOF'\n${relleno}\nEOF`)).exit).toBe(2);
+    // y el envio escrito despues del caracter 6.000 de lo que corre
+    expect(mail(bash(`python -c "${relleno.replace(/\n/g, '; ')}"\n${pegado}`)).exit).toBe(2);
+    // el relleno solo no manda nada
+    expect(mail(bash(`cat > "$SP/calculo.py" <<'EOF'\n${relleno}\nEOF`)).exit).toBe(0);
+  });
 });
 
 // HOY-57 (12/10/2026): formas NATURALES de apagar la PC o cerrar la sesion de Windows que la regla vieja no veia

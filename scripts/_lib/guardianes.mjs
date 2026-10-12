@@ -1871,7 +1871,7 @@ apretando Enviar en la ventana que ya tiene abierta.
   // (antes pasaba porque el nombre entraba en el texto mirado; ahora en un Write/Edit se mira solo el contenido).
   if (esEscritura && /(?:^|[\\/])scripts[\\/]_mailEnviar\.py$/i.test(ctx.fileL)) return null;
   const target = esEscritura ? ctx.body6
-    : /^(?:bash|powershell)$/i.test(ctx.toolL) ? limpiar(queCorre(ctx.cmd, { porVerbo: ctx.tool === 'Bash' }).corre).slice(0, CORTE)
+    : /^(?:bash|powershell)$/i.test(ctx.toolL) ? limpiar(queCorre(ctx.cmd, { porVerbo: ctx.tool === 'Bash' }).corre)
       : `${ctx.cmd6} ${ctx.fileL} ${ctx.body6}`;
   // 1) Tiene que oler a Outlook. 2) Tiene que haber un envio real (Display/Save/ReplyAll no
   // envian). 3) Si va por la via autorizada, pasa.
