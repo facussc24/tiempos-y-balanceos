@@ -318,9 +318,6 @@ describe('firma-ia-guard', () => {
 const VERDES_P16 = [
     ['el .add( de un Set de Python (antes: `Add(` con bandera i lo contaba como COM)', ctx('Bash', { cmd: `python -c "vistos = set(); vistos.add('Claude Barack'); print(len(vistos))"` })],
     ['el .add( de un Set de JS', ctx('Bash', { cmd: `node -e "const s = new Set(); s.add('Claude Barack'); console.log(s.size)"` })],
-    ['CLAUDE.md como valor de una clave (antes: `] =` lo contaba como una celda)', ctx('Bash', { cmd: `node -e "cfg['memoria'] = 'CLAUDE.md'; fs.writeFileSync('tmp/cfg.json', JSON.stringify(cfg))"` })],
-    ['la carpeta Claude Fak como valor de una clave', ctx('Bash', { cmd: `python -c "rutas['config'] = 'Claude Fak'; print(rutas)"` })],
-    ['CLAUDE.md con la ruta del repo adelante', ctx('Bash', { cmd: `python -c "cfg['archivo'] = 'C:/Dev/BarackMercosul/CLAUDE.md'"` })],
     ['la carpeta Claude Fak sin barra final: cd y despues un script (antes se exigia la barra)', ctx('Bash', { cmd: `cd "${NP}/Claude Fak" && node scripts/_nube.mjs --subir memoria` })],
     ['la carpeta Claude Fak entre comillas simples, sin barra, como argumento', ctx('Bash', { cmd: `python scripts/_x.py --carpeta '${NP}/Claude Fak'` })],
 ];
@@ -328,6 +325,15 @@ const ROJOS_P16 = [
     ['una celda que diga Claude (el caso del listado): el gemelo rojo de la fila', ctx('Bash', { cmd: `python -c "ws.Cells(r, 10).Value = 'Claude'"` })],
     ['una celda que diga Claude Fak S.A. (el nombre exacto es un nombre; con algo mas, no)', ctx('Bash', { cmd: `python -c "ws['J74'] = 'Claude Fak S.A.'"` })],
     ['una celda que diga «ver CLAUDE.md»', ctx('Bash', { cmd: `python -c "ws['J74'] = 'ver CLAUDE.md'"` })],
+    // La excepcion del «nombre propio» salio (auditor 11/10/2026): el nombre EXACTO tambien frena, sea una celda, una
+    // pestaña o el valor de una clave. No liberaba ningun freno real y tapaba estos.
+    ['una celda con exactamente el nombre de la carpeta', ctx('Bash', { cmd: `python -c "ws['J74'] = 'Claude Fak'"` })],
+    ['el nombre de una pestaña', ctx('Bash', { cmd: `python -c "ws.title = 'Claude Fak'"` })],
+    ['una pestaña que se llama como el archivo de configuracion', ctx('Bash', { cmd: `python -c "wb.create_sheet('CLAUDE.md')"` })],
+    ['otra IA adelante de la barra y el nombre atras', ctx('Bash', { cmd: `python -c "ws['A1'] = 'Generado con ChatGPT/Claude Fak'"` })],
+    ['CLAUDE.md como valor de una clave: vuelve a frenar (no se distingue de una celda)', ctx('Bash', { cmd: `node -e "cfg['memoria'] = 'CLAUDE.md'; fs.writeFileSync('tmp/cfg.json', JSON.stringify(cfg))"` })],
+    ['una carpeta con ese nombre en el SERVIDOR no es la carpeta exenta', ctx('Bash', { cmd: `mkdir -p "/y/BARACK/CALIDAD/DOCUMENTACION SGC/Claude Fak"` })],
+    ['idem con barra final y un archivo adentro', ctx('Bash', { cmd: `cp notas.txt "Y:/BARACK/CALIDAD/DOCUMENTACION SGC/Claude Fak/notas.txt"` })],
     ['el .Add( de COM con una IA adentro: un comentario de celda', ctx('Bash', { cmd: `python -c "ws.Comments.Add(rng, 'revisado por Claude')"` })],
     ['el .Add( de COM por PowerShell', ctx('PowerShell', { cmd: `$ws.Comments.Add($rng, 'Claude')` })],
     ['una carpeta de la nube que se llama parecido: Claude Fakultad', ctx('Bash', { cmd: `mkdir -p "${NP}/2- PROYECTOS/Claude Fakultad"` })],
@@ -335,7 +341,7 @@ const ROJOS_P16 = [
     ['un documento en la nube que nombra la carpeta Claude Fak (la regla 4 no se toca)', ctx('Write', { file: `${NUBE}\\1- GENERAL\\nota.txt`, content: 'Los archivos estan en la carpeta Claude Fak.' })],
 ];
 
-describe('firma-ia-guard · P16: Add( distingue mayusculas; CLAUDE.md y «Claude Fak» son nombres, no una firma', () => {
+describe('firma-ia-guard · P16: Add( distingue mayusculas, y la carpeta «Claude Fak» de la biblioteca queda exenta tambien sin barra final', () => {
     for (const [nombre, c] of VERDES_P16) it(`VERDE: ${nombre}`, () => {
         expect(bloquea(c)).toBe(false);
         expect(bloquea(ctxVivo(c.tool, { cmd: c.cmd }))).toBe(false);          // como lo arma el despachador
@@ -353,7 +359,7 @@ describe('firma-ia-guard · P16: Add( distingue mayusculas; CLAUDE.md y «Claude
     });
     it('firmaIaEnEscritura: el motivo dice que es una celda, no una ruta', () => {
         expect(firmaIaEnEscritura(`ws['J74'] = 'Claude Fak S.A.'`, '')).toMatch(/ADENTRO de un documento/);
-        expect(firmaIaEnEscritura(`rutas['config'] = 'Claude Fak'`, '')).toBeNull();
+        expect(firmaIaEnEscritura(`rutas['config'] = 'Claude Fak'`, '')).toMatch(/ADENTRO de un documento/);
         expect(firmaIaEnEscritura(`s.add('Claude Barack')`, '')).toBeNull();
     });
 });

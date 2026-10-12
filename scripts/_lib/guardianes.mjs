@@ -357,14 +357,15 @@ const FIRMA_PREFIJO_RE = /(?:\.(?:value2?|formula|text|name|caption|title|author
 // bandera i. Con ella, el `.add(` de un Set o de una lista (`carpetas.add('Claude Fak')`, `s.add('CLAUDE.md')`) contaba
 // como escribir en un documento.
 const FIRMA_PREFIJO_ADD_RE = /\bAdd\s*\([^()\n]*?$/;
-// El archivo CLAUDE.md (la configuracion del repo) y la carpeta «Claude Fak» (la de Fak en la nube) son NOMBRES, no
-// una firma: `cfg['memoria'] = 'CLAUDE.md'`, `rutas['config'] = 'Claude Fak'`. Solo el nombre exacto, con o sin ruta
-// adelante: una celda que diga «Claude» o «Claude Fak S.A.» sigue frenando.
-const FIRMA_NOMBRE_PROPIO_RE = /^(?:[^\n]*[\\/])?(?:CLAUDE\.md|Claude Fak)[\\/]?$/i;
+// (El borrador de P16 traia ademas una excepcion por «nombre propio»: un literal que fuera exactamente `CLAUDE.md` o
+// `Claude Fak` no contaba. El auditor la saco el 11/10/2026: no liberaba ninguno de los 39 frenos reales de la historia
+// y dejaba pasar una celda o una pestaña con ese nombre.)
 const FIRMA_RAIZ_RE = /(?:^|[\s"'=])(?:[yY]:[\\/]|\/y\/|[^"'\n]*Ingenier[ií]a y Proyecto)/;
 // P16: «Claude Fak» y CLAUDE.md quedan exentos tambien SIN barra final (`cd ".../Claude Fak" && node …`): el nombre
 // exacto seguido de barra, comilla o fin. Un espacio NO alcanza: «Claude Fak notas» o «Claude Fakultad» son otra carpeta.
-const FIRMA_EXENTOS_RE = /(?:[\\/]\.claude[\\/]|[\\/]memory[\\/]|[\\/]docs[\\/]|[\\/]__tests__[\\/]|[\\/]_archive[\\/]|[\\/]claude-area[\\/]|CLAUDES_POR_AREA|CLAUDE POR AREA|Claude Barack|Base Claude Ingenieria|INSTALAR CLAUDE|ACTUALIZACION_CLAUDE|[\\/]Claude Fak(?=[\\/"']|$)|firmaIA|_sinFirmaIA|_limpiarListadoHoClaude|guardianes\.mjs|cierreGuard\.mjs|CLAUDE\.md(?=["']|$)|LECCIONES_APRENDIDAS\.md$|MEMORY\.md$|\.claude[\\/])/i;
+// La carpeta exenta es la de la BIBLIOTECA de Ingenieria: una carpeta «Claude Fak» en el servidor (`Y:\...`) no lo es
+// (auditor, 11/10/2026).
+const FIRMA_EXENTOS_RE = /(?:[\\/]\.claude[\\/]|[\\/]memory[\\/]|[\\/]docs[\\/]|[\\/]__tests__[\\/]|[\\/]_archive[\\/]|[\\/]claude-area[\\/]|CLAUDES_POR_AREA|CLAUDE POR AREA|Claude Barack|Base Claude Ingenieria|INSTALAR CLAUDE|ACTUALIZACION_CLAUDE|Ingenier[ií]a y Proyecto - General[^"'\n]*?[\\/]Claude Fak(?=[\\/"']|$)|firmaIA|_sinFirmaIA|_limpiarListadoHoClaude|guardianes\.mjs|cierreGuard\.mjs|CLAUDE\.md(?=["']|$)|LECCIONES_APRENDIDAS\.md$|MEMORY\.md$|\.claude[\\/])/i;
 // Comandos que solo leen o que guardan texto que no es un documento (un mensaje de commit lleva
 // "Co-Authored-By: Claude" por convencion del repo, y no sale de aca como documento de Barack).
 //
@@ -559,7 +560,6 @@ export function firmaIaEnEscritura(texto, archivo = '', { bash = false } = {}) {
         const antes = linea.slice(Math.max(0, m.index - 120), m.index);
         const literal = m[1].trim();
         if (interno && FIRMA_ID_MODELO_RE.test(literal)) { re.lastIndex = m.index + 1; continue; }
-        if (FIRMA_NOMBRE_PROPIO_RE.test(literal)) { re.lastIndex = m.index + 1; continue; }   // P16: un nombre, no una firma
         if (FIRMA_PREFIJO_RE.test(antes) || FIRMA_PREFIJO_ADD_RE.test(antes)) return `una IA escrita ADENTRO de un documento: «${(antes.slice(-40) + m[0]).trim().slice(0, 110)}»`;
         re.lastIndex = m.index + 1;   // un literal "abierto" de mas no tapa el siguiente
       }
