@@ -52,7 +52,7 @@ incidente vive en los snapshots.
 - **El chequeo frena, no decide; y la objecion de Fak es un dato, no una opinion a refutar: ante un "no anda", preguntar como falla.** Graduado a la memoria `feedback_el_chequeo_frena_no_decide` (y `cad-3d.md` GATE 0).
 - **Un plan de accion heredado se arrastra fila por fila: fusionar dos filas pierde alcance, media fila que se cae no la ve nadie, y un issue no se cierra con evidencia de una parte del alcance.** Graduado a la memoria `plan_heredado_se_arrastra_fila_por_fila`.
 
-- **07/10 — Un mail que Fak pide «con lo que encuentres» lleva UNA pregunta y lo mínimo para entenderla, no el informe del agente pegado** (al de Pablo sobre 9465/9466 le metí arb, hilo, tela y las hojas cortadas: 611 caracteres, dos temas; Fak: *"es una remada, ni se entiende... olvidate"*). Lo junta el agente; el mail lo recorta uno antes de abrirlo.
+- **07/10 — Un mail que Fak pide «con lo que encuentres» lleva UNA pregunta y lo mínimo para entenderla, no el informe del agente pegado.** Graduado a `feedback_mail_corto_como_los_de_fak`.
 
 - **02 y 05/10 — Para un código el arb es la fuente, pero antes de decir «el arb tiene mal X» se confirma que la BOM leída es la de ESE código (10 productos cargados dos veces con otra grafía).** Graduado a `feedback_arb_es_la_fuente_de_un_codigo` y `scripts/hilos/cruce_programa_arb.py`.
 
