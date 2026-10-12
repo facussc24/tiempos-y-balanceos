@@ -1693,7 +1693,7 @@ GUARDIANES['ho-numeracion-guard'] = (ctx, { env }) => {
 // Archivos que CITAN los patrones peligrosos como dato: tests, hooks, este modulo, reglas, skills, memorias, docs.
 const CITA_PATRONES_RE = /(?:__tests__|\.test\.|\.spec\.|(?:^|[\\/])\.claude[\\/](?:hooks|rules|skills)[\\/]|(?:^|[\\/])scripts[\\/]_lib[\\/]guardianes\.mjs$|(?:^|[\\/])(?:memory|docs)[\\/]|LECCIONES_APRENDIDAS|MEMORY\.md$|CLAUDE\.md$)/i;
 const CORRE_TEXTO_RE = /(?:^|[\\/])(?:echo|printf|grep|egrep|fgrep|rg|ag|sed|awk|cat|head|tail|less|more|wc|sort|uniq|cut|tr|tee|ls|dir|find|stat|file|diff|cmp|jq|git|gh|npx|npm|pnpm|yarn|vitest|test|\[|\[\[|true|false|touch|mkdir|cp|mv|rm|cd|pwd|date|basename|dirname|type|which|column|nl|tac|rev|paste|comm|md5sum|sha256sum|base64|iconv|cygpath|code)(?:\.exe)?$/i;
-const CORRE_INTERPRETE_RE = /(?:^|[\\/])(?:python[\d.]*|py|node|powershell|pwsh|bash|sh|zsh|dash|cmd|perl|ruby|php)(?:\.exe)?$/i;
+const CORRE_INTERPRETE_RE = /(?:^|[\\/])(?:pythonw?[\d.]*|py|node|powershell|pwsh|bash|sh|zsh|dash|cmd|perl|ruby|php)(?:\.exe)?$/i;
 const CORRE_INLINE_RE = /^(?:-c(?:om(?:m(?:a(?:n(?:d)?)?)?)?)?|-e|--eval|-p|--print|\/\/?[ck])$/i;   // lo que sigue es codigo
 const CORRE_ENVOLTORIO_RE = /^(?:xargs|timeout|nohup|sudo|env|command|builtin|exec|winpty|time|nice|start)$/i;
 const CORRE_HD_ARCHIVO_RE = /(?:>{1,2}\s*|\btee\s+(?:-[a-z]+\s+)*)("[^"]*"|'[^']*'|[^\s;&|<>]+)/i;
@@ -1705,7 +1705,8 @@ const esProsaOCita = (f) => { const x = String(f ?? '').trim().replace(/^["']|["
 // no, los tests de JS y de consola, este modulo y los envoltorios de los guardianes, que citan el patron por oficio.
 const EXT_CORRE_RE = /\.(?:py|pyw|ps1|psm1|sh|bash|bat|cmd|js|mjs|cjs|ts|vbs|wsf|pl|rb|php)$/i;
 const CITA_SIEMPRE_RE = /(?:__tests__|\.(?:test|spec)\.(?:mjs|cjs|js|ts|tsx|sh)$|(?:^|[\\/])scripts[\\/]_lib[\\/]guardianes\.mjs$|(?:^|[\\/])\.claude[\\/]hooks[\\/](?:[a-z-]+-guard|_dispatcher)(?:\.test)?\.sh$)/i;
-const citaSinCorrer = (f) => { const x = String(f ?? ''); return CITA_SIEMPRE_RE.test(x) || (CITA_PATRONES_RE.test(x) && !EXT_CORRE_RE.test(x)); };
+// (7) Segunda auditoria: un .py / .ps1 / .vbs / .bat no es un test de JS ni de consola: adentro de __tests__ tambien corre.
+const citaSinCorrer = (f) => { const x = String(f ?? ''); if (/\.(?:py|pyw|ps1|psm1|bat|cmd|vbs|wsf|pl|rb|php)$/i.test(x)) return false; return CITA_SIEMPRE_RE.test(x) || (CITA_PATRONES_RE.test(x) && !EXT_CORRE_RE.test(x)); };
 // (2) El cuerpo de un heredoc es CODIGO salvo que lo reciba un verbo de texto (cat, tee, echo, printf) que lo manda a
 // la salida o a un archivo de prosa. Antes era al reves (codigo solo si el dueño era un interprete conocido escrito
 // pelado) y `ruta/python.exe - <<EOF` o `$PY - <<EOF` no se miraban: 820 de los 14.740 heredocs reales tienen esa forma.
@@ -1717,6 +1718,25 @@ function verboDeComando(c) {
   }
   return { verbo: p[0] ?? '', args: p.slice(1) };
 }
+// (6) Segunda auditoria (11/10/2026): ¿de donde toma su PROGRAMA un interprete? De stdin cuando la bandera de codigo no
+// trae nada atras (`powershell -Command -`, `cmd /k`, `bash -e`), cuando su primer argumento es `-` (`python - x`), en
+// una shell con `-s` (`bash -s -- x`) o cuando nada de lo que recibe parece un archivo (`python -X utf8`, `bash -o
+// pipefail`, `cmd /q`). Antes alcanzaba un argumento cualquiera para leerlo como «corre un archivo».
+const pareceArchivo = (a) => /^\$|[\\/]|\.[A-Za-z0-9]{1,5}$/.test(a);
+const enVariable = (verbo, args) => /^\$\{?[A-Za-z_]/.test(verbo) && [undefined, '-'].includes(args.find((a) => a === '-' || !a.startsWith('-')));
+function modoInterprete(verbo, args) {
+  const esPS = /(?:^|[\\/])(?:powershell|pwsh)(?:\.exe)?$/i.test(verbo);
+  const esCmd = /(?:^|[\\/])cmd(?:\.exe)?$/i.test(verbo);
+  const i = args.findIndex((a) => CORRE_INLINE_RE.test(a) || (!esPS && !esCmd && /^-[A-Za-z]{1,3}[ce]$/.test(a)));
+  if (i >= 0) { const pegado = args.slice(i + 1).join(' ').trim(); return pegado && pegado !== '-' ? { modo: 'pegado', codigo: pegado } : { modo: 'stdin' }; }
+  const opcion = (a) => a.startsWith('-') || (esCmd && /^\/\/?[A-Za-z](?::.*)?$/.test(a));
+  const primero = args.find((a) => a === '-' || !opcion(a));
+  if (primero === '-') return { modo: 'stdin' };
+  if (esPS && primero !== undefined && !args.some((a) => /^-f(?:ile)?$/i.test(a))) return { modo: 'pegado', codigo: args.join(' ') };
+  if (/(?:^|[\\/])(?:ba|z|da)?sh(?:\.exe)?$/i.test(verbo) && args.some((a) => /^-[A-Za-z]*s$/.test(a))) return { modo: 'stdin' };
+  if (args.includes('-m')) return { modo: 'archivo' };
+  return args.some((a) => !opcion(a) && pareceArchivo(a)) ? { modo: 'archivo' } : { modo: 'stdin' };
+}
 function duenoEsTexto(dueno) {
   let cs;
   try { cs = comandosSimples(dueno); } catch { return false; }
@@ -1727,7 +1747,8 @@ function duenoEsTexto(dueno) {
   for (const c of cs.slice(k + 1)) {
     const { verbo, args } = verboDeComando(c);
     if (/^(?:eval|xargs)$/i.test(verbo)) return false;
-    if (CORRE_INTERPRETE_RE.test(verbo) && !args.some((a) => a !== '-' && !a.startsWith('-'))) return false;
+    if (CORRE_INTERPRETE_RE.test(verbo) && modoInterprete(verbo, args).modo === 'stdin') return false;
+    if (enVariable(verbo, args)) return false;                       // `cat <<EOF | $PY -`
   }
   return true;
 }
@@ -1769,15 +1790,13 @@ export function queCorre(cmd, { porVerbo = true, prof = 0 } = {}) {
       // (3) tambien es codigo: una bandera JUNTA que termina en c o e (`bash -lc`, `sh -ec`, `python -Ic`, `node -pe`;
       // no en PowerShell ni cmd, donde `-NoProfile` termina en e) y lo posicional de `powershell` / `pwsh` sin `-File`
       // (`powershell "Stop-Process …"`).
-      const esPS = /(?:^|[\\/])(?:powershell|pwsh)(?:\.exe)?$/i.test(verbo);
-      const esCmd = /(?:^|[\\/])cmd(?:\.exe)?$/i.test(verbo);
-      const i = args.findIndex((a) => CORRE_INLINE_RE.test(a) || (!esPS && !esCmd && /^-[A-Za-z]{1,3}[ce]$/.test(a)));
-      const posicional = args.some((a) => a !== '-' && !a.startsWith('-'));
-      if (i >= 0) corre.push(args.slice(i + 1).join(' '));
-      else if (esPS && posicional && !args.some((a) => /^-f(?:ile)?$/i.test(a))) corre.push(args.join(' '));
-      else if (!posicional) return { corre: visible, visible };                                          // lee de stdin
+      const r = modoInterprete(verbo, args);
+      if (r.modo === 'pegado') corre.push(r.codigo);
+      else if (r.modo === 'stdin') return { corre: visible, visible };                                 // lee de stdin
       continue;                                                                                        // corre un ARCHIVO: sus argumentos son datos
     }
+    // un programa que viaja en una variable y no corre un archivo (`$PY -`, `"$PY"` solo): no se sabe que le llega
+    if (enVariable(verbo, args)) return { corre: visible, visible };
     const guarda = c.redirs.some((r) => /^\d?>{1,2}$/.test(r.op) && !esProsaOCita(r.t))
       || (/^tee$/i.test(verbo) && args.some((a) => !a.startsWith('-') && !esProsaOCita(a)));
     const ejecuta = (/^find$/i.test(verbo) && args.some((a) => FIRMA_FIND_ESCRIBE.test(a)))
