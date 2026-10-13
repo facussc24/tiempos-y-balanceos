@@ -230,7 +230,12 @@ El pie de foto solo no alcanza: la primera vez que la hoja nombra una pieza que 
 (acumulador, guiador, desbobinador, fusor, enrollador, expulsores, atemperador...) el paso dice qué es en palabras
 simples, con su fuente (*"los acumuladores (los rodillos por donde el material sube y baja)"*), y la foto la lleva
 marcada con recuadro y nombre. Medido ese día en las hojas del hot melt: 39 de 44 piezas nombradas estaban sin
-marcar, y el control no veía los plurales (`acumuladores`). Lo que no se puede explicar con una fuente va a la
+marcar, y el control no veía los plurales (`acumuladores`). **Lo mismo para las HERRAMIENTAS del puesto** (Fak,
+13/10/2026, hoja de tapizado del Top Roll, paso *"Verificar el herramental: engrampadora neumática con grampas,
+pistola de calor, tijera, pinza y cutter"* con una foto de la mesa y el pie *"Herramental del puesto"*: *"no se
+entiende bien cuáles son las herramientas, deberíamos nombrarlas y mostrarlas mejor... lo vamos a tener que incluir
+como criterio general"*): cada herramienta que el paso nombra va señalada en la foto con su nombre y su flecha; una
+foto de la mesa con todo junto y un pie genérico no alcanza. Vale en todas las hojas. Lo que no se puede explicar con una fuente va a la
 lista de lo que falta preguntar, no se inventa.
 
 **c) ¿Yo entiendo lo que estoy mandando hacer?** *"Pegar una cinta adhesiva como indicador para el
