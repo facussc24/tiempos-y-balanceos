@@ -189,7 +189,10 @@ FOTOS.update({
                    nota="Pantalla manual con el boton del modo de enhebrado"),
     "n_rollo": dict(fuente=cuadro("9415", 2), crop=(0, 8, 100, 92),
                     nota="Rollo montado, el material sale hacia arriba por el primer rodillo"),
+    # El recuadro marca los rodillos del acumulador (Fak, 13/10/2026: "Verificar que los acumuladores... no entiendo:
+    # marcar con un rectangulo en la foto y poner 'acumuladores'").
     "n_acumulador": dict(fuente=("manual", 17), crop=(4, 29, 18, 70),
+                         marcas=[(27, 35, 72, 14, "Acumulador")], nombres=True,
                          nota="Acumulador de entrada con las flechas de sube y baja (manual p. 17)"),
     "n_debajo": dict(fuente=cuadro("9415", 32),
                      nota="Material envolviendo el rodillo de abajo antes de subir al encolado"),

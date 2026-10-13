@@ -128,7 +128,8 @@ def gate_pieza_nombrada_se_ve(d, fotos=None):
             vistas.append(" ".join([f.get("pie", ""), ficha.get("nota", ""), marcas]))
     vistas = _plano(" ".join(vistas))
     for i, p in enumerate(d["pasos"], 1):
-        nombradas = [x for x in PIEZAS if re.search(r"\b" + x + r"\b", _plano(p["texto"]))]
+        # con su plural: el 13/10/2026 "los acumuladores" paso sin que el control lo viera
+        nombradas = [x for x in PIEZAS if re.search(r"\b" + x + r"(?:es|s)?\b", _plano(p["texto"]))]
         if not nombradas or p.get("sin_foto"):
             continue
         faltan = [x for x in nombradas if not re.search(r"\b" + x, vistas)]

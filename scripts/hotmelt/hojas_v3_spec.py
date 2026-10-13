@@ -420,7 +420,8 @@ PRODUCCION = [
                            "IMG_0394 04:14 (sin adhesivo)"]),
              # los acumuladores bajan DESPUES de girar la llave de cambio (IMG_9527 40:35 a 40:54):
              # no son el aviso de fin de rollo. El aviso es la alarma.
-             dict(texto="Verificar que los acumuladores estén arriba. Si suena la alarma de fin de "
+             dict(texto="Verificar que los acumuladores (los rodillos por donde el material sube y baja) estén "
+                        "arriba. Si suena la alarma de fin de "
                         "material, seguir la hoja 20.7.",
                   foto=ruta("n_acumulador"), pie="Acumulador",
                   fuentes=["IMG_9527 31:30 a 31:58 (en operación están arriba)", "IMG_9527 41:17 a 43:26",

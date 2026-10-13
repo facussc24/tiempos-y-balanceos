@@ -65,7 +65,39 @@ def abrir(fuente):
     return im, os.path.basename(fuente)
 
 
-def preparar(nombre, fuente, crop=None, rot=0, marcas=None, nota="", ancho=1500, lisa_ok=()):
+def _poner_nombres(im, marcas):
+    """Escribe el NOMBRE de cada marca sobre la foto, en un cartel blanco de borde rojo unido al recuadro por
+    una flecha. Fak, 13/10/2026: "falta la flechita que diga acumulador... no sirve que pongas acumulador abajo
+    porque en la foto se ven mas flechas, es confuso". El pie solo no alcanza."""
+    from PIL import ImageDraw, ImageFont
+    rojo = (200, 0, 0)
+    W, H = im.size
+    d = ImageDraw.Draw(im)
+    f = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", max(16, W // 11))
+    g = max(3, W // 110)
+    for x, y, w, h, texto in marcas:
+        if not texto:
+            continue
+        bx0, by0, bx1, by1 = W * x / 100, H * y / 100, W * (x + w) / 100, H * (y + h) / 100
+        tb = d.textbbox((0, 0), texto, font=f)
+        tw, th = tb[2] - tb[0] + 4 * g, tb[3] - tb[1] + 4 * g
+        cx = min(max((bx0 + bx1) / 2, tw / 2 + g), W - tw / 2 - g)
+        sep = max(H * 0.07, 3 * g)
+        arriba = by0 - sep - th > g          # el cartel va arriba del recuadro si entra; si no, abajo
+        ty = by0 - sep - th if arriba else by1 + sep
+        caja = (cx - tw / 2, ty, cx + tw / 2, ty + th)
+        # la flecha: del cartel al borde del recuadro, con su punta
+        px, py = cx, (by0 if arriba else by1)
+        ox, oy = cx, (caja[3] if arriba else caja[1])
+        d.line((ox, oy, px, py), fill=rojo, width=g)
+        s = 3 * g * (1 if arriba else -1)
+        d.polygon([(px, py), (px - 2 * g, py - s), (px + 2 * g, py - s)], fill=rojo)
+        d.rectangle(caja, fill="white", outline=rojo, width=g)
+        d.text((caja[0] + 2 * g - tb[0], caja[1] + 2 * g - tb[1]), texto, font=f, fill=rojo)
+    return im
+
+
+def preparar(nombre, fuente, crop=None, rot=0, marcas=None, nota="", ancho=1500, lisa_ok=(), nombres=False):
     im, de_donde = abrir(fuente)
     if rot:
         im = im.rotate(-rot, expand=True)       # rot en sentido horario, como el telefono
@@ -89,6 +121,8 @@ def preparar(nombre, fuente, crop=None, rot=0, marcas=None, nota="", ancho=1500,
             raise SystemExit(f"{nombre}: marcas mal puestas: {malas}")
         im = rotular(tmp, m5, "ninguna", min(ancho, im.width), None, numeros=True,
                      grosor=max(5, min(ancho, im.width) // 180))
+        if nombres:
+            im = _poner_nombres(im, m5)
     elif im.width > ancho:
         im = im.resize((ancho, round(im.height * ancho / im.width)), Image.LANCZOS)
     guardar(im, dst, origen)
@@ -108,7 +142,7 @@ if __name__ == "__main__":
         if pedidas and nombre not in pedidas:
             continue
         preparar(nombre, f["fuente"], crop=f.get("crop"), rot=f.get("rot", 0), marcas=f.get("marcas"),
-                 nota=f.get("nota", ""), lisa_ok=f.get("lisa_ok", ()))
+                 nota=f.get("nota", ""), lisa_ok=f.get("lisa_ok", ()), nombres=f.get("nombres", False))
         hechas += 1
         print("ok", nombre)
     print(hechas, "fotos en", DESTINO)
