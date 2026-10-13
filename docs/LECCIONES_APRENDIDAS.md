@@ -60,6 +60,8 @@ incidente vive en los snapshots.
 
 - **13/10 — En una hoja de proceso, una pieza de nombre raro lleva su aclaración entre paréntesis y su recuadro con el nombre en la foto; el pie solo no alcanza** (*"Verificar que los acumuladores... no entiendo... es increíble que sigamos fallando en esto"*). Graduado al skill `hojas-de-proceso` 0.8 b bis y a `feedback_palabra_rara_en_una_hoja_se_aclara_y_se_marca`.
 
+- **13/10 — Un utillaje que apoya sobre algo blando se simula APOYADO y APRETADO antes de imprimirlo, y ante un «no anda» se mide antes de dar una teoría** (*"está muy flojo todo"*). Graduado a `feedback_diseno_3d_medir_antes_de_explicar_y_simular_el_uso`.
+
 ## Identidad de un dato
 
 - **Una fuente que sale de mi lado del mostrador (una regla mía, un test, un agente, el número que yo propuse) no es una segunda fuente: si un documento puede zanjarlo, se abre antes de actuar.** Graduado a `amfe.md` §12 y a `verificar_contra_la_fuente_no_el_codigo`, `un_agente_no_es_independiente`, `al_documento_entra_lo_que_dice_un_papel_de_esa_pieza`.
