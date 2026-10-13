@@ -47,12 +47,12 @@ OP_NUEVA = dict(OP_PRODUCCION, **OP_MAQUINA)
 def renumerar(texto, avisos):
     """Una hoja que nombra a otra por su numero viejo («ver la hoja 40») pasa al numero nuevo."""
     def cambio(m):
-        viejo = m.group(2)
-        if viejo in OP_NUEVA:
-            avisos.append(f"referencia '{m.group(0)}' -> {OP_NUEVA[viejo]}")
-            return m.group(1) + OP_NUEVA[viejo]
-        return m.group(0)
-    return re.sub(r"(?i)\b((?:hojas?|operaci[oó]n(?:es)?|op\.?)\s+)(\d{2})\b", cambio, texto)
+        # "hojas 41 y 42", "hojas 41 a 46": se cambian TODOS los numeros de la lista, no solo el primero
+        nuevos = re.sub(r"\d{2}", lambda n: OP_NUEVA.get(n.group(0), n.group(0)), m.group(2))
+        if nuevos != m.group(2):
+            avisos.append(f"referencia '{m.group(0)}' -> '{m.group(1)}{nuevos}'")
+        return m.group(1) + nuevos
+    return re.sub(r"(?i)\b((?:hojas?|operaci[oó]n(?:es)?|op\.?)\s+)(\d{2}(?:\s*(?:y|a|,)\s*\d{2})*)\b", cambio, texto)
 
 
 def PALABRA_DE_PLANTA(texto):
