@@ -235,7 +235,14 @@ marcar, y el control no veía los plurales (`acumuladores`). **Lo mismo para las
 pistola de calor, tijera, pinza y cutter"* con una foto de la mesa y el pie *"Herramental del puesto"*: *"no se
 entiende bien cuáles son las herramientas, deberíamos nombrarlas y mostrarlas mejor... lo vamos a tener que incluir
 como criterio general"*): cada herramienta que el paso nombra va señalada en la foto con su nombre y su flecha; una
-foto de la mesa con todo junto y un pie genérico no alcanza. Vale en todas las hojas. Lo que no se puede explicar con una fuente va a la
+foto de la mesa con todo junto y un pie genérico no alcanza. Vale en todas las hojas.
+**La forma que pidió Fak ese mismo día** (*"pongamos las herramientas con fondo blanco, más lindo... así queda feo"*,
+sobre los carteles con flecha encima de la foto de la mesa): una **tira de herramientas**, una baldosa por
+herramienta, la herramienta ENTERA sobre fondo blanco y su nombre abajo en letra grande. Sale de una foto real de
+cada herramienta (sobre una hoja o una mesa blanca); nada generado ni dibujado. Probado el 13/10 recortando de la
+foto de la mesa: sirve solo si la herramienta se ve entera (el cutter salió bien; la pistola de calor y la
+engrampadora, cortadas por el borde de la foto, no). Si no hay foto de la herramienta entera, se pide; mientras
+tanto va el cartel con flecha sobre la foto, y lo que no se ve (la pinza) no se marca. Lo que no se puede explicar con una fuente va a la
 lista de lo que falta preguntar, no se inventa.
 
 **c) ¿Yo entiendo lo que estoy mandando hacer?** *"Pegar una cinta adhesiva como indicador para el
