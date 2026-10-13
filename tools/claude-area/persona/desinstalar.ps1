@@ -71,8 +71,14 @@ function Anotar([string]$ruta, [string]$que) { if ($ruta -and (Test-Path -Litera
 
 $cm = Join-Path $claudeDir 'CLAUDE.md'
 if ((Test-Path -LiteralPath $cm) -and ((Leer $cm).Contains('<!-- barack-instalador -->'))) { Anotar $cm 'quien sos (lo que dejo el instalador)' }
-foreach ($s in @(Prop $marca 'skills')) { if ($s) { Anotar (Join-Path $claudeDir ('skills\' + $s)) ('habilidad ' + $s) } }
-foreach ($a in @(Prop $marca 'agentes')) { if ($a) { Anotar (Join-Path $claudeDir ('agents\' + $a)) ('ayudante ' + $a) } }
+# en modo carpeta las habilidades y los ayudantes estan adentro de esa carpeta (se van con ella, mas abajo): los de
+# ~\.claude con el mismo nombre son de la persona y no se tocan
+$cmCarpeta = Join-Path $CarpetaBarack 'CLAUDE.md'
+$enCarpeta = ((Prop $marca 'modo') -eq 'carpeta') -or ((Test-Path -LiteralPath $cmCarpeta) -and ((Leer $cmCarpeta).Contains('<!-- barack-instalador -->')))
+if (-not $enCarpeta) {
+  foreach ($s in @(Prop $marca 'skills')) { if ($s) { Anotar (Join-Path $claudeDir ('skills\' + $s)) ('habilidad ' + $s) } }
+  foreach ($a in @(Prop $marca 'agentes')) { if ($a) { Anotar (Join-Path $claudeDir ('agents\' + $a)) ('ayudante ' + $a) } }
+}
 Anotar (Join-Path $claudeDir 'conocimiento-barack') 'fichas de la empresa'
 $nuestras = @(Prop $marca 'memorias' | Where-Object { $_ -and $_ -ne 'MEMORY.md' })
 foreach ($m in $nuestras) { Anotar (Join-Path $memDir $m) 'memoria de Ingenieria' }
@@ -80,6 +86,9 @@ if ((Prop $marca 'herramientas_creada') -ne $false) { Anotar $CarpetaHerramienta
 foreach ($d in @(Prop $marca 'playwright_creadas')) { if ($d) { Anotar (Join-Path $pwDir $d) 'navegador de los flujogramas' } }
 # lo del asistente por area (las habilidades que la persona le enseno se pasan antes a ~\.claude\skills)
 $skillsSuyas = @(Get-ChildItem -LiteralPath (Join-Path $CarpetaBarack '.claude\skills') -Directory -ErrorAction SilentlyContinue)
+# instalado en modo carpeta, las habilidades de esa carpeta que anoto el instalador son de Ingenieria, no de la persona
+# (sin la marca no se sabe cuales son de quien: no se pasa ninguna, van a la Papelera con la carpeta y de ahi se recuperan)
+if ($enCarpeta) { $deIng = @(Prop $marca 'skills' | Where-Object { $_ }); if ($deIng.Count) { $skillsSuyas = @($skillsSuyas | Where-Object { $deIng -notcontains $_.Name }) } else { $skillsSuyas = @() } }
 if (Test-Path -LiteralPath $CarpetaBarack) {
   foreach ($e in @(Get-ChildItem -LiteralPath $CarpetaBarack -Force)) {
     if ($e.Name -ieq 'Trabajo') {
@@ -118,6 +127,8 @@ if (Test-Path -LiteralPath $sp) {
     foreach ($par in @(@('autoMemoryDirectory', $s), @('skipDangerousModePermissionPrompt', $s), @('defaultMode', $perm))) {
       $clave = $par[0]; $obj = $par[1]
       if ($null -eq $obj) { continue }
+      # en modo carpeta el instalador no fijo la carpeta de memoria: si la persona puso una, es suya y queda
+      if ($enCarpeta -and $clave -eq 'autoMemoryDirectory') { continue }
       $antes = Prop $previo $clave
       if ($null -ne $antes) { Poner $obj $clave $antes } else { [void](Sacar $obj $clave) }
     }

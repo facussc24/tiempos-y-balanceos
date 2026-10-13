@@ -55,6 +55,8 @@ export function validarTexto(texto, ruta = '') {
 const REEMPLAZOS = {
     'reference_impresoras_ricoh_red_barack.md': [['Se llamaba `impresora de mierda`; desde', 'Desde']],
     'reference_caracteristicas_especiales_notacion_barack.md': [['"¿Qué carajo es W?"', '"¿Qué es W?"']],
+    // la cuenta de cuantas veces pregunto un sector no es conocimiento de la empresa, y el paquete puede ir a ese sector
+    'project_telas_termoformadas_pwa_582d.md': [[' **Tercera vez que Produccion pregunta lo mismo.**', '']],
     'ppap-motherson/SKILL.md': [['- Texto corto, voz de Fak (`_vozFak.mjs`): ', '- Texto corto, en la voz de la persona: ']],
     'explicar-mejor/SKILL.md': [
         ['6. Abrila con el programa de arriba (la skill `leer-archivo`, sección "Abrirle el archivo"):', '6. Abrila en pantalla:'],
@@ -134,6 +136,36 @@ export function descripcion(texto) {
     let d = m ? m[1].trim() : '';
     d = d.replace(/^"(.*)"$/, '$1').replace(/\\"/g, '"');
     return d.length > 100 ? `${d.slice(0, 97).trimEnd()}...` : d;
+}
+
+const NOMBRE_AREA = { direccion: 'Dirección', produccion: 'Producción', ingenieria: 'Ingeniería', calidad: 'Calidad', compras: 'Compras', logistica: 'Logística', mantenimiento: 'Mantenimiento', rrhh: 'Recursos Humanos' };
+const FICHAS_DIRECCION = '`direccion\\` (lo de Dirección)';
+const CARPETA_LIBRE = '- Trabajá en la carpeta que él elija. Ninguna carpeta es obligatoria.';
+
+/**
+ * El CLAUDE.md del paquete, desde la plantilla (escrita para Pedro: fichas de Direccion, instalado para todo el
+ * usuario). Pone las fichas del area de la persona y, con `"modo": "carpeta"` (13/10/2026, Federico: quiere el de
+ * Ingenieria y ademas conservar su Claude personal), dice que esto vale solo en la carpeta donde se instalo.
+ */
+export function claudeMdDe(persona, plantilla) {
+    let t = plantilla;
+    const areas = (persona.conocimiento || []).filter((c) => c !== 'comun');
+    if (persona.modo !== undefined && persona.modo !== 'carpeta') throw new Error(`"modo": "${persona.modo}" no existe (el unico es "carpeta"; sin "modo" se instala para todo el usuario)`);
+    if (!areas.length) throw new Error('la persona no tiene fichas de ningun area en "conocimiento" (ademas de "comun")');
+    if (areas.join() !== 'direccion') {
+        if (!t.includes(FICHAS_DIRECCION)) throw new Error('la plantilla CLAUDE.md ya no trae el renglon de las fichas de Direccion: no se pudo poner el area de la persona');
+        for (const a of areas) if (!NOMBRE_AREA[a]) throw new Error(`no se como se llama el area "${a}" (agregala a NOMBRE_AREA)`);
+        t = t.replace(FICHAS_DIRECCION, () => areas.map((a) => `\`${a}\\\` (lo de ${NOMBRE_AREA[a]})`).join(' y '));
+    }
+    if (persona.modo === 'carpeta') {
+        if (!t.includes(CARPETA_LIBRE)) throw new Error('la plantilla CLAUDE.md ya no trae el renglon de la carpeta de trabajo: no se pudo armar el modo carpeta');
+        t = t.replace(CARPETA_LIBRE, () => [
+            '- **Sos el Claude de Ingeniería y valés solo cuando {{NOMBRE_CORTO}} abre Claude en esta carpeta (`{{CARPETA}}`).**',
+            '  En cualquier otra carpeta de su PC sigue su Claude personal, con su propia memoria: lo que anotes acá no pasa',
+            '  allá, y lo de allá no se ve acá. Sus archivos pueden estar en cualquier lado; acá adentro van en `Trabajo\\`.',
+        ].join('\n'));
+    }
+    return t;
 }
 
 // Claude Code lee de MEMORY.md los primeros 200 renglones o 25.000 caracteres (medido en el ejecutable 2.1.293:
@@ -248,7 +280,7 @@ export function armar(opciones) {
     // 3) ayudantes, CLAUDE.md, persona, instalador
     fs.mkdirSync(path.join(staging, 'agentes'), { recursive: true });
     for (const a of ['investigador.md', 'explorador.md', 'buscador.md']) fs.copyFileSync(path.join(AQUI, 'plantillas', 'agentes', a), path.join(staging, 'agentes', a));
-    fs.copyFileSync(path.join(AQUI, 'plantillas', 'CLAUDE.md'), path.join(staging, 'CLAUDE.md'));
+    escribir(path.join(staging, 'CLAUDE.md'), claudeMdDe(persona, fs.readFileSync(path.join(AQUI, 'plantillas', 'CLAUDE.md'), 'utf8')));
     fs.copyFileSync(path.join(AQUI, 'instalar.ps1'), path.join(staging, 'instalar.ps1'));
     fs.copyFileSync(path.join(AQUI, 'desinstalar.ps1'), path.join(staging, 'desinstalar.ps1'));
     escribir(path.join(staging, 'persona.json'), JSON.stringify({ ...persona, fecha_paquete: fecha }, null, 2));

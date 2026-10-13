@@ -63,7 +63,13 @@ function AlRespaldo([string]$ruta, [string]$respaldo, [string]$base, [switch]$Co
 
 $persona = (Leer (Join-Path $aqui 'persona.json')) | ConvertFrom-Json
 $claudeDir = Join-Path $CarpetaUsuario '.claude'
-$sello = Get-Date -Format 'yyyy-MM-dd_HHmmss'
+# Modo carpeta ("modo": "carpeta" en persona.json; 13/10/2026, Federico: quiere el Claude de Ingenieria y ademas
+# conservar su Claude personal). Quien es, las habilidades y los ayudantes quedan ADENTRO de -CarpetaBarack y la
+# memoria en la de esa carpeta: valen solo cuando abre Claude ahi. En las demas carpetas sigue su Claude, sin mezclar.
+$enCarpeta = ((Prop $persona 'modo') -eq 'carpeta')
+$baseClaude = $claudeDir
+if ($enCarpeta) { $baseClaude = Join-Path $CarpetaBarack '.claude' }
+$sello =Get-Date -Format 'yyyy-MM-dd_HHmmss'
 $respUsuario = Join-Path $claudeDir ('respaldos\antes-de-instalar-' + $sello)
 # La carpeta de memoria se deriva de -CarpetaBarack como lo hace Claude Code (C:\ClaudeBarack -> C--ClaudeBarack):
 # con otra carpeta la memoria quedaba huerfana (revision S2, 09/10/2026).
@@ -184,8 +190,10 @@ Poner $perm 'defaultMode' 'bypassPermissions'
 Poner $s 'permissions' $perm
 if ((Prop $s 'skipDangerousModePermissionPrompt') -ne $true) { $queCambia += 'sin el cartel de advertencia de ese modo' }
 Poner $s 'skipDangerousModePermissionPrompt' $true
-if ((Prop $s 'autoMemoryDirectory') -ne $memDir) { $queCambia += 'la memoria en un solo lugar, abra la carpeta que abra' }
-Poner $s 'autoMemoryDirectory' $memDir
+if (-not $enCarpeta) {
+  if ((Prop $s 'autoMemoryDirectory') -ne $memDir) { $queCambia += 'la memoria en un solo lugar, abra la carpeta que abra' }
+  Poner $s 'autoMemoryDirectory' $memDir
+}
 $settingsNuevo = AJson $s
 
 $km = Join-Path $claudeDir 'plugins\known_marketplaces.json'
@@ -207,11 +215,33 @@ if (Test-Path -LiteralPath $ip) {
 
 # El asistente por area entero va a la Papelera (Fak, 08/10/2026: la carpeta vieja no queda). Queda solo lo de la
 # persona: sus archivos de C:\ClaudeBarack\Trabajo.
+# Un paquete de un modo encima de una instalacion del otro dejaria lo del primero sin dueno (el desinstalador no lo
+# sacaria): se corta antes de tocar nada (auditoria del 13/10/2026).
+$modoPrevio = $null
+if ($null -ne $marcaPrevia) { $modoPrevio = Prop $marcaPrevia 'modo'; if (-not $modoPrevio) { $modoPrevio = 'usuario' } }
+$modoNuevo = 'usuario'; if ($enCarpeta) { $modoNuevo = 'carpeta' }
+if ($modoPrevio -and $modoPrevio -ne $modoNuevo) {
+  Write-Host ('  En esta PC ya hay una instalacion de Ingenieria en modo "' + $modoPrevio + '" y este paquete es modo "' + $modoNuevo + '".') -ForegroundColor Red
+  Write-Host '  Primero hay que sacar la anterior (pedirselo a Claude, o el desinstalador). No se toco nada.' -ForegroundColor Red
+  exit 5
+}
+# En modo carpeta, instalar ENCIMA no vacia la carpeta: lo que la persona hizo ahi (sus notas, sus habilidades, sus
+# archivos) queda. Solo se reemplaza lo que puso el instalador anterior (lo dice su marca).
+$reinstalaCarpeta = $enCarpeta -and ($modoPrevio -eq 'carpeta')
+$nuestrasAntes = @(); if ($reinstalaCarpeta) { $nuestrasAntes = @(Prop $marcaPrevia 'skills' | Where-Object { $_ }) }
 $deBarack = @()
-if (Test-Path -LiteralPath $CarpetaBarack) {
+if ($reinstalaCarpeta) {
+  foreach ($n in $nuestrasAntes) {
+    $p = Join-Path $CarpetaBarack ('.claude\skills\' + $n)
+    if ((Test-Path -LiteralPath $p) -and -not (Test-Path -LiteralPath (Join-Path $aqui ('skills\' + $n)))) { $deBarack += $p }
+  }
+} elseif (Test-Path -LiteralPath $CarpetaBarack) {
   foreach ($e in @(Get-ChildItem -LiteralPath $CarpetaBarack -Force)) {
     if ($e.Name -ieq 'Trabajo') {
       foreach ($rel in @('.claude', 'LEEME.txt')) { $p = Join-Path $e.FullName $rel; if (Test-Path -LiteralPath $p) { $deBarack += $p } }
+    } elseif ($enCarpeta -and $e.Name -ieq '.claude') {
+      # las habilidades que la persona le enseno al asistente por area se quedan en la carpeta (no pasan a su Claude personal)
+      foreach ($h in @(Get-ChildItem -LiteralPath $e.FullName -Force)) { if ($h.Name -ine 'skills') { $deBarack += $h.FullName } }
     } else { $deBarack += $e.FullName }
   }
 }
@@ -230,7 +260,7 @@ $cm = $cm.Replace('{{NOMBRE_CORTO}}', $persona.nombre_corto).Replace('{{NOMBRE}}
 $cm = $cm.Replace('{{MAIL}}', $persona.mail).Replace('{{MEMORIA}}', $memDir).Replace('{{CONOCIMIENTO}}', $conDir).Replace('{{FECHA}}', $persona.fecha_paquete)
 $cm = $cm.Replace('{{HERRAMIENTAS}}', $CarpetaHerramientas).Replace('{{PYTHON}}', (Join-Path $pyDir 'python.exe')).Replace('{{NODE}}', (Join-Path $nodeDir 'node.exe'))
 $desinstalador = Join-Path $progDir 'desinstalar.ps1'
-$cm = $cm.Replace('{{DESINSTALAR}}', $desinstalador)
+$cm = $cm.Replace('{{DESINSTALAR}}', $desinstalador).Replace('{{CARPETA}}', $CarpetaBarack)
 # lo que ya habia antes de instalar (el desinstalador saca solo lo que puso este instalador)
 $herrCreada = (-not (Test-Path -LiteralPath $CarpetaHerramientas)) -or ((Prop $marcaPrevia 'herramientas_creada') -eq $true)
 $pwAntes = @(Get-ChildItem -LiteralPath $pwDir -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.Name })
@@ -262,7 +292,10 @@ function SumarRenglones([string]$idxRuta) {
 $idxPrevio = Join-Path $memDir 'MEMORY.md'
 if (Test-Path -LiteralPath $idxPrevio) { SumarRenglones $idxPrevio }
 $otrasMemorias = @()
-foreach ($d in @(Get-ChildItem -LiteralPath (Join-Path $claudeDir 'projects') -Directory -ErrorAction SilentlyContinue)) {
+# en modo carpeta las memorias de sus otras carpetas son de su Claude personal: no se traen
+$otrosProyectos = @()
+if (-not $enCarpeta) { $otrosProyectos = @(Get-ChildItem -LiteralPath (Join-Path $claudeDir 'projects') -Directory -ErrorAction SilentlyContinue) }
+foreach ($d in $otrosProyectos) {
   $m = Join-Path $d.FullName 'memory'
   if ($m -eq $memDir -or -not (Test-Path -LiteralPath $m)) { continue }
   foreach ($f in @(Get-ChildItem -LiteralPath $m -File -Filter '*.md')) {
@@ -272,9 +305,11 @@ foreach ($d in @(Get-ChildItem -LiteralPath (Join-Path $claudeDir 'projects') -D
 }
 # lo que la persona le enseno al asistente por area (skill "aprender"): pasa a su Claude nuevo, no a la Papelera
 $skillsSuyas = @(Get-ChildItem -LiteralPath (Join-Path $CarpetaBarack '.claude\skills') -Directory -ErrorAction SilentlyContinue)
+# en modo carpeta ninguna habilidad pasa a ~\.claude (seria meterla en su Claude personal): las suyas quedan donde estan
+if ($enCarpeta) { $skillsSuyas = @() }
 $cmViejo = Join-Path $CarpetaBarack 'CLAUDE.md'
 $cmViejoPropio = $false
-if (Test-Path -LiteralPath $cmViejo) {
+if ((Test-Path -LiteralPath $cmViejo) -and -not ((Leer $cmViejo).Contains('<!-- barack-instalador -->'))) {
   $resto = @((Leer $cmViejo) -split "`r?`n" | Where-Object { $_.Trim() -and $_ -notmatch '^# Claude de Barack Mercosul' -and $_ -notmatch 'Tus archivos van en la carpeta' })
   $cmViejoPropio = $resto.Count -gt 0
 }
@@ -307,8 +342,11 @@ foreach ($p in $deBarack) { $ruta = $p; Hacer ('a la Papelera: ' + $ruta + ' (as
 # ---------------------------------------------------------------------------------------------
 Titulo '4. Instalo quien sos y lo que sabe'
 $cmDest = Join-Path $claudeDir 'CLAUDE.md'
-if (Test-Path -LiteralPath $cmDest) { Hacer 'guardar una copia del CLAUDE.md que habia' { AlRespaldo $cmDest $respUsuario $claudeDir -Copiar } }
-Hacer ('quien sos: ' + $persona.nombre + ', ' + $persona.puesto + ', ' + $persona.mail) { Escribir $cmDest $cm }
+if ($enCarpeta) { $cmDest = Join-Path $CarpetaBarack 'CLAUDE.md' }
+# en modo carpeta lo que habia en esa carpeta ya se fue a la Papelera en el paso 3 (no hay nada que respaldar)
+if ((-not $enCarpeta) -and (Test-Path -LiteralPath $cmDest)) { Hacer 'guardar una copia del CLAUDE.md que habia' { AlRespaldo $cmDest $respUsuario $claudeDir -Copiar } }
+Hacer ('quien sos: ' + $persona.nombre + ', ' + $persona.puesto + ', ' + $persona.mail + $(if ($enCarpeta) { ' (solo en ' + $CarpetaBarack + ')' } else { '' })) { Escribir $cmDest $cm }
+if ($enCarpeta -and -not (Test-Path -LiteralPath (Join-Path $CarpetaBarack 'Trabajo'))) { Hacer ('carpeta para sus archivos: ' + (Join-Path $CarpetaBarack 'Trabajo')) { New-Item -ItemType Directory -Path (Join-Path $CarpetaBarack 'Trabajo') -Force | Out-Null } }
 Hacer ('memoria: ' + $memFiles.Count + ' archivos' + $(if ($suyas.Count) { ', y quedan arriba los ' + $suyas.Count + ' renglones que ya tenia' } else { '' })) {
   if (-not (Test-Path -LiteralPath $memDir)) { New-Item -ItemType Directory -Path $memDir -Force | Out-Null }
   foreach ($o in $otrasMemorias) { Copy-Item -LiteralPath $o -Destination (Join-Path $memDir (Split-Path $o -Leaf)) }
@@ -326,20 +364,29 @@ if ($suyas.Count -and (@((Leer (Join-Path $aqui 'memoria\MEMORY.md')) -split "`n
   Write-Host '  aviso: el indice de la memoria quedo largo; Claude lee los primeros 200 renglones (lo de la persona va arriba).' -ForegroundColor Yellow
 }
 Hacer ('habilidades: ' + (($skills | ForEach-Object { $_.Name }) -join ', ')) {
-  $skDest = Join-Path $claudeDir 'skills'
+  $skDest = Join-Path $baseClaude 'skills'
   if (-not (Test-Path -LiteralPath $skDest)) { New-Item -ItemType Directory -Path $skDest -Force | Out-Null }
   foreach ($k in $skills) {
     $dst = Join-Path $skDest $k.Name
-    if (Test-Path -LiteralPath $dst) { AlRespaldo $dst $respUsuario $claudeDir }
+    if (Test-Path -LiteralPath $dst) {
+      if (-not $enCarpeta) { AlRespaldo $dst $respUsuario $claudeDir }
+      elseif ($nuestrasAntes -contains $k.Name) { APapelera $dst }
+      else {
+        # una habilidad de la persona con el mismo nombre que una nuestra: la suya queda, con otro nombre
+        $propia = $dst + '-propia'; $n = 2
+        while (Test-Path -LiteralPath $propia) { $propia = $dst + '-propia-' + $n; $n++ }
+        Rename-Item -LiteralPath $dst -NewName (Split-Path $propia -Leaf)
+      }
+    }
     Copy-Item -LiteralPath $k.FullName -Destination $dst -Recurse -Force
   }
 }
 Hacer 'ayudantes: investigador, explorador y buscador' {
-  $ad = Join-Path $claudeDir 'agents'
+  $ad = Join-Path $baseClaude 'agents'
   if (-not (Test-Path -LiteralPath $ad)) { New-Item -ItemType Directory -Path $ad -Force | Out-Null }
   foreach ($g in (Get-ChildItem -LiteralPath (Join-Path $aqui 'agentes') -File)) {
     $dst = Join-Path $ad $g.Name
-    if (Test-Path -LiteralPath $dst) { AlRespaldo $dst $respUsuario $claudeDir -Copiar }
+    if ((-not $enCarpeta) -and (Test-Path -LiteralPath $dst)) { AlRespaldo $dst $respUsuario $claudeDir -Copiar }
     Copy-Item -LiteralPath $g.FullName -Destination $dst -Force
   }
 }
@@ -378,6 +425,7 @@ Hacer 'anotar lo que se instalo (lo usa el desinstalador)' {
   $marca = [pscustomobject]@{
     persona = $persona.nombre; puesto = $persona.puesto; instalado = (Get-Date -Format s); paquete = $persona.fecha_paquete
     pc = $env:COMPUTERNAME; usuario = $env:USERNAME
+    modo = $(if ($enCarpeta) { 'carpeta' } else { 'usuario' }); carpeta = $CarpetaBarack; claude_md = $cmDest; base_claude = $baseClaude
     memoria_dir = $memDir; memorias = @($nuestros); skills = @($skills | ForEach-Object { $_.Name }); agentes = @('investigador.md', 'explorador.md', 'buscador.md')
     herramientas = $CarpetaHerramientas; herramientas_creada = [bool]($hayHerr -and $herrCreada)
     playwright_creadas = @(@($pwPrevias) + @($pwNuevas) | Select-Object -Unique)
@@ -411,12 +459,13 @@ try {
   $controles += ,@('asistente por area apagado', ((Prop (Prop $v 'enabledPlugins') 'barack-area@barack') -eq $false))
   $controles += ,@('ya no se reinstala solo', (-not (Prop (Prop $v 'extraKnownMarketplaces') 'barack')))
   $controles += ,@('sin carteles de permiso', ((Prop (Prop $v 'permissions') 'defaultMode') -eq 'bypassPermissions'))
-  $controles += ,@('memoria en un solo lugar', ((Prop $v 'autoMemoryDirectory') -eq $memDir))
+  if ($enCarpeta) { $controles += ,@('su Claude personal sigue con su memoria (la de Ingenieria no se le mezcla)', ((Prop $v 'autoMemoryDirectory') -ne $memDir)) }
+  else { $controles += ,@('memoria en un solo lugar', ((Prop $v 'autoMemoryDirectory') -eq $memDir)) }
 } catch { $controles += ,@('la configuracion se puede leer', $false) }
-$controles += ,@('sabe quien sos', ((Test-Path -LiteralPath $cmDest) -and ((Leer $cmDest).Contains($persona.nombre))))
+$controles += ,@('sabe quien sos', ((Test-Path -LiteralPath $cmDest) -and ((Leer $cmDest).Contains($persona.nombre)) -and -not ((Leer $cmDest).Contains('{{'))))
 $controles += ,@('memoria copiada', (@(Get-ChildItem -LiteralPath $memDir -File -ErrorAction SilentlyContinue).Count -ge $memFiles.Count))
-$controles += ,@('habilidades copiadas', (@($skills | Where-Object { -not (Test-Path -LiteralPath (Join-Path $claudeDir ('skills\' + $_.Name + '\SKILL.md'))) }).Count -eq 0))
-$controles += ,@('ayudantes copiados', ((Test-Path -LiteralPath (Join-Path $claudeDir 'agents\investigador.md')) -and (Test-Path -LiteralPath (Join-Path $claudeDir 'agents\explorador.md')) -and (Test-Path -LiteralPath (Join-Path $claudeDir 'agents\buscador.md'))))
+$controles += ,@('habilidades copiadas', (@($skills | Where-Object { -not (Test-Path -LiteralPath (Join-Path $baseClaude ('skills\' + $_.Name + '\SKILL.md'))) }).Count -eq 0))
+$controles += ,@('ayudantes copiados', ((Test-Path -LiteralPath (Join-Path $baseClaude 'agents\investigador.md')) -and (Test-Path -LiteralPath (Join-Path $baseClaude 'agents\explorador.md')) -and (Test-Path -LiteralPath (Join-Path $baseClaude 'agents\buscador.md'))))
 $controles += ,@('reglas del asistente por area afuera', (-not (Test-Path -LiteralPath (Join-Path $CarpetaBarack '.claude\rules\casa.md'))))
 if (-not $SinTarea) { $controles += ,@('tarea de Windows afuera', ($null -eq (Get-ScheduledTask -TaskName 'Barack - Claude por area' -ErrorAction SilentlyContinue))) }
 if ($hayHerr) {
@@ -445,8 +494,16 @@ if ($script:fallas.Count) {
 Write-Host ''
 Write-Host '  Que cambio:'
 Write-Host '   - Se apagaron los frenos del asistente por area, en cualquier carpeta.'
+if ($enCarpeta -and (Prop $s 'autoMemoryDirectory')) {
+  Write-Host ('   - OJO: esta PC tiene una carpeta de memoria fija para todo (' + (Prop $s 'autoMemoryDirectory') + ').') -ForegroundColor Yellow
+  Write-Host '     Con eso el Claude de Ingenieria no lee la memoria que se acaba de instalar. Avisale a Ingenieria.' -ForegroundColor Yellow
+}
+if ($enCarpeta) {
+  Write-Host ('   - Tenes DOS Claude. El de Ingenieria: abri Claude y elegi la carpeta ' + $CarpetaBarack + '.') -ForegroundColor Green
+  Write-Host '     El tuyo personal: abri Claude en cualquier otra carpeta. No se mezclan.' -ForegroundColor Green
+}
 Write-Host ('   - Claude sabe que sos ' + $persona.nombre + ' (' + $persona.puesto + ').')
-Write-Host ('   - Tiene ' + ($memFiles.Count - 1) + ' temas de memoria de la empresa, ' + $fichas + ' fichas, ' + $skills.Count + ' habilidades y 2 ayudantes.')
+Write-Host ('   - Tiene ' + ($memFiles.Count - 1) + ' temas de memoria de la empresa, ' + $fichas + ' fichas, ' + $skills.Count + ' habilidades y 3 ayudantes.')
 if ($hayHerr) { Write-Host ('   - Tiene Python, Node y los programas de las habilidades (en ' + $CarpetaHerramientas + ').') }
 Write-Host ''
 Write-Host '  Falta, una sola vez:'

@@ -1,0 +1,14 @@
+{
+  "_fuente": "Lo que Federico declaro al instalar el asistente por area el 06/10/2026 (aviso sin-persona de DESKTOP-OV373UE en el buzon: nombre Federico Kipersain, puesto Planificador, area produccion) y la salud de esa PC del 06/10/2026 (usuario de Windows fkipersain). El mail sale de las memorias de mails del equipo (f.kipersain@barackmercosul.com). Modo carpeta (pedido de Facundo del 13/10/2026: quiere el de Ingenieria y ademas conservar su Claude personal): lo de Ingenieria queda adentro de C:\\ClaudeBarack y en las demas carpetas sigue su Claude.",
+  "clave": "federico",
+  "nombre": "Federico Kipersain",
+  "nombre_corto": "Federico",
+  "puesto": "Planificador",
+  "area": "produccion",
+  "mail": "f.kipersain@barackmercosul.com",
+  "usuario_windows": "fkipersain",
+  "pc": "DESKTOP-OV373UE",
+  "conocimiento": ["comun", "produccion"],
+  "modo": "carpeta",
+  "nombre_instalador": "Instalar Claude - Federico Kipersain.cmd"
+}

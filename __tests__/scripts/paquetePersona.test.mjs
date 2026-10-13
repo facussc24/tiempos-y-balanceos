@@ -12,7 +12,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { validarTexto, limpiarTexto, descripcion, TOPE_INDICE, HERRAMIENTAS } from '../../tools/claude-area/persona/armar.mjs';
+import { validarTexto, limpiarTexto, descripcion, TOPE_INDICE, HERRAMIENTAS, claudeMdDe } from '../../tools/claude-area/persona/armar.mjs';
 
 const DATOS = JSON.parse(readFileSync(join(__dirname, '..', '..', 'tools', 'claude-area', 'persona', 'memorias.data.json'), 'utf8'));
 
@@ -118,6 +118,52 @@ describe('el indice MEMORY.md entra entero en lo que lee Claude', () => {
     it('el tope queda por debajo de lo que lee Claude Code (200 renglones, 25.000 caracteres)', () => {
         expect(TOPE_INDICE.renglones).toBeLessThan(200);
         expect(TOPE_INDICE.caracteres).toBeLessThan(25000);
+    });
+});
+
+// 13/10/2026: Federico (Produccion) pidio el Claude de Ingenieria y ademas conservar su Claude personal. La plantilla
+// estaba escrita para Pedro (fichas de Direccion, instalado para todo el usuario).
+describe('claudeMdDe: el area de la persona y el modo carpeta', () => {
+    const PERSONA_DIR = join(__dirname, '..', '..', 'tools', 'claude-area', 'persona');
+    const plantilla = readFileSync(join(PERSONA_DIR, 'plantillas', 'CLAUDE.md'), 'utf8');
+    const persona = (clave) => JSON.parse(readFileSync(join(PERSONA_DIR, `${clave}.json`), 'utf8'));
+    it('para Pedro (Direccion, todo el usuario) la plantilla sale igual', () => {
+        expect(claudeMdDe(persona('pedro'), plantilla)).toBe(plantilla);
+    });
+    it('para Federico: fichas de Produccion, no de Direccion, y dice que vale solo en su carpeta', () => {
+        const t = claudeMdDe(persona('federico'), plantilla);
+        expect(t).toContain('`produccion\\` (lo de Producción)');
+        expect(t).not.toMatch(/direccion|Dirección/);
+        expect(t).toContain('valés solo cuando {{NOMBRE_CORTO}} abre Claude en esta carpeta (`{{CARPETA}}`)');
+        expect(t).not.toContain('Ninguna carpeta es obligatoria');
+    });
+    it('sin "modo": "carpeta" no habla de dos Claude', () => {
+        const t = claudeMdDe({ ...persona('federico'), modo: undefined }, plantilla);
+        expect(t).not.toContain('{{CARPETA}}');
+        expect(t).toContain('Ninguna carpeta es obligatoria');
+    });
+    it('un area sin nombre o una plantilla que cambio frenan el armado en vez de dejar el renglon de otro', () => {
+        expect(() => claudeMdDe({ conocimiento: ['comun', 'ventas'] }, plantilla)).toThrow(/ventas/);
+        expect(() => claudeMdDe(persona('federico'), plantilla.replace('`direccion\\`', '`otra\\`'))).toThrow(/fichas de Direccion/);
+        expect(() => claudeMdDe(persona('federico'), plantilla.replace('Ninguna carpeta es obligatoria.', ''))).toThrow(/modo carpeta/);
+    });
+    it('el instalador reemplaza {{CARPETA}} y sabe del modo carpeta; el desinstalador no toca lo de ~\\.claude en ese modo', () => {
+        const inst = readFileSync(join(PERSONA_DIR, 'instalar.ps1'), 'utf8');
+        expect(inst).toContain(".Replace('{{CARPETA}}', $CarpetaBarack)");
+        expect(inst).toMatch(/if \(-not \$enCarpeta\) \{\r?\n\s+if \(\(Prop \$s 'autoMemoryDirectory'\)/);
+        const des = readFileSync(join(PERSONA_DIR, 'desinstalar.ps1'), 'utf8');
+        expect(des).toMatch(/if \(-not \$enCarpeta\) \{\r?\n\s+foreach \(\$s in @\(Prop \$marca 'skills'\)\)/);
+        // auditoria del 13/10: en modo carpeta ninguna habilidad pasa a ~\.claude y el desinstalador no toca una carpeta de memoria que no fijo
+        expect(inst).toContain('if ($enCarpeta) { $skillsSuyas = @() }');
+        expect(des).toContain("if ($enCarpeta -and $clave -eq 'autoMemoryDirectory') { continue }");
+    });
+    it('un "modo" mal escrito o una persona sin area frenan el armado', () => {
+        expect(() => claudeMdDe({ ...persona('federico'), modo: 'carpetas' }, plantilla)).toThrow(/no existe/);
+        expect(() => claudeMdDe({ conocimiento: ['comun'] }, plantilla)).toThrow(/ningun area/);
+    });
+    it('la cuenta de cuantas veces pregunto Produccion no viaja', () => {
+        const { texto } = limpiarTexto('Kipersain volvio a preguntar el 31/08. **Tercera vez que Produccion pregunta lo mismo.**\n', { archivo: 'project_telas_termoformadas_pwa_582d.md' });
+        expect(texto).toBe('Kipersain volvio a preguntar el 31/08.\n');
     });
 });
 
