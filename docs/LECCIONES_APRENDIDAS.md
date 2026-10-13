@@ -23,7 +23,7 @@ incidente vive en los snapshots.
 
 - **11/10 — «La API piensa, yo integro» funciona, pero lo que escribe la API se AUDITA antes de commitear: el auditor Opus encontró 3 errores reales en la primera tanda y 2 en la segunda.** Graduado a `api-claude.md` §2 y §5 (el tope de salida con esfuerzo alto) y a `project_tanda_orquestador_2026-10-10_donde_quedo`; lo que la API afirma de un dato que no vio se mide antes de codear (`feedback_la_respuesta_conocida_se_mide_antes_del_gate`).
 
-- **09-10/10 — Un control que suma trabajo a un chequeo con tope de tiempo se mide en el MODO en que corre ese chequeo** (el detector pasó de 55 a 90 s y el cierre leyó «vacío» como limpio), **y el auditor Opus no se saltea** (un error real en 3 de 4 cambios; el 11/10 cazó 9 escrituras que pasaban en la primera versión de HOY-16). Graduado al auditor (`metodo_correr_no_solo_leer`) y a `_sinFirmaIA.py`.
+- **09-10/10 — Un control que suma trabajo a un chequeo con tope de tiempo se mide en el MODO en que corre ese chequeo** (el detector pasó de 55 a 90 s y el cierre leyó «vacío» como limpio), **y el auditor Opus no se saltea**. Graduado al auditor (`metodo_correr_no_solo_leer`) y a `_sinFirmaIA.py`.
 
 - **07/10 — «El estándar» se COMPARA contra una hoja real de la casa (la HO de Excel), no contra lo que dejó la sesión anterior** (Fak: *"te lo dije 300 veces, no es el estándar que decidimos"*; era el ARMADO: plan debajo de las fotos, ciclo de control al lado). Graduado al canon 4.5 y a `bloque_plan()`.
 
@@ -91,7 +91,7 @@ incidente vive en los snapshots.
 
 - **08/10 — Mi Claude para OTRA persona va filtrado y con SU identidad** (a Carlos la memoria cruda le dejó "el usuario es Facundo"); y una pregunta de Fak no es una orden de diseño. Graduado a `validarTexto()` de `tools/claude-area/persona/armar.mjs` y a `project_claude_para_pedro`.
 
-- **08/10 — «Un instalador idéntico al de Carlos pero para mí» era SU asistente entero, no el de mails: ante un pedido con dos lecturas se arma lo principal y lo accesorio («de paso, los mails») va después** (Fak: *"le pedí que me pase mi Claude entero... hiciste cagada"*). Lo que Fak va a usar se deja en UNA carpeta con doble clic numerados. Memoria `project_instalar_mi_asistente_pc_nueva`.
+- **08/10 — «Un instalador idéntico al de Carlos pero para mí» era SU asistente entero, no el de mails: ante un pedido con dos lecturas se arma lo principal y lo accesorio («de paso, los mails») va después**. Lo que Fak va a usar se deja en UNA carpeta con doble clic numerados. Memoria `project_instalar_mi_asistente_pc_nueva`.
 
 - **08/10 — Lo que escribo en un entregable lo tiene que poder defender Fak: si un operario o un gerente no lo entiende, no va** (*"jamás podés poner algo que yo no pueda defender"*); y un flujograma para imprimir se juzga por si se entiende el FLUJO, no solo por la letra (*"demasiado junto"*).
 
@@ -103,9 +103,9 @@ incidente vive en los snapshots.
 
 - **06/10 — Una pregunta directa de Fak que llega mientras trabajo se contesta en el mensaje siguiente, antes de seguir** («¿puedo desconectar el celular ya?» esperó varias tandas mías con los videos ya copiados y verificados). Graduado a la memoria `reference_capacidades_de_proceso_y_toma_de_tiempos_por_video` (paso 1).
 
-- **06/10 — Lo que corrijo en el archivo de OTRO se le muestra a Fak recién auditado, cada celda con su ANTES, y volver atrás un cambio no puede dejar un dato que se sabe falso** (el plan de control de Nico: *"no me lo abras, auditalo... poneme el antes"*; el hilo que *"no existe más... es grave"*). Graduado a la memoria `feedback_entregables_para_fak`.
+- **06/10 — Lo que corrijo en el archivo de OTRO se le muestra a Fak recién auditado, cada celda con su ANTES, y volver atrás un cambio no puede dejar un dato que se sabe falso**. Graduado a la memoria `feedback_entregables_para_fak`.
 
-- **06/10 — En el entregable va lo que contesta la pregunta; lo que no pude hacer se dice, no se reemplaza por algo parecido con el título de lo pedido** (apoyacabezas delantero: a «¿cosen las piezas del plano?» le sumé el 3D pintado como «cómo quedaría armada» y una hoja de fuentes; Fak: *"al pedo hiciste eso, no muestres info de más"*, sacó las dos). Graduado a la memoria `feedback_responder_el_scope_exacto`.
+- **06/10 — En el entregable va lo que contesta la pregunta; lo que no pude hacer se dice, no se reemplaza por algo parecido con el título de lo pedido** (Fak: *"al pedo hiciste eso, no muestres info de más"*). Graduado a la memoria `feedback_responder_el_scope_exacto`.
 
 - **06/10 — Si Fak marca UN defecto de un documento se corrige eso con el criterio escrito y se le muestra, sin menú de qué más tocar; y el freno que armé para eso PAUSA la pregunta, no ordena hacer** (*"no deberías hacerme tantas preguntas, deberías saber qué hacer"*). Graduado al skill `flujogramas` §1.5, a `preguntaGuard.mjs` y a `feedback_con_recomendacion_no_se_pregunta`.
 
