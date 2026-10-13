@@ -55,6 +55,26 @@ def renumerar(texto, avisos):
     return re.sub(r"(?i)\b((?:hojas?)\s+)(\d{2}(?:\s*(?:y|a|,)\s*\d{2})*)\b", cambio, texto)
 
 
+# El plan de reaccion del A3 es el estandar (canon 4.5), asi que las acciones propias que cada hoja A4 llevaba
+# en ese bloque no se dibujan. Las que cuidan al operario o al molde pasan al cuadro amarillo, con las palabras
+# del spec (Fak, 13/10/2026: "que pensas vos, conviene?" -> solo las de seguridad; "dar aviso al Lider" ya lo
+# dice el plan estandar). Clave: (operacion nueva, numero de hoja si esta partida).
+_SI_NO_VERDE = ("Si un paso no se pone en verde o algo se mueve distinto: soltar el botón y no pasar al paso "
+                "siguiente.")
+AVISO_SEGURIDAD = {
+    ("30.3", None): "No forzar el rollo a mano con la máquina en marcha.",
+    ("30.4", None): "No tirar del material a mano con los selectores en FWD.",
+    ("30.6", None): "No entrar al molde mientras los expulsores no levantan las piezas.",
+    ("40", 1): _SI_NO_VERDE,
+    ("40", 2): _SI_NO_VERDE,
+    ("50", None): _SI_NO_VERDE,
+    ("60", None): "Si el molde no pasa al carro o el carro se mueve: dejar de empujar y no forzar el molde.",
+    ("70", None): "Si el molde no entra derecho o no llega al tope: dejar de empujar y no forzar el molde.",
+    ("80", None): _SI_NO_VERDE,
+    ("90", None): _SI_NO_VERDE,
+}
+
+
 def a_a3(h, avisos):
     """Una hoja del spec A4 -> el dict que dibuja hoja_a3_fotos. Mismo texto, misma foto."""
     imgs = h.get("imagenes") or []
@@ -79,6 +99,9 @@ def a_a3(h, avisos):
         partes.append(renumerar(str(h["nota"]), avisos))
     for nombre, valor in (h.get("parametros") or []):
         partes.append(f"{nombre}: {valor}.")
+    seg = AVISO_SEGURIDAD.get((OP_NUEVA[h["op"]], (h.get("hoja_de") or (None,))[0]))
+    if seg:
+        partes.insert(0, seg)
     d = dict(op=OP_NUEVA[h["op"]], denominacion=h["denominacion"], pasos=pasos, epp=h.get("epp"))
     if partes:
         d["aviso"] = " ".join(partes)
