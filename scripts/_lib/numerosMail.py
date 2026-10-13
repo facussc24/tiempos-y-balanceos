@@ -102,9 +102,12 @@ def texto_de_adjunto(ruta: str, max_mb: float = 25) -> str:
             import openpyxl
             wb = openpyxl.load_workbook(ruta, read_only=True, data_only=True)
             partes = []
-            for ws in wb.worksheets:
-                for fila in ws.iter_rows(values_only=True):
-                    partes.extend(str(v) for v in fila if v is not None)
+            try:
+                for ws in wb.worksheets:
+                    for fila in ws.iter_rows(values_only=True):
+                        partes.extend(str(v) for v in fila if v is not None)
+            finally:
+                wb.close()   # en modo solo lectura el archivo queda tomado y Windows no deja borrar la carpeta temporal
             return '\n'.join(partes)
         if ext == '.pdf':
             import fitz
