@@ -222,6 +222,17 @@ Una pieza o un aparato que un operario nuevo no conoce por el nombre va **en la 
 (recuadro o numero); el pie lo nombra. Un paso que nombra una pieza y va sin foto lo declara con
 `sin_foto="por que"`, y eso va a lo que falta filmar: `gate_pieza_nombrada_se_ve()`.
 
+**b bis) Una palabra rara lleva su aclaración entre paréntesis Y su recuadro con el nombre en la foto** (Fak,
+13/10/2026, leyendo la 20.6 del hot melt: *"Verificar que los acumuladores... cuando encontramos una palabra así
+extraña, ¿no vale la pena entre paréntesis aclarar qué carajo es eso? porque no entiendo; y si podés marcar con un
+rectángulo o círculo en la foto y poner 'acumuladores', mejor aún... es increíble que sigamos fallando en esto"*).
+El pie de foto solo no alcanza: la primera vez que la hoja nombra una pieza que un operario nuevo no conoce
+(acumulador, guiador, desbobinador, fusor, enrollador, expulsores, atemperador...) el paso dice qué es en palabras
+simples, con su fuente (*"los acumuladores (los rodillos por donde el material sube y baja)"*), y la foto la lleva
+marcada con recuadro y nombre. Medido ese día en las hojas del hot melt: 39 de 44 piezas nombradas estaban sin
+marcar, y el control no veía los plurales (`acumuladores`). Lo que no se puede explicar con una fuente va a la
+lista de lo que falta preguntar, no se inventa.
+
 **c) ¿Yo entiendo lo que estoy mandando hacer?** *"Pegar una cinta adhesiva como indicador para el
 cambio de rollo: no se entiende ni la foto ni el texto"*. El paso salia de un audio traducido que
 yo tampoco entendia (no se ve la cinta, ni donde se pega, ni quien, ni cuando). **Lo que no puedo
@@ -705,6 +716,10 @@ la busca por contenido.
 - [ ] **cada elemento de maquina que se ve en la foto de un paso (sensor, perilla, boton, guia)
       esta nombrado en algun renglon, o se decidio que el operario no lo toca** (criterio 15,
       23/09/2026: el sensor de la mesa estaba en la foto y ningun paso lo nombraba)
+- [ ] **cada pieza de nombre raro que nombra un paso (acumulador, guiador, fusor, expulsores, sonotrodo…) tiene
+      su aclaracion entre parentesis la primera vez Y su recuadro con el nombre en la foto** (0.8 b bis, Fak
+      13/10/2026). Se recorre paso por paso con la pregunta "¿un operario nuevo sabe que es esto y donde esta?";
+      vale tambien para las hojas de otro autor y las de Excel
 - [ ] cada nota pasa el test: ¿le cambia algo al que esta al lado de la maquina?
 - [ ] lo que falta filmar, en su lista aparte — **no se escribe por analogia**
 - [ ] ningun `TBD` en la descripcion (solo en el cajetin), ninguna foto sin mirar, ningun numero sin fuente citada

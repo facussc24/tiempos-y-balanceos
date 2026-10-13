@@ -117,6 +117,13 @@ Regla corta. El detalle, los umbrales y los errores caros: skill `hojas-de-proce
 23. **Un paso que nombra una pieza la MUESTRA marcada** (Fak, 02/10/2026: *"¿que es el volante
     cromado? es como que te diga gira esta nave espacial... pone una foto del volante"*). Sin foto,
     el paso lo declara con `sin_foto="por que"`: `gate_pieza_nombrada_se_ve()`.
+    **Y la palabra rara se ACLARA entre parentesis** la primera vez que la hoja la nombra, con el
+    recuadro y el nombre puestos en la foto; el pie solo no alcanza (Fak, 13/10/2026, hot melt 20.6:
+    *"Verificar que los acumuladores... ¿no vale la pena entre parentesis aclarar que carajo es eso?...
+    marcar con un rectangulo en la foto y poner 'acumuladores'... es increible que sigamos fallando en
+    esto"*). Vale para TODA hoja de proceso, de cualquier maquina y de cualquier autor. El control
+    automatico existe solo en el generador del hot melt: en las demas se revisa a mano, paso por paso,
+    antes de mostrarla (skill `hojas-de-proceso`, 0.8 b bis y la lista de §7).
 24. **Lo que yo no entiendo de la fuente no se escribe como paso** (un audio traducido, un renglon
     del manual, un "verificar" sin decir contra que): va a lo que falta preguntar. Antes de
     mostrarle la hoja a Fak se corre una **lectura a ciegas**: un agente con solo el PDF, haciendo
