@@ -12,7 +12,7 @@ a todos en la empresa»*): se escribe para alguien que no conoce el proyecto.
 | Nombre | Qué es | Dirección | Para qué |
 |---|---|---|---|
 | **impresora para ingenieria** | Ricoh SP 3710SF, blanco y negro, A4 | `192.168.1.105` | Todo lo que no es A3: BOMs, hojas de proceso A4, listados |
-| **impresora de arriba** | Ricoh MP C2004, color, A4 y A3 | `192.168.1.104` | **Los flujogramas** (A3) y lo que va en A3 o en color |
+| **impresora de arriba** | Ricoh MP C2004, color, A4 y A3 | `192.168.1.104` | **Los flujogramas** (A3) y lo que va en A3. **Se imprime en blanco y negro**; en color solo si lo piden |
 
 Hay otra SP 3710SF idéntica en RRHH (`192.168.1.193`): no es la de Ingeniería. La dirección
 `192.168.1.70` contesta como "MP C2004" pero es otra entrada de la **misma** impresora de arriba
@@ -22,7 +22,8 @@ Hay otra SP 3710SF idéntica en RRHH (`192.168.1.193`): no es la de Ingeniería.
 
 ```bash
 python scripts/_imprimir.py <archivo.pdf>                 # A4 en la impresora para ingenieria
-python scripts/_imprimir.py <archivo.pdf> --a3            # A3 color en la impresora de arriba
+python scripts/_imprimir.py <archivo.pdf> --a3            # A3 en la impresora de arriba, en blanco y negro
+python scripts/_imprimir.py <archivo.pdf> --a3 --color    # A3 en color: SOLO si lo pidieron explícitamente
 python scripts/_imprimir.py <archivo.pdf> --paginas 3-5   # solo esas hojas
 python scripts/_imprimir.py <archivo.pdf> --a3 --seco     # no manda nada: vista previa de la 1.a hoja
 ```
@@ -41,18 +42,26 @@ imprimir: `--seco`.
 Si el script no está (otra PC), el mismo camino a mano:
 
 ```bash
-gswin32c.exe -q -dBATCH -dNOPAUSE -dSAFER -sDEVICE=pxlcolor -sPAPERSIZE=a3 -dFIXEDMEDIA -dPDFFitPage -r300 -sOutputFile=trabajo.pxl archivo.pdf
+gswin32c.exe -q -dBATCH -dNOPAUSE -dSAFER -sDEVICE=pxlmono -sPAPERSIZE=a3 -dFIXEDMEDIA -dPDFFitPage -r300 -sOutputFile=trabajo.pxl archivo.pdf
 # y mandar trabajo.pxl a 192.168.1.104 puerto 9100 (en Python: socket.create_connection((ip, 9100)).sendall(datos))
 ```
 
 Para la A4 en blanco y negro: `-sDEVICE=pxlmono -sPAPERSIZE=a4 -r600` y la dirección `192.168.1.105`.
+
+## Blanco y negro siempre, salvo pedido explícito
+
+Fak, 13/10/2026: *«la C2004 si bien imprime a color, siempre imprimir en blanco y negro, a no ser que
+explícitamente yo te pida que quiero a color»*. `--a3` sale en blanco y negro; `--color` se agrega solo
+cuando la persona lo pidió para ESE trabajo. Un "imprimilo" a secas es blanco y negro, también para
+flujogramas y hojas de proceso. Si el documento depende del color para entenderse (una marca roja, una
+leyenda de colores), se avisa en una línea antes de mandar; no se pasa a color por cuenta propia.
 
 ## Antes de imprimir
 
 - **Se imprime la última versión emitida**, no un borrador: el documento sale del servidor
   (`Y:`) o del lugar donde está emitido, nunca de una copia de trabajo, salvo que la persona diga
   que es esa.
-- Muchas hojas (más de 20) o A3 en color: decir cuántas hojas van a salir antes de mandarlas.
+- Muchas hojas (más de 20): decir cuántas hojas van a salir antes de mandarlas.
 - Un flujograma va en UNA hoja A3 con letra de **8 pt o más** (Fak, 07/10/2026, pidió que se lean
   impresos): la salida de la propuesta B (`tools/flowchart/propuestas/B_final/`) mide 8,2 a 10,7 pt.
   El render de siempre (`_flujograma.mjs`, PNG a 150 DPI) escalado a A3 deja la letra en unos 4 pt:

@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """Imprime un PDF en las impresoras de Ingenieria, sin pasar por la cola de Windows.
 
-    python scripts/_imprimir.py <archivo.pdf> [--a3] [--paginas 1-3,7] [--seco]
+    python scripts/_imprimir.py <archivo.pdf> [--a3] [--color] [--paginas 1-3,7] [--seco]
 
   (sin --a3)  A4 en la "impresora para ingenieria" (Ricoh SP 3710SF, 192.168.1.105), blanco y negro.
-  --a3        A3 color en la "impresora de arriba" (RICOH MP C2004, 192.168.1.104): los FLUJOGRAMAS van aca.
+  --a3        A3 en la "impresora de arriba" (RICOH MP C2004, 192.168.1.104): los FLUJOGRAMAS van aca.
+              Sale en BLANCO Y NEGRO aunque la maquina imprima color (Fak, 13/10/2026).
+  --color     con --a3: en color. SOLO cuando Fak lo pide explicitamente para ese trabajo.
   --paginas   solo esas paginas (1 = la primera).
   --seco      arma el archivo de impresion y una vista previa PNG de la primera hoja, y NO manda nada.
 
@@ -30,7 +32,7 @@ from _impresoraEstado import get as snmp_get  # noqa: E402
 GS = r'C:\Program Files\PDFCreator\Ghostscript\Bin\gswin32c.exe'
 IMPRESORAS = {
     'a4': {'ip': '192.168.1.105', 'nombre': 'impresora para ingenieria (SP 3710SF)', 'device': 'pxlmono', 'papel': 'a4'},
-    'a3': {'ip': '192.168.1.104', 'nombre': 'impresora de arriba (RICOH MP C2004)', 'device': 'pxlcolor', 'papel': 'a3'},
+    'a3': {'ip': '192.168.1.104', 'nombre': 'impresora de arriba (RICOH MP C2004)', 'device': 'pxlmono', 'papel': 'a3'},
 }
 OID_PAGINAS = '1.3.6.1.2.1.43.10.2.1.4.1.1'
 
@@ -68,7 +70,8 @@ def contador(ip):
 def main():
     ap = argparse.ArgumentParser(description='Imprime un PDF en la impresora para ingenieria (A4) o en la impresora de arriba (A3).')
     ap.add_argument('pdf')
-    ap.add_argument('--a3', action='store_true', help='A3 color en la impresora de arriba (C2004)')
+    ap.add_argument('--a3', action='store_true', help='A3 en la impresora de arriba (C2004), en blanco y negro')
+    ap.add_argument('--color', action='store_true', help='con --a3: en color. Solo si Fak lo pidio explicitamente')
     ap.add_argument('--paginas', help='por ejemplo 1-3,7')
     ap.add_argument('--seco', action='store_true', help='no manda nada: arma el archivo y una vista previa')
     ap.add_argument('--conservar', action='store_true', help='deja la carpeta temporal entera (por defecto se borra lo que ya se mando)')
@@ -86,7 +89,12 @@ def main():
     tbdImpresion.avisar([a.pdf], a.paginas, 'imprimir')
     if not os.path.exists(GS):
         raise SystemExit('Falta Ghostscript en %s (viene con PDFCreator)' % GS)
-    imp = IMPRESORAS['a3' if a.a3 else 'a4']
+    imp = dict(IMPRESORAS['a3' if a.a3 else 'a4'])
+    if a.color:
+        if not a.a3:
+            raise SystemExit('--color va con --a3: la impresora para ingenieria es blanco y negro')
+        imp['device'] = 'pxlcolor'
+    print('Sale en %s.' % ('COLOR' if imp['device'] == 'pxlcolor' else 'blanco y negro'))
     paginas = rango_paginas(a.paginas) if a.paginas else None
 
     limpiar_viejas()
