@@ -286,6 +286,18 @@ def preparar(cfg):
     for a in cfg.get('adjuntos', []):
         mail.Attachments.Add(a)
 
+    # Imagenes PEGADAS en el cuerpo (13/10/2026, Fak: "las fotos directamente sobre el mail, asi
+    # no hace falta que abran el PowerPoint"). {"nombre": "C:\\ruta\\foto.jpg"}: en "cuerpo_html"
+    # se referencian como <img src="cid:nombre">. Van como adjunto con identificador de contenido,
+    # que es como Outlook guarda una imagen pegada a mano; sin esto el destinatario ve un recuadro vacio.
+    for cid, ruta in (cfg.get('imagenes_cuerpo') or {}).items():
+        if not os.path.isfile(ruta):
+            sys.exit(f'ABORTADO: no existe la imagen del cuerpo "{cid}": {ruta}')
+        if f'cid:{cid}' not in (cfg.get('cuerpo_html') or ''):
+            sys.exit(f'ABORTADO: la imagen "{cid}" no se usa en cuerpo_html (falta <img src="cid:{cid}">)')
+        att = mail.Attachments.Add(ruta)
+        att.PropertyAccessor.SetProperty('http://schemas.microsoft.com/mapi/proptag/0x3712001F', cid)
+
     # El borrador anterior del mismo asunto que armo este script y nadie toco, a Eliminados:
     # rehacer un mail no puede dejar copias apiladas (mail-envio.md).
     reemplazar_borradores_previos(ns, mail.Subject)
