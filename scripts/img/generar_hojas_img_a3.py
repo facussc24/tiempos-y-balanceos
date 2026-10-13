@@ -52,14 +52,7 @@ def renumerar(texto, avisos):
         if nuevos != m.group(2):
             avisos.append(f"referencia '{m.group(0)}' -> '{m.group(1)}{nuevos}'")
         return m.group(1) + nuevos
-    return re.sub(r"(?i)\b((?:hojas?|operaci[oó]n(?:es)?|op\.?)\s+)(\d{2}(?:\s*(?:y|a|,)\s*\d{2})*)\b", cambio, texto)
-
-
-def PALABRA_DE_PLANTA(texto):
-    """El control de vocabulario (08/10/2026) rechaza "enfriador", pero es el rotulo que muestra la pantalla
-    de la maquina en castellano (boton «Enfriador» de la fila de servicios): se deja como esta y la palabra
-    se aprueba en scripts/_lib/vocabularioPlanta.data.json con esa fuente."""
-    return str(texto)
+    return re.sub(r"(?i)\b((?:hojas?)\s+)(\d{2}(?:\s*(?:y|a|,)\s*\d{2})*)\b", cambio, texto)
 
 
 def a_a3(h, avisos):
@@ -85,7 +78,7 @@ def a_a3(h, avisos):
     if h.get("nota"):
         partes.append(renumerar(str(h["nota"]), avisos))
     for nombre, valor in (h.get("parametros") or []):
-        partes.append(f"{nombre}: {PALABRA_DE_PLANTA(valor)}.")
+        partes.append(f"{nombre}: {valor}.")
     d = dict(op=OP_NUEVA[h["op"]], denominacion=h["denominacion"], pasos=pasos, epp=h.get("epp"))
     if partes:
         d["aviso"] = " ".join(partes)
@@ -103,7 +96,7 @@ def para_redaccion(d):
 JUEGOS = {
     "produccion": dict(
         hojas=gh.HOJAS_IMG, archivo="HO-992 - OP 30 TERMOFORMADO Y LAMINADO IMG - TOP ROLL",
-        cajetin=dict(ho="HO-992", sector="TERMOFORMADO", pieza="TOP ROLL — N 216 / N 256 / N 285 / N 315",
+        cajetin=dict(ho="HO-992", sector="IMG", pieza="TOP ROLL — N 216 / N 256 / N 285 / N 315",
                      modelo="PATAGONIA / VW427", cliente="VW / NOVAX"),
         portada=dict(titulo="HOJAS DE PROCESO — TOP ROLL PATAGONIA",
                      subtitulo="Operación 30 del flujograma 155: PROCESO DE TERMOFORMADO Y LAMINADO IMG",
@@ -116,13 +109,13 @@ JUEGOS = {
                             ("Fecha / Revisión", f"{FECHA} · Rev. A")])),
     "maquina": dict(
         hojas=cm.HOJAS_CM, archivo="HO-996 - MOLDEADORA IMG - CAMBIO DE MOLDE - HOJA DE MAQUINA",
-        cajetin=dict(ho="HO-996", sector="TERMOFORMADO", pieza="MOLDEADORA IMG — CAMBIO DE MOLDE",
+        cajetin=dict(ho="HO-996", sector="IMG", pieza="MOLDEADORA IMG — CAMBIO DE MOLDE",
                      modelo="PATAGONIA / VW427", cliente="VW / NOVAX"),
         portada=dict(titulo="HOJAS DE PROCESO — MOLDEADORA IMG",
                      subtitulo="Hoja de la máquina: cambio de molde",
                      ficha=[("Documento", "HO-996 · Form. I-IN-002.4-R01"),
                             ("Máquina", MAQUINA_TXT),
-                            ("Sector", "TERMOFORMADO"),
+                            ("Sector", "IMG"),
                             ("Proyecto en curso", "PATAGONIA / VW427 · TOP ROLL (HO-992, operación 30)"),
                             ("Elaboró", "F. Santoro · Ingeniería"),
                             ("Fecha / Revisión", f"{FECHA} · Rev. A")])),

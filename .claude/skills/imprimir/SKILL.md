@@ -1,6 +1,6 @@
 ---
 name: imprimir
-description: Imprimir un PDF en las impresoras de Barack desde Claude, sin pasar por la cola de Windows — "impresora para ingenieria" (A4, blanco y negro) e "impresora de arriba" (A3 color, la RICOH MP C2004, donde van los FLUJOGRAMAS). Cargarlo cuando piden imprimir algo ("imprimilo", "mandalo a la impresora", "imprimí los flujogramas", "sacalo en A3", "en la de arriba"), al armar un paquete de hojas de proceso para planta (qué entra, qué se revisa antes de imprimir), y para saber si una impresión salió de verdad (contador de hojas).
+description: Imprimir un PDF en las impresoras de Barack desde Claude, sin pasar por la cola de Windows — "impresora para ingenieria" (A4, blanco y negro) e "impresora de arriba" (A3, la RICOH MP C2004, donde van los FLUJOGRAMAS; sale en blanco y negro salvo que pidan color). Cargarlo cuando piden imprimir algo ("imprimilo", "mandalo a la impresora", "imprimí los flujogramas", "sacalo en A3", "en la de arriba"), al armar un paquete de hojas de proceso para planta (qué entra, qué se revisa antes de imprimir), y para saber si una impresión salió de verdad (contador de hojas).
 ---
 
 # Imprimir
@@ -42,7 +42,7 @@ imprimir: `--seco`.
 Si el script no está (otra PC), el mismo camino a mano:
 
 ```bash
-gswin32c.exe -q -dBATCH -dNOPAUSE -dSAFER -sDEVICE=pxlmono -sPAPERSIZE=a3 -dFIXEDMEDIA -dPDFFitPage -r300 -sOutputFile=trabajo.pxl archivo.pdf
+gswin32c.exe -q -dBATCH -dNOPAUSE -dSAFER -sDEVICE=pxlmono -sPAPERSIZE=a3 -dFIXEDMEDIA -dPDFFitPage -r600 -sOutputFile=trabajo.pxl archivo.pdf
 # y mandar trabajo.pxl a 192.168.1.104 puerto 9100 (en Python: socket.create_connection((ip, 9100)).sendall(datos))
 ```
 
