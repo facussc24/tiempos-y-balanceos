@@ -72,7 +72,7 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
-- **13/10 — Si Fak pide que algo quede automático, no se le deja una lista de pasos ni un archivo para editar** (le pedí que abriera un `.json` y pegara el código de la impresora: *"hacé eso vos, yo no voy a hacer nada, la idea es automatizarlo... ni pienso leer eso"*). Lo único suyo se reduce a un gesto (una ventanita con un campo) y el resto corre solo. **Y un «no aprietes nada, está preparando» se dice después de medir que avanza**: la impresora llevaba 5 minutos en el renglón 0. Graduado al skill `impresion-3d-bambu` §1 bis.
+- **13/10 — Si Fak pide que algo quede automático, no se le deja una lista de pasos ni un archivo para editar** (*"hacé eso vos... ni pienso leer eso"*), **y un «no aprietes nada» se dice después de medir que avanza.** Graduado al skill `impresion-3d-bambu` §1 bis.
 
 - **11/10 — Una pantalla que Fak mira todos los días se escribe con SUS palabras, como un entregable: la banda decía «283 llamadas · en curso» y «noche · 0 prioridades»** (*"no era más fácil poner disponible, gastado, y separar entre cada api"*; *"renueva pusiste hora pero no día"*). Graduado a `feedback_lenguaje_del_entregable_palabras_de_fak`.
 
