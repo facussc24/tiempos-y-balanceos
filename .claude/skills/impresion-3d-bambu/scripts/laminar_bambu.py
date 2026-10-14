@@ -141,6 +141,8 @@ ap.add_argument("--ajuste", action="append", default=[],
                      'wall_loops=5, sparse_infill_density=30%%, top_shell_layers=6 ...')
 ap.add_argument("--cama", default=None, help="por defecto, la default_bed_type del modelo de impresora")
 ap.add_argument("--color", action="append", default=[], help="un color por filamento, #RRGGBB")
+ap.add_argument("--acomodar", action="store_true",
+                help="reacomoda las piezas en la cama (un .3mf armado para otra impresora mas grande)")
 a = ap.parse_args()
 
 out = Path(a.salida).resolve()      # absoluta: bambu-studio corre con otra carpeta de trabajo
@@ -198,6 +200,8 @@ def correr(entrada, carpeta, nombre, con_perfiles):
         cmd += ["--load-settings", f"{f_maq};{f_pro}", "--load-filaments", ";".join(f_fil)]
     if CAMA:
         cmd += ["--curr-bed-type", CAMA]
+    if con_perfiles and a.acomodar:
+        cmd += ["--arrange", "1"]
     cmd += ["--slice", "0", "--export-3mf", nombre, "--outputdir", str(carpeta), str(entrada)]
     import time
     t0 = time.time()
