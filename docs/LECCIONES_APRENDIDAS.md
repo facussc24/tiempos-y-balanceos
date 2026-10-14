@@ -56,15 +56,13 @@ incidente vive en los snapshots.
 
 - **02 y 05/10 — Para un código el arb es la fuente, pero antes de decir «el arb tiene mal X» se confirma que la BOM leída es la de ESE código (10 productos cargados dos veces con otra grafía).** Graduado a `feedback_arb_es_la_fuente_de_un_codigo` y `scripts/hilos/cruce_programa_arb.py`.
 
-- **05/10 — Un largo que sale de un plano se calcula SUMANDO sus cotas, no midiendo el dibujo a escala** (cinta del apoyabrazos trasero: medí píxeles y dije «aproximado» con 69,54 + 13,96 + 13,6 escritas en la captura; Fak: *"eso tenés que usar"*).
+- **05/10 — Un largo que sale de un plano se calcula SUMANDO sus cotas, no midiendo el dibujo.** Graduado a `feedback_largo_de_un_plano_se_suma_de_las_cotas`.
 
 - **13/10 — En una hoja de proceso, una pieza de nombre raro lleva su aclaración entre paréntesis y su recuadro con el nombre en la foto; el pie solo no alcanza** (*"Verificar que los acumuladores... no entiendo... es increíble que sigamos fallando en esto"*). Graduado al skill `hojas-de-proceso` 0.8 b bis y a `feedback_palabra_rara_en_una_hoja_se_aclara_y_se_marca`.
 
 - **13/10 — Un utillaje que apoya sobre algo blando se simula APOYADO y APRETADO antes de imprimirlo, y ante un «no anda» se mide antes de dar una teoría** (*"está muy flojo todo"*). Graduado a `feedback_diseno_3d_medir_antes_de_explicar_y_simular_el_uso`.
 
-- **14/10 — Un «desvío a propósito» no se le firma a Fak sin el papel donde lo decidió: la tabla de costura del 05/10 puso el 6 en 25 del IP PAD como «cambio de Ingeniería, fuente F. Santoro», y salía de un mail de VW de julio 2025 que no nombra la pieza** (*"¿yo puse eso? ¿por qué haría eso?"*). Antes de escribir quién decidió algo, se busca el papel; si no está, «falta saber».
-
-- **14/10 — Una corrección se arma sobre el documento VIGENTE del tema, no sobre el más viejo que tiene el error: corregí el PowerPoint de costura de mayo (cinta en 15/3, otros puntos flojos) y lo vigente era la tabla del 05/10 a Nico** (*"agarraste un archivo viejo sin verificarlo"*). Antes de tocar: listar las versiones, la más nueva que Fak validó manda, y la memoria del tema nombra cuál NO se usa. Memoria `reference_valores_costura_patagonia_confirmados`.
+- **14/10 — Costura del IP PAD: un «desvío a propósito» no se le firma a Fak sin el papel (el 6 en 25 salía de un mail de VW que no nombra la pieza; *"¿yo puse eso?"*), y la corrección se arma sobre el documento VIGENTE del tema, no sobre el más viejo** (*"agarraste un archivo viejo sin verificarlo"*). Antes de tocar: listar las versiones; manda la más nueva que Fak validó. Memoria `reference_valores_costura_patagonia_confirmados`.
 
 ## Identidad de un dato
 
@@ -87,7 +85,7 @@ incidente vive en los snapshots.
 - **09-10/10 — Un «no puedo» a Fak es un problema mío, y una pregunta que le hago NO frena el resto: lo que no depende de ella se hace mientras tanto** (le dije que apretara Enviar: *"nunca más podés decirme no puedo"*; el 10/10 estuve 4 h parado esperando su respuesta sobre el modo de las hijas con la etapa 1 de los AMFE libre: *"es gravísimo"*). Graduado a `_mailEnviar.py` paso 4b, `mail-envio.md` y `feedback_la_caja_soy_yo_pensar_fuera_de_lo_que_dijo_fak`.
 - **09/10 — El historial de revisiones también confiesa: una corrección por observación interna, antes de que el documento salga, no abre revisión** (la Rev. B del 160/174 decía «OP 32 se integra a la 31; 71 y 72 a la 70»; Fak: *"no nos delates de que eliminamos reprocesos... mantenele la revisión A"*). Graduado a `documento_no_confiesa_como_se_hizo`.
 
-- **09/10 — El alcance de un reclamo lo marca DÓNDE va el material del reclamo, no la frase amplia del pedido** («todas las telas de PWA»): le metí las telas de serie, que no llevan el fieltro de 1000 g/m², antes de mirar en qué piezas entra. Fak: *"¿lo que pidió no es solo de proyecto?"*. Primero se ubica el material en las BOM/AMFE, después se arma la lista de documentos.
+- **09/10 — El alcance de un reclamo lo marca DÓNDE va el material, no la frase amplia del pedido.** Graduado a `project_reclamo_agujas_fieltro_pwa`.
 
 - **09/10 — Un PowerPoint para un gerente se arma como lo haría un ingeniero de la casa (blanco, tablas y capturas reales; *"parece hecho con IA"*) y el logo es SOLO el oficial.** Graduado a `feedback_powerpoint_para_un_gerente_como_ingeniero_de_la_casa` y `feedback_logo_oficial_barack_en_todo_documento`.
 
@@ -99,13 +97,13 @@ incidente vive en los snapshots.
 
 - **08/10 — «Un instalador idéntico al de Carlos pero para mí» era SU asistente entero, no el de mails: ante un pedido con dos lecturas se arma lo principal y lo accesorio («de paso, los mails») va después**. Lo que Fak va a usar se deja en UNA carpeta con doble clic numerados. Memoria `project_instalar_mi_asistente_pc_nueva`.
 
-- **08/10 — Lo que escribo en un entregable lo tiene que poder defender Fak: si un operario o un gerente no lo entiende, no va** (*"jamás podés poner algo que yo no pueda defender"*); y un flujograma para imprimir se juzga por si se entiende el FLUJO, no solo por la letra (*"demasiado junto"*).
+- **08/10 — Lo que escribo en un entregable lo tiene que poder defender Fak.** Graduado a `feedback_entregables_para_fak`.
 
 - **07-08/10 — Toma de tiempos por video = TIEMPOS + VIDEO RECORTADO adentro del PowerPoint, sin planilla; el rato en que el operario prueba no es proceso; un link a la nube se le pide a OneDrive.** Memorias `project_tiempos_forrado_ductos_patagonia`, `reference_link_nube_se_pide_a_onedrive`.
 
 - **07/10 — Con Fak se habla en castellano también en los avisos cortos** (*"dejá de hablar en inglés"*; graduado al chequeo 10 del cierre-guard, `idioma.mjs`). **Y un pedido de videos para alguien que tiene editor es de ORIGINALES completos**: preguntar o deducir el uso antes de editar.
 
-- **06/10 — Un archivo que Fak nombra y no aparece con ese nombre no se cambia por el parecido sin mostrárselo ANTES («tomé este, de esta ruta, ¿es?»), y lo que se entrega tiene el tamaño del pedido** (*"solo estos tiempos tienen que estar en el excel"*).
+- **06/10 y 14/10 — El archivo sobre el que se trabaja se confirma antes: el parecido se muestra, y entre versiones manda la vigente.** Graduado a `feedback_archivo_que_se_toma_se_muestra_antes`.
 
 - **06/10 — Una pregunta directa de Fak que llega mientras trabajo se contesta en el mensaje siguiente, antes de seguir** («¿puedo desconectar el celular ya?» esperó varias tandas mías con los videos ya copiados y verificados). Graduado a la memoria `reference_capacidades_de_proceso_y_toma_de_tiempos_por_video` (paso 1).
 
