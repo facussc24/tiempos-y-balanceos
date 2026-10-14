@@ -64,6 +64,8 @@ incidente vive en los snapshots.
 
 - **14/10 — Costura del IP PAD: un «desvío a propósito» no se le firma a Fak sin el papel (el 6 en 25 salía de un mail de VW que no nombra la pieza; *"¿yo puse eso?"*), y la corrección se arma sobre el documento VIGENTE del tema, no sobre el más viejo** (*"agarraste un archivo viejo sin verificarlo"*). Antes de tocar: listar las versiones; manda la más nueva que Fak validó. Memoria `reference_valores_costura_patagonia_confirmados`.
 
+- **14/10 — «¿Sabés cuáles son?» es una pregunta: una pieza que Fak nombra por su FUNCIÓN («los pines del insert») se identifica por su FORMA antes de imprimir, no por la última pieza parecida de la sesión** (mandé 20 pines TRA-IZQ; *"esos no son los pines"*). Memoria `project_pines_costura_cnc_insert`.
+
 ## Identidad de un dato
 
 - **Una fuente que sale de mi lado del mostrador (una regla mía, un test, un agente, el número que yo propuse) no es una segunda fuente: si un documento puede zanjarlo, se abre antes de actuar.** Graduado a `amfe.md` §12 y a `verificar_contra_la_fuente_no_el_codigo`, `un_agente_no_es_independiente`, `al_documento_entra_lo_que_dice_un_papel_de_esa_pieza`.
