@@ -78,6 +78,8 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **14/10 — Un «resumen» es el resumen: sin «Qué haría», sin recomendaciones ni notas al pie que nadie pidió** (resumen de Meta Ads para Andrés: *"el qué haría está de más... hacé solo lo que pidió, no agregues cosas de más"*). Y si pide «el formato de Barack», se copia el de la página web (barackmercosul.com), no un tablero genérico. Memoria `project_reporte_meta_ads_barack_mobility`.
+
 - **13/10 — Si Fak pide que algo quede automático, no se le deja una lista de pasos ni un archivo para editar** (*"hacé eso vos... ni pienso leer eso"*), **y un «no aprietes nada» se dice después de medir que avanza.** Graduado al skill `impresion-3d-bambu` §1 bis.
 
 - **11/10 — Una pantalla que Fak mira todos los días se escribe con SUS palabras, como un entregable: la banda decía «283 llamadas · en curso» y «noche · 0 prioridades»** (*"no era más fácil poner disponible, gastado, y separar entre cada api"*; *"renueva pusiste hora pero no día"*). Graduado a `feedback_lenguaje_del_entregable_palabras_de_fak`.
