@@ -39,6 +39,7 @@ python .claude/skills/impresion-3d-bambu/scripts/bambu_red.py --imprimir <archiv
   parecido. **Frena** si el material cargado no es el del laminado (probado con el gemelo: el
   archivo de PLA Basic contra el cargador con PLA Lite no se manda), si el color no se parece o
   si la impresora está ocupada. `--mapa 0,1` lo fuerza a mano (lugares contando desde 0).
+  Tampoco manda un archivo con más de una placa (solo iría la 1).
 - **Vigilar hasta que termine** (solo lee; se lanza en segundo plano y su salida me despierta):
   `--seguir <carpeta> [--fotos-en 41,44]`. Deja `seguimiento.log` y fotos de la cámara (capa 1,
   las capas pedidas, una cada 15 min y la final). Sale con 0 = terminó, 1 = falló o se canceló,
@@ -240,6 +241,16 @@ filamento. Solo hay cambios de color en esas 4 capas. Patrón: `_partir.py` del 
 `exports/impresion_3d/molde_probeta_50x50_20261013/` (corta sobre el B-Rep con build123d; la malla
 del STL no cierra como volumen y las booleanas de malla no la aceptan).
 
+**Un `.3mf` armado para otra impresora más grande** (14/10/2026: el soporte de microscopio de Leo, hecho
+para una Elegoo Neptune 4 Max de cama 420): sin más, Bambu Studio frena con «objects are located over the
+boundary of the heated bed». `--acomodar` le pide que reacomode las piezas (`--arrange 1`). Si no entran
+en una placa las reparte en varias, y **el script frena** (salida 1, `"placas": N` en `resumen.json`)
+porque el resumen, los controles y `bambu_red.py --imprimir` miran solo la placa 1; `--imprimir` tampoco
+manda un archivo de varias placas. Se parte la entrada en un `.3mf` por placa (sacando del
+`3D/3dmodel.model` los `<item>` y de `Metadata/model_settings.config` los `<object>`, `<model_instance>` y
+`<assemble_item>` de lo que no va) y se lamina cada uno. Ojo: con soportes en árbol las piezas ocupan más
+y salen más placas (Leo: 1 placa sin soportes ni ajustes; 2 con soportes en árbol y 3 paredes).
+
 **La carpeta de salida va con ruta relativa o absoluta**: el script la resuelve (13/10: con una
 relativa Bambu Studio escribía en otro lado y el laminado «fallaba» sin mensaje).
 
@@ -268,6 +279,7 @@ relativa Bambu Studio escribía en otro lado y el laminado «fallaba» sin mensa
 ## 4. Los controles (el script sale con 1 si alguno falla)
 
 - La temperatura de boquilla del código es la del perfil del filamento.
+- El laminado salió en UNA placa (con `--acomodar` puede repartir en varias: ver §2).
 - La densidad no es 0 (el perfil de material se cargó).
 - Si se pidieron varios filamentos, el código cambia de filamento.
 - El arranque del código es el de la plantilla de esa impresora.

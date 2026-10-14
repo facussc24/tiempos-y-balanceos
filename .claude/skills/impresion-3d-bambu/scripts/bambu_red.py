@@ -287,6 +287,13 @@ def imprimir(archivo, mapa, aplicar):
     archivo = Path(archivo)
     est0 = leer_estado(d)
     fallas = []
+    # antes que el freno de color: con varias placas solo se mandaria la 1 y el resto se perderia
+    # sin aviso (14/10/2026); el mensaje del color tapaba este
+    with zipfile.ZipFile(archivo) as _z:
+        placas = [n for n in _z.namelist() if re.fullmatch(r"Metadata/plate_\d+\.gcode", n)]
+    if len(placas) > 1:
+        print(f"   NO SE MANDA: el archivo trae {len(placas)} placas; va un archivo por placa")
+        return 1
     if mapa is None:                      # sin --mapa: se elige solo, por material y color
         mapa, ren, fallas = mapa_automatico(archivo, est0)
         for r in ren:

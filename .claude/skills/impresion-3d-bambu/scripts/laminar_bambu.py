@@ -4,6 +4,7 @@ Uso (python del sistema o .venv-cad):
   laminar_bambu.py <entrada.3mf> <carpeta de salida NUEVA> --filamento "Bambu PLA Basic" [--filamento ...]
                    [--proceso "0.20mm Standard"] [--impresora "Bambu Lab A2L"]
                    [--boquilla 0.4] [--color "#000000" ...] [--parte-filamento "1=2" --parte-filamento "2=1"]
+                   [--acomodar]   (reacomoda las piezas; si salen en varias placas, frena)
 
 Por que existe: pasarle a bambu-studio.exe los perfiles del sistema tal cual NO resuelve la
 herencia (`inherits`): el 13/10/2026 salio boquilla 200 C, flujo 1, densidad 0 y un solo
@@ -280,6 +281,12 @@ resumen = {
     "avisos": placa.get("warning_message", ""), "salida": str(destino), "modelo_id": mid,
 }
 fallas = []
+# 14/10/2026 (auditoria de --acomodar): si Bambu Studio reparte en varias placas, el resumen, los
+# controles y bambu_red.py --imprimir miran solo la placa 1 y el resto se pierde en silencio.
+resumen["placas"] = len(res.get("sliced_plates") or [placa])
+if resumen["placas"] > 1:
+    fallas.append(f"el laminado salio en {resumen['placas']} placas y solo se controla y se manda la 1: "
+                  "partir la entrada en un archivo por placa")
 if CAMA and resumen["cama"] != CAMA:
     fallas.append(f"la cama del codigo es {resumen['cama']} y se pidio {CAMA}")
 # el arranque del codigo tiene que ser el de la plantilla de ESA maquina
