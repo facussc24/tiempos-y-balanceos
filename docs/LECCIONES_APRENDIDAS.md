@@ -13,7 +13,7 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
-- **11/10 — Antes de un push que agrega archivos o toca `settings.json` va la suite COMPLETA, no las pruebas de lo tocado (el CI quedó rojo por un `#!`), y un umbral de una regla no lo aflojo yo: va como propuesta (y ese 60 % ni era de Fak: lo había escrito la API).** Graduado a `feedback_suite_completa_antes_del_push` y `feedback_un_numero_de_la_regla_no_lo_cambio_yo`.
+- **11/10 — Antes de un push que agrega archivos o toca `settings.json` va la suite COMPLETA, y un umbral de una regla no lo aflojo yo: va como propuesta.** Graduado a `feedback_suite_completa_antes_del_push` y `feedback_un_numero_de_la_regla_no_lo_cambio_yo`.
 
 - **11-12/10 — Lo que va a un registro (una hora, «lo dije en el chat») se MIDE antes de escribirlo: `date`, el commit o el archivo de la sesión, nunca de memoria** (tres veces en un día, la última minutos después de anotar esta lección: la lección sola no alcanza, cola HOY-65), **y con la sesión parada en un worktree lo de main se prueba con `git -C` y rutas absolutas.** Graduado a `reference_entrar_a_main_desde_un_worktree`.
 
@@ -78,8 +78,6 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
-- **14/10 — Un «resumen» es el resumen: sin «Qué haría», sin recomendaciones ni notas al pie que nadie pidió** (resumen de Meta Ads para Andrés: *"el qué haría está de más... hacé solo lo que pidió, no agregues cosas de más"*). Y si pide «el formato de Barack», se copia el de la página web (barackmercosul.com), no un tablero genérico. Memoria `project_reporte_meta_ads_barack_mobility`.
-
 - **13/10 — Si Fak pide que algo quede automático, no se le deja una lista de pasos ni un archivo para editar** (*"hacé eso vos... ni pienso leer eso"*), **y un «no aprietes nada» se dice después de medir que avanza.** Graduado al skill `impresion-3d-bambu` §1 bis.
 
 - **11/10 — Una pantalla que Fak mira todos los días se escribe con SUS palabras, como un entregable: la banda decía «283 llamadas · en curso» y «noche · 0 prioridades»** (*"no era más fácil poner disponible, gastado, y separar entre cada api"*; *"renueva pusiste hora pero no día"*). Graduado a `feedback_lenguaje_del_entregable_palabras_de_fak`.
@@ -111,7 +109,7 @@ incidente vive en los snapshots.
 
 - **06/10 — Lo que corrijo en el archivo de OTRO se le muestra a Fak recién auditado, cada celda con su ANTES, y volver atrás un cambio no puede dejar un dato que se sabe falso**. Graduado a la memoria `feedback_entregables_para_fak`.
 
-- **06/10 — En el entregable va lo que contesta la pregunta; lo que no pude hacer se dice, no se reemplaza por algo parecido con el título de lo pedido** (Fak: *"al pedo hiciste eso, no muestres info de más"*). Graduado a la memoria `feedback_responder_el_scope_exacto`.
+- **06 y 14/10 — En el entregable va lo que contesta la pregunta, sin recomendaciones que nadie pidió; lo que no pude hacer se dice, no se reemplaza por algo parecido con el título de lo pedido** (Fak: *"al pedo hiciste eso, no muestres info de más"*). Graduado a la memoria `feedback_responder_el_scope_exacto`.
 
 - **06/10 — Si Fak marca UN defecto de un documento se corrige eso con el criterio escrito y se le muestra, sin menú de qué más tocar; y el freno que armé para eso PAUSA la pregunta, no ordena hacer** (*"no deberías hacerme tantas preguntas, deberías saber qué hacer"*). Graduado al skill `flujogramas` §1.5, a `preguntaGuard.mjs` y a `feedback_con_recomendacion_no_se_pregunta`.
 
