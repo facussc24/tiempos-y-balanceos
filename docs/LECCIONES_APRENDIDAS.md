@@ -62,6 +62,8 @@ incidente vive en los snapshots.
 
 - **13/10 — Un utillaje que apoya sobre algo blando se simula APOYADO y APRETADO antes de imprimirlo, y ante un «no anda» se mide antes de dar una teoría** (*"está muy flojo todo"*). Graduado a `feedback_diseno_3d_medir_antes_de_explicar_y_simular_el_uso`.
 
+- **14/10 — Un «desvío a propósito» no se le firma a Fak sin el papel donde lo decidió: la tabla de costura del 05/10 puso el 6 en 25 del IP PAD como «cambio de Ingeniería, fuente F. Santoro», y salía de un mail de VW de julio 2025 que no nombra la pieza** (*"¿yo puse eso? ¿por qué haría eso?"*). Antes de escribir quién decidió algo, se busca el papel; si no está, «falta saber».
+
 ## Identidad de un dato
 
 - **Una fuente que sale de mi lado del mostrador (una regla mía, un test, un agente, el número que yo propuse) no es una segunda fuente: si un documento puede zanjarlo, se abre antes de actuar.** Graduado a `amfe.md` §12 y a `verificar_contra_la_fuente_no_el_codigo`, `un_agente_no_es_independiente`, `al_documento_entra_lo_que_dice_un_papel_de_esa_pieza`.
