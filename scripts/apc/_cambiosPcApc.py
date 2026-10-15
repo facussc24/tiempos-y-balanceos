@@ -21,7 +21,7 @@ NOMBRE = 'Cambios plan de control apoyacabezas Patagonia 15-10-2026'
 
 CAMBIOS = [
     ('General', 'Numeración 10 - 20 - 30 - 40 - 50 - 80 - 100',
-     'Numeración del flujograma 152 Rev. A: 10, 20, 21, 22, 30, 31, 40, 41, 42, 50, 51, 52, 60, 70, 71, 72, 80',
+     'Numeración del flujograma 152 Rev. A: 10, 20, 21, 22, 30, 31, 32, 40, 41, 42, 50, 51, 52, 60, 70, 71, 72, 80',
      'Para que coincida con el flujograma y con los AMFE 151, 153 y 155'),
     ('General', 'Varias características en la misma fila',
      'Una característica por fila, con su marca SC o D (en rojo)',
@@ -47,10 +47,13 @@ CAMBIOS = [
      '20 Preparación y carga de vinilo · 21 Corte automático · 22 Control con Mylar (± 1 mm). '
      'Cuchilla 4 mm mínimo con calibre MC167 antes de cada corte',
      'Según las hojas de operaciones 968, 969 y 970'),
-    ('30 Costura unión', 'Margen y aguja en TBD. Sin atraque',
+    ('30 Refilado', "'Operación 30 y 30,2'",
+     'Operación 30 Refilado de componentes cortados (sector costura): set up de la refiladora y ancho 10 ± 2 mm con regla MC 310; '
+     'vinilo sin dañar contra patrón', 'Está en el flujograma y en el AMFE'),
+    ('31 Costura unión', 'Margen y aguja en TBD. Sin atraque',
      'Toma 8 ± 1 mm en vinilo y 8 ± 2 mm en tela. 4 puntadas en 16 mm (± 1). Atraque de 3 a 4 puntadas. '
      'Aguja N° 18', 'Valores de costura de Patagonia y hojas de operaciones'),
-    ('31 Costura vista', 'Era la 40. Filas escritas como defectos, sin medida',
+    ('32 Costura vista', 'Era la 40. Filas escritas como defectos, sin medida',
      'Separación al borde 4 ± 1 mm. 4 puntadas en 16 mm (± 1). Color del hilo según versión, el L0 con hilo negro '
      'FX483TK-E0PTO. Aguja N° 22', 'Valores de costura de Patagonia. El L0 lleva costura decorativa negra desde el pedido de Leo Lattanzi (05/08/2026)'),
     ('40 a 51 Tapizado y carga del molde', 'No estaban',
@@ -66,8 +69,6 @@ CAMBIOS = [
      'Según la hoja de operaciones (pestaña 60) y el cronograma de calibración'),
     ('70 a 72 Reprocesos', 'No estaban', 'Agregados. Puntada floja con el método de la aguja',
      'Están en el flujograma'),
-    ('Refilado', "'Operación 30 y 30,2'", 'Se mantiene (se hace en el sector de costura)',
-     'Confirmado en planta. Falta su número en el flujograma'),
     ('80 Embalaje', "Era la 100: 'Según hoja de operaciones'",
      '48 piezas por bin en los tres: delantero en bin plástico verde (GE-103), traseros en bin azul metálico (GE-104 y GE-105). '
      'Bolsa individual, etiqueta por pieza y láminas de cartón; las astas no tocan la zona vista',

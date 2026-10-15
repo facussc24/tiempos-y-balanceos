@@ -47,7 +47,7 @@ V = {
         bolsa=('427VAR002TAP01', 'Bolsa PP 600 x 500 mm'),
         ge='GE-103 Rev. D', cant='48 piezas por bin (2 pisos de 20 parados + 1 piso de 8 acostados)',
         medio='Bin plástico verde 1200 x 1000 x 900 mm', laminas='4', calibre='MC506',
-        hojas_union='30, 32, 33 y 34 (paneles 101+102+103, 105+106, (105+106)+104 y cerrado completo)',
+        hojas_union='31.1 a 31.4 (paneles 101+102+103, 105+106, (105+106)+104 y cerrado completo)',
         pv2005_antes="Rev 0: 'sin grietas tras el almacenamiento de 8 ciclos (TRASERO CENTRAL) y de 5 ciclos (TRASERO LATERAL)' en la hoja del DELANTERO",
         shot='450 g en las pruebas',
     ),
@@ -62,7 +62,7 @@ V = {
         bolsa=('BA 35 50', 'Bolsa 35 x 50 cristal virgen'),
         ge='GE-105 Rev. D', cant='48 piezas por bin (4 pisos de 12 acostados)',
         medio='Bin azul (cajón metálico) 1140 x 720 x 750 mm', laminas='5', calibre='MC507',
-        hojas_union='30, 32 y 33 (paneles 101+102+103, conjunto trasero 105+106+104 y cerrado completo)',
+        hojas_union='31.1 a 31.3 (paneles 101+102+103, conjunto trasero 105+106+104 y cerrado completo)',
         pv2005_antes=None, shot='180 a 200 g en las pruebas',
     ),
     'TL': dict(
@@ -76,7 +76,7 @@ V = {
         bolsa=('BA 35 50', 'Bolsa 35 x 50 cristal virgen'),
         ge='GE-104 Rev. D', cant='48 piezas por bin (4 pisos de 12 acostados)',
         medio='Bin azul (cajón metálico) 1140 x 720 x 750 mm', laminas='5', calibre='MC508',
-        hojas_union='30, 32 y 33 (paneles 107+108+109, conjunto trasero 111+112+110 y cerrado completo)',
+        hojas_union='31.1 a 31.3 (paneles 107+108+109, conjunto trasero 111+112+110 y cerrado completo)',
         pv2005_antes=None, shot='270 g en las pruebas',
     ),
 }
@@ -249,31 +249,31 @@ def filas_variante(key):
     mesa = 'Máquina de corte N° BM 068 / BM 069'
     f1 = "1 (la HO dice 'Frec. 1')"
     corte = [
-        ('20', 'Preparación y carga de vinilo', '20 a 24', [
-            dict(proc='Código de material del rollo', esp='Según planilla de mesa de corte', inst='Visual — planilla de corte (HO pestaña 20)',
+        ('20', 'Preparación y carga de vinilo', '20.1 a 20.4', [
+            dict(proc='Código de material del rollo', esp='Según planilla de mesa de corte', inst='Visual — planilla de corte (HO pestaña 20.1)',
                  tam='1 control', frec=f1, reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.'),
-            dict(proc='Posición del lado vista del vinilo', esp='Según planilla de mesa de corte', inst='Visual — planilla de corte (HO pestaña 20)',
+            dict(proc='Posición del lado vista del vinilo', esp='Según planilla de mesa de corte', inst='Visual — planilla de corte (HO pestaña 20.1)',
                  tam='1 control', frec=f1, reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.'),
             dict(proc='Alineación del vinilo detrás de los rodillos (los parámetros de velocidad no los cambia el operador)', esp='Alineado',
-                 inst='Visual (HO pestaña 22)', tam='1 control', frec=f1, reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.'),
+                 inst='Visual (HO pestaña 20.3)', tam='1 control', frec=f1, reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.'),
             dict(proc='Velocidad y tensión del vinilo', esp='Según instructivo de parámetros por producto (valores TBD: el instructivo no está en el legajo)',
-                 inst='Instructivo de parámetros — visual (HO pestaña 23)', **SETUP),
-            dict(proc='Cantidad de capas', esp='Según planilla de mesa de corte', inst='Panel de la máquina — visual (HO pestaña 23)', **SETUP),
-            dict(prod='Largo de la capa (tizada + demasía)', esp='Según planilla de mesa de corte', inst='Regla (código TBD) (HO pestaña 23)',
-                 tam='1 control', frec='Primera capa de cada tizada', reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.'),
-            dict(proc='Alineación del vinilo hasta las líneas rojas de la mesa', esp='Recto y coincidente con las marcas rojas', inst='Visual (HO pestaña 24)',
-                 tam='1 control', frec=f1, reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.')]),
-        ('21', 'Corte automático de componentes', '25 a 27', [
-            dict(proc='Ancho de cuchilla', esp='4 mm mínimo', inst='Calibre MC167 (HO pestaña 25)', tam='1 control', frec='Antes de cada corte',
+                 inst='Instructivo de parámetros — visual (HO pestaña 20.4)', **SETUP),
+            dict(proc='Cantidad de capas', esp='Según planilla de mesa de corte', inst='Panel de la máquina — visual (HO pestaña 20.4)', **SETUP),
+            dict(prod='Largo de la capa (tizada + demasía)', esp='Según planilla de mesa de corte', inst='Regla (código TBD) (HO pestaña 20.4)',
+                 tam='1 control', frec='Primera capa de cada tizada', reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.')]),
+        ('21', 'Corte automático de componentes', '21.1 a 21.4', [
+            dict(proc='Alineación del vinilo hasta las líneas rojas de la mesa', esp='Recto y coincidente con las marcas rojas', inst='Visual (HO pestaña 21.1)',
+                 tam='1 control', frec=f1, reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.'),
+            dict(proc='Ancho de cuchilla', esp='4 mm mínimo', inst='Calibre MC167 (HO pestaña 21.2)', tam='1 control', frec='Antes de cada corte',
                  reg='Registro de set up', resp='Operador de producción', reac='Según P-09/I.'),
-            dict(proc='Alineación del cabezal y margen', esp='Margen máximo 2,5 cm por lado', inst='Visual + láser de la máquina (HO pestaña 26)',
+            dict(proc='Alineación del cabezal y margen', esp='Margen máximo 2,5 cm por lado', inst='Visual + láser de la máquina (HO pestaña 21.3)',
                  tam='1 control', frec='Antes de cada corte', reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.'),
-            dict(proc='Posición del cabezal y elevación del plato', esp='Según HO pestaña 27', inst='Visual', tam='1 control',
+            dict(proc='Posición del cabezal y elevación del plato', esp='Según HO pestaña 21.4', inst='Visual', tam='1 control',
                  frec='Antes de cada corte', reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.'),
             dict(proc='Verificación automática de medidas del vinilo (sensores de la máquina)', esp='La máquina no arranca si el vinilo no cumple las medidas',
                  inst='Verificación del sensor con falla simulada (I-AC-032)', tam='TBD', frec='TBD', reg='TBD',
                  resp='TBD (el I-AC-032 asigna al líder de producción las verificaciones de inicio de turno)', reac='Según P-09/I.')]),
-        ('22', 'Control con Mylar', '28', [
+        ('22', 'Control con Mylar', '22', [
             dict(proc='Identificación de la plantilla Mylar según referencia y material', esp='Según planilla de corte',
                  inst='Visual — planilla de corte', tam='1 control', frec='Inicio de turno / Falla mantenimiento / Corte de energía / Problema de calidad',
                  reg='Registro de set up', resp='Operador de producción / Calidad', reac='Según P-09/I.'),
@@ -285,26 +285,30 @@ def filas_variante(key):
                    "capas y 'dimensional de corte según mayler'")
     for i, (op, nom, pest, items) in enumerate(corte):
         for j, it in enumerate(items):
-            R.append(fila('nueva', f'{FLUJO} op {op} + {ho} pestañas {pest} (numeración vieja de la HO, ciclo de control)',
+            R.append(fila('nueva', f'{FLUJO} op {op} + {ho} pestañas {pest} (ciclo de control)',
                           antes_corte if (i == 0 and j == 0) else '',
                           **({'op': f'Operación {op}.', 'nom': nom, 'maq': mesa} if j == 0 else {}), n=f'{j + 1}.0', **it))
-    # refilado: los controles de la Rev 0. Fak, 15/10/2026: "el refilado en APC se continua haciendo, se hace en el
-    # sector de costura". Falta su numero en el flujograma 152, el AMFE y las HO (ver lista)
-    ref = dict(op='Refilado (sector costura; sin N° en el flujograma)', nom='Operación de Refilado de Cortes de APC Vinilos Laterales',
+    # refilado: op 30 del flujograma 152 desde el 15/10 a la tarde (Fak: "el refilado en APC se continua haciendo, se
+    # hace en el sector de costura"). Controles del AMFE op 30 y de la Rev 0 de Calidad; la HO todavia no tiene su hoja.
+    ref = dict(op='Operación 30.', nom='Refilado de componentes cortados (sector costura)',
                maq='Maquina refiladora N°  BM 001 BM 003')
-    nota_ref = 'Controles de la Rev 0. Se hace en el sector de costura (Fak, 15/10/2026); falta su número en el flujograma, el AMFE y las HO'
-    R.append(fila('cambia', nota_ref, '', **ref, n='1.0', prod='Forma', esp='Refilado de 10+/-2mm', inst='Regla Metalica N° MC 310',
+    nota_ref = (f'{FLUJO} op 30 + AMFE op 30 (prevención: regulación de la refiladora en el set up de inicio de turno; detección: '
+                'regla MC 310 y visual contra patrón, 1 pieza al inicio y fin de turno; sin sigla) + valores de la Rev 0 de Calidad')
+    R.append(fila('nueva', nota_ref, '', **ref, n='1.0', proc='Regulación de la refiladora (set up)', esp='Ancho de refilado 10 ± 2 mm',
+                  inst='Regla metálica MC 310', tam='1 control', frec='Inicio de turno', reg='Registro de set up',
+                  resp='Operador de producción', reac='Según P-09/I.'))
+    R.append(fila('cambia', nota_ref, '', n='2.0', prod='Ancho de refilado', esp='Refilado de 10+/-2mm', inst='Regla Metalica N° MC 310',
                   tam='1 Pieza.', frec='Inicio y fin de turno.', reg='set up', resp='Operador de producción.', reac='Según P-09/I.'))
     R.append(fila('igual', '', '', tam='1.0', frec='Por lote.', reg='Autocontrol.', resp='Operador de producción.', reac='Según P-09/I.'))
-    R.append(fila('igual', '', '', n='2.0', prod='Aspecto', esp='Refilado Ok según Patron sin dañar vinilo',
+    R.append(fila('igual', '', '', n='3.0', prod='Aspecto: vinilo sin dañar', esp='Refilado Ok según Patron sin dañar vinilo', inst='Visual contra patrón',
                   tam='1 Pieza.', frec='Inicio y fin de turno.', reg='set up', resp='Operador de producción.', reac='Según P-09/I.'))
     R.append(fila('igual', '', '', tam='1.0', frec='Por lote.', reg='Autocontrol.', resp='Operador de producción.', reac='Según P-09/I.'))
 
-    # --- costura union: una sola operacion 30 (todas las costuras de union de la pieza)
-    union_src = (f'{FLUJO} op 30 + {ho} pestañas de unión {v["hojas_union"]} + {COSTURA_SRC}. '
-                 'Siglas del AMFE op 30: SC "selección incorrecta del hilo" (S8 O4), "largo de puntada fuera de especificación" (S6 O4), '
+    # --- costura union: una sola operacion 31 (todas las costuras de union de la pieza)
+    union_src = (f'{FLUJO} op 31 + {ho} pestañas de unión {v["hojas_union"]} + {COSTURA_SRC}. '
+                 'Siglas del AMFE op 31: SC "selección incorrecta del hilo" (S8 O4), "largo de puntada fuera de especificación" (S6 O4), '
                  '"toma de costura fuera de especificación" (S6 O4)')
-    base = {'op': 'Operación 30.', 'nom': 'Costura unión (todas las uniones de la pieza: ' + v['hojas_union'] + ')',
+    base = {'op': 'Operación 31.', 'nom': 'Costura unión (todas las uniones de la pieza: ' + v['hojas_union'] + ')',
             'maq': 'Máquina de coser recta (código TBD)'}
     R.append(fila('cambia', union_src, "Rev 0 ('Operación 30 Costura Union'): set up 'Sin pérdida de aceite / medios identificados / hilo correcto / linterna funcionamiento de crochet ok', aguja 'TBD', margen 'TBD'",
                   **base, n='1.0', proc='Set up: aguja, hilo, tensión, máquina sin pérdida de aceite, medios identificados, linterna y crochet OK',
@@ -325,7 +329,7 @@ def filas_variante(key):
         R.append(fila('cambia', union_src, '', **AUTO))
 
     # --- costura vista: 31 (antes la Rev 0 la tenia como 40)
-    vista_src = (f'{FLUJO} op 31 + {ho} pestaña 31 + {COSTURA_SRC}. Siglas del AMFE op 31 (live 15/10/2026): SC "selección incorrecta del hilo" (S6 O4), '
+    vista_src = (f'{FLUJO} op 32 + {ho} pestaña 32 + {COSTURA_SRC}. Siglas del AMFE op 32 (live 15/10/2026): SC "selección incorrecta del hilo" (S6 O4), '
                  '"largo de puntada fuera de especificación" (S6 O5) y "ancho de cubierta fuera de 4 mm ±1" (S6 O4)')
     vista = [
         ('Set up: aguja, hilo, tensión', 'Aguja N° 22 · hilo aguja Nm 20/3 PET (color según versión) · bobina Nm 30/3 PET', 'Visual — hoja de set up', '', 'proc'),
@@ -338,7 +342,7 @@ def filas_variante(key):
     antes_vista = ("Rev 0 ('Operación 40 Costura vista'): filas escritas como modo de falla ('Costura descosida o débil', 'Costura desviada o fuera de especificación', "
                    "'Puntadas irregulares', 'Selección incorrecta del hilo', 'Largo de puntada', 'Distancia entre costuras') sin especificación")
     for k, (c, esp, inst, clas, tipo) in enumerate(vista):
-        extra = {'op': 'Operación 31.', 'nom': 'Costura vista (L0 a L3)', 'maq': 'Máquina de costura vista (código TBD)'} if k == 0 else {}
+        extra = {'op': 'Operación 32.', 'nom': 'Costura vista (L0 a L3)', 'maq': 'Máquina de costura vista (código TBD)'} if k == 0 else {}
         if tipo == 'proc':
             R.append(fila('cambia', vista_src, antes_vista, **extra, n='1.0', proc=c, esp=esp, inst=inst,
                           tam='1 control', frec='Inicio de turno / Después de cada intervención mecánica o parada de más de 1 h',
