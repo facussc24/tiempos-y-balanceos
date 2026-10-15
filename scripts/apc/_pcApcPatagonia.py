@@ -45,7 +45,8 @@ V = {
         asta_car='Material / aspecto\nDiámetro\nCota\nDiámetro',
         asta_esp='Cromado, libre de rayas, manchas y falta de material\n90 mm\n130 mm\n14 mm +0,05 / -0,1 mm',
         bolsa=('427VAR002TAP01', 'Bolsa PP 600 x 500 mm'),
-        ge='GE-103 Rev. C', cant='24 piezas por contenedor (12 por piso)', calibre='MC506',
+        ge='GE-103 Rev. D', cant='48 piezas por bin (2 pisos de 20 parados + 1 piso de 8 acostados)',
+        medio='Bin plástico verde 1200 x 1000 x 900 mm', laminas='4', calibre='MC506',
         hojas_union='30, 32, 33 y 34 (paneles 101+102+103, 105+106, (105+106)+104 y cerrado completo)',
         pv2005_antes="Rev 0: 'sin grietas tras el almacenamiento de 8 ciclos (TRASERO CENTRAL) y de 5 ciclos (TRASERO LATERAL)' en la hoja del DELANTERO",
         shot='450 g en las pruebas',
@@ -59,7 +60,8 @@ V = {
         asta_car='Material / aspecto\nDiámetro\nCota\nDiámetro\nCota 4.1\nCota',
         asta_esp='Cromado, libre de rayas, manchas y falta de material\nØ 7 mm ± 0,1 mm\n167 mm\nØ 12,7 mm +0,02 / -0,1 mm\n80 mm ± 1 mm\n6,8 mm ± 1 mm',
         bolsa=('BA 35 50', 'Bolsa 35 x 50 cristal virgen'),
-        ge='GE-105 Rev. C', cant='40 piezas por contenedor (20 por piso)', calibre='MC507',
+        ge='GE-105 Rev. D', cant='48 piezas por bin (4 pisos de 12 acostados)',
+        medio='Bin azul (cajón metálico) 1140 x 720 x 750 mm', laminas='5', calibre='MC507',
         hojas_union='30, 32 y 33 (paneles 101+102+103, conjunto trasero 105+106+104 y cerrado completo)',
         pv2005_antes=None, shot='180 a 200 g en las pruebas',
     ),
@@ -72,7 +74,8 @@ V = {
         asta_car='Material / aspecto\nCota 1\nCota 2\nCota 3\nCota 4',
         asta_esp='Cromado, libre de rayas, manchas y falta de material\n102,6 mm\n7 ± 0,1 mm\n130 ± 1 mm\n12,75 +0,02 / -0,1 mm',
         bolsa=('BA 35 50', 'Bolsa 35 x 50 cristal virgen'),
-        ge='GE-104 Rev. C', cant='36 piezas por contenedor (18 por piso)', calibre='MC508',
+        ge='GE-104 Rev. D', cant='48 piezas por bin (4 pisos de 12 acostados)',
+        medio='Bin azul (cajón metálico) 1140 x 720 x 750 mm', laminas='5', calibre='MC508',
         hojas_union='30, 32 y 33 (paneles 107+108+109, conjunto trasero 111+112+110 y cerrado completo)',
         pv2005_antes=None, shot='270 g en las pruebas',
     ),
@@ -144,23 +147,25 @@ def filas_variante(key):
     op10 = dict(op='Operación 10.', nom='Recepción e inspección de materia prima')
 
     # --- recepcion: vinilos y tela (siglas de causas de op 10 que cumplen el criterio de I-AC-005)
-    esp_vin = ('Según patrón de color\nEspesor: CONFLICTO — arb: "PU 4,5 mm + PVC 1 mm" / lista VW: "PVC 1,1 ±10 % + PUR 1,0 +0,5" / '
-               'Rev 0: "2,1 +/-" sin tolerancia\n< 100 mm/min')
-    fuente_vin = ('BOM arb 29/09/2026 + LISTADO PC PATAGONIA.xlsx (hoja separado APC). No hay plan de recepción de vinilo Patagonia: '
-                  'la carpeta VINILO\\Patagonia está vacía. Siglas del AMFE op 10: SC por "material con especificación errónea" '
-                  '(S7 O4 y O5) y "variación de color entre lotes" (S6 O4); D/TLD por flamabilidad TL 1010 (S9 O2)')
+    # Espesor resuelto el 15/10/2026 (pedido de Fak): el material vigente es el de espuma PU 4,5 mm (recomendacion de
+    # Sansuy para FIP, mail de M. Perticaro 16/03/2026; el de espuma 1 mm quedo "NO USAR. PIP NoOK"). Valores de la
+    # especificacion de Sansuy EPS-2320 Rev 0 / EPS-2312 Rev 0 (certificados de recepcion CA 1324826, 1325426, 1149026).
+    esp_vin = 'Según patrón de color\n5,05 a 6,15 mm (espesor total)\n1022 a 1249 g/m²\nMín. 1400 mm\n< 100 mm/min'
+    fuente_vin = ('BOM arb 29/09/2026 + especificación Sansuy EPS-2320 / EPS-2312 Rev 0 (certificados de recepción de 08-09/2026, '
+                  '2 - certificados de calidad\\1- Certificados de Sansuy). Siglas del AMFE op 10: SC por "material con especificación errónea '
+                  '(dimensiones, color...)" (S7 O4 y O5) y "variación de color entre lotes" (S6 O4); D/TLD por flamabilidad TL 1010 (S9 O2)')
     antes_vin = 'Rev 0: espesor "2,1 +/-", gramaje "mín. 800 - máx. 1000 GMS/MT2", instrumento sin código en las filas 2 y 3, sin siglas'
     titan_niv = 'L0 y L1-L3 (laterales)' if key == 'DEL' else 'L0'
-    vinilos = [('1246030198', 'Vinilo PU 4,5 mm + PVC 1 mm TITAN BLACK (Sansuy BAH RL1)', titan_niv),
-               ('1246030199', 'Vinilo PU 4,5 mm + PVC 1 mm ANDINO GRAY (Sansuy ST Haptik)', 'L2'),
-               ('1246030200', 'Vinilo PU 4,5 mm + PVC 1 mm DARK SLATE (York ML14)', 'L3')]
+    vinilos = [('1246030198', 'Vinilo PVC 1 mm + espuma PU 4,5 mm TITAN BLACK (Sansuy)', titan_niv),
+               ('1246030199', 'Vinilo PVC 1 mm + espuma PU 4,5 mm ANDINO GRAY (Sansuy, Haptik)', 'L2'),
+               ('1246030200', 'Vinilo PVC 1 mm + espuma PU 4,5 mm DARK SLATE (Sansuy ML14)', 'L3')]
     n = 0
     for i, (cod, desc, lv) in enumerate(vinilos):
         n += 1
         R.append(fila('cambia', fuente_vin, antes_vin, **(op10 if i == 0 else {}), n=f'{n}.0',
-                      prod=f'{desc} — código {cod} — {lv}', proc='Grabado y color\nEspesor\nFlamabilidad',
-                      clas='SC\nSC\nD/TLD', esp=esp_vin,
-                      inst='Visual con patrón\nCalibre MC212 (ver lista: sector y checklist)\nCámara de flamabilidad MC184 (ver lista: calibración)', **REC))
+                      prod=f'{desc} — código {cod} — {lv}', proc='Grabado y color\nEspesor\nGramaje\nAncho\nFlamabilidad',
+                      clas='SC\nSC\n\nSC\nD/TLD', esp=esp_vin,
+                      inst='Visual con patrón\nCalibre MC212\nBalanza electrónica\nCinta métrica\nCámara de flamabilidad MC184', **REC))
     n += 1
     R.append(fila('cambia', 'BOM arb 2951P098297 + LISTADO PC PATAGONIA (Fabric + Ether-PUR 1,5 +0,5 + base 50 g/m² ±10 %). '
                   'Sin plan de recepción encontrado. Siglas del AMFE op 10 (mismas causas que los vinilos)',
@@ -178,7 +183,8 @@ def filas_variante(key):
     # --- hilos: sin sigla en recepcion (las SC del AMFE son de la seleccion del hilo en costura, op 30/31)
     n += 1
     R.append(fila('cambia', 'Plan de recepción N° 1043 (Linhanyl FX284-E0PTO, C. Rodríguez rev B 03/09/2025) + BOM arb. '
-                  f'CONFLICTO de código: la {ho} (pestañas de costura de unión) y la Rev 0 dicen FX284TK-E0PTO; el arb y el plan 1043 dicen FX284-E0PTO',
+                  'Código confirmado por la aprobación de pieza de Linhanyl del 07/02/2026 ("1571 - FX284/E0PTO, Linha 100% Poliéster Mole 30 - E0PTO"); '
+                  f'la {ho} y la Rev 0 decían FX284TK-E0PTO (el "TK" es del hilo de vista FX483TK)',
                   "Rev 0: 'Hilo Union JET BLACK Pantone 19-0303 TPG / FX284TK-E0PTO 30/3Nm'",
                   n=f'{n}.0', prod='Hilo unión Nm 30/3 PET negro — código FX284-E0PTO (Linhanyl)',
                   proc='Número métrico\nMaterial\nCabos\nColor\nSolidez a la luz\nFlamabilidad',
@@ -188,7 +194,9 @@ def filas_variante(key):
                   resp='Auditor de recepción', reac='P-14.'))
     hilos_vista = [('FX483TK-11930E', 'ALPE GRAY TGA IP3', 'L1', '1063'),
                    ('FX483TK-11703E', 'GRAY VIOLET TGA AT2 (Pantone 14-4103)', 'L2 y L3', '1064'),
-                   ('FX483TK-E0PTO', 'JET BLACK', 'L0 (CONFLICTO: la HO dice que el L0 no lleva costura vista; el arb le carga este hilo)', '1062')]
+                   # L0 con costura decorativa negra: pedido de L. Lattanzi, mail del 05/08/2026 ("incorporar decorativo negro
+                   # a los L0"), cargado en el arb; las HO 968/969/970 todavia dicen que el L0 no lleva vista (ver lista)
+                   ('FX483TK-E0PTO', 'JET BLACK', 'L0', '1062')]
     for cod, col, lv, plan in hilos_vista:
         n += 1
         R.append(fila('cambia' if cod == 'FX483TK-11703E' else 'nueva',
@@ -280,10 +288,12 @@ def filas_variante(key):
             R.append(fila('nueva', f'{FLUJO} op {op} + {ho} pestañas {pest} (numeración vieja de la HO, ciclo de control)',
                           antes_corte if (i == 0 and j == 0) else '',
                           **({'op': f'Operación {op}.', 'nom': nom, 'maq': mesa} if j == 0 else {}), n=f'{j + 1}.0', **it))
-    # refilado: tal cual la Rev 0 (no esta en flujograma, AMFE ni HO -> lista)
-    ref = dict(op='Operación 30 y 30,2', nom='Operación de Refilado de Cortes de APC Vinilos Laterales', maq='Maquina refiladora N°  BM 001 BM 003')
-    nota_ref = 'Filas como las tenía Calidad en la Rev 0. OJO: esta operación no está en el flujograma 152, ni en el AMFE, ni en las HO, y su número choca con la costura de unión (ver lista)'
-    R.append(fila('igual', nota_ref, '', **ref, n='1.0', prod='Forma', esp='Refilado de 10+/-2mm', inst='Regla Metalica N° MC 310',
+    # refilado: los controles de la Rev 0. Fak, 15/10/2026: "el refilado en APC se continua haciendo, se hace en el
+    # sector de costura". Falta su numero en el flujograma 152, el AMFE y las HO (ver lista)
+    ref = dict(op='Refilado (sector costura; sin N° en el flujograma)', nom='Operación de Refilado de Cortes de APC Vinilos Laterales',
+               maq='Maquina refiladora N°  BM 001 BM 003')
+    nota_ref = 'Controles de la Rev 0. Se hace en el sector de costura (Fak, 15/10/2026); falta su número en el flujograma, el AMFE y las HO'
+    R.append(fila('cambia', nota_ref, '', **ref, n='1.0', prod='Forma', esp='Refilado de 10+/-2mm', inst='Regla Metalica N° MC 310',
                   tam='1 Pieza.', frec='Inicio y fin de turno.', reg='set up', resp='Operador de producción.', reac='Según P-09/I.'))
     R.append(fila('igual', '', '', tam='1.0', frec='Por lote.', reg='Autocontrol.', resp='Operador de producción.', reac='Según P-09/I.'))
     R.append(fila('igual', '', '', n='2.0', prod='Aspecto', esp='Refilado Ok según Patron sin dañar vinilo',
@@ -304,7 +314,7 @@ def filas_variante(key):
     for k, (prod, esp, inst, clas) in enumerate([
         ('Toma (margen) de costura', 'L1 tela 8 ± 2 mm · L0-L2-L3 PVC 8 ± 1 mm · cortes X1 3 ± 1 mm', 'Regla metálica (código MC TBD)', 'SC'),
         ('Densidad de puntada', '4 puntadas en 16 mm (± 1)', 'Regla metálica (código MC TBD)', 'SC'),
-        ('Hilo aguja y bobina', 'Nm 30/3 PET negro — código: CONFLICTO FX284TK-E0PTO (HO) / FX284-E0PTO (arb y plan 1043)', 'Visual en la bobina', 'SC'),
+        ('Hilo aguja y bobina', 'Nm 30/3 PET negro E0PTO — código FX284-E0PTO (Linhanyl)', 'Visual en la bobina', 'SC'),
         ('Atraque', '3 a 4 puntadas al inicio y al final', 'Visual', ''),
         ('Costura completa: sin falta de costura, sin costura floja ni salteada, sin arrugas ni pliegues', 'Según muestra patrón / biblia de defectos',
          'Visual / muestra patrón', ''),
@@ -321,14 +331,14 @@ def filas_variante(key):
         ('Set up: aguja, hilo, tensión', 'Aguja N° 22 · hilo aguja Nm 20/3 PET (color según versión) · bobina Nm 30/3 PET', 'Visual — hoja de set up', '', 'proc'),
         ('Separación al borde (las dos líneas)', '4 mm ± 1 mm', 'Regla metálica (código MC TBD)', 'SC', 'prod'),
         ('Densidad de puntada', '4 puntadas en 16 mm (± 1)', 'Regla metálica (código MC TBD)', 'SC', 'prod'),
-        ('Color del hilo vista según versión', 'L1 Alpe Gray FX483TK-11930E · L2 y L3 Gray Violet FX483TK-11703E · L0 sin costura vista', 'Visual en la bobina', 'SC', 'prod'),
+        ('Color del hilo vista según versión', 'L0 Jet Black FX483TK-E0PTO · L1 Alpe Gray FX483TK-11930E · L2 y L3 Gray Violet FX483TK-11703E', 'Visual en la bobina', 'SC', 'prod'),
         ('Atraque', '3 a 4 puntadas al inicio y al final de cada línea', 'Visual', '', 'prod'),
         ('Línea vista alineada con la costura de unión, completa, sin puntadas irregulares ni arrugas', 'Según muestra patrón / biblia de defectos', 'Visual / muestra patrón', '', 'prod'),
     ]
     antes_vista = ("Rev 0 ('Operación 40 Costura vista'): filas escritas como modo de falla ('Costura descosida o débil', 'Costura desviada o fuera de especificación', "
                    "'Puntadas irregulares', 'Selección incorrecta del hilo', 'Largo de puntada', 'Distancia entre costuras') sin especificación")
     for k, (c, esp, inst, clas, tipo) in enumerate(vista):
-        extra = {'op': 'Operación 31.', 'nom': 'Costura vista (L1 / L2 / L3)', 'maq': 'Máquina de costura vista (código TBD)'} if k == 0 else {}
+        extra = {'op': 'Operación 31.', 'nom': 'Costura vista (L0 a L3)', 'maq': 'Máquina de costura vista (código TBD)'} if k == 0 else {}
         if tipo == 'proc':
             R.append(fila('cambia', vista_src, antes_vista, **extra, n='1.0', proc=c, esp=esp, inst=inst,
                           tam='1 control', frec='Inicio de turno / Después de cada intervención mecánica o parada de más de 1 h',
@@ -427,14 +437,19 @@ def filas_variante(key):
                       reac='Según P-09/I.'))
 
     # --- embalaje (SC del AMFE op 80: S5 O4 en el AMFE live del 15/10/2026)
-    R.append(fila('cambia', f'Ficha de embalaje {v["ge"]} (maestro de fichas, vigente desde 17/06/2026) + {ho} pestaña 80. '
+    R.append(fila('cambia', f'Ficha de embalaje {v["ge"]} (C. Baptista, 07/10/2026; mail del 15/10/2026 con las fichas vigentes) + {ho} pestaña 80. '
                   'Sigla: AMFE op 80 SC "marcado de identificación ausente o incorrecto" (S5 O4)',
                   "Rev 0: 'Operación 100 - Embalaje' - 'Identificación de medio correcto de la pieza' - 'Según hoja de operaciones'",
-                  op='Operación 80.', nom='Embalaje y etiquetado de producto terminado', maq='Contenedor según ficha ' + v['ge'],
+                  op='Operación 80.', nom='Embalaje y etiquetado de producto terminado', maq=f'{v["medio"]} según ficha {v["ge"]}',
                   n='1.0', prod='Identificación del medio', clas='SC', esp='Etiqueta SATO 100 x 60 según código de la pieza (ARB)',
                   inst=f'Visual — ficha {v["ge"]}', tam='1.0', frec='Por lote.', reg='Autocontrol.', resp='Operador de Calidad', reac='Según P-09/I.'))
     R.append(fila('cambia', f'Ficha de embalaje {v["ge"]}', "Rev 0: 'Cantidad correcta de piezas por medio' - 'Según hoja de operaciones'",
                   n='2.0', prod='Cantidad por medio', esp=v['cant'], inst=f'Visual — ficha {v["ge"]}', tam='1.0', frec='Por lote.',
+                  reg='Autocontrol.', resp='Operador de Calidad', reac='Según P-09/I.'))
+    R.append(fila('nueva', f'Ficha de embalaje {v["ge"]} (descripción de armado)', '',
+                  n='3.0', prod='Armado del medio: cada pieza en su bolsa BA 35 50 con su etiqueta; láminas de cartón '
+                  f'({v["laminas"]} por bin); las astas no tocan la zona vista de ninguna pieza',
+                  esp=f'Según ficha {v["ge"]}', inst=f'Visual — ficha {v["ge"]}', tam='1.0', frec='Por lote.',
                   reg='Autocontrol.', resp='Operador de Calidad', reac='Según P-09/I.'))
 
     # --- test de lay out

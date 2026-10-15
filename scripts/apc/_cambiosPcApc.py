@@ -34,6 +34,12 @@ CAMBIOS = [
      'embalaje y etiquetas. '
      'Poliol POLI-PLUS FF636 e isocianato ISO-PLUS 1355',
      'Son los materiales y componentes cargados en la BOM del arb (29/09/2026)'),
+    ('10 Recepción vinilos', 'Vinilo "PVC 1,1 + PU 1,0". Espesor "2,1 +/-" y gramaje 800 a 1000 g/m²',
+     'Vinilo PVC 1 mm + espuma PU 4,5 mm. Espesor total 5,05 a 6,15 mm, gramaje 1022 a 1249 g/m², ancho mínimo 1400 mm, '
+     'flamabilidad < 100 mm/min',
+     'Es el vinilo que Sansuy recomendó para la inyección (marzo 2026). Valores de su especificación y de los certificados de recepción'),
+    ('10 Recepción', 'Hilo de unión FX284TK-E0PTO',
+     'Hilo de unión FX284-E0PTO', 'Es el código de la aprobación de pieza de Linhanyl, del arb y del plan de recepción 1043'),
     ('10 Recepción', 'Hilos y astas con controles generales',
      'Hilos y astas con las características de sus planes de recepción (hilos 1043, 1062, 1063, 1064; '
      'astas 1063, 1064, 1065)', 'Para que coincida con lo que controla recepción'),
@@ -45,8 +51,8 @@ CAMBIOS = [
      'Toma 8 ± 1 mm en vinilo y 8 ± 2 mm en tela. 4 puntadas en 16 mm (± 1). Atraque de 3 a 4 puntadas. '
      'Aguja N° 18', 'Valores de costura de Patagonia y hojas de operaciones'),
     ('31 Costura vista', 'Era la 40. Filas escritas como defectos, sin medida',
-     'Separación al borde 4 ± 1 mm. 4 puntadas en 16 mm (± 1). Color del hilo según versión (el L0 no lleva vista). '
-     'Aguja N° 22', 'Valores de costura de Patagonia y hojas de operaciones'),
+     'Separación al borde 4 ± 1 mm. 4 puntadas en 16 mm (± 1). Color del hilo según versión, el L0 con hilo negro '
+     'FX483TK-E0PTO. Aguja N° 22', 'Valores de costura de Patagonia. El L0 lleva costura decorativa negra desde el pedido de Leo Lattanzi (05/08/2026)'),
     ('40 a 51 Tapizado y carga del molde', 'No estaban',
      'Una fila por operación con lo que la hoja manda verificar (funda asentada, vinilo sobre la varilla, precinto, '
      'bolsa y boquilla)', 'Están en el flujograma y en las hojas de operaciones'),
@@ -60,20 +66,24 @@ CAMBIOS = [
      'Según la hoja de operaciones (pestaña 60) y el cronograma de calibración'),
     ('70 a 72 Reprocesos', 'No estaban', 'Agregados. Puntada floja con el método de la aguja',
      'Están en el flujograma'),
+    ('Refilado', "'Operación 30 y 30,2'", 'Se mantiene (se hace en el sector de costura)',
+     'Confirmado en planta. Falta su número en el flujograma'),
     ('80 Embalaje', "Era la 100: 'Según hoja de operaciones'",
-     'Cantidad por medio: 24 delantero (GE-103), 40 trasero central (GE-105), 36 trasero lateral (GE-104)',
-     'Fichas de embalaje vigentes'),
+     '48 piezas por bin en los tres: delantero en bin plástico verde (GE-103), traseros en bin azul metálico (GE-104 y GE-105). '
+     'Bolsa individual, etiqueta por pieza y láminas de cartón; las astas no tocan la zona vista',
+     'Fichas de embalaje Rev. D'),
     ('Test de lay out', 'Solo PV 2005', 'Se suman compresión PV 3410, flamabilidad y emisiones, y dimensional anual',
      'Pedido de VW en la auditoría de 2025'),
 ]
 
 FALTA = [
     'Valores de la inyección PU (temperaturas, caudal, relación, shot, tiempos): pedir a Lattanzi.',
-    'Planes de recepción que no encontramos: vinilos Patagonia, tela, FF636, ISO 1355 y los insumos de la PIP.',
-    'Espesor del vinilo: el arb y la lista de materiales de VW dicen distinto.',
-    'Código del hilo de unión: las hojas dicen FX284TK-E0PTO; el arb y el plan de recepción, FX284-E0PTO.',
-    'Refilado (Rev 0, "Operación 30 y 30,2"): no está en el flujograma ni en las hojas. Confirmar si se hace.',
-    'Cámara de flamabilidad MC184: en el cronograma figura vencida. Calibre MC212: figura en otro sector.',
+    'Planes de recepción que no encontramos: vinilos Patagonia, tela Rennes, FF636, ISO 1355 y los insumos de la PIP.',
+    'Tela Rennes: espesor y gramaje (no encontramos especificación ni certificado).',
+    'Láminas de cartón del embalaje: las piden las fichas Rev. D y no están en la BOM.',
+    'Bolsa del delantero: la ficha GE-103 dice BA 35 50 y la BOM tiene la bolsa PP 600 x 500.',
+    'Cámara de flamabilidad MC184: en el cronograma de calibración figura vencida desde el 11/09/2026.',
+    'Calibre MC212 (espesor en recepción): en el cronograma está asignado a Conversión de Cintas. Confirmar qué calibre usa recepción.',
 ]
 
 
