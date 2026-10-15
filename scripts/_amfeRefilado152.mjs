@@ -12,8 +12,9 @@
  *     05/08/2026, punto 4 ("Incorporar Hilo decorativo Negro para todos los APC L0"), cargado en el arb.
  *     Se agrega a la OP 10 con la misma cadena que los otros dos hilos vista.
  *
- * Las causas nuevas van sin sigla: con S 7 y O 4 quedan dentro del criterio de SC, y asignarla es de Fak
- * (caracteristicas-especiales.md). El script las lista al final como candidatas.
+ * Las dos causas del refilado llevan SC: S 7 y O 4 cumplen el criterio de significativa del I-AC-005 rev.B
+ * (S 5 a 8 y O >= 4) y Fak la asigno el 15/10/2026 ("si hacelo si consideras que van", caracteristicas-especiales.md).
+ * Si la OP 30 ya existe sin la sigla, el script se la pone a esas dos causas y a ninguna otra.
  *
  * Uso:  node scripts/_amfeRefilado152.mjs            (dry-run)
  *       node scripts/_amfeRefilado152.mjs --apply
@@ -31,7 +32,7 @@ const REFILADO = 'REFILADO DE COMPONENTES CORTADOS';
 const HILO_NEGRO = 'Hilo vista 20/3 Jet Black (Linhanyl) (codigo FX483TK-E0PTO)';
 
 const { apply } = parseSafeArgs();
-const banderas = process.argv.slice(2).filter((a) => a.startsWith('-') && !['--apply', '--verbose', '-v'].includes(a));
+const banderas = process.argv.slice(2).filter((a) => a.startsWith('-') && !['--apply', '--verbose', '-v', '--allow-specialchar'].includes(a));
 if (banderas.length) throw new Error(`Argumento que este script no conoce: ${banderas.join(', ')}`);
 
 // El flujograma manda: sin el 30/31/32 emitido en el 152, no se toca nada.
@@ -42,11 +43,14 @@ if (flujo.header.revision !== 'A' || paso('30') !== REFILADO || paso('31') !== '
 }
 
 const id = () => crypto.randomUUID();
+const CAUSAS_REFILADO = ['Refiladora mal regulada', 'Cuchilla de la refiladora gastada'];
+/** SC asignada por Fak a las causas del refilado; la sigla sale de S y O de ESA causa, no se copia. */
+const sigla = (s, o) => (s >= 5 && s <= 8 && o >= 4 ? 'SC' : '');
 const causa = (texto, s, o, d, prevencion, deteccion) => ({
     id: id(), cause: texto, description: texto, severity: s, occurrence: o, detection: d,
     ap: calculateAP(s, o, d), actionPriority: calculateAP(s, o, d),
     preventionControl: prevencion, detectionControl: deteccion,
-    specialChar: '', characteristicNumber: '', filterCode: '', preventionAction: '', detectionAction: '',
+    specialChar: sigla(s, o), characteristicNumber: '', filterCode: '', preventionAction: '', detectionAction: '',
     responsible: '', targetDate: '', status: '', _autoFilled: true,
 });
 const falla = (texto, local, siguiente, usuario, causas) => ({
@@ -114,6 +118,15 @@ for (const numero of AMFES) {
     const hecho = con('30').length === 1 && nombre(con('30')[0]) === REFILADO;
     if (hecho) {
         console.log('   el refilado ya esta como 30: no se renumera');
+        for (const fm of con('30')[0].workElements.flatMap((w) => w.functions.flatMap((f) => f.failures))) {
+            for (const c of fm.causes) {
+                if (!CAUSAS_REFILADO.includes(c.cause)) throw new Error(`${numero}: causa inesperada en la OP 30: ${c.cause}`);
+                const nueva = sigla(c.severity, c.occurrence);
+                if ((c.specialChar ?? '') === nueva) continue;
+                logChange(apply, `${numero} OP 30 sigla`, { antes: `${c.cause} (S${c.severity} O${c.occurrence}) sigla "${c.specialChar ?? ''}"`, despues: `sigla "${nueva}"` });
+                c.specialChar = nueva;
+            }
+        }
     } else {
         if (ops.some((o) => /REFILADO/i.test(nombre(o)))) throw new Error(`${numero}: ya hay un refilado con otro numero`);
         const [union, vista] = [con('30'), con('31')];
@@ -199,7 +212,7 @@ for (const numero of AMFES) {
 }
 
 if (candidatasSC.length) {
-    console.log('\nCandidatas a SC por criterio (S 5-8 y O >= 4), SIN asignar — la sigla la decide Fak:');
+    console.log('\nCausas del refilado dentro del criterio de SC (S 5-8 y O >= 4); la sigla la asigno Fak el 15/10/2026:');
     for (const c of candidatasSC) console.log(`   ${c}`);
 }
 
