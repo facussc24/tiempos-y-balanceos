@@ -293,14 +293,15 @@ def filas_variante(key):
     ref = dict(op='Operación 30.', nom='Refilado de componentes cortados (sector costura)',
                maq='Maquina refiladora N°  BM 001 BM 003')
     nota_ref = (f'{FLUJO} op 30 + AMFE op 30 (prevención: regulación de la refiladora en el set up de inicio de turno; detección: '
-                'regla MC 310 y visual contra patrón, 1 pieza al inicio y fin de turno; sin sigla) + valores de la Rev 0 de Calidad')
+                'regla MC 310 y visual contra patrón, 1 pieza al inicio y fin de turno) + valores de la Rev 0 de Calidad. Siglas del '
+                'AMFE op 30 (15/10 16:22): SC "refiladora mal regulada" y "cuchilla de la refiladora gastada" (S7 O4)')
     R.append(fila('nueva', nota_ref, '', **ref, n='1.0', proc='Regulación de la refiladora (set up)', esp='Ancho de refilado 10 ± 2 mm',
                   inst='Regla metálica MC 310', tam='1 control', frec='Inicio de turno', reg='Registro de set up',
                   resp='Operador de producción', reac='Según P-09/I.'))
-    R.append(fila('cambia', nota_ref, '', n='2.0', prod='Ancho de refilado', esp='Refilado de 10+/-2mm', inst='Regla Metalica N° MC 310',
+    R.append(fila('cambia', nota_ref, '', n='2.0', prod='Ancho de refilado', clas='SC', esp='Refilado de 10+/-2mm', inst='Regla Metalica N° MC 310',
                   tam='1 Pieza.', frec='Inicio y fin de turno.', reg='set up', resp='Operador de producción.', reac='Según P-09/I.'))
     R.append(fila('igual', '', '', tam='1.0', frec='Por lote.', reg='Autocontrol.', resp='Operador de producción.', reac='Según P-09/I.'))
-    R.append(fila('igual', '', '', n='3.0', prod='Aspecto: vinilo sin dañar', esp='Refilado Ok según Patron sin dañar vinilo', inst='Visual contra patrón',
+    R.append(fila('cambia', nota_ref, '', n='3.0', prod='Aspecto: vinilo sin dañar', clas='SC', esp='Refilado Ok según Patron sin dañar vinilo', inst='Visual contra patrón',
                   tam='1 Pieza.', frec='Inicio y fin de turno.', reg='set up', resp='Operador de producción.', reac='Según P-09/I.'))
     R.append(fila('igual', '', '', tam='1.0', frec='Por lote.', reg='Autocontrol.', resp='Operador de producción.', reac='Según P-09/I.'))
 
