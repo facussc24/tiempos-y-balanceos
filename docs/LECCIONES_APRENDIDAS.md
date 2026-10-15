@@ -66,6 +66,8 @@ incidente vive en los snapshots.
 
 - **14/10 — «¿Sabés cuáles son?» es una pregunta: una pieza que Fak nombra por su FUNCIÓN («los pines del insert») se identifica por su FORMA antes de imprimir, no por la última pieza parecida de la sesión** (mandé 20 pines TRA-IZQ; *"esos no son los pines"*). Memoria `project_pines_costura_cnc_insert`.
 
+- **15/10 — Plan de control: se genera releyendo flujograma, AMFE y fichas de embalaje JUSTO antes (los tres cambiaron ese día), y si se rearma entero va limpio: sin amarillo ni notas, una característica por fila, la D sola** (*"todo amarillo con demasiadas notas... ¿por qué no solo D?"*). Graduado al skill `planes-de-control` §4 y §5.
+
 ## Identidad de un dato
 
 - **Una fuente que sale de mi lado del mostrador (una regla mía, un test, un agente, el número que yo propuse) no es una segunda fuente: si un documento puede zanjarlo, se abre antes de actuar.** Graduado a `amfe.md` §12 y a `verificar_contra_la_fuente_no_el_codigo`, `un_agente_no_es_independiente`, `al_documento_entra_lo_que_dice_un_papel_de_esa_pieza`.
