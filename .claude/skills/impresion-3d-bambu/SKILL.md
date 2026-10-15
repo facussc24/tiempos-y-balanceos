@@ -40,7 +40,19 @@ python .claude/skills/impresion-3d-bambu/scripts/bambu_red.py --imprimir <archiv
   archivo de PLA Basic contra el cargador con PLA Lite no se manda), si el color no se parece o
   si la impresora está ocupada. `--mapa 0,1` lo fuerza a mano (lugares contando desde 0).
   Tampoco manda un archivo con más de una placa (solo iría la 1).
-- **Vigilar hasta que termine** (solo lee; se lanza en segundo plano y su salida me despierta):
+- **Antes de mandar, la PRIMERA CAPA se le muestra a Fak** (15/10/2026: *"guardaste una foto del
+  antes de imprimir?... agregarlo a la skill"*). `--imprimir` (con o sin `--apply`) deja
+  `<archivo>_PRIMERA_CAPA.png` al lado del archivo (`primera_capa.py`): lo que pega en la cama vista
+  de arriba, la pieza en negro y el borde de adherencia en naranja, con los mm² de apoyo. La
+  miniatura del laminado NO sirve para esto: mostraba enteros tres pines que apoyaban en dos islitas
+  de ~3,6 mm cada uno y se despegaron al 27 %. El dibujo usa Pillow (si falta, avisa y el envío sigue).
+  Avisa cuando no hay borde y el apoyo total es chico (menos de 1000 mm²); con una pieza
+  angosta, redonda o acostada, se relamina con `--ajuste brim_type=outer_only --ajuste brim_width=6`
+  (y, si la forma lo permite, una cara de apoyo más ancha).
+- **Vigilar hasta que termine** (solo lee; se lanza en segundo plano y su salida me despierta).
+  **Se lanza en el MISMO mensaje en que se manda**, con `--despertar 5 --cada 30`: el 15/10/2026 se
+  mandó sin vigilancia y la falla la vio Fak (*"el software no te despertó nunca?"*). `--apply` lo
+  recuerda en el renglón que sigue a «ORDEN DE IMPRIMIR MANDADA».
   `--seguir <carpeta> [--fotos-en 41,44]`. Deja `seguimiento.log` y fotos de la cámara (capa 1,
   las capas pedidas, una cada 15 min y la final). Sale con 0 = terminó, 1 = falló o se canceló,
   2 = en pausa o con alarma, 3 = 15 minutos sin avanzar. **Después de mandar una impresión se
@@ -225,7 +237,7 @@ caen cada uno a la cama. Patrón: `C:\Dev\_utrim\build_v14_etiqueta.py`.
 
 **Pieza resistente o ajustes del perfil:** `--ajuste clave=valor`, las veces que haga falta, con
 los nombres de Bambu Studio (`wall_loops`, `sparse_infill_density`, `top_shell_layers`,
-`bottom_shell_layers`). Frena si la clave no existe en el perfil. El perfil estándar de la A2L
+`bottom_shell_layers`). Frena si la clave no existe en el perfil (salvo `brim_type`, que el perfil no trae: borde de adherencia). El perfil estándar de la A2L
 trae 2 paredes, 15 % de relleno, 5 capas arriba y 3 abajo. Para una pieza que recibe golpes o
 cortes (molde de probetas, 13/10/2026): 5 paredes, 25 % de relleno, 6 capas arriba y 5 abajo.
 **Más paredes y relleno multiplican el tiempo**: ese molde (1040 cm³) dio 10 h 49 min y 599 g.

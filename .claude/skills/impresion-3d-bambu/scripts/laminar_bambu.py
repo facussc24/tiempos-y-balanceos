@@ -174,10 +174,12 @@ _pro["exclude_object"] = "1"
 # ya trae: un nombre mal escrito frena, no se ignora en silencio.
 for _aj in a.ajuste:
     _k, _v = _aj.split("=", 1)
-    if _k not in _pro:
+    # brim_type existe en Bambu Studio pero los perfiles no lo traen (vale su default, auto):
+    # sin esto no se puede pedir el borde de adherencia (15/10/2026, pines acostados despegados)
+    if _k not in _pro and _k not in ("brim_type",):
         raise SystemExit(f"el perfil de proceso no tiene el ajuste '{_k}'. Parecidos: "
                          f"{[k for k in _pro if _k.split('_')[0] in k][:10]}")
-    print(f"  ajuste: {_k} = {_pro[_k]} -> {_v}")
+    print(f"  ajuste: {_k} = {_pro.get(_k, '(default)')} -> {_v}")
     _pro[_k] = _v
 f_pro = escribir(_pro, tmp / "proceso.json")
 f_fil, perfiles_fil = [], []

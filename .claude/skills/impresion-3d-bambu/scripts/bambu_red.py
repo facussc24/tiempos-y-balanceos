@@ -341,6 +341,19 @@ def imprimir(archivo, mapa, aplicar):
             print("      AVISO DE AMBIENTE:", x)
     except BaseException as e:
         print("      (ambiente sin medir:", type(e).__name__, ")")
+    # lo que pega en la cama, dibujado ANTES de mandar (15/10/2026: pines acostados con dos islitas
+    # por pieza se despegaron; la miniatura del laminado no lo mostraba). Avisa, no frena.
+    try:
+        import primera_capa
+        pc = primera_capa.dibujar(archivo)
+        print("      PRIMERA CAPA (mostrarsela a Fak antes de mandar):", pc["png"])
+        print("      apoyo de las piezas en la cama:", pc["apoyo_mm2"], "mm2 | borde de adherencia:",
+              "si" if pc["borde"] else "NO")
+        if not pc["borde"] and pc["chico"]:
+            print("      AVISO: poco apoyo y sin borde de adherencia. Una pieza angosta o acostada se despega: "
+                  "laminar con --ajuste brim_type=outer_only --ajuste brim_width=6")
+    except (Exception, SystemExit) as e:     # un Ctrl+C frena el envio; lo demas solo avisa
+        print("      (primera capa sin dibujar:", type(e).__name__, e, ")")
     if not aplicar:
         print("      (sin --apply no se manda nada)")
         return 0
@@ -353,6 +366,9 @@ def imprimir(archivo, mapa, aplicar):
         return 1
     publicar(s, f"device/{d['serie']}/request", orden)
     print("  ORDEN DE IMPRIMIR MANDADA", time.strftime("%H:%M:%S"))
+    # 15/10/2026: se mando y nadie vigilo; la falla la vio Fak al 27 %. La vigilancia la lanza la
+    # sesion (en segundo plano, para que su salida la despierte): este renglon se lo recuerda.
+    print("  AHORA, EN SEGUNDO PLANO: bambu_red.py --seguir <carpeta> --fotos-en 3,10 --despertar 5 --cada 30")
     # queda anotado en el registro compartido de la nube (horas, gramos por rollo)
     try:
         import registro
