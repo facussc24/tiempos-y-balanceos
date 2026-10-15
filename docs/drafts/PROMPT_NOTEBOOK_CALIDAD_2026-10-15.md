@@ -168,6 +168,11 @@ respecto de la PC principal: entornos de Python, `.venv-cad`, mods instalados, t
     APQP con evaluador aparte (existe en parte: auditor Opus, casos de respuesta conocida), calibración de skills
     (existe en parte: `skill-creator` con evals, `_probarMejora.mjs`), cirugía de CLAUDE.md (existe la graduación de
     LECCIONES con tope). **Para cada una: qué hay, qué falta, y evidencia de que lo que hay no alcanza.** No duplicar.
+17. **Guardianes que frenan de más** (15/10 11:05: VIDEO-MAQUINA bloqueó expulsar un pendrive porque la expresión
+    que detecta una copia del celular incluye `Namespace(17)`, que es «Este equipo» de Windows; detalle en
+    `03-casos-nuevos.md`). Medir cuántos frenos de los guardianes de los últimos 30 días fueron falsos positivos (los
+    registros de las charlas y los logs de los hooks) y qué criterio separa un freno verdadero de uno falso. Fak lo
+    mandó a este plan: no se arregla suelto.
 16. **Lo que quedó de la semana pasada** (memoria `project_tanda_orquestador…`, «El orden para retomar»): el agente por
     API, HOY-26/27 (hallazgos de la API a verificar), P6 etapa 3, P9 C1-C3, P14-P18, los mods, C1/H6. Decidir qué de eso
     entra en este plan y qué no, y por qué.
