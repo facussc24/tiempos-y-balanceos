@@ -258,6 +258,14 @@ nivelado, sin sol directo ni humedad.
   (Mesa de Corte) [mails 13 y 27/05/2026, headrest trasero central]. Los de Insert/APB para plotter
   viven en `...\02 -Computo Tizada de Corte- Consumo de Materiales\NOVAX PLOTTER\`. Que esos mails
   sean de esta maquina y no del HTV2A: a confirmar, §11.
+- **Acomodar varias piezas en una hoja** (Fak, 15/10/2026): **en COLUMNAS a lo ancho del material** (eje Y de Xiao),
+  la mano derecha en una columna y la izquierda en la otra, sin girar y sin espejar, con **25 mm reales entre piezas**.
+  Fak reacomodaba a mano las grillas 2 x 2 y el encastre en diagonal de 1233 x 478 que le arme ese dia: *"lo que hago
+  cuando sube el archivo al plotter es tomar los 2 de la derecha y ponerlos, los 4 en una sola columna"*. Una hoja por
+  tipo (el delantero y el trasero no entran juntos en el largo): 5 + 5 piezas dan 1380 x 1187 (delantero) y
+  1293 x 1285 (trasero). El ancho del material lo dice Fak (el 15/10 penso en 1,8 m, vinilo obsoleto para la prueba);
+  el area de esta maquina sigue sin medir (§11). Script: `scripts/acomodar_columnas.py <dxf 4 piezas> DEL|TRA <N> 25 <salida>`.
+  Al lado va siempre un PNG **"cual es cual"** con el nombre de cada mano: el DXF no lleva texto.
 - Si Fak pregunta como se hace algo de la maquina: contestar con esta skill y su pagina del manual;
   si no esta, **decir que el manual no lo dice** y no inventar un valor (`core-prohibiciones` §1).
 - Ningun parametro de fabrica (*config → machine*) se recomienda cambiar.
