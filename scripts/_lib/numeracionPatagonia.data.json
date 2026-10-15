@@ -2,7 +2,7 @@
   "_comentario": "Numeracion canonica de las operaciones de Patagonia (VW427). REGLA MADRE: la numeracion la manda el FLUJOGRAMA (orden APQP flujograma -> AMFE -> Plan de Control). Este archivo es la secuencia que el flujograma declara; el AMFE de Supabase se verifica CONTRA esto con scripts/_verificarNumeracion.mjs. Origen: mail de L. Lattanzi del 02/07/2026 'Condiciones que rompen trazabilidad Flujograma - AMFE - Instruccion de trabajo', que freno la carga en BeOn.",
   "_como_actualizar": "Cuando un flujograma pase a Rev. B, poner aca su secuencia REAL (leida del documento, no supuesta) y cambiar estado a VIGENTE.",
   "_dos_campos_distintos": "`flujograma.estado` es un HECHO: VIGENTE = el documento existe y es el que manda; PENDIENTE = todavia no se emitio. `secuencia` es OTRA cosa: el esperado contra el que se mide el AMFE. Pueden ir separados. Un flujograma PENDIENTE puede tener secuencia si hay fuentes independientes que ya la fijan (caso Top Roll: el Plan de Control y el flujograma vigente coinciden), y en ese caso `secuenciaConfirmadaPor` tiene que listar 2 o mas — lo exige el test. Si no hay con que confirmarla, `secuencia` va null y el script reporta NO VERIFICABLE en vez de inventar un esperado.",
-  "_fecha": "2026-10-05",
+  "_fecha": "2026-10-15",
   "_no_confundir": "cp_documents de la app es PRELIMINAR (memoria plan_control_app_es_preliminar_obsoleto). No usarlo como fuente de numeracion; solo como pista a contrastar.",
   "documentos": {
     "150": {
@@ -104,7 +104,7 @@
       "amfe": "151",
       "flujograma": {
         "id": "152",
-        "revVigente": "B",
+        "revVigente": "A",
         "estado": "VIGENTE"
       },
       "secuencia": [
@@ -112,17 +112,8 @@
         "20",
         "21",
         "22",
-        "23",
-        "24",
-        "25",
-        "26",
-        "27",
-        "28",
         "30",
         "31",
-        "32",
-        "33",
-        "34",
         "40",
         "41",
         "42",
@@ -135,7 +126,7 @@
         "72",
         "80"
       ],
-      "nota": "Orden correcto y sirvio de referencia para corregir los traseros: 50 ENFUNDADO, 51 VARILLA, 60 PRECINTO, 61 BOLSA Y CARGA EN MOLDE, 62 CIERRE DE MOLDE, 63 INYECCION DE PU. El PU entra adentro de la funda ya montada. Diferencia REAL con los traseros que NO se alinea: el delantero lleva inserto EPP y los traseros solo varilla. Lo que si hay que unificar, porque comparten el flujograma 152: mylar 28 aca / 25 en los traseros, control final 70 / 80, embalaje 90 / 100. || ABIERTO 23/08/2026 — EL PAR VARILLA/FUNDA NO ESTA CERRADO: el 18/08 12:40 quedo VARILLA antes que FUNDA por lo que dijo Fak del puesto, y a las 16:47 el script _alinearAmfesPatagonia.mjs (renumeracion contra el flujograma) mapeo VARILLA 50->41 y ENFUNDADO 60->40, lo que INVIRTIO el par sin registrarlo en el commit. Hoy Supabase y el flujograma 152 Rev.B dicen 40 ENFUNDADO / 41 INSERCION DE VARILLA / 52 INYECCION DE PU en los tres. Fak, 23/08: 'agarras la estructura, le metes la funda y despues pasas a la inyeccion'. LOS NUMEROS DE ESTA NOTA SON HISTORICOS — la numeracion vigente se lee de Supabase o de _verificarNumeracion.mjs, nunca de aca.",
+      "nota": "Orden correcto y sirvio de referencia para corregir los traseros: 50 ENFUNDADO, 51 VARILLA, 60 PRECINTO, 61 BOLSA Y CARGA EN MOLDE, 62 CIERRE DE MOLDE, 63 INYECCION DE PU. El PU entra adentro de la funda ya montada. Diferencia REAL con los traseros que NO se alinea: el delantero lleva inserto EPP y los traseros solo varilla. Lo que si hay que unificar, porque comparten el flujograma 152: mylar 28 aca / 25 en los traseros, control final 70 / 80, embalaje 90 / 100. || ABIERTO 23/08/2026 — EL PAR VARILLA/FUNDA NO ESTA CERRADO: el 18/08 12:40 quedo VARILLA antes que FUNDA por lo que dijo Fak del puesto, y a las 16:47 el script _alinearAmfesPatagonia.mjs (renumeracion contra el flujograma) mapeo VARILLA 50->41 y ENFUNDADO 60->40, lo que INVIRTIO el par sin registrarlo en el commit. Hoy Supabase y el flujograma 152 Rev.B dicen 40 ENFUNDADO / 41 INSERCION DE VARILLA / 52 INYECCION DE PU en los tres. Fak, 23/08: 'agarras la estructura, le metes la funda y despues pasas a la inyeccion'. LOS NUMEROS DE ESTA NOTA SON HISTORICOS — la numeracion vigente se lee de Supabase o de _verificarNumeracion.mjs, nunca de aca. || REV.A DEL 15/10/2026 (flujograma 152 unificado, pedido de Fak 06/10 y su OK del 15/10): el corte pasa a 20 PREPARACION Y CARGA DE VINILO, 21 CORTE AUTOMATICO DE COMPONENTES y 22 CONTROL CON MYLAR (antes 20 a 27 y mylar 28); la costura, de tres ramas por pieza a un bloque: 30 COSTURA UNION y 31 COSTURA VISTA. Sale como Rev.A porque VW solo vio un flujograma preliminar en BeOn (relevamiento del 15/10). El AMFE se alinea con filas 20-21, 22 y 30.",
       "fuente": "AMFE 151 Supabase live 2026-08-18",
       "secuenciaConfirmadaPor": [
         "flujograma 152 Rev.B (compartido por los 3 apoyacabezas)"
@@ -146,7 +137,7 @@
       "amfe": "153",
       "flujograma": {
         "id": "152",
-        "revVigente": "B",
+        "revVigente": "A",
         "estado": "VIGENTE"
       },
       "secuencia": [
@@ -154,17 +145,8 @@
         "20",
         "21",
         "22",
-        "23",
-        "24",
-        "25",
-        "26",
-        "27",
-        "28",
         "30",
         "31",
-        "32",
-        "33",
-        "34",
         "40",
         "41",
         "42",
@@ -177,7 +159,7 @@
         "72",
         "80"
       ],
-      "nota": "CORREGIDO 18/08/2026. Tenia el proceso al reves (50 INYECCION DE PU, 60 ENFUNDADO, 70 VARILLA). Fak sobre el puesto: 'es imposible que se inyecte sin la funda, se saldria todo el material', 'se coloca la varilla, la funda, y luego se inyecta', 'lo tengo 100% claro'. Quedo 50 VARILLA, 60 ENFUNDADO, 70 INYECCION DE PU (script _corregirOrdenApoyacabezasTraseros.mjs). La regla amfe.md §12 decia que los traseros iban 'directo a PU' y era falsa: se corrigio y nacio el check PU_ANTES_DE_ENFUNDADO. Identico al 155. || ABIERTO 23/08/2026 — EL PAR VARILLA/FUNDA NO ESTA CERRADO: el 18/08 12:40 quedo VARILLA antes que FUNDA por lo que dijo Fak del puesto, y a las 16:47 el script _alinearAmfesPatagonia.mjs (renumeracion contra el flujograma) mapeo VARILLA 50->41 y ENFUNDADO 60->40, lo que INVIRTIO el par sin registrarlo en el commit. Hoy Supabase y el flujograma 152 Rev.B dicen 40 ENFUNDADO / 41 INSERCION DE VARILLA / 52 INYECCION DE PU en los tres. Fak, 23/08: 'agarras la estructura, le metes la funda y despues pasas a la inyeccion'. LOS NUMEROS DE ESTA NOTA SON HISTORICOS — la numeracion vigente se lee de Supabase o de _verificarNumeracion.mjs, nunca de aca.",
+      "nota": "CORREGIDO 18/08/2026. Tenia el proceso al reves (50 INYECCION DE PU, 60 ENFUNDADO, 70 VARILLA). Fak sobre el puesto: 'es imposible que se inyecte sin la funda, se saldria todo el material', 'se coloca la varilla, la funda, y luego se inyecta', 'lo tengo 100% claro'. Quedo 50 VARILLA, 60 ENFUNDADO, 70 INYECCION DE PU (script _corregirOrdenApoyacabezasTraseros.mjs). La regla amfe.md §12 decia que los traseros iban 'directo a PU' y era falsa: se corrigio y nacio el check PU_ANTES_DE_ENFUNDADO. Identico al 155. || ABIERTO 23/08/2026 — EL PAR VARILLA/FUNDA NO ESTA CERRADO: el 18/08 12:40 quedo VARILLA antes que FUNDA por lo que dijo Fak del puesto, y a las 16:47 el script _alinearAmfesPatagonia.mjs (renumeracion contra el flujograma) mapeo VARILLA 50->41 y ENFUNDADO 60->40, lo que INVIRTIO el par sin registrarlo en el commit. Hoy Supabase y el flujograma 152 Rev.B dicen 40 ENFUNDADO / 41 INSERCION DE VARILLA / 52 INYECCION DE PU en los tres. Fak, 23/08: 'agarras la estructura, le metes la funda y despues pasas a la inyeccion'. LOS NUMEROS DE ESTA NOTA SON HISTORICOS — la numeracion vigente se lee de Supabase o de _verificarNumeracion.mjs, nunca de aca. || REV.A DEL 15/10/2026 (flujograma 152 unificado, pedido de Fak 06/10 y su OK del 15/10): el corte pasa a 20 PREPARACION Y CARGA DE VINILO, 21 CORTE AUTOMATICO DE COMPONENTES y 22 CONTROL CON MYLAR (antes 20 a 27 y mylar 28); la costura, de tres ramas por pieza a un bloque: 30 COSTURA UNION y 31 COSTURA VISTA. Sale como Rev.A porque VW solo vio un flujograma preliminar en BeOn (relevamiento del 15/10). El AMFE se alinea con filas 20-21, 22 y 30.",
       "fuente": "AMFE 153 Supabase live 2026-08-18",
       "secuenciaConfirmadaPor": [
         "flujograma 152 Rev.B (compartido por los 3 apoyacabezas)"
@@ -188,7 +170,7 @@
       "amfe": "155",
       "flujograma": {
         "id": "152",
-        "revVigente": "B",
+        "revVigente": "A",
         "estado": "VIGENTE"
       },
       "secuencia": [
@@ -196,17 +178,8 @@
         "20",
         "21",
         "22",
-        "23",
-        "24",
-        "25",
-        "26",
-        "27",
-        "28",
         "30",
         "31",
-        "32",
-        "33",
-        "34",
         "40",
         "41",
         "42",
@@ -219,7 +192,7 @@
         "72",
         "80"
       ],
-      "nota": "CORREGIDO 18/08/2026. Tenia el proceso al reves (50 INYECCION DE PU, 60 ENFUNDADO, 70 VARILLA). Fak sobre el puesto: 'es imposible que se inyecte sin la funda, se saldria todo el material', 'se coloca la varilla, la funda, y luego se inyecta', 'lo tengo 100% claro'. Quedo 50 VARILLA, 60 ENFUNDADO, 70 INYECCION DE PU (script _corregirOrdenApoyacabezasTraseros.mjs). La regla amfe.md §12 decia que los traseros iban 'directo a PU' y era falsa: se corrigio y nacio el check PU_ANTES_DE_ENFUNDADO. Identico al 153. || ABIERTO 23/08/2026 — EL PAR VARILLA/FUNDA NO ESTA CERRADO: el 18/08 12:40 quedo VARILLA antes que FUNDA por lo que dijo Fak del puesto, y a las 16:47 el script _alinearAmfesPatagonia.mjs (renumeracion contra el flujograma) mapeo VARILLA 50->41 y ENFUNDADO 60->40, lo que INVIRTIO el par sin registrarlo en el commit. Hoy Supabase y el flujograma 152 Rev.B dicen 40 ENFUNDADO / 41 INSERCION DE VARILLA / 52 INYECCION DE PU en los tres. Fak, 23/08: 'agarras la estructura, le metes la funda y despues pasas a la inyeccion'. LOS NUMEROS DE ESTA NOTA SON HISTORICOS — la numeracion vigente se lee de Supabase o de _verificarNumeracion.mjs, nunca de aca.",
+      "nota": "CORREGIDO 18/08/2026. Tenia el proceso al reves (50 INYECCION DE PU, 60 ENFUNDADO, 70 VARILLA). Fak sobre el puesto: 'es imposible que se inyecte sin la funda, se saldria todo el material', 'se coloca la varilla, la funda, y luego se inyecta', 'lo tengo 100% claro'. Quedo 50 VARILLA, 60 ENFUNDADO, 70 INYECCION DE PU (script _corregirOrdenApoyacabezasTraseros.mjs). La regla amfe.md §12 decia que los traseros iban 'directo a PU' y era falsa: se corrigio y nacio el check PU_ANTES_DE_ENFUNDADO. Identico al 153. || ABIERTO 23/08/2026 — EL PAR VARILLA/FUNDA NO ESTA CERRADO: el 18/08 12:40 quedo VARILLA antes que FUNDA por lo que dijo Fak del puesto, y a las 16:47 el script _alinearAmfesPatagonia.mjs (renumeracion contra el flujograma) mapeo VARILLA 50->41 y ENFUNDADO 60->40, lo que INVIRTIO el par sin registrarlo en el commit. Hoy Supabase y el flujograma 152 Rev.B dicen 40 ENFUNDADO / 41 INSERCION DE VARILLA / 52 INYECCION DE PU en los tres. Fak, 23/08: 'agarras la estructura, le metes la funda y despues pasas a la inyeccion'. LOS NUMEROS DE ESTA NOTA SON HISTORICOS — la numeracion vigente se lee de Supabase o de _verificarNumeracion.mjs, nunca de aca. || REV.A DEL 15/10/2026 (flujograma 152 unificado, pedido de Fak 06/10 y su OK del 15/10): el corte pasa a 20 PREPARACION Y CARGA DE VINILO, 21 CORTE AUTOMATICO DE COMPONENTES y 22 CONTROL CON MYLAR (antes 20 a 27 y mylar 28); la costura, de tres ramas por pieza a un bloque: 30 COSTURA UNION y 31 COSTURA VISTA. Sale como Rev.A porque VW solo vio un flujograma preliminar en BeOn (relevamiento del 15/10). El AMFE se alinea con filas 20-21, 22 y 30.",
       "fuente": "AMFE 155 Supabase live 2026-08-18",
       "secuenciaConfirmadaPor": [
         "flujograma 152 Rev.B (compartido por los 3 apoyacabezas)"
@@ -293,7 +266,7 @@
       "amfe": "149",
       "flujograma": {
         "id": "157",
-        "revVigente": "C",
+        "revVigente": "B",
         "estado": "VIGENTE"
       },
       "secuencia": [
@@ -320,7 +293,7 @@
         "140",
         "150"
       ],
-      "nota": "HISTORIA (Rev.B, 18/08/2026): el flujograma desglosaba la inyeccion en 20 a 26 y el corte en 30 a 38, un nodo por cada pestaña de la HO-985, y el AMFE 149 los resumia en dos filas-rango. Ese desglose dejo de valer con la Rev.C: el flujograma no lleva un nodo por pestaña de la hoja de operaciones (skill flujogramas 1.5, chequeo `sector-desglosado`). REV.C DEL 06/10/2026. (1) Pedido de Fak al revisar el dibujo: la Rev.B tenia un nodo por cada pestaña de la HO-985 (inyeccion 20 a 26, corte 30 a 38); la Rev.C dibuja cada sector con el bloque de los hermanos 153 y 154: 20 INYECCION DE PIEZAS PLASTICAS, 21 CONTROL DE PIEZA INYECTADA, 30 PREPARACION Y CARGA DE VINILO, 31 CORTE AUTOMATICO DE COMPONENTES y 32 CONTROL CON MYLAR. No se renumera nada mas (Fak: \"no renumerar todo el flujograma en base a los insert y apb, la idea era solo que no quede tan largo\"). El AMFE 149 se alineo el mismo dia: filas 20-21, 30-31 y 32 (antes 20, 30 y 38). LA HO-985 QUEDA DESFASADA: sus pestañas 21 a 26 y 31 a 38 son pasos de las operaciones 20-21 y 30-32. (2) Pedido de Carlos Baptista (audio del 06/10): el troquelado de espumas (50) va en paralelo, la espuma troquelada se traslada a Inyeccion Plastica, el ensamble (60) se hace ahi y el semielaborado (arb INY-IPP0001/0002-V1) pasa por Deposito.",
+      "nota": "HISTORIA (Rev.B, 18/08/2026): el flujograma desglosaba la inyeccion en 20 a 26 y el corte en 30 a 38, un nodo por cada pestaña de la HO-985, y el AMFE 149 los resumia en dos filas-rango. Ese desglose dejo de valer con la Rev.C: el flujograma no lleva un nodo por pestaña de la hoja de operaciones (skill flujogramas 1.5, chequeo `sector-desglosado`). REV.C DEL 06/10/2026. (1) Pedido de Fak al revisar el dibujo: la Rev.B tenia un nodo por cada pestaña de la HO-985 (inyeccion 20 a 26, corte 30 a 38); la Rev.C dibuja cada sector con el bloque de los hermanos 153 y 154: 20 INYECCION DE PIEZAS PLASTICAS, 21 CONTROL DE PIEZA INYECTADA, 30 PREPARACION Y CARGA DE VINILO, 31 CORTE AUTOMATICO DE COMPONENTES y 32 CONTROL CON MYLAR. No se renumera nada mas (Fak: \"no renumerar todo el flujograma en base a los insert y apb, la idea era solo que no quede tan largo\"). El AMFE 149 se alineo el mismo dia: filas 20-21, 30-31 y 32 (antes 20, 30 y 38). LA HO-985 QUEDA DESFASADA: sus pestañas 21 a 26 y 31 a 38 son pasos de las operaciones 20-21 y 30-32. (2) Pedido de Carlos Baptista (audio del 06/10): el troquelado de espumas (50) va en paralelo, la espuma troquelada se traslada a Inyeccion Plastica, el ensamble (60) se hace ahi y el semielaborado (arb INY-IPP0001/0002-V1) pasa por Deposito. || 15/10/2026: la Rev.C pasa a llamarse Rev.B (VW solo vio la Rev.A en BeOn; los cambios del 18/08 y del 06/10 quedan en la B). No cambia ningun numero.",
       "fuente": "AMFE 149 Supabase live + Listado Maestro 2026-08-18",
       "secuenciaConfirmadaPor": [
         "flujograma 157 Rev.B: corte 30-38 y la 90 partida en 90+91",

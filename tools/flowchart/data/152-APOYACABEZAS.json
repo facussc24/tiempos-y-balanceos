@@ -1,11 +1,11 @@
 {
-  "_doc": "Flujograma 152 — APOYACABEZAS (VW427 Patagonia). Transcripcion literal del PNG FLUJOGRAMA_APOYACABEZAS.png (7352 x 8218 px). Lectura exacta: no se agrego, completo ni reinterpreto ningun paso. Tres ramas de costura paralelas (DEL / TC / TL) que divergen despues del traslado a sector de costura y convergen antes del traslado a tapizado.",
+  "_doc": "Flujograma 152 — APOYACABEZAS (VW427 Patagonia). Desde el 15/10/2026 el corte y la costura se dibujan como bloque de sector (skill flujogramas 1.5): el paso a paso de la maquina y el detalle de paneles por pieza son de las hojas de operaciones 968, 969 y 970.",
   "header": {
     "title": "FLUJOGRAMA DE PROCESO APOYACABEZAS",
     "documentCode": "I-IN-002/III",
-    "revision": "B",
+    "revision": "A",
     "date": "18/09/2025",
-    "revisionDate": "18/08/2026",
+    "revisionDate": "15/10/2026",
     "_nota_fechas": "`date` es la FECHA DE EMISION registrada en el Listado_Maestro_FLUJOGRMAS.xlsx para el ID 152 (18/09/2025) y no se toca mas. El PNG de origen traia 'REVISION A / FECHA EMISION 04/05/2026' en un solo campo — esa era la fecha de la reemision, no la de emision original.",
     "preparedBy": "FACUNDO SANTORO",
     "reviewedBy": "CARLOS BAPTISTA",
@@ -96,14 +96,17 @@
       "modifiedBy": "FS"
     },
     {
-      "rev": "B",
-      "date": "18/08/2026",
-      "item": "20-28 / 30-34 / 40-42 / 50-52 / 60 / 70-72 / 80",
-      "details": "SE SEPARA EL CORTE EN LAS OPERACIONES 20 A 27 Y EL CONTROL CON PLANTILLA MYLAR PASA A LA 28, COMO EN LA HOJA DE OPERACIONES. TRES RAMAS DE COSTURA, UNA POR VARIANTE. CAMBIA LA NUMERACION DEL ENFUNDADO AL EMBALAJE.",
+      "rev": "A",
+      "date": "15/10/2026",
+      "item": "20-22 / 30-31 / 40-42 / 50-52 / 60 / 70-72 / 80",
+      "details": "EL CORTE QUEDA EN PREPARACION Y CARGA DE VINILO (20), CORTE AUTOMATICO DE COMPONENTES (21) Y CONTROL CON MYLAR (22). LA COSTURA SE DIBUJA EN UN SOLO BLOQUE PARA LAS TRES PIEZAS: COSTURA UNION (30) Y COSTURA VISTA (31). CAMBIA LA NUMERACION DEL ENFUNDADO AL EMBALAJE.",
       "pswDate": "",
       "modifiedBy": "FS"
     }
   ],
+  "_no_aplica": {
+    "INYECCION.rombo": "El apoyacabezas sale del molde de PU (52) y va al control final de calidad (60), donde esta el rombo de conformidad. Los AMFE 151, 153 y 155 no tienen un control propio despues de la 52."
+  },
   "flow": [
     {
       "stepId": "10",
@@ -162,47 +165,17 @@
     {
       "stepId": "20",
       "type": "operation",
-      "description": "PREPARACIÓN Y CARGA DEL VINILO"
+      "description": "PREPARACIÓN Y CARGA DE VINILO"
     },
     {
       "stepId": "21",
       "type": "operation",
-      "description": "AJUSTE DE RODILLOS Y ALIMENTACIÓN DEL VINILO"
+      "description": "CORTE AUTOMÁTICO DE COMPONENTES"
     },
     {
       "stepId": "22",
-      "type": "operation",
-      "description": "AJUSTE DE MATERIAL EN LA MÁQUINA DE CORTE DE CAPAS"
-    },
-    {
-      "stepId": "23",
-      "type": "operation",
-      "description": "CONFIGURACIÓN Y CORTE AUTOMÁTICO DE CAPAS DE VINILO"
-    },
-    {
-      "stepId": "24",
-      "type": "operation",
-      "description": "AVANCE Y ALINEACIÓN DE VINILO EN MESA DE CORTE"
-    },
-    {
-      "stepId": "25",
-      "type": "operation",
-      "description": "MEDICIÓN DE CUCHILLA"
-    },
-    {
-      "stepId": "26",
-      "type": "operation",
-      "description": "PREPARACIÓN Y AJUSTE DE CORTE CON SUCCIÓN"
-    },
-    {
-      "stepId": "27",
-      "type": "operation",
-      "description": "INICIO DEL CORTE Y VERIFICACIÓN AUTOMÁTICA DE MEDIDAS"
-    },
-    {
-      "stepId": "28",
       "type": "op-ins",
-      "description": "CONTROL DE FORMA CON PLANTILLA MYLAR"
+      "description": "CONTROL CON MYLAR"
     },
     {
       "type": "condition",
@@ -216,93 +189,18 @@
     },
     {
       "type": "transfer",
-      "description": "TRASLADO A SECTOR DE COSTURA",
-      "incomingConnector": "A",
-      "branches": [
-        [
-          {
-            "type": "transfer",
-            "description": "APC DELANTERO (DEL)"
-          },
-          {
-            "stepId": "30",
-            "type": "operation",
-            "description": "COSTURA UNIÓN (PANELES 101 + 102 + 103)"
-          },
-          {
-            "stepId": "31",
-            "type": "operation",
-            "description": "COSTURA VISTA"
-          },
-          {
-            "stepId": "32",
-            "type": "operation",
-            "description": "COSTURA UNIÓN (105 + 106)"
-          },
-          {
-            "stepId": "33",
-            "type": "operation",
-            "description": "COSTURA UNIÓN (105-106 + 104)"
-          },
-          {
-            "stepId": "34",
-            "type": "operation",
-            "description": "COSTURA DE CERRADO COMPLETO"
-          }
-        ],
-        [
-          {
-            "type": "transfer",
-            "description": "APC TRASERO CENTRAL (TC)"
-          },
-          {
-            "stepId": "30",
-            "type": "operation",
-            "description": "COSTURA UNIÓN (PANELES 101 + 102 + 103)"
-          },
-          {
-            "stepId": "31",
-            "type": "operation",
-            "description": "COSTURA VISTA"
-          },
-          {
-            "stepId": "32",
-            "type": "operation",
-            "description": "COSTURA UNIÓN CONJUNTO TRASERO (105 + 106 + 104)"
-          },
-          {
-            "stepId": "33",
-            "type": "operation",
-            "description": "COSTURA DE CERRADO COMPLETO"
-          }
-        ],
-        [
-          {
-            "type": "transfer",
-            "description": "APC TRASERO LATERAL (TL)"
-          },
-          {
-            "stepId": "30",
-            "type": "operation",
-            "description": "COSTURA UNIÓN (PANELES 107 + 108 + 109)"
-          },
-          {
-            "stepId": "31",
-            "type": "operation",
-            "description": "COSTURA VISTA"
-          },
-          {
-            "stepId": "32",
-            "type": "operation",
-            "description": "COSTURA UNIÓN CONJUNTO TRASERO (111 + 112 + 110)"
-          },
-          {
-            "stepId": "33",
-            "type": "operation",
-            "description": "COSTURA DE CERRADO COMPLETO"
-          }
-        ]
-      ]
+      "description": "TRASLADO A SECTOR DE COSTURA"
+    },
+    {
+      "stepId": "30",
+      "type": "operation",
+      "description": "COSTURA UNIÓN",
+      "incomingConnector": "A"
+    },
+    {
+      "stepId": "31",
+      "type": "operation",
+      "description": "COSTURA VISTA"
     },
     {
       "type": "transfer",
@@ -425,8 +323,5 @@
       "description": "ALMACENADO FINAL DE PRODUCTO TERMINADO"
     }
   ],
-  "_codigos_de_color": "Los codigos de 3 letras (SIY, GEV, EFG, GEQ, DZS, RL1...) son de VW y se cargan TAL CUAL. El 18/08/2026 los marque como sospechosos porque 2HC.885.900.B (L2) y .C (L3) figuran los dos como SIY siendo colores distintos — ERA UNA SUPOSICION MIA, no un hallazgo: di por hecho que colores distintos exigen codigos distintos. Fak: 'eso esta bien, no es un error, esos codigos vienen originalmente de un mail de Leo o del plano VW'. Verificado: hay un mail de Marcelo Nieve del 16/06/2026 cuyo asunto es literalmente 'BeOn Pieza 2HC 885 900 C SIY - Devuelto', o sea que VW tiene esa pieza cargada con ese codigo. En la nomenclatura VW la letra del sufijo es el NIVEL de equipamiento y las 3 letras el color/version: dos niveles pueden compartir color sin problema. NO tocar estos codigos ni volver a reportarlos.",
-  "_excepciones_canon": {
-    "sector-desglosado": "emitido asi en la Rev.B (18/08/2026, corte en 20 a 28 \"alineando con la hoja de operaciones\"); se resume en 20-21-22 en la Rev.C, pendiente junto con los numeros repetidos de las tres ramas de costura (Fak, 06/10/2026: \"esos tambien tienen que ser unificados\")"
-  }
+  "_codigos_de_color": "Los codigos de 3 letras (SIY, GEV, EFG, GEQ, DZS, RL1...) son de VW y se cargan TAL CUAL. El 18/08/2026 los marque como sospechosos porque 2HC.885.900.B (L2) y .C (L3) figuran los dos como SIY siendo colores distintos — ERA UNA SUPOSICION MIA, no un hallazgo: di por hecho que colores distintos exigen codigos distintos. Fak: 'eso esta bien, no es un error, esos codigos vienen originalmente de un mail de Leo o del plano VW'. Verificado: hay un mail de Marcelo Nieve del 16/06/2026 cuyo asunto es literalmente 'BeOn Pieza 2HC 885 900 C SIY - Devuelto', o sea que VW tiene esa pieza cargada con ese codigo. En la nomenclatura VW la letra del sufijo es el NIVEL de equipamiento y las 3 letras el color/version: dos niveles pueden compartir color sin problema. NO tocar estos codigos ni volver a reportarlos."
 }

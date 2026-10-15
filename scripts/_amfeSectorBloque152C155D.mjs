@@ -31,9 +31,12 @@ const CORTE = {
     '28': ['22', 'CONTROL CON MYLAR'],
     '30': ['30', 'COSTURA UNION'],
 };
+// 15/10/2026: el 152 unificado se emitio como Rev.A (VW solo vio un flujograma preliminar en BeOn; Fak: la primera
+// letra que ve VW es la A). Las filas viejas que citan "152 REV. B" pasan a citar la A (`citaVieja`).
 const APC = {
-    flujo: '152-APOYACABEZAS', rev: 'C', cambios: CORTE, item: '20-21, 22, 30',
-    detalle: 'SE ALINEA CON EL FLUJOGRAMA 152 REV. C: EL CORTE PASA A NUMERARSE 20-21 (PREPARACION Y CORTE AUTOMATICO), EL CONTROL CON MYLAR PASA DE 28 A 22 Y LA COSTURA UNION QUEDA COMO OPERACION 30.',
+    flujo: '152-APOYACABEZAS', rev: 'A', cambios: CORTE, item: '20-21, 22, 30',
+    detalle: 'SE ALINEA CON EL FLUJOGRAMA 152 REV. A: EL CORTE PASA A NUMERARSE 20-21 (PREPARACION Y CORTE AUTOMATICO), EL CONTROL CON MYLAR PASA DE 28 A 22 Y LA COSTURA UNION QUEDA COMO OPERACION 30.',
+    citaVieja: [/FLUJOGRAMA 152 REV\. ?B\b/g, (m) => m.replace(/B$/, 'A')],
 };
 const PLAN = {
     'AMFE-HF-PAT': APC,
@@ -50,7 +53,11 @@ const PLAN = {
     },
 };
 
-const { apply } = parseSafeArgs();
+// Numeros de AMFE pasados como argumento: solo esos (el Top Roll espera su propio flujograma 155 Rev.D).
+const { apply, positional } = parseSafeArgs();
+const solo = positional.length ? positional : null;
+const desconocidos = (solo ?? []).filter((x) => !(x in PLAN));
+if (desconocidos.length) throw new Error(`AMFE que este script no conoce: ${desconocidos.join(', ')}`);
 const aDia = (s) => { const m = String(s ?? '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? Number(m[3] + m[2] + m[1]) : 0; };
 const hoy = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
@@ -83,6 +90,7 @@ const sb = await connectSupabase();
 const lote = [];
 
 for (const [numero, plan] of Object.entries(PLAN)) {
+    if (solo && !solo.includes(numero)) continue;
     const { data: rows, error } = await sb.from('amfe_documents').select('id, amfe_number, project_name').eq('amfe_number', numero);
     if (error) throw error;
     if (rows.length !== 1) throw new Error(`Esperaba 1 ${numero}, encontre ${rows.length}`);
@@ -93,7 +101,8 @@ for (const [numero, plan] of Object.entries(PLAN)) {
     doc.revisions = Array.isArray(doc.revisions) ? doc.revisions : [];
     const estados = Object.entries(plan.cambios).map(([viejo, c]) => [viejo, c, estadoDelCambio(numero, ops, viejo, c)]);
     const filaYa = doc.revisions.some((r) => r.item === plan.item && r.details === plan.detalle);
-    if (estados.every(([, , e]) => e === 'hecho') && filaYa) {
+    const citaPendiente = plan.citaVieja && doc.revisions.some((r) => ['details', 'description'].some((k) => typeof r[k] === 'string' && new RegExp(plan.citaVieja[0].source).test(r[k])));
+    if (estados.every(([, , e]) => e === 'hecho') && filaYa && !citaPendiente) {
         console.log(`${numero}: ya esta alineado, no hay nada que hacer.`);
         continue;
     }
@@ -128,6 +137,18 @@ for (const [numero, plan] of Object.entries(PLAN)) {
         }
     })(ops, 'operations', 0);
 
+    if (citaPendiente) {
+        for (const r of doc.revisions) {
+            for (const k of ['details', 'description']) {
+                if (typeof r[k] !== 'string') continue;
+                const nuevo = r[k].replace(plan.citaVieja[0], plan.citaVieja[1]);
+                if (nuevo !== r[k]) {
+                    logChange(apply, `${numero} fila de revision del ${r.date}`, { antes: r[k], despues: nuevo });
+                    r[k] = nuevo;
+                }
+            }
+        }
+    }
     if (!filaYa) {
         const letras = doc.revisions.map((r) => String(r.rev ?? '').trim()).filter((l) => /^[A-Z]$/.test(l)).sort();
         const letra = letras.at(-1) ?? String(doc.header?.revision ?? doc.header?.rev ?? '').trim();
