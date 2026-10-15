@@ -104,6 +104,39 @@ def seccion(texto):
     return {'_seccion': texto}
 
 
+def una_por_fila(filas):
+    """Parte las filas con varias caracteristicas (renglones en PRODUCTO o PROCESO) en una fila por
+    caracteristica, como los planes de Calidad (PWA 2025): asi cada fila lleva una sola sigla."""
+    out = []
+    for f in filas:
+        if '_seccion' in f:
+            out.append(f)
+            continue
+        campo = 'proc' if '\n' in f['proc'] else ('prod' if '\n' in f['prod'] else None)
+        esp = f['esp'].split('\n')
+        if campo is None or len(esp) != len(f[campo].split('\n')):
+            out.append(f)
+            continue
+        car = f[campo].split('\n')
+        n = len(car)
+        inst = f['inst'].split('\n')
+        if len(inst) != n:
+            inst = inst[:1] + [inst[-1]] * (n - 1) if len(inst) == 2 else [inst[0]] * n
+        clas = f['clas'].split('\n') if f['clas'] else [''] * n
+        if len(clas) != n:
+            clas = [f['clas']] * n
+        for i in range(n):
+            g = dict(f)
+            if i > 0:
+                for k in ('op', 'nom', 'maq', 'n'):
+                    g[k] = ''
+                if campo == 'proc':
+                    g['prod'] = ''
+            g[campo], g['esp'], g['inst'], g['clas'] = car[i], esp[i], inst[i], clas[i]
+            out.append(g)
+    return out
+
+
 def filas_variante(key):
     v = V[key]
     ho = v['ho']
@@ -190,7 +223,7 @@ def filas_variante(key):
                   f'OJO: {v["rec_estr_nota"]}',
                   f"Rev 0: '{antes}' - 'Cromado libre de rayas y falta material' - 'Visual / Calibre MC 212' - '1 Pieza'",
                   n=f'{n}.0', prod=f'{desc} — {cod} (VW consignado)', proc=v['asta_car'],
-                  esp=v['asta_esp'] + f'\n(valores del plan de recepción {v["rec_estr"]})',
+                  esp=v['asta_esp'],
                   inst='Patrón de aspecto\nCalibre digital', tam='3 % del lote', frec='Por entrega', reg='P-10.1',
                   resp='Auditor de recepción', reac='P-14.'))
     for cod, desc in [('427VAR001INY01', 'Embudo PIP PP entrada 34 x 38 mm salida D8'),
@@ -441,14 +474,9 @@ def escribir_hoja(ws, key):
     # encabezado: N° de parte (C5:F6 combinada) y S/R con una sola marca (hay D/TLD asignadas en el AMFE)
     np_cel = celda_superior(ws, 'C6')
     np_cel.Value = v['codigos']
-    np_cel.Interior.Color = AMARILLO
-    if np_cel.Comment is None:
-        np_cel.AddComment(f'{QUIEN} {FECHA}: N° de parte vacío en la Rev 0. Fuente: {FLUJO} y BOM del arb.')
     sr = celda_superior(ws, 'N66')
     if str(sr.Value or '').strip().upper() == 'X':
         sr.Value = ''
-        sr.Interior.Color = AMARILLO
-        sr.AddComment(f'{QUIEN} {FECHA}: la Rev 0 tenía SI y NO marcados. Queda SI: el {v["amfe"]} tiene causas D/TLD asignadas. ANTES: "X" en NO.')
 
     # cuerpo: desde la fila "Recepción" hasta la ultima usada
     primera = None
@@ -467,7 +495,7 @@ def escribir_hoja(ws, key):
     ws.Range(ws.Cells(primera, 1), ws.Cells(ultima + 5, 14)).UnMerge()
     ws.Range(ws.Rows(primera), ws.Rows(ultima + 5)).Delete()
 
-    filas = filas_variante(key)
+    filas = una_por_fila(filas_variante(key))
     r = primera
     grupos = []
     grupo_ini = None
@@ -501,30 +529,20 @@ def escribir_hoja(ws, key):
         for i, campo in enumerate(CAMPOS):
             cel = ws.Cells(r, i + 1)
             cel.NumberFormat = '@'
-            cel.Value = f[campo]
-            if 'TBD' in str(f[campo]) or 'CONFLICTO' in str(f[campo]):
+            valor = f[campo]
+            if campo == 'clas':
+                # la marca de la casa en los planes de Calidad es la D (D y TLD son la misma marca, Formel Q §7.5)
+                valor = valor.replace('D/TLD', 'D')
+            cel.Value = valor
+            if 'TBD' in str(valor) or 'CONFLICTO' in str(valor):
                 cel.Font.Color = ROJO_FUENTE
-            if campo == 'clas' and 'D/TLD' in str(f[campo]):
+            if campo == 'clas' and valor.strip() == 'D':
                 cel.Font.Color = ROJO_FUENTE   # la casa marca la D en rojo (planes de Calidad, Cozzuol)
                 cel.Font.Bold = True
         for c in (4, 7, 10, 11):
             ws.Cells(r, c).HorizontalAlignment = -4108
-        if f['_estado'] != 'igual':
-            amarillas = [c for c in COLS if f[CAMPOS[COLS.index(c)]] != '']
-            for c in amarillas:
-                ws.Range(f'{c}{r}').Interior.Color = AMARILLO
-            if amarillas and (f['_fuente'] or f['_antes']):
-                txt = f'{QUIEN} {FECHA}. Fuente: {f["_fuente"]}.'
-                if f['_antes']:
-                    txt += f' ANTES: {f["_antes"]}.'
-                elif f['_estado'] == 'nueva':
-                    txt += ' ANTES: fila nueva (no estaba en la Rev 0).'
-                cel = ws.Range(f'{amarillas[0]}{r}')
-                cel.AddComment(txt)
-                cel.Comment.Shape.Width = 420
-                cel.Comment.Shape.Height = 150
-        elif f['_fuente']:
-            ws.Range(f'A{r}').AddComment(f'{QUIEN} {FECHA}: {f["_fuente"]}.')
+        # Sin amarillo ni notas: Fak, 15/10/2026 ("todo amarillo con demasiadas notas"). El cambio de cada
+        # fila y su fuente quedan en este script (_fuente, _antes) y lo pendiente en la lista que acompaña.
         r += 1
     if grupo_ini is not None:
         grupos.append((grupo_ini, r - 1))
@@ -549,7 +567,8 @@ def main():
         sys.exit(2)
     origen, salida = os.path.abspath(sys.argv[1]), os.path.abspath(sys.argv[2])
     os.makedirs(salida, exist_ok=True)
-    destino = os.path.join(salida, 'PC APOYACABEZAS Patagonia Rev0 - correcciones de Ingenieria 15-10-2026.xls')
+    nombre = sys.argv[3] if len(sys.argv) > 3 else 'PC APOYACABEZAS Patagonia - propuesta de Ingenieria 15-10-2026.xls'
+    destino = os.path.join(salida, nombre)
     shutil.copyfile(origen, destino)
     xl = win32.DispatchEx('Excel.Application')
     xl.Visible = False
