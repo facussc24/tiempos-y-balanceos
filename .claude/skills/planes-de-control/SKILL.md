@@ -221,10 +221,29 @@ un valor parecido de otra pieza, ni "segun especificacion" generico (`core-prohi
    no muestra nada (el N° de parte del 15/10 salio vacio).
 4. **Una caracteristica por fila**, como los planes de Calidad: asi cada fila lleva una sola marca (con varias
    en la misma celda se lee "SC SC SC").
-5. **La marca critica en el plan es la `D` en rojo**, como en los planes de Calidad y como pidio VW en la VDA
-   6.3 ("con la letra D"); D y TLD son la misma marca (Formel Q §7.5). Fak, 15/10: *"¿por que no solo D?"*.
-6. Lo que pide una fila nueva o un dato sin papel va a un `.txt` aparte ("que queda para la reunion").
-7. Auditor antes de mostrar; se le muestra a Fak abierto; el mail a Calidad, con su OK.
+5. **La marca critica en el plan de control es la `D` sola, en rojo. Decision de Fak, 15/10/2026** (*"¿por que no
+   solo D?"*; y despues *"la decision de colocar solo D dejala anotada en la skill con la evidencia de porque lo
+   decidiste"*). La evidencia:
+   - **Es la convencion de Calidad**: los planes de recepcion de TNT (SB60, SB80, SB100), los de PWA 2025 de
+     Cecilia (21-6034, 21-6757, 21-7340: "Flamabilidad · D · < 100 mm/min · Camara de flamabilidad") y la Rev 0
+     de los APC de Nicolas (una "D" roja dibujada en la columna de clasificacion) escriben D, nunca D/TLD.
+   - **VW lo pidio asi en su auditoria**: VDA 6.3 de 2025, item 6.2.3: *"Asegurar la identificacion de toda la
+     documentacion relacionada con caracteristicas de comprobacion obligatoria, con la letra D"*
+     (`Plan de acción - VW - VDA 6.3 - 2025.xlsx`). Cozzuol pidio lo mismo: *"letra D de color rojo"*.
+   - **D y TLD son la misma marca**, nombre viejo y nombre nuevo (Formel Q Capacidad de Calidad, pag. 28 §7.5 y
+     pag. 35): poner las dos no agrega nada y en la celda se lee como dos marcas.
+   - Alcance: es la notacion del plan de control. El AMFE sigue escribiendo `D/TLD` (regla
+     `caracteristicas-especiales.md`, columna "Documento para VW"). La sigla se sigue COPIANDO de la causa del
+     AMFE con su S y su O: esto cambia como se escribe, no cuando va.
+6. **El plan que se entrega como definitivo no lleva `TBD` ni explicaciones de `CONFLICTO` adentro de las
+   celdas** (Fak, 15/10: *"luego de resolver todas estas dudas... vamos a armar un plan de control verdadero sin
+   esas cosas"*). Mientras haya dudas, la version de trabajo puede tenerlas, con la lista aparte; las dudas se
+   resuelven ANTES de mandarlo como definitivo.
+7. Lo que pide una fila nueva o un dato sin papel va a un `.txt` aparte ("que queda para la reunion").
+8. Auditor antes de mostrar; se le muestra a Fak abierto; el mail a Calidad, con su OK.
+9. **Las fichas de embalaje se piden al dia**: el 15/10 el plan salio con GE-103/104/105 Rev C y Carlos habia
+   mandado esa misma manana la Rev D (48 por bin). Antes de cerrar, buscar en los mails de Carlos la ultima
+   version y mirar la carpeta `19-Normas y Especificaciones de embalaje` del legajo.
    Script de referencia: `scripts/novax/_pcNicoCorrecciones.py`. Render sobre la plantilla por Excel COM:
    `scripts/_cpFormatoCalidadPwa.py` (abre la plantilla en solo lectura).
 
