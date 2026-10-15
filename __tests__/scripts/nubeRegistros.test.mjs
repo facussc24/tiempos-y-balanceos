@@ -3,13 +3,13 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import {
-    carpetasDeRegistros, subirRegistros, leerSettings, avisoLimpieza, PATRON_REGISTROS, SUBCARPETA_REGISTROS,
+    carpetasDeRegistros, subirRegistros, contarRegistros, leerSettings, avisoLimpieza, PATRON_REGISTROS, SUBCARPETA_REGISTROS,
 } from '../../scripts/_lib/nubeRegistros.mjs';
 
 let raiz;
 beforeAll(() => {
     raiz = mkdtempSync(join(tmpdir(), 'nube-registros-'));
-    for (const n of ['C--Dev-BarackMercosul', 'C--Dev-BarackMercosul-wt-cola', 'C--Users-Fak-otro']) {
+    for (const n of ['C--Dev-BarackMercosul', 'C--Dev-BarackMercosul-wt-cola', 'C--Users-Fak-otro', 'C--Users-Fak-AppData-Local-Temp-claude-x-scratchpad', 'C--Users-Fak-AppData-Local-Temp', 'C--Users-Fak-Documents-estudio', 'D--KIT-ESTUDIO-CLAUDE']) {
         mkdirSync(join(raiz, 'projects', n), { recursive: true });
     }
     writeFileSync(join(raiz, 'projects', 'C--Dev-BarackMercosul.txt'), 'mismo nombre pero no es carpeta');
@@ -18,20 +18,32 @@ beforeAll(() => {
 afterAll(() => rmSync(raiz, { recursive: true, force: true }));
 
 describe('carpetasDeRegistros', () => {
-    it('verde: toma las carpetas C--Dev-BarackMercosul* con su ruta local', () => {
+    it('verde: toma TODAS las carpetas (repo, worktree y charlas sin carpeta) con su ruta local', () => {
         const c = carpetasDeRegistros(join(raiz, 'projects'));
-        expect(c.map((x) => x.nombre).sort()).toEqual(['C--Dev-BarackMercosul', 'C--Dev-BarackMercosul-wt-cola']);
+        expect(c.map((x) => x.nombre).sort()).toEqual(['C--Dev-BarackMercosul', 'C--Dev-BarackMercosul-wt-cola', 'C--Users-Fak-otro']);
         const principal = c.find((x) => x.nombre === 'C--Dev-BarackMercosul');
         expect(principal.local).toBe(join(raiz, 'projects', 'C--Dev-BarackMercosul'));
     });
-    it('rojo: otro proyecto y un archivo con el mismo prefijo quedan afuera', () => {
+    it('rojo: temporales, estudio y un archivo suelto quedan afuera', () => {
         const nombres = carpetasDeRegistros(join(raiz, 'projects')).map((x) => x.nombre);
-        expect(nombres).not.toContain('C--Users-Fak-otro');
+        for (const n of ['C--Users-Fak-AppData-Local-Temp-claude-x-scratchpad', 'C--Users-Fak-AppData-Local-Temp', 'C--Users-Fak-Documents-estudio', 'D--KIT-ESTUDIO-CLAUDE']) expect(nombres).not.toContain(n);
         expect(nombres).not.toContain('C--Dev-BarackMercosul.txt');
     });
     it('rojo: projects ilegible da null (no una lista vacia); vacia de verdad da []', () => {
         expect(carpetasDeRegistros(join(raiz, 'no-existe'))).toBeNull();
         expect(carpetasDeRegistros(join(raiz, 'vacia'))).toEqual([]);
+    });
+});
+
+describe('contarRegistros', () => {
+    it('verde: cuenta solo los .jsonl de cada carpeta', () => {
+        const leer = (d) => (d === 'a' ? ['1.jsonl', '2.JSONL', 'memory', 'x.txt'] : ['3.jsonl']);
+        expect(contarRegistros([{ local: 'a' }, { local: 'b' }], leer)).toBe(3);
+    });
+    it('rojo: una carpeta ilegible cuenta 0 y no corta la cuenta; sin carpetas da 0', () => {
+        const leer = (d) => { if (d === 'mala') throw new Error('EPERM'); return ['1.jsonl']; };
+        expect(contarRegistros([{ local: 'mala' }, { local: 'b' }], leer)).toBe(1);
+        expect(contarRegistros(null)).toBe(0);
     });
 });
 

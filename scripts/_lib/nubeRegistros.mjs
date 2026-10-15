@@ -1,8 +1,14 @@
 /**
- * nubeRegistros.mjs — los registros de las charlas con Claude Code de ESTE repo
- * (~/.claude/projects/C--Dev-BarackMercosul*\*.jsonl) suben a la nube de Ingenieria con
+ * nubeRegistros.mjs — los registros de las charlas con Claude Code de esta PC
+ * (~/.claude/projects/<carpeta>\*.jsonl) suben a la nube de Ingenieria con
  * `_nube.mjs --sincronizar`. Logica pura; se prueba con un robocopy de mentira en
  * `__tests__/scripts/nubeRegistros.test.mjs`.
+ *
+ * TODAS LAS CARPETAS, no solo las del repo (Fak, 15/10/2026: "la notebook de calidad esta subiendo
+ * automaticamente el historial de chat?... si quiero"). Hasta ese dia subian solo las C--Dev-BarackMercosul*:
+ * la notebook no habia subido ninguna charla, y en esta PC quedaban afuera 42 charlas abiertas sin carpeta
+ * (C--Users-FacundoS-PC). Quedan afuera los temporales y las charlas de estudio (EXCLUIR_REGISTROS). El nombre de
+ * cada archivo es el id de la sesion: dos PC no se pisan aunque compartan el nombre de la carpeta.
  *
  * POR QUE SUBEN (HOY-6, Fak 09/10/2026: "subilas a la nube... ¿se borran las viejas?")
  *  - Son la fuente de los informes de errores (R4 leyo desde el 01/09) y Claude Code los borra en la
@@ -16,8 +22,12 @@ import { readdirSync, readFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { esCarpeta } from './nubeRutas.mjs';
 
-/** Como llama Claude Code a la carpeta del repo (C:\Dev\BarackMercosul); con sufijo son sus worktrees. */
-export const PREFIJO_REGISTROS = 'C--Dev-BarackMercosul';
+/**
+ * Carpetas de proyecto que NO suben: un scratchpad temporal (C:\Users\<u>\AppData\Local\Temp[\...]) y las
+ * charlas de estudio personal de Fak (Documents\estudio, D:\KIT-ESTUDIO-CLAUDE), que no son de Barack y la
+ * carpeta de la nube la ve Ingenieria.
+ */
+export const EXCLUIR_REGISTROS = /-AppData-Local-Temp(-|$)|estudio/i;
 /** Donde quedan en la nube: una subcarpeta por carpeta de proyecto. */
 export const SUBCARPETA_REGISTROS = 'claude-registros';
 /** Lo que pide la fila: los .jsonl del primer nivel, no las subcarpetas. */
@@ -35,9 +45,21 @@ export function carpetasDeRegistros(projectsDir) {
     let nombres;
     try { nombres = readdirSync(projectsDir); } catch { return null; }
     return nombres
-        .filter((n) => n.startsWith(PREFIJO_REGISTROS))
+        .filter((n) => !EXCLUIR_REGISTROS.test(n))
         .map((n) => ({ nombre: n, local: join(projectsDir, n) }))
         .filter((c) => esCarpeta(c.local));
+}
+
+/**
+ * Cuantos registros (.jsonl del primer nivel) hay en esas carpetas. Queda anotado por PC en `_ESTADO.json`
+ * para comprobar desde la otra PC que esta subio sus charlas. Una carpeta que no se puede leer cuenta 0.
+ */
+export function contarRegistros(carpetas, leer = readdirSync) {
+    let n = 0;
+    for (const { local } of carpetas || []) {
+        try { n += leer(local).filter((f) => f.toLowerCase().endsWith('.jsonl')).length; } catch { /* cuenta 0 */ }
+    }
+    return n;
 }
 
 /**

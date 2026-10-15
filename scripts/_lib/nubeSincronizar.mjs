@@ -113,7 +113,7 @@ export function resguardarConflictos({ localDir, nubeRaiz, pieza, conflictos, pc
  * Lee/actualiza el estado por PC de `_ESTADO.json` (se mantiene lo que ya habia: fecha, pc,
  * commitRepo del ultimo --subir siguen ahi para los que lo leen).
  */
-export function estadoConSync(previo, { pc, ahora = new Date(), archivos = 0, conflictos = 0, commitRepo = '?' }) {
+export function estadoConSync(previo, { pc, ahora = new Date(), archivos = 0, conflictos = 0, commitRepo = '?', charlas = null }) {
     const e = previo && typeof previo === 'object' ? { ...previo } : {};
     e.por_pc = { ...(e.por_pc || {}) };
     e.por_pc[pc] = {
@@ -123,6 +123,8 @@ export function estadoConSync(previo, { pc, ahora = new Date(), archivos = 0, co
         conflictos,
         commitRepo,
     };
+    // 15/10/2026: cuantas charlas tiene esa PC y en cuantas carpetas, para comprobarlo desde la otra PC.
+    if (charlas) e.por_pc[pc].charlas = charlas;
     return e;
 }
 

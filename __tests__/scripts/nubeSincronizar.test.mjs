@@ -134,6 +134,12 @@ describe('_ESTADO.json por PC', () => {
         expect(estadoConSync(null, { pc: 'X', ahora: new Date(T0) }).por_pc.X.modo).toBe('sincronizar');
     });
 
+    it('estadoConSync anota las charlas de la PC solo si se las pasan', () => {
+        const con = estadoConSync(null, { pc: 'CATA', ahora: new Date(T0), charlas: { carpetas: 2, archivos: 17 } });
+        expect(con.por_pc.CATA.charlas).toEqual({ carpetas: 2, archivos: 17 });
+        expect('charlas' in estadoConSync(null, { pc: 'CATA', ahora: new Date(T0) }).por_pc.CATA).toBe(false);
+    });
+
     it('ultimoSyncDe devuelve 0 cuando no hay dato o esta mal escrito', () => {
         expect(ultimoSyncDe(null, 'X')).toBe(0);
         expect(ultimoSyncDe({ por_pc: { X: { ultimoSync: 'ayer' } } }, 'X')).toBe(0);
