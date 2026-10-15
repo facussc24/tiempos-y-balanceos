@@ -55,8 +55,10 @@ const PLAN = {
 
 // Numeros de AMFE pasados como argumento: solo esos (el Top Roll espera su propio flujograma 155 Rev.D).
 const { apply, positional } = parseSafeArgs();
+const banderas = process.argv.slice(2).filter((a) => a.startsWith('-') && !['--apply', '--verbose', '-v'].includes(a));
+if (banderas.length) throw new Error(`Argumento que este script no conoce: ${banderas.join(', ')}`);
 const solo = positional.length ? positional : null;
-const desconocidos = (solo ?? []).filter((x) => !(x in PLAN));
+const desconocidos = (solo ?? []).filter((x) => !Object.hasOwn(PLAN, x));
 if (desconocidos.length) throw new Error(`AMFE que este script no conoce: ${desconocidos.join(', ')}`);
 const aDia = (s) => { const m = String(s ?? '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? Number(m[3] + m[2] + m[1]) : 0; };
 const hoy = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
