@@ -53,6 +53,12 @@ sin color. **Son los chequeos de la skill.**
 
 ## 4. La skill (plan; se escribe cuando Fak pida la primera base preliminar)
 
+**15/10/2026: escrita** — `.claude/skills/planes-de-control/` (SKILL.md + referencias.md). Con el servidor a la
+vista se leyeron lo que el §5 dejaba pendiente: el formulario vacio I-AC-005.1, los planes de recepcion por
+material, el cronograma de calibracion y los planes que reviso Cecilia (PWA 2025, modelo de la casa). Primera
+aplicacion: correccion del plan de los 3 apoyacabezas, `exports/PC_APC_PATAGONIA_20261015/`
+(`scripts/apc/_pcApcPatagonia.py`).
+
 - **Entradas**: flujograma vigente (`tools/flowchart/data/*.json`), AMFE vigente (Supabase live), BOM del arb (último
   nivel), planes de recepción por familia de material (servidor), hoja de proceso (parámetros y set up), fichas de
   embalaje vigentes.
