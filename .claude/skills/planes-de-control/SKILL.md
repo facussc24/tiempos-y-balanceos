@@ -213,13 +213,18 @@ un valor parecido de otra pieza, ni "segun especificacion" generico (`core-prohi
    con la numeracion vieja, y el auditor lo encontro con colisiones de numero.
 2. Trabajar sobre una **copia** (`exports/<TEMA>_<AAAAMMDD>/... - correcciones de Ingenieria <fecha>.xls`),
    nunca sobre el original.
-3. Cada fila nueva o cambiada en **amarillo, la fila entera**, con un comentario: la fuente (documento,
-   revision, hoja/fila) y el valor ANTES. En blanco solo lo que quedo identico a la version de Calidad (el
-   15/10 marque celda por celda y quedaron ~60 cambios por hoja sin color). Si Calidad ya cambio esa celda en
-   una version posterior, se saltea. En una celda combinada se escribe en la de arriba a la izquierda
-   (`MergeArea.Cells(1,1)`): escribir en otra no muestra nada (el N° de parte del 15/10 salio vacio).
-4. Lo que pide una fila nueva o un dato sin papel va a un `.txt` aparte ("que queda para la reunion").
-5. Auditor antes de mostrar; se le muestra a Fak abierto; el mail a Calidad, con su OK.
+3. **Si se corrigen pocas celdas**: cada una en amarillo con su comentario (fuente + ANTES), como el PC de
+   Nicolas del 06/10. **Si el plan se rearma entero**: archivo limpio, sin amarillo ni notas, y los cambios en
+   la lista aparte. Fak, 15/10/2026, al abrir el de los APC con casi todo amarillo: *"todo amarillo con
+   demasiadas notas... no me gusta"*. Si Calidad ya cambio una celda en una version posterior, se saltea. En
+   una celda combinada se escribe en la de arriba a la izquierda (`MergeArea.Cells(1,1)`): escribir en otra
+   no muestra nada (el N° de parte del 15/10 salio vacio).
+4. **Una caracteristica por fila**, como los planes de Calidad: asi cada fila lleva una sola marca (con varias
+   en la misma celda se lee "SC SC SC").
+5. **La marca critica en el plan es la `D` en rojo**, como en los planes de Calidad y como pidio VW en la VDA
+   6.3 ("con la letra D"); D y TLD son la misma marca (Formel Q §7.5). Fak, 15/10: *"¿por que no solo D?"*.
+6. Lo que pide una fila nueva o un dato sin papel va a un `.txt` aparte ("que queda para la reunion").
+7. Auditor antes de mostrar; se le muestra a Fak abierto; el mail a Calidad, con su OK.
    Script de referencia: `scripts/novax/_pcNicoCorrecciones.py`. Render sobre la plantilla por Excel COM:
    `scripts/_cpFormatoCalidadPwa.py` (abre la plantilla en solo lectura).
 
