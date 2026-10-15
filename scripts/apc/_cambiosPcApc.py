@@ -80,8 +80,6 @@ FALTA = [
     'Valores de la inyección PU (temperaturas, caudal, relación, shot, tiempos): pedir a Lattanzi.',
     'Planes de recepción que no encontramos: vinilos Patagonia, tela Rennes, FF636, ISO 1355 y los insumos de la PIP.',
     'Tela Rennes: espesor y gramaje (no encontramos especificación ni certificado).',
-    'Láminas de cartón del embalaje: las piden las fichas Rev. D y no están en la BOM.',
-    'Bolsa del delantero: la ficha GE-103 dice BA 35 50 y la BOM tiene la bolsa PP 600 x 500.',
     'Cámara de flamabilidad MC184: en el cronograma de calibración figura vencida desde el 11/09/2026.',
     'Calibre MC212 (espesor en recepción): en el cronograma está asignado a Conversión de Cintas. Confirmar qué calibre usa recepción.',
 ]
