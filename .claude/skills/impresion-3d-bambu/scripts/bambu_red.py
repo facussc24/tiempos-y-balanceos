@@ -7,6 +7,9 @@ Uso (python del sistema):
 
 Datos en %USERPROFILE%\\.claude\\bambu-a2l.json (fuera del repo, que es publico); copia para las otras PC en la nube de Ingenieria.
 MQTT 3.1.1 sobre TLS, puerto 8883, usuario "bblp", clave = codigo de acceso de la pantalla.
+
+Nunca termina en un error de Python: cada falla sale en un renglon en castellano con su codigo de salida
+(12 = no la encuentro / sin conexion, 13 = rechazo el codigo de acceso; los de --seguir, en seguir()).
 """
 import json
 import os
@@ -15,25 +18,85 @@ import socket
 import ssl
 import struct
 import sys
+import tempfile
 import time
 from pathlib import Path
 
-DATOS = Path(os.environ["USERPROFILE"]) / ".claude" / "bambu-a2l.json"
+VERSION = "2026-10-16"        # la misma que el encabezado de SKILL.md (--version)
+# Las pruebas (tests/) redirigen las rutas a una carpeta temporal con BAMBU_DATOS y BAMBU_DATOS_NUBE; con
+# BAMBU_PRUEBA=1 este modulo se niega a escribir fuera de esa carpeta (nunca el archivo de datos real).
+DATOS = (Path(os.environ["BAMBU_DATOS"]) if os.environ.get("BAMBU_DATOS")
+         else Path(os.environ["USERPROFILE"]) / ".claude" / "bambu-a2l.json")
 UNIDAD_CARGADOR_A2L = 16      # id fisico del cargador de 4 lugares de la A2L (lo informa la propia impresora)
 # Copia compartida de los datos, en la nube de Ingenieria (OK de Fak 13/10/2026): asi la PC de un
 # compañero se conecta sola. El repo es publico: el codigo de acceso NUNCA va en el repo.
-DATOS_NUBE = (Path(os.environ["USERPROFILE"]) / "BARACK ARGENTINA SRL" / "Ingeniería y Proyecto - General"
+DATOS_NUBE = (Path(os.environ["BAMBU_DATOS_NUBE"]) if os.environ.get("BAMBU_DATOS_NUBE")
+              else Path(os.environ["USERPROFILE"]) / "BARACK ARGENTINA SRL" / "Ingeniería y Proyecto - General"
               / "INGENIERIA BARACK (NUNCA BORRAR)" / "1- GENERAL" / "5. 3D" / "IMPRESORA BAMBU A2L" / "bambu-a2l.json")
+PUERTO_MQTT, PUERTO_FTP, PUERTO_CAMARA = 8883, 990, 6000     # wiki en/general/printer-network-ports
+SALIDA_SIN_CONEXION, SALIDA_ACCESO = 12, 13     # 4 y 5 no: son las del latido de la casa (_latido.mjs)
+
+
+class FallaImpresora(Exception):
+    """Una falla que se le dice a la persona en un renglon, con su codigo de salida."""
+    salida = 1
+
+    def __init__(self, texto):
+        super().__init__(texto)
+        self.texto = texto
+
+
+class SinConexion(FallaImpresora):
+    salida = SALIDA_SIN_CONEXION
+
+
+class AccesoRechazado(FallaImpresora):
+    salida = SALIDA_ACCESO
+
+
+class OtraImpresora(SinConexion):
+    """En esa direccion contesta una Bambu, pero su certificado trae OTRA serie: no se le manda nada."""
+
+    def __init__(self, ip, serie):
+        self.ip, self.serie = ip, serie
+        super().__init__(f"En {ip} hay otra impresora (serie {_serie_corta(serie)}), no la nuestra.")
+
+
+def _serie_corta(serie):
+    return (serie[:4] + "…" + serie[-3:]) if serie and len(serie) > 8 else (serie or "sin serie")
+
+
+def ruta_de_prueba_ok(ruta):
+    """Con BAMBU_PRUEBA=1 (los tests) nada se escribe fuera de la carpeta temporal del sistema."""
+    if os.environ.get("BAMBU_PRUEBA") != "1":
+        return
+    tmp = Path(tempfile.gettempdir()).resolve()
+    r = Path(ruta).resolve()
+    if tmp != r and tmp not in r.parents:
+        raise FallaImpresora(f"PRUEBA: {ruta} esta fuera de la carpeta temporal; no se escribe")
+
+
+def _escribir_json(ruta, d):
+    ruta_de_prueba_ok(ruta)
+    Path(ruta).parent.mkdir(parents=True, exist_ok=True)
+    with open(ruta, "w", encoding="utf-8") as f:
+        json.dump({k: v for k, v in d.items() if not k.startswith("_")}, f, indent=1)
 
 
 def cargar_datos():
-    """Datos de la impresora: primero los de esta PC; si no estan, los de la nube de Ingenieria."""
+    """Datos de la impresora: primero los de esta PC; si no estan, los de la nube de Ingenieria.
+    La IP es una PISTA (ubicar() la comprueba con el numero de serie); la serie y el codigo, no."""
     for ruta in (DATOS, DATOS_NUBE):
         if ruta.exists():
-            d = json.load(open(ruta, encoding="utf-8"))
-            if d.get("ip") and d.get("serie"):
+            try:
+                d = json.loads(ruta.read_text(encoding="utf-8"))
+            except (OSError, ValueError) as e:
+                raise FallaImpresora(f"No puedo leer el archivo de datos {ruta} ({type(e).__name__}): "
+                                     "si OneDrive lo esta bajando, esperar un minuto; si esta roto, avisar a Fak")
+            if d.get("serie"):
+                d["_origen"] = str(ruta)
                 return d
-    raise SystemExit(
+    raise FallaImpresora(
         "No encuentro los datos de la impresora.\n"
         f"  1. Mirar que este sincronizada la carpeta de Ingenieria: {DATOS_NUBE}\n"
         "  2. Si no esta: en la pantalla de la impresora, Ajustes > Solo LAN, leer la IP y correr\n"
@@ -41,29 +104,69 @@ def cargar_datos():
         "  3. La PC tiene que estar en el mismo wifi que la impresora.")
 
 
-def tls(ip, puerto=8883, timeout=8):
+def _contexto_tls():
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
     ctx.check_hostname = False          # la impresora firma con la CA propia de Bambu
     ctx.verify_mode = ssl.CERT_NONE
-    raw = socket.create_connection((ip, puerto), timeout=timeout)
-    return ctx.wrap_socket(raw)
+    # tope TLS 1.2, como ha-bambulab (bambu_client.py): el firmware 01.02.00.00 de la P2S no contesta un pedido 1.3
+    ctx.maximum_version = ssl.TLSVersion.TLSv1_2
+    return ctx
+
+
+def serie_del_certificado(der):
+    """El numero de serie es el CN del certificado del equipo (OID 2.5.4.3 = 55 04 03); buscar «un texto largo en
+    mayusculas» agarraba una FECHA de vigencia (13/10/2026)."""
+    cns = [der[m.end():m.end() + m.group(1)[0]].decode("utf-8", "replace")
+           for m in re.finditer(rb"\x55\x04\x03[\x0c\x13](.)", der, re.S)]
+    cand = [c for c in cns if re.fullmatch(r"[0-9A-Z]{10,}", c)]
+    return cand[-1] if cand else ""
+
+
+def _motivo_red(e):
+    n = getattr(e, "winerror", None) or getattr(e, "errno", None)
+    return {10065: "la red no llega a esa direccion", 10051: "esta PC no tiene red",
+            10060: "no contesta", 11001: "nombre desconocido"}.get(n, f"{type(e).__name__} {n or ''}".strip())
+
+
+def tls(ip, puerto=None, timeout=8, serie=None):
+    """Conexion cifrada con la impresora. Con `serie`, el certificado TIENE que traer ese numero de serie: a un
+    equipo que no lo trae no se le manda nada (ni el codigo de acceso)."""
+    puerto = PUERTO_MQTT if puerto is None else puerto
+    if not ip:
+        raise SinConexion("El archivo de datos no tiene la direccion de la impresora.")
+    try:
+        raw = socket.create_connection((ip, puerto), timeout=timeout)
+    except ConnectionRefusedError:
+        raise SinConexion(f"En {ip} hay un equipo, pero no es la impresora o tiene apagado el modo desarrollador "
+                          f"(no escucha el puerto {puerto}).") from None
+    except (TimeoutError, socket.timeout):
+        raise SinConexion(f"No encuentro la impresora en {ip} (no contesta).") from None
+    except OSError as e:
+        raise SinConexion(f"No encuentro la impresora en {ip} ({_motivo_red(e)}).") from None
+    try:
+        t = _contexto_tls().wrap_socket(raw)
+    except (ssl.SSLError, OSError):
+        raw.close()
+        raise SinConexion(f"En {ip} contesta otra cosa (el cifrado no es el de la impresora).") from None
+    if serie:
+        vista = serie_del_certificado(t.getpeercert(True))
+        if vista != serie:
+            t.close()
+            raise OtraImpresora(ip, vista)
+    return t
 
 
 def preparar(ip):
     if DATOS.exists():
         d = json.load(open(DATOS, encoding="utf-8"))
-        print("el archivo ya existe y no se pisa:", DATOS, "| tiene codigo cargado:", bool(d.get("codigo_acceso")))
-        return
+        print("el archivo ya existe y no se pisa:", DATOS, "| tiene codigo cargado:", bool(d.get("codigo_acceso")),
+              "| para cambiar la direccion no hace falta: el programa la busca sola por el numero de serie")
+        return 0
     with tls(ip) as t:
-        der = t.getpeercert(True)
-    # el numero de serie es el CN del certificado del equipo (OID 2.5.4.3 = 55 04 03); buscar
-    # "un texto largo en mayusculas" agarraba una FECHA de vigencia (13/10/2026)
-    cns = [der[m.end():m.end() + m.group(1)[0]].decode("utf-8", "replace")
-           for m in re.finditer(rb"\x55\x04\x03[\x0c\x13](.)", der, re.S)]
-    cand = [c for c in cns if re.fullmatch(r"[0-9A-Z]{10,}", c)]
-    serie = cand[-1] if cand else ""
-    json.dump({"ip": ip, "serie": serie, "codigo_acceso": ""}, open(DATOS, "w", encoding="utf-8"), indent=1)
-    print("escrito", DATOS, "| serie leida del certificado:", (serie[:4] + "..." + serie[-4:]) if serie else "NO ENCONTRADA")
+        serie = serie_del_certificado(t.getpeercert(True))
+    _escribir_json(DATOS, {"ip": ip, "serie": serie, "codigo_acceso": ""})
+    print("escrito", DATOS, "| serie leida del certificado:", _serie_corta(serie) if serie else "NO ENCONTRADA")
+    return 0
 
 
 # ---------------- MQTT minimo ----------------
@@ -104,17 +207,47 @@ def _paquete(sock):
     return cab, _leer(sock, largo) if largo else b""
 
 
-def conectar(d):
+def ubicar(d, guardar=True):
+    """Buscar la impresora por su numero de serie (bloque 2.2 de la tanda 17)."""
+    raise SinConexion("No encuentro la impresora en la red: mirá en su pantalla Ajustes > WLAN qué dirección tiene.")
+
+
+TEXTO_ACCESO = ("La impresora rechazó la conexión: cambió el código de acceso o se apagó el modo desarrollador. "
+                 "Mirá en su pantalla Ajustes > Solo LAN; el código lo escribe Fak con bambu_red.py --pedir-codigo "
+                 "(nunca en el chat).")
+
+
+def conectar(d, buscar=True):
+    """Conexion MQTT ya presentada. El certificado se comprueba ANTES de mandar el codigo de acceso. Si la
+    direccion no contesta o es otro equipo, con buscar=True la busca en la red por su numero de serie (ubicar)."""
     if not d.get("codigo_acceso"):
-        raise SystemExit(f"falta el codigo de acceso en {DATOS}")
-    s = tls(d["ip"])
-    var = _txt("MQTT") + bytes([4, 0xC2]) + struct.pack(">H", 60)      # usuario + clave + sesion limpia
+        raise FallaImpresora(f"Falta el codigo de acceso en {d.get('_origen', DATOS)}: lo escribe Fak con "
+                             "bambu_red.py --pedir-codigo (nunca en el chat).")
+    try:
+        s = tls(d.get("ip"), serie=d["serie"])
+    except SinConexion as e:
+        if not buscar:
+            raise
+        print(e.texto, "La busco en la red por su numero de serie...", flush=True)
+        ubicar(d)                                    # corrige d["ip"] o levanta SinConexion «no la encuentro»
+        s = tls(d["ip"], serie=d["serie"])
+    var = _txt("MQTT") + bytes([4, 0xC2]) + struct.pack(">H", 60)      # usuario + clave + sesion limpia, keepalive 60 s
     cuerpo = var + _txt("barack-%d" % os.getpid()) + _txt("bblp") + _txt(d["codigo_acceso"])
-    s.sendall(bytes([0x10]) + _largo(len(cuerpo)) + cuerpo)
-    cab, dat = _paquete(s)
-    if cab >> 4 != 2 or dat[1] != 0:
-        motivo = {4: "usuario o codigo de acceso mal", 5: "no autorizado (codigo de acceso mal)"}.get(dat[1], f"codigo {dat[1]}")
-        raise SystemExit(f"la impresora rechazo la conexion: {motivo}")
+    try:
+        s.sendall(bytes([0x10]) + _largo(len(cuerpo)) + cuerpo)
+        cab, dat = _paquete(s)
+    except (OSError, ConnectionError):
+        s.close()
+        raise SinConexion(f"La impresora en {d['ip']} cortó la conexión al presentarse.") from None
+    if cab >> 4 != 2 or len(dat) < 2:
+        s.close()
+        raise SinConexion(f"En {d['ip']} contestó algo que no es la impresora.")
+    if dat[1] in (4, 5):
+        s.close()
+        raise AccesoRechazado(TEXTO_ACCESO)
+    if dat[1]:
+        s.close()
+        raise SinConexion(f"La impresora rechazó la conexión (código {dat[1]}): probá de nuevo en un minuto.")
     return s
 
 
@@ -128,34 +261,166 @@ def publicar(s, tema, obj):
     s.sendall(bytes([0x30]) + _largo(len(cuerpo)) + cuerpo)
 
 
-def escuchar(s, segundos):
-    fin = time.time() + segundos
-    s.settimeout(1.0)
-    while time.time() < fin:
-        try:
-            cab, dat = _paquete(s)
-        except (socket.timeout, TimeoutError):
+def _fusionar_por_id(viejos, nuevos, sub=None):
+    """Listas de dicts con 'id' (unidades del cargador, lugares): se actualiza cada uno por su id."""
+    por_id = {str(x.get("id")): dict(x) for x in viejos if isinstance(x, dict)}
+    for x in nuevos:
+        if not isinstance(x, dict):
             continue
-        if cab >> 4 == 3:
-            n = struct.unpack(">H", dat[:2])[0]
+        k = str(x.get("id"))
+        if k in por_id:
+            for kk, vv in x.items():
+                if sub and kk == sub and isinstance(vv, list) and isinstance(por_id[k].get(kk), list):
+                    por_id[k][kk] = _fusionar_por_id(por_id[k][kk], vv)
+                else:
+                    por_id[k][kk] = vv
+        else:
+            por_id[k] = dict(x)
+    return list(por_id.values())
+
+
+def fusionar(visto, p):
+    """Suma un informe al estado conocido. Los informes parciales no borran lo demas: un 'ams' que trae un solo
+    lugar actualiza ESE lugar, no deja el cargador vacio."""
+    for k, v in p.items():
+        if k == "ams" and isinstance(v, dict) and isinstance(visto.get("ams"), dict):
+            a = visto["ams"]
+            for k2, v2 in v.items():
+                if k2 == "ams" and isinstance(v2, list) and isinstance(a.get("ams"), list):
+                    a["ams"] = _fusionar_por_id(a["ams"], v2, sub="tray")
+                else:
+                    a[k2] = v2
+        else:
+            visto[k] = v
+    return visto
+
+
+PING_CADA, PUSHALL_CADA = 30, 300     # aviso de vida cada 30 s (keepalive 60); informe completo cada 5 min (OpenBambuAPI)
+
+
+class Conexion:
+    """Una conexion MQTT con la impresora que puede quedar abierta. Lee paquetes ENTEROS de un buffer propio: si un
+    informe llega partido en dos, no se pierde ni se desordena lo que sigue. Manda el aviso de vida y pide el
+    informe completo al conectar y cada 5 minutos; los informes llegan solos."""
+
+    def __init__(self, d, buscar=True):
+        self.d = d
+        self.s = conectar(d, buscar)
+        self.buf = b""
+        self.visto = {}
+        self.ult_paquete = self.ult_ping = time.time()
+        self.ult_pushall = 0.0
+        self.tema = f"device/{d['serie']}/request"
+        try:
+            suscribir(self.s, f"device/{d['serie']}/report")
+        except OSError:
+            self.cerrar()
+            raise SinConexion("La impresora cortó la conexión al suscribirse.") from None
+        self.pushall()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        self.cerrar()
+
+    def publicar(self, obj):
+        try:
+            publicar(self.s, self.tema, obj)
+        except OSError:
+            raise SinConexion("Se cortó la conexión con la impresora al mandarle un pedido.") from None
+
+    def pushall(self):
+        self.publicar({"pushing": {"sequence_id": "0", "command": "pushall"}})
+        self.ult_pushall = time.time()
+
+    def _paquetes(self):
+        out = []
+        while len(self.buf) >= 2:
+            mult, largo, i = 1, 0, 1
+            while True:
+                if i >= len(self.buf):
+                    return out                      # el largo todavia no llego entero
+                b = self.buf[i]
+                largo += (b & 127) * mult
+                mult *= 128
+                i += 1
+                if not b & 128:
+                    break
+                if i > 4:
+                    raise SinConexion("La impresora mandó un paquete roto.")
+            if len(self.buf) < i + largo:
+                return out                          # el cuerpo todavia no llego entero
+            out.append((self.buf[0], self.buf[i:i + largo]))
+            self.buf = self.buf[i + largo:]
+        return out
+
+    def leer(self, segundos, hasta=None):
+        """Lee lo que llegue durante `segundos`, o hasta que hasta(visto, mensaje) de True. Devuelve los mensajes
+        'print' que llegaron. Levanta SinConexion si la conexion se corta."""
+        fin = time.time() + segundos
+        nuevos = []
+        while True:
+            for cab, dat in self._paquetes():
+                self.ult_paquete = time.time()
+                if cab >> 4 != 3 or len(dat) < 2:
+                    continue                        # CONNACK, SUBACK, PINGRESP: solo cuentan como señal de vida
+                n = struct.unpack(">H", dat[:2])[0]
+                off = 2 + n + (2 if (cab >> 1) & 3 else 0)   # con QoS > 0 viene el numero de paquete
+                try:
+                    m = json.loads(dat[off:].decode("utf-8", "replace"))
+                except ValueError:
+                    continue
+                p = m.get("print") if isinstance(m, dict) else None
+                if isinstance(p, dict):
+                    fusionar(self.visto, p)
+                    nuevos.append(p)
+                    if hasta and hasta(self.visto, p):
+                        return nuevos
+            ahora_ = time.time()
+            if ahora_ >= fin:
+                return nuevos
             try:
-                yield json.loads(dat[2 + n:].decode("utf-8", "replace"))
-            except Exception:
-                pass
+                if ahora_ - self.ult_ping >= PING_CADA:
+                    self.s.sendall(b"\xc0\x00")            # PINGREQ
+                    self.ult_ping = ahora_
+            except OSError:
+                raise SinConexion("Se cortó la conexión con la impresora.") from None
+            if ahora_ - self.ult_pushall >= PUSHALL_CADA:
+                self.pushall()
+            self.s.settimeout(max(0.05, min(1.0, fin - ahora_)))
+            try:
+                c = self.s.recv(65536)
+            except (socket.timeout, TimeoutError):
+                continue
+            except (OSError, ssl.SSLError):
+                raise SinConexion("Se cortó la conexión con la impresora.") from None
+            if not c:
+                raise SinConexion("La impresora cerró la conexión.")
+            self.buf += c
+
+    def cerrar(self):
+        try:
+            self.s.sendall(b"\xe0\x00")                 # DISCONNECT
+        except OSError:
+            pass
+        try:
+            self.s.close()
+        except OSError:
+            pass
+
+
+def _informe_completo(visto, p):
+    """El informe que contesta un pushall: trae el estado y el cargador en el mismo mensaje."""
+    return "gcode_state" in p and "ams" in p
 
 
 def estado():
     d = cargar_datos()
-    s = conectar(d)
-    print("conectado a la impresora (el codigo de acceso es correcto)")
-    suscribir(s, f"device/{d['serie']}/report")
-    publicar(s, f"device/{d['serie']}/request", {"pushing": {"sequence_id": "0", "command": "pushall"}})
-    visto = {}
-    for m in escuchar(s, 8):
-        p = m.get("print")
-        if isinstance(p, dict):
-            visto.update(p)
-    s.close()
+    with Conexion(d) as c:
+        print("conectado a la impresora en", d["ip"], "(el codigo de acceso es correcto)")
+        c.leer(8, hasta=_informe_completo)
+        visto = c.visto
     if not visto:
         print("no llego ningun informe: revisar el numero de serie del archivo de datos")
         return 1
@@ -168,7 +433,10 @@ def estado():
             print(f"  lugar {int(t.get('id', 0)) + 1}: {t.get('tray_sub_brands') or t.get('tray_type') or 'vacio'}"
                   f" | color {('#' + t['tray_color'][:6]) if t.get('tray_color') else '-'}"
                   f" | perfil {t.get('tray_info_idx', '-')}")
-    json.dump(visto, open(DATOS.with_name("bambu-a2l-ultimo-estado.json"), "w", encoding="utf-8"), indent=1)
+    try:
+        _escribir_json(DATOS.with_name("bambu-a2l-ultimo-estado.json"), visto)
+    except (OSError, FallaImpresora) as e:
+        print("  (no se pudo guardar el ultimo estado:", e, ")")
     return 0
 
 
@@ -339,7 +607,7 @@ def imprimir(archivo, mapa, aplicar):
             print("     ", x)
         for x in av_a:
             print("      AVISO DE AMBIENTE:", x)
-    except BaseException as e:
+    except Exception as e:
         print("      (ambiente sin medir:", type(e).__name__, ")")
     # lo que pega en la cama, dibujado ANTES de mandar (15/10/2026: pines acostados con dos islitas
     # por pieza se despegaron; la miniatura del laminado no lo mostraba). Avisa, no frena.
@@ -357,14 +625,14 @@ def imprimir(archivo, mapa, aplicar):
     if not aplicar:
         print("      (sin --apply no se manda nada)")
         return 0
-    s = conectar(d)
-    suscribir(s, f"device/{d['serie']}/report")
+    c = Conexion(d)
     tam = subir(d, archivo, nombre)
     print("  subido; tamano en la impresora:", tam, "| local:", archivo.stat().st_size)
     if tam is not None and tam != archivo.stat().st_size:
         print("  EL ARCHIVO NO LLEGO ENTERO: no se manda a imprimir")
+        c.cerrar()
         return 1
-    publicar(s, f"device/{d['serie']}/request", orden)
+    c.publicar(orden)
     print("  ORDEN DE IMPRIMIR MANDADA", time.strftime("%H:%M:%S"))
     # 15/10/2026: se mando y nadie vigilo; la falla la vio Fak al 27 %. La vigilancia la lanza la
     # sesion (en segundo plano, para que su salida la despierte): este renglon se lo recuerda.
@@ -384,76 +652,82 @@ def imprimir(archivo, mapa, aplicar):
             "filamentos": [{"lugar": mapa[i] + 1, "material": lug1.get(mapa[i], ("", "", ""))[1],
                             "color": col, "gramos": float(g or 0), "rollo": chips.get(mapa[i])}
                            for i, (_, _, _, col, g) in enumerate(filamentos_del_archivo(archivo))]})
-    except BaseException as e:
+    except Exception as e:
         print("  (no se pudo anotar en el registro:", type(e).__name__, e, ")")
-    visto, ultimo = {}, None
-    for m in escuchar(s, 150):
-        p = m.get("print")
-        if isinstance(p, dict):
-            visto.update(p)
-            est = (visto.get("gcode_state"), visto.get("print_error"), visto.get("stg_cur"))
-            if est != ultimo:
-                print("  impresora:", {"estado": est[0], "error": est[1], "etapa": est[2],
-                                       "respuesta": p.get("result"), "motivo": p.get("reason")})
-                ultimo = est
-    s.close()
-    return 0 if visto.get("gcode_state") in ("PREPARE", "RUNNING", "SLICING") else 1
+    ultimo = None
+    for p in c.leer(150):
+        visto = c.visto
+        est = (visto.get("gcode_state"), visto.get("print_error"), visto.get("stg_cur"))
+        if est != ultimo:
+            print("  impresora:", {"estado": est[0], "error": est[1], "etapa": est[2],
+                                   "respuesta": p.get("result"), "motivo": p.get("reason")})
+            ultimo = est
+    c.cerrar()
+    return 0 if c.visto.get("gcode_state") in ("PREPARE", "RUNNING", "SLICING") else 1
 
 
-def foto(salida):
+def asegurar_ip(d):
+    """La camara (6000) y la subida (990) tambien reciben el codigo de acceso: se abren solo en una direccion cuyo
+    certificado del 8883 ya trajo la serie en este proceso. Si no contesta, la busca (ubicar)."""
+    if d.get("_verificada") and d.get("_verificada") == d.get("ip"):
+        return
+    try:
+        tls(d.get("ip"), serie=d["serie"], timeout=4).close()
+    except SinConexion as e:
+        print(e.texto, "La busco en la red por su numero de serie...", flush=True)
+        ubicar(d)
+    d["_verificada"] = d["ip"]
+
+
+def foto(salida, d=None):
     """Saca UNA foto de la camara de la impresora (puerto 6000, el mismo flujo que usan A1/P1)."""
-    d = cargar_datos()
+    d = d or cargar_datos()
     if not d.get("codigo_acceso"):
-        raise SystemExit(f"falta el codigo de acceso en {DATOS}")
-    s = tls(d["ip"], 6000, timeout=10)
-    auth = struct.pack("<IIII", 0x40, 0x3000, 0, 0)
-    auth += "bblp".encode().ljust(32, b"\x00") + d["codigo_acceso"].encode().ljust(32, b"\x00")
-    s.sendall(auth)
-    s.settimeout(10)
-    fin = time.time() + 20
-    while time.time() < fin:
-        cab = _leer(s, 16)
-        largo = struct.unpack("<I", cab[:4])[0]
-        if not 0 < largo < 5_000_000:
-            raise SystemExit(f"la camara contesto algo que no es una foto (largo {largo})")
-        img = _leer(s, largo)
-        if img[:2] == b"\xff\xd8" and img[-2:] == b"\xff\xd9":
-            open(salida, "wb").write(img)
-            s.close()
-            print("foto guardada:", salida, f"({len(img)/1000:.0f} KB)")
-            return 0
-    s.close()
+        raise FallaImpresora(f"Falta el codigo de acceso en {d.get('_origen', DATOS)}: lo escribe Fak con --pedir-codigo.")
+    asegurar_ip(d)
+    s = tls(d["ip"], PUERTO_CAMARA, timeout=10)
+    try:
+        auth = struct.pack("<IIII", 0x40, 0x3000, 0, 0)
+        auth += "bblp".encode().ljust(32, b"\x00") + d["codigo_acceso"].encode().ljust(32, b"\x00")
+        s.sendall(auth)
+        s.settimeout(10)
+        fin = time.time() + 20
+        while time.time() < fin:
+            cab = _leer(s, 16)
+            largo = struct.unpack("<I", cab[:4])[0]
+            if not 0 < largo < 5_000_000:
+                raise FallaImpresora(f"la camara contesto algo que no es una foto (largo {largo})")
+            img = _leer(s, largo)
+            if img[:2] == b"\xff\xd8" and img[-2:] == b"\xff\xd9":
+                with open(salida, "wb") as f:
+                    f.write(img)
+                print("foto guardada:", salida, f"({len(img)/1000:.0f} KB)")
+                return 0
+    except (OSError, ConnectionError):
+        raise SinConexion("La camara de la impresora no contesto (se corto la conexion).") from None
+    finally:
+        s.close()
     print("no llego ninguna foto en 20 s")
     return 1
 
 
 def leer_estado(d, segundos=6):
-    s = conectar(d)
-    suscribir(s, f"device/{d['serie']}/report")
-    publicar(s, f"device/{d['serie']}/request", {"pushing": {"sequence_id": "0", "command": "pushall"}})
-    visto = {}
-    for m in escuchar(s, segundos):
-        p = m.get("print")
-        if isinstance(p, dict):
-            visto.update(p)
-    s.close()
-    return visto
+    """El estado completo de la impresora (sale apenas llega el informe completo, o a los `segundos`)."""
+    with Conexion(d) as c:
+        c.leer(segundos, hasta=_informe_completo)
+        d["_verificada"] = d.get("ip")
+        return c.visto
 
 
 def orden_simple(comando):
     """pause / resume / stop."""
     d = cargar_datos()
-    s = conectar(d)
-    suscribir(s, f"device/{d['serie']}/report")
-    publicar(s, f"device/{d['serie']}/request",
-             {"print": {"sequence_id": "20010", "command": comando, "param": ""}})
-    res = None
-    for m in escuchar(s, 12):
-        p = m.get("print")
-        if isinstance(p, dict) and p.get("command") == comando:
-            res = p.get("result")
-            break
-    s.close()
+    with Conexion(d) as c:
+        c.publicar({"print": {"sequence_id": "20010", "command": comando, "param": ""}})
+        res = None
+        for p in c.leer(12, hasta=lambda v, p: p.get("command") == comando):
+            if p.get("command") == comando:
+                res = p.get("result")
     print(f"orden '{comando}' mandada {time.strftime('%H:%M:%S')} | respuesta: {res}")
     return 0 if res == "success" else 1
 
@@ -468,10 +742,8 @@ def velocidad(nivel):
     if nivel is None:
         print(f"velocidad actual: {antes} = {VELOCIDADES.get(antes, '?')}")
         return 0
-    s = conectar(d)
-    publicar(s, f"device/{d['serie']}/request",
-             {"print": {"sequence_id": "20011", "command": "print_speed", "param": str(nivel)}})
-    s.close()
+    with Conexion(d) as c:
+        c.publicar({"print": {"sequence_id": "20011", "command": "print_speed", "param": str(nivel)}})
     time.sleep(3)
     ahora = leer_estado(d, 5).get("spd_lvl")
     print(f"velocidad: {antes} ({VELOCIDADES.get(antes, '?')}) -> pedida {nivel} -> la impresora informa "
@@ -509,17 +781,12 @@ def saltear(archivo, ids, aplicar):
         print("      (sin --apply no se manda nada)")
         return 0
     d = cargar_datos()
-    s = conectar(d)
-    suscribir(s, f"device/{d['serie']}/report")
-    publicar(s, f"device/{d['serie']}/request",
-             {"print": {"sequence_id": "20013", "command": "skip_objects", "obj_list": list(ids)}})
-    res = None
-    for m in escuchar(s, 12):
-        p = m.get("print")
-        if isinstance(p, dict) and p.get("command") == "skip_objects":
-            res = p.get("result")
-            break
-    s.close()
+    with Conexion(d) as c:
+        c.publicar({"print": {"sequence_id": "20013", "command": "skip_objects", "obj_list": list(ids)}})
+        res = None
+        for p in c.leer(12, hasta=lambda v, p: p.get("command") == "skip_objects"):
+            if p.get("command") == "skip_objects":
+                res = p.get("result")
     print(f"orden de saltear mandada {time.strftime('%H:%M:%S')} | respuesta: {res}")
     return 0 if res == "success" else 1
 
@@ -529,22 +796,21 @@ def esperar_enfriar(tope=35.0, maximo_min=45):
 
     Bambu: sacar la pieza con la placa fria (wiki de la A2L: "wait for the heatbed and model to cool
     to room temperature"; ficha de la placa texturada: 35 C o menos). Corre en segundo plano: su
-    salida avisa. Sale con 1 si en `maximo_min` minutos no bajo.
+    salida avisa. Sale con 1 si en `maximo_min` minutos no bajo, y con 12 si no encuentra la impresora
+    (antes daba 45 minutos de «sin respuesta» y salia con 1, como si la placa no se hubiera enfriado).
     """
     d = cargar_datos()
     t0 = time.time()
     while time.time() - t0 < maximo_min * 60:
-        try:
-            v = leer_estado(d, 4)
-            cama = float(v.get("bed_temper", 99))
-            print(f"{time.strftime('%H:%M:%S')} placa {cama:.0f} C (objetivo {v.get('bed_target_temper')}) "
-                  f"estado {v.get('gcode_state')}", flush=True)
-            if cama <= tope and v.get("gcode_state") in ("FINISH", "FAILED", "IDLE"):
-                print(f"YA SE PUEDE RETIRAR: placa a {cama:.0f} C")
-                return 0
-        except BaseException as e:
-            print(time.strftime("%H:%M:%S"), "sin respuesta:", type(e).__name__, flush=True)
+        v = leer_estado(d, 4)          # sin conexion: conectar() ya la busco; si no esta, SinConexion -> 12
+        cama = float(v.get("bed_temper", 99))
+        print(f"{time.strftime('%H:%M:%S')} placa {cama:.0f} C (objetivo {v.get('bed_target_temper')}) "
+              f"estado {v.get('gcode_state')}", flush=True)
+        if cama <= tope and v.get("gcode_state") in ("FINISH", "FAILED", "IDLE"):
+            print(f"YA SE PUEDE RETIRAR: placa a {cama:.0f} C")
+            return 0
         time.sleep(60)
+    print(f"la placa no bajo de {tope:.0f} C en {maximo_min} minutos")
     return 1
 
 
@@ -563,8 +829,10 @@ def ambiente(minutos_de_impresion=0):
     """
     import urllib.request
     lin, avisos = [], []
+    adentro_ok = False
     try:
         v = leer_estado(cargar_datos(), 4)
+        adentro_ok = True
         cama, boq = float(v.get("bed_temper", 99)), float(v.get("nozzle_temper", 99))
         fria = (v.get("gcode_state") in ("IDLE", "FINISH", "FAILED") and not float(v.get("bed_target_temper", 0))
                 and abs(cama - boq) < 2 and cama < 40)
@@ -576,9 +844,13 @@ def ambiente(minutos_de_impresion=0):
         else:
             lin.append(f"adentro: no se puede medir ahora (la impresora esta caliente o trabajando: "
                        f"placa {cama:.0f} C, boquilla {boq:.0f} C)")
-    except BaseException as e:
+    except FallaImpresora as e:
+        lin.append(f"adentro: sin lectura ({e.texto})")
+    except Exception as e:
         lin.append(f"adentro: sin lectura ({type(e).__name__})")
     try:
+        if os.environ.get("BAMBU_SIN_INTERNET") == "1":
+            raise OSError("pruebas: sin internet")
         horas = max(1, int(minutos_de_impresion // 60) + 2)
         url = (f"https://api.open-meteo.com/v1/forecast?latitude={PLANTA[0]}&longitude={PLANTA[1]}"
                f"&current=temperature_2m,relative_humidity_2m&hourly=temperature_2m&forecast_hours={horas}"
@@ -592,8 +864,9 @@ def ambiente(minutos_de_impresion=0):
                           f"Bambu pide {AMBIENTE_MIN:.0f} a {AMBIENTE_MAX:.0f} C")
         if d["current"]["relative_humidity_2m"] >= 85:
             avisos.append(f"humedad {d['current']['relative_humidity_2m']} %: Bambu pide menos de 85 %")
-    except BaseException as e:
+    except Exception as e:
         lin.append(f"afuera: sin pronostico ({type(e).__name__})")
+    ambiente.adentro_ok = adentro_ok
     return lin, avisos
 
 
@@ -608,12 +881,10 @@ def luz(modo):
     if modo is None:
         print("luces:", antes)
         return 0
-    s = conectar(d)
-    publicar(s, f"device/{d['serie']}/request",
-             {"system": {"sequence_id": "20012", "command": "ledctrl", "led_node": "chamber_light",
-                         "led_mode": modo, "led_on_time": 500, "led_off_time": 500,
-                         "loop_times": 0, "interval_time": 0}})
-    s.close()
+    with Conexion(d) as c:
+        c.publicar({"system": {"sequence_id": "20012", "command": "ledctrl", "led_node": "chamber_light",
+                               "led_mode": modo, "led_on_time": 500, "led_off_time": 500,
+                               "loop_times": 0, "interval_time": 0}})
     time.sleep(3)
     ahora = leer_luz()
     print(f"luz: {antes.get('chamber_light')} -> pedida {modo} -> la impresora informa {ahora.get('chamber_light')}")
@@ -636,7 +907,7 @@ def cerrar_en_registro(est, v):
                          "minutos_reales": round((registro.ahora() - t0).total_seconds() / 60, 1),
                          "avance_pct": v.get("mc_percent", 100 if est == "FINISH" else 0),
                          "capa": v.get("layer_num"), "error": v.get("print_error")})
-    except BaseException as ex:
+    except (Exception, SystemExit) as ex:
         print("  (no se pudo cerrar en el registro:", type(ex).__name__, ex, ")")
 
 
@@ -660,7 +931,7 @@ def medir_foto(ruta):
                             str(ruta), "--recorte", RECORTE_PLACA], capture_output=True, text=True, timeout=60)
         m = re.search(r"\{.*\}", r.stdout.splitlines()[-1]) if r.stdout.strip() else None
         return json.loads(m.group(0)) if m else None
-    except BaseException:
+    except (Exception, SystemExit):          # la camara o el detector no tiran abajo la vigilancia; Ctrl+C si
         return None
 
 
@@ -792,58 +1063,105 @@ def pedir_codigo():
         print("no se escribio nada")
         return 1
     d["codigo_acceso"] = cod.strip()
-    json.dump(d, open(DATOS, "w", encoding="utf-8"), indent=1)
+    _escribir_json(DATOS, d)
     print("codigo guardado (largo %d)" % len(cod.strip()))
     return 0
 
 
-if __name__ == "__main__":
-    if len(sys.argv) >= 2 and sys.argv[1] == "--pedir-codigo":
-        sys.exit(pedir_codigo())
-    if len(sys.argv) >= 3 and sys.argv[1] == "--preparar":
-        preparar(sys.argv[2])
-    elif len(sys.argv) >= 2 and sys.argv[1] == "--estado":
-        sys.exit(estado())
-    elif len(sys.argv) >= 3 and sys.argv[1] == "--saltear":
+def _valor(argv, opcion, tipo=str, defecto=None):
+    """El valor que sigue a `opcion` en la linea de comandos (o `defecto`)."""
+    if opcion not in argv:
+        return defecto
+    i = argv.index(opcion) + 1
+    if i >= len(argv):
+        raise FallaImpresora(f"a {opcion} le falta el valor")
+    try:
+        return tipo(argv[i])
+    except ValueError:
+        raise FallaImpresora(f"{opcion} {argv[i]}: no es un valor valido") from None
+
+
+def _numeros(texto, opcion):
+    try:
+        return [int(x) for x in str(texto).split(",") if x.strip()]
+    except ValueError:
+        raise FallaImpresora(f"{opcion} {texto}: van numeros separados por coma") from None
+
+
+def despachar(argv):
+    a = argv[1] if len(argv) >= 2 else ""
+    if a == "--pedir-codigo":
+        return pedir_codigo()
+    if a == "--preparar" and len(argv) >= 3:
+        return preparar(argv[2])
+    if a == "--estado":
+        return estado()
+    if a == "--saltear" and len(argv) >= 3:
         # --saltear <archivo.gcode.3mf>            lista los objetos
         # --saltear <archivo.gcode.3mf> 12[,15]    plan;  con --apply lo manda
-        ids = [int(x) for x in sys.argv[3].split(",")] if len(sys.argv) >= 4 and sys.argv[3][0].isdigit() else None
-        sys.exit(saltear(sys.argv[2], ids, "--apply" in sys.argv))
-    elif len(sys.argv) >= 2 and sys.argv[1] == "--ambiente":
-        # --ambiente [minutos que dura la impresion]   -> sale con 2 si hay un aviso
-        lin_, av_ = ambiente(float(sys.argv[2]) if len(sys.argv) >= 3 else 0)
+        ids = _numeros(argv[3], "--saltear") if len(argv) >= 4 and argv[3][:1].isdigit() else None
+        return saltear(argv[2], ids, "--apply" in argv)
+    if a == "--ambiente":
+        # --ambiente [minutos que dura la impresion]   -> 2 si hay un aviso, 12 si la impresora no contesto
+        lin_, av_ = ambiente(float(argv[2]) if len(argv) >= 3 else 0)
         for x in lin_:
             print(" ", x)
         for x in av_:
             print("  AVISO:", x)
-        sys.exit(2 if av_ else 0)
-    elif len(sys.argv) >= 2 and sys.argv[1] == "--avisar-retiro":
-        sys.exit(esperar_enfriar())
-    elif len(sys.argv) >= 2 and sys.argv[1] == "--luz":
-        sys.exit(luz(sys.argv[2] if len(sys.argv) >= 3 else None))      # --luz | --luz on | --luz off
-    elif len(sys.argv) >= 2 and sys.argv[1] == "--velocidad":
+        return 2 if av_ else (0 if getattr(ambiente, "adentro_ok", False) else SALIDA_SIN_CONEXION)
+    if a == "--avisar-retiro":
+        return esperar_enfriar()
+    if a == "--luz":
+        return luz(argv[2] if len(argv) >= 3 else None)      # --luz | --luz on | --luz off
+    if a == "--velocidad":
         # --velocidad        muestra la actual;   --velocidad 1|2|3|4   la cambia
-        sys.exit(velocidad(int(sys.argv[2]) if len(sys.argv) >= 3 else None))
-    elif len(sys.argv) >= 3 and sys.argv[1] == "--foto":
-        sys.exit(foto(sys.argv[2]))
-    elif len(sys.argv) >= 3 and sys.argv[1] == "--seguir":
-        # --seguir <carpeta> [--fotos-en 41,44]
-        capas = ()
-        if "--fotos-en" in sys.argv:
-            capas = tuple(int(x) for x in sys.argv[sys.argv.index("--fotos-en") + 1].split(","))
-        desp = int(sys.argv[sys.argv.index("--despertar") + 1]) if "--despertar" in sys.argv else 0
-        # --detector: filtro de PrintGuard cada vuelta; --solo-medir: lo registra pero no da alarma
-        cada_s = int(sys.argv[sys.argv.index("--cada") + 1]) if "--cada" in sys.argv else 60
-        sys.exit(seguir(sys.argv[2], cada=cada_s, fotos_en=capas, despertar_min=desp,
-                        detector="--detector" in sys.argv or "--solo-medir" in sys.argv,
-                        solo_medir="--solo-medir" in sys.argv))
-    elif len(sys.argv) >= 2 and sys.argv[1] in ("--pausar", "--reanudar", "--cancelar"):
-        sys.exit(orden_simple({"--pausar": "pause", "--reanudar": "resume", "--cancelar": "stop"}[sys.argv[1]]))
-    elif len(sys.argv) >= 3 and sys.argv[1] == "--imprimir":
+        return velocidad(_valor(argv, "--velocidad", int) if len(argv) >= 3 else None)
+    if a == "--foto" and len(argv) >= 3:
+        return foto(argv[2])
+    if a == "--seguir" and len(argv) >= 3:
+        # --seguir <carpeta> [--fotos-en 41,44] [--despertar N] [--cada S] [--detector | --solo-medir]
+        capas = tuple(_numeros(_valor(argv, "--fotos-en"), "--fotos-en")) if "--fotos-en" in argv else ()
+        return seguir(argv[2], cada=_valor(argv, "--cada", int, 60), fotos_en=capas,
+                      despertar_min=_valor(argv, "--despertar", int, 0),
+                      detector="--detector" in argv or "--solo-medir" in argv,
+                      solo_medir="--solo-medir" in argv)
+    if a in ("--pausar", "--reanudar", "--cancelar"):
+        return orden_simple({"--pausar": "pause", "--reanudar": "resume", "--cancelar": "stop"}[a])
+    if a == "--imprimir" and len(argv) >= 3:
         # --mapa 0,1 : filamento 1 del archivo -> lugar 1 del cargador, filamento 2 -> lugar 2
-        mapa = None
-        if "--mapa" in sys.argv:
-            mapa = [int(x) for x in sys.argv[sys.argv.index("--mapa") + 1].split(",")]
-        sys.exit(imprimir(sys.argv[2], mapa, "--apply" in sys.argv))
-    else:
-        print(__doc__)
+        mapa = _numeros(_valor(argv, "--mapa"), "--mapa") if "--mapa" in argv else None
+        return imprimir(argv[2], mapa, "--apply" in argv)
+    if a == "--version":
+        print("skill impresion-3d-bambu, version", VERSION)
+        return 0
+    print(__doc__)
+    return 0 if a in ("", "-h", "--help", "--ayuda") else 1
+
+
+def main(argv=None):
+    """Toda falla termina en un renglon en castellano y su codigo de salida: nunca un error de Python."""
+    for f in (sys.stdout, sys.stderr):
+        try:
+            f.reconfigure(errors="replace")      # en Windows, con la salida a un archivo, una flecha tumbaba el print
+        except (AttributeError, ValueError):
+            pass
+    try:
+        return despachar(list(sys.argv if argv is None else argv))
+    except KeyboardInterrupt:
+        print("cortado a mano (Ctrl+C)")
+        return 130
+    except FallaImpresora as e:
+        print(e.texto, flush=True)
+        return e.salida
+    except SystemExit as e:
+        if isinstance(e.code, str):
+            print(e.code)
+            return 1
+        return e.code or 0
+    except Exception as e:
+        print(f"No se pudo: {type(e).__name__}: {e}. No es un problema de la impresora: avisar a Fak con este renglon.")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
