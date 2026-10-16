@@ -1,9 +1,11 @@
-# Lo que dice Bambu Lab de la A2L (wiki oficial, leída el 13/10/2026)
+# Lo que dice Bambu Lab de la A2L (wiki oficial, leída el 13/10/2026; releída y ampliada el 16/10/2026)
 
 Cada dato con su página. **Los originales están en la nube de Ingeniería,
-`INGENIERIA BARACK (NUNCA BORRAR)\4- MANUALES\IMPRESORA 3D BAMBU LAB A2L\`**: 11 páginas, cada una
-como transcripción `.txt` (texto original en inglés, con URL, fecha y cómo se obtuvo) y captura
-`.png` de la página completa. Ahí no va nada mío: este resumen vive en la skill
+`INGENIERIA BARACK (NUNCA BORRAR)\4- MANUALES\IMPRESORA 3D BAMBU LAB A2L\`**: 20 páginas (11 del 13/10 y
+9 del 16/10), cada una como transcripción `.txt` (texto original en inglés, con URL, fecha y cómo se
+obtuvo) y captura `.png` de la página completa (las del 16/10 traen también el `.html` crudo). El 16/10 se
+releyó este resumen contra los 11 originales: se corrigió el enredo (reintenta una vez antes de pausar) y se
+sacó «no lleva pegamento», que ninguna de las páginas dice. Ahí no va nada mío: este resumen vive en la skill
 (regla `documentacion-oficial.md`). Copia de trabajo: `exports/impresion_3d/fuentes_bambu/*.txt` (se vuelve a bajar con `scripts/wiki_bambu.py <ruta> <carpeta>
 [--captura]`; WebFetch da 402 con esta wiki, pedida como navegador contesta). Índice de la A2L:
 `https://wiki.bambulab.com/en/a2l`. Antes de afirmar algo que no esté acá, se baja la página.
@@ -27,9 +29,8 @@ Captura para mostrar: `exports/impresion_3d/fuentes_bambu/EVIDENCIA_limpieza_pla
   (en PLA, demasiado alta tapa la boquilla y da «pata de elefante»); agregar borde (*brim*) a las
   piezas chicas y soportes a las altas y finas; revisar la temperatura si el perfil fue tocado;
   primera capa de 0,5 mm de ancho de línea y 0,25 mm de alto; dar vuelta la placa.
-- No lleva pegamento para los materiales comunes.
 - **Sacar la pieza**: esperar a que placa y pieza lleguen a temperatura ambiente, sacar la chapa
-  y flexionarla. La línea de purga se saca con la espátula.
+  y flexionarla. La línea de purga se saca con la espátula (`first-print`: «Use a Scraper»).
 - Una zona gastada del recubrimiento donde la impresora limpia la boquilla es normal; si el
   desgaste está en la zona de impresión, se usa la otra cara o se cambia la placa, y se nivela.
 - Antes de poner la chapa: la cama magnética sin restos (se daña al calentar).
@@ -38,18 +39,93 @@ Captura para mostrar: `exports/impresion_3d/fuentes_bambu/EVIDENCIA_limpieza_pla
 
 Fuentes: `en/a2l/manual/a2l-faq` · `nozzle-clumping-detection` · `air-printing-and-filament-tangle-detection`.
 
-- **No tiene detección de enredos por cámara.** Tiene sensores: fin de filamento, impresión en el
-  aire, filamento trabado y pegote en la boquilla. Por eso vale la pena mirar la cámara desde afuera.
+- **Su wiki no nombra ninguna detección por cámara** (la «Spaghetti detection» es de X1/H2). Detecta con
+  sensores: fin de filamento, impresión en el aire, filamento trabado y pegote en la boquilla (`a2l-faq`:
+  hereda de la A1 «filament runout detection, air printing detection, and filament tangle detection»). Por eso
+  vale la pena mirar la cámara desde afuera.
 - **Pegote en la boquilla** (sensor mecánico en el limpiador de purga; por defecto «Auto»): se
   controla cada vez que el cabezal pasa por la purga (extrusión, cambio de color), **obligatorio
   en las capas 2 y 3**, a intervalos fijos **hasta los 10 mm de altura**, y en PLA cada 6 g
   consumidos, 3 veces. **Después de los 10 mm y de esos 18 g ya no hay control fijo**: ahí la
   vigilancia por cámara es la única que queda. Bambu avisa que no es una detección infalible.
-- **Impresión en el aire** (boquilla tapada, filamento gastado) y **filamento trabado** (el
-  carrete o el tubo frenan): pausan y avisan. Con el cargador de 4 lugares vienen activadas.
-  Con filamento flexible (TPU) no se detecta el trabado.
-- Todas se configuran en la pantalla: Ajustes > Opciones de impresión.
+- **Impresión en el aire** (boquilla tapada, filamento gastado o de diámetro raro): corta el filamento,
+  retrae, pausa y avisa. Se detecta **después** de que pasa: antes de reanudar hay que mirar la pieza.
+- **Filamento trabado o enredado** (el carrete o el tubo frenan; con el cargador de 4 lo mide el resorte del
+  hub del cabezal): **con el cargador primero retrae y vuelve a cargar, UNA vez por filamento y por
+  impresión; si vuelve a pasar, da error y pausa**. Entre las causas que manda revisar: filamento enredado,
+  anudado o **trabado en el borde del carrete**, el cargador muy lejos o el tubo muy doblado, restos en la
+  rueda de entrada. Con el cargador de 4 o carrete externo viene activada. Con filamentos flexibles (TPU,
+  TPE) o PVA húmedo no se detecta el trabado. Si el sensor falla puede dar falsas alarmas: se apaga la
+  detección, se carga y se vuelve a prender.
+- Todas se configuran en la pantalla: Ajustes > Opciones de impresión (`screen-operation`: sonidos,
+  enredo, recuperación de pasos perdidos, pegote, detección de la placa, impresión en el aire, aislación de
+  la cama). **No hay ninguna opción de recuperación ante cortes de luz.**
 - **Cámara: 0,5 cuadros por segundo** (una imagen cada 2 s).
+
+Fuentes: `air-printing-and-filament-tangle-detection` · `screen-operation` · `a2l-intro`.
+
+## Fin de filamento y rollo de respaldo
+
+Fuentes: `ams-lite/manual/intro-ams-lite` (el cargador de 4 de la A2L es un AMS lite) · `a2l/manual/screen-operation`
+· `ams/manual/ams-function-introduction`.
+
+- Con un solo material: cuando el cabezal deja de ver filamento, mira si el sensor del lugar todavía lo
+  ve; si lo ve, sigue empujando; si no, avisa que se terminó y pide cargar otro.
+- Con varios colores, si la última punta ya se soltó del carrete y hay que cambiar de color, no la puede
+  retraer: la purga entera y pasa al otro lugar.
+- **«AMS Filament Backup»** (pantalla: Ajustes > Opciones AMS): cuando se termina el filamento de un lugar,
+  pasa solo a otro lugar con un rollo de **la misma marca, tipo, color y temperatura de boquilla**. Si no
+  encuentra uno igual, avisa. Pide tener cargada la información de todos los filamentos antes de imprimir.
+- Las Opciones AMS de la A2L son: leer el chip al cargar, leer el chip al arrancar, el respaldo y el orden de
+  los cargadores. **Ninguna estima lo que queda.** Esa estimación (por el giro del chip, 1 kg = 100 %) es del
+  cargador grande (AMS), no del de 4 de la A2L. La impresora informó `remain = -1` y `tray_weight = 1000` el
+  13/10 (dato de la máquina, no de la wiki): la cuenta la lleva el registro.
+
+## Hub del cabezal trabado (filamento cortado adentro)
+
+Fuente: `a2l/troubleshooting/filament-hub-clear`. Cuando el filamento se corta adentro del hub, la carga
+siguiente falla. Se desarma el hub (espátula y pinza plana) y se saca el pedazo. **Antes: impresora apagada y
+desenchufada, y la boquilla y la cama frías.**
+
+## La tarjeta MicroSD
+
+Fuente: `a2l-faq`. **La A2L no tiene memoria propia: sin la MicroSD no recibe ni arranca trabajos.** Viene con
+una de 32 GB. El archivo que sube `--imprimir` queda en la tarjeta: la impresión no depende de la PC ni del
+wifi.
+
+## Corte de luz (página general de Bambu: la A2L no lo documenta)
+
+Fuente: `knowledge-sharing/power-loss-recovery` (no nombra la A2L).
+- La impresora detecta la caída de tensión y guarda dónde iba: ejes, filamento, renglón del código y
+  temperaturas.
+- **Al prender de nuevo, si hay un archivo de recuperación, la pantalla ofrece reanudar y reanuda solo si
+  alguien confirma.** No sirve durante la primera capa.
+- Recalienta, purga un poco y sigue desde el mismo renglón; casi siempre queda una marca en ese punto.
+- **El PLA se enfría rápido y se puede despegar de la placa** si la temperatura baja de cierto punto: antes de
+  reanudar hay que mirar la pieza.
+
+## La red
+
+Fuentes: `general/printer-network-ports` · `knowledge-sharing/enable-lan-mode` · `a2l-faq`.
+- Puertos: 8883 (mensajes, MQTT), 990 y 50000-50100 (subida de archivos, FTP), 6000 o 322 (cámara),
+  1990 y 2021 (el anuncio de la impresora en la red, SSDP, multicast/broadcast).
+- En modo LAN, Bambu Studio tarda de 20 a 60 s en verla. **No anda en algunas redes de invitados** (bloquean
+  la comunicación entre equipos) ni entre redes distintas.
+
+## Carrete reutilizable y recarga (cómo cambiar un rollo)
+
+Fuentes: `general/swaping-new-filament-with-bambu-reusable-spool` · `knowledge-sharing/bambu-reusable-spool`.
+- Hay dos carretes reutilizables: de baja temperatura (≤ 70 °C, para PLA y PETG) y de alta (≤ 90 °C).
+- Pasos de la recarga: sacar el envoltorio (si trae la tira transparente de protección, no sacarla todavía;
+  la recarga de 250 g conserva su núcleo de cartón) → **abrir el carrete girándolo en contra del reloj: se
+  separa en dos mitades** (la ancha y la angosta) → alinear la muesca del núcleo de cartón con la traba de
+  la mitad ancha, apretar el rollo en su lugar y poner la mitad angosta → girar a favor del reloj hasta el
+  «clic» → sacar la parte de la tira más cercana a la punta, meter la punta en el agujero redondo del carrete
+  y recién ahí sacar el resto de la tira → apretar los costados del rollo si queda luz con el carrete (evita
+  enredos) → sacar la etiqueta vieja y pegar la que viene con el rollo nuevo.
+- **Si el chip que lee la impresora viaja con la recarga: la página no lo dice. A confirmar** (mirando una
+  recarga, o en la página del producto).
+- El carrete impreso en 3D es para usar de emergencia, no se seca filamento en él.
 
 ## Materiales, placas y ambiente
 

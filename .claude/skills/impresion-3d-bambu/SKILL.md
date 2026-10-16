@@ -5,10 +5,25 @@ description: Preparar una pieza para la impresora 3D Bambu Lab A2L de Fak sin pa
 
 # impresion-3d-bambu — dejar una pieza lista para la Bambu Lab A2L
 
+**Versión 2026-10-16** (la misma que `bambu_red.py --version`; `--selftest` las compara).
+
 **Estado (13/10/2026): PROBADA con tres impresiones reales** en la A2L: virolador v14 (negro con
 grabado amarillo, 1 h 43 min contra 1 h 41 estimado), tres fichas de tres colores (32,6 min contra
-32) y el molde de probeta 50 x 50 (mandado 13:46, 10 h 49 min). Lo que sigue sin verse: el detector
-ante una falla real.
+32) y el molde de probeta 50 x 50 (mandado 13:46, terminó 00:18: 632,9 min reales contra 649
+estimados). Lo que sigue sin verse: el detector ante una falla real.
+**16/10/2026 (tanda 17):** la búsqueda por número de serie, la vigilancia nueva (salidas 12/13/14) y los
+frenos de `--imprimir` están probados contra una impresora de juguete (82 tests en
+`tests/`, `python -m unittest discover -s .claude/skills/impresion-3d-bambu/tests`); con la impresora
+real, ver §7.
+
+**Reglas que valen para toda la skill:**
+- `--imprimir --apply` y `--seguir` se lanzan **siempre en segundo plano y nunca dentro de `timeout`**
+  (un `timeout 100` cortó la subida de 20 MB el 15/10; la vigilancia tiene que poder despertar a la sesión).
+- **Prohibido esperar con un `ping` a una dirección fija** (el 15/10 un bucle preguntó por la .198 tres horas
+  mientras la impresora estaba en la .111): se espera con `--seguir <carpeta> --buscar`.
+- **El código de acceso se dice que está en la foto o en el archivo; no se transcribe en el chat** (13/10:
+  se escribió leído de una foto). Ni en el repo, ni en la skill, ni en la memoria.
+- Con Fak, todo en castellano: ningún renglón en inglés en el chat (15/10: «The vigilance will wake me…»).
 
 ## 1. Qué hay y qué no
 
@@ -53,12 +68,40 @@ python .claude/skills/impresion-3d-bambu/scripts/bambu_red.py --imprimir <archiv
   **Se lanza en el MISMO mensaje en que se manda**, con `--despertar 5 --cada 30`: el 15/10/2026 se
   mandó sin vigilancia y la falla la vio Fak (*"el software no te despertó nunca?"*). `--apply` lo
   recuerda en el renglón que sigue a «ORDEN DE IMPRIMIR MANDADA».
-  `--seguir <carpeta> [--fotos-en 41,44]`. Deja `seguimiento.log` y fotos de la cámara (capa 1,
-  las capas pedidas, una cada 15 min y la final). Sale con 0 = terminó, 1 = falló o se canceló,
-  2 = en pausa o con alarma, 3 = 15 minutos sin avanzar. **Después de mandar una impresión se
-  lanza siempre**, con las capas donde cambia de color (salen de `quien_imprime_que.py`).
+  `--seguir <carpeta> [--fotos-en 41,44]`. Deja `seguimiento.log` (fecha y hora con zona),
+  `estado_seguimiento.json` (el reloj de «quieta» y el trabajo, para la próxima relanzada) y fotos de la
+  cámara (capa 1, las capas pedidas, una cada 15 min y la final). Una sola conexión que queda abierta.
+  **Después de mandar una impresión se lanza siempre**, con las capas donde cambia de color (salen de
+  `quien_imprime_que.py`). Qué hacer con cada salida: tabla de §1 ter.
+- **Los frenos de `--imprimir`** (16/10/2026; todos se controlan ANTES de subir; sin `--apply` se muestran):
+  - **Gramos por rollo**: lo que pide el archivo contra lo que queda según el registro, con margen
+    `max(30 g, 15 %)` → «NO SE MANDA: no alcanza el negro (pide 78 g, quedan ~19 g, margen 30 g)». Con menos de
+    100 g avisa «pesalo». **De noche** (termina después de las 20:45) con menos de 100 g y sin un rollo de
+    respaldo igual cargado: frena. Un rollo igual cargado en otro lugar suma, con el aviso de prender «AMS
+    Filament Backup» en la pantalla. Los números son una propuesta sin fuente (H2 §2.5): se ajustan con las
+    pesadas. **`--sin-margen` lo saltea SOLO con la frase de Fak en el chat.**
+  - **El negro va siempre con respaldo** (Fak, 16/10): si no hay un segundo negro PLA Lite cargado, avisa (de
+    día no frena). Entre dos rollos iguales elige **el más gastado** y lo dice: así el viejo se termina primero.
+  - **Placa ocupada**: con la impresora en FINISH o FAILED no manda hasta que alguien anote que sacó las piezas
+    (`registro.py --placa-libre`). Con IDLE pasa (alguien tocó la pantalla) y lo dice.
+  - **Pieza de más de 3 h o que termina después de las 20:45: no sale sin `<archivo>.ok`** al lado del
+    `.gcode.3mf`, con la frase textual de Fak y la fecha. Lo escribe la sesión cuando Fak dio el sí sabiendo el
+    tiempo y la hora de fin; un `.ok` más viejo que el laminado no sirve (13/10: el «esperá a Fak» vivía solo en
+    el chat, se compactó y el molde salió sin que lo viera).
+  - Ocupada (RUNNING, PREPARE, PAUSE), varias placas, material o color distintos: como antes.
+- **Al mandar**: sube con progreso cada 15 s, **relee el estado justo antes de la orden** (otra PC pudo mandar en
+  los ~2 min de subida), anota «enviada» **antes** de la orden («sin confirmar») y la pasa a «confirmada» cuando la
+  impresora contesta; vuelve apenas arranca (no espera 150 s fijos) y a los 2 min avisa la trampa de la etapa 77.
+  El aviso trae paredes, relleno, capas, borde, soportes, «la primera capa empieza en 6-16 min» y **«termina a las
+  HH:MM»** (estimado × 1,02: en 9 impresiones el real quedó entre −7 % y +2,3 %); de noche, «la cámara no ve».
+- **La ficha de cada pieza**: `ficha.json` en la carpeta del `.gcode.3mf` (nombre = las palabras de Fak del
+  archivo, archivo vigente, ajustes, gramos y minutos estimados, cada envío con su chip). `--seguir` y
+  `--cancelar` la completan (resultado, minutos reales, foto final). `--ficha <carpeta>` la muestra. El campo
+  «descartado» (y por qué) lo escribe la sesión a mano: así no se vuelve a mandar el pin equivocado (14 y 15/10).
 - `--foto <archivo.jpg>`: una foto de la cámara (puerto 6000). `--pausar`, `--reanudar`,
   `--cancelar` (los tres probados el 13/10/2026; `--imprimir` frena si la impresora está ocupada, con rollos elegidos a mano o solos).
+  **`--cancelar` cierra en el registro EL trabajo que la impresora informa** (por número y nombre) como
+  «cancelada» con su avance y su capa; si no está anotado, queda como «visto»: nunca se cierra uno ajeno.
 - **Durante la impresión** (probado el 13/10/2026 sobre una pieza real, Fak lo vio en la pantalla):
   `--velocidad` muestra el modo y `--velocidad 1|2|3|4` lo cambia (1 silencioso, 2 estándar,
   3 deportivo = 124 % en la pantalla, 4 el más rápido); `--luz on|off`. Cada orden se confirma
@@ -74,7 +117,12 @@ python .claude/skills/impresion-3d-bambu/scripts/bambu_red.py --imprimir <archiv
   terminaron). Un objeto por color se asigna al laminar con `--parte-filamento "obj:<nombre>=N"`.
 - **Pausar y reanudar: probados** en esa misma prueba (PAUSE a los 3 s, RUNNING al reanudar).
 - `--avisar-retiro` (en segundo plano): sale cuando la placa baja de 35 °C con la impresión
-  terminada; tarda unos 15 min desde 55 °C. Probado dos veces.
+  terminada; tarda unos 15 min desde 55 °C. Probado dos veces. Si no encuentra la impresora sale con 12 (antes
+  daba 45 minutos de «sin respuesta» y salía con 1).
+- **Ningún comando termina en un error de Python**: cada falla sale en un renglón en castellano con su salida
+  (12 = no la encuentro, 13 = rechazó el código de acceso, 130 = Ctrl+C). `--selftest` revisa una PC (Bambu
+  Studio y los perfiles, Pillow, `.venv-cad`, el registro escribible, el archivo de datos sin mostrar el código,
+  el detector y la versión). `--version`.
 - **La prueba general del 13/10** (32 min, 10 g, 12 cambios de color): elección de rollos, envío,
   registro, pausa, salteo y avisos, todo bien; tiempo real 32,6 min contra 32 estimados.
 - Etapas que parecen un cuelgue y no lo son (arranque oficial de la A2L, ~10 min antes de la
@@ -90,8 +138,17 @@ python .claude/skills/impresion-3d-bambu/scripts/bambu_red.py --imprimir <archiv
   simulando una PC sin archivo propio. Si no encuentra ninguna, dice qué hacer. Requisitos del
   compañero: Bambu Studio instalado, la carpeta de Ingeniería sincronizada y el mismo wifi que la
   impresora. **El código de acceso no va al repo (es público), ni a esta skill, ni a la memoria.**
-  Lo escribe Fak: `--pedir-codigo` le abre una ventanita. Si la IP cambia (la da el router), se
-  corrige ahí. El número de serie sale del certificado de la impresora (`--preparar <ip>`).
+  Lo escribe Fak: `--pedir-codigo` le abre una ventanita. El número de serie sale del certificado de
+  la impresora (`--preparar <ip>`, que **no pisa** un archivo que ya existe).
+- **La IP del archivo es una pista, no un dato** (16/10/2026: el 15/10 a las 23:31 la impresora pasó de .198 a
+  .111 y el programa no la volvió a ver). Si no contesta, **la busca por su número de serie** (`ubicar()`): la
+  dirección del archivo, las que anotaron las otras PC en el registro, el anuncio de la red (puertos 1990/2021),
+  la MAC si el archivo la trae y el recorrido de la red en el 8883. Cada candidato se comprueba con el
+  certificado (CN = serie) **antes** de mandarle el código. Encontrada: corrige **solo la copia de esta PC**
+  (con respaldo `.antes-<fecha>`) o, en una PC que lee los datos de la nube, deja una pista local sin el código;
+  **el `bambu-a2l.json` de la nube no se toca desde cada PC** (copias en conflicto de OneDrive). Imprime «la
+  impresora cambió a X; archivo corregido» y lo anota en el registro. No la encuentra: salida 12 con qué mirar.
+  El certificado se comprueba en CADA conexión (tope TLS 1.2): en una dirección con otra Bambu no se manda nada.
 - **Mandar a imprimir es una acción física: se manda cuando Fak lo pide y está cerca de la
   impresora** (placa vacía y limpia). Cancelar: orden `stop` por MQTT (probada) o el cuadrado
   rojo de la pantalla.
@@ -116,17 +173,30 @@ Fak, 13/10/2026: *"normalmente imprimimos desde distintas PCs… ¿usar la nube 
 PC solo agrega renglones al suyo, así OneDrive no genera copias en conflicto) y el resumen junta
 los de todas.
 
-- `--imprimir … --apply` anota solo la impresión enviada (pieza, minutos estimados, gramos por
-  filamento y **el número de chip de cada rollo**); `--seguir` anota el final (terminada o fallida,
-  minutos reales, avance).
+- `--imprimir … --apply` anota la impresión **antes** de la orden (pieza, minutos estimados, gramos por
+  filamento, **el número de chip de cada rollo**, `task_id` y `subtask_name`) y la confirma cuando la impresora
+  contesta; `--seguir` y `--cancelar` cierran **ESE** trabajo (terminada, fallida o cancelada, minutos reales,
+  avance). Si terminó sin que nadie lo viera: «terminada» con `fin_visto` y los minutos en blanco. Cualquier
+  comando que se conecta lo concilia (una sola vez); lo que la impresora informa y no está anotado queda «visto».
 - `python .claude/skills/impresion-3d-bambu/scripts/registro.py --resumen`: horas de impresión,
-  gramos gastados y lo que queda de cada rollo (la impresora no lo informa; se descuenta por chip,
-  aunque cambien el rollo de lugar) y **qué mantenimiento toca** según la wiki de Bambu (eje Y cada
-  200 h, cuchilla cada 3 rollos, extrusor cada 5, tubos cada 6, eje X y ventiladores cada mes).
+  gramos gastados, lo que queda de cada rollo (con aviso de rollo bajo: menos de 100 g «pesalo», menos de 50 g
+  «solo piezas chicas de día o con respaldo»), estimado contra real, qué rollo hay en cada lugar según el último
+  `--estado`, y **qué mantenimiento toca** según la wiki de Bambu (eje Y cada 200 h, cuchilla cada 3 rollos,
+  extrusor cada 5, tubos cada 6, eje X y ventiladores cada mes).
   Un mantenimiento hecho se anota con `--anotar '{"tipo":"mantenimiento","que":"<el texto del resumen>"}'`.
-- **Antes de mandar una pieza se mira el resumen**: si a un rollo no le alcanzan los gramos, se avisa.
-- **Límite:** solo cuenta lo que se manda con la skill. Lo impreso directo desde Bambu Studio o
-  desde la pantalla no queda anotado.
+- **La impresora NO informa cuánto le queda a un rollo**: el 13/10 informó `remain = -1` y `tray_weight =
+  1000` (el peso nominal) en cada lugar, y el cargador de 4 de la A2L no tiene la opción de estimarlo. Es una
+  cuenta: **la balanza le gana**. `registro.py --pesar <lugar 1-4 o chip> <gramos en la balanza>` [`--tara <g>`]
+  anota la pesada y la cuenta sigue desde ahí. Tara sin medir: 250 g (tienda de Bambu; en el foro 208-260 g). El
+  primer carrete vacío que se pese queda como tara de la casa: `registro.py --tara <g>`.
+- `registro.py --placa-libre ["nota"]`: quien sacó las piezas lo anota; recién ahí `--imprimir --apply` manda.
+- `registro.py --validar`: rojo o amarillo por renglón (tipo desconocido, falta el trabajo, cierre antes del
+  envío, minutos que no cierran con las horas, «enviada» de más de 24 h sin cierre, gramos negativos); sale con 1
+  si hay rojos. Hoy marca la «cancelada» de 3 min del 15/10 07:06 para un trabajo mandado el día anterior.
+- Los renglones nuevos llevan fecha y hora con zona (`2026-10-16T13:20:05-03:00`); los viejos se siguen leyendo.
+- **Límite:** lo impreso directo desde Bambu Studio o desde la pantalla queda «visto» (sin gramos) solo si una
+  PC habla con la impresora mientras lo imprime. Eso NO es el camino de Leo de §2 bis: ahí el archivo lo manda el
+  asistente y se anota completo.
 
 ## 1 quinquies. La temperatura del lugar (idea de Fak, 13/10/2026)
 
@@ -154,13 +224,42 @@ Autorización suya, durable: **si veo una falla clara, la pauso yo** y le aviso.
 
 | Capa | Cada cuánto | Qué ve | Costo |
 |---|---|---|---|
-| El script lee el estado de la impresora | 60 s | lo que detecta la propia máquina: pausa, error, alarma (`hms`), 15 min sin avanzar. El arranque de la A2L deja prendidas la detección de «impresión en el aire» y la del cargador | nada |
+| El script lee el estado de la impresora | lo que manda la impresora (conexión abierta) | lo que detecta la propia máquina: pausa, error, alarma (`hms`), 15 min sin avanzar con la impresora contestando, sin conexión. El arranque de la A2L deja prendidas la detección de «impresión en el aire» y la del cargador | nada |
 | Yo miro una foto de la cámara | capa 1, capas 2-3, cada cambio de color y **cada 10 min** | pieza despegada, fideos, pegote en la boquilla, pieza corrida | un turno mío cada vez |
 
+**De noche la cámara no ve** (desde ~20:45 se apagan las luces de la planta; con la luz de la impresora
+prendida la foto sale casi negra igual, 15/10 22:05): **de noche se vigila solo el estado**. Una foto
+negra no es «se ve bien».
+
 **Cómo se corre:** `bambu_red.py --seguir <carpeta> --fotos-en <capas> --despertar 10` en segundo
-plano. Cuando sale con **código 10** hay una foto `*_REVISION.jpg` nueva: la abro con Read, la
-juzgo y **relanzo el mismo comando**. Con 0/1/2/3 no se relanza: terminó, falló, quedó en pausa o
-se quedó quieta, y se le avisa a Fak con la foto.
+plano. Qué hacer con cada salida:
+
+| Salida | Qué pasó | Qué hago |
+|---|---|---|
+| **10** | pasaron los minutos de `--despertar` | abro la foto `*_REVISION.jpg` con Read, la juzgo y **relanzo el mismo comando**. Si dice «sin foto nueva: la cámara no contestó», no hay nada que juzgar: relanzo |
+| 0 | terminó | aviso a Fak con la foto; `--avisar-retiro` en segundo plano |
+| 1 | falló, la cancelaron, o «el trabajo ya no está» | aviso a Fak con la foto y el texto |
+| 2 | pausa o alarma | aviso a Fak con la foto y el texto. Si es **pausa del cargador** (fin de rollo o enredo): «cargá un rollo igual en el lugar N y tocá reanudar». Después relanzo con `--en-pausa` (mira cada 5 min sin volver a avisar, hasta que vuelva a imprimir, termine o quede libre) |
+| 3 | 15 min sin avanzar **con la impresora contestando** | foto y aviso a Fak |
+| 11 | alarma del detector | miro la foto y aplico la regla de abajo |
+| **12** | sin conexión (ya la buscó por su serie y no está) | aviso **una vez** («se perdió la conexión a las HH:MM; la impresión no depende de la PC») y relanzo **`--seguir <carpeta> --buscar`**: prueba cada 2 min y solo sale cuando la encuentra (y sigue vigilando con su estado) o a la hora de fin + 1 h. **Nunca un `ping` a una dirección fija** |
+| 13 | rechazó el código de acceso dos veces | aviso: «cambió el código o se apagó el modo desarrollador: Ajustes > Solo LAN». El código lo escribe Fak (`--pedir-codigo`) |
+| **14** | terminó mientras no la veía | foto, el registro ya quedó cerrado; aviso «terminó; no la vi terminar: revisá que no se haya despegado nada» |
+| 15 | ya hay otra vigilancia en esa carpeta | no lanzo otra |
+
+4 y 5 no se usan: son las del latido de la casa. Si la impresora vuelve en **pausa** con el mismo trabajo,
+la salida 2 dice «posible corte de luz: mirá la pantalla; si ofrece reanudar, mirá la pieza antes». Reanudar
+después de un corte lo decide una persona mirando la pieza, no la sesión. Qué hacer en la planta: el runbook
+`reference/runbook-impresora.md` (una carilla para Leo y Paulo). Lo esencial:
+
+- **«La impresora no contesta»**: que alguien mire la pantalla (prendida; imprimiendo, pausa o finalizada). Si
+  imprime, se la deja: no depende de la PC. Ajustes > WLAN (wifi `barack_Oficinas_PA`, 2,4 GHz; ahí está su
+  dirección) y Ajustes > Solo LAN (Solo LAN y modo desarrollador prendidos).
+- **«Volvió la luz»**: si ofrece reanudar, primero se mira la pieza (pegada → reanudar; movida → cancelar). Si
+  dice «Impresión finalizada», foto de la pantalla antes de tocar «Ok». Si está en el inicio sin preguntar
+  nada, la impresión se perdió: no se manda otra hasta sacar lo que quedó (y anotar `--placa-libre`).
+- La causa de fondo del 15/10 es que el router le dio otra dirección: el pedido de una reserva de dirección
+  para la MAC `90:E5:B1:D9:6D:F0` es de Fak (Sistemas o el proveedor del router).
 
 **De dónde sale el intervalo (buscado el 13/10/2026; no hay un número oficial para una persona):**
 - Bambu (wiki «Spaghetti detection», series X1/H2): la impresora toma un cuadro cada T segundos,
@@ -200,8 +299,15 @@ por rollos. **Se lee antes de contestar cualquier cosa sobre la impresora.** Lo 
   (Fak, 13/10/2026): si una primera capa falla, esto va antes que tocar el modelo o el laminado.
 - La pieza se saca con la placa a temperatura ambiente, flexionando la chapa.
 - **La A2L no detecta enredos por cámara.** Detecta sola pegote en la boquilla, impresión en el
-  aire y filamento trabado, y pausa; el control fijo de pegote termina a los 10 mm de altura. De
-  ahí para arriba, la cámara es lo único que mira.
+  aire y filamento trabado; el control fijo de pegote termina a los 10 mm de altura. De ahí para
+  arriba, la cámara es lo único que mira. **Con el cargador, ante un enredo primero retrae y vuelve a
+  cargar UNA vez por impresión; recién la segunda vez da error y pausa**
+  (`a2l/manual/air-printing-and-filament-tangle-detection`). La impresión en el aire corta, retrae y pausa.
+- **Fin de rollo**: el cargador avisa que se terminó y pausa; con «AMS Filament Backup» prendido (pantalla,
+  Ajustes > Opciones AMS) pasa solo a otro lugar con un rollo de **la misma marca, tipo, color y temperatura**
+  (wiki `a2l/manual/screen-operation` y `ams-lite/manual/intro-ams-lite`). Si el respaldo está prendido no se
+  sabe por la red: se mira en la pantalla. El código exacto de la A2L para fin de rollo **falta saberlo**:
+  `--seguir` lo anota tal cual la primera vez que pase (sacar también una foto de la pantalla).
 
 **Regla para frenar (copiada de los detectores: una sola imagen no alcanza):**
 1. Si una foto muestra algo raro, **saco otra a los 60-90 s** (`--foto`). Si las dos muestran lo
@@ -219,7 +325,7 @@ grabado. «No vi nada raro» no es «salió bien»: eso lo dice la pieza en la m
 
 ```bash
 python .claude/skills/impresion-3d-bambu/scripts/laminar_bambu.py <pieza.3mf> <carpeta NUEVA> \
-    --filamento "Bambu PLA Basic" --filamento "Bambu PLA Basic" \
+    --filamento "Bambu PLA Lite" --filamento "Bambu PLA Lite" \
     --color "#F4D31F" --color "#000000" \
     --parte-filamento "1=2" --parte-filamento "2=1"
 ```
@@ -244,8 +350,11 @@ cortes (molde de probetas, 13/10/2026): 5 paredes, 25 % de relleno, 6 capas arri
 
 **Antes de mandar, el tiempo se le dice a Fak si la impresión no termina con gente en la planta.**
 Un «dale, mandala» dado sin saber cuánto tarda no cubre una impresión que queda sola de noche:
-se lamina, se le muestra tiempo, gramos, hora en que termina y el aviso de ambiente, y decide él
-(13/10/2026: el molde terminaba pasada la medianoche con mínima de 12,8 °C; no se mandó).
+se lamina, se le muestra tiempo, gramos, hora en que termina y el aviso de ambiente, y decide él.
+Su sí, con la frase textual y la fecha, va al `<archivo>.ok`: sin él `--apply` no manda una pieza de más de
+3 h o que termina después de las 20:45. (13/10/2026: el molde terminaba pasada la medianoche con mínima de
+12,8 °C; la decisión de esperar a Fak quedó solo en el chat, el contexto se compactó y se mandó a las 13:46
+sin que lo viera. Terminó bien a las 00:18.)
 
 **Un color solo en las capas de arriba de una zona** (marca, casillero, etiqueta): se parte la
 pieza en cuerpo + una tapa fina (0,8 mm = 4 capas) que es parte aparte, y cada una con su
@@ -265,6 +374,19 @@ y salen más placas (Leo: 1 placa sin soportes ni ajustes; 2 con soportes en ár
 
 **La carpeta de salida va con ruta relativa o absoluta**: el script la resuelve (13/10: con una
 relativa Bambu Studio escribía en otro lado y el laminado «fallaba» sin mensaje).
+
+## 2 bis. El camino de Leo: la placa armada en Bambu Studio (mail de Leo, 15/10/2026)
+
+Leo pidió tres cosas: un chequeo mínimo antes de mandar, poder armar él la placa en Bambu Studio (soportes,
+distribución, orientación por la dirección de la fibra) y seguir desarrollando. **Su camino es válido:**
+1. Él arma y lamina la placa en Bambu Studio y exporta el `.gcode.3mf` («Exportar archivo de placa laminada»).
+   Material y placa: los de §5 (PLA Lite, Textured PEI).
+2. Se lo pasa al asistente (la ruta del archivo). El asistente corre `bambu_red.py --imprimir <archivo>` **sin
+   `--apply`**: ese es el chequeo mínimo (material y color contra lo cargado, gramos contra lo que queda,
+   placa libre, varias placas, hora de fin, dibujo de la primera capa). Se le muestra y se manda con su sí
+   (`--apply`), con la vigilancia en el mismo mensaje. Queda en el registro y en la ficha igual que lo demás.
+3. **El criterio de orientación por fibra queda pendiente para la tanda 11** (ficha de ingeniería de producto):
+   no se inventa; mientras tanto la orientación la decide quien arma la placa.
 
 ## 3. Las tres trampas (las tres dieron "Success" con un código que no servía)
 
@@ -322,4 +444,15 @@ destapó la trampa 2.
 | `reporte_laminado.py` | En qué se va el tiempo y el material de un laminado (paredes, relleno, cambios de color) |
 | `video_impresion.py` | Un video corto con las fotos de `--seguir` |
 | `quien_imprime_que.py` | Qué filamento imprime cada capa: el control de los colores (la miniatura del archivo no sirve) |
-| `registro.py` | Horas, gramos por rollo y mantenimiento que toca, sumando lo que anotó cada PC |
+| `registro.py` | Horas, gramos por rollo (con pesadas), placa libre, validar y mantenimiento que toca, sumando lo que anotó cada PC |
+| `../tests/` | La impresora de juguete y los casos T1-T18 del plan del 16/10 (`docs/PLAN_IMPRESORA_2026-10-16.md`). Sin la impresora real y sin tocar el registro real: `python -m unittest discover -s .claude/skills/impresion-3d-bambu/tests` (~3 min) |
+
+## 7. Lo que falta ver con la impresora real
+
+- Con el archivo de datos apuntando a una IP falsa, `--estado` la encuentra y corrige; con una serie falsa,
+  «no la encuentro». (Las pruebas de juguete lo cubren; falta en la red de la planta.)
+- Si la A2L contesta el anuncio de la red (M-SEARCH) y en qué puerto; si escuchar el 2021 hace aparecer el cartel
+  del firewall de Windows para Python (no es fatal: la búsqueda sigue con la MAC y el recorrido).
+- La pausa por fin de rollo: el código de la A2L se anota la primera vez que pase, con una foto de la pantalla.
+- El respaldo automático en modo solo LAN y con dos rollos de chip distinto: una prueba corta de día, mirando.
+- Si después de un corte de luz la A2L vuelve en pausa (lo dice un programa de la comunidad para otras Bambu).
