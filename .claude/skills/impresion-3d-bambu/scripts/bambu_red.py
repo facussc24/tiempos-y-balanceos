@@ -631,9 +631,9 @@ def cerrar_en_registro(est, v):
         if not abiertas:
             return
         e = abiertas[-1]
-        t0 = datetime.datetime.strptime(e["cuando"], "%Y-%m-%d %H:%M:%S")
+        t0 = registro.fecha(e["cuando"])
         registro.anotar({"tipo": "terminada" if est == "FINISH" else "fallida", "trabajo_id": e["trabajo_id"],
-                         "minutos_reales": round((datetime.datetime.now() - t0).total_seconds() / 60, 1),
+                         "minutos_reales": round((registro.ahora() - t0).total_seconds() / 60, 1),
                          "avance_pct": v.get("mc_percent", 100 if est == "FINISH" else 0),
                          "capa": v.get("layer_num"), "error": v.get("print_error")})
     except BaseException as ex:
