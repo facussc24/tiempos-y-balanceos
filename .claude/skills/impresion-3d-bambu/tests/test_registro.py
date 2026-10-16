@@ -1,6 +1,8 @@
 """Tests de registro.py (T13, T16 y lo que usa bambu_red.py). Todo en una carpeta temporal."""
 import json
+import os
 import re
+import time
 import unittest
 from datetime import datetime, timedelta
 
@@ -139,8 +141,9 @@ class Rollos(unittest.TestCase):
         self.reg = _base.apuntar(self.tmp, "registro_2026-10-16")
 
     def test_negro_de_hoy(self):
-        # 1000 - lo descontado del registro de hoy (canceladas y fallidas por su avance): 46,76 g
-        self.assertAlmostEqual(registro.gramos_restantes(self.NEGRO), 46.76, places=1)
+        # 1000 - lo descontado del registro de hoy (canceladas y fallidas por su avance, o por sus capas si dicen mas:
+        # pines20 se cancelo en la capa 8 de 79, que es mas que su 10 %): 46,71 g
+        self.assertAlmostEqual(registro.gramos_restantes(self.NEGRO), 46.71, places=1)
 
     def test_pesar_cuenta_desde_la_pesada(self):
         registro.ULTIMO_ESTADO.write_text(json.dumps({"ams": {"ams": [{"id": "16", "tray": [
@@ -261,6 +264,17 @@ class RolloSinChip(unittest.TestCase):
         self.assertAlmostEqual(registro.gramos_restantes("SIN-CHIP-L4"), 975.0)
         nuevo = [e for e in registro.leer() if e["tipo"] == "rollo cargado"][0]
         self.assertEqual((nuevo["lugar"], nuevo["gramos"], nuevo["nota"]), (4, 1000.0, "lo dijo Fak"))
+
+    def test_por_lugar_con_un_estado_viejo_avisa_y_con_uno_nuevo_no(self):
+        r, out, _ = _base.correr(registro._main, ["registro.py", "--pesar", "2", "800"])
+        self.assertIn("según el --estado de las", out)
+        self.assertNotIn("OJO", out)
+        viejo = time.time() - 1800
+        os.utime(registro.ULTIMO_ESTADO, (viejo, viejo))
+        r, out, _ = _base.correr(registro._main, ["registro.py", "--rollo-nuevo", "4"])
+        self.assertIn("corré bambu_red.py --estado y anotalo de nuevo", out)
+        r, out, _ = _base.correr(registro._main, ["registro.py", "--pesar", "6EACADA000000100", "800"])
+        self.assertNotIn("--estado", out)                                   # por chip no depende del estado
 
 
 class LineaDeComandos(unittest.TestCase):

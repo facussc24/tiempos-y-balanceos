@@ -219,9 +219,9 @@ def confirmar(trabajo_id, **campos):
 
 def visto_ya(subtask_name, task_id=None, ev=None):
     ev = leer() if ev is None else ev
-    return any(e.get("tipo") == "visto" and (e.get("subtask_name") == subtask_name
-                                              or (task_id not in (None, "", "0") and str(e.get("task_id")) == str(task_id)))
-               for e in ev)
+    if task_id not in (None, "", "0"):           # con numero, el «visto» es de ESE trabajo (no de otro con el mismo nombre)
+        return any(e.get("tipo") == "visto" and str(e.get("task_id")) == str(task_id) for e in ev)
+    return any(e.get("tipo") == "visto" and e.get("subtask_name") == subtask_name for e in ev)
 
 
 # ---------------- la red y la placa ----------------
@@ -230,14 +230,17 @@ def anotar_ip(ip, antes=None):
     return anotar({"tipo": "ip", "ip": ip, "serie_ok": True, "antes": antes})
 
 
-def ips_anotadas(ev=None):
-    """Las direcciones que anotaron todas las PC, la mas nueva primero, sin repetir."""
+def ips_anotadas(ev=None, tope=5):
+    """Las direcciones que anotaron todas las PC, la mas nueva primero, sin repetir y solo las bien escritas; las
+    `tope` mas nuevas (con 15 direcciones viejas, probarlas todas demoraba la busqueda ~30 s)."""
     ev = leer() if ev is None else ev
     out = []
     for e in reversed(ev):
-        if e.get("tipo") == "ip" and e.get("serie_ok") and e.get("ip") and e["ip"] not in out:
-            out.append(e["ip"])
-    return out
+        ip = e.get("ip")
+        if (e.get("tipo") == "ip" and e.get("serie_ok") and isinstance(ip, str)
+                and re.fullmatch(r"(?:\d{1,3}\.){3}\d{1,3}", ip) and ip not in out):
+            out.append(ip)
+    return out[:tope]
 
 
 def placa_libre(ev=None):
@@ -245,6 +248,16 @@ def placa_libre(ev=None):
     ev = leer() if ev is None else ev
     fs = [_clave_tiempo(e) for e in ev if e.get("tipo") == "placa_libre"]
     return max(fs) if fs else None
+
+
+FIN_MINIMO = 0.85      # un trabajo no termina antes del 85 % de su estimado: en 11 impresiones el real quedo entre -10,9 % y +2,3 %
+
+
+def fin_mas_temprano(env):
+    """Lo antes que pudo terminar un trabajo que nadie vio terminar: el envio + el 85 % del estimado. Un «placa libre»
+    anotado antes de eso no puede ser de ESTE trabajo (alguien lo anoto mientras imprimia: revision 16/10)."""
+    from datetime import timedelta
+    return _clave_tiempo(env) + timedelta(minutes=FIN_MINIMO * float(env.get("minutos_estimados") or 0))
 
 
 def ultimo_fin(ev=None):
@@ -264,7 +277,7 @@ def ultimo_fin(ev=None):
             if e.get("avance_pct") in (0, 0.0, "0") and e.get("capa") in (None, 0, "0", ""):
                 continue
             if e.get("fin_visto") and e.get("minutos_reales") is None and e.get("trabajo_id") in envios:
-                fs.append(_clave_tiempo(envios[e["trabajo_id"]]))
+                fs.append(min(fin_mas_temprano(envios[e["trabajo_id"]]), _clave_tiempo(e)))
             else:
                 fs.append(_clave_tiempo(e))
         elif e.get("tipo") == "visto" and e.get("estado") in ("FINISH", "FAILED"):
@@ -304,6 +317,12 @@ def _consumos(ev):
             frac = 0.0 if (e.get("estado") == "sin confirmar" and tid not in confirmadas) else 1.0
         else:
             frac = 1.0 if c["tipo"] == "terminada" else float(c.get("avance_pct") or 0) / 100
+            if c["tipo"] != "terminada" and c.get("capa") and c.get("capas"):
+                # el % que informa la impresora vale 0 durante toda la primera capa: con capas impresas, cuentan las capas
+                try:
+                    frac = max(frac, float(c["capa"]) / float(c["capas"]))
+                except (TypeError, ValueError, ZeroDivisionError):
+                    pass
         for fil in e.get("filamentos", []):
             g, chip = float(fil.get("gramos") or 0), fil.get("rollo") or "sin chip"
             cam = next((x for x in cambios.get(tid, []) if x.get("de_chip") == chip and x.get("capas")), None)
@@ -378,6 +397,25 @@ def _rollo_de(quien):
     if not rollo_:
         raise SystemExit(f"no se que rollo hay en el lugar {quien}: correr antes bambu_red.py --estado, o pasar el chip")
     return rollo_
+
+
+ESTADO_VIEJO_S = 600
+
+
+def de_que_estado(quien):
+    """Para --pesar y --rollo-nuevo por LUGAR: de que --estado salio el rollo. El lugar se resuelve con el ultimo
+    --estado de esta PC; si se cambio el rollo despues, la anotacion va al rollo viejo (revision 16/10): con un estado
+    de mas de 10 min lo dice, para volver a leerlo y anotarlo de nuevo."""
+    if not (str(quien).isdigit() and len(str(quien)) == 1):
+        return ""
+    try:
+        h = datetime.fromtimestamp(ULTIMO_ESTADO.stat().st_mtime).astimezone()
+    except OSError:
+        return ""
+    if (ahora() - h).total_seconds() > ESTADO_VIEJO_S:
+        return (f"\nOJO: el lugar {quien} sale del --estado de las {h:%H:%M}: si cambiaste el rollo después, corré "
+                f"bambu_red.py --estado y anotalo de nuevo")
+    return f" (lugar {quien} según el --estado de las {h:%H:%M})"
 
 
 def rollo_nuevo(quien, gramos=ROLLO_NOMINAL, nota=""):
@@ -552,7 +590,8 @@ def _main(argv):
     if len(argv) >= 3 and argv[1] == "--rollo-nuevo":
         g = float(argv[3].replace(",", ".")) if len(argv) >= 4 and argv[3][:1].isdigit() else ROLLO_NOMINAL
         e = rollo_nuevo(argv[2], g, " ".join(x for x in argv[3:] if not x[:1].isdigit()))
-        print(f"anotado: rollo nuevo {e['rollo']} con {e['gramos']:.0f} g (la cuenta arranca de aca)")
+        print(f"anotado: rollo nuevo {e['rollo']} con {e['gramos']:.0f} g (la cuenta arranca de aca)"
+              + de_que_estado(argv[2]))
         return 0
     if len(argv) >= 4 and argv[1] == "--pesar":
         if "--tara" in argv and argv.index("--tara") + 1 >= len(argv):
@@ -560,7 +599,7 @@ def _main(argv):
         tara = float(argv[argv.index("--tara") + 1]) if "--tara" in argv else None
         e = pesar(argv[2], float(argv[3].replace(",", ".")), tara)
         print(f"anotado: rollo {e['rollo'][:8]} con {e['gramos']:.0f} g netos (balanza {e['bruto']:.0f} g - tara "
-              f"{e['tara']:.0f} g{'' if e['tara_medida'] else ', sin medir'})")
+              f"{e['tara']:.0f} g{'' if e['tara_medida'] else ', sin medir'})" + de_que_estado(argv[2]))
         return 0
     if len(argv) >= 3 and argv[1] == "--tara":
         e = anotar({"tipo": "tara", "gramos": float(argv[2].replace(",", ".")),

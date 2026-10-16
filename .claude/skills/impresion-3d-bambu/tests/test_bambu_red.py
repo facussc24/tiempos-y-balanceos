@@ -583,6 +583,19 @@ class ClasificarVidaEInformes(unittest.TestCase):
         self.assertEqual(br.clasificar(lect, previo=previo, trabajo_cerrado=True), (None, "imprime y avanza"))
         self.assertEqual(br.clasificar(lect, previo=previo)[0], 1)           # sin cerrar: el trabajo ya no está
 
+    def test_en_pausa_la_misma_alarma_no_se_avisa_dos_veces_y_una_nueva_si(self):
+        hms = [{"attr": 0x0C000300, "code": 0x00010004}]
+        vig = br.Vigia(0.0)
+        vig.mensaje(0.0, {"gcode_state": "RUNNING", "subtask_name": "X", "task_id": "77", "hms": hms})
+        self.assertEqual(vig.evaluar(0.0)[0], 2)
+        previo = vig.estado()                                               # lo que guarda la vigilancia al salir
+        sigue = [(10.0, {"gcode_state": "RUNNING", "subtask_name": "X", "task_id": "77", "hms": hms})]
+        self.assertEqual(br.clasificar(sigue, previo=previo, en_pausa=True)[0], None)
+        self.assertEqual(br.clasificar(sigue, previo=previo)[0], 2)          # sin --en-pausa avisa
+        otra = [(10.0, {"gcode_state": "RUNNING", "subtask_name": "X", "task_id": "77",
+                        "hms": [{"attr": 0x07000100, "code": 0x00020001}]})]
+        self.assertEqual(br.clasificar(otra, previo=previo, en_pausa=True)[0], 2)
+
 
 class ConciliarAlConectar(ConJuguete):
 
@@ -626,7 +639,7 @@ class ConciliarAlConectar(ConJuguete):
 NEGRO, AMARILLO = "6EACADA000000100", "1C6E4ADF00000100"
 
 
-class Imprimir(ConJuguete):
+class _ImprimirBase(ConJuguete):
     """--imprimir: los frenos antes de mandar (T8, T8b, T8c, T10, T11, T17, T18). La subida por FTPS se reemplaza:
     la impresora de juguete no la simula; todo lo demas (estado, orden, respuesta) va por la red de prueba."""
 
@@ -661,6 +674,8 @@ class Imprimir(ConJuguete):
     def archivo(self, nombre="pieza", **kw):
         return _base.gcode_3mf(self.pieza / f"{nombre}.gcode.3mf", **kw)
 
+
+class Imprimir(_ImprimirBase):
     def test_T8_no_alcanza_el_rollo(self):
         self.quedan(NEGRO, 19)
         r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(78.0,))))
@@ -833,6 +848,232 @@ class Imprimir(ConJuguete):
         r, out, _ = self.correr("--imprimir", str(self.archivo(placas=2)))
         self.assertEqual(r, 1, out)
         self.assertIn("trae 2 placas", out)
+
+
+class RevisionImprimir(_ImprimirBase):
+    """Lo real de la lista «sin verificar» de la revision del 16/10 en --imprimir, en las dos direcciones."""
+
+    def test_1122_sin_estado_no_se_manda_a_ciegas(self):
+        self.jug.mudo = True
+        r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(5.0,))), "--mapa", "1", "--apply")
+        self.assertEqual(r, 12, out)
+        self.assertIn("no se manda nada a ciegas", out)
+        self.assertEqual(self.subidas, [])
+
+    def test_1210_sin_estado_justo_antes_de_la_orden_no_sale(self):
+        def subir_y_mudo(d, archivo, nombre):
+            self.jug.mudo = True
+            return Path(archivo).stat().st_size
+        br.subir = subir_y_mudo
+        r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(5.0,))), "--apply")
+        self.assertEqual(r, 12, out)
+        self.assertFalse(any((o.get("print") or {}).get("command") == "project_file" for o in self.jug.recibidos))
+
+    def test_1225_el_rollo_se_anota_del_estado_que_valido_el_freno(self):
+        def subir_y_sin_ams(d, archivo, nombre):
+            self.jug.estado.pop("ams")
+            return Path(archivo).stat().st_size
+        br.subir = subir_y_sin_ams
+        r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(5.0,))), "--apply")
+        self.assertEqual(r, 0, out)
+        env = [e for e in registro.leer() if e["tipo"] == "enviada"][0]
+        self.assertEqual(env["filamentos"][0]["rollo"], NEGRO)
+
+    def test_mapa_a_un_lugar_vacio_frena(self):
+        r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(5.0,))), "--mapa", "3")
+        self.assertEqual(r, 1, out)
+        self.assertIn("el lugar 4 no tiene ningún rollo", out)
+
+    def test_sin_cabecera_de_tiempo_usa_la_prediccion_y_si_no_hay_pide_el_ok(self):
+        archivo = self.archivo(minutos=240, gramos=(5.0,))
+        import zipfile
+        sin_tiempo = self.pieza / "sin_tiempo.gcode.3mf"
+        with zipfile.ZipFile(archivo) as zi, zipfile.ZipFile(sin_tiempo, "w") as zo:
+            for n in zi.namelist():
+                datos = zi.read(n)
+                if n.endswith("plate_1.gcode"):
+                    datos = datos.replace(b"total estimated time", b"tiempo borrado")
+                zo.writestr(n, datos)
+        self.assertEqual(br.ajustes_del_archivo(sin_tiempo)["minutos"], 240)      # de slice_info (prediction)
+        self.assertIn("pieza de más de 3 h", br.falta_ok_de_fak(sin_tiempo, 240, br._ahora()))
+        self.assertIn("no dice cuánto tarda", br.falta_ok_de_fak(sin_tiempo, None, br._ahora()))
+
+    def test_de_noche_tambien_de_madrugada(self):
+        from datetime import datetime, timedelta
+        dia = datetime(2026, 10, 16, 0, 0).astimezone()
+        self.assertTrue(br._de_noche(dia.replace(hour=1), dia.replace(hour=3)))          # de madrugada
+        self.assertTrue(br._de_noche(dia.replace(hour=20), dia.replace(hour=21)))
+        self.assertTrue(br._de_noche(dia.replace(hour=19), dia.replace(hour=19) + timedelta(hours=14)))  # al dia siguiente
+        self.assertFalse(br._de_noche(dia.replace(hour=10), dia.replace(hour=11)))
+        self.assertFalse(br._de_noche(dia.replace(hour=8, minute=20), dia.replace(hour=20, minute=40)))
+
+    def test_idle_con_un_trabajo_abierto_es_placa_ocupada(self):
+        self.jug.estado.update(gcode_state="IDLE")
+        registro.anotar({"tipo": "enviada", "trabajo_id": "perdido", "archivo": "perdido.gcode.3mf",
+                         "pieza": "perdido", "minutos_estimados": 60, "filamentos": []})
+        r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(5.0,))), "--apply")
+        self.assertEqual(r, 1, out)
+        self.assertIn("placa posiblemente ocupada", out)
+        time.sleep(1.1)
+        _base.correr(registro._main, ["registro.py", "--placa-libre", "saque lo que quedo"])
+        r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(5.0,))), "--apply")
+        self.assertEqual(r, 0, out)
+
+    def test_idle_sin_nada_abierto_pasa(self):
+        self.jug.estado.update(gcode_state="IDLE")
+        self.assertIsNone(br.placa_ocupada({"gcode_state": "IDLE"}))
+
+
+class RevisionPlacaYRegistro(unittest.TestCase):
+    """placa_ocupada y el registro: un placa libre de durante la impresion no libera la placa; una reimpresion desde la
+    pantalla queda «visto»; una cancelacion en 0 % con capas impresas cuenta sus gramos."""
+
+    def setUp(self):
+        self.tmp = _base.carpeta_nueva("rev_placa")
+        self.reg = _base.apuntar(self.tmp)
+
+    def _renglones(self, *rs):
+        with open(self.reg / "PC-A.jsonl", "a", encoding="utf-8") as f:
+            for r in rs:
+                f.write(json.dumps(r) + "\n")
+
+    def test_placa_libre_mientras_imprimia_no_libera(self):
+        self._renglones({"tipo": "enviada", "trabajo_id": "x1", "archivo": "x1.gcode.3mf", "minutos_estimados": 120,
+                         "cuando": "2026-10-16T10:00:00-03:00"},
+                        {"tipo": "placa_libre", "cuando": "2026-10-16T10:30:00-03:00"},
+                        {"tipo": "terminada", "trabajo_id": "x1", "minutos_reales": None,
+                         "fin_visto": "2026-10-16T12:40:00-03:00", "cuando": "2026-10-16T12:40:00-03:00"})
+        self.assertIsNotNone(br.placa_ocupada({"gcode_state": "FINISH"}))
+        self._renglones({"tipo": "placa_libre", "cuando": "2026-10-16T12:50:00-03:00"})
+        self.assertIsNone(br.placa_ocupada({"gcode_state": "FINISH"}))
+
+    def test_finish_de_un_trabajo_todavia_abierto_ocupa_la_placa(self):
+        self._renglones({"tipo": "placa_libre", "cuando": "2026-10-16T09:00:00-03:00"},
+                        {"tipo": "enviada", "trabajo_id": "p1", "archivo": "p1.gcode.3mf", "task_id": "4242",
+                         "cuando": "2026-10-16T11:00:00-03:00"})
+        self.assertIsNotNone(br.placa_ocupada({"gcode_state": "FINISH"}))
+
+    def test_reimpresion_desde_la_pantalla_queda_vista(self):
+        self._renglones({"tipo": "enviada", "trabajo_id": "pv", "archivo": "placa_v2.gcode.3mf",
+                         "cuando": "2026-10-16 12:49:42"},
+                        {"tipo": "terminada", "trabajo_id": "pv", "minutos_reales": 40.2, "cuando": "2026-10-16 13:29:54"})
+        v = {"gcode_state": "FINISH", "subtask_name": "placa_v2", "task_id": "1999999999"}
+        self.assertEqual(br.anotar_visto(v)["tipo"], "visto")
+        self.assertIsNone(br.anotar_visto(v))                                   # una sola vez
+        # al reves: si el trabajo anotado tiene ESE numero, no es una reimpresion
+        self._renglones({"tipo": "enviada", "trabajo_id": "q", "archivo": "q.gcode.3mf", "task_id": "77",
+                         "cuando": "2026-10-16 14:00:00"})
+        self.assertIsNone(br.anotar_visto({"gcode_state": "RUNNING", "subtask_name": "q", "task_id": "77"}))
+
+    def test_cancelada_en_cero_por_ciento_con_capas_cuenta_sus_gramos(self):
+        self._renglones({"tipo": "enviada", "trabajo_id": "c", "archivo": "c.gcode.3mf", "cuando": "2026-10-16 11:00:00",
+                         "filamentos": [{"rollo": "R", "gramos": 300.0}]},
+                        {"tipo": "cancelada", "trabajo_id": "c", "avance_pct": 0, "capa": 30, "capas": 300,
+                         "cuando": "2026-10-16 11:20:00"})
+        self.assertAlmostEqual(registro.gramos_restantes("R"), 970.0)
+
+    def test_ips_anotadas_solo_las_bien_escritas_y_las_5_mas_nuevas(self):
+        for i in range(8):
+            registro.anotar_ip(f"192.168.1.{100 + i}")
+        registro.anotar({"tipo": "ip", "ip": 12345, "serie_ok": True})
+        ips = registro.ips_anotadas()
+        self.assertEqual(ips, [f"192.168.1.{100 + i}" for i in (7, 6, 5, 4, 3)])
+
+
+class RevisionDatosYRed(unittest.TestCase):
+    def setUp(self):
+        self.tmp = _base.carpeta_nueva("rev_datos")
+        _base.apuntar(self.tmp)
+
+    def test_archivo_local_roto_usa_la_copia_de_la_nube(self):
+        (self.tmp / "claude" / "bambu-a2l.json").write_text("{", encoding="utf-8")
+        _base.escribir_datos(self.tmp, "127.0.0.1", donde="nube")
+        r, out, _ = _base.correr(br.cargar_datos)
+        self.assertEqual(r["serie"], SERIE)
+        self.assertIn("uso la otra copia", out)
+
+    def test_serie_en_minuscula_se_normaliza(self):
+        _base.escribir_datos(self.tmp, "127.0.0.1", serie=" " + SERIE.lower())
+        self.assertEqual(br.cargar_datos()["serie"], SERIE)
+
+    def test_escritura_entera_o_nada(self):
+        br._escribir_json(self.tmp / "x.json", {"a": 1})
+        self.assertEqual(json.loads((self.tmp / "x.json").read_text(encoding="utf-8")), {"a": 1})
+        self.assertFalse(list(self.tmp.glob("*.escribiendo")))
+
+    def test_la_direccion_que_confirma_el_anuncio_se_reintenta(self):
+        intentos = []
+        tls_real = br.tls
+
+        def tls_que_falla_una_vez(ip, puerto=None, timeout=8, serie=None):
+            intentos.append(ip)
+            if len(intentos) == 1:
+                raise br.SinConexion("no contesta (un corte de 3 s)")
+            return type("T", (), {"close": lambda self: None})()
+        anteriores = (br.tls, br._ips_por_anuncio, br._ips_por_mac, br._ips_de_la_red, br._pc_sin_red,
+                      os.environ.pop("BAMBU_BUSCAR_EN"))
+        br.tls, br._ips_por_anuncio = tls_que_falla_una_vez, lambda serie, segundos=None: ["10.9.9.9"]
+        br._ips_por_mac, br._ips_de_la_red, br._pc_sin_red = (lambda mac: []), (lambda probadas: []), (lambda: False)
+        try:
+            d = {"ip": "10.9.9.9", "serie": SERIE, "_origen": "prueba"}
+            self.assertEqual(br.ubicar(d, guardar=False), "10.9.9.9")
+        finally:
+            br.tls, br._ips_por_anuncio, br._ips_por_mac, br._ips_de_la_red, br._pc_sin_red = anteriores[:5]
+            os.environ["BAMBU_BUSCAR_EN"] = anteriores[5]
+        self.assertEqual(intentos, ["10.9.9.9", "10.9.9.9"])
+
+
+class RevisionPreparar(ConJuguete):
+    serie_juguete = "router"                       # un equipo cuyo certificado no trae una serie de Bambu
+
+    def test_preparar_sin_serie_no_escribe(self):
+        (self.tmp / "claude" / "bambu-a2l.json").unlink()
+        r, out, _ = self.correr("--preparar", "127.0.0.1")
+        self.assertEqual(r, 12, out)
+        self.assertIn("no trae un número de serie", out)
+        self.assertFalse((self.tmp / "claude" / "bambu-a2l.json").exists())
+
+
+class RevisionSeguirArranque(_SeguirBase):
+    """--seguir lanzado en el mismo mensaje que el envio, con la impresora todavia en el FINISH de la pieza anterior."""
+
+    def _anterior_cerrada(self):
+        registro.anotar({"tipo": "enviada", "trabajo_id": "vieja", "archivo": "vieja.gcode.3mf", "subtask_name": "vieja",
+                         "task_id": "1", "filamentos": []})
+        registro.cerrar("vieja", "terminada", avance_pct=100)
+        self.jug.estado.update(gcode_state="FINISH", subtask_name="vieja", task_id="1")
+
+    def test_espera_que_arranque_la_nueva(self):
+        self._anterior_cerrada()
+        threading.Timer(3, self.jug.poner, kwargs={"gcode_state": "RUNNING", "subtask_name": "nueva",
+                                                   "task_id": "2"}).start()
+        threading.Timer(6, self.jug.poner, kwargs={"gcode_state": "FINISH"}).start()
+        r, out, err = self.seguir()
+        self.assertEqual(r, 0, out)
+        self.assertIn("espero que arranque la impresión nueva", out)
+
+    def test_si_no_arranca_ninguna_sale_con_1(self):
+        self._anterior_cerrada()
+        espera = br.ESPERA_ARRANQUE_S
+        br.ESPERA_ARRANQUE_S = 3
+        try:
+            r, out, err = self.seguir()
+        finally:
+            br.ESPERA_ARRANQUE_S = espera
+        self.assertEqual(r, 1, out)
+        self.assertIn("no arrancó ninguna impresión nueva", out)
+
+    def test_rollo_nuevo_en_el_mismo_lugar_reparte_los_gramos(self):
+        self.enviada("pieza_prueba", task_id="555", gramos=40.0)
+        self.jug.estado.update(layer_num=25, total_layer_num=100)
+        tray = [dict(t) for t in self.jug.estado["ams"]["ams"][0]["tray"]]
+        tray[1] = dict(tray[1], tag_uid="BBBBBBBB00000100")
+        threading.Timer(3, self.jug.poner, kwargs={"ams": {"tray_now": "1", "ams": [{"id": "16", "tray": tray}]}}).start()
+        threading.Timer(6, self.jug.poner, kwargs={"gcode_state": "FINISH"}).start()
+        r, out, err = self.seguir()
+        self.assertEqual(r, 0, out)
+        cambio = [x for x in registro.leer() if x["tipo"] == "cambio de rollo"]
+        self.assertEqual((cambio[0]["de_chip"], cambio[0]["a_chip"]), (NEGRO, "BBBBBBBB00000100"))
 
 
 class T9Cancelar(ConJuguete):
