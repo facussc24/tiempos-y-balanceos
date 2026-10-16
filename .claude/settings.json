@@ -155,5 +155,9 @@
   },
   "env": {
     "PYTHONIOENCODING": "utf-8"
+  },
+  "attribution": {
+    "commit": "",
+    "pr": ""
   }
 }
