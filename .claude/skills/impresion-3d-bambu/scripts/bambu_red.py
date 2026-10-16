@@ -952,12 +952,6 @@ def freno_gramos(archivo, mapa, est, minutos, inicio, restantes=None):
         iguales = [n for n, (pf, _, c) in lug.items()
                    if n != m and n not in usados and (pf, c) == (lug[m][0], lug[m][2]) and chips.get(n)]
         extra = sum(max(0.0, restantes(chips[n]) or 0) for n in iguales)
-        sin_chip_resp = [n for n in iguales if chips[n].startswith("SIN-CHIP")]
-        if sin_chip_resp:
-            # la wiki dice que el respaldo pasa a un rollo de la misma marca, tipo, color y temperatura; uno cargado a mano
-            # no informa la marca: que la impresora lo tome no se vio nunca (16/10/2026)
-            avisos.append(f"el respaldo del lugar {sin_chip_resp[0] + 1} no tiene chip ni marca: que la impresora pase "
-                          "sola a ese rollo NO está verificado (probarlo de día, mirando)")
         margen = max(MARGEN_G, MARGEN_PCT * pide)
         if quedan - pide < margen:
             if iguales and quedan + extra - pide >= margen:

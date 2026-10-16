@@ -241,13 +241,15 @@ def ultimo_fin(ev=None):
     - Cierre de un trabajo que termino sin que nadie lo viera (fin_visto, minutos en blanco): la hora real de fin no
       se sabe, solo que fue despues del envio; un placa_libre anotado despues del ENVIO cuenta (auditoria 16/10: Leo
       saca las piezas, lo anota, y la PC que concilia despues no puede volver a ocupar la placa).
-    - Un cierre con avance 0 (la orden no salio, la cancelaron antes de imprimir) no deja piezas: no cuenta."""
+    - Un cierre en el que no se imprimio NADA (la orden no salio, la cancelaron antes de la primera capa: avance 0 y
+      capa 0 o vacia) no deja piezas: no cuenta. Uno que fallo EN la primera capa (avance 0, capa 1) si: lo que se
+      despego queda en la placa (re-auditoria 16/10, TB5)."""
     ev = leer() if ev is None else ev
     envios = {e["trabajo_id"]: e for e in ev if e.get("tipo") == "enviada" and e.get("trabajo_id")}
     fs = []
     for e in ev:
         if e.get("tipo") in CIERRES:
-            if e.get("avance_pct") in (0, 0.0, "0"):
+            if e.get("avance_pct") in (0, 0.0, "0") and e.get("capa") in (None, 0, "0", ""):
                 continue
             if e.get("fin_visto") and e.get("minutos_reales") is None and e.get("trabajo_id") in envios:
                 fs.append(_clave_tiempo(envios[e["trabajo_id"]]))

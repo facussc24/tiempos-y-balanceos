@@ -230,6 +230,12 @@ class ArreglosDeLaAuditoria(unittest.TestCase):
             {"tipo": "cancelada", "trabajo_id": "Y", "avance_pct": 0, "cuando": "2026-10-16T10:05:00-03:00"}])
         self.assertIsNone(registro.ultimo_fin())
 
+    def test_TB5_lo_que_fallo_en_la_primera_capa_si_ocupa_la_placa(self):
+        anotar_a_mano(self.reg, "PC-A", [
+            {"tipo": "enviada", "trabajo_id": "W", "archivo": "w.gcode.3mf", "cuando": "2026-10-16T10:00:00-03:00"},
+            {"tipo": "fallida", "trabajo_id": "W", "avance_pct": 0, "capa": 1, "cuando": "2026-10-16T10:12:00-03:00"}])
+        self.assertIsNotNone(registro.ultimo_fin())
+
 
 class RolloSinChip(unittest.TestCase):
     """Fak, 16/10/2026: «si llega a fallar el chip deberíamos usarlo igual» y «te aclaro que es nuevo y listo»."""

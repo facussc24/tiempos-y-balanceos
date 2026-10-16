@@ -192,9 +192,8 @@ los de todas.
   primer carrete vacío que se pese queda como tara de la casa: `registro.py --tara <g>`.
 - **Rollo sin chip** (Fak, 16/10: *«si llega a fallar el chip deberíamos usarlo igual»*): un rollo cargado a mano en
   la pantalla no informa chip. Se usa igual: la cuenta va **por el lugar** (`SIN-CHIP-L4`), que anda mientras nadie
-  lo cambie de lugar, y cuenta como respaldo de uno igual (mismo perfil y color). **Que la impresora pase sola a un
-  rollo sin chip NO está verificado**: la wiki pide la misma marca, tipo, color y temperatura, y uno cargado a mano
-  no informa la marca; `--imprimir` lo avisa y se prueba de día, mirando. **Si es nuevo, no hace falta
+  lo cambie de lugar, y cuenta como respaldo de uno igual (mismo perfil y color): si Fak dice que es el mismo
+  rollo, es el mismo (16/10: *«ya te confirmé que es el mismo, dejá de dar vueltas»*). **Si es nuevo, no hace falta
   pesarlo**: `registro.py --rollo-nuevo <lugar>` lo anota con 1000 g (*«te aclaro que es nuevo y listo»*).
 - `registro.py --placa-libre ["nota"]`: quien sacó las piezas lo anota; recién ahí `--imprimir --apply` manda.
   Vale aunque se anote antes de que alguna PC vea el fin: cuenta todo «placa libre» posterior al envío.
