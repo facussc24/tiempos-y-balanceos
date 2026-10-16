@@ -12,7 +12,7 @@ grabado amarillo, 1 h 43 min contra 1 h 41 estimado), tres fichas de tres colore
 32) y el molde de probeta 50 x 50 (mandado 13:46, terminó 00:18: 632,9 min reales contra 649
 estimados). Lo que sigue sin verse: el detector ante una falla real.
 **16/10/2026 (tanda 17):** la búsqueda por número de serie, la vigilancia nueva (salidas 12/13/14) y los
-frenos de `--imprimir` están probados contra una impresora de juguete (136 tests en
+frenos de `--imprimir` están probados contra una impresora de juguete (137 tests en
 `tests/`, `python -m unittest discover -s .claude/skills/impresion-3d-bambu/tests`); con la impresora
 real, ver §7.
 
@@ -218,7 +218,9 @@ los de todas.
   la pantalla no informa chip. Se usa igual: la cuenta va **por el lugar** (`SIN-CHIP-L4`), que anda mientras nadie
   lo cambie de lugar, y cuenta como respaldo de uno igual (mismo perfil y color): si Fak dice que es el mismo
   rollo, es el mismo (16/10: *«ya te confirmé que es el mismo, dejá de dar vueltas»*). **Si es nuevo, no hace falta
-  pesarlo**: `registro.py --rollo-nuevo <lugar>` lo anota con 1000 g (*«te aclaro que es nuevo y listo»*).
+  pesarlo** (*«te aclaro que es nuevo y listo»*): cuando Fak dice «el del lugar N es nuevo», la sesión corre
+  `bambu_red.py --estado` y `registro.py --rollo-nuevo N "<su frase>"`, que lo anota con 1000 g. Se pesa solo si
+  hay duda. Desde ahí lo gastado antes en ese lugar no cuenta y `--imprimir` deja de pedir que se anote.
 - `registro.py --placa-libre ["nota"]`: quien sacó las piezas lo anota; recién ahí `--imprimir --apply` manda.
   Vale aunque se anote antes de que alguna PC vea el fin, pero no si se anotó mientras ESE trabajo imprimía:
   cuenta desde lo antes que pudo terminar (el envío + el 85 % de su estimado; en 11 impresiones ninguna tardó

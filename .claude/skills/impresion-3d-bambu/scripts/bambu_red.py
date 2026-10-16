@@ -991,8 +991,10 @@ def freno_gramos(archivo, mapa, est, minutos, inicio, restantes=None):
             fallas.append(f"el lugar {m + 1} no tiene ningún rollo según la impresora")
             continue
         if chip.startswith("SIN-CHIP"):
+            # una vez que Fak dijo «el del lugar N es nuevo» (o se peso) no se lo vuelve a pedir
+            anotado = registro.rollo(chip)["pesado"]
             avisos.append(f"el rollo del lugar {m + 1} no tiene chip: la cuenta va por el lugar (si lo cambian de lugar "
-                          f"se confunde); si es nuevo, registro.py --rollo-nuevo {m + 1}")
+                          "se confunde)" + ("" if anotado else f"; si es nuevo, registro.py --rollo-nuevo {m + 1}"))
         quedan = restantes(chip)
         # un rollo IGUAL (mismo perfil y color) en otro lugar que el trabajo no usa es respaldo, tenga chip o no: la
         # impresora lo toma si esta configurado en la pantalla (wiki a2l/manual/screen-operation, AMS Filament Backup)
@@ -1016,7 +1018,7 @@ def freno_gramos(archivo, mapa, est, minutos, inicio, restantes=None):
                           f"(registro.py --pesar {m + 1} <gramos de la balanza>)")
         if nombre == "negro" and not iguales:
             avisos.append("no hay un segundo negro igual cargado: el negro va siempre con respaldo (Fak, 16/10). "
-                          "De día no frena")
+                          "Solo avisa: no frena")
     return fallas, avisos
 
 

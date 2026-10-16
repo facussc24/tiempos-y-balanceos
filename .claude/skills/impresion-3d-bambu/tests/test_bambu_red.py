@@ -844,6 +844,27 @@ class Imprimir(_ImprimirBase):
         env = [e for e in registro.leer() if e["tipo"] == "enviada"][0]
         self.assertEqual(env["filamentos"][0]["rollo"], "SIN-CHIP-L4")
 
+    def test_el_del_lugar_4_es_nuevo(self):
+        """Fak, 16/10: «te aclaro que es nuevo y listo». Lo gastado antes en ese lugar no cuenta para el rollo nuevo,
+        y una vez anotado no se vuelve a pedir."""
+        self.respaldo_sin_chip_en_4()
+        registro.anotar({"tipo": "enviada", "trabajo_id": "viejo", "archivo": "viejo.gcode.3mf",
+                         "filamentos": [{"rollo": "SIN-CHIP-L4", "gramos": 900.0}]})
+        registro.anotar({"tipo": "confirmada", "trabajo_id": "viejo"})
+        registro.cerrar("viejo", "terminada", avance_pct=100)
+        archivo = self.archivo(gramos=(250.0,))
+        r, out, _ = self.correr("--imprimir", str(archivo), "--mapa", "3")
+        self.assertIn("no alcanza solo (pide 250 g, quedan ~100 g)", out)  # lo gastado antes en el lugar 4
+        self.assertIn("si es nuevo, registro.py --rollo-nuevo 4", out)
+        r, out, _ = self.correr("--estado")                                 # la sesion relee antes de anotarlo
+        r, out, _ = _base.correr(registro._main, ["registro.py", "--rollo-nuevo", "4", "el del lugar 4 es nuevo"])
+        self.assertIn("rollo nuevo SIN-CHIP-L4 con 1000 g", out)
+        r, out, _ = self.correr("--imprimir", str(archivo), "--mapa", "3")
+        self.assertEqual(r, 0, out)
+        self.assertNotIn("--rollo-nuevo", out)
+        self.assertNotIn("no alcanza solo", out)
+        self.assertAlmostEqual(registro.gramos_restantes("SIN-CHIP-L4"), 1000.0)
+
     def test_varias_placas_no_se_manda(self):
         r, out, _ = self.correr("--imprimir", str(self.archivo(placas=2)))
         self.assertEqual(r, 1, out)
