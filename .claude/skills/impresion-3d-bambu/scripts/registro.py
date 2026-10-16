@@ -300,8 +300,9 @@ def rollo(chip, ev=None):
             base, i0 = float(e["gramos"]), i
             desde = (f"pesado el {cuando:%d/%m %H:%M}: {base:.0f} g netos"
                      + ("" if e.get("tara_medida") else f" (tara sin medir, {e.get('tara')} g)"))
-        elif e.get("tipo") in ("rollo terminado", "rollo cargado") and (e.get("tipo") == "rollo terminado"
-                                                                       or e.get("gramos") is not None):
+        elif (e.get("tipo") == "rollo terminado" and e.get("confirmado") is not False) or (
+                e.get("tipo") == "rollo cargado" and e.get("gramos") is not None):
+            # una pausa del cargador que no se confirmo en la pantalla (puede ser un enredo) no pone el rollo en cero
             base, i0 = (0.0 if e.get("tipo") == "rollo terminado" else float(e["gramos"])), i
             desde = f"{e['tipo']} el {cuando:%d/%m %H:%M}"
     # se descuenta lo que se mando DESPUES de la pesada (por su lugar en el registro, no por el segundo)

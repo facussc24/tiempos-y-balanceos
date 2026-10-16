@@ -690,6 +690,7 @@ def estado():
     if not visto:
         print("no llego ningun informe: revisar el numero de serie del archivo de datos")
         return 1
+    conciliar(visto)
     for k in ("gcode_state", "mc_percent", "mc_remaining_time", "nozzle_temper", "bed_temper",
               "gcode_file", "subtask_name", "print_error", "wifi_signal", "nozzle_diameter"):
         if k in visto:
@@ -781,6 +782,17 @@ def lugares_del_cargador(estado_):
                 out[int(t["id"])] = (t.get("tray_info_idx", ""),
                                      t.get("tray_sub_brands") or t.get("tray_type", ""),
                                      "#" + (t.get("tray_color") or "")[:6].upper())
+    return out
+
+
+def chips_del_cargador(estado_):
+    """{lugar 0-3: numero de chip (tag_uid) del rollo} de lo que informa la impresora."""
+    out = {}
+    for unidad in (estado_.get("ams") or {}).get("ams", []):
+        for t in unidad.get("tray", []):
+            uid = t.get("tag_uid")
+            if uid and set(uid) != {"0"}:
+                out[int(t["id"])] = uid
     return out
 
 
@@ -982,7 +994,9 @@ def leer_estado(d, segundos=6):
     with Conexion(d) as c:
         c.leer(segundos, hasta=_informe_completo)
         d["_verificada"] = d.get("ip")
-        return c.visto
+        visto = c.visto
+    conciliar(visto)
+    return visto
 
 
 def orden_simple(comando):
@@ -1157,24 +1171,320 @@ def luz(modo):
     return 0 if ahora.get("chamber_light") == modo else 1
 
 
-def cerrar_en_registro(est, v):
-    """Anota el final de la ultima impresion enviada que no tenga cierre (tiempo real y avance)."""
+# ---------------- el registro contra lo que informa la impresora ----------------
+def anotar_visto(v):
+    """Un trabajo que la impresora informa y que no esta en el registro (lo mandaron desde Bambu Studio, la
+    pantalla u otra skill) queda como «visto», una sola vez. Nunca se cierra un trabajo ajeno por descarte."""
+    import registro
+    est, nombre, tid = v.get("gcode_state"), v.get("subtask_name"), v.get("task_id")
+    if not nombre or est not in ("RUNNING", "PREPARE", "PAUSE", "FINISH", "FAILED"):
+        return None
+    ev = registro.leer()
+    if registro.trabajo_de(nombre, tid, solo_abiertas=False, ev=ev) or registro.visto_ya(nombre, tid, ev):
+        return None
+    return registro.anotar({"tipo": "visto", "subtask_name": nombre, "task_id": tid, "estado": est,
+                            "capa": v.get("layer_num"), "capas": v.get("total_layer_num"),
+                            "avance_pct": v.get("mc_percent"),
+                            "nota": "la impresora lo informa y no tiene renglon «enviada»: se mando desde Bambu Studio, "
+                                    "la pantalla u otra skill (sus gramos no se descuentan)"})
+
+
+def cerrar_trabajo(v, tipo, trabajo=None, visto_terminar=False, nota=""):
+    """Cierra en el registro EL trabajo que informa la impresora (por task_id y nombre), no «el ultimo abierto».
+    Si no lo encuentra, no cierra nada: lo anota como «visto». Devuelve (renglon de cierre, renglon enviada)."""
+    import registro
+    nombre = (trabajo or {}).get("subtask_name") or v.get("subtask_name")
+    tid = (trabajo or {}).get("task_id") or v.get("task_id")
+    e = registro.trabajo_de(nombre, tid)
+    if e is None:
+        anotar_visto(dict(v, subtask_name=nombre, task_id=tid))
+        return None, None
+    campos = {"avance_pct": 100 if tipo == "terminada" else (trabajo or {}).get("ult_pct", v.get("mc_percent")),
+              "capa": (trabajo or {}).get("ult_capa", v.get("layer_num")), "capas": v.get("total_layer_num"),
+              "error": v.get("print_error")}
+    if visto_terminar:
+        t0 = registro.fecha(e.get("cuando"))
+        campos["minutos_reales"] = round((registro.ahora() - t0).total_seconds() / 60, 1) if t0 else None
+    else:
+        campos.update(minutos_reales=None, fin_visto=registro.ahora_iso())
+    if nota:
+        campos["nota"] = nota
+    return registro.cerrar(e["trabajo_id"], tipo, **campos), e
+
+
+def conciliar(v):
+    """En cada conexion de cualquier comando (idea de bambuddy, solo la idea): un trabajo del registro que la
+    impresora informa terminado o fallado sin que nadie lo viera se cierra por ESE trabajo, con la hora real de
+    fin desconocida; uno que imprime y no figura queda «visto». Idempotente; no corre si en esta PC hay una
+    vigilancia viva (ella lo cierra con los minutos reales)."""
+    est = v.get("gcode_state")
+    if not v.get("subtask_name") or _vigilancia_viva():
+        return None
     try:
-        import datetime
         import registro
-        ev = registro.leer()
-        cerradas = {e["trabajo_id"] for e in ev if e.get("tipo") in ("terminada", "fallida", "cancelada")}
-        abiertas = [e for e in ev if e.get("tipo") == "enviada" and e["trabajo_id"] not in cerradas]
-        if not abiertas:
-            return
-        e = abiertas[-1]
-        t0 = registro.fecha(e["cuando"])
-        registro.anotar({"tipo": "terminada" if est == "FINISH" else "fallida", "trabajo_id": e["trabajo_id"],
-                         "minutos_reales": round((registro.ahora() - t0).total_seconds() / 60, 1),
-                         "avance_pct": v.get("mc_percent", 100 if est == "FINISH" else 0),
-                         "capa": v.get("layer_num"), "error": v.get("print_error")})
+        if est in ("FINISH", "FAILED") and registro.trabajo_de(v.get("subtask_name"), v.get("task_id")):
+            r, e = cerrar_trabajo(v, "terminada" if est == "FINISH" else "fallida",
+                                  nota="lo vio terminado una PC al conectarse, sin vigilancia: hora real de fin desconocida")
+            if r:
+                print(f"  registro: cerré {e['trabajo_id']} como {r['tipo']} (la impresora lo informa {est}; "
+                      "la hora real de fin no se sabe)")
+            return r
+        return anotar_visto(v)
     except (Exception, SystemExit) as ex:
-        print("  (no se pudo cerrar en el registro:", type(ex).__name__, ex, ")")
+        print("  (no se pudo comparar con el registro:", type(ex).__name__, ex, ")")
+        return None
+
+
+# ---------------- vigilar: separar «sin conexion» de «quieta» (16/10/2026) ----------------
+# Anoche (15/10) la vigilancia leyo «sin conexion» como «quieta»: el reloj de 15 minutos no distinguia una lectura
+# vacia de una impresora frenada, y salio con 3. Ahora:
+#   sin conexion = un error de la conexion o 60 s sin ningun paquete de la impresora  -> 12 (una vez)
+#   quieta       = llegan informes y en 15 min no cambian estado, capa, etapa ni %     -> 3
+#   acceso       = la impresora rechaza el codigo DOS veces seguidas                     -> 13
+#   al volver    = FINISH del mismo trabajo -> 14; PAUSE -> 2 (posible corte); IDLE u otro trabajo -> 1
+SALIDA_TERMINO_SIN_VER, SALIDA_YA_VIGILADA = 14, 15
+QUIETA_S = 900
+SIN_MENSAJES_S = float(os.environ.get("BAMBU_SIN_MENSAJES_S") or 60)   # 60 s: ha-bambulab y bambuddy; las pruebas lo achican
+BUSCAR_CADA, EN_PAUSA_CADA, CANDADO_VENCE_S = 120, 300, 180
+
+
+def _hora(t):
+    return time.strftime("%H:%M", time.localtime(t)) if t else "?"
+
+
+def _iso(t=None):
+    import registro
+    return registro.ahora_iso() if t is None else registro.datetime.fromtimestamp(t).astimezone().isoformat(timespec="seconds")
+
+
+def fin_de_rollo(v):
+    """El codigo de la alarma si la pausa la pidio el cargador (fin de rollo o enredo): un HMS que empieza por 0700 o
+    1200, o un print_error 0700xxxx / 1200xxxx. El codigo exacto de fin de rollo de la A2L falta saberlo: se anota
+    tal cual la primera vez que pase, con la foto de la pantalla."""
+    for h in v.get("hms") or []:
+        try:
+            attr, code = int(h.get("attr", 0)), int(h.get("code", 0))
+        except (TypeError, ValueError, AttributeError):
+            continue
+        txt = f"{attr >> 16:04X}-{attr & 0xFFFF:04X}-{code >> 16:04X}-{code & 0xFFFF:04X}"
+        if txt[:4] in ("0700", "1200"):
+            return txt
+    try:
+        pe = int(v.get("print_error") or 0)
+    except (TypeError, ValueError):
+        pe = 0
+    txt = f"{pe:08X}"
+    return f"{txt[:4]}-{txt[4:]}" if pe and txt[:4] in ("0700", "1200") else None
+
+
+def _lugar_activo(v):
+    try:
+        n = int((v.get("ams") or {}).get("tray_now"))
+    except (TypeError, ValueError):
+        return None
+    return n if 0 <= n <= 3 else None
+
+
+class Vigia:
+    """Decide que pasa con la impresion a partir de lo que llega (o no llega) de la impresora. No toca la red: se le
+    pasan los informes (mensaje) y las fallas (falla), y evaluar() devuelve (salida, texto) o None. Asi se prueba
+    con lecturas guardadas (clasificar). `previo` es lo que guardo la corrida anterior en estado_seguimiento.json."""
+
+    def __init__(self, ahora_, previo=None, buscar=False, en_pausa=False):
+        p = previo or {}
+        self.inicio, self.buscar, self.en_pausa = ahora_, buscar, en_pausa
+        self.trabajo = p.get("trabajo")
+        self.ult_mensaje = p.get("ult_mensaje")
+        self.ult_corriendo = p.get("ult_corriendo")
+        self.desconectado_desde = p.get("desconectado_desde")
+        self.ult_clave = tuple(p["ult_clave"]) if p.get("ult_clave") else None
+        self.ult_avance = p.get("ult_avance")
+        # El reloj de «quieta» viene de la corrida anterior SOLO si esa corrida estaba viendo la impresora hace poco.
+        # Despues de una PC dormida o de un hueco sin conexion arranca de cero: no se sabe que paso mientras no se veia.
+        if not (self.ult_mensaje and ahora_ - self.ult_mensaje < 300) or self.desconectado_desde:
+            self.ult_avance = None
+        self.volvio = bool(self.desconectado_desde)
+        self.v, self.rechazos, self.motivo = {}, 0, p.get("motivo") or ""
+
+    def estado(self):
+        return {"trabajo": self.trabajo, "ult_mensaje": self.ult_mensaje, "ult_corriendo": self.ult_corriendo,
+                "desconectado_desde": self.desconectado_desde, "ult_clave": list(self.ult_clave) if self.ult_clave else None,
+                "ult_avance": self.ult_avance, "motivo": self.motivo}
+
+    def mensaje(self, t, v):
+        self.v, self.rechazos = v, 0
+        if self.desconectado_desde is not None:          # volvio despues de un hueco
+            self.volvio, self.desconectado_desde, self.ult_avance = True, None, None
+        self.ult_mensaje = t
+        est = v.get("gcode_state")
+        clave = (est, v.get("layer_num"), v.get("stg_cur"), v.get("mc_percent"))
+        if clave != self.ult_clave or self.ult_avance is None:
+            self.ult_clave, self.ult_avance = clave, t
+        if est in ("RUNNING", "PREPARE", "PAUSE") and v.get("subtask_name"):
+            if not self.trabajo or (not self.volvio and not self.mismo_trabajo(v)):
+                self.trabajo = {"subtask_name": v.get("subtask_name"), "task_id": v.get("task_id")}
+            if est != "PAUSE" or self.trabajo.get("ult_pct") is None:
+                self.trabajo["ult_pct"], self.trabajo["ult_capa"] = v.get("mc_percent"), v.get("layer_num")
+        if est in ("RUNNING", "PREPARE"):
+            self.ult_corriendo = t
+
+    def falla(self, t, tipo, motivo=""):
+        if tipo == "acceso":
+            self.rechazos += 1
+        self.motivo = motivo or self.motivo
+        if self.desconectado_desde is None:
+            self.desconectado_desde = self.ult_mensaje or t
+
+    def mismo_trabajo(self, v):
+        if not self.trabajo:
+            return False
+        tid = self.trabajo.get("task_id")
+        if tid not in (None, "", "0") and v.get("task_id") not in (None, "", "0"):
+            return str(v.get("task_id")) == str(tid)
+        return bool(v.get("subtask_name")) and v.get("subtask_name") == self.trabajo.get("subtask_name")
+
+    def evaluar(self, t):
+        if self.rechazos >= 2:                   # no al primer rechazo: ha-bambulab lo vio con la impresora apagada
+            return SALIDA_ACCESO, TEXTO_ACCESO
+        ult = self.ult_mensaje or self.inicio
+        if self.desconectado_desde is not None or t - ult >= SIN_MENSAJES_S:
+            if t - ult >= SIN_MENSAJES_S:
+                if self.desconectado_desde is None:
+                    self.desconectado_desde = ult
+                if not self.buscar:
+                    return SALIDA_SIN_CONEXION, (f"sin conexión con la impresora desde las {_hora(ult)}"
+                                                 + (f" ({self.motivo})" if self.motivo else "")
+                                                 + ". La impresión no depende de la PC: el archivo está en la tarjeta "
+                                                   "de la impresora")
+            return None
+        v = self.v
+        est = v.get("gcode_state")
+        if self.volvio:
+            self.volvio = False
+            mismo = self.mismo_trabajo(v)
+            if est == "FINISH" and mismo:
+                return SALIDA_TERMINO_SIN_VER, "terminó; no la vi terminar: revisá que no se haya despegado nada"
+            if est == "PAUSE" and mismo:
+                return 2, ("volvió en pausa con el mismo trabajo, posible corte de luz: mirá la pantalla; "
+                           "si ofrece reanudar, mirá la pieza antes")
+            if self.trabajo and (est in ("IDLE", "FAILED") or not mismo):
+                return 1, "el trabajo ya no está: probable corte sin reanudar, o alguien lo canceló"
+        if est == "FINISH":
+            return 0, "terminó"
+        if est == "FAILED":
+            return 1, "falló o la cancelaron"
+        if est == "PAUSE":
+            if self.en_pausa:
+                return None
+            cod = fin_de_rollo(v)
+            if cod:
+                lug = _lugar_activo(v)
+                return 2, (f"pausa del cargador (código {cod}): si la pantalla dice que se terminó el filamento, "
+                           f"cargá un rollo igual en el lugar {lug + 1 if lug is not None else '?'} y tocá reanudar; "
+                           "si dice enredo, destrabalo antes")
+            return 2, "en pausa: mirá la pantalla"
+        if v.get("hms") or v.get("print_error"):
+            return 2, f"alarma de la impresora (error {v.get('print_error')}, hms {v.get('hms')})"
+        if est == "IDLE" and self.ult_corriendo:
+            return 1, "el trabajo ya no está (la impresora quedó libre sin terminar): alguien lo canceló en la pantalla"
+        if self.ult_avance is not None and t - self.ult_avance > QUIETA_S:
+            return 3, (f"15 minutos sin avanzar con la impresora contestando ({est}, etapa {v.get('stg_cur')}, "
+                       f"capa {v.get('layer_num')})")
+        return None
+
+
+def clasificar(lecturas, buscar=False, previo=None, en_pausa=False):
+    """Lecturas guardadas [(t, informe | None | 'acceso')] -> (salida, texto) de la primera decision, o
+    (None, texto) si la impresion sigue. None = esa vuelta no hubo informe (sin conexion); 'acceso' = la
+    impresora rechazo el codigo. Es la misma regla que usa --seguir."""
+    if not lecturas:
+        return None, "sin lecturas"
+    vig, visto = Vigia(lecturas[0][0], previo, buscar=buscar, en_pausa=en_pausa), {}
+    for t, x in lecturas:
+        if x is None:
+            vig.falla(t, "red")
+        elif x == "acceso":
+            vig.falla(t, "acceso")
+        else:
+            vig.mensaje(t, fusionar(visto, x))
+        r = vig.evaluar(t)
+        if r:
+            return r
+    return None, "imprime y avanza"
+
+
+def _pid_vivo(pid):
+    """Sin os.kill(pid, 0): en Windows esa llamada TERMINA el proceso."""
+    try:
+        pid = int(pid)
+    except (TypeError, ValueError):
+        return False
+    if os.name == "nt":
+        import ctypes
+        k = ctypes.windll.kernel32
+        h = k.OpenProcess(0x1000, False, pid)            # PROCESS_QUERY_LIMITED_INFORMATION
+        if not h:
+            return False
+        try:
+            codigo = ctypes.c_ulong()
+            return bool(k.GetExitCodeProcess(h, ctypes.byref(codigo))) and codigo.value == 259   # STILL_ACTIVE
+        finally:
+            k.CloseHandle(h)
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+class YaVigilada(FallaImpresora):
+    salida = SALIDA_YA_VIGILADA
+
+
+def _candado_vivo(ruta):
+    try:
+        c = json.loads(Path(ruta).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if (c.get("pid") != os.getpid() and _pid_vivo(c.get("pid"))
+            and time.time() - float(c.get("refrescado") or 0) < CANDADO_VENCE_S):
+        return c
+    return None
+
+
+def _vigilancia_viva():
+    """Otra vigilancia viva en esta PC (ella cierra el registro: los demas comandos no concilian)."""
+    return _candado_vivo(DATOS.with_name("bambu-a2l-vigilancia.json")) is not None
+
+
+class Candado:
+    """<carpeta>/vigilancia.pid: una sola vigilancia por carpeta. Se refresca en cada vuelta; el de un proceso
+    muerto, o sin refrescar hace mas de 3 minutos (numero de proceso reusado), no cuenta."""
+
+    def __init__(self, carpeta):
+        self.ruta = Path(carpeta) / "vigilancia.pid"
+        self.global_ = DATOS.with_name("bambu-a2l-vigilancia.json")
+        otro = _candado_vivo(self.ruta)
+        if otro:
+            raise YaVigilada(f"ya hay una vigilancia (PID {otro.get('pid')}) sobre esta carpeta: {carpeta}. "
+                             "No se lanza otra.")
+        self.refrescar()
+
+    def refrescar(self):
+        dato = {"pid": os.getpid(), "refrescado": time.time(), "carpeta": str(self.ruta.parent)}
+        for r in (self.ruta, self.global_):
+            try:
+                _escribir_json(r, dato)
+            except (OSError, FallaImpresora):
+                pass
+
+    def soltar(self):
+        for r in (self.ruta, self.global_):
+            try:
+                if json.loads(r.read_text(encoding="utf-8")).get("pid") == os.getpid():
+                    r.unlink()
+            except (OSError, ValueError):
+                pass
 
 
 PY_DETECTOR = Path(r"C:\Dev\_printguard\.venv\Scripts\python.exe")
@@ -1187,12 +1497,12 @@ SEGUIDAS = 3
 UMBRAL_DETECTOR = 0.45                # distancia a "pieza sana"; sana medida el 13/10/2026: 0,23 a 0,27
 
 
-def medir_foto(ruta):
+def medir_foto(ruta, d=None):
     """Saca una foto y devuelve las distancias del detector ({'success':..,'failure':..}) o None."""
     import subprocess
     try:
         ruta.parent.mkdir(parents=True, exist_ok=True)
-        foto(str(ruta))
+        foto(str(ruta), d)
         r = subprocess.run([str(PY_DETECTOR), str(Path(__file__).with_name("detector_fallas.py")),
                             str(ruta), "--recorte", RECORTE_PLACA], capture_output=True, text=True, timeout=60)
         m = re.search(r"\{.*\}", r.stdout.splitlines()[-1]) if r.stdout.strip() else None
@@ -1201,20 +1511,85 @@ def medir_foto(ruta):
         return None
 
 
-def seguir(carpeta, cada=60, fotos_en=(), despertar_min=0, detector=False, solo_medir=False):
-    """Vigila la impresion hasta que termina. SOLO LEE (estado + camara).
+def seguir(carpeta, cada=60, fotos_en=(), despertar_min=0, detector=False, solo_medir=False, buscar=False,
+           en_pausa=False):
+    """Vigila la impresion hasta que termina. SOLO LEE (estado + camara), con UNA conexion que queda abierta.
 
-    Sale con 0 si termino bien (FINISH), 1 si fallo o se cancelo (FAILED), 2 si quedo en pausa
-    o con una alarma (hms / print_error), 3 si dejo de avanzar 15 minutos. Deja en <carpeta>
-    seguimiento.log y fotos: capa 1, las capas pedidas, una cada 15 minutos y la final.
+    Salidas: 0 termino bien · 1 fallo, se cancelo o el trabajo ya no esta · 2 pausa o alarma (con su texto: posible
+    corte de luz, fin de rollo) · 3 quince minutos sin avanzar CON la impresora contestando · 10 «mira esta foto y
+    relanzame» (--despertar) · 11 alarma del detector · 12 sin conexion (antes de salir la busca; si esta en otra
+    direccion corrige y sigue) · 13 rechazo el codigo dos veces seguidas · 14 termino mientras no la veia ·
+    15 ya hay otra vigilancia sobre esa carpeta. 4 y 5 no se usan (son del latido de la casa).
+    --buscar: despues de un 12, prueba ubicar() cada 2 min y solo sale cuando la encuentra (y sigue vigilando) o a la
+    hora estimada de fin + 1 h. --en-pausa: con la impresora en pausa no sale; mira cada 5 min hasta que vuelva.
+    Deja en <carpeta> seguimiento.log (fecha y hora con zona), estado_seguimiento.json (el reloj de «quieta» y el
+    trabajo, para la proxima relanzada) y fotos: capa 1, las capas pedidas, una cada 15 minutos y la final.
     """
     d = cargar_datos()
     carpeta = Path(carpeta)
+    ruta_de_prueba_ok(carpeta)
     carpeta.mkdir(parents=True, exist_ok=True)
+    candado = Candado(carpeta)
+    try:
+        return _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_medir, buscar, en_pausa)
+    finally:
+        candado.soltar()
+
+
+def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_medir, buscar, en_pausa):
+    import registro
+    ruta_estado = carpeta / "estado_seguimiento.json"
+    try:
+        previo = json.loads(ruta_estado.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        previo = {}
+    vig = Vigia(time.time(), previo, buscar=buscar, en_pausa=en_pausa)
+    extra = {k: previo.get(k) for k in ("sin_camara_desde", "tray_now", "fin_estimado", "rollo_anotado")}
     log = open(carpeta / "seguimiento.log", "a", encoding="utf-8")
-    hechas, ult_foto, ult_avance, ult_clave = set(), 0.0, time.time(), None
+    hechas, ult_foto = set(), 0.0
     t0 = time.time()
     historial = []
+    con, ult_busqueda, enviada = None, 0.0, {}
+
+    def anotar_log(linea):
+        print(linea, flush=True)
+        log.write(linea + "\n")
+        log.flush()
+
+    def guardar():
+        try:
+            _escribir_json(ruta_estado, {**vig.estado(), **extra, "guardado": _iso()})
+        except (OSError, FallaImpresora) as e:
+            print("  (no se pudo guardar el estado de la vigilancia:", e, ")")
+
+    def sacar(nombre):
+        """Una foto; devuelve la ruta o None. La camara que no contesta se anota UNA vez, no en cada vuelta."""
+        if con is None:
+            return None
+        ruta = carpeta / f"{time.strftime('%H%M')}_{nombre}.jpg"
+        try:
+            with open(os.devnull, "w") as nada:
+                import contextlib
+                with contextlib.redirect_stdout(nada):
+                    ok = foto(str(ruta), d) == 0
+        except (Exception, SystemExit):
+            ok = False
+        if ok:
+            if extra.get("sin_camara_desde"):
+                anotar_log(f"{_iso()} la cámara volvió a contestar")
+                extra["sin_camara_desde"] = None
+            return ruta
+        if not extra.get("sin_camara_desde"):
+            extra["sin_camara_desde"] = time.time()
+            anotar_log(f"{_iso()} sin cámara desde las {_hora(time.time())} (la vigilancia sigue con el estado)")
+        return None
+
+    def trabajo_del_registro():
+        """El renglon «enviada» del trabajo que se vigila (para el reparto de gramos), o {}."""
+        if not enviada and vig.trabajo:
+            e = registro.trabajo_de(vig.trabajo.get("subtask_name"), vig.trabajo.get("task_id"))
+            enviada.update(e or {"_no_esta": True})
+        return {} if enviada.get("_no_esta") else enviada
     # El seguimiento se relanza cada pocos minutos: las lecturas validas anteriores se recuperan del
     # log, o la base y la regla de "tres seguidas" arrancarian de cero en cada relanzada y la alarma
     # no podria saltar nunca (visto el 13/10/2026 en la prueba de las tres fichas).
@@ -1230,88 +1605,193 @@ def seguir(carpeta, cada=60, fotos_en=(), despertar_min=0, detector=False, solo_
         except ValueError:
             pass
 
-    def sacar(nombre):
-        try:
-            foto(str(carpeta / f"{time.strftime('%H%M')}_{nombre}.jpg"))
-        except BaseException as e:               # la camara no puede tirar abajo el seguimiento
-            print("  (sin foto:", type(e).__name__, ")")
+    def cambio_de_rollo(v):
+        """Si a mitad de la impresion la impresora paso a un lugar que el trabajo no usa con el mismo material y
+        color (el respaldo automatico), se anota con la capa: al cerrar, los gramos se reparten entre los dos chips."""
+        nuevo, viejo = _lugar_activo(v), extra.get("tray_now")
+        extra["tray_now"] = nuevo if nuevo is not None else viejo
+        if nuevo is None or viejo is None or nuevo == viejo or v.get("gcode_state") != "RUNNING":
+            return
+        e = trabajo_del_registro()
+        usados = {int(f.get("lugar")) - 1 for f in e.get("filamentos", []) if f.get("lugar")}
+        lug = lugares_del_cargador(v)
+        if not e or nuevo in usados or viejo not in usados or lug.get(nuevo, ("", "", ""))[::2] != lug.get(viejo, ("", "", ""))[::2]:
+            return                                  # un cambio de color normal del trabajo, o algo que no se entiende
+        chips = chips_del_cargador(v)
+        registro.anotar({"tipo": "cambio de rollo", "trabajo_id": e["trabajo_id"], "de_lugar": viejo + 1,
+                         "a_lugar": nuevo + 1, "de_chip": chips.get(viejo), "a_chip": chips.get(nuevo),
+                         "capa": v.get("layer_num"), "capas": v.get("total_layer_num"),
+                         "nota": "el respaldo automatico paso al rollo igual; reparto estimado por capas"})
+        anotar_log(f"{_iso()} cambio de rollo: del lugar {viejo + 1} al {nuevo + 1} en la capa {v.get('layer_num')}")
 
-    while True:
+    def detector_linea(v):
+        """El filtro barato (sin tokens): una foto por vuelta pasada por el modelo de PrintGuard. Devuelve
+        (texto para la linea, True si hay alarma)."""
+        dd = medir_foto(carpeta / "por_minuto" / f"{time.strftime('%H%M%S')}.jpg", d)
+        # Una foto sacada durante un cambio de filamento NO cuenta: la cama se va para atras y la escena cambia
+        # (13/10/2026: notas de 23, 32 y 54 sobre 100 con la pieza sana, las tres en cambios de color). Se relee el
+        # estado justo despues de la foto: si antes o despues la impresora no estaba imprimiendo (etapa distinta de
+        # 0), la lectura se anota y se descarta. Solo la etapa: sumar ams_status y tray_tar no separa (263 aparece con
+        # la pieza sana a la vista y 768 con la cama corrida); queda en la linea para seguir juntando datos.
         try:
-            v = leer_estado(d)
-        except BaseException as e:
-            v = {}
-            print(time.strftime("%H:%M:%S"), "sin respuesta de la impresora:", type(e).__name__)
-        est, capa, tot = v.get("gcode_state"), v.get("layer_num"), v.get("total_layer_num")
-        linea = (f"{time.strftime('%H:%M:%S')} {est} etapa {v.get('stg_cur')} capa {capa}/{tot} "
-                 f"{v.get('mc_percent')} % faltan {v.get('mc_remaining_time')} min "
-                 f"filamento {(v.get('ams') or {}).get('tray_now')} error {v.get('print_error')} hms {v.get('hms')}")
-        # filtro barato (sin tokens): una foto por vuelta pasada por el modelo de PrintGuard
-        if detector and est == "RUNNING":
-            dd = medir_foto(carpeta / "por_minuto" / f"{time.strftime('%H%M%S')}.jpg")
-            # Una foto sacada durante un cambio de filamento NO cuenta: la cama se va para atras y la
-            # escena cambia (13/10/2026: notas de 23, 32 y 54 sobre 100 con la pieza sana, las tres en
-            # cambios de color). Se relee el estado justo despues de la foto: si antes o despues la
-            # impresora no estaba imprimiendo (etapa distinta de 0), la lectura se anota y se descarta.
-            def cambiando(e_):
-                """True si la impresora esta en un cambio de filamento (aunque la etapa diga 0)."""
-                a_ = e_.get("ams") or {}
-                # Solo la etapa. Se probo sumar lo que informa el cargador (ams_status, tray_tar) y no
-                # separa: 263 aparece con la pieza sana a la vista y 768 con la cama corrida. Queda
-                # anotado en la linea para seguir juntando datos.
-                return e_.get("stg_cur") != 0 or a_ is None
+            con.leer(3)
+            v2 = dict(con.visto)
+        except SinConexion:
+            v2 = {"stg_cur": None}
+        despues = v2.get("stg_cur")
+        txt = (f" [ams {v.get('ams_status')}/{v2.get('ams_status')} "
+               f"obj {(v.get('ams') or {}).get('tray_tar')}/{(v2.get('ams') or {}).get('tray_tar')}]")
+        if dd and (v.get("stg_cur") != 0 or despues != 0):
+            return txt + (f" | detector exito {dd['success']:.3f} falla {dd['failure']:.3f} "
+                          f"(NO CUENTA: etapa {v.get('stg_cur')}->{despues})"), False
+        if not dd:
+            return txt, False
+        historial.append(dd["success"])
+        base = sorted(historial[:8])[len(historial[:8]) // 2]       # mediana de las primeras 8
+        alarma = (not solo_medir and len(historial) >= 9
+                  and all(x > max(UMBRAL_DETECTOR, base * 1.8) for x in historial[-SEGUIDAS:]))
+        return txt + f" | detector exito {dd['success']:.3f} falla {dd['failure']:.3f}", alarma
+
+    def terminar(salida, texto):
+        """Lo que se hace al salir: foto, registro y el renglon final del log."""
+        v = vig.v
+        if salida in (0, SALIDA_TERMINO_SIN_VER):
+            sacar("FINAL")
+            visto = salida == 0 and bool(vig.ult_corriendo) and time.time() - vig.ult_corriendo < max(180, 3 * cada)
+            r, _ = cerrar_trabajo(v, "terminada", vig.trabajo, visto_terminar=visto,
+                                  nota="" if visto else "terminó mientras no se veía: hora real de fin desconocida")
+        elif salida == 1:
+            sacar("FALLO")
+            if vig.trabajo:
+                cerrar_trabajo(v, "fallida", vig.trabajo, visto_terminar=bool(vig.ult_corriendo), nota=texto)
+        elif salida == 2:
+            sacar("ALARMA")
+            cod = fin_de_rollo(v)
+            lug = _lugar_activo(v)
+            if cod and extra.get("rollo_anotado") != cod:
+                extra["rollo_anotado"] = cod
+                registro.anotar({"tipo": "rollo terminado", "rollo": chips_del_cargador(v).get(lug),
+                                 "lugar": None if lug is None else lug + 1, "codigo": cod, "confirmado": False,
+                                 "trabajo_id": (trabajo_del_registro() or {}).get("trabajo_id"),
+                                 "nota": "pausa del cargador: fin de rollo o enredo; confirmarlo en la pantalla "
+                                         "(el codigo de la A2L se anota tal cual la primera vez)"})
+        elif salida == 3:
+            sacar("QUIETA")
+        anotar_log(f"{_iso()} SALIDA {salida}: {texto}")
+        return salida
+
+    def linea_de(v):
+        return (f"{_iso()} {v.get('gcode_state')} etapa {v.get('stg_cur')} capa {v.get('layer_num')}/"
+                f"{v.get('total_layer_num')} {v.get('mc_percent')} % faltan {v.get('mc_remaining_time')} min "
+                f"filamento {(v.get('ams') or {}).get('tray_now')} error {v.get('print_error')} hms {v.get('hms')}")
+
+    def _vuelta():
+        nonlocal con, ult_busqueda, ult_foto
+        candado.refrescar()
+        ahora_ = time.time()
+        if con is None:
             try:
-                v2 = leer_estado(d, 3)
-                despues = v2.get("stg_cur")
-            except BaseException:
-                v2, despues = {"stg_cur": None}, None
-            linea += (f" [ams {v.get('ams_status')}/{v2.get('ams_status')} "
-                      f"obj {(v.get('ams') or {}).get('tray_tar')}/{(v2.get('ams') or {}).get('tray_tar')}]")
-            if dd and (cambiando(v) or cambiando(v2)):
-                linea += (f" | detector exito {dd['success']:.3f} falla {dd['failure']:.3f} "
-                          f"(NO CUENTA: etapa {v.get('stg_cur')}->{despues})")
-                dd = None
-            if dd:
-                linea += f" | detector exito {dd['success']:.3f} falla {dd['failure']:.3f}"
-                historial.append(dd["success"])
-                base = sorted(historial[:8])[len(historial[:8]) // 2]       # mediana de las primeras 8
-                # alarma: dos fotos seguidas con la distancia a "pieza sana" bien por encima de la base
-                if (not solo_medir and len(historial) >= 9
-                        and all(x > max(UMBRAL_DETECTOR, base * 1.8) for x in historial[-SEGUIDAS:])):
-                    print(linea, flush=True)
-                    log.write(linea + " | ALARMA DEL DETECTOR\n")
-                    log.flush()
-                    sacar("DETECTOR")
-                    return 11
-        print(linea, flush=True)
-        log.write(linea + "\n")
-        log.flush()
-        clave = (est, capa, v.get("stg_cur"), v.get("mc_percent"))
-        if clave != ult_clave:
-            ult_clave, ult_avance = clave, time.time()
+                if buscar and ahora_ - ult_busqueda >= BUSCAR_CADA and vig.desconectado_desde is not None:
+                    ult_busqueda = ahora_
+                    ubicar(d)
+                con = Conexion(d, buscar=False)
+            except AccesoRechazado as e:
+                vig.falla(ahora_, "acceso", "rechazó el código")
+            except SinConexion as e:
+                vig.falla(ahora_, "red", e.texto.rstrip("."))
+        if con is not None:
+            try:
+                espera = EN_PAUSA_CADA if (en_pausa and vig.v.get("gcode_state") == "PAUSE") else cada
+                # vuelve antes si llega el primer informe completo o si cambia el estado (termino, pausa, fallo)
+                con.leer(espera, hasta=lambda v_, p: (vig.ult_mensaje is None and _informe_completo(v_, p)) or (
+                    "gcode_state" in p and bool(vig.v) and p["gcode_state"] != vig.v.get("gcode_state")))
+                if con.visto and (vig.ult_mensaje is None or con.ult_paquete > vig.ult_mensaje):
+                    vig.mensaje(con.ult_paquete, dict(con.visto))
+            except SinConexion as e:
+                con.cerrar()
+                con = None
+                vig.falla(time.time(), "red", e.texto.rstrip("."))
+        else:
+            time.sleep(min(cada, 10))
+        t = time.time()
+        v = vig.v
+        r = vig.evaluar(t)
+        if r and r[0] == SALIDA_SIN_CONEXION:
+            # antes de salir con 12, se la busca: si esta en otra direccion se corrige y la vigilancia sigue
+            try:
+                ubicar(d)
+                if con is not None:
+                    con.cerrar()
+                con = Conexion(d, buscar=False)
+                anotar_log(f"{_iso()} la encontré en {d['ip']}: sigo vigilando")
+                return None
+            except AccesoRechazado:
+                vig.falla(time.time(), "acceso", "rechazó el código")
+            except SinConexion as e:
+                r = (r[0], r[1] + ". " + e.texto)
+        if con is None or vig.desconectado_desde is not None:
+            anotar_log(f"{_iso()} SIN CONEXION desde las {_hora(vig.desconectado_desde or vig.inicio)}"
+                       + (f" ({vig.motivo})" if vig.motivo else ""))
+            guardar()
+            if r:
+                return terminar(*r)
+            if buscar:
+                fin = extra.get("fin_estimado")
+                limite = (fin + 3600) if fin else (vig.inicio + 12 * 3600)
+                if t > limite:
+                    return terminar(SALIDA_SIN_CONEXION, "sigue sin aparecer y ya pasó la hora estimada de fin + 1 h: "
+                                                         "mirá la pantalla de la impresora")
+            return None
+        if v.get("gcode_state") == "RUNNING" and v.get("mc_remaining_time") is not None:
+            try:
+                extra["fin_estimado"] = t + float(v["mc_remaining_time"]) * 60
+            except (TypeError, ValueError):
+                pass
+        linea = linea_de(v)
+        alarma = False
+        if detector and v.get("gcode_state") == "RUNNING":
+            txt, alarma = detector_linea(v)
+            linea += txt
+        anotar_log(linea + (" | ALARMA DEL DETECTOR" if alarma else ""))
+        if alarma:
+            sacar("DETECTOR")
+            guardar()
+            return 11
+        if not vig.trabajo or not vig.trabajo.get("_visto"):
+            anotar_visto(v)
+            if vig.trabajo:
+                vig.trabajo["_visto"] = True
+        cambio_de_rollo(v)
+        capa = v.get("layer_num")
         if isinstance(capa, int):
             for c in (1,) + tuple(fotos_en):
                 if capa >= c and c not in hechas:
                     hechas.add(c)
                     sacar(f"capa{c:03d}")
                     ult_foto = time.time()
-        if time.time() - ult_foto > 900 and est == "RUNNING":
+        if time.time() - ult_foto > 900 and v.get("gcode_state") == "RUNNING":
             sacar("avance")
             ult_foto = time.time()
-        if est in ("FINISH", "FAILED"):
-            sacar("FINAL" if est == "FINISH" else "FALLO")
-            cerrar_en_registro(est, v)
-            return 0 if est == "FINISH" else 1
-        if est == "PAUSE" or v.get("hms") or v.get("print_error"):
-            sacar("ALARMA")
-            return 2
-        if time.time() - ult_avance > 900:
-            sacar("QUIETA")
-            return 3
+        guardar()
+        if r:
+            return terminar(*r)
         if despertar_min and time.time() - t0 > despertar_min * 60:
-            sacar("REVISION")              # salida 10 = "mirá esta foto y relanzame"
+            ruta = sacar("REVISION")              # salida 10 = "mirá esta foto y relanzame"
+            anotar_log(f"{_iso()} SALIDA 10: " + (f"foto para revisar {ruta.name}" if ruta
+                                                  else "sin foto nueva: la cámara no contestó"))
             return 10
-        time.sleep(cada)
+        return None
+
+    try:
+        while True:
+            r = _vuelta()
+            if r is not None:
+                guardar()
+                return r
+    finally:
+        if con is not None:
+            con.cerrar()
+        log.close()
 
 
 def pedir_codigo():
@@ -1386,11 +1866,12 @@ def despachar(argv):
         return foto(argv[2])
     if a == "--seguir" and len(argv) >= 3:
         # --seguir <carpeta> [--fotos-en 41,44] [--despertar N] [--cada S] [--detector | --solo-medir]
+        #                    [--buscar] [--en-pausa]
         capas = tuple(_numeros(_valor(argv, "--fotos-en"), "--fotos-en")) if "--fotos-en" in argv else ()
         return seguir(argv[2], cada=_valor(argv, "--cada", int, 60), fotos_en=capas,
                       despertar_min=_valor(argv, "--despertar", int, 0),
                       detector="--detector" in argv or "--solo-medir" in argv,
-                      solo_medir="--solo-medir" in argv)
+                      solo_medir="--solo-medir" in argv, buscar="--buscar" in argv, en_pausa="--en-pausa" in argv)
     if a in ("--pausar", "--reanudar", "--cancelar"):
         return orden_simple({"--pausar": "pause", "--reanudar": "resume", "--cancelar": "stop"}[a])
     if a == "--imprimir" and len(argv) >= 3:
