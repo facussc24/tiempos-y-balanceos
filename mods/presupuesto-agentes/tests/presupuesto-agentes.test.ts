@@ -156,7 +156,7 @@ test('un .md de definicion no se deja abrir: no se niega a nadie por «sin defin
   expect(registro()).toMatch(/PERMITIR investigador .*peso=4 .*def=error :: 4\/40 puntos/)
 })
 
-test('con la definicion sin leer el cupo lleno frena igual', async ($, on) => {
+test('con la definicion sin leer el cupo lleno (5 h) frena igual', async ($, on) => {
   armar(on, { noSeLeen: [`${HOME}/.claude/agents/investigador.md`], cupo: LLENO })
   const r = await $.agent.spawn(lanzar('investigador', { model: 'sonnet' }))
   expect(String(r.deny)).toMatch(/Cupo real/)
@@ -185,16 +185,18 @@ test('cupo lleno (5 h al 91 %): un investigador se niega', async ($, on) => {
   expect(String(r.deny)).toMatch(/de 5 horas esta al 91 %/)
 })
 
-test('semana al 61 %: ni una busqueda en haiku sale', async ($, on) => {
-  armar(on, { cupo: [{ kind: 'five_hour', percentUsed: 5 }, { kind: 'seven_day', percentUsed: 61 }] })
+test('semana al 61 %: una busqueda en haiku SALE con el aviso del 60 % en el registro (16/10/2026, Fak 15/10: sin evidencia no hay freno por cupo semanal)', async ($, on) => {
+  const { registro } = armar(on, { cupo: [{ kind: 'five_hour', percentUsed: 5 }, { kind: 'seven_day', percentUsed: 61 }] })
   const r = await $.agent.spawn(lanzar('buscador'))
-  expect(String(r.deny)).toMatch(/semanal esta al 61 % \(tope 60 %\)/)
+  expect(r.deny).toBeUndefined()
+  expect(registro()).toMatch(/PERMITIR buscador .*AVISO Cupo real: la ventana semanal esta al 61 % \(aviso desde el 60 %\)/)
 })
 
-test('con ~/.claude/.agent-cupo-ok vigente el mismo lanzamiento pasa; con el archivo vencido no', async ($, on) => {
-  armar(on, { cupo: LLENO, escapes: { '.agent-cupo-ok': { mtimeMs: AHORA - 60_000 } } })
+test('con ~/.claude/.agent-cupo-ok vigente el mismo lanzamiento pasa, y sin aviso', async ($, on) => {
+  const { registro } = armar(on, { cupo: LLENO, escapes: { '.agent-cupo-ok': { mtimeMs: AHORA - 60_000 } } })
   const r = await $.agent.spawn(lanzar('investigador', { model: 'sonnet' }))
   expect(r.deny).toBeUndefined()
+  expect(registro()).not.toMatch(/AVISO Cupo real/)
 })
 
 test('~/.claude/.agent-cupo-ok de hace 13 horas ya no vale', async ($, on) => {

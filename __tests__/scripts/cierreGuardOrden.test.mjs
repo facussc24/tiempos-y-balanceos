@@ -9,7 +9,7 @@
  *   3. que NO hay freno nuevo: un cierre corto pasa igual, ordenado o no.
  */
 import { describe, it, expect } from 'vitest';
-import { evaluarOrdenCierre, evaluarPermiso, decidir, CANON } from '../../scripts/_lib/cierreGuard.mjs';
+import { evaluarOrdenCierre, evaluarPermiso, evaluarPropongo, decidir, CANON } from '../../scripts/_lib/cierreGuard.mjs';
 
 // Frases de cierres reales (sesion + donde estaban), medidas el 10/10/2026.
 const ENTERRADOS = [
@@ -180,6 +180,37 @@ describe('cierre-guard · el aviso de orden viaja en el chequeo 5 y NO agrega un
     const texto = `${relleno}\n\nQué necesito de vos: el número de HO.\n\nTodo commiteado y pusheado.`;
     const r = await decidir({ session_id: 's-orden', last_assistant_message: texto }, deps({ enCooldown: (sid, clave) => clave === 'largo' }));
     expect(r.ok).toBe(true);
+  });
+
+  describe('«Propongo: …» (tanda 1.2 del plan del sistema, 16/10/2026): aviso en el mismo freno, nunca un freno nuevo', () => {
+    it('informe largo SIN el renglon: el freno del chequeo 5 trae el aviso de Propongo', async () => {
+      const texto = `**Qué necesito de vos:** nada.\n\nQué cambió:\n\n${relleno}\n\nTodo commiteado y pusheado.`;
+      const r = await decidir({ session_id: 's-prop', last_assistant_message: texto }, deps());
+      expect(r.ok).toBe(false);
+      expect(r.detalle).toMatch(/ADEMAS, falta el ultimo renglon «Propongo/);
+      expect(evaluarPropongo(texto)).toEqual({ tiene: false, aviso: true });
+    });
+
+    it('informe largo CON «Propongo: nada» al final (o en negrita): el freno sale igual, sin ese aviso', async () => {
+      for (const cola of ['Propongo: nada.', '**Propongo:** probar `claude plugin eval` con el plugin en una carpeta chica (doc oficial).']) {
+        const texto = `De vos no necesito nada.\n\n${relleno}\n\nTodo commiteado y pusheado.\n\n${cola}`;
+        const r = await decidir({ session_id: 's-prop', last_assistant_message: texto }, deps());
+        expect(r.ok).toBe(false);
+        expect(r.detalle).not.toMatch(/falta el ultimo renglon «Propongo/);
+        expect(evaluarPropongo(texto).tiene).toBe(true);
+      }
+    });
+
+    it('SIN FRENO NUEVO: un cierre corto sin «Propongo» pasa (la conducta la maneja CLAUDE.md)', async () => {
+      const texto = 'De vos no necesito nada. Cambié la hoja 3 y quedó commiteado y pusheado.';
+      expect(evaluarPropongo(texto).aviso).toBe(true);
+      expect((await decidir({ session_id: 's-prop', last_assistant_message: texto }, deps())).ok).toBe(true);
+    });
+
+    it('«propongo» en medio de una frase no cuenta como el renglon', () => {
+      expect(evaluarPropongo('Lo que propongo: que lo mires mañana.').tiene).toBe(false);
+      expect(evaluarPropongo('Te propongo cerrar hoy.').tiene).toBe(false);
+    });
   });
 });
 

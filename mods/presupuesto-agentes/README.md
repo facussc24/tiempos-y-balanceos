@@ -3,7 +3,7 @@
 Mod de Claude Code (probado con la 2.1.293, Windows 11) que hace en `agent.spawn` lo mismo que `~/.claude/hooks/agentes-guard.sh` (regla `.claude/rules/techo-agentes.md`) y una cosa más: mira el **cupo real** del plan.
 
 - Pesa cada subagente por costo (haiku 1, sonnet 4, opus 8, fable 20) y suma la ventana de 10 min (40 puntos).
-- **Cupo real**: con la ventana de 5 h por encima de 85 % o la semanal por encima de 60 % no sale ningún subagente nuevo.
+- **Cupo real**: con la ventana de 5 h por encima de 85 % no sale ningún subagente nuevo (sigue frenando: 13 agentes cortados por el límite de sesión en el informe de costos). La **semanal, desde el 16/10/2026, AVISA al 60 y al 85 % y no frena** (decisión de Fak del 15/10: sin evidencia no hay freno por cupo semanal; el freno del 74 % del 13/10 no ahorró nada): el agente sale, queda una línea tenue y el registro lleva `· AVISO …`.
 - La auditoría final (`auditor`, `auditor-cliente`) no descuenta y pasa también si su definición no se encuentra o no se puede leer. Se niega, igual que en el guardián bash, en tres casos: si la llamada pide un `model` que no es opus, si la definición encontrada dice otro modelo o esfuerzo, y si es un `fork`.
 - **Falla abierto** (`FALLA_CERRADA = false` en `hooks/register.js`): si el hook falla o tarda más de 10 s, la llamada pasa, decide el guardián bash (que sigue puesto) y queda un renglón `agent.spawn ERROR` en el registro. Si las definiciones no se pudieron leer (`def=error`) tampoco se niega por «sin definición».
 - En `turn.step`, un subagente que pida `effort: max` se rebaja a `xhigh`.
@@ -22,10 +22,10 @@ Mod de Claude Code (probado con la 2.1.293, Windows 11) que hace en `agent.spawn
 |---|---|
 | `~/.claude/.agent-limit` | cambia el techo de la ventana (N Sonnet); `0` apaga el conteo, no el cupo real |
 | `~/.claude/.agent-opus-ok` | Opus y Fable descuentan como Sonnet |
-| `~/.claude/.agent-cupo-ok` | saltea el freno por cupo real (5 h y semana) |
+| `~/.claude/.agent-cupo-ok` | saltea el freno de la ventana de 5 h y apaga el aviso semanal |
 | `~/.claude/.agent-builtin-ok` | con el id de la sesión adentro: deja pasar un built-in con `model: sonnet` |
 
-Vencidos se ignoran, no se borran. `.workflow-ok` no aplica: Workflow no pasa por `agent.spawn`, lo sigue tapando `disableWorkflows: true`.
+Vencidos se ignoran, no se borran. `.workflow-ok` no aplica: Workflow no pasa por `agent.spawn`. Desde el 16/10/2026 Workflow está habilitada (ultracode, pedido de Fak): sus agentes pasan por `agent.spawn` como cualquier subagente.
 
 ## Instalar, ver el estado y volver atrás
 

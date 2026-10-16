@@ -51,7 +51,7 @@ describe('verde: deja pasar', () => {
     expect(pasa.accion).toBe('permitir')
     expect(pasa.motivo).toContain('4/40')
     expect(decidir(evento(sinLeer), estado(40), AHORA).motivo).toContain('40/40')
-    expect(decidir(evento({ ...sinLeer, rateLimits: [{ kind: 'seven_day', percentUsed: 61 }] }), estado(), AHORA).motivo).toContain('semanal')
+    expect(decidir(evento({ ...sinLeer, rateLimits: [{ kind: 'seven_day', percentUsed: 61 }] }), estado(), AHORA).aviso).toContain('semanal')
   })
 
   test('un libro con una entrada rota se repara solo: lo que no es un lanzamiento se tira', () => {
@@ -79,21 +79,32 @@ describe('rojo: niega con motivo legible', () => {
     expect(d.estadoNuevo.lanzamientos).toHaveLength(1)
   })
 
-  test('al 90 % de la ventana de 5 h se niega todo lanzamiento nuevo, con el % en el motivo', () => {
+  test('al 90 % de la ventana de 5 h se niega todo lanzamiento nuevo, con el % en el motivo (sigue frenando: 13 agentes cortados por el limite de sesion)', () => {
     const d = decidir(evento({ rateLimits: [{ kind: 'five_hour', percentUsed: 90 }] }), estado(), AHORA)
     expect(d.accion).toBe('negar')
     expect(d.motivo).toContain('90 %')
     expect(d.motivo).toContain('5 horas')
   })
 
-  test('al 61 % de la semanal tambien: no sale ninguno, ni una busqueda en haiku', () => {
+  test('CAMBIO 16/10/2026 (Fak 15/10: sin evidencia no hay freno por cupo SEMANAL): al 61 % sale con aviso (desde el 60 %); al 86 % con el del 85 %; por debajo del 60 % sin aviso', () => {
     const semana = [{ kind: 'five_hour', percentUsed: 10 }, { kind: 'seven_day', percentUsed: 61 }]
     const d = decidir(evento({ rateLimits: semana }), estado(), AHORA)
-    expect(d.accion).toBe('negar')
-    expect(d.motivo).toContain('semanal')
-    expect(d.motivo).toContain('61 %')
-    expect(d.motivo).toContain('.agent-cupo-ok')
-    expect(decidir(evento({ model: 'haiku', rateLimits: semana }), estado(), AHORA).accion).toBe('negar')
+    expect(d.accion).toBe('permitir')
+    expect(d.aviso).toContain('semanal')
+    expect(d.aviso).toContain('61 %')
+    expect(d.aviso).toContain('aviso desde el 60 %')
+    expect(d.aviso).toContain('investigador')
+    expect(d.aviso).toContain('peso 4')
+    expect(d.estadoNuevo.lanzamientos).toHaveLength(1)   // descuenta igual: la ventana de 10 min sigue
+    expect(decidir(evento({ model: 'haiku', rateLimits: semana }), estado(), AHORA).accion).toBe('permitir')
+    const alto = decidir(evento({ rateLimits: [{ kind: 'seven_day', percentUsed: 86 }] }), estado(), AHORA)
+    expect(alto.accion).toBe('permitir')
+    expect(alto.aviso).toContain('aviso desde el 85 %')
+    expect(decidir(evento({ rateLimits: [{ kind: 'seven_day', percentUsed: 59 }] }), estado(), AHORA).aviso).toBeNull()
+    // con el pase opus-ok el aviso dice el peso que se descuenta de verdad (auditor 16/10, H7)
+    const conOpus = decidir(evento({ model: 'opus', rateLimits: semana }), estado(0, { opusOk: { mtimeMs: AHORA } }), AHORA)
+    expect(conOpus.peso).toBe(4)
+    expect(conOpus.aviso).toContain('peso 4')
   })
 
   test('effort max se niega aunque todo lo demas este bien', () => {
@@ -122,17 +133,21 @@ describe('escapes por archivo (valen 12 h)', () => {
     expect(d.accion).toBe('negar')
   })
 
-  test('.agent-limit = 0 apaga el conteo pero no el cupo real', () => {
+  test('.agent-limit = 0 apaga el conteo pero no el freno de la ventana de 5 h; la semanal solo avisa', () => {
     const escapes = { limite: { valor: 0, mtimeMs: AHORA } }
     expect(decidir(evento({ model: 'fable' }), estado(40, escapes), AHORA).accion).toBe('permitir')
     expect(decidir(evento({ model: 'fable', rateLimits: [{ kind: 'five_hour', percentUsed: 86 }] }), estado(0, escapes), AHORA).accion).toBe('negar')
+    const d = decidir(evento({ model: 'fable', rateLimits: [{ kind: 'seven_day', percentUsed: 86 }] }), estado(0, escapes), AHORA)
+    expect(d.accion).toBe('permitir')
+    expect(d.aviso).toContain('86 %')
   })
 
-  test('.agent-cupo-ok saltea el freno por cupo real durante 12 h; vencido se ignora', () => {
+  test('.agent-cupo-ok saltea el freno de 5 h y apaga el aviso semanal durante 12 h; vencido se ignora', () => {
     const rojo = [{ kind: 'five_hour', percentUsed: 95 }, { kind: 'seven_day', percentUsed: 90 }]
     const conPase = decidir(evento({ model: 'fable', rateLimits: rojo }), estado(0, { cupoOk: { mtimeMs: AHORA - 3_600_000 } }), AHORA)
     expect(conPase.accion).toBe('permitir')
     expect(conPase.motivo).toContain('20/40')
+    expect(conPase.aviso).toBeNull()
     const vencido = decidir(evento({ rateLimits: rojo }), estado(0, { cupoOk: { mtimeMs: AHORA - VENCE_MS - 1 } }), AHORA)
     expect(vencido.accion).toBe('negar')
     expect(vencido.motivo).toContain('5 horas')

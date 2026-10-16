@@ -3,12 +3,15 @@ export const PESOS = { haiku: 1, sonnet: 4, opus: 8, fable: 20 }
 export const LIMITE_DEFAULT = 10
 export const VENTANA_MS = 10 * 60_000
 export const VENCE_MS = 12 * 3_600_000 // vida de los escapes por archivo (A6, 10/09/2026)
-// Cupo real: por encima de esto no sale ningun subagente nuevo salvo la auditoria final. El 85 % de la ventana de 5 h
-// es lo que evita otro 06/08 (regla trabajar-hasta-la-hora.md, punto 5); el 60 % de la semanal es el tope con el que
-// las tandas dejan de lanzar sesiones (regla techo-agentes.md, «Fase 3»). El escape ~/.claude/.agent-cupo-ok (12 h)
-// saltea este freno; lo escribe la sesion solo con el pedido textual de Fak, como los otros.
+// Cupo real. La ventana de 5 h por encima del 85 % FRENA (dato: 13 agentes cortados por el limite de sesion; regla
+// trabajar-hasta-la-hora.md, punto 5). La SEMANAL, desde el 16/10/2026, AVISA al 60 y al 85 % y no frena (Fak, 15/10:
+// «sin evidencia no… un estandar que siempre pueda desplegar subagentes»; medido: el freno del 74 % del 13/10 no ahorro
+// nada y, segun la estimacion del informe de costos, se salteo en 54 de 62 lanzamientos). El 60 es el tope con el que
+// las tandas dejan de lanzar HIJAS (techo-agentes.md, «Fase 3»). ~/.claude/.agent-cupo-ok (12 h) saltea el freno de 5 h y
+// apaga el aviso semanal.
 export const UMBRAL_5H = 85
 export const UMBRAL_SEMANAL = 60
+export const UMBRAL_SEMANAL_ALTO = 85
 export const AUDITORES = ['auditor', 'auditor-cliente']
 const ESFUERZOS = ['low', 'medium', 'high', 'xhigh']
 const FAMILIAS = ['haiku', 'sonnet', 'opus', 'fable']
@@ -127,24 +130,34 @@ export function decidir(evento, estado, ahora) {
   // La auditoria final es obligatoria: pasa siempre y no descuenta, aunque el cupo o la ventana esten llenos.
   if (esAuditor) return { accion: 'permitir', motivo: 'auditoria final: pasa sin descontar', estadoNuevo: base, peso: 0 }
 
-  // Cupo real antes que nada: por encima del umbral no sale nada nuevo. Con ~/.claude/.agent-cupo-ok vigente (Fak lo
-  // pidio textual) este freno no se mira; la ventana de 10 min sigue valiendo.
-  if (!vigente(escapes.cupoOk, ahora)) {
-    const { cincoHoras, semana } = cupoReal(evento.rateLimits)
-    const lleno = cincoHoras !== null && cincoHoras > UMBRAL_5H ? { nombre: 'de 5 horas', pct: cincoHoras, tope: UMBRAL_5H }
-      : semana !== null && semana > UMBRAL_SEMANAL ? { nombre: 'semanal', pct: semana, tope: UMBRAL_SEMANAL }
-        : null
-    if (lleno) {
-      return negar(`Cupo real: la ventana ${lleno.nombre} esta al ${lleno.pct} % (tope ${lleno.tope} %). No sale ningun subagente nuevo hasta que baje; la auditoria final (auditor, auditor-cliente) si pasa. Hace el trabajo vos y avisale a Fak. Si Fak lo pidio textual en el chat, escribi \`touch ~/.claude/.agent-cupo-ok\` (vale 12 h) y decilo.`, base, peso)
-    }
-  }
-
+  // Cupo real: desde el 16/10/2026 AVISA y no frena (Fak, 15/10 ≈ 16:10: «no me convence si no tiene evidencia; prefiero
+  // dejar un estandar que siempre pueda desplegar subagentes… si no encontraste datos, propone eliminarlo»; lo medido: el
+  // freno del 74 % del 13/10 no ahorro nada y se salteo con pases en 54 de 62 lanzamientos). Avisa al 60 y al 85 % de la
+  // semana y al 85 % de las 5 h, con el modelo y el peso del agente; se mide una semana y, si hay daño, se propone un freno
+  // con el numero. Con ~/.claude/.agent-cupo-ok vigente no se avisa (queda por compatibilidad). La ventana de 10 min por
+  // puntos y el tope por agente (maxTurns en cada definicion) siguen valiendo.
   // Con el pase de Fak (~/.claude/.agent-opus-ok) Opus y Fable descuentan como Sonnet: el autorizo a gastar.
   if ((fam === 'opus' || fam === 'fable') && vigente(escapes.opusOk, ahora)) peso = PESOS.sonnet
 
+  let aviso = null
+  if (!vigente(escapes.cupoOk, ahora)) {
+    const { cincoHoras, semana } = cupoReal(evento.rateLimits)
+    // La ventana de 5 h SIGUE FRENANDO (dato: 13 agentes cortados por el limite de sesion en el informe de costos;
+    // regla trabajar-hasta-la-hora.md, punto 5). Lo que paso a aviso es la SEMANAL (plan §3, punto 2).
+    if (cincoHoras !== null && cincoHoras > UMBRAL_5H) {
+      return negar(`Cupo real: la ventana de 5 horas esta al ${cincoHoras} % (tope ${UMBRAL_5H} %). No sale ningun subagente nuevo hasta que baje; la auditoria final (auditor, auditor-cliente) si pasa. Hace el trabajo vos y avisale a Fak. Si Fak lo pidio textual en el chat, escribi \`touch ~/.claude/.agent-cupo-ok\` (vale 12 h) y decilo.`, base, peso)
+    }
+    const lleno = semana !== null && semana > UMBRAL_SEMANAL_ALTO ? { pct: semana, tope: UMBRAL_SEMANAL_ALTO }
+      : semana !== null && semana > UMBRAL_SEMANAL ? { pct: semana, tope: UMBRAL_SEMANAL }
+        : null
+    if (lleno) {
+      aviso = `Cupo real: la ventana semanal esta al ${lleno.pct} % (aviso desde el ${lleno.tope} %). Este subagente (${tipo}, ${fam ?? familia(def && def.model) ?? 'sonnet'}, peso ${peso}) sale igual: desde el 16/10/2026 el cupo semanal avisa y no frena (decision de Fak). Si el trabajo no avanza en 10 minutos, se mira, no se espera.`
+    }
+  }
+
   // Ventana de 10 min por puntos. ~/.claude/.agent-limit cambia el techo (N Sonnet); 0 apaga el conteo, no el cupo real.
   const limite = vigente(escapes.limite, ahora) && Number.isInteger(escapes.limite.valor) ? escapes.limite.valor : LIMITE_DEFAULT
-  if (limite === 0) return { accion: 'permitir', motivo: 'conteo apagado por ~/.claude/.agent-limit = 0 (vale 12 h)', estadoNuevo: base, peso }
+  if (limite === 0) return { accion: 'permitir', motivo: 'conteo apagado por ~/.claude/.agent-limit = 0 (vale 12 h)', estadoNuevo: base, peso, aviso }
   const presupuesto = limite * PESOS.sonnet
   const puntos = base.lanzamientos.reduce((s, l) => s + (Number.isFinite(l.peso) ? l.peso : PESOS.sonnet), 0)
   if (puntos + peso > presupuesto) {
@@ -153,5 +166,5 @@ export function decidir(evento, estado, ahora) {
     return negar(`Presupuesto de subagentes agotado: ${puntos}/${presupuesto} puntos en los ultimos 10 minutos; esta llamada pesa ${peso} (haiku 1 · sonnet 4 · opus 8 · fable 20). NO reintentes ni reformules: hace el trabajo vos, relanzalo en haiku si es buscar/leer/extraer, o espera ~${espera} min. Si Fak lo pidio textual en el chat, escribi \`echo 15 > ~/.claude/.agent-limit\` y decilo. Reportale que llegaste al techo.`, base, peso)
   }
   const lanzamiento = { ts: ahora, tipo, modelo: fam ?? familia(def && def.model) ?? 'sonnet', peso }
-  return { accion: 'permitir', motivo: `${puntos + peso}/${presupuesto} puntos en la ventana`, estadoNuevo: { ...base, lanzamientos: [...base.lanzamientos, lanzamiento] }, peso }
+  return { accion: 'permitir', motivo: `${puntos + peso}/${presupuesto} puntos en la ventana`, estadoNuevo: { ...base, lanzamientos: [...base.lanzamientos, lanzamiento] }, peso, aviso }
 }

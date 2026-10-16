@@ -4,7 +4,7 @@
 segun lo que cuesta** (tabla oficial de precios de Anthropic, 08/10/2026): **haiku 1 · sonnet 4 · opus 8 ·
 fable 20**. Diez Sonnet siguen valiendo lo mismo que antes (40); con lo mismo entran 40 busquedas en
 Haiku, 5 Opus o 2 Fable. El esfuerzo es `xhigh` (el anteultimo; `max` nunca se pide). La tool
-`Workflow` esta DESHABILITADA.
+`Workflow` estuvo deshabilitada del 06/08 al 16/10/2026; **Fak la prendio el 16/10** («Fable 5.1 ultracode de una… si o si») y queda prendida: sus agentes pasan por el mismo presupuesto.
 
 **Que tiene fuente y que no (Fak lo pregunto el 08/10 a la noche):** los PESOS salen de la tabla oficial
 de precios. La ventana de 10 minutos y el 40 NO tienen fuente externa: la ventana la puso una sesion el
@@ -17,9 +17,7 @@ precio y frene por cupo real**; hasta entonces el presupuesto por puntos es la r
 **Fase 3, instalada el 11/10/2026 (mod `presupuesto-agentes`, P33; convive con este guardian):** el mod vive en
 `mods/presupuesto-agentes/` y carga en todas las sesiones NUEVAS desde una copia fuera del repo (marketplace `mods-casa`,
 `~/.claude/mods-casa/`). La politica (`mods/presupuesto-agentes/hooks/presupuesto.mjs`, pura; test `__tests__/mods/presupuesto-agentes.test.mjs`)
-replica este guardian y suma el freno por cupo real: con la ventana de 5 h por encima de 85 % o la semanal por encima
-de 60 %, no sale ningun subagente nuevo salvo la auditoria final. Ese freno tiene su escape, igual que los otros:
-`touch ~/.claude/.agent-cupo-ok` (12 h), que escribo solo con el pedido textual de Fak. Falla abierto: si el mod falla,
+replica este guardian y, desde el 16/10/2026, por el cupo real AVISA y no frena (Fak, 15/10: *«no me convence si no tiene evidencia; prefiero dejar un estandar que siempre pueda desplegar subagentes… si no encontraste datos, propone eliminarlo»*; lo medido en `casa_subagentes_costo.md`: el freno del 74 % del 13/10 no ahorro nada y se salteo con pases en 54 de 62 lanzamientos; es una estimacion del informe, no un conteo): al 60 y al 85 % de la SEMANA deja una linea tenue con el modelo y el peso del agente, y el agente sale igual; se mide una semana y, si hay daño, se propone un freno con el numero. **La ventana de 5 h por encima del 85 % SIGUE FRENANDO** (13 agentes cortados por el limite de sesion en el informe de costos; `trabajar-hasta-la-hora.md`, punto 5). Lo que SI frena, ademas: la ventana de 10 min por puntos y `maxTurns` en cada definicion, medido contra los turnos reales desde el 01/10 (el auditor del 16/10 encontro que 60 y 80 cortaban trabajo real): buscador 30 (p95 64, no se toca), explorador 300 (p95 247, max 580), investigador 400 (p95 311, max 870), amfe-healer 300, **auditor sin tope** (la auditoria final pasa siempre y escribe su informe pasados los 100 turnos; p95 232). El tope nativo `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=10` esta en el settings global, pero el auditor leyo en el binario 2.1.299 que **no corre en modo ultracode** (probable, no medido): con ultracode el que cuenta es el presupuesto del mod. La profundidad de lanzamiento queda en su default 3 por el ritual del viernes (ahi los Sonnet del equipo lanzan Haiku con una definicion propia; el `investigador` diario no lanza subagentes y el `explorador` no tiene `Agent`). `~/.claude/.agent-cupo-ok` saltea el freno de 5 h y apaga el aviso semanal. Falla abierto: si el mod falla,
 la llamada pasa y decide el bash. Mientras conviven, bash corta primero (PreToolUse) y el mod ve lo que bash dejo pasar;
 el bash se apaga ULTIMO, con dos dias de registro coherente en `~/.claude/mods-log/presupuesto-agentes.log` (cada
 decision dice el cupo leido y de que carpeta salio la definicion). Instalar, ver el estado y volver atras:
@@ -33,7 +31,7 @@ pueda usar Sonnet... eficiencia no significa siempre ahorrar tokens, significa t
 forma posible: algunas tareas van a requerir Fable o muchos Opus"**. De ahi el presupuesto por costo:
 Haiku para lo barato y muchos a la vez; Opus y Fable cuando el trabajo lo pide, descontando lo que valen.
 
-Esto no vive solo aca: esta enforced en `~/.claude/settings.json` (`disableWorkflows: true`,
+Esto no vive solo aca: esta enforced en `~/.claude/settings.json` (hasta el 16/10 `disableWorkflows: true`; desde ese dia sacado y `workflowKeywordTriggerEnabled: true`,
 `workflowKeywordTriggerEnabled: false`, `CLAUDE_CODE_SUBAGENT_MODEL=claude-sonnet-5-5` como default,
 sin `_FORCE`) y en el hook `~/.claude/hooks/agentes-guard.sh` (PreToolUse, matcher `Agent|Task|Workflow`;
 copia identica en `.claude/hooks/`), que suma los puntos de la ventana de 10 min en
@@ -89,6 +87,14 @@ poder trabajar). La historia, las citas de Fak y los tres errores que los explic
 `techo_agentes_los_dos_incidentes_2026-08`. Lo que mide si el presupuesto esta bien calibrado:
 `node scripts/_tokens.mjs` (turnos por modelo; desde el 08/10 cuenta cada mensaje una sola vez).
 
+## Lanzar o no, con los numeros de la casa (1, 2 y 4 medidos en `casa_subagentes_costo.md`, 15/10/2026, `.jsonl` desde el 06/10; 3 es la regla de Lydia Hallie; 5 es lo hecho el 16/10)
+
+1. **El hilo principal es el 71 % del gasto** (≈ US$ 2.197 contra ≈ US$ 888 de 247 subagentes): un turno del principal cuesta ≈ US$ 0,20 porque relee ~469.000 tokens; un `buscador` Haiku entero, ≈ US$ 0,14. **Lanzar ahorra casi siempre cuando el que trabajaria es el principal** (leer mucho y devolver poco; varios frentes en paralelo).
+2. **Lanzar cuesta mas cuando el agente es largo, repetido o se pierde**: 22 agentes de mas de US$ 10 sumaron US$ 292 (el 33 % del gasto de subagentes); 30 de 247 no terminaron bien (13 cortados por error de API, 11 parados por el principal o por Fak). De ahi `maxTurns` por definicion.
+3. **Un subagente hace UNA tarea y devuelve** (Lydia Hallie, 10/10: el cache de un subagente vence a los 5 min; «in most cases you want your subagents to just run one task and hand back the result»); no se lo deja esperando mas trabajo.
+4. **No se relanza lo ya contestado**: los incidentes de agosto (21 y 40 agentes) fueron preguntas que ya tenian respuesta.
+5. **`explorador`, `investigador`, `auditor` y `amfe-healer` arrancan con `omitClaudeMd: true`** (16/10/2026): no cargan CLAUDE.md ni las reglas; medido ese dia: un `investigador` cargaba 98.000 a 118.000 tokens en su primer turno y un `buscador` (que ya lo tenia) 55.000; las 5 o 6 reglas que les valen van en su prompt y los hooks siguen corriendo. `buscador` y `auditor-cliente` ya lo tenian.
+
 ## Como decidir, antes de pensar en un agente
 
 1. **Se DONDE mirar?** -> leerlo yo. Grep/Read/query directa. Casi siempre gana.
@@ -115,9 +121,9 @@ y se le avisa a Fak que se llego al techo.
 ```bash
 echo 15 > ~/.claude/.agent-limit    # 15 Sonnet = 60 puntos cada 10 min (vale 12 h, despues vuelve a 40 solo)
 echo 0 > ~/.claude/.agent-limit     # apaga el CONTEO (idem, 12 h); la regla de esfuerzo sigue
-touch ~/.claude/.workflow-ok        # habilita UN Workflow (se consume al usarlo)
+touch ~/.claude/.workflow-ok        # habilitaba UN Workflow hasta el 16/10 (hoy Workflow esta prendida)
 touch ~/.claude/.agent-opus-ok      # 12 h: Opus y Fable descuentan como Sonnet (4)
-touch ~/.claude/.agent-cupo-ok      # 12 h: el mod deja de frenar por cupo real (5 h > 85 %, semana > 60 %)
+touch ~/.claude/.agent-cupo-ok      # 12 h: saltea el freno de la ventana de 5 h (> 85 %) y apaga el aviso semanal
 ```
 
 Fak no corre comandos: cuando lo pide ("usa mas agentes", "no me importa gastar tokens", "usa mas
@@ -127,4 +133,4 @@ regla: se le nombra el cambio exacto y se hace** (el 01/10 tuvo que pedirlo cuat
 08/10/2026 a la noche, `echo 20 > ~/.claude/.agent-limit` (80 puntos) para la investigacion grande que
 pidio ("desplegando agentes, equipos de agentes, lo que sea necesario").
 
-Para reactivar Workflow del todo: sacar `disableWorkflows` de `~/.claude/settings.json`.
+Workflow se reactivo el 16/10/2026 sacando `disableWorkflows` de `~/.claude/settings.json` (respaldo `settings.json.antes-ultracode-2026-10-16`). Para apagarla de nuevo: volver a poner `"disableWorkflows": true`.

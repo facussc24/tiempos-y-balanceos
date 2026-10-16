@@ -104,7 +104,7 @@ async function anotar($, base, linea) {
 // Asentar un lanzamiento y dejarlo en el registro, las dos cosas en el mismo turno de la fila.
 async function asentarYAnotar($, base, evento, escapes, datos) {
   const r = await asentar($, evento, escapes)
-  await anotar($, base, lineaDeRegistro({ ...datos, ahora: r.ahora, accion: r.d.accion, peso: r.d.peso, motivo: r.d.motivo }))
+  await anotar($, base, lineaDeRegistro({ ...datos, ahora: r.ahora, accion: r.d.accion, peso: r.d.peso, motivo: r.d.aviso ? `${r.d.motivo} · AVISO ${r.d.aviso}` : r.d.motivo }))
   return r
 }
 
@@ -154,6 +154,8 @@ async function guardia($, e, next) {
     $.ui.log('subagente bloqueado: ' + d.motivo) // linea tenue para Fak; el modelo lee el deny como error del Agent tool
     return { deny: 'BLOQUEADO (presupuesto-agentes): ' + d.motivo }
   }
+  // Cupo real alto: AVISO (16/10/2026, decision de Fak del 15/10: el cupo no frena subagentes). Linea tenue para Fak y al registro.
+  if (d.aviso) $.ui.log('cupo: ' + d.aviso)
   return next(e)
 }
 

@@ -37,6 +37,8 @@
  *      mensajes objetados de los que no, ni en cierres ni en todo turno (cierreCanon, _medicion_22_09).
  *      Desde el 10/10/2026 (H5) ese mismo aviso suma un renglon si lo que necesito de Fak no esta al
  *      inicio (`evaluarOrdenCierre`, canon `cierre_orden`): un aviso adentro de este freno, no un freno nuevo.
+ *      Y desde el 16/10/2026 (tanda 1.2 del plan del sistema) otro aviso adentro del mismo freno: el cierre termina
+ *      con «Propongo: …» (`evaluarPropongo`, canon `cierre_propongo`).
  *   Los frenos 3 y 5 suman ademas, para una sesion con una hora vigente, el aviso de las reglas de la tanda (HOY-17:
  *   2 horas sin un pedido a la API, o el latido con varios despertares sin avance): `avisoParaCierre`, tandaReglas.mjs.
  * Con stop_hook_active=true (segundo Stop del mismo turno) siempre deja pasar: sin loops.
@@ -326,6 +328,27 @@ export function evaluarOrdenCierre(texto) {
     return { necesita: true, alInicio, aviso: !alInicio, parrafo: i + 1, parrafos: parrafos.length, frase: hallada[0] };
   }
   return { necesita: false, alInicio: false, aviso: false };
+}
+
+// ---------------------------------------------------------------------------------------
+// Aviso DENTRO del chequeo 5 (tanda 1.2 del plan del sistema, 16/10/2026): el cierre termina con «Propongo: …»
+// ---------------------------------------------------------------------------------------
+// Fak, 13/10 (Viernes 17.txt): «siento que todo se me tiene que ocurrir a mí»; 08/10: «no sugeriste agregar nada».
+// Medido el 16/10 (`_cuatroNumeros.mjs`, 09→16/10): 0 de 442 cierres traian «Propongo». El renglon es SOLO sobre el
+// como (herramienta, metodo, repo, manual, tarea aparte), con fuente, hasta 3 items; nunca un numero tecnico ni contenido
+// del entregable; si no hay nada que valga, «Propongo: nada». Va al FINAL: el orden del cierre (lo que necesito de Fak →
+// que cambio → que encontre, 05/10) no se toca. Igual que el aviso de orden, viaja en el freno del chequeo 5 (cierre
+// declarado que es un informe) y no agrega ningun freno: un cierre corto no lo recibe y ahi manda el renglon de CLAUDE.md.
+// Limite medido por el auditor (16/10): el freno del chequeo 5 salio por ultima vez el 13/09 (354 frenos desde el 09/10,
+// ninguno por el chequeo 5), asi que este aviso casi nunca viaja; lo que lleva la conducta es el renglon de CLAUDE.md y
+// lo que la mide es `scripts/_cuatroNumeros.mjs` (misma expresion: cursiva, negrita o pelado).
+const PROP = CANON.cierre_propongo;
+const PROP_RE = rx(PROP.re);
+
+/** ¿El mensaje trae el renglon «Propongo: …»? Devuelve { tiene, aviso } (aviso = cierre sin el renglon). */
+export function evaluarPropongo(texto) {
+  const tiene = PROP_RE.test(String(texto ?? ''));
+  return { tiene, aviso: !tiene };
 }
 
 // ---------------------------------------------------------------------------------------
@@ -1848,6 +1871,12 @@ export async function decidir(payload = {}, deps = {}) {
         + 'Va PRIMERO (con la ruta del entregable adelante si hay una), despues que cambio y despues que encontraste '
         + '(CLAUDE.md, "Como interactuar con Fak").'
       : '';
+    // Aviso de «Propongo» (tanda 1.2, 16/10/2026): viaja en este mismo freno; no agrega ninguno. Ver `evaluarPropongo`.
+    const avisoPropongo = evaluarPropongo(texto).aviso
+      ? '\nADEMAS, falta el ultimo renglon «Propongo: …» (hasta 3 items, solo sobre el COMO: herramienta, metodo, repo, manual o '
+        + 'tarea aparte, cada uno con su fuente; nunca un numero tecnico ni contenido del entregable; si no hay nada que valga, '
+        + '«Propongo: nada»). Va al final, despues de lo que necesitas de Fak, que cambio y que encontraste (CLAUDE.md).'
+      : '';
     return {
       ok: false,
       titulo: 'CIERRE-GUARD: el cierre es un informe',
@@ -1856,7 +1885,7 @@ export async function decidir(payload = {}, deps = {}) {
         + 'en el archivo o la memoria (memoria no_hacer_informes). Reescribilo corto. Si Fak pidio el detalle con esas palabras, este aviso '
         + 'no aplica (se lee su ultimo mensaje). Lo que Fak objeta no es el largo sino lo que no se entiende de una lectura '
         + '(medicion 22/09, cierreCanon cierre_largo): palabras de planta, sin siglas ni rotulos inventados. No se repite por 20 minutos.'
-        + avisoOrden + tanda(),
+        + avisoOrden + avisoPropongo + tanda(),
     };
   }
   return { ok: true };
