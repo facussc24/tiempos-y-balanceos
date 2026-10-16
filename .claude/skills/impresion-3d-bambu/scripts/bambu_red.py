@@ -95,6 +95,13 @@ def cargar_datos():
                                      "si OneDrive lo esta bajando, esperar un minuto; si esta roto, avisar a Fak")
             if d.get("serie"):
                 d["_origen"] = str(ruta)
+                if ruta != DATOS:              # datos de la nube: la direccion que encontro esta PC le gana
+                    try:
+                        p = json.loads(_pista_ip().read_text(encoding="utf-8"))
+                        if p.get("serie") == d["serie"] and p.get("ip"):
+                            d["ip"] = p["ip"]
+                    except (OSError, ValueError):
+                        pass
                 return d
     raise FallaImpresora(
         "No encuentro los datos de la impresora.\n"
@@ -207,9 +214,268 @@ def _paquete(sock):
     return cab, _leer(sock, largo) if largo else b""
 
 
+# ---------------- buscar la impresora por su numero de serie (16/10/2026) ----------------
+# El 15/10 a las 23:31 la impresora paso de .198 a .111 (el router le dio otra direccion) y el programa, con la IP
+# fija en un archivo, no la volvio a ver; un bucle de ping pregunto por la .198 tres horas. Bambu Studio la
+# encuentra sola porque la guarda por numero de serie (DevManager.cpp, «MachineObject IP changed»).
+SSDP_GRUPO, SSDP_PUERTOS, SSDP_SEGUNDOS = "239.255.255.250", (1990, 2021), 15
+_IPV4 = r"(?:\d{1,3}\.){3}\d{1,3}"
+
+
+def _pista_ip():
+    """La direccion que encontro ubicar() en una PC que lee los datos de la nube: la nube no se toca desde cada PC
+    (dos PC escribiendo el mismo archivo de OneDrive = copias en conflicto) ni se copia el codigo a esta PC."""
+    return DATOS.with_name("bambu-a2l-ip.json")
+
+
+def _ips_del_registro():
+    import registro
+    return registro.ips_anotadas()
+
+
+def ip_del_anuncio(txt, ip_origen, serie):
+    """Del aviso SSDP de una Bambu (NOTIFY o respuesta a un M-SEARCH): su direccion si es la de esa serie."""
+    campos = {k.strip().lower(): v.strip() for k, v in re.findall(r"^([A-Za-z0-9.\-]+):[ \t]*(.*?)\r?$", txt, re.M)}
+    if campos.get("usn") != serie:
+        return None
+    loc = campos.get("location", "")
+    return loc if re.fullmatch(_IPV4, loc) else ip_origen
+
+
+def _ips_por_anuncio(serie, segundos=None):
+    """Escucha el anuncio de la impresora (1990 y 2021) y le pregunta con un M-SEARCH. Si un puerto esta ocupado
+    (Bambu Studio abierto) o el firewall no deja, lo dice en un renglon y sigue: no es fatal."""
+    segundos = SSDP_SEGUNDOS if segundos is None else segundos
+    socks, avisos, ips = [], [], []
+    for puerto in SSDP_PUERTOS:
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.bind(("", puerto))
+            try:
+                s.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
+                             struct.pack("4sl", socket.inet_aton(SSDP_GRUPO), socket.INADDR_ANY))
+            except OSError:
+                pass
+            s.settimeout(0.3)
+            socks.append(s)
+        except OSError as e:
+            avisos.append(f"no pude escuchar el puerto {puerto} (¿Bambu Studio abierto o el firewall?): {e.strerror or e}")
+    try:
+        q = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        q.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        q.settimeout(0.3)
+        pedido = ("M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1990\r\nMAN: \"ssdp:discover\"\r\nMX: 3\r\n"
+                  "ST: urn:bambulab-com:device:3dprinter:1\r\n\r\n").encode()
+        for destino in ((SSDP_GRUPO, 1990), (SSDP_GRUPO, 2021), ("255.255.255.255", 2021)):
+            try:
+                q.sendto(pedido, destino)
+            except OSError:
+                pass
+        socks.append(q)
+    except OSError as e:
+        avisos.append(f"no pude preguntar en la red: {e.strerror or e}")
+    fin = time.time() + segundos
+    try:
+        while time.time() < fin and socks and not ips:
+            for s in socks:
+                try:
+                    data, addr = s.recvfrom(4096)
+                except OSError:
+                    continue
+                ip = ip_del_anuncio(data.decode("utf-8", "replace"), addr[0], serie)
+                if ip and ip not in ips:
+                    ips.append(ip)
+    finally:
+        for s in socks:
+            s.close()
+    for a in avisos:
+        print("  anuncio:", a)
+    return ips
+
+
+def _correr(cmd, timeout=30):
+    """Un comando de Windows; su salida viene en la pagina de codigos de la consola (cp850), no en utf-8."""
+    import subprocess
+    try:
+        r = subprocess.run(cmd, capture_output=True, timeout=timeout)
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    return r.stdout.decode("cp850", "replace")
+
+
+def puerta_de_enlace(ipconfig, ip):
+    """Del texto de `ipconfig`, la puerta de enlace del adaptador que tiene la direccion `ip` (sin depender del
+    idioma: es la primera IPv4 despues de la mascara en ese bloque)."""
+    lineas = ipconfig.splitlines()
+    for i, ren in enumerate(lineas):
+        if ip and re.search(r"(?<![\d.])" + re.escape(ip) + r"(?![\d.])", ren):
+            mascara = False
+            for sig in lineas[i + 1:]:
+                if sig.strip() and not sig[:1].isspace():
+                    break                       # empieza otro adaptador
+                for x in re.findall(_IPV4, sig):
+                    if x.startswith("255."):
+                        mascara = True
+                    elif mascara:
+                        return x
+    return None
+
+
+def _mi_red():
+    """(direccion de esta PC, puerta de enlace) de la placa de red que sale a la red; sin red, (None, None)."""
+    ip = None
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))                  # no manda nada: solo elige la placa de red que sale
+        ip = s.getsockname()[0]
+        s.close()
+    except OSError:
+        pass
+    return ip, (puerta_de_enlace(_correr(["ipconfig"]), ip) if ip else None)
+
+
+def ip_de_mac(arp, mac):
+    """Del texto de `arp -a`, la direccion que tiene esa placa de red."""
+    m = mac.lower().replace(":", "-")
+    for ren in arp.splitlines():
+        if m in ren.lower():
+            x = re.findall(_IPV4, ren)
+            if x:
+                return x[0]
+    return None
+
+
+def _subred(ip):
+    """Las 254 direcciones de la red de esta PC (se toma /24 aunque la mascara sea mas grande)."""
+    base = ip.rsplit(".", 1)[0]
+    return [f"{base}.{i}" for i in range(1, 255) if f"{base}.{i}" != ip]
+
+
+def _ips_por_mac(mac):
+    """Barrido de ping a la red de esta PC (llena la tabla ARP) y la direccion que tiene la MAC de la impresora."""
+    if not mac:
+        return []
+    import concurrent.futures
+    ip, _ = _mi_red()
+    if not ip:
+        return []
+    with concurrent.futures.ThreadPoolExecutor(64) as ex:
+        list(ex.map(lambda x: _correr(["ping", "-n", "1", "-w", "300", x], timeout=5), _subred(ip)))
+    x = ip_de_mac(_correr(["arp", "-a"]), mac)
+    return [x] if x else []
+
+
+def _abre(ip, puerto, timeout):
+    try:
+        socket.create_connection((ip, puerto), timeout=timeout).close()
+        return True
+    except OSError:
+        return False
+
+
+def _ips_de_la_red(probadas):
+    """Recorrido de la red de esta PC en el 8883, 0,5 s por equipo y varios a la vez: los que contestan."""
+    import concurrent.futures
+    ip, _ = _mi_red()
+    if not ip:
+        return []
+    cand = [x for x in _subred(ip) if x not in probadas]
+    with concurrent.futures.ThreadPoolExecutor(64) as ex:
+        abiertos = [x for x, ok in zip(cand, ex.map(lambda x: _abre(x, PUERTO_MQTT, 0.5), cand)) if ok]
+    return abiertos
+
+
+def _pc_sin_red():
+    """True si la que perdio la red es ESTA PC: no tiene direccion o no le contesta el router."""
+    ip, gw = _mi_red()
+    if not ip:
+        return True
+    if not gw:
+        return False                                # sin saber cual es el router no se afirma nada
+    return "ttl=" not in _correr(["ping", "-n", "2", "-w", "1000", gw], timeout=10).lower()
+
+
+def _guardar_ip(d, vieja, nueva):
+    """Corrige SOLO la copia de esta PC: el archivo local (con respaldo al lado) o, si los datos vienen de la nube,
+    una pista local sin el codigo de acceso. El bambu-a2l.json de la nube no se toca desde aca."""
+    import shutil
+    if d.get("_origen") == str(DATOS) and DATOS.exists():
+        respaldo = DATOS.with_name(f"{DATOS.name}.antes-{time.strftime('%Y-%m-%d-%H%M%S')}")
+        ruta_de_prueba_ok(respaldo)
+        shutil.copy2(DATOS, respaldo)
+        datos = json.loads(DATOS.read_text(encoding="utf-8"))
+        datos["ip"] = nueva
+        _escribir_json(DATOS, datos)
+        return f"{DATOS} (respaldo {respaldo.name})"
+    import registro
+    _escribir_json(_pista_ip(), {"ip": nueva, "serie": d["serie"], "cuando": registro.ahora_iso(), "antes": vieja})
+    return f"{_pista_ip()} (pista de esta PC; la copia de la nube no se toca)"
+
+
 def ubicar(d, guardar=True):
-    """Buscar la impresora por su numero de serie (bloque 2.2 de la tanda 17)."""
-    raise SinConexion("No encuentro la impresora en la red: mirá en su pantalla Ajustes > WLAN qué dirección tiene.")
+    """Encuentra la impresora por su NUMERO DE SERIE y deja en d["ip"] donde esta. Cada candidato se comprueba con el
+    certificado (CN = serie) antes de mandarle nada. Orden: la direccion del archivo, las que anotaron las otras PC,
+    el anuncio de la red (SSDP), la placa de red (MAC, si el archivo la trae) y el recorrido de la red en el 8883.
+    Encontrada en otra direccion: corrige la copia de esta PC y lo anota en el registro. No encontrada: SinConexion.
+    BAMBU_BUSCAR_EN (solo pruebas): en vez del anuncio, la MAC y el recorrido, prueba solo esas direcciones."""
+    serie, vieja = d["serie"], d.get("ip")
+    probadas = set()
+
+    def probar(ip, timeout):
+        if not ip or ip in probadas:
+            return False
+        probadas.add(ip)
+        try:
+            tls(ip, serie=serie, timeout=timeout).close()
+            return True
+        except OtraImpresora as e:
+            print(f"  {e.texto} Sigo buscando.", flush=True)
+        except SinConexion:
+            pass
+        return False
+
+    prueba = [x.strip() for x in os.environ.get("BAMBU_BUSCAR_EN", "").split(",") if x.strip()]
+    pasos = [("la direccion del archivo", lambda: [vieja], 3), ("las que anotaron las otras PC", _ips_del_registro, 2)]
+    if prueba:
+        pasos.append(("las direcciones de prueba", lambda: prueba, 2))
+    else:
+        pasos += [("el anuncio de la impresora en la red", lambda: _ips_por_anuncio(serie), 3),
+                  ("la placa de red (MAC)", lambda: _ips_por_mac(d.get("mac")), 3),
+                  ("el recorrido de la red", lambda: _ips_de_la_red(probadas), 2)]
+    encontrada, por = None, None
+    for nombre, fuente, t in pasos:
+        try:
+            cand = [x for x in (fuente() or []) if x]
+        except Exception as e:
+            print(f"  {nombre}: no se pudo ({type(e).__name__}: {e})", flush=True)
+            cand = []
+        encontrada = next((ip for ip in cand if probar(ip, t)), None)
+        if encontrada:
+            por = nombre
+            break
+    if not encontrada:
+        texto = ("No encuentro la impresora en la red (probé " + ", ".join(n for n, _, _ in pasos) + "): "
+                 "¿está prendida y en la wifi barack_Oficinas_PA? Mirá en su pantalla Ajustes > WLAN.")
+        if not prueba and _pc_sin_red():
+            texto = ("La que perdió la red es esta PC, no la impresora: no llega al router. Revisá el wifi de esta PC; "
+                     "la impresión, si había una, sigue sola (el archivo está en la tarjeta de la impresora).")
+        raise SinConexion(texto)
+    if encontrada != vieja:
+        d["ip"] = encontrada
+        if guardar:
+            donde = _guardar_ip(d, vieja, encontrada)
+            try:
+                import registro
+                registro.anotar_ip(encontrada, antes=vieja)
+            except (Exception, SystemExit) as e:
+                print("  (no se pudo anotar la direccion en el registro:", e, ")")
+        else:
+            donde = "sin guardar (prueba)"
+        print(f"la impresora cambió a {encontrada} (estaba en {vieja}; la encontré por {por}); "
+              f"archivo corregido: {donde}", flush=True)
+    d["_verificada"] = encontrada
+    return encontrada
 
 
 TEXTO_ACCESO = ("La impresora rechazó la conexión: cambió el código de acceso o se apagó el modo desarrollador. "
