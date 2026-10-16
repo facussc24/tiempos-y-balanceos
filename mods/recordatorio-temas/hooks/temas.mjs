@@ -2,12 +2,13 @@
 // La cascara (register.js) lee el canon de <raiz del proyecto>/scripts/_lib/temasCanon.data.json, el reloj y el $.store.
 
 // Origenes de un mensaje que NO son Fak escribiendo: avisos de tareas, otra sesion, una tarea programada, un plugin. El
-// encargo de una sesion madre nombra «plotter», «tornillo» o «plan del sistema» y no es una pregunta de Fak. Lo demas
-// (composer, bridge, sdk, unclassified) pasa: como manda la app de escritorio un mensaje de Fak no esta medido todavia
-// (16/10/2026), y el registro anota el origen de cada uno para saberlo.
+// encargo de una sesion madre nombra «plotter», «tornillo» o «plan del sistema» y no es una pregunta de Fak. Medido el
+// 16/10/2026 en el registro real del mod contra los transcripts (auditor Opus): lo que Fak escribe en la app de
+// escritorio llega como `composer` (7 de 7); como `sdk` llegaron 5 que no eran de el (dos encargos de la sesion madre, dos
+// informes de una hija y el aviso de seguir despues de compactar). `composer`, `bridge` y `unclassified` pasan.
 export const ORIGENES_QUE_NO_SON_FAK = [
   'task-notification', 'scheduled-trigger', 'peer', 'peer-send-message', 'projects-relay', 'channel',
-  'coordinator', 'observer', 'observer-activity', 'auto-continuation', 'slack-ping', 'plugin',
+  'coordinator', 'observer', 'observer-activity', 'auto-continuation', 'slack-ping', 'plugin', 'sdk',
 ]
 
 export function esDeFak(origen, isMeta) {
@@ -42,16 +43,23 @@ export function leerCanon(texto) {
   }
 }
 
-// Los temas que nombra el texto, el de frase mas larga primero (lo especifico antes que «el plotter» a secas).
+// Los temas que nombra el texto, el de frase mas larga primero (lo especifico antes que «el plotter» a secas). Cada tema
+// que se toma «consume» sus frases del texto: «la impresora 3d» ya no deja una «impresora» suelta para el tema generico
+// (que pediria confirmar cual cuando Fak ya lo dijo); «las medidas del plotter... el otro plotter» si deja un «plotter».
 export function temasDelTexto(texto, canon) {
   if (!canon) return []
   const t = normalizar(texto)
-  const hallados = []
-  for (const tema of canon.temas) {
-    const largo = Math.max(0, ...tema.frasesNorm.filter((f) => t.includes(f)).map((f) => f.length))
-    if (largo) hallados.push({ tema, largo })
+  const largoDe = (tema, txt) => Math.max(0, ...tema.frasesNorm.filter((f) => txt.includes(f)).map((f) => f.length))
+  const candidatos = canon.temas.map((tema) => ({ tema, largo: largoDe(tema, t) })).filter((h) => h.largo)
+    .sort((a, b) => b.largo - a.largo)
+  let resto = t
+  const tomados = []
+  for (const { tema } of candidatos) {
+    if (!largoDe(tema, resto)) continue
+    tomados.push(tema)
+    for (const f of [...tema.frasesNorm].sort((a, b) => b.length - a.length)) resto = resto.split(f).join(' | ')
   }
-  return hallados.sort((a, b) => b.largo - a.largo).map((h) => h.tema).slice(0, canon.maxTemas)
+  return tomados.slice(0, canon.maxTemas)
 }
 
 export function renglon(tema, memoriaDir) {

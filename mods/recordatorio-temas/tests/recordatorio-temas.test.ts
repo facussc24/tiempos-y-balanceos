@@ -18,7 +18,7 @@ const CANON = JSON.stringify({
   ],
 })
 
-type Opciones = { canon?: string | null; sesion?: string }
+type Opciones = { canon?: string | null; sesion?: string; storeRoto?: boolean }
 
 function armar(on: any, opciones: Opciones = {}) {
   const guardado = new Map<string, unknown>()
@@ -36,7 +36,7 @@ function armar(on: any, opciones: Opciones = {}) {
   on('session.root', () => ({ value: RAIZ }))
   on('session.cwd', () => ({ value: RAIZ }))
   on('session.id', () => ({ value: opciones.sesion ?? 'sesion-1' }))
-  on('store.get', ($: any, e: any) => ({ value: guardado.get(e.key) }))
+  on('store.get', ($: any, e: any) => (opciones.storeRoto ? { deny: 'store roto' } : { value: guardado.get(e.key) }))
   on('store.set', ($: any, e: any) => { guardado.set(e.key, e.value); return { value: undefined } })
   // Lo que haria el motor con el mensaje: lo deja entrar tal cual, con el contexto que le pusieron los hooks.
   on('prompt.submit', ($: any, e: any) => ({ text: e.text, context: e.context }))
@@ -55,11 +55,17 @@ test('un mensaje de Fak que nombra el plotter de corte trae el renglon con la ru
 
 test('un aviso de una tarea o un encargo de otra sesion no recibe nada aunque nombre el tema', async ($, on) => {
   const { lineas } = armar(on)
-  for (const kind of ['task-notification', 'peer', 'scheduled-trigger']) {
+  for (const kind of ['task-notification', 'peer', 'scheduled-trigger', 'sdk']) {
     const r: any = await $.prompt.submit(mensaje('el plotter de corte', kind) as any)
     expect(r.context ?? []).toEqual([])
   }
-  expect(lineas().filter((l) => / no es de Fak: nada/.test(l)).length).toBe(3)
+  expect(lineas().filter((l) => / sesion=sesion-1 no es de Fak: nada/.test(l)).length).toBe(4)
+})
+
+test('si el store falla, el mensaje pasa igual (el mod nunca frena)', async ($, on) => {
+  armar(on, { storeRoto: true })
+  const r: any = await $.prompt.submit(mensaje('el plotter de corte') as any)
+  expect(r.text).toBe('el plotter de corte')
 })
 
 test('el mismo tema no se repite en la misma sesion dentro de la hora, y vuelve pasada la hora', async ($, on) => {

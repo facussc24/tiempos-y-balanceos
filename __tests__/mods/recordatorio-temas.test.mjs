@@ -80,6 +80,29 @@ describe('recordatorio-temas: lo que no tiene que disparar', () => {
     expect(esDeFak({ kind: 'bridge' })).toBe(true)
   })
 
+  // Textos REALES que llegaron como `sdk` el 16/10/2026 (auditoria Opus, registro del mod contra los transcripts): el
+  // encargo de la sesion madre y el informe de una hija. Con `sdk` nada; el mismo texto como `composer` o `unclassified`, si.
+  test.each([
+    ['[ENCARGO E261016-33f0] PARA: Impresora A2L', 'impresora-3d'],
+    ['The session "triangulito-v3" you started finished a turn. It reported', 'triangulito'],
+  ])('«%s» llegado como sdk no recibe nada; como composer o unclassified, si (%s)', (texto, id) => {
+    expect(decidir({ texto, origen: { kind: 'sdk' }, sesion: 's1', vistos: {}, ahoraMs: T0, canon }).renglones).toEqual([])
+    for (const kind of ['composer', 'unclassified']) {
+      expect(decidir({ texto, origen: { kind }, sesion: 's1', vistos: {}, ahoraMs: T0, canon }).renglones.map((r) => r.id)).toContain(id)
+    }
+  })
+
+  test('el generico no sale cuando Fak ya dijo cual; si queda una mencion suelta, si', () => {
+    expect(ids('mandalo a la impresora 3d')).toEqual(['impresora-3d'])
+    expect(ids('la impresora de arriba')).toEqual(['impresoras-ricoh'])
+    expect(ids('las medidas del plotter o el papel del otro plotter')).toEqual(['plotter-htv2a', 'plotter'])
+  })
+
+  test('«8d» suelto no lleva a la tapa Amarok; «el 8D de la tapa», si', () => {
+    expect(ids('el 8D de las agujas del fieltro de PWA')).not.toContain('8d-tapa-amarok')
+    expect(ids('el 8D de la tapa')).toContain('8d-tapa-amarok')
+  })
+
   test('sin canon no sale nada y no rompe', () => {
     expect(leerCanon('no es json')).toBeNull()
     expect(decidir({ texto: 'el plotter de corte', origen: FAK, sesion: 's1', vistos: {}, ahoraMs: T0, canon: null }).renglones).toEqual([])

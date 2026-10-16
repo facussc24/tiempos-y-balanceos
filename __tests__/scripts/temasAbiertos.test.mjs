@@ -59,6 +59,27 @@ describe('_temasAbiertos', () => {
     expect(estadoDeMemoria('algo', '## 🔴 22/08 — no giro')).toBe('urgente');
   });
 
+  // Lo que marco el auditor Opus el 16/10 con renglones reales de la memoria.
+  test('«entregadas» en minuscula no es estado hecho; HECHO en mayuscula si', () => {
+    expect(estadoDeMemoria('Hojas de corte del Insert, 2 DXF de 8 piezas, entregadas 2026-08-10', '')).toBe('abierto');
+    expect(estadoDeMemoria('HECHO 07/09/2026: se le mandaron los manuales', '')).toBe('hecho');
+  });
+
+  test('un renglon que dice que algo NO falta no es un pendiente', () => {
+    const p = pendientesDe('- No hace falta avisarles a los compañeros: ya esta acordado.\n- No falta cargarlo: esta en el arb.\n- Lay out de planta: no es pendiente de Fak.\n- falta la firma de Calidad');
+    expect(p).toEqual(['falta la firma de Calidad']);
+  });
+
+  test('una memoria que dice HECHO pero tiene pendientes escritos sale «abierto»', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'temas-'));
+    fs.writeFileSync(path.join(dir, 'project_x.md'), '---\nname: x\ndescription: "HECHO 01/10: entregado"\nmetadata:\n  modified: 2026-10-01T00:00:00Z\n---\n## Hoy\n- PENDIENTE: la prueba de Fak en planta\n');
+    const out = path.join(dir, 't.html');
+    generar({ memoria: dir, hoy: '2026-10-16', out });
+    const html = fs.readFileSync(out, 'utf8');
+    expect(html).toMatch(/>abierto</);
+    expect(html).not.toMatch(/>hecho</);
+  });
+
   test('pendientes: como mucho tres, sin repetir, sin las secciones historicas', () => {
     const p = pendientesDe('## Hoy\n- falta la placa\n- falta la placa\n- el ancho, a medir\n- falta el pin\n- falta la tuerca\n## Historico\n- falta la rosca');
     expect(p).toEqual(['falta la placa', 'el ancho, a medir', 'falta el pin']);

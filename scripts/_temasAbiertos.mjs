@@ -37,6 +37,9 @@ export function leerFrontmatter(md) {
 
 const SECCION_VIEJA = /hist[oó]ric|superad|no usar|cerrad[oa]|entregado \(/i;
 const PENDIENTE = /\b(pendientes?|falta|faltan|queda abierto|quedo abierto|sin mandar|sin enviar|a medir|a confirmar|tbd|esperando|en espera)\b/i;
+// Un renglon que dice que algo NO falta no es un pendiente (auditor Opus 16/10: «No hace falta avisarles», «No falta
+// cargarlo», «no es pendiente de Fak», «no se le lista como pendiente» salian en la columna «Lo que falta»).
+const NIEGA = /\bno (hace|hacia|hara) falta\b|\bno falta\b|\bno (es|son|queda|quedan) pendientes?\b|\bno se (le )?lista como pendiente\b|\bsin pendientes\b|\bnada pendiente\b/i;
 
 /** Hasta `max` renglones del cuerpo que dicen que algo falta, fuera de las secciones historicas. */
 export function pendientesDe(cuerpo, max = 3) {
@@ -45,7 +48,7 @@ export function pendientesDe(cuerpo, max = 3) {
   for (const linea of String(cuerpo).split(/\r?\n/)) {
     const h = linea.match(/^#{1,6}\s+(.*)$/);
     if (h) { vieja = SECCION_VIEJA.test(h[1]); continue; }
-    if (vieja || !PENDIENTE.test(linea)) continue;
+    if (vieja || !PENDIENTE.test(linea) || NIEGA.test(linea)) continue;
     const t = corto(limpiar(linea), 170);
     if (t.length > 8 && !out.includes(t)) out.push(t);
     if (out.length >= max) break;
@@ -62,7 +65,7 @@ export function estadoDeMemoria(description, cuerpo) {
   if (/FRENAD|en espera|esperando/i.test(t)) return 'en espera';
   if (/🔴/.test(t)) return 'urgente';
   if (/🟡/.test(t)) return 'en curso';
-  if (/🟢|HECHO|ENTREGAD/i.test(t)) return 'hecho';
+  if (/🟢|HECHO|ENTREGAD/.test(t)) return 'hecho'; // en MAYUSCULAS es marca de estado; «entregadas» suelto no (auditor 16/10)
   return 'abierto';
 }
 
@@ -83,15 +86,17 @@ export function temasDeMemoria(dir, alias = {}) {
     const ruta = path.join(dir, f);
     const { description, modified, cuerpo } = leerFrontmatter(fs.readFileSync(ruta, 'utf8'));
     const fechaFm = modified && /^\d{4}-\d{2}-\d{2}/.test(modified) ? modified.slice(0, 10) : null;
+    const pendientes = pendientesDe(cuerpo);
+    const estado = estadoDeMemoria(description, cuerpo);
     filas.push({
       archivo: f,
       tema: humano(f),
       alias: [...new Set(alias[f] ?? [])].sort((a, b) => b.length - a.length), // lo especifico primero: se muestran 6
-      estado: estadoDeMemoria(description, cuerpo),
+      estado: estado === 'hecho' && pendientes.length ? 'abierto' : estado, // con pendientes escritos no es «hecho»
       fecha: fechaFm ?? aIso(fs.statSync(ruta).mtime),
       fechaDeArchivo: !fechaFm,
       descripcion: corto(limpiar(description.replace(/^"|"$/g, '')), 220),
-      pendientes: pendientesDe(cuerpo),
+      pendientes,
     });
   }
   return filas.sort((a, b) => (a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : a.tema.localeCompare(b.tema)));

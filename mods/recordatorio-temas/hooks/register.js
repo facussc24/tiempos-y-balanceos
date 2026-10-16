@@ -45,15 +45,15 @@ async function evaluar($, e) {
   const ahora = await $.clock.now()
   const iso = new Date(ahora).toISOString()
   const origen = e.origin?.kind ?? '?'
-  if (!esDeFak(e.origin, e.isMeta)) { await anotar($, `${iso} prompt.submit origen=${origen} no es de Fak: nada`); return [] }
+  const sesion = await sesionId($)
+  if (!esDeFak(e.origin, e.isMeta)) { await anotar($, `${iso} prompt.submit origen=${origen} sesion=${sesion ?? '?'} no es de Fak: nada`); return [] }
   const raiz = await raizSesion($)
   let texto = null
   try { texto = raiz ? await $.fs.read(raiz + CANON) : null } catch { texto = null }
   const leido = leerCanon(texto)
   // La ruta va absoluta: el modelo la abre con Read, que no entiende «~».
   const canon = leido && { ...leido, memoriaDir: leido.memoriaDir.replace(/^~/, barras(await home($))) }
-  if (!canon) { await anotar($, `${iso} prompt.submit origen=${origen} sin canon en ${raiz || '(sin raiz)'}${CANON}: nada`); return [] }
-  const sesion = await sesionId($)
+  if (!canon) { await anotar($, `${iso} prompt.submit origen=${origen} sesion=${sesion ?? '?'} sin canon en ${raiz || '(sin raiz)'}${CANON}: nada`); return [] }
   return enFila(async () => {
     const d = decidir({ texto: e.text, origen: e.origin, isMeta: e.isMeta, sesion, vistos: await $.store.get(CLAVE), ahoraMs: ahora, canon })
     await $.store.set(CLAVE, d.vistos)

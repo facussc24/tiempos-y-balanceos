@@ -58,7 +58,13 @@
       "id": "hot-press",
       "nombre": "la hot press (BMA101 / BMA103)",
       "archivos": ["reference_hot_press_patagonia_bma101_bma103.md"],
-      "frases": ["hot press", "hotpress", "bma101", "bma103", "triangulito"]
+      "frases": ["hot press", "hotpress", "bma101", "bma103"]
+    },
+    {
+      "id": "triangulito",
+      "nombre": "el triangulito regulable de la hot press del Insert",
+      "archivos": ["project_triangulito_hot_press_insert.md", "reference_hot_press_patagonia_bma101_bma103.md"],
+      "frases": ["triangulito", "triangulitos"]
     },
     {
       "id": "embossing",
@@ -94,7 +100,7 @@
       "id": "8d-tapa-amarok",
       "nombre": "el 8D de la tapa Amarok",
       "archivos": ["project_8d_11010843_tapa_amarok.md"],
-      "frases": ["8d", "11010843", "tapa amarok", "tapa de la amarok", "tapa consola"]
+      "frases": ["8d de la tapa", "8d tapa", "8d amarok", "8d de la amarok", "11010843", "tapa amarok", "tapa de la amarok", "tapa consola"]
     },
     {
       "id": "sika-top-roll",
