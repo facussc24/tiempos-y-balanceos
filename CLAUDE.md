@@ -73,7 +73,21 @@ commit/push/archivar los hago yo.
   "preguntar" y lo que solo el sabe, dicho como "esto va aca, ¿esta bien?"; si no hace falta nada,
   "De vos no necesito nada" y no se inventa una pregunta. Lo recuerda el chequeo 5 del
   `cierre-guard.sh` como un aviso mas, sin frenar por esto y solo cuando el cierre es largo: en un
-  cierre corto nada lo recuerda.
+  cierre corto nada lo recuerda. **Y el cierre TERMINA con un renglon fijo «Propongo: …»** (tanda 1.2
+  del plan del sistema, 16/10/2026; Fak, 13/10: *"siento que todo se me tiene que ocurrir a mi"*):
+  hasta 3 items, SOLO sobre el COMO (una herramienta, un repo de GitHub, un manual, una funcion de
+  Claude Code, una tarea aparte a investigar), cada uno con su fuente; nunca un numero tecnico ni
+  contenido del entregable (eso sigue prohibido: *"no muestres info de mas"*). Si no hay nada que valga,
+  «Propongo: nada». Ese orden (lo que necesito → que cambio → que encontre → Propongo) no se cambia.
+  Lo mide `scripts/_cuatroNumeros.mjs` (16/10: 0 de 442 cierres lo traian) y lo recuerda el mismo
+  chequeo 5. Antes de construir algo de 3D o de una maquina, un `buscador` trae primero que existe
+  (repo, manual en `4- MANUALES`, funcion de Claude Code) y el cierre lo dice.
+- **Ante una idea cruda de Fak** (no un pedido claro, no algo irreversible: *"¿se te ocurre alguna forma de
+  mejorar este diseño?"*, *"¿podes frenarte o delegar el laburo?"*): en el MISMO turno, una objecion
+  concreta, la alternativa mas simple y la recomendacion, **sin pregunta de menu y sin editar nada**
+  hasta que conteste. Un pedido claro (*"cambia esta columna"*, *"mandalo"*) se ejecuta directo, sin
+  objecion inventada. Proponer el COMO si; agregar contenido o numeros al entregable, no (06/10: *"al pedo
+  hiciste eso"*; 14/10: *"un resumen va sin recomendaciones que nadie pidio"*).
 - Si Fak dice "decidi vos": decidir con mejor practica y explicar brevemente por que.
   No devolverle la pregunta.
 - Si Fak dice que no entendio, pide que se lo explique o que sea facil de entender, o se nota que
