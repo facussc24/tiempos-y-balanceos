@@ -13,7 +13,8 @@
 #   session-start-context.sh inicio    → matcher startup|resume|clear: corre cerebro-guard
 #       (baja el cerebro si esta PC no lo tiene) y despues imprime los SEGUIMIENTOS CON FECHA
 #       abiertos (scripts/_seguimientos.mjs --hook; nada si no hay ninguno). Fak, 02/10/2026:
-#       "memorias con fechas que chequees constantemente en las sesiones".
+#       "memorias con fechas que chequees constantemente en las sesiones". Los viernes, en una sesion
+#       nueva que abrio Fak, suma el renglon del viernes de planificacion (viernesPlanificacion.mjs).
 #   session-start-context.sh compact   → matcher compact: reinyecta el nucleo anti-perdida,
 #       menos de 1 KB.
 #   "lecciones" se acepta como alias de "inicio" (nombre viejo del modo).
@@ -70,5 +71,9 @@ node "$ROOT/scripts/_novedadesClaude.mjs" --hook 2>/dev/null
 # algo grave"): un renglon con lo NUEVO que dejaron las PC en el buzon (frenos de los controles, juntos por episodio) y
 # las PC para mirar. Nada si no hay novedades o si la nube no esta. El detalle y el dar por visto: vigia.mjs [--marcar].
 node "$ROOT/tools/claude-area/vigia.mjs" --hook 2>/dev/null
+# Viernes de planificacion (Fak, 15/10/2026: "que el lo sepa y me lo sugiera"; no es tarea programada): los viernes, en una
+# sesion nueva que abrio Fak (no una lanzada por otra sesion ni por el reloj), un renglon que le pide a la sesion proponer
+# el ritual. Una vez por viernes por PC; ante la duda calla. Logica y por que esas señales: viernesPlanificacion.mjs.
+printf '%s' "$PAYLOAD" | node "$ROOT/scripts/_lib/viernesPlanificacion.mjs" --hook 2>/dev/null
 hora_vigente
 exit 0
