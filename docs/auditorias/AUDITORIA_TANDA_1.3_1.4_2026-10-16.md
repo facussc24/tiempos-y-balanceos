@@ -53,7 +53,9 @@ Las condiciones son tres:
   - un mensaje sin origen pasa a `sdk` solo si `promptSource === 'sdk'`;
   - lo tipeado o encolado sin origen pasa a `unclassified`.
 
-  Lo que Fak escribe nunca sale como `sdk`.
+  Segun ese codigo y los 7 casos medidos, lo que Fak escribe no sale como `sdk`. Del encargo de las 23:12:23 solo
+  se leyo el comienzo (`<cross-session-message from="`): tiene el mismo formato que el de las 19:27:33, que se leyo
+  entero.
 - **Arreglo propuesto (lo aplica quien lanzo la auditoria):**
   - Agregar `'sdk'` a `ORIGENES_QUE_NO_SON_FAK`. `unclassified` tiene que seguir pasando.
   - Corregir el comentario de `temas.mjs:4-7` y el README:10: medido el 16/10, Fak = `composer`, y `sdk` = encargos, informes de hijas y la continuacion despues de compactar.
@@ -124,8 +126,8 @@ Las condiciones son tres:
   - El test arma el payload con `JSON.stringify` y prueba el camino real `bash → node`, con payload bueno y con basura.
   - `hooksTienenTest` tiene su fila (`tipo: 'observa'`).
 - **R-9. ROBUSTEZ: en un worktree, el registro queda en el worktree.**
-  - El hook escribe en `$CLAUDE_PROJECT_DIR/.claude/state/`. En una sesion hija en un worktree, `CLAUDE_PROJECT_DIR` es el worktree: los transcripts de esas sesiones viven en otra carpeta de proyecto, por ejemplo `C--Dev-BarackMercosul--claude-worktrees-impresora-tanda17-496e43`.
-  - Las compactaciones de las hijas se pierden cuando se borra el worktree.
+  - El hook escribe en `$CLAUDE_PROJECT_DIR/.claude/state/`. En una sesion hija en un worktree, `CLAUDE_PROJECT_DIR` seria el worktree. Es una **inferencia**, no se midio la variable: sale de que el mod lee la raiz del worktree (`$.session.root()`, en el registro) y de que los transcripts de esas sesiones viven en otra carpeta de proyecto, por ejemplo `C--Dev-BarackMercosul--claude-worktrees-impresora-tanda17-496e43`.
+  - Si es asi, las compactaciones de las hijas se pierden cuando se borra el worktree.
   - Arreglo, si se quiere contarlas: escribir en la `.claude/state` del repo principal (`git rev-parse --git-common-dir`) o en `~/.claude/state`.
 
 ## 4. `scripts/_temasAbiertos.mjs`
