@@ -4,6 +4,11 @@ Uso (python del sistema):
   bambu_red.py --preparar 192.168.1.198     arma el archivo de datos (IP y numero de serie; el codigo
                                             de acceso lo escribe Fak a mano, este script NUNCA lo muestra)
   bambu_red.py --estado                     SOLO LEE: estado, temperaturas y filamentos cargados
+  bambu_red.py --imprimir <x.gcode.3mf> [--mapa 0,1] [--apply] [--sin-margen]   plan; con --apply sube y manda
+  bambu_red.py --seguir <carpeta> [--fotos-en 3,10] [--despertar 5] [--cada 30] [--buscar] [--en-pausa]
+  bambu_red.py --foto x.jpg | --pausar | --reanudar | --cancelar | --velocidad [1-4] | --luz [on|off]
+  bambu_red.py --saltear <x.gcode.3mf> [12,15] [--apply] | --ambiente [min] | --avisar-retiro
+  bambu_red.py --ficha <carpeta> | --selftest | --version | --pedir-codigo
 
 Datos en %USERPROFILE%\\.claude\\bambu-a2l.json (fuera del repo, que es publico); copia para las otras PC en la nube de Ingenieria.
 MQTT 3.1.1 sobre TLS, puerto 8883, usuario "bblp", clave = codigo de acceso de la pantalla.
@@ -20,6 +25,7 @@ import struct
 import sys
 import tempfile
 import time
+from datetime import timedelta
 from pathlib import Path
 
 VERSION = "2026-10-16"        # la misma que el encabezado de SKILL.md (--version)
@@ -729,21 +735,33 @@ def subir(d, archivo, nombre):
                                                 session=self.sock.session)
             return conn, size
 
+    asegurar_ip(d)                     # el codigo de acceso viaja en el login: solo a la impresora comprobada
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
     ctx.check_hostname = False
     ctx.verify_mode = ssl.CERT_NONE
-    f = FTPSImplicito(context=ctx)
-    f.connect(d["ip"], 990)
-    f.login("bblp", d["codigo_acceso"])
-    f.prot_p()
-    f.voidcmd("TYPE I")
-    conn = f.transfercmd("STOR " + nombre)
-    with open(archivo, "rb") as fh:
-        while True:
-            blo = fh.read(65536)
-            if not blo:
-                break
-            conn.sendall(blo)
+    total, subido, ult_aviso = Path(archivo).stat().st_size, 0, time.time()
+    try:
+        f = FTPSImplicito(context=ctx)
+        f.connect(d["ip"], PUERTO_FTP)
+        f.login("bblp", d["codigo_acceso"])
+        f.prot_p()
+        f.voidcmd("TYPE I")
+        conn = f.transfercmd("STOR " + nombre)
+        with open(archivo, "rb") as fh:
+            while True:
+                blo = fh.read(65536)
+                if not blo:
+                    break
+                conn.sendall(blo)
+                subido += len(blo)
+                if time.time() - ult_aviso > 15:       # que se vea que avanza (una subida de 20 MB tarda ~2 min)
+                    print(f"  subidos {subido / 1e6:.0f} de {total / 1e6:.0f} MB", flush=True)
+                    ult_aviso = time.time()
+    except ftplib.error_perm as e:
+        raise FallaImpresora(f"La impresora no aceptó el archivo ({str(e)[:80]}): ¿tiene la tarjeta MicroSD puesta?") from None
+    except (OSError, EOFError, ftplib.Error) as e:
+        raise SinConexion(f"Se cortó la subida del archivo a la impresora ({type(e).__name__}): no se mandó "
+                          "ninguna orden de imprimir.") from None
     conn.close()                       # sin unwrap(): con la Bambu se queda colgado
     try:
         f.voidresp()
@@ -796,26 +814,44 @@ def chips_del_cargador(estado_):
     return out
 
 
-def mapa_automatico(archivo, estado_):
-    """Elige el lugar del cargador para cada filamento del archivo: MISMO material (perfil GFAxx)
-    y el color mas parecido. Devuelve (mapa, renglones para mostrar, fallas)."""
-    def dist(c1, c2):
-        try:
-            a_, b_ = (tuple(int(c[i:i + 2], 16) for i in (1, 3, 5)) for c in (c1, c2))
-            return sum((x - y) ** 2 for x, y in zip(a_, b_)) ** 0.5
-        except Exception:
-            return 999.0
-    lug = lugares_del_cargador(estado_)
+def _dist_color(c1, c2):
+    try:
+        a_, b_ = (tuple(int(c[i:i + 2], 16) for i in (1, 3, 5)) for c in (c1, c2))
+        return sum((x - y) ** 2 for x, y in zip(a_, b_)) ** 0.5
+    except (TypeError, ValueError, IndexError):
+        return 999.0
+
+
+def _restantes_del_registro(chip):
+    import registro
+    return registro.gramos_restantes(chip) if chip else None
+
+
+def mapa_automatico(archivo, estado_, restantes=None):
+    """Elige el lugar del cargador para cada filamento del archivo: MISMO material (perfil GFAxx) y el color mas
+    parecido. Entre dos rollos iguales (mismo material y color) elige EL MAS GASTADO segun el registro (idea de
+    bambuddy): asi el viejo se termina primero y el respaldo automatico pasa al nuevo. Devuelve (mapa, renglones
+    para mostrar, fallas)."""
+    restantes = restantes or _restantes_del_registro
+    lug, chips = lugares_del_cargador(estado_), chips_del_cargador(estado_)
     mapa, ren, fallas, usados = [], [], [], set()
     for fid, perfil, tipo, color, gramos in filamentos_del_archivo(archivo):
-        cand = [(dist(color, c), n) for n, (pf, _, c) in lug.items() if pf == perfil and n not in usados]
+        cand = sorted((_dist_color(color, c), n) for n, (pf, _, c) in lug.items() if pf == perfil and n not in usados)
         if not cand:
             hay = sorted({f"{nom} ({pf})" for pf, nom, _ in lug.values()})
             fallas.append(f"filamento {fid} del archivo es {tipo} perfil {perfil} y en el cargador hay {hay}: "
                           f"hay que laminarlo de nuevo con el material cargado")
             mapa.append(-1)
             continue
-        dmin, n = min(cand)
+        dmin, n = cand[0]
+        iguales = [x for dd, x in cand if dd <= dmin + 30 and lug[x][2] == lug[n][2]]
+        if len(iguales) > 1:
+            quedan = {x: restantes(chips.get(x)) for x in iguales}
+            n = min(iguales, key=lambda x: (quedan[x] is None, quedan[x] if quedan[x] is not None else 0, x))
+            cuanto = {x: (f"~{quedan[x]:.0f} g" if quedan[x] is not None else "sin chip") for x in iguales}
+            ren.append(f"   (lugares {', '.join(str(x + 1) for x in sorted(iguales))} con el mismo rollo: elijo el {n + 1}, "
+                       f"el mas gastado ({', '.join(f'lugar {x + 1} {cuanto[x]}' for x in sorted(iguales))}); "
+                       "asi el viejo se termina primero)")
         usados.add(n)
         mapa.append(n)
         ren.append(f"filamento {fid} ({color}, {gramos} g) -> lugar {n + 1}: {lug[n][1]} {lug[n][2]}")
@@ -825,38 +861,265 @@ def mapa_automatico(archivo, estado_):
     return mapa, ren, fallas
 
 
-def imprimir(archivo, mapa, aplicar):
-    """Sube un .gcode.3mf y le pide a la impresora que lo imprima. Sin --apply solo muestra el plan."""
+# ---------------- frenos antes de mandar (16/10/2026) ----------------
+# La skill decia «antes de mandar se miran los gramos» y el codigo no los miraba: el 15/10 se mandaron 78 g de noche
+# con «quedan unos 98 g» y sin respaldo. Estos numeros son PROPUESTA SIN FUENTE (informe H2 §2.5): se ajustan con
+# las primeras pesadas.
+MARGEN_G, MARGEN_PCT = 30.0, 0.15      # margen por envio: las purgas y la linea de arranque no se cuentan
+ROLLO_AVISO_G = 100.0                  # con menos: «pesalo» en cada envio
+# Con menos y una pieza que termina de noche sin un rollo de respaldo igual: frena. Caso T8c del plan (80 g a las
+# 23:00 frena); el §2.4 del plan decia 50 g: se tomo el mas estricto (contrato de autonomia, «la fila mas restrictiva»).
+ROLLO_NOCHE_G = 100.0
+NOCHE_DESDE = (20, 45)                 # desde ~20:45 se apagan las luces de la planta y la camara no ve (13 y 15/10)
+OK_FAK_MINUTOS = 180                   # mas de 3 h (o que termine de noche): no se manda sin <archivo>.ok
+FACTOR_TIEMPO = 1.02                   # en 9 impresiones el real quedo entre -7 % y +2,3 % del estimado (registro)
+
+
+def _ahora():
+    import registro
+    return registro.ahora()
+
+
+def ajustes_del_archivo(archivo):
+    """Del plate_1.gcode: minutos estimados, capas, gramos por filamento y los ajustes con que se lamino."""
+    import zipfile
+    with zipfile.ZipFile(archivo) as z:
+        with z.open("Metadata/plate_1.gcode") as fh:
+            txt = b""
+            for blo in iter(lambda: fh.read(65536), b""):
+                txt += blo
+                if b"CONFIG_BLOCK_END" in txt or len(txt) > 4_000_000:
+                    break
+    txt = txt.decode("utf-8", "replace")
+    m = re.search(r"total estimated time: (?:(\d+)d )?(?:(\d+)h )?(\d+)m", txt)
+    minutos = (int(m.group(1) or 0) * 1440 + int(m.group(2) or 0) * 60 + int(m.group(3))) if m else None
+    capas = re.search(r"total layer number: (\d+)", txt)
+
+    def clave(k):
+        x = re.search(rf"^; {k} = (.*)$", txt, re.M)
+        return x.group(1).strip() if x else None
+    soportes = clave("enable_support")
+    return {"minutos": minutos, "capas": int(capas.group(1)) if capas else None,
+            "paredes": clave("wall_loops"), "relleno": clave("sparse_infill_density"),
+            "capas_arriba": clave("top_shell_layers"), "capas_abajo": clave("bottom_shell_layers"),
+            "borde": clave("brim_type"), "borde_mm": clave("brim_width"),
+            "soportes": ("no" if soportes in ("0", None) else f"si ({clave('support_type')})")}
+
+
+def _de_noche(inicio, fin):
+    return fin > inicio.replace(hour=NOCHE_DESDE[0], minute=NOCHE_DESDE[1], second=0, microsecond=0)
+
+
+def freno_gramos(archivo, mapa, est, minutos, inicio, restantes=None):
+    """(fallas, avisos) por lugar del cargador: los gramos del archivo contra lo que queda segun el registro, con
+    margen max(30 g, 15 %). Los rollos IGUALES cargados en otros lugares que el trabajo no usa suman (el respaldo
+    automatico pasa a ellos), con un aviso de que tiene que estar prendido."""
+    import registro
+    restantes = restantes or _restantes_del_registro
+    lug, chips = lugares_del_cargador(est), chips_del_cargador(est)
+    fin = inicio + timedelta(minutes=(minutos or 0) * FACTOR_TIEMPO)
+    noche = _de_noche(inicio, fin)
+    usados = {m for m in mapa if m >= 0}
+    pedidos = {}
+    for (fid, perfil, tipo, color, g), m in zip(filamentos_del_archivo(archivo), mapa):
+        if m >= 0:
+            pedidos[m] = pedidos.get(m, 0.0) + float(g or 0)
+    fallas, avisos = [], []
+    for m, pide in sorted(pedidos.items()):
+        nombre = registro.nombre_color(lug.get(m, ("", "", ""))[2])
+        chip = chips.get(m)
+        if not chip:
+            avisos.append(f"el rollo del lugar {m + 1} no informa chip: no sé cuánto le queda (pesalo)")
+            continue
+        quedan = restantes(chip)
+        iguales = [n for n, (pf, _, c) in lug.items()
+                   if n != m and n not in usados and (pf, c) == (lug[m][0], lug[m][2]) and chips.get(n)]
+        extra = sum(max(0.0, restantes(chips[n]) or 0) for n in iguales)
+        margen = max(MARGEN_G, MARGEN_PCT * pide)
+        if quedan - pide < margen:
+            if iguales and quedan + extra - pide >= margen:
+                avisos.append(f"el {nombre} del lugar {m + 1} no alcanza solo (pide {pide:.0f} g, quedan ~{quedan:.0f} g): "
+                              f"cuenta con el rollo igual del lugar {iguales[0] + 1}. Tiene que estar prendido «AMS "
+                              "Filament Backup» en la pantalla (Ajustes > Opciones AMS); si no, se pausa al terminarse")
+            else:
+                fallas.append(f"no alcanza el {nombre} (pide {pide:.0f} g, quedan ~{quedan:.0f} g, margen {margen:.0f} g)")
+                continue
+        if quedan < ROLLO_NOCHE_G and noche and not iguales:
+            fallas.append(f"de noche con menos de {ROLLO_NOCHE_G:.0f} g y sin rollo de respaldo igual: el {nombre} del "
+                          f"lugar {m + 1} tiene ~{quedan:.0f} g y la pieza termina a las {fin:%H:%M}")
+        elif quedan < ROLLO_AVISO_G:
+            avisos.append(f"al {nombre} del lugar {m + 1} le quedan ~{quedan:.0f} g según la cuenta: pesalo "
+                          f"(registro.py --pesar {m + 1} <gramos de la balanza>)")
+        if nombre == "negro" and not iguales:
+            avisos.append("no hay un segundo negro igual cargado: el negro va siempre con respaldo (Fak, 16/10). "
+                          "De día no frena")
+    return fallas, avisos
+
+
+def placa_ocupada(est):
+    """FINISH o FAILED = la placa tiene piezas hasta que alguien anote «placa_libre» despues de ese fin."""
+    import registro
+    if est.get("gcode_state") not in ("FINISH", "FAILED"):
+        return None
+    ev = registro.leer()
+    fin, libre = registro.ultimo_fin(ev), registro.placa_libre(ev)
+    if libre and (fin is None or libre > fin):
+        return None
+    return ("placa ocupada: confirmá que la sacaste con registro.py --placa-libre (la impresora dice "
+            f"{est.get('gcode_state')} y no hay un «placa libre» anotado después de ese fin)")
+
+
+def falta_ok_de_fak(archivo, minutos, inicio):
+    """None si no hace falta o esta; si falta, el texto. El <archivo>.ok lo escribe la sesion con la frase textual de
+    Fak y la fecha (el 13/10 la decision «esperar a Fak» vivia solo en el chat, se compacto y se mando igual)."""
+    fin = inicio + timedelta(minutes=(minutos or 0) * FACTOR_TIEMPO)
+    largo, noche = (minutos or 0) > OK_FAK_MINUTOS, _de_noche(inicio, fin)
+    if not (largo or noche):
+        return None
+    ok = Path(archivo).with_name(Path(archivo).name + ".ok")
+    motivo = "pieza de más de 3 h" if largo else f"termina a las {fin:%H:%M}, después de las 20:45"
+    try:
+        hay = ok.read_text(encoding="utf-8", errors="replace").strip()
+    except OSError:
+        hay = ""
+    if not hay:
+        return f"falta el OK de Fak en {ok} ({motivo}): la sesión lo escribe con la frase textual de Fak y la fecha"
+    if ok.stat().st_mtime < Path(archivo).stat().st_mtime:
+        return f"el OK de Fak ({ok.name}) es anterior al laminado: se relaminó después; hay que pedírselo de nuevo"
+    return None
+
+
+def ficha(archivo):
+    """La ficha de la pieza (ficha.json en la carpeta del .gcode.3mf) o {}."""
+    try:
+        return json.loads((Path(archivo).parent / "ficha.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def anotar_envio_en_ficha(archivo, ajustes, gramos, trabajo_id, chips, lugares):
+    """La ficha de la pieza: nombre (las palabras de Fak = el nombre del archivo), archivo vigente, ajustes, gramos y
+    minutos estimados y cada envio. --seguir la completa al cerrar. «descartado» lo escribe la sesion a mano."""
+    import registro
+    archivo = Path(archivo)
+    f = ficha(archivo) or {"pieza": archivo.name.replace(".gcode.3mf", ""), "descartado": ""}
+    f.update({"archivo_vigente": archivo.name, "ajustes": ajustes, "gramos": gramos,
+              "minutos_estimados": ajustes.get("minutos"), "actualizada": registro.ahora_iso()})
+    f.setdefault("envios", []).append({"trabajo_id": trabajo_id, "fecha": registro.ahora_iso(), "archivo": archivo.name,
+                                       "chips": chips, "lugares": lugares, "resultado": None, "minutos_reales": None,
+                                       "foto_final": None})
+    _escribir_json(archivo.parent / "ficha.json", f)
+
+
+def completar_ficha(enviada, cierre, foto_final=None):
+    """Al cerrar un trabajo: resultado, minutos reales y la foto final en la ficha de la pieza (si esta en esta PC)."""
+    if not enviada or not cierre or not enviada.get("carpeta"):
+        return
+    ruta = Path(enviada["carpeta"]) / "ficha.json"
+    try:
+        f = json.loads(ruta.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    for e in f.get("envios", []):
+        if e.get("trabajo_id") == enviada.get("trabajo_id"):
+            e.update(resultado=cierre.get("tipo"), minutos_reales=cierre.get("minutos_reales"),
+                     foto_final=str(foto_final) if foto_final else e.get("foto_final"))
+    try:
+        _escribir_json(ruta, f)
+    except (OSError, FallaImpresora):
+        pass
+
+
+def mostrar_ficha(carpeta):
+    ruta = Path(carpeta) / "ficha.json" if Path(carpeta).is_dir() else Path(carpeta).parent / "ficha.json"
+    try:
+        f = json.loads(ruta.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        raise FallaImpresora(f"no hay una ficha en {ruta.parent} (se crea al mandar la pieza con --imprimir --apply)") from None
+    print(f"PIEZA: {f.get('pieza')} | archivo vigente: {f.get('archivo_vigente')}")
+    print("  ajustes:", ", ".join(f"{k} {v}" for k, v in (f.get("ajustes") or {}).items() if v is not None))
+    print("  gramos:", f.get("gramos"), "| minutos estimados:", f.get("minutos_estimados"))
+    if f.get("descartado"):
+        print("  DESCARTADO:", f["descartado"])
+    for e in f.get("envios", []):
+        print(f"  envio {e.get('fecha', '')[:16]} {e.get('trabajo_id')}: {e.get('resultado') or 'sin cierre'}"
+              + (f", {e['minutos_reales']} min reales" if e.get("minutos_reales") is not None else "")
+              + (f", foto {e['foto_final']}" if e.get("foto_final") else ""))
+    return 0
+
+
+ORDEN_ESPERA_S, TRAMPA_ESPERA_S = 150, 120     # vuelve apenas arranca; a los 2 min mira la trampa de la etapa 77
+TRAMPA_77 = ("la impresora sigue en PREPARE, etapa 77 («Preparando AMS»), renglon 0: es la trampa de la unidad 16 "
+             "(falta ams_mapping2). Cancelala (--cancelar o el cuadrado rojo) y avisá a Fak")
+
+
+def imprimir(archivo, mapa, aplicar, sin_margen=False):
+    """Sube un .gcode.3mf y le pide a la impresora que lo imprima. Sin --apply solo muestra el plan.
+    Frena (antes de subir nada) si: el archivo trae varias placas, el material o el color no son los cargados, la
+    impresora esta ocupada, no alcanzan los gramos (o es de noche con poco rollo y sin respaldo), la placa tiene
+    piezas sin «placa libre» anotado, o es una pieza larga o de noche sin el <archivo>.ok de Fak."""
     import hashlib
     import zipfile
-    d = cargar_datos()
+    import registro
     archivo = Path(archivo)
-    est0 = leer_estado(d)
-    fallas = []
-    # antes que el freno de color: con varias placas solo se mandaria la 1 y el resto se perderia
-    # sin aviso (14/10/2026); el mensaje del color tapaba este
-    with zipfile.ZipFile(archivo) as _z:
-        placas = [n for n in _z.namelist() if re.fullmatch(r"Metadata/plate_\d+\.gcode", n)]
+    if not archivo.is_file():
+        raise FallaImpresora(f"no encuentro el archivo {archivo}")
+    try:
+        with zipfile.ZipFile(archivo) as _z:
+            nombres = _z.namelist()
+    except zipfile.BadZipFile:
+        raise FallaImpresora(f"{archivo.name} no es un laminado de Bambu Studio (.gcode.3mf)") from None
+    # antes que el freno de color: con varias placas solo se mandaria la 1 y el resto se perderia sin aviso (14/10)
+    placas = [n for n in nombres if re.fullmatch(r"Metadata/plate_\d+\.gcode", n)]
     if len(placas) > 1:
         print(f"   NO SE MANDA: el archivo trae {len(placas)} placas; va un archivo por placa")
         return 1
-    if mapa is None:                      # sin --mapa: se elige solo, por material y color
+    if not placas:
+        raise FallaImpresora(f"{archivo.name} no trae el codigo de la placa 1 (Metadata/plate_1.gcode)")
+    d = cargar_datos()
+    est0 = leer_estado(d)
+    fallas = []
+    if mapa is None:                      # sin --mapa: se elige solo, por material, color y el rollo mas gastado
         mapa, ren, fallas = mapa_automatico(archivo, est0)
         for r in ren:
             print("  ", r)
     elif not mapa or any(not isinstance(m, int) or m < -1 or m > 3 for m in mapa):
         fallas.append(f"--mapa {mapa}: cada lugar del cargador va de 0 a 3 (-1 = no se usa)")
-    # con mapa a mano o automatico: a una impresora ocupada no se le manda nada
-    if aplicar and est0.get("gcode_state") in ("RUNNING", "PREPARE", "PAUSE"):
-        fallas.append(f"la impresora esta ocupada ({est0.get('gcode_state')})")
+    ajustes = ajustes_del_archivo(archivo)
+    minutos, inicio = ajustes.get("minutos") or 0, _ahora()
+    fin = inicio + timedelta(minutes=minutos * FACTOR_TIEMPO)
+    if not fallas:
+        f_g, avisos_g = freno_gramos(archivo, mapa, est0, minutos, inicio)
+        for a in avisos_g:
+            print("   AVISO DE ROLLO:", a)
+        if f_g and sin_margen:
+            print("   --sin-margen: se manda igual con poco rollo (solo con la frase de Fak en el chat):", "; ".join(f_g))
+        elif f_g:
+            fallas += f_g
+    estado_ = est0.get("gcode_state")
+    al_mandar = []                         # lo que frena solo con --apply (sin --apply se muestra como aviso)
+    if estado_ in ("RUNNING", "PREPARE", "PAUSE"):
+        al_mandar.append(f"la impresora esta ocupada ({estado_})")
+    ocupada = placa_ocupada(est0)
+    if ocupada:
+        al_mandar.append(ocupada)
+    elif estado_ == "IDLE":
+        print("   la impresora esta libre (IDLE): si antes termino algo, alguien toco la pantalla; mirá igual que la "
+              "placa este vacia y limpia")
+    falta_ok = falta_ok_de_fak(archivo, minutos, inicio)
+    if falta_ok:
+        al_mandar.append(falta_ok)
+    if aplicar:
+        fallas += al_mandar
     if fallas:
         for f in fallas:
             print("   NO SE MANDA:", f)
         return 1
-    nombre = "virolador_v14.gcode.3mf" if "VIROLADOR v14" in archivo.name else re.sub(r"[^A-Za-z0-9_.-]", "_", archivo.name)
-    z = zipfile.ZipFile(archivo)
+    nombre = registro.nombre_en_impresora(archivo)
+    subtask = registro.subtask_de(nombre)
+    with zipfile.ZipFile(archivo) as z:
+        md5 = hashlib.md5(z.read("Metadata/plate_1.gcode")).hexdigest().upper()
     placa = "Metadata/plate_1.gcode"
-    md5 = hashlib.md5(z.read(placa)).hexdigest().upper()
     # Forma de la orden: la del programa abierto Bambuddy (maziggy/bambuddy, bambu_mqtt.py), que ya
     # soporta la A2L y la saco de capturas de Bambu Studio. LO QUE FALTABA el 13/10/2026: en la A2L
     # el cargador es la unidad fisica 16, y sin "ams_mapping2" con ams_id 16 la impresora acepta el
@@ -870,17 +1133,25 @@ def imprimir(archivo, mapa, aplicar):
         "flow_cali": False, "extrude_cali_flag": 2, "extrude_cali_manual_mode": 0,
         "vibration_cali": True, "layer_inspect": False, "nozzle_offset_cali": 0,
         "use_ams": True,
-        "subtask_name": nombre.replace(".3mf", "").replace(".gcode", ""),
+        "subtask_name": subtask,
         "profile_id": "0", "project_id": uid, "subtask_id": uid, "task_id": uid,
         "ams_mapping": list(mapa),
         "ams_mapping2": [{"ams_id": UNIDAD_CARGADOR_A2L, "slot_id": m} for m in mapa]}}
     print("PLAN: subir", archivo.name, f"({archivo.stat().st_size/1e6:.1f} MB) como", nombre)
     print("      imprimir", placa, "| filamento del archivo -> lugar del cargador:",
           {i + 1: m + 1 for i, m in enumerate(mapa)})
+    print(f"      ajustes: paredes {ajustes['paredes']}, relleno {ajustes['relleno']}, capas arriba/abajo "
+          f"{ajustes['capas_arriba']}/{ajustes['capas_abajo']}, borde {ajustes['borde']} ({ajustes['borde_mm']} mm), "
+          f"soportes {ajustes['soportes']}; orientacion: la del laminado (se ve en el dibujo de la primera capa)")
+    print(f"      {minutos // 60} h {minutos % 60} min estimados: la primera capa empieza en 6-16 min (arranque de la "
+          f"A2L) y termina a las {fin:%H:%M}" + (f" del {fin:%d/%m}" if fin.date() != inicio.date() else ""))
+    if _de_noche(inicio, fin):
+        print("      DE NOCHE: después de las 20:45 la cámara no ve (planta a oscuras); se vigila solo el estado")
+    for a in al_mandar:
+        print("      CON --apply NO SE MANDA:", a)
     # temperatura del lugar contra lo que pide Bambu (avisa; la decision de imprimir igual es de Fak)
     try:
-        t_est = re.search(rb"total estimated time: (?:(\d+)h )?(\d+)m", z.read(placa)[:20000])
-        lin_a, av_a = ambiente((int(t_est.group(1) or 0) * 60 + int(t_est.group(2))) if t_est else 0)
+        lin_a, av_a = ambiente(minutos)
         for x in lin_a:
             print("     ", x)
         for x in av_a:
@@ -903,45 +1174,80 @@ def imprimir(archivo, mapa, aplicar):
     if not aplicar:
         print("      (sin --apply no se manda nada)")
         return 0
-    c = Conexion(d)
+    # la conexion se abre DESPUES de subir: una subida de ~2 min no deja mandar el aviso de vida
     tam = subir(d, archivo, nombre)
     print("  subido; tamano en la impresora:", tam, "| local:", archivo.stat().st_size)
     if tam is not None and tam != archivo.stat().st_size:
         print("  EL ARCHIVO NO LLEGO ENTERO: no se manda a imprimir")
-        c.cerrar()
         return 1
-    c.publicar(orden)
-    print("  ORDEN DE IMPRIMIR MANDADA", time.strftime("%H:%M:%S"))
-    # 15/10/2026: se mando y nadie vigilo; la falla la vio Fak al 27 %. La vigilancia la lanza la
-    # sesion (en segundo plano, para que su salida la despierte): este renglon se lo recuerda.
-    print("  AHORA, EN SEGUNDO PLANO: bambu_red.py --seguir <carpeta> --fotos-en 3,10 --despertar 5 --cada 30")
-    # queda anotado en el registro compartido de la nube (horas, gramos por rollo)
-    try:
-        import registro
-        est1 = leer_estado(d, 4)
-        chips = {int(t["id"]): t.get("tag_uid") for u in (est1.get("ams") or {}).get("ams", [])
-                 for t in u.get("tray", []) if t.get("tag_uid")}
-        lug1 = lugares_del_cargador(est1)
-        tiempo = re.search(rb"total estimated time: (?:(\d+)h )?(\d+)m", z.read(placa)[:20000] or b"")
+    with Conexion(d) as c:
+        c.leer(8, hasta=_informe_completo)
+        est1 = c.visto
+        # otra PC pudo mandar durante la subida: se relee justo antes de dar la orden
+        if est1.get("gcode_state") in ("RUNNING", "PREPARE", "PAUSE"):
+            print(f"   NO SE MANDA: mientras se subia el archivo la impresora paso a {est1.get('gcode_state')} "
+                  f"({est1.get('subtask_name')}): otra PC u otra persona la mando")
+            return 1
+        chips, lug1 = chips_del_cargador(est1), lugares_del_cargador(est1)
+        fil = filamentos_del_archivo(archivo)
+        trabajo_id = time.strftime("%Y%m%d-%H%M%S-") + nombre.split(".")[0]
+        # el renglon va ANTES de la orden: si el programa se corta entre las dos, la impresion igual queda anotada
         registro.anotar({
-            "tipo": "enviada", "trabajo_id": time.strftime("%Y%m%d-%H%M%S-") + nombre.split(".")[0],
-            "pieza": archivo.stem.replace(".gcode", ""), "archivo": archivo.name,
-            "minutos_estimados": (int(tiempo.group(1) or 0) * 60 + int(tiempo.group(2))) if tiempo else None,
+            "tipo": "enviada", "trabajo_id": trabajo_id, "estado": "sin confirmar",
+            "pieza": archivo.name.replace(".gcode.3mf", ""), "archivo": archivo.name, "carpeta": str(archivo.parent.resolve()),
+            "subtask_name": subtask, "task_id": uid, "minutos_estimados": minutos or None,
+            "fin_estimado": fin.isoformat(timespec="minutes"), "capas": ajustes.get("capas"),
+            "ajustes": {k: v for k, v in ajustes.items() if k not in ("minutos", "capas")},
             "filamentos": [{"lugar": mapa[i] + 1, "material": lug1.get(mapa[i], ("", "", ""))[1],
                             "color": col, "gramos": float(g or 0), "rollo": chips.get(mapa[i])}
-                           for i, (_, _, _, col, g) in enumerate(filamentos_del_archivo(archivo))]})
-    except Exception as e:
-        print("  (no se pudo anotar en el registro:", type(e).__name__, e, ")")
-    ultimo = None
-    for p in c.leer(150):
-        visto = c.visto
-        est = (visto.get("gcode_state"), visto.get("print_error"), visto.get("stg_cur"))
-        if est != ultimo:
-            print("  impresora:", {"estado": est[0], "error": est[1], "etapa": est[2],
-                                   "respuesta": p.get("result"), "motivo": p.get("reason")})
-            ultimo = est
-    c.cerrar()
-    return 0 if c.visto.get("gcode_state") in ("PREPARE", "RUNNING", "SLICING") else 1
+                           for i, (_, _, _, col, g) in enumerate(fil)]})
+        try:
+            anotar_envio_en_ficha(archivo, {k: v for k, v in ajustes.items()}, {i + 1: float(g or 0) for i, (*_, g) in enumerate(fil)},
+                                  trabajo_id, [chips.get(m) for m in mapa], [m + 1 for m in mapa])
+        except (OSError, FallaImpresora) as e:
+            print("  (no se pudo escribir la ficha de la pieza:", e, ")")
+        try:
+            c.publicar(orden)
+        except SinConexion:
+            registro.cerrar(trabajo_id, "cancelada", avance_pct=0, minutos_reales=None,
+                            nota="la orden no salio: se corto la conexion al mandarla")
+            raise
+        print("  ORDEN DE IMPRIMIR MANDADA", time.strftime("%H:%M:%S"))
+        # 15/10/2026: se mando y nadie vigilo; la falla la vio Fak al 27 %. La vigilancia la lanza la sesion (en
+        # segundo plano, para que su salida la despierte, y nunca dentro de `timeout`): este renglon se lo recuerda.
+        print(f"  AHORA, EN SEGUNDO PLANO: bambu_red.py --seguir {archivo.parent / 'seguimiento'} --fotos-en 3,10 "
+              "--despertar 5 --cada 30")
+        t_orden, confirmada, ultimo = time.time(), False, None
+        while time.time() - t_orden < ORDEN_ESPERA_S:
+            nuevos = c.leer(5, hasta=lambda v, p: v.get("gcode_state") == "RUNNING" or p.get("command") == "project_file")
+            v = c.visto
+            resp = next((p for p in nuevos if p.get("command") == "project_file" and p.get("result")), None)
+            if resp and str(resp.get("result")).lower() != "success":
+                print("  LA IMPRESORA RECHAZO LA ORDEN:", resp.get("result"), resp.get("reason") or "")
+                registro.cerrar(trabajo_id, "cancelada", avance_pct=0, minutos_reales=None,
+                                nota=f"la impresora rechazo la orden: {resp.get('result')} {resp.get('reason') or ''}".strip())
+                return 1
+            nuestro = v.get("subtask_name") == subtask
+            if not confirmada and (resp or (nuestro and v.get("gcode_state") in ("PREPARE", "RUNNING"))):
+                registro.confirmar(trabajo_id, task_id=uid, subtask_name=subtask,
+                                   respuesta=(resp or {}).get("result") or v.get("gcode_state"))
+                confirmada = True
+            estado_v = (v.get("gcode_state"), v.get("print_error"), v.get("stg_cur"))
+            if estado_v != ultimo:
+                print("  impresora:", {"estado": estado_v[0], "error": estado_v[1], "etapa": estado_v[2]}, flush=True)
+                ultimo = estado_v
+            if nuestro and v.get("gcode_state") == "RUNNING":
+                print(f"  ARRANCÓ {time.strftime('%H:%M:%S')}: termina a las {fin:%H:%M} aprox.")
+                return 0
+            if (time.time() - t_orden > TRAMPA_ESPERA_S and v.get("gcode_state") == "PREPARE" and v.get("stg_cur") == 77
+                    and str(v.get("mc_print_line_number")) in ("0", "None")):
+                print("  OJO:", TRAMPA_77)
+                return 1
+    if confirmada and c.visto.get("gcode_state") in ("PREPARE", "SLICING"):
+        print("  todavia preparando (arranque de la A2L): la vigilancia lo sigue")
+        return 0
+    print("  la impresora no confirmo la orden en 2,5 minutos: mirá la pantalla antes de mandar otra")
+    return 1
 
 
 def asegurar_ip(d):
@@ -1000,15 +1306,32 @@ def leer_estado(d, segundos=6):
 
 
 def orden_simple(comando):
-    """pause / resume / stop."""
+    """pause / resume / stop. Con stop (--cancelar), cierra en el registro EL trabajo que la impresora informa (por
+    task_id y nombre) como «cancelada» con su avance y su capa; si no esta en el registro, lo anota como «visto»."""
     d = cargar_datos()
     with Conexion(d) as c:
+        c.leer(6, hasta=_informe_completo)
+        antes = dict(c.visto)
         c.publicar({"print": {"sequence_id": "20010", "command": comando, "param": ""}})
         res = None
         for p in c.leer(12, hasta=lambda v, p: p.get("command") == comando):
             if p.get("command") == comando:
                 res = p.get("result")
     print(f"orden '{comando}' mandada {time.strftime('%H:%M:%S')} | respuesta: {res}")
+    if comando == "stop" and res == "success" and antes.get("gcode_state") in ("RUNNING", "PREPARE", "PAUSE"):
+        try:
+            r, e = cerrar_trabajo(antes, "cancelada",
+                                  {"subtask_name": antes.get("subtask_name"), "task_id": antes.get("task_id"),
+                                   "ult_pct": antes.get("mc_percent"), "ult_capa": antes.get("layer_num")},
+                                  visto_terminar=True, nota="cancelada con bambu_red.py --cancelar")
+            if r:
+                completar_ficha(e, r)
+                print(f"  registro: {e['trabajo_id']} cancelada en la capa {antes.get('layer_num')} "
+                      f"({antes.get('mc_percent')} %)")
+            elif e is None:
+                print(f"  registro: {antes.get('subtask_name')} no estaba anotado: quedo como «visto», no se cerro nada ajeno")
+        except (Exception, SystemExit) as ex:
+            print("  (no se pudo anotar la cancelacion en el registro:", type(ex).__name__, ex, ")")
     return 0 if res == "success" else 1
 
 
@@ -1655,15 +1978,18 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
     def terminar(salida, texto):
         """Lo que se hace al salir: foto, registro y el renglon final del log."""
         v = vig.v
+        visto = bool(vig.ult_corriendo) and time.time() - vig.ult_corriendo < max(180, 3 * cada)
         if salida in (0, SALIDA_TERMINO_SIN_VER):
-            sacar("FINAL")
-            visto = salida == 0 and bool(vig.ult_corriendo) and time.time() - vig.ult_corriendo < max(180, 3 * cada)
-            r, _ = cerrar_trabajo(v, "terminada", vig.trabajo, visto_terminar=visto,
+            final = sacar("FINAL")
+            visto = visto and salida == 0
+            r, e = cerrar_trabajo(v, "terminada", vig.trabajo, visto_terminar=visto,
                                   nota="" if visto else "terminó mientras no se veía: hora real de fin desconocida")
+            completar_ficha(e, r, final)
         elif salida == 1:
-            sacar("FALLO")
+            final = sacar("FALLO")
             if vig.trabajo:
-                cerrar_trabajo(v, "fallida", vig.trabajo, visto_terminar=bool(vig.ult_corriendo), nota=texto)
+                r, e = cerrar_trabajo(v, "fallida", vig.trabajo, visto_terminar=visto, nota=texto)
+                completar_ficha(e, r, final)
         elif salida == 2:
             sacar("ALARMA")
             cod = fin_de_rollo(v)
@@ -1794,6 +2120,59 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
         log.close()
 
 
+def selftest():
+    """Lo que hace falta en esta PC para usar la skill, sin red y sin mostrar el codigo de acceso. Un renglon por
+    chequeo: OK, FALTA (no anda) o AVISO (anda, con un limite). Sale con 1 si algo FALTA."""
+    import importlib.util
+    import registro
+    filas = []
+
+    def fila(nivel, que, detalle=""):
+        filas.append(nivel)
+        print(f"  {nivel:6} {que}" + (f": {detalle}" if detalle else ""))
+
+    print(f"skill impresion-3d-bambu, version {VERSION}")
+    fila("OK" if sys.version_info >= (3, 10) else "FALTA", "Python", sys.version.split()[0])
+    exe = Path(r"C:\Program Files\Bambu Studio\bambu-studio.exe")
+    fila("OK" if exe.exists() else "FALTA", "Bambu Studio (para laminar)", str(exe))
+    maquinas = Path(os.environ.get("APPDATA", "")) / "BambuStudio" / "system" / "BBL" / "machine"
+    a2l = list(maquinas.glob("*A2L*")) if maquinas.exists() else []
+    fila("OK" if a2l else "FALTA", "perfiles de la A2L", f"{len(a2l)} en {maquinas}" if a2l else
+         "abrir Bambu Studio una vez y elegir la A2L para que baje los perfiles")
+    fila("OK" if importlib.util.find_spec("PIL") else "AVISO", "Pillow (dibujo de la primera capa)",
+         "" if importlib.util.find_spec("PIL") else "sin Pillow el envio sigue, sin el dibujo: pip install pillow")
+    venv = Path(__file__).resolve().parents[4] / ".venv-cad" / "Scripts" / "python.exe"
+    fila("OK" if venv.exists() else "AVISO", ".venv-cad (para vista_previa.py)",
+         str(venv) if venv.exists() else "sin el entorno CAD no hay vista previa en colores; lo demas anda")
+    try:
+        registro.ruta_de_prueba_ok(registro.CARPETA)
+        registro.CARPETA.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryFile(dir=registro.CARPETA):
+            pass
+        fila("OK", "registro compartido (nube de Ingenieria) escribible", str(registro.CARPETA))
+    except (OSError, SystemExit) as e:
+        fila("FALTA", "registro compartido", f"{registro.CARPETA}: {e} (¿esta sincronizada la carpeta de Ingenieria?)")
+    try:
+        d = cargar_datos()
+        fila("OK" if d.get("codigo_acceso") else "FALTA", "archivo de datos de la impresora",
+             f"{d['_origen']} | serie {_serie_corta(d['serie'])} | codigo de acceso "
+             + ("cargado" if d.get("codigo_acceso") else "FALTA: bambu_red.py --pedir-codigo"))
+    except FallaImpresora as e:
+        fila("FALTA", "archivo de datos de la impresora", e.texto.splitlines()[0])
+    fila("OK" if PY_DETECTOR.exists() else "AVISO", "detector de fallas (PrintGuard)",
+         str(PY_DETECTOR) if PY_DETECTOR.exists() else "sin el, --detector no anda: instalar_detector.py --probar")
+    skill = Path(__file__).resolve().parents[1] / "SKILL.md"
+    try:
+        cab = re.search(r"[Vv]ersi[oó]n:?\**:? *(\d{4}-\d\d-\d\d)", skill.read_text(encoding="utf-8")[:1500])
+    except OSError:
+        cab = None
+    fila("OK" if cab and cab.group(1) == VERSION else "AVISO", "SKILL.md y el programa son la misma version",
+         f"SKILL.md {cab.group(1) if cab else 'sin version'} | programa {VERSION}")
+    print("  AVISO  copia de la skill en la nube para comparar: no hay una publicada (la skill se pasa por mail en un zip)")
+    print("RESULTADO:", "falta algo" if "FALTA" in filas else "listo para usar")
+    return 1 if "FALTA" in filas else 0
+
+
 def pedir_codigo():
     """Ventanita para que FAK escriba el codigo de acceso. Se guarda en el archivo de datos y no se imprime."""
     import tkinter as tk
@@ -1876,8 +2255,13 @@ def despachar(argv):
         return orden_simple({"--pausar": "pause", "--reanudar": "resume", "--cancelar": "stop"}[a])
     if a == "--imprimir" and len(argv) >= 3:
         # --mapa 0,1 : filamento 1 del archivo -> lugar 1 del cargador, filamento 2 -> lugar 2
+        # --sin-margen: manda aunque la cuenta de gramos no alcance (SOLO con la frase de Fak en el chat)
         mapa = _numeros(_valor(argv, "--mapa"), "--mapa") if "--mapa" in argv else None
-        return imprimir(argv[2], mapa, "--apply" in argv)
+        return imprimir(argv[2], mapa, "--apply" in argv, sin_margen="--sin-margen" in argv)
+    if a == "--ficha" and len(argv) >= 3:
+        return mostrar_ficha(argv[2])
+    if a == "--selftest":
+        return selftest()
     if a == "--version":
         print("skill impresion-3d-bambu, version", VERSION)
         return 0

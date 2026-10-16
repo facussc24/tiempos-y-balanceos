@@ -10,6 +10,7 @@ import sys
 import threading
 import time
 import unittest
+from pathlib import Path
 
 import _base
 from _base import registro, SERIE, OTRA_SERIE, CODIGO
@@ -422,6 +423,229 @@ class ConciliarAlConectar(ConJuguete):
             otro.kill()
             otro.wait()
         self.assertNotIn("t-viva", registro.cerrados())
+
+
+NEGRO, AMARILLO = "6EACADA000000100", "1C6E4ADF00000100"
+
+
+class Imprimir(ConJuguete):
+    """--imprimir: los frenos antes de mandar (T8, T8b, T8c, T10, T11, T17, T18). La subida por FTPS se reemplaza:
+    la impresora de juguete no la simula; todo lo demas (estado, orden, respuesta) va por la red de prueba."""
+
+    def setUp(self):
+        super().setUp()
+        self.jug.estado.update(gcode_state="IDLE", subtask_name="", task_id="0")
+        self.subidas = []
+        self._subir, self._ahora = br.subir, br._ahora
+        br.subir = lambda d, archivo, nombre: self.subidas.append(nombre) or Path(archivo).stat().st_size
+        self.a_las(10, 0)
+        self.pieza = self.tmp / "pieza"
+        self.pieza.mkdir()
+
+    def tearDown(self):
+        br.subir, br._ahora = self._subir, self._ahora
+        super().tearDown()
+
+    def a_las(self, h, m):
+        from datetime import datetime
+        br._ahora = lambda: datetime(2026, 10, 16, h, m).astimezone()
+
+    def quedan(self, chip, gramos):
+        registro.anotar({"tipo": "pesado", "rollo": chip, "gramos": float(gramos), "bruto": gramos + 250.0,
+                         "tara": 250.0, "tara_medida": False})
+
+    def respaldo_en_4(self, chip="AAAAAAAA00000100"):
+        tray = [dict(t) for t in self.jug.estado["ams"]["ams"][0]["tray"][:3]]
+        tray.append({"id": "3", "tray_info_idx": "GFA18", "tray_type": "PLA", "tray_sub_brands": "PLA Lite",
+                     "tray_color": "000000FF", "tag_uid": chip})
+        self.jug.estado["ams"] = {"tray_now": "255", "ams": [{"id": "16", "tray": tray}]}
+
+    def archivo(self, nombre="pieza", **kw):
+        return _base.gcode_3mf(self.pieza / f"{nombre}.gcode.3mf", **kw)
+
+    def test_T8_no_alcanza_el_rollo(self):
+        self.quedan(NEGRO, 19)
+        r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(78.0,))))
+        self.assertEqual(r, 1, out)
+        self.assertIn("NO SE MANDA: no alcanza el negro (pide 78 g, quedan ~19 g, margen 30 g)", out)
+        self.assertEqual(self.subidas, [])
+
+    def test_T8b_alcanza(self):
+        self.quedan(NEGRO, 200)
+        r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(78.0,))))
+        self.assertEqual(r, 0, out)
+        self.assertNotIn("no alcanza", out)
+        self.assertIn("termina a las 11:01", out)                      # 60 min x 1,02 desde las 10:00
+
+    def test_T8c_de_noche_sin_respaldo_frena_y_con_respaldo_pasa(self):
+        self.a_las(19, 0)
+        self.quedan(NEGRO, 80)
+        archivo = self.archivo(minutos=240, gramos=(10.0,))
+        r, out, _ = self.correr("--imprimir", str(archivo))
+        self.assertEqual(r, 1, out)
+        self.assertIn("de noche con menos de 100 g y sin rollo de respaldo igual", out)
+        self.respaldo_en_4()
+        r, out, _ = self.correr("--imprimir", str(archivo))
+        self.assertEqual(r, 0, out)
+
+    def test_sin_margen_lo_saltea(self):
+        self.quedan(NEGRO, 19)
+        r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(78.0,))), "--sin-margen")
+        self.assertEqual(r, 0, out)
+        self.assertIn("--sin-margen", out)
+
+    def test_T18_elige_el_rollo_mas_gastado(self):
+        self.respaldo_en_4()
+        self.quedan(NEGRO, 47)
+        self.quedan("AAAAAAAA00000100", 980)
+        r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(3.0,))))
+        self.assertEqual(r, 0, out)
+        self.assertIn("elijo el 2, el mas gastado", out)
+        self.assertIn("-> lugar 2", out)
+
+    def test_T18_ninguno_alcanza_solo_pero_la_suma_si(self):
+        self.respaldo_en_4()
+        self.quedan(NEGRO, 47)
+        self.quedan("AAAAAAAA00000100", 980)
+        r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(78.0,))))
+        self.assertEqual(r, 0, out)
+        self.assertIn("-> lugar 2", out)
+        self.assertIn("AMS Filament Backup", out)
+
+    def test_T10_pieza_larga_sin_el_ok_frena_antes_de_subir(self):
+        archivo = self.archivo(minutos=240, gramos=(10.0,))
+        r, out, _ = self.correr("--imprimir", str(archivo), "--apply")
+        self.assertEqual(r, 1, out)
+        self.assertIn(f"falta el OK de Fak en {archivo}.ok (pieza de más de 3 h)", out)
+        self.assertEqual(self.subidas, [])
+        ok = archivo.with_name(archivo.name + ".ok")
+        ok.write_text('16/10/2026 09:41 Fak: "dale, mandala"', encoding="utf-8")
+        r, out, _ = self.correr("--imprimir", str(archivo), "--apply")
+        self.assertEqual(r, 0, out)
+        self.assertEqual(len(self.subidas), 1)
+
+    def test_el_ok_viejo_no_sirve_si_se_relamino(self):
+        archivo = self.archivo(minutos=240, gramos=(10.0,))
+        ok = archivo.with_name(archivo.name + ".ok")
+        ok.write_text("Fak: dale", encoding="utf-8")
+        os.utime(ok, (time.time() - 3600, time.time() - 3600))
+        r, out, _ = self.correr("--imprimir", str(archivo), "--apply")
+        self.assertEqual(r, 1, out)
+        self.assertIn("es anterior al laminado", out)
+
+    def test_T11_placa_ocupada_hasta_placa_libre(self):
+        self.jug.estado.update(gcode_state="FINISH", subtask_name="lo_anterior")
+        archivo = self.archivo(gramos=(5.0,))
+        r, out, _ = self.correr("--imprimir", str(archivo), "--apply")
+        self.assertEqual(r, 1, out)
+        self.assertIn("placa ocupada: confirmá que la sacaste con registro.py --placa-libre", out)
+        self.assertEqual(self.subidas, [])
+        time.sleep(1.1)
+        _base.correr(registro._main, ["registro.py", "--placa-libre", "saque las piezas"])
+        r, out, _ = self.correr("--imprimir", str(archivo), "--apply")
+        self.assertEqual(r, 0, out)
+
+    def test_ocupada_no_se_manda(self):
+        self.jug.estado.update(gcode_state="RUNNING", subtask_name="de_otro")
+        r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(5.0,))), "--apply")
+        self.assertEqual(r, 1, out)
+        self.assertIn("la impresora esta ocupada (RUNNING)", out)
+
+    def test_T17_enviada_antes_de_la_orden_y_confirmada_despues(self):
+        visto_al_recibir = []
+
+        def al_recibir(orden):
+            if (orden.get("print") or {}).get("command") == "project_file":
+                visto_al_recibir.extend(e for e in registro.leer() if e["tipo"] == "enviada")
+        self.jug.al_recibir = al_recibir
+        r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(5.0,))), "--apply")
+        self.assertEqual(r, 0, out)
+        self.assertEqual(len(visto_al_recibir), 1)
+        env = visto_al_recibir[0]
+        self.assertEqual((env["estado"], env["subtask_name"]), ("sin confirmar", "pieza"))
+        conf = [e for e in registro.leer() if e["tipo"] == "confirmada"]
+        self.assertEqual(len(conf), 1)
+        self.assertEqual((conf[0]["trabajo_id"], conf[0]["task_id"], conf[0]["subtask_name"]),
+                         (env["trabajo_id"], env["task_id"], "pieza"))
+        self.assertIn("ARRANCÓ", out)
+
+    def test_otra_pc_mando_mientras_subia(self):
+        def subir_y_otro(d, archivo, nombre):
+            self.jug.estado.update(gcode_state="RUNNING", subtask_name="de_otra_pc")
+            return Path(archivo).stat().st_size
+        br.subir = subir_y_otro
+        r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(5.0,))), "--apply")
+        self.assertEqual(r, 1, out)
+        self.assertIn("mientras se subia el archivo la impresora paso a RUNNING", out)
+        self.assertFalse(any((o.get("print") or {}).get("command") == "project_file" for o in self.jug.recibidos))
+        self.assertFalse([e for e in registro.leer() if e["tipo"] == "enviada"])
+
+    def test_trampa_de_la_etapa_77(self):
+        self.jug.al_imprimir = ("PREPARE",)
+        self.jug.estado.update(stg_cur=77, mc_print_line_number="0")
+        esperas = br.ORDEN_ESPERA_S, br.TRAMPA_ESPERA_S
+        br.ORDEN_ESPERA_S, br.TRAMPA_ESPERA_S = 12, 2
+        try:
+            r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(5.0,))), "--apply")
+        finally:
+            br.ORDEN_ESPERA_S, br.TRAMPA_ESPERA_S = esperas
+        self.assertEqual(r, 1, out)
+        self.assertIn("trampa de la unidad 16", out)
+
+    def test_la_ficha_se_arma_al_mandar_y_se_completa_al_cancelar(self):
+        archivo = self.archivo(gramos=(5.0,))
+        r, out, _ = self.correr("--imprimir", str(archivo), "--apply")
+        self.assertEqual(r, 0, out)
+        f = json.loads((self.pieza / "ficha.json").read_text(encoding="utf-8"))
+        self.assertEqual((f["pieza"], f["archivo_vigente"], f["ajustes"]["paredes"]), ("pieza", archivo.name, "2"))
+        self.assertIsNone(f["envios"][0]["resultado"])
+        r, out, _ = self.correr("--cancelar")
+        self.assertEqual(r, 0, out)
+        f = json.loads((self.pieza / "ficha.json").read_text(encoding="utf-8"))
+        self.assertEqual(f["envios"][0]["resultado"], "cancelada")
+        r, out, _ = self.correr("--ficha", str(self.pieza))
+        self.assertEqual(r, 0, out)
+        self.assertIn("cancelada", out)
+
+    def test_varias_placas_no_se_manda(self):
+        r, out, _ = self.correr("--imprimir", str(self.archivo(placas=2)))
+        self.assertEqual(r, 1, out)
+        self.assertIn("trae 2 placas", out)
+
+
+class T9Cancelar(ConJuguete):
+    def test_cierra_el_trabajo_que_informa_la_impresora(self):
+        reg = registro.CARPETA
+        with open(reg / "PC-A.jsonl", "a", encoding="utf-8") as f:
+            f.write(json.dumps({"tipo": "enviada", "trabajo_id": "20261016-090000-pieza_a", "archivo": "pieza_a.gcode.3mf",
+                                "cuando": "2026-10-16 09:00:00", "pc": "PC-A", "filamentos": []}) + "\n")
+        with open(reg / "PC-B.jsonl", "a", encoding="utf-8") as f:
+            f.write(json.dumps({"tipo": "enviada", "trabajo_id": "20261016-095000-pieza_b", "archivo": "pieza_b.gcode.3mf",
+                                "cuando": "2026-10-16 09:50:00", "pc": "PC-B", "filamentos": []}) + "\n")
+        self.jug.estado.update(gcode_state="RUNNING", subtask_name="pieza_a", task_id="0", layer_num=12, mc_percent=31)
+        r, out, _ = self.correr("--cancelar")
+        self.assertEqual(r, 0, out)
+        cerr = registro.cerrados()
+        self.assertEqual(cerr["20261016-090000-pieza_a"]["tipo"], "cancelada")
+        self.assertEqual((cerr["20261016-090000-pieza_a"]["avance_pct"], cerr["20261016-090000-pieza_a"]["capa"]), (31, 12))
+        self.assertNotIn("20261016-095000-pieza_b", cerr)          # la ultima abierta (de otra PC) no se toca
+
+    def test_trabajo_ajeno_no_se_cierra(self):
+        registro.anotar({"tipo": "enviada", "trabajo_id": "mio", "archivo": "mio.gcode.3mf", "filamentos": []})
+        self.jug.estado.update(gcode_state="RUNNING", subtask_name="desde_bambu_studio")
+        r, out, _ = self.correr("--cancelar")
+        self.assertEqual(r, 0, out)
+        self.assertNotIn("mio", registro.cerrados())
+        self.assertTrue([e for e in registro.leer() if e["tipo"] == "visto"])
+
+
+class Selftest(ConJuguete):
+    def test_no_muestra_el_codigo(self):
+        r, out, err = self.correr("--selftest")
+        self.assertIn(r, (0, 1))
+        self.assertIn("archivo de datos de la impresora", out)
+        self.assertNotIn(CODIGO, out + err)
+        self.assertIn("registro compartido (nube de Ingenieria) escribible", out)
 
 
 class LecturasDeLaRed(unittest.TestCase):
