@@ -17,7 +17,9 @@ pide su sí (plata, una regla suya, instalar algo) se le dice con el precio o el
 
 **Cuándo:** cuando Fak lo pide, cuando el arranque de sesión avisa `[NOVEDADES DE CLAUDE]` (pasó una semana sin
 leer) y cada lunes como paso de la tanda 0 del plan del sistema. Una lectura = un archivo
-`exports/explicaciones/novedades_<AAAA-MM-DD>.md`: ese archivo es lo que calla el aviso del arranque.
+`C:\Dev\BarackMercosul\exports\explicaciones\novedades_<AAAA-MM-DD>.md`: ese archivo es lo que calla el aviso del
+arranque. Va en el checkout principal **aunque la sesión trabaje en un worktree**: el aviso corre desde ahí, y lo que
+quede en un worktree no lo ve nadie y se pierde al borrarlo.
 
 El lector viejo (`node scripts/_novedadesClaude.mjs`, búsqueda pública de X por FxTwitter) **no lee X desde el
 04/10/2026** (la búsqueda contesta 404 en 4 de 5 cuentas). No se borra: su parte del registro de cambios oficial la
@@ -38,8 +40,10 @@ sigue usando la noche, que corre sin la app y no puede abrir el navegador. Esta 
 
 Cómo se lee: `WebFetch`, o el navegador de la app con `get_page_text` y `max_chars: 60000` (por defecto corta a ~5.000
 y se pierde la mitad de la página). Anotar la **fecha de cada entrada** y la **versión**: de una página sin fechas se
-anota «sin fecha» y se compara con lo que decía la lectura anterior. La versión instalada en esta PC: `claude --version`
-o el nombre de la carpeta de `CLAUDE_CODE_EXECPATH`.
+anota «sin fecha» y se compara con lo que decía la lectura anterior. Las versiones instaladas en esta PC pueden ser dos y
+se anotan las dos: la de la consola (`claude --version`) y la que corre la app de escritorio, que está en la ruta de
+`CLAUDE_CODE_EXECPATH` (`…\claude-code\<versión>\<id>\claude.exe`: la carpeta de arriba de la del ejecutable). El
+16/10 daban 2.1.301 y 2.1.299.
 
 ## 2. X, con la sesión de Fak (segundo, y con cuidado)
 
@@ -69,13 +73,15 @@ Detalle y límites medidos: memoria `reference_leer_x_con_el_navegador_de_la_app
 ## 3. Cruzar con lo que ya vimos y con lo que ya tenemos
 
 Antes de poner algo en la lista, que sea NUEVO y que no esté ya decidido:
-- Lo ya leído: `exports/explicaciones/novedades_*.md` (las lecturas anteriores), `.sgc-cache/x-seguimiento/`
+- Lo ya leído: `C:\Dev\BarackMercosul\exports\explicaciones\novedades_*.md` (las lecturas anteriores), `.sgc-cache/x-seguimiento/`
   (crudos, artículos y listados del lector viejo hasta el 04/10) y, en la nube de Ingeniería,
   `Claude Fak\viernes-17-plan-sistema\20-informes\novedades_x_2026-10-15.md` (55 puntos del 18/05 al 15/10).
-- Lo ya decidido: el plan del sistema vigente (`Claude Fak\viernes-…\10-PLAN_SISTEMA_*.md`, §4 «Descartado con
-  motivo») y la cola `docs/COLA_CAMBIOS_CODIGO.md` (`git grep` del nombre de la función). Lo descartado con motivo
-  no se vuelve a proponer salvo que la novedad cambie el motivo (p. ej. fast mode y `/fast`: cobran aparte;
-  Managed Agents: créditos; `twscrape` y la API paga de X: contra lo que pidió Fak, «de una manera no paga»).
+- Lo ya decidido: el plan del sistema vigente (`Claude Fak\viernes-…\10-PLAN_SISTEMA_*.md`: el §4 «Descartado con
+  motivo» y lo que cada tanda descartó en su propio texto; buscar el nombre en el archivo entero) y la cola
+  `docs/COLA_CAMBIOS_CODIGO.md` (`git grep` del nombre de la función). Lo descartado no se vuelve a proponer salvo
+  que la novedad cambie el motivo. Ejemplos del plan del 16/10: fast mode y `/fast` (cobran aparte; §0.5), Managed
+  Agents (créditos; tanda 10, P74), `twscrape` y la API paga de X (contra lo que pidió Fak, «de una manera no paga»;
+  tanda 10 y punto 0.5).
 - Lo que ya tenemos: buscar en el repo (`git grep`), en `~/.claude/settings.json` y en las memorias si la función ya
   está puesta o probada.
 - **Una novedad se afirma con su fuente oficial**: un post que dice «salió X» se coteja con el registro de cambios o la
@@ -84,9 +90,9 @@ Antes de poner algo en la lista, que sea NUEVO y que no esté ya decidido:
 Lo que se vigila aunque no haya pedido nuevo: **Claude Motion en el plan Max** (Fak, 08/10: *«si Motion está
 disponible de ahora en más a veces lo vamos a usar»*; cola H61, fundida en HOY-14).
 
-## 4. La salida: `exports/explicaciones/novedades_<AAAA-MM-DD>.md`
+## 4. La salida: `C:\Dev\BarackMercosul\exports\explicaciones\novedades_<AAAA-MM-DD>.md`
 
-Modelo: `exports/explicaciones/novedades_x_2026-10-16.md` (la primera lectura con este método). Lleva, en este orden:
+Modelo: `C:\Dev\BarackMercosul\exports\explicaciones\novedades_x_2026-10-16.md` (la primera lectura con este método). Lleva, en este orden:
 1. Título con el rango («desde el DD/MM») y la hora de la lectura.
 2. **Tabla de páginas oficiales**: Página · Leída (fecha y hora) · Lo nuevo desde la lectura anterior · ¿Cambia algo?
    Una fila por página de la lista fija, también las que no trajeron nada («Nada nuevo»).

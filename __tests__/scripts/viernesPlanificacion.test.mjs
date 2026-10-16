@@ -65,6 +65,14 @@ describe('viernesPlanificacion — la decision', () => {
     expect(decide(VIERNES, RELOJ).avisar).toBe(false);
     expect(decide(VIERNES, ABIERTA_POR_FAK, { env: { CLAUDE_CODE_HOST_SCHEDULED_RUN: '1' } }).avisar).toBe(false);
   });
+  it('ROJO: la ficha de la app es de otra charla (un claude lanzado desde una sesion de Fak hereda su id de la app) -> calla', () => {
+    const d = decide(VIERNES, ABIERTA_POR_FAK, { payload: inicio('cli-de-otra-charla') });
+    expect(d.avisar).toBe(false);
+    expect(d.motivo).toMatch(/otra charla/);
+    // una ficha que todavia no trae su id de charla no se compara: no calla por eso
+    const sinId = { ...ABIERTA_POR_FAK }; delete sinId.cliSessionId;
+    expect(decide(VIERNES, sinId, { payload: inicio('cli-cualquiera') }).avisar).toBe(true);
+  });
   it('ROJO: sin registro de la app -> calla (ante la duda)', () => {
     const d = decide(VIERNES, null, { cliId: 'cli-que-no-esta' });
     expect(d.avisar).toBe(false);

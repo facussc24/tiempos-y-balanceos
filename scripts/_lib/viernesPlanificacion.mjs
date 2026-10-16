@@ -105,6 +105,10 @@ export function decidir({ ahora, payload, env = {}, encontrado = null, ultimoAvi
   if (String(env.CLAUDE_CODE_HOST_SCHEDULED_RUN ?? '') === '1') return { avisar: false, motivo: 'corrida programada (CLAUDE_CODE_HOST_SCHEDULED_RUN)' };
   if (!encontrado || !encontrado.registro || typeof encontrado.registro !== 'object') return { avisar: false, motivo: 'no encontré el registro de la app: ante la duda, callo' };
   const r = encontrado.registro;
+  // La variable del id de la app se hereda: un `claude` lanzado desde el Bash de una sesión de Fak tendría la ficha de
+  // ella con OTRO id de charla (auditor 16/10, R4). Si la ficha ya trae su id de charla y no es este, no es esta sesión.
+  const cliId = payload && typeof payload.session_id === 'string' ? payload.session_id : null;
+  if (r.cliSessionId && cliId && r.cliSessionId !== cliId) return { avisar: false, motivo: 'la ficha de la app es de otra charla (id distinto)' };
   if (r.spawnedFrom) return { avisar: false, motivo: 'la lanzó otra sesión (spawnedFrom)' };
   if (r.scheduledTaskId) return { avisar: false, motivo: `la lanzó el reloj (scheduledTaskId ${r.scheduledTaskId})` };
   if (ultimoAviso === diaLocal(ahora)) return { avisar: false, motivo: 'ya se propuso hoy en esta PC' };

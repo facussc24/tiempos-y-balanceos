@@ -74,6 +74,10 @@ node "$ROOT/tools/claude-area/vigia.mjs" --hook 2>/dev/null
 # Viernes de planificacion (Fak, 15/10/2026: "que el lo sepa y me lo sugiera"; no es tarea programada): los viernes, en una
 # sesion nueva que abrio Fak (no una lanzada por otra sesion ni por el reloj), un renglon que le pide a la sesion proponer
 # el ritual. Una vez por viernes por PC; ante la duda calla. Logica y por que esas señales: viernesPlanificacion.mjs.
-printf '%s' "$PAYLOAD" | node "$ROOT/scripts/_lib/viernesPlanificacion.mjs" --hook 2>/dev/null
+# De lunes a jueves no se arranca node (0,5 a 0,9 s por arranque, auditor 16/10); el date de Git Bash da la hora local
+# (medido el 16/10). VIERNES_HOY_PRUEBA solo la ponen los tests, y node la respeta solo con VITEST.
+if [ "$(date +%u)" = "5" ] || [ -n "${VIERNES_HOY_PRUEBA:-}" ]; then
+  printf '%s' "$PAYLOAD" | node "$ROOT/scripts/_lib/viernesPlanificacion.mjs" --hook 2>/dev/null
+fi
 hora_vigente
 exit 0
