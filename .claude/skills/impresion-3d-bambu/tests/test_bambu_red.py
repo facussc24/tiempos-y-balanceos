@@ -733,6 +733,7 @@ class Imprimir(ConJuguete):
         r, out, _ = self.correr("--imprimir", str(archivo))
         self.assertEqual(r, 0, out)
         self.assertIn("-> lugar 2", out)                       # el negro con chip (el mas gastado) va primero
+        self.assertIn("NO está verificado", out)               # y se dice que el cambio solo a ese rollo no se vio
 
     def test_rollo_sin_chip_se_anota_por_su_lugar(self):
         self.respaldo_sin_chip_en_4()
