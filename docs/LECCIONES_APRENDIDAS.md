@@ -82,6 +82,8 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **15/10 — A Fak no se le pregunta lo que contesta un manual, una prueba que puedo correr o el propio diseño: de 18 puntos de una lista, 11 eran míos (CATIA se prueba, el ancho del plotter está en el manual, el filo lo decide el diseño)** (*"preguntás muchas boludeces"*). Graduado a `feedback_la_info_ya_la_tengo_no_preguntar`.
+
 - **13/10 — Si Fak pide que algo quede automático, no se le deja una lista de pasos ni un archivo para editar** (*"hacé eso vos... ni pienso leer eso"*), **y un «no aprietes nada» se dice después de medir que avanza.** Graduado al skill `impresion-3d-bambu` §1 bis.
 
 - **11/10 — Una pantalla que Fak mira todos los días se escribe con SUS palabras, como un entregable: la banda decía «283 llamadas · en curso» y «noche · 0 prioridades»** (*"no era más fácil poner disponible, gastado, y separar entre cada api"*; *"renueva pusiste hora pero no día"*). Graduado a `feedback_lenguaje_del_entregable_palabras_de_fak`.
