@@ -1,0 +1,130 @@
+{
+  "_que_es": "Tema -> memoria. Cuando un mensaje de Fak nombra una de las frases, el mod recordatorio-temas le agrega al modelo un renglon: «Tema «X»: leé <memoria> antes de contestar». Lo leen el mod (en vivo, desde la raiz del proyecto de la sesion), sus tests y el indice MEMORY.md (mismos temas, mismas palabras). Una frase se compara por palabras enteras, sin acentos ni mayusculas (normalizar() de mods/recordatorio-temas/hooks/temas.mjs).",
+  "_fuente": "docs/PLAN_MEMORIA_Y_MAQUINAS_2026-10-16.md (1.3.1, 1.3.2, 1.4); informes casa_memoria_olvidos.md y casa_hojas_y_maquinas.md tema B (nube de Ingenieria, Claude Fak\\viernes-17-plan-sistema\\20-informes\\), con los mensajes textuales de Fak. Tipeos reales de Fak (pltoter, plloter, ploter, hortmelera, bamboo): casa_hojas_y_maquinas.md B.3.",
+  "_como_se_agrega": "Un tema nuevo lleva id, nombre (como lo dice Fak), archivos (nombres de archivo de la carpeta de memoria, que existan) y frases (palabras de Fak, con sus tipeos). Una frase suelta muy comun (papel, mesa, costura) no va: dispara en cualquier mensaje. Despues: npx vitest run --pool=threads __tests__/mods/recordatorio-temas.test.mjs",
+  "memoria_dir": "~/.claude/projects/C--Dev-BarackMercosul/memory",
+  "cooldown_min": 60,
+  "max_temas_por_mensaje": 3,
+  "temas": [
+    {
+      "id": "plotter-aol",
+      "nombre": "el plotter de corte (AOL, Xiao)",
+      "archivos": ["reference_plotter_aol_corte_insert.md"],
+      "frases": ["plotter de corte", "ploter de corte", "pltoter de corte", "plloter de corte", "plotter aol", "plotter con cuchilla", "plotter de cuchilla", "xiao", "succionador", "aol"]
+    },
+    {
+      "id": "plotter-htv2a",
+      "nombre": "el otro plotter (HTV2A, el que imprime los plt)",
+      "archivos": ["reference_plotter_inkjet_software_htv2a.md"],
+      "frases": ["otro plotter", "otro ploter", "htv2a", "imprime los plt", "papel del plotter", "papel mide", "ancho del papel", "plotter de impresion"]
+    },
+    {
+      "id": "plotter",
+      "nombre": "el plotter (hay dos: el de corte AOL y el HTV2A; confirmar cual)",
+      "archivos": ["reference_plotter_aol_corte_insert.md", "reference_plotter_inkjet_software_htv2a.md"],
+      "frases": ["plotter", "plotters", "ploter", "pltoter", "plloter"]
+    },
+    {
+      "id": "costura-cnc",
+      "nombre": "la maquina de costura CNC",
+      "archivos": ["reference_maquina_costura_cnc.md"],
+      "frases": ["costura cnc", "la cnc", "maquina cnc", "maquina de coser cnc", "cnc de coser", "richpeace", "e085"]
+    },
+    {
+      "id": "tornillo-cnc",
+      "nombre": "el tornillo y los pines de la costura CNC",
+      "archivos": ["project_tornillo_cabeza_ancha_impreso.md", "project_pines_costura_cnc_insert.md"],
+      "frases": ["tornillo", "tornillos", "tuerca", "tuercas", "pines del insert", "pines de la costura", "pin traba", "tornillo cnc"]
+    },
+    {
+      "id": "hotmelt",
+      "nombre": "la hotmelera (laminadora hot melt)",
+      "archivos": ["reference_maquina_hotmelt_parametros.md"],
+      "frases": ["hotmelera", "hortmelera", "hotmelt", "hot melt", "hot-melt", "laminadora"]
+    },
+    {
+      "id": "moldeadora-img",
+      "nombre": "la moldeadora IMG",
+      "archivos": ["reference_moldeadora_img_defectos_y_vacio.md"],
+      "frases": ["moldeadora", "la img", "maquina img", "maquina de la img"]
+    },
+    {
+      "id": "hot-press",
+      "nombre": "la hot press (BMA101 / BMA103)",
+      "archivos": ["reference_hot_press_patagonia_bma101_bma103.md"],
+      "frases": ["hot press", "hotpress", "bma101", "bma103", "triangulito"]
+    },
+    {
+      "id": "embossing",
+      "nombre": "la prensa de embossing",
+      "archivos": ["project_hojas_proceso_embossing.md"],
+      "frases": ["embossing", "prensa de embossing"]
+    },
+    {
+      "id": "impresora-3d",
+      "nombre": "la impresora 3D (Bambu A2L)",
+      "archivos": ["reference_impresora_3d_fak.md"],
+      "frases": ["impresora 3d", "bambu", "bamboo", "a2l", "pla", "pla rapid", "pla lite", "filamento", "elegoo"]
+    },
+    {
+      "id": "impresoras-ricoh",
+      "nombre": "las impresoras de papel (Ricoh: la de ingenieria y la de arriba)",
+      "archivos": ["reference_impresoras_ricoh_red_barack.md"],
+      "frases": ["impresora de arriba", "impresora para ingenieria", "impresora de ingenieria", "ricoh", "c2004"]
+    },
+    {
+      "id": "impresora",
+      "nombre": "la impresora (hay dos clases: la 3D y las Ricoh de papel; confirmar cual)",
+      "archivos": ["reference_impresora_3d_fak.md", "reference_impresoras_ricoh_red_barack.md"],
+      "frases": ["impresora", "impresoras"]
+    },
+    {
+      "id": "costura-patagonia",
+      "nombre": "valores de costura de Patagonia (IP PAD)",
+      "archivos": ["reference_valores_costura_patagonia_confirmados.md"],
+      "frases": ["valores de costura", "6 en 25", "largo de puntada", "puntadas por", "costura del ip pad", "costuras del ip pad"]
+    },
+    {
+      "id": "8d-tapa-amarok",
+      "nombre": "el 8D de la tapa Amarok",
+      "archivos": ["project_8d_11010843_tapa_amarok.md"],
+      "frases": ["8d", "11010843", "tapa amarok", "tapa de la amarok", "tapa consola"]
+    },
+    {
+      "id": "sika-top-roll",
+      "nombre": "el Sika del Top Roll",
+      "archivos": ["project_sika_toproll_codigo_y_consumo.md"],
+      "frases": ["sika", "sikamelt", "923852"]
+    },
+    {
+      "id": "reunion-calidad",
+      "nombre": "la reunion de AMFE con Calidad",
+      "archivos": ["project_reunion_amfe_calidad_2026-10.md"],
+      "frases": ["reunion con calidad", "reunion de amfe", "reunion con cecilia", "reunion con seguridad e higiene"]
+    },
+    {
+      "id": "plan-sistema",
+      "nombre": "el plan del sistema",
+      "archivos": ["project_plan_sistema_2026-10-16_donde_quedo.md"],
+      "frases": ["plan del sistema", "plan de mejoras del sistema", "viernes 17"]
+    },
+    {
+      "id": "mails-equipo",
+      "nombre": "los mails del equipo en la nube",
+      "archivos": ["project_mails_del_equipo_a_la_nube.md", "reference_acceso_mails_outlook.md"],
+      "frases": ["mails del equipo", "mails de carlos", "correo de carlos", "mails de calidad", "mails de marcelo"]
+    },
+    {
+      "id": "plan-reaccion-ho",
+      "nombre": "el plan de reaccion en la hoja de proceso",
+      "archivos": ["project_formato_a3_hojas_de_proceso.md", "project_hojas_proceso_img.md"],
+      "frases": ["plan de reaccion"]
+    },
+    {
+      "id": "palabra-rara-ho",
+      "nombre": "una palabra rara en una hoja de proceso",
+      "archivos": ["feedback_palabra_rara_en_una_hoja_se_aclara_y_se_marca.md"],
+      "frases": ["acumulador", "acumuladores"]
+    }
+  ]
+}
