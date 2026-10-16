@@ -164,8 +164,8 @@ describe('el catalogo y la lista de mods', () => {
     ])
   })
 
-  test('se instalan el tablero y el presupuesto; el recordatorio de CC/SC no (Fak, 11/10/2026)', () => {
-    expect(MODS).toEqual(['tablero', 'presupuesto-agentes'])
+  test('se instalan el tablero, el presupuesto y el recordatorio de temas; el recordatorio de CC/SC no (Fak, 11/10/2026)', () => {
+    expect(MODS).toEqual(['tablero', 'presupuesto-agentes', 'recordatorio-temas'])
     for (const m of MODS) {
       const man = leerManifiesto(join(process.cwd(), 'mods', m))
       expect(typeof man.name).toBe('string')
