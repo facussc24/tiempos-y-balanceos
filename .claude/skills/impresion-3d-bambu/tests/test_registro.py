@@ -288,6 +288,15 @@ class LineaDeComandos(unittest.TestCase):
         self.assertEqual(r, 1)
         self.assertIn("sin fecha legible", out)
 
+    def test_ip_de_la_pantalla_entra_en_la_busqueda_y_una_mal_escrita_no(self):
+        r, out, _ = _base.correr(registro._main, ["registro.py", "--ip-de-la-pantalla", "192.168.1.140", "la leyó Paulo"])
+        self.assertEqual(r, 0, out)
+        self.assertEqual(registro.ips_anotadas()[0], "192.168.1.140")
+        with self.assertRaises(SystemExit) as cm:
+            registro._main(["registro.py", "--ip-de-la-pantalla", "192.168.1"])
+        self.assertIn("no es una dirección", str(cm.exception))
+        self.assertEqual(registro.ips_anotadas(), ["192.168.1.140"])
+
     def test_tara_sin_valor(self):
         with self.assertRaises(SystemExit) as cm:
             registro._main(["registro.py", "--pesar", "ABCDEF0000000100", "300", "--tara"])

@@ -8,6 +8,8 @@ Uso (python del sistema):
                                         (un rollo SIN chip se cuenta por su lugar: SIN-CHIP-L<n>)
   registro.py --tara <g>                el carrete VACIO pesado: queda como tara de la casa
   registro.py --placa-libre ["nota"]    quien saco las piezas lo anota: recien ahi --imprimir --apply manda
+  registro.py --ip-de-la-pantalla <ip>  la direccion que se lee en la pantalla (Ajustes > WLAN): la busqueda la
+                                        prueba (comprobando el certificado antes de mandar el codigo)
   registro.py --validar                 rojo/verde por renglon; sale con 1 si hay rojos
 
 DONDE VIVE: en la nube de Ingenieria, para que todas las PC vean lo mismo:
@@ -237,7 +239,7 @@ def ips_anotadas(ev=None, tope=5):
     out = []
     for e in reversed(ev):
         ip = e.get("ip")
-        if (e.get("tipo") == "ip" and e.get("serie_ok") and isinstance(ip, str)
+        if (e.get("tipo") == "ip" and (e.get("serie_ok") or e.get("de_la_pantalla")) and isinstance(ip, str)
                 and re.fullmatch(r"(?:\d{1,3}\.){3}\d{1,3}", ip) and ip not in out):
             out.append(ip)
     return out[:tope]
@@ -609,6 +611,14 @@ def _main(argv):
     if len(argv) >= 2 and argv[1] == "--placa-libre":
         e = anotar({"tipo": "placa_libre", "nota": " ".join(argv[2:])})
         print("anotado: placa libre", e["cuando"], "(ya se puede mandar la proxima impresion)")
+        return 0
+    if len(argv) >= 3 and argv[1] == "--ip-de-la-pantalla":
+        ip = argv[2].strip()
+        if not re.fullmatch(r"(?:\d{1,3}\.){3}\d{1,3}", ip):
+            raise SystemExit(f"«{ip}» no es una dirección: se escribe como en Ajustes > WLAN (192.168.1.111)")
+        anotar({"tipo": "ip", "ip": ip, "serie_ok": False, "de_la_pantalla": True, "nota": " ".join(argv[3:])})
+        print(f"anotada {ip} (leída en la pantalla): la próxima búsqueda la prueba, y antes de mandarle el código "
+              "comprueba que el certificado sea el de nuestra impresora")
         return 0
     if len(argv) >= 2 and argv[1] == "--validar":
         hall = validar()
