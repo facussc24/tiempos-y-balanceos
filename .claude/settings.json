@@ -126,6 +126,31 @@
         ]
       }
     ],
+    "PreCompact": [
+      {
+        "_comentario": "16/10/2026 (tanda 1.3.3 del plan del sistema): registro de compactaciones. Anota en .claude/state/compactaciones.jsonl (gitignoreado) fecha, sesion, causa (auto | manual | idle, leido del claude.exe 2.1.301) y los tokens del ultimo turno; PostCompact suma el largo del resumen. Hasta hoy se contaban leyendo los .jsonl a mano. Nunca frena la compactacion (exit 0 siempre; errores a compactaciones.errores.log). No toca idleCompaction ni la ventana de 1 M. Logica: scripts/_lib/compactacionRegistro.mjs. Test: compactacionRegistro.test.mjs.",
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/compactacion-registro.sh\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/compactacion-registro.sh\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "_comentario": "10/09/2026 (A1, A3, A4): cierre-guard suma dos chequeos (entregable afuera nunca abierto; cierre largo) y los dos Stop hooks miran solo lo que toco ESTA sesion (transcript_path del payload, subagentes incluidos). Logica en scripts/_lib/cierreGuard.mjs, frases en cierreCanon.data.json. 02/10/2026: chequeo 7 (Fak pidio que se lo explique y el turno no cargo el skill explicar-mejor, ni mostro un dibujo o una pagina; salida: un renglon 'No aplica explicar-mejor: …') y pendiente de mejora sin probar (regla mejora-implementada.md, node scripts/_probarMejora.mjs). Tests: cierreGuardExplicar.test.mjs.",
