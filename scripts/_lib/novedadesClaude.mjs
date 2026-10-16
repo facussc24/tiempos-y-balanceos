@@ -370,12 +370,34 @@ export function versionesNuevas(texto, ultimaVista = null, { primeraVez = 6 } = 
  * El renglon para el arranque de sesion: avisa si paso una semana (o `dias`) desde la ultima lectura, o si nunca se leyo.
  * '' si no toca. Fak, 04/10/2026: que corra solo en SU PC los lunes; que se implementa lo decide el.
  */
-export function avisoHook(estado, ahora = new Date(), dias = 7) {
-  const ultima = estado && estado.ultima_corrida ? Date.parse(estado.ultima_corrida) : NaN;
+export function avisoHook(estado, ahora = new Date(), dias = 7, ultimaSkill = null) {
+  // 16/10/2026: una lectura hecha con la skill `novedades-claude` (su archivo en exports/explicaciones) tambien cuenta;
+  // el lector por busqueda publica no lee X desde el 04/10 y su `ultima_corrida` dejo de avanzar.
+  const lector = estado && estado.ultima_corrida ? Date.parse(estado.ultima_corrida) : NaN;
+  const skill = ultimaSkill instanceof Date ? ultimaSkill.getTime() : NaN;
+  const conocidas = [lector, skill].filter(Number.isFinite);
+  const ultima = conocidas.length ? Math.max(...conocidas) : NaN;
   const pasaron = Number.isFinite(ultima) ? Math.floor((ahora.getTime() - ultima) / 86400000) : null;
   if (pasaron !== null && pasaron < dias) return '';
-  const cuanto = pasaron === null ? 'Todavia no se leyo nunca' : `Pasaron ${pasaron} dias desde la ultima lectura de`;
-  return `[NOVEDADES DE CLAUDE] ${cuanto} lo que publican Lydia Hallie, Thariq y Claude Devs y el registro de cambios de Claude Code. Toca: node scripts/_novedadesClaude.mjs, cruzar el listado con lo que ya tenemos y llevarle a Fak la lista corta (que nos sirve, que nos puede romper). El decide que se implementa: nada se aplica solo.`;
+  const cuanto = pasaron === null ? 'Todavia no se leyeron nunca' : `Pasaron ${pasaron} dias desde la ultima lectura de`;
+  return `[NOVEDADES DE CLAUDE] ${cuanto} las novedades de Claude (las paginas oficiales, el registro de cambios de Claude Code y lo que publican en X Claude Devs, Lydia Hallie, Boris y Thariq). Toca: la skill novedades-claude (paginas oficiales primero, X con la sesion de Fak en el navegador de la app; el lector viejo node scripts/_novedadesClaude.mjs no lee X desde el 04/10), cruzar con lo que ya tenemos y llevarle a Fak la lista corta (que nos sirve, que nos puede romper). El decide que se implementa: nada se aplica solo.`;
+}
+
+/**
+ * El dia de la ultima lectura hecha con la skill `novedades-claude`, puro: de una lista de nombres de archivo de
+ * `exports/explicaciones/`, el `novedades_<AAAA-MM-DD>.md` (o `novedades_x_<AAAA-MM-DD>.md`) mas nuevo, como fecha
+ * local a las 00:00. Null si no hay ninguno. Otros archivos (`seguir-novedades-claude.html`, `novedades_*.html`) no cuentan.
+ */
+export function ultimaLecturaSkill(nombres) {
+  let max = null;
+  for (const n of Array.isArray(nombres) ? nombres : []) {
+    const m = String(n).match(/^novedades_(?:x_)?(\d{4})-(\d{2})-(\d{2})\.md$/);
+    if (!m) continue;
+    const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    if (d.getMonth() !== Number(m[2]) - 1) continue;   // un 2026-13-40 no es una fecha
+    if (!max || d > max) max = d;
+  }
+  return max;
 }
 
 /**

@@ -84,6 +84,12 @@ commit/push/archivar los hago yo.
 - Si detectas un problema o inconsistencia: reportar sin esperar a que pregunte.
 - Si un cambio afecta multiples productos: sugerir aplicarlo/verificarlos todos.
 - Ante duda de datos: TBD y avisar. Nunca inventar (regla `core-prohibiciones.md`).
+- **Los viernes son de planificacion** (Fak, 15/10/2026: *"que el lo sepa y me lo sugiera"*; no es tarea programada):
+  en la primera sesion que Fak abre el viernes va un renglon «Propongo:» con el ritual — revisar la semana con los 4
+  numeros (`node scripts/_cuatroNumeros.mjs`), lanzar el equipo «fuera de la caja» con la plantilla de la nube
+  (`Claude Fak\viernes-17-plan-sistema\20-informes\oportunidades\00_encargo_equipo.md`), decidir con evidencia y
+  llevarle solo lo suyo, implementar. Decide el; si dice que no, no se insiste. Lo recuerda el arranque de sesion
+  (`scripts/_lib/viernesPlanificacion.mjs`); memoria `feedback_viernes_de_planificacion_equipo_fuera_de_la_caja`.
 - Contrato de autonomia (que hago solo vs que requiere OK): `.claude/rules/autonomy-contract.md`.
 
 ## Reglas del dominio

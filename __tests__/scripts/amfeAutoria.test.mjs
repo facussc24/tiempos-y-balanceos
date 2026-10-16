@@ -12,7 +12,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {
     crearConstructores, chequeosDeAutoria, pasosDelFlujograma, ordenDelFlujograma, controlQueNoExiste,
-    parsearBom, materialesContraBom,
+    parsearBom, materialesContraBom, contarPalabras,
 } from '../../scripts/_lib/amfeAutoria.mjs';
 
 const FOCO = 'Funcion Interna: entregar la pieza / Funcion del Cliente: armar / Funcion del Usuario Final: aspecto';
@@ -114,6 +114,46 @@ describe('chequeos de autoria', () => {
         const r2 = chequeosDeAutoria(docSano((p) => { p.causaRecepcion.preventiveControl = 'Capacitacion del sector'; }), { flujograma: FLUJO });
         expect(r1.errores.join('\n')).toMatch(/error de operario/);
         expect(r2.errores.join('\n')).toMatch(/capacitacion/);
+    });
+    // 02/10/2026: Calidad leyo el AMFE 174 como "hecho con IA". Medido: la causa tenia 12
+    // palabras de mediana y 61 de 75 pasaban de 10; en los AMFE de la casa la mediana es de 4 a 7.
+    it('ROJO: una causa, un modo de falla o un control mas largos que el tope de palabras', () => {
+        const causaLarga = 'La cobertura del adhesivo depende de como se aplica en cada pieza del lote';
+        const r1 = chequeosDeAutoria(docSano((p) => { p.causaCorte.cause = p.causaCorte.description = causaLarga; }), { flujograma: FLUJO });
+        expect(r1.errores.join('\n')).toMatch(/causa de 14 palabras \(tope 10\)/);
+        const controlLargo = 'Control de recepcion de color, viscosidad y vencimiento contra el certificado, una muestra por lote de entrega';
+        const r2 = chequeosDeAutoria(docSano((p) => { p.causaRecepcion.detectionControl = controlLargo; }), { flujograma: FLUJO });
+        expect(r2.errores.join('\n')).toMatch(/control de 17 palabras \(tope 12\)/);
+        // el control PREVENTIVO, por cualquiera de sus dos nombres de campo
+        const r3 = chequeosDeAutoria(docSano((p) => { p.causaRecepcion.preventionControl = controlLargo; }), { flujograma: FLUJO });
+        expect(r3.errores.join('\n')).toMatch(/control de 17 palabras/);
+        const r4 = chequeosDeAutoria(docSano((p) => { p.causaRecepcion.preventiveControl = controlLargo; }), { flujograma: FLUJO });
+        expect(r4.errores.join('\n')).toMatch(/control de 17 palabras/);
+        // la causa escrita solo en el campo `cause`
+        const r5 = chequeosDeAutoria(docSano((p) => { p.causaCorte.cause = causaLarga; }), { flujograma: FLUJO });
+        expect(r5.errores.join('\n')).toMatch(/causa de 14 palabras/);
+        // el modo de falla: 11 palabras no pasan
+        const doc = docSano();
+        const fm = doc.operations[1].workElements[0].functions[0].failures[0];
+        fm.description = fm.failureMode = 'Borde de la microfibra deshilachado o con rebaba en todo el contorno';
+        expect(contarPalabras(fm.description)).toBe(12);
+        expect(chequeosDeAutoria(doc, { flujograma: FLUJO }).errores.join('\n')).toMatch(/modo de falla de 12 palabras \(tope 10\)/);
+    });
+    it('contarPalabras: las barras separan, un guion suelto no cuenta, vacio y null dan cero', () => {
+        expect(contarPalabras('tela/hilo/refuerzo')).toBe(3);
+        expect(contarPalabras('Control visual - cada turno')).toBe(4);
+        expect(contarPalabras('')).toBe(0);
+        expect(contarPalabras(null)).toBe(0);
+        expect(contarPalabras('  dos\npalabras  ')).toBe(2);
+    });
+    it('VERDE: 10 palabras en la causa y 12 en el control pasan justo', () => {
+        const r = chequeosDeAutoria(docSano((p) => {
+            p.causaCorte.cause = p.causaCorte.description = 'El doblez se suelta antes de que el adhesivo tome';
+            p.causaRecepcion.preventiveControl = 'Control del tendido y del despegue de la capa durante el corte';
+        }), { flujograma: FLUJO });
+        expect(contarPalabras('El doblez se suelta antes de que el adhesivo tome')).toBe(10);
+        expect(contarPalabras('Control del tendido y del despegue de la capa durante el corte')).toBe(12);
+        expect(r.errores).toEqual([]);
     });
     it('ROJO: el AP escrito a mano no es el de la tabla', () => {
         const doc = docSano();

@@ -2,6 +2,8 @@
 // Se prueba lo puro: la busqueda que se arma, que posteos quedan, las versiones nuevas del registro de cambios y el listado.
 import { describe, it, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import * as N from '../../scripts/_lib/novedadesClaude.mjs';
 
@@ -70,16 +72,41 @@ describe('novedadesClaude — el registro de cambios', () => {
 describe('novedadesClaude — el aviso del arranque', () => {
   const hoy = new Date('2026-10-12T12:00:00Z');
   it('avisa si nunca se leyo o si paso una semana; se calla si se leyo hace menos', () => {
-    expect(N.avisoHook(null, hoy)).toContain('Todavia no se leyo nunca');
+    expect(N.avisoHook(null, hoy)).toContain('Todavia no se leyeron nunca');
     expect(N.avisoHook({ ultima_corrida: '2026-10-04T14:30:50.120Z' }, hoy)).toContain('Pasaron 7 dias');
     expect(N.avisoHook({ ultima_corrida: '2026-10-04T14:30:50.120Z' }, hoy)).toContain('El decide que se implementa');
     expect(N.avisoHook({ ultima_corrida: '2026-10-06T14:30:50.120Z' }, hoy)).toBe('');
-    expect(N.avisoHook({ ultima_corrida: 'roto' }, hoy)).toContain('Todavia no se leyo nunca');
+    expect(N.avisoHook({ ultima_corrida: 'roto' }, hoy)).toContain('Todavia no se leyeron nunca');
+  });
+  // 16/10/2026: el lector por busqueda publica no lee X desde el 04/10; la lectura la hace la skill novedades-claude.
+  it('el aviso nombra la skill novedades-claude y una lectura de la skill lo calla (gana la mas nueva de las dos)', () => {
+    expect(N.avisoHook(null, hoy)).toContain('la skill novedades-claude');
+    expect(N.avisoHook(null, hoy, 7, new Date(2026, 9, 10))).toBe('');                                       // skill hace 2 dias
+    expect(N.avisoHook({ ultima_corrida: '2026-09-01T00:00:00.000Z' }, hoy, 7, new Date(2026, 9, 10))).toBe('');
+    expect(N.avisoHook({ ultima_corrida: '2026-10-10T00:00:00.000Z' }, hoy, 7, new Date(2026, 8, 1))).toBe(''); // lector mas nuevo
+    expect(N.avisoHook(null, hoy, 7, new Date(2026, 9, 1))).toMatch(/Pasaron 1[01] dias/);                    // skill vieja
+  });
+  it('ultimaLecturaSkill: el novedades_<fecha>.md mas nuevo (tambien novedades_x_); lo demas no cuenta', () => {
+    const d = N.ultimaLecturaSkill(['novedades_2026-10-10.html', 'seguir-novedades-claude.html', 'novedades_x_2026-10-16.md', 'novedades_2026-10-12.md', 'novedades_2026-13-40.md']);
+    expect([d.getFullYear(), d.getMonth() + 1, d.getDate()]).toEqual([2026, 10, 16]);
+    expect(N.ultimaLecturaSkill(['otra_cosa.md'])).toBeNull();
+    expect(N.ultimaLecturaSkill(null)).toBeNull();
   });
   it('--hook no sale a internet ni guarda: con una carpeta vacia avisa; exit 0 siempre', () => {
-    const r = spawnSync(process.execPath, [path.join(process.cwd(), 'scripts', '_novedadesClaude.mjs'), '--hook'], { encoding: 'utf8', env: { ...process.env, BARACK_NOVEDADES_DIR: path.join(process.cwd(), 'no-existe-esta-carpeta') } });
+    const r = spawnSync(process.execPath, [path.join(process.cwd(), 'scripts', '_novedadesClaude.mjs'), '--hook'], { encoding: 'utf8', env: { ...process.env, BARACK_NOVEDADES_DIR: path.join(process.cwd(), 'no-existe-esta-carpeta'), BARACK_EXPLICACIONES_DIR: path.join(process.cwd(), 'no-existe-esta-carpeta') } });
     expect(r.status).toBe(0);
     expect(r.stdout).toContain('[NOVEDADES DE CLAUDE]');
+  });
+  it('--hook: con una lectura de la skill de hoy en la carpeta de explicaciones, calla', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'novedades-skill-'));
+    const d = new Date();
+    const dia = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    fs.writeFileSync(path.join(dir, `novedades_${dia}.md`), '# prueba\n');
+    try {
+      const r = spawnSync(process.execPath, [path.join(process.cwd(), 'scripts', '_novedadesClaude.mjs'), '--hook'], { encoding: 'utf8', env: { ...process.env, BARACK_NOVEDADES_DIR: path.join(process.cwd(), 'no-existe-esta-carpeta'), BARACK_EXPLICACIONES_DIR: dir } });
+      expect(r.status).toBe(0);
+      expect(r.stdout).not.toContain('[NOVEDADES DE CLAUDE]');
+    } finally { fs.rmSync(dir, { recursive: true, force: true }); }
   });
 });
 

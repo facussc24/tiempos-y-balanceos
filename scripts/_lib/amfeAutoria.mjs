@@ -11,6 +11,7 @@
  *   - un control que dice que no existe ("Sin ...", "No hay ...") lleva O=10 o D=10;
  *   - un efecto que dice scrap no puede quedar en la banda de retrabajo (S < 7);
  *   - los tres niveles de funcion son distintos;
+ *   - el modo de falla y la causa no pasan de 10 palabras, ni el control de 12 (amfe.md §11);
  *   - los materiales de la recepcion son los de la BOM del arb, renglon por renglon, y al
  *     reves: ningun material del AMFE que la BOM no tenga.
  *
@@ -154,6 +155,15 @@ export function ordenDelFlujograma(flujo) {
 const NO_EXISTE = /^(sin (control|plan|registro|ensayo|muestra|metodo|verificacion|deteccion|inspeccion|medicion|criterio|prevencion)|no hay |no existe|ningun[oa]?\b|no se (detecta|controla|verifica)|-*$)/i;
 export const controlQueNoExiste = (texto) => NO_EXISTE.test(sinAcentos(String(texto ?? '')).trim());
 
+// amfe.md §11: lenguaje simple, 8 a 10 palabras por campo. Medido en Supabase el 02/10/2026: en
+// los tres AMFE escritos de cero con un generador (172, 173 y 174) la causa tenia de 12 a 14
+// palabras de mediana y entre el 77 % y el 86 % pasaba de 10; en los otros catorce la mediana
+// es de 4 a 7. Calidad lo leyo de una: "esta hecho con IA". El control lleva metodo,
+// instrumento y frecuencia, por eso su tope es mas alto.
+export const TOPE_PALABRAS = { falla: 10, causa: 10, control: 12 };
+// Una barra separa palabras ("tela/hilo/refuerzo" son tres); un guion suelto no es una palabra.
+export const contarPalabras = (texto) => String(texto ?? '').split(/[\s/]+/).filter((p) => /[\p{L}\p{N}]/u.test(p)).length;
+
 // Un efecto que manda la pieza o el material a scrap. "Sin generar scrap" no cuenta.
 const diceScrap = (texto) => /\bscrap\b|se descarta|descarte de/i.test(
   String(texto ?? '').replace(/\b(sin|no)\s+(generar?\s+|se\s+genera\s+|hay\s+)?scrap/gi, ''),
@@ -189,8 +199,18 @@ export function chequeosDeAutoria(doc, opts = {}) {
           nFM++;
           if (!fm.effectLocal || !fm.effectNextLevel || !fm.effectEndUser) errores.push(`OP${op.opNumber}: modo de falla sin los 3 efectos: ${fm.description}`);
           if (!fm.causes.length) errores.push(`OP${op.opNumber}: modo de falla sin causas: ${fm.description}`);
+          // El tope mira los dos nombres de cada campo (amfe.md §14): el que exporta es el otro.
+          for (const falla of new Set([fm.description, fm.failureMode].filter(Boolean))) {
+            if (contarPalabras(falla) > TOPE_PALABRAS.falla) errores.push(`OP${op.opNumber}: modo de falla de ${contarPalabras(falla)} palabras (tope ${TOPE_PALABRAS.falla}): ${falla}`);
+          }
           for (const c of fm.causes) {
             nCausas++;
+            for (const causaTexto of new Set([c.description, c.cause].filter(Boolean))) {
+              if (contarPalabras(causaTexto) > TOPE_PALABRAS.causa) errores.push(`OP${op.opNumber}: causa de ${contarPalabras(causaTexto)} palabras (tope ${TOPE_PALABRAS.causa}): ${causaTexto}`);
+            }
+            for (const control of new Set([c.preventiveControl, c.preventionControl, c.detectionControl].filter(Boolean))) {
+              if (contarPalabras(control) > TOPE_PALABRAS.control) errores.push(`OP${op.opNumber}: control de ${contarPalabras(control)} palabras (tope ${TOPE_PALABRAS.control}): ${control}`);
+            }
             if (!c.ap) errores.push(`OP${op.opNumber}: causa sin AP: ${c.description}`);
             else apCount[c.ap] = (apCount[c.ap] || 0) + 1;
             if (c.ap && c.ap !== calculateAP(fm.severity, c.occurrence, c.detection)) errores.push(`OP${op.opNumber}: el AP de la causa no es el de la tabla: ${c.description}`);

@@ -6,6 +6,10 @@
  * podes leer los tweets?". No hace falta su usuario: la lista sale de la busqueda publica de FxTwitter (un servicio
  * de terceros que lee X sin sesion) y del CHANGELOG oficial en GitHub. Si la busqueda deja de andar, lo dice.
  *
+ * 16/10/2026: la busqueda de X no lee nada desde el 04/10 (contesta 404; cola HOY-14). Para X y las paginas oficiales
+ * esta la skill `novedades-claude` (con la sesion de Fak en el navegador de la app). Este programa no se borra: la
+ * noche lo sigue corriendo por el registro de cambios oficial, que si anda.
+ *
  * Uso:
  *   node scripts/_novedadesClaude.mjs                 lo nuevo desde la ultima lectura (la primera vez, 8 dias)
  *   node scripts/_novedadesClaude.mjs --dias 30       lo de los ultimos 30 dias
@@ -13,7 +17,8 @@
  *   node scripts/_novedadesClaude.mjs --cuenta trq212 solo esa cuenta
  *   node scripts/_novedadesClaude.mjs --simular       lee y muestra el resumen, sin guardar nada (no baja articulos)
  *   node scripts/_novedadesClaude.mjs --sin-links     no sigue los links de los posteos
- *   node scripts/_novedadesClaude.mjs --hook          (arranque de sesion) un renglon si paso una semana sin leer; no sale a internet
+ *   node scripts/_novedadesClaude.mjs --hook          (arranque de sesion) un renglon si paso una semana sin leer (tambien
+ *                                                     cuenta la ultima lectura de la skill novedades-claude); no sale a internet
  *
  * Deja en .sgc-cache/x-seguimiento/ (fuera de git): novedades_<fecha>.md (el listado), crudo/<fecha>_<cuenta>.json,
  * articulos/<dominio-ruta>.md (cola H20: el texto de cada pagina que un posteo linkea, con su fuente y fecha; solo de
@@ -25,7 +30,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { leerCuenta, seguirLinks, seSigue, filtrar, versionesNuevas, listado, aDia, avisoHook, estadoNuevo } from './_lib/novedadesClaude.mjs';
+import { leerCuenta, seguirLinks, seSigue, filtrar, versionesNuevas, listado, aDia, avisoHook, ultimaLecturaSkill, estadoNuevo } from './_lib/novedadesClaude.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const CANON = JSON.parse(fs.readFileSync(path.join(AQUI, '_lib', 'novedadesClaude.data.json'), 'utf8'));
@@ -92,8 +97,13 @@ async function traerArticulo(url, ms = 20000) {
 
 const ahora = new Date();
 const estado = leerEstado();
-// --hook (arranque de sesion): solo mira la fecha de la ultima lectura; no sale a internet ni guarda nada
-if (op['--hook']) { try { const a = avisoHook(estado, ahora); if (a) console.log(a); } catch { /* el arranque no se frena por esto */ } process.exit(0); }
+// --hook (arranque de sesion): solo mira la fecha de la ultima lectura; no sale a internet ni guarda nada.
+// 16/10/2026: tambien cuenta la ultima lectura de la skill novedades-claude (su archivo en exports/explicaciones/).
+// La carpeta de prueba vale SOLO adentro de vitest (como CIERRE_GUARD_EXPORTS_PRUEBA): un test no puede leer el
+// exports/ real de la PC, que en el CI no existe (HOY-12).
+const explicaciones = () => (process.env.VITEST && process.env.BARACK_EXPLICACIONES_DIR) || path.join(AQUI, '..', 'exports', 'explicaciones');
+const nombresEn = (dir) => { try { return fs.readdirSync(dir); } catch { return []; } };
+if (op['--hook']) { try { const a = avisoHook(estado, ahora, 7, ultimaLecturaSkill(nombresEn(explicaciones()))); if (a) console.log(a); } catch { /* el arranque no se frena por esto */ } process.exit(0); }
 const cuentas = CANON.cuentas.filter((c) => !op['--cuenta'] || c.usuario.toLowerCase() === String(op['--cuenta']).toLowerCase());
 if (!cuentas.length) { console.log(`la cuenta ${op['--cuenta']} no esta en la lista (scripts/_lib/novedadesClaude.data.json)`); process.exit(2); }
 if (op['--desde'] && !/^\d{4}-\d{2}-\d{2}$/.test(op['--desde'])) { console.log('--desde va como AAAA-MM-DD'); process.exit(2); }
