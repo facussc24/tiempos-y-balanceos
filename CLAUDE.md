@@ -109,6 +109,8 @@ commit/push/archivar los hago yo.
   sin verificar, los caminos muertos (lo que se probo y no anduvo), la ultima pregunta de Fak sin contestar, textual,
   y el proximo paso. Cada compactacion queda anotada en `.claude/state/compactaciones.jsonl` (hook
   `compactacion-registro.sh`: fecha, sesion, causa auto | manual | idle, tokens).
+- **Antes de pedirle o mandarle algo a Calidad o a otra area, mirar el buzon**: `python scripts/_mails.py --buscar
+  "<tema>"` dice que ya se compartio (caso Nicolas, 13/10/2026: Calidad ya habia mandado los caminos de inspeccion).
 
 ## Reglas del dominio
 
