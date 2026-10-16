@@ -74,7 +74,9 @@ es como se gasta un control hasta que alguien lo desactiva.
 
 - `.claude/hooks/coordinador-guard.sh` → `scripts/_lib/coordinadorGuard.mjs`, **PreToolUse**, con matcher sobre
   TODOS los canales que entregan trabajo a otra sesion (`SendMessage`, `Agent`, `Task`, el
-  `send_message` del MCP, `spawn_task` y las tareas agendadas). En `SendMessage` exige el marcador `[ENCARGO <id>]` con
+  `send_message` del MCP, `spawn_task`, **`mcp__ccd_session__start_session`** (la hija anidada, el camino normal
+  desde el 16/10/2026: su `prompt` ES el encargo y el `title` es el destino que `_encargo.mjs --a` registra; sin
+  `prompt`, una oferta o un `proposal_id`, no se revisa) y las tareas agendadas). En `SendMessage` exige el marcador `[ENCARGO <id>]` con
   registro y texto coincidente; en `Agent` corre solo los dos checks baratos (G3 y G4), porque
   lanzar subagentes lo hacen todas las sesiones todo el dia y un gate pesado ahi es el candado
   que en un mes se saltea.

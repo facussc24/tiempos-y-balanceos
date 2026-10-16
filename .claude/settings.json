@@ -47,7 +47,7 @@
         ]
       },
       {
-        "matcher": "SendMessage|Agent|Task|mcp__ccd_session_mgmt__send_message|mcp__ccd_session__spawn_task|mcp__scheduled-tasks__create_scheduled_task",
+        "matcher": "SendMessage|Agent|Task|mcp__ccd_session_mgmt__send_message|mcp__ccd_session__spawn_task|mcp__ccd_session__start_session|mcp__ccd_session__hand_off_to_session|mcp__scheduled-tasks__create_scheduled_task",
         "hooks": [
           {
             "type": "command",

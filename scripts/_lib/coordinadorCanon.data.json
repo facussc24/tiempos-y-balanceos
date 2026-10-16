@@ -243,6 +243,8 @@
     ],
     "conCarpeta": "La tarea vive en el Escritorio: {carpeta}. Ahí va el rastro (el mail, capturas, borradores); el entregable se escribe directo en su carpeta por tipo de la biblioteca de Ingeniería, y nada tuyo queda suelto en el Escritorio.",
     "sinCarpeta": "Carpeta de la tarea: ninguna declarada. Si es trabajo de Barack va en una carpeta del Escritorio, y la carpeta la decide Fak.",
-    "conSkills": "Cargá con la tool Skill, antes de empezar: {skills}."
+    "conSkills": "Cargá con la tool Skill, antes de empezar: {skills}.",
+    "_autonoma": "16/10/2026 (tanda 1.1 y 9 (b) del plan del sistema): con --lanzada, el ARRANQUE termina con lineaAutonoma: los bloques oficiales de la guia de Fable 5.1 para corridas sin humano (operas autonomo, el pedido es el alcance, no arreglar lo que no se pidio, ediciones puntuales, terminar la tarea entera) y el cierre con el prompt oficial de Alex Albert (primero el resultado, despues lo que necesitas del usuario, claro antes que corto). Antes iba pegado a mano en cada cuerpo; ahora lo pone la plantilla.",
+    "lineaAutonoma": "Operás de forma autónoma: Fak no está mirando y nadie te va a contestar, así que no preguntes «¿sigo?» ni «¿querés que…?». El pedido es el alcance: lo que encuentres roto y no esté pedido no lo arreglás, lo reportás; ediciones puntuales, nada de reescribir archivos enteros; terminá la tarea completa en vez de anunciar un próximo paso. Al cerrar, en tu último turno (es el punto anterior, dicho entero): la RUTA del entregable en la primera línea, después el resultado, después lo que hace falta de la sesión que te lanzó o de Fak, cada cosa explicada como si fuera nueva, sin taquigrafía ni etiquetas inventadas; si tenés que elegir entre corto y claro, elegí claro."
   }
 }

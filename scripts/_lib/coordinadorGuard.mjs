@@ -1,7 +1,8 @@
 /**
  * coordinadorGuard.mjs — el cerrojo del rol coordinador.
  *
- * Lo llama .claude/hooks/coordinador-guard.sh (PreToolUse, matcher SendMessage|Agent).
+ * Lo llama .claude/hooks/coordinador-guard.sh (PreToolUse; el matcher vive en .claude/settings.json: SendMessage,
+ * Agent, Task, send_message del MCP, spawn_task, start_session, hand_off_to_session y las tareas agendadas).
  * Recibe por stdin el JSON del hook y decide si la llamada pasa o se bloquea.
  *
  * POR QUE EN NODE Y NO EN BASH: el cuerpo de un mensaje trae comillas, saltos de linea y
@@ -17,6 +18,10 @@
  *   Agent        -> solo los dos checks baratos: segunda tarea (G3) y accion irreversible
  *                   (G4). El canal completo no aplica: lanzar subagentes lo hacen todas las
  *                   sesiones todo el dia y un gate pesado ahi es el candado que se saltea.
+ *   start_session (16/10/2026) -> G3 y G4 sobre title + background + prompt, y despues el canal
+ *                   completo sobre el `prompt` (tiene que SER el encargo; el `title` es el destino).
+ *                   Sin prompt (oferta, proposal_id) no hay texto que revisar.
+ *   hand_off_to_session -> G3 y G4 sobre title + remaining_plan (es un fork: no hay encargo).
  *
  * ESCAPE (un solo uso), para mensajes que no son encargos — un "gracias", un aviso:
  *   : > ~/.claude/.encargo-libre.<session_id>
@@ -181,18 +186,41 @@ export function decidir(payload, { hayEscape, leerEncargo, leerSubagentes } = {}
     return checksDeLanzamiento(texto, inp.prompt || '');
   }
 
+  // --- start_session: la hija anidada (volvio el 16/10/2026, tanda 1.1 del plan del sistema) ---
+  // Es el camino normal para abrir una hija desde la sesion. Su `prompt` ES el encargo que la hija
+  // recibe como primer mensaje, asi que pasa por el mismo cerrojo que un SendMessage a otra sesion:
+  // tiene que ser el texto de _encargo.mjs, tal cual. Sin `prompt` (una oferta, o arrancar una ficha
+  // ya propuesta por `proposal_id`) no sale ningun texto hacia otra sesion y no hay nada que revisar.
+  const ES_START = tool === 'mcp__ccd_session__start_session';
+  const ES_HANDOFF = tool === 'mcp__ccd_session__hand_off_to_session';
+  if (ES_START || ES_HANDOFF) {
+    // G3 y G4 sobre TODO lo que viaja a la hija, ANTES del escape y del encargo (auditor 16/10, H1 y H2): el
+    // `background` de start_session y el `remaining_plan` de hand_off llegan a la hija como texto libre y no pasan
+    // por _encargo.mjs; una orden irreversible ahi es la misma orden que en un prompt.
+    const viaja = ES_START ? `${inp.title || ''} ${inp.background || ''} ${inp.prompt || ''}`
+                           : `${inp.title || ''} ${inp.remaining_plan || ''}`;
+    const r = checksDeLanzamiento(viaja, ES_START ? `${inp.background || ''} ${inp.prompt || ''}` : (inp.remaining_plan || ''), 'una sesion hija');
+    if (!r.ok) return r;
+    // hand_off es un fork: la conversacion entera viaja y no hay un encargo que comparar (auditor 16/10, H5).
+    if (ES_HANDOFF) return { ok: true };
+    if (typeof inp.prompt !== 'string' || !inp.prompt.trim()) return { ok: true };
+  }
+
   // Cualquier otra tool que empiece trabajo en otro lado y todavia no este contemplada:
   // se avisa una vez, no se bloquea. Una lista de tools es una lista canonica mas, y esta
   // casa ya sabe que envejecen — pero bloquear a ciegas algo que no se conoce es peor.
-  if (/spawn|dispatch|remote_trigger|create_scheduled/i.test(String(tool || ''))) {
+  if (!ES_START && /spawn|dispatch|remote_trigger|create_scheduled/i.test(String(tool || ''))) {
     return { ok: true, aviso: `tool "${tool}" arranca trabajo en otro lado y el guardian no la revisa. Si le estas mandando un encargo, armalo con _encargo.mjs.` };
   }
 
-  // --- SendMessage: canal unico -------------------------------------------
-  if (tool !== 'SendMessage' && tool !== 'mcp__ccd_session_mgmt__send_message') return { ok: true };
+  // --- SendMessage y start_session: canal unico -------------------------------------------
+  if (!ES_START && tool !== 'SendMessage' && tool !== 'mcp__ccd_session_mgmt__send_message') return { ok: true };
 
-  const cuerpo = inp.message || inp.content || '';
+  const cuerpo = ES_START ? inp.prompt : (inp.message || inp.content || '');
   if (typeof cuerpo !== 'string' || !cuerpo.trim()) return { ok: true };
+
+  // En start_session el destino es el titulo de la hija (lo que _encargo.mjs registra en `a`).
+  const destino = ES_START ? String(inp.title || '').trim() : String(inp.to || inp.recipient || '').trim();
 
   // Un SendMessage a un SUBAGENTE que lanzo esta MISMA sesion no sale hacia otra sesion: es
   // seguir hablandole a un Agent propio (una correccion, "me devolviste las rutas pero no el
@@ -200,7 +228,6 @@ export function decidir(payload, { hayEscape, leerEncargo, leerSubagentes } = {}
   // esto (los otros 3 iban a otra sesion), y cada uno se resolvia con el escape + reenvio (2 turnos). Pasa por los MISMOS checks
   // que el lanzamiento (G4 irreversible, G3 segunda tarea). Lo que va a otra sesion (`uds:`, un
   // nombre que esta sesion no lanzo) o por el send_message del MCP sigue exigiendo _encargo.mjs.
-  const destino = String(inp.to || inp.recipient || '').trim();
   if (tool === 'SendMessage' && destino && !/^uds:/i.test(destino)) {
     const propios = leerSubagentes ? leerSubagentes() : subagentesPropios(payload?.transcript_path, sid);
     if (propios.has(destino)) {
@@ -221,7 +248,7 @@ export function decidir(payload, { hayEscape, leerEncargo, leerSubagentes } = {}
         '    node scripts/_encargo.mjs --a "<sesion>" --entregable "<UNO>" --origen fak \\',
         '         --cuerpo "<el texto>" --sin-supuestos',
         '',
-        '  Despues pegás la salida TAL CUAL en el SendMessage.',
+        '  Despues pegás la salida TAL CUAL en el SendMessage (o como `prompt` de start_session).',
         '',
         '  Por que existe esto: hasta el 02/09/2026 del coordinador salia prosa libre y en',
         '  dos dias produjo 7 errores reales — un "creo" de Fak convertido en dato, un mail',

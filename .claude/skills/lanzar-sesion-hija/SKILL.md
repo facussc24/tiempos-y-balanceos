@@ -1,6 +1,6 @@
 ---
 name: lanzar-sesion-hija
-description: Lanzar una sesión nueva o hija de Claude Code desde esta sesión, sin que Fak pegue un prompt ni apruebe un cartel — encargo con `_encargo.mjs --lanzada`, tarea manual + `run_scheduled_task` (arranca con el modo guardado en la tarea o el del settings, nunca con el de la que la lanza), modelo y título desde acá, y el control `_hijaEstado.mjs` que mide que arrancó bien. Usar cuando haya que abrir otra sesión, pasarle trabajo a una sesión nueva, continuar en un chat nuevo al llegar al límite de contexto, repartir la cola entre sesiones, orquestar varias sesiones, o cuando Fak pregunte si puedo abrir una sesión («¿no podés vos mismo desplegar una sesión?», 09/10; «testeá si podés abrir una sesión hija», 10/10/2026). Lo primero que hace es probar si `start_session` (la hija anidada debajo del chat) ya está habilitada.
+description: Lanzar una sesión nueva o hija de Claude Code desde esta sesión, sin que Fak pegue un prompt ni apruebe un cartel — desde el 16/10/2026 con `mcp__ccd_session__start_session` (la hija anidada debajo del chat, en Opus y en bypass, medido), encargo con `_encargo.mjs --lanzada` como prompt, y el control `_hijaEstado.mjs` que mide que arrancó bien; la tarea manual + `run_scheduled_task` queda como respaldo. Usar cuando haya que abrir otra sesión, pasarle trabajo a una sesión nueva, continuar en un chat nuevo al llegar al límite de contexto, repartir la cola entre sesiones, orquestar varias sesiones, proponer una tarea aparte como ficha (`own_initiative`), o cuando Fak pregunte si puedo abrir una sesión («¿no podés vos mismo desplegar una sesión?», 09/10; «testeá si podés abrir una sesión hija», 10/10/2026).
 ---
 
 # Lanzar una sesión hija desde esta sesión
@@ -9,7 +9,45 @@ Fak, 09/10/2026 20:25: *"¿y no podés vos mismo desplegar una nueva sesión en 
 10/10/2026 11:05: *"testeá si podés abrir una sesión hija y fijate cómo memorizás eso, si con una skill propia…
 pareciera que te olvidás de tus propias habilidades"*. Esta skill es esa memoria: se lista en cada sesión.
 
-## 0. Primero, ¿volvió la hija anidada (la que aparece debajo de este chat)?
+## 0. La hija anidada VOLVIÓ (16/10/2026): `start_session` es el camino normal; B queda de respaldo
+
+**Medido el 16/10/2026** desde la sesión Fable 5.1 de la PC principal (`34df5f0e`): `mcp__ccd_session__start_session`
+aparece en la lista de herramientas y lanzó dos hijas sin clic, anidadas bajo el chat, **en Opus 5.5 y en
+`bypassPermissions` desde el primer mensaje** (`local_b3e5c5f5` 13:13 y `local_4ac0598e` 13:28; `_hijaEstado.mjs`
+dijo ARRANCÓ BIEN en las dos). Lo que se usó y anda:
+
+```
+mcp__ccd_session__start_session  initiation: "user_asked" · context: "fresh" · use_worktree: true (si toca código que
+  la madre también toca) · model: "claude-opus-5-5" (desde Fable se puede pedir igual o más barato; sin `model` la
+  hija corre en el modelo de la madre) · wake_when_done: true (la madre se retoma cuando la hija termina; según el esquema de la herramienta la app la retoma igual, con o sin esta opción, salvo que la hija nunca reciba su encargo: ahí sí hace falta)
+  · name (≤ 24, [a-z0-9-]) · title (≤ 60: es lo que `_encargo.mjs --a` registra como destino) · branch_name ·
+  background (≥ 80 caracteres) · prompt = el texto de `_encargo.mjs --lanzada`, TAL CUAL
+```
+
+- **El encargo se sigue armando con `_encargo.mjs --lanzada`** (regla `coordinador.md`): el `prompt` es el primer
+  mensaje de la hija, y desde el 16/10 el guardián `coordinador-guard` también mira `start_session` (prosa libre o un
+  encargo editado → bloqueo; una oferta o un `proposal_id` sin `prompt` → pasa). Los comandos que son el objeto del
+  trabajo van en un archivo adjunto al encargo (`docs/PLAN_*.md`), nunca literales en el texto: el guardián frena un
+  comando de borrado o un grep escrito literal aunque sea el tema.
+- **Se mide igual**: `node scripts/_hijaEstado.mjs <local_id> --espera-modelo claude-opus-5-5` al minuto. Y la hija
+  no puede pasar del esfuerzo de la madre (con Fable en medium, Opus en medium).
+- **`initiation: "own_initiative"`** deja una ficha que Fak toca para arrancarla: es «proponer trabajo aparte»
+  sin pedir permiso en el chat (tanda 1.2). **`"offer"`** pregunta «Sesión nueva / Acá» antes de nada.
+- **Máximo dos hijas activas a la vez** (con cuatro el cupo semanal subía ~4 puntos por hora el 10/10). Una hija, un
+  entregable, un commit en su worktree, nunca un push: dice la rama y la madre la trae a `main` (`git merge --no-ff`,
+  build, suite completa si agrega archivos o toca `settings.json`, push).
+- **Settings que lo acompañan (16/10, esta PC):** `crossSessionInbound: "accept"` en `~/.claude/settings.json` (la app no
+  puede mostrar el diálogo de aprobación de un mensaje entre sesiones y lo descartaba a los 5 minutos; con `accept`
+  entra); `.worktreeinclude` con `.env.local` y `.qr-secret` (desde el 08/10) para que un worktree nuevo vea Supabase.
+- **Retiros con vencimiento** (se revisan el **23/10/2026** con una semana de uso; tanda 9): el camino B entero
+  (tarea manual + `run_scheduled_task`) queda escrito como respaldo y se saca si en una semana no hizo falta; la espera
+  de `_hijaEstado.mjs` se reemplaza por `wake_when_done` + `SendMessage` con `notify_when_idle` si se mide que llega en
+  la app (doc `cross-session-messaging`: solo a sesiones de esta misma máquina; no probado en la app todavía); la
+  mensajería por archivos entre sesiones (`FACUNDO\PEDIDO N`) sigue: es entre PC, no entre sesiones.
+
+Lo que sigue abajo es la historia (08/10 a 15/10) y el camino B, que se usa solo si `start_session` no aparece.
+
+### 0 bis. Historia: cómo se perdió y cómo se midió (08/10 a 15/10/2026)
 
 `start_session` (`mcp__ccd_session__start_session`, con `list_start_targets` y `hand_off_to_session`) **existió
 y se usó**: el 08/10/2026 hubo 6 llamadas reales desde sesiones de esta carpeta. Con `initiation: "user_asked"`
@@ -29,15 +67,15 @@ Si aparece: usarla con `initiation: "user_asked"` (abre la hija anidada, sin cli
 `set_session_*`, `send_message`, `stop_session`, `detach_session`). Avisarle a Fak en un renglón que volvió y
 anotar acá la fecha.
 
-Si no aparece (hoy): camino B, con el modo resuelto en §B.0. **No** le decir a Fak «no se puede»: se le dice qué
+Si no aparece (pasó del 09 al 15/10/2026): camino B, con el modo resuelto en §B.0. **No** le decir a Fak «no se puede»: se le dice qué
 falta y las dos formas de resolverlo.
 
-## Los tres caminos, medidos (10/10/2026)
+## Los tres caminos, medidos (10/10/2026; el 16/10 el A volvió y es el normal: §0)
 
 | Camino | Clic de Fak | Dónde se ve | Modo con el que arranca | Estado |
 |---|---|---|---|---|
-| **A** `start_session` con `initiation: user_asked` | no | anidada debajo del chat que la lanzó | el que se pida (bypass el 08/10) | funcionó el 08/10 (3 de 3); no aparece desde la app 2.31226.1 (09/10 17:26); probar en §0 |
-| **B** tarea manual + `run_scheduled_task` | no, **pero hoy arranca en `default` y pide carteles** hasta que Fak fije el modo (§B.0) | **Programadas** → la tarea → sus corridas (no tiene fila propia en la barra) | **el guardado en la tarea** (`permissionMode` de `scheduled-tasks.json`, lo escribe el selector de Programadas) **o, si no hay, el del settings**; NUNCA el de la sesión que la lanza (medido 10/10 11:26: desde bypass arrancó en `default`; la del 01:33 tomó `plan` del repo; la del 11:44 por reloj, `default`) | el único camino de hoy, **solo con el modo resuelto en §B.0** |
+| **A** `start_session` con `initiation: user_asked` | no | anidada debajo del chat que la lanzó | el que se pida (bypass el 08/10) | funcionó el 08/10 (3 de 3); desapareció del 09 al 15/10; **volvió el 16/10 y es el camino normal (§0)** |
+| **B** tarea manual + `run_scheduled_task` (respaldo desde el 16/10) | no, **pero arranca en `default` y pide carteles** si el settings no fija el modo (§B.0) | **Programadas** → la tarea → sus corridas (no tiene fila propia en la barra) | **el guardado en la tarea** (`permissionMode` de `scheduled-tasks.json`, lo escribe el selector de Programadas) **o, si no hay, el del settings**; NUNCA el de la sesión que la lanza (medido 10/10 11:26: desde bypass arrancó en `default`; la del 01:33 tomó `plan` del repo; la del 11:44 por reloj, `default`) | respaldo (hasta el 15/10 era el único), **solo con el modo resuelto en §B.0** |
 | **C** ficha `spawn_task` | **sí, uno** | anidada debajo del chat, con su worktree propio | el de la sesión madre (22 de 24 en bypass, 2 en auto) | para cuando Fak está y quiere verla abajo |
 
 Lo que Fak vio «abrirse debajo de un chat» (01 al 06/10/2026) fueron **24 fichas C** que él clickeó.

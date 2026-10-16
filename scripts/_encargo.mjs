@@ -294,7 +294,12 @@ export function lineasArranque({ carpeta, skills = [], sinArranque = false, lanz
   // Con `lanzada` y una hora vigente en la que lanza (`hereda`), el punto 2 le dice a la hija que se anote como hija
   // de esa sesion (cola P41b): el hook permiso-guard le aplica la hora de la madre. Sin `lanzada` no sale nunca.
   const conHora = lanzada && hereda && hereda.madre && hereda.hasta;
-  const lineas = lanzada ? [P.lineaLanzada, ...(conHora ? ['{hereda}'] : []), ...P.lineas.slice(1)] : P.lineas;
+  // Con `lanzada` el bloque termina con `lineaAutonoma` (16/10/2026, tanda 1.1 del plan del sistema): los bloques
+  // oficiales de la guia de Fable 5.1 para corridas sin humano y el cierre «primero el resultado». Va al final para
+  // que la numeracion de los puntos que ya existian no cambie.
+  const lineas = lanzada
+    ? [P.lineaLanzada, ...(conHora ? ['{hereda}'] : []), ...P.lineas.slice(1), ...(P.lineaAutonoma ? [P.lineaAutonoma] : [])]
+    : P.lineas;
   for (const l of lineas) {
     let texto = l;
     if (l === '{hereda}') texto = P.lineaHeredaHora.replace('{hasta}', () => hereda.hasta).replace('{madre}', () => hereda.madre).replace('{lista}', () => hereda.lista || 'esa hora no tiene un archivo de lista: queda en el registro');

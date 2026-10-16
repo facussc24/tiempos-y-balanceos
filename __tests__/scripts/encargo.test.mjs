@@ -83,6 +83,18 @@ describe('plantilla de arranque · lo que Fak tipeaba a mano sale fijo', () => {
     expect(lineasArranque({ lanzada: true })[1]).toBe(`  1. ${CANON.plantillaArranque.lineaLanzada}`);
   });
 
+  it('--lanzada termina con el renglon de corrida autonoma (16/10/2026, tanda 1.1: bloques oficiales de Fable 5.1), y sin --lanzada no sale', () => {
+    const t = armarTexto({ ...base(), carpeta: 'C:\\Escritorio\\Tarea', skills: ['carga-arb'], lanzada: true });
+    expect(t).toMatch(/6\. Operás de forma autónoma: Fak no está mirando/);
+    expect(t).toMatch(/la RUTA del entregable en la primera línea, después el resultado/);
+    const l = lineasArranque({ lanzada: true });
+    expect(l[l.length - 1]).toBe(`  ${l.length - 1}. ${CANON.plantillaArranque.lineaAutonoma}`);
+    expect(armarTexto(base())).not.toMatch(/Operás de forma autónoma/);
+    // y sigue pasando los candados del guardian
+    expect(detectarSegundaTarea(t)).toEqual([]);
+    expect(detectarIrreversibles(t)).toEqual([]);
+  });
+
   it('--lanzada pasa los candados del guardian igual que el encargo comun, y --sin-arranque le gana', () => {
     const t = armarTexto({ ...base(), lanzada: true });
     expect(detectarSegundaTarea(t)).toEqual([]);
@@ -194,7 +206,7 @@ describe('plantilla de arranque · lo que Fak tipeaba a mano sale fijo', () => {
 
   it('cada linea de la plantilla, sola, tampoco dispara un candado (una linea nueva se prueba aca antes de ir al canon)', () => {
     const P = CANON.plantillaArranque;
-    for (const l of [...P.lineas, P.lineaLanzada, P.lineaHeredaHora, P.conCarpeta, P.sinCarpeta, P.conSkills, P.titulo]) {
+    for (const l of [...P.lineas, P.lineaLanzada, P.lineaHeredaHora, P.lineaAutonoma, P.conCarpeta, P.sinCarpeta, P.conSkills, P.titulo]) {
       expect(detectarSegundaTarea(l), l).toEqual([]);
       expect(detectarIrreversibles(l), l).toEqual([]);
     }

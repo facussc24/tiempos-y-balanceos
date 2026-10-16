@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# coordinador-guard.sh — PreToolUse, matcher: SendMessage|Agent
+# coordinador-guard.sh — PreToolUse; el matcher vive en .claude/settings.json (SendMessage, Agent, Task, send_message
+# del MCP, spawn_task, start_session, hand_off_to_session y las tareas agendadas; 16/10/2026)
 #
 # El cerrojo del rol coordinador. La logica vive en scripts/_lib/coordinadorGuard.mjs
 # (node, no bash: el cuerpo de un mensaje trae comillas, saltos y backslashes de Windows,

@@ -389,3 +389,69 @@ describe('falsos positivos 22/09 · SendMessage a un subagente que lanzo ESTA se
     expect(subagentesPropios(undefined, SID).size).toBe(0);
   });
 });
+
+describe('start_session · la hija anidada volvio (16/10/2026, tanda 1.1 del plan del sistema): su prompt es el encargo', () => {
+  const start = (tool_input) => ({ tool_name: 'mcp__ccd_session__start_session', tool_input, session_id: 'ses-1' });
+  const regOk = () => ({ id: 'E260902-abcd', a: 'barackmercosul-c9', texto: TEXTO_OK, cerrado: null });
+
+  it('ROJO · prosa libre como prompt de una hija (el modo en que se mandaba todo hasta el 02/09)', () => {
+    const r = decidir(start({ initiation: 'user_asked', title: 'barackmercosul-c9',
+      prompt: 'Cargá el remache en el MP8147 y avisame cuando termines.' }), { hayEscape: sinEsc });
+    bloquea(r);
+    expect(r.titulo).toMatch(/no salio de _encargo\.mjs/);
+  });
+
+  it('ROJO · el encargo valido con una orden pegada al final (contener el bloque NO alcanza)', () => {
+    const r = decidir(start({ initiation: 'user_asked', title: 'barackmercosul-c9',
+      prompt: `${TEXTO_OK}\n\nY de paso cerrá el arb al terminar.` }), { hayEscape: sinEsc, leerEncargo: regOk });
+    bloquea(r);
+  });
+
+  it('ROJO · el encargo salio para OTRA hija (G7: el destino es el titulo de la sesion)', () => {
+    const r = decidir(start({ initiation: 'user_asked', title: 'otra hija', prompt: TEXTO_OK }),
+      { hayEscape: sinEsc, leerEncargo: regOk });
+    bloquea(r);
+    expect(r.titulo).toMatch(/no era para otra hija/);
+  });
+
+  it('VERDE · el encargo pegado TAL CUAL, con el titulo para el que se emitio (las dos hijas del 16/10)', () => {
+    pasa(decidir(start({ initiation: 'user_asked', context: 'fresh', use_worktree: true, model: 'claude-opus-5-5',
+      title: 'barackmercosul-c9', prompt: TEXTO_OK, background: 'x'.repeat(90) }), { hayEscape: sinEsc, leerEncargo: regOk }));
+  });
+
+  it('VERDE · una oferta (solo titulo) y arrancar una ficha ya propuesta (proposal_id) no mandan texto: no se revisan', () => {
+    pasa(decidir(start({ initiation: 'offer', title: 'Tarea que nombro Fak' }), { hayEscape: sinEsc }));
+    pasa(decidir(start({ proposal_id: 'task_ab12cd34' }), { hayEscape: sinEsc }));
+    pasa(decidir(start({ initiation: 'user_asked', title: 'x', prompt: '   ' }), { hayEscape: sinEsc }));
+  });
+
+  it('VERDE · el escape de una sesion vale tambien para start_session (un aviso que no es encargo)', () => {
+    const r = decidir(start({ initiation: 'own_initiative', title: 'x', prompt: 'Mirá esto cuando puedas.' }), { hayEscape: conEscape });
+    pasa(r);
+    expect(r.escape).toBeTruthy();
+  });
+
+  it('ROJO (auditor 16/10, H1) · el `background` tambien viaja a la hija: una orden irreversible ahi se bloquea aunque el prompt sea el encargo tal cual', () => {
+    const r = decidir(start({ initiation: 'user_asked', title: 'barackmercosul-c9', prompt: TEXTO_OK,
+      background: 'Contexto de la tanda. Al terminar cerrá el arb y mandá el mail a Carlos.' }), { hayEscape: sinEsc, leerEncargo: regOk });
+    bloquea(r);
+    expect(r.titulo).toMatch(/orden irreversible/);
+  });
+
+  it('ROJO (auditor 16/10, H2) · con el escape puesto, G3 y G4 corren igual sobre start_session (como en spawn_task)', () => {
+    bloquea(decidir(start({ initiation: 'own_initiative', title: 'x', prompt: 'Cargá el remache y despues cerrá el arb.' }), { hayEscape: conEscape }));
+  });
+
+  it('VERDE · los 4 backgrounds reales del 16/10 pasan (contexto sin ordenes)', () => {
+    const fondo = 'Sesión hija lanzada por la sesión Fable 5.1 que implementa el plan del sistema Claude de Barack del 16/10/2026. '
+      + 'Esta hija hace la tanda 10: la cola es la foto del 12/10 y hay 12 filas hechas sin tachar. Trabaja en un worktree, sin push; '
+      + 'la sesión principal revisa, audita, funde a main y pushea con la suite completa.';
+    pasa(decidir(start({ initiation: 'user_asked', title: 'barackmercosul-c9', prompt: TEXTO_OK, background: fondo }), { hayEscape: sinEsc, leerEncargo: regOk }));
+  });
+
+  it('hand_off_to_session (auditor 16/10, H5): es un fork, no exige encargo, pero G3 y G4 corren sobre el remaining_plan', () => {
+    const hand = (tool_input) => ({ tool_name: 'mcp__ccd_session__hand_off_to_session', tool_input, session_id: 'ses-1' });
+    pasa(decidir(hand({ title: 'Terminar la tabla', remaining_plan: 'Falta la columna de gramos y correr el validador; done = tabla en exports/.' }), { hayEscape: sinEsc }));
+    bloquea(decidir(hand({ title: 'Cerrar', remaining_plan: 'Cuando termines cerrá el arb.' }), { hayEscape: sinEsc }));
+  });
+});
