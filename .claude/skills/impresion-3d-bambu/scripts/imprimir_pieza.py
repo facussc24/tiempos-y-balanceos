@@ -14,6 +14,7 @@ Uso (python del sistema):
 """
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -21,6 +22,18 @@ from pathlib import Path
 AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
 import bambu_red as br  # noqa: E402
+
+
+def _falla_en_un_renglon(tipo, valor, tb):
+    """Una falla de la impresora (no la encuentra, rechazo el codigo) sale en un renglon con su salida, como en
+    bambu_red.py, y no como un error de Python (desde el 16/10/2026 bambu_red levanta FallaImpresora)."""
+    if isinstance(valor, br.FallaImpresora):
+        print(valor.texto, flush=True)
+        os._exit(valor.salida)
+    sys.__excepthook__(tipo, valor, tb)
+
+
+sys.excepthook = _falla_en_un_renglon
 
 COLORES = {"negro": "#000000", "blanco": "#FFFFFF", "amarillo": "#F4D31F", "verde": "#00AE42",
            "rojo": "#C12E1F", "azul": "#0A2989", "gris": "#8E9089", "naranja": "#FF6A13"}

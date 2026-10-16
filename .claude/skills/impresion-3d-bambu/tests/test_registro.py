@@ -185,13 +185,102 @@ class Rollos(unittest.TestCase):
         self.assertEqual(registro.nombre_color("#EFE255"), "amarillo")
 
 
+class ArreglosDeLaAuditoria(unittest.TestCase):
+    """TB2 y la placa libre (auditoria del 16/10/2026), en las dos direcciones."""
+
+    def setUp(self):
+        self.tmp = _base.carpeta_nueva("audit")
+        self.reg = _base.apuntar(self.tmp)
+
+    def test_TB2_reimpresion_no_se_toma_por_el_nombre(self):
+        registro.anotar({"tipo": "enviada", "trabajo_id": "A", "archivo": "p.gcode.3mf", "subtask_name": "p",
+                         "task_id": "111", "filamentos": [{"rollo": "R", "gramos": 40.0}]})
+        registro.cerrar("A", "terminada", avance_pct=100)
+        registro.anotar({"tipo": "enviada", "trabajo_id": "B", "archivo": "p.gcode.3mf", "subtask_name": "p",
+                         "task_id": "222", "estado": "sin confirmar", "filamentos": [{"rollo": "R", "gramos": 40.0}]})
+        self.assertIsNone(registro.trabajo_de("p", "111"))                 # el FINISH de la vieja no agarra la nueva
+        self.assertEqual(registro.trabajo_de("p", "222")["trabajo_id"], "B")
+        self.assertEqual(registro.trabajo_de("p")["trabajo_id"], "B")        # sin numero, por el nombre
+
+    def test_TB2_renglon_viejo_sin_numero_sigue_saliendo_por_el_nombre(self):
+        registro.anotar({"tipo": "enviada", "trabajo_id": "C", "archivo": "q.gcode.3mf", "filamentos": []})
+        self.assertEqual(registro.trabajo_de("q", "999")["trabajo_id"], "C")
+
+    def _fin_sin_ver_y_placa_libre(self, libre_antes_del_envio):
+        if libre_antes_del_envio:
+            anotar_a_mano(self.reg, "PC-L", [{"tipo": "placa_libre", "cuando": "2026-10-16T09:00:00-03:00"}])
+        anotar_a_mano(self.reg, "PC-A", [{"tipo": "enviada", "trabajo_id": "X", "archivo": "x.gcode.3mf",
+                                          "cuando": "2026-10-16T10:00:00-03:00"}])
+        if not libre_antes_del_envio:
+            anotar_a_mano(self.reg, "PC-L", [{"tipo": "placa_libre", "cuando": "2026-10-16T18:00:00-03:00"}])
+        # otra PC lo vio terminado DESPUES de que Leo anoto la placa libre: hora real de fin desconocida
+        anotar_a_mano(self.reg, "PC-B", [{"tipo": "terminada", "trabajo_id": "X", "minutos_reales": None,
+                                          "fin_visto": "2026-10-16T18:30:00-03:00", "cuando": "2026-10-16T18:30:00-03:00"}])
+        return registro.placa_libre() > registro.ultimo_fin()
+
+    def test_placa_libre_antes_de_que_alguien_vea_el_fin_cuenta(self):
+        self.assertTrue(self._fin_sin_ver_y_placa_libre(libre_antes_del_envio=False))
+
+    def test_placa_libre_de_antes_del_envio_no_cuenta(self):
+        self.assertFalse(self._fin_sin_ver_y_placa_libre(libre_antes_del_envio=True))
+
+    def test_un_cierre_sin_nada_impreso_no_ocupa_la_placa(self):
+        anotar_a_mano(self.reg, "PC-A", [
+            {"tipo": "enviada", "trabajo_id": "Y", "archivo": "y.gcode.3mf", "cuando": "2026-10-16T10:00:00-03:00"},
+            {"tipo": "cancelada", "trabajo_id": "Y", "avance_pct": 0, "cuando": "2026-10-16T10:05:00-03:00"}])
+        self.assertIsNone(registro.ultimo_fin())
+
+
+class RolloSinChip(unittest.TestCase):
+    """Fak, 16/10/2026: «si llega a fallar el chip deberíamos usarlo igual» y «te aclaro que es nuevo y listo»."""
+
+    def setUp(self):
+        self.tmp = _base.carpeta_nueva("sinchip")
+        _base.apuntar(self.tmp)
+        registro.ULTIMO_ESTADO.write_text(json.dumps({"ams": {"ams": [{"id": "16", "tray": [
+            {"id": "1", "tag_uid": "6EACADA000000100", "tray_type": "PLA", "tray_info_idx": "GFA18"},
+            {"id": "3", "tag_uid": "0000000000000000", "tray_type": "PLA", "tray_info_idx": "GFA18"},
+            {"id": "2"}]}]}}), encoding="utf-8")
+
+    def test_el_lugar_sin_chip_tiene_nombre(self):
+        self.assertEqual(registro.chip_del_lugar(4), "SIN-CHIP-L4")
+        self.assertEqual(registro.chip_del_lugar(2), "6EACADA000000100")
+        self.assertIsNone(registro.chip_del_lugar(3))                      # lugar vacio
+
+    def test_rollo_nuevo_arranca_la_cuenta(self):
+        r, out, _ = _base.correr(registro._main, ["registro.py", "--rollo-nuevo", "4", "lo dijo Fak"])
+        self.assertEqual(r, 0, out)
+        registro.anotar({"tipo": "enviada", "trabajo_id": "z", "archivo": "z.gcode.3mf",
+                         "filamentos": [{"rollo": "SIN-CHIP-L4", "gramos": 25.0}]})
+        self.assertAlmostEqual(registro.gramos_restantes("SIN-CHIP-L4"), 975.0)
+        nuevo = [e for e in registro.leer() if e["tipo"] == "rollo cargado"][0]
+        self.assertEqual((nuevo["lugar"], nuevo["gramos"], nuevo["nota"]), (4, 1000.0, "lo dijo Fak"))
+
+
+class LineaDeComandos(unittest.TestCase):
+    def setUp(self):
+        self.tmp = _base.carpeta_nueva("cli")
+        self.reg = _base.apuntar(self.tmp)
+
+    def test_validar_con_un_renglon_sin_fecha(self):
+        anotar_a_mano(self.reg, "PC-A", [{"tipo": "placa_libre", "cuando": None}])
+        r, out, _ = _base.correr(registro._main, ["registro.py", "--validar"])
+        self.assertEqual(r, 1)
+        self.assertIn("sin fecha legible", out)
+
+    def test_tara_sin_valor(self):
+        with self.assertRaises(SystemExit) as cm:
+            registro._main(["registro.py", "--pesar", "ABCDEF0000000100", "300", "--tara"])
+        self.assertIn("le falta el valor", str(cm.exception))
+
+
 class Aislamiento(unittest.TestCase):
     """Con BAMBU_PRUEBA=1 no se escribe fuera de la carpeta temporal (las dos direcciones)."""
 
     def test_frena_fuera_de_la_temporal(self):
         anterior = registro.CARPETA
         try:
-            registro.CARPETA = registro._NUBE_3D / "registro"
+            registro.CARPETA = _base.FUERA_DE_LA_TEMPORAL / "registro"      # fuera de la temporal, pero no la real
             with self.assertRaises(SystemExit) as cm:
                 registro.anotar({"tipo": "placa_libre"})
             self.assertIn("fuera de la carpeta temporal", str(cm.exception))

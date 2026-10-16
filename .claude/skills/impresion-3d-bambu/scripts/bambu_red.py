@@ -470,7 +470,10 @@ def ubicar(d, guardar=True):
     if encontrada != vieja:
         d["ip"] = encontrada
         if guardar:
-            donde = _guardar_ip(d, vieja, encontrada)
+            try:
+                donde = _guardar_ip(d, vieja, encontrada)
+            except (OSError, ValueError, FallaImpresora) as e:
+                donde = f"NO se pudo corregir el archivo ({type(e).__name__}: {e}); esta vez se usa la direccion nueva igual"
             try:
                 import registro
                 registro.anotar_ip(encontrada, antes=vieja)
@@ -814,6 +817,15 @@ def chips_del_cargador(estado_):
     return out
 
 
+def rollos_del_cargador(estado_):
+    """{lugar 0-3: con que nombre se le lleva la cuenta al rollo}: su chip o, si la impresora no leyo ningun chip
+    (rollo cargado a mano en la pantalla), SIN-CHIP-L<n> por el lugar. Fak, 16/10/2026: «si llega a fallar el chip
+    deberiamos usarlo igual»; el 16/10 el lugar 4 tenia un PLA Lite negro cargado a mano, sin chip."""
+    import registro
+    chips = chips_del_cargador(estado_)
+    return {n: chips.get(n) or registro.sin_chip(n + 1) for n in lugares_del_cargador(estado_)}
+
+
 def _dist_color(c1, c2):
     try:
         a_, b_ = (tuple(int(c[i:i + 2], 16) for i in (1, 3, 5)) for c in (c1, c2))
@@ -833,7 +845,7 @@ def mapa_automatico(archivo, estado_, restantes=None):
     bambuddy): asi el viejo se termina primero y el respaldo automatico pasa al nuevo. Devuelve (mapa, renglones
     para mostrar, fallas)."""
     restantes = restantes or _restantes_del_registro
-    lug, chips = lugares_del_cargador(estado_), chips_del_cargador(estado_)
+    lug, chips = lugares_del_cargador(estado_), rollos_del_cargador(estado_)
     mapa, ren, fallas, usados = [], [], [], set()
     for fid, perfil, tipo, color, gramos in filamentos_del_archivo(archivo):
         cand = sorted((_dist_color(color, c), n) for n, (pf, _, c) in lug.items() if pf == perfil and n not in usados)
@@ -916,7 +928,7 @@ def freno_gramos(archivo, mapa, est, minutos, inicio, restantes=None):
     automatico pasa a ellos), con un aviso de que tiene que estar prendido."""
     import registro
     restantes = restantes or _restantes_del_registro
-    lug, chips = lugares_del_cargador(est), chips_del_cargador(est)
+    lug, chips = lugares_del_cargador(est), rollos_del_cargador(est)
     fin = inicio + timedelta(minutes=(minutos or 0) * FACTOR_TIEMPO)
     noche = _de_noche(inicio, fin)
     usados = {m for m in mapa if m >= 0}
@@ -929,9 +941,14 @@ def freno_gramos(archivo, mapa, est, minutos, inicio, restantes=None):
         nombre = registro.nombre_color(lug.get(m, ("", "", ""))[2])
         chip = chips.get(m)
         if not chip:
-            avisos.append(f"el rollo del lugar {m + 1} no informa chip: no sé cuánto le queda (pesalo)")
+            avisos.append(f"el lugar {m + 1} no informa ningun rollo: no sé cuánto le queda")
             continue
+        if chip.startswith("SIN-CHIP"):
+            avisos.append(f"el rollo del lugar {m + 1} no tiene chip: la cuenta va por el lugar (si lo cambian de lugar "
+                          f"se confunde); si es nuevo, registro.py --rollo-nuevo {m + 1}")
         quedan = restantes(chip)
+        # un rollo IGUAL (mismo perfil y color) en otro lugar que el trabajo no usa es respaldo, tenga chip o no: la
+        # impresora lo toma si esta configurado en la pantalla (wiki a2l/manual/screen-operation, AMS Filament Backup)
         iguales = [n for n, (pf, _, c) in lug.items()
                    if n != m and n not in usados and (pf, c) == (lug[m][0], lug[m][2]) and chips.get(n)]
         extra = sum(max(0.0, restantes(chips[n]) or 0) for n in iguales)
@@ -1188,7 +1205,7 @@ def imprimir(archivo, mapa, aplicar, sin_margen=False):
             print(f"   NO SE MANDA: mientras se subia el archivo la impresora paso a {est1.get('gcode_state')} "
                   f"({est1.get('subtask_name')}): otra PC u otra persona la mando")
             return 1
-        chips, lug1 = chips_del_cargador(est1), lugares_del_cargador(est1)
+        chips, lug1 = rollos_del_cargador(est1), lugares_del_cargador(est1)
         fil = filamentos_del_archivo(archivo)
         trabajo_id = time.strftime("%Y%m%d-%H%M%S-") + nombre.split(".")[0]
         # el renglon va ANTES de la orden: si el programa se corta entre las dos, la impresion igual queda anotada
@@ -1215,8 +1232,9 @@ def imprimir(archivo, mapa, aplicar, sin_margen=False):
         print("  ORDEN DE IMPRIMIR MANDADA", time.strftime("%H:%M:%S"))
         # 15/10/2026: se mando y nadie vigilo; la falla la vio Fak al 27 %. La vigilancia la lanza la sesion (en
         # segundo plano, para que su salida la despierte, y nunca dentro de `timeout`): este renglon se lo recuerda.
-        print(f"  AHORA, EN SEGUNDO PLANO: bambu_red.py --seguir {archivo.parent / 'seguimiento'} --fotos-en 3,10 "
-              "--despertar 5 --cada 30")
+        # una carpeta por envio: una reimpresion no hereda el estado, las fotos ni la base del detector de la anterior
+        print(f"  AHORA, EN SEGUNDO PLANO: bambu_red.py --seguir \"{archivo.parent / ('seguimiento_' + trabajo_id)}\" "
+              "--fotos-en 3,10 --despertar 5 --cada 30")
         t_orden, confirmada, ultimo = time.time(), False, None
         while time.time() - t_orden < ORDEN_ESPERA_S:
             nuevos = c.leer(5, hasta=lambda v, p: v.get("gcode_state") == "RUNNING" or p.get("command") == "project_file")
@@ -1769,8 +1787,11 @@ def _candado_vivo(ruta):
         c = json.loads(Path(ruta).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
+    # vence a los `vence_s` que declaro su duenio (la espera mas larga de su vuelta + margen), nunca antes de 3 min:
+    # con --en-pausa la vuelta espera 5 min y un vencimiento fijo de 3 dejaba entrar una segunda vigilancia (auditoria 16/10)
+    vence = max(CANDADO_VENCE_S, float(c.get("vence_s") or 0))
     if (c.get("pid") != os.getpid() and _pid_vivo(c.get("pid"))
-            and time.time() - float(c.get("refrescado") or 0) < CANDADO_VENCE_S):
+            and time.time() - float(c.get("refrescado") or 0) < vence):
         return c
     return None
 
@@ -1793,8 +1814,8 @@ class Candado:
                              "No se lanza otra.")
         self.refrescar()
 
-    def refrescar(self):
-        dato = {"pid": os.getpid(), "refrescado": time.time(), "carpeta": str(self.ruta.parent)}
+    def refrescar(self, vence_s=CANDADO_VENCE_S):
+        dato = {"pid": os.getpid(), "refrescado": time.time(), "vence_s": float(vence_s), "carpeta": str(self.ruta.parent)}
         for r in (self.ruta, self.global_):
             try:
                 _escribir_json(r, dato)
@@ -1866,6 +1887,14 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
         previo = json.loads(ruta_estado.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         previo = {}
+    t_prev = previo.get("trabajo") or {}
+    if (t_prev.get("subtask_name")
+            and registro.trabajo_de(t_prev.get("subtask_name"), t_prev.get("task_id")) is None
+            and registro.trabajo_de(t_prev.get("subtask_name"), t_prev.get("task_id"), solo_abiertas=False)):
+        # El trabajo que vigilaba la corrida anterior en esta carpeta ya esta CERRADO en el registro: esta vigilancia es
+        # de otro envio (una reimpresion en la misma carpeta). No se hereda ni el trabajo ni el hueco sin conexion, o
+        # la primera lectura daba «el trabajo ya no esta» y cerraba como fallida la impresion nueva (auditoria 16/10, TB3).
+        previo = {k: previo[k] for k in ("sin_camara_desde",) if previo.get(k)}
     vig = Vigia(time.time(), previo, buscar=buscar, en_pausa=en_pausa)
     extra = {k: previo.get(k) for k in ("sin_camara_desde", "tray_now", "fin_estimado", "rollo_anotado")}
     log = open(carpeta / "seguimiento.log", "a", encoding="utf-8")
@@ -1940,7 +1969,7 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
         lug = lugares_del_cargador(v)
         if not e or nuevo in usados or viejo not in usados or lug.get(nuevo, ("", "", ""))[::2] != lug.get(viejo, ("", "", ""))[::2]:
             return                                  # un cambio de color normal del trabajo, o algo que no se entiende
-        chips = chips_del_cargador(v)
+        chips = rollos_del_cargador(v)
         registro.anotar({"tipo": "cambio de rollo", "trabajo_id": e["trabajo_id"], "de_lugar": viejo + 1,
                          "a_lugar": nuevo + 1, "de_chip": chips.get(viejo), "a_chip": chips.get(nuevo),
                          "capa": v.get("layer_num"), "capas": v.get("total_layer_num"),
@@ -1975,6 +2004,15 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
                   and all(x > max(UMBRAL_DETECTOR, base * 1.8) for x in historial[-SEGUIDAS:]))
         return txt + f" | detector exito {dd['success']:.3f} falla {dd['failure']:.3f}", alarma
 
+    def al_registro(fn):
+        """Lo que se escribe en el registro no cambia la salida de la vigilancia (OneDrive puede tener el archivo
+        tomado): si falla, queda en el log y la salida sigue siendo la que es (auditoria 16/10)."""
+        try:
+            return fn()
+        except (Exception, SystemExit) as e:
+            anotar_log(f"{_iso()} no se pudo escribir en el registro ({type(e).__name__}: {e}); la salida no cambia")
+            return None
+
     def terminar(salida, texto):
         """Lo que se hace al salir: foto, registro y el renglon final del log."""
         v = vig.v
@@ -1982,25 +2020,29 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
         if salida in (0, SALIDA_TERMINO_SIN_VER):
             final = sacar("FINAL")
             visto = visto and salida == 0
-            r, e = cerrar_trabajo(v, "terminada", vig.trabajo, visto_terminar=visto,
-                                  nota="" if visto else "terminó mientras no se veía: hora real de fin desconocida")
-            completar_ficha(e, r, final)
+            res = al_registro(lambda: cerrar_trabajo(
+                v, "terminada", vig.trabajo, visto_terminar=visto,
+                nota="" if visto else "terminó mientras no se veía: hora real de fin desconocida"))
+            if res:
+                al_registro(lambda: completar_ficha(res[1], res[0], final))
         elif salida == 1:
             final = sacar("FALLO")
             if vig.trabajo:
-                r, e = cerrar_trabajo(v, "fallida", vig.trabajo, visto_terminar=visto, nota=texto)
-                completar_ficha(e, r, final)
+                res = al_registro(lambda: cerrar_trabajo(v, "fallida", vig.trabajo, visto_terminar=visto, nota=texto))
+                if res:
+                    al_registro(lambda: completar_ficha(res[1], res[0], final))
         elif salida == 2:
             sacar("ALARMA")
             cod = fin_de_rollo(v)
             lug = _lugar_activo(v)
             if cod and extra.get("rollo_anotado") != cod:
                 extra["rollo_anotado"] = cod
-                registro.anotar({"tipo": "rollo terminado", "rollo": chips_del_cargador(v).get(lug),
-                                 "lugar": None if lug is None else lug + 1, "codigo": cod, "confirmado": False,
-                                 "trabajo_id": (trabajo_del_registro() or {}).get("trabajo_id"),
-                                 "nota": "pausa del cargador: fin de rollo o enredo; confirmarlo en la pantalla "
-                                         "(el codigo de la A2L se anota tal cual la primera vez)"})
+                al_registro(lambda: registro.anotar({
+                    "tipo": "rollo terminado", "rollo": rollos_del_cargador(v).get(lug),
+                    "lugar": None if lug is None else lug + 1, "codigo": cod, "confirmado": False,
+                    "trabajo_id": (trabajo_del_registro() or {}).get("trabajo_id"),
+                    "nota": "pausa del cargador: fin de rollo o enredo; confirmarlo en la pantalla "
+                            "(el codigo de la A2L se anota tal cual la primera vez)"}))
         elif salida == 3:
             sacar("QUIETA")
         anotar_log(f"{_iso()} SALIDA {salida}: {texto}")
@@ -2013,7 +2055,8 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
 
     def _vuelta():
         nonlocal con, ult_busqueda, ult_foto
-        candado.refrescar()
+        espera = EN_PAUSA_CADA if (en_pausa and vig.v.get("gcode_state") == "PAUSE") else cada
+        candado.refrescar(2 * espera + 180)          # la vuelta mas larga (espera + foto + detector) con margen
         ahora_ = time.time()
         if con is None:
             try:
@@ -2027,7 +2070,6 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
                 vig.falla(ahora_, "red", e.texto.rstrip("."))
         if con is not None:
             try:
-                espera = EN_PAUSA_CADA if (en_pausa and vig.v.get("gcode_state") == "PAUSE") else cada
                 # vuelve antes si llega el primer informe completo o si cambia el estado (termino, pausa, fallo)
                 con.leer(espera, hasta=lambda v_, p: (vig.ult_mensaje is None and _informe_completo(v_, p)) or (
                     "gcode_state" in p and bool(vig.v) and p["gcode_state"] != vig.v.get("gcode_state")))
@@ -2043,14 +2085,29 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
         v = vig.v
         r = vig.evaluar(t)
         if r and r[0] == SALIDA_SIN_CONEXION:
-            # antes de salir con 12, se la busca: si esta en otra direccion se corrige y la vigilancia sigue
+            # Antes de salir con 12 se la busca. La vigilancia sigue solo si, donde la encuentra, vuelve a mandar
+            # informes: una impresora que conecta y queda muda (o solo contesta el aviso de vida) en la misma direccion
+            # hacia girar la vigilancia para siempre sin despertar nunca a la sesion (auditoria 16/10, TB1).
             try:
                 ubicar(d)
                 if con is not None:
                     con.cerrar()
-                con = Conexion(d, buscar=False)
-                anotar_log(f"{_iso()} la encontré en {d['ip']}: sigo vigilando")
-                return None
+                    con = None
+                prueba = Conexion(d, buscar=False)
+                try:
+                    prueba.leer(15, hasta=_informe_completo)
+                except SinConexion:
+                    prueba.visto = {}
+                if prueba.visto:
+                    con = prueba
+                    anotar_log(f"{_iso()} la encontré en {d['ip']}: sigo vigilando")
+                    vig.mensaje(con.ult_paquete, dict(con.visto))
+                    r = vig.evaluar(time.time())     # lo que trae al volver se juzga YA (terminó sin verla, pausa...)
+                    v = vig.v
+                else:
+                    prueba.cerrar()
+                    r = (r[0], r[1] + f". En {d['ip']} la impresora acepta la conexión pero no manda informes: "
+                                      "mirá su pantalla (si está colgada, apagarla y prenderla lo decide quien está ahí)")
             except AccesoRechazado:
                 vig.falla(time.time(), "acceso", "rechazó el código")
             except SinConexion as e:
@@ -2084,10 +2141,10 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
             guardar()
             return 11
         if not vig.trabajo or not vig.trabajo.get("_visto"):
-            anotar_visto(v)
+            al_registro(lambda: anotar_visto(v))
             if vig.trabajo:
                 vig.trabajo["_visto"] = True
-        cambio_de_rollo(v)
+        al_registro(lambda: cambio_de_rollo(v))
         capa = v.get("layer_num")
         if isinstance(capa, int):
             for c in (1,) + tuple(fotos_en):

@@ -4,6 +4,8 @@ Uso (python del sistema):
   registro.py --resumen                 horas de impresion, gramos por rollo, rollo bajo y mantenimiento que toca
   registro.py --anotar '<json>'         agrega un evento (lo usan bambu_red.py e imprimir_pieza.py)
   registro.py --pesar <lugar|chip> <g> [--tara <g>]   el rollo montado en la balanza (gramos con el carrete)
+  registro.py --rollo-nuevo <lugar|chip> [g] ["nota"]  un rollo nuevo (lleno, 1000 g) puesto en ese lugar
+                                        (un rollo SIN chip se cuenta por su lugar: SIN-CHIP-L<n>)
   registro.py --tara <g>                el carrete VACIO pesado: queda como tara de la casa
   registro.py --placa-libre ["nota"]    quien saco las piezas lo anota: recien ahi --imprimir --apply manda
   registro.py --validar                 rojo/verde por renglon; sale con 1 si hay rojos
@@ -172,12 +174,18 @@ def trabajo_de(subtask_name=None, task_id=None, solo_abiertas=True, ev=None):
     ev = leer() if ev is None else ev
     cand = (abiertas(ev=ev) if solo_abiertas
             else [e for e in ev if e.get("tipo") == "enviada" and e.get("trabajo_id")][::-1])
-    if task_id not in (None, "", "0", 0):
+    con_numero = task_id not in (None, "", "0", 0)
+    if con_numero:
         for e in cand:
             if e.get("task_id") not in (None, "") and str(e.get("task_id")) == str(task_id):
                 return e
     if subtask_name:
         for e in cand:
+            # si los dos traen numero de trabajo y no coinciden, es OTRO envio del mismo archivo (una reimpresion):
+            # no se lo toma por el nombre (auditoria 16/10: cerraba la impresion nueva con el FINISH de la vieja).
+            # Los renglones viejos, sin task_id, siguen saliendo por el nombre.
+            if con_numero and e.get("task_id") not in (None, "", "0") and str(e.get("task_id")) != str(task_id):
+                continue
             if subtask(e) == subtask_name:
                 return e
     return None
@@ -228,12 +236,25 @@ def placa_libre(ev=None):
 
 
 def ultimo_fin(ev=None):
-    """Cuando termino (o se vio terminado) el ultimo trabajo: desde ahi la placa tiene piezas hasta un placa_libre."""
+    """Desde cuando la placa puede tener piezas del ultimo trabajo; un «placa_libre» posterior la libera.
+    - Cierre visto en vivo: la hora del cierre.
+    - Cierre de un trabajo que termino sin que nadie lo viera (fin_visto, minutos en blanco): la hora real de fin no
+      se sabe, solo que fue despues del envio; un placa_libre anotado despues del ENVIO cuenta (auditoria 16/10: Leo
+      saca las piezas, lo anota, y la PC que concilia despues no puede volver a ocupar la placa).
+    - Un cierre con avance 0 (la orden no salio, la cancelaron antes de imprimir) no deja piezas: no cuenta."""
     ev = leer() if ev is None else ev
+    envios = {e["trabajo_id"]: e for e in ev if e.get("tipo") == "enviada" and e.get("trabajo_id")}
     fs = []
     for e in ev:
-        if e.get("tipo") in CIERRES or (e.get("tipo") == "visto" and e.get("estado") in ("FINISH", "FAILED")):
-            fs.append(fecha(e.get("fin_visto")) or _clave_tiempo(e))
+        if e.get("tipo") in CIERRES:
+            if e.get("avance_pct") in (0, 0.0, "0"):
+                continue
+            if e.get("fin_visto") and e.get("minutos_reales") is None and e.get("trabajo_id") in envios:
+                fs.append(_clave_tiempo(envios[e["trabajo_id"]]))
+            else:
+                fs.append(_clave_tiempo(e))
+        elif e.get("tipo") == "visto" and e.get("estado") in ("FINISH", "FAILED"):
+            fs.append(_clave_tiempo(e))
     return max(fs) if fs else None
 
 
@@ -315,24 +336,48 @@ def gramos_restantes(chip, ev=None):
     return rollo(chip, ev)["quedan"]
 
 
+def sin_chip(lugar):
+    """El nombre con que se le lleva la cuenta a un rollo SIN chip: por el lugar del cargador (1 a 4). Fak, 16/10/2026:
+    «si llega a fallar el chip deberiamos usarlo igual». Anda mientras nadie lo cambie de lugar."""
+    return f"SIN-CHIP-L{int(lugar)}"
+
+
 def chip_del_lugar(lugar):
-    """El chip del rollo que el ultimo --estado de esta PC vio en ese lugar (1 a 4), o None."""
+    """El rollo que el ultimo --estado de esta PC vio en ese lugar (1 a 4): su chip, o SIN-CHIP-L<n> si hay un rollo
+    cargado sin chip, o None si el lugar esta vacio o no hay un --estado guardado."""
     try:
         v = json.loads(ULTIMO_ESTADO.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
     for u in (v.get("ams") or {}).get("ams", []):
         for t in u.get("tray", []):
-            if str(t.get("id")) == str(int(lugar) - 1) and t.get("tag_uid") and set(t["tag_uid"]) != {"0"}:
-                return t["tag_uid"]
+            if str(t.get("id")) == str(int(lugar) - 1):
+                if t.get("tag_uid") and set(t["tag_uid"]) != {"0"}:
+                    return t["tag_uid"]
+                if t.get("tray_type") or t.get("tray_info_idx"):
+                    return sin_chip(lugar)
     return None
+
+
+def _rollo_de(quien):
+    rollo_ = chip_del_lugar(quien) if str(quien).isdigit() and len(str(quien)) == 1 else str(quien)
+    if not rollo_:
+        raise SystemExit(f"no se que rollo hay en el lugar {quien}: correr antes bambu_red.py --estado, o pasar el chip")
+    return rollo_
+
+
+def rollo_nuevo(quien, gramos=ROLLO_NOMINAL, nota=""):
+    """Renglon «rollo cargado»: un rollo nuevo (lleno) puesto en ese lugar; la cuenta arranca de ahi. Mas sencillo
+    que pesarlo cuando se sabe que es nuevo (Fak, 16/10/2026: «te aclaro que es nuevo y listo»)."""
+    rollo_ = _rollo_de(quien)
+    lugar = int(quien) if str(quien).isdigit() and len(str(quien)) == 1 else None
+    return anotar({"tipo": "rollo cargado", "rollo": rollo_, "lugar": lugar, "gramos": float(gramos),
+                   "nota": nota or "rollo nuevo"})
 
 
 def pesar(quien, bruto, tara=None):
     """Renglon «pesado»: el rollo montado en la balanza. quien = lugar 1-4 (del ultimo --estado) o el chip."""
-    chip = chip_del_lugar(quien) if str(quien).isdigit() and len(str(quien)) == 1 else str(quien)
-    if not chip:
-        raise SystemExit(f"no se que rollo hay en el lugar {quien}: correr antes bambu_red.py --estado, o pasar el chip")
+    chip = _rollo_de(quien)
     medida = tara is not None
     if tara is None:
         tara, medida = tara_de_la_casa()
@@ -404,7 +449,8 @@ def validar(ev=None, ahora_=None):
 
 
 def _txt_renglon(e):
-    return f"{e.get('cuando', '')[:16]} {e.get('pc', '')} {e.get('tipo')} {e.get('trabajo_id') or e.get('rollo') or ''}".strip()
+    return (f"{str(e.get('cuando') or '')[:16]} {e.get('pc') or ''} {e.get('tipo')} "
+            f"{e.get('trabajo_id') or e.get('rollo') or ''}").strip()
 
 
 def resumen():
@@ -444,10 +490,11 @@ def resumen():
         gastado += r["gastado"]
         aviso = ""
         if r["quedan"] < ROLLO_SOLO_CHICAS:
-            aviso = "  <-- MENOS DE 50 g: solo piezas chicas de dia o con un rollo de respaldo igual; pesalo"
+            aviso = "  <-- MENOS DE 50 g: solo piezas chicas de dia; pesalo"
         elif r["quedan"] < ROLLO_PESALO:
-            aviso = "  <-- menos de 100 g: pesalo (registro.py --pesar)"
-        print(f"  {mat} {nombre_color(col)} {col}  chip {chip[:8]}: quedan ~{max(0, r['quedan']):.0f} g "
+            aviso = "  <-- menos de 100 g: pesalo; de noche solo con un rollo de respaldo igual (si no, --imprimir frena)"
+        print(f"  {mat} {nombre_color(col)} {col}  {'rollo' if chip.startswith('SIN-CHIP') else 'chip'} "
+              f"{chip if chip.startswith('SIN-CHIP') else chip[:8]}: quedan ~{max(0, r['quedan']):.0f} g "
               f"({r['desde']}){aviso}")
     try:
         v = json.loads(ULTIMO_ESTADO.read_text(encoding="utf-8"))
@@ -488,7 +535,14 @@ def _main(argv):
     if len(argv) >= 3 and argv[1] == "--anotar":
         print(anotar(json.loads(argv[2])))
         return 0
+    if len(argv) >= 3 and argv[1] == "--rollo-nuevo":
+        g = float(argv[3].replace(",", ".")) if len(argv) >= 4 and argv[3][:1].isdigit() else ROLLO_NOMINAL
+        e = rollo_nuevo(argv[2], g, " ".join(x for x in argv[3:] if not x[:1].isdigit()))
+        print(f"anotado: rollo nuevo {e['rollo']} con {e['gramos']:.0f} g (la cuenta arranca de aca)")
+        return 0
     if len(argv) >= 4 and argv[1] == "--pesar":
+        if "--tara" in argv and argv.index("--tara") + 1 >= len(argv):
+            raise SystemExit("a --tara le falta el valor (los gramos del carrete vacio)")
         tara = float(argv[argv.index("--tara") + 1]) if "--tara" in argv else None
         e = pesar(argv[2], float(argv[3].replace(",", ".")), tara)
         print(f"anotado: rollo {e['rollo'][:8]} con {e['gramos']:.0f} g netos (balanza {e['bruto']:.0f} g - tara "
@@ -524,6 +578,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("cortado a mano")
         sys.exit(130)
-    except (OSError, ValueError) as e:
+    except (OSError, ValueError, TypeError, IndexError, KeyError) as e:
         print(f"no se pudo: {type(e).__name__}: {e}")
         sys.exit(1)

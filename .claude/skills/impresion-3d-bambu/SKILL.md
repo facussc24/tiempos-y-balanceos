@@ -12,7 +12,7 @@ grabado amarillo, 1 h 43 min contra 1 h 41 estimado), tres fichas de tres colore
 32) y el molde de probeta 50 x 50 (mandado 13:46, terminó 00:18: 632,9 min reales contra 649
 estimados). Lo que sigue sin verse: el detector ante una falla real.
 **16/10/2026 (tanda 17):** la búsqueda por número de serie, la vigilancia nueva (salidas 12/13/14) y los
-frenos de `--imprimir` están probados contra una impresora de juguete (82 tests en
+frenos de `--imprimir` están probados contra una impresora de juguete (101 tests en
 `tests/`, `python -m unittest discover -s .claude/skills/impresion-3d-bambu/tests`); con la impresora
 real, ver §7.
 
@@ -67,7 +67,8 @@ python .claude/skills/impresion-3d-bambu/scripts/bambu_red.py --imprimir <archiv
 - **Vigilar hasta que termine** (solo lee; se lanza en segundo plano y su salida me despierta).
   **Se lanza en el MISMO mensaje en que se manda**, con `--despertar 5 --cada 30`: el 15/10/2026 se
   mandó sin vigilancia y la falla la vio Fak (*"el software no te despertó nunca?"*). `--apply` lo
-  recuerda en el renglón que sigue a «ORDEN DE IMPRIMIR MANDADA».
+  recuerda en el renglón que sigue a «ORDEN DE IMPRIMIR MANDADA», con **una carpeta por envío**
+  (`seguimiento_<trabajo>`): una reimpresión en la carpeta vieja heredaba su estado y sus fotos.
   `--seguir <carpeta> [--fotos-en 41,44]`. Deja `seguimiento.log` (fecha y hora con zona),
   `estado_seguimiento.json` (el reloj de «quieta» y el trabajo, para la próxima relanzada) y fotos de la
   cámara (capa 1, las capas pedidas, una cada 15 min y la final). Una sola conexión que queda abierta.
@@ -189,7 +190,12 @@ los de todas.
   cuenta: **la balanza le gana**. `registro.py --pesar <lugar 1-4 o chip> <gramos en la balanza>` [`--tara <g>`]
   anota la pesada y la cuenta sigue desde ahí. Tara sin medir: 250 g (tienda de Bambu; en el foro 208-260 g). El
   primer carrete vacío que se pese queda como tara de la casa: `registro.py --tara <g>`.
+- **Rollo sin chip** (Fak, 16/10: *«si llega a fallar el chip deberíamos usarlo igual»*): un rollo cargado a mano en
+  la pantalla no informa chip. Se usa igual: la cuenta va **por el lugar** (`SIN-CHIP-L4`), que anda mientras nadie
+  lo cambie de lugar, y cuenta como respaldo de uno igual (mismo perfil y color). **Si es nuevo, no hace falta
+  pesarlo**: `registro.py --rollo-nuevo <lugar>` lo anota con 1000 g (*«te aclaro que es nuevo y listo»*).
 - `registro.py --placa-libre ["nota"]`: quien sacó las piezas lo anota; recién ahí `--imprimir --apply` manda.
+  Vale aunque se anote antes de que alguna PC vea el fin: cuenta todo «placa libre» posterior al envío.
 - `registro.py --validar`: rojo o amarillo por renglón (tipo desconocido, falta el trabajo, cierre antes del
   envío, minutos que no cierran con las horas, «enviada» de más de 24 h sin cierre, gramos negativos); sale con 1
   si hay rojos. Hoy marca la «cancelada» de 3 min del 15/10 07:06 para un trabajo mandado el día anterior.
@@ -231,18 +237,18 @@ Autorización suya, durable: **si veo una falla clara, la pauso yo** y le aviso.
 prendida la foto sale casi negra igual, 15/10 22:05): **de noche se vigila solo el estado**. Una foto
 negra no es «se ve bien».
 
-**Cómo se corre:** `bambu_red.py --seguir <carpeta> --fotos-en <capas> --despertar 10` en segundo
+**Cómo se corre:** `bambu_red.py --seguir <carpeta> --fotos-en <capas> --despertar 10` (las primeras capas, `--despertar 5`, como lo recuerda `--apply`) en segundo
 plano. Qué hacer con cada salida:
 
 | Salida | Qué pasó | Qué hago |
 |---|---|---|
 | **10** | pasaron los minutos de `--despertar` | abro la foto `*_REVISION.jpg` con Read, la juzgo y **relanzo el mismo comando**. Si dice «sin foto nueva: la cámara no contestó», no hay nada que juzgar: relanzo |
 | 0 | terminó | aviso a Fak con la foto; `--avisar-retiro` en segundo plano |
-| 1 | falló, la cancelaron, o «el trabajo ya no está» | aviso a Fak con la foto y el texto |
+| 1 | falló, la cancelaron, o «el trabajo ya no está» (o un error del programa: «No se pudo: …») | aviso a Fak con la foto y el texto |
 | 2 | pausa o alarma | aviso a Fak con la foto y el texto. Si es **pausa del cargador** (fin de rollo o enredo): «cargá un rollo igual en el lugar N y tocá reanudar». Después relanzo con `--en-pausa` (mira cada 5 min sin volver a avisar, hasta que vuelva a imprimir, termine o quede libre) |
 | 3 | 15 min sin avanzar **con la impresora contestando** | foto y aviso a Fak |
 | 11 | alarma del detector | miro la foto y aplico la regla de abajo |
-| **12** | sin conexión (ya la buscó por su serie y no está) | aviso **una vez** («se perdió la conexión a las HH:MM; la impresión no depende de la PC») y relanzo **`--seguir <carpeta> --buscar`**: prueba cada 2 min y solo sale cuando la encuentra (y sigue vigilando con su estado) o a la hora de fin + 1 h. **Nunca un `ping` a una dirección fija** |
+| **12** | sin conexión: ya la buscó por su serie y no está, o contesta pero no manda informes («muda») | aviso **una vez** («se perdió la conexión a las HH:MM; la impresión no depende de la PC») y relanzo **`--seguir <carpeta> --buscar`**: prueba cada 2 min y solo sale cuando la encuentra (y sigue vigilando con su estado) o a la hora de fin + 1 h. **Nunca un `ping` a una dirección fija** |
 | 13 | rechazó el código de acceso dos veces | aviso: «cambió el código o se apagó el modo desarrollador: Ajustes > Solo LAN». El código lo escribe Fak (`--pedir-codigo`) |
 | **14** | terminó mientras no la veía | foto, el registro ya quedó cerrado; aviso «terminó; no la vi terminar: revisá que no se haya despegado nada» |
 | 15 | ya hay otra vigilancia en esa carpeta | no lanzo otra |
@@ -445,7 +451,7 @@ destapó la trampa 2.
 | `video_impresion.py` | Un video corto con las fotos de `--seguir` |
 | `quien_imprime_que.py` | Qué filamento imprime cada capa: el control de los colores (la miniatura del archivo no sirve) |
 | `registro.py` | Horas, gramos por rollo (con pesadas), placa libre, validar y mantenimiento que toca, sumando lo que anotó cada PC |
-| `../tests/` | La impresora de juguete y los casos T1-T18 del plan del 16/10 (`docs/PLAN_IMPRESORA_2026-10-16.md`). Sin la impresora real y sin tocar el registro real: `python -m unittest discover -s .claude/skills/impresion-3d-bambu/tests` (~3 min) |
+| `../tests/` | La impresora de juguete y los casos T1-T18 del plan del 16/10 (`docs/PLAN_IMPRESORA_2026-10-16.md`) más los arreglos de la auditoría. Sin la impresora real y sin tocar el registro real: `python -m unittest discover -s .claude/skills/impresion-3d-bambu/tests` (~4 min). Necesita el `openssl` de Git: sin él, los tests con la impresora de juguete se saltean y la corrida dice `skipped` |
 
 ## 7. Lo que falta ver con la impresora real
 

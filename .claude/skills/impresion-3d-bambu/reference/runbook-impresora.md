@@ -49,6 +49,8 @@ que pasó el 15/10 a la noche y con la wiki oficial de Bambu (las páginas está
 16. Sacá la tira cerca de la punta, metela en el agujero redondo del carrete y recién ahí sacá el resto.
     Si queda luz entre el rollo y el carrete, apretá los costados con la mano (así no se enreda).
 17. Cambiá la etiqueta vieja por la que viene con el rollo nuevo. Cortá la punta recta antes de cargarla.
-18. **Pesá el rollo montado** en una balanza y anotalo: `registro.py --pesar <lugar> <gramos>`. La impresora
-    no sabe cuánto le queda a un rollo; la cuenta la lleva el programa y la balanza la corrige.
-    (Si el chip del rollo viaja con la recarga, la wiki no lo dice: a confirmar mirando una recarga.)
+18. **Avisá que el rollo es nuevo** (`registro.py --rollo-nuevo <lugar>`, o decíselo al asistente): la cuenta
+    arranca en 1000 g. Si no sabés cuánto tiene, **pesalo montado** en una balanza: `registro.py --pesar <lugar>
+    <gramos>`. La impresora no sabe cuánto le queda a un rollo; la cuenta la lleva el programa.
+19. Si la pantalla no lee el chip del rollo (queda cargado a mano), se usa igual: la cuenta va por el lugar, así
+    que **no lo cambies de lugar** sin avisar. (Si el chip viaja con la recarga, la wiki no lo dice: a confirmar.)

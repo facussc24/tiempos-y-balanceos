@@ -254,8 +254,8 @@ class ClasificarLecturasGuardadas(unittest.TestCase):
         self.assertIsNone(br.clasificar([(0.0, v)], en_pausa=True)[0])          # --en-pausa: no sale
 
 
-class SeguirContraLaJuguete(ConJuguete):
-    """--seguir de verdad, contra la impresora de juguete (T3 con el registro, T12, T13, T15, y lo de 2.3)."""
+class _SeguirBase(ConJuguete):
+    """Lo comun para correr --seguir de verdad contra la impresora de juguete (sin tests propios)."""
 
     def setUp(self):
         super().setUp()
@@ -279,6 +279,10 @@ class SeguirContraLaJuguete(ConJuguete):
 
     def previo(self, **campos):
         (self.carpeta / "estado_seguimiento.json").write_text(json.dumps(campos), encoding="utf-8")
+
+
+class SeguirContraLaJuguete(_SeguirBase):
+    """--seguir de verdad, contra la impresora de juguete (T3 con el registro, T12, T13, T15, y lo de 2.3)."""
 
     def test_T3_vuelve_terminada_y_cierra_ese_trabajo(self):
         e = self.enviada("pieza_t3")
@@ -396,7 +400,114 @@ class SeguirContraLaJuguete(ConJuguete):
         self.assertEqual([x["subtask_name"] for x in vistos], ["desde_bambu_studio"])
 
 
+class ArreglosDeLaAuditoriaSeguir(_SeguirBase):
+    """TB1, TB3 y TB4 de la auditoria del 16/10/2026, contra la impresora de juguete, en las dos direcciones."""
+
+    def _con_guardia(self, *extra):
+        # si la vigilancia volviera a girar para siempre, a los 60 s se apaga la juguete: el test termina igual (y falla)
+        guardia = threading.Timer(60, self.jug.parar)
+        guardia.start()
+        try:
+            return self.seguir(*extra)
+        finally:
+            guardia.cancel()
+
+    def test_TB1_impresora_muda_sale_con_12(self):
+        self.jug.mudo = True
+        r, out, err = self._con_guardia("--despertar", "1")
+        self.assertEqual(r, 12, out)
+        self.assertIn("acepta la conexión pero no manda informes", out)
+
+    def test_TB1_contesta_el_aviso_de_vida_pero_no_publica(self):
+        self.jug.no_publica = True
+        ping = br.PING_CADA
+        br.PING_CADA = 1
+        try:
+            r, out, err = self._con_guardia()
+        finally:
+            br.PING_CADA = ping
+        self.assertEqual(r, 12, out)
+        self.assertIn("no manda informes", out)
+
+    def test_TB3_reimpresion_en_la_misma_carpeta(self):
+        registro.anotar({"tipo": "enviada", "trabajo_id": "A", "archivo": "pieza.gcode.3mf", "subtask_name": "pieza",
+                         "task_id": "111", "filamentos": []})
+        registro.cerrar("A", "terminada", avance_pct=100)
+        registro.anotar({"tipo": "enviada", "trabajo_id": "B", "archivo": "pieza.gcode.3mf", "subtask_name": "pieza",
+                         "task_id": "222", "filamentos": []})
+        registro.confirmar("B", task_id="222")
+        self.previo(trabajo={"subtask_name": "pieza", "task_id": "111"}, desconectado_desde=time.time() - 7200,
+                    ult_mensaje=time.time() - 7200)
+        self.jug.estado.update(gcode_state="RUNNING", subtask_name="pieza", task_id="222")
+        threading.Timer(4, self.jug.poner, kwargs={"gcode_state": "FINISH"}).start()
+        r, out, err = self.seguir("--despertar", "5")
+        self.assertEqual(r, 0, out)
+        self.assertEqual(registro.cerrados()["B"]["tipo"], "terminada")
+
+    def test_TB4_el_candado_de_una_vigilancia_en_pausa_no_vence(self):
+        otro = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+        try:
+            # refrescado hace 200 s (mas que el minimo de 180) pero su duenio declaro 700 s: sigue valiendo
+            (self.carpeta / "vigilancia.pid").write_text(json.dumps(
+                {"pid": otro.pid, "refrescado": time.time() - 200, "vence_s": 700}), encoding="utf-8")
+            r, out, err = self.seguir()
+            self.assertEqual(r, 15, out)
+            # pasado lo que declaro, ya no cuenta
+            (self.carpeta / "vigilancia.pid").write_text(json.dumps(
+                {"pid": otro.pid, "refrescado": time.time() - 800, "vence_s": 700}), encoding="utf-8")
+            self.jug.estado.update(gcode_state="FINISH")
+            r, out, err = self.seguir()
+            self.assertEqual(r, 0, out)
+        finally:
+            otro.kill()
+            otro.wait()
+
+    def test_el_candado_declara_la_espera_de_en_pausa(self):
+        self.jug.estado.update(gcode_state="PAUSE")
+        visto = []
+        refrescar = br.Candado.refrescar
+
+        def espia(cand, vence_s=br.CANDADO_VENCE_S):
+            visto.append(vence_s)
+            return refrescar(cand, vence_s)
+        br.Candado.refrescar = espia
+        pausa = br.EN_PAUSA_CADA
+        br.EN_PAUSA_CADA = 2
+        try:
+            threading.Timer(3, self.jug.poner, kwargs={"gcode_state": "FINISH"}).start()
+            r, out, err = self.seguir("--en-pausa")
+        finally:
+            br.Candado.refrescar, br.EN_PAUSA_CADA = refrescar, pausa
+        self.assertEqual(r, 0, out)
+        self.assertIn(2 * 2 + 180, visto)                       # en pausa: 2 x la espera de 5 min (aca, 2 s) + margen
+
+    def test_registro_que_no_se_puede_escribir_no_cambia_la_salida(self):
+        self.jug.estado.update(gcode_state="FINISH")
+        self.enviada("pieza_prueba", task_id="555")
+        anotar = registro.anotar
+
+        def falla(_):
+            raise PermissionError("OneDrive tiene el archivo tomado")
+        registro.anotar = falla
+        try:
+            r, out, err = self.seguir()
+        finally:
+            registro.anotar = anotar
+        self.assertEqual(r, 0, out)
+        self.assertIn("no se pudo escribir en el registro", out)
+
+
 class ConciliarAlConectar(ConJuguete):
+
+    def test_TB2_el_fin_de_la_vieja_no_cierra_la_reimpresion(self):
+        registro.anotar({"tipo": "enviada", "trabajo_id": "A", "archivo": "p.gcode.3mf", "subtask_name": "p",
+                         "task_id": "111", "filamentos": []})
+        registro.cerrar("A", "terminada", avance_pct=100)
+        registro.anotar({"tipo": "enviada", "trabajo_id": "B", "archivo": "p.gcode.3mf", "subtask_name": "p",
+                         "task_id": "222", "estado": "sin confirmar", "filamentos": []})
+        self.jug.estado.update(gcode_state="FINISH", subtask_name="p", task_id="111")
+        self.correr("--estado")
+        self.assertNotIn("B", registro.cerrados())
     """Cualquier comando que se conecta cierra el trabajo que termino sin que nadie lo viera (una sola vez)."""
 
     def test_estado_cierra_lo_que_termino(self):
@@ -607,6 +718,30 @@ class Imprimir(ConJuguete):
         self.assertEqual(r, 0, out)
         self.assertIn("cancelada", out)
 
+    def respaldo_sin_chip_en_4(self):
+        """Como la impresora real el 16/10: un PLA Lite negro cargado a mano en el lugar 4, sin chip ni marca."""
+        tray = [dict(t) for t in self.jug.estado["ams"]["ams"][0]["tray"][:3]]
+        tray.append({"id": "3", "tray_info_idx": "GFA18", "tray_type": "PLA", "tray_sub_brands": "",
+                     "tray_color": "000000FF", "tag_uid": "0000000000000000"})
+        self.jug.estado["ams"] = {"tray_now": "255", "ams": [{"id": "16", "tray": tray}]}
+
+    def test_rollo_sin_chip_cuenta_como_respaldo_de_noche(self):
+        self.a_las(19, 0)
+        self.quedan(NEGRO, 80)
+        archivo = self.archivo(minutos=240, gramos=(10.0,))
+        self.respaldo_sin_chip_en_4()
+        r, out, _ = self.correr("--imprimir", str(archivo))
+        self.assertEqual(r, 0, out)
+        self.assertIn("-> lugar 2", out)                       # el negro con chip (el mas gastado) va primero
+
+    def test_rollo_sin_chip_se_anota_por_su_lugar(self):
+        self.respaldo_sin_chip_en_4()
+        r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(5.0,))), "--mapa", "3", "--apply")
+        self.assertEqual(r, 0, out)
+        self.assertIn("no tiene chip: la cuenta va por el lugar", out)
+        env = [e for e in registro.leer() if e["tipo"] == "enviada"][0]
+        self.assertEqual(env["filamentos"][0]["rollo"], "SIN-CHIP-L4")
+
     def test_varias_placas_no_se_manda(self):
         r, out, _ = self.correr("--imprimir", str(self.archivo(placas=2)))
         self.assertEqual(r, 1, out)
@@ -731,6 +866,18 @@ class T14NuncaUnTraceback(unittest.TestCase):
         self.assertNotIn("Traceback", r.stdout + r.stderr)
         self.assertIn("No encuentro la impresora", r.stdout)
 
+    def test_imprimir_pieza_sin_error_de_python(self):
+        # imprimir_pieza.py no pasa por main(): una falla de la impresora igual sale en un renglon (auditoria 16/10)
+        vacio = _base.carpeta_nueva("sin_datos")
+        env = dict(os.environ, BAMBU_DATOS=str(vacio / "no.json"), BAMBU_DATOS_NUBE=str(vacio / "tampoco.json"),
+                   BAMBU_REGISTRO=str(vacio / "registro"))
+        r = subprocess.run([sys.executable, str(_base.SCRIPTS / "imprimir_pieza.py"), "x.3mf", str(vacio / "c"),
+                            "--color-parte", "1=negro"], capture_output=True, text=True, env=env, timeout=60,
+                           encoding="utf-8", errors="replace")
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn("No encuentro los datos de la impresora", r.stdout)
+        self.assertNotIn("Traceback", r.stdout + r.stderr)
+
     def test_ctrl_c_sale_limpio(self):
         anterior = br.estado
         try:
@@ -748,9 +895,10 @@ class Aislamiento(unittest.TestCase):
     def test_no_escribe_el_archivo_de_datos_real(self):
         anterior = br.DATOS
         try:
-            br.DATOS = br.Path(os.environ["USERPROFILE"]) / ".claude" / "bambu-a2l.json"
+            br.DATOS = _base.FUERA_DE_LA_TEMPORAL / "bambu-a2l.json"         # fuera de la temporal, pero no la real
             with self.assertRaises(br.FallaImpresora):
                 br._escribir_json(br.DATOS, {"ip": "x"})
+            self.assertFalse(br.DATOS.exists())
         finally:
             br.DATOS = anterior
 

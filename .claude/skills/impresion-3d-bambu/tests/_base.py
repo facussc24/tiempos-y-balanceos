@@ -24,6 +24,9 @@ AQUI = Path(__file__).resolve().parent
 SCRIPTS = AQUI.parent / "scripts"
 FIXTURES = AQUI / "fixtures"
 RAIZ_TMP = Path(tempfile.mkdtemp(prefix="bambu_tests_"))
+# Ruta FUERA de la carpeta temporal que no existe: los tests de la guardia apuntan aca y no a los archivos reales, asi
+# un freno roto no pisa nada de verdad (auditoria 16/10).
+FUERA_DE_LA_TEMPORAL = Path(os.environ["USERPROFILE"]) / ".claude" / "bambu-PRUEBA-NO-EXISTE"
 
 os.environ["BAMBU_PRUEBA"] = "1"
 os.environ["BAMBU_REGISTRO"] = str(RAIZ_TMP / "registro")
