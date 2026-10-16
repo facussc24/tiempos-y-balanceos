@@ -21,6 +21,7 @@ const CON_TEMA = [
   ['recordá las medidas del plotter', 'reference_plotter_aol_corte_insert.md'], // 02/10 16:00
   ['siempre usamos el pla rapid', 'reference_impresora_3d_fak.md'], // 13/08
   ['el que imprime los plt el plotter usa ese software', 'reference_plotter_inkjet_software_htv2a.md'], // 07/08 12:51
+  ['la mesa de corte no está haciendo los agujeros donde debería', 'reference_maquina_mesa_corte_yin.md'], // 14/10 14:34 (texto de una tarea que pego Fak)
 ]
 const SIN_TEMA = ['dale', 'ok gracias', 'mandalo', '¿cuánto falta?', 'abrí el último power point']
 

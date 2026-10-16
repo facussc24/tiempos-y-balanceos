@@ -25,6 +25,12 @@
       "frases": ["plotter", "plotters", "ploter", "pltoter", "plloter"]
     },
     {
+      "id": "mesa-corte-yin",
+      "nombre": "la mesa de corte (YIN)",
+      "archivos": ["reference_maquina_mesa_corte_yin.md"],
+      "frases": ["mesa de corte", "mesas de corte", "maquina de corte yin", "mesa yin", "cuttercontrol", "markedit"]
+    },
+    {
       "id": "costura-cnc",
       "nombre": "la maquina de costura CNC",
       "archivos": ["reference_maquina_costura_cnc.md"],
