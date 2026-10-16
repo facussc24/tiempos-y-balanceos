@@ -83,6 +83,7 @@ class Juguete:
         self.estado = estado_base()
         self.mudo = False                 # acepta la conexion y no manda ningun informe (ni PINGRESP)
         self.no_publica = False           # contesta el aviso de vida (PINGRESP) pero no publica ningun informe
+        self.calla_despues_del_primero = False   # publica UN informe y despues solo contesta el aviso de vida
         self.partir = False               # el proximo informe va en dos mitades, con 1,5 s entre una y otra
         self.al_recibir = None            # funcion(orden) que se llama ANTES de contestar una orden
         self.al_imprimir = ("PREPARE", "RUNNING")   # estados por los que pasa al recibir project_file
@@ -135,6 +136,8 @@ class Juguete:
     def _publicar(self, c, obj):
         if self.no_publica:
             return
+        if self.calla_despues_del_primero:
+            self.no_publica = True
         cuerpo = _txt(f"device/{self.serie}/report") + json.dumps(obj).encode("utf-8")
         paquete = bytes([0x30]) + _largo(len(cuerpo)) + cuerpo
         try:

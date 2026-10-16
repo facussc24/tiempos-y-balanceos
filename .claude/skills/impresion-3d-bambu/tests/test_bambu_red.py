@@ -497,6 +497,93 @@ class ArreglosDeLaAuditoriaSeguir(_SeguirBase):
         self.assertIn("no se pudo escribir en el registro", out)
 
 
+class RevisionConfirmados(_SeguirBase):
+    """Los 3 confirmados de la revision adversarial del 16/10/2026, en las dos direcciones."""
+
+    def test_C1_registro_ilegible_no_tumba_la_relanzada(self):
+        (self.reg / "OTRA-PC.jsonl").write_bytes(
+            b'{"tipo": "placa_libre", "cuando": "2026-10-16 09:00:00"}\n{"tipo": "visto", "nota": "corta\xe2\x82')
+        (self.reg / "TOMADO.jsonl").mkdir()                  # un archivo que no se puede leer como texto
+        self.enviada("pieza_prueba", task_id="555")
+        self.previo(trabajo={"subtask_name": "pieza_prueba", "task_id": "555"}, ult_mensaje=time.time() - 20)
+        self.jug.estado.update(gcode_state="FINISH")
+        r, out, err = self.seguir()
+        self.assertEqual(r, 0, out + err)
+        self.assertEqual(registro.cerrados()["20261016-100000-pieza_prueba"]["tipo"], "terminada")
+
+    def test_C1_un_error_del_programa_en_seguir_no_es_un_1(self):
+        anterior = br._seguir
+
+        def roto(*a, **k):
+            raise RuntimeError("algo interno")
+        br._seguir = roto
+        try:
+            r, out, err = self.seguir()
+        finally:
+            br._seguir = anterior
+        self.assertEqual(r, br.SALIDA_ERROR_PROGRAMA, out)
+
+    def test_C2_codigo_rechazado_en_una_relanzada_tardia_es_13(self):
+        self.jug.connack = 5
+        self.previo(ult_mensaje=time.time() - 600, trabajo={"subtask_name": "pieza_prueba", "task_id": "555"})
+        r, out, err = self.seguir()
+        self.assertEqual(r, 13, out)
+
+    def test_C3_solo_el_aviso_de_vida_no_es_un_informe(self):
+        self.jug.calla_despues_del_primero = True
+        valores = br.PING_CADA, br.SIN_INFORMES_S, br.QUIETA_S
+        br.PING_CADA, br.SIN_INFORMES_S, br.QUIETA_S = 1, 5, 30
+        guardia = threading.Timer(60, self.jug.parar)
+        guardia.start()
+        try:
+            r, out, err = self.seguir()
+        finally:
+            guardia.cancel()
+            br.PING_CADA, br.SIN_INFORMES_S, br.QUIETA_S = valores
+        self.assertEqual(r, 12, out)                         # antes salia 3 «quieta»: el PINGRESP contaba como informe
+        self.assertIn("no manda informes", out)
+
+
+class ClasificarVidaEInformes(unittest.TestCase):
+    def test_avisos_de_vida_sin_informes_es_sin_conexion(self):
+        lect = [(0.0, {"gcode_state": "RUNNING", "layer_num": 5, "mc_percent": 9, "stg_cur": 0})]
+        lect += [(30.0 * i, "vida") for i in range(1, 14)]         # 6,5 min solo contestando el aviso de vida
+        self.assertEqual(br.clasificar(lect)[0], 12)
+
+    def test_informes_que_no_cambian_siguen_siendo_quieta(self):
+        quieta = [(30.0 * i, {"gcode_state": "RUNNING", "layer_num": 5, "mc_percent": 9, "stg_cur": 0}) for i in range(32)]
+        self.assertEqual(br.clasificar(quieta)[0], 3)
+
+    def test_al_volver_un_informe_sin_nombre_no_es_otro_trabajo(self):
+        lect = [(0.0, {"gcode_state": "RUNNING", "subtask_name": "X", "task_id": "77", "mc_percent": 83, "layer_num": 64})]
+        lect += [(30.0 * i, None) for i in range(1, 5)]
+        lect.append((150.0, {"gcode_state": "RUNNING", "mc_percent": 84}))     # informe parcial, sin nombre ni numero
+        self.assertEqual(br.clasificar(lect, buscar=True), (None, "imprime y avanza"))
+
+    def test_al_volver_en_pausa_del_cargador_dice_el_rollo(self):
+        lect = [(0.0, {"gcode_state": "RUNNING", "subtask_name": "X", "task_id": "77", "ams": {"tray_now": "1"}})]
+        lect += [(30.0 * i, None) for i in range(1, 5)]
+        lect.append((150.0, {"gcode_state": "PAUSE", "subtask_name": "X", "task_id": "77",
+                             "hms": [{"attr": 0x07000100, "code": 0x00020001}]}))
+        salida, texto = br.clasificar(lect, buscar=True)
+        self.assertEqual(salida, 2)
+        self.assertIn("cargá un rollo igual en el lugar 2", texto)
+
+    def test_volver_con_otro_trabajo_no_pisa_el_avance_del_viejo(self):
+        vig = br.Vigia(0.0)
+        vig.mensaje(0.0, {"gcode_state": "RUNNING", "subtask_name": "X", "task_id": "77", "mc_percent": 83, "layer_num": 64})
+        vig.falla(30.0, "red")
+        vig.mensaje(200.0, {"gcode_state": "RUNNING", "subtask_name": "Y", "task_id": "88", "mc_percent": 4, "layer_num": 3})
+        self.assertEqual((vig.trabajo["ult_pct"], vig.trabajo["ult_capa"]), (83, 64))
+        self.assertEqual(vig.evaluar(200.0)[0], 1)
+
+    def test_volver_con_otro_trabajo_si_el_viejo_estaba_cerrado_lo_toma(self):
+        lect = [(0.0, {"gcode_state": "RUNNING", "subtask_name": "Y", "task_id": "88"})]
+        previo = {"trabajo": {"subtask_name": "X", "task_id": "77"}, "desconectado_desde": -100.0, "ult_mensaje": -100.0}
+        self.assertEqual(br.clasificar(lect, previo=previo, trabajo_cerrado=True), (None, "imprime y avanza"))
+        self.assertEqual(br.clasificar(lect, previo=previo)[0], 1)           # sin cerrar: el trabajo ya no está
+
+
 class ConciliarAlConectar(ConJuguete):
 
     def test_TB2_el_fin_de_la_vieja_no_cierra_la_reimpresion(self):

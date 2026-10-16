@@ -115,11 +115,23 @@ def anotar(evento):
     return evento
 
 
+_YA_AVISADOS = set()
+
+
 def leer():
     ev = []
     if CARPETA.exists():
         for f in sorted(CARPETA.glob("*.jsonl")):
-            for ren in f.read_text(encoding="utf-8").splitlines():
+            # Un archivo de otra PC a medio sincronizar (OneDrive), tomado o con un caracter cortado no puede tumbar la
+            # vigilancia ni el envio (revision 16/10): se lee lo que se pueda y se avisa una vez por archivo.
+            try:
+                texto = f.read_text(encoding="utf-8", errors="replace")
+            except OSError as e:
+                if f.name not in _YA_AVISADOS:
+                    _YA_AVISADOS.add(f.name)
+                    print(f"  (registro: no pude leer {f.name}: {e.strerror or e}; sigo sin ese archivo)", file=sys.stderr)
+                continue
+            for ren in texto.splitlines():
                 if ren.strip():
                     try:
                         ev.append(json.loads(ren))

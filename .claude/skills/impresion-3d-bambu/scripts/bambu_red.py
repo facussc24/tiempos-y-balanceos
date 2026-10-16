@@ -584,14 +584,15 @@ class Conexion:
         self.buf = b""
         self.visto = {}
         self.ult_paquete = self.ult_ping = time.time()
+        self.ult_informe = None              # el ultimo INFORME ('print'); un PINGRESP no cuenta como informe
         self.ult_pushall = 0.0
         self.tema = f"device/{d['serie']}/request"
         try:
             suscribir(self.s, f"device/{d['serie']}/report")
-        except OSError:
+            self.pushall()
+        except (OSError, SinConexion):
             self.cerrar()
             raise SinConexion("La impresora cortó la conexión al suscribirse.") from None
-        self.pushall()
 
     def __enter__(self):
         return self
@@ -636,6 +637,9 @@ class Conexion:
         fin = time.time() + segundos
         nuevos = []
         while True:
+            listo = False
+            # se procesan TODOS los paquetes ya recibidos antes de volver: si se volviera en el que cumple `hasta`, los
+            # que vienen detras (ya sacados del buffer) se perderian (revision 16/10)
             for cab, dat in self._paquetes():
                 self.ult_paquete = time.time()
                 if cab >> 4 != 3 or len(dat) < 2:
@@ -648,10 +652,13 @@ class Conexion:
                     continue
                 p = m.get("print") if isinstance(m, dict) else None
                 if isinstance(p, dict):
+                    self.ult_informe = time.time()
                     fusionar(self.visto, p)
                     nuevos.append(p)
                     if hasta and hasta(self.visto, p):
-                        return nuevos
+                        listo = True
+            if listo:
+                return nuevos
             ahora_ = time.time()
             if ahora_ >= fin:
                 return nuevos
@@ -1586,7 +1593,10 @@ def conciliar(v):
 SALIDA_TERMINO_SIN_VER, SALIDA_YA_VIGILADA = 14, 15
 QUIETA_S = 900
 SIN_MENSAJES_S = float(os.environ.get("BAMBU_SIN_MENSAJES_S") or 60)   # 60 s: ha-bambulab y bambuddy; las pruebas lo achican
+# sin ningun INFORME (aunque conteste el aviso de vida): el pedido de informe completo va cada 5 min, mas un minuto
+SIN_INFORMES_S = PUSHALL_CADA + 60
 BUSCAR_CADA, EN_PAUSA_CADA, CANDADO_VENCE_S = 120, 300, 180
+SALIDA_ERROR_PROGRAMA = 16           # --seguir: un error del programa, no de la impresora (no se confunde con el 1)
 
 
 def _hora(t):
@@ -1628,14 +1638,18 @@ def _lugar_activo(v):
 
 class Vigia:
     """Decide que pasa con la impresion a partir de lo que llega (o no llega) de la impresora. No toca la red: se le
-    pasan los informes (mensaje) y las fallas (falla), y evaluar() devuelve (salida, texto) o None. Asi se prueba
-    con lecturas guardadas (clasificar). `previo` es lo que guardo la corrida anterior en estado_seguimiento.json."""
+    pasan los informes (mensaje), las señales de vida (vida) y las fallas (falla), y evaluar() devuelve (salida, texto)
+    o None. Asi se prueba con lecturas guardadas (clasificar). `previo` es lo que guardo la corrida anterior en
+    estado_seguimiento.json. `trabajo_cerrado`: el trabajo de `previo` ya esta cerrado en el registro (una reimpresion
+    en la misma carpeta, o lo cerro otro comando): si al volver la impresora informa OTRO trabajo, se lo toma."""
 
-    def __init__(self, ahora_, previo=None, buscar=False, en_pausa=False):
+    def __init__(self, ahora_, previo=None, buscar=False, en_pausa=False, trabajo_cerrado=False):
         p = previo or {}
         self.inicio, self.buscar, self.en_pausa = ahora_, buscar, en_pausa
         self.trabajo = p.get("trabajo")
-        self.ult_mensaje = p.get("ult_mensaje")
+        self.trabajo_cerrado = bool(trabajo_cerrado and self.trabajo)
+        self.ult_mensaje = p.get("ult_mensaje")          # el ultimo INFORME de la impresora (no un aviso de vida)
+        self.ult_vida = None                             # el ultimo paquete de cualquier tipo (PINGRESP incluido)
         self.ult_corriendo = p.get("ult_corriendo")
         self.desconectado_desde = p.get("desconectado_desde")
         self.ult_clave = tuple(p["ult_clave"]) if p.get("ult_clave") else None
@@ -1652,8 +1666,14 @@ class Vigia:
                 "desconectado_desde": self.desconectado_desde, "ult_clave": list(self.ult_clave) if self.ult_clave else None,
                 "ult_avance": self.ult_avance, "motivo": self.motivo}
 
+    def vida(self, t):
+        """Llego algo de la impresora (un aviso de vida, una respuesta): la conexion anda, aunque no sea un informe."""
+        self.ult_vida = t if self.ult_vida is None else max(self.ult_vida, t)
+
     def mensaje(self, t, v):
+        """Llego un INFORME de la impresora (un 'print'): `v` es el estado completo conocido."""
         self.v, self.rechazos = v, 0
+        self.vida(t)
         if self.desconectado_desde is not None:          # volvio despues de un hueco
             self.volvio, self.desconectado_desde, self.ult_avance = True, None, None
         self.ult_mensaje = t
@@ -1662,9 +1682,11 @@ class Vigia:
         if clave != self.ult_clave or self.ult_avance is None:
             self.ult_clave, self.ult_avance = clave, t
         if est in ("RUNNING", "PREPARE", "PAUSE") and v.get("subtask_name"):
-            if not self.trabajo or (not self.volvio and not self.mismo_trabajo(v)):
+            if not self.trabajo or (not self.volvio and self.mismo_trabajo(v) is False):
                 self.trabajo = {"subtask_name": v.get("subtask_name"), "task_id": v.get("task_id")}
-            if est != "PAUSE" or self.trabajo.get("ult_pct") is None:
+                self.trabajo_cerrado = False
+            # el avance que se guarda es el de ESTE trabajo: al volver con otro trabajo no se pisa el del viejo
+            if self.mismo_trabajo(v) and (est != "PAUSE" or self.trabajo.get("ult_pct") is None):
                 self.trabajo["ult_pct"], self.trabajo["ult_capa"] = v.get("mc_percent"), v.get("layer_num")
         if est in ("RUNNING", "PREPARE"):
             self.ult_corriendo = t
@@ -1677,38 +1699,62 @@ class Vigia:
             self.desconectado_desde = self.ult_mensaje or t
 
     def mismo_trabajo(self, v):
+        """True / False, o None si el informe no dice de que trabajo es (un informe parcial, sin nombre ni numero)."""
         if not self.trabajo:
             return False
-        tid = self.trabajo.get("task_id")
-        if tid not in (None, "", "0") and v.get("task_id") not in (None, "", "0"):
-            return str(v.get("task_id")) == str(tid)
-        return bool(v.get("subtask_name")) and v.get("subtask_name") == self.trabajo.get("subtask_name")
+        tid, vtid = self.trabajo.get("task_id"), v.get("task_id")
+        if tid not in (None, "", "0") and vtid not in (None, "", "0"):
+            return str(vtid) == str(tid)
+        if not v.get("subtask_name"):
+            return None
+        return v.get("subtask_name") == self.trabajo.get("subtask_name")
 
     def evaluar(self, t):
         if self.rechazos >= 2:                   # no al primer rechazo: ha-bambulab lo vio con la impresora apagada
             return SALIDA_ACCESO, TEXTO_ACCESO
         ult = self.ult_mensaje or self.inicio
-        if self.desconectado_desde is not None or t - ult >= SIN_MENSAJES_S:
-            if t - ult >= SIN_MENSAJES_S:
+        vida = max(self.ult_vida or 0, ult)
+        # Sin conexion: 60 s sin NINGUN paquete, o sin ningun INFORME: una impresora que solo contesta el aviso de vida
+        # no esta «quieta», no se la esta viendo (revision 16/10: el PINGRESP contaba como informe y salia 3, no 12).
+        # Sin ningun informe en esta corrida alcanzan 60 s (el pedido de informe completo al conectar se contesta
+        # enseguida); despues de uno, el tiempo entre dos pedidos de informe completo (5 min) mas un minuto.
+        if self.ult_mensaje is None or self.ult_mensaje < self.inicio:
+            sin_informes = t - self.inicio >= SIN_MENSAJES_S
+        else:
+            sin_informes = t - self.ult_mensaje >= SIN_INFORMES_S
+        sin = t - vida >= SIN_MENSAJES_S or sin_informes
+        if self.desconectado_desde is not None or sin:
+            if sin:
                 if self.desconectado_desde is None:
                     self.desconectado_desde = ult
                 if not self.buscar:
                     return SALIDA_SIN_CONEXION, (f"sin conexión con la impresora desde las {_hora(ult)}"
                                                  + (f" ({self.motivo})" if self.motivo else "")
-                                                 + ". La impresión no depende de la PC: el archivo está en la tarjeta "
-                                                   "de la impresora")
+                                                 + ". Si la impresora sigue con luz, imprime sola (el archivo está en "
+                                                   "su tarjeta); si se cortó la luz, no se sabe: mirá la pantalla")
             return None
         v = self.v
         est = v.get("gcode_state")
         if self.volvio:
-            self.volvio = False
             mismo = self.mismo_trabajo(v)
-            if est == "FINISH" and mismo:
+            if mismo is None:
+                return None                          # el informe no dice de que trabajo es: se espera al siguiente
+            self.volvio = False
+            if not mismo and self.trabajo_cerrado:
+                # el trabajo viejo ya estaba cerrado: la impresora esta con otro (una reimpresion); se vigila ese
+                if est in ("RUNNING", "PREPARE", "PAUSE"):
+                    self.trabajo = {"subtask_name": v.get("subtask_name"), "task_id": v.get("task_id"),
+                                    "ult_pct": v.get("mc_percent"), "ult_capa": v.get("layer_num")}
+                    self.trabajo_cerrado = False
+                    return None
+            elif est == "FINISH" and mismo:
                 return SALIDA_TERMINO_SIN_VER, "terminó; no la vi terminar: revisá que no se haya despegado nada"
-            if est == "PAUSE" and mismo:
+            elif est == "PAUSE" and mismo and not fin_de_rollo(v):
                 return 2, ("volvió en pausa con el mismo trabajo, posible corte de luz: mirá la pantalla; "
                            "si ofrece reanudar, mirá la pieza antes")
-            if self.trabajo and (est in ("IDLE", "FAILED") or not mismo):
+            elif est == "PAUSE" and mismo:
+                pass                                 # pausa del cargador: la dice la regla de abajo
+            elif self.trabajo and (est in ("IDLE", "FAILED") or not mismo):
                 return 1, "el trabajo ya no está: probable corte sin reanudar, o alguien lo canceló"
         if est == "FINISH":
             return 0, "terminó"
@@ -1734,18 +1780,22 @@ class Vigia:
         return None
 
 
-def clasificar(lecturas, buscar=False, previo=None, en_pausa=False):
-    """Lecturas guardadas [(t, informe | None | 'acceso')] -> (salida, texto) de la primera decision, o
-    (None, texto) si la impresion sigue. None = esa vuelta no hubo informe (sin conexion); 'acceso' = la
-    impresora rechazo el codigo. Es la misma regla que usa --seguir."""
+def clasificar(lecturas, buscar=False, previo=None, en_pausa=False, trabajo_cerrado=False):
+    """Lecturas guardadas [(t, informe | None | 'acceso' | 'vida')] -> (salida, texto) de la primera decision, o
+    (None, texto) si la impresion sigue. None = esa vuelta no llego nada (sin conexion); 'acceso' = la impresora
+    rechazo el codigo; 'vida' = llego solo un aviso de vida (PINGRESP), ningun informe. Es la misma regla que usa
+    --seguir."""
     if not lecturas:
         return None, "sin lecturas"
-    vig, visto = Vigia(lecturas[0][0], previo, buscar=buscar, en_pausa=en_pausa), {}
+    vig = Vigia(lecturas[0][0], previo, buscar=buscar, en_pausa=en_pausa, trabajo_cerrado=trabajo_cerrado)
+    visto = {}
     for t, x in lecturas:
         if x is None:
             vig.falla(t, "red")
         elif x == "acceso":
             vig.falla(t, "acceso")
+        elif x == "vida":
+            vig.vida(t)
         else:
             vig.mensaje(t, fusionar(visto, x))
         r = vig.evaluar(t)
@@ -1888,14 +1938,18 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
     except (OSError, ValueError):
         previo = {}
     t_prev = previo.get("trabajo") or {}
-    if (t_prev.get("subtask_name")
-            and registro.trabajo_de(t_prev.get("subtask_name"), t_prev.get("task_id")) is None
-            and registro.trabajo_de(t_prev.get("subtask_name"), t_prev.get("task_id"), solo_abiertas=False)):
-        # El trabajo que vigilaba la corrida anterior en esta carpeta ya esta CERRADO en el registro: esta vigilancia es
-        # de otro envio (una reimpresion en la misma carpeta). No se hereda ni el trabajo ni el hueco sin conexion, o
-        # la primera lectura daba «el trabajo ya no esta» y cerraba como fallida la impresion nueva (auditoria 16/10, TB3).
-        previo = {k: previo[k] for k in ("sin_camara_desde",) if previo.get(k)}
-    vig = Vigia(time.time(), previo, buscar=buscar, en_pausa=en_pausa)
+    cerrado = False
+    try:
+        # ¿El trabajo que vigilaba la corrida anterior en esta carpeta ya esta CERRADO en el registro? (una reimpresion
+        # en la misma carpeta, o lo cerro otro comando). Si al volver la impresora informa otro trabajo, se toma ese y
+        # no se cierra como fallida la impresion nueva (auditoria 16/10, TB3); si informa el mismo terminado, sigue
+        # siendo 14 (re-auditoria). Un registro que no se puede leer no impide vigilar (revision 16/10).
+        cerrado = bool(t_prev.get("subtask_name")
+                       and registro.trabajo_de(t_prev.get("subtask_name"), t_prev.get("task_id")) is None
+                       and registro.trabajo_de(t_prev.get("subtask_name"), t_prev.get("task_id"), solo_abiertas=False))
+    except (Exception, SystemExit) as e:
+        print(f"  (no se pudo leer el registro al arrancar: {type(e).__name__}: {e}; se vigila igual)", flush=True)
+    vig = Vigia(time.time(), previo, buscar=buscar, en_pausa=en_pausa, trabajo_cerrado=cerrado)
     extra = {k: previo.get(k) for k in ("sin_camara_desde", "tray_now", "fin_estimado", "rollo_anotado")}
     log = open(carpeta / "seguimiento.log", "a", encoding="utf-8")
     hechas, ult_foto = set(), 0.0
@@ -2073,13 +2127,16 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
                 # vuelve antes si llega el primer informe completo o si cambia el estado (termino, pausa, fallo)
                 con.leer(espera, hasta=lambda v_, p: (vig.ult_mensaje is None and _informe_completo(v_, p)) or (
                     "gcode_state" in p and bool(vig.v) and p["gcode_state"] != vig.v.get("gcode_state")))
-                if con.visto and (vig.ult_mensaje is None or con.ult_paquete > vig.ult_mensaje):
-                    vig.mensaje(con.ult_paquete, dict(con.visto))
+                vig.vida(con.ult_paquete)                     # un aviso de vida dice que la conexion anda...
+                if con.ult_informe and (vig.ult_mensaje is None or con.ult_informe > vig.ult_mensaje):
+                    vig.mensaje(con.ult_informe, dict(con.visto))   # ...pero solo un INFORME cuenta como informe
             except SinConexion as e:
                 con.cerrar()
                 con = None
                 vig.falla(time.time(), "red", e.texto.rstrip("."))
-        else:
+        if con is None:
+            # sin conexion se espera antes de reintentar, tambien si la conexion abrio y murio en esta misma vuelta
+            # (una impresora que acepta y corta: 47 conexiones por segundo sin esta espera, revision 16/10)
             time.sleep(min(cada, 10))
         t = time.time()
         v = vig.v
@@ -2101,7 +2158,7 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
                 if prueba.visto:
                     con = prueba
                     anotar_log(f"{_iso()} la encontré en {d['ip']}: sigo vigilando")
-                    vig.mensaje(con.ult_paquete, dict(con.visto))
+                    vig.mensaje(con.ult_informe or time.time(), dict(con.visto))
                     r = vig.evaluar(time.time())     # lo que trae al volver se juzga YA (terminó sin verla, pausa...)
                     v = vig.v
                 else:
@@ -2110,8 +2167,13 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
                                       "mirá su pantalla (si está colgada, apagarla y prenderla lo decide quien está ahí)")
             except AccesoRechazado:
                 vig.falla(time.time(), "acceso", "rechazó el código")
+                r = vig.evaluar(time.time()) or r     # el segundo rechazo es 13, no un 12 (revision 16/10)
             except SinConexion as e:
                 r = (r[0], r[1] + ". " + e.texto)
+        if buscar and con is not None and vig.desconectado_desde is not None:
+            # --buscar: una conexion abierta que no trae informes se suelta, asi la proxima vuelta la vuelve a buscar
+            con.cerrar()
+            con = None
         if con is None or vig.desconectado_desde is not None:
             anotar_log(f"{_iso()} SIN CONEXION desde las {_hora(vig.desconectado_desde or vig.inicio)}"
                        + (f" ({vig.motivo})" if vig.motivo else ""))
@@ -2348,7 +2410,8 @@ def main(argv=None):
         return e.code or 0
     except Exception as e:
         print(f"No se pudo: {type(e).__name__}: {e}. No es un problema de la impresora: avisar a Fak con este renglon.")
-        return 1
+        # en --seguir el 1 quiere decir «falló o la cancelaron»: un error del programa tiene su propia salida
+        return SALIDA_ERROR_PROGRAMA if (argv or sys.argv)[1:2] == ["--seguir"] else 1
 
 
 if __name__ == "__main__":
