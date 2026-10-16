@@ -1,5 +1,5 @@
 {
-  "generado": "2026-09-08 09:09:34",
+  "generado": "2026-10-16 14:11:20",
   "raices": [
     {
       "id": "biblio-2d-mejoras",
@@ -7,7 +7,7 @@
       "que": "Dispositivos y mascaras de mejora de proceso, en 2D (DXF de corte + planos)",
       "obligatoria": true,
       "estado": "ok",
-      "dispositivos": 4
+      "dispositivos": 7
     },
     {
       "id": "biblio-3d",
@@ -15,7 +15,7 @@
       "que": "Piezas y dispositivos en 3D: calibres de costura, bases de ultrasonido, pines de alineacion, impresos",
       "obligatoria": true,
       "estado": "ok",
-      "dispositivos": 28
+      "dispositivos": 42
     },
     {
       "id": "servidor-utillajes",
@@ -68,6 +68,77 @@
       },
       "fecha": "2026-08-31",
       "resuelve": "Nido de adhesivado del Insert trasero SAB1740: placa CNC que copia el contorno de la pieza (una por mano) + piezas de torno. Version entregada el 31/08/2026, sobre carro estatico. El pliego v3 (02/09) la reemplaza por un carro que GIRA, asi que el nido sirve, el soporte no.",
+      "notas": null
+    },
+    {
+      "id": "biblio-2d-mejoras/dispositivo-adhesivado-insert-trasero-sab1740",
+      "nombre": "INSERT TRASERO SAB1740",
+      "raiz": "biblio-2d-mejoras",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\4. 2D\\MEJORAS DE PROCESO\\DISPOSITIVO ADHESIVADO\\INSERT TRASERO SAB1740",
+      "contexto": [
+        "DISPOSITIVO ADHESIVADO"
+      ],
+      "archivos": {
+        "corte2d": [
+          "nido_SAB1740_placa_cnc.dxf"
+        ],
+        "imagen": [
+          "plano constructivo del caballete FIJO.png",
+          "plano de las piezas de torno del nido.png"
+        ],
+        "plano": [
+          "plano constructivo del caballete FIJO.pdf",
+          "plano de las piezas de torno del nido.pdf"
+        ]
+      },
+      "fecha": "2026-09-01",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-2d-mejoras/insert-patagonia-orejita-costura-cnc",
+      "nombre": "INSERT PATAGONIA - OREJITA COSTURA CNC",
+      "raiz": "biblio-2d-mejoras",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\4. 2D\\MEJORAS DE PROCESO\\INSERT PATAGONIA - OREJITA COSTURA CNC",
+      "contexto": [],
+      "archivos": {
+        "corte2d": [
+          "INSERT PATAGONIA DELANTERO - 10 PIEZAS (5 der + 5 izq) - OREJITA COSTURA - 2026-10-15.dxf",
+          "INSERT PATAGONIA DELANTERO - IZQ Y DER - OREJITA COSTURA - 2026-10-15.dxf",
+          "INSERT PATAGONIA TRASERO - 10 PIEZAS (5 der + 5 izq) - OREJITA COSTURA - 2026-10-15.dxf",
+          "INSERT PATAGONIA TRASERO - IZQ Y DER - OREJITA COSTURA - 2026-10-15.dxf"
+        ],
+        "imagen": [
+          "INSERT PATAGONIA DELANTERO - 10 PIEZAS (5 der + 5 izq) - OREJITA COSTURA - 2026-10-15 - cual es cual.png",
+          "INSERT PATAGONIA DELANTERO - IZQ Y DER - OREJITA COSTURA - 2026-10-15.png",
+          "INSERT PATAGONIA TRASERO - 10 PIEZAS (5 der + 5 izq) - OREJITA COSTURA - 2026-10-15 - cual es cual.png",
+          "INSERT PATAGONIA TRASERO - IZQ Y DER - OREJITA COSTURA - 2026-10-15.png"
+        ]
+      },
+      "fecha": "2026-10-15",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-2d-mejoras/insert-patagonia-v-hot-press",
+      "nombre": "INSERT PATAGONIA - V HOT PRESS",
+      "raiz": "biblio-2d-mejoras",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\4. 2D\\MEJORAS DE PROCESO\\INSERT PATAGONIA - V HOT PRESS",
+      "contexto": [],
+      "archivos": {
+        "corte2d": [
+          "INSERT DEL - 10 PIEZAS - 2 V HOT PRESS - 2026-10-16.dxf",
+          "INSERT TRA - 10 PIEZAS - 2 V HOT PRESS - 2026-10-16.dxf"
+        ],
+        "imagen": [
+          "INSERT DEL - 10 PIEZAS - 2 V HOT PRESS - 2026-10-16 - cual es cual.png",
+          "INSERT DEL - 2 V HOT PRESS - 2026-10-16 - pieza con las 2 V.png",
+          "INSERT TRA - 10 PIEZAS - 2 V HOT PRESS - 2026-10-16 - cual es cual.png",
+          "INSERT TRA - 2 V HOT PRESS - 2026-10-16 - pieza con las 2 V.png"
+        ]
+      },
+      "fecha": "2026-10-16",
+      "resuelve": null,
       "notas": null
     },
     {
@@ -487,6 +558,130 @@
       "notas": null
     },
     {
+      "id": "biblio-3d/soporte-microscopio-pedido-leo-14-10",
+      "nombre": "Soporte microscopio - pedido Leo (14-10)",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\Soporte microscopio - pedido Leo (14-10)",
+      "contexto": [],
+      "archivos": {
+        "modelo3d": [
+          "ORIGINAL de Leo - base_mount.3mf",
+          "PLACA A - base, soportes, perillas y bulones (8h 110g).gcode.3mf",
+          "PLACA B - brazos y tuercas (4h13 64g).gcode.3mf"
+        ]
+      },
+      "fecha": "2026-10-14",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/tornillo-7mm-impreso-costura-cnc-insert-prueba-14-10",
+      "nombre": "Tornillo 7mm impreso - costura CNC insert (prueba 14-10)",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\Tornillo 7mm impreso - costura CNC insert (prueba 14-10)",
+      "contexto": [],
+      "archivos": {
+        "modelo3d": [
+          "PIN traba con agujero agrandado a 7,2.stl",
+          "PLACA Bambu - 3 tornillos + 3 tuercas + pin (PLA Lite negro).gcode.3mf",
+          "TORNILLO 7mm holgura 0,30 (1 punto).stl",
+          "TORNILLO 7mm holgura 0,40 (2 puntos).stl",
+          "TORNILLO 7mm holgura 0,50 (3 puntos).stl",
+          "TUERCA 7mm - va con los tres tornillos.stl"
+        ]
+      },
+      "fecha": "2026-10-14",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/tornillo-7mm-impreso-costura-cnc-insert-prueba-14-10-acostados-14-10-tarde",
+      "nombre": "ACOSTADOS (14-10 tarde)",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\Tornillo 7mm impreso - costura CNC insert (prueba 14-10)\\ACOSTADOS (14-10 tarde)",
+      "contexto": [
+        "Tornillo 7mm impreso - costura CNC insert (prueba 14-10)"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "PIN acostado - agujero 7,2.step",
+          "PIN acostado - agujero 7,2.stl",
+          "PLACA 20 pines acostados (3h38 40g).gcode.3mf",
+          "TORNILLO acostado - holgura 0,50.step",
+          "TORNILLO acostado - holgura 0,50.stl"
+        ]
+      },
+      "fecha": "2026-10-14",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/tornillo-7mm-impreso-costura-cnc-insert-prueba-14-10-fuente-step-para-modificar",
+      "nombre": "FUENTE (STEP para modificar)",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\Tornillo 7mm impreso - costura CNC insert (prueba 14-10)\\FUENTE (STEP para modificar)",
+      "contexto": [
+        "Tornillo 7mm impreso - costura CNC insert (prueba 14-10)"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "TORNILLO 7mm holgura 0,30.step",
+          "TORNILLO 7mm holgura 0,40.step",
+          "TORNILLO 7mm holgura 0,50.step",
+          "TUERCA 7mm.step"
+        ]
+      },
+      "fecha": "2026-10-14",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/tornillo-7mm-impreso-costura-cnc-insert-prueba-14-10-pin-v3-acostado-agujero-6-8-y-7-0-15-10",
+      "nombre": "PIN v3 ACOSTADO agujero 6,8 y 7,0 (15-10)",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\Tornillo 7mm impreso - costura CNC insert (prueba 14-10)\\PIN v3 ACOSTADO agujero 6,8 y 7,0 (15-10)",
+      "contexto": [
+        "Tornillo 7mm impreso - costura CNC insert (prueba 14-10)"
+      ],
+      "archivos": {
+        "imagen": [
+          "PLACA 20 JUEGOS - primera capa.png"
+        ],
+        "modelo3d": [
+          "PIN traba v3 - agujero 6,8 - apoyo 0.6 - ACOSTADO.step",
+          "PIN traba v3 - agujero 6,8 - apoyo 0.6 - ACOSTADO.stl",
+          "PIN traba v3 - agujero 7,0 - apoyo 0.6 - ACOSTADO.step",
+          "PIN traba v3 - agujero 7,0 - apoyo 0.6 - ACOSTADO.stl",
+          "PLACA 20 JUEGOS - tornillo + tuerca + pin 6,8 (7h43, 78 g).gcode.3mf"
+        ]
+      },
+      "fecha": "2026-10-15",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/tornillo-7mm-impreso-costura-cnc-insert-prueba-14-10-pin-v3-acostado-agujero-6-8-y-7-0-15-10-obsoleto-apoyo-0-3-se-despega-no-imprimir",
+      "nombre": "OBSOLETO - apoyo 0,3 se despega (NO IMPRIMIR)",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\Tornillo 7mm impreso - costura CNC insert (prueba 14-10)\\PIN v3 ACOSTADO agujero 6,8 y 7,0 (15-10)\\OBSOLETO - apoyo 0,3 se despega (NO IMPRIMIR)",
+      "contexto": [
+        "Tornillo 7mm impreso - costura CNC insert (prueba 14-10)",
+        "PIN v3 ACOSTADO agujero 6,8 y 7,0 (15-10)"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "PIN traba v3 - agujero 6,8 - ACOSTADO.step",
+          "PIN traba v3 - agujero 6,8 - ACOSTADO.stl",
+          "PIN traba v3 - agujero 7,0 - ACOSTADO.step",
+          "PIN traba v3 - agujero 7,0 - ACOSTADO.stl",
+          "PLACA prueba - 2 pines agujero 6,8 + 1 pin agujero 7,0 (40 min, 6 g).gcode.3mf"
+        ]
+      },
+      "fecha": "2026-10-15",
+      "resuelve": null,
+      "notas": null
+    },
+    {
       "id": "biblio-3d/tornillo-y-tuerca-impresos-pin-dispositivo-tra-izq",
       "nombre": "Tornillo y tuerca impresos - pin dispositivo TRA-IZQ",
       "raiz": "biblio-3d",
@@ -658,6 +853,33 @@
       "notas": null
     },
     {
+      "id": "biblio-3d/vwa-patagonia-dispositivo-adhesivado-carro-giratorio",
+      "nombre": "CARRO GIRATORIO",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\VWA\\PATAGONIA - DISPOSITIVO ADHESIVADO\\CARRO GIRATORIO",
+      "contexto": [
+        "VWA",
+        "PATAGONIA - DISPOSITIVO ADHESIVADO"
+      ],
+      "archivos": {
+        "corte2d": [
+          "nido_SAB1726_placa_cnc.dxf"
+        ],
+        "modelo3d": [
+          "carro_giratorio.step",
+          "carro_giratorio_TREN_A_LA_VISTA.step",
+          "nido_SAB1726.step"
+        ],
+        "plano": [
+          "DISPOSITIVO_ADHESIVADO_INSERT.pdf",
+          "plano_carro_giratorio.pdf"
+        ]
+      },
+      "fecha": "2026-09-22",
+      "resuelve": null,
+      "notas": null
+    },
+    {
       "id": "biblio-3d/vwa-patagonia-dispositivo-adhesivado-insert-sab1740",
       "nombre": "INSERT SAB1740",
       "raiz": "biblio-3d",
@@ -683,6 +905,27 @@
       "notas": null
     },
     {
+      "id": "biblio-3d/vwa-patagonia-dispositivo-adhesivado-insert-trasero-sab1740",
+      "nombre": "INSERT TRASERO SAB1740",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\VWA\\PATAGONIA - DISPOSITIVO ADHESIVADO\\INSERT TRASERO SAB1740",
+      "contexto": [
+        "VWA",
+        "PATAGONIA - DISPOSITIVO ADHESIVADO"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "caballete.step",
+          "caballete.stl",
+          "nido_SAB1740.step",
+          "nido_SAB1740.stl"
+        ]
+      },
+      "fecha": "2026-09-01",
+      "resuelve": null,
+      "notas": null
+    },
+    {
       "id": "biblio-3d/vwa-patagonia-dispositivo-adhesivado-ip-pad",
       "nombre": "IP PAD",
       "raiz": "biblio-3d",
@@ -699,6 +942,165 @@
       },
       "fecha": "2026-08-31",
       "resuelve": "Carro de adhesivado del IP PAD: bandejas a distinta altura, nada por debajo de 560 mm por ergonomia (Fak: 'no quiero que el operario se agache'). Entregado 31/08/2026; le falta resuelta la sujecion contra el aire de la pistola.",
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/vwa-patagonia-pines-costura-cnc-insert-v1-2026-10-14",
+      "nombre": "v1 - 2026-10-14",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\VWA\\PATAGONIA - PINES COSTURA CNC INSERT\\v1 - 2026-10-14",
+      "contexto": [
+        "VWA",
+        "PATAGONIA - PINES COSTURA CNC INSERT"
+      ],
+      "archivos": {
+        "imagen": [
+          "imagen - pin costura CNC.png"
+        ],
+        "modelo3d": [
+          "PIN costura CNC insert - base 18 - pin 2,8 x 5.step",
+          "PIN costura CNC insert - base 18 - pin 2,8 x 5.stl",
+          "PLACA 40 pines (1h54 28g, PLA Lite negro).gcode.3mf"
+        ]
+      },
+      "fecha": "2026-10-14",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/vwa-patagonia-pines-costura-cnc-insert-v2-2026-10-14-pin-2-0-sacabocado-2",
+      "nombre": "v2 - 2026-10-14 - pin 2,0 (sacabocado 2)",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\VWA\\PATAGONIA - PINES COSTURA CNC INSERT\\v2 - 2026-10-14 - pin 2,0 (sacabocado 2)",
+      "contexto": [
+        "VWA",
+        "PATAGONIA - PINES COSTURA CNC INSERT"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "PIN costura CNC insert - base 18 - pin 2,0 x 5.step",
+          "PIN costura CNC insert - base 18 - pin 2,0 x 5.stl",
+          "PLACA 40 pines 2,0.gcode.3mf"
+        ]
+      },
+      "fecha": "2026-10-14",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/vwa-patagonia-plantilla-perforado-insert-v1-2026-10-14-dxf-para-cortar-carton-4-mm",
+      "nombre": "DXF para cortar (carton 4 mm)",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\VWA\\PATAGONIA - PLANTILLA PERFORADO INSERT\\v1 - 2026-10-14\\DXF para cortar (carton 4 mm)",
+      "contexto": [
+        "VWA",
+        "PATAGONIA - PLANTILLA PERFORADO INSERT",
+        "v1 - 2026-10-14"
+      ],
+      "archivos": {
+        "corte2d": [
+          "INSERT DELANTERO - PLANTILLA PERFORADO - BASE.dxf",
+          "INSERT DELANTERO - PLANTILLA PERFORADO - MARCO.dxf",
+          "INSERT DELANTERO - PLANTILLA PERFORADO - TAPA.dxf",
+          "INSERT TRASERO - PLANTILLA PERFORADO - BASE.dxf",
+          "INSERT TRASERO - PLANTILLA PERFORADO - MARCO.dxf",
+          "INSERT TRASERO - PLANTILLA PERFORADO - TAPA.dxf"
+        ]
+      },
+      "fecha": "2026-10-14",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/vwa-patagonia-plantilla-perforado-insert-v1-2026-10-14-piezas-para-imprimir",
+      "nombre": "Piezas para imprimir",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\VWA\\PATAGONIA - PLANTILLA PERFORADO INSERT\\v1 - 2026-10-14\\Piezas para imprimir",
+      "contexto": [
+        "VWA",
+        "PATAGONIA - PLANTILLA PERFORADO INSERT",
+        "v1 - 2026-10-14"
+      ],
+      "archivos": {
+        "modelo3d": [
+          "BUJE GUIA - agujero 3,0.step",
+          "BUJE GUIA - agujero 3,0.stl",
+          "BUJE GUIA - agujero 3,5.step",
+          "BUJE GUIA - agujero 3,5.stl",
+          "BUJE GUIA - agujero 4,0.step",
+          "BUJE GUIA - agujero 4,0.stl",
+          "BUJE GUIA - agujero 4,5.step",
+          "BUJE GUIA - agujero 4,5.stl",
+          "BUJE GUIA - agujero 5,0.step",
+          "BUJE GUIA - agujero 5,0.stl",
+          "TACO APOYO.step",
+          "TACO APOYO.stl",
+          "TETON.step",
+          "TETON.stl"
+        ]
+      },
+      "fecha": "2026-10-14",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/vwa-patagonia-triangulito-hot-press-insert-v2-2026-10-16",
+      "nombre": "v2 - 2026-10-16",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\VWA\\PATAGONIA - TRIANGULITO HOT PRESS INSERT\\v2 - 2026-10-16",
+      "contexto": [
+        "VWA",
+        "PATAGONIA - TRIANGULITO HOT PRESS INSERT"
+      ],
+      "archivos": {
+        "imagen": [
+          "TRIANGULITO v2 - piezas y armado.png"
+        ],
+        "modelo3d": [
+          "TRIANGULITO v2 - PLACA 2 juegos PLA Lite 41 min.gcode.3mf",
+          "TRIANGULITO v2 - base.step",
+          "TRIANGULITO v2 - base.stl",
+          "TRIANGULITO v2 - collar.step",
+          "TRIANGULITO v2 - collar.stl",
+          "TRIANGULITO v2 - dedo.step",
+          "TRIANGULITO v2 - dedo.stl"
+        ],
+        "plano": [
+          "TRIANGULITO v2.pdf"
+        ]
+      },
+      "fecha": "2026-10-16",
+      "resuelve": null,
+      "notas": null
+    },
+    {
+      "id": "biblio-3d/vwa-patagonia-virolador-upper-trim-v14-2026-10-13",
+      "nombre": "v14 - 2026-10-13",
+      "raiz": "biblio-3d",
+      "ruta": "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\5. 3D\\VWA\\PATAGONIA - VIROLADOR UPPER TRIM\\v14 - 2026-10-13",
+      "contexto": [
+        "VWA",
+        "PATAGONIA - VIROLADOR UPPER TRIM"
+      ],
+      "archivos": {
+        "imagen": [
+          "imagen - v14 desde arriba.png",
+          "imagen - v14 general.png"
+        ],
+        "modelo3d": [
+          "VIROLADOR v14 - 2 ranuras (cuerpo + grabado).3mf",
+          "VIROLADOR v14 - 2 ranuras (sin grabado).step",
+          "VIROLADOR v14 - 2 ranuras - 1 CUERPO.stl",
+          "VIROLADOR v14 - 2 ranuras - 2 GRABADO (otro color).stl",
+          "VIROLADOR v14 - LAMINADO negro + amarillo (A2L, PLA Lite, placa texturada).gcode.3mf"
+        ],
+        "plano": [
+          "VIROLADOR v14 - como imprimirlo.pdf",
+          "VIROLADOR v14 - ficha de la impresion.pdf"
+        ]
+      },
+      "fecha": "2026-10-13",
+      "resuelve": null,
       "notas": null
     },
     {
