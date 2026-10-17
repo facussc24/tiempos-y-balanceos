@@ -265,12 +265,44 @@ export function crearCliente({ apiKey, timeoutMs = 10 * 60 * 1000, maxRetries = 
  *              otro modelo en vez de devolver el rechazo.
  *
  * El `thinking` se omite: en los cuatro modelos es adaptativo por defecto y el esfuerzo lo gobierna.
+ *
+ * REVISADO CONTRA LA GUIA DE MIGRACION A LOS 5.x (skill claude-api, `shared/model-migration.md`, 17/10/2026, tanda 5):
+ *   - Nunca se manda `thinking` (Opus 5.5 y Sonnet 5.5 dan 400 con `disabled`; los cuatro dan 400 con `budget_tokens`),
+ *     ni `temperature` / `top_p` / `top_k` (400 fuera del default en Fable 5.1, Sonnet 5.5 y Haiku 5.5), ni
+ *     `tool_choice` forzado (400 en Fable 5.1, Opus 5.5 y Sonnet 5.5, tambien en count_tokens y Batches), ni un
+ *     ultimo mensaje del asistente (el prefill da 400 en los cuatro: se frena aca, antes de mandar).
+ *   - El fallback del servidor va en su forma `'default'` con la cabecera `-2026-07-01` en Opus, Sonnet y Fable (para
+ *     Sonnet 5.5 es la unica forma); Haiku 5.5 no tiene fallback del servidor; los lotes no lo aceptan (lote() lo saca).
+ *   - Un solo `cache_control`, en el ULTIMO bloque del system: en estos pedidos de una vuelta el system es lo que se
+ *     repite y el usuario cambia; el cache automatico de arriba cachearia el mensaje del usuario y pagaria la escritura
+ *     sin lecturas. (El agente por API, que si repite la charla, lo mueve al ultimo mensaje: agenteApi.marcarCache.)
+ *   - `max_tokens`: el tokenizador de los 5.x da ~30 % mas tokens, pero los topes de la noche ya corrieron con los
+ *     modelos 5.x: en el ledger del 09-11/10 la salida maxima fue 2.814 tokens (disparo, Haiku) contra topes de 4.000 a
+ *     16.000. Los que se cortaron (32.000 y 128.000) fueron borradores largos por `_apiTarea.mjs`, no la noche.
+ *   - Preserved thinking: aca cada pedido es de UNA vuelta (no se reenvian bloques de pensamiento). El unico que arma
+ *     historial es el agente por API, y lo hace agregando `res.content` entero, sin editar turnos viejos (mover
+ *     `cache_control` no cuenta como edicion, segun la guia). La medicion con reenvios cuesta plata: no se corrio.
  */
+/**
+ * ¿El ultimo mensaje es un prefill? Un turno del asistente hecho SOLO de texto (string o bloques `text`). El turno que
+ * el agente reenvia tal cual despues de un `pause_turn` trae bloques de herramientas del servidor y no es prefill.
+ */
+export function esPrefill(mensajes) {
+  if (!Array.isArray(mensajes) || !mensajes.length) return false;
+  const u = mensajes[mensajes.length - 1];
+  if (u?.role !== 'assistant') return false;
+  if (typeof u.content === 'string') return true;
+  return Array.isArray(u.content) && u.content.length > 0 && u.content.every((b) => b?.type === 'text');
+}
+
 export function armarParametros({
   modelo, system, usuario, mensajes, maxTokens = 16000, effort, cacheTtl = null, schema, fallbacks,
 } = {}) {
   const id = resolverModelo(modelo);
   if (!mensajes && usuario == null) throw new ErrorApi('api', 'armarParametros: falta `usuario` o `mensajes`');
+  if (esPrefill(mensajes)) {
+    throw new ErrorApi('api', 'armarParametros: el ultimo mensaje es texto del asistente (prefill): los modelos 5.x lo rechazan con 400. Pedir el formato con `schema` o en el system.');
+  }
   const params = {
     model: id,
     max_tokens: maxTokens,
