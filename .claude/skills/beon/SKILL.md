@@ -1,6 +1,6 @@
 ---
 name: beon
-description: "Operar BeOn («el BeOn», «cargar en BeOn», el portal de VW del informe PPF, ex ISIR / muestras iniciales) — entrar, buscar los informes de Barack, leer estado, IMDS, anexos y la decision de VW, crear un informe, cargar o cambiar anexos, finalizar el registro y emitir a VW. Usar cuando haya que cargar, revisar o mandar un informe de BeOn, cuando VW devuelva uno («Rueckgabe»), o para cruzar BeOn con IMDS."
+description: "Operar BeOn («el BeOn», el portal de VW del informe PPF, ex ISIR / muestras iniciales) — entrar, buscar los informes de Barack, leer estado, IMDS, anexos y la decision de VW, crear un informe, cargar o cambiar anexos, finalizar el registro y emitir a VW. Usar cuando haya que cargar, revisar o mandar un informe de BeOn, cuando VW devuelva uno («Rueckgabe»), o para cruzar BeOn con IMDS."
 ---
 
 # BeOn — el informe PPF de VW

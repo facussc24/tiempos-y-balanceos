@@ -1,6 +1,6 @@
 ---
 name: amfe-export-oficial
-description: Exportar un AMFE de Barack a Excel oficial («el AMFE en Excel», «el excel del AMFE», «para el pendrive»): hoja Caratula I-AC-005.3, modos de falla secuenciales, rev vigente en rojo, aprobadores y firmas. Usar SIEMPRE al exportar un AMFE para el cliente o el pendrive, o al armar el header de un AMFE nuevo. Evita carátula vacía, FM fuera de secuencia y revisiones mal hechas.
+description: Exportar un AMFE de Barack a Excel oficial («el AMFE en Excel», «para el pendrive»): hoja Caratula I-AC-005.3, modos de falla secuenciales, rev vigente en rojo, aprobadores y firmas. Usar SIEMPRE al exportar un AMFE para el cliente o el pendrive, o al armar el header de un AMFE nuevo. Evita carátula vacía, FM fuera de secuencia y revisiones mal hechas.
 ---
 
 # Export AMFE → Excel oficial (formulario I-AC-005.3)

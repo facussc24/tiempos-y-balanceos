@@ -243,7 +243,7 @@ un valor parecido de otra pieza, ni "segun especificacion" generico (`core-prohi
    (sale con 1) si la columna CLASIF. dice `D/TLD` o lleva dos marcas en una celda; con `--rearmado` frena ademas el
    amarillo y las notas de la tabla, y con `--definitivo` el `TBD` y el `CONFLICTO`. Lo de arriba del encabezado
    (banners de la plantilla) no lo mira. Corrido el 17/10 sobre los dos planes del 15/10: las correcciones de la
-   Rev 0 dan ROJO (33 `D/TLD`, 18 celdas con varias marcas, amarillo en la tabla); la propuesta limpia da 3 ROJO,
+   Rev 0 dan ROJO (33 `D/TLD`, 18 celdas con varias marcas, amarillo en la tabla); la propuesta rearmada da 3 ROJO,
    uno por hoja: la fila 3.0 «Flamabilidad y emisiones del conjunto» lleva «D / D» en una celda.
 7. Lo que pide una fila nueva o un dato sin papel va a un `.txt` aparte ("que queda para la reunion").
 8. Auditor antes de mostrar; se le muestra a Fak abierto; el mail a Calidad, con su OK.

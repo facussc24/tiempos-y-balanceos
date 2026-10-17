@@ -269,6 +269,8 @@ nivelado, sin sol directo ni humedad.
   silencio: para eso va `_mixPlotter.py`, que los conserva y los pone antes que los contornos), y si el DXF escrito,
   releido, no tiene 2N contornos cerrados o queda con menos de 25 mm reales entre piezas. Probado el 17/10 con el DXF de
   4 piezas del 15/10: verde (1380,4 x 1187,1 y 1293,1 x 1284,6, 25,00 mm); con un agujero agregado al origen, frena.
+  Selftest con DXF sinteticos: `py -3 .claude/skills/plotter-aol/scripts/acomodar_columnas_selftest.py` ("0 fallan"; no
+  corre en `npm test` porque el CI no instala ezdxf ni shapely).
   Al lado va siempre un PNG **"cual es cual"** con el nombre de cada mano: el DXF no lleva texto.
 - Si Fak pregunta como se hace algo de la maquina: contestar con esta skill y su pagina del manual;
   si no esta, **decir que el manual no lo dice** y no inventar un valor (`core-prohibiciones` §1).
