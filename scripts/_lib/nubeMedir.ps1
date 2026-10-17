@@ -26,7 +26,7 @@ $desde = (Get-Date).ToUniversalTime().AddDays(-[double]$cfg.dias_recientes)
 $RECALL = 0x400000
 $REPARSE = 0x400
 
-function Nuevo { [ordered]@{ archivos = 0; bytes = [int64]0; archivos_disco = 0; bytes_disco = [int64]0; sin_subir = 0; recientes = 0; ultima = $null; ultimo_nombre = $null } }
+function Nuevo { [ordered]@{ archivos = 0; bytes = [int64]0; archivos_disco = 0; bytes_disco = [int64]0; sin_subir = 0; recientes = 0; ultima = $null; ultimo_nombre = $null; ultimo_carpeta = $null } }
 function Ignorado([string]$n) { $n -eq 'Thumbs.db' -or $n -eq 'desktop.ini' -or $n.StartsWith('~$') -or $n.StartsWith('.849C9593') }
 function Sumar($b, [System.IO.FileInfo]$f) {
     $a = [int64]$f.Attributes
@@ -35,7 +35,7 @@ function Sumar($b, [System.IO.FileInfo]$f) {
     if (-not ($a -band $REPARSE)) { $b.sin_subir++ }
     $t = $f.LastWriteTimeUtc
     if ($t -ge $desde) { $b.recientes++ }
-    if ($null -eq $b.ultima -or $t -gt $b.ultima) { $b.ultima = $t; $b.ultimo_nombre = $f.Name }
+    if ($null -eq $b.ultima -or $t -gt $b.ultima) { $b.ultima = $t; $b.ultimo_nombre = $f.Name; $b.ultimo_carpeta = $f.DirectoryName }
 }
 
 $libreAntes = ([System.IO.DriveInfo]::new('C')).AvailableFreeSpace
@@ -65,7 +65,11 @@ foreach ($nombre in $cfg.carpetas) {
     }
     $item.segundos = [math]::Round($reloj.Elapsed.TotalSeconds, 1)
     # La fecha sale como texto en hora local (ConvertTo-Json la escribiria como /Date(ms)/).
-    foreach ($b in @($item.total, $item.sueltos) + @($item.sub.Values)) { if ($null -ne $b.ultima) { $b.ultima = $b.ultima.ToLocalTime().ToString('yyyy-MM-dd HH:mm') } }
+    # y la carpeta del archivo mas nuevo, relativa a la de primer nivel (de ahi se infiere quien escribe)
+    foreach ($b in @($item.total, $item.sueltos) + @($item.sub.Values)) {
+        if ($null -ne $b.ultima) { $b.ultima = $b.ultima.ToLocalTime().ToString('yyyy-MM-dd HH:mm') }
+        if ($b.ultimo_carpeta) { $b.ultimo_carpeta = $b.ultimo_carpeta.Substring([math]::Min($p.Length, $b.ultimo_carpeta.Length)).TrimStart('\') }
+    }
     $res += $item
 }
 # Opcional (cfg.leibles): los programas que viven EN la nube y corren copiados en otras PC. Se listan con su

@@ -1,106 +1,133 @@
 {
   "fuente": "Tanda 7 del plan del sistema (10-PLAN_SISTEMA_2026-10-16.md, en la nube: Claude Fak\\viernes-17-plan-sistema) y plan del 08/10 §1.4 (docs/PLAN_CLAUDE_BARACK_SISTEMA_2026-10-08.md). Lo leen scripts/_nubeSimular.mjs y scripts/_nubeMapa.mjs, que SOLO LEEN: nada de esta lista mueve ni borra un archivo.",
 
+  "si_general": "El 09/10 dijiste que sí a la carpeta única («solucionalo vos»), con este simulado antes de mover (plan del 16/10, tanda 7, «Medido»).",
   "nombres_carpeta_unica": [
-    { "nombre": "ASISTENTE INGENIERIA", "nota": "Fak lo contesto el 15/10/2026: plan del 16/10, §3 punto 6, «Contestado: si, \"lo que haga falta\"» a la recomendacion «ASISTENTE INGENIERIA»." },
-    { "nombre": "SISTEMA INGENIERIA", "nota": "Alternativa sin la palabra Claude, por si Fak prefiere un nombre que no diga asistente." }
+    { "nombre": "ASISTENTE INGENIERIA", "nota": "Ya lo contestaste el 15/10: «sí, lo que haga falta» a «ASISTENTE INGENIERIA» (plan del 16/10, §3 punto 6). Si sigue valiendo, no hay nada más que decidir acá." },
+    { "nombre": "SISTEMA INGENIERIA", "nota": "La otra opción sin la palabra Claude, por si preferís que el nombre no diga «asistente»." }
   ],
   "nombre_descartado": {
     "nombre": "CLAUDE BARACK",
-    "motivo": "Es el del plan del 08/10, pero el guardian firma-ia (regla 3) frena cualquier ruta de la biblioteca de Ingenieria con la palabra Claude: 8 de los 11 frenos de ese guardian en 30 dias fueron por «Claude Fak» (plan del 16/10, tanda 7, «Rompe» b)."
+    "motivo": "Nombra a Claude, y ningún nombre de carpeta de la empresa puede decir que lo hizo una IA (regla de Fak del 08/10). El guardián de firma hoy no lo frena, pero es por casualidad: ver la sección del guardián."
   },
 
   "destinos": [
     { "id": "1", "nombre": "1- INSTALAR (doble clic)", "que": "Los instaladores, uno por PC o por persona.",
       "leeme": [
         "1- INSTALAR (doble clic): los instaladores del asistente, uno por PC o por persona.",
-        "Cada subcarpeta tiene un solo archivo para hacer doble clic desde la PC nueva.",
-        "La PC tiene que tener sincronizada la biblioteca de Ingenieria.",
-        "No editar lo que esta en «programa»: se reemplaza solo con cada version.",
-        "Dudas: Facundo Santoro (Ingenieria)."
+        "Cada subcarpeta tiene su instalador; su propio LEEME dice qué archivo se abre.",
+        "La PC tiene que tener sincronizada la biblioteca de Ingeniería.",
+        "No editar lo que está en «programa»: se reemplaza solo con cada versión.",
+        "Dudas: Facundo Santoro (Ingeniería)."
       ] },
-    { "id": "2", "nombre": "2- EQUIPO (publicado)", "que": "Lo que se publica para el asistente de cada companero.",
+    { "id": "2", "nombre": "2- EQUIPO (publicado)", "que": "Lo que se publica para el asistente de cada compañero.",
       "leeme": [
-        "2- EQUIPO (publicado): mejoras para el asistente de cada companero (hoy, Carlos Baptista).",
-        "Cada persona decide que instala; el asistente de su PC se lo explica antes.",
-        "Para los companeros es de solo lectura: no escribir, borrar ni mover nada aca.",
-        "Cada version trae su catalogo con una huella para comprobar que nadie la cambio.",
-        "Dudas: Facundo Santoro (Ingenieria)."
+        "2- EQUIPO (publicado): mejoras para el asistente de cada compañero (hoy, Carlos Baptista).",
+        "Cada persona decide qué instala; el asistente de su PC se lo explica antes.",
+        "Para los compañeros es de solo lectura: no escribir, borrar ni mover nada acá.",
+        "Cada versión trae su catálogo con una huella para comprobar que nadie la cambió.",
+        "Dudas: Facundo Santoro (Ingeniería)."
       ] },
     { "id": "3", "nombre": "3- BUZON (lo que mandan las PC)", "que": "Salud, avisos y aportes que mandan las PC del equipo.",
       "leeme": [
         "3- BUZON: lo que mandan las PC del equipo (salud, avisos y aportes).",
-        "Lo escribe el programa de cada PC; Facundo lo revisa y decide que entra.",
-        "No borrar: es el registro de lo que paso en cada PC.",
+        "Lo escribe el programa de cada PC; Facundo lo revisa y decide qué entra.",
+        "No borrar: es el registro de lo que pasó en cada PC.",
         "Hay una carpeta por PC o por persona.",
-        "Dudas: Facundo Santoro (Ingenieria)."
+        "Dudas: Facundo Santoro (Ingeniería)."
       ] },
-    { "id": "4", "nombre": "4- MAILS DEL EQUIPO", "que": "La copia de los mails que suben las PC de Carlos y de Calidad.",
+    { "id": "4", "nombre": "4- MAILS DEL EQUIPO", "que": "La copia de los mails de trabajo que suben las PC del equipo.",
       "leeme": [
-        "4- MAILS DEL EQUIPO: la copia de los mails que suben las PC de Carlos y de Calidad.",
+        "4- MAILS DEL EQUIPO: la copia de los mails de trabajo que suben las PC del equipo.",
         "Los sube solo el programa de cada PC; nadie los edita a mano.",
-        "Sirven para buscar lo que ya se compartio antes de pedirlo de nuevo.",
-        "No mover ni renombrar: la tarea de cada PC busca esta carpeta por su nombre.",
-        "Dudas: Facundo Santoro (Ingenieria)."
+        "Sirven para buscar lo que ya se compartió antes de pedirlo de nuevo.",
+        "No mover ni renombrar: el programa de cada PC busca esta carpeta.",
+        "Dudas: Facundo Santoro (Ingeniería)."
       ] },
-    { "id": "5", "nombre": "5- FACUNDO (memoria y configuracion)", "que": "Lo que hoy es «Claude Fak»: mi memoria, la configuracion y los registros de las charlas.",
+    { "id": "5", "nombre": "5- FACUNDO (memoria y configuracion)", "que": "Lo que hoy es «Claude Fak»: mi memoria, la configuración y los registros de las charlas.",
       "leeme": [
-        "5- FACUNDO (memoria y configuracion): lo que aprendio el asistente de Facundo y su configuracion.",
+        "5- FACUNDO (memoria y configuración): lo que aprendió el asistente de Facundo y su configuración.",
         "Lo sincronizan solas las PC de Facundo, cada 2 horas.",
-        "Tambien guarda los registros de las charlas de cada PC: suben y no se borran.",
-        "No editar a mano: gana el archivo mas nuevo y un cambio hecho a mano se puede perder.",
-        "Dudas: Facundo Santoro (Ingenieria)."
+        "También guarda los registros de las charlas de cada PC: suben y no se borran.",
+        "No editar a mano: gana el archivo más nuevo y un cambio hecho a mano se puede perder.",
+        "Dudas: Facundo Santoro (Ingeniería)."
       ] },
     { "id": "9", "nombre": "9- VIEJO (no usar)", "que": "Instaladores y versiones anteriores, guardados por si hace falta mirar algo.",
       "leeme": [
         "9- VIEJO (no usar): instaladores y versiones anteriores, guardados por si hace falta mirar algo.",
-        "Ningun programa vigente usa esta carpeta.",
-        "No ejecutar nada de aca.",
+        "Antes de traer algo acá se cambian los programas que lo buscaban, para que ninguno dependa de esta carpeta.",
+        "No ejecutar nada de acá.",
         "Se borra solo con el OK de Facundo.",
-        "Dudas: Facundo Santoro (Ingenieria)."
+        "Dudas: Facundo Santoro (Ingeniería)."
       ] }
   ],
   "leeme_raiz": [
-    "{NOMBRE}: lo del asistente de Ingenieria, todo en un solo lugar.",
-    "Lo arma y lo mantiene Facundo Santoro (Ingenieria). No mover ni renombrar: hay programas que buscan estas carpetas por su nombre.",
-    "1- INSTALAR: un doble clic por PC. 2- EQUIPO: lo publicado para los companeros. 3- BUZON: lo que mandan las PC.",
-    "4- MAILS DEL EQUIPO: la copia de los mails del equipo. 5- FACUNDO: memoria y configuracion. 9- VIEJO: no usar.",
-    "Dudas: Facundo Santoro (Ingenieria)."
+    "{NOMBRE}: lo del asistente de Ingeniería, todo en un solo lugar.",
+    "Lo arma y lo mantiene Facundo Santoro (Ingeniería). No mover ni renombrar: hay programas que buscan estas carpetas por su nombre.",
+    "1- INSTALAR: un instalador por PC. 2- EQUIPO: lo publicado para los compañeros. 3- BUZON: lo que mandan las PC.",
+    "4- MAILS DEL EQUIPO: la copia de los mails de trabajo. 5- FACUNDO: memoria y configuración. 9- VIEJO: no usar.",
+    "Dudas: Facundo Santoro (Ingeniería)."
   ],
 
   "carpetas": [
-    { "nombre": "INSTALAR EN UNA PC NUEVA", "destino": "1", "motivo": "Plan 08/10 §1.4: «lo que hoy esta en INSTALAR EN UNA PC NUEVA» va a 1- INSTALAR." },
-    { "nombre": "MEJORAS CLAUDE", "destino": "2", "motivo": "Nacio el 12/10, despues del arbol del 08/10, y adentro tiene el paquete de mejoras para el asistente de Carlos (catalogo con huella y «LEEME - para el que lo lee»): es lo que ese arbol llama 2- EQUIPO (publicado). El lugar lo propongo yo: el arbol no la nombra." },
-    { "nombre": "_CUARENTENA_Claude Barack", "destino": "9", "partes": [ { "sub": "mails", "destino": "4", "motivo": "Plan 08/10 §1.4: 4- MAILS DEL EQUIPO es «lo que hoy esta en _CUARENTENA_Claude Barack\\mails»." } ], "motivo": "Plan 08/10 §1.4: las dos _CUARENTENA_, sin los mails, van a 9- VIEJO." },
-    { "nombre": "_CUARENTENA_CLAUDE POR AREA", "destino": "9", "motivo": "Plan 08/10 §1.4: las dos _CUARENTENA_ van a 9- VIEJO." },
-    { "nombre": "Claude Fak", "destino": "5", "motivo": "Plan 08/10 §1.4: 5- FACUNDO (memoria y configuracion) es «lo que hoy es Claude Fak». Las subcarpetas investigaciones-gemini (tanda 5) y viernes-17-plan-sistema viajan adentro." },
-    { "nombre": "Base Claude Ingenieria", "destino": "9", "motivo": "Plan 08/10 §1.4: Base Claude Ingenieria va a 9- VIEJO." },
-    { "nombre": "0- INSTALAR CLAUDE (entrar aca)", "destino": "9", "motivo": "Plan 08/10 §1.4: 0- INSTALAR va a 9- VIEJO. Su LEEME ya dice que esta en cuarentena y que no se ejecute." },
-    { "nombre": "FACUNDO", "destino": null, "excluir_si_antes": "VARIOS[\\\\/]+$", "exigir_en_archivo": "Ingenier[ií]a y Proyecto|buscarBiblioteca|biblioteca|nube de Ingenier", "motivo": "El arbol del 08/10 no le da lugar y adentro hay dos cosas: el canal de pedidos entre las PC (los «PEDIDO N … .txt», que lee el aviso de arranque pedidos-pendientes) y entregables de Barack (IMDS, BeOn, hojas corregidas, «PLANOS VW NUNCA BORRAR»). Lo decide Fak.",
+    { "nombre": "INSTALAR EN UNA PC NUEVA", "destino": "1", "motivo": "Plan del 08/10 §1.4: «lo que hoy está en INSTALAR EN UNA PC NUEVA» va a 1- INSTALAR." },
+    { "nombre": "MEJORAS CLAUDE", "destino": "2", "motivo": "Nació el 12/10, después del árbol del 08/10, y adentro tiene el paquete de mejoras para el asistente de Carlos (catálogo con huella y «LEEME - para el que lo lee»): es lo que ese árbol llama 2- EQUIPO (publicado). El lugar lo propongo yo: el árbol no la nombra." },
+    { "nombre": "_CUARENTENA_Claude Barack", "destino": "9", "alias": ["Claude Barack", "claude barack"], "excluir_linea_si": "ProgramFiles|Manual de arranque",
+      "partes": [ { "sub": "mails", "destino": "4", "motivo": "Plan del 08/10 §1.4: 4- MAILS DEL EQUIPO es «lo que hoy está en _CUARENTENA_Claude Barack\\mails»." } ],
+      "motivo": "Plan del 08/10 §1.4: las dos _CUARENTENA_, sin los mails, van a 9- VIEJO. Los programas la buscan también por su nombre de antes de la cuarentena («Claude Barack», en mayúsculas o minúsculas)." },
+    { "nombre": "_CUARENTENA_CLAUDE POR AREA", "destino": "9", "alias": ["CLAUDE POR AREA"],
+      "partes": [ { "sub": "4- BUZON", "destino": "3", "motivo": "Siguió recibiendo avisos de las PC hasta el 13/10 (lo dice el mapa): es lo que el árbol del 08/10 llama 3- BUZON. Lo propongo yo: el árbol mandaba la cuarentena entera a 9- VIEJO." } ],
+      "motivo": "Plan del 08/10 §1.4: las dos _CUARENTENA_ van a 9- VIEJO. Los programas la buscan también por su nombre de antes («CLAUDE POR AREA»)." },
+    { "nombre": "Claude Fak", "destino": "5", "motivo": "Plan del 08/10 §1.4: 5- FACUNDO (memoria y configuración) es «lo que hoy es Claude Fak». Las subcarpetas investigaciones-gemini (tanda 5) y viernes-17-plan-sistema viajan adentro." },
+    { "nombre": "Base Claude Ingenieria", "destino": "9", "motivo": "Plan del 08/10 §1.4: Base Claude Ingenieria va a 9- VIEJO." },
+    { "nombre": "0- INSTALAR CLAUDE (entrar aca)", "destino": "9", "motivo": "Plan del 08/10 §1.4: 0- INSTALAR va a 9- VIEJO. Su LEEME ya dice que está en cuarentena y que no se ejecute." },
+    { "nombre": "FACUNDO", "destino": null, "excluir_si_antes": "VARIOS[\\\\/]+$", "exigir_en_archivo": "Ingenier[ií]a y Proyecto|buscarBiblioteca|biblioteca|nube de Ingenier",
+      "motivo": "El árbol del 08/10 no le da lugar y adentro hay dos cosas: el canal de pedidos entre tus PC (los «PEDIDO N … .txt», que lee el aviso de arranque de cada sesión) y entregables de Barack (IMDS, BeOn, hojas corregidas, «PLANOS VW NUNCA BORRAR»). Lo decidís vos.",
       "opciones": [
-        "Dejarla donde esta (no rompe nada; queda una carpeta de la casa afuera de la carpeta unica).",
-        "Mover solo los «PEDIDO N … .txt» a la carpeta unica (hay que cambiar el aviso de arranque pedidos-pendientes y la memoria del canal; los entregables se quedan donde estan).",
-        "Moverla entera (mete entregables de Barack adentro de la carpeta del asistente; ademas hay que cambiar el aviso de arranque)."
+        "Dejarla donde está: no rompe nada; queda una carpeta tuya afuera de la carpeta única.",
+        "Mover solo los «PEDIDO N … .txt» a «3- BUZON (lo que mandan las PC)\\PEDIDOS»: hay que cambiar el aviso de arranque y la memoria del canal; los entregables se quedan donde están.",
+        "Moverla entera a la carpeta única, al lado de «5- FACUNDO»: mete entregables de Barack adentro de la carpeta del asistente, y también hay que cambiar el aviso de arranque."
       ] },
-    { "nombre": "ACTUALIZACION_CLAUDE_LIMPIO", "destino": null, "ya_no_esta": "Fue a la Papelera el 12/10/2026 (plan del 16/10, tanda 7, «Medido»).", "motivo": "Se lista solo para mostrar quien la sigue nombrando." }
+    { "nombre": "ACTUALIZACION_CLAUDE_LIMPIO", "destino": null, "ya_no_esta": "fue a la Papelera el 12/10", "motivo": "Se lista solo para mostrar quién la sigue nombrando." }
   ],
   "detectar_nuevas": "claude|asistente|^_CUARENTENA_",
   "exigir_biblioteca": "Ingenier[ií]a y Proyecto|buscarBiblioteca|biblioteca|nube de Ingenier",
-  "exigir_biblioteca_porque": "En el mapa, una carpeta de primer nivel con nombre comun (OBSOLETO, IATF, VARIOS, PROYECTOS) cuenta solo en un archivo que ademas habla de la biblioteca de Ingenieria: sin eso, «OBSOLETO» encontraba las carpetas OBSOLETOS del servidor Y:.",
+  "excluir_linea_si": "[Yy]:[\\\\/]|\"[A-Z]{2,6}:|servidor",
+  "exigir_biblioteca_porque": "En el mapa, una carpeta con nombre común (OBSOLETO, IATF, VARIOS, PROYECTOS, TAOS) cuenta solo si el archivo habla de la biblioteca de Ingeniería Y el renglón la usa como ruta (pegada a una barra, o junto al nombre de su carpeta de arriba), y no si el renglón habla del servidor Y: o de una hoja de operaciones. Sin eso, «OBSOLETO» encontraba la carpeta OBSOLETO de cada documento del servidor y «TAOS» una lista de clientes.",
 
   "busquedas_por_forma": [
     { "tramo": "_entrada", "exigir_en_archivo": "mails", "afecta": "_CUARENTENA_Claude Barack\\mails",
-      "que": "Recorren las carpetas de PRIMER nivel de la biblioteca buscando una que tenga «mails\\_entrada» adentro (medido el 17/10 en la copia de la nube de la PC de Calidad: INSTALAR EN UNA PC NUEVA\\2- Mails de Calidad\\programa\\subir.ps1, renglones 55-63). Si los mails bajan un nivel (a la carpeta unica\\4- MAILS DEL EQUIPO\\mails) dejan de encontrarlos aunque nadie los nombre." },
+      "que": "Recorren las carpetas de PRIMER nivel de la biblioteca buscando una que tenga «mails\\_entrada» adentro (medido el 17/10 en la copia de la nube del programa de la PC de Calidad: INSTALAR EN UNA PC NUEVA\\2- Mails de Calidad\\programa\\subir.ps1, renglones 55-63). Si los mails bajan un nivel (a la carpeta única\\4- MAILS DEL EQUIPO\\mails) dejan de encontrarlos aunque nadie los nombre." },
     { "tramo": "1- PUBLICADO", "afecta": "_CUARENTENA_CLAUDE POR AREA",
       "que": "Recorren las carpetas de primer nivel buscando «1- PUBLICADO\\...» (la lista de lo privado de los mails). Si la cuarentena baja un nivel (a 9- VIEJO), dejan de encontrarla." }
   ],
   "se_instalan_en_otras_pc": {
-    "que": "Programas del repo que se copian a otra PC al instalar (Carlos, Calidad, Pedro, Federico, CATA): arreglarlos en el repo no alcanza, hay que publicar e instalar la version nueva en esa PC.",
+    "que": "Programas del repo que se copian a otra PC al instalar: arreglarlos en el repo no alcanza, hay que publicar e instalar la versión nueva en esa PC.",
     "prefijos": ["tools/claude-area/mails_solo/", "tools/claude-area/mails_pc/", "tools/claude-area/hola/", "tools/paquete-equipo/", "tools/instalar_mi_pc/", "scripts/_paquete.mjs"]
   },
+  "pcs": [
+    { "pc": "Esta PC (la principal de Facundo)", "prefijos": ["programa de esta PC: ", "schtasks:", "scripts/", ".claude/", "~/.claude/", "tools/claude-area/puerta.py"], "fuente": "los programas de esta PC (repo, ~/.claude, tareas de Windows y los instalados en %LOCALAPPDATA%: BarackMailsFak, BarackMailsPC, BarackEquipo)" },
+    { "pc": "CATA (la notebook de Calidad) y cualquier PC de Facundo", "prefijos": ["tools/instalar_mi_pc/", "nube: INSTALAR EN UNA PC NUEVA/1- Mi asistente completo/", "scripts/_nube.mjs", "scripts/_lib/nubeRutas.mjs", ".claude/hooks/cerebro-guard"], "fuente": "INSTALAR EN UNA PC NUEVA\\LEEME.txt, punto 1 («deja tu asistente entero en esa PC»)" },
+    { "pc": "La PC de Calidad (mails de las casillas de Calidad)", "prefijos": ["tools/claude-area/mails_pc/", "nube: INSTALAR EN UNA PC NUEVA/2- Mails de Calidad/"], "fuente": "INSTALAR EN UNA PC NUEVA\\LEEME.txt, punto 2" },
+    { "pc": "La PC de Carlos (sus mails)", "prefijos": ["tools/claude-area/mails_solo/"], "fuente": "tools/claude-area/mails_solo/subir_mails.ps1, renglones 1-4 (Carlos, 07/10/2026)" },
+    { "pc": "La PC de Pedro Ergo", "prefijos": ["nube: INSTALAR EN UNA PC NUEVA/3- Asistente de Pedro Ergo/"], "fuente": "INSTALAR EN UNA PC NUEVA\\LEEME.txt, punto 3" },
+    { "pc": "La PC de Federico Kipersain", "prefijos": ["nube: INSTALAR EN UNA PC NUEVA/4- Asistente de Federico Kipersain/"], "fuente": "INSTALAR EN UNA PC NUEVA\\LEEME.txt, punto 4" },
+    { "pc": "Las PC que todavía tengan el asistente por área viejo (en cuarentena desde el 06/10)", "prefijos": ["nube: _CUARENTENA_CLAUDE POR AREA/", "tools/claude-area/sync_area.ps1", "tools/claude-area/mails_area.mjs", "tools/claude-area/hola/"], "fuente": "_CUARENTENA_CLAUDE POR AREA\\1- PUBLICADO (el paquete) y su buzón, que recibió avisos hasta el 13/10" },
+    { "pc": "Las PC que todavía tengan el paquete del equipo viejo (Base Claude)", "prefijos": ["nube: Base Claude Ingenieria/", "tools/paquete-equipo/", "scripts/_paquete.mjs"], "fuente": "tools/paquete-equipo/sync_equipo.ps1, renglones 1-8 (tarea «Barack - Base Claude y mails»)" }
+  ],
+
+  "quien_por_nombre": [
+    { "re": "(^|[\\\\/])(mails|_entrada|6- ARCHIVO DE CORREO)([\\\\/]|$)|\\.(eml|msg)$", "quien": "la copia de mails (la escriben los programas de mails de cada PC)" },
+    { "re": "^PEDIDO ", "quien": "las sesiones de las PC de Facundo (canal de pedidos)" },
+    { "re": "(^|[\\\\/])(BUZON|4- BUZON|avisos|salud|aportes|inventario)([\\\\/]|$)", "quien": "los programas de las PC del equipo (avisos, salud y aportes)" },
+    { "re": "^(DESKTOP-[A-Z0-9]+|CATA[0-9-]*)\\.jsonl?$", "quien": "un programa de la casa (deja un archivo por PC)" },
+    { "re": "registro|claude-registros|claude-memoria|claude-config|_ESTADO", "quien": "un programa de la casa (registros o sincronización)" },
+    { "re": "\\.(mov|mp4|jpe?g|png|heic)$", "quien": "fotos o videos (del teléfono o capturas)" }
+  ],
+  "quien_por_defecto": "una persona o un programa: el nombre del archivo no alcanza para saberlo",
 
   "copias_en_la_nube": {
-    "que": "Programas que estan EN la nube y corren copiados en otras PC (Carlos, Calidad, Pedro, Federico): si buscan una carpeta por su nombre, esa PC deja de encontrarla aunque aca se arregle el repo. Se leen solo los archivos que ya estan en esta PC (sin el marcador de solo nube): uno solo-nube no se abre para no bajarlo.",
+    "que": "Programas que están EN la nube y corren copiados en otras PC: si buscan una carpeta por su nombre, esa PC deja de encontrarla aunque acá se arregle el repo. Se leen solo los archivos que ya están en esta PC (sin el marcador de solo nube): uno solo-nube no se abre para no bajarlo.",
     "carpetas": ["INSTALAR EN UNA PC NUEVA", "0- INSTALAR CLAUDE (entrar aca)", "_CUARENTENA_CLAUDE POR AREA", "Base Claude Ingenieria", "MEJORAS CLAUDE"],
     "extensiones": [".cmd", ".bat", ".ps1", ".mjs", ".js", ".py", ".json", ".sh"],
     "tope_bytes": 1048576
@@ -109,7 +136,9 @@
   "alcance_busqueda": {
     "repo": ["scripts", "tools", ".claude", "mods"],
     "home": [".claude/hooks", ".claude/scheduled-tasks", ".claude/agents", ".claude/projects/C--Dev-BarackMercosul/memory"],
-    "excluir_carpetas": ["node_modules", "worktrees", "state", ".build", "__pycache__", ".venv", ".venv-cad", "_archive", "logs"],
+    "programas_de_esta_pc": ["BarackMailsFak", "BarackMailsPC", "BarackEquipo"],
+    "programas_de_esta_pc_porque": "Carpetas de %LOCALAPPDATA% donde se instalan las tareas de Windows de mails y del equipo (el auditor del 17/10 encontro que «Barack - mis mails a la nube» corre desde BarackMailsFak y la busqueda no la veia).",
+    "excluir_carpetas": ["node_modules", "worktrees", "state", ".build", "__pycache__", ".venv", ".venv-cad", "_archive", "logs", "node", "estado"],
     "extensiones_codigo": [".mjs", ".js", ".cjs", ".ts", ".py", ".ps1", ".sh", ".cmd", ".bat"],
     "extensiones_texto": [".md", ".txt", ".json", ".yml", ".yaml"],
     "tope_bytes": 2097152,
@@ -118,13 +147,14 @@
   },
 
   "tipos": [
-    { "tipo": "nuestro", "re": "claude|asistente|^_CUARENTENA_|^FACUNDO$|^MEJORAS CLAUDE$|^INSTALAR EN UNA PC NUEVA$", "nivel": 1, "motivo": "Carpetas del asistente (las de la carpeta unica)." },
-    { "tipo": "varios tipos (ver el segundo nivel)", "re": "^INGENIERIA BARACK \\(NUNCA BORRAR\\)$", "nivel": 1, "motivo": "Es la biblioteca ordenada de Ingenieria: cada subcarpeta es de otro tipo." },
-    { "tipo": "documento oficial", "re": "^4- MANUALES$|^3- SISTEMA DE CALIDAD SGC BARACK$|^IATF$|^NORMAS$|^CURSOS IMDS Y AMFE$|^Listado Maestro", "motivo": "Manuales de fabricantes y normas, el SGC y material oficial: el original manda (regla documentacion-oficial.md)." },
-    { "tipo": "material de maquina", "re": "^5- VIDEOS Y FOTOS$|^2- SOFTWARE$|^dibujos plotter$|^Calibres$", "motivo": "Videos, fotos, programas y archivos de las maquinas (regla video-maquina.md)." },
-    { "tipo": "del cliente", "re": "PLANOS VW|^CLIENTES$|^PRESENTACION VW$|^PLANOS$|cliente", "motivo": "Planos y documentacion que manda o pide el cliente." },
-    { "tipo": "archivo viejo", "re": "OBSOLETO|^INGENIERIA 2023$|^Respaldo Mail|^6- ARCHIVO DE CORREO$|^Proyecto 2021$", "motivo": "Lo que ya no se usa o es copia de respaldo (correo de personas que se fueron, proyectos viejos)." },
-    { "tipo": "de una persona", "re": "^SILVIA BAEZ \\(ING\\)$|^FACUNDO$", "nivel": 2, "motivo": "Carpeta de trabajo con el nombre de una persona." },
-    { "tipo": "entregable", "re": "^DOCUMENACION INGENIERIA$|^1- GENERAL$|^PROYECTOS$|^Check List$|^Cronograma$|^FORMATO CARTELES$|^VARIOS$|^AMFE$|^BOMS$|^FLUJOGRAMA$|^HO$|^FICHAS|^TIEMPOS$|^Tiempos$|^FORMULARIOS$|^SET UP$|^DESVIOS$|^CALCULADORAS$", "motivo": "Documentos que hace Ingenieria y formatos de la casa." }
+    { "tipo": "nuestro", "re": "claude|asistente|^_CUARENTENA_|^INSTALAR EN UNA PC NUEVA$", "nivel": 1, "motivo": "Carpetas del asistente (las que irían a la carpeta única)." },
+    { "tipo": "varios tipos (ver el segundo nivel)", "re": "^INGENIERIA BARACK \\(NUNCA BORRAR\\)$", "nivel": 1, "motivo": "Es la biblioteca ordenada de Ingeniería: cada subcarpeta es de otro tipo." },
+    { "tipo": "documento oficial", "re": "^4- MANUALES$|^3- SISTEMA DE CALIDAD SGC BARACK$|^IATF$|^NORMAS$|^CURSOS IMDS Y AMFE$|^Listado Maestro", "motivo": "Manuales de fabricantes, normas, el SGC y material oficial: el original manda (regla documentacion-oficial.md)." },
+    { "tipo": "material de máquina", "re": "^5- VIDEOS Y FOTOS$|^2- SOFTWARE$|^dibujos plotter$|^Calibres$", "motivo": "Videos, fotos, programas y archivos de las máquinas (regla video-maquina.md)." },
+    { "tipo": "copia de mails", "re": "^6- ARCHIVO DE CORREO$", "motivo": "Copia de buzones y mails de trabajo de la casa; se sigue escribiendo, así que no es archivo viejo." },
+    { "tipo": "del cliente", "re": "PLANOS VW|^CLIENTES$|^PRESENTACION VW$|^PLANOS$|cliente", "motivo": "Planos y documentación que manda o pide el cliente." },
+    { "tipo": "archivo viejo", "re": "OBSOLETO|^INGENIERIA 2023$|^Respaldo Mail|^Proyecto 2021$", "motivo": "Lo que ya no se usa o es copia de respaldo (correo de una persona que se fue, proyectos viejos)." },
+    { "tipo": "de una persona", "re": "^SILVIA BAEZ \\(ING\\)$|^FACUNDO$", "motivo": "Carpeta de trabajo con el nombre de una persona (la de Facundo guarda además el canal de pedidos entre sus PC)." },
+    { "tipo": "entregable", "re": "^DOCUMENACION INGENIERIA$|^1- GENERAL$|^PROYECTOS$|^Check List$|^Cronograma$|^FORMATO CARTELES$|^VARIOS$|^AMFE$|^BOMS$|^FLUJOGRAMA$|^HO$|^FICHAS|^TIEMPOS$|^Tiempos$|^FORMULARIOS$|^SET UP$|^DESVIOS$|^CALCULADORAS$", "motivo": "Documentos que hace Ingeniería y formatos de la casa." }
   ]
 }

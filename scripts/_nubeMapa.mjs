@@ -18,8 +18,8 @@ import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { buscarBiblioteca, esCarpeta } from './_lib/nubeRutas.mjs';
 import {
-    cargarCanon, leerArgs, rutaSalida, buscarReferencias, porArchivo, recolectar, sumarCopiasDeLaNube, leerTareasDeWindows,
-    medirPorAtributos, tipoDeCarpeta, quienEscribe, mb, celda, recortar,
+    cargarCanon, leerArgs, rutaSalida, buscarReferencias, buscarConAlias, porArchivo, recolectar, sumarCopiasDeLaNube, leerTareasDeWindows,
+    medirPorAtributos, tipoDeCarpeta, quienEscribe, fraseEspacio, mb, celda, recortar,
 } from './_lib/nubeOrden.mjs';
 
 const ARCHIVO_POR_DEFECTO = 'nube_mapa_2026-10-16.md';
@@ -38,11 +38,13 @@ export function resumenProgramas(refs, max = 4) {
  * ya calculado; esta funcion solo escribe (se prueba con datos de mentira).
  */
 export function renderMapa(d) {
-    const { medicion, carpetas, sueltos, dias = 30 } = d;
+    const { medicion, carpetas, sueltos, dias = 30, canon = null } = d;
+    const quien = (t, n) => quienEscribe(t, n, dias, canon);
+    const porque = (tipo) => (tipo.heredado ? 'como su carpeta de arriba' : recortar(tipo.motivo, 70));
     const L = [];
-    L.push('# Mapa de la biblioteca de Ingeniería — solo lectura, nada se bajó ni se movió');
+    L.push('# Mapa de la biblioteca de Ingeniería — solo lectura, nada se movió');
     L.push('');
-    L.push(`Medido el ${medicion.medido} con \`node scripts/_nubeMapa.mjs\`. Espacio libre en C: **${mb(medicion.libre_antes)} antes y ${mb(medicion.libre_despues)} después** de recorrer todo: la medición lee los atributos de cada archivo y no abre ninguno, así que un archivo que vive solo en la nube sigue solo en la nube.`);
+    L.push(`Medido el ${medicion.medido} con \`node scripts/_nubeMapa.mjs\`. ${fraseEspacio(medicion.libre_antes, medicion.libre_despues)}`);
     L.push('');
     L.push(`De acá sale el plan por carpeta, que vos aprobás después. Este mapa no propone nada: dice qué hay, de qué tipo es, quién escribe y qué programa lo usa.`);
     L.push('');
@@ -60,14 +62,14 @@ export function renderMapa(d) {
     L.push('');
     L.push('## Primer nivel');
     L.push('');
-    L.push(`«Quién escribe» es una **inferencia**: los archivos sincronizados no dicen quién los hizo; sale de cuántos cambiaron en los últimos ${dias} días, del más nuevo y de si un programa de la casa la nombra. «Programas» = archivos de código o tareas que la buscan por su nombre (se rompen si la carpeta cambia de lugar); «texto» = reglas, memorias y documentos que la nombran.`);
+    L.push(`«Quién escribe» es una **inferencia**: los archivos sincronizados no dicen quién los hizo. Sale del nombre y la carpeta del archivo más nuevo (un archivo por PC lo deja un programa; un mail, la copia de mails; un «PEDIDO», las sesiones de Facundo), de cuántos cambiaron en los últimos ${dias} días y de si un programa de la casa la nombra. «Programas» = archivos de código o tareas que la buscan por su nombre (se rompen si la carpeta cambia de lugar); «texto» = reglas, memorias y documentos que la nombran.`);
     L.push('');
-    L.push('| Carpeta | Tipo | Archivos | Peso | En esta PC | Último cambio | Quién escribe (inferido) | Programas | Texto |');
-    L.push('|---|---|---:|---:|---:|---|---|---|---:|');
+    L.push('| Carpeta | Tipo | Por qué ese tipo | Archivos | Peso | En esta PC | Último cambio | Quién escribe (inferido) | Programas | Texto |');
+    L.push('|---|---|---|---:|---:|---:|---|---|---|---:|');
     for (const c of carpetas) {
         const t = c.medida?.total;
         const p = c.programas;
-        L.push(`| \`${celda(c.nombre)}\` | ${c.tipo.tipo} | ${t ? `${t.archivos.toLocaleString('es-AR')}${c.medida.terminado ? '' : ' (no terminó)'}` : '—'} | ${t ? mb(t.bytes) : '—'} | ${t ? mb(t.bytes_disco) : '—'} | ${t?.ultima || '—'} | ${celda(quienEscribe(t, p.codigo, dias))} | ${p.codigo ? `${p.codigo}: ${celda(p.nombres)}` : '—'} | ${p.texto || '—'} |`);
+        L.push(`| \`${celda(c.nombre)}\` | ${c.tipo.tipo} | ${celda(porque(c.tipo))} | ${t ? `${t.archivos.toLocaleString('es-AR')}${c.medida.terminado ? '' : ' (no terminó)'}` : '—'} | ${t ? mb(t.bytes) : '—'} | ${t ? mb(t.bytes_disco) : '—'} | ${t?.ultima || '—'} | ${celda(quien(t, p.codigo))} | ${p.codigo ? `${p.codigo}: ${celda(p.nombres)}` : '—'} | ${p.texto || '—'} |`);
     }
     L.push('');
     L.push('## Por qué cada tipo');
@@ -83,12 +85,11 @@ export function renderMapa(d) {
         L.push(`### \`${c.nombre}\` (${c.tipo.tipo})`);
         L.push('');
         if (c.nota) { L.push(c.nota); L.push(''); }
-        L.push('| Subcarpeta | Tipo | Archivos | Peso | En esta PC | Último cambio | Quién escribe (inferido) | Programas |');
-        L.push('|---|---|---:|---:|---:|---|---|---|');
+        L.push('| Subcarpeta | Tipo | Por qué ese tipo | Archivos | Peso | En esta PC | Último cambio | Quién escribe (inferido) | Programas |');
+        L.push('|---|---|---|---:|---:|---:|---|---|---|');
         for (const s of c.sub) {
             const t = s.medida;
-            const tipo = s.tipo.heredado ? `${s.tipo.tipo} (como la de arriba)` : s.tipo.tipo;
-            L.push(`| \`${celda(recortar(s.nombre, 60))}\` | ${tipo} | ${t ? t.archivos.toLocaleString('es-AR') : '—'} | ${t ? mb(t.bytes) : '—'} | ${t ? mb(t.bytes_disco) : '—'} | ${t?.ultima || '—'} | ${celda(quienEscribe(t, s.programas.codigo, dias))} | ${s.programas.codigo ? `${s.programas.codigo}: ${celda(s.programas.nombres)}` : '—'} |`);
+            L.push(`| \`${celda(recortar(s.nombre, 60))}\` | ${s.tipo.tipo} | ${celda(porque(s.tipo))} | ${t ? t.archivos.toLocaleString('es-AR') : '—'} | ${t ? mb(t.bytes) : '—'} | ${t ? mb(t.bytes_disco) : '—'} | ${t?.ultima || '—'} | ${celda(quien(t, s.programas.codigo))} | ${s.programas.codigo ? `${s.programas.codigo}: ${celda(s.programas.nombres)}` : '—'} |`);
         }
         if (c.medida && !c.medida.terminado) L.push(`\n_Esta carpeta pasó su tope de tiempo: las subcarpetas que no se alcanzaron a recorrer pueden figurar con menos archivos de los que tienen._`);
         L.push('');
@@ -128,31 +129,31 @@ function main() {
     const carpetas = [];
     for (const m of medicion.carpetas) {
         const tipo = tipoDeCarpeta(m.nombre, 1, canon);
-        // la carpeta nuestra usa sus propios filtros (FACUNDO); el resto, que el archivo hable de la biblioteca
+        // la carpeta nuestra usa sus propios filtros y sus nombres de antes; un nombre comun, que el archivo hable de la
+        // biblioteca y que el renglon la use como ruta (no el servidor Y: ni una hoja de operaciones)
         const propia = canon.carpetas.find((c) => c.nombre === m.nombre);
-        const refs = buscarReferencias(archivos, m.nombre, {
-            canon,
-            excluirSiAntes: propia?.excluir_si_antes,
-            exigirEnArchivo: propia ? propia.exigir_en_archivo : canon.exigir_biblioteca,
-        });
+        const nombresCarpeta = [m.nombre, ...(propia?.alias || [])];
+        const refs = propia
+            ? buscarConAlias(archivos, nombresCarpeta, { canon, excluirSiAntes: propia.excluir_si_antes, exigirEnArchivo: propia.exigir_en_archivo, excluirLinea: propia.excluir_linea_si })
+            : buscarReferencias(archivos, m.nombre, { canon, exigirEnArchivo: canon.exigir_biblioteca, lineaDeRuta: true, excluirLinea: canon.excluir_linea_si });
         const sub = Object.entries(m.sub || {}).map(([n, med]) => ({
             nombre: n,
             tipo: tipoDeCarpeta(n, 2, canon, tipo),
             medida: med,
-            programas: resumenProgramas(buscarReferencias(archivos, n, { canon, tambien: m.nombre }), 3),
+            programas: resumenProgramas(buscarReferencias(archivos, n, { canon, tambien: nombresCarpeta, lineaDeRuta: true, excluirLinea: canon.excluir_linea_si }), 3),
         }));
         const c = { nombre: m.nombre, tipo, medida: m, programas: resumenProgramas(refs), sub };
         if (m.nombre === 'Claude Fak') c.nota = 'Adentro están `investigaciones-gemini` (la convención de Gemini de la tanda 5: prompts, respuestas y lo verificado) y `viernes-17-plan-sistema` (el plan del sistema y sus informes); las dos viajan con `Claude Fak` a la carpeta única.';
         carpetas.push(c);
     }
 
-    const md = renderMapa({ medicion, carpetas, sueltos });
+    const md = renderMapa({ medicion, carpetas, sueltos, canon });
     mkdirSync(dirname(salida), { recursive: true });
     writeFileSync(salida, md, 'utf8');
     const nSub = carpetas.reduce((s, c) => s + c.sub.length, 0);
     const conProg = carpetas.filter((c) => c.programas.codigo).length;
     console.log(`Listo: ${salida}`);
-    console.log(`${carpetas.length} carpetas de primer nivel, ${nSub} de segundo; ${conProg} de primer nivel con algun programa que las busca. Libre en C: ${mb(medicion.libre_antes)} antes, ${mb(medicion.libre_despues)} despues. Nada se movio ni se bajo.`);
+    console.log(`${carpetas.length} carpetas de primer nivel, ${nSub} de segundo; ${conProg} de primer nivel con algun programa que las busca. Libre en C: ${mb(medicion.libre_antes)} antes, ${mb(medicion.libre_despues)} despues (ningun archivo se abrio). Nada se movio.`);
 }
 
 if (process.argv[1] && resolve(fileURLToPath(import.meta.url)).toLowerCase() === resolve(process.argv[1]).toLowerCase()) main();

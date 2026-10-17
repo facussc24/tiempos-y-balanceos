@@ -72,7 +72,10 @@ export function escaparRe(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '
  * fin. Distingue mayusculas (FACUNDO no es Facundo).
  */
 export function reTramo(nombre) {
-    return new RegExp(String.raw`(?:^|[\\/'"\x60(\s«=])(${escaparRe(nombre)})(?=$|[\\/'"\x60)»;,])`, 'g');
+    // tambien una barra vertical o un corchete: el nombre adentro de una expresion regular (`|Claude Barack|`), que el
+    // auditor del 17/10 encontro sin listar en FIRMA_EXENTOS_RE
+    // 'm': un archivo entero se busca de una vez, y el nombre al final de un renglon tiene que contar
+    return new RegExp(String.raw`(?:^|[\\/'"\x60(\s«=|\[])(${escaparRe(nombre)})(?=$|[\\/'"\x60)»;,|(\]])`, 'gm');
 }
 
 /** codigo / tarea / texto, por la extension y por donde vive. */
@@ -84,7 +87,7 @@ export function clasificarArchivo(ruta, canon) {
     if (/\/\.claude\/scheduled-tasks\//.test(r) || r.startsWith('schtasks:')) return 'tarea';
     if (canon.alcance_busqueda.extensiones_codigo.includes(ext)) return 'codigo';
     // un .json de canon que lee un programa (scripts/_lib/*.data.json, settings) cuenta como codigo
-    if (ext === '.json' && /(^|\/)(scripts|tools|mods|hooks)\/|settings\.json$/.test(r)) return 'codigo';
+    if (ext === '.json' && /(^|\/)(scripts|tools|mods|hooks)\/|settings\.json$|^programa de esta PC:|^nube: /.test(r)) return 'codigo';
     return 'texto';
 }
 
@@ -94,6 +97,8 @@ export function esComentario(linea, ruta) {
     if (/^(?:\/\/|\/\*|\*|<!--)/.test(t)) return true;
     if (/\.(?:py|ps1|sh)$/i.test(ruta) && t.startsWith('#')) return true;
     if (/\.(?:cmd|bat)$/i.test(ruta) && /^(?:rem\b|::)/i.test(t)) return true;
+    // en un canon .json, los campos que empiezan con «_» son notas («_fuente», «_que_es»), no datos que lea un programa
+    if (/\.json$/i.test(ruta) && /^"_[A-Za-z]/.test(t)) return true;
     return false;
 }
 
@@ -115,28 +120,37 @@ export function taparSecretos(linea) {
  * @returns {Array<{ruta, origen, linea, texto, categoria}>}
  */
 export function buscarReferencias(archivos, nombre, opts) {
-    const { canon, excluirSiAntes, tambien, exigirEnArchivo } = opts;
+    const { canon, excluirSiAntes, tambien, exigirEnArchivo, lineaDeRuta = false, excluirLinea } = opts;
     const reExigir = exigirEnArchivo ? new RegExp(exigirEnArchivo, 'i') : null;
+    const reExcluirLinea = excluirLinea ? new RegExp(excluirLinea) : null;
     const propios = new Set(canon.alcance_busqueda.excluir_archivos || []);
     const re = reTramo(nombre);
     const reAntes = excluirSiAntes ? new RegExp(excluirSiAntes) : null;
-    const reTambien = tambien ? reTramo(tambien) : null;
+    // `tambien` puede ser una lista: la carpeta de arriba y sus otros nombres (los de antes de la cuarentena)
+    const padres = [].concat(tambien || []).filter(Boolean);
+    const contienePadre = (s) => padres.some((p) => { const r = reTramo(p); return r.test(s); });
     const out = [];
     for (const a of archivos) {
         if (!a.texto || !a.texto.includes(nombre) || propios.has(a.ruta)) continue;
         if (reExigir && !reExigir.test(a.texto)) continue;
         const cat = clasificarArchivo(a.ruta, canon);
-        if (reTambien) { reTambien.lastIndex = 0; if (!reTambien.test(a.texto)) continue; }
+        if (padres.length && !contienePadre(a.texto)) continue;
         const lineas = a.texto.split(/\r?\n/);
         for (let i = 0; i < lineas.length; i++) {
             const l = lineas[i];
             if (!l.includes(nombre)) continue;
             if (cat !== 'texto' && esComentario(l, a.ruta)) continue;
+            if (reExcluirLinea && reExcluirLinea.test(l)) continue;
             re.lastIndex = 0;
             let m, vale = false;
             while ((m = re.exec(l))) {
                 const ini = m.index + m[0].length - m[1].length;
                 if (reAntes && reAntes.test(l.slice(0, ini))) continue;
+                // un nombre comun cuenta solo usado como ruta: pegado a una barra o en el renglon de su carpeta de arriba
+                if (lineaDeRuta) {
+                    const pegado = /[\\/]/.test(l[ini - 1] || '') || /[\\/]/.test(l[ini + nombre.length] || '');
+                    if (!pegado && !(padres.length && contienePadre(l))) continue;
+                }
                 vale = true; break;
             }
             if (!vale) continue;
@@ -144,6 +158,31 @@ export function buscarReferencias(archivos, nombre, opts) {
         }
     }
     return out;
+}
+
+/** La misma busqueda para cada nombre de la carpeta (el de hoy y sus alias), sin repetir un renglon. */
+export function buscarConAlias(archivos, nombres, opts) {
+    const vistos = new Set();
+    const out = [];
+    for (const n of nombres) {
+        for (const r of buscarReferencias(archivos, n, opts)) {
+            const k = `${r.origen}|${r.ruta}|${r.linea}`;
+            if (!vistos.has(k)) { vistos.add(k); out.push(r); }
+        }
+    }
+    return out;
+}
+
+/**
+ * En que PC corre cada programa afectado: [{ pc, fuente, programas: [{ruta, carpetas}] }]. Un programa puede correr en
+ * mas de una PC (el de mails de esta PC y su copia en la de Calidad). Lo que ningun prefijo nombra no se asigna.
+ */
+export function porPc(items, canon) {
+    return canon.pcs.map((p) => ({
+        pc: p.pc,
+        fuente: p.fuente,
+        programas: items.filter((x) => p.prefijos.some((pre) => x.ruta.startsWith(pre))),
+    }));
 }
 
 /** Agrupa las referencias por archivo: { ruta, origen, categoria, lineas:[n...] }. */
@@ -184,6 +223,8 @@ export function planCarpetaUnica(nombresRaiz, canon, nombreUnico) {
             opciones: c.opciones || null,
             excluir_si_antes: c.excluir_si_antes || null,
             exigir_en_archivo: c.exigir_en_archivo || null,
+            excluir_linea_si: c.excluir_linea_si || null,
+            alias: c.alias || [],
             partes: (c.partes || []).map((p) => ({ ...p, destino: `${nombreUnico}\\${destinos.get(p.destino).nombre}\\${p.sub}` })),
         };
     });
@@ -215,12 +256,24 @@ export function tipoDeCarpeta(nombre, nivel, canon, tipoPadre = null) {
  * quien los hizo). Sale de cuantos archivos cambiaron en los ultimos dias, del mas nuevo, y de si un programa de la
  * casa la nombra en su codigo.
  */
-export function quienEscribe(m, programas = 0, dias = 30) {
+export function quienEscribe(m, programas = 0, dias = 30, canon = null) {
     if (!m) return 'sin dato';
-    const prog = programas ? `la nombra${programas === 1 ? '' : 'n'} ${programas} programa${programas === 1 ? '' : 's'} de la casa; ` : '';
-    if (!m.archivos) return `${prog}vacia`;
-    if (m.recientes) return `${prog}${m.recientes} archivo${m.recientes === 1 ? '' : 's'} cambiado${m.recientes === 1 ? '' : 's'} en ${dias} dias; el ultimo, «${recortar(m.ultimo_nombre, 50)}» (${m.ultima})`;
-    return `${prog}nadie en ${dias} dias; ultimo cambio ${m.ultima ? m.ultima.slice(0, 10) : 'sin fecha'}`;
+    const prog = programas ? `; la nombra${programas === 1 ? '' : 'n'} ${programas} programa${programas === 1 ? '' : 's'} de la casa` : '';
+    if (!m.archivos) return `nadie: solo carpetas vacías${prog}`;
+    if (!m.recientes) return `nadie en ${dias} días (último cambio ${m.ultima ? m.ultima.slice(0, 10) : 'sin fecha'})${prog}`;
+    const quien = quienPorNombre(m.ultimo_nombre, m.ultimo_carpeta, canon);
+    const donde = m.ultimo_carpeta ? ` en ${recortar(m.ultimo_carpeta, 45)}` : '';
+    return `${quien} — el más nuevo es «${recortar(m.ultimo_nombre, 40)}»${donde} (${m.ultima}); ${m.recientes} cambiado${m.recientes === 1 ? '' : 's'} en ${dias} días${prog}`;
+}
+
+/** Quien escribe un archivo, por su nombre y su carpeta (reglas del canon); sin regla, que no se sabe. */
+export function quienPorNombre(nombre, carpeta, canon) {
+    const reglas = canon?.quien_por_nombre || [];
+    for (const r of reglas) {
+        const re = new RegExp(r.re, 'i');
+        if (re.test(String(nombre ?? '')) || re.test(String(carpeta ?? ''))) return r.quien;
+    }
+    return canon?.quien_por_defecto || 'no se sabe por el nombre';
 }
 
 export function recortar(s, n) { s = String(s ?? ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
@@ -229,6 +282,19 @@ export function mb(bytes) {
     const v = Number(bytes || 0) / (1024 * 1024);
     if (v >= 1024) return `${(v / 1024).toFixed(1).replace('.', ',')} GB`;
     return `${v.toFixed(v < 10 ? 1 : 0).replace('.', ',')} MB`;
+}
+
+/**
+ * La frase del espacio libre de C: antes y despues de medir, sin afirmar de mas (auditor 17/10: una corrida bajo 1 GB
+ * mientras medía y la frase decia igual «nada se bajo»). El libre lo mueve cualquier programa de la PC; la prueba de que
+ * la medicion no bajo nada es que no abre archivos y que «en esta PC» no sube de una corrida a otra.
+ */
+export function fraseEspacio(antes, despues) {
+    const gb = (b) => (Number(b) / 1024 ** 3).toFixed(2).replace('.', ',');
+    const dif = Number(antes) - Number(despues);
+    const base = `Espacio libre en C: ${gb(antes)} GB al empezar y ${gb(despues)} GB al terminar`;
+    if (dif > 200 * 1024 ** 2) return `${base}: **bajó ${gb(dif)} GB mientras se medía**. La medición no abre archivos, así que lo usó otro programa de la PC en ese rato; lo que prueba que no se bajó nada de la nube es la columna «En esta PC», que no tiene por qué subir entre una corrida y otra.`;
+    return `${base} (prácticamente igual). La medición mira los atributos de cada archivo y no abre ninguno: un archivo que vive solo en la nube no se baja.`;
 }
 
 export function celda(s) { return String(s ?? '').replace(/\|/g, '/').replace(/\r?\n/g, ' '); }
@@ -256,7 +322,7 @@ export function listarArchivos(dir, canon) {
 }
 
 /** Lee los archivos del alcance: repo + ~/.claude. Devuelve [{ruta (para mostrar), texto, origen}]. */
-export function recolectar(canon, { raizRepo = RAIZ_REPO, home } = {}) {
+export function recolectar(canon, { raizRepo = RAIZ_REPO, home, localAppData = process.env.LOCALAPPDATA } = {}) {
     const tope = canon.alcance_busqueda.tope_bytes;
     const out = [];
     const leer = (p, mostrar, origen) => {
@@ -268,6 +334,12 @@ export function recolectar(canon, { raizRepo = RAIZ_REPO, home } = {}) {
     if (home) {
         for (const d of canon.alcance_busqueda.home) {
             for (const p of listarArchivos(join(home, d), canon)) leer(p, '~/' + relative(home, p).replace(/\\/g, '/'), 'esta PC');
+        }
+    }
+    // los programas de las tareas de Windows instalados en %LOCALAPPDATA% (la tarea de mails de esta PC corre de ahi)
+    if (localAppData) {
+        for (const d of canon.alcance_busqueda.programas_de_esta_pc || []) {
+            for (const p of listarArchivos(join(localAppData, d), canon)) leer(p, 'programa de esta PC: ' + relative(localAppData, p).replace(/\\/g, '/'), 'esta PC');
         }
     }
     return out;

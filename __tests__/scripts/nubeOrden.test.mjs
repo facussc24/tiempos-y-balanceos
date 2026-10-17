@@ -15,7 +15,8 @@ import { join, resolve, dirname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
     cargarCanon, leerArgs, rutaSalida, raizPrincipal, reTramo, clasificarArchivo, esComentario, taparSecretos, buscarReferencias,
-    porArchivo, dependientesDeNubeRutas, planCarpetaUnica, leemes, tipoDeCarpeta, quienEscribe, mb, tareasDeWindows,
+    buscarConAlias, porPc, porArchivo, dependientesDeNubeRutas, planCarpetaUnica, leemes, tipoDeCarpeta, quienEscribe, quienPorNombre,
+    fraseEspacio, mb, tareasDeWindows,
 } from '../../scripts/_lib/nubeOrden.mjs';
 import { firmaIaEnTexto } from '../../scripts/_lib/firmaIA.mjs';
 import { renderSimulado, frenaGuardian, rutasAProbar } from '../../scripts/_nubeSimular.mjs';
@@ -93,6 +94,41 @@ describe('buscarReferencias: el nombre como tramo de ruta, codigo separado de te
             { ruta: 'scripts/otro.py', origen: 'repo', texto: "M = join(x, 'mails')" },
         ];
         expect(buscarReferencias(a, 'mails', { canon, tambien: '_CUARENTENA_Claude Barack' }).map((r) => r.ruta)).toEqual(['scripts/_mails.py']);
+    });
+    it('el nombre de antes de la cuarentena, en minusculas, tambien cuenta (auditor 17/10: mails_area.mjs)', () => {
+        const a = [{ ruta: 'tools/claude-area/mails_area.mjs', origen: 'repo', texto: "if (padre.toLowerCase() !== 'claude barack') return null;" }];
+        const fila = canon.carpetas.find((c) => c.nombre === '_CUARENTENA_Claude Barack');
+        expect(buscarReferencias(a, fila.nombre, { canon })).toHaveLength(0);
+        expect(buscarConAlias(a, [fila.nombre, ...fila.alias], { canon }).map((r) => r.ruta)).toEqual(['tools/claude-area/mails_area.mjs']);
+    });
+    it('un nombre adentro de una expresion regular (|Claude Barack|) cuenta como tramo', () => {
+        const a = [{ ruta: 'scripts/_lib/guardianes.mjs', origen: 'repo', texto: 'const RE = /(?:CLAUDE POR AREA|Claude Barack|Base Claude Ingenieria)/i;' }];
+        expect(buscarReferencias(a, 'Claude Barack', { canon })).toHaveLength(1);
+    });
+    it('un nombre comun cuenta solo usado como ruta, y no en el arbol del servidor (revisor-pedido 17/10)', () => {
+        const opts = { canon, tambien: ['PROYECTOS'], lineaDeRuta: true, excluirLinea: canon.excluir_linea_si };
+        const a = [
+            { ruta: 'scripts/_pdfSemielaboradosArb.py', origen: 'repo', texto: "# PROYECTOS\n'ajenos': ('AMAROK','MIRGOR','TAOS')" },
+            { ruta: 'scripts/x.mjs', origen: 'repo', texto: "const p = join(bib, 'PROYECTOS', 'TAOS');" },
+            { ruta: 'scripts/y.mjs', origen: 'repo', texto: "// PROYECTOS\nconst q = 'TAOS/planos';" },
+            { ruta: 'scripts/_lib/vocab.data.json', origen: 'repo', texto: '"PROYECTOS": 1,\n"HO:1- CLIENTES/TAOS/OBSOLETO/x.xlsx"' },
+        ];
+        expect(buscarReferencias(a, 'TAOS', opts).map((r) => r.ruta)).toEqual(['scripts/x.mjs', 'scripts/y.mjs']);
+    });
+    it('en un canon .json, un campo «_fuente» es una nota, no un dato', () => {
+        expect(esComentario('"_fuente": "Carlos Baptista (\'ACTUALIZACION_CLAUDE_LIMPIO\')",', 'tools/claude-area/persona/carlos.json')).toBe(true);
+        expect(esComentario('"carpeta": "FACUNDO",', 'scripts/_lib/pedidosCanon.data.json')).toBe(false);
+    });
+    it('porPc reparte los programas por PC segun los prefijos del canon', () => {
+        const items = [
+            { ruta: 'tools/claude-area/mails_solo/subir_mails.ps1', carpetas: new Set(['x']) },
+            { ruta: 'programa de esta PC: BarackMailsPC/programas/mails_area.mjs', carpetas: new Set(['y']) },
+        ];
+        const pcs = porPc(items, canon);
+        expect(pcs.find((p) => /Carlos/.test(p.pc)).programas.map((x) => x.ruta)).toEqual(['tools/claude-area/mails_solo/subir_mails.ps1']);
+        // lo instalado en %LOCALAPPDATA% de esta PC es de esta PC, no de la de Calidad
+        expect(pcs.find((p) => /^Esta PC/.test(p.pc)).programas.map((x) => x.ruta)).toContain('programa de esta PC: BarackMailsPC/programas/mails_area.mjs');
+        expect(pcs.find((p) => /PC de Calidad/.test(p.pc)).programas).toHaveLength(0);
     });
     it('porArchivo junta los renglones de un mismo archivo', () => {
         const p = porArchivo([{ ruta: 'a', origen: 'repo', linea: 3, texto: 'x', categoria: 'codigo' }, { ruta: 'a', origen: 'repo', linea: 9, texto: 'y', categoria: 'codigo' }]);
@@ -190,7 +226,13 @@ describe('tipoDeCarpeta y quienEscribe (mapa)', () => {
     it('una regla por nombre; el segundo nivel hereda de su carpeta; lo demas queda «sin clasificar»', () => {
         expect(tipoDeCarpeta('Claude Fak', 1, canon).tipo).toBe('nuestro');
         expect(tipoDeCarpeta('4- MANUALES', 2, canon).tipo).toBe('documento oficial');
-        expect(tipoDeCarpeta('5- VIDEOS Y FOTOS', 2, canon).tipo).toBe('material de maquina');
+        expect(tipoDeCarpeta('5- VIDEOS Y FOTOS', 2, canon).tipo).toBe('material de máquina');
+        // el archivo de correo se sigue escribiendo: no es «archivo viejo» (revisor-pedido 17/10)
+        expect(tipoDeCarpeta('6- ARCHIVO DE CORREO', 2, canon).tipo).toBe('copia de mails');
+        // FACUNDO es la carpeta de trabajo de Fak, con entregables: no «nuestro», y sus hijas tampoco
+        const fac = tipoDeCarpeta('FACUNDO', 1, canon);
+        expect(fac.tipo).toBe('de una persona');
+        expect(tipoDeCarpeta('IMDS evidencias 13-10-2026', 2, canon, fac).tipo).toBe('de una persona');
         const padre = tipoDeCarpeta('PROYECTOS', 1, canon);
         expect(padre.tipo).toBe('entregable');
         expect(tipoDeCarpeta('Mubea', 2, canon, padre)).toMatchObject({ tipo: 'entregable', heredado: true });
@@ -199,10 +241,23 @@ describe('tipoDeCarpeta y quienEscribe (mapa)', () => {
         // INGENIERIA BARACK (NUNCA BORRAR) no le pasa su tipo a sus hijas
         expect(tipoDeCarpeta('zzz', 2, canon, tipoDeCarpeta('INGENIERIA BARACK (NUNCA BORRAR)', 1, canon)).tipo).toBe('sin clasificar');
     });
-    it('quien escribe sale de las fechas y de los programas, marcado como inferido por quien lo arma', () => {
+    it('quien escribe dice QUIEN, por el nombre y la carpeta del archivo mas nuevo (revisor-pedido 17/10)', () => {
         expect(quienEscribe(null)).toBe('sin dato');
-        expect(quienEscribe({ archivos: 3, recientes: 0, ultima: '2025-01-02 10:00' })).toMatch(/nadie en 30 dias; ultimo cambio 2025-01-02/);
-        expect(quienEscribe({ archivos: 3, recientes: 2, ultima: '2026-10-16 10:00', ultimo_nombre: 'a.xlsx' }, 1)).toMatch(/la nombra 1 programa de la casa; 2 archivos cambiados/);
+        expect(quienEscribe({ archivos: 0 })).toMatch(/solo carpetas vacías/);
+        expect(quienEscribe({ archivos: 3, recientes: 0, ultima: '2025-01-02 10:00' })).toMatch(/nadie en 30 días \(último cambio 2025-01-02\)/);
+        const reg = { archivos: 9, recientes: 2, ultima: '2026-10-17 11:40', ultimo_nombre: 'DESKTOP-90DOEFV.jsonl', ultimo_carpeta: '1- GENERAL\\5. 3D\\IMPRESORA BAMBU A2L\\registro' };
+        expect(quienEscribe(reg, 1, 30, canon)).toMatch(/^un programa de la casa \(deja un archivo por PC\) — el más nuevo es «DESKTOP-90DOEFV\.jsonl» en 1- GENERAL.*la nombra 1 programa/);
+        expect(quienPorNombre('2025-07-31_1345_Desarrollo.json', '6- ARCHIVO DE CORREO\\CALIDAD', canon)).toMatch(/copia de mails/);
+        expect(quienPorNombre('PEDIDO 8 - listo.txt', '', canon)).toMatch(/canal de pedidos/);
+        expect(quienPorNombre('x.json', '4- BUZON\\avisos\\DESKTOP-OV373UE', canon)).toMatch(/PC del equipo/);
+        expect(quienPorNombre('HO-985 - IP PAD REV.A.pdf', 'HO-985', canon)).toBe(canon.quien_por_defecto);
+    });
+    it('la frase del espacio de C: no afirma «nada se bajó» si el libre bajo mientras se media (auditor 17/10)', () => {
+        const G = 1024 ** 3;
+        expect(fraseEspacio(5.8 * G, 5.79 * G)).toMatch(/prácticamente igual/);
+        const baja = fraseEspacio(5.8 * G, 4.7 * G);
+        expect(baja).toMatch(/bajó 1,10 GB mientras se medía/);
+        expect(baja).not.toMatch(/no se baja\./);
     });
     it('mb en castellano', () => {
         expect(mb(1024 * 1024 * 1.5)).toBe('1,5 MB');

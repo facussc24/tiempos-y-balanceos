@@ -19,8 +19,8 @@ import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { buscarBiblioteca, esCarpeta } from './_lib/nubeRutas.mjs';
 import {
-    cargarCanon, leerArgs, rutaSalida, planCarpetaUnica, leemes, buscarReferencias, porArchivo, dependientesDeNubeRutas,
-    recolectar, sumarCopiasDeLaNube, leerTareasDeWindows, medirPorAtributos, mb, celda, recortar,
+    cargarCanon, leerArgs, rutaSalida, planCarpetaUnica, leemes, buscarReferencias, buscarConAlias, porArchivo, porPc,
+    dependientesDeNubeRutas, recolectar, sumarCopiasDeLaNube, leerTareasDeWindows, medirPorAtributos, fraseEspacio, mb, celda, recortar,
 } from './_lib/nubeOrden.mjs';
 import { firmaIaEnEscritura } from './_lib/guardianes.mjs';
 
@@ -47,15 +47,24 @@ export function renderSimulado(d) {
     const prefOtra = canon.se_instalan_en_otras_pc.prefijos;
     const seInstala = (ruta) => prefOtra.some((p) => ruta.startsWith(p));
     const med = new Map(medicion.carpetas.map((c) => [c.nombre, c]));
+    // todo el codigo y las tareas que se rompen, por nombre o por forma, con las carpetas de cada uno
+    const codigo = new Map();
+    const sumar = (carpeta, x) => { const k = `${x.origen}|${x.ruta}`; if (!codigo.has(k)) codigo.set(k, { ...x, carpetas: new Set() }); codigo.get(k).carpetas.add(carpeta); };
+    for (const [carpeta, r] of refs) for (const x of r) if (x.categoria !== 'texto') sumar(carpeta, x);
+    for (const f of forma) for (const x of f.refs) if (x.categoria !== 'texto') sumar(`${f.afecta} (por la forma)`, x);
+    const enOtraPc = [...codigo.values()].filter((x) => x.origen === 'copia en la nube');
+    const soloForma = (x) => [...x.carpetas].every((c) => c.endsWith('(por la forma)'));
+    const enEsta = [...codigo.values()].filter((x) => x.origen !== 'copia en la nube' && !soloForma(x));
+    const aRevisar = [...codigo.values()].filter((x) => x.origen !== 'copia en la nube' && soloForma(x));
     const L = [];
     const opcion = canon.nombres_carpeta_unica.find((o) => o.nombre === nombreUnico);
     L.push(`# Simulado de la carpeta única de la nube — nada se movió ni se borró`);
     L.push('');
-    L.push(`Medido el ${medicion.medido} con \`node scripts/_nubeSimular.mjs\` (solo lee). Nombre usado en este simulado: **${nombreUnico}**. Espacio libre en C: ${mb(medicion.libre_antes)} antes de medir y ${mb(medicion.libre_despues)} después (la medición mira los atributos de cada archivo y no abre ninguno; un archivo que vive solo en la nube no se bajó).`);
+    L.push(`Medido el ${medicion.medido} con \`node scripts/_nubeSimular.mjs\` (solo lee). Nombre usado en este simulado: **${nombreUnico}**. ${fraseEspacio(medicion.libre_antes, medicion.libre_despues)}`);
     L.push('');
     L.push('## Lo que necesito de vos');
     L.push('');
-    L.push(`1. **El sí a este simulado.** Con tu sí se mueve (P56), y antes se publican los programas que buscan las carpetas en los dos lugares, el viejo y el nuevo, para que los mails de Carlos y de Calidad no dejen de subir.`);
+    L.push(`1. **El sí a este simulado.** ${canon.si_general} Con este sí se mueve; antes se publican los programas que buscan las carpetas en los dos lugares, el viejo y el nuevo, para que los mails de cada PC no dejen de subir.`);
     L.push(`2. **El nombre de la carpeta única** (no lleva la palabra Claude). Las dos opciones:`);
     for (const o of canon.nombres_carpeta_unica) L.push(`   - «${o.nombre}»: ${o.nota}`);
     L.push(`   - El del plan del 08/10, «${canon.nombre_descartado.nombre}», queda afuera: ${canon.nombre_descartado.motivo}`);
@@ -91,8 +100,15 @@ export function renderSimulado(d) {
         const cod = porArchivo(r).filter((x) => x.categoria !== 'texto').length;
         const txt = porArchivo(r).filter((x) => x.categoria === 'texto').length;
         const destino = f.ya_no_esta ? `ya no está (${f.ya_no_esta})` : f.destino ? `\`${f.destino}\`` : '**lo decidís vos** (punto 3)';
+        // si una parte va a otro lado, la fila dice lo que QUEDA para el destino de la carpeta (el total menos las partes)
+        const resto = { ...(m?.total || {}) };
+        for (const p of f.partes) {
+            const mp = m?.sub?.[p.sub];
+            if (mp) for (const k of ['archivos', 'bytes', 'bytes_disco', 'sin_subir']) resto[k] -= mp[k];
+        }
+        const sufijo = f.partes.length ? ' (sin lo de abajo)' : '';
         const numeros = m && m.existe
-            ? `${m.total.archivos}${m.terminado ? '' : ' (no terminó)'} | ${mb(m.total.bytes)} | ${mb(m.total.bytes_disco)} | ${m.total.sin_subir} | ${m.total.ultima || '—'}`
+            ? `${resto.archivos}${sufijo}${m.terminado ? '' : ' (no terminó)'} | ${mb(resto.bytes)} | ${mb(resto.bytes_disco)} | ${resto.sin_subir} | ${m.total.ultima || '—'}`
             : '— | — | — | — | —';
         L.push(`| \`${celda(f.nombre)}\` | ${celda(destino)} | ${numeros} | ${cod} | ${txt} |`);
         for (const p of f.partes) {
@@ -102,11 +118,30 @@ export function renderSimulado(d) {
         }
     }
     L.push('');
-    for (const f of plan.filas) L.push(`- \`${f.nombre}\`: ${f.motivo}`);
+    for (const f of plan.filas) {
+        L.push(`- \`${f.nombre}\`: ${f.motivo}`);
+        for (const p of f.partes) L.push(`  - \`${p.sub}\`: ${p.motivo}`);
+    }
+    L.push('');
+    L.push('## Qué deja de andar en cada PC si se mueve sin cambiar nada');
+    L.push('');
+    L.push('Lo que corre en cada PC y busca alguna de estas carpetas, por su nombre o por su forma. De las PC de los compañeros se ve lo que está publicado en la nube para ellas, no lo que tienen instalado adentro (puede ser otra versión).');
+    L.push('');
+    L.push('| PC | Qué programa | Qué carpeta busca |');
+    L.push('|---|---|---|');
+    for (const p of porPc([...codigo.values()], canon)) {
+        if (!p.programas.length) { L.push(`| ${p.pc} | ninguno de los que se pudieron leer | — |`); continue; }
+        const carpetasPc = new Set(p.programas.flatMap((x) => [...x.carpetas]));
+        const progs = p.programas.slice(0, 6).map((x) => `\`${x.ruta.replace(/^nube: /, 'nube:').replace(/^programa de esta PC: /, '%LOCALAPPDATA%\\')}\``).join(', ') + (p.programas.length > 6 ? ` y ${p.programas.length - 6} más` : '');
+        L.push(`| ${p.pc} | ${celda(progs)} | ${celda([...carpetasPc].map((c) => `\`${c}\``).join(', '))} |`);
+    }
+    L.push('');
+    L.push('De dónde sale que cada programa corre en esa PC:');
+    for (const p of canon.pcs) L.push(`- ${p.pc}: ${p.fuente}.`);
     L.push('');
     L.push('## Qué programas buscan cada carpeta por su nombre');
     L.push('');
-    L.push('«Código» se rompe si la carpeta cambia de lugar (un programa que arma la ruta con ese nombre). «Tarea» es una tarea programada que la nombra. «Texto» queda desactualizado pero no rompe nada (reglas, memorias, skills, documentos). La búsqueda es por el nombre como parte de una ruta, no como palabra suelta: «FACUNDO» no cuenta a Facundo Santoro, ni a `VARIOS\\FACUNDO`, ni al usuario FACUNDO del arb. En el código no cuentan los comentarios, y los encargos de las sesiones hijas (tareas `hija-*`, que corren una sola vez) cuentan como texto. Los números son de ARCHIVOS.');
+    L.push('«Código» se rompe si la carpeta cambia de lugar (un programa que arma la ruta con ese nombre). «Tarea» es una tarea programada que la nombra. «Texto» queda desactualizado pero no rompe nada (reglas, memorias, habilidades, documentos). La búsqueda es por el nombre como parte de una ruta, no como palabra suelta: «FACUNDO» no cuenta a Facundo Santoro, ni a `VARIOS\\FACUNDO`, ni al usuario FACUNDO del arb. Cuenta también el nombre que tenía antes de la cuarentena, en mayúsculas o minúsculas (los programas lo siguen buscando así). En el código no cuentan los comentarios, y los encargos de las sesiones lanzadas por otra sesión (corren una sola vez) cuentan como texto. Los números son de ARCHIVOS.');
     L.push('');
     for (const f of plan.filas) {
         const grupos = [[f.nombre, refs.get(f.nombre) || []], ...f.partes.map((p) => [`${f.nombre}\\${p.sub}`, refs.get(`${f.nombre}\\${p.sub}`) || []])];
@@ -158,14 +193,6 @@ export function renderSimulado(d) {
     if (cb.length && cb.every((g) => !g.frena)) L.push(`«${canon.nombre_descartado.nombre}» **no** lo frena, al revés de lo que dice el plan: pasa por la excepción de la cuarentena «Claude Barack», que no distingue mayúsculas. Es una casualidad del guardián, no un permiso; igual va afuera porque nombra a Claude.\n`);
     L.push('## Lo que hay que cambiar antes de mover (con tu sí)');
     L.push('');
-    const codigo = new Map();
-    const sumar = (carpeta, x) => { const k = `${x.origen}|${x.ruta}`; if (!codigo.has(k)) codigo.set(k, { ...x, carpetas: new Set() }); codigo.get(k).carpetas.add(carpeta); };
-    for (const [carpeta, r] of refs) for (const x of r) if (x.categoria !== 'texto') sumar(carpeta, x);
-    for (const f of forma) for (const x of f.refs) if (x.categoria !== 'texto') sumar(`${f.afecta} (por la forma)`, x);
-    const enOtraPc = [...codigo.values()].filter((x) => x.origen === 'copia en la nube');
-    const soloForma = (x) => [...x.carpetas].every((c) => c.endsWith('(por la forma)'));
-    const enEsta = [...codigo.values()].filter((x) => x.origen !== 'copia en la nube' && !soloForma(x));
-    const aRevisar = [...codigo.values()].filter((x) => x.origen !== 'copia en la nube' && soloForma(x));
     const item = (x) => `   - \`${x.ruta}\`${seInstala(x.ruta) ? ' **(se instala en otras PC: además de cambiarlo, hay que reinstalarlo allá)**' : ''} (${[...x.carpetas].map((c) => `\`${c}\``).join(', ')})`;
     L.push(`1. **En esta PC y el repo: ${enEsta.length} archivo${enEsta.length === 1 ? '' : 's'} de código o tarea** que nombran la carpeta. Cada uno tiene que buscar en los dos lugares (el viejo y el nuevo) y publicarse ANTES de mover:`);
     for (const x of enEsta.sort((a, b) => a.ruta.localeCompare(b.ruta))) L.push(item(x));
@@ -177,7 +204,7 @@ export function renderSimulado(d) {
     for (const x of enOtraPc.sort((a, b) => a.ruta.localeCompare(b.ruta))) L.push(`   - \`${x.ruta}\` (${[...x.carpetas].map((c) => `\`${c}\``).join(', ')})`);
     if (noLeidos.length) L.push(`   - Sin leer, porque viven solo en la nube y abrirlos los bajaría: ${noLeidos.length} archivo${noLeidos.length === 1 ? '' : 's'} (${noLeidos.slice(0, 5).map((x) => `\`${x}\``).join(', ')}${noLeidos.length > 5 ? '…' : ''}).`);
     L.push(`3. **El guardián de firma**: la excepción de \`Claude Fak\` pasa a la ruta nueva (ver la sección de arriba).`);
-    L.push('4. **Después de mover**, la prueba del plan: los mails de Carlos y de Calidad siguen subiendo (la salud de cada PC lo muestra) y `node scripts/_nube.mjs --sincronizar` corre en las dos PC de Facundo.');
+    L.push(`4. **Después de mover**, la prueba del plan: los mails de cada PC siguen subiendo${d.entradas?.length ? ` (hoy hay ${d.entradas.length} carpetas de entrada: ${d.entradas.map((e) => `\`${e}\``).join(', ')}; las ${d.entradas.length} tienen que seguir recibiendo)` : ''} y \`node scripts/_nube.mjs --sincronizar\` corre en las dos PC de Facundo.`);
     L.push('');
     L.push('## Los LEEME propuestos (cinco renglones cada uno; todavía no se escribieron en la nube)');
     L.push('');
@@ -228,8 +255,8 @@ function main() {
 
     const refs = new Map();
     for (const f of plan.filas) {
-        refs.set(f.nombre, buscarReferencias(archivos, f.nombre, { canon, excluirSiAntes: f.excluir_si_antes, exigirEnArchivo: f.exigir_en_archivo }));
-        for (const p of f.partes) refs.set(`${f.nombre}\\${p.sub}`, buscarReferencias(archivos, p.sub, { canon, tambien: f.nombre }));
+        refs.set(f.nombre, buscarConAlias(archivos, [f.nombre, ...f.alias], { canon, excluirSiAntes: f.excluir_si_antes, exigirEnArchivo: f.exigir_en_archivo, excluirLinea: f.excluir_linea_si }));
+        for (const p of f.partes) refs.set(`${f.nombre}\\${p.sub}`, buscarReferencias(archivos, p.sub, { canon, tambien: [f.nombre, ...f.alias] }));
     }
     const dependNubeRutas = dependientesDeNubeRutas(archivos, canon);
     const forma = canon.busquedas_por_forma.map((b) => ({ ...b, refs: buscarReferencias(archivos, b.tramo, { canon, exigirEnArchivo: b.exigir_en_archivo }) }));
@@ -246,7 +273,11 @@ function main() {
         ? `Sí: desde el 15/10 los chats de cada PC suben solos a la nube (\`_nube.mjs --sincronizar\`, cada 2 horas; lógica en \`scripts/_lib/nubeRegistros.mjs\`), a \`Claude Fak\\claude-registros\\\`: hoy hay ${reg.archivos} archivos (${mb(reg.bytes)}) y el último llegó el ${reg.ultima}. Solo suben: todavía no bajan a la otra PC (plan del 16/10, §0 punto 11, y §7 punto 14, que lo deja decidido como cambio chico). Es lo que preguntaba \`duda.txt\`.`
         : 'No encontré la carpeta de los registros de las charlas en `Claude Fak` (no se pudo medir).';
 
-    const md = renderSimulado({ canon, nombreUnico, plan, medicion, refs, dependNubeRutas, guardian, noLeidos, chats, forma });
+    // las carpetas de entrada de los mails (una por persona o casilla): listar nombres no baja nada
+    let entradas = [];
+    try { entradas = readdirSync(join(bib, '_CUARENTENA_Claude Barack', 'mails', '_entrada')).filter((n) => esCarpeta(join(bib, '_CUARENTENA_Claude Barack', 'mails', '_entrada', n))); } catch { /* sin la carpeta: el paso 4 no las nombra */ }
+
+    const md = renderSimulado({ canon, nombreUnico, plan, medicion, refs, dependNubeRutas, guardian, noLeidos, chats, forma, entradas });
     mkdirSync(dirname(salida), { recursive: true });
     writeFileSync(salida, md, 'utf8');
     const nCod = new Set([...refs.values()].flat().filter((x) => x.categoria !== 'texto').map((x) => `${x.origen}|${x.ruta}`)).size;
