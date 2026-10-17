@@ -300,7 +300,10 @@ function variablesEscritas(todo) {
 /** ¿Algun comando simple del texto (o de sus `$(…)`) lee el secreto? `todo` = el comando entero, para las variables. */
 function leeSecretoPorComando(texto, todo, prof = 0, vars = variablesEscritas(todo)) {
   if (prof > 4) return SECRETO_RE.test(texto);
-  const t = String(texto ?? '');
+  // Ronda 2 (17/10, hallazgo 6): la sustitucion de proceso `<(cat .env.local)` / `>(…)` es un comando: se mira adentro
+  let t = String(texto ?? '');
+  for (const m of t.matchAll(/[<>]\(([^()]*)\)/g)) if (leeSecretoPorComando(m[1], todo, prof + 1, vars)) return true;
+  t = t.replace(/[<>]\(([^()]*)\)/g, ' sustitucion ');
   for (const c of comandosSimples(t)) {
     const palabras = c.palabras.map((w) => w.replace(/\uE000/g, '$'));
     for (const w of palabras) {
@@ -345,6 +348,9 @@ function leeSecretoPorComando(texto, todo, prof = 0, vars = variablesEscritas(to
     }
     if (INTERPRETE_SECRETO_RE.test(v)) {
       if (args.some((a) => SECRETO_RE.test(a) || SECRETO_ARG_RE.test(a))) return true;
+      // (hallazgo 6) un interprete que lee su PROGRAMA de stdin (`echo "print(open('.env.local')…)" | python`): no se
+      // sabe que le llega; frena si el comando nombra el secreto
+      if (modoInterprete(verbo, args).modo === 'stdin' && SECRETO_RE.test(todo)) return true;
       continue;
     }
     const ejecutaOtro = (/^xargs$/i.test(v) && args.some((a) => LECTOR_ARCHIVO_RE.test(verboPelado(a)) || PATRONERO_VERBO_RE.test(verboPelado(a))))

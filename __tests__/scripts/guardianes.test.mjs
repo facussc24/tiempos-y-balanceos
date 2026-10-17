@@ -876,6 +876,13 @@ describe('secretos-guard — .env.local y .qr-secret no se leen ni se pisan desd
     rojo(bash('find . -maxdepth 1 -name .env.local -exec grep -h KEY {} +'));
     rojo(bash('cat `echo .env.local`'));
   });
+  it('P12 ROJO (ronda 2, hallazgo 6) — sustitucion de proceso y un interprete que lee su programa de stdin', () => {
+    rojo(bash('diff <(cat .env.local) .env.example'));
+    rojo(bash(`echo "print(open('.env.local').read())" | python`));
+    rojo(bash(`printf 'console.log(require("fs").readFileSync(".env.local","utf8"))' | node`));
+    verde(bash('diff <(sort a.txt) <(sort b.txt)'));
+    verde(bash('echo "print(1)" | python'));
+  });
 
   it('comandoTocaSecreto: dice QUE archivo y COMO', () => {
     expect(comandoTocaSecreto('cat .env.local')).toEqual({ como: 'lectura', nombres: ['.env.local'] });
