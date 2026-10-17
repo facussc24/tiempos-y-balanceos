@@ -435,4 +435,8 @@ describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (borrado-m
     it('VERDE (ronda 3, F4 del auditor de cierre) — export const d = fs.mkdtempSync(…) sigue siendo la carpeta temporal', () => {
         esperados(G, ['Z-B184']);
     });
+    it('ROJO (ronda 3, N2 del auditor de cierre) — algo mas despues del mkdtemp() en el mismo renglon (un modo prueba)', () => {
+        esperados(G, ['Z-B160d', 'Z-B160', 'Z-B161', 'Z-B162']);
+        esperados(G, ['Z-B160e', 'Z-B160f', 'H8-V1', 'H8-V2']);   // los controles: la ruta sola frena, el mkdtemp solo pasa
+    });
 });

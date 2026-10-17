@@ -1864,6 +1864,11 @@ function variablesTemporales(code) {
   // (F4 del auditor de cierre) tambien con `export` adelante: `export const d = fs.mkdtempSync(…)`
   for (const m of code.matchAll(/(?:^|[\n;])[ \t]*(?:export\s+)?(?:(?:const|let|var)\s+)?([A-Za-z_$][\w$]*)\s*=\s*(?:await\s+)?((?:[\w$]+\.)*)mkdtemp(?:Sync)?\s*\(([^\n]{0,160})/g)) {
     const args = m[3];
+    // (N2 del auditor de cierre) despues del `)` que cierra el mkdtemp no puede venir nada mas que un `;` o un
+    // comentario: en `d = tempfile.mkdtemp() if prueba else r'Y:/…'` la variable puede ser la carpeta del servidor
+    const ini = m.index + m[0].length - args.length;
+    const cierre = ini + argumentosDeLlamada(code, ini).join(',').length;
+    if (!/^[ \t]*(?:$|;|#|\/\/)/.test(code.slice(cierre + 1).split('\n')[0])) continue;
     // JS: fs.mkdtempSync(path.join(os.tmpdir(), 'x-')) — la carpeta de adentro tiene que ser el TEMP del sistema
     if (/tmpdir\s*\(\s*\)/.test(args)) { vars.add(m[1]); continue; }
     // Python: tempfile.mkdtemp(...) sin `dir=` (con dir= la crea donde le dicen)
