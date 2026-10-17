@@ -1,6 +1,6 @@
 ---
 name: flujogramas
-description: Flujogramas de proceso de Barack (formulario I-IN-002/III) con el generador de `tools/flowchart/` — criterio de numeracion, convenciones de dibujo validadas por Fak, trampas del motor, como se entrega y como se imprime en A3. Usar cuando Fak pida armar, corregir, rehacer, emitir o imprimir un flujograma (de una pieza o para BeOn), o cuando el AMFE, el Plan de Control o la hoja de operaciones no cierran con el flujograma.
+description: Flujograma de proceso («el flujograma», «el flujo») de Barack, formulario I-IN-002/III, con el generador de `tools/flowchart/` — numeracion por sector, bloques de los hermanos, dibujo validado por Fak, historial de revisiones, entrega e impresion A3. Usar al armar, corregir, rehacer, emitir o imprimir un flujograma (de una pieza o para BeOn), o cuando el AMFE, el plan de control o la HO no cierran con el.
 ---
 
 # El flujograma manda la numeracion, y se juzga renderizado
@@ -85,7 +85,9 @@ los 8 del generador, relevados el 22/09/2026):
 Y avisa, sin frenar, cuando un control va con elipse simple, cuando un traslado no nombra su
 sector destino, cuando un nombre esta en infinitivo (el corpus usa **sustantivo**: `CORTE DE
 VINILO`, no `CORTAR EL VINILO` — es lo contrario de las hojas de proceso) y cuando una caja
-terminal se sale de `SCRAP` / `RECLAMO DE CALIDAD AL PROVEEDOR` / `PLAN DE REACCION / SCRAP`.
+terminal se sale de `SCRAP` / `RECLAMO DE CALIDAD AL PROVEEDOR` / `PLAN DE REACCION / SCRAP`,
+y cuando una fila del historial cuenta que se sacaron reprocesos o el antes y el despues de una
+correccion (`historial-confiesa`, §5).
 
 **Antes de numerar nada, abrir dos flujogramas vigentes del mismo cliente y familia.** En el
 generador, el de SMRC es el **159** (APB P21) y el apoyabrazos de Patagonia (VWA) el **153**; en
@@ -391,6 +393,18 @@ cada corrida. Eso no dice nada del contenido.
 
 La **revision solo sube en un hito oficial** (prelanzamiento / PPAP / ECN) y la fila de
 revisiones dice **textual que cambio**, operacion por operacion.
+
+**Y el historial tambien confiesa** (LECCIONES 02 y 09/10/2026). La Rev.B del 160/174 contaba que
+la OP 32 se integraba a la 31 y los reprocesos 71 y 72 a la 70; Fak: *"no nos delates de que
+eliminamos reprocesos... mantenele la revision A"*. Dos reglas:
+- **Una correccion por observacion interna, antes de que el documento salga, no abre revision**:
+  se hace sobre la letra vigente.
+- **De un flujograma puede salir la PALABRA reproceso, nunca por que se saco** (ni "a pedido del
+  cliente", ni el antes y el despues de una correccion propia). El analisis del retrabajo sigue en
+  el AMFE (IATF 8.7.1.4).
+Lo avisa `historial-confiesa` en el canon (`flujogramaCanon.mjs`, chequeo 11 bis, con las listas
+`reproceso-delata` y `antes-despues` de `firmaIA.data.json`). Avisa, no decide si la fila abre
+revision; y no ve una integracion que no nombra la palabra reproceso («71 y 72 a la 70»).
 
 Entrega:
 
