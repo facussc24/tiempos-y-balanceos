@@ -17,6 +17,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { GUARDIANES, evaluar } from '../../scripts/_lib/guardianes.mjs';
 
 const LEGAJO = 'Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\REYDEL-SMRC\\APB P21\\P21 SSRT-MY2026 HILO NARANJA\\APQP';
@@ -269,5 +270,23 @@ describe('P13 — origen o destino: copiar el listado para LEERLO no es escribir
     it('ROJO — los _registrar* --apply siguen frenando (los verdaderos del informe)', () => {
         expect(frena('py -3 scripts/_registrarRevFlujograma.py 153 D 01/10/2026 --apply 2>&1 | tail -6')).toBe(true);
         expect(frena('cd /c/Dev/BarackMercosul && python scripts/_registrarUpperTrimListados.py flujograma --apply 2>&1 | tail -20')).toBe(true);
+    });
+});
+
+// Ronda 3 (17/10/2026): los casos del auditor a ciegas de la ronda 2, por su id, desde `guardianesRonda3.casos.json`
+// (las rutas reales, con sus parentesis). 2 = frena, 0 = pasa.
+describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (apqp-cliente)', () => {
+    const CASOS = JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'guardianesRonda3.casos.json'), 'utf8')).casos;
+    const r3 = (id) => {
+        const c = CASOS.find((x) => x.id === id);
+        if (!c) throw new Error(`no esta el caso ${id}`);
+        const raw = JSON.stringify({ tool_name: c.tool, tool_input: c.input, session_id: 'ronda3', cwd: 'C:\\Dev\\BarackMercosul' });
+        return evaluar(raw, { nombres: ['apqp-cliente-guard'], env: { HOME: os.tmpdir() }, marcar: false, escapes: false }).res.bloqueos.length ? 2 : 0;
+    };
+    const esperados = (ids) => { for (const id of ids) expect(r3(id), id).toBe(CASOS.find((x) => x.id === id).esperado); };
+
+    it('ROJO (ronda 3, T1) — el .Save() de COM adentro de powershell -Command sobre el listado vuelve a frenar', () => {
+        esperados(['N-A08', 'N-A09']);
+        esperados(['H2-A03', 'H2-A04', 'H2-A07', 'H2-X04', 'H2-sh', 'H2-V1', 'H2-V2']);   // los de la ronda 2 siguen igual
     });
 });

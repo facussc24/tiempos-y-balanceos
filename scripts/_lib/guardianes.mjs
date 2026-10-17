@@ -2876,7 +2876,9 @@ export function escribeListadoBash(cmd, { cwd = '', leer, prof = 0 } = {}) {
     }
     if (CORRE_INTERPRETE_RE.test(v)) {
       const r = modoInterprete(verbo, args);
-      if (r.modo === 'pegado') (APQP_SHELL_RE.test(verbo) ? shells : codigos).push(r.codigo);
+      // Ronda 3 (17/10, T1): lo pegado a una shell se mira como comandos Y como codigo: un `.Save()` de COM escrito
+      // adentro de `powershell -Command` no es un comando que la vuelta reconozca, y la ronda 2 lo habia dejado afuera
+      if (r.modo === 'pegado') { codigos.push(r.codigo); if (APQP_SHELL_RE.test(verbo)) shells.push(r.codigo); }
       else if (r.modo === 'archivo') {
         // un script del TEMP o del scratchpad corrido por ruta: no pasa por el guardian cuando lo escribe un heredoc de
         // otro comando, asi que se lee aca (los de scripts/ que escriben un listado van con `_registrar* --apply`)
