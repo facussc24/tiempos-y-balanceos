@@ -154,7 +154,30 @@ export function parsear(raw) {
   // relativo se sabe DONDE borra sin adivinarlo por palabras sueltas del comando.
   // `session_id` (y `agent_id`, solo cuando la llamada sale de un subagente) son la clave de los
   // recordatorios "una vez por sesion": ver `resolver`.
-  return armarCtx({ raw, tool: String(j.tool_name ?? ''), cmd: String(t.command ?? ''), file: String(t.file_path ?? ''), content: String(t.content ?? t.new_string ?? ''), cwd: typeof j.cwd === 'string' ? j.cwd : '', sid: typeof j.session_id === 'string' ? j.session_id : '', agente: typeof j.agent_id === 'string' ? j.agent_id : '' });
+  const comunes = { raw, cwd: typeof j.cwd === 'string' ? j.cwd : '', sid: typeof j.session_id === 'string' ? j.session_id : '', agente: typeof j.agent_id === 'string' ? j.agent_id : '' };
+  const nombre = String(j.tool_name ?? '');
+  if (/^mcp__/.test(nombre)) return { ...armarCtx({ ...comunes, ...mcpComoHerramienta(t) }), mcp: nombre };
+  return armarCtx({ ...comunes, tool: nombre, cmd: String(t.command ?? ''), file: String(t.file_path ?? ''), content: String(t.content ?? t.new_string ?? '') });
+}
+
+/**
+ * Pieza 10 (tanda 3, 16/10/2026): una llamada MCP que escribe, manda o corre algo pasa por los mismos guardianes, con el
+ * molde de `mcp-write-gate.sh` (que ya miraba las escrituras a Supabase). Lo que la MCP recibe se traduce a lo que miran
+ * los guardianes: un `command` (o `cmd`, `script`) es un comando de Bash; una ruta (`path`, `file_path`, `destination`…)
+ * con su contenido (`content`, `text`, `body`…) es un Write. Lo que no trae ninguna de las dos cosas queda como un Write
+ * sin archivo (los guardianes de archivo no ven nada; el de mails mira el NOMBRE de la herramienta). El nombre real de la
+ * herramienta queda en `ctx.mcp`. Que llamadas llegan aca lo decide el matcher de settings.json (verbos de escribir,
+ * mandar o correr; nunca las internas de la app).
+ */
+export function mcpComoHerramienta(t) {
+  const str = (v) => (typeof v === 'string' ? v : Array.isArray(v) ? v.filter((x) => typeof x === 'string').join('\n') : '');
+  const primero = (...ks) => { for (const k of ks) { const v = str(t?.[k]); if (v) return v; } return ''; };
+  const cmd = primero('command', 'cmd', 'script', 'commands');
+  const file = primero('file_path', 'path', 'filePath', 'filename', 'file', 'destination', 'dest', 'target', 'target_path', 'output_path');
+  // el contenido cuenta solo si va a un ARCHIVO: el texto de un mensaje o de un documento de otra plataforma (Claude Docs,
+  // un chat) no es un documento de Barack en disco, y el guardian de firma lo leeria como tal
+  const content = file ? primero('content', 'new_string', 'text', 'body', 'data', 'contents', 'html', 'markdown') : '';
+  return cmd ? { tool: 'Bash', cmd, file: '', content: '' } : { tool: 'Write', cmd: '', file, content };
 }
 
 function armarCtx({ raw, tool, cmd, file, content, parsed4, cwd = '', sid = '', agente = '' }) {
@@ -2072,8 +2095,27 @@ export function loQueEjecuta(cmd) {
 // YA ESTABA en Enviados y la explique como "copia vieja". Un item en la Bandeja de salida NO
 // prueba que el mensaje no se haya enviado. La leccion escrita no alcanza: el .Send() se
 // escribe en 3 segundos dentro de un heredoc. Por eso el bloqueo es aca.
+// Pieza 10 (tanda 3, 16/10/2026): una MCP que MANDA un mail o un mensaje a una persona (Gmail, Outlook, Teams, Slack,
+// WhatsApp…) no pasa por `_mailEnviar.py` ni por el OK de Fak despues del borrador: frena siempre. Armar un borrador
+// (draft) o leer pasan. Las MCP internas de la app (`mcp__ccd_*`: mensajes entre sesiones de Claude) no son mails.
+const MAIL_MCP_MANDA = /__\w*(?:send|reply|forward|post)\w*$/i;
+const MAIL_MCP_CANAL = /mail|gmail|outlook|exchange|message|mensaje|teams|slack|whatsapp|chat|sms/i;
+// armar un borrador (create_draft, create_reply_draft) no manda; mandar el borrador (send_draft) si
+const mcpMandaMail = (n) => !/^mcp__ccd_/.test(n) && MAIL_MCP_MANDA.test(n) && MAIL_MCP_CANAL.test(n) && !(/draft/i.test(n) && !/send/i.test(n));
 GUARDIANES['mail-guard'] = (ctx) => {
   if (!ctx.ok) return null;
+  if (ctx.mcp && mcpMandaMail(ctx.mcp)) {
+    return bloqueo(`
+[MAIL-GUARD — BLOQUEO. Regla: .claude/rules/mail-envio.md]
+
+${ctx.mcp} manda un mail o un mensaje a una persona por una MCP. Un mail de Barack sale SOLO por
+scripts/_mailEnviar.py, despues de que Fak vio el borrador armado y dijo que se mande (08/10/2026), y esta
+MCP no pasa por ninguno de los dos controles.
+
+Que hacer: armar el borrador (sin mandarlo), mostrarselo a Fak y esperar su respuesta. Si la MCP tiene una
+funcion de borrador (draft), esa si pasa.
+`);
+  }
 
   // 0-bis) VOZ: un borrador `_mail*.txt` se mide contra como escribe Fak antes de que exista
   // el mail. Fak, 11/09/2026: "revise porque revisamos, yo revise", y al dia siguiente el
