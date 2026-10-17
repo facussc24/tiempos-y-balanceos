@@ -302,6 +302,10 @@ function hook() {
  * traen `ts` no cuentan. Una categoria que sigue igual o sube despues de graduada es una leccion que no sirvio.
  */
 export function reapariciones(filas, fecha) {
+  // Ronda 2 (hallazgo 9): con 01/10/2026 o sin valor, la comparacion de textos daba «no bajo» o «despues 0» falsos.
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(fecha ?? '')) || Number.isNaN(Date.parse(`${fecha}T00:00:00Z`))) {
+    throw new RangeError(`--despues necesita una fecha AAAA-MM-DD (llego «${fecha}»)`);
+  }
   const conTs = filas.filter((f) => typeof f.t === 'string' && typeof f.ts === 'string' && f.ts);
   const antes = conTs.filter((f) => f.ts.slice(0, 10) < fecha); const despues = conTs.filter((f) => f.ts.slice(0, 10) >= fecha);
   const semanas = (xs) => { if (!xs.length) return 0; const d = xs.map((f) => Date.parse(f.ts)).sort((a, b) => a - b); return Math.max(1, (d[d.length - 1] - d[0]) / (7 * 86400e3)); };
@@ -318,7 +322,8 @@ function medir(ruta) {
   const filas = fs.readFileSync(ruta, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
   const iD = process.argv.indexOf('--despues');
   if (iD >= 0) {
-    const r = reapariciones(filas, process.argv[iD + 1]);
+    let r;
+    try { r = reapariciones(filas, process.argv[iD + 1]); } catch (e) { console.error(e.message); process.exit(2); }
     console.log(`Reapariciones por categoria antes y despues del ${r.fecha} · ${r.mensajes.antes} mensajes de Fak en ${r.semanas.antes.toFixed(1)} semanas antes, ${r.mensajes.despues} en ${r.semanas.despues.toFixed(1)} despues (solo filas con fecha)`);
     for (const c of r.categorias) console.log(`  ${c.categoria.padEnd(22)} antes ${String(c.antes).padStart(4)} (${c.porSemanaAntes.toFixed(1)}/sem) · despues ${String(c.despues).padStart(4)} (${c.porSemanaDespues.toFixed(1)}/sem)${c.porSemanaDespues >= c.porSemanaAntes && c.despues ? '  ← no bajo' : ''}`);
     return;
