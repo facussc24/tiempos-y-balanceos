@@ -18,7 +18,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
     parsearBusqueda, cuerpoDeVer, extraerCita, taparClaves, contieneTermino, esMailExcluido,
-    llamarMails, armarPropuesta, temasYaEnLaCola, aMarkdown, haceDias, sinMarcaDelAsistente, CANON, OPCIONES_PERMITIDAS,
+    llamarMails, armarPropuesta, temasYaEnLaCola, aMarkdown, haceDias, sinMarcaDelAsistente, esLaCola, CANON, OPCIONES_PERMITIDAS,
 } from '../../scripts/_automatizacionCandidatos.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -110,6 +110,22 @@ describe('las claves no viajan', () => {
         expect(taparClaves('api key: ABCDEFGHIJKLMNOPQRS')).not.toContain('ABCDEFGHIJKLMNOPQRS');
         expect(taparClaves('token=zzzzzzzzzzzzzzzzzzzz')).not.toContain('zzzzzzzzzzzzzzzz');
     });
+    it('una clave justo donde se corta la cita igual se tapa (primero se tapa, despues se corta)', () => {
+        const c = extraerCita(['ECR ' + 'x '.repeat(105) + 'sk-ant-api03-AbCdEfGhIjKlMnOpQrStUvWx'], ['ecr']);
+        expect(c).not.toMatch(/sk-ant/);
+    });
+    it('contraseña, password y Bearer', () => {
+        for (const t of ['password: Hunter2!', 'contraseña=barack2026', 'Authorization: Bearer abcdefghijklmnop.qrs']) {
+            expect(taparClaves(t)).toContain('[clave retirada]');
+        }
+    });
+    it('el remitente tambien sale limpio: ni clave ni marca del fabricante', () => {
+        const filas = [{ tema: { nombre: 'X' }, total: 1, falsos: 0, ultimo: '2026-10-01', yaEnCola: false, citas: [
+            { cita: 'ECR pendiente de armar', de: 'Anthropic Team sk-ant-api03-AbCdEfGhIjKlMnOp', fecha: '2026-10-01', asunto: 'x', id: 'y' },
+        ] }];
+        const md = aMarkdown(filas, { desde: '2026-10-01', hoy: '2026-10-17' });
+        expect(md).not.toMatch(/anthropic|sk-ant/i);
+    });
     it('el texto comun no se toca (direccion contraria)', () => {
         const t = 'Les pido que me pasen la clave del portal en persona; ask-antes de mandar; sk-8 es un hilo';
         expect(taparClaves(t)).toBe(t);
@@ -147,7 +163,16 @@ describe('a _mails.py solo se le pide --buscar y --ver', () => {
         }
         expect(() => llamarMails('x.py', ['--buscar', 'ecr', '--mover'], espia)).toThrow(/no permitida/);
         expect(() => llamarMails('x.py', ['--ver', 'id', '--abrir'], espia)).toThrow(/no permitida/);
+        // detras de una opcion permitida, una abreviatura de argparse o una opcion corta tambien frenan
+        for (const op of ['--sync', '--sy', '--nue', '-h', '--adj']) {
+            expect(() => llamarMails('x.py', ['--buscar', 'ecr', op], espia), op).toThrow(/no permitida/);
+        }
         expect(lanzado).toBe(false);
+    });
+    it('se lanza sin shell (nada del texto buscado se interpreta como comando)', () => {
+        let opciones;
+        llamarMails('x.py', ['--buscar', 'a & b'], (_c, _a, o) => { opciones = o; return falso(); });
+        expect(opciones.shell).toBe(false);
     });
     it('el codigo del script no nombra ninguna opcion que abra Outlook o escriba', () => {
         const src = fs.readFileSync(SCRIPT, 'utf8');
@@ -233,7 +258,21 @@ describe('de punta a punta, con un _mails.py de mentira', () => {
         expect(fs.readFileSync(out, 'utf8')).toContain('relevamiento del');
         const pedidos = fs.readFileSync(log, 'utf8').trim().split('\n');
         expect(pedidos.length).toBeGreaterThan(5);
-        for (const p of pedidos) expect(p).toMatch(/^--(buscar|ver) /);
+        for (const p of pedidos) {
+            expect(p).toMatch(/^--(buscar|ver) /);
+            for (const tok of p.split(' ').filter((t) => t.startsWith('-'))) {
+                expect(['--buscar', '--ver', '--desde', '--limite'], tok).toContain(tok);
+            }
+        }
+    });
+    it('esLaCola: el mismo archivo con otro nombre tambien cuenta', () => {
+        expect(esLaCola(path.join(dir, 'COLA.MD'), cola)).toBe(true);
+        expect(esLaCola(`${cola}::$DATA`, cola)).toBe(true);
+        expect(esLaCola(`${cola}. `, cola)).toBe(true);
+        const enlace = path.join(dir, 'otro_nombre.md');
+        fs.linkSync(cola, enlace);
+        expect(esLaCola(enlace, cola)).toBe(true);
+        expect(esLaCola(path.join(dir, 'relevamientos', 'propuesta.md'), cola)).toBe(false);
     });
     it('--out nunca pisa la cola', () => {
         const antes = fs.readFileSync(cola, 'utf8');

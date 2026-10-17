@@ -38,7 +38,26 @@ export function taparClaves(texto) {
     return String(texto ?? '')
         .replace(/sk-ant-[A-Za-z0-9_\-]{8,}/g, '[clave retirada]')
         .replace(/\b(sk|pk|rk)-[A-Za-z0-9]{20,}\b/g, '[clave retirada]')
-        .replace(/\b(api[_ ]?key|token|clave)\s*[:=]\s*\S{12,}/gi, '$1: [clave retirada]');
+        .replace(/\bbearer\s+[A-Za-z0-9._\-]{12,}/gi, 'Bearer [clave retirada]')
+        .replace(/\b(api[_ ]?key|token|clave)\s*[:=]\s*\S{12,}/gi, '$1: [clave retirada]')
+        .replace(/(password|contrase(?:ñ|n)a|pass)\s*[:=]\s*\S+/gi, '$1: [clave retirada]');
+}
+
+/**
+ * True si `out` es la cola (o la misma cosa con otro nombre): mismo nombre sin importar mayusculas, puntos o espacios
+ * del final y un `::$DATA` u otro flujo de Windows; la misma ruta resuelta; o el mismo archivo por un enlace duro.
+ */
+export function esLaCola(out, rutaCola) {
+    const limpiar = (p) => path.resolve(String(p).replace(/(?<=.):[^\\/:]*(?::\$DATA)?$/i, '').replace(/[ .]+$/, ''));
+    const o = limpiar(out);
+    if (path.basename(o).toLowerCase() === 'cola.md') return true;
+    if (rutaCola && o.toLowerCase() === path.resolve(rutaCola).toLowerCase()) return true;
+    try {
+        const a = fs.statSync(o);
+        const b = fs.statSync(rutaCola);
+        if (a.ino && a.ino === b.ino && a.dev === b.dev) return true;
+    } catch { /* uno de los dos no existe: no es el mismo archivo */ }
+    return false;
 }
 
 /**
@@ -121,8 +140,8 @@ export function extraerCita(lineasCuerpo, terminos, canon = CANON) {
     const conDolor = (arr) => arr.find((t) => contieneTermino(t, canon.palabras_de_dolor));
     const elegida = conTema(propias) || conTema(citadas) || conDolor(propias) || conDolor(citadas)
         || propias.find((t) => t.length >= 20) || citadas.find((t) => t.length >= 20) || '';
-    const corta = elegida.length > 220 ? elegida.slice(0, 217).trimEnd() + '...' : elegida;
-    return taparClaves(corta);
+    const tapada = taparClaves(elegida); // primero se tapa, despues se corta: un corte no deja media clave sin tapar
+    return tapada.length > 220 ? tapada.slice(0, 217).trimEnd() + '...' : tapada;
 }
 
 /**
@@ -173,12 +192,13 @@ export function llamarMails(rutaMails, args, ejecutar = spawnSync) {
     if (!Array.isArray(args) || !OPCIONES_PERMITIDAS.includes(args[0])) {
         throw new Error(`_automatizacionCandidatos: _mails.py solo se llama con ${OPCIONES_PERMITIDAS.join(' o ')} (pidio: ${args?.[0]})`);
     }
-    const extra = args.slice(1).filter((a) => /^--/.test(a));
+    // cualquier cosa que empiece con guion es una opcion (argparse acepta abreviaturas como `--sy`): solo pasan estas
     const extrasPermitidos = ['--desde', '--hasta', '--limite', '--asunto', '--buzon', '--carpeta'];
-    for (const e of extra) {
+    for (const e of args.slice(1).filter((a) => /^-/.test(String(a)))) {
         if (!extrasPermitidos.includes(e)) throw new Error(`_automatizacionCandidatos: opcion no permitida para _mails.py: ${e}`);
     }
     const r = ejecutar('python', [rutaMails, ...args], {
+        shell: false,
         encoding: 'utf8',
         env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
         timeout: 120_000,
@@ -235,7 +255,8 @@ export function aMarkdown(filas, { desde, hoy }) {
         const descartados = f.falsos ? ` (de los abiertos para citar, ${f.falsos} no hablaban del tema: la palabra estaba adentro de otra)` : '';
         out.push(`- ${f.total} mail${f.total === 1 ? '' : 's'} con esas palabras (busqueda por texto: es un tope, no un conteo exacto)${f.ultimo ? ` · el ultimo del ${f.ultimo}` : ''} · ${estado}${descartados}`);
         for (const c of f.citas) {
-            out.push(`- «${sinMarcaDelAsistente(c.cita)}» — ${c.de || 'sin remitente'}, ${c.fecha}, asunto «${sinMarcaDelAsistente(taparClaves(c.asunto))}» (id ${c.id})`);
+            const limpio = (s) => sinMarcaDelAsistente(taparClaves(s));
+            out.push(`- «${limpio(c.cita)}» — ${limpio(c.de) || 'sin remitente'}, ${c.fecha}, asunto «${limpio(c.asunto)}» (id ${c.id})`);
         }
         out.push('');
     }
@@ -275,8 +296,8 @@ function main() {
         console.log('Uso: node scripts/_automatizacionCandidatos.mjs [--dias N] [--out <archivo>] [--cola <ruta>] [--mails <ruta>]');
         return;
     }
-    const rutaCola = args.cola || path.join(buscarBiblioteca(), 'AUTOMATIZACION BARACK', 'cola.md');
-    if (args.out && path.basename(args.out).toLowerCase() === 'cola.md') {
+    const rutaCola = args.cola || path.join(buscarBiblioteca() || '', 'AUTOMATIZACION BARACK', 'cola.md');
+    if (args.out && esLaCola(args.out, rutaCola)) {
         console.error('No piso la cola: --out tiene que ser otro archivo (la cola la decide Facundo).');
         process.exit(1);
     }
