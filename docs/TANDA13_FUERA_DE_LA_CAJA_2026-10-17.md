@@ -289,7 +289,7 @@ porque instala algo en la configuración de Claude Code de la PC.**
 | 2 | Estudio de aptitud de máquina calculado solo | **Hecho** (`scripts/_aptitudMaquina.mjs`, 16 tests) |
 | 3 | Versión grabada en cada utillaje impreso | **En otra tanda** (11, ya fundida) |
 | 4 | Vencimientos de Ingeniería al arrancar | **Hecho** (`scripts/_lib/seguimientos.mjs`, 7 tests nuevos); sin cargar la D7 real |
-| 5 | Libro de observaciones recibidas | **Hecho** (`scripts/_observaciones.mjs`, 7 tests; 6 observaciones reales de Carlos en la memoria) |
+| 5 | Libro de observaciones recibidas | **Hecho** (`scripts/_observaciones.mjs`, 6 tests; 6 observaciones reales de Carlos en la memoria) |
 | 6 | Cortes de los videos de tiempos | **Diseño** (arriba); solo falta `mediapipe`, y quizás ni eso; se instala con el sí de Fak |
 | 7 | Medir la costura de la CNC con una foto | **Método hecho y probado en imágenes de medida conocida** (`scripts/costura/`, 7 casos); con fotos reales **no se pudo** (no hay ninguna con referencia de tamaño) |
 | 8 | Un reclamo que llega al AMFE de toda la familia | **Diseño** (arriba); el dry-run contra Supabase, desde una sesión de Barack, y escribir con el sí de Fak |
