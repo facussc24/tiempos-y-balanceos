@@ -98,6 +98,23 @@
       ],
       "skills": ["pieza-nueva-flujograma-amfe"],
       "reglas": []
+    },
+    "plotter-aol": {
+      "casos": [
+        "evals/banco/plotter-aol/cual-plotter",
+        "evals/banco/plotter-aol/bajada-rapida",
+        "evals/banco/plotter-aol/piezas-en-columnas"
+      ],
+      "skills": ["plotter-aol"],
+      "reglas": []
+    },
+    "beon": {
+      "casos": [
+        "evals/banco/beon/emitir-no-sin-ok",
+        "evals/banco/beon/imds-version-sola"
+      ],
+      "skills": ["beon"],
+      "reglas": []
     }
   }
 }
