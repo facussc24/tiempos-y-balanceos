@@ -1,7 +1,7 @@
 {
   "_que_es": "Retiro con vencimiento (tanda 9, pieza 7; docs/PLAN_METODO_2026-10-16.md): cada hook y cada regla tiene una fecha en que se revisa (revisar) y la razon por la que existe (justifica). La guia oficial de evals (07/10/2026) llama sobreajuste a «un guardian por incidente»; Anthropic: cada pieza del arnes es una suposicion sobre lo que el modelo no puede hacer. Lo lee node scripts/_retirosVencidos.mjs, que lista los vencidos, los que vencen en 7 dias, los que estan en el disco sin renglon aca y, con --disparos, los que no se dispararon nunca. Un hook o una regla nueva entra con su renglon en la misma sesion.",
   "_justifica": "En los 76 renglones de hoy, «justifica» es lo que dice la cabecera del propio archivo (primeras lineas de comentario de un hook, description o titulo de una regla), copiado el 17/10/2026. Donde la cabecera no dice el numero o el incidente, se completa al revisarlo; si no hay, va TBD.",
-  "_revisar": "La fecha de revision por defecto (2026-11-17, un mes despues de la tanda 9) es una propuesta: la confirma o la cambia Fak. Las de los retiros ya decididos salen de su fuente.",
+  "_revisar": "La fecha de revision por defecto (2026-11-17, un mes despues de la tanda 9) era una propuesta; Fak, 17/10/2026 ~19:50, sobre los tres numeros de la tanda 9 (umbral 0,8 del banco, tope de 3 nits, 2026-11-17): «no se que carajo, toma la mejor decision»: quedan los tres como se propusieron, medidos en la tanda. Las de los retiros ya decididos salen de su fuente.",
   "_cero_disparos": "0 disparos NO es inutil: un control que frena lo que casi nunca pasa puede estar bien. Se mide con un caso plantado (uno que debe frenar y uno que no) antes de retirar nada.",
   "retiros_decididos": {
     "lanzar-sesion-hija:camino-b": {
