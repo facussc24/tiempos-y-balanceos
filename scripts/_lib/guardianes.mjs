@@ -1859,7 +1859,9 @@ const enCadena = (rangos, k) => rangos.some(([a, b]) => k >= a && k < b);
 /** Las variables que el script crea con mkdtemp adentro del TEMP. */
 function variablesTemporales(code) {
   const vars = new Set();
-  for (const m of code.matchAll(/\b([A-Za-z_$][\w$]*)\s*=\s*(?:await\s+)?((?:[\w$]+\.)*)mkdtemp(?:Sync)?\s*\(([^\n]{0,160})/g)) {
+  // Ronda 3 (17/10, T8): el nombre va al PRINCIPIO de la sentencia (o despues de const/let/var) y solo, antes del `=`:
+  // en `d, e = tempfile.mkdtemp(), r'Y:/…'` la captura se quedaba con `e`, que es la ruta del servidor
+  for (const m of code.matchAll(/(?:^|[\n;])[ \t]*(?:(?:const|let|var)\s+)?([A-Za-z_$][\w$]*)\s*=\s*(?:await\s+)?((?:[\w$]+\.)*)mkdtemp(?:Sync)?\s*\(([^\n]{0,160})/g)) {
     const args = m[3];
     // JS: fs.mkdtempSync(path.join(os.tmpdir(), 'x-')) — la carpeta de adentro tiene que ser el TEMP del sistema
     if (/tmpdir\s*\(\s*\)/.test(args)) { vars.add(m[1]); continue; }
@@ -1875,9 +1877,22 @@ function variablesTemporales(code) {
     for (const p of String(m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? '').split(',')) { const n = p.trim().replace(/^\*+|[=:].*$/g, '').trim(); if (n) parametros.add(n); }
   }
   for (const m of code.matchAll(/\b([A-Za-z_$][\w$]*)\s*=>|\bfor\s+([A-Za-z_]\w*)\s+in\b|\bfor\s*\(\s*(?:const|let|var)\s+([A-Za-z_$][\w$]*)|\bwith\b[^\n]*\bas\s+([A-Za-z_]\w*)/g)) parametros.add(m[1] ?? m[2] ?? m[3] ?? m[4]);
+  // (ronda 3, T8) y una asignacion es tambien la anotacion (`d: str = …`), el walrus (`d := …`) y el nombre adentro de lo
+  // que va a la izquierda de un `=` (`[d] = …`, `d, e = …`, `(a, d) = …`, `{ d } = …`); un `=` adentro de una llamada
+  // abierta (`rmtree(d, ignore_errors=True)`) es un argumento con nombre, no una asignacion
+  const asignacionesDe = (v) => {
+    const id = new RegExp(`(?<![\\w$.])${esc(v)}(?![\\w$])`);
+    let n = [...code.matchAll(new RegExp(`(?<![\\w$.])${esc(v)}\\s*(?:[-+*/%]?=|:=)(?!=)`, 'g'))].length;
+    n += [...code.matchAll(new RegExp(`(?<![\\w$.])${esc(v)}\\s*:(?!=)[^=\\n]*=(?![=>])`, 'g'))].length;
+    for (const sentencia of code.split(/[\n;]/)) {
+      const izq = sentencia.match(/^([^=]*?)(?<![=!<>+\-*/%&|^:])=(?![=>])/)?.[1];
+      if (!izq || !/[[\](){},]/.test(izq) || !id.test(izq)) continue;
+      if ((izq.match(/[([{]/g) ?? []).length === (izq.match(/[)\]}]/g) ?? []).length) n++;
+    }
+    return n;
+  };
   for (const v of [...vars]) {
-    const asignaciones = [...code.matchAll(new RegExp(`(?<![\\w$.])${esc(v)}\\s*(?:[-+*/]?=)(?!=)`, 'g'))].length;
-    if (asignaciones !== 1 || parametros.has(v)) vars.delete(v);
+    if (asignacionesDe(v) !== 1 || parametros.has(v)) vars.delete(v);
   }
   return vars;
 }

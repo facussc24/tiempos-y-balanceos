@@ -20,6 +20,8 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
+import { evaluar } from '../../scripts/_lib/guardianes.mjs';
+import { esperados } from './guardianesRonda3.mjs';
 
 const HOOK = path.resolve(process.cwd(), '.claude/hooks/borrado-masivo-guard.sh');
 
@@ -399,5 +401,23 @@ describe('P18 — temporales de mktemp, __pycache__ y scripts que prueban un gua
         expect(correr(escribir('C:\\Dev\\BarackMercosul\\scripts\\_x.mjs', fuera)).code).toBe(2);
         const pyDir = "import tempfile, shutil\nd = tempfile.mkdtemp(dir=r'Y:\\\\INGENIERIA')\nshutil.rmtree(d)\n";
         expect(correr(escribir('C:\\Dev\\BarackMercosul\\scripts\\_x.py', pyDir)).code).toBe(2);
+    });
+});
+
+// Ronda 3 (17/10/2026): los casos del auditor a ciegas de la ronda 2, por su id (`guardianesRonda3.mjs`). 2 = frena, 0 = pasa.
+describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (borrado-masivo)', () => {
+    const G = 'borrado-masivo-guard';
+    const write = (file_path, content) => evaluar(JSON.stringify({ tool_name: 'Write', tool_input: { file_path, content }, session_id: 'ronda3', cwd: 'C:\\Dev\\BarackMercosul' }),
+        { nombres: [G], env: { HOME: os.tmpdir() }, marcar: false, escapes: false }).res.bloqueos.length;
+
+    it('ROJO (ronda 3, T8) — la variable de mkdtemp reasignada con tupla, anotacion, walrus o desestructuracion', () => {
+        esperados(G, ['N-B01', 'N-B02', 'N-B03', 'N-B04']);
+        esperados(G, ['H8-B46', 'H8-B47', 'H8-B48', 'H8-V1', 'H8-V2', 'N-B07', 'N-B08', 'N-B09']);   // los de la ronda 2 siguen igual
+    });
+    it('VERDE (ronda 3, T8) — un argumento con nombre adentro de la llamada no es una asignacion de la variable', () => {
+        const py = "import tempfile, shutil, os\nd = tempfile.mkdtemp()\nos.makedirs(os.path.join(d, 'a'), exist_ok=True)\nshutil.rmtree(d, ignore_errors=True)\n";
+        expect(write('C:\\Dev\\BarackMercosul\\scripts\\_x.py', py)).toBe(0);
+        const js = "import fs from 'node:fs';\nimport os from 'node:os';\nimport path from 'node:path';\nconst d = fs.mkdtempSync(path.join(os.tmpdir(), 'x-'));\nif (d === '') throw new Error('x');\nfs.rmSync(d, { recursive: true, force: true });\n";
+        expect(write('C:\\Dev\\BarackMercosul\\scripts\\_x.mjs', js)).toBe(0);
     });
 });
