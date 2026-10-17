@@ -1621,4 +1621,13 @@ describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (secretos)
     it('P12 ROJO (ronda 3, T6) — un interprete adentro de xargs o de find -exec que abre lo que le pasan', () => {
         esperados(G, ['N-S06', 'N-S07', 'H5-T05', 'H5-T06', 'H5-T07', 'H5-T08', 'H5-T10', 'H5-T12']);
     });
+    it('P12 VERDE (ronda 3, F1) — buscar quien usa el secreto con xargs grep o find -exec grep: el nombre es el PATRON', () => {
+        esperados(G, ['N-S12', 'N-S13']);
+        // ROJO de la misma forma: el secreto tambien es el archivo que find le pasa al grep
+        const S = ['.env', 'local'].join('.');
+        const bash = (command) => evaluar(JSON.stringify({ tool_name: 'Bash', tool_input: { command }, session_id: 'ronda3', cwd: 'C:/Dev/BarackMercosul' }),
+            { nombres: [G], env: { HOME: os.tmpdir() }, marcar: false, escapes: false }).res.bloqueos.length;
+        expect(bash(`find . -maxdepth 1 -name ${S} -exec grep -l '${S}' {} +`)).toBe(1);
+        expect(bash(`git ls-files | xargs grep -l -f ${S}`)).toBe(1);   // con -f el secreto ES la lista de patrones
+    });
 });

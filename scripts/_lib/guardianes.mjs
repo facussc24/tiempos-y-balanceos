@@ -301,6 +301,27 @@ function variablesEscritas(todo) {
   return vars;
 }
 
+/**
+ * Ronda 3 (17/10, F1): ¿el comando nombra el secreto FUERA del patron del grep / sed / awk que corre adentro de xargs o de
+ * find -exec? Buscar quien lo usa (`git ls-files | xargs grep -l '.env.local'`) no es leerlo, y el texto del freno lo
+ * recomienda. El patron es lo de -e / --regexp, o el primer posicional (con -f no hay patron escrito). Si el secreto
+ * aparece en otro lado (`find -name .env.local -exec grep …`), sigue frenando.
+ */
+function nombraSecretoFueraDelPatron(palabras, todo) {
+  const menciones = (x) => [...` ${x} `.matchAll(new RegExp(SECRETO_SRC, 'gi'))].length;
+  const k = palabras.findIndex((a, i) => i > 0 && PATRONERO_VERBO_RE.test(verboPelado(a)));
+  let patron = '';
+  if (k > 0) {
+    const resto = palabras.slice(k + 1);
+    const e = resto.findIndex((a) => /^(?:-[a-zA-Z]*e|--regexp|--expression)$/.test(a));
+    const igual = resto.map((a) => a.match(/^--(?:regexp|expression)=(.*)$/)).find(Boolean);
+    if (e >= 0) patron = resto[e + 1] ?? '';
+    else if (igual) patron = igual[1];
+    else if (!resto.some((a) => /^(?:-[a-zA-Z]*f|--file)(?:=|$)/.test(a))) patron = resto.find((a) => !/^-/.test(a)) ?? '';
+  }
+  return menciones(todo) - (patron ? menciones(patron) : 0) > 0;
+}
+
 /** ¿Algun comando simple del texto (o de sus `$(…)`) lee el secreto? `todo` = el comando entero, para las variables. */
 function leeSecretoPorComando(texto, todo, prof = 0, vars = variablesEscritas(todo)) {
   if (prof > 4) return SECRETO_RE.test(texto);
@@ -323,7 +344,7 @@ function leeSecretoPorComando(texto, todo, prof = 0, vars = variablesEscritas(to
     // Ronda 3 (17/10, T6): y un interprete adentro (`xargs -I % python -c "…open('%')…"`, `find … -exec python -c … {} \;`)
     const corrida = (a) => LECTOR_ARCHIVO_RE.test(verboPelado(a)) || PATRONERO_VERBO_RE.test(verboPelado(a)) || INTERPRETE_SECRETO_RE.test(verboPelado(a));
     const lanzador = verboPelado(palabras.find((w) => w && !/^[A-Za-z_]\w*=/.test(w)));
-    if (/^(?:xargs|find|parallel)$/i.test(lanzador) && palabras.slice(1).some(corrida) && SECRETO_RE.test(todo)) return true;
+    if (/^(?:xargs|find|parallel)$/i.test(lanzador) && palabras.slice(1).some(corrida) && nombraSecretoFueraDelPatron(palabras, todo)) return true;
     // un argumento con una variable: si el comando le dio un valor escrito, se mira ese valor (puede ser una lista);
     // si no se sabe que vale, cuenta como el secreto cuando el comando lo nombra en algun lado (no se adivina).
     // Ronda 2: un backtick tambien es algo sin resolver (hallazgo 5), y un `)` o `}` del final es del subshell o del
@@ -360,7 +381,7 @@ function leeSecretoPorComando(texto, todo, prof = 0, vars = variablesEscritas(to
     }
     const ejecutaOtro = (/^xargs$/i.test(v) && args.some(corrida))
       || (/^find$/i.test(v) && args.some((a, k) => /^-(?:exec|execdir|ok|okdir)$/.test(a) && corrida(args[k + 1] ?? '')));
-    if (ejecutaOtro && SECRETO_RE.test(todo)) return true;
+    if (ejecutaOtro && nombraSecretoFueraDelPatron(palabras, todo)) return true;
   }
   return false;
 }
