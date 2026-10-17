@@ -45,6 +45,8 @@ dist-ssr
 !.claude/agents/
 !.claude/hooks/
 !.claude/pcs/
+# 17/10/2026 (tanda 9, pieza 3): los workflows guardados (Claude Code los busca aca por nombre). Son guiones, no datos.
+!.claude/workflows/
 
 # Project secrets
 SUPABASE_INFO.md

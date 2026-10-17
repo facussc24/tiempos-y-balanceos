@@ -99,6 +99,7 @@ describe('plantilla de arranque · lo que Fak tipeaba a mano sale fijo', () => {
     const R = CANON.plantillaArranque.lineaRevisor;
     expect(R).toMatch(/definición de hecho/);
     expect(R).toMatch(/revisor-pedido/);
+    expect(R).toMatch(/como mucho 2 rondas: después de la segunda se revisa solo el diff nuevo/);   // pieza 3
     const comun = lineasArranque({});
     expect(comun[comun.length - 1]).toBe(`  ${comun.length - 1}. ${R}`);
     expect(armarTexto({ ...base(), carpeta: 'C:\\Escritorio\\Tarea', skills: ['carga-arb'] })).toMatch(/5\. Al cerrar:[\s\S]*6\. Si el trabajo deja un entregable para Fak/);
