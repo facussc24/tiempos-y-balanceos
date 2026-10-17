@@ -51,7 +51,7 @@ es el error que la casa ya tuvo (regla `cad-3d.md` decía 0,3-0,5 «por lado», 
 | # | Regla | Número | Fuente |
 |---|---|---|---|
 | R1 | Rosca impresa: no bajar de M5; paso 1,0; chaflán de entrada 45° × 0,8-1,5 mm; holgura **0,50 al diámetro** | mm | CASA, memoria `reference_roscas_impresas_3d` |
-| R2 | Tuerca impresa: altura **≥ D** (Leo). Una ISO 4032 de acero mide 0,83-0,85·D; la de plástico pide más porque el plástico aguanta menos | ≥ 1,0·D | Leo (`tuerca y tonrillo.txt`, 13/10); fasten.it reproducción de ISO 4032 (ABIERTA, 15/10) |
+| R2 | Tuerca impresa: altura **≥ D** (Leo). Una ISO 4032 de acero mide 0,83-0,85·D de M6 a M10 (M5 ≈ 0,94·D; M3-M4 ≈ 0,80·D); la de plástico pide más porque el plástico aguanta menos | ≥ 1,0·D | Leo (`tuerca y tonrillo.txt`, 13/10); fasten.it reproducción de ISO 4032 (ABIERTA, 15/10) |
 | R3 | Largo de rosca en plástico: **1,5·D** (memoria) contra **2,5·D** (blog sin norma): no reconciliado | ×D | `afuera_3d.md` K1. **A MEDIR EN LA A2L** con una pieza de prueba |
 | R4 | Los primeros milímetros de una rosca impresa no toman (el tornillo de 7 mm validado no enrosca hasta meterlo unos mm): el largo útil se cuenta sin ese tramo | mm (medir en el STEP) | CASA, Fak 16/10 (memoria del tornillo) |
 | R5 | Con carga o par: tornillo y tuerca de acero, el plástico fuera del camino de la carga | — | CASA, memoria de roscas |

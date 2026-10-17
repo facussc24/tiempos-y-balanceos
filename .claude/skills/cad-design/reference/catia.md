@@ -33,12 +33,13 @@ C:\Dev\_catia_env\Scripts\python.exe .claude\skills\cad-design\scripts\catia_med
 
 | Medición | CATIA | build123d (`--cadlib`) | Diferencia |
 |---|---|---|---|
+| v16 entregada (placa 168): volumen y choque | 89.278,482 mm³ = 89.278,483; sin choque, 1 contacto (0,0) | | 54 s sin el arranque |
 | Volumen de la v14 | 116.526,908 mm³ | 116.526,907 mm³ | 0,000 001 % |
 | Área de la v14 | 33.819,859 mm² | 33.819,859 mm² | 0 |
 | Volumen del panel (sólido, sin el tapizado) | 91.791,099 mm³ | 91.765,561 mm³ | 0,03 % |
 | Choque v14 contra panel, mismo marco, holgura 0,3 | **sin choque; 1 contacto (0,0 mm)** | `check_collision`: 0 puntos adentro, contacto 0,06-0,08 | coinciden |
 | Gemelo: la v14 metida 1 mm en el panel | **choque −0,14 mm** | — | el control no es ciego |
-| Tiempos | arranque 20 s (64 s la primera vez del día); medición 44 s sin el arranque | | < 1 min con la PC libre. Con cuatro simulaciones corriendo a la vez (v16, 17/10): arranque 78 s y medición 101 s |
+| Tiempos | arranque 20 s (63,7 s la primera corrida del día; ese informe lo pisó la segunda); medición 44 s sin el arranque | | < 1 min con la PC libre. Con cuatro simulaciones corriendo a la vez (v16, 17/10): arranque 78 s y medición 101 s |
 
 `GetCOG` no devuelve la misma unidad para todos los STEP (en la v14 coincide con build123d en mm; en el panel salió
 ×1000): el informe lo guarda como `centro_crudo` y **no se compara**.

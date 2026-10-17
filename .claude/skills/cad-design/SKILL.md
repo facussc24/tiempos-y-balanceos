@@ -361,8 +361,8 @@ isostática, re-derivar en vez de parchear): `reference/utillajes-de-apriete.md`
   real), las preguntas A1 apoyos / A2 ventana de asiento / A3 asiento simulado, tolerancias y GD&T básico.
 - `reference/ficha-fdm.md`: orientación contra la carga, voladizos, paredes, holguras **con su unidad**, roscas,
   materiales (PLA Lite / PETG / ABS / ASA / TPU) y lo que queda «a medir en la A2L».
-- `reference/ficha-utillajes.md`: 3-2-1, nada de ubicadores redundantes, tres apoyos con la mano adentro del
-  triángulo, ventana de asiento, apriete contra los apoyos, ergonomía y criterio de aceptación.
+- `reference/ficha-utillajes.md`: 3-2-1, nada de ubicadores redundantes, tres o cuatro apoyos (U8) según dónde
+  aprieta la mano, ventana de asiento, apriete contra los apoyos, ergonomía y criterio de aceptación.
 - `reference/catia.md` + `scripts/catia_medir.py`: CATIA V5 por programa (medir, choque en el mismo marco, módulos).
 - Casos de respuesta conocida: `scripts/eval_casos_3d.py` (con `data/casos_3d.json`) y el banco `evals/banco/cad/`
   (`node scripts/_evalBanco.mjs --banco cad-design`).

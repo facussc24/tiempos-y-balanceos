@@ -132,15 +132,17 @@ tardar **menos de 1 minuto**. Si algo no lo permite la licencia, se dice con lo 
 | A1b 4-2-1 coplanar (renglón aparte, informativo) | ROJO (3 superficies) | ROJO (2 superficies, 1,21 mm entre topes) | **VERDE** (1 superficie, 0,001 mm) |
 | A2 ventana (banda / punta) | ROJO (0,20 / 0,24) | VERDE (1,19 / 0,75) | VERDE (1,19 / 0,75: el anillo es el de la v15) |
 | A3 simulación normal, 150 casos (% > 0,3 mm · máx.) | 100 % · 6,27 | 28 % · 0,63 | **0 % · 0,16** |
-| A3 apretando en la punta (mediana) | 5,91 mm | 1,69 mm | **0,00 mm** |
-| Gemelo: tapizado de espesor desparejo ±0,2, 50 casos (% · máx. · punta) | — | 66 % · 1,31 · 1,73 | **6 % · 0,53 · 0,11** |
+| A3 apretando en la punta, x −30 / 120 (mediana) | 5,91 mm | 1,69 mm | no aplica: en la v16 esos puntos caen adentro de los apoyos (auditor, I1) |
+| A3 apretando en el borde mismo de la placa (1 mm adentro del extremo) | — | **35,79 mm** (vuelca, tope del modelo) | **33,34 mm** (vuelca, tope del modelo) |
+| Gemelo: tapizado de espesor desparejo ±0,2, 50 casos (% · máx.) | — | 66 % · 1,31 | **8 % · 0,54** |
 
 **Decidí distinto del plan, con la evidencia:**
 1. **La v15 da ROJO en A1** (el plan esperaba verde). Aplicada la regla tal cual, sus cuatro bloques controlan la altura; la
    simulación lo confirma (28 de 100). No se aflojó la regla.
 2. **La v16 tiene cuatro apoyos, no tres** (V1 del plan pedía tres). Probado con la simulación: tres apoyos en una placa de
-   164 mm que la mano aprieta en cualquier lado **vuelcan hasta 10 mm** (todas las variantes de triángulo, con y sin topes,
-   dieron 100 % de casos). Fuente abierta y leída: *«3-2-1 … provides equilibrium but not necessarily stability. The second,
+   164 mm que la mano aprieta en cualquier lado **vuelcan hasta 10 mm** (las cuatro variantes de triángulo del prototipo
+   dieron 100 % de casos; tres apoyos + un tope de luz 0,05 / 0,10 dieron 32 % y 40 % en el gemelo, contra 26 % de los
+   cuatro discos). Fuente abierta y leída: *«3-2-1 … provides equilibrium but not necessarily stability. The second,
    4-2-1 provides both»* (Applied Engineering, *Jig and Fixture Design*). La redundancia del cuarto se paga con
    **coplanaridad**: los cuatro apoyos están sobre la MISMA cara del tapizado (dispersión 0,000 bajo cada huella; topes a
    −10,334 / −10,335), en vez de los cuatro bloques de la v15 repartidos entre dos mesetas (una inclinada 0,78°). Por eso
@@ -148,17 +150,29 @@ tardar **menos de 1 minuto**. Si algo no lo permite la licencia, se dice con lo 
 3. **La simulación original no podía ver fallar a cuatro apoyos simétricos** (solo sortea un plano, un hundimiento parejo
    y un alabeo simétrico respecto de x = 45). Se le agregó un **gemelo** en la copia (`sim_asiento_v16.py --error-local`:
    espesor local ±0,2 en lomas de 15 mm y alabeo descentrado). Con el gemelo, los cuatro apoyos del prototipo saltaron de
-   1 % a 26 % (y la v15 de 28 % a 66 %): el 1 % era en parte ceguera del modelo. La v16 definitiva da 6 %.
+   1 % a 26 % (y la v15 de 28 % a 66 %): el 1 % era en parte ceguera del modelo. La v16 definitiva da 8 %.
 4. **El redondeo R1,5 del tope se come la cara plana del apoyo**: con 6 × 6 la cara plana era 3 × 3 y la mano en y = ±18
    quedaba afuera del polígono (la v16 de la primera vuelta dio 6,3 mm en el 100 %). La v16 lleva apoyos de 6 × 10 en y.
-   Y la placa se alargó de 164 a 172 mm para que los apoyos de las esquinas caigan enteros sobre esa cara (el generador
+   Y la placa pasó de 164 a 168 mm para que los apoyos de las esquinas caigan enteros sobre esa cara (el generador
    ahora frena si una huella monta el borde de una meseta: lo hizo en la primera vuelta, 0,92 mm de desnivel).
+5. **Apretar en la punta no se puede medir con esta simulación** (auditor, I1, verificado): la mano «punta» del original
+   está en x = −30 / 120, números de la placa de 164 mm; en una iteración de 172 mm con los apoyos 4 mm adentro, esos
+   puntos caían sobre los apoyos y daban 0,00 mm, que **no era la punta**. Con la mano en el borde real, el modelo rígido
+   vuelca hasta su tope **a la v15 y a la v16 por igual** (no modela el anillo agarrado en el vinilo de la ranura), y con
+   la mano justo encima de un apoyo el programa lineal queda indeterminado (33 %, no físico). Lo que se hizo con eso: los
+   apoyos van a 0,3 mm de los extremos (el voladizo más allá de la cara plana bajó de 4,1 a 1,8 mm: el redondeo) y **la
+   punta la decide la prueba física** (punto 2 del PDF: apretar en el borde de las puntas). Si ahí vuelca, el siguiente
+   paso es un tope antivuelco que no apoye (regla B3) o un apoyo que llegue al borde.
 
-**V1 a V7 de la v16:** V1 ROJO por la letra (4-2-1, arriba) · V2 VERDE · V3 VERDE (0 %, máx. 0,16; el anillo no toca
-plástico) · V4 VERDE (0,00 mm) · V5 VERDE (`verificar_v16.py`: un sólido válido, malla = B-Rep, anillo = v15 a 0,0002 mm,
-los cuatro apoyos a su altura, gemelo +0,10 en rojo; CATIA: 91.206,744 mm³ = build123d 91.206,745; sin choque contra el
-panel, solo contacto) · V6 VERDE (1 h 27 min, 62,1 g negro + 1,9 g amarillo, sin fallas del laminador) · V7 VERDE
-(`_sinFirmaIA.py`: 0 en STEP, 3MF, laminado y PDF). En el gemelo la hamaca máxima da 0,53 mm (0,03 sobre el 0,5).
+**V1 a V7 de la v16 (geometría final: placa 168, apoyos 6 × 10 en x −35,807 / 125,593):** V1 ROJO por la letra (4-2-1,
+arriba; A1b 4-2-1 coplanar VERDE) · V2 VERDE · V3 VERDE (0 %, máx. 0,16; el anillo no toca plástico) · **V4 NO MEDIBLE en
+simulación** (punto 5: la decide la prueba física) · V5 VERDE sobre el archivo ENTREGADO (`verificar_v16.py`: un sólido
+válido, malla = B-Rep, anillo = v15 a 0,0004 mm, los cuatro apoyos a su altura, gemelo +0,10 en rojo; `choque_v16.py`:
+0 de 64.343 puntos adentro del plástico, cada apoyo a 0,55 mm del plástico = tapizado 0,5 + holgura 0,05, gemelo subido
+1 mm: 1.006 adentro; CATIA: 89.278,482 mm³ = build123d 89.278,483, sin choque, solo contacto) · V6 VERDE (1 h 25 min,
+60,6 g negro + 1,9 g amarillo, sin fallas del laminador) · V7 VERDE (`_sinFirmaIA.py`: 0 en STEP, 3MF, laminado y PDF).
+En el gemelo la hamaca máxima da 0,54 mm (0,04 sobre el 0,5). La medición de CATIA de la iteración 6 × 6 (91.206,7 mm³)
+quedó vieja: el auditor lo marcó (I2) y se repitió sobre el STEP entregado.
 
 **Le falta:** pasar por el gate de asiento de la tanda 2 cuando exista; la simulación grabada (mp4/gif) del GATE E no se
 hizo (la entrega de la v14 tampoco la tenía); y la prueba física.

@@ -328,8 +328,9 @@ def cmd_medir(a):
             antes = c.Documents.Count
             c.Documents.Open(str(copia))
             doc = c.ActiveDocument      # el objeto que devuelve Open no expone Part/Product a pywin32 (17/10)
-            if c.Documents.Count != antes + 1 or Path(doc.FullName).name.lower() != copia.name.lower():
-                raise SystemExit(f"Abri {copia.name} y el documento activo es {doc.FullName}: no sigo (no lo cierro).")
+            # al importar un STEP, CATIA lo nombra <nombre>.CATPart (o .CATProduct): se compara el nombre sin la extension
+            if c.Documents.Count != antes + 1 or Path(str(doc.Name)).stem.lower() != copia.stem.lower():
+                raise SystemExit(f"Abri {copia.name} y el documento activo es {doc.Name}: no sigo (no lo cierro).")
             abiertos.append(doc)
             fila = {"archivo": str(step), "cabecera_que_traia": orden, "segundos_abrir": round(time.time() - t0, 1)}
             fila.update(medir_documento(c, doc))

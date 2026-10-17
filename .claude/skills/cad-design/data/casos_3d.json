@@ -142,25 +142,25 @@
       }
     },
     "v16": {
-      "_fuente": "C:/Dev/_utrim/params_v10.json 'nido.apoyos_v16' y cotas_v10_two.json (17/10/2026): cuatro apoyos 6x10 en las esquinas sobre el mismo plano del tapizado (z_tope -10,334/-10,335, dispersion 0,000 bajo cada huella), sin pasadores ni orejas; anillo identico a la v15 (verificar_v16.py: 0,0002 mm)",
+      "_fuente": "C:/Dev/_utrim/params_v10.json 'nido.apoyos_v16' y cotas_v10_two.json (17/10/2026, geometria final): placa 168 mm, cuatro apoyos 6 x 10 en x -35,807 / 125,593 e y -20,5 / 16,5 sobre el mismo plano del tapizado (topes -10,334 / -10,335, dispersion 0,000 bajo cada huella), a 0,3 mm de los extremos, sin pasadores ni orejas; anillo identico a la v15 (verificar_v16.py: 0,0004 mm)",
       "elementos": [
         {
-          "nombre": "apoyo esquina x-35,5 y-20,5",
+          "nombre": "apoyo esquina x-35,8 y-20,5",
           "tipo": "apoyo_z",
           "rigido": true
         },
         {
-          "nombre": "apoyo esquina x-35,5 y+16,5",
+          "nombre": "apoyo esquina x-35,8 y+16,5",
           "tipo": "apoyo_z",
           "rigido": true
         },
         {
-          "nombre": "apoyo esquina x125,3 y-20,5",
+          "nombre": "apoyo esquina x125,6 y-20,5",
           "tipo": "apoyo_z",
           "rigido": true
         },
         {
-          "nombre": "apoyo esquina x125,3 y+16,5",
+          "nombre": "apoyo esquina x125,6 y+16,5",
           "tipo": "apoyo_z",
           "rigido": true
         },
