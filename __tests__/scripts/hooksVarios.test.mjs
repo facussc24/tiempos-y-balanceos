@@ -10,7 +10,6 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync, execFileSync } from 'node:child_process';
-import { COMPUERTA, evaluarTimeout } from '../../scripts/_lib/timeoutGuard.mjs';
 
 // Cada caso levanta bash -> node (y agentes-guard, siete veces seguidas). Solos tardan
 // decimas; con la suite entera en paralelo en la notebook de Windows pasaron los 15 s del
@@ -136,82 +135,6 @@ describe('supabase-write-flag.sh — siempre exit 0; deja el flag solo si la ses
     expect(r.exit).toBe(0);
     expect(r.err).toBe('');
     expect(fs.existsSync(FLAG)).toBe(false);
-  });
-});
-
-// ───────────────────────────────── dev-server-guard (Stop): recuerda el preview si se toco la APP
-describe('dev-server-guard.sh (Stop) — recuerda el preview solo si se toco codigo de la APP y nadie escucha', () => {
-  const repo = path.join(TMP, 'app');
-  const git = repoGit(repo);
-  fs.mkdirSync(path.join(repo, '.claude'), { recursive: true });
-  fs.mkdirSync(path.join(repo, 'scripts'), { recursive: true });
-  // Puerto que no escucha nadie: asi el chequeo (1) no tapa el (2).
-  fs.writeFileSync(path.join(repo, '.claude', 'launch.json'), JSON.stringify({ configurations: [{ name: 'dev', port: 65001 }] }));
-  const APP = path.join(repo, 'App.tsx');
-  const SCRIPT = path.join(repo, 'scripts', 'x.ts');
-  fs.writeFileSync(APP, 'export const a = 1;\n');
-  fs.writeFileSync(SCRIPT, 'export const b = 1;\n');
-  git('add', 'App.tsx', 'scripts/x.ts', '.claude/launch.json');
-  git('commit', '-q', '-m', 'init');
-  const correr = () => hook('dev-server-guard.sh', {}, { cwd: repo });
-  beforeEach(() => { fs.writeFileSync(APP, 'export const a = 1;\n'); fs.writeFileSync(SCRIPT, 'export const b = 1;\n'); });
-
-  it('ROJO: App.tsx modificado y nadie en el puerto → 2 nombrando el archivo y el puerto', () => {
-    fs.appendFileSync(APP, 'export const c = 2;\n');
-    const r = correr();
-    expect(r.exit).toBe(2);
-    expect(r.err).toMatch(/puerto 65001/);
-    expect(r.err).toMatch(/App\.tsx/);
-  });
-
-  it('VERDE: solo scripts/ modificado, o nada modificado → 0 sin ruido', () => {
-    fs.appendFileSync(SCRIPT, 'export const d = 2;\n');
-    const soloScripts = correr();
-    expect(soloScripts.exit).toBe(0);
-    expect(soloScripts.err).toBe('');
-    fs.writeFileSync(SCRIPT, 'export const b = 1;\n');
-    expect(correr().exit).toBe(0);
-  });
-
-  // A4 (10/09/2026): solo lo que ESTA sesion toco, via transcript_path del payload del Stop.
-  const l = (o) => JSON.stringify(o);
-  const transcriptCon = (bloques) => {
-    const f = path.join(TMP, `dsg-${Date.now()}-${Math.random().toString(36).slice(2)}.jsonl`);
-    fs.writeFileSync(f, [l({ type: 'user', message: { content: 'dale' } }), ...bloques.map((b) => l({ type: 'assistant', message: { content: [{ type: 'tool_use', ...b }] } }))].join('\n') + '\n');
-    return f;
-  };
-  const correrCon = (transcript) => hook('dev-server-guard.sh', { hook_event_name: 'Stop', transcript_path: posix(transcript) }, { cwd: repo });
-
-  it('A4 ROJO: App.tsx sucio y ESTA sesion lo escribio → 2 nombrandolo', () => {
-    fs.appendFileSync(APP, 'export const c = 2;\n');
-    const r = correrCon(transcriptCon([{ name: 'Write', input: { file_path: APP, content: '' } }]));
-    expect(r.exit).toBe(2);
-    expect(r.err).toMatch(/App\.tsx/);
-  });
-
-  it('A4 VERDE: App.tsx sucio pero ESTA sesion solo toco scripts/x.ts → 0 (lo sucio es de OTRA sesion)', () => {
-    fs.appendFileSync(APP, 'export const c = 2;\n');
-    const r = correrCon(transcriptCon([{ name: 'Edit', input: { file_path: SCRIPT, old_string: 'a', new_string: 'b' } }]));
-    expect(r.exit).toBe(0);
-    expect(r.err).toBe('');
-  });
-
-  it('A4 VERDE: App.tsx sucio y ESTA sesion solo LEYO → 0 (lista vacia no es "no se puede atribuir")', () => {
-    fs.appendFileSync(APP, 'export const c = 2;\n');
-    const r = correrCon(transcriptCon([{ name: 'Read', input: { file_path: APP } }]));
-    expect(r.exit).toBe(0);
-    expect(r.err).toBe('');
-  });
-
-  it('A4 VERDE: .claude/*.json y .mcp.json sucios no son codigo de la app (sin transcript, que cuenta todo)', () => {
-    fs.writeFileSync(path.join(repo, '.mcp.json'), '{}\n');
-    git('add', '.mcp.json');
-    git('commit', '-q', '-m', 'mcp');
-    fs.appendFileSync(path.join(repo, '.claude', 'launch.json'), '\n');
-    fs.appendFileSync(path.join(repo, '.mcp.json'), '\n');
-    const r = correr();
-    expect(r.exit).toBe(0);
-    expect(r.err).toBe('');
   });
 });
 
@@ -347,106 +270,6 @@ describe('instrucciones-log.sh (InstructionsLoaded) — siempre exit 0; deja una
   it('VERDE (no rompe nada): un payload ilegible tambien es exit 0 y deja una linea con "?"', () => {
     expect(correr(null, { stdin: '{roto' }).exit).toBe(0);
     expect(fs.readFileSync(LOG, 'utf8')).toMatch(/\t\?\t\t\?$/m);
-  });
-});
-
-// ─────────────── timeout-guard (PostToolUse|PostToolUseFailure): un comando cortado no es evidencia
-describe('timeout-guard.sh (PostToolUse) — el timeout deja el aviso; todo lo demas pasa en silencio', () => {
-  const correr = (payload, extra) => hook('timeout-guard.sh', payload, extra);
-
-  it('ROJO (deja marca): "Command timed out" en tool_response → exit 0 + additionalContext con el comando', () => {
-    const r = correr({ hook_event_name: 'PostToolUse', tool_name: 'Bash', tool_input: { command: 'find /y/BARACK -name "I-AC-012*"' }, tool_response: { stdout: '', stderr: 'Command timed out after 2m 0.0s', interrupted: false } });
-    expect(r.exit).toBe(0);
-    const ctx = JSON.parse(r.out).hookSpecificOutput;
-    expect(ctx.hookEventName).toBe('PostToolUse');
-    expect(ctx.additionalContext).toMatch(/TIMEOUT-GUARD/);
-    expect(ctx.additionalContext).toMatch(/I-AC-012\*/);
-    expect(ctx.additionalContext).toMatch(/NO es un chequeo/);
-    const f = correr({ hook_event_name: 'PostToolUseFailure', tool_name: 'Bash', tool_input: { command: 'grep -r x /y' }, error: 'Command timed out after 2m 0s' });
-    expect(JSON.parse(f.out).hookSpecificOutput.hookEventName).toBe('PostToolUseFailure');
-  });
-
-  it('ROJO en el otro formato: la frase del pase a background, y la frase tras un salto de linea del stderr', () => {
-    const bg = correr({ hook_event_name: 'PostToolUse', tool_name: 'Bash', tool_input: { command: 'find /y -name x' }, tool_response: { stdout: 'Command did not complete within its 120s timeout and was moved to the background (ID: b1).', stderr: '' } });
-    expect(JSON.parse(bg.out).hookSpecificOutput.additionalContext).toMatch(/TIMEOUT-GUARD/);
-    const nl = correr({ hook_event_name: 'PostToolUse', tool_name: 'Bash', tool_input: { command: 'x' }, tool_response: { stdout: '', stderr: 'algo\nCommand timed out after 2m 0.0s' } });
-    expect(JSON.parse(nl.out).hookSpecificOutput.additionalContext).toMatch(/TIMEOUT-GUARD/);
-  });
-
-  it('VERDE: salida normal, "timed out" solo en el COMANDO (un grep), o JSON ilegible → exit 0 sin nada', () => {
-    expect(correr({ tool_name: 'Bash', tool_input: { command: 'ls' }, tool_response: { stdout: 'a\nb', stderr: '' } })).toEqual({ exit: 0, out: '', err: '' });
-    const g = correr({ tool_name: 'Bash', tool_input: { command: 'grep "timed out" log.txt' }, tool_response: { stdout: 'nada', stderr: '' } });
-    expect(g.exit).toBe(0);
-    expect(g.out).toBe('');
-    expect(correr(null, { stdin: '{roto Command timed out after 2m' })).toEqual({ exit: 0, out: '', err: '' });
-  });
-
-  it('VERDE por su motivo (visto fallar 10/09): la frase CITADA en un stdout —la salida de vitest con el titulo de este test, o un cat del test— no es un timeout', () => {
-    const vitest = correr({ tool_name: 'Bash', tool_input: { command: 'npx vitest run' }, tool_response: { stdout: ' ✓ ROJO (deja marca): "Command timed out" en tool_response → exit 0\n Tests 177 passed', stderr: '' } });
-    expect(vitest.out).toBe('');
-    const cat = correr({ tool_name: 'Bash', tool_input: { command: 'cat x.test.mjs' }, tool_response: { stdout: "    tool_response: { stdout: '', stderr: 'Command timed out after 2m 0.0s', interrupted: false }", stderr: '' } });
-    expect(cat.out).toBe('');
-  });
-});
-
-// ─────────────── timeout-guard directo con node (30/09/2026): sin el envoltorio bash
-describe('timeout-guard con node directo (settings.json) — el mismo veredicto que el .sh, sin bash', () => {
-  const NODE = path.join(RAIZ, 'scripts', '_lib', 'timeoutGuard.mjs');
-  const directo = (payload, stdin) => {
-    const r = spawnSync('node', [NODE], { input: stdin ?? JSON.stringify(payload), encoding: 'utf8' });
-    return { exit: r.status, out: r.stdout ?? '', err: r.stderr ?? '' };
-  };
-  const ROJOS = [
-    { hook_event_name: 'PostToolUse', tool_name: 'Bash', tool_input: { command: 'find /y/BARACK -name "I-AC-012*"' }, tool_response: { stdout: '', stderr: 'Command timed out after 2m 0.0s', interrupted: false } },
-    { hook_event_name: 'PostToolUseFailure', tool_name: 'Bash', tool_input: { command: 'grep -r x /y' }, error: 'Command timed out after 2m 0s' },
-    { hook_event_name: 'PostToolUse', tool_name: 'Bash', tool_input: { command: 'find /y -name x' }, tool_response: { stdout: 'Command did not complete within its 120s timeout and was moved to the background (ID: b1).', stderr: '' } },
-    { hook_event_name: 'PostToolUse', tool_name: 'PowerShell', tool_input: { command: 'Get-ChildItem Y:\\ -Recurse' }, tool_response: { stdout: '', stderr: 'algo\nCommand timed out after 2m 0.0s' } },
-  ];
-  const VERDES = [
-    { tool_name: 'Bash', tool_input: { command: 'ls' }, tool_response: { stdout: 'a\nb', stderr: '' } },
-    { tool_name: 'Bash', tool_input: { command: 'grep "timed out" log.txt' }, tool_response: { stdout: 'nada', stderr: '' } },
-    { tool_name: 'Bash', tool_input: { command: 'npx vitest run' }, tool_response: { stdout: ' ✓ ROJO (deja marca): "Command timed out" en tool_response → exit 0\n Tests 177 passed', stderr: '' } },
-    { tool_name: 'Bash', tool_input: { command: 'cat x.test.mjs' }, tool_response: { stdout: "    tool_response: { stdout: '', stderr: 'Command timed out after 2m 0.0s', interrupted: false }", stderr: '' } },
-  ];
-
-  it('ROJO: un timeout deja el aviso con el comando; el evento de salida es el del payload', () => {
-    for (const p of ROJOS) {
-      const r = directo(p);
-      expect(r.exit).toBe(0);
-      const ctx = JSON.parse(r.out).hookSpecificOutput;
-      expect(ctx.hookEventName).toBe(p.hook_event_name);
-      expect(ctx.additionalContext).toMatch(/TIMEOUT-GUARD/);
-      expect(ctx.additionalContext).toMatch(/NO es un chequeo/);
-    }
-  });
-
-  it('VERDE: salida normal, "timed out" solo en el comando o citado en un stdout, payload ilegible o vacio → exit 0 sin nada', () => {
-    for (const p of VERDES) expect(directo(p), JSON.stringify(p).slice(0, 80)).toEqual({ exit: 0, out: '', err: '' });
-    expect(directo(null, '{roto Command timed out after 2m')).toEqual({ exit: 0, out: '', err: '' });
-    expect(directo(null, '')).toEqual({ exit: 0, out: '', err: '' });
-    expect(directo(null, 'no es json')).toEqual({ exit: 0, out: '', err: '' });
-  });
-
-  it('IGUAL al .sh en los 8 casos (el envoltorio no agrega ni saca nada)', () => {
-    for (const p of [...ROJOS, ...VERDES]) expect(directo(p)).toEqual(hook('timeout-guard.sh', p));
-  });
-
-  it('la compuerta del crudo es mas ancha que el detector: todo lo que el detector avisa pasa por ella (no se pierde ningun aviso)', () => {
-    for (const p of ROJOS) {
-      expect(evaluarTimeout(p), JSON.stringify(p).slice(0, 80)).not.toBe(null);
-      expect(COMPUERTA.test(JSON.stringify(p))).toBe(true);
-    }
-    // y lo que la compuerta deja pasar sin ser timeout lo descarta el detector (la frase citada en un stdout)
-    for (const p of VERDES) if (COMPUERTA.test(JSON.stringify(p))) expect(evaluarTimeout(p)).toBe(null);
-  });
-
-  it('settings.json llama a este mismo archivo, con node y por ${CLAUDE_PROJECT_DIR}, en PostToolUse y PostToolUseFailure (Bash|PowerShell)', () => {
-    const s = JSON.parse(fs.readFileSync(path.join(RAIZ, '.claude', 'settings.json'), 'utf8'));
-    for (const evento of ['PostToolUse', 'PostToolUseFailure']) {
-      const grupo = s.hooks[evento].find((g) => g.matcher === 'Bash|PowerShell');
-      expect(grupo, evento).toBeTruthy();
-      expect(grupo.hooks.map((h) => h.command)).toEqual(['node "${CLAUDE_PROJECT_DIR}/scripts/_lib/timeoutGuard.mjs"']);
-    }
   });
 });
 

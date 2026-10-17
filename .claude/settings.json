@@ -103,29 +103,6 @@
         ]
       }
     ],
-    "PostToolUse": [
-      {
-        "_comentario": "10/09/2026 (A2): un comando cortado por timeout NO es evidencia (LECCIONES 08/09, anexo I-AC-012.1); el aviso sale como additionalContext, exit 0. Se cablea tambien en PostToolUseFailure porque no esta verificado en cual de los dos eventos llega el timeout de Bash. 30/09/2026: se llama a node directo, sin el envoltorio bash de timeout-guard.sh (corrio ~21.000 veces en septiembre y aviso 1: el bash + subshells + grep costaban mas que el chequeo); la compuerta barata (un regex sobre el payload crudo) vive ahora en scripts/_lib/timeoutGuard.mjs. timeout-guard.sh queda como wrapper suelto para las pruebas. Tests: hooksVarios.test.mjs.",
-        "matcher": "Bash|PowerShell",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PROJECT_DIR}/scripts/_lib/timeoutGuard.mjs\""
-          }
-        ]
-      }
-    ],
-    "PostToolUseFailure": [
-      {
-        "matcher": "Bash|PowerShell",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PROJECT_DIR}/scripts/_lib/timeoutGuard.mjs\""
-          }
-        ]
-      }
-    ],
     "PreCompact": [
       {
         "_comentario": "16/10/2026 (tanda 1.3.3 del plan del sistema): registro de compactaciones. Anota en .claude/state/compactaciones.jsonl (gitignoreado) fecha, sesion, causa (auto | manual | idle, leido del claude.exe 2.1.301) y los tokens del ultimo turno; PostCompact suma el largo del resumen. Hasta hoy se contaban leyendo los .jsonl a mano. Nunca frena la compactacion (exit 0 siempre; errores a compactaciones.errores.log). No toca idleCompaction ni la ventana de 1 M. Logica: scripts/_lib/compactacionRegistro.mjs. Test: compactacionRegistro.test.mjs.",
@@ -153,13 +130,9 @@
     ],
     "Stop": [
       {
-        "_comentario": "10/09/2026 (A1, A3, A4): cierre-guard suma dos chequeos (entregable afuera nunca abierto; cierre largo) y los dos Stop hooks miran solo lo que toco ESTA sesion (transcript_path del payload, subagentes incluidos). Logica en scripts/_lib/cierreGuard.mjs, frases en cierreCanon.data.json. 02/10/2026: chequeo 7 (Fak pidio que se lo explique y el turno no cargo el skill explicar-mejor, ni mostro un dibujo o una pagina; salida: un renglon 'No aplica explicar-mejor: …') y pendiente de mejora sin probar (regla mejora-implementada.md, node scripts/_probarMejora.mjs). Tests: cierreGuardExplicar.test.mjs.",
+        "_comentario": "10/09/2026 (A1, A3, A4): cierre-guard suma dos chequeos (entregable afuera nunca abierto; cierre largo) y miran solo lo que toco ESTA sesion (transcript_path del payload, subagentes incluidos). Logica en scripts/_lib/cierreGuard.mjs, frases en cierreCanon.data.json. 02/10/2026: chequeo 7 (Fak pidio que se lo explique y el turno no cargo el skill explicar-mejor, ni mostro un dibujo o una pagina; salida: un renglon 'No aplica explicar-mejor: …') y pendiente de mejora sin probar (regla mejora-implementada.md, node scripts/_probarMejora.mjs). Tests: cierreGuardExplicar.test.mjs. 16/10/2026 (tanda 3, P11 y P20, si de Fak del 09/10): se retiraron dev-server-guard (Stop: 4 frenos en el mes, los 4 falsos) y timeout-guard (PostToolUse y PostToolUseFailure: ~51.800 corridas y 6 avisos); sus archivos estan en .claude/hooks/_retirados/ con el porque.",
         "matcher": "",
         "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/dev-server-guard.sh\""
-          },
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/cierre-guard.sh\""

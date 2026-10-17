@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# RETIRADO el 16/10/2026 (tanda 3 del plan del sistema, P11, si de Fak del 09/10): en el mes freno 4 veces y las 4 fueron falsas; ya no esta cableado en settings.json.
 # Stop hook — recordar verificar en el preview cuando se toco codigo de la APP.
 #
 # Historia (21/08/2026): la version anterior vivia inline dentro de settings.json y decia

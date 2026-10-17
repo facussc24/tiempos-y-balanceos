@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# RETIRADO el 16/10/2026 (tanda 3 del plan del sistema, P20, si de Fak del 09/10): ~51.800 corridas en el mes y 6 avisos; ya no esta cableado en settings.json.
 # timeout-guard.sh — PostToolUse + PostToolUseFailure, matcher Bash|PowerShell (A2, 10/09/2026).
 #
 # Si el resultado del comando dice "Command timed out", deja en el contexto (additionalContext,
