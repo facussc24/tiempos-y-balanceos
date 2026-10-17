@@ -2581,6 +2581,111 @@ const APQP_GENERA = /(^|[;&|\s])(cp|copy|xcopy|robocopy|mv|move)(\s|$)|Copy-Item
 // o sea el comando con el que iba a ARREGLAR la fila que el gate cuida.
 const APQP_REGISTRA = /(^|[;&|]+\s*)(py|python3?|node)\b[^\n;&|]*_registrar[A-Za-z0-9]*\.(py|mjs)\b[^\n;&|]*--apply/i;
 
+// P13 (tanda 3, 16/10/2026; si de Fak del 15/10). Medido sobre los 19 frenos de 30 dias del informe de CATA
+// (`casa_guardianes_frenos.md` §3 P4): 7 de los 8 falsos copiaban el listado HACIA el scratchpad o exports/ para leerlo
+// (el listado era el ORIGEN del cp) o lo abrian con openpyxl sin guardar; la regla vieja contaba el nombre del listado en
+// cualquier lado del comando junto a cualquier cp. En Bash ahora se mira cada comando y cada codigo pegado:
+//   · cp / mv / copy / xcopy / Copy-Item / Move-Item: frena si el DESTINO es el listado, o si el listado es un ORIGEN y el
+//     destino no es local (TEMP, scratchpad, /tmp, C:\tmp, C:\Dev\…): una copia al lado del maestro en el servidor
+//     tambien es escribir ahi. Las variables escritas en el mismo comando y los `cd` de antes se resuelven;
+//   · robocopy: frena si nombra el listado y el destino (su segundo argumento) no es local;
+//   · el codigo pegado (heredoc, python -c, node -e) y el script del TEMP o del scratchpad que el comando corre por ruta:
+//     frena si nombra el listado y lo GUARDA (`.Save()` de COM, `.save(<el listado>)`, `shutil.copy(x, <el listado>)`,
+//     `open(<el listado>, 'w')`, `to_excel(<el listado>)`). Abrirlo para leer no frena.
+// El octavo falso del informe (15/10 13:39) no era falso: el mismo comando escribia un script con `wb.Save()` sobre el
+// listado de flujogramas y lo corria. Sigue frenando. Los `_registrar* --apply` y el Write/Edit no cambian.
+const APQP_LOCAL = /AppData[\\/]Local[\\/]Temp(?:[\\/]|$)|[\\/]scratchpad(?:[\\/]|$)|^(?:\/tmp|\/c\/tmp|[A-Za-z]:[\\/]tmp)(?:[\\/]|$)|^(?:[A-Za-z]:|\/[a-z])[\\/]Dev[\\/]/i;
+const APQP_COM_GUARDA = /\.(?:Save|SaveAs|SaveCopyAs)\s*\(|SaveChanges\s*[:=]\s*(?:True|\$true|1)|\.Close\s*\(\s*(?:True|\$true|1|-1)\s*[,)]/i;
+const APQP_GUARDA_EN = /(?:\.save|\.to_excel|shutil\.(?:copy\w*|move)|os\.(?:replace|rename)|copyfile\w*|copyFileSync|renameSync|writeFileSync)\s*\(([^\n]*)/g;
+const apqpLocal = (p) => APQP_LOCAL.test(String(p ?? '').replace(/^["']|["']$/g, ''));
+// lo mismo adentro de un codigo: la ruta se arma con el TEMP del sistema, el scratchpad o C:\Dev
+const APQP_CODIGO_LOCAL = /scratchpad|AppData[\\/]+Local[\\/]+Temp|environ\s*\[\s*["']TE?MP["']\s*\]|gettempdir|mkdtemp|tmpdir\s*\(|["'](?:\/tmp|[A-Za-z]:[\\/]+tmp)[\\/"']|[A-Za-z]:[\\/]+Dev[\\/]/i;
+const APQP_HOME_PH = 'C:/Users/_home_';
+const APQP_ENV = { TEMP: `${APQP_HOME_PH}/AppData/Local/Temp`, TMP: `${APQP_HOME_PH}/AppData/Local/Temp`, TMPDIR: `${APQP_HOME_PH}/AppData/Local/Temp`, HOME: APQP_HOME_PH, USERPROFILE: APQP_HOME_PH };
+/** Resuelve las variables del comando: las escritas (tambien las que nombran otra variable escrita) y TEMP/HOME. */
+function resolvedorDe(cmd) {
+  const crudas = new Map();
+  for (const m of String(cmd).matchAll(/(?:^|[;&|\s(])([A-Za-z_][A-Za-z0-9_]*)=("([^"\n]*)"|'([^'\n]*)'|([^\s;&|"'()]*))/g)) crudas.set(m[1], { v: m[3] ?? m[4] ?? m[5] ?? '', simple: m[4] !== undefined });
+  const res = (w, prof = 0) => String(w ?? '').replace(/\$\{?([A-Za-z_]\w*)\}?/g, (m, n) => {
+    const c = crudas.get(n);
+    if (c) return c.simple ? c.v : /\$\(|\x60/.test(c.v) || prof > 4 ? m : res(c.v, prof + 1);
+    return APQP_ENV[n.toUpperCase()] ?? m;
+  });
+  return res;
+}
+
+/** ¿Este codigo (Python / JS) guarda sobre el listado? Las variables con el nombre del listado cuentan. */
+export function codigoGuardaListado(code) {
+  const s = String(code ?? '');
+  if (!APQP_LISTADO.test(s)) return false;
+  if (APQP_COM_GUARDA.test(s)) return true;                               // COM guarda el libro que abrio
+  // una copia LOCAL que se llama como el listado (`…/scratchpad/listado_maestro_ing.xlsx`, 13/10) no es el maestro
+  const local = (t) => APQP_CODIGO_LOCAL.test(t);
+  const conListado = new Set();
+  for (const m of s.matchAll(/(?:^|[\s;(,])([A-Za-z_$][\w$]*)\s*=\s*([^\n=][^\n]*)/g)) if (APQP_LISTADO.test(m[2]) && !local(m[2])) conListado.add(m[1]);
+  const nombraListado = (arg) => (APQP_LISTADO.test(arg) && !local(arg)) || [...conListado].some((v) => new RegExp(`(?<![\\w$.])${v.replace(/\$/g, '\\$')}(?![\\w$])`).test(arg));
+  for (const m of s.matchAll(APQP_GUARDA_EN)) {
+    const llamada = m[0];
+    const args = m[1];
+    // .save(X) / to_excel(X): el primer argumento; copiar o mover (A, B): el segundo, que es el destino
+    const dentro = args.split(')')[0];
+    const destino = /^\.save|^\.to_excel|^writeFileSync/.test(llamada) ? dentro.split(',')[0] : dentro.split(',').slice(1).join(',');
+    if (nombraListado(destino)) return true;
+  }
+  for (const m of s.matchAll(/\bopen\s*\(([^)\n]*)\)/g)) {
+    const partes = m[1].split(',');
+    if (partes.length > 1 && /["'][^"']*[wa+x][^"']*["']/.test(partes.slice(1).join(',')) && nombraListado(partes[0])) return true;
+  }
+  return false;
+}
+
+/**
+ * Bash: la ruta o el motivo por el que el comando ESCRIBE un listado maestro ('' si no). Ver P13 arriba.
+ * `leer` lee un script por ruta (por defecto, del disco; ≤ 200 KB); `cwd` es la carpeta de la sesion.
+ */
+export function escribeListadoBash(cmd, { cwd = '', leer } = {}) {
+  const leerScript = leer ?? ((p) => { try { const st = fs.statSync(p); return st.size <= 200_000 ? fs.readFileSync(p, 'utf8') : ''; } catch { return ''; } });
+  const { lineas, cuerpos } = separarHeredocs(String(cmd ?? ''));
+  const res = resolvedorDe(cmd);
+  const codigos = cuerpos.filter((h) => !h.deGit).map((h) => h.cuerpo);
+  let dir = cwd ? String(cwd).replace(/\\/g, '/') : '';
+  const completa = (p) => { const r = res(p).replace(/\\/g, '/'); return /^(?:[A-Za-z]:|\/|~)/.test(r) || !dir ? r : `${dir.replace(/\/+$/, '')}/${r}`; };
+  for (const c of comandosSimples(lineas)) {
+    const palabras = c.palabras.map((w) => w.replace(/\uE000/g, '$'));
+    const { verbo, args } = verboDeComando({ ...c, palabras });
+    const v = verboPelado(verbo);
+    if (/^(?:cd|pushd|chdir|Set-Location|sl)$/i.test(v)) { const d = args.find((a) => !a.startsWith('-')); const r = d ? res(d).replace(/\\/g, '/') : ''; dir = /\$/.test(r) ? '' : /^(?:[A-Za-z]:|\/)/.test(r) ? r : dir && r ? `${dir}/${r}` : ''; continue; }
+    if (/^(?:cp|mv|copy|move|xcopy|Copy-Item|cpi|Move-Item|mi)$/i.test(v)) {
+      const explicito = args.findIndex((a) => /^-(?:t|Destination)$/i.test(a) || /^--target-directory=/.test(a));
+      const pos = args.filter((a, k) => !/^-/.test(a) && !/^\/[A-Za-z]{1,3}$/.test(a) && !(explicito >= 0 && k === explicito + 1));
+      const destino = explicito >= 0 ? (args[explicito].includes('=') ? args[explicito].split('=')[1] : args[explicito + 1]) : pos[pos.length - 1];
+      const fuentes = explicito >= 0 ? pos : pos.slice(0, -1);
+      if (!destino) continue;
+      const d = completa(destino);
+      if (APQP_LISTADO.test(d) && (/\$/.test(d) || !apqpLocal(d))) return d;
+      if (fuentes.some((f) => APQP_LISTADO.test(res(f))) && (/\$/.test(d) || !apqpLocal(d))) return `${d} (copia del listado)`;
+      continue;
+    }
+    if (/^robocopy$/i.test(v)) {
+      const pos = args.filter((a) => !/^\//.test(a));
+      if (APQP_LISTADO.test(res(c.crudo)) && (!pos[1] || /\$/.test(res(pos[1])) || !apqpLocal(completa(pos[1])))) return completa(pos[1] || '');
+      continue;
+    }
+    if (CORRE_INTERPRETE_RE.test(v)) {
+      const r = modoInterprete(verbo, args);
+      if (r.modo === 'pegado') codigos.push(r.codigo);
+      else if (r.modo === 'archivo') {
+        // un script del TEMP o del scratchpad corrido por ruta: no pasa por el guardian cuando lo escribe un heredoc de
+        // otro comando, asi que se lee aca (los de scripts/ que escriben un listado van con `_registrar* --apply`)
+        const archivo = args.find((a) => !a.startsWith('-') && /\.(?:py|mjs|js|cjs)$/i.test(a));
+        const p = archivo ? completa(archivo) : '';
+        if (p && !/\$/.test(p) && /AppData[\\/]Local[\\/]Temp|[\\/]scratchpad[\\/]|^\/tmp\//i.test(p)) codigos.push(leerScript(aRutaWin(p, p)));
+      }
+    }
+  }
+  return codigos.some(codigoGuardaListado) ? 'el codigo que corre guarda el listado' : '';
+}
+
 const APQP_CIERRE = `Regla: .claude/rules/autonomy-contract.md §F — "la PRIMERA VEZ se pregunta".
 Que va en cada casillero del legajo APQP: skill \`apqp-legajo\`.`;
 
@@ -2616,9 +2721,12 @@ dudas" en el paquete envejece sola y despues nadie sabe cual manda.
 ${APQP_CIERRE}`);
   }
 
-  // 2. Los listados maestros
+  // 2. Los listados maestros. En Bash con JSON sano, comando por comando (P13, arriba); si no, la regla de siempre.
+  const porComando = ctx.ok && ctx.tool === 'Bash' && !esEscritura;
+  const listadoBash = porComando ? escribeListadoBash(ctx.cmd, { cwd: ctx.cwd || '' }) : '';
   const tocaListado = APQP_LISTADO.test(destino) || (!esEscritura && APQP_LISTADO.test(cmd));
-  if ((esEscritura && APQP_LISTADO.test(file)) || (!esEscritura && tocaListado && APQP_ESCRIBE.test(cmd)) || APQP_REGISTRA.test(cmd)) {
+  const escribeListado = porComando ? Boolean(listadoBash) : (!esEscritura && tocaListado && APQP_ESCRIBE.test(cmd));
+  if ((esEscritura && APQP_LISTADO.test(file)) || escribeListado || APQP_REGISTRA.test(cmd)) {
     // Escape de UN uso, igual que arb-cerrar-guard: cuando Fak ya dijo que si, el gate tiene
     // que poder abrirse. Un gate que no se puede pasar ni con autorizacion no se respeta, se
     // esquiva — y ahi deja de existir. Se consume al usarlo para que valga por UNA carga.
@@ -2630,7 +2738,7 @@ Despues de cargar: releer la fila y verificar que la de al lado quedo intacta.`)
     }
     return bloqueo(`[APQP-CLIENTE] BLOQUEADO: estas por escribir en un LISTADO MAESTRO.
 
-${destino || cmd.slice(0, 120)}
+${listadoBash || destino || cmd.slice(0, 120)}
 
 Los listados maestros (flujogramas, AMFEs, hojas de proceso) son el registro compartido de
 Ingenieria: de ahi sale el numero de cada documento y el estado de cada uno. Una fila cargada

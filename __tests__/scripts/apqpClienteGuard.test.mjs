@@ -187,3 +187,62 @@ describe('apqp-cliente-guard por el camino real (evaluar con el JSON del hook)',
         expect(fs.existsSync(marca)).toBe(false);
     });
 });
+
+// P13 (tanda 3 del plan del sistema, 16/10/2026; si de Fak del 15/10). Los VERDE son los frenos FALSOS reales del informe
+// de CATA (`casa_guardianes_frenos.md` §3 P4), recortados a lo que decide; los ROJO, los verdaderos y las variantes que el
+// arreglo no tiene que dejar pasar. Medido con scripts/_frenosMedir.mjs: 8 falsos -> 1 (el que queda escribia de verdad).
+describe('P13 — origen o destino: copiar el listado para LEERLO no es escribirlo (Bash)', () => {
+    const HO = 'Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\HOJAS DE OPERACIONES\\3- LISTADO\\Listado hojas de proceso.xlsx';
+    const FLUJO = 'Y:/Ingenieria/Documentacion Gestion Ingenieria/8. Flujograma Sinóptico (I-IN-002III)/1. LISTADO DE FLUJOGRAMAS';
+    const SCR = 'C:/Users/FACUND~1/AppData/Local/Temp/claude/C--Dev-BarackMercosul/a27eabc3-6f16-4975-8a56-576b60a29524/scratchpad';
+    const json = (command, cwd = 'C:\\Dev\\BarackMercosul') => JSON.stringify({ tool_name: 'Bash', tool_input: { command }, cwd, session_id: 'test' });
+    const frena = (command, cwd) => evaluar(json(command, cwd), { nombres: ['apqp-cliente-guard'], env: { HOME: os.tmpdir() }, marcar: false, escapes: false }).res.bloqueos.length === 1;
+
+    it('VERDE — el listado como ORIGEN de un cp hacia el scratchpad, exports o C:\\tmp (24/09, 14/10, 15/10)', () => {
+        for (const c of [
+            `H="/y/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES"; timeout 60 find "$H/1- CLIENTES/SMRC/P21" -maxdepth 3 | head -40; cp "$H/3- LISTADO/Listado hojas de proceso.xlsx" "${SCR}/listado_ho.xlsx"`,
+            `cd /c/tmp/setup && cp "/y/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/3- LISTADO/Listado hojas de proceso.xlsx" listado_ho.xlsx 2>&1 | tail -1; python -X utf8 -c "import openpyxl; wb=openpyxl.load_workbook('listado_ho.xlsx',read_only=True)"`,
+            `D="${FLUJO}"; ls -la "$D" | grep -i '~\\$' && exit 1; mkdir -p C:/Dev/BarackMercosul/exports/BEON/listado_respaldo; cp -p "$D/Listado_Maestro_FLUJOGRMAS.xlsx" C:/Dev/BarackMercosul/exports/BEON/listado_respaldo/`,
+            `S="$TEMP/claude/C--Dev-BarackMercosul/f14f5aae/scratchpad" && L="Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/3- LISTADO/Listado hojas de proceso.xlsx" && ls -la "$L" && cp "$L" "$S/listado_copia.xlsx"`,
+        ]) expect(frena(c), c).toBe(false);
+    });
+    it('VERDE — abrir el listado con openpyxl desde un python pegado, sin guardarlo (01/10, 13/10)', () => {
+        const py = `python - <<'EOF'\nimport openpyxl, shutil, os\nsrc = r"${HO}"\ndst = os.path.join(os.environ['TEMP'],'claude','x','scratchpad','listado_copia.xlsx')\nshutil.copy2(src,dst)\nwb = openpyxl.load_workbook(dst, data_only=True)\nprint(wb.sheetnames)\nEOF`;
+        expect(frena(py)).toBe(false);
+        // la copia local puede llamarse como un listado (13/10: listado_maestro_ing.xlsx en el scratchpad)
+        const py2 = `python - <<'EOF'\nimport os,shutil\ng=r'C:\\x\\LISTADO MAESTRO DE INGENIERIA - I-IN-001 - REV 8.xlsx'\ndst=os.path.join(os.environ['TEMP'],'claude','x','scratchpad','listado_maestro_ing.xlsx')\nshutil.copyfile(g,dst)\nEOF`;
+        expect(frena(py2)).toBe(false);
+    });
+
+    it('ROJO — copiar HACIA el listado, o el listado a otra carpeta del servidor', () => {
+        for (const c of [
+            `cp ${SCR}/listado.xlsx "${HO.replace(/\\/g, '/')}"`,
+            `cp -p "${FLUJO}/Listado_Maestro_FLUJOGRMAS.xlsx" "Y:/Ingenieria/otra carpeta/"`,
+            `robocopy "${SCR}" "Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/3- LISTADO" "Listado hojas de proceso.xlsx"`,
+            `D="Y:/x/1. LISTADO DE AMFES"; cp x.xlsx "$D/Listado_Maestro_AMFE.xlsx"`,
+        ]) expect(frena(c), c).toBe(true);
+        // 21/09 17:50: la copia de respaldo al LADO del maestro, en el servidor (cd adentro de la carpeta del listado)
+        expect(frena('cd "/y/Ingenieria/Documentacion Gestion Ingenieria/13. Analisis/1. LISTADO DE AMFES" && cp "Listado_Maestro_AMFE.xlsx" "Listado_Maestro_AMFE_backup_$(date +%Y%m%d).xlsx"')).toBe(true);
+    });
+    it('ROJO — el codigo pegado que GUARDA el listado (15/10 13:39: COM con wb.Save(); openpyxl; shutil hacia el listado)', () => {
+        const com = `cp -p "${FLUJO}/Listado_Maestro_FLUJOGRMAS.xlsx" C:/Dev/BarackMercosul/exports/x/; cat > "${SCR}/listado157.py" <<'EOF'\nimport win32com.client as win32\nf=r'Y:\\x\\Listado_Maestro_FLUJOGRMAS.xlsx'\nxl=win32.DispatchEx('Excel.Application')\nwb=xl.Workbooks.Open(f, 0, False)\nwb.Worksheets('Listado FLUJOGRAMAS').Range('M62').Value='B'\nwb.Save(); wb.Close(False)\nEOF\npython "${SCR}/listado157.py"`;
+        expect(frena(com)).toBe(true);
+        expect(frena(`python -c "import openpyxl; L=r'${HO}'; wb=openpyxl.load_workbook(L); wb.save(L)"`)).toBe(true);
+        expect(frena(`python - <<'EOF'\nimport shutil\nsrc = r"C:\\tmp\\nuevo.xlsx"\ndst = r"${HO}"\nshutil.copy(src, dst)\nEOF`)).toBe(true);
+        expect(frena(`node -e "require('fs').copyFileSync('C:/tmp/n.xlsx', 'Y:/x/Listado_Maestro_AMFE.xlsx')"`)).toBe(true);
+    });
+    it('ROJO — un script del TEMP corrido por RUTA que guarda el listado (15/10 13:55, listado152.py)', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'apqp-p13-'));
+        const script = path.join(dir, 'listado152.py');
+        fs.writeFileSync(script, "import win32com.client as w\nf=r'Y:\\x\\Listado_Maestro_FLUJOGRMAS.xlsx'\nwb=w.DispatchEx('Excel.Application').Workbooks.Open(f)\nwb.Save()\n");
+        const p = script.replace(/\\/g, '/');
+        expect(frena(`cp -p "${FLUJO}/Listado_Maestro_FLUJOGRMAS.xlsx" exports/x/antes.xlsx; python "${p}"`)).toBe(true);
+        // el mismo script sin guardar: pasa (leer el listado no es escribirlo)
+        fs.writeFileSync(script, "import openpyxl\nwb=openpyxl.load_workbook(r'Y:\\x\\Listado_Maestro_FLUJOGRMAS.xlsx', read_only=True)\nprint(wb.sheetnames)\n");
+        expect(frena(`python "${p}"`)).toBe(false);
+    });
+    it('ROJO — los _registrar* --apply siguen frenando (los verdaderos del informe)', () => {
+        expect(frena('py -3 scripts/_registrarRevFlujograma.py 153 D 01/10/2026 --apply 2>&1 | tail -6')).toBe(true);
+        expect(frena('cd /c/Dev/BarackMercosul && python scripts/_registrarUpperTrimListados.py flujograma --apply 2>&1 | tail -20')).toBe(true);
+    });
+});
