@@ -1741,7 +1741,8 @@ const BM_SONDA = /guardianes\.mjs|\bGUARDIANES\s*\[|[\w-]-guard(?:\.test)?\.(?:m
 const BM_LANZA = /\bos\.(?:system|popen|exec\w*|spawn\w*)\b|\bsubprocess\b|child_process|\bexecSync\b|\bexecFileSync\b|\bspawnSync\b|\bspawn\s*\(|(?<!\.)\bexec\s*\(|\bexecFile\s*\(|shell\s*=\s*True|Invoke-Expression|\biex\b|Start-Process/i;
 // mas las formas que no nombran el verbo: el `.exec(` de un modulo de procesos importado con otro nombre, asyncio, pty,
 // posix_spawn (si el script nombra child_process en cualquier lado, cualquier `.exec(` cuenta)
-const BM_LANZA_EXTRA = /create_subprocess|\bpty\.spawn|posix_spawn|\bProcessBuilder\b|Runtime\.getRuntime/i;
+// (ronda 2, detalle 9: `from os import system` + `system(…)`, `eval(`, `new Function`, `importlib.import_module`, `__import__`)
+const BM_LANZA_EXTRA = /create_subprocess|\bpty\.spawn|posix_spawn|\bProcessBuilder\b|Runtime\.getRuntime|(?<![\w.])system\s*\(|(?<![\w.])eval\s*\(|\bnew\s+Function\b|\bimport_module\b|\b__import__\b/i;
 // En un .mjs/.js/.py (los unicos donde vale la excepcion) `iex`, `Invoke-Expression` o `Start-Process` escritos en una
 // cadena solo corren si un child_process o un subprocess los lanza, y eso ya cuenta: se buscan sin esas tres palabras
 // (la sonda del 04/10 trae `'iwr … | iex'` como caso de texto).

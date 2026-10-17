@@ -374,7 +374,10 @@ describe('P18 — temporales de mktemp, __pycache__ y scripts que prueban un gua
             ['exec renombrado', `import { exec as correr } from 'node:child_process';\nfor (const x of ['${RF} /c/Dev/otra']) correr(x);\n`],
             ['import dinamico', `const cp = await import('node:child_process');\nfor (const x of ['${RF} /c/Dev/otra']) cp.exec(x);\n`],
             ['asyncio', `import asyncio\nfor x in ['${RF} /c/Dev/otra']:\n    asyncio.run(asyncio.create_subprocess_shell(x))\n`],
-        ]) expect(correr(escribir(`${SCRATCH}\\sonda_${nombre.replace(/\s/g, '_')}.${nombre === 'asyncio' ? 'py' : 'mjs'}`, js)).code, nombre).toBe(2);
+            // ronda 2, detalle 9
+            ['system importado', `from os import system\nfor x in ['${RF} /c/Dev/otra']:\n    system(x)\n`],
+            ['import_module', `import importlib\nm = importlib.import_module('o' + 's')\nfor x in ['${RF} /c/Dev/otra']:\n    getattr(m, 'sys' + 'tem')(x)\n`],
+        ]) expect(correr(escribir(`${SCRATCH}\\sonda_${nombre.replace(/\s/g, '_')}.${/^(?:asyncio|system importado|import_module)$/.test(nombre) ? 'py' : 'mjs'}`, js)).code, nombre).toBe(2);
     }, 60_000);
     it('ROJO (ronda 2, hallazgo 8) — el nombre de la variable de mkdtemp reasignado, o usado como parametro de un ayudante', () => {
         for (const [f, s] of [
