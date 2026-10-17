@@ -45,7 +45,8 @@ for h in HOJAS:
     d.update(h)
     d.setdefault("disparador", D.DISPARADOR)
     d.setdefault("acciones", D.ACCIONES)
-    d.setdefault("epp", D.EPP_BASE)
+    # sin setdefault del EPP: cada hoja del spec declara el suyo y hoja() frena si falta
+    # (tanda 1.5, 16/10/2026). EPP_BASE sigue existiendo para la hoja que lo pide por nombre.
     for f in d.get("imagenes", []):
         if not os.path.exists(f):
             faltan.append((d["op"], f))

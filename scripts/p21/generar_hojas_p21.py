@@ -374,6 +374,7 @@ def gate_foto_por_paso(d):
 
 
 def hoja(prs, d):
+    g._gate_epp_declarado(d)
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     g.cajetin(slide, d, g.LOGO_BARACK)
     gate_foto_por_paso(d)
@@ -384,7 +385,7 @@ def hoja(prs, d):
     bloque_imagenes_con_huecos(slide, d.get("imagenes", []), d.get("pies"))
     g.bloque_pasos(slide, d.get("pasos", []), d.get("nota"), d.get("parametros"))
     g.bloque_ciclo(slide, [])
-    g.bloque_epp(slide, d.get("epp", g.EPP_STD), ("OP - Operador de Producción",))
+    g.bloque_epp(slide, d["epp"], ("OP - Operador de Producción",))
     g.bloque_plan(slide, d.get("disparador", 'SI DETECTA "PRODUCTO" O "PROCESO" NO CONFORME'),
                   d.get("acciones"))
     return slide

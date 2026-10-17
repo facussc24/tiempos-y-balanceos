@@ -9,6 +9,9 @@
   --color     con --a3: en color. SOLO cuando Fak lo pide explicitamente para ese trabajo.
   --paginas   solo esas paginas (1 = la primera).
   --seco      arma el archivo de impresion y una vista previa PNG de la primera hoja, y NO manda nada.
+  --aunque-tenga-rojos  imprime hojas de proceso aunque el revisor del PDF (_revisarPaqueteHO.py) les
+              encuentre un defecto ROJO. Sin esto, un PDF con hojas de proceso en rojo NO se imprime
+              (tanda 1.5, 16/10/2026). Solo si Fak lo pidio para ese archivo.
 
 Como: Ghostscript (el que trae PDFCreator) convierte el PDF a PCL XL ajustando cada pagina al
 papel (gira la hoja si hace falta) y los bytes van crudos al puerto 9100. La C2004 esta instalada
@@ -75,6 +78,8 @@ def main():
     ap.add_argument('--paginas', help='por ejemplo 1-3,7')
     ap.add_argument('--seco', action='store_true', help='no manda nada: arma el archivo y una vista previa')
     ap.add_argument('--conservar', action='store_true', help='deja la carpeta temporal entera (por defecto se borra lo que ya se mando)')
+    ap.add_argument('--aunque-tenga-rojos', action='store_true',
+                    help='imprime hojas de proceso con defectos ROJO del revisor: solo si Fak lo pidio para ese archivo')
     a = ap.parse_args()
 
     if not os.path.exists(a.pdf):
@@ -87,6 +92,14 @@ def main():
     # TBD"). Avisa y sigue: no frena ni pregunta; el TBD del cajetin de una hoja de proceso no cuenta (cola P26).
     import tbdImpresion
     tbdImpresion.avisar([a.pdf], a.paginas, 'imprimir')
+    # Las hojas de proceso pasan por el revisor del PDF antes de imprimirse, sean de quien sean (tanda 1.5,
+    # 16/10/2026: el error entraba por hojas del servidor o de otro autor que no pasaban por ningun control).
+    # Con un ROJO no se imprime; --aunque-tenga-rojos solo si Fak lo pidio para ESE archivo.
+    if not a.aunque_tenga_rojos:
+        import _revisarPaqueteHO
+        total = len(_revisarPaqueteHO.fitz.open(a.pdf))
+        lista = tbdImpresion.paginas_a_revisar(a.paginas, total)
+        _revisarPaqueteHO.exigir_sin_rojos(a.pdf, ','.join(map(str, lista)), 'imprimir')
     if not os.path.exists(GS):
         raise SystemExit('Falta Ghostscript en %s (viene con PDFCreator)' % GS)
     imp = dict(IMPRESORAS['a3' if a.a3 else 'a4'])

@@ -654,7 +654,17 @@ def portada_a3(prs, d, logo=None, foto=None, ops_indice=None):
             y_ind += hh_ind
 
 # ─── 6. LÁMINA OPERACIONAL COMPLETA A3 ───────────────────────────────────────
+def _gate_epp_declarado(d):
+    """Cada hoja nombra su EPP segun el riesgo de SU puesto (hojas-proceso.md 16): no hay valor
+    por defecto (tanda 1.5 del plan del sistema, 16/10/2026). Corre antes que nada."""
+    if not d.get("epp"):
+        raise SystemExit(f"hoja {d.get('op', '?')}: no declara su epp=. El EPP sale del riesgo real del "
+                         f"puesto (hojas-proceso.md 16), no de un set por defecto: declarar epp=[...] "
+                         f"en la hoja con los iconos de ese puesto.")
+
+
 def hoja_a3(prs, d, logo=None):
+    _gate_epp_declarado(d)
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     _caja(slide, X0, Y0, X1 - X0, Y1 - Y0, BLANCO, borde=NEGRO, ancho=Pt(1.5))
     cajetin_a3(slide, d, logo)
@@ -662,7 +672,7 @@ def hoja_a3(prs, d, logo=None):
                        principal=d.get("principal"), fotos_criticas=d.get("fotos_criticas"))
     bloque_plan_a3(slide, d.get("disparador", 'SI DETECTA "PRODUCTO" O "PROCESO" NO CONFORME'), d.get("acciones"))
     bloque_descripcion_a3(slide, d.get("pasos", []), nota=d.get("nota"),
-                          parametros=d.get("parametros"), epp_icons=d.get("epp", [ICO_ROPA, ICO_CALZADO, ICO_GUANTES, ICO_BARBIJO]),
+                          parametros=d.get("parametros"), epp_icons=d["epp"],
                           ciclo_filas=d.get("ciclo", []))
     return slide
 

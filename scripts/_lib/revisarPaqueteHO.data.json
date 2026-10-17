@@ -1,0 +1,64 @@
+{
+  "_leeme": "Canon de los chequeos de contenido de scripts/_revisarPaqueteHO.py (tanda 1.5 del plan del sistema, 16/10/2026). Cada lista lleva su fuente. Una palabra, una herramienta o una regla de EPP nueva se agrega con SU fuente (una cita de Fak o un documento), nunca de memoria: una regla sin cita es inventar (core-prohibiciones §1). Lo prueba __tests__/scripts/revisarPaqueteHO.test.mjs con hojas reales en rojo y en verde.",
+
+  "piezas_raras": {
+    "fuente": "Skill hojas-de-proceso 0.8 b bis y §7 (Fak, 13/10/2026, hoja 20.6 del hot melt: «Verificar que los acumuladores... ¿no vale la pena entre parentesis aclarar que carajo es eso?») y 0.8 b (Fak, 02/10/2026: «¿que es el volante cromado?»).",
+    "rojo": [
+      {"palabra": "acumulador", "fuente": "Fak, 13/10/2026, hoja 20.6 del hot melt: «Verificar que los acumuladores... ¿no vale la pena entre parentesis aclarar que carajo es eso?»"}
+    ],
+    "aviso": ["volante cromado", "guiador", "desbobinador", "fusor", "enrollador", "expulsor", "atemperador", "sonotrodo"],
+    "_niveles": "ROJO solo para la pieza por la que Fak pidio el PARENTESIS (acumulador, 13/10). El volante cromado (02/10) es AVISO: ahi pidio la foto marcada, no la aclaracion entre parentesis (skill 0.8 b), y con ROJO el hot melt emitido el 13/10 no se imprimia. AVISO tambien para los demas ejemplos de la lista del skill (0.8 b bis y §7), que escribio una sesion y no Fak. Medido el 16/10/2026: el hot melt regenerado del 13/10 sigue con fusor, desbobinador, guiador, enrollador y volante cromado sin parentesis (el barrido pendiente de la memoria feedback_palabra_rara_en_una_hoja_se_aclara_y_se_marca)."
+  },
+
+  "herramientas": {
+    "fuente": "Skill hojas-de-proceso 0.8 b bis (Fak, 13/10/2026, hoja de tapizado del Top Roll de P. Gamboa, paso «Verificar el herramental: engrampadora neumatica con grampas, pistola de calor, tijera, pinza y cutter»: «no se entiende bien cuales son las herramientas, deberiamos nombrarlas y mostrarlas mejor... criterio general»). Lista de la tira de herramientas del I-IN-001 Rev 8 (memoria project_hojas_proceso_patagonia_que_falta).",
+    "palabras": ["engrampadora", "pistola de calor", "tijera", "pinza", "cutter", "cuter", "destornillador"],
+    "minimo_en_un_paso": 3,
+    "_minimo": "Un paso que lista 3 herramientas o mas es un paso de herramental (el caso medido nombra 5). Un paso que usa una o dos (\"recortar con tijera\") muestra la accion en su foto: ese caso lo mira la revision a mano."
+  },
+
+  "epp": {
+    "carpeta_iconos": "hotmelt/epp",
+    "iconos": {"ropa": "ico_13756.png", "calzado": "ico_4449.png", "guantes": "ico_11789.png", "anteojos": "ico_16034.png", "auditiva": "ico_12924.png", "barbijo": "ico_barbijo.png"},
+    "similitud_min": 0.9,
+    "_similitud": "Medido el 16/10/2026 sobre la HO-990 Rev.A, las hojas de grampas, el hot melt regenerado y la IMG A3: cada icono de la casa da 1,00 contra su archivo y como mucho 0,84 contra el segundo mas parecido (calzado contra guantes). 0,9 queda en el medio.",
+    "no_corresponde": [
+      {"donde": {"sector": "IMG"}, "icono": "anteojos",
+       "fuente": "Fak, 21/09/2026, moldeadora IMG: «¿para que necesito gafas? nadie usa gafas en esta maquina» (de ahi EPP_IMG en scripts/img/generar_hojas_img.py)"},
+      {"donde": {"ho": "990"}, "icono": "anteojos",
+       "fuente": "Fak, 14/10/2026, mirando las hojas de la HO-990 Rev.A del Insert: «¿por que hay gafas? en ese sector no hace falta gafas»"}
+    ],
+    "avisar": ["anteojos"],
+    "_avisar": "Anteojos en un puesto sin criterio cargado: AVISO para mirarlas juntas (informe casa_hojas_y_maquinas.md, A.3 punto 2). Que un sector SI los lleve no se deduce: lo dice el riesgo real del puesto (hojas-proceso.md 16)."
+  },
+
+  "plan_de_control": {
+    "fuente": "HO-990 Rev.A (exports/hojas-por-pieza-14-10): el plan de reaccion traia la reaccion del plan de control al costado («Segregar e identificar el material afectado en el cajon de scrap / contenedor rojo», «P-13 (Producto No Conforme) y P-14 (Acciones Correctivas)»); Fak, 14/10/2026: «¿por que el plan de reaccion esta mal?».",
+    "frases": [
+      ["P-13", "\\bP\\s?-?\\s?13\\b"],
+      ["P-14", "\\bP\\s?-?\\s?14\\b"],
+      ["segregar", "\\bSEGREGA"],
+      ["contenedor rojo", "CONTENEDOR ROJO"],
+      ["acciones correctivas", "ACCIONES\\s+CORRECTIVAS"]
+    ]
+  },
+
+  "cantidad": {
+    "fuente": "Fak, 13/10/2026, camino de inspeccion de grampas: «en el camino de inspeccion arriba dice x4 x3, no se entiende eso»; plan del sistema §7 punto 4: «4 piezas por juego», no «x4» en letra chica. 7 pt: canon de legibilidad (hojas-proceso.md 2).",
+    "cuerpo_min_pt": 7.0,
+    "regex": "\\b\\d+\\s+(GRAMPAS?|PIEZAS?|UNIDADES?|CLIPS?|TORNILLOS?|JUEGOS?|REMACHES?)\\b"
+  },
+
+  "armado_zona_muerta": 0.05,
+  "_armado": "Dos bloques a menos de 5 % de la pagina en un eje se toman a la par. Medido el 16/10/2026: las dos A4 buenas del test (HO de Excel p.1 y generador de la IMG p.62) acomodan distinto el recuadro de EPP y el ciclo pero ninguna invierte una relacion de la aprobada; la HO-990 Rev.A pone el plan de reaccion a la DERECHA del ciclo de control.",
+  "aprobadas": {
+    "A3": {
+      "fuente": "la HO-992 OP 50 UBICACION DE LAS GRAMPAS (exports/hojas-grampas-a3), emitida con el OK de Fak el 13/10/2026 a las 14:35 (memoria project_hojas_proceso_patagonia_que_falta; Fak ese dia: «ame como quedaron las hojas de grampas»); el hot melt regenerado del 13/10 tiene la misma huella",
+      "huella": {"DESC": [0.795, 0.192], "CICLO": [0.715, 0.75], "EPP": [0.902, 0.729], "PLAN": [0.312, 0.891]}
+    },
+    "A4": {
+      "fuente": "la HO de Excel de la casa del paquete del 07/10/2026 (IMPRESION_0710_V3, v6 p.1), que es el estandar segun LECCIONES 07/10 («se compara contra una HO de Excel del servidor»); no consta una aprobacion puntual de Fak de esa pagina",
+      "huella": {"DESC": [0.727, 0.251], "CICLO": [0.639, 0.733], "EPP": [0.87, 0.697], "PLAN": [0.27, 0.793]}
+    }
+  }
+}

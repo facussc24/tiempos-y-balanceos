@@ -455,6 +455,7 @@ def armar(d):
 
 
 def hoja(prs, d, logo=None):
+    base._gate_epp_declarado(d)          # sin EPP declarado no hay hoja (el A3 de la IMG pasaba None)
     fotos, refs, textos = armar(d)
     if len(fotos) > 15:
         raise ValueError(f"OP {d.get('op')}: {len(fotos)} fotos no entran en una hoja (tope 15): partirla")
@@ -467,7 +468,7 @@ def hoja(prs, d, logo=None):
     base.cajetin_a3(slide, caj, logo)
     avisos = bloque_fotos(slide, fotos, grilla=d.get("grilla"), filas=d.get("filas"))
     base.bloque_plan_a3(slide)
-    bloque_descripcion(slide, textos, refs, aviso=d.get("aviso"), epp=d.get("epp"))
+    bloque_descripcion(slide, textos, refs, aviso=d.get("aviso"), epp=d["epp"])
     return slide, avisos
 
 
