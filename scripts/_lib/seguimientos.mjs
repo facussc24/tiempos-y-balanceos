@@ -245,20 +245,22 @@ export function textoHook(datos, hoy) {
 /**
  * Saca de la memoria el bloque ```json que tiene la lista "seguimientos" (puede haber otro
  * bloque json de ejemplo antes). Devuelve { datos, antes, despues, salto } para reescribirlo.
+ * `clave` elige otro bloque (tanda 13: "parametros" de la ficha de una maquina, `parametrosMaquina.mjs`).
  */
-export function leerBloque(md) {
+export function leerBloque(md, clave = 'seguimientos') {
   const re = /```json[ \t]*\r?\n([\s\S]*?)\r?\n```/g;
   let m;
   let primerError = null;
   while ((m = re.exec(md)) !== null) {
     let datos;
     try { datos = JSON.parse(m[1]); } catch (e) { primerError = primerError || e; continue; }
-    if (datos && typeof datos === 'object' && 'seguimientos' in datos) {
+    if (datos && typeof datos === 'object' && clave in datos) {
       return { datos, antes: md.slice(0, m.index), despues: md.slice(m.index + m[0].length), salto: md.includes('\r\n') ? '\r\n' : '\n' };
     }
   }
-  if (primerError) throw new Error(`el bloque json de la memoria de seguimientos no se puede leer: ${primerError.message}`);
-  throw new Error('la memoria de seguimientos no tiene un bloque ```json con la lista "seguimientos"');
+  const de = clave === 'seguimientos' ? 'de seguimientos' : `(bloque "${clave}")`;
+  if (primerError) throw new Error(`el bloque json de la memoria ${de} no se puede leer: ${primerError.message}`);
+  throw new Error(`la memoria ${de} no tiene un bloque \`\`\`json con la lista "${clave}"`);
 }
 
 export function escribirBloque({ datos, antes, despues, salto = '\n' }) {
