@@ -106,6 +106,9 @@ const COBERTURA = {
   // InstructionsLoaded (10/09/2026, C5): registro TSV de lo que Claude Code cargo de verdad.
   'instrucciones-log.sh': { test: VARIOS, tipo: 'observa' },
   'agentes-guard.sh': { test: VARIOS, tipo: 'bloquea', ruta: GLOBAL },
+  // Hooks GLOBALES (viven en ~/.claude/hooks; la copia del repo viaja por git): tanda 1.7, 16/10/2026.
+  'carpeta-guard.sh': { test: '__tests__/scripts/carpetaGuard.test.mjs', tipo: 'aviso' },
+  'pedidos-pendientes.sh': { test: '__tests__/scripts/pedidosPendientes.test.mjs', tipo: 'aviso' },
 };
 /** En el disco pero no cableados. Borrarlos es decision de Fak (autonomy-contract C). */
 const HUERFANOS = {
@@ -220,10 +223,11 @@ describe('hooksTienenTest — todo hook figura en la tabla, con su test', () => 
       expect(cableados.has(h), `${h} figura como huerfano pero esta cableado: sacalo de HUERFANOS y dale test`).toBe(false);
     }
     // session-start-context / cerebro-guard: SessionStart, cableados por nombre de script.
-    // agentes-guard: lo cablea ~/.claude/settings.json (es global, aplica a toda la PC); la copia del
-    // repo es la versionada — se chequea aparte que sea identica a la instalada.
+    // agentes-guard, carpeta-guard y pedidos-pendientes: los cablea ~/.claude/settings.json (son globales, aplican a
+    // toda la PC; tools/instalar_mi_pc/ajustar_settings.mjs los cablea en las otras PC); la copia del repo es la
+    // versionada — se chequea aparte (5b, 5e) que sea identica a la instalada.
     const huerfanosReales = enDisco.filter((f) => !cableados.has(f) && !HUERFANOS[f]
-      && !['session-start-context.sh', 'cerebro-guard.sh', 'agentes-guard.sh'].includes(f));
+      && !['session-start-context.sh', 'cerebro-guard.sh', 'agentes-guard.sh', 'carpeta-guard.sh', 'pedidos-pendientes.sh'].includes(f));
     expect(huerfanosReales, `hooks en el disco que nadie llama: ${huerfanosReales.join(', ')}`).toEqual([]);
   });
 
@@ -265,4 +269,11 @@ describe('hooksTienenTest — todo hook figura en la tabla, con su test', () => 
   it.skipIf(!fs.existsSync(GLOBAL))('5b. agentes-guard.sh del repo es identico al instalado en ~/.claude/hooks (el que corre)', () => {
     expect(leer('.claude/hooks/agentes-guard.sh')).toBe(fs.readFileSync(GLOBAL, 'utf8'));
   });
+
+  for (const g of ['carpeta-guard.sh', 'pedidos-pendientes.sh']) {
+    const instalado = path.join(os.homedir(), '.claude', 'hooks', g);
+    it.skipIf(!fs.existsSync(instalado))(`5e. ${g} del repo es identico al instalado en ~/.claude/hooks (hook global, tanda 1.7)`, () => {
+      expect(leer(`.claude/hooks/${g}`)).toBe(fs.readFileSync(instalado, 'utf8'));
+    });
+  }
 });

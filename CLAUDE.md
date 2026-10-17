@@ -16,6 +16,15 @@ solo lectura. Los flujogramas los genero yo por script y las HO se arman a pedid
    `node scripts/_nube.mjs --bajar --aplicar` (Node pelado) **sin preguntarle a Fak** y avisarlo en
    una linea, en castellano simple: a Fak no se le dice "el cerebro" (regla `nube-ingenieria.md`).
    Es la red por si el hook `cerebro-guard.sh` no corrio.
+0 bis. **La carpeta de una sesion es `C:\Dev\BarackMercosul`, en las tres PC** (Fak, 16/10/2026: *"si Claude
+   detecta que estoy en la carpeta incorrecta me puede avisar, es muy importante"*; las 8 sesiones de CATA abrian en
+   `C:\Dev`, donde no carga nada de la casa). Lo avisa el hook GLOBAL `carpeta-guard` al arrancar y en el primer
+   mensaje; a Fak se le dice en un renglon que la cierre y la abra ahi (la destacada del selector, Alt+1). **Los
+   pedidos entre PC** viven en `FACUNDO\` de la nube de Ingenieria (`PEDIDO N - <que> - <fecha>.txt`; hecho =
+   `PEDIDO N - listo <que>.txt`): el hook GLOBAL `pedidos-pendientes` lista al arrancar los de esta PC sin su
+   «listo»; antes de decir "no encuentro el pedido" se lista esa carpeta (memoria
+   `reference_canal_entre_pcs_pedidos_facundo`). Los dos hooks viven en `~/.claude/hooks/` con copia en
+   `.claude/hooks/` y los cablea `tools/instalar_mi_pc/ajustar_settings.mjs` en cada PC (tanda 1.7, 16/10/2026).
 1. Las lecciones vigentes ya estan en este contexto: `docs/LECCIONES_APRENDIDAS.md` entra por
    el `@import` de abajo. No releerlo; si un tema tiene memoria propia, esa si se lee al tocarlo.
 2. Si Fak menciona un producto: leer su AMFE/CP en Supabase live antes de hacer cambios.

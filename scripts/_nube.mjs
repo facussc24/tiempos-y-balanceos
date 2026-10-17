@@ -113,6 +113,23 @@ const SUELTOS = [
     [REPO, '.qr-secret', 'repo-privado', 'clave de firma de los QR de documentos'],
 ];
 
+// 16/10/2026 (tanda 1.7): el settings de ESTA PC se deja para esta PC con el mismo ajustador del instalador: si vino de
+// otra PC (sus rutas de usuario, su PATH) se ajusta entero; si ya es de aca, solo se cablean los hooks globales que falten
+// y cuyo .sh ya llego (carpeta-guard, pedidos-pendientes). Se importa recien al usarlo, para que _nube.mjs arranque igual
+// si ese modulo no carga (auditor 16/10, H16). Sin --aplicar solo dice que ajustaria. Devuelve el renglon o null.
+async function ajustarSettingsDeEstaPc({ dryRun }) {
+    const ruta = join(CLAUDE, 'settings.json');
+    if (!existsSync(ruta)) return null;
+    try {
+        const { ajustarSettingsLocal } = await import('../tools/instalar_mi_pc/ajustar_settings.mjs');
+        const a = ajustarSettingsLocal(ruta, { home: HOME, dryRun });
+        if (!a.cambios.length) return null;
+        return `${dryRun ? '[DRY-RUN] settings.json se ajustaria a esta PC' : 'settings.json ajustado a esta PC'}: ${a.cambios.join('; ')}`;
+    } catch (e) {
+        return `[!] settings.json: no se pudo ajustar a esta PC (${String(e && e.message ? e.message : e).slice(0, 120)})`;
+    }
+}
+
 const args = process.argv.slice(2);
 const subir = args.includes('--subir');
 const bajar = args.includes('--bajar');
@@ -338,6 +355,10 @@ if (sincronizar) {
         total += n;
         console.log(`    ${nombre.padEnd(11)} ${n ? `${n} archivo${n === 1 ? '' : 's'}` : 'al dia'}`);
     }
+    // 16/10/2026 (tanda 1.7, auditor H7): el settings no viaja, pero los hooks globales si (pieza 'hooks', recien copiada):
+    // en cada pasada se cablean en el settings de ESTA PC los que falten y ya esten en disco. En la PC principal no cambia nada.
+    const ajSync = await ajustarSettingsDeEstaPc({ dryRun: !aplicar });
+    if (ajSync) console.log(`    ${'settings.json'.padEnd(11)} ${ajSync}`);
 
     // Registros de las charlas de esta PC (HOY-6, 09/10/2026; todas las carpetas desde el 15/10): una sola pierna, PC -> nube, sin espejo.
     // No bajan (cada PC tiene las suyas) ni se borran alla: la nube es lo que sobrevive al cleanupPeriodDays.
@@ -441,6 +462,11 @@ for (const [dir, nombre, sub, que] of SUELTOS) {
     totalArch += r.archivos;
     if (r.err) { fallos++; console.log(`    ${nombre.padEnd(11)} [X] ${r.err}`); }
     else console.log(`    ${nombre.padEnd(11)} ${humano(r.archivos).padEnd(16)} ${que}`);
+    // 16/10/2026 (tanda 1.7): el settings bajado es el de la PC de origen; se deja para ESTA PC (ajustarSettingsDeEstaPc).
+    if (!r.err && bajar && nombre === 'settings.json') {
+        const aj = await ajustarSettingsDeEstaPc({ dryRun: !aplicar });
+        if (aj) console.log(`    ${''.padEnd(11)} ${aj}`);
+    }
 }
 
 if (subir && aplicar && fallos === 0) {

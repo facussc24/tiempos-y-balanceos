@@ -1,0 +1,11 @@
+{
+  "_que_es": "Canon del canal entre las PC de Fak (tanda 1.7 del plan del sistema, 16/10/2026): la carpeta de la nube de Ingenieria donde una sesion le deja un PEDIDO N a la sesion de otra PC, que PC es la principal, y desde cuando se deja la marca «listo». Lo lee scripts/_lib/pedidosPendientes.mjs (hook global pedidos-pendientes.sh). Memoria: reference_canal_entre_pcs_pedidos_facundo.",
+  "carpeta": "FACUNDO",
+  "pc_principal": ["DESKTOP-14JG95B"],
+  "_pc_principal_porque": "nombre de maquina (COMPUTERNAME) de la PC principal de Fak; cualquier otro nombre es una notebook. Si aparece otra PC principal se agrega aca.",
+  "_notebooks_conocidas": ["CATA"],
+  "_notebooks_porque": "la notebook de Calidad se llama CATA (lo escribe ella misma en _ESTADO.json de la nube, por_pc.CATA, y el informe casa_cata_estado.md del 15/10 dice «PC Cata, usuario catav»); la otra notebook de Fak no dejo su nombre todavia. Dato informativo: quienSoy() no lo usa.",
+  "listo_desde": "2026-10-15",
+  "_listo_desde_porque": "el primer «listo» de la carpeta es «PEDIDO 6 - listo revisiones BeOn.txt» del 15/10/2026 10:15; los pedidos de antes se dieron por hechos en el chat y no tienen marca, asi que se nombran en UN solo renglon (para dejarles su listo una vez) y no uno por uno.",
+  "marca": "[PEDIDOS]"
+}

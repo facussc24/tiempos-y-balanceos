@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ajustarSettings, PLUGIN_POR_AREA } from '../../tools/instalar_mi_pc/ajustar_settings.mjs';
+import { ajustarSettings, ajustarSettingsLocal, asegurarHooksGlobales, usuariosAjenos, HOOKS_GLOBALES, PLUGIN_POR_AREA } from '../../tools/instalar_mi_pc/ajustar_settings.mjs';
 import { plan, CARPETA } from '../../tools/instalar_mi_pc/publicar.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -28,7 +28,9 @@ const ORIGEN = {
 };
 
 describe('ajustar_settings: el settings.json de la otra PC, listo para esta', () => {
-    const ajustar = (o = ORIGEN, home = 'C:\\Users\\Cata') => { const r = ajustarSettings(JSON.stringify(o), { home }); return { ...r, j: JSON.parse(r.texto) }; };
+    // `existe` = los .sh de los hooks globales ya estan en la PC (los trae _nube.mjs --bajar antes de ajustar el settings).
+    const TODOS = () => true;
+    const ajustar = (o = ORIGEN, home = 'C:\\Users\\Cata', existe = TODOS) => { const r = ajustarSettings(JSON.stringify(o), { home, existe }); return { ...r, j: JSON.parse(r.texto) }; };
     it('las rutas de usuario de la otra PC pasan a la carpeta de usuario de esta, con el mismo tipo de barra', () => {
         const { j } = ajustar();
         expect(j.hooks.PreToolUse[0].hooks[0].command).toBe('bash "C:/Users/Cata/.claude/hooks/agentes-guard.sh"');
@@ -50,10 +52,99 @@ describe('ajustar_settings: el settings.json de la otra PC, listo para esta', ()
         expect(cambios.join(' ')).not.toMatch(/ruta/);
         expect(texto).toContain('C:/Users/FacundoS-PC/.claude/hooks/agentes-guard.sh');
     });
-    it('un settings sin nada de eso sale igual (y sin inventar claves)', () => {
+    it('un settings sin nada de eso sale igual, salvo los hooks globales de la casa, que se cablean (y ninguna otra clave inventada)', () => {
         const { j, cambios } = ajustar({ model: 'opus' });
-        expect(j).toEqual({ model: 'opus' });
-        expect(cambios).toEqual([]);
+        expect(j.model).toBe('opus');
+        expect(Object.keys(j).sort()).toEqual(['hooks', 'model']);
+        expect(cambios).toEqual([`${HOOKS_GLOBALES.length} hook(s) globales cableados: agentes-guard.sh, carpeta-guard.sh inicio, carpeta-guard.sh prompt, pedidos-pendientes.sh`]);
+    });
+    it('los hooks globales (tanda 1.7, 16/10/2026): se cablean los que faltan con la carpeta de usuario de ESTA PC; el que ya esta no se duplica', () => {
+        const { j, cambios } = ajustar();        // ORIGEN ya trae agentes-guard de la otra PC
+        expect(j.hooks.PreToolUse).toHaveLength(1);
+        expect(j.hooks.PreToolUse[0].hooks[0].command).toBe('bash "C:/Users/Cata/.claude/hooks/agentes-guard.sh"');
+        expect(j.hooks.SessionStart.map((g) => g.hooks[0].command)).toEqual([
+            'bash "C:/Users/Cata/.claude/hooks/carpeta-guard.sh" inicio',
+            'bash "C:/Users/Cata/.claude/hooks/pedidos-pendientes.sh"',
+        ]);
+        expect(j.hooks.SessionStart[0].matcher).toBe('startup|resume|clear|compact');
+        expect(j.hooks.UserPromptSubmit).toEqual([{ matcher: '', hooks: [{ type: 'command', command: 'bash "C:/Users/Cata/.claude/hooks/carpeta-guard.sh" prompt' }] }]);
+        expect(cambios.join(' | ')).toMatch(/3 hook\(s\) globales cableados: carpeta-guard\.sh inicio, carpeta-guard\.sh prompt, pedidos-pendientes\.sh/);
+        // segunda pasada sobre lo ya ajustado: nada que agregar
+        const otra = JSON.parse(ajustarSettings(JSON.stringify(j), { home: 'C:\\Users\\Cata', existe: TODOS }).texto);
+        expect(otra.hooks).toEqual(j.hooks);
+        expect(asegurarHooksGlobales(otra, 'C:\\Users\\Cata', { existe: TODOS })).toEqual([]);
+    });
+    it('H2: un hook cuyo .sh no esta en esta PC NO se cablea (bash saldria con 127 en cada mensaje) y se dice cual', () => {
+        const soloAgentes = (ruta) => /agentes-guard\.sh$/.test(ruta);
+        const { j, cambios } = ajustar({ model: 'opus' }, 'C:\\Users\\Cata', soloAgentes);
+        expect(Object.keys(j.hooks)).toEqual(['PreToolUse']);
+        expect(cambios.join(' | ')).toMatch(/1 hook\(s\) globales cableados: agentes-guard\.sh/);
+        expect(cambios.join(' | ')).toMatch(/3 hook\(s\) globales sin cablear porque su \.sh no esta en esta PC: carpeta-guard\.sh inicio, carpeta-guard\.sh prompt, pedidos-pendientes\.sh/);
+        // con el .sh ya en disco, la siguiente pasada los cablea
+        const despues = ajustar(j, 'C:\\Users\\Cata', TODOS);
+        expect(despues.j.hooks.SessionStart).toHaveLength(2);
+    });
+    it('H12: un hook ya cableado con otra forma (sin comillas, comillas simples, barras invertidas, mayusculas) no se duplica', () => {
+        const formas = [
+            "bash 'C:/Users/Cata/.claude/hooks/carpeta-guard.sh' inicio",
+            'bash C:/Users/Cata/.claude/hooks/carpeta-guard.sh inicio',
+            'bash "C:\\Users\\Cata\\.claude\\hooks\\carpeta-guard.sh" inicio',
+            'bash "C:/Users/CATA/.claude/hooks/CARPETA-GUARD.sh" inicio ',
+        ];
+        for (const command of formas) {
+            const s = { hooks: { SessionStart: [{ matcher: 'startup', hooks: [{ type: 'command', command }] }] } };
+            const agregados = asegurarHooksGlobales(s, 'C:\\Users\\Cata', { existe: TODOS });
+            expect(agregados, command).not.toContain('carpeta-guard.sh inicio');
+            expect(s.hooks.SessionStart.filter((g) => /carpeta-guard/i.test(g.hooks[0].command)), command).toHaveLength(1);
+        }
+    });
+    it('ajustarSettingsLocal (lo que corre _nube.mjs --bajar): en la misma PC solo cablea los hooks que faltan y el PATH queda; con dryRun no escribe', () => {
+        const t = fs.mkdtempSync(path.join(os.tmpdir(), 'mi-pc-'));
+        temporales.push(t);
+        const ruta = path.join(t, 'settings.json');
+        const mio = { env: { PATH: 'C:\\Windows;C:\\Users\\FacundoS-PC\\.cargo\\bin' }, hooks: { PreToolUse: [{ matcher: 'Agent', hooks: [{ type: 'command', command: 'bash "C:/Users/FacundoS-PC/.claude/hooks/agentes-guard.sh"' }] }] } };
+        fs.writeFileSync(ruta, JSON.stringify(mio, null, 2), 'utf8');
+        const seco = ajustarSettingsLocal(ruta, { home: 'C:\\Users\\FacundoS-PC', dryRun: true, existe: TODOS });
+        expect(seco.dryRun).toBe(true);
+        expect(seco.cambios).toHaveLength(1);
+        expect(JSON.parse(fs.readFileSync(ruta, 'utf8'))).toEqual(mio);          // no escribio
+        const real = ajustarSettingsLocal(ruta, { home: 'C:\\Users\\FacundoS-PC', existe: TODOS });
+        const j = JSON.parse(fs.readFileSync(ruta, 'utf8'));
+        expect(real.cambios.join(' ')).toMatch(/3 hook\(s\) globales cableados/);
+        expect(j.env.PATH).toBe(mio.env.PATH);                                     // misma PC: el PATH queda
+        expect(j.hooks.SessionStart).toHaveLength(2);
+        expect(j.hooks.UserPromptSubmit).toHaveLength(1);
+        expect(ajustarSettingsLocal(ruta, { home: 'C:\\Users\\FacundoS-PC', existe: TODOS }).cambios).toEqual([]);   // ya esta: no toca
+        expect(fs.readdirSync(t)).toEqual(['settings.json']);                      // sin archivos aparte olvidados
+    });
+    it('H3: «es de otra PC» se decide sobre los VALORES: una ruta con barra invertida de otro usuario cuenta; Public y un nombre corto 8.3 no', () => {
+        const t = fs.mkdtempSync(path.join(os.tmpdir(), 'mi-pc-'));
+        temporales.push(t);
+        const ruta = path.join(t, 'settings.json');
+        // misma PC, pero con una ruta a Public y a la forma corta de SU carpeta: NO es de otra PC -> el PATH queda
+        fs.writeFileSync(ruta, JSON.stringify({ env: { PATH: 'C:\\Users\\Public\\bin;C:\\Users\\FACUND~1\\x' }, statusLine: { command: 'C:/Users/FacundoS-PC/.claude/s.cmd' } }), 'utf8');
+        ajustarSettingsLocal(ruta, { home: 'C:\\Users\\FacundoS-PC', existe: TODOS });
+        expect(JSON.parse(fs.readFileSync(ruta, 'utf8')).env.PATH).toBe('C:\\Users\\Public\\bin;C:\\Users\\FACUND~1\\x');
+        // otra PC, con la ruta ajena SOLO con barras invertidas: si se detecta -> se ajusta entero (PATH afuera, ruta cambiada)
+        fs.writeFileSync(ruta, JSON.stringify({ env: { PATH: 'C:\\Windows' }, statusLine: { command: 'C:\\Users\\FacundoS-PC\\.claude\\s.cmd' } }), 'utf8');
+        const r = ajustarSettingsLocal(ruta, { home: 'C:\\Users\\Cata', existe: TODOS });
+        const j = JSON.parse(fs.readFileSync(ruta, 'utf8'));
+        expect(r.cambios.join(' | ')).toMatch(/ruta\(s\) de la otra PC/);
+        expect(j.env.PATH).toBeUndefined();
+        expect(j.statusLine.command).toBe('C:\\Users\\Cata\\.claude\\s.cmd');
+        expect(usuariosAjenos({ a: 'C:\\Users\\Otro\\x', b: 'C:/Users/Public/y', c: 'C:\\Users\\FACUND~1\\z' }, 'C:\\Users\\FacundoS-PC')).toEqual(['Otro']);
+    });
+    it('ajustarSettingsLocal con el settings de OTRA PC: se ajusta entero (rutas, PATH afuera, hooks con la carpeta de esta)', () => {
+        const t = fs.mkdtempSync(path.join(os.tmpdir(), 'mi-pc-'));
+        temporales.push(t);
+        const ruta = path.join(t, 'settings.json');
+        fs.writeFileSync(ruta, JSON.stringify(ORIGEN), 'utf8');
+        const r = ajustarSettingsLocal(ruta, { home: 'C:\\Users\\Cata', existe: TODOS });
+        const j = JSON.parse(fs.readFileSync(ruta, 'utf8'));
+        expect(r.cambios.join(' | ')).toMatch(/ruta\(s\) de la otra PC/);
+        expect(j.env.PATH).toBeUndefined();
+        expect(j.hooks.SessionStart[1].hooks[0].command).toBe('bash "C:/Users/Cata/.claude/hooks/pedidos-pendientes.sh"');
+        expect(fs.readdirSync(t)).toEqual(['settings.json']);
     });
     it('lo que no es un objeto JSON se rechaza', () => {
         for (const x of ['[]', '5', 'null', '{ roto', '']) expect(() => ajustarSettings(x, { home: 'C:\\Users\\Cata' })).toThrow();
