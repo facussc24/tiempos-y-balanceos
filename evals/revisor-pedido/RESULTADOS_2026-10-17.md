@@ -11,6 +11,8 @@ y 3 con el formato de dos renglones, que salió de lo que mostró la corrida 1.
 
 ## Resultado
 
+**Contra el pedido: 8 de 8 corridas con el formato de dos renglones (corridas 2 y 3), más las 4 de la corrida 1 calificadas a mano: 12 de 12.** El veredicto final acierta 6 de 12 (ver punto 2).
+
 ```
 Revisor contra el pedido · 12 corridas · contra el pedido acierta 12 (4 de 4 casos en todas) · veredicto final acierta 6 (2 de 4 casos en todas)
   D1-fotos-hot-press               devuelto  espera NO CUMPLE · contra el pedido: NO CUMPLE / NO CUMPLE / NO CUMPLE · final: NO CUMPLE / NO CUMPLE / NO CUMPLE
@@ -32,14 +34,20 @@ Revisor contra el pedido · 12 corridas · contra el pedido acierta 12 (4 de 4 c
    scratchpad) y en el complemento de Excel (`claude.fileId`), y el informe TryOut del día 4 tiene 18 imágenes con
    `/home/claude/assets/…` en el texto alternativo (`_sinFirmaIA.py` da BLOQUEANTE en los dos). Son hallazgos reales:
    esos archivos ya salieron. Por eso el revisor da dos veredictos separados desde la corrida 2.
-3. **El caso D2 está contaminado**: su queja quedó escrita en `docs/review/mail.md`, que el revisor lee. D1, A1 y A2 son
-   independientes. En la corrida 1 un revisor encontró `casos.json` buscando el código de la pieza en el repo (dijo que no
+3. **El caso D2 está contaminado**: su queja quedó escrita en `docs/review/mail.md`, que el revisor lee. A1 y A2 son
+   independientes; D1 en parte: en la corrida 3 un revisor vio un comentario de `scripts/_lib/correccionGuard.mjs` (línea 7)
+   que cuenta ese mismo caso (dijo que no lo usó). En la corrida 1 un revisor encontró `casos.json` buscando el código de la pieza en el repo (dijo que no
    lo usó); desde la corrida 2 el prompt le prohíbe abrir `evals/revisor-pedido/`.
 4. **Variación entre corridas** en «reglas de la casa» de D1: la corrida 1 marcó como Importante que las fotos vivan en
    una carpeta `.claude`; la 2 la dio por buena (la eximen `video-maquina.md` y la lista de rutas excluidas del detector).
    Contra el pedido, ninguna variación.
-5. **Un posible hueco del detector**, visto en A2: una corrida dice que `_sinFirmaIA.py --arreglar` no limpia el texto
-   alternativo (`descr`) de las imágenes de un PowerPoint y otra dice que sí. **No verificado**: se prueba sobre una copia.
+5. **Un hueco del detector**, visto en A2 y verificado el 17/10 sobre una copia en el scratchpad (el original no se tocó):
+   `python scripts/_sinFirmaIA.py <copia> --arreglar --apply` no limpia el texto alternativo (`descr`) de las imágenes de un
+   PowerPoint: 44 bloqueantes antes y 44 después («quedan a mano: 1»). Dos corridas del revisor habían dicho cosas opuestas.
+
+6. **Casos de entrenamiento usados como prueba**: el formato de dos renglones se diseñó después de ver la corrida 1 sobre
+   estos mismos 4 casos, así que las corridas 2 y 3 no son una validación independiente del formato: lo confirman sobre
+   los casos que lo originaron. Hacen falta casos nuevos (los que vayan devolviendo y aprobando Fak) para medirlo de verdad.
 
 **Veredicto de la calibración**: sirve para lo que se pensó (comparar contra el pedido). La primera semana avisa, no
 frena; con 2 y 2 casos reales el número es chico y se dice así.
