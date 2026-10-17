@@ -55,6 +55,24 @@
       ],
       "skills": ["planes-de-control"],
       "reglas": []
+    },
+    "flujogramas": {
+      "casos": [
+        "evals/banco/flujogramas/no-se-alinea-a-la-ho",
+        "evals/banco/flujogramas/pieza-nueva-desde-hermanos",
+        "evals/banco/flujogramas/historial-no-confiesa"
+      ],
+      "skills": ["flujogramas"],
+      "reglas": []
+    },
+    "amfe-export-oficial": {
+      "casos": [
+        "evals/export-amfe-dispara",
+        "evals/banco/amfe-export-oficial/caratula-vacia-no-sale",
+        "evals/banco/amfe-export-oficial/firmas-vacias-aprobadores"
+      ],
+      "skills": ["amfe-export-oficial"],
+      "reglas": []
     }
   }
 }
