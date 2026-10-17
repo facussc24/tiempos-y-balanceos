@@ -228,7 +228,7 @@ export function renderSimulado(d) {
     L.push('## Cómo se midió y qué no se pudo ver');
     L.push('');
     L.push(`- El peso y la fecha salen de los atributos de cada archivo (\`scripts/_lib/nubeMedir.ps1\`): el marcador «solo en la nube» (0x400000) dice qué está en esta PC; ningún archivo se abrió. Las carpetas de lo nuestro se recorrieron enteras${medicion.carpetas.every((c) => c.terminado) ? '' : ' (las marcadas «no terminó» pasaron su tope de tiempo: su número es parcial)'}.`);
-    L.push('- La búsqueda de programas abarca el repo (`scripts`, `tools`, `.claude`, `mods`), `~/.claude` (avisos de arranque, tareas programadas de la app, agentes, mi memoria), las tareas de Windows de esta PC y los programas que están en la nube y corren copiados en otras PC (solo los que ya estaban bajados).');
+    L.push('- La búsqueda de programas abarca el repo (`scripts`, `tools`, `.claude`, `mods`), `~/.claude` (avisos de arranque, tareas programadas de la app, agentes, mi memoria), las tareas de Windows de esta PC, los programas instalados en `%LOCALAPPDATA%` (BarackMailsFak, BarackMailsPC, BarackEquipo; de los dos últimos no se midió si tienen una tarea que los corra) y los programas que están en la nube y corren copiados en otras PC (solo los que ya estaban bajados).');
     L.push('- **No se ve**: lo que está instalado DENTRO de las PC de Carlos, Calidad, Pedro y Federico (su copia puede ser de otra versión que la de la nube), ni las tareas de Windows de esas PC. Lo que corre ahí se ve recién por su salud después de mover.');
     L.push(`- La opción de nombre usada fue «${nombreUnico}»${opcion ? '' : ' (no está en la lista del canon)'}; con la otra cambian solo las rutas.`);
     return L.join('\n') + '\n';

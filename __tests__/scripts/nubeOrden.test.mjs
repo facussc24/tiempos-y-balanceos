@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 import {
     cargarCanon, leerArgs, rutaSalida, raizPrincipal, reTramo, clasificarArchivo, esComentario, taparSecretos, buscarReferencias,
     buscarConAlias, porPc, porArchivo, dependientesDeNubeRutas, planCarpetaUnica, leemes, tipoDeCarpeta, quienEscribe, quienPorNombre,
-    fraseEspacio, mb, tareasDeWindows,
+    fraseEspacio, esNombreComun, mb, tareasDeWindows,
 } from '../../scripts/_lib/nubeOrden.mjs';
 import { firmaIaEnTexto } from '../../scripts/_lib/firmaIA.mjs';
 import { renderSimulado, frenaGuardian, rutasAProbar } from '../../scripts/_nubeSimular.mjs';
@@ -114,6 +114,19 @@ describe('buscarReferencias: el nombre como tramo de ruta, codigo separado de te
             { ruta: 'scripts/_lib/vocab.data.json', origen: 'repo', texto: '"PROYECTOS": 1,\n"HO:1- CLIENTES/TAOS/OBSOLETO/x.xlsx"' },
         ];
         expect(buscarReferencias(a, 'TAOS', opts).map((r) => r.ruta)).toEqual(['scripts/x.mjs', 'scripts/y.mjs']);
+    });
+    it('un nombre con espacios o parentesis no necesita estar pegado a una barra (auditor ronda 2: nubeRutas.mjs)', () => {
+        expect(esNombreComun('OBSOLETO')).toBe(true);
+        expect(esNombreComun('INGENIERIA BARACK (NUNCA BORRAR)')).toBe(false);
+        const a = [{ ruta: 'scripts/_lib/nubeRutas.mjs', origen: 'repo', texto: "// biblioteca\nreturn cand.find((p) => esCarpeta(join(p, 'INGENIERIA BARACK (NUNCA BORRAR)')));" }];
+        const n = 'INGENIERIA BARACK (NUNCA BORRAR)';
+        expect(buscarReferencias(a, n, { canon, lineaDeRuta: esNombreComun(n), exigirEnArchivo: canon.exigir_biblioteca })).toHaveLength(1);
+    });
+    it('los dos renglones REALES que el auditor encontro sin listar (mails_area.mjs:437 y guardianes.mjs:535)', () => {
+        const mails = "    if (!/^(?:_cuarentena_)?claude barack$/.test(normalizar(path.basename(path.dirname(r))))) return null;";
+        expect(buscarReferencias([{ ruta: 'tools/claude-area/mails_area.mjs', origen: 'repo', texto: mails }], 'claude barack', { canon })).toHaveLength(1);
+        const guard = String.raw`const FIRMA_EXENTOS_RE = /(?:Ingenier[ií]a y Proyecto - General(?:[\\/][^\\/"'\n]+[\\/]\.\.)?[\\/]Claude Fak(?=[\\/"']|$))/i;`;
+        expect(buscarReferencias([{ ruta: 'scripts/_lib/guardianes.mjs', origen: 'repo', texto: guard }], 'Claude Fak', { canon })).toHaveLength(1);
     });
     it('en un canon .json, un campo «_fuente» es una nota, no un dato', () => {
         expect(esComentario('"_fuente": "Carlos Baptista (\'ACTUALIZACION_CLAUDE_LIMPIO\')",', 'tools/claude-area/persona/carlos.json')).toBe(true);
@@ -246,8 +259,9 @@ describe('tipoDeCarpeta y quienEscribe (mapa)', () => {
         expect(quienEscribe({ archivos: 0 })).toMatch(/solo carpetas vacías/);
         expect(quienEscribe({ archivos: 3, recientes: 0, ultima: '2025-01-02 10:00' })).toMatch(/nadie en 30 días \(último cambio 2025-01-02\)/);
         const reg = { archivos: 9, recientes: 2, ultima: '2026-10-17 11:40', ultimo_nombre: 'DESKTOP-90DOEFV.jsonl', ultimo_carpeta: '1- GENERAL\\5. 3D\\IMPRESORA BAMBU A2L\\registro' };
-        expect(quienEscribe(reg, 1, 30, canon)).toMatch(/^un programa de la casa \(deja un archivo por PC\) — el más nuevo es «DESKTOP-90DOEFV\.jsonl» en 1- GENERAL.*la nombra 1 programa/);
-        expect(quienPorNombre('2025-07-31_1345_Desarrollo.json', '6- ARCHIVO DE CORREO\\CALIDAD', canon)).toMatch(/copia de mails/);
+        // lo inferido es del archivo mas nuevo, no de la carpeta entera (auditor ronda 2)
+        expect(quienEscribe(reg, 1, 30, canon)).toMatch(/^2 cambiados en 30 días; el más nuevo, «DESKTOP-90DOEFV\.jsonl» en 1- GENERAL.*parece de un programa de la casa \(deja un archivo por PC\); la nombra 1 programa/);
+        expect(quienPorNombre('2025-07-31_1345_Desarrollo.json', '6- ARCHIVO DE CORREO\\CALIDAD', canon)).toMatch(/archivo de mails/);
         expect(quienPorNombre('PEDIDO 8 - listo.txt', '', canon)).toMatch(/canal de pedidos/);
         expect(quienPorNombre('x.json', '4- BUZON\\avisos\\DESKTOP-OV373UE', canon)).toMatch(/PC del equipo/);
         expect(quienPorNombre('HO-985 - IP PAD REV.A.pdf', 'HO-985', canon)).toBe(canon.quien_por_defecto);

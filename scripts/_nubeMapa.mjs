@@ -19,7 +19,7 @@ import { fileURLToPath } from 'url';
 import { buscarBiblioteca, esCarpeta } from './_lib/nubeRutas.mjs';
 import {
     cargarCanon, leerArgs, rutaSalida, buscarReferencias, buscarConAlias, porArchivo, recolectar, sumarCopiasDeLaNube, leerTareasDeWindows,
-    medirPorAtributos, tipoDeCarpeta, quienEscribe, fraseEspacio, mb, celda, recortar,
+    medirPorAtributos, tipoDeCarpeta, quienEscribe, fraseEspacio, esNombreComun, mb, celda, recortar,
 } from './_lib/nubeOrden.mjs';
 
 const ARCHIVO_POR_DEFECTO = 'nube_mapa_2026-10-16.md';
@@ -99,7 +99,7 @@ export function renderMapa(d) {
     }
     L.push('## Cómo se midió y qué no se ve');
     L.push('');
-    L.push('- Peso, fecha y «en esta PC» salen de los atributos (`scripts/_lib/nubeMedir.ps1`, en prioridad baja): el marcador «solo en la nube» (0x400000) dice qué está bajado. Ningún archivo se abrió, y el espacio libre de C: de arriba es la prueba.');
+    L.push('- Peso, fecha y «en esta PC» salen de los atributos (`scripts/_lib/nubeMedir.ps1`, en prioridad baja): el marcador «solo en la nube» (0x400000) dice qué está bajado. Ningún archivo se abrió; el espacio libre de C: de arriba es un dato de contexto (lo mueve cualquier programa de la PC), no la prueba.');
     L.push('- Los programas se buscan por el nombre de la carpeta como parte de una ruta. Una subcarpeta cuenta solo en archivos que nombran también a su carpeta de arriba (así «AMFE» o «Tiempos» no se confunden entre carpetas). En el código no cuentan los comentarios.');
     L.push('- **No se ve**: quién es la persona que guardó cada archivo (OneDrive no lo deja en el atributo), ni lo que corre adentro de las PC de Carlos, Calidad, Pedro y Federico.' + (carpetas.some((c) => c.tipo.tipo === 'sin clasificar' || c.sub.some((s) => s.tipo.tipo === 'sin clasificar')) ? ' Las carpetas del tipo «sin clasificar» no las nombra ninguna regla todavía.' : ''));
     L.push('- La carpeta de lo nuestro (qué se movería a la carpeta única y quién la busca) tiene su propio simulado: `exports/explicaciones/nube_simulado_2026-10-16.md`.');
@@ -138,12 +138,12 @@ function main() {
         const nombresCarpeta = [m.nombre, ...(propia?.alias || [])];
         const refs = propia
             ? buscarConAlias(archivos, nombresCarpeta, { canon, excluirSiAntes: propia.excluir_si_antes, exigirEnArchivo: propia.exigir_en_archivo, excluirLinea: propia.excluir_linea_si })
-            : buscarReferencias(archivos, m.nombre, { canon, exigirEnArchivo: canon.exigir_biblioteca, lineaDeRuta: true, excluirLinea: canon.excluir_linea_si });
+            : buscarReferencias(archivos, m.nombre, { canon, exigirEnArchivo: canon.exigir_biblioteca, lineaDeRuta: esNombreComun(m.nombre), excluirLinea: canon.excluir_linea_si });
         const sub = Object.entries(m.sub || {}).map(([n, med]) => ({
             nombre: n,
             tipo: tipoDeCarpeta(n, 2, canon, tipo),
             medida: med,
-            programas: resumenProgramas(buscarReferencias(archivos, n, { canon, tambien: nombresCarpeta, lineaDeRuta: true, excluirLinea: canon.excluir_linea_si }), 3),
+            programas: resumenProgramas(buscarReferencias(archivos, n, { canon, tambien: nombresCarpeta, lineaDeRuta: esNombreComun(m.nombre), excluirLinea: canon.excluir_linea_si }), 3),
         }));
         const c = { nombre: m.nombre, tipo, medida: m, programas: resumenProgramas(refs), sub };
         if (m.nombre === 'Claude Fak') c.nota = 'Adentro están `investigaciones-gemini` (la convención de Gemini de la tanda 5: prompts, respuestas y lo verificado) y `viernes-17-plan-sistema` (el plan del sistema y sus informes); las dos viajan con `Claude Fak` a la carpeta única.';

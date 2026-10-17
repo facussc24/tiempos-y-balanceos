@@ -117,7 +117,7 @@
   ],
 
   "quien_por_nombre": [
-    { "re": "(^|[\\\\/])(mails|_entrada|6- ARCHIVO DE CORREO)([\\\\/]|$)|\\.(eml|msg)$", "quien": "la copia de mails (la escriben los programas de mails de cada PC)" },
+    { "re": "(^|[\\\\/])(mails|_entrada|6- ARCHIVO DE CORREO)([\\\\/]|$)|\\.(eml|msg)$", "quien": "un archivo de mails (un buzón archivado o los mails que suben las PC)" },
     { "re": "^PEDIDO ", "quien": "las sesiones de las PC de Facundo (canal de pedidos)" },
     { "re": "(^|[\\\\/])(BUZON|4- BUZON|avisos|salud|aportes|inventario)([\\\\/]|$)", "quien": "los programas de las PC del equipo (avisos, salud y aportes)" },
     { "re": "^(DESKTOP-[A-Z0-9]+|CATA[0-9-]*)\\.jsonl?$", "quien": "un programa de la casa (deja un archivo por PC)" },

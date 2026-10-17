@@ -31,3 +31,22 @@ dos informes se regeneraron (`node scripts/_nubeSimular.mjs`, `node scripts/_nub
 
 - Lo instalado DENTRO de las PC de los compañeros no se ve desde acá (su copia puede ser otra versión).
 - `_mails.py` y otros mensajes que solo NOMBRAN una ruta en un texto para el usuario siguen contados como código: se prefirió de más a de menos.
+
+## Ronda 2 (la última) — qué se hizo después
+
+Revisor-pedido ronda 2: resueltos R1-R5; un Importante nuevo (la frase «copiados en otras PC» atribuía los 12
+programas a Carlos, Pedro y Federico, y las filas de Pedro y Federico no decían qué se leyó): corregido en 3b1879af.
+
+Auditor ronda 2 (`TANDA7_NUBE_auditor_ronda2_2026-10-17.md`), aplicado después de su lectura y **sin una tercera
+ronda de revisión** (regla de dos rondas):
+- I1 (el filtro «usado como ruta» escondía nubeRutas.mjs, _paquete.mjs, publicar.mjs, _frenosMedir.mjs): el filtro
+  vale solo para nombres comunes de una palabra (`esNombreComun`); medido: INGENIERIA BARACK vuelve a 27 programas,
+  `contenido` 4, `viernes-17-plan-sistema` 2, `1- Mi asistente completo` 1; OBSOLETO y TAOS siguen en «—».
+- I2 («quién escribe» le ponía dueño a la carpeta por un archivo): la frase dice ahora de quién «parece» el archivo
+  más nuevo, no la carpeta; la regla de mails ya no afirma quién arma el archivo de correo.
+- Nits: borde del tramo con `?`, `]` y `$` (los dos renglones REALES del auditor, ahora en el test); la frase del
+  espacio no da una causa que nadie midió; el mapa ya no llama «prueba» al libre de C:; «Cómo se midió» del simulado
+  nombra %LOCALAPPDATA%.
+- Queda abierto: el filtro de la carpeta de arriba mira el archivo entero (puede sumar renglones de otra carpeta con
+  el mismo nombre de subcarpeta, p. ej. `marketplace`); la tabla por PC no avisa los programas que no caen en ninguna
+  fila; de BarackMailsPC y BarackEquipo no se midió si tienen una tarea que los corra.

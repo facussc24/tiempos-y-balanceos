@@ -75,7 +75,16 @@ export function reTramo(nombre) {
     // tambien una barra vertical o un corchete: el nombre adentro de una expresion regular (`|Claude Barack|`), que el
     // auditor del 17/10 encontro sin listar en FIRMA_EXENTOS_RE
     // 'm': un archivo entero se busca de una vez, y el nombre al final de un renglon tiene que contar
-    return new RegExp(String.raw`(?:^|[\\/'"\x60(\s«=|\[])(${escaparRe(nombre)})(?=$|[\\/'"\x60)»;,|(\]])`, 'gm');
+    return new RegExp(String.raw`(?:^|[\\/'"\x60(\s«=|\[\]?!])(${escaparRe(nombre)})(?=$|[\\/'"\x60)»;,|(\]$])`, 'gm');
+}
+
+/**
+ * Un nombre de carpeta COMUN (una sola palabra: OBSOLETO, IATF, VARIOS, PROYECTOS, TAOS) aparece en el codigo por
+ * otras razones; uno con espacios o parentesis («INGENIERIA BARACK (NUNCA BORRAR)», «Base Claude Ingenieria») no.
+ * Solo al comun se le pide que el renglon lo use como ruta (auditor ronda 2: pedirselo a todos escondia nubeRutas.mjs).
+ */
+export function esNombreComun(nombre) {
+    return !/[\s()]/.test(String(nombre));
 }
 
 /** codigo / tarea / texto, por la extension y por donde vive. */
@@ -263,7 +272,8 @@ export function quienEscribe(m, programas = 0, dias = 30, canon = null) {
     if (!m.recientes) return `nadie en ${dias} días (último cambio ${m.ultima ? m.ultima.slice(0, 10) : 'sin fecha'})${prog}`;
     const quien = quienPorNombre(m.ultimo_nombre, m.ultimo_carpeta, canon);
     const donde = m.ultimo_carpeta ? ` en ${recortar(m.ultimo_carpeta, 45)}` : '';
-    return `${quien} — el más nuevo es «${recortar(m.ultimo_nombre, 40)}»${donde} (${m.ultima}); ${m.recientes} cambiado${m.recientes === 1 ? '' : 's'} en ${dias} días${prog}`;
+    // lo inferido es del archivo MAS NUEVO, no de la carpeta entera (auditor ronda 2: 2 de 466 tenian nombre de PC)
+    return `${m.recientes} cambiado${m.recientes === 1 ? '' : 's'} en ${dias} días; el más nuevo, «${recortar(m.ultimo_nombre, 40)}»${donde} (${m.ultima}), parece de ${quien}${prog}`;
 }
 
 /** Quien escribe un archivo, por su nombre y su carpeta (reglas del canon); sin regla, que no se sabe. */
@@ -293,7 +303,7 @@ export function fraseEspacio(antes, despues) {
     const gb = (b) => (Number(b) / 1024 ** 3).toFixed(2).replace('.', ',');
     const dif = Number(antes) - Number(despues);
     const base = `Espacio libre en C: ${gb(antes)} GB al empezar y ${gb(despues)} GB al terminar`;
-    if (dif > 200 * 1024 ** 2) return `${base}: **bajó ${gb(dif)} GB mientras se medía**. La medición no abre archivos, así que lo usó otro programa de la PC en ese rato; lo que prueba que no se bajó nada de la nube es la columna «En esta PC», que no tiene por qué subir entre una corrida y otra.`;
+    if (dif > 200 * 1024 ** 2) return `${base}: **bajó ${gb(dif)} GB mientras se medía**. La medición no abre archivos; qué usó ese espacio no se midió. Lo que prueba que no se bajó nada de la nube es la columna «En esta PC», que no tiene por qué subir entre una corrida y otra.`;
     return `${base} (prácticamente igual). La medición mira los atributos de cada archivo y no abre ninguno: un archivo que vive solo en la nube no se baja.`;
 }
 
