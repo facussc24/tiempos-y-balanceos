@@ -771,9 +771,27 @@ const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
  */
 export async function lote(cliente, pedidos, { tarea = '', esperarMs = 30000, timeoutMs = 55 * 60 * 1000, dirLedger = DIR_API, ahora } = {}) {
   if (!pedidos.length) return { loteId: null, resultados: {} };
+  const creado = await crearLote(cliente, pedidos, { tarea });
+  await esperarLote(cliente, creado.lote, { esperarMs, timeoutMs });
+  const resultados = await recogerLote(cliente, creado.loteId, { tarea, conSchema: creado.conSchema, modelos: creado.modelos, dirLedger, ahora });
+  return { loteId: creado.loteId, resultados };
+}
+
+/** El `custom_id` de un pedido de lote: 1 a 64 caracteres, letras, numeros, `_` y `-` (doc de Message Batches). */
+export const RE_CUSTOM_ID = /^[A-Za-z0-9_-]{1,64}$/;
+
+/**
+ * Crea el lote y vuelve ENSEGUIDA, sin esperar (tanda 5, 17/10/2026): quien lo crea guarda `loteId` en disco antes de
+ * esperar, asi un proceso que se cae en el medio no deja un lote pagado que nadie puede recoger. `lote()` es esto +
+ * esperarLote + recogerLote. Devuelve { loteId, lote (el objeto del SDK), conSchema, modelos } — los dos ultimos, por
+ * id de pedido, son lo que recogerLote necesita para interpretar y cobrar cada respuesta.
+ */
+export async function crearLote(cliente, pedidos, { tarea = '' } = {}) {
+  if (!pedidos.length) throw new ErrorApi('lote', 'un lote sin pedidos no se manda');
   const ids = new Set();
   const requests = pedidos.map((p) => {
     if (!p.id || ids.has(p.id)) throw new ErrorApi('lote', `cada pedido del lote lleva un id unico: "${p.id}"`);
+    if (!RE_CUSTOM_ID.test(String(p.id))) throw new ErrorApi('lote', `el id "${p.id}" no sirve como custom_id (1 a 64 caracteres: letras, numeros, _ y -)`);
     ids.add(p.id);
     const { params } = armarParametros({ ...p, fallbacks: false });
     return { custom_id: String(p.id), params };
@@ -782,6 +800,20 @@ export async function lote(cliente, pedidos, { tarea = '', esperarMs = 30000, ti
   try { b = await cliente.messages.batches.create({ requests }); } catch (e) {
     throw new ErrorApi('api', `no se pudo crear el lote${tarea ? ` (${tarea})` : ''}: ${e?.message ?? e}`, { causa: e });
   }
+  return {
+    loteId: b.id,
+    lote: b,
+    conSchema: Object.fromEntries(pedidos.map((p) => [String(p.id), !!p.schema])),
+    modelos: Object.fromEntries(pedidos.map((p) => [String(p.id), resolverModelo(p.modelo)])),
+  };
+}
+
+/**
+ * Espera a que el lote termine (`processing_status` 'ended'). Pasado `timeoutMs` tira ErrorApi 'lote' con `loteId`:
+ * el lote sigue vivo del lado de Anthropic (vence a las 24 h) y se recoge despues. Devuelve el objeto final del lote.
+ */
+export async function esperarLote(cliente, loteOId, { esperarMs = 30000, timeoutMs = 55 * 60 * 1000 } = {}) {
+  let b = typeof loteOId === 'string' ? await cliente.messages.batches.retrieve(loteOId) : loteOId;
   const t0 = Date.now();
   while (b.processing_status !== 'ended') {
     if (Date.now() - t0 > timeoutMs) {
@@ -790,10 +822,7 @@ export async function lote(cliente, pedidos, { tarea = '', esperarMs = 30000, ti
     await dormir(esperarMs);
     b = await cliente.messages.batches.retrieve(b.id);
   }
-  const conSchema = Object.fromEntries(pedidos.map((p) => [String(p.id), !!p.schema]));
-  const modelos = Object.fromEntries(pedidos.map((p) => [String(p.id), resolverModelo(p.modelo)]));
-  const resultados = await recogerLote(cliente, b.id, { tarea, conSchema, modelos, dirLedger, ahora });
-  return { loteId: b.id, resultados };
+  return b;
 }
 
 /**

@@ -4,14 +4,36 @@
 //   jobs.json: { "concurrencia": 5, "salidaDir": "...", "jobs": [ { "tarea": "...", "pedido": "x.md", "adjuntos": ["..."], "modelo": "opus", "effort": "high" } ],
 //               "sintesis": { "tarea": "...", "pedido": "y.md", "modelo": "fable", "salida": "..." } }
 // En modo --auditoria <lista.txt> arma los lotes solo: agrupa los archivos de la lista hasta `kbPorLote` KB por lote.
+//
+// En BATCH (tanda 5, 17/10/2026; Message Batches, mitad de precio, casi siempre menos de 1 h, vence a las 24 h):
+//   node scripts/_apiLotes.mjs <jobs.json> --lote [--esperar-min N]   manda TODOS los jobs en un lote, guarda su id en
+//                                     <salidaDir>/_lote.json, espera hasta N min (55) y recoge. Si no termino, queda
+//                                     en curso y se recoge despues con:
+//   node scripts/_apiLotes.mjs <jobs.json> --recoger [--forzar]        recoge UNA vez (otra vez duplicaria el ledger)
+//   ("lote": true en el jobs.json es lo mismo que --lote.) La sintesis no va en lote: se espera mirando.
+// Logica y candados en scripts/_lib/apiLotesBatch.mjs.
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import { crearCliente, esperarLote, usd, ErrorApi } from './_lib/claudeApi.mjs';
+import { mandarLote, recogerGuardado } from './_lib/apiLotesBatch.mjs';
 
 const RAIZ = 'C:/Dev/BarackMercosul';
 const args = process.argv.slice(2);
 const jobsFile = args[0];
+const op = { lote: false, recoger: false, forzar: false, esperarMin: 55 };
+for (let i = 1; i < args.length; i++) {
+  const a = args[i];
+  if (a === '--lote') op.lote = true;
+  else if (a === '--recoger') op.recoger = true;
+  else if (a === '--forzar') op.forzar = true;
+  else if (a === '--esperar-min' && i + 1 < args.length) op.esperarMin = Number(args[++i]);
+  else { console.error(`no conozco el argumento ${a}. No hago nada.`); process.exit(2); }
+}
+if (!jobsFile || !fs.existsSync(jobsFile)) { console.error('uso: node scripts/_apiLotes.mjs <jobs.json> [--lote [--esperar-min N] | --recoger [--forzar]]'); process.exit(2); }
+if (!(op.esperarMin >= 0 && op.esperarMin <= 600)) { console.error('--esperar-min va de 0 a 600'); process.exit(2); }
 const cfg = JSON.parse(fs.readFileSync(jobsFile, 'utf8'));
+if (cfg.lote) op.lote = true;
 fs.mkdirSync(cfg.salidaDir, { recursive: true });
 
 let jobs = cfg.jobs || [];
@@ -32,6 +54,27 @@ if (cfg.auditoria) {
   const todos = jobs.length;
   if (au.saltarExistentes) jobs = jobs.filter((j) => !fs.existsSync(path.join(cfg.salidaDir, `${j.tarea}.md`)));
   console.log(`auditoría: ${lista.length} archivos en ${todos} lotes${au.saltarExistentes ? ` · ${todos - jobs.length} ya en disco · ${jobs.length} a correr` : ''}`);
+}
+
+/** Batch: manda (o solo recoge) y deja en `ok` lo que sirve para la sintesis. Devuelve null si el lote sigue en curso. */
+async function enLote() {
+  const cliente = crearCliente();
+  const tarea = cfg.auditoria?.tarea || path.basename(jobsFile, '.json');
+  if (!op.recoger) {
+    const { estado, lote: b } = await mandarLote(cliente, { jobs, salidaDir: cfg.salidaDir, raiz: RAIZ, tarea });
+    console.log(`lote ${estado.loteId} creado con ${estado.pedidos.length} pedido(s) (mitad de precio) · id guardado en ${path.join(cfg.salidaDir, '_lote.json')}`);
+    try {
+      await esperarLote(cliente, b, { timeoutMs: op.esperarMin * 60 * 1000 });
+    } catch (e) {
+      if (e instanceof ErrorApi && e.tipo === 'lote') { console.log(`sigue en curso despues de ${op.esperarMin} min: recogerlo despues con  node scripts/_apiLotes.mjs ${jobsFile} --recoger`); return null; }
+      throw e;
+    }
+  }
+  const r = await recogerGuardado(cliente, { salidaDir: cfg.salidaDir, forzar: op.forzar });
+  if (r.estado === 'en_curso') { console.log(`lote ${r.loteId} en curso: ${r.aviso}`); return null; }
+  for (const f of r.filas) console.log(`${f.id}: ${f.resultado}${f.costoUsd ? ` · ${usd(f.costoUsd)}` : ''} · ${f.detalle}`);
+  console.log(`lote ${r.loteId}: ${r.filas.length - r.relanzar.length} de ${r.filas.length} guardados · ${usd(r.costoUsd)} (ya con la mitad)${r.relanzar.length ? ` · para relanzar: ${r.relanzar.join(', ')}` : ''}`);
+  return r.filas.filter((f) => f.salida).map((f) => ({ salida: f.salida }));
 }
 
 function correr(job) {
@@ -55,14 +98,20 @@ function correr(job) {
   });
 }
 
-const conc = cfg.concurrencia || 4;
-const cola = [...jobs]; const hechos = [];
-await Promise.all(Array.from({ length: Math.min(conc, cola.length) }, async () => {
-  while (cola.length) { const j = cola.shift(); hechos.push(await correr(j)); }
-}));
-// exit 4 = respuesta cortada pero guardada (_apiTarea --guardar-cortada): cuenta como salida, marcada CORTADA en la linea.
-const ok = hechos.filter((h) => (h.code === 0 || h.code === 4) && fs.existsSync(h.salida));
-console.log(`lotes: ${hechos.length} · ok: ${ok.length}`);
+let ok;
+if (op.lote || op.recoger) {
+  try { ok = await enLote(); } catch (e) { console.error(`Fallo: ${e?.message ?? e}`); process.exit(1); }
+  if (!ok) { console.log('FIN (lote en curso: la sintesis corre al recogerlo)'); process.exit(0); }
+} else {
+  const conc = cfg.concurrencia || 4;
+  const cola = [...jobs]; const hechos = [];
+  await Promise.all(Array.from({ length: Math.min(conc, cola.length) }, async () => {
+    while (cola.length) { const j = cola.shift(); hechos.push(await correr(j)); }
+  }));
+  // exit 4 = respuesta cortada pero guardada (_apiTarea --guardar-cortada): cuenta como salida, marcada CORTADA en la linea.
+  ok = hechos.filter((h) => (h.code === 0 || h.code === 4) && fs.existsSync(h.salida));
+  console.log(`lotes: ${hechos.length} · ok: ${ok.length}`);
+}
 
 // todosEnDisco: la síntesis adjunta TODOS los lotes que están en disco (los de esta corrida y los de antes), no solo los recién corridos.
 const paraSintesis = cfg.sintesis?.todosEnDisco && cfg.auditoria
