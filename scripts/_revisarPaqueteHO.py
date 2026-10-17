@@ -27,9 +27,10 @@ entre las paginas elegidas. Tarda unos 0,3 s por pagina (renderiza cada una para
 
 TIPOS DE PAGINA: "HO" es la que trae el casillero N de operacion, el titulo HOJA DE OPERACIONES o el
 sello Form: I-IN-002.4 (incluye las hojas de embalaje, que no tienen casillero de operacion).
-"CAMINO DE INSPECCION" (las laminas de grampas del paquete A3) es un anexo conocido: no se le pide HO,
-operacion ni plan, pero si logo, tamano, palabras y que no este cortada. Cualquier otra pagina sin
-esos sellos es PORTADA.
+"CAMINO DE INSPECCION" (las laminas de grampas de Pablo) YA NO ESTA EXIMIDO desde el 16/10/2026: por
+esa excepcion paso el formato que Carlos Baptista marco el 13/10 ("el formato esta mal"). Se le corren
+logo, tamano, palabras, corte, cantidad, pieza rara y texto tachado, y avisa CAMINO_ANEXO (no es el
+formulario de HO; si va en el paquete lo define Calidad). Cualquier otra pagina sin esos sellos es PORTADA.
 
 DEFECTOS (ROJO salvo que diga AVISO). Cada uno sale con codigo, pagina y la evidencia (el texto
 o la medida que lo prueba):
@@ -47,6 +48,30 @@ o la medida que lo prueba):
   CAPTURA_PEGADA    AVISO: la descripcion es una captura pegada en vez de texto
   REPETIDA          AVISO: misma hoja generica repetida en varios productos (imprimir una)
   EPP_VACIO         AVISO: el recuadro ELEMENTOS DE SEGURIDAD sin iconos
+
+  Tanda 1.5 del plan del sistema (16/10/2026): lo que Fak marco a ojo del 13 al 14/10 y este revisor no
+  veia porque miraba la forma. Listas y fuentes en scripts/_lib/revisarPaqueteHO.data.json; cada uno
+  con una hoja real en rojo y una en verde en el test.
+  CICLO_LLENO       el CICLO DE CONTROL con renglones escritos (va vacio, canon 1.1 y 1.2); ROJO en el A3
+                    de Ingenieria, AVISO en la HO A4 de Excel (pregunta abierta a Fak); y el mismo ciclo
+                    en hojas de otra operacion ("texto de otra hoja")
+  PIEZA_SIN_ACLARAR pieza de nombre raro sin su aclaracion entre parentesis la primera vez (0.8 b bis);
+                    ROJO las que Fak marco (acumulador, volante cromado), AVISO el resto de la lista. El
+                    recuadro con el nombre EN la foto no se mide (esta en los pixeles)
+  EPP_NO_DEL_SECTOR un icono que una cita de Fak dice que ahi no se usa (ROJO); anteojos sin criterio
+                    cargado (AVISO). Los iconos se reconocen contra los de scripts/hotmelt/epp
+  HERRAMENTAL_SIN_MARCAR un paso que lista 3 herramientas o mas sin la tira de herramientas ni carteles
+                    con el nombre sobre la foto (0.8 b bis, herramientas)
+  PLAN_DEL_PLAN_DE_CONTROL la reaccion del plan de control (segregar, P-13, P-14...) pegada en el plan
+                    de la HO. Contra el plan de control vigente de la pieza NO se compara (no verificado)
+  TEXTO_TACHADO     una linea de la tabla que le cruza el centro a un renglon ("la linea de abajo corta
+                    el texto", Fak 14/10)
+  CANTIDAD_ILEGIBLE una cantidad con el signo por suelto ("×4", "x3") o impresa a menos de 7 pt
+  CAMINO_ANEXO      AVISO: camino de inspeccion en otro formato que la HO
+  ARMADO_DISTINTO   el armado (donde va cada bloque) invierte una relacion de la ultima hoja aprobada
+                    de ese tamano (LECCIONES 07/10: se compara contra una hoja real de la casa)
+
+  --huella imprime la huella del armado de unas paginas, para registrar una hoja aprobada nueva.
 
 UMBRALES: estan arriba, en la seccion CONSTANTES, cada uno con la medicion que lo justifica
 (los PDF del 07/10/2026 y la prueba en las dos direcciones del test
@@ -173,13 +198,15 @@ def recorte(s, n=60):
 # --------------------------------------------------------------------------------------
 
 class Linea:
-    """Una linea de texto del PDF con su caja (en puntos, origen arriba a la izquierda)."""
-    __slots__ = ('x0', 'y0', 'x1', 'y1', 'texto', 'n')
+    """Una linea de texto del PDF con su caja (en puntos, origen arriba a la izquierda) y el cuerpo
+    de letra mas grande de la linea (pt)."""
+    __slots__ = ('x0', 'y0', 'x1', 'y1', 'texto', 'n', 'size')
 
-    def __init__(self, bbox, texto):
+    def __init__(self, bbox, texto, size=0.0):
         self.x0, self.y0, self.x1, self.y1 = bbox
         self.texto = texto
         self.n = norm(texto)
+        self.size = size
 
     @property
     def cx(self):
@@ -197,7 +224,7 @@ def leer_lineas(page):
         for l in b.get('lines', []):
             t = ''.join(s['text'] for s in l.get('spans', []))
             if t.strip():
-                out.append(Linea(l['bbox'], t))
+                out.append(Linea(l['bbox'], t, max((s.get('size', 0.0) for s in l.get('spans', [])), default=0.0)))
     return out
 
 
@@ -842,6 +869,440 @@ def chequear_repetidas(paginas):
     return out
 
 
+# --------------------------------------------------------------------------------------
+# Tanda 1.5 del plan del sistema (16/10/2026): los siete chequeos de CONTENIDO que Fak marco
+# a ojo y el revisor no veia (informe casa_hojas_y_maquinas.md, A1 a A7), mas la comparacion
+# del ARMADO contra la ultima hoja aprobada de ese tipo (LECCIONES 07/10). Las listas y sus
+# fuentes viven en scripts/_lib/revisarPaqueteHO.data.json.
+# --------------------------------------------------------------------------------------
+
+CANON_RUTA = os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib', 'revisarPaqueteHO.data.json')
+_CANON = {}
+
+
+def canon():
+    if not _CANON:
+        with io.open(CANON_RUTA, encoding='utf-8') as f:
+            _CANON.update(json.load(f))
+    return _CANON
+
+
+def papel(p):
+    """'A3' o 'A4' segun la hoja de papel en que se imprime la pagina."""
+    return hoja_de_papel(p.W, p.H)[0].split(' ')[0]
+
+
+# ---- 13 CICLO_LLENO ----------------------------------------------------------------
+
+def cuerpo_ciclo(p):
+    """Los renglones escritos DEBAJO de la fila de titulos del CICLO DE CONTROL, o None si la
+    hoja no tiene el bloque. La fila de titulos (Caracteristicas, Metodo, Resp., Frec., Registro)
+    no cuenta: lo que cuenta es lo que alguien escribio en las filas."""
+    tit = p.buscar('CICLO DE CONTROL')
+    if tit is None:
+        return None
+    hdr = [l for l in p.lineas if tit.y1 - 2 < l.y0 < tit.y1 + 40
+           and l.n.startswith(('CARACTERISTICA', 'METODO', 'RESP', 'FREC', 'REGISTRO'))]
+    if not hdr:
+        return None
+    xa = min(l.x0 for l in hdr) - 70
+    xb = max(l.x1 for l in hdr) + 40
+    yh = max(l.y1 for l in hdr)
+    fin = [l.y0 for l in p.lineas if l.y0 > yh and l.n.startswith('PLAN DE REACCION') and xa - 40 <= l.cx <= xb + 40]
+    yf = min(fin) if fin else p.H
+    return [l for l in p.lineas if yh + 1 < l.y0 < yf - 1 and xa <= l.cx <= xb and not l.n.startswith('REFERENCIA')]
+
+
+def chequear_ciclo(p):
+    """Canon 1.1 y 1.2: Procesos no emite hojas de Calidad; el CICLO DE CONTROL va VACIO hasta que
+    Calidad emita su plan de control aprobado para ese part number. En el A3 de una foto por paso
+    (el formato de Ingenieria) es ROJO: las hojas de Pablo que lo traian lleno se corrigieron el
+    14/10/2026 (exports/hojas-gamboa-corregidas-14-10, 'ANTES - ciclo de control que tenian.txt') y
+    la HO-990 Rev.A lo traia lleno (Fak, 14/10: "¿el ciclo de control se basa en el plan de control
+    del Insert?"). En la HO A4 de Excel de la casa es AVISO: 100 de 114 paginas del paquete del 07/10
+    lo traen lleno y si eso se corrige o no es una pregunta abierta a Fak (informe, fila A7)."""
+    if p.tipo != 'HO':
+        return []
+    c = cuerpo_ciclo(p)
+    if not c:
+        return []
+    txt = ' | '.join(l.texto.strip() for l in c[:3])
+    nivel = ROJO if papel(p) == 'A3' else AVISO
+    extra = '' if nivel == ROJO else ' (HO A4 de Excel: si se vacia lo decide Fak)'
+    return [d('CICLO_LLENO', nivel, 'el CICLO DE CONTROL tiene %d renglones escritos ("%s"): va vacio hasta que '
+              'Calidad emita su plan de control aprobado (canon 1.1 y 1.2)%s' % (len(c), recorte(txt, 90), extra))]
+
+
+def chequear_ciclo_copiado(paginas):
+    """{n: [defectos]}: el mismo ciclo escrito, letra por letra, en hojas de OTRA operacion: es texto
+    de otra hoja (el ciclo de una operacion no puede ser el de otra)."""
+    out = {}
+    grupos = collections.defaultdict(list)
+    for p in paginas:
+        if p.tipo != 'HO':
+            continue
+        c = cuerpo_ciclo(p)
+        k = clave(' '.join(l.texto for l in c)) if c else ''
+        if len(k) >= 40:
+            grupos[k].append(p)
+    for g in grupos.values():
+        ops = {valor_operacion(p)[1] for p in g}
+        if len(g) < 2 or len(ops) < 2:
+            continue
+        for p in g:
+            otras = ['p.%d (op %s)' % (q.n, valor_operacion(q)[1]) for q in g if q is not p]
+            out.setdefault(p.n, []).append(d('CICLO_LLENO', ROJO if papel(p) == 'A3' else AVISO,
+                                             'el ciclo de control es el mismo texto que el de %s: es texto de otra hoja'
+                                             % ', '.join(otras[:4])))
+    return out
+
+
+# ---- 14 PIEZA_SIN_ACLARAR ----------------------------------------------------------
+
+def texto_descripcion(p):
+    """El texto de los pasos (zona DESCRIPCION DE LA OPERACION), en orden de lectura."""
+    z = zona_descripcion(p)
+    if z is None:
+        return ''
+    zx0, zx1, zy0, zy1 = z
+    ls = [l for l in p.lineas if zy0 <= l.y0 < zy1 and zx0 - 2 <= l.cx <= zx1 + 2]
+    ls.sort(key=lambda l: (round(l.y0), l.x0))
+    return ' '.join(l.texto.strip() for l in ls)
+
+
+def chequear_pieza_rara(p):
+    """0.8 b bis (Fak, 13/10/2026, hoja 20.6 del hot melt: "Verificar que los acumuladores... ¿no vale
+    la pena entre parentesis aclarar que carajo es eso?"): la PRIMERA vez que la descripcion nombra una
+    pieza de nombre raro, va su aclaracion entre parentesis. El recuadro con el nombre en la foto se
+    dibuja adentro de la imagen y sin OCR no se mide: eso sigue siendo de la revision a mano (§7)."""
+    if p.tipo not in ('HO', 'CAMINO'):
+        return []
+    txt = texto_descripcion(p) if p.tipo == 'HO' else ' '.join(l.texto for l in p.lineas)
+    plano = re.sub(r'\s+', ' ', txt)
+    up = sin_tildes(plano).upper()          # mismo largo que `plano`: sin_tildes no cambia el largo
+    c = canon()['piezas_raras']
+    out = []
+    for nivel, palabras in ((ROJO, [x['palabra'] for x in c['rojo']]), (AVISO, c['aviso'])):
+        faltan = []
+        for palabra in palabras:
+            m = re.search(r'\b' + re.escape(sin_tildes(palabra).upper()) + r'(?:ES|S)?\b', up)
+            if m and not re.match(r'\s*\(', up[m.end():]):
+                faltan.append('"%s"' % plano[m.start():m.end()])
+        if faltan:
+            out.append(d('PIEZA_SIN_ACLARAR', nivel, 'la descripcion nombra %s sin la aclaracion entre parentesis la primera '
+                         'vez (0.8 b bis: "los acumuladores (los rodillos por donde el material sube y baja)")'
+                         % ', '.join(faltan)))
+    return out
+
+
+# ---- 15 EPP_NO_DEL_SECTOR ----------------------------------------------------------
+
+_EPP_REF = {}
+
+
+def _vector_icono(im):
+    im = im.convert('RGBA')
+    fondo = Image.new('RGBA', im.size, 'white')
+    fondo.alpha_composite(im)
+    return np.asarray(fondo.convert('L').resize((32, 32), Image.BILINEAR)).astype(float).ravel()
+
+
+def iconos_referencia():
+    """{nombre: vector} de los iconos de EPP de la casa (scripts/hotmelt/epp, extraidos de HO reales)."""
+    if not _EPP_REF:
+        c = canon()['epp']
+        base = os.path.join(os.path.dirname(os.path.abspath(__file__)), *c['carpeta_iconos'].split('/'))
+        for nombre, archivo in c['iconos'].items():
+            ruta = os.path.join(base, archivo)
+            if os.path.exists(ruta):
+                _EPP_REF[nombre] = _vector_icono(Image.open(ruta))
+    return _EPP_REF
+
+
+def iconos_epp(p):
+    """Nombres de los iconos del recuadro ELEMENTOS DE SEGURIDAD ('?' si no se parece a ninguno)."""
+    lab = p.buscar('ELEMENTOS DE SEGURIDAD')
+    if lab is None:
+        return []
+    banda = p.rect_banda(lab)
+    x0c, x1c = (banda.x0 - 5, banda.x1 + 5) if banda is not None else (lab.x0 - 80, lab.x1 + 80)
+    refs = iconos_referencia()
+    minimo = canon()['epp']['similitud_min']
+    out = []
+    for i in p.page.get_image_info(xrefs=True):
+        x0, y0, x1, y1 = i['bbox']
+        if not es_icono_o_tira(x1 - x0, y1 - y0) or not i.get('xref'):
+            continue
+        cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+        if not (x0c <= cx <= x1c and lab.y1 - 80 <= cy <= lab.y1 + 90):
+            continue
+        try:
+            v = _vector_icono(Image.open(io.BytesIO(p.doc.extract_image(i['xref'])['image'])))
+        except Exception:
+            continue
+        sc = max(((_correlacion(v, r), n) for n, r in refs.items()), default=(0.0, '?'))
+        out.append(sc[1] if sc[0] >= minimo else '?')
+    return out
+
+
+def campo_cajetin(p, etiqueta):
+    """El valor impreso debajo de una etiqueta del cajetin (SECTOR, ...), o ''."""
+    lab = p.buscar(etiqueta)
+    if lab is None:
+        return ''
+    cand = [l for l in p.lineas if lab.y1 - 1 <= l.y0 < lab.y1 + 24 and abs(l.cx - lab.cx) < 90 and l is not lab]
+    return min(cand, key=lambda l: l.y0).texto.strip() if cand else ''
+
+
+def chequear_epp_sector(p):
+    """hojas-proceso.md 16: el EPP sale del riesgo real del puesto. ROJO: un icono que una cita de Fak
+    dice que en ese sector (o en esa HO) no se usa. AVISO: anteojos en un puesto sin criterio cargado
+    (se miran juntos, como propuso el informe de hojas del 15/10). Sin la cita, no se inventa la regla."""
+    if p.tipo != 'HO':
+        return []
+    iconos = iconos_epp(p)
+    if not iconos:
+        return []
+    sector = norm(campo_cajetin(p, 'SECTOR'))
+    ho_txt = norm(texto_casillero_ho(p)[0])
+    m = re.search(r'(\d{3})', ho_txt)
+    ho = m.group(1) if m else ''
+    out = []
+    marcados = set()
+    for regla in canon()['epp']['no_corresponde']:
+        donde = regla['donde']
+        aplica = (('sector' in donde and norm(donde['sector']) == sector) or ('ho' in donde and donde['ho'] == ho))
+        if aplica and regla['icono'] in iconos:
+            marcados.add(regla['icono'])
+            out.append(d('EPP_NO_DEL_SECTOR', ROJO, 'lleva %s y en %s no se usan: %s'
+                         % (regla['icono'], ('el sector ' + sector) if 'sector' in donde else 'la HO-' + ho, regla['fuente'])))
+    for ic in canon()['epp']['avisar']:
+        if ic in iconos and ic not in marcados:
+            out.append(d('EPP_NO_DEL_SECTOR', AVISO, 'lleva %s (sector "%s"): ¿hay ese riesgo en este puesto? el EPP sale '
+                         'del riesgo real, no de un set (hojas-proceso.md 16)' % (ic, sector or 'sin sector')))
+    return out
+
+
+# ---- 16 HERRAMENTAL_SIN_MARCAR -----------------------------------------------------
+
+def es_tira_de_herramientas(p, info):
+    """Una imagen mucho mas ancha que alta y con fondo blanco: la tira de herramientas que pidio Fak
+    el 13/10 (una baldosa por herramienta, entera sobre blanco, el nombre abajo)."""
+    x0, y0, x1, y1 = info['bbox']
+    w, h = x1 - x0, y1 - y0
+    if h <= 0 or w / h < 3.0 or w < 150:
+        return False
+    try:
+        im = Image.open(io.BytesIO(p.doc.extract_image(info['xref'])['image'])).convert('L')
+    except Exception:
+        return False
+    a = np.asarray(im)
+    return float((a > 235).mean()) >= 0.5
+
+
+def chequear_herramental(p):
+    """0.8 b bis, herramientas (Fak, 13/10/2026, hoja de tapizado del Top Roll: "no se entiende bien
+    cuales son las herramientas, deberiamos nombrarlas y mostrarlas mejor... criterio general"): un paso
+    que nombra varias herramientas del puesto las muestra cada una con su nombre: o la tira de
+    herramientas (imagen ancha sobre blanco) o un cartel con el nombre ENCIMA de la foto. Un pie de
+    foto generico ("Herramental del puesto") no alcanza. Lo que no mide: que cada baldosa de la tira sea
+    la herramienta correcta (los nombres de la tira son pixeles)."""
+    if p.tipo != 'HO':
+        return []
+    txt = sin_tildes(texto_descripcion(p)).upper()
+    nombradas = []
+    for h in canon()['herramientas']['palabras']:
+        if re.search(r'\b' + re.escape(sin_tildes(h).upper()) + r'(?:S|ES)?\b', txt):
+            nombradas.append(h)
+    if len(nombradas) < canon()['herramientas']['minimo_en_un_paso']:
+        return []
+    infos = [i for i in p.page.get_image_info(xrefs=True) if i.get('xref')]
+    if any(es_tira_de_herramientas(p, i) for i in infos):
+        return []
+    fotos = [fitz.Rect(i['bbox']) for i in infos if (i['bbox'][2] - i['bbox'][0]) >= FOTO_LADO_MIN]
+    sobre_foto = ' '.join(sin_tildes(l.texto).upper() for l in p.lineas
+                          if any(r.contains(fitz.Point(l.cx, (l.y0 + l.y1) / 2)) for r in fotos))
+    faltan = [h for h in nombradas if sin_tildes(h).upper() not in sobre_foto]
+    if not faltan:
+        return []
+    return [d('HERRAMENTAL_SIN_MARCAR', ROJO, 'la descripcion nombra %d herramientas (%s) y la hoja no las muestra con '
+              'su nombre: falta la tira de herramientas o el cartel sobre la foto de: %s'
+              % (len(nombradas), ', '.join(nombradas), ', '.join(faltan)))]
+
+
+# ---- 17 PLAN_DEL_PLAN_DE_CONTROL ---------------------------------------------------
+
+def chequear_plan_de_control(p):
+    """El plan de reaccion de la HO es el estandar (canon 4.5); la reaccion propia del PLAN DE CONTROL
+    (segregar, P-13, contenedor rojo...) no va pegada en la hoja del operario: es lo que traia la HO-990
+    Rev.A (Fak, 14/10/2026: "¿por que el plan de reaccion esta mal?"). Contra el plan de control vigente
+    de cada pieza NO se compara: vive en Supabase y en el servidor (no verificado por este control)."""
+    if p.tipo != 'HO':
+        return []
+    banda = p.buscar('PLAN DE REACCION')
+    if banda is None:
+        return []
+    zona = sin_tildes(' '.join(l.texto for l in p.lineas if l.y0 >= banda.y1 - 2)).upper()
+    hallados = []
+    for etiqueta, rx in canon()['plan_de_control']['frases']:
+        if re.search(rx, zona):
+            hallados.append(etiqueta)
+    if not hallados:
+        return []
+    return [d('PLAN_DEL_PLAN_DE_CONTROL', ROJO, 'el plan de reaccion trae la reaccion del plan de control (%s): en la HO '
+              'va solo el estandar DETENGA / NOTIFIQUE / ESPERE (canon 4.5)' % ', '.join(hallados))]
+
+
+# ---- 18 TEXTO_TACHADO --------------------------------------------------------------
+
+def trazos_horizontales(p):
+    """(y, x0, x1) de cada trazo horizontal visible: lineas y bordes de rectangulos con color."""
+    out = []
+    for dr in p.dibujos:
+        con_color = dr.get('color') is not None
+        for it in dr['items']:
+            if it[0] == 'l':
+                a, b = it[1], it[2]
+                if abs(a.y - b.y) < 0.6 and abs(a.x - b.x) > 4:
+                    out.append((a.y, min(a.x, b.x), max(a.x, b.x)))
+            elif it[0] in ('re', 'qu') and con_color:
+                r = it[1] if it[0] == 're' else it[1].rect
+                if r.width > 4:
+                    out.append((r.y0, r.x0, r.x1))
+                    out.append((r.y1, r.x0, r.x1))
+    return out
+
+
+def chequear_tachado(p):
+    """Fak, 14/10/2026, HO-990 Rev.A: "¿por que la linea de abajo corta el texto?". Un renglon con una
+    linea dibujada que le cruza el CENTRO (entre el 30 % y el 70 % de su alto, sobre la mitad de su ancho):
+    el borde de la tabla quedo encima de las letras. Solo renglones con 4 letras o mas: los numeros de
+    grampa de un camino de inspeccion cruzados por la linea del recorrido no son texto cortado (medido
+    sobre el paquete A3 del 07/10: 4 falsos asi, 0 con esta condicion)."""
+    hs = trazos_horizontales(p)
+    malos = []
+    for l in p.lineas:
+        h = l.y1 - l.y0
+        if h < 3 or len(re.findall(r'[A-Za-zÀ-ſ]', l.texto)) < 4:
+            continue
+        ya, yb = l.y0 + 0.30 * h, l.y1 - 0.30 * h
+        w = l.x1 - l.x0
+        for y, x0, x1 in hs:
+            if ya <= y <= yb and min(x1, l.x1) - max(x0, l.x0) >= 0.5 * w:
+                malos.append(l)
+                break
+    if not malos:
+        return []
+    return [d('TEXTO_TACHADO', ROJO, 'una linea de la tabla le pasa por encima a %d renglon(es): "%s"'
+              % (len(malos), recorte(malos[0].texto, 60)))]
+
+
+# ---- 19 CANTIDAD_ILEGIBLE ----------------------------------------------------------
+
+RE_POR = re.compile(r'(?<![\w.,])[x×]\s?\d+\b')
+
+
+def cantidades_con_por(texto):
+    """Los "×4" / "x3" SUELTOS: el signo por con un numero atras y nada delante. "600 × 400 mm" (una
+    medida) y "2 pisos × 15" (una cuenta que se lee) no cuentan: antes del signo hay un numero o una
+    palabra (medido en las hojas de embalaje del Insert, 16/10/2026)."""
+    out = []
+    for m in RE_POR.finditer(texto):
+        antes = texto[:m.start()].rstrip()
+        if antes and re.search(r'[\w)]$', antes):
+            continue
+        out.append(m.group(0))
+    return out
+
+
+def chequear_cantidad(p):
+    """Fak, 13/10/2026, camino de inspeccion de grampas: "en el camino de inspeccion arriba dice x4 x3,
+    no se entiende eso". La cantidad va en palabras ("4 grampas (1 a 4)", "4 piezas por juego"), no con
+    el signo por; y lo que dice una cantidad se lee impreso (canon: 7 pt como minimo)."""
+    if p.tipo not in ('HO', 'CAMINO'):
+        return []
+    out = []
+    por = [l for l in p.lineas if cantidades_con_por(l.texto)]
+    if por:
+        ej = ', '.join('"%s"' % recorte(l.texto, 40) for l in por[:3])
+        out.append(d('CANTIDAD_ILEGIBLE', ROJO, 'cantidad escrita con el signo por (%s): escribirla en palabras, '
+                     'como "4 grampas (1 a 4)"' % ej))
+    minimo = canon()['cantidad']['cuerpo_min_pt']
+    rx = canon()['cantidad']['regex']
+    chicas = [l for l in p.lineas if l.size and l.size < minimo and re.search(rx, sin_tildes(l.texto).upper())]
+    if chicas:
+        out.append(d('CANTIDAD_ILEGIBLE', ROJO, 'una cantidad impresa a %.1f pt ("%s"): lo que hay que leer va a %d pt '
+                     'como minimo' % (chicas[0].size, recorte(chicas[0].texto, 40), minimo)))
+    return out
+
+
+# ---- 20 CAMINO_ANEXO ---------------------------------------------------------------
+
+def chequear_camino(p):
+    """Hasta el 16/10/2026 el revisor eximia al CAMINO DE INSPECCION ("anexo conocido"), y por esa
+    excepcion paso el formato que Carlos Baptista marco el 13/10 12:32 ("el formato esta mal. Tenemos que
+    hacer una hoja de proceso de donde colocar las grampas"). Ahora se le corren todos los chequeos de
+    contenido (cantidad, pieza rara, texto tachado, logo, palabras, corte) y ademas se avisa que no es el
+    formulario de HO. AVISO y no ROJO: si va dentro del paquete o aparte lo define Calidad."""
+    if p.tipo != 'CAMINO':
+        return []
+    return [d('CAMINO_ANEXO', AVISO, 'camino de inspeccion en otro formato que la HO (sin N de HO, operacion ni plan de '
+              'reaccion): Carlos 13/10 pidio una hoja de proceso de donde van las grampas; si va en el paquete lo define Calidad')]
+
+
+# ---- 21 ARMADO_DISTINTO (contra la ultima hoja aprobada) ---------------------------
+
+BLOQUES = (('DESC', 'DESCRIPCION DE LA OPERACION'), ('CICLO', 'CICLO DE CONTROL'),
+           ('EPP', 'ELEMENTOS DE SEGURIDAD'), ('PLAN', 'PLAN DE REACCION'))
+
+
+def huella_armado(p):
+    """{bloque: [cx, cy]} en fraccion de la pagina: donde esta la banda de titulo de cada bloque."""
+    out = {}
+    for k, pref in BLOQUES:
+        l = p.buscar(pref)
+        if l is not None:
+            out[k] = [round(l.cx / p.W, 3), round((l.y0 + l.y1) / 2 / p.H, 3)]
+    return out
+
+
+def _relacion(a, b, eje, zona):
+    """-1 si a esta antes que b en ese eje (izquierda / arriba), 1 si despues, 0 si estan a la par."""
+    dlt = a[eje] - b[eje]
+    return 0 if abs(dlt) <= zona else (1 if dlt > 0 else -1)
+
+
+def chequear_armado(p):
+    """LECCIONES 07/10/2026: el estandar se compara contra una hoja REAL de la casa, no contra la sesion
+    anterior (Fak: "te lo dije 300 veces, no es el estandar que decidimos... a la derecha queda todo
+    blanco"). Se compara contra la ultima hoja aprobada de ese tamano (canon 'aprobadas', con su fuente):
+    para cada par de bloques, si la aprobada dice "A a la izquierda de B" (o arriba) y esta dice lo
+    CONTRARIO, el armado no es el de la casa. Estar a la par no cuenta: dos HO buenas acomodan distinto
+    el recuadro de EPP y el ciclo."""
+    if p.tipo != 'HO':
+        return []
+    ref = canon()['aprobadas'].get(papel(p))
+    if not ref:
+        return [d('ARMADO_DISTINTO', AVISO, 'no hay hoja aprobada registrada para %s: el armado no se comparo' % papel(p))]
+    zona = canon()['armado_zona_muerta']
+    h = huella_armado(p)
+    r = ref['huella']
+    nombres = {'DESC': 'la descripcion', 'CICLO': 'el ciclo de control', 'EPP': 'los elementos de seguridad',
+               'PLAN': 'el plan de reaccion'}
+    malos = []
+    claves = [k for k, _ in BLOQUES if k in h and k in r]
+    for i, a in enumerate(claves):
+        for b in claves[i + 1:]:
+            for eje, (antes, despues) in ((0, ('a la izquierda de', 'a la derecha de')), (1, ('arriba de', 'abajo de'))):
+                ra, rc = _relacion(r[a], r[b], eje, zona), _relacion(h[a], h[b], eje, zona)
+                if ra and rc and ra != rc:
+                    malos.append('%s esta %s %s (en la aprobada, %s)' % (
+                        nombres[a], antes if rc < 0 else despues, nombres[b], antes if ra < 0 else despues))
+    if not malos:
+        return []
+    return [d('ARMADO_DISTINTO', ROJO, '%s; comparado con %s' % ('; '.join(malos[:2]), ref['fuente']))]
+
+
 # ---- driver ------------------------------------------------------------------------
 
 def revisar_pagina(p):
@@ -857,6 +1318,16 @@ def revisar_pagina(p):
     defectos += chequear_plan(p)
     defectos += chequear_captura(p)
     defectos += chequear_epp(p)
+    # tanda 1.5 (16/10/2026)
+    defectos += chequear_ciclo(p)
+    defectos += chequear_pieza_rara(p)
+    defectos += chequear_epp_sector(p)
+    defectos += chequear_herramental(p)
+    defectos += chequear_plan_de_control(p)
+    defectos += chequear_tachado(p)
+    defectos += chequear_cantidad(p)
+    defectos += chequear_camino(p)
+    defectos += chequear_armado(p)
     return defectos
 
 
@@ -889,7 +1360,7 @@ def revisar_pdf(ruta, paginas_txt=None):
     nums = parse_paginas(paginas_txt, len(doc))
     paginas = [Pagina(doc, n - 1) for n in nums]
     res = {p.n: revisar_pagina(p) for p in paginas}
-    for chequeo in (chequear_tamanos, chequear_repetidas):
+    for chequeo in (chequear_tamanos, chequear_repetidas, chequear_ciclo_copiado):
         for n, ds in chequeo(paginas).items():
             res[n] += ds
     ident = {p.n: identidad(p) for p in paginas if res[p.n]}
@@ -915,9 +1386,19 @@ def main(argv=None):
     ap.add_argument('--paginas', help='solo estas paginas, ej. 1-5,47')
     ap.add_argument('--json', action='store_true', help='salida JSON')
     ap.add_argument('--solo-rojo', action='store_true', help='no listar los avisos')
+    ap.add_argument('--huella', action='store_true',
+                    help='imprime la huella del armado de las paginas (para registrar una hoja aprobada en el canon)')
     args = ap.parse_args(argv)
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    if args.huella:
+        for ruta in args.pdf:
+            doc = fitz.open(ruta)
+            for n in parse_paginas(args.paginas, len(doc)):
+                p = Pagina(doc, n - 1)
+                print(json.dumps({'pdf': os.path.basename(ruta), 'pagina': n, 'papel': papel(p),
+                                  'huella': huella_armado(p)}, ensure_ascii=False))
+        return 0
 
     todos = []
     hay_error = False

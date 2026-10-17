@@ -28,7 +28,20 @@ const RAIZ = path.resolve(fileURLToPath(import.meta.url), '../../..');
 /** REVISAR_PAQUETE_SCRIPT apunta la suite a una copia MUTADA del script (umbrales rotos a proposito):
  *  los tests tienen que fallar. Un test que sigue verde con el bug puesto no protege nada. */
 const SCRIPT = process.env.REVISAR_PAQUETE_SCRIPT ?? path.join(RAIZ, 'scripts', '_revisarPaqueteHO.py');
-const EX = path.join(RAIZ, 'exports');
+
+/** Los PDF de ejemplo viven en exports/, que no se versiona: un worktree no lo tiene y la suite se
+ *  salteaba entera en silencio (un verde vacio). Orden: REVISAR_PAQUETE_EXPORTS, el exports/ de este
+ *  checkout, y el del checkout principal (la carpeta padre del .git comun). */
+function carpetaExports() {
+    const cands = [process.env.REVISAR_PAQUETE_EXPORTS, path.join(RAIZ, 'exports')];
+    try {
+        const comun = execFileSync('git', ['rev-parse', '--path-format=absolute', '--git-common-dir'],
+            { cwd: RAIZ, encoding: 'utf8' }).trim();
+        cands.push(path.join(path.dirname(comun), 'exports'));
+    } catch { /* sin git: quedan las otras */ }
+    return cands.find((c) => c && fs.existsSync(path.join(c, 'IMPRESION_0710_FINAL'))) ?? path.join(RAIZ, 'exports');
+}
+const EX = carpetaExports();
 const FUENTES = {
     dep: path.join(EX, 'IMPRESION_0710_FINAL', '3_HOJAS_DE_PROCESO_A4_depurado.pdf'), // con muchos errores
     a3: path.join(EX, 'IMPRESION_0710_FINAL', '4_HOJAS_DE_PROCESO_A3.pdf'),          // con logo viejo
@@ -64,7 +77,12 @@ const MANIFIESTO = {
         v6_2_acciones: E('v6', 2, { plan_acciones: true }),
     },
     buenas_a4: { p1: E('v6', 1), p2: E('v6', 2), p3: E('v6', 3), p62: E('v6', 62), p63: E('v6', 63) },
-    buenas_a3: { p1: E('a3v6', 1), p2: E('a3v6', 2), p3: E('a3v6', 3), p4: E('a3v6', 4) },
+    // Hasta el 16/10/2026 eran las paginas 1 a 4 del A3 v6 (hot melt del 07/10). Con la regla del 13/10
+    // (0.8 b bis: la pieza rara va con su aclaracion entre parentesis) esas hojas dicen "volante cromado",
+    // "fusor" y "guiador" sin aclarar: ya no son verdes, y lo prueba el bloque de la tanda 1.5. Las A3
+    // buenas pasan a ser las paginas del hot melt regenerado el 13/10 que si cumplen y las de grampas
+    // aprobadas por Fak ese dia (bloque de la tanda 1.5).
+    buenas_a3: { p3: E('a3v6', 3) },
     solo_avisos: { epp: E('v6', 72) },
     tamano_mezcla: { a4_1: E('v6', 1), a4_2: E('v6', 2), vertical: E('v6', 49), a3: E('a3v6', 1) },
     tamano_parejo: { a4_1: E('v6', 1), a4_2: E('v6', 2) },
@@ -338,11 +356,15 @@ describe.skipIf(!HAY_PDFS)('con paginas reales del paquete del 07/10/2026', () =
     });
 
     // ---------------------------------------------------------------------------------
-    it('VERDE: un paquete de hojas buenas (A4 y A3) no da ningun defecto, ni aviso, y sale con codigo 0', () => {
-        for (const pdf of ['buenas_a4', 'buenas_a3']) {
-            expect(CORRIDA[pdf].defectos, pdf + ':\n' + CORRIDA[pdf].defectos.map((x) => x.pagina + ' ' + x.codigo + ' ' + x.evidencia).join('\n')).toHaveLength(0);
-            expect(CORRIDA[pdf].status).toBe(0);
-        }
+    it('VERDE: un paquete de hojas buenas (A4 y A3) no da ningun ROJO y sale con codigo 0; el unico aviso de las A4 de Excel es el ciclo lleno', () => {
+        // A3: ni un defecto ni un aviso
+        expect(CORRIDA.buenas_a3.defectos, CORRIDA.buenas_a3.defectos.map((x) => x.pagina + ' ' + x.codigo + ' ' + x.evidencia).join('\n')).toHaveLength(0);
+        expect(CORRIDA.buenas_a3.status).toBe(0);
+        // A4 de Excel: el ciclo de control lleno es AVISO (si se vacia es una pregunta abierta a Fak, informe A7)
+        // y es lo unico que puede aparecer
+        const otros = CORRIDA.buenas_a4.defectos.filter((x) => x.codigo !== 'CICLO_LLENO' || x.nivel !== 'AVISO');
+        expect(otros, otros.map((x) => x.pagina + ' ' + x.nivel + ' ' + x.codigo + ' ' + x.evidencia).join('\n')).toHaveLength(0);
+        expect(CORRIDA.buenas_a4.status).toBe(0);
     });
 
     it('CODIGO DE SALIDA: ROJO sale 1; solo avisos sale 0; --solo-rojo oculta los avisos', () => {
@@ -373,5 +395,123 @@ describe.skipIf(!HAY_PDFS)('con paginas reales del paquete del 07/10/2026', () =
         expect(j.defectos.length).toBeGreaterThan(0);
         expect(new Set(j.defectos.map((d) => d.pagina))).toEqual(new Set([n]));
         expect(j.defectos.some((d) => d.codigo === 'SIN_HO')).toBe(true);
+    });
+});
+
+// =====================================================================================
+// Tanda 1.5 del plan del sistema (16/10/2026): los chequeos de CONTENIDO, cada uno con una hoja real
+// en ROJO y una en VERDE. Las hojas son las de respuesta conocida del informe casa_hojas_y_maquinas.md
+// (A1 a A7): la HO-990 Rev.A del servidor (en el PDF por pieza del 14/10), la 20.6 del hot melt del
+// 01/10, la hoja de tapizado de Pablo sin y con la tira de herramientas, el camino de inspeccion de
+// grampas del 01/10 con los "×3"; y en verde las de grampas aprobadas el 13/10, el hot melt regenerado
+// ese dia y las de Pablo corregidas el 14/10. Las paginas se COPIAN a un PDF chico: nada se modifica.
+// =====================================================================================
+const F15 = {
+    h990: path.join(EX, 'hojas-por-pieza-14-10', 'HO 990 - INSERT - HOJAS DE PROCESO (todas).pdf'),
+    hm0110: path.join(EX, 'hojas-hotmelt-01-10', 'HO-992 - OP 20 ADHESIVADO HOT MELT - TOP ROLL.pdf'),
+    hmreg: path.join(EX, 'hojas-hotmelt-13-10', 'regenerado', 'HO-992 - OP 20 ADHESIVADO HOT MELT - TOP ROLL.pdf'),
+    gr992: path.join(EX, 'hojas-grampas-a3', 'HO-992 - OP 50 UBICACION DE LAS GRAMPAS - TOP ROLL.pdf'),
+    gr971: path.join(EX, 'hojas-grampas-a3', 'HO-971 - OP 93 UBICACION DE LAS GRAMPAS - APB DE PUERTA.pdf'),
+    gr990: path.join(EX, 'hojas-grampas-a3', 'HO-990 - OP 101 UBICACION DE LAS GRAMPAS - INSERT.pdf'),
+    tapiz: path.join(EX, 'hojas-img-a3', 'HO-992 - OP 50 TAPIZADO Y ENGRAMPADO DE PANEL - TOP ROLL TRASERO.pdf'),
+    tira: path.join(EX, 'hojas-img-a3', 'HO-992 - OP 50 TAPIZADO Y ENGRAMPADO DE PANEL - TOP ROLL TRASERO - con tira de herramientas.pdf'),
+    camino: path.join(EX, 'hojas-grampas-patagonia-01-10', 'CAMINO DE INSPECCION DE GRAMPAS - TOP ROLL TRASERO - 34.pdf'),
+    espuma: path.join(EX, 'hojas-gamboa-corregidas-14-10', 'HO-990 - OP 80 ARMADO DE ESPUMA - INSERTO DELANTERO.pdf'),
+    v6: FUENTES.v6,
+    a3v6: FUENTES.a3v6,
+};
+const FALTAN15 = Object.values(F15).filter((p) => !fs.existsSync(p));
+if (FALTAN15.length) {
+    console.warn('[revisarPaqueteHO] SE SALTEA el bloque de la tanda 1.5: faltan ' + FALTAN15.map((p) => path.basename(p)).join(', '));
+}
+
+/** La tabla de respuesta conocida: [etiqueta, fuente, pagina, codigo, nivel esperado (null = que NO aparezca)]. */
+const CASOS15 = [
+    // 1 CICLO_LLENO: la HO-990 Rev.A lo traia lleno (Fak 14/10: "¿el ciclo de control se basa en el plan de control del Insert?")
+    ['ciclo_rojo_h990', 'h990', 1, 'CICLO_LLENO', 'ROJO'],
+    ['ciclo_verde_espuma_corregida', 'espuma', 1, 'CICLO_LLENO', null],
+    ['ciclo_verde_grampas', 'gr992', 1, 'CICLO_LLENO', null],
+    ['ciclo_aviso_excel_a4', 'v6', 1, 'CICLO_LLENO', 'AVISO'],
+    // 2 PIEZA_SIN_ACLARAR: "Verificar que los acumuladores..." (20.6 del 01/10) contra "los acumuladores (los rodillos...)"
+    ['pieza_rojo_20_6_0110', 'hm0110', 7, 'PIEZA_SIN_ACLARAR', 'ROJO'],
+    ['pieza_verde_20_6_regenerada', 'hmreg', 6, 'PIEZA_SIN_ACLARAR', null],
+    // 3 EPP_NO_DEL_SECTOR: anteojos en la HO-990 (Fak 14/10: "en ese sector no hace falta gafas")
+    ['epp_rojo_h990', 'h990', 1, 'EPP_NO_DEL_SECTOR', 'ROJO'],
+    ['epp_verde_grampas_990', 'gr990', 1, 'EPP_NO_DEL_SECTOR', null],
+    // 4 HERRAMENTAL_SIN_MARCAR: la hoja de Pablo con "Herramental del puesto" contra la de la tira de herramientas
+    ['herr_rojo_tapizado', 'tapiz', 1, 'HERRAMENTAL_SIN_MARCAR', 'ROJO'],
+    ['herr_verde_tira', 'tira', 1, 'HERRAMENTAL_SIN_MARCAR', null],
+    // 5 PLAN_DEL_PLAN_DE_CONTROL: "Segregar... P-13... P-14" pegado al costado del plan
+    ['plan_pc_rojo_h990', 'h990', 1, 'PLAN_DEL_PLAN_DE_CONTROL', 'ROJO'],
+    ['plan_pc_verde_grampas', 'gr992', 1, 'PLAN_DEL_PLAN_DE_CONTROL', null],
+    // 6 TEXTO_TACHADO: "3. No reiniciar la produccion..." cruzado por el borde de abajo
+    ['tachado_rojo_h990', 'h990', 1, 'TEXTO_TACHADO', 'ROJO'],
+    ['tachado_verde_grampas', 'gr992', 1, 'TEXTO_TACHADO', null],
+    ['tachado_verde_camino_numeros', 'a3v6', 11, 'TEXTO_TACHADO', null],   // numeros de grampa cruzados por el recorrido
+    // 7 CANTIDAD_ILEGIBLE: "×3 + 4" del camino de Pablo contra "4 grampas (1 a 4)" de la hoja aprobada
+    ['cantidad_rojo_camino', 'camino', 1, 'CANTIDAD_ILEGIBLE', 'ROJO'],
+    ['cantidad_verde_grampas', 'gr992', 1, 'CANTIDAD_ILEGIBLE', null],
+    ['cantidad_verde_medidas_embalaje', 'h990', 16, 'CANTIDAD_ILEGIBLE', null],   // "600 × 400 × 400 mm" es una medida
+    // el CAMINO DE INSPECCION ya no esta eximido: avisa que no es una HO y se le corren los de contenido
+    ['camino_anexo', 'camino', 1, 'CAMINO_ANEXO', 'AVISO'],
+    // ARMADO_DISTINTO contra la ultima aprobada de ese tamano
+    ['armado_rojo_h990', 'h990', 1, 'ARMADO_DISTINTO', 'ROJO'],
+    ['armado_verde_grampas', 'gr971', 1, 'ARMADO_DISTINTO', null],
+    ['armado_verde_excel_a4', 'v6', 1, 'ARMADO_DISTINTO', null],
+    ['armado_verde_generador_a4', 'v6', 62, 'ARMADO_DISTINTO', null],
+];
+/** Hojas que tienen que salir sin un solo defecto ni aviso: las aprobadas por Fak el 13/10. */
+const VERDES15 = [['gr992', 1], ['gr992', 2], ['gr971', 1], ['gr971', 2], ['gr990', 1], ['gr990', 2],
+    ['hmreg', 3], ['hmreg', 5], ['hmreg', 6], ['hmreg', 8], ['espuma', 1]];
+
+describe.skipIf(FALTAN15.length > 0)('tanda 1.5: los chequeos de contenido, cada uno con una hoja real en rojo y una en verde', () => {
+    const DEF15 = {};      // etiqueta -> defectos de esa pagina
+    let STATUS_VERDES = null;
+    beforeAll(() => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'revpaq15-'));
+        const casos = {};
+        for (const [et, src, pag] of CASOS15) casos[et] = { src, pag, ediciones: [] };
+        const verdes = {};
+        VERDES15.forEach(([src, pag], i) => { verdes['v' + i] = { src, pag, ediciones: [] }; });
+        const spec = { dir, fuentes: F15, pdfs: { casos15: casos, verdes15: verdes } };
+        const pags = JSON.parse(execFileSync('python', ['-c', PY_ARMAR, JSON.stringify(spec)],
+            { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }));
+        for (const pdf of ['casos15', 'verdes15']) {
+            const r = spawnSync('python', [SCRIPT, path.join(dir, pdf + '.pdf'), '--json'], {
+                encoding: 'utf8', maxBuffer: 256 * 1024 * 1024, env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+            });
+            const defs = JSON.parse(r.stdout).defectos;
+            if (pdf === 'verdes15') { DEF15.__verdes = defs; STATUS_VERDES = r.status; continue; }
+            for (const [et, n] of Object.entries(pags.casos15)) DEF15[et] = defs.filter((x) => x.pagina === n);
+        }
+        // los dos PDF chicos, de a uno, y la carpeta vacia
+        for (const f of fs.readdirSync(dir)) fs.unlinkSync(path.join(dir, f));
+        fs.rmdirSync(dir);
+    }, 600000);
+
+    for (const [et, , , codigo, nivel] of CASOS15) {
+        it(`${et}: ${codigo} ${nivel ?? 'NO aparece'}`, () => {
+            const ds = DEF15[et].filter((x) => x.codigo === codigo);
+            const todo = DEF15[et].map((x) => x.nivel + ' ' + x.codigo + ': ' + x.evidencia).join('\n');
+            if (nivel === null) expect(ds, todo).toHaveLength(0);
+            else expect(ds.some((x) => x.nivel === nivel), todo).toBe(true);
+        });
+    }
+
+    it('las evidencias dicen lo que Fak marco (la palabra, la herramienta, el icono, la frase cortada)', () => {
+        const ev = (et, c) => DEF15[et].filter((x) => x.codigo === c).map((x) => x.evidencia).join(' || ');
+        expect(ev('pieza_rojo_20_6_0110', 'PIEZA_SIN_ACLARAR')).toContain('acumuladores');
+        expect(ev('epp_rojo_h990', 'EPP_NO_DEL_SECTOR')).toContain('anteojos');
+        expect(ev('herr_rojo_tapizado', 'HERRAMENTAL_SIN_MARCAR')).toContain('pistola de calor');
+        expect(ev('tachado_rojo_h990', 'TEXTO_TACHADO')).toContain('No reiniciar');
+        expect(ev('cantidad_rojo_camino', 'CANTIDAD_ILEGIBLE')).toContain('×3');
+        expect(ev('plan_pc_rojo_h990', 'PLAN_DEL_PLAN_DE_CONTROL')).toContain('P-13');
+        expect(ev('armado_rojo_h990', 'ARMADO_DISTINTO')).toContain('el plan de reaccion');
+    });
+
+    it('las hojas aprobadas por Fak el 13/10 (grampas, hot melt regenerado) y la espuma corregida el 14/10 salen sin un solo defecto ni aviso', () => {
+        const ds = DEF15.__verdes;
+        expect(ds, ds.map((x) => x.pagina + ' ' + x.nivel + ' ' + x.codigo + ' ' + x.evidencia).join('\n')).toHaveLength(0);
+        expect(STATUS_VERDES).toBe(0);
     });
 });
