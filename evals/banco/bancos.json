@@ -73,6 +73,31 @@
       ],
       "skills": ["amfe-export-oficial"],
       "reglas": []
+    },
+    "amfe-domain": {
+      "casos": [
+        "evals/banco/amfe-domain/enfundado-no-se-invierte",
+        "evals/banco/amfe-domain/we-placeholder"
+      ],
+      "skills": ["amfe-domain"],
+      "reglas": []
+    },
+    "amfe-cookbook": {
+      "casos": [
+        "evals/banco/amfe-cookbook/sod-sin-fuente",
+        "evals/banco/amfe-cookbook/placeholder-borrar-no-op"
+      ],
+      "skills": ["amfe-cookbook"],
+      "reglas": []
+    },
+    "pieza-nueva-flujograma-amfe": {
+      "casos": [
+        "evals/banco/pieza-nueva-flujograma-amfe/metodo-de-la-vecina",
+        "evals/banco/pieza-nueva-flujograma-amfe/todo-alto-no-se-baja",
+        "evals/banco/pieza-nueva-flujograma-amfe/mail-a-calidad-con-copia"
+      ],
+      "skills": ["pieza-nueva-flujograma-amfe"],
+      "reglas": []
     }
   }
 }

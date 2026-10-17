@@ -1,6 +1,6 @@
 ---
 name: amfe-domain
-description: Conocimiento AMFE profundo de Barack — ejemplos de los 3 niveles de funcion, jerarquia de fuentes para WE.name con vectores de test, tabla keyword→OP para detectar fallas mal alocadas, SQL de auditoria de placeholders 6M, formato canonico de applicableParts L0-L3, workflow completo de renumeracion. Usar cuando se edita contenido de AMFEs (funciones, WEs, renumeraciones, placeholders) y la regla amfe.md no alcanza. Complementa amfe-cookbook (recetas de gaps) y apqp-schema (schema JSON).
+description: Conocimiento AMFE profundo de Barack — los 3 niveles de funcion con ejemplos, de donde sale el nombre de un work element (y los 4 roles), tabla keyword→OP para fallas mal alocadas, placeholders 6M, applicableParts L0-L3, renumeracion segura, apoyacabezas delantero vs trasero. Usar al editar el contenido de un AMFE (funciones, WEs, renumerar, placeholders) cuando la regla amfe.md no alcanza. Complementa amfe-cookbook y apqp-schema.
 ---
 
 # amfe-domain — detalle profundo del dominio AMFE Barack
@@ -12,9 +12,13 @@ La regla operativa vive en `.claude/rules/amfe.md`. Este skill tiene el detalle 
 **Nivel 1 `focusElementFunction`** (identica en TODAS las OPs del AMFE):
 ```
 Función Interna: Proveer pieza tapizada conforme dimensional, costuras y bordes sin defectos
- / Función del Cliente: Permitir ensamble en panel de puerta sin interferencia ni Gap & Flush fuera de spec
- / Función del Usuario Final: Confort ergonómico al apoyar antebrazo, estética coherente con interior, ausencia de S&R
+ / Función del Cliente: Permitir ensamble en panel de puerta sin interferencia ni alineación y separación entre piezas fuera de especificación
+ / Función del Usuario Final: Confort ergonómico al apoyar antebrazo, estética coherente con interior, ausencia de ruidos
 ```
+(Hasta el 17/10/2026 este ejemplo decia «Gap & Flush fuera de spec» y «S&R»: el gate `ENGLISH_RANDOM_TERMS` los
+frena en el AMFE; las palabras de arriba son las traducciones que decidio Fak el 23/08/2026, `_english` de
+`core/amfe/forbiddenContent.data.json`. Lo cuida `__tests__/scripts/skillsAmfeEjemplos.test.mjs`: un ejemplo
+«bien» de esta skill pasa por el mismo validador que el AMFE.)
 
 **Nivel 2 `operationFunction`** (verbo + objetivo + criterio, 80-200 chars, cambia por OP):
 - OP 10 RECEPCION: "Asegurar conformidad de calidad, cantidad y trazabilidad de materia prima recibida"
@@ -62,6 +66,13 @@ WHERE LOWER(TRIM(unaccent(COALESCE(we->>'name','')))) IN ('machine','maquina','m
 | 3 | OP ENFUNDADO manual, type=Machine, sin match en ningun AMFE | paso 8 → omitir WE (mover failures al primer WE valido) |
 | 4 | OP MYLAR, type=Machine, sin info en biblioteca | paso 7 → TBD |
 | 5 | OP nueva, type=Material, info en HO preliminar xlsx | paso 5 → copiar de HO |
+
+**Roles Man: exactamente cuatro** (regla `amfe.md` §9): `Operador de Produccion`, `Operador de Calidad`,
+`Inspector de Calidad`, `Lider de Produccion`. **Nunca variantes** ("Costurera", "Operador de corte", "Lider de
+equipo"): se renombran al rol, y si al renombrar quedan dos WE Man iguales en la OP se fusionan sus fallas. Reparto que
+usa el reparador (`healingEngine.mjs`, 22/09/2026, contado sobre los 20 AMFE vivos): control final = `Inspector de
+Calidad`; todo lo demas, recepcion incluida = `Operador de Produccion`. ⚠ El validador no lo frena: es una regla
+escrita, no un gate (tanda 12, 17/10/2026: medir cuantos AMFE vivos la rompen pide leer Supabase).
 
 Placeholders invalidos en WE.name (todos CRITICAL): `"Proceso Op 10"`, `"Maquina"` (type traducido), `"Proceso Op 60"` en OP 50 (foreign opNumber post-renumeracion). Validos: `"Máquina de coser"`, `"Inyectora de PUR"`, `"Hilo VW 50106"`.
 
