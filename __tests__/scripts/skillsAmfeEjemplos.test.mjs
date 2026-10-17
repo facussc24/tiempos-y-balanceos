@@ -2,9 +2,9 @@
  * skillsAmfeEjemplos — lo que una skill de AMFE enseña como BIEN pasa por el mismo validador que el AMFE (tanda 12,
  * 17/10/2026).
  *
- * POR QUE: el ejemplo canonico de funcion de amfe-domain §1 decia «Gap & Flush fuera de spec» y «S&R», y
+ * POR QUE: el ejemplo canonico de funcion de amfe-domain §1 decia «Gap & Flush fuera de spec», y
  * `ENGLISH_RANDOM_TERMS` (CRITICAL; Fak 19/08/2026: "no puedo enviar amfes con palabras asi... queda obvio que los
- * hiciste vos") los frena en el documento. Una skill que enseña lo que el gate rechaza produce el rechazo. Se miran
+ * hiciste vos") lo frena en el documento (la sigla «S&R» que estaba al lado no esta en la lista: no la ve). Una skill que enseña lo que el gate rechaza produce el rechazo. Se miran
  * solo los ejemplos que la skill da como buenos: los bloques de codigo del §1 de amfe-domain y la columna «Bien» de
  * sus tablas; los «Mal» quedan afuera a proposito.
  */

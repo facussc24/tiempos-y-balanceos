@@ -16,7 +16,7 @@ import ezdxf
 SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'acomodar_columnas.py')
 
 
-def origen(ruta, con_circulo=False):
+def origen(ruta, con_circulo=False, con_recuadro=False):
     doc = ezdxf.new('R2010')
     ms = doc.modelspace()
     for x0, ancho, alto in [(0, 700, 200), (1000, 700, 200), (0, 500, 150), (1000, 500, 150)]:
@@ -24,6 +24,8 @@ def origen(ruta, con_circulo=False):
         ms.add_lwpolyline([(x0, y0), (x0 + ancho, y0), (x0 + ancho, y0 + alto), (x0, y0 + alto)], close=True)
     if con_circulo:
         ms.add_circle((50, 50), 1.0)
+    if con_recuadro:  # el caso del auditor: un cuadrado de 10 mm se leia como una pieza y la pisaba
+        ms.add_lwpolyline([(1200, 800), (1210, 800), (1210, 810), (1200, 810)], close=True)
     doc.saveas(ruta)
 
 
@@ -35,13 +37,15 @@ def correr(*args):
 def main():
     malos = 0
     with tempfile.TemporaryDirectory() as d:
-        sano, roto = os.path.join(d, 'sano.dxf'), os.path.join(d, 'circulo.dxf')
+        sano, roto, extra = os.path.join(d, 'sano.dxf'), os.path.join(d, 'circulo.dxf'), os.path.join(d, 'extra.dxf')
         origen(sano)
         origen(roto, con_circulo=True)
+        origen(extra, con_recuadro=True)
         casos = [
             ('VERDE: DEL, 5 por columna, 25 mm', (sano, 'DEL', '5', '25', os.path.join(d, 'a.dxf')), 0, 'releido: 10 contornos'),
             ('VERDE: TRA, 3 por columna, 25 mm', (sano, 'TRA', '3', '25', os.path.join(d, 'b.dxf')), 0, 'releido: 6 contornos'),
             ('ROJO: el origen trae un agujero (CIRCLE) que se perderia', (roto, 'DEL', '5', '25', os.path.join(d, 'c.dxf')), 1, 'ABORTADO: el origen trae CIRCLE'),
+            ('ROJO: una polilinea de mas en el origen pisaria una pieza', (extra, 'TRA', '5', '25', os.path.join(d, 'e.dxf')), 1, 'ABORTADO: el origen tiene dos contornos'),
         ]
         for nombre, args, esperado, texto in casos:
             codigo, salida = correr(*args)
@@ -53,7 +57,7 @@ def main():
         sin_archivo = not os.path.exists(os.path.join(d, 'c.dxf'))
         malos += not sin_archivo
         print(f'  {"ok" if sin_archivo else "MAL"}  ROJO: con el agujero no se escribe ningun archivo')
-    print(f'{4} casos, {malos} fallan.')
+    print(f'{len(casos) + 1} casos, {malos} fallan.')
     return 1 if malos else 0
 
 

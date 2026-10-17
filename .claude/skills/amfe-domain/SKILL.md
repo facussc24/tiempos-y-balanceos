@@ -15,9 +15,10 @@ Función Interna: Proveer pieza tapizada conforme dimensional, costuras y bordes
  / Función del Cliente: Permitir ensamble en panel de puerta sin interferencia ni alineación y separación entre piezas fuera de especificación
  / Función del Usuario Final: Confort ergonómico al apoyar antebrazo, estética coherente con interior, ausencia de ruidos
 ```
-(Hasta el 17/10/2026 este ejemplo decia «Gap & Flush fuera de spec» y «S&R»: el gate `ENGLISH_RANDOM_TERMS` los
-frena en el AMFE; las palabras de arriba son las traducciones que decidio Fak el 23/08/2026, `_english` de
-`core/amfe/forbiddenContent.data.json`. Lo cuida `__tests__/scripts/skillsAmfeEjemplos.test.mjs`: un ejemplo
+(Hasta el 17/10/2026 este ejemplo decia «Gap & Flush fuera de spec», que el gate `ENGLISH_RANDOM_TERMS` frena en el
+AMFE, y «S&R», la sigla de squeak & rattle: la lista frena «squeak» pero no la sigla sola. Las palabras de arriba son
+las traducciones que decidio Fak el 23/08/2026 (`_english` de `core/amfe/forbiddenContent.data.json`: gap & flush ->
+alineacion y separacion entre piezas; squeak & rattle -> ruidos). Lo cuida `__tests__/scripts/skillsAmfeEjemplos.test.mjs`: un ejemplo
 «bien» de esta skill pasa por el mismo validador que el AMFE.)
 
 **Nivel 2 `operationFunction`** (verbo + objetivo + criterio, 80-200 chars, cambia por OP):

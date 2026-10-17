@@ -14,9 +14,11 @@
   var traba = { cortados: [] };
   w.__trabaBeon = traba;
   w.confirm = function (m) { traba.cortados.push('confirm: ' + m); return false; };
+  var envueltas = 0;
   ['formSubmit', 'formSubmit2'].forEach(function (n) {
     var orig = w[n];
     if (typeof orig !== 'function') return;
+    envueltas += 1;
     w[n] = function (accion) {
       if (PERMITIDOS.test(String(accion))) return orig.apply(this, arguments);
       traba.cortados.push(n + ': ' + accion);
@@ -27,5 +29,9 @@
     if (typeof w[n] !== 'function') return;
     w[n] = function (accion) { traba.cortados.push(n + ': ' + (accion === undefined ? '' : accion)); return false; };
   });
+  // Auditor de la tanda 12: sin formSubmit ni formSubmit2 en la pagina no hay nada que trabar, y decir "traba puesta"
+  // seria un verde vacio (la pagina todavia no cargo, o BeOn cambio el nombre de la funcion).
+  // Y sin marcar la traba como puesta: pegarla otra vez, con la pagina ya cargada, tiene que trabar de verdad.
+  if (!envueltas) { delete w.__trabaBeon; return 'OJO: NO hay traba: la pagina no tiene formSubmit ni formSubmit2 (¿no termino de cargar?). No hacer clic.'; }
   return 'traba puesta';
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -240,6 +240,15 @@ describe('canon de flujogramas', () => {
             expect(avisos(conRevision('REORGANIZACION DE CORTE (20-23) Y REPROCESO DE ADHESIVADO (93). ELIMINACION DE OP. 40 REFILADO PREVIO A COSTURA.'))).toHaveLength(0);
             expect(avisos(conRevision('SE ELIMINAN LAS DECISIONES DE SCRAP INTERMEDIAS EN TERMOFORMADO (30-40).'))).toHaveLength(0);
         });
+        it('VERDE: palabras que empiezan como un verbo de sacar y no lo son (auditor de la tanda 12)', () => {
+            for (const t of ['CONTROL DE INTEGRIDAD DEL REPROCESO DE COSTURA (63).', 'CONTROL INTEGRAL DEL RETRABAJO.', 'SE AGREGA EL PASACABLES Y EL REPROCESO DE COSTURA.']) {
+                expect(avisos(conRevision(t)), t).toHaveLength(0);
+            }
+        });
+        it('AVISO: el verbo con tilde y despues de la palabra reproceso', () => {
+            expect(avisos(conRevision('EL REPROCESO 71 SE QUITÓ DEL FLUJO.'))).toHaveLength(1);
+            expect(avisos(conRevision('LOS RETRABAJOS 71 Y 72 SE INTEGRARON A LA 70.'))).toHaveLength(1);
+        });
         it('VERDE: ningun flujograma del generador lo dispara hoy', () => {
             for (const f of fs.readdirSync(DATA).filter((x) => x.endsWith('.json'))) {
                 expect(avisos(leer(f)), f).toHaveLength(0);

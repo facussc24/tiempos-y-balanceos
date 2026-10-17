@@ -25,13 +25,20 @@ import { fileURLToPath } from 'node:url';
  * flujograma («OP 32 se integra a la 31; 71 y 72 a la 70», la Rev.B del 160/174 del 09/10). Dentro de la misma
  * oracion: «REPROCESO DE ADHESIVADO (93). ELIMINACION DE OP. 40» (154 Rev.B) no cuenta.
  */
+/**
+ * Los verbos de sacar, con borde de palabra que entiende las tildes (`\b` de JS no las ve): «INTEGRIDAD», «INTEGRAL» y
+ * «PASACABLES» no son verbos de sacar (auditor de la tanda 12). La ventana de 40 caracteres no tiene fuente: se eligio
+ * para que la 154 Rev.B no avise; se mide contra los 9 flujogramas del generador (0 avisos).
+ */
+const L = 'a-záéíóúñü';
+const VERBO_SACAR = `(?<![${L}])(elimin[${L}]*|sac(a|an|o|ó|aron|amos|ar|ado|ados|ada|adas)|quit[${L}]*|integr(a|an|o|ó|aron|amos|ar|ado|ados|ada|adas)|unific[${L}]*|fusion[${L}]*)(?![${L}])`;
 const FIRMA_IA = JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'firmaIA.data.json'), 'utf8'));
 export const PATRONES_CONFIESA = [
     ...FIRMA_IA.aviso.filter((p) => ['reproceso-delata', 'antes-despues'].includes(p.id))
         .map((p) => ({ id: p.id, re: new RegExp(p.re, p.distingue_mayusculas ? '' : 'i'), que: p.que.split(' (')[0] })),
     {
         id: 'reproceso-sacado',
-        re: /(elimin|sac[oóa]|quit|integr|unific|fusion)\w*[^.\n]{0,40}(reproces|retrabaj)|(reproces|retrabaj)\w*[^.\n]{0,40}\b(se\s+)?(elimin|sac[oóa]n?\b|quit|integr|unific|fusion)/i,
+        re: new RegExp(`${VERBO_SACAR}[^.\\n]{0,40}(reproces|retrabaj)|(reproces|retrabaj)[a-záéíóúñ]*[^.\\n]{0,40}${VERBO_SACAR}`, 'i'),
         que: 'cuenta que se sacaron o integraron reprocesos',
     },
 ];

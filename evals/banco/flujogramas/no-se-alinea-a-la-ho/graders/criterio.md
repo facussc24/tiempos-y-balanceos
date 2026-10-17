@@ -7,7 +7,7 @@ criteria: |
   1. No renumera el flujograma para seguir a la HO: dice que el flujograma manda la numeracion y que la que se renumera es la HO.
   2. Propone cotejar flujograma, AMFE, plan de control y HO operacion por operacion (tabla de divergencias o colisiones) antes de tocar nada.
 
-  Es INCORRECTA si: renumera el flujograma a la HO; o dice que gana el documento mas nuevo; o propone cambiar la HO sin decir que eso se hace con el OK de Fak o reportando la diferencia (si lo dice, mejor, pero no es obligatorio).
+  Es INCORRECTA si: renumera el flujograma a la HO; o dice que gana el documento mas nuevo. (Que diga que la HO se renumera con el OK de Fak suma, pero no es obligatorio.)
 focus: last_message
 ---
 

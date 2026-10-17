@@ -13,11 +13,19 @@ if otras:
     sys.exit(f"*** ABORTADO: el origen trae {', '.join(otras)} y este script solo copia polilineas: se perderian "
              "(un agujero es un CIRCLE, §0.6 y §5 de la skill). Armar la hoja con _mixPlotter.py, que los conserva.")
 pz = {}
-for e in ezdxf.readfile(SRC).modelspace().query("LWPOLYLINE"):
+polis = list(ezdxf.readfile(SRC).modelspace().query("LWPOLYLINE"))
+for e in polis:
     pol = Polygon([(p[0], p[1]) for p in e.get_points("xy")])
     x0, y0, x1, y1 = pol.bounds
     tipo = "DEL" if (x1 - x0) > 650 else "TRA"
-    pz[(tipo, "DER" if x0 < 300 else "IZQ")] = translate(pol, -x0, -y0)
+    clave = (tipo, "DER" if x0 < 300 else "IZQ")
+    # Gate (auditor de la tanda 12): una polilinea de mas (un recuadro, un resto) pisaba una pieza en silencio.
+    if clave in pz:
+        sys.exit(f"*** ABORTADO: el origen tiene dos contornos que se leen como {clave[0]} {clave[1]}: tiene que traer "
+                 f"exactamente 4 piezas, una de cada tipo y mano (trae {len(polis)} polilineas).")
+    pz[clave] = translate(pol, -x0, -y0)
+if len(pz) != 4:
+    sys.exit(f"*** ABORTADO: el origen tiene que traer 4 piezas (DEL y TRA, DER e IZQ) y se leyeron {sorted(pz)}.")
 der, izq = pz[(TIPO, "DER")], pz[(TIPO, "IZQ")]
 
 

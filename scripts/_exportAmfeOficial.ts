@@ -16,7 +16,7 @@
  * Ej:      npx tsx scripts/_exportAmfeOficial.ts --amfe AMFE-HF-PAT --out tmp/export-amfe
  * Borrador que todavia no esta en Supabase:  ... --amfe <clave> --json <archivo.json> --sin-auditoria
  */
-import { writeFileSync, mkdirSync, readFileSync, existsSync, rmSync, statSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync, existsSync, rmSync, statSync, renameSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import XLSX from 'xlsx-js-style';
 import { buildAmfeOficialWorkbook } from '../modules/amfe/amfeExcelExport';
@@ -240,6 +240,9 @@ if (caratulaVacia.length) {
   console.error(`FALLO: la caratula de ${dest} tiene rotulos sin valor; no se entrega:`);
   for (const v of caratulaVacia) console.error(`  ${v.rotulo} (${v.celda}): ${v.motivo}`);
   console.error('El dato suele existir con otro nombre en el header (HEADER_ALIASES de amfeCaratulaSheet.ts).');
+  // Que no quede en la carpeta con el nombre de entrega (auditor de la tanda 12): se renombra, no se borra.
+  const rechazado = dest.replace(/\.xlsx$/i, '') + ' - NO ENTREGAR (caratula incompleta).xlsx';
+  try { renameSync(dest, rechazado); console.error(`El archivo quedo como ${rechazado}`); } catch { /* si esta tomado, el FALLO de arriba ya lo dice */ }
   process.exit(1);
 }
 

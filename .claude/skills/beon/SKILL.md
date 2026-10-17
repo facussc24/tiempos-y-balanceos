@@ -216,7 +216,8 @@ cada pagina nueva de BeOn, antes del primer clic (desde el 17/10/2026; antes se 
 `window.confirm` por una funcion que anota el mensaje y devuelve `false`, envuelve `formSubmit` / `formSubmit2` para
 que solo pasen `search`, `nextSearch`, `reset`, `changeCard`, `openEmpb[n]`, y corta tambien `buttonConfirm` /
 `buttonConfirmOk`, el cartel propio de BeOn de §7 que no pasa por `window.confirm` (lo demas se corta y se anota en
-`window.__trabaBeon.cortados`). Devuelve "traba puesta". Lo prueba `__tests__/scripts/beonTraba.test.mjs` sobre una
+`window.__trabaBeon.cortados`). Devuelve "traba puesta"; si la pagina no tiene `formSubmit` ni `formSubmit2` devuelve
+"OJO: NO hay traba" y no se hace clic. Lo prueba `__tests__/scripts/beonTraba.test.mjs` sobre una
 ventana simulada; en el portal todavia no se pego desde que es archivo. Recargar la pagina la saca. Para navegar: `cardSubmit('changeCard','selectedMainNavTab',
 'nav_query'|'nav_overview'|'nav_empb'|'nav_stammdaten', true)`; abrir fila: `formSubmit2('openEmpb[i]')`.
 Las capturas de pantalla del portal se cuelgan (Chrome): leer con el texto de la pagina.

@@ -36,10 +36,10 @@ que no se usan: va a «Lo que hace falta de Fak».
 | planes-de-control | 303 → 311 | 632 → 539 | 3/3 con · 2/3 sin (igual antes: dos casos los contesta bien un modelo sin la skill; solo «la D sola» discrimina) | 0/0/8 y 0/0/9 → 0/0/9 y 0/0/8 | **`scripts/_planControlLimpio.py`**: la D sola, una marca por celda; `--rearmado` sin amarillo ni notas; `--definitivo` sin TBD/CONFLICTO; selftest + `planControlLimpio.test.mjs` | 15/10 |
 | flujogramas | 433 → 447 | 424 → 408 | 3/3 con · 1/3 sin (antes 2/3 con: el caso del historial daba 0 % con la skill y ahora 100 %) | 0/2/1 y 0/2/1 → 0/2/2 y 0/2/1 | **aviso `historial-confiesa`** en `flujogramaCanon.mjs` (chequeo 11 bis) + la regla en §5 | 02 y 09/10 |
 | amfe-export-oficial | 117 → 126 | 379 → 354 | 3/3 con · 0/3 sin (antes 1/3 sin) | 0/2/0 y 0/2/0 → 0/2/0 y 0/2/1 | **`scripts/_lib/caratulaVacia.mjs`** en `_exportAmfeOficial.ts`: un rotulo de la caratula sin valor en el ARCHIVO releido da FALLO; 9 de 9 AMFE exportados lo pasan | 25/06 (origen de la skill) y 03-08/09 |
-| amfe-domain | 145 → 156 | 490 → 434 | 2/2 con · 0/2 sin (antes 1/2 con) | 0/0/4 y 0/0/2 → 0/0/3 y 0/0/1 | **`skillsAmfeEjemplos.test.mjs`**: lo que la skill da como BIEN pasa `scanForbidden`; el ejemplo canonico decia «Gap & Flush fuera de spec» y «S&R» (frenados por `ENGLISH_RANDOM_TERMS`) | 19 y 23/08 (amfe.md §17.2) |
+| amfe-domain | 145 → 156 | 490 → 434 | 2/2 con · 0/2 sin (antes 1/2 con) | 0/0/4 y 0/0/2 → 0/0/3 y 0/0/1 | **`skillsAmfeEjemplos.test.mjs`**: lo que la skill da como BIEN pasa `scanForbidden`; el ejemplo canonico decia «Gap & Flush fuera de spec» (frenado por `ENGLISH_RANDOM_TERMS`) y «S&R» (la lista no tiene la sigla: no la ve) | 19 y 23/08 (amfe.md §17.2) |
 | amfe-cookbook | 189 → 196 | 326 → 314 | 2/2 con · 0/2 sin (antes 1/2 sin) | 0/0/1 y 0/0/1 → 0/0/0 y 0/0/1 | ninguno ejecutable: la regla del 02/10 (de la vecina, el lugar; nunca el metodo) escrita donde se propaga; son scripts sueltos | 02/10 |
 | pieza-nueva-flujograma-amfe | 290 → 291 | 431 → 392 | 2/3 con · 1/3 sin (igual antes; el que falla es el del mail, ver abajo) | 0/1/1 y 0/1/0 → 0/1/1 y 0/1/1 | ninguno nuevo: `TOPE_PALABRAS` ya existia y tenia test; entra a la tabla de la skill | 02 y 09/10 |
-| plotter-aol | 296 → 300 | 720 → 554 | 3/3 con · 1/3 sin (igual antes) | 1/0/1 y 0/1/1 → 0/1/0 y 1/0/0 | **en `acomodar_columnas.py`**: frena si el origen trae algo que no sea polilinea (un agujero se perdia en silencio) y relee el DXF (2N contornos, ≥ 25 mm reales); probado con el DXF real del 15/10 y con `acomodar_columnas_selftest.py` (4 casos ROJO/VERDE con DXF sinteticos; fuera de `npm test` porque el CI no instala ezdxf ni shapely) | 15/10 (columnas, 25 mm) y "lo que falta no se ve" |
+| plotter-aol | 296 → 302 | 720 → 554 | 3/3 con · 1/3 sin (igual antes) | 1/0/1 y 0/1/1 → 0/1/0 y 1/0/0 | **en `acomodar_columnas.py`**: frena si el origen trae algo que no sea polilinea (un agujero se perdia en silencio) y relee el DXF (2N contornos, ≥ 25 mm reales); frena tambien si el origen no trae exactamente 4 piezas (un contorno de mas pisaba una pieza, lo encontro el auditor); probado con el DXF real del 15/10 y con `acomodar_columnas_selftest.py` (4 casos ROJO/VERDE con DXF sinteticos; fuera de `npm test` porque el CI no instala ezdxf ni shapely) | 15/10 (columnas, 25 mm) y "lo que falta no se ve" |
 | beon | 241 → 248 | 663 → 389 | 2/2 con · 0/2 sin (igual antes) | 0/0/1 y 0/0/0 → 0/0/0 y 0/0/0 | **`.claude/skills/beon/traba.js`** + `beonTraba.test.mjs`: la traba de lectura deja de ser un parrafo | §0 de la skill (emitir vale como firma) |
 
 Disparo global: **49 % y 49 % antes, 49 % y 48 % despues** (igual dentro del ruido). Vecinas: arb-operar 5 y 6 aciertos → 9 y 7;
@@ -104,8 +104,26 @@ Ninguna skill pasa de 500 renglones (la mas larga, flujogramas, 447): no se part
 - **La otra mitad de la leccion 15/10 de planes de control** (generar el plan releyendo flujograma, AMFE y fichas de
   embalaje JUSTO antes) no tiene gate: `_planControlLimpio.py` mira el archivo, no de que versiones salio.
 - **La ventana de 40 caracteres** del patron `reproceso-sacado` (flujogramas) no tiene fuente: se eligio para que
-  «REPROCESO DE ADHESIVADO (93). ELIMINACION DE OP. 40» (154 Rev.B) no avise y las frases de la Rev.B del 160 si. Se
+  «REPROCESO DE ADHESIVADO (93). ELIMINACION DE OP. 40» (154 Rev.B) no avise y una fila que nombra los reprocesos sacados si; la Rev.B textual del 160 («71 y 72 a la 70») no avisa porque no dice la palabra. Se
   mide contra el corpus: 0 avisos en los 9 flujogramas del generador.
 - **Mensajes de commit con un numero mal**: en los commits de hojas (dice 593, es 603), planes (527 → 539) y flujogramas
   (405; el siguiente commit lo deja en 408) el largo de la description se escribio antes de medirlo. Los numeros buenos son
   los de esta tabla.
+- **Limites conocidos de `_planControlLimpio.py`** (auditor): en un `.xlsx` ve solo el amarillo puro (`FFFF00`), no el
+  indexado ni el claro; si arriba de la tabla hay otra celda que dice «CLASIF», toma esa columna; «SC/CC» con barra queda
+  como aviso, no como dos marcas. Los `.xls` reales de Calidad los lee bien (las cifras de arriba las reprodujo el auditor).
+- **«S&R» no esta en `ENGLISH_RANDOM_TERMS`** (lista del validador del AMFE): agregarla es cambiar un gate y pide medir
+  cuantos AMFE vivos la tienen (Supabase). Va a la lista de Fak.
+- **Metodo del banco** (auditor): el «antes» de amfe-domain y de pieza-nueva corrio con parte del cambio ya escrito (lo
+  que no tocaba los casos), y el «despues» de flujogramas, amfe-cookbook, amfe-export-oficial y beon corrio antes del
+  ultimo retoque de la description (solo palabras). No cambia ninguna conclusion.
+
+## Rondas de revision
+
+1. **revisor-pedido** (4 importantes): test del gate del plotter, amfe-cookbook declarada sin gate, lista de skills que
+   entraron y no, y lo que hace falta de Fak. Aplicado (commit `aefa34a7`).
+2. **auditor Opus** (`docs/auditorias/TANDA12_SKILLS_auditor_2026-10-17.md`; 3 importantes): «S&R» mal atribuido al gate,
+   un contorno de mas pisaba una pieza en `acomodar_columnas.py`, y la traba de BeOn decia «traba puesta» sin nada que
+   trabar. Aplicado, con sus casos ROJO en los tests; tambien los detalles (verbos con tilde e «INTEGRIDAD» en el aviso del
+   historial, el Excel con la caratula incompleta queda renombrado «NO ENTREGAR», un criterio contradictorio del banco).
+   Despues de la segunda ronda no se pidio otra revision completa: lo nuevo es solo el diff de estas correcciones.

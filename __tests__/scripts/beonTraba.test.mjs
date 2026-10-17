@@ -62,4 +62,14 @@ describe('traba de lectura de BeOn (skill beon §10)', () => {
     it('la primera vez devuelve "traba puesta" (lo que ve javascript_tool)', () => {
         expect(ventana().resultado).toBe('traba puesta');
     });
+    it('ROJO: en una pagina sin formSubmit ni formSubmit2 NO dice "traba puesta" (auditor de la tanda 12)', () => {
+        const w = { confirm: () => true };
+        expect(correr(w)).toMatch(/^OJO: NO hay traba/);
+        // cuando la pagina termina de cargar, pegarla de nuevo traba de verdad
+        const hecho = [];
+        w.formSubmit = (a) => { hecho.push(a); return true; };
+        expect(correr(w)).toBe('traba puesta');
+        expect(w.formSubmit('save')).toBe(false);
+        expect(hecho).toEqual([]);
+    });
 });
