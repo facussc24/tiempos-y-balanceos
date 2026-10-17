@@ -37,7 +37,7 @@ function correr(payload) {
     return { exit: r.status, deny, err: r.stderr || '' };
 }
 const cambio = (source, tp) => ({ hook_event_name: 'PreModelSwitch', session_id: 'x', transcript_path: tp, from_model: 'claude-fable-5-1', to_model: 'claude-sonnet-5-5', requested_model: 'sonnet', source, context_tokens: 400000, prompt_cache_warm: true });
-const herramienta = (tp) => ({ hook_event_name: 'PreToolUse', session_id: 'x', transcript_path: tp, tool_name: 'mcp__ccd_session_mgmt__set_session_model', tool_input: { session_id: 'y', model: 'claude-sonnet-5-5' } });
+const herramienta = (tp, model = 'claude-sonnet-5-5', destino = 'y') => ({ hook_event_name: 'PreToolUse', session_id: 'x', transcript_path: tp, tool_name: 'mcp__ccd_session_mgmt__set_session_model', tool_input: { session_id: destino, model } });
 
 describe('modelo-guard — PreModelSwitch', () => {
     it('VERDE: /model y el selector interactivo pasan siempre (los dispara una persona)', () => {
@@ -72,6 +72,16 @@ describe('modelo-guard — PreToolUse de set_session_model (una sesion que cambi
         expect(r.exit).toBe(2);
         expect(r.err).toMatch(/MODELO-GUARD/);
         expect(correr(herramienta(path.join(TMP, 'no-existe.jsonl'))).exit).toBe(2);
+    });
+    // Ronda 2 (17/10, hallazgo 17; decision de la madre): el paso 4 del camino B de lanzar-sesion-hija
+    it('VERDE (ronda 2): la madre pone a una HIJA en Opus 5.5 sin frase de Fak (el modelo de la casa para las hijas)', () => {
+        const tp = transcript('hija-opus', 'abri una hija para revisar los guardianes', false);
+        expect(correr(herramienta(tp, 'claude-opus-5-5', 'local_hija')).exit).toBe(0);
+    });
+    it('ROJO (ronda 2): la madre pone a una hija en Fable sin frase de Fak; y Opus sobre la MISMA sesion tambien la pide', () => {
+        const tp = transcript('hija-fable', 'abri una hija para revisar los guardianes', false);
+        expect(correr(herramienta(tp, 'claude-fable-5-1', 'local_hija')).exit).toBe(2);
+        expect(correr(herramienta(tp, 'claude-opus-5-5', 'x')).exit).toBe(2);
     });
     it('VERDE: con Fak pidiendolo en su ultimo mensaje, exit 0; otro evento u otra herramienta, exit 0', () => {
         expect(correr(herramienta(transcript('pide', PIDE_MODELO, false))).exit).toBe(0);

@@ -67,6 +67,12 @@ export function decidir(p) {
     return fak ? { evento, decision: 'deja', motivo: 'Fak lo pidio en su ultimo mensaje' } : { evento, decision: 'niega', motivo: MOTIVO };
   }
   if (evento === 'PreToolUse' && HERRAMIENTA_MODELO.test(String(p?.tool_name ?? ''))) {
+    // Ronda 2 (17/10, hallazgo 17; decision de la sesion madre): poner a OTRA sesion (una hija) en el modelo de la casa
+    // para las hijas, claude-opus-5-5 (CLAUDE.md: «Opus para el resto»), es el paso 4 del camino B de lanzar-sesion-hija y
+    // pasa sin la frase de Fak. Cualquier otro modelo hacia otra sesion, o un cambio sobre la misma sesion, la sigue pidiendo.
+    const destino = String(p?.tool_input?.session_id ?? '');
+    const pedido = String(p?.tool_input?.model ?? '');
+    if (destino && destino !== String(p?.session_id ?? '') && pedido === 'claude-opus-5-5') return { evento, decision: 'deja', motivo: 'una hija a Opus 5.5, el modelo de la casa para las hijas' };
     const fak = fakHabloDelModelo(tp);
     if (fak) return { evento, decision: 'deja', motivo: 'Fak lo pidio en su ultimo mensaje' };
     return { evento, decision: 'niega', motivo: fak === null ? `${MOTIVO}. No pude leer el transcript para ver lo que pidio Fak` : MOTIVO };
