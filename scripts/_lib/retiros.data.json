@@ -317,21 +317,17 @@
     "hook:modelo-guard": {
       "revisar": "2026-11-17",
       "desde": "2026-10-16",
-      "pendienteDeFusion": "claude/guardianes-tanda3",
       "justifica": "Tanda 3 del plan del sistema, pieza 12 (16/10/2026): el modelo de una sesion no se cambia a mitad de camino sin que Fak lo pida en su ultimo mensaje (PreModelSwitch y set_session_model; logica en scripts/_lib/modeloGuard.mjs)"
     },
     "hook:permiso-un-uso-guard": {
       "revisar": "2026-11-17",
       "desde": "2026-10-16",
-      "pendienteDeFusion": "claude/guardianes-tanda3",
       "justifica": "Tanda 3 del plan del sistema, pieza 9 (16/10/2026): un permiso de un solo uso de Fak (8 archivos de ~/.claude) no se arma sin su cita del ultimo mensaje (autonomy-contract.md seccion G; logica en scripts/_lib/permisoUnUso.mjs)"
     }
   },
-  "_pendienteDeFusion": "Ronda 2 de la tanda 9 (17/10/2026): la rama claude/guardianes-tanda3 se funde a main antes que esta y agrega modelo-guard y permiso-un-uso-guard y retira dev-server-guard y timeout-guard. Sus renglones llevan pendienteDeFusion: mientras la otra rama no llego, un alta sin archivo o una baja que sigue en el disco se listan aparte y no ponen rojo el test. Despues de las dos fusiones se puede sacar el campo.",
   "retirados": {
     "hook:dev-server-guard": {
       "retirado": "2026-10-16",
-      "pendienteDeFusion": "claude/guardianes-tanda3",
       "justifica": "Retirado el 16/10/2026 (tanda 3, P11, si de Fak del 09/10): en el mes freno 4 veces y las 4 fueron falsas; movido a .claude/hooks/_retirados/",
       "antes": {
         "revisar": "2026-11-17",
@@ -340,7 +336,6 @@
     },
     "hook:timeout-guard": {
       "retirado": "2026-10-16",
-      "pendienteDeFusion": "claude/guardianes-tanda3",
       "justifica": "Retirado el 16/10/2026 (tanda 3, P20, si de Fak del 09/10): ~51.800 corridas en el mes y 6 avisos; movido a .claude/hooks/_retirados/",
       "antes": {
         "revisar": "2026-11-17",
