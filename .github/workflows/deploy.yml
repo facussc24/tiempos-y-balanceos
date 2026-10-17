@@ -1,8 +1,32 @@
 name: Deploy to GitHub Pages
 
+# Tanda 9, pieza 9 (17/10/2026): el deploy corre solo cuando cambia algo que entra al build. La lista sale del grafo
+# real de imports desde index.tsx (esbuild con metafile, ese dia: components/ core/ hooks/ modules/ src/ types/ utils/,
+# los .ts/.tsx de la raiz e index.*; ningun archivo de scripts/) mas la configuracion del build y public/.
+# Lo que no esta aca (scripts, hooks, docs, evals, reglas) lo prueba candado.yml en CADA push, con el candado del
+# repo publico incluido. Un cambio de la app que caiga fuera de esta lista se publica a mano: workflow_dispatch.
 on:
   push:
     branches: [main]
+    paths:
+      - 'modules/**'
+      - 'components/**'
+      - 'core/**'
+      - 'hooks/**'
+      - 'src/**'
+      - 'types/**'
+      - 'utils/**'
+      - 'public/**'
+      - '*.ts'
+      - '*.tsx'
+      - 'index.*'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.*'
+      - 'tailwind.config.*'
+      - 'postcss.config.*'
+      - 'tsconfig*.json'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 permissions:

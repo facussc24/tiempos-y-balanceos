@@ -308,13 +308,18 @@ export function evaluarCI({ sha, run, error }) {
  * Trae la corrida mas nueva del workflow por la API publica de GitHub (esta PC no tiene login de `gh`:
  * memoria gh_cli_sin_login_ci_por_api). Con tope de tiempo: esperar sin tope no es supervisar.
  */
-export async function leerUltimoRunCI({ fetchFn = globalThis.fetch, timeoutMs = 8000, shaLocal } = {}) {
+export async function leerUltimoRunCI({ fetchFn = globalThis.fetch, timeoutMs = 8000, shaLocal, workflow = null } = {}) {
     let sha = shaLocal ?? null;
     if (sha == null) { try { sha = git('rev-parse HEAD'); } catch { /* sin git */ } }
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), timeoutMs);
+    // Con `workflow` (tanda 9, pieza 9: el CI se partio en candado.yml y deploy.yml) se lee la ultima corrida de ESE
+    // workflow en main: con dos workflows, «la ultima corrida» a secas puede ser la de uno y tapar un rojo del otro.
+    const url = workflow
+        ? `https://api.github.com/repos/${REPO_GITHUB}/actions/workflows/${workflow}/runs?per_page=1&branch=main`
+        : `https://api.github.com/repos/${REPO_GITHUB}/actions/runs?per_page=1`;
     try {
-        const r = await fetchFn(`https://api.github.com/repos/${REPO_GITHUB}/actions/runs?per_page=1`, {
+        const r = await fetchFn(url, {
             signal: ctl.signal,
             headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'barack-cierreSesion' },
         });
@@ -329,8 +334,27 @@ export async function leerUltimoRunCI({ fetchFn = globalThis.fetch, timeoutMs = 
     }
 }
 
+/**
+ * Puro (tanda 9, pieza 9). `candado` = evaluarCI del workflow que corre en cada push (candado.yml); `deploy` = la
+ * ultima corrida de deploy.yml, que corre solo cuando cambia la app y por eso casi nunca es la del HEAD. El candado
+ * manda; del deploy solo importa que su ultima corrida no este en rojo (un deploy roto deja a Fak probando una version
+ * vieja). No leer el deploy es aviso, nunca verde.
+ */
+export function combinarCI(candado, { run, error } = {}) {
+    const tablero = `https://github.com/${REPO_GITHUB}/actions/workflows/deploy.yml`;
+    if (error) return candado.estado === 'falta' ? candado : { estado: 'aviso', detalle: `${candado.detalle} · el deploy no se pudo leer (${error}): ${tablero}` };
+    if (run && run.status === 'completed' && run.conclusion && run.conclusion !== 'success') {
+        return { estado: 'falta', detalle: `${candado.detalle} · y el ULTIMO DEPLOY de la app esta ROJO (${run.conclusion}, ${String(run.head_sha ?? '').slice(0, 8)}): ${run.html_url ?? tablero}` };
+    }
+    const dep = !run ? 'sin corridas del deploy' : run.status !== 'completed' ? `deploy en curso (${run.status})` : `ultimo deploy verde (${String(run.head_sha ?? '').slice(0, 8)})`;
+    return { ...candado, detalle: `${candado.detalle} · ${dep}` };
+}
+
 async function chequearCI() {
-    return evaluarCI(await leerUltimoRunCI());
+    // Mientras candado.yml no exista en GitHub (antes del primer push de la tanda 9) la API da 404: se lee como antes.
+    const candado = await leerUltimoRunCI({ workflow: 'candado.yml' });
+    if (candado.error && /HTTP 404/.test(candado.error)) return evaluarCI(await leerUltimoRunCI());
+    return combinarCI(evaluarCI(candado), await leerUltimoRunCI({ workflow: 'deploy.yml' }));
 }
 
 function chequearBuild(saltear) {

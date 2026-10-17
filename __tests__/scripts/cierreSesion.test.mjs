@@ -11,7 +11,7 @@ import {
     carpetaTemporal, leerEpochFlag, clasificarPorcelain,
     evaluarGit, evaluarBackup, evaluarLecciones, evaluarComponentesClaude, evaluarDisco, veredicto,
     LECCIONES_AVISO, LECCIONES_TOPE,
-    evaluarCI, leerUltimoRunCI,
+    evaluarCI, leerUltimoRunCI, combinarCI,
 } from '../../scripts/_cierreSesion.mjs';
 
 describe('carpetaTemporal', () => {
@@ -145,6 +145,32 @@ describe('leerUltimoRunCI (API publica de GitHub, con tope de tiempo)', () => {
         const fetchFn = (_url, { signal }) => new Promise((_res, rej) => { signal.addEventListener('abort', () => { const e = new Error('abortado'); e.name = 'AbortError'; rej(e); }); });
         const r = await leerUltimoRunCI({ fetchFn, shaLocal: 'aaa', timeoutMs: 20 });
         expect(r.error).toMatch(/sin respuesta en 0.02 s/);
+    });
+});
+
+describe('CI partido en candado.yml y deploy.yml (tanda 9, pieza 9)', () => {
+    const verde = { head_sha: 'abcdef1234567890', status: 'completed', conclusion: 'success', html_url: 'u' };
+    it('con workflow, pide las corridas de ESE workflow en main', async () => {
+        let url = '';
+        const fetchFn = async (u) => { url = u; return { ok: true, status: 200, json: async () => ({ workflow_runs: [verde] }) }; };
+        await leerUltimoRunCI({ fetchFn, shaLocal: 'a', workflow: 'candado.yml' });
+        expect(url.endsWith('/actions/workflows/candado.yml/runs?per_page=1&branch=main')).toBe(true);
+        await leerUltimoRunCI({ fetchFn, shaLocal: 'a' });
+        expect(url.endsWith('/actions/runs?per_page=1')).toBe(true);
+    });
+    it('ROJO: candado verde pero el ultimo deploy de la app en rojo -> falta (no lo tapa el verde del candado)', () => {
+        const candado = evaluarCI({ sha: 'abcdef1234567890', run: verde, error: null });
+        const r = combinarCI(candado, { run: { ...verde, head_sha: '1111111199', conclusion: 'failure' }, error: null });
+        expect(r.estado).toBe('falta');
+        expect(r.detalle).toMatch(/ULTIMO DEPLOY de la app esta ROJO/);
+    });
+    it('VERDE: candado verde y deploy viejo verde (o sin corridas) -> ok; deploy ilegible -> aviso, nunca verde', () => {
+        const candado = evaluarCI({ sha: 'abcdef1234567890', run: verde, error: null });
+        expect(combinarCI(candado, { run: { ...verde, head_sha: '2222222299' }, error: null }).estado).toBe('ok');
+        expect(combinarCI(candado, { run: null, error: null }).estado).toBe('ok');
+        expect(combinarCI(candado, { run: null, error: 'HTTP 403' }).estado).toBe('aviso');
+        const rojo = evaluarCI({ sha: 'abcdef1234567890', run: { ...verde, conclusion: 'failure' }, error: null });
+        expect(combinarCI(rojo, { run: null, error: 'HTTP 403' }).estado).toBe('falta');
     });
 });
 

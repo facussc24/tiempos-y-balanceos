@@ -23,9 +23,11 @@
 3. **`git push origin main`**.
 4. **Verificar CI** — `gh` no tiene login en esta PC (memoria `gh_cli_sin_login_ci_por_api`); el
    ultimo run se lee por API y se mira `status` / `conclusion`. Desde el 09/10/2026 lo mide
-   `node scripts/_cierreSesion.mjs` (paso «CI de GitHub»: rojo = falta, no leido = aviso, nunca verde sin leer):
+   `node scripts/_cierreSesion.mjs` (paso «CI de GitHub»: rojo = falta, no leido = aviso, nunca verde sin leer).
+   **Desde la tanda 9 (17/10/2026) son dos workflows**: `candado.yml` (candado del repo publico, tipos, pruebas y
+   lint) corre en CADA push y `deploy.yml` solo cuando cambia algo que entra al build; se lee uno por vez:
    ```bash
-   curl -s "https://api.github.com/repos/facussc24/tiempos-y-balanceos/actions/runs?per_page=1"
+   curl -s "https://api.github.com/repos/facussc24/tiempos-y-balanceos/actions/workflows/candado.yml/runs?per_page=1&branch=main"
    ```
 
 **Por que:** Fak prueba en GitHub Pages (produccion, no dev server), y el deploy corre en el push a

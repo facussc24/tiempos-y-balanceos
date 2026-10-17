@@ -80,11 +80,14 @@ git log origin/main..HEAD --oneline
 Si hay commits locales sin pushear, REPORTAR como CRITICO.
 
 ### 5. CI Status
-`gh` no tiene login en esta PC (memoria `gh_cli_sin_login_ci_por_api`); el ultimo run se lee por API:
+`gh` no tiene login en esta PC (memoria `gh_cli_sin_login_ci_por_api`); el ultimo run se lee por API, **un workflow por
+vez** (desde la tanda 9 son dos: `candado.yml` corre en cada push, `deploy.yml` solo cuando cambia la app; «la ultima
+corrida» a secas puede tapar el rojo del otro):
 ```bash
-curl -s "https://api.github.com/repos/facussc24/tiempos-y-balanceos/actions/runs?per_page=1" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const r=JSON.parse(s).workflow_runs[0];console.log(r.status,r.conclusion||'running')})"
+for w in candado.yml deploy.yml; do curl -s "https://api.github.com/repos/facussc24/tiempos-y-balanceos/actions/workflows/$w/runs?per_page=1&branch=main" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const r=(JSON.parse(s).workflow_runs||[])[0];console.log('$w',r?r.status+' '+(r.conclusion||'running')+' '+r.head_sha.slice(0,8):'sin corridas')})"; done
 ```
-El último run debe ser `completed success`. Si es `failure`, reportar el error; si el curl falla, reportar "CI sin verificar", no "CI fallo".
+El de `candado.yml` debe ser `completed success` para el HEAD; el ultimo de `deploy.yml`, no rojo. Si es `failure`,
+reportar el error; si el curl falla o el workflow todavia no existe en GitHub, reportar "CI sin verificar", no "CI fallo".
 
 ### 6. Integridad del modulo auditado
 Si se indica un modulo especifico, verificar:
