@@ -13,7 +13,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import {
-  armarTarea, estadoSesion, html, leerMails, leerNocheTarea, leerNube, leerResultado, leerSeguimiento, leerSelftest,
+  armarTarea, estadoSesion, html, leerArb, leerMails, leerNocheTarea, leerNube, leerResultado, leerSeguimiento, leerSelftest,
 } from '../../scripts/_lib/programita.mjs';
 
 const dos = (n) => String(n).padStart(2, '0');
@@ -50,13 +50,33 @@ describe('las tareas: el color sale de SU registro', () => {
     const r = leerResultado(`2026-10-17 09:41  RESULTADO OK\n${local(AHORA - 2 * 60000, false)}  inicio\n`, AHORA);
     expect(r.palabra).toBe('corriendo');
   });
+  it('una corrida que arrancó y se murió sin anotar resultado → rojo, no el verde de la anterior (sync-diario 25/09)', () => {
+    const txt = '2026-09-25 08:31  RESULTADO: OK\n2026-09-25 12:56  Outlook expone 3392 items; arranco el sync\n';
+    const r = leerResultado(txt, new Date(2026, 8, 25, 16, 11).getTime());
+    expect(r.color).toBe('rojo');
+    expect(r.detalle).toMatch(/no anotó ningún resultado/);
+  });
+  it('el renglón «backups/ ocupa N MB» pegado al resultado no es una corrida nueva (ni en el mismo minuto ni en el siguiente)', () => {
+    for (const min of ['45', '46']) {
+      const txt = `2026-10-12 08:45  RESULTADO: OK\n2026-10-12 08:${min}  backups/ ocupa 800 MB\n`;
+      expect(leerResultado(txt, new Date(2026, 9, 12, 8, 50).getTime()).palabra).toBe('terminó bien');
+    }
+  });
+  it('arb: el latido manda; «sin red al servidor» → rojo aunque Windows diga 0; abierto → «disponible»; sin latir → rojo', () => {
+    const lat = (ms, paso) => { const d = new Date(ms); return `${dos(d.getDate())}/${dos(d.getMonth() + 1)} ${dos(d.getHours())}:${dos(d.getMinutes())}:${dos(d.getSeconds())}  pid 10864  ${paso}`; };
+    const roto = leerArb(lat(AHORA - 60000, 'abriendo el arb'), '17/10 10:59:28  vigilante: sin red al servidor; reintento en el proximo chequeo', AHORA);
+    expect(roto.color).toBe('rojo');
+    expect(leerArb(lat(AHORA - 60000, 'arb abierto: nada que hacer'), null, AHORA).palabra).toBe('disponible');
+    expect(leerArb(lat(AHORA - 40 * 60000, 'arb abierto: nada que hacer'), null, AHORA).color).toBe('rojo');
+    expect(leerArb(null, null, AHORA).color).toBe('gris');
+  });
   it('la noche que no arrancó por el tope de la API → ámbar «API gastada», no verde', () => {
     const r = leerNocheTarea(JSON.stringify({ inicio: '2026-10-17 06:30:17', pasos: [], noArranco: 'presupuesto del ciclo en rojo: $263.62 de $170.' }), null);
     expect(r.color).toBe('ambar');
     expect(r.palabra).toMatch(/gastada/);
   });
   it('atrasada: el último resultado bueno tiene más del doble de su intervalo → rojo', () => {
-    const def = { nombre: 'Barack - mis mails a la nube', para_fak: 'Mis mails suben a la nube', cada_minutos: 120 };
+    const def = { nombre: 'Barack - mis mails a la nube', para_fak: 'Mis mails suben a la nube', atrasada_si_pasan_minutos: 255, cuando_corre: 'cada 2 h' };
     const viejo = armarTarea(def, leerMails(OK_MAILS(AHORA - 5 * 3600000)), { estado: 'Ready' }, AHORA);
     expect(viejo.color).toBe('rojo');
     expect(viejo.avisos.join(' ')).toMatch(/atrasada/);
@@ -87,6 +107,18 @@ describe('la nube, la impresora, las skills y las sesiones', () => {
     // un RUNNING viejo (el seguimiento se cortó) no es «imprimiendo»
     expect(leerSeguimiento(corre, AHORA - 3600000, AHORA).palabra).toBe('no imprime');
   });
+  it('impresora: el formato de hoy, con fecha y zona adelante (bambu_red.py desde el 16/10), se lee igual', () => {
+    const iso = '2026-10-17T11:44:49-03:00 RUNNING etapa 0 capa 85/102 97 % faltan 2 min filamento 1 error 0 hms []';
+    const r = leerSeguimiento(`${iso} | detector exito 0.224 falla 1.588`, AHORA - 30000, AHORA);
+    expect(r.palabra).toBe('imprimiendo');
+    expect(r.detalle).toMatch(/capa 85 de 102/);
+    expect(leerSeguimiento(`${iso} | detector exito 0.61 falla 0.52 | ALARMA DEL DETECTOR`, AHORA - 30000, AHORA).color).toBe('rojo');
+    // en pausa la vigilancia escribe cada 300 s: a los 6 min sigue «en pausa», no salta a «no imprime»
+    expect(leerSeguimiento(iso.replace('RUNNING', 'PAUSE'), AHORA - 6 * 60000, AHORA).palabra).toBe('en pausa');
+    const sinCon = `${iso}\n2026-10-17T11:50:02-03:00 SIN CONEXION desde las 11:46 (sigo buscandola por su serie)`;
+    expect(leerSeguimiento(sinCon, AHORA - 60000, AHORA).palabra).toBe('sin conexión');
+    expect(leerSeguimiento(`${iso}\n2026-10-17T11:58:00-03:00 SALIDA 3: 15 min sin avanzar`, AHORA - 60000, AHORA).color).toBe('rojo');
+  });
   it('skills: sin comandos → «sin selftest» (cad-design), nunca verde; falla → rojo', () => {
     expect(leerSelftest({ skill: 'cad-design', para_fak: 'Diseño 3D', comandos: [] }, null).palabra).toBe('sin selftest');
     expect(leerSelftest({ skill: 'x', comandos: [['py']] }, { ok: false, resumen: '3 fallan', cuandoMs: AHORA }).color).toBe('rojo');
@@ -101,7 +133,13 @@ describe('la nube, la impresora, las skills y las sesiones', () => {
   });
   it('la página lleva el logo arriba, la hora de cada dato y cuenta los rojos', () => {
     const t = armarTarea({ nombre: 'Barack - mis mails a la nube', para_fak: 'Mis mails suben a la nube', cada_minutos: 120 }, leerMails(OUTLOOK_CERRADO(AHORA - 60000)), null, AHORA);
-    const pag = html({ ahora: AHORA, refresco: 30, logo: 'logo.png', sesionesHoras: 12, selftestsHoras: 6, sesiones: [], tareas: [t], nube: leerNube(null), nubePcs: [], impresora: leerSeguimiento(null, null, AHORA), selftests: [] });
+    // el nombre real de la tarea de Windows dice «Claude»: la página muestra solo la frase para Fak (revisor-pedido 17/10)
+    const noche = armarTarea({ nombre: 'Barack - Noche de Claude (API)', para_fak: 'La noche: el trabajo automático con la API', cada_minutos: 1440 }, leerNocheTarea(null, null), null, AHORA);
+    const ok = leerSelftest({ skill: 'hojas-de-proceso', para_fak: 'Hojas de proceso', comandos: [['py']] }, { ok: true, resumen: '0 fallan', cuandoMs: AHORA });
+    expect(ok.palabra).toBe('disponible');
+    // un título de sesión de Fak con el nombre del asistente (4 de 7 días, auditor 17/10) tampoco lo deja ver
+    const ses = estadoSesion({ title: 'Plan sistema Claude Barack', lastActivityAt: AHORA, scheduledTaskId: 'sesion-sistema-claude-fase2' }, null, AHORA);
+    const pag = html({ ahora: AHORA, refresco: 30, logo: 'logo.png', sesionesHoras: 12, selftestsHoras: 6, sesiones: [ses], tareas: [t, noche], nube: leerNube(null), nubePcs: [], impresora: leerSeguimiento(null, null, AHORA), selftests: [ok] });
     expect(pag).toMatch(/<header><img src="logo\.png"/);
     expect(pag).toMatch(/http-equiv="refresh" content="30"/);
     expect(pag).toMatch(/1 cosa en rojo/);

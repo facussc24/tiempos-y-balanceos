@@ -50,7 +50,7 @@ export const MAQUETAS = [
       fila: S.solarized.claro.zebra, leer: S.github.claro.read, correr: S.github.claro.run, escribir: S.github.claro.write,
       ok: S.github.claro.ok, err: S.github.claro.err, warn: S.github.claro.warn,
     },
-    fuente: 'Tema CLARO de la app + skin «github» (texto, íconos y semáforo, variante clara) con las cajas del skin «solarized» claro (#eee8d5). El fondo hueso #f7f4ec y el azul #1f4e79 son la propuesta del informe: ningún skin pinta el fondo de la ventana.',
+    fuente: 'Tema CLARO de la app + skin «github» (texto, íconos y semáforo, variante clara) con las cajas del skin «solarized» claro (#eee8d5). El fondo hueso #f7f4ec y el azul #1f4e79 son la propuesta del informe de la comunidad del 15/10 (afuera_comunidad_mods.md, en la nube de Ingeniería): ningún skin pinta el fondo de la ventana.',
     probar: '/skin github  (o /skin solarized) con la app en tema claro',
   },
   {
@@ -62,7 +62,7 @@ export const MAQUETAS = [
       fila: S['tokyo-night'].oscuro.zebra, leer: S.nord.oscuro.read, correr: S.nord.oscuro.run, escribir: S.nord.oscuro.write,
       ok: S.nord.oscuro.ok, err: S.nord.oscuro.err, warn: S.nord.oscuro.warn,
     },
-    fuente: 'Tema OSCURO de la app + skin «nord» (texto, íconos y semáforo) con el código en las cajas de «tokyo-night» (#1f2335). El fondo #16222e, la caja de Fak #22364a y el ámbar #f2c14e son la propuesta del informe.',
+    fuente: 'Tema OSCURO de la app + skin «nord» (texto, íconos y semáforo) con el código en las cajas de «tokyo-night» (#1f2335). El fondo #16222e, el gris secundario #9fb3c8, la caja de Fak #22364a y el ámbar #f2c14e son la propuesta del informe de la comunidad del 15/10.',
     probar: '/skin nord  (o /skin tokyo-night) con la app en tema oscuro',
   },
   {
@@ -74,7 +74,7 @@ export const MAQUETAS = [
       fila: '#f3f5f6', leer: '#4b5563', correr: '#4b5563', escribir: '#4b5563',
       ok: S.github.claro.ok, err: S.github.claro.err, warn: S.github.claro.warn,
     },
-    fuente: 'La idea del skin «mono» (solo grises) llevada a claro: «mono» trae únicamente variante oscura, así que los grises claros son la propuesta del informe. El semáforo sale del skin «github» claro (#1a7f37, #9a6700, #cf222e).',
+    fuente: 'La idea del skin «mono» (solo grises) llevada a claro: «mono» trae únicamente variante oscura. El fondo #eceff1 y el texto #111827 son la propuesta del informe de la comunidad del 15/10; los demás grises son una elección de esta maqueta. El semáforo sale del skin «github» claro (#1a7f37, #9a6700, #cf222e).',
     probar: '/skin mono  (no se verificó cómo se ve en tema claro: trae solo la variante oscura)',
   },
 ];
@@ -111,6 +111,7 @@ export function contrastes(c) {
     ['texto dentro de tu mensaje', contraste(c.texto, c.cajaFak)],
     ['texto gris (secundario)', contraste(c.suave, c.fondo)],
     ['verde «hecho»', contraste(c.ok, c.fondo)],
+    ['ámbar «ojo»', contraste(c.warn, c.fondo)],
     ['rojo «error»', contraste(c.err, c.fondo)],
   ];
 }
@@ -172,7 +173,7 @@ export function htmlIndice(maquetas) {
       <a href="${m.clave}.png"><img src="${m.clave}.png" alt="Maqueta ${m.nombre}"></a>
       <p>${m.idea}</p><p class="f"><b>De dónde salen los colores:</b> ${m.fuente}</p>
       <p class="f"><b>Para probarlo en vivo</b> (después de instalar el skin, con tu sí): <code>${m.probar}</code></p>
-      <table><tr><th>Contraste (mínimo 4,5)</th><th></th></tr>${filas}</table></section>`;
+      <table><tr><th>Contraste (mínimo 4,5)</th><th></th></tr>${filas}</table>${contrastes(m.c).some(([, v]) => v < 4.5) ? '<p class="f">Lo que sale en rojo queda apenas debajo del mínimo para letra chica: en negrita se lee, pero si elegís esta opción ese color se ajusta un tono antes de usarla.</p>' : ''}</section>`;
   };
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Colores del chat</title><style>

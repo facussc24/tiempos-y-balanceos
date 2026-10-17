@@ -1,6 +1,6 @@
 # Tanda 6: salida de `claude plugin validate` y `claude plugin test` sobre los dos mods propios (17/10/2026)
 
-Corrido el 17/10/2026 ~11:10 con Claude Code 2.1.301, desde la rama `claude/vista-tanda6-1017` (los mods sin cambios respecto de `main` 4322d932). No se arregló nada: es la salida tal cual. La carpeta del tablero es `mods/tablero` y su nombre de plugin es `tablero-casa`.
+Corrido el 17/10/2026 ~11:10 con el programa de la terminal (Claude Code 2.1.301; la app de escritorio corre el motor 2.1.299), desde la rama `claude/vista-tanda6-1017` (los mods sin cambios respecto de `main` 4322d932). No se arregló nada: es la salida tal cual. La carpeta del tablero es `mods/tablero` y su nombre de plugin es `tablero-casa`.
 
 **Resultado:** los dos validan (`✔ Validation passed`, salida 0) y sus pruebas pasan: `tablero-casa` 5 de 5, `presupuesto-agentes` 20 de 20. Único consejo del validador (no cambia el veredicto): al README de `presupuesto-agentes` le falta el renglón de instalación desde un marketplace; no aplica mientras el mod se instale con `scripts/_modsInstalar.mjs`.
 

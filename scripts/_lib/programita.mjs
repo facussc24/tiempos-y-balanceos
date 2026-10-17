@@ -9,6 +9,8 @@
  *
  * La regla de fondo: el verde o el rojo de una tarea sale de SU registro, no del Programador de tareas de Windows. El
  * 17/10 a las 10:37 la de mails terminó con 0 para Windows y su registro decía «Outlook clásico no está abierto».
+ * El nombre de la tarea de Windows no se muestra: va la frase para Fak (`para_fak`), porque el nombre puede decir «Claude»
+ * y ningún documento de Barack lo dice (core-prohibiciones.md §9).
  * Colores: verde = anda · ambar = ojo, no es una rotura · rojo = roto o atrasado · gris = sin dato o no aplica.
  */
 import { leerNoche } from '../../mods/tablero/hooks/estado.mjs';
@@ -43,8 +45,10 @@ const sinDato = (detalle) => ({ color: 'gris', palabra: 'sin dato', detalle, cua
 
 /**
  * Los registros de la casa que terminan cada corrida con «AAAA-MM-DD HH:MM  RESULTADO[:] OK | ERROR… | PARCIAL…»
- * (_nubeSync.ps1, _syncMailsDiario.ps1, _backupSemanal.ps1). Si después del último RESULTADO hay renglones nuevos de
- * hace menos de 20 min, la corrida está en curso.
+ * (_nubeSync.ps1, _syncMailsDiario.ps1, _backupSemanal.ps1). Una corrida nueva es un renglón escrito más de 2 min
+ * después del último RESULTADO (los que una corrida agrega pegados a su resultado, como «backups/ ocupa N MB», no
+ * cuentan): con menos de 20 min está en curso; con más, se murió sin anotar resultado (auditor 17/10: el 25/09 una
+ * corrida de sync-diario.log arrancó a las 12:56 y nunca terminó, y la página decía «terminó bien» con la anterior).
  */
 export function leerResultado(texto, ahora) {
   if (texto == null) return sinDato('no encuentro su registro');
@@ -54,10 +58,12 @@ export function leerResultado(texto, ahora) {
     const m = /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2})\s+RESULTADO:?\s*(.*)$/.exec(l.trim());
     if (m) { ultimo = { cuandoMs: msLocal(m[1]), texto: m[2].trim() }; idx = i; }
   });
-  const despues = lineas.slice(idx + 1).map((l) => msLocal(l.trim())).filter(Number.isFinite);
-  const ultimaEscritura = despues.length ? Math.max(...despues) : null;
-  if (ultimaEscritura && ahora - ultimaEscritura < 20 * 60000 && (!ultimo || ultimaEscritura > ultimo.cuandoMs)) {
-    return { color: 'verde', palabra: 'corriendo', detalle: 'está corriendo ahora', cuandoMs: ultimaEscritura };
+  const despues = lineas.slice(idx + 1).map((l) => msLocal(l.trim())).filter(Number.isFinite)
+    .filter((ms) => !ultimo || ms - ultimo.cuandoMs > 2 * 60000);
+  if (despues.length) {
+    const desde = Math.min(...despues);
+    if (ahora - Math.max(...despues) < 20 * 60000) return { color: 'verde', palabra: 'corriendo', detalle: 'está corriendo ahora', cuandoMs: desde };
+    return { color: 'rojo', palabra: 'roto', detalle: `empezó ${fechaHora(desde)} y no anotó ningún resultado`, cuandoMs: desde };
   }
   if (!ultimo) return { color: 'rojo', palabra: 'roto', detalle: 'el registro no tiene ningún resultado', cuandoMs: null };
   if (/^OK\b/i.test(ultimo.texto)) return { color: 'verde', palabra: 'terminó bien', detalle: '', cuandoMs: ultimo.cuandoMs };
@@ -98,27 +104,49 @@ export function leerNocheTarea(texto, mtimeMs) {
   return { color: 'verde', palabra: 'terminó bien', detalle: `${n.pasos} paso(s)`, cuandoMs: n.cuandoMs };
 }
 
+/**
+ * El arb: el latido que el vigilante reescribe en cada vuelta (~/arb_fotos/vigilante_latido.txt: 'DD/MM HH:MM:SS  pid N
+ * <paso>') y el último renglón de su registro (lanzador.log), que dice por qué no lo pudo abrir. Auditor 17/10: el
+ * registro tenía 300 vueltas seguidas de «sin red al servidor» mientras Windows decía 0.
+ */
+export function leerArb(latido, ultimoLog, ahora) {
+  const m = /^(\d\d)\/(\d\d) (\d\d):(\d\d):(\d\d)\s+pid \d+\s+(.*)$/.exec((latido ?? '').trim());
+  if (!m) return latido == null ? sinDato('no encuentro el latido del vigilante del arb') : { color: 'rojo', palabra: 'roto', detalle: 'el latido del vigilante no se entiende', cuandoMs: null };
+  const anio = new Date(ahora).getFullYear();
+  let cuandoMs = new Date(anio, +m[2] - 1, +m[1], +m[3], +m[4], +m[5]).getTime();
+  if (cuandoMs > ahora + 86400000) cuandoMs = new Date(anio - 1, +m[2] - 1, +m[1], +m[3], +m[4], +m[5]).getTime();
+  const paso = m[6].trim();
+  if (ahora - cuandoMs > 15 * 60000) return { color: 'rojo', palabra: 'roto', detalle: `el vigilante no late desde ${fechaHora(cuandoMs)}`, cuandoMs };
+  if (/^arb abierto/.test(paso)) return { color: 'verde', palabra: 'disponible', detalle: 'el arb está abierto', cuandoMs };
+  if (/^pausado/.test(paso)) return { color: 'ambar', palabra: 'en pausa', detalle: 'el vigilante está pausado a mano', cuandoMs };
+  const log = (ultimoLog ?? '').trim().replace(/^\d\d\/\d\d \d\d:\d\d:\d\d\s+/, '');
+  if (/sin red|no responde/i.test(log)) return { color: 'rojo', palabra: 'roto', detalle: `el arb está cerrado y no lo puede abrir: ${log}`, cuandoMs };
+  if (/bloqueado|usando la PC/i.test(paso)) return { color: 'ambar', palabra: 'esperando', detalle: paso, cuandoMs };
+  return { color: 'verde', palabra: 'corriendo', detalle: paso, cuandoMs };
+}
+
 /** Solo lo que dice Windows (para una tarea sin registro propio). */
 export function leerWindows(win) {
   if (!win) return sinDato('Windows no la tiene registrada');
   const r = win.ultimoResultado;
-  if (r === 0) return { color: 'verde', palabra: 'terminó bien', detalle: 'según Windows (no deja registro propio)', cuandoMs: win.ultimaMs };
+  if (r === 0) return { color: 'verde', palabra: 'terminó bien', detalle: 'según Windows', cuandoMs: win.ultimaMs };
   if (r === 267009) return { color: 'verde', palabra: 'corriendo', detalle: 'según Windows', cuandoMs: win.ultimaMs };
   return { color: 'rojo', palabra: 'roto', detalle: `Windows dice código ${r}`, cuandoMs: win.ultimaMs };
 }
 
 /**
- * Una tarea de la casa: la lectura de su registro + lo que dice Windows (próxima corrida, apagada) + el atraso
- * (su último resultado tiene más del doble de su intervalo y 15 min de margen).
+ * Una tarea de la casa: la lectura de su registro + lo que dice Windows (próxima corrida, apagada) + el atraso: su
+ * último resultado tiene más de `atrasada_si_pasan_minutos` (cada tarea con su número y su porqué en el canon; el
+ * «doble del intervalo» de la primera versión no tenía fuente y daba rojo falso todas las noches, auditor 17/10).
  */
 export function armarTarea(def, lectura, win, ahora) {
   const t = { nombre: def.nombre, paraFak: def.para_fak, ...lectura, proximaMs: win?.proximaMs ?? null, avisos: [] };
   if (!win) t.avisos.push('Windows no la tiene registrada en esta PC');
   else if (win.estado === 'Disabled') { t.color = 'rojo'; t.palabra = 'apagada'; t.avisos.push('la tarea está apagada en Windows'); }
-  const limite = (2 * (def.cada_minutos ?? 0) + 15) * 60000;
-  if (def.cada_minutos && t.palabra !== 'corriendo' && Number.isFinite(t.cuandoMs) && ahora - t.cuandoMs > limite) {
+  const tope = def.atrasada_si_pasan_minutos;
+  if (tope && t.palabra !== 'corriendo' && Number.isFinite(t.cuandoMs) && ahora - t.cuandoMs > tope * 60000) {
     t.color = 'rojo';
-    t.avisos.push(`atrasada: su último resultado es de ${hace(t.cuandoMs, ahora)} y corre cada ${def.cada_minutos >= 1440 ? `${def.cada_minutos / 1440} día(s)` : `${def.cada_minutos} min`}`);
+    t.avisos.push(`atrasada: su último resultado es de ${hace(t.cuandoMs, ahora)}${def.cuando_corre ? ` y corre ${def.cuando_corre}` : ''}`);
   }
   return t;
 }
@@ -142,22 +170,34 @@ export function estadoSesion(app, est, ahora) {
 }
 
 /**
- * seguimiento.log de `bambu_red.py --seguir`: 'HH:MM:SS ESTADO etapa N capa a/b P % faltan M min … [| detector exito X
- * falla Y] [| ALARMA DEL DETECTOR]', y renglones '… SALIDA n: texto'. La fecha sale de la del archivo.
+ * seguimiento.log de `bambu_red.py --seguir`: '<hora> ESTADO etapa N capa a/b P % faltan M min … [| detector exito X
+ * falla Y] [| ALARMA DEL DETECTOR]', y renglones '<hora> SALIDA n: texto' o '<hora> SIN CONEXION desde …'. La hora va
+ * como 'HH:MM:SS' (hasta el 16/10) o con fecha y zona, '2026-10-17T11:44:49-03:00' (desde b47e890d, 16/10: el auditor
+ * del 17/10 midió que con solo la hora 595 de 595 renglones nuevos salían «sin datos de capa»). Sin fecha en el renglón,
+ * la fecha sale de la del archivo.
  */
-export function leerSeguimiento(texto, mtimeMs, ahora, { umbral = 0.45, recienteMin = 5 } = {}) {
+export function leerSeguimiento(texto, mtimeMs, ahora, { umbral = 0.45, recienteMin = 7 } = {}) {
   if (texto == null) return { color: 'gris', palabra: 'sin impresiones', detalle: 'no encuentro ningún seguimiento', cuandoMs: null };
   const lineas = texto.split(/\r?\n/).filter((l) => l.trim());
+  const HORA = String.raw`^(?:\d{4}-\d{2}-\d{2}T)?(\d\d:\d\d):\d\d(?:\.\d+)?(?:Z|[+-]\d\d:?\d\d)?\s+`;
   let estado = null; let salida = null;
   for (const l of lineas) {
-    const m = /^(\d\d:\d\d:\d\d) ([A-Z_]+) etapa -?\d+ capa (\d+)\/(\d+) (\d+) % faltan (\d+) min/.exec(l);
+    const m = new RegExp(`${HORA}([A-Z_]+) etapa -?\\d+ capa (\\d+)\\/(\\d+) (\\d+) % faltan (\\d+) min`).exec(l);
     if (m) {
       const d = /detector exito ([\d.]+) falla ([\d.]+)/.exec(l);
-      estado = { hora: m[1].slice(0, 5), gcode: m[2], capa: +m[3], capas: +m[4], pct: +m[5], faltan: +m[6], exito: d ? +d[1] : null, falla: d ? +d[2] : null, alarma: /ALARMA DEL DETECTOR/.test(l) };
+      estado = { hora: m[1], gcode: m[2], capa: +m[3], capas: +m[4], pct: +m[5], faltan: +m[6], exito: d ? +d[1] : null, falla: d ? +d[2] : null, alarma: /ALARMA DEL DETECTOR/.test(l) };
       salida = null;
     }
     const s = /SALIDA (\d+): (.*)$/.exec(l);
     if (s) salida = { codigo: +s[1], texto: s[2] };
+    if (/ SIN CONEXION /.test(l)) salida = { codigo: 12, texto: l.replace(new RegExp(HORA), '') };
+  }
+  // lo último que pasó después del último renglón de capa manda: sin conexión, quieta, detector, fallada
+  if (salida && Number.isFinite(mtimeMs) && ahora - mtimeMs < 12 * 3600000) {
+    if (salida.codigo === 12) return { color: 'ambar', palabra: 'sin conexión', detalle: `${salida.texto}: no se sabe si sigue imprimiendo; que alguien mire la pantalla`, cuandoMs: mtimeMs };
+    // salidas de la tabla «Cómo se corre» de la skill impresion-3d-bambu: 2 pausa o alarma; 1, 3, 11, 13 y 16 algo anda mal
+    if (salida.codigo === 2) return { color: 'ambar', palabra: 'en pausa o con alarma', detalle: salida.texto, cuandoMs: mtimeMs };
+    if ([1, 3, 11, 13, 16].includes(salida.codigo)) return { color: 'rojo', palabra: salida.codigo === 11 ? 'el detector avisó' : 'roto', detalle: salida.texto, cuandoMs: mtimeMs };
   }
   const coma = (n) => n.toFixed(2).replace('.', ',');
   const detector = estado?.exito != null ? `detector: distancia a «sana» ${coma(estado.exito)}, a «fallada» ${coma(estado.falla)} (avisa si pasa ${coma(umbral)} tres veces seguidas)` : '';
@@ -196,16 +236,19 @@ export function leerEstadoNube(texto) {
 export function leerSelftest(def, guardado) {
   if (!def.comandos?.length) return { skill: def.skill, paraFak: def.para_fak, color: 'gris', palabra: 'sin selftest', detalle: def.sin_selftest ?? '', cuandoMs: null };
   if (!guardado) return { skill: def.skill, paraFak: def.para_fak, color: 'gris', palabra: 'sin correr todavía', detalle: '', cuandoMs: null };
-  return { skill: def.skill, paraFak: def.para_fak, color: guardado.ok ? 'verde' : 'rojo', palabra: guardado.ok ? 'anda' : 'roto', detalle: guardado.ok ? (guardado.resumen ?? '') : (guardado.resumen || 'el selftest falló'), cuandoMs: guardado.cuandoMs };
+  return { skill: def.skill, paraFak: def.para_fak, color: guardado.ok ? 'verde' : 'rojo', palabra: guardado.ok ? 'disponible' : 'roto', detalle: guardado.ok ? (guardado.resumen ?? '') : (guardado.resumen || 'el selftest falló'), cuandoMs: guardado.cuandoMs };
 }
 
-const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+// Todo texto que entra a la página pasa por acá: la página lleva el logo de Barack, así que el nombre del asistente no
+// aparece (core-prohibiciones.md §9). Los títulos de sesión de Fak y los nombres de tarea lo traen a veces (auditor 17/10:
+// 4 sesiones de 7 días): se muestra «asistente» en su lugar; el dato de origen no se toca.
+const esc = (s) => String(s ?? '').replace(/claude/gi, 'asistente').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 /** La página entera. `e`: { ahora, sesiones, tareas, nube, nubePcs, impresora, selftests, refresco, logo, foto, pc }. */
 export function html(e) {
   const punto = (c, p) => `<span class="est ${c}"><i></i>${esc(p)}</span>`;
   const cuando = (ms) => (Number.isFinite(ms) ? `<span class="cu">${esc(fechaHora(ms))} · ${esc(hace(ms, e.ahora))}</span>` : '<span class="cu">—</span>');
-  const filaTarea = (t) => `<tr><td><b>${esc(t.paraFak)}</b><div class="cu">${esc(t.nombre)}</div></td><td>${punto(t.color, t.palabra)}${t.detalle ? `<div class="det">${esc(t.detalle)}</div>` : ''}${t.avisos.map((a) => `<div class="det rojo-t">${esc(a)}</div>`).join('')}</td><td>${cuando(t.cuandoMs)}</td><td>${Number.isFinite(t.proximaMs) ? `<span class="cu">${esc(fechaHora(t.proximaMs))}</span>` : '<span class="cu">—</span>'}</td></tr>`;
+  const filaTarea = (t) => `<tr><td><b>${esc(t.paraFak)}</b></td><td>${punto(t.color, t.palabra)}${t.detalle ? `<div class="det">${esc(t.detalle)}</div>` : ''}${t.avisos.map((a) => `<div class="det rojo-t">${esc(a)}</div>`).join('')}</td><td>${cuando(t.cuandoMs)}</td><td>${Number.isFinite(t.proximaMs) ? `<span class="cu">${esc(fechaHora(t.proximaMs))}</span>` : '<span class="cu">—</span>'}</td></tr>`;
   const filaSesion = (s) => `<tr><td><b>${esc(s.titulo)}</b>${s.tarea ? `<div class="cu">la lanzó la tarea ${esc(s.tarea)}</div>` : ''}</td><td>${punto(s.color, s.palabra)}${s.detalle ? `<div class="det">${esc(s.detalle)}</div>` : ''}</td><td>${cuando(s.ultimaMs)}</td></tr>`;
   const filaSelftest = (s) => `<tr><td><b>${esc(s.paraFak)}</b><div class="cu">${esc(s.skill)}</div></td><td>${punto(s.color, s.palabra)}${s.detalle ? `<div class="det">${esc(s.detalle)}</div>` : ''}</td><td>${cuando(s.cuandoMs)}</td></tr>`;
   const n = e.nube;
@@ -242,6 +285,6 @@ ${e.nubePcs.map((p) => `<tr><td>Memoria y configuración desde ${esc(p.pc)}</td>
 <section><h2>La impresora 3D</h2><div class="imp"><div>${punto(imp.color, imp.palabra)}${imp.detalle ? `<div class="det">${esc(imp.detalle)}</div>` : ''}<div>${cuando(imp.cuandoMs)}</div>${imp.carpeta ? `<div class="cu">${esc(imp.carpeta)}</div>` : ''}<div class="cu">Se lee el registro que deja el seguimiento; acá no se le habla a la impresora.</div></div>
 ${e.foto ? `<div><img src="${esc(e.foto)}" alt="Última foto de la cámara"><div class="cu">última foto de la cámara${Number.isFinite(e.fotoMs) ? ` · ${esc(fechaHora(e.fotoMs))}` : ''}</div></div>` : ''}</div></section>
 <section><h2>Salud de cada skill (su último selftest)</h2><table><tr><th>Skill</th><th>Resultado</th><th>Corrido</th></tr>${e.selftests.map(filaSelftest).join('')}</table>
-<p class="cu">Se vuelven a correr solos cada ${e.selftestsHoras} h mientras la página está abierta.</p></section>
+<p class="cu">Además de las tres que se pidieron (impresora, hojas de proceso y diseño 3D) entran las otras skills que ya tienen selftest. Se vuelven a correr solos cada ${e.selftestsHoras} h mientras la página está abierta.</p></section>
 </main></body></html>`;
 }

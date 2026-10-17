@@ -31,8 +31,9 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { colaDe, estadoDe } from './_lib/colgados.mjs';
+import { RAIZ_APP } from './_hijaEstado.mjs';
 import {
-  armarTarea, estadoSesion, html, leerEstadoNube, leerMails, leerNocheTarea, leerNube, leerResultado,
+  armarTarea, estadoSesion, html, leerArb, leerEstadoNube, leerMails, leerNocheTarea, leerNube, leerResultado,
   leerSeguimiento, leerSelftest, leerWindows,
 } from './_lib/programita.mjs';
 
@@ -76,13 +77,16 @@ function leerTarea(def, repo, win, ahora) {
   if (def.lector === 'mails') lectura = leerMails(leer(p));
   else if (def.lector === 'resultado') lectura = leerResultado(leer(p), ahora);
   else if (def.lector === 'noche') lectura = leerNocheTarea(leer(p), mtime(p));
-  else lectura = leerWindows(win);
+  else if (def.lector === 'arb') {
+    const cola = def.registro_log ? colaDe(ruta(def.registro_log, repo), 4096).filter((l) => l.trim()) : [];
+    lectura = leerArb(leer(p), cola.length ? cola[cola.length - 1] : null, ahora);
+  } else lectura = leerWindows(win);
   return armarTarea(def, lectura, win, ahora);
 }
 
 /** Los registros de la app de las sesiones no archivadas con actividad en las últimas `horas`. */
 function sesiones(ahora, horas) {
-  const raizApp = path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'), 'Claude', 'claude-code-sessions');
+  const raizApp = RAIZ_APP();
   const proyectos = path.join(os.homedir(), '.claude', 'projects');
   let dirsProy = [];
   try { dirsProy = fs.readdirSync(proyectos, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => path.join(proyectos, d.name)); } catch { /* sin conversaciones */ }
