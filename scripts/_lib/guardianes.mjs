@@ -301,7 +301,7 @@ function variablesEscritas(todo) {
 function leeSecretoPorComando(texto, todo, prof = 0, vars = variablesEscritas(todo)) {
   if (prof > 4) return SECRETO_RE.test(texto);
   for (const c of comandosSimples(texto)) {
-    const palabras = c.palabras.map((w) => w.replace(//g, '$'));
+    const palabras = c.palabras.map((w) => w.replace(/\uE000/g, '$'));
     for (const w of palabras) {
       const subs = sustitucionesDe(w);
       if (subs === null) { if (SECRETO_RE.test(w)) return true; continue; }
@@ -1279,7 +1279,7 @@ export function mueveAMano(cmd, { cwd = '' } = {}) {
   const res = resolvedorDe(cmd);
   const embebido = cuerpos.filter((h) => !h.deGit).map((h) => h.cuerpo);
   for (const c of comandosSimples(lineas)) {
-    const palabras = c.palabras.map((w) => w.replace(//g, '$'));
+    const palabras = c.palabras.map((w) => w.replace(/\uE000/g, '$'));
     const { verbo, args } = verboDeComando({ ...c, palabras });
     const v = verboPelado(verbo);
     if (CORRE_INTERPRETE_RE.test(v)) { const r = modoInterprete(verbo, args); if (r.modo === 'pegado') embebido.push(r.codigo); continue; }
