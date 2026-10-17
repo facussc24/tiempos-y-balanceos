@@ -276,6 +276,8 @@ describe('P13 — origen o destino: copiar el listado para LEERLO no es escribir
 // Ronda 3 (17/10/2026): los casos del auditor a ciegas de la ronda 2, por su id (`guardianesRonda3.mjs`). 2 = frena, 0 = pasa.
 describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (apqp-cliente)', () => {
     const G = 'apqp-cliente-guard';
+    const bash = (command) => evaluar(JSON.stringify({ tool_name: 'Bash', tool_input: { command }, session_id: 'ronda3', cwd: 'C:\\Dev\\BarackMercosul' }),
+        { nombres: [G], env: { HOME: os.tmpdir() }, marcar: false, escapes: false }).res.bloqueos.length;
 
     it('ROJO (ronda 3, T1) — el .Save() de COM adentro de powershell -Command sobre el listado vuelve a frenar', () => {
         esperados(G, ['N-A08', 'N-A09']);
@@ -285,11 +287,18 @@ describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (apqp-clie
         // shutil.copy, copyFileSync y to_excel encima del listado real; el mismo en flujogramas; el code de una MCP
         esperados(G, ['X-A11', 'X-A12', 'X-A13', 'X-A14', 'X-A15', 'X-A16', 'N-C05', 'X-C08']);
         // VERDE: traer el listado real (con sus parentesis) a una carpeta local para leerlo
-        const leer = `python -c "import shutil; shutil.copy(r'${LISTADO}', r'C:\tmp\l.xlsx')"`;
-        expect(evaluar(JSON.stringify({ tool_name: 'Bash', tool_input: { command: leer }, session_id: 'ronda3', cwd: 'C:\Dev\BarackMercosul' }),
-            { nombres: [G], env: { HOME: os.tmpdir() }, marcar: false, escapes: false }).res.bloqueos.length).toBe(0);
+        expect(bash(`python -c "import shutil; shutil.copy(r'${LISTADO}', r'C:\\tmp\\l.xlsx')"`)).toBe(0);
     });
     it('ROJO (ronda 3, T3) — robocopy desde /tmp hacia la carpeta del listado: /tmp es el TEMP, no un switch', () => {
         esperados(G, ['N-A07', 'H3-Z11', 'H3-Z09', 'H3-V1', 'H3-V2']);
+    });
+    it('ROJO (ronda 3, T4) — el destino explicito de cp (-t con espacio, -t pegado, -rt) y de Copy-Item (-Dest, -Destination:)', () => {
+        esperados(G, ['N-A01', 'N-A02', 'N-A03', 'N-A06', 'Y-A19']);
+        // VERDE: las mismas formas trayendo el listado a una carpeta local
+        const L = LISTADO.replace(/\\/g, '/');
+        for (const c of [`cp -t /c/tmp "${L}"`, `cp -rt /c/tmp "${L}"`, `cp --target=/c/tmp "${L}"`,
+            `powershell -NoProfile -Command "Copy-Item -Path '${LISTADO}' -Destination:'C:\\tmp\\l.xlsx'"`]) expect(bash(c), c).toBe(0);
+        // y el ROJO de la misma forma: -Destination: encima del listado real
+        expect(bash(`powershell -NoProfile -Command "Copy-Item -Path C:\\tmp\\n.xlsx -Destination:'${LISTADO}'"`)).toBe(1);
     });
 });

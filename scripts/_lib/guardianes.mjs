@@ -1308,6 +1308,33 @@ const ESC_ARCHIVO = /(_TERMINADAS|TAREAS CERRADAS)/i;
 // `/LOG:x`). `/tmp` no es un switch: Git Bash lo convierte en el TEMP del sistema y robocopy copia desde ahi. Lo usan
 // escritorio-guard y apqp-cliente-guard.
 const ROBOCOPY_SWITCH_RE = /^\/(?:[A-Za-z]+:.*|S|E|Z|B|ZB|J|EFSRAW|SEC|COPYALL|NOCOPY|SECFIX|TIMFIX|PURGE|MIR|MOV|MOVE|A\+|A-|CREATE|FAT|256|MON|MOT|RH|PF|IPG|SL|SJ|A|M|IA|XA|XF|XD|XC|XN|XO|XX|XL|IS|IT|IM|XJ|XJD|XJF|FFT|DST|REG|TBD|LFSM|L|X|V|TS|FP|BYTES|NS|NC|NFL|NDL|NP|ETA|TEE|NJH|NJS|UNICODE|NOSD|NODD|QUIT|NODCOPY|NOOFFLOAD|COMPRESS|NOCLONE|SPARSE|Y|\?)$/i;
+// Ronda 3 (17/10, T4): el destino EXPLICITO de un copiar o mover, con todas sus formas, para escritorio-guard y
+// apqp-cliente-guard (la ronda 2 lo arreglo en uno solo). { destino, k } (k = la palabra del valor, que no es fuente) o null.
+//   · GNU cp / mv: `-t X`, `-rt X` (la t al final de un grupo de opciones sin valor), `-t<X>` pegado y `--t… X` /
+//     `--t…=X` (cualquier prefijo de `--target-directory`: GNU acepta abreviar una opcion larga);
+//   · PowerShell Copy-Item / Move-Item (y sus alias): `-Destination X`, `-Dest X` (un prefijo de 3 letras o mas, como
+//     acepta PowerShell) y `-Destination:X`.
+function destinoExplicitoDe(verbo, args) {
+  const v = verboPelado(verbo);
+  const gnu = /^(?:cp|mv)$/i.test(v);
+  const ps = /^(?:Copy-Item|cpi|Move-Item|mi|copy|move)$/i.test(v);
+  const valor = (pegado, k) => (pegado ? { destino: pegado, k } : args[k + 1] !== undefined ? { destino: args[k + 1], k: k + 1 } : null);
+  for (let k = 0; k < args.length; k++) {
+    const a = args[k];
+    if (a === '--') break;
+    if (gnu) {
+      const corta = a.match(/^-([abdfHilLnPpRrsTuvxZ]*)t(.*)$/);
+      if (corta) return valor(corta[2], k);
+      const larga = a.match(/^--(t[\w-]*)(?:=(.*))?$/);
+      if (larga && 'target-directory'.startsWith(larga[1])) return valor(larga[2], k);
+    }
+    if (ps) {
+      const m = a.match(/^-([A-Za-z]+)(?::(.*))?$/);
+      if (m && m[1].length >= 3 && 'destination'.startsWith(m[1].toLowerCase())) return valor(m[2], k);
+    }
+  }
+  return null;
+}
 const ESC_MUEVE_VERBO = /^(?:mv|move|Move-Item|mi)$/i;
 const ESC_COPIA_VERBO = /^(?:cp|copy|xcopy|Copy-Item|cpi)$/i;
 export function mueveAMano(cmd, { cwd = '' } = {}) {
@@ -1336,9 +1363,9 @@ export function mueveAMano(cmd, { cwd = '' } = {}) {
     // Ronda 2 (17/10, hallazgo 7): el destino explicito tambien va como `--target-directory=X` o con la t pegada a otras
     // opciones (`cp -rt X`), y algo que no se resuelve (una variable de `$(cygpath …)` o de un for) se mira contra el
     // comando ENTERO, como en apqp-cliente: no se adivina.
-    const largo = args.map((a) => a.match(/^--target-directory=(.+)$/)).find(Boolean);
-    const explicito = args.findIndex((a) => /^-(?:t|Destination|-target-directory)$/i.test(a) || /^-[A-Za-z]*t$/.test(a));
-    const destinoExplicito = largo ? completa(largo[1]) : explicito >= 0 && args[explicito + 1] !== undefined ? completa(args[explicito + 1]) : undefined;
+    // (ronda 3, T4) y `-t<X>` pegado, `--target=` abreviado, `-Dest` / `-Destination:X` de PowerShell
+    const ex = destinoExplicitoDe(verbo, args);
+    const destinoExplicito = ex ? completa(ex.destino) : undefined;
     const esSwitch = (a) => (/^robocopy$/i.test(v) ? ROBOCOPY_SWITCH_RE.test(a) : /^\/[A-Za-z]{1,4}(?::\S*)?$/.test(a));
     const pos = args.filter((a) => !/^-/.test(a) && !esSwitch(a)).map((a) => completa(a));
     if (destinoExplicito !== undefined) pos.push(destinoExplicito);
@@ -2887,10 +2914,11 @@ export function escribeListadoBash(cmd, { cwd = '', leer, prof = 0 } = {}) {
     const v = verboPelado(verbo);
     if (/^(?:cd|pushd|chdir|Set-Location|sl)$/i.test(v)) { const d = args.find((a) => !a.startsWith('-')); const r = d ? res(d).replace(/\\/g, '/') : ''; dir = /\$/.test(r) ? '' : /^(?:[A-Za-z]:|\/)/.test(r) ? r : dir && r ? `${dir}/${r}` : ''; continue; }
     if (/^(?:cp|mv|copy|move|xcopy|Copy-Item|cpi|Move-Item|mi)$/i.test(v)) {
-      const explicito = args.findIndex((a) => /^-(?:t|Destination)$/i.test(a) || /^--target-directory=/.test(a));
-      const pos = args.filter((a, k) => !/^-/.test(a) && !/^\/[A-Za-z]{1,3}$/.test(a) && !(explicito >= 0 && k === explicito + 1));
-      const destino = explicito >= 0 ? (args[explicito].includes('=') ? args[explicito].split('=')[1] : args[explicito + 1]) : pos[pos.length - 1];
-      const fuentes = explicito >= 0 ? pos : pos.slice(0, -1);
+      // (ronda 3, T4) el destino explicito con todas sus formas: la misma funcion que escritorio-guard
+      const ex = destinoExplicitoDe(verbo, args);
+      const pos = args.filter((a, k) => !/^-/.test(a) && !/^\/[A-Za-z]{1,3}$/.test(a) && !(ex && k === ex.k));
+      const destino = ex ? ex.destino : pos[pos.length - 1];
+      const fuentes = ex ? pos : pos.slice(0, -1);
       if (!destino) continue;
       const d = completa(destino);
       if (APQP_LISTADO.test(d) && (/\$/.test(d) || !apqpLocal(d))) return d;

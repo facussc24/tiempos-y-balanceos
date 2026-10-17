@@ -198,4 +198,7 @@ describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (escritori
     it('ROJO (ronda 3, T3) — robocopy desde /tmp hacia el archivo de cerradas: /tmp es el TEMP, no un switch', () => {
         esperados(G, ['X-E11', 'X-E12', 'N-E06']);
     });
+    it('ROJO (ronda 3, T4) — mv con --target= abreviado o con -t pegado hacia el archivo de cerradas', () => {
+        esperados(G, ['N-E01', 'N-E02', 'H7-E06', 'H7-E07', 'H7-E08', 'H7-V1', 'H7-V2']);
+    });
 });
