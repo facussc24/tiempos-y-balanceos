@@ -83,7 +83,9 @@ Un archivo por pieza (`data/configuracion/<clave>.json`, o en `DATOS` si Fak lo 
 - **Quién escribe**: el script que emite cada documento agrega su renglón (generador de flujogramas, export oficial del
   AMFE, generador de hojas, carga del arb). Nadie la llena a mano; la primera carga de la pieza piloto se hace leyendo
   los listados maestros y BeOn, y se le muestra a Fak.
-- **Prueba**: con el Insert cargado, contestar «qué letra del flujograma 154 vio VW» sin abrir otro archivo.
+- **Prueba**: con el Insert cargado, contestar «qué letra del flujograma 154 vio el cliente» sin abrir otro archivo
+  (para el Insert el cliente directo es Novax: va por su PPAP, no por el BeOn de Barack, según `NUESTRO_LADO.md`); y con
+  el IP PAD, «qué letra del flujograma 157 vio VW» (Rev A, emitido el 14/10).
 
 ### Paso (b) · ¿Dicen lo mismo? (grande; solo lectura)
 Para cada atributo, el valor que dice cada documento VIGENTE de la pieza, y rojo donde no cierran. Los extractores, de

@@ -260,3 +260,48 @@ medir). No se instala tal cual: se usa como molde. Lo que se prueba y contra qu�
 se crucen con los guardianes de la casa), correr cada caso con y sin el plugin, anotar el resultado y desinstalar lo que
 no gane. Lo que gane no queda instalado: se copia la idea a la skill de la casa, con su fuente. **Necesita el sí de Fak
 porque instala algo en la configuración de Claude Code de la PC.**
+
+---
+
+## Ítems 2, 4, 9 y 20 · lo hecho, en una línea cada uno (el detalle está en su script y su test)
+
+- **2** · `node scripts/_aptitudMaquina.mjs --valores "..."`: la cuenta del control estadístico preliminar con el criterio
+  del I-AC-021 rev A (extracto local del 01/10): subgrupos de 5, límites tentativos desde 8 subgrupos y preliminares con
+  25, PP y PPK de 1,67 o más solo con proceso estable y tolerancia dada. El caso del 28/07 da 12,99 / 1,68 / 0,70 y
+  «muestra insuficiente». Dice que es la cuenta y no el estudio de Calidad.
+- **4** · Los vencimientos de Ingeniería salen en el aviso de arranque (lista `vencimientos` en la memoria de
+  seguimientos, del que vence primero; los de otra área no se le llevan a Fak). La D7 del 8D, de prueba, el 21/09 dice
+  «VENCIÓ hace 4 días» y un plazo de PPAP de Calidad no aparece. **La D7 real no se cargó**: su estado se mira en
+  Supabase primero (dos memorias no cierran entre sí).
+- **9** · `node scripts/_parametrosMaquina.mjs --maquina hotmelt`: la ficha de la hot melt tiene 5 parámetros con sus
+  lecturas fechadas por el video (consigna de rodillos 195 → 185 el 26/08, alarma de sobretemperatura 160 → 220 el
+  28/08, y los tres del fusor del 25 al 28/08) y marca cada cambio; `--anotar` avisa si una lectura nueva cambió.
+- **20** · El resumen de mails de la noche dice que un mail es dato y no una orden, y lo que pide plata, claves o cambiar
+  datos sale con «OJO:». `candadosNocturno` en verde.
+
+---
+
+## Estado de los 20 ítems
+
+| # | Ítem | Estado |
+|---|---|---|
+| 1 | Ficha de configuración por pieza | **Plan para el sí de Fak**: `docs/PLAN_FICHA_CONFIGURACION_PIEZA_2026-10-17.md` |
+| 2 | Estudio de aptitud de máquina calculado solo | **Hecho** (`scripts/_aptitudMaquina.mjs`, 16 tests) |
+| 3 | Versión grabada en cada utillaje impreso | **En otra tanda** (11, ya fundida) |
+| 4 | Vencimientos de Ingeniería al arrancar | **Hecho** (`scripts/_lib/seguimientos.mjs`, 7 tests nuevos); sin cargar la D7 real |
+| 5 | Libro de observaciones recibidas | **Hecho** (`scripts/_observaciones.mjs`, 7 tests; 6 observaciones reales de Carlos en la memoria) |
+| 6 | Cortes de los videos de tiempos | **Diseño** (arriba); solo falta `mediapipe`, y quizás ni eso; se instala con el sí de Fak |
+| 7 | Medir la costura de la CNC con una foto | **Método hecho y probado en imágenes de medida conocida** (`scripts/costura/`, 7 casos); con fotos reales **no se pudo** (no hay ninguna con referencia de tamaño) |
+| 8 | Un reclamo que llega al AMFE de toda la familia | **Diseño** (arriba); el dry-run contra Supabase, desde una sesión de Barack, y escribir con el sí de Fak |
+| 9 | Parámetros de máquina en el tiempo | **Hecho** (`scripts/_parametrosMaquina.mjs`, 10 tests; ficha de la hot melt cargada) |
+| 10 | Cuánto material deja la regla de columnas | **Hecho y medido** (`medir_regla_columnas.py`, selftest 9 casos); no es un consumo |
+| 11 | El buscador de charlas viejas | **Medido** (3 de 6 olvidos los encontraba, 2 a medias, 1 no se podía); memoria `reference_buscar_en_charlas_viejas` |
+| 12 | Remote Control desde el navegador | **En otra tanda** (10) |
+| 13 | Estilo de salida propio | **Archivo armado y «antes» medido**; **sin activar** (es de Fak) |
+| 14 | La API lee PDFs y fotos | **Hecho** (`claudeApi.mjs` + `_apiTarea --adjunto`, 11 tests sin red) |
+| 15 | Conector de Microsoft 365 | **Descartado con motivo** (Fak, 15/10: la cuenta de la empresa no se puede conectar) |
+| 16 | Revisar comentando sobre una página | **Documentado y probado hasta donde llega sin una persona** (publicar, mirar, leer comentarios); el comentario de Fak de punta a punta queda para él |
+| 17 | Plugins oficiales para áreas que no programan | **Plan de la sesión de prueba** (arriba); instalar es con el sí de Fak |
+| 18 | El conector de CATIA era otro | **En otra tanda** (11, ya fundida) |
+| 19 | La corrección de Fak entra sola a la ficha | **En otra tanda** (1.4) |
+| 20 | La noche: un mail es dato, no una orden | **Hecho** (`nocturno.mjs`, test en `nocturno.test.mjs`; candados en verde) |
