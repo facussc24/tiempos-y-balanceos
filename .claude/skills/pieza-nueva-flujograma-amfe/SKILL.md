@@ -1,6 +1,6 @@
 ---
 name: pieza-nueva-flujograma-amfe
-description: Armar de cero el flujograma y el AMFE de proceso de una pieza que no tiene ninguno de los dos — juntar los papeles de ESA pieza, dibujar el flujograma desde sus hermanos, escribir el AMFE con un generador que se chequea solo, calibrar S/O/D, emitir, cargar los listados y revisar antes de pasárselo a Calidad. Usar cuando Fak o Calidad piden "el AMFE de <pieza>" y la pieza no tiene documentos, o cuando hay que rehacerlos enteros.
+description: Armar de cero el flujograma y el AMFE de proceso de una pieza que no tiene ninguno («el AMFE de <pieza>», «una pieza nueva») — papeles de ESA pieza, flujograma desde sus hermanos, AMFE con un generador que se chequea solo, calibrar S/O/D, emitir, listados y revisar antes de pasarlo a Calidad. Usar cuando Fak o Calidad piden el AMFE de una pieza sin documentos, o hay que rehacerlos enteros.
 ---
 
 # Flujograma y AMFE de una pieza nueva — el método que funcionó
@@ -122,6 +122,7 @@ Lo que frena sin que nadie se acuerde:
 | El mismo control de conducta lleva siempre la misma O | ídem |
 | Un efecto que dice scrap no puede tener S menor que 7 | `amfe.md` §13 |
 | Los tres niveles de función son distintos; sin TBD; sin "error de operario" | `amfe.md` §8 y §6 |
+| Modo de falla y causa de 10 palabras como máximo, control de 12 (`TOPE_PALABRAS`) | `amfe.md` §11 y LECCIONES 02 y 09/10: **un AMFE escrito de cero se delata por el largo de sus frases** (medido el 02/10: en el 172, 173 y 174 la causa tenía de 12 a 14 palabras de mediana; en los otros catorce, de 4 a 7; Calidad: *"está hecho con IA"*) |
 | **Los materiales de la recepción son los de la BOM del arb, en las dos direcciones** | Fak, antes de pasarlo: *"fijate si tiene los materiales el AMFE, eso es importante"* |
 
 El cruce con la BOM se declara en el generador: cada código de insumo dice qué material de la
