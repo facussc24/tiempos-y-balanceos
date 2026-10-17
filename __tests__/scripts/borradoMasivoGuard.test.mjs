@@ -420,4 +420,10 @@ describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (borrado-m
         const js = "import fs from 'node:fs';\nimport os from 'node:os';\nimport path from 'node:path';\nconst d = fs.mkdtempSync(path.join(os.tmpdir(), 'x-'));\nif (d === '') throw new Error('x');\nfs.rmSync(d, { recursive: true, force: true });\n";
         expect(write('C:\\Dev\\BarackMercosul\\scripts\\_x.mjs', js)).toBe(0);
     });
+    it('ROJO (ronda 3, TB-1 del auditor a ciegas) — la desestructuracion ENTRE PARENTESIS reasigna la variable de mkdtemp', () => {
+        esperados(G, ['BT8b', 'BT8c', 'Z-B163', 'BT8a', 'BT8d']);
+        // VERDE: la misma forma sobre OTRA variable no le saca la marca de temporal a la carpeta
+        const js = "import fs from 'node:fs';\nimport os from 'node:os';\nimport path from 'node:path';\nconst d = fs.mkdtempSync(path.join(os.tmpdir(), 'x-'));\nlet a;\n({ a } = { a: 1 });\nfs.rmSync(d, { recursive: true, force: true });\n";
+        expect(write('C:\\Dev\\BarackMercosul\\scripts\\_x.mjs', js)).toBe(0);
+    });
 });

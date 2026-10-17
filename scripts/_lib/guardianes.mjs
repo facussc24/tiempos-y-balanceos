@@ -1887,7 +1887,11 @@ function variablesTemporales(code) {
     for (const sentencia of code.split(/[\n;]/)) {
       const izq = sentencia.match(/^([^=]*?)(?<![=!<>+\-*/%&|^:])=(?![=>])/)?.[1];
       if (!izq || !/[[\](){},]/.test(izq) || !id.test(izq)) continue;
-      if ((izq.match(/[([{]/g) ?? []).length === (izq.match(/[)\]}]/g) ?? []).length) n++;
+      // (TB-1 del auditor a ciegas de la ronda 3) la desestructuracion ENTRE PARENTESIS, `({ d } = …)` (la unica forma
+      // valida en JS para un objeto) o `([ d ] = …)`: la izquierda abre un `(` que se cierra despues del `=`
+      const abre = (izq.match(/[([{]/g) ?? []).length;
+      const cierra = (izq.match(/[)\]}]/g) ?? []).length;
+      if (abre === cierra || (/^\s*\(/.test(izq) && abre === cierra + 1)) n++;
     }
     return n;
   };
