@@ -119,6 +119,60 @@ tardar **menos de 1 minuto**. Si algo no lo permite la licencia, se dice con lo 
 7. v16 diseñada, simulada, laminada, con su PDF y el criterio de aceptación.
 8. Informe del auditor Opus en `docs/auditorias/`.
 
+## Resultados (17/10/2026, escrito después de correr todo; lo de arriba no se tocó)
+
+### Caso 1 — virolador: lo que dio cada pregunta
+
+`sim_asiento.py` sin tocar, corrido hoy: **reproduce exacto lo del 13/10** (v14 100 % y 68 %; v15 28 %; v15 en la punta
+1,69 mm). Con eso la simulación sirve como vara (`eval_casos_3d.py`, «reproduce_lo_publicado: true»).
+
+| | v14 | v15 | v16 |
+|---|---|---|---|
+| A1 apoyos | ROJO (7: 4 bloques + 3 pasadores parados sobre las ranuras tapadas) | **ROJO** (4 bloques) | **ROJO por la letra** (4 apoyos chicos) |
+| A2 ventana (banda / punta) | ROJO (0,20 / 0,24) | VERDE (1,19 / 0,75) | VERDE (1,19 / 0,75: el anillo es el de la v15) |
+| A3 simulación normal, 150 casos (% > 0,3 mm · máx.) | 100 % · 6,27 | 28 % · 0,63 | **0 % · 0,16** |
+| A3 apretando en la punta (mediana) | 5,91 mm | 1,69 mm | **0,00 mm** |
+| Gemelo: tapizado de espesor desparejo ±0,2, 50 casos (% · máx. · punta) | — | 66 % · 1,31 · 1,73 | **6 % · 0,53 · 0,11** |
+
+**Decidí distinto del plan, con la evidencia:**
+1. **La v15 da ROJO en A1** (el plan esperaba verde). Aplicada la regla tal cual, sus cuatro bloques controlan la altura; la
+   simulación lo confirma (28 de 100). No se aflojó la regla.
+2. **La v16 tiene cuatro apoyos, no tres** (V1 del plan pedía tres). Probado con la simulación: tres apoyos en una placa de
+   164 mm que la mano aprieta en cualquier lado **vuelcan hasta 10 mm** (todas las variantes de triángulo, con y sin topes,
+   dieron 100 % de casos). Fuente abierta y leída: *«3-2-1 … provides equilibrium but not necessarily stability. The second,
+   4-2-1 provides both»* (Applied Engineering, *Jig and Fixture Design*). La redundancia del cuarto se paga con
+   **coplanaridad**: los cuatro apoyos están sobre la MISMA cara del tapizado (dispersión 0,000 bajo cada huella; topes a
+   −10,334 / −10,335), en vez de los cuatro bloques de la v15 repartidos entre dos mesetas (una inclinada 0,78°). Por eso
+   **V1 queda ROJO por la letra y lo digo**: el veredicto de la v16 lo da la prueba física de los cinco lugares.
+3. **La simulación original no podía ver fallar a cuatro apoyos simétricos** (solo sortea un plano, un hundimiento parejo
+   y un alabeo simétrico respecto de x = 45). Se le agregó un **gemelo** en la copia (`sim_asiento_v16.py --error-local`:
+   espesor local ±0,2 en lomas de 15 mm y alabeo descentrado). Con el gemelo, los cuatro apoyos del prototipo saltaron de
+   1 % a 26 % (y la v15 de 28 % a 66 %): el 1 % era en parte ceguera del modelo. La v16 definitiva da 6 %.
+4. **El redondeo R1,5 del tope se come la cara plana del apoyo**: con 6 × 6 la cara plana era 3 × 3 y la mano en y = ±18
+   quedaba afuera del polígono (la v16 de la primera vuelta dio 6,3 mm en el 100 %). La v16 lleva apoyos de 6 × 10 en y.
+   Y la placa se alargó de 164 a 172 mm para que los apoyos de las esquinas caigan enteros sobre esa cara (el generador
+   ahora frena si una huella monta el borde de una meseta: lo hizo en la primera vuelta, 0,92 mm de desnivel).
+
+**V1 a V7 de la v16:** V1 ROJO por la letra (4-2-1, arriba) · V2 VERDE · V3 VERDE (0 %, máx. 0,16; el anillo no toca
+plástico) · V4 VERDE (0,00 mm) · V5 VERDE (`verificar_v16.py`: un sólido válido, malla = B-Rep, anillo = v15 a 0,0002 mm,
+los cuatro apoyos a su altura, gemelo +0,10 en rojo; CATIA: 91.206,744 mm³ = build123d 91.206,745; sin choque contra el
+panel, solo contacto) · V6 VERDE (1 h 27 min, 62,1 g negro + 1,9 g amarillo, sin fallas del laminador) · V7 VERDE
+(`_sinFirmaIA.py`: 0 en STEP, 3MF, laminado y PDF). En el gemelo la hamaca máxima da 0,53 mm (0,03 sobre el 0,5).
+
+**Le falta:** pasar por el gate de asiento de la tanda 2 cuando exista; la simulación grabada (mp4/gif) del GATE E no se
+hizo (la entrega de la v14 tampoco la tenía); y la prueba física.
+
+### Casos 2 y 3 y CATIA
+
+- Tornillo de 7 mm y pines del insert: banco `evals/banco/cad/` armado y probado en seco (`--seco`); la corrida real con
+  el juez gasta cupo y la decide la madre o Fak. Las reglas que los explican están en las fichas (FDM O1/O4/M7/R2/R4;
+  ingeniería de producto §1).
+- **CATIA, caso conocido cumplido:** v14 medida en CATIA = build123d (116.526,908 contra 116.526,907 mm³); choque v14
+  contra el panel **en el mismo marco**: sin choque, un contacto de 0,0 mm; gemelo (v14 metida 1 mm): choque −0,14 mm.
+  Medición 44 s sin el arranque (20 s). **El «choque de −3,354 mm» del 13/10 era un efecto de mover el panel adentro de
+  CATIA** (ninguna de las dos piezas tiene material en esos puntos). Módulos: Part Design y superficies (GSM) andan
+  creando y midiendo; DSE (escaneo) está instalado pero sin automatización.
+
 ## Qué puede romper
 
 - Las fichas y `SKILL.md`: otra hija (`claude/skills-1017`, tanda 12) puede tocar `cad-design` a la vez. Por eso

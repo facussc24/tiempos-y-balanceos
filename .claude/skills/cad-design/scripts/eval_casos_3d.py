@@ -104,7 +104,7 @@ def evaluar(casos, normal=None, punta=None):
                 fallas.append(f"{nombre}: la simulacion de hoy NO reproduce lo publicado: {r['A3_asiento']['diferencias']}")
         for clave, esperado in (ver.get("esperado") or {}).items():
             got = r.get(clave, {}).get("veredicto")
-            if got is not None and got != esperado:
+            if got not in (None, "SIN DATO") and got != esperado:   # sin corrida de esa pieza no hay contradiccion: se ve como SIN DATO
                 fallas.append(f"{nombre} {clave}: dio {got}, se esperaba {esperado}")
         res[nombre] = r
     return res, fallas
