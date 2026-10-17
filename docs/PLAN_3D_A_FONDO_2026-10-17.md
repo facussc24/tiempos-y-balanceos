@@ -165,7 +165,8 @@ hizo (la entrega de la v14 tampoco la tenía); y la prueba física.
 
 ### Casos 2 y 3 y CATIA
 
-- Tornillo de 7 mm y pines del insert: banco `evals/banco/cad/` armado y probado en seco (`--seco`); la corrida real con
+- Tornillo de 7 mm y pines del insert: banco `evals/banco/cad/` armado y probado en seco (`--seco`); al fundir `main` se
+  registró como `cad-design` con reglas vacías (convención de la tanda 12): `node scripts/_evalBanco.mjs --banco cad-design`; la corrida real con
   el juez gasta cupo y la decide la madre o Fak. Las reglas que los explican están en las fichas (FDM O1/O4/M7/R2/R4;
   ingeniería de producto §1).
 - **CATIA, caso conocido cumplido:** v14 medida en CATIA = build123d (116.526,908 contra 116.526,907 mm³); choque v14

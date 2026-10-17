@@ -48,7 +48,7 @@ código de fuentes: ABIERTA / BUSCADOR / CASA / A MEDIR.
 | C4 | Donde hay flexión, sin esquina interna viva (Kt 2,2 → 1,2 con R ≥ 0,5·t) | CASA (FEM propio) |
 | C5 | Pared con carga 1,5 a 2 mm; panza ≥ 2 mm alrededor de lo que entra en un vano | `ficha-fdm.md` G3; CASA `SKILL.md` §4 |
 
-## 5. Los tres casos de la casa que esta ficha tiene que explicar (los corre `eval_casos_3d.py` y el banco `cad`)
+## 5. Los tres casos de la casa que esta ficha tiene que explicar (los corre `eval_casos_3d.py` y el banco `cad-design`)
 
 | Caso | Qué pasó | Qué regla lo caza |
 |---|---|---|
