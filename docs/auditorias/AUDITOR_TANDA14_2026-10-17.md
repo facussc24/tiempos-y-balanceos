@@ -89,7 +89,7 @@ Lo probé en la copia, con el parche puesto:
 - M19: **muere** (1 en rojo).
 - M20: **muere** (1 en rojo).
 
-respuesta: ____
+respuesta: aplicado tal cual en `__tests__/scripts/incaParte.test.mjs` (commit `6061fd70`), más un caso de un `%` mal formado (nit 7).
 
 ### 2. [Nit · ROBUSTNESS] `piezaDe()` junta dos estanterías distintas en la pieza «estanteria»
 
@@ -115,7 +115,7 @@ El caso conocido sale bien: `--buscar "estanteria inserto"` trae exactamente dos
 (`ESTANTERIA INSERTO -1.rar`) y 28/08 16:45 (`ESTANTERIA ARMADA ESPUMA INSERTO.rar`). En la copia cruda, todas las
 carpetas, no hay otro.
 
-respuesta: ____
+respuesta: aplicada la primera idea: la tabla por pieza muestra los asuntos de los mails al lado (sin «RE:»), con su test (commit `6061fd70`). `piezaDe()` no se cambió: el «-1» sigue siendo la versión de la estantería del inserto.
 
 ### 3. [Nit] El paquete dice que a Carlos «le llegan 23» de los 91 mails de Pablo con 3D: son 46
 
@@ -143,18 +143,18 @@ Entonces:
   es así» exagera la corrección.
 - El título de la sección sigue siendo cierto: a Fak le llegan 91 y a Carlos 46.
 
-respuesta: ____
+respuesta: corregido en el paquete: 91 mails de Pablo con 3D; Fak en los 91 (26 en «Para», 65 solo en copia); Carlos en 46 (23 y 23). Medido de nuevo con los lectores de la tanda.
 
 ### Y 6 nits más (sin detalle)
 
 | # | Clase | Dónde | Qué pasa · caso medido | respuesta |
 |---|---|---|---|---|
-| 4 | ROBUSTNESS | `scripts/_adjuntosIndice.mjs:31-33` | `.jt` y `.tar` no entran: `tipoAdjunto('x.jt')` y `tipoAdjunto('x.tar')` dan `null`. En la copia hay 5 `.jt`. Cuatro son del mail de Fak del 02/09/2025 15:37, «Conjunto tela FSC RH / LH P2X (208) 2D Y 3D»: ese mail **no aparece en el índice** (sus 2D son PDF). El quinto `.jt` es del mail del MQB, que sí entra por `.stp`/`.igs`. También falta un `.tar` de VW (`2HT_853_839…SCHEUERSCHUTZFOLIE….tar`, 09/12/2024), que no aparece. `.jt` no estaba en la lista pedida. Si se suma, cambian los números 306/119/425/193/58/91 que cita el paquete | ____ |
-| 5 | TRUE BUG sin efecto hoy | `scripts/_plannerCarlos.mjs:63` y `:88` | Dos formas del castellano de Planner (2023) que el parser no reconoce. El encabezado «Tiene una tarea vencida hoy» no es «vence hoy»: la tarea queda «sin seccion» (2 avisos). «1 día de retraso» no da `dias` (2 renglones). No mueven ninguna cifra: solo «vencida» suma, y los dos son del plan «Tareas», cuya tabla no muestra el atraso | ____ |
-| 6 | ROBUSTNESS | `scripts/_incaParte.mjs:169` | El renglón de consola imprime `u.sinBka.piezas` sin `taparClaves()`. Las piezas salen de un enlace de VW, así que el riesgo real es nulo. Pero el encabezado de `_lib/lectorMails.mjs:12` dice «todo texto que sale de un mail pasa por `taparClaves()`», y en este renglón no es cierto | ____ |
-| 7 | ROBUSTNESS | `scripts/_incaParte.mjs:43` | `decodeURIComponent` sobre el renglón entero tira con un `%` mal formado (`piezasDelEnlace('… a=100%&tlks=_A …')` → `URIError: URI malformed`) y frena el script entero. Los 29 partes reales pasan | ____ |
-| 8 | dato del documento | `docs/TANDA14_PAQUETE_POR_PERSONA_2026-10-17.md:162` | «las 6 piezas que VW ve sin acuerdo de capacidad desde abril»: 3 están desde el 11/03, el primer parte de la copia (`2HT881901D_YZM`, `2HT853839` y `2HT881901E_OHE`, 29 de 29 partes). Las otras 3 están desde el 01/04. Como grupo de 6 es desde el 01/04 | ____ |
-| 9 | datos del documento (menores) | los dos documentos | **Pre-mortem, fila 9:** la tanda 3 se fundió a las 05:56 (el documento dice 05:58). **Fila 10:** la tanda 5 se fundió a las 10:30, con el push a las 10:40 (el documento dice 10:33). Las dos horas salen del reflog de `main`. **Fila 9:** «Versión 15/10 13:55» va entre comillas, pero el renglón dice «Versión del prompt: 15/10 13:55». **Paquete:** Carlos tiene 279 mails desde el 01/06 con la regla de repetidos de la tanda (278 en la Bandeja + 1 en Eliminados, «RV: Seguimiento Proyectos» del 12/06), no 278 (`:109`). Los 109 avisos van del 03/10 (PRUEBA-NUBE-01), no del 04/10 (`:13`). «PD270 lo usan 11 productos» (`:83`): la lista de 11 incluye al propio PD270 y a 3 semielaborados | ____ |
+| 4 | ROBUSTNESS | `scripts/_adjuntosIndice.mjs:31-33` | `.jt` y `.tar` no entran: `tipoAdjunto('x.jt')` y `tipoAdjunto('x.tar')` dan `null`. En la copia hay 5 `.jt`. Cuatro son del mail de Fak del 02/09/2025 15:37, «Conjunto tela FSC RH / LH P2X (208) 2D Y 3D»: ese mail **no aparece en el índice** (sus 2D son PDF). El quinto `.jt` es del mail del MQB, que sí entra por `.stp`/`.igs`. También falta un `.tar` de VW (`2HT_853_839…SCHEUERSCHUTZFOLIE….tar`, 09/12/2024), que no aparece. `.jt` no estaba en la lista pedida. Si se suma, cambian los números 306/119/425/193/58/91 que cita el paquete | aplicado: `.jt` y `.tar` entran (commit `6061fd70`); los números del paquete pasan a 311 + 120 = 431 |
+| 5 | TRUE BUG sin efecto hoy | `scripts/_plannerCarlos.mjs:63` y `:88` | Dos formas del castellano de Planner (2023) que el parser no reconoce. El encabezado «Tiene una tarea vencida hoy» no es «vence hoy»: la tarea queda «sin seccion» (2 avisos). «1 día de retraso» no da `dias` (2 renglones). No mueven ninguna cifra: solo «vencida» suma, y los dos son del plan «Tareas», cuya tabla no muestra el atraso | aplicado: «vencida hoy» y «de retraso», con test (`diasDeAtraso`, commit `6061fd70`) |
+| 6 | ROBUSTNESS | `scripts/_incaParte.mjs:169` | El renglón de consola imprime `u.sinBka.piezas` sin `taparClaves()`. Las piezas salen de un enlace de VW, así que el riesgo real es nulo. Pero el encabezado de `_lib/lectorMails.mjs:12` dice «todo texto que sale de un mail pasa por `taparClaves()`», y en este renglón no es cierto | aplicado: el renglón de consola pasa por `taparClaves()` |
+| 7 | ROBUSTNESS | `scripts/_incaParte.mjs:43` | `decodeURIComponent` sobre el renglón entero tira con un `%` mal formado (`piezasDelEnlace('… a=100%&tlks=_A …')` → `URIError: URI malformed`) y frena el script entero. Los 29 partes reales pasan | aplicado: se decodifica solo el valor de `tlks`, con try; test del `%` mal formado |
+| 8 | dato del documento | `docs/TANDA14_PAQUETE_POR_PERSONA_2026-10-17.md:162` | «las 6 piezas que VW ve sin acuerdo de capacidad desde abril»: 3 están desde el 11/03, el primer parte de la copia (`2HT881901D_YZM`, `2HT853839` y `2HT881901E_OHE`, 29 de 29 partes). Las otras 3 están desde el 01/04. Como grupo de 6 es desde el 01/04 | corregido en el paquete: 3 desde el 11/03 y 3 desde el 01/04 |
+| 9 | datos del documento (menores) | los dos documentos | **Pre-mortem, fila 9:** la tanda 3 se fundió a las 05:56 (el documento dice 05:58). **Fila 10:** la tanda 5 se fundió a las 10:30, con el push a las 10:40 (el documento dice 10:33). Las dos horas salen del reflog de `main`. **Fila 9:** «Versión 15/10 13:55» va entre comillas, pero el renglón dice «Versión del prompt: 15/10 13:55». **Paquete:** Carlos tiene 279 mails desde el 01/06 con la regla de repetidos de la tanda (278 en la Bandeja + 1 en Eliminados, «RV: Seguimiento Proyectos» del 12/06), no 278 (`:109`). Los 109 avisos van del 03/10 (PRUEBA-NUBE-01), no del 04/10 (`:13`). «PD270 lo usan 11 productos» (`:83`): la lista de 11 incluye al propio PD270 y a 3 semielaborados | corregidos los cinco datos (horas del reflog, cita del prompt, 279 mails, 03/10, PD270 en 11 códigos con él mismo y 3 semielaborados) |
 
 ## Preexistente
 

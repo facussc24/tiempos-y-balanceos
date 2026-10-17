@@ -10,7 +10,7 @@ los puntos 16 a 19 como diseño. Nada de esto tocó el arb, el servidor `Y:`, Ou
   repetidos (un mismo mail en la Bandeja y en Eliminados cuenta una vez: `scripts/_lib/lectorMails.mjs`). Solo se leyó
   el asunto, el remitente y el principio del cuerpo; de los mails de Pedro, solo el asunto (uno trae su clave de API).
 - **Lo que hacía cada asistente**: los 109 avisos que dejaron en
-  `Ingeniería y Proyecto - General\_CUARENTENA_CLAUDE POR AREA\4- BUZON\avisos\` (del 04/10 al 13/10), sus archivos de
+  `Ingeniería y Proyecto - General\_CUARENTENA_CLAUDE POR AREA\4- BUZON\avisos\` (del 03/10 al 13/10), sus archivos de
   salud (`…\4- BUZON\salud\`) y el aporte de Federico (`…\4- BUZON\aportes\Federico Kipersain - Producción\`).
 - **La BOM**: el export local del arb que ya estaba en la PC (`C:\tmp\RELACIONES.TXT`, hecho el 13/10 08:42), leído con
   `scripts/_consumo.py`, que no abre el arb. Tiene 4 días: lo que diga de un consumo «puede estar viejo».
@@ -21,9 +21,9 @@ Las tres herramientas nuevas de esta tanda (solo leen la copia de mails; salidas
 
 | Herramienta | Qué contesta | Lo que dio hoy |
 |---|---|---|
-| `node scripts/_adjuntosIndice.mjs [--buscar "<palabras>"]` | En qué mail está un 3D o un DXF, por pieza y versión | 306 adjuntos de diseño y 119 comprimidos sin abrir; «estanteria inserto» trae los dos mails de agosto (25/08 `ESTANTERIA INSERTO -1.rar`, 28/08 `ESTANTERIA ARMADA ESPUMA INSERTO.rar`) → `exports/adjuntos_3d_dxf_2026-10-17.md` |
-| `node scripts/_plannerCarlos.mjs` | Las tareas del Planner «Actividades Ingenieria» de Carlos, de los avisos por mail | 38 tareas asignadas a Fak (12/11/2025 al 23/06/2026), 33 con aviso de vencida, último aviso el 08/07 → `exports/planner_carlos_2026-10-17.md` |
-| `node scripts/_incaParte.mjs` | El parte semanal de VW (INCA): piezas sin acuerdo de capacidad y acuerdos en rojo | 29 partes (11/03 al 14/10); el del 14/10 trae 6 piezas sin acuerdo; el B00000330933 (apoyabrazos trasero) estuvo en rojo en 17 partes, del 15/04 al 26/08 → `exports/inca_parte_2026-10-17.md` |
+| `node scripts/_adjuntosIndice.mjs [--buscar "<palabras>"]` | En qué mail está un 3D o un DXF, por pieza y versión, con los asuntos al lado | 311 adjuntos de diseño y 120 comprimidos sin abrir; «estanteria inserto» trae los dos mails de agosto (25/08 `ESTANTERIA INSERTO -1.rar`, 28/08 `ESTANTERIA ARMADA ESPUMA INSERTO.rar`) → `exports/adjuntos_3d_dxf_2026-10-17.md` |
+| `node scripts/_plannerCarlos.mjs` | Las tareas del Planner «Actividades Ingenieria» de Carlos, de los avisos por mail | 38 tareas asignadas a Fak (12/11/2025 al 23/06/2026), 33 con aviso de vencida, último aviso de vencida el 08/07. El «50 avisos de vencidas» del informe D son los 50 mails en inglés «You have late tasks»; con los otros avisos de vencimiento (por vencer, vence hoy, en castellano) son 76 mails → `exports/planner_carlos_2026-10-17.md` |
+| `node scripts/_incaParte.mjs` | El parte semanal de VW (INCA): piezas sin acuerdo de capacidad y acuerdos en rojo | 29 partes (11/03 al 14/10); el del 14/10 trae 6 piezas sin acuerdo; el B00000330933 (apoyabrazos trasero) estuvo en rojo en 17 partes, del 15/04 al 26/08. A la copia le faltan los partes del 27/05, 03/06 y 10/06: son 17 partes, no 17 semanas corridas → `exports/inca_parte_2026-10-17.md` |
 
 ---
 
@@ -64,6 +64,16 @@ claude.ai: `foto-a-tabla`, `auditoria-consumos-arb`, `armado-planes-entrega-v2`,
 el repo, en la cuenta). Lo que sí queda como trabajo: comparar `auditoria-consumos-arb` con la `verificacion-consumos`
 de la casa antes de que dos skills digan cosas distintas sobre el mismo consumo.
 
+**Ficha de la skill candidata «foto a tabla»** (no se construyó nada):
+
+| Campo | Qué dice |
+|---|---|
+| Qué hace | Pasa a un Excel limpio, para copiar y pegar, una foto o captura de una tabla (declaraciones de stock, planillas de proveedores, listas de precios). No es para leer PDF ni para editar un Excel que ya existe (su propia descripción en la cuenta) |
+| Dónde está | En la cuenta de claude.ai de Fak, habilitada (lista de skills leída el 17/10). No está en `.claude/skills/` del repo |
+| De quién es | La nombra Federico como habilidad suya (aporte del 06/10) |
+| Qué falta decidir | Si las sesiones del repo la usan tal cual desde la cuenta o se copia al repo con los controles de la casa (sin firma de IA, números verificados contra la foto). Si se copia, es una skill nueva: camino mediano, con casos de respuesta conocida |
+| Quién decide | Fak |
+
 ### El punto 5 de Federico, contra los papeles de la casa
 
 Papeles: la memoria `reference_arb_export_estructura` (cómo se lee el export RELACIONES), el lector de la casa
@@ -80,13 +90,14 @@ Papeles: la memoria `reference_arb_export_estructura` (cómo se lee el export RE
 | Los códigos vienen con espacios de más | El campo de código tiene 15 caracteres rellenos con espacios en el `.TXT` (memoria, §3 y §3b: «siempre `strip()`») | **Sí** para el `.TXT`; que la hoja de Excel los traiga igual se infiere (Excel abre ese mismo `.TXT`), no se miró |
 | Los semielaborados vienen corridos a la derecha, con la columna A vacía | Cada nivel corre **7 columnas** en los datos y la columna A no se repite (memoria §2; `arbRelaciones.py`) | **Sí**, con una advertencia que su punto no dice: en el **encabezado** el bloque corre 9 columnas; leer el corrimiento del encabezado pierde los sub-ensambles (incidente del 27/07: 858 filas) |
 | Los archivos internos del arb no se abren directo | Igual en la skill `arb-operar` y en la memoria `reference_arb_erp_btrieve` | **Sí** |
-| PD270 y APLIX-A999R8395 tienen BOM propia y son materia prima comprada | Export local del 13/10: `PD270` tiene una BOM que se lleva a sí mismo (0,03 KG) y lo usan 11 productos; `APLIX-A999R8395` tiene una BOM de 1 rollo de `APLIX ROLLO` | **Sí** (con el export de hace 4 días) |
+| PD270 y APLIX-A999R8395 tienen BOM propia y son materia prima comprada | Export local del 13/10: `PD270` tiene una BOM que se lleva a sí mismo (0,03 KG) y aparece en la BOM de 11 códigos (entre ellos el propio PD270 y 3 semielaborados); `APLIX-A999R8395` tiene una BOM de 1 rollo de `APLIX ROLLO` | **Sí** (con el export de hace 4 días) |
 | — (no lo dice) | Una descripción de más de 40 caracteres parte la fila en dos renglones y corre unidad y consumo (memoria §1; 144 insumos usan los dos renglones) | Falta en su punto 5 |
 | — (no lo dice) | Con el combo de salida vacío, tres flechas abajo caen en «Impresora», no en «Tabla EXcel»: se manda el listado entero a la impresora (skill, «el GATE de la foto») | Falta en su punto 5 |
 
-**Lo que se puede validar con un papel: 8 de las 10 filas** (6 coinciden, 1 no, 1 a medias por el nombre de los
-botones; y 2 cosas que le faltan). **Lo que no se puede validar sin mirar el arb:** el nombre exacto de los botones de
-su camino y que la hoja de Excel traiga los espacios. Contestarle a Federico es un mail: lo decide Fak.
+**Contra los papeles, sus 9 afirmaciones dan: 7 coinciden, 1 no (la columna B) y 1 a medias (el nombre de los
+botones). Además, a su punto le faltan 2 cosas que los papeles sí dicen** (las dos últimas filas). **Lo que no se puede
+validar sin mirar el arb:** el nombre exacto de los botones de su camino y que la hoja de Excel traiga los espacios
+(esa fila coincide para el `.TXT`; para el Excel es una inferencia). Contestarle a Federico es un mail: lo decide Fak.
 
 ### Qué le daría su asistente
 
@@ -106,7 +117,8 @@ su camino y que la hoja de Excel traiga los espacios. Contestarle a Federico es 
 
 ### Qué le pregunta a Fak
 
-- **278 mails suyos desde el 01/06** (el que más le escribe). **85 nombran BOM, arb, códigos o consumos.** Los asuntos
+- **279 mails suyos desde el 01/06** (el que más le escribe; uno solo quedó en Eliminados). **De los 278 de la Bandeja,
+  85 nombran BOM, arb, códigos o consumos.** Los asuntos
   que más se repiten ahí: «Consumo actualizado aplix» (6), «Vinilos proyecto» (4), «Consumos P703 TOP ROLL & APB» (3),
   «CONSUMOS P703», «Consulta códigos de compra – BOM Ductos», «Códigos y colores - Proyecto Patagonia (VW427)»,
   «BOM-AMFE 21-9902-8944-9689» y «Forecast sansuy proyecto» (2 cada uno).
@@ -114,10 +126,10 @@ su camino y que la hoja de Excel traiga los espacios. Contestarle a Federico es 
   tuvieron aviso de vencida; el último aviso llegó el 08/07 y después ninguno (con los mails solos no se sabe si el
   plan se dejó de usar). Los mails no avisan cuando una tarea se completa: el listado dice «asignada el …, último aviso
   de vencida el …», nunca «abierta». Detalle: `exports/planner_carlos_2026-10-17.md`.
-- **Los 3D de Pablo Gamboa le llegan a Fak más que a Carlos**: de los 425 adjuntos de diseño y comprimidos del índice,
-  193 los mandó Pablo y 58 Carlos. Los mails de Pablo con esos adjuntos son 91: los 91 tienen a Fak en «Para» o en
-  copia, y 23 van a Carlos (22 de ellos con Fak en copia). El informe D decía «casi siempre a Carlos con Fak en copia»:
-  medido, no es así.
+- **Los 3D de Pablo Gamboa le llegan a Fak siempre y a Carlos en la mitad**: de los 431 adjuntos de diseño y
+  comprimidos del índice, 193 los mandó Pablo y 58 Carlos. Los mails de Pablo con esos adjuntos son 91: los 91 llevan a
+  Fak (en «Para» 26, solo en copia 65) y 46 llevan a Carlos (23 en «Para» y 23 en copia). El «casi siempre con Fak en
+  copia» del informe D se sostiene (65 de 91); el «a Carlos» vale para la mitad.
 
 ### Qué usaba su asistente (25 avisos, del 05/10 al 07/10)
 
@@ -136,8 +148,8 @@ Salud al 07/10: versión 23 = la publicada; ve `Y:` y `Z:`; **sin Python**; mail
 
 - **Las mismas consultas de BOM**, con una condición: en su PC no hay Python, y `_consumo.py` es Python. O el
   instalador le suma Python, o hace falta un lector en Node. Lo decide quien arme su paquete; acá no se instaló nada.
-- **El índice de los 3D** (`_adjuntosIndice.mjs`): le llegan 23 de los 91 mails de Pablo con 3D, y él mismo mandó 58 de
-  los 425 adjuntos.
+- **El índice de los 3D** (`_adjuntosIndice.mjs`): le llegan 46 de los 91 mails de Pablo con 3D, y él mismo mandó 58 de
+  los 431 adjuntos.
 - **Sus fichas de embalaje y el servidor**: ya las armaba; guardarlas en `Y:` es la línea que pone Fak.
 
 ---
@@ -159,8 +171,9 @@ Salud al 07/10: versión 23 = la publicada; ve `Y:` y `Z:`; **sin Python**; mail
 ### Qué le daría su asistente
 
 - No consultas de BOM: no las hace.
-- **El parte de INCA** (`_incaParte.mjs`): las 6 piezas que VW ve sin acuerdo de capacidad desde abril son un tema de
-  dirección y compras más que de Ingeniería (el texto del parte dice que pasadas 2 semanas se avisa al comprador de VW).
+- **El parte de INCA** (`_incaParte.mjs`): las 6 piezas que el último parte muestra sin acuerdo de capacidad (3 desde el
+  primer parte de la copia, el 11/03, y 3 desde el 01/04). El texto del parte dice que pasadas 2 semanas INCA le avisa
+  al comprador de VW. Si esas piezas le tocan a Barack, y a quién de Barack, no se decide acá: lo mira Fak en INCA.
 - **El borrador quincenal de la tanda 8** (`AUTOMATIZACION BARACK\` en la nube), que ya se arma.
 - **Ponerle la versión 23**: su asistente quedó en la 16.
 - **La clave de API**: sigue en texto plano en su mail del 09/10 (copia local). Lo seguro es que Pedro genere una nueva
@@ -259,8 +272,10 @@ está verificado.
   `.x_t`, `.f3d`, y los comprimidos (`.rar`, `.zip`, `.7z`) aparte, «sin abrir»: el 3D de la estantería del inserto
   estaba en dos `.rar`, y sin ellos el caso de respuesta conocida no aparecía.
 - **Los repetidos se cuentan con el cuerpo y el destinatario**, no solo por fecha, remitente y asunto: el 28/04/2026 a
-  las 17:21 Carlos asignó 8 tareas distintas con el mismo asunto y la misma hora; contando como el informe D, 38 tareas
-  daban 29.
+  las 17:21 Carlos asignó 8 tareas distintas con el mismo asunto y la misma hora. Con la regla del informe D (fecha,
+  remitente y asunto) esos avisos se juntaban, y de las 38 tareas solo 29 quedaban con su aviso de asignación.
+- **El índice suma `.jt` (3D) y `.tar` (comprimido)** además de lo de arriba, por un detalle del auditor: con `.jt`
+  entra el mail del 02/09/2025 «Conjunto tela FSC RH / LH P2X (208) 2D Y 3D», que sin eso no aparecía.
 
 ## No pude verificar
 
