@@ -40,7 +40,7 @@ export function resumenProgramas(refs, max = 4) {
 export function renderMapa(d) {
     const { medicion, carpetas, sueltos, dias = 30, canon = null } = d;
     const quien = (t, n) => quienEscribe(t, n, dias, canon);
-    const porque = (tipo) => (tipo.heredado ? 'como su carpeta de arriba' : recortar(tipo.motivo, 70));
+    const porque = (tipo) => (tipo.heredado ? 'como su carpeta de arriba' : tipo.motivo);
     const L = [];
     L.push('# Mapa de la biblioteca de Ingeniería — solo lectura, nada se movió');
     L.push('');
@@ -75,7 +75,10 @@ export function renderMapa(d) {
     L.push('## Por qué cada tipo');
     L.push('');
     const motivos = new Map();
-    for (const c of carpetas) if (!c.tipo.heredado) motivos.set(c.tipo.tipo, c.tipo.motivo);
+    for (const c of carpetas) {
+        if (!c.tipo.heredado) motivos.set(c.tipo.tipo, c.tipo.motivo);
+        for (const s of c.sub) if (!s.tipo.heredado) motivos.set(s.tipo.tipo, s.tipo.motivo);
+    }
     for (const [t, m] of motivos) L.push(`- **${t}**: ${m}`);
     L.push('');
     L.push('## Segundo nivel, carpeta por carpeta');
@@ -98,7 +101,7 @@ export function renderMapa(d) {
     L.push('');
     L.push('- Peso, fecha y «en esta PC» salen de los atributos (`scripts/_lib/nubeMedir.ps1`, en prioridad baja): el marcador «solo en la nube» (0x400000) dice qué está bajado. Ningún archivo se abrió, y el espacio libre de C: de arriba es la prueba.');
     L.push('- Los programas se buscan por el nombre de la carpeta como parte de una ruta. Una subcarpeta cuenta solo en archivos que nombran también a su carpeta de arriba (así «AMFE» o «Tiempos» no se confunden entre carpetas). En el código no cuentan los comentarios.');
-    L.push('- **No se ve**: quién es la persona que guardó cada archivo (OneDrive no lo deja en el atributo), ni lo que corre adentro de las PC de Carlos, Calidad, Pedro y Federico. Las carpetas del tipo «sin clasificar» no las nombra ninguna regla todavía.');
+    L.push('- **No se ve**: quién es la persona que guardó cada archivo (OneDrive no lo deja en el atributo), ni lo que corre adentro de las PC de Carlos, Calidad, Pedro y Federico.' + (carpetas.some((c) => c.tipo.tipo === 'sin clasificar' || c.sub.some((s) => s.tipo.tipo === 'sin clasificar')) ? ' Las carpetas del tipo «sin clasificar» no las nombra ninguna regla todavía.' : ''));
     L.push('- La carpeta de lo nuestro (qué se movería a la carpeta única y quién la busca) tiene su propio simulado: `exports/explicaciones/nube_simulado_2026-10-16.md`.');
     return L.join('\n') + '\n';
 }

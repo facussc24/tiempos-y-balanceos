@@ -107,8 +107,8 @@
   },
   "pcs": [
     { "pc": "Esta PC (la principal de Facundo)", "prefijos": ["programa de esta PC: ", "schtasks:", "scripts/", ".claude/", "~/.claude/", "tools/claude-area/puerta.py"], "fuente": "los programas de esta PC (repo, ~/.claude, tareas de Windows y los instalados en %LOCALAPPDATA%: BarackMailsFak, BarackMailsPC, BarackEquipo)" },
-    { "pc": "CATA (la notebook de Calidad) y cualquier PC de Facundo", "prefijos": ["tools/instalar_mi_pc/", "nube: INSTALAR EN UNA PC NUEVA/1- Mi asistente completo/", "scripts/_nube.mjs", "scripts/_lib/nubeRutas.mjs", ".claude/hooks/cerebro-guard"], "fuente": "INSTALAR EN UNA PC NUEVA\\LEEME.txt, punto 1 («deja tu asistente entero en esa PC»)" },
-    { "pc": "La PC de Calidad (mails de las casillas de Calidad)", "prefijos": ["tools/claude-area/mails_pc/", "nube: INSTALAR EN UNA PC NUEVA/2- Mails de Calidad/"], "fuente": "INSTALAR EN UNA PC NUEVA\\LEEME.txt, punto 2" },
+    { "pc": "CATA y cualquier PC de Facundo (su asistente completo)","prefijos": ["tools/instalar_mi_pc/", "nube: INSTALAR EN UNA PC NUEVA/1- Mi asistente completo/", "scripts/_nube.mjs", "scripts/_lib/nubeRutas.mjs", ".claude/hooks/cerebro-guard"], "fuente": "INSTALAR EN UNA PC NUEVA\\LEEME.txt, punto 1 («deja tu asistente entero en esa PC»)" },
+    { "pc": "La PC que sube los mails de Calidad (hoy CATA, la misma notebook de la fila de arriba)", "prefijos": ["tools/claude-area/mails_pc/", "nube: INSTALAR EN UNA PC NUEVA/2- Mails de Calidad/"], "fuente": "INSTALAR EN UNA PC NUEVA\\LEEME.txt, punto 2; .claude/pcs/CATA.md, renglón 7 (tarea «Barack - mails de Calidad»)" },
     { "pc": "La PC de Carlos (sus mails)", "prefijos": ["tools/claude-area/mails_solo/"], "fuente": "tools/claude-area/mails_solo/subir_mails.ps1, renglones 1-4 (Carlos, 07/10/2026)" },
     { "pc": "La PC de Pedro Ergo", "prefijos": ["nube: INSTALAR EN UNA PC NUEVA/3- Asistente de Pedro Ergo/"], "fuente": "INSTALAR EN UNA PC NUEVA\\LEEME.txt, punto 3" },
     { "pc": "La PC de Federico Kipersain", "prefijos": ["nube: INSTALAR EN UNA PC NUEVA/4- Asistente de Federico Kipersain/"], "fuente": "INSTALAR EN UNA PC NUEVA\\LEEME.txt, punto 4" },

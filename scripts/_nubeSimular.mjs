@@ -130,7 +130,12 @@ export function renderSimulado(d) {
     L.push('| PC | Qué programa | Qué carpeta busca |');
     L.push('|---|---|---|');
     for (const p of porPc([...codigo.values()], canon)) {
-        if (!p.programas.length) { L.push(`| ${p.pc} | ninguno de los que se pudieron leer | — |`); continue; }
+        if (!p.programas.length) {
+            const pre = canon.pcs.find((x) => x.pc === p.pc).prefijos;
+            const n = (d.leidos || []).filter((r) => pre.some((x) => r.startsWith(x))).length;
+            L.push(`| ${p.pc} | **ninguno** (medido: se leyeron ${n} archivo${n === 1 ? '' : 's'} de sus programas y ninguno busca estas carpetas) | — |`);
+            continue;
+        }
         const carpetasPc = new Set(p.programas.flatMap((x) => [...x.carpetas]));
         const progs = p.programas.slice(0, 6).map((x) => `\`${x.ruta.replace(/^nube: /, 'nube:').replace(/^programa de esta PC: /, '%LOCALAPPDATA%\\')}\``).join(', ') + (p.programas.length > 6 ? ` y ${p.programas.length - 6} más` : '');
         L.push(`| ${p.pc} | ${celda(progs)} | ${celda([...carpetasPc].map((c) => `\`${c}\``).join(', '))} |`);
@@ -200,7 +205,7 @@ export function renderSimulado(d) {
         L.push(`   Y ${aRevisar.length} más que solo usan la FORMA («_entrada», «1- PUBLICADO»): algunos la buscan desde la raíz y otros la usan adentro de una carpeta que ya encontraron; hay que revisarlos uno por uno antes de mover:`);
         for (const x of aRevisar.sort((a, b) => a.ruta.localeCompare(b.ruta))) L.push(item(x));
     }
-    L.push(`2. **Copiados en otras PC: ${enOtraPc.length}.** Corren en las PC de Carlos, de Calidad, de Pedro o de Federico: arreglar el repo no los arregla; hay que publicarles la versión nueva y que su tarea la tome.${enOtraPc.length ? '' : ' Ninguno de los que se pudieron leer nombra estas carpetas.'}`);
+    L.push(`2. **Publicados en la nube: ${enOtraPc.length}.** Son los programas de los instaladores y de los paquetes viejos que están en la nube; corren en la PC donde se instalaron (cuál es cuál, en la tabla «Qué deja de andar en cada PC»). Arreglar el repo no los arregla: hay que publicar la versión nueva y que cada PC la tome.${enOtraPc.length ? '' : ' Ninguno de los que se pudieron leer nombra estas carpetas.'}`);
     for (const x of enOtraPc.sort((a, b) => a.ruta.localeCompare(b.ruta))) L.push(`   - \`${x.ruta}\` (${[...x.carpetas].map((c) => `\`${c}\``).join(', ')})`);
     if (noLeidos.length) L.push(`   - Sin leer, porque viven solo en la nube y abrirlos los bajaría: ${noLeidos.length} archivo${noLeidos.length === 1 ? '' : 's'} (${noLeidos.slice(0, 5).map((x) => `\`${x}\``).join(', ')}${noLeidos.length > 5 ? '…' : ''}).`);
     L.push(`3. **El guardián de firma**: la excepción de \`Claude Fak\` pasa a la ruta nueva (ver la sección de arriba).`);
@@ -277,7 +282,7 @@ function main() {
     let entradas = [];
     try { entradas = readdirSync(join(bib, '_CUARENTENA_Claude Barack', 'mails', '_entrada')).filter((n) => esCarpeta(join(bib, '_CUARENTENA_Claude Barack', 'mails', '_entrada', n))); } catch { /* sin la carpeta: el paso 4 no las nombra */ }
 
-    const md = renderSimulado({ canon, nombreUnico, plan, medicion, refs, dependNubeRutas, guardian, noLeidos, chats, forma, entradas });
+    const md = renderSimulado({ canon, nombreUnico, plan, medicion, refs, dependNubeRutas, guardian, noLeidos, chats, forma, entradas, leidos: archivos.map((a) => a.ruta) });
     mkdirSync(dirname(salida), { recursive: true });
     writeFileSync(salida, md, 'utf8');
     const nCod = new Set([...refs.values()].flat().filter((x) => x.categoria !== 'texto').map((x) => `${x.origen}|${x.ruta}`)).size;

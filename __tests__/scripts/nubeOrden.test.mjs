@@ -128,7 +128,7 @@ describe('buscarReferencias: el nombre como tramo de ruta, codigo separado de te
         expect(pcs.find((p) => /Carlos/.test(p.pc)).programas.map((x) => x.ruta)).toEqual(['tools/claude-area/mails_solo/subir_mails.ps1']);
         // lo instalado en %LOCALAPPDATA% de esta PC es de esta PC, no de la de Calidad
         expect(pcs.find((p) => /^Esta PC/.test(p.pc)).programas.map((x) => x.ruta)).toContain('programa de esta PC: BarackMailsPC/programas/mails_area.mjs');
-        expect(pcs.find((p) => /PC de Calidad/.test(p.pc)).programas).toHaveLength(0);
+        expect(pcs.find((p) => /mails de Calidad/.test(p.pc)).programas).toHaveLength(0);
     });
     it('porArchivo junta los renglones de un mismo archivo', () => {
         const p = porArchivo([{ ruta: 'a', origen: 'repo', linea: 3, texto: 'x', categoria: 'codigo' }, { ruta: 'a', origen: 'repo', linea: 9, texto: 'y', categoria: 'codigo' }]);
