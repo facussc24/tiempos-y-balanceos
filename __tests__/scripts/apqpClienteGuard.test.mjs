@@ -247,6 +247,16 @@ describe('P13 — origen o destino: copiar el listado para LEERLO no es escribir
         fs.writeFileSync(script, "import openpyxl\nwb=openpyxl.load_workbook(r'Y:\\x\\Listado_Maestro_FLUJOGRMAS.xlsx', read_only=True)\nprint(wb.sheetnames)\n");
         expect(frena(`python "${p}"`)).toBe(false);
     });
+    // Ronda 2 (17/10, hallazgo 2): lo pegado a powershell / pwsh y el heredoc que alimenta a bash se vuelven a mirar
+    it('ROJO (ronda 2, hallazgo 2) — Copy-Item / Move-Item / cp adentro de powershell -Command, pwsh -c o un heredoc a bash', () => {
+        for (const c of [
+            `powershell -NoProfile -Command "Copy-Item C:\\tmp\\n.xlsx '${HO}'"`,
+            `pwsh -c "Move-Item C:\\tmp\\n.xlsx '${HO}'"`,
+            `bash <<'EOF'\ncp /c/tmp/n.xlsx "${HO.replace(/\\/g, '/')}"\nEOF`,
+            `powershell -Command "Move-Item '${HO}' C:\\Dev\\BarackMercosul\\exports\\x.xlsx"`,
+        ]) expect(frena(c), c).toBe(true);
+        expect(frena(`powershell -NoProfile -Command "Copy-Item '${HO}' C:\\Dev\\BarackMercosul\\exports\\x.xlsx"`)).toBe(false); // copiar para leer
+    });
     it('ROJO — los _registrar* --apply siguen frenando (los verdaderos del informe)', () => {
         expect(frena('py -3 scripts/_registrarRevFlujograma.py 153 D 01/10/2026 --apply 2>&1 | tail -6')).toBe(true);
         expect(frena('cd /c/Dev/BarackMercosul && python scripts/_registrarUpperTrimListados.py flujograma --apply 2>&1 | tail -20')).toBe(true);

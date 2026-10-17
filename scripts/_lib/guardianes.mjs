@@ -2789,11 +2789,16 @@ export function codigoGuardaListado(code) {
  * Bash: la ruta o el motivo por el que el comando ESCRIBE un listado maestro ('' si no). Ver P13 arriba.
  * `leer` lee un script por ruta (por defecto, del disco; ≤ 200 KB); `cwd` es la carpeta de la sesion.
  */
-export function escribeListadoBash(cmd, { cwd = '', leer } = {}) {
+// Ronda 2 (17/10, hallazgo 2): lo que va pegado a una SHELL (powershell -Command, pwsh -c, bash -c, cmd /c) o el cuerpo
+// de un heredoc que alimenta a una shell son comandos: se vuelven a mirar con esta misma funcion (tope de profundidad).
+const APQP_SHELL_RE = /(?:^|[\\/])(?:(?:ba|z|da)?sh|powershell|pwsh|cmd)(?:\.exe)?$/i;
+const APQP_HD_SHELL_RE = /(?:^|[\s;&|(])(?:[\w.:~$-]*[\\/])?(?:(?:ba|z|da)?sh|powershell|pwsh|cmd)(?:\.exe)?(?:\s|$)/i;
+export function escribeListadoBash(cmd, { cwd = '', leer, prof = 0 } = {}) {
   const leerScript = leer ?? ((p) => { try { const st = fs.statSync(p); return st.size <= 200_000 ? fs.readFileSync(p, 'utf8') : ''; } catch { return ''; } });
   const { lineas, cuerpos } = separarHeredocs(String(cmd ?? ''));
   const res = resolvedorDe(cmd);
   const codigos = cuerpos.filter((h) => !h.deGit).map((h) => h.cuerpo);
+  const shells = cuerpos.filter((h) => !h.deGit && APQP_HD_SHELL_RE.test(String(h.dueno ?? ''))).map((h) => h.cuerpo);
   let dir = cwd ? String(cwd).replace(/\\/g, '/') : '';
   const completa = (p) => { const r = res(p).replace(/\\/g, '/'); return /^(?:[A-Za-z]:|\/|~)/.test(r) || !dir ? r : `${dir.replace(/\/+$/, '')}/${r}`; };
   for (const c of comandosSimples(lineas)) {
@@ -2825,7 +2830,7 @@ export function escribeListadoBash(cmd, { cwd = '', leer } = {}) {
     }
     if (CORRE_INTERPRETE_RE.test(v)) {
       const r = modoInterprete(verbo, args);
-      if (r.modo === 'pegado') codigos.push(r.codigo);
+      if (r.modo === 'pegado') (APQP_SHELL_RE.test(verbo) ? shells : codigos).push(r.codigo);
       else if (r.modo === 'archivo') {
         // un script del TEMP o del scratchpad corrido por ruta: no pasa por el guardian cuando lo escribe un heredoc de
         // otro comando, asi que se lee aca (los de scripts/ que escriben un listado van con `_registrar* --apply`)
@@ -2835,6 +2840,7 @@ export function escribeListadoBash(cmd, { cwd = '', leer } = {}) {
       }
     }
   }
+  if (prof < 3) for (const s of shells) { const r = escribeListadoBash(s, { cwd: dir, leer, prof: prof + 1 }); if (r) return r; }
   return codigos.some(codigoGuardaListado) ? 'el codigo que corre guarda el listado' : '';
 }
 
