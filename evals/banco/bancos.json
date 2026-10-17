@@ -46,6 +46,15 @@
       ],
       "skills": ["hojas-de-proceso"],
       "reglas": []
+    },
+    "planes-de-control": {
+      "casos": [
+        "evals/banco/planes-de-control/la-d-sola",
+        "evals/banco/planes-de-control/rearmado-va-limpio",
+        "evals/banco/planes-de-control/fila-no-es-modo-de-falla"
+      ],
+      "skills": ["planes-de-control"],
+      "reglas": []
     }
   }
 }
