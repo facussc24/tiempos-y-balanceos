@@ -1454,7 +1454,8 @@ const BM_MUTA = /\b(Remove-Item|Move-Item|Copy-Item|Rename-Item|Clear-Content)\b
 // comparan contra el OBJETIVO resuelto del rm (no contra el comando entero): el TEMP de Windows
 // (ahi vive el scratchpad; $TEMP/$TMPDIR resuelven ahi), /tmp, y el tmp/ y .video/ de un repo en
 // C:\Dev\<repo>\ (7f176ac8 `rm -rf tmp/amfe158`, 623be82a `rm -rf .video/clips`), node_modules, .venv.
-const BM_EFIMERO = /AppData[\\/]Local[\\/]Temp([\\/]|$)|^(\/|[A-Za-z]:[\\/])tmp([\\/]|$)|[\\/]Dev[\\/][^\\/]+[\\/](tmp|\.video)([\\/]|$)|[\\/]node_modules([\\/]|$)|[\\/]\.venv([\\/]|$)/i;
+// `__pycache__` (tanda 3, P18, 16/10/2026): lo regenera Python solo; 2 de los 13 frenos falsos eran limpiarlo.
+const BM_EFIMERO = /AppData[\\/]Local[\\/]Temp([\\/]|$)|^(\/|[A-Za-z]:[\\/])tmp([\\/]|$)|[\\/]Dev[\\/][^\\/]+[\\/](tmp|\.video)([\\/]|$)|[\\/]node_modules([\\/]|$)|[\\/]\.venv([\\/]|$)|[\\/]__pycache__([\\/]|$)/i;
 // Archivos que no se ejecutan: un plan o una nota que CITA `rm -rf` no borra nada (fc581284, 07/09).
 const BM_PROSA = /\.(md|markdown|txt|rst|csv|tsv|log)$/i;
 
@@ -1484,11 +1485,14 @@ export function enlacesDeWorktree(cmd, cwd) {
 /** Un comando de shell cuyos borrados permanentes apuntan TODOS a destinos efimeros resueltos. */
 function borraSoloEfimero(ctx) {
   const an = analizarComando(sinCuerposHeredocDeGit(ctx.cmd), { cwd: ctx.cwd || null });
-  if (!an.borrados.length) return false;
+  // P18 (16/10/2026): cuentan los borrados PERMANENTES (los que V3 mira). Un borrado comun de un archivo al lado
+  // (sin recursion: `rm -f scripts/_tmp_x.mjs`) no es lo que frena V3; antes hacia frenar un borrado recursivo de `tmp/`.
+  const permanentes = an.borrados.filter((b) => BM_V3.test(limpiar(b.crudo)));
+  if (!permanentes.length) return false;
   // Queda un borrado permanente en codigo pegado (python -c, heredoc, -Command) o en una forma
   // que el analisis no desarmo: no se sabe a que apunta.
   if (BM_V3.test(limpiar(an.residual))) return false;
-  return an.borrados.every((b) => !b.sinObjetivo && b.objetivos.length
+  return permanentes.every((b) => !b.sinObjetivo && b.objetivos.length
     && b.objetivos.every((o) => o.ok && BM_EFIMERO.test(o.valor)));
 }
 
@@ -1520,12 +1524,125 @@ export function borradosPermanentesFueraDeEfimero(cmd, cwd) {
   // el directorio de la sesion (sin variables sin resolver adentro).
   const efimero = (o) => {
     const v = normal(o.valor);
-    return (o.ok && BM_EFIMERO.test(v)) || (!/[$\x60]/.test(v) && !/(^|\/)\.\.(\/|$)/.test(v) && /(^|\/)(node_modules|\.venv)(\/|$)/i.test(v));
+    return (o.ok && BM_EFIMERO.test(v)) || (!/[$\x60]/.test(v) && !/(^|\/)\.\.(\/|$)/.test(v) && /(^|\/)(node_modules|\.venv|__pycache__)(\/|$)/i.test(v));
   };
   return an.borrados
     .filter((b) => BM_V3.test(limpiar(b.crudo)))
     .filter((b) => b.sinObjetivo || !b.objetivos.length || !b.objetivos.every(efimero))
     .map((b) => b.crudo.trim());
+}
+
+// ── P18 (tanda 3, 16/10/2026; si de Fak del 09/10): un script que CITA el patron como dato, o que borra lo que el mismo
+// creo en el TEMP. Medido sobre los 13 frenos falsos del informe de CATA (`casa_guardianes_frenos.md` §3 P1): dos eran
+// Write de un script que prueba un guardian (los `rm -rf` y `Remove-Item -Force` son textos de una lista de casos) o que
+// limpia la carpeta que creo con `mkdtempSync(os.tmpdir() …)`; uno, un `node -e` que pasa casos de texto a un guardian.
+// No se exime el scratchpad entero: un script de ahi se corre despues por ruta y este guardian ya no lo ve. Lo que vale:
+//   · el patron cae ADENTRO de una cadena ('…', "…", `…` sin lo de `${}`) de un script que no lanza procesos
+//     (sin os.system, subprocess, child_process, exec…), y el script es una SONDA de un guardian (importa
+//     guardianes.mjs, un *-guard.mjs/.sh o el despachador) o vive en el scratchpad de la sesion;
+//   · o el borrado es una llamada (`fs.rmSync(x`, `shutil.rmtree(x`) sobre una variable que el mismo script creo con
+//     mkdtemp en el TEMP (`fs.mkdtempSync(path.join(os.tmpdir(), …))`, `tempfile.mkdtemp()` sin `dir=`).
+// Todo lo demas sigue como estaba: un `fs.rmSync('Y:/…')` en codigo frena, este o no en el scratchpad.
+const BM_SONDA = /guardianes\.mjs|\bGUARDIANES\s*\[|[\w-]-guard(?:\.test)?\.(?:mjs|sh)\b|-guard\.mjs|_dispatcher\.sh/;
+// (el `.exec(` de una expresion regular no lanza nada: `exec(` sin el punto si, en Python corre codigo)
+const BM_LANZA = /\bos\.(?:system|popen|exec\w*|spawn\w*)\b|\bsubprocess\b|child_process|\bexecSync\b|\bexecFileSync\b|\bspawnSync\b|\bspawn\s*\(|(?<!\.)\bexec\s*\(|\bexecFile\s*\(|shell\s*=\s*True|Invoke-Expression|\biex\b|Start-Process/i;
+const BM_SCRATCHPAD = /[\\/]AppData[\\/]Local[\\/]Temp[\\/]claude[\\/][^\\/]+[\\/][^\\/]+[\\/]scratchpad[\\/]/i;
+const BM_SCRIPT_DATO = /\.(?:mjs|cjs|js|ts|py)$/i;
+
+/** Los tramos [ini, fin) de un codigo JS o Python que estan adentro de una cadena (sin lo de `${…}` de un template). */
+export function rangosDeCadenas(code) {
+  const s = String(code ?? '');
+  const r = [];
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (c !== '"' && c !== "'" && c !== '\x60') continue;
+    const triple = c !== '\x60' && s.startsWith(c.repeat(3), i);
+    const cierre = triple ? c.repeat(3) : c;
+    let j = i + cierre.length;
+    let ini = j;
+    for (; j < s.length; j++) {
+      if (s[j] === '\\') { j++; continue; }
+      if (c === '\x60' && s[j] === '$' && s[j + 1] === '{') {   // lo de adentro de ${…} es codigo: cierra el tramo
+        r.push([ini, j]);
+        let prof = 0;
+        for (j += 1; j < s.length; j++) { if (s[j] === '{') prof++; else if (s[j] === '}' && --prof === 0) break; }
+        ini = j + 1;
+        continue;
+      }
+      if (!triple && c !== '\x60' && s[j] === '\n') break;   // una cadena simple no cruza el renglon
+      if (s.startsWith(cierre, j)) break;
+    }
+    r.push([ini, Math.min(j, s.length)]);
+    i = j + cierre.length - 1;
+  }
+  return r;
+}
+const enCadena = (rangos, k) => rangos.some(([a, b]) => k >= a && k < b);
+
+/** Las variables que el script crea con mkdtemp adentro del TEMP. */
+function variablesTemporales(code) {
+  const vars = new Set();
+  for (const m of code.matchAll(/\b([A-Za-z_$][\w$]*)\s*=\s*(?:await\s+)?((?:[\w$]+\.)*)mkdtemp(?:Sync)?\s*\(([^\n]{0,160})/g)) {
+    const args = m[3];
+    // JS: fs.mkdtempSync(path.join(os.tmpdir(), 'x-')) — la carpeta de adentro tiene que ser el TEMP del sistema
+    if (/tmpdir\s*\(\s*\)/.test(args)) { vars.add(m[1]); continue; }
+    // Python: tempfile.mkdtemp(...) sin `dir=` (con dir= la crea donde le dicen)
+    if (/(?:^|\.)tempfile\.$/.test(m[2]) && !/\bdir\s*=/.test(args.split(')')[0])) vars.add(m[1]);
+  }
+  return vars;
+}
+const BM_LLAMADA_BORRA = /^(?:(?:fs|fsp|fs\.promises)\.)?(?:rmSync|rmdirSync|rm|rmdir)\s*\(\s*([A-Za-z_$][\w$]*)\s*[,)]|^shutil\.rmtree\s*\(\s*([A-Za-z_]\w*)\s*[,)]/;
+
+/**
+ * ¿Todas las apariciones de `patron` en el script son DATO (adentro de una cadena de una sonda o del scratchpad, sin que
+ * el script lance procesos) o el borrado de una carpeta que el script creo en el TEMP? Sin ninguna aparicion: false.
+ */
+export function borradosDelScriptSonDatoOTemporal(body, file, patron) {
+  if (!BM_SCRIPT_DATO.test(String(file ?? '')) || /(?:^|[\\/])\.\.(?:[\\/]|$)/.test(String(file ?? ''))) return false;
+  const code = sinComentarios(String(body ?? ''));
+  const re = new RegExp(patron.source, patron.flags.includes('g') ? patron.flags : `${patron.flags}g`);
+  const hits = [...code.matchAll(re)];
+  if (!hits.length) return false;
+  const rangos = rangosDeCadenas(code);
+  // lo que lanza un proceso se busca en el CODIGO, no en las cadenas (una lista de casos puede traer 'Invoke-Expression')
+  let fueraDeCadenas = '', desde = 0;
+  for (const [a, z] of rangos) { fueraDeCadenas += `${code.slice(desde, a)} `; desde = z; }
+  fueraDeCadenas += code.slice(desde);
+  const datoPosible = !BM_LANZA.test(fueraDeCadenas) && (BM_SONDA.test(code) || BM_SCRATCHPAD.test(String(file ?? '')));
+  const temporales = variablesTemporales(code);
+  return hits.every((m) => {
+    const fin = m.index + Math.max(1, m[0].length) - 1;
+    // el verbo suelto de V4 (`'rm`) arranca EN la comilla que abre la cadena: se mira desde el caracter siguiente
+    const ini = /^["'\x60]/.test(m[0]) ? m.index + 1 : m.index;
+    if (enCadena(rangos, ini) && enCadena(rangos, fin)) return datoPosible;
+    // `fs.rmSync(` puede venir como `fs.rmSync` (V3) o como `fs.rm` (V4): se mira la llamada entera desde ahi
+    const llamada = code.slice(m.index).match(BM_LLAMADA_BORRA);
+    const v = llamada && (llamada[1] || llamada[2]);
+    return Boolean(v && temporales.has(v));
+  });
+}
+
+/**
+ * Bash: ¿el patron de borrado aparece SOLO adentro del codigo pegado a un interprete (`node -e`, `python -c`, un heredoc)
+ * y ese codigo es una sonda de un guardian que lo tiene como texto? Caso real (06/10/2026): `node -e "import(…pc-guard.mjs)
+ * .then(m => { const c = ['rm -rf Trabajo/viejos/', …]; for (const x of c) console.log(m.nombresDelComando(x)) })"`.
+ */
+export function v3SoloEnSondaPegada(cmd) {
+  const { lineas, cuerpos } = separarHeredocs(String(cmd ?? ''));
+  const codigos = cuerpos.filter((h) => !h.deGit).map((h) => h.cuerpo);
+  for (const c of comandosSimples(lineas)) {
+    const p = c.palabras.map((w) => w.replace(/\uE000/g, '$'));
+    const verbo = (p[0] || '').replace(/^.*[\\/]/, '').replace(/\.exe$/i, '');
+    const k = /^(?:node|python[\d.]*|py|deno|bun)$/i.test(verbo) ? p.findIndex((a, n) => n > 0 && /^(?:-e|--eval|-p|--print|-c)$/.test(a)) : -1;
+    if (k > 0 && p[k + 1] !== undefined) {
+      codigos.push(p[k + 1]);
+      if (BM_V3.test([...p.slice(0, k + 1), ...p.slice(k + 2)].join(' '))) return false;
+      continue;
+    }
+    if (BM_V3.test(c.crudo)) return false;
+  }
+  const conPatron = codigos.filter((x) => BM_V3.test(x));
+  return conPatron.length > 0 && conPatron.every((x) => !BM_LANZA.test(x) && BM_SONDA.test(x) && borradosDelScriptSonDatoOTemporal(x, 'sonda.mjs', BM_V3));
 }
 
 GUARDIANES['borrado-masivo-guard'] = (ctx) => {
@@ -1571,8 +1688,11 @@ GUARDIANES['borrado-masivo-guard'] = (ctx) => {
   const excluido = BM_GIT_RM.test(haystack) || BM_PALABRA_EFIMERA.test(haystack);
   // (el analisis del comando se paga solo si el patron aparece: este guardian corre en cada comando de cada sesion)
   const fueraDeEfimero = esShell && BM_V3.test(ctx.cmd) ? borradosPermanentesFueraDeEfimero(ctx.cmd, ctx.cwd) : [];
+  // P18: un script (o el codigo pegado a un `node -e`) que tiene el patron como TEXTO, o que borra la carpeta que el mismo
+  // creo en el TEMP, no borra nada de Fak (ver `borradosDelScriptSonDatoOTemporal`). Solo con JSON sano.
+  const datoOTemporal = ctx.ok && ((esEscritura && borradosDelScriptSonDatoOTemporal(ctx.content, file, BM_V3)) || (esShell && v3SoloEnSondaPegada(ctx.cmd)));
   if (fueraDeEfimero.length) motivo += 'V3';
-  else if (!excluido && !(esEscritura && BM_PROSA.test(file)) && BM_V3.test(haystack) && !(esShell && borraSoloEfimero(ctx))) motivo += 'V3';
+  else if (!excluido && !(esEscritura && BM_PROSA.test(file)) && BM_V3.test(haystack) && !(esShell && borraSoloEfimero(ctx)) && !datoOTemporal) motivo += 'V3';
   // V4: script que borra/mueve en lote sin dry-run. Los tokens se buscan con los comentarios
   // afuera (05/09/2026: un comentario que decia "no usa fs.rename ni mv" bloqueo dos Write).
   // `mv`/`rm` pelados son verbos solo en scripts de shell; en .py/.mjs/.js cuentan como comando
@@ -1581,9 +1701,12 @@ GUARDIANES['borrado-masivo-guard'] = (ctx) => {
   if (esEscritura && /\.(ps1|sh|mjs|js|py|bat|cmd)$/i.test(file)) {
     const codigo = sinComentarios(body);
     const verboSuelto = /\.(ps1|sh|bat|cmd)$/i.test(file) ? /\bmv\b|\brm\b/i : /["'\x60]\s*(mv|rm)\b/i;
-    if ((/(Remove-Item|Move-Item|DeleteFile|DeleteDirectory|shutil\.(move|rmtree)|os\.remove|fs\.(unlink|rm|rename))/i.test(codigo) || verboSuelto.test(codigo))
+    const borraV4 = /(Remove-Item|Move-Item|DeleteFile|DeleteDirectory|shutil\.(move|rmtree)|os\.remove|fs\.(unlink|rm|rename))/i;
+    // P18: si todo lo que borra o mueve es texto de una sonda o la carpeta temporal que el script creo, no hay lote que mover
+    const todoDatoOTemporal = ctx.ok && [borraV4, verboSuelto].every((re) => !re.test(codigo) || borradosDelScriptSonDatoOTemporal(ctx.content, file, re));
+    if ((borraV4.test(codigo) || verboSuelto.test(codigo))
       && /(foreach|for +\(|for +[a-z_]+ +in |while|Get-ChildItem|find |glob|walk|readdir|listdir|iterdir|rglob|scandir)/i.test(codigo)
-      && !/dry[-_ ]?run|dryRun|DRYRUN|WhatIf/i.test(body)) motivo += 'V4';
+      && !/dry[-_ ]?run|dryRun|DRYRUN|WhatIf/i.test(body) && !todoDatoOTemporal) motivo += 'V4';
   }
   const enlaces = esShell ? enlacesDeWorktree(ctx.cmd, ctx.cwd) : [];
   if (enlaces.length) motivo += 'V5';
