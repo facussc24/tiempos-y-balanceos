@@ -61,4 +61,4 @@ script-inline 6 / 165 / 2 → 0 / 165 / 0). Guardianes que frenan de más sobre 
 - `npm test` entera, al final de la ronda: **8.068 pasan, 2 fallan, 30 saltados** (402 archivos). Las dos fallas son de
   `claudeAreaInstalar.test.mjs` (el instalador de las PC de las áreas, `sync_area.ps1`): la rama no toca ni ese test ni
   `tools/claude-area`, y el test es inestable en esta PC (corrido solo, en la rama, falló 5 de 80, otros que en la suite, con
-  un `estado.json` que no aparece). Se dejó corriendo también en main para comparar.
+  un `estado.json` que no aparece). **En main, el mismo test falla igual: 4 de 80.** Es una falla que ya estaba, no de la rama.
