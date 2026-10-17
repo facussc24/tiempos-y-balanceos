@@ -366,6 +366,25 @@ describe('mail-guard (casos de mail-guard.test.sh)', () => {
     expect(ev(bash('node -e "socket.Send()"')).exit).toBe(0);
     expect(ev(bash('python -c "import win32com.client as w; w.Dispatch(\\"Outlook.Application\\").GetNamespace(\\"MAPI\\").GetDefaultFolder(6).Items.Item(1).ReplyAll().Display()"')).exit).toBe(0);
   });
+  // Pieza 6 (tanda 3, 16/10/2026): los frenos falsos del informe de CATA (`casa_guardianes_frenos.md`, mail-guard, 6 de
+  // 14). Los que seguian frenando eran un sed que corregia texto y un .sh del scratchpad que armaba un encargo.
+  const SCR = 'C:\\Users\\FACUND~1\\AppData\\Local\\Temp\\claude\\C--Dev-BarackMercosul\\ae95ec7e\\scratchpad';
+  it('pieza 6 VERDE — el texto de un sed, de un grep o de un argumento que NOMBRA el envio no es un envio', () => {
+    expect(ev(bash("sed -i 's/una bandera recortada como `--envi` valia por `--enviar` en python scripts\\/_mailEnviar.py --buscar x --enviar/arreglado/' docs/x.md"), { nombres: ['mail-guard'] }).exit).toBe(0);
+    expect(ev(bash('grep -n "_mailEnviar.py --buscar .* --enviar" .claude/rules/mail-envio.md'), { nombres: ['mail-guard'] }).exit).toBe(0);
+    const encargo = `S="${SCR}"\nnode scripts/_encargo.mjs --lanzada \\\n --a "Hija 7 · Outlook: borradores viejos" \\\n --entregable "Reglas duras: mail-envio.md (jamás .Send()), Outlook.Application solo con Display()" \\\n > "$S/encargo.txt" 2>&1\necho "exit=$?"\n`;
+    expect(ev(escribir(`${SCR}\\encargo_hoy19k.sh`, encargo), { nombres: ['mail-guard'] }).exit).toBe(0);
+    expect(ev(escribir('C:\\Dev\\BarackMercosul\\__tests__\\scripts\\mailsBorradores.test.mjs', 'ol=Dispatch("Outlook.Application"); m=ol.CreateItem(0); m.Send()'), { nombres: ['mail-guard'] }).exit).toBe(0);
+    expect(ev(escribir(`${SCR}\\cola_envio.txt`, 'Outlook.Application CreateItem(0) .Send() pendiente'), { nombres: ['mail-guard'] }).exit).toBe(0);
+  });
+  it('pieza 6 ROJO — el envio de verdad sigue frenando: por _mailEnviar, por un .sh que manda, por un script del scratchpad', () => {
+    expect(ev(bash('cd /c/Dev/BarackMercosul && python scripts/_mailEnviar.py --buscar "APB TRA CEN" --enviar'), { nombres: ['mail-guard'] }).exit).toBe(2);
+    expect(ev(bash('timeout 60 py -3 scripts/_mailEnviar.py --id ABC --enviar 2>&1 | tail -5'), { nombres: ['mail-guard'] }).exit).toBe(2);
+    expect(ev(bash('echo "python scripts/_mailEnviar.py --id ABC --enviar" | bash'), { nombres: ['mail-guard'] }).exit).toBe(2);
+    const manda = "python - <<'PY'\nimport win32com.client as w\nm=w.Dispatch('Outlook.Application').CreateItem(0)\nm.Send()\nPY\n";
+    expect(ev(escribir(`${SCR}\\mandar.sh`, manda), { nombres: ['mail-guard'] }).exit).toBe(2);
+    expect(ev(escribir(`${SCR}\\mandar.py`, "import win32com.client as w\nm=w.Dispatch('Outlook.Application').CreateItem(0)\nm.Send()\n"), { nombres: ['mail-guard'] }).exit).toBe(2);
+  });
 });
 
 // ───────────────────────────────────────────────────────────── arb-cerrar-guard

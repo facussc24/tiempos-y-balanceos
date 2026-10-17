@@ -2050,6 +2050,19 @@ export function queCorre(cmd, { porVerbo = true, prof = 0 } = {}) {
   return { corre: corre.join('\n'), visible };
 }
 
+/**
+ * Lo que un comando de Bash CORRE o EJECUTA: lo de `queCorre` mas los comandos que no son verbos de texto (un interprete
+ * que corre un archivo cuenta entero, con sus argumentos). Si `queCorre` no pudo desarmar el comando (un interprete que
+ * lee de stdin, una sustitucion de proceso), devuelve el comando entero sin la prosa: no se adivina.
+ */
+export function loQueEjecuta(cmd) {
+  const { corre, visible } = queCorre(cmd, { porVerbo: true });
+  if (corre === visible) return visible;
+  const { lineas } = separarHeredocs(sinArgumentosDeCommit(String(cmd ?? '')));
+  const ejecuta = comandosSimples(lineas).filter((c) => !CORRE_TEXTO_RE.test(verboDeComando(c).verbo)).map((c) => c.crudo);
+  return [...ejecuta, corre].join('\n');
+}
+
 // ── mail-guard ─────────────────────────────────────────────────────────────
 // Bloquea cualquier envio de mail por Outlook que NO pase por scripts/_mailEnviar.py, el unico
 // camino con gate anti-duplicado. INCIDENTE 2026-08-14: Fak mando el mail del AMFE 150, quedo
@@ -2080,7 +2093,10 @@ GUARDIANES['mail-guard'] = (ctx) => {
   // 0-ter) El OK de Fak tiene que ser POSTERIOR al borrador (incidente 08/10/2026: "arma el mail y
   // mandalo" escrito antes de que el borrador existiera; Fak: "yo siempre reviso los mails... pone
   // un bloqueante"). Logica y caso en scripts/_lib/mailOkFak.mjs. Sin escape: --forzar no lo saltea.
-  if (/^(Bash|PowerShell)$/i.test(ctx.tool) && pedidoDeEnvio(ctx.cmd)) {
+  // Pieza 6 (tanda 3, 16/10/2026): en Bash el pedido de envio se busca en lo que CORRE o EJECUTA (un `python
+  // scripts/_mailEnviar.py --enviar` cuenta; el texto de un `sed -i`, un `grep` o un commit que lo nombra, no: frenaba
+  // el 11/10 un sed que corregia un informe). En PowerShell, el comando entero, como siempre.
+  if (/^(Bash|PowerShell)$/i.test(ctx.tool) && pedidoDeEnvio(ctx.tool === 'Bash' ? loQueEjecuta(ctx.cmd) : ctx.cmd)) {
     let tp = '';
     try { tp = String(JSON.parse(ctx.raw).transcript_path || ''); } catch { tp = ''; }
     const v = evaluarEnvio({ cmd: ctx.cmd, transcriptPath: tp, raizRepo: RAIZ });
@@ -2111,9 +2127,13 @@ apretando Enviar en la ventana que ya tiene abierta.
   // (5) el unico camino autorizado se puede editar: `scripts/_mailEnviar.py` queda exento por su nombre de archivo
   // (antes pasaba porque el nombre entraba en el texto mirado; ahora en un Write/Edit se mira solo el contenido).
   if (esEscritura && /(?:^|[\\/])scripts[\\/]_mailEnviar\.py$/i.test(ctx.fileL)) return null;
-  const target = esEscritura ? ctx.body6
-    : /^(?:bash|powershell)$/i.test(ctx.toolL) ? limpiar(queCorre(ctx.cmd, { porVerbo: ctx.tool === 'Bash' }).corre)
-      : `${ctx.cmd6} ${ctx.fileL} ${ctx.body6}`;
+  // Pieza 6: un .sh que se escribe con Write es un comando de Bash que va a correr despues: se mira lo que CORRE de el
+  // (el texto de los argumentos de `node scripts/_encargo.mjs --a "... jamas .Send() ..."` no, 11/10 encargo_hoy19k.sh).
+  const esScriptSh = esEscritura && /\.(?:sh|bash)$/i.test(ctx.fileL);
+  const target = esScriptSh ? limpiar(queCorre(ctx.content, { porVerbo: true }).corre)
+    : esEscritura ? ctx.body6
+      : /^(?:bash|powershell)$/i.test(ctx.toolL) ? limpiar(queCorre(ctx.cmd, { porVerbo: ctx.tool === 'Bash' }).corre)
+        : `${ctx.cmd6} ${ctx.fileL} ${ctx.body6}`;
   // 1) Tiene que oler a Outlook. 2) Tiene que haber un envio real (Display/Save/ReplyAll no
   // envian). 3) Si va por la via autorizada, pasa.
   if (!/Outlook\.Application|olMailItem|GetDefaultFolder|MailItem|CreateItem\(/i.test(target)) return null;
