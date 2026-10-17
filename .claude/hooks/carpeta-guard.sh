@@ -46,6 +46,9 @@ cwdl="$(normalizar "$cwd")"
 repol="$(normalizar "$REPO")"
 homel="$(normalizar "${HOME:-}")"
 repo_win="${repol//\//\\}"
+# Para preguntar si el repo EXISTE se usa la ruta tal cual vino (solo con barras normales): en Linux (el CI) el disco
+# distingue mayusculas y la version en minusculas no existe (rojo del CI del 16/10 21:55).
+repo_dir="${REPO//\\//}"; repo_dir="${repo_dir%/}"
 
 en_repo=0
 if [ "$cwdl" = "$repol" ] || [[ "$cwdl" == "$repol/"* ]]; then en_repo=1; fi
@@ -78,7 +81,7 @@ if [ "$MODE" = "prompt" ]; then
   if [ "$primero" = 0 ] && [ "$pregunta" = 0 ]; then exit 0; fi
 fi
 
-if [ "$por_error" = 1 ] && [ -d "$repol" ]; then
+if [ "$por_error" = 1 ] && [ -d "$repo_dir" ]; then
   cwd_win="${cwdl//\//\\}"
   printf '[CARPETA] Esta sesion esta en «%s» y la carpeta del proyecto es %s: sin ella no cargan los hooks, las reglas, las skills ni la memoria de la casa. Deciselo a Fak en un renglon: cerrar esta sesion y abrirla en esa carpeta (en el selector de carpeta de la app, la destacada, Alt+1).\n' "$cwd_win" "$repo_win"
 fi
