@@ -44,7 +44,9 @@
         "evals/banco/hojas-de-proceso/tbd-no-va-en-la-descripcion",
         "evals/banco/hojas-de-proceso/ciclo-de-control-vacio"
       ],
-      "skills": ["hojas-de-proceso"],
+      "skills": [
+        "hojas-de-proceso"
+      ],
       "reglas": []
     },
     "planes-de-control": {
@@ -53,7 +55,9 @@
         "evals/banco/planes-de-control/rearmado-va-limpio",
         "evals/banco/planes-de-control/fila-no-es-modo-de-falla"
       ],
-      "skills": ["planes-de-control"],
+      "skills": [
+        "planes-de-control"
+      ],
       "reglas": []
     },
     "flujogramas": {
@@ -62,7 +66,9 @@
         "evals/banco/flujogramas/pieza-nueva-desde-hermanos",
         "evals/banco/flujogramas/historial-no-confiesa"
       ],
-      "skills": ["flujogramas"],
+      "skills": [
+        "flujogramas"
+      ],
       "reglas": []
     },
     "amfe-export-oficial": {
@@ -71,7 +77,9 @@
         "evals/banco/amfe-export-oficial/caratula-vacia-no-sale",
         "evals/banco/amfe-export-oficial/firmas-vacias-aprobadores"
       ],
-      "skills": ["amfe-export-oficial"],
+      "skills": [
+        "amfe-export-oficial"
+      ],
       "reglas": []
     },
     "amfe-domain": {
@@ -79,7 +87,9 @@
         "evals/banco/amfe-domain/enfundado-no-se-invierte",
         "evals/banco/amfe-domain/we-placeholder"
       ],
-      "skills": ["amfe-domain"],
+      "skills": [
+        "amfe-domain"
+      ],
       "reglas": []
     },
     "amfe-cookbook": {
@@ -87,7 +97,9 @@
         "evals/banco/amfe-cookbook/sod-sin-fuente",
         "evals/banco/amfe-cookbook/placeholder-borrar-no-op"
       ],
-      "skills": ["amfe-cookbook"],
+      "skills": [
+        "amfe-cookbook"
+      ],
       "reglas": []
     },
     "pieza-nueva-flujograma-amfe": {
@@ -96,7 +108,9 @@
         "evals/banco/pieza-nueva-flujograma-amfe/todo-alto-no-se-baja",
         "evals/banco/pieza-nueva-flujograma-amfe/mail-a-calidad-con-copia"
       ],
-      "skills": ["pieza-nueva-flujograma-amfe"],
+      "skills": [
+        "pieza-nueva-flujograma-amfe"
+      ],
       "reglas": []
     },
     "plotter-aol": {
@@ -105,7 +119,9 @@
         "evals/banco/plotter-aol/bajada-rapida",
         "evals/banco/plotter-aol/piezas-en-columnas"
       ],
-      "skills": ["plotter-aol"],
+      "skills": [
+        "plotter-aol"
+      ],
       "reglas": []
     },
     "beon": {
@@ -113,7 +129,21 @@
         "evals/banco/beon/emitir-no-sin-ok",
         "evals/banco/beon/imds-version-sola"
       ],
-      "skills": ["beon"],
+      "skills": [
+        "beon"
+      ],
+      "reglas": []
+    },
+    "cad-design": {
+      "_nota": "Tanda 11 (17/10/2026): casos de respuesta conocida del diseno 3D (virolador v14, tornillo de 7 mm, pines del insert). Convencion de la tanda 12: el brazo con lleva solo la skill (las fichas viven en su reference/).",
+      "casos": [
+        "evals/banco/cad/virolador-apoyos-y-asiento",
+        "evals/banco/cad/tornillo-impreso-parado",
+        "evals/banco/cad/pin-cota-del-proceso"
+      ],
+      "skills": [
+        "cad-design"
+      ],
       "reglas": []
     }
   }

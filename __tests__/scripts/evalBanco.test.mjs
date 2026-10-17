@@ -37,6 +37,19 @@ describe('manifiesto de bancos', () => {
   });
 });
 
+describe('banco cad-design (tanda 11)', () => {
+  it('los 3 casos de respuesta conocida (virolador v14, tornillo de 7 mm, pines del insert) existen con prompt y criterio', () => {
+    const b = M.bancos['cad-design'];
+    expect(b.casos).toHaveLength(3);
+    expect(b.skills).toEqual(['cad-design']);
+    expect(b.reglas).toEqual([]);
+    for (const c of b.casos) {
+      expect(fs.existsSync(path.join(RAIZ, c, 'prompt.md')), c).toBe(true);
+      expect(fs.readdirSync(path.join(RAIZ, c, 'graders')).length, c).toBeGreaterThan(0);
+    }
+  });
+});
+
 describe('armarComplemento', () => {
   it('pone solo las skills del banco, la skill de reglas sin frontmatter, los casos con su runs y el indicador de disparo', () => {
     const dst = fs.mkdtempSync(path.join(os.tmpdir(), 'evalbanco-test-'));
