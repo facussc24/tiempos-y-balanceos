@@ -104,7 +104,11 @@ export function leerAdjuntos(rutas, { raiz = process.cwd() } = {}) {
       return { ruta, abs, binario: true };
     }
     if (bytes > TOPE_ADJUNTO_BYTES) throw new ErrorApi('api', `el adjunto ${r} pesa ${Math.round(bytes / 1024)} KB: el tope son ${TOPE_ADJUNTO_BYTES / 1024 / 1024} MB (recortalo antes)`);
-    return { ruta, texto: fs.readFileSync(abs, 'utf8') };
+    // Un binario que no es PDF ni foto (un .docx, un .xlsx, un .zip) iba como texto ilegible y se pagaba igual
+    // (revisor del pedido, tanda 13): un byte nulo no aparece en un texto, asi que se frena.
+    const crudo = fs.readFileSync(abs);
+    if (crudo.includes(0)) throw new ErrorApi('api', `el adjunto ${r} es un archivo binario que no es PDF ni foto: no se manda (pasarlo a PDF o a texto antes)`);
+    return { ruta, texto: crudo.toString('utf8') };
   });
 }
 

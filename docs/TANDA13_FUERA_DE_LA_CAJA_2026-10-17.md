@@ -263,7 +263,22 @@ porque instala algo en la configuración de Claude Code de la PC.**
 
 ---
 
-## Ítems 2, 4, 9 y 20 · lo hecho, en una línea cada uno (el detalle está en su script y su test)
+## Ítems 2, 4, 5, 9, 14 y 20 · lo hecho, en pocas líneas cada uno (el detalle está en su script y su test)
+
+- **14** · La API ya puede leer un PDF o una foto: van como bloques `document` / `image` en base64 adelante del texto
+  (`contenidoConAdjuntos()` de `scripts/_lib/claudeApi.mjs`; desde la consola, `node scripts/_apiTarea.mjs ... --adjunto
+  manual.pdf`). **Qué pasa con un archivo que no sirve**: uno que se llama .pdf o .png y por dentro no lo es se frena
+  antes de mandar; un PDF de más de 600 páginas, también; si todo junto pasa los 32 MB que acepta un pedido (25 MB de PDF
+  ya son 33 en base64), también. Por `--adjunto`, un texto sigue yendo como texto (hasta 2 MB) y cualquier otro binario
+  (un .docx, un .xlsx) se frena: hay que pasarlo a PDF o a texto. Nada se paga en esos casos. El costo de un PDF se mide
+  con `--estimar` (count_tokens, gratis) antes de pagar. Probado sin red: 12 tests con un cliente de mentira miran el
+  cuerpo exacto y que el gasto quede en el registro como siempre; la noche no cambió.
+- **5** · `node scripts/_observaciones.mjs --antes-de-mandar AMFE` lista lo que ya le marcaron a ese tipo de documento,
+  primero lo que ningún control caza («A MANO»). El libro vive en la memoria `project_observaciones_recibidas` (no en el
+  repo) y arranca con las 6 observaciones reales de Carlos al AMFE de ductos (10/08 y 20/08): 5 sobre el AMFE y 1 sobre
+  el flujograma; 1 la caza un control solo, 1 a medias y 4 hay que mirarlas a mano. Si una observación nueva es de una
+  clase que ya se había cerrado, dice VOLVIÓ (el chequeo que se armó no alcanzó). Un renglón en las skills de AMFE,
+  hojas y flujogramas lo pide antes de mandar.
 
 - **2** · `node scripts/_aptitudMaquina.mjs --valores "..."`: la cuenta del control estadístico preliminar con el criterio
   del I-AC-021 rev A (extracto local del 01/10): subgrupos de 5, límites tentativos desde 8 subgrupos y preliminares con
@@ -298,7 +313,7 @@ porque instala algo en la configuración de Claude Code de la PC.**
 | 11 | El buscador de charlas viejas | **Medido** (3 de 6 olvidos los encontraba, 2 a medias, 1 no se podía); memoria `reference_buscar_en_charlas_viejas` |
 | 12 | Remote Control desde el navegador | **En otra tanda** (10) |
 | 13 | Estilo de salida propio | **Archivo armado y «antes» medido**; **sin activar** (es de Fak) |
-| 14 | La API lee PDFs y fotos | **Hecho** (`claudeApi.mjs` + `_apiTarea --adjunto`, 11 tests sin red) |
+| 14 | La API lee PDFs y fotos | **Hecho** (`claudeApi.mjs` + `_apiTarea --adjunto`, 12 tests sin red) |
 | 15 | Conector de Microsoft 365 | **Descartado con motivo** (Fak, 15/10: la cuenta de la empresa no se puede conectar) |
 | 16 | Revisar comentando sobre una página | **Documentado y probado hasta donde llega sin una persona** (publicar, mirar, leer comentarios); el comentario de Fak de punta a punta queda para él |
 | 17 | Plugins oficiales para áreas que no programan | **Plan de la sesión de prueba** (arriba); instalar es con el sí de Fak |

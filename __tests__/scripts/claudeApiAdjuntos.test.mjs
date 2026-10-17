@@ -101,6 +101,15 @@ describe('_apiTarea --adjunto con un PDF', () => {
     expect(m).toMatch(/<archivo ruta="nota\.md">\ntexto\n\n<\/archivo>/);
     expect(m).not.toMatch(/%PDF/);
   });
+  it('ROJO: un binario que no es PDF ni foto (un .docx, un .xlsx) no se manda como texto ilegible; un texto con tildes si pasa', () => {
+    const zip = Buffer.concat([Buffer.from('PK\x03\x04', 'latin1'), Buffer.alloc(32)]); // .docx y .xlsx son zip, con bytes nulos
+    for (const n of ['informe.docx', 'planilla.xlsx', 'sinextension']) {
+      fs.writeFileSync(path.join(dir, n), zip);
+      expect(() => leerAdjuntos([n], { raiz: dir }), n).toThrow(/binario que no es PDF ni foto/);
+    }
+    fs.writeFileSync(path.join(dir, 'nota.txt'), 'Distancia al borde: 12,99 mm (calibre).\n', 'utf8');
+    expect(leerAdjuntos(['nota.txt'], { raiz: dir })[0].texto).toBe('Distancia al borde: 12,99 mm (calibre).\n');
+  });
   it('sin PDF ni foto, el mensaje sale igual que antes', () => {
     expect(armarMensaje({ pedido: 'x', adjuntos: [{ ruta: 'a.md', texto: 'y' }] })).toBe('x\n\n--- 1 archivo(s) adjunto(s) ---\n\n<archivo ruta="a.md">\ny\n</archivo>');
   });
