@@ -48,6 +48,13 @@ node scripts/_frenosMedir.mjs --base <carpeta>/scripts/_lib/guardianes.mjs --cas
 
 ## Lo que la medición no puede ver
 
+- **Lo que se ABRE**: una medición sobre frenos pasados muestra lo que se destraba, no los agujeros nuevos. El auditor Opus
+  (`TANDA3_GUARDIANES_auditor_2026-10-16.md`) encontró cinco formas que la base frenaba y la rama dejaba pasar (mover al
+  archivo con `cd`/`find -exec`/`xargs`, mover el listado o `robocopy /MOV`, el destino del listado en un `$(…)`, formas de
+  lanzar procesos en un script del scratchpad, `grep --include=.env.local`) y un `PreModelSwitch` que solo podía frenar el
+  selector de Fak. Los seis quedaron arreglados en `0c3cbdf6`, cada uno con su caso ROJO; la medición después del arreglo
+  da lo mismo (51 falsos: 38 → 8; 43 verdaderos siguen frenando).
+
 - Los frenos que no llegaron a los transcripts copiados (subagentes, logs locales de hooks): informe de CATA, sección 5.
 - Las piezas 8 a 12 no aflojan frenos de esta lista: los retiros sacan hooks que no frenaban acá; los permisos, el
   despachador de MCP, el `onFailure` y el `PreModelSwitch` agregan controles, con sus tests en las dos direcciones.
