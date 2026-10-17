@@ -32,7 +32,9 @@ describe('pieza 10 — el matcher: escribir, mandar o correr entra; leer y lo in
     const re = () => new RegExp(grupo.matcher);
     it('ROJO (entra al despachador): escribir un archivo, mandar un mail, correr un comando, borrar o mover', () => {
         for (const n of ['mcp__filesystem__write_file', 'mcp__filesystem__edit_file', 'mcp__filesystem__move_file', 'mcp__filesystem__create_directory',
-            'mcp__gmail__send_email', 'mcp__outlook__reply_message', 'mcp__terminal__run_in_terminal', 'mcp__catia__save_part', 'mcp__drive__delete_file'])
+            'mcp__gmail__send_email', 'mcp__outlook__reply_message', 'mcp__terminal__run_in_terminal', 'mcp__catia__save_part', 'mcp__drive__delete_file',
+            // auditor Opus 17/10: mayusculas, guiones y digitos en el nombre, y la MCP de CAD que nombra el plan
+            'mcp__gmail__SendEmail', 'mcp__outlook__send-mail', 'mcp__whatsapp__send_message_v2', 'mcp__text-to-cad__generate'])
             expect(re().test(n), n).toBe(true);
     });
     it('VERDE (no paga el despachador): leer, listar, el navegador, las internas de la app y el Supabase (ya lo mira mcp-write-gate)', () => {
@@ -60,6 +62,7 @@ describe('pieza 10 — la entrada de la MCP se traduce a lo que miran los guardi
         expect(frenan(mcp('mcp__filesystem__write_file', { path: 'Y:\\BARACK\\CALIDAD\\x.csv', content: 'CREADO POR: Claude' }))).toContain('firma-ia-guard');
         expect(frenan(mcp('mcp__gmail__send_email', { to: 'carlos@barackmercosul.com', subject: 'x', body: 'y' }))).toContain('mail-guard');
         expect(frenan(mcp('mcp__gmail__send_draft', { id: 'r123' }))).toContain('mail-guard');
+        expect(frenan(mcp('mcp__outlook__send-mail', { to: 'x@y.com' }))).toContain('mail-guard');
     });
     it('VERDE: la MCP que escribe en el repo o el scratchpad, arma un borrador o corre un comando comun', () => {
         expect(frenan(mcp('mcp__filesystem__write_file', { path: 'C:\\Dev\\BarackMercosul\\exports\\x\\notas.txt', content: 'medido el 16/10' }))).toEqual([]);

@@ -859,6 +859,10 @@ describe('secretos-guard — .env.local y .qr-secret no se leen ni se pisan desd
     rojo(bash('cmd //c type .env.local'));
     rojo(bash('bash -c "cat .env.local"'));
     rojo(bash('grep -e KEY .env.local'));
+    // auditor Opus 17/10 (TRUE BUG 5): el archivo pegado a una opcion que elige que archivos lee
+    rojo(bash('grep -rn VITE_SUPABASE_URL . --include=.env.local'));
+    rojo(bash('grep -rn VITE_SUPABASE_URL . --include .env.local'));
+    rojo(bash('rg -g .env.local VITE_SUPABASE'));
     // (`cat .env*` no lo frena ni antes de P12: el nombre seguido de `*` no entra en SECRETO_RE. Agujero anotado aparte.)
   });
 

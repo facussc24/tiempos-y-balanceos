@@ -221,6 +221,12 @@ describe('P13 — origen o destino: copiar el listado para LEERLO no es escribir
             `robocopy "${SCR}" "Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/3- LISTADO" "Listado hojas de proceso.xlsx"`,
             `D="Y:/x/1. LISTADO DE AMFES"; cp x.xlsx "$D/Listado_Maestro_AMFE.xlsx"`,
         ]) expect(frena(c), c).toBe(true);
+        // auditor Opus 17/10 (TRUE BUG 2 y 3): MOVER el listado al TEMP lo saca del servidor; un destino en una variable de $(…)
+        for (const c of [
+            `mv "${HO.replace(/\\/g, '/')}" "$TEMP/listado.xlsx"`,
+            `robocopy "Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/3- LISTADO" C:/tmp "Listado hojas de proceso.xlsx" /MOV`,
+            `D="$(cygpath -u "Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/3- LISTADO/Listado hojas de proceso.xlsx")"; cp /c/tmp/nuevo.xlsx "$D"`,
+        ]) expect(frena(c), c).toBe(true);
         // 21/09 17:50: la copia de respaldo al LADO del maestro, en el servidor (cd adentro de la carpeta del listado)
         expect(frena('cd "/y/Ingenieria/Documentacion Gestion Ingenieria/13. Analisis/1. LISTADO DE AMFES" && cp "Listado_Maestro_AMFE.xlsx" "Listado_Maestro_AMFE_backup_$(date +%Y%m%d).xlsx"')).toBe(true);
     });

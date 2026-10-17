@@ -23,10 +23,10 @@ const PIDE_MODELO = 'Fable 5.1 ultracode de una… si o si';
 const OTRA_COSA = 'ah si me encanta eso si hagamoslo asi me encanta dale labura aunque te tome mucho timepo hacer eos hacelo si';
 
 /** Transcript: el mensaje de Fak y, si `llamada`, despues una llamada de la sesion a set_session_model. */
-function transcript(nombre, fak, llamada) {
+function transcript(nombre, fak, llamada, destino = 'x') {
     const f = path.join(TMP, `${nombre}.jsonl`);
     const l = [JSON.stringify({ type: 'user', timestamp: '2026-10-16T20:00:00.000Z', message: { role: 'user', content: fak } })];
-    if (llamada) l.push(JSON.stringify({ type: 'assistant', timestamp: '2026-10-16T20:01:00.000Z', message: { role: 'assistant', content: [{ type: 'tool_use', id: 't1', name: 'mcp__ccd_session_mgmt__set_session_model', input: { session_id: 'x', model: 'claude-sonnet-5-5' } }] } }));
+    if (llamada) l.push(JSON.stringify({ type: 'assistant', timestamp: '2026-10-16T20:01:00.000Z', message: { role: 'assistant', content: [{ type: 'tool_use', id: 't1', name: 'mcp__ccd_session_mgmt__set_session_model', input: { session_id: destino, model: 'claude-sonnet-5-5' } }] } }));
     fs.writeFileSync(f, `${l.join('\n')}\n`);
     return f;
 }
@@ -49,7 +49,11 @@ describe('modelo-guard — PreModelSwitch', () => {
         expect(r.exit).toBe(0);
         expect(r.deny).toBe(false);
     });
-    it('ROJO: sdk que salio de una llamada de la sesion, sin que Fak hablara del modelo: deny con el motivo', () => {
+    it('VERDE (auditor Opus 17/10): la madre le cambio el modelo a una HIJA y despues Fak usa el selector: pasa', () => {
+        // la llamada apuntaba a otra sesion; la app no deja que una sesion se cambie el modelo a si misma
+        expect(correr(cambio('sdk', transcript('a-otra-sesion', OTRA_COSA, true, 'hija-123'))).deny).toBe(false);
+    });
+    it('ROJO (la red, por si la app lo permite): sdk que salio de una llamada de ESTA sesion sobre si misma, sin que Fak hablara del modelo', () => {
         const r = correr(cambio('sdk', transcript('otra-con-llamada-2', OTRA_COSA, true)));
         expect(r.exit).toBe(0);
         expect(r.deny).toBe(true);

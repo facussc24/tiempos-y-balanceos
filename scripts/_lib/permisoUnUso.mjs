@@ -33,27 +33,35 @@ export function canonPermisos() {
 
 const escaparRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 function permisoRe(lista) {
-  return new RegExp(`(?:^|[\\\\/])\\.claude[\\\\/]+(${lista.map((p) => escaparRe(p.archivo)).join('|')})(?![\\w.-])`, 'i');
+  // `~/.claude/./.x` es la misma ruta (auditor Opus 17/10)
+  return new RegExp(`(?:^|[\\\\/])\\.claude[\\\\/]+(?:\\.[\\\\/]+)*(${lista.map((p) => escaparRe(p.archivo)).join('|')})(?![\\w.-])`, 'i');
 }
-const VERBO_ARMA = /^(?:touch|New-Item|ni|Set-Content|sc|Out-File|Add-Content|ac|cp|copy|Copy-Item|cpi|install|mkdir|md|tee)$/i;
+const VERBO_ARMA = /^(?:touch|New-Item|ni|Set-Content|sc|Out-File|Add-Content|ac|cp|copy|Copy-Item|cpi|install|mkdir|md|tee|mv|move|Move-Item|mi|ln)$/i;
+const VERBO_DESTINO = /^(?:cp|copy|Copy-Item|cpi|install|mv|move|Move-Item|mi|ln)$/i;
+// Si el canon no se puede leer no se sabe que permisos son de Fak: un comando que arma algo con forma de permiso frena
+// (falla cerrado; auditor Opus 17/10).
+const FORMA_PERMISO = /(?:^|[\\/])\.claude[\\/]+(?:\.[\\/]+)*(\.[\w-]+-ok|\.agent-limit)(?![\w.-])/i;
 
 /** Los permisos DE FAK que el comando ARMA: ['.apqp-listado-ok', ...] ([] si ninguno). Leer o borrar no cuenta. */
 export function permisosQueArma(cmd) {
   const canon = canonPermisos();
-  if (!canon?.de_fak?.length) return [];
-  const re = permisoRe(canon.de_fak);
+  const re = canon?.de_fak?.length ? permisoRe(canon.de_fak) : FORMA_PERMISO;
   const c = sinCuerposHeredoc(String(cmd ?? ''));
-  if (!re.test(c)) return [];
+  if (!re.test(c) && !/\.claude/i.test(c)) return [];
   const arma = new Set();
+  // `cd ~/.claude && touch .arb-cerrar-ok`: los argumentos relativos se miran pegados a la carpeta de los `cd`
+  let dir = '';
+  const conDir = (a) => (dir && !/^(?:[A-Za-z]:|[\\/~$])/.test(a) ? `${dir}/${a}` : a);
+  const anotar = (a) => { const m = conDir(String(a)).match(re); if (m) arma.add((canon ? m[1] : m[1]).toLowerCase()); };
   for (const s of comandosSimples(c)) {
-    for (const r of s.redirs) if (/>/.test(r.op)) { const m = String(r.t).match(re); if (m) arma.add(m[1].toLowerCase()); }
-    const p = s.palabras.filter((w, i, a) => !(i === 0 && /^[A-Za-z_]\w*=/.test(w)));
+    const p = s.palabras.filter((w, i) => !(i === 0 && /^[A-Za-z_]\w*=/.test(w)));
     const verbo = String(p[0] ?? '').replace(/^.*[\\/]/, '').replace(/\.exe$/i, '');
+    if (/^(?:cd|pushd|Set-Location|sl)$/i.test(verbo)) { dir = String(p.slice(1).find((a) => !a.startsWith('-')) ?? ''); continue; }
+    for (const r of s.redirs) if (/>/.test(r.op)) anotar(r.t);
     if (!VERBO_ARMA.test(verbo)) continue;
-    // cp/copy: solo el DESTINO; los demas verbos, cualquier argumento
+    // cp/mv/ln: solo el DESTINO; los demas verbos, cualquier argumento
     const args = p.slice(1).filter((a) => !a.startsWith('-'));
-    const mirar = /^(?:cp|copy|Copy-Item|cpi|install)$/i.test(verbo) ? args.slice(-1) : args;
-    for (const a of mirar) { const m = a.match(re); if (m) arma.add(m[1].toLowerCase()); }
+    for (const a of VERBO_DESTINO.test(verbo) ? args.slice(-1) : args) anotar(a);
   }
   return [...arma];
 }
@@ -92,7 +100,8 @@ export function verificarCita({ cita, mensajes, canon = canonPermisos() }) {
   if (mensajes === null) return { ok: false, motivo: 'no pude leer el transcript de la sesion para comparar la cita con lo que Fak escribio' };
   const ultimo = (mensajes || []).reduce((a, m) => (!a || m.ts > a.ts ? m : a), null);
   if (!ultimo) return { ok: false, motivo: 'en esta sesion no hay ningun mensaje de Fak: el si tiene que ser suyo, de este turno' };
-  if (!normalizar(ultimo.texto).includes(texto)) return { ok: false, motivo: `«${cita.texto}» no esta en el ultimo mensaje de Fak` };
+  // por palabras ENTERAS: un pedazo de palabra («e la t») no es una cita (auditor Opus 17/10)
+  if (!` ${normalizar(ultimo.texto)} `.includes(` ${texto} `)) return { ok: false, motivo: `«${cita.texto}» no esta en el ultimo mensaje de Fak` };
   const local = new Date(ultimo.ts + offset * 3600_000);
   const citada = Date.UTC(local.getUTCFullYear(), cita.mes - 1, cita.dia, cita.hora, cita.minuto);
   const real = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate(), local.getUTCHours(), local.getUTCMinutes());

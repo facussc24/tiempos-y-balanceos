@@ -114,12 +114,16 @@ describe('escritorio-guard — mover a mano', () => {
             `T="${T26}"; mv "$T/2026-07-31 - Modificacion arb por Leo" "${ESC}\\Leo"`,
             `robocopy "${ESC}\\Tarea" "${T26}/2026-10-16 - Tarea" /E`,
             `python -c "import shutil; shutil.move(r'${ESC}\\Tarea', r'${ARCH}\\2026\\2026-10-16 - Tarea')"`,
+            // auditor Opus 17/10 (TRUE BUG 1): con un cd adelante, por find -exec y por xargs
+            `cd "${T26}" && mv "/c/Users/FacundoS-PC/OneDrive - BARACK ARGENTINA SRL/Desktop/2026-10-01 - Tarea" .`,
+            `find "/c/Users/FacundoS-PC/OneDrive - BARACK ARGENTINA SRL/Desktop" -maxdepth 1 -name "2026-10-01*" -exec mv {} "${T26}/" \\;`,
+            `ls -d "/c/Users/FacundoS-PC/OneDrive - BARACK ARGENTINA SRL/Desktop/2026-10-01"* | xargs -I{} mv {} "${T26}/"`,
         ]) {
             const r = correr(bash(c));
             expect(r.code, c).toBe(2);
             expect(r.err, c).toMatch(/Mover y registrar son UNA operacion/);
         }
-    });
+    }, 60_000);
 });
 
 describe('escritorio-guard — escrituras', () => {

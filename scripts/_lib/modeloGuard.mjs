@@ -8,8 +8,9 @@
 //   · PreModelSwitch (claude.exe 2.1.299; entrada: from_model, to_model, source = command | picker | sdk): `command`
 //     (/model) y `picker` los dispara una persona y pasan siempre. El selector de la app de escritorio manda un
 //     `set_model` por el puente, o sea `sdk`, igual que un cambio programatico: por eso con `sdk` se niega SOLO si el
-//     transcript muestra que el cambio salio de una llamada de esta sesion despues del ultimo mensaje de Fak, y ese
-//     mensaje no habla del modelo. Si no se puede atribuir (no hay llamada, o el transcript no se lee), pasa: es Fak.
+//     transcript muestra que esta sesion pidio cambiar SU PROPIO modelo despues del ultimo mensaje de Fak, y ese mensaje
+//     no habla del modelo (hoy la app ni lo permite: queda como red si eso cambia). Si no se puede atribuir, pasa: es Fak.
+//     El control que de verdad frena es el PreToolUse de set_session_model.
 // La frase de Fak: su ultimo mensaje real (filtro `mensajesDeFak` de mailOkFak.mjs) nombra el modelo o el cambio.
 import fs from 'node:fs';
 import { mensajesDeFak } from './mailOkFak.mjs';
@@ -26,21 +27,29 @@ export function fakHabloDelModelo(transcriptPath) {
   return Boolean(ultimo && FRASE_MODELO.test(sinTildes(ultimo.texto)));
 }
 
-/** ¿Despues del ultimo mensaje de Fak, la sesion llamo a una herramienta que cambia el modelo? null si no se lee. */
-export function sesionPidioElCambio(transcriptPath) {
-  let lineas;
-  try { lineas = fs.readFileSync(transcriptPath, 'utf8').split('\n'); } catch { return null; }
-  const m = mensajesDeFak(transcriptPath) || [];
-  const desde = m.reduce((a, x) => Math.max(a, x.ts), 0);
-  for (const linea of lineas) {
+/**
+ * ¿Despues del ultimo mensaje de Fak, ESTA sesion pidio cambiar SU PROPIO modelo (una llamada cuyo `session_id` es el de
+ * la sesion)? null si no se lee. Auditor Opus 17/10 (TRUE BUG 6): hoy la app no deja que una sesion se cambie el modelo
+ * a si misma («Must not be this session», app.asar), asi que un cambio `sdk` casi siempre es el selector de Fak; una
+ * llamada que apuntaba a OTRA sesion (una hija) no cuenta. Si la herramienta no aparece en el transcript no se lee nada
+ * mas (un transcript de 294 MB costaba 14 s).
+ */
+export function sesionPidioElCambio(transcriptPath, sessionId = '') {
+  let crudo;
+  try { crudo = fs.readFileSync(transcriptPath, 'utf8'); } catch { return null; }
+  if (!sessionId || !/set_session_model|"set_model"/.test(crudo)) return false;
+  const llamadas = [];
+  for (const linea of crudo.split('\n')) {
     if (!linea.includes('"tool_use"') || !/set_session_model|set_model/.test(linea)) continue;
     let o;
     try { o = JSON.parse(linea); } catch { continue; }
-    if (o.type !== 'assistant' || Date.parse(o.timestamp || '') < desde) continue;
+    if (o.type !== 'assistant') continue;
     const bloques = Array.isArray(o.message?.content) ? o.message.content : [];
-    if (bloques.some((b) => b?.type === 'tool_use' && HERRAMIENTA_MODELO.test(String(b.name ?? '')))) return true;
+    if (bloques.some((b) => b?.type === 'tool_use' && HERRAMIENTA_MODELO.test(String(b.name ?? '')) && String(b.input?.session_id ?? '') === sessionId)) llamadas.push(Date.parse(o.timestamp || ''));
   }
-  return false;
+  if (!llamadas.length) return false;
+  const desde = (mensajesDeFak(transcriptPath) || []).reduce((a, x) => Math.max(a, x.ts), 0);
+  return llamadas.some((t) => t >= desde);
 }
 
 const MOTIVO = 'el modelo de una sesion no se cambia por cuenta propia (CLAUDE.md: «no tocar el selector por cuenta propia»; con Fable de sesion principal se pierde el cache y el razonamiento). Hace falta que Fak lo pida en su ultimo mensaje (que nombre el modelo o el cambio); si no, se le pregunta';
@@ -52,7 +61,7 @@ export function decidir(p) {
   if (evento === 'PreModelSwitch') {
     const source = String(p?.source ?? '');
     if (source === 'command' || source === 'picker') return { evento, decision: 'deja', motivo: `lo cambio una persona (${source})` };
-    const pidio = sesionPidioElCambio(tp);
+    const pidio = sesionPidioElCambio(tp, String(p?.session_id ?? ''));
     if (!pidio) return { evento, decision: 'deja', motivo: pidio === null ? 'sin transcript: no se puede atribuir a la sesion' : 'no salio de una llamada de esta sesion (el selector de la app)' };
     const fak = fakHabloDelModelo(tp);
     return fak ? { evento, decision: 'deja', motivo: 'Fak lo pidio en su ultimo mensaje' } : { evento, decision: 'niega', motivo: MOTIVO };

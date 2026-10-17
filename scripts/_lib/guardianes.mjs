@@ -322,6 +322,14 @@ function leeSecretoPorComando(texto, todo, prof = 0, vars = variablesEscritas(to
       const sinPatron = args.some((a) => /^(?:-[a-zA-Z]*[ef]|--(?:regexp|file|expression)(?:=|$))/.test(a));
       const posicionales = args.filter((a) => !/^-/.test(a));
       if ((sinPatron ? posicionales : posicionales.slice(1)).some(esSecreto) || /^(?:Select-String|sls)$/i.test(v) && args.some(esSecreto)) return true;
+      // Auditor Opus 17/10 (TRUE BUG 5): el archivo puede ir pegado a una opcion que elige QUE archivos lee
+      // (`grep -rn KEY . --include=.env.local`, `rg -g .env.local KEY`)
+      const elegidos = args.flatMap((a, k) => {
+        const m = a.match(/^--(?:include|glob|iglob)=(.+)$/);
+        if (m) return [m[1]];
+        return /^(?:--include|--glob|--iglob|-g)$/.test(a) && args[k + 1] !== undefined ? [args[k + 1]] : [];
+      });
+      if (elegidos.some((x) => esSecreto(x.replace(/^["']|["']$/g, '')))) return true;
       continue;
     }
     if (INTERPRETE_SECRETO_RE.test(v)) { if (args.some((a) => SECRETO_RE.test(a) || SECRETO_ARG_RE.test(a))) return true; continue; }
@@ -1278,18 +1286,30 @@ export function mueveAMano(cmd, { cwd = '' } = {}) {
   const { lineas, cuerpos } = separarHeredocs(String(cmd ?? ''));
   const res = resolvedorDe(cmd);
   const embebido = cuerpos.filter((h) => !h.deGit).map((h) => h.cuerpo);
+  // Auditor Opus 17/10 (TRUE BUG 1): los `cd` de antes cuentan (`cd <archivo> && mv <tarea> .`), y un mover que va
+  // detras de find -exec / xargs / parallel se mira con la regla vieja sobre ese comando.
+  let dir = String(cwd ?? '').replace(/\\/g, '/');
+  const completa = (p) => { const r = res(p).replace(/\\/g, '/'); return /^(?:[A-Za-z]:|\/|~)/.test(r) || !dir ? r : `${dir.replace(/\/+$/, '')}/${r}`; };
   for (const c of comandosSimples(lineas)) {
     const palabras = c.palabras.map((w) => w.replace(/\uE000/g, '$'));
     const { verbo, args } = verboDeComando({ ...c, palabras });
     const v = verboPelado(verbo);
+    if (/^(?:cd|pushd|chdir|Set-Location|sl)$/i.test(v)) { const d = args.find((a) => !a.startsWith('-')); dir = d ? completa(d) : ''; continue; }
     if (CORRE_INTERPRETE_RE.test(v)) { const r = modoInterprete(verbo, args); if (r.modo === 'pegado') embebido.push(r.codigo); continue; }
+    // (la primera palabra cruda: `verboDeComando` saca a xargs como envoltorio y deja `mv` sin argumentos)
+    const lanzador = palabras.find((w) => w && !/^[A-Za-z_]\w*=/.test(w));
+    if (/^(?:find|xargs|parallel)$/i.test(verboPelado(lanzador)) && palabras.some((a) => ESC_MUEVE_VERBO.test(verboPelado(a)) || ESC_COPIA_VERBO.test(verboPelado(a)))) {
+      // el comando entero: el `{}` de find -exec parte el comando y la carpeta queda en el otro pedazo
+      if (ESC_ARCHIVO.test(res(String(cmd))) || ESC_ARCHIVO.test(dir)) return true;
+      continue;
+    }
     const robomueve = /^robocopy$/i.test(v) && args.some((a) => /^\/(?:MOV|MOVE)$/i.test(a));
     if (!ESC_MUEVE_VERBO.test(v) && !ESC_COPIA_VERBO.test(v) && !/^robocopy$/i.test(v)) continue;
-    const pos = args.filter((a) => !/^-/.test(a) && !/^\/[A-Za-z]{1,4}(?::\S*)?$/.test(a)).map((a) => res(a));
+    const pos = args.filter((a) => !/^-/.test(a) && !/^\/[A-Za-z]{1,4}(?::\S*)?$/.test(a)).map((a) => completa(a));
     if (!pos.length) continue;
     if (ESC_MUEVE_VERBO.test(v) || robomueve) { if (pos.some((a) => ESC_ARCHIVO.test(a)) || (pos.some((a) => /\$/.test(a)) && ESC_ARCHIVO.test(c.crudo))) return true; continue; }
     const explicito = args.findIndex((a) => /^-(?:t|Destination)$/i.test(a));
-    const destino = /^robocopy$/i.test(v) ? pos[1] : explicito >= 0 ? res(args[explicito + 1]) : pos[pos.length - 1];
+    const destino = /^robocopy$/i.test(v) ? pos[1] : explicito >= 0 ? completa(args[explicito + 1]) : pos[pos.length - 1];
     if (destino === undefined) { if (ESC_ARCHIVO.test(c.crudo)) return true; continue; }
     if (ESC_ARCHIVO.test(destino) || (/\$/.test(destino) && ESC_ARCHIVO.test(res(c.crudo)))) return true;
   }
@@ -1688,6 +1708,16 @@ export function borradosPermanentesFueraDeEfimero(cmd, cwd) {
 const BM_SONDA = /guardianes\.mjs|\bGUARDIANES\s*\[|[\w-]-guard(?:\.test)?\.(?:mjs|sh)\b|-guard\.mjs|_dispatcher\.sh/;
 // (el `.exec(` de una expresion regular no lanza nada: `exec(` sin el punto si, en Python corre codigo)
 const BM_LANZA = /\bos\.(?:system|popen|exec\w*|spawn\w*)\b|\bsubprocess\b|child_process|\bexecSync\b|\bexecFileSync\b|\bspawnSync\b|\bspawn\s*\(|(?<!\.)\bexec\s*\(|\bexecFile\s*\(|shell\s*=\s*True|Invoke-Expression|\biex\b|Start-Process/i;
+// mas las formas que no nombran el verbo: el `.exec(` de un modulo de procesos importado con otro nombre, asyncio, pty,
+// posix_spawn (si el script nombra child_process en cualquier lado, cualquier `.exec(` cuenta)
+const BM_LANZA_EXTRA = /create_subprocess|\bpty\.spawn|posix_spawn|\bProcessBuilder\b|Runtime\.getRuntime/i;
+// En un .mjs/.js/.py (los unicos donde vale la excepcion) `iex`, `Invoke-Expression` o `Start-Process` escritos en una
+// cadena solo corren si un child_process o un subprocess los lanza, y eso ya cuenta: se buscan sin esas tres palabras
+// (la sonda del 04/10 trae `'iwr … | iex'` como caso de texto).
+const BM_LANZA_CODIGO = new RegExp(BM_LANZA.source.replace('|Invoke-Expression|\\biex\\b|Start-Process', ''), 'i');
+function lanzaProcesos(code) {
+  return BM_LANZA_CODIGO.test(code) || BM_LANZA_EXTRA.test(code) || (/child_process/.test(code) && /\.\s*exec(?:File)?\s*\(/.test(code));
+}
 const BM_SCRATCHPAD = /[\\/]AppData[\\/]Local[\\/]Temp[\\/]claude[\\/][^\\/]+[\\/][^\\/]+[\\/]scratchpad[\\/]/i;
 const BM_SCRIPT_DATO = /\.(?:mjs|cjs|js|ts|py)$/i;
 
@@ -1746,11 +1776,9 @@ export function borradosDelScriptSonDatoOTemporal(body, file, patron) {
   const hits = [...code.matchAll(re)];
   if (!hits.length) return false;
   const rangos = rangosDeCadenas(code);
-  // lo que lanza un proceso se busca en el CODIGO, no en las cadenas (una lista de casos puede traer 'Invoke-Expression')
-  let fueraDeCadenas = '', desde = 0;
-  for (const [a, z] of rangos) { fueraDeCadenas += `${code.slice(desde, a)} `; desde = z; }
-  fueraDeCadenas += code.slice(desde);
-  const datoPosible = !BM_LANZA.test(fueraDeCadenas) && (BM_SONDA.test(code) || BM_SCRATCHPAD.test(String(file ?? '')));
+  // lo que lanza un proceso se busca en el codigo ENTERO, cadenas incluidas: el nombre del modulo va entre comillas
+  // (`import cp from 'node:child_process'; cp.exec(…)`, un import renombrado o dinamico). Auditor Opus 17/10, TRUE BUG 4.
+  const datoPosible = !lanzaProcesos(code) && (BM_SONDA.test(code) || BM_SCRATCHPAD.test(String(file ?? '')));
   const temporales = variablesTemporales(code);
   return hits.every((m) => {
     const fin = m.index + Math.max(1, m[0].length) - 1;
@@ -1784,7 +1812,7 @@ export function v3SoloEnSondaPegada(cmd) {
     if (BM_V3.test(c.crudo)) return false;
   }
   const conPatron = codigos.filter((x) => BM_V3.test(x));
-  return conPatron.length > 0 && conPatron.every((x) => !BM_LANZA.test(x) && BM_SONDA.test(x) && borradosDelScriptSonDatoOTemporal(x, 'sonda.mjs', BM_V3));
+  return conPatron.length > 0 && conPatron.every((x) => !lanzaProcesos(x) && BM_SONDA.test(x) && borradosDelScriptSonDatoOTemporal(x, 'sonda.mjs', BM_V3));
 }
 
 GUARDIANES['borrado-masivo-guard'] = (ctx) => {
@@ -2098,7 +2126,7 @@ export function loQueEjecuta(cmd) {
 // Pieza 10 (tanda 3, 16/10/2026): una MCP que MANDA un mail o un mensaje a una persona (Gmail, Outlook, Teams, Slack,
 // WhatsApp…) no pasa por `_mailEnviar.py` ni por el OK de Fak despues del borrador: frena siempre. Armar un borrador
 // (draft) o leer pasan. Las MCP internas de la app (`mcp__ccd_*`: mensajes entre sesiones de Claude) no son mails.
-const MAIL_MCP_MANDA = /__\w*(?:send|reply|forward|post)\w*$/i;
+const MAIL_MCP_MANDA = /__[\w-]*(?:send|reply|forward|post)[\w-]*$/i;
 const MAIL_MCP_CANAL = /mail|gmail|outlook|exchange|message|mensaje|teams|slack|whatsapp|chat|sms/i;
 // armar un borrador (create_draft, create_reply_draft) no manda; mandar el borrador (send_draft) si
 const mcpMandaMail = (n) => !/^mcp__ccd_/.test(n) && MAIL_MCP_MANDA.test(n) && MAIL_MCP_CANAL.test(n) && !(/draft/i.test(n) && !/send/i.test(n));
@@ -2543,7 +2571,7 @@ reference_canal_entre_pcs_pedidos_facundo) o decirselo a Fak si esta en esa PC. 
 
 Fak, 13/10/2026: "no descargues videos en esta PC, no tiene almacenamiento, esas tareas son para la otra notebook".
 
-Si Fak pidio hacerlo ACA igual (su pedido le gana a este freno): \`: > ~/.claude/.espacio-ok\` (vale UNA vez) y repetir el comando.`);
+Si Fak pidio hacerlo ACA igual (su pedido le gana a este freno): \`: > ~/.claude/.espacio-ok # Fak DD/MM HH:MM: "lo que dijo"\` (vale UNA vez; la cita, copiada de su ultimo mensaje: autonomy-contract.md G) y repetir el comando.`);
     }
   }
   return null;
@@ -2652,7 +2680,8 @@ cargar el reemplazo del remache, y la tarea quedo frenada dos veces esperandolo.
 QUE HACER EN VEZ:
   - Dejalo abierto. Un arb abierto no molesta a nadie y es el estado por defecto.
   - Si de verdad hay que cerrarlo, PREGUNTALE A FAK primero, con el motivo.
-  - Si Fak ya dijo que si:  touch ~/.claude/.arb-cerrar-ok   y reintenta (vale 1 vez).
+  - Si Fak ya dijo que si:  touch ~/.claude/.arb-cerrar-ok # Fak DD/MM HH:MM: "lo que dijo"   y reintenta (vale 1 vez;
+    la cita, copiada de su ultimo mensaje: autonomy-contract.md G).
 
 NO BLOQUEADO, por si era lo que buscabas: cerrar 'Maestro de Insumos' con WM_CLOSE (es el
 modo documentado de descartar una edicion sin grabar) y 'python scripts/_arbVer.py reset'
@@ -2780,12 +2809,18 @@ export function escribeListadoBash(cmd, { cwd = '', leer } = {}) {
       if (!destino) continue;
       const d = completa(destino);
       if (APQP_LISTADO.test(d) && (/\$/.test(d) || !apqpLocal(d))) return d;
+      // Auditor Opus 17/10 (TRUE BUG 2): MOVER el listado lo saca del servidor; solo COPIARLO es leer
+      if (/^(?:mv|move|Move-Item|mi)$/i.test(v) && fuentes.some((f) => APQP_LISTADO.test(res(f)))) return `${d} (mueve el listado)`;
       if (fuentes.some((f) => APQP_LISTADO.test(res(f))) && (/\$/.test(d) || !apqpLocal(d))) return `${d} (copia del listado)`;
+      // (TRUE BUG 3) un destino que no se puede resolver (`D="$(cygpath -u "…/Listado….xlsx")"`) con el listado nombrado en
+      // el comando: no se adivina
+      if (/\$/.test(d) && APQP_LISTADO.test(String(cmd))) return `${d} (destino sin resolver)`;
       continue;
     }
     if (/^robocopy$/i.test(v)) {
       const pos = args.filter((a) => !/^\//.test(a));
-      if (APQP_LISTADO.test(res(c.crudo)) && (!pos[1] || /\$/.test(res(pos[1])) || !apqpLocal(completa(pos[1])))) return completa(pos[1] || '');
+      const mueve = args.some((a) => /^\/(?:MOV|MOVE)$/i.test(a));
+      if (APQP_LISTADO.test(res(c.crudo)) && (mueve || !pos[1] || /\$/.test(res(pos[1])) || !apqpLocal(completa(pos[1])))) return completa(pos[1] || '');
       continue;
     }
     if (CORRE_INTERPRETE_RE.test(v)) {
@@ -2864,7 +2899,8 @@ de mas, o con una ruta que todavia no existe, la arrastra despues todo el mundo.
   · Corre el script en DRY-RUN (sin --apply), mostrale a Fak la fila que va a quedar, y
     aplicala con su OK.
   · Leer el listado no esta bloqueado.
-  · Si Fak YA dijo que si:  : > ~/.claude/.apqp-listado-ok   y reintenta (vale UNA carga).
+  · Si Fak YA dijo que si:  : > ~/.claude/.apqp-listado-ok # Fak DD/MM HH:MM: "lo que dijo"   y reintenta (vale UNA
+    carga; la cita, copiada de su ultimo mensaje: autonomy-contract.md G).
 
 ${APQP_CIERRE}`);
   }
@@ -2933,7 +2969,8 @@ biblioteca del sector: \`BARACK ARGENTINA SRL\\Ingenieria y Proyecto - General\\
 
   · Guardalo en su carpeta por tipo de la biblioteca de Ingenieria.
   · Leer de la nube personal y SACAR cosas de ahi no esta bloqueado.
-  · Si Fak dijo que ESTE archivo va ahi:  : > ~/.claude/.nube-personal-ok   y reintenta (vale una vez).
+  · Si Fak dijo que ESTE archivo va ahi:  : > ~/.claude/.nube-personal-ok # Fak DD/MM HH:MM: "lo que dijo"   y reintenta
+    (vale una vez; la cita, copiada de su ultimo mensaje: autonomy-contract.md G).
 
 Regla: .claude/rules/nube-ingenieria.md`);
 };

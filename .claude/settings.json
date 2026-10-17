@@ -35,7 +35,7 @@
       },
       {
         "_comentario": "16/10/2026 (tanda 3, pieza 10; condicion previa para instalar cualquier MCP nueva: CATIA, text-to-cad, context-mode): las MCP que ESCRIBEN, MANDAN o CORREN algo pasan por el mismo despachador que Bash/Write. guardianes.mjs traduce la entrada (mcpComoHerramienta: un `command` es un Bash; una ruta con contenido, un Write) y mail-guard frena la MCP que manda un mail o un mensaje. El matcher mira el VERBO del nombre de la herramienta, sin las internas de la app (ccd_*, el navegador, computer-use, visualize, el registro de MCP): un update_plan o un clic no pagan el despachador. Una MCP nueva cuyo verbo no este en la lista se agrega aca el dia que se instala. Test: mcpDespachador.test.mjs.",
-        "matcher": "^mcp__(?!.*__(?:execute_sql|apply_migration)$)(?!(?:ccd_[A-Za-z_]+|Claude_Browser|claude-in-chrome|computer-use|visualize|mcp-registry|scheduled-tasks)__).+__[A-Za-z_]*(?:write|create|edit|update|delete|remove|move|rename|copy|send|reply|forward|post|upload|save|insert|append|replace|publish|put|patch|run|exec|execute)[A-Za-z_]*$",
+        "matcher": "^mcp__(?!.*__(?:execute_sql|apply_migration)$)(?!(?:ccd_[A-Za-z_]+|Claude_Browser|claude-in-chrome|computer-use|visualize|mcp-registry|scheduled-tasks)__).+__[A-Za-z0-9_-]*(?:[Ww]rite|[Cc]reate|[Ee]dit|[Uu]pdate|[Dd]elete|[Rr]emove|[Mm]ove|[Rr]ename|[Cc]opy|[Ss]end|[Rr]eply|[Ff]orward|[Pp]ost|[Uu]pload|[Ss]ave|[Ii]nsert|[Aa]ppend|[Rr]eplace|[Pp]ublish|[Pp]ut|[Pp]atch|[Rr]un|[Ee]xec|[Ee]xecute|[Gg]enerate|[Ee]xport)[A-Za-z0-9_-]*$",
         "hooks": [
           {
             "type": "command",

@@ -368,7 +368,15 @@ describe('P18 — temporales de mktemp, __pycache__ y scripts que prueban un gua
             `node -e "import('x/hooks/pc-guard.mjs'); require('child_process').execSync('${RF} /c/Dev/otra')"`,
         ]) expect(correr(bash(cmd)).code, cmd).toBe(2);
     });
-    it('ROJO — un script con un borrado REAL sigue frenando, este en el scratchpad o en scripts/', () => {
+    it('ROJO (auditor Opus 17/10, TRUE BUG 4) — un script del scratchpad que LANZA el texto por otras vias no es dato', () => {
+        for (const [nombre, js] of [
+            ['cp.exec', `import cp from 'node:child_process';\nfor (const x of ['${RF} /c/Dev/otra']) cp.exec(x);\n`],
+            ['exec renombrado', `import { exec as correr } from 'node:child_process';\nfor (const x of ['${RF} /c/Dev/otra']) correr(x);\n`],
+            ['import dinamico', `const cp = await import('node:child_process');\nfor (const x of ['${RF} /c/Dev/otra']) cp.exec(x);\n`],
+            ['asyncio', `import asyncio\nfor x in ['${RF} /c/Dev/otra']:\n    asyncio.run(asyncio.create_subprocess_shell(x))\n`],
+        ]) expect(correr(escribir(`${SCRATCH}\\sonda_${nombre.replace(/\s/g, '_')}.${nombre === 'asyncio' ? 'py' : 'mjs'}`, js)).code, nombre).toBe(2);
+    }, 60_000);
+    it('ROJO — un script con un borrado REAL sigue frenando, este en el scratchpad o en scripts/', { timeout: 60_000 }, () => {
         const real = "import fs from 'node:fs';\nfs.rmSync('C:/Users/FacundoS-PC/BARACK ARGENTINA SRL/Ingenieria y Proyecto - General/x', { recursive: true });\n";
         expect(correr(escribir(`${SCRATCH}\\limpiar.mjs`, real)).code).toBe(2);
         const py = "import shutil\nfor d in destinos:\n    shutil.rmtree(d)\n";

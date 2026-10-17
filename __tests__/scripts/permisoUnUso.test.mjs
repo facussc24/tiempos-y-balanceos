@@ -49,6 +49,10 @@ describe('permiso-un-uso-guard — que comando ARMA un permiso de Fak', () => {
         expect(permisosQueArma('New-Item -ItemType File "$env:USERPROFILE\\.claude\\.nube-personal-ok"')).toEqual(['.nube-personal-ok']);
         expect(permisosQueArma('Set-Content -Path C:/Users/FacundoS-PC/.claude/.espacio-ok -Value ""')).toEqual(['.espacio-ok']);
         expect(permisosQueArma('cp /tmp/vacio "$HOME/.claude/.agent-opus-ok"')).toEqual(['.agent-opus-ok']);
+        // auditor Opus 17/10: mover encima, con un cd adelante, o con ./ en la ruta
+        expect(permisosQueArma('mv /tmp/x ~/.claude/.arb-cerrar-ok')).toEqual(['.arb-cerrar-ok']);
+        expect(permisosQueArma('cd ~/.claude && touch .arb-cerrar-ok')).toEqual(['.arb-cerrar-ok']);
+        expect(permisosQueArma('echo 30 > ~/.claude/./.agent-limit')).toEqual(['.agent-limit']);
     });
     it('VERDE: leer, listar, borrar, copiarlo de origen, nombrarlo en un texto, y los pases de la propia sesion', () => {
         for (const c of [
@@ -85,6 +89,8 @@ describe('permiso-un-uso-guard — la cita se compara con lo que Fak escribio', 
         expect(verificarCita({ cita: citaDe('# Fak 15/10 10:50: "cargalo en el listado"'), mensajes: m }).motivo).toMatch(/no esta en el ultimo mensaje/);
         expect(verificarCita({ cita: citaDe('# Fak 15/10 13:50: "hacelo si"'), mensajes: m }).motivo).toMatch(/la cita dice 15\/10 13:50/);
         expect(verificarCita({ cita: citaDe('# Fak 15/10 10:50: "si"'), mensajes: m }).motivo).toMatch(/menos de 2 palabras/);
+        // auditor Opus 17/10: un pedazo de palabra no es una cita («ah si me encanta» → «h si me enc»)
+        expect(verificarCita({ cita: citaDe('# Fak 15/10 10:50: "h si me enc"'), mensajes: m }).motivo).toMatch(/no esta en el ultimo mensaje/);
         // 21/09: el si de las 16:44 ya no es del turno de las 17:47 (el ultimo mensaje es un reclamo)
         expect(verificarCita({ cita: citaDe('# Fak 21/09 13:44: "cargalo en el listado"'), mensajes: mensajesDeFak(VIEJO) }).ok).toBe(false);
         // lo que imprimio un comando (un tool_result) no es Fak
