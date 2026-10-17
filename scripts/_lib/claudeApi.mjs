@@ -284,6 +284,26 @@ export function crearCliente({ apiKey, timeoutMs = 10 * 60 * 1000, maxRetries = 
  *     `cache_control` no cuenta como edicion, segun la guia). La medicion con reenvios cuesta plata: no se corrio.
  */
 /**
+ * FABLE SOLO SI FAK LO PIDE PARA ESA TAREA (api-claude.md §2; tanda 5 pieza 7, 17/10/2026). En la ola del 11/10 Fable
+ * fue el 55 % del gasto (US$ 144,78 de 262,93) y hasta este dia la puerta no lo controlaba: cualquier llamada con
+ * `modelo: 'fable'` pasaba y la sintesis de _apiLotes.mjs lo usaba por defecto. Ahora un pedido a Fable lleva
+ * `pedidoFable`: la frase de Fak que lo pidio, con su fecha (`Fak 17/10 10:05: "usa fable para la sintesis"`). Sin
+ * eso se frena ANTES de mandar (tambien el conteo de tokens y los lotes), y con eso la frase queda en la linea del
+ * ledger. El codigo no puede saber si la frase es real: lo que asegura es que nadie llegue a Fable sin escribirla.
+ */
+export const LARGO_MIN_PEDIDO_FABLE = 12;
+/** La frase para el ledger si el pedido ES a Fable (id resuelto); null si es otro modelo. */
+export const fraseFableDe = (modelo, pedidoFable) => (resolverModelo(modelo) === MODELOS.fable ? exigirPedidoFable(MODELOS.fable, pedidoFable) : null);
+export function exigirPedidoFable(id, pedidoFable) {
+  if (id !== MODELOS.fable) return null;
+  const frase = String(pedidoFable ?? '').replace(/\s+/g, ' ').trim();
+  if (frase.length < LARGO_MIN_PEDIDO_FABLE) {
+    throw new ErrorApi('fable', 'Fable por la API va solo si Fak lo pidio para esta tarea (api-claude.md §2): falta `pedidoFable` con su frase y su fecha (en los comandos, --fable-pedido "Fak dd/mm hh:mm: <lo que dijo>"). Si no lo pidio, va con Opus.');
+  }
+  return frase.slice(0, 200);
+}
+
+/**
  * ¿El ultimo mensaje es un prefill? Un turno del asistente hecho SOLO de texto (string o bloques `text`). El turno que
  * el agente reenvia tal cual despues de un `pause_turn` trae bloques de herramientas del servidor y no es prefill.
  */
@@ -296,9 +316,10 @@ export function esPrefill(mensajes) {
 }
 
 export function armarParametros({
-  modelo, system, usuario, mensajes, maxTokens = 16000, effort, cacheTtl = null, schema, fallbacks,
+  modelo, system, usuario, mensajes, maxTokens = 16000, effort, cacheTtl = null, schema, fallbacks, pedidoFable,
 } = {}) {
   const id = resolverModelo(modelo);
+  exigirPedidoFable(id, pedidoFable);
   if (!mensajes && usuario == null) throw new ErrorApi('api', 'armarParametros: falta `usuario` o `mensajes`');
   if (esPrefill(mensajes)) {
     throw new ErrorApi('api', 'armarParametros: el ultimo mensaje es texto del asistente (prefill): los modelos 5.x lo rechazan con 400. Pedir el formato con `schema` o en el system.');
@@ -399,8 +420,11 @@ export const rutaLedger = (mes = mesLocal(), dir = DIR_API) => path.join(dir, `l
  * pago); sin ella la linea no lleva el campo. Despues deja al dia el resumen por clave (saldo.json); si ese resumen
  * falla, el gasto ya quedo anotado y no se pierde.
  */
-export function registrarGasto(r, { tarea = '', lote = false, dir = DIR_API, ahora = new Date(), clave = null } = {}) {
+export function registrarGasto(r, { tarea = '', lote = false, dir = DIR_API, ahora = new Date(), clave = null, pedidoFable = null } = {}) {
   const u = r.usage || {};
+  // un pedido a Fable deja en el ledger la frase de Fak que lo autorizo (tanda 5). Quien llama la pasa solo si PIDIO
+  // Fable (fraseFableDe): asi queda aunque el fallback del servidor haya contestado con otro modelo
+  const fraseFable = pedidoFable ? String(pedidoFable).replace(/\s+/g, ' ').trim().slice(0, 200) : '';
   const entrada = {
     ts: selloLocal(ahora),
     tarea: String(tarea || 'sin-tarea'),
@@ -416,6 +440,7 @@ export function registrarGasto(r, { tarea = '', lote = false, dir = DIR_API, aho
     ...(r.fallback && r.fallback.length ? { fallback: r.fallback } : {}),
     // solo una etiqueta de etiquetaClave(): cualquier otro texto no se escribe (si alguien pasara la clave misma, no queda)
     ...(RE_ETIQUETA_CLAVE.test(String(clave ?? '')) ? { clave: String(clave) } : {}),
+    ...(fraseFable ? { pedidoFable: fraseFable } : {}),
   };
   // por la puerta segura: el ledger solo puede caer en .sgc-cache (o en la carpeta de BARACK_API_DIR)
   agregarSeguro(rutaLedger(mesLocal(ahora), dir), `${JSON.stringify(entrada)}\n`);
@@ -716,7 +741,7 @@ export async function llamar(cliente, opciones = {}) {
     throw new ErrorApi('api', `la API fallo${tarea ? ` (${tarea})` : ''}: ${e?.status ? `HTTP ${e.status} ` : ''}${e?.message ?? e}`, { causa: e });
   }
   const r = interpretarRespuesta(res, { modelo: params.model, conSchema, duracionMs: Date.now() - t0 });
-  if (registrar) registrarGasto(r, { tarea, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(usado?.apiKey, respaldoClave ?? {}) });
+  if (registrar) registrarGasto(r, { tarea, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(usado?.apiKey, respaldoClave ?? {}), pedidoFable: fraseFableDe(params.model, opciones.pedidoFable) });
   return tolerar ? r : exigirRespuestaUtil(r, { tarea });
 }
 
@@ -738,7 +763,7 @@ export async function llamarLargo(cliente, opciones = {}) {
     throw new ErrorApi('api', `la API fallo${tarea ? ` (${tarea})` : ''}: ${e?.status ? `HTTP ${e.status} ` : ''}${e?.message ?? e}`, { causa: e });
   }
   const r = interpretarRespuesta(res, { modelo: params.model, conSchema, duracionMs: Date.now() - t0 });
-  if (registrar) registrarGasto(r, { tarea, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(usado?.apiKey, respaldoClave ?? {}) });
+  if (registrar) registrarGasto(r, { tarea, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(usado?.apiKey, respaldoClave ?? {}), pedidoFable: fraseFableDe(params.model, opciones.pedidoFable) });
   return tolerar ? r : exigirRespuestaUtil(r, { tarea });
 }
 
@@ -805,7 +830,7 @@ export async function lote(cliente, pedidos, { tarea = '', esperarMs = 30000, ti
   if (!pedidos.length) return { loteId: null, resultados: {} };
   const creado = await crearLote(cliente, pedidos, { tarea });
   await esperarLote(cliente, creado.lote, { esperarMs, timeoutMs });
-  const resultados = await recogerLote(cliente, creado.loteId, { tarea, conSchema: creado.conSchema, modelos: creado.modelos, dirLedger, ahora });
+  const resultados = await recogerLote(cliente, creado.loteId, { tarea, conSchema: creado.conSchema, modelos: creado.modelos, pedidoFableDe: creado.pedidoFableDe, dirLedger, ahora });
   return { loteId: creado.loteId, resultados };
 }
 
@@ -837,6 +862,8 @@ export async function crearLote(cliente, pedidos, { tarea = '' } = {}) {
     lote: b,
     conSchema: Object.fromEntries(pedidos.map((p) => [String(p.id), !!p.schema])),
     modelos: Object.fromEntries(pedidos.map((p) => [String(p.id), resolverModelo(p.modelo)])),
+    // la frase de Fak de cada pedido a Fable (armarParametros ya la exigio): va al ledger al recoger
+    pedidoFableDe: Object.fromEntries(pedidos.map((p) => [String(p.id), fraseFableDe(p.modelo, p.pedidoFable)]).filter(([, f]) => f)),
   };
 }
 
@@ -862,13 +889,13 @@ export async function esperarLote(cliente, loteOId, { esperarMs = 30000, timeout
  * Registra el gasto de cada respuesta como lote. `tareaDe` ({ [id]: tarea }) anota cada pedido con su propio nombre en
  * el ledger (sin eso todos caen bajo `tarea` y no se pueden comparar dos lotes, p. ej. el mismo en high y en medium).
  */
-export async function recogerLote(cliente, loteId, { tarea = '', tareaDe = {}, conSchema = {}, modelos = {}, dirLedger = DIR_API, ahora } = {}) {
+export async function recogerLote(cliente, loteId, { tarea = '', tareaDe = {}, conSchema = {}, modelos = {}, pedidoFableDe = {}, dirLedger = DIR_API, ahora } = {}) {
   const resultados = {};
   for await (const r of await cliente.messages.batches.results(loteId)) {
     const id = String(r.custom_id);
     if (r.result?.type === 'succeeded') {
       const resp = interpretarRespuesta(r.result.message, { modelo: modelos[id] || r.result.message?.model, conSchema: !!conSchema[id], lote: true });
-      registrarGasto(resp, { tarea: tareaDe[id] || tarea, lote: true, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(cliente?.apiKey) });
+      registrarGasto(resp, { tarea: tareaDe[id] || tarea, lote: true, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(cliente?.apiKey), pedidoFable: pedidoFableDe[id] ?? null });
       resultados[id] = resp;
     } else {
       resultados[id] = { error: r.result?.type || 'sin resultado', detalle: r.result?.error?.message ?? r.result?.error?.type ?? null };

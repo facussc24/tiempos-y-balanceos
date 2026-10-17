@@ -21,6 +21,7 @@ describe('claudeApi · migracion a los 5.x', () => {
     it(`${modelo}: el pedido no lleva nada que de 400, y a lo sumo un cache_control`, () => {
       const { params, betas } = A.armarParametros({
         modelo, system: 'system largo y estable', usuario: 'hola', effort: 'medium', cacheTtl: '1h', schema: { type: 'object' },
+        ...(modelo === 'fable' ? { pedidoFable: 'Fak 17/10 10:00: "usa fable para esto"' } : {}),
       });
       for (const k of PROHIBIDOS) expect(params).not.toHaveProperty(k);
       expect(params.output_config.effort).toBe('medium');

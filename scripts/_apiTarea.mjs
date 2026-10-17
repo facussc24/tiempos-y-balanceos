@@ -25,7 +25,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  crearCliente, llamarLargo, contarTokens, estimarUsd, resolverModelo, usd, MENSAJE_SIN_CLAVE, ErrorApi, exigirRespuestaUtil,
+  crearCliente, llamarLargo, contarTokens, estimarUsd, resolverModelo, usd, MENSAJE_SIN_CLAVE, ErrorApi, exigirRespuestaUtil, exigirPedidoFable,
 } from './_lib/claudeApi.mjs';
 
 export const TOPE_ADJUNTO_BYTES = 2 * 1024 * 1024;
@@ -94,10 +94,10 @@ export function leerAdjuntos(rutas, { raiz = process.cwd() } = {}) {
   });
 }
 
-const USO = 'uso: node scripts/_apiTarea.mjs --tarea <nombre> --pedido <archivo.md> [--adjunto <ruta>]... --salida <archivo> [--modelo opus|sonnet|haiku|fable] [--effort low|medium|high|xhigh] [--sistema <archivo>] [--max-tokens N] [--guardar-cortada] [--estimar]';
+const USO = 'uso: node scripts/_apiTarea.mjs --tarea <nombre> --pedido <archivo.md> [--adjunto <ruta>]... --salida <archivo> [--modelo opus|sonnet|haiku|fable] [--fable-pedido "Fak dd/mm hh:mm: <lo que dijo>"] [--effort low|medium|high|xhigh] [--sistema <archivo>] [--max-tokens N] [--guardar-cortada] [--estimar]';
 
 export function leerArgumentos(argv) {
-  const CON_VALOR = ['--tarea', '--pedido', '--adjunto', '--salida', '--modelo', '--effort', '--sistema', '--max-tokens', '--timeout-min'];
+  const CON_VALOR = ['--tarea', '--pedido', '--adjunto', '--salida', '--modelo', '--effort', '--sistema', '--max-tokens', '--timeout-min', '--fable-pedido'];
   const op = { adjuntos: [] };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -115,7 +115,8 @@ export function leerArgumentos(argv) {
   }
   if (!op.tarea || !op.pedido || (!op.salida && !op.estimar)) throw new ErrorApi('api', `faltan --tarea, --pedido o --salida.\n${USO}`);
   op.modelo = op.modelo || 'opus';
-  resolverModelo(op.modelo);
+  // Fable solo con la frase de Fak que lo pidio para esta tarea (api-claude.md §2): sin ella no arranca, antes de leer nada
+  op.pedidoFable = exigirPedidoFable(resolverModelo(op.modelo), op['fable-pedido']) ?? undefined;
   op.effort = op.effort || 'high';
   if (!EFFORTS.includes(op.effort)) throw new ErrorApi('api', `--effort va con ${EFFORTS.join('|')} (max nunca se pide: regla techo-agentes.md)`);
   op.maxTokens = op['max-tokens'] ? Number(op['max-tokens']) : 32000;
@@ -137,7 +138,7 @@ async function main(argv) {
   const salida = op.estimar ? null : validarSalida(op.salida, { entradas: [op.pedido, ...op.adjuntos, ...(op.sistema ? [op.sistema] : [])] });
   // fallbacks: false — un pedido a Opus tiene que volver de Opus; el 09/10/2026 el fallback del servidor
   // devolvio "claude-opus-4-8" y el trabajo se perdio. Un rechazo es un error y se ve, no se tapa con otro modelo.
-  const comun = { modelo: op.modelo, effort: op.effort, usuario, system, cacheTtl: system ? '5m' : null, maxTokens: op.maxTokens, fallbacks: false };
+  const comun = { modelo: op.modelo, effort: op.effort, usuario, system, cacheTtl: system ? '5m' : null, maxTokens: op.maxTokens, fallbacks: false, ...(op.pedidoFable ? { pedidoFable: op.pedidoFable } : {}) };
   const cliente = crearCliente({ timeoutMs: op.timeoutMin * 60 * 1000 });
 
   const entrada = await contarTokens(cliente, comun);

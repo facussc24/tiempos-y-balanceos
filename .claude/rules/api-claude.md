@@ -39,6 +39,12 @@ y `.../pricing`). Traspaso completo: `docs/drafts/HANDOFF_API_CLAUDE_2026-10-08.
 | Volumen barato | Haiku 5.5 | una linea por mail sin respuesta (`effort: low`) |
 | Deliberar | Fable 5.1 | **solo si Fak lo pide** (cuesta 2,5x Opus) |
 
+**Fable por la API lo frena la puerta** (tanda 5, 17/10/2026; en la ola del 11/10 fue el 55 % del gasto y nada lo
+controlaba): un pedido a Fable sin `pedidoFable` (la frase de Fak con su fecha) tira antes de mandar, tambien el conteo
+y los lotes; con la frase pasa y queda en la linea del ledger (`pedidoFable`). En los comandos es
+`--fable-pedido "Fak dd/mm hh:mm: <lo que dijo>"` (`_apiTarea`, `_agente`, `_claude --preguntar`; en `_apiLotes`, el
+campo `pedidoFable` del jobs.json). La sintesis de `_apiLotes` va con Opus por defecto. Test `claudeApiFable.test.mjs`.
+
 El esfuerzo va siempre explicito (Opus y Haiku 5.5 arrancan en `medium`). Opus y Sonnet llevan el
 fallback del servidor (`fallbacks: 'default'`); Haiku no lo tiene. Una respuesta rechazada, cortada por
 `max_tokens` o con JSON roto es un **error** (`ErrorApi`), nunca un resultado a medias. Excepcion a pedido:

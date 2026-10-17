@@ -2,7 +2,8 @@
 // Corre varios pedidos a la API en paralelo (por _apiTarea.mjs) y, si se pide, una síntesis final.
 // Uso: node api_lotes.mjs <jobs.json>
 //   jobs.json: { "concurrencia": 5, "salidaDir": "...", "jobs": [ { "tarea": "...", "pedido": "x.md", "adjuntos": ["..."], "modelo": "opus", "effort": "high" } ],
-//               "sintesis": { "tarea": "...", "pedido": "y.md", "modelo": "fable", "salida": "..." } }
+//               "sintesis": { "tarea": "...", "pedido": "y.md", "modelo": "opus", "salida": "..." } }
+//   Fable (en un job o en la sintesis) solo con "pedidoFable": "Fak dd/mm hh:mm: <lo que dijo>" (api-claude.md §2).
 // En modo --auditoria <lista.txt> arma los lotes solo: agrupa los archivos de la lista hasta `kbPorLote` KB por lote.
 //
 // En BATCH (tanda 5, 17/10/2026; Message Batches, mitad de precio, casi siempre menos de 1 h, vence a las 24 h):
@@ -60,7 +61,7 @@ if (cfg.auditoria) {
   }
   if (actual.length) lotes.push(actual);
   const au = cfg.auditoria;
-  jobs = lotes.map((adj, i) => ({ tarea: `${au.tarea}-${String(i + 1).padStart(2, '0')}`, pedido: au.pedido, adjuntos: adj, modelo: au.modelo || 'opus', effort: au.effort || 'high', maxTokens: au.maxTokens, guardarCortada: au.guardarCortada, timeoutMin: au.timeoutMin }));
+  jobs = lotes.map((adj, i) => ({ tarea: `${au.tarea}-${String(i + 1).padStart(2, '0')}`, pedido: au.pedido, adjuntos: adj, modelo: au.modelo || 'opus', effort: au.effort || 'high', maxTokens: au.maxTokens, guardarCortada: au.guardarCortada, timeoutMin: au.timeoutMin, pedidoFable: au.pedidoFable }));
   // saltarExistentes: los lotes que ya tienen salida en disco no se vuelven a pagar (relanzar solo los que fallaron).
   const todos = jobs.length;
   if (au.saltarExistentes) jobs = jobs.filter((j) => !fs.existsSync(path.join(cfg.salidaDir, `${j.tarea}.md`)));
@@ -98,6 +99,7 @@ function correr(job) {
     for (const x of job.adjuntos || []) a.push('--adjunto', x);
     if (job.maxTokens) a.push('--max-tokens', String(job.maxTokens));
     if (job.guardarCortada) a.push('--guardar-cortada');
+    if (job.pedidoFable) a.push('--fable-pedido', job.pedidoFable);
     const t0 = Date.now();
     const p = spawn('node', a, { cwd: RAIZ, stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '';
@@ -134,7 +136,10 @@ const paraSintesis = cfg.sintesis?.todosEnDisco && cfg.auditoria
 if (cfg.sintesis && paraSintesis.length) {
   const s = cfg.sintesis;
   console.log(`síntesis sobre ${paraSintesis.length} lote(s)`);
-  const a = ['scripts/_apiTarea.mjs', '--tarea', s.tarea, '--pedido', s.pedido, '--salida', s.salida, '--modelo', s.modelo || 'fable', '--effort', s.effort || 'high', '--timeout-min', String(s.timeoutMin || 30)];
+  // la sintesis va con Opus por defecto (hasta el 17/10/2026 era Fable: en la ola del 11/10 Fable fue el 55 % del gasto);
+  // Fable solo si el jobs.json lo pide con "pedidoFable": la frase de Fak (api-claude.md §2)
+  const a = ['scripts/_apiTarea.mjs', '--tarea', s.tarea, '--pedido', s.pedido, '--salida', s.salida, '--modelo', s.modelo || 'opus', '--effort', s.effort || 'high', '--timeout-min', String(s.timeoutMin || 30)];
+  if (s.pedidoFable) a.push('--fable-pedido', s.pedidoFable);
   for (const h of paraSintesis) a.push('--adjunto', h.salida);
   for (const x of s.adjuntos || []) a.push('--adjunto', x);
   if (s.maxTokens) a.push('--max-tokens', String(s.maxTokens));

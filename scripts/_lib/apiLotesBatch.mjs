@@ -58,7 +58,7 @@ export function idDeTarea(tarea) {
 /**
  * De los jobs del runner a los pedidos del lote, con los mismos candados que _apiTarea.mjs (sin secretos, sin
  * adjuntos de mas de 2 MB, la salida validada antes de pagar). Puro salvo leer los archivos de entrada.
- * job: { tarea, pedido, adjuntos, modelo, effort, maxTokens, guardarCortada, sistema }
+ * job: { tarea, pedido, adjuntos, modelo, effort, maxTokens, guardarCortada, sistema, pedidoFable (solo con Fable) }
  */
 export function armarPedidosLote(jobs, { raiz = process.cwd(), salidaDir } = {}) {
   if (!salidaDir) throw new ErrorApi('lote', 'falta salidaDir');
@@ -86,6 +86,8 @@ export function armarPedidosLote(jobs, { raiz = process.cwd(), salidaDir } = {})
         system,
         cacheTtl: system ? '1h' : null,   // en lote el contexto compartido se cachea 1 h (doc de Batches)
         maxTokens: Number(job.maxTokens) || MAX_TOKENS_LOTE,
+        // Fable solo con la frase de Fak (la exige armarParametros al crear el lote; va al ledger al recoger)
+        ...(job.pedidoFable ? { pedidoFable: job.pedidoFable } : {}),
       },
     };
   });
@@ -110,6 +112,7 @@ export async function mandarLote(cliente, { jobs, salidaDir, raiz = process.cwd(
     pedidos: pedidos.map((p) => ({ id: p.id, salida: p.salida, modelo: creado.modelos[p.id], effort: p.opciones.effort, maxTokens: p.opciones.maxTokens, guardarCortada: p.guardarCortada })),
     modelos: creado.modelos,
     conSchema: creado.conSchema,
+    pedidoFableDe: creado.pedidoFableDe,
     recogiendo: null,
     recogido: null,
   };
@@ -142,7 +145,7 @@ export async function recogerGuardado(cliente, { salidaDir, ahora = new Date(), 
   guardarEstado(salidaDir, { ...estado, recogiendo: selloLocal(ahora) });
   // cada pedido con su nombre en el ledger, como `sesion:<tarea>` igual que _apiTarea.mjs (y con su effort, para medir)
   const tareaDe = Object.fromEntries(estado.pedidos.map((p) => [p.id, `sesion:${p.id}${p.effort ? `@${p.effort}` : ''}`]));
-  const resultados = await recogerLote(cliente, estado.loteId, { tarea: estado.tarea, tareaDe, conSchema: estado.conSchema || {}, modelos: estado.modelos || {}, dirLedger, ahora });
+  const resultados = await recogerLote(cliente, estado.loteId, { tarea: estado.tarea, tareaDe, conSchema: estado.conSchema || {}, modelos: estado.modelos || {}, pedidoFableDe: estado.pedidoFableDe || {}, dirLedger, ahora });
   const filas = [];
   let costoUsd = 0;
   for (const p of estado.pedidos) {
