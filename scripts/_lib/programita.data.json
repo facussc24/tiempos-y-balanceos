@@ -1,0 +1,88 @@
+{
+  "_que_es": "Lista de lo que muestra la pagina local del programita (scripts/_programita.mjs, tanda 6 del plan del sistema, 17/10/2026). Fak, audio del 15/10 17:58: «que nos vaya diciendo que tareas corren en segundo plano... si la nube esta bien sincronizada... porque una vez se piensa que esta todo funcionando bien y no es asi». Una tarea o un selftest nuevo se agrega ACA, no en el codigo.",
+  "refresco_segundos": 30,
+  "nube_cada_minutos": 10,
+  "selftests_cada_horas": 6,
+  "sesiones_horas": 12,
+  "impresora_reciente_minutos": 5,
+  "tareas": [
+    {
+      "nombre": "Barack - mis mails a la nube",
+      "para_fak": "Mis mails suben a la nube",
+      "registro": "%LOCALAPPDATA%/BarackMailsFak/mails.log",
+      "lector": "mails",
+      "cada_minutos": 120
+    },
+    {
+      "nombre": "Barack - mi asistente al dia",
+      "para_fak": "Mi memoria y la configuración se sincronizan con la nube",
+      "registro": "{repo}/.claude/state/nube-sync.log",
+      "lector": "resultado",
+      "cada_minutos": 120
+    },
+    {
+      "nombre": "Barack - Sync mails a cache local",
+      "para_fak": "Los mails se copian a la PC para poder buscarlos",
+      "registro": "{repo}/.mail-cache/sync-diario.log",
+      "lector": "resultado",
+      "cada_minutos": 240
+    },
+    {
+      "nombre": "Barack - Noche de Claude (API)",
+      "para_fak": "La noche: el trabajo automático con la API",
+      "registro": "{repo}/.claude/state/nocturno.json",
+      "lector": "noche",
+      "cada_minutos": 1440
+    },
+    {
+      "nombre": "Barack - Backup Supabase semanal",
+      "para_fak": "Copia de seguridad semanal de los AMFE y planes de control",
+      "registro": "{repo}/backups/backup-semanal.log",
+      "lector": "resultado",
+      "cada_minutos": 10080
+    },
+    {
+      "nombre": "Barack - ARB siempre abierto",
+      "para_fak": "El arb queda abierto",
+      "registro": null,
+      "lector": "windows",
+      "cada_minutos": 3
+    }
+  ],
+  "selftests": [
+    {
+      "skill": "impresion-3d-bambu",
+      "para_fak": "Impresora 3D",
+      "comandos": [["py", "-3", ".claude/skills/impresion-3d-bambu/scripts/bambu_red.py", "--selftest"]]
+    },
+    {
+      "skill": "hojas-de-proceso",
+      "para_fak": "Hojas de proceso",
+      "comandos": [
+        ["py", "-3", ".claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py"],
+        ["py", "-3", ".claude/skills/hojas-de-proceso/scripts/redaccion_selftest.py"]
+      ]
+    },
+    {
+      "skill": "cad-design",
+      "para_fak": "Diseño 3D",
+      "comandos": [],
+      "sin_selftest": "No tiene selftest (eval_casos_3d.py no cuenta: sin la simulación de asiento sale con error)"
+    },
+    {
+      "skill": "patrones-corte-plotter",
+      "para_fak": "Patrones de corte (DXF / PLT)",
+      "comandos": [["py", "-3", ".claude/skills/patrones-corte-plotter/scripts/patronlib_selftest.py"]]
+    },
+    {
+      "skill": "plotter-aol",
+      "para_fak": "Plotter de corte AOL",
+      "comandos": [["py", "-3", ".claude/skills/plotter-aol/scripts/acomodar_columnas_selftest.py"]]
+    }
+  ],
+  "impresora_carpetas": [
+    "{repo}/exports/impresion_3d",
+    "%USERPROFILE%/BARACK ARGENTINA SRL/Ingeniería y Proyecto - General/INGENIERIA BARACK (NUNCA BORRAR)/1- GENERAL/5. 3D/IMPRESORA BAMBU A2L"
+  ],
+  "detector_umbral": 0.45
+}
