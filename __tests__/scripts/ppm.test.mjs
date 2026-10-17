@@ -22,7 +22,11 @@ describe('hallazgosRespondidos', () => {
     const t1 = 'leyenda: **arreglado / rechazado / a propósito / no importa**\n- [Importante] a.mjs:1 — x · respuesta: arreglado\n- [Nit] b.mjs:2 — y · respuesta: ____\n| h | **a propósito** |';
     const t2 = 'informe viejo sin etiquetas: CRITICO, WARNING';
     const r = hallazgosRespondidos([t1, t2]);
-    expect(r).toEqual({ informes: 1, emitidos: 2, respondidos: 1, arreglados: 1 });
+    expect(r).toEqual({ informes: 1, emitidos: 2, respondidos: 1, arreglados: 1, enParte: 0 });
     expect(r.respondidos).toBeLessThanOrEqual(r.emitidos);
+  });
+  it('«arreglado en parte» se cuenta aparte, no como arreglado (ronda 2, detalle 22)', () => {
+    const t = '- [Importante] a:1 · respuesta: arreglado en parte (falta X)\n- [Nit] b:2 · respuesta: arreglado';
+    expect(hallazgosRespondidos([t])).toEqual({ informes: 1, emitidos: 2, respondidos: 2, arreglados: 1, enParte: 1 });
   });
 });

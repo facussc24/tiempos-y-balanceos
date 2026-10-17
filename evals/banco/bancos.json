@@ -1,18 +1,40 @@
 {
-  "_que_es": "Bancos de casos de RESULTADO por tipo de entregable (tanda 9, pieza 4; docs/PLAN_METODO_2026-10-16.md). Cada banco lista sus casos (carpetas con prompt.md + graders/), las skills del repo que entran al brazo «con» y las reglas que se empaquetan como una skill generada (en una sesion real cargan siempre por CLAUDE.md; en el eval, el hijo corre en una carpeta temporal y no las ve). Lo corre node scripts/_evalBanco.mjs --banco <nombre>. Primer lote armado con casos que ya existian y respuestas conocidas de reglas o incidentes con fecha; el segundo lote de AMFE se arma con Fak (una hora, pedida en el cierre de la tanda).",
+  "_que_es": "Bancos de casos de RESULTADO por tipo de entregable (tanda 9, pieza 4; docs/PLAN_METODO_2026-10-16.md). Cada banco lista sus casos (carpetas con prompt.md + graders/), las skills del repo que entran al brazo «con» y las reglas que se empaquetan como una skill generada (en una sesion real cargan siempre por CLAUDE.md; en el eval, el hijo corre en una carpeta temporal y no las ve). OJO (ronda 2, detalle 16): el brazo «con» trae ademas la lista del revisor (docs/review/<tipo>.md), que una sesion real NO carga; asi que el brazo «con» mide reglas + lista del revisor, no solo lo que carga una sesion. Lo corre node scripts/_evalBanco.mjs --banco <nombre>. Primer lote armado con casos que ya existian y respuestas conocidas de reglas o incidentes con fecha; el segundo lote de AMFE se arma con Fak (una hora, pedida en el cierre de la tanda).",
   "umbral": 0.8,
   "_umbral": "Pasa un caso con puntaje >= 0,8 en el brazo con. La primera semana el banco AVISA, no frena: el umbral se lee, no corta nada.",
   "bancos": {
     "amfe": {
-      "casos": ["evals/siglas-s7-o3", "evals/banco/amfe/aph-sin-accion", "evals/banco/amfe/s-sale-del-efecto", "evals/banco/amfe/deteccion-muestreo", "evals/banco/amfe/control-sin-valor-ni-cita"],
-      "skills": ["amfe-domain", "amfe-cookbook"],
-      "reglas": [".claude/rules/amfe.md", ".claude/rules/caracteristicas-especiales.md", "docs/review/amfe.md"],
+      "casos": [
+        "evals/siglas-s7-o3",
+        "evals/banco/amfe/aph-sin-accion",
+        "evals/banco/amfe/s-sale-del-efecto",
+        "evals/banco/amfe/deteccion-muestreo",
+        "evals/banco/amfe/control-sin-valor-ni-cita"
+      ],
+      "skills": [
+        "amfe-domain",
+        "amfe-cookbook"
+      ],
+      "reglas": [
+        ".claude/rules/amfe.md",
+        ".claude/rules/caracteristicas-especiales.md",
+        "docs/review/amfe.md"
+      ],
       "descripcion_reglas": "Reglas de Barack para escribir, calificar y revisar un AMFE de proceso: severidad por efecto, ocurrencia, deteccion, prioridad de accion, caracteristicas especiales (CC/SC, D/TLD), controles y acciones. Usar al calificar S/O/D, al redactar un control o una accion, o al decidir una sigla."
     },
     "mail": {
-      "casos": ["evals/mail-alcance", "evals/banco/mail/consumo-sin-pisar-otra-area", "evals/banco/mail/correccion-sin-confesar", "evals/banco/mail/adjunto-sin-explicar", "evals/banco/mail/pedir-a-calidad-mirar-buzon"],
+      "casos": [
+        "evals/mail-alcance",
+        "evals/banco/mail/consumo-sin-pisar-otra-area",
+        "evals/banco/mail/correccion-sin-confesar",
+        "evals/banco/mail/adjunto-sin-explicar",
+        "evals/banco/mail/pedir-a-calidad-mirar-buzon"
+      ],
       "skills": [],
-      "reglas": [".claude/rules/mail-envio.md", "docs/review/mail.md"],
+      "reglas": [
+        ".claude/rules/mail-envio.md",
+        "docs/review/mail.md"
+      ],
       "descripcion_reglas": "Reglas de Barack para escribir un mail de trabajo: que entra y que no, el largo, la voz de Fak, quien va en copia, no contestar por otra area y mirar el buzon antes de pedir. Usar siempre que haya que escribir o revisar un mail."
     }
   }

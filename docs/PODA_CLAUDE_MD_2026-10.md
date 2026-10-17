@@ -68,7 +68,7 @@ contexto no mejoran el éxito en general y suben el costo más de 20 %, **pero s
    antes la lista de lo que se saca.
 
 El primer dato ya está: en el banco de la pieza 4, el caso de detección por muestreo dio 100 % con las reglas de AMFE y
-0 % sin ellas (una corrida por brazo, 17/10). Esas reglas no se podan: son las no estándar.
+0 % sin ellas (3 corridas por brazo, 17/10). Esas reglas no se podan: son las no estándar.
 
 ## Qué falta y de quién
 

@@ -30,7 +30,8 @@ le encontró un defecto (un agente caído contaba como «sin hallazgos»), arreg
 1. Por cada diff, el mismo pedido: «revisá este cambio con `REVIEW.md`; devolvé los hallazgos con etiqueta y caso»
    (los prompts de lente de `.claude/workflows/revision-adversarial.js` sirven tal cual).
 2. 3 corridas por modelo: `investigador` en Sonnet y `investigador` con `model: opus`. Primero en esfuerzo `low`
-   (Boris, 23/09: «`/code-review low` cuesta menos y encuentra más bugs»), y solo si pierde, más alto.
+   (el plan general, tanda 9, apartado «a bis», cita a Boris el 23/09: «`/code-review low` cuesta menos y encuentra más
+   bugs»; la fuente original no la verifiqué), y solo si pierde, más alto.
 3. Se compara contra `/code-review low` y `medium` sobre los mismos 8 (los lanza la sesión con la skill `code-review`).
 4. Se cuenta, por modelo: defectos encontrados de 4 (con la etiqueta bien puesta), falsos Importante en los 4 limpios, y
    cuánto varía entre corridas. Si las 3 corridas de un caso no coinciden, el número es ruido y se dice.
