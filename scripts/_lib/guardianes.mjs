@@ -2173,23 +2173,26 @@ const CORRE_HD_TEXTO_RE = /(?:^|[\\/])(?:cat|tee|echo|printf)(?:\.exe)?$/i;
 // sigue si lo es, el verbo es esa (una opcion con valor que no esta en la tabla no esconde al lector o al mover).
 function verboDeComando(c, conocido = null) {
   const p = [...c.palabras];
-  let envuelto = false;
+  let trasOpcion = false;   // la ultima palabra que se saco era una opcion del envoltorio (puede llevar un valor que no esta en la tabla)
   while (p.length && (p[0] === '' || FIRMA_PALABRA_SHELL.has(p[0]) || /^[A-Za-z_][A-Za-z0-9_]*\+?=/.test(p[0]) || CORRE_ENVOLTORIO_RE.test(p[0]))) {
     const w = p.shift();
+    trasOpcion = false;
     if (!CORRE_ENVOLTORIO_RE.test(w)) continue;
-    envuelto = true;
     const conValor = ENVOLTORIO_CON_VALOR[w.toLowerCase()];
     while (p.length && (p[0].startsWith('-') || /^\d+(?:\.\d+)?[smhd]?$/.test(p[0]))) {
       const o = p.shift();
+      trasOpcion = o.startsWith('-');
       // `env -S "cat x"` / `--split-string=…`: el valor ES el comando, partido en palabras
       const partido = /^env$/i.test(w) && (/^(?:-S|--split-string)$/.test(o) ? p.shift() : o.match(/^--split-string=(.*)$/)?.[1]);
-      if (partido) { p.unshift(...String(partido).split(/\s+/).filter(Boolean)); continue; }
-      if (conValor && conValor.test(o) && p.length) p.shift();
+      if (partido) { p.unshift(...String(partido).split(/\s+/).filter(Boolean)); trasOpcion = false; continue; }
+      if (conValor && conValor.test(o) && p.length) { p.shift(); trasOpcion = false; }
     }
   }
-  if (envuelto && conocido && p.length && !conocido(verboPelado(p[0]))) {
-    const k = p.findIndex((w) => conocido(verboPelado(w)));
-    if (k > 0) return { verbo: p[k], args: p.slice(k + 1) };
+  // (F5 del auditor de cierre) el respaldo vale solo para el VALOR de una opcion que no esta en la tabla: la palabra que
+  // sigue a una opcion del envoltorio no es conocida y la siguiente si (`timeout -x VAL cat …`). En `timeout 60 rg -n mv
+  // <archivo>` el `mv` es el patron del rg, no el verbo.
+  if (trasOpcion && conocido && p.length > 1 && !conocido(verboPelado(p[0])) && conocido(verboPelado(p[1]))) {
+    return { verbo: p[1], args: p.slice(2) };
   }
   return { verbo: p[0] ?? '', args: p.slice(1) };
 }

@@ -204,4 +204,8 @@ describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (escritori
     it('ROJO (ronda 3, T5) — eval, exec -a, timeout -s y env -u adelante del mv o el cp hacia el archivo de cerradas', () => {
         esperados(G, ['N-E03', 'N-E04', 'N-E05', 'N-E07', 'N-E08', 'N-E09']);
     });
+    it('VERDE (ronda 3, F5 del auditor de cierre) — detras de un envoltorio, un mv o un cp que es el PATRON de un rg o un grep no es el verbo', () => {
+        esperados(G, ['Z-E95', 'Z-E95c', 'Z-E95b']);
+        esperados(G, ['Z-E90', 'Z-E91', 'Z-E92', 'Z-E94']);   // los envoltorios de T5 hacia el archivo de cerradas siguen frenando
+    });
 });
