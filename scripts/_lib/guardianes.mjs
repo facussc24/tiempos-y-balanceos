@@ -1884,14 +1884,24 @@ function variablesTemporales(code) {
     const id = new RegExp(`(?<![\\w$.])${esc(v)}(?![\\w$])`);
     let n = [...code.matchAll(new RegExp(`(?<![\\w$.])${esc(v)}\\s*(?:[-+*/%]?=|:=)(?!=)`, 'g'))].length;
     n += [...code.matchAll(new RegExp(`(?<![\\w$.])${esc(v)}\\s*:(?!=)[^=\\n]*=(?![=>])`, 'g'))].length;
-    for (const sentencia of code.split(/[\n;]/)) {
-      const izq = sentencia.match(/^([^=]*?)(?<![=!<>+\-*/%&|^:])=(?![=>])/)?.[1];
-      if (!izq || !/[[\](){},]/.test(izq) || !id.test(izq)) continue;
+    // (F3 del auditor de cierre) un renglon que sigue a una llamada abierta en los de antes (`shutil.rmtree(\n    d,
+    // ignore_errors=True)`, el formato de black) no es una sentencia: el `nombre=` pegado ahi es un argumento con nombre.
+    // Se cuentan `(` y `[` sin las cadenas; las llaves no, porque abren el cuerpo de una funcion.
+    let abiertos = 0;
+    for (const renglon of code.split('\n')) {
+      const continua = abiertos > 0;
+      const limpio = renglon.replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`/g, '""');
+      abiertos = Math.max(0, abiertos + (limpio.match(/[([]/g) ?? []).length - (limpio.match(/[)\]]/g) ?? []).length);
+      for (const sentencia of renglon.split(';')) {
+        const izq = sentencia.match(/^([^=]*?)(?<![=!<>+\-*/%&|^:])=(?![=>])/)?.[1];
+        if (!izq || !/[[\](){},]/.test(izq) || !id.test(izq)) continue;
+        if (continua && /[\w$]$/.test(izq)) continue;
       // (TB-1 del auditor a ciegas de la ronda 3) la desestructuracion ENTRE PARENTESIS, `({ d } = …)` (la unica forma
       // valida en JS para un objeto) o `([ d ] = …)`: la izquierda abre un `(` que se cierra despues del `=`
-      const abre = (izq.match(/[([{]/g) ?? []).length;
-      const cierra = (izq.match(/[)\]}]/g) ?? []).length;
-      if (abre === cierra || (/^\s*\(/.test(izq) && abre === cierra + 1)) n++;
+        const abre = (izq.match(/[([{]/g) ?? []).length;
+        const cierra = (izq.match(/[)\]}]/g) ?? []).length;
+        if (abre === cierra || (/^\s*\(/.test(izq) && abre === cierra + 1)) n++;
+      }
     }
     return n;
   };

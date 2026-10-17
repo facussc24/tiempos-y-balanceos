@@ -426,4 +426,10 @@ describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (borrado-m
         const js = "import fs from 'node:fs';\nimport os from 'node:os';\nimport path from 'node:path';\nconst d = fs.mkdtempSync(path.join(os.tmpdir(), 'x-'));\nlet a;\n({ a } = { a: 1 });\nfs.rmSync(d, { recursive: true, force: true });\n";
         expect(write('C:\\Dev\\BarackMercosul\\scripts\\_x.mjs', js)).toBe(0);
     });
+    it('VERDE (ronda 3, F3 del auditor de cierre) — el renglon de continuacion de una llamada de varios renglones no es una asignacion', () => {
+        esperados(G, ['Z-B180', 'Z-B181', 'Z-B180c', 'Z-B181c']);
+        // ROJO de la misma familia: la reasignacion adentro del cuerpo de una funcion de varios renglones sigue contando
+        const js = "import fs from 'node:fs';\nimport os from 'node:os';\nimport path from 'node:path';\nlet d = fs.mkdtempSync(path.join(os.tmpdir(), 'x-'));\n['a'].forEach((x) => {\n  [d] = ['Y:/Ingenieria/x'];\n});\nfs.rmSync(d, { recursive: true, force: true });\n";
+        expect(write('C:\\Dev\\BarackMercosul\\scripts\\_x.mjs', js)).toBe(1);
+    });
 });
