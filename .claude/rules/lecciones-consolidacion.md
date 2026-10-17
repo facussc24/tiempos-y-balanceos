@@ -34,6 +34,18 @@ conducta con el minimo de historia que la hace entendible. El detalle largo va a
 | Procedimiento / meta-proceso | una regla con `paths:` (no siempre-cargada) | el puntero |
 | Ya no aplica | snapshot en `docs/_archive/` | nada |
 
+## Graduar no es terminar: la regla nueva se verifica y la lección se mide (D7, tanda 9, 17/10/2026)
+
+1. **Antes de darla por implementada**, una regla o un hook nacido de una corrección de Fak se prueba
+   adversarialmente: **un caso que tiene que frenar y uno que no**, los dos con un mensaje o un archivo real (Thariq,
+   02/06: «minar las sesiones para convertir correcciones repetidas en reglas, verificadas adversarialmente»). Sin el
+   par, la regla es prosa (`rule-enforcement-gate`).
+2. **A la semana se mide si la corrección volvió**: `node scripts/_cuatroNumeros.mjs --desde <un mes antes> --filas
+   <archivo>` y despues `node scripts/_lib/correccionGuard.mjs --medir <archivo> --despues <fecha de la graduación>`
+   cuentan, por categoría de corrección, cuántos mensajes de Fak la traen antes y después, por semana. Si la categoría
+   no bajó, la lección no sirvió: se rehace el control, no se agrega otra lección («la lección sola no alcanza», LECCIONES
+   11-12/10).
+
 ## El gate es POR BULLET, no por bytes
 
 **Enforcement:** `evaluarBullets()` en `scripts/_lib/cierreGuard.mjs`, con los limites en

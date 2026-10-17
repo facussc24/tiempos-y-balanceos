@@ -27,6 +27,9 @@ sintesis con la ruta primero). Es lo que Fak tipeaba a mano en cada sesion ("mod
 en dos semanas). `--skill` se valida contra `.claude/skills/` y `--carpeta` contra el disco; una
 linea nueva de la plantilla se prueba en `encargo.test.mjs` (pasa por los mismos candados). Un mensaje que no es encargo (un gracias, un aviso):
 `touch ~/.claude/.encargo-libre` — vale una vez, mientras el archivo este vacio.
+Desde el 17/10/2026 (tanda 9) el bloque suma, despues del cierre, el renglon `lineaRevisor`: definicion de hecho y
+quiz de 3 preguntas antes de empezar, el agente `revisor-pedido` al terminar y como mucho 2 rondas con el revisor
+(con `--lanzada`, antes del renglon autonomo, que sigue ultimo).
 
 **`--lanzada` (10/10/2026, cola HOY-8 con el si de Fak):** el encargo va a una sesion que LANZA otra
 sesion y Fak no esta en su ventana. La linea 1 del ARRANQUE pasa de «entra en modo plan» a «NO entres

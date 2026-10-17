@@ -49,6 +49,7 @@ import { relevarCerebro, lintCerebro, dirMemoriaDe, resumir as resumirCerebro } 
 import { chequearAvisos } from './_lib/probarMejora.mjs';
 import { carpetaNube } from './_datosExportar.mjs';
 import { evaluarCopiaNube, leerEstado as leerEstadoNube, rutaEstadoPorDefecto } from './_lib/datosNube.mjs';
+import { evaluarRevisorPedido, relevarRevisorPedido, registroDeSesion } from './_lib/revisorPedido.mjs';
 export const LECCIONES_AVISO = CANON_CIERRE.lecciones.aviso_bytes;
 export const LECCIONES_TOPE = CANON_CIERRE.lecciones.tope_bytes;
 
@@ -307,13 +308,18 @@ export function evaluarCI({ sha, run, error }) {
  * Trae la corrida mas nueva del workflow por la API publica de GitHub (esta PC no tiene login de `gh`:
  * memoria gh_cli_sin_login_ci_por_api). Con tope de tiempo: esperar sin tope no es supervisar.
  */
-export async function leerUltimoRunCI({ fetchFn = globalThis.fetch, timeoutMs = 8000, shaLocal } = {}) {
+export async function leerUltimoRunCI({ fetchFn = globalThis.fetch, timeoutMs = 8000, shaLocal, workflow = null } = {}) {
     let sha = shaLocal ?? null;
     if (sha == null) { try { sha = git('rev-parse HEAD'); } catch { /* sin git */ } }
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), timeoutMs);
+    // Con `workflow` (tanda 9, pieza 9: el CI se partio en candado.yml y deploy.yml) se lee la ultima corrida de ESE
+    // workflow en main: con dos workflows, «la ultima corrida» a secas puede ser la de uno y tapar un rojo del otro.
+    const url = workflow
+        ? `https://api.github.com/repos/${REPO_GITHUB}/actions/workflows/${workflow}/runs?per_page=1&branch=main`
+        : `https://api.github.com/repos/${REPO_GITHUB}/actions/runs?per_page=1`;
     try {
-        const r = await fetchFn(`https://api.github.com/repos/${REPO_GITHUB}/actions/runs?per_page=1`, {
+        const r = await fetchFn(url, {
             signal: ctl.signal,
             headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'barack-cierreSesion' },
         });
@@ -328,8 +334,41 @@ export async function leerUltimoRunCI({ fetchFn = globalThis.fetch, timeoutMs = 
     }
 }
 
+/**
+ * Puro (tanda 9, pieza 9). `candado` = evaluarCI del workflow que corre en cada push (candado.yml); `deploy` = la
+ * ultima corrida de deploy.yml, que corre solo cuando cambia la app y por eso casi nunca es la del HEAD. El candado
+ * manda; del deploy solo importa que su ultima corrida no este en rojo (un deploy roto deja a Fak probando una version
+ * vieja). No leer el deploy es aviso, nunca verde.
+ */
+export function combinarCI(candado, { run, error, sha = null } = {}) {
+    const tablero = `https://github.com/${REPO_GITHUB}/actions/workflows/deploy.yml`;
+    if (error) return candado.estado === 'falta' ? candado : { estado: 'aviso', detalle: `${candado.detalle} · el deploy no se pudo leer (${error}): ${tablero}` };
+    if (run && run.status === 'completed' && run.conclusion && run.conclusion !== 'success') {
+        // Auditor de la tanda 9 (17/10): con el filtro de rutas, el commit que arregla un test de herramientas no vuelve
+        // a correr el deploy; si esto fuera 'falta' siempre, todas las sesiones quedarian frenadas por un rojo que solo
+        // se destraba desde la web. Es 'falta' cuando el deploy rojo es el del HEAD; si es de un commit anterior, aviso.
+        const rojo = String(run.head_sha ?? '').slice(0, 8);
+        const delHead = Boolean(sha) && String(sha).slice(0, 8) === rojo;
+        const msg = `el ULTIMO DEPLOY de la app esta ROJO (${run.conclusion}, ${rojo}): ${run.html_url ?? tablero}`;
+        if (delHead) return { estado: 'falta', detalle: `${candado.detalle} · y ${msg}` };
+        return { estado: candado.estado === 'falta' ? 'falta' : 'aviso', detalle: `${candado.detalle} · ${msg} — si el rojo ya se arreglo, lo relanza Fak desde la web: Run workflow sobre main en la pagina del deploy` };
+    }
+    // Ronda 2 (17/10, hallazgo 1): un deploy en curso o en cola NO hereda el verde del candado. candado.yml no corre el
+    // build de la app; solo deploy.yml lo prueba, y mientras corre no se sabe si lo publicado va a quedar verde.
+    if (run && run.status !== 'completed') {
+        const corre = String(run.head_sha ?? '').slice(0, 8);
+        const delHead = Boolean(sha) && String(sha).slice(0, 8) === corre;
+        return { estado: candado.estado === 'falta' ? 'falta' : 'aviso', detalle: `${candado.detalle} · deploy ${delHead ? 'del HEAD ' : ''}en curso (${run.status}, ${corre}): volver a mirar antes de cerrar — ${run.html_url ?? tablero}` };
+    }
+    const dep = !run ? 'sin corridas del deploy' : `ultimo deploy verde (${String(run.head_sha ?? '').slice(0, 8)})`;
+    return { ...candado, detalle: `${candado.detalle} · ${dep}` };
+}
+
 async function chequearCI() {
-    return evaluarCI(await leerUltimoRunCI());
+    // Mientras candado.yml no exista en GitHub (antes del primer push de la tanda 9) la API da 404: se lee como antes.
+    const candado = await leerUltimoRunCI({ workflow: 'candado.yml' });
+    if (candado.error && /HTTP 404/.test(candado.error)) return evaluarCI(await leerUltimoRunCI());
+    return combinarCI(evaluarCI(candado), { ...(await leerUltimoRunCI({ workflow: 'deploy.yml' })), sha: candado.sha });
 }
 
 function chequearBuild(saltear) {
@@ -400,6 +439,59 @@ function chequearCopiaNube(tmp) {
         return evaluarCopiaNube({ estado, hayCarpeta: !!dir, escrituraEpoch: ultimaEscrituraSupabase(tmp) });
     } catch (e) {
         return { estado: 'aviso', detalle: `no se pudo leer el estado de la copia de la nube: ${e.message}` };
+    }
+}
+
+/**
+ * Revisor contra el pedido (tanda 9, pieza 1): si la sesion le entrego documentos a Fak y no corrio el agente
+ * revisor-pedido, avisa. Nunca falta: la primera semana el revisor avisa, no frena. Logica en _lib/revisorPedido.mjs.
+ */
+function chequearRevisorPedido(env = process.env) {
+    try {
+        const p = registroDeSesion(env.CLAUDE_CODE_SESSION_ID);
+        return evaluarRevisorPedido(p ? relevarRevisorPedido(p) : { leido: false });
+    } catch (e) {
+        return { estado: 'aviso', detalle: `no se pudo medir: ${e.message}` };
+    }
+}
+
+/**
+ * Retiros con vencimiento (tanda 9, pieza 7). Puro: `r` = evaluarRetiros(...) de _retirosVencidos.mjs. Los vencidos se
+ * NOMBRAN una vez por semana, el viernes (el dia de planificacion de Fak); el resto de los dias se cuentan sin
+ * insistir. Una pieza en el disco sin renglon es aviso todos los dias (entra con su fecha y su razon en la sesion que
+ * la crea). Nunca falta.
+ */
+export function evaluarRetirosCierre(r, { viernes = false } = {}) {
+    if (!r) return { estado: 'aviso', detalle: 'no se pudo leer scripts/_lib/retiros.data.json' };
+    if (r.sinRenglon.length) return { estado: 'aviso', detalle: `${r.sinRenglon.length} hook(s) o regla(s) sin renglon en retiros.data.json (fecha de revision y razon): ${r.sinRenglon.join(', ')}` };
+    // Ronda 2 (auditor): la marca pendienteDeFusion no vence; si queda colgada (la otra rama no se fundio, o se fundio
+    // distinta), se dice todos los dias con la rama nombrada. Se SUMA al resto: no tapa los vencidos del viernes.
+    const pend = (r.pendientesDeFusion || []).length
+        ? `${r.pendientesDeFusion.length} alta(s) o baja(s) de retiros.data.json esperan otra rama: ${r.pendientesDeFusion.join(' · ')}` : '';
+    const n = r.vencidos.length + r.proximos.length;
+    let base;
+    if (!n) base = { estado: 'ok', detalle: `${r.total} renglones, ninguno vence en 7 dias` };
+    else if (!viernes) base = { estado: 'ok', detalle: `${r.vencidos.length} vencido(s) y ${r.proximos.length} por vencer en 7 dias: se nombran el viernes (node scripts/_retirosVencidos.mjs)` };
+    else {
+        base = {
+            estado: 'aviso',
+            detalle: `viernes de planificacion: ${r.vencidos.length} vencido(s) y ${r.proximos.length} por vencer — node scripts/_retirosVencidos.mjs --disparos\n`
+                + [...r.vencidos, ...r.proximos].slice(0, 6).map((f) => `      · ${f.id} (revisar ${f.revisar})`).join('\n'),
+        };
+    }
+    return pend ? { estado: 'aviso', detalle: `${pend}\n      · ${base.detalle}` } : base;
+}
+
+async function chequearRetiros() {
+    try {
+        const R = await import('./_retirosVencidos.mjs');
+        const hoy = new Date();
+        // fecha LOCAL (auditor 17/10: con toISOString, despues de las 21 h se corria un dia contra el viernes local)
+        const local = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+        const r = R.evaluarRetiros(JSON.parse(fs.readFileSync(R.DATOS, 'utf8')), R.piezasEnDisco(REPO), local);
+        return evaluarRetirosCierre(r, { viernes: hoy.getDay() === 5 });
+    } catch (e) {
+        return { estado: 'aviso', detalle: `no se pudo medir: ${e.message}` };
     }
 }
 
@@ -563,6 +655,8 @@ async function main(argv) {
         { paso: 'Mejoras del sistema: el aviso que debia llegar, llego (regla mejora-implementada)', ...(await chequearAvisos()) },
         { paso: 'Disco C: con lugar para la proxima sesion', ...chequearDisco() },
         { paso: 'BOM ultimo nivel en el legajo APQP (regla de Fak 22/09/2026)', ...chequearBomLegajo() },
+        { paso: 'Revisor contra el pedido: lo entregado a Fak paso por revisor-pedido (tanda 9; avisa, no frena)', ...chequearRevisorPedido() },
+        { paso: 'Retiros con vencimiento: hooks y reglas para revisar (tanda 9; se nombran los viernes)', ...(await chequearRetiros()) },
         // Lo que ningun script puede medir — se lista para que no se olvide, no bloquea:
         { paso: 'Auditor al cerrar tareas de codigo', estado: 'manual', detalle: 'lanzar el agente `auditor` si esta sesion toco codigo' },
         { paso: 'Lecciones y memorias de la sesion', estado: 'manual', detalle: 'si Fak corrigio, decidio o revelo algo: LECCIONES_APRENDIDAS + memoria con fuente' },

@@ -21,6 +21,7 @@
  *
  *   node scripts/_lib/correccionGuard.mjs --hook            # stdin: JSON de UserPromptSubmit
  *   node scripts/_lib/correccionGuard.mjs --medir <jsonl>   # calibra contra sesiones reales: filas {ses,t} o {ses,e:[archivos]}
+ *   node scripts/_lib/correccionGuard.mjs --medir <jsonl> --despues AAAA-MM-DD   # D7: ¿la categoria volvio despues de graduada? (filas con ts)
  *   node scripts/_lib/correccionGuard.mjs --selftest
  */
 import fs from 'node:fs';
@@ -294,8 +295,41 @@ function hook() {
   });
 }
 
+/**
+ * D7 (tanda 9, pieza 8): ¿la leccion sirvio? Por cada categoria de correccion (los nombres de `fuertes` y `debiles`
+ * del canon, mas el enojo difuso), cuantos mensajes de Fak la traen antes y despues de `fecha` (la de la graduacion a
+ * hook o regla), y por semana, porque las dos ventanas no miden lo mismo. Puro: `filas` = [{ ses, t, ts }]; las que no
+ * traen `ts` no cuentan. Una categoria que sigue igual o sube despues de graduada es una leccion que no sirvio.
+ */
+export function reapariciones(filas, fecha) {
+  // Ronda 2 (hallazgo 9): con 01/10/2026 o sin valor, la comparacion de textos daba «no bajo» o «despues 0» falsos.
+  // y la fecha tiene que existir: 2026-02-30 pasa el formato pero Date la corre al 02/03 (auditor de la ronda 2)
+  const ms = Date.parse(`${fecha}T00:00:00Z`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(fecha ?? '')) || Number.isNaN(ms) || new Date(ms).toISOString().slice(0, 10) !== fecha) {
+    throw new RangeError(`--despues necesita una fecha AAAA-MM-DD (llego «${fecha}»)`);
+  }
+  const conTs = filas.filter((f) => typeof f.t === 'string' && typeof f.ts === 'string' && f.ts);
+  const antes = conTs.filter((f) => f.ts.slice(0, 10) < fecha); const despues = conTs.filter((f) => f.ts.slice(0, 10) >= fecha);
+  const semanas = (xs) => { if (!xs.length) return 0; const d = xs.map((f) => Date.parse(f.ts)).sort((a, b) => a - b); return Math.max(1, (d[d.length - 1] - d[0]) / (7 * 86400e3)); };
+  const cuenta = (xs) => { const m = {}; for (const f of xs) { const s = senales(f.t); if (!esCorreccion(f.t)) continue; for (const c of new Set([...s.fuertes, ...s.debiles])) m[c] = (m[c] || 0) + 1; } return m; };
+  const a = cuenta(antes); const d = cuenta(despues); const sa = semanas(antes); const sd = semanas(despues);
+  const cats = [...new Set([...Object.keys(a), ...Object.keys(d)])].sort();
+  return {
+    fecha, mensajes: { antes: antes.length, despues: despues.length }, semanas: { antes: sa, despues: sd },
+    categorias: cats.map((c) => ({ categoria: c, antes: a[c] || 0, despues: d[c] || 0, porSemanaAntes: sa ? (a[c] || 0) / sa : 0, porSemanaDespues: sd ? (d[c] || 0) / sd : 0 })),
+  };
+}
+
 function medir(ruta) {
   const filas = fs.readFileSync(ruta, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
+  const iD = process.argv.indexOf('--despues');
+  if (iD >= 0) {
+    let r;
+    try { r = reapariciones(filas, process.argv[iD + 1]); } catch (e) { console.error(e.message); process.exit(2); }
+    console.log(`Reapariciones por categoria antes y despues del ${r.fecha} · ${r.mensajes.antes} mensajes de Fak en ${r.semanas.antes.toFixed(1)} semanas antes, ${r.mensajes.despues} en ${r.semanas.despues.toFixed(1)} despues (solo filas con fecha)`);
+    for (const c of r.categorias) console.log(`  ${c.categoria.padEnd(22)} antes ${String(c.antes).padStart(4)} (${c.porSemanaAntes.toFixed(1)}/sem) · despues ${String(c.despues).padStart(4)} (${c.porSemanaDespues.toFixed(1)}/sem)${c.porSemanaDespues >= c.porSemanaAntes && c.despues ? '  ← no bajo' : ''}`);
+    return;
+  }
   const porSes = new Map();
   for (const f of filas) { if (!porSes.has(f.ses)) porSes.set(f.ses, []); porSes.get(f.ses).push(f); }
   const cuenta = { mensajes: 0, entregas: 0, cortos: 0, largos: 0 }; const ses = { cortos: new Set(), largos: new Set() }; const muestras = [];
@@ -366,5 +400,5 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   if (process.argv.includes('--hook')) hook();
   else if (process.argv.includes('--selftest')) selftest();
   else if (process.argv.includes('--medir')) medir(process.argv[process.argv.indexOf('--medir') + 1]);
-  else console.log('uso: --hook | --medir <sesiones.jsonl> [--muestra] | --selftest');
+  else console.log('uso: --hook | --medir <sesiones.jsonl> [--muestra] [--despues AAAA-MM-DD] | --selftest');
 }

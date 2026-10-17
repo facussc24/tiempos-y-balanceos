@@ -56,6 +56,9 @@ Una pieza del sistema es un hook, un skill, una regla, un agente, un comando, `s
 2. **Le dice a Fak si las sesiones abiertas la toman solas o hay que reabrirlas**, cuando toco un
    hook, una regla, `CLAUDE.md` o una pieza que lee sus mensajes. El renglon lo imprime el mismo
    script (`SESIONES ABIERTAS`); solo eso: `--sesiones`.
+2 bis. **Un hook o una regla nueva entra con su renglón en `scripts/_lib/retiros.data.json`** (fecha de revisión y
+   la razón por la que existe: número o incidente; tanda 9, 17/10/2026). `node scripts/_retirosVencidos.mjs` lista lo
+   vencido y lo que está en el disco sin renglón; su test falla si falta uno.
 3. **La da por implementada cuando la vio llegar.** El aviso se anota en
    `scripts/_lib/mejorasEnPrueba.data.json` y de ahi en mas se mide solo: en los transcripts, cuantos
    mensajes debian recibirlo y a cuantos les llego (`node scripts/_probarMejora.mjs --llego`).

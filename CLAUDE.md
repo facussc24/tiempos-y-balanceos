@@ -208,7 +208,7 @@ node scripts/_auditAll.mjs --summary   # salud de los AMFEs en Supabase
 ## Auth y deploy
 
 - Dev: boton "Acceso rapido (dev)" (borde naranja) con `VITE_AUTO_LOGIN_EMAIL/PASSWORD` — protegido por regla `dev-login.md`.
-- Produccion: https://facussc24.github.io/tiempos-y-balanceos/ — la despliega `.github/workflows/deploy.yml` en cada push a `main` (repo publico). `npx gh-pages -d dist` no se usa (memoria `ghpages_manual_deploy`).
+- Produccion: https://facussc24.github.io/tiempos-y-balanceos/ — la despliega `.github/workflows/deploy.yml` en cada push a `main` que cambia la app (repo publico); el candado y las pruebas corren en todos (`candado.yml`). `npx gh-pages -d dist` no se usa (memoria `ghpages_manual_deploy`).
 
 ## Documentos de la empresa
 

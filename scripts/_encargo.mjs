@@ -297,9 +297,12 @@ export function lineasArranque({ carpeta, skills = [], sinArranque = false, lanz
   // Con `lanzada` el bloque termina con `lineaAutonoma` (16/10/2026, tanda 1.1 del plan del sistema): los bloques
   // oficiales de la guia de Fable 5.1 para corridas sin humano y el cierre «primero el resultado». Va al final para
   // que la numeracion de los puntos que ya existian no cambie.
+  // `lineaRevisor` (17/10/2026, tanda 9 pieza 1): definicion de hecho + quiz antes de empezar y el agente revisor-pedido
+  // al terminar. Va despues del cierre en los dos modos, y con `lanzada` antes de `lineaAutonoma`, que sigue ultima.
+  const revisor = P.lineaRevisor ? [P.lineaRevisor] : [];
   const lineas = lanzada
-    ? [P.lineaLanzada, ...(conHora ? ['{hereda}'] : []), ...P.lineas.slice(1), ...(P.lineaAutonoma ? [P.lineaAutonoma] : [])]
-    : P.lineas;
+    ? [P.lineaLanzada, ...(conHora ? ['{hereda}'] : []), ...P.lineas.slice(1), ...revisor, ...(P.lineaAutonoma ? [P.lineaAutonoma] : [])]
+    : [...P.lineas, ...revisor];
   for (const l of lineas) {
     let texto = l;
     if (l === '{hereda}') texto = P.lineaHeredaHora.replace('{hasta}', () => hereda.hasta).replace('{madre}', () => hereda.madre).replace('{lista}', () => hereda.lista || 'esa hora no tiene un archivo de lista: queda en el registro');

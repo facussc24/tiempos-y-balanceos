@@ -1,0 +1,143 @@
+name: Candado y pruebas
+
+# Tanda 9, pieza 9 del plan del sistema (17/10/2026): este workflow corre en CADA push a main, sin filtro de rutas,
+# y el deploy de GitHub Pages (deploy.yml) corre solo cuando cambia la app. Medido ese dia: de los ultimos 300
+# commits de main (10/10 al 17/10) solo 2 entraban en el filtro de la app, y los dos eran de configuracion; los otros 298 publicaban de nuevo lo mismo, y un rojo de un
+# test de herramientas (la Papelera, 23 min) frenaba el deploy de una app que no habia cambiado.
+# EL CANDADO DEL REPO PUBLICO (_gateRepoPublico.mjs) NO SE FILTRA NUNCA: por eso vive aca, sin `paths`, y tambien
+# en deploy.yml. Lo verifica __tests__/scripts/ciWorkflows.test.mjs (rojo si este archivo gana un `paths`).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "candado-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  # Gate 0: candado del repo PUBLICO. Bloqueante desde el dia uno.
+  # No necesita secretos ni red, por eso no se puede saltear ni desactivar de hecho
+  # (a diferencia de un hook local, que `git push --no-verify` ignora).
+  # CHECK-1: credenciales de dev-login en el env de un build (Vite las inlinea en el
+  # bundle publicado). CHECK-2: memoria o documentos internos versionados.
+  repo-publico:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Selftest del gate (un gate que no se prueba roto no es un gate)
+        run: node scripts/_gateRepoPublico.mjs --selftest
+      - name: Gate repo publico
+        run: node scripts/_gateRepoPublico.mjs
+
+  # Gate 1: TypeScript typecheck. Blocking — if types break, we do not deploy.
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      # Strict typecheck for core/ and utils/repositories/. Blocking desde 2026-08-30:
+      # los 25 errores restantes (todos codigo muerto TS6133) se limpiaron ese dia.
+      - name: Run strict typecheck
+        run: npm run typecheck:strict
+
+  # Gate 2: Vitest suite. Runs in parallel with typecheck. BLOCKING desde 2026-08-30:
+  # la precondicion del viejo TODO (subir testTimeout) ya estaba cumplida en
+  # vitest.config.ts (testTimeout/hookTimeout 15000, medido 2026-07-30), y la suite
+  # completa paso local ese dia: 3708 tests / 0 fallos / exit 0. Los skipped son
+  # describe.skip a proposito.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      # __tests__/scripts/pdfBomArb.test.mjs corre scripts/_pdfBomArb.py, que importa
+      # fitz (PyMuPDF). Por diseño ese test NO se saltea si falta el entorno ("un test
+      # salteado es un verde vacio"), asi que el runner necesita Python + PyMuPDF.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # Version PINEADA = la probada en la notebook. La ultima de pip imprime una
+      # advertencia de deprecacion por stdout al hacer `import fitz`, y los tests
+      # de pdfBomArb parsean stdout (el JSON y el "ok" quedan contaminados).
+      # Los tests de revisarPaqueteHO (numpy, Pillow) y de firmaIASelftest (openpyxl,
+      # python-pptx, python-docx) corren scripts Python que importan esos paquetes al
+      # arrancar: sin ellos mueren con ModuleNotFoundError y el test sale rojo
+      # (CI rojo desde el 08/10/2026). Versiones = las de la notebook; las seis tienen
+      # wheel para Python 3.12 en Linux (consultado en PyPI).
+      - run: pip install PyMuPDF==1.27.2.2 Pillow==11.2.1 numpy==2.4.4 openpyxl==3.1.5 python-pptx==1.0.2 python-docx==1.2.0
+      - run: npm ci
+      # `--reporter=github-actions` publica cada test en rojo como ANOTACION del job.
+      # Sin eso, lo unico que queda afuera es "Process completed with exit code 1": el log
+      # del job pide estar logueado en GitHub, pero las anotaciones se leen sin auth
+      # (`/repos/.../check-runs/<job_id>/annotations`). Un rojo que no se puede leer desde
+      # donde trabajo obliga a adivinar — 11/09/2026.
+      - name: Run vitest
+        run: |
+          set -o pipefail
+          npx vitest run --reporter=default --reporter=github-actions 2>&1 | tee /tmp/vitest.log
+      # Las anotaciones no alcanzan solas: el 11/09/2026 un rojo dejo el job con "1 error" y
+      # NINGUNA anotacion de test — el unico dato legible era "exit code 1", que es exactamente
+      # lo que la linea de arriba queria evitar. El summary del job SI se lee sin estar
+      # logueado (el log no), asi que el rojo queda legible siempre, y si el dia de mañana el
+      # reporter deja de anotar, esto no se entera tarde.
+      #
+      # Como termino ese caso: el commit siguiente, con el MISMO codigo y solo este cambio de
+      # workflow, salio verde — o sea que era INTERMITENTE. Dos cosas que aprender de ahi: que
+      # la suite tarde lo mismo que un verde NO prueba que el rojo sea deterministico (lo
+      # prueba volver a correr el mismo codigo), y que un rojo intermitente ilegible es el peor
+      # de todos, porque no se puede ni reproducir ni leer. Si vuelve a pasar, el que aparece
+      # en el summary es el test que hay que mirar.
+      - name: El rojo en el summary (esto SI pide estar logueado)
+        if: failure()
+        run: |
+          {
+            echo '## vitest en rojo'
+            echo '```'
+            grep -aE 'FAIL|AssertionError|Expected|Received|Tests  |Test Files|✕|×|→' /tmp/vitest.log | head -c 60000 || tail -c 60000 /tmp/vitest.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY" || true
+      # Y EL SUMMARY TAMPOCO SE LEE SIN CUENTA (13/09/2026). El 11/09 el paso de arriba se
+      # escribio creyendo que si; abierto el run desde una sesion sin login, la pagina del job
+      # dice "Sign in to view logs" y la del run no muestra ningun summary. Lo unico que sale
+      # sin auth son las ANOTACIONES (/repos/.../check-runs/<job_id>/annotations), y el
+      # reporter de vitest dejo el job con CERO anotaciones de test las dos veces que hubo rojo
+      # (11 y 13/09): anota asserts que fallan, no una corrida que muere de otra forma.
+      #
+      # VA EN UN PASO PROPIO, no al final del de arriba: el runner corre cada `run` con
+      # `bash --noprofile --norc -eo pipefail`, asi que si el job muere ANTES de "Run vitest"
+      # (npm ci, pip install, setup-python) el log no existe, `grep` y `tail` fallan los dos
+      # y `set -e` corta el paso antes de llegar a esta linea. O sea que el unico camino que
+      # deja el rojo legible se apagaba solo justo cuando menos se sabe que paso. Reproducido
+      # con los flags exactos del runner, no leyendo el YAML.
+      - name: El rojo como ANOTACION, que es lo unico que se lee sin cuenta
+        if: failure()
+        run: node scripts/_anotarVitest.mjs /tmp/vitest.log
+
+  # Gate 3: ESLint. En local solo corre via husky pre-commit (lint-staged), que un
+  # `git push --no-verify` saltea — aca no hay como saltearlo.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+

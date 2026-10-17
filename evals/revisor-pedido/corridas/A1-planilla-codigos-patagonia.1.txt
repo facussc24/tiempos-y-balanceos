@@ -1,0 +1,6 @@
+VEREDICTO: NO CUMPLE  ·  1 Importante, 1 Nit, 4 Preexistente  ·  definición de hecho 3 de 3  ·  quiz 3 de 3
+CONTRA EL PEDIDO: CUMPLE   (escrito a mano desde «falta» y «sobra» del informe de la corrida 1, formato viejo)
+REGLAS DE LA CASA: NO CUMPLE
+Contra el pedido: los tres cambios hechos (DH 3/3, quiz 3/3).
+[Importante] El archivo nombra a Claude en partes ocultas: absPath del scratchpad en xl/workbook.xml y claude.fileId en webextension1/3 (_sinFirmaIA.py: 4 BLOQUEANTE). Igual en las 4 copias; la regla §9 es del 08/10, posterior a la aprobación del 01/09.
+[Nit] dc:creator = openpyxl.

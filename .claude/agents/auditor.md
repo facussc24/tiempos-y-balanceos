@@ -30,6 +30,12 @@ secretos (`.env*`, `.qr-secret`, codigos de acceso, `sk-ant-`); un hallazgo de o
 contra la fuente antes de darlo por bueno (en los audits la mayoria son falsos positivos); castellano
 argentino simple, nada en ingles suelto.
 
+**Antes de auditar leé `REVIEW.md` (raiz del repo)**: que es falla aca, que no se reporta, las rutas que no se
+revisan y el tope de 3 nits; si el prompt nombra un tipo de entregable (hojas de proceso, AMFE, mail), tambien
+`docs/review/<tipo>.md`. **Cada hallazgo lleva una etiqueta: Importante / Nit / Preexistente**, con archivo y linea y
+el caso medido, y el informe arranca con el conteo («N Importante, M Nit, P Preexistente»). Como mucho 2 rondas con el
+autor: en la segunda, solo el diff nuevo (tanda 9 del plan del sistema, 17/10/2026).
+
 ## Memoria propia (persistente entre sesiones)
 
 Tenes memoria en `.claude/agent-memory/auditor/MEMORY.md`. **ANTES de empezar:
@@ -74,11 +80,14 @@ git log origin/main..HEAD --oneline
 Si hay commits locales sin pushear, REPORTAR como CRITICO.
 
 ### 5. CI Status
-`gh` no tiene login en esta PC (memoria `gh_cli_sin_login_ci_por_api`); el ultimo run se lee por API:
+`gh` no tiene login en esta PC (memoria `gh_cli_sin_login_ci_por_api`); el ultimo run se lee por API, **un workflow por
+vez** (desde la tanda 9 son dos: `candado.yml` corre en cada push, `deploy.yml` solo cuando cambia la app; «la ultima
+corrida» a secas puede tapar el rojo del otro):
 ```bash
-curl -s "https://api.github.com/repos/facussc24/tiempos-y-balanceos/actions/runs?per_page=1" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const r=JSON.parse(s).workflow_runs[0];console.log(r.status,r.conclusion||'running')})"
+for w in candado.yml deploy.yml; do curl -s "https://api.github.com/repos/facussc24/tiempos-y-balanceos/actions/workflows/$w/runs?per_page=1&branch=main" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const r=(JSON.parse(s).workflow_runs||[])[0];console.log('$w',r?r.status+' '+(r.conclusion||'running')+' '+r.head_sha.slice(0,8):'sin corridas')})"; done
 ```
-El último run debe ser `completed success`. Si es `failure`, reportar el error; si el curl falla, reportar "CI sin verificar", no "CI fallo".
+El de `candado.yml` debe ser `completed success` para el HEAD; el ultimo de `deploy.yml`, no rojo. Si es `failure`,
+reportar el error; si el curl falla o el workflow todavia no existe en GitHub, reportar "CI sin verificar", no "CI fallo".
 
 ### 6. Integridad del modulo auditado
 Si se indica un modulo especifico, verificar:
@@ -99,7 +108,7 @@ Reportar dependencias faltantes o conflictos.
 ```
 ## Reporte de Auditoria — [fecha]
 
-### Resultado: OK / FALLO
+### Resultado: OK / FALLO  ·  N Importante, M Nit, P Preexistente
 
 | Check | Estado | Detalle |
 |-------|--------|---------|
@@ -112,10 +121,10 @@ Reportar dependencias faltantes o conflictos.
 | Dependencias | OK/FALLO | ... |
 
 ### Hallazgos CRITICOS (bloquean deploy)
-- ...
+- [Importante] archivo:linea — que pasa · caso medido · respuesta: ____ (arreglado / rechazado / a proposito / no importa)
 
 ### Hallazgos WARNING (no bloquean pero deben arreglarse)
-- ...
+- [Nit] / [Preexistente] archivo:linea — ... · respuesta: ____
 
 ### Acciones requeridas
 - ...
