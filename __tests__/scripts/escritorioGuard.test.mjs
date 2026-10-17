@@ -201,4 +201,7 @@ describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (escritori
     it('ROJO (ronda 3, T4) — mv con --target= abreviado o con -t pegado hacia el archivo de cerradas', () => {
         esperados(G, ['N-E01', 'N-E02', 'H7-E06', 'H7-E07', 'H7-E08', 'H7-V1', 'H7-V2']);
     });
+    it('ROJO (ronda 3, T5) — eval, exec -a, timeout -s y env -u adelante del mv o el cp hacia el archivo de cerradas', () => {
+        esperados(G, ['N-E03', 'N-E04', 'N-E05', 'N-E07', 'N-E08', 'N-E09']);
+    });
 });

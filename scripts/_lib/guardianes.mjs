@@ -289,6 +289,7 @@ const LECTOR_ARCHIVO_RE = /^(?:cat|type|head|tail|less|more|bat|strings|od|xxd|h
 const PATRONERO_VERBO_RE = /^(?:grep|egrep|fgrep|rg|ag|sed|awk|findstr|Select-String|sls)$/i;
 const INTERPRETE_SECRETO_RE = /^(?:python[\d.]*|py|pythonw|node|deno|bun|perl|ruby|php|pwsh|powershell|bash|sh|zsh|dash|cmd|wsl)$/i;
 const verboPelado = (v) => String(v ?? '').replace(/^.*[\\/]/, '').replace(/\.exe$/i, '');
+const SECRETO_VERBO_CONOCIDO = (v) => LECTOR_ARCHIVO_RE.test(v) || PATRONERO_VERBO_RE.test(v) || INTERPRETE_SECRETO_RE.test(v) || /^(?:xargs|find|parallel)$/i.test(v);
 
 /** Las variables que el comando asigna con un valor ESCRITO (`D="/d/x"`); null si alguna vez sale de un `$(…)`. */
 function variablesEscritas(todo) {
@@ -307,14 +308,15 @@ function leeSecretoPorComando(texto, todo, prof = 0, vars = variablesEscritas(to
   let t = String(texto ?? '');
   for (const m of t.matchAll(/[<>]\(([^()]*)\)/g)) if (leeSecretoPorComando(m[1], todo, prof + 1, vars)) return true;
   t = t.replace(/[<>]\(([^()]*)\)/g, ' sustitucion ');
-  for (const c of comandosSimples(t)) {
+  // (ronda 3, T5) lo de detras de un eval se vuelve a partir; un envoltorio con una opcion que lleva valor no esconde al lector
+  for (const c of comandosConEval(t)) {
     const palabras = c.palabras.map((w) => w.replace(/\uE000/g, '$'));
     for (const w of palabras) {
       const subs = sustitucionesDe(w);
       if (subs === null) { if (SECRETO_RE.test(w)) return true; continue; }
       for (const s of subs) if (leeSecretoPorComando(s, todo, prof + 1, vars)) return true;
     }
-    const { verbo, args } = verboDeComando({ ...c, palabras });
+    const { verbo, args } = verboDeComando({ ...c, palabras }, SECRETO_VERBO_CONOCIDO);
     const v = verboPelado(verbo);
     // Ronda 2 (hallazgo 5): xargs / find -exec / parallel con un lector o un grep/sed/awk adentro: la primera palabra CRUDA
     // (verboDeComando saca a xargs como envoltorio y el lector llega sin argumentos); frena si el comando nombra el secreto
@@ -1337,6 +1339,7 @@ function destinoExplicitoDe(verbo, args) {
 }
 const ESC_MUEVE_VERBO = /^(?:mv|move|Move-Item|mi)$/i;
 const ESC_COPIA_VERBO = /^(?:cp|copy|xcopy|Copy-Item|cpi)$/i;
+const ESC_VERBO_CONOCIDO = (v) => ESC_MUEVE_VERBO.test(v) || ESC_COPIA_VERBO.test(v) || /^(?:robocopy|find|xargs|parallel)$/i.test(v) || CORRE_INTERPRETE_RE.test(v);
 export function mueveAMano(cmd, { cwd = '' } = {}) {
   const { lineas, cuerpos } = separarHeredocs(String(cmd ?? ''));
   const res = resolvedorDe(cmd);
@@ -1345,9 +1348,10 @@ export function mueveAMano(cmd, { cwd = '' } = {}) {
   // detras de find -exec / xargs / parallel se mira con la regla vieja sobre ese comando.
   let dir = String(cwd ?? '').replace(/\\/g, '/');
   const completa = (p) => { const r = res(p).replace(/\\/g, '/'); return /^(?:[A-Za-z]:|\/|~)/.test(r) || !dir ? r : `${dir.replace(/\/+$/, '')}/${r}`; };
-  for (const c of comandosSimples(lineas)) {
+  // (ronda 3, T5) lo de detras de un eval se vuelve a partir; un envoltorio con una opcion que lleva valor no esconde al mover
+  for (const c of comandosConEval(lineas)) {
     const palabras = c.palabras.map((w) => w.replace(/\uE000/g, '$'));
-    const { verbo, args } = verboDeComando({ ...c, palabras });
+    const { verbo, args } = verboDeComando({ ...c, palabras }, ESC_VERBO_CONOCIDO);
     const v = verboPelado(verbo);
     if (/^(?:cd|pushd|chdir|Set-Location|sl)$/i.test(v)) { const d = args.find((a) => !a.startsWith('-')); dir = d ? completa(d) : ''; continue; }
     if (CORRE_INTERPRETE_RE.test(v)) { const r = modoInterprete(verbo, args); if (r.modo === 'pegado') embebido.push(r.codigo); continue; }
@@ -2065,7 +2069,19 @@ const CITA_PATRONES_RE = /(?:__tests__|\.test\.|\.spec\.|(?:^|[\\/])\.claude[\\/
 const CORRE_TEXTO_RE = /(?:^|[\\/])(?:echo|printf|grep|egrep|fgrep|rg|ag|sed|awk|cat|head|tail|less|more|wc|sort|uniq|cut|tr|tee|ls|dir|find|stat|file|diff|cmp|jq|git|gh|npx|npm|pnpm|yarn|vitest|test|\[|\[\[|true|false|touch|mkdir|cp|mv|rm|cd|pwd|date|basename|dirname|type|which|column|nl|tac|rev|paste|comm|md5sum|sha256sum|base64|iconv|cygpath|code)(?:\.exe)?$/i;
 const CORRE_INTERPRETE_RE = /(?:^|[\\/])(?:pythonw?[\d.]*|py|node|powershell|pwsh|bash|sh|zsh|dash|cmd|perl|ruby|php)(?:\.exe)?$/i;
 const CORRE_INLINE_RE = /^(?:-c(?:om(?:m(?:a(?:n(?:d)?)?)?)?)?|-e|--eval|-p|--print|\/\/?[ck])$/i;   // lo que sigue es codigo
-const CORRE_ENVOLTORIO_RE = /^(?:xargs|timeout|nohup|sudo|env|command|builtin|exec|winpty|time|nice|start)$/i;
+const CORRE_ENVOLTORIO_RE = /^(?:xargs|timeout|nohup|sudo|env|command|builtin|exec|winpty|time|nice|start|stdbuf)$/i;
+// Ronda 3 (17/10, T5): las opciones de un envoltorio que llevan su VALOR en la palabra siguiente; sin esto el valor
+// quedaba como verbo (`timeout -s KILL 5 cat …` daba `KILL`; `env -u X cat …`, `X`; `exec -a n mv …`, `n`)
+const ENVOLTORIO_CON_VALOR = {
+  timeout: /^(?:-[sk]|--signal|--kill-after)$/,
+  env: /^(?:-[uC]|--unset|--chdir)$/,
+  exec: /^-a$/,
+  nice: /^(?:-n|--adjustment)$/,
+  stdbuf: /^(?:-[oei]|--(?:input|output|error))$/,
+  sudo: /^(?:-[ugpChDrtUR]|--(?:user|group|prompt|host|chdir|role|type|other-user|chroot))$/,
+  xargs: /^(?:-[IdnPLsEa]|--(?:arg-file|delimiter|max-args|max-procs|max-lines|max-chars|eof|replace|process-slot-var))$/,
+  time: /^-[fo]$/,
+};
 const CORRE_HD_ARCHIVO_RE = /(?:>{1,2}\s*|\btee\s+(?:-[a-z]+\s+)*)("[^"]*"|'[^']*'|[^\s;&|<>]+)/i;
 /** Prosa (.md/.txt/...) o un archivo que cita los patrones como dato: lo que se guarda ahi no corre. */
 const esProsaOCita = (f) => { const x = String(f ?? '').trim().replace(/^["']|["']$/g, ''); return x === '/dev/null' || /^&\d/.test(x) || BM_PROSA.test(x) || citaSinCorrer(x); };
@@ -2081,12 +2097,41 @@ const citaSinCorrer = (f) => { const x = String(f ?? ''); if (/\.(?:py|pyw|ps1|p
 // la salida o a un archivo de prosa. Antes era al reves (codigo solo si el dueño era un interprete conocido escrito
 // pelado) y `ruta/python.exe - <<EOF` o `$PY - <<EOF` no se miraban: 820 de los 14.740 heredocs reales tienen esa forma.
 const CORRE_HD_TEXTO_RE = /(?:^|[\\/])(?:cat|tee|echo|printf)(?:\.exe)?$/i;
-function verboDeComando(c) {
+// `conocido` (opcional): si despues de sacar un envoltorio el verbo no es uno que el guardian reconoce y una palabra que
+// sigue si lo es, el verbo es esa (una opcion con valor que no esta en la tabla no esconde al lector o al mover).
+function verboDeComando(c, conocido = null) {
   const p = [...c.palabras];
+  let envuelto = false;
   while (p.length && (p[0] === '' || FIRMA_PALABRA_SHELL.has(p[0]) || /^[A-Za-z_][A-Za-z0-9_]*\+?=/.test(p[0]) || CORRE_ENVOLTORIO_RE.test(p[0]))) {
-    if (CORRE_ENVOLTORIO_RE.test(p.shift())) while (p.length && (p[0].startsWith('-') || /^\d+[smhd]?$/.test(p[0]))) p.shift();
+    const w = p.shift();
+    if (!CORRE_ENVOLTORIO_RE.test(w)) continue;
+    envuelto = true;
+    const conValor = ENVOLTORIO_CON_VALOR[w.toLowerCase()];
+    while (p.length && (p[0].startsWith('-') || /^\d+(?:\.\d+)?[smhd]?$/.test(p[0]))) {
+      const o = p.shift();
+      // `env -S "cat x"` / `--split-string=…`: el valor ES el comando, partido en palabras
+      const partido = /^env$/i.test(w) && (/^(?:-S|--split-string)$/.test(o) ? p.shift() : o.match(/^--split-string=(.*)$/)?.[1]);
+      if (partido) { p.unshift(...String(partido).split(/\s+/).filter(Boolean)); continue; }
+      if (conValor && conValor.test(o) && p.length) p.shift();
+    }
+  }
+  if (envuelto && conocido && p.length && !conocido(verboPelado(p[0]))) {
+    const k = p.findIndex((w) => conocido(verboPelado(w)));
+    if (k > 0) return { verbo: p[k], args: p.slice(k + 1) };
   }
   return { verbo: p[0] ?? '', args: p.slice(1) };
+}
+
+/** Ronda 3 (17/10, T5): los comandos simples de un texto, con lo que va detras de un `eval` vuelto a partir como comando
+ *  (eval junta sus argumentos con espacios y los vuelve a leer: `eval cp a "'<listado>'"` copia encima del listado). */
+function comandosConEval(texto, prof = 0) {
+  const out = [];
+  for (const c of comandosSimples(texto)) {
+    const { verbo, args } = verboDeComando(c);
+    if (prof < 3 && /^eval$/i.test(verboPelado(verbo)) && args.length) { out.push(...comandosConEval(args.join(' ').replace(//g, '$'), prof + 1)); continue; }
+    out.push(c);
+  }
+  return out;
 }
 // (6) Segunda auditoria (11/10/2026): ¿de donde toma su PROGRAMA un interprete? De stdin cuando la bandera de codigo no
 // trae nada atras (`powershell -Command -`, `cmd /k`, `bash -e`), cuando su primer argumento es `-` (`python - x`), en
@@ -2899,6 +2944,7 @@ export function codigoGuardaListado(code) {
 // Ronda 2 (17/10, hallazgo 2): lo que va pegado a una SHELL (powershell -Command, pwsh -c, bash -c, cmd /c) o el cuerpo
 // de un heredoc que alimenta a una shell son comandos: se vuelven a mirar con esta misma funcion (tope de profundidad).
 const APQP_SHELL_RE = /(?:^|[\\/])(?:(?:ba|z|da)?sh|powershell|pwsh|cmd)(?:\.exe)?$/i;
+const APQP_VERBO_CONOCIDO = (v) => /^(?:cp|mv|copy|move|xcopy|Copy-Item|cpi|Move-Item|mi|robocopy)$/i.test(v) || CORRE_INTERPRETE_RE.test(v);
 const APQP_HD_SHELL_RE = /(?:^|[\s;&|(])(?:[\w.:~$-]*[\\/])?(?:(?:ba|z|da)?sh|powershell|pwsh|cmd)(?:\.exe)?(?:\s|$)/i;
 export function escribeListadoBash(cmd, { cwd = '', leer, prof = 0 } = {}) {
   const leerScript = leer ?? ((p) => { try { const st = fs.statSync(p); return st.size <= 200_000 ? fs.readFileSync(p, 'utf8') : ''; } catch { return ''; } });
@@ -2908,9 +2954,10 @@ export function escribeListadoBash(cmd, { cwd = '', leer, prof = 0 } = {}) {
   const shells = cuerpos.filter((h) => !h.deGit && APQP_HD_SHELL_RE.test(String(h.dueno ?? ''))).map((h) => h.cuerpo);
   let dir = cwd ? String(cwd).replace(/\\/g, '/') : '';
   const completa = (p) => { const r = res(p).replace(/\\/g, '/'); return /^(?:[A-Za-z]:|\/|~)/.test(r) || !dir ? r : `${dir.replace(/\/+$/, '')}/${r}`; };
-  for (const c of comandosSimples(lineas)) {
+  // (ronda 3, T5) lo de detras de un eval se vuelve a partir; un envoltorio con una opcion que lleva valor no esconde al copiar
+  for (const c of comandosConEval(lineas)) {
     const palabras = c.palabras.map((w) => w.replace(/\uE000/g, '$'));
-    const { verbo, args } = verboDeComando({ ...c, palabras });
+    const { verbo, args } = verboDeComando({ ...c, palabras }, APQP_VERBO_CONOCIDO);
     const v = verboPelado(verbo);
     if (/^(?:cd|pushd|chdir|Set-Location|sl)$/i.test(v)) { const d = args.find((a) => !a.startsWith('-')); const r = d ? res(d).replace(/\\/g, '/') : ''; dir = /\$/.test(r) ? '' : /^(?:[A-Za-z]:|\/)/.test(r) ? r : dir && r ? `${dir}/${r}` : ''; continue; }
     if (/^(?:cp|mv|copy|move|xcopy|Copy-Item|cpi|Move-Item|mi)$/i.test(v)) {

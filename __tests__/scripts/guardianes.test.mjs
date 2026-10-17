@@ -22,6 +22,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { esperados } from './guardianesRonda3.mjs';
 
 // El bloque "por bash" levanta _dispatcher.sh + node varias veces por caso: solo tarda
 // decimas, con la suite entera en paralelo en Windows paso los 15 s (05/09/2026). 60 s aca.
@@ -1608,3 +1609,13 @@ describe('arb-cerrar-guard HOY-57 — apagar o cerrar la sesion, se escriba como
 function destinatarioComoTexto(base) {
   return `${base.replace('it.Send()', 'it.Display()')}\nit.To = "alguien@barack.com"\nit.Attachments.Add(r"C:\\Dev\\BarackMercosul\\docs\\informe.pdf")`;
 }
+
+// Ronda 3 (17/10/2026): los casos del auditor a ciegas de la ronda 2, por su id (`guardianesRonda3.mjs`). 2 = frena, 0 = pasa.
+describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (secretos)', () => {
+    const G = 'secretos-guard';
+
+    it('P12 ROJO (ronda 3, T5) — eval, stdbuf y un envoltorio con una opcion que lleva valor (timeout -s, env -u) no esconden al lector', () => {
+        esperados(G, ['N-S01', 'N-S02', 'N-S03', 'N-S04', 'N-S05', 'X-S17', 'X-S18', 'X-S19']);
+        esperados(G, ['H4-V1', 'H4-V2', 'H5-V1', 'H6-V1', 'H6-V2']);   // los VERDES de la ronda 2 siguen pasando
+    });
+});

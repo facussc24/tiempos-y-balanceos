@@ -301,4 +301,7 @@ describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (apqp-clie
         // y el ROJO de la misma forma: -Destination: encima del listado real
         expect(bash(`powershell -NoProfile -Command "Copy-Item -Path C:\\tmp\\n.xlsx -Destination:'${LISTADO}'"`)).toBe(1);
     });
+    it('ROJO (ronda 3, T5) — eval y env -u adelante del cp encima del listado', () => {
+        esperados(G, ['N-A04', 'N-A05']);
+    });
 });
