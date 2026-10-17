@@ -289,4 +289,12 @@ describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (apqp-clie
         esperados(['N-A08', 'N-A09']);
         esperados(['H2-A03', 'H2-A04', 'H2-A07', 'H2-X04', 'H2-sh', 'H2-V1', 'H2-V2']);   // los de la ronda 2 siguen igual
     });
+    it('ROJO (ronda 3, T2) — un parentesis de la ruta REAL del listado (AMFE, flujogramas) ya no corta el destino', () => {
+        // shutil.copy, copyFileSync y to_excel encima del listado real; el mismo en flujogramas; el code de una MCP
+        esperados(['X-A11', 'X-A12', 'X-A13', 'X-A14', 'X-A15', 'X-A16', 'N-C05', 'X-C08']);
+        // VERDE: traer el listado real (con sus parentesis) a una carpeta local para leerlo
+        const leer = `python -c "import shutil; shutil.copy(r'${LISTADO}', r'C:\\tmp\\l.xlsx')"`;
+        expect(evaluar(JSON.stringify({ tool_name: 'Bash', tool_input: { command: leer }, session_id: 'ronda3', cwd: 'C:\\Dev\\BarackMercosul' }),
+            { nombres: ['apqp-cliente-guard'], env: { HOME: os.tmpdir() }, marcar: false, escapes: false }).res.bloqueos.length).toBe(0);
+    });
 });

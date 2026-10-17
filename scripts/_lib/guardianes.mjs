@@ -2787,7 +2787,7 @@ const APQP_REGISTRA = /(^|[;&|]+\s*)(py|python3?|node)\b[^\n;&|]*_registrar[A-Za
 // listado de flujogramas y lo corria. Sigue frenando. Los `_registrar* --apply` y el Write/Edit no cambian.
 const APQP_LOCAL = /AppData[\\/]Local[\\/]Temp(?:[\\/]|$)|[\\/]scratchpad(?:[\\/]|$)|^(?:\/tmp|\/c\/tmp|[A-Za-z]:[\\/]tmp)(?:[\\/]|$)|^(?:[A-Za-z]:|\/[a-z])[\\/]Dev[\\/]/i;
 const APQP_COM_GUARDA = /\.(?:Save|SaveAs|SaveCopyAs)\s*\(|SaveChanges\s*[:=]\s*(?:True|\$true|1)|\.Close\s*\(\s*(?:True|\$true|1|-1)\s*[,)]/i;
-const APQP_GUARDA_EN = /(?:\.save|\.to_excel|shutil\.(?:copy\w*|move)|os\.(?:replace|rename)|copyfile\w*|copyFileSync|renameSync|writeFileSync)\s*\(([^\n]*)/g;
+const APQP_GUARDA_EN = /(?:\.save|\.to_excel|shutil\.(?:copy\w*|move)|os\.(?:replace|rename)|copyfile\w*|copyFileSync|renameSync|writeFileSync)\s*\(/g;
 const apqpLocal = (p) => APQP_LOCAL.test(String(p ?? '').replace(/^["']|["']$/g, ''));
 // lo mismo adentro de un codigo: la ruta se arma con el TEMP del sistema, el scratchpad o C:\Dev
 const APQP_CODIGO_LOCAL = /scratchpad|AppData[\\/]+Local[\\/]+Temp|environ\s*\[\s*["']TE?MP["']\s*\]|gettempdir|mkdtemp|tmpdir\s*\(|["'](?:\/tmp|[A-Za-z]:[\\/]+tmp)[\\/"']|[A-Za-z]:[\\/]+Dev[\\/]/i;
@@ -2805,6 +2805,37 @@ function resolvedorDe(cmd) {
   return res;
 }
 
+/**
+ * Ronda 3 (17/10, T2): los argumentos de una llamada cuyo `(` termina en `i`, partidos en las comas de primer nivel. Un
+ * `(`, `)` o `,` adentro de una cadena o de otra llamada no cuenta: las carpetas reales del listado de AMFE y del de
+ * flujogramas llevan parentesis (`… ( I-AC-005.3)`, `… (I-IN-002III)`) y cortar en el primer `)` dejaba el nombre del
+ * listado afuera del destino. Hasta 4.000 caracteres.
+ */
+export function argumentosDeLlamada(s, i) {
+  const args = [];
+  let prof = 0;
+  let ini = i;
+  const tope = Math.min(s.length, i + 4000);
+  for (let j = i; j < tope; j++) {
+    const c = s[j];
+    if (c === '"' || c === "'" || c === '\x60') {
+      const triple = c !== '\x60' && s.startsWith(c.repeat(3), j);
+      const cierre = triple ? c.repeat(3) : c;
+      let k = j + cierre.length;
+      for (; k < tope; k++) {
+        if (s[k] === '\\' && (s[k + 1] === c || s[k + 1] === '\\')) { k++; continue; }
+        if (!triple && c !== '\x60' && s[k] === '\n') break;
+        if (s.startsWith(cierre, k)) break;
+      }
+      j = k + cierre.length - 1;
+    } else if (c === '(' || c === '[' || c === '{') prof++;
+    else if (c === ')' || c === ']' || c === '}') { if (prof === 0) { args.push(s.slice(ini, j)); return args; } prof--; }
+    else if (c === ',' && prof === 0) { args.push(s.slice(ini, j)); ini = j + 1; }
+  }
+  args.push(s.slice(ini, tope));
+  return args;
+}
+
 /** ¿Este codigo (Python / JS) guarda sobre el listado? Las variables con el nombre del listado cuentan. */
 export function codigoGuardaListado(code) {
   const s = String(code ?? '');
@@ -2817,14 +2848,13 @@ export function codigoGuardaListado(code) {
   const nombraListado = (arg) => (APQP_LISTADO.test(arg) && !local(arg)) || [...conListado].some((v) => new RegExp(`(?<![\\w$.])${v.replace(/\$/g, '\\$')}(?![\\w$])`).test(arg));
   for (const m of s.matchAll(APQP_GUARDA_EN)) {
     const llamada = m[0];
-    const args = m[1];
+    const args = argumentosDeLlamada(s, m.index + m[0].length);
     // .save(X) / to_excel(X): el primer argumento; copiar o mover (A, B): el segundo, que es el destino
-    const dentro = args.split(')')[0];
-    const destino = /^\.save|^\.to_excel|^writeFileSync/.test(llamada) ? dentro.split(',')[0] : dentro.split(',').slice(1).join(',');
+    const destino = /^\.save|^\.to_excel|^writeFileSync/.test(llamada) ? args[0] ?? '' : args.slice(1).join(',');
     if (nombraListado(destino)) return true;
   }
-  for (const m of s.matchAll(/\bopen\s*\(([^)\n]*)\)/g)) {
-    const partes = m[1].split(',');
+  for (const m of s.matchAll(/\bopen\s*\(/g)) {
+    const partes = argumentosDeLlamada(s, m.index + m[0].length);
     if (partes.length > 1 && /["'][^"']*[wa+x][^"']*["']/.test(partes.slice(1).join(',')) && nombraListado(partes[0])) return true;
   }
   return false;
