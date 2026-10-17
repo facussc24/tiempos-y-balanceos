@@ -21,7 +21,7 @@ test de INCA está abajo, textual, y lo probé en una copia del scratchpad.
 | GitHub sync | no aplica | la rama es local y no se sube, como pide el encargo |
 | CI | OK (base) | `candado.yml` completed success sobre `87679546` (la base de la rama); `deploy.yml` completed success |
 | Tests de la tanda | OK | `npx vitest run` de los 3 tests nuevos + `convencionesScripts`: **40 de 40** |
-| Mutantes | 19 de 22 mueren | los 3 vivos se explican abajo: 2 no cambian nada y 1 es el nit 1 |
+| Mutantes | 16 de 21 mueren (más el control en verde) | los 5 vivos se explican abajo: M2 (cinturón doble), M15 (equivalente) y M16 (no cambia nada hoy) no son hallazgo; M19 y M20 son el nit 1 y mueren con el parche |
 | Claves | OK | 0 apariciones del patrón de la clave en las 3 salidas (la mía y la de `exports/`), en los commits y en los mensajes |
 | Repo público | OK | `node scripts/_gateRepoPublico.mjs`: limpio |
 | Dependencias | OK | `npm ls --depth=0`: sin UNMET / ERR / missing |
@@ -219,8 +219,8 @@ la Bandeja. Las columnas de cada uno coinciden con el encabezado del mail (ver n
 / 2HC885081» aparece en 17 partes, del 15/04 al 26/08. A la copia le faltan los partes del 27/05, el 03/06 y el 10/06:
 es la copia, no el parser.
 
-**Mutantes.** 22 mutantes sobre una copia en el scratchpad, con `node_modules` por enlace (junction) y vitest con
-`globals`; el worktree no se tocó.
+**Mutantes.** 21 mutantes (M1 a M21) más el control M0, sobre una copia en el scratchpad, con `node_modules` por enlace
+(junction) y vitest con `globals`; el worktree no se tocó. Mueren 16; viven 5 (M2, M15, M16, M19 y M20).
 
 | Mutante | Resultado |
 |---|---|
@@ -257,8 +257,9 @@ Busqué el patrón de la clave en tres lugares:
 
 Los casos de muestra llevan `{{CLAVE_FALSA}}`, y la clave falsa la arma cada test por código. El filtro de Planner
 (`esAvisoPlanner`) y el de INCA (remitente exacto) no dejan entrar el cuerpo del mail de Pedro. El índice de adjuntos lee
-cuerpos solo para la clave de repetidos, en memoria, y no los escribe. El cuerpo de ese mail no se abrió ni se imprimió
-en esta auditoría: lo único que leí de él es la fecha y que el asunto está vacío.
+cuerpos solo para la clave de repetidos, en memoria, y no los escribe. El cuerpo de ese mail no se imprimió ni se leyó
+a mano en esta auditoría: los scripts de conteo lo pasaron por la clave de repetidos en memoria, igual que el lector de
+la tanda. Lo único que miré de él es la fecha y que el asunto está vacío.
 
 ### Los documentos
 
