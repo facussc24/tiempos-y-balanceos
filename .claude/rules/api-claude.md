@@ -27,6 +27,10 @@ y `.../pricing`). Traspaso completo: `docs/drafts/HANDOFF_API_CLAUDE_2026-10-08.
 - Los gasta solo codigo que llama a la API con `ANTHROPIC_API_KEY` de la organizacion vinculada al plan.
   En este repo, **la unica puerta es `scripts/_lib/claudeApi.mjs`**: ningun script llama al SDK por su
   cuenta (asi el gasto queda en el ledger y el semaforo del mes es real).
+- **PDFs y fotos** (tanda 13, 17/10/2026): van por la misma puerta, como bloques `document` / `image` en base64 adelante
+  del texto (`contenidoConAdjuntos()` de `claudeApi.mjs`; en `_apiTarea.mjs`, `--adjunto archivo.pdf`). Frena antes de
+  mandar lo que no es PDF ni foto, un PDF de mas de 600 paginas y un pedido de mas de 32 MB. Su costo no sale de contar
+  caracteres: `--estimar` (count_tokens, gratis) lo mide. Test sin red: `claudeApiAdjuntos.test.mjs`.
 - Los precios salen de la tabla oficial y viven en `PRECIOS` de `claudeApi.mjs`. Un informe o un post
   no es fuente de precios (el del 07/10 tenia mal Sonnet y los cache reads).
 

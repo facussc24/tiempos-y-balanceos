@@ -11,12 +11,15 @@
  *
  *   --timeout-min cuanto se espera la respuesta (30 por defecto: una salida larga de Opus pasa los 10 min)
  *   --pedido     el texto del pedido (un .md con las instrucciones); va tal cual como mensaje del usuario
- *   --adjunto    cada archivo va adentro del mensaje, entre <archivo ruta="..."> y </archivo>; varios, en orden
+ *   --adjunto    cada archivo va adentro del mensaje, entre <archivo ruta="..."> y </archivo>; varios, en orden.
+ *                Un PDF o una foto (.pdf .png .jpg .jpeg .gif .webp) va como bloque aparte en base64, adelante del
+ *                texto (tanda 13, 17/10/2026): la API lo lee como documento o imagen; --estimar mide sus tokens.
  *   --salida     donde se guarda el texto de la respuesta (crea la carpeta si falta)
  *   --sistema    un archivo con el system prompt (opcional; se cachea 5 min por si se repite)
  *   --estimar    cuenta los tokens de entrada (count_tokens es gratis) y dice cuanto costaria; no llama
  *
- * Lo que NO hace: no manda un archivo de secretos (.env*, .qr-secret) ni uno de mas de 2 MB, no imprime la
+ * Lo que NO hace: no manda un archivo de secretos (.env*, .qr-secret) ni un texto de mas de 2 MB (un PDF o una foto,
+ * hasta los 32 MB por pedido que acepta la API), no imprime la
  * clave, no escribe en ningun lado salvo --salida. Cada llamada queda en el ledger como `sesion:<tarea>`
  * (`node scripts/_claude.mjs --ledger`). La unica puerta a la API sigue siendo scripts/_lib/claudeApi.mjs
  * (regla api-claude.md). Sale con 0 ok · 1 fallo · 2 argumento · 3 falta la clave.
@@ -26,6 +29,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   crearCliente, llamarLargo, contarTokens, estimarUsd, resolverModelo, usd, MENSAJE_SIN_CLAVE, ErrorApi, exigirRespuestaUtil, exigirPedidoFable,
+  TIPOS_ADJUNTO, TOPE_PEDIDO_BYTES, contenidoConAdjuntos,
 } from './_lib/claudeApi.mjs';
 
 export const TOPE_ADJUNTO_BYTES = 2 * 1024 * 1024;
@@ -73,9 +77,13 @@ export function validarSalida(ruta, { raiz = process.cwd(), entradas = [] } = {}
  */
 export function armarMensaje({ pedido, adjuntos = [] }) {
   const partes = [String(pedido ?? '').trim()];
-  if (adjuntos.length) {
-    partes.push('', `--- ${adjuntos.length} archivo(s) adjunto(s) ---`);
-    for (const { ruta, texto } of adjuntos) {
+  // los PDF y las fotos van como bloques aparte, ARRIBA de este texto (main): aca solo se nombran, en el mismo orden
+  const binarios = adjuntos.filter((a) => a.binario);
+  const textos = adjuntos.filter((a) => !a.binario);
+  if (binarios.length) partes.push('', `--- ${binarios.length} PDF o foto(s) adjunto(s), arriba de este texto y en este orden: ${binarios.map((b) => b.ruta).join(', ')} ---`);
+  if (textos.length) {
+    partes.push('', `--- ${textos.length} archivo(s) adjunto(s) ---`);
+    for (const { ruta, texto } of textos) {
       partes.push('', `<archivo ruta="${ruta}">`, String(texto ?? '').replace(/\r\n/g, '\n'), '</archivo>');
     }
   }
@@ -89,8 +97,14 @@ export function leerAdjuntos(rutas, { raiz = process.cwd() } = {}) {
     const abs = rutaReal(r, { raiz });
     if (!fs.existsSync(abs) || fs.statSync(abs).isDirectory()) throw new ErrorApi('api', `no existe el adjunto ${r}`);
     const bytes = fs.statSync(abs).size;
+    const ruta = path.relative(rutaReal(raiz), abs).replace(/\\/g, '/');
+    // PDF o foto (tanda 13): no se lee como texto; va como bloque en base64 y el tope es el de la API por pedido
+    if (TIPOS_ADJUNTO[path.extname(abs).toLowerCase()]) {
+      if (Math.ceil(bytes / 3) * 4 > TOPE_PEDIDO_BYTES) throw new ErrorApi('api', `el adjunto ${r} pesa ${Math.round(bytes / 1024 / 1024)} MB: pasado a base64 supera los 32 MB que acepta un pedido`);
+      return { ruta, abs, binario: true };
+    }
     if (bytes > TOPE_ADJUNTO_BYTES) throw new ErrorApi('api', `el adjunto ${r} pesa ${Math.round(bytes / 1024)} KB: el tope son ${TOPE_ADJUNTO_BYTES / 1024 / 1024} MB (recortalo antes)`);
-    return { ruta: path.relative(rutaReal(raiz), abs).replace(/\\/g, '/'), texto: fs.readFileSync(abs, 'utf8') };
+    return { ruta, texto: fs.readFileSync(abs, 'utf8') };
   });
 }
 
@@ -133,7 +147,9 @@ async function main(argv) {
   try { op = leerArgumentos(argv); } catch (e) { console.error(e.message); return 2; }
   const pedido = leerTextoSeguro(op.pedido, { que: 'pedido' });
   const adjuntos = leerAdjuntos(op.adjuntos);
-  const usuario = armarMensaje({ pedido, adjuntos });
+  const binarios = adjuntos.filter((a) => a.binario);
+  const texto = armarMensaje({ pedido, adjuntos });
+  const usuario = binarios.length ? contenidoConAdjuntos(texto, binarios.map((b) => b.abs)) : texto;
   const system = op.sistema ? leerTextoSeguro(op.sistema, { que: 'system' }) : undefined;
   const salida = op.estimar ? null : validarSalida(op.salida, { entradas: [op.pedido, ...op.adjuntos, ...(op.sistema ? [op.sistema] : [])] });
   // fallbacks: false — un pedido a Opus tiene que volver de Opus; el 09/10/2026 el fallback del servidor
