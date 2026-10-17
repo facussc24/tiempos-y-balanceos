@@ -78,8 +78,8 @@ function leerTarea(def, repo, win, ahora) {
   else if (def.lector === 'resultado') lectura = leerResultado(leer(p), ahora);
   else if (def.lector === 'noche') lectura = leerNocheTarea(leer(p), mtime(p));
   else if (def.lector === 'arb') {
-    const cola = def.registro_log ? colaDe(ruta(def.registro_log, repo), 4096).filter((l) => l.trim()) : [];
-    lectura = leerArb(leer(p), cola.length ? cola[cola.length - 1] : null, ahora);
+    // 64 KB de cola: el registro no repite renglones iguales, así que la falla puede estar lejos del final
+    lectura = leerArb(leer(p), def.registro_log ? colaDe(ruta(def.registro_log, repo), 65536) : [], ahora);
   } else lectura = leerWindows(win);
   return armarTarea(def, lectura, win, ahora);
 }

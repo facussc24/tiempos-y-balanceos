@@ -106,10 +106,13 @@ export function leerNocheTarea(texto, mtimeMs) {
 
 /**
  * El arb: el latido que el vigilante reescribe en cada vuelta (~/arb_fotos/vigilante_latido.txt: 'DD/MM HH:MM:SS  pid N
- * <paso>') y el último renglón de su registro (lanzador.log), que dice por qué no lo pudo abrir. Auditor 17/10: el
- * registro tenía 300 vueltas seguidas de «sin red al servidor» mientras Windows decía 0.
+ * <paso>') y la cola de su registro (lanzador.log). Auditor 17/10: el registro tenía 300 vueltas seguidas de «sin red
+ * al servidor» mientras Windows decía 0. Ronda 2: el ÚLTIMO renglón no alcanza, porque un «Fak usando la PC; espero» o
+ * un «abriendo» quedan escritos encima de la falla (el registro no repite renglones iguales): manda la última falla que
+ * no tenga un «login OK» después.
  */
-export function leerArb(latido, ultimoLog, ahora) {
+const FALLA_ARB = /servidor no responde|sin red|No pude escribir|no pude traerla|sin confirmacion|sigue abierta|no tomo Aceptar/i;
+export function leerArb(latido, colaLog, ahora) {
   const m = /^(\d\d)\/(\d\d) (\d\d):(\d\d):(\d\d)\s+pid \d+\s+(.*)$/.exec((latido ?? '').trim());
   if (!m) return latido == null ? sinDato('no encuentro el latido del vigilante del arb') : { color: 'rojo', palabra: 'roto', detalle: 'el latido del vigilante no se entiende', cuandoMs: null };
   const anio = new Date(ahora).getFullYear();
@@ -119,8 +122,13 @@ export function leerArb(latido, ultimoLog, ahora) {
   if (ahora - cuandoMs > 15 * 60000) return { color: 'rojo', palabra: 'roto', detalle: `el vigilante no late desde ${fechaHora(cuandoMs)}`, cuandoMs };
   if (/^arb abierto/.test(paso)) return { color: 'verde', palabra: 'disponible', detalle: 'el arb está abierto', cuandoMs };
   if (/^pausado/.test(paso)) return { color: 'ambar', palabra: 'en pausa', detalle: 'el vigilante está pausado a mano', cuandoMs };
-  const log = (ultimoLog ?? '').trim().replace(/^\d\d\/\d\d \d\d:\d\d:\d\d\s+/, '');
-  if (/sin red|no responde/i.test(log)) return { color: 'rojo', palabra: 'roto', detalle: `el arb está cerrado y no lo puede abrir: ${log}`, cuandoMs };
+  const renglones = (Array.isArray(colaLog) ? colaLog : String(colaLog ?? '').split(/\r?\n/)).map((l) => l.trim()).filter(Boolean);
+  let falla = null;
+  for (const l of renglones) {
+    if (/login OK/i.test(l)) falla = null;
+    else if (FALLA_ARB.test(l)) falla = l.replace(/^\d\d\/\d\d \d\d:\d\d:\d\d\s+/, '');
+  }
+  if (falla) return { color: 'rojo', palabra: 'roto', detalle: `el arb está cerrado y no lo puede abrir: ${falla}`, cuandoMs };
   if (/bloqueado|usando la PC/i.test(paso)) return { color: 'ambar', palabra: 'esperando', detalle: paso, cuandoMs };
   return { color: 'verde', palabra: 'corriendo', detalle: paso, cuandoMs };
 }
@@ -159,7 +167,11 @@ export function estadoSesion(app, est, ahora) {
   const cat = app?.postTurnSummary?.status_category ?? null;
   // la app anota lastActivityAt por turno; la conversación se escribe a cada herramienta: vale la más nueva
   const horas = [app?.lastActivityAt, est?.ultimoMs].filter(Number.isFinite);
-  const base = { titulo: app?.title || '(sin título)', ultimaMs: horas.length ? Math.max(...horas) : null, modelo: app?.model ?? '', tarea: app?.scheduledTaskId ?? null };
+  // la página lleva el logo de Barack: el nombre del asistente no aparece (core-prohibiciones.md §9). Los títulos de
+  // sesión de Fak y los ids de tarea lo traen a veces (auditor 17/10: 4 sesiones de 7 días): se muestra «asistente»;
+  // el dato de origen no se toca. Solo acá, no en todo el texto: una ruta real (`Claude Fak\…`) no se deforma.
+  const sinNombre = (s) => (s == null ? s : String(s).replace(/claude/gi, 'asistente'));
+  const base = { titulo: sinNombre(app?.title) || '(sin título)', ultimaMs: horas.length ? Math.max(...horas) : null, modelo: app?.model ?? '', tarea: sinNombre(app?.scheduledTaskId ?? null) };
   if (est?.estado === 'trabajando') return { ...base, color: 'verde', palabra: 'corriendo', detalle: '' };
   if (est?.estado === 'espera_herramienta') return { ...base, color: 'rojo', palabra: `quieta hace ${est.quietaMin} min`, detalle: 'espera una herramienta: casi siempre un cartel de permiso' };
   if (est?.estado === 'espera_modelo') return { ...base, color: 'rojo', palabra: `quieta hace ${est.quietaMin} min`, detalle: 'quedó a mitad de un turno' };
@@ -191,6 +203,13 @@ export function leerSeguimiento(texto, mtimeMs, ahora, { umbral = 0.45, reciente
     const s = /SALIDA (\d+): (.*)$/.exec(l);
     if (s) salida = { codigo: +s[1], texto: s[2] };
     if (/ SIN CONEXION /.test(l)) salida = { codigo: 12, texto: l.replace(new RegExp(HORA), '') };
+  }
+  // la alarma del detector: la vigilancia sale con 11 SIN escribir un renglón SALIDA (bambu_red.py hace `return 11`
+  // fuera de terminar()), así que el último renglón de capa con ALARMA queda como el último dato y vale aunque el registro
+  // ya no se mueva (auditor ronda 2: a los 8 min la página decía «no imprime» con la impresora imprimiendo). La salida
+  // 16 tampoco deja renglón: esa no se puede ver desde el registro.
+  if (estado?.alarma && !salida && Number.isFinite(mtimeMs) && ahora - mtimeMs < 12 * 3600000) {
+    return { color: 'rojo', palabra: 'el detector avisó', detalle: `capa ${estado.capa} de ${estado.capas}: mirar la última foto; la vigilancia se cortó con la alarma`, cuandoMs: mtimeMs };
   }
   // lo último que pasó después del último renglón de capa manda: sin conexión, quieta, detector, fallada
   if (salida && Number.isFinite(mtimeMs) && ahora - mtimeMs < 12 * 3600000) {
@@ -239,10 +258,7 @@ export function leerSelftest(def, guardado) {
   return { skill: def.skill, paraFak: def.para_fak, color: guardado.ok ? 'verde' : 'rojo', palabra: guardado.ok ? 'disponible' : 'roto', detalle: guardado.ok ? (guardado.resumen ?? '') : (guardado.resumen || 'el selftest falló'), cuandoMs: guardado.cuandoMs };
 }
 
-// Todo texto que entra a la página pasa por acá: la página lleva el logo de Barack, así que el nombre del asistente no
-// aparece (core-prohibiciones.md §9). Los títulos de sesión de Fak y los nombres de tarea lo traen a veces (auditor 17/10:
-// 4 sesiones de 7 días): se muestra «asistente» en su lugar; el dato de origen no se toca.
-const esc = (s) => String(s ?? '').replace(/claude/gi, 'asistente').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 /** La página entera. `e`: { ahora, sesiones, tareas, nube, nubePcs, impresora, selftests, refresco, logo, foto, pc }. */
 export function html(e) {

@@ -69,6 +69,14 @@ describe('las tareas: el color sale de SU registro', () => {
     expect(leerArb(lat(AHORA - 60000, 'arb abierto: nada que hacer'), null, AHORA).palabra).toBe('disponible');
     expect(leerArb(lat(AHORA - 40 * 60000, 'arb abierto: nada que hacer'), null, AHORA).color).toBe('rojo');
     expect(leerArb(null, null, AHORA).color).toBe('gris');
+    // ronda 2 del auditor: la falla queda debajo de otro renglón (hoy 17/10: «Fak usando la PC» encima del «sin red»;
+    // el 08/10: el login trabado con «abriendo» encima): manda la última falla sin un «login OK» después
+    const sinRed = ['17/10 11:29:28  vigilante: sin red al servidor; reintento en el proximo chequeo', '17/10 11:35:02  vigilante: arb cerrado pero Fak esta usando la PC; espero'];
+    expect(leerArb(lat(AHORA - 60000, 'Fak usando la PC'), sinRed, AHORA).color).toBe('rojo');
+    const login = ['08/10 13:05:11  aviso (silencioso): No pude escribir en "Inicio de Sesion": otra ventana le saco el frente.', '08/10 13:08:12  vigilante: el arb esta en el login; lo abro'];
+    expect(leerArb(lat(AHORA - 60000, 'abriendo el arb'), login, AHORA).color).toBe('rojo');
+    const volvio = [...sinRed, '17/10 11:40:00  login OK'];
+    expect(leerArb(lat(AHORA - 60000, 'abriendo el arb'), volvio, AHORA).color).toBe('verde');
   });
   it('la noche que no arrancó por el tope de la API → ámbar «API gastada», no verde', () => {
     const r = leerNocheTarea(JSON.stringify({ inicio: '2026-10-17 06:30:17', pasos: [], noArranco: 'presupuesto del ciclo en rojo: $263.62 de $170.' }), null);
@@ -113,6 +121,8 @@ describe('la nube, la impresora, las skills y las sesiones', () => {
     expect(r.palabra).toBe('imprimiendo');
     expect(r.detalle).toMatch(/capa 85 de 102/);
     expect(leerSeguimiento(`${iso} | detector exito 0.61 falla 0.52 | ALARMA DEL DETECTOR`, AHORA - 30000, AHORA).color).toBe('rojo');
+    // la vigilancia sale con 11 sin escribir SALIDA: a los 8 y a los 30 min la alarma sigue en rojo (ronda 2 del auditor)
+    for (const min of [8, 30]) expect(leerSeguimiento(`${iso} | detector exito 0.61 falla 0.52 | ALARMA DEL DETECTOR`, AHORA - min * 60000, AHORA).color).toBe('rojo');
     // en pausa la vigilancia escribe cada 300 s: a los 6 min sigue «en pausa», no salta a «no imprime»
     expect(leerSeguimiento(iso.replace('RUNNING', 'PAUSE'), AHORA - 6 * 60000, AHORA).palabra).toBe('en pausa');
     const sinCon = `${iso}\n2026-10-17T11:50:02-03:00 SIN CONEXION desde las 11:46 (sigo buscandola por su serie)`;
