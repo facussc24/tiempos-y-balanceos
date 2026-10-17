@@ -159,6 +159,19 @@ describe('estadoHija · ROJO (lo que paso de verdad)', () => {
     expect(r2.ok).toBe(false);
     expect(r2.ojos[0]).toMatch(/no encuentro la conversación/);
   });
+
+  it('H7 (auditor 16/10): registro de la app SIN cliSessionId -> OJO, no «arrancó bien» (así dio ARRANCÓ BIEN la hija de memoria a las 15:50)', () => {
+    const { local } = armar({ sinTranscript: true });
+    const f = path.join(raizApp, 'cuenta', 'org', `${local}.json`);
+    const reg = JSON.parse(fs.readFileSync(f, 'utf8'));
+    delete reg.cliSessionId;
+    fs.writeFileSync(f, JSON.stringify(reg));
+    const r = estadoHija({ id: local, raizApp, raizProyectos, ahoraMs: AHORA, esperaModelo: 'claude-opus-5-5' });
+    expect(r.ok).toBe(false);
+    expect(r.ojos).toHaveLength(1);
+    expect(r.ojos[0]).toMatch(/todavía no anotó el id de la conversación/);
+    expect(r.datos[0]).toMatch(/título: Hija/);
+  });
 });
 
 describe('lectores', () => {

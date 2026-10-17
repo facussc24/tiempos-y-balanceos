@@ -119,6 +119,8 @@ export function estadoHija({ id, raizApp = RAIZ_APP(), raizProyectos = RAIZ_PROY
   const t = cli ? leerTranscript(cli, raizProyectos) : null;
   if (!t) {
     if (cli) ojos.push(`no encuentro la conversación ${cli}.jsonl: todavía no escribió nada (volver a mirar en un minuto)`);
+    // H7 (auditor 16/10/2026): sin cliSessionId en el registro de la app no hay nada que leer, y «arrancó bien» salía igual.
+    else if (app) ojos.push('la app todavía no anotó el id de la conversación (cliSessionId): no se puede leer su primer mensaje ni su modo; volver a mirar en un minuto');
   } else {
     const hace = t.ultimoTs ? Math.round((ahoraMs - t.ultimoTs) / 60000) : null;
     const modoHoy = app?.permissionMode ?? t.modoActual ?? t.modoPrimerMensaje;
