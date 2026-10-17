@@ -143,6 +143,8 @@ describe('apiLotesBatch · recoger', () => {
     const l = ledger();
     expect(l).toHaveLength(2);
     expect(l.every((e) => e.lote === true)).toBe(true);
+    // cada pedido con su nombre y su effort: asi se comparan dos lotes iguales en high y en medium
+    expect(l.map((e) => e.tarea)).toEqual(['sesion:audit-01@high', 'sesion:audit-03@high']);
     expect(r.costoUsd).toBeCloseTo(6, 6);
     const enDisco = JSON.parse(fs.readFileSync(path.join(salidaDir, '_lote.json'), 'utf8'));
     expect(enDisco.recogido).toBeTruthy();

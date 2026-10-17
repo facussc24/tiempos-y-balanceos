@@ -17,23 +17,34 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { crearCliente, esperarLote, usd, ErrorApi } from './_lib/claudeApi.mjs';
 import { mandarLote, recogerGuardado } from './_lib/apiLotesBatch.mjs';
+import { EFFORTS } from './_apiTarea.mjs';
 
 const RAIZ = 'C:/Dev/BarackMercosul';
 const args = process.argv.slice(2);
 const jobsFile = args[0];
-const op = { lote: false, recoger: false, forzar: false, esperarMin: 55 };
+// Para MEDIR el esfuerzo (tanda 5 pieza 2; la salida promedio de un lote de auditoria fue 36.700 tokens, casi todo
+// pensamiento): --effort low|medium|high|xhigh pisa el de todos los jobs (la sintesis no), --solo N corre los N
+// primeros y --salida-dir <dir> deja la corrida aparte. Sin --effort manda lo del jobs.json (por defecto high).
+// El comando para comparar dos lotes en high y en medium: docs/pedidos-api/medir_esfuerzo.md.
+const op = { lote: false, recoger: false, forzar: false, esperarMin: 55, effort: null, solo: null, salidaDir: null };
 for (let i = 1; i < args.length; i++) {
   const a = args[i];
   if (a === '--lote') op.lote = true;
   else if (a === '--recoger') op.recoger = true;
   else if (a === '--forzar') op.forzar = true;
   else if (a === '--esperar-min' && i + 1 < args.length) op.esperarMin = Number(args[++i]);
+  else if (a === '--effort' && i + 1 < args.length) op.effort = args[++i];
+  else if (a === '--solo' && i + 1 < args.length) op.solo = Number(args[++i]);
+  else if (a === '--salida-dir' && i + 1 < args.length) op.salidaDir = args[++i];
   else { console.error(`no conozco el argumento ${a}. No hago nada.`); process.exit(2); }
 }
-if (!jobsFile || !fs.existsSync(jobsFile)) { console.error('uso: node scripts/_apiLotes.mjs <jobs.json> [--lote [--esperar-min N] | --recoger [--forzar]]'); process.exit(2); }
+if (!jobsFile || !fs.existsSync(jobsFile)) { console.error('uso: node scripts/_apiLotes.mjs <jobs.json> [--lote [--esperar-min N] | --recoger [--forzar]] [--effort low|medium|high|xhigh] [--solo N] [--salida-dir <dir>]'); process.exit(2); }
 if (!(op.esperarMin >= 0 && op.esperarMin <= 600)) { console.error('--esperar-min va de 0 a 600'); process.exit(2); }
+if (op.effort && !EFFORTS.includes(op.effort)) { console.error(`--effort va con ${EFFORTS.join('|')} (max nunca se pide)`); process.exit(2); }
+if (op.solo != null && !(Number.isInteger(op.solo) && op.solo >= 1)) { console.error('--solo va con un entero mayor que 0'); process.exit(2); }
 const cfg = JSON.parse(fs.readFileSync(jobsFile, 'utf8'));
 if (cfg.lote) op.lote = true;
+if (op.salidaDir) cfg.salidaDir = op.salidaDir;
 fs.mkdirSync(cfg.salidaDir, { recursive: true });
 
 let jobs = cfg.jobs || [];
@@ -55,6 +66,9 @@ if (cfg.auditoria) {
   if (au.saltarExistentes) jobs = jobs.filter((j) => !fs.existsSync(path.join(cfg.salidaDir, `${j.tarea}.md`)));
   console.log(`auditoría: ${lista.length} archivos en ${todos} lotes${au.saltarExistentes ? ` · ${todos - jobs.length} ya en disco · ${jobs.length} a correr` : ''}`);
 }
+if (op.solo) jobs = jobs.slice(0, op.solo);
+if (op.effort) jobs = jobs.map((j) => ({ ...j, effort: op.effort }));
+if (op.solo || op.effort) console.log(`medición: ${jobs.length} job(s)${op.effort ? ` en effort ${op.effort}` : ''} · salidas en ${cfg.salidaDir}`);
 
 /** Batch: manda (o solo recoge) y deja en `ok` lo que sirve para la sintesis. Devuelve null si el lote sigue en curso. */
 async function enLote() {

@@ -827,15 +827,16 @@ export async function esperarLote(cliente, loteOId, { esperarMs = 30000, timeout
 
 /**
  * Los resultados de un lote ya terminado, por id de pedido: { [id]: respuesta | { error } }.
- * Registra el gasto de cada respuesta como lote.
+ * Registra el gasto de cada respuesta como lote. `tareaDe` ({ [id]: tarea }) anota cada pedido con su propio nombre en
+ * el ledger (sin eso todos caen bajo `tarea` y no se pueden comparar dos lotes, p. ej. el mismo en high y en medium).
  */
-export async function recogerLote(cliente, loteId, { tarea = '', conSchema = {}, modelos = {}, dirLedger = DIR_API, ahora } = {}) {
+export async function recogerLote(cliente, loteId, { tarea = '', tareaDe = {}, conSchema = {}, modelos = {}, dirLedger = DIR_API, ahora } = {}) {
   const resultados = {};
   for await (const r of await cliente.messages.batches.results(loteId)) {
     const id = String(r.custom_id);
     if (r.result?.type === 'succeeded') {
       const resp = interpretarRespuesta(r.result.message, { modelo: modelos[id] || r.result.message?.model, conSchema: !!conSchema[id], lote: true });
-      registrarGasto(resp, { tarea, lote: true, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(cliente?.apiKey) });
+      registrarGasto(resp, { tarea: tareaDe[id] || tarea, lote: true, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(cliente?.apiKey) });
       resultados[id] = resp;
     } else {
       resultados[id] = { error: r.result?.type || 'sin resultado', detalle: r.result?.error?.message ?? r.result?.error?.type ?? null };

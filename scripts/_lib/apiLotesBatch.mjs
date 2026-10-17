@@ -140,7 +140,9 @@ export async function recogerGuardado(cliente, { salidaDir, ahora = new Date(), 
     return { estado: 'en_curso', horas, aviso, loteId: estado.loteId };
   }
   guardarEstado(salidaDir, { ...estado, recogiendo: selloLocal(ahora) });
-  const resultados = await recogerLote(cliente, estado.loteId, { tarea: estado.tarea, conSchema: estado.conSchema || {}, modelos: estado.modelos || {}, dirLedger, ahora });
+  // cada pedido con su nombre en el ledger, como `sesion:<tarea>` igual que _apiTarea.mjs (y con su effort, para medir)
+  const tareaDe = Object.fromEntries(estado.pedidos.map((p) => [p.id, `sesion:${p.id}${p.effort ? `@${p.effort}` : ''}`]));
+  const resultados = await recogerLote(cliente, estado.loteId, { tarea: estado.tarea, tareaDe, conSchema: estado.conSchema || {}, modelos: estado.modelos || {}, dirLedger, ahora });
   const filas = [];
   let costoUsd = 0;
   for (const p of estado.pedidos) {
