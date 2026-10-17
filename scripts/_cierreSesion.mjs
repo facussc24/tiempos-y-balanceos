@@ -465,16 +465,21 @@ export function evaluarRetirosCierre(r, { viernes = false } = {}) {
     if (!r) return { estado: 'aviso', detalle: 'no se pudo leer scripts/_lib/retiros.data.json' };
     if (r.sinRenglon.length) return { estado: 'aviso', detalle: `${r.sinRenglon.length} hook(s) o regla(s) sin renglon en retiros.data.json (fecha de revision y razon): ${r.sinRenglon.join(', ')}` };
     // Ronda 2 (auditor): la marca pendienteDeFusion no vence; si queda colgada (la otra rama no se fundio, o se fundio
-    // distinta), se dice todos los dias con la rama nombrada.
-    if ((r.pendientesDeFusion || []).length) return { estado: 'aviso', detalle: `${r.pendientesDeFusion.length} alta(s) o baja(s) de retiros.data.json esperan otra rama: ${r.pendientesDeFusion.join(' · ')}` };
+    // distinta), se dice todos los dias con la rama nombrada. Se SUMA al resto: no tapa los vencidos del viernes.
+    const pend = (r.pendientesDeFusion || []).length
+        ? `${r.pendientesDeFusion.length} alta(s) o baja(s) de retiros.data.json esperan otra rama: ${r.pendientesDeFusion.join(' · ')}` : '';
     const n = r.vencidos.length + r.proximos.length;
-    if (!n) return { estado: 'ok', detalle: `${r.total} renglones, ninguno vence en 7 dias` };
-    if (!viernes) return { estado: 'ok', detalle: `${r.vencidos.length} vencido(s) y ${r.proximos.length} por vencer en 7 dias: se nombran el viernes (node scripts/_retirosVencidos.mjs)` };
-    return {
-        estado: 'aviso',
-        detalle: `viernes de planificacion: ${r.vencidos.length} vencido(s) y ${r.proximos.length} por vencer — node scripts/_retirosVencidos.mjs --disparos\n`
-            + [...r.vencidos, ...r.proximos].slice(0, 6).map((f) => `      · ${f.id} (revisar ${f.revisar})`).join('\n'),
-    };
+    let base;
+    if (!n) base = { estado: 'ok', detalle: `${r.total} renglones, ninguno vence en 7 dias` };
+    else if (!viernes) base = { estado: 'ok', detalle: `${r.vencidos.length} vencido(s) y ${r.proximos.length} por vencer en 7 dias: se nombran el viernes (node scripts/_retirosVencidos.mjs)` };
+    else {
+        base = {
+            estado: 'aviso',
+            detalle: `viernes de planificacion: ${r.vencidos.length} vencido(s) y ${r.proximos.length} por vencer — node scripts/_retirosVencidos.mjs --disparos\n`
+                + [...r.vencidos, ...r.proximos].slice(0, 6).map((f) => `      · ${f.id} (revisar ${f.revisar})`).join('\n'),
+        };
+    }
+    return pend ? { estado: 'aviso', detalle: `${pend}\n      · ${base.detalle}` } : base;
 }
 
 async function chequearRetiros() {

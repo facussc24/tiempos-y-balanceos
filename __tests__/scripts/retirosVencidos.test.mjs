@@ -68,7 +68,7 @@ describe('el paso del cierre (evaluarRetirosCierre)', () => {
     const r = evaluarRetiros(datos, piezasEnDisco(), '2026-10-23');
     expect(evaluarRetirosCierre(r, { viernes: true }).estado).toBe('aviso');
     expect(evaluarRetirosCierre(r, { viernes: true }).detalle).toMatch(/lanzar-sesion-hija:camino-b/);
-    expect(evaluarRetirosCierre(r, { viernes: false }).estado).toBe('ok');
+    expect(evaluarRetirosCierre({ ...r, pendientesDeFusion: [] }, { viernes: false }).estado).toBe('ok');   // sin pendientes: los vencidos no se nombran fuera del viernes
     expect(evaluarRetirosCierre({ ...r, sinRenglon: ['hook:nuevo'] }, { viernes: false }).estado).toBe('aviso');
     expect(evaluarRetirosCierre(null).estado).toBe('aviso');
     // ronda 2 (auditor): una marca pendienteDeFusion colgada avisa con la rama nombrada; sin pendientes, no
@@ -76,6 +76,10 @@ describe('el paso del cierre (evaluarRetirosCierre)', () => {
     expect(p.estado).toBe('aviso');
     expect(p.detalle).toMatch(/claude\/guardianes-tanda3/);
     expect(evaluarRetirosCierre({ ...r, pendientesDeFusion: [] }, { viernes: false }).estado).toBe('ok');
+    // los pendientes se SUMAN: el viernes siguen apareciendo los vencidos
+    const ambos = evaluarRetirosCierre({ ...r, pendientesDeFusion: ['hook:x (alta de rama-y, todavia no esta en el disco)'] }, { viernes: true });
+    expect(ambos.detalle).toMatch(/rama-y/);
+    expect(ambos.detalle).toMatch(/lanzar-sesion-hija:camino-b/);
   });
 });
 
