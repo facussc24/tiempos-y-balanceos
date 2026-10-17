@@ -2434,7 +2434,13 @@ todo lo demas dentro de una carpeta que diga .claude para que no estorbe".`);
   }
 
   // 2. Copiar del telefono sin haber cruzado antes contra la biblioteca.
-  if (VID_MTP.test(cmd) && VID_MUEVE.test(cmd)) {
+  // Pieza 7 (tanda 3, 16/10/2026; si de Fak del 15/10): el telefono y el verbo de copiar tienen que estar en la MISMA
+  // sentencia. El 15/10 se freno expulsar el pendrive (`powershell … Namespace(17).ParseName('D:').InvokeVerb('Eject')`)
+  // porque un `cp` de un .py al skill, al principio del mismo comando, contaba como copia del telefono
+  // (`casa_guardianes_frenos.md` §0). Con JSON sano se parte el comando CRUDO (cmd6 cambia los saltos de linea por
+  // espacios y un comando de varios renglones quedaba como una sola sentencia); con JSON roto, la regla de siempre.
+  const sentenciasTel = ctx.ok && ctx.cmd ? ctx.cmd.split(/\r?\n|&&|\|\||;/) : [cmd];
+  if (sentenciasTel.some((s) => VID_MTP.test(s) && VID_MUEVE.test(s))) {
     const marca = path.join(dirHome(env), '.claude', '.cruce-video');
     let edadH = Infinity;
     try {

@@ -108,6 +108,31 @@ describe('video-maquina-guard — copiar del telefono sin cruzar', () => {
     it('VERDE: mirar el telefono sin copiar (indexar) pasa aunque no haya cruce', () => {
         expect(correr('$s.NameSpace(17).Items() | ForEach-Object { $_.Name }')).toBeNull();
     });
+
+    // Pieza 7 (tanda 3, 16/10/2026; si de Fak del 15/10). El caso del 15/10 (`casa_guardianes_frenos.md` §0): expulsar el
+    // pendrive con Namespace(17) en el mismo comando que un `cp` de un .py al skill. Los rojos son la tabla de pruebas de
+    // ese informe (casos 9 y 10: la copia real del telefono) y sus variantes de varios renglones.
+    const CASO_15_10 = [
+        'mkdir -p /c/Dev/BarackMercosul/.claude/skills/plotter-aol/scripts && cp "C:/Users/FACUND~1/AppData/Local/Temp/claude/C--Dev-BarackMercosul/e4c3c7a7/scratchpad/acomodar.py" /c/Dev/BarackMercosul/.claude/skills/plotter-aol/scripts/acomodar_insert.py && python - <<\'EOF\'',
+        "import io\np='/c/Dev/BarackMercosul/.claude/skills/plotter-aol/SKILL.md'\ns=io.open(p,encoding='utf-8').read()\nio.open(p,'w',encoding='utf-8').write(s)",
+        'EOF',
+        "powershell -NoProfile -Command \"(New-Object -ComObject Shell.Application).Namespace(17).ParseName('D:').InvokeVerb('Eject'); Start-Sleep 2; Get-PSDrive D -ErrorAction SilentlyContinue\"",
+    ].join('\n');
+    it('pieza 7 VERDE — expulsar el pendrive con Namespace(17) en un comando que ademas copia OTRA cosa (15/10)', () => {
+        expect(correr(CASO_15_10)).toBeNull();
+        expect(correr("cp a.txt b.txt && powershell -Command \"(New-Object -ComObject Shell.Application).Namespace(17).ParseName('D:').InvokeVerb('Eject')\"")).toBeNull();
+    });
+    it('pieza 7 ROJO — la copia real del telefono, en una sentencia o en varios renglones, sigue frenando sin cruce', () => {
+        for (const c of [
+            'cp "/c/Users/FacundoS-PC/Apple iPhone/Internal Storage/DCIM/100APPLE/IMG_0645.MOV" /d/transito/',
+            "powershell -Command \"$s=New-Object -ComObject Shell.Application\n$d=$s.Namespace('D:\\\\transito')\n$d.CopyHere($s.Namespace(17).ParseName('Apple iPhone'))\"",
+            'mkdir -p /d/x && python - <<\'EOF\'\nimport win32com.client as w\nsh=w.Dispatch("Shell.Application")\nsh.Namespace("D:/x").CopyHere(item)\nEOF',
+        ]) {
+            const r = correr(c);
+            expect(r?.tipo, c).toBe('bloqueo');
+            expect(r.texto, c).toMatch(/copiar del telefono sin haber cruzado/);
+        }
+    });
 });
 
 describe('video-maquina-guard — la raiz de una carpeta de maquina es solo para originales', () => {
