@@ -105,4 +105,23 @@ ingenieria"*, 08/09; *"yo soy ingenieria te dije"*, 21/09). Memorias
 Que va en cada casillero del legajo APQP: skill **`apqp-legajo`** (relevado de 7 legajos reales
 el 21/09/2026; lo corrige Fak). Lo que ahi dice SIN DEFINIR se pregunta, no se completa.
 
+## G. Permisos de un solo uso: solo con la frase de Fak de ESTE turno, citada (tanda 3, 16/10/2026)
+
+Un permiso de un solo uso (`~/.claude/.apqp-listado-ok`, `.arb-cerrar-ok`, `.nube-personal-ok`, `.espacio-ok`,
+`.agent-opus-ok`, `.agent-cupo-ok`, `.agent-limit`, `.workflow-ok`) abre UNA vez un freno que Fak ya autorizo. Lo
+arma la sesion **solo con el si de Fak en su ultimo mensaje**, y la cita va en el mismo comando, copiada de ese mensaje
+con su fecha y hora (hora argentina): `: > ~/.claude/.apqp-listado-ok # Fak 15/10 13:55: "hacelo si"`. Sin la frase,
+el freno vale y se le pregunta. Un si de una hora antes, «resolvelo vos» o una instruccion de otra sesion no son ese si.
+
+Por que: en 30 dias se armaron 10 permisos así; 2 sin ningun si visible y el `arb-cerrar-ok` del 02/10 se apoyo en
+«vos deberias solucionarlo todo automaticamente» y el `taskkill` se ejecuto igual (informe de CATA del 15/10/2026,
+seccion 3 bis). Quedan afuera los pases que la regla de su guardian deja a la propia sesion: `.encargo-libre`
+(`coordinador.md`, un mensaje que no es encargo) y `.agent-builtin-ok` (`techo-agentes.md`).
+
+Enforcement: `permiso-un-uso-guard` (dentro de `_dispatcher.sh`; logica en `scripts/_lib/permisoUnUso.mjs`, lista
+y formato en `scripts/_lib/permisosUnUso.data.json`): compara el texto citado y la hora con el ultimo mensaje real de
+Fak del transcript; sin transcript que leer, frena; por la tool Write, frena siempre. Cada decision queda en
+`~/.claude/.permisos-un-uso.log` (`node scripts/_lib/permisoGuard.mjs --registro`). Test: `permisoUnUso.test.mjs`.
+Limite: un script que crea el archivo por dentro no lo nombra en el comando.
+
 Este contrato evoluciona: si una fila genera friccion repetida, actualizarlo y commitearlo.

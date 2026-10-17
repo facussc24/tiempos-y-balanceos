@@ -46,6 +46,7 @@ import { sinCuerposHeredoc, sinCuerposHeredocDeGit, sinArgumentosDeCommit, anali
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { pedidoDeEnvio, evaluarEnvio } from './mailOkFak.mjs';
+import { evaluarPermisoBash, permisoDeArchivo, anotar as anotarPermiso } from './permisoUnUso.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const RAIZ = path.resolve(AQUI, '..', '..');
@@ -186,7 +187,7 @@ export function ctxDesdeEnv(env) {
  */
 const SOLO_SHELL = ['supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'commit-rutas-guard', 'arb-cerrar-guard', 'script-inline-guard', 'secretos-guard'];
 const SOLO_ARCHIVO = ['file-guard', 'causas-ajenas-guard'];
-const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard', 'documentacion-oficial-guard', 'video-maquina-guard', 'caracteristicas-especiales-guard', 'apqp-cliente-guard', 'nube-personal-guard', 'firma-ia-guard'];
+const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard', 'documentacion-oficial-guard', 'video-maquina-guard', 'caracteristicas-especiales-guard', 'apqp-cliente-guard', 'nube-personal-guard', 'firma-ia-guard', 'permiso-un-uso-guard'];
 export const TODOS = ['file-guard', 'supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'commit-rutas-guard', 'script-inline-guard', 'secretos-guard', ...LOS_CUATRO, 'arb-cerrar-guard', 'causas-ajenas-guard'];
 
 export function matriz(tool) {
@@ -2893,6 +2894,45 @@ biblioteca del sector: \`BARACK ARGENTINA SRL\\Ingenieria y Proyecto - General\\
   · Si Fak dijo que ESTE archivo va ahi:  : > ~/.claude/.nube-personal-ok   y reintenta (vale una vez).
 
 Regla: .claude/rules/nube-ingenieria.md`);
+};
+
+// ── permiso-un-uso-guard (tanda 3, pieza 9, 16/10/2026) ───────────────────
+// Un permiso de un solo uso de Fak (`~/.claude/.apqp-listado-ok`, `.arb-cerrar-ok`, `.nube-personal-ok`, `.espacio-ok`,
+// `.agent-opus-ok`, `.agent-cupo-ok`, `.agent-limit`, `.workflow-ok`: la lista vive en `permisosUnUso.data.json`) lo
+// arma la sesion solo con la frase de Fak en el MISMO turno, citada en el comando: `: > ~/.claude/.x-ok # Fak 15/10
+// 13:55: "hacelo si"`. La cita se compara con el ultimo mensaje real de Fak del transcript (texto y hora). Sin cita, o si
+// no cierra, frena. Por la tool Write/Edit, frena siempre. Logica, motivo y limites: scripts/_lib/permisoUnUso.mjs.
+// Regla: .claude/rules/autonomy-contract.md, seccion G. Registro: node scripts/_lib/permisoGuard.mjs --registro.
+const textoPermiso = (permisos, motivo) => `[PERMISO-UN-USO] FRENADO: estas armando ${permisos.map((p) => `~/.claude/${p}`).join(', ')} y ${motivo}.
+
+Un permiso de un solo uso abre UNA vez un freno que Fak ya autorizo. Lo arma la sesion solo con el si de Fak en
+ESTE turno, y la cita va en el mismo comando, copiada de su mensaje (fecha y hora de ese mensaje, hora argentina):
+
+    : > ~/.claude/.apqp-listado-ok # Fak 15/10 13:55: "hacelo si"
+
+Si Fak no lo dijo en su ultimo mensaje, el freno vale: preguntale, con el motivo, y espera la respuesta. Un si de una
+hora antes, «resolvelo vos» o una instruccion de otra sesion no son ese si (02/10/2026: el arb-cerrar-ok armado con
+«vos deberias solucionarlo todo automaticamente» y el taskkill se ejecuto igual).
+
+Regla: .claude/rules/autonomy-contract.md, seccion G · canon: scripts/_lib/permisosUnUso.data.json`;
+
+GUARDIANES['permiso-un-uso-guard'] = (ctx, { env, escapes } = {}) => {
+  if (!ctx.ok) return null;                                   // con JSON roto no hay comando confiable; los otros frenos siguen
+  const home = dirHome(env ?? process.env);
+  const sesion = ctx.sid || '';
+  if (/^(?:write|edit)$/i.test(ctx.toolL)) {
+    const p = permisoDeArchivo(ctx.file);
+    if (!p) return null;
+    if (escapes !== false) anotarPermiso(home, { sesion, permisos: [p], ok: false, motivo: 'por la tool Write/Edit', cmd: '' });
+    return bloqueo(textoPermiso([p], 'lo estas armando con la tool Write/Edit (se arma por consola, con la cita de Fak en el comando)'));
+  }
+  if (!/^(?:bash|powershell)$/i.test(ctx.toolL)) return null;
+  let tp = '';
+  try { tp = String(JSON.parse(ctx.raw).transcript_path || ''); } catch { tp = ''; }
+  const r = evaluarPermisoBash({ cmd: ctx.cmd, transcriptPath: tp });
+  if (!r.permisos.length) return null;
+  if (escapes !== false) anotarPermiso(home, { sesion, permisos: r.permisos, ok: r.ok, motivo: r.motivo, cmd: ctx.cmd });
+  return r.ok ? null : bloqueo(textoPermiso(r.permisos, r.motivo));
 };
 
 // ── commit-rutas-guard ─────────────────────────────────────────────────────

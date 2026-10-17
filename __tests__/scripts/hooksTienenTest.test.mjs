@@ -59,6 +59,9 @@ const COBERTURA = {
   // PreToolUse via _dispatcher (02/10/2026): un `git commit` sin rutas se lleva lo que otra sesion tenga
   // en el indice (cee8f1b2 salio con 12 archivos ajenos). Regla git-deploy.md, paso 2.
   'commit-rutas-guard.sh': { test: '__tests__/scripts/commitRutasGuard.test.mjs', tipo: 'bloquea' },
+  // PreToolUse via _dispatcher (tanda 3, pieza 9, 16/10/2026): un permiso de un solo uso de Fak se arma solo con su frase
+  // de este turno citada en el comando (autonomy-contract.md §G).
+  'permiso-un-uso-guard.sh': { test: '__tests__/scripts/permisoUnUso.test.mjs', tipo: 'bloquea' },
   // PreToolUse via _dispatcher (11/09/2026): recordatorio 1x/h del criterio CC/SC (S 9-10 · S 5-8 y O>=4)
   // al tocar siglas, flujogramas o el tema. No bloquea: el bloqueo duro son los CRITICAL del validador.
   'caracteristicas-especiales-guard.sh': { test: GUARDIANES, tipo: 'aviso' },
