@@ -3,7 +3,6 @@ type: tool_used
 tool: Skill
 input_match: "amfe-export-oficial"
 min: 1
-with-only: true
 ---
 
 **Este grader mide el DISPARO, no la respuesta.** Va marcado `with-only` a proposito: bajo

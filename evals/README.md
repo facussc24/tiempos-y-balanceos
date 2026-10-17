@@ -4,7 +4,17 @@ Casos de prueba para `claude plugin eval`. La gracia del comando: corre cada cas
 skill y despues **sin** ella (`--ablation with-without`), y reporta la diferencia. Es la unica
 forma de contestar "¿las 19 skills cambian algo, o son 5,8 KB de contexto por turno?".
 
-## Estado: escritos, NO ejecutados todavia (11/09/2026)
+## Estado al 17/10/2026: corren, con una carpeta chica (tanda 9, pieza 4)
+
+`claude plugin eval` ya esta habilitado (2.1.301). Con el repo entero como complemento se niega («a plugin directory
+holds more than 20000 entries»), asi que **no se corre desde la raiz**: `node scripts/_evalBanco.mjs --banco amfe|mail|todos`
+arma en el temporal un complemento con solo las skills del banco y las reglas empaquetadas como una skill generada,
+corre `--ablation with-without --no-publish` y deja el informe en `docs/evals/`. Los bancos estan en
+`evals/banco/bancos.json` (5 casos de AMFE y 5 de mail; los cuatro casos de abajo entran ahi). Dos correcciones que
+salieron de correrlos: el grader de disparo **no lleva ninguna clave `with-only`** (el eval marca solo un `tool_used`
+sobre `Skill` como indicador; con la clave, el caso no carga) y `evals/results/` va ignorado por git.
+
+## Historia: escritos, NO ejecutados todavia (11/09/2026)
 
 `claude plugin eval` esta en **early access y no habilitado en esta cuenta**. Tanto `eval` como
 `eval init` contestan:

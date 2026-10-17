@@ -55,6 +55,8 @@ AUDIT_FUNCIONAL.md
 
 # Test exports and debug scripts
 exports/test-*
+# Resultados crudos de claude plugin eval (el informe que se lee va a docs/evals/; tanda 9, pieza 4)
+evals/results/
 # Paginas descartables del skill explicar-mejor (no son entregables)
 exports/explicaciones/
 # listas de borradores de Outlook (asuntos y destinatarios): scripts/_mails.py --limpiar-borradores
