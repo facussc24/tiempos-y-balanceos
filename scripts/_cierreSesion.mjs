@@ -353,7 +353,14 @@ export function combinarCI(candado, { run, error, sha = null } = {}) {
         if (delHead) return { estado: 'falta', detalle: `${candado.detalle} · y ${msg}` };
         return { estado: candado.estado === 'falta' ? 'falta' : 'aviso', detalle: `${candado.detalle} · ${msg} — si el rojo ya se arreglo, relanzarlo (Run workflow en la pagina del deploy, o un push que toque la app)` };
     }
-    const dep = !run ? 'sin corridas del deploy' : run.status !== 'completed' ? `deploy en curso (${run.status})` : `ultimo deploy verde (${String(run.head_sha ?? '').slice(0, 8)})`;
+    // Ronda 2 (17/10, hallazgo 1): un deploy en curso o en cola NO hereda el verde del candado. candado.yml no corre el
+    // build de la app; solo deploy.yml lo prueba, y mientras corre no se sabe si lo publicado va a quedar verde.
+    if (run && run.status !== 'completed') {
+        const corre = String(run.head_sha ?? '').slice(0, 8);
+        const delHead = Boolean(sha) && String(sha).slice(0, 8) === corre;
+        return { estado: candado.estado === 'falta' ? 'falta' : 'aviso', detalle: `${candado.detalle} · deploy ${delHead ? 'del HEAD ' : ''}en curso (${run.status}, ${corre}): volver a mirar antes de cerrar — ${run.html_url ?? tablero}` };
+    }
+    const dep = !run ? 'sin corridas del deploy' : `ultimo deploy verde (${String(run.head_sha ?? '').slice(0, 8)})`;
     return { ...candado, detalle: `${candado.detalle} · ${dep}` };
 }
 
