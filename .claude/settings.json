@@ -69,6 +69,16 @@
         ]
       },
       {
+        "_comentario": "16/10/2026 (tanda 3, pieza 12): una sesion que le cambia el modelo a otra o a si misma por la herramienta de la app necesita que Fak lo haya pedido en su ultimo mensaje (CLAUDE.md: no tocar el selector por cuenta propia). Logica: scripts/_lib/modeloGuard.mjs (el mismo control que el PreModelSwitch de abajo). Test: modeloGuard.test.mjs.",
+        "matcher": "mcp__ccd_session_mgmt__set_session_model",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/modelo-guard.sh\""
+          }
+        ]
+      },
+      {
         "_comentario": "04/09/2026: nacio como recordatorio (additionalContext). 06/10/2026: PAUSA (exit 2) la pregunta con opcion recomendada o con forma de menu de alcance, para repensarla antes de que le llegue a Fak; el mensaje no ordena hacer nada (frena, no decide). Medido 01/09-06/10: 81 preguntas, 35 rechazadas; el recordatorio llegaba despues de escrita la pregunta. Logica: scripts/_lib/preguntaGuard.mjs. Test: preguntaGuard.test.mjs.",
         "matcher": "AskUserQuestion",
         "hooks": [
@@ -99,6 +109,19 @@
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/permiso-guard.sh\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "PreModelSwitch": [
+      {
+        "_comentario": "16/10/2026 (tanda 3, pieza 12; evento de claude.exe desde la semana 36, entrada: from_model, to_model, source). /model (command) y el selector interactivo (picker) pasan siempre: los dispara una persona. El selector de la app de escritorio manda set_model por el puente y llega como sdk, igual que un cambio programatico: con sdk se niega SOLO si el transcript muestra que el cambio salio de una llamada de esta sesion despues del ultimo mensaje de Fak y ese mensaje no habla del modelo; si no se puede atribuir, pasa. Salida: permissionDecision deny con el motivo. Logica: scripts/_lib/modeloGuard.mjs. Test: modeloGuard.test.mjs.",
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/modelo-guard.sh\"",
             "timeout": 20
           }
         ]

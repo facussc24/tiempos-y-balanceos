@@ -62,6 +62,9 @@ const COBERTURA = {
   // PreToolUse via _dispatcher (tanda 3, pieza 9, 16/10/2026): un permiso de un solo uso de Fak se arma solo con su frase
   // de este turno citada en el comando (autonomy-contract.md §G).
   'permiso-un-uso-guard.sh': { test: '__tests__/scripts/permisoUnUso.test.mjs', tipo: 'bloquea' },
+  // PreModelSwitch + PreToolUse de set_session_model (tanda 3, pieza 12, 16/10/2026): el modelo no se cambia a mitad de
+  // camino por cuenta propia; /model y el selector pasan siempre.
+  'modelo-guard.sh': { test: '__tests__/scripts/modeloGuard.test.mjs', tipo: 'bloquea' },
   // PreToolUse via _dispatcher (11/09/2026): recordatorio 1x/h del criterio CC/SC (S 9-10 · S 5-8 y O>=4)
   // al tocar siglas, flujogramas o el tema. No bloquea: el bloqueo duro son los CRITICAL del validador.
   'caracteristicas-especiales-guard.sh': { test: GUARDIANES, tipo: 'aviso' },
