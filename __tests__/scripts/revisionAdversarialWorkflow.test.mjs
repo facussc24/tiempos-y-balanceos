@@ -53,6 +53,19 @@ describe('revision-adversarial.js', () => {
     expect(llamadas.length).toBeLessThanOrEqual(10);
   });
 
+  it('el mismo defecto encontrado por tres lentes cuenta UNA vez y se verifica UNA vez (prueba del 17/10: 6 Importante por 2 defectos)', async () => {
+    const d46 = { archivo: 'scripts/_lib/revisorPedido.mjs', linea: 46, clase: 'TRUE_BUG', etiqueta: 'Importante', titulo: 'se pisa', caso: 'c' };
+    const d63 = { ...d46, linea: 63, titulo: 'falla abierto' };
+    const { r, llamadas } = await correr({ repo: '.' }, (p, o) => {
+      if (o.phase === 'Lentes') return { hallazgos: o.label === 'lente:datos-y-texto' ? [] : [d46, { ...d63, archivo: 'scripts\\_lib\\revisorPedido.mjs' }] };
+      return { refutado: false, etiqueta: 'Importante', caso: 'reproducido' };
+    });
+    expect(r.conteo.Importante).toBe(2);
+    expect(r.confirmados.map((h) => h.lentes.length)).toEqual([3, 3]);
+    expect(llamadas.filter((l) => l.opts.phase === 'Verificar')).toHaveLength(2);
+    expect(r.informe).toMatch(/6 hallazgos de las lentes, 2 distintos por archivo y linea, 2 verificados/);
+  });
+
   it('un hallazgo que el verificador refuta no cuenta, y el tope de verificacion se respeta y se dice', async () => {
     const muchos = Array.from({ length: 5 }, (_, i) => ({ archivo: 'a.mjs', linea: i + 1, clase: 'TRUE_BUG', etiqueta: 'Importante', titulo: `b${i}`, caso: 'c' }));
     const { r, llamadas } = await correr({ repo: '.', maxVerificar: 2, lentes: [{ key: 'unica', enfoque: 'todo' }] }, (p, o) =>

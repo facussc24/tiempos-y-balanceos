@@ -48,6 +48,9 @@ describe('evaluarRevisorPedido', () => {
     expect(registroDeSesion('../malo', { home })).toBeNull();
     expect(evaluarRevisorPedido(relevarRevisorPedido(p)).estado).toBe('aviso');
     fs.appendFileSync(p, `\n${asis([uso('Agent', { subagent_type: 'revisor-pedido', prompt: 'x' })])}`);
+    // despues del revisor siempre hay mas lineas (la respuesta, otro comando): la marca no se puede perder por eso.
+    // Lo encontro la revision adversarial del 17/10 sobre un diff plantado (`revisor = s.revisor` en vez de `||=`).
+    fs.appendFileSync(p, `\n${asis([uso('Bash', { command: 'ls' })])}\n${asis([{ type: 'text', text: 'listo' }])}`);
     expect(evaluarRevisorPedido(relevarRevisorPedido(p)).estado).toBe('ok');
   });
 });
