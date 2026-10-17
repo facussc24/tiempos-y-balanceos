@@ -93,6 +93,11 @@ el `node` del Programador de tareas: por eso los candados son codigo y test, no 
      sale con codigo 1. `--sin-tope` levanta los dos.
      **El mismo tope se mira ADENTRO de la pre-auditoria** (cola H18): antes de arrancar cada AMFE; los que no arrancan
      vuelven la noche siguiente sin tocar el estado. Con concurrencia 3 se puede pasar por lo que ya estaba en curso.
+     **Y antes de cada pedido (tanda 5, 17/10/2026; regla 6 del post de Anthropic sobre automatizaciones del 08/10):**
+     cada paso recibe lo que le queda a la corrida y compara la cota de su pedido (entrada x1,3 por el tokenizador y la
+     salida en su `max_tokens`; los semanales, su estimado probable x1,3) con eso. El que no entra queda `saltado` con
+     `pausa: 'budget_reached'` y vuelve la noche siguiente; los pasos que siguen corren, y la noche sale con 1
+     (`pausaPorPresupuesto` en `scripts/_lib/nocturno.mjs`; test `nocturnoPausaMarcador.test.mjs`).
 5. **Un paso que falla no deja nada a medias ni tumba a los demas**: cada paso con su try/catch, todo se
    escribe a `.tmp` y se renombra, y el envoltorio `_nocturno.ps1` marca ERROR si `node` sale bien pero
    no escribio `.claude/state/nocturno.json` (resultado vacio es error). **Con tres pasos seguidos en
@@ -129,7 +134,11 @@ siguiente sin tocar el estado). Una segunda corrida del mismo dia no pisa el rep
   y a `nocturno.json`: es una sugerencia para la sesion de la manana, que la contrasta antes de decirle
   algo a Fak (~$0,03 por noche).
 - `novedades` corre **todos los dias**: si lo nuevo trae algo, Haiku `low` (hasta 4 renglones); los lunes,
-  o pasada una semana, Sonnet con el resumen largo (hasta 8) sobre los listados de los ultimos 7 dias.
+  o pasada una semana, Sonnet con el resumen largo (hasta 8) sobre los listados **desde el ultimo resumen largo**
+  (marcador en `.claude/state/nocturno-marcadores.json`, tanda 5: con la notebook apagada una semana, la ventana de 7
+  dias perdia lo que quedaba afuera). Sin marcador, la primera vez, los ultimos 7 dias; un marcador que no se entiende
+  es un error del paso, no «sin novedades»; avanza recien con el resumen escrito, y lo que no entra en el tope queda
+  arriba del marcador para el proximo.
   Como la lectura corre a diario, `avisoHook` ya no avisa al arrancar la sesion.
 
 **Variables de entorno** (todas opcionales): `BARACK_API_PRESUPUESTO_USD` (170) · `BARACK_API_CICLO_DIA` (1) ·
