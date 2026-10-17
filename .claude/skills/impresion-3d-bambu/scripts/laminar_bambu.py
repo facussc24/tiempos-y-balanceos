@@ -1,7 +1,7 @@
 """Lamina un .3mf con Bambu Studio por comando, con los perfiles COMPLETOS.
 
 Uso (python del sistema o .venv-cad):
-  laminar_bambu.py <entrada.3mf> <carpeta de salida NUEVA> --filamento "Bambu PLA Basic" [--filamento ...]
+  laminar_bambu.py <entrada.3mf> <carpeta de salida NUEVA> --filamento "Bambu PLA Lite" [--filamento ...]
                    [--proceso "0.20mm Standard"] [--impresora "Bambu Lab A2L"]
                    [--boquilla 0.4] [--color "#000000" ...] [--parte-filamento "1=2" --parte-filamento "2=1"]
                    [--acomodar]   (reacomoda las piezas; si salen en varias placas, frena)

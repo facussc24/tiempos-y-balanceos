@@ -14,6 +14,7 @@ Uso (python del sistema):
 """
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -21,6 +22,23 @@ from pathlib import Path
 AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
 import bambu_red as br  # noqa: E402
+
+
+def _falla_en_un_renglon(tipo, valor, tb):
+    """Una falla de la impresora (no la encuentra, rechazo el codigo) sale en un renglon con su salida, como en
+    bambu_red.py, y no como un error de Python (desde el 16/10/2026 bambu_red levanta FallaImpresora). Cualquier otro
+    error del programa tambien sale en un renglon, como lo muestra bambu_red.main() (revision 16/10)."""
+    if isinstance(valor, br.FallaImpresora):
+        print(valor.texto, flush=True)
+        os._exit(valor.salida)
+    if isinstance(valor, Exception):
+        print(f"No se pudo: {tipo.__name__}: {valor}. No es un problema de la impresora: avisar a Fak con este renglon.",
+              flush=True)
+        os._exit(1)
+    sys.__excepthook__(tipo, valor, tb)
+
+
+sys.excepthook = _falla_en_un_renglon
 
 COLORES = {"negro": "#000000", "blanco": "#FFFFFF", "amarillo": "#F4D31F", "verde": "#00AE42",
            "rojo": "#C12E1F", "azul": "#0A2989", "gris": "#8E9089", "naranja": "#FF6A13"}
@@ -87,6 +105,8 @@ q = subprocess.run([sys.executable, str(AQUI / "quien_imprime_que.py"), str(carp
 print(q.stdout)
 rc = br.imprimir(str(salida), None, a.apply)
 if a.apply and rc == 0:
-    print("\nSEGUIMIENTO (lanzar en segundo plano):")
-    print(f'  python "{AQUI / "bambu_red.py"}" --seguir "{carpeta / "seguimiento"}" --fotos-en <capas del cambio de color>')
+    # el comando de la vigilancia es UNO solo: el que imprimio --imprimir arriba («AHORA, EN SEGUNDO PLANO», con su
+    # carpeta por envio y --despertar); antes aca salia otro distinto, sin --despertar (revision 16/10)
+    print("\nSEGUIMIENTO: lanzar en segundo plano el comando de arriba («AHORA, EN SEGUNDO PLANO»), sumando a "
+          "--fotos-en las capas del cambio de color")
 sys.exit(rc)

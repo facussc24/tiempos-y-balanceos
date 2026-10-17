@@ -1,0 +1,31 @@
+De donde sale cada archivo de esta carpeta (fixtures de los tests de la skill impresion-3d-bambu).
+
+MOCK-A2L.json
+  Lectura de ejemplo de una Bambu Lab A2L, del programa abierto ha-bambulab (licencia MIT, "Copyright (c) 2023
+  ha-bambulab contributors"). Bajado tal cual el 16/10/2026 con:
+  https://raw.githubusercontent.com/greghesp/ha-bambulab/0e027ff135a6d9265cb756d3e246747954c76722/custom_components/bambu_lab/pybambu/mock_data/MOCK-A2L.json
+  repo https://github.com/greghesp/ha-bambulab, commit 0e027ff135a6d9265cb756d3e246747954c76722 (21/09/2026).
+  Ojo: la lectura es de una A2L LIBRE (gcode_state IDLE), con el cargador como unidad 16 y un solo rollo
+  (lugar 2, GFG01) con remain -1. Los tests la usan tal cual y tambien con el estado cambiado a RUNNING.
+
+registro_2026-10-16/
+  Copia del registro compartido real (nube de Ingenieria, 1- GENERAL\5. 3D\IMPRESORA BAMBU A2L\registro\)
+  tomada el 16/10/2026 a las 14:03, despues de cerrar a mano juegos20, pines20 y pines_v3_prueba y de
+  terminar placa_v2. Solo lectura: los tests trabajan sobre una copia en la carpeta temporal.
+
+seguimiento_2026-10-15_noche.log
+  RECONSTRUIDO, no es el archivo original (ese quedo en el scratchpad de la sesion 729dfcec y ya no existe).
+  Sale del extracto del chat de esa noche
+  (Claude Fak\viernes-17-plan-sistema\20-informes\oportunidades\H_insumos\chat_2026-10-15_noche_lote20_sesion729dfcec.md):
+  - 23:27 capa 46 de 77, 83 %, «falta 1 h 15 min» (mensaje de las 02:28 UTC);
+  - la ultima lectura buena, 23:30:54 RUNNING (resultado de las 02:47:03 UTC, «grep RUNNING | tail -1»);
+  - las lecturas vacias de 23:43:52, 23:44:30, 23:45:08, 23:45:46 y 23:46:24 (mismo resultado, «tail -5»), una
+    cada ~38 s; las de 23:31:32 a 23:43:14 siguen ese mismo paso (informe H1 §1.1: «todas las lecturas vacias
+    desde ~23:31, una cada ~38 s»).
+  Los RUNNING de 23:28 a 23:30 usan la capa 46 y los minutos que faltan de ese tramo; el campo «filamento 1»
+  es el lugar 2 (el negro), como en las lecturas que si estan en el extracto.
+
+El .gcode.3mf de prueba no esta aca: lo arma _base.gcode_3mf() en cada test (zip con Metadata/slice_info.config
+y Metadata/plate_1.gcode con la cabecera de tiempo y filamento, como los que deja Bambu Studio 02.08.02.61).
+El certificado de la impresora de juguete tampoco: lo genera impresora_juguete.py con el openssl de Git en la
+carpeta temporal (no se sube una clave privada al repo publico, aunque sea de juguete).
