@@ -1,6 +1,6 @@
 ---
 name: amfe-export-oficial
-description: Exportar un AMFE Barack a Excel oficial CORRECTO (hoja Caratula formato I-AC-005.3, modos de falla secuenciales, rev vigente en rojo, aprobadores globales). Usar SIEMPRE al exportar/generar un AMFE a Excel para el pendrive o el cliente, o al construir el header de un AMFE nuevo. Evita los 3 errores recurrentes: carátula vacía, FM fuera de secuencia, revisiones mal formateadas.
+description: Exportar un AMFE de Barack a Excel oficial («el AMFE en Excel», «el excel del AMFE», «para el pendrive»): hoja Caratula I-AC-005.3, modos de falla secuenciales, rev vigente en rojo, aprobadores y firmas. Usar SIEMPRE al exportar un AMFE para el cliente o el pendrive, o al armar el header de un AMFE nuevo. Evita carátula vacía, FM fuera de secuencia y revisiones mal hechas.
 ---
 
 # Export AMFE → Excel oficial (formulario I-AC-005.3)
@@ -94,9 +94,18 @@ Desde 2026-07-03 las revisiones van en la **tabla REVISIONES de la Caratula** (f
 
 `assertAmfeExportable(doc)` (en `amfeExcelExport.ts`, llamado dentro de `buildAmfeOficialWorkbook`) **ABORTA (throw)** si alguna causa tiene S (del failure) / O / D vacío. Así es imposible escribir al pendrive/cliente un AMFE incompleto. Incidente fuente: se entregó un export PREMATURO (antes de completar O/D) y Fak vio celdas vacías — "jamás algo puede estar vacío... no puede volver a suceder".
 
+**La carátula del ARCHIVO** (tanda 12, 17/10/2026): `_exportAmfeOficial.ts` relee el `.xlsx` escrito y sale con
+FALLO si un rótulo del bloque de identificación (organización, tema, N° de AMFE, planta, fechas de inicio y de
+revisión, responsable del proceso, cliente, modelo-año, nivel de revisión) quedó sin valor
+(`scripts/_lib/caratulaVacia.mjs`, test `__tests__/scripts/caratulaVacia.test.ts`). Es el error que dio origen a esta
+skill (25/06) y LECCIONES 03-08/09: se abre el archivo que quedó, no el script. Medido el 17/10 sobre los 9 AMFE
+exportados en `exports/`: 9 con la carátula llena, ninguno frenaría. Los exports puntuales viejos
+(`_exportOficial.ts`, `_exportAmfeAmarok.ts`) no lo tienen.
+
 ## Checklist antes de entregar un Excel de AMFE
 - [ ] Hoja **Caratula** presente y **primera** (workbook = `Caratula`, `AMFE`).
-- [ ] Carátula con TODOS los campos llenos (abrir el .xlsx y mirar el bloque de identificación).
+- [ ] Carátula con TODOS los campos llenos (abrir el .xlsx y mirar el bloque de identificación; con
+      `_exportAmfeOficial.ts` lo frena `caratulaVacia.mjs` sobre el archivo releído).
 - [ ] Si el Excel va a imprimirse o al cliente: la caratula lleva el margen y el area de
       impresion que acomodo Fak (`B2:M29`). `buildAmfeOficialWorkbook` no los pone; hoy lo hace
       el molde `scripts/_archive/2026-09-23-ppap-p21-naranja/armar_final.py` (skill `ppap-motherson` §4).
