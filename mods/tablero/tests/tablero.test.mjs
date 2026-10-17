@@ -72,7 +72,7 @@ describe('verde: con los archivos de ejemplo da los números esperados', () => {
     })
     expect(s.noche).toEqual({
       cuandoMs: new Date(2026, 9, 11, 6, 30).getTime(), corrio: false, motivo: 'la API pasó su tope de gasto',
-      cortada: false, pasos: 0, conError: 0, costoUsd: 0,
+      cortada: false, pasos: 0, conError: 0, enPausa: 0, costoUsd: 0,
     })
   })
 
@@ -226,7 +226,7 @@ describe('la tarea automática de la madrugada: lo que se lee de nocturno.json',
   const dibujo = (noche) => textoPlano(dibujar({ ahora: AHORA, noche }, undefined, { ancho: 120 }))
   test('corrió bien: lo dice, con lo que gastó; los pasos salteados no cuentan', () => {
     const n = leerNoche(JSON.stringify(NOCHE_BIEN), null)
-    expect(n).toEqual({ cuandoMs: new Date(2026, 9, 11, 6, 30).getTime(), corrio: true, motivo: null, cortada: false, pasos: 3, conError: 0, costoUsd: 0.98 })
+    expect(n).toEqual({ cuandoMs: new Date(2026, 9, 11, 6, 30).getTime(), corrio: true, motivo: null, cortada: false, pasos: 3, conError: 0, enPausa: 0, costoUsd: 0.98 })
     expect(dibujo(n)).toContain('tarea automática de hoy 06:30 corrió bien · US$ 0,98')
   })
   // Lo que la noche deja para revisar son sugerencias sin verificar para la sesión de la mañana (api-claude.md §6):
@@ -249,6 +249,11 @@ describe('la tarea automática de la madrugada: lo que se lee de nocturno.json',
     expect(dibujo(conError)).toContain('corrió con 2 de 3 pasos con error')
     const cortada = leerNoche(JSON.stringify({ ...NOCHE_BIEN, corte: { motivo: 'tope por corrida' }, prioridades: [{}] }), null)
     expect(dibujo(cortada)).toContain('se cortó antes de terminar')
+    // un paso en pausa por el tope de la corrida (tanda 5): la noche sale con 1 y el tablero no puede decir «bien»
+    const pausa = leerNoche(JSON.stringify({ ...NOCHE_BIEN, pasos: [{ estado: 'ok' }, { estado: 'saltado', pausa: 'budget_reached' }] }), null)
+    expect(pausa.enPausa).toBe(1)
+    expect(dibujo(pausa)).toContain('un paso quedó en pausa por el tope de gasto')
+    expect(dibujo(pausa)).not.toContain('corrió bien')
   })
   test('no arrancó: el motivo en corto; uno que no se reconoce va tal cual, recortado', () => {
     expect(leerNoche(JSON.stringify({ ...NOCHE_NO, noArranco: 'falta la clave ANTHROPIC_API_KEY' }), null).motivo).toBe('falta la clave de la API')

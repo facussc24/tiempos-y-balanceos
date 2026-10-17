@@ -269,7 +269,14 @@ async function pasoNovedades({ cliente, simular, ahora, restanteUsd = null }) {
     texto = junta.texto;
   }
   const plan = planNovedades(ahora, aviso, !novedadesSinCambios(texto));
-  if (plan.accion === 'saltar') return { detalle: 'sin cambios', datos: { listado: nuevo.f } };
+  if (plan.accion === 'saltar') {
+    // largo sin nada nuevo: los listados se LEYERON bien y no traian novedades, asi que el marcador avanza igual. Si no
+    // avanzara, con mas de 60 listados vacios arriba del marcador el largo saldria "sin cambios" para siempre (auditor 17/10)
+    if (largo && junta?.hastaMs != null) {
+      escribirSeguro(RUTA_MARCADORES, `${JSON.stringify(anotarMarcador(marcadores, 'novedadesLargo', { hastaMs: junta.hastaMs, fecha: selloLocal(new Date(junta.hastaMs)).slice(0, 16) }), null, 2)}\n`);
+    }
+    return { detalle: 'sin cambios', datos: { listado: nuevo.f } };
+  }
   const pausa = pausaPorPresupuesto({ cotaUsd: cotaPedidoUsd(plan.modelo, plan.system + texto, plan.maxTokens), restanteUsd, que: `el resumen ${plan.largo ? 'largo' : 'de hoy'} de novedades` });
   if (pausa) return { ...pausa, datos: { listado: nuevo.f } };
   const res = await resumirNovedades({ plan, texto, llamarModelo: (opciones) => llamar(cliente, opciones) });

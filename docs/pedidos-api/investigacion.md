@@ -8,8 +8,8 @@ supuestos, no medidos en la casa).
 ## Cómo se corre
 
 El único camino de la casa con búsqueda web es el agente por API (`scripts/_agente.mjs`: bucle propio sobre la
-Messages API, con `web_search` del servidor, caché de 1 h en el último mensaje y topes de pasos, minutos, dólares y
-búsquedas). `_apiTarea.mjs` no busca en la web: sirve para revisar texto que ya está en disco.
+Messages API, con `web_search` del servidor, caché de 1 h en el system y de 5 min en el último mensaje, y topes de
+pasos, minutos, dólares y búsquedas). `_apiTarea.mjs` no busca en la web: sirve para revisar texto que ya está en disco.
 
 1. Copiar a la carpeta de la investigación **solo la sección «El encargo»** (de la línea para abajo) y completarla. Lo
    de arriba se borra de la copia: el agente recibe el archivo entero como encargo.

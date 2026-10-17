@@ -103,6 +103,14 @@ describe('apiLotesBatch · mandar', () => {
     expect(fs.existsSync(path.join(salidaDir, '_lote.json'))).toBe(false);
   });
 
+  it('si el lote se crea y _lote.json no se puede escribir, el error trae el id del lote (no se pierde)', async () => {
+    const { cliente, llamadas } = clienteFalso();
+    const comoArchivo = path.join(dir, 'no-es-carpeta');
+    fs.writeFileSync(comoArchivo, 'soy un archivo');   // la "carpeta" de salida es un archivo: no se puede escribir adentro
+    await expect(B.mandarLote(cliente, { jobs: jobs(), salidaDir: comoArchivo, raiz, ahora: AHORA })).rejects.toThrow(/msgbatch_1/);
+    expect(llamadas.create).toHaveLength(1);
+  });
+
   it('crearLote rechaza un custom_id de mas de 64 caracteres', async () => {
     const { cliente } = clienteFalso();
     await expect(A.crearLote(cliente, [{ id: 'x'.repeat(65), modelo: 'haiku', usuario: 'hola' }])).rejects.toThrow(/custom_id/);

@@ -161,7 +161,7 @@ export function msModificado(stat) {
 // nocturno.json: lo que dejó la tarea automática de la madrugada (scripts/_nocturno.mjs, 06:30). Se dice si corrió o
 // no y por qué, con palabras que se entiendan sin conocer el programa (el dueño, 11/10/2026, sobre «noche 2026-10-11 ·
 // 0 prioridades»: «lo de noche no se entiende tampoco»).
-//   { cuandoMs, corrio, motivo, cortada, pasos, conError, costoUsd }
+//   { cuandoMs, corrio, motivo, cortada, pasos, conError, enPausa, costoUsd }
 // Lo que la noche deja para revisar (`prioridades`, hallazgos) NO se lee: son sugerencias sin verificar para la
 // sesión de la mañana (regla api-claude.md §6), no un número para el dueño.
 // `cuandoMs` sale de `inicio` ('AAAA-MM-DD HH:MM:SS', hora local) y, si falta, de la fecha del archivo.
@@ -187,6 +187,9 @@ export function leerNoche(texto, stat) {
     cortada: !noArranco && Boolean(datos.corte),
     pasos: corridos.length,
     conError: corridos.filter((p) => p.estado === 'error').length,
+    // un pedido que no entraba en lo que quedaba del tope de la corrida queda en pausa (tanda 5, 17/10/2026): la noche
+    // sale con error en el log y aca no puede decir «corrió bien»
+    enPausa: noArranco ? 0 : pasos.filter((p) => p.pausa).length,
     costoUsd: typeof datos.costoUsd === 'number' && Number.isFinite(datos.costoUsd) ? datos.costoUsd : null,
   }
 }

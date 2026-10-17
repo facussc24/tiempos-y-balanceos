@@ -81,7 +81,7 @@ async function enLote() {
     try {
       await esperarLote(cliente, b, { timeoutMs: op.esperarMin * 60 * 1000 });
     } catch (e) {
-      if (e instanceof ErrorApi && e.tipo === 'lote') { console.log(`sigue en curso despues de ${op.esperarMin} min: recogerlo despues con  node scripts/_apiLotes.mjs ${jobsFile} --recoger`); return null; }
+      if (e instanceof ErrorApi && e.tipo === 'lote') { console.log(`sigue en curso despues de ${op.esperarMin} min: recogerlo despues con  node scripts/_apiLotes.mjs ${jobsFile} --recoger${op.salidaDir ? ` --salida-dir ${op.salidaDir}` : ''}`); return null; }
       throw e;
     }
   }

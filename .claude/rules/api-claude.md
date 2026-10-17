@@ -143,8 +143,8 @@ siguiente sin tocar el estado). Una segunda corrida del mismo dia no pisa el rep
   o pasada una semana, Sonnet con el resumen largo (hasta 8) sobre los listados **desde el ultimo resumen largo**
   (marcador en `.claude/state/nocturno-marcadores.json`, tanda 5: con la notebook apagada una semana, la ventana de 7
   dias perdia lo que quedaba afuera). Sin marcador, la primera vez, los ultimos 7 dias; un marcador que no se entiende
-  es un error del paso, no «sin novedades»; avanza recien con el resumen escrito, y lo que no entra en el tope queda
-  arriba del marcador para el proximo.
+  es un error del paso, no «sin novedades»; avanza recien con el resumen escrito (o con todo leido y nada nuevo), y lo
+  que no entra en el tope queda arriba del marcador para el proximo.
   Como la lectura corre a diario, `avisoHook` ya no avisa al arrancar la sesion.
 
 **Variables de entorno** (todas opcionales): `BARACK_API_PRESUPUESTO_USD` (170) · `BARACK_API_CICLO_DIA` (1) ·

@@ -116,7 +116,12 @@ export async function mandarLote(cliente, { jobs, salidaDir, raiz = process.cwd(
     recogiendo: null,
     recogido: null,
   };
-  guardarEstado(salidaDir, estado);
+  try {
+    guardarEstado(salidaDir, estado);
+  } catch (e) {
+    // el lote ya esta creado (y se va a cobrar): su id tiene que quedar a la vista para recogerlo a mano (auditor 17/10)
+    throw new ErrorApi('lote', `el lote ${creado.loteId} se creo pero no pude escribir ${rutaLote(salidaDir)} (${e.message}): anotar ese id y recogerlo a mano con recogerLote`, { loteId: creado.loteId });
+  }
   return { estado, lote: creado.lote };
 }
 

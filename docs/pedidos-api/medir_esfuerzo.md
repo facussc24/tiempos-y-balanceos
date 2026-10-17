@@ -25,8 +25,10 @@ node scripts/_apiLotes.mjs <jobs.json> --lote --solo 2 --effort medium --salida-
 ```
 
 `<jobs.json>` es el de una auditoría ya hecha (modo `auditoria`, con su `lista` y su `pedido`), así los lotes salen
-iguales en las dos corridas. Si un lote no termina en 55 minutos queda en curso y se recoge después con
-`--recoger --salida-dir <la misma carpeta>`.
+iguales en las dos corridas, **copiado sin la sección `"sintesis"`**: si la trae, el runner la corre al recoger (y su
+`salida` no sigue a `--salida-dir`); el `jobs_auditoria.json` del 11/10 la trae con Fable, que hoy la puerta frena sin la
+frase de Fak. Si un lote no termina en 55 minutos queda en curso y se recoge después con
+`--recoger --salida-dir <la misma carpeta>` (el aviso del runner ya lo escribe así).
 
 Costo estimado de las dos corridas (Opus en Batch, con los tokens medidos del 11/10: 63.200 de entrada y 36.700 de
 salida por lote): ≈ US$ 0,99 en `high`; en `medium` es lo que se quiere medir. Total esperado: menos de US$ 2.

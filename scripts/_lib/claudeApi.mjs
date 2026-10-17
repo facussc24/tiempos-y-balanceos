@@ -275,10 +275,12 @@ export function crearCliente({ apiKey, timeoutMs = 10 * 60 * 1000, maxRetries = 
  *     Sonnet 5.5 es la unica forma); Haiku 5.5 no tiene fallback del servidor; los lotes no lo aceptan (lote() lo saca).
  *   - Un solo `cache_control`, en el ULTIMO bloque del system: en estos pedidos de una vuelta el system es lo que se
  *     repite y el usuario cambia; el cache automatico de arriba cachearia el mensaje del usuario y pagaria la escritura
- *     sin lecturas. (El agente por API, que si repite la charla, lo mueve al ultimo mensaje: agenteApi.marcarCache.)
+ *     sin lecturas. (El agente por API, que si repite la charla, lleva dos marcas: 1 h en el system y 5 min en el
+ *     ultimo mensaje del usuario, que avanza cada vuelta: agenteApi.marcarCache.)
  *   - `max_tokens`: el tokenizador de los 5.x da ~30 % mas tokens, pero los topes de la noche ya corrieron con los
- *     modelos 5.x: en el ledger del 09-11/10 la salida maxima fue 2.814 tokens (disparo, Haiku) contra topes de 4.000 a
- *     16.000. Los que se cortaron (32.000 y 128.000) fueron borradores largos por `_apiTarea.mjs`, no la noche.
+ *     modelos 5.x: en el ledger del 09 al 17/10 la salida maxima de la noche fue 2.814 tokens (disparo, Haiku, 17/10)
+ *     contra topes de 4.000 a 16.000. Los que se cortaron (32.000 y 128.000) fueron borradores largos por
+ *     `_apiTarea.mjs`, no la noche.
  *   - Preserved thinking: aca cada pedido es de UNA vuelta (no se reenvian bloques de pensamiento). El unico que arma
  *     historial es el agente por API, y lo hace agregando `res.content` entero, sin editar turnos viejos (mover
  *     `cache_control` no cuenta como edicion, segun la guia). La medicion con reenvios cuesta plata: no se corrio.
