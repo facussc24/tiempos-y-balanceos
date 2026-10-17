@@ -871,6 +871,11 @@ describe('secretos-guard — .env.local y .qr-secret no se leen ni se pisan desd
     rojo(bash('(head -3 .env.local)'));
     rojo(bash('{ cat .env.local; }'));
   });
+  it('P12 ROJO (ronda 2, hallazgo 5) — xargs, find -exec grep y el nombre en un backtick', () => {
+    rojo(bash('ls .env.local | xargs cat'));
+    rojo(bash('find . -maxdepth 1 -name .env.local -exec grep -h KEY {} +'));
+    rojo(bash('cat `echo .env.local`'));
+  });
 
   it('comandoTocaSecreto: dice QUE archivo y COMO', () => {
     expect(comandoTocaSecreto('cat .env.local')).toEqual({ como: 'lectura', nombres: ['.env.local'] });

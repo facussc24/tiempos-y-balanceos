@@ -310,12 +310,19 @@ function leeSecretoPorComando(texto, todo, prof = 0, vars = variablesEscritas(to
     }
     const { verbo, args } = verboDeComando({ ...c, palabras });
     const v = verboPelado(verbo);
+    // Ronda 2 (hallazgo 5): xargs / find -exec / parallel con un lector o un grep/sed/awk adentro: la primera palabra CRUDA
+    // (verboDeComando saca a xargs como envoltorio y el lector llega sin argumentos); frena si el comando nombra el secreto
+    const lanzador = verboPelado(palabras.find((w) => w && !/^[A-Za-z_]\w*=/.test(w)));
+    if (/^(?:xargs|find|parallel)$/i.test(lanzador)
+      && palabras.slice(1).some((a) => LECTOR_ARCHIVO_RE.test(verboPelado(a)) || PATRONERO_VERBO_RE.test(verboPelado(a)))
+      && SECRETO_RE.test(todo)) return true;
     // un argumento con una variable: si el comando le dio un valor escrito, se mira ese valor (puede ser una lista);
     // si no se sabe que vale, cuenta como el secreto cuando el comando lo nombra en algun lado (no se adivina).
     // Ronda 2: un backtick tambien es algo sin resolver (hallazgo 5), y un `)` o `}` del final es del subshell o del
     // bloque, no del nombre: `(cat .env.local)` (hallazgo 4).
     const esSecreto = (a0) => {
       const a = String(a0).replace(/[)}]+$/, '');
+      if (/\x60/.test(a)) return SECRETO_RE.test(todo);
       if (!/\$/.test(a)) return SECRETO_ARG_RE.test(a);
       const r = a.replace(/\$\{?([A-Za-z_]\w*)\}?/g, (m, n) => (vars.get(n) != null ? vars.get(n) : m));
       if (/\$/.test(r)) return SECRETO_RE.test(todo);
