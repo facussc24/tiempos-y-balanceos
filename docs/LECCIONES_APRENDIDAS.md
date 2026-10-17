@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **17/10 — Un caso de prueba peligroso (leer el archivo de secretos, borrar, pisar el listado maestro) no se pega en el chat: un filtro de la plataforma cortó a la hija que imprimió los casos del auditor y la ronda perdió una sesión; los casos viajan por archivo con el nombre del secreto como marcador y los tests los llaman por su código.** Graduado al encargo de la ronda 3 de la tanda 3 (E261017-88fe) y a `__tests__/scripts/guardianesRonda3.casos.json`.
+
 - **11/10 — Antes de un push que agrega archivos o toca `settings.json` va la suite COMPLETA, y un umbral de una regla no lo aflojo yo: va como propuesta.** Graduado a `feedback_suite_completa_antes_del_push` y `feedback_un_numero_de_la_regla_no_lo_cambio_yo`.
 
 - **11-12/10 — Lo que va a un registro (una hora, «lo dije en el chat») se MIDE antes de escribirlo: `date`, el commit o el archivo de la sesión, nunca de memoria** (tres veces en un día, la última minutos después de anotar esta lección: la lección sola no alcanza, cola HOY-65), **y con la sesión parada en un worktree lo de main se prueba con `git -C` y rutas absolutas.** Graduado a `reference_entrar_a_main_desde_un_worktree`.
