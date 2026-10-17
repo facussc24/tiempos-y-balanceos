@@ -68,6 +68,19 @@ C:\Dev\_catia_env\Scripts\python.exe .claude\skills\cad-design\scripts\catia_med
 - Para conocer los nombres exactos de cada orden: `.sgc-cache/investigacion-2026-10-11/catia/codigo/tipos.py`
   (`lista`, `buscar`, `interfaz`, `firma`) sobre las bibliotecas de tipos registradas.
 
+## Si el script frena y deja SU CATIA abierta
+
+Cuando un chequeo corta a mitad de camino (el documento activo no es la copia que abrió, o la CATIA que contestó ya
+tenía documentos), el script **no cierra nada a propósito** y la siguiente corrida se niega. Para cerrar la que dejó
+(solo si es la suya: un único documento con el nombre de la copia, `<nombre>_cabecera.CATPart`):
+
+```
+C:\Dev\_catia_env\Scripts\python.exe -c "import win32com.client as w; c=w.GetActiveObject('CATIA.Application'); print([c.Documents.Item(i+1).Name for i in range(c.Documents.Count)])"
+```
+
+Si la lista es solo esa copia: `c.Documents.Item(1).Close(); c.Quit()`. Si hay cualquier otro documento, es la CATIA de
+Fak: no se toca (pasó el 17/10 a las 09:11 y se cerró así).
+
 ## Trampas (además de las de la memoria)
 
 - El objeto que devuelve `Documents.Open` no expone `Part` ni `Product` a pywin32: se toma `catia.ActiveDocument`.

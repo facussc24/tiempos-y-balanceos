@@ -17,8 +17,10 @@ trabajo (`C:\\Dev\\_utrim\\sim_asiento.py` sin tocar, y `sim_asiento_v16.py` par
                 simulación no sirve y sale con código 1); para la que no tiene número publicado (la v16), aplica los
                 umbrales: % de casos que se hamacan > 0,3 mm, hamaca máxima y mediana apretando en la punta.
 
-Sale 0 si cada caso da lo esperado en `esperado` (o si no hay `esperado`), 1 si un caso conocido no da lo que tiene que
-dar o la simulación no reproduce lo publicado, 2 si faltan datos.
+Sale 0 si cada caso da lo esperado en `esperado`; 1 si un caso conocido no da lo que tiene que dar, si la simulacion no
+reproduce lo publicado o si FALTAN datos (un control que no pudo medir no da OK: sin --sim-normal, o una pieza que la
+corrida no trae, es falla salvo --solo / --sin-sim); 2 si los argumentos estan mal (p. ej. --solo con una pieza que no
+existe).
 """
 import argparse
 import json
@@ -115,7 +117,7 @@ def a3_asiento(nombre, ver, normal, punta, u):
     return out
 
 
-def evaluar(casos, normal=None, punta=None, solo=None):
+def evaluar(casos, normal=None, punta=None, solo=None, sin_sim=False):
     """solo: lista de versiones a evaluar (las demas se excluyen A PROPOSITO y se dice). Sin --solo, una version sin
     corrida es una FALLA: un control que no pudo medir no da OK (auditor del 17/10, I3)."""
     u = casos["umbrales"]
@@ -126,8 +128,16 @@ def evaluar(casos, normal=None, punta=None, solo=None):
         r = {"A1_apoyos": a1_apoyos(ver.get("elementos", []), u),
              "A1b_4_2_1": a1b_cuatro_coplanares(ver.get("elementos", []), ver.get("apoyos_superficie"), u),
              "A2_ventana": a2_ventana(ver.get("ventana_mm"), u)}
-        if normal is not None:
+        if normal is None and sin_sim:
+            pass                             # pedido a proposito: solo A1 / A1b / A2
+        elif normal is None:
+            # sin ninguna simulacion: A3 no se pudo medir. Es falla (auditor ronda 2, R2-I1): un control que no midio no da OK
+            r["A3_asiento"] = {"veredicto": "SIN DATO", "motivo": "no se paso --sim-normal"}
+            fallas.append(f"{nombre} A3_asiento: SIN DATO (no se paso ninguna simulacion; para mirar solo A1/A2: --sin-sim)")
+        else:
             r["A3_asiento"] = a3_asiento(nombre, ver, normal, punta, u)
+            if r["A3_asiento"]["veredicto"] == "SIN DATO" and "A3_asiento" not in (ver.get("esperado") or {}):
+                fallas.append(f"{nombre} A3_asiento: SIN DATO (la corrida no trae esta pieza; para excluirla a proposito: --solo)")
             if r["A3_asiento"].get("reproduce_lo_publicado") is False:
                 fallas.append(f"{nombre}: la simulacion de hoy NO reproduce lo publicado: {r['A3_asiento']['diferencias']}")
             elif "sim_publicada" in ver and r["A3_asiento"].get("reproduce_lo_publicado") is None:
@@ -136,7 +146,8 @@ def evaluar(casos, normal=None, punta=None, solo=None):
         for clave, esperado in (ver.get("esperado") or {}).items():
             got = r.get(clave, {}).get("veredicto")
             if got == "SIN DATO":
-                fallas.append(f"{nombre} {clave}: SIN DATO (sin corrida o sin datos; para excluirla a proposito: --solo)")
+                if not (clave == "A3_asiento" and normal is None):   # ese caso ya se conto arriba (o --sin-sim)
+                    fallas.append(f"{nombre} {clave}: SIN DATO (sin corrida o sin datos; para excluirla a proposito: --solo)")
             elif got is not None and got != esperado:
                 fallas.append(f"{nombre} {clave}: dio {got}, se esperaba {esperado}")
         res[nombre] = r
@@ -150,14 +161,19 @@ def main(argv=None):
     ap.add_argument("--sim-punta")
     ap.add_argument("--salida")
     ap.add_argument("--solo", help="versiones a evaluar, separadas por coma (las demas quedan afuera a proposito)")
+    ap.add_argument("--sin-sim", action="store_true", help="evaluar solo A1 / A1b / A2, sin simulacion (se dice)")
     a = ap.parse_args(argv)
     casos = json.load(open(a.casos, encoding="utf-8"))
     normal = json.load(open(a.sim_normal, encoding="utf-8")) if a.sim_normal else None
     punta = json.load(open(a.sim_punta, encoding="utf-8")) if a.sim_punta else None
     solo = [s.strip() for s in a.solo.split(",")] if a.solo else None
+    if solo and any(x not in casos["versiones"] for x in solo):
+        ap.error(f"--solo nombra piezas que no estan en {a.casos}: {[x for x in solo if x not in casos['versiones']]}")
+    if a.sin_sim:
+        print("sin simulacion a proposito: se evaluan solo A1, A1b y A2")
     if solo:
         print("evaluadas solo:", ", ".join(solo), "(las demas quedan afuera a proposito)")
-    res, fallas = evaluar(casos, normal, punta, solo)
+    res, fallas = evaluar(casos, normal, punta, solo, a.sin_sim)
     for nombre, r in res.items():
         print(f"== {nombre}")
         for k, v in r.items():

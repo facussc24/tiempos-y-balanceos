@@ -75,6 +75,20 @@ chequear(not f, "--solo vX deja afuera a vY a proposito: sin fallas")
 _, f = ev.evaluar(dos, [fila("vX", 28)], [fila("vX", 100, med=1.69)])
 chequear(any("vY" in x and "SIN DATO" in x for x in f), "sin --solo, vY sin corrida es FALLA")
 
+print("3c. ronda 2 del auditor (R2-I1): tampoco da OK sin ninguna simulacion, con una pieza que la corrida no trae ni con --solo mal escrito")
+_, f = ev.evaluar(casos, None, None)
+chequear(any("no se paso ninguna simulacion" in x for x in f), "sin --sim-normal: FALLA (antes OK)")
+_, f = ev.evaluar(casos, None, None, sin_sim=True)
+chequear(not f, "--sin-sim a proposito: sin fallas (A1/A2 solos)")
+sin_esp = {"umbrales": U, "versiones": {"vX": casos["versiones"]["vX"], "vZ": {"elementos": tres}}}
+_, f = ev.evaluar(sin_esp, [fila("vX", 28)], [fila("vX", 100, med=1.69)])
+chequear(any("vZ" in x and "SIN DATO" in x for x in f), "una pieza SIN esperado que la corrida no trae (como la v16 real): FALLA")
+try:
+    ev.main(["--casos", os.path.join(AQUI, "..", "data", "casos_3d.json"), "--solo", "v61", "--sin-sim"])
+    chequear(False, "--solo con una pieza que no existe tiene que dar error")
+except SystemExit as e:
+    chequear(e.code == 2, "--solo v61 (mal escrito): error, codigo 2")
+
 print("4. A3 asiento: la pieza nueva se juzga por umbral")
 nueva = {"umbrales": U, "versiones": {"v16": {"elementos": tres, "ventana_mm": {"banda": 1.2, "punta": 0.7}}}}
 r, _ = ev.evaluar(nueva, [fila("v16", 5, mx=0.4)], [fila("v16", 0, med=0.3)])

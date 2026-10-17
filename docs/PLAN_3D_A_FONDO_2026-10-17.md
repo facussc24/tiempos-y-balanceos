@@ -157,7 +157,7 @@ tardar **menos de 1 minuto**. Si algo no lo permite la licencia, se dice con lo 
    ahora frena si una huella monta el borde de una meseta: lo hizo en la primera vuelta, 0,92 mm de desnivel).
 5. **Apretar en la punta no se puede medir con esta simulación** (auditor, I1, verificado): la mano «punta» del original
    está en x = −30 / 120, números de la placa de 164 mm; en una iteración de 172 mm con los apoyos 4 mm adentro, esos
-   puntos caían sobre los apoyos y daban 0,00 mm, que **no era la punta**. Con la mano en el borde real, el modelo rígido
+   puntos caían adentro del polígono de apoyos (entre ellos) y daban 0,00 mm, que **no era la punta**. Con la mano en el borde real, el modelo rígido
    vuelca hasta su tope **a la v15 y a la v16 por igual** (no modela el anillo agarrado en el vinilo de la ranura), y con
    la mano justo encima de un apoyo el programa lineal queda indeterminado (33 %, no físico). Lo que se hizo con eso: los
    apoyos van a 0,3 mm de los extremos (el voladizo más allá de la cara plana bajó de 4,1 a 1,8 mm: el redondeo) y **la
@@ -172,7 +172,10 @@ válido, malla = B-Rep, anillo = v15 a 0,0004 mm, los cuatro apoyos a su altura,
 1 mm: 1.006 adentro; CATIA: 89.278,482 mm³ = build123d 89.278,483, sin choque, solo contacto) · V6 VERDE (1 h 25 min,
 60,6 g negro + 1,9 g amarillo, sin fallas del laminador) · V7 VERDE (`_sinFirmaIA.py`: 0 en STEP, 3MF, laminado y PDF).
 En el gemelo la hamaca máxima da 0,54 mm (0,04 sobre el 0,5). La medición de CATIA de la iteración 6 × 6 (91.206,7 mm³)
-quedó vieja: el auditor lo marcó (I2) y se repitió sobre el STEP entregado.
+quedó vieja: el auditor lo marcó (I2) y se repitió sobre el STEP entregado (evidencia:
+`.sgc-cache/catia-2026-10-17/catia_v16_final.json`; la corrida que se frenó a las 09:11 quedó al lado como
+`catia_v16_final_FALLIDA_0911.json`). Ojo al comparar: las corridas de la v16 miden las esquinas en x −38,1 / 127,9 (su
+placa) y las de la v15 en −35 / 125; eso favorece a la v15 (esquinas más afuera = más hamaca para el mismo giro).
 
 **Le falta:** pasar por el gate de asiento de la tanda 2 cuando exista; la simulación grabada (mp4/gif) del GATE E no se
 hizo (la entrega de la v14 tampoco la tenía); y la prueba física.
