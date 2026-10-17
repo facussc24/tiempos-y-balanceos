@@ -22,6 +22,19 @@ describe('manifiesto de bancos', () => {
       for (const r of b.reglas) expect(fs.existsSync(path.join(RAIZ, r)), r).toBe(true);
     }
   });
+  it('los bancos por skill (tanda 12): cada caso existe, cada skill existe y el brazo con lleva solo la skill', () => {
+    const porSkill = Object.entries(M.bancos).filter(([n]) => !['amfe', 'mail'].includes(n));
+    expect(porSkill.length).toBeGreaterThan(0);
+    for (const [n, b] of porSkill) {
+      expect(b.casos.length, n).toBeGreaterThanOrEqual(2);
+      expect(b.reglas, n).toEqual([]);
+      for (const s of b.skills) expect(fs.existsSync(path.join(RAIZ, '.claude', 'skills', s, 'SKILL.md')), s).toBe(true);
+      for (const c of b.casos) {
+        expect(fs.existsSync(path.join(RAIZ, c, 'prompt.md')), c).toBe(true);
+        expect(fs.readdirSync(path.join(RAIZ, c, 'graders')).length, c).toBeGreaterThan(0);
+      }
+    }
+  });
 });
 
 describe('armarComplemento', () => {

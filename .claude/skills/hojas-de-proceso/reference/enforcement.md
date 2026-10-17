@@ -37,7 +37,8 @@ de copiar los gates.
 | **Dura (deck)** | un material que entra o sale de la operacion y ninguna hoja nombra | `gate_materiales_del_deck()` del generador |
 | **Dura** | una NOTA que le cuenta al operario un hueco mio ("no esta documentado", "preguntar antes") | `COCINA` en `_gate_texto_para_el_operario()` |
 | **Paquete** | un PDF armado con errores de los de §7 bis (los de otro autor y los de Excel no pasan por ningun generador) | `python scripts/_revisarPaqueteHO.py <pdf>` (lo escribio otra sesion el 07/10/2026; codigos a esa fecha: E1 `PLAN_NO_ESTANDAR`, E2 `LOGO_VIEJO`, E3 `HOJA_CHICA` y `CORTADA`, E4 `SIN_HO` y `SIN_OP`, E5 `PALABRA_PROHIBIDA`, portada `PORTADA`; la lista vigente esta en su encabezado) |
-| **A ojo** | el ARMADO del plan de reaccion (E1), restos de Excel y texto cortado (E3), una hoja esqueleto sin la palabra TBD (E5), y que lo que entra sea una HO de este producto | sin gate: lo mira quien arma, y despues un agente independiente sobre el PDF (skill `imprimir`) |
+| **Paquete (desde el 16/10)** | el ARMADO contra la ultima hoja aprobada de ese tamaño (E1, `ARMADO_DISTINTO`), el ciclo de control lleno (`CICLO_LLENO`), la pieza rara sin su parentesis (0.8 b bis, `PIEZA_SIN_ACLARAR`), el EPP que no es del sector, el herramental sin marcar, el texto tachado y la cantidad con "×" | `_revisarPaqueteHO.py` (tanda 1.5; la lista vigente, en su encabezado) |
+| **A ojo** | restos de Excel y texto cortado que el control no ve (E3), una hoja esqueleto sin la palabra TBD (E5), y que lo que entra sea una HO de este producto | sin gate: lo mira quien arma, y despues un agente independiente sobre el PDF (skill `imprimir`) |
 
 ```bash
 py -3 .claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py     # tiene que dar "0 fallan"

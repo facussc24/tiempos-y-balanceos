@@ -36,6 +36,16 @@
         "docs/review/mail.md"
       ],
       "descripcion_reglas": "Reglas de Barack para escribir un mail de trabajo: que entra y que no, el largo, la voz de Fak, quien va en copia, no contestar por otra area y mirar el buzon antes de pedir. Usar siempre que haya que escribir o revisar un mail."
+    },
+    "hojas-de-proceso": {
+      "_nota": "Tanda 12 (17/10/2026): bancos por SKILL. El brazo con lleva SOLO la skill (reglas vacias), asi la diferencia con/sin es la de la skill. Casos de criterio puro: el hijo del eval no ve el repo, Y: ni los generadores.",
+      "casos": [
+        "evals/banco/hojas-de-proceso/palabra-rara-se-aclara",
+        "evals/banco/hojas-de-proceso/tbd-no-va-en-la-descripcion",
+        "evals/banco/hojas-de-proceso/ciclo-de-control-vacio"
+      ],
+      "skills": ["hojas-de-proceso"],
+      "reglas": []
     }
   }
 }
