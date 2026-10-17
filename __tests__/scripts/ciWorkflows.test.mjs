@@ -29,6 +29,15 @@ describe('candado.yml corre siempre', () => {
 /** El bloque de un job (desde `  <job>:` hasta el proximo job de primer nivel o el final). */
 const bloqueJob = (t, job) => (t.match(new RegExp(`^  ${job}:\\n([\\s\\S]*?)(?=^  [a-z][a-z0-9-]*:\\n|(?![\\s\\S]))`, 'm')) || [, ''])[1];
 
+describe('el job lint del candado no se rompe con los guiones de Workflow (ronda 2, auditor)', () => {
+  it('ESLint ignora .claude/workflows/ (un guion de Workflow tiene un return de nivel superior)', async () => {
+    const { ESLint } = await import('eslint');
+    const eslint = new ESLint({ cwd: RAIZ });
+    expect(await eslint.isPathIgnored(path.join(RAIZ, '.claude', 'workflows', 'revision-adversarial.js'))).toBe(true);
+    expect(await eslint.isPathIgnored(path.join(RAIZ, 'scripts', '_cierreSesion.mjs'))).toBe(false);
+  }, 60000);
+});
+
 describe('el job del candado no se puede saltear (ronda 2, detalle 2)', () => {
   for (const f of ['candado.yml', 'deploy.yml']) {
     it(`ROJO en ${f} si el job repo-publico gana un \`if:\` o un paso del gate gana continue-on-error`, () => {

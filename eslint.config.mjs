@@ -10,6 +10,10 @@ export default tseslint.config(
         ignores: [
             'dist',
             '.claude/worktrees/**',
+            // Guiones de la tool Workflow (tanda 9, 17/10/2026): son el CUERPO de una funcion async (un `return` y un
+            // `await` de nivel superior), no un modulo; ESLint los lee como modulo y da «'return' outside of function».
+            // Su chequeo es __tests__/scripts/revisionAdversarialWorkflow.test.mjs, que los corre enteros.
+            '.claude/workflows/**',
             // Directorios locales no trackeados (no existen en CI): sin esto el lint
             // local barre JS vendor (p. ej. .venv-cad trae matplotlib/trame) y da
             // un resultado distinto al del runner.
