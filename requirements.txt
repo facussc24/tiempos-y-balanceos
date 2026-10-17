@@ -1,0 +1,13 @@
+# Paquetes de Python que usan los scripts del repo en el Python base (el entorno 3D es aparte: .venv-cad, skill cad-design,
+# y ahi viven matplotlib, gmsh, build123d, trimesh). Medido el 15/10/2026 en casa_cata_estado.md contando los imports:
+# pptx 134, PIL 76, openpyxl 20, win32com 17, fitz 17, mas numpy, ezdxf y docx; el 16/10 la PC principal los tiene todos.
+# Lo mide el aviso «PC nueva» de `node scripts/_nube.mjs --sincronizar` (scripts/_lib/pcNueva.mjs, tanda 1.6).
+#   pip install -r requirements.txt
+python-pptx
+Pillow
+openpyxl
+PyMuPDF
+pywin32
+numpy
+ezdxf
+python-docx

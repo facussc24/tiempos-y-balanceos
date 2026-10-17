@@ -78,6 +78,14 @@ nombre de la maquina.
 6. Subir y **deshidratar** (`attrib +U -P`) recien cuando el archivo tiene `ReparsePoint`.
 7. La carpeta de la tarea en el Escritorio es para **trabajar**; el video no vive ahi.
 
+**Con menos de 10 GB libres en la PC principal, lo pesado NO se baja ni se copia aca: se hace desde CATA**, la
+notebook de Calidad, que tiene el disco grande (239 GB libres el 15/10; la principal, 9,3 GB el 16/10). Fak, 13/10/2026:
+*"no descargues videos en esta PC, no tiene almacenamiento, esas tareas son para la otra notebook"*. Vale para la copia
+del telefono, la descarga o la copia de un video o un comprimido: el pedido se le deja a CATA como `PEDIDO N` en
+`FACUNDO\` de la nube (memoria `reference_canal_entre_pcs_pedidos_facundo`). El guardian lo frena (tanda 1.6 del plan del
+sistema, 16/10/2026; el 10 lo puso el plan, no esta medido); si Fak pide hacerlo aca igual, su pedido gana: pase de un uso
+`: > ~/.claude/.espacio-ok`, que escribo yo y lo digo.
+
 **Nada de esto se borra** para hacer lugar (memoria `material_de_fak_no_se_borra_va_a_la_nube`).
 
 ## Enforcement
@@ -90,6 +98,7 @@ Hook `video-maquina-guard.sh` (PreToolUse, logica en `scripts/_lib/guardianes.mj
 | dejar un `.MOV/.MP4/.M4V` en una carpeta del Escritorio | su lugar es la biblioteca; ahi se pierde y se vuelve a bajar |
 | copiar del telefono por MTP sin cruce fresco (< 12 h) | es lo que hizo rebajar 13 videos que ya estaban |
 | dejar en la **raiz de una carpeta de maquina** algo que no sea un original con el nombre de la casa | lo que no es original va a `.claude`; asi la carpeta ordena por fecha y se lee de un vistazo |
+| copiar del telefono, bajar o copiar un video o un comprimido **en la PC principal con menos de 10 GB libres** (16/10/2026) | lo pesado se hace desde CATA; el freno dice los GB que hay y como dejarle el pedido; pase de un uso `~/.claude/.espacio-ok` solo con el pedido de Fak |
 
 **Alcance del hook, a proposito**: la tercera regla cuida la raiz de **cualquier** carpeta que
 empiece con `MAQUINA `, no solo las tres de la lista que audita el script. Una maquina nueva

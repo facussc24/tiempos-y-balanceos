@@ -377,6 +377,15 @@ if (sincronizar) {
     if (avLimpieza) avisos.push(avLimpieza);
     const avVersion = avisoVersion(leerVersionClaude());
     if (avVersion) avisos.push(avVersion);
+    // 16/10/2026 (tanda 1.6, «PC nueva»): lo que NO viaja por la nube son programas (node_modules, paquetes de Python, ffmpeg,
+    // Bambu Studio, los mods). Un renglon con lo que falta en ESTA PC y el comando que lo arregla; instalar lleva el si de Fak.
+    try {
+        const { avisoPcNueva, medirPc } = await import('./_lib/pcNueva.mjs');
+        const avPc = avisoPcNueva(medirPc({ repo: REPO, home: HOME }));
+        if (avPc) avisos.push(avPc);
+    } catch (e) {
+        avisos.push(`pc nueva: no pude medir que le falta a esta PC (${String(e && e.message ? e.message : e).slice(0, 80)})`);
+    }
 
     // El codigo viaja por GitHub, no por la nube: si el repo esta limpio y atras, se trae; si tiene
     // commits sin pushear, se avisa (la otra PC no los ve). Sin red, se dice y se sigue.

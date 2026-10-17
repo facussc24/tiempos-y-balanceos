@@ -57,6 +57,14 @@ fi
 # El cerebro va PRIMERO: si esta PC no lo tiene, bajarlo es prioritario sobre todo lo demas.
 bash "$ROOT/.claude/hooks/cerebro-guard.sh" 2>/dev/null
 
+# Ficha de ESTA PC (tanda 1.6, 16/10/2026; Fak: "debe saber que esta en la PC de Calidad"): si existe
+# .claude/pcs/<COMPUTERNAME>.md se imprime entera. Viaja por git y se actualiza sola; la PC principal no tiene ficha
+# (la casa esta escrita para ella). Sin COMPUTERNAME (una prueba fuera de Windows) no se busca nada.
+if [ -n "${COMPUTERNAME:-}" ]; then
+  FICHA_PC="$ROOT/.claude/pcs/${COMPUTERNAME^^}.md"
+  [ -f "$FICHA_PC" ] && cat "$FICHA_PC"
+fi
+
 # Seguimientos con fecha: lo que hay que volver a pedir (lunes y viernes) hasta que contesten.
 # Va DESPUES del cerebro porque los datos viven en la memoria. Detalla hasta 10 (unos 5 KB) y
 # cuenta el resto; un dato mal escrito lo DICE por esta misma salida; si node falla, no frena.

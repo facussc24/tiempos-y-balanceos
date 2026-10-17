@@ -44,6 +44,7 @@ dist-ssr
 !.claude/skills/
 !.claude/agents/
 !.claude/hooks/
+!.claude/pcs/
 
 # Project secrets
 SUPABASE_INFO.md

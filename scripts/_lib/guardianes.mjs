@@ -1978,6 +1978,25 @@ const VID_CRUCE_H = 12;
 const VID_RAIZ_MAQUINA = /5-\s*VIDEOS Y FOTOS[\\/].*[\\/]MAQUINA [^\\/]+[\\/][^\\/]+$/i;
 const VID_MEDIA = /\.(mov|mp4|m4v|heic|jpe?g|png)$/i;
 const VID_NOMBRE_CASA = /[\\/]\d{4}-\d{2}-\d{2} - [^\\/]+ \([^()\\/]+\)\.[A-Za-z0-9]{2,4}$/;
+// 4. Lo pesado se baja desde CATA (tanda 1.6 del plan del sistema, 16/10/2026; Fak, 13/10: "no descargues videos en esta
+//    PC, no tiene almacenamiento, esas tareas son para la otra notebook"): en la PC con el disco chico, copiar del telefono,
+//    bajar o copiar un video o un comprimido con menos de VID_GB_MINIMO GB libres se frena y se manda a CATA (239 GB libres
+//    el 15/10; la principal tenia 9,3 GB el 16/10 a las 20:42). El 10 lo puso el plan (1.6, punto 4), no esta medido: si Fak
+//    lo cambia, va aca. BARACK_ESPACIO_LIBRE_GB inyecta la medicion (tests); sin medicion posible no se frena.
+//    `.espacio-ok` en ~/.claude es el pase de UN uso para cuando Fak pidio hacerlo aca igual (su pedido le gana al freno):
+//    se marca "consumido" adentro, como el pase del coordinador.
+const VID_GB_MINIMO = 10;
+const VID_PC_DISCO_CHICO = /^DESKTOP-14JG95B$/i;
+const VID_DESCARGA = /yt-dlp|youtube-dl|Invoke-WebRequest|Start-BitsTransfer|(^|[;&|\s])(wget|curl)(\s|$)/im;
+const VID_PESADO_EXT = /\.(mov|mp4|m4v|zip|7z|rar|iso)\b/i;
+function vidGbLibres(env, ruta = 'C:/') {
+  const forzado = env && env.BARACK_ESPACIO_LIBRE_GB;
+  if (forzado !== undefined && forzado !== null && forzado !== '') {
+    const n = Number(forzado);
+    return Number.isFinite(n) ? n : null;
+  }
+  try { const s = fs.statfsSync(ruta); return (s.bavail * s.bsize) / 1e9; } catch { return null; }
+}
 
 /**
  * El DESTINO de un comando que mueve o copia: el ultimo argumento con pinta de ruta
@@ -2029,6 +2048,34 @@ GUARDIANES['video-maquina-guard'] = (ctx, { ahora, env }) => {
   else { tool = ctx.rescate.tool; file = ctx.rescate.file; cmd = `${ctx.rescate.cmd} ${ctx.raw.replace(/\n/g, ' ')}`; }
   const todo = `${cmd} ${file}`;
   if (VID_EXCEPCION.test(todo)) return null;
+
+  // 4. Lo pesado se baja desde CATA (ver las constantes VID_GB_MINIMO / VID_PC_DISCO_CHICO). Solo con el nombre de maquina
+  //    que viene en `env` (los tests no lo traen y asi no dependen del disco real de la PC donde corren).
+  const pcChica = VID_PC_DISCO_CHICO.test(String((env && env.COMPUTERNAME) || ''));
+  const copiaPesada = VID_MTP.test(cmd)
+    || (VID_MUEVE.test(cmd) && (VID_EXT.test(todo) || VID_PESADO_EXT.test(todo)))
+    || (VID_DESCARGA.test(cmd) && VID_PESADO_EXT.test(todo));
+  if (pcChica && copiaPesada) {
+    const gb = vidGbLibres(env);
+    if (gb !== null && gb < VID_GB_MINIMO) {
+      const pase = path.join(dirHome(env), '.claude', '.espacio-ok');
+      let paseVale = false;
+      try { paseVale = fs.existsSync(pase) && !/consumido/.test(fs.readFileSync(pase, 'utf8')); } catch { paseVale = false; }
+      if (paseVale) {
+        try { fs.writeFileSync(pase, 'consumido'); } catch { /* si no se puede marcar, el pase vale esta vez igual */ }
+      } else {
+        return bloqueo(`[VIDEO-MAQUINA] BLOQUEADO: esta PC tiene ${gb.toFixed(1)} GB libres (menos de ${VID_GB_MINIMO}) y esto copia o baja material pesado.
+
+Lo pesado en disco se hace desde CATA, la notebook de Calidad (tiene el disco grande: 239 GB libres el 15/10): dejarle el
+pedido en FACUNDO\\ de la nube de Ingenieria (PEDIDO N - <que> - <fecha>.txt; memoria
+reference_canal_entre_pcs_pedidos_facundo) o decirselo a Fak si esta en esa PC. Regla video-maquina.md, tanda 1.6 (16/10/2026).
+
+Fak, 13/10/2026: "no descargues videos en esta PC, no tiene almacenamiento, esas tareas son para la otra notebook".
+
+Si Fak pidio hacerlo ACA igual (su pedido le gana a este freno): \`: > ~/.claude/.espacio-ok\` (vale UNA vez) y repetir el comando.`);
+      }
+    }
+  }
 
   // 1. Un video que TERMINA en una carpeta del Escritorio. La carpeta de la tarea es para
   //    trabajar; el master no vive ahi. Se mira el DESTINO, no el comando entero: sacarlo del

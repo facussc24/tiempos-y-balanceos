@@ -229,6 +229,27 @@ describe('session-start-context.sh (SessionStart) — el nucleo post-compact se 
     expect(r.stdout).toMatch(/caracteristicas-especiales\.md/);
     expect(r.stdout.length).toBeLessThan(3000);      // el tope de 10 KB de salida de hook queda lejos
   });
+
+  // 16/10/2026 (tanda 1.6): la ficha de la PC (.claude/pcs/<COMPUTERNAME>.md) se imprime al arrancar si existe.
+  const inicio = (env) => spawnSync('bash', [path.join(HOOKS, 'session-start-context.sh'), 'inicio'], {
+    input: '{"hook_event_name":"SessionStart","source":"startup"}', encoding: 'utf8', cwd: RAIZ,
+    env: { ...process.env, CLAUDE_PROJECT_DIR: posix(RAIZ), ...env },
+  });
+  it('inicio en CATA: imprime la ficha .claude/pcs/CATA.md (por COMPUTERNAME, sin importar mayusculas)', () => {
+    const ficha = fs.readFileSync(path.join(RAIZ, '.claude', 'pcs', 'CATA.md'), 'utf8');
+    expect(ficha).toMatch(/^\[PC\] Esta sesion corre en CATA/);
+    expect(ficha.length).toBeLessThan(4000);
+    for (const nombre of ['CATA', 'Cata']) {
+      const r = inicio({ COMPUTERNAME: nombre });
+      expect(r.status, r.stderr).toBe(0);
+      expect(r.stdout, `COMPUTERNAME=${nombre}`).toContain('[PC] Esta sesion corre en CATA');
+      expect(r.stdout).toContain('C:\\Dev\\BarackMercosul');
+    }
+  });
+  it('inicio en una PC sin ficha (la principal, o sin COMPUTERNAME): no imprime ninguna [PC]', () => {
+    expect(inicio({ COMPUTERNAME: 'DESKTOP-14JG95B' }).stdout).not.toContain('[PC] Esta sesion corre en');
+    expect(inicio({ COMPUTERNAME: '' }).stdout).not.toContain('[PC] Esta sesion corre en');
+  });
 });
 
 // ──────────── caracteristicas-especiales-prompt (UserPromptSubmit): el criterio cuando Fak lo nombra
