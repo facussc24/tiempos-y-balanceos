@@ -654,6 +654,31 @@ describe('script-inline-guard — comandos REALES de los transcripts', () => {
     // Pero el node -e de verdad, fuera del heredoc, sigue contando entero.
     expect(ev(bash(`node -e 'x' && git commit -F - -- a.mjs <<'EOF'\nmsg\nEOF\nnode -e '${'z'.repeat(3100)}'`)).err).toMatch(/SCRIPT-INLINE-GUARD/);
   });
+  // Pieza 5 (tanda 3, 16/10/2026): agregar PROSA a una nota con `cat >>` / `tee -a` no es un script pegado (los 6 frenos
+  // falsos del informe de CATA, `casa_guardianes_frenos.md` §3 P5); agregar CODIGO sigue frenando (los V del informe).
+  const solo = { nombres: ['script-inline-guard'] };
+  const prosa = '## 22/09/2026 — "puesto asi nomas": lo que Fak vio a ojo estaba medido\n'.repeat(80);
+  it('pieza 5 VERDE — cat >> / tee -a de prosa a un .md o .txt (memorias, planes, diarios; tambien con la ruta en una variable)', () => {
+    expect(prosa.length).toBeGreaterThan(INLINE_MAX);
+    for (const c of [
+      `cd "C:/Users/FacundoS-PC/.claude/projects/C--Dev-BarackMercosul/memory" && cat >> project_dispositivo_adhesivado_insert.md <<'EOF'\n${prosa}EOF`,
+      `cat >> docs/PLAN_P6_PLANES_DE_CONTROL_2026-10-10.md <<'EOF'\n${prosa}EOF`,
+      `cd /c/Dev/BarackMercosul/.sgc-cache/claude-por-area/examen && H=$(date +%H:%M) && cat >> DIA_2026-10-05.md <<'EOF'\n${prosa}EOF`,
+      `M="/c/Users/FacundoS-PC/.claude/projects/C--Dev-BarackMercosul/memory/project_claudes_por_area.md"; cat >> "$M" <<'EOF'\n${prosa}EOF`,
+      `tee -a notas.txt >/dev/null <<'EOF'\n${prosa}EOF`,
+    ]) expect(ev(bash(c), solo).exit, c.slice(0, 80)).toBe(0);
+  });
+  it('pieza 5 ROJO — agregar CODIGO, pisar con cat >, o un heredoc que va a un interprete, siguen frenando', () => {
+    const codigo = 'it("caso", () => { expect(correr(bash("x")).code).toBe(0); });\n'.repeat(60);
+    for (const c of [
+      `cat >> __tests__/scripts/mailsPcCalidad.test.mjs <<'EOF'\n${codigo}EOF`,                    // V del informe
+      `cat >> scripts/hotmelt/fotos_v3_lista.py <<'EOF'\n${codigo}EOF`,                              // V del informe
+      `head -65 generar.mjs > nuevo.mjs && cat >> nuevo.mjs <<'EOF'\n${codigo}EOF`,                 // V del informe
+      `cat > notas.md <<'EOF'\n${prosa}EOF`,                                                          // pisa: Write
+      `cat >> notas.md <<'EOF' | python -\n${prosa}EOF`,                                              // va a un interprete
+      `M=$(ls *.md | head -1); cat >> "$M" <<'EOF'\n${prosa}EOF`,                                     // destino que no se sabe
+    ]) expect(ev(bash(c), solo).exit, c.slice(0, 80)).toBe(2);
+  });
 });
 
 // ───────────────────────────────────────────────────────────── documentacion-oficial-guard

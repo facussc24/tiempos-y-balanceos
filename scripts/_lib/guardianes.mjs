@@ -916,10 +916,23 @@ const RE_HD = /<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1/;
 const HD_DE_GIT = /\bgit\s+(commit|tag|notes)\b|\bgh\s+(pr|issue|release)\b/;
 const HD_A_ARCHIVO = /(^|[;&|]\s*)(cat|tee)\b[^\n]*>/;
 const HD_A_INTERPRETE = /\|\s*((ba)?sh|python3?|node|powershell|pwsh)\b/;
+// Pieza 5 (tanda 3, 16/10/2026; si de Fak del 15/10): AGREGAR prosa al final de una nota (`cat >> notas.md <<EOF`,
+// `tee -a DIA.md`) no es un script pegado ni pisa nada, y la tool Write no sirve para agregar. Medido sobre los 173 frenos
+// del informe de CATA (`casa_guardianes_frenos.md` §3 P5): los 6 falsos eran eso. Agregar CODIGO (`cat >> x.test.mjs`,
+// un .py) sigue contando: ese se itera y viaja entero en cada vuelta. El destino se lee con las variables del comando.
+const HD_AGREGA = /(?:>>\s*|\btee\s+(?:-[A-Za-z]*a[A-Za-z]*\s+|--append\s+)(?:-[A-Za-z]+\s+)*)("[^"]*"|'[^']*'|[^\s;&|<>]+)/;
+function agregaProsa(dueno, res) {
+  const m = String(dueno).match(HD_AGREGA);
+  if (!m || HD_A_INTERPRETE.test(dueno)) return false;
+  const f = res(m[1].replace(/^["']|["']$/g, ''));
+  return !/\$/.test(f) && BM_PROSA.test(f);
+}
 export function medirInline(cmd) {
   let total = 0, aArchivo = 0, fin = null, dueno = '', buf = 0;
+  const res = resolvedorDe(cmd);
   const cerrar = () => {
     if (HD_DE_GIT.test(dueno)) return;
+    if (agregaProsa(dueno, res)) return;
     total += buf;
     if (HD_A_ARCHIVO.test(dueno) && !HD_A_INTERPRETE.test(dueno)) aArchivo += buf;
   };
