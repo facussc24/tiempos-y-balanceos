@@ -1,6 +1,6 @@
 ---
 name: plotter-aol
-description: "Operar el plotter de corte AOL (AOL Digital Cutter de Jinan AOL CNC, la mesa negra con aspiracion por vacio y cuchilla oscilante que esta junto a las mesas de corte, software Xiao en la PC) de principio a fin — encender, ir al origen, poner la cuchilla y su profundidad, abrir el DXF en Xiao, asignar herramientas (SP), cortar agujeros chicos, mandar a cortar, mantenimiento diario y que hacer cuando corta mal. Usar cuando Fak hable del plotter AOL, del plotter de corte con aspiracion o succionador, de Xiao, de cortar Insert u otras piezas finas en el plotter, o pregunte como se usa, se calibra o por que corta mal. Preparar o modificar el DXF lo cubre `patrones-corte-plotter`; el otro plotter (HTV2A) no es este."
+description: "Plotter de corte AOL («el plotter de corte», «el de cuchilla», «el succionador», software «Xiao»): la mesa negra con vacio y cuchilla oscilante junto a las mesas de corte, donde se cortan los Insert — prender, origen, cuchilla y profundidad, DXF en Xiao, herramientas SP, agujeros chicos, acomodar piezas en columnas, mantenimiento y que hacer si corta mal. Usar cuando Fak hable de ese plotter, de cortar Insert u otras piezas finas ahi, o pregunte como se usa o por que corta mal. El DXF lo prepara `patrones-corte-plotter`; el HTV2A es otro plotter."
 ---
 
 # Plotter AOL — de prender la maquina a sacar las piezas
@@ -264,7 +264,11 @@ nivelado, sin sol directo ni humedad.
   cuando sube el archivo al plotter es tomar los 2 de la derecha y ponerlos, los 4 en una sola columna"*. Una hoja por
   tipo (el delantero y el trasero no entran juntos en el largo): 5 + 5 piezas dan 1380 x 1187 (delantero) y
   1293 x 1285 (trasero). El ancho del material lo dice Fak (el 15/10 penso en 1,8 m, vinilo obsoleto para la prueba);
-  el area de esta maquina sigue sin medir (§11). Script: `scripts/acomodar_columnas.py <dxf 4 piezas> DEL|TRA <N> 25 <salida>`.
+  el area de esta maquina sigue sin medir (§11). Script: `py -3 .claude/skills/plotter-aol/scripts/acomodar_columnas.py <dxf 4 piezas> DEL|TRA <N> 25 <salida>`.
+  **Frena solo** (tanda 12, 17/10/2026): si el origen trae algo que no sea una polilinea (un agujero CIRCLE se perderia en
+  silencio: para eso va `_mixPlotter.py`, que los conserva y los pone antes que los contornos), y si el DXF escrito,
+  releido, no tiene 2N contornos cerrados o queda con menos de 25 mm reales entre piezas. Probado el 17/10 con el DXF de
+  4 piezas del 15/10: verde (1380,4 x 1187,1 y 1293,1 x 1284,6, 25,00 mm); con un agujero agregado al origen, frena.
   Al lado va siempre un PNG **"cual es cual"** con el nombre de cada mano: el DXF no lleva texto.
 - Si Fak pregunta como se hace algo de la maquina: contestar con esta skill y su pagina del manual;
   si no esta, **decir que el manual no lo dice** y no inventar un valor (`core-prohibiciones` §1).
