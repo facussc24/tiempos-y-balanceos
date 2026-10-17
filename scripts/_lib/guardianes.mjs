@@ -2180,7 +2180,7 @@ function comandosConEval(texto, prof = 0) {
   const out = [];
   for (const c of comandosSimples(texto)) {
     const { verbo, args } = verboDeComando(c);
-    if (prof < 3 && /^eval$/i.test(verboPelado(verbo)) && args.length) { out.push(...comandosConEval(args.join(' ').replace(//g, '$'), prof + 1)); continue; }
+    if (prof < 3 && /^eval$/i.test(verboPelado(verbo)) && args.length) { out.push(...comandosConEval(args.join(' ').replace(/\uE000/g, '$'), prof + 1)); continue; }
     out.push(c);
   }
   return out;
