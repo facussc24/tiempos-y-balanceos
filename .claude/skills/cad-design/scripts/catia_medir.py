@@ -347,7 +347,10 @@ def cmd_medir(a):
                 c.Quit()
             except Exception:  # noqa: BLE001
                 pass
-        time.sleep(3)
+        for _ in range(30):            # con la PC cargada, Quit tarda mas de 3 s (17/10): se espera hasta 30 s
+            if pid not in cnext_abiertos():
+                break
+            time.sleep(1)
         if vigia:
             vigia.parar()
             informe["cuadros"] = vigia.vistos

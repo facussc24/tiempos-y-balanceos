@@ -17,34 +17,153 @@
     "v14": {
       "_fuente": "C:/Dev/_utrim/params_v10.json (v13/v14, 'localizadores.two_v14', 'nido.ped_neg/ped_pos', '_v15') y memoria project_uppertrim_pisador_utillaje",
       "elementos": [
-        {"nombre": "bloque ranura 1, lado -y", "tipo": "apoyo_z", "rigido": true},
-        {"nombre": "bloque ranura 1, lado +y", "tipo": "apoyo_z", "rigido": true},
-        {"nombre": "bloque ranura 2, lado -y", "tipo": "apoyo_z", "rigido": true},
-        {"nombre": "bloque ranura 2, lado +y", "tipo": "apoyo_z", "rigido": true},
-        {"nombre": "pasador 1 (parado sobre la ranura de liston tapada)", "tipo": "apoyo_z", "rigido": true},
-        {"nombre": "pasador 2 (parado sobre la ranura de liston tapada)", "tipo": "apoyo_z", "rigido": true},
-        {"nombre": "pasador 3 (parado sobre la ranura de liston tapada)", "tipo": "apoyo_z", "rigido": true},
-        {"nombre": "anillos (luz 0,15 a la pared)", "tipo": "ubicador_xy", "rigido": true}
+        {
+          "nombre": "bloque ranura 1, lado -y",
+          "tipo": "apoyo_z",
+          "rigido": true
+        },
+        {
+          "nombre": "bloque ranura 1, lado +y",
+          "tipo": "apoyo_z",
+          "rigido": true
+        },
+        {
+          "nombre": "bloque ranura 2, lado -y",
+          "tipo": "apoyo_z",
+          "rigido": true
+        },
+        {
+          "nombre": "bloque ranura 2, lado +y",
+          "tipo": "apoyo_z",
+          "rigido": true
+        },
+        {
+          "nombre": "pasador 1 (parado sobre la ranura de liston tapada)",
+          "tipo": "apoyo_z",
+          "rigido": true
+        },
+        {
+          "nombre": "pasador 2 (parado sobre la ranura de liston tapada)",
+          "tipo": "apoyo_z",
+          "rigido": true
+        },
+        {
+          "nombre": "pasador 3 (parado sobre la ranura de liston tapada)",
+          "tipo": "apoyo_z",
+          "rigido": true
+        },
+        {
+          "nombre": "anillos (luz 0,15 a la pared)",
+          "tipo": "ubicador_xy",
+          "rigido": true
+        }
       ],
-      "ventana_mm": {"banda": 0.20, "punta": 0.24},
-      "sim_publicada": {"normal_tapados_pct": 100, "normal_abiertos_pct": 68},
-      "esperado": {"A1_apoyos": "ROJO", "A2_ventana": "ROJO", "A3_asiento": "ROJO"}
+      "ventana_mm": {
+        "banda": 0.2,
+        "punta": 0.24
+      },
+      "sim_publicada": {
+        "normal_tapados_pct": 100,
+        "normal_abiertos_pct": 68
+      },
+      "esperado": {
+        "A1_apoyos": "ROJO",
+        "A2_ventana": "ROJO",
+        "A3_asiento": "ROJO"
+      }
     },
     "v15": {
       "_fuente": "params_v10.json '_v15' (13/10): sin pasadores, orejas de las puntas como tope antivuelco a 0,25 bajo el tapizado, banda hasta z -6,30 y punta a z -4,80",
       "elementos": [
-        {"nombre": "bloque ranura 1, lado -y", "tipo": "apoyo_z", "rigido": true},
-        {"nombre": "bloque ranura 1, lado +y", "tipo": "apoyo_z", "rigido": true},
-        {"nombre": "bloque ranura 2, lado -y", "tipo": "apoyo_z", "rigido": true},
-        {"nombre": "bloque ranura 2, lado +y", "tipo": "apoyo_z", "rigido": true},
-        {"nombre": "oreja punta izquierda (luz 0,25)", "tipo": "antivuelco", "rigido": true},
-        {"nombre": "oreja punta derecha (luz 0,25)", "tipo": "antivuelco", "rigido": true},
-        {"nombre": "anillos (luz 0,15 a la pared)", "tipo": "ubicador_xy", "rigido": true}
+        {
+          "nombre": "bloque ranura 1, lado -y",
+          "tipo": "apoyo_z",
+          "rigido": true
+        },
+        {
+          "nombre": "bloque ranura 1, lado +y",
+          "tipo": "apoyo_z",
+          "rigido": true
+        },
+        {
+          "nombre": "bloque ranura 2, lado -y",
+          "tipo": "apoyo_z",
+          "rigido": true
+        },
+        {
+          "nombre": "bloque ranura 2, lado +y",
+          "tipo": "apoyo_z",
+          "rigido": true
+        },
+        {
+          "nombre": "oreja punta izquierda (luz 0,25)",
+          "tipo": "antivuelco",
+          "rigido": true
+        },
+        {
+          "nombre": "oreja punta derecha (luz 0,25)",
+          "tipo": "antivuelco",
+          "rigido": true
+        },
+        {
+          "nombre": "anillos (luz 0,15 a la pared)",
+          "tipo": "ubicador_xy",
+          "rigido": true
+        }
       ],
-      "ventana_mm": {"banda": 1.19, "punta": 0.75},
-      "sim_publicada": {"normal_tapados_pct": 28, "punta_mediana_mm": 1.69},
-      "esperado": {"A1_apoyos": "ROJO", "A2_ventana": "VERDE", "A3_asiento": "ROJO"},
+      "ventana_mm": {
+        "banda": 1.19,
+        "punta": 0.75
+      },
+      "sim_publicada": {
+        "normal_tapados_pct": 28,
+        "punta_mediana_mm": 1.69
+      },
+      "_reproducida_17_10": "sim_asiento.py sin tocar, 17/10: v14 100 % y 68 %, v15 28 %, punta v15 1,69 mm: identico al 13/10",
+      "esperado": {
+        "A1_apoyos": "ROJO",
+        "A2_ventana": "VERDE",
+        "A3_asiento": "ROJO"
+      },
       "_esperado": "El plan del 17/10 esperaba A1 VERDE para la v15 (sin pasadores). Aplicada la regla tal cual, sus cuatro bloques rigidos controlan la altura: ROJO. No se afloja la regla para que la v15 de verde: la simulacion la confirma (se hamaca en 28 de 100). La que tiene que dar verde es la v16."
+    },
+    "v16": {
+      "_fuente": "C:/Dev/_utrim/params_v10.json 'nido.apoyos_v16' y cotas_v10_two.json (17/10/2026): cuatro apoyos 6x10 en las esquinas sobre el mismo plano del tapizado (z_tope -10,334/-10,335, dispersion 0,000 bajo cada huella), sin pasadores ni orejas; anillo identico a la v15 (verificar_v16.py: 0,0002 mm)",
+      "elementos": [
+        {
+          "nombre": "apoyo esquina x-35,5 y-20,5",
+          "tipo": "apoyo_z",
+          "rigido": true
+        },
+        {
+          "nombre": "apoyo esquina x-35,5 y+16,5",
+          "tipo": "apoyo_z",
+          "rigido": true
+        },
+        {
+          "nombre": "apoyo esquina x125,3 y-20,5",
+          "tipo": "apoyo_z",
+          "rigido": true
+        },
+        {
+          "nombre": "apoyo esquina x125,3 y+16,5",
+          "tipo": "apoyo_z",
+          "rigido": true
+        },
+        {
+          "nombre": "anillos (luz 0,15 a la pared)",
+          "tipo": "ubicador_xy",
+          "rigido": true
+        }
+      ],
+      "ventana_mm": {
+        "banda": 1.19,
+        "punta": 0.75
+      },
+      "esperado": {
+        "A1_apoyos": "ROJO"
+      },
+      "_esperado": "Por la letra del criterio V1 del plan (exactamente tres apoyos) la v16 da ROJO en A1: tiene cuatro. Se decidio 4-2-1 con evidencia (Applied Engineering: 3-2-1 da equilibrio, no estabilidad; tres apoyos volcaban hasta 10 mm con la mano afuera del triangulo) y la redundancia se paga con coplanaridad (los cuatro sobre el mismo plano medido). No se afloja A1: el veredicto final de la v16 lo da la prueba fisica (apretar en cinco lugares)."
     }
   }
 }
