@@ -172,6 +172,13 @@ describe('CI partido en candado.yml y deploy.yml (tanda 9, pieza 9)', () => {
             expect(r.detalle).toMatch(/deploy del HEAD en curso/);
         }
     });
+    it('un deploy en curso de OTRO commit tambien es aviso, y el texto no dice «del HEAD» (ronda 2, auditor)', () => {
+        const candado = evaluarCI({ sha: 'abcdef1234567890', run: verde, error: null });
+        const r = combinarCI(candado, { run: { ...verde, head_sha: '2222222299', status: 'in_progress', conclusion: null }, error: null, sha: 'abcdef1234567890' });
+        expect(r.estado).toBe('aviso');
+        expect(r.detalle).toMatch(/deploy en curso \(in_progress, 22222222\)/);
+        expect(r.detalle).not.toMatch(/del HEAD/);
+    });
     it('VERDE: candado verde y deploy terminado verde sigue en ok (el caso en curso no cambia lo terminado)', () => {
         const candado = evaluarCI({ sha: 'abcdef1234567890', run: verde, error: null });
         expect(combinarCI(candado, { run: verde, error: null, sha: 'abcdef1234567890' }).estado).toBe('ok');
