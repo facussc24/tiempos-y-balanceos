@@ -300,7 +300,8 @@ function variablesEscritas(todo) {
 /** ¿Algun comando simple del texto (o de sus `$(…)`) lee el secreto? `todo` = el comando entero, para las variables. */
 function leeSecretoPorComando(texto, todo, prof = 0, vars = variablesEscritas(todo)) {
   if (prof > 4) return SECRETO_RE.test(texto);
-  for (const c of comandosSimples(texto)) {
+  const t = String(texto ?? '');
+  for (const c of comandosSimples(t)) {
     const palabras = c.palabras.map((w) => w.replace(/\uE000/g, '$'));
     for (const w of palabras) {
       const subs = sustitucionesDe(w);
@@ -310,8 +311,11 @@ function leeSecretoPorComando(texto, todo, prof = 0, vars = variablesEscritas(to
     const { verbo, args } = verboDeComando({ ...c, palabras });
     const v = verboPelado(verbo);
     // un argumento con una variable: si el comando le dio un valor escrito, se mira ese valor (puede ser una lista);
-    // si no se sabe que vale, cuenta como el secreto cuando el comando lo nombra en algun lado (no se adivina)
-    const esSecreto = (a) => {
+    // si no se sabe que vale, cuenta como el secreto cuando el comando lo nombra en algun lado (no se adivina).
+    // Ronda 2: un backtick tambien es algo sin resolver (hallazgo 5), y un `)` o `}` del final es del subshell o del
+    // bloque, no del nombre: `(cat .env.local)` (hallazgo 4).
+    const esSecreto = (a0) => {
+      const a = String(a0).replace(/[)}]+$/, '');
       if (!/\$/.test(a)) return SECRETO_ARG_RE.test(a);
       const r = a.replace(/\$\{?([A-Za-z_]\w*)\}?/g, (m, n) => (vars.get(n) != null ? vars.get(n) : m));
       if (/\$/.test(r)) return SECRETO_RE.test(todo);
@@ -332,7 +336,10 @@ function leeSecretoPorComando(texto, todo, prof = 0, vars = variablesEscritas(to
       if (elegidos.some((x) => esSecreto(x.replace(/^["']|["']$/g, '')))) return true;
       continue;
     }
-    if (INTERPRETE_SECRETO_RE.test(v)) { if (args.some((a) => SECRETO_RE.test(a) || SECRETO_ARG_RE.test(a))) return true; continue; }
+    if (INTERPRETE_SECRETO_RE.test(v)) {
+      if (args.some((a) => SECRETO_RE.test(a) || SECRETO_ARG_RE.test(a))) return true;
+      continue;
+    }
     const ejecutaOtro = (/^xargs$/i.test(v) && args.some((a) => LECTOR_ARCHIVO_RE.test(verboPelado(a)) || PATRONERO_VERBO_RE.test(verboPelado(a))))
       || (/^find$/i.test(v) && args.some((a, k) => /^-(?:exec|execdir|ok|okdir)$/.test(a) && LECTOR_ARCHIVO_RE.test(verboPelado(args[k + 1]))));
     if (ejecutaOtro && SECRETO_RE.test(todo)) return true;

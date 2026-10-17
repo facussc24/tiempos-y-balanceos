@@ -866,6 +866,12 @@ describe('secretos-guard — .env.local y .qr-secret no se leen ni se pisan desd
     // (`cat .env*` no lo frena ni antes de P12: el nombre seguido de `*` no entra en SECRETO_RE. Agujero anotado aparte.)
   });
 
+  it('P12 ROJO (ronda 2, hallazgo 4) — el lector adentro de un subshell o de un bloque', () => {
+    rojo(bash('(cd /c/Dev/BarackMercosul && cat .env.local)'));
+    rojo(bash('(head -3 .env.local)'));
+    rojo(bash('{ cat .env.local; }'));
+  });
+
   it('comandoTocaSecreto: dice QUE archivo y COMO', () => {
     expect(comandoTocaSecreto('cat .env.local')).toEqual({ como: 'lectura', nombres: ['.env.local'] });
     expect(comandoTocaSecreto('cat .env.local', { porComando: true })).toEqual({ como: 'lectura', nombres: ['.env.local'] });
