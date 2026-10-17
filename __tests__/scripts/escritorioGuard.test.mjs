@@ -94,6 +94,32 @@ describe('escritorio-guard — mover a mano', () => {
     it('8. mover DENTRO del Escritorio, sin tocar el archivo, no se bloquea', () => {
         expect(correr(bash(`mv "${ESC}\\a.txt" "${ESC}\\Insert\\a.txt"`)).code).toBe(0);
     });
+
+    // Tanda 3, pieza 4 (16/10/2026; si de Fak del 15/10): el archivo y el verbo tienen que estar en el MISMO comando, y un
+    // cp que COPIA desde el archivo para leer no es archivar. Casos VERDE = frenos falsos reales del informe de CATA
+    // (`casa_guardianes_frenos.md` §3 P3); ROJO = los verdaderos de siempre (5 y 6 de arriba) y sus variantes.
+    const T26 = '/c/Users/FacundoS-PC/BARACK ARGENTINA SRL/Ingeniería y Proyecto - General/INGENIERIA BARACK (NUNCA BORRAR)/1- GENERAL/TAREAS CERRADAS/2026';
+    const SCR = 'C:/Users/FACUND~1/AppData/Local/Temp/claude/C--Dev-BarackMercosul/b3209884-a3dc-4d60-9cec-41e14f639b1b/scratchpad';
+    it('8b. VERDE — el cp y el archivo en pedazos distintos del comando (02/10 13:03)', () => {
+        expect(correr(bash(`cp /c/tmp/RELACIONES.TXT .arb-cache/RELACIONES_20261002.TXT && LEO="${T26}/2026-07-31 - Modificacion arb por Leo"; ls "$LEO" 2>/dev/null | head; python scripts/_arbSustituir.py --tabla x.csv`)).code).toBe(0);
+    });
+    it('8c. VERDE — copiar DESDE el archivo hacia el scratchpad, para leer (02/10 15:35 y 14/10 17:45)', () => {
+        expect(correr(bash(`cd "$TEMP/claude/C--Dev-BarackMercosul/5dcc2c5c/scratchpad" && mkdir -p evip && cp "${T26}/2026-07-31 - Modificacion arb por Leo/Modificaciones BOM ARB_20260731.pdf" evip/leo.pdf 2>/dev/null; ls evip`)).code).toBe(0);
+        expect(correr(bash(`S="${SCR}"; T="${T26}"; cp "$T/2026-08-13 - PLANTILLA LASER INSERTO DEL R2/PLANTILLA.dxf" "$T/2026-08-13 - PLANTILLA LASER  INSERTO TRASERO R2/PLANTILLA.dxf" "$S/src/"; ls "$T/2026-08-13 - PLANTILLA LASER INSERTO DEL R2/"`)).code).toBe(0);
+    });
+    it('8d. ROJO — copiar HACIA el archivo, mover desde o hacia (tambien con variables), y el codigo pegado que mueve', () => {
+        for (const c of [
+            `cp "${SCR}/x.pdf" "${T26}/2026-10-16 - Tarea/"`,
+            `T="${T26}"; cp a.pdf "$T/2026-10-16 - Tarea/"`,
+            `T="${T26}"; mv "$T/2026-07-31 - Modificacion arb por Leo" "${ESC}\\Leo"`,
+            `robocopy "${ESC}\\Tarea" "${T26}/2026-10-16 - Tarea" /E`,
+            `python -c "import shutil; shutil.move(r'${ESC}\\Tarea', r'${ARCH}\\2026\\2026-10-16 - Tarea')"`,
+        ]) {
+            const r = correr(bash(c));
+            expect(r.code, c).toBe(2);
+            expect(r.err, c).toMatch(/Mover y registrar son UNA operacion/);
+        }
+    });
 });
 
 describe('escritorio-guard — escrituras', () => {

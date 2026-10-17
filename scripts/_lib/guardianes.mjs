@@ -1226,6 +1226,40 @@ function borraEnZona(an, zonaALaVista) {
   return false;
 }
 
+/**
+ * Regla 2 por comando (tanda 3, pieza 4, 16/10/2026; si de Fak del 15/10). Medido sobre los 22 frenos del informe de CATA
+ * (`casa_guardianes_frenos.md` §3 P3): los falsos que seguian frenando tenian la carpeta del archivo y el `cp` en
+ * pedazos distintos del comando (`cp /c/tmp/R.TXT .arb-cache/…; LEO=".../TAREAS CERRADAS/…"; ls "$LEO"`), o copiaban
+ * DESDE el archivo hacia el scratchpad para leer. Ahora: un mover (mv, move, Move-Item, robocopy /MOV) que nombra el
+ * archivo en sus argumentos frena; un copiar frena si su DESTINO cae en el archivo (o no se puede resolver y el comando
+ * nombra el archivo). El codigo pegado (python -c, heredoc) sigue con la regla vieja: archivo nombrado + mover/copiar.
+ */
+const ESC_ARCHIVO = /(_TERMINADAS|TAREAS CERRADAS)/i;
+const ESC_MUEVE_VERBO = /^(?:mv|move|Move-Item|mi)$/i;
+const ESC_COPIA_VERBO = /^(?:cp|copy|xcopy|Copy-Item|cpi)$/i;
+export function mueveAMano(cmd, { cwd = '' } = {}) {
+  const { lineas, cuerpos } = separarHeredocs(String(cmd ?? ''));
+  const res = resolvedorDe(cmd);
+  const embebido = cuerpos.filter((h) => !h.deGit).map((h) => h.cuerpo);
+  for (const c of comandosSimples(lineas)) {
+    const palabras = c.palabras.map((w) => w.replace(//g, '$'));
+    const { verbo, args } = verboDeComando({ ...c, palabras });
+    const v = verboPelado(verbo);
+    if (CORRE_INTERPRETE_RE.test(v)) { const r = modoInterprete(verbo, args); if (r.modo === 'pegado') embebido.push(r.codigo); continue; }
+    const robomueve = /^robocopy$/i.test(v) && args.some((a) => /^\/(?:MOV|MOVE)$/i.test(a));
+    if (!ESC_MUEVE_VERBO.test(v) && !ESC_COPIA_VERBO.test(v) && !/^robocopy$/i.test(v)) continue;
+    const pos = args.filter((a) => !/^-/.test(a) && !/^\/[A-Za-z]{1,4}(?::\S*)?$/.test(a)).map((a) => res(a));
+    if (!pos.length) continue;
+    if (ESC_MUEVE_VERBO.test(v) || robomueve) { if (pos.some((a) => ESC_ARCHIVO.test(a)) || (pos.some((a) => /\$/.test(a)) && ESC_ARCHIVO.test(c.crudo))) return true; continue; }
+    const explicito = args.findIndex((a) => /^-(?:t|Destination)$/i.test(a));
+    const destino = /^robocopy$/i.test(v) ? pos[1] : explicito >= 0 ? res(args[explicito + 1]) : pos[pos.length - 1];
+    if (destino === undefined) { if (ESC_ARCHIVO.test(c.crudo)) return true; continue; }
+    if (ESC_ARCHIVO.test(destino) || (/\$/.test(destino) && ESC_ARCHIVO.test(res(c.crudo)))) return true;
+  }
+  const codigo = embebido.join('\n');
+  return ESC_ARCHIVO.test(codigo) && ESC_MUEVE.test(codigo);
+}
+
 /** Una salida ya resuelta que cae adentro del Escritorio y es un entregable (o una carpeta, y el comando nombra uno). */
 function generaEntregable(salida, cmd) {
   if (!ESC_DENTRO.test(salida)) return false;
@@ -1269,8 +1303,9 @@ Si de verdad hay que sacar algo, lo decide Fak explicitamente, no yo.`);
   }
   // Solo el cwd estaba en la zona: las demas reglas miran lo que el comando NOMBRA.
   if (!zonaEnTexto) return null;
-  // 2. Mover a mano hacia/desde el archivo
-  if (/(_TERMINADAS|TAREAS CERRADAS)/i.test(todo) && ESC_MUEVE.test(cmd)) {
+  // 2. Mover a mano hacia/desde el archivo (en Bash con JSON sano, comando por comando: `mueveAMano`, arriba)
+  const porComando = ctx.ok && ctx.tool === 'Bash' && ctx.cmd;
+  if (porComando ? mueveAMano(ctx.cmd, { cwd: ctx.cwd || '' }) : (/(_TERMINADAS|TAREAS CERRADAS)/i.test(todo) && ESC_MUEVE.test(cmd))) {
     return bloqueo(`[ESCRITORIO-GUARD] BLOQUEADO: mover a mano hacia/desde el archivo de tareas cerradas.
 
 Mover y registrar son UNA operacion. A mano, la carpeta queda archivada sin fila en el
