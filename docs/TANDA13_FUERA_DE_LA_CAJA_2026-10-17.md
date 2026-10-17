@@ -85,3 +85,36 @@ Lo que se aprendió de la herramienta, medido:
 
 Sin cambios de código: es una herramienta de la app. Queda anotada para las sesiones en la memoria
 `reference_buscar_en_charlas_viejas` (cómo usarla y sus trampas).
+
+---
+
+## Ítem 13 · Un estilo de salida propio con la voz y el cierre de Fak (armado, sin activar)
+
+Archivo: `.claude/output-styles/voz-de-fak.md` (frontmatter `name`, `description`, `keep-coding-instructions: true`,
+doc oficial `code.claude.com/docs/en/output-styles`, investigado por la casa en julio:
+`docs/_archive/research-claude-code-2026-07/research_plugins-output-styles.json`). Es corto a propósito: dice la forma de
+cada respuesta (castellano simple, claro antes que corto, no preguntar lo propio, no anunciar trabajo, el orden fijo del
+cierre con «Propongo», nada de recomendaciones que nadie pidió, medir antes de escribir un número) y remite a `CLAUDE.md`
+para el resto. **No está activado**: activarlo cambia el prompt de sistema de todas las sesiones y es decisión de Fak.
+
+**El «antes», medido** con `node scripts/_stopHooksMedir.mjs --desde <d> --hasta <h> --por-chequeo` (el medidor de la
+tanda 9, ahora con el desglose por chequeo de cierre-guard y los frenos cada 100 mensajes de Fak):
+
+| Chequeo de cierre-guard (lo que el estilo quiere evitar) | 03/10 al 09/10 (454 mensajes de Fak) | 10/10 al 16/10 (424 mensajes) |
+|---|---|---|
+| 1 · termina pidiendo permiso para el propio trabajo | 14 (3,1 cada 100) | 6 (1,4) |
+| 5 · el cierre es un informe | 0 | 0 |
+| 6 · termina anunciando trabajo que no hizo | 7 (1,5) | 9 (2,1) |
+| 7 · Fak pidió que se lo expliquen y no cambió la forma | 0 | 1 (0,2) |
+| 10 · termina en inglés | 0 | 4 (0,9) |
+| **Suma de los que toca el estilo** | **21 (4,6 cada 100)** | **20 (4,7 cada 100)** |
+| (los demás: 2 entregable sin ruta, 3 pendientes, 4 sin abrir, 8, 9) | 116 | 143 |
+
+«Mensajes de Fak» cuenta todo mensaje de persona en el registro, incluido el encargo con que arranca una hija: sirve para
+comparar una semana con otra, no como conteo exacto. El chequeo 5 no frenó en las dos semanas (ya lo había medido el
+auditor del 16/10: su freno salió por última vez el 13/09).
+
+**El «después»**: con el sí de Fak, se elige el estilo en el menú «Output style» de la barra de título de cada sesión (o
+como estilo por defecto de las sesiones nuevas en la configuración de la app), y a la semana se corre el mismo comando con
+`--desde <día de activación>`. Sirve si la suma de los chequeos 1, 5, 6, 7 y 10 baja de ~4,6 cada 100 mensajes; si no
+baja, se saca (es un archivo: borrarlo o elegir «Default» lo apaga). Los subagentes no lo heredan (solo los fork).

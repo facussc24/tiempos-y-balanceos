@@ -47,6 +47,9 @@ dist-ssr
 !.claude/pcs/
 # 17/10/2026 (tanda 9, pieza 3): los workflows guardados (Claude Code los busca aca por nombre). Son guiones, no datos.
 !.claude/workflows/
+# 17/10/2026 (tanda 13, item 13): los estilos de salida propios (la app los ofrece en el menu «Output style»). Son texto de
+# forma, no datos; se activan solo con el si de Fak.
+!.claude/output-styles/
 
 # Project secrets
 SUPABASE_INFO.md
