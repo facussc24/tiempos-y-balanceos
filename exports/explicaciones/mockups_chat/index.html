@@ -1,0 +1,43 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Colores del chat</title><style>
+:root{--fondo:#f7f7f5;--texto:#1f2328;--suave:#57606a;--borde:#d0d7de;--tarjeta:#fff}
+@media (prefers-color-scheme:dark){:root{--fondo:#16181b;--texto:#e6edf3;--suave:#9aa4ae;--borde:#30363d;--tarjeta:#1d2125}}
+body{margin:0;background:var(--fondo);color:var(--texto);font-family:"Segoe UI",system-ui,sans-serif;line-height:1.5}
+main{max-width:1500px;margin:0 auto;padding:24px 16px}
+h1{font-size:26px;margin:0 0 6px}h2{font-size:20px;margin:0 0 10px}h2 span{color:var(--suave);font-weight:400;font-size:16px}
+.aviso{background:var(--tarjeta);border:1px solid var(--borde);border-left:5px solid #1f4e79;border-radius:8px;padding:12px 16px;margin:14px 0 22px}
+.grilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:18px}
+.t{background:var(--tarjeta);border:1px solid var(--borde);border-radius:10px;padding:14px}
+.t img{width:100%;border:1px solid var(--borde);border-radius:6px}
+.f{font-size:14px;color:var(--suave)}
+table{border-collapse:collapse;font-size:14px}td,th{padding:3px 10px;border-bottom:1px solid var(--borde);text-align:left}
+.bien{color:#1a7f37;font-weight:600}.mal{color:#cf222e;font-weight:600}
+code{font-family:Consolas,monospace;background:var(--fondo);padding:1px 5px;border-radius:4px}
+.hoy{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}.hoy img{width:420px;max-width:100%;border:1px solid var(--borde);border-radius:6px}
+@media (max-width:480px){.grilla{grid-template-columns:1fr}}
+</style></head><body><main>
+<h1>Cómo se vería el chat: tres opciones para elegir</h1>
+<p>Son maquetas, no capturas: la conversación es de ejemplo y no se instaló nada. Elegí una, o ninguna.</p>
+<div class="aviso"><b>Lo oficial para «es muy oscuro» es pasar la app a tema claro.</b> Mirá en Configuración si aparece
+«Apariencia» o «Tema» (y si hay tamaño de letra), y escribí <code>/theme</code> en una conversación para ver si la app
+lo acepta. No lo pude ver desde acá: para sacar una captura del tema claro había que cambiarte la configuración.
+Un skin (un mod de la comunidad) repinta los mensajes, las tablas y las filas de herramientas; el fondo de la ventana
+lo pone la app y <b>la letra no la cambia ningún mod</b>.</div>
+<div class="grilla"><section class="t"><h2>Papel <span>· claro, fondo hueso</span></h2>
+      <a href="papel.png"><img src="papel.png" alt="Maqueta Papel"></a>
+      <p>Parecido a una hoja impresa: para leer mucho rato. Es lo contrario del oscuro de hoy.</p><p class="f"><b>De dónde salen los colores:</b> Tema CLARO de la app + skin «github» (texto, íconos y semáforo, variante clara) con las cajas del skin «solarized» claro (#eee8d5). El fondo hueso #f7f4ec y el azul #1f4e79 son la propuesta del informe: ningún skin pinta el fondo de la ventana.</p>
+      <p class="f"><b>Para probarlo en vivo</b> (después de instalar el skin, con tu sí): <code>/skin github  (o /skin solarized) con la app en tema claro</code></p>
+      <table><tr><th>Contraste (mínimo 4,5)</th><th></th></tr><tr><td>texto sobre el fondo</td><td class="bien">14,4</td></tr><tr><td>texto dentro de tu mensaje</td><td class="bien">12,9</td></tr><tr><td>texto gris (secundario)</td><td class="bien">4,8</td></tr><tr><td>verde «hecho»</td><td class="bien">4,6</td></tr><tr><td>rojo «error»</td><td class="bien">4,9</td></tr></table></section><section class="t"><h2>Azul noche <span>· oscuro suave, sin marrón</span></h2>
+      <a href="azul-noche.png"><img src="azul-noche.png" alt="Maqueta Azul noche"></a>
+      <p>Sigue siendo oscuro, pero azul y no negro-marrón: cansa menos a la noche.</p><p class="f"><b>De dónde salen los colores:</b> Tema OSCURO de la app + skin «nord» (texto, íconos y semáforo) con el código en las cajas de «tokyo-night» (#1f2335). El fondo #16222e, la caja de Fak #22364a y el ámbar #f2c14e son la propuesta del informe.</p>
+      <p class="f"><b>Para probarlo en vivo</b> (después de instalar el skin, con tu sí): <code>/skin nord  (o /skin tokyo-night) con la app en tema oscuro</code></p>
+      <table><tr><th>Contraste (mínimo 4,5)</th><th></th></tr><tr><td>texto sobre el fondo</td><td class="bien">13,2</td></tr><tr><td>texto dentro de tu mensaje</td><td class="bien">10,2</td></tr><tr><td>texto gris (secundario)</td><td class="bien">7,5</td></tr><tr><td>verde «hecho»</td><td class="bien">7,9</td></tr><tr><td>rojo «error»</td><td class="mal">3,9</td></tr></table></section><section class="t"><h2>Plano de planta <span>· gris claro con semáforo</span></h2>
+      <a href="plano-de-planta.png"><img src="plano-de-planta.png" alt="Maqueta Plano de planta"></a>
+      <p>Gris de plano, sin colores de adorno: verde = hecho, ámbar = ojo, rojo = error. Sale bien en una captura para un informe.</p><p class="f"><b>De dónde salen los colores:</b> La idea del skin «mono» (solo grises) llevada a claro: «mono» trae únicamente variante oscura, así que los grises claros son la propuesta del informe. El semáforo sale del skin «github» claro (#1a7f37, #9a6700, #cf222e).</p>
+      <p class="f"><b>Para probarlo en vivo</b> (después de instalar el skin, con tu sí): <code>/skin mono  (no se verificó cómo se ve en tema claro: trae solo la variante oscura)</code></p>
+      <table><tr><th>Contraste (mínimo 4,5)</th><th></th></tr><tr><td>texto sobre el fondo</td><td class="bien">15,4</td></tr><tr><td>texto dentro de tu mensaje</td><td class="bien">13,6</td></tr><tr><td>texto gris (secundario)</td><td class="bien">6,5</td></tr><tr><td>verde «hecho»</td><td class="mal">4,4</td></tr><tr><td>rojo «error»</td><td class="bien">4,6</td></tr></table></section></div>
+<h2 style="margin-top:26px">Para comparar: así es hoy</h2>
+<div class="hoy"><img src="hoy.png" alt="Reconstrucción del tema oscuro de hoy"><p class="f">Reconstrucción con los colores
+medidos en la ventana de la app el 17/10/2026 (fondo del chat #151515, barra lateral #111111, cajas #212121). No es una
+captura: la conversación es la misma de ejemplo.</p></div>
+</main></body></html>
