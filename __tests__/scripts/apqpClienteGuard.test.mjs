@@ -17,8 +17,8 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { GUARDIANES, evaluar } from '../../scripts/_lib/guardianes.mjs';
+import { esperados } from './guardianesRonda3.mjs';
 
 const LEGAJO = 'Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\REYDEL-SMRC\\APB P21\\P21 SSRT-MY2026 HILO NARANJA\\APQP';
 // El paquete del cliente vive adentro de `1. Imput`, junto al resto de lo que mando el
@@ -273,28 +273,23 @@ describe('P13 — origen o destino: copiar el listado para LEERLO no es escribir
     });
 });
 
-// Ronda 3 (17/10/2026): los casos del auditor a ciegas de la ronda 2, por su id, desde `guardianesRonda3.casos.json`
-// (las rutas reales, con sus parentesis). 2 = frena, 0 = pasa.
+// Ronda 3 (17/10/2026): los casos del auditor a ciegas de la ronda 2, por su id (`guardianesRonda3.mjs`). 2 = frena, 0 = pasa.
 describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (apqp-cliente)', () => {
-    const CASOS = JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'guardianesRonda3.casos.json'), 'utf8')).casos;
-    const r3 = (id) => {
-        const c = CASOS.find((x) => x.id === id);
-        if (!c) throw new Error(`no esta el caso ${id}`);
-        const raw = JSON.stringify({ tool_name: c.tool, tool_input: c.input, session_id: 'ronda3', cwd: 'C:\\Dev\\BarackMercosul' });
-        return evaluar(raw, { nombres: ['apqp-cliente-guard'], env: { HOME: os.tmpdir() }, marcar: false, escapes: false }).res.bloqueos.length ? 2 : 0;
-    };
-    const esperados = (ids) => { for (const id of ids) expect(r3(id), id).toBe(CASOS.find((x) => x.id === id).esperado); };
+    const G = 'apqp-cliente-guard';
 
     it('ROJO (ronda 3, T1) — el .Save() de COM adentro de powershell -Command sobre el listado vuelve a frenar', () => {
-        esperados(['N-A08', 'N-A09']);
-        esperados(['H2-A03', 'H2-A04', 'H2-A07', 'H2-X04', 'H2-sh', 'H2-V1', 'H2-V2']);   // los de la ronda 2 siguen igual
+        esperados(G, ['N-A08', 'N-A09']);
+        esperados(G, ['H2-A03', 'H2-A04', 'H2-A07', 'H2-X04', 'H2-sh', 'H2-V1', 'H2-V2']);   // los de la ronda 2 siguen igual
     });
     it('ROJO (ronda 3, T2) — un parentesis de la ruta REAL del listado (AMFE, flujogramas) ya no corta el destino', () => {
         // shutil.copy, copyFileSync y to_excel encima del listado real; el mismo en flujogramas; el code de una MCP
-        esperados(['X-A11', 'X-A12', 'X-A13', 'X-A14', 'X-A15', 'X-A16', 'N-C05', 'X-C08']);
+        esperados(G, ['X-A11', 'X-A12', 'X-A13', 'X-A14', 'X-A15', 'X-A16', 'N-C05', 'X-C08']);
         // VERDE: traer el listado real (con sus parentesis) a una carpeta local para leerlo
-        const leer = `python -c "import shutil; shutil.copy(r'${LISTADO}', r'C:\\tmp\\l.xlsx')"`;
-        expect(evaluar(JSON.stringify({ tool_name: 'Bash', tool_input: { command: leer }, session_id: 'ronda3', cwd: 'C:\\Dev\\BarackMercosul' }),
-            { nombres: ['apqp-cliente-guard'], env: { HOME: os.tmpdir() }, marcar: false, escapes: false }).res.bloqueos.length).toBe(0);
+        const leer = `python -c "import shutil; shutil.copy(r'${LISTADO}', r'C:\tmp\l.xlsx')"`;
+        expect(evaluar(JSON.stringify({ tool_name: 'Bash', tool_input: { command: leer }, session_id: 'ronda3', cwd: 'C:\Dev\BarackMercosul' }),
+            { nombres: [G], env: { HOME: os.tmpdir() }, marcar: false, escapes: false }).res.bloqueos.length).toBe(0);
+    });
+    it('ROJO (ronda 3, T3) — robocopy desde /tmp hacia la carpeta del listado: /tmp es el TEMP, no un switch', () => {
+        esperados(G, ['N-A07', 'H3-Z11', 'H3-Z09', 'H3-V1', 'H3-V2']);
     });
 });

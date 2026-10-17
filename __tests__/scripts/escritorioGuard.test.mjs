@@ -12,6 +12,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { esperados } from './guardianesRonda3.mjs';
 
 const HOOK = path.resolve(process.cwd(), '.claude/hooks/escritorio-guard.sh');
 const ESC = 'C:\\Users\\facun\\OneDrive\\Escritorio';
@@ -187,5 +188,14 @@ describe('escritorio-guard — recordatorio', () => {
     });
     it('15. un comando que no toca el Escritorio nunca molesta', () => {
         expect(correr(bash('npm run build'), { conCooldown: false }).code).toBe(0);
+    });
+});
+
+// Ronda 3 (17/10/2026): los casos del auditor a ciegas de la ronda 2, por su id (`guardianesRonda3.mjs`). 2 = frena, 0 = pasa.
+describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (escritorio)', () => {
+    const G = 'escritorio-guard';
+
+    it('ROJO (ronda 3, T3) — robocopy desde /tmp hacia el archivo de cerradas: /tmp es el TEMP, no un switch', () => {
+        esperados(G, ['X-E11', 'X-E12', 'N-E06']);
     });
 });

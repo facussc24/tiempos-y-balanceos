@@ -1304,6 +1304,10 @@ function borraEnZona(an, zonaALaVista) {
  * nombra el archivo). El codigo pegado (python -c, heredoc) sigue con la regla vieja: archivo nombrado + mover/copiar.
  */
 const ESC_ARCHIVO = /(_TERMINADAS|TAREAS CERRADAS)/i;
+// Ronda 3 (17/10, T3): un switch de robocopy es uno de los suyos (`/E`, `/MIR`, `/MOV`…) o lleva `:valor` (`/R:1`,
+// `/LOG:x`). `/tmp` no es un switch: Git Bash lo convierte en el TEMP del sistema y robocopy copia desde ahi. Lo usan
+// escritorio-guard y apqp-cliente-guard.
+const ROBOCOPY_SWITCH_RE = /^\/(?:[A-Za-z]+:.*|S|E|Z|B|ZB|J|EFSRAW|SEC|COPYALL|NOCOPY|SECFIX|TIMFIX|PURGE|MIR|MOV|MOVE|A\+|A-|CREATE|FAT|256|MON|MOT|RH|PF|IPG|SL|SJ|A|M|IA|XA|XF|XD|XC|XN|XO|XX|XL|IS|IT|IM|XJ|XJD|XJF|FFT|DST|REG|TBD|LFSM|L|X|V|TS|FP|BYTES|NS|NC|NFL|NDL|NP|ETA|TEE|NJH|NJS|UNICODE|NOSD|NODD|QUIT|NODCOPY|NOOFFLOAD|COMPRESS|NOCLONE|SPARSE|Y|\?)$/i;
 const ESC_MUEVE_VERBO = /^(?:mv|move|Move-Item|mi)$/i;
 const ESC_COPIA_VERBO = /^(?:cp|copy|xcopy|Copy-Item|cpi)$/i;
 export function mueveAMano(cmd, { cwd = '' } = {}) {
@@ -1335,7 +1339,8 @@ export function mueveAMano(cmd, { cwd = '' } = {}) {
     const largo = args.map((a) => a.match(/^--target-directory=(.+)$/)).find(Boolean);
     const explicito = args.findIndex((a) => /^-(?:t|Destination|-target-directory)$/i.test(a) || /^-[A-Za-z]*t$/.test(a));
     const destinoExplicito = largo ? completa(largo[1]) : explicito >= 0 && args[explicito + 1] !== undefined ? completa(args[explicito + 1]) : undefined;
-    const pos = args.filter((a) => !/^-/.test(a) && !/^\/[A-Za-z]{1,4}(?::\S*)?$/.test(a)).map((a) => completa(a));
+    const esSwitch = (a) => (/^robocopy$/i.test(v) ? ROBOCOPY_SWITCH_RE.test(a) : /^\/[A-Za-z]{1,4}(?::\S*)?$/.test(a));
+    const pos = args.filter((a) => !/^-/.test(a) && !esSwitch(a)).map((a) => completa(a));
     if (destinoExplicito !== undefined) pos.push(destinoExplicito);
     if (!pos.length) continue;
     const enTodo = () => ESC_ARCHIVO.test(res(String(cmd)));
@@ -2899,7 +2904,8 @@ export function escribeListadoBash(cmd, { cwd = '', leer, prof = 0 } = {}) {
     }
     if (/^robocopy$/i.test(v)) {
       // (hallazgo 3) un switch de robocopy es `/X` o `/X:valor`, sin otra barra: `/c/tmp` es una ruta (Git Bash la convierte)
-      const pos = args.filter((a) => !/^\/[A-Za-z]+(?::.*)?$/.test(a));
+      // (ronda 3, T3) y solo los de su lista: `/tmp` es el TEMP del sistema, no un switch
+      const pos = args.filter((a) => !ROBOCOPY_SWITCH_RE.test(a));
       const mueve = args.some((a) => /^\/(?:MOV|MOVE)$/i.test(a));
       if (APQP_LISTADO.test(res(c.crudo)) && (mueve || !pos[1] || /\$/.test(res(pos[1])) || !apqpLocal(completa(pos[1])))) return completa(pos[1] || '');
       continue;
