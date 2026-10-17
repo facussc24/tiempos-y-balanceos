@@ -417,6 +417,36 @@ function chequearRevisorPedido(env = process.env) {
     }
 }
 
+/**
+ * Retiros con vencimiento (tanda 9, pieza 7). Puro: `r` = evaluarRetiros(...) de _retirosVencidos.mjs. Los vencidos se
+ * NOMBRAN una vez por semana, el viernes (el dia de planificacion de Fak); el resto de los dias se cuentan sin
+ * insistir. Una pieza en el disco sin renglon es aviso todos los dias (entra con su fecha y su razon en la sesion que
+ * la crea). Nunca falta.
+ */
+export function evaluarRetirosCierre(r, { viernes = false } = {}) {
+    if (!r) return { estado: 'aviso', detalle: 'no se pudo leer scripts/_lib/retiros.data.json' };
+    if (r.sinRenglon.length) return { estado: 'aviso', detalle: `${r.sinRenglon.length} hook(s) o regla(s) sin renglon en retiros.data.json (fecha de revision y razon): ${r.sinRenglon.join(', ')}` };
+    const n = r.vencidos.length + r.proximos.length;
+    if (!n) return { estado: 'ok', detalle: `${r.total} renglones, ninguno vence en 7 dias` };
+    if (!viernes) return { estado: 'ok', detalle: `${r.vencidos.length} vencido(s) y ${r.proximos.length} por vencer en 7 dias: se nombran el viernes (node scripts/_retirosVencidos.mjs)` };
+    return {
+        estado: 'aviso',
+        detalle: `viernes de planificacion: ${r.vencidos.length} vencido(s) y ${r.proximos.length} por vencer — node scripts/_retirosVencidos.mjs --disparos\n`
+            + [...r.vencidos, ...r.proximos].slice(0, 6).map((f) => `      · ${f.id} (revisar ${f.revisar})`).join('\n'),
+    };
+}
+
+async function chequearRetiros() {
+    try {
+        const R = await import('./_retirosVencidos.mjs');
+        const hoy = new Date();
+        const r = R.evaluarRetiros(JSON.parse(fs.readFileSync(R.DATOS, 'utf8')), R.piezasEnDisco(REPO), hoy.toISOString().slice(0, 10));
+        return evaluarRetirosCierre(r, { viernes: hoy.getDay() === 5 });
+    } catch (e) {
+        return { estado: 'aviso', detalle: `no se pudo medir: ${e.message}` };
+    }
+}
+
 function chequearLecciones() {
     try {
         return evaluarLecciones(fs.statSync(path.join(REPO, 'docs', 'LECCIONES_APRENDIDAS.md')).size);
@@ -578,6 +608,7 @@ async function main(argv) {
         { paso: 'Disco C: con lugar para la proxima sesion', ...chequearDisco() },
         { paso: 'BOM ultimo nivel en el legajo APQP (regla de Fak 22/09/2026)', ...chequearBomLegajo() },
         { paso: 'Revisor contra el pedido: lo entregado a Fak paso por revisor-pedido (tanda 9; avisa, no frena)', ...chequearRevisorPedido() },
+        { paso: 'Retiros con vencimiento: hooks y reglas para revisar (tanda 9; se nombran los viernes)', ...(await chequearRetiros()) },
         // Lo que ningun script puede medir — se lista para que no se olvide, no bloquea:
         { paso: 'Auditor al cerrar tareas de codigo', estado: 'manual', detalle: 'lanzar el agente `auditor` si esta sesion toco codigo' },
         { paso: 'Lecciones y memorias de la sesion', estado: 'manual', detalle: 'si Fak corrigio, decidio o revelo algo: LECCIONES_APRENDIDAS + memoria con fuente' },

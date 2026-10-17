@@ -1,0 +1,326 @@
+{
+  "_que_es": "Retiro con vencimiento (tanda 9, pieza 7; docs/PLAN_METODO_2026-10-16.md): cada hook y cada regla tiene una fecha en que se revisa (revisar) y la razon por la que existe (justifica). La guia oficial de evals (07/10/2026) llama sobreajuste a «un guardian por incidente»; Anthropic: cada pieza del arnes es una suposicion sobre lo que el modelo no puede hacer. Lo lee node scripts/_retirosVencidos.mjs, que lista los vencidos, los que vencen en 7 dias, los que estan en el disco sin renglon aca y, con --disparos, los que no se dispararon nunca. Un hook o una regla nueva entra con su renglon en la misma sesion.",
+  "_justifica": "En los 76 renglones de hoy, «justifica» es lo que dice la cabecera del propio archivo (primeras lineas de comentario de un hook, description o titulo de una regla), copiado el 17/10/2026. Donde la cabecera no dice el numero o el incidente, se completa al revisarlo; si no hay, va TBD.",
+  "_revisar": "La fecha de revision por defecto (2026-11-17, un mes despues de la tanda 9) es una propuesta: la confirma o la cambia Fak. Las de los retiros ya decididos salen de su fuente.",
+  "_cero_disparos": "0 disparos NO es inutil: un control que frena lo que casi nunca pasa puede estar bien. Se mide con un caso plantado (uno que debe frenar y uno que no) antes de retirar nada.",
+  "retiros_decididos": {
+    "lanzar-sesion-hija:camino-b": {
+      "revisar": "2026-10-23",
+      "que": "El camino B de lanzar una hija (tarea manual + run_scheduled_task) queda como respaldo escrito y se saca si en una semana no hizo falta.",
+      "justifica": "Desde el 16/10/2026 el camino normal es mcp__ccd_session__start_session (medido: la hija anidada, en Opus y en bypass).",
+      "fuente": ".claude/skills/lanzar-sesion-hija/SKILL.md, «Retiros con vencimiento»"
+    },
+    "hijaEstado:espera-modelo": {
+      "revisar": "2026-10-23",
+      "que": "La espera de node scripts/_hijaEstado.mjs (--espera-modelo) se reemplaza por wake_when_done + SendMessage con notify_when_idle si se mide que el aviso llega en la app.",
+      "justifica": "Cola HOY-17 (10/10/2026): sin --espera-modelo el control daba «arranco bien» a una hija en Fable. No probado en la app todavia.",
+      "fuente": ".claude/skills/lanzar-sesion-hija/SKILL.md, «Retiros con vencimiento»; plan 10-PLAN_SISTEMA_2026-10-16.md tanda 1.1"
+    }
+  },
+  "piezas": {
+    "hook:_dispatcher": {
+      "revisar": "2026-11-17",
+      "justifica": "Despachador de guardianes PreToolUse (matcher: Bash|PowerShell|Write|Edit). HISTORIA"
+    },
+    "hook:agentes-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "agentes-guard.sh — TECHO DURO de subagentes. PreToolUse, matcher: Agent|Task|Workflow Origen: 2026-08-06. Un Workflow disparo 40 subagentes y consumio el limite de uso de"
+    },
+    "hook:apqp-cliente-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "apqp-cliente-guard.sh — wrapper fino. La logica vive en scripts/_lib/guardianes.mjs (guardian \"apqp-cliente-guard\"), junto con la de los otros: el despachador _dispatcher.sh"
+    },
+    "hook:arb-cerrar-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "arb-cerrar-guard.sh — wrapper fino. Desde el 05/09/2026 la logica vive en scripts/_lib/guardianes.mjs (guardian \"arb-cerrar-guard\"), junto con la de los otros doce: el"
+    },
+    "hook:borrado-masivo-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "borrado-masivo-guard.sh — wrapper fino. Desde el 05/09/2026 la logica vive en scripts/_lib/guardianes.mjs (guardian \"borrado-masivo-guard\"), junto con la de los otros doce: el"
+    },
+    "hook:cad-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "cad-guard.sh — wrapper fino. Desde el 05/09/2026 la logica vive en scripts/_lib/guardianes.mjs (guardian \"cad-guard\"), junto con la de los otros doce: el"
+    },
+    "hook:caracteristicas-especiales-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "caracteristicas-especiales-guard.sh — wrapper fino. La logica vive en scripts/_lib/guardianes.mjs (guardian \"caracteristicas-especiales-guard\"): el despachador"
+    },
+    "hook:caracteristicas-especiales-prompt": {
+      "revisar": "2026-11-17",
+      "justifica": ".claude/hooks/caracteristicas-especiales-prompt.sh — wrapper fino. Desde el 10/10/2026 (cola P10) la logica vive en scripts/_lib/caracteristicasEspecialesPrompt.mjs y corre dentro de prompt-hooks.sh junto con las otras tres piezas;"
+    },
+    "hook:carpeta-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "carpeta-guard.sh — hook GLOBAL (~/.claude/hooks; copia identica en .claude/hooks del repo): la sesion no esta en la carpeta del proyecto. SessionStart y el PRIMER mensaje de cada sesion."
+    },
+    "hook:causas-ajenas-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "causas-ajenas-guard.sh — wrapper fino. Desde el 05/09/2026 la logica vive en scripts/_lib/guardianes.mjs (guardian \"causas-ajenas-guard\"), junto con la de los otros doce: el"
+    },
+    "hook:cerebro-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "cerebro-guard.sh — detecta si ESTA PC tiene el cerebro (memorias + config) y, si no, le ordena a la sesion que lo baje de OneDrive antes de trabajar."
+    },
+    "hook:cierre-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "cierre-guard.sh — hook Stop. Reemplaza a session-close-guard.sh desde el 04/09/2026. La logica vive en scripts/_lib/cierreGuard.mjs (node): el ultimo mensaje del asistente"
+    },
+    "hook:commit-rutas-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "commit-rutas-guard.sh — wrapper fino. La logica vive en scripts/_lib/guardianes.mjs (guardian \"commit-rutas-guard\"), junto con la de los otros: el despachador _dispatcher.sh"
+    },
+    "hook:compactacion-registro": {
+      "revisar": "2026-11-17",
+      "justifica": "compactacion-registro.sh — hooks PreCompact y PostCompact. Anota cada compactacion (fecha, sesion, causa auto|manual|idle, tokens del ultimo turno, largo del resumen) en .claude/state/compactaciones.jsonl."
+    },
+    "hook:consumos-entregable-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "consumos-entregable-guard.sh — wrapper fino. Desde el 05/09/2026 la logica vive en scripts/_lib/guardianes.mjs (guardian \"consumos-entregable-guard\"), junto con la de los otros doce: el"
+    },
+    "hook:coordinador-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "coordinador-guard.sh — PreToolUse; el matcher vive en .claude/settings.json (SendMessage, Agent, Task, send_message del MCP, spawn_task, start_session, hand_off_to_session y las tareas agendadas; 16/10/2026)"
+    },
+    "hook:correccion-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "correccion-guard.sh — wrapper fino. La logica vive en scripts/_lib/correccionGuard.mjs y las palabras en scripts/_lib/correccionCanon.data.json. NO bloquea nunca: solo agrega contexto."
+    },
+    "hook:dev-server-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "Stop hook — recordar verificar en el preview cuando se toco codigo de la APP. Historia (21/08/2026): la version anterior vivia inline dentro de settings.json y decia"
+    },
+    "hook:documentacion-oficial-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "documentacion-oficial-guard.sh — wrapper fino. La logica vive en scripts/_lib/guardianes.mjs (guardian \"documentacion-oficial-guard\"), junto con la de los otros trece: el despachador"
+    },
+    "hook:escritorio-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "escritorio-guard.sh — wrapper fino. Desde el 05/09/2026 la logica vive en scripts/_lib/guardianes.mjs (guardian \"escritorio-guard\"), junto con la de los otros doce: el"
+    },
+    "hook:explicar-prompt": {
+      "revisar": "2026-11-17",
+      "justifica": "explicar-prompt.sh — wrapper fino. La logica vive en scripts/_lib/explicarGuard.mjs y las palabras en scripts/_lib/explicarCanon.data.json. NO bloquea nunca: solo agrega contexto."
+    },
+    "hook:file-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "file-guard.sh — wrapper fino. Desde el 05/09/2026 la logica vive en scripts/_lib/guardianes.mjs (guardian \"file-guard\"), junto con la de los otros doce: el"
+    },
+    "hook:firma-ia-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "firma-ia-guard.sh — wrapper fino. La logica vive en scripts/_lib/guardianes.mjs (guardian \"firma-ia-guard\"), junto con la de los otros: el despachador _dispatcher.sh"
+    },
+    "hook:ho-numeracion-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "ho-numeracion-guard.sh — wrapper fino. Desde el 05/09/2026 la logica vive en scripts/_lib/guardianes.mjs (guardian \"ho-numeracion-guard\"), junto con la de los otros doce: el"
+    },
+    "hook:hora-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "hora-guard.sh — wrapper fino del control de cierre \"trabajar hasta la hora\". Logica: scripts/_lib/horaGuard.mjs. Stop. Frena el cierre del turno (exit 2) cuando:"
+    },
+    "hook:hora-prompt": {
+      "revisar": "2026-11-17",
+      "justifica": "hora-prompt.sh — wrapper fino. La logica vive en scripts/_lib/horaGuard.mjs y las palabras en scripts/_lib/horaCanon.data.json. NO bloquea nunca: solo agrega contexto."
+    },
+    "hook:instrucciones-log": {
+      "revisar": "2026-11-17",
+      "justifica": "instrucciones-log.sh — hook InstructionsLoaded (todos los load_reason). Registra QUE instrucciones cargo Claude Code DE VERDAD en la sesion: .claude/.instrucciones-cargadas.log (gitignoreado por"
+    },
+    "hook:mail-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "mail-guard.sh — wrapper fino. Desde el 05/09/2026 la logica vive en scripts/_lib/guardianes.mjs (guardian \"mail-guard\"), junto con la de los otros doce: el"
+    },
+    "hook:mcp-write-gate": {
+      "revisar": "2026-11-17",
+      "justifica": "mcp-write-gate.sh — candado BLOQUEANTE de escrituras a documentos APQP via MCP. POR QUE (2026-07-30): el unico hook que miraba las escrituras por MCP era"
+    },
+    "hook:nube-personal-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "nube-personal-guard.sh — wrapper fino. La logica vive en scripts/_lib/guardianes.mjs (guardian \"nube-personal-guard\"), junto con la de los otros: el despachador _dispatcher.sh"
+    },
+    "hook:patrones-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "patrones-guard.sh — wrapper fino. Desde el 05/09/2026 la logica vive en scripts/_lib/guardianes.mjs (guardian \"patrones-guard\"), junto con la de los otros doce: el"
+    },
+    "hook:pedidos-pendientes": {
+      "revisar": "2026-11-17",
+      "justifica": "pedidos-pendientes.sh — hook GLOBAL (~/.claude/hooks; copia identica en .claude/hooks del repo). SessionStart. Al arrancar, reanudar o compactar cualquier sesion de esta PC, lista los PEDIDO N que otra PC de Fak dejo en la"
+    },
+    "hook:permiso-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "permiso-guard.sh — wrapper fino del hook PermissionRequest. Logica: scripts/_lib/permisoGuard.mjs, numeros y listas en scripts/_lib/permisoCanon.data.json."
+    },
+    "hook:pregunta-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "pregunta-guard.sh — PreToolUse, matcher: AskUserQuestion. Wrapper fino: la logica vive en scripts/_lib/preguntaGuard.mjs y los patrones en scripts/_lib/preguntaCanon.data.json."
+    },
+    "hook:prompt-hooks": {
+      "revisar": "2026-11-17",
+      "justifica": ".claude/hooks/prompt-hooks.sh — UserPromptSubmit, matcher vacio, UN solo hook (cola P10, 10/10/2026). Reemplaza a caracteristicas-especiales-prompt.sh, correccion-guard.sh, explicar-prompt.sh y hora-prompt.sh, que corrian como"
+    },
+    "hook:push-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "push-guard.sh — wrapper fino. Desde el 05/09/2026 la logica vive en scripts/_lib/guardianes.mjs (guardian \"push-guard\"), junto con la de los otros doce: el"
+    },
+    "hook:renumber-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "renumber-guard.sh — wrapper fino. Desde el 05/09/2026 la logica vive en scripts/_lib/guardianes.mjs (guardian \"renumber-guard\"), junto con la de los otros doce: el"
+    },
+    "hook:secretos-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "secretos-guard.sh — wrapper fino. La logica vive en scripts/_lib/guardianes.mjs (guardian \"secretos-guard\"), junto con la de los otros: el despachador _dispatcher.sh los corre a todos"
+    },
+    "hook:session-close-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "session-close-guard.sh — Recuerda el checklist de cierre de sesion cuando hay cambios de codigo/docs sin commitear en el repo. Cooldown de 20 min para no"
+    },
+    "hook:session-start-context": {
+      "revisar": "2026-11-17",
+      "justifica": "session-start-context.sh — contexto deterministico al arrancar (SessionStart). Desde el 04/09/2026 este hook YA NO inyecta docs/LECCIONES_APRENDIDAS.md: el archivo entra"
+    },
+    "hook:stop-hooks": {
+      "revisar": "2026-11-17",
+      "justifica": ".claude/hooks/stop-hooks.sh — hook Stop, UN solo node (cola P10, plan §2): cierre-guard y despues hora-guard, en scripts/_lib/stopHooks.mjs. Reemplaza a cierre-guard.sh + hora-guard.sh (+ dev-server-guard.sh, que se saca: P11)."
+    },
+    "hook:supabase-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "Supabase Safety Guard Dispara _backup.mjs ANTES de correr scripts destructivos contra Supabase."
+    },
+    "hook:supabase-write-flag": {
+      "revisar": "2026-11-17",
+      "justifica": "supabase-write-flag.sh — marca que la sesion ESCRIBIO en Supabase via MCP (execute_sql con DML/DDL o apply_migration). El session-close-guard usa el flag"
+    },
+    "hook:timeout-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "timeout-guard.sh — PostToolUse + PostToolUseFailure, matcher Bash|PowerShell (A2, 10/09/2026). Si el resultado del comando dice \"Command timed out\", deja en el contexto (additionalContext,"
+    },
+    "hook:validator-check": {
+      "revisar": "2026-11-17",
+      "justifica": "validator-check.sh — wrapper fino. Desde el 05/09/2026 la logica vive en scripts/_lib/guardianes.mjs (guardian \"validator-check\"), junto con la de los otros doce: el"
+    },
+    "hook:video-maquina-guard": {
+      "revisar": "2026-11-17",
+      "justifica": "video-maquina-guard.sh — wrapper fino. La logica vive en scripts/_lib/guardianes.mjs (guardian \"video-maquina-guard\"), junto con la de los otros catorce: el despachador"
+    },
+    "regla:amfe": {
+      "revisar": "2026-11-17",
+      "justifica": "Reglas del modulo AMFE — severidades, CC/SC, funciones VDA, work elements, controles, placeholders, scripts y schema"
+    },
+    "regla:api-claude": {
+      "revisar": "2026-11-17",
+      "justifica": "La API de Anthropic con los creditos del plan Max (vencen por ciclo de facturacion) — que los gasta y que no, que modelo hace que, los 5 candados de la noche de Claude (y sus topes por ciclo y por corrida), donde vive la clave y para quien "
+    },
+    "regla:arb-no-cerrar": {
+      "revisar": "2026-11-17",
+      "justifica": "El arb NO se cierra sin consultarle a Fak — reabrirlo pide contraseña y la sesión no tipea contraseñas"
+    },
+    "regla:autonomy-contract": {
+      "revisar": "2026-11-17",
+      "justifica": "Contrato de Autonomia — que hago solo vs que requiere OK de Fak"
+    },
+    "regla:cad-3d": {
+      "revisar": "2026-11-17",
+      "justifica": "Diseño 3D / CAD — los gates (regla corta; detalle y scripts: skill `cad-design`)"
+    },
+    "regla:caracteristicas-especiales": {
+      "revisar": "2026-11-17",
+      "justifica": "Caracteristicas especiales — criterio, siglas y fuentes (always-on)"
+    },
+    "regla:codigo-madre": {
+      "revisar": "2026-11-17",
+      "justifica": "El código es sagrado: cada cambio con evidencia, plan a su medida, tests y revisor (always-on)"
+    },
+    "regla:consumos-entregables": {
+      "revisar": "2026-11-17",
+      "justifica": "Consumos y entregables ejecutables — regla corta (always-on)"
+    },
+    "regla:control-plan": {
+      "revisar": "2026-11-17",
+      "justifica": "Reglas del modulo Plan de Control (generador, contenido, validaciones)"
+    },
+    "regla:coordinador": {
+      "revisar": "2026-11-17",
+      "justifica": "Rol COORDINADOR — lo que sale hacia otra sesion pasa por _encargo.mjs, no por prosa libre"
+    },
+    "regla:core-prohibiciones": {
+      "revisar": "2026-11-17",
+      "justifica": "Prohibiciones core — aplican SIEMPRE, a cualquier tarea"
+    },
+    "regla:database": {
+      "revisar": "2026-11-17",
+      "justifica": "Persistencia, repositorios tipados y scripts que tocan Supabase"
+    },
+    "regla:dev-login": {
+      "revisar": "2026-11-17",
+      "justifica": "Protección del botón de dev-login en LoginPage"
+    },
+    "regla:documentacion-oficial": {
+      "revisar": "2026-11-17",
+      "justifica": "Documentacion oficial: el original manda y tiene que verse CUAL es"
+    },
+    "regla:dxf-entregable": {
+      "revisar": "2026-11-17",
+      "justifica": "Un DXF no esta entregado hasta que AutoCAD lo abre — validador, y el limite de 260 caracteres de la ruta"
+    },
+    "regla:escritorio-tareas": {
+      "revisar": "2026-11-17",
+      "justifica": "El Escritorio es la cola de tareas — cuándo se cierra una y cómo se archiva"
+    },
+    "regla:exports": {
+      "revisar": "2026-11-17",
+      "justifica": "Reglas para exportacion Excel y PDF"
+    },
+    "regla:git-deploy": {
+      "revisar": "2026-11-17",
+      "justifica": "Regla: build + commit + push al cerrar una tarea de codigo"
+    },
+    "regla:hojas-proceso": {
+      "revisar": "2026-11-17",
+      "justifica": "Una hoja de proceso se juzga IMPRESA, no en el monitor"
+    },
+    "regla:lecciones-consolidacion": {
+      "revisar": "2026-11-17",
+      "justifica": "Ciclo de vida de docs/LECCIONES_APRENDIDAS.md — como entra una leccion, como se gradua y el gate por bullet que evita pelear bytes"
+    },
+    "regla:mail-envio": {
+      "revisar": "2026-11-17",
+      "justifica": "Envio de mails desde Outlook — gate anti-duplicado obligatorio"
+    },
+    "regla:mejora-implementada": {
+      "revisar": "2026-11-17",
+      "justifica": "Una mejora del sistema (hook, skill, regla, guardian) no esta implementada hasta que se la probo con un mensaje real de Fak por el camino real y se la vio llegar; al cerrarla se le dice a Fak si las sesiones abiertas la toman solas"
+    },
+    "regla:no-pfd-no-ho": {
+      "revisar": "2026-11-17",
+      "justifica": "Flujogramas: los hago yo con el generador del repo · HO solo a pedido · el modulo PFD de la app esta muerto"
+    },
+    "regla:nube-ingenieria": {
+      "revisar": "2026-11-17",
+      "justifica": "Una sola nube: la de Ingeniería. En la nube personal de Fak no se guarda nada (always-on)"
+    },
+    "regla:patrones-corte": {
+      "revisar": "2026-11-17",
+      "justifica": "Patrones de corte DXF/PLT — 3 gates antes de mover un punto"
+    },
+    "regla:techo-agentes": {
+      "revisar": "2026-11-17",
+      "justifica": "Subagentes: presupuesto por costo (40 puntos cada 10 min); el modelo se elige por tarea; la auditoria final en Opus"
+    },
+    "regla:testing": {
+      "revisar": "2026-11-17",
+      "justifica": "Reglas de testing - se aplica al editar o crear tests"
+    },
+    "regla:trabajar-hasta-la-hora": {
+      "revisar": "2026-11-17",
+      "justifica": "Si Fak pone una hora, no se cierra antes (always-on)"
+    },
+    "regla:verify-supabase-live": {
+      "revisar": "2026-11-17",
+      "justifica": "Supabase live es la unica fuente de verdad para documentos APQP — nunca afirmar estado desde dumps"
+    },
+    "regla:video-maquina": {
+      "revisar": "2026-11-17",
+      "justifica": "Videos y fotos de maquina: donde viven y como se traen del celular"
+    }
+  }
+}
