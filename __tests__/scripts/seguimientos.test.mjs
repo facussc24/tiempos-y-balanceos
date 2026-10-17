@@ -292,6 +292,88 @@ describe('seguimientos — el aviso no se calla (auditoria del 02/10/2026)', () 
   });
 });
 
+describe('vencimientos de Ingenieria (tanda 13, item 4) — el caso de la D7 del 8D 11010843', () => {
+  // La D7 de Fak («incorporar el modo de falla de recorte de vinilo» al AMFE) tenia plazo 17/09/2026 y el se entero el
+  // 21/09 (memoria project_8d_11010843_tapa_amarok). Estos son datos de prueba: la memoria real no la carga (su
+  // estado esta en duda y se mira en Supabase desde la PC principal).
+  const d7 = (extra = {}) => ({
+    id: 'd7-8d-11010843', que: 'D7 del 8D 11010843: modo de falla del recorte de vinilo en el AMFE', vence: '2026-09-17',
+    area: 'ingenieria', estado: 'abierto', fuente: '8D en KPM', ...extra,
+  });
+  const ppap = { id: 'ppap-calidad', que: 'Entrega del PPAP', vence: '2026-09-15', area: 'Calidad', estado: 'abierto' };
+  const md = (datos) => `Arriba.\n\n\`\`\`json\n${JSON.stringify(datos, null, 2)}\n\`\`\`\n`;
+
+  it('el 21/09 dice que la D7 VENCIO hace 4 dias, y el plazo de PPAP (de Calidad) no aparece', () => {
+    const t = textoHook({ seguimientos: [], vencimientos: [d7(), ppap] }, '2026-09-21');
+    expect(t).toMatch(/\[VENCIMIENTOS DE INGENIERIA/);
+    expect(t).toMatch(/d7-8d-11010843: .*VENCIO el jueves 17\/09 \(hace 4 dias\): decirselo a Fak al empezar/);
+    expect(t).not.toMatch(/ppap-calidad|PPAP/);
+    expect(t).not.toMatch(/SEGUIMIENTOS CON FECHA/); // sin seguimientos abiertos no sale ese encabezado
+  });
+
+  it('antes del plazo dice cuantos dias faltan; el mismo dia dice VENCE HOY', () => {
+    expect(textoHook({ seguimientos: [], vencimientos: [d7()] }, '2026-09-10')).toMatch(/Vence el jueves 17\/09 \(faltan 7 dias\)/);
+    expect(textoHook({ seguimientos: [], vencimientos: [d7()] }, '2026-09-16')).toMatch(/faltan 1 dia\)/);
+    expect(textoHook({ seguimientos: [], vencimientos: [d7()] }, '2026-09-17')).toMatch(/VENCE HOY/);
+  });
+
+  it('ordena del que vence primero al ultimo; uno cerrado no sale; sin nada abierto, silencio', () => {
+    const t = textoHook({ seguimientos: [], vencimientos: [d7({ id: 'tarde', vence: '2026-10-30' }), d7({ id: 'temprano', vence: '2026-10-20' }), d7({ id: 'listo', estado: 'cerrado' })] }, '2026-10-17');
+    expect(t.indexOf('temprano')).toBeGreaterThan(0);
+    expect(t.indexOf('temprano')).toBeLessThan(t.indexOf('tarde'));
+    expect(t).not.toMatch(/listo/);
+    expect(textoHook({ seguimientos: [], vencimientos: [d7({ estado: 'cerrado' })] }, '2026-10-17')).toBe('');
+    expect(textoHook({ seguimientos: [] }, '2026-10-17')).toBe(''); // memoria vieja, sin la lista: igual que antes
+  });
+
+  it('mal escrito se dice y va arriba de todo, sin callar al sano; la lista que no es lista tampoco se calla', () => {
+    const t = textoHook({ seguimientos: [], vencimientos: [d7(), { id: 'sin-fecha', que: 'algo', area: 'ingenieria' }, { id: 'sin-area', que: 'x', vence: '2026-10-20' }] }, '2026-09-21');
+    expect(t).toMatch(/sin-fecha: ESTA MAL ESCRITO/);
+    expect(t).toMatch(/sin-area: ESTA MAL ESCRITO.*de que area es/);
+    expect(t).toMatch(/d7-8d-11010843: .*VENCIO/);
+    expect(t.indexOf('sin-fecha')).toBeLessThan(t.indexOf('d7-8d-11010843'));
+    expect(textoHook({ seguimientos: [], vencimientos: 'texto' }, '2026-09-21')).toMatch(/NO SE PUDO LEER la lista/);
+  });
+
+  it('seguimientos y vencimientos salen juntos, cada uno con su encabezado', () => {
+    const t = textoHook({ seguimientos: [seg({ intentos: [enviado('2026-10-02')] })], vencimientos: [d7()] }, '2026-10-05');
+    expect(t).toMatch(/SEGUIMIENTOS CON FECHA[\s\S]*HOY TOCA INSISTIR[\s\S]*VENCIMIENTOS DE INGENIERIA[\s\S]*VENCIO/);
+  });
+
+  it('un vencimiento no se anota (no se insiste: vence) pero se cierra', () => {
+    const datos = { seguimientos: [seg()], vencimientos: [d7()] };
+    expect(() => anotar(datos, 'd7-8d-11010843', { fecha: '2026-09-21', que: 'x', enviado: true, hoy: '2026-09-21' })).toThrow(/es un vencimiento/);
+    cerrar(datos, 'd7-8d-11010843', { fecha: '2026-09-21', motivo: 'cargada en el AMFE' });
+    expect(datos.vencimientos[0].estado).toBe('cerrado');
+    expect(textoHook(datos, '2026-09-22')).not.toMatch(/VENCIMIENTOS/);
+  });
+
+  it('el script: --hook avisa la D7 y calla el PPAP; el listado nombra los dos y dice que el de Calidad no se lleva', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'vencimientos-'));
+    const archivo = join(dir, 'seg.md');
+    const correr = (...a) => spawnSync('node', [join(RAIZ, 'scripts/_seguimientos.mjs'), ...a], {
+      encoding: 'utf8', env: { ...process.env, BARACK_SEGUIMIENTOS: archivo, BARACK_HOY: '2026-09-21' },
+    });
+    try {
+      writeFileSync(archivo, md({ seguimientos: [], vencimientos: [d7(), ppap] }));
+      const h = correr('--hook');
+      expect(h.status).toBe(0);
+      expect(h.stdout).toMatch(/VENCIO el jueves 17\/09 \(hace 4 dias\)/);
+      expect(h.stdout).not.toMatch(/PPAP/);
+      const l = correr();
+      expect(l.status).toBe(0);
+      expect(l.stdout).toMatch(/Vencimientos abiertos: 2/);
+      expect(l.stdout).toMatch(/ppap-calidad[\s\S]*no es de ingenieria: no se le lleva a Fak/);
+      expect(correr('--anotar', 'd7-8d-11010843', '--que', 'x').status).toBe(1);
+      expect(correr('--cerrar', 'd7-8d-11010843', '--motivo', 'cargada').status).toBe(0);
+      expect(correr('--hook').stdout).toBe('');
+    } finally {
+      unlinkSync(archivo);
+      rmdirSync(dir);
+    }
+  });
+});
+
 describe('seguimientos — el arranque de sesion lo corre', () => {
   it('session-start-context.sh (modo inicio) llama a _seguimientos.mjs --hook despues del cerebro', () => {
     const sh = readFileSync(join(RAIZ, '.claude/hooks/session-start-context.sh'), 'utf8');
