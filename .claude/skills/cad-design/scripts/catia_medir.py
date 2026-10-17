@@ -38,14 +38,17 @@ VENV_CAD = Path(r"C:\Dev\BarackMercosul\.venv-cad\Scripts\python.exe")
 
 
 # ---------------------------------------------------------------- utilidades sin COM (se prueban sin CATIA)
-def cnext_abiertos():
-    """PIDs de CNEXT.exe (el proceso de CATIA V5) que corren ahora."""
+def cnext_abiertos(correr=subprocess.run):
+    """PIDs de CNEXT.exe (el proceso de CATIA V5) que corren ahora, o None si NO SE PUDO MIRAR (tasklist fallo o tardo).
+    «No pude mirar» no es «no hay CATIA» (auditor del 17/10, I4): el que llama falla cerrado."""
     try:
-        out = subprocess.run(["tasklist", "/FI", "IMAGENAME eq CNEXT.exe", "/FO", "CSV", "/NH"],
-                             capture_output=True, text=True, timeout=20).stdout
+        r = correr(["tasklist", "/FI", "IMAGENAME eq CNEXT.exe", "/FO", "CSV", "/NH"],
+                   capture_output=True, text=True, timeout=20)
     except (OSError, subprocess.TimeoutExpired):
-        return []
-    return [int(m.group(1)) for m in re.finditer(r'"CNEXT\.exe","(\d+)"', out, re.I)]
+        return None
+    if getattr(r, "returncode", 0) != 0:
+        return None
+    return [int(m.group(1)) for m in re.finditer(r'"CNEXT\.exe","(\d+)"', r.stdout or "", re.I)]
 
 
 def cabecera_en_orden(texto):
@@ -128,7 +131,7 @@ class VigiaCuadros(threading.Thread):
                 clave = (titulo, tuple(b[1] for b in botones))
                 if clave not in [(v["titulo"], tuple(v.get("botones", []))) for v in self.vistos]:
                     self.vistos.append({"titulo": titulo, "texto": textos[:4], "botones": [b[1] for b in botones],
-                                        "accion": "NO tocado (más de un botón)"})
+                                        "accion": "NO tocado (no es un solo boton OK o Aceptar)"})
             return True
 
         while not self._parar.wait(1.5):
@@ -144,6 +147,8 @@ class VigiaCuadros(threading.Thread):
 # ---------------------------------------------------------------- COM
 def arrancar():
     previos = cnext_abiertos()
+    if previos is None:
+        raise SystemExit("No pude saber si hay una CATIA abierta (tasklist fallo): no arranco, para no tocar documentos ajenos.")
     if previos:
         raise SystemExit(f"Hay una CATIA abierta (CNEXT.exe pid {previos}): no la uso para no tocar documentos ajenos. "
                          "Cerrala y volvé a correr.")
@@ -151,7 +156,10 @@ def arrancar():
     t0 = time.time()
     c = win32com.client.Dispatch("CATIA.Application")
     seg = round(time.time() - t0, 1)
-    pids = cnext_abiertos()
+    pids = cnext_abiertos() or []
+    if c.Documents.Count != 0:   # se engancho a una CATIA con documentos: no es la nuestra. No se cierra nada.
+        raise SystemExit(f"La CATIA que contesto ya tiene {c.Documents.Count} documento(s): no es la que arranque yo. "
+                         "No toco nada.")
     c.DisplayFileAlerts = False
     return c, seg, (pids[0] if len(pids) == 1 else None)
 
@@ -317,8 +325,11 @@ def cmd_medir(a):
         for step in a.step:
             copia, orden = copia_con_cabecera(step, tmp)
             t0 = time.time()
+            antes = c.Documents.Count
             c.Documents.Open(str(copia))
             doc = c.ActiveDocument      # el objeto que devuelve Open no expone Part/Product a pywin32 (17/10)
+            if c.Documents.Count != antes + 1 or Path(doc.FullName).name.lower() != copia.name.lower():
+                raise SystemExit(f"Abri {copia.name} y el documento activo es {doc.FullName}: no sigo (no lo cierro).")
             abiertos.append(doc)
             fila = {"archivo": str(step), "cabecera_que_traia": orden, "segundos_abrir": round(time.time() - t0, 1)}
             fila.update(medir_documento(c, doc))
@@ -348,13 +359,14 @@ def cmd_medir(a):
             except Exception:  # noqa: BLE001
                 pass
         for _ in range(30):            # con la PC cargada, Quit tarda mas de 3 s (17/10): se espera hasta 30 s
-            if pid not in cnext_abiertos():
+            if pid not in (cnext_abiertos() or []):
                 break
             time.sleep(1)
         if vigia:
             vigia.parar()
             informe["cuadros"] = vigia.vistos
-        informe["catia_sigue_abierta"] = bool(cnext_abiertos())
+        _q = cnext_abiertos()
+        informe["catia_sigue_abierta"] = "no se pudo mirar" if _q is None else bool(_q)
         informe["segundos_total"] = round(time.time() - t_total, 1)
         Path(a.salida).write_text(json.dumps(informe, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps(informe, ensure_ascii=False, indent=1))
@@ -368,6 +380,7 @@ def main(argv=None):
     m.add_argument("--step", action="append", default=[])
     m.add_argument("--choque", nargs=2, metavar=("PANEL", "PIEZA"))
     m.add_argument("--frame")
+    m.add_argument("--frame-inseguro", action="store_true")
     m.add_argument("--holgura", type=float, default=0.3)
     m.add_argument("--modulos", action="store_true")
     m.add_argument("--cadlib", action="store_true")
@@ -375,8 +388,12 @@ def main(argv=None):
     a = ap.parse_args(argv)
     if a.cmd == "estado":
         pids = cnext_abiertos()
-        print(json.dumps({"catia_abierta": bool(pids), "pids": pids}))
+        print(json.dumps({"catia_abierta": "no se pudo mirar" if pids is None else bool(pids), "pids": pids}))
         return 0
+    if a.frame and not a.frame_inseguro:
+        ap.error("--frame mueve el panel ADENTRO de CATIA y el 13 y el 17/10 dio un choque falso (-3,354 mm donde ninguna "
+                 "pieza tiene material). Lleva el panel al marco del utillaje antes (OpenCASCADE) y no pases --frame; "
+                 "para probarlo igual: --frame-inseguro")
     cmd_medir(a)
     return 0
 

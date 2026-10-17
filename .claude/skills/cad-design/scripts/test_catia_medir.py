@@ -65,8 +65,28 @@ loc = [v[0] * x + v[3] * y + v[6] * z + v[9], v[1] * x + v[4] * y + v[7] * z + v
 chequear(all(abs(c) < 1e-9 for c in loc), "marco girado: el origen del marco cae en cero (%s)" % loc)
 chequear(not all(abs(c) < 1e-9 for c in [v[9], v[10], v[11]]), "gemelo: la traslación no es nula (si lo fuera, el control sería ciego)")
 
-print("3. freno de CATIA ajena")
+print("3. freno de CATIA ajena (falla cerrado: auditor del 17/10, I4)")
 chequear(isinstance(cm.cnext_abiertos(), list), "cnext_abiertos devuelve una lista (vacía si no hay CATIA)")
+
+
+class _R:
+    def __init__(self, out, rc=0):
+        self.stdout, self.returncode = out, rc
+
+
+def _cae(*a, **k):
+    raise cm.subprocess.TimeoutExpired("tasklist", 20)
+
+
+chequear(cm.cnext_abiertos(_cae) is None, "tasklist que tarda: None (no se pudo mirar), no []")
+chequear(cm.cnext_abiertos(lambda *a, **k: _R("", 1)) is None, "tasklist con error: None")
+chequear(cm.cnext_abiertos(lambda *a, **k: _R('"CNEXT.exe","4321","Console","1","500.000 KB"\n')) == [4321],
+         "tasklist con una CATIA: [4321]")
+try:
+    cm.main(["medir", "--step", "x.step", "--choque", "p.step", "x.step", "--frame", "f.json", "--salida", "s.json"])
+    chequear(False, "--frame sin --frame-inseguro tiene que frenar")
+except SystemExit as e:
+    chequear(e.code == 2, "--frame sin --frame-inseguro frena (el choque falso del 13/10)")
 print("4. macro de mover")
 chequear("prod.Move.Apply a" in cm.macro_mover([0] * 12) and len(re.findall(r"a\(\d+\) = ", cm.macro_mover([0] * 12))) == 12,
          "la macro arma los 12 valores")

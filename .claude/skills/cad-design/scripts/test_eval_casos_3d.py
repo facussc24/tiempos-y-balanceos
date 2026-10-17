@@ -63,6 +63,18 @@ chequear(not f, "reproduce 28 % y 1,69 mm: sin fallas")
 _, f = ev.evaluar(casos, [fila("vX", 60)], [fila("vX", 100, med=1.69)])
 chequear(any("NO reproduce" in x for x in f), "da 60 % en vez de 28 %: FALLA aunque el veredicto ROJO coincida")
 
+print("3b. un control que no pudo medir no da OK (auditor del 17/10, I3)")
+_, f = ev.evaluar(casos, [], [])
+chequear(any("SIN DATO" in x for x in f), "simulacion vacia: FALLA (antes daba OK)")
+r, f = ev.evaluar(casos, [fila("vX", 28)], None)
+chequear(r["vX"]["A3_asiento"]["reproduce_lo_publicado"] is None and any("no se pudo comparar" in x for x in f),
+         "sin la corrida de la punta: reproduce = null y FALLA (no dice true sin comparar el 1,69)")
+dos = {"umbrales": U, "versiones": {"vX": casos["versiones"]["vX"], "vY": {"elementos": tres, "esperado": {"A3_asiento": "ROJO"}}}}
+_, f = ev.evaluar(dos, [fila("vX", 28)], [fila("vX", 100, med=1.69)], solo=["vX"])
+chequear(not f, "--solo vX deja afuera a vY a proposito: sin fallas")
+_, f = ev.evaluar(dos, [fila("vX", 28)], [fila("vX", 100, med=1.69)])
+chequear(any("vY" in x and "SIN DATO" in x for x in f), "sin --solo, vY sin corrida es FALLA")
+
 print("4. A3 asiento: la pieza nueva se juzga por umbral")
 nueva = {"umbrales": U, "versiones": {"v16": {"elementos": tres, "ventana_mm": {"banda": 1.2, "punta": 0.7}}}}
 r, _ = ev.evaluar(nueva, [fila("v16", 5, mx=0.4)], [fila("v16", 0, med=0.3)])

@@ -9,11 +9,12 @@
     "hamaca_pct_max": 10,
     "hamaca_max_mm": 0.5,
     "punta_mediana_max_mm": 0.5,
-    "reproduccion_tol_pct": 5,
-    "reproduccion_tol_mm": 0.15,
+    "reproduccion_tol_pct": 0,
+    "reproduccion_tol_mm": 0.01,
     "_fuente": "ficha-utillajes.md U1/U2/B2-B5 e ingenieria-de-producto.md §2; plan del 17/10",
     "coplanar_dispersion_max_mm": 0.05,
-    "_coplanar": "A1b (informativo, 17/10): cuatro apoyos sobre UNA superficie medida con dispersion <= 0,05 mm entre sus topes. El 0,05 lo fijo la casa sin fuente (a medir: cuanto desnivel absorbe el tapizado bajo la mano)."
+    "_coplanar": "A1b (informativo, 17/10): cuatro apoyos sobre UNA superficie medida con dispersion <= 0,05 mm entre sus topes. El 0,05 lo fijo la casa sin fuente (a medir: cuanto desnivel absorbe el tapizado bajo la mano).",
+    "_reproduccion": "semilla fija (7): la simulacion reproduce EXACTO (17/10). Tolerancia 0 en % y 0,01 mm (el redondeo a 2 decimales del JSON)."
   },
   "versiones": {
     "v14": {
