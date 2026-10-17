@@ -6,7 +6,7 @@
  * registros de las sesiones (`~/.claude/projects/C--Dev-BarackMercosul*\*.jsonl`), para que el viernes 23/10 se
  * compare contra el 16/10 con el mismo comando. Tanda 0 (línea de base) y tanda 9 (la hoja de los viernes).
  *
- *   node scripts/_cuatroNumeros.mjs --desde 2026-10-09 --hasta 2026-10-16 [--cupo "0 %"] [--json]
+ *   node scripts/_cuatroNumeros.mjs --desde 2026-10-09 --hasta 2026-10-16 [--cupo "0 %"] [--json] [--filas <archivo>]
  *
  * Qué mide (y qué NO):
  *  1. Reentregas: los avisos del correccion-guard (`scripts/_lib/correccionGuard.mjs --medir`) sobre los mensajes
@@ -95,7 +95,7 @@ for (const f of archivos) {
       const t = textoDe(o.message);
       if (/(^|\n)\s*\**Propongo\**\s*:/i.test(t)) propongo++;
       const e = entregasDe(o);
-      if (e.length) filasMedir.push({ ses, e });
+      if (e.length) filasMedir.push({ ses, e, ts: o.timestamp });
       ultimoAsistente = o;
       continue;
     }
@@ -111,7 +111,7 @@ for (const f of archivos) {
         const t = textoDe(o.message);
         mensajesFak++;
         if (ultimoAsistente) { cierres++; ultimoAsistente = null; }
-        filasMedir.push({ ses, t });
+        filasMedir.push({ ses, t, ts: o.timestamp });
         if (REPETICION.test(t)) { repeticiones++; if (ejemplosRep.length < 6) ejemplosRep.push(`[${ses.slice(0, 8)} ${ts}] ${t.replace(/\s+/g, ' ').slice(0, 120)}`); }
       }
     }
@@ -123,6 +123,9 @@ let reentregas = 'sin medir';
 const tmp = path.join(os.tmpdir(), `cuatro-numeros-${Date.now()}.jsonl`);
 try {
   fs.writeFileSync(tmp, filasMedir.map((x) => JSON.stringify(x)).join('\n'));
+  // --filas <archivo> (tanda 9, pieza 8): deja las filas (con su fecha) para correr el D7 a mano:
+  // node scripts/_lib/correccionGuard.mjs --medir <archivo> --despues <fecha de la graduacion>
+  const dFilas = arg('--filas', null); if (dFilas) fs.copyFileSync(tmp, dFilas);
   const r = spawnSync(process.execPath, [path.join(AQUI, '_lib', 'correccionGuard.mjs'), '--medir', tmp, '--muestra'], { encoding: 'utf8', cwd: RAIZ });
   const salida = (r.stdout || '') + (r.stderr || '');
   const porSes = new Map();
