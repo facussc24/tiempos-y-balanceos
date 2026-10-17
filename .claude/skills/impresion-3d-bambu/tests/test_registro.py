@@ -265,16 +265,18 @@ class RolloSinChip(unittest.TestCase):
         nuevo = [e for e in registro.leer() if e["tipo"] == "rollo cargado"][0]
         self.assertEqual((nuevo["lugar"], nuevo["gramos"], nuevo["nota"]), (4, 1000.0, "lo dijo Fak"))
 
-    def test_por_lugar_con_un_estado_viejo_avisa_y_con_uno_nuevo_no(self):
+    def test_por_lugar_con_un_estado_viejo_no_anota_y_con_uno_nuevo_si(self):
         r, out, _ = _base.correr(registro._main, ["registro.py", "--pesar", "2", "800"])
         self.assertIn("según el --estado de las", out)
-        self.assertNotIn("OJO", out)
         viejo = time.time() - 1800
         os.utime(registro.ULTIMO_ESTADO, (viejo, viejo))
-        r, out, _ = _base.correr(registro._main, ["registro.py", "--rollo-nuevo", "4"])
-        self.assertIn("corré bambu_red.py --estado y anotalo de nuevo", out)
+        antes = len(registro.leer())
+        with self.assertRaises(SystemExit) as cm:                           # re-auditoria R6: frena ANTES de anotar
+            registro._main(["registro.py", "--rollo-nuevo", "4"])
+        self.assertIn("Corré antes bambu_red.py --estado", str(cm.exception))
+        self.assertEqual(len(registro.leer()), antes)
         r, out, _ = _base.correr(registro._main, ["registro.py", "--pesar", "6EACADA000000100", "800"])
-        self.assertNotIn("--estado", out)                                   # por chip no depende del estado
+        self.assertEqual(r, 0, out)                                         # por chip no depende del estado
 
 
 class LineaDeComandos(unittest.TestCase):

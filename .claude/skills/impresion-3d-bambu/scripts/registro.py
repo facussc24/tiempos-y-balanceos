@@ -266,8 +266,9 @@ def ultimo_fin(ev=None):
     """Desde cuando la placa puede tener piezas del ultimo trabajo; un «placa_libre» posterior la libera.
     - Cierre visto en vivo: la hora del cierre.
     - Cierre de un trabajo que termino sin que nadie lo viera (fin_visto, minutos en blanco): la hora real de fin no
-      se sabe, solo que fue despues del envio; un placa_libre anotado despues del ENVIO cuenta (auditoria 16/10: Leo
-      saca las piezas, lo anota, y la PC que concilia despues no puede volver a ocupar la placa).
+      se sabe; un placa_libre anotado despues de lo antes que pudo terminar cuenta (auditoria 16/10: Leo saca las
+      piezas, lo anota, y la PC que concilia despues no puede volver a ocupar la placa). Para «terminada», eso es el
+      envio + el 85 % del estimado (revision 16/10); para fallida o cancelada, el envio (re-auditoria R2).
     - Un cierre en el que no se imprimio NADA (la orden no salio, la cancelaron antes de la primera capa: avance 0 y
       capa 0 o vacia) no deja piezas: no cuenta. Uno que fallo EN la primera capa (avance 0, capa 1) si: lo que se
       despego queda en la placa (re-auditoria 16/10, TB5)."""
@@ -279,7 +280,11 @@ def ultimo_fin(ev=None):
             if e.get("avance_pct") in (0, 0.0, "0") and e.get("capa") in (None, 0, "0", ""):
                 continue
             if e.get("fin_visto") and e.get("minutos_reales") is None and e.get("trabajo_id") in envios:
-                fs.append(min(fin_mas_temprano(envios[e["trabajo_id"]]), _clave_tiempo(e)))
+                env = envios[e["trabajo_id"]]
+                # el 85 % del estimado vale para lo que TERMINO; lo que fallo o se cancelo pudo cortar en cualquier
+                # momento despues del envio (re-auditoria R2)
+                fs.append(min(fin_mas_temprano(env) if e.get("tipo") == "terminada" else _clave_tiempo(env),
+                              _clave_tiempo(e)))
             else:
                 fs.append(_clave_tiempo(e))
         elif e.get("tipo") == "visto" and e.get("estado") in ("FINISH", "FAILED"):
@@ -395,6 +400,13 @@ def chip_del_lugar(lugar):
 
 
 def _rollo_de(quien):
+    """El rollo de un lugar (1-4, del ultimo --estado de esta PC) o el chip tal cual. Por lugar, con un --estado de
+    mas de 10 min no se anota: si se cambio el rollo despues, la pesada iria al rollo viejo (re-auditoria R6)."""
+    if str(quien).isdigit() and len(str(quien)) == 1:
+        h = _hora_del_estado()
+        if h and (ahora() - h).total_seconds() > ESTADO_VIEJO_S:
+            raise SystemExit(f"no anoté nada: el lugar {quien} sale del --estado de las {h:%H:%M}, que es viejo. Corré "
+                             "antes bambu_red.py --estado (así el lugar es el rollo que está ahora), o pasá el chip")
     rollo_ = chip_del_lugar(quien) if str(quien).isdigit() and len(str(quien)) == 1 else str(quien)
     if not rollo_:
         raise SystemExit(f"no se que rollo hay en el lugar {quien}: correr antes bambu_red.py --estado, o pasar el chip")
@@ -404,20 +416,17 @@ def _rollo_de(quien):
 ESTADO_VIEJO_S = 600
 
 
-def de_que_estado(quien):
-    """Para --pesar y --rollo-nuevo por LUGAR: de que --estado salio el rollo. El lugar se resuelve con el ultimo
-    --estado de esta PC; si se cambio el rollo despues, la anotacion va al rollo viejo (revision 16/10): con un estado
-    de mas de 10 min lo dice, para volver a leerlo y anotarlo de nuevo."""
-    if not (str(quien).isdigit() and len(str(quien)) == 1):
-        return ""
+def _hora_del_estado():
     try:
-        h = datetime.fromtimestamp(ULTIMO_ESTADO.stat().st_mtime).astimezone()
+        return datetime.fromtimestamp(ULTIMO_ESTADO.stat().st_mtime).astimezone()
     except OSError:
-        return ""
-    if (ahora() - h).total_seconds() > ESTADO_VIEJO_S:
-        return (f"\nOJO: el lugar {quien} sale del --estado de las {h:%H:%M}: si cambiaste el rollo después, corré "
-                f"bambu_red.py --estado y anotalo de nuevo")
-    return f" (lugar {quien} según el --estado de las {h:%H:%M})"
+        return None
+
+
+def de_que_estado(quien):
+    """Para --pesar y --rollo-nuevo por LUGAR: de que --estado salio el rollo (lo dice al anotar)."""
+    h = _hora_del_estado() if str(quien).isdigit() and len(str(quien)) == 1 else None
+    return f" (lugar {quien} según el --estado de las {h:%H:%M})" if h else ""
 
 
 def rollo_nuevo(quien, gramos=ROLLO_NOMINAL, nota=""):

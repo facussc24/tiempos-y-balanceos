@@ -91,7 +91,7 @@ Fuentes: `ams-lite/manual/intro-ams-lite` (el cargador de 4 de la A2L es un AMS 
 ## Distribuidor de filamento del cabezal trabado («filament hub»: filamento cortado adentro)
 
 Fuente: `a2l/troubleshooting/filament-hub-clear`. Cuando el filamento se corta adentro del distribuidor, la
-carga siguiente falla (al revés no vale: una carga que falla puede tener otras causas). Se desarma el hub (espátula y pinza plana) y se saca el pedazo. **Antes: impresora apagada y
+carga siguiente falla (al revés no vale: una carga que falla puede tener otras causas). Se desarma el distribuidor (espátula y pinza plana) y se saca el pedazo. **Antes: impresora apagada y
 desenchufada, y la boquilla y la cama frías.**
 
 ## La tarjeta MicroSD

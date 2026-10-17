@@ -23,7 +23,7 @@ que pasó el 15/10 a la noche y con la wiki oficial de Bambu (las páginas está
 6. Si dice **«Impresión finalizada»**: sacale una foto a la pantalla antes de tocar «Ok», revisá las piezas y
    sacá la placa recién cuando esté fría.
 7. Si está en la pantalla de inicio sin preguntar nada, la impresión se perdió: no mandes otra hasta sacar lo
-   que quedó en la placa y anotarlo (paso 8). El programa no manda mientras ese trabajo siga sin cerrar.
+   que quedó en la placa y anotarlo (paso 8). El programa no manda la próxima hasta que se anote la placa libre.
 
 ## Antes de mandar cualquier impresión
 

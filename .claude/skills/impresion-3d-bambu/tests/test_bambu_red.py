@@ -228,6 +228,16 @@ class ClasificarLecturasGuardadas(unittest.TestCase):
             self.assertEqual(salida, 1, (estado, mismo))
             self.assertIn("el trabajo ya no está", texto)
 
+    def test_T5_vuelve_en_el_IDLE_real_sin_nombre_ni_numero(self):
+        """Una A2L libre informa el nombre vacio y el numero "0" (MOCK-A2L.json). Antes de la re-auditoria (TB-R2-1)
+        la vigilancia esperaba «el informe siguiente» para siempre y no despertaba nunca."""
+        lect = [(0.0, {"gcode_state": "RUNNING", "subtask_name": "X", "task_id": "77", "layer_num": 30})]
+        lect += [(30.0 * i, None) for i in range(1, 41)]
+        lect += [(1230.0 + 30 * i, {"gcode_state": "IDLE", "subtask_name": "", "task_id": "0"}) for i in range(5)]
+        salida, texto = br.clasificar(lect, buscar=True)
+        self.assertEqual(salida, 1, texto)
+        self.assertIn("el trabajo ya no está", texto)
+
     def test_quieta_solo_con_la_impresora_contestando(self):
         quieta = [(60.0 * i, {"gcode_state": "RUNNING", "layer_num": 5, "mc_percent": 9, "stg_cur": 0})
                   for i in range(17)]
@@ -544,6 +554,32 @@ class RevisionConfirmados(_SeguirBase):
         self.assertIn("no manda informes", out)
 
 
+class ReAuditoriaRonda2(_SeguirBase):
+    """Lo que encontro la auditoria Opus de la ronda 2 (TB-R2-1), corrido de verdad contra la juguete."""
+
+    def _vuelve_libre(self, *extra):
+        self.enviada("pieza_prueba", task_id="555")
+        hace = time.time() - 600
+        self.previo(trabajo={"subtask_name": "pieza_prueba", "task_id": "555"}, ult_mensaje=hace,
+                    desconectado_desde=hace)
+        self.jug.estado.update(gcode_state="IDLE", subtask_name="", task_id="0")
+        guardia = threading.Timer(60, self.jug.parar)       # si no sale, la juguete se apaga y el test no se cuelga
+        guardia.start()
+        try:
+            r, out, err = self.seguir(*extra)
+        finally:
+            guardia.cancel()
+        self.assertEqual(r, 1, out)
+        self.assertIn("el trabajo ya no está", out)
+        self.assertEqual(registro.cerrados()["20261016-100000-pieza_prueba"]["tipo"], "fallida")
+
+    def test_TB_R2_1_vuelve_libre_despues_de_un_corte_y_despierta(self):
+        self._vuelve_libre()
+
+    def test_TB_R2_1_tambien_con_buscar(self):
+        self._vuelve_libre("--buscar")
+
+
 class ClasificarVidaEInformes(unittest.TestCase):
     def test_avisos_de_vida_sin_informes_es_sin_conexion(self):
         lect = [(0.0, {"gcode_state": "RUNNING", "layer_num": 5, "mc_percent": 9, "stg_cur": 0})]
@@ -595,6 +631,16 @@ class ClasificarVidaEInformes(unittest.TestCase):
         otra = [(10.0, {"gcode_state": "RUNNING", "subtask_name": "X", "task_id": "77",
                         "hms": [{"attr": 0x07000100, "code": 0x00020001}]})]
         self.assertEqual(br.clasificar(otra, previo=previo, en_pausa=True)[0], 2)
+
+    def test_la_alarma_de_una_pausa_del_cargador_tampoco_se_repite(self):
+        """Re-auditoria R3: la pausa avisaba, y al reanudar con el mismo hms prendido volvia a salir 2."""
+        hms = [{"attr": 0x07000100, "code": 0x00020001}]
+        vig = br.Vigia(0.0)
+        vig.mensaje(0.0, {"gcode_state": "PAUSE", "subtask_name": "X", "task_id": "77", "hms": hms,
+                          "ams": {"tray_now": "1"}})
+        self.assertEqual(vig.evaluar(0.0)[0], 2)
+        sigue = [(10.0, {"gcode_state": "RUNNING", "subtask_name": "X", "task_id": "77", "hms": hms})]
+        self.assertEqual(br.clasificar(sigue, previo=vig.estado(), en_pausa=True)[0], None)
 
 
 class ConciliarAlConectar(ConJuguete):
@@ -904,6 +950,10 @@ class RevisionImprimir(_ImprimirBase):
         r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(5.0,))), "--mapa", "3")
         self.assertEqual(r, 1, out)
         self.assertIn("el lugar 4 no tiene ningún rollo", out)
+        # --sin-margen saltea la cuenta de gramos, no el lugar vacio (re-auditoria R5)
+        r, out, _ = self.correr("--imprimir", str(self.archivo(gramos=(5.0,))), "--mapa", "3", "--sin-margen", "--apply")
+        self.assertEqual(r, 1, out)
+        self.assertEqual(self.subidas, [])
 
     def test_sin_cabecera_de_tiempo_usa_la_prediccion_y_si_no_hay_pide_el_ok(self):
         archivo = self.archivo(minutos=240, gramos=(5.0,))
@@ -968,6 +1018,17 @@ class RevisionPlacaYRegistro(unittest.TestCase):
         self._renglones({"tipo": "placa_libre", "cuando": "2026-10-16T12:50:00-03:00"})
         self.assertIsNone(br.placa_ocupada({"gcode_state": "FINISH"}))
 
+    def test_la_que_fallo_cuenta_desde_el_envio(self):
+        """Re-auditoria R2: el 85 % del estimado es para lo que termino; una que fallo pudo cortar en cualquier momento."""
+        self._renglones({"tipo": "enviada", "trabajo_id": "b1", "archivo": "b1.gcode.3mf", "minutos_estimados": 240,
+                         "cuando": "2026-10-16T10:00:00-03:00"},
+                        {"tipo": "placa_libre", "cuando": "2026-10-16T10:40:00-03:00"})
+        self.assertIsNone(br.placa_ocupada({"gcode_state": "FAILED"}))            # todavia abierta
+        self.assertIsNotNone(br.placa_ocupada({"gcode_state": "FINISH"}))         # si hubiera terminado: no pudo a las 10:40
+        self._renglones({"tipo": "fallida", "trabajo_id": "b1", "avance_pct": 8, "capa": 6, "minutos_reales": None,
+                         "fin_visto": "2026-10-16T10:50:00-03:00", "cuando": "2026-10-16T10:50:00-03:00"})
+        self.assertIsNone(br.placa_ocupada({"gcode_state": "FAILED"}))            # conciliada como fallida
+
     def test_finish_de_un_trabajo_todavia_abierto_ocupa_la_placa(self):
         self._renglones({"tipo": "placa_libre", "cuando": "2026-10-16T09:00:00-03:00"},
                         {"tipo": "enviada", "trabajo_id": "p1", "archivo": "p1.gcode.3mf", "task_id": "4242",
@@ -978,8 +1039,11 @@ class RevisionPlacaYRegistro(unittest.TestCase):
         self._renglones({"tipo": "enviada", "trabajo_id": "pv", "archivo": "placa_v2.gcode.3mf",
                          "cuando": "2026-10-16 12:49:42"},
                         {"tipo": "terminada", "trabajo_id": "pv", "minutos_reales": 40.2, "cuando": "2026-10-16 13:29:54"})
-        v = {"gcode_state": "FINISH", "subtask_name": "placa_v2", "task_id": "1999999999"}
-        self.assertEqual(br.anotar_visto(v)["tipo"], "visto")
+        # el FINISH del mismo envio viejo (sin numero) que sigue en la pantalla no es una reimpresion (re-auditoria R1:
+        # la A2L informa el numero que se le mando, 1164396105 para placa_v2, y el renglon viejo no lo tiene)
+        self.assertIsNone(br.anotar_visto({"gcode_state": "FINISH", "subtask_name": "placa_v2", "task_id": "1164396105"}))
+        v = {"gcode_state": "RUNNING", "subtask_name": "placa_v2", "task_id": "1999999999"}
+        self.assertEqual(br.anotar_visto(v)["tipo"], "visto")                  # imprimiendo despues del cierre: si
         self.assertIsNone(br.anotar_visto(v))                                   # una sola vez
         # al reves: si el trabajo anotado tiene ESE numero, no es una reimpresion
         self._renglones({"tipo": "enviada", "trabajo_id": "q", "archivo": "q.gcode.3mf", "task_id": "77",
@@ -1021,6 +1085,11 @@ class RevisionDatosYRed(unittest.TestCase):
         br._escribir_json(self.tmp / "x.json", {"a": 1})
         self.assertEqual(json.loads((self.tmp / "x.json").read_text(encoding="utf-8")), {"a": 1})
         self.assertFalse(list(self.tmp.glob("*.escribiendo")))
+        # una escritura que se corta a la mitad (aca, un valor que no se puede escribir despues de "a") no toca el
+        # archivo que estaba: con la escritura directa quedaba cortado (re-auditoria R7)
+        with self.assertRaises(TypeError):
+            br._escribir_json(self.tmp / "x.json", {"a": 2, "b": object()})
+        self.assertEqual(json.loads((self.tmp / "x.json").read_text(encoding="utf-8")), {"a": 1})
 
     def test_la_direccion_que_confirma_el_anuncio_se_reintenta(self):
         intentos = []
@@ -1063,6 +1132,12 @@ class RevisionSeguirArranque(_SeguirBase):
                          "task_id": "1", "filamentos": []})
         registro.cerrar("vieja", "terminada", avance_pct=100)
         self.jug.estado.update(gcode_state="FINISH", subtask_name="vieja", task_id="1")
+        self._nueva_abierta()
+
+    def _nueva_abierta(self):
+        """--imprimir anota el envio ANTES de la orden: la pieza nueva esta abierta y todavia no arranco."""
+        registro.anotar({"tipo": "enviada", "trabajo_id": "nueva", "archivo": "nueva.gcode.3mf", "subtask_name": "nueva",
+                         "task_id": "2", "estado": "sin confirmar", "filamentos": []})
 
     def test_espera_que_arranque_la_nueva(self):
         self._anterior_cerrada()
@@ -1081,6 +1156,27 @@ class RevisionSeguirArranque(_SeguirBase):
             r, out, err = self.seguir()
         finally:
             br.ESPERA_ARRANQUE_S = espera
+        self.assertEqual(r, 1, out)
+        self.assertIn("no arrancó ninguna impresión nueva", out)
+
+    def test_la_anterior_mandada_desde_la_pantalla_tambien_espera(self):
+        """Re-auditoria R4.1: la pieza anterior no es de la skill (no esta en el registro): igual no es «terminó»."""
+        self.jug.estado.update(gcode_state="FINISH", subtask_name="de_bambu_studio", task_id="9")
+        self._nueva_abierta()
+        espera = br.ESPERA_ARRANQUE_S
+        br.ESPERA_ARRANQUE_S = 3
+        try:
+            r, out, err = self.seguir()
+        finally:
+            br.ESPERA_ARRANQUE_S = espera
+        self.assertEqual(r, 1, out)
+        self.assertIn("no arrancó ninguna impresión nueva", out)
+
+    def test_la_espera_no_vuelve_a_cero_en_cada_relanzada(self):
+        """Re-auditoria R4.2: con --despertar cada relanzada empezaba la espera de nuevo y nunca salia el 1."""
+        self._anterior_cerrada()
+        self.previo(esperando_desde=time.time() - br.ESPERA_ARRANQUE_S - 60)
+        r, out, err = self.seguir("--despertar", "5")
         self.assertEqual(r, 1, out)
         self.assertIn("no arrancó ninguna impresión nueva", out)
 

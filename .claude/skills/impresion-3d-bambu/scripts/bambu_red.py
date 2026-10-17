@@ -1036,9 +1036,9 @@ def placa_ocupada(est):
     confirmadas = {e.get("trabajo_id") for e in ev if e.get("tipo") == "confirmada"}
     abiertos = [e for e in registro.abiertas(ev=ev)
                 if e.get("estado") != "sin confirmar" or e.get("trabajo_id") in confirmadas]
-    # con IDLE la impresora no lo esta imprimiendo: se perdio en cualquier momento (corte de luz), asi que vale un
-    # «placa libre» anotado despues del ENVIO; si no, despues de un corte habria que esperar el 85 % de su estimado
-    desde = [registro._clave_tiempo(e) if estado_ == "IDLE" else registro.fin_mas_temprano(e) for e in abiertos]
+    # con IDLE o FAILED la impresora no lo termino: corto en cualquier momento (corte de luz, falla), asi que vale un
+    # «placa libre» anotado despues del ENVIO; el 85 % de su estimado es solo para lo que termino (FINISH: re-auditoria R2)
+    desde = [registro.fin_mas_temprano(e) if estado_ == "FINISH" else registro._clave_tiempo(e) for e in abiertos]
     if estado_ != "IDLE":
         fin = registro.ultimo_fin(ev)
         desde += [fin] if fin else []
@@ -1175,6 +1175,10 @@ def imprimir(archivo, mapa, aplicar, sin_margen=False):
             print("  ", r)
     elif not mapa or any(not isinstance(m, int) or m < -1 or m > 3 for m in mapa):
         fallas.append(f"--mapa {mapa}: cada lugar del cargador va de 0 a 3 (-1 = no se usa)")
+    else:
+        # un lugar vacio frena siempre, tambien con --sin-margen (que solo saltea la cuenta de gramos: re-auditoria R5)
+        chips0 = rollos_del_cargador(est0)
+        fallas += [f"el lugar {m + 1} no tiene ningún rollo según la impresora" for m in mapa if m >= 0 and not chips0.get(m)]
     ajustes = ajustes_del_archivo(archivo)
     minutos_archivo, inicio = ajustes.get("minutos"), _ahora()
     minutos = minutos_archivo or 0
@@ -1606,8 +1610,11 @@ def anotar_visto(v):
         con_num, e_num = tid not in (None, "", "0"), e.get("task_id") not in (None, "", "0")
         # Es un trabajo anotado, salvo que lo unico que coincida sea el NOMBRE de un envio viejo, sin numero y ya cerrado,
         # mientras la impresora informa un numero: eso es otra impresion del mismo archivo (desde la pantalla o Bambu
-        # Studio) y tiene que quedar «visto» (revision 16/10: nunca quedaba y no ocupaba la placa).
-        if not con_num or e_num or e["trabajo_id"] not in registro.cerrados(ev):
+        # Studio) y tiene que quedar «visto» (revision 16/10: nunca quedaba y no ocupaba la placa). Solo si esta
+        # IMPRIMIENDO: el original no puede estar imprimiendo despues de su cierre, pero su FINISH si puede seguir en la
+        # pantalla (los envios viejos no tienen numero: anotarlo volvia a ocupar la placa, re-auditoria R1).
+        if (not con_num or e_num or e["trabajo_id"] not in registro.cerrados(ev)
+                or est not in ("RUNNING", "PREPARE", "PAUSE")):
             return None
     if registro.visto_ya(nombre, tid, ev):
         return None
@@ -1681,15 +1688,16 @@ SALIDA_ERROR_PROGRAMA = 16           # --seguir: un error del programa, no de la
 ESPERA_ARRANQUE_S = 600              # --seguir lanzado con el envio: cuanto espera a que arranque la pieza nueva
 
 
-def fin_de_un_trabajo_cerrado(v):
-    """True si la impresora muestra el FIN (FINISH/FAILED) de un trabajo que el registro ya tiene CERRADO: el de la
-    pieza anterior, no el que se esta por vigilar."""
+def fin_de_otro_trabajo(v):
+    """True si la impresora muestra el FIN (FINISH/FAILED) de un trabajo que NO esta abierto en el registro (el de la
+    pieza anterior: cerrada, o mandada desde Bambu Studio o la pantalla) mientras hay un envio ABIERTO que todavia no
+    arranco: el que se esta por vigilar. Sin un envio abierto no hay nada que esperar (una vigilancia lanzada sola
+    sobre una impresora que ya termino dice «terminó», como antes)."""
     try:
         import registro
         nombre, tid = v.get("subtask_name"), v.get("task_id")
         return bool(v.get("gcode_state") in ("FINISH", "FAILED") and nombre
-                    and registro.trabajo_de(nombre, tid) is None
-                    and registro.trabajo_de(nombre, tid, solo_abiertas=False))
+                    and registro.trabajo_de(nombre, tid) is None and registro.abiertas())
     except (Exception, SystemExit):
         return False
 
@@ -1835,8 +1843,10 @@ class Vigia:
         est = v.get("gcode_state")
         if self.volvio:
             mismo = self.mismo_trabajo(v)
-            if mismo is None:
-                return None                          # el informe no dice de que trabajo es: se espera al siguiente
+            if mismo is None and est != "IDLE":
+                # el informe no dice de que trabajo es: se espera al siguiente. Con IDLE no: una A2L libre informa el
+                # nombre vacio y el numero "0" para siempre, y la vigilancia no despertaria nunca (re-auditoria, TB-R2-1)
+                return None
             self.volvio = False
             if not mismo and self.trabajo_cerrado:
                 # el trabajo viejo ya estaba cerrado: la impresora esta con otro (una reimpresion); se vigila ese
@@ -1861,6 +1871,8 @@ class Vigia:
         if est == "PAUSE":
             if self.en_pausa:
                 return None
+            if v.get("hms") or v.get("print_error"):
+                self.alarma = _clave_alarma(v)      # la alarma de esta pausa ya quedo avisada (re-auditoria, R3)
             cod = fin_de_rollo(v)
             if cod:
                 lug = _lugar_activo(v)
@@ -1869,7 +1881,7 @@ class Vigia:
                            "si dice enredo, destrabalo antes")
             return 2, "en pausa: mirá la pantalla"
         if v.get("hms") or v.get("print_error"):
-            clave = f"{v.get('print_error')}|{json.dumps(v.get('hms'), sort_keys=True)}"
+            clave = _clave_alarma(v)
             if not (self.en_pausa and clave == self.alarma):
                 self.alarma = clave
                 return 2, f"alarma de la impresora (error {v.get('print_error')}, hms {v.get('hms')})"
@@ -1879,6 +1891,10 @@ class Vigia:
             return 3, (f"15 minutos sin avanzar con la impresora contestando ({est}, etapa {v.get('stg_cur')}, "
                        f"capa {v.get('layer_num')})")
         return None
+
+
+def _clave_alarma(v):
+    return f"{v.get('print_error')}|{json.dumps(v.get('hms'), sort_keys=True)}"
 
 
 def clasificar(lecturas, buscar=False, previo=None, en_pausa=False, trabajo_cerrado=False):
@@ -2052,7 +2068,8 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
     except (Exception, SystemExit) as e:
         print(f"  (no se pudo leer el registro al arrancar: {type(e).__name__}: {e}; se vigila igual)", flush=True)
     vig = Vigia(time.time(), previo, buscar=buscar, en_pausa=en_pausa, trabajo_cerrado=cerrado)
-    extra = {k: previo.get(k) for k in ("sin_camara_desde", "tray_now", "fin_estimado", "rollo_anotado", "chip_activo")}
+    extra = {k: previo.get(k) for k in ("sin_camara_desde", "tray_now", "fin_estimado", "rollo_anotado", "chip_activo",
+                                        "esperando_desde")}
     log = open(carpeta / "seguimiento.log", "a", encoding="utf-8")
     hechas, ult_foto = set(), 0.0
     t0 = time.time()
@@ -2258,19 +2275,6 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
         t = time.time()
         v = vig.v
         r = vig.evaluar(t)
-        if r and r[0] in (0, 1) and not vig.trabajo and fin_de_un_trabajo_cerrado(v):
-            # La vigilancia se lanza en el mismo mensaje que el envio, que tarda ~2 min en subir: la impresora todavia
-            # muestra el fin de la pieza ANTERIOR (ya cerrada). No es «terminó»: se espera a que arranque la nueva
-            # (revision 16/10).
-            if time.time() - t0 < ESPERA_ARRANQUE_S:
-                if not extra.get("esperando_arranque"):
-                    extra["esperando_arranque"] = True
-                    anotar_log(f"{_iso()} la impresora muestra el fin de {v.get('subtask_name')}, que ya está cerrado: "
-                               "espero que arranque la impresión nueva")
-                r = None
-            else:
-                r = (1, f"no arrancó ninguna impresión nueva en {ESPERA_ARRANQUE_S // 60:.0f} min: la impresora sigue "
-                        f"mostrando el fin de {v.get('subtask_name')}")
         if r and r[0] == SALIDA_SIN_CONEXION:
             # Antes de salir con 12 se la busca. La vigilancia sigue solo si, donde la encuentra, vuelve a mandar
             # informes: una impresora que conecta y queda muda (o solo contesta el aviso de vida) en la misma direccion
@@ -2300,6 +2304,23 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
                 r = vig.evaluar(time.time()) or r     # el segundo rechazo es 13, no un 12 (revision 16/10)
             except SinConexion as e:
                 r = (r[0], r[1] + ". " + e.texto)
+        if vig.trabajo:
+            extra["esperando_desde"] = None          # ya arranco: la espera termino
+        if r and r[0] in (0, 1) and not vig.trabajo and fin_de_otro_trabajo(v):
+            # La vigilancia se lanza en el mismo mensaje que el envio, que tarda ~2 min en subir: la impresora todavia
+            # muestra el fin de la pieza ANTERIOR (cerrada, o mandada desde Bambu Studio o la pantalla). No es
+            # «terminó»: se espera a que arranque la nueva (revision 16/10). Desde cuando se espera queda en el estado
+            # guardado, asi las relanzadas de --despertar no vuelven el reloj a cero; y vale tambien para lo que se
+            # recalcula al volver la conexion (re-auditoria R4).
+            if not extra.get("esperando_desde"):
+                extra["esperando_desde"] = time.time()
+                anotar_log(f"{_iso()} la impresora muestra el fin de {v.get('subtask_name')}, que no es el trabajo "
+                           "nuevo: espero que arranque la impresión nueva")
+            if time.time() - extra["esperando_desde"] < ESPERA_ARRANQUE_S:
+                r = None
+            else:
+                r = (1, f"no arrancó ninguna impresión nueva en {ESPERA_ARRANQUE_S // 60:.0f} min: la impresora sigue "
+                        f"mostrando el fin de {v.get('subtask_name')}")
         if buscar and con is not None and vig.desconectado_desde is not None:
             # --buscar: una conexion abierta que no trae informes se suelta, asi la proxima vuelta la vuelve a buscar
             con.cerrar()

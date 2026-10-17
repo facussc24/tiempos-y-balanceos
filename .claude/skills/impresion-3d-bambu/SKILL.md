@@ -12,7 +12,7 @@ grabado amarillo, 1 h 43 min contra 1 h 41 estimado), tres fichas de tres colore
 32) y el molde de probeta 50 x 50 (mandado 13:46, terminó 00:18: 632,9 min reales contra 649
 estimados). Lo que sigue sin verse: el detector ante una falla real.
 **16/10/2026 (tanda 17):** la búsqueda por número de serie, la vigilancia nueva (salidas 12/13/14) y los
-frenos de `--imprimir` están probados contra una impresora de juguete (137 tests en
+frenos de `--imprimir` están probados contra una impresora de juguete (144 tests en
 `tests/`, `python -m unittest discover -s .claude/skills/impresion-3d-bambu/tests`); con la impresora
 real, ver §7.
 
@@ -55,7 +55,7 @@ python .claude/skills/impresion-3d-bambu/scripts/bambu_red.py --imprimir <archiv
   archivo de PLA Basic contra el cargador con PLA Lite no se manda), si el color no se parece o
   si la impresora está ocupada. Tampoco manda un archivo con más de una placa (solo iría la 1).
 - `--mapa 0,1` fuerza los lugares a mano (contando desde 0) y **saltea el control de material y color**: solo
-  cuando la elección sola no sirve, y diciéndolo. Un lugar vacío frena igual. Los demás frenos valen con o sin
+  cuando la elección sola no sirve, y diciéndolo. Un lugar vacío frena igual (también con `--sin-margen`). Los demás frenos valen con o sin
   `--mapa`.
 - **Si la impresora no manda su estado completo** (en 6 s, al empezar) no se manda nada: sin estado no hay frenos.
   Y si justo antes de la orden no contesta, la orden no sale (el archivo queda subido; se vuelve a probar).
@@ -74,8 +74,8 @@ python .claude/skills/impresion-3d-bambu/scripts/bambu_red.py --imprimir <archiv
   «AHORA, EN SEGUNDO PLANO» (`--fotos-en 3,10 --despertar 5 --cada 30`, con **una carpeta por envío**,
   `seguimiento_<trabajo>`: una reimpresión en la carpeta vieja heredaba su estado y sus fotos); `imprimir_pieza.py`
   remite a ese mismo. Pasadas las primeras capas se relanza con `--despertar 10` (§1 ter). Si arranca con la
-  pantalla todavía en el «finalizada» de la pieza anterior, espera hasta 10 min a que empiece la nueva (sale 1 si
-  no empieza).
+  pantalla todavía en el «finalizada» de la pieza anterior (de la skill, de Bambu Studio o de la pantalla), espera
+  hasta 10 min a que empiece la nueva, contando también las relanzadas de `--despertar` (sale 1 si no empieza).
   `--seguir <carpeta> [--fotos-en 41,44]`. Deja `seguimiento.log` (fecha y hora con zona),
   `estado_seguimiento.json` (el reloj de «quieta» y el trabajo, para la próxima relanzada) y fotos de la
   cámara (capa 1, las capas pedidas, una cada 15 min y la final). Una sola conexión que queda abierta.
@@ -223,9 +223,11 @@ los de todas.
   hay duda. Desde ahí lo gastado antes en ese lugar no cuenta y `--imprimir` deja de pedir que se anote.
 - `registro.py --placa-libre ["nota"]`: quien sacó las piezas lo anota; recién ahí `--imprimir --apply` manda.
   Vale aunque se anote antes de que alguna PC vea el fin, pero no si se anotó mientras ESE trabajo imprimía:
-  cuenta desde lo antes que pudo terminar (el envío + el 85 % de su estimado; en 11 impresiones ninguna tardó
-  menos). Con la impresora en el inicio después de un corte, cuenta desde el envío.
-- Una reimpresión desde la pantalla de un trabajo que ya estaba cerrado queda «visto» (ocupa la placa al terminar).
+  si terminó, cuenta desde lo antes que pudo terminar (el envío + el 85 % de su estimado; en 11 impresiones
+  ninguna tardó menos). Si falló, se canceló o la impresora quedó en el inicio después de un corte, cuenta desde el
+  envío (pudo cortar en cualquier momento).
+- Una reimpresión desde la pantalla de un trabajo que ya estaba cerrado queda «visto» si se la ve imprimiendo
+  (ocupa la placa al terminar). El «finalizada» del trabajo viejo que sigue en la pantalla no cuenta como otra.
 - `registro.py --validar`: rojo o amarillo por renglón (tipo desconocido, falta el trabajo, cierre antes del
   envío, minutos que no cierran con las horas, «enviada» de más de 24 h sin cierre, gramos negativos); sale con 1
   si hay rojos. Hoy marca la «cancelada» de 3 min del 15/10 07:06 para un trabajo mandado el día anterior.
@@ -501,7 +503,11 @@ mismo número que se le manda.
 
 - Si la A2L contesta el anuncio por el 2021 sin preguntarle; si escuchar el 2021 hace aparecer el cartel del
   firewall de Windows para Python (no es fatal: la búsqueda sigue con la MAC y el recorrido).
-- La subida por FTPS (990) no la simula la impresora de juguete: la cubren las impresiones reales del 13 al 16/10.
+- La subida por FTPS (990) no la simula la impresora de juguete. Su núcleo es el de las impresiones reales del 13 al
+  16/10; lo nuevo de esta tanda (comprobar la dirección antes, el progreso, los errores en un renglón) se ve en la
+  primera impresión real con esta versión: de día y con una pieza chica.
+- Que la A2L conteste el pedido de informe completo también en pausa y en preparación (si no, a los 6 min sin
+  informes la vigilancia saldría 12 sin motivo).
 - La pausa por fin de rollo: el código de la A2L se anota la primera vez que pase, con una foto de la pantalla.
 - El respaldo automático en modo solo LAN y con dos rollos de chip distinto: una prueba corta de día, mirando.
 - Si después de un corte de luz la A2L vuelve en pausa (lo dice un programa de la comunidad para otras Bambu).
