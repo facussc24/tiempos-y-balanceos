@@ -30,6 +30,12 @@ secretos (`.env*`, `.qr-secret`, codigos de acceso, `sk-ant-`); un hallazgo de o
 contra la fuente antes de darlo por bueno (en los audits la mayoria son falsos positivos); castellano
 argentino simple, nada en ingles suelto.
 
+**Antes de auditar leé `REVIEW.md` (raiz del repo)**: que es falla aca, que no se reporta, las rutas que no se
+revisan y el tope de 3 nits; si el prompt nombra un tipo de entregable (hojas de proceso, AMFE, mail), tambien
+`docs/review/<tipo>.md`. **Cada hallazgo lleva una etiqueta: Importante / Nit / Preexistente**, con archivo y linea y
+el caso medido, y el informe arranca con el conteo («N Importante, M Nit, P Preexistente»). Como mucho 2 rondas con el
+autor: en la segunda, solo el diff nuevo (tanda 9 del plan del sistema, 17/10/2026).
+
 ## Memoria propia (persistente entre sesiones)
 
 Tenes memoria en `.claude/agent-memory/auditor/MEMORY.md`. **ANTES de empezar:
@@ -99,7 +105,7 @@ Reportar dependencias faltantes o conflictos.
 ```
 ## Reporte de Auditoria — [fecha]
 
-### Resultado: OK / FALLO
+### Resultado: OK / FALLO  ·  N Importante, M Nit, P Preexistente
 
 | Check | Estado | Detalle |
 |-------|--------|---------|
@@ -112,10 +118,10 @@ Reportar dependencias faltantes o conflictos.
 | Dependencias | OK/FALLO | ... |
 
 ### Hallazgos CRITICOS (bloquean deploy)
-- ...
+- [Importante] archivo:linea — que pasa · caso medido · respuesta: ____ (arreglado / rechazado / a proposito / no importa)
 
 ### Hallazgos WARNING (no bloquean pero deben arreglarse)
-- ...
+- [Nit] / [Preexistente] archivo:linea — ... · respuesta: ____
 
 ### Acciones requeridas
 - ...
