@@ -2823,7 +2823,8 @@ export function escribeListadoBash(cmd, { cwd = '', leer, prof = 0 } = {}) {
       continue;
     }
     if (/^robocopy$/i.test(v)) {
-      const pos = args.filter((a) => !/^\//.test(a));
+      // (hallazgo 3) un switch de robocopy es `/X` o `/X:valor`, sin otra barra: `/c/tmp` es una ruta (Git Bash la convierte)
+      const pos = args.filter((a) => !/^\/[A-Za-z]+(?::.*)?$/.test(a));
       const mueve = args.some((a) => /^\/(?:MOV|MOVE)$/i.test(a));
       if (APQP_LISTADO.test(res(c.crudo)) && (mueve || !pos[1] || /\$/.test(res(pos[1])) || !apqpLocal(completa(pos[1])))) return completa(pos[1] || '');
       continue;

@@ -257,6 +257,15 @@ describe('P13 — origen o destino: copiar el listado para LEERLO no es escribir
         ]) expect(frena(c), c).toBe(true);
         expect(frena(`powershell -NoProfile -Command "Copy-Item '${HO}' C:\\Dev\\BarackMercosul\\exports\\x.xlsx"`)).toBe(false); // copiar para leer
     });
+    // Ronda 2 (17/10, hallazgo 3): `/c/tmp` es una ruta, no un switch de robocopy (Git Bash la convierte a C:/tmp)
+    it('ROJO (ronda 2, hallazgo 3) — robocopy con el origen escrito /c/… hacia la carpeta del listado', () => {
+        const AMFE = 'Ingenieria/Documentacion Gestion Ingenieria/13. Analisis del modo de falla y sus efectos ( I-AC-005.3)/1. LISTADO DE AMFES';
+        for (const c of [
+            `robocopy /c/tmp "/y/${AMFE}" Listado_Maestro_AMFE.xlsx /Y`,
+            `robocopy /c/tmp "Y:\\${AMFE.replace(/\//g, '\\')}" Listado_Maestro_AMFE.xlsx /Y`,
+        ]) expect(frena(c), c).toBe(true);
+        expect(frena(`robocopy "Y:\\${AMFE.replace(/\//g, '\\')}" /c/tmp Listado_Maestro_AMFE.xlsx /R:1 /W:1`)).toBe(false); // traerlo para leer
+    });
     it('ROJO — los _registrar* --apply siguen frenando (los verdaderos del informe)', () => {
         expect(frena('py -3 scripts/_registrarRevFlujograma.py 153 D 01/10/2026 --apply 2>&1 | tail -6')).toBe(true);
         expect(frena('cd /c/Dev/BarackMercosul && python scripts/_registrarUpperTrimListados.py flujograma --apply 2>&1 | tail -20')).toBe(true);
