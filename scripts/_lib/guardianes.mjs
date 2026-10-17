@@ -42,7 +42,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { sinCuerposHeredoc, sinCuerposHeredocDeGit, sinArgumentosDeCommit, analizarComando, comandosSimples, separarHeredocs } from './shellTexto.mjs';
+import { sinCuerposHeredoc, sinCuerposHeredocDeGit, sinArgumentosDeCommit, analizarComando, comandosSimples, separarHeredocs, finSustitucion } from './shellTexto.mjs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { pedidoDeEnvio, evaluarEnvio } from './mailOkFak.mjs';
@@ -322,13 +322,29 @@ function nombraSecretoFueraDelPatron(palabras, todo) {
   return menciones(todo) - (patron ? menciones(patron) : 0) > 0;
 }
 
+/** Las sustituciones de proceso `<( … )` / `>( … )` de un texto (lo de adentro) y el texto con cada una cambiada por una
+ *  palabra. El cierre lo busca `finSustitucion`, que cuenta parentesis y salta comillas. */
+function sustitucionesDeProceso(t) {
+  const adentro = [];
+  let resto = '';
+  for (let i = 0; i < t.length; i++) {
+    if ((t[i] === '<' || t[i] === '>') && t[i + 1] === '(') {
+      const fin = finSustitucion(t, i);
+      adentro.push(t.slice(i + 2, fin));
+      resto += ' sustitucion ';
+      i = fin;
+    } else resto += t[i];
+  }
+  return { adentro, resto };
+}
+
 /** ¿Algun comando simple del texto (o de sus `$(…)`) lee el secreto? `todo` = el comando entero, para las variables. */
 function leeSecretoPorComando(texto, todo, prof = 0, vars = variablesEscritas(todo)) {
   if (prof > 4) return SECRETO_RE.test(texto);
   // Ronda 2 (17/10, hallazgo 6): la sustitucion de proceso `<(cat .env.local)` / `>(…)` es un comando: se mira adentro
-  let t = String(texto ?? '');
-  for (const m of t.matchAll(/[<>]\(([^()]*)\)/g)) if (leeSecretoPorComando(m[1], todo, prof + 1, vars)) return true;
-  t = t.replace(/[<>]\(([^()]*)\)/g, ' sustitucion ');
+  // Ronda 3 (17/10, T7): el cierre se busca contando parentesis y saltando comillas (`<(cat … | sed 's/(x)//')`)
+  const { adentro, resto: t } = sustitucionesDeProceso(String(texto ?? ''));
+  for (const s of adentro) if (leeSecretoPorComando(s, todo, prof + 1, vars)) return true;
   // (ronda 3, T5) lo de detras de un eval se vuelve a partir; un envoltorio con una opcion que lleva valor no esconde al lector
   for (const c of comandosConEval(t)) {
     const palabras = c.palabras.map((w) => w.replace(/\uE000/g, '$'));

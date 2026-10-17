@@ -101,7 +101,7 @@ export function sinCuerposHeredocDeGit(cmd) {
 const SQ = '\uE000'; // `$` adentro de comillas simples: literal, no se expande
 
 /** Indice del cierre de una sustitucion `$(...)` o `` `...` `` que arranca en i (tolera comillas adentro). */
-function finSustitucion(s, i) {
+export function finSustitucion(s, i) {
   if (s[i] === '`') { const k = s.indexOf('`', i + 1); return k < 0 ? s.length - 1 : k; }
   let prof = 0;
   for (let j = i + 1; j < s.length; j++) {
