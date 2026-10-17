@@ -200,6 +200,9 @@ propio, eso pienso"*. Precedente: la OP 51 del flujograma 153.
 
 ### 1.3 Colisiones
 
+Antes de emitir, mirar lo que ya le marcaron a un flujograma: `node scripts/_observaciones.mjs --antes-de-mandar
+flujograma` (libro de observaciones recibidas, tanda 13; el 20/08 Carlos marcó que faltaba la tabla de códigos).
+
 Antes de emitir, cotejar **flujograma · AMFE · Plan de Control · HO** operacion por
 operacion y mirar las **colisiones** (mismo numero, distinta operacion). Lo mide
 `node scripts/_verificarNumeracion.mjs` contra

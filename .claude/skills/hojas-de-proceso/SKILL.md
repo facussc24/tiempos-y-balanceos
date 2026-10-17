@@ -49,6 +49,8 @@ Una operación no tiene un número de HO aparte.
 
 ## 7. Antes de entregar
 
+- [ ] **lo que ya le marcaron a una hoja**: `node scripts/_observaciones.mjs --antes-de-mandar "hoja de proceso"` (libro
+      de observaciones recibidas, tanda 13); lo que sale «A MANO» no lo caza ningún control.
 - [ ] **todo PDF de hojas que va a Fak o a planta pasa por `python scripts/_revisarPaqueteHO.py <pdf>` sin ROJO**,
       también las del servidor y las de otro autor (tanda 1.5, 16/10/2026: el error entraba por lo que no pasaba por
       ningún control). Mide además el ciclo lleno, la pieza rara sin paréntesis, el EPP que no es del sector, el
