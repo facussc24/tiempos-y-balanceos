@@ -464,6 +464,9 @@ function chequearRevisorPedido(env = process.env) {
 export function evaluarRetirosCierre(r, { viernes = false } = {}) {
     if (!r) return { estado: 'aviso', detalle: 'no se pudo leer scripts/_lib/retiros.data.json' };
     if (r.sinRenglon.length) return { estado: 'aviso', detalle: `${r.sinRenglon.length} hook(s) o regla(s) sin renglon en retiros.data.json (fecha de revision y razon): ${r.sinRenglon.join(', ')}` };
+    // Ronda 2 (auditor): la marca pendienteDeFusion no vence; si queda colgada (la otra rama no se fundio, o se fundio
+    // distinta), se dice todos los dias con la rama nombrada.
+    if ((r.pendientesDeFusion || []).length) return { estado: 'aviso', detalle: `${r.pendientesDeFusion.length} alta(s) o baja(s) de retiros.data.json esperan otra rama: ${r.pendientesDeFusion.join(' · ')}` };
     const n = r.vencidos.length + r.proximos.length;
     if (!n) return { estado: 'ok', detalle: `${r.total} renglones, ninguno vence en 7 dias` };
     if (!viernes) return { estado: 'ok', detalle: `${r.vencidos.length} vencido(s) y ${r.proximos.length} por vencer en 7 dias: se nombran el viernes (node scripts/_retirosVencidos.mjs)` };

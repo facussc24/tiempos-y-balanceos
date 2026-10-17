@@ -71,6 +71,11 @@ describe('el paso del cierre (evaluarRetirosCierre)', () => {
     expect(evaluarRetirosCierre(r, { viernes: false }).estado).toBe('ok');
     expect(evaluarRetirosCierre({ ...r, sinRenglon: ['hook:nuevo'] }, { viernes: false }).estado).toBe('aviso');
     expect(evaluarRetirosCierre(null).estado).toBe('aviso');
+    // ronda 2 (auditor): una marca pendienteDeFusion colgada avisa con la rama nombrada; sin pendientes, no
+    const p = evaluarRetirosCierre({ ...r, pendientesDeFusion: ['hook:modelo-guard (alta de claude/guardianes-tanda3, todavia no esta en el disco)'] }, { viernes: false });
+    expect(p.estado).toBe('aviso');
+    expect(p.detalle).toMatch(/claude\/guardianes-tanda3/);
+    expect(evaluarRetirosCierre({ ...r, pendientesDeFusion: [] }, { viernes: false }).estado).toBe('ok');
   });
 });
 
