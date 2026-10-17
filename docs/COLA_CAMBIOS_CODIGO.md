@@ -33,6 +33,7 @@ Formato de una fila: `- [ ] AAAA-MM-DD · tamaño · quién · qué (sus palabra
 13. H25 + H26 + H27 · chico y mediano · condición del 06/10 en consumos y vigilante del arb · tres textos que contradicen reglas de Fak
 14. H30 + H31 · mediano y chico · el correccion-guard pide decidir, no copiar la lista literal · Fak: *"deja de tomar literal"*
 15. H5 + H6 · mediano · el cierre empieza por lo que necesito de Fak, y el aviso del cartel de permisos · son líneas, van después de lo que duele
+16. N17-1 · chico · `_encargo.mjs` avisa (y con `--lanzada` rechaza) cuando el cuerpo dice «va en DATO» / «ruta en DATO» y no llegó ninguna `--fuente` · los 4 encargos de las tandas 5-8 del 16/10 22:05 salieron sin la sección DATO y la hija no habría tenido las rutas (rearmados el 17/10 00:25); test en las dos direcciones en `__tests__/scripts/encargo.test.mjs`
 
 _2026-10-16: los 14 pasos de esta lista están hechos. El orden de hoy lo da el plan del sistema del 16/10 (nube de Ingeniería, `Claude Fak\viernes-17-plan-sistema\10-PLAN_SISTEMA_2026-10-16.md`, §1)._
 
