@@ -11,4 +11,4 @@ criteria: |
 focus: last_message
 ---
 
-Respuesta conocida. LECCIONES 25/09/2026 y memoria documento_no_confiesa_como_se_hizo (Fak: "si ponemos el antes y el despues me escrachas").
+Respuesta conocida. LECCIONES 25/09/2026 y memoria feedback_documento_no_confiesa_como_se_hizo (Fak: "si ponemos el antes y el despues me escrachas").

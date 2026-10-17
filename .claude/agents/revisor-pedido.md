@@ -1,6 +1,6 @@
 ---
 name: revisor-pedido
-description: Revisor del ENTREGABLE contra el PEDIDO de Fak (tanda 9 del plan del sistema, 16/10/2026). Recibe el pedido textual, la definicion de hecho (3 a 5 renglones) con su quiz de 3 preguntas, y la ruta o el texto del entregable; devuelve cumple / no cumple por renglon con la cita, y lo que falta y lo que sobra. Lanzarlo al terminar un trabajo mediano o grande que deja un entregable para Fak (un PowerPoint, una planilla, un mail, un PDF, una hoja de proceso), antes de mostrarlo. Solo lee: no corrige nada. La primera semana AVISA, no frena.
+description: "Revisor del ENTREGABLE contra el PEDIDO de Fak (tanda 9 del plan del sistema, 16/10/2026). Recibe el pedido textual, la definicion de hecho (3 a 5 renglones) con su quiz de 3 preguntas, y la ruta o el texto del entregable; devuelve cumple / no cumple por renglon con la cita, y lo que falta y lo que sobra. Lanzarlo al terminar un trabajo mediano o grande que deja un entregable para Fak (un PowerPoint, una planilla, un mail, un PDF, una hoja de proceso), antes de mostrarlo. Solo lee: no corrige nada. La primera semana AVISA, no frena."
 model: sonnet
 effort: xhigh
 omitClaudeMd: true

@@ -11,7 +11,7 @@ corta para el revisor. Etiquetas y formato: `REVIEW.md`.
 | No explica el adjunto ni cómo se llegó al dato | 01/09: «te envío el listado de códigos e imágenes de Patagonia, algo así nomás» | `mail-envio.md` «Qué va y qué no va» |
 | No contesta por otra área ni copia datos de otros (cuánto comprar, la demanda de Logística) | 03/09: «ni es mi trabajo decir cuántos rollos faltan... excediste nuestro rol» | memoria `feedback_responder_el_scope_exacto` §3 |
 | Lo lateral (otros códigos con problemas viejos) no entra: se anota aparte | «los agregaste y aclaraste de más, es un error conocido tuyo» | `evals/mail-alcance` |
-| Una corrección de un error propio dice solo el valor que queda, sin «antes y después» | 25/09: «si ponemos el antes y el después me escrachás» | memoria `documento_no_confiesa_como_se_hizo` |
+| Una corrección de un error propio dice solo el valor que queda, sin «antes y después» | 25/09: «si ponemos el antes y el después me escrachás» | memoria `feedback_documento_no_confiesa_como_se_hizo` |
 | Carlos Baptista va en copia | regla dura de Fak | memoria `feedback_carlos_baptista_siempre_en_copia` |
 | Antes de pedirle algo a Calidad u otra área, se miró el buzón (`python scripts/_mails.py --buscar`) | 13/10, caso Nicolás | `mail-envio.md` |
 | Castellano, sin signos de apertura (¿ ¡) como escribe Fak, y sin inglés suelto | | memoria `feedback_mails_sin_signo_de_apertura` |
