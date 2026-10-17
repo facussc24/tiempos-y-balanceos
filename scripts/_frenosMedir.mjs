@@ -82,7 +82,9 @@ export function medir({ frenos, base, nuevo, env, ahora }) {
     const fb = frenosDe(base, raw, env, ahora);
     const fn = frenosDe(nuevo, raw, env, ahora);
     const antes = fb.includes(f.guard), despues = fn.includes(f.guard);
-    filas.push({ ...f, medible: true, antes, despues, otrosDespues: fn.filter((x) => x !== f.guard), cambio: antes === despues ? '' : despues ? 'aprieta' : 'afloja' });
+    // (ronda 2, detalle 31) los guardianes que frenan con la nueva y no con la base, cualquiera sea el del freno
+    const nuevos = fn.filter((x) => !fb.includes(x));
+    filas.push({ ...f, medible: true, antes, despues, otrosDespues: fn.filter((x) => x !== f.guard), nuevos, cambio: antes === despues ? '' : despues ? 'aprieta' : 'afloja' });
   }
   return filas;
 }
@@ -150,6 +152,9 @@ async function main() {
     const c = (e) => (r.medibles ? `${e.n}: ${e.base}->${e.nuevo}` : `${e.n}: -`);
     console.log(`  ${r.guard.padEnd(44)} ${String(r.n).padStart(3)} · V ${c(r.V)} · F ${c(r.F)} · SD ${c(r.SD)}`);
   }
+  const porNuevo = {};
+  for (const x of filas) for (const g of x.nuevos || []) porNuevo[g] = (porNuevo[g] || 0) + 1;
+  console.log(`\nGuardianes que frenan con la nueva y no con la base (por freno, cualquiera sea el del freno): ${Object.entries(porNuevo).map(([g, n]) => `${g} ${n}`).join(' · ') || 'ninguno'}`);
   const cambiaron = filas.filter((x) => x.cambio);
   const raros = cambiaron.filter((x) => (x.e === 'V' && x.cambio === 'afloja') || (x.e !== 'V' && x.cambio === 'aprieta') || (x.e === 'SD' && x.cambio));
   console.log(`\nCambiaron: ${cambiaron.length} (aflojan ${cambiaron.filter((x) => x.cambio === 'afloja').length}, aprietan ${cambiaron.filter((x) => x.cambio === 'aprieta').length}). Para mirar uno por uno: --casos`);
