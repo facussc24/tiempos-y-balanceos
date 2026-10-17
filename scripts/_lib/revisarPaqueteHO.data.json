@@ -4,11 +4,10 @@
   "piezas_raras": {
     "fuente": "Skill hojas-de-proceso 0.8 b bis y §7 (Fak, 13/10/2026, hoja 20.6 del hot melt: «Verificar que los acumuladores... ¿no vale la pena entre parentesis aclarar que carajo es eso?») y 0.8 b (Fak, 02/10/2026: «¿que es el volante cromado?»).",
     "rojo": [
-      {"palabra": "acumulador", "fuente": "Fak, 13/10/2026, hoja 20.6 del hot melt: «Verificar que los acumuladores... ¿no vale la pena entre parentesis aclarar que carajo es eso?»"},
-      {"palabra": "volante cromado", "fuente": "Fak, 02/10/2026: «¿que es el volante cromado? es como que te diga gira esta nave espacial»"}
+      {"palabra": "acumulador", "fuente": "Fak, 13/10/2026, hoja 20.6 del hot melt: «Verificar que los acumuladores... ¿no vale la pena entre parentesis aclarar que carajo es eso?»"}
     ],
-    "aviso": ["guiador", "desbobinador", "fusor", "enrollador", "expulsor", "atemperador", "sonotrodo"],
-    "_niveles": "ROJO solo para las piezas que Fak marco con su nombre; AVISO para los demas ejemplos de la lista del skill (0.8 b bis y §7), que escribio una sesion y no Fak. Medido el 16/10/2026: el hot melt regenerado del 13/10 sigue con fusor, desbobinador, guiador, enrollador y volante cromado sin parentesis (el barrido pendiente de la memoria feedback_palabra_rara_en_una_hoja_se_aclara_y_se_marca)."
+    "aviso": ["volante cromado", "guiador", "desbobinador", "fusor", "enrollador", "expulsor", "atemperador", "sonotrodo"],
+    "_niveles": "ROJO solo para la pieza por la que Fak pidio el PARENTESIS (acumulador, 13/10). El volante cromado (02/10) es AVISO: ahi pidio la foto marcada, no la aclaracion entre parentesis (skill 0.8 b), y con ROJO el hot melt emitido el 13/10 no se imprimia. AVISO tambien para los demas ejemplos de la lista del skill (0.8 b bis y §7), que escribio una sesion y no Fak. Medido el 16/10/2026: el hot melt regenerado del 13/10 sigue con fusor, desbobinador, guiador, enrollador y volante cromado sin parentesis (el barrido pendiente de la memoria feedback_palabra_rara_en_una_hoja_se_aclara_y_se_marca)."
   },
 
   "herramientas": {

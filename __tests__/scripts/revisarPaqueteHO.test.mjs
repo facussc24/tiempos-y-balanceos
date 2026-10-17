@@ -551,7 +551,7 @@ for k, ruta in json.loads(sys.argv[2]).items():
 print(json.dumps(out))
 `;
     it('frena la HO-990 Rev.A del servidor; deja pasar las de grampas aprobadas y un PDF que no es de hojas (flujograma, AMFE)', () => {
-        const rutas = { h990: F15.h990, gr992: F15.gr992, flujo: path.join(EX, 'IMPRESION_0710_FINAL', '1_FLUJOGRAMAS_A3.pdf'), amfe: F15.amfe };
+        const rutas = { h990: F15.h990, gr992: F15.gr992, flujo: path.join(EX, 'IMPRESION_0710_FINAL', '1_FLUJOGRAMAS_A3.pdf'), amfe: F15.amfe, hmreg: F15.hmreg };
         const r = spawnSync('python', ['-c', PUERTA, RAIZ, JSON.stringify(rutas)], {
             encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
         });
@@ -561,6 +561,8 @@ print(json.dumps(out))
         expect(j.flujo).toEqual({ avisos: 0, frena: false });
         // un AMFE que dice "Hoja de operaciones del puesto" en una celda no es una hoja (lo encontro el auditor, 16/10)
         expect(j.amfe).toEqual({ avisos: 0, frena: false });
+        // el hot melt regenerado y emitido el 13/10 (HO-992 OP 20, las 8 hojas) se puede imprimir: avisos si, ROJO no
+        expect(j.hmreg.frena).toBe(false);
     }, 300000);
 
     it('_imprimir.py no imprime un PDF de hojas con ROJO: sale 1 antes de armar el archivo de impresion', () => {

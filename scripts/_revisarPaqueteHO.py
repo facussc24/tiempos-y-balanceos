@@ -57,7 +57,7 @@ o la medida que lo prueba):
                     abierta a Fak); y el mismo ciclo
                     en hojas de otra operacion ("texto de otra hoja")
   PIEZA_SIN_ACLARAR pieza de nombre raro sin su aclaracion entre parentesis la primera vez (0.8 b bis);
-                    ROJO las que Fak marco (acumulador, volante cromado), AVISO el resto de la lista. El
+                    ROJO acumulador (Fak pidio el parentesis el 13/10), AVISO el resto de la lista. El
                     recuadro con el nombre EN la foto no se mide (esta en los pixeles)
   EPP_NO_DEL_SECTOR un icono que una cita de Fak dice que ahi no se usa (ROJO); anteojos sin criterio
                     cargado (AVISO). Los iconos se reconocen contra los de scripts/hotmelt/epp

@@ -247,3 +247,10 @@ soldadura OP 60 corregida da solo un AVISO (sonotrodo).
 | El barrido lee solo PDF | Escrito en la nota del barrido: los Excel y PowerPoint se pasan antes a PDF en una carpeta de trabajo | — |
 
 Ruido conocido: `imprimirTemporal.test.mjs` tuvo dos fallas por tiempo con cuatro suites en paralelo (19 s por test); solo y en la segunda corrida conjunta, 4/4. `_imprimir.py` ahora tarda más porque corre el revisor (unos 0,3 s por página de hoja).
+
+### Segunda vuelta (consulta al asesor, ≈ 23:25)
+
+- **«volante cromado» bajó a AVISO.** Con ROJO, el hot melt regenerado que Fak aprobó y emitió el 13/10 (HO-992 OP 20, hojas 20.2 y 20.7) no se podía imprimir. Además, lo que Fak pidió el 02/10 fue la foto marcada, no el paréntesis (skill 0.8 b). En ROJO queda solo «acumulador» (13/10). Ahora la HO-992 OP 20 regenerada pasa la puerta con 4 avisos; test en «la puerta de salida».
+- **Hallazgo que queda abierto:** la HO-993 regenerada (la hoja de la máquina, emitida el 13/10) sigue diciendo «acumulador» sin paréntesis en la operación 60 (hojas 7 y 8). Es la misma palabra que marcó Fak, así que es ROJO y la puerta no la imprime hasta que se corrija.
+- **`_tipo` contra toda la población:** corrí el revisor del commit anterior y el nuevo sobre IMPRESION_0710_FINAL, IMPRESION_0710_V3, hojas-por-pieza-14-10 y hojas-gamboa-corregidas-14-10, y los conteos de PORTADA y CAMINO_ANEXO salen iguales (1 y 10). Ninguna hoja real pasó a portada.
+- **Mutación del ciclo copiado:** con `chequear_ciclo_copiado` apagado, falla el test de las evidencias (1 de 54).
