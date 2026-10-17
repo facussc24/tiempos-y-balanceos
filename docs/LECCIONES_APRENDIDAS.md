@@ -62,9 +62,7 @@ incidente vive en los snapshots.
 
 - **13/10 — Un utillaje que apoya sobre algo blando se simula APOYADO y APRETADO antes de imprimirlo, y ante un «no anda» se mide antes de dar una teoría** (*"está muy flojo todo"*). Graduado a `feedback_diseno_3d_medir_antes_de_explicar_y_simular_el_uso`.
 
-- **14/10 — Costura del IP PAD: un «desvío a propósito» no se le firma a Fak sin el papel (el 6 en 25 salía de un mail de VW que no nombra la pieza; *"¿yo puse eso?"*), y la corrección se arma sobre el documento VIGENTE del tema, no sobre el más viejo** (*"agarraste un archivo viejo sin verificarlo"*). Antes de tocar: listar las versiones; manda la más nueva que Fak validó. Memoria `reference_valores_costura_patagonia_confirmados`.
-
-- **14/10 — «¿Sabés cuáles son?» es una pregunta: una pieza que Fak nombra por su FUNCIÓN («los pines del insert») se identifica por su FORMA antes de imprimir, no por la última pieza parecida de la sesión** (mandé 20 pines TRA-IZQ; *"esos no son los pines"*). Memoria `project_pines_costura_cnc_insert`.
+- **14-15/10 — Lo que Fak nombra se identifica por su FORMA y su FUNCIÓN, no por el nombre de una carpeta ni por la última pieza parecida; entre versiones manda la que él validó** («el plotter» es el AOL de cuchilla: *"es grave que no sepas a qué plotter me refiero"*; los pines no eran los TRA-IZQ; la «orejita» era la costura hacia afuera, sin agujero; el 6 en 25 del IP PAD no se firma sin el papel: *"¿yo puse eso?"*). Memorias `reference_plotter_aol_corte_insert`, `project_pines_costura_cnc_insert`, `project_insert_muesca_costura_cnc`, `reference_valores_costura_patagonia_confirmados`.
 
 - **15/10 — Plan de control: se genera releyendo flujograma, AMFE y fichas de embalaje JUSTO antes (los tres cambiaron ese día), y si se rearma entero va limpio: sin amarillo ni notas, una característica por fila, la D sola** (*"todo amarillo con demasiadas notas... ¿por qué no solo D?"*). Graduado al skill `planes-de-control` §4 y §5.
 
@@ -85,6 +83,8 @@ incidente vive en los snapshots.
 - **15/10 — A Fak no se le pregunta lo que contesta un manual, una prueba que puedo correr o el propio diseño: de 18 puntos de una lista, 11 eran míos (CATIA se prueba, el ancho del plotter está en el manual, el filo lo decide el diseño)** (*"preguntás muchas boludeces"*). Graduado a `feedback_la_info_ya_la_tengo_no_preguntar`.
 
 - **16/10 — Impresora Bambu: lo que Fak confirma de su material con la pieza en la mano («es el mismo rollo te dije») queda como DATO y el programa no lo vuelve a poner en duda con avisos** (*"ya me tenés cansado de dudar de mí"*); **y un programa que espera a una dirección fija espera a nadie: la impresora se busca por su serie, y 15 min sin avanzar no es «sin conexión».** Graduado a `feedback_lo_que_fak_confirma_de_su_material_no_se_vuelve_a_dudar` y al skill `impresion-3d-bambu` (`bambu_red.py`, `--seguir`).
+
+- **15/10 — Un valor que la norma resuelve con el papel delante (la S sale del efecto) se aplica y se informa, no se pregunta** (*"ya sabes decidir en base a datos"*). Graduado a `feedback_con_recomendacion_no_se_pregunta`.
 
 - **13/10 — Si Fak pide que algo quede automático, no se le deja una lista de pasos ni un archivo para editar** (*"hacé eso vos... ni pienso leer eso"*), **y un «no aprietes nada» se dice después de medir que avanza.** Graduado al skill `impresion-3d-bambu` §1 bis.
 
