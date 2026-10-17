@@ -1394,6 +1394,16 @@ def exigir_sin_rojos(ruta, paginas_txt=None, quien='mostrar'):
     return avisos
 
 
+def pdfs_de_carpeta(carpeta):
+    """Los PDF de una carpeta y sus subcarpetas, en orden, sin OBSOLETO ni HISTORICO (lo viejo no se juzga:
+    no se usa) ni las carpetas de trabajo que empiezan con "_" (fotos, partes). Solo lista: no abre nada."""
+    out = []
+    for raiz, dirs, archivos in os.walk(carpeta):
+        dirs[:] = sorted(x for x in dirs if not re.search(r'OBSOLET|HISTORIC', norm(x)) and not x.startswith('_'))
+        out += [os.path.join(raiz, a) for a in sorted(archivos) if a.lower().endswith('.pdf')]
+    return out
+
+
 def rangos(nums):
     nums = sorted(set(nums))
     out = []
@@ -1409,7 +1419,10 @@ def rangos(nums):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description='Revisa un paquete de hojas de proceso (PDF).')
-    ap.add_argument('pdf', nargs='+')
+    ap.add_argument('pdf', nargs='*')
+    ap.add_argument('--carpeta', action='append', default=[],
+                    help='revisa todos los PDF de esa carpeta y sus subcarpetas, salteando OBSOLETO y HISTORICO '
+                         '(el barrido de las hojas ya emitidas; se puede repetir)')
     ap.add_argument('--paginas', help='solo estas paginas, ej. 1-5,47')
     ap.add_argument('--json', action='store_true', help='salida JSON')
     ap.add_argument('--solo-rojo', action='store_true', help='no listar los avisos')
@@ -1418,6 +1431,10 @@ def main(argv=None):
     args = ap.parse_args(argv)
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    for carpeta in args.carpeta:
+        args.pdf += pdfs_de_carpeta(carpeta)
+    if not args.pdf:
+        ap.error('falta al menos un PDF o una --carpeta')
     if args.huella:
         for ruta in args.pdf:
             doc = fitz.open(ruta)

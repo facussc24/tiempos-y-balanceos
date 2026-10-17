@@ -549,3 +549,23 @@ print(json.dumps(out))
         expect(r.stdout).not.toContain('Archivo de impresion');
     }, 300000);
 });
+
+describe('tanda 1.5: --carpeta (el barrido de las hojas ya emitidas)', () => {
+    it('lista los PDF de la carpeta y sus subcarpetas, sin OBSOLETO, HISTORICO ni las carpetas de trabajo "_"', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'revpaq-carpeta-'));
+        const crear = (...p) => { fs.mkdirSync(path.join(dir, ...p.slice(0, -1)), { recursive: true }); fs.writeFileSync(path.join(dir, ...p), ''); return path.join(dir, ...p); };
+        const archivos = [
+            crear('HO 990 - INSERT', 'HO-990 - OP 80.pdf'), crear('HO 990 - INSERT', 'OBSOLETO', 'viejo.pdf'),
+            crear('9- HISTORICO (NO USAR)', 'x.pdf'), crear('HO 992', '_fotos', 'foto.pdf'), crear('HO 992', 'HO-992 - OP 50.pdf'),
+            crear('HO 992', 'notas.txt'),
+        ];
+        const r = spawnSync('python', ['-c', String.raw`
+import sys, os, json
+sys.path.insert(0, os.path.join(sys.argv[1], 'scripts'))
+import _revisarPaqueteHO as R
+print(json.dumps([os.path.relpath(p, sys.argv[2]).replace(os.sep, '/') for p in R.pdfs_de_carpeta(sys.argv[2])]))
+`, RAIZ, dir], { encoding: 'utf8' });
+        for (const f of archivos) fs.unlinkSync(f);
+        expect(JSON.parse(r.stdout.trim())).toEqual(['HO 990 - INSERT/HO-990 - OP 80.pdf', 'HO 992/HO-992 - OP 50.pdf']);
+    });
+});
