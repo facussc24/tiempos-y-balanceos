@@ -356,6 +356,17 @@ Se leen **antes de modelar**, no después de que un gate dé rojo.
 Las decisiones de **concepto** de un utillaje que aprieta (de dónde sale la elasticidad,
 isostática, re-derivar en vez de parchear): `reference/utillajes-de-apriete.md`.
 
+**El criterio de un ingeniero de producto, con fuente por regla (tanda 11, 17/10/2026)** — se lee ANTES de modelar:
+- `reference/ingenieria-de-producto.md`: el orden de las preguntas (la función existe hoy, la cota sale del proceso
+  real), las preguntas A1 apoyos / A2 ventana de asiento / A3 asiento simulado, tolerancias y GD&T básico.
+- `reference/ficha-fdm.md`: orientación contra la carga, voladizos, paredes, holguras **con su unidad**, roscas,
+  materiales (PLA Lite / PETG / ABS / ASA / TPU) y lo que queda «a medir en la A2L».
+- `reference/ficha-utillajes.md`: 3-2-1, nada de ubicadores redundantes, tres apoyos con la mano adentro del
+  triángulo, ventana de asiento, apriete contra los apoyos, ergonomía y criterio de aceptación.
+- `reference/catia.md` + `scripts/catia_medir.py`: CATIA V5 por programa (medir, choque en el mismo marco, módulos).
+- Casos de respuesta conocida: `scripts/eval_casos_3d.py` (con `data/casos_3d.json`) y el banco `evals/banco/cad/`
+  (`node scripts/_evalBanco.mjs --banco cad`).
+
 **LIMITE CONOCIDO de G-E2, encontrado el 04/09/2026 (anotado, NO parcheado).** El control
 "PDF y STEP de la misma corrida" compara **mtime**, y `export_deliverables --final` copia las
 piezas a la carpeta destino **justo antes** de correr el gate: la copia siempre queda mas
