@@ -265,12 +265,67 @@ export function crearCliente({ apiKey, timeoutMs = 10 * 60 * 1000, maxRetries = 
  *              otro modelo en vez de devolver el rechazo.
  *
  * El `thinking` se omite: en los cuatro modelos es adaptativo por defecto y el esfuerzo lo gobierna.
+ *
+ * REVISADO CONTRA LA GUIA DE MIGRACION A LOS 5.x (skill claude-api, `shared/model-migration.md`, 17/10/2026, tanda 5):
+ *   - Nunca se manda `thinking` (Opus 5.5 y Sonnet 5.5 dan 400 con `disabled`; los cuatro dan 400 con `budget_tokens`),
+ *     ni `temperature` / `top_p` / `top_k` (400 fuera del default en Fable 5.1, Sonnet 5.5 y Haiku 5.5), ni
+ *     `tool_choice` forzado (400 en Fable 5.1, Opus 5.5 y Sonnet 5.5, tambien en count_tokens y Batches), ni un
+ *     ultimo mensaje del asistente (el prefill da 400 en los cuatro: se frena aca, antes de mandar).
+ *   - El fallback del servidor va en su forma `'default'` con la cabecera `-2026-07-01` en Opus, Sonnet y Fable (para
+ *     Sonnet 5.5 es la unica forma); Haiku 5.5 no tiene fallback del servidor; los lotes no lo aceptan (lote() lo saca).
+ *   - Un solo `cache_control`, en el ULTIMO bloque del system: en estos pedidos de una vuelta el system es lo que se
+ *     repite y el usuario cambia; el cache automatico de arriba cachearia el mensaje del usuario y pagaria la escritura
+ *     sin lecturas. (El agente por API, que si repite la charla, lleva dos marcas: 1 h en el system y 5 min en el
+ *     ultimo mensaje del usuario, que avanza cada vuelta: agenteApi.marcarCache.)
+ *   - `max_tokens`: el tokenizador de los 5.x da ~30 % mas tokens, pero los topes de la noche ya corrieron con los
+ *     modelos 5.x: en el ledger del 09 al 17/10 la salida maxima de la noche fue 2.814 tokens (disparo, Haiku, 17/10)
+ *     contra topes de 4.000 a 16.000. Los que se cortaron (32.000 y 128.000) fueron borradores largos por
+ *     `_apiTarea.mjs`, no la noche.
+ *   - Preserved thinking: aca cada pedido es de UNA vuelta (no se reenvian bloques de pensamiento). El unico que arma
+ *     historial es el agente por API, y lo hace agregando `res.content` entero, sin editar turnos viejos (mover
+ *     `cache_control` no cuenta como edicion, segun la guia). La medicion con reenvios cuesta plata: no se corrio.
  */
+/**
+ * FABLE SOLO SI FAK LO PIDE PARA ESA TAREA (api-claude.md §2; tanda 5 pieza 7, 17/10/2026). En la ola del 11/10 Fable
+ * fue el 55 % del gasto (US$ 144,78 de 262,93) y hasta este dia la puerta no lo controlaba: cualquier llamada con
+ * `modelo: 'fable'` pasaba y la sintesis de _apiLotes.mjs lo usaba por defecto. Ahora un pedido a Fable lleva
+ * `pedidoFable`: la frase de Fak que lo pidio, con su fecha (`Fak 17/10 10:05: "usa fable para la sintesis"`). Sin
+ * eso se frena ANTES de mandar (tambien el conteo de tokens y los lotes), y con eso la frase queda en la linea del
+ * ledger. El codigo no puede saber si la frase es real: lo que asegura es que nadie llegue a Fable sin escribirla.
+ */
+export const LARGO_MIN_PEDIDO_FABLE = 12;
+/** La frase para el ledger si el pedido ES a Fable (id resuelto); null si es otro modelo. */
+export const fraseFableDe = (modelo, pedidoFable) => (resolverModelo(modelo) === MODELOS.fable ? exigirPedidoFable(MODELOS.fable, pedidoFable) : null);
+export function exigirPedidoFable(id, pedidoFable) {
+  if (id !== MODELOS.fable) return null;
+  const frase = String(pedidoFable ?? '').replace(/\s+/g, ' ').trim();
+  if (frase.length < LARGO_MIN_PEDIDO_FABLE) {
+    throw new ErrorApi('fable', 'Fable por la API va solo si Fak lo pidio para esta tarea (api-claude.md §2): falta `pedidoFable` con su frase y su fecha (en los comandos, --fable-pedido "Fak dd/mm hh:mm: <lo que dijo>"). Si no lo pidio, va con Opus.');
+  }
+  return frase.slice(0, 200);
+}
+
+/**
+ * ¿El ultimo mensaje es un prefill? Un turno del asistente hecho SOLO de texto (string o bloques `text`). El turno que
+ * el agente reenvia tal cual despues de un `pause_turn` trae bloques de herramientas del servidor y no es prefill.
+ */
+export function esPrefill(mensajes) {
+  if (!Array.isArray(mensajes) || !mensajes.length) return false;
+  const u = mensajes[mensajes.length - 1];
+  if (u?.role !== 'assistant') return false;
+  if (typeof u.content === 'string') return true;
+  return Array.isArray(u.content) && u.content.length > 0 && u.content.every((b) => b?.type === 'text');
+}
+
 export function armarParametros({
-  modelo, system, usuario, mensajes, maxTokens = 16000, effort, cacheTtl = null, schema, fallbacks,
+  modelo, system, usuario, mensajes, maxTokens = 16000, effort, cacheTtl = null, schema, fallbacks, pedidoFable,
 } = {}) {
   const id = resolverModelo(modelo);
+  exigirPedidoFable(id, pedidoFable);
   if (!mensajes && usuario == null) throw new ErrorApi('api', 'armarParametros: falta `usuario` o `mensajes`');
+  if (esPrefill(mensajes)) {
+    throw new ErrorApi('api', 'armarParametros: el ultimo mensaje es texto del asistente (prefill): los modelos 5.x lo rechazan con 400. Pedir el formato con `schema` o en el system.');
+  }
   const params = {
     model: id,
     max_tokens: maxTokens,
@@ -367,8 +422,11 @@ export const rutaLedger = (mes = mesLocal(), dir = DIR_API) => path.join(dir, `l
  * pago); sin ella la linea no lleva el campo. Despues deja al dia el resumen por clave (saldo.json); si ese resumen
  * falla, el gasto ya quedo anotado y no se pierde.
  */
-export function registrarGasto(r, { tarea = '', lote = false, dir = DIR_API, ahora = new Date(), clave = null } = {}) {
+export function registrarGasto(r, { tarea = '', lote = false, dir = DIR_API, ahora = new Date(), clave = null, pedidoFable = null } = {}) {
   const u = r.usage || {};
+  // un pedido a Fable deja en el ledger la frase de Fak que lo autorizo (tanda 5). Quien llama la pasa solo si PIDIO
+  // Fable (fraseFableDe): asi queda aunque el fallback del servidor haya contestado con otro modelo
+  const fraseFable = pedidoFable ? String(pedidoFable).replace(/\s+/g, ' ').trim().slice(0, 200) : '';
   const entrada = {
     ts: selloLocal(ahora),
     tarea: String(tarea || 'sin-tarea'),
@@ -384,6 +442,7 @@ export function registrarGasto(r, { tarea = '', lote = false, dir = DIR_API, aho
     ...(r.fallback && r.fallback.length ? { fallback: r.fallback } : {}),
     // solo una etiqueta de etiquetaClave(): cualquier otro texto no se escribe (si alguien pasara la clave misma, no queda)
     ...(RE_ETIQUETA_CLAVE.test(String(clave ?? '')) ? { clave: String(clave) } : {}),
+    ...(fraseFable ? { pedidoFable: fraseFable } : {}),
   };
   // por la puerta segura: el ledger solo puede caer en .sgc-cache (o en la carpeta de BARACK_API_DIR)
   agregarSeguro(rutaLedger(mesLocal(ahora), dir), `${JSON.stringify(entrada)}\n`);
@@ -684,7 +743,7 @@ export async function llamar(cliente, opciones = {}) {
     throw new ErrorApi('api', `la API fallo${tarea ? ` (${tarea})` : ''}: ${e?.status ? `HTTP ${e.status} ` : ''}${e?.message ?? e}`, { causa: e });
   }
   const r = interpretarRespuesta(res, { modelo: params.model, conSchema, duracionMs: Date.now() - t0 });
-  if (registrar) registrarGasto(r, { tarea, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(usado?.apiKey, respaldoClave ?? {}) });
+  if (registrar) registrarGasto(r, { tarea, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(usado?.apiKey, respaldoClave ?? {}), pedidoFable: fraseFableDe(params.model, opciones.pedidoFable) });
   return tolerar ? r : exigirRespuestaUtil(r, { tarea });
 }
 
@@ -706,7 +765,7 @@ export async function llamarLargo(cliente, opciones = {}) {
     throw new ErrorApi('api', `la API fallo${tarea ? ` (${tarea})` : ''}: ${e?.status ? `HTTP ${e.status} ` : ''}${e?.message ?? e}`, { causa: e });
   }
   const r = interpretarRespuesta(res, { modelo: params.model, conSchema, duracionMs: Date.now() - t0 });
-  if (registrar) registrarGasto(r, { tarea, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(usado?.apiKey, respaldoClave ?? {}) });
+  if (registrar) registrarGasto(r, { tarea, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(usado?.apiKey, respaldoClave ?? {}), pedidoFable: fraseFableDe(params.model, opciones.pedidoFable) });
   return tolerar ? r : exigirRespuestaUtil(r, { tarea });
 }
 
@@ -771,9 +830,27 @@ const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
  */
 export async function lote(cliente, pedidos, { tarea = '', esperarMs = 30000, timeoutMs = 55 * 60 * 1000, dirLedger = DIR_API, ahora } = {}) {
   if (!pedidos.length) return { loteId: null, resultados: {} };
+  const creado = await crearLote(cliente, pedidos, { tarea });
+  await esperarLote(cliente, creado.lote, { esperarMs, timeoutMs });
+  const resultados = await recogerLote(cliente, creado.loteId, { tarea, conSchema: creado.conSchema, modelos: creado.modelos, pedidoFableDe: creado.pedidoFableDe, dirLedger, ahora });
+  return { loteId: creado.loteId, resultados };
+}
+
+/** El `custom_id` de un pedido de lote: 1 a 64 caracteres, letras, numeros, `_` y `-` (doc de Message Batches). */
+export const RE_CUSTOM_ID = /^[A-Za-z0-9_-]{1,64}$/;
+
+/**
+ * Crea el lote y vuelve ENSEGUIDA, sin esperar (tanda 5, 17/10/2026): quien lo crea guarda `loteId` en disco antes de
+ * esperar, asi un proceso que se cae en el medio no deja un lote pagado que nadie puede recoger. `lote()` es esto +
+ * esperarLote + recogerLote. Devuelve { loteId, lote (el objeto del SDK), conSchema, modelos } — los dos ultimos, por
+ * id de pedido, son lo que recogerLote necesita para interpretar y cobrar cada respuesta.
+ */
+export async function crearLote(cliente, pedidos, { tarea = '' } = {}) {
+  if (!pedidos.length) throw new ErrorApi('lote', 'un lote sin pedidos no se manda');
   const ids = new Set();
   const requests = pedidos.map((p) => {
     if (!p.id || ids.has(p.id)) throw new ErrorApi('lote', `cada pedido del lote lleva un id unico: "${p.id}"`);
+    if (!RE_CUSTOM_ID.test(String(p.id))) throw new ErrorApi('lote', `el id "${p.id}" no sirve como custom_id (1 a 64 caracteres: letras, numeros, _ y -)`);
     ids.add(p.id);
     const { params } = armarParametros({ ...p, fallbacks: false });
     return { custom_id: String(p.id), params };
@@ -782,6 +859,22 @@ export async function lote(cliente, pedidos, { tarea = '', esperarMs = 30000, ti
   try { b = await cliente.messages.batches.create({ requests }); } catch (e) {
     throw new ErrorApi('api', `no se pudo crear el lote${tarea ? ` (${tarea})` : ''}: ${e?.message ?? e}`, { causa: e });
   }
+  return {
+    loteId: b.id,
+    lote: b,
+    conSchema: Object.fromEntries(pedidos.map((p) => [String(p.id), !!p.schema])),
+    modelos: Object.fromEntries(pedidos.map((p) => [String(p.id), resolverModelo(p.modelo)])),
+    // la frase de Fak de cada pedido a Fable (armarParametros ya la exigio): va al ledger al recoger
+    pedidoFableDe: Object.fromEntries(pedidos.map((p) => [String(p.id), fraseFableDe(p.modelo, p.pedidoFable)]).filter(([, f]) => f)),
+  };
+}
+
+/**
+ * Espera a que el lote termine (`processing_status` 'ended'). Pasado `timeoutMs` tira ErrorApi 'lote' con `loteId`:
+ * el lote sigue vivo del lado de Anthropic (vence a las 24 h) y se recoge despues. Devuelve el objeto final del lote.
+ */
+export async function esperarLote(cliente, loteOId, { esperarMs = 30000, timeoutMs = 55 * 60 * 1000 } = {}) {
+  let b = typeof loteOId === 'string' ? await cliente.messages.batches.retrieve(loteOId) : loteOId;
   const t0 = Date.now();
   while (b.processing_status !== 'ended') {
     if (Date.now() - t0 > timeoutMs) {
@@ -790,23 +883,21 @@ export async function lote(cliente, pedidos, { tarea = '', esperarMs = 30000, ti
     await dormir(esperarMs);
     b = await cliente.messages.batches.retrieve(b.id);
   }
-  const conSchema = Object.fromEntries(pedidos.map((p) => [String(p.id), !!p.schema]));
-  const modelos = Object.fromEntries(pedidos.map((p) => [String(p.id), resolverModelo(p.modelo)]));
-  const resultados = await recogerLote(cliente, b.id, { tarea, conSchema, modelos, dirLedger, ahora });
-  return { loteId: b.id, resultados };
+  return b;
 }
 
 /**
  * Los resultados de un lote ya terminado, por id de pedido: { [id]: respuesta | { error } }.
- * Registra el gasto de cada respuesta como lote.
+ * Registra el gasto de cada respuesta como lote. `tareaDe` ({ [id]: tarea }) anota cada pedido con su propio nombre en
+ * el ledger (sin eso todos caen bajo `tarea` y no se pueden comparar dos lotes, p. ej. el mismo en high y en medium).
  */
-export async function recogerLote(cliente, loteId, { tarea = '', conSchema = {}, modelos = {}, dirLedger = DIR_API, ahora } = {}) {
+export async function recogerLote(cliente, loteId, { tarea = '', tareaDe = {}, conSchema = {}, modelos = {}, pedidoFableDe = {}, dirLedger = DIR_API, ahora } = {}) {
   const resultados = {};
   for await (const r of await cliente.messages.batches.results(loteId)) {
     const id = String(r.custom_id);
     if (r.result?.type === 'succeeded') {
       const resp = interpretarRespuesta(r.result.message, { modelo: modelos[id] || r.result.message?.model, conSchema: !!conSchema[id], lote: true });
-      registrarGasto(resp, { tarea, lote: true, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(cliente?.apiKey) });
+      registrarGasto(resp, { tarea: tareaDe[id] || tarea, lote: true, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(cliente?.apiKey), pedidoFable: pedidoFableDe[id] ?? null });
       resultados[id] = resp;
     } else {
       resultados[id] = { error: r.result?.type || 'sin resultado', detalle: r.result?.error?.message ?? r.result?.error?.type ?? null };

@@ -2,7 +2,7 @@
  * _agente.mjs — la linea de comandos del agente por API (diseño AGENTE_POR_API_diseno_opus.md, 11/10/2026).
  *
  * Uso:
- *   node scripts/_agente.mjs --encargo <md> [--modelo opus|sonnet|fable] [--carpeta <dir>]
+ *   node scripts/_agente.mjs --encargo <md> [--modelo opus|sonnet|fable] [--fable-pedido "Fak dd/mm hh:mm: <lo que dijo>"] [--carpeta <dir>]
  *                            [--pasos N] [--minutos N] [--dolares N] [--seco]
  *
  *   --encargo  el pedido (un .md): va tal cual como primer mensaje del usuario
@@ -18,12 +18,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { crearCliente, contarTokens, presupuestoDelMes, resolverModelo, selloLocal, usd, ErrorApi, MENSAJE_SIN_CLAVE } from './_lib/claudeApi.mjs';
+import { crearCliente, contarTokens, presupuestoDelMes, resolverModelo, selloLocal, usd, ErrorApi, MENSAJE_SIN_CLAVE, exigirPedidoFable } from './_lib/claudeApi.mjs';
 import { escribirSeguro } from './_lib/escrituraSegura.mjs';
 import { leerTextoSeguro } from './_apiTarea.mjs';
 import { correrAgente, ejecutorReal, ejecutorSeco, clienteGuion, registroEnDisco, usoDe, tapar, RAIZ, TOPES_DEFECTO } from './_lib/agenteApi.mjs';
 
-const USO = 'uso: node scripts/_agente.mjs --encargo <md> [--modelo opus|sonnet|fable] [--carpeta <dir>] [--pasos N] [--minutos N] [--dolares N] [--seco]';
+const USO = 'uso: node scripts/_agente.mjs --encargo <md> [--modelo opus|sonnet|fable] [--fable-pedido "Fak dd/mm hh:mm: <lo que dijo>"] [--carpeta <dir>] [--pasos N] [--minutos N] [--dolares N] [--seco]';
 const ESFUERZO = { sonnet: 'high', opus: 'xhigh', fable: 'xhigh' };   // Sonnet ejecuta, Opus/Fable deciden (diseño §2); `max` nunca (techo-agentes.md)
 export const SYSTEM_TOPE_TOKENS = 25000;
 const RUTAS_SYSTEM = ['CLAUDE.md', '.claude/rules/api-claude.md', 'MEMORY.md'];   // A VERIFICAR: donde vive el indice MEMORY.md
@@ -34,7 +34,7 @@ export function leerArgumentos(argv, env = process.env) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--seco') { op.seco = true; continue; }
-    if (['--encargo', '--modelo', '--carpeta', '--pasos', '--minutos', '--dolares'].includes(a) && i + 1 < argv.length) { op[a.slice(2)] = argv[++i]; continue; }
+    if (['--encargo', '--modelo', '--carpeta', '--pasos', '--minutos', '--dolares', '--fable-pedido'].includes(a) && i + 1 < argv.length) { op[a.slice(2)] = argv[++i]; continue; }
     throw new ErrorApi('api', `no conozco el argumento ${a}. No hago nada.\n${USO}`);
   }
   if (!op.encargo) throw new ErrorApi('api', `falta --encargo.\n${USO}`);
@@ -45,6 +45,8 @@ export function leerArgumentos(argv, env = process.env) {
   if (!ESFUERZO[op.modelo]) throw new ErrorApi('api', '--modelo va con opus|sonnet|fable (Haiku no corre el bucle: pasa los 100 k tokens y salta a la tarifa larga)');
   for (const k of ['pasos', 'minutos', 'dolares']) { op[k] = Number(op[k]); if (!(op[k] > 0)) throw new ErrorApi('api', `--${k} tiene que ser un numero mayor que 0`); }
   op.effort = ESFUERZO[op.modelo];
+  // Fable solo con la frase de Fak que lo pidio para esta corrida (api-claude.md §2; tanda 5): sin ella no arranca
+  op.pedidoFable = exigirPedidoFable(resolverModelo(op.modelo), op['fable-pedido']) ?? undefined;
   return op;
 }
 
@@ -101,14 +103,14 @@ async function main(argv) {
     const sem = presupuestoDelMes();
     if (sem.semaforo === 'rojo') { console.error(`ciclo en rojo (${usd(sem.gastadoUsd)} de ${usd(sem.presupuestoUsd)}, ${sem.ciclo.texto}): el agente no arranca`); return 1; }
     cliente = crearCliente({ timeoutMs: 15 * 60 * 1000 });
-    const tokens = await contarTokens(cliente, { modelo: op.modelo, system, usuario: encargo });   // gratis; no cuenta las herramientas (~1 k mas)
+    const tokens = await contarTokens(cliente, { modelo: op.modelo, system, usuario: encargo, pedidoFable: op.pedidoFable });   // gratis; no cuenta las herramientas (~1 k mas)
     if (tokens > SYSTEM_TOPE_TOKENS) { console.error(`system + encargo miden ${tokens.toLocaleString('es-AR')} tokens: el tope es ${SYSTEM_TOPE_TOKENS.toLocaleString('es-AR')}`); return 1; }
     soltar = tomarCandado(path.dirname(carpeta));
     ejecutor = ejecutorReal({ carpeta });
   }
   console.log(`agente ${corrida}: ${resolverModelo(op.modelo)} ${op.effort} · topes ${topes.pasos} pasos / ${topes.minutos} min / ${usd(topes.dolares)} / ${topes.busquedas} busquedas · carpeta ${path.relative(process.cwd(), carpeta) || '.'}${op.seco ? ' · EN SECO' : ''}`);
   let r;
-  try { r = await correrAgente({ cliente, modelo: op.modelo, effort: op.effort, system, encargo, carpeta, corrida, ejecutor, registro, topes, registrar }); } finally { soltar(); }
+  try { r = await correrAgente({ cliente, modelo: op.modelo, effort: op.effort, system, encargo, carpeta, corrida, ejecutor, registro, topes, registrar, pedidoFable: op.pedidoFable }); } finally { soltar(); }
   console.log(`${r.terminado ? 'TERMINADO' : `CORTE: ${r.corte}`} · ${r.paso} pasos · ${Math.round(r.duracionMs / 60000)} min · ${r.busquedas} busquedas · ${r.bloqueos} bloqueo(s) · costo real ${usd(r.gastadoUsd)} · registro en ${path.relative(process.cwd(), path.join(carpeta, 'registro.jsonl'))}`);
   if (r.resumen) console.log(`Resumen: ${r.resumen}\nEntregable: ${r.entregable}`);
   return r.terminado ? 0 : 1;

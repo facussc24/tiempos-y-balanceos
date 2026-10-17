@@ -74,10 +74,11 @@ import { correr as correrDisparo } from './_pruebaDisparoSkills.mjs';
 import { correr as correrVigilante } from './_lib/vigilarPrecios.mjs';
 import {
   PASOS, NOMBRE_TAREA, HORA_TAREA, debeArrancar, correrPasos, leerSalidaDatos, elegirPedidos, emparejarMails, recortarCuerpo,
-  SYSTEM_MAILS, armarPedidoMails, lineasDeMails, tocaNovedades, novedadesSinCambios, planNovedades, juntarListados, resumirNovedades,
+  SYSTEM_MAILS, armarPedidoMails, lineasDeMails, tocaNovedades, novedadesSinCambios, planNovedades, resumirNovedades,
   reunirEntradas, armarPedidoPrioridades, SYSTEM_PRIORIDADES, generarPrioridades, textoPrioridades, lineaRenglon,
   armarEstado, edadHoras, comandoAgendar, comandoDesagendar, comandoEstadoTarea, leerEstadoTarea,
   ultimaCorrida, anotarCorrida, corridaCompleta, tocaSemanal, detalleVigilante,
+  pausaPorPresupuesto, FACTOR_TOKENIZADOR, leerMarcador, anotarMarcador, juntarDesdeMarcador,
 } from './_lib/nocturno.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
@@ -87,7 +88,21 @@ export const RUTA_PRIORIDADES = path.join(RAIZ, '.claude', 'state', 'prioridades
 const RUTA_LOG = path.join(DIR_API, 'nocturno.log');
 const DIR_NOVEDADES = process.env.BARACK_NOVEDADES_DIR || path.join(RAIZ, '.sgc-cache', 'x-seguimiento');
 
+/** Desde donde lee cada paso que lee por marcador (tanda 5): { novedadesLargo: { hastaMs, fecha } }. */
+export const RUTA_MARCADORES = path.join(RAIZ, '.claude', 'state', 'nocturno-marcadores.json');
+
 const leerJson = (ruta) => { try { return JSON.parse(fs.readFileSync(ruta, 'utf8')); } catch { return null; } };
+
+/** El registro de marcadores: {} si nunca se escribio; si esta y no se entiende es un ERROR del paso (no "dia tranquilo"). */
+function leerMarcadores() {
+  if (!fs.existsSync(RUTA_MARCADORES)) return {};
+  try { return JSON.parse(fs.readFileSync(RUTA_MARCADORES, 'utf8')); } catch (e) {
+    throw new Error(`no pude leer ${path.relative(RAIZ, RUTA_MARCADORES)} (${e.message}): sin el marcador no se sabe desde donde leer; se mira a mano`);
+  }
+}
+
+/** Lo MAS que puede costar un pedido: la entrada inflada por el tokenizador de los 5.x y la salida en su max_tokens. */
+const cotaPedidoUsd = (modelo, texto, maxTokens) => estimarUsd(modelo, { entrada: Math.ceil(tokensAprox(texto) * FACTOR_TOKENIZADOR), salida: maxTokens });
 const DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 const p2 = (x) => String(x).padStart(2, '0');
 /** "jueves 08/10/2026": el dia de la noche, escrito para el modelo (que no tiene reloj). */
@@ -129,7 +144,7 @@ async function mailsDeLosPedidos(pedidos, jsonl = MAILS_JSONL) {
   return out;
 }
 
-async function pasoMails({ cliente, simular }) {
+async function pasoMails({ cliente, simular, restanteUsd = null }) {
   const elegidos = elegirPedidos(pedidosSinRespuesta());
   if (!elegidos.length) return { detalle: '0 mails sin respuesta', datos: [] };
   const pares = emparejarMails(elegidos, await mailsDeLosPedidos(elegidos), claveHilo)
@@ -139,6 +154,8 @@ async function pasoMails({ cliente, simular }) {
     const est = estimarUsd('haiku', { entrada: tokensAprox(SYSTEM_MAILS) + tokensAprox(pedido.usuario), salida: 2000 });
     return { detalle: `${elegidos.length} mails para resumir (simulado, ~${usd(est)})`, datos: [] };
   }
+  const pausa = pausaPorPresupuesto({ cotaUsd: cotaPedidoUsd('haiku', SYSTEM_MAILS + pedido.usuario, 8000), restanteUsd, que: `el resumen de ${elegidos.length} mails` });
+  if (pausa) return { ...pausa, datos: [] };
   const r = await llamar(cliente, { modelo: 'haiku', effort: 'low', system: SYSTEM_MAILS, ...pedido, maxTokens: 8000, tarea: 'nocturno:mails' });
   const lineas = lineasDeMails(elegidos, r.json);
   const sinResumen = lineas.filter((l) => /^\(sin resumen/.test(l.linea)).length;
@@ -182,7 +199,7 @@ function carpetasDelEscritorio(ahora) {
   return out.sort((a, b) => a.dias - b.dias);
 }
 
-async function pasoPrioridades({ cliente, simular, ahora, hechos, datos }) {
+async function pasoPrioridades({ cliente, simular, ahora, hechos, datos, restanteUsd = null }) {
   const { entradas, avisos } = reunirEntradas({
     fuentes: { seguimientos: seguimientosHook, hilos: hilosAbiertos, escritorio: () => carpetasDelEscritorio(ahora) },
     mails: datos.mails, pasos: hechos, hallazgos: datos.hallazgos,
@@ -193,6 +210,11 @@ async function pasoPrioridades({ cliente, simular, ahora, hechos, datos }) {
     if (!entradas.length) return { detalle: `0 entradas: no llamaria al modelo (simulado)${aviso}`, datos: [] };
     const est = estimarUsd('sonnet', { entrada: tokensAprox(SYSTEM_PRIORIDADES) + tokensAprox(armarPedidoPrioridades(entradas, { fecha }).usuario), salida: 2500 });
     return { detalle: `${entradas.length} entradas para ordenar (simulado, ~${usd(est)})${aviso}`, datos: [] };
+  }
+  if (entradas.length) {
+    // misma llamada que generarPrioridades (Sonnet, max_tokens 8000): su cota, antes de mandarla
+    const pausa = pausaPorPresupuesto({ cotaUsd: cotaPedidoUsd('sonnet', SYSTEM_PRIORIDADES + armarPedidoPrioridades(entradas, { fecha }).usuario, 8000), restanteUsd, que: `ordenar ${entradas.length} entradas` });
+    if (pausa) return { ...pausa, detalle: `${pausa.detalle}${aviso}`, datos: [] };
   }
   const r = await generarPrioridades({ entradas, fecha, llamarModelo: (opciones) => llamar(cliente, opciones) });
   escribirSeguro(RUTA_PRIORIDADES, textoPrioridades({ renglones: r.renglones, descartados: r.descartados, fecha: selloLocal(ahora).slice(0, 16), avisos }));
@@ -212,12 +234,16 @@ const listados = () => {
   } catch { return []; }
 };
 
-/** Los listados de los ultimos 7 dias con su texto (para el resumen largo del lunes). */
-const listadosDeLaSemana = (ahoraMs) => listados()
-  .filter((x) => x.ms >= ahoraMs - 7 * 86400000).slice(0, 12)
+/**
+ * Los listados para el resumen largo, con su texto: los de despues del MARCADOR (tanda 5) o, sin marcador, los de los
+ * ultimos 7 dias. Como mucho los 60 mas VIEJOS (dos meses de noches; `listados()` viene del mas nuevo al mas viejo): lo
+ * que no entra queda arriba del marcador y va en el proximo largo, en vez de perderse.
+ */
+const listadosParaElLargo = (ahoraMs, desdeMs) => listados()
+  .filter((x) => (desdeMs != null ? x.ms > desdeMs : x.ms >= ahoraMs - 7 * 86400000)).slice(-60)
   .map((x) => ({ f: x.f, ms: x.ms, texto: fs.readFileSync(path.join(DIR_NOVEDADES, x.f), 'utf8') }));
 
-async function pasoNovedades({ cliente, simular, ahora }) {
+async function pasoNovedades({ cliente, simular, ahora, restanteUsd = null }) {
   const aviso = avisoHook(leerJson(path.join(DIR_NOVEDADES, '_estado.json')) || {}, ahora);
   const largo = tocaNovedades(ahora, aviso);
   if (simular) {
@@ -230,16 +256,41 @@ async function pasoNovedades({ cliente, simular, ahora }) {
   if (!nuevo) throw new Error('_novedadesClaude.mjs no dejo un listado nuevo: resultado vacio');
   const hoy = fs.readFileSync(path.join(DIR_NOVEDADES, nuevo.f), 'utf8');
   // la lectura corre todos los dias y su estado avanza todos los dias: el listado de hoy trae SOLO lo de hoy;
-  // el resumen largo del lunes necesita la semana
-  const texto = largo ? juntarListados(listadosDeLaSemana(ahora.getTime()), { ahoraMs: ahora.getTime() }) : hoy;
+  // el resumen largo necesita lo que hubo desde el ultimo resumen largo: se lee desde el MARCADOR (tanda 5), no
+  // "los ultimos 7 dias" (con la notebook apagada una semana, la ventana perdia lo que quedaba afuera)
+  let texto = hoy;
+  let junta = null;
+  let marcadores = null;
+  let marca = null;
+  if (largo) {
+    marcadores = leerMarcadores();
+    marca = leerMarcador(marcadores, 'novedadesLargo');
+    junta = juntarDesdeMarcador(listadosParaElLargo(ahora.getTime(), marca?.hastaMs ?? null), { desdeMs: marca?.hastaMs ?? null, ahoraMs: ahora.getTime() });
+    texto = junta.texto;
+  }
   const plan = planNovedades(ahora, aviso, !novedadesSinCambios(texto));
-  if (plan.accion === 'saltar') return { detalle: 'sin cambios', datos: { listado: nuevo.f } };
+  if (plan.accion === 'saltar') {
+    // largo sin nada nuevo: los listados se LEYERON bien y no traian novedades, asi que el marcador avanza igual. Si no
+    // avanzara, con mas de 60 listados vacios arriba del marcador el largo saldria "sin cambios" para siempre (auditor 17/10)
+    if (largo && junta?.hastaMs != null) {
+      escribirSeguro(RUTA_MARCADORES, `${JSON.stringify(anotarMarcador(marcadores, 'novedadesLargo', { hastaMs: junta.hastaMs, fecha: selloLocal(new Date(junta.hastaMs)).slice(0, 16) }), null, 2)}\n`);
+    }
+    return { detalle: 'sin cambios', datos: { listado: nuevo.f } };
+  }
+  const pausa = pausaPorPresupuesto({ cotaUsd: cotaPedidoUsd(plan.modelo, plan.system + texto, plan.maxTokens), restanteUsd, que: `el resumen ${plan.largo ? 'largo' : 'de hoy'} de novedades` });
+  if (pausa) return { ...pausa, datos: { listado: nuevo.f } };
   const res = await resumirNovedades({ plan, texto, llamarModelo: (opciones) => llamar(cliente, opciones) });
   const sello = selloLocal(ahora).replace(/[: ]/g, '').replace(/-/g, '').slice(0, 12);
   const ruta = path.join(DIR_NOVEDADES, `resumen_${sello}.md`);
-  escribirSeguro(ruta, `# Novedades de Claude — resumen ${plan.largo ? 'de la semana' : 'de hoy'} (${selloLocal(ahora).slice(0, 16)})\n\nDe ${nuevo.f}${plan.largo ? ' y los listados de los ultimos 7 dias' : ''}. Para la sesion de la manana: se cruza con lo que ya tenemos antes de proponerle algo a Fak; nada se aplica solo.\n\n${res.resumen}\n`);
+  const deDonde = !plan.largo ? '' : marca ? ` y los listados desde el ultimo resumen largo (${marca.fecha ?? 'marcador'})` : ' y los listados de los ultimos 7 dias (primera vez: todavia no habia marcador)';
+  escribirSeguro(ruta, `# Novedades de Claude — resumen ${plan.largo ? 'de la semana' : 'de hoy'} (${selloLocal(ahora).slice(0, 16)})\n\nDe ${nuevo.f}${deDonde}. Para la sesion de la manana: se cruza con lo que ya tenemos antes de proponerle algo a Fak; nada se aplica solo.\n\n${res.resumen}\n`);
+  // el marcador avanza recien con el resumen escrito (confirmar antes de registrar); simulando no se llega aca
+  if (plan.largo && junta?.hastaMs != null) {
+    escribirSeguro(RUTA_MARCADORES, `${JSON.stringify(anotarMarcador(marcadores, 'novedadesLargo', { hastaMs: junta.hastaMs, fecha: selloLocal(new Date(junta.hastaMs)).slice(0, 16) }), null, 2)}\n`);
+  }
   const renglones = res.resumen.split(/\r?\n/).filter((l) => l.trim().startsWith('-')).length;
-  return { detalle: `${renglones} renglon(es) en ${path.basename(ruta)} (${res.modelo})`, costoUsd: res.costoUsd, datos: { listado: nuevo.f, resumen: ruta } };
+  const quedan = junta?.quedan ? ` · ${junta.quedan} listado(s) no entraron: quedan para el proximo largo` : '';
+  return { detalle: `${renglones} renglon(es) en ${path.basename(ruta)} (${res.modelo})${quedan}`, costoUsd: res.costoUsd, datos: { listado: nuevo.f, resumen: ruta } };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -276,14 +327,14 @@ export const RUTA_SEMANAL = path.join(RAIZ, '.claude', 'state', 'nocturno-semana
  * paso). `correr` devuelve { detalle, costoUsd, datos, completa }; con `completa` (y sin simular) se anota la fecha.
  */
 export function semanal(nombre, { solo, ahora, simular, ruta = RUTA_SEMANAL }, correr) {
-  return async () => {
+  return async (ctxPaso = {}) => {
     const ultima = ultimaCorrida(nombre, leerJson(ruta));
     const t = tocaSemanal(ultima, ahora);
     if (!t.toca && solo !== nombre) return { saltado: true, detalle: `no toca: la última completa fue hace ${t.dias} día${t.dias === 1 ? '' : 's'} (${ultima})` };
-    const r = await correr();
+    const r = await correr(ctxPaso);
     if (r?.completa && !simular) {
       escribirSeguro(ruta, `${JSON.stringify(anotarCorrida(leerJson(ruta), nombre, selloLocal(ahora).slice(0, 10)), null, 2)}\n`);
-    } else if (!simular) {
+    } else if (!simular && !r?.pausa) {   // una pausa ya dice que vuelve la proxima noche
       r.detalle = `${r.detalle} · incompleta: se reintenta la próxima noche`;
     }
     return r;
@@ -296,7 +347,19 @@ async function pasoVigilante({ simular, ahora }) {
   return { detalle: `${detalleVigilante(r)}${simular ? ' (simulado, páginas guardadas)' : ''}`, datos: { json: r.rutaJson ?? null, diferencias: r.diferencias?.length ?? 0 }, completa: corridaCompleta('vigilante', r) };
 }
 
-async function pasoPropuestas({ cliente, simular, ahora, transcripts }) {
+/**
+ * La cota de un semanal sale de su propia simulacion (lee skills y transcripts, no llama a la API). Propuestas son ~40
+ * pedidos: su "tope" (todos llenando max_tokens) pasa los $8 y la pausaria siempre; se usa el probable inflado por el
+ * tokenizador, y el corte por corrida sigue de red.
+ */
+async function pausaSemanal({ simular, restanteUsd, que, estimar }) {
+  if (simular || restanteUsd == null) return null;
+  return pausaPorPresupuesto({ cotaUsd: (await estimar()) * FACTOR_TOKENIZADOR, restanteUsd, que });
+}
+
+async function pasoPropuestas({ cliente, simular, ahora, transcripts, restanteUsd = null }) {
+  const pausa = await pausaSemanal({ simular, restanteUsd, que: 'la revisión de skills', estimar: async () => (await correrPropuestas({ simular: true, transcripts: await transcripts(), ahora })).estimadoUsd.probable });
+  if (pausa) return pausa;
   const r = await correrPropuestas({ simular, cliente, transcripts: await transcripts(), ahora });
   if (simular) return { detalle: `${r.resumen.linea.replace(/^simulado: /, '')} (simulado, ~${usd(r.estimadoUsd.probable)} probable)` };
   const s = r.resumen;
@@ -304,7 +367,9 @@ async function pasoPropuestas({ cliente, simular, ahora, transcripts }) {
   return { detalle: `${s.propuestas} para verificar de ${s.revisados} revisado${s.revisados === 1 ? '' : 's'}${s.errores ? ` · ${s.errores} con error` : ''}`, costoUsd: s.costoUsd, datos: { dir: s.dir }, completa: corridaCompleta('propuestas', r) };
 }
 
-async function pasoDisparo({ cliente, simular, ahora, transcripts }) {
+async function pasoDisparo({ cliente, simular, ahora, transcripts, restanteUsd = null }) {
+  const pausa = await pausaSemanal({ simular, restanteUsd, que: 'la prueba de disparo', estimar: async () => (await correrDisparo({ simular: true, transcripts: await transcripts(), ahora })).estimadoUsd });
+  if (pausa) return pausa;
   const r = await correrDisparo({ simular, cliente, transcripts: await transcripts(), ahora });
   if (simular) return { detalle: `${r.resumen.linea.replace(/^simulado: /, '')} (simulado)` };
   const s = r.resumen;
@@ -348,9 +413,10 @@ async function noche({ simular, solo, sinTope }) {
     { nombre: 'datos', correr: async () => pasoDatos({ simular }) },
     {
       nombre: 'preauditoria',
-      correr: async () => {
-        // el tope por corrida tambien ADENTRO de la pasada (cola H18): es el primer paso, lo gastado hasta aca es 0
-        const r = await correrPreauditoria({ simular, cliente, ahora: inicio, max: TOPE_AMFE_POR_NOCHE, topeUsd: sinTope ? null : topeCorridaUsd() });
+      correr: async ({ restanteUsd }) => {
+        // el tope por corrida tambien ADENTRO de la pasada (cola H18), con lo que le queda a la corrida (null sin tope):
+        // un AMFE que no arranca queda para la noche siguiente sin tocar el estado
+        const r = await correrPreauditoria({ simular, cliente, ahora: inicio, max: TOPE_AMFE_POR_NOCHE, topeUsd: restanteUsd });
         if (simular) return { detalle: r.linea };
         datos.hallazgos = { revisados: r.revisados, saltados: r.saltados, diferidos: r.diferidos, porTope: r.porTope ?? 0, total: r.hallazgos, nuevos: r.nuevos, errores: r.errores };
         datos.reporte = r.reporte;
@@ -360,19 +426,19 @@ async function noche({ simular, solo, sinTope }) {
     },
     {
       nombre: 'mails',
-      correr: async () => { const r = await pasoMails({ cliente, simular }); datos.mails = r.datos || []; return r; },
+      correr: async ({ restanteUsd }) => { const r = await pasoMails({ cliente, simular, restanteUsd }); datos.mails = r.datos || []; return r; },
     },
     {
       nombre: 'prioridades',
-      correr: () => pasoPrioridades({ cliente, simular, ahora: inicio, hechos, datos }),
+      correr: ({ restanteUsd }) => pasoPrioridades({ cliente, simular, ahora: inicio, hechos, datos, restanteUsd }),
     },
     {
       nombre: 'novedades',
-      correr: async () => { const r = await pasoNovedades({ cliente, simular, ahora: inicio }); datos.resumenNovedades = r.datos?.resumen ?? null; return r; },
+      correr: async ({ restanteUsd }) => { const r = await pasoNovedades({ cliente, simular, ahora: inicio, restanteUsd }); datos.resumenNovedades = r.datos?.resumen ?? null; return r; },
     },
     { nombre: 'vigilante', correr: semanal('vigilante', ctxSemanal, () => pasoVigilante({ simular, ahora: inicio }).then(guardarSemanal('vigilante'))) },
-    { nombre: 'propuestas', correr: semanal('propuestas', ctxSemanal, () => pasoPropuestas({ cliente, simular, ahora: inicio, transcripts }).then(guardarSemanal('propuestas'))) },
-    { nombre: 'disparo', correr: semanal('disparo', ctxSemanal, () => pasoDisparo({ cliente, simular, ahora: inicio, transcripts }).then(guardarSemanal('disparo'))) },
+    { nombre: 'propuestas', correr: semanal('propuestas', ctxSemanal, ({ restanteUsd }) => pasoPropuestas({ cliente, simular, ahora: inicio, transcripts, restanteUsd }).then(guardarSemanal('propuestas'))) },
+    { nombre: 'disparo', correr: semanal('disparo', ctxSemanal, ({ restanteUsd }) => pasoDisparo({ cliente, simular, ahora: inicio, transcripts, restanteUsd }).then(guardarSemanal('disparo'))) },
   ], {
     solo,
     topeCorridaUsd: sinTope ? null : topeCorridaUsd(),
@@ -392,7 +458,10 @@ async function noche({ simular, solo, sinTope }) {
     if (datos.prioridades) console.log(`Prioridades sugeridas (para la sesion de la manana): ${path.relative(RAIZ, RUTA_PRIORIDADES)}`);
   }
   if (estado.corte) console.log(`La noche se corto sola: ${estado.corte.detalle}.`);
-  return pasos.some((p) => p.estado === 'error' || p.corte) ? 1 : 0;
+  const pausados = pasos.filter((p) => p.pausa).map((p) => p.nombre);
+  if (pausados.length) console.log(`En pausa por el tope de la corrida (vuelven la próxima noche): ${pausados.join(', ')}.`);
+  // una pausa sale con 1, como el corte: algo quedo sin hacer por el tope y la sesion de la manana tiene que verlo
+  return pasos.some((p) => p.estado === 'error' || p.corte || p.pausa) ? 1 : 0;
 }
 
 function mostrarEstado() {

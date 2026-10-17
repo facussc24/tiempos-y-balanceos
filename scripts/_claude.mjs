@@ -24,7 +24,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import {
   crearCliente, leerClave, claveActiva, llamar, verificarAcceso, presupuestoDelMes, leerLedgerCiclo, resumenLedger, cicloDia, topeCorridaUsd,
-  selloLocal, usd, resolverModelo, MENSAJE_SIN_CLAVE, ErrorApi, clavesPrestadas, prestadaAgotada, DIR_API, escribirSaldo,
+  selloLocal, usd, resolverModelo, MENSAJE_SIN_CLAVE, ErrorApi, clavesPrestadas, prestadaAgotada, DIR_API, escribirSaldo, exigirPedidoFable,
 } from './_lib/claudeApi.mjs';
 import { psRun } from './_lib/powershell.mjs';
 import {
@@ -298,8 +298,8 @@ function ledger(mes) {
   return 0;
 }
 
-async function preguntar(texto, modelo = 'opus') {
-  const r = await llamar(crearCliente(), { modelo, effort: 'medium', usuario: texto, maxTokens: 16000, tarea: 'preguntar' });
+async function preguntar(texto, modelo = 'opus', pedidoFable = undefined) {
+  const r = await llamar(crearCliente(), { modelo, effort: 'medium', usuario: texto, maxTokens: 16000, tarea: 'preguntar', pedidoFable });
   console.log(r.texto);
   console.error(`\n(${r.modelo} · $${r.costoUsd.toFixed(4)} · ${r.usage.input_tokens ?? 0} entrada / ${r.usage.output_tokens ?? 0} salida)`);
   return 0;
@@ -309,10 +309,10 @@ async function preguntar(texto, modelo = 'opus') {
 // CLI
 // ─────────────────────────────────────────────────────────────────────────────
 
-const USO = 'uso: node scripts/_claude.mjs --check | --pegar-clave | --probar | --ledger [--mes AAAA-MM] | --preguntar "texto" [--modelo opus|sonnet|haiku|fable]';
+const USO = 'uso: node scripts/_claude.mjs --check | --pegar-clave | --probar | --ledger [--mes AAAA-MM] | --preguntar "texto" [--modelo opus|sonnet|haiku|fable [--fable-pedido "Fak dd/mm hh:mm: <lo que dijo>"]]';
 
 async function main(argv) {
-  const CON_VALOR = ['--mes', '--preguntar', '--modelo'];
+  const CON_VALOR = ['--mes', '--preguntar', '--modelo', '--fable-pedido'];
   const SIN_VALOR = ['--check', '--probar', '--ledger', '--pegar-clave'];
   const op = {};
   for (let i = 0; i < argv.length; i++) {
@@ -325,13 +325,14 @@ async function main(argv) {
   const acciones = ['--check', '--probar', '--ledger', '--pegar-clave', '--preguntar'].filter((a) => op[a]);
   if (acciones.length !== 1) { console.error(USO); return 2; }
   if (op['--mes'] && !/^\d{4}-\d{2}$/.test(op['--mes'])) { console.error('--mes va como AAAA-MM. No hago nada.'); return 2; }
-  if (op['--modelo']) { try { resolverModelo(op['--modelo']); } catch (e) { console.error(e.message); return 2; } }
+  // Fable solo con la frase de Fak que lo pidio (api-claude.md §2): sin ella, argumento invalido antes de llamar
+  if (op['--modelo']) { try { exigirPedidoFable(resolverModelo(op['--modelo']), op['--fable-pedido']); } catch (e) { console.error(e.message); return 2; } }
   try {
     if (op['--check']) return await check();
     if (op['--pegar-clave']) return await pegarClave();
     if (op['--ledger']) return ledger(op['--mes'] || null);
     if (op['--probar']) return await probar();
-    return await preguntar(op['--preguntar'], op['--modelo'] || 'opus');
+    return await preguntar(op['--preguntar'], op['--modelo'] || 'opus', op['--fable-pedido']);
   } catch (e) {
     if (e instanceof ErrorApi && e.tipo === 'sin_clave') { console.error(MENSAJE_SIN_CLAVE); return 3; }
     console.error(`Fallo: ${e?.message ?? e}`);

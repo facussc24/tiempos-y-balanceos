@@ -142,6 +142,9 @@ export function dibujar(estado, el = crudo, opciones = {}) {
     } else if (n.cortada) {
       estadoLargo = [fuerte('se cortó antes de terminar', COLOR.ambar)]
       estadoCorto = [fuerte('se cortó', COLOR.ambar)]
+    } else if (n.enPausa) {
+      estadoLargo = [fuerte(`${n.enPausa === 1 ? 'un paso quedó' : `${n.enPausa} pasos quedaron`} en pausa por el tope de gasto`, COLOR.ambar)]
+      estadoCorto = [fuerte(`${n.enPausa} en pausa`, COLOR.ambar)]
     } else {
       estadoLargo = [fuerte('corrió bien', COLOR.verde)]
       estadoCorto = estadoLargo

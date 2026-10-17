@@ -20,7 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { armarParametros, interpretarRespuesta, resolverModelo, costoUsd, registrarGasto, etiquetaClave, selloLocal, usd } from './claudeApi.mjs';
+import { armarParametros, interpretarRespuesta, resolverModelo, costoUsd, registrarGasto, etiquetaClave, selloLocal, usd, fraseFableDe } from './claudeApi.mjs';
 import { escribirSeguro, agregarSeguro, rutaReal as rutaRealHastaDondeExista } from './escrituraSegura.mjs';
 import { esSecreto } from '../_apiTarea.mjs';
 
@@ -508,7 +508,7 @@ async function ejecutarHerramienta(uso, paso, k, ctx) {
   }
 }
 
-const registrarEnLedger = (r, tarea, clave = null) => registrarGasto(r, { tarea, clave });
+const registrarEnLedger = (r, tarea, clave = null, pedidoFable = null) => registrarGasto(r, { tarea, clave, pedidoFable });
 
 /**
  * Un paso = una llamada al modelo; sus tool_use se ejecutan en orden y los tool_result vuelven en UN mensaje
@@ -518,9 +518,11 @@ const registrarEnLedger = (r, tarea, clave = null) => registrarGasto(r, { tarea,
 export async function correrAgente({
   cliente, modelo = 'sonnet', effort = 'high', system, encargo, carpeta, corrida = 'sin-nombre', ejecutor, registro,
   topes = {}, maxTokens = 8192, guardian = guardianReal, registrar = registrarEnLedger, ahora = () => Date.now(),
+  pedidoFable,
 }) {
   const t = { ...TOPES_DEFECTO, ...topes };
   const id = resolverModelo(modelo);
+  const fraseFable = fraseFableDe(id, pedidoFable);   // Fable solo con la frase de Fak (api-claude.md §2): sin ella tira aca
   const mensajes = [{ role: 'user', content: [{ type: 'text', text: String(encargo ?? '') }] }];
   const estado = {
     corrida, modelo: id, paso: 0, gastadoUsd: 0, busquedas: 0, bloqueos: 0, sinTerminar: 0, corte: null, entregable: null, resumen: null,
@@ -531,7 +533,7 @@ export async function correrAgente({
     const freno = chequearTopes(estado, t, { modelo: id, maxTokens, ahora: ahora() });
     if (freno) { estado.corte = freno; break; }
     marcarCache(mensajes);
-    const { params } = armarParametros({ modelo: id, system, mensajes, maxTokens, effort, cacheTtl: '1h', fallbacks: false });
+    const { params } = armarParametros({ modelo: id, system, mensajes, maxTokens, effort, cacheTtl: '1h', fallbacks: false, pedidoFable });
     params.tools = armarHerramientas(t.busquedas - estado.busquedas);   // lo que queda de la corrida, no el tope entero cada vez
     const t0 = ahora();
     let res;
@@ -541,7 +543,7 @@ export async function correrAgente({
     const costo = Math.round((r.costoUsd + busq * PRECIO_BUSQUEDA_USD) * 1e6) / 1e6;   // costoUsd ignora las busquedas: se suman aca
     estado.paso++; estado.gastadoUsd = Math.round((estado.gastadoUsd + costo) * 1e6) / 1e6; estado.busquedas += busq;
     estado.ultimaEntrada = tokensEntrada(r.usage);
-    registrar({ ...r, costoUsd: costo }, `agente:${corrida}`, etiquetaClave(cliente?.apiKey));
+    registrar({ ...r, costoUsd: costo }, `agente:${corrida}`, etiquetaClave(cliente?.apiKey), fraseFable);
     const contenido = Array.isArray(res?.content) ? res.content : [];
     mensajes.push({ role: 'assistant', content: contenido });
     const linea = { n: estado.paso, hora: selloLocal(new Date(ahora())), modelo: r.modeloRespuesta ?? id, stop: r.stopReason, duracionMs: r.duracionMs, busquedas: busq, costoUsd: costo, acumuladoUsd: estado.gastadoUsd, herramientas: [] };

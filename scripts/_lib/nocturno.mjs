@@ -81,6 +81,13 @@ export const MAX_ERRORES_SEGUIDOS = 3;
  *     (un 'ok' reinicia la cuenta; un 'saltado' no cuenta ni reinicia), la noche se frena: algo de
  *     fondo anda mal (sin red, clave vencida) y seguir solo gasta. Los que faltan quedan 'saltado'.
  * Las filas afectadas llevan `corte` ('tope_corrida' | 'errores_seguidos') y `corteDetalle`.
+ *
+ * PAUSA POR PRESUPUESTO (tanda 5, 17/10/2026; regla 6 del post de Anthropic sobre automatizaciones, 08/10/2026: «el
+ * pedido que supera el tope queda en pausa», `budget_reached`). Cada paso recibe `{ restanteUsd }` (lo que le queda a
+ * ESTA corrida antes del tope; null sin tope) y, ANTES de llamar al modelo, compara la cota de su pedido con eso
+ * (`pausaPorPresupuesto`). Si no entra devuelve `{ saltado: true, pausa: 'budget_reached', detalle }`: la fila queda
+ * 'saltado' con `pausa`, no cuenta como error ni reinicia la cuenta, y los pasos que siguen corren (uno mas barato
+ * puede entrar). Lo que se pauso vuelve la noche siguiente. El corte de arriba sigue: es la red si una cota se queda corta.
  */
 export async function correrPasos(pasos, { solo = null, alTerminar = () => {}, topeCorridaUsd = null, maxErroresSeguidos = MAX_ERRORES_SEGUIDOS } = {}) {
   const out = [];
@@ -99,13 +106,15 @@ export async function correrPasos(pasos, { solo = null, alTerminar = () => {}, t
         fila = { nombre: p.nombre, estado: 'saltado', detalle: corte.detalle, costoUsd: 0, datos: null, corte: corte.motivo, corteDetalle: corte.detalle };
       } else {
         try {
-          const r = (await p.correr()) || {};
+          const restanteUsd = topeCorridaUsd != null ? Math.round((Number(topeCorridaUsd) - gastado) * 1e6) / 1e6 : null;
+          const r = (await p.correr({ restanteUsd })) || {};
           fila = {
             nombre: p.nombre,
-            estado: r.saltado ? 'saltado' : 'ok',
+            estado: r.saltado || r.pausa ? 'saltado' : 'ok',
             detalle: String(r.detalle ?? ''),
             costoUsd: Number(r.costoUsd) || 0,
             datos: r.datos ?? null,
+            ...(r.pausa ? { pausa: String(r.pausa) } : {}),
           };
         } catch (e) {
           fila = {
@@ -126,6 +135,56 @@ export async function correrPasos(pasos, { solo = null, alTerminar = () => {}, t
     alTerminar(fila);
   }
   return out;
+}
+
+/** Los modelos 5.x cuentan hasta ~30 % mas tokens para el mismo texto: la cota de entrada se infla con esto. */
+export const FACTOR_TOKENIZADOR = 1.3;
+
+/**
+ * ¿El pedido entra en lo que le queda a la corrida? `cotaUsd`: lo MAS que puede costar (entrada inflada por
+ * FACTOR_TOKENIZADOR y la salida en su max_tokens: la cuenta baja se queda corta justo cuando importa). Devuelve null si
+ * entra (o no hay tope), o lo que el paso tiene que devolver para quedar en pausa.
+ */
+export function pausaPorPresupuesto({ cotaUsd, restanteUsd, que = 'el pedido' } = {}) {
+  if (restanteUsd == null) return null;
+  const cota = Number(cotaUsd);
+  if (!Number.isFinite(cota) || cota <= Number(restanteUsd)) return null;
+  return {
+    saltado: true,
+    pausa: 'budget_reached',
+    detalle: `en pausa (budget_reached): ${que} puede costar hasta ${plata(cota)} y a la corrida le quedan ${plata(Math.max(0, Number(restanteUsd)))} del tope; vuelve la próxima noche`,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Marcadores: leer desde donde se quedo, no por ventana de tiempo
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// Regla 1 del post de automatizaciones (08/10/2026): una automatizacion lee desde un MARCADOR (lo ultimo que proceso), no
+// "los ultimos 7 dias": con la notebook apagada una semana, la ventana pierde lo que quedo afuera; el marcador no. El
+// registro vive en .claude/state/nocturno-marcadores.json ({ novedadesLargo: { hastaMs, fecha } }). Que no exista es la
+// primera corrida (se cae a la ventana de siempre); que exista y no se entienda es un ERROR: una lectura fallida no es
+// "dia tranquilo" (regla 2). El marcador avanza solo despues de escribir el resultado (regla 4: confirmar antes de registrar).
+
+export const MARCADORES = Object.freeze(['novedadesLargo']);
+
+/** El marcador `nombre` del registro: { hastaMs, fecha } o null si nunca se anoto. Tira si esta pero no se entiende. */
+export function leerMarcador(registro, nombre) {
+  if (!MARCADORES.includes(nombre)) throw new Error(`leerMarcador: marcador desconocido "${nombre}"`);
+  if (registro == null) return null;
+  if (typeof registro !== 'object' || Array.isArray(registro)) throw new Error('el registro de marcadores no es un objeto: no se adivina desde donde leer');
+  const m = registro[nombre];
+  if (m == null) return null;
+  if (!Number.isFinite(Number(m?.hastaMs))) throw new Error(`el marcador "${nombre}" esta roto (${JSON.stringify(m).slice(0, 80)}): no se adivina desde donde leer`);
+  return { hastaMs: Number(m.hastaMs), fecha: m.fecha ?? null };
+}
+
+/** El registro con el marcador `nombre` puesto en `hastaMs`. Puro: devuelve uno nuevo. */
+export function anotarMarcador(registro, nombre, { hastaMs, fecha = null }) {
+  if (!MARCADORES.includes(nombre)) throw new Error(`anotarMarcador: marcador desconocido "${nombre}"`);
+  if (!Number.isFinite(Number(hastaMs))) throw new Error(`anotarMarcador: hastaMs invalido "${hastaMs}"`);
+  const base = registro && typeof registro === 'object' && !Array.isArray(registro) ? registro : {};
+  return { ...base, [nombre]: { hastaMs: Number(hastaMs), fecha } };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -364,6 +423,39 @@ export function juntarListados(listados, { ahoraMs = Date.now(), dias = 7, tope 
     total += pieza.length;
   }
   return entran.join('\n\n---\n\n');
+}
+
+/**
+ * El texto del resumen LARGO leyendo desde el MARCADOR (tanda 5): los listados con `ms` > `desdeMs`; sin marcador
+ * (primera vez), los de los ultimos `dias`. Se recorren del mas VIEJO al mas nuevo: si no entra todo en `tope`, lo que
+ * queda afuera es lo mas nuevo, que sigue arriba del marcador y entra la proxima vez (con la ventana se perdia lo viejo).
+ * Un listado sin novedades no va al texto pero cuenta como leido. Devuelve { texto (el mas nuevo primero, como siempre),
+ * hastaMs (el ultimo listado leido: a donde avanza el marcador si el resumen sale), incluidos, quedan }.
+ */
+export function juntarDesdeMarcador(listados, { desdeMs = null, ahoraMs = Date.now(), dias = 7, tope = 120000 } = {}) {
+  const piso = desdeMs != null ? Number(desdeMs) : ahoraMs - dias * 86400000;
+  const enRango = (Array.isArray(listados) ? listados : [])
+    .filter((x) => x && Number.isFinite(Number(x.ms)) && (desdeMs != null ? Number(x.ms) > piso : Number(x.ms) >= piso))
+    .sort((a, b) => a.ms - b.ms);
+  const entran = [];
+  let total = 0;
+  let hastaMs = null;
+  let leidos = 0;
+  for (const x of enRango) {
+    if (novedadesSinCambios(x.texto)) { hastaMs = x.ms; leidos++; continue; }
+    const pieza = `## ${x.f}\n\n${String(x.texto).trim()}`;
+    if (entran.length && total + pieza.length > tope) break;
+    entran.push({ ms: x.ms, pieza });
+    total += pieza.length;
+    hastaMs = x.ms;
+    leidos++;
+  }
+  return {
+    texto: entran.sort((a, b) => b.ms - a.ms).map((e) => e.pieza).join('\n\n---\n\n'),
+    hastaMs,
+    incluidos: entran.length,
+    quedan: enRango.length - leidos,
+  };
 }
 
 /**
@@ -653,7 +745,7 @@ export function lineaTablero({ fin, pasos = [], costoUsd = 0, presupuesto = null
     if (nov) {
       if (nov.estado === 'error') partes.push(`novedades: ERROR (${corto(nov.detalle, 60)})`);
       else if (nov.estado === 'ok') partes.push(`novedades: ${nov.detalle || 'ok'}`);
-      else if (nov.estado === 'saltado' && !nov.corte && !/^--solo/.test(nov.detalle)) partes.push('novedades: no tocaba');
+      else if (nov.estado === 'saltado' && !nov.corte && !nov.pausa && !/^--solo/.test(nov.detalle)) partes.push('novedades: no tocaba');
     }
     // los semanales: solo si corrieron (un 'saltado' porque no tocaba no ocupa lugar en la linea)
     for (const [n, etiqueta] of [['vigilante', 'precios'], ['propuestas', 'propuestas de skills'], ['disparo', 'disparo de skills']]) {
@@ -665,6 +757,9 @@ export function lineaTablero({ fin, pasos = [], costoUsd = 0, presupuesto = null
     // la noche se corto sola (tope por corrida o pasos seguidos en error): que se vea en la linea
     const cortada = pasos.find((p) => p.corte);
     if (cortada) partes.push(`CORTADA: ${cortada.corteDetalle || cortada.detalle}`);
+    // un pedido que no entraba en lo que quedaba del tope quedo en pausa: vuelve la noche siguiente
+    const pausados = pasos.filter((p) => p.pausa).map((p) => p.nombre);
+    if (pausados.length) partes.push(`EN PAUSA por el tope de la corrida: ${pausados.join(', ')}`);
   }
   const mes = presupuesto ? ` (mes ${plata(presupuesto.gastadoUsd)} de $${presupuesto.presupuestoUsd}, ${presupuesto.semaforo})` : '';
   partes.push(`${plata(costoUsd)}${mes}`);
@@ -682,7 +777,7 @@ export function armarEstado({ inicio, fin, pasos = [], presupuesto = null, noArr
     inicio: local(ini),
     fin: local(fi),
     finMs: fi.getTime(),
-    pasos: pasos.map(({ nombre, estado, detalle, costoUsd: c, corte }) => ({ nombre, estado, detalle, costoUsd: Number(c) || 0, ...(corte ? { corte } : {}) })),
+    pasos: pasos.map(({ nombre, estado, detalle, costoUsd: c, corte, pausa }) => ({ nombre, estado, detalle, costoUsd: Number(c) || 0, ...(corte ? { corte } : {}), ...(pausa ? { pausa } : {}) })),
     costoUsd,
     presupuesto,
     noArranco: noArranco || null,
