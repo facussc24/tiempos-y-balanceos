@@ -1325,13 +1325,20 @@ export function mueveAMano(cmd, { cwd = '' } = {}) {
     }
     const robomueve = /^robocopy$/i.test(v) && args.some((a) => /^\/(?:MOV|MOVE)$/i.test(a));
     if (!ESC_MUEVE_VERBO.test(v) && !ESC_COPIA_VERBO.test(v) && !/^robocopy$/i.test(v)) continue;
+    // Ronda 2 (17/10, hallazgo 7): el destino explicito tambien va como `--target-directory=X` o con la t pegada a otras
+    // opciones (`cp -rt X`), y algo que no se resuelve (una variable de `$(cygpath …)` o de un for) se mira contra el
+    // comando ENTERO, como en apqp-cliente: no se adivina.
+    const largo = args.map((a) => a.match(/^--target-directory=(.+)$/)).find(Boolean);
+    const explicito = args.findIndex((a) => /^-(?:t|Destination|-target-directory)$/i.test(a) || /^-[A-Za-z]*t$/.test(a));
+    const destinoExplicito = largo ? completa(largo[1]) : explicito >= 0 && args[explicito + 1] !== undefined ? completa(args[explicito + 1]) : undefined;
     const pos = args.filter((a) => !/^-/.test(a) && !/^\/[A-Za-z]{1,4}(?::\S*)?$/.test(a)).map((a) => completa(a));
+    if (destinoExplicito !== undefined) pos.push(destinoExplicito);
     if (!pos.length) continue;
-    if (ESC_MUEVE_VERBO.test(v) || robomueve) { if (pos.some((a) => ESC_ARCHIVO.test(a)) || (pos.some((a) => /\$/.test(a)) && ESC_ARCHIVO.test(c.crudo))) return true; continue; }
-    const explicito = args.findIndex((a) => /^-(?:t|Destination)$/i.test(a));
-    const destino = /^robocopy$/i.test(v) ? pos[1] : explicito >= 0 ? completa(args[explicito + 1]) : pos[pos.length - 1];
+    const enTodo = () => ESC_ARCHIVO.test(res(String(cmd)));
+    if (ESC_MUEVE_VERBO.test(v) || robomueve) { if (pos.some((a) => ESC_ARCHIVO.test(a)) || (pos.some((a) => /\$/.test(a)) && enTodo())) return true; continue; }
+    const destino = /^robocopy$/i.test(v) ? pos[1] : destinoExplicito ?? pos[pos.length - 1];
     if (destino === undefined) { if (ESC_ARCHIVO.test(c.crudo)) return true; continue; }
-    if (ESC_ARCHIVO.test(destino) || (/\$/.test(destino) && ESC_ARCHIVO.test(res(c.crudo)))) return true;
+    if (ESC_ARCHIVO.test(destino) || (/\$/.test(destino) && enTodo())) return true;
   }
   const codigo = embebido.join('\n');
   return ESC_ARCHIVO.test(codigo) && ESC_MUEVE.test(codigo);

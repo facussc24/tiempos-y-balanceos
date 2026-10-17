@@ -124,6 +124,21 @@ describe('escritorio-guard — mover a mano', () => {
             expect(r.err, c).toMatch(/Mover y registrar son UNA operacion/);
         }
     }, 60_000);
+    // Ronda 2 (17/10, hallazgo 7): el archivo en una variable de $(cygpath …) o de un for, --target-directory= y cp -rt
+    it('8e. ROJO (ronda 2) — el archivo de cerradas en una variable que no se resuelve, o como destino explicito', () => {
+        const T26w = `C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\TAREAS CERRADAS\\2026`;
+        const D = '/c/Users/FacundoS-PC/OneDrive - BARACK ARGENTINA SRL/Desktop';
+        for (const c of [
+            `ARCH="$(cygpath -u '${T26w}')"; mv "${D}/Tarea" "$ARCH/2026-10-17 - Tarea"`,
+            `for d in "${T26}"; do mv "${D}/Tarea" "$d/"; done`,
+            `cp --target-directory="${T26}" "${D}/x.pdf"`,
+            `cp -rt "${T26}" "${D}/Tarea"`,
+        ]) {
+            const r = correr(bash(c));
+            expect(r.code, c).toBe(2);
+            expect(r.err, c).toMatch(/Mover y registrar son UNA operacion/);
+        }
+    }, 60_000);
 });
 
 describe('escritorio-guard — escrituras', () => {
