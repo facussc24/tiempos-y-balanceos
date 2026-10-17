@@ -7,11 +7,16 @@ lo que corrí fue sobre copias en la carpeta temporal de la sesión (`scratchpad
 qué comando dio cada JSON usé el registro de la sesión (`5849b15b-….jsonl`). Al lado de cada hallazgo hay un
 `respuesta: ____` (REVIEW.md).
 
-## Resultado: FALLO · 2 Importante, 3 Nit (y 4 más contados), 0 Preexistente
+**Auditado hasta `53ff38ff`.** Mientras escribía entró `7a2dcd20` (09:41), que ya arregla R2-I1, R2-I2 y dos nits. Ese
+commit se llevó una versión anterior de este informe, **sin R2-I3**: la medición que lo sostiene terminó a las 09:42 y
+a las 09:45. `7a2dcd20` no lo revisé, porque después de la ronda 2 va al cierre. Lo único que miré: la frase de R2-I3
+sigue en `docs/PLAN_3D_A_FONDO_2026-10-17.md:162`.
+
+## Resultado: FALLO · 3 Importante, 3 Nit (y 4 más contados), 0 Preexistente
 
 | Severidad | Cuántos | Cuáles |
 |---|---|---|
-| TRUE BUG | 1 | R2-I2 (la evidencia guardada de CATIA es la corrida que falló) |
+| TRUE BUG | 2 | R2-I2 (la evidencia guardada de CATIA es la corrida que falló), R2-I3 (el «33 %, indeterminado, no físico» no es indeterminado) |
 | ROBUSTNESS | 1 Importante + nits | R2-I1 (el eval sigue dando OK sin datos por otras dos puertas) |
 | FALSE POSITIVE (revisado, está bien) | 17 | lista al final |
 
@@ -43,7 +48,7 @@ no tiene `esperado.A3_asiento` ni `sim_publicada`, así que su «SIN DATO» no c
 | `--sim-normal vacio.json --sim-punta vacio.json` | 4 fallas, código 1 (bien: es lo que arregló I3) |
 | `--sim-normal sim_asiento_repro_1017.json` sin `--sim-punta` | v15 `reproduce_lo_publicado: null` y 1 falla, código 1 (bien) |
 | **sin ningún `--sim-…`** (la llamada que sugiere `SKILL.md:367`) | **RESULTADO: OK, código 0**. v14 y v15 esperan `A3_asiento: ROJO` y no se compara |
-| `--sim-normal` y `--sim-punta` del 13/10, sin `--solo` | **OK, código 0**. La v16 da `A3 SIN DATO` y no falla |
+| `--sim-normal sim_asiento_repro_1017.json --sim-punta sim_asiento_repro_punta_1017.json`, sin `--solo` | **OK, código 0**. La v16 da `A3 SIN DATO` y no falla |
 | `--solo v16` sin ninguna corrida | **OK, código 0** (no imprime ni la línea de A3) |
 | `--solo v61` (mal escrito) | **OK, código 0** sin evaluar ninguna pieza |
 
@@ -80,6 +85,41 @@ nube es la misma que la del archivo que midió CATIA (md5 igual, arriba).
 
 **Qué haría.** Copiar el JSON de las 09:16 encima del de `.sgc-cache` (o guardarlo al lado con otro nombre y dejar el
 fallido como `…_fallida_0911.json`), y nombrar el archivo en V5 del plan.
+
+### R2-I3 — [Importante] TRUE BUG: «con la mano justo encima de un apoyo el programa lineal queda indeterminado (33 %, no físico)» no es indeterminado · respuesta: ____
+
+**Dónde:** `docs/PLAN_3D_A_FONDO_2026-10-17.md:161-162` (punto 5). Es la única frase de la rama que todavía afirma de
+la punta algo que los datos no dicen: la causa que da no se midió, y medida no es esa.
+
+**Caso medido 1, ¿es indeterminado?** Armé un lanzador, `scratchpad\r2\degen.py`, que corre en memoria la misma copia de
+`sim_asiento_v16.py` sin tocar el archivo. Solo le agrega una medición a `reposo()`: después de encontrar el óptimo, por cada
+una de las 4 esquinas calcula la altura mínima y la máxima entre **todas** las poses que dan ese mismo óptimo
+(tolerancia 1e-6 mm, 8 programas lineales más por mano). Lo corrí con 30 casos, la mano en x −35,8 / 125,6 (las de
+`sim_v16b_punta_apoyos.json`) y las esquinas en −38,1 / 127,9. Resultado: 360 soluciones, y entre poses óptimas las
+esquinas varían **0,0003 mm de mediana y 0,0035 mm como máximo** (0 % arriba de 0,01 mm). La pose está determinada. La
+misma corrida da la métrica publicada (30 % > 0,3 mm, máximo 0,81; el archivo de 150 casos da 33 % y 0,81). El 33 % es
+una salida del modelo con el mismo peso que el 0 % y el 28 %.
+
+**Caso medido 2, ¿de dónde sale?** Con el lanzador `scratchpad\r2\sin_alabeo.py` cambio una sola línea por corrida.
+Mismos 30 casos, misma mano:
+
+| Corrida | % > 0,3 mm | Máx. |
+|---|---|---|
+| igual (control) | 30 % | 0,81 |
+| sin el alabeo de la pieza impresa (`g = H - T`; el sorteo se hace igual, no se aplica) | **0 %** | 0,16 |
+| sin el tope del plástico bajo el tapizado | 27 % | 0,88 |
+
+Lo que lo mueve es el **alabeo**: con la mano encima del apoyo de una punta, el modelo rígido apoya la cara plana de 3 mm
+de ese apoyo, que el alabeo dejó inclinada, y lleva esa inclinación hasta la otra punta. ¿Es físico? **Falta
+verificar.** Esa cara inclinada es de centésimas sobre 3 mm, el tapizado la puede absorber, y el modelo no lo sabe.
+Con la mano adentro (la corrida normal) no pasa: 0 %.
+
+**Qué cambia.** El veredicto no: la punta igual la decide la prueba física, y el PDF no usa el 33 %. Lo que cambia es
+lo que queda escrito. De las corridas de la rama, es el único caso de «apretar en la punta» que el modelo resuelve sin
+llegar al tope de giro, y queda afuera de los umbrales de V3 (33 % contra ≤ 10 %; 0,81 contra ≤ 0,5). Su mediana
+(0,13) cumple la de V4 (≤ 0,5). **Qué haría:** reemplazar la frase por lo medido: «con la mano encima de los apoyos de
+las puntas da 33 % y 0,81 mm (150 casos); lo mueve el alabeo sorteado de la pieza (sin alabeo, 0 % en 30 casos); si el
+tapizado lo absorbe, lo dice la prueba 2».
 
 ---
 
@@ -120,9 +160,9 @@ fallido como `…_fallida_0911.json`), y nombrar el archivo en V5 del plan.
 
 ## Lo que pidió el encargo, punto por punto
 
-**1. ¿I1 quedó bien dicho?** Sí. Ni en la rama ni en el PDF queda una frase que afirme de la punta algo que los datos
-no dicen. Busqué «0,00» y «punta» en `cad-design`, el plan y la investigación: lo único que queda con 0,00 es
-`gate_giro` (lecciones-caras, otro tema). Contra los JSON:
+**1. ¿I1 quedó bien dicho?** En el PDF y en B2, sí. En la rama queda una frase, la del 33 % «indeterminado» (R2-I3).
+El «0,00 en la punta» no aparece más: busqué «0,00» y «punta» en `cad-design`, el plan y la investigación, y lo único
+con 0,00 es `gate_giro` (lecciones-caras, otro tema). Contra los JSON:
 
 | Lo que dice | JSON | ¿Coincide? |
 |---|---|---|
@@ -140,9 +180,8 @@ vinilo). Lo dice la prueba 2.» Y la prueba 2 pide apretar «en el borde de las 
 agarre del anillo es cierto: el programa lineal solo impide atravesar (`A_ub`), y nada sujeta la pieza contra el panel.
 B2 de `ficha-utillajes.md` está alineado.
 
-**Lo que sigue abierto de I1:** que el 33 % con la mano encima de un apoyo sea «indeterminado, no físico» (plan
-`:162`). Lo estoy midiendo: para cada posición de la mano, cuánto pueden variar las esquinas entre todas las poses que
-dan el mismo óptimo. El resultado está más abajo.
+**Lo que sigue abierto de I1:** la frase del plan `:161-162`, que dice que el 33 % con la mano encima de un apoyo es
+«indeterminado, no físico». Medido, no es indeterminado; lo mueve el alabeo (R2-I3).
 
 **2. ¿I2?** La geometría está cerrada. Nube = `out\v16` = `out\virolador_v10_two.step` = mi regeneración (misma DATA).
 build123d da 89.278,483, CATIA 89.278,482 (en la corrida de las 09:16). `choque_v16.py` reproduce: 0 adentro, 0,55 en

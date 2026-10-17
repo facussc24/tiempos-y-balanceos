@@ -159,7 +159,9 @@ tardar **menos de 1 minuto**. Si algo no lo permite la licencia, se dice con lo 
    está en x = −30 / 120, números de la placa de 164 mm; en una iteración de 172 mm con los apoyos 4 mm adentro, esos
    puntos caían adentro del polígono de apoyos (entre ellos) y daban 0,00 mm, que **no era la punta**. Con la mano en el borde real, el modelo rígido
    vuelca hasta su tope **a la v15 y a la v16 por igual** (no modela el anillo agarrado en el vinilo de la ranura), y con
-   la mano justo encima de un apoyo el programa lineal queda indeterminado (33 %, no físico). Lo que se hizo con eso: los
+   la mano justo encima de un apoyo da 33 % de casos: no es una indeterminación del programa (medido por el auditor, ronda
+   2: entre las poses con el mismo óptimo las esquinas varían 0,0035 mm); lo produce el alabeo sorteado de la pieza (sin
+   alabeo, 0 % en 30 casos). Si el tapizado absorbe ese alabeo, falta verificarlo. Lo que se hizo con eso: los
    apoyos van a 0,3 mm de los extremos (el voladizo más allá de la cara plana bajó de 4,1 a 1,8 mm: el redondeo) y **la
    punta la decide la prueba física** (punto 2 del PDF: apretar en el borde de las puntas). Si ahí vuelca, el siguiente
    paso es un tope antivuelco que no apoye (regla B3) o un apoyo que llegue al borde.
