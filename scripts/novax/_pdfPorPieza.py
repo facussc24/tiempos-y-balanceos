@@ -64,6 +64,7 @@ if faltan:
     sys.exit(1)
 
 os.makedirs(SALIDA, exist_ok=True)
+armados = []
 for nombre, partes in PIEZAS.items():
     doc = fitz.open()
     for carpeta, archivo in partes:
@@ -79,4 +80,20 @@ for nombre, partes in PIEZAS.items():
     print(f"\n{nombre}  —  {len(doc)} hojas, {os.path.getsize(destino) / 1e6:.1f} MB")
     for i, p in enumerate(doc, 1):
         print(f"  {i:2d}. {que_es(p)}")
+    armados.append(destino)
+
+# Antes de mostrarlo: el revisor del PDF, sobre cada PDF armado (tanda 1.5, 16/10/2026: el 14/10 Fak abrio
+# el del Insert con 26 rojos que el revisor ya marcaba; "no vuelvas a pasarme hojas mal"). Con un ROJO, el
+# PDF queda escrito para corregirlo pero el programa sale con 1 y dice que no se muestra.
+sys.path.insert(0, os.path.join(REPO, "scripts"))
+import _revisarPaqueteHO  # noqa: E402
+con_rojos = []
+for destino in armados:
+    try:
+        _revisarPaqueteHO.exigir_sin_rojos(destino, quien="mostrar ni imprimir")
+    except SystemExit:
+        con_rojos.append(os.path.basename(destino))
+if con_rojos:
+    print(f"\nNO SE MUESTRA: {len(con_rojos)} PDF con defectos ROJO ({', '.join(con_rojos)}). Corregir y volver a armar.")
+    sys.exit(1)
 print(f"\nListo en {SALIDA}")

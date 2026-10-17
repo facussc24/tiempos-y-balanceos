@@ -1300,7 +1300,8 @@ def chequear_armado(p):
                         nombres[a], antes if rc < 0 else despues, nombres[b], antes if ra < 0 else despues))
     if not malos:
         return []
-    return [d('ARMADO_DISTINTO', ROJO, '%s; comparado con %s' % ('; '.join(malos[:2]), ref['fuente']))]
+    texto = '; '.join(malos[:2]).replace(' de el ', ' del ')
+    return [d('ARMADO_DISTINTO', ROJO, '%s; comparado con %s' % (texto, ref['fuente']))]
 
 
 # ---- driver ------------------------------------------------------------------------
@@ -1365,6 +1366,32 @@ def revisar_pdf(ruta, paginas_txt=None):
             res[n] += ds
     ident = {p.n: identidad(p) for p in paginas if res[p.n]}
     return doc, paginas, res, ident
+
+
+def exigir_sin_rojos(ruta, paginas_txt=None, quien='mostrar'):
+    """La puerta de salida (tanda 1.5, 16/10/2026): toda hoja de proceso que va a Fak o a planta pasa por
+    este revisor, la haya hecho quien la haya hecho (generador, servidor, otro autor). El error entraba por
+    lo que NO pasaba por ningun control: hojas viejas del servidor y de otro autor (informe de hojas del
+    15/10, A3, A6, A8). Un PDF sin ninguna hoja de proceso (flujograma, AMFE) pasa sin revisar.
+    Con un ROJO sale con SystemExit y la lista; devuelve la cantidad de avisos si no hay rojos."""
+    doc = fitz.open(ruta)
+    nums = parse_paginas(paginas_txt, len(doc))
+    if not any(Pagina(doc, n - 1).tipo in ('HO', 'CAMINO') for n in nums):
+        return 0
+    _, _, res, ident = revisar_pdf(ruta, paginas_txt)
+    rojos = [(n, x) for n in sorted(res) for x in res[n] if x['nivel'] == ROJO]
+    avisos = sum(1 for n in res for x in res[n] if x['nivel'] == AVISO)
+    if rojos:
+        print('REVISOR DE HOJAS: %d defecto(s) ROJO en %s; no se puede %s:' % (len(rojos), os.path.basename(ruta), quien))
+        for n, x in rojos[:15]:
+            print('  p.%-4d [%s | op %s] %-18s %s' % (n, ident[n][0], ident[n][1], x['codigo'], recorte(x['evidencia'], 120)))
+        if len(rojos) > 15:
+            print('  ... y %d mas (python scripts/_revisarPaqueteHO.py "%s")' % (len(rojos) - 15, ruta))
+        raise SystemExit(1)
+    if avisos:
+        print('REVISOR DE HOJAS: sin rojos, %d aviso(s) para mirar (python scripts/_revisarPaqueteHO.py "%s")'
+              % (avisos, ruta))
+    return avisos
 
 
 def rangos(nums):

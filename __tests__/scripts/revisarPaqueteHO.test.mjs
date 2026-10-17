@@ -515,3 +515,37 @@ describe.skipIf(FALTAN15.length > 0)('tanda 1.5: los chequeos de contenido, cada
         expect(STATUS_VERDES).toBe(0);
     });
 });
+
+describe.skipIf(FALTAN15.length > 0)('tanda 1.5: la puerta de salida (lo que va a Fak o a planta pasa por el revisor, sea de quien sea)', () => {
+    const PUERTA = String.raw`
+import sys, os, json
+sys.path.insert(0, os.path.join(sys.argv[1], 'scripts'))
+import _revisarPaqueteHO as R
+out = {}
+for k, ruta in json.loads(sys.argv[2]).items():
+    try:
+        out[k] = {'avisos': R.exigir_sin_rojos(ruta, quien='mostrar'), 'frena': False}
+    except SystemExit:
+        out[k] = {'frena': True}
+print(json.dumps(out))
+`;
+    it('frena la HO-990 Rev.A del servidor; deja pasar las de grampas aprobadas y un PDF que no es de hojas (flujograma)', () => {
+        const rutas = { h990: F15.h990, gr992: F15.gr992, flujo: path.join(EX, 'IMPRESION_0710_FINAL', '1_FLUJOGRAMAS_A3.pdf') };
+        const r = spawnSync('python', ['-c', PUERTA, RAIZ, JSON.stringify(rutas)], {
+            encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+        });
+        const j = JSON.parse(r.stdout.trim().split('\n').pop());
+        expect(j.h990.frena).toBe(true);
+        expect(j.gr992).toEqual({ avisos: 0, frena: false });
+        expect(j.flujo).toEqual({ avisos: 0, frena: false });
+    }, 300000);
+
+    it('_imprimir.py no imprime un PDF de hojas con ROJO: sale 1 antes de armar el archivo de impresion', () => {
+        const r = spawnSync('python', [path.join(RAIZ, 'scripts', '_imprimir.py'), F15.h990, '--a3', '--seco'], {
+            encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+        });
+        expect(r.status, r.stdout + r.stderr).toBe(1);
+        expect(r.stdout).toContain('no se puede imprimir');
+        expect(r.stdout).not.toContain('Archivo de impresion');
+    }, 300000);
+});
