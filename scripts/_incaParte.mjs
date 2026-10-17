@@ -20,7 +20,7 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-    rutaMailsJsonl, salidaPorDefecto, leerMails, celda, escribirSalida, leerArgs, fechaLocal,
+    rutaMailsJsonl, salidaPorDefecto, leerMails, celda, escribirSalida, leerArgs, fechaLocal, taparClaves,
 } from './_lib/lectorMails.mjs';
 
 export const REMITENTE_INCA = 'inca-mail@volkswagen.de';
@@ -38,11 +38,18 @@ export function fechaDelParte(cuerpo) {
     return `${m[3]}-${String(MESES[m[2].toLowerCase()]).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
 }
 
-/** Las piezas del enlace `tlks=_A,_B` (sin el guion bajo de adelante), en el orden del mail. */
+/**
+ * Las piezas del PRIMER enlace `tlks=_A,_B` del renglon (el del Total; el segundo es el de «> 2 Weeks»), sin el guion
+ * bajo de adelante y en el orden del mail. Se decodifica solo ese valor: un `%` mal formado en otra parte del renglon no
+ * frena la lectura.
+ */
 export function piezasDelEnlace(linea) {
-    const m = /[?&]tlks=([^&>\s]+)/.exec(decodeURIComponent(String(linea ?? '')));
+    const crudo = String(linea ?? '');
+    const m = /[?&]tlks=([^&>\s]+)/i.exec(crudo);
     if (!m) return [];
-    return m[1].split(',').map((p) => p.replace(/^_+/, '').trim()).filter(Boolean);
+    let valor = m[1];
+    try { valor = decodeURIComponent(valor); } catch { /* se queda como vino */ }
+    return valor.split(/,|%2C/i).map((p) => p.replace(/^_+/, '').trim()).filter(Boolean);
 }
 
 /**
@@ -79,6 +86,21 @@ export function leerParte(m) {
     return parte;
 }
 
+/**
+ * Los miercoles que faltan en la copia entre dos partes seguidos (el parte sale cada semana: un salto de mas de 8 dias
+ * es un parte que no esta). Ej.: del 20/05 al 17/06 faltan el 27/05, el 03/06 y el 10/06.
+ */
+export function huecos(orden) {
+    const out = [];
+    for (let i = 1; i < orden.length; i++) {
+        const a = Date.parse(`${orden[i - 1].fecha}T12:00:00Z`);
+        const b = Date.parse(`${orden[i].fecha}T12:00:00Z`);
+        if (!(b - a > 8 * 86400000)) continue;
+        for (let t = a + 7 * 86400000; t < b - 86400000; t += 7 * 86400000) out.push(new Date(t).toISOString().slice(0, 10));
+    }
+    return out;
+}
+
 /** Ordena los partes por fecha y arma la historia: por pieza sin BKA y por BKA en rojo, primera y ultima vez. */
 export function historia(partes) {
     const orden = [...partes].sort((a, b) => (a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0));
@@ -94,14 +116,14 @@ export function historia(partes) {
             h.ultima = p.fecha; h.partes += 1; rojos.set(r.bka, h);
         }
     }
-    return { orden, piezas: [...piezas.values()], rojos: [...rojos.values()] };
+    return { orden, piezas: [...piezas.values()], rojos: [...rojos.values()], faltan: huecos(orden) };
 }
 
 const dmy = (iso) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : '—');
 
 /** El markdown. `meta`: { hoy, leidos, fechaMin, fechaMax }. */
 export function aMarkdown(partes, meta) {
-    const { orden, piezas, rojos } = historia(partes);
+    const { orden, piezas, rojos, faltan } = historia(partes);
     const ultimo = orden[orden.length - 1];
     const o = [];
     o.push(`# Parte semanal de VW (INCA) — lo que dicen los mails (${meta.hoy})`);
@@ -110,10 +132,14 @@ export function aMarkdown(partes, meta) {
     o.push('');
     o.push('**Lo que este listado NO dice:** si esas piezas le tocan a Barack o estan asi a proposito. Eso se mira en INCA.');
     o.push('');
+    if (faltan.length) {
+        o.push(`**Partes que faltan en la copia** (el parte sale cada miercoles): ${faltan.map(dmy).join(', ')}. Las cuentas de «partes» de abajo son de los ${orden.length} que estan, no de semanas corridas.`);
+        o.push('');
+    }
     if (!ultimo) { o.push('No hay ningun parte en la copia.'); return o.join('\n'); }
     o.push(`## Ultimo parte: ${dmy(ultimo.fecha)} (semana ${celda(ultimo.cw)})`);
     o.push('');
-    o.push(`- **Piezas sin acuerdo de capacidad (BKA): ${ultimo.sinBka.total}** (${ultimo.sinBka.masDeDosSemanas} con mas de 2 semanas: VW le avisa al comprador).`);
+    o.push(`- **Piezas sin acuerdo de capacidad (BKA): ${ultimo.sinBka.total}** (${ultimo.sinBka.masDeDosSemanas} con mas de 2 semanas: el parte dice que ahi INCA le avisa al comprador de VW).`);
     if (ultimo.sinBka.piezas.length !== ultimo.sinBka.total) o.push(`- ⚠ El mail dice ${ultimo.sinBka.total} y el enlace trae ${ultimo.sinBka.piezas.length} piezas: revisar en INCA.`);
     o.push('');
     o.push('| Pieza | Aparece sin BKA desde el parte del | Partes en que aparece |');
@@ -166,7 +192,7 @@ async function main() {
     const { orden } = historia(partes);
     const u = orden[orden.length - 1];
     console.log(`Dejado en ${out}`);
-    console.log(`${partes.length} partes; el ultimo (${u ? dmy(u.fecha) : '—'}) trae ${u ? u.sinBka.total : 0} piezas sin BKA: ${u ? u.sinBka.piezas.join(', ') : ''}.`);
+    console.log(taparClaves(`${partes.length} partes; el ultimo (${u ? dmy(u.fecha) : '—'}) trae ${u ? u.sinBka.total : 0} piezas sin BKA: ${u ? u.sinBka.piezas.join(', ') : ''}.`));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) main();

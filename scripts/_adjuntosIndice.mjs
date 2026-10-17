@@ -11,7 +11,7 @@
  *   - Lee SOLO la copia local (`.mail-cache/mails.jsonl`): el NOMBRE de cada adjunto, la fecha, el remitente y el
  *     asunto. No abre Outlook, no baja ni abre ningun archivo.
  *   - Por cada adjunto de diseño (.step .stp .igs .iges .stl .dxf .plt .dwg .3dm, y tambien .catpart .catproduct
- *     .sldprt .sldasm .3mf .x_t .f3d) dice en que mail esta. Los comprimidos (.rar .zip .7z) van APARTE como
+ *     .sldprt .sldasm .3mf .x_t .f3d .jt) dice en que mail esta. Los comprimidos (.rar .zip .7z .tar) van APARTE como
  *     «comprimido, sin abrir»: el de la estanteria era un .rar, y adentro no se mira (puede traer un 3D o cualquier cosa).
  *   - Agrupa por pieza (el nombre del archivo sin la version del final: «TOPE TOP ROLL 2A» y «… 10B» son la misma
  *     pieza) y deja la lista de versiones con su fecha.
@@ -29,8 +29,8 @@ import {
 
 /** Lo que pidio el encargo (tanda 14) y lo que suma este indice porque Barack lo recibe (CATIA, SolidWorks, Bambu). */
 export const EXT_PEDIDAS = Object.freeze(['step', 'stp', 'igs', 'iges', 'stl', 'dxf', 'plt', 'dwg', '3dm']);
-export const EXT_SUMADAS = Object.freeze(['catpart', 'catproduct', 'sldprt', 'sldasm', '3mf', 'x_t', 'f3d']);
-export const EXT_COMPRIMIDOS = Object.freeze(['rar', 'zip', '7z']);
+export const EXT_SUMADAS = Object.freeze(['catpart', 'catproduct', 'sldprt', 'sldasm', '3mf', 'x_t', 'f3d', 'jt']);
+export const EXT_COMPRIMIDOS = Object.freeze(['rar', 'zip', '7z', 'tar']);
 
 /** 'cad' | 'comprimido' | null, por la extension del nombre (sin importar mayusculas). */
 export function tipoAdjunto(nombre) {
@@ -92,9 +92,10 @@ export function buscar(filas, consulta) {
 export function porPieza(filas) {
     const g = new Map();
     for (const f of filas) {
-        const p = g.get(f.pieza) ?? { pieza: f.pieza, archivos: new Map(), remitentes: new Set(), mails: new Set(), primera: f.fecha, ultima: f.fecha };
+        const p = g.get(f.pieza) ?? { pieza: f.pieza, archivos: new Map(), remitentes: new Set(), mails: new Set(), asuntos: new Set(), primera: f.fecha, ultima: f.fecha };
         if (!p.archivos.has(f.archivo.toLowerCase())) p.archivos.set(f.archivo.toLowerCase(), { archivo: f.archivo, fecha: f.fecha });
         p.remitentes.add(f.de);
+        p.asuntos.add(f.asunto.replace(/^((re|rv|fw|fwd)\s*:\s*)+/i, '').trim());
         p.mails.add(f.id);
         if (f.fecha < p.primera) p.primera = f.fecha;
         if (f.fecha > p.ultima) p.ultima = f.fecha;
@@ -127,7 +128,7 @@ export function aMarkdown(filas, meta) {
     o.push('## Resumen');
     o.push('');
     o.push(`- **${cad.length} adjuntos de diseño** en ${new Set(cad.map((f) => f.id)).size} mails (${distintos(cad)} nombres de archivo distintos).`);
-    o.push(`- **${comp.length} comprimidos sin abrir** (.rar, .zip, .7z) en ${new Set(comp.map((f) => f.id)).size} mails: pueden traer un 3D adentro; no se miro.`);
+    o.push(`- **${comp.length} comprimidos sin abrir** (.rar, .zip, .7z, .tar) en ${new Set(comp.map((f) => f.id)).size} mails: pueden traer un 3D adentro; no se miro.`);
     o.push(`- Por tipo: ${conteo(cad.map((f) => ({ e: ext(f.archivo) })), 'e').map(([e, n]) => `${e} ${n}`).join(' · ') || 'ninguno'}.`);
     o.push(`- Por quien lo mando (diseño + comprimidos): ${conteo(filas, 'de').slice(0, 10).map(([d, n]) => `${celda(d) || 'sin remitente'} ${n}`).join(' · ') || 'nadie'}.`);
     o.push('');
@@ -135,11 +136,15 @@ export function aMarkdown(filas, meta) {
         o.push(`## ${titulo}`);
         o.push('');
         if (!fs.length) { o.push('Ninguno.'); o.push(''); return; }
-        o.push('| Pieza | Archivos (versiones), con la fecha del primer mail | Primer mail | Ultimo mail | Quien lo mando | Mails |');
-        o.push('|---|---|---|---|---|---|');
+        // El asunto va al lado: el nombre del archivo solo junta piezas distintas («ESTANTERIA.rar» y «ESTANTERIA-1.rar»
+        // del 21/08 son dos estanterias: «DE CAJAS» y «IP Y TOP ROLL»; auditor de la tanda 14, nit 2).
+        o.push('| Pieza | Archivos (versiones), con la fecha del primer mail | Asuntos de los mails | Primer mail | Ultimo mail | Quien lo mando | Mails |');
+        o.push('|---|---|---|---|---|---|---|');
         for (const p of porPieza(fs)) {
             const archivos = [...p.archivos.values()].sort((a, b) => (a.fecha < b.fecha ? -1 : 1)).map((a) => `${celda(a.archivo)} (${a.fecha.slice(0, 10)})`).join('; ');
-            o.push(`| ${celda(p.pieza) || '(sin nombre)'} | ${archivos} | ${p.primera.slice(0, 10)} | ${p.ultima.slice(0, 10)} | ${[...p.remitentes].map(celda).join(', ')} | ${p.mails.size} |`);
+            const asuntos = [...p.asuntos].filter(Boolean);
+            const verAsuntos = asuntos.slice(0, 3).map((x) => `«${celda(x)}»`).join('; ') + (asuntos.length > 3 ? ` y ${asuntos.length - 3} mas` : '');
+            o.push(`| ${celda(p.pieza) || '(sin nombre)'} | ${archivos} | ${verAsuntos || '—'} | ${p.primera.slice(0, 10)} | ${p.ultima.slice(0, 10)} | ${[...p.remitentes].map(celda).join(', ')} | ${p.mails.size} |`);
         }
         o.push('');
     };

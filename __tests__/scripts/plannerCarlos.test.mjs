@@ -16,7 +16,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-    fechaDeAviso, idiomaAviso, tareaDeAsignacion, tareasDeVencimientos, estadoDeEncabezado, juntar, aMarkdown, esAvisoPlanner, PLAN_CARLOS,
+    fechaDeAviso, idiomaAviso, tareaDeAsignacion, tareasDeVencimientos, estadoDeEncabezado, diasDeAtraso, juntar, aMarkdown, esAvisoPlanner, PLAN_CARLOS,
 } from '../../scripts/_plannerCarlos.mjs';
 import { leerMails } from '../../scripts/_lib/lectorMails.mjs';
 
@@ -91,6 +91,13 @@ describe('leer un aviso', () => {
         expect(estadoDeEncabezado('Tiene una tarea próximamente')).toBe('por vencer');
         expect(estadoDeEncabezado('You have a task due today')).toBe('vence hoy');
         expect(estadoDeEncabezado('Hi Facundo. You have a task due.')).toBeNull();
+    });
+    it('las dos formas del castellano de 2023 que faltaban (auditor de la tanda 14, nit 5)', () => {
+        expect(estadoDeEncabezado('Tiene una tarea vencida hoy')).toBe('vence hoy');
+        expect(diasDeAtraso('1 día de retraso')).toBe(1);
+        expect(diasDeAtraso('4 días tarde')).toBe(4);
+        expect(diasDeAtraso('7 days late')).toBe(7);
+        expect(diasDeAtraso('Due in 6 days')).toBeNull();
     });
 });
 

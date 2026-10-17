@@ -56,11 +56,17 @@ export function idDeTarea(linea) {
 }
 const sinUrl = (s) => String(s ?? '').replace(URL, '').replace(/[͏‌​ ]/g, ' ').replace(/\s+/g, ' ').trim();
 
+/** «7 days late», «4 días tarde», «1 día de retraso» -> el numero; null si el renglon no dice un atraso. */
+export function diasDeAtraso(texto) {
+    const m = /(\d+)\s*(?:days?|d[ií]as?)\s*(?:late|tarde|de retraso)/i.exec(String(texto ?? ''));
+    return m ? Number(m[1]) : null;
+}
+
 /** Que dice el renglon de una seccion de un aviso de vencimientos: 'vencida' | 'vence hoy' | 'por vencer' | null. */
 export function estadoDeEncabezado(linea) {
     const t = normalizarTexto(linea);
     if (/^you have (a |an )?late tasks?$|^tienes? (una )?tareas? retrasadas?$/.test(t)) return 'vencida';
-    if (/^you have (a )?tasks? due today$|^tienes? (una )?tareas? que vencen? hoy$/.test(t)) return 'vence hoy';
+    if (/^you have (a )?tasks? due today$|^tienes? (una )?tareas? (que vencen?|vencidas?) hoy$/.test(t)) return 'vence hoy';
     if (/^you have (an )?upcoming tasks?( due)?$|^tienes? (una )?tareas? (que vencen? )?proximamente$/.test(t)) return 'por vencer';
     return null;
 }
@@ -85,7 +91,7 @@ export function tareasDeVencimientos(cuerpo) {
         const atraso = sinUrl(fechaLinea.replace(/\d{1,2}\/\d{1,2}\/\d{4}/, ''));
         out.push({
             titulo: sinUrl(lineaTarea), id: idDeTarea(lineaTarea), plan: sinUrl(plan[1]), estado: estado ?? 'sin seccion',
-            vence, atraso, dias: /(\d+)\s*(?:days?|d[ií]as?)\s*(?:late|tarde)/i.exec(atraso)?.[1] ? Number(/(\d+)/.exec(atraso)[1]) : null,
+            vence, atraso, dias: diasDeAtraso(atraso),
         });
     }
     return out;

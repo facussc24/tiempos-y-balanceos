@@ -14,7 +14,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { esParteInca, fechaDelParte, piezasDelEnlace, leerParte, historia, aMarkdown } from '../../scripts/_incaParte.mjs';
+import { esParteInca, fechaDelParte, piezasDelEnlace, leerParte, historia, huecos, aMarkdown } from '../../scripts/_incaParte.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const SCRIPT = path.resolve(AQUI, '..', '..', 'scripts', '_incaParte.mjs');
@@ -42,6 +42,23 @@ describe('leer un parte', () => {
         expect(p.sinBka).toEqual({ total: 6, masDeDosSemanas: 6, piezas: SEIS });
         expect(p.rojos).toEqual([]);
     });
+    it('Total y «> 2 Weeks» son dos columnas, y las piezas salen del enlace del Total (forma del parte CW14 del 01/04: 6 y 3)', () => {
+        // parche del auditor de la tanda 14 (nit 1): sin este caso, leer las piezas del segundo enlace o la columna «> 2»
+        // del Total dejaba los tests en verde y cambiaba la salida real
+        const enlace = (pzs) => `<https://lso.volkswagen.de/inca/x?command=findTLKs&tlks=${pzs.map((p) => `_${p}`).join(',')}&duns=1>`;
+        const seis = ['2HT881901E_OHE', '2HT853839', '2HC858417D', '2HT881901E', '2HT881901D', '2HT881901D_YZM'];
+        const tres = ['2HT881901E_OHE', '2HT853839', '2HT881901D_YZM'];
+        const cuerpo = [
+            'this is your weekly INCA status report from Wednesday 01. April 2026, 06:48.',
+            'Task description\tSupplier\tTotal\t> 2 Weeks*\t',
+            `Parts to be assigned to BKA\t978890452 - Barack Argentina SRL\t6 ${enlace(seis)}  \t3 ${enlace(tres)}  \t`,
+        ].join('\n');
+        const p = leerParte({ fecha: '2026-04-01 01:48', asunto: 'INCA: weekly status report CW 14.2026', cuerpo });
+        expect(p.sinBka).toEqual({ total: 6, masDeDosSemanas: 3, piezas: seis });
+    });
+    it('un % mal formado en otro lado del renglon no frena la lectura de las piezas', () => {
+        expect(piezasDelEnlace('6 <https://lso.volkswagen.de/inca/x?a=100%&tlks=_A1,_B2&duns=1>')).toEqual(['A1', 'B2']);
+    });
     it('el rojo del apoyabrazos trasero, con su pieza', () => {
         const p = leerParte(mails()[1]);
         expect(p.rojos).toEqual([{ bka: 'B00000330933', descripcion: 'ARMREST REAR', pieza: '2HC885081', estado: 'Red' }]);
@@ -54,6 +71,20 @@ describe('la historia', () => {
         expect(orden.map((p) => p.fecha)).toEqual(['2026-04-15', '2026-07-29', '2026-10-14']);
         expect(rojos).toHaveLength(1);
         expect(rojos[0]).toMatchObject({ bka: 'B00000330933', primera: '2026-04-15', ultima: '2026-07-29', partes: 2 });
+    });
+});
+
+describe('los partes que faltan en la copia', () => {
+    it('del 20/05 al 17/06 faltan tres miercoles; semanas seguidas no dan hueco', () => {
+        const f = (d) => ({ fecha: d });
+        expect(huecos([f('2026-05-13'), f('2026-05-20'), f('2026-06-17'), f('2026-06-24')])).toEqual(['2026-05-27', '2026-06-03', '2026-06-10']);
+        expect(huecos([f('2026-10-07'), f('2026-10-14')])).toEqual([]);
+    });
+    it('la salida avisa los que faltan y que las cuentas son de los partes que estan', () => {
+        const md = aMarkdown(partes(), { hoy: '2026-10-17', leidos: 4, fechaMin: 'a', fechaMax: 'b' });
+        expect(md).toMatch(/\*\*Partes que faltan en la copia\*\*/);
+        expect(md).toContain('22/04/2026');                 // entre el 15/04 y el 29/07 de la muestra
+        expect(md).toContain('son de los 3 que estan, no de semanas corridas');
     });
 });
 

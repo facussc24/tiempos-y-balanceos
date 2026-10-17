@@ -39,11 +39,12 @@ async function filas() {
 
 describe('que es un adjunto de diseño', () => {
     it('las extensiones pedidas y las sumadas son diseño, sin importar mayusculas', () => {
-        for (const n of ['a.step', 'a.STP', 'a.igs', 'a.iges', 'a.STL', 'a.dxf', 'a.plt', 'a.DWG', 'a.3dm', 'a.CATPart', 'a.sldprt', 'a.3mf']) expect(tipoAdjunto(n)).toBe('cad');
+        for (const n of ['a.step', 'a.STP', 'a.igs', 'a.iges', 'a.STL', 'a.dxf', 'a.plt', 'a.DWG', 'a.3dm', 'a.CATPart', 'a.sldprt', 'a.3mf', 'a.jt']) expect(tipoAdjunto(n)).toBe('cad');
     });
     it('los comprimidos van aparte y lo demas no entra', () => {
         expect(tipoAdjunto('ESTANTERIA.rar')).toBe('comprimido');
         expect(tipoAdjunto('x.ZIP')).toBe('comprimido');
+        expect(tipoAdjunto('ARCHIVO DE VW.tar')).toBe('comprimido');
         for (const n of ['plano.pdf', 'image.png', 'video.mp4', 'sin_extension', 'x.xlsx']) expect(tipoAdjunto(n)).toBeNull();
     });
 });
@@ -99,6 +100,22 @@ describe('caso conocido: el 3D de la estanteria del inserto (dado por perdido el
     it('«pin» no trae nada (el mail de los pines lleva fotos y video, no un 3D)', async () => {
         const { filas: f } = await filas();
         expect(buscar(f, 'pin')).toHaveLength(0);
+    });
+});
+
+describe('dos piezas distintas con el mismo nombre de archivo', () => {
+    it('la tabla por pieza muestra los asuntos: «ESTANTERIA.rar» y «ESTANTERIA-1.rar» del 21/08 son dos estanterias', () => {
+        const base = { carpeta: 'x / Bandeja de entrada', clase: 'entrada', de: 'Pablo Gamboa', de_mail: 'p', para: 'Carlos Baptista', cc: '', cuerpo: '' };
+        const mails = [
+            { ...base, id: '1', fecha: '2026-08-21 11:19', asunto: 'ESTANTERIA DE CAJAS', adjuntos: ['ESTANTERIA.rar'] },
+            { ...base, id: '2', fecha: '2026-08-21 12:19', asunto: 'RE: ESTANTERIA IP Y TOP ROLL', adjuntos: ['ESTANTERIA-1.rar'] },
+        ];
+        const f = filasDeAdjuntos(mails);
+        expect(porPieza(f)).toHaveLength(1);           // el nombre solo no las separa...
+        const md = aMarkdown(f, { hoy: '2026-10-17', leidos: 2, contados: 2, fechaMin: 'a', fechaMax: 'b' });
+        const fila = md.split('\n').find((l) => l.startsWith('| estanteria |'));
+        expect(fila).toContain('«ESTANTERIA DE CAJAS»');  // ...pero los asuntos se ven al lado, sin el «RE:»
+        expect(fila).toContain('«ESTANTERIA IP Y TOP ROLL»');
     });
 });
 
