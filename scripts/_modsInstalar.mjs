@@ -24,8 +24,9 @@ import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 export const MARKETPLACE = 'mods-casa'
-// carpeta del repo -> el mod. `recordatorio-ccsc` queda afuera a proposito (Fak, 11/10/2026 04:05).
-export const MODS = ['tablero', 'presupuesto-agentes']
+// carpeta del repo -> el mod. `recordatorio-ccsc` queda afuera a proposito (Fak, 11/10/2026 04:05). `recordatorio-temas`
+// entra el 16/10/2026 (tanda 1.3.2 del plan del sistema, «apruebo todo» de Fak).
+export const MODS = ['tablero', 'presupuesto-agentes', 'recordatorio-temas']
 // Lo que no viaja a la copia instalada ni cuenta para comparar dos copias: las pruebas, lo que Claude Code escribe al
 // cargar con --plugin-dir y la marca `.in_use` que deja adentro de un plugin instalado mientras una sesion lo usa (con
 // ella en la cuenta, `--estado` decia «DISTINTO» de un mod que estaba al dia: lo midio la sesion de prueba, 11/10/2026).

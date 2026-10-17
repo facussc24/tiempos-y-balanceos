@@ -24,6 +24,10 @@ python scripts/_mailEnviar.py --buscar "<parte del asunto>" --enviar
 python scripts/_mailEnviar.py --selftest                               # sin Outlook
 ```
 
+**Antes de pedirle o mandarle algo a Calidad (o a cualquier area), mirar el buzon** (16/10/2026, tanda 1.3.5):
+`python scripts/_mails.py --buscar "<tema>"` dice que se compartio antes, en el buzon de Fak y en la nube del equipo.
+Caso: el 13/10 se le iba a pedir a Nicolas los caminos de inspeccion que Calidad ya habia mandado.
+
 ## El OK va DESPUES del borrador — BLOQUEANTE desde el 08/10/2026
 
 Fak escribio *"arma el mail y mandalo"*; arme el borrador y lo envie en el mismo turno, sin que el lo

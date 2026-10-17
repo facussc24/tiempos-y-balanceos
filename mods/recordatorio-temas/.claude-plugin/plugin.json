@@ -1,0 +1,6 @@
+{
+  "name": "recordatorio-temas",
+  "version": "0.1.0",
+  "description": "Cuando un mensaje de Fak nombra un tema de la casa (el plotter de corte, la hotmelera, el tornillo CNC...), le agrega al modelo un renglon con la memoria a leer antes de contestar; una vez por hora por tema y sesion, sin frenar nada",
+  "author": { "name": "Barack Mercosul" }
+}

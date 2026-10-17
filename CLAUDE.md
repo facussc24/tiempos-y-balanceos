@@ -114,6 +114,12 @@ commit/push/archivar los hago yo.
   llevarle solo lo suyo, implementar. Decide el; si dice que no, no se insiste. Lo recuerda el arranque de sesion
   (`scripts/_lib/viernesPlanificacion.mjs`); memoria `feedback_viernes_de_planificacion_equipo_fuera_de_la_caja`.
 - Contrato de autonomia (que hago solo vs que requiere OK): `.claude/rules/autonomy-contract.md`.
+- **Al compactar, el resumen conserva** (16/10/2026, tanda 1.3.3): las decisiones tomadas y por que, los supuestos
+  sin verificar, los caminos muertos (lo que se probo y no anduvo), la ultima pregunta de Fak sin contestar, textual,
+  y el proximo paso. Cada compactacion queda anotada en `.claude/state/compactaciones.jsonl` (hook
+  `compactacion-registro.sh`: fecha, sesion, causa auto | manual | idle, tokens).
+- **Antes de pedirle o mandarle algo a Calidad o a otra area, mirar el buzon**: `python scripts/_mails.py --buscar
+  "<tema>"` dice que ya se compartio (caso Nicolas, 13/10/2026: Calidad ya habia mandado los caminos de inspeccion).
 
 ## Reglas del dominio
 

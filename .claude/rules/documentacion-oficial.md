@@ -19,7 +19,7 @@ Aplica a TODO lo que se guarda en la nube de Barack como manual, norma, instruct
 o requisito de un cliente, proveedor u organismo (VW, Toyota/Boshoku, SMRC, Woodbridge, AIAG, VDA,
 IATF, IRAM, fabricantes de maquinas).
 
-## Las 6 reglas
+## Las 7 reglas
 
 1. **El original entra TAL CUAL.** Mismo archivo y **mismo nombre que le puso el emisor**. No se
    renombra "para que se entienda", no se le agrega fecha, sigla, revision ni cliente. Si el nombre
@@ -39,6 +39,14 @@ IATF, IRAM, fabricantes de maquinas).
    donde salio y quien lo armo.
 6. **Idioma:** que el original este en aleman o en ingles NO es un problema y NO habilita a
    reemplazarlo. El original se guarda igual; la traduccion se suma aparte (regla 3).
+7. **El manual de una maquina que se consulto y no estaba, queda.** Si para contestar algo de una
+   maquina de Ingenieria se usa un manual de fabricante que no esta en `4- MANUALES`, el original
+   (sin tocar, con su nombre) se guarda en `4- MANUALES\<MAQUINA>\` y se nombra en la ficha de esa
+   maquina (la memoria `reference_maquina_*` o la que la cubra, seccion «Ficha»). Bajarlo de internet
+   es una descarga: va con el OK de Fak para ese archivo (nombre, fuente y tamaño). Las fotos y videos
+   de la maquina van a `5- VIDEOS Y FOTOS` (regla `video-maquina.md`). Tanda 1.4 del plan del sistema,
+   16/10/2026: de las maquinas con memoria, 5 no tienen el manual en esa carpeta (moldeadora IMG,
+   HTV2A, Ricoh, hot press y prensa de embossing; informe `casa_hojas_y_maquinas.md` B.1).
 
 ## Por que — la cadena que se envenena
 
@@ -84,5 +92,7 @@ Hook `documentacion-oficial-guard.sh` — guardian `documentacion-oficial-guard`
 **Deja pasar**: la transcripcion `.txt` que trae `Fuente:` y `Fecha de consulta:` en la cabecera
 (regla 4), lo que va a `TRADUCIDOS\` (regla 3), el original que entra desde donde llego (un
 adjunto, Descargas) y **sacar de ahi** un archivo mio — que es la unica correccion posible cuando
-ya se colo uno. Todo lo demas que toca esas carpetas recibe el recordatorio 1x/h con las 6 reglas.
+ya se colo uno. Todo lo demas que toca esas carpetas recibe el recordatorio 1x/h con las reglas.
+La regla 7 no tiene freno propio: el que guarda el manual lo hace por el camino del original (regla 1),
+y que la ficha lo nombre lo mira el revisor de la tanda.
 Tests (rojo y verde): `__tests__/scripts/guardianes.test.mjs`.

@@ -105,6 +105,8 @@ const COBERTURA = {
   'timeout-guard.sh': { test: VARIOS, tipo: 'aviso' },
   // InstructionsLoaded (10/09/2026, C5): registro TSV de lo que Claude Code cargo de verdad.
   'instrucciones-log.sh': { test: VARIOS, tipo: 'observa' },
+  // PreCompact y PostCompact (16/10/2026, tanda 1.3.3): registro de compactaciones en .claude/state/compactaciones.jsonl.
+  'compactacion-registro.sh': { test: '__tests__/scripts/compactacionRegistro.test.mjs', tipo: 'observa' },
   'agentes-guard.sh': { test: VARIOS, tipo: 'bloquea', ruta: GLOBAL },
   // Hooks GLOBALES (viven en ~/.claude/hooks; la copia del repo viaja por git): tanda 1.7, 16/10/2026.
   'carpeta-guard.sh': { test: '__tests__/scripts/carpetaGuard.test.mjs', tipo: 'aviso' },

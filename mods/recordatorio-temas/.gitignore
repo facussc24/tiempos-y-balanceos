@@ -1,0 +1,4 @@
+# Los escribe Claude Code al cargar el mod con --plugin-dir (tipos de la versión instalada
+# y un tsconfig que los extiende); no se versionan
+.claude-plugin/types/
+tsconfig.json
