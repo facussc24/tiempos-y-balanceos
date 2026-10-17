@@ -47,7 +47,10 @@ export function armarPrompt(caso, { cuerpo = '' } = {}) {
   for (const r of e.rutas || []) L.push(`  · ${r}`);
   if (e.texto) L.push('  (texto pegado, tal como se le mostro a Fak)', '<<<', e.texto, '>>>');
   if (e.nota) L.push(`  Nota: ${e.nota}`);
-  L.push('', 'Solo lees: no escribas, no muevas ni borres ningun archivo. Devolve la respuesta con el formato de arriba, empezando por la linea VEREDICTO.');
+  // 17/10/2026, primera corrida: un revisor que buscaba el codigo de la pieza en el repo encontro casos.json (que trae
+  // la reaccion de Fak). Se le prohibe abrir la carpeta de calibracion; lo que diga haber visto se anota en el informe.
+  L.push('', 'No abras ni busques dentro de evals/revisor-pedido/ (es el banco de calibracion: trae la respuesta). Si igual lo ves, decilo en el informe.');
+  L.push('Solo lees: no escribas, no muevas ni borres ningun archivo. Devolve la respuesta con el formato de arriba, empezando por la linea VEREDICTO.');
   return L.join('\n');
 }
 
@@ -57,17 +60,29 @@ export function parsearVeredicto(texto) {
   return m ? (/^no/i.test(m[1]) ? 'NO CUMPLE' : 'CUMPLE') : null;
 }
 
-/** Compara las corridas con lo esperado. `salidas` = { [id]: [texto, texto, ...] }. */
+/**
+ * «CONTRA EL PEDIDO: CUMPLE | NO CUMPLE» (formato desde la segunda corrida del 17/10). Sin el renglon explicito
+ * devuelve null: deducirlo de la definicion de hecho y el quiz se equivoca cuando el defecto es lo que SOBRA (caso D2).
+ */
+export function parsearContraPedido(texto) {
+  const m = String(texto ?? '').match(/CONTRA EL PEDIDO\s*:?\s*\**\s*(NO\s+CUMPLE|CUMPLE)\b/i);
+  return m ? (/^no/i.test(m[1]) ? 'NO CUMPLE' : 'CUMPLE') : null;
+}
+
+/** Compara las corridas con lo esperado. `salidas` = { [id]: [texto, texto, ...] }. Mide el veredicto final y el de contra el pedido. */
 export function evaluar(casos, salidas) {
   const filas = casos.map((c) => {
-    const vs = (salidas[c.id] || []).map(parsearVeredicto);
-    const aciertos = vs.filter((v) => v === c.esperado).length;
-    return { id: c.id, tipo: c.tipo, esperado: c.esperado, veredictos: vs, corridas: vs.length, aciertos };
+    const ts = salidas[c.id] || [];
+    const vs = ts.map(parsearVeredicto); const ps = ts.map(parsearContraPedido);
+    return {
+      id: c.id, tipo: c.tipo, esperado: c.esperado, veredictos: vs, contraPedido: ps, corridas: vs.length,
+      aciertos: vs.filter((v) => v === c.esperado).length, aciertosPedido: ps.filter((v) => v === c.esperado).length,
+    };
   });
-  const corridas = filas.reduce((n, f) => n + f.corridas, 0);
-  const aciertos = filas.reduce((n, f) => n + f.aciertos, 0);
+  const suma = (k) => filas.reduce((n, f) => n + f[k], 0);
   const casosEstables = filas.filter((f) => f.corridas > 0 && f.aciertos === f.corridas).length;
-  return { filas, corridas, aciertos, casosEstables, casosTotal: casos.length };
+  const casosEstablesPedido = filas.filter((f) => f.corridas > 0 && f.aciertosPedido === f.corridas).length;
+  return { filas, corridas: suma('corridas'), aciertos: suma('aciertos'), aciertosPedido: suma('aciertosPedido'), casosEstables, casosEstablesPedido, casosTotal: casos.length };
 }
 
 function leerSalidas(dir, casos) {
@@ -92,9 +107,9 @@ function main(argv) {
   if (iE >= 0 && argv[iE + 1]) {
     const r = evaluar(casos, leerSalidas(argv[iE + 1], casos));
     if (argv.includes('--json')) { console.log(JSON.stringify(r, null, 2)); return 0; }
-    console.log(`Revisor contra el pedido · ${r.aciertos} de ${r.corridas} corridas aciertan · ${r.casosEstables} de ${r.casosTotal} casos aciertan en todas sus corridas`);
-    for (const f of r.filas) console.log(`  ${f.id.padEnd(32)} ${f.tipo.padEnd(9)} espera ${f.esperado.padEnd(9)} · ${f.veredictos.map((v) => v ?? 'sin veredicto').join(' / ') || 'sin corridas'}`);
-    return r.corridas && r.aciertos === r.corridas ? 0 : 1;
+    console.log(`Revisor contra el pedido · ${r.corridas} corridas · contra el pedido acierta ${r.aciertosPedido} (${r.casosEstablesPedido} de ${r.casosTotal} casos en todas) · veredicto final acierta ${r.aciertos} (${r.casosEstables} de ${r.casosTotal} casos en todas)`);
+    for (const f of r.filas) console.log(`  ${f.id.padEnd(32)} ${f.tipo.padEnd(9)} espera ${f.esperado.padEnd(9)} · contra el pedido: ${f.contraPedido.map((v) => v ?? '?').join(' / ') || '-'} · final: ${f.veredictos.map((v) => v ?? '?').join(' / ') || '-'}`);
+    return r.corridas && r.aciertosPedido === r.corridas ? 0 : 1;
   }
   console.log('uso: --prompts <carpeta> | --evaluar <carpeta> [--json]');
   return 1;

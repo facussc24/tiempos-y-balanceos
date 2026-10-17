@@ -1,0 +1,6 @@
+VEREDICTO: NO CUMPLE  ·  2 Importante, 2 Nit, 2 Preexistente  ·  definición de hecho 3 de 3  ·  quiz 3 de 3
+CONTRA EL PEDIDO: CUMPLE   (escrito a mano desde «falta» y «sobra» del informe de la corrida 1, formato viejo)
+REGLAS DE LA CASA: NO CUMPLE
+Contra el pedido: el contenido contesta lo pedido (DH 3/3, quiz 3/3).
+[Importante] «claude» en el texto alternativo de 18 imágenes nuevas (/home/claude/assets/...); _sinFirmaIA.py BLOQUEANTE (regla §9 del 08/10, posterior a la aprobación del 31/08).
+[Importante] Contradicción diap. 41 vs 43 sobre el 01/09 (Sansuy vs Haartz + Sika).

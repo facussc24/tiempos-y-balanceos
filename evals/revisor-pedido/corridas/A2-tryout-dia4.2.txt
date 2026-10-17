@@ -1,0 +1,4 @@
+VEREDICTO: NO CUMPLE  ·  2 Importante, 5 Nit, 3 Preexistente  ·  definición de hecho 3 de 3  ·  quiz 3 de 3
+CONTRA EL PEDIDO: CUMPLE
+REGLAS DE LA CASA: NO CUMPLE   (18 textos alternativos con /home/claude/assets; contradiccion sobre el 01/09)
+Nota: abrio PowerPoint por COM sobre una copia y leyo dos mails con _mails.py --ver (solo lectura). _sinFirmaIA --arreglar no limpia el campo descr.

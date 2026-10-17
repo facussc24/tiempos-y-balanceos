@@ -1,0 +1,5 @@
+VEREDICTO: NO CUMPLE  ·  3 Importante, 3 Nit, 0 Preexistente  ·  definición de hecho 1 de 4  ·  quiz 1 de 3
+CONTRA EL PEDIDO: NO CUMPLE
+REGLAS DE LA CASA: CUMPLE
+[Importante] falta el proceso · [Importante] falta el mail · [Importante] el APB no tiene una foto entera verificable
+Aviso: un grep le mostro un comentario de correccionGuard.mjs:7 que cuenta como se devolvio esta entrega; dice que no lo uso.

@@ -1,0 +1,4 @@
+VEREDICTO: NO CUMPLE  ·  2 Importante, 5 Nit, 0 Preexistente  ·  definición de hecho 2 de 4  ·  quiz 1 de 3
+CONTRA EL PEDIDO: NO CUMPLE
+REGLAS DE LA CASA: CUMPLE   (la carpeta .claude de maquina la exime video-maquina.md y firmaIA rutas_excluidas)
+[Importante] Falta el proceso (habia un mp4 del ciclo automatico antes de la entrega) · [Importante] Falta el mail.

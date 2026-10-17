@@ -1,0 +1,6 @@
+VEREDICTO: NO CUMPLE  ·  1 Importante, 3 Nit, 0 Preexistente  ·  definición de hecho 3 de 3  ·  quiz 3 de 3
+CONTRA EL PEDIDO: NO CUMPLE   (responde además cuántos rollos comprar, con la demanda del EDI)
+REGLAS DE LA CASA: NO CUMPLE  (contesta por otra área)
+[Importante] Contesta por otra área (4 rollos para 1.416 piezas del EDI; adjunto con demanda y rollos a comprar). Cita docs/review/mail.md (caso contaminado).
+[Nit] explica el adjunto · [Nit] renglón ECR/ECO · [Nit] las cuentas no cierran (22,8/0,0522 = 436,8, no 410)
+No abrió evals/revisor-pedido/.

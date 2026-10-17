@@ -60,6 +60,8 @@ PEDIDO. Las formas en que Fak devolvió un entregable, con sus palabras, están 
 
 ```
 VEREDICTO: CUMPLE | NO CUMPLE  ·  <n> Importante, <m> Nit, <p> Preexistente  ·  definición de hecho <a> de <b>  ·  quiz <c> de 3
+CONTRA EL PEDIDO: CUMPLE | NO CUMPLE   (solo pasos 2 a 4: lo que falta, lo que sobra, la definición de hecho y el quiz)
+REGLAS DE LA CASA: CUMPLE | NO CUMPLE  (solo paso 5: firma de IA, inglés suelto, número sin fuente, contradicción, otra área)
 Pedido usado: «<las primeras palabras del pedido>…»
 
 | # | Renglón (definición de hecho o pregunta del quiz) | Cumple | Cita (archivo · hoja/página · texto) |
@@ -70,7 +72,10 @@ Hallazgos con etiqueta: [Importante] … · [Nit] … · [Preexistente] …
 No verificado: …
 ```
 
-**NO CUMPLE** = al menos un *Importante*. Un *Nit* solo no cambia el veredicto.
+**NO CUMPLE** = al menos un *Importante*. Un *Nit* solo no cambia el veredicto. El VEREDICTO es NO CUMPLE si
+cualquiera de los dos renglones de abajo lo es; los dos se escriben siempre separados, porque fallan distinto: en la
+calibración del 17/10/2026 los dos entregables que Fak aprobó en agosto y septiembre pasaron CONTRA EL PEDIDO completos
+y fallaron REGLAS DE LA CASA por una firma de IA escondida (una regla del 08/10, posterior a la aprobación).
 
 ## Reglas
 

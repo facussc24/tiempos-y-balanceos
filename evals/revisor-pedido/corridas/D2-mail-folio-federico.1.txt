@@ -1,0 +1,6 @@
+VEREDICTO: NO CUMPLE  ·  2 Importante, 3 Nit, 0 Preexistente  ·  definición de hecho 3 de 3  ·  quiz 3 de 3
+CONTRA EL PEDIDO: NO CUMPLE   (escrito a mano desde «falta» y «sobra» del informe de la corrida 1, formato viejo)
+REGLAS DE LA CASA: NO CUMPLE
+[Importante] Contesta por otra área: «Para las 1.416 piezas del EDI hacen falta 4 rollos» y la demanda en el adjunto (cita docs/review/mail.md: caso contaminado).
+[Importante] Los números del mail no cierran entre sí: 22,8/0,0522 = 437, no 410.
+Aviso del agente: encontró evals/revisor-pedido/casos.json buscando 2HT853839; dice que no lo usó.

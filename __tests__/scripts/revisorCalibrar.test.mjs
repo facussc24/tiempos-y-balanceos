@@ -3,7 +3,7 @@
  * (tanda 9, pieza 1). Los casos son los de evals/revisor-pedido/casos.json (sesiones reales).
  */
 import fs from 'node:fs';
-import { armarPrompt, parsearVeredicto, evaluar, cuerpoDelAgente, CASOS, AGENTE } from '../../scripts/_revisorCalibrar.mjs';
+import { armarPrompt, parsearVeredicto, parsearContraPedido, evaluar, cuerpoDelAgente, CASOS, AGENTE } from '../../scripts/_revisorCalibrar.mjs';
 
 const casos = JSON.parse(fs.readFileSync(CASOS, 'utf8')).casos;
 
@@ -28,6 +28,7 @@ describe('casos de calibracion del revisor-pedido', () => {
       expect(p, c.id).not.toMatch(/devuelto|aprobado/i);
       expect(p, c.id).not.toContain(c.esperado === 'CUMPLE' ? 'esperado' : 'NO CUMPLE (esperado)');
       expect(p, c.id).toContain(c.pedido.slice(0, 60));
+      expect(p, c.id).toMatch(/No abras ni busques dentro de evals\/revisor-pedido\//);
     }
   });
 
@@ -48,6 +49,12 @@ describe('parsearVeredicto y evaluar', () => {
     expect(parsearVeredicto('**VEREDICTO: CUMPLE** · 0 Importante')).toBe('CUMPLE');
     expect(parsearVeredicto('veredicto:  no   cumple')).toBe('NO CUMPLE');
     expect(parsearVeredicto('El entregable cumple con lo pedido')).toBeNull();
+  });
+
+  it('contra el pedido: solo el renglon explicito (deducirlo de la definicion de hecho falla cuando el defecto es lo que sobra)', () => {
+    expect(parsearContraPedido('VEREDICTO: NO CUMPLE\nCONTRA EL PEDIDO: CUMPLE\nREGLAS DE LA CASA: NO CUMPLE')).toBe('CUMPLE');
+    expect(parsearContraPedido('CONTRA EL PEDIDO: **NO CUMPLE**')).toBe('NO CUMPLE');
+    expect(parsearContraPedido('VEREDICTO: NO CUMPLE · definición de hecho 3 de 3 · quiz 3 de 3')).toBeNull();
   });
 
   it('cuenta aciertos por corrida y casos estables', () => {
