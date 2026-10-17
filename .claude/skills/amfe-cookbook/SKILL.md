@@ -1,6 +1,6 @@
 ---
 name: amfe-cookbook
-description: Recetas para completar gaps en AMFEs de Barack — tabla tipo de issue -> accion, con ejemplos; es la referencia de `_fixAmfePlaceholdersAndAllocation.mjs`. Usar cuando haya que completar o reparar lo que le falta a un AMFE. Lo ejecutan el comando /fix-amfe-gaps y el agente amfe-healer; lo detectan /audit-amfe y los auditores.
+description: Recetas para completar o reparar lo que le falta a un AMFE de Barack («completa AMFE», «reparar», «completa los faltantes») — tabla tipo de issue -> accion; referencia de `_fixAmfePlaceholdersAndAllocation.mjs`. La ejecutan /fix-amfe-gaps y el agente amfe-healer; los gaps los detectan /audit-amfe y los auditores.
 ---
 
 # AMFE Cookbook — Recetas para fijar gaps
@@ -87,6 +87,13 @@ Para gaps que son WE real (no placeholder), buscar fuente en estos AMFEs segun e
 | EMBALAJE | `AMFE-2` OP 110 | `AMFE-INS-PAT` OP 110 |
 
 **NOTA**: propagar SOLO si hermano tiene WE con el mismo nombre normalizado. No propagar "por similitud semantica" — eso requiere juicio humano.
+
+**Propagar desde OTRA pieza copia su metodo** (Fak, 02/10/2026, Upper Trim contra IP Pad: *"capaz no va a ser igual
+al IP Pad... solo lo confirmado 100%"*; memoria `feedback_al_documento_entra_lo_que_dice_un_papel_de_esa_pieza`): de
+la pieza vecina se toma lo que es del LUGAR (deposito, mesa, campana del sector); un control, una herramienta o una
+frecuencia de otra pieza entra solo si un papel de ESTA pieza lo respalda. En un AMFE de pieza nueva no se propaga
+desde la vecina: skill `pieza-nueva-flujograma-amfe` §1. Ningun script de esta receta lo frena: lo cuida el OK de Fak
+del paso "Parcial".
 
 ## Reglas duras (NUNCA violar)
 

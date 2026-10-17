@@ -6,12 +6,26 @@ from shapely.geometry import Polygon
 from shapely.affinity import translate
 
 SRC, TIPO, N, GAP, OUT = sys.argv[1], sys.argv[2], int(sys.argv[3]), float(sys.argv[4]), sys.argv[5]
+# Gate (tanda 12, 17/10/2026): lo que FALTA no se ve (LECCIONES). Este script lee solo polilineas: un agujero (CIRCLE)
+# o un tramo suelto del origen se perderia en silencio y la hoja saldria "bien" sin el. Frena antes de escribir.
+otras = sorted({e.dxftype() for e in ezdxf.readfile(SRC).modelspace()} - {"LWPOLYLINE"})
+if otras:
+    sys.exit(f"*** ABORTADO: el origen trae {', '.join(otras)} y este script solo copia polilineas: se perderian "
+             "(un agujero es un CIRCLE, §0.6 y §5 de la skill). Armar la hoja con _mixPlotter.py, que los conserva.")
 pz = {}
-for e in ezdxf.readfile(SRC).modelspace().query("LWPOLYLINE"):
+polis = list(ezdxf.readfile(SRC).modelspace().query("LWPOLYLINE"))
+for e in polis:
     pol = Polygon([(p[0], p[1]) for p in e.get_points("xy")])
     x0, y0, x1, y1 = pol.bounds
     tipo = "DEL" if (x1 - x0) > 650 else "TRA"
-    pz[(tipo, "DER" if x0 < 300 else "IZQ")] = translate(pol, -x0, -y0)
+    clave = (tipo, "DER" if x0 < 300 else "IZQ")
+    # Gate (auditor de la tanda 12): una polilinea de mas (un recuadro, un resto) pisaba una pieza en silencio.
+    if clave in pz:
+        sys.exit(f"*** ABORTADO: el origen tiene dos contornos que se leen como {clave[0]} {clave[1]}: tiene que traer "
+                 f"exactamente 4 piezas, una de cada tipo y mano (trae {len(polis)} polilineas).")
+    pz[clave] = translate(pol, -x0, -y0)
+if len(pz) != 4:
+    sys.exit(f"*** ABORTADO: el origen tiene que traer 4 piezas (DEL y TRA, DER e IZQ) y se leyeron {sorted(pz)}.")
 der, izq = pz[(TIPO, "DER")], pz[(TIPO, "IZQ")]
 
 
@@ -44,4 +58,11 @@ msp = doc.modelspace()
 for p in todas:
     msp.add_lwpolyline(list(p.exterior.coords)[:-1], close=True, dxfattribs={"layer": "CORTE"})
 doc.saveas(OUT)
-print("guardado", OUT)
+# Gate: se relee el ARCHIVO escrito, no la intencion del codigo (como verificar_orden de _mixPlotter.py): 2N contornos
+# cerrados y la separacion real minima >= GAP (Fak 15/10: "25 mm reales entre piezas").
+leidas = [Polygon([(p[0], p[1]) for p in e.get_points("xy")]) for e in ezdxf.readfile(OUT).modelspace().query("LWPOLYLINE") if e.closed]
+dmin_archivo = min(a.distance(b) for a, b in itertools.combinations(leidas, 2)) if len(leidas) > 1 else float("inf")
+if len(leidas) != 2 * N or dmin_archivo < GAP - 0.01:
+    sys.exit(f"*** FALLO en el archivo escrito: {len(leidas)} contornos cerrados (esperaba {2 * N}), separacion real "
+             f"minima {dmin_archivo:.2f} mm (minimo {GAP}). No se entrega: {OUT}")
+print("guardado", OUT, f"(releido: {len(leidas)} contornos, separacion minima {dmin_archivo:.2f} mm)")

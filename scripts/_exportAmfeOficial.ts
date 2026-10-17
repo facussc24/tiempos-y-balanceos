@@ -16,11 +16,12 @@
  * Ej:      npx tsx scripts/_exportAmfeOficial.ts --amfe AMFE-HF-PAT --out tmp/export-amfe
  * Borrador que todavia no esta en Supabase:  ... --amfe <clave> --json <archivo.json> --sin-auditoria
  */
-import { writeFileSync, mkdirSync, readFileSync, existsSync, rmSync, statSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync, existsSync, rmSync, statSync, renameSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import XLSX from 'xlsx-js-style';
 import { buildAmfeOficialWorkbook } from '../modules/amfe/amfeExcelExport';
 import { scanRevisionMeta, scanDocSelfExposure } from './_lib/forbiddenContent.mjs';
+import { rotulosVacios } from './_lib/caratulaVacia.mjs';
 import { mergeRevisions, type AmfeLifecycleStatus } from '../modules/amfe/amfeCaratulaSheet';
 
 function arg(nombre: string): string | undefined {
@@ -230,6 +231,18 @@ if (bytes < 10_000) { console.error(`FALLO: ${dest} pesa ${bytes} bytes, sospech
 const releido = XLSX.read(readFileSync(dest), { type: 'buffer' });
 if (releido.SheetNames.length !== wb.SheetNames.length) {
   console.error(`FALLO: releido tiene hojas [${releido.SheetNames}] y se esperaba [${wb.SheetNames}]`);
+  process.exit(1);
+}
+// 3. La caratula del ARCHIVO, no la del codigo (skill amfe-export-oficial: nacio de la caratula vacia del 25/06;
+//    LECCIONES 03-08/09: se abre el archivo que quedo). Medido el 17/10/2026: 9 de 9 AMFE exportados la tienen llena.
+const caratulaVacia = rotulosVacios(releido.Sheets['Caratula']);
+if (caratulaVacia.length) {
+  console.error(`FALLO: la caratula de ${dest} tiene rotulos sin valor; no se entrega:`);
+  for (const v of caratulaVacia) console.error(`  ${v.rotulo} (${v.celda}): ${v.motivo}`);
+  console.error('El dato suele existir con otro nombre en el header (HEADER_ALIASES de amfeCaratulaSheet.ts).');
+  // Que no quede en la carpeta con el nombre de entrega (auditor de la tanda 12): se renombra, no se borra.
+  const rechazado = dest.replace(/\.xlsx$/i, '') + ' - NO ENTREGAR (caratula incompleta).xlsx';
+  try { renameSync(dest, rechazado); console.error(`El archivo quedo como ${rechazado}`); } catch { /* si esta tomado, el FALLO de arriba ya lo dice */ }
   process.exit(1);
 }
 

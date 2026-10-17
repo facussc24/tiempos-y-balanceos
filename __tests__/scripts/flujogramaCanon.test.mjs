@@ -217,6 +217,45 @@ describe('canon de flujogramas', () => {
         });
     });
 
+    /**
+     * 17/10/2026 (tanda 12) — EL HISTORIAL TAMBIEN CONFIESA (LECCIONES 02 y 09/10). La Rev.B del 160/174 contaba
+     * que los reprocesos se integraban a otra operacion; Fak: "no nos delates de que eliminamos reprocesos".
+     * Avisa, no frena. Limite: «71 y 72 a la 70» sin la palabra reproceso no se ve.
+     */
+    describe('historial-confiesa (LECCIONES 02 y 09/10)', () => {
+        const avisos = (d) => revisarFlujograma(d).filter((x) => x.regla === 'historial-confiesa');
+        const conRevision = (details) => conDefecto((c) => { c.revisions.push({ rev: 'B', date: '09/10/2026', item: '31, 70', details, pswDate: '', modifiedBy: 'F.S.' }); });
+        it('AVISO: una fila que cuenta que se integraron o sacaron reprocesos', () => {
+            const h = avisos(conRevision('OP 32 SE INTEGRA A LA 31; 71 Y 72 (REPROCESOS) A LA 70.'));
+            expect(h).toHaveLength(1);
+            expect(h[0].gravedad).toBe('AVISO');
+            expect(h[0].detalle).toMatch(/revision B/);
+            expect(avisos(conRevision('SE ELIMINAN LOS REPROCESOS A PEDIDO DEL CLIENTE.'))).toHaveLength(1);
+        });
+        it('AVISO: el antes y el despues de una correccion', () => {
+            expect(avisos(conRevision('SE CORRIGE EL LARGO DE PUNTADA: ANTES DECIA 4 EN 16.'))).toHaveLength(1);
+        });
+        it('VERDE: agregar un reproceso, o eliminar otra cosa en la oracion siguiente (154 Rev.B), no avisa', () => {
+            expect(avisos(conRevision('SE AGREGA EL REPROCESO DE COSTURA (63).'))).toHaveLength(0);
+            expect(avisos(conRevision('REORGANIZACION DE CORTE (20-23) Y REPROCESO DE ADHESIVADO (93). ELIMINACION DE OP. 40 REFILADO PREVIO A COSTURA.'))).toHaveLength(0);
+            expect(avisos(conRevision('SE ELIMINAN LAS DECISIONES DE SCRAP INTERMEDIAS EN TERMOFORMADO (30-40).'))).toHaveLength(0);
+        });
+        it('VERDE: palabras que empiezan como un verbo de sacar y no lo son (auditor de la tanda 12)', () => {
+            for (const t of ['CONTROL DE INTEGRIDAD DEL REPROCESO DE COSTURA (63).', 'CONTROL INTEGRAL DEL RETRABAJO.', 'SE AGREGA EL PASACABLES Y EL REPROCESO DE COSTURA.']) {
+                expect(avisos(conRevision(t)), t).toHaveLength(0);
+            }
+        });
+        it('AVISO: el verbo con tilde y despues de la palabra reproceso', () => {
+            expect(avisos(conRevision('EL REPROCESO 71 SE QUITÓ DEL FLUJO.'))).toHaveLength(1);
+            expect(avisos(conRevision('LOS RETRABAJOS 71 Y 72 SE INTEGRARON A LA 70.'))).toHaveLength(1);
+        });
+        it('VERDE: ningun flujograma del generador lo dispara hoy', () => {
+            for (const f of fs.readdirSync(DATA).filter((x) => x.endsWith('.json'))) {
+                expect(avisos(leer(f)), f).toHaveLength(0);
+            }
+        });
+    });
+
     describe('decena()', () => {
         it('sube al numero de sector', () => {
             expect(decena('21')).toBe(20);

@@ -1,6 +1,6 @@
 ---
 name: planes-de-control
-description: Armar, corregir o revisar un PLAN DE CONTROL de Barack (formulario I-AC-005.1 de Calidad, prelanzamiento o produccion, y el de recepcion I-AC-005.2) — de donde sale cada fila, que va en cada columna, como lo hace Calidad cuando lo hace bien (los planes que reviso Cecilia Rodriguez), lo que exigen IATF 16949 8.5.1.1 + Anexo A y el checklist A-10 del APQP 3a ed., y los errores que ya nos marcaron. Usar cuando Fak o Calidad pidan un plan de control ("PC", "PdC", "plan de contorl"), cuando haya que corregir uno de Calidad, cruzarlo con el AMFE o el flujograma, o completar el ciclo de control de una hoja de proceso desde un plan.
+description: Plan de control («el PC», «el PdC», «plan de contorl») de Barack, formulario I-AC-005.1 de Calidad (prelanzamiento o produccion) y el de recepcion I-AC-005.2 — de donde sale cada fila, que va en cada columna, como lo hace Calidad (planes revisados por Cecilia), IATF 8.5.1.1 + Anexo A y checklist A-10, y los errores ya marcados (la D sola, una caracteristica por fila, rearmado sin amarillo). Usar al armar, corregir o revisar un plan de control, cruzarlo con el AMFE o el flujograma, o llenar el ciclo de control de una HO desde un plan.
 ---
 
 # Planes de control (I-AC-005.1)
@@ -239,6 +239,12 @@ un valor parecido de otra pieza, ni "segun especificacion" generico (`core-prohi
    celdas** (Fak, 15/10: *"luego de resolver todas estas dudas... vamos a armar un plan de control verdadero sin
    esas cosas"*). Mientras haya dudas, la version de trabajo puede tenerlas, con la lista aparte; las dudas se
    resuelven ANTES de mandarlo como definitivo.
+   **Gate de los puntos 3 a 6 (tanda 12, 17/10/2026)**: `python scripts/_planControlLimpio.py "<plan.xls>"` frena
+   (sale con 1) si la columna CLASIF. dice `D/TLD` o lleva dos marcas en una celda; con `--rearmado` frena ademas el
+   amarillo y las notas de la tabla, y con `--definitivo` el `TBD` y el `CONFLICTO`. Lo de arriba del encabezado
+   (banners de la plantilla) no lo mira. Corrido el 17/10 sobre los dos planes del 15/10: las correcciones de la
+   Rev 0 dan ROJO (33 `D/TLD`, 18 celdas con varias marcas, amarillo en la tabla); la propuesta rearmada da 3 ROJO,
+   uno por hoja: la fila 3.0 «Flamabilidad y emisiones del conjunto» lleva «D / D» en una celda.
 7. Lo que pide una fila nueva o un dato sin papel va a un `.txt` aparte ("que queda para la reunion").
 8. Auditor antes de mostrar; se le muestra a Fak abierto; el mail a Calidad, con su OK.
 9. **Las fichas de embalaje se piden al dia**: el 15/10 el plan salio con GE-103/104/105 Rev C y Carlos habia
@@ -269,6 +275,8 @@ un valor parecido de otra pieza, ni "segun especificacion" generico (`core-prohi
 18. ¿Reclamos y alertas de la pieza o familia incorporados con su numero?
 19. ¿Nada copiado de otra pieza (textos de otro producto, "TRASERO CENTRAL" en la hoja del delantero)?
 20. ¿`_sinFirmaIA.py` limpio y el archivo abierto y mirado impreso?
+21. ¿`python scripts/_planControlLimpio.py "<plan>"` sin ROJO, con `--rearmado` si se rearmo entero y `--definitivo`
+    si sale como definitivo (§5, puntos 3 a 6)?
 
 ## 7. Apoyacabezas (APC) — lo especifico
 

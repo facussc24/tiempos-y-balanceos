@@ -1,9 +1,13 @@
 ---
 name: beon
-description: "Operar BeOn (Bemusterung Online, portal de VW para el informe PPF, ex ISIR / informe de muestras iniciales) de principio a fin — entrar, buscar los informes de Barack, leer estado / IMDS / anexos / decision de VW, crear un informe, cargar y cambiar anexos, finalizar el registro y emitirlo a VW. Usar cuando haya que cargar, revisar o mandar un informe de BeOn, cuando VW devuelva uno, o para cruzar BeOn con IMDS. Version 2.1 del 14/10/2026 — leer esta probado en el portal; de escribir se hizo una sola cosa (reemplazar el PDF del IMDS en 2HC 881 901 RL1, sin emitir); finalizar registro y emitir salen de los videos y la ayuda de VW y todavia no se hicieron."
+description: "Operar BeOn («el BeOn», el portal de VW del informe PPF, ex ISIR / muestras iniciales) — entrar, buscar los informes de Barack, leer estado, IMDS, anexos y la decision de VW, crear un informe, cargar o cambiar anexos, finalizar el registro y emitir a VW. Usar cuando haya que cargar, revisar o mandar un informe de BeOn, cuando VW devuelva uno («Rueckgabe»), o para cruzar BeOn con IMDS."
 ---
 
 # BeOn — el informe PPF de VW
+
+**Estado de esta skill** (version 2.1 del 14/10/2026): leer esta probado en el portal; de escribir se hizo una sola
+cosa (reemplazar el PDF del IMDS en 2HC 881 901 RL1, sin emitir); finalizar registro y emitir salen de los videos y la
+ayuda de VW y todavia no se hicieron.
 
 **Fuentes y como se marcan.** [portal] = visto en vivo (13 y 14/10/2026, usuario D69851N).
 [video NN] = video oficial de VW (seccion 11). [ayuda N] = tema N de la ayuda online (82 temas,
@@ -207,10 +211,14 @@ Copiar un informe existente (boton Copiar) es la otra forma [ayuda 64]: no proba
 | Portada VDA / Hoja VDA | genera PDF (no probado) |
 | Desconexion | cierra la sesion |
 
-**Traba para leer seguro** (pegar con javascript_tool en cada pagina nueva de BeOn): reemplaza
-`window.confirm` por una funcion que anota el mensaje y devuelve `false`, y envuelve `formSubmit`
-/ `formSubmit2` para que solo pasen `search`, `nextSearch`, `reset`, `changeCard`, `openEmpb[n]`
-(lo demas se corta y se anota). Para navegar: `cardSubmit('changeCard','selectedMainNavTab',
+**Traba para leer seguro**: el archivo **`.claude/skills/beon/traba.js`**, pegado tal cual con javascript_tool en
+cada pagina nueva de BeOn, antes del primer clic (desde el 17/10/2026; antes se reescribia a mano). Reemplaza
+`window.confirm` por una funcion que anota el mensaje y devuelve `false`, envuelve `formSubmit` / `formSubmit2` para
+que solo pasen `search`, `nextSearch`, `reset`, `changeCard`, `openEmpb[n]`, y corta tambien `buttonConfirm` /
+`buttonConfirmOk`, el cartel propio de BeOn de §7 que no pasa por `window.confirm` (lo demas se corta y se anota en
+`window.__trabaBeon.cortados`). Devuelve "traba puesta"; si la pagina no tiene `formSubmit` ni `formSubmit2` devuelve
+"OJO: NO hay traba" y no se hace clic. Lo prueba `__tests__/scripts/beonTraba.test.mjs` sobre una
+ventana simulada; en el portal todavia no se pego desde que es archivo. Recargar la pagina la saca. Para navegar: `cardSubmit('changeCard','selectedMainNavTab',
 'nav_query'|'nav_overview'|'nav_empb'|'nav_stammdaten', true)`; abrir fila: `formSubmit2('openEmpb[i]')`.
 Las capturas de pantalla del portal se cuelgan (Chrome): leer con el texto de la pagina.
 

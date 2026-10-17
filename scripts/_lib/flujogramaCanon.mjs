@@ -15,6 +15,34 @@
  * el chequeo avisa en vez de bloquear, y dice el conteo.
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+/**
+ * Lo que una fila del historial no cuenta (chequeo 11 bis). Los dos avisos de `firmaIA.data.json` son la lista
+ * unica que ya usa `_sinFirmaIA.py`; el de reprocesos sacados o integrados es propio del historial de un
+ * flujograma («OP 32 se integra a la 31; 71 y 72 a la 70», la Rev.B del 160/174 del 09/10). Dentro de la misma
+ * oracion: «REPROCESO DE ADHESIVADO (93). ELIMINACION DE OP. 40» (154 Rev.B) no cuenta.
+ */
+/**
+ * Los verbos de sacar, con borde de palabra que entiende las tildes (`\b` de JS no las ve): «INTEGRIDAD», «INTEGRAL» y
+ * «PASACABLES» no son verbos de sacar (auditor de la tanda 12). La ventana de 40 caracteres no tiene fuente: se eligio
+ * para que la 154 Rev.B no avise; se mide contra los 9 flujogramas del generador (0 avisos).
+ */
+const L = 'a-záéíóúñü';
+const VERBO_SACAR = `(?<![${L}])(elimin[${L}]*|sac(a|an|o|ó|aron|amos|ar|ado|ados|ada|adas)|quit[${L}]*|integr(a|an|o|ó|aron|amos|ar|ado|ados|ada|adas)|unific[${L}]*|fusion[${L}]*)(?![${L}])`;
+const FIRMA_IA = JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'firmaIA.data.json'), 'utf8'));
+export const PATRONES_CONFIESA = [
+    ...FIRMA_IA.aviso.filter((p) => ['reproceso-delata', 'antes-despues'].includes(p.id))
+        .map((p) => ({ id: p.id, re: new RegExp(p.re, p.distingue_mayusculas ? '' : 'i'), que: p.que.split(' (')[0] })),
+    {
+        id: 'reproceso-sacado',
+        re: new RegExp(`${VERBO_SACAR}[^.\\n]{0,40}(reproces|retrabaj)|(reproces|retrabaj)[a-záéíóúñ]*[^.\\n]{0,40}${VERBO_SACAR}`, 'i'),
+        que: 'cuenta que se sacaron o integraron reprocesos',
+    },
+];
+
 /** Sube al numero de sector: '21' -> 20, '90.2' -> 90. */
 export const decena = (stepId) => Math.floor(parseFloat(stepId) / 10) * 10;
 
@@ -210,6 +238,22 @@ export function revisarFlujograma(doc, { hermanos = null } = {}) {
     }
     if (!Array.isArray(doc.revisions) || doc.revisions.length === 0) {
         rojo('sin-historial', 'falta el historial de revisiones');
+    }
+
+    // 11 bis. EL HISTORIAL TAMBIEN CONFIESA (tanda 12, 17/10/2026; LECCIONES 02 y 09/10). La Rev.B del 160/174
+    //     contaba «OP 32 se integra a la 31; 71 y 72 a la 70» y Fak: *"no nos delates de que eliminamos
+    //     reprocesos... mantenele la revision A"*. De un flujograma puede salir la PALABRA reproceso, nunca por que
+    //     se saco; y una correccion interna antes de emitir no abre revision. Avisa (no decide si la fila abre
+    //     revision): una fila que cuenta que se sacaron, integraron o unificaron reprocesos, o el antes y el
+    //     despues de una correccion (los avisos `reproceso-delata` y `antes-despues` de firmaIA.data.json, la
+    //     misma lista que mira `_sinFirmaIA.py` en los documentos).
+    for (const r of doc.revisions ?? []) {
+        const texto = `${r.item ?? ''} ${r.details ?? ''}`;
+        const cual = PATRONES_CONFIESA.find((p) => p.re.test(texto));
+        if (cual) {
+            aviso('historial-confiesa',
+                `la revision ${r.rev ?? '?'} dice "${String(r.details ?? '').slice(0, 120)}": ${cual.que}. Si el documento no salio todavia, la correccion no abre revision (LECCIONES 09/10)`);
+        }
     }
 
     // 12. Cada sigla que se dibuja esta declarada en la leyenda.
