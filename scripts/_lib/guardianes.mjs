@@ -172,7 +172,10 @@ export function parsear(raw) {
 export function mcpComoHerramienta(t) {
   const str = (v) => (typeof v === 'string' ? v : Array.isArray(v) ? v.filter((x) => typeof x === 'string').join('\n') : '');
   const primero = (...ks) => { for (const k of ks) { const v = str(t?.[k]); if (v) return v; } return ''; };
-  const cmd = primero('command', 'cmd', 'script', 'commands');
+  // Ronda 2 (17/10, hallazgo 16): el codigo que una MCP corre (`mcp__build123d__execute {code}`) se mira como el de un
+  // `python -` con ese codigo en un heredoc: lo ven los mismos guardianes que a un python -c
+  const codigo = primero('code', 'source');
+  const cmd = primero('command', 'cmd', 'script', 'commands') || (codigo ? `python - <<'CODIGO_MCP'\n${codigo}\nCODIGO_MCP` : '');
   const file = primero('file_path', 'path', 'filePath', 'filename', 'file', 'destination', 'dest', 'target', 'target_path', 'output_path');
   // el contenido cuenta solo si va a un ARCHIVO: el texto de un mensaje o de un documento de otra plataforma (Claude Docs,
   // un chat) no es un documento de Barack en disco, y el guardian de firma lo leeria como tal
@@ -1006,6 +1009,7 @@ export function medirInline(cmd) {
 }
 GUARDIANES['script-inline-guard'] = (ctx) => {
   if (!ctx.ok || !ctx.cmd) return null;
+  if (ctx.mcp) return null;   // ronda 2: el codigo de una MCP es el pedido mismo, no un script pegado en la consola
   const { inline, archivo } = medirInline(ctx.cmd);
   if (inline < INLINE_MAX) return null;
   const n = inline.toLocaleString('es-AR');

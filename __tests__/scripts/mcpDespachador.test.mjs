@@ -64,6 +64,13 @@ describe('pieza 10 — la entrada de la MCP se traduce a lo que miran los guardi
         expect(frenan(mcp('mcp__gmail__send_draft', { id: 'r123' }))).toContain('mail-guard');
         expect(frenan(mcp('mcp__outlook__send-mail', { to: 'x@y.com' }))).toContain('mail-guard');
     });
+    it('ROJO (ronda 2, hallazgo 16): execute(code) de build123d que borra una carpeta del servidor', () => {
+        expect(frenan(mcp('mcp__build123d__execute', { code: "import shutil\nshutil.rmtree(r'Y:/Ingenieria/Documentacion Gestion Ingenieria/13. Analisis')" }))).toContain('borrado-masivo-guard');
+    });
+    it('VERDE (ronda 2, hallazgo 16): execute(code) que modela una pieza pasa, aunque el codigo sea largo', () => {
+        const largo = "from build123d import *\n" + 'b = Box(10, 10, 10)\nshow(b, "caja")\n'.repeat(200);
+        expect(frenan(mcp('mcp__build123d__execute', { code: largo }))).toEqual([]);
+    });
     it('VERDE: la MCP que escribe en el repo o el scratchpad, arma un borrador o corre un comando comun', () => {
         expect(frenan(mcp('mcp__filesystem__write_file', { path: 'C:\\Dev\\BarackMercosul\\exports\\x\\notas.txt', content: 'medido el 16/10' }))).toEqual([]);
         expect(frenan(mcp('mcp__gmail__create_draft', { to: 'carlos@barackmercosul.com', body: 'y' }))).toEqual([]);
