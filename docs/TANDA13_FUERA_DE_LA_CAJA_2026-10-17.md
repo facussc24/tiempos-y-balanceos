@@ -118,3 +118,29 @@ auditor del 16/10: su freno salió por última vez el 13/09).
 como estilo por defecto de las sesiones nuevas en la configuración de la app), y a la semana se corre el mismo comando con
 `--desde <día de activación>`. Sirve si la suma de los chequeos 1, 5, 6, 7 y 10 baja de ~4,6 cada 100 mensajes; si no
 baja, se saca (es un archivo: borrarlo o elegir «Default» lo apaga). Los subagentes no lo heredan (solo los fork).
+
+---
+
+## Ítem 16 · Revisar un entregable comentando sobre una página (probado hasta donde llega sin una persona)
+
+**Cómo funciona** (descripción de las herramientas `Artifact` y `ArtifactComments` de la sesión, leída el 17/10):
+1. La sesión publica la página (privada: solo la ve el dueño de la cuenta y a quien él se la comparta). Al publicar, la
+   sesión queda «mirando» la página.
+2. Fak abre el link, selecciona el pedazo (un paso de la hoja) y deja un comentario.
+3. **El comentario solo le llega a la sesión si Fak lo manda**: respondiendo el hilo con «Send to Claude» o escribiendo
+   @claude adentro. Un comentario común queda guardado en la página y no avisa a nadie; la sesión lo lee si se lo piden.
+4. Con el comentario mandado, la sesión se despierta, corrige el archivo, vuelve a publicar en el mismo link y responde
+   y cierra el hilo («resolve»). Solo puede responder y cerrar hilos mandados; no puede crear comentarios nuevos.
+5. La «mirada» es de ESA sesión: si se cierra, nadie escucha. Si Fak quiere que lo vea otra sesión, le pega el link en su
+   mensaje y esa sesión empieza a mirarla (`ArtifactComments` con `watch`).
+
+**Lo que se probó (17/10, ~19:45):** se publicó una página de prueba **sin datos de la empresa**
+(`https://claude.ai/artifact/ASCDE3Qec1cuNgtZ1qcmHB`, «Prueba de comentarios»: tres pasos de ejemplo, el 2 marcado para
+comentar). La publicación anduvo, la sesión quedó mirándola («connected, auto-replies armed») y la lectura de comentarios
+anduvo (0 hilos). **Lo que no se pudo probar**: que un comentario de Fak llegue con el paso al que apunta; hace falta que
+él comente y lo mande, y esta sesión hija termina antes. La prueba de punta a punta es: abrir el link, comentar el paso 2,
+mandarlo, y que la sesión que lo mira conteste en el hilo.
+
+**Para qué se usaría:** un paquete de hojas de proceso o un flujograma se muestra como página y Fak marca sobre el paso
+(«este paso no se entiende») en vez de describirlo en el chat. La página es de revisión interna, nunca el entregable
+(regla `core-prohibiciones.md` §9: el entregable sigue siendo el PowerPoint o el PDF de la casa).
