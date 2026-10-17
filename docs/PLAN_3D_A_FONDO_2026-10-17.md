@@ -129,6 +129,7 @@ tardar **menos de 1 minuto**. Si algo no lo permite la licencia, se dice con lo 
 | | v14 | v15 | v16 |
 |---|---|---|---|
 | A1 apoyos | ROJO (7: 4 bloques + 3 pasadores parados sobre las ranuras tapadas) | **ROJO** (4 bloques) | **ROJO por la letra** (4 apoyos chicos) |
+| A1b 4-2-1 coplanar (renglón aparte, informativo) | ROJO (3 superficies) | ROJO (2 superficies, 1,21 mm entre topes) | **VERDE** (1 superficie, 0,001 mm) |
 | A2 ventana (banda / punta) | ROJO (0,20 / 0,24) | VERDE (1,19 / 0,75) | VERDE (1,19 / 0,75: el anillo es el de la v15) |
 | A3 simulación normal, 150 casos (% > 0,3 mm · máx.) | 100 % · 6,27 | 28 % · 0,63 | **0 % · 0,16** |
 | A3 apretando en la punta (mediana) | 5,91 mm | 1,69 mm | **0,00 mm** |
@@ -172,6 +173,22 @@ hizo (la entrega de la v14 tampoco la tenía); y la prueba física.
   Medición 44 s sin el arranque (20 s). **El «choque de −3,354 mm» del 13/10 era un efecto de mover el panel adentro de
   CATIA** (ninguna de las dos piezas tiene material en esos puntos). Módulos: Part Design y superficies (GSM) andan
   creando y midiendo; DSE (escaneo) está instalado pero sin automatización.
+
+### Manuales
+
+- `4- MANUALES\CATIA V5\V5Automation.chm` (16.067.621 bytes, la ayuda oficial de automatización de la instalación de
+  CATIA, copiada tal cual; mismo hash que el original).
+- **build123d: NO bajado, espera el OK de Fak** (regla `documentacion-oficial.md` 7: bajarlo de internet es una descarga):
+  archivo `build123d-readthedocs-io-en-latest.pdf`, fuente `https://build123d.readthedocs.io/_/downloads/en/latest/pdf/`
+  (la documentación oficial, en readthedocs), 17.164.209 bytes (medido con un pedido de cabecera el 17/10, sin bajarlo).
+  Destino propuesto: `4- MANUALES\BUILD123D\`.
+
+### Qué pide compra o licencia (nada es obligatorio)
+
+Nada de esta tanda pide comprar ni licenciar: CATIA ya está (licencia confirmada por Fak el 13/10), build123d y lo demás
+son gratis. Opcionales, todos con el sí de Fak: instalar Blender (`bpy`, gratis, GPL-3.0, 338 MB) solo para renders;
+filamento TPU 95A si algún utillaje toca una superficie pintada; la prueba de 30 días de Fusion (≈ US$ 680/año después,
+sin verificar en Autodesk) no se recomienda: ningún programa arregla lo del asiento.
 
 ## Qué puede romper
 

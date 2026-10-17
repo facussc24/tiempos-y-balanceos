@@ -16,6 +16,10 @@ usa se reabrieron a mano (Carr Lane, CCOHS, hoja de PLA Basic): coinciden.
 | 5 | Almohadilla de **TPU 95A** sobre cuerpo rígido cuando un utillaje toca una superficie pintada o clase A (no el tapizado: ahí el blando ya es el vinilo) | Dos fuentes independientes (Siraya, UltiMaker/Ford) | filamento TPU | cuando haya una pieza así |
 | 6 | Mirar la idea del «juez independiente» de **Pan-Chera/Multi-Agent-CAD** (1.038 ★, MIT) sin adoptarlo | La casa ya tiene la revisión ciega (G-E4); confirma el método | 0 | — |
 
+**Ojo con §d.3 punto 1 del informe de abajo («tres almohadillas, no más»):** la tanda lo probó en la simulación del
+virolador y **tres apoyos vuelcan** cuando la mano aprieta fuera de su triángulo (hasta 10 mm); la v16 quedó con cuatro
+coplanares (4-2-1). Ver `docs/PLAN_3D_A_FONDO_2026-10-17.md`, «Resultados».
+
 Lo que no se pudo ver: los posts de Alex Albert del 01 y 05/09 (no aparecieron en tres búsquedas; x.com no se abrió).
 Lo descartado con motivo: FreeCAD, SolidWorks, Fusion de comunidad, OpenSCAD y las skills de impresión (otro motor o
 duplican lo que ya hay; casi todas con menos de 300 estrellas); `anujasid/mcp-for-blender-pro` (posible imitación del

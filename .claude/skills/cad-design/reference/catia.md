@@ -38,7 +38,7 @@ C:\Dev\_catia_env\Scripts\python.exe .claude\skills\cad-design\scripts\catia_med
 | Volumen del panel (sólido, sin el tapizado) | 91.791,099 mm³ | 91.765,561 mm³ | 0,03 % |
 | Choque v14 contra panel, mismo marco, holgura 0,3 | **sin choque; 1 contacto (0,0 mm)** | `check_collision`: 0 puntos adentro, contacto 0,06-0,08 | coinciden |
 | Gemelo: la v14 metida 1 mm en el panel | **choque −0,14 mm** | — | el control no es ciego |
-| Tiempos | arranque 20 s (64 s la primera vez del día); medición 44 s sin el arranque | | < 1 min |
+| Tiempos | arranque 20 s (64 s la primera vez del día); medición 44 s sin el arranque | | < 1 min con la PC libre. Con cuatro simulaciones corriendo a la vez (v16, 17/10): arranque 78 s y medición 101 s |
 
 `GetCOG` no devuelve la misma unidad para todos los STEP (en la v14 coincide con build123d en mm; en el panel salió
 ×1000): el informe lo guarda como `centro_crudo` y **no se compara**.

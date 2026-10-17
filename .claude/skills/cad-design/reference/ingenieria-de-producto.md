@@ -22,7 +22,8 @@ código de fuentes: ABIERTA / BUSCADOR / CASA / A MEDIR.
 
 | Pregunta | Rojo cuando | Fuente de la regla |
 |---|---|---|
-| **A1 Apoyos** — ¿dos elementos rígidos controlan el mismo movimiento? | sí (p. ej. anillo + pasadores ubicando los dos X/Y; cuatro bloques de apoyo controlando Z y los dos giros) | Carr Lane U2/U3 (`ficha-utillajes.md`) |
+| **A1 Apoyos** — ¿más de tres elementos rígidos controlan la altura y los dos giros, o más de uno ubica en el plano? | sí (v14: cuatro bloques en dos mesetas + tres pasadores parados sobre las ranuras tapadas; v15: los cuatro bloques). Es el criterio estricto (3-2-1) y no se afloja | Carr Lane U2/U3 (`ficha-utillajes.md`) |
+| **A1b 4-2-1 coplanar** (renglón aparte, informativo) — si son cuatro, ¿están los cuatro sobre UNA misma superficie medida (dispersión ≤ 0,05 mm bajo y entre las huellas) y la mano puede apretar afuera de un triángulo? | cuatro repartidos en superficies distintas (v15: dos mesetas, una inclinada 0,78°). La v16 lo cumple; **igual la valida la prueba física**: cuánto desnivel absorbe el tapizado no tiene fuente | Applied Engineering U7; U8 (`ficha-utillajes.md`); umbral 0,05 mm fijado el 17/10, sin fuente: A MEDIR |
 | **A2 Ventana de asiento** — ¿cuánto puede variar la altura del panel sin tocar plástico ni dejar de apretar? | menos de **1,0 mm hacia abajo o 0,6 mm hacia arriba** (cubre que el tapizado ceda 0 a 0,6 mm y ±0,2 de espesor: hipótesis del 13/10 hasta medir con el escáner) | CASA, B4 |
 | **A3 Asiento simulado** — apretando en varios lugares con el blando variando, ¿cambia la pose? | la simulación no reproduce primero la falla conocida, o la pieza nueva se hamaca más de 0,3 mm en más del 10 % de los casos | CASA, B5; umbral fijado el 17/10 en `docs/PLAN_3D_A_FONDO_2026-10-17.md` antes de correr la v16 |
 
@@ -51,7 +52,7 @@ código de fuentes: ABIERTA / BUSCADOR / CASA / A MEDIR.
 
 | Caso | Qué pasó | Qué regla lo caza |
 |---|---|---|
-| **Virolador v14** (Upper Trim, 13/10) | pasó todos los gates y se hamacó en la mano | A1 (anillo + pasadores + cuatro bloques), A2 (ventana +0,20 / −0,24), A3 (100 % / 68 % de casos) |
+| **Virolador v14** (Upper Trim, 13/10) | pasó todos los gates y se hamacó en la mano | A1 (cuatro bloques en dos mesetas + tres pasadores parados sobre las ranuras de listón tapadas por el tapizado), A2 (ventana 0,20 / 0,24), A3 (100 % / 68 % de casos) |
 | **Tornillo de 7 mm** (costura CNC, 14-16/10) | parado se partió bajo la cabeza; la holgura ganadora (0,50) estaba dentro del error de la máquina; los primeros mm no enroscan | `ficha-fdm.md` O1/O4, M7, R2, R4 |
 | **Pines del insert** (costura CNC, 14-16/10) | la cota salió del DXF (Ø3) y en planta el agujero es de sacabocado Ø2; y la CNC ya no cose con pines | §1 preguntas 1 y 2 |
 

@@ -34,6 +34,19 @@ chequear(ev.a1_apoyos(tres, U)["veredicto"] == "VERDE", "tres apoyos + un ubicad
 chequear(ev.a1_apoyos(tres + [ap("d")], U)["veredicto"] == "ROJO", "cuatro apoyos rígidos: ROJO (gemelo)")
 chequear(ev.a1_apoyos(tres + [ap("pasador", "ubicador_xy")], U)["veredicto"] == "ROJO", "dos ubicadores en el plano: ROJO")
 
+print("1b. A1b 4-2-1 coplanar (renglon aparte; A1 sigue dando ROJO con cuatro)")
+cuatro = tres + [ap("d")]
+chequear(ev.a1b_cuatro_coplanares(tres, None, U)["veredicto"] == "NO APLICA", "con tres apoyos no aplica")
+chequear(ev.a1b_cuatro_coplanares(cuatro, {"superficies": 1, "dispersion_mm": 0.01}, U)["veredicto"] == "VERDE",
+         "cuatro sobre una superficie con 0,01 de desnivel: VERDE")
+chequear(ev.a1b_cuatro_coplanares(cuatro, {"superficies": 2, "dispersion_mm": 0.01}, U)["veredicto"] == "ROJO",
+         "cuatro en dos superficies: ROJO (gemelo)")
+chequear(ev.a1b_cuatro_coplanares(cuatro, {"superficies": 1, "dispersion_mm": 0.2}, U)["veredicto"] == "ROJO",
+         "cuatro con 0,2 de desnivel: ROJO")
+chequear(ev.a1b_cuatro_coplanares(cuatro + [ap("e")], {"superficies": 1, "dispersion_mm": 0.0}, U)["veredicto"] == "ROJO",
+         "cinco apoyos: ROJO")
+chequear(ev.a1_apoyos(cuatro, U)["veredicto"] == "ROJO", "A1 estricto no se afloja: cuatro sigue ROJO")
+
 print("2. A2 ventana")
 chequear(ev.a2_ventana({"banda": 1.0, "punta": 0.6}, U)["veredicto"] == "VERDE", "en el umbral: VERDE")
 chequear(ev.a2_ventana({"banda": 0.9, "punta": 0.6}, U)["veredicto"] == "ROJO", "banda una décima corta: ROJO")

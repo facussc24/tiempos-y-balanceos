@@ -39,6 +39,20 @@ def a1_apoyos(elementos, u):
             "motivo": "; ".join(motivo) or f"{len(z)} apoyos en Z, {len(xy)} ubicador en el plano"}
 
 
+def a1b_cuatro_coplanares(elementos, sup, u):
+    """Renglon APARTE de A1 (no lo afloja): si son cuatro apoyos, ¿estan sobre UNA misma superficie medida? (4-2-1,
+    Applied Engineering; la redundancia del cuarto se paga con coplanaridad). Informativo: lo valida la prueba fisica."""
+    n = sum(1 for e in elementos if e.get("rigido") and e["tipo"] == "apoyo_z")
+    if n <= u["apoyos_z_max"]:
+        return {"veredicto": "NO APLICA", "motivo": f"{n} apoyos: alcanza con A1"}
+    if not sup:
+        return {"veredicto": "SIN DATO", "motivo": "falta 'apoyos_superficie' (cuantas superficies y dispersion)"}
+    ok = n == 4 and sup["superficies"] == 1 and sup["dispersion_mm"] <= u["coplanar_dispersion_max_mm"]
+    return {"veredicto": "VERDE" if ok else "ROJO", "apoyos": n, **sup,
+            "motivo": "cuatro sobre una misma superficie (informativo: lo valida la prueba fisica)" if ok
+            else "mas de cuatro, o repartidos en superficies distintas, o desnivel de mas"}
+
+
 def a2_ventana(v, u):
     if not v:
         return {"veredicto": "SIN DATO"}
@@ -97,7 +111,9 @@ def evaluar(casos, normal=None, punta=None):
     u = casos["umbrales"]
     res, fallas = {}, []
     for nombre, ver in casos["versiones"].items():
-        r = {"A1_apoyos": a1_apoyos(ver.get("elementos", []), u), "A2_ventana": a2_ventana(ver.get("ventana_mm"), u)}
+        r = {"A1_apoyos": a1_apoyos(ver.get("elementos", []), u),
+             "A1b_4_2_1": a1b_cuatro_coplanares(ver.get("elementos", []), ver.get("apoyos_superficie"), u),
+             "A2_ventana": a2_ventana(ver.get("ventana_mm"), u)}
         if normal is not None:
             r["A3_asiento"] = a3_asiento(nombre, ver, normal, punta, u)
             if r["A3_asiento"].get("reproduce_lo_publicado") is False:

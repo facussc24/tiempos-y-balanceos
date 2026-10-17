@@ -11,7 +11,9 @@
     "punta_mediana_max_mm": 0.5,
     "reproduccion_tol_pct": 5,
     "reproduccion_tol_mm": 0.15,
-    "_fuente": "ficha-utillajes.md U1/U2/B2-B5 e ingenieria-de-producto.md §2; plan del 17/10"
+    "_fuente": "ficha-utillajes.md U1/U2/B2-B5 e ingenieria-de-producto.md §2; plan del 17/10",
+    "coplanar_dispersion_max_mm": 0.05,
+    "_coplanar": "A1b (informativo, 17/10): cuatro apoyos sobre UNA superficie medida con dispersion <= 0,05 mm entre sus topes. El 0,05 lo fijo la casa sin fuente (a medir: cuanto desnivel absorbe el tapizado bajo la mano)."
   },
   "versiones": {
     "v14": {
@@ -70,6 +72,11 @@
         "A1_apoyos": "ROJO",
         "A2_ventana": "ROJO",
         "A3_asiento": "ROJO"
+      },
+      "apoyos_superficie": {
+        "superficies": 3,
+        "dispersion_mm": 1.21,
+        "_": "bloques en la meseta -y (tope -9,128) y en el plano +y (-10,335), pasadores sobre la cara del liston: 3 superficies, 1,21 mm entre topes"
       }
     },
     "v15": {
@@ -123,9 +130,15 @@
       "esperado": {
         "A1_apoyos": "ROJO",
         "A2_ventana": "VERDE",
-        "A3_asiento": "ROJO"
+        "A3_asiento": "ROJO",
+        "A1b_4_2_1": "ROJO"
       },
-      "_esperado": "El plan del 17/10 esperaba A1 VERDE para la v15 (sin pasadores). Aplicada la regla tal cual, sus cuatro bloques rigidos controlan la altura: ROJO. No se afloja la regla para que la v15 de verde: la simulacion la confirma (se hamaca en 28 de 100). La que tiene que dar verde es la v16."
+      "_esperado": "El plan del 17/10 esperaba A1 VERDE para la v15 (sin pasadores). Aplicada la regla tal cual, sus cuatro bloques rigidos controlan la altura: ROJO. No se afloja la regla para que la v15 de verde: la simulacion la confirma (se hamaca en 28 de 100). La que tiene que dar verde es la v16.",
+      "apoyos_superficie": {
+        "superficies": 2,
+        "dispersion_mm": 1.21,
+        "_": "bloques en la meseta -y (tope -9,128, inclinada 0,78 grados) y en el plano +y (-10,335)"
+      }
     },
     "v16": {
       "_fuente": "C:/Dev/_utrim/params_v10.json 'nido.apoyos_v16' y cotas_v10_two.json (17/10/2026): cuatro apoyos 6x10 en las esquinas sobre el mismo plano del tapizado (z_tope -10,334/-10,335, dispersion 0,000 bajo cada huella), sin pasadores ni orejas; anillo identico a la v15 (verificar_v16.py: 0,0002 mm)",
@@ -161,9 +174,15 @@
         "punta": 0.75
       },
       "esperado": {
-        "A1_apoyos": "ROJO"
+        "A1_apoyos": "ROJO",
+        "A1b_4_2_1": "VERDE"
       },
-      "_esperado": "Por la letra del criterio V1 del plan (exactamente tres apoyos) la v16 da ROJO en A1: tiene cuatro. Se decidio 4-2-1 con evidencia (Applied Engineering: 3-2-1 da equilibrio, no estabilidad; tres apoyos volcaban hasta 10 mm con la mano afuera del triangulo) y la redundancia se paga con coplanaridad (los cuatro sobre el mismo plano medido). No se afloja A1: el veredicto final de la v16 lo da la prueba fisica (apretar en cinco lugares)."
+      "_esperado": "Por la letra del criterio V1 del plan (exactamente tres apoyos) la v16 da ROJO en A1: tiene cuatro. Se decidio 4-2-1 con evidencia (Applied Engineering: 3-2-1 da equilibrio, no estabilidad; tres apoyos volcaban hasta 10 mm con la mano afuera del triangulo) y la redundancia se paga con coplanaridad (los cuatro sobre el mismo plano medido). No se afloja A1: el veredicto final de la v16 lo da la prueba fisica (apretar en cinco lugares).",
+      "apoyos_superficie": {
+        "superficies": 1,
+        "dispersion_mm": 0.001,
+        "_": "los cuatro sobre el plano del tapizado z -10,28 (topes -10,334 y -10,335; dispersion 0,000 bajo cada huella)"
+      }
     }
   }
 }
