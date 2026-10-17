@@ -1788,6 +1788,19 @@ function variablesTemporales(code) {
     // Python: tempfile.mkdtemp(...) sin `dir=` (con dir= la crea donde le dicen)
     if (/(?:^|\.)tempfile\.$/.test(m[2]) && !/\bdir\s*=/.test(args.split(')')[0])) vars.add(m[1]);
   }
+  // Ronda 2 (17/10, hallazgo 8): el nombre se sigue en TODO el script, asi que tiene que ser una sola cosa: una unica
+  // asignacion (`d = mkdtemp(); …; d = r'Y:/…'` ya no es temporal) y nunca un parametro de una funcion ni la variable de
+  // un for (`def limpiar(d): shutil.rmtree(d)` con `limpiar(r'Y:/…')`). Si hay duda, no es temporal: el freno vale.
+  const esc = (n) => n.replace(/\$/g, '\\$');
+  const parametros = new Set();
+  for (const m of code.matchAll(/\bdef\s+\w+\s*\(([^)]*)\)|\bfunction\b[^(]*\(([^)]*)\)|\(([^()]*)\)\s*=>|\blambda\s+([^:]*):|\bcatch\s*\(([^)]*)\)/g)) {
+    for (const p of String(m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? '').split(',')) { const n = p.trim().replace(/^\*+|[=:].*$/g, '').trim(); if (n) parametros.add(n); }
+  }
+  for (const m of code.matchAll(/\b([A-Za-z_$][\w$]*)\s*=>|\bfor\s+([A-Za-z_]\w*)\s+in\b|\bfor\s*\(\s*(?:const|let|var)\s+([A-Za-z_$][\w$]*)|\bwith\b[^\n]*\bas\s+([A-Za-z_]\w*)/g)) parametros.add(m[1] ?? m[2] ?? m[3] ?? m[4]);
+  for (const v of [...vars]) {
+    const asignaciones = [...code.matchAll(new RegExp(`(?<![\\w$.])${esc(v)}\\s*(?:[-+*/]?=)(?!=)`, 'g'))].length;
+    if (asignaciones !== 1 || parametros.has(v)) vars.delete(v);
+  }
   return vars;
 }
 const BM_LLAMADA_BORRA = /^(?:(?:fs|fsp|fs\.promises)\.)?(?:rmSync|rmdirSync|rm|rmdir)\s*\(\s*([A-Za-z_$][\w$]*)\s*[,)]|^shutil\.rmtree\s*\(\s*([A-Za-z_]\w*)\s*[,)]/;

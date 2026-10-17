@@ -376,6 +376,13 @@ describe('P18 — temporales de mktemp, __pycache__ y scripts que prueban un gua
             ['asyncio', `import asyncio\nfor x in ['${RF} /c/Dev/otra']:\n    asyncio.run(asyncio.create_subprocess_shell(x))\n`],
         ]) expect(correr(escribir(`${SCRATCH}\\sonda_${nombre.replace(/\s/g, '_')}.${nombre === 'asyncio' ? 'py' : 'mjs'}`, js)).code, nombre).toBe(2);
     }, 60_000);
+    it('ROJO (ronda 2, hallazgo 8) — el nombre de la variable de mkdtemp reasignado, o usado como parametro de un ayudante', () => {
+        for (const [f, s] of [
+            ['C:\\Dev\\BarackMercosul\\scripts\\_x.py', "import tempfile, shutil\nd = tempfile.mkdtemp()\nshutil.rmtree(d)\nd = r'Y:/INGENIERIA/x'\nshutil.rmtree(d)\n"],
+            ['C:\\Dev\\BarackMercosul\\scripts\\_limpiar.py', "import tempfile, shutil\nd = tempfile.mkdtemp()\ndef limpiar(d):\n    shutil.rmtree(d)\nlimpiar(r'Y:/INGENIERIA/x')\n"],
+            ['C:\\Dev\\BarackMercosul\\scripts\\_limpiar.mjs', "import fs from 'node:fs';\nconst d = fs.mkdtempSync(path.join(os.tmpdir(), 'x'));\nfunction limpiar(d) { fs.rmSync(d, { recursive: true }); }\nlimpiar('Y:/INGENIERIA/x');\n"],
+        ]) expect(correr(escribir(f, s)).code, f).toBe(2);
+    }, 60_000);
     it('ROJO — un script con un borrado REAL sigue frenando, este en el scratchpad o en scripts/', { timeout: 60_000 }, () => {
         const real = "import fs from 'node:fs';\nfs.rmSync('C:/Users/FacundoS-PC/BARACK ARGENTINA SRL/Ingenieria y Proyecto - General/x', { recursive: true });\n";
         expect(correr(escribir(`${SCRATCH}\\limpiar.mjs`, real)).code).toBe(2);
