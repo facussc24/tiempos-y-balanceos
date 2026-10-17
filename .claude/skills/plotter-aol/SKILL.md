@@ -272,6 +272,13 @@ nivelado, sin sol directo ni humedad.
   Selftest con DXF sinteticos: `py -3 .claude/skills/plotter-aol/scripts/acomodar_columnas_selftest.py` ("0 fallan"; no
   corre en `npm test` porque el CI no instala ezdxf ni shapely).
   Al lado va siempre un PNG **"cual es cual"** con el nombre de cada mano: el DXF no lleva texto.
+  **Cuanto material deja la regla** (tanda 13, 17/10/2026): `py -3 .claude/skills/plotter-aol/scripts/medir_regla_columnas.py
+  <dxf 4 piezas> DEL|TRA 5 25 [--ancho W] [--png salida.png]` arma la hoja de columnas con el script de arriba y busca otro
+  acomodo con las mismas condiciones (sin girar, sin espejar, 25 mm), mas una cota de abajo. Con el DXF del 15/10 y el
+  mismo ancho que ocupan las columnas, ningun acomodo que encontro es mas corto (sobra 28,6 % DEL y 32,7 % TRA); con
+  1,8 m de material (el ancho que Fak penso para la prueba, sin medir) mezclar manos y usar el ancho acorta 90 mm (DEL) y
+  77 mm (TRA) por hoja. **No es un consumo** (`consumos-entregables.md` §6) y no se le pregunta a Pablo. Selftest:
+  `medir_regla_columnas_selftest.py` ("0 fallan").
 - Si Fak pregunta como se hace algo de la maquina: contestar con esta skill y su pagina del manual;
   si no esta, **decir que el manual no lo dice** y no inventar un valor (`core-prohibiciones` §1).
 - Ningun parametro de fabrica (*config → machine*) se recomienda cambiar.
