@@ -36,6 +36,20 @@
         "docs/review/mail.md"
       ],
       "descripcion_reglas": "Reglas de Barack para escribir un mail de trabajo: que entra y que no, el largo, la voz de Fak, quien va en copia, no contestar por otra area y mirar el buzon antes de pedir. Usar siempre que haya que escribir o revisar un mail."
+    },
+    "cad": {
+      "casos": [
+        "evals/banco/cad/virolador-apoyos-y-asiento",
+        "evals/banco/cad/tornillo-impreso-parado",
+        "evals/banco/cad/pin-cota-del-proceso"
+      ],
+      "skills": [
+        "cad-design"
+      ],
+      "reglas": [
+        ".claude/rules/cad-3d.md"
+      ],
+      "descripcion_reglas": "Reglas de Barack para disenar piezas y utillajes en 3D e imprimirlos: los gates de proceso, zona, frame, choque y entregable, apoyos y asiento sobre material blando, orientacion de impresion y tolerancias. Usar al disenar, revisar o mandar a imprimir una pieza o un utillaje."
     }
   }
 }

@@ -22,6 +22,17 @@ describe('manifiesto de bancos', () => {
       for (const r of b.reglas) expect(fs.existsSync(path.join(RAIZ, r)), r).toBe(true);
     }
   });
+
+  it('cad (tanda 11): los 3 casos de respuesta conocida (virolador v14, tornillo de 7 mm, pines del insert) existen con prompt y criterio', () => {
+    const b = M.bancos.cad;
+    expect(b.casos).toHaveLength(3);
+    expect(b.skills).toEqual(['cad-design']);
+    for (const c of b.casos) {
+      expect(fs.existsSync(path.join(RAIZ, c, 'prompt.md')), c).toBe(true);
+      expect(fs.readdirSync(path.join(RAIZ, c, 'graders')).length, c).toBeGreaterThan(0);
+    }
+    for (const r of b.reglas) expect(fs.existsSync(path.join(RAIZ, r)), r).toBe(true);
+  });
 });
 
 describe('armarComplemento', () => {

@@ -1,0 +1,50 @@
+{
+  "_que_es": "Casos de respuesta conocida de la tanda 11 (17/10/2026) para eval_casos_3d.py: el inventario de apoyos y la ventana de asiento de cada version del virolador del Upper Trim, y lo que la simulacion de asiento del 13/10 publico. Cada dato con su fuente. Lo lee eval_casos_3d.py; los umbrales viven en 'umbrales' y se fijaron en docs/PLAN_3D_A_FONDO_2026-10-17.md ANTES de correr la v16.",
+  "umbrales": {
+    "apoyos_z_max": 3,
+    "ubicadores_xy_max": 1,
+    "ventana_banda_min_mm": 1.0,
+    "ventana_punta_min_mm": 0.6,
+    "_ventana": "banda = cuanto puede bajar el panel y la banda recta del anillo sigue apretando (pasado el labio de plastico); punta = cuanto puede subir antes de que la punta del anillo toque los pines de plastico. Cubre que el tapizado ceda 0 a 0,6 mm y +-0,2 de espesor (hipotesis del 13/10).",
+    "hamaca_pct_max": 10,
+    "hamaca_max_mm": 0.5,
+    "punta_mediana_max_mm": 0.5,
+    "reproduccion_tol_pct": 5,
+    "reproduccion_tol_mm": 0.15,
+    "_fuente": "ficha-utillajes.md U1/U2/B2-B5 e ingenieria-de-producto.md §2; plan del 17/10"
+  },
+  "versiones": {
+    "v14": {
+      "_fuente": "C:/Dev/_utrim/params_v10.json (v13/v14, 'localizadores.two_v14', 'nido.ped_neg/ped_pos', '_v15') y memoria project_uppertrim_pisador_utillaje",
+      "elementos": [
+        {"nombre": "bloque ranura 1, lado -y", "tipo": "apoyo_z", "rigido": true},
+        {"nombre": "bloque ranura 1, lado +y", "tipo": "apoyo_z", "rigido": true},
+        {"nombre": "bloque ranura 2, lado -y", "tipo": "apoyo_z", "rigido": true},
+        {"nombre": "bloque ranura 2, lado +y", "tipo": "apoyo_z", "rigido": true},
+        {"nombre": "pasador 1 (parado sobre la ranura de liston tapada)", "tipo": "apoyo_z", "rigido": true},
+        {"nombre": "pasador 2 (parado sobre la ranura de liston tapada)", "tipo": "apoyo_z", "rigido": true},
+        {"nombre": "pasador 3 (parado sobre la ranura de liston tapada)", "tipo": "apoyo_z", "rigido": true},
+        {"nombre": "anillos (luz 0,15 a la pared)", "tipo": "ubicador_xy", "rigido": true}
+      ],
+      "ventana_mm": {"banda": 0.20, "punta": 0.24},
+      "sim_publicada": {"normal_tapados_pct": 100, "normal_abiertos_pct": 68},
+      "esperado": {"A1_apoyos": "ROJO", "A2_ventana": "ROJO", "A3_asiento": "ROJO"}
+    },
+    "v15": {
+      "_fuente": "params_v10.json '_v15' (13/10): sin pasadores, orejas de las puntas como tope antivuelco a 0,25 bajo el tapizado, banda hasta z -6,30 y punta a z -4,80",
+      "elementos": [
+        {"nombre": "bloque ranura 1, lado -y", "tipo": "apoyo_z", "rigido": true},
+        {"nombre": "bloque ranura 1, lado +y", "tipo": "apoyo_z", "rigido": true},
+        {"nombre": "bloque ranura 2, lado -y", "tipo": "apoyo_z", "rigido": true},
+        {"nombre": "bloque ranura 2, lado +y", "tipo": "apoyo_z", "rigido": true},
+        {"nombre": "oreja punta izquierda (luz 0,25)", "tipo": "antivuelco", "rigido": true},
+        {"nombre": "oreja punta derecha (luz 0,25)", "tipo": "antivuelco", "rigido": true},
+        {"nombre": "anillos (luz 0,15 a la pared)", "tipo": "ubicador_xy", "rigido": true}
+      ],
+      "ventana_mm": {"banda": 1.19, "punta": 0.75},
+      "sim_publicada": {"normal_tapados_pct": 28, "punta_mediana_mm": 1.69},
+      "esperado": {"A1_apoyos": "ROJO", "A2_ventana": "VERDE", "A3_asiento": "ROJO"},
+      "_esperado": "El plan del 17/10 esperaba A1 VERDE para la v15 (sin pasadores). Aplicada la regla tal cual, sus cuatro bloques rigidos controlan la altura: ROJO. No se afloja la regla para que la v15 de verde: la simulacion la confirma (se hamaca en 28 de 100). La que tiene que dar verde es la v16."
+    }
+  }
+}

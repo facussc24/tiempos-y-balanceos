@@ -1,0 +1,73 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#   python test_eval_casos_3d.py
+"""Prueba de eval_casos_3d.py en las dos direcciones, con datos sintéticos (no necesita la carpeta de trabajo).
+
+BIEN: tres apoyos + un ubicador -> A1 VERDE; un tope antivuelco no cuenta como apoyo. MAL: cuatro apoyos -> ROJO.
+Ventana justo en el umbral -> VERDE; una décima menos -> ROJO. Una simulación que no reproduce el número publicado hace
+fallar el eval (código 1) aunque la pieza dé ROJO como se esperaba. La v16 sin número publicado se juzga por umbral.
+Y los casos reales del 13/10 (si la carpeta de trabajo está) dan lo esperado.
+"""
+import json
+import os
+import sys
+
+AQUI = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, AQUI)
+import eval_casos_3d as ev  # noqa: E402
+
+fallos = []
+
+
+def chequear(cond, msg):
+    print("   %s  %s" % ("ok  " if cond else "FALLA", msg))
+    if not cond:
+        fallos.append(msg)
+
+
+U = json.load(open(os.path.join(AQUI, "..", "data", "casos_3d.json"), encoding="utf-8"))["umbrales"]
+ap = lambda n, t="apoyo_z": {"nombre": n, "tipo": t, "rigido": True}  # noqa: E731
+
+print("1. A1 apoyos")
+tres = [ap("a"), ap("b"), ap("c"), ap("anillo", "ubicador_xy"), ap("tope", "antivuelco")]
+chequear(ev.a1_apoyos(tres, U)["veredicto"] == "VERDE", "tres apoyos + un ubicador + un tope antivuelco: VERDE")
+chequear(ev.a1_apoyos(tres + [ap("d")], U)["veredicto"] == "ROJO", "cuatro apoyos rígidos: ROJO (gemelo)")
+chequear(ev.a1_apoyos(tres + [ap("pasador", "ubicador_xy")], U)["veredicto"] == "ROJO", "dos ubicadores en el plano: ROJO")
+
+print("2. A2 ventana")
+chequear(ev.a2_ventana({"banda": 1.0, "punta": 0.6}, U)["veredicto"] == "VERDE", "en el umbral: VERDE")
+chequear(ev.a2_ventana({"banda": 0.9, "punta": 0.6}, U)["veredicto"] == "ROJO", "banda una décima corta: ROJO")
+chequear(ev.a2_ventana({"banda": 1.2, "punta": 0.5}, U)["veredicto"] == "ROJO", "punta una décima corta: ROJO")
+
+print("3. A3 asiento: reproducir lo publicado")
+fila = lambda p, pct, mx=0.6, med=0.1, tap=True: {"pieza": p, "listones_tapados": tap, "pct_hamaca_mas_de_0_3": pct,  # noqa: E731
+                                                  "hamaca_max_mm": mx, "hamaca_mediana_mm": med, "pct_anillo_toca_plastico": 0}
+casos = {"umbrales": U, "versiones": {"vX": {"elementos": tres, "ventana_mm": {"banda": 1.2, "punta": 0.7},
+                                             "sim_publicada": {"normal_tapados_pct": 28, "punta_mediana_mm": 1.69},
+                                             "esperado": {"A3_asiento": "ROJO"}}}}
+_, f = ev.evaluar(casos, [fila("vX", 28)], [fila("vX", 100, med=1.69)])
+chequear(not f, "reproduce 28 % y 1,69 mm: sin fallas")
+_, f = ev.evaluar(casos, [fila("vX", 60)], [fila("vX", 100, med=1.69)])
+chequear(any("NO reproduce" in x for x in f), "da 60 % en vez de 28 %: FALLA aunque el veredicto ROJO coincida")
+
+print("4. A3 asiento: la pieza nueva se juzga por umbral")
+nueva = {"umbrales": U, "versiones": {"v16": {"elementos": tres, "ventana_mm": {"banda": 1.2, "punta": 0.7}}}}
+r, _ = ev.evaluar(nueva, [fila("v16", 5, mx=0.4)], [fila("v16", 0, med=0.3)])
+chequear(r["v16"]["A3_asiento"]["veredicto"] == "VERDE", "5 %, máx 0,4, punta 0,3: VERDE")
+r, _ = ev.evaluar(nueva, [fila("v16", 12, mx=0.4)], [fila("v16", 0, med=0.3)])
+chequear(r["v16"]["A3_asiento"]["veredicto"] == "ROJO", "12 %: ROJO")
+r, _ = ev.evaluar(nueva, [fila("v16", 5, mx=0.4)], None)
+chequear(r["v16"]["A3_asiento"]["veredicto"] == "ROJO", "sin la corrida de la punta: ROJO (no se aprueba a medias)")
+
+print("5. casos reales del 13/10 (si está la carpeta de trabajo)")
+sn, sp = r"C:\Dev\_utrim\out\sim_asiento.json", r"C:\Dev\_utrim\out\sim_asiento_punta.json"
+if os.path.exists(sn) and os.path.exists(sp):
+    real = json.load(open(os.path.join(AQUI, "..", "data", "casos_3d.json"), encoding="utf-8"))
+    real["versiones"] = {k: v for k, v in real["versiones"].items() if k in ("v14", "v15")}
+    _, f = ev.evaluar(real, json.load(open(sn, encoding="utf-8")), json.load(open(sp, encoding="utf-8")))
+    chequear(not f, "v14 y v15 dan lo esperado contra lo publicado el 13/10 (%s)" % f)
+else:
+    print("   (salteado: no está C:\\Dev\\_utrim)")
+
+print("\nRESULTADO:", "OK" if not fallos else "FALLAS: %d" % len(fallos))
+sys.exit(1 if fallos else 0)
