@@ -29,16 +29,19 @@ El mail no sale de acá: Fak copia el borrador a un mail nuevo de Outlook. La ta
 ## La tarea programada (QUEDÓ SIN CREAR: la app pidió la aprobación de una persona)
 
 El 17/10 la herramienta de tareas programadas contestó «needs a person's approval, and nobody has opened this scheduled
-run». No se armó por otro camino. Se crea con un clic de Fak en el cartel, desde una sesión con él en la ventana, con
-estos valores:
+run». No se armó por otro camino. Se crea desde una sesión con Fak en la ventana, aprobando la creación (si la app
+muestra un cartel, ese es el paso; no lo pude ver), con estos valores, y se confirma con `list_scheduled_tasks` que la
+próxima corrida diga viernes 09:00 y que el resultado de la creación diga en qué modo de permisos quedó:
 
 - **taskId:** `borrador-mail-pedro-automatizacion`
 - **título:** Borrador quincenal del mail a Pedro (automatización)
 - **cron:** `0 9 * * 5` (viernes 09:00, hora local). Cron no sabe «cada dos semanas»: corre todos los viernes y la
-  guarda del paso 1 sale sin escribir si el último borrador tiene menos de 14 días. Con el primero del 17/10: el 24/10
-  no escribe, el 31/10 sí.
-- **modo:** omitir permisos (la sesión que la crea está en ese modo; el resultado de la creación lo dice). Solo lee y
-  escribe dos archivos en la nube.
+  guarda del paso 1 sale sin escribir si el último borrador tiene menos de 12 días (12 y no 14: el primero se escribió
+  a mano el sábado 17/10, y del viernes 30/10 al 17/10 hay 13 días; con 14 el primero automático se iba al 06/11). Con
+  ese primero: el viernes 23/10 no escribe (6 días), el viernes 30/10 sí (13); después, uno cada dos viernes (7 días no
+  alcanza, 14 sí).
+- **modo:** omitir permisos. La herramienta guarda el modo de la sesión que la crea: crearla desde una sesión en
+  omitir permisos y leer en el resultado que quedó así (sin verificar todavía). Solo lee y escribe dos archivos en la nube.
 - **notifyOnCompletion:** false.
 - **prompt:** el bloque de abajo, entero.
 
@@ -53,7 +56,7 @@ REGLAS DURAS (no se negocian):
 - No se promete una cadencia («una automatización cada dos semanas» no tiene fuente): se cuenta lo que avanzó.
 
 PASOS:
-1. Guarda de 14 días: listá `AUTOMATIZACION BARACK\borradores\`. Los archivos se llaman `AAAA-MM-DD - mail a Pedro.md`. Si el más nuevo tiene menos de 14 días respecto de hoy (medí la fecha con `date`), TERMINÁ sin escribir nada y decí en una línea: «No toca: el último borrador es del <fecha>; el próximo sale el viernes <fecha>». (El primero es del 17/10/2026: el 24/10 no toca, el 31/10 sí.)
+1. Guarda de 12 días: listá `AUTOMATIZACION BARACK\borradores\`. Los archivos se llaman `AAAA-MM-DD - mail a Pedro.md`. Si el más nuevo tiene menos de 12 días respecto de hoy (medí la fecha con `date`), TERMINÁ sin escribir nada y decí en una línea: «No toca: el último borrador es del <fecha>; el próximo sale el viernes <fecha>». (El primero es del sábado 17/10/2026: el viernes 23/10 no toca, el viernes 30/10 sí.)
 2. Leé entera la cola `AUTOMATIZACION BARACK\cola.md` (estado de cada candidato, fechas de revisión, lo ya hecho) y el borrador anterior (para no repetirlo).
 3. Mirá qué cambió en 14 días: `git -C C:\Dev\BarackMercosul log --since="14 days ago" --oneline` y quedate SOLO con lo que mueve una fila de la cola (BeOn, ECR/ECO, historia del arb, vigilancia de la impresora o la notebook fija, o algo de «Ya hecho»). Los commits del sistema interno (guardianes, hooks, reglas, tandas del plan) NO van al mail. También podés mirar `FACUNDO\` en la misma biblioteca (archivos `PEDIDO N - listo ...`) para ver qué se hizo en BeOn.
 4. Relevamiento: si existe `C:\Dev\BarackMercosul\scripts\_automatizacionCandidatos.mjs`, corré `node scripts/_automatizacionCandidatos.mjs --out "C:\Users\FacundoS-PC\BARACK ARGENTINA SRL\Ingeniería y Proyecto - General\AUTOMATIZACION BARACK\relevamientos\<AAAA-MM-DD> - candidatos propuestos.md"` (unos 3 minutos; solo lee). Si no existe (rama sin fundir), seguí sin él y decilo al final.
