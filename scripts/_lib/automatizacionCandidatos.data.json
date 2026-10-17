@@ -1,0 +1,114 @@
+{
+  "_fuente": "plan del sistema 16/10/2026, tanda 8 (2 bis) y §7 punto 11: una vez por quincena se releen los mails de la casa y los procesos largos (ECR/ECO, arb, BeOn) y se proponen filas para la cola AUTOMATIZACION BARACK\\cola.md",
+  "_como_se_usa": "node scripts/_automatizacionCandidatos.mjs [--dias N] [--out <archivo>]; detalle en el encabezado del script",
+  "ventana_dias": 15,
+  "citas_por_tema": 3,
+  "temas": [
+    {
+      "id": "beon",
+      "nombre": "Carga de documentos en BeOn (portal de VW)",
+      "en_la_cola": "BeOn",
+      "terminos": [
+        "beon",
+        "rueckgabe"
+      ]
+    },
+    {
+      "id": "ecr-eco",
+      "nombre": "Cambios de ingeniería (ECR/ECO)",
+      "en_la_cola": "ECR/ECO",
+      "terminos": [
+        "ecr",
+        "ecr/eco",
+        "solicitud de cambio",
+        "alteração de engenharia"
+      ]
+    },
+    {
+      "id": "arb",
+      "nombre": "El arb (BOM, consumos, códigos)",
+      "en_la_cola": "arb",
+      "terminos": [
+        "en arb",
+        "el arb",
+        "del arb",
+        "en el arb"
+      ]
+    },
+    {
+      "id": "impresora-vigilancia",
+      "nombre": "Impresora 3D y lo que corre solo (vigilancia)",
+      "en_la_cola": "notebook fija",
+      "terminos": [
+        "impresora 3d",
+        "bambu"
+      ]
+    },
+    {
+      "id": "procesos-largos",
+      "nombre": "Otros procesos largos o a mano (candidato nuevo a mirar)",
+      "en_la_cola": null,
+      "terminos": [
+        "a mano",
+        "manualmente",
+        "llevar mas tiempo",
+        "lleva mucho tiempo",
+        "demora",
+        "a pulmon"
+      ]
+    }
+  ],
+  "palabras_de_dolor": [
+    "a mano",
+    "manual",
+    "demora",
+    "tarda",
+    "tiempo",
+    "pendiente",
+    "otra vez",
+    "de nuevo",
+    "error",
+    "rechaz",
+    "devol",
+    "falta",
+    "urgente",
+    "ecr",
+    "armemos",
+    "formato"
+  ],
+  "excluir_remitentes": [
+    "soloazar",
+    "microsoft on behalf",
+    "rhetorik",
+    "noreply",
+    "no-reply",
+    "linkedin",
+    "immuniweb",
+    "newsletter",
+    "read ai",
+    "read assistant",
+    "webinar",
+    "salesforce"
+  ],
+  "lineas_de_encabezado": [
+    "de:",
+    "para:",
+    "cc:",
+    "enviado",
+    "asunto:",
+    "from:",
+    "to:",
+    "sent:",
+    "subject:",
+    "date:"
+  ],
+  "excluir_carpetas": [
+    "borradores",
+    "drafts",
+    "elementos eliminados",
+    "deleted items",
+    "problemas de sincroniz",
+    "correo no deseado",
+    "junk"
+  ]
+}
