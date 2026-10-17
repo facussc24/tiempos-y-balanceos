@@ -59,6 +59,12 @@ const COBERTURA = {
   // PreToolUse via _dispatcher (02/10/2026): un `git commit` sin rutas se lleva lo que otra sesion tenga
   // en el indice (cee8f1b2 salio con 12 archivos ajenos). Regla git-deploy.md, paso 2.
   'commit-rutas-guard.sh': { test: '__tests__/scripts/commitRutasGuard.test.mjs', tipo: 'bloquea' },
+  // PreToolUse via _dispatcher (tanda 3, pieza 9, 16/10/2026): un permiso de un solo uso de Fak se arma solo con su frase
+  // de este turno citada en el comando (autonomy-contract.md §G).
+  'permiso-un-uso-guard.sh': { test: '__tests__/scripts/permisoUnUso.test.mjs', tipo: 'bloquea' },
+  // PreModelSwitch + PreToolUse de set_session_model (tanda 3, pieza 12, 16/10/2026): el modelo no se cambia a mitad de
+  // camino por cuenta propia; /model y el selector pasan siempre.
+  'modelo-guard.sh': { test: '__tests__/scripts/modeloGuard.test.mjs', tipo: 'bloquea' },
   // PreToolUse via _dispatcher (11/09/2026): recordatorio 1x/h del criterio CC/SC (S 9-10 · S 5-8 y O>=4)
   // al tocar siglas, flujogramas o el tema. No bloquea: el bloqueo duro son los CRITICAL del validador.
   'caracteristicas-especiales-guard.sh': { test: GUARDIANES, tipo: 'aviso' },
@@ -75,7 +81,6 @@ const COBERTURA = {
   'supabase-guard.sh': { test: VARIOS, tipo: 'bloquea' },
   'mcp-write-gate.sh': { test: VARIOS, tipo: 'bloquea' },
   'supabase-write-flag.sh': { test: VARIOS, tipo: 'observa' },
-  'dev-server-guard.sh': { test: VARIOS, tipo: 'bloquea' },
   // PreToolUse AskUserQuestion (06/10/2026): dejo de ser un recordatorio. Frena la pregunta con opcion recomendada
   // fuera de lo que el contrato manda confirmar, y el menu de alcance. Origen: 35 de 81 preguntas rechazadas por Fak.
   'pregunta-guard.sh': { test: '__tests__/scripts/preguntaGuard.test.mjs', tipo: 'bloquea' },
@@ -101,8 +106,6 @@ const COBERTURA = {
   // que el MODELO lo recibe se sigue verificando en el TRANSCRIPT de una sesion nueva
   // (LECCIONES 04/09: 144 sesiones con el preview de 2 KB).
   'session-start-context.sh': { test: VARIOS, tipo: 'aviso' },
-  // PostToolUse|PostToolUseFailure (10/09/2026, A2): additionalContext cuando el comando se corto.
-  'timeout-guard.sh': { test: VARIOS, tipo: 'aviso' },
   // InstructionsLoaded (10/09/2026, C5): registro TSV de lo que Claude Code cargo de verdad.
   'instrucciones-log.sh': { test: VARIOS, tipo: 'observa' },
   // PreCompact y PostCompact (16/10/2026, tanda 1.3.3): registro de compactaciones en .claude/state/compactaciones.jsonl.
@@ -124,6 +127,15 @@ const HUERFANOS = {
   'correccion-guard.sh': 'reemplazado por prompt-hooks.sh (cola P10 C2); pendiente el OK de Fak para borrarlo',
   'explicar-prompt.sh': 'reemplazado por prompt-hooks.sh (cola P10 C2); pendiente el OK de Fak para borrarlo',
   'hora-prompt.sh': 'reemplazado por prompt-hooks.sh (cola P10 C2); pendiente el OK de Fak para borrarlo',
+};
+/**
+ * Retirados con el si de Fak (tanda 3, 16/10/2026, si del 09/10): viven en `.claude/hooks/_retirados/` (no se borran del
+ * historial), con un renglon de por que al principio, y no estan cableados. `enDisco` no baja a esa carpeta.
+ */
+const RETIRADOS = {
+  'dev-server-guard.sh': 'P11: en el mes freno 4 veces y las 4 fueron falsas',
+  'timeout-guard.sh': 'P20: ~51.800 corridas en el mes y 6 avisos',
+  'timeoutGuard.mjs': 'P20: la logica que settings.json llamaba directo con node',
 };
 
 const enDisco = fs.readdirSync(HOOKS).filter((f) => f.endsWith('.sh') && !f.endsWith('.test.sh'));
@@ -263,9 +275,20 @@ describe('hooksTienenTest — todo hook figura en la tabla, con su test', () => 
         directos.push(`${evento}:${rel}`);
       }
     }
-    // el timeout-guard corre en los dos eventos, sin bash
-    expect(directos.sort()).toEqual(['PostToolUse:scripts/_lib/timeoutGuard.mjs', 'PostToolUseFailure:scripts/_lib/timeoutGuard.mjs']);
-    expect(hooksCableados().has('timeout-guard.sh')).toBe(true);
+    // el unico que corria asi era el timeout-guard, retirado el 16/10/2026 (tanda 3, P20): hoy no queda ninguno
+    expect(directos.sort()).toEqual([]);
+  });
+
+  it('6. los retirados viven en _retirados/ con su renglon de por que, y nadie los cablea (tanda 3, 16/10/2026)', () => {
+    const settings = leer('.claude/settings.json');
+    for (const [f, motivo] of Object.entries(RETIRADOS)) {
+      const ruta = path.join(HOOKS, '_retirados', f);
+      expect(fs.existsSync(ruta), `${f}: ${motivo} — tiene que estar en .claude/hooks/_retirados/`).toBe(true);
+      expect(fs.existsSync(path.join(HOOKS, f)), `${f} sigue en .claude/hooks/`).toBe(false);
+      expect(fs.readFileSync(ruta, 'utf8').split('\n').slice(0, 3).join('\n'), `${f} sin el renglon de por que`).toMatch(/RETIRADO el \d{2}\/\d{2}\/\d{4}/);
+      expect(settings.includes(f), `settings.json todavia nombra a ${f}`).toBe(false);
+    }
+    expect(enDisco.some((f) => RETIRADOS[f]), 'un retirado volvio a .claude/hooks/').toBe(false);
   });
 
   it.skipIf(!fs.existsSync(GLOBAL))('5b. agentes-guard.sh del repo es identico al instalado en ~/.claude/hooks (el que corre)', () => {

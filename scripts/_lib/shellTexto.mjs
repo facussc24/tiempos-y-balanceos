@@ -101,7 +101,7 @@ export function sinCuerposHeredocDeGit(cmd) {
 const SQ = '\uE000'; // `$` adentro de comillas simples: literal, no se expande
 
 /** Indice del cierre de una sustitucion `$(...)` o `` `...` `` que arranca en i (tolera comillas adentro). */
-function finSustitucion(s, i) {
+export function finSustitucion(s, i) {
   if (s[i] === '`') { const k = s.indexOf('`', i + 1); return k < 0 ? s.length - 1 : k; }
   let prof = 0;
   for (let j = i + 1; j < s.length; j++) {
@@ -201,6 +201,11 @@ export function resolverPalabra(w, vars = new Map(), cwd = null) {
   let x = String(w ?? '');
   // $(cygpath -u "X") es X con otras barras: el patron `T="$(cygpath -u "$TEMP")/..."` es comun aca.
   x = x.replace(/\$\(\s*cygpath(?:\s+-[A-Za-z]+)*\s+["']?([^"')]*?)["']?\s*\)/g, '$1');
+  // $(mktemp -d) es una carpeta NUEVA adentro del TEMP (tanda 3, P18, 16/10/2026: 7 de los 13 frenos falsos de
+  // borrado-masivo eran un `T=$(mktemp -d)` y al final el borrado recursivo de "$T"). Solo sin carpeta propia: con `-p`,
+  // `--tmpdir=` o una plantilla con barra la crea donde le dicen, y eso queda sin resolver como antes.
+  x = x.replace(/\$\(\s*mktemp((?:\s+(?:-[dqtu]+|--(?:directory|quiet|dry-run|tmpdir)))*)(?:\s+["']?([^\s"'\\/()=$`]+)["']?)?\s*\)/g,
+    (m, flags, plantilla) => `${TEMP_PH}/${plantilla || 'tmp.XXXXXXXXXX'}`);
   if (/\$\(|`/.test(x)) return { valor: x, ok: false };
   if (/^~(?=$|[\\/])/.test(x)) x = HOME_PH + x.slice(1);
   let ok = true;

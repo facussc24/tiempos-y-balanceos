@@ -428,6 +428,9 @@ if (comoScript) {
     console.log(filas.length ? filas.join('\n') : 'Ninguna sesión lanzada anotó de quién es hija.');
   } else if (process.argv.includes('--registro')) {
     try { console.log(fs.readFileSync(rutaRegistro(), 'utf8').trimEnd().split('\n').slice(-40).join('\n')); } catch { console.log('El registro está vacío: el hook todavía no corrió en esta PC.'); }
+    // tanda 3, pieza 9 (16/10/2026): los permisos de un solo uso que armo una sesion, con su cita o el motivo del freno
+    console.log('\n== permisos de un solo uso (permiso-un-uso-guard): fecha · sesion · permiso · pasa/frena · cita o motivo');
+    try { console.log(fs.readFileSync(path.join(os.homedir(), '.claude', '.permisos-un-uso.log'), 'utf8').trimEnd().split('\n').slice(-40).join('\n')); } catch { console.log('Ninguna sesion armo un permiso de un solo uso desde que existe este control.'); }
   } else {
     console.log('uso: --hook (stdin: JSON de PermissionRequest) | --heredar <id de la sesión que te lanzó> [--sesion <id>] | --heredadas | --registro');
   }

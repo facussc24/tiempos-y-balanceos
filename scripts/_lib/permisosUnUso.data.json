@@ -1,0 +1,26 @@
+{
+  "_que_es": "Canon de los permisos de un solo uso (tanda 3 del plan del sistema, pieza 9, 16/10/2026). Un permiso de un uso es un archivo vacio en ~/.claude/ que abre UNA vez un freno que Fak ya autorizo. Los de_fak los arma la sesion SOLO con la frase de Fak en el mismo turno, citada en el comando con este formato:  : > ~/.claude/.apqp-listado-ok # Fak 15/10 13:55: \"hacelo si\"  · el texto citado tiene que estar en el ULTIMO mensaje real de Fak del transcript, y la fecha y la hora (Argentina, UTC-3) son las de ese mensaje. Sin la cita, o si no cierra, el freno vale. Los de_la_sesion son pases que la regla de cada guardian define para la propia sesion y no llevan la frase de Fak. Lo aplica permiso-un-uso-guard (scripts/_lib/guardianes.mjs, logica en scripts/_lib/permisoUnUso.mjs); el registro de cada decision: node scripts/_lib/permisoGuard.mjs --registro. Regla: .claude/rules/autonomy-contract.md, seccion G.",
+  "fuente": "Informe de CATA del 15/10/2026 (casa_guardianes_frenos.md, seccion 3 bis): 10 permisos armados por la propia sesion en 30 dias, 4 con un si explicito de Fak en el ultimo mensaje, 2 sin si visible, y el arb-cerrar-ok del 02/10 15:17 seguido del taskkill que se ejecuto igual. Plan: docs/PLAN_GUARDIANES_2026-10-16.md, pieza 9.",
+  "de_fak": [
+    { "archivo": ".apqp-listado-ok", "lo_lee": "apqp-cliente-guard (escribir un listado maestro)" },
+    { "archivo": ".arb-cerrar-ok", "lo_lee": "arb-cerrar-guard (cerrar el arb)" },
+    { "archivo": ".nube-personal-ok", "lo_lee": "nube-personal-guard (guardar en la nube personal)" },
+    { "archivo": ".espacio-ok", "lo_lee": "video-maquina-guard regla 4 (bajar algo pesado en la PC del disco chico)" },
+    { "archivo": ".agent-opus-ok", "lo_lee": "agentes-guard (Opus y Fable descuentan como Sonnet)" },
+    { "archivo": ".agent-cupo-ok", "lo_lee": "agentes-guard y el mod presupuesto-agentes (saltear el freno de la ventana de 5 h)" },
+    { "archivo": ".agent-limit", "lo_lee": "agentes-guard (cambiar el presupuesto de puntos)" },
+    { "archivo": ".workflow-ok", "lo_lee": "agentes-guard (un Workflow, cuando estaba apagada)" }
+  ],
+  "de_la_sesion": [
+    { "archivo": ".encargo-libre", "por_que": "coordinador.md: un mensaje que NO es encargo (un gracias, un aviso) a otra sesion o subagente; lo decide la sesion, por diseño. El informe de CATA lo separa de los otros diez (17 casos, por diseño)." },
+    { "archivo": ".agent-builtin-ok", "por_que": "techo-agentes.md: pase tecnico mientras un agente recien creado no aparece en la sesion (\"lo escribo yo, lo digo, y lo retiro al cerrar\")." },
+    { "archivo": ".cruce-video", "por_que": "no es un permiso: es la marca con la hora que deja _videoBiblioteca.mjs --cruzar." }
+  ],
+  "cita": {
+    "_que_es": "La cita va como comentario de shell, despues del comando que arma el permiso. Fecha DD/MM y hora HH:MM del mensaje de Fak (Argentina, UTC-3); el texto, entre comillas, copiado de su mensaje (con sus errores de tipeo: se compara sin tildes, sin mayusculas ni signos).",
+    "regex": "#\\s*Fak\\s+(\\d{1,2})/(\\d{1,2})\\s+(\\d{1,2}):(\\d{2})\\s*:\\s*[\"\\u201c]([^\"\\u201d\\n]{2,400})[\"\\u201d]",
+    "palabras_minimas": 2,
+    "minutos_de_tolerancia": 5,
+    "utc_offset_horas": -3
+  }
+}

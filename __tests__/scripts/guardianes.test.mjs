@@ -22,6 +22,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { esperados } from './guardianesRonda3.mjs';
 
 // El bloque "por bash" levanta _dispatcher.sh + node varias veces por caso: solo tarda
 // decimas, con la suite entera en paralelo en Windows paso los 15 s (05/09/2026). 60 s aca.
@@ -366,6 +367,25 @@ describe('mail-guard (casos de mail-guard.test.sh)', () => {
     expect(ev(bash('node -e "socket.Send()"')).exit).toBe(0);
     expect(ev(bash('python -c "import win32com.client as w; w.Dispatch(\\"Outlook.Application\\").GetNamespace(\\"MAPI\\").GetDefaultFolder(6).Items.Item(1).ReplyAll().Display()"')).exit).toBe(0);
   });
+  // Pieza 6 (tanda 3, 16/10/2026): los frenos falsos del informe de CATA (`casa_guardianes_frenos.md`, mail-guard, 6 de
+  // 14). Los que seguian frenando eran un sed que corregia texto y un .sh del scratchpad que armaba un encargo.
+  const SCR = 'C:\\Users\\FACUND~1\\AppData\\Local\\Temp\\claude\\C--Dev-BarackMercosul\\ae95ec7e\\scratchpad';
+  it('pieza 6 VERDE — el texto de un sed, de un grep o de un argumento que NOMBRA el envio no es un envio', () => {
+    expect(ev(bash("sed -i 's/una bandera recortada como `--envi` valia por `--enviar` en python scripts\\/_mailEnviar.py --buscar x --enviar/arreglado/' docs/x.md"), { nombres: ['mail-guard'] }).exit).toBe(0);
+    expect(ev(bash('grep -n "_mailEnviar.py --buscar .* --enviar" .claude/rules/mail-envio.md'), { nombres: ['mail-guard'] }).exit).toBe(0);
+    const encargo = `S="${SCR}"\nnode scripts/_encargo.mjs --lanzada \\\n --a "Hija 7 · Outlook: borradores viejos" \\\n --entregable "Reglas duras: mail-envio.md (jamás .Send()), Outlook.Application solo con Display()" \\\n > "$S/encargo.txt" 2>&1\necho "exit=$?"\n`;
+    expect(ev(escribir(`${SCR}\\encargo_hoy19k.sh`, encargo), { nombres: ['mail-guard'] }).exit).toBe(0);
+    expect(ev(escribir('C:\\Dev\\BarackMercosul\\__tests__\\scripts\\mailsBorradores.test.mjs', 'ol=Dispatch("Outlook.Application"); m=ol.CreateItem(0); m.Send()'), { nombres: ['mail-guard'] }).exit).toBe(0);
+    expect(ev(escribir(`${SCR}\\cola_envio.txt`, 'Outlook.Application CreateItem(0) .Send() pendiente'), { nombres: ['mail-guard'] }).exit).toBe(0);
+  });
+  it('pieza 6 ROJO — el envio de verdad sigue frenando: por _mailEnviar, por un .sh que manda, por un script del scratchpad', () => {
+    expect(ev(bash('cd /c/Dev/BarackMercosul && python scripts/_mailEnviar.py --buscar "APB TRA CEN" --enviar'), { nombres: ['mail-guard'] }).exit).toBe(2);
+    expect(ev(bash('timeout 60 py -3 scripts/_mailEnviar.py --id ABC --enviar 2>&1 | tail -5'), { nombres: ['mail-guard'] }).exit).toBe(2);
+    expect(ev(bash('echo "python scripts/_mailEnviar.py --id ABC --enviar" | bash'), { nombres: ['mail-guard'] }).exit).toBe(2);
+    const manda = "python - <<'PY'\nimport win32com.client as w\nm=w.Dispatch('Outlook.Application').CreateItem(0)\nm.Send()\nPY\n";
+    expect(ev(escribir(`${SCR}\\mandar.sh`, manda), { nombres: ['mail-guard'] }).exit).toBe(2);
+    expect(ev(escribir(`${SCR}\\mandar.py`, "import win32com.client as w\nm=w.Dispatch('Outlook.Application').CreateItem(0)\nm.Send()\n"), { nombres: ['mail-guard'] }).exit).toBe(2);
+  });
 });
 
 // ───────────────────────────────────────────────────────────── arb-cerrar-guard
@@ -654,6 +674,31 @@ describe('script-inline-guard — comandos REALES de los transcripts', () => {
     // Pero el node -e de verdad, fuera del heredoc, sigue contando entero.
     expect(ev(bash(`node -e 'x' && git commit -F - -- a.mjs <<'EOF'\nmsg\nEOF\nnode -e '${'z'.repeat(3100)}'`)).err).toMatch(/SCRIPT-INLINE-GUARD/);
   });
+  // Pieza 5 (tanda 3, 16/10/2026): agregar PROSA a una nota con `cat >>` / `tee -a` no es un script pegado (los 6 frenos
+  // falsos del informe de CATA, `casa_guardianes_frenos.md` §3 P5); agregar CODIGO sigue frenando (los V del informe).
+  const solo = { nombres: ['script-inline-guard'] };
+  const prosa = '## 22/09/2026 — "puesto asi nomas": lo que Fak vio a ojo estaba medido\n'.repeat(80);
+  it('pieza 5 VERDE — cat >> / tee -a de prosa a un .md o .txt (memorias, planes, diarios; tambien con la ruta en una variable)', () => {
+    expect(prosa.length).toBeGreaterThan(INLINE_MAX);
+    for (const c of [
+      `cd "C:/Users/FacundoS-PC/.claude/projects/C--Dev-BarackMercosul/memory" && cat >> project_dispositivo_adhesivado_insert.md <<'EOF'\n${prosa}EOF`,
+      `cat >> docs/PLAN_P6_PLANES_DE_CONTROL_2026-10-10.md <<'EOF'\n${prosa}EOF`,
+      `cd /c/Dev/BarackMercosul/.sgc-cache/claude-por-area/examen && H=$(date +%H:%M) && cat >> DIA_2026-10-05.md <<'EOF'\n${prosa}EOF`,
+      `M="/c/Users/FacundoS-PC/.claude/projects/C--Dev-BarackMercosul/memory/project_claudes_por_area.md"; cat >> "$M" <<'EOF'\n${prosa}EOF`,
+      `tee -a notas.txt >/dev/null <<'EOF'\n${prosa}EOF`,
+    ]) expect(ev(bash(c), solo).exit, c.slice(0, 80)).toBe(0);
+  });
+  it('pieza 5 ROJO — agregar CODIGO, pisar con cat >, o un heredoc que va a un interprete, siguen frenando', () => {
+    const codigo = 'it("caso", () => { expect(correr(bash("x")).code).toBe(0); });\n'.repeat(60);
+    for (const c of [
+      `cat >> __tests__/scripts/mailsPcCalidad.test.mjs <<'EOF'\n${codigo}EOF`,                    // V del informe
+      `cat >> scripts/hotmelt/fotos_v3_lista.py <<'EOF'\n${codigo}EOF`,                              // V del informe
+      `head -65 generar.mjs > nuevo.mjs && cat >> nuevo.mjs <<'EOF'\n${codigo}EOF`,                 // V del informe
+      `cat > notas.md <<'EOF'\n${prosa}EOF`,                                                          // pisa: Write
+      `cat >> notas.md <<'EOF' | python -\n${prosa}EOF`,                                              // va a un interprete
+      `M=$(ls *.md | head -1); cat >> "$M" <<'EOF'\n${prosa}EOF`,                                     // destino que no se sabe
+    ]) expect(ev(bash(c), solo).exit, c.slice(0, 80)).toBe(2);
+  });
 });
 
 // ───────────────────────────────────────────────────────────── documentacion-oficial-guard
@@ -790,8 +835,61 @@ describe('secretos-guard — .env.local y .qr-secret no se leen ni se pisan desd
     verde(bash('echo "process.env.VITE_SUPABASE_URL" && node -e "console.log(process.env.HOME)"'));
     verde(bash('npm install dotenv && cat .envrc'));
   });
+  // P12 (tanda 3, 16/10/2026): los frenos FALSOS reales del informe de CATA (`casa_guardianes_frenos.md` §3 P2) pasan;
+  // los VERDADEROS (§4) y las lecturas de siempre siguen frenando. Medido con scripts/_frenosMedir.mjs: 9 falsos -> 1.
+  it('P12 VERDE — el lector lee la salida de OTRO comando, o el nombre es un patron o una lista de exclusion', () => {
+    verde(bash('ls scripts/_lib/ | head -40; echo "--- existe env:"; ls -la .env.local 2>/dev/null'));               // 21/09 11:25
+    verde(bash('ls -la .env.local 2>&1 | head -3; timeout 90 node scripts/_auditAll.mjs --summary 2>&1 | head -25'));    // 21/09 11:20
+    verde(bash("ls -la /d/ 2>&1 | head -20; echo ---; ls -la /c/Dev/BarackMercosul/.env.local /c/Dev/BarackMercosul/.qr-secret 2>&1 | awk '{print $5, $9}'")); // 08/10
+    verde(bash('grep -n -i "pegar-clave\\|env.local\\|ANTHROPIC_API_KEY" scripts/_claude.mjs | head -40; echo "--- gitignore ---"; grep -n "env.local\\|\\.env" .gitignore')); // 09/10
+    verde(bash(`cd C:/Dev/BarackMercosul; D="/d/FEDERICO CLAUDE CODE"; X='/XD node_modules __pycache__ /XF .env* *.secret .qr-secret'\ncp CLAUDE.md docs/LECCIONES_APRENDIDAS.md "$D/1-REGLAS-Y-CEREBRO/"\nrobocopy .claude/rules "D:\\\\FEDERICO CLAUDE CODE\\\\rules" /E $X\ncat "$D/LEEME.txt" | head`)); // 28/09
+    verde(bash(`ls .env.local >/dev/null 2>&1 && echo env-ok; cat > scripts/_tmp_q.mjs <<'EOF'\nconst env = fs.readFileSync('.env.local','utf8');\nEOF\nnode scripts/_tmp_q.mjs`)); // 30/09 (el script lo lee por dentro)
+    verde(bash('test -f .env.local && echo ok; find . -maxdepth 2 -iname ".env*" | head; robocopy a b /XF .env*'));
+  });
+  it('P12 ROJO — los verdaderos del informe y las lecturas por el archivo siguen frenando', () => {
+    rojo(bash('ls -a | grep -i env; echo "---"; grep -h "SUPABASE" .env.local .env 2>/dev/null | sed \'s/\\(KEY=.\\{20\\}\\).*/\\1.../\''));     // 21/09 11:25 (§4)
+    rojo(bash("ls -la .env.local 2>&1 | head -3; grep -o 'VITE_SUPABASE_URL=.*' .env.local 2>/dev/null | sed 's#x#y#'"));                    // 21/09 11:20
+    rojo(bash('ls -la .env.local | head -3; curl -s "$(grep -oE \'https://[a-z0-9]+\\.supabase\\.co\' .env.local | head -1)/rest/v1/"')); // adentro de un $(…)
+    rojo(bash('head -3 .env.local'));
+    rojo(bash('cat .env.local | head'));
+    rojo(bash('ls; cat ".env.local"'));
+    rojo(bash('F=.env.local; cat "$F"'));
+    rojo(bash('cat "$X" # .env.local'));
+    rojo(bash('ls -a | xargs cat .env.local'));
+    rojo(bash('find . -name ".env.local" -exec cat {} \\;'));
+    rojo(bash('cmd //c type .env.local'));
+    rojo(bash('bash -c "cat .env.local"'));
+    rojo(bash('grep -e KEY .env.local'));
+    // auditor Opus 17/10 (TRUE BUG 5): el archivo pegado a una opcion que elige que archivos lee
+    rojo(bash('grep -rn VITE_SUPABASE_URL . --include=.env.local'));
+    rojo(bash('grep -rn VITE_SUPABASE_URL . --include .env.local'));
+    rojo(bash('rg -g .env.local VITE_SUPABASE'));
+    // (`cat .env*` no lo frena ni antes de P12: el nombre seguido de `*` no entra en SECRETO_RE. Agujero anotado aparte.)
+  });
+
+  it('P12 ROJO (ronda 2, hallazgo 4) — el lector adentro de un subshell o de un bloque', () => {
+    rojo(bash('(cd /c/Dev/BarackMercosul && cat .env.local)'));
+    rojo(bash('(head -3 .env.local)'));
+    rojo(bash('{ cat .env.local; }'));
+  });
+  it('P12 ROJO (ronda 2, hallazgo 5) — xargs, find -exec grep y el nombre en un backtick', () => {
+    rojo(bash('ls .env.local | xargs cat'));
+    rojo(bash('find . -maxdepth 1 -name .env.local -exec grep -h KEY {} +'));
+    rojo(bash('cat `echo .env.local`'));
+  });
+  it('P12 ROJO (ronda 2, hallazgo 6) — sustitucion de proceso y un interprete que lee su programa de stdin', () => {
+    rojo(bash('diff <(cat .env.local) .env.example'));
+    rojo(bash(`echo "print(open('.env.local').read())" | python`));
+    rojo(bash(`printf 'console.log(require("fs").readFileSync(".env.local","utf8"))' | node`));
+    verde(bash('diff <(sort a.txt) <(sort b.txt)'));
+    verde(bash('echo "print(1)" | python'));
+  });
+
   it('comandoTocaSecreto: dice QUE archivo y COMO', () => {
     expect(comandoTocaSecreto('cat .env.local')).toEqual({ como: 'lectura', nombres: ['.env.local'] });
+    expect(comandoTocaSecreto('cat .env.local', { porComando: true })).toEqual({ como: 'lectura', nombres: ['.env.local'] });
+    expect(comandoTocaSecreto('ls -la .env.local | head -3', { porComando: true })).toBeNull();
+    expect(comandoTocaSecreto('ls -la .env.local | head -3')).toEqual({ como: 'lectura', nombres: ['.env.local'] }); // la regla vieja (PowerShell)
     expect(comandoTocaSecreto('echo x > .qr-secret').como).toBe('redireccion');
     expect(comandoTocaSecreto('set -a; . .env.local').como).toBe('source');
     expect(comandoTocaSecreto('ls .env.local')).toBeNull();
@@ -1511,3 +1609,28 @@ describe('arb-cerrar-guard HOY-57 — apagar o cerrar la sesion, se escriba como
 function destinatarioComoTexto(base) {
   return `${base.replace('it.Send()', 'it.Display()')}\nit.To = "alguien@barack.com"\nit.Attachments.Add(r"C:\\Dev\\BarackMercosul\\docs\\informe.pdf")`;
 }
+
+// Ronda 3 (17/10/2026): los casos del auditor a ciegas de la ronda 2, por su id (`guardianesRonda3.mjs`). 2 = frena, 0 = pasa.
+describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (secretos)', () => {
+    const G = 'secretos-guard';
+
+    it('P12 ROJO (ronda 3, T5) — eval, stdbuf y un envoltorio con una opcion que lleva valor (timeout -s, env -u) no esconden al lector', () => {
+        esperados(G, ['N-S01', 'N-S02', 'N-S03', 'N-S04', 'N-S05', 'X-S17', 'X-S18', 'X-S19']);
+        esperados(G, ['H4-V1', 'H4-V2', 'H5-V1', 'H6-V1', 'H6-V2']);   // los VERDES de la ronda 2 siguen pasando
+    });
+    it('P12 ROJO (ronda 3, T6) — un interprete adentro de xargs o de find -exec que abre lo que le pasan', () => {
+        esperados(G, ['N-S06', 'N-S07', 'H5-T05', 'H5-T06', 'H5-T07', 'H5-T08', 'H5-T10', 'H5-T12']);
+    });
+    it('P12 ROJO (ronda 3, T7) — un parentesis adentro de la sustitucion de proceso no la corta', () => {
+        esperados(G, ['N-S08', 'H6-S25', 'H6-S27', 'H6-V1']);
+    });
+    it('P12 VERDE (ronda 3, F1) — buscar quien usa el secreto con xargs grep o find -exec grep: el nombre es el PATRON', () => {
+        esperados(G, ['N-S12', 'N-S13']);
+        // ROJO de la misma forma: el secreto tambien es el archivo que find le pasa al grep
+        const S = ['.env', 'local'].join('.');
+        const bash = (command) => evaluar(JSON.stringify({ tool_name: 'Bash', tool_input: { command }, session_id: 'ronda3', cwd: 'C:/Dev/BarackMercosul' }),
+            { nombres: [G], env: { HOME: os.tmpdir() }, marcar: false, escapes: false }).res.bloqueos.length;
+        expect(bash(`find . -maxdepth 1 -name ${S} -exec grep -l '${S}' {} +`)).toBe(1);
+        expect(bash(`git ls-files | xargs grep -l -f ${S}`)).toBe(1);   // con -f el secreto ES la lista de patrones
+    });
+});

@@ -42,10 +42,11 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { sinCuerposHeredoc, sinCuerposHeredocDeGit, sinArgumentosDeCommit, analizarComando, comandosSimples, separarHeredocs } from './shellTexto.mjs';
+import { sinCuerposHeredoc, sinCuerposHeredocDeGit, sinArgumentosDeCommit, analizarComando, comandosSimples, separarHeredocs, finSustitucion } from './shellTexto.mjs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { pedidoDeEnvio, evaluarEnvio } from './mailOkFak.mjs';
+import { evaluarPermisoBash, permisoDeArchivo, anotar as anotarPermiso } from './permisoUnUso.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const RAIZ = path.resolve(AQUI, '..', '..');
@@ -153,7 +154,33 @@ export function parsear(raw) {
   // relativo se sabe DONDE borra sin adivinarlo por palabras sueltas del comando.
   // `session_id` (y `agent_id`, solo cuando la llamada sale de un subagente) son la clave de los
   // recordatorios "una vez por sesion": ver `resolver`.
-  return armarCtx({ raw, tool: String(j.tool_name ?? ''), cmd: String(t.command ?? ''), file: String(t.file_path ?? ''), content: String(t.content ?? t.new_string ?? ''), cwd: typeof j.cwd === 'string' ? j.cwd : '', sid: typeof j.session_id === 'string' ? j.session_id : '', agente: typeof j.agent_id === 'string' ? j.agent_id : '' });
+  const comunes = { raw, cwd: typeof j.cwd === 'string' ? j.cwd : '', sid: typeof j.session_id === 'string' ? j.session_id : '', agente: typeof j.agent_id === 'string' ? j.agent_id : '' };
+  const nombre = String(j.tool_name ?? '');
+  if (/^mcp__/.test(nombre)) return { ...armarCtx({ ...comunes, ...mcpComoHerramienta(t) }), mcp: nombre };
+  return armarCtx({ ...comunes, tool: nombre, cmd: String(t.command ?? ''), file: String(t.file_path ?? ''), content: String(t.content ?? t.new_string ?? '') });
+}
+
+/**
+ * Pieza 10 (tanda 3, 16/10/2026): una llamada MCP que escribe, manda o corre algo pasa por los mismos guardianes, con el
+ * molde de `mcp-write-gate.sh` (que ya miraba las escrituras a Supabase). Lo que la MCP recibe se traduce a lo que miran
+ * los guardianes: un `command` (o `cmd`, `script`) es un comando de Bash; una ruta (`path`, `file_path`, `destination`…)
+ * con su contenido (`content`, `text`, `body`…) es un Write. Lo que no trae ninguna de las dos cosas queda como un Write
+ * sin archivo (los guardianes de archivo no ven nada; el de mails mira el NOMBRE de la herramienta). El nombre real de la
+ * herramienta queda en `ctx.mcp`. Que llamadas llegan aca lo decide el matcher de settings.json (verbos de escribir,
+ * mandar o correr; nunca las internas de la app).
+ */
+export function mcpComoHerramienta(t) {
+  const str = (v) => (typeof v === 'string' ? v : Array.isArray(v) ? v.filter((x) => typeof x === 'string').join('\n') : '');
+  const primero = (...ks) => { for (const k of ks) { const v = str(t?.[k]); if (v) return v; } return ''; };
+  // Ronda 2 (17/10, hallazgo 16): el codigo que una MCP corre (`mcp__build123d__execute {code}`) se mira como el de un
+  // `python -` con ese codigo en un heredoc: lo ven los mismos guardianes que a un python -c
+  const codigo = primero('code', 'source');
+  const cmd = primero('command', 'cmd', 'script', 'commands') || (codigo ? `python - <<'CODIGO_MCP'\n${codigo}\nCODIGO_MCP` : '');
+  const file = primero('file_path', 'path', 'filePath', 'filename', 'file', 'destination', 'dest', 'target', 'target_path', 'output_path');
+  // el contenido cuenta solo si va a un ARCHIVO: el texto de un mensaje o de un documento de otra plataforma (Claude Docs,
+  // un chat) no es un documento de Barack en disco, y el guardian de firma lo leeria como tal
+  const content = file ? primero('content', 'new_string', 'text', 'body', 'data', 'contents', 'html', 'markdown') : '';
+  return cmd ? { tool: 'Bash', cmd, file: '', content: '' } : { tool: 'Write', cmd: '', file, content };
 }
 
 function armarCtx({ raw, tool, cmd, file, content, parsed4, cwd = '', sid = '', agente = '' }) {
@@ -186,7 +213,7 @@ export function ctxDesdeEnv(env) {
  */
 const SOLO_SHELL = ['supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'commit-rutas-guard', 'arb-cerrar-guard', 'script-inline-guard', 'secretos-guard'];
 const SOLO_ARCHIVO = ['file-guard', 'causas-ajenas-guard'];
-const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard', 'documentacion-oficial-guard', 'video-maquina-guard', 'caracteristicas-especiales-guard', 'apqp-cliente-guard', 'nube-personal-guard', 'firma-ia-guard'];
+const LOS_CUATRO = ['consumos-entregable-guard', 'cad-guard', 'patrones-guard', 'escritorio-guard', 'borrado-masivo-guard', 'ho-numeracion-guard', 'mail-guard', 'documentacion-oficial-guard', 'video-maquina-guard', 'caracteristicas-especiales-guard', 'apqp-cliente-guard', 'nube-personal-guard', 'firma-ia-guard', 'permiso-un-uso-guard'];
 export const TODOS = ['file-guard', 'supabase-guard', 'validator-check', 'renumber-guard', 'push-guard', 'commit-rutas-guard', 'script-inline-guard', 'secretos-guard', ...LOS_CUATRO, 'arb-cerrar-guard', 'causas-ajenas-guard'];
 
 export function matriz(tool) {
@@ -243,13 +270,150 @@ const REDIRECCION_RE = /[<>]{1,2}\s*["']?(?:[^\s"'|;&<>]*[\/\\])?\.(?:env(?:\.(?
 const SOURCE_PUNTO_RE = /(?:^|[;&|(]\s*)\.\s+\S*\.env(?:\.[\w.-]+)?(?=$|[\s;&|)])/;
 const sinComillas = (s) => s.replace(/"(?:[^"\\]|\\.)*"|'[^']*'/g, ' "" ');
 
-/** null si el comando no lee ni pisa un secreto; si no, { como: 'lectura'|'redireccion'|'source', nombres }. */
-export function comandoTocaSecreto(cmd) {
+// P12 (tanda 3, 16/10/2026; si de Fak del 15/10). Medido sobre los 12 frenos de 30 dias del informe de CATA
+// (`casa_guardianes_frenos.md` §3 P2): 9 eran falsos, y en los 9 el nombre del secreto y el «lector» estaban en
+// pedazos distintos del comando (`ls -la .env.local | head -3`: el head lee la salida del ls; `grep "env.local"
+// .gitignore | head`; `robocopy … /XF .env*`). En Bash ahora se mira COMANDO POR COMANDO (los de la cañeria, los de
+// `;`/`&&` y los de adentro de un `$(…)`):
+//   · un lector de archivo (cat, head, tail, type, sed -n…) frena si el secreto es UNO DE SUS ARGUMENTOS (con o sin
+//     comillas: `cat ".env.local"` es leerlo) o si un argumento es una variable que no se resuelve y el comando nombra
+//     el secreto en algun lado (`F=.env.local; cat "$F"`);
+//   · grep/sed/awk/findstr: lo mismo, salteando el primer argumento, que es el PATRON (salvo con -e/-f);
+//   · un interprete (python, node, perl, bash -c, cmd /c, powershell…) frena si lo nombra entre sus argumentos (su
+//     codigo pegado: `python -c "open('.env.local')"`);
+//   · xargs o find -exec con un lector adelante: frena si el comando nombra el secreto (no se sabe que le llega).
+// Lo que sigue igual: la redireccion (`< .env.local`, `> .qr-secret`), el `. .env.local`, PowerShell entero (la regla de
+// siempre, sobre el comando completo) y un JSON roto (no corre: el guardian pide ctx.ok).
+const SECRETO_ARG_RE = /(?:^|[\\/])(?:\.env(?:\.(?!example(?![\w-]))[\w.*?-]+|[*?])?|\.qr-secret)$/i;
+const LECTOR_ARCHIVO_RE = /^(?:cat|type|head|tail|less|more|bat|strings|od|xxd|hexdump|base64|nl|tac|rev|cut|paste|column|tee|source|Get-Content|gc|Out-String|Import-Csv|Format-Table|ft)$/i;
+const PATRONERO_VERBO_RE = /^(?:grep|egrep|fgrep|rg|ag|sed|awk|findstr|Select-String|sls)$/i;
+const INTERPRETE_SECRETO_RE = /^(?:python[\d.]*|py|pythonw|node|deno|bun|perl|ruby|php|pwsh|powershell|bash|sh|zsh|dash|cmd|wsl)$/i;
+const verboPelado = (v) => String(v ?? '').replace(/^.*[\\/]/, '').replace(/\.exe$/i, '');
+const SECRETO_VERBO_CONOCIDO = (v) => LECTOR_ARCHIVO_RE.test(v) || PATRONERO_VERBO_RE.test(v) || INTERPRETE_SECRETO_RE.test(v) || /^(?:xargs|find|parallel)$/i.test(v);
+
+/** Las variables que el comando asigna con un valor ESCRITO (`D="/d/x"`); null si alguna vez sale de un `$(…)`. */
+function variablesEscritas(todo) {
+  const vars = new Map();
+  for (const m of String(todo).matchAll(/(?:^|[;&|\s(])([A-Za-z_][A-Za-z0-9_]*)=("([^"\n]*)"|'([^'\n]*)'|([^\s;&|"'()]*))/g)) {
+    const v = m[3] ?? m[4] ?? m[5] ?? '';
+    vars.set(m[1], /[$\x60]/.test(v) && m[4] === undefined ? null : v);
+  }
+  return vars;
+}
+
+/**
+ * Ronda 3 (17/10, F1): ¿el comando nombra el secreto FUERA del patron del grep / sed / awk que corre adentro de xargs o de
+ * find -exec? Buscar quien lo usa (`git ls-files | xargs grep -l '.env.local'`) no es leerlo, y el texto del freno lo
+ * recomienda. El patron es lo de -e / --regexp, o el primer posicional (con -f no hay patron escrito). Si el secreto
+ * aparece en otro lado (`find -name .env.local -exec grep …`), sigue frenando.
+ */
+function nombraSecretoFueraDelPatron(palabras, todo) {
+  const menciones = (x) => [...` ${x} `.matchAll(new RegExp(SECRETO_SRC, 'gi'))].length;
+  const k = palabras.findIndex((a, i) => i > 0 && PATRONERO_VERBO_RE.test(verboPelado(a)));
+  let patron = '';
+  if (k > 0) {
+    const resto = palabras.slice(k + 1);
+    const e = resto.findIndex((a) => /^(?:-[a-zA-Z]*e|--regexp|--expression)$/.test(a));
+    const igual = resto.map((a) => a.match(/^--(?:regexp|expression)=(.*)$/)).find(Boolean);
+    if (e >= 0) patron = resto[e + 1] ?? '';
+    else if (igual) patron = igual[1];
+    else if (!resto.some((a) => /^(?:-[a-zA-Z]*f|--file)(?:=|$)/.test(a))) patron = resto.find((a) => !/^-/.test(a)) ?? '';
+  }
+  return menciones(todo) - (patron ? menciones(patron) : 0) > 0;
+}
+
+/** Las sustituciones de proceso `<( … )` / `>( … )` de un texto (lo de adentro) y el texto con cada una cambiada por una
+ *  palabra. El cierre lo busca `finSustitucion`, que cuenta parentesis y salta comillas. */
+function sustitucionesDeProceso(t) {
+  const adentro = [];
+  let resto = '';
+  for (let i = 0; i < t.length; i++) {
+    if ((t[i] === '<' || t[i] === '>') && t[i + 1] === '(') {
+      const fin = finSustitucion(t, i);
+      adentro.push(t.slice(i + 2, fin));
+      resto += ' sustitucion ';
+      i = fin;
+    } else resto += t[i];
+  }
+  return { adentro, resto };
+}
+
+/** ¿Algun comando simple del texto (o de sus `$(…)`) lee el secreto? `todo` = el comando entero, para las variables. */
+function leeSecretoPorComando(texto, todo, prof = 0, vars = variablesEscritas(todo)) {
+  if (prof > 4) return SECRETO_RE.test(texto);
+  // Ronda 2 (17/10, hallazgo 6): la sustitucion de proceso `<(cat .env.local)` / `>(…)` es un comando: se mira adentro
+  // Ronda 3 (17/10, T7): el cierre se busca contando parentesis y saltando comillas (`<(cat … | sed 's/(x)//')`)
+  const { adentro, resto: t } = sustitucionesDeProceso(String(texto ?? ''));
+  for (const s of adentro) if (leeSecretoPorComando(s, todo, prof + 1, vars)) return true;
+  // (ronda 3, T5) lo de detras de un eval se vuelve a partir; un envoltorio con una opcion que lleva valor no esconde al lector
+  for (const c of comandosConEval(t)) {
+    const palabras = c.palabras.map((w) => w.replace(/\uE000/g, '$'));
+    for (const w of palabras) {
+      const subs = sustitucionesDe(w);
+      if (subs === null) { if (SECRETO_RE.test(w)) return true; continue; }
+      for (const s of subs) if (leeSecretoPorComando(s, todo, prof + 1, vars)) return true;
+    }
+    const { verbo, args } = verboDeComando({ ...c, palabras }, SECRETO_VERBO_CONOCIDO);
+    const v = verboPelado(verbo);
+    // Ronda 2 (hallazgo 5): xargs / find -exec / parallel con un lector o un grep/sed/awk adentro: la primera palabra CRUDA
+    // (verboDeComando saca a xargs como envoltorio y el lector llega sin argumentos); frena si el comando nombra el secreto
+    // Ronda 3 (17/10, T6): y un interprete adentro (`xargs -I % python -c "…open('%')…"`, `find … -exec python -c … {} \;`)
+    const corrida = (a) => LECTOR_ARCHIVO_RE.test(verboPelado(a)) || PATRONERO_VERBO_RE.test(verboPelado(a)) || INTERPRETE_SECRETO_RE.test(verboPelado(a));
+    const lanzador = verboPelado(palabras.find((w) => w && !/^[A-Za-z_]\w*=/.test(w)));
+    if (/^(?:xargs|find|parallel)$/i.test(lanzador) && palabras.slice(1).some(corrida) && nombraSecretoFueraDelPatron(palabras, todo)) return true;
+    // un argumento con una variable: si el comando le dio un valor escrito, se mira ese valor (puede ser una lista);
+    // si no se sabe que vale, cuenta como el secreto cuando el comando lo nombra en algun lado (no se adivina).
+    // Ronda 2: un backtick tambien es algo sin resolver (hallazgo 5), y un `)` o `}` del final es del subshell o del
+    // bloque, no del nombre: `(cat .env.local)` (hallazgo 4).
+    const esSecreto = (a0) => {
+      const a = String(a0).replace(/[)}]+$/, '');
+      if (/\x60/.test(a)) return SECRETO_RE.test(todo);
+      if (!/\$/.test(a)) return SECRETO_ARG_RE.test(a);
+      const r = a.replace(/\$\{?([A-Za-z_]\w*)\}?/g, (m, n) => (vars.get(n) != null ? vars.get(n) : m));
+      if (/\$/.test(r)) return SECRETO_RE.test(todo);
+      return r.split(/\s+/).some((p) => SECRETO_ARG_RE.test(p));
+    };
+    if (LECTOR_ARCHIVO_RE.test(v)) { if (args.some((a) => !/^-/.test(a) && esSecreto(a))) return true; continue; }
+    if (PATRONERO_VERBO_RE.test(v)) {
+      const sinPatron = args.some((a) => /^(?:-[a-zA-Z]*[ef]|--(?:regexp|file|expression)(?:=|$))/.test(a));
+      const posicionales = args.filter((a) => !/^-/.test(a));
+      if ((sinPatron ? posicionales : posicionales.slice(1)).some(esSecreto) || /^(?:Select-String|sls)$/i.test(v) && args.some(esSecreto)) return true;
+      // Auditor Opus 17/10 (TRUE BUG 5): el archivo puede ir pegado a una opcion que elige QUE archivos lee
+      // (`grep -rn KEY . --include=.env.local`, `rg -g .env.local KEY`)
+      const elegidos = args.flatMap((a, k) => {
+        const m = a.match(/^--(?:include|glob|iglob)=(.+)$/);
+        if (m) return [m[1]];
+        return /^(?:--include|--glob|--iglob|-g)$/.test(a) && args[k + 1] !== undefined ? [args[k + 1]] : [];
+      });
+      if (elegidos.some((x) => esSecreto(x.replace(/^["']|["']$/g, '')))) return true;
+      continue;
+    }
+    if (INTERPRETE_SECRETO_RE.test(v)) {
+      if (args.some((a) => SECRETO_RE.test(a) || SECRETO_ARG_RE.test(a))) return true;
+      // (hallazgo 6) un interprete que lee su PROGRAMA de stdin (`echo "print(open('.env.local')…)" | python`): no se
+      // sabe que le llega; frena si el comando nombra el secreto
+      if (modoInterprete(verbo, args).modo === 'stdin' && SECRETO_RE.test(todo)) return true;
+      continue;
+    }
+    const ejecutaOtro = (/^xargs$/i.test(v) && args.some(corrida))
+      || (/^find$/i.test(v) && args.some((a, k) => /^-(?:exec|execdir|ok|okdir)$/.test(a) && corrida(args[k + 1] ?? '')));
+    if (ejecutaOtro && nombraSecretoFueraDelPatron(palabras, todo)) return true;
+  }
+  return false;
+}
+
+/**
+ * null si el comando no lee ni pisa un secreto; si no, { como: 'lectura'|'redireccion'|'source', nombres }.
+ * `porComando: true` (Bash, desde P12) mira comando por comando; sin eso (PowerShell, o quien la llame suelta), la
+ * regla de siempre sobre el comando entero.
+ */
+export function comandoTocaSecreto(cmd, { porComando = false } = {}) {
   const c = sinCuerposHeredoc(String(cmd ?? ''));
   if (!SECRETO_RE.test(c)) return null;
   const nombres = [...new Set([...c.matchAll(new RegExp(SECRETO_SRC, 'gi'))].map((m) => m[1]))];
   if (REDIRECCION_RE.test(c)) return { como: 'redireccion', nombres };
   if (SOURCE_PUNTO_RE.test(c)) return { como: 'source', nombres };
+  if (porComando) return leeSecretoPorComando(c, c) ? { como: 'lectura', nombres } : null;
   const pelado = sinComillas(c);
   if (LECTORES_RE.test(pelado)) return { como: 'lectura', nombres };
   if (PATRONEROS_RE.test(pelado) && SECRETO_RE.test(pelado)) return { como: 'lectura', nombres };
@@ -258,7 +422,7 @@ export function comandoTocaSecreto(cmd) {
 
 GUARDIANES['secretos-guard'] = (ctx) => {
   if (!ctx.ok || !ctx.cmd) return null;
-  const t = comandoTocaSecreto(ctx.cmd);
+  const t = comandoTocaSecreto(ctx.cmd, { porComando: ctx.tool === 'Bash' });
   if (!t) return null;
   const verbo = t.como === 'redireccion' ? 'pisa' : 'lee';
   return bloqueo(`[SECRETOS-GUARD] BLOQUEADO: el comando ${verbo} un archivo de secretos (${t.nombres.join(', ')}).
@@ -846,10 +1010,23 @@ const RE_HD = /<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1/;
 const HD_DE_GIT = /\bgit\s+(commit|tag|notes)\b|\bgh\s+(pr|issue|release)\b/;
 const HD_A_ARCHIVO = /(^|[;&|]\s*)(cat|tee)\b[^\n]*>/;
 const HD_A_INTERPRETE = /\|\s*((ba)?sh|python3?|node|powershell|pwsh)\b/;
+// Pieza 5 (tanda 3, 16/10/2026; si de Fak del 15/10): AGREGAR prosa al final de una nota (`cat >> notas.md <<EOF`,
+// `tee -a DIA.md`) no es un script pegado ni pisa nada, y la tool Write no sirve para agregar. Medido sobre los 173 frenos
+// del informe de CATA (`casa_guardianes_frenos.md` §3 P5): los 6 falsos eran eso. Agregar CODIGO (`cat >> x.test.mjs`,
+// un .py) sigue contando: ese se itera y viaja entero en cada vuelta. El destino se lee con las variables del comando.
+const HD_AGREGA = /(?:>>\s*|\btee\s+(?:-[A-Za-z]*a[A-Za-z]*\s+|--append\s+)(?:-[A-Za-z]+\s+)*)("[^"]*"|'[^']*'|[^\s;&|<>]+)/;
+function agregaProsa(dueno, res) {
+  const m = String(dueno).match(HD_AGREGA);
+  if (!m || HD_A_INTERPRETE.test(dueno)) return false;
+  const f = res(m[1].replace(/^["']|["']$/g, ''));
+  return !/\$/.test(f) && BM_PROSA.test(f);
+}
 export function medirInline(cmd) {
   let total = 0, aArchivo = 0, fin = null, dueno = '', buf = 0;
+  const res = resolvedorDe(cmd);
   const cerrar = () => {
     if (HD_DE_GIT.test(dueno)) return;
+    if (agregaProsa(dueno, res)) return;
     total += buf;
     if (HD_A_ARCHIVO.test(dueno) && !HD_A_INTERPRETE.test(dueno)) aArchivo += buf;
   };
@@ -871,6 +1048,7 @@ export function medirInline(cmd) {
 }
 GUARDIANES['script-inline-guard'] = (ctx) => {
   if (!ctx.ok || !ctx.cmd) return null;
+  if (ctx.mcp) return null;   // ronda 2: el codigo de una MCP es el pedido mismo, no un script pegado en la consola
   const { inline, archivo } = medirInline(ctx.cmd);
   if (inline < INLINE_MAX) return null;
   const n = inline.toLocaleString('es-AR');
@@ -1156,6 +1334,95 @@ function borraEnZona(an, zonaALaVista) {
   return false;
 }
 
+/**
+ * Regla 2 por comando (tanda 3, pieza 4, 16/10/2026; si de Fak del 15/10). Medido sobre los 22 frenos del informe de CATA
+ * (`casa_guardianes_frenos.md` §3 P3): los falsos que seguian frenando tenian la carpeta del archivo y el `cp` en
+ * pedazos distintos del comando (`cp /c/tmp/R.TXT .arb-cache/…; LEO=".../TAREAS CERRADAS/…"; ls "$LEO"`), o copiaban
+ * DESDE el archivo hacia el scratchpad para leer. Ahora: un mover (mv, move, Move-Item, robocopy /MOV) que nombra el
+ * archivo en sus argumentos frena; un copiar frena si su DESTINO cae en el archivo (o no se puede resolver y el comando
+ * nombra el archivo). El codigo pegado (python -c, heredoc) sigue con la regla vieja: archivo nombrado + mover/copiar.
+ */
+const ESC_ARCHIVO = /(_TERMINADAS|TAREAS CERRADAS)/i;
+// Ronda 3 (17/10, T3): un switch de robocopy es uno de los suyos (`/E`, `/MIR`, `/MOV`…) o lleva `:valor` (`/R:1`,
+// `/LOG:x`). `/tmp` no es un switch: Git Bash lo convierte en el TEMP del sistema y robocopy copia desde ahi. Lo usan
+// escritorio-guard y apqp-cliente-guard.
+const ROBOCOPY_SWITCH_RE = /^\/(?:[A-Za-z]+:.*|S|E|Z|B|ZB|J|EFSRAW|SEC|COPYALL|NOCOPY|SECFIX|TIMFIX|PURGE|MIR|MOV|MOVE|A\+|A-|CREATE|FAT|256|MON|MOT|RH|PF|IPG|SL|SJ|A|M|IA|XA|XF|XD|XC|XN|XO|XX|XL|IS|IT|IM|XJ|XJD|XJF|FFT|DST|REG|TBD|LFSM|L|X|V|TS|FP|BYTES|NS|NC|NFL|NDL|NP|ETA|TEE|NJH|NJS|UNICODE|NOSD|NODD|QUIT|NODCOPY|NOOFFLOAD|COMPRESS|NOCLONE|SPARSE|Y|\?)$/i;
+// Ronda 3 (17/10, T4): el destino EXPLICITO de un copiar o mover, con todas sus formas, para escritorio-guard y
+// apqp-cliente-guard (la ronda 2 lo arreglo en uno solo). { destino, k } (k = la palabra del valor, que no es fuente) o null.
+//   · GNU cp / mv: `-t X`, `-rt X` (la t al final de un grupo de opciones sin valor), `-t<X>` pegado y `--t… X` /
+//     `--t…=X` (cualquier prefijo de `--target-directory`: GNU acepta abreviar una opcion larga);
+//   · PowerShell Copy-Item / Move-Item (y sus alias): `-Destination X`, `-Dest X` (un prefijo de 3 letras o mas, como
+//     acepta PowerShell) y `-Destination:X`.
+// (N1 del auditor de cierre) `ps`: el texto viene de adentro de `powershell -Command` / `pwsh -c`, donde `cp` y `mv` son
+// alias de Copy-Item y Move-Item y se leen con las reglas de PowerShell, no con las de GNU.
+function destinoExplicitoDe(verbo, args, { ps: enPowershell = false } = {}) {
+  const v = verboPelado(verbo);
+  const gnu = !enPowershell && /^(?:cp|mv)$/i.test(v);
+  const ps = /^(?:Copy-Item|cpi|Move-Item|mi|copy|move)$/i.test(v) || (enPowershell && /^(?:cp|mv)$/i.test(v));
+  const valor = (pegado, k) => (pegado ? { destino: pegado, k } : args[k + 1] !== undefined ? { destino: args[k + 1], k: k + 1 } : null);
+  for (let k = 0; k < args.length; k++) {
+    const a = args[k];
+    if (a === '--') break;
+    if (gnu) {
+      const corta = a.match(/^-([abdfHilLnPpRrsTuvxZ]*)t(.*)$/);
+      if (corta) return valor(corta[2], k);
+      const larga = a.match(/^--(t[\w-]*)(?:=(.*))?$/);
+      if (larga && 'target-directory'.startsWith(larga[1])) return valor(larga[2], k);
+    }
+    if (ps) {
+      const m = a.match(/^-([A-Za-z]+)(?::(.*))?$/);
+      if (m && m[1].length >= 3 && 'destination'.startsWith(m[1].toLowerCase())) return valor(m[2], k);
+    }
+  }
+  return null;
+}
+const ESC_MUEVE_VERBO = /^(?:mv|move|Move-Item|mi)$/i;
+const ESC_COPIA_VERBO = /^(?:cp|copy|xcopy|Copy-Item|cpi)$/i;
+const ESC_VERBO_CONOCIDO = (v) => ESC_MUEVE_VERBO.test(v) || ESC_COPIA_VERBO.test(v) || /^(?:robocopy|find|xargs|parallel)$/i.test(v) || CORRE_INTERPRETE_RE.test(v);
+export function mueveAMano(cmd, { cwd = '' } = {}) {
+  const { lineas, cuerpos } = separarHeredocs(String(cmd ?? ''));
+  const res = resolvedorDe(cmd);
+  const embebido = cuerpos.filter((h) => !h.deGit).map((h) => h.cuerpo);
+  // Auditor Opus 17/10 (TRUE BUG 1): los `cd` de antes cuentan (`cd <archivo> && mv <tarea> .`), y un mover que va
+  // detras de find -exec / xargs / parallel se mira con la regla vieja sobre ese comando.
+  let dir = String(cwd ?? '').replace(/\\/g, '/');
+  const completa = (p) => { const r = res(p).replace(/\\/g, '/'); return /^(?:[A-Za-z]:|\/|~)/.test(r) || !dir ? r : `${dir.replace(/\/+$/, '')}/${r}`; };
+  // (ronda 3, T5) lo de detras de un eval se vuelve a partir; un envoltorio con una opcion que lleva valor no esconde al mover
+  for (const c of comandosConEval(lineas)) {
+    const palabras = c.palabras.map((w) => w.replace(/\uE000/g, '$'));
+    const { verbo, args } = verboDeComando({ ...c, palabras }, ESC_VERBO_CONOCIDO);
+    const v = verboPelado(verbo);
+    if (/^(?:cd|pushd|chdir|Set-Location|sl)$/i.test(v)) { const d = args.find((a) => !a.startsWith('-')); dir = d ? completa(d) : ''; continue; }
+    if (CORRE_INTERPRETE_RE.test(v)) { const r = modoInterprete(verbo, args); if (r.modo === 'pegado') embebido.push(r.codigo); continue; }
+    // (la primera palabra cruda: `verboDeComando` saca a xargs como envoltorio y deja `mv` sin argumentos)
+    const lanzador = palabras.find((w) => w && !/^[A-Za-z_]\w*=/.test(w));
+    if (/^(?:find|xargs|parallel)$/i.test(verboPelado(lanzador)) && palabras.some((a) => ESC_MUEVE_VERBO.test(verboPelado(a)) || ESC_COPIA_VERBO.test(verboPelado(a)))) {
+      // el comando entero: el `{}` de find -exec parte el comando y la carpeta queda en el otro pedazo
+      if (ESC_ARCHIVO.test(res(String(cmd))) || ESC_ARCHIVO.test(dir)) return true;
+      continue;
+    }
+    const robomueve = /^robocopy$/i.test(v) && args.some((a) => /^\/(?:MOV|MOVE)$/i.test(a));
+    if (!ESC_MUEVE_VERBO.test(v) && !ESC_COPIA_VERBO.test(v) && !/^robocopy$/i.test(v)) continue;
+    // Ronda 2 (17/10, hallazgo 7): el destino explicito tambien va como `--target-directory=X` o con la t pegada a otras
+    // opciones (`cp -rt X`), y algo que no se resuelve (una variable de `$(cygpath …)` o de un for) se mira contra el
+    // comando ENTERO, como en apqp-cliente: no se adivina.
+    // (ronda 3, T4) y `-t<X>` pegado, `--target=` abreviado, `-Dest` / `-Destination:X` de PowerShell
+    const ex = destinoExplicitoDe(verbo, args);
+    const destinoExplicito = ex ? completa(ex.destino) : undefined;
+    const esSwitch = (a) => (/^robocopy$/i.test(v) ? ROBOCOPY_SWITCH_RE.test(a) : /^\/[A-Za-z]{1,4}(?::\S*)?$/.test(a));
+    const pos = args.filter((a) => !/^-/.test(a) && !esSwitch(a)).map((a) => completa(a));
+    if (destinoExplicito !== undefined) pos.push(destinoExplicito);
+    if (!pos.length) continue;
+    const enTodo = () => ESC_ARCHIVO.test(res(String(cmd)));
+    if (ESC_MUEVE_VERBO.test(v) || robomueve) { if (pos.some((a) => ESC_ARCHIVO.test(a)) || (pos.some((a) => /\$/.test(a)) && enTodo())) return true; continue; }
+    const destino = /^robocopy$/i.test(v) ? pos[1] : destinoExplicito ?? pos[pos.length - 1];
+    if (destino === undefined) { if (ESC_ARCHIVO.test(c.crudo)) return true; continue; }
+    if (ESC_ARCHIVO.test(destino) || (/\$/.test(destino) && enTodo())) return true;
+  }
+  const codigo = embebido.join('\n');
+  return ESC_ARCHIVO.test(codigo) && ESC_MUEVE.test(codigo);
+}
+
 /** Una salida ya resuelta que cae adentro del Escritorio y es un entregable (o una carpeta, y el comando nombra uno). */
 function generaEntregable(salida, cmd) {
   if (!ESC_DENTRO.test(salida)) return false;
@@ -1199,8 +1466,9 @@ Si de verdad hay que sacar algo, lo decide Fak explicitamente, no yo.`);
   }
   // Solo el cwd estaba en la zona: las demas reglas miran lo que el comando NOMBRA.
   if (!zonaEnTexto) return null;
-  // 2. Mover a mano hacia/desde el archivo
-  if (/(_TERMINADAS|TAREAS CERRADAS)/i.test(todo) && ESC_MUEVE.test(cmd)) {
+  // 2. Mover a mano hacia/desde el archivo (en Bash con JSON sano, comando por comando: `mueveAMano`, arriba)
+  const porComando = ctx.ok && ctx.tool === 'Bash' && ctx.cmd;
+  if (porComando ? mueveAMano(ctx.cmd, { cwd: ctx.cwd || '' }) : (/(_TERMINADAS|TAREAS CERRADAS)/i.test(todo) && ESC_MUEVE.test(cmd))) {
     return bloqueo(`[ESCRITORIO-GUARD] BLOQUEADO: mover a mano hacia/desde el archivo de tareas cerradas.
 
 Mover y registrar son UNA operacion. A mano, la carpeta queda archivada sin fila en el
@@ -1454,7 +1722,8 @@ const BM_MUTA = /\b(Remove-Item|Move-Item|Copy-Item|Rename-Item|Clear-Content)\b
 // comparan contra el OBJETIVO resuelto del rm (no contra el comando entero): el TEMP de Windows
 // (ahi vive el scratchpad; $TEMP/$TMPDIR resuelven ahi), /tmp, y el tmp/ y .video/ de un repo en
 // C:\Dev\<repo>\ (7f176ac8 `rm -rf tmp/amfe158`, 623be82a `rm -rf .video/clips`), node_modules, .venv.
-const BM_EFIMERO = /AppData[\\/]Local[\\/]Temp([\\/]|$)|^(\/|[A-Za-z]:[\\/])tmp([\\/]|$)|[\\/]Dev[\\/][^\\/]+[\\/](tmp|\.video)([\\/]|$)|[\\/]node_modules([\\/]|$)|[\\/]\.venv([\\/]|$)/i;
+// `__pycache__` (tanda 3, P18, 16/10/2026): lo regenera Python solo; 2 de los 13 frenos falsos eran limpiarlo.
+const BM_EFIMERO = /AppData[\\/]Local[\\/]Temp([\\/]|$)|^(\/|[A-Za-z]:[\\/])tmp([\\/]|$)|[\\/]Dev[\\/][^\\/]+[\\/](tmp|\.video)([\\/]|$)|[\\/]node_modules([\\/]|$)|[\\/]\.venv([\\/]|$)|[\\/]__pycache__([\\/]|$)/i;
 // Archivos que no se ejecutan: un plan o una nota que CITA `rm -rf` no borra nada (fc581284, 07/09).
 const BM_PROSA = /\.(md|markdown|txt|rst|csv|tsv|log)$/i;
 
@@ -1484,11 +1753,14 @@ export function enlacesDeWorktree(cmd, cwd) {
 /** Un comando de shell cuyos borrados permanentes apuntan TODOS a destinos efimeros resueltos. */
 function borraSoloEfimero(ctx) {
   const an = analizarComando(sinCuerposHeredocDeGit(ctx.cmd), { cwd: ctx.cwd || null });
-  if (!an.borrados.length) return false;
+  // P18 (16/10/2026): cuentan los borrados PERMANENTES (los que V3 mira). Un borrado comun de un archivo al lado
+  // (sin recursion: `rm -f scripts/_tmp_x.mjs`) no es lo que frena V3; antes hacia frenar un borrado recursivo de `tmp/`.
+  const permanentes = an.borrados.filter((b) => BM_V3.test(limpiar(b.crudo)));
+  if (!permanentes.length) return false;
   // Queda un borrado permanente en codigo pegado (python -c, heredoc, -Command) o en una forma
   // que el analisis no desarmo: no se sabe a que apunta.
   if (BM_V3.test(limpiar(an.residual))) return false;
-  return an.borrados.every((b) => !b.sinObjetivo && b.objetivos.length
+  return permanentes.every((b) => !b.sinObjetivo && b.objetivos.length
     && b.objetivos.every((o) => o.ok && BM_EFIMERO.test(o.valor)));
 }
 
@@ -1520,12 +1792,182 @@ export function borradosPermanentesFueraDeEfimero(cmd, cwd) {
   // el directorio de la sesion (sin variables sin resolver adentro).
   const efimero = (o) => {
     const v = normal(o.valor);
-    return (o.ok && BM_EFIMERO.test(v)) || (!/[$\x60]/.test(v) && !/(^|\/)\.\.(\/|$)/.test(v) && /(^|\/)(node_modules|\.venv)(\/|$)/i.test(v));
+    return (o.ok && BM_EFIMERO.test(v)) || (!/[$\x60]/.test(v) && !/(^|\/)\.\.(\/|$)/.test(v) && /(^|\/)(node_modules|\.venv|__pycache__)(\/|$)/i.test(v));
   };
   return an.borrados
     .filter((b) => BM_V3.test(limpiar(b.crudo)))
     .filter((b) => b.sinObjetivo || !b.objetivos.length || !b.objetivos.every(efimero))
     .map((b) => b.crudo.trim());
+}
+
+// ── P18 (tanda 3, 16/10/2026; si de Fak del 09/10): un script que CITA el patron como dato, o que borra lo que el mismo
+// creo en el TEMP. Medido sobre los 13 frenos falsos del informe de CATA (`casa_guardianes_frenos.md` §3 P1): dos eran
+// Write de un script que prueba un guardian (los `rm -rf` y `Remove-Item -Force` son textos de una lista de casos) o que
+// limpia la carpeta que creo con `mkdtempSync(os.tmpdir() …)`; uno, un `node -e` que pasa casos de texto a un guardian.
+// No se exime el scratchpad entero: un script de ahi se corre despues por ruta y este guardian ya no lo ve. Lo que vale:
+//   · el patron cae ADENTRO de una cadena ('…', "…", `…` sin lo de `${}`) de un script que no lanza procesos
+//     (sin os.system, subprocess, child_process, exec…), y el script es una SONDA de un guardian (importa
+//     guardianes.mjs, un *-guard.mjs/.sh o el despachador) o vive en el scratchpad de la sesion;
+//   · o el borrado es una llamada (`fs.rmSync(x`, `shutil.rmtree(x`) sobre una variable que el mismo script creo con
+//     mkdtemp en el TEMP (`fs.mkdtempSync(path.join(os.tmpdir(), …))`, `tempfile.mkdtemp()` sin `dir=`).
+// Todo lo demas sigue como estaba: un `fs.rmSync('Y:/…')` en codigo frena, este o no en el scratchpad.
+const BM_SONDA = /guardianes\.mjs|\bGUARDIANES\s*\[|[\w-]-guard(?:\.test)?\.(?:mjs|sh)\b|-guard\.mjs|_dispatcher\.sh/;
+// (el `.exec(` de una expresion regular no lanza nada: `exec(` sin el punto si, en Python corre codigo)
+const BM_LANZA = /\bos\.(?:system|popen|exec\w*|spawn\w*)\b|\bsubprocess\b|child_process|\bexecSync\b|\bexecFileSync\b|\bspawnSync\b|\bspawn\s*\(|(?<!\.)\bexec\s*\(|\bexecFile\s*\(|shell\s*=\s*True|Invoke-Expression|\biex\b|Start-Process/i;
+// mas las formas que no nombran el verbo: el `.exec(` de un modulo de procesos importado con otro nombre, asyncio, pty,
+// posix_spawn (si el script nombra child_process en cualquier lado, cualquier `.exec(` cuenta)
+// (ronda 2, detalle 9: `from os import system` + `system(…)`, `eval(`, `new Function`, `importlib.import_module`, `__import__`)
+const BM_LANZA_EXTRA = /create_subprocess|\bpty\.spawn|posix_spawn|\bProcessBuilder\b|Runtime\.getRuntime|(?<![\w.])system\s*\(|(?<![\w.])eval\s*\(|\bnew\s+Function\b|\bimport_module\b|\b__import__\b/i;
+// En un .mjs/.js/.py (los unicos donde vale la excepcion) `iex`, `Invoke-Expression` o `Start-Process` escritos en una
+// cadena solo corren si un child_process o un subprocess los lanza, y eso ya cuenta: se buscan sin esas tres palabras
+// (la sonda del 04/10 trae `'iwr … | iex'` como caso de texto).
+const BM_LANZA_CODIGO = new RegExp(BM_LANZA.source.replace('|Invoke-Expression|\\biex\\b|Start-Process', ''), 'i');
+function lanzaProcesos(code) {
+  return BM_LANZA_CODIGO.test(code) || BM_LANZA_EXTRA.test(code) || (/child_process/.test(code) && /\.\s*exec(?:File)?\s*\(/.test(code));
+}
+const BM_SCRATCHPAD = /[\\/]AppData[\\/]Local[\\/]Temp[\\/]claude[\\/][^\\/]+[\\/][^\\/]+[\\/]scratchpad[\\/]/i;
+const BM_SCRIPT_DATO = /\.(?:mjs|cjs|js|ts|py)$/i;
+
+/** Los tramos [ini, fin) de un codigo JS o Python que estan adentro de una cadena (sin lo de `${…}` de un template). */
+export function rangosDeCadenas(code) {
+  const s = String(code ?? '');
+  const r = [];
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (c !== '"' && c !== "'" && c !== '\x60') continue;
+    const triple = c !== '\x60' && s.startsWith(c.repeat(3), i);
+    const cierre = triple ? c.repeat(3) : c;
+    let j = i + cierre.length;
+    let ini = j;
+    for (; j < s.length; j++) {
+      if (s[j] === '\\') { j++; continue; }
+      if (c === '\x60' && s[j] === '$' && s[j + 1] === '{') {   // lo de adentro de ${…} es codigo: cierra el tramo
+        r.push([ini, j]);
+        let prof = 0;
+        for (j += 1; j < s.length; j++) { if (s[j] === '{') prof++; else if (s[j] === '}' && --prof === 0) break; }
+        ini = j + 1;
+        continue;
+      }
+      if (!triple && c !== '\x60' && s[j] === '\n') break;   // una cadena simple no cruza el renglon
+      if (s.startsWith(cierre, j)) break;
+    }
+    r.push([ini, Math.min(j, s.length)]);
+    i = j + cierre.length - 1;
+  }
+  return r;
+}
+const enCadena = (rangos, k) => rangos.some(([a, b]) => k >= a && k < b);
+
+/** Las variables que el script crea con mkdtemp adentro del TEMP. */
+function variablesTemporales(code) {
+  const vars = new Set();
+  // Ronda 3 (17/10, T8): el nombre va al PRINCIPIO de la sentencia (o despues de const/let/var) y solo, antes del `=`:
+  // en `d, e = tempfile.mkdtemp(), r'Y:/…'` la captura se quedaba con `e`, que es la ruta del servidor
+  // (F4 del auditor de cierre) tambien con `export` adelante: `export const d = fs.mkdtempSync(…)`
+  for (const m of code.matchAll(/(?:^|[\n;])[ \t]*(?:export\s+)?(?:(?:const|let|var)\s+)?([A-Za-z_$][\w$]*)\s*=\s*(?:await\s+)?((?:[\w$]+\.)*)mkdtemp(?:Sync)?\s*\(([^\n]{0,160})/g)) {
+    const args = m[3];
+    // (N2 del auditor de cierre) despues del `)` que cierra el mkdtemp no puede venir nada mas que un `;` o un
+    // comentario: en `d = tempfile.mkdtemp() if prueba else r'Y:/…'` la variable puede ser la carpeta del servidor
+    const ini = m.index + m[0].length - args.length;
+    const cierre = ini + argumentosDeLlamada(code, ini).join(',').length;
+    if (!/^[ \t]*(?:$|;|#|\/\/)/.test(code.slice(cierre + 1).split('\n')[0])) continue;
+    // JS: fs.mkdtempSync(path.join(os.tmpdir(), 'x-')) — la carpeta de adentro tiene que ser el TEMP del sistema
+    if (/tmpdir\s*\(\s*\)/.test(args)) { vars.add(m[1]); continue; }
+    // Python: tempfile.mkdtemp(...) sin `dir=` (con dir= la crea donde le dicen)
+    if (/(?:^|\.)tempfile\.$/.test(m[2]) && !/\bdir\s*=/.test(args.split(')')[0])) vars.add(m[1]);
+  }
+  // Ronda 2 (17/10, hallazgo 8): el nombre se sigue en TODO el script, asi que tiene que ser una sola cosa: una unica
+  // asignacion (`d = mkdtemp(); …; d = r'Y:/…'` ya no es temporal) y nunca un parametro de una funcion ni la variable de
+  // un for (`def limpiar(d): shutil.rmtree(d)` con `limpiar(r'Y:/…')`). Si hay duda, no es temporal: el freno vale.
+  const esc = (n) => n.replace(/\$/g, '\\$');
+  const parametros = new Set();
+  for (const m of code.matchAll(/\bdef\s+\w+\s*\(([^)]*)\)|\bfunction\b[^(]*\(([^)]*)\)|\(([^()]*)\)\s*=>|\blambda\s+([^:]*):|\bcatch\s*\(([^)]*)\)/g)) {
+    for (const p of String(m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? '').split(',')) { const n = p.trim().replace(/^\*+|[=:].*$/g, '').trim(); if (n) parametros.add(n); }
+  }
+  for (const m of code.matchAll(/\b([A-Za-z_$][\w$]*)\s*=>|\bfor\s+([A-Za-z_]\w*)\s+in\b|\bfor\s*\(\s*(?:const|let|var)\s+([A-Za-z_$][\w$]*)|\bwith\b[^\n]*\bas\s+([A-Za-z_]\w*)/g)) parametros.add(m[1] ?? m[2] ?? m[3] ?? m[4]);
+  // (ronda 3, T8) y una asignacion es tambien la anotacion (`d: str = …`), el walrus (`d := …`) y el nombre adentro de lo
+  // que va a la izquierda de un `=` (`[d] = …`, `d, e = …`, `(a, d) = …`, `{ d } = …`); un `=` adentro de una llamada
+  // abierta (`rmtree(d, ignore_errors=True)`) es un argumento con nombre, no una asignacion
+  const asignacionesDe = (v) => {
+    const id = new RegExp(`(?<![\\w$.])${esc(v)}(?![\\w$])`);
+    let n = [...code.matchAll(new RegExp(`(?<![\\w$.])${esc(v)}\\s*(?:[-+*/%]?=|:=)(?!=)`, 'g'))].length;
+    n += [...code.matchAll(new RegExp(`(?<![\\w$.])${esc(v)}\\s*:(?!=)[^=\\n]*=(?![=>])`, 'g'))].length;
+    // (F3 del auditor de cierre) un renglon que sigue a una llamada abierta en los de antes (`shutil.rmtree(\n    d,
+    // ignore_errors=True)`, el formato de black) no es una sentencia: el `nombre=` pegado ahi es un argumento con nombre.
+    // Se cuentan `(` y `[` sin las cadenas; las llaves no, porque abren el cuerpo de una funcion.
+    let abiertos = 0;
+    for (const renglon of code.split('\n')) {
+      const continua = abiertos > 0;
+      const limpio = renglon.replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`/g, '""');
+      abiertos = Math.max(0, abiertos + (limpio.match(/[([]/g) ?? []).length - (limpio.match(/[)\]]/g) ?? []).length);
+      for (const sentencia of renglon.split(';')) {
+        const izq = sentencia.match(/^([^=]*?)(?<![=!<>+\-*/%&|^:])=(?![=>])/)?.[1];
+        if (!izq || !/[[\](){},]/.test(izq) || !id.test(izq)) continue;
+        if (continua && /[\w$]$/.test(izq)) continue;
+      // (TB-1 del auditor a ciegas de la ronda 3) la desestructuracion ENTRE PARENTESIS, `({ d } = …)` (la unica forma
+      // valida en JS para un objeto) o `([ d ] = …)`: la izquierda abre un `(` que se cierra despues del `=`
+        const abre = (izq.match(/[([{]/g) ?? []).length;
+        const cierra = (izq.match(/[)\]}]/g) ?? []).length;
+        if (abre === cierra || (/^\s*\(/.test(izq) && abre === cierra + 1)) n++;
+      }
+    }
+    return n;
+  };
+  for (const v of [...vars]) {
+    if (asignacionesDe(v) !== 1 || parametros.has(v)) vars.delete(v);
+  }
+  return vars;
+}
+const BM_LLAMADA_BORRA = /^(?:(?:fs|fsp|fs\.promises)\.)?(?:rmSync|rmdirSync|rm|rmdir)\s*\(\s*([A-Za-z_$][\w$]*)\s*[,)]|^shutil\.rmtree\s*\(\s*([A-Za-z_]\w*)\s*[,)]/;
+
+/**
+ * ¿Todas las apariciones de `patron` en el script son DATO (adentro de una cadena de una sonda o del scratchpad, sin que
+ * el script lance procesos) o el borrado de una carpeta que el script creo en el TEMP? Sin ninguna aparicion: false.
+ */
+export function borradosDelScriptSonDatoOTemporal(body, file, patron) {
+  if (!BM_SCRIPT_DATO.test(String(file ?? '')) || /(?:^|[\\/])\.\.(?:[\\/]|$)/.test(String(file ?? ''))) return false;
+  const code = sinComentarios(String(body ?? ''));
+  const re = new RegExp(patron.source, patron.flags.includes('g') ? patron.flags : `${patron.flags}g`);
+  const hits = [...code.matchAll(re)];
+  if (!hits.length) return false;
+  const rangos = rangosDeCadenas(code);
+  // lo que lanza un proceso se busca en el codigo ENTERO, cadenas incluidas: el nombre del modulo va entre comillas
+  // (`import cp from 'node:child_process'; cp.exec(…)`, un import renombrado o dinamico). Auditor Opus 17/10, TRUE BUG 4.
+  const datoPosible = !lanzaProcesos(code) && (BM_SONDA.test(code) || BM_SCRATCHPAD.test(String(file ?? '')));
+  const temporales = variablesTemporales(code);
+  return hits.every((m) => {
+    const fin = m.index + Math.max(1, m[0].length) - 1;
+    // el verbo suelto de V4 (`'rm`) arranca EN la comilla que abre la cadena: se mira desde el caracter siguiente
+    const ini = /^["'\x60]/.test(m[0]) ? m.index + 1 : m.index;
+    if (enCadena(rangos, ini) && enCadena(rangos, fin)) return datoPosible;
+    // `fs.rmSync(` puede venir como `fs.rmSync` (V3) o como `fs.rm` (V4): se mira la llamada entera desde ahi
+    const llamada = code.slice(m.index).match(BM_LLAMADA_BORRA);
+    const v = llamada && (llamada[1] || llamada[2]);
+    return Boolean(v && temporales.has(v));
+  });
+}
+
+/**
+ * Bash: ¿el patron de borrado aparece SOLO adentro del codigo pegado a un interprete (`node -e`, `python -c`, un heredoc)
+ * y ese codigo es una sonda de un guardian que lo tiene como texto? Caso real (06/10/2026): `node -e "import(…pc-guard.mjs)
+ * .then(m => { const c = ['rm -rf Trabajo/viejos/', …]; for (const x of c) console.log(m.nombresDelComando(x)) })"`.
+ */
+export function v3SoloEnSondaPegada(cmd) {
+  const { lineas, cuerpos } = separarHeredocs(String(cmd ?? ''));
+  const codigos = cuerpos.filter((h) => !h.deGit).map((h) => h.cuerpo);
+  for (const c of comandosSimples(lineas)) {
+    const p = c.palabras.map((w) => w.replace(/\uE000/g, '$'));
+    const verbo = (p[0] || '').replace(/^.*[\\/]/, '').replace(/\.exe$/i, '');
+    const k = /^(?:node|python[\d.]*|py|deno|bun)$/i.test(verbo) ? p.findIndex((a, n) => n > 0 && /^(?:-e|--eval|-p|--print|-c)$/.test(a)) : -1;
+    if (k > 0 && p[k + 1] !== undefined) {
+      codigos.push(p[k + 1]);
+      if (BM_V3.test([...p.slice(0, k + 1), ...p.slice(k + 2)].join(' '))) return false;
+      continue;
+    }
+    if (BM_V3.test(c.crudo)) return false;
+  }
+  const conPatron = codigos.filter((x) => BM_V3.test(x));
+  return conPatron.length > 0 && conPatron.every((x) => !lanzaProcesos(x) && BM_SONDA.test(x) && borradosDelScriptSonDatoOTemporal(x, 'sonda.mjs', BM_V3));
 }
 
 GUARDIANES['borrado-masivo-guard'] = (ctx) => {
@@ -1571,8 +2013,11 @@ GUARDIANES['borrado-masivo-guard'] = (ctx) => {
   const excluido = BM_GIT_RM.test(haystack) || BM_PALABRA_EFIMERA.test(haystack);
   // (el analisis del comando se paga solo si el patron aparece: este guardian corre en cada comando de cada sesion)
   const fueraDeEfimero = esShell && BM_V3.test(ctx.cmd) ? borradosPermanentesFueraDeEfimero(ctx.cmd, ctx.cwd) : [];
+  // P18: un script (o el codigo pegado a un `node -e`) que tiene el patron como TEXTO, o que borra la carpeta que el mismo
+  // creo en el TEMP, no borra nada de Fak (ver `borradosDelScriptSonDatoOTemporal`). Solo con JSON sano.
+  const datoOTemporal = ctx.ok && ((esEscritura && borradosDelScriptSonDatoOTemporal(ctx.content, file, BM_V3)) || (esShell && v3SoloEnSondaPegada(ctx.cmd)));
   if (fueraDeEfimero.length) motivo += 'V3';
-  else if (!excluido && !(esEscritura && BM_PROSA.test(file)) && BM_V3.test(haystack) && !(esShell && borraSoloEfimero(ctx))) motivo += 'V3';
+  else if (!excluido && !(esEscritura && BM_PROSA.test(file)) && BM_V3.test(haystack) && !(esShell && borraSoloEfimero(ctx)) && !datoOTemporal) motivo += 'V3';
   // V4: script que borra/mueve en lote sin dry-run. Los tokens se buscan con los comentarios
   // afuera (05/09/2026: un comentario que decia "no usa fs.rename ni mv" bloqueo dos Write).
   // `mv`/`rm` pelados son verbos solo en scripts de shell; en .py/.mjs/.js cuentan como comando
@@ -1581,9 +2026,12 @@ GUARDIANES['borrado-masivo-guard'] = (ctx) => {
   if (esEscritura && /\.(ps1|sh|mjs|js|py|bat|cmd)$/i.test(file)) {
     const codigo = sinComentarios(body);
     const verboSuelto = /\.(ps1|sh|bat|cmd)$/i.test(file) ? /\bmv\b|\brm\b/i : /["'\x60]\s*(mv|rm)\b/i;
-    if ((/(Remove-Item|Move-Item|DeleteFile|DeleteDirectory|shutil\.(move|rmtree)|os\.remove|fs\.(unlink|rm|rename))/i.test(codigo) || verboSuelto.test(codigo))
+    const borraV4 = /(Remove-Item|Move-Item|DeleteFile|DeleteDirectory|shutil\.(move|rmtree)|os\.remove|fs\.(unlink|rm|rename))/i;
+    // P18: si todo lo que borra o mueve es texto de una sonda o la carpeta temporal que el script creo, no hay lote que mover
+    const todoDatoOTemporal = ctx.ok && [borraV4, verboSuelto].every((re) => !re.test(codigo) || borradosDelScriptSonDatoOTemporal(ctx.content, file, re));
+    if ((borraV4.test(codigo) || verboSuelto.test(codigo))
       && /(foreach|for +\(|for +[a-z_]+ +in |while|Get-ChildItem|find |glob|walk|readdir|listdir|iterdir|rglob|scandir)/i.test(codigo)
-      && !/dry[-_ ]?run|dryRun|DRYRUN|WhatIf/i.test(body)) motivo += 'V4';
+      && !/dry[-_ ]?run|dryRun|DRYRUN|WhatIf/i.test(body) && !todoDatoOTemporal) motivo += 'V4';
   }
   const enlaces = esShell ? enlacesDeWorktree(ctx.cmd, ctx.cwd) : [];
   if (enlaces.length) motivo += 'V5';
@@ -1695,7 +2143,19 @@ const CITA_PATRONES_RE = /(?:__tests__|\.test\.|\.spec\.|(?:^|[\\/])\.claude[\\/
 const CORRE_TEXTO_RE = /(?:^|[\\/])(?:echo|printf|grep|egrep|fgrep|rg|ag|sed|awk|cat|head|tail|less|more|wc|sort|uniq|cut|tr|tee|ls|dir|find|stat|file|diff|cmp|jq|git|gh|npx|npm|pnpm|yarn|vitest|test|\[|\[\[|true|false|touch|mkdir|cp|mv|rm|cd|pwd|date|basename|dirname|type|which|column|nl|tac|rev|paste|comm|md5sum|sha256sum|base64|iconv|cygpath|code)(?:\.exe)?$/i;
 const CORRE_INTERPRETE_RE = /(?:^|[\\/])(?:pythonw?[\d.]*|py|node|powershell|pwsh|bash|sh|zsh|dash|cmd|perl|ruby|php)(?:\.exe)?$/i;
 const CORRE_INLINE_RE = /^(?:-c(?:om(?:m(?:a(?:n(?:d)?)?)?)?)?|-e|--eval|-p|--print|\/\/?[ck])$/i;   // lo que sigue es codigo
-const CORRE_ENVOLTORIO_RE = /^(?:xargs|timeout|nohup|sudo|env|command|builtin|exec|winpty|time|nice|start)$/i;
+const CORRE_ENVOLTORIO_RE = /^(?:xargs|timeout|nohup|sudo|env|command|builtin|exec|winpty|time|nice|start|stdbuf)$/i;
+// Ronda 3 (17/10, T5): las opciones de un envoltorio que llevan su VALOR en la palabra siguiente; sin esto el valor
+// quedaba como verbo (`timeout -s KILL 5 cat …` daba `KILL`; `env -u X cat …`, `X`; `exec -a n mv …`, `n`)
+const ENVOLTORIO_CON_VALOR = {
+  timeout: /^(?:-[sk]|--signal|--kill-after)$/,
+  env: /^(?:-[uC]|--unset|--chdir)$/,
+  exec: /^-a$/,
+  nice: /^(?:-n|--adjustment)$/,
+  stdbuf: /^(?:-[oei]|--(?:input|output|error))$/,
+  sudo: /^(?:-[ugpChDrtUR]|--(?:user|group|prompt|host|chdir|role|type|other-user|chroot))$/,
+  xargs: /^(?:-[IdnPLsEa]|--(?:arg-file|delimiter|max-args|max-procs|max-lines|max-chars|eof|replace|process-slot-var))$/,
+  time: /^-[fo]$/,
+};
 const CORRE_HD_ARCHIVO_RE = /(?:>{1,2}\s*|\btee\s+(?:-[a-z]+\s+)*)("[^"]*"|'[^']*'|[^\s;&|<>]+)/i;
 /** Prosa (.md/.txt/...) o un archivo que cita los patrones como dato: lo que se guarda ahi no corre. */
 const esProsaOCita = (f) => { const x = String(f ?? '').trim().replace(/^["']|["']$/g, ''); return x === '/dev/null' || /^&\d/.test(x) || BM_PROSA.test(x) || citaSinCorrer(x); };
@@ -1711,12 +2171,44 @@ const citaSinCorrer = (f) => { const x = String(f ?? ''); if (/\.(?:py|pyw|ps1|p
 // la salida o a un archivo de prosa. Antes era al reves (codigo solo si el dueño era un interprete conocido escrito
 // pelado) y `ruta/python.exe - <<EOF` o `$PY - <<EOF` no se miraban: 820 de los 14.740 heredocs reales tienen esa forma.
 const CORRE_HD_TEXTO_RE = /(?:^|[\\/])(?:cat|tee|echo|printf)(?:\.exe)?$/i;
-function verboDeComando(c) {
+// `conocido` (opcional): si despues de sacar un envoltorio el verbo no es uno que el guardian reconoce y una palabra que
+// sigue si lo es, el verbo es esa (una opcion con valor que no esta en la tabla no esconde al lector o al mover).
+function verboDeComando(c, conocido = null) {
   const p = [...c.palabras];
+  let trasOpcion = false;   // la ultima palabra que se saco era una opcion del envoltorio (puede llevar un valor que no esta en la tabla)
   while (p.length && (p[0] === '' || FIRMA_PALABRA_SHELL.has(p[0]) || /^[A-Za-z_][A-Za-z0-9_]*\+?=/.test(p[0]) || CORRE_ENVOLTORIO_RE.test(p[0]))) {
-    if (CORRE_ENVOLTORIO_RE.test(p.shift())) while (p.length && (p[0].startsWith('-') || /^\d+[smhd]?$/.test(p[0]))) p.shift();
+    const w = p.shift();
+    trasOpcion = false;
+    if (!CORRE_ENVOLTORIO_RE.test(w)) continue;
+    const conValor = ENVOLTORIO_CON_VALOR[w.toLowerCase()];
+    while (p.length && (p[0].startsWith('-') || /^\d+(?:\.\d+)?[smhd]?$/.test(p[0]))) {
+      const o = p.shift();
+      trasOpcion = o.startsWith('-');
+      // `env -S "cat x"` / `--split-string=…`: el valor ES el comando, partido en palabras
+      const partido = /^env$/i.test(w) && (/^(?:-S|--split-string)$/.test(o) ? p.shift() : o.match(/^--split-string=(.*)$/)?.[1]);
+      if (partido) { p.unshift(...String(partido).split(/\s+/).filter(Boolean)); trasOpcion = false; continue; }
+      if (conValor && conValor.test(o) && p.length) { p.shift(); trasOpcion = false; }
+    }
+  }
+  // (F5 del auditor de cierre) el respaldo vale solo para el VALOR de una opcion que no esta en la tabla: la palabra que
+  // sigue a una opcion del envoltorio no es conocida y la siguiente si (`timeout -x VAL cat …`). En `timeout 60 rg -n mv
+  // <archivo>` el `mv` es el patron del rg, no el verbo.
+  if (trasOpcion && conocido && p.length > 1 && !conocido(verboPelado(p[0])) && conocido(verboPelado(p[1]))) {
+    return { verbo: p[1], args: p.slice(2) };
   }
   return { verbo: p[0] ?? '', args: p.slice(1) };
+}
+
+/** Ronda 3 (17/10, T5): los comandos simples de un texto, con lo que va detras de un `eval` vuelto a partir como comando
+ *  (eval junta sus argumentos con espacios y los vuelve a leer: `eval cp a "'<listado>'"` copia encima del listado). */
+function comandosConEval(texto, prof = 0) {
+  const out = [];
+  for (const c of comandosSimples(texto)) {
+    const { verbo, args } = verboDeComando(c);
+    if (prof < 3 && /^eval$/i.test(verboPelado(verbo)) && args.length) { out.push(...comandosConEval(args.join(' ').replace(/\uE000/g, '$'), prof + 1)); continue; }
+    out.push(c);
+  }
+  return out;
 }
 // (6) Segunda auditoria (11/10/2026): ¿de donde toma su PROGRAMA un interprete? De stdin cuando la bandera de codigo no
 // trae nada atras (`powershell -Command -`, `cmd /k`, `bash -e`), cuando su primer argumento es `-` (`python - x`), en
@@ -1809,6 +2301,19 @@ export function queCorre(cmd, { porVerbo = true, prof = 0 } = {}) {
   return { corre: corre.join('\n'), visible };
 }
 
+/**
+ * Lo que un comando de Bash CORRE o EJECUTA: lo de `queCorre` mas los comandos que no son verbos de texto (un interprete
+ * que corre un archivo cuenta entero, con sus argumentos). Si `queCorre` no pudo desarmar el comando (un interprete que
+ * lee de stdin, una sustitucion de proceso), devuelve el comando entero sin la prosa: no se adivina.
+ */
+export function loQueEjecuta(cmd) {
+  const { corre, visible } = queCorre(cmd, { porVerbo: true });
+  if (corre === visible) return visible;
+  const { lineas } = separarHeredocs(sinArgumentosDeCommit(String(cmd ?? '')));
+  const ejecuta = comandosSimples(lineas).filter((c) => !CORRE_TEXTO_RE.test(verboDeComando(c).verbo)).map((c) => c.crudo);
+  return [...ejecuta, corre].join('\n');
+}
+
 // ── mail-guard ─────────────────────────────────────────────────────────────
 // Bloquea cualquier envio de mail por Outlook que NO pase por scripts/_mailEnviar.py, el unico
 // camino con gate anti-duplicado. INCIDENTE 2026-08-14: Fak mando el mail del AMFE 150, quedo
@@ -1817,8 +2322,27 @@ export function queCorre(cmd, { porVerbo = true, prof = 0 } = {}) {
 // YA ESTABA en Enviados y la explique como "copia vieja". Un item en la Bandeja de salida NO
 // prueba que el mensaje no se haya enviado. La leccion escrita no alcanza: el .Send() se
 // escribe en 3 segundos dentro de un heredoc. Por eso el bloqueo es aca.
+// Pieza 10 (tanda 3, 16/10/2026): una MCP que MANDA un mail o un mensaje a una persona (Gmail, Outlook, Teams, Slack,
+// WhatsApp…) no pasa por `_mailEnviar.py` ni por el OK de Fak despues del borrador: frena siempre. Armar un borrador
+// (draft) o leer pasan. Las MCP internas de la app (`mcp__ccd_*`: mensajes entre sesiones de Claude) no son mails.
+const MAIL_MCP_MANDA = /__[\w-]*(?:send|reply|forward|post)[\w-]*$/i;
+const MAIL_MCP_CANAL = /mail|gmail|outlook|exchange|message|mensaje|teams|slack|whatsapp|chat|sms/i;
+// armar un borrador (create_draft, create_reply_draft) no manda; mandar el borrador (send_draft) si
+const mcpMandaMail = (n) => !/^mcp__ccd_/.test(n) && MAIL_MCP_MANDA.test(n) && MAIL_MCP_CANAL.test(n) && !(/draft/i.test(n) && !/send/i.test(n));
 GUARDIANES['mail-guard'] = (ctx) => {
   if (!ctx.ok) return null;
+  if (ctx.mcp && mcpMandaMail(ctx.mcp)) {
+    return bloqueo(`
+[MAIL-GUARD — BLOQUEO. Regla: .claude/rules/mail-envio.md]
+
+${ctx.mcp} manda un mail o un mensaje a una persona por una MCP. Un mail de Barack sale SOLO por
+scripts/_mailEnviar.py, despues de que Fak vio el borrador armado y dijo que se mande (08/10/2026), y esta
+MCP no pasa por ninguno de los dos controles.
+
+Que hacer: armar el borrador (sin mandarlo), mostrarselo a Fak y esperar su respuesta. Si la MCP tiene una
+funcion de borrador (draft), esa si pasa.
+`);
+  }
 
   // 0-bis) VOZ: un borrador `_mail*.txt` se mide contra como escribe Fak antes de que exista
   // el mail. Fak, 11/09/2026: "revise porque revisamos, yo revise", y al dia siguiente el
@@ -1839,7 +2363,10 @@ GUARDIANES['mail-guard'] = (ctx) => {
   // 0-ter) El OK de Fak tiene que ser POSTERIOR al borrador (incidente 08/10/2026: "arma el mail y
   // mandalo" escrito antes de que el borrador existiera; Fak: "yo siempre reviso los mails... pone
   // un bloqueante"). Logica y caso en scripts/_lib/mailOkFak.mjs. Sin escape: --forzar no lo saltea.
-  if (/^(Bash|PowerShell)$/i.test(ctx.tool) && pedidoDeEnvio(ctx.cmd)) {
+  // Pieza 6 (tanda 3, 16/10/2026): en Bash el pedido de envio se busca en lo que CORRE o EJECUTA (un `python
+  // scripts/_mailEnviar.py --enviar` cuenta; el texto de un `sed -i`, un `grep` o un commit que lo nombra, no: frenaba
+  // el 11/10 un sed que corregia un informe). En PowerShell, el comando entero, como siempre.
+  if (/^(Bash|PowerShell)$/i.test(ctx.tool) && pedidoDeEnvio(ctx.tool === 'Bash' ? loQueEjecuta(ctx.cmd) : ctx.cmd)) {
     let tp = '';
     try { tp = String(JSON.parse(ctx.raw).transcript_path || ''); } catch { tp = ''; }
     const v = evaluarEnvio({ cmd: ctx.cmd, transcriptPath: tp, raizRepo: RAIZ });
@@ -1870,9 +2397,13 @@ apretando Enviar en la ventana que ya tiene abierta.
   // (5) el unico camino autorizado se puede editar: `scripts/_mailEnviar.py` queda exento por su nombre de archivo
   // (antes pasaba porque el nombre entraba en el texto mirado; ahora en un Write/Edit se mira solo el contenido).
   if (esEscritura && /(?:^|[\\/])scripts[\\/]_mailEnviar\.py$/i.test(ctx.fileL)) return null;
-  const target = esEscritura ? ctx.body6
-    : /^(?:bash|powershell)$/i.test(ctx.toolL) ? limpiar(queCorre(ctx.cmd, { porVerbo: ctx.tool === 'Bash' }).corre)
-      : `${ctx.cmd6} ${ctx.fileL} ${ctx.body6}`;
+  // Pieza 6: un .sh que se escribe con Write es un comando de Bash que va a correr despues: se mira lo que CORRE de el
+  // (el texto de los argumentos de `node scripts/_encargo.mjs --a "... jamas .Send() ..."` no, 11/10 encargo_hoy19k.sh).
+  const esScriptSh = esEscritura && /\.(?:sh|bash)$/i.test(ctx.fileL);
+  const target = esScriptSh ? limpiar(queCorre(ctx.content, { porVerbo: true }).corre)
+    : esEscritura ? ctx.body6
+      : /^(?:bash|powershell)$/i.test(ctx.toolL) ? limpiar(queCorre(ctx.cmd, { porVerbo: ctx.tool === 'Bash' }).corre)
+        : `${ctx.cmd6} ${ctx.fileL} ${ctx.body6}`;
   // 1) Tiene que oler a Outlook. 2) Tiene que haber un envio real (Display/Save/ReplyAll no
   // envian). 3) Si va por la via autorizada, pasa.
   if (!/Outlook\.Application|olMailItem|GetDefaultFolder|MailItem|CreateItem\(/i.test(target)) return null;
@@ -2173,7 +2704,13 @@ todo lo demas dentro de una carpeta que diga .claude para que no estorbe".`);
   }
 
   // 2. Copiar del telefono sin haber cruzado antes contra la biblioteca.
-  if (VID_MTP.test(cmd) && VID_MUEVE.test(cmd)) {
+  // Pieza 7 (tanda 3, 16/10/2026; si de Fak del 15/10): el telefono y el verbo de copiar tienen que estar en la MISMA
+  // sentencia. El 15/10 se freno expulsar el pendrive (`powershell … Namespace(17).ParseName('D:').InvokeVerb('Eject')`)
+  // porque un `cp` de un .py al skill, al principio del mismo comando, contaba como copia del telefono
+  // (`casa_guardianes_frenos.md` §0). Con JSON sano se parte el comando CRUDO (cmd6 cambia los saltos de linea por
+  // espacios y un comando de varios renglones quedaba como una sola sentencia); con JSON roto, la regla de siempre.
+  const sentenciasTel = ctx.ok && ctx.cmd ? ctx.cmd.split(/\r?\n|&&|\|\||;/) : [cmd];
+  if (sentenciasTel.some((s) => VID_MTP.test(s) && VID_MUEVE.test(s))) {
     const marca = path.join(dirHome(env), '.claude', '.cruce-video');
     let edadH = Infinity;
     try {
@@ -2233,7 +2770,7 @@ reference_canal_entre_pcs_pedidos_facundo) o decirselo a Fak si esta en esa PC. 
 
 Fak, 13/10/2026: "no descargues videos en esta PC, no tiene almacenamiento, esas tareas son para la otra notebook".
 
-Si Fak pidio hacerlo ACA igual (su pedido le gana a este freno): \`: > ~/.claude/.espacio-ok\` (vale UNA vez) y repetir el comando.`);
+Si Fak pidio hacerlo ACA igual (su pedido le gana a este freno): \`: > ~/.claude/.espacio-ok # Fak DD/MM HH:MM: "lo que dijo"\` (vale UNA vez; la cita, copiada de su ultimo mensaje: autonomy-contract.md G) y repetir el comando.`);
     }
   }
   return null;
@@ -2342,7 +2879,8 @@ cargar el reemplazo del remache, y la tarea quedo frenada dos veces esperandolo.
 QUE HACER EN VEZ:
   - Dejalo abierto. Un arb abierto no molesta a nadie y es el estado por defecto.
   - Si de verdad hay que cerrarlo, PREGUNTALE A FAK primero, con el motivo.
-  - Si Fak ya dijo que si:  touch ~/.claude/.arb-cerrar-ok   y reintenta (vale 1 vez).
+  - Si Fak ya dijo que si:  touch ~/.claude/.arb-cerrar-ok # Fak DD/MM HH:MM: "lo que dijo"   y reintenta (vale 1 vez;
+    la cita, copiada de su ultimo mensaje: autonomy-contract.md G).
 
 NO BLOQUEADO, por si era lo que buscabas: cerrar 'Maestro de Insumos' con WM_CLOSE (es el
 modo documentado de descartar una edicion sin grabar) y 'python scripts/_arbVer.py reset'
@@ -2388,6 +2926,184 @@ const APQP_GENERA = /(^|[;&|\s])(cp|copy|xcopy|robocopy|mv|move)(\s|$)|Copy-Item
 // o sea el comando con el que iba a ARREGLAR la fila que el gate cuida.
 const APQP_REGISTRA = /(^|[;&|]+\s*)(py|python3?|node)\b[^\n;&|]*_registrar[A-Za-z0-9]*\.(py|mjs)\b[^\n;&|]*--apply/i;
 
+// P13 (tanda 3, 16/10/2026; si de Fak del 15/10). Medido sobre los 19 frenos de 30 dias del informe de CATA
+// (`casa_guardianes_frenos.md` §3 P4): 7 de los 8 falsos copiaban el listado HACIA el scratchpad o exports/ para leerlo
+// (el listado era el ORIGEN del cp) o lo abrian con openpyxl sin guardar; la regla vieja contaba el nombre del listado en
+// cualquier lado del comando junto a cualquier cp. En Bash ahora se mira cada comando y cada codigo pegado:
+//   · cp / mv / copy / xcopy / Copy-Item / Move-Item: frena si el DESTINO es el listado, o si el listado es un ORIGEN y el
+//     destino no es local (TEMP, scratchpad, /tmp, C:\tmp, C:\Dev\…): una copia al lado del maestro en el servidor
+//     tambien es escribir ahi. Las variables escritas en el mismo comando y los `cd` de antes se resuelven;
+//   · robocopy: frena si nombra el listado y el destino (su segundo argumento) no es local;
+//   · el codigo pegado (heredoc, python -c, node -e) y el script del TEMP o del scratchpad que el comando corre por ruta:
+//     frena si nombra el listado y lo GUARDA (`.Save()` de COM, `.save(<el listado>)`, `shutil.copy(x, <el listado>)`,
+//     `open(<el listado>, 'w')`, `to_excel(<el listado>)`). Abrirlo para leer no frena.
+// El octavo falso del informe (15/10 13:39) no era falso: el mismo comando escribia un script con `wb.Save()` sobre el
+// listado de flujogramas y lo corria. Sigue frenando. Los `_registrar* --apply` y el Write/Edit no cambian.
+const APQP_LOCAL = /AppData[\\/]Local[\\/]Temp(?:[\\/]|$)|[\\/]scratchpad(?:[\\/]|$)|^(?:\/tmp|\/c\/tmp|[A-Za-z]:[\\/]tmp)(?:[\\/]|$)|^(?:[A-Za-z]:|\/[a-z])[\\/]Dev[\\/]/i;
+const APQP_COM_GUARDA = /\.(?:Save|SaveAs|SaveCopyAs)\s*\(|SaveChanges\s*[:=]\s*(?:True|\$true|1)|\.Close\s*\(\s*(?:True|\$true|1|-1)\s*[,)]/i;
+const APQP_GUARDA_EN = /(?:\.save|\.to_excel|shutil\.(?:copy\w*|move)|os\.(?:replace|rename)|copyfile\w*|copyFileSync|renameSync|writeFileSync)\s*\(/g;
+const apqpLocal = (p) => APQP_LOCAL.test(String(p ?? '').replace(/^["']|["']$/g, ''));
+// lo mismo adentro de un codigo: la ruta se arma con el TEMP del sistema, el scratchpad o C:\Dev
+const APQP_CODIGO_LOCAL = /scratchpad|AppData[\\/]+Local[\\/]+Temp|environ\s*\[\s*["']TE?MP["']\s*\]|gettempdir|mkdtemp|tmpdir\s*\(|["'](?:\/tmp|[A-Za-z]:[\\/]+tmp)[\\/"']|[A-Za-z]:[\\/]+Dev[\\/]/i;
+const APQP_HOME_PH = 'C:/Users/_home_';
+const APQP_ENV = { TEMP: `${APQP_HOME_PH}/AppData/Local/Temp`, TMP: `${APQP_HOME_PH}/AppData/Local/Temp`, TMPDIR: `${APQP_HOME_PH}/AppData/Local/Temp`, HOME: APQP_HOME_PH, USERPROFILE: APQP_HOME_PH };
+/** Resuelve las variables del comando: las escritas (tambien las que nombran otra variable escrita) y TEMP/HOME. */
+function resolvedorDe(cmd) {
+  const crudas = new Map();
+  for (const m of String(cmd).matchAll(/(?:^|[;&|\s(])([A-Za-z_][A-Za-z0-9_]*)=("([^"\n]*)"|'([^'\n]*)'|([^\s;&|"'()]*))/g)) crudas.set(m[1], { v: m[3] ?? m[4] ?? m[5] ?? '', simple: m[4] !== undefined });
+  const res = (w, prof = 0) => String(w ?? '').replace(/\$\{?([A-Za-z_]\w*)\}?/g, (m, n) => {
+    const c = crudas.get(n);
+    if (c) return c.simple ? c.v : /\$\(|\x60/.test(c.v) || prof > 4 ? m : res(c.v, prof + 1);
+    return APQP_ENV[n.toUpperCase()] ?? m;
+  });
+  return res;
+}
+
+/**
+ * Ronda 3 (17/10, T2): los argumentos de una llamada cuyo `(` termina en `i`, partidos en las comas de primer nivel. Un
+ * `(`, `)` o `,` adentro de una cadena o de otra llamada no cuenta: las carpetas reales del listado de AMFE y del de
+ * flujogramas llevan parentesis (`… ( I-AC-005.3)`, `… (I-IN-002III)`) y cortar en el primer `)` dejaba el nombre del
+ * listado afuera del destino. Hasta 4.000 caracteres.
+ */
+export function argumentosDeLlamada(s, i) {
+  const args = [];
+  let prof = 0;
+  let ini = i;
+  const tope = Math.min(s.length, i + 4000);
+  for (let j = i; j < tope; j++) {
+    const c = s[j];
+    if (c === '"' || c === "'" || c === '\x60') {
+      const triple = c !== '\x60' && s.startsWith(c.repeat(3), j);
+      const cierre = triple ? c.repeat(3) : c;
+      let k = j + cierre.length;
+      for (; k < tope; k++) {
+        if (s[k] === '\\' && (s[k + 1] === c || s[k + 1] === '\\')) { k++; continue; }
+        if (!triple && c !== '\x60' && s[k] === '\n') break;
+        if (s.startsWith(cierre, k)) break;
+      }
+      j = k + cierre.length - 1;
+    } else if (c === '(' || c === '[' || c === '{') prof++;
+    else if (c === ')' || c === ']' || c === '}') { if (prof === 0) { args.push(s.slice(ini, j)); return args; } prof--; }
+    else if (c === ',' && prof === 0) { args.push(s.slice(ini, j)); ini = j + 1; }
+  }
+  args.push(s.slice(ini, tope));
+  return args;
+}
+
+/** ¿Este codigo (Python / JS) guarda sobre el listado? Las variables con el nombre del listado cuentan. */
+export function codigoGuardaListado(code) {
+  const s = String(code ?? '');
+  if (!APQP_LISTADO.test(s)) return false;
+  if (APQP_COM_GUARDA.test(s)) return true;                               // COM guarda el libro que abrio
+  // una copia LOCAL que se llama como el listado (`…/scratchpad/listado_maestro_ing.xlsx`, 13/10) no es el maestro
+  const local = (t) => APQP_CODIGO_LOCAL.test(t);
+  const conListado = new Set();
+  for (const m of s.matchAll(/(?:^|[\s;(,])([A-Za-z_$][\w$]*)\s*=\s*([^\n=][^\n]*)/g)) if (APQP_LISTADO.test(m[2]) && !local(m[2])) conListado.add(m[1]);
+  const nombraListado = (arg) => (APQP_LISTADO.test(arg) && !local(arg)) || [...conListado].some((v) => new RegExp(`(?<![\\w$.])${v.replace(/\$/g, '\\$')}(?![\\w$])`).test(arg));
+  for (const m of s.matchAll(APQP_GUARDA_EN)) {
+    const llamada = m[0];
+    const args = argumentosDeLlamada(s, m.index + m[0].length);
+    // .save(X) / to_excel(X): el primer argumento; copiar o mover (A, B): el segundo, que es el destino
+    const destino = /^\.save|^\.to_excel|^writeFileSync/.test(llamada) ? args[0] ?? '' : args.slice(1).join(',');
+    if (nombraListado(destino)) return true;
+  }
+  for (const m of s.matchAll(/\bopen\s*\(/g)) {
+    const partes = argumentosDeLlamada(s, m.index + m[0].length);
+    if (partes.length > 1 && /["'][^"']*[wa+x][^"']*["']/.test(partes.slice(1).join(',')) && nombraListado(partes[0])) return true;
+  }
+  return false;
+}
+
+/**
+ * Bash: la ruta o el motivo por el que el comando ESCRIBE un listado maestro ('' si no). Ver P13 arriba.
+ * `leer` lee un script por ruta (por defecto, del disco; ≤ 200 KB); `cwd` es la carpeta de la sesion.
+ */
+// Ronda 2 (17/10, hallazgo 2): lo que va pegado a una SHELL (powershell -Command, pwsh -c, bash -c, cmd /c) o el cuerpo
+// de un heredoc que alimenta a una shell son comandos: se vuelven a mirar con esta misma funcion (tope de profundidad).
+const APQP_SHELL_RE = /(?:^|[\\/])(?:(?:ba|z|da)?sh|powershell|pwsh|cmd)(?:\.exe)?$/i;
+const APQP_VERBO_CONOCIDO = (v) => /^(?:cp|mv|copy|move|xcopy|Copy-Item|cpi|Move-Item|mi|robocopy)$/i.test(v) || CORRE_INTERPRETE_RE.test(v);
+const APQP_HD_SHELL_RE = /(?:^|[\s;&|(])(?:[\w.:~$-]*[\\/])?(?:(?:ba|z|da)?sh|powershell|pwsh|cmd)(?:\.exe)?(?:\s|$)/i;
+export function escribeListadoBash(cmd, { cwd = '', leer, prof = 0, ps = false } = {}) {
+  const leerScript = leer ?? ((p) => { try { const st = fs.statSync(p); return st.size <= 200_000 ? fs.readFileSync(p, 'utf8') : ''; } catch { return ''; } });
+  const { lineas, cuerpos } = separarHeredocs(String(cmd ?? ''));
+  const res = resolvedorDe(cmd);
+  const codigos = cuerpos.filter((h) => !h.deGit).map((h) => h.cuerpo);
+  // (N1) cada shell sabe si es PowerShell: ahi `cp` / `mv` son alias de Copy-Item / Move-Item
+  const shells = cuerpos.filter((h) => !h.deGit && APQP_HD_SHELL_RE.test(String(h.dueno ?? ''))).map((h) => ({ cuerpo: h.cuerpo, ps: /(?:^|[\s\\/])(?:powershell|pwsh)(?:\.exe)?(?:\s|$)/i.test(String(h.dueno ?? '')) }));
+  let dir = cwd ? String(cwd).replace(/\\/g, '/') : '';
+  const completa = (p) => { const r = res(p).replace(/\\/g, '/'); return /^(?:[A-Za-z]:|\/|~)/.test(r) || !dir ? r : `${dir.replace(/\/+$/, '')}/${r}`; };
+  const COPIA_VERBO = /^(?:cp|mv|copy|move|xcopy|Copy-Item|cpi|Move-Item|mi)$/i;
+  // un copiar o mover: la ruta o el motivo si escribe el listado ('' si no). `deLaCaneria`: los archivos le llegan por la
+  // cañeria o por el `{}` de find (xargs, parallel, find -exec): el origen puede ser cualquiera que el comando nombre.
+  const juzgaCopia = (verbo, args, deLaCaneria = false) => {
+    const v = verboPelado(verbo);
+    // (ronda 3, T4) el destino explicito con todas sus formas: la misma funcion que escritorio-guard
+    const ex = destinoExplicitoDe(verbo, args, { ps });
+    const pos = args.filter((a, k) => !/^-/.test(a) && !/^\/[A-Za-z]{1,3}$/.test(a) && !(ex && k === ex.k));
+    const destino = ex ? ex.destino : pos[pos.length - 1];
+    const fuentes = ex ? pos : pos.slice(0, -1);
+    if (deLaCaneria) fuentes.push(String(cmd));
+    if (!destino) return '';
+    const d = completa(destino);
+    if (APQP_LISTADO.test(d) && (/\$/.test(d) || !apqpLocal(d))) return d;
+    // Auditor Opus 17/10 (TRUE BUG 2): MOVER el listado lo saca del servidor; solo COPIARLO es leer
+    if (/^(?:mv|move|Move-Item|mi)$/i.test(v) && fuentes.some((f) => APQP_LISTADO.test(res(f)))) return `${d} (mueve el listado)`;
+    if (fuentes.some((f) => APQP_LISTADO.test(res(f))) && (/\$/.test(d) || !apqpLocal(d))) return `${d} (copia del listado)`;
+    // (TRUE BUG 3) un destino que no se puede resolver (`D="$(cygpath -u "…/Listado….xlsx")"`) con el listado nombrado en
+    // el comando: no se adivina
+    if (/\$/.test(d) && APQP_LISTADO.test(String(cmd))) return `${d} (destino sin resolver)`;
+    return '';
+  };
+  // (ronda 3, T5) lo de detras de un eval se vuelve a partir; un envoltorio con una opcion que lleva valor no esconde al copiar.
+  // (N3 del auditor de cierre) el `{}` de find / xargs / parallel no es un bloque de bash: se cambia por una palabra para
+  // que no parta el comando.
+  for (const c of comandosConEval(lineas.replace(/\{\}/g, '__ARCHIVO__'))) {
+    const palabras = c.palabras.map((w) => w.replace(/\uE000/g, '$'));
+    // (N3) el copiar o mover que corre detras de find -exec, xargs o parallel: la regla que escritorio-guard tiene desde la
+    // ronda 1 (mueveAMano). Se juzga el comando de adentro, hasta el `;` / `+` / `:::` que lo cierra.
+    const lanzador = verboPelado(palabras.find((w) => w && !/^[A-Za-z_]\w*=/.test(w)));
+    const k = /^(?:find|xargs|parallel)$/i.test(lanzador) ? palabras.findIndex((w, i) => i > 0 && COPIA_VERBO.test(verboPelado(w))) : -1;
+    if (k > 0) {
+      const resto = palabras.slice(k + 1);
+      const fin = resto.findIndex((w) => /^(?:\\?;|\+|:::)$/.test(w));
+      const r = juzgaCopia(palabras[k], fin >= 0 ? resto.slice(0, fin) : resto, true);
+      if (r) return r;
+      continue;
+    }
+    const { verbo, args } = verboDeComando({ ...c, palabras }, APQP_VERBO_CONOCIDO);
+    const v = verboPelado(verbo);
+    if (/^(?:cd|pushd|chdir|Set-Location|sl)$/i.test(v)) { const d = args.find((a) => !a.startsWith('-')); const r = d ? res(d).replace(/\\/g, '/') : ''; dir = /\$/.test(r) ? '' : /^(?:[A-Za-z]:|\/)/.test(r) ? r : dir && r ? `${dir}/${r}` : ''; continue; }
+    if (COPIA_VERBO.test(v)) {
+      const r = juzgaCopia(verbo, args);
+      if (r) return r;
+      continue;
+    }
+    if (/^robocopy$/i.test(v)) {
+      // (hallazgo 3) un switch de robocopy es `/X` o `/X:valor`, sin otra barra: `/c/tmp` es una ruta (Git Bash la convierte)
+      // (ronda 3, T3) y solo los de su lista: `/tmp` es el TEMP del sistema, no un switch
+      const pos = args.filter((a) => !ROBOCOPY_SWITCH_RE.test(a));
+      const mueve = args.some((a) => /^\/(?:MOV|MOVE)$/i.test(a));
+      if (APQP_LISTADO.test(res(c.crudo)) && (mueve || !pos[1] || /\$/.test(res(pos[1])) || !apqpLocal(completa(pos[1])))) return completa(pos[1] || '');
+      continue;
+    }
+    if (CORRE_INTERPRETE_RE.test(v)) {
+      const r = modoInterprete(verbo, args);
+      // Ronda 3 (17/10, T1): lo pegado a una shell se mira como comandos Y como codigo: un `.Save()` de COM escrito
+      // adentro de `powershell -Command` no es un comando que la vuelta reconozca, y la ronda 2 lo habia dejado afuera
+      if (r.modo === 'pegado') { codigos.push(r.codigo); if (APQP_SHELL_RE.test(verbo)) shells.push({ cuerpo: r.codigo, ps: /(?:^|[\\/])(?:powershell|pwsh)(?:\.exe)?$/i.test(verbo) }); }
+      else if (r.modo === 'archivo') {
+        // un script del TEMP o del scratchpad corrido por ruta: no pasa por el guardian cuando lo escribe un heredoc de
+        // otro comando, asi que se lee aca (los de scripts/ que escriben un listado van con `_registrar* --apply`)
+        const archivo = args.find((a) => !a.startsWith('-') && /\.(?:py|mjs|js|cjs)$/i.test(a));
+        const p = archivo ? completa(archivo) : '';
+        if (p && !/\$/.test(p) && /AppData[\\/]Local[\\/]Temp|[\\/]scratchpad[\\/]|^\/tmp\//i.test(p)) codigos.push(leerScript(aRutaWin(p, p)));
+      }
+    }
+  }
+  if (prof < 3) for (const s of shells) { const r = escribeListadoBash(s.cuerpo, { cwd: dir, leer, prof: prof + 1, ps: s.ps }); if (r) return r; }
+  return codigos.some(codigoGuardaListado) ? 'el codigo que corre guarda el listado' : '';
+}
+
 const APQP_CIERRE = `Regla: .claude/rules/autonomy-contract.md §F — "la PRIMERA VEZ se pregunta".
 Que va en cada casillero del legajo APQP: skill \`apqp-legajo\`.`;
 
@@ -2423,9 +3139,12 @@ dudas" en el paquete envejece sola y despues nadie sabe cual manda.
 ${APQP_CIERRE}`);
   }
 
-  // 2. Los listados maestros
+  // 2. Los listados maestros. En Bash con JSON sano, comando por comando (P13, arriba); si no, la regla de siempre.
+  const porComando = ctx.ok && ctx.tool === 'Bash' && !esEscritura;
+  const listadoBash = porComando ? escribeListadoBash(ctx.cmd, { cwd: ctx.cwd || '' }) : '';
   const tocaListado = APQP_LISTADO.test(destino) || (!esEscritura && APQP_LISTADO.test(cmd));
-  if ((esEscritura && APQP_LISTADO.test(file)) || (!esEscritura && tocaListado && APQP_ESCRIBE.test(cmd)) || APQP_REGISTRA.test(cmd)) {
+  const escribeListado = porComando ? Boolean(listadoBash) : (!esEscritura && tocaListado && APQP_ESCRIBE.test(cmd));
+  if ((esEscritura && APQP_LISTADO.test(file)) || escribeListado || APQP_REGISTRA.test(cmd)) {
     // Escape de UN uso, igual que arb-cerrar-guard: cuando Fak ya dijo que si, el gate tiene
     // que poder abrirse. Un gate que no se puede pasar ni con autorizacion no se respeta, se
     // esquiva — y ahi deja de existir. Se consume al usarlo para que valga por UNA carga.
@@ -2437,7 +3156,7 @@ Despues de cargar: releer la fila y verificar que la de al lado quedo intacta.`)
     }
     return bloqueo(`[APQP-CLIENTE] BLOQUEADO: estas por escribir en un LISTADO MAESTRO.
 
-${destino || cmd.slice(0, 120)}
+${listadoBash || destino || cmd.slice(0, 120)}
 
 Los listados maestros (flujogramas, AMFEs, hojas de proceso) son el registro compartido de
 Ingenieria: de ahi sale el numero de cada documento y el estado de cada uno. Una fila cargada
@@ -2446,7 +3165,8 @@ de mas, o con una ruta que todavia no existe, la arrastra despues todo el mundo.
   · Corre el script en DRY-RUN (sin --apply), mostrale a Fak la fila que va a quedar, y
     aplicala con su OK.
   · Leer el listado no esta bloqueado.
-  · Si Fak YA dijo que si:  : > ~/.claude/.apqp-listado-ok   y reintenta (vale UNA carga).
+  · Si Fak YA dijo que si:  : > ~/.claude/.apqp-listado-ok # Fak DD/MM HH:MM: "lo que dijo"   y reintenta (vale UNA
+    carga; la cita, copiada de su ultimo mensaje: autonomy-contract.md G).
 
 ${APQP_CIERRE}`);
   }
@@ -2515,9 +3235,49 @@ biblioteca del sector: \`BARACK ARGENTINA SRL\\Ingenieria y Proyecto - General\\
 
   · Guardalo en su carpeta por tipo de la biblioteca de Ingenieria.
   · Leer de la nube personal y SACAR cosas de ahi no esta bloqueado.
-  · Si Fak dijo que ESTE archivo va ahi:  : > ~/.claude/.nube-personal-ok   y reintenta (vale una vez).
+  · Si Fak dijo que ESTE archivo va ahi:  : > ~/.claude/.nube-personal-ok # Fak DD/MM HH:MM: "lo que dijo"   y reintenta
+    (vale una vez; la cita, copiada de su ultimo mensaje: autonomy-contract.md G).
 
 Regla: .claude/rules/nube-ingenieria.md`);
+};
+
+// ── permiso-un-uso-guard (tanda 3, pieza 9, 16/10/2026) ───────────────────
+// Un permiso de un solo uso de Fak (`~/.claude/.apqp-listado-ok`, `.arb-cerrar-ok`, `.nube-personal-ok`, `.espacio-ok`,
+// `.agent-opus-ok`, `.agent-cupo-ok`, `.agent-limit`, `.workflow-ok`: la lista vive en `permisosUnUso.data.json`) lo
+// arma la sesion solo con la frase de Fak en el MISMO turno, citada en el comando: `: > ~/.claude/.x-ok # Fak 15/10
+// 13:55: "hacelo si"`. La cita se compara con el ultimo mensaje real de Fak del transcript (texto y hora). Sin cita, o si
+// no cierra, frena. Por la tool Write/Edit, frena siempre. Logica, motivo y limites: scripts/_lib/permisoUnUso.mjs.
+// Regla: .claude/rules/autonomy-contract.md, seccion G. Registro: node scripts/_lib/permisoGuard.mjs --registro.
+const textoPermiso = (permisos, motivo) => `[PERMISO-UN-USO] FRENADO: estas armando ${permisos.map((p) => `~/.claude/${p}`).join(', ')} y ${motivo}.
+
+Un permiso de un solo uso abre UNA vez un freno que Fak ya autorizo. Lo arma la sesion solo con el si de Fak en
+ESTE turno, y la cita va en el mismo comando, copiada de su mensaje (fecha y hora de ese mensaje, hora argentina):
+
+    : > ~/.claude/.apqp-listado-ok # Fak 15/10 13:55: "hacelo si"
+
+Si Fak no lo dijo en su ultimo mensaje, el freno vale: preguntale, con el motivo, y espera la respuesta. Un si de una
+hora antes, «resolvelo vos» o una instruccion de otra sesion no son ese si (02/10/2026: el arb-cerrar-ok armado con
+«vos deberias solucionarlo todo automaticamente» y el taskkill se ejecuto igual).
+
+Regla: .claude/rules/autonomy-contract.md, seccion G · canon: scripts/_lib/permisosUnUso.data.json`;
+
+GUARDIANES['permiso-un-uso-guard'] = (ctx, { env, escapes } = {}) => {
+  if (!ctx.ok) return null;                                   // con JSON roto no hay comando confiable; los otros frenos siguen
+  const home = dirHome(env ?? process.env);
+  const sesion = ctx.sid || '';
+  if (/^(?:write|edit)$/i.test(ctx.toolL)) {
+    const p = permisoDeArchivo(ctx.file);
+    if (!p) return null;
+    if (escapes !== false) anotarPermiso(home, { sesion, permisos: [p], ok: false, motivo: 'por la tool Write/Edit', cmd: '' });
+    return bloqueo(textoPermiso([p], 'lo estas armando con la tool Write/Edit (se arma por consola, con la cita de Fak en el comando)'));
+  }
+  if (!/^(?:bash|powershell)$/i.test(ctx.toolL)) return null;
+  let tp = '';
+  try { tp = String(JSON.parse(ctx.raw).transcript_path || ''); } catch { tp = ''; }
+  const r = evaluarPermisoBash({ cmd: ctx.cmd, transcriptPath: tp });
+  if (!r.permisos.length) return null;
+  if (escapes !== false) anotarPermiso(home, { sesion, permisos: r.permisos, ok: r.ok, motivo: r.motivo, cmd: ctx.cmd });
+  return r.ok ? null : bloqueo(textoPermiso(r.permisos, r.motivo));
 };
 
 // ── commit-rutas-guard ─────────────────────────────────────────────────────

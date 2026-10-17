@@ -18,6 +18,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { GUARDIANES, evaluar } from '../../scripts/_lib/guardianes.mjs';
+import { esperados } from './guardianesRonda3.mjs';
 
 const LEGAJO = 'Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\REYDEL-SMRC\\APB P21\\P21 SSRT-MY2026 HILO NARANJA\\APQP';
 // El paquete del cliente vive adentro de `1. Imput`, junto al resto de lo que mando el
@@ -185,5 +186,130 @@ describe('apqp-cliente-guard por el camino real (evaluar con el JSON del hook)',
         expect(fs.existsSync(marca)).toBe(true);
         expect(bloqueos('Write', LISTADO, { env })).toBe(0);
         expect(fs.existsSync(marca)).toBe(false);
+    });
+});
+
+// P13 (tanda 3 del plan del sistema, 16/10/2026; si de Fak del 15/10). Los VERDE son los frenos FALSOS reales del informe
+// de CATA (`casa_guardianes_frenos.md` §3 P4), recortados a lo que decide; los ROJO, los verdaderos y las variantes que el
+// arreglo no tiene que dejar pasar. Medido con scripts/_frenosMedir.mjs: 8 falsos -> 1 (el que queda escribia de verdad).
+describe('P13 — origen o destino: copiar el listado para LEERLO no es escribirlo (Bash)', () => {
+    const HO = 'Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\HOJAS DE OPERACIONES\\3- LISTADO\\Listado hojas de proceso.xlsx';
+    const FLUJO = 'Y:/Ingenieria/Documentacion Gestion Ingenieria/8. Flujograma Sinóptico (I-IN-002III)/1. LISTADO DE FLUJOGRAMAS';
+    const SCR = 'C:/Users/FACUND~1/AppData/Local/Temp/claude/C--Dev-BarackMercosul/a27eabc3-6f16-4975-8a56-576b60a29524/scratchpad';
+    const json = (command, cwd = 'C:\\Dev\\BarackMercosul') => JSON.stringify({ tool_name: 'Bash', tool_input: { command }, cwd, session_id: 'test' });
+    const frena = (command, cwd) => evaluar(json(command, cwd), { nombres: ['apqp-cliente-guard'], env: { HOME: os.tmpdir() }, marcar: false, escapes: false }).res.bloqueos.length === 1;
+
+    it('VERDE — el listado como ORIGEN de un cp hacia el scratchpad, exports o C:\\tmp (24/09, 14/10, 15/10)', () => {
+        for (const c of [
+            `H="/y/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES"; timeout 60 find "$H/1- CLIENTES/SMRC/P21" -maxdepth 3 | head -40; cp "$H/3- LISTADO/Listado hojas de proceso.xlsx" "${SCR}/listado_ho.xlsx"`,
+            `cd /c/tmp/setup && cp "/y/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/3- LISTADO/Listado hojas de proceso.xlsx" listado_ho.xlsx 2>&1 | tail -1; python -X utf8 -c "import openpyxl; wb=openpyxl.load_workbook('listado_ho.xlsx',read_only=True)"`,
+            `D="${FLUJO}"; ls -la "$D" | grep -i '~\\$' && exit 1; mkdir -p C:/Dev/BarackMercosul/exports/BEON/listado_respaldo; cp -p "$D/Listado_Maestro_FLUJOGRMAS.xlsx" C:/Dev/BarackMercosul/exports/BEON/listado_respaldo/`,
+            `S="$TEMP/claude/C--Dev-BarackMercosul/f14f5aae/scratchpad" && L="Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/3- LISTADO/Listado hojas de proceso.xlsx" && ls -la "$L" && cp "$L" "$S/listado_copia.xlsx"`,
+        ]) expect(frena(c), c).toBe(false);
+    });
+    it('VERDE — abrir el listado con openpyxl desde un python pegado, sin guardarlo (01/10, 13/10)', () => {
+        const py = `python - <<'EOF'\nimport openpyxl, shutil, os\nsrc = r"${HO}"\ndst = os.path.join(os.environ['TEMP'],'claude','x','scratchpad','listado_copia.xlsx')\nshutil.copy2(src,dst)\nwb = openpyxl.load_workbook(dst, data_only=True)\nprint(wb.sheetnames)\nEOF`;
+        expect(frena(py)).toBe(false);
+        // la copia local puede llamarse como un listado (13/10: listado_maestro_ing.xlsx en el scratchpad)
+        const py2 = `python - <<'EOF'\nimport os,shutil\ng=r'C:\\x\\LISTADO MAESTRO DE INGENIERIA - I-IN-001 - REV 8.xlsx'\ndst=os.path.join(os.environ['TEMP'],'claude','x','scratchpad','listado_maestro_ing.xlsx')\nshutil.copyfile(g,dst)\nEOF`;
+        expect(frena(py2)).toBe(false);
+    });
+
+    it('ROJO — copiar HACIA el listado, o el listado a otra carpeta del servidor', () => {
+        for (const c of [
+            `cp ${SCR}/listado.xlsx "${HO.replace(/\\/g, '/')}"`,
+            `cp -p "${FLUJO}/Listado_Maestro_FLUJOGRMAS.xlsx" "Y:/Ingenieria/otra carpeta/"`,
+            `robocopy "${SCR}" "Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/3- LISTADO" "Listado hojas de proceso.xlsx"`,
+            `D="Y:/x/1. LISTADO DE AMFES"; cp x.xlsx "$D/Listado_Maestro_AMFE.xlsx"`,
+        ]) expect(frena(c), c).toBe(true);
+        // auditor Opus 17/10 (TRUE BUG 2 y 3): MOVER el listado al TEMP lo saca del servidor; un destino en una variable de $(…)
+        for (const c of [
+            `mv "${HO.replace(/\\/g, '/')}" "$TEMP/listado.xlsx"`,
+            `robocopy "Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/3- LISTADO" C:/tmp "Listado hojas de proceso.xlsx" /MOV`,
+            `D="$(cygpath -u "Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/3- LISTADO/Listado hojas de proceso.xlsx")"; cp /c/tmp/nuevo.xlsx "$D"`,
+        ]) expect(frena(c), c).toBe(true);
+        // 21/09 17:50: la copia de respaldo al LADO del maestro, en el servidor (cd adentro de la carpeta del listado)
+        expect(frena('cd "/y/Ingenieria/Documentacion Gestion Ingenieria/13. Analisis/1. LISTADO DE AMFES" && cp "Listado_Maestro_AMFE.xlsx" "Listado_Maestro_AMFE_backup_$(date +%Y%m%d).xlsx"')).toBe(true);
+    });
+    it('ROJO — el codigo pegado que GUARDA el listado (15/10 13:39: COM con wb.Save(); openpyxl; shutil hacia el listado)', () => {
+        const com = `cp -p "${FLUJO}/Listado_Maestro_FLUJOGRMAS.xlsx" C:/Dev/BarackMercosul/exports/x/; cat > "${SCR}/listado157.py" <<'EOF'\nimport win32com.client as win32\nf=r'Y:\\x\\Listado_Maestro_FLUJOGRMAS.xlsx'\nxl=win32.DispatchEx('Excel.Application')\nwb=xl.Workbooks.Open(f, 0, False)\nwb.Worksheets('Listado FLUJOGRAMAS').Range('M62').Value='B'\nwb.Save(); wb.Close(False)\nEOF\npython "${SCR}/listado157.py"`;
+        expect(frena(com)).toBe(true);
+        expect(frena(`python -c "import openpyxl; L=r'${HO}'; wb=openpyxl.load_workbook(L); wb.save(L)"`)).toBe(true);
+        expect(frena(`python - <<'EOF'\nimport shutil\nsrc = r"C:\\tmp\\nuevo.xlsx"\ndst = r"${HO}"\nshutil.copy(src, dst)\nEOF`)).toBe(true);
+        expect(frena(`node -e "require('fs').copyFileSync('C:/tmp/n.xlsx', 'Y:/x/Listado_Maestro_AMFE.xlsx')"`)).toBe(true);
+    });
+    it('ROJO — un script del TEMP corrido por RUTA que guarda el listado (15/10 13:55, listado152.py)', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'apqp-p13-'));
+        const script = path.join(dir, 'listado152.py');
+        fs.writeFileSync(script, "import win32com.client as w\nf=r'Y:\\x\\Listado_Maestro_FLUJOGRMAS.xlsx'\nwb=w.DispatchEx('Excel.Application').Workbooks.Open(f)\nwb.Save()\n");
+        const p = script.replace(/\\/g, '/');
+        expect(frena(`cp -p "${FLUJO}/Listado_Maestro_FLUJOGRMAS.xlsx" exports/x/antes.xlsx; python "${p}"`)).toBe(true);
+        // el mismo script sin guardar: pasa (leer el listado no es escribirlo)
+        fs.writeFileSync(script, "import openpyxl\nwb=openpyxl.load_workbook(r'Y:\\x\\Listado_Maestro_FLUJOGRMAS.xlsx', read_only=True)\nprint(wb.sheetnames)\n");
+        expect(frena(`python "${p}"`)).toBe(false);
+    });
+    // Ronda 2 (17/10, hallazgo 2): lo pegado a powershell / pwsh y el heredoc que alimenta a bash se vuelven a mirar
+    it('ROJO (ronda 2, hallazgo 2) — Copy-Item / Move-Item / cp adentro de powershell -Command, pwsh -c o un heredoc a bash', () => {
+        for (const c of [
+            `powershell -NoProfile -Command "Copy-Item C:\\tmp\\n.xlsx '${HO}'"`,
+            `pwsh -c "Move-Item C:\\tmp\\n.xlsx '${HO}'"`,
+            `bash <<'EOF'\ncp /c/tmp/n.xlsx "${HO.replace(/\\/g, '/')}"\nEOF`,
+            `powershell -Command "Move-Item '${HO}' C:\\Dev\\BarackMercosul\\exports\\x.xlsx"`,
+        ]) expect(frena(c), c).toBe(true);
+        expect(frena(`powershell -NoProfile -Command "Copy-Item '${HO}' C:\\Dev\\BarackMercosul\\exports\\x.xlsx"`)).toBe(false); // copiar para leer
+    });
+    // Ronda 2 (17/10, hallazgo 3): `/c/tmp` es una ruta, no un switch de robocopy (Git Bash la convierte a C:/tmp)
+    it('ROJO (ronda 2, hallazgo 3) — robocopy con el origen escrito /c/… hacia la carpeta del listado', () => {
+        const AMFE = 'Ingenieria/Documentacion Gestion Ingenieria/13. Analisis del modo de falla y sus efectos ( I-AC-005.3)/1. LISTADO DE AMFES';
+        for (const c of [
+            `robocopy /c/tmp "/y/${AMFE}" Listado_Maestro_AMFE.xlsx /Y`,
+            `robocopy /c/tmp "Y:\\${AMFE.replace(/\//g, '\\')}" Listado_Maestro_AMFE.xlsx /Y`,
+        ]) expect(frena(c), c).toBe(true);
+        expect(frena(`robocopy "Y:\\${AMFE.replace(/\//g, '\\')}" /c/tmp Listado_Maestro_AMFE.xlsx /R:1 /W:1`)).toBe(false); // traerlo para leer
+    });
+    it('ROJO — los _registrar* --apply siguen frenando (los verdaderos del informe)', () => {
+        expect(frena('py -3 scripts/_registrarRevFlujograma.py 153 D 01/10/2026 --apply 2>&1 | tail -6')).toBe(true);
+        expect(frena('cd /c/Dev/BarackMercosul && python scripts/_registrarUpperTrimListados.py flujograma --apply 2>&1 | tail -20')).toBe(true);
+    });
+});
+
+// Ronda 3 (17/10/2026): los casos del auditor a ciegas de la ronda 2, por su id (`guardianesRonda3.mjs`). 2 = frena, 0 = pasa.
+describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (apqp-cliente)', () => {
+    const G = 'apqp-cliente-guard';
+    const bash = (command) => evaluar(JSON.stringify({ tool_name: 'Bash', tool_input: { command }, session_id: 'ronda3', cwd: 'C:\\Dev\\BarackMercosul' }),
+        { nombres: [G], env: { HOME: os.tmpdir() }, marcar: false, escapes: false }).res.bloqueos.length;
+
+    it('ROJO (ronda 3, T1) — el .Save() de COM adentro de powershell -Command sobre el listado vuelve a frenar', () => {
+        esperados(G, ['N-A08', 'N-A09']);
+        esperados(G, ['H2-A03', 'H2-A04', 'H2-A07', 'H2-X04', 'H2-sh', 'H2-V1', 'H2-V2']);   // los de la ronda 2 siguen igual
+    });
+    it('ROJO (ronda 3, T2) — un parentesis de la ruta REAL del listado (AMFE, flujogramas) ya no corta el destino', () => {
+        // shutil.copy, copyFileSync y to_excel encima del listado real; el mismo en flujogramas; el code de una MCP
+        esperados(G, ['X-A11', 'X-A12', 'X-A13', 'X-A14', 'X-A15', 'X-A16', 'N-C05', 'X-C08']);
+        // VERDE: traer el listado real (con sus parentesis) a una carpeta local para leerlo
+        expect(bash(`python -c "import shutil; shutil.copy(r'${LISTADO}', r'C:\\tmp\\l.xlsx')"`)).toBe(0);
+    });
+    it('ROJO (ronda 3, T3) — robocopy desde /tmp hacia la carpeta del listado: /tmp es el TEMP, no un switch', () => {
+        esperados(G, ['N-A07', 'H3-Z11', 'H3-Z09', 'H3-V1', 'H3-V2']);
+    });
+    it('ROJO (ronda 3, T4) — el destino explicito de cp (-t con espacio, -t pegado, -rt) y de Copy-Item (-Dest, -Destination:)', () => {
+        esperados(G, ['N-A01', 'N-A02', 'N-A03', 'N-A06', 'Y-A19']);
+        // VERDE: las mismas formas trayendo el listado a una carpeta local
+        const L = LISTADO.replace(/\\/g, '/');
+        for (const c of [`cp -t /c/tmp "${L}"`, `cp -rt /c/tmp "${L}"`, `cp --target=/c/tmp "${L}"`,
+            `powershell -NoProfile -Command "Copy-Item -Path '${LISTADO}' -Destination:'C:\\tmp\\l.xlsx'"`]) expect(bash(c), c).toBe(0);
+        // y el ROJO de la misma forma: -Destination: encima del listado real
+        expect(bash(`powershell -NoProfile -Command "Copy-Item -Path C:\\tmp\\n.xlsx -Destination:'${LISTADO}'"`)).toBe(1);
+    });
+    it('ROJO (ronda 3, T5) — eval y env -u adelante del cp encima del listado', () => {
+        esperados(G, ['N-A04', 'N-A05']);
+    });
+    it('ROJO (ronda 3, N1 del auditor de cierre) — adentro de powershell -Command, cp y mv son alias de Copy-Item y Move-Item', () => {
+        esperados(G, ['Z-A31', 'Z-A31c', 'Z-A32', 'Z-A43']);
+        esperados(G, ['Z-A44', 'Z-A40', 'Z-A31b', 'Z-A31d', 'Z-A35', 'Z-A38', 'N-A03']);   // VERDES y las formas de Bash siguen igual
+    });
+    it('ROJO (ronda 3, N3 del auditor de cierre) — el cp o el mv que corre detras de xargs, find -exec o parallel', () => {
+        esperados(G, ['Z-A87', 'Z-A88', 'Z-A89', 'Z-A91', 'Z-A92', 'Z-A93', 'Z-A94', 'Z-A96']);
+        esperados(G, ['Z-A95']);   // VERDE: traer el listado por xargs a una carpeta local para leerlo
     });
 });

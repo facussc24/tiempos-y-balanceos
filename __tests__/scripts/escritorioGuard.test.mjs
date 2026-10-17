@@ -12,6 +12,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { esperados } from './guardianesRonda3.mjs';
 
 const HOOK = path.resolve(process.cwd(), '.claude/hooks/escritorio-guard.sh');
 const ESC = 'C:\\Users\\facun\\OneDrive\\Escritorio';
@@ -94,6 +95,51 @@ describe('escritorio-guard — mover a mano', () => {
     it('8. mover DENTRO del Escritorio, sin tocar el archivo, no se bloquea', () => {
         expect(correr(bash(`mv "${ESC}\\a.txt" "${ESC}\\Insert\\a.txt"`)).code).toBe(0);
     });
+
+    // Tanda 3, pieza 4 (16/10/2026; si de Fak del 15/10): el archivo y el verbo tienen que estar en el MISMO comando, y un
+    // cp que COPIA desde el archivo para leer no es archivar. Casos VERDE = frenos falsos reales del informe de CATA
+    // (`casa_guardianes_frenos.md` §3 P3); ROJO = los verdaderos de siempre (5 y 6 de arriba) y sus variantes.
+    const T26 = '/c/Users/FacundoS-PC/BARACK ARGENTINA SRL/Ingeniería y Proyecto - General/INGENIERIA BARACK (NUNCA BORRAR)/1- GENERAL/TAREAS CERRADAS/2026';
+    const SCR = 'C:/Users/FACUND~1/AppData/Local/Temp/claude/C--Dev-BarackMercosul/b3209884-a3dc-4d60-9cec-41e14f639b1b/scratchpad';
+    it('8b. VERDE — el cp y el archivo en pedazos distintos del comando (02/10 13:03)', () => {
+        expect(correr(bash(`cp /c/tmp/RELACIONES.TXT .arb-cache/RELACIONES_20261002.TXT && LEO="${T26}/2026-07-31 - Modificacion arb por Leo"; ls "$LEO" 2>/dev/null | head; python scripts/_arbSustituir.py --tabla x.csv`)).code).toBe(0);
+    });
+    it('8c. VERDE — copiar DESDE el archivo hacia el scratchpad, para leer (02/10 15:35 y 14/10 17:45)', () => {
+        expect(correr(bash(`cd "$TEMP/claude/C--Dev-BarackMercosul/5dcc2c5c/scratchpad" && mkdir -p evip && cp "${T26}/2026-07-31 - Modificacion arb por Leo/Modificaciones BOM ARB_20260731.pdf" evip/leo.pdf 2>/dev/null; ls evip`)).code).toBe(0);
+        expect(correr(bash(`S="${SCR}"; T="${T26}"; cp "$T/2026-08-13 - PLANTILLA LASER INSERTO DEL R2/PLANTILLA.dxf" "$T/2026-08-13 - PLANTILLA LASER  INSERTO TRASERO R2/PLANTILLA.dxf" "$S/src/"; ls "$T/2026-08-13 - PLANTILLA LASER INSERTO DEL R2/"`)).code).toBe(0);
+    });
+    it('8d. ROJO — copiar HACIA el archivo, mover desde o hacia (tambien con variables), y el codigo pegado que mueve', () => {
+        for (const c of [
+            `cp "${SCR}/x.pdf" "${T26}/2026-10-16 - Tarea/"`,
+            `T="${T26}"; cp a.pdf "$T/2026-10-16 - Tarea/"`,
+            `T="${T26}"; mv "$T/2026-07-31 - Modificacion arb por Leo" "${ESC}\\Leo"`,
+            `robocopy "${ESC}\\Tarea" "${T26}/2026-10-16 - Tarea" /E`,
+            `python -c "import shutil; shutil.move(r'${ESC}\\Tarea', r'${ARCH}\\2026\\2026-10-16 - Tarea')"`,
+            // auditor Opus 17/10 (TRUE BUG 1): con un cd adelante, por find -exec y por xargs
+            `cd "${T26}" && mv "/c/Users/FacundoS-PC/OneDrive - BARACK ARGENTINA SRL/Desktop/2026-10-01 - Tarea" .`,
+            `find "/c/Users/FacundoS-PC/OneDrive - BARACK ARGENTINA SRL/Desktop" -maxdepth 1 -name "2026-10-01*" -exec mv {} "${T26}/" \\;`,
+            `ls -d "/c/Users/FacundoS-PC/OneDrive - BARACK ARGENTINA SRL/Desktop/2026-10-01"* | xargs -I{} mv {} "${T26}/"`,
+        ]) {
+            const r = correr(bash(c));
+            expect(r.code, c).toBe(2);
+            expect(r.err, c).toMatch(/Mover y registrar son UNA operacion/);
+        }
+    }, 60_000);
+    // Ronda 2 (17/10, hallazgo 7): el archivo en una variable de $(cygpath …) o de un for, --target-directory= y cp -rt
+    it('8e. ROJO (ronda 2) — el archivo de cerradas en una variable que no se resuelve, o como destino explicito', () => {
+        const T26w = `C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\1- GENERAL\\TAREAS CERRADAS\\2026`;
+        const D = '/c/Users/FacundoS-PC/OneDrive - BARACK ARGENTINA SRL/Desktop';
+        for (const c of [
+            `ARCH="$(cygpath -u '${T26w}')"; mv "${D}/Tarea" "$ARCH/2026-10-17 - Tarea"`,
+            `for d in "${T26}"; do mv "${D}/Tarea" "$d/"; done`,
+            `cp --target-directory="${T26}" "${D}/x.pdf"`,
+            `cp -rt "${T26}" "${D}/Tarea"`,
+        ]) {
+            const r = correr(bash(c));
+            expect(r.code, c).toBe(2);
+            expect(r.err, c).toMatch(/Mover y registrar son UNA operacion/);
+        }
+    }, 60_000);
 });
 
 describe('escritorio-guard — escrituras', () => {
@@ -142,5 +188,24 @@ describe('escritorio-guard — recordatorio', () => {
     });
     it('15. un comando que no toca el Escritorio nunca molesta', () => {
         expect(correr(bash('npm run build'), { conCooldown: false }).code).toBe(0);
+    });
+});
+
+// Ronda 3 (17/10/2026): los casos del auditor a ciegas de la ronda 2, por su id (`guardianesRonda3.mjs`). 2 = frena, 0 = pasa.
+describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (escritorio)', () => {
+    const G = 'escritorio-guard';
+
+    it('ROJO (ronda 3, T3) — robocopy desde /tmp hacia el archivo de cerradas: /tmp es el TEMP, no un switch', () => {
+        esperados(G, ['X-E11', 'X-E12', 'N-E06']);
+    });
+    it('ROJO (ronda 3, T4) — mv con --target= abreviado o con -t pegado hacia el archivo de cerradas', () => {
+        esperados(G, ['N-E01', 'N-E02', 'H7-E06', 'H7-E07', 'H7-E08', 'H7-V1', 'H7-V2']);
+    });
+    it('ROJO (ronda 3, T5) — eval, exec -a, timeout -s y env -u adelante del mv o el cp hacia el archivo de cerradas', () => {
+        esperados(G, ['N-E03', 'N-E04', 'N-E05', 'N-E07', 'N-E08', 'N-E09']);
+    });
+    it('VERDE (ronda 3, F5 del auditor de cierre) — detras de un envoltorio, un mv o un cp que es el PATRON de un rg o un grep no es el verbo', () => {
+        esperados(G, ['Z-E95', 'Z-E95c', 'Z-E95b']);
+        esperados(G, ['Z-E90', 'Z-E91', 'Z-E92', 'Z-E94']);   // los envoltorios de T5 hacia el archivo de cerradas siguen frenando
     });
 });

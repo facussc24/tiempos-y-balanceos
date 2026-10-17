@@ -41,9 +41,21 @@ const textoDeBloques = (c) => (typeof c === 'string' ? c : Array.isArray(c) ? c.
 
 /** Epoch ms del ultimo mensaje REAL de Fak en el transcript (el que escribe mientras trabajo, tambien). 0 si no hay. */
 export function ultimoMensajeDeFak(transcriptPath) {
-  let lineas;
-  try { lineas = fs.readFileSync(transcriptPath, 'utf8').split('\n'); } catch { return 0; }
   let ts = 0;
+  for (const m of mensajesDeFak(transcriptPath) ?? []) if (m.ts > ts) ts = m.ts;
+  return ts;
+}
+
+/**
+ * Los mensajes REALES de Fak del transcript, en orden: [{ ts (epoch ms), texto }]. null si el transcript no se puede
+ * leer. Mismo filtro que decide el OK de un mail (tanda 3, pieza 9, 16/10/2026: lo usa tambien el permiso de un solo uso
+ * para comparar la cita con lo que Fak escribio): sin avisos de la app adelante, sin resultados de herramientas, sin
+ * resumenes de compactacion ni mensajes automaticos (`esAutomatico`), y una cola solo si la tipeo una persona.
+ */
+export function mensajesDeFak(transcriptPath) {
+  let lineas;
+  try { lineas = fs.readFileSync(transcriptPath, 'utf8').split('\n'); } catch { return null; }
+  const out = [];
   for (const linea of lineas) {
     if (!linea.includes('"type":"user"') && !linea.includes('"queued_command"')) continue;
     let o;
@@ -61,9 +73,9 @@ export function ultimoMensajeDeFak(transcriptPath) {
     } else continue;
     if (!texto.trim() || esAutomatico(texto)) continue;
     const t = Date.parse(o.timestamp || '');
-    if (t > ts) ts = t;
+    if (t > 0) out.push({ ts: t, texto });
   }
-  return ts;
+  return out;
 }
 
 /** El borrador del registro al que apunta el pedido (el mas nuevo si hay varios). null si no esta. */

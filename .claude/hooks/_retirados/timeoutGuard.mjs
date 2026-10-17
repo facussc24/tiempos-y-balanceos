@@ -1,3 +1,5 @@
+// RETIRADO el 16/10/2026 (tanda 3 del plan del sistema, P20, si de Fak del 09/10): corria en cada Bash (~51.800 veces
+// en el mes) y aviso 6; ya no esta cableado en settings.json y no corre (lee cierreCanon.data.json de su carpeta vieja).
 /**
  * timeoutGuard.mjs — un comando que se corto por timeout NO es evidencia (hook PostToolUse y
  * PostToolUseFailure con matcher Bash|PowerShell).
