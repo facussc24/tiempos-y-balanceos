@@ -2203,8 +2203,13 @@ ${VID_CIERRE}`);
   //    de arriba frena, el pase de Fak no se gasta. Solo con el nombre de maquina que viene en `env` (los tests no lo traen y
   //    asi no dependen del disco real de la PC donde corren).
   if (VID_PC_DISCO_CHICO.test(String((env && env.COMPUTERNAME) || ''))) {
-    const vars = vidVariables(cmd);
-    for (const s of vidSentencias(cmd)) {
+    // Con el comando CRUDO (ctx.cmd conserva los saltos de linea; cmd6 los cambia por espacios y un `powershell -Command`
+    // de varios renglones quedaba como una sola sentencia: el Move-Item real del 14/10 se frenaba por el Copy-Item de una
+    // foto del renglon de abajo; auditor ronda 2, H2). Se parte por renglon, `&&` y `||`, no por `;`, para que el codigo de
+    // un `node -e "a; b"` o un `python -c` siga siendo UNA sentencia que empieza con node/python (ronda 2, H5).
+    const crudo = ctx.ok && ctx.cmd ? ctx.cmd : cmd;
+    const vars = vidVariables(crudo);
+    for (const s of crudo.split(/\r?\n|&&|\|\|/).map((x) => x.trim()).filter(Boolean)) {
       const motivo = vidSentenciaPesada(s, vars);
       if (!motivo) continue;
       const disco = vidDisco(vidResolver(s, vars));

@@ -28,16 +28,16 @@ MODE="${1:-inicio}"
 # .claude/pcs/<COMPUTERNAME>.md se imprime entera, al arrancar Y al compactar (el auditor del 16/10 midio que una sesion
 # de CATA que compacta perdia el «estoy en CATA»; cuesta 2,4 KB). Viaja por git y se actualiza sola; la PC principal no
 # tiene ficha (la casa esta escrita para ella). Sin COMPUTERNAME (una prueba fuera de Windows) no se busca nada.
-# Debajo, el ultimo aviso «PC nueva» que dejo la sincronizacion de cada 2 h (que programas le faltan a esta PC): hasta el
-# 16/10 iba a .claude/state/nube-sync.log y nadie lo leia (auditor, H6). Solo bash: grep y tail, sin node.
+# Debajo, el aviso «PC nueva» de la ULTIMA sincronizacion (que programas le faltan a esta PC): _nube.mjs lo deja en
+# .claude/state/pc-nueva.txt, vacio si no falta nada (el ultimo renglon del log mentia cuando ya no faltaba nada: auditor
+# ronda 2, N1). Hasta el 16/10 iba solo al log y nadie lo leia (H6). Solo bash, sin node. BARACK_PC_NUEVA_ARCHIVO: tests.
 ficha_pc() {
   if [ -n "${COMPUTERNAME:-}" ]; then
     FICHA_PC="$ROOT/.claude/pcs/${COMPUTERNAME^^}.md"
     [ -f "$FICHA_PC" ] && cat "$FICHA_PC"
   fi
-  if [ -f "$ROOT/.claude/state/nube-sync.log" ]; then
-    grep -F '[PC NUEVA]' "$ROOT/.claude/state/nube-sync.log" 2>/dev/null | tail -1
-  fi
+  PCN="${BARACK_PC_NUEVA_ARCHIVO:-$ROOT/.claude/state/pc-nueva.txt}"
+  [ -s "$PCN" ] && cat "$PCN"
 }
 
 # 03/10/2026: si Fak dejo a ESTA sesion trabajando hasta una hora y todavia no llego, se dice al arrancar, al

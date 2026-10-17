@@ -260,12 +260,16 @@ describe('session-start-context.sh (SessionStart) — el nucleo post-compact se 
     expect(r.stdout).toContain('[PC] Esta sesion corre en CATA');
     expect(r.stdout.length).toBeLessThan(6000);
   });
-  it('H6 (auditor 16/10): el ultimo aviso «PC nueva» del registro de la sincronizacion se imprime al arrancar, si lo hay', () => {
-    const log = path.join(RAIZ, '.claude', 'state', 'nube-sync.log');
-    if (!fs.existsSync(log) || !fs.readFileSync(log, 'utf8').includes('[PC NUEVA]')) return;   // sin aviso en esta PC: nada que mostrar
-    const r = inicio({ COMPUTERNAME: 'DESKTOP-14JG95B' });
-    expect(r.stdout).toContain('[PC NUEVA]');
-    expect(r.stdout.split('[PC NUEVA]').length - 1).toBe(1);                                   // solo el ultimo
+  it('H6 / N1 (auditor 16/10): el aviso «PC nueva» de la ULTIMA sincronizacion se imprime al arrancar; si la ultima dijo que no falta nada (archivo vacio), nada', () => {
+    const dir = fs.mkdtempSync(path.join(TMP, 'pcn-'));
+    const archivo = path.join(dir, 'pc-nueva.txt');
+    fs.writeFileSync(archivo, '[PC NUEVA] A esta PC (PRUEBA) le falta 1 cosa para correr los scripts de la casa: ffmpeg -> winget install Gyan.FFmpeg.\n', 'utf8');
+    const con = inicio({ COMPUTERNAME: 'DESKTOP-14JG95B', BARACK_PC_NUEVA_ARCHIVO: posix(archivo) });
+    expect(con.stdout).toContain('[PC NUEVA] A esta PC (PRUEBA) le falta 1 cosa');
+    expect(con.stdout.split('[PC NUEVA]').length - 1).toBe(1);
+    fs.writeFileSync(archivo, '', 'utf8');                                                      // la ultima sincronizacion: nada falta
+    expect(inicio({ COMPUTERNAME: 'DESKTOP-14JG95B', BARACK_PC_NUEVA_ARCHIVO: posix(archivo) }).stdout).not.toContain('[PC NUEVA]');
+    expect(inicio({ COMPUTERNAME: 'DESKTOP-14JG95B', BARACK_PC_NUEVA_ARCHIVO: posix(path.join(dir, 'no-existe.txt')) }).stdout).not.toContain('[PC NUEVA]');
   });
 });
 

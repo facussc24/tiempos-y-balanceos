@@ -383,6 +383,10 @@ if (sincronizar) {
         const { avisoPcNueva, medirPc } = await import('./_lib/pcNueva.mjs');
         const avPc = avisoPcNueva(medirPc({ repo: REPO, home: HOME }));
         if (avPc) avisos.push(avPc);
+        // El estado de HOY (aviso o vacio) queda en un archivo que lee session-start-context.sh al arrancar: el ultimo
+        // renglon del log mentia cuando ya no faltaba nada (auditor ronda 2, N1).
+        mkdirSync(join(REPO, '.claude', 'state'), { recursive: true });
+        writeFileSync(join(REPO, '.claude', 'state', 'pc-nueva.txt'), avPc ? `${avPc}\n` : '', 'utf8');
     } catch (e) {
         avisos.push(`pc nueva: no pude medir que le falta a esta PC (${String(e && e.message ? e.message : e).slice(0, 80)})`);
     }

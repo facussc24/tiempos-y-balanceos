@@ -25,3 +25,4 @@ rapidocr-onnxruntime
 pypdf
 faster-whisper
 extract-msg
+XlsxWriter

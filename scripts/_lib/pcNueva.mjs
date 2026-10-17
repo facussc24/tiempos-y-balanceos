@@ -23,7 +23,7 @@ export const MARCA_PC_NUEVA = '[PC NUEVA]';
  * PC principal no lo tiene en su Python base (medido el 16/10/2026; los 21 de esta lista si los tiene).
  */
 export const IMPORTS_PYTHON = ['pptx', 'PIL', 'openpyxl', 'fitz', 'numpy', 'win32com', 'ezdxf', 'docx',
-  'cv2', 'segno', 'scipy', 'shapely', 'lib3mf', 'pillow_heif', 'xlrd', 'olefile', 'pytesseract', 'rapidocr_onnxruntime', 'pypdf', 'faster_whisper', 'extract_msg'];
+  'cv2', 'segno', 'scipy', 'shapely', 'lib3mf', 'pillow_heif', 'xlrd', 'olefile', 'pytesseract', 'rapidocr_onnxruntime', 'pypdf', 'faster_whisper', 'extract_msg', 'xlsxwriter'];
 /** El Ghostscript que usa la casa es el de PDFCreator (scripts/_imprimir.py, GS): el de ghostscript.com no sirve para imprimir. */
 export const GHOSTSCRIPT_PDFCREATOR = ['PDFCreator', 'Ghostscript', 'Bin', 'gswin32c.exe'];
 

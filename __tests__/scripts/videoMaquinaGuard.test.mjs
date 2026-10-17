@@ -222,6 +222,10 @@ describe('video-maquina-guard — lo pesado se baja desde CATA (v2): frena lo pe
             `ls /d/ | head; powershell -NoProfile -Command "$d = (New-Object -ComObject Shell.Application).Namespace(17).ParseName('D:'); $d.Verbs() | ForEach-Object { $_.Name }"`,
             // mover o renombrar adentro del disco no ocupa un byte: es el paso 6 de la regla (Move-Item del 14/10, shutil.move del 07/10, mv y os.rename)
             `powershell -NoProfile -Command " Move-Item 'C:\\Dev\\_telefono\\2026-10-14\\IMG_1246.MOV' '${BIBW}\\1- CLIENTES\\NOVAX\\TOP ROLL\\MAQUINA MOLDEADORA IMG\\2026-10-14 - ROBOT LASER sobre tela (IMG_1246).MOV'"`,
+            // el comando REAL del 14/10 18:42 tiene varios renglones y un Copy-Item de una foto en el de abajo (auditor ronda 2, H2)
+            `powershell -NoProfile -Command "\n $b='${BIBW}\\1- CLIENTES\\NOVAX\\TOP ROLL\\MAQUINA MOLDEADORA IMG'\n Move-Item 'C:\\Dev\\_telefono\\2026-10-14\\IMG_1246.MOV' (Join-Path $b '2026-10-14 - ROBOT LASER sobre tela (IMG_1246).MOV')\n Copy-Item 'C:\\Dev\\_telefono\\2026-10-14\\IMG_1247.HEIC' (Join-Path $b '2026-10-14 - PIZARRA del robot (IMG_1247).HEIC')\n"`,
+            // codigo con punto y coma adentro de las comillas sigue siendo UNA sentencia que empieza con node (ronda 2, H5)
+            `node -e "const re=/tel_copiar/; const x='a.mp4'; console.log(re.test(process.argv[1]), x)" x`,
             `cd /c/Dev/_telefono && python - <<'EOF'\nimport os, shutil\nL=r"C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\x"\nshutil.move(os.path.join(L, "IMG_1083.MOV"), os.path.join(L, "2026-10-07 - ductos (IMG_1083).MOV"))\nEOF`,
             `N="/c/Users/FacundoS-PC/BARACK ARGENTINA SRL/Ingeniería y Proyecto - General/INSTALAR EN UNA PC NUEVA"; mv "$N/5- Mails para el asistente de Leo.zip" "$N/viejo.zip"`,
             `python - <<'EOF'\nimport os\nd=r"${BIBW}\\3- INSTITUCIONAL\\2026-10-07 - Videos para Andres"\nos.rename(os.path.join(d,"a.zip"), os.path.join(d,"b.zip"))\nEOF`,

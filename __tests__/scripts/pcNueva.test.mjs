@@ -67,10 +67,10 @@ describe('pcNueva — que falta y que comando lo arregla', () => {
     const d = deps({ python: PY.faltan });
     for (const p of PIEZAS_PC) { expect(queDe(p, d).length).toBeGreaterThan(5); expect(p.comando.length).toBeGreaterThan(3); }
     expect(IMPORTS_PYTHON).toEqual(['pptx', 'PIL', 'openpyxl', 'fitz', 'numpy', 'win32com', 'ezdxf', 'docx',
-      'cv2', 'segno', 'scipy', 'shapely', 'lib3mf', 'pillow_heif', 'xlrd', 'olefile', 'pytesseract', 'rapidocr_onnxruntime', 'pypdf', 'faster_whisper', 'extract_msg']);
+      'cv2', 'segno', 'scipy', 'shapely', 'lib3mf', 'pillow_heif', 'xlrd', 'olefile', 'pytesseract', 'rapidocr_onnxruntime', 'pypdf', 'faster_whisper', 'extract_msg', 'xlsxwriter']);
     const req = fs.readFileSync(path.join(process.cwd(), 'requirements.txt'), 'utf8');
     for (const paq of ['python-pptx', 'Pillow', 'openpyxl', 'PyMuPDF', 'pywin32', 'numpy', 'ezdxf', 'python-docx',
-      'opencv-python', 'segno', 'scipy', 'shapely', 'lib3mf', 'pillow-heif', 'xlrd', 'olefile', 'pytesseract', 'rapidocr-onnxruntime', 'pypdf', 'faster-whisper', 'extract-msg']) expect(req).toContain(`\n${paq}\n`);
+      'opencv-python', 'segno', 'scipy', 'shapely', 'lib3mf', 'pillow-heif', 'xlrd', 'olefile', 'pytesseract', 'rapidocr-onnxruntime', 'pypdf', 'faster-whisper', 'extract-msg', 'XlsxWriter']) expect(req).toContain(`\n${paq}\n`);
     expect(req).not.toMatch(/^matplotlib$/m);
   });
 

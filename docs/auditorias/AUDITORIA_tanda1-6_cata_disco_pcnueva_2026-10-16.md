@@ -200,3 +200,75 @@ Lo decide la sesión principal con Fak; yo no toqué nada.
 5. **H7:** completar `requirements.txt` con lo que importan los scripts vivos, o decir en el archivo que es solo el mínimo.
 
 Hasta que se arregle la regla 4, sigue prendida con menos de 10 GB libres. Para hacer lo de H2 en la PC principal hace falta un pase por cada paso.
+
+## Ronda 2 (22:30)
+
+**Veredicto: aprobado con cambios.** La regla 4 pasó de frenar 28 comandos reales a frenar 4: los 3 pesados y 1 que no lo es. Quedan dos cosas para arreglar: el `Move-Item` real del 14/10 sigue frenado (H2) y cada arranque de esta PC muestra un aviso «PC nueva» viejo y falso (N1).
+
+- Auditado: commit `2b56de42`, en `main`. **No está pusheado**: hay 2 commits locales, `2b56de42` y `96360349`. El CI de HEAD no corrió (sin verificar); el último run es el de `9e6c36d9`, en verde.
+- Probé todo con un HOME de prueba. No toqué código, datos, Supabase, arb, Y:, Outlook, el settings global ni la nube.
+- El pase real `~/.claude/.espacio-ok` no existe y no lo creé. Hoy esta PC tiene 6,9 GB libres, así que la regla está prendida.
+
+| Control | Resultado |
+|---|---|
+| `node --check scripts/_lib/guardianes.mjs` | OK |
+| vitest: videoMaquinaGuard, guardianes, pcNueva, hooksVarios | 237 de 237 |
+| vitest: firmaIAGuard, nubePersonalGuard | 172 de 172 |
+| Despachador real con `echo hola` y con `echo cp prueba.zip` | sale 0 y no dice nada, en los dos (la v1 frenaba el segundo) |
+| Replay sobre 17.384 comandos únicos ajenos de 10 días (sin las sondas de los auditores, que están en `subagents/` de esta sesión) | v1 frena 28, v2 frena 4. Ninguno que la v1 dejaba pasar frena ahora |
+
+### Los 28 comandos reales, con la principal, 8 GB contra 50 GB y cruce fresco
+
+| Clase de la ronda 1 | Qué pasa con la v2 |
+|---|---|
+| 3 pesados | **los 3 frenan**: `tel_copiar.ps1` del 07/10 y del 14/10, y el `cp "$D"/*.mp4` de la biblioteca del 16/10 |
+| 21 no pesados | **20 pasan y 1 sigue frenado**: el `Move-Item` del 14/10 18:42 a `MAQUINA MOLDEADORA IMG`, sesión `0be7a687` (ver H2) |
+| 2 discutibles (`cp` del `.mp4` del defroster a `TIEMPOS Y BALANCEOS`) | pasan. Ojo: no es porque se midió que es chico. El archivo de origen ya no existe, y como no viene de la biblioteca, la regla no lo cuenta |
+| 2 `ffmpeg ... -c:v copy` | pasan. La regla escrita trata a `ffmpeg` como código |
+
+Por qué pasan los 20:
+- 4 porque se midió el archivo hoy y pesa menos de 100 MB: el zip de Pedro (58,6 MB), los dos `base_mount.3mf.zip` (11,5 MB) y uno de los mails de Leo (0,06 MB).
+- 13 porque no copian: expulsan el pendrive, mueven o renombran, o son código (heredoc, `python -c`).
+- 3 porque hoy el archivo de origen ya no existe: la skill 3D, el otro zip de Leo y la copia al pendrive. En la ronda 1 esos dos zips medían 89 KB y 55 KB, y la copia va a `D:`, que hoy no está conectado.
+
+### Cada hallazgo de la ronda 1
+
+| | Estado | Caso que probé |
+|---|---|---|
+| H1 | **parcial** | Lo pasé por `evaluar`, el despachador entero, con un HOME de prueba y 6 GB. Estos casos ni usan ni gastan el pase: el agente por API (`escapes:false`, `marcar:false`), un video al Escritorio (lo frena la regla 1), `CopyHere` sin cruce (lo frena la regla 2), expulsar el pendrive con `Namespace(17)` y un `ls`. Con el pase, `tel_copiar.ps1` pasa con aviso y el pase queda «consumido». Sigue abierto el caso entre guardianes: un `cp` de un video de 120 MB a la nube personal. El de video gasta el pase y avisa; después `nube-personal-guard` frena (exit 2) y el pase queda «consumido» sin que el comando corra. Pasa porque `video-maquina-guard` corre antes en la matriz. Los pases de arb-cerrar, apqp-cliente y nube-personal también se gastan adentro del guardián: es de la casa y no frena la aprobación |
+| H2 | **parcial** | Con 6 GB pasan `mv` de 120 MB, `Move-Item` de un zip, `git mv` de un zip, `shutil.move` en heredoc y `os.rename` en `python -c`. **El caso real del 14/10 18:42 sigue frenado** («copia videos de la biblioteca»). Son dos `Move-Item` de `.MOV` más un `Copy-Item` de una foto `.jpg`, cada uno en su renglón, adentro de un `powershell -Command "..."`. El test no usa ese comando tal cual: lo reescribió en un renglón y sin el `Copy-Item`. La causa está abajo |
+| H3 | **resuelto** | Frenan: `yt-dlp <url>` sin `-o`, `yt-dlp -f best`, `robocopy <carpeta de máquina> C:\Dev\copia /E`, `cp -r` de esa carpeta, `Copy-Item -Recurse` (por Bash y por PowerShell) y `cp`/`Copy-Item` de un archivo de 120 MB. Encontré huecos sin ningún caso real en 10 días, y no los cuento como hallazgo: pasan `robocopy <carpeta> <destino> *.MOV` (sin `/E`), un comando de varios renglones que arranca con un renglón `echo` o `git`, y una variable de PowerShell (`$src = ...; Copy-Item $src ...`). Frena un `cp -r` de la `.claude` de una máquina, o hacia la biblioteca. Medido: ningún comando de 10 días arranca con un renglón de comentario; de 918 donde el primer renglón «de código» tapa a los demás, 2 tenían una copia y ninguna era pesada |
+| H4 | **resuelto** | `medirPc` en esta PC: `(nada falta)`. Mide `C:\Program Files\PDFCreator\Ghostscript\Bin\gswin32c.exe`, la misma ruta de `scripts/_imprimir.py:32`, que existe. El texto ya no dice «PDF a imagen» |
+| H5 | **parcial** | De los 21, pasan 20; el que falta es el de H2. Ninguno de los 17.384 frena por primera vez con la v2. También sigue frenado el `node -e` de solo lectura de la ronda 1, el que tenía `CopyHere` en una expresión regular después de un `;`. La excepción de «código» solo llega hasta el primer `;`: `node -e "const a=1; const re=/tel_copiar.ps1/; ..."` frena. El test pone el literal antes del `;` y por eso pasa |
+| H6 | **parcial** | El aviso ahora llega a la sesión, en inicio y en compact, una sola vez. Pero llega viejo: ver N1 |
+| H7 | **resuelto** | Los 21 de `requirements.txt` coinciden con `IMPORTS_PYTHON` (nombres de pip contra nombres de import). Quedó afuera `xlsxwriter`, que importa `scripts/hotmelt/cuadro_estructura.py:15` arriba de todo; tampoco lo listé yo en la ronda 1 |
+| H8 | **resuelto** | Con CATA, en compact salen 4.274 bytes con la ficha; con DESKTOP-14JG95B no sale la ficha. Medí con un HOME de prueba, sin correr el modo inicio con el HOME real porque hoy es viernes y ese hook escribe en `~/.claude`. Cuenta para el caso real: 2.287 bytes (el máximo de 10 días) + 2.518 (la ficha) + hasta 1.204 (el aviso de CATA con todo faltando), unos 6 KB. Queda bajo 10 KB |
+| H9 | **resuelto** | Probé tres casos con PATH falsos. Sin python da «sin-python» y avisa el programa. Con un python que sale con error y con un `.exe` roto da «no-medido» y no avisa nada. El timeout cae en «no-medido»; eso lo vi leyendo `pcNueva.mjs:89`, no lo corrí. Lo de `-I` y los paquetes por usuario sigue sin verificar en CATA |
+| H10 | **resuelto** | Comparé contra `casa_cata_estado.md`. «299 videos; una muestra de 20 dio 17 bajados» coincide con la fila «Biblioteca de Ingeniería» y con §D. Lo de Outlook ahora dice «según la memoria del 08/10, sin volver a verificar», igual que el punto 2 de B. Supabase salió. «El arb y la noche de la API corren solo en la principal» sale de la fila «Tareas programadas». `CATA.md:2` sigue igual; no molesta |
+| P1 | sigue (es de antes) | `tel_copiar.ps1` sin cruce y con 50 GB pasa la regla 2. Con 6 GB lo frena la regla 4 |
+
+**Por qué sigue frenado el `Move-Item` de H2.**
+- `scripts/_lib/guardianes.mjs:2114` hace `cmd = ctx.cmd6`. Ese `cmd6` lo arma `armarCtx` (`:160`) con `limpiar` (`:59`), que cambia los saltos de línea por espacios.
+- Entonces el corte por renglón de `vidSentencias` (`:2097`) nunca corta. Un `powershell -Command "..."` de varios renglones queda como una sola sentencia y un solo token entre comillas.
+- En esa sentencia, el `Copy-Item` de la foto prende `VID_COPIA`. Como el mismo token tiene el `.MOV` y la biblioteca, la regla lo toma como «video de la biblioteca sin medir» (`:2056-2064`).
+- Lo probé con el comando real: con `cmd6` como viene, frena; con los saltos conservados (`cmd6 = ctx.cmd`), pasa. La misma causa funciona al revés: un `cp` de 120 MB detrás de un renglón `echo` pasa con `cmd6` y frena con los saltos.
+
+### Hallazgo nuevo
+
+**N1 · TRUE_BUG · Importante — el arranque muestra un aviso «PC nueva» viejo, y en esta PC es el falso de H4.**
+- `.claude/hooks/session-start-context.sh:38-40` imprime el último renglón `[PC NUEVA]` del registro, sin mirar si es de la última sincronización. Y `scripts/_nube.mjs:383-385` solo escribe ese renglón cuando falta algo. Cuando ya no falta nada, nada lo reemplaza.
+- Caso real, hoy en esta PC: `.claude/state/nube-sync.log` tiene un solo `[PC NUEVA]`, el de las 21:40 (antes del arreglo de H4), que dice «le falta 1 cosa ... Ghostscript (PDF a imagen) -> instalar Ghostscript desde ghostscript.com».
+- Corrí el hook con `COMPUTERNAME=DESKTOP-14JG95B`: ese renglón sale una vez en inicio y una vez en compact, aunque `pcNueva` ahora dice que no falta nada. O sea, el aviso falso de H4 llega a cada arranque y a cada compactación.
+- El registro recién se recorta al pasar 1 MB (`scripts/_nubeSync.ps1:21-24`), y hoy tiene 459 KB desde el 08/10.
+- En CATA va a pasar lo mismo el día que Fak instale todo: el renglón de las 7 cosas queda. Es lo que la ronda 1 temía de la lista fija de la ficha, ahora por otro lado.
+- El test nuevo de H6 (`hooksVarios.test.mjs`, «el ultimo aviso PC nueva…») lee el registro real, que no está versionado. En el CI sale antes y no prueba nada; en esta PC da verde con el renglón viejo.
+- `.claude/state/` no viaja ni por la nube ni por git: cada PC lee el suyo.
+
+### Qué falta para aprobar sin cambios
+
+Lo decide la sesión principal con Fak; yo no toqué nada.
+
+1. **N1:** que el arranque muestre el aviso solo si es de la última sincronización, o que la sincronización deje un renglón «no falta nada» que lo reemplace.
+2. **H2:** que la regla 4 mire el comando con sus saltos de línea (`ctx.cmd`), y que el test use el comando real del 14/10 tal cual.
+
+Lo demás queda anotado y no frena: H1 entre guardianes, H5 con el `;` adentro de `node -e`, los huecos de H3, `xlsxwriter` y P1. Esta fue la última ronda.
