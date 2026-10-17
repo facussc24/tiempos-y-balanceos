@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * _automatizacionCandidatos.mjs — de donde salen los candidatos de la cola de automatizacion de Barack para Pedro
  * (plan del sistema 16/10/2026, tanda 8 punto 2 bis; cola en la nube de Ingenieria: `AUTOMATIZACION BARACK\cola.md`).
