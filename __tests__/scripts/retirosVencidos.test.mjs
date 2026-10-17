@@ -49,6 +49,13 @@ describe('vencimientos', () => {
     const b = evaluarRetiros(datos, piezasEnDisco(), '2026-10-23');
     expect(b.vencidos.map((f) => f.id).sort()).toEqual(['hijaEstado:espera-modelo', 'lanzar-sesion-hija:camino-b']);
   });
+  it('ROJO (ronda 2, hallazgo 8): una razon con la letra d y sin ningun digito sale en «sin numero»; una con fecha no', () => {
+    const r = evaluarRetiros({ piezas: {
+      'hook:sin': { revisar: '2026-11-17', justifica: 'despachador de guardianes de cada herramienta' },
+      'hook:con': { revisar: '2026-11-17', justifica: 'incidente del 06/08/2026' },
+    } }, ['hook:con', 'hook:sin'], '2026-10-17');
+    expect(r.sinNumero).toEqual(['hook:sin']);
+  });
   it('una razon TBD se lista como sin razon', () => {
     const r = evaluarRetiros({ piezas: { 'regla:x': { revisar: '2026-11-17', justifica: 'TBD: nadie lo dijo' } } }, ['regla:x'], '2026-10-17');
     expect(r.sinRazon).toEqual(['regla:x']);

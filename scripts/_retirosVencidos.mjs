@@ -57,7 +57,7 @@ export function evaluarRetiros(datos, enDisco, hoy) {
     sinRazon: filas.filter((f) => !f.justifica || /^TBD/.test(f.justifica)).map((f) => f.id),
     // Auditor 17/10: el plan pide «justifica: <numero o incidente>»; una razon sin un digito (fecha, numero, conteo) es texto
     // de cabecera, no una justificacion medida. Se lista para completarla al revisar la pieza.
-    sinNumero: filas.filter((f) => f.justifica && !/^TBD/.test(f.justifica) && !/d/.test(f.justifica)).map((f) => f.id),
+    sinNumero: filas.filter((f) => f.justifica && !/^TBD/.test(f.justifica) && !/\d/.test(f.justifica)).map((f) => f.id),
     total: filas.length,
   };
 }
