@@ -304,4 +304,8 @@ describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (apqp-clie
     it('ROJO (ronda 3, T5) — eval y env -u adelante del cp encima del listado', () => {
         esperados(G, ['N-A04', 'N-A05']);
     });
+    it('ROJO (ronda 3, N1 del auditor de cierre) — adentro de powershell -Command, cp y mv son alias de Copy-Item y Move-Item', () => {
+        esperados(G, ['Z-A31', 'Z-A31c', 'Z-A32', 'Z-A43']);
+        esperados(G, ['Z-A44', 'Z-A40', 'Z-A31b', 'Z-A31d', 'Z-A35', 'Z-A38', 'N-A03']);   // VERDES y las formas de Bash siguen igual
+    });
 });

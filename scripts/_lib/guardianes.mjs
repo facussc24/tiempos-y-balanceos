@@ -1353,10 +1353,12 @@ const ROBOCOPY_SWITCH_RE = /^\/(?:[A-Za-z]+:.*|S|E|Z|B|ZB|J|EFSRAW|SEC|COPYALL|N
 //     `--t…=X` (cualquier prefijo de `--target-directory`: GNU acepta abreviar una opcion larga);
 //   · PowerShell Copy-Item / Move-Item (y sus alias): `-Destination X`, `-Dest X` (un prefijo de 3 letras o mas, como
 //     acepta PowerShell) y `-Destination:X`.
-function destinoExplicitoDe(verbo, args) {
+// (N1 del auditor de cierre) `ps`: el texto viene de adentro de `powershell -Command` / `pwsh -c`, donde `cp` y `mv` son
+// alias de Copy-Item y Move-Item y se leen con las reglas de PowerShell, no con las de GNU.
+function destinoExplicitoDe(verbo, args, { ps: enPowershell = false } = {}) {
   const v = verboPelado(verbo);
-  const gnu = /^(?:cp|mv)$/i.test(v);
-  const ps = /^(?:Copy-Item|cpi|Move-Item|mi|copy|move)$/i.test(v);
+  const gnu = !enPowershell && /^(?:cp|mv)$/i.test(v);
+  const ps = /^(?:Copy-Item|cpi|Move-Item|mi|copy|move)$/i.test(v) || (enPowershell && /^(?:cp|mv)$/i.test(v));
   const valor = (pegado, k) => (pegado ? { destino: pegado, k } : args[k + 1] !== undefined ? { destino: args[k + 1], k: k + 1 } : null);
   for (let k = 0; k < args.length; k++) {
     const a = args[k];
@@ -3021,12 +3023,13 @@ export function codigoGuardaListado(code) {
 const APQP_SHELL_RE = /(?:^|[\\/])(?:(?:ba|z|da)?sh|powershell|pwsh|cmd)(?:\.exe)?$/i;
 const APQP_VERBO_CONOCIDO = (v) => /^(?:cp|mv|copy|move|xcopy|Copy-Item|cpi|Move-Item|mi|robocopy)$/i.test(v) || CORRE_INTERPRETE_RE.test(v);
 const APQP_HD_SHELL_RE = /(?:^|[\s;&|(])(?:[\w.:~$-]*[\\/])?(?:(?:ba|z|da)?sh|powershell|pwsh|cmd)(?:\.exe)?(?:\s|$)/i;
-export function escribeListadoBash(cmd, { cwd = '', leer, prof = 0 } = {}) {
+export function escribeListadoBash(cmd, { cwd = '', leer, prof = 0, ps = false } = {}) {
   const leerScript = leer ?? ((p) => { try { const st = fs.statSync(p); return st.size <= 200_000 ? fs.readFileSync(p, 'utf8') : ''; } catch { return ''; } });
   const { lineas, cuerpos } = separarHeredocs(String(cmd ?? ''));
   const res = resolvedorDe(cmd);
   const codigos = cuerpos.filter((h) => !h.deGit).map((h) => h.cuerpo);
-  const shells = cuerpos.filter((h) => !h.deGit && APQP_HD_SHELL_RE.test(String(h.dueno ?? ''))).map((h) => h.cuerpo);
+  // (N1) cada shell sabe si es PowerShell: ahi `cp` / `mv` son alias de Copy-Item / Move-Item
+  const shells = cuerpos.filter((h) => !h.deGit && APQP_HD_SHELL_RE.test(String(h.dueno ?? ''))).map((h) => ({ cuerpo: h.cuerpo, ps: /(?:^|[\s\\/])(?:powershell|pwsh)(?:\.exe)?(?:\s|$)/i.test(String(h.dueno ?? '')) }));
   let dir = cwd ? String(cwd).replace(/\\/g, '/') : '';
   const completa = (p) => { const r = res(p).replace(/\\/g, '/'); return /^(?:[A-Za-z]:|\/|~)/.test(r) || !dir ? r : `${dir.replace(/\/+$/, '')}/${r}`; };
   // (ronda 3, T5) lo de detras de un eval se vuelve a partir; un envoltorio con una opcion que lleva valor no esconde al copiar
@@ -3037,7 +3040,7 @@ export function escribeListadoBash(cmd, { cwd = '', leer, prof = 0 } = {}) {
     if (/^(?:cd|pushd|chdir|Set-Location|sl)$/i.test(v)) { const d = args.find((a) => !a.startsWith('-')); const r = d ? res(d).replace(/\\/g, '/') : ''; dir = /\$/.test(r) ? '' : /^(?:[A-Za-z]:|\/)/.test(r) ? r : dir && r ? `${dir}/${r}` : ''; continue; }
     if (/^(?:cp|mv|copy|move|xcopy|Copy-Item|cpi|Move-Item|mi)$/i.test(v)) {
       // (ronda 3, T4) el destino explicito con todas sus formas: la misma funcion que escritorio-guard
-      const ex = destinoExplicitoDe(verbo, args);
+      const ex = destinoExplicitoDe(verbo, args, { ps });
       const pos = args.filter((a, k) => !/^-/.test(a) && !/^\/[A-Za-z]{1,3}$/.test(a) && !(ex && k === ex.k));
       const destino = ex ? ex.destino : pos[pos.length - 1];
       const fuentes = ex ? pos : pos.slice(0, -1);
@@ -3064,7 +3067,7 @@ export function escribeListadoBash(cmd, { cwd = '', leer, prof = 0 } = {}) {
       const r = modoInterprete(verbo, args);
       // Ronda 3 (17/10, T1): lo pegado a una shell se mira como comandos Y como codigo: un `.Save()` de COM escrito
       // adentro de `powershell -Command` no es un comando que la vuelta reconozca, y la ronda 2 lo habia dejado afuera
-      if (r.modo === 'pegado') { codigos.push(r.codigo); if (APQP_SHELL_RE.test(verbo)) shells.push(r.codigo); }
+      if (r.modo === 'pegado') { codigos.push(r.codigo); if (APQP_SHELL_RE.test(verbo)) shells.push({ cuerpo: r.codigo, ps: /(?:^|[\\/])(?:powershell|pwsh)(?:\.exe)?$/i.test(verbo) }); }
       else if (r.modo === 'archivo') {
         // un script del TEMP o del scratchpad corrido por ruta: no pasa por el guardian cuando lo escribe un heredoc de
         // otro comando, asi que se lee aca (los de scripts/ que escriben un listado van con `_registrar* --apply`)
@@ -3074,7 +3077,7 @@ export function escribeListadoBash(cmd, { cwd = '', leer, prof = 0 } = {}) {
       }
     }
   }
-  if (prof < 3) for (const s of shells) { const r = escribeListadoBash(s, { cwd: dir, leer, prof: prof + 1 }); if (r) return r; }
+  if (prof < 3) for (const s of shells) { const r = escribeListadoBash(s.cuerpo, { cwd: dir, leer, prof: prof + 1, ps: s.ps }); if (r) return r; }
   return codigos.some(codigoGuardaListado) ? 'el codigo que corre guarda el listado' : '';
 }
 
