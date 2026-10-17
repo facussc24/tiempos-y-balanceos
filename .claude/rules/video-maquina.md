@@ -78,13 +78,18 @@ nombre de la maquina.
 6. Subir y **deshidratar** (`attrib +U -P`) recien cuando el archivo tiene `ReparsePoint`.
 7. La carpeta de la tarea en el Escritorio es para **trabajar**; el video no vive ahi.
 
-**Con menos de 10 GB libres en la PC principal, lo pesado NO se baja ni se copia aca: se hace desde CATA**, la
-notebook de Calidad, que tiene el disco grande (239 GB libres el 15/10; la principal, 9,3 GB el 16/10). Fak, 13/10/2026:
-*"no descargues videos en esta PC, no tiene almacenamiento, esas tareas son para la otra notebook"*. Vale para la copia
-del telefono, la descarga o la copia de un video o un comprimido: el pedido se le deja a CATA como `PEDIDO N` en
-`FACUNDO\` de la nube (memoria `reference_canal_entre_pcs_pedidos_facundo`). El guardian lo frena (tanda 1.6 del plan del
-sistema, 16/10/2026; el 10 lo puso el plan, no esta medido); si Fak pide hacerlo aca igual, su pedido gana: pase de un uso
-`: > ~/.claude/.espacio-ok`, que escribo yo y lo digo.
+**Con menos de 10 GB libres en la PC principal, lo PESADO no se baja ni se copia aca: se hace desde CATA**, la
+notebook de Calidad, que tiene el disco grande (239 GB libres el 15/10; la principal, 7 a 9 GB el 16/10). Fak, 13/10/2026:
+*"no descargues videos en esta PC, no tiene almacenamiento, esas tareas son para la otra notebook"*. Pesado es: bajar un
+video (`yt-dlp`), copiar del telefono (`tel_copiar.ps1`, `CopyHere`), copiar recursivo una carpeta de `5- VIDEOS Y FOTOS`,
+copiar un video o un comprimido de 100 MB o mas (el guardian MIDE el archivo de origen; un video que no puede medir y viene
+de la biblioteca tambien cuenta). **No cuenta** mover o renombrar adentro del disco (el paso 6 de arriba pasa), un zip chico,
+expulsar el pendrive, ni el texto de un comando que es codigo (echo, python, heredocs, el `copy` del codec de ffmpeg); la
+copia al pendrive se mide contra el pendrive. El pedido se le deja a CATA como `PEDIDO N` en `FACUNDO\` de la nube (memoria
+`reference_canal_entre_pcs_pedidos_facundo`). El guardian lo frena (tanda 1.6 del plan del sistema, 16/10/2026; la v1 la
+rechazo el auditor Opus esa noche por frenar 21 de 28 comandos reales que no eran pesados; la v2 se probo con esos 28); el
+10 lo puso el plan y el 100 MB lo puse yo (un video del telefono pesa ~430 MB): si Fak los cambia, van en `guardianes.mjs`.
+Si Fak pide hacerlo aca igual, su pedido gana: pase de un uso `: > ~/.claude/.espacio-ok`, que escribo yo y lo digo.
 
 **Nada de esto se borra** para hacer lugar (memoria `material_de_fak_no_se_borra_va_a_la_nube`).
 
@@ -98,7 +103,7 @@ Hook `video-maquina-guard.sh` (PreToolUse, logica en `scripts/_lib/guardianes.mj
 | dejar un `.MOV/.MP4/.M4V` en una carpeta del Escritorio | su lugar es la biblioteca; ahi se pierde y se vuelve a bajar |
 | copiar del telefono por MTP sin cruce fresco (< 12 h) | es lo que hizo rebajar 13 videos que ya estaban |
 | dejar en la **raiz de una carpeta de maquina** algo que no sea un original con el nombre de la casa | lo que no es original va a `.claude`; asi la carpeta ordena por fecha y se lee de un vistazo |
-| copiar del telefono, bajar o copiar un video o un comprimido **en la PC principal con menos de 10 GB libres** (16/10/2026) | lo pesado se hace desde CATA; el freno dice los GB que hay y como dejarle el pedido; pase de un uso `~/.claude/.espacio-ok` solo con el pedido de Fak |
+| copiar del telefono, bajar un video o copiar algo PESADO (100 MB o mas, medido; una carpeta de la biblioteca) **en la PC principal con menos de 10 GB libres** (16/10/2026, v2) | lo pesado se hace desde CATA; el freno dice que es pesado, los GB que hay y como dejarle el pedido; mover o renombrar no cuenta; pase de un uso `~/.claude/.espacio-ok` solo con el pedido de Fak |
 
 **Alcance del hook, a proposito**: la tercera regla cuida la raiz de **cualquier** carpeta que
 empiece con `MAQUINA `, no solo las tres de la lista que audita el script. Una maquina nueva

@@ -1978,24 +1978,91 @@ const VID_CRUCE_H = 12;
 const VID_RAIZ_MAQUINA = /5-\s*VIDEOS Y FOTOS[\\/].*[\\/]MAQUINA [^\\/]+[\\/][^\\/]+$/i;
 const VID_MEDIA = /\.(mov|mp4|m4v|heic|jpe?g|png)$/i;
 const VID_NOMBRE_CASA = /[\\/]\d{4}-\d{2}-\d{2} - [^\\/]+ \([^()\\/]+\)\.[A-Za-z0-9]{2,4}$/;
-// 4. Lo pesado se baja desde CATA (tanda 1.6 del plan del sistema, 16/10/2026; Fak, 13/10: "no descargues videos en esta
-//    PC, no tiene almacenamiento, esas tareas son para la otra notebook"): en la PC con el disco chico, copiar del telefono,
-//    bajar o copiar un video o un comprimido con menos de VID_GB_MINIMO GB libres se frena y se manda a CATA (239 GB libres
-//    el 15/10; la principal tenia 9,3 GB el 16/10 a las 20:42). El 10 lo puso el plan (1.6, punto 4), no esta medido: si Fak
-//    lo cambia, va aca. BARACK_ESPACIO_LIBRE_GB inyecta la medicion (tests); sin medicion posible no se frena.
-//    `.espacio-ok` en ~/.claude es el pase de UN uso para cuando Fak pidio hacerlo aca igual (su pedido le gana al freno):
-//    se marca "consumido" adentro, como el pase del coordinador.
+// 4. Lo pesado se baja desde CATA — v2 (tanda 1.6 del plan del sistema, 16/10/2026; Fak, 13/10: "no descargues videos en
+//    esta PC, no tiene almacenamiento, esas tareas son para la otra notebook"). El auditor Opus del 16/10 a la noche rechazo
+//    la v1: frenaba 21 de 28 comandos reales que no eran pesados (expulsar el pendrive, renombres, zips de 55 KB, el `copy`
+//    del codec de ffmpeg, codigo adentro de un heredoc) y dejaba pasar lo pesado de verdad (yt-dlp sin -o, copiar una carpeta
+//    de maquina entera). Que cuenta como PESADO ahora, sentencia por sentencia (vidSentencias) y nunca en una sentencia que
+//    es codigo o texto (echo, python/node -c, cat/heredoc, ffmpeg): bajar un video (yt-dlp), copiar del telefono
+//    (tel_copiar.ps1, o CopyHere/iPhone con verbo de copia), copiar recursivo una carpeta de `5- VIDEOS Y FOTOS`, copiar un
+//    archivo de video o comprimido que MIDE VID_PESADO_MB o mas (se mide el ORIGEN local; las variables simples NOMBRE="..."
+//    del comando se resuelven), o un video que no se puede medir y viene de la biblioteca (glob o variable). Un `mv`, un
+//    `Move-Item` o un renombre adentro del disco no ocupan un byte (es el paso 6 de la regla) y NO cuentan; un zip que no se
+//    puede medir, tampoco. El disco que se mide es el del DESTINO (una copia al pendrive D: se mide contra D:). Solo en la
+//    PC del disco chico (COMPUTERNAME por `env`) y con menos de VID_GB_MINIMO GB libres; sin medicion no frena. Corre
+//    DESPUES de las reglas 1 a 3: si otra regla frena, el pase no se gasta. El 10 lo puso el plan (1.6, punto 4); el 100 MB
+//    lo puse yo el 16/10 (un video del telefono pesa ~430 MB; los zips de la casa, 55 KB a 58 MB): si Fak los cambia, van
+//    aca. BARACK_ESPACIO_LIBRE_GB inyecta la medicion de C: (tests). `.espacio-ok` en ~/.claude: pase de UN uso para cuando
+//    Fak pidio hacerlo aca igual; respeta `escapes` (el agente por API ni lo usa ni lo gasta) y se marca «consumido».
+//    Limites escritos: una descarga sin extension (`curl -o instalador`), `tar`, y bajar programas (npm, pip, winget) pasan.
 const VID_GB_MINIMO = 10;
+const VID_PESADO_MB = 100;
 const VID_PC_DISCO_CHICO = /^DESKTOP-14JG95B$/i;
-const VID_DESCARGA = /yt-dlp|youtube-dl|Invoke-WebRequest|Start-BitsTransfer|(^|[;&|\s])(wget|curl)(\s|$)/im;
 const VID_PESADO_EXT = /\.(mov|mp4|m4v|zip|7z|rar|iso)\b/i;
-function vidGbLibres(env, ruta = 'C:/') {
-  const forzado = env && env.BARACK_ESPACIO_LIBRE_GB;
-  if (forzado !== undefined && forzado !== null && forzado !== '') {
-    const n = Number(forzado);
-    return Number.isFinite(n) ? n : null;
+const VID_BAJA_VIDEO = /(^|[;&|\s])(yt-dlp|youtube-dl)(\s|$)/i;
+const VID_BAJA_ARCHIVO = /(^|[;&|\s])(curl|wget)(\s|$)|Invoke-WebRequest|Start-BitsTransfer/i;
+const VID_COPIA = /(^|[;&|\s])(cp|copy|xcopy|robocopy)(\s|$)|Copy-Item|shutil\.copy(file|2|tree)?\b/i;
+const VID_RECURSIVO = /(^|\s)(-r|-R|-a|-rf|-ra|--recursive|-Recurse|\/E|\/S|\/MIR)(\s|$)|[\\/]\*/i;
+const VID_TEL_SCRIPT = /tel_copiar\.ps1/i;
+const VID_MTP_LEE = /Apple\s*iPhone|Internal\s*Storage|CopyHere/i;
+const VID_SENTENCIA_CODIGO = /^\s*(echo|printf|node|python3?|py|git|cat|grep|sed|awk|ffmpeg|ffprobe|import|from|#)(\s|$)/i;
+/** Las asignaciones simples del comando (D="...", W=/c/x), para resolver `"$D"/*.mp4` en la sentencia que copia. */
+function vidVariables(cmd) {
+  const vars = {};
+  for (const m of String(cmd).matchAll(/(?:^|[;&|\s])([A-Za-z_][A-Za-z0-9_]*)=("([^"]*)"|'([^']*)'|(\S+))/g)) vars[m[1]] = m[3] ?? m[4] ?? m[5] ?? '';
+  return vars;
+}
+const vidResolver = (texto, vars) => String(texto).replace(/\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?/g, (m, n) => (n in vars ? vars[n] : m));
+/** Ruta en forma de Windows y sin comillas: `"/c/Dev/x"` -> `C:/Dev/x`. Un `/E` suelto (switch de robocopy) no es el disco E:. */
+function vidRutaWin(t) {
+  let p = String(t).replace(/["']/g, '').replace(/[)\],;]+$/, '');
+  const m = p.match(/^\/([a-zA-Z])\/(.*)$/);
+  if (m) p = `${m[1].toUpperCase()}:/${m[2]}`;
+  return p;
+}
+const VID_SWITCH = /^(\/[A-Za-z]+(:\S*)?|-\S*)$/;   // /E, /MIR, /R:1, -Recurse, --recursive: no son rutas
+/** MB de un archivo local; null si no se puede medir (variable sin resolver, glob, remoto, no existe). */
+function vidMb(ruta) {
+  if (/[*?$]/.test(ruta)) return null;
+  try { const st = fs.statSync(ruta); return st.isFile() ? st.size / 1e6 : null; } catch { return null; }
+}
+/** El disco del DESTINO de la sentencia ('C:/', 'D:/'...): la ultima ruta que no es un switch; C: si no se entiende. */
+function vidDisco(sentencia) {
+  const explicito = sentencia.match(/-(?:Destination|dest|dst)\s+("[^"]+"|'[^']+'|\S+)/i);
+  const rutas = explicito
+    ? [explicito[1]]
+    : (sentencia.match(/(?:"[^"]*"|'[^']*'|[^\s"'])+/g) || []).filter((t) => /[\\/]/.test(t) && !VID_SWITCH.test(t));
+  if (!rutas.length) return 'C:/';
+  const m = vidRutaWin(rutas[rutas.length - 1]).match(/^([A-Za-z]):/);
+  return m ? `${m[1].toUpperCase()}:/` : 'C:/';
+}
+function vidGbLibres(env, disco = 'C:/') {
+  if (disco === 'C:/') {
+    const forzado = env && env.BARACK_ESPACIO_LIBRE_GB;
+    if (forzado !== undefined && forzado !== null && forzado !== '') { const n = Number(forzado); return Number.isFinite(n) ? n : null; }
   }
-  try { const s = fs.statfsSync(ruta); return (s.bavail * s.bsize) / 1e9; } catch { return null; }
+  try { const s = fs.statfsSync(disco); return (s.bavail * s.bsize) / 1e9; } catch { return null; }
+}
+/** Por que una sentencia es una copia o descarga PESADA; null si no lo es. */
+function vidSentenciaPesada(s, vars) {
+  if (VID_SENTENCIA_CODIGO.test(s)) return null;
+  if (VID_BAJA_VIDEO.test(s)) return 'baja un video (yt-dlp)';
+  if (VID_TEL_SCRIPT.test(s)) return 'copia videos del telefono (tel_copiar.ps1)';
+  if (VID_MTP_LEE.test(s) && (VID_COPIA.test(s) || /CopyHere/i.test(s))) return 'copia del telefono';
+  if (VID_BAJA_ARCHIVO.test(s) && VID_PESADO_EXT.test(s)) return 'baja un archivo pesado';
+  if (!VID_COPIA.test(s)) return null;
+  const r = vidResolver(s, vars);
+  if (VID_RECURSIVO.test(r) && VID_BIBLIOTECA.test(r)) return 'copia una carpeta de 5- VIDEOS Y FOTOS';
+  const tokens = (r.match(/(?:"[^"]*"|'[^']*'|[^\s"'])+/g) || []).map(vidRutaWin).filter((t) => VID_PESADO_EXT.test(t));
+  let max = null; let videoSinMedir = null;
+  for (const t of tokens) {
+    const mb = vidMb(t);
+    if (mb !== null) { max = Math.max(max ?? 0, mb); continue; }
+    if (VID_EXT.test(t) && VID_BIBLIOTECA.test(t)) videoSinMedir = t;
+  }
+  if (max !== null) return max >= VID_PESADO_MB ? `copia un archivo de ${Math.round(max)} MB` : null;
+  if (videoSinMedir) return `copia videos de la biblioteca (…${videoSinMedir.slice(-50)})`;
+  return null;
 }
 
 /**
@@ -2042,40 +2109,12 @@ const VID_DONDE = `DONDE VAN (verificado, ya existe y esta poblado):
           "2026-08-25 - DEFECTO - el material se traba (IMG_0362).MOV"
   El (IMG_xxxx) del final NO es decorativo: es la clave para cruzar contra el celular.`;
 
-GUARDIANES['video-maquina-guard'] = (ctx, { ahora, env }) => {
+GUARDIANES['video-maquina-guard'] = (ctx, { ahora, env, escapes }) => {
   let tool, cmd, file;
   if (ctx.ok) { tool = ctx.toolL; cmd = ctx.cmd6; file = ctx.fileL; }
   else { tool = ctx.rescate.tool; file = ctx.rescate.file; cmd = `${ctx.rescate.cmd} ${ctx.raw.replace(/\n/g, ' ')}`; }
   const todo = `${cmd} ${file}`;
   if (VID_EXCEPCION.test(todo)) return null;
-
-  // 4. Lo pesado se baja desde CATA (ver las constantes VID_GB_MINIMO / VID_PC_DISCO_CHICO). Solo con el nombre de maquina
-  //    que viene en `env` (los tests no lo traen y asi no dependen del disco real de la PC donde corren).
-  const pcChica = VID_PC_DISCO_CHICO.test(String((env && env.COMPUTERNAME) || ''));
-  const copiaPesada = VID_MTP.test(cmd)
-    || (VID_MUEVE.test(cmd) && (VID_EXT.test(todo) || VID_PESADO_EXT.test(todo)))
-    || (VID_DESCARGA.test(cmd) && VID_PESADO_EXT.test(todo));
-  if (pcChica && copiaPesada) {
-    const gb = vidGbLibres(env);
-    if (gb !== null && gb < VID_GB_MINIMO) {
-      const pase = path.join(dirHome(env), '.claude', '.espacio-ok');
-      let paseVale = false;
-      try { paseVale = fs.existsSync(pase) && !/consumido/.test(fs.readFileSync(pase, 'utf8')); } catch { paseVale = false; }
-      if (paseVale) {
-        try { fs.writeFileSync(pase, 'consumido'); } catch { /* si no se puede marcar, el pase vale esta vez igual */ }
-      } else {
-        return bloqueo(`[VIDEO-MAQUINA] BLOQUEADO: esta PC tiene ${gb.toFixed(1)} GB libres (menos de ${VID_GB_MINIMO}) y esto copia o baja material pesado.
-
-Lo pesado en disco se hace desde CATA, la notebook de Calidad (tiene el disco grande: 239 GB libres el 15/10): dejarle el
-pedido en FACUNDO\\ de la nube de Ingenieria (PEDIDO N - <que> - <fecha>.txt; memoria
-reference_canal_entre_pcs_pedidos_facundo) o decirselo a Fak si esta en esa PC. Regla video-maquina.md, tanda 1.6 (16/10/2026).
-
-Fak, 13/10/2026: "no descargues videos en esta PC, no tiene almacenamiento, esas tareas son para la otra notebook".
-
-Si Fak pidio hacerlo ACA igual (su pedido le gana a este freno): \`: > ~/.claude/.espacio-ok\` (vale UNA vez) y repetir el comando.`);
-      }
-    }
-  }
 
   // 1. Un video que TERMINA en una carpeta del Escritorio. La carpeta de la tarea es para
   //    trabajar; el master no vive ahi. Se mira el DESTINO, no el comando entero: sacarlo del
@@ -2157,6 +2196,39 @@ imprime que falta de verdad y deja la marca. Despues copia solo eso.
 ${VID_DONDE}
 
 ${VID_CIERRE}`);
+    }
+  }
+
+  // 4. Lo pesado se baja desde CATA (v2; las constantes y el criterio, arriba de VID_GB_MINIMO). Va ULTIMA: si una regla
+  //    de arriba frena, el pase de Fak no se gasta. Solo con el nombre de maquina que viene en `env` (los tests no lo traen y
+  //    asi no dependen del disco real de la PC donde corren).
+  if (VID_PC_DISCO_CHICO.test(String((env && env.COMPUTERNAME) || ''))) {
+    const vars = vidVariables(cmd);
+    for (const s of vidSentencias(cmd)) {
+      const motivo = vidSentenciaPesada(s, vars);
+      if (!motivo) continue;
+      const disco = vidDisco(vidResolver(s, vars));
+      const gb = vidGbLibres(env, disco);
+      if (gb === null || gb >= VID_GB_MINIMO) continue;
+      const pase = path.join(dirHome(env), '.claude', '.espacio-ok');
+      let paseVale = false;
+      if (escapes !== false) {
+        try { paseVale = fs.existsSync(pase) && !/consumido/.test(fs.readFileSync(pase, 'utf8')); } catch { paseVale = false; }
+      }
+      if (paseVale) {
+        try { fs.writeFileSync(pase, 'consumido'); } catch { /* si no se puede marcar, el pase vale esta vez igual */ }
+        return aviso('[VIDEO-MAQUINA] Paso con el OK de Fak (se consumio ~/.claude/.espacio-ok).');
+      }
+      return bloqueo(`[VIDEO-MAQUINA] BLOQUEADO: esto ${motivo} y el disco ${disco} de esta PC tiene ${gb.toFixed(1)} GB libres (menos de ${VID_GB_MINIMO}).
+
+Lo pesado en disco se hace desde CATA, la notebook de Calidad (tiene el disco grande: 239 GB libres el 15/10): dejarle el
+pedido en FACUNDO\\ de la nube de Ingenieria (PEDIDO N - <que> - <fecha>.txt; memoria
+reference_canal_entre_pcs_pedidos_facundo) o decirselo a Fak si esta en esa PC. Mover o renombrar adentro del disco no cuenta
+(un mv a la biblioteca pasa). Regla video-maquina.md, tanda 1.6 (16/10/2026).
+
+Fak, 13/10/2026: "no descargues videos en esta PC, no tiene almacenamiento, esas tareas son para la otra notebook".
+
+Si Fak pidio hacerlo ACA igual (su pedido le gana a este freno): \`: > ~/.claude/.espacio-ok\` (vale UNA vez) y repetir el comando.`);
     }
   }
   return null;

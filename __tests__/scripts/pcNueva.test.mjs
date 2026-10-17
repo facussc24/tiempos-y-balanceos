@@ -10,9 +10,9 @@ const HOME = 'C:\\Users\\catav';
 const PROGRAMAS = 'C:\\Program Files';
 const todo = new Set([
   path.join(REPO, 'node_modules', '@supabase', 'supabase-js'), path.join(REPO, '.venv-cad'),
-  path.join(PROGRAMAS, 'Bambu Studio'), path.join(PROGRAMAS, 'gs'), path.join(HOME, '.claude', 'mods-casa'),
+  path.join(PROGRAMAS, 'Bambu Studio'), path.join(PROGRAMAS, 'PDFCreator', 'Ghostscript', 'Bin', 'gswin32c.exe'), path.join(HOME, '.claude', 'mods-casa'),
 ]);
-const PY = { ok: { estado: 'ok', faltan: [] }, faltan: { estado: 'faltan', faltan: ['pptx', 'PIL', 'fitz'] }, sin: { estado: 'sin-python', faltan: [] } };
+const PY = { ok: { estado: 'ok', faltan: [] }, faltan: { estado: 'faltan', faltan: ['pptx', 'PIL', 'fitz'] }, sin: { estado: 'sin-python', faltan: [] }, noMedido: { estado: 'no-medido', faltan: [] } };
 const deps = ({ sin = [], programas = ['ffmpeg', 'gswin64c'], python = PY.ok } = {}) => ({
   repo: REPO, home: HOME, programas: PROGRAMAS, pc: 'CATA',
   existe: (p) => todo.has(p) && !sin.some((s) => p.includes(s)),
@@ -27,7 +27,7 @@ describe('pcNueva — que falta y que comando lo arregla', () => {
   });
 
   it('ROJO: CATA el 15/10 (sin node_modules, sin paquetes de Python, sin venv, sin ffmpeg, sin Ghostscript, sin Bambu, sin mods): 7 faltantes', () => {
-    const d = deps({ sin: ['node_modules', '.venv-cad', 'Bambu Studio', 'gs', 'mods-casa'], programas: [], python: PY.faltan });
+    const d = deps({ sin: ['node_modules', '.venv-cad', 'Bambu Studio', 'PDFCreator', 'mods-casa'], programas: [], python: PY.faltan });
     const f = faltantes(d).map((p) => p.clave);
     expect(f).toEqual(['node_modules', 'python', 'venv-cad', 'ffmpeg', 'ghostscript', 'bambu-studio', 'mods']);
     const aviso = avisoPcNueva(d);
@@ -46,13 +46,18 @@ describe('pcNueva — que falta y que comando lo arregla', () => {
     expect(aviso).not.toContain('npm ci');
   });
 
-  it('sin Python en el PATH se dice que falta el programa, no los paquetes', () => {
-    const f = faltantes(deps({ python: PY.sin })).map((p) => p.clave);
-    expect(f).toEqual(['python-programa']);
+  it('sin Python en el PATH se dice que falta el programa, no los paquetes; un python que no contesto (H9) no avisa nada', () => {
+    expect(faltantes(deps({ python: PY.sin })).map((p) => p.clave)).toEqual(['python-programa']);
+    expect(faltantes(deps({ python: PY.noMedido })).map((p) => p.clave)).toEqual([]);
   });
 
-  it('Ghostscript cuenta como presente si esta el programa o la carpeta gs; una pieza que revienta al medir no cuenta como faltante', () => {
-    expect(faltantes(deps({ programas: ['ffmpeg'] })).map((p) => p.clave)).toEqual([]);     // gs por carpeta
+  it('H4: el Ghostscript que se mide es el de PDFCreator (el que usa _imprimir.py), no el de ghostscript.com; una pieza que revienta al medir no cuenta como faltante', () => {
+    const sinPdfCreator = deps({ sin: ['PDFCreator'] });
+    const f = faltantes(sinPdfCreator);
+    expect(f.map((p) => p.clave)).toEqual(['ghostscript']);
+    expect(queDe(f[0], sinPdfCreator)).toContain('PDFCreator');
+    expect(f[0].comando).toContain('PDFCreator');
+    expect(f[0].comando).not.toMatch(/^instalar Ghostscript desde ghostscript\.com/);
     const d = deps(); d.cual = () => { throw new Error('where roto'); };
     expect(faltantes(d).map((p) => p.clave)).toEqual([]);
   });
@@ -61,9 +66,11 @@ describe('pcNueva — que falta y que comando lo arregla', () => {
     expect(new Set(PIEZAS_PC.map((p) => p.clave)).size).toBe(PIEZAS_PC.length);
     const d = deps({ python: PY.faltan });
     for (const p of PIEZAS_PC) { expect(queDe(p, d).length).toBeGreaterThan(5); expect(p.comando.length).toBeGreaterThan(3); }
-    expect(IMPORTS_PYTHON).toEqual(['pptx', 'PIL', 'openpyxl', 'fitz', 'numpy', 'win32com', 'ezdxf', 'docx']);
+    expect(IMPORTS_PYTHON).toEqual(['pptx', 'PIL', 'openpyxl', 'fitz', 'numpy', 'win32com', 'ezdxf', 'docx',
+      'cv2', 'segno', 'scipy', 'shapely', 'lib3mf', 'pillow_heif', 'xlrd', 'olefile', 'pytesseract', 'rapidocr_onnxruntime', 'pypdf', 'faster_whisper', 'extract_msg']);
     const req = fs.readFileSync(path.join(process.cwd(), 'requirements.txt'), 'utf8');
-    for (const paq of ['python-pptx', 'Pillow', 'openpyxl', 'PyMuPDF', 'pywin32', 'numpy', 'ezdxf', 'python-docx']) expect(req).toContain(`\n${paq}\n`);
+    for (const paq of ['python-pptx', 'Pillow', 'openpyxl', 'PyMuPDF', 'pywin32', 'numpy', 'ezdxf', 'python-docx',
+      'opencv-python', 'segno', 'scipy', 'shapely', 'lib3mf', 'pillow-heif', 'xlrd', 'olefile', 'pytesseract', 'rapidocr-onnxruntime', 'pypdf', 'faster-whisper', 'extract-msg']) expect(req).toContain(`\n${paq}\n`);
     expect(req).not.toMatch(/^matplotlib$/m);
   });
 
@@ -71,7 +78,7 @@ describe('pcNueva — que falta y que comando lo arregla', () => {
     const d = medirPc({ repo: process.cwd() });
     expect(typeof d.existe).toBe('function');
     const py = d.python();
-    expect(['ok', 'faltan', 'sin-python']).toContain(py.estado);
+    expect(['ok', 'faltan', 'sin-python', 'no-medido']).toContain(py.estado);
     expect(Array.isArray(py.faltan)).toBe(true);
     expect(d.existe(process.cwd())).toBe(true);
   });

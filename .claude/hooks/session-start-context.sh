@@ -24,6 +24,22 @@ PAYLOAD="$(cat 2>/dev/null)"   # el JSON de stdin (trae session_id)
 ROOT="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || echo .)}"
 MODE="${1:-inicio}"
 
+# Ficha de ESTA PC (tanda 1.6, 16/10/2026; Fak: "debe saber que esta en la PC de Calidad"): si existe
+# .claude/pcs/<COMPUTERNAME>.md se imprime entera, al arrancar Y al compactar (el auditor del 16/10 midio que una sesion
+# de CATA que compacta perdia el «estoy en CATA»; cuesta 2,4 KB). Viaja por git y se actualiza sola; la PC principal no
+# tiene ficha (la casa esta escrita para ella). Sin COMPUTERNAME (una prueba fuera de Windows) no se busca nada.
+# Debajo, el ultimo aviso «PC nueva» que dejo la sincronizacion de cada 2 h (que programas le faltan a esta PC): hasta el
+# 16/10 iba a .claude/state/nube-sync.log y nadie lo leia (auditor, H6). Solo bash: grep y tail, sin node.
+ficha_pc() {
+  if [ -n "${COMPUTERNAME:-}" ]; then
+    FICHA_PC="$ROOT/.claude/pcs/${COMPUTERNAME^^}.md"
+    [ -f "$FICHA_PC" ] && cat "$FICHA_PC"
+  fi
+  if [ -f "$ROOT/.claude/state/nube-sync.log" ]; then
+    grep -F '[PC NUEVA]' "$ROOT/.claude/state/nube-sync.log" 2>/dev/null | tail -1
+  fi
+}
+
 # 03/10/2026: si Fak dejo a ESTA sesion trabajando hasta una hora y todavia no llego, se dice al arrancar, al
 # reanudar y al compactar (el latido muere si la app se reinicia y la consigna se puede perder al compactar).
 # Nada si no hay nada vigente. Regla trabajar-hasta-la-hora.md.
@@ -50,6 +66,7 @@ if [ "$MODE" = "compact" ]; then
    La sigla se justifica con S y O de ESA causa, nunca porque otro documento la tenia.
    Regla always-on caracteristicas-especiales.md; fuente core/amfe/caracteristicasEspeciales.data.json.
 NUCLEO
+  ficha_pc
   hora_vigente
   exit 0
 fi
@@ -57,13 +74,8 @@ fi
 # El cerebro va PRIMERO: si esta PC no lo tiene, bajarlo es prioritario sobre todo lo demas.
 bash "$ROOT/.claude/hooks/cerebro-guard.sh" 2>/dev/null
 
-# Ficha de ESTA PC (tanda 1.6, 16/10/2026; Fak: "debe saber que esta en la PC de Calidad"): si existe
-# .claude/pcs/<COMPUTERNAME>.md se imprime entera. Viaja por git y se actualiza sola; la PC principal no tiene ficha
-# (la casa esta escrita para ella). Sin COMPUTERNAME (una prueba fuera de Windows) no se busca nada.
-if [ -n "${COMPUTERNAME:-}" ]; then
-  FICHA_PC="$ROOT/.claude/pcs/${COMPUTERNAME^^}.md"
-  [ -f "$FICHA_PC" ] && cat "$FICHA_PC"
-fi
+# La ficha de esta PC y el ultimo aviso «PC nueva» (funcion de arriba).
+ficha_pc
 
 # Seguimientos con fecha: lo que hay que volver a pedir (lunes y viernes) hasta que contesten.
 # Va DESPUES del cerebro porque los datos viven en la memoria. Detalla hasta 10 (unos 5 KB) y

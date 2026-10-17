@@ -1,6 +1,7 @@
-# Paquetes de Python que usan los scripts del repo en el Python base (el entorno 3D es aparte: .venv-cad, skill cad-design,
-# y ahi viven matplotlib, gmsh, build123d, trimesh). Medido el 15/10/2026 en casa_cata_estado.md contando los imports:
-# pptx 134, PIL 76, openpyxl 20, win32com 17, fitz 17, mas numpy, ezdxf y docx; el 16/10 la PC principal los tiene todos.
+# Paquetes de Python que usan los scripts VIVOS del repo en el Python base (el entorno 3D es aparte: .venv-cad, skill
+# cad-design, y ahi viven matplotlib, gmsh, build123d, trimesh). Los 8 primeros salen de contar imports el 15/10/2026
+# (casa_cata_estado.md: pptx 134, PIL 76, openpyxl 20, win32com 17, fitz 17, numpy, ezdxf, docx); los 13 siguientes los
+# listo el auditor del 16/10 con el script que los importa. La PC principal tiene los 21 (medido 16/10).
 # Lo mide el aviso «PC nueva» de `node scripts/_nube.mjs --sincronizar` (scripts/_lib/pcNueva.mjs, tanda 1.6).
 #   pip install -r requirements.txt
 python-pptx
@@ -11,3 +12,16 @@ pywin32
 numpy
 ezdxf
 python-docx
+opencv-python
+segno
+scipy
+shapely
+lib3mf
+pillow-heif
+xlrd
+olefile
+pytesseract
+rapidocr-onnxruntime
+pypdf
+faster-whisper
+extract-msg

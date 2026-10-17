@@ -168,46 +168,124 @@ describe('video-maquina-guard — no estorba a quien lo documenta', () => {
     });
 });
 
-// 16/10/2026 (tanda 1.6 del plan del sistema): con menos de 10 GB libres en la PC principal, lo pesado se baja desde CATA.
-// El nombre de maquina y los GB libres entran por `env` (COMPUTERNAME, BARACK_ESPACIO_LIBRE_GB): el test no depende del
-// disco real de la PC donde corre, y los tests de arriba (sin COMPUTERNAME) no cambian.
-describe('video-maquina-guard — lo pesado se baja desde CATA cuando la PC principal tiene menos de 10 GB libres', () => {
+// 16/10/2026 (tanda 1.6 del plan del sistema; v2 tras el auditor Opus de esa noche): con menos de 10 GB libres en la PC
+// principal, lo PESADO se baja desde CATA. Los casos son los 28 comandos REALES de 10 dias de charlas que la v1 frenaba
+// (el auditor los listo: 3 pesados, 2 discutibles, 2 agarrados por casualidad, 21 que no eran pesados) mas lo pesado que la
+// v1 dejaba pasar. El nombre de maquina y los GB libres de C: entran por `env` (COMPUTERNAME, BARACK_ESPACIO_LIBRE_GB): el
+// test no depende del disco real de la PC donde corre, y los tests de arriba (sin COMPUTERNAME) no cambian.
+describe('video-maquina-guard — lo pesado se baja desde CATA (v2): frena lo pesado de verdad y deja pasar los 21 comandos reales que no lo eran', () => {
     const PC = { COMPUTERNAME: 'DESKTOP-14JG95B' };
-    const copiaTelefono = 'powershell -NoProfile -ExecutionPolicy Bypass -File scripts/video/tel_copiar.ps1 -Mes 202610 -Archivos IMG_0645.MOV -Destino C:\\Dev\\_telefono\\tarea';
+    const POCO = { ...PC, BARACK_ESPACIO_LIBRE_GB: '6' };
+    const BIB = '/c/Users/FacundoS-PC/BARACK ARGENTINA SRL/Ingeniería y Proyecto - General/INGENIERIA BARACK (NUNCA BORRAR)/5- VIDEOS Y FOTOS';
+    const BIBW = BIB.replace(/\//g, '\\').replace(/^\\c\\/, 'C:\\');
+    const telCopiar = `cd /c/Dev/BarackMercosul; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/video/tel_copiar.ps1 -Mes 202610 -Archivos IMG_1246.MOV,IMG_1248.MOV,IMG_1249.MOV -Destino 'C:\\Dev\\_telefono\\2026-10-14' 2>&1 | tail -15`;
+    const poco = (cmd, extra = {}) => correr(cmd, { horasDelCruce: 0, env: { ...POCO, ...extra } });
+    // Dos archivos de tamano conocido: el guardian MIDE el origen cuando es local.
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vmg-pesado-'));
+    const grande = path.join(dir, 'grande.mp4').replace(/\\/g, '/');
+    const chico = path.join(dir, 'chico.zip').replace(/\\/g, '/');
+    beforeAll(() => {
+        for (const [f, mb] of [[grande, 120], [chico, 5]]) { const fd = fs.openSync(f, 'w'); fs.ftruncateSync(fd, mb * 1e6); fs.closeSync(fd); }
+    });
+    afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
 
-    it('ROJO: copiar del telefono, bajar un video o copiar un zip con 6 GB libres BLOQUEA, dice los GB y manda a CATA con el pase', () => {
-        const r = correr(copiaTelefono, { horasDelCruce: 0, env: { ...PC, BARACK_ESPACIO_LIBRE_GB: '6' } });
+    it('ROJO (los 3 pesados reales): tel_copiar.ps1 del 07 y del 14/10, y el cp "$D"/*.mp4 de la biblioteca del 16/10, con 6 GB -> BLOQUEA y dice por que, los GB y como dejarle el pedido a CATA', () => {
+        const r = poco(telCopiar);
         expect(r?.tipo).toBe('bloqueo');
-        expect(r.texto).toMatch(/6\.0 GB libres \(menos de 10\)/);
+        expect(r.texto).toMatch(/copia videos del telefono \(tel_copiar\.ps1\)/);
+        expect(r.texto).toMatch(/C:\/ de esta PC tiene 6\.0 GB libres \(menos de 10\)/);
         expect(r.texto).toMatch(/desde CATA/);
         expect(r.texto).toMatch(/FACUNDO/);
         expect(r.texto).toMatch(/\.espacio-ok/);
-        expect(correr('yt-dlp -o referencia.mp4 https://www.youtube.com/watch?v=x', { horasDelCruce: 0, env: { ...PC, BARACK_ESPACIO_LIBRE_GB: '2' } })?.tipo).toBe('bloqueo');
-        expect(correr(`cp fotos_prensa.zip ${BIBLIOTECA}`, { horasDelCruce: 0, env: { ...PC, BARACK_ESPACIO_LIBRE_GB: '9.3' } })?.tipo).toBe('bloqueo');
-        expect(correr(`Copy-Item -LiteralPath C:\\Dev\\_telefono\\IMG_0645.MOV -Destination ${BIBLIOTECA}`, { horasDelCruce: 0, env: { ...PC, BARACK_ESPACIO_LIBRE_GB: '0.5' } })?.tipo).toBe('bloqueo');
+        expect(poco(`powershell -NoProfile -ExecutionPolicy Bypass -File scripts/video/tel_copiar.ps1 -Mes 202610 -Archivos "IMG_1083.MOV,IMG_1086.MOV,SASN9865.MP4" -Destino 'C:\\Dev\\_telefono\\2026-10-07'`)?.tipo).toBe('bloqueo');
+        const glob = poco(`D="${BIB}/1- CLIENTES/NOVAX/INSERT/MAQUINA HOT PRESS BMA101"; W="C:/Users/FACUND~1/AppData/Local/Temp/claude/x/scratchpad"; mkdir -p "$W" && cp "$D"/*.mp4 "$W/" && ls "$W"`);
+        expect(glob?.tipo).toBe('bloqueo');
+        expect(glob.texto).toMatch(/5- VIDEOS Y FOTOS|biblioteca/);
     });
 
-    it('VERDE: con 50 GB pasa; en CATA pasa con 6; lo liviano (ls, ffprobe, un .jpg, un .txt) pasa; sin medicion no frena', () => {
-        expect(correr(copiaTelefono, { horasDelCruce: 0, env: { ...PC, BARACK_ESPACIO_LIBRE_GB: '50' } })).toBeNull();
-        expect(correr(copiaTelefono, { horasDelCruce: 0, env: { COMPUTERNAME: 'CATA', BARACK_ESPACIO_LIBRE_GB: '6' } })).toBeNull();
-        expect(correr(copiaTelefono, { horasDelCruce: 0, env: { COMPUTERNAME: 'Cata', BARACK_ESPACIO_LIBRE_GB: '1' } })).toBeNull();
-        expect(correr(`ls -la ${BIBLIOTECA}`, { horasDelCruce: 0, env: { ...PC, BARACK_ESPACIO_LIBRE_GB: '1' } })).toBeNull();
-        expect(correr(`ffprobe -v error ${BIBLIOTECA}`, { horasDelCruce: 0, env: { ...PC, BARACK_ESPACIO_LIBRE_GB: '1' } })).toBeNull();
-        expect(correr('cp plancha.jpg "/c/Users/FacundoS-PC/OneDrive - BARACK ARGENTINA SRL/Desktop/tarea/x.jpg"', { horasDelCruce: 0, env: { ...PC, BARACK_ESPACIO_LIBRE_GB: '1' } })).toBeNull();
-        expect(correr('curl -s -o datos.txt https://x/datos.txt', { horasDelCruce: 0, env: { ...PC, BARACK_ESPACIO_LIBRE_GB: '1' } })).toBeNull();
-        expect(correr(copiaTelefono, { horasDelCruce: 0, env: { ...PC, BARACK_ESPACIO_LIBRE_GB: 'no-se-pudo' } })).toBeNull();
+    it('ROJO (lo que la v1 dejaba pasar): yt-dlp sin -o, y la copia recursiva de una carpeta de maquina con robocopy, cp -r y Copy-Item -Recurse', () => {
+        expect(poco('yt-dlp https://www.youtube.com/watch?v=abc')?.tipo).toBe('bloqueo');
+        expect(poco('yt-dlp -f best https://www.youtube.com/watch?v=abc')?.tipo).toBe('bloqueo');
+        expect(poco(`robocopy "${BIBW}\\1- CLIENTES\\NOVAX\\INSERT\\MAQUINA HOT PRESS BMA101" C:\\Dev\\copia /E`)?.tipo).toBe('bloqueo');
+        expect(poco(`cp -r "${BIB}/1- CLIENTES/NOVAX/INSERT/MAQUINA HOT PRESS BMA101" /c/Dev/copia`)?.tipo).toBe('bloqueo');
+        expect(poco(`Copy-Item -Recurse "${BIBW}\\1- CLIENTES\\NOVAX\\INSERT\\MAQUINA HOT PRESS BMA101" C:\\Dev\\copia`)?.tipo).toBe('bloqueo');
+        expect(poco(MTP)?.tipo).toBe('bloqueo');                                              // CopyHere del telefono, con cruce fresco
+        const medido = poco(`cp "${grande}" /c/Dev/_telefono/copia.mp4`);
+        expect(medido?.tipo).toBe('bloqueo');
+        expect(medido.texto).toMatch(/copia un archivo de 120 MB/);
     });
 
-    it('el pase de Fak (~/.claude/.espacio-ok) vale UNA vez: pasa, queda «consumido» y la siguiente vuelve a frenar', () => {
+    it('VERDE (los 21 reales que no eran pesados): expulsar el pendrive, mover o renombrar, zips chicos o sin medir, codigo adentro de echo/python/node/heredoc, el copy del codec de ffmpeg', () => {
+        const pasan = [
+            // Namespace(17) es «Este equipo»: expulsar o listar el pendrive no copia nada (5 comandos reales)
+            `powershell -NoProfile -Command "(New-Object -ComObject Shell.Application).Namespace(17).ParseName('D:').InvokeVerb('Eject'); Start-Sleep -Seconds 3; if (Get-PSDrive -Name D -ErrorAction SilentlyContinue) { 'sigue montado' } else { 'expulsado' }"`,
+            `ls /d/ | head; powershell -NoProfile -Command "$d = (New-Object -ComObject Shell.Application).Namespace(17).ParseName('D:'); $d.Verbs() | ForEach-Object { $_.Name }"`,
+            // mover o renombrar adentro del disco no ocupa un byte: es el paso 6 de la regla (Move-Item del 14/10, shutil.move del 07/10, mv y os.rename)
+            `powershell -NoProfile -Command " Move-Item 'C:\\Dev\\_telefono\\2026-10-14\\IMG_1246.MOV' '${BIBW}\\1- CLIENTES\\NOVAX\\TOP ROLL\\MAQUINA MOLDEADORA IMG\\2026-10-14 - ROBOT LASER sobre tela (IMG_1246).MOV'"`,
+            `cd /c/Dev/_telefono && python - <<'EOF'\nimport os, shutil\nL=r"C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\x"\nshutil.move(os.path.join(L, "IMG_1083.MOV"), os.path.join(L, "2026-10-07 - ductos (IMG_1083).MOV"))\nEOF`,
+            `N="/c/Users/FacundoS-PC/BARACK ARGENTINA SRL/Ingeniería y Proyecto - General/INSTALAR EN UNA PC NUEVA"; mv "$N/5- Mails para el asistente de Leo.zip" "$N/viejo.zip"`,
+            `python - <<'EOF'\nimport os\nd=r"${BIBW}\\3- INSTITUCIONAL\\2026-10-07 - Videos para Andres"\nos.rename(os.path.join(d,"a.zip"), os.path.join(d,"b.zip"))\nEOF`,
+            // zips chicos (55 KB a 58 MB) o que no se pueden medir: pasan
+            `cp /c/Dev/_pedro_20261009/herramientas/repo.zip /c/Dev/_pedro_20261009/herramientas2/repo.zip && ls -la /c/Dev/_pedro_20261009/herramientas2/`,
+            `cd /c/Dev/BarackMercosul && mkdir -p exports/impresion_3d/mail && cp -n ".claude/worktrees/impresora-tanda17-496e43/exports/impresion_3d/skill_impresion-3d-bambu_2026-10-16.zip" exports/impresion_3d/`,
+            `cp "${chico}" /c/Dev/x/chico.zip`,
+            `D="C:/Users/FACUND~1/AppData/Local/Temp/claude/x/scratchpad/leo_zip"; cp "C:/Users/FacundoS-PC/Downloads/base_mount.3mf.zip" "$D/base_mount.3mf"`,
+            // la copia va a OTRO disco (el pendrive D:): no se mide contra C:
+            `DEST="/d/INSTALAR MI PC (Facundo)"; mkdir -p "$DEST/programa" && cp tools/instalar_mi_pc/Instalar-Mi-PC.cmd "$DEST/" && cp "${grande}" "$DEST/programa/grande.zip"`,
+            // codigo o texto, no copias
+            'echo cp prueba.zip',
+            `node -e "const re=/tel_copiar/; console.log(re.test(process.argv[1]))" x`,
+            `S="C:/Users/FACUND~1/AppData/Local/Temp/claude/x/scratchpad"; cd "$S"; python -I -c "import sys,zipfile; z=zipfile.ZipFile(sys.argv[1]); [print(i.filename,i.file_size) for i in z.infolist()]" "$S/deck.zip"`,
+            `mkdir -p /c/tmp/setup/agentes/ippad/zipx && cd /c/tmp/setup/agentes/ippad/zipx && python -I -c "import zipfile,shutil; z=zipfile.ZipFile(r'Y:\\BARACK\\CALIDAD\\HO 985 - IP PAD\\IP PAD.zip'); shutil.copyfileobj(z.open('IP PAD.xlsx'), open('IP PAD.xlsx','wb'))"`,
+            `cd "/c/x/entrega" && ffmpeg -v error -y -i apc_costura.mp4 -map 0:v -map 0:a -c:v copy -af "volume=-1.2dB" -c:a aac apc_costura_ok.mp4`,
+            `cd "/c/x/scratchpad" && cat > com_drafts.py <<'EOF'\n# SOLO LECTURA: Borradores y Bandeja de salida\ncp = dict(a=1)\nEXT = ['.zip', '.msg']\nEOF`,
+            `mkdir -p /c/Dev/BarackMercosul/.claude/skills/plotter-aol/scripts && cp "C:/Users/FACUND~1/AppData/Local/Temp/claude/x/scratchpad/cuadradito/acomodar.py" /c/Dev/BarackMercosul/.claude/skills/plotter-aol/scripts/`,
+            // un video editado que no se puede medir y NO viene de la biblioteca (los dos «discutibles» del 08/10): pasa
+            `T="/c/Users/FacundoS-PC/BARACK ARGENTINA SRL/Ingeniería y Proyecto - General/INGENIERIA BARACK (NUNCA BORRAR)/1- GENERAL/TIEMPOS Y BALANCEOS/VWA/PROYECTO PATAGONIA/DUCTOS"; W=/c/Dev/_telefono/tiempos_paulo_20261007_trabajo; cp "$W/salida/DEFROSTER componente lateral.mp4" "$T/DEFROSTER componente lateral.mp4"`,
+            // lo liviano de siempre
+            `ls -la ${BIBLIOTECA}`, `ffprobe -v error ${BIBLIOTECA}`,
+            'cp plancha.jpg "/c/Users/FacundoS-PC/OneDrive - BARACK ARGENTINA SRL/Desktop/tarea/x.jpg"',
+            'curl -s -o datos.txt https://x/datos.txt',
+        ];
+        for (const cmd of pasan) expect(poco(cmd), cmd.slice(0, 90)).toBeNull();
+    });
+
+    it('VERDE: con 50 GB pasa; en CATA pasa con 6 (tambien escrito «Cata»); sin medicion no frena', () => {
+        expect(correr(telCopiar, { horasDelCruce: 0, env: { ...PC, BARACK_ESPACIO_LIBRE_GB: '50' } })).toBeNull();
+        expect(correr(telCopiar, { horasDelCruce: 0, env: { COMPUTERNAME: 'CATA', BARACK_ESPACIO_LIBRE_GB: '6' } })).toBeNull();
+        expect(correr(telCopiar, { horasDelCruce: 0, env: { COMPUTERNAME: 'Cata', BARACK_ESPACIO_LIBRE_GB: '1' } })).toBeNull();
+        expect(correr(telCopiar, { horasDelCruce: 0, env: { ...PC, BARACK_ESPACIO_LIBRE_GB: 'no-se-pudo' } })).toBeNull();
+    });
+
+    it('el pase de Fak (~/.claude/.espacio-ok) vale UNA vez: pasa con aviso, queda «consumido» y la siguiente vuelve a frenar; con escapes:false (el agente por API) ni se usa ni se gasta', () => {
         const home = fs.mkdtempSync(path.join(os.tmpdir(), 'vmg-pase-'));
         fs.mkdirSync(path.join(home, '.claude'), { recursive: true });
         fs.writeFileSync(path.join(home, '.claude', '.cruce-video'), String(AHORA));
-        fs.writeFileSync(path.join(home, '.claude', '.espacio-ok'), '');
-        const ctx = parsear(JSON.stringify({ tool_name: 'Bash', tool_input: { command: copiaTelefono, file_path: '' } }));
-        const env = { HOME: home, ...PC, BARACK_ESPACIO_LIBRE_GB: '6' };
-        expect(GUARDIANES['video-maquina-guard'](ctx, { ahora: AHORA, env })).toBeNull();
-        expect(fs.readFileSync(path.join(home, '.claude', '.espacio-ok'), 'utf8')).toBe('consumido');
+        const pase = path.join(home, '.claude', '.espacio-ok');
+        fs.writeFileSync(pase, '');
+        const ctx = parsear(JSON.stringify({ tool_name: 'Bash', tool_input: { command: telCopiar, file_path: '' } }));
+        const env = { HOME: home, ...POCO };
+        expect(GUARDIANES['video-maquina-guard'](ctx, { ahora: AHORA, env, escapes: false })?.tipo).toBe('bloqueo');
+        expect(fs.readFileSync(pase, 'utf8')).toBe('');                                   // el agente por API no lo gasta
+        const conPase = GUARDIANES['video-maquina-guard'](ctx, { ahora: AHORA, env });
+        expect(conPase?.tipo).toBe('aviso');
+        expect(conPase.texto).toMatch(/se consumio ~\/\.claude\/\.espacio-ok/);
+        expect(fs.readFileSync(pase, 'utf8')).toBe('consumido');
         expect(GUARDIANES['video-maquina-guard'](ctx, { ahora: AHORA, env })?.tipo).toBe('bloqueo');
+        fs.rmSync(home, { recursive: true, force: true });
+    });
+
+    it('la regla 4 va ULTIMA: si la regla 1 frena (video al Escritorio), el pase no se gasta', () => {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'vmg-pase2-'));
+        fs.mkdirSync(path.join(home, '.claude'), { recursive: true });
+        fs.writeFileSync(path.join(home, '.claude', '.cruce-video'), String(AHORA));
+        const pase = path.join(home, '.claude', '.espacio-ok');
+        fs.writeFileSync(pase, '');
+        const ctx = parsear(JSON.stringify({ tool_name: 'Bash', tool_input: { command: `cp "${grande}" ${ESCRITORIO}`, file_path: '' } }));
+        const r = GUARDIANES['video-maquina-guard'](ctx, { ahora: AHORA, env: { HOME: home, ...POCO } });
+        expect(r?.tipo).toBe('bloqueo');
+        expect(r.texto).toMatch(/dejando un video en una carpeta del Escritorio/);
+        expect(fs.readFileSync(pase, 'utf8')).toBe('');
         fs.rmSync(home, { recursive: true, force: true });
     });
 });

@@ -250,6 +250,23 @@ describe('session-start-context.sh (SessionStart) — el nucleo post-compact se 
     expect(inicio({ COMPUTERNAME: 'DESKTOP-14JG95B' }).stdout).not.toContain('[PC] Esta sesion corre en');
     expect(inicio({ COMPUTERNAME: '' }).stdout).not.toContain('[PC] Esta sesion corre en');
   });
+  it('H8 (auditor 16/10): despues de compactar, la ficha de CATA se vuelve a imprimir junto con el nucleo', () => {
+    const r = spawnSync('bash', [path.join(HOOKS, 'session-start-context.sh'), 'compact'], {
+      input: '{"hook_event_name":"SessionStart","source":"compact"}', encoding: 'utf8', cwd: RAIZ,
+      env: { ...process.env, CLAUDE_PROJECT_DIR: posix(RAIZ), COMPUTERNAME: 'CATA' },
+    });
+    expect(r.status).toBe(0);
+    expect(r.stdout).toMatch(/POST-COMPACT/);
+    expect(r.stdout).toContain('[PC] Esta sesion corre en CATA');
+    expect(r.stdout.length).toBeLessThan(6000);
+  });
+  it('H6 (auditor 16/10): el ultimo aviso «PC nueva» del registro de la sincronizacion se imprime al arrancar, si lo hay', () => {
+    const log = path.join(RAIZ, '.claude', 'state', 'nube-sync.log');
+    if (!fs.existsSync(log) || !fs.readFileSync(log, 'utf8').includes('[PC NUEVA]')) return;   // sin aviso en esta PC: nada que mostrar
+    const r = inicio({ COMPUTERNAME: 'DESKTOP-14JG95B' });
+    expect(r.stdout).toContain('[PC NUEVA]');
+    expect(r.stdout.split('[PC NUEVA]').length - 1).toBe(1);                                   // solo el ultimo
+  });
 });
 
 // ──────────── caracteristicas-especiales-prompt (UserPromptSubmit): el criterio cuando Fak lo nombra
