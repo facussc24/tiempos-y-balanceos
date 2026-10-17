@@ -417,6 +417,10 @@ const F15 = {
     tira: path.join(EX, 'hojas-img-a3', 'HO-992 - OP 50 TAPIZADO Y ENGRAMPADO DE PANEL - TOP ROLL TRASERO - con tira de herramientas.pdf'),
     camino: path.join(EX, 'hojas-grampas-patagonia-01-10', 'CAMINO DE INSPECCION DE GRAMPAS - TOP ROLL TRASERO - 34.pdf'),
     espuma: path.join(EX, 'hojas-gamboa-corregidas-14-10', 'HO-990 - OP 80 ARMADO DE ESPUMA - INSERTO DELANTERO.pdf'),
+    engr0110: path.join(EX, 'hojas-grampas-patagonia-01-10', 'HO-971 - OP 83 ENGRAMPADO - APB DE PUERTA DELANTERO.pdf'),
+    engr1410: path.join(EX, 'hojas-gamboa-corregidas-14-10', 'HO-971 - OP 93 ENGRAMPADO - APB DE PUERTA DELANTERO.pdf'),
+    h971: path.join(EX, 'hojas-por-pieza-14-10', 'HO 971 - APB DE PUERTA - HOJAS DE PROCESO (todas).pdf'),
+    amfe: path.join(EX, 'RECLAMO_AGUJAS_PWA_20261009', 'AMFE 157 - TELAS_HILUX - Rev.A.pdf'),
     v6: FUENTES.v6,
     a3v6: FUENTES.a3v6,
 };
@@ -427,11 +431,22 @@ if (FALTAN15.length) {
 
 /** La tabla de respuesta conocida: [etiqueta, fuente, pagina, codigo, nivel esperado (null = que NO aparezca)]. */
 const CASOS15 = [
-    // 1 CICLO_LLENO: la HO-990 Rev.A lo traia lleno (Fak 14/10: "¿el ciclo de control se basa en el plan de control del Insert?")
-    ['ciclo_rojo_h990', 'h990', 1, 'CICLO_LLENO', 'ROJO'],
+    // 1 CICLO_LLENO: ROJO en el A3 de una foto por paso. La hoja de engrampado de Pablo del 01/10 lo traia lleno y la
+    // misma hoja corregida el 14/10 va vacia. En otro formato es AVISO (pregunta abierta a Fak, informe A7): la HO-990
+    // Rev.A (Fak 14/10: "¿el ciclo de control se basa en el plan de control del Insert?") y la HO de Excel, A4 o A3.
+    ['ciclo_rojo_engrampado_0110', 'engr0110', 1, 'CICLO_LLENO', 'ROJO'],
+    ['ciclo_verde_engrampado_1410', 'engr1410', 1, 'CICLO_LLENO', null],
     ['ciclo_verde_espuma_corregida', 'espuma', 1, 'CICLO_LLENO', null],
     ['ciclo_verde_grampas', 'gr992', 1, 'CICLO_LLENO', null],
+    ['ciclo_aviso_h990', 'h990', 1, 'CICLO_LLENO', 'AVISO'],
     ['ciclo_aviso_excel_a4', 'v6', 1, 'CICLO_LLENO', 'AVISO'],
+    ['ciclo_aviso_excel_a3', 'h971', 2, 'CICLO_LLENO', 'AVISO'],
+    // el mismo ciclo, letra por letra, en la op 50 y en la 60.2 del paquete del 07/10: texto de otra hoja
+    ['ciclo_copiado_op50', 'v6', 22, 'CICLO_LLENO', 'AVISO'],
+    ['ciclo_copiado_op60_2', 'v6', 25, 'CICLO_LLENO', 'AVISO'],
+    // 60 y 60.2 son la misma operacion partida: comparten ciclo sin que sea de otra hoja
+    ['ciclo_partida_op60', 'v6', 16, 'CICLO_LLENO', 'AVISO'],
+    ['ciclo_partida_op60_2', 'v6', 18, 'CICLO_LLENO', 'AVISO'],
     // 2 PIEZA_SIN_ACLARAR: "Verificar que los acumuladores..." (20.6 del 01/10) contra "los acumuladores (los rodillos...)"
     ['pieza_rojo_20_6_0110', 'hm0110', 7, 'PIEZA_SIN_ACLARAR', 'ROJO'],
     ['pieza_verde_20_6_regenerada', 'hmreg', 6, 'PIEZA_SIN_ACLARAR', null],
@@ -507,6 +522,12 @@ describe.skipIf(FALTAN15.length > 0)('tanda 1.5: los chequeos de contenido, cada
         expect(ev('cantidad_rojo_camino', 'CANTIDAD_ILEGIBLE')).toContain('×3');
         expect(ev('plan_pc_rojo_h990', 'PLAN_DEL_PLAN_DE_CONTROL')).toContain('P-13');
         expect(ev('armado_rojo_h990', 'ARMADO_DISTINTO')).toContain('el plan de reaccion');
+        expect(ev('ciclo_aviso_excel_a3', 'CICLO_LLENO')).not.toMatch(/ROJO/);
+        expect(DEF15.ciclo_aviso_excel_a3.some((x) => x.codigo === 'CICLO_LLENO' && x.nivel === 'ROJO')).toBe(false);
+        expect(ev('ciclo_copiado_op50', 'CICLO_LLENO')).toContain('texto de otra hoja');
+        expect(ev('ciclo_copiado_op60_2', 'CICLO_LLENO')).toContain('texto de otra hoja');
+        expect(ev('ciclo_partida_op60', 'CICLO_LLENO')).not.toContain('texto de otra hoja');
+        expect(ev('ciclo_partida_op60_2', 'CICLO_LLENO')).not.toContain('texto de otra hoja');
     });
 
     it('las hojas aprobadas por Fak el 13/10 (grampas, hot melt regenerado) y la espuma corregida el 14/10 salen sin un solo defecto ni aviso', () => {
@@ -529,8 +550,8 @@ for k, ruta in json.loads(sys.argv[2]).items():
         out[k] = {'frena': True}
 print(json.dumps(out))
 `;
-    it('frena la HO-990 Rev.A del servidor; deja pasar las de grampas aprobadas y un PDF que no es de hojas (flujograma)', () => {
-        const rutas = { h990: F15.h990, gr992: F15.gr992, flujo: path.join(EX, 'IMPRESION_0710_FINAL', '1_FLUJOGRAMAS_A3.pdf') };
+    it('frena la HO-990 Rev.A del servidor; deja pasar las de grampas aprobadas y un PDF que no es de hojas (flujograma, AMFE)', () => {
+        const rutas = { h990: F15.h990, gr992: F15.gr992, flujo: path.join(EX, 'IMPRESION_0710_FINAL', '1_FLUJOGRAMAS_A3.pdf'), amfe: F15.amfe };
         const r = spawnSync('python', ['-c', PUERTA, RAIZ, JSON.stringify(rutas)], {
             encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
         });
@@ -538,6 +559,8 @@ print(json.dumps(out))
         expect(j.h990.frena).toBe(true);
         expect(j.gr992).toEqual({ avisos: 0, frena: false });
         expect(j.flujo).toEqual({ avisos: 0, frena: false });
+        // un AMFE que dice "Hoja de operaciones del puesto" en una celda no es una hoja (lo encontro el auditor, 16/10)
+        expect(j.amfe).toEqual({ avisos: 0, frena: false });
     }, 300000);
 
     it('_imprimir.py no imprime un PDF de hojas con ROJO: sale 1 antes de armar el archivo de impresion', () => {

@@ -53,7 +53,8 @@ o la medida que lo prueba):
   veia porque miraba la forma. Listas y fuentes en scripts/_lib/revisarPaqueteHO.data.json; cada uno
   con una hoja real en rojo y una en verde en el test.
   CICLO_LLENO       el CICLO DE CONTROL con renglones escritos (va vacio, canon 1.1 y 1.2); ROJO en el A3
-                    de Ingenieria, AVISO en la HO A4 de Excel (pregunta abierta a Fak); y el mismo ciclo
+                    de una foto por paso ("REF. n"), AVISO en otro formato, como la HO de Excel (pregunta
+                    abierta a Fak); y el mismo ciclo
                     en hojas de otra operacion ("texto de otra hoja")
   PIEZA_SIN_ACLARAR pieza de nombre raro sin su aclaracion entre parentesis la primera vez (0.8 b bis);
                     ROJO las que Fak marco (acumulador, volante cromado), AVISO el resto de la lista. El
@@ -281,11 +282,15 @@ class Pagina:
     def _tipo(self):
         """HO = tiene el casillero N de operacion, el titulo HOJA DE OPERACIONES o el sello Form: I-IN-002.4
         (las hojas de embalaje no traen casillero de operacion; la portada solo cita el formulario)."""
-        marcas = ('N° DE OPERACION', 'NO DE OPERACION', 'HOJA DE OPERACIONES', 'FORM: I-IN-002.4')
+        # "HOJA DE OPERACIONES" cuenta solo como TITULO (el renglon entero): un AMFE que dice "Hoja de
+        # operaciones del puesto" en una celda de control no es una hoja (auditor de la tanda 1.5, 16/10/2026:
+        # desde que _imprimir.py frena con un ROJO, el AMFE 157 daba 9 ROJO y no se imprimia).
+        marcas = ('N° DE OPERACION', 'NO DE OPERACION', 'FORM: I-IN-002.4')
         for l in self.lineas:
-            if l.n.startswith(marcas):
+            if l.n.startswith(marcas) or l.n == 'HOJA DE OPERACIONES':
                 return 'HO'
-        if 'CAMINO DE INSPECCION' in norm(self.texto):
+        # el camino de inspeccion lo dice en su TITULO, arriba; una mencion suelta en el cuerpo no lo es
+        if any(l.n.startswith('CAMINO DE INSPECCION') and l.y0 < 0.2 * self.H for l in self.lineas):
             return 'CAMINO'
         return 'PORTADA'
 
@@ -892,6 +897,16 @@ def papel(p):
     return hoja_de_papel(p.W, p.H)[0].split(' ')[0]
 
 
+RE_REF = re.compile(r'^REF\.?\s?\d+\b')
+
+
+def una_foto_por_paso(p):
+    """La hoja A3 de una foto por paso (el formato de Ingenieria, de P. Gamboa y de los generadores del hot
+    melt y la IMG): cada foto lleva su cartel "REF. n". La HO de Excel de la casa no los tiene, salga en A4
+    o en A3 (auditor de la tanda 1.5: decidirlo por el tamano daba ROJO a las HO de Excel en A3)."""
+    return any(RE_REF.match(l.n) for l in p.lineas)
+
+
 # ---- 13 CICLO_LLENO ----------------------------------------------------------------
 
 def cuerpo_ciclo(p):
@@ -915,20 +930,21 @@ def cuerpo_ciclo(p):
 
 def chequear_ciclo(p):
     """Canon 1.1 y 1.2: Procesos no emite hojas de Calidad; el CICLO DE CONTROL va VACIO hasta que
-    Calidad emita su plan de control aprobado para ese part number. En el A3 de una foto por paso
-    (el formato de Ingenieria) es ROJO: las hojas de Pablo que lo traian lleno se corrigieron el
-    14/10/2026 (exports/hojas-gamboa-corregidas-14-10, 'ANTES - ciclo de control que tenian.txt') y
-    la HO-990 Rev.A lo traia lleno (Fak, 14/10: "¿el ciclo de control se basa en el plan de control
-    del Insert?"). En la HO A4 de Excel de la casa es AVISO: 100 de 114 paginas del paquete del 07/10
-    lo traen lleno y si eso se corrige o no es una pregunta abierta a Fak (informe, fila A7)."""
+    Calidad emita su plan de control aprobado para ese part number. En la hoja A3 de una foto por paso
+    (el formato de Ingenieria, con sus carteles "REF. n") es ROJO: las hojas de Pablo que lo traian lleno
+    se corrigieron el 14/10/2026 (exports/hojas-gamboa-corregidas-14-10, 'ANTES - ciclo de control que
+    tenian.txt'). En cualquier otro formato (la HO de Excel de la casa, en A4 o en A3, y la HO-990 Rev.A,
+    sobre la que Fak pregunto el 14/10 "¿el ciclo de control se basa en el plan de control del Insert?")
+    es AVISO: 74 de las 114 paginas del paquete A4 del 07/10 lo traen lleno y si eso se vacia es una
+    pregunta abierta a Fak (informe de hojas del 15/10, fila A7)."""
     if p.tipo != 'HO':
         return []
     c = cuerpo_ciclo(p)
     if not c:
         return []
     txt = ' | '.join(l.texto.strip() for l in c[:3])
-    nivel = ROJO if papel(p) == 'A3' else AVISO
-    extra = '' if nivel == ROJO else ' (HO A4 de Excel: si se vacia lo decide Fak)'
+    nivel = ROJO if una_foto_por_paso(p) else AVISO
+    extra = '' if nivel == ROJO else ' (HO en otro formato que el A3 de una foto por paso: si se vacia lo decide Fak)'
     return [d('CICLO_LLENO', nivel, 'el CICLO DE CONTROL tiene %d renglones escritos ("%s"): va vacio hasta que '
               'Calidad emita su plan de control aprobado (canon 1.1 y 1.2)%s' % (len(c), recorte(txt, 90), extra))]
 
@@ -945,13 +961,18 @@ def chequear_ciclo_copiado(paginas):
         k = clave(' '.join(l.texto for l in c)) if c else ''
         if len(k) >= 40:
             grupos[k].append(p)
+    def base(p):
+        # 60, 60.1 y 60.2 son la misma operacion partida: pueden compartir el ciclo. Otra hoja es otra decena.
+        return str(valor_operacion(p)[1] or '').split('.')[0]
+
     for g in grupos.values():
-        ops = {valor_operacion(p)[1] for p in g}
-        if len(g) < 2 or len(ops) < 2:
+        if len(g) < 2 or len({base(p) for p in g}) < 2:
             continue
         for p in g:
-            otras = ['p.%d (op %s)' % (q.n, valor_operacion(q)[1]) for q in g if q is not p]
-            out.setdefault(p.n, []).append(d('CICLO_LLENO', ROJO if papel(p) == 'A3' else AVISO,
+            otras = ['p.%d (op %s)' % (q.n, valor_operacion(q)[1]) for q in g if base(q) != base(p)]
+            if not otras:
+                continue
+            out.setdefault(p.n, []).append(d('CICLO_LLENO', ROJO if una_foto_por_paso(p) else AVISO,
                                              'el ciclo de control es el mismo texto que el de %s: es texto de otra hoja'
                                              % ', '.join(otras[:4])))
     return out
