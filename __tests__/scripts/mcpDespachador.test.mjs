@@ -69,6 +69,45 @@ describe('pieza 10 — la entrada de la MCP se traduce a lo que miran los guardi
     });
 });
 
+// Pieza 11 (16/10/2026): onFailure "block" solo en los dos hooks donde dejar pasar es peor que frenar. Lo que hace Claude
+// Code con eso esta leido del ejecutable instalado (claude.exe 2.1.299, funciones gUe/hUe/xFt): un hook de COMANDO no
+// asincrono con onFailure "block" cuyo resultado es un error no bloqueante (exit distinto de 0 y de 2, o un corte por
+// tiempo) pasa a BLOQUEAR, salvo en los eventos Stop, SubagentStop, TaskCompleted y TeammateIdle. Claude Code no se puede
+// correr aca: el test fija la configuracion, replica esa regla y mira que un hook roto de verdad caiga en esa clase.
+const IGNORA_ONFAILURE = new Set(['Stop', 'SubagentStop', 'TaskCompleted', 'TeammateIdle']);
+/** La regla del ejecutable: ¿un hook con este resultado frena la llamada? */
+const frenaSegunClaudeCode = (hook, evento, exit, cortado = false) => {
+    if (exit === 2) return true;
+    if (exit === 0 && !cortado) return false;
+    return hook.type === 'command' && hook.onFailure === 'block' && hook.async !== true && !IGNORA_ONFAILURE.has(evento);
+};
+describe('pieza 11 — onFailure "block": si el hook se rompe, frena (solo en mcp-write-gate y en el despachador de las MCP)', () => {
+    const todos = Object.entries(settings.hooks).flatMap(([evento, gs]) => gs.flatMap((g) => g.hooks.map((h) => ({ evento, matcher: g.matcher, h }))));
+    it('los dos hooks lo tienen, y ningun otro (el despachador de Bash/Write no: un timeout trabaria todo)', () => {
+        const con = todos.filter((x) => x.h.onFailure === 'block').map((x) => `${x.evento} ${x.h.command.match(/hooks\/([\w.-]+)/)[1]} ${x.matcher.slice(0, 7)}`);
+        expect(con.sort()).toEqual(['PreToolUse _dispatcher.sh ^mcp__(', 'PreToolUse mcp-write-gate.sh mcp__.*'].sort());
+        const principal = todos.find((x) => x.matcher === 'Bash|PowerShell|Write|Edit');
+        expect(principal.h.onFailure).toBeUndefined();
+    });
+    it('ROJO: un hook que no arranca (archivo que falta: bash sale con 127) o que se corta por tiempo, frena', () => {
+        const roto = spawnSync('bash', [path.join(RAIZ, '.claude', 'hooks', 'no-existe-mcp-write-gate.sh')], { input: '{}', encoding: 'utf8' });
+        expect(roto.status).not.toBe(0);
+        expect(roto.status).not.toBe(2);                    // un error NO bloqueante: sin onFailure, la llamada pasaria
+        for (const x of todos.filter((y) => y.h.onFailure === 'block')) {
+            expect(frenaSegunClaudeCode(x.h, x.evento, roto.status), x.h.command).toBe(true);
+            expect(frenaSegunClaudeCode(x.h, x.evento, 0, true), `${x.h.command} cortado por tiempo`).toBe(true);
+        }
+    });
+    it('VERDE: con el hook sano, lo que sale con 0 pasa; y sin onFailure, un hook roto deja pasar (como antes)', () => {
+        const gate = todos.find((x) => /mcp-write-gate/.test(x.h.command));
+        const r = spawnSync('bash', [path.join(RAIZ, '.claude', 'hooks', 'mcp-write-gate.sh')], { input: mcp('mcp__supabase__execute_sql', { query: 'select 1' }), encoding: 'utf8', env: ENV });
+        expect(r.status).toBe(0);
+        expect(frenaSegunClaudeCode(gate.h, gate.evento, r.status)).toBe(false);
+        expect(frenaSegunClaudeCode({ type: 'command' }, 'PreToolUse', 127)).toBe(false);
+        expect(frenaSegunClaudeCode(gate.h, 'Stop', 127)).toBe(false);
+    });
+});
+
 describe('pieza 10 — por el camino real: bash _dispatcher.sh con el JSON de la MCP', () => {
     const despachar = (raw) => {
         const r = spawnSync('bash', [path.join(RAIZ, '.claude', 'hooks', '_dispatcher.sh')], { input: raw, encoding: 'utf8', env: ENV });

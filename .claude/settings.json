@@ -39,16 +39,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/_dispatcher.sh\""
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/_dispatcher.sh\"",
+            "onFailure": "block"
           }
         ]
       },
       {
+        "_comentario": "16/10/2026 (tanda 3, pieza 11): onFailure block en los dos hooks donde dejar pasar es peor que frenar: este (lo irreversible sobre documentos APQP por MCP) y el despachador de las MCP de arriba (un mail o un mensaje por MCP). Si el hook revienta, no arranca o se pasa de tiempo, Claude Code frena la llamada en vez de dejarla pasar (claude.exe 2.1.299: vale para hooks de comando; se ignora en Stop, SubagentStop, TaskCompleted y TeammateIdle). No va en el despachador de Bash/Write: ahi un timeout trabaria todo. Test: mcpDespachador.test.mjs.",
         "matcher": "mcp__.*__(execute_sql|apply_migration)",
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/mcp-write-gate.sh\""
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/mcp-write-gate.sh\"",
+            "onFailure": "block"
           },
           {
             "type": "command",
