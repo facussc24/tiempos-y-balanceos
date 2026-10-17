@@ -24,6 +24,8 @@
  *      que quedo esperando se avisa en cada arranque.
  */
 
+import { AREAS } from './nocturno.mjs';   // nocturno.mjs no importa nada: es puro (la lista de areas de la casa)
+
 export const DIAS = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 
 const sinTildes = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -134,6 +136,12 @@ export function abiertos(datos) {
  * aparecen en el listado completo. Un vencimiento mal escrito se dice, igual que un seguimiento: nunca se calla.
  */
 export const AREA_PROPIA = 'ingenieria';
+/**
+ * Las areas que se conocen: la misma lista con que la noche etiqueta los mails (una sola en la casa). Un area que no
+ * esta aca es un vencimiento MAL ESCRITO y se avisa: con «ingeneria» o «Ing.» quedaba afuera del arranque en silencio
+ * (auditor 17/10), que es justo el olvido que esto quiere evitar.
+ */
+export const AREAS_CONOCIDAS = AREAS;
 
 function listaVencimientos(datos) {
   if (datos?.vencimientos === undefined) return [];
@@ -141,8 +149,9 @@ function listaVencimientos(datos) {
   return datos.vencimientos;
 }
 
+/** Los abiertos. Un renglon vacio (null) NO se descarta: sigue para que el arranque lo diga como mal escrito. */
 export function vencimientosAbiertos(datos) {
-  return listaVencimientos(datos).filter((v) => v && v.estado !== 'cerrado');
+  return listaVencimientos(datos).filter((v) => !(v && v.estado === 'cerrado'));
 }
 
 const diasEntre = (desde, hasta) => Math.round((aFecha(hasta) - aFecha(desde)) / 86400000);
@@ -155,6 +164,7 @@ export function estadoVencimiento(v, hoy) {
   aFecha(v.vence);
   const area = sinTildes(v.area);
   if (!area) throw new Error(`el vencimiento "${v.id || '(sin id)'}" no dice de que area es ("area": "ingenieria" si es de Fak)`);
+  if (!AREAS.includes(area)) throw new Error(`el vencimiento "${v.id || '(sin id)'}" tiene un area que no conozco: "${v.area}" (van ${AREAS.join(', ')})`);
   const faltan = diasEntre(hoy, v.vence);
   return { faltan, vencido: faltan < 0, hoy: faltan === 0, propio: area === AREA_PROPIA, area };
 }

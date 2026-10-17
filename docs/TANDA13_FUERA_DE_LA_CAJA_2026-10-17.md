@@ -78,7 +78,9 @@ Lo que se aprendió de la herramienta, medido:
   límite por defecto. Hay que pedir `limit: 60` o más.
 - **Distingue tildes**: `plan de reaccion` y `plan de reacción` traen listas distintas (hay sesiones que salen en una y no en la otra). Se busca con
   las dos formas, o con un pedazo sin tilde.
-- **Busca texto exacto**: `plan de reacción abajo` dio 0 aunque «PLAN DE REACCION abajo» existe. Frases cortas.
+- **Busca un pedazo de texto tal cual**: `plan de reacción abajo` (con tilde) dio 0 aunque «PLAN DE REACCION abajo»
+  existe, pero ese 0 lo explica la tilde, no prueba nada más (la forma sin tilde no se corrió). Frases cortas y probar
+  con y sin tilde.
 - Ve las sesiones de esta PC, también las archivadas y las de los worktrees; llega al menos al 08/09/2026 (la más vieja
   que apareció).
 - Trae un pedazo de 100 caracteres, no la charla: para leer más hay que abrir esa sesión (`list_events`).
@@ -108,7 +110,7 @@ tanda 9, ahora con el desglose por chequeo de cierre-guard y los frenos cada 100
 | 7 · Fak pidió que se lo expliquen y no cambió la forma | 0 | 1 (0,2) |
 | 10 · termina en inglés | 0 | 4 (0,9) |
 | **Suma de los que toca el estilo** | **21 (4,6 cada 100)** | **20 (4,7 cada 100)** |
-| (los demás: 2 entregable sin ruta, 3 pendientes, 4 sin abrir, 8, 9) | 116 | 143 |
+| (los demás: 2 entregable sin ruta, 3 pendientes, 4 sin abrir, 8, 9) | 116 | 143 (incluye 1 freno de título que el medidor no reconoce) |
 
 «Mensajes de Fak» cuenta todo mensaje de persona en el registro, incluido el encargo con que arranca una hija: sirve para
 comparar una semana con otra, no como conteo exacto. El chequeo 5 no frenó en las dos semanas (ya lo había medido el
@@ -149,7 +151,7 @@ mandarlo, y que la sesión que lo mira conteste en el hilo.
 
 ## Ítem 7 · Medir la costura de la CNC con una foto (método probado en imágenes de medida conocida)
 
-Script: `scripts/costura/medir_costura_foto.py` (selftest `medir_costura_foto_selftest.py`, 7 casos en verde). Usa
+Script: `scripts/costura/medir_costura_foto.py` (selftest `medir_costura_foto_selftest.py`, 12 casos en verde). Usa
 OpenCV, que **ya está en esta PC** (no se instaló nada). Cómo funciona: la pieza se apoya sobre una hoja A4 impresa con
 4 marcas ArUco (`--hoja-referencia hoja.png` la genera); las marcas dan la vista de arriba en milímetros aunque el
 celular esté inclinado; el borde de referencia es el de arriba de la pieza, la costura lo que es más oscuro que la pieza,
@@ -159,7 +161,12 @@ y entran directo a `node scripts/_aptitudMaquina.mjs --valores "..."` (ítem 2).
 **Lo medido (imágenes sintéticas de medida conocida):** 52,4 mm (el delantero que midió Fak) sale 52,35 sin
 perspectiva; en 8 «fotos» con el celular inclinado hasta 8 %, desenfoque y ruido, el error máximo por tramo fue 0,05 mm;
 con la pieza girada 3° da 52,39; con 46,4 mm (la otra mano del trasero) da 46,37. Sin las marcas, o con una tapada, no
-mide y lo dice. La hoja que se imprime tiene sus marcas a menos de 1 px de donde el método las espera.
+mide y lo dice. La hoja que se imprime tiene sus marcas a menos de 1 px de donde el método las espera, y sobre esa misma
+hoja (con su leyenda, que ahora va abajo y afuera de la zona que se mide) los tramos quedan a 0,05 mm de 52,4.
+**Si el hilo no se distingue del vinilo** (sin costura, hilo apenas más oscuro, hilo más claro que el vinilo) no
+devuelve un número: frena y dice «no distingo la costura del vinilo»; ahí hace falta `--umbral-costura` o mejor luz.
+Selftest: 12 casos en verde (el auditor del 17/10 encontró que la leyenda vieja se medía como costura y que con poco
+contraste salía ~1 mm sin aviso: los dos casos están ahora en el selftest).
 
 **Lo que NO se pudo probar, y por qué:**
 - **Con fotos reales.** En las carpetas donde vive el tema (la del estudio de la orejita en `4. 2D\MEJORAS DE PROCESO`,
@@ -278,7 +285,9 @@ porque instala algo en la configuración de Claude Code de la PC.**
 - **5** · `node scripts/_observaciones.mjs --antes-de-mandar AMFE` lista lo que ya le marcaron a ese tipo de documento,
   primero lo que ningún control caza («A MANO»). El libro vive en la memoria `project_observaciones_recibidas` (no en el
   repo) y arranca con las 6 observaciones reales de Carlos al AMFE de ductos (10/08 y 20/08): 5 sobre el AMFE y 1 sobre
-  el flujograma; 1 la caza un control solo, 1 a medias y 4 hay que mirarlas a mano. Si una observación nueva es de una
+  el flujograma; ninguna la caza un control solo para cualquier AMFE, 2 a medias (materiales contra la BOM, solo en los
+  generadores nuevos que lo llaman; la numeración contra el flujograma, sin el contenido) y 4 hay que mirarlas a mano.
+  Si una observación nueva es de una
   clase que ya se había cerrado, dice VOLVIÓ (el chequeo que se armó no alcanzó). Un renglón en las skills de AMFE,
   hojas y flujogramas lo pide antes de mandar.
 
@@ -305,10 +314,10 @@ porque instala algo en la configuración de Claude Code de la PC.**
 | 1 | Ficha de configuración por pieza | **Plan para el sí de Fak**: `docs/PLAN_FICHA_CONFIGURACION_PIEZA_2026-10-17.md` |
 | 2 | Estudio de aptitud de máquina calculado solo | **Hecho** (`scripts/_aptitudMaquina.mjs`, 16 tests) |
 | 3 | Versión grabada en cada utillaje impreso | **En otra tanda** (11, ya fundida) |
-| 4 | Vencimientos de Ingeniería al arrancar | **Hecho** (`scripts/_lib/seguimientos.mjs`, 7 tests nuevos); sin cargar la D7 real |
-| 5 | Libro de observaciones recibidas | **Hecho** (`scripts/_observaciones.mjs`, 6 tests; 6 observaciones reales de Carlos en la memoria) |
+| 4 | Vencimientos de Ingeniería al arrancar | **Hecho** (`scripts/_lib/seguimientos.mjs`, 8 tests nuevos; un área mal escrita se avisa); sin cargar la D7 real |
+| 5 | Libro de observaciones recibidas | **Hecho** (`scripts/_observaciones.mjs`, 7 tests; 6 observaciones reales de Carlos en la memoria) |
 | 6 | Cortes de los videos de tiempos | **Diseño** (arriba); solo falta `mediapipe`, y quizás ni eso; se instala con el sí de Fak |
-| 7 | Medir la costura de la CNC con una foto | **Método hecho y probado en imágenes de medida conocida** (`scripts/costura/`, 7 casos); con fotos reales **no se pudo** (no hay ninguna con referencia de tamaño) |
+| 7 | Medir la costura de la CNC con una foto | **Método hecho y probado en imágenes de medida conocida** (`scripts/costura/`, 12 casos); con fotos reales **no se pudo** (no hay ninguna con referencia de tamaño) |
 | 8 | Un reclamo que llega al AMFE de toda la familia | **Diseño** (arriba); el dry-run contra Supabase, desde una sesión de Barack, y escribir con el sí de Fak |
 | 9 | Parámetros de máquina en el tiempo | **Hecho** (`scripts/_parametrosMaquina.mjs`, 10 tests; ficha de la hot melt cargada) |
 | 10 | Cuánto material deja la regla de columnas | **Hecho y medido** (`medir_regla_columnas.py`, selftest 9 casos); no es un consumo |

@@ -335,6 +335,18 @@ describe('vencimientos de Ingenieria (tanda 13, item 4) — el caso de la D7 del
     expect(textoHook({ seguimientos: [], vencimientos: 'texto' }, '2026-09-21')).toMatch(/NO SE PUDO LEER la lista/);
   });
 
+  it('un area mal escrita o un renglon vacio se DICEN en el arranque (auditor 17/10: quedaban afuera en silencio)', () => {
+    for (const area of ['ingeneria', 'Ing.', 'ingenieria de procesos', 5]) {
+      const t = textoHook({ seguimientos: [], vencimientos: [d7({ id: 'tipeo', area })] }, '2026-09-21');
+      expect(t, String(area)).toMatch(/tipeo: ESTA MAL ESCRITO.*area que no conozco/);
+    }
+    for (const area of ['ingenieria', 'Ingeniería', ' INGENIERIA ']) {
+      expect(textoHook({ seguimientos: [], vencimientos: [d7({ area })] }, '2026-09-21'), area).toMatch(/VENCIO el jueves 17\/09/);
+    }
+    expect(textoHook({ seguimientos: [], vencimientos: [d7({ area: 'logistica' })] }, '2026-09-21')).toBe(''); // de otra area, conocida: no se lleva
+    expect(textoHook({ seguimientos: [], vencimientos: [null] }, '2026-09-21')).toMatch(/\(sin id\): ESTA MAL ESCRITO.*vencimiento vacio/);
+  });
+
   it('seguimientos y vencimientos salen juntos, cada uno con su encabezado', () => {
     const t = textoHook({ seguimientos: [seg({ intentos: [enviado('2026-10-02')] })], vencimientos: [d7()] }, '2026-10-05');
     expect(t).toMatch(/SEGUIMIENTOS CON FECHA[\s\S]*HOY TOCA INSISTIR[\s\S]*VENCIMIENTOS DE INGENIERIA[\s\S]*VENCIO/);

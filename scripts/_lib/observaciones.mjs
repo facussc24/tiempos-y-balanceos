@@ -18,7 +18,10 @@ import { aFecha } from './seguimientos.mjs';
 export const CLAVE = 'observaciones';
 export const ESTADOS = ['abierta', 'cerrada', 'sin-confirmar'];
 
-export const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim().replace(/\s+/g, ' ');
+const normTexto = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim().replace(/\s+/g, ' ');
+/** Como escribe Fak el tipo de documento -> un solo nombre (auditor 17/10: «HO» no salia en «hoja de proceso»). */
+const ALIAS_DOCUMENTO = { ho: 'hoja de proceso', hoja: 'hoja de proceso', 'hoja de operaciones': 'hoja de proceso', pc: 'plan de control', flujo: 'flujograma' };
+export const norm = (s) => { const t = normTexto(s); return ALIAS_DOCUMENTO[t] || t; };
 
 export function lista(datos) {
   if (!datos || !Array.isArray(datos[CLAVE])) throw new Error(`el bloque json no tiene la lista "${CLAVE}"`);

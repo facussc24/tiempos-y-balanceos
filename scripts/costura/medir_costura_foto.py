@@ -23,6 +23,9 @@ CENTRO de la puntada, no a su borde: el calibre de Fak midio «hasta la hilera d
 Uso:
   py -3 scripts/costura/medir_costura_foto.py --hoja-referencia hoja.png
   py -3 scripts/costura/medir_costura_foto.py foto.jpg [--centros "20,20;190,20;190,277;20,277"] [--tramo 10]
+        [--umbral-pieza N] [--umbral-costura N] [--costura-desde MM]
+Si el hilo no se distingue del vinilo (poco contraste, hilo mas claro, sin costura) NO devuelve un numero: frena y lo
+dice. Solo se mide lo que esta adentro del rectangulo de los centros de las 4 marcas.
 Salida: los valores por tramo (con coma) y el resumen; `--valores` imprime solo los valores, para pasarlos a
 `node scripts/_aptitudMaquina.mjs --valores "..."`.
 """
@@ -53,8 +56,10 @@ def hoja_referencia(ruta, dpi=300):
         m = cv2.aruco.generateImageMarker(dic, i, lado)
         x0, y0 = int(round(cx * k - lado / 2)), int(round(cy * k - lado / 2))
         img[y0:y0 + lado, x0:x0 + lado] = m
-    cv2.putText(img, 'Hoja de referencia - medir la distancia entre centros con regla', (int(30 * k), int(40 * k)),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6 * k / 11.8, 0, 2)
+    # La leyenda va ABAJO de las marcas 2 y 3, afuera de la zona que se mide (auditor 17/10: escrita entre las marcas 0/1 y
+    # la pieza, el metodo tomaba sus letras como borde y como costura y daba 0,42 mm en un tramo).
+    cv2.putText(img, 'Hoja de referencia - medir la distancia entre centros con regla', (int(15 * k), int(293 * k)),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5 * k / 11.8, 0, 2)
     cv2.imwrite(ruta, img)
     return ruta
 
@@ -84,7 +89,14 @@ def enderezar(img, centros_mm=CENTROS_NOMINALES, k=PX_POR_MM):
 
 
 def _sin_marcas(mascara, centros_mm, k):
-    m = mascara.copy()
+    """Solo lo que esta ADENTRO del rectangulo de los centros de las marcas, sin las marcas: lo de afuera (la leyenda,
+    el borde de la hoja, la mesa) no puede pasar por pieza."""
+    m = np.zeros_like(mascara)
+    xs = [c[0] for c in centros_mm]
+    ys = [c[1] for c in centros_mm]
+    y0, y1 = int(round(min(ys) * k)), int(round(max(ys) * k))
+    x0, x1 = int(round(min(xs) * k)), int(round(max(xs) * k))
+    m[y0:y1, x0:x1] = mascara[y0:y1, x0:x1]
     r = int(round((LADO_MARCA_MM / 2 + 4) * k))
     for cx, cy in centros_mm:
         x, y = int(round(cx * k)), int(round(cy * k))
@@ -92,11 +104,21 @@ def _sin_marcas(mascara, centros_mm, k):
     return m
 
 
-def medir(img, centros_mm=CENTROS_NOMINALES, k=PX_POR_MM, tramo_mm=10.0, umbral_pieza=None, umbral_costura=None):
+# Una costura de verdad es una franja ANGOSTA y SEPARADA del borde. Si «lo oscuro adentro de la pieza» es mas de este
+# pedazo de la pieza, no se distingue la costura del vinilo (hilo apenas mas oscuro, hilo mas claro, o sin costura) y se
+# frena en vez de devolver ~1 mm (auditor 17/10: con poco contraste daba 1,02 mm sin aviso).
+TOPE_FRACCION_COSTURA = 0.15
+COSTURA_DESDE_MM = 2.0   # la hilera empieza a 2 mm o mas del borde (la del APB va a 4 +-1 mm)
+COSTURA_ANCHO_MAX_MM = 3.0
+
+
+def medir(img, centros_mm=CENTROS_NOMINALES, k=PX_POR_MM, tramo_mm=10.0, umbral_pieza=None, umbral_costura=None,
+          costura_desde_mm=COSTURA_DESDE_MM):
     """Distancia borde -> centro de la costura por tramos, en mm. Devuelve {'tramos': [...], 'media', 'min', 'max'}."""
     plano = enderezar(img, centros_mm, k)
     suave = cv2.GaussianBlur(plano, (5, 5), 0)
-    up = umbral_pieza if umbral_pieza is not None else cv2.threshold(suave, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[0]
+    adentro_hoja = _sin_marcas(np.ones_like(suave, np.uint8), centros_mm, k) > 0
+    up = umbral_pieza if umbral_pieza is not None else cv2.threshold(suave[adentro_hoja].reshape(-1, 1), 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[0]
     pieza = _sin_marcas((suave < up).astype(np.uint8), centros_mm, k)
     pieza = cv2.morphologyEx(pieza, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
     ys, xs = np.nonzero(pieza)
@@ -107,6 +129,10 @@ def medir(img, centros_mm=CENTROS_NOMINALES, k=PX_POR_MM, tramo_mm=10.0, umbral_
     valores = suave[adentro > 0]
     uc = umbral_costura if umbral_costura is not None else cv2.threshold(valores.reshape(-1, 1), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[0]
     costura = ((suave < uc) & (adentro > 0)).astype(np.uint8)
+    fraccion = costura.sum() / max(1, int((adentro > 0).sum()))
+    if fraccion > TOPE_FRACCION_COSTURA:
+        raise ErrorMedicion(f'no distingo la costura del vinilo ({fraccion:.0%} de la pieza parece costura): el hilo tiene que ser mas oscuro que la pieza; probar --umbral-costura o mejorar la luz')
+    desde, ancho_max = costura_desde_mm * k, COSTURA_ANCHO_MAX_MM * k
     x0, x1 = xs.min(), xs.max()
     paso = int(round(tramo_mm * k))
     tramos = []
@@ -127,7 +153,9 @@ def medir(img, centros_mm=CENTROS_NOMINALES, k=PX_POR_MM, tramo_mm=10.0, umbral_
                     if v != corrida[-1] + 1:
                         break
                     corrida.append(v)
-                puntada.append((c, yb + (corrida[0] + corrida[-1]) / 2.0))
+                # pegada al borde o mas ancha que un hilo no es una hilera de puntadas: esa columna no se mide
+                if corrida[0] >= desde and corrida[-1] - corrida[0] + 1 <= ancho_max:
+                    puntada.append((c, yb + (corrida[0] + corrida[-1]) / 2.0))
         if len(borde) < paso * 0.5 or len(puntada) < 3:
             continue
         vx, vy, px, py = cv2.fitLine(np.array(borde, np.float32), cv2.DIST_L2, 0, 0.01, 0.01).flatten()
@@ -158,6 +186,7 @@ def main(argv):
     foto, resto = argv[0], argv[1:]
     centros, tramo, solo_valores = CENTROS_NOMINALES, 10.0, False
     up = uc = None
+    desde = COSTURA_DESDE_MM
     while resto:
         a = resto.pop(0)
         if a == '--centros' and resto:
@@ -170,6 +199,8 @@ def main(argv):
             up = int(resto.pop(0))
         elif a == '--umbral-costura' and resto:
             uc = int(resto.pop(0))
+        elif a == '--costura-desde' and resto:
+            desde = float(resto.pop(0).replace(',', '.'))
         elif a == '--valores':
             solo_valores = True
         else:
@@ -178,7 +209,7 @@ def main(argv):
     if img is None:
         sys.exit(f'no pude abrir la foto {foto}')
     try:
-        r = medir(img, centros, tramo_mm=tramo, umbral_pieza=up, umbral_costura=uc)
+        r = medir(img, centros, tramo_mm=tramo, umbral_pieza=up, umbral_costura=uc, costura_desde_mm=desde)
     except ErrorMedicion as e:
         print(f'*** {e}', file=sys.stderr)
         return 1

@@ -41,6 +41,12 @@ describe('libro de observaciones — el caso de ductos', () => {
     expect(antesDeMandar(ductos(), 'Flujograma').observaciones.map((o) => o.id)).toEqual(['5']);
     expect(textoAntesDeMandar(ductos(), 'hoja de proceso')).toMatch(/No hay observaciones recibidas/);
   });
+  it('el tipo de documento acepta como lo escribe Fak: una anotada como «HO» sale en «hoja de proceso» (auditor 17/10)', () => {
+    const datos = { observaciones: [obs({ id: 'h', documento: 'HO' })] };
+    expect(antesDeMandar(datos, 'hoja de proceso').observaciones.map((o) => o.id)).toEqual(['h']);
+    expect(antesDeMandar(datos, 'Hoja').observaciones.map((o) => o.id)).toEqual(['h']);
+    expect(antesDeMandar(datos, 'AMFE').observaciones).toEqual([]);
+  });
 });
 
 describe('libro de observaciones — VOLVIO (molde D7 de la tanda 9)', () => {

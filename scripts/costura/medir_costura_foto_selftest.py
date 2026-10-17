@@ -48,6 +48,20 @@ def hoja_sintetica(dist_mm=52.4, giro_grados=0.0, hilo_mm=1.0, puntada_mm=4.0, h
     return img
 
 
+def sobre_hoja_real(ruta_hoja, dist_mm=52.4, pieza_gris=120, hilo_gris=25, x0=40, x1=170, borde_y=70, con_costura=True):
+    """La pieza dibujada sobre la hoja que imprime hoja_referencia() (300 dpi, con su leyenda): la posicion x 40-170 y el
+    borde a 70 mm son los del caso que el auditor hizo fallar el 17/10 (la leyenda caia entre las marcas y la pieza)."""
+    img = cv2.imread(ruta_hoja, cv2.IMREAD_GRAYSCALE)
+    k = 300 / 25.4
+    cv2.rectangle(img, (int(x0 * k), int(borde_y * k)), (int(x1 * k), int((borde_y + 150) * k)), pieza_gris, -1)
+    if con_costura:
+        x = x0 + 5.0
+        while x + 4 <= x1 - 5:
+            cv2.line(img, (int(x * k), int((borde_y + dist_mm) * k)), (int((x + 4) * k), int((borde_y + dist_mm) * k)), hilo_gris, max(1, int(round(k))))
+            x += 6
+    return img
+
+
 def foto(img, inclinacion=0.08, semilla=0, ruido=6.0, desenfoque=3):
     """Perspectiva de un celular inclinado: las 4 esquinas se corren hasta `inclinacion` del ancho; despues ruido y blur."""
     rng = np.random.default_rng(semilla)
@@ -84,6 +98,22 @@ def main():
         px = m.marcas(cv2.imread(ruta, cv2.IMREAD_GRAYSCALE))
         nominal = np.array(m.CENTROS_NOMINALES) * 300 / 25.4
         casos.append(('VERDE: la hoja de referencia que se imprime tiene las 4 marcas donde el metodo las espera (< 2 px a 300 dpi)', float(np.abs(px - nominal).max()) < 2, float(np.abs(px - nominal).max())))
+        # el caso del auditor (17/10): con la hoja que imprime el script y la pieza en x 40-170, la leyenda daba 0,42 mm
+        peor = 0.0
+        for s in range(3):
+            r = m.medir(foto(sobre_hoja_real(ruta), semilla=s))
+            peor = max(peor, abs(r['min'] - 52.4), abs(r['max'] - 52.4))
+        casos.append(('VERDE: sobre la hoja que imprime el script (con su leyenda), 3 fotos, todos los tramos a < 0,5 de 52,4', peor < 0.5, peor))
+        r = m.medir(foto(sobre_hoja_real(ruta, pieza_gris=90, hilo_gris=40), semilla=1))
+        casos.append(('VERDE: con menos contraste que se distingue (vinilo 90, hilo 40) sigue midiendo 52,4', abs(r['media'] - 52.4) < 0.5, r['media']))
+        # ROJO: si la costura no se distingue, frena en vez de devolver ~1 mm (auditor 17/10)
+        for nombre, kw in [('sin costura', {'con_costura': False}), ('hilo apenas mas oscuro (60 contra 40)', {'pieza_gris': 60, 'hilo_gris': 40}),
+                           ('hilo mas claro que el vinilo (60 contra 200)', {'pieza_gris': 60, 'hilo_gris': 200})]:
+            try:
+                r = m.medir(foto(sobre_hoja_real(ruta, **kw), semilla=1))
+                casos.append((f'ROJO: {nombre} no da un numero', False, r['media']))
+            except m.ErrorMedicion as e:
+                casos.append((f'ROJO: {nombre} no da un numero ({str(e)[:40]}...)', True, None))
     sin = np.full((800, 600), 245, np.uint8)
     try:
         m.medir(sin)

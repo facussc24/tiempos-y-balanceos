@@ -10,7 +10,7 @@ Camino por tamaño (`codigo-madre.md`): grande → este plan, el sí de Fak, wor
 
 **El problema.** Lo que se le escapa a Barack hacia el cliente casi nunca es un documento mal hecho: es que **dos
 documentos de la misma pieza dicen cosas distintas**, o que se trabajó sobre una versión que no era la vigente. Cuatro
-casos reales, todos del Insert y del IP PAD de Patagonia: la HO-990 dice adhesivo SikaMelt y la BOM y el AMFE dicen
+casos reales, todos de Patagonia (Insert, IP PAD y apoyacabezas): la HO-990 dice adhesivo SikaMelt y la BOM y el AMFE dicen
 Fenoclor; el ancho del rollo del Insert aparece con cuatro valores (1400, 1200, 1500 y 1150 mm); dos fichas técnicas dan
 dos densidades de espuma (35 y 45 kg/m³); y VW vio en BeOn letras distintas de las nuestras (el 15/10 hubo que
 reconstruirlo a mano).
