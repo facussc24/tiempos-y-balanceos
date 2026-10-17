@@ -27,6 +27,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { entregasDeLinea, claveDe } from './_lib/correccionGuard.mjs';
+import { reentregasPorCarpeta, hallazgosRespondidos } from './_lib/ppm.mjs';
+
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const RAIZ = path.resolve(AQUI, '..');
@@ -77,12 +80,14 @@ for (const d of fs.existsSync(PROYECTOS) ? fs.readdirSync(PROYECTOS) : []) {
 }
 
 const filasMedir = [];           // para correccionGuard --medir
+const carpetasPorSesion = new Map(); // PPM v0 columna A: ses -> Map(carpeta -> Set(turnos de Fak))
 const porSesion = new Map();     // ses -> {avisosEstimados}
 let cierres = 0, propongo = 0, repeticiones = 0, frenos = 0, mensajesFak = 0, sesiones = new Set();
 const ejemplosRep = [];
 for (const f of archivos) {
   const ses = path.basename(f, '.jsonl');
   let ultimoAsistente = null;
+  let turno = 0; const carpetas = new Map(); carpetasPorSesion.set(ses, carpetas);
   let lineas;
   try { lineas = fs.readFileSync(f, 'utf8').split('\n'); } catch { continue; }
   for (const l of lineas) {
@@ -92,6 +97,7 @@ for (const f of archivos) {
     if (!ts || ts < desde || ts > hasta) continue;
     sesiones.add(ses);
     if (o.type === 'assistant') {
+      for (const a of entregasDeLinea(l)) { const k = claveDe(a); if (!k) continue; if (!carpetas.has(k)) carpetas.set(k, new Set()); carpetas.get(k).add(turno); }
       const t = textoDe(o.message);
       if (/(^|\n)\s*\**Propongo\**\s*:/i.test(t)) propongo++;
       const e = entregasDe(o);
@@ -109,7 +115,7 @@ for (const f of archivos) {
       }
       if (esDeFak(o)) {
         const t = textoDe(o.message);
-        mensajesFak++;
+        mensajesFak++; turno++;
         if (ultimoAsistente) { cierres++; ultimoAsistente = null; }
         filasMedir.push({ ses, t, ts: o.timestamp });
         if (REPETICION.test(t)) { repeticiones++; if (ejemplosRep.length < 6) ejemplosRep.push(`[${ses.slice(0, 8)} ${ts}] ${t.replace(/\s+/g, ' ').slice(0, 120)}`); }
@@ -136,9 +142,19 @@ try {
 } catch (e) { reentregas = `no se pudo medir (${e.message})`; }
 finally { try { fs.unlinkSync(tmp); } catch { /* nada */ } }
 
+// PPM v0 (tanda 9, pieza 10): las dos columnas nuevas.
+const porCarpeta = reentregasPorCarpeta(carpetasPorSesion);
+let auditor = { informes: 0, emitidos: 0, respondidos: 0, arreglados: 0 };
+try {
+  const dirAud = path.join(RAIZ, 'docs', 'auditorias');
+  auditor = hallazgosRespondidos(fs.readdirSync(dirAud).filter((f) => f.endsWith('.md')).map((f) => fs.readFileSync(path.join(dirAud, f), 'utf8')));
+} catch { /* sin carpeta: queda en cero y se dice */ }
+
 const hoja = {
   ventana: { desde, hasta, sesiones: sesiones.size, mensajesFak },
   '1_reentregas': reentregas,
+  '1b_reentregas_por_carpeta': { metodo: 'el del 15 de 54 (01/10): SendUserFile por carpeta, una por turno de Fak; reentrega = una carpeta en 3 turnos o mas', sesiones_con_entregas: porCarpeta.conEntregas, sesiones_con_reentrega_3_o_mas: porCarpeta.conTres },
+  '6_hallazgos_auditor': { ...auditor, nota: 'de docs/auditorias/ con etiquetas Importante/Nit/Preexistente (desde la tanda 9); aceptado = arreglado' },
   '2_propongo': { cierres, con_propongo: propongo, porcentaje: cierres ? Math.round((propongo / cierres) * 1000) / 10 : null, tomadas_por_fak: 'lo valida Fak' },
   '3_te_dije': { conteo: repeticiones, ejemplos: ejemplosRep },
   '4_frenos': { total: frenos, falsos: 'sin clasificar (al 15/10: 51 falsos de 436 en 30 días; se repite con clasificar2.mjs)' },
@@ -148,9 +164,11 @@ if (process.argv.includes('--json')) { console.log(JSON.stringify(hoja, null, 2)
 else {
   console.log(`LOS 4 NÚMEROS · ventana ${desde} a ${hasta} · ${sesiones.size} sesiones · ${mensajesFak} mensajes de Fak`);
   console.log(`1. Entregas devueltas (correccion-guard): ${reentregas}`);
+  console.log(`1b. Reentregas por carpeta (el metodo del «15 de 54» del 01/10): ${porCarpeta.conTres} de ${porCarpeta.conEntregas} sesiones con entregas`);
   console.log(`2. Cierres con «Propongo: …»: ${propongo} de ${cierres} cierres (${hoja['2_propongo'].porcentaje ?? '-'} %) · tomadas por Fak: lo valida él`);
   console.log(`3. «Te dije / otra vez / se olvida» en mensajes de Fak: ${repeticiones}`);
   for (const e of ejemplosRep) console.log(`     ${e}`);
   console.log(`4. Frenos de guardianes: ${frenos} en la ventana · falsos: ${hoja['4_frenos'].falsos}`);
   console.log(`5. Cupo semanal al viernes: ${cupo}`);
+  console.log(`6. Hallazgos del auditor (docs/auditorias con etiquetas): ${auditor.arreglados} arreglados de ${auditor.emitidos} emitidos · ${auditor.respondidos} con respuesta · ${auditor.informes} informe(s) con etiquetas`);
 }
