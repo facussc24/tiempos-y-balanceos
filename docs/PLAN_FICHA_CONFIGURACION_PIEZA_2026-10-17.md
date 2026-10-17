@@ -43,7 +43,7 @@ reconstruye a mano qué vio el cliente antes de cada BeOn; y cuando cambia algo,
 
 | # | Pieza | Qué dice cada documento | Fuente |
 |---|---|---|---|
-| 1 | Insert Patagonia | **HO-990**: adhesivado hot melt **SikaMelt 140-160 °C**. **BOM y AMFE**: **Fenoclor**. | memoria `project_ppap_novax_tapizadas_puerta` (relevamiento del PPAP Novax, 11/09/2026) |
+| 1 | Insert Patagonia | **HO-990**: adhesivado hot melt **SikaMelt 140-160 °C**. **BOM y AMFE**: **Fenoclor**. | memoria `project_ppap_novax_tapizadas_puerta` (sección del 25/09/2026: grampas, siglas en las HO y parámetros) |
 | 2 | Insert Patagonia | Ancho de rollo: **FT141 1400 mm**; la copia que circuló por mail **1200**; Marcelo pidió **1,5 m** (dic-2025); las tizadas `INSERT 26-1-26` usan **115 cm** (`<WIDTH>115.0000</WIDTH>` en el MRK). | memoria `project_boms_patagonia_procesos` (renglones 102 a 110) |
 | 3 | Insert Patagonia (espuma) | **FT141: PU 35 kg/m³**; **FT149: 45 kg/m³**. | resumen de la charla del 13/10 (`20-informes\charlas\semana_09.md:25`, sesión `e2acfaf9`): es un resumen, **hay que abrir las dos FT para confirmarlo** |
 | 4 | IP PAD y apoyacabezas | Lo que vio VW en BeOn contra lo nuestro (15/10): flujograma 157 IP PAD, VW **Rev A** (emitido 14/10) y nosotros **C** (unificado en **B** ese día); flujograma 152, VW «preliminar» y nosotros **B** (pasado a **A** ese día); BOM de apoyacabezas, VW «v. B» y nosotros BOM004 **Rev A**; la HO-985 que tiene VW dice **6 en 25** y la corregida (**4 en 16**) sigue Rev A. | memoria `project_beon_revisiones_patagonia` y `exports/BEON_REVISIONES_20261015/NUESTRO_LADO.md` |

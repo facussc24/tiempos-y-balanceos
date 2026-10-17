@@ -162,9 +162,11 @@ con la pieza girada 3° da 52,39; con 46,4 mm (la otra mano del trasero) da 46,3
 mide y lo dice. La hoja que se imprime tiene sus marcas a menos de 1 px de donde el método las espera.
 
 **Lo que NO se pudo probar, y por qué:**
-- **Con fotos reales.** No hay fotos de piezas cosidas con una referencia de tamaño: las del calibre del 15/10 se
-  sacaron en la notebook de Calidad y no tienen hoja de referencia; sin una medida conocida en la foto no hay milímetros.
-  Y barrer `5- VIDEOS Y FOTOS` entero está prohibido (memoria `feedback_no_scan_onedrive`).
+- **Con fotos reales.** En las carpetas donde vive el tema (la del estudio de la orejita en `4. 2D\MEJORAS DE PROCESO`,
+  la del Insert en `5- VIDEOS Y FOTOS\1- CLIENTES\NOVAX\INSERT` y `exports/INSERT_OREJITA_COSTURA_20261015`, listadas el
+  17/10) no hay ninguna foto de una pieza cosida con una referencia de tamaño, y las fotos del calibre del 15/10 no están
+  en esta PC; sin una medida conocida en la foto no hay milímetros. Barrer `5- VIDEOS Y FOTOS` entero para buscarlas está
+  prohibido (memoria `feedback_no_scan_onedrive`).
 - **El espesor de la pieza cambia la escala**: la cara de arriba del vinilo está más cerca del celular que la hoja, y
   todo lo de arriba se ve un poco más grande. Con la pieza de 3 mm y el celular a 40 cm, el error es de ~0,75 % (en
   52 mm, ~0,4 mm), casi el tope de 0,5 mm. Se corrige poniendo las marcas a la altura de la pieza (sobre un taco del
