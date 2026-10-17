@@ -19,6 +19,11 @@ Reglas que valen para los tres: se lee el código completo antes de editar; **si
 `as any`, `@ts-ignore` ni datos mock; lo que afloja un control lo prueba OTRO (`LECCIONES`); el commit
 siempre con rutas (`git-deploy.md`). Ante la duda del tamaño, el camino más largo.
 
+**Mediano o grande con un entregable para Fak** (tanda 9, 17/10/2026): antes de empezar, en el chat, la definición de
+hecho (3 a 5 renglones de qué tiene que ser verdad al terminar) y un quiz de 3 preguntas que el entregable tiene que
+contestar perfecto; al terminar, el agente `revisor-pedido` lo compara contra el pedido textual. La primera semana avisa,
+no frena (lo mide `_cierreSesion.mjs`).
+
 ## Los pedidos chicos de Fak durante la semana
 
 Cuando Fak encuentra algo mientras labura («cambiá esto», «esto no anda»), **no se corrige dentro de la

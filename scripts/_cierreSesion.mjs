@@ -49,6 +49,7 @@ import { relevarCerebro, lintCerebro, dirMemoriaDe, resumir as resumirCerebro } 
 import { chequearAvisos } from './_lib/probarMejora.mjs';
 import { carpetaNube } from './_datosExportar.mjs';
 import { evaluarCopiaNube, leerEstado as leerEstadoNube, rutaEstadoPorDefecto } from './_lib/datosNube.mjs';
+import { evaluarRevisorPedido, relevarRevisorPedido, registroDeSesion } from './_lib/revisorPedido.mjs';
 export const LECCIONES_AVISO = CANON_CIERRE.lecciones.aviso_bytes;
 export const LECCIONES_TOPE = CANON_CIERRE.lecciones.tope_bytes;
 
@@ -403,6 +404,19 @@ function chequearCopiaNube(tmp) {
     }
 }
 
+/**
+ * Revisor contra el pedido (tanda 9, pieza 1): si la sesion le entrego documentos a Fak y no corrio el agente
+ * revisor-pedido, avisa. Nunca falta: la primera semana el revisor avisa, no frena. Logica en _lib/revisorPedido.mjs.
+ */
+function chequearRevisorPedido(env = process.env) {
+    try {
+        const p = registroDeSesion(env.CLAUDE_CODE_SESSION_ID);
+        return evaluarRevisorPedido(p ? relevarRevisorPedido(p) : { leido: false });
+    } catch (e) {
+        return { estado: 'aviso', detalle: `no se pudo medir: ${e.message}` };
+    }
+}
+
 function chequearLecciones() {
     try {
         return evaluarLecciones(fs.statSync(path.join(REPO, 'docs', 'LECCIONES_APRENDIDAS.md')).size);
@@ -563,6 +577,7 @@ async function main(argv) {
         { paso: 'Mejoras del sistema: el aviso que debia llegar, llego (regla mejora-implementada)', ...(await chequearAvisos()) },
         { paso: 'Disco C: con lugar para la proxima sesion', ...chequearDisco() },
         { paso: 'BOM ultimo nivel en el legajo APQP (regla de Fak 22/09/2026)', ...chequearBomLegajo() },
+        { paso: 'Revisor contra el pedido: lo entregado a Fak paso por revisor-pedido (tanda 9; avisa, no frena)', ...chequearRevisorPedido() },
         // Lo que ningun script puede medir — se lista para que no se olvide, no bloquea:
         { paso: 'Auditor al cerrar tareas de codigo', estado: 'manual', detalle: 'lanzar el agente `auditor` si esta sesion toco codigo' },
         { paso: 'Lecciones y memorias de la sesion', estado: 'manual', detalle: 'si Fak corrigio, decidio o revelo algo: LECCIONES_APRENDIDAS + memoria con fuente' },

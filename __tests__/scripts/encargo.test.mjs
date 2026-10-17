@@ -85,7 +85,7 @@ describe('plantilla de arranque · lo que Fak tipeaba a mano sale fijo', () => {
 
   it('--lanzada termina con el renglon de corrida autonoma (16/10/2026, tanda 1.1: bloques oficiales de Fable 5.1), y sin --lanzada no sale', () => {
     const t = armarTexto({ ...base(), carpeta: 'C:\\Escritorio\\Tarea', skills: ['carga-arb'], lanzada: true });
-    expect(t).toMatch(/6\. Operás de forma autónoma: Fak no está mirando/);
+    expect(t).toMatch(/7\. Operás de forma autónoma: Fak no está mirando/);   // el 6 es el renglon del revisor (tanda 9)
     expect(t).toMatch(/la RUTA del entregable en la primera línea, después el resultado/);
     const l = lineasArranque({ lanzada: true });
     expect(l[l.length - 1]).toBe(`  ${l.length - 1}. ${CANON.plantillaArranque.lineaAutonoma}`);
@@ -93,6 +93,19 @@ describe('plantilla de arranque · lo que Fak tipeaba a mano sale fijo', () => {
     // y sigue pasando los candados del guardian
     expect(detectarSegundaTarea(t)).toEqual([]);
     expect(detectarIrreversibles(t)).toEqual([]);
+  });
+
+  it('el renglon del revisor contra el pedido (17/10/2026, tanda 9) va despues del cierre en los dos modos, y con --lanzada antes del autonomo', () => {
+    const R = CANON.plantillaArranque.lineaRevisor;
+    expect(R).toMatch(/definición de hecho/);
+    expect(R).toMatch(/revisor-pedido/);
+    const comun = lineasArranque({});
+    expect(comun[comun.length - 1]).toBe(`  ${comun.length - 1}. ${R}`);
+    expect(armarTexto({ ...base(), carpeta: 'C:\\Escritorio\\Tarea', skills: ['carga-arb'] })).toMatch(/5\. Al cerrar:[\s\S]*6\. Si el trabajo deja un entregable para Fak/);
+    const lanz = lineasArranque({ lanzada: true });
+    expect(lanz[lanz.length - 2]).toBe(`  ${lanz.length - 2}. ${R}`);
+    expect(lanz[lanz.length - 1]).toBe(`  ${lanz.length - 1}. ${CANON.plantillaArranque.lineaAutonoma}`);
+    expect(lineasArranque({ sinArranque: true })).toEqual([]);
   });
 
   it('--lanzada pasa los candados del guardian igual que el encargo comun, y --sin-arranque le gana', () => {
@@ -206,7 +219,7 @@ describe('plantilla de arranque · lo que Fak tipeaba a mano sale fijo', () => {
 
   it('cada linea de la plantilla, sola, tampoco dispara un candado (una linea nueva se prueba aca antes de ir al canon)', () => {
     const P = CANON.plantillaArranque;
-    for (const l of [...P.lineas, P.lineaLanzada, P.lineaHeredaHora, P.lineaAutonoma, P.conCarpeta, P.sinCarpeta, P.conSkills, P.titulo]) {
+    for (const l of [...P.lineas, P.lineaLanzada, P.lineaHeredaHora, P.lineaRevisor, P.lineaAutonoma, P.conCarpeta, P.sinCarpeta, P.conSkills, P.titulo]) {
       expect(detectarSegundaTarea(l), l).toEqual([]);
       expect(detectarIrreversibles(l), l).toEqual([]);
     }

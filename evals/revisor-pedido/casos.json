@@ -1,0 +1,107 @@
+{
+  "_que_es": "Casos de respuesta conocida para calibrar el agente revisor-pedido (tanda 9, pieza 1). Salen de sesiones reales: el pedido es el mensaje de Fak, textual; la definicion de hecho y el quiz se escribieron SOLO desde el pedido, sin mirar la reaccion de Fak (reaccion_fak no viaja al revisor: lo prueba __tests__/scripts/revisorCalibrar.test.mjs). Se ubicaron 2 devueltos y 2 aprobados con el archivo o el texto que Fak vio; el tercero de cada lado no se invento.",
+  "casos": [
+    {
+      "id": "D1-fotos-hot-press",
+      "tipo": "devuelto",
+      "esperado": "NO CUMPLE",
+      "fecha": "2026-10-01",
+      "sesion": "523e8e4a",
+      "pedido": "el duseño de la empresa pedro ergo me peidido que le pase fotos de la mauqina esa hotprees d einsert y apb busca fotos uderanet el rpcoeso aparte de las que deje en descargas y arma un mail para pasarle con buenas fotos ok? \"C:\\Users\\FacundoS-PC\\Downloads\" si hace flalta editlas un pcoc par aque se vean mejor las que estan en descargas el em dijoq ue queria de frente y de lejos que sevea bine enterea entendes? y del rpoceso busca videos o algo debe haber en la nube o en algun lguar ok?",
+      "definicion_de_hecho": [
+        "Hay fotos de la maquina Hot Press del Insert y de la del APB, de frente y de lejos, donde cada maquina se ve entera.",
+        "Hay fotos o videos del PROCESO (la maquina trabajando), buscados en la nube u otro lugar, aparte de las fotos de Descargas.",
+        "Las fotos de Descargas que se usen estan editadas para que se vean mejor.",
+        "Hay un mail armado para pasarle las fotos al de diseno (Pedro Ergo)."
+      ],
+      "quiz": [
+        "¿Que archivo muestra la Hot Press del Insert entera y de frente?",
+        "¿Que archivo muestra el proceso, con la maquina trabajando?",
+        "¿Donde esta el mail para Pedro y que adjunta?"
+      ],
+      "entregable": {
+        "rutas": [
+          "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\5- VIDEOS Y FOTOS\\1- CLIENTES\\NOVAX\\INSERT\\MAQUINA HOT PRESS BMA101\\.claude\\retocadas\\1 - Hot Press Insert (BMA101) - de frente.jpg",
+          "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\5- VIDEOS Y FOTOS\\1- CLIENTES\\NOVAX\\APB\\MAQUINA HOT PRESS BMA103\\.claude\\retocadas\\2 - Hot Press APB (BMA103) - de frente.jpg",
+          "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\5- VIDEOS Y FOTOS\\1- CLIENTES\\NOVAX\\APB\\MAQUINA HOT PRESS BMA103\\.claude\\retocadas\\3 - Hot Press APB (BMA103) - estaciones de cerca.jpg",
+          "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\5- VIDEOS Y FOTOS\\1- CLIENTES\\NOVAX\\APB\\MAQUINA HOT PRESS BMA103\\.claude\\retocadas\\4 - Hot Press APB (BMA103) - vista del sector.jpg"
+        ],
+        "nota": "Lo que se le mando a Fak por SendUserFile el 01/10 22:17; los cuatro archivos no cambiaron desde entonces (fecha de modificacion anterior a la entrega)."
+      },
+      "reaccion_fak": "01/10 22:2x: «usaste las 4 fotos de descargas, la idea era no repetir y subir las fotos del proceso en funcionamiento, no entendiste» (devuelto)"
+    },
+    {
+      "id": "D2-mail-folio-federico",
+      "tipo": "devuelto",
+      "esperado": "NO CUMPLE",
+      "fecha": "2026-09-03",
+      "sesion": "c24ed0c5",
+      "pedido": "FOLIO PROTECTOR AMAROK PA2 (2HT853839) — QUE ROLLO ESTAN COMPRANDO AHORA Y CUANTO CONSUME REALMENTE EN M2. Federico Kipersain pregunto dos cosas el 02/09 (mail \"Consulta por demanda\", a Sebastian Rios y Facundo, 16:14): - a Sebastian: que material se puede comprar para cubrir la demanda, y que medidas tiene el rollo. - a Facundo: confirmar el consumo de material en M2 (la BOM hoy esta cargada en ROLLO, y Federico quiere evitar discrepancias entre compras, consumo y planificacion).",
+      "definicion_de_hecho": [
+        "El mail contesta el consumo del folio protector del 2HT853839 en m2 por pieza.",
+        "Dice con que rollo (medidas) se hizo la cuenta.",
+        "Explica por que no coincide con lo que esta cargado hoy en el sistema (en rollo)."
+      ],
+      "quiz": [
+        "¿Cuantos m2 consume una pieza?",
+        "¿Con que rollo se calculo?",
+        "¿Por que el sistema dice otra cosa?"
+      ],
+      "entregable": {
+        "texto": "Borrador en Outlook, para Federico; en copia Sebastian, Marianna, Gonzalo, Luciano y Carlos Baptista.\n\nFede, buenas.\n\nEl consumo es 0,0522 m2 por pieza.\n\nCon el rollo de 1,52 x 15 m que paso Sebastian salen 410 piezas por rollo. Para las 1.416 piezas del EDI hacen falta 4 rollos.\n\nEn el sistema el consumo figura como 784 piezas por rollo. Ese numero corresponde a un rollo de 0,60 x 70 m, que tiene 42 m2. El rollo nuevo tiene 22,8 m2, casi la mitad, y por eso rinde 410.\n\nLos m2 por pieza son los mismos con los dos rollos. Lo que cambia es el rollo.\n\nPara corregirlo en el sistema hace falta una ECR/ECO, asi que se los paso por si lo quieren oficializar.\n\nAdjunto el detalle.\n\nSaludos\n\nAdjunto: 2HT853839 - Consumo de material.xlsx (tabla de consumo + demanda semana a semana + rollos a comprar).",
+        "nota": "Texto del borrador tal como se le mostro a Fak el 03/09 (registro de la sesion c24ed0c5, mensaje 450)."
+      },
+      "reaccion_fak": "03/09: «esto no lo pondria yo, ni se que es EDI, ni es mi trabajo decir cuantos rollos faltan... excediste nuestro rol» · «elimina la columna demanda, no la se yo, no la manejo» (devuelto)"
+    },
+    {
+      "id": "A1-planilla-codigos-patagonia",
+      "tipo": "aprobado",
+      "esperado": "CUMPLE",
+      "fecha": "2026-09-01",
+      "sesion": "f8086778",
+      "pedido": "porque dentor de un mismot top roll hay l1 y l2 ? no no nopuedoe nviar esto ya demasiados erroes, no? esiancpetable ya no tinee ningun sentido / ya esta teoncoes finalemtn temrianste? el mail para luca donde quedo? esta en borradores? / simpflcia lad escripcion d el amil  pone te envio el lsitado de codigo se imagnenes d eparagonai algo asni nomas meepza a hacer eso en todos los mails complijiazas todo mcujoe tnendoes elmina la columna rpdocuto o peiza no podemos poenr 2 iguale smanante la mas relemvanetne elemiina la columan tipo eleiinna la fila 2 que die ccodigos viegentens bla blba bal osea deja d eclarar todo de mas.... e sobvio... eleomian tmabine la coliumanr pveoeodr de codigos  si solo eso ams que nada.... y estmaos eleimian el maila ctual y hacleod esd e0 digmaos",
+      "definicion_de_hecho": [
+        "La planilla de codigos y colores de Patagonia no repite una columna (producto o pieza: queda la mas relevante).",
+        "No tiene la columna tipo ni la columna proveedor de codigos.",
+        "Debajo del titulo no hay una fila de aclaracion (codigos vigentes segun...)."
+      ],
+      "quiz": [
+        "¿Que columnas tiene la hoja de codigos?",
+        "¿Hay una fila de aclaracion debajo del titulo?",
+        "¿Aparecen dos columnas que dicen lo mismo?"
+      ],
+      "entregable": {
+        "rutas": [
+          "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\6- ARCHIVO DE CORREO\\ADJUNTOS\\INGENIERIA Y PROYECTOS\\2026\\Codigos y colores Patagonia_20260901 (4).xlsx"
+        ],
+        "nota": "El adjunto tal como salio por mail (archivo de correo). Hay cuatro copias del 01/09; la (3) y la (4) son las que ya no tienen la fila de aclaracion; cual de las dos es la que salio no se puede saber desde el registro."
+      },
+      "reaccion_fak": "01/09 14:29: «listo entonces enviale el mail dale te autorizo» (aprobado)"
+    },
+    {
+      "id": "A2-tryout-dia4",
+      "tipo": "aprobado",
+      "esperado": "CUMPLE",
+      "fecha": "2026-08-31",
+      "sesion": "d24e5d74",
+      "pedido": "Carlos me mando un mail con... con un formato de presentaicon digmaos ultimo nivel pro mail y capa las pbservaciones de wwalter us aeso de base para el dia cuatro vamos a ahcer el dia cuatro y en miw hastapp digamos tenes fotos usa todo eso apra genenra rle informe del dia 4 en mdodo plan peotne ok? no se sie tnendiste tenbgo whastaspp aiberto en mi pc par auqe peudas digamos osea... para que puedas.... como se dic epara que pueda.s.... extraer las iamgnes con las despceiones me olvide las notas tenia mas notas yo peor bueno uemos las de wal  + las fotos algo deberiamso pdoer ahcer , no? fijate bine pensalo bine ene mdodo plana anzlai bine a fondo als aimgens y todo el material dispsomnie y bueno generamte el dia4 en wpoer point y enviemmsleslo a mi gerente nO0 el mail con el dia 4 pedo eoncifar en tu cirterio asi ya diremcnet ete doy el ok y envias todo? pdeos veirifca rtood cuasomanet hace no mucho hcicomso una tarea asi fiajte si ecnotas el chat apra ver difmaos las cosa sque pearneiandsite a ver si memrizas teetc etc / no arrancaste ni siqueira? xd si dale dejame el mail ahi listo apr aamdnar asi lo reviso y si dale emtele loco",
+      "definicion_de_hecho": [
+        "Hay un PowerPoint del informe TryOut de la IMG que suma el dia 4.",
+        "El dia 4 usa las observaciones de Walter y las fotos del dia (WhatsApp).",
+        "Sigue el formato de presentacion que mando Carlos."
+      ],
+      "quiz": [
+        "¿Que observaciones trae el dia 4?",
+        "¿Hay fotos del dia 4 y de que?",
+        "¿Que dias cubre el informe?"
+      ],
+      "entregable": {
+        "rutas": [
+          "C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\INGENIERIA BARACK (NUNCA BORRAR)\\6- ARCHIVO DE CORREO\\ADJUNTOS\\INGENIERIA Y PROYECTOS\\2026\\TryOut_IMG_Dia1a4.pptx"
+        ],
+        "nota": "El adjunto tal como salio por mail el 31/08 (archivo de correo, copia unica)."
+      },
+      "reaccion_fak": "31/08 22:20: «listo envia el mail ya ya esta envialo asegurate que se envie» (aprobado)"
+    }
+  ]
+}
