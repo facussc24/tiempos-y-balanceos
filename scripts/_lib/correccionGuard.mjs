@@ -303,7 +303,9 @@ function hook() {
  */
 export function reapariciones(filas, fecha) {
   // Ronda 2 (hallazgo 9): con 01/10/2026 o sin valor, la comparacion de textos daba «no bajo» o «despues 0» falsos.
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(fecha ?? '')) || Number.isNaN(Date.parse(`${fecha}T00:00:00Z`))) {
+  // y la fecha tiene que existir: 2026-02-30 pasa el formato pero Date la corre al 02/03 (auditor de la ronda 2)
+  const ms = Date.parse(`${fecha}T00:00:00Z`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(fecha ?? '')) || Number.isNaN(ms) || new Date(ms).toISOString().slice(0, 10) !== fecha) {
     throw new RangeError(`--despues necesita una fecha AAAA-MM-DD (llego «${fecha}»)`);
   }
   const conTs = filas.filter((f) => typeof f.t === 'string' && typeof f.ts === 'string' && f.ts);

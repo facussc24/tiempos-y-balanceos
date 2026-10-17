@@ -12,7 +12,7 @@ const fila = (t, ts) => ({ ses: 's', t, ts });
 
 describe('reapariciones: la fecha (ronda 2, hallazgo 9)', () => {
   it('ROJO: una fecha mal escrita (dd/mm/aaaa, vacia, inexistente) tira error en vez de contar mal; la CLI sale con 2', () => {
-    for (const mala of ['01/10/2026', '28/09', undefined, '2026-13-45']) expect(() => reapariciones([], mala), String(mala)).toThrow(/AAAA-MM-DD/);
+    for (const mala of ['01/10/2026', '28/09', undefined, '2026-13-45', '2026-02-30']) expect(() => reapariciones([], mala), String(mala)).toThrow(/AAAA-MM-DD/);
     const tmp = path.join(os.tmpdir(), `d7-${process.pid}.jsonl`);
     fs.writeFileSync(tmp, JSON.stringify({ ses: 's', t: 'hola', ts: '2026-10-05T10:00:00Z' }));
     const r = spawnSync(process.execPath, [path.resolve(__dirname, '../../scripts/_lib/correccionGuard.mjs'), '--medir', tmp, '--despues', '01/10/2026'], { encoding: 'utf8' });
