@@ -36,6 +36,11 @@ const dias = (a, b) => Math.round((Date.parse(`${a}T00:00:00Z`) - Date.parse(`${
 export function evaluarRetiros(datos, enDisco, hoy) {
   const todas = { ...(datos.piezas || {}) };
   const decididos = datos.retiros_decididos || {};
+  const retirados = datos.retirados || {};
+  // Ronda 2 (hallazgo 7): una rama que se funde antes puede agregar o retirar piezas. Un alta marcada pendienteDeFusion
+  // que todavia no esta en el disco, o una baja que todavia sigue ahi, se listan aparte y no ponen rojo el test.
+  const altaPendiente = (id) => Boolean(todas[id]?.pendienteDeFusion) && !enDisco.includes(id);
+  const bajaPendiente = (id) => Boolean(retirados[id]?.pendienteDeFusion);
   const filas = [
     ...Object.entries(todas).map(([id, p]) => ({ id, tipo: 'pieza', ...p })),
     ...Object.entries(decididos).map(([id, p]) => ({ id, tipo: 'retiro decidido', ...p })),
@@ -43,8 +48,12 @@ export function evaluarRetiros(datos, enDisco, hoy) {
   return {
     vencidos: filas.filter((f) => f.faltan != null && f.faltan <= 0),
     proximos: filas.filter((f) => f.faltan != null && f.faltan > 0 && f.faltan <= 7),
-    sinRenglon: enDisco.filter((id) => !todas[id]),
-    sinArchivo: Object.keys(todas).filter((id) => !enDisco.includes(id)),
+    sinRenglon: enDisco.filter((id) => !todas[id] && !bajaPendiente(id)),
+    sinArchivo: Object.keys(todas).filter((id) => !enDisco.includes(id) && !altaPendiente(id)),
+    pendientesDeFusion: [
+      ...Object.keys(todas).filter(altaPendiente).map((id) => `${id} (alta de ${todas[id].pendienteDeFusion}, todavia no esta en el disco)`),
+      ...enDisco.filter((id) => !todas[id] && bajaPendiente(id)).map((id) => `${id} (baja de ${retirados[id].pendienteDeFusion}, todavia en el disco)`),
+    ],
     sinRazon: filas.filter((f) => !f.justifica || /^TBD/.test(f.justifica)).map((f) => f.id),
     // Auditor 17/10: el plan pide «justifica: <numero o incidente>»; una razon sin un digito (fecha, numero, conteo) es texto
     // de cabecera, no una justificacion medida. Se lista para completarla al revisar la pieza.
@@ -113,6 +122,7 @@ function main(argv) {
   console.log(`Vencen en los proximos 7 dias (${r.proximos.length}):`); r.proximos.forEach((f) => console.log(linea(f)));
   console.log(`En el disco sin renglon (${r.sinRenglon.length}): ${r.sinRenglon.join(', ') || '-'}`);
   console.log(`Renglon sin archivo (${r.sinArchivo.length}): ${r.sinArchivo.join(', ') || '-'}`);
+  console.log(`Pendientes de fusion (${r.pendientesDeFusion.length}): ${r.pendientesDeFusion.join(' · ') || '-'}`);
   console.log(`Sin razon escrita (${r.sinRazon.length}): ${r.sinRazon.join(', ') || '-'}`);
   console.log(`Razon sin numero, fecha ni incidente (${r.sinNumero.length}): se completa al revisar cada pieza`);
   if (d) {

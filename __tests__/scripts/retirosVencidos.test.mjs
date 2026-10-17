@@ -17,6 +17,23 @@ describe('el registro cubre el disco', () => {
       expect(p.justifica.length, id).toBeGreaterThan(10);
     }
   });
+  it('VERDE antes y despues de fundir la tanda 3 (ronda 2, hallazgo 7): las altas y bajas pendientes de fusion no ponen rojo', () => {
+    const hoy = piezasEnDisco();
+    const fin = [...hoy.filter((id) => id !== 'hook:dev-server-guard' && id !== 'hook:timeout-guard'), 'hook:modelo-guard', 'hook:permiso-un-uso-guard'].sort();
+    for (const enDisco of [hoy, fin]) {
+      const r = evaluarRetiros(datos, enDisco, '2026-10-17');
+      expect(r.sinRenglon).toEqual([]);
+      expect(r.sinArchivo).toEqual([]);
+    }
+    expect(evaluarRetiros(datos, fin, '2026-10-17').pendientesDeFusion).toEqual([]);
+  });
+  it('ROJO: un alta SIN pendienteDeFusion que no esta en el disco, o una pieza nueva sin renglon ni baja, siguen frenando', () => {
+    const d = { piezas: { 'hook:a': { revisar: '2026-11-17', justifica: 'x 1' }, 'hook:b': { revisar: '2026-11-17', justifica: 'x 1', pendienteDeFusion: 'rama' } }, retirados: { 'hook:c': { pendienteDeFusion: 'rama' } } };
+    const r = evaluarRetiros(d, ['hook:c', 'hook:nuevo'], '2026-10-17');
+    expect(r.sinArchivo).toEqual(['hook:a']);
+    expect(r.sinRenglon).toEqual(['hook:nuevo']);
+    expect(r.pendientesDeFusion).toHaveLength(2);
+  });
   it('detecta una pieza en el disco sin renglon y un renglon sin archivo', () => {
     const r = evaluarRetiros({ piezas: { 'hook:viejo': { revisar: '2026-11-17', justifica: 'x' } } }, ['hook:nuevo'], '2026-10-17');
     expect(r.sinRenglon).toEqual(['hook:nuevo']);
