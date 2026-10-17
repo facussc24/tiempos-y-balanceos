@@ -351,7 +351,7 @@ export function combinarCI(candado, { run, error, sha = null } = {}) {
         const delHead = Boolean(sha) && String(sha).slice(0, 8) === rojo;
         const msg = `el ULTIMO DEPLOY de la app esta ROJO (${run.conclusion}, ${rojo}): ${run.html_url ?? tablero}`;
         if (delHead) return { estado: 'falta', detalle: `${candado.detalle} · y ${msg}` };
-        return { estado: candado.estado === 'falta' ? 'falta' : 'aviso', detalle: `${candado.detalle} · ${msg} — si el rojo ya se arreglo, relanzarlo (Run workflow en la pagina del deploy, o un push que toque la app)` };
+        return { estado: candado.estado === 'falta' ? 'falta' : 'aviso', detalle: `${candado.detalle} · ${msg} — si el rojo ya se arreglo, lo relanza Fak desde la web: Run workflow sobre main en la pagina del deploy` };
     }
     // Ronda 2 (17/10, hallazgo 1): un deploy en curso o en cola NO hereda el verde del candado. candado.yml no corre el
     // build de la app; solo deploy.yml lo prueba, y mientras corre no se sabe si lo publicado va a quedar verde.

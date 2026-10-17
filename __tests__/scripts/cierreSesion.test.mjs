@@ -180,7 +180,7 @@ describe('CI partido en candado.yml y deploy.yml (tanda 9, pieza 9)', () => {
         const candado = evaluarCI({ sha: 'abcdef1234567890', run: verde, error: null });
         const r = combinarCI(candado, { run: { ...verde, head_sha: '1111111199', conclusion: 'failure' }, error: null, sha: 'abcdef1234567890' });
         expect(r.estado).toBe('aviso');
-        expect(r.detalle).toMatch(/relanzarlo/);
+        expect(r.detalle).toMatch(/lo relanza Fak desde la web: Run workflow sobre main/);
     });
     it('VERDE: candado verde y deploy viejo verde (o sin corridas) -> ok; deploy ilegible -> aviso, nunca verde', () => {
         const candado = evaluarCI({ sha: 'abcdef1234567890', run: verde, error: null });

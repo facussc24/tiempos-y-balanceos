@@ -30,6 +30,8 @@
    curl -s "https://api.github.com/repos/facussc24/tiempos-y-balanceos/actions/workflows/candado.yml/runs?per_page=1&branch=main"
    curl -s "https://api.github.com/repos/facussc24/tiempos-y-balanceos/actions/workflows/deploy.yml/runs?per_page=1&branch=main"
    ```
+   Un cambio de la app que cae fuera de la lista de rutas de `deploy.yml` (o un deploy rojo que ya se arreglo) se publica
+   con **Run workflow** sobre `main` en la pagina del deploy, desde la web: eso lo hace Fak (`gh` no tiene login aca).
 
 **Por que:** Fak prueba en GitHub Pages (produccion, no dev server), y el deploy corre en el push a
 `main`: sin push, prueba una version vieja.
