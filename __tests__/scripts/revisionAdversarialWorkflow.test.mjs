@@ -66,6 +66,35 @@ describe('revision-adversarial.js', () => {
     expect(r.informe).toMatch(/6 hallazgos de las lentes, 2 distintos por archivo y linea, 2 verificados/);
   });
 
+  it('un agente caido no es «sin hallazgos» ni «refutado»: la lente caida y el hallazgo sin voto se dicen y siguen contando (auditor 17/10)', async () => {
+    const h = { archivo: 'a.mjs', linea: 1, clase: 'TRUE_BUG', etiqueta: 'Importante', titulo: 'b', caso: 'c' };
+    const { r } = await correr({ repo: '.' }, (p, o) => {
+      if (o.phase === 'Lentes') return o.label === 'lente:controles' ? null : { hallazgos: o.label === 'lente:correctitud' ? [h] : [] };
+      return null;   // el verificador no contesta
+    });
+    expect(r.incompleto).toBe(true);
+    expect(r.lentesCaidas).toEqual(['controles']);
+    expect(r.refutados).toHaveLength(0);
+    expect(r.sinVerificar).toHaveLength(1);
+    expect(r.conteo.Importante).toBe(1);
+    expect(r.informe).toMatch(/\*\*INCOMPLETO\*\*: 1 lente\(s\) no contestaron \(controles\) y 1 hallazgo\(s\) quedaron sin ningún voto/);
+  });
+
+  it('la misma ruta escrita distinto se junta, el tope de 10 agentes vale con 3 votos y el informe lista como mucho 3 nits (auditor 17/10)', async () => {
+    const base = { linea: 7, clase: 'TRUE_BUG', etiqueta: 'Importante', titulo: 't', caso: 'c' };
+    const nits = Array.from({ length: 5 }, (_, i) => ({ archivo: 'n.mjs', linea: 100 + i, clase: 'DOC', etiqueta: 'Nit', titulo: `nit${i}`, caso: 'c' }));
+    const { r, llamadas } = await correr({ repo: 'C:/Repo', votos: 3 }, (p, o) => {
+      if (o.label === 'lente:correctitud') return { hallazgos: [{ ...base, archivo: './scripts/x.mjs' }, { ...base, archivo: 'C:\\Repo\\scripts\\x.mjs' }, ...nits] };
+      if (o.label === 'lente:controles') return { hallazgos: [{ ...base, archivo: 'scripts/x.mjs' }, ...Array.from({ length: 5 }, (_, i) => ({ ...base, archivo: `y${i}.mjs` }))] };
+      if (o.phase === 'Lentes') return { hallazgos: [] };
+      return { refutado: false, etiqueta: 'Importante', caso: 'ok' };
+    });
+    expect(r.confirmados.find((h) => /x\.mjs/.test(h.archivo)).lentes).toEqual(['correctitud', 'controles']);
+    expect(llamadas.length).toBeLessThanOrEqual(10);
+    expect((r.informe.match(/^- \[Nit\]/gm) || []).length).toBe(3);
+    expect(r.informe).toMatch(/y 2 nits mas/);
+  });
+
   it('un hallazgo que el verificador refuta no cuenta, y el tope de verificacion se respeta y se dice', async () => {
     const muchos = Array.from({ length: 5 }, (_, i) => ({ archivo: 'a.mjs', linea: i + 1, clase: 'TRUE_BUG', etiqueta: 'Importante', titulo: `b${i}`, caso: 'c' }));
     const { r, llamadas } = await correr({ repo: '.', maxVerificar: 2, lentes: [{ key: 'unica', enfoque: 'todo' }] }, (p, o) =>

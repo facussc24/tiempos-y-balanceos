@@ -28,6 +28,7 @@
    lint) corre en CADA push y `deploy.yml` solo cuando cambia algo que entra al build; se lee uno por vez:
    ```bash
    curl -s "https://api.github.com/repos/facussc24/tiempos-y-balanceos/actions/workflows/candado.yml/runs?per_page=1&branch=main"
+   curl -s "https://api.github.com/repos/facussc24/tiempos-y-balanceos/actions/workflows/deploy.yml/runs?per_page=1&branch=main"
    ```
 
 **Por que:** Fak prueba en GitHub Pages (produccion, no dev server), y el deploy corre en el push a

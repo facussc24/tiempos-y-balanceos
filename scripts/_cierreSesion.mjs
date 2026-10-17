@@ -340,11 +340,18 @@ export async function leerUltimoRunCI({ fetchFn = globalThis.fetch, timeoutMs = 
  * manda; del deploy solo importa que su ultima corrida no este en rojo (un deploy roto deja a Fak probando una version
  * vieja). No leer el deploy es aviso, nunca verde.
  */
-export function combinarCI(candado, { run, error } = {}) {
+export function combinarCI(candado, { run, error, sha = null } = {}) {
     const tablero = `https://github.com/${REPO_GITHUB}/actions/workflows/deploy.yml`;
     if (error) return candado.estado === 'falta' ? candado : { estado: 'aviso', detalle: `${candado.detalle} · el deploy no se pudo leer (${error}): ${tablero}` };
     if (run && run.status === 'completed' && run.conclusion && run.conclusion !== 'success') {
-        return { estado: 'falta', detalle: `${candado.detalle} · y el ULTIMO DEPLOY de la app esta ROJO (${run.conclusion}, ${String(run.head_sha ?? '').slice(0, 8)}): ${run.html_url ?? tablero}` };
+        // Auditor de la tanda 9 (17/10): con el filtro de rutas, el commit que arregla un test de herramientas no vuelve
+        // a correr el deploy; si esto fuera 'falta' siempre, todas las sesiones quedarian frenadas por un rojo que solo
+        // se destraba desde la web. Es 'falta' cuando el deploy rojo es el del HEAD; si es de un commit anterior, aviso.
+        const rojo = String(run.head_sha ?? '').slice(0, 8);
+        const delHead = Boolean(sha) && String(sha).slice(0, 8) === rojo;
+        const msg = `el ULTIMO DEPLOY de la app esta ROJO (${run.conclusion}, ${rojo}): ${run.html_url ?? tablero}`;
+        if (delHead) return { estado: 'falta', detalle: `${candado.detalle} · y ${msg}` };
+        return { estado: candado.estado === 'falta' ? 'falta' : 'aviso', detalle: `${candado.detalle} · ${msg} — si el rojo ya se arreglo, relanzarlo (Run workflow en la pagina del deploy, o un push que toque la app)` };
     }
     const dep = !run ? 'sin corridas del deploy' : run.status !== 'completed' ? `deploy en curso (${run.status})` : `ultimo deploy verde (${String(run.head_sha ?? '').slice(0, 8)})`;
     return { ...candado, detalle: `${candado.detalle} · ${dep}` };
@@ -354,7 +361,7 @@ async function chequearCI() {
     // Mientras candado.yml no exista en GitHub (antes del primer push de la tanda 9) la API da 404: se lee como antes.
     const candado = await leerUltimoRunCI({ workflow: 'candado.yml' });
     if (candado.error && /HTTP 404/.test(candado.error)) return evaluarCI(await leerUltimoRunCI());
-    return combinarCI(evaluarCI(candado), await leerUltimoRunCI({ workflow: 'deploy.yml' }));
+    return combinarCI(evaluarCI(candado), { ...(await leerUltimoRunCI({ workflow: 'deploy.yml' })), sha: candado.sha });
 }
 
 function chequearBuild(saltear) {
@@ -464,7 +471,9 @@ async function chequearRetiros() {
     try {
         const R = await import('./_retirosVencidos.mjs');
         const hoy = new Date();
-        const r = R.evaluarRetiros(JSON.parse(fs.readFileSync(R.DATOS, 'utf8')), R.piezasEnDisco(REPO), hoy.toISOString().slice(0, 10));
+        // fecha LOCAL (auditor 17/10: con toISOString, despues de las 21 h se corria un dia contra el viernes local)
+        const local = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+        const r = R.evaluarRetiros(JSON.parse(fs.readFileSync(R.DATOS, 'utf8')), R.piezasEnDisco(REPO), local);
         return evaluarRetirosCierre(r, { viernes: hoy.getDay() === 5 });
     } catch (e) {
         return { estado: 'aviso', detalle: `no se pudo medir: ${e.message}` };

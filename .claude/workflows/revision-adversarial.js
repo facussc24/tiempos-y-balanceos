@@ -18,7 +18,7 @@ const REPO = A.repo || '.'
 const BASE = A.base || 'main'
 const RAMA = A.rama || 'HEAD'
 const ARCHIVOS = Array.isArray(A.archivos) ? A.archivos : []
-const MAX_VERIFICAR = Number.isFinite(A.maxVerificar) ? A.maxVerificar : 6
+const MAX_VERIFICAR = Number.isFinite(A.maxVerificar) ? Math.max(0, Math.floor(A.maxVerificar)) : 6
 const VOTOS = Number.isFinite(A.votos) && A.votos > 0 ? A.votos : 1
 const FECHA = A.fecha || ''
 
@@ -86,19 +86,29 @@ phase('Lentes')
 // Barrera a proposito (la unica): se juntan los hallazgos de TODAS las lentes por archivo y linea antes de verificar.
 // Prueba del 17/10/2026 sobre un diff con 2 defectos plantados: 3 lentes encontraron los dos, el informe contaba
 // 6 Importante y se gastaron 5 verificadores en 2 defectos. Ahora cada defecto se verifica una vez y se cuenta una vez.
-const crudos = (await parallel(LENTES.map((l) => () =>
+// Una lente que no contesto (agente caido, `null`) NO es «sin hallazgos»: se cuenta y el informe lo dice (auditor 17/10).
+const porLente = await parallel(LENTES.map((l) => () =>
   agent(pedidoLente(l), { label: `lente:${l.key}`, phase: 'Lentes', schema: HALLAZGOS, agentType: 'investigador' })
-    .then((r) => ((r && r.hallazgos) || []).map((h) => ({ ...h, lente: l.key }))))))
-  .filter(Boolean).flat()
+    .then((r) => (r ? (r.hallazgos || []).map((h) => ({ ...h, lente: l.key })) : null))))
+const lentesCaidas = LENTES.filter((l, i) => !porLente[i]).map((l) => l.key)
+if (lentesCaidas.length) log(`${lentesCaidas.length} lente(s) no contestaron (${lentesCaidas.join(', ')}): el informe queda incompleto`)
+const crudos = porLente.filter(Boolean).flat()
 const unicos = []
 for (const h of crudos) {
-  const clave = `${String(h.archivo).replace(/\\/g, '/').toLowerCase()}:${h.linea}`
+  // la misma ruta escrita distinto (./x, x, C:/repo/x, con barras invertidas) es el mismo archivo (auditor 17/10)
+  const raiz = String(REPO).replace(/\\/g, '/').toLowerCase().replace(/\/+$/, '') + '/'
+  let ruta = String(h.archivo).replace(/\\/g, '/').toLowerCase()
+  if (ruta.startsWith(raiz)) ruta = ruta.slice(raiz.length)
+  ruta = ruta.replace(/^\.\//, '')
+  const clave = `${ruta}:${h.linea}`
   const ya = unicos.find((u) => u.clave === clave)
   if (ya) { if (!ya.lentes.includes(h.lente)) ya.lentes.push(h.lente); if (h.etiqueta === 'Importante') ya.etiqueta = 'Importante'; if (h.clase === 'TRUE_BUG') ya.clase = 'TRUE_BUG' }
   else unicos.push({ ...h, clave, lentes: [h.lente] })
 }
 const importantes = unicos.filter((h) => h.clase === 'TRUE_BUG' || h.etiqueta === 'Importante')
-const aVerificar = importantes.slice(0, MAX_VERIFICAR)
+// Tope total de 10 agentes (techo-agentes.md) tambien con votos > 1, salvo args.sinTope (auditor 17/10: con votos 3 salian 22)
+const cupoVerif = A.sinTope ? MAX_VERIFICAR : Math.min(MAX_VERIFICAR, Math.max(0, Math.floor((10 - LENTES.length) / VOTOS)))
+const aVerificar = importantes.slice(0, cupoVerif)
 log(`${crudos.length} hallazgos de las lentes, ${unicos.length} distintos por archivo y linea, ${aVerificar.length} a verificar`)
 const saltados = importantes.length - aVerificar.length
 if (saltados) log(`${saltados} hallazgos importantes quedaron sin verificar por el tope de ${MAX_VERIFICAR}: van en «Sin verificar»`)
@@ -112,9 +122,11 @@ const verificados = (await parallel(aVerificar.map((h) => () =>
       const sostienen = ok.filter((x) => !x.refutado)
       return { ...h, votos: ok.length, sostienen: sostienen.length, confirmado: ok.length > 0 && sostienen.length * 2 > ok.length, etiquetaVerificada: (sostienen[0] || ok[0] || {}).etiqueta || h.etiqueta, casoVerificado: (sostienen[0] || ok[0] || {}).caso || '' }
     })))).filter(Boolean)
-const sinVerificar = unicos.filter((h) => !aVerificar.includes(h))
+// Un hallazgo cuyos verificadores no contestaron (0 votos) no es «refutado»: vuelve a «sin verificar» y cuenta (auditor 17/10).
+const sinVoto = verificados.filter((h) => h.votos === 0)
+const sinVerificar = [...unicos.filter((h) => !aVerificar.includes(h)), ...sinVoto]
 const confirmados = verificados.filter((h) => h.confirmado)
-const refutados = verificados.filter((h) => !h.confirmado)
+const refutados = verificados.filter((h) => !h.confirmado && h.votos > 0)
 
 const etiqueta = (h) => h.etiquetaVerificada || h.etiqueta
 const cuenta = (e) => confirmados.filter((h) => etiqueta(h) === e).length + sinVerificar.filter((h) => h.etiqueta === e).length
@@ -122,6 +134,7 @@ const L = []
 L.push(`# Revisión adversarial de ${A.diff ? 'un diff pegado' : `${RAMA} contra ${BASE}`}${FECHA ? ` — ${FECHA}` : ''}`)
 L.push('')
 L.push(`**${cuenta('Importante')} Importante, ${cuenta('Nit')} Nit, ${cuenta('Preexistente')} Preexistente** (confirmados más sin verificar; los refutados no cuentan). ${LENTES.length} lentes (${LENTES.map((l) => l.key).join(', ')}), ${crudos.length} hallazgos de las lentes, ${unicos.length} distintos por archivo y linea, ${verificados.length} verificados con ${VOTOS} voto(s) cada uno, tope ${MAX_VERIFICAR}.`)
+if (lentesCaidas.length || sinVoto.length) L.push('', `**INCOMPLETO**: ${lentesCaidas.length} lente(s) no contestaron (${lentesCaidas.join(', ') || '-'}) y ${sinVoto.length} hallazgo(s) quedaron sin ningún voto del verificador. Un agente caído no es «sin hallazgos».`)
 L.push('')
 L.push('Al lado de cada hallazgo, quien lo recibe anota qué hizo: **arreglado / rechazado / a propósito / no importa** (REVIEW.md). Eso mide el ruido del revisor.')
 L.push('')
@@ -132,6 +145,8 @@ L.push(`## Refutados (${refutados.length})`)
 for (const h of refutados) L.push(`- \`${h.archivo}:${h.linea}\` · ${h.clase} · lentes ${h.lentes.join(", ")} — ${h.titulo} · por qué no: ${h.casoVerificado || 'sin veredicto'}`)
 L.push('')
 L.push(`## Sin verificar (${sinVerificar.length}: ROBUSTNESS, DOC y lo que pasó el tope; se juzgan al leerlos)`)
-for (const h of sinVerificar) L.push(`- [${h.etiqueta}] \`${h.archivo}:${h.linea}\` · ${h.clase} · lentes ${h.lentes.join(", ")} — ${h.titulo} · caso: ${h.caso} · respuesta: ____`)
+const nits = sinVerificar.filter((h) => h.etiqueta === 'Nit'); const otros = sinVerificar.filter((h) => h.etiqueta !== 'Nit')
+for (const h of [...otros, ...nits.slice(0, 3)]) L.push(`- [${h.etiqueta}] \`${h.archivo}:${h.linea}\` · ${h.clase} · lentes ${h.lentes.join(', ')} — ${h.titulo} · caso: ${h.caso} · respuesta: ____`)
+if (nits.length > 3) L.push(`- y ${nits.length - 3} nits mas (tope de 3 de REVIEW.md)`)
 
-return { conteo: { Importante: cuenta('Importante'), Nit: cuenta('Nit'), Preexistente: cuenta('Preexistente') }, confirmados, refutados, sinVerificar, informe: L.join('\n') }
+return { conteo: { Importante: cuenta('Importante'), Nit: cuenta('Nit'), Preexistente: cuenta('Preexistente') }, incompleto: lentesCaidas.length > 0 || sinVoto.length > 0, lentesCaidas, confirmados, refutados, sinVerificar, informe: L.join('\n') }

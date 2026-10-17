@@ -41,11 +41,16 @@ Revisor contra el pedido · 12 corridas · contra el pedido acierta 12 (4 de 4 c
 4. **Variación entre corridas** en «reglas de la casa» de D1: la corrida 1 marcó como Importante que las fotos vivan en
    una carpeta `.claude`; la 2 la dio por buena (la eximen `video-maquina.md` y la lista de rutas excluidas del detector).
    Contra el pedido, ninguna variación.
-5. **Un hueco del detector**, visto en A2 y verificado el 17/10 sobre una copia en el scratchpad (el original no se tocó):
+5. **Lo que `--arreglar` no toca (es a propósito, no un hueco: el detector SÍ ve los 44; según su cabecera, `--arreglar`
+   arregla propiedades y la marca del complemento, y el contenido se arregla a mano)**, visto en A2 y verificado el 17/10 sobre una copia en el scratchpad (el original no se tocó):
    `python scripts/_sinFirmaIA.py <copia> --arreglar --apply` no limpia el texto alternativo (`descr`) de las imágenes de un
    PowerPoint: 44 bloqueantes antes y 44 después («quedan a mano: 1»). Dos corridas del revisor habían dicho cosas opuestas.
 
-6. **Casos de entrenamiento usados como prueba**: el formato de dos renglones se diseñó después de ver la corrida 1 sobre
+6. **Lo que le marcó el auditor a la calibración (17/10)**: la nota del caso A1 decía que la copia elegida «ya no tiene
+   la fila de aclaración», o sea que contestaba de antemano la pregunta 2 del quiz; las 3 corridas de A1 la vieron. Desde
+   este commit la nota ya no lo dice. Y las corridas fueron con `investigador`, que trae escritas en su prompt las reglas
+   de no inventar y de firma de IA; `revisor-pedido` no las trae: si eso cambió el renglón «reglas de la casa» no se midió.
+7. **Casos de entrenamiento usados como prueba**: el formato de dos renglones se diseñó después de ver la corrida 1 sobre
    estos mismos 4 casos, así que las corridas 2 y 3 no son una validación independiente del formato: lo confirman sobre
    los casos que lo originaron. Hacen falta casos nuevos (los que vayan devolviendo y aprobando Fak) para medirlo de verdad.
 

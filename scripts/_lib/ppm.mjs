@@ -21,13 +21,14 @@ export function reentregasPorCarpeta(porSesion) {
  */
 export function hallazgosRespondidos(textos) {
   let informes = 0, emitidos = 0, respondidos = 0, arreglados = 0;
-  // «respuesta: arreglado» o la celda en negrita «**arreglado**»; la leyenda «**arreglado / rechazado / …**» no cuenta.
-  const resp = /respuesta:\s*(arreglado|rechazado|a prop[oó]sito|no importa)\b|\*\*(arreglado|rechazado|a prop[oó]sito|no importa)\*\*/gi;
+  // Auditor 17/10: la respuesta cuenta solo si esta en el MISMO renglon que un hallazgo con etiqueta («respuesta: X»).
+  // Antes se contaban tablas y leyendas sueltas y salian mas respuestas que hallazgos.
+  const resp = /respuesta:\s*(arreglado|rechazado|a prop[oó]sito|no importa)\b/i;
   for (const t of textos) {
-    const e = (t.match(/\[(Importante|Nit|Preexistente)\]/g) || []).length;
-    if (!e) continue;
-    informes += 1; emitidos += e;
-    const rs = [...t.matchAll(resp)].map((m) => (m[1] || m[2]).toLowerCase());
+    const renglones = String(t).split('\n').filter((l) => /\[(Importante|Nit|Preexistente)\]/.test(l));
+    if (!renglones.length) continue;
+    informes += 1; emitidos += renglones.length;
+    const rs = renglones.map((l) => (l.match(resp) || [])[1]).filter(Boolean).map((r) => r.toLowerCase());
     respondidos += rs.length; arreglados += rs.filter((r) => r === 'arreglado').length;
   }
   return { informes, emitidos, respondidos, arreglados };

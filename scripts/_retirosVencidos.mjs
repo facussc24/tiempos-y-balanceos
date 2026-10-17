@@ -46,6 +46,9 @@ export function evaluarRetiros(datos, enDisco, hoy) {
     sinRenglon: enDisco.filter((id) => !todas[id]),
     sinArchivo: Object.keys(todas).filter((id) => !enDisco.includes(id)),
     sinRazon: filas.filter((f) => !f.justifica || /^TBD/.test(f.justifica)).map((f) => f.id),
+    // Auditor 17/10: el plan pide «justifica: <numero o incidente>»; una razon sin un digito (fecha, numero, conteo) es texto
+    // de cabecera, no una justificacion medida. Se lista para completarla al revisar la pieza.
+    sinNumero: filas.filter((f) => f.justifica && !/^TBD/.test(f.justifica) && !/d/.test(f.justifica)).map((f) => f.id),
     total: filas.length,
   };
 }
@@ -111,6 +114,7 @@ function main(argv) {
   console.log(`En el disco sin renglon (${r.sinRenglon.length}): ${r.sinRenglon.join(', ') || '-'}`);
   console.log(`Renglon sin archivo (${r.sinArchivo.length}): ${r.sinArchivo.join(', ') || '-'}`);
   console.log(`Sin razon escrita (${r.sinRazon.length}): ${r.sinRazon.join(', ') || '-'}`);
+  console.log(`Razon sin numero, fecha ni incidente (${r.sinNumero.length}): se completa al revisar cada pieza`);
   if (d) {
     const ceros = Object.entries(d.total).filter(([, n]) => n === 0).map(([id]) => id);
     console.log(`Disparos desde ${d.desde} en ${d.archivos} registros (cuenta la firma del hook, p. ej. [ESCRITORIO-GUARD]):`);

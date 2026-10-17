@@ -22,8 +22,8 @@ auditor encontró, así que la respuesta se conoce):
 **Limpios** (cambios ya aprobados; un hallazgo Importante acá es un falso positivo): elegir 4 commits del 16/10 que un
 auditor aprobó sin cambios, de tamaño parecido a los de arriba. Candidatos a confirmar leyendo su auditoría:
 `5b988ae0` (hojas, «volante cromado» a aviso, 4 archivos), `a17b445b` (tanda 1.6, ronda 2), `7e8a2b9b` (solo
-documentación: sirve de control de «no inventa en un diff de texto») y el arreglo de esta tanda `53c76112`
-(deduplicación del workflow, revisado sobre el diff plantado).
+documentación: sirve de control de «no inventa en un diff de texto»). **No** el `53c76112` de esta tanda: el auditor del 17/10
+le encontró un defecto (un agente caído contaba como «sin hallazgos»), arreglado después; sirve como diff CON defecto.
 
 ## Cómo se corre
 

@@ -158,11 +158,17 @@ describe('CI partido en candado.yml y deploy.yml (tanda 9, pieza 9)', () => {
         await leerUltimoRunCI({ fetchFn, shaLocal: 'a' });
         expect(url.endsWith('/actions/runs?per_page=1')).toBe(true);
     });
-    it('ROJO: candado verde pero el ultimo deploy de la app en rojo -> falta (no lo tapa el verde del candado)', () => {
+    it('ROJO: candado verde pero el deploy del HEAD en rojo -> falta (no lo tapa el verde del candado)', () => {
         const candado = evaluarCI({ sha: 'abcdef1234567890', run: verde, error: null });
-        const r = combinarCI(candado, { run: { ...verde, head_sha: '1111111199', conclusion: 'failure' }, error: null });
+        const r = combinarCI(candado, { run: { ...verde, head_sha: 'abcdef1234567890', conclusion: 'failure' }, error: null, sha: 'abcdef1234567890' });
         expect(r.estado).toBe('falta');
         expect(r.detalle).toMatch(/ULTIMO DEPLOY de la app esta ROJO/);
+    });
+    it('un deploy rojo de un commit ANTERIOR es aviso con como relanzarlo (auditor 17/10: no frena todas las sesiones)', () => {
+        const candado = evaluarCI({ sha: 'abcdef1234567890', run: verde, error: null });
+        const r = combinarCI(candado, { run: { ...verde, head_sha: '1111111199', conclusion: 'failure' }, error: null, sha: 'abcdef1234567890' });
+        expect(r.estado).toBe('aviso');
+        expect(r.detalle).toMatch(/relanzarlo/);
     });
     it('VERDE: candado verde y deploy viejo verde (o sin corridas) -> ok; deploy ilegible -> aviso, nunca verde', () => {
         const candado = evaluarCI({ sha: 'abcdef1234567890', run: verde, error: null });

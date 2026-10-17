@@ -18,9 +18,11 @@ describe('reentregasPorCarpeta (el metodo del 15 de 54)', () => {
 });
 
 describe('hallazgosRespondidos', () => {
-  it('cuenta etiquetas emitidas, respuestas inline y en tabla, y arreglados', () => {
+  it('cuenta la respuesta solo en el renglon del hallazgo; leyendas y tablas sueltas no (nunca mas respuestas que hallazgos)', () => {
     const t1 = 'leyenda: **arreglado / rechazado / a propósito / no importa**\n- [Importante] a.mjs:1 — x · respuesta: arreglado\n- [Nit] b.mjs:2 — y · respuesta: ____\n| h | **a propósito** |';
     const t2 = 'informe viejo sin etiquetas: CRITICO, WARNING';
-    expect(hallazgosRespondidos([t1, t2])).toEqual({ informes: 1, emitidos: 2, respondidos: 2, arreglados: 1 });
+    const r = hallazgosRespondidos([t1, t2]);
+    expect(r).toEqual({ informes: 1, emitidos: 2, respondidos: 1, arreglados: 1 });
+    expect(r.respondidos).toBeLessThanOrEqual(r.emitidos);
   });
 });

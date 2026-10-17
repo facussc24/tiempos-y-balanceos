@@ -4,9 +4,11 @@
  * Lo lee `_cierreSesion.mjs` del registro de la sesion. La primera semana es AVISO, nunca falta (plan de la tanda,
  * docs/PLAN_METODO_2026-10-16.md: «el revisor nuevo y los bancos avisan la primera semana, no frenan»).
  *
- * Que cuenta como entrega: un `SendUserFile`, o un Write/Edit de un documento (.pptx .xlsx .docx .pdf .msg) dentro de
- * `exports\` o de la biblioteca de Ingenieria, hecho por la sesion principal (no por un subagente). Lo que no ve: un
- * documento que arma un script de Python sin pasar por Write (por eso es aviso). Que cuenta como revisor: una
+ * Que cuenta como entrega: un `SendUserFile`, un Write/Edit de un documento (.pptx .xlsx .docx .pdf .msg) dentro de
+ * `exports\` o de la biblioteca de Ingenieria, o un comando de Bash/PowerShell que nombra uno de esos documentos ahi,
+ * siempre de la sesion principal (no de un subagente). Puede contar de mas (un comando que solo lo lee) y no ve un
+ * documento que un script arma sin nombrar su ruta en el comando: por eso es aviso, y «no-aplica» no prueba que no hubo
+ * entrega. Que cuenta como revisor: una
  * llamada a Agent con `subagent_type: revisor-pedido`, o un `investigador` cuyo prompt trae el cuerpo del revisor
  * («# Revisor contra el pedido»), que es como se calibra mientras la definicion nueva no aparece en la sesion.
  */
@@ -29,7 +31,13 @@ export function senalesDeLinea(linea) {
     const inp = b.input ?? {};
     if (b.name === 'SendUserFile' && Array.isArray(inp.files)) out.entregas.push(...inp.files.filter((f) => typeof f === 'string'));
     if ((b.name === 'Write' || b.name === 'Edit') && typeof inp.file_path === 'string' && DOC.test(inp.file_path) && LUGAR.test(inp.file_path)) out.entregas.push(inp.file_path);
-    if ((b.name === 'Agent' || b.name === 'Task') && (inp.subagent_type === 'revisor-pedido' || /# Revisor contra el pedido/.test(String(inp.prompt ?? '')))) out.revisor = true;
+    // Auditor 17/10: el caso D2 (mail y Excel armados por scripts) no pasaba por Write ni por SendUserFile y daba
+    // «no-aplica». Un comando que nombra un documento en exports\ o en la biblioteca cuenta como entrega; puede contar de
+    // mas (un comando que solo lo lee), por eso el paso es un aviso.
+    if ((b.name === 'Bash' || b.name === 'PowerShell') && typeof inp.command === 'string') {
+      for (const m of inp.command.matchAll(/(?:[A-Za-z]:[\\/]|exports[\\/])[^"'\n|<>]*?\.(?:pptx|xlsx|docx|pdf|msg)\b/gi)) if (LUGAR.test(m[0]) || /^exports[\\/]/i.test(m[0])) out.entregas.push(m[0]);
+    }
+    if ((b.name === 'Agent' || b.name === 'Task') && (inp.subagent_type === 'revisor-pedido' || String(inp.prompt ?? '').trimStart().startsWith('# Revisor contra el pedido'))) out.revisor = true;
   }
   return out;
 }
@@ -38,14 +46,16 @@ export function senalesDeLinea(linea) {
 export function relevarRevisorPedido(transcriptPath) {
   let texto;
   try { texto = fs.readFileSync(transcriptPath, 'utf8'); } catch { return { entregas: [], revisor: false, leido: false }; }
-  const entregas = new Set(); let revisor = false;
+  // Auditor 17/10: el revisor vale si corrio DESPUES de la ultima entrega (uno que corrio antes no reviso lo entregado).
+  const entregas = new Set(); let ultimaEntrega = -1; let ultimoRevisor = -1; let i = 0;
   for (const l of texto.split('\n')) {
+    i += 1;
     if (!l) continue;
     const s = senalesDeLinea(l);
-    s.entregas.forEach((e) => entregas.add(e));
-    revisor ||= s.revisor;
+    if (s.entregas.length) { s.entregas.forEach((e) => entregas.add(e)); ultimaEntrega = i; }
+    if (s.revisor) ultimoRevisor = i;
   }
-  return { entregas: [...entregas], revisor, leido: true };
+  return { entregas: [...entregas], revisor: ultimoRevisor > 0 && ultimoRevisor > ultimaEntrega, leido: true };
 }
 
 /** El registro de una sesion por su id, en cualquiera de las carpetas del proyecto (principal o worktree). */

@@ -15,6 +15,10 @@ describe('senales del registro', () => {
     expect(senalesDeLinea(asis([uso('SendUserFile', { files: ['C:\\x\\a.pptx'] })])).entregas).toEqual(['C:\\x\\a.pptx']);
     expect(senalesDeLinea(asis([uso('Write', { file_path: 'C:\\Dev\\BarackMercosul\\exports\\T\\informe.pdf' })])).entregas).toHaveLength(1);
   });
+  it('cuenta un documento armado por un comando (caso D2 del 03/09: el Excel salio de un script), y no un .py en exports', () => {
+    expect(senalesDeLinea(asis([uso('Bash', { command: 'python scripts/x.py --out "C:\\Dev\\BarackMercosul\\exports\\FOLIO\\2HT853839 - Consumo de material.xlsx"' })])).entregas).toHaveLength(1);
+    expect(senalesDeLinea(asis([uso('Bash', { command: 'python exports/FOLIO/generar.py' })])).entregas).toEqual([]);
+  });
   it('NO cuenta un .mjs en exports, un .pptx fuera de exports ni lo que hace un subagente', () => {
     expect(senalesDeLinea(asis([uso('Write', { file_path: 'C:\\Dev\\BarackMercosul\\exports\\T\\gen.mjs' })])).entregas).toEqual([]);
     expect(senalesDeLinea(asis([uso('Write', { file_path: 'C:\\tmp\\a.pptx' })])).entregas).toEqual([]);
@@ -24,6 +28,8 @@ describe('senales del registro', () => {
     expect(senalesDeLinea(asis([uso('Agent', { subagent_type: 'revisor-pedido', prompt: 'x' })])).revisor).toBe(true);
     expect(senalesDeLinea(asis([uso('Agent', { subagent_type: 'investigador', prompt: '# Revisor contra el pedido\n...' })])).revisor).toBe(true);
     expect(senalesDeLinea(asis([uso('Agent', { subagent_type: 'auditor', prompt: 'auditá' })])).revisor).toBe(false);
+    // un auditor que CITA el cuerpo del revisor no es el revisor (auditor 17/10)
+    expect(senalesDeLinea(asis([uso('Agent', { subagent_type: 'auditor', prompt: 'revisá el archivo que dice «# Revisor contra el pedido»' })])).revisor).toBe(false);
   });
 });
 
@@ -52,5 +58,8 @@ describe('evaluarRevisorPedido', () => {
     // Lo encontro la revision adversarial del 17/10 sobre un diff plantado (`revisor = s.revisor` en vez de `||=`).
     fs.appendFileSync(p, `\n${asis([uso('Bash', { command: 'ls' })])}\n${asis([{ type: 'text', text: 'listo' }])}`);
     expect(evaluarRevisorPedido(relevarRevisorPedido(p)).estado).toBe('ok');
+    // una entrega NUEVA despues del revisor vuelve a pedir revision (auditor 17/10: el orden importa)
+    fs.appendFileSync(p, `\n${asis([uso('SendUserFile', { files: ['C:\\x\\b.pptx'] })])}`);
+    expect(evaluarRevisorPedido(relevarRevisorPedido(p)).estado).toBe('aviso');
   });
 });

@@ -2,7 +2,7 @@ name: Candado y pruebas
 
 # Tanda 9, pieza 9 del plan del sistema (17/10/2026): este workflow corre en CADA push a main, sin filtro de rutas,
 # y el deploy de GitHub Pages (deploy.yml) corre solo cuando cambia la app. Medido ese dia: de los ultimos 300
-# commits de main (10/10 al 17/10) solo 1 toco la app; los otros 299 publicaban de nuevo lo mismo, y un rojo de un
+# commits de main (10/10 al 17/10) solo 2 entraban en el filtro de la app, y los dos eran de configuracion; los otros 298 publicaban de nuevo lo mismo, y un rojo de un
 # test de herramientas (la Papelera, 23 min) frenaba el deploy de una app que no habia cambiado.
 # EL CANDADO DEL REPO PUBLICO (_gateRepoPublico.mjs) NO SE FILTRA NUNCA: por eso vive aca, sin `paths`, y tambien
 # en deploy.yml. Lo verifica __tests__/scripts/ciWorkflows.test.mjs (rojo si este archivo gana un `paths`).
