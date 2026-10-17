@@ -12,16 +12,107 @@ Cada gate de abajo nacio de una hoja que Fak devolvio; los casos, con fecha y ci
 
 ---
 
-> **Si ves esta skill cortada (pasa tras un compactado): hacé `Read` del SKILL.md desde §7 antes de entregar o
-> imprimir.** Al entregar: `hojalib_selftest.py` y `hoja_proceso_check.py` en verde; las láminas miradas una por
-> una; ningún `TBD` en la descripción (solo en el cajetín). Si es un paquete para planta: tabla §7 bis (E1 a E6)
-> fila por fila sobre el PDF, también para hojas de otro autor. Dónde se guarda y qué número lleva: §3 bis.
+> **Lo crítico va primero: §7 (antes de entregar) y §7 bis (los errores que Fak ya marcó), y después los
+> gates.** Si ves esta skill cortada (pasa tras un compactado), hacé `Read` del SKILL.md entero antes de entregar
+> o imprimir. Al entregar: `hojalib_selftest.py` y `hoja_proceso_check.py` en verde; las láminas miradas una por
+> una; ningún `TBD` en la descripción (solo en el cajetín); y **todo PDF de hojas que va a Fak o a planta, propio,
+> del servidor o de otro autor, pasa por `python scripts/_revisarPaqueteHO.py <pdf>` sin ROJO** (tanda 1.5).
 
 **Un número por PIEZA, no por sector** (decisión de Carlos Baptista, contada por Fak el
 01/10/2026: *"las hojas de proceso ahora están unificadas, no se separan más por sectores,
 número único"*). 971 = APB de puerta, 990 = Insert, 992 = Top Roll, 994 = Upper Trim: todas las
 operaciones de la pieza van en ese número y cada hoja lleva el **N° de operación del flujograma**.
 Una operación no tiene un número de HO aparte.
+
+**Lo crítico, en cinco renglones** (el detalle está en cada gate y en `reference/`):
+- El EPP sale del riesgo real del puesto: **cada hoja declara su `epp=`**; los generadores no tienen set por
+  defecto y frenan sin él (16/10/2026). Anteojos donde Fak dijo que no se usan es ROJO del revisor.
+- CICLO DE CONTROL **vacío** hasta que Calidad emita su plan de control (canon 1.1 y 1.2). Registro: `Set up` o `-`,
+  nunca "RC". Sin foto, el recuadro va vacío.
+- La pieza de nombre raro y cada herramienta del puesto se aclaran y se marcan (0.8 b bis).
+- El plan de reacción es el estándar y el ARMADO es el de la última hoja aprobada (canon 4.5; el revisor compara).
+- Dónde se guarda y qué número lleva: `reference/guardado-y-numero.md` (§3 bis).
+
+**Dónde quedó cada sección** (los números no cambiaron; las reglas y otros skills los citan asi):
+
+| Sección | Archivo |
+|---|---|
+| §0 (gates 0.1 a 0.8, 1 a 3), §7, §7 bis | este `SKILL.md` |
+| §1, §1 bis, §1 ter (criterios de imagen; la hoja A3 de una foto por paso) | `reference/criterios-de-foto.md` |
+| §2 a §2 sexies, §3 (pantallas, foto del video, rotular, marcas, nota, castellano) | `reference/pantallas-y-fotos.md` |
+| §3 bis (dónde se guarda, número de HO, listado maestro) | `reference/guardado-y-numero.md` |
+| §4 (lo fijo del formulario), §5 (de dónde sale cada gate) | `reference/formulario-y-origen.md` |
+| §6 (qué control frena qué, y dónde vive) | `reference/enforcement.md` |
+| Los casos de cada gate, con fecha y cita | `reference/casos.md` |
+
+---
+
+## 7. Antes de entregar
+
+- [ ] **todo PDF de hojas que va a Fak o a planta pasa por `python scripts/_revisarPaqueteHO.py <pdf>` sin ROJO**,
+      también las del servidor y las de otro autor (tanda 1.5, 16/10/2026: el error entraba por lo que no pasaba por
+      ningún control). Mide además el ciclo lleno, la pieza rara sin paréntesis, el EPP que no es del sector, el
+      herramental sin marcar, la reacción del plan de control pegada, el texto tachado, la cantidad con "×", el camino
+      de inspección y el ARMADO contra la última hoja aprobada de ese tamaño. `_imprimir.py` no imprime con un ROJO
+      y `_pdfPorPieza.py` dice que no se muestra
+- [ ] **si es un PAQUETE para imprimir o pasar a planta: la tabla de §7 bis, fila por fila, sobre el PDF**
+      (y `python scripts/_revisarPaqueteHO.py <pdf>`, skill `imprimir`)
+- [ ] `hojalib_selftest.py` en verde ("0 fallan")
+- [ ] `hoja_proceso_check.py` en verde sobre el deck
+- [ ] **las laminas miradas una por una**, renderizadas — no el script, el archivo publicado
+- [ ] las pantallas miradas **al ancho que van a tener impresas**, no ampliadas
+- [ ] PowerPoint cerrado antes de generar, y el texto verificado sobre el archivo guardado
+- [ ] si el archivo lo venia editando Fak: su texto **intacto**, verificado con diff
+- [ ] `fotodevideo.py leer` en verde: **ninguna foto sin decir de que video salio**
+- [ ] **ninguna foto repetida con dos nombres** (`md5sum *.jpg | sort | uniq -d` sobre el hash)
+- [ ] cada hoja con 2 a 4 pasos, una foto por paso, y las partidas con su (HOJA n DE m)
+- [ ] **cada foto rotulada, mirada a tamaño completo DESPUES del ultimo cambio de recorte**
+- [ ] **cada elemento de maquina que se ve en la foto de un paso (sensor, perilla, boton, guia)
+      esta nombrado en algun renglon, o se decidio que el operario no lo toca** (criterio 15,
+      23/09/2026: el sensor de la mesa estaba en la foto y ningun paso lo nombraba)
+- [ ] **cada pieza de nombre raro que nombra un paso (acumulador, guiador, fusor, expulsores, sonotrodo…) tiene
+      su aclaracion entre parentesis la primera vez Y su recuadro con el nombre en la foto** (0.8 b bis, Fak
+      13/10/2026). Se recorre paso por paso con la pregunta "¿un operario nuevo sabe que es esto y donde esta?";
+      vale tambien para las hojas de otro autor y las de Excel
+- [ ] cada nota pasa el test: ¿le cambia algo al que esta al lado de la maquina?
+- [ ] lo que falta filmar, en su lista aparte — **no se escribe por analogia**
+- [ ] ningun `TBD` en la descripcion (solo en el cajetin), ninguna foto sin mirar, ningun numero sin fuente citada
+- [ ] **revision ciega** (22/09/2026): UN `Agent` recibe SOLO el PDF impreso de las hojas (ni el
+      spec, ni la transcripcion, ni mi razonamiento) y contesta como operario nuevo: *"¿Que tengo
+      que hacer yo en este puesto, paso por paso? ¿Que no se entiende?"*. Si su respuesta no es el
+      proceso real, la hoja no se entiende y no se entrega. Los gates verdes no vieron lo que Fak
+      vio a ojo (08/09, tres veces el 21/09 — *"no me explicas que debo hacer yo"* —, 22/09). Es un
+      paso de proceso, sin gate automatico: por eso esta en esta lista. Un agente al que le paso mis
+      supuestos no es independiente (memoria `un_agente_no_es_independiente_si_le_paso_mis_supuestos`)
+
+---
+
+## 7 bis. Los errores que Fak ya marcó en el paquete de planta (07/10/2026)
+
+Salieron de revisar a ojo el paquete de hojas que se iba a imprimir. Los gates de arriba miran una
+hoja por vez y no ven nada de esto: varias hojas vienen de otro autor o de Excel. Horas de Buenos
+Aires; las citas llevan el tipeo corregido, las palabras son de Fak. Los números de hoja que él cita (48,
+55, 173) coinciden con el paquete de 175 páginas de esa mañana
+(`exports\IMPRESION_0710_FINAL\3_HOJAS_DE_PROCESO_A4_depurado.pdf`: la 48 es el armado de espuma del inserto de
+Pablo, con logo violeta; la 55, la HO-985 OP 21; la 173, la HO-983 OP 40 costura de planas, cortada abajo).
+
+**Si al revisar aparece uno de estos errores, se le dice a Fak en una línea («ojo, la hoja X tiene
+tal error») y se corrige antes de la auditoría** (Fak, 15:58: *«así las próximas ya los conocés y me
+decís: ojo, acá hay aún un error»*). Se miran sobre el PDF, no sobre el script ni el generador.
+
+| # | Error (como se ve impreso) | Fak (fecha y hora) | Qué se hace |
+|---|---|---|---|
+| **E1** | **El plan de reacción no es el estándar**: un disparador propio (la 55 era la HO-985 OP 21 con *«SI DETECTA 3 PIEZAS NO CONFORMES CONSECUTIVAS (REBABAS/FLASHES)…»*; el embossing, *«SI LA PRENSA NO ENCIENDE O LA PANTALLA NO RESPONDE»*), una columna de acciones propias a la derecha, o una franja angosta con media hoja en blanco | 13:24: *«el plan de reacción no conforme, como que algunas hojas no están respetando el formato estándar»* · 14:37: *«en la 55 sigue mal el plan de no conforme… habíamos dicho que eso se debía corregir»* · 15:22: *«te lo dije 300 veces, no es el estándar que decidimos… a la derecha queda todo blanco, está mal aprovechado el espacio de estas HO»* | Armado y texto del **canon 4.5** (`bloque_plan()` de `scripts/img/generar_hojas_img.py`). Se compara con una HO de Excel del servidor, nunca con la hoja anterior (LECCIONES 07/10). Vale también para las hojas de otro autor |
+| **E2** | **Logo que no es el oficial**: el violeta con MERCOSUL en letra grande (el oficial es azul, con MERCOSUL chico debajo de una línea). Lo traían 18 páginas del paquete: las hojas A3 de Pablo Gamboa y los caminos de grampas | 14:37: *«la hoja 48 tiene mal el logo, ese violeta no es el oficial de Barack, error grave… sí o sí hay que corregirlo»* | El único es `barack_logo.png`, carpeta `INGENIERIA BARACK (NUNCA BORRAR)` de la nube de Ingeniería (constante `LOGO_BARACK` del generador), sobre celda blanca (canon 4.2). Se mira la esquina de TODAS las hojas, también las ajenas |
+| **E3** | **La hoja no llena su página**: sale chica con franja blanca, **cortada abajo**, o con la marca *«Página 1»* del Excel | 14:37: tres capturas, una con la HO-971 OP 80 ocupando poco más de la mitad del ancho del papel (la frase que la acompaña está ilegible; se leyó de la captura) y *«en la 54 se ve la página 1 del Excel»* · 14:47: *«en la hoja 173 veo cortada la parte de abajo… hay que corregir eso también»* | Se juzga sobre el PDF: lo IMPRESO llena el papel, nada queda cortado, sin restos de la interfaz de Excel. Se mide lo que no es blanco, no la caja de dibujo (hallazgo técnico del 07/10, no frase de Fak: un elemento invisible lejos de la hoja engañaba la cuenta en 4 hojas del APB) |
+| **E4** | **Falta el N° de operación o el N° de HO (arriba a la derecha)**, o el N° no coincide con el flujograma | 12:43: *«hojas sin número»* · 13:24: *«hojas sin número de operación, hojas sin número arriba a la derecha también»* · 14:39: *«fijate si tiene número, etcétera»* · 09:53 pidió la tabla de si *«los números de AMFEs, flujogramas y HO coinciden»* | Toda hoja lleva los dos. El N° de operación sale del flujograma (`no-pfd-no-ho.md`, `node scripts/_verificarNumeracion.mjs`); el de HO, del listado (`python scripts/_hoNumeros.py`, §3 bis). Un decimal (60.1) tiene que poder explicarse: *«¿por qué están en 60.1?… no me lo explicaste»* (14:37; antes, 13:24: *«antes no lo hacíamos, no digo que esté mal, pero me llamó la atención»*). Qué se hace con las de máquina: sin decidir, ver skill `imprimir` |
+| **E5** | **Dice TBD, PENDIENTE, FOTOS PENDIENTES o PRELIMINAR** | 10:39, sobre la HO-971 OP 70 (foto *«FOTOS PENDIENTES / TBD»*, paso *«PENDIENTE / TBD - Cargar descripción»*, ciclo *«PENDIENTE / TBD»*): *«esa está mal puesta, encima dice todo TBD, o sea al pedo la vamos a imprimir… revisá eso y otro tipo de errores»* · 14:46: *«debemos eliminar la palabra preliminar de las hojas, fue una orden de Carlos Baptista y debemos respetarla»* | Una hoja esqueleto (sin fotos ni pasos) **no se imprime ni se pasa a planta**: se hace de verdad o queda afuera, y va a la lista de lo que falta. A planta ni el cajetín lleva TBD (sin N° no se imprime, E4); el `TBD` del cajetín es solo para trabajar (§4). CICLO DE CONTROL vacío (canon 1.2), no *«PENDIENTE / TBD»*. Ni «PRELIMINAR» en ningún lado |
+| **E6** | **Hoja de otro autor que entra sin revisar** (la costura del APB trasero central de Pablo Gamboa, que él le pasó a Carlos) | 14:39: *«buscala, así actualizamos, por favor, y revisá errores conocidos antes de pasarlas… o sea, fijate si tiene número, etcétera»* | Pasa por E1 a E5 igual que las propias. Lo que se corrija en un archivo ajeno se le muestra a Fak con el ANTES de cada cambio, ya auditado (LECCIONES 06/10) |
+
+Lo que va y lo que no va en el paquete (portada, esquema de palletizado, embalaje WIP, hojas repetidas
+por producto, hojas de Pablo) y los pasos para imprimir: skill `imprimir`.
+
+---
 
 ## 0. LOS GATES (bloqueantes). Los 0.x se contestan antes de escribir; 1 a 3, al armar y al entregar
 
@@ -293,482 +384,6 @@ Sale con codigo 1 y no se entrega. `--jerarquia 20.2=0,20.4=0` sirve para cheque
 autores, algunas salidas de Excel) se busca ademas lo de §7 bis y se corre
 `python scripts/_revisarPaqueteHO.py <pdf>` (pasos en el skill `imprimir`). El 07/10/2026 Fak
 encontro a ojo, en el paquete de planta, hojas con el logo viejo, con otro plan de reaccion y cortadas abajo.
-
----
-
-## 1. Los criterios, con su numero
-
-| # | Criterio | Umbral | Por que ese numero |
-|---|---|---|---|
-| 1 | Una imagen **principal** por hoja | >= **45 %** de la superficie de foto de la hoja **y** >= **1,6x** la segunda | sobre la TINTA, no sobre el bloque: una foto vertical 9:16 a la altura completa ocupa 32 % y **no puede ocupar mas** |
-| 2 | **Lo que hay que leer, se lee** | cuerpo impreso >= **7 pt** | es lo mas chico que Barack imprime en estas hojas (las referencias de EPP) |
-| 3 | La principal no es una estampilla | >= **25 %** del bloque | piso absoluto, para que el criterio 1 no se cumpla achicando a las otras |
-| 4 | **Lo ajeno no entra** | se recorta o se descarta | celulares de traductor, caras, gente de espaldas, piso vacio, cajas del fondo |
-| 5 | **Cantidad** | **2 o 3** en jerarquia · **hasta 4** en secuencia, y con mas la hoja se PARTE | en A4, con 4 fotos de tamaños distintos no se ve ninguna; en secuencia van las 4 iguales en grilla 2x2, 34 cm² cada una |
-| 6 | Las pantallas son la **foto real enderezada**, con el rotulo encima | — | ver §3 |
-
-**Un umbral se prueba contra la poblacion entera antes de declararlo** (el primer 45 %
-reprobaba 13 de 17 hojas sanas).
-
----
-
-## 1 bis. Que hace que una foto EXPLIQUE un paso (criterios 7 a 13)
-
-El test: **sin leer nada, ¿se contesta QUE OBJETO y QUE LE ESTA PASANDO?** Si no, la foto
-decora. Medido sobre las laminas del 21/09/2026.
-
-| # | Criterio | Como se ve que esta mal |
-|---|---|---|
-| 7 | **El sujeto del paso llena el cuadro** | En `r_botonera` los cinco comandos que la hoja señala vivian en **2,7 cm de alto** impresos (25 % del area). Recortada a la banda, los mismos botones pasan a 9,3 cm: **3,4x** |
-| 8 | **Lo ajeno no es solo gente: es todo lo que ningun renglon nombra** | el cartel del proveedor ocupaba el **36 % del alto** de una foto del ciclo; pared y techo, entre 36 y 41 % |
-| 9 | **Una persona entra si sus MANOS son el paso. Si entra su espalda, tapa el paso** | dos operarios de espaldas tapaban el **35 % del ancho** y el molde quedaba en **2,5 cm²**: no se distingue si sacan la pieza o un marco |
-| 10 | **En una secuencia, la foto n+1 dice QUE CAMBIO — y va en el orden del reloj** | cuatro fotos del mismo video en los segundos 198 · 153 · 110 · 327: los pasos 1→2→3 iban **para atras**. Y dos con el mismo recorte y el mismo punto de vista no muestran ningun cambio |
-| 11 | **El pie describe el instante que la foto MUESTRA**, no el que el paso quiere | el pie decia *"la pieza queda en la cavidad"* y la foto mostraba una mano ya sacandola |
-| 12 | **El punto de vista es el del operario parado en el puesto** | una toma centrada de frente al molde es el punto de vista del que filmo, no el del que opera |
-| 13 | **Si la accion pasa ADENTRO, la foto del paso es la PANTALLA** | una maquina cerrada es la misma foto para cualquier paso del ciclo |
-| 15 | **Lo que la foto del paso MUESTRA y ningun renglon nombra se pregunta: ¿que hace el operario con esto?** | el sensor de la mesa de carga (soporte con cable negro) estaba en la foto del paso 3 de la 30.3 desde el 22/09 y nadie lo nombraba; el material colgando entre el desenrollador y la mesa estaba filmado en dos videos. Fak, 23/09: *"no hablaste del sensor... siempre dejamos el rollo colgando"*. Los pasos salieron de lo que NARRA el audio; lo que MUESTRA la imagen no se miro |
-
-Del 7 y del 14 (*dos chapas no se pisan*) falta el numero: **el umbral se corre antes contra
-las 17 hojas de la HOTMELT**, que es la poblacion que hay (§1).
-
-Lo que **si** esta en codigo hoy: el orden del reloj (`_gate_secuencia_en_orden`), que cada
-foto de secuencia lleve al menos una marca (aviso: poner la marca obliga a BUSCAR el objeto
-en el cuadro, y ahi se ve solo que no esta), y que la foto llene su celda.
-
-Lo que **no ve ningun script** y hay que mirar: si lo que esta en el cuadro es el objeto que
-el paso nombra, si el pie describe el instante que se ve, si la persona agarra o tapa, y el
-punto de vista.
-
-## 1 ter. La hoja A3 de una foto por paso (formato de Pablo Gamboa)
-
-Fak, 28/09/2026: *"el formato ahora es el que hizo Pablo Gamboa, el A3"* y *"con las FOTOS se
-tiene que entender exactamente lo que hay que hacer... menos texto, mas visual"*. Es otra hoja,
-no la A4 agrandada:
-
-- **Una foto por paso, en una grilla de baldosas iguales**, cada una con su cartel `REF. n` y
-  su pie; el paso termina en *"– Ver REF. n"*. Un paso que no se puede fotografiar va sin REF.
-- La advertencia va en el **cuadro amarillo**, al lado de los elementos de seguridad. El ciclo
-  de control queda con las filas vacias (canon 1.1 y 1.2).
-- **Hasta 15 fotos por hoja** (la HO-992 TAPIZADO Y ENGRAMPADO DE PANEL de Gamboa lleva 15 y la
-  HO-971 ENGRAMPADO, 12); el piso sigue siendo **25 cm² y 3,5 cm de lado** por foto. Con mas, la
-  hoja se parte. Cada foto lleva su cartel `REF. n` en su propia baldosa: el control los cuenta
-  y rechaza dos encimados.
-- La grilla se elige por la FORMA de las fotos: el bloque es casi cuadrado, y seis pantallas
-  apaisadas en 3 x 2 quedan en baldosas verticales que les cortan la mitad. Si llenar la
-  baldosa recortaria mas del 15 %, la foto entra **entera** (queda mas chica, pero no se corta
-  el boton marcado ni una columna de la tabla: paso con la consigna del fusor).
-- **Pantalla en ingles** (cuando la maquina no tiene castellano): la foto real con el recuadro
-  rojo, y el paso dice que es el boton en castellano y cita el rotulo entre comillas:
-  *"Presionar el boton 1, inicio de limpieza («Glue removal starts»)"*.
-
-Motor: `scripts/hotmelt/hoja_a3_fotos.py` (`hoja(prs, d)`); ejemplo completo con sus gates,
-`scripts/hotmelt/generar_hojas_v3.py`. El control duro la juzga con
-`hoja_proceso_check.py "<deck>" --secuencia` (detecta el A3 por el tamano de la lamina).
-
-## 2. Como se dimensiona una pantalla para que entre legible
-
-1. cuantas imagenes va a tener la hoja (2 o 3), y cual es la principal;
-2. `hojalib.ancho_que_le_toca_cm(ancho_px, alto_px, n)` -> los cm reales;
-3. `ancho_px_max = cuerpo_px x cm / (7 x 0,0352778)`;
-4. si no entran los campos, **se sacan los que el paso no nombra** y se declaran en el pie
-   de la imagen ("la pantalla real trae ademas ...");
-5. al guardar, la metrica va **adentro del PNG**:
-   `hojalib.guardar_pantalla(im, dst, cuerpo_px=30, que_es="...")`.
-
-`cuerpo_px` es **la tipografia mas chica que el operario tiene que leer** — la de los
-rotulos, no la de los titulos ni la de los valores grandes. Declararla mas grande de lo que
-es hace pasar el gate y no arregla nada.
-
-El dato viaja en un chunk de texto del PNG y no en un archivo al lado porque el gate lee las
-imagenes **ya embebidas en el pptx**, donde no hay nombre de archivo que seguir.
-
----
-
-## 2 bis. La foto sale del VIDEO, no del fotograma de la biblioteca
-
-La biblioteca de fotogramas de la maquina (`<MAQUINA>\.claude\fotogramas de cada video\`,
-memoria `reference_videos_y_fotos_de_maquina_donde_van`) muestrea **un cuadro
-cada 2 segundos, escalado a 1600**. Eso sirve para ENCONTRAR el momento; la foto de la hoja
-se saca aparte, y por tres motivos medidos el 21/09/2026:
-
-1. **Entre dos muestras hay 59 cuadros que nadie miro** y el foco entre vecinos se mueve un
-   orden de magnitud. Se extrae la ventana entera a resolucion completa y se elige por foco.
-2. **El metadato de rotacion del telefono puede estar mal**: el IMG_0585 declara
-   `rotation=90`, ffmpeg la aplica, y el tablero igual sale acostado. La rotacion se MIRA.
-3. **Una toma general sin recortar no explica un paso.** Desde un punto fijo, el portico
-   arriba y el portico abajo se parecen. El recorte es lo que convierte una foto en una
-   instruccion.
-
-```bash
-S=.claude/skills/hojas-de-proceso/scripts
-py -3 $S/fotodevideo.py ubicar  --video V --cuadro <frame de la biblioteca>   # el segundo
-py -3 $S/fotodevideo.py ventana --video V --seg 110 --radio 2 --plancha p.jpg # mirar y elegir
-py -3 $S/fotodevideo.py sacar   --video V --seg 110 --crop 15,25,34,34 --out f.jpg --nota "..."
-py -3 $S/fotodevideo.py leer    assets/*.jpg      # sale 1 si alguna no dice de donde salio
-```
-
-**La procedencia va ADENTRO del archivo** (EXIF / chunk PNG): video, segundo, rotacion,
-recorte y nota. Un JPG suelto en una carpeta de assets sin eso es un huerfano — nadie puede
-rehacerlo ni verificarlo. Y es lo que evita el defecto que tenia el set anterior: de 36
-fotos, **7 eran el mismo archivo con otro nombre** (una foto del portico se llamaba
-`30.9_b_cadenas_grua` y tambien `30.7_b_descenso_portico`).
-
-**El recorte se pide en la relacion de la CELDA, que no es 16:9.** Con 4 fotos y pie, la
-celda da **2,0:1** (7,86 x 3,89 cm); sin pie, 1,78:1. Una foto de otra relacion entra
-contenida, queda mas chica que las otras y puede caer abajo de los 25 cm2 del gate —
-paso el 21/09 con una foto de 1,60:1 que quedo en 24 cm2. El generador avisa cuando una
-foto llena menos del 80 % de su celda.
-
-## 2 ter. Rotular: el numero va en la foto, el texto va en la HOJA
-
-`rotular.py` pone recuadro + numero sobre lo que hay que mirar. Dentro de una hoja se usa
-**`--banda ninguna`**: el texto de cada numero ya esta en el bloque DESCRIPCION, y repetirlo
-en una banda al costado lo pone dos veces y, al tamaño que le toca a la foto en A4, la copia
-no se lee. La banda (`derecha` / `abajo`) es para una foto que viaja sola, en un mail o un PDF.
-
-```bash
-py -3 $S/rotular.py --foto f.jpg --out r.jpg --banda ninguna \
-     --marca "8,50,25,28|Selector AUTOMATICO / MANUAL" --marca "52,48,9,27|Verde ARRANQUE"
-```
-
-- **La serigrafia en chino se cita, no se traduce sobre la maquina**: el rotulo dice
-  *"Verde ARRANQUE DE CICLO (循环启动)"* porque eso es lo que el operario tiene delante.
-  La fuente es Microsoft YaHei (latino + CJK); con Calibri los ideogramas salen como
-  cuadraditos vacios y `sin_glifo()` corta antes de guardar.
-- **El numero va montado sobre la ESQUINA del recuadro**, no adentro: adentro le tapa al
-  control justo la serigrafia que el rotulo esta citando.
-- La foto guarda la lista de rotulos adentro, y el generador la lee: **si la foto trae 5
-  marcas, la hoja tiene que tener 5 pasos**. Si alguien saca una marca y no toca la hoja,
-  el gate lo frena.
-
-## 2 quater. Una marca es una POSICION, y una posicion se mide
-
-Fak, 21/09/2026: *"le erraste con los cuadraditos, no estan bien puestos sobre los botones,
-eso revisalo cuidadosamente... errores obvios"*, *"el skill deberia verificar bien esas
-cosas, no podemos fallar en algo tan obvio"*. Mirar no es medir.
-
-```bash
-py -3 $S/medir_marca.py --foto f.jpg --marcado prueba.jpg   # donde esta cada pulsador
-py -3 $S/rotular.py --foto f.jpg --out r.jpg --zona 50,45,90,75 \
-     --marca "color:verde|Verde ARRANQUE DE CICLO" --marca "color:rojo#1|Rojo PARO"
-```
-
-- **`color:verde` mide la caja**; nadie tipea la posicion, asi que no se puede poner mal.
-  Colores: verde, rojo, azul, amarillo, y `oscuro` / `claro` para lo que no es de color
-  (el contorno del molde sobre la grilla de resistencias). Si hay varias manchas del mismo
-  color, **corta y las lista** en vez de elegir por su cuenta: se desempata con `rojo#1` o
-  acotando con `--zona`.
-- **La marca escrita a mano se chequea**: si la caja cae sobre una zona LISA (chapa, pared,
-  panel vacio) `rotular.py` sale con error. Una marca corrida unos centimetros cae justo al
-  lado del boton, se ve prolija en el codigo y mal en el papel. `--lisa-ok 2` para el caso
-  en que rodear una zona lisa sea a proposito.
-- **El orden de los numeros es el orden en que se escriben las marcas**, midan o no. El
-  numero del rotulo ES el numero del paso.
-- Y despues igual **se mira la foto rotulada a tamaño completo**, antes de meterla en la
-  hoja. El control ubica, no aprueba.
-
-## 2 quinquies. La NOTA es para el operario, o no va
-
-Fak, 21/09/2026, mirando la nota de una hoja: *"esas notas son una mierda, no le aportan
-nada util al operario, o sea cualquier cosa son"*. Lo que yo habia escrito ahi era mi
-propia contabilidad: de que video sale la foto, a quien le pregunte que, que quedo pendiente
-con el proveedor, como arme la hoja.
-
-**Test de una nota: ¿esto le cambia algo al que esta parado al lado de la maquina?** Si no,
-va a la bitacora o al PDF de pendientes, no a la hoja. Sirven: un limite, una advertencia,
-un "no arranques si...", un "esto se hace entre dos". No sirven —y las frena el gate
-`_gate_texto_para_el_operario()`— el numero de video, "pendiente de confirmar con X",
-"filmado el ...", "lectura del ...", "lo agregamos nosotros", "BORRADOR". **Y desde el
-24/09/2026 tampoco `TBD`** en la descripcion: lo que no se sabe se escribe generico con lo que
-hay, y el por que va a la lista de pendientes (ver §4).
-
-Lo mismo para los parametros: va el valor que rige (`Tiempo de vacio: 19 s`), no su
-historia (`subido de 8 s el 10/09 porque...`).
-
-**Tampoco va en la nota como LEI yo la foto** (Fak, 01/10/2026, hoja de engrampado del IP Pad):
-habia puesto *"Una grampa que quedo hundida en el vinilo se cuenta igual"* — era mi duda al
-contar grampas en el video, no una instruccion. *"Esa nota eliminala, no hace falta."* Si la
-foto ya numera cada grampa, la nota dice eso y nada mas; la duda de conteo se resuelve antes
-(con Fak o con la pieza) y no llega a la hoja.
-
-## 2 sexies. La pantalla va en CASTELLANO, y el idioma no es del dia
-
-Fak, 21/09/2026: *"hay que intentar que todas, dentro de lo posible, esten en español, no en
-chino: cuando ya lo habiamos traducido me asegure de grabar todas las pantallas de frente"*.
-
-En la moldeadora ninguna pantalla existe solo en chino: si una hoja muestra una en chino, no se
-busco bien. **El idioma de la pantalla no es del dia**: se cambia en cualquier momento con las
-banderas de la barra de arriba, asi que se busca cuadro por cuadro.
-
-**Y el OCR no alcanza para encontrarlas.** En el barrido de la moldeadora, un fotograma con la pantalla en
-castellano perfectamente legible dio CERO texto, ni agrandandolo al doble. Lo encontro el
-barrido visual. El OCR ordena la busqueda; el que decide es el ojo.
-
-## 3. La pantalla es la FOTO REAL enderezada, con el dato encima. Ni redibujada ni con IA
-
-**Fak, 08/09/2026:** *"intenta poner la foto de la pantalla real y metele un edit y ponele encima
-el dato que vos queres"* — despues de que yo entregara la pantalla de seguridad redibujada entera,
-en castellano y prolija. El motivo: **el operario tiene adelante la pantalla en chino**. Un dibujo
-en castellano que no se le parece no le sirve para encontrarla entre menus; la foto de la
-pantalla que el ve, con el rotulo puesto encima, si.
-
-Como se hace — los cuatro pasos, en orden:
-
-1. **Elegir el fotograma** donde la pantalla se lee (`scripts/hotmelt/elegir_frame.py` ordena candidatos del
-   mismo video por foco; el veredicto sale de MIRARLA).
-2. **Enderezarla**: `Image.PERSPECTIVE` con los cuatro vertices del LCD. Una pantalla sacada
-   de costado se rectifica; no se recorta y se deja en diagonal.
-3. **Marcar sin tapar.** Lo que hay que mirar se resalta con banda semitransparente y un
-   numero. **Ningun valor de la pantalla se cubre ni se retoca** — y el pie lo dice.
-4. **El texto en castellano va AL COSTADO**, en banda blanca fuera del LCD, unido por el
-   numero. Ahi entra a cuerpo legible sin robarle lugar a la pantalla.
-
-Las alturas de las filas que se marcan se **miden sobre la imagen enderezada**, fila por
-fila: la foto conserva distorsion y el rotulo y su casilla no quedan a la misma altura (en
-la pantalla de seguridad de la HOTMELT se llevan 18 px). Con un paso fijo la banda le corta
-el borde a la casilla del valor. Ejemplo completo: `scripts/hotmelt/pantalla_seguridad.py`.
-
-**No se pasa por un generador de imagenes: reinventa los digitos, y una marca de procedencia
-no se saca.**
-
-Lo que agregamos nosotros (una advertencia, una franja) va visiblemente separado y aclarado
-en el pie: *"la franja es advertencia de esta hoja, no del HMI"*.
-
-**Las pantallas redibujadas que ya estan en el deck de la HOTMELT** (`pantalla_hmi.py`,
-`pantalla_fusor.py`, `pantalla_operacion.py`, `pantalla_parametros.py`,
-`pantalla_limpieza.py`) son del criterio VIEJO y hay que rehacerlas con este.
-
----
-
-## 3 bis. Dónde se guarda la hoja — `HOJAS DE OPERACIONES` del SGC, nunca en Ingeniería
-
-**Se entrega UN PDF por pieza, con las hojas ordenadas por operación y sin la portada** (Fak,
-02/10/2026: *"deberían estar unidas las de Top Roll en una hoja sola... sin la hoja esa primera
-que hacés de intro... no la elimines, me gustó, pero por ahora no se la pasamos... la idea es que
-sea un PDF por pieza, y organizadas"*). Las hojas de varios autores y generadores de la misma
-pieza van juntas en ese PDF; la hoja de una máquina (sector) va en el suyo. Lo arma
-`scripts/novax/_pdfPorPieza.py` (lista cada hoja en el orden en que quedó); el generador del hot
-melt saca la portada con `--sin-portada`.
-
-Fak, 24/09/2026, cuando dejé la HO-991 del P21 en la biblioteca de Ingeniería
-(`1- GENERAL\INSTRUCTIVOS\INSTRUCCIONES OPERATIVAS\`): *"ahí no van las hojas de proceso, hay
-que ir guardándolas donde sí van, o sea `Y:\BARACK\CALIDAD\DOCUMENTACION SGC\HOJAS DE OPERACIONES`"*.
-
-| Qué | Dónde |
-|---|---|
-| Hoja de un producto de cliente | `...\HOJAS DE OPERACIONES\1- CLIENTES\<CLIENTE>\<proyecto>\HO NNN - <pieza o sector>\` — **una carpeta por HO** (Fak, 24/09/2026), con la vigente y una sola `OBSOLETO\` adentro. **Cliente y proyecto se llaman igual que en `PPAP CLIENTES`** (Fak, 25/09/2026: *"igualalos al PPAP"*). Ej. `REYDEL-SMRC\APB P21\HO 991 - APB P21 HILO NARANJA\` |
-| Lo viejo (2011-2024) | `...\HOJAS DE OPERACIONES\9- HISTORICO (NO USAR)\` (era `Revisar`): no se toca ni se usa |
-| Hoja de un sector / máquina | `...\HOJAS DE OPERACIONES\2- SECTORES\<sector>\` |
-| Retrabajo | `...\HOJAS DE OPERACIONES\4- RETRABAJOS\` |
-| El número | `...\HOJAS DE OPERACIONES\3- LISTADO\Listado hojas de proceso.xlsx` (pestañas INDICE y CRITERIO; el próximo libre lo da `python scripts/_hoNumeros.py`). CREADO POR = la persona (`F.Santoro`), nunca "Claude", y en el libro no va ninguna pestaña ni nota para mí (Fak, 08/10/2026; la historia que vivía en la pestaña oculta borrada está en la memoria `reference_listado_ho_historia_numeracion`) |
-
-**El número** (Fak, 25/09/2026, al resolver 13 números repetidos: *"no quiero pasar de 999"*):
-- **Es de la HOJA, no del código.** Si varias piezas se hacen igual, van en la misma HO, con una
-  página (o subcarpeta) por código: 025, 952, 984 y la **913**, que junta las 17 telas de costura
-  blanco PWA (`...\PWA\HO 913 - COSTURA BLANCO\<código>\`). No se abre un número por tela.
-- Si dos hojas tienen el mismo número, **se lo queda la fila del listado**; la otra cambia.
-  Un número que se deja de usar no se reusa (queda su fila OBSOLETO "pasó a HO N").
-- **No se pasa de 999**: las hojas completas (GENERAL) siguen 992…999, después los huecos que
-  nunca tuvieron hoja (903, 921-925, 928, 930, 936, 947) y después la **serie 800**. La 300-899
-  no se usó nunca (300 y 400 quedan sugeridas para inyección y mesa de corte).
-- Antes de dar un número y al cerrar: `python scripts/_hoNumeros.py` (choques entre carpetas,
-  números sin fila en el listado, próximo libre; `--q3` lee además el cajetín).
-- **El listado maestro es registro compartido**: la fila de la hoja nueva (o de su cambio de
-  revisión) se **prepara** en la misma tanda en que se arma la hoja, se le muestra a Fak y se
-  **escribe con su OK** (`autonomy-contract.md` §F; el hook `apqp-cliente-guard` frena copiar o
-  escribir `Listado hojas de proceso.xlsx` sin ese OK, pero no ve el camino por Excel COM: el OK
-  se pide igual; escape `~/.claude/.apqp-listado-ok`, vale una carga). En el cierre se dice qué
-  fila quedó preparada y si ya se escribió.
-- **Cambiar el número de una hoja existente no pasa por Excel**: se toca solo el texto `HO-NNN`
-  de `xl/sharedStrings.xml`. Guardarla con Excel por COM se tiró de 1 a 3 imágenes "en celda"
-  por libro en las telas PWA (25/09/2026; se volvió al respaldo).
-
-(«Un número por PIEZA, no por sector» está arriba, antes de los gates.)
-
-**Lo único que va con número propio es lo que queda AFUERA del proceso de la pieza** (Fak,
-08/10/2026: *"lo que queda aparte son las hojas que aclaran cosas aparte... que no están dentro
-del proceso, como un cambio de molde"*; *"no quiero que me vuelvas a preguntar"*). Cómo se decide,
-sin preguntarle:
-
-| Pregunta | Sí → | Ejemplos |
-|---|---|---|
-| ¿Es lo que el operario hace para producir la pieza en ese puesto (cargar, operar, controlar, sacar, reponer material)? | Hoja de la **pieza**: número de la pieza, N° de operación del flujograma (60; si se parte, 60.1, 60.2) | embossing del logo (994 · 60); control de receta, montaje y cambio de rollo, empalme, arranque y parada de la laminadora (992 · 20.1 a 20.8) |
-| ¿Prepara, ajusta o cambia la MÁQUINA y no es el paso a paso de la pieza? | Hoja de **máquina**: número propio, en `2- SECTORES`, operaciones 10, 20, 30… | prender y calentar, set-up y parámetros, cambio de molde o de herramienta, limpieza, alarmas: laminadora hot melt (993), prensa de embossing (995), costura CNC (118) |
-
-La hoja de la pieza nombra la de máquina cuando la necesita (*"La prensa se prende y se prepara
-con la HO-995"*; *"el encendido... está en la HO-993"*). Las dos filas van al listado con el OK
-de Fak (§F), como cualquier número nuevo.
-
-**¿Cada hoja puede tener su revisión dentro del mismo número?** Ni el SGC ni las normas lo
-obligan ni lo prohíben (barrido del 01/10/2026: I-IN-002, P-05, P-09, I-AC-008, IATF 16949,
-ISO 9001, APQP 3ª, VDA 6.3 P6). Lo que sí está escrito: la revisión es una **letra** y sube al
-modificar (I-IN-002 §5.1); la instrucción lleva nivel y fecha (P-09 §5.2); la regla de "todas
-las hojas con la misma revisión y fecha" (P-05 §5.1.2) es para manuales, procedimientos e
-instructivos, no para las HO. Hoy conviven las dos formas (HO 971 y 927 con pestañas en
-distinta revisión; 968 a 991 con una revisión por libro) y el listado tiene una sola columna
-de revisión por HO. **Es criterio de Barack: lo define Carlos Baptista** (Fak se lo va a
-preguntar). Hasta que conteste, no se unifica ni se cambia la revisión de lo que ya está.
-
-Van el `.pptx` y su `.pdf`, con nombre `HO-<N> - HOJAS DE PROCESO - <PIEZA> - Rev.<letra>`. El
-generador puede escribir en el scratchpad para mirarla, pero la entrega va ahí. Los decks de
-HOTMELT y MOLDEADORA IMG se mudaron el 25/09 de `INSTRUCCIONES OPERATIVAS` a
-`1- CLIENTES\NOVAX\Tapizadas puerta\TOP ROLL\` (son del Top Roll Patagonia, N 216/256/285/315); el de
-la PRENSA EMBOSSING se mudo el mismo 24/09 a `1- CLIENTES\COZZUOL\00_VW427-1LA_K-PATAGONIA\00- Upper Trimming\`;
-el 08/10/2026 se partio en HO-994 (la pieza, operacion 60) y HO-995 (la maquina, a `2- SECTORES`),
-las dos sin fila en el listado todavia.
-
-## 4. Lo fijo del formulario I-IN-002.4-R01
-
-Una hoja = una operacion. Bloques: cajetin · IMAGENES · DESCRIPCION DE LA OPERACION ·
-CICLO DE CONTROL · ELEMENTOS DE SEGURIDAD · PLAN DE REACCION.
-
-- **Portada** (Fak, 23/09/2026, corrigiendola a mano antes de mandarla a aprobar, *"la imagen
-  queda mejor ahi centrada"* y *"asi las aplicas para las proximas"*): la foto de la maquina va
-  **centrada vertical en el alto libre**, no pegada arriba; y **Realizó / Aprobó = F. Santoro /
-  C. Baptista**: las hojas de proceso de Ingenieria las aprueba Carlos Baptista. Lo cumplen
-  `portada()` de `scripts/img/generar_hojas_img.py` y de `scripts/hotmelt/hoja_pptx.py`.
-- **Resp.** solo `OP` / `OC` / `Insp.`  · **Registro** solo `Set up` o `-`, nunca "RC".
-- Pasos: frases cortas, en infinitivo (canon 4.4), una accion por renglon. Sin "BORRADOR" ni "pendiente",
-  **ni "PRELIMINAR"** (orden de Carlos Baptista, Fak 07/10/2026 14:46; ver §7 bis, E5).
-- **Sin foto -> recuadro VACIO**, no una leyenda que diga que falta.
-- **Ni un TBD en la descripcion** (pasos, notas, parametros, pies, plan de reaccion) —
-  Fak, 24/09/2026: *"no puede haber ni 1 TBD... el TBD del numero de hoja si, pero que sea
-  una hoja de proceso sin TBD en las descripciones... toda la informacion disponible para
-  conseguirlo"*. Lo que no se sabe se escribe **generico con lo que hay** (*"colocar la pieza
-  bien apoyada, con la zona del logo debajo del molde"*, *"los valores de la foto son de
-  referencia del proveedor"*), **sin inventar un valor** ni copiar un paso de otra pieza; el
-  hueco va a la lista de pendientes y al mail, no a la hoja. El TBD queda solo en el cajetin
-  (N° de operacion, HO, sector). Lo frena `redaccion.revisar_tbd()` dentro de `gate_redaccion`.
-- Los iconos de EPP se **extraen de una HO real** y se reusan; no se dibujan ni se buscan en
-  internet. Y se identifican **abriendo el PNG**: el 03/09 el que yo llamaba "barbijo" era
-  el mismo pictograma de anteojos con otro nombre de archivo.
-- El EPP se deduce del **riesgo filmado** (superficie caliente, atrapamiento, corte, aire
-  comprimido). Deducir EPP de un riesgo que se ve es correcto; inventar un dato de Barack, no.
-- La numeracion la manda el **flujograma**, no yo. Ver `no-pfd-no-ho.md`.
-
----
-
-## 5. De donde sale cada gate
-
-Cada gate de arriba nacio de una hoja que Fak devolvio. Los casos, con fecha y cita, estan en
-`reference/casos.md`: se leen para entender por que un gate esta donde esta, no para aplicarlo.
-
-De la tanda del 03/09 quedan tres reglas que no estan en otra seccion:
-
-- Una hoja se basa en **una** lectura de la maquina: si hay dos fechas, se elige una y se dice
-  cual. Dos lecturas de distinto minuto no se comparan como contradiccion sin poner la hora al
-  lado de cada valor (memoria `dos_lecturas_del_mismo_dia_no_son_comparables`).
-- Una foto no se da por buena por su nombre de archivo: se abre.
-- Un script que reordena imagenes no es idempotente: cada hoja declara cuantas imagenes espera
-  encontrar y aborta antes de escribir si no coinciden.
-
----
-
-## 6. Enforcement
-
-Los `_gate_*()` y `gate_materiales_del_deck()` que nombra esta tabla viven en
-**`scripts/img/generar_hojas_img.py`**: su `hoja()` corre los de cada hoja y `compilar_deck()`
-el de materiales. El generador de la prensa embossing importa ese archivo y usa su `hoja()`,
-pero no el de materiales; el de P21 arma su propia hoja y corre solo texto para el operario,
-fuente por paso, no afirmar de mas y `gate_redaccion`. Un deck armado con otro generador (el de
-la HOTMELT, `scripts/hotmelt/hoja_pptx.py`) no pasa por ninguno, y `hoja_proceso_check.py` sobre
-el PPTX mira legibilidad, jerarquia, vocabulario y cocina, no la redaccion: en ese caso se corre
-`redaccion.py spec <generador.py> HOJAS_X`. Un generador nuevo usa el `hoja()` de la IMG en vez
-de copiar los gates.
-
-| Capa | Que | Donde |
-|---|---|---|
-| **Dura** | `hoja_proceso_check.py` sale con codigo 1 y la hoja no se entrega | `.claude/skills/hojas-de-proceso/scripts/hoja_proceso_check.py` |
-| **Dura** | los umbrales viven **solo** en `hojalib.py`: el generador dibuja con los mismos numeros con los que el gate rechaza | `.claude/skills/hojas-de-proceso/scripts/hojalib.py` |
-| **Regresion** | cada criterio en ROJO y en VERDE | `.claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py` |
-| **Dato** | la metrica de legibilidad viaja dentro del PNG, sobrevive al pptx | `hojalib.guardar_pantalla()` |
-| **Dato** | de que video y que segundo salio cada foto, adentro del archivo | `fotodevideo.py leer` (sale 1 si alguna no lo dice) |
-| **Dura** | una foto por paso · 2 a 4 pasos · las marcas de la foto = los pasos de la hoja | `_gate_una_foto_por_paso()` del generador |
-| **Aviso** | una foto que llena menos del 80 % de su celda | el generador lo imprime al compilar |
-| **Dura** | un rotulo con caracteres que la fuente no dibuja | `rotular.sin_glifo()` |
-| **Dura** | una marca que cae sobre una zona lisa (al lado del boton, no encima) | `rotular.chequear_marcas()` |
-| **Dura** | cocina interna en el texto de la hoja (Nº de video, pendientes, metodo) | `_gate_texto_para_el_operario()` del generador |
-| **Medido** | donde esta cada pulsador, en vez de estimarlo | `medir_marca.py` / `--marca "color:verde|..."` |
-| **Dura** | un termino que en planta no se dice asi (`seta`, `izaje`, `chumacera`...) | `redaccion.py` + `vocabulario.data.json` |
-| **Dura** | un paso que describe la maquina en vez de mandarle algo al operario | `redaccion.gate_redaccion()` |
-| **Regresion** | idioma, vocabulario, voz, cocina y TBD, en ROJO y en VERDE | `redaccion_selftest.py` |
-| **Dura (deck)** | un material que entra o sale de la operacion y ninguna hoja nombra | `gate_materiales_del_deck()` del generador |
-| **Dura** | una NOTA que le cuenta al operario un hueco mio ("no esta documentado", "preguntar antes") | `COCINA` en `_gate_texto_para_el_operario()` |
-| **Paquete** | un PDF armado con errores de los de §7 bis (los de otro autor y los de Excel no pasan por ningun generador) | `python scripts/_revisarPaqueteHO.py <pdf>` (lo escribio otra sesion el 07/10/2026; codigos a esa fecha: E1 `PLAN_NO_ESTANDAR`, E2 `LOGO_VIEJO`, E3 `HOJA_CHICA` y `CORTADA`, E4 `SIN_HO` y `SIN_OP`, E5 `PALABRA_PROHIBIDA`, portada `PORTADA`; la lista vigente esta en su encabezado) |
-| **A ojo** | el ARMADO del plan de reaccion (E1), restos de Excel y texto cortado (E3), una hoja esqueleto sin la palabra TBD (E5), y que lo que entra sea una HO de este producto | sin gate: lo mira quien arma, y despues un agente independiente sobre el PDF (skill `imprimir`) |
-
-```bash
-py -3 .claude/skills/hojas-de-proceso/scripts/hojalib_selftest.py     # tiene que dar "0 fallan"
-py -3 .claude/skills/hojas-de-proceso/scripts/redaccion_selftest.py   # tiene que dar "0 fallan"
-py -3 .claude/skills/hojas-de-proceso/scripts/fotodevideo.py leer <assets>/*.jpg  # procedencia
-py -3 .claude/skills/hojas-de-proceso/scripts/hoja_proceso_check.py "<deck.pptx>" --spec <spec.py>
-```
-
-El spec de cada maquina vive en el repo, junto a su generador (`scripts/hotmelt/hojas_spec.py`,
-`HOJAS_IMG` en `scripts/img/generar_hojas_img.py`). Lo unico que no entra es la **contraseña del
-HMI**: va en `scripts/hotmelt/datos_privados.py` (gitignoreado) y `_gateRepoPublico.mjs` CHECK-3
-la busca por contenido.
-
----
-
-## 7. Antes de entregar
-
-- [ ] **si es un PAQUETE para imprimir o pasar a planta: la tabla de §7 bis, fila por fila, sobre el PDF**
-      (y `python scripts/_revisarPaqueteHO.py <pdf>`, skill `imprimir`)
-- [ ] `hojalib_selftest.py` en verde ("0 fallan")
-- [ ] `hoja_proceso_check.py` en verde sobre el deck
-- [ ] **las laminas miradas una por una**, renderizadas — no el script, el archivo publicado
-- [ ] las pantallas miradas **al ancho que van a tener impresas**, no ampliadas
-- [ ] PowerPoint cerrado antes de generar, y el texto verificado sobre el archivo guardado
-- [ ] si el archivo lo venia editando Fak: su texto **intacto**, verificado con diff
-- [ ] `fotodevideo.py leer` en verde: **ninguna foto sin decir de que video salio**
-- [ ] **ninguna foto repetida con dos nombres** (`md5sum *.jpg | sort | uniq -d` sobre el hash)
-- [ ] cada hoja con 2 a 4 pasos, una foto por paso, y las partidas con su (HOJA n DE m)
-- [ ] **cada foto rotulada, mirada a tamaño completo DESPUES del ultimo cambio de recorte**
-- [ ] **cada elemento de maquina que se ve en la foto de un paso (sensor, perilla, boton, guia)
-      esta nombrado en algun renglon, o se decidio que el operario no lo toca** (criterio 15,
-      23/09/2026: el sensor de la mesa estaba en la foto y ningun paso lo nombraba)
-- [ ] **cada pieza de nombre raro que nombra un paso (acumulador, guiador, fusor, expulsores, sonotrodo…) tiene
-      su aclaracion entre parentesis la primera vez Y su recuadro con el nombre en la foto** (0.8 b bis, Fak
-      13/10/2026). Se recorre paso por paso con la pregunta "¿un operario nuevo sabe que es esto y donde esta?";
-      vale tambien para las hojas de otro autor y las de Excel
-- [ ] cada nota pasa el test: ¿le cambia algo al que esta al lado de la maquina?
-- [ ] lo que falta filmar, en su lista aparte — **no se escribe por analogia**
-- [ ] ningun `TBD` en la descripcion (solo en el cajetin), ninguna foto sin mirar, ningun numero sin fuente citada
-- [ ] **revision ciega** (22/09/2026): UN `Agent` recibe SOLO el PDF impreso de las hojas (ni el
-      spec, ni la transcripcion, ni mi razonamiento) y contesta como operario nuevo: *"¿Que tengo
-      que hacer yo en este puesto, paso por paso? ¿Que no se entiende?"*. Si su respuesta no es el
-      proceso real, la hoja no se entiende y no se entrega. Los gates verdes no vieron lo que Fak
-      vio a ojo (08/09, tres veces el 21/09 — *"no me explicas que debo hacer yo"* —, 22/09). Es un
-      paso de proceso, sin gate automatico: por eso esta en esta lista. Un agente al que le paso mis
-      supuestos no es independiente (memoria `un_agente_no_es_independiente_si_le_paso_mis_supuestos`)
-
----
-
-## 7 bis. Los errores que Fak ya marcó en el paquete de planta (07/10/2026)
-
-Salieron de revisar a ojo el paquete de hojas que se iba a imprimir. Los gates de arriba miran una
-hoja por vez y no ven nada de esto: varias hojas vienen de otro autor o de Excel. Horas de Buenos
-Aires; las citas llevan el tipeo corregido, las palabras son de Fak. Los números de hoja que él cita (48,
-55, 173) coinciden con el paquete de 175 páginas de esa mañana
-(`exports\IMPRESION_0710_FINAL\3_HOJAS_DE_PROCESO_A4_depurado.pdf`: la 48 es el armado de espuma del inserto de
-Pablo, con logo violeta; la 55, la HO-985 OP 21; la 173, la HO-983 OP 40 costura de planas, cortada abajo).
-
-**Si al revisar aparece uno de estos errores, se le dice a Fak en una línea («ojo, la hoja X tiene
-tal error») y se corrige antes de la auditoría** (Fak, 15:58: *«así las próximas ya los conocés y me
-decís: ojo, acá hay aún un error»*). Se miran sobre el PDF, no sobre el script ni el generador.
-
-| # | Error (como se ve impreso) | Fak (fecha y hora) | Qué se hace |
-|---|---|---|---|
-| **E1** | **El plan de reacción no es el estándar**: un disparador propio (la 55 era la HO-985 OP 21 con *«SI DETECTA 3 PIEZAS NO CONFORMES CONSECUTIVAS (REBABAS/FLASHES)…»*; el embossing, *«SI LA PRENSA NO ENCIENDE O LA PANTALLA NO RESPONDE»*), una columna de acciones propias a la derecha, o una franja angosta con media hoja en blanco | 13:24: *«el plan de reacción no conforme, como que algunas hojas no están respetando el formato estándar»* · 14:37: *«en la 55 sigue mal el plan de no conforme… habíamos dicho que eso se debía corregir»* · 15:22: *«te lo dije 300 veces, no es el estándar que decidimos… a la derecha queda todo blanco, está mal aprovechado el espacio de estas HO»* | Armado y texto del **canon 4.5** (`bloque_plan()` de `scripts/img/generar_hojas_img.py`). Se compara con una HO de Excel del servidor, nunca con la hoja anterior (LECCIONES 07/10). Vale también para las hojas de otro autor |
-| **E2** | **Logo que no es el oficial**: el violeta con MERCOSUL en letra grande (el oficial es azul, con MERCOSUL chico debajo de una línea). Lo traían 18 páginas del paquete: las hojas A3 de Pablo Gamboa y los caminos de grampas | 14:37: *«la hoja 48 tiene mal el logo, ese violeta no es el oficial de Barack, error grave… sí o sí hay que corregirlo»* | El único es `barack_logo.png`, carpeta `INGENIERIA BARACK (NUNCA BORRAR)` de la nube de Ingeniería (constante `LOGO_BARACK` del generador), sobre celda blanca (canon 4.2). Se mira la esquina de TODAS las hojas, también las ajenas |
-| **E3** | **La hoja no llena su página**: sale chica con franja blanca, **cortada abajo**, o con la marca *«Página 1»* del Excel | 14:37: tres capturas, una con la HO-971 OP 80 ocupando poco más de la mitad del ancho del papel (la frase que la acompaña está ilegible; se leyó de la captura) y *«en la 54 se ve la página 1 del Excel»* · 14:47: *«en la hoja 173 veo cortada la parte de abajo… hay que corregir eso también»* | Se juzga sobre el PDF: lo IMPRESO llena el papel, nada queda cortado, sin restos de la interfaz de Excel. Se mide lo que no es blanco, no la caja de dibujo (hallazgo técnico del 07/10, no frase de Fak: un elemento invisible lejos de la hoja engañaba la cuenta en 4 hojas del APB) |
-| **E4** | **Falta el N° de operación o el N° de HO (arriba a la derecha)**, o el N° no coincide con el flujograma | 12:43: *«hojas sin número»* · 13:24: *«hojas sin número de operación, hojas sin número arriba a la derecha también»* · 14:39: *«fijate si tiene número, etcétera»* · 09:53 pidió la tabla de si *«los números de AMFEs, flujogramas y HO coinciden»* | Toda hoja lleva los dos. El N° de operación sale del flujograma (`no-pfd-no-ho.md`, `node scripts/_verificarNumeracion.mjs`); el de HO, del listado (`python scripts/_hoNumeros.py`, §3 bis). Un decimal (60.1) tiene que poder explicarse: *«¿por qué están en 60.1?… no me lo explicaste»* (14:37; antes, 13:24: *«antes no lo hacíamos, no digo que esté mal, pero me llamó la atención»*). Qué se hace con las de máquina: sin decidir, ver skill `imprimir` |
-| **E5** | **Dice TBD, PENDIENTE, FOTOS PENDIENTES o PRELIMINAR** | 10:39, sobre la HO-971 OP 70 (foto *«FOTOS PENDIENTES / TBD»*, paso *«PENDIENTE / TBD - Cargar descripción»*, ciclo *«PENDIENTE / TBD»*): *«esa está mal puesta, encima dice todo TBD, o sea al pedo la vamos a imprimir… revisá eso y otro tipo de errores»* · 14:46: *«debemos eliminar la palabra preliminar de las hojas, fue una orden de Carlos Baptista y debemos respetarla»* | Una hoja esqueleto (sin fotos ni pasos) **no se imprime ni se pasa a planta**: se hace de verdad o queda afuera, y va a la lista de lo que falta. A planta ni el cajetín lleva TBD (sin N° no se imprime, E4); el `TBD` del cajetín es solo para trabajar (§4). CICLO DE CONTROL vacío (canon 1.2), no *«PENDIENTE / TBD»*. Ni «PRELIMINAR» en ningún lado |
-| **E6** | **Hoja de otro autor que entra sin revisar** (la costura del APB trasero central de Pablo Gamboa, que él le pasó a Carlos) | 14:39: *«buscala, así actualizamos, por favor, y revisá errores conocidos antes de pasarlas… o sea, fijate si tiene número, etcétera»* | Pasa por E1 a E5 igual que las propias. Lo que se corrija en un archivo ajeno se le muestra a Fak con el ANTES de cada cambio, ya auditado (LECCIONES 06/10) |
-
-Lo que va y lo que no va en el paquete (portada, esquema de palletizado, embalaje WIP, hojas repetidas
-por producto, hojas de Pablo) y los pasos para imprimir: skill `imprimir`.
 
 ---
 

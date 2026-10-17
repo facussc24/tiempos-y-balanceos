@@ -111,8 +111,12 @@ error»*. En orden:
 2. **Correr el script** sobre el PDF: `python scripts/_revisarPaqueteHO.py <pdf>` (solo lee; sale 1 si hay un
    defecto ROJO). Lo escribió otra sesión el 07/10/2026 y mira portada, N° de HO y de operación, palabras
    prohibidas (TBD, PENDIENTE, PRELIMINAR), logo, hoja chica, hoja cortada, plan de reacción (texto y columna
-   de acciones al costado), hojas de otro tamaño y recuadro de seguridad vacío; la lista vigente está en su
-   encabezado. Cada ROJO se corrige; cada AVISO se mira.
+   de acciones al costado), hojas de otro tamaño y recuadro de seguridad vacío; desde el 16/10/2026 (tanda 1.5)
+   también el ciclo de control lleno, la pieza rara sin aclarar, el EPP que no es del sector, el herramental sin
+   marcar, la reacción del plan de control pegada, el texto tachado, la cantidad con «×», el camino de
+   inspección (ya no eximido) y el ARMADO contra la última hoja aprobada; la lista vigente está en su
+   encabezado. Cada ROJO se corrige; cada AVISO se mira. **`_imprimir.py` ya no imprime un PDF de hojas de
+   proceso con un ROJO** (`--aunque-tenga-rojos` solo si Fak lo pidió para ese archivo).
 3. **Mirar a ojo lo que el script no ve**, en el PDF y con una HO de Excel del servidor al lado para comparar:
    - **El armado del plan de reacción** (E1): el plan debajo de las fotos y el ciclo de control a su derecha,
      sin media hoja en blanco. El script revisa el texto y la columna de acciones, no el armado.

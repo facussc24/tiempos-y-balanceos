@@ -1,6 +1,6 @@
 # Receta: hoja de proceso desde un video, en 3 momentos con Fak (meta ~20 min, mismos gates)
 
-**No releer ni rehacer:** `SKILL.md` entero (solo GATE 0.1 y 0.7), LECCIONES y reglas (ya estan en contexto), Whisper, el cuadro mas nitido, la hoja de contacto, `rotular.py`, el pptx a PNG: todo existe y esta probado. Canon `docs/CRITERIOS_HOJAS_DE_PROCESO.md`: abrirlo una vez, secciones 3.2, 4.4 y 6.
+**No releer ni rehacer:** `SKILL.md` entero (solo GATE 0.1, 0.7 y 0.8, y la lista de §7, que va arriba de todo: tras un compactado es lo que hay que volver a leer), LECCIONES y reglas (ya estan en contexto), Whisper, el cuadro mas nitido, la hoja de contacto, `rotular.py`, el pptx a PNG: todo existe y esta probado. Canon `docs/CRITERIOS_HOJAS_DE_PROCESO.md`: abrirlo una vez, secciones 3.2, 4.4 y 6.
 
 ## Minuto 0 — un comando, y se sigue leyendo mientras corre
 ```bash
