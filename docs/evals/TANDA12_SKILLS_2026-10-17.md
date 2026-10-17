@@ -36,11 +36,11 @@ que no se usan: va a «Lo que hace falta de Fak».
 | planes-de-control | 303 → 311 | 632 → 539 | 3/3 con · 2/3 sin (igual antes: dos casos los contesta bien un modelo sin la skill; solo «la D sola» discrimina) | 0/0/8 y 0/0/9 → 0/0/9 y 0/0/8 | **`scripts/_planControlLimpio.py`**: la D sola, una marca por celda; `--rearmado` sin amarillo ni notas; `--definitivo` sin TBD/CONFLICTO; selftest + `planControlLimpio.test.mjs` | 15/10 |
 | flujogramas | 433 → 447 | 424 → 408 | 3/3 con · 1/3 sin (antes 2/3 con: el caso del historial daba 0 % con la skill y ahora 100 %) | 0/2/1 y 0/2/1 → 0/2/2 y 0/2/1 | **aviso `historial-confiesa`** en `flujogramaCanon.mjs` (chequeo 11 bis) + la regla en §5 | 02 y 09/10 |
 | amfe-export-oficial | 117 → 126 | 379 → 354 | 3/3 con · 0/3 sin (antes 1/3 sin) | 0/2/0 y 0/2/0 → 0/2/0 y 0/2/1 | **`scripts/_lib/caratulaVacia.mjs`** en `_exportAmfeOficial.ts`: un rotulo de la caratula sin valor en el ARCHIVO releido da FALLO; 9 de 9 AMFE exportados lo pasan | 25/06 (origen de la skill) y 03-08/09 |
-| amfe-domain | 145 → 156 | 490 → 434 | 2/2 con · 0/2 sin (antes 1/2 con) | 0/0/4 y 0/0/2 → 0/0/3 y 0/0/1 | **`skillsAmfeEjemplos.test.mjs`**: lo que la skill da como BIEN pasa `scanForbidden`; el ejemplo canonico decia «Gap & Flush fuera de spec» (frenado por `ENGLISH_RANDOM_TERMS`) y «S&R» (la lista no tiene la sigla: no la ve) | 19 y 23/08 (amfe.md §17.2) |
+| amfe-domain | 145 → 157 | 490 → 434 | 2/2 con · 0/2 sin (antes 1/2 con) | 0/0/4 y 0/0/2 → 0/0/3 y 0/0/1 | **`skillsAmfeEjemplos.test.mjs`**: lo que la skill da como BIEN pasa `scanForbidden`; el ejemplo canonico decia «Gap & Flush fuera de spec» (frenado por `ENGLISH_RANDOM_TERMS`) y «S&R» (la lista no tiene la sigla: no la ve) | 19 y 23/08 (amfe.md §17.2) |
 | amfe-cookbook | 189 → 196 | 326 → 314 | 2/2 con · 0/2 sin (antes 1/2 sin) | 0/0/1 y 0/0/1 → 0/0/0 y 0/0/1 | ninguno ejecutable: la regla del 02/10 (de la vecina, el lugar; nunca el metodo) escrita donde se propaga; son scripts sueltos | 02/10 |
 | pieza-nueva-flujograma-amfe | 290 → 291 | 431 → 392 | 2/3 con · 1/3 sin (igual antes; el que falla es el del mail, ver abajo) | 0/1/1 y 0/1/0 → 0/1/1 y 0/1/1 | ninguno nuevo: `TOPE_PALABRAS` ya existia y tenia test; entra a la tabla de la skill | 02 y 09/10 |
 | plotter-aol | 296 → 302 | 720 → 554 | 3/3 con · 1/3 sin (igual antes) | 1/0/1 y 0/1/1 → 0/1/0 y 1/0/0 | **en `acomodar_columnas.py`**: frena si el origen trae algo que no sea polilinea (un agujero se perdia en silencio) y relee el DXF (2N contornos, ≥ 25 mm reales); frena tambien si el origen no trae exactamente 4 piezas (un contorno de mas pisaba una pieza, lo encontro el auditor); probado con el DXF real del 15/10 y con `acomodar_columnas_selftest.py` (4 casos ROJO/VERDE con DXF sinteticos; fuera de `npm test` porque el CI no instala ezdxf ni shapely) | 15/10 (columnas, 25 mm) y "lo que falta no se ve" |
-| beon | 241 → 248 | 663 → 389 | 2/2 con · 0/2 sin (igual antes) | 0/0/1 y 0/0/0 → 0/0/0 y 0/0/0 | **`.claude/skills/beon/traba.js`** + `beonTraba.test.mjs`: la traba de lectura deja de ser un parrafo | §0 de la skill (emitir vale como firma) |
+| beon | 241 → 249 | 663 → 389 | 2/2 con · 0/2 sin (igual antes) | 0/0/1 y 0/0/0 → 0/0/0 y 0/0/0 | **`.claude/skills/beon/traba.js`** + `beonTraba.test.mjs`: la traba de lectura deja de ser un parrafo | §0 de la skill (emitir vale como firma) |
 
 Disparo global: **49 % y 49 % antes, 49 % y 48 % despues** (igual dentro del ruido). Vecinas: arb-operar 5 y 6 aciertos → 9 y 7;
 apqp-legajo de mas 2 y 2 → 3 y 4; explicar-mejor 32 y 32 → 31 y 35. Con 0 a 6 mensajes reales por skill, ±1 es ruido.
@@ -74,6 +74,14 @@ Ninguna skill pasa de 500 renglones (la mas larga, flujogramas, 447): no se part
   (comparando contra el AMFE de origen). Es un cambio mediano en un gate que usan todos los scripts de AMFE: va con su
   plan corto y su auditor, en una sesion de codigo.
 
+## Lo que hace falta de la sesion madre
+
+- **Nada de esto existe hasta que se funda en main.** Los hooks, las skills y los scripts corren desde
+  `C:DevBarackMercosul`, no desde el worktree (`mejora-implementada.md`): ninguna sesion ve los gates nuevos ni las
+  descriptions mas cortas hasta que `claude/skills-1017` se revise y se funda. Despues, las sesiones nuevas toman las skills
+  solas; las abiertas leen el texto nuevo al cargar la skill.
+- El auditor dejo su memoria en `.claude/agent-memory/auditor/` del checkout principal (ignorada por git, fuera del worktree).
+
 ## Lo que hace falta de Fak
 
 1. **La hora del banco de casos** (ya pedida en la tanda 9): sirve tambien para calibrar el juez, que en esta tanda bajo
@@ -83,7 +91,9 @@ Ninguna skill pasa de 500 renglones (la mas larga, flujogramas, 447): no se part
    ejemplos. Lo que conteste va a la skill y a la memoria.
 3. **La lista de skills con tope**: con las descriptions al doble del tope, decidir si se sacan de la lista las skills que
    no se usan (o se acortan todas). Es un cambio del sistema: va con su plan.
-4. **El plan de control de los APC del 15/10**: la fila 3.0 lleva dos caracteristicas («flamabilidad y emisiones del
+4. **Si `_planControlLimpio.py` frena dentro del generador** (`scripts/apc/_pcApcPatagonia.py`): hoy se corre a mano (lista
+   de la skill, §6 punto 21). Conectarlo haria que el generador del APC frene por la fila «D / D» de abajo; eso lo decide Fak.
+5. **El plan de control de los APC del 15/10**: la fila 3.0 lleva dos caracteristicas («flamabilidad y emisiones del
    conjunto», «D / D»). Si ese plan sale a Calidad, se parte en dos filas.
 
 ## Lo que no se hizo y por que
@@ -106,6 +116,9 @@ Ninguna skill pasa de 500 renglones (la mas larga, flujogramas, 447): no se part
 - **La ventana de 40 caracteres** del patron `reproceso-sacado` (flujogramas) no tiene fuente: se eligio para que
   «REPROCESO DE ADHESIVADO (93). ELIMINACION DE OP. 40» (154 Rev.B) no avise y una fila que nombra los reprocesos sacados si; la Rev.B textual del 160 («71 y 72 a la 70») no avisa porque no dice la palabra. Se
   mide contra el corpus: 0 avisos en los 9 flujogramas del generador.
+- **La caratula en `_exportAmfeOficial.ts` no se probo de punta a punta**: el export lee Supabase. Se probo la funcion sola,
+  con los 9 AMFE exportados reales y con el generador oficial (`caratulaVacia.test.ts`).
+- **`traba.js` de BeOn no se pego nunca en el portal**: lo prueba una ventana simulada.
 - **Mensajes de commit con un numero mal**: en los commits de hojas (dice 593, es 603), planes (527 → 539) y flujogramas
   (405; el siguiente commit lo deja en 408) el largo de la description se escribio antes de medirlo. Los numeros buenos son
   los de esta tabla.
