@@ -320,10 +320,10 @@ function leeSecretoPorComando(texto, todo, prof = 0, vars = variablesEscritas(to
     const v = verboPelado(verbo);
     // Ronda 2 (hallazgo 5): xargs / find -exec / parallel con un lector o un grep/sed/awk adentro: la primera palabra CRUDA
     // (verboDeComando saca a xargs como envoltorio y el lector llega sin argumentos); frena si el comando nombra el secreto
+    // Ronda 3 (17/10, T6): y un interprete adentro (`xargs -I % python -c "…open('%')…"`, `find … -exec python -c … {} \;`)
+    const corrida = (a) => LECTOR_ARCHIVO_RE.test(verboPelado(a)) || PATRONERO_VERBO_RE.test(verboPelado(a)) || INTERPRETE_SECRETO_RE.test(verboPelado(a));
     const lanzador = verboPelado(palabras.find((w) => w && !/^[A-Za-z_]\w*=/.test(w)));
-    if (/^(?:xargs|find|parallel)$/i.test(lanzador)
-      && palabras.slice(1).some((a) => LECTOR_ARCHIVO_RE.test(verboPelado(a)) || PATRONERO_VERBO_RE.test(verboPelado(a)))
-      && SECRETO_RE.test(todo)) return true;
+    if (/^(?:xargs|find|parallel)$/i.test(lanzador) && palabras.slice(1).some(corrida) && SECRETO_RE.test(todo)) return true;
     // un argumento con una variable: si el comando le dio un valor escrito, se mira ese valor (puede ser una lista);
     // si no se sabe que vale, cuenta como el secreto cuando el comando lo nombra en algun lado (no se adivina).
     // Ronda 2: un backtick tambien es algo sin resolver (hallazgo 5), y un `)` o `}` del final es del subshell o del
@@ -358,8 +358,8 @@ function leeSecretoPorComando(texto, todo, prof = 0, vars = variablesEscritas(to
       if (modoInterprete(verbo, args).modo === 'stdin' && SECRETO_RE.test(todo)) return true;
       continue;
     }
-    const ejecutaOtro = (/^xargs$/i.test(v) && args.some((a) => LECTOR_ARCHIVO_RE.test(verboPelado(a)) || PATRONERO_VERBO_RE.test(verboPelado(a))))
-      || (/^find$/i.test(v) && args.some((a, k) => /^-(?:exec|execdir|ok|okdir)$/.test(a) && LECTOR_ARCHIVO_RE.test(verboPelado(args[k + 1]))));
+    const ejecutaOtro = (/^xargs$/i.test(v) && args.some(corrida))
+      || (/^find$/i.test(v) && args.some((a, k) => /^-(?:exec|execdir|ok|okdir)$/.test(a) && corrida(args[k + 1] ?? '')));
     if (ejecutaOtro && SECRETO_RE.test(todo)) return true;
   }
   return false;

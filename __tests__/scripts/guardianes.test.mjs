@@ -1618,4 +1618,7 @@ describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (secretos)
         esperados(G, ['N-S01', 'N-S02', 'N-S03', 'N-S04', 'N-S05', 'X-S17', 'X-S18', 'X-S19']);
         esperados(G, ['H4-V1', 'H4-V2', 'H5-V1', 'H6-V1', 'H6-V2']);   // los VERDES de la ronda 2 siguen pasando
     });
+    it('P12 ROJO (ronda 3, T6) — un interprete adentro de xargs o de find -exec que abre lo que le pasan', () => {
+        esperados(G, ['N-S06', 'N-S07', 'H5-T05', 'H5-T06', 'H5-T07', 'H5-T08', 'H5-T10', 'H5-T12']);
+    });
 });
