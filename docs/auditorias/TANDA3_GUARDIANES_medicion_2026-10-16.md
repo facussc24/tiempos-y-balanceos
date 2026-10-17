@@ -46,6 +46,15 @@ node scripts/_frenosMedir.mjs --base <carpeta>/scripts/_lib/guardianes.mjs --cas
 - **Frenos nuevos**: solo los de `permiso-un-uso-guard`, 6 comandos que armaban un permiso de Fak sin cita (pieza 9, a
   propósito). Ningún guardián de las otras piezas frena algo que antes pasaba.
 
+## Ronda 2 (17/10/2026): después de los 9 hallazgos de la revisión adversarial
+
+Rehecha con la punta de la rama después de los arreglos de la ronda 2 (`TANDA3_GUARDIANES_ronda2_2026-10-17.md`): **la misma
+tabla de arriba**. Falsos: 51, frenan 38 → 8. Verdaderos que se pueden repetir: 49, frenan 43 → 43 (**ninguno dejó de
+frenar**). Sin determinar: 72 → 65. script-inline: 6 / 165 / 2 → 0 / 165 / 0. Desde esta ronda el medidor cuenta además,
+por freno, los guardianes que frenan con la nueva y no con la base: solo `permiso-un-uso-guard`, 6 (los mismos de antes).
+Los nueve arreglos cierran formas que la base frenaba y que no aparecen en los 436 frenos de 30 días, por eso la tabla no se
+mueve: lo que prueban son sus casos ROJO.
+
 ## Lo que la medición no puede ver
 
 - **Lo que se ABRE**: una medición sobre frenos pasados muestra lo que se destraba, no los agujeros nuevos. El auditor Opus
