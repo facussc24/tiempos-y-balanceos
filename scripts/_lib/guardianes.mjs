@@ -1861,7 +1861,8 @@ function variablesTemporales(code) {
   const vars = new Set();
   // Ronda 3 (17/10, T8): el nombre va al PRINCIPIO de la sentencia (o despues de const/let/var) y solo, antes del `=`:
   // en `d, e = tempfile.mkdtemp(), r'Y:/…'` la captura se quedaba con `e`, que es la ruta del servidor
-  for (const m of code.matchAll(/(?:^|[\n;])[ \t]*(?:(?:const|let|var)\s+)?([A-Za-z_$][\w$]*)\s*=\s*(?:await\s+)?((?:[\w$]+\.)*)mkdtemp(?:Sync)?\s*\(([^\n]{0,160})/g)) {
+  // (F4 del auditor de cierre) tambien con `export` adelante: `export const d = fs.mkdtempSync(…)`
+  for (const m of code.matchAll(/(?:^|[\n;])[ \t]*(?:export\s+)?(?:(?:const|let|var)\s+)?([A-Za-z_$][\w$]*)\s*=\s*(?:await\s+)?((?:[\w$]+\.)*)mkdtemp(?:Sync)?\s*\(([^\n]{0,160})/g)) {
     const args = m[3];
     // JS: fs.mkdtempSync(path.join(os.tmpdir(), 'x-')) — la carpeta de adentro tiene que ser el TEMP del sistema
     if (/tmpdir\s*\(\s*\)/.test(args)) { vars.add(m[1]); continue; }

@@ -432,4 +432,7 @@ describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (borrado-m
         const js = "import fs from 'node:fs';\nimport os from 'node:os';\nimport path from 'node:path';\nlet d = fs.mkdtempSync(path.join(os.tmpdir(), 'x-'));\n['a'].forEach((x) => {\n  [d] = ['Y:/Ingenieria/x'];\n});\nfs.rmSync(d, { recursive: true, force: true });\n";
         expect(write('C:\\Dev\\BarackMercosul\\scripts\\_x.mjs', js)).toBe(1);
     });
+    it('VERDE (ronda 3, F4 del auditor de cierre) — export const d = fs.mkdtempSync(…) sigue siendo la carpeta temporal', () => {
+        esperados(G, ['Z-B184']);
+    });
 });
