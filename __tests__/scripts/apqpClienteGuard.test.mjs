@@ -308,4 +308,8 @@ describe('ronda 3 — los agujeros del auditor a ciegas de la ronda 2 (apqp-clie
         esperados(G, ['Z-A31', 'Z-A31c', 'Z-A32', 'Z-A43']);
         esperados(G, ['Z-A44', 'Z-A40', 'Z-A31b', 'Z-A31d', 'Z-A35', 'Z-A38', 'N-A03']);   // VERDES y las formas de Bash siguen igual
     });
+    it('ROJO (ronda 3, N3 del auditor de cierre) — el cp o el mv que corre detras de xargs, find -exec o parallel', () => {
+        esperados(G, ['Z-A87', 'Z-A88', 'Z-A89', 'Z-A91', 'Z-A92', 'Z-A93', 'Z-A94', 'Z-A96']);
+        esperados(G, ['Z-A95']);   // VERDE: traer el listado por xargs a una carpeta local para leerlo
+    });
 });

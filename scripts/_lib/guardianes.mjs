@@ -3032,27 +3032,50 @@ export function escribeListadoBash(cmd, { cwd = '', leer, prof = 0, ps = false }
   const shells = cuerpos.filter((h) => !h.deGit && APQP_HD_SHELL_RE.test(String(h.dueno ?? ''))).map((h) => ({ cuerpo: h.cuerpo, ps: /(?:^|[\s\\/])(?:powershell|pwsh)(?:\.exe)?(?:\s|$)/i.test(String(h.dueno ?? '')) }));
   let dir = cwd ? String(cwd).replace(/\\/g, '/') : '';
   const completa = (p) => { const r = res(p).replace(/\\/g, '/'); return /^(?:[A-Za-z]:|\/|~)/.test(r) || !dir ? r : `${dir.replace(/\/+$/, '')}/${r}`; };
-  // (ronda 3, T5) lo de detras de un eval se vuelve a partir; un envoltorio con una opcion que lleva valor no esconde al copiar
-  for (const c of comandosConEval(lineas)) {
+  const COPIA_VERBO = /^(?:cp|mv|copy|move|xcopy|Copy-Item|cpi|Move-Item|mi)$/i;
+  // un copiar o mover: la ruta o el motivo si escribe el listado ('' si no). `deLaCaneria`: los archivos le llegan por la
+  // cañeria o por el `{}` de find (xargs, parallel, find -exec): el origen puede ser cualquiera que el comando nombre.
+  const juzgaCopia = (verbo, args, deLaCaneria = false) => {
+    const v = verboPelado(verbo);
+    // (ronda 3, T4) el destino explicito con todas sus formas: la misma funcion que escritorio-guard
+    const ex = destinoExplicitoDe(verbo, args, { ps });
+    const pos = args.filter((a, k) => !/^-/.test(a) && !/^\/[A-Za-z]{1,3}$/.test(a) && !(ex && k === ex.k));
+    const destino = ex ? ex.destino : pos[pos.length - 1];
+    const fuentes = ex ? pos : pos.slice(0, -1);
+    if (deLaCaneria) fuentes.push(String(cmd));
+    if (!destino) return '';
+    const d = completa(destino);
+    if (APQP_LISTADO.test(d) && (/\$/.test(d) || !apqpLocal(d))) return d;
+    // Auditor Opus 17/10 (TRUE BUG 2): MOVER el listado lo saca del servidor; solo COPIARLO es leer
+    if (/^(?:mv|move|Move-Item|mi)$/i.test(v) && fuentes.some((f) => APQP_LISTADO.test(res(f)))) return `${d} (mueve el listado)`;
+    if (fuentes.some((f) => APQP_LISTADO.test(res(f))) && (/\$/.test(d) || !apqpLocal(d))) return `${d} (copia del listado)`;
+    // (TRUE BUG 3) un destino que no se puede resolver (`D="$(cygpath -u "…/Listado….xlsx")"`) con el listado nombrado en
+    // el comando: no se adivina
+    if (/\$/.test(d) && APQP_LISTADO.test(String(cmd))) return `${d} (destino sin resolver)`;
+    return '';
+  };
+  // (ronda 3, T5) lo de detras de un eval se vuelve a partir; un envoltorio con una opcion que lleva valor no esconde al copiar.
+  // (N3 del auditor de cierre) el `{}` de find / xargs / parallel no es un bloque de bash: se cambia por una palabra para
+  // que no parta el comando.
+  for (const c of comandosConEval(lineas.replace(/\{\}/g, '__ARCHIVO__'))) {
     const palabras = c.palabras.map((w) => w.replace(/\uE000/g, '$'));
+    // (N3) el copiar o mover que corre detras de find -exec, xargs o parallel: la regla que escritorio-guard tiene desde la
+    // ronda 1 (mueveAMano). Se juzga el comando de adentro, hasta el `;` / `+` / `:::` que lo cierra.
+    const lanzador = verboPelado(palabras.find((w) => w && !/^[A-Za-z_]\w*=/.test(w)));
+    const k = /^(?:find|xargs|parallel)$/i.test(lanzador) ? palabras.findIndex((w, i) => i > 0 && COPIA_VERBO.test(verboPelado(w))) : -1;
+    if (k > 0) {
+      const resto = palabras.slice(k + 1);
+      const fin = resto.findIndex((w) => /^(?:\\?;|\+|:::)$/.test(w));
+      const r = juzgaCopia(palabras[k], fin >= 0 ? resto.slice(0, fin) : resto, true);
+      if (r) return r;
+      continue;
+    }
     const { verbo, args } = verboDeComando({ ...c, palabras }, APQP_VERBO_CONOCIDO);
     const v = verboPelado(verbo);
     if (/^(?:cd|pushd|chdir|Set-Location|sl)$/i.test(v)) { const d = args.find((a) => !a.startsWith('-')); const r = d ? res(d).replace(/\\/g, '/') : ''; dir = /\$/.test(r) ? '' : /^(?:[A-Za-z]:|\/)/.test(r) ? r : dir && r ? `${dir}/${r}` : ''; continue; }
-    if (/^(?:cp|mv|copy|move|xcopy|Copy-Item|cpi|Move-Item|mi)$/i.test(v)) {
-      // (ronda 3, T4) el destino explicito con todas sus formas: la misma funcion que escritorio-guard
-      const ex = destinoExplicitoDe(verbo, args, { ps });
-      const pos = args.filter((a, k) => !/^-/.test(a) && !/^\/[A-Za-z]{1,3}$/.test(a) && !(ex && k === ex.k));
-      const destino = ex ? ex.destino : pos[pos.length - 1];
-      const fuentes = ex ? pos : pos.slice(0, -1);
-      if (!destino) continue;
-      const d = completa(destino);
-      if (APQP_LISTADO.test(d) && (/\$/.test(d) || !apqpLocal(d))) return d;
-      // Auditor Opus 17/10 (TRUE BUG 2): MOVER el listado lo saca del servidor; solo COPIARLO es leer
-      if (/^(?:mv|move|Move-Item|mi)$/i.test(v) && fuentes.some((f) => APQP_LISTADO.test(res(f)))) return `${d} (mueve el listado)`;
-      if (fuentes.some((f) => APQP_LISTADO.test(res(f))) && (/\$/.test(d) || !apqpLocal(d))) return `${d} (copia del listado)`;
-      // (TRUE BUG 3) un destino que no se puede resolver (`D="$(cygpath -u "…/Listado….xlsx")"`) con el listado nombrado en
-      // el comando: no se adivina
-      if (/\$/.test(d) && APQP_LISTADO.test(String(cmd))) return `${d} (destino sin resolver)`;
+    if (COPIA_VERBO.test(v)) {
+      const r = juzgaCopia(verbo, args);
+      if (r) return r;
       continue;
     }
     if (/^robocopy$/i.test(v)) {
