@@ -1613,10 +1613,11 @@ def anotar_visto(v):
         # Studio) y tiene que quedar «visto» (revision 16/10: nunca quedaba y no ocupaba la placa). Solo si esta
         # IMPRIMIENDO: el original no puede estar imprimiendo despues de su cierre, pero su FINISH si puede seguir en la
         # pantalla (los envios viejos no tienen numero: anotarlo volvia a ocupar la placa, re-auditoria R1).
-        if (not con_num or e_num or e["trabajo_id"] not in registro.cerrados(ev)
-                or est not in ("RUNNING", "PREPARE", "PAUSE")):
+        if not con_num or e_num or e["trabajo_id"] not in registro.cerrados(ev):
             return None
-    if registro.visto_ya(nombre, tid, ev):
+        if est not in ("RUNNING", "PREPARE", "PAUSE") and not registro.visto_ya(nombre, tid, ev):
+            return None                     # su fin, sin haberla visto imprimir, puede ser el original en la pantalla
+    if registro.visto_ya(nombre, tid, ev, fin=est in ("FINISH", "FAILED")):
         return None
     return registro.anotar({"tipo": "visto", "subtask_name": nombre, "task_id": tid, "estado": est,
                             "capa": v.get("layer_num"), "capas": v.get("total_layer_num"),
@@ -1686,6 +1687,7 @@ SIN_INFORMES_S = PUSHALL_CADA + 60
 BUSCAR_CADA, EN_PAUSA_CADA, CANDADO_VENCE_S = 120, 300, 180
 SALIDA_ERROR_PROGRAMA = 16           # --seguir: un error del programa, no de la impresora (no se confunde con el 1)
 ESPERA_ARRANQUE_S = 600              # --seguir lanzado con el envio: cuanto espera a que arranque la pieza nueva
+ENVIO_RECIENTE_S = 900               # un envio abierto de hace menos que esto es el que se esta por vigilar
 
 
 def fin_de_otro_trabajo(v):
@@ -1696,8 +1698,13 @@ def fin_de_otro_trabajo(v):
     try:
         import registro
         nombre, tid = v.get("subtask_name"), v.get("task_id")
-        return bool(v.get("gcode_state") in ("FINISH", "FAILED") and nombre
-                    and registro.trabajo_de(nombre, tid) is None and registro.abiertas())
+        if not (v.get("gcode_state") in ("FINISH", "FAILED") and nombre and registro.trabajo_de(nombre, tid) is None):
+            return False
+        # un envio abierto RECIENTE: uno viejo que quedo abierto (otra PC, otro dia) no es el que se esta por vigilar
+        # (re-auditoria del bloque 4, R-B4-2: Rueda_graduada, abierta en el registro real, hacia esperar 10 min)
+        limite = registro.ahora().timestamp() - ENVIO_RECIENTE_S
+        return any((registro.fecha(e.get("cuando")) or registro._MUY_VIEJO).timestamp() >= limite
+                   for e in registro.abiertas())
     except (Exception, SystemExit):
         return False
 

@@ -560,8 +560,10 @@ class ReAuditoriaRonda2(_SeguirBase):
     def _vuelve_libre(self, *extra):
         self.enviada("pieza_prueba", task_id="555")
         hace = time.time() - 600
+        # fin_estimado: con --buscar la hora limite (fin + 1 h) cae a los 90 s, despues de la guardia; si el error vuelve,
+        # el test falla con 12 en vez de colgar la suite (re-auditoria del bloque 4, R-B4-3)
         self.previo(trabajo={"subtask_name": "pieza_prueba", "task_id": "555"}, ult_mensaje=hace,
-                    desconectado_desde=hace)
+                    desconectado_desde=hace, fin_estimado=time.time() - 3600 + 90)
         self.jug.estado.update(gcode_state="IDLE", subtask_name="", task_id="0")
         guardia = threading.Timer(60, self.jug.parar)       # si no sale, la juguete se apaga y el test no se cuelga
         guardia.start()
@@ -1050,6 +1052,21 @@ class RevisionPlacaYRegistro(unittest.TestCase):
                          "cuando": "2026-10-16 14:00:00"})
         self.assertIsNone(br.anotar_visto({"gcode_state": "RUNNING", "subtask_name": "q", "task_id": "77"}))
 
+    def test_lo_que_se_vio_imprimiendo_ocupa_la_placa_al_terminar(self):
+        """Re-auditoria del bloque 4, R-B4-1: el «visto» de cuando imprimia no ocupaba la placa (solo cuentan los de
+        FINISH/FAILED) y al terminar no se anotaba otro."""
+        self._renglones({"tipo": "enviada", "trabajo_id": "pv", "archivo": "placa_v2.gcode.3mf",
+                         "cuando": "2026-10-16 12:49:42"},
+                        {"tipo": "terminada", "trabajo_id": "pv", "minutos_reales": 40.2, "cuando": "2026-10-16 13:29:54"},
+                        {"tipo": "placa_libre", "cuando": "2026-10-16 13:40:00"})
+        for nombre, tid in (("placa_v2", "1999999999"), ("de_bambu_studio", "4321")):
+            self.assertEqual(br.anotar_visto({"gcode_state": "RUNNING", "subtask_name": nombre, "task_id": tid})["estado"],
+                             "RUNNING")
+            self.assertEqual(br.anotar_visto({"gcode_state": "FINISH", "subtask_name": nombre, "task_id": tid})["estado"],
+                             "FINISH")
+            self.assertIsNone(br.anotar_visto({"gcode_state": "FINISH", "subtask_name": nombre, "task_id": tid}))
+        self.assertIsNotNone(br.placa_ocupada({"gcode_state": "FINISH"}))
+
     def test_cancelada_en_cero_por_ciento_con_capas_cuenta_sus_gramos(self):
         self._renglones({"tipo": "enviada", "trabajo_id": "c", "archivo": "c.gcode.3mf", "cuando": "2026-10-16 11:00:00",
                          "filamentos": [{"rollo": "R", "gramos": 300.0}]},
@@ -1171,6 +1188,21 @@ class RevisionSeguirArranque(_SeguirBase):
             br.ESPERA_ARRANQUE_S = espera
         self.assertEqual(r, 1, out)
         self.assertIn("no arrancó ninguna impresión nueva", out)
+
+    def test_un_envio_viejo_abierto_no_hace_esperar(self):
+        """Re-auditoria del bloque 4, R-B4-2: un envio que quedo abierto de otro dia (Rueda_graduada en el registro
+        real) no es el que se esta por vigilar: con la pieza de Bambu Studio terminada, «terminó» enseguida."""
+        with open(self.reg / "OTRA-PC.jsonl", "a", encoding="utf-8") as f:
+            f.write(json.dumps({"tipo": "enviada", "trabajo_id": "20261016-181429-Rueda_graduada",
+                                "archivo": "Rueda_graduada.gcode.3mf", "cuando": "2026-10-16T18:14:29-03:00"}) + "\n")
+        self.jug.estado.update(gcode_state="FINISH", subtask_name="de_bambu_studio", task_id="9")
+        espera = br.ESPERA_ARRANQUE_S
+        br.ESPERA_ARRANQUE_S = 3
+        try:
+            r, out, err = self.seguir()
+        finally:
+            br.ESPERA_ARRANQUE_S = espera
+        self.assertEqual(r, 0, out)
 
     def test_la_espera_no_vuelve_a_cero_en_cada_relanzada(self):
         """Re-auditoria R4.2: con --despertar cada relanzada empezaba la espera de nuevo y nunca salia el 1."""

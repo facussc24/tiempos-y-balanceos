@@ -219,11 +219,16 @@ def confirmar(trabajo_id, **campos):
     return anotar({"tipo": "confirmada", "trabajo_id": trabajo_id, **campos})
 
 
-def visto_ya(subtask_name, task_id=None, ev=None):
+def visto_ya(subtask_name, task_id=None, ev=None, fin=False):
+    """Si ese trabajo ya tiene su «visto». Con fin=True solo cuenta un «visto» de su FIN (FINISH/FAILED): el que se vio
+    imprimiendo se anota otra vez al terminar, asi ocupa la placa (re-auditoria del bloque 4, R-B4-1)."""
     ev = leer() if ev is None else ev
+
+    def cuenta(e):
+        return e.get("tipo") == "visto" and (not fin or e.get("estado") in ("FINISH", "FAILED"))
     if task_id not in (None, "", "0"):           # con numero, el «visto» es de ESE trabajo (no de otro con el mismo nombre)
-        return any(e.get("tipo") == "visto" and str(e.get("task_id")) == str(task_id) for e in ev)
-    return any(e.get("tipo") == "visto" and e.get("subtask_name") == subtask_name for e in ev)
+        return any(cuenta(e) and str(e.get("task_id")) == str(task_id) for e in ev)
+    return any(cuenta(e) and e.get("subtask_name") == subtask_name for e in ev)
 
 
 # ---------------- la red y la placa ----------------

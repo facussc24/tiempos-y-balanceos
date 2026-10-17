@@ -12,7 +12,7 @@ grabado amarillo, 1 h 43 min contra 1 h 41 estimado), tres fichas de tres colore
 32) y el molde de probeta 50 x 50 (mandado 13:46, terminó 00:18: 632,9 min reales contra 649
 estimados). Lo que sigue sin verse: el detector ante una falla real.
 **16/10/2026 (tanda 17):** la búsqueda por número de serie, la vigilancia nueva (salidas 12/13/14) y los
-frenos de `--imprimir` están probados contra una impresora de juguete (144 tests en
+frenos de `--imprimir` están probados contra una impresora de juguete (146 tests en
 `tests/`, `python -m unittest discover -s .claude/skills/impresion-3d-bambu/tests`); con la impresora
 real, ver §7.
 
@@ -76,6 +76,7 @@ python .claude/skills/impresion-3d-bambu/scripts/bambu_red.py --imprimir <archiv
   remite a ese mismo. Pasadas las primeras capas se relanza con `--despertar 10` (§1 ter). Si arranca con la
   pantalla todavía en el «finalizada» de la pieza anterior (de la skill, de Bambu Studio o de la pantalla), espera
   hasta 10 min a que empiece la nueva, contando también las relanzadas de `--despertar` (sale 1 si no empieza).
+  Espera solo si hay un envío de la skill de los últimos 15 min que todavía no arrancó.
   `--seguir <carpeta> [--fotos-en 41,44]`. Deja `seguimiento.log` (fecha y hora con zona),
   `estado_seguimiento.json` (el reloj de «quieta» y el trabajo, para la próxima relanzada) y fotos de la
   cámara (capa 1, las capas pedidas, una cada 15 min y la final). Una sola conexión que queda abierta.
@@ -211,7 +212,8 @@ los de todas.
   chip> <gramos en la balanza>` [`--tara <g>`] anota la pesada y la cuenta sigue desde ahí. Tara sin medir: 250 g
   (tienda de Bambu; en el foro 208-260 g). El primer carrete vacío que se pese queda como tara de la casa:
   `registro.py --tara <g>`. **Por lugar, el rollo sale del último `--estado` de esta PC**: después de cambiar un
-  rollo se corre `bambu_red.py --estado` antes de pesarlo; con un estado de más de 10 min el comando lo avisa.
+  rollo se corre `bambu_red.py --estado` antes de pesarlo; con un estado de más de 10 min el comando no anota nada y
+  pide correr `--estado` (o pasar el chip).
 - El consumo de una impresión que se canceló o falló se descuenta por su avance o por sus capas impresas, lo que
   diga más (una cancelada en 0 % con 30 capas impresas gastó filamento).
 - **Rollo sin chip** (Fak, 16/10: *«si llega a fallar el chip deberíamos usarlo igual»*): un rollo cargado a mano en
