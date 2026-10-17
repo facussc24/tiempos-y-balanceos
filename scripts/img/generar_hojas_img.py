@@ -101,7 +101,10 @@ ICO_GUANTES  = os.path.join(EPP_DIR, "ico_11789.png")
 ICO_ANTEOJOS = os.path.join(EPP_DIR, "ico_16034.png")
 ICO_AUDITIVA = os.path.join(EPP_DIR, "ico_12924.png")
 
-EPP_STD = [ICO_ROPA, ICO_CALZADO, ICO_GUANTES, ICO_ANTEOJOS, ICO_AUDITIVA]
+# No hay un set de EPP por defecto (tanda 1.5 del plan del sistema, 16/10/2026): el EPP_STD de
+# cinco iconos se ponia solo en toda hoja que no declaraba el suyo y asi salieron anteojos donde
+# nadie los usa (Fak, 21/09 y 14/10/2026: "¿por que hay gafas? en ese sector no hace falta
+# gafas"). Cada hoja declara epp=[...] segun el riesgo de su puesto; sin eso, hoja() frena.
 
 # Los dos fijos de toda hoja de Barack. El tercero lo define el riesgo del
 # puesto, no la costumbre: los anteojos salieron porque nadie los usa en esta
@@ -936,7 +939,17 @@ def _gate_corregido_por_fak(d):
             raise SystemExit(f"hoja {op}: dice \"{m.group(0)}\" -> {en_vez}. {fuente}")
 
 
+def _gate_epp_declarado(d):
+    """Cada hoja nombra su EPP segun el riesgo de SU puesto (hojas-proceso.md 16): no hay valor
+    por defecto. Corre antes que nada, para que ningun otro freno lo tape."""
+    if not d.get("epp"):
+        raise SystemExit(f"hoja {d.get('op', '?')}: no declara su epp=. El EPP sale del riesgo real del "
+                         f"puesto (hojas-proceso.md 16), no de un set por defecto: declarar epp=[...] "
+                         f"en la hoja con los iconos de ese puesto.")
+
+
 def hoja(prs, d, logo=None):
+    _gate_epp_declarado(d)
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     cajetin(slide, d, logo)
     _gate_corregido_por_fak(d)
@@ -952,7 +965,7 @@ def hoja(prs, d, logo=None):
                     numerar=(d.get("modo", "secuencia") != "rotulada"))
     bloque_pasos(slide, d.get("pasos", []), d.get("nota"), d.get("parametros"))
     bloque_ciclo(slide, d.get("ciclo", []))
-    bloque_epp(slide, d.get("epp", EPP_STD), d.get("refs", ("OP - Operador de Producción",)))
+    bloque_epp(slide, d["epp"], d.get("refs", ("OP - Operador de Producción",)))
     bloque_plan(slide, d.get("disparador", 'SI DETECTA "PRODUCTO" O "PROCESO" NO CONFORME'), d.get("acciones"))
     return slide
 

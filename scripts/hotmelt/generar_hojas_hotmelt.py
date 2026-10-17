@@ -652,7 +652,17 @@ def portada(prs, d, logo=None, foto=None, ops_indice=None):
         y_ind += hh_ind
 
 # ─── 8. HOJA COMPLETA ────────────────────────────────────────────────────────
+def _gate_epp_declarado(d):
+    """Cada hoja nombra su EPP segun el riesgo de SU puesto (hojas-proceso.md 16): no hay valor
+    por defecto (tanda 1.5 del plan del sistema, 16/10/2026). Corre antes que nada."""
+    if not d.get("epp"):
+        raise SystemExit(f"hoja {d.get('op', '?')}: no declara su epp=. El EPP sale del riesgo real del "
+                         f"puesto (hojas-proceso.md 16), no de un set por defecto: declarar epp=[...] "
+                         f"en la hoja con los iconos de ese puesto.")
+
+
 def hoja(prs, d, logo=None):
+    _gate_epp_declarado(d)
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     _caja(slide, X0, M, X1 - X0, H - 2 * M, BLANCO, borde=NEGRO, ancho=Pt(1.5))
     cajetin(slide, d, logo)
@@ -660,7 +670,7 @@ def hoja(prs, d, logo=None):
                     principal=d.get("principal"))
     bloque_pasos(slide, d.get("pasos", []), nota=d.get("nota"), parametros=d.get("parametros"))
     bloque_ciclo(slide, d.get("ciclo", []))
-    bloque_epp(slide, d.get("epp", EPP_HOTMELT))
+    bloque_epp(slide, d["epp"])
     bloque_plan(slide, d.get("disparador", 'SI DETECTA "PRODUCTO" O "PROCESO" NO CONFORME'),
                 d.get("acciones"))
     return slide

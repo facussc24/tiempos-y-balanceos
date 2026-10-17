@@ -510,6 +510,15 @@ def portada(prs, d, logo=None, foto=None, indice=None):
     return slide
 
 
+def _gate_epp_declarado(d):
+    """Cada hoja nombra su EPP segun el riesgo de SU puesto (hojas-proceso.md 16): no hay valor
+    por defecto (tanda 1.5 del plan del sistema, 16/10/2026). Corre antes que nada."""
+    if not d.get("epp"):
+        raise SystemExit(f"hoja {d.get('op', '?')}: no declara su epp=. El EPP sale del riesgo real del "
+                         f"puesto (hojas-proceso.md 16), no de un set por defecto: declarar epp=[...] "
+                         f"en la hoja con los iconos de ese puesto.")
+
+
 def hoja(prs, d, logo=None):
     """d: dict con cajetin, imagenes, pasos, ciclo, epp, plan.
 
@@ -518,6 +527,7 @@ def hoja(prs, d, logo=None):
         operacion no entra, se parte en varias laminas y `desde` continua la numeracion.
       · el de siempre — `principal=<idx>` declara cual foto manda; las otras acompañan.
     """
+    _gate_epp_declarado(d)
     slide = prs.slides.add_slide(prs.slide_layouts[6])   # en blanco, sin heredar nada
     cajetin(slide, d, logo)
     desde = d.get("desde", 1)
@@ -529,7 +539,7 @@ def hoja(prs, d, logo=None):
     bloque_imagenes(slide, imgs, d.get("principal"), nums, d.get("secuencia", False))
     bloque_pasos(slide, pasos, d.get("nota"), desde)
     bloque_ciclo(slide, d.get("ciclo", []))
-    bloque_epp(slide, d.get("epp", []), d.get("refs", ("OP - Operador de Producción",
+    bloque_epp(slide, d["epp"], d.get("refs", ("OP - Operador de Producción",
                                                        "OC - Operador de Calidad")))
     bloque_plan(slide, d.get("disparador", "SI DETECTA \"PRODUCTO\" O \"PROCESO\" NO CONFORME"),
                 d.get("acciones"))
