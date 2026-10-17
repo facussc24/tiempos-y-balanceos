@@ -243,13 +243,83 @@ const REDIRECCION_RE = /[<>]{1,2}\s*["']?(?:[^\s"'|;&<>]*[\/\\])?\.(?:env(?:\.(?
 const SOURCE_PUNTO_RE = /(?:^|[;&|(]\s*)\.\s+\S*\.env(?:\.[\w.-]+)?(?=$|[\s;&|)])/;
 const sinComillas = (s) => s.replace(/"(?:[^"\\]|\\.)*"|'[^']*'/g, ' "" ');
 
-/** null si el comando no lee ni pisa un secreto; si no, { como: 'lectura'|'redireccion'|'source', nombres }. */
-export function comandoTocaSecreto(cmd) {
+// P12 (tanda 3, 16/10/2026; si de Fak del 15/10). Medido sobre los 12 frenos de 30 dias del informe de CATA
+// (`casa_guardianes_frenos.md` §3 P2): 9 eran falsos, y en los 9 el nombre del secreto y el «lector» estaban en
+// pedazos distintos del comando (`ls -la .env.local | head -3`: el head lee la salida del ls; `grep "env.local"
+// .gitignore | head`; `robocopy … /XF .env*`). En Bash ahora se mira COMANDO POR COMANDO (los de la cañeria, los de
+// `;`/`&&` y los de adentro de un `$(…)`):
+//   · un lector de archivo (cat, head, tail, type, sed -n…) frena si el secreto es UNO DE SUS ARGUMENTOS (con o sin
+//     comillas: `cat ".env.local"` es leerlo) o si un argumento es una variable que no se resuelve y el comando nombra
+//     el secreto en algun lado (`F=.env.local; cat "$F"`);
+//   · grep/sed/awk/findstr: lo mismo, salteando el primer argumento, que es el PATRON (salvo con -e/-f);
+//   · un interprete (python, node, perl, bash -c, cmd /c, powershell…) frena si lo nombra entre sus argumentos (su
+//     codigo pegado: `python -c "open('.env.local')"`);
+//   · xargs o find -exec con un lector adelante: frena si el comando nombra el secreto (no se sabe que le llega).
+// Lo que sigue igual: la redireccion (`< .env.local`, `> .qr-secret`), el `. .env.local`, PowerShell entero (la regla de
+// siempre, sobre el comando completo) y un JSON roto (no corre: el guardian pide ctx.ok).
+const SECRETO_ARG_RE = /(?:^|[\\/])(?:\.env(?:\.(?!example(?![\w-]))[\w.*?-]+|[*?])?|\.qr-secret)$/i;
+const LECTOR_ARCHIVO_RE = /^(?:cat|type|head|tail|less|more|bat|strings|od|xxd|hexdump|base64|nl|tac|rev|cut|paste|column|tee|source|Get-Content|gc|Out-String|Import-Csv|Format-Table|ft)$/i;
+const PATRONERO_VERBO_RE = /^(?:grep|egrep|fgrep|rg|ag|sed|awk|findstr|Select-String|sls)$/i;
+const INTERPRETE_SECRETO_RE = /^(?:python[\d.]*|py|pythonw|node|deno|bun|perl|ruby|php|pwsh|powershell|bash|sh|zsh|dash|cmd|wsl)$/i;
+const verboPelado = (v) => String(v ?? '').replace(/^.*[\\/]/, '').replace(/\.exe$/i, '');
+
+/** Las variables que el comando asigna con un valor ESCRITO (`D="/d/x"`); null si alguna vez sale de un `$(…)`. */
+function variablesEscritas(todo) {
+  const vars = new Map();
+  for (const m of String(todo).matchAll(/(?:^|[;&|\s(])([A-Za-z_][A-Za-z0-9_]*)=("([^"\n]*)"|'([^'\n]*)'|([^\s;&|"'()]*))/g)) {
+    const v = m[3] ?? m[4] ?? m[5] ?? '';
+    vars.set(m[1], /[$\x60]/.test(v) && m[4] === undefined ? null : v);
+  }
+  return vars;
+}
+
+/** ¿Algun comando simple del texto (o de sus `$(…)`) lee el secreto? `todo` = el comando entero, para las variables. */
+function leeSecretoPorComando(texto, todo, prof = 0, vars = variablesEscritas(todo)) {
+  if (prof > 4) return SECRETO_RE.test(texto);
+  for (const c of comandosSimples(texto)) {
+    const palabras = c.palabras.map((w) => w.replace(//g, '$'));
+    for (const w of palabras) {
+      const subs = sustitucionesDe(w);
+      if (subs === null) { if (SECRETO_RE.test(w)) return true; continue; }
+      for (const s of subs) if (leeSecretoPorComando(s, todo, prof + 1, vars)) return true;
+    }
+    const { verbo, args } = verboDeComando({ ...c, palabras });
+    const v = verboPelado(verbo);
+    // un argumento con una variable: si el comando le dio un valor escrito, se mira ese valor (puede ser una lista);
+    // si no se sabe que vale, cuenta como el secreto cuando el comando lo nombra en algun lado (no se adivina)
+    const esSecreto = (a) => {
+      if (!/\$/.test(a)) return SECRETO_ARG_RE.test(a);
+      const r = a.replace(/\$\{?([A-Za-z_]\w*)\}?/g, (m, n) => (vars.get(n) != null ? vars.get(n) : m));
+      if (/\$/.test(r)) return SECRETO_RE.test(todo);
+      return r.split(/\s+/).some((p) => SECRETO_ARG_RE.test(p));
+    };
+    if (LECTOR_ARCHIVO_RE.test(v)) { if (args.some((a) => !/^-/.test(a) && esSecreto(a))) return true; continue; }
+    if (PATRONERO_VERBO_RE.test(v)) {
+      const sinPatron = args.some((a) => /^(?:-[a-zA-Z]*[ef]|--(?:regexp|file|expression)(?:=|$))/.test(a));
+      const posicionales = args.filter((a) => !/^-/.test(a));
+      if ((sinPatron ? posicionales : posicionales.slice(1)).some(esSecreto) || /^(?:Select-String|sls)$/i.test(v) && args.some(esSecreto)) return true;
+      continue;
+    }
+    if (INTERPRETE_SECRETO_RE.test(v)) { if (args.some((a) => SECRETO_RE.test(a) || SECRETO_ARG_RE.test(a))) return true; continue; }
+    const ejecutaOtro = (/^xargs$/i.test(v) && args.some((a) => LECTOR_ARCHIVO_RE.test(verboPelado(a)) || PATRONERO_VERBO_RE.test(verboPelado(a))))
+      || (/^find$/i.test(v) && args.some((a, k) => /^-(?:exec|execdir|ok|okdir)$/.test(a) && LECTOR_ARCHIVO_RE.test(verboPelado(args[k + 1]))));
+    if (ejecutaOtro && SECRETO_RE.test(todo)) return true;
+  }
+  return false;
+}
+
+/**
+ * null si el comando no lee ni pisa un secreto; si no, { como: 'lectura'|'redireccion'|'source', nombres }.
+ * `porComando: true` (Bash, desde P12) mira comando por comando; sin eso (PowerShell, o quien la llame suelta), la
+ * regla de siempre sobre el comando entero.
+ */
+export function comandoTocaSecreto(cmd, { porComando = false } = {}) {
   const c = sinCuerposHeredoc(String(cmd ?? ''));
   if (!SECRETO_RE.test(c)) return null;
   const nombres = [...new Set([...c.matchAll(new RegExp(SECRETO_SRC, 'gi'))].map((m) => m[1]))];
   if (REDIRECCION_RE.test(c)) return { como: 'redireccion', nombres };
   if (SOURCE_PUNTO_RE.test(c)) return { como: 'source', nombres };
+  if (porComando) return leeSecretoPorComando(c, c) ? { como: 'lectura', nombres } : null;
   const pelado = sinComillas(c);
   if (LECTORES_RE.test(pelado)) return { como: 'lectura', nombres };
   if (PATRONEROS_RE.test(pelado) && SECRETO_RE.test(pelado)) return { como: 'lectura', nombres };
@@ -258,7 +328,7 @@ export function comandoTocaSecreto(cmd) {
 
 GUARDIANES['secretos-guard'] = (ctx) => {
   if (!ctx.ok || !ctx.cmd) return null;
-  const t = comandoTocaSecreto(ctx.cmd);
+  const t = comandoTocaSecreto(ctx.cmd, { porComando: ctx.tool === 'Bash' });
   if (!t) return null;
   const verbo = t.como === 'redireccion' ? 'pisa' : 'lee';
   return bloqueo(`[SECRETOS-GUARD] BLOQUEADO: el comando ${verbo} un archivo de secretos (${t.nombres.join(', ')}).

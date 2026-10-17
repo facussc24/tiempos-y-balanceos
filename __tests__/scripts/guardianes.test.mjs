@@ -790,8 +790,39 @@ describe('secretos-guard — .env.local y .qr-secret no se leen ni se pisan desd
     verde(bash('echo "process.env.VITE_SUPABASE_URL" && node -e "console.log(process.env.HOME)"'));
     verde(bash('npm install dotenv && cat .envrc'));
   });
+  // P12 (tanda 3, 16/10/2026): los frenos FALSOS reales del informe de CATA (`casa_guardianes_frenos.md` §3 P2) pasan;
+  // los VERDADEROS (§4) y las lecturas de siempre siguen frenando. Medido con scripts/_frenosMedir.mjs: 9 falsos -> 1.
+  it('P12 VERDE — el lector lee la salida de OTRO comando, o el nombre es un patron o una lista de exclusion', () => {
+    verde(bash('ls scripts/_lib/ | head -40; echo "--- existe env:"; ls -la .env.local 2>/dev/null'));               // 21/09 11:25
+    verde(bash('ls -la .env.local 2>&1 | head -3; timeout 90 node scripts/_auditAll.mjs --summary 2>&1 | head -25'));    // 21/09 11:20
+    verde(bash("ls -la /d/ 2>&1 | head -20; echo ---; ls -la /c/Dev/BarackMercosul/.env.local /c/Dev/BarackMercosul/.qr-secret 2>&1 | awk '{print $5, $9}'")); // 08/10
+    verde(bash('grep -n -i "pegar-clave\\|env.local\\|ANTHROPIC_API_KEY" scripts/_claude.mjs | head -40; echo "--- gitignore ---"; grep -n "env.local\\|\\.env" .gitignore')); // 09/10
+    verde(bash(`cd C:/Dev/BarackMercosul; D="/d/FEDERICO CLAUDE CODE"; X='/XD node_modules __pycache__ /XF .env* *.secret .qr-secret'\ncp CLAUDE.md docs/LECCIONES_APRENDIDAS.md "$D/1-REGLAS-Y-CEREBRO/"\nrobocopy .claude/rules "D:\\\\FEDERICO CLAUDE CODE\\\\rules" /E $X\ncat "$D/LEEME.txt" | head`)); // 28/09
+    verde(bash(`ls .env.local >/dev/null 2>&1 && echo env-ok; cat > scripts/_tmp_q.mjs <<'EOF'\nconst env = fs.readFileSync('.env.local','utf8');\nEOF\nnode scripts/_tmp_q.mjs`)); // 30/09 (el script lo lee por dentro)
+    verde(bash('test -f .env.local && echo ok; find . -maxdepth 2 -iname ".env*" | head; robocopy a b /XF .env*'));
+  });
+  it('P12 ROJO — los verdaderos del informe y las lecturas por el archivo siguen frenando', () => {
+    rojo(bash('ls -a | grep -i env; echo "---"; grep -h "SUPABASE" .env.local .env 2>/dev/null | sed \'s/\\(KEY=.\\{20\\}\\).*/\\1.../\''));     // 21/09 11:25 (§4)
+    rojo(bash("ls -la .env.local 2>&1 | head -3; grep -o 'VITE_SUPABASE_URL=.*' .env.local 2>/dev/null | sed 's#x#y#'"));                    // 21/09 11:20
+    rojo(bash('ls -la .env.local | head -3; curl -s "$(grep -oE \'https://[a-z0-9]+\\.supabase\\.co\' .env.local | head -1)/rest/v1/"')); // adentro de un $(…)
+    rojo(bash('head -3 .env.local'));
+    rojo(bash('cat .env.local | head'));
+    rojo(bash('ls; cat ".env.local"'));
+    rojo(bash('F=.env.local; cat "$F"'));
+    rojo(bash('cat "$X" # .env.local'));
+    rojo(bash('ls -a | xargs cat .env.local'));
+    rojo(bash('find . -name ".env.local" -exec cat {} \\;'));
+    rojo(bash('cmd //c type .env.local'));
+    rojo(bash('bash -c "cat .env.local"'));
+    rojo(bash('grep -e KEY .env.local'));
+    // (`cat .env*` no lo frena ni antes de P12: el nombre seguido de `*` no entra en SECRETO_RE. Agujero anotado aparte.)
+  });
+
   it('comandoTocaSecreto: dice QUE archivo y COMO', () => {
     expect(comandoTocaSecreto('cat .env.local')).toEqual({ como: 'lectura', nombres: ['.env.local'] });
+    expect(comandoTocaSecreto('cat .env.local', { porComando: true })).toEqual({ como: 'lectura', nombres: ['.env.local'] });
+    expect(comandoTocaSecreto('ls -la .env.local | head -3', { porComando: true })).toBeNull();
+    expect(comandoTocaSecreto('ls -la .env.local | head -3')).toEqual({ como: 'lectura', nombres: ['.env.local'] }); // la regla vieja (PowerShell)
     expect(comandoTocaSecreto('echo x > .qr-secret').como).toBe('redireccion');
     expect(comandoTocaSecreto('set -a; . .env.local').como).toBe('source');
     expect(comandoTocaSecreto('ls .env.local')).toBeNull();
