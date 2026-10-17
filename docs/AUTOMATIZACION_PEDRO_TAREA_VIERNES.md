@@ -26,7 +26,9 @@ El mail no sale de acá: Fak copia el borrador a un mail nuevo de Outlook. La ta
 - Test: `__tests__/scripts/automatizacionCandidatos.test.mjs` (23 casos, con un `_mails.py` de mentira que anota lo que le piden).
 - Desde un worktree encuentra solo el `_mails.py` del checkout principal (el que tiene `.mail-cache`).
 
-## La tarea programada (QUEDÓ SIN CREAR: la app pidió la aprobación de una persona)
+## La tarea programada (CREADA el 17/10/2026 a las 20:3x desde la sesión madre, con Fak en la ventana; modo omitir permisos; corre los viernes 09:09, próxima el 23/10 que por la guarda de 12 días no escribe; la primera que escribe es el 30/10)
+
+Antes decía: QUEDÓ SIN CREAR: la app pidió la aprobación de una persona.
 
 El 17/10 la herramienta de tareas programadas contestó «needs a person's approval, and nobody has opened this scheduled
 run». No se armó por otro camino. Se crea desde una sesión con Fak en la ventana, aprobando la creación (si la app
