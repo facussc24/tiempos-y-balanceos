@@ -1,0 +1,32 @@
+{
+  "_que_es": "Canon de la ficha de configuracion por pieza (tanda 13 item 1, plan docs/PLAN_FICHA_CONFIGURACION_PIEZA_2026-10-17.md). Lo leen scripts/_lib/fichaPieza.mjs y su test. Una marca o una regla nueva se agrega aca con su fuente; no en el codigo.",
+  "adhesivos": [
+    {
+      "marca": "Fenoclor FA",
+      "patrones": ["fenoclor", "\\bAD\\s*-\\s*ADFA", "\\bADFA\\d*", "adhesivo\\s+fa\\b"],
+      "fuente": "AMFE 158 en Supabase, OP 10: «Adhesivo base solvente Fenoclor (codigo AD - ADFA15)» y «Reticulante para adhesivo Fenoclor (codigo AD - REGV0.6)» (memoria reference_adhesivo_fa_retic_gv_densidades)"
+    },
+    {
+      "marca": "SikaMelt",
+      "patrones": ["sika\\s*-?\\s*melt", "\\b923852\\b"],
+      "fuente": "HO-990 Rev.A hoja de la OP 90: «adhesivo termofusible (SikaMelt)»; codigo 923852 = tabla de Sika del mail de Fak del 01/06/2026 (memoria project_sika_toproll_codigo_y_consumo)"
+    }
+  ],
+  "unidades_por_atributo": {
+    "_comentario": "En que unidad se compara cada atributo. Un ancho que viene sin unidad se toma en mm salvo que la fuente diga otra cosa (la tizada .MRK escribe <WIDTH> en cm).",
+    "ancho": "mm",
+    "densidad": "kg/m3"
+  },
+  "ecr": {
+    "documentos_que_nombra_el_sgc": "Fichas Tecnicas, Estructura de Producto, Flujogramas, Hojas de Proceso, A.M.F.E.s y Planes de Control",
+    "recordatorio": [
+      "Antes de tocar un documento ya emitido: ECR/ECO con el formato unico I-IN-003.1 (hojas EC y ECO) y su renglon en el registro I-IN-003.2, hoja Tracking.",
+      "Evaluacion tecnica conjunta (Ing. de Producto, Ing. de Manufactura, Logistica, Produccion, Calidad) y firma de las 4 gerencias (Ingenieria, Calidad, Produccion, Planta).",
+      "Barack no disena: el cambio lo aprueba el disenador o el cliente y se documenta por PPAP; el OK interno no alcanza.",
+      "No va ECR si el documento todavia no se emitio al cliente y lo que se cierra era un TBD (criterio con Fak del 27/07/2026): no sube la letra, queda el rastro en la tabla de revisiones.",
+      "Esta lista solo dice que tocar: la firma de un ECR es de otras gerencias y ningun documento se edita desde aca."
+    ],
+    "fuente": "I-IN-002 rev A (lista de documentos que se modifican por SCP) e I-IN-003 rev I del 19/06/2026, leidos el 27/07/2026 (memoria reference_circuito_cambios_ecr_eco_barack)"
+  },
+  "bom_vieja_dias": 7
+}
