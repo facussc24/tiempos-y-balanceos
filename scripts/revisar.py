@@ -49,7 +49,7 @@ TEMA = json.load(io.open(os.path.join(AQUI, "_lib", "tema.json"), encoding="utf-
 INGLES = json.load(io.open(os.path.join(RAIZ, "core", "amfe", "forbiddenContent.data.json"), encoding="utf-8"))["ENGLISH_RANDOM_TERMS"]
 
 TIPOS = ["proyectar", "leer", "una-pagina", "excel", "html", "mail", "texto", "explicacion"]
-POR_EXTENSION = {".pptx": "leer", ".xlsx": "excel", ".xlsm": "excel", ".xls": "excel", ".pdf": "una-pagina",
+POR_EXTENSION = {".pptx": "leer", ".xlsx": "excel", ".xlsm": "excel", ".xltx": "excel", ".xls": "excel", ".pdf": "una-pagina",
                  ".html": "html", ".htm": "html", ".txt": "texto", ".md": "texto", ".docx": "una-pagina"}
 
 ROJO, VERDE, NO_APLICA, NO_CORRIO, MIRAR = "ROJO", "VERDE", "no aplica", "NO CORRIO", "PARA MIRAR"
@@ -100,13 +100,13 @@ def leer_pptx(ruta, d):
                         for p in c.text_frame.paragraphs:
                             for r in p.runs:
                                 if r.font.size is not None:
-                                    lam["tamanos"].append((r.font.size.pt, "tabla", r.text[:40]))
+                                    lam["tamanos"].append((r.font.size.pt, "tabla", r.text))
             if getattr(sh, "has_text_frame", False) and sh.has_text_frame:
                 lam["textos"].append(sh.text_frame.text)
                 for p in sh.text_frame.paragraphs:
                     for r in p.runs:
                         if r.font.size is not None and r.text.strip():
-                            lam["tamanos"].append((r.font.size.pt, "texto", r.text[:40]))
+                            lam["tamanos"].append((r.font.size.pt, "texto", r.text))
 
     for i, sl in enumerate(prs.slides, 1):
         lam = {"n": i, "textos": [], "imagenes": 0, "tablas": 0, "tamanos": []}
@@ -220,7 +220,7 @@ def leer_texto(ruta, d):
             d.pedazos.append((f"renglon {i}", renglon))
 
 
-LECTORES = {".pptx": leer_pptx, ".xlsx": leer_xlsx, ".xlsm": leer_xlsx, ".xls": leer_xls, ".pdf": leer_pdf,
+LECTORES = {".pptx": leer_pptx, ".xlsx": leer_xlsx, ".xlsm": leer_xlsx, ".xltx": leer_xlsx, ".xls": leer_xls, ".pdf": leer_pdf,
             ".docx": leer_docx, ".html": leer_html, ".htm": leer_html, ".txt": leer_texto, ".md": leer_texto}
 
 
@@ -444,7 +444,7 @@ def regla_letra(d, tipo):
         chicos = [(pt, k, txt) for pt, k, txt in lam["tamanos"] if pt < (tabla if k == "tabla" else cuerpo) and not es_pie(txt)]
         if chicos:
             pt, k, txt = min(chicos)
-            hall.append((f"lamina {lam['n']}", f"{k} a {pt:g} pt (minimo {tabla if k == 'tabla' else cuerpo}): {txt}"))
+            hall.append((f"lamina {lam['n']}", f"{k} a {pt:g} pt (minimo {tabla if k == 'tabla' else cuerpo}): {txt[:40]}"))
     return primero("letra-minima", hall, f"letra por debajo del minimo para «{tipo}» (las que heredan del diseño no se miden)", de)
 
 

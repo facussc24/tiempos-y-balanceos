@@ -30,7 +30,8 @@
       "de": "#10 «columna Fuente» 24/07; #9 folio 03/09 (columnas que derivé yo). «Observaciones» NO esta en la lista: es columna de muchos formularios"
     },
     "jerga_interna": {
-      "valor": ["subagente", "subagentes", "hook", "hooks", "tokens", "dry-run", "commit", "pipeline", "prompt", "llamadas en curso"],
+      "valor": ["subagente", "subagentes", "tokens", "dry-run", "commit", "pipeline", "prompt", "llamadas en curso"],
+      "_medido": "18/10: «hook» salia en la BOM de Patagonia por «APLIX 10X60MM / MOLD IN FOAM HOOK», un nombre de material como figura en la BOM (excepcion de la casa: amfe.md §17.2); se saco",
       "de": "#8 banda 11/10 «283 llamadas en curso???» (feedback_lenguaje_del_entregable_palabras_de_fak). El ingles suelto de planta se lee de core/amfe/forbiddenContent.data.json (ENGLISH_RANDOM_TERMS): no se copia"
     },
     "formularios": {

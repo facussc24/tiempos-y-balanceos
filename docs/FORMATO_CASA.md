@@ -65,3 +65,62 @@ llamadas «REF. n» de la misma lámina (y «tocar» o «apretar» no son palabr
 
 **Lo que no ve:** lo visual (portada oscura, tarjetas de colores, fotos «mejoradas»): eso lo mira una persona sobre el
 render; si una hoja de reunión pregunta cosas que ya se saben (#3); si un número está bien.
+
+## El tema: `scripts/_lib/tema.json`
+
+Un solo archivo con el logo (ruta y sha256), la letra, los colores, los tamaños por tipo y el pie. Lo cargan
+`scripts/_lib/temaCasa.py` y `temaCasa.mjs`, que **frenan si el logo no es el oficial** (sha256 `6798d5bc…`;
+`5d9207e12856` es el sha1 del mismo archivo). Copia la mecánica de la skill `brand-guidelines` de Anthropic (Apache 2.0);
+las skills oficiales `pptx`, `xlsx`, `docx` y `pdf` no se copian (su licencia lo prohíbe).
+
+- **Logo**: solo el oficial, arriba a la izquierda, nunca agrandado ni redibujado. Mide 151×75 px: a 15 mm de alto
+  impreso queda en unos 127 dpi.
+- **Letra**: Calibri. **Colores**: fondo blanco, texto negro, cabecera de tabla `#44546A` con letra blanca (fijo: tiene
+  papel), gris `9AA3AD`, relleno `F3F4F6`, rojo `C00000` solo para marcar el renglón que importa.
+- **El azul de acento lo elige Fak.** Propuesto `#44546A`, el único con papel. Hoy hay otros azules sin papel en tres
+  generadores (`004E98` la lámina de proceso, `1B4F8F` la superficie de vinilo, `1F3A5F` los de hilos) y uno en el
+  zip `Sistema_Procesos_Barack_v1.0.zip` de la nube (`1A5FA8`). No se cambian hasta que Fak elija.
+- **Quién lo lee hoy**: los seis generadores de hoja de proceso y la página de temas abiertos, que ya usaban `#44546A`
+  (salida idéntica, probado en `__tests__/scripts/temaCasa.test.mjs`), la lámina del Insert (el logo), el programita
+  (logo, letra y colores) y las plantillas de abajo. La letra de los generadores de hoja de proceso sigue escrita en
+  ellos porque la miden con `calibri.ttf`, y el diseño de un formulario oficial no se toca.
+
+## Plantillas: `python scripts/plantillasCasa.py` (deja `templates/CASA_*`)
+
+**PowerPoint, dos tipos que no se mezclan en el mismo archivo:**
+
+| | Para proyectar en una reunión | Para mandar y leer (el más común) |
+|---|---|---|
+| Archivo | `templates/CASA_PRESENTACION_PROYECTAR.pptx` | `templates/CASA_PRESENTACION_LEER.pptx` |
+| Título | la AFIRMACIÓN en una oración, 28 a 32 pt («La OP 30 pasa de 2 a 1 operario», no «Análisis OP 30») | la afirmación, 22 pt |
+| Cuerpo | UNA evidencia por lámina (captura del papel, foto real, tabla o gráfico); letra de 18 pt o más | lo mismo, 10 pt o más |
+| De dónde sale | Garner, Alley, Wolfe y Sawarynski, *Int. J. Engineering Education* 29(6), 2013: título-oración y una imagen por lámina, d = 0,81 en comprensión y 0,89 en recuerdo; el deck LSR de VW que la casa ya presentó usa 32 / 18 / 12 | **sale de un solo caso**: el PowerPoint del IMDS rehecho el 09/10 (cuerpo 10 a 14 pt) |
+
+Cada fuente que se nombra lleva su lámina con la captura del papel y el renglón en rojo (reclamo del 01/10). El pie:
+título · fecha · F.Santoro · revisión · página. La función `lamina()` de `scripts/plantillasCasa.py` arma una lámina así
+para cualquier generador.
+
+**Excel de datos** (`templates/CASA_EXCEL_B2.xltx`, función `excel_b2()`): fila 1 y columna A vacías, **título en
+B2**, tabla desde B4 con la cabecera `#44546A` en letra blanca, bordes finos, paneles inmovilizados debajo de la
+cabecera, ancho de columna al dato, autor «Facundo Santoro». Solo título y datos: sin notas, sin gris, sin columnas que
+derive yo. Parte de `PLAN DE TRABAJO Formato Rev. 1.xlsx` de `FORMATOS GENERAL`, el único Excel de esa carpeta que ya
+cumplía la regla del dueño (columna A de 3,7 de ancho, título en B2 con `#44546A`); cambia su letra (Times New Roman y
+Aptos Narrow) por la del tema.
+
+**Hoja de una página / A3** (`templates/CASA_HOJA_A3.pptx`, A3 horizontal): **la primera línea dice qué pasa y qué se
+necesita**, de quién y para cuándo; debajo, los 6 bloques del A3 de Toyota (situación, objetivo, causa,
+contramedida, plan con responsable y fecha, seguimiento; Sobek y Smalley 2008, lexicón del Lean Enterprise
+Institute). Letra de 12 pt o más en texto y 9 pt en tablas (el A3 de hoja de proceso de Gamboa va de 8,5 a 12,5). Sirve
+para un problema, un desvío o el estado de un tema. En A4 no hay fuente de un mínimo impreso: se fija con una prueba de
+impresión.
+
+**Pantalla para Fak** (el programita, `scripts/_programita.mjs`): *«mucho más 2D y mucho más serio»*, el logo arriba a
+la izquierda; plata como «gastado / quedan»; fecha con día; ningún contador interno; verde = cierra, rojo = no cierra,
+con su leyenda.
+
+**Mail**: no lleva plantilla visual; lleva la voz (`python scripts/revisar.py <borrador.txt> --tipo mail`, que usa
+`_vozFak.mjs`).
+
+**Capturas para que Fak elija** (18/10, fuera de git): `exports/explicaciones/formatos_antes_despues_2026-10-18/`, con
+una lámina (IMDS del 09/10 contra la pregunta 5 sola con el tema), la hoja A3 y un Excel (el mapeo de vinilos tal como
+está contra los mismos datos en B2). Lo que Fak elija pasa a `tema.json`.
