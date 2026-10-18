@@ -411,12 +411,15 @@ lector, armé una sonda que importa los mismos módulos del worktree e imprime s
 - **INCA:** cambian solo el aviso de los partes que faltan y la frase del comprador. Las tablas son iguales: leer el
   enlace sin decodificar el renglón entero no movió ninguna pieza.
 - **Planner:** la salida es idéntica byte a byte. Es lo esperado: el nit 5 no movía ninguna cifra.
-- **Índice:** sacando la columna nueva de asuntos, difieren 21 renglones, y todos se explican:
-  - los 4 del resumen;
+- **Índice:** sacando la columna nueva de asuntos, el `diff` marca 21 renglones (cuenta el viejo y el nuevo de lo que
+  cambió), y todos se explican:
+  - los 4 del resumen: 8 renglones, 4 viejos y 4 nuevos;
   - las 4 filas `.jt` del 02/09/2025;
-  - la fila del MQB, que suma su `.jt`;
+  - la fila del MQB, que suma su `.jt`: 2 renglones, la vieja y la nueva;
   - la fila del `.tar` de VW (09/12/2024);
   - y sus 6 renglones de detalle.
+
+  8 + 4 + 2 + 1 + 6 = 21.
 
   Facundo Santoro pasa de 83 a 87 (los 4 `.jt`). Nada más se movió.
 
