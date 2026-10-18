@@ -147,7 +147,13 @@ export function estudio(valores, { lie, lse } = {}) {
     // valores que sobran nunca se verificaron estables y no entran en la aptitud (revision de la sesion madre, 17/10).
     const delEstudio = resumen(usados.flat());
     out.resumenAptitud = delEstudio;
-    if (delEstudio.n < res.n) out.avisos.push(`PP y PPK salen de los ${delEstudio.n} valores de los ${SUBGRUPOS_PRELIMINARES} subgrupos de la carta; los otros ${res.n - delEstudio.n} no entran (no se verifico que esten estables).`);
+    if (delEstudio.n < res.n) {
+      out.avisos.push(`PP y PPK salen de los ${delEstudio.n} valores de los ${SUBGRUPOS_PRELIMINARES} subgrupos de la carta; los otros ${res.n - delEstudio.n} no entran (no se verifico que esten estables).`);
+      // lo que queda afuera puede traer piezas malas: se nombran, para que un «llega» no las esconda (auditor, ronda 2)
+      const afuera = valores.slice(delEstudio.n);
+      const fuera = afuera.filter((v) => (Number.isFinite(lie) && v < lie) || (Number.isFinite(lse) && v > lse));
+      if (fuera.length) out.avisos.push(`OJO: de los ${afuera.length} que no entran, ${fuera.length} estan FUERA DE TOLERANCIA (${fuera.map((v) => coma(v)).join(' ')}): PP y PPK no los miran; revisar esas piezas antes de leer el resultado.`);
+    }
     const ap = aptitud(delEstudio, { lie, lse });
     if (!ap) {
       out.avisos.push('Sin tolerancia no se calcula PP ni PPK: pasar --lie y/o --lse (salen del plano o del plan de control).');
@@ -173,7 +179,8 @@ export function informe(e) {
   if (e.aptitud) {
     const a = e.aptitud;
     const cumple = (v) => (Number.isFinite(v) ? (v >= a.minimo ? 'llega' : 'NO llega') : '');
-    l.push(`PP ${coma(a.pp)} ${cumple(a.pp)} · PPK ${coma(a.ppk)} ${cumple(a.ppk)} (el I-AC-021 pide ${coma(a.minimo)} o mas)${a.motivo ? ` · ${a.motivo}` : ''}`);
+    const rs = e.resumenAptitud;
+    l.push(`PP ${coma(a.pp)} ${cumple(a.pp)} · PPK ${coma(a.ppk)} ${cumple(a.ppk)} (el I-AC-021 pide ${coma(a.minimo)} o mas)${rs ? ` · con promedio ${coma(rs.media)} y s ${coma(rs.s)} de los ${rs.n} valores de la carta` : ''}${a.motivo ? ` · ${a.motivo}` : ''}`);
   }
   for (const a of e.avisos) l.push(a);
   l.push(AVISO);

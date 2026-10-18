@@ -46,6 +46,12 @@ describe('libro de observaciones — el caso de ductos', () => {
     expect(antesDeMandar(datos, 'hoja de proceso').observaciones.map((o) => o.id)).toEqual(['h']);
     expect(antesDeMandar(datos, 'Hoja').observaciones.map((o) => o.id)).toEqual(['h']);
     expect(antesDeMandar(datos, 'AMFE').observaciones).toEqual([]);
+    // y los otros nombres que usa la casa (auditor, ronda 2): PFD, CP, plural, PFMEA
+    const varios = { observaciones: [obs({ id: 'f', documento: 'PFD' }), obs({ id: 'c', documento: 'CP' }), obs({ id: 'p', documento: 'PFMEA' }), obs({ id: 'h2', documento: 'Hojas de proceso' })] };
+    expect(antesDeMandar(varios, 'flujograma').observaciones.map((o) => o.id)).toEqual(['f']);
+    expect(antesDeMandar(varios, 'plan de control').observaciones.map((o) => o.id)).toEqual(['c']);
+    expect(antesDeMandar(varios, 'AMFE').observaciones.map((o) => o.id)).toEqual(['p']);
+    expect(antesDeMandar(varios, 'HO').observaciones.map((o) => o.id)).toEqual(['h2']);
   });
 });
 

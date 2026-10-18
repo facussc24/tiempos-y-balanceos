@@ -41,7 +41,7 @@ DXF: `exports/INSERT_OREJITA_COSTURA_20261015/INSERT PATAGONIA - 4 PIEZAS (1 de 
 
 **Lectura.** Con el ancho que ocupan las columnas, la regla de Fak es tan buena como lo mejor que encontró el buscador:
 las columnas encastran la punta inclinada de una mano en la de la otra. **El ancho real del rollo no está medido** y no
-lo pongo de ejemplo: para el Insert hay cuatro valores en circulación (1400, 1200, 1500 y 1150 mm; caso 2 del plan del
+lo pongo de ejemplo: para el Insert hay tres valores en circulación (1400, 1200 y 1500 mm) más los 1150 mm de las tizadas (caso 2 del plan del
 ítem 1) y ningún papel que diga cuál se usa en el plotter. Si el rollo es más ancho que la columna, las 5 piezas por
 columna dejan sin usar esa franja; cuánto se gana acomodando distinto se mide con el ancho de un papel (la orden de
 compra o la planilla de la mesa de corte) y este comando:
@@ -150,7 +150,7 @@ mandarlo, y que la sesión que lo mira conteste en el hilo.
 
 ## Ítem 7 · Medir la costura de la CNC con una foto (método probado en imágenes de medida conocida)
 
-Script: `scripts/costura/medir_costura_foto.py` (selftest `medir_costura_foto_selftest.py`, 12 casos en verde). Usa
+Script: `scripts/costura/medir_costura_foto.py` (selftest `medir_costura_foto_selftest.py`, 22 casos en verde). Usa
 OpenCV, que **ya está en esta PC** (no se instaló nada). Cómo funciona: la pieza se apoya sobre una hoja A4 impresa con
 4 marcas ArUco (`--hoja-referencia hoja.png` la genera); las marcas dan la vista de arriba en milímetros aunque el
 celular esté inclinado; el borde de referencia es el de arriba de la pieza, la costura lo que es más oscuro que la pieza,
@@ -161,11 +161,16 @@ y entran directo a `node scripts/_aptitudMaquina.mjs --valores "..."` (ítem 2).
 perspectiva; en 8 «fotos» con el celular inclinado hasta 8 %, desenfoque y ruido, el error máximo por tramo fue 0,05 mm;
 con la pieza girada 3° da 52,39; con 46,4 mm (la otra mano del trasero) da 46,37. Sin las marcas, o con una tapada, no
 mide y lo dice. La hoja que se imprime tiene sus marcas a menos de 1 px de donde el método las espera, y sobre esa misma
-hoja (con su leyenda, que ahora va abajo y afuera de la zona que se mide) los tramos quedan a 0,05 mm de 52,4.
-**Si el hilo no se distingue del vinilo** (sin costura, hilo apenas más oscuro, hilo más claro que el vinilo) no
+hoja (con su leyenda, que ahora va abajo y afuera de la zona que se mide) los tramos quedan a menos de 0,15 mm de 52,4.
+**Si el hilo no se distingue del vinilo** (sin costura, hilo casi del color del vinilo, hilo más claro que el vinilo) no
 devuelve un número: frena y dice «no distingo la costura del vinilo»; ahí hace falta `--umbral-costura` o mejor luz.
-Selftest: 12 casos en verde (el auditor del 17/10 encontró que la leyenda vieja se medía como costura y que con poco
-contraste salía ~1 mm sin aviso: los dos casos están ahora en el selftest).
+**Si el borde de la pieza cruza la recta de las marcas 0 y 1**, frena (antes medía hasta el recorte: con el borde a
+18 mm daba 50,35). **Si en algún tramo la hilera queda a menos de 2 mm del borde** (la costura que se corre hacia el
+borde, que son justo las piezas fuera de tolerancia), frena y dice que se mida con `--costura-desde 0,5`; antes esos
+tramos desaparecían y la media salía mejor de lo que era (una costura de 1 a 5 mm daba 3,73 en vez de 3,04). Una franja
+de sombra pegada al borde ya no tapa la costura. Los tramos que no se miden por una esquina se cuentan en la salida.
+Selftest: 22 casos en verde; el auditor del 17/10 encontró en dos rondas la leyenda medida como costura, ~1 mm sin aviso
+con poco contraste, el borde arriba de las marcas y los tramos caídos en silencio, y los cuatro casos están en el selftest.
 
 **Lo que NO se pudo probar, y por qué:**
 - **Con fotos reales.** En las carpetas donde vive el tema (la del estudio de la orejita en `4. 2D\MEJORAS DE PROCESO`,
@@ -316,7 +321,7 @@ porque instala algo en la configuración de Claude Code de la PC.**
 | 4 | Vencimientos de Ingeniería al arrancar | **Hecho** (`scripts/_lib/seguimientos.mjs`, 9 tests nuevos; un área mal escrita se avisa); sin cargar la D7 real |
 | 5 | Libro de observaciones recibidas | **Hecho** (`scripts/_observaciones.mjs`, 8 tests sobre una copia del libro real; 6 observaciones de Carlos en la memoria) |
 | 6 | Cortes de los videos de tiempos | **Diseño** (arriba); solo falta `mediapipe`, y quizás ni eso; se instala con el sí de Fak |
-| 7 | Medir la costura de la CNC con una foto | **Método hecho y probado en imágenes de medida conocida** (`scripts/costura/`, 12 casos); con fotos reales **no se pudo** (no hay ninguna con referencia de tamaño) |
+| 7 | Medir la costura de la CNC con una foto | **Método hecho y probado en imágenes de medida conocida** (`scripts/costura/`, 22 casos); con fotos reales **no se pudo** (no hay ninguna con referencia de tamaño) |
 | 8 | Un reclamo que llega al AMFE de toda la familia | **Diseño** (arriba); el dry-run contra Supabase, desde una sesión de Barack, y escribir con el sí de Fak |
 | 9 | Parámetros de máquina en el tiempo | **Hecho** (`scripts/_parametrosMaquina.mjs`, 10 tests; ficha de la hot melt cargada) |
 | 10 | Cuánto material deja la regla de columnas | **Hecho y medido con el ancho que ocupan las columnas** (`medir_regla_columnas.py`, selftest 12 casos); el ancho real del rollo es TBD; no es un consumo |

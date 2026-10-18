@@ -11,7 +11,8 @@ Como funciona:
   2. Las 4 marcas dan la homografia foto -> hoja: la foto se endereza a una vista de arriba, en milimetros (no importa que
      el celular este inclinado).
   3. La pieza es lo oscuro sobre la hoja blanca; el BORDE de referencia es el de arriba de la pieza en la hoja enderezada
-     (poner la pieza con ese borde hacia el lado de las marcas 0 y 1). La COSTURA es lo que es mas oscuro que la pieza.
+     (poner la pieza con ese borde hacia el lado de las marcas 0 y 1, pero ABAJO de la recta que las une: si la cruza,
+     frena). La COSTURA es lo que es mas oscuro que la pieza.
   4. Se ajusta una recta al borde y otra al centro de la hilera de puntadas, y se mide la distancia perpendicular del
      centro de la puntada al borde, por tramos de --tramo mm a lo largo del borde.
 
@@ -134,11 +135,19 @@ def medir(img, centros_mm=CENTROS_NOMINALES, k=PX_POR_MM, tramo_mm=10.0, umbral_
         raise ErrorMedicion(f'no distingo la costura del vinilo ({fraccion:.0%} de la pieza parece costura): el hilo tiene que ser mas oscuro que la pieza; probar --umbral-costura o mejorar la luz')
     desde, ancho_max = costura_desde_mm * k, COSTURA_ANCHO_MAX_MM * k
     x0, x1 = xs.min(), xs.max()
+    # El borde tiene que quedar ABAJO de la recta de las marcas 0 y 1: lo de arriba se recorta, y si la pieza la cruza el
+    # «borde» pasa a ser el recorte (una recta perfecta) y se mide mal sin aviso (auditor, ronda 2: con el borde a 15 mm
+    # daba 47,40 en vez de 52,4). Si muchas columnas de la pieza arrancan en el renglon del recorte, se frena.
+    fila_recorte = int(round(min(c[1] for c in centros_mm) * k))
+    tops = [np.nonzero(pieza[:, c])[0] for c in range(x0, x1 + 1)]
+    tops = [t.min() for t in tops if len(t)]
+    if tops and sum(1 for t in tops if t <= fila_recorte + 1) > 0.05 * len(tops):
+        raise ErrorMedicion('el borde de la pieza queda arriba de la recta de las marcas 0 y 1: correr la pieza para abajo (se mide solo adentro de las marcas)')
     paso = int(round(tramo_mm * k))
-    tramos = []
+    tramos, caidos, pegados = [], 0, 0
     for a in range(x0 + paso // 2, x1 - paso // 2, paso):
         cols = range(a, min(a + paso, x1))
-        borde, puntada = [], []
+        borde, puntada, cerca = [], [], 0
         for c in cols:
             col = np.nonzero(pieza[:, c])[0]
             if not len(col):
@@ -146,29 +155,45 @@ def medir(img, centros_mm=CENTROS_NOMINALES, k=PX_POR_MM, tramo_mm=10.0, umbral_
             yb = col.min()
             borde.append((c, yb))
             cs = np.nonzero(costura[yb:, c])[0]
-            if len(cs):
-                # la primera hilera debajo del borde: el tramo continuo de pixeles oscuros mas cercano al borde
-                corrida = [cs[0]]
-                for v in cs[1:]:
-                    if v != corrida[-1] + 1:
-                        break
-                    corrida.append(v)
-                # pegada al borde o mas ancha que un hilo no es una hilera de puntadas: esa columna no se mide
-                if corrida[0] >= desde and corrida[-1] - corrida[0] + 1 <= ancho_max:
-                    puntada.append((c, yb + (corrida[0] + corrida[-1]) / 2.0))
+            if not len(cs):
+                continue
+            # las hileras oscuras debajo del borde, de la mas cercana a la mas lejana; vale la primera que arranca a
+            # `desde` o mas y es angosta como un hilo (una franja de sombra o un canto pegado al borde no tapa la costura)
+            corridas, actual = [], [cs[0]]
+            for v in cs[1:]:
+                if v != actual[-1] + 1:
+                    corridas.append(actual)
+                    actual = [v]
+                else:
+                    actual.append(v)
+            corridas.append(actual)
+            buena = next((r for r in corridas if r[0] >= desde and r[-1] - r[0] + 1 <= ancho_max), None)
+            if buena is not None:
+                puntada.append((c, yb + (buena[0] + buena[-1]) / 2.0))
+            elif any(r[0] < desde and r[-1] - r[0] + 1 <= ancho_max for r in corridas):
+                cerca += 1
+        # Un tramo donde la hilera queda pegada al borde (a menos de `desde`) NO desaparece en silencio: son justo los
+        # tramos fuera de tolerancia (auditor, ronda 2: una costura de 1 a 5 mm daba media 3,73 en vez de 3,04).
+        if cerca and cerca >= 0.3 * (cerca + len(puntada)):
+            pegados += 1
+            continue
         if len(borde) < paso * 0.5 or len(puntada) < 3:
+            caidos += 1
             continue
         vx, vy, px, py = cv2.fitLine(np.array(borde, np.float32), cv2.DIST_L2, 0, 0.01, 0.01).flatten()
         n = np.array([-vy, vx])  # normal al borde
         # un tramo donde el «borde» no es una recta (la esquina de la pieza, una muesca) no se mide: daria cualquier cosa
         resid = [abs(np.dot(np.array(b) - np.array([px, py]), n)) for b in borde]
         if np.percentile(resid, 95) > 0.5 * k:
+            caidos += 1
             continue
         d = [abs(np.dot(np.array(p) - np.array([px, py]), n)) for p in puntada]
         tramos.append(float(np.median(d)) / k)
+    if pegados:
+        raise ErrorMedicion(f'en {pegados} tramo(s) la hilera queda a menos de {costura_desde_mm:g} mm del borde: si la costura va ahi, medir con --costura-desde 0,5; si no, es una sombra o un canto del borde (mejorar la luz)')
     if not tramos:
-        raise ErrorMedicion('no encontre la costura debajo del borde (el hilo tiene que ser mas oscuro que la pieza: probar --umbral-costura)')
-    return {'tramos': tramos, 'media': float(np.mean(tramos)), 'min': float(min(tramos)), 'max': float(max(tramos))}
+        raise ErrorMedicion('no encontre la costura debajo del borde (el hilo tiene que ser mas oscuro que la pieza: probar --umbral-costura; si va muy cerca del borde, --costura-desde)')
+    return {'tramos': tramos, 'media': float(np.mean(tramos)), 'min': float(min(tramos)), 'max': float(max(tramos)), 'sin_medir': caidos}
 
 
 def coma(x, d=2):
@@ -214,11 +239,14 @@ def main(argv):
         print(f'*** {e}', file=sys.stderr)
         return 1
     vals = ' '.join(coma(t) for t in r['tramos'])
+    if r['sin_medir']:
+        print(f'OJO: {r["sin_medir"]} tramo(s) no se midieron (una esquina o un borde que no es recta): no entran en los valores', file=sys.stderr)
     if solo_valores:
         print(vals)
         return 0
     print(f'{len(r["tramos"])} tramos de {coma(tramo, 0)} mm: {vals}')
-    print(f'media {coma(r["media"])} mm · min {coma(r["min"])} · max {coma(r["max"])} (borde de arriba -> centro de la puntada)')
+    print(f'media {coma(r["media"])} mm · min {coma(r["min"])} · max {coma(r["max"])} (borde de arriba -> centro de la puntada)'
+          + (f' · {r["sin_medir"]} tramo(s) sin medir' if r['sin_medir'] else ''))
     return 0
 
 

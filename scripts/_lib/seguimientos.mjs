@@ -130,7 +130,7 @@ export function abiertos(datos) {
  * el 21/09, cuatro dias despues, porque el 8D no le llego por mail (memoria `project_8d_11010843_tapa_amarok`).
  *
  * Viven en el mismo bloque json, en una lista aparte (opcional):
- *   "vencimientos": [{ id, que, vence: 'AAAA-MM-DD', area: 'ingenieria'|'calidad'|..., estado, fuente? }]
+ *   "vencimientos": [{ id, que, vence: 'AAAA-MM-DD', area: 'ingenieria'|'calidad'|'logistica'|'otra' (las AREAS de nocturno.mjs), estado, fuente? }]
  * Al arrancar se muestran TODOS los abiertos de Ingenieria, del que vence primero al ultimo; los de otra area no se
  * le llevan a Fak (contrato de autonomia §F: el 8D como documento y el PPAP son de Calidad; la D7 es de el) y solo
  * aparecen en el listado completo. Un vencimiento mal escrito se dice, igual que un seguimiento: nunca se calla.

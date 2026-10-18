@@ -277,7 +277,7 @@ nivelado, sin sol directo ni humedad.
   acomodo con las mismas condiciones (sin girar, sin espejar, 25 mm), mas una cota de abajo. Con el DXF del 15/10 y el
   mismo ancho que ocupan las columnas, ningun acomodo que encontro es mas corto (sobra 28,6 % DEL y 32,7 % TRA). Con un
   rollo mas ancho que la columna, cuanto se gana se mide con `--ancho` y el ancho de un papel (OC o planilla de la mesa
-  de corte): **el ancho real del rollo es TBD** (el Insert tiene cuatro valores en circulacion) y no se pone uno de
+  de corte): **el ancho real del rollo es TBD** (para el Insert hay tres en circulacion, 1400, 1200 y 1500 mm, mas los 1150 de las tizadas) y no se pone uno de
   ejemplo. **No es un consumo** (`consumos-entregables.md` §6) y no se le pregunta a Pablo. Selftest:
   `medir_regla_columnas_selftest.py` ("0 fallan"; el DXF real no esta en git: con otra ruta, `BARACK_DXF_INSERT_15_10`).
 - Si Fak pregunta como se hace algo de la maquina: contestar con esta skill y su pagina del manual;

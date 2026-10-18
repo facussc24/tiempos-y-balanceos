@@ -26,7 +26,7 @@ import sys
 import tempfile
 
 import ezdxf
-from shapely.affinity import translate
+from shapely.affinity import scale, translate
 from shapely.geometry import Polygon
 from shapely.ops import unary_union
 from shapely.prepared import prep
@@ -55,14 +55,18 @@ def hoja_columnas(src, tipo, n, gap):
         sys.exit(f'*** la hoja de columnas tiene {len(piezas)} contornos, esperaba {2 * n}')
     piezas.sort(key=lambda p: (round(p.bounds[0], 3), p.bounds[1]))
     col1, col2 = piezas[:n], piezas[n:]
-    # acomodar_columnas.py pone la columna DER en x = 0 (`columna(der, 0)`) y la IZQ a su derecha: la primera columna en X
-    # es la DER. Se verifica en vez de suponerlo: la columna 1 arranca en 0 y sus N piezas son la misma forma, y la otra
-    # columna es otra forma (la mano espejo). Si acomodar_columnas cambia, esto frena en vez de pintar las manos al reves.
+    # acomodar_columnas.py pone la columna DER en x = 0 (`columna(der, 0)`) y la IZQ a su derecha. Lo que se verifica: la
+    # columna 1 arranca en x = 0, cada columna es UNA sola forma, y la columna 2 es el ESPEJO de la 1 (las dos manos).
+    # Lo que la geometria no puede decir es cual de las dos manos es la DER (son espejo una de la otra): eso sale del
+    # orden de acomodar_columnas.py. Los largos no dependen de eso (el buscador prueba las dos primero); solo los colores
+    # del PNG se invertirian si ese orden cambiara.
     al_origen = lambda p: translate(p, -p.bounds[0], -p.bounds[1])
     der, izq = al_origen(col1[0]), al_origen(col2[0])
+    espejo = al_origen(scale(der, xfact=-1, yfact=1, origin=(0, 0)))
     if abs(col1[0].bounds[0]) > 0.01 or any(al_origen(p).symmetric_difference(der).area > 1.0 for p in col1) \
-            or any(al_origen(p).symmetric_difference(izq).area > 1.0 for p in col2):
-        sys.exit('*** la hoja de columnas no tiene una columna DER en x = 0 y otra IZQ al lado (cambio acomodar_columnas.py?): no mido')
+            or any(al_origen(p).symmetric_difference(izq).area > 1.0 for p in col2) \
+            or espejo.symmetric_difference(izq).area > 1.0:
+        sys.exit('*** la hoja de columnas no tiene una columna DER en x = 0 y su espejo IZQ al lado (cambio acomodar_columnas.py?): no mido')
     return der, izq, piezas
 
 

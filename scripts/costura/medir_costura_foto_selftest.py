@@ -48,16 +48,23 @@ def hoja_sintetica(dist_mm=52.4, giro_grados=0.0, hilo_mm=1.0, puntada_mm=4.0, h
     return img
 
 
-def sobre_hoja_real(ruta_hoja, dist_mm=52.4, pieza_gris=120, hilo_gris=25, x0=40, x1=170, borde_y=70, con_costura=True):
+def sobre_hoja_real(ruta_hoja, dist_mm=52.4, pieza_gris=120, hilo_gris=25, x0=40, x1=170, borde_y=70, con_costura=True,
+                    dist_fin=None, banda=None):
     """La pieza dibujada sobre la hoja que imprime hoja_referencia() (300 dpi, con su leyenda): la posicion x 40-170 y el
-    borde a 70 mm son los del caso que el auditor hizo fallar el 17/10 (la leyenda caia entre las marcas y la pieza)."""
+    borde a 70 mm son los del caso que el auditor hizo fallar el 17/10 (la leyenda caia entre las marcas y la pieza).
+    `dist_fin`: la costura va inclinada de dist_mm a dist_fin a lo largo; `banda` = (gris, mm): una franja oscura pegada al
+    borde por dentro (sombra del espesor, canto doblado)."""
     img = cv2.imread(ruta_hoja, cv2.IMREAD_GRAYSCALE)
     k = 300 / 25.4
     cv2.rectangle(img, (int(x0 * k), int(borde_y * k)), (int(x1 * k), int((borde_y + 150) * k)), pieza_gris, -1)
+    if banda:
+        cv2.rectangle(img, (int(x0 * k), int(borde_y * k)), (int(x1 * k), int((borde_y + banda[1]) * k)), banda[0], -1)
     if con_costura:
-        x = x0 + 5.0
-        while x + 4 <= x1 - 5:
-            cv2.line(img, (int(x * k), int((borde_y + dist_mm) * k)), (int((x + 4) * k), int((borde_y + dist_mm) * k)), hilo_gris, max(1, int(round(k))))
+        a, b = x0 + 5.0, x1 - 5.0
+        dist = lambda x: dist_mm if dist_fin is None else dist_mm + (dist_fin - dist_mm) * (x - a) / (b - a)
+        x = a
+        while x + 4 <= b:
+            cv2.line(img, (int(x * k), int(round((borde_y + dist(x)) * k))), (int((x + 4) * k), int(round((borde_y + dist(x + 4)) * k))), hilo_gris, max(1, int(round(k))))
             x += 6
     return img
 
@@ -107,13 +114,32 @@ def main():
         r = m.medir(foto(sobre_hoja_real(ruta, pieza_gris=90, hilo_gris=40), semilla=1))
         casos.append(('VERDE: con menos contraste que se distingue (vinilo 90, hilo 40) sigue midiendo 52,4', abs(r['media'] - 52.4) < 0.5, r['media']))
         # ROJO: si la costura no se distingue, frena en vez de devolver ~1 mm (auditor 17/10)
-        for nombre, kw in [('sin costura', {'con_costura': False}), ('hilo apenas mas oscuro (60 contra 40)', {'pieza_gris': 60, 'hilo_gris': 40}),
+        # (el «60 contra 40» de la primera version dependia de la semilla: con 0 y 2 se distinguia; va uno que no)
+        for nombre, kw in [('sin costura', {'con_costura': False}), ('hilo casi del color del vinilo (60 contra 56)', {'pieza_gris': 60, 'hilo_gris': 56}),
                            ('hilo mas claro que el vinilo (60 contra 200)', {'pieza_gris': 60, 'hilo_gris': 200})]:
-            try:
-                r = m.medir(foto(sobre_hoja_real(ruta, **kw), semilla=1))
-                casos.append((f'ROJO: {nombre} no da un numero', False, r['media']))
-            except m.ErrorMedicion as e:
-                casos.append((f'ROJO: {nombre} no da un numero ({str(e)[:40]}...)', True, None))
+            for s in (0, 1, 2):
+                try:
+                    r = m.medir(foto(sobre_hoja_real(ruta, **kw), semilla=s))
+                    casos.append((f'ROJO: {nombre}, semilla {s}, no da un numero', False, r['media']))
+                except m.ErrorMedicion:
+                    casos.append((f'ROJO: {nombre}, semilla {s}, no da un numero', True, None))
+        # ROJO (auditor, ronda 2): el borde arriba de la recta de las marcas 0 y 1 frena en vez de medir hasta el recorte
+        try:
+            r = m.medir(foto(sobre_hoja_real(ruta, borde_y=15), semilla=0))
+            casos.append(('ROJO: el borde a 15 mm (arriba de la recta de las marcas) frena', False, r['media']))
+        except m.ErrorMedicion as e:
+            casos.append(('ROJO: el borde a 15 mm (arriba de la recta de las marcas) frena', 'arriba de la recta' in str(e), None))
+        # ROJO (auditor, ronda 2): una costura que se corre de 1 a 5 mm no pierde en silencio los tramos de menos de 2 mm
+        try:
+            r = m.medir(foto(sobre_hoja_real(ruta, dist_mm=1.0, dist_fin=5.0), semilla=0))
+            casos.append(('ROJO: costura de 1 a 5 mm: los tramos pegados al borde frenan, no se caen', False, r['media']))
+        except m.ErrorMedicion as e:
+            casos.append(('ROJO: costura de 1 a 5 mm: los tramos pegados al borde frenan, no se caen', 'a menos de 2 mm del borde' in str(e), None))
+        r = m.medir(foto(sobre_hoja_real(ruta, dist_mm=1.0, dist_fin=5.0), semilla=0), costura_desde_mm=0)
+        casos.append(('VERDE: la misma con --costura-desde 0 mide todos los tramos, del ~1 al ~5', r['min'] < 1.6 and r['max'] > 4.4 and len(r['tramos']) >= 11, r['media']))
+        # VERDE (auditor, ronda 2, menor): una franja de sombra de 1 mm pegada al borde no tapa la costura de 52,4
+        r = m.medir(foto(sobre_hoja_real(ruta, banda=(40, 1.0)), semilla=1))
+        casos.append(('VERDE: con una franja de sombra pegada al borde, la costura se mide igual (52,4)', abs(r['media'] - 52.4) < 0.5 and r['sin_medir'] == 0, r['media']))
     sin = np.full((800, 600), 245, np.uint8)
     try:
         m.medir(sin)

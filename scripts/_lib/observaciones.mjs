@@ -20,7 +20,13 @@ export const ESTADOS = ['abierta', 'cerrada', 'sin-confirmar'];
 
 const normTexto = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim().replace(/\s+/g, ' ');
 /** Como escribe Fak el tipo de documento -> un solo nombre (auditor 17/10: «HO» no salia en «hoja de proceso»). */
-const ALIAS_DOCUMENTO = { ho: 'hoja de proceso', hoja: 'hoja de proceso', 'hoja de operaciones': 'hoja de proceso', pc: 'plan de control', flujo: 'flujograma' };
+const ALIAS_DOCUMENTO = {
+  ho: 'hoja de proceso', hoja: 'hoja de proceso', hojas: 'hoja de proceso', 'hojas de proceso': 'hoja de proceso',
+  'hoja de operaciones': 'hoja de proceso', 'hoja de operacion': 'hoja de proceso', 'hojas de operaciones': 'hoja de proceso',
+  pc: 'plan de control', cp: 'plan de control', 'planes de control': 'plan de control',
+  flujo: 'flujograma', pfd: 'flujograma', flujogramas: 'flujograma',
+  pfmea: 'amfe', fmea: 'amfe', amfes: 'amfe', 'amfe de proceso': 'amfe',
+};
 export const norm = (s) => { const t = normTexto(s); return ALIAS_DOCUMENTO[t] || t; };
 
 export function lista(datos) {

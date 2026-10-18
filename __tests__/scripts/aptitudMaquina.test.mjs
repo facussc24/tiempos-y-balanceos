@@ -111,6 +111,11 @@ describe('aptitud de maquina — el criterio del I-AC-021', () => {
     expect(conCola.aptitud.ppk).toBeCloseTo(base.aptitud.ppk, 12);
     expect(conCola.resumenAptitud.n).toBe(125);
     expect(conCola.avisos.join(' ')).toMatch(/PP y PPK salen de los 125 valores[\s\S]*los otros 7 no entran/);
+    // auditor, ronda 2: la cola trae piezas fuera de tolerancia y un «llega» no puede esconderlas
+    expect(conCola.avisos.join(' ')).toMatch(/de los 7 que no entran, 7 estan FUERA DE TOLERANCIA \(4,00 4,00 16,00 16,00 4,00 3,00 17,00\)/);
+    expect(informe(conCola)).toMatch(/con promedio 10,00 y s 0,64 de los 125 valores de la carta/);
+    const sana = estudio([...repetir(grupo, 25), 10, 10], { lie: 6, lse: 14 });
+    expect(sana.avisos.join(' ')).not.toMatch(/FUERA DE TOLERANCIA/);
   });
 
   it('con mas de 25 subgrupos los limites salen de los 25 primeros, y lo que sobra se dice', () => {
