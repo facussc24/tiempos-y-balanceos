@@ -1,0 +1,92 @@
+{
+  "_que_es": "Casos del gate de asiento (gate_asiento.py, tanda 2 del plan del sistema, 17/10/2026). Cada ESCENA es un panel del cliente con su capa blanda, la grilla, las zonas donde manda el plastico, donde aprieta la mano y los sorteos. Cada PIEZA es un STL del utillaje en el frame de la escena. Las piezas con 'publicado' son casos de respuesta conocida: el gate tiene que REPRODUCIR esos numeros antes de juzgar una pieza nueva (gate_asiento.py calibrar). Los umbrales del veredicto NO viven aca: se leen de data/casos_3d.json ('umbrales'), la misma fuente que eval_casos_3d.py. Escrito ANTES de correr el modulo.",
+  "tolerancias": {
+    "ventana_reproduccion_mm": 0.05,
+    "_ventana": "Fijada el 17/10 antes de medir la ventana con el modulo. Las cifras publicadas (params_v10.json '_v15') tienen dos decimales y salen de la pose de DISENO; 0,05 es la holgura de asiento del pedestal, la diferencia de definicion mas grande que hay entre 'a 0,19 de los pines' (asentado) y 'ventana -0,24' (diseno).",
+    "_simulacion": "La simulacion se reproduce EXACTA: tolerancia 0 % y 0,01 mm, las de data/casos_3d.json (reproduccion_tol_pct / reproduccion_tol_mm), con la misma semilla."
+  },
+  "escenas": {
+    "upper_trim_two": {
+      "_que_es": "Panel del Upper Trim (VW427, 'two wireless') con su tapizado modelado como caras libres, en el frame del virolador. Geometria de la carpeta de trabajo del 13/10 (C:/Dev/_utrim), la misma que usa sim_asiento.py.",
+      "apoya_sobre": "blando",
+      "panel": {
+        "step": "C:/Dev/_utrim/in/two_wireless.stp",
+        "frame": "C:/Dev/_utrim/frame.json",
+        "lc": 0.4,
+        "_": "el plastico es el solido (caras_libres=False) y el tapizado son las caras libres (caras_libres=True), como sim_asiento.py lineas 33-36 y 54-61"
+      },
+      "grilla": {"x": [-52, 142], "y": [-33, 30], "paso": 1.0, "desfase": 0.137, "_": "sim_asiento.py lineas 39-42"},
+      "rayos": {"panel_desde": -60, "pieza_desde": 20},
+      "zonas_plastico": [
+        {"cx": 0.0, "cy": 0.0, "hx": 29, "hy": 8.5},
+        {"cx": 89.786, "cy": 0.0, "hx": 29, "hy": 8.5}
+      ],
+      "_zonas_plastico": "las dos ranuras del cargador (contorno_two.json 'ranuras'): ahi manda el plastico, el vinilo se aprieta de costado y no frena la bajada (sim_asiento.py lineas 62-65 y 101-102)",
+      "variantes": [
+        {"nombre": "listones_tapados", "abiertas": []},
+        {"nombre": "listones_abiertos", "abiertas": [
+          {"cx": -44.91, "cy": -25.47, "hx": 1.2, "hy": 5.3},
+          {"cx": 44.88, "cy": -25.47, "hx": 1.2, "hy": 5.3},
+          {"cx": 134.66, "cy": -25.47, "hx": 1.2, "hy": 5.3}
+        ]}
+      ],
+      "_variantes": "tapados = el panel real (el tapizado tapa las ranuras de los listones); abiertos = con el agujero hecho (sim_asiento.py lineas 66-69 y 105-106, params_v10.json localizadores.two_v14)",
+      "centro": [45, 0],
+      "esquinas": [[-35, -27], [125, -27], [-35, 25], [125, 25]],
+      "mano": [[-18, -18], [-18, 0], [-18, 18], [13, -18], [13, 0], [13, 18], [45, -18], [45, 0], [45, 18], [77, -18], [77, 0], [77, 18], [108, -18], [108, 0], [108, 18]],
+      "mano_punta": [[-30, -18], [-30, 0], [-30, 18], [120, -18], [120, 0], [120, 18]],
+      "_mano": "donde aprieta el operario es un dato del proceso (ficha-utillajes U9). sim_asiento.py lineas 86-90: sobre la zona de los anillos y los apoyos (x -18 a 108) y, aparte, en la punta de la placa (x -30 / 120)",
+      "pose": {"z": 20, "giro": 0.2},
+      "sorteo": {
+        "cede": [0, 0.6], "espesor": 0.2, "espesor_Lx": 90, "espesor_Ly": 30, "alabeo": 0.2, "alabeo_L": 90,
+        "semilla": 7, "casos_calibracion": 150, "casos": 50, "hamaca_umbral_mm": 0.3,
+        "_": "hipotesis declarada del 13/10, NO medicion: el tapizado cede 0 a 0,6 mm, su espesor varia +-0,2 (un plano) y la pieza impresa se alabea +-0,2 en la punta (sim_asiento.py lineas 97-107). Se reemplaza por el escaneo del panel con el CR-Scan Raptor el dia que haya pieza."
+      },
+      "gemelo": {
+        "lomas": 6, "x": [-40, 130], "y": [-30, 25], "amp": 0.2, "sigma": 15, "xc": [0, 90],
+        "_": "renglon INFORMATIVO (sim_asiento_v16.py --error-local, 17/10): espesor local +-0,2 en lomas de 15 mm y alabeo descentrado. El modelo original no puede ver hamacarse a cuatro apoyos simetricos; este si."
+      },
+      "apriete": {
+        "tipo": "costado",
+        "sondas": [{"x": 0.0, "y_desde": 20.0, "dir": -1}, {"x": 0.0, "y_desde": -20.0, "dir": 1}],
+        "z_labio_declarado": -7.49,
+        "_": "el anillo aprieta el vinilo de COSTADO contra la pared de la ranura: sigue apretando mientras su banda recta llegue mas alla del labio de plastico. La banda y el labio se MIDEN (rayos horizontales sobre la pieza y sobre el plastico); el labio declarado (params_v10.json '_v15', 13/10: 'el labio de plastico (z -7,49)') es la segunda fuente: si no coinciden en 0,05, el gate aborta."
+      },
+      "piezas": {
+        "v14": {
+          "stl": "C:/Dev/_utrim/out/v14/virolador_v10_two.stl",
+          "_fuente": "la v14 impresa el 13/10 que se hamaca en la mano (memoria project_uppertrim_pisador_utillaje)",
+          "publicado": {
+            "listones_tapados": {"pct_hamaca": 100},
+            "listones_abiertos": {"pct_hamaca": 68}
+          },
+          "ventana_publicada": {"banda": 0.2, "punta": 0.24, "_": "params_v10.json '_v15': 'solo funcionaba si el panel asentaba a +0,20 / -0,24'"},
+          "esperado": {"apoyos": "ROJO", "ventana": "ROJO", "asiento": "ROJO"}
+        },
+        "v15": {
+          "stl": "C:/Dev/_utrim/out/v15_two.stl",
+          "_fuente": "la v15 del 13/10 (no impresa)",
+          "publicado": {
+            "listones_tapados": {"pct_hamaca": 28, "punta_mediana_mm": 1.69}
+          },
+          "ventana_publicada": {"banda": 1.19, "punta": 0.75, "_": "params_v10.json '_v15': 'ventana +1,19 / -0,75'"},
+          "esperado": {"apoyos": "ROJO", "ventana": "VERDE", "asiento": "ROJO"},
+          "_esperado": "apoyos ROJO y no verde como decia la tabla del plan del 16/10: sus cuatro bloques rigidos controlan la altura (la tanda 11 lo midio el 17/10 y no se aflojo la regla; data/casos_3d.json). La simulacion lo confirma: 28 de 100."
+        },
+        "v16": {
+          "stl": "C:/Dev/_utrim/out/v16/virolador_v16_two.stl",
+          "_fuente": "la v16 de la tanda 11 (17/10), laminada y sin imprimir; su veredicto lo da la prueba fisica de Fak",
+          "esperado": {"apoyos": "ROJO", "apoyos_4_2_1": "VERDE", "ventana": "VERDE", "asiento": "VERDE"},
+          "_esperado": "lo que la tanda 11 midio con la copia de la simulacion: 0 de 100, maxima 0,16; la punta no es medible (los puntos de la mano 'punta' caen adentro de los apoyos). No es caso de calibracion: es la primera pieza que el gate juzga despues de calibrar."
+        }
+      }
+    },
+    "posicionador_toproll": {
+      "_que_es": "Caso de control: el posicionador del Top Roll trasero apoya sobre la chapa/plastico RIGIDO del panel (examples/posicionador). El gate de asiento no corre: el que juzga es check_collision contra el sustrato rigido (cad-3d.md).",
+      "apoya_sobre": "rigido",
+      "piezas": {
+        "posicionador": {"esperado": {"activacion": "NO CORRE"}}
+      }
+    }
+  }
+}
