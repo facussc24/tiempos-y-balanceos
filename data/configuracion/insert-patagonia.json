@@ -45,7 +45,8 @@
           "letra": "B",
           "inferida": true,
           "adjunto": "FLUJOGRAMA_154-INSERT.pdf",
-          "nota": "el adjunto no dice la letra; es la ultima del historial con fecha hasta el 2026-09-08"
+          "nota": "el adjunto no dice la letra; es la ultima del historial con fecha hasta el 2026-09-08",
+          "fuenteId": "mail-novax-0809"
         }
       ],
       "avisos": [
@@ -95,7 +96,8 @@
           "fuente": "mail «RV: Documentación PPAP - NOVAX (Top Roll, APB, Insert) - Nivel Actualizado» del 2026-09-08 18:45 a Hernan Giacopuzzi (cache de mails, id ...0002D78C819A0000)",
           "letra": null,
           "estado": "a confirmar",
-          "nota": "AMFE 158 - INSERT - Rev.A.pdf no esta entre los adjuntos de ese mail"
+          "nota": "AMFE 158 - INSERT - Rev.A.pdf no esta entre los adjuntos de ese mail",
+          "fuenteId": "mail-novax-0809"
         }
       ],
       "avisos": [],
@@ -124,14 +126,15 @@
           "fuente": "mail «RV: Documentación PPAP - NOVAX (Top Roll, APB, Insert) - Nivel Actualizado» del 2026-09-08 18:45 a Hernan Giacopuzzi (cache de mails, id ...0002D78C819A0000)",
           "letra": null,
           "estado": "a confirmar",
-          "nota": "HO-990_INSERT_PATAGONIA_REV.A.pdf no esta entre los adjuntos de ese mail"
+          "nota": "HO-990_INSERT_PATAGONIA_REV.A.pdf no esta entre los adjuntos de ese mail",
+          "fuenteId": "mail-novax-0809"
         }
       ],
       "avisos": [],
-      "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/26- Instrucciones de Proceso/INSERT/HO-990_INSERT_PATAGONIA_REV.A.pptx",
-      "leido": "2026-10-18",
       "letra": "A",
-      "fecha": "08/09/2026"
+      "fecha": "08/09/2026",
+      "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/26- Instrucciones de Proceso/INSERT/HO-990_INSERT_PATAGONIA_REV.A.pptx",
+      "leido": "2026-10-18"
     },
     {
       "id": "ho:990-copia-0710",
@@ -142,10 +145,10 @@
       "vigente": "a confirmar",
       "cliente": [],
       "avisos": [],
-      "donde": "{principal}/exports/HO_CORREGIDAS_20261007/INSERTO/HO-990_INSERT_PATAGONIA_REV.A.pptx",
-      "leido": "2026-10-18",
       "letra": "A",
-      "fecha": "08/09/2026"
+      "fecha": "08/09/2026",
+      "donde": "{principal}/exports/HO_CORREGIDAS_20261007/INSERTO/HO-990_INSERT_PATAGONIA_REV.A.pptx",
+      "leido": "2026-10-18"
     },
     {
       "id": "bom:arb",
@@ -154,11 +157,11 @@
       "nombre": "BOM del arb (ultimo nivel) de los 16 codigos del Insert",
       "cliente": [],
       "avisos": [],
+      "sinLetra": true,
       "fecha": "2026-10-13",
       "donde": "export del arb {arb}",
       "exportDelArb": "2026-10-13T11:42:15.293Z",
-      "leido": "2026-10-18",
-      "sinLetra": true
+      "leido": "2026-10-18"
     },
     {
       "id": "bom:legajo",
@@ -167,10 +170,10 @@
       "nombre": "BOM ARB ultimo nivel del legajo (casillero 7, copia del 13/10)",
       "cliente": [],
       "avisos": [],
-      "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/7-Lista de materiales preliminares/01_BOM MATERIAL/BOM ARB ultimo nivel_Insert_20261009.pdf",
-      "leido": "2026-10-18",
       "sinLetra": true,
-      "fecha": "2026-10-09"
+      "fecha": "2026-10-09",
+      "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/7-Lista de materiales preliminares/01_BOM MATERIAL/BOM ARB ultimo nivel_Insert_20261009.pdf",
+      "leido": "2026-10-18"
     },
     {
       "id": "bom:002",
@@ -223,6 +226,7 @@
       "cliente": [],
       "avisos": [],
       "leido": "2026-10-18",
+      "materialNoConfirmado": false,
       "letra": "A",
       "donde": "{biblioteca}/INGENIERIA BARACK (NUNCA BORRAR)/6- ARCHIVO DE CORREO/ADJUNTOS/CALIDAD - QUALITY PROJECTS/2025/FT149 Espuma PU back for IP PAD.doc"
     },
@@ -234,9 +238,9 @@
       "vigente": "a confirmar",
       "cliente": [],
       "avisos": [],
+      "sinLetra": true,
       "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/13-Especificaciones de Ingenieria F/02 -Computo Tizada de Corte- Consumo de Materiales/INSERT FR+RR/02- espuma/INSERT 26-1-26/INSERT TRA PAT 5MM.MRK",
-      "leido": "2026-10-18",
-      "sinLetra": true
+      "leido": "2026-10-18"
     },
     {
       "id": "tizada:espuma-9-9-25",
@@ -246,9 +250,9 @@
       "vigente": "a confirmar",
       "cliente": [],
       "avisos": [],
+      "sinLetra": true,
       "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/13-Especificaciones de Ingenieria F/02 -Computo Tizada de Corte- Consumo de Materiales/INSERT FR+RR/02- espuma/INSERT FR+RR/INSERT FR+RR/INSERT PAT ESP 9-9-25/MIX/INSERT MIX ESP PAT 3MM.MRK",
-      "leido": "2026-10-18",
-      "sinLetra": true
+      "leido": "2026-10-18"
     },
     {
       "id": "ge:278",
@@ -269,7 +273,8 @@
           "letra": null,
           "estado": "a confirmar",
           "adjunto": "GE - 278 INSERT.pdf",
-          "nota": "el adjunto no dice la letra en el nombre"
+          "nota": "el adjunto no dice la letra en el nombre",
+          "fuenteId": "mail-novax-0809"
         }
       ],
       "avisos": [
@@ -332,7 +337,8 @@
           "fecha": "2026-10-15",
           "fuente": "mail «RE: PC NOVAX» del 2026-10-15 14:59 a 'Hernan Giacopuzzi' (cache de mails, id ...0002F19DAC940000)",
           "letra": "0",
-          "adjunto": "PC INSERTO PATAGONIA REV 0.pdf"
+          "adjunto": "PC INSERTO PATAGONIA REV 0.pdf",
+          "fuenteId": "mail-novax-1510"
         }
       ],
       "avisos": [
@@ -377,6 +383,13 @@
           "atributo": "espuma",
           "patron": "espuma",
           "rol": "menciona"
+        },
+        {
+          "atributo": "materiales.codigos",
+          "patron": ".",
+          "op": "10",
+          "tipo": "material",
+          "codigos": true
         }
       ]
     },
@@ -491,6 +504,11 @@
           "atributo": "hilo",
           "patron": "^FX\\d{3}",
           "juntar": true
+        },
+        {
+          "atributo": "materiales.codigos",
+          "todos": true,
+          "rol": "universo"
         }
       ]
     },
@@ -718,6 +736,11 @@
       "que": "Marcelo Nieve pidio rollo de espuma de 1,5 m en dic-2025: es un pedido, no un documento vigente (no entra en la comparacion)",
       "estado": "referencia",
       "zanja": "memoria project_boms_patagonia_procesos"
+    },
+    {
+      "que": "Que letra vio el cliente por BeOn o por el PPAP: el Insert no es un informe de Barack en BeOn (va por Novax, exports/BEON_REVISIONES_20261015/NUESTRO_LADO.md) y el casillero 31 PPAP de la copia del legajo del 13/10 esta vacio; lo que salio por mail lo leen las fuentes mail-novax-*",
+      "estado": "a confirmar",
+      "zanja": "el legajo PPAP de Novax en Y: (Calidad) y lo que Manuel le entrego a Novax en persona"
     }
   ],
   "atributos": [
@@ -808,6 +831,26 @@
       "atributo": "espuma",
       "texto": "OP 10: Espuma de poliuretano del panel decorativo (codigo 427-ESP-001-TRO-01)",
       "rol": "menciona"
+    },
+    {
+      "documento": "amfe:158",
+      "fuente": "AMFE en Supabase live (AMFE-INS-PAT, updated_at 2026-10-01T14:57:29.815+00:00)",
+      "leido": "2026-10-18",
+      "fuenteId": "amfe-live",
+      "atributo": "materiales.codigos",
+      "texto": "OP 10: Vinilo bondeado Sansuy - 4 variantes de color (Titan Black, Platinium Gray, Andino Gray, Dark Slate ML14) + OP 10: Hilo vista 20/3 (Linhanyl) - 3 variantes de color (Jet Black FX483TK-E0PTO, Alpe Gray FX483TK-11930E, Gray Violet FX483TK-11703E) + OP 10: Film adhesivo Tesa 52110 (codigo 52110-00000-00) + OP 10: Espuma de poliuretano del panel decorativo (codigo 427-ESP-001-TRO-01) + OP 10: Hilo de union 30/3 Jet Black (Linhanyl) (codigo FX284-E0PTO) + OP 10: Adhesivo base solvente Fenoclor (codigo AD - ADFA15) + OP 10: Reticulante para adhesivo Fenoclor (codigo AD - REGV0.6) + OP 10: Sustrato plastico MG47 (codigo 22020541) + OP 10: Grampas de fijacion metalicas (codigo DK/1840600)",
+      "lista": [
+        "FX483TK-E0PTO",
+        "FX483TK-11930E",
+        "FX483TK-11703E",
+        "52110-00000-00",
+        "427-ESP-001-TRO-01",
+        "FX284-E0PTO",
+        "AD - ADFA15",
+        "AD - REGV0.6",
+        "22020541",
+        "DK/1840600"
+      ]
     },
     {
       "documento": "ho:990",
@@ -967,6 +1010,33 @@
       "texto": "FX284-E0PTO Hilo union Negro Titan Pantone 19-4205 T + FX483TK-E0PTO HILO JET BLACK 20/3 + FX483TK-11930E ALPE GRAY TGA IP3 DECOR DBL STCH 20/3 + FX483TK-11703E GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3"
     },
     {
+      "documento": "bom:arb",
+      "fuente": "export del arb del 2026-10-13 11:42 ({arb}), 16 productos",
+      "leido": "2026-10-18",
+      "fuenteId": "bom-arb",
+      "atributo": "materiales.codigos",
+      "texto": "1246030226 AD - ADFA15 AD - REGV0.6 DK/1840600 ET-SATO-100X60 ET-SATO-50X20 FX284-E0PTO FX483TK-E0PTO 427ESP001TRO01 52110 22020541 1246030225 FX483TK-11930E 1246030223 FX483TK-11703E 1246030224",
+      "lista": [
+        "1246030226",
+        "AD - ADFA15",
+        "AD - REGV0.6",
+        "DK/1840600",
+        "ET-SATO-100X60",
+        "ET-SATO-50X20",
+        "FX284-E0PTO",
+        "FX483TK-E0PTO",
+        "427ESP001TRO01",
+        "52110",
+        "22020541",
+        "1246030225",
+        "FX483TK-11930E",
+        "1246030223",
+        "FX483TK-11703E",
+        "1246030224"
+      ],
+      "rol": "universo"
+    },
+    {
       "documento": "bom:legajo",
       "fuente": "BOM ARB ultimo nivel del legajo ({biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/7-Lista de materiales preliminares/01_BOM MATERIAL/BOM ARB ultimo nivel_Insert_20261009.pdf)",
       "leido": "2026-10-18",
@@ -1089,6 +1159,11 @@
       "que": "Marcelo Nieve pidio rollo de espuma de 1,5 m en dic-2025: es un pedido, no un documento vigente (no entra en la comparacion)",
       "estado": "referencia",
       "zanja": "memoria project_boms_patagonia_procesos"
+    },
+    {
+      "que": "Que letra vio el cliente por BeOn o por el PPAP: el Insert no es un informe de Barack en BeOn (va por Novax, exports/BEON_REVISIONES_20261015/NUESTRO_LADO.md) y el casillero 31 PPAP de la copia del legajo del 13/10 esta vacio; lo que salio por mail lo leen las fuentes mail-novax-*",
+      "estado": "a confirmar",
+      "zanja": "el legajo PPAP de Novax en Y: (Calidad) y lo que Manuel le entrego a Novax en persona"
     },
     {
       "documento": "flujograma:154",

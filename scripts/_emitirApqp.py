@@ -36,7 +36,12 @@ import sys
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATOS = os.path.join(REPO, "scripts", "_lib", "emisionesApqp.data.json")
 sys.path.insert(0, os.path.join(REPO, "scripts", "_lib"))
-from fichaRegistro import registrar_en_ficha  # noqa: E402  el renglon en la ficha de la pieza (tanda 13)
+try:
+    from fichaRegistro import registrar_en_ficha  # noqa: E402  el renglon en la ficha de la pieza (tanda 13)
+except Exception as _err:  # noqa: BLE001  si falta o se rompe el ayudante, el emisor sigue andando
+    def registrar_en_ficha(campos, decir=print, _e=_err):
+        decir("  ficha de la pieza: no se pudo cargar scripts/_lib/fichaRegistro.py (%s); la emision ya quedo hecha" % _e)
+        return False
 EXTENSIONES = {"flujograma": (".pdf", ".png"), "amfe": (".xlsx", ".pdf")}
 PESO_MINIMO = 10_000   # una fuente de menos de 10 KB es un export que fallo
 

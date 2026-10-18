@@ -30,7 +30,12 @@ import sys
 AQUI = os.path.dirname(os.path.abspath(__file__))
 DATOS = os.path.join(AQUI, '_lib', 'bomLegajos.data.json')
 sys.path.insert(0, os.path.join(AQUI, '_lib'))
-from fichaRegistro import registrar_en_ficha  # noqa: E402  el renglon en la ficha de la pieza (tanda 13)
+try:
+    from fichaRegistro import registrar_en_ficha  # noqa: E402  el renglon en la ficha de la pieza (tanda 13)
+except Exception as _err:  # noqa: BLE001  si falta o se rompe el ayudante, la BOM del legajo se deja igual
+    def registrar_en_ficha(campos, decir=print, _e=_err):
+        decir('  ficha de la pieza: no se pudo cargar scripts/_lib/fichaRegistro.py (%s); la BOM ya quedo en el legajo' % _e)
+        return False
 PREFIJO = 'BOM ARB ultimo nivel_'
 TOPE_RUTA = 259             # mas largo no abre en Windows (memoria max_path_260)
 

@@ -2,8 +2,10 @@
  * fichaPieza contra los PAPELES REALES (respuesta conocida del plan, tanda 13 item 1).
  *
  * Tres capas:
- *   1. La ficha versionada del Insert (data/configuracion/insert-patagonia.json), tal como la dejo
- *      `--relevar`: corre en todos lados, tambien en el CI de GitHub.
+ *   1. La ficha del Insert tal como la dejo `--relevar` el 18/10/2026, CONGELADA en
+ *      fixtures/fichaInsertPatagonia_2026-10-18.json: corre en todos lados, tambien en el CI de GitHub, y no se
+ *      pone roja el dia que alguien corrija la HO-990 y vuelva a relevar (eso es arreglar, no romper). La ficha
+ *      viva (data/configuracion/) se prueba aparte, solo en su forma.
  *   2. Releer HOY los archivos de la nube y de exports/ (HO-990, FT141, FT149, copia de la ficha del
  *      legajo, tizadas, HO 971, valores de costura, BeOn): solo en una PC con la nube sincronizada,
  *      antiword, pdftotext y python-pptx. Donde falta algo, el test lo dice y se saltea con el motivo.
@@ -13,14 +15,27 @@
  * Supabase no se toca desde los tests: el AMFE 158 entra por la capa 1 (lo leyo `--relevar` live).
  */
 import { describe, it, expect } from 'vitest';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { leerFicha, compararAtributos, compararCliente, queTocaUnCambio } from '../../scripts/_lib/fichaPieza.mjs';
-import { relevarFicha, letraDe, letraEnFecha, extraerDeTexto } from '../../scripts/_lib/fichaRelevar.mjs';
+import { relevarFicha, letraDe, letraEnFecha, extraerDeTexto, resolverRuta } from '../../scripts/_lib/fichaRelevar.mjs';
 import { hay, checkoutPrincipal, flujogramaDelRepo } from '../../scripts/_lib/fichaLectores.mjs';
 import { buscarBiblioteca } from '../../scripts/_lib/nubeRutas.mjs';
 
-const ficha = leerFicha('insert-patagonia');
+const ficha = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'fichaInsertPatagonia_2026-10-18.json'), 'utf8'));
+
+describe('la ficha viva del Insert (data/configuracion/insert-patagonia.json): su forma', () => {
+  const viva = leerFicha('insert-patagonia');
+  it('tiene los documentos que pide el plan y cada fuente apunta a un documento de la ficha (o es de un cliente)', () => {
+    const ids = viva.documentos.map((d) => d.id);
+    for (const tipo of ['flujograma', 'amfe', 'ho', 'bom', 'ft', 'ge', 'imds']) expect(ids.some((id) => id.startsWith(`${tipo}:`))).toBe(true);
+    for (const f of viva.fuentes) expect(['mail', 'beon'].includes(f.lector) || ids.includes(f.documento)).toBe(true);
+  });
+  it('no guarda rutas de una PC: van con {biblioteca}, {principal} o {arb}', () => {
+    expect(JSON.stringify(viva)).not.toMatch(/C:[\\/]+Users/i);
+  });
+});
 const porAtributo = (f, a) => compararAtributos(f).find((x) => x.atributo === a);
 
 describe('ayudantes del relevamiento (puros)', () => {
@@ -37,6 +52,26 @@ describe('ayudantes del relevamiento (puros)', () => {
     expect(letraEnFecha(revs, '2026-09-08')).toBe('B');
     expect(letraEnFecha(revs, '2026-09-10')).toBe('B');
     expect(letraEnFecha(revs, '2025-01-01')).toBeNull();
+  });
+  it('resolverRuta: una ruta de red queda abrible (no se colapsan las dos barras del principio)', async () => {
+    const ctx = { biblioteca: '\\\\servidor\\nube', repo: 'C:\\r', principal: 'C:\\p', arb: 'C:\\tmp\\R.TXT' };
+    expect(await resolverRuta('{biblioteca}\\PROYECTOS\\x.doc', ctx)).toBe('//servidor/nube/PROYECTOS/x.doc');
+    expect(await resolverRuta('{arb}', ctx)).toBe('C:/tmp/R.TXT');
+  });
+  it('--parcial: si el mail no se puede leer, lo que el cliente tenia queda (marcado), y la ficha nueva lo dice', async () => {
+    const base = {
+      documentos: [{ id: 'flujograma:154', tipo: 'flujograma', numero: '154', letra: 'D',
+        cliente: [{ documento: 'flujograma:154', letra: 'B', inferida: true, donde: 'mail', fuenteId: 'm1', fuente: 'mail 08/09' }] }],
+      fuentes: [{ id: 'm1', lector: 'mail', mail: 'x', cliente: [{ documento: 'flujograma:154', adjunto: 'F.pdf' }] }],
+      atributos: [],
+    };
+    const opts = { biblioteca: 'B', principal: 'P', leerMail: async () => { throw new Error('sin cache de mails'); } };
+    const sin = await relevarFicha(base, opts);
+    expect(sin.fallas).toHaveLength(1);
+    expect(sin.ficha.documentos[0].cliente).toEqual([]);
+    const con = await relevarFicha(base, { ...opts, parcial: true });
+    expect(con.ficha.documentos[0].cliente[0]).toMatchObject({ letra: 'B', sinReleer: expect.stringMatching(/sin cache/) });
+    expect(con.ficha.pendientes.some((p) => p.estado === 'falla')).toBe(true);
   });
   it('extraerDeTexto: con un grupo en el patron se guarda solo esa columna', () => {
     const t = 'APB de puerta | 4 en 16 mm ±1; margen 8 mm ±1 | 6 ±0,5 en 25 mm; a 4 ±0,5 mm | Union 30/3';
@@ -65,7 +100,8 @@ describe('capa 1: la ficha versionada del Insert (los casos 1, 2 y 3 del plan, c
     expect(r.valores.find((v) => v.documento === 'ft:141').valor).toBe(1400);
     expect(r.valores.find((v) => v.documento === 'ft:141-copia-legajo').valor).toBe(1200);
     expect(r.valores.some((v) => v.documento.startsWith('bom'))).toBe(false);
-    expect(porAtributo(ficha, 'vinilo.ancho_rollo').estado).toBe('verde');
+    // los cuatro vinilos son renglones de UN papel (la BOM del arb): no hay con que comparar
+    expect(porAtributo(ficha, 'vinilo.ancho_rollo').estado).toBe('una_fuente');
   });
   it('caso 2, tizadas: la de 26-1-26 (115 cm) entra en el rollo; la de 9-9-25 (135 cm) no entra en el de 1200: ROJO', () => {
     const r = porAtributo(ficha, 'espuma.ancho_tizada');
@@ -81,13 +117,15 @@ describe('capa 1: la ficha versionada del Insert (los casos 1, 2 y 3 del plan, c
   it('la HO-990 cita el flujograma 154 en Rev. B y el vigente es la D: ROJO', () => {
     expect(porAtributo(ficha, 'cita.flujograma').estado).toBe('rojo');
   });
-  it('lo que tiene que dar verde da verde: los hilos de la BOM y del AMFE', () => {
+  it('lo que tiene que dar verde da verde: los hilos y los codigos de material del AMFE contra la BOM del arb', () => {
     expect(porAtributo(ficha, 'hilo').estado).toBe('verde');
+    expect(porAtributo(ficha, 'materiales.codigos').estado).toBe('verde');
   });
-  it('quiz 1: la letra del 154 que vio Novax sale de la ficha, marcada como inferida, con su mail', () => {
+  it('quiz 1: la letra del 154 que vio Novax: «a confirmar, probablemente B», con su mail (no se pinta de rojo un dato deducido)', () => {
     const c = compararCliente(ficha).find((x) => x.documento === 'flujograma:154');
     const d = ficha.documentos.find((x) => x.id === 'flujograma:154');
-    expect(c.estado).toBe('rojo');
+    expect(c.estado).toBe('a_confirmar');
+    expect(c.detalle).toMatch(/probablemente/);
     expect(d.cliente[0]).toMatchObject({ letra: 'B', inferida: true, fecha: '2026-09-08' });
     expect(d.cliente[0].fuente).toMatch(/Giacopuzzi/);
   });
@@ -110,7 +148,9 @@ describe('capa 1: la ficha versionada del Insert (los casos 1, 2 y 3 del plan, c
 });
 
 // --- capa 2 y 3: archivos reales -------------------------------------------------------------
-const BIB = buscarBiblioteca();
+// Sin la nube (el CI de GitHub) buscarBiblioteca() da null: las rutas quedan en una carpeta que no existe y los
+// casos se saltean con el motivo, en vez de tirar abajo el archivo entero con un join(null).
+const BIB = buscarBiblioteca() || '<la nube de Ingenieria no esta en esta PC>';
 const PRINCIPAL = await checkoutPrincipal();
 const NOVAX = join(BIB, 'PROYECTOS', 'NOVAX copia servidor 13-10', 'Tapizadas puerta');
 const BEON = join(BIB, 'ASISTENTE INGENIERIA', '6- PEDIDOS ENTRE PC (FACUNDO)', 'BeOn practica 13-10-2026', 'BeOn Patagonia - revisiones que vio VW 15-10-2026.txt');
@@ -127,9 +167,11 @@ const motivo = (...rutas) => {
 const saltear = (m) => { if (m) console.warn(`  (salteado: ${m})`); return Boolean(m); };
 
 describe('capa 2: releer hoy los archivos del Insert da lo mismo que la ficha', () => {
-  const m = motivo(NOVAX);
+  const fuentesDeArchivo = ficha.fuentes.filter((f) => ['pptx', 'doc', 'mrk'].includes(f.lector));
+  const rutas = fuentesDeArchivo.map((f) => f.ruta.replace('{biblioteca}', BIB).replace('{principal}', PRINCIPAL));
+  const m = motivo(...rutas);
   it.skipIf(saltear(m))('HO-990, FT141, FT149, copia del legajo y tizadas: los mismos rojos', async () => {
-    const soloArchivos = { ...ficha, fuentes: ficha.fuentes.filter((f) => ['pptx', 'doc', 'mrk'].includes(f.lector)) };
+    const soloArchivos = { ...ficha, fuentes: fuentesDeArchivo };
     const { ficha: hoy, fallas } = await relevarFicha(soloArchivos);
     expect(fallas).toEqual([]);
     expect(porAtributo(hoy, 'adhesivo').valores.map((v) => v.valor)).toEqual(expect.arrayContaining(['SikaMelt']));
@@ -145,14 +187,16 @@ describe('capa 3: caso 4, el IP PAD contra lo que vio VW en BeOn (ficha armada e
       pieza: { clave: 'ip-pad-prueba' },
       documentos: [
         { id: 'flujograma:157', tipo: 'flujograma', numero: '157' },
-        // La letra de la HO-985 y del AMFE 149 de nuestro lado: tabla exports/BEON_REVISIONES_20261015/NUESTRO_LADO.md
-        // («HO-985 ... A (985: hoja 42 corregida 15/10, sigue A)», «AMFE 149 IP PAD A»).
-        { id: 'ho:985', tipo: 'ho', numero: '985', letra: 'A' },
+        // La letra de la HO-985 sale de leer la carpeta de la corregida («HO-985 - IP PAD REV.A.pdf/.xlsx»). La del
+        // AMFE 149 no tiene fuente en este test (Supabase no se toca desde los tests): la de la tabla
+        // exports/BEON_REVISIONES_20261015/NUESTRO_LADO.md («AMFE 149 IP PAD A»).
+        { id: 'ho:985', tipo: 'ho', numero: '985' },
         { id: 'amfe:149', tipo: 'amfe', numero: '149', letra: 'A' },
       ],
       fuentes: [
         { id: 'f157', documento: 'flujograma:157', lector: 'flujograma', clave: '157-IP-PAD' },
         { id: 'ho985', documento: 'ho:985', lector: 'pdf', ruta: HO985, extraer: [{ atributo: 'costura.vista.puntada', patron: '\\d+ puntadas en \\d+ mm' }] },
+        { id: 'ho985-carpeta', documento: 'ho:985', lector: 'carpeta', ruta: dirname(HO985), patron: '^HO-985' },
         { id: 'beon', lector: 'beon', ruta: BEON, cliente: [
           { documento: 'flujograma:157', tipo: 'FLUJOGRAMA', informe: '2HC 858 417 B FAM' },
           { documento: 'ho:985', tipo: 'HOJA DE PROCESO', informe: '2HC 858 417 B FAM', extraer: [{ atributo: 'costura.vista.puntada', patron: '\\d+ puntadas en \\d+ mm' }] },

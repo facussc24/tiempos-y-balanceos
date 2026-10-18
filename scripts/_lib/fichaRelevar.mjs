@@ -15,17 +15,21 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { buscarBiblioteca } from './nubeRutas.mjs';
 import { EXPORT_BOM_ARB } from './amfeAutoria.mjs';
-import { CANON, RAIZ_REPO } from './fichaPieza.mjs';
+import { CANON, RAIZ_REPO, codigosDeTexto } from './fichaPieza.mjs';
 import * as L from './fichaLectores.mjs';
 
-/** {biblioteca}, {repo}, {principal} y {arb} -> rutas de esta PC. */
+/** Lo que escribe el relevamiento en un documento (todo lo demas es configuracion o lo dejo un emisor). */
+export const LEIDOS = ['letra', 'fecha', 'donde', 'copias', 'revisiones', 'actualizado', 'exportDelArb', 'leido', 'materialNoConfirmado'];
+
+/** {biblioteca}, {repo}, {principal} y {arb} -> rutas de esta PC. Solo se dan vuelta las barras: una ruta
+ * de red («\\\\servidor\\...») queda «//servidor/...», que Windows abre igual. */
 export async function resolverRuta(ruta, ctx) {
   return String(ruta)
     .replace('{biblioteca}', ctx.biblioteca)
     .replace('{repo}', ctx.repo)
     .replace('{principal}', ctx.principal)
     .replace('{arb}', ctx.arb)
-    .replace(/[\\/]+/g, '/');
+    .replace(/\\/g, '/');
 }
 
 /** Cada coincidencia de los patrones `extraer` en un texto -> una entrada de atributo. */
@@ -66,7 +70,7 @@ export function letraDe(texto) {
 export function letraEnFecha(revisiones, fechaIso) {
   const aIso = (f) => { const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(f || ''); return m ? `${m[3]}-${m[2]}-${m[1]}` : f; };
   const dia = String(fechaIso).slice(0, 10);
-  const antes = (revisiones || []).filter((r) => aIso(r.fecha) && aIso(r.fecha) <= dia);
+  const antes = (revisiones || []).filter((r) => aIso(r.fecha) && aIso(r.fecha) <= dia).sort((a, b) => aIso(a.fecha).localeCompare(aIso(b.fecha)));
   return antes.length ? antes[antes.length - 1].letra : null;
 }
 
@@ -94,8 +98,12 @@ async function leerFuente(f, ctx, fichaDocs) {
       r.atributos.push({ ...b, atributo: 'operaciones', texto: a.operaciones.join(' '), lista: a.operaciones });
       for (const e of f.extraer || []) {
         const re = new RegExp(e.patron, 'i');
-        const hits = [...new Map(a.recursos.filter((rec) => re.test(rec.nombre || '')).map((rec) => [rec.nombre, rec])).values()];
-        if (e.juntar && hits.length) r.atributos.push({ ...b, atributo: e.atributo, texto: hits.map((rec) => `OP ${rec.op}: ${rec.nombre}`).join(' + '), ...soloDefinidos(e) });
+        const delFiltro = (rec) => (!e.op || rec.op === String(e.op)) && (!e.tipo || new RegExp(e.tipo, 'i').test(rec.tipo || ''));
+        const hits = [...new Map(a.recursos.filter((rec) => delFiltro(rec) && re.test(rec.nombre || '')).map((rec) => [rec.nombre, rec])).values()];
+        if (e.codigos && hits.length) {   // los codigos que nombran esos recursos, en una sola lista
+          const lista = [...new Set(hits.flatMap((rec) => codigosDeTexto(rec.nombre)))];
+          r.atributos.push({ ...b, atributo: e.atributo, texto: hits.map((rec) => `OP ${rec.op}: ${rec.nombre}`).join(' + '), lista, ...soloDefinidos(e) });
+        } else if (e.juntar && hits.length) r.atributos.push({ ...b, atributo: e.atributo, texto: hits.map((rec) => `OP ${rec.op}: ${rec.nombre}`).join(' + '), ...soloDefinidos(e) });
         else for (const rec of hits) r.atributos.push({ ...b, atributo: e.atributo, texto: `OP ${rec.op}: ${rec.nombre}`, ...soloDefinidos(e) });
       }
       break;
@@ -112,9 +120,10 @@ async function leerFuente(f, ctx, fichaDocs) {
       if (dias > CANON.bom_vieja_dias) r.avisos.push(`el export del arb tiene ${dias} dias (del ${bom.fecha.slice(0, 10)}): antes de dar verde, exportarlo de nuevo (python scripts/_arbVer.py export)`);
       const b = { ...base, fuente: `export del arb del ${bom.fecha.slice(0, 16).replace('T', ' ')} (${rutaFicha}), ${f.productos.length} productos` };
       for (const e of f.extraer || []) {
-        const re = new RegExp(e.patron, 'i');
+        const re = new RegExp(e.patron || '.', 'i');
         const hits = bom.lineas.filter((l) => re.test(`${l.codigo} ${l.descripcion}`));
-        if (e.juntar && hits.length) r.atributos.push({ ...b, atributo: e.atributo, texto: hits.map((l) => `${l.codigo} ${l.descripcion}`).join(' + '), ...soloDefinidos(e) });
+        if (e.todos && hits.length) r.atributos.push({ ...b, atributo: e.atributo, texto: hits.map((l) => l.codigo).join(' '), lista: hits.map((l) => l.codigo), ...soloDefinidos(e) });
+        else if (e.juntar && hits.length) r.atributos.push({ ...b, atributo: e.atributo, texto: hits.map((l) => `${l.codigo} ${l.descripcion}`).join(' + '), ...soloDefinidos(e) });
         else for (const l of hits) r.atributos.push({ ...b, atributo: e.atributo, texto: `${l.codigo} ${l.descripcion}`, codigo: l.codigo, ...soloDefinidos(e) });
       }
       break;
@@ -185,7 +194,7 @@ async function leerFuente(f, ctx, fichaDocs) {
     case 'beon': {
       const filas = L.filasBeon(readFileSync(ruta, 'utf8'));
       for (const c of f.cliente || []) {
-        const fila = filas.find((x) => x.tipo.toUpperCase().startsWith(c.tipo) && (!c.informe || x.informe === c.informe) && /SI/i.test(x.vio));
+        const fila = filas.find((x) => x.tipo.toUpperCase().startsWith(c.tipo) && (!c.informe || x.informe === c.informe) && /^S[IÍ]\b/i.test(x.vio));
         if (!fila) { r.cliente.push({ documento: c.documento, donde: 'BeOn', letra: null, estado: 'a confirmar', fuente: base.fuente }); continue; }
         const letra = letraDe(fila.revision);
         const donde = `BeOn ${fila.informe} (${fila.estado})`;   // el mismo «donde» en el renglon y en lo que dice esa copia
@@ -213,11 +222,25 @@ export async function relevarFicha(ficha, opts = {}) {
     arb: opts.arb || EXPORT_BOM_ARB,
     leerAmfe: opts.leerAmfe, leerMail: opts.leerMail,
   };
+  for (const [marca, valor] of [['{biblioteca}', ctx.biblioteca], ['{principal}', ctx.principal]]) {
+    if (!valor && ficha.fuentes.some((f) => String(f.ruta || '').includes(marca))) {
+      // sin esto la ruta quedaba «null/PROYECTOS/...» y la falla decia "no esta el archivo"
+      ctx[marca === '{biblioteca}' ? 'biblioteca' : 'principal'] = `<${marca.slice(1, -1)} no esta en esta PC>`;
+    }
+  }
   const nueva = structuredClone(ficha);
   const docs = new Map(nueva.documentos.map((d) => [d.id, d]));
   const anteriores = nueva.atributos || [];
+  const previos = new Map(ficha.documentos.map((d) => [d.id, d]));
   nueva.atributos = [];
-  for (const d of nueva.documentos) { d.cliente = []; d.avisos = []; }
+  // Lo LEIDO se borra y se vuelve a leer: una letra que dejo de aparecer no queda vieja sin aviso. Lo
+  // configurado (nombre, maestro, vigente) y las emisiones que dejaron los emisores no se tocan.
+  const conFuente = new Set(nueva.fuentes.map((f) => f.documento));
+  for (const d of nueva.documentos) {
+    d.cliente = [];
+    d.avisos = [];
+    if (conFuente.has(d.id)) for (const k of LEIDOS) delete d[k];
+  }
   const fallas = [];
   // primero lo nuestro, despues lo que vio el cliente (la letra inferida usa el historial)
   const orden = [...nueva.fuentes].sort((a, b) => (['mail', 'beon'].includes(a.lector) ? 1 : 0) - (['mail', 'beon'].includes(b.lector) ? 1 : 0));
@@ -230,15 +253,20 @@ export async function relevarFicha(ficha, opts = {}) {
         Object.assign(d, r.doc, { leido: ctx.hoy });
         if (r.letraCopia && !d.letra) d.letra = r.letraCopia;
         d.avisos.push(...r.avisos);
-        if (r.materialConfirmado === false) d.vigente = false;
+        if (r.materialConfirmado !== undefined) d.materialNoConfirmado = !r.materialConfirmado;
       }
       nueva.atributos.push(...r.atributos);
-      for (const c of r.cliente) docs.get(c.documento)?.cliente.push(c);
+      for (const c of r.cliente) docs.get(c.documento)?.cliente.push({ ...c, fuenteId: f.id });
     } catch (e) {
       fallas.push(`${f.id}: ${e.message}`);
       if (opts.parcial) {
-        const viejos = anteriores.filter((a) => a.fuenteId === f.id);
-        nueva.atributos.push(...viejos.map((a) => ({ ...a, sinReleer: `no se pudo releer el ${ctx.hoy}: ${e.message}` })));
+        const nota = `no se pudo releer el ${ctx.hoy}: ${e.message}`;
+        nueva.atributos.push(...anteriores.filter((a) => a.fuenteId === f.id).map((a) => ({ ...a, sinReleer: nota })));
+        const previo = previos.get(f.documento);
+        if (d && previo) for (const k of LEIDOS) if (d[k] === undefined && previo[k] !== undefined) d[k] = previo[k];
+        for (const p of ficha.documentos) {
+          for (const c of p.cliente || []) if (c.fuenteId === f.id) docs.get(p.id)?.cliente.push({ ...c, sinReleer: nota });
+        }
       }
     }
   }

@@ -238,6 +238,47 @@ describe('hilos: el conjunto de codigos de cada documento', () => {
   });
 });
 
+describe('materiales: los codigos que nombra el AMFE tienen que estar en la BOM del arb', () => {
+  const ficha = () => ({
+    documentos: [doc('bom:arb'), doc('amfe:158')],
+    atributos: [
+      at('materiales.codigos', 'bom:arb', '52110 427ESP001TRO01 AD - ADFA15 1246030223 ET-SATO-100X60', { rol: 'universo', lista: ['52110', '427ESP001TRO01', 'AD - ADFA15', '1246030223', 'ET-SATO-100X60'] }),
+      at('materiales.codigos', 'amfe:158', 'Film adhesivo Tesa 52110 (codigo 52110-00000-00) + Espuma (codigo 427-ESP-001-TRO-01) + Adhesivo Fenoclor (codigo AD - ADFA15)'),
+    ],
+  });
+  it('todo lo que nombra el AMFE esta en la BOM (aunque con otra grafia): VERDE, y dice lo que la BOM tiene sin nombrar', () => {
+    const r = compararAtributos(ficha()).find((x) => x.atributo === 'materiales.codigos');
+    expect(r.estado).toBe('verde');
+    expect(r.detalle).toMatch(/1246030223/);
+    expect(r.detalle).toMatch(/ET-SATO-100X60/);
+  });
+  it('gemelo: el AMFE nombra un adhesivo que la BOM no tiene: ROJO', () => {
+    const f = ficha();
+    f.atributos[1].texto += ' + Adhesivo Sika (codigo 923852)';
+    const r = compararAtributos(f).find((x) => x.atributo === 'materiales.codigos');
+    expect(r.estado).toBe('rojo');
+    expect(r.detalle).toMatch(/amfe:158 nombra 923852/);
+  });
+});
+
+describe('detalles que la revision por API encontro', () => {
+  it('cuatro renglones de la MISMA BOM no son una comparacion: UNA FUENTE', () => {
+    const f = { documentos: [doc('bom:arb')], atributos: [1, 2, 3, 4].map(() => at('vinilo.ancho_rollo', 'bom:arb', 'SANLEATHER 1,1X1400 ESP3,00')) };
+    expect(compararAtributos(f).find((x) => x.atributo === 'vinilo.ancho_rollo').estado).toBe('una_fuente');
+  });
+  it('un rojo que sale de un documento con vigencia a confirmar lo dice', () => {
+    const f = { documentos: [doc('ho:990', { vigente: 'a confirmar' }), doc('bom:arb')], atributos: [at('adhesivo', 'ho:990', 'SikaMelt'), at('adhesivo', 'bom:arb', 'ADFA15')] };
+    expect(compararAtributos(f).find((x) => x.atributo === 'adhesivo').detalle).toMatch(/vigencia a confirmar: ho:990/);
+  });
+  it('la letra citada se lee aunque venga en mayusculas («REV. B»)', () => {
+    expect(normalizar('cita.flujograma', 'FLUJOGRAMA 154 REV. B').valor).toBe('B');
+  });
+  it('--cambio dice que un documento es de otra pieza', () => {
+    const f = { documentos: [doc('ft:149', { pieza: 'ip-pad' })], atributos: [at('espuma.densidad', 'ft:149', '45Kg/m3')] };
+    expect(queTocaUnCambio(f, { atributo: 'espuma' }).documentos[0].pieza).toBe('ip-pad');
+  });
+});
+
 describe('un solo papel no es una comparacion', () => {
   it('atributo con una sola fuente vigente: UNA FUENTE, ni verde ni rojo', () => {
     const f = { documentos: [doc('ft:141')], atributos: [at('espuma.densidad', 'ft:141', '35Kg/m3')] };
@@ -288,11 +329,13 @@ describe('compararCliente: caso 4, lo que vio el cliente contra lo nuestro', () 
     expect(r.estado).toBe('a_confirmar');
     expect(r.detalle).not.toMatch(/undefined|null/);
   });
-  it('letra inferida: se dice como inferida', () => {
+  it('letra inferida (deducida por fecha, no leida): A CONFIRMAR con la letra probable, nunca rojo ni verde', () => {
     const f = { documentos: [doc('flujograma:154', { letra: 'D', cliente: [{ letra: 'B', inferida: true, fuente: 'mail 08/09' }] })], atributos: [] };
     const r = compararCliente(f)[0];
-    expect(r.estado).toBe('rojo');
-    expect(r.detalle).toMatch(/inferid/);
+    expect(r.estado).toBe('a_confirmar');
+    expect(r.detalle).toMatch(/probablemente.*B.*inferid/);
+    const igualLetra = { documentos: [doc('flujograma:154', { letra: 'B', cliente: [{ letra: 'B', inferida: true, fuente: 'mail' }] })], atributos: [] };
+    expect(compararCliente(igualLetra)[0].estado).toBe('a_confirmar');
   });
 });
 

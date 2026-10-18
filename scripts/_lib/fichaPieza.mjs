@@ -78,8 +78,8 @@ function normalizarPuntada(texto) {
 }
 
 function normalizarLetra(texto) {
-  const m = /\bRev(?:isi[oó]n)?\.?\s*([A-Z])\b/.exec(texto);
-  return m ? { valor: m[1] } : { valor: null, nota: 'no trae una letra de revision' };
+  const m = /\bRev(?:isi[oó]n)?\.?\s*([A-Z])\b/i.exec(texto);
+  return m ? { valor: m[1].toUpperCase() } : { valor: null, nota: 'no trae una letra de revision' };
 }
 
 function normalizarCodigos(texto) {
@@ -100,6 +100,10 @@ export function normalizar(atributo, texto, opts = {}) {
     const lista = opts.lista || t.split(/[\s,;|]+/).filter((x) => /^\d+$/.test(x));
     return lista.length ? { valor: [...new Set(lista.map(String))].sort((a, b) => Number(a) - Number(b)) } : { valor: null, nota: 'sin operaciones' };
   }
+  if (atributo === 'materiales.codigos') {
+    const lista = opts.lista || codigosDeTexto(t);
+    return lista.length ? { valor: [...new Set(lista)].sort() } : { valor: null, nota: 'no nombra codigos' };
+  }
   if (atributo === 'adhesivo') return normalizarAdhesivo(t);
   if (atributo.startsWith('cita.')) return normalizarLetra(t);
   if (/\.densidad$/.test(atributo)) return normalizarDensidad(t);
@@ -116,6 +120,9 @@ export function normalizar(atributo, texto, opts = {}) {
 
 const igual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const mostrar = (v) => (Array.isArray(v) ? v.join(' ') : String(v));
+
+/** Fuera de la comparacion: no vigente, o un papel de otra pieza cuyo material el arb no confirmo. */
+const fueraDeVigencia = (d) => d?.vigente === false || d?.materialNoConfirmado === true;
 
 function indiceDocumentos(ficha) {
   return new Map((ficha.documentos || []).map((d) => [d.id, d]));
@@ -169,13 +176,13 @@ export function compararAtributos(ficha) {
   const entradas = [...propiasDeLaFicha, ...citados];
   const nombres = [...new Set(entradas.map((a) => a.atributo))];
   const declarados = (atributo) => entradas
-    .filter((a) => a.atributo === atributo && (a.rol || 'declara') === 'declara' && docs.get(a.documento)?.vigente !== false)
+    .filter((a) => a.atributo === atributo && (a.rol || 'declara') === 'declara' && !fueraDeVigencia(docs.get(a.documento)))
     .map((a) => conValor(a, docs)).filter((v) => v.valor !== null);
 
   return nombres.map((atributo) => {
     const propias = entradas.filter((a) => a.atributo === atributo);
-    const fuera = propias.filter((a) => docs.get(a.documento)?.vigente === false).map((a) => conValor(a, docs));
-    const vigentes = propias.filter((a) => docs.get(a.documento)?.vigente !== false);
+    const fuera = propias.filter((a) => fueraDeVigencia(docs.get(a.documento))).map((a) => conValor(a, docs));
+    const vigentes = propias.filter((a) => !fueraDeVigencia(docs.get(a.documento)));
     const referencias = vigentes.filter((a) => a.rol === 'referencia').map((a) => conValor(a, docs));
     const topes = vigentes.filter((a) => a.rol === 'tope').map((a) => ({ ...conValor(a, docs), de: a.de }));
     const declara = vigentes.filter((a) => (a.rol || 'declara') === 'declara').map((a) => conValor(a, docs));
@@ -194,8 +201,13 @@ export function compararAtributos(ficha) {
         : `entra en el ${topes[0].de} declarado (${minimo})`;
       return r;
     }
-    if (valores.length < 2) {
-      r.detalle = valores.length ? `solo ${valores[0].documento} lo dice` : 'ningun documento vigente trae un valor legible';
+    const universo = vigentes.filter((a) => a.rol === 'universo').map((a) => conValor(a, docs)).filter((v) => v.valor !== null);
+    if (universo.length) return compararContraUniverso(r, universo, valores);
+    // Se cuentan DOCUMENTOS, no renglones: cuatro vinilos de la misma BOM son un solo papel.
+    const papeles = new Set(valores.map((v) => v.documento));
+    if (papeles.size < 2) {
+      const distintosDeUno = valores.filter((v, i) => valores.findIndex((w) => igual(w.valor, v.valor)) === i);
+      r.detalle = valores.length ? `solo ${valores[0].documento} lo dice${distintosDeUno.length > 1 ? ` (y con valores distintos: ${distintosDeUno.map((v) => mostrar(v.valor)).join(', ')})` : ''}` : 'ningun documento vigente trae un valor legible';
       return r;
     }
     const distintos = valores.filter((v, i) => valores.findIndex((w) => igual(w.valor, v.valor)) === i);
@@ -205,8 +217,43 @@ export function compararAtributos(ficha) {
     if (compartidos.length) {
       r.detalle += ` (${compartidos.map((v) => `${v.documento} es de la pieza ${v.otraPieza}${v.porMaterial ? `: comparte el material ${v.porMaterial}` : ''}`).join('; ')})`;
     }
+    const aConfirmar = [...papeles].filter((id) => docs.get(id)?.vigente === 'a confirmar');
+    if (aConfirmar.length) r.detalle += ` (vigencia a confirmar: ${aConfirmar.join(', ')})`;
     return r;
   });
+}
+
+/** Codigo sin espacios, guiones ni barras, en mayusculas: «427-ESP-001-TRO-01» = «427ESP001TRO01». */
+export const codigoPlano = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+/** Los codigos que nombra un texto: «(codigo X)» y los hilos FX... */
+export function codigosDeTexto(texto) {
+  const t = String(texto || '');
+  const out = [...t.matchAll(/\(c[oó]digo\s+([^)]+)\)/gi)].map((m) => m[1].trim());
+  out.push(...(t.toUpperCase().match(/\bFX\d{3}[A-Z0-9-]*/g) || []));
+  return [...new Set(out)];
+}
+
+// «52110-00000-00» del AMFE es el «52110» del arb: un codigo cubre al otro si uno empieza con el otro
+// (con al menos 5 caracteres, para que un «AD» no tape nada).
+const cubre = (a, b) => { const x = codigoPlano(a); const y = codigoPlano(b); return x === y || (Math.min(x.length, y.length) >= 5 && (x.startsWith(y) || y.startsWith(x))); };
+
+/**
+ * Los materiales: todo codigo que nombra un documento (el AMFE en su recepcion) tiene que estar en el
+ * universo (la BOM del arb). La otra direccion (un codigo de la BOM que el AMFE no nombra por codigo: el
+ * vinilo va por color, las etiquetas en otra operacion) se lista y no da rojo: no es una contradiccion.
+ */
+function compararContraUniverso(r, universo, valores) {
+  const todos = universo.flatMap((u) => u.valor);
+  const faltan = valores.flatMap((v) => v.valor.filter((c) => !todos.some((u) => cubre(c, u))).map((c) => `${v.documento} nombra ${c}`));
+  const nombrados = valores.flatMap((v) => v.valor);
+  const sinNombrar = todos.filter((u) => !nombrados.some((c) => cubre(c, u)));
+  r.valores = [...universo, ...valores];
+  if (!valores.length) { r.detalle = `ningun documento nombra codigos para cruzar con ${universo[0].documento}`; return r; }
+  r.estado = faltan.length ? 'rojo' : 'verde';
+  r.detalle = `${faltan.length ? `${faltan.join('; ')}, que ${universo[0].documento} no tiene` : `todo codigo que nombran ${[...new Set(valores.map((v) => v.documento))].join(' y ')} esta en ${universo[0].documento}`}`
+    + (sinNombrar.length ? ` · ${universo[0].documento} tiene ${sinNombrar.length} codigo(s) que no se nombran por codigo: ${sinNombrar.join(', ')}` : '');
+  return r;
 }
 
 /**
@@ -226,6 +273,12 @@ export function compararCliente(ficha) {
       const donde = [c.donde, c.fecha].filter(Boolean).join(' ');
       if (!c.letra) { peor('a_confirmar'); lineas.push(`no se sabe que letra tiene el cliente${donde ? ` (${donde})` : ''}: lo zanja ${c.fuente || 'una fuente que falta nombrar'}`); continue; }
       const marca = c.inferida ? ' (inferida, no leida en el documento)' : '';
+      // Una letra deducida (por la fecha del historial) no es un dato leido: no da rojo ni verde.
+      if (c.inferida) {
+        peor('a_confirmar');
+        lineas.push(`probablemente el cliente tiene la ${c.letra}${marca}${donde ? ` (${donde})` : ''}; la vigente es la ${d.letra ?? 'a confirmar'}. Lo zanja abrir el adjunto de ${c.fuente || 'ese envio'}`);
+        continue;
+      }
       if (!d.letra) {
         peor('a_confirmar');
         lineas.push(`el cliente tiene la ${c.letra}${marca}${donde ? ` (${donde})` : ''} y la letra vigente nuestra esta a confirmar`);
@@ -272,16 +325,15 @@ export function queTocaUnCambio(ficha, { atributo, codigo } = {}) {
     if (atributo && (a.atributo === atributo || a.atributo.startsWith(`${atributo}.`))) return true;
     if (codigo) {
       // sin espacios ni guiones: el AMFE escribe «427-ESP-001-TRO-01» y el arb «427ESP001TRO01»
-      const plano = (s) => String(s || '').toUpperCase().replace(/[\s-]+/g, '');
-      const c = plano(codigo);
-      return plano(a.codigo) === c || plano(a.texto).includes(c);
+      const c = codigoPlano(codigo);
+      return codigoPlano(a.codigo) === c || codigoPlano(a.texto).includes(c) || (a.lista || []).some((x) => codigoPlano(x) === c);
     }
     return false;
   };
   const ids = [...new Set((ficha.atributos || []).filter((a) => a.rol !== 'cliente' && a.rol !== 'referencia' && !a.cita && nombra(a)).map((a) => a.documento))];
   const documentos = ids.map((id) => {
     const d = docs.get(id) || { id };
-    return { id, tipo: d.tipo, numero: d.numero, letra: d.letra ?? null, sinLetra: Boolean(d.sinLetra), fecha: d.fecha ?? null, vigente: d.vigente !== false, donde: d.donde || null, maestro: d.maestro || null, cliente: d.cliente || [] };
+    return { id, tipo: d.tipo, numero: d.numero, letra: d.letra ?? null, sinLetra: Boolean(d.sinLetra), fecha: d.fecha ?? null, vigente: d.vigente !== false, pieza: d.pieza || null, donde: d.donde || null, maestro: d.maestro || null, cliente: d.cliente || [] };
   });
   const r = { cambio: atributo || codigo, documentos, recordatorio: CANON.ecr.recordatorio.join('\n'), queNombraElSgc: CANON.ecr.documentos_que_nombra_el_sgc, fuente: CANON.ecr.fuente };
   if (!documentos.length) r.aviso = `ningun documento de la ficha nombra «${atributo || codigo}»: o no se releva todavia o el nombre del atributo es otro`;

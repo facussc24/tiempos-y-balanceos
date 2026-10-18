@@ -36,7 +36,8 @@ function correr(cmd, args, { timeout = 60_000, input } = {}) {
 
 /** Hay con que leer? (en el CI de GitHub no hay antiword, pdftotext ni la nube) */
 export function hay(cmd) {
-  const r = spawnSync(cmd, cmd === 'python' ? ['-c', 'import pptx'] : ['-v'], { encoding: 'utf8', timeout: 15_000 });
+  // python con -I, igual que textoPptx: sin -I ve los paquetes del usuario y despues el lector no
+  const r = spawnSync(cmd, cmd === 'python' ? ['-I', '-c', 'import pptx'] : ['-v'], { encoding: 'utf8', timeout: 15_000 });
   return !r.error && (cmd !== 'python' || r.status === 0);
 }
 
