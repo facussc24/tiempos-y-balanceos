@@ -33,6 +33,15 @@ estimado, y se le dice en un renglón que quedó anotado. Se hace en una sesión
 el camino de su tamaño. **Excepción**: si el defecto frena la tarea que Fak está haciendo, se arregla
 ahí mismo por el camino chico y se anota igual. Al abrir una sesión de código se lee la cola primero.
 
+## Un guardián o un hook: antes de fundir, y si igual se rompe
+
+Antes de fundir algo que toque `scripts/_lib/guardianes.mjs` o un hook: `node --check` del archivo y el despachador con
+los seis pedidos de `__tests__/scripts/despachadorPayloadsConocidos.jsonl` (tienen que dar 2 2 2 2 0 0). Si igual se rompe
+en main y traba todas las sesiones, el destrabe es el oficial y lo hace Fak en 30 segundos: `"disableAllHooks": true` en
+el `settings.json` de su usuario (con el Bloc de notas) o `claude --safe-mode` en la consola de la PC principal (en CATA
+`claude` no está en el PATH); después se saca. Paso a paso, fuentes y lo que no se probó: `docs/DESTRABE_GUARDIAN_ROTO.md`
+(tanda 15, 18/10/2026; reemplaza el destrabe inferido de la tanda 14).
+
 ## Dónde y con qué
 
 - El código se toca en `C:\Dev\BarackMercosul` (los hooks y guardianes viven acá); cambios en paralelo,
