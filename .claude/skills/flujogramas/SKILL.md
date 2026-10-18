@@ -18,6 +18,10 @@ ARCHIVO** (`FLUJOGRAMA_154-INSERT.pdf`), no en el cajetin: el campo "CODIGO DEL 
 lleva el codigo del formulario. `FECHA DE EMISION` y `FECHA DE REVISION` son **dos campos
 distintos**. **No existen** los campos "APROBADO POR" ni "RESPONSABLE DE AREA".
 
+<!-- paso0:inicio -->
+**Paso 0 — qué formato se usa, antes de armar nada** (detalle en `docs/FORMATO_CASA.md`). En este orden: (1) si hay **formulario oficial del SGC** para esto, se usa ese; (2) si el **cliente tiene plantilla propia** (VW, BeOn, SMRC), se clona la suya; (3) si un **compañero ya usa un formato** para esto (Leo, Carlos, Gamboa) o hay uno en `FORMATOS GENERAL`, se copia ese; (4) recién ahí, el **formato de la casa** (`scripts/_lib/tema.json`). Y dos modos que no se mezclan: **corregir el archivo de otro** lleva color propio y «ANTES: …» en cada celda tocada (06/10); **rearmarlo entero** va limpio, sin amarillo ni notas (15/10). Antes de mostrarlo: `python scripts/revisar.py <archivo>`.
+<!-- paso0:fin -->
+
 ## Anti-patrones
 
 ❌ Juzgar el flujograma por el JSON o por la vista general del PNG.

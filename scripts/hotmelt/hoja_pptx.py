@@ -41,7 +41,9 @@ _layout_orientacion = HL.layout_orientacion
 _layout_secuencia = HL.layout_secuencia
 
 # ─── paleta ───────────────────────────────────────────────────────────────────
-AZUL   = RGBColor(0x44, 0x54, 0x6A)
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "_lib"))
+import temaCasa  # noqa: E402  el azul de cabecera sale del tema de la casa (scripts/_lib/tema.json, tanda 16)
+AZUL   = RGBColor.from_string(temaCasa.color("cabecera"))
 AZUL2  = RGBColor(0x44, 0x72, 0xC4)
 BLANCO = RGBColor(0xFF, 0xFF, 0xFF)
 NEGRO  = RGBColor(0x00, 0x00, 0x00)

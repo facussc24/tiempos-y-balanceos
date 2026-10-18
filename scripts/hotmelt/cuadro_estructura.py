@@ -15,6 +15,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import xlsxwriter                                                    # noqa: E402
 
 import estructura_v2 as E                                            # noqa: E402
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "_lib"))
+import temaCasa                                                      # noqa: E402  azul de cabecera del tema (tanda 16)
 
 COLOR = {"ok": "#E8F3E8", "FALTA": "#FDE2E2", "ROTULAR": "#FFF3CD",
          "VERIFICAR": "#FFE0CC", "": "#FFFFFF"}
@@ -34,7 +36,7 @@ def main():
 
     wb = xlsxwriter.Workbook(a.salida)
     ws = wb.add_worksheet("estructura")
-    tit = wb.add_format(dict(bold=True, font_color="white", bg_color="#44546A",
+    tit = wb.add_format(dict(bold=True, font_color="white", bg_color="#" + temaCasa.color("cabecera"),
                              align="center", valign="vcenter", text_wrap=True, border=1))
     op_f = wb.add_format(dict(bold=True, bg_color="#D9E2F3", border=1, valign="vcenter"))
     nota_f = wb.add_format(dict(italic=True, bg_color="#F2F2F2", border=1, text_wrap=True,

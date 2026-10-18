@@ -155,6 +155,11 @@ describe('la nube, la impresora, las skills y las sesiones', () => {
     expect(pag).toMatch(/1 cosa en rojo/);
     expect(pag).toMatch(/sáb 17\/10 10:59/);
     expect(pag).not.toMatch(/claude/i);
+    // tanda 16: el tema de la casa, «mucho más 2D y mucho más serio» — la letra y los colores salen de tema.json, sin
+    // esquinas redondeadas en las secciones ni en la foto
+    expect(pag).toMatch(/font-family:"Calibri"/);
+    expect(pag).toMatch(/--acento:#44546A/);
+    expect(pag).not.toMatch(/border-radius:(6|8)px/);
   });
 });
 

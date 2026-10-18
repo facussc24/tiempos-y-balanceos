@@ -1,0 +1,94 @@
+{
+  "_fuente": "Tanda 16 del plan del sistema (16/10/2026), informe G de formatos (15/10/2026). Lo usan scripts/revisar.py y __tests__/scripts/pasoCeroSkills.test.mjs. Doc: docs/FORMATO_CASA.md.",
+  "skills_de_entregable": {
+    "_por_que": "Las cinco que nombra el encargo (hojas-de-proceso, planes-de-control, flujogramas, amfe-export-oficial y cad-design en su parte de entregables) y las que nombra el informe G §1.2 y §2.3 porque arman un entregable que se muestra (lamina-de-proceso, superficie-vinilo-3d, informe-tryout, carga-arb por el PDF de difusion, explicar-mejor cuando pasa a formato para mostrar).",
+    "lista": [
+      "hojas-de-proceso",
+      "planes-de-control",
+      "flujogramas",
+      "amfe-export-oficial",
+      "cad-design",
+      "lamina-de-proceso",
+      "superficie-vinilo-3d",
+      "informe-tryout",
+      "carga-arb",
+      "explicar-mejor"
+    ]
+  },
+  "revisar": {
+    "_fuente": "Reglas de contenido de scripts/revisar.py: salen de los 13 entregables que Fak devolvio por la forma (informe G §1.3, tabla de reclamos con su cita). Cada lista dice de que reclamo sale. Viven aca y no en el libro de observaciones (que esta en la memoria y no existe en el CI).",
+    "notas_re": {
+      "valor": "^\\s*(NOTAS?|AVISOS?|ACLARACI[OÓ]N(ES)?)\\b\\s*([:\\-—]|$)",
+      "de": "#6 plan de control 15/10 «todo amarillo con demasiadas notas»; #10 tablas con bloque NOTAS 24/07 «queda re que lo hizo Claude»"
+    },
+    "recomendaciones": {
+      "valor": ["recomendamos", "recomiendo", "se recomienda", "sugerimos", "sugiero", "se sugiere", "qué haría", "que haria", "lo que haría", "lo que haria", "próximos pasos", "proximos pasos", "mi recomendación", "mi recomendacion"],
+      "de": "#4 Meta Ads 14/10 «el qué haría está de más… no agregues cosas de más»; LECCIONES 14/10 «un resumen va sin recomendaciones que nadie pidió»"
+    },
+    "columnas_inventadas": {
+      "valor": ["fuente", "fuentes", "nota", "notas", "comentario", "comentarios", "como se calculo", "calculo", "verificado", "origen del dato", "diferencia %", "dif %", "derivado"],
+      "de": "#10 «columna Fuente» 24/07; #9 folio 03/09 (columnas que derivé yo). «Observaciones» NO esta en la lista: es columna de muchos formularios"
+    },
+    "jerga_interna": {
+      "valor": ["subagente", "subagentes", "tokens", "dry-run", "commit", "pipeline", "prompt", "llamadas en curso"],
+      "_medido": "18/10: «hook» salia en la BOM de Patagonia por «APLIX 10X60MM / MOLD IN FOAM HOOK», un nombre de material como figura en la BOM (excepcion de la casa: amfe.md §17.2); se saco",
+      "de": "#8 banda 11/10 «283 llamadas en curso???» (feedback_lenguaje_del_entregable_palabras_de_fak). El ingles suelto de planta se lee de core/amfe/forbiddenContent.data.json (ENGLISH_RANDOM_TERMS): no se copia"
+    },
+    "formularios": {
+      "valor": {
+        "hoja de proceso": ["I-IN-002.4"],
+        "hoja de operaciones": ["I-IN-002.4"],
+        "camino de inspeccion": ["I-IN-002.4"],
+        "instructivo de planta": ["I-IN-002.4"],
+        "plan de control": ["I-AC-032", "I-AC-005.1", "I-AC-005.2"],
+        "amfe": ["I-AC-005.3"],
+        "flujograma": ["I-IN-002/III", "I-IN-002"]
+      },
+      "de": "#5 camino de inspeccion 13/10, Carlos: «el formato está mal. Tenemos que hacer una hoja de proceso». Codigos del informe G §1.1; el del plan de control se midio el 18/10 en los .xls reales del 15/10 (dicen I-AC-032; la skill planes-de-control dice I-AC-005.1: se aceptan los dos)"
+    },
+    "preambulo_re": {
+      "valor": "^\\s*(en este (documento|informe|archivo)|este (documento|informe) (presenta|resume|describe)|a continuaci[oó]n|el presente|introducci[oó]n\\b|contexto\\s*:|objetivo del documento)",
+      "de": "informe G §2.2 b: la primera linea dice que pasa y que se necesita (lo importante primero)"
+    },
+    "contador_re": {
+      "valor": "\\b\\d+\\s+(llamadas|tokens|turnos|subagentes)\\b",
+      "de": "#8 banda 11/10"
+    },
+    "hora_re": {
+      "valor": "\\b([01]?\\d|2[0-3]):[0-5]\\d\\b",
+      "de": "#8 banda 11/10 «renueva pusiste hora pero no día»"
+    },
+    "dia_re": {
+      "valor": "\\b(\\d{1,2}/\\d{1,2}|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|lun|mar|mi[eé]|jue|vie|s[aá]b|dom|hoy|mañana|ayer)\\b"
+    },
+    "flechitas": {
+      "valor": ["→", "←", "⇒", "➜", "➔", "▶", "◀"],
+      "de": "#9 folio 03/09 «sacá esas aclaraciones en gris… las flechitas»"
+    },
+    "amarillos": {
+      "valor": ["FFFF00", "FFFF99", "FFFFCC", "FFFF66", "FFF2CC", "FFEB9C", "FFE699", "FFD966", "FFFFE0"],
+      "de": "#6 plan de control 15/10 «todo amarillo»; el modo correccion (06/10) admite color propio solo con «ANTES:»"
+    },
+    "fuente_re": {
+      "valor": "\\b(seg[uú]n (el|la|los|las)|fuentes?\\s*:|sale de (el|la)|de acuerdo (a|con) (el|la))\\b",
+      "de": "#12 superficie de vinilo 01/10 «mencionaste 3 fuentes sin adjuntar la foto de evidencia»"
+    },
+    "pantalla_re": {
+      "valor": "\\b(pantalla|bot[oó]n|botones|hmi)\\b",
+      "_medido": "18/10 sobre 33 hojas reales de exports/hojas-*: con «tocar» y «apretar» saltaba en hojas de trabajo manual (apretar la espuma); quedan solo las palabras de pantalla",
+      "de": "#7 hojas del cambio de molde 25/09 «era extremadamente difícil de comprender» (memoria project_hojas_proceso_img: hoja-mapa primero)"
+    },
+    "piezas_re": {
+      "valor": "\\b(reconocimiento|piezas?|qu[eé] se mueve|componentes|partes del|REF\\.\\s*\\d)",
+      "_medido": "18/10: las hojas aceptadas del IMG y del hot melt (13/10) nombran lo que se mueve con llamadas «REF. 1 La llave general…» en la MISMA lamina; eso cuenta como nombrar las piezas"
+    },
+    "cajetin_hoja": {
+      "valor": ["COD. DE PIEZA / DESCRIPCIÓN", "COD. DE PIEZA", "DESCRIPCIÓN DE LA PIEZA"],
+      "de": "el cajetin del I-IN-002.4 dice «pieza» en todas las hojas: se descuenta antes de buscar las piezas"
+    },
+    "medio_explicacion": {
+      "valor": [".txt", ".html", ".htm", ".md"],
+      "de": "#11 31/08 «los txt son al pedo… un PDF fácil de entender a prueba de boludos con fotos reales»"
+    }
+  }
+}

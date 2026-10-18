@@ -1,0 +1,70 @@
+{
+  "_que_es": "El tema de lo que entrega Ingenieria de Barack Mercosul: un solo archivo con el logo, la letra, los colores, los tamaños y el pie. Lo leen los generadores por scripts/_lib/temaCasa.py y scripts/_lib/temaCasa.mjs, que frenan si el logo no es el oficial. Tanda 16 del plan del sistema (16/10/2026), informe G de formatos (15/10/2026), doc docs/FORMATO_CASA.md.",
+  "_mecanica": "Copia la mecanica de la skill brand-guidelines de Anthropic (licencia Apache 2.0): colores principales y de acento, letra con alternativas, y una sola fuente que aplican todos los generadores. Los valores son los de Barack. Las skills oficiales pptx, xlsx, docx y pdf NO se copian (su licencia prohibe obras derivadas).",
+  "alcance": "Solo Ingenieria de Barack Mercosul. Mobility y la pagina web son otra marca (marino 07214B, azul 0067FF, Montserrat): no se mezclan. Un formulario oficial del SGC o del cliente NO se rediseña con este tema (paso 0).",
+  "logo": {
+    "ruta_repo": "tools/flowchart/assets/barack_logo.png",
+    "ruta_nube": "VARIOS\\Logo y color barack\\barack_logo.png (biblioteca de Ingenieria)",
+    "sha256": "6798d5bc388318b17386055d1c27b8c2dfa83ae168a78b185a89e81953449657",
+    "_sha1": "5d9207e12856 es el sha1 del MISMO archivo (el numero que cita core-prohibiciones.md §9); se compara por sha256",
+    "pixeles": [151, 75],
+    "posicion": "arriba a la izquierda",
+    "regla": "SOLO este archivo (core-prohibiciones.md §9): nunca agrandado, redibujado, recortado ni bajado de otro documento. A 15 mm de alto impreso queda en unos 127 dpi; no se reemplaza por uno mas grande que no sea el oficial."
+  },
+  "letra": {
+    "nombre": "Calibri",
+    "alternativas": ["Carlito", "Arial"],
+    "_fuente": "A3 de hoja de proceso de Pablo Gamboa: 415 usos de Calibri contra 35 de Arial; PowerPoint del IMDS rehecho el 09/10: 240 contra 3 (informe G §2.1, medido con unzip -p el 15/10). Carlito es la equivalente libre de Calibri."
+  },
+  "colores": {
+    "cabecera": {
+      "valor": "44546A",
+      "uso": "cabecera de tabla y bandas de encabezado, con letra blanca",
+      "_fuente": "carpeta oficial VARIOS\\Logo y color barack\\#44546A ---Codigo color azul barack excels---- y docs/CRITERIOS_HOJAS_DE_PROCESO.md (cabecera de las HO). Fijo: no cambia con la eleccion del acento."
+    },
+    "acento": {
+      "valor": "44546A",
+      "estado": "PROPUESTO: lo elige Fak. Es el unico azul con papel; mientras no elija, los generadores con otro azul NO se cambian (decidir por el no es mio).",
+      "en_uso_sin_papel": {
+        "004E98": "scripts/lamina_proceso/motor.py (lamina de proceso, «azul del logo»)",
+        "1B4F8F": ".claude/skills/superficie-vinilo-3d/scripts/svlib_lamina.py (PowerPoint de superficie de vinilo, «azul Barack»)",
+        "1F3A5F": "scripts/hilos/matriz_hilos.py y scripts/hilos/plan_medicion_hilos.py (Excel y PowerPoint de hilos)",
+        "1A5FA8": "el zip Sistema_Procesos_Barack_v1.0.zip de FORMATOS GENERAL (de la nube, no se toca)"
+      }
+    },
+    "fondo": { "valor": "FFFFFF" },
+    "texto": { "valor": "000000" },
+    "gris": { "valor": "9AA3AD", "uso": "lineas y texto de apoyo" },
+    "relleno": { "valor": "F3F4F6", "uso": "relleno suave de una fila o una caja" },
+    "rojo_marca": { "valor": "C00000", "uso": "SOLO para marcar el renglon que importa en una captura" },
+    "_fuente": "A3 de Gamboa (templates/HO_A3_TEMPLATE_GAMBOA.pptx): texto 000000, cabeceras 44546A, gris 9AA3AD, relleno F3F4F6, rojo C00000; informe G §2.1. Sin degradados, sin sombras, sin tarjetas de colores, sin iconos (feedback_powerpoint_para_un_gerente_como_ingeniero_de_la_casa, 09/10)."
+  },
+  "tamanos": {
+    "pptx_proyectar": {
+      "titulo_min": 28, "titulo_max": 32, "cuerpo_min": 18, "tabla_min": 12,
+      "_fuente": "Garner, Alley, Wolfe y Sawarynski, Int. J. Engineering Education 29(6), 2013: titulo que afirma + una evidencia por lamina, d = 0,81 en comprension; los tamaños son los del deck LSR de VW que la casa ya presento (32 / 18 / 12). Citado del informe G §2.2 a."
+    },
+    "pptx_leer": {
+      "cuerpo_min": 10,
+      "_fuente": "Sale de UN solo caso: el PowerPoint del IMDS rehecho el 09/10 y usado con Manuel esa tarde (informe G §2.2 a). Se confirma con Fak."
+    },
+    "a3": { "tabla_min": 9, "texto_min": 12, "_fuente": "A3 de Gamboa: 8,5 a 12,5 pt (informe G §2.2 b). En A4 no hay fuente de un minimo impreso: se fija con una prueba de impresion." },
+    "excel": { "titulo": 14, "cuerpo": 10, "_fuente": "scripts/hilos/plan_medicion_hilos.py y la plantilla PLAN DE TRABAJO Formato Rev. 1.xlsx (titulo en B2)" }
+  },
+  "pie": {
+    "campos": ["titulo", "fecha con dia", "autor", "revision", "pagina"],
+    "autor": "F.Santoro",
+    "autor_propiedades": "Facundo Santoro",
+    "fuente_al_pie": "en una lamina con datos, la fuente al pie (archivo y fecha), corta",
+    "_fuente": "campos de ISO 7200 (dueño, numero, fecha, hoja; informe G §2.1) y core-prohibiciones.md §9 (autor = la persona)"
+  },
+  "no_entra_nunca": [
+    "bloques NOTAS o AVISOS",
+    "aclaraciones en gris debajo del titulo",
+    "flechitas",
+    "columnas que derive yo",
+    "recomendaciones o «que haria» que nadie pidio",
+    "contadores internos",
+    "contar como se hizo"
+  ]
+}

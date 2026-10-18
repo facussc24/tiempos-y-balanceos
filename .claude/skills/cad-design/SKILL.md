@@ -188,6 +188,10 @@ Sin decimar, una base de 620×480 con `lc=3` da millones de puntos y el barrido 
 la celda de decimación (`--celda`) es además **la resolución del resultado** y se informa. Cómo
 se armó su autotest para que separe de verdad: `reference/enforcement-como-se-cerro.md`.
 
+<!-- paso0:inicio -->
+**Paso 0 — qué formato se usa, antes de armar nada** (detalle en `docs/FORMATO_CASA.md`). En este orden: (1) si hay **formulario oficial del SGC** para esto, se usa ese; (2) si el **cliente tiene plantilla propia** (VW, BeOn, SMRC), se clona la suya; (3) si un **compañero ya usa un formato** para esto (Leo, Carlos, Gamboa) o hay uno en `FORMATOS GENERAL`, se copia ese; (4) recién ahí, el **formato de la casa** (`scripts/_lib/tema.json`). Y dos modos que no se mezclan: **corregir el archivo de otro** lleva color propio y «ANTES: …» en cada celda tocada (06/10); **rearmarlo entero** va limpio, sin amarillo ni notas (15/10). Antes de mostrarlo: `python scripts/revisar.py <archivo>`.
+<!-- paso0:fin -->
+
 **GATE E — EL ENTREGABLE: que Fak pueda ENTENDERLO, no que esté documentado.**
 
 ```
