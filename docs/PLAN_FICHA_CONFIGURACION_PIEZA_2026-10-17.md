@@ -127,3 +127,20 @@ si el cliente lo pide, PPAP. Esta pieza **solo lista**: la firma de un ECR es de
 
 Las fases (a) y (c) son las dos piezas de la cola de automatización de Pedro (tanda 8); se muestran con su antes y
 después: «cuántas diferencias encontró el cliente o Calidad» contra «cuántas encontró el chequeo antes de emitir».
+
+---
+
+## 6. Hecho el 18/10/2026 (Insert de Patagonia, rama `claude/ficha-pieza`)
+
+- **Ficha**: `data/configuracion/insert-patagonia.json`. La parte de arriba (pieza, documentos, fuentes) es la
+  lista de papeles y donde mirarlos; lo demas lo escribe `node scripts/_fichaPieza.mjs --relevar insert-patagonia`
+  (frena si una fuente no se puede leer; `--parcial` conserva lo anterior con su fecha).
+- **Comandos**: `--mostrar` (letra vigente y lo que vio el cliente), `--comparar` (sale 1 con un rojo),
+  `--cambio --atributo adhesivo | --codigo 427ESP001TRO01` (que documentos tocar + recordatorio del ECR).
+- **Quien escribe la ficha**: `--relevar` y los que emiten de verdad: `_emitirApqp.py` (despues de un `--apply`
+  bueno), `_bomLegajo.py` (en el legajo real) y `_exportAmfeOficial.ts` (solo el export para el cliente). El
+  generador de flujogramas no escribe: dibuja un PNG, no emite (la letra vigente sale del JSON del repo). El
+  generador de hojas `generar_hojas_img.py` es de la IMG y guarda en el repo y el Escritorio: tampoco emite.
+- **Paso 0 (Artemis)**: no se abrio, Y: no esta montada desde casa. Pendiente del lunes.
+- **Respuesta conocida**: `__tests__/scripts/fichaPieza*.test.mjs` (los cuatro casos del plan en rojo, la costura
+  del APB de puerta en verde, el paso c contra el cambio de espuma del 09/10).

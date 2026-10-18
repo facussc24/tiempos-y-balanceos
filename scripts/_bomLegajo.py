@@ -29,6 +29,13 @@ import sys
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 DATOS = os.path.join(AQUI, '_lib', 'bomLegajos.data.json')
+sys.path.insert(0, os.path.join(AQUI, '_lib'))
+try:
+    from fichaRegistro import registrar_en_ficha  # noqa: E402  el renglon en la ficha de la pieza (tanda 13)
+except Exception as _err:  # noqa: BLE001  si falta o se rompe el ayudante, la BOM del legajo se deja igual
+    def registrar_en_ficha(campos, decir=print, _e=_err):
+        decir('  ficha de la pieza: no se pudo cargar scripts/_lib/fichaRegistro.py (%s); la BOM ya quedo en el legajo' % _e)
+        return False
 PREFIJO = 'BOM ARB ultimo nivel_'
 TOPE_RUTA = 259             # mas largo no abre en Windows (memoria max_path_260)
 
@@ -126,6 +133,11 @@ def main(argv):
         print('OJO: en el legajo quedaron %s' % [os.path.basename(q) for q in quedan])
         return 1
     print('OK: en el legajo queda una sola BOM ultimo nivel de %s: %s' % (a.familia, nombre))
+    # El renglon en la ficha de configuracion de la pieza (tanda 13), solo si el PDF quedo en el
+    # legajo REAL (con --legajo es una carpeta de prueba). No frena: si no puede, lo dice.
+    if not a.legajo:
+        registrar_en_ficha({'tipo': 'bom', 'numero': 'legajo', 'familia': a.familia, 'destino': salida,
+                            'fecha': '%s-%s-%s' % (y, m, d), 'quien': '_bomLegajo.py'})
     return 0
 
 
