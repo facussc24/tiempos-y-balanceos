@@ -97,7 +97,7 @@ def main():
         ruta = m.hoja_referencia(os.path.join(d, 'hoja.png'))
         px = m.marcas(cv2.imread(ruta, cv2.IMREAD_GRAYSCALE))
         nominal = np.array(m.CENTROS_NOMINALES) * 300 / 25.4
-        casos.append(('VERDE: la hoja de referencia que se imprime tiene las 4 marcas donde el metodo las espera (< 2 px a 300 dpi)', float(np.abs(px - nominal).max()) < 2, float(np.abs(px - nominal).max())))
+        casos.append(('VERDE: la hoja de referencia que se imprime tiene las 4 marcas donde el metodo las espera (< 1 px a 300 dpi)', float(np.abs(px - nominal).max()) < 1, float(np.abs(px - nominal).max())))
         # el caso del auditor (17/10): con la hoja que imprime el script y la pieza en x 40-170, la leyenda daba 0,42 mm
         peor = 0.0
         for s in range(3):

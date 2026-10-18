@@ -186,6 +186,17 @@ export function renglonVencimiento(v, hoy) {
   return l.trim();
 }
 
+/**
+ * Orden: los mal escritos primero (sin estado, `e` nulo), despues del que vence antes al que vence despues. Dos mal
+ * escritos empatan en 0 (no `-Infinity - -Infinity`, que da NaN y deja el orden indefinido: revision de la madre, 17/10);
+ * el sort de JS es estable, asi que entre ellos queda el orden de la memoria.
+ */
+export function porVencimiento(a, b) {
+  const ka = a.e ? a.e.faltan : -Infinity;
+  const kb = b.e ? b.e.faltan : -Infinity;
+  return ka === kb ? 0 : ka < kb ? -1 : 1;
+}
+
 /** Los vencimientos que se le muestran a Fak: abiertos, de Ingenieria (o mal escritos), del que vence primero. */
 export function vencimientosParaElArranque(datos, hoy) {
   const conEstado = vencimientosAbiertos(datos).map((v) => {
@@ -193,7 +204,7 @@ export function vencimientosParaElArranque(datos, hoy) {
   });
   return conEstado
     .filter(({ e }) => !e || e.propio)
-    .sort((a, b) => (a.e ? a.e.faltan : -Infinity) - (b.e ? b.e.faltan : -Infinity))
+    .sort(porVencimiento)
     .map(({ v }) => v);
 }
 

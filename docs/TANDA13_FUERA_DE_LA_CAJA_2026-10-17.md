@@ -21,9 +21,9 @@ El estado de los 20 ítems está en la tabla del final (§ Estado). Acá va lo m
 
 ---
 
-## Ítem 10 · Cuánto material deja la regla de columnas del plotter (medido)
+## Ítem 10 · Cuánto material deja la regla de columnas del plotter (medido con el ancho que ocupan las columnas; el ancho del rollo, TBD)
 
-Script: `.claude/skills/plotter-aol/scripts/medir_regla_columnas.py` (selftest `medir_regla_columnas_selftest.py`, 9
+Script: `.claude/skills/plotter-aol/scripts/medir_regla_columnas.py` (selftest `medir_regla_columnas_selftest.py`, 12
 casos en verde). Arma la hoja de columnas con el mismo `acomodar_columnas.py` que se usa de verdad, busca otro acomodo
 con las mismas condiciones de Fak (sin girar, sin espejar, 25 mm reales entre piezas, el mismo ancho de material) y da
 una cota de abajo (ningún acomodo puede ser más corto). Sparrow (el acomodador MIT del informe) **no se instaló ni se le
@@ -37,19 +37,18 @@ DXF: `exports/INSERT_OREJITA_COSTURA_20261015/INSERT PATAGONIA - 4 PIEZAS (1 de 
 |---|---|---|---|---|---|
 | Delantero | 1.187,1 mm (el que ocupan las columnas) | 1.380,4 × 1.187,1 mm | 0,469 m² (28,6 %) | ninguno más corto | 1.113,4 mm de largo |
 | Trasero | 1.284,6 mm (ídem) | 1.293,1 × 1.284,6 mm | 0,543 m² (32,7 %) | ninguno más corto | 982,2 mm |
-| Delantero | 1.800 mm (lo que Fak pensó el 15/10 para la prueba, sin medir) | 1.380,4 mm de largo | 1,315 m² (52,9 %) | 1.290,7 mm: 90 mm menos, 0,161 m² por hoja | 731,1 mm |
-| Trasero | 1.800 mm (ídem) | 1.293,1 mm de largo | 1,210 m² (52,0 %) | 1.216,1 mm: 77 mm menos, 0,139 m² por hoja | 697,7 mm |
+| Los dos | **el ancho del rollo que se usa: TBD** | — | — | — | — |
 
 **Lectura.** Con el ancho que ocupan las columnas, la regla de Fak es tan buena como lo mejor que encontró el buscador:
-las columnas encastran la punta inclinada de una mano en la de la otra. La única ganancia aparece si el material es más
-ancho que la columna (1,8 m): ahí el otro acomodo mezcla manos y usa el ancho que la columna deja vacío. O sea: **lo que
-deja material no es la regla de columnas, es que 5 piezas por columna no llenan un rollo de 1,8 m**; con el ancho real
-del material se puede ver cuántas entran por columna. Los números de 1,8 m son de ejemplo hasta que se mida el ancho.
+las columnas encastran la punta inclinada de una mano en la de la otra. **El ancho real del rollo no está medido** y no
+lo pongo de ejemplo: para el Insert hay cuatro valores en circulación (1400, 1200, 1500 y 1150 mm; caso 2 del plan del
+ítem 1) y ningún papel que diga cuál se usa en el plotter. Si el rollo es más ancho que la columna, las 5 piezas por
+columna dejan sin usar esa franja; cuánto se gana acomodando distinto se mide con el ancho de un papel (la orden de
+compra o la planilla de la mesa de corte) y este comando:
+`py -3 .claude/skills/plotter-aol/scripts/medir_regla_columnas.py "<dxf>" DEL 5 25 --ancho <ancho del papel> --png salida.png`
+(las dos hojas lado a lado, azul DER y verde IZQ).
 **No es un consumo** (`consumos-entregables.md` §6): el consumo sale de la planilla oficial de Mesa de Corte o de un
 mail de Pablo Gamboa, y a Pablo no se le pregunta por esto.
-
-Para verlo: `py -3 .claude/skills/plotter-aol/scripts/medir_regla_columnas.py "<dxf>" DEL 5 25 --ancho 1800 --png salida.png`
-(las dos hojas lado a lado, azul DER y verde IZQ).
 
 ---
 
@@ -137,8 +136,8 @@ baja, se saca (es un archivo: borrarlo o elegir «Default» lo apaga). Los subag
    mensaje y esa sesión empieza a mirarla (`ArtifactComments` con `watch`).
 
 **Lo que se probó (17/10, ~19:45):** se publicó una página de prueba **sin datos de la empresa**
-(`https://claude.ai/artifact/ASCDE3Qec1cuNgtZ1qcmHB`, «Prueba de comentarios»: tres pasos de ejemplo, el 2 marcado para
-comentar). La publicación anduvo, la sesión quedó mirándola («connected, auto-replies armed») y la lectura de comentarios
+(«Prueba de comentarios»: tres pasos de ejemplo, el 2 marcado para comentar; está en la galería de artefactos de la
+cuenta, y el link no va en el repo público). La publicación anduvo, la sesión quedó mirándola («connected, auto-replies armed») y la lectura de comentarios
 anduvo (0 hilos). **Lo que no se pudo probar**: que un comentario de Fak llegue con el paso al que apunta; hace falta que
 él comente y lo mande, y esta sesión hija termina antes. La prueba de punta a punta es: abrir el link, comentar el paso 2,
 mandarlo, y que la sesión que lo mira conteste en el hilo.
@@ -277,7 +276,7 @@ porque instala algo en la configuración de Claude Code de la PC.**
 - **14** · La API ya puede leer un PDF o una foto: van como bloques `document` / `image` en base64 adelante del texto
   (`contenidoConAdjuntos()` de `scripts/_lib/claudeApi.mjs`; desde la consola, `node scripts/_apiTarea.mjs ... --adjunto
   manual.pdf`). **Qué pasa con un archivo que no sirve**: uno que se llama .pdf o .png y por dentro no lo es se frena
-  antes de mandar; un PDF de más de 600 páginas, también; si todo junto pasa los 32 MB que acepta un pedido (25 MB de PDF
+  antes de mandar; si los PDF del pedido suman más de 600 páginas (la doc oficial lo cuenta por pedido, no por PDF), también; un PDF con contraseña, también; si todo junto pasa los 32 MB que acepta un pedido (25 MB de PDF
   ya son 33 en base64), también. Por `--adjunto`, un texto sigue yendo como texto (hasta 2 MB) y cualquier otro binario
   (un .docx, un .xlsx) se frena: hay que pasarlo a PDF o a texto. Nada se paga en esos casos. El costo de un PDF se mide
   con `--estimar` (count_tokens, gratis) antes de pagar. Probado sin red: 12 tests con un cliente de mentira miran el
@@ -312,19 +311,19 @@ porque instala algo en la configuración de Claude Code de la PC.**
 | # | Ítem | Estado |
 |---|---|---|
 | 1 | Ficha de configuración por pieza | **Plan para el sí de Fak**: `docs/PLAN_FICHA_CONFIGURACION_PIEZA_2026-10-17.md` |
-| 2 | Estudio de aptitud de máquina calculado solo | **Hecho** (`scripts/_aptitudMaquina.mjs`, 16 tests) |
+| 2 | Estudio de aptitud de máquina calculado solo | **Hecho** (`scripts/_aptitudMaquina.mjs`, 17 tests; PP y PPK con los mismos 25 subgrupos de la carta) |
 | 3 | Versión grabada en cada utillaje impreso | **En otra tanda** (11, ya fundida) |
-| 4 | Vencimientos de Ingeniería al arrancar | **Hecho** (`scripts/_lib/seguimientos.mjs`, 8 tests nuevos; un área mal escrita se avisa); sin cargar la D7 real |
-| 5 | Libro de observaciones recibidas | **Hecho** (`scripts/_observaciones.mjs`, 7 tests; 6 observaciones reales de Carlos en la memoria) |
+| 4 | Vencimientos de Ingeniería al arrancar | **Hecho** (`scripts/_lib/seguimientos.mjs`, 9 tests nuevos; un área mal escrita se avisa); sin cargar la D7 real |
+| 5 | Libro de observaciones recibidas | **Hecho** (`scripts/_observaciones.mjs`, 8 tests sobre una copia del libro real; 6 observaciones de Carlos en la memoria) |
 | 6 | Cortes de los videos de tiempos | **Diseño** (arriba); solo falta `mediapipe`, y quizás ni eso; se instala con el sí de Fak |
 | 7 | Medir la costura de la CNC con una foto | **Método hecho y probado en imágenes de medida conocida** (`scripts/costura/`, 12 casos); con fotos reales **no se pudo** (no hay ninguna con referencia de tamaño) |
 | 8 | Un reclamo que llega al AMFE de toda la familia | **Diseño** (arriba); el dry-run contra Supabase, desde una sesión de Barack, y escribir con el sí de Fak |
 | 9 | Parámetros de máquina en el tiempo | **Hecho** (`scripts/_parametrosMaquina.mjs`, 10 tests; ficha de la hot melt cargada) |
-| 10 | Cuánto material deja la regla de columnas | **Hecho y medido** (`medir_regla_columnas.py`, selftest 9 casos); no es un consumo |
+| 10 | Cuánto material deja la regla de columnas | **Hecho y medido con el ancho que ocupan las columnas** (`medir_regla_columnas.py`, selftest 12 casos); el ancho real del rollo es TBD; no es un consumo |
 | 11 | El buscador de charlas viejas | **Medido** (3 de 6 olvidos los encontraba, 2 a medias, 1 no se podía); memoria `reference_buscar_en_charlas_viejas` |
 | 12 | Remote Control desde el navegador | **En otra tanda** (10) |
 | 13 | Estilo de salida propio | **Archivo armado y «antes» medido**; **sin activar** (es de Fak) |
-| 14 | La API lee PDFs y fotos | **Hecho** (`claudeApi.mjs` + `_apiTarea --adjunto`, 12 tests sin red) |
+| 14 | La API lee PDFs y fotos | **Hecho** (`claudeApi.mjs` + `_apiTarea --adjunto`, 14 tests sin red) |
 | 15 | Conector de Microsoft 365 | **Descartado con motivo** (Fak, 15/10: la cuenta de la empresa no se puede conectar) |
 | 16 | Revisar comentando sobre una página | **Documentado y probado hasta donde llega sin una persona** (publicar, mirar, leer comentarios); el comentario de Fak de punta a punta queda para él |
 | 17 | Plugins oficiales para áreas que no programan | **Plan de la sesión de prueba** (arriba); instalar es con el sí de Fak |

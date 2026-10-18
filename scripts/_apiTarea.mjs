@@ -107,7 +107,11 @@ export function leerAdjuntos(rutas, { raiz = process.cwd() } = {}) {
     // Un binario que no es PDF ni foto (un .docx, un .xlsx, un .zip) iba como texto ilegible y se pagaba igual
     // (revisor del pedido, tanda 13): un byte nulo no aparece en un texto, asi que se frena.
     const crudo = fs.readFileSync(abs);
-    if (crudo.includes(0)) throw new ErrorApi('api', `el adjunto ${r} es un archivo binario que no es PDF ni foto: no se manda (pasarlo a PDF o a texto antes; si es un texto, guardarlo en UTF-8: un texto en UTF-16, como lo deja PowerShell 5, tambien cae aca)`);
+    // Un texto en UTF-16 con su marca de inicio (lo que deja `>` en PowerShell 5) tiene bytes nulos pero ES texto: se
+    // decodifica (revision de la madre, 17/10). Sin esa marca, un byte nulo es un binario y se frena.
+    const utf16 = crudo[0] === 0xff && crudo[1] === 0xfe ? 'utf-16le' : crudo[0] === 0xfe && crudo[1] === 0xff ? 'utf-16be' : null;
+    if (utf16) return { ruta, texto: new TextDecoder(utf16).decode(crudo.subarray(2)) };
+    if (crudo.includes(0)) throw new ErrorApi('api', `el adjunto ${r} es un archivo binario que no es PDF ni foto: no se manda (pasarlo a PDF o a texto antes)`);
     return { ruta, texto: crudo.toString('utf8') };
   });
 }

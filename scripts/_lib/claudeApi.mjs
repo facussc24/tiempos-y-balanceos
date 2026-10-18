@@ -253,8 +253,11 @@ export function crearCliente({ apiKey, timeoutMs = 10 * 60 * 1000, maxRetries = 
  * Hasta el 17/10/2026 la puerta solo mandaba texto: la API no podia leer el manual escaneado del AIAG-VDA (las escalas
  * O/D siguen saliendo del borrador 2017) ni una hoja de proceso impresa (informe B del 15/10, punto 4). Un PDF va como
  * bloque `document` y una foto como bloque `image`, los dos en base64 y ADELANTE del texto del pedido (skill claude-api,
- * «Document & File Input» y «Vision»). Topes de la doc: 32 MB por pedido y 600 paginas por PDF (100 en los modelos de
- * 200k de contexto; los cuatro de la casa son de 1M).
+ * «Document & File Input» y «Vision»). Topes, de la doc oficial (platform.claude.com/docs/en/build-with-claude/pdf-support,
+ * leida el 17/10/2026, tabla «Check PDF requirements»): «Maximum request size 32 MB», «Maximum pages per request 600 (100
+ * when the request's context window is under 1M tokens)», «Format: Standard PDF (no passwords/encryption)», y «Both
+ * limits are on the entire request payload»: las 600 paginas son de TODO el pedido, no de cada PDF. Los cuatro modelos
+ * de la casa tienen contexto de 1M (tabla «Current Models» de la skill claude-api, cache del 06/10/2026), asi que va 600.
  * El costo de un adjunto NO sale de contar caracteres: se mide con contarTokens() (count_tokens, gratis) antes de
  * pagar, como hace `_apiTarea.mjs`. Lo que esta seccion lee del disco es solo el archivo que se le pasa.
  */
@@ -280,7 +283,8 @@ const FIRMA_ADJUNTO = {
 
 /**
  * Paginas de un PDF contando los objetos `/Type /Page` (no `/Pages`). Es aproximado: un PDF que guarda sus objetos
- * comprimidos puede dar 0, y 0 no frena (el costo real lo dice count_tokens). Sirve para frenar ANTES uno de mas de 600.
+ * comprimidos puede dar 0, y 0 no frena (el costo real lo dice count_tokens); uno con revisiones agregadas al final
+ * puede contar de mas (frena de mas, nunca de menos). Sirve para frenar ANTES un pedido de mas de 600 paginas.
  */
 export function paginasPdf(buf) {
   const m = Buffer.from(buf).toString('latin1').match(/\/Type\s*\/Page(?![A-Za-z])/g);
@@ -300,7 +304,10 @@ export function bloqueAdjunto(ruta, { leer = (p) => fs.readFileSync(p) } = {}) {
   const buf = Buffer.from(leer(ruta));
   if (!FIRMA_ADJUNTO[tipo.media](buf)) throw new ErrorApi('adjunto', `"${ruta}" se llama ${ext} y por dentro no es ${tipo.media}: no se manda`);
   const paginas = tipo.bloque === 'document' ? paginasPdf(buf) : null;
-  if (paginas > TOPE_PAGINAS_PDF) throw new ErrorApi('adjunto', `"${ruta}" tiene ${paginas} paginas: la API toma hasta ${TOPE_PAGINAS_PDF} por PDF (partirlo antes)`);
+  if (paginas > TOPE_PAGINAS_PDF) throw new ErrorApi('adjunto', `"${ruta}" tiene ${paginas} paginas: la API toma hasta ${TOPE_PAGINAS_PDF} por pedido (partirlo antes)`);
+  if (tipo.bloque === 'document' && /\/Encrypt\b/.test(buf.toString('latin1'))) {
+    throw new ErrorApi('adjunto', `"${ruta}" es un PDF con contraseña o cifrado: la API no lo toma (guardarlo sin proteccion antes)`);
+  }
   return {
     bloque: { type: tipo.bloque, source: { type: 'base64', media_type: tipo.media, data: buf.toString('base64') } },
     ruta: String(ruta), bytes: buf.length, paginas,
@@ -313,6 +320,10 @@ export function bloqueAdjunto(ruta, { leer = (p) => fs.readFileSync(p) } = {}) {
  */
 export function contenidoConAdjuntos(usuario, rutas = [], opciones = {}) {
   const adjuntos = rutas.map((r) => bloqueAdjunto(r, opciones));
+  const paginas = adjuntos.reduce((s, a) => s + (a.paginas || 0), 0);
+  if (paginas > TOPE_PAGINAS_PDF) {
+    throw new ErrorApi('adjunto', `los PDF del pedido suman ${paginas} paginas: la API toma hasta ${TOPE_PAGINAS_PDF} en todo el pedido (mandarlos en pedidos separados)`);
+  }
   const texto = Array.isArray(usuario) ? usuario : [{ type: 'text', text: String(usuario ?? '') }];
   const total = adjuntos.reduce((s, a) => s + a.bloque.source.data.length, 0) + Buffer.byteLength(JSON.stringify(texto));
   if (total > TOPE_PEDIDO_BYTES) {

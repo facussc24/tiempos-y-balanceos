@@ -28,7 +28,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { abiertos, estadoDe, textoHook, leerBloque, escribirBloque, anotar, cerrar, aIso, aFecha, nombreDia, vencimientosAbiertos, estadoVencimiento, AREA_PROPIA } from './_lib/seguimientos.mjs';
+import { abiertos, estadoDe, textoHook, leerBloque, escribirBloque, anotar, cerrar, aIso, aFecha, nombreDia, vencimientosAbiertos, estadoVencimiento, porVencimiento, AREA_PROPIA } from './_lib/seguimientos.mjs';
 
 const ARCHIVO = process.env.BARACK_SEGUIMIENTOS
   || join(homedir(), '.claude', 'projects', 'C--Dev-BarackMercosul', 'memory', 'project_seguimientos_con_fecha.md');
@@ -113,7 +113,7 @@ try {
     const venc = vencimientosAbiertos(datos);
     console.log(`\nVencimientos abiertos: ${venc.length}${venc.length ? ' (los de otra area no salen en el arranque)' : ''}`);
     const conEstado = venc.map((v) => { try { return { v, e: estadoVencimiento(v, HOY) }; } catch (err) { return { v, err }; } });
-    conEstado.sort((a, b) => (a.e ? a.e.faltan : -Infinity) - (b.e ? b.e.faltan : -Infinity));
+    conEstado.sort(porVencimiento);
     for (const { v, e, err } of conEstado) {
       console.log(`\n${v?.id || '(sin id)'} — ${v?.que || '(sin que)'}`);
       if (err) { rotos++; console.log(`  >> ESTA MAL ESCRITO: ${err.message}`); continue; }

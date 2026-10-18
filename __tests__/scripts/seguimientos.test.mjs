@@ -12,7 +12,7 @@ import { mkdtempSync, writeFileSync, readFileSync, unlinkSync, rmdirSync } from 
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { estadoDe, textoHook, renglonHook, abiertos, aFecha, leerBloque, escribirBloque, anotar, cerrar, nombreDia, TOPE_HOOK } from '../../scripts/_lib/seguimientos.mjs';
+import { estadoDe, textoHook, renglonHook, abiertos, aFecha, leerBloque, escribirBloque, anotar, cerrar, nombreDia, TOPE_HOOK, porVencimiento } from '../../scripts/_lib/seguimientos.mjs';
 
 const RAIZ = resolve(fileURLToPath(import.meta.url), '../../..');
 
@@ -345,6 +345,18 @@ describe('vencimientos de Ingenieria (tanda 13, item 4) — el caso de la D7 del
     }
     expect(textoHook({ seguimientos: [], vencimientos: [d7({ area: 'logistica' })] }, '2026-09-21')).toBe(''); // de otra area, conocida: no se lleva
     expect(textoHook({ seguimientos: [], vencimientos: [null] }, '2026-09-21')).toMatch(/\(sin id\): ESTA MAL ESCRITO.*vencimiento vacio/);
+  });
+
+  it('dos mal escritos empatan (0, no NaN) y quedan arriba en el orden de la memoria; los sanos, del que vence primero', () => {
+    const rotoA = { id: 'rotoA', que: 'x', area: 'ingenieria' };          // sin fecha
+    const rotoB = { id: 'rotoB', que: 'y', vence: '17/09', area: 'ingenieria' };
+    const t = textoHook({ seguimientos: [], vencimientos: [d7({ id: 'tarde', vence: '2026-10-30' }), rotoA, d7({ id: 'temprano', vence: '2026-10-20' }), rotoB] }, '2026-10-17');
+    const orden = ['rotoA', 'rotoB', 'temprano', 'tarde'].map((id) => t.indexOf(`- ${id}:`));
+    expect(orden.every((p) => p > 0)).toBe(true);
+    expect([...orden].sort((a, b) => a - b)).toEqual(orden);
+    expect(porVencimiento({ e: null }, { e: null })).toBe(0);
+    expect(porVencimiento({ e: null }, { e: { faltan: -5 } })).toBe(-1);
+    expect(porVencimiento({ e: { faltan: 3 } }, { e: { faltan: -5 } })).toBe(1);
   });
 
   it('seguimientos y vencimientos salen juntos, cada uno con su encabezado', () => {

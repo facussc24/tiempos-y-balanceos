@@ -64,6 +64,13 @@ describe('PDF y fotos · el mensaje y el pedido', () => {
     expect(c.map((b) => b.type)).toEqual(['document', 'image', 'text']);
     expect(c[2]).toEqual({ type: 'text', text: 'Leé las escalas.' });
   });
+  it('ROJO: las 600 paginas son de TODO el pedido (doc oficial): dos PDF de 400 no pasan juntos; uno con contraseña tampoco', () => {
+    const pdf = (n) => Buffer.from(`%PDF-1.7\n${'<< /Type /Page >>\n'.repeat(n)}`, 'latin1');
+    expect(() => A.contenidoConAdjuntos('x', ['a.pdf', 'b.pdf'], { leer: () => pdf(400) })).toThrow(/suman 800 paginas/);
+    expect(A.contenidoConAdjuntos('x', ['a.pdf', 'b.pdf'], { leer: () => pdf(300) })).toHaveLength(3);
+    const cifrado = Buffer.from('%PDF-1.7\ntrailer << /Encrypt 5 0 R >>\n', 'latin1');
+    expect(() => A.bloqueAdjunto('c.pdf', { leer: () => cifrado })).toThrow(/con contraseña o cifrado/);
+  });
   it('ROJO: si todo junto pasa los 32 MB en base64 se frena (25 MB de PDF son 33 MB en base64)', () => {
     const gordo = Buffer.concat([Buffer.from('%PDF-1.4\n', 'latin1'), Buffer.alloc(25 * 1024 * 1024)]);
     expect(() => A.contenidoConAdjuntos('x', ['gordo.pdf'], { leer: () => gordo })).toThrow(/32 MB por pedido/);
@@ -109,6 +116,15 @@ describe('_apiTarea --adjunto con un PDF', () => {
     }
     fs.writeFileSync(path.join(dir, 'nota.txt'), 'Distancia al borde: 12,99 mm (calibre).\n', 'utf8');
     expect(leerAdjuntos(['nota.txt'], { raiz: dir })[0].texto).toBe('Distancia al borde: 12,99 mm (calibre).\n');
+  });
+  it('un texto en UTF-16 con su marca de inicio (lo que deja PowerShell 5) se decodifica, no se frena; en LE y en BE', () => {
+    const texto = 'Distancia al borde: 52,4 mm (cara vista).\n';
+    const le = Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(texto, 'utf16le')]);
+    const be = Buffer.from(le); be.swap16(); // la marca queda FE FF y cada caracter al reves: UTF-16 BE
+    fs.writeFileSync(path.join(dir, 'ps5.txt'), le);
+    fs.writeFileSync(path.join(dir, 'be.txt'), be);
+    expect(leerAdjuntos(['ps5.txt'], { raiz: dir })[0].texto).toBe(texto);
+    expect(leerAdjuntos(['be.txt'], { raiz: dir })[0].texto).toBe(texto);
   });
   it('sin PDF ni foto, el mensaje sale igual que antes', () => {
     expect(armarMensaje({ pedido: 'x', adjuntos: [{ ruta: 'a.md', texto: 'y' }] })).toBe('x\n\n--- 1 archivo(s) adjunto(s) ---\n\n<archivo ruta="a.md">\ny\n</archivo>');

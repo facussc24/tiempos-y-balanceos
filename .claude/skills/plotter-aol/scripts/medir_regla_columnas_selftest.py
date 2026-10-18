@@ -10,7 +10,11 @@ Casos:
   VERDE  con 1300 mm de ancho siguen entrando 5 por columna (6 pedirian 1325): 10 piezas siguen en 2 columnas, 1425.
   ROJO   el verificador frena dos piezas a menos de 25 mm y una que se sale del ancho.
   VERDE  con el DXF real de 4 piezas del 15/10 (si esta en esta PC), las columnas dan 1380,4 x 1187,1 (DEL) y
-         1293,1 x 1284,6 (TRA): los numeros que la skill plotter-aol dice del 17/10.
+         1293,1 x 1284,6 (TRA): los numeros que la skill plotter-aol dice del 17/10; y con ese mismo ancho el otro
+         acomodo no es mas corto que las columnas (lo que afirma la skill).
+  ROJO   una hoja «de columnas» con la primera columna de otra forma frena (no pinta las manos al reves).
+El DXF real NO esta en git (vive en exports/ de la PC principal): la ruta se cambia con BARACK_DXF_INSERT_15_10, y si
+no esta, el selftest lo DICE y esos casos no cuentan (no se saltean en silencio).
 """
 import os
 import sys
@@ -22,7 +26,7 @@ from shapely.geometry import box
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import medir_regla_columnas as m  # noqa: E402
 
-REAL = r'C:\Dev\BarackMercosul\exports\INSERT_OREJITA_COSTURA_20261015\INSERT PATAGONIA - 4 PIEZAS (1 de cada mano) - OREJITA COSTURA - 2026-10-15.dxf'
+REAL = os.environ.get('BARACK_DXF_INSERT_15_10') or r'C:\Dev\BarackMercosul\exports\INSERT_OREJITA_COSTURA_20261015\INSERT PATAGONIA - 4 PIEZAS (1 de cada mano) - OREJITA COSTURA - 2026-10-15.dxf'
 
 
 def origen(ruta):
@@ -50,14 +54,40 @@ def main():
     casos.append(('ROJO: dos piezas a 10 mm con minimo 25', (m.verificar([a, b], 25) or '').startswith('las piezas 1 y 2 quedan a 10.00')))
     casos.append(('ROJO: una pieza que se sale del ancho', 'el material tiene 40.0' in (m.verificar([a], 25, ancho=40) or '')))
     casos.append(('VERDE: piezas a 25 mm justos pasan', m.verificar([a, box(125, 0, 225, 50)], 25) is None))
+    # ROJO: si la primera columna no es una sola forma en x = 0 (acomodar_columnas cambio), hoja_columnas frena
+    with tempfile.TemporaryDirectory() as d:
+        mezcla = os.path.join(d, 'mezcla.dxf')
+        doc = ezdxf.new('R2010')
+        for x0, w in [(0, 100), (0, 120), (200, 100), (200, 120)]:
+            y0 = 0 if w == 100 else 300
+            doc.modelspace().add_lwpolyline([(x0, y0), (x0 + w, y0), (x0 + w, y0 + 50), (x0, y0 + 50)], close=True)
+        doc.saveas(mezcla)
+        orig = m.hoja_columnas.__globals__['subprocess'].run
+        try:
+            # se simula una salida de acomodar_columnas con formas mezcladas: se le pasa ese DXF en vez de correrlo
+            def falso(args, **kw):
+                import shutil
+                shutil.copy(mezcla, args[-1])
+                return type('R', (), {'returncode': 0, 'stdout': '', 'stderr': ''})()
+            m.hoja_columnas.__globals__['subprocess'].run = falso
+            try:
+                m.hoja_columnas(mezcla, 'DEL', 2, 25)
+                casos.append(('ROJO: una hoja con formas mezcladas en la primera columna frena', False))
+            except SystemExit as e:
+                casos.append(('ROJO: una hoja con formas mezcladas en la primera columna frena', 'no tiene una columna DER' in str(e)))
+        finally:
+            m.hoja_columnas.__globals__['subprocess'].run = orig
     if os.path.exists(REAL):
         rd = m.hoja_columnas(REAL, 'DEL', 5, 25)[2]
         rt = m.hoja_columnas(REAL, 'TRA', 5, 25)[2]
         md, mt = m.medidas(rd), m.medidas(rt)
         casos.append(('VERDE: DXF real del 15/10, DEL 1380,4 x 1187,1', f"{md['largo']:.1f} x {md['ancho']:.1f}" == '1380.4 x 1187.1'))
         casos.append(('VERDE: DXF real del 15/10, TRA 1293,1 x 1284,6', f"{mt['largo']:.1f} x {mt['ancho']:.1f}" == '1293.1 x 1284.6'))
+        for tipo in ('DEL', 'TRA'):
+            r = m.medir(REAL, tipo, 5, 25)
+            casos.append((f'VERDE: DXF real {tipo}, con el mismo ancho el otro acomodo no es mas corto (lo que dice la skill)', r['otro']['largo'] >= r['columnas']['largo'] - 0.05))
     else:
-        print('  (el DXF real del 15/10 no esta en esta PC: esos dos casos no corren)')
+        print(f'  SE SALTEAN 4 casos: no esta el DXF real del 15/10 en {REAL} (no esta en git; en otra PC se pasa con BARACK_DXF_INSERT_15_10)')
     malos = 0
     for nombre, ok in casos:
         malos += not ok

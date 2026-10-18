@@ -143,7 +143,12 @@ export function estudio(valores, { lie, lse } = {}) {
     return out;
   }
   if (out.nivel === 'preliminar') {
-    const ap = aptitud(res, { lie, lse });
+    // PP y PPK con los MISMOS valores con que se miro la estabilidad (los 25 subgrupos de la carta): un subgrupo 26 o los
+    // valores que sobran nunca se verificaron estables y no entran en la aptitud (revision de la sesion madre, 17/10).
+    const delEstudio = resumen(usados.flat());
+    out.resumenAptitud = delEstudio;
+    if (delEstudio.n < res.n) out.avisos.push(`PP y PPK salen de los ${delEstudio.n} valores de los ${SUBGRUPOS_PRELIMINARES} subgrupos de la carta; los otros ${res.n - delEstudio.n} no entran (no se verifico que esten estables).`);
+    const ap = aptitud(delEstudio, { lie, lse });
     if (!ap) {
       out.avisos.push('Sin tolerancia no se calcula PP ni PPK: pasar --lie y/o --lse (salen del plano o del plan de control).');
     } else {

@@ -11,7 +11,9 @@ Camino por tamaño (`codigo-madre.md`): grande → este plan, el sí de Fak, wor
 **El problema.** Lo que se le escapa a Barack hacia el cliente casi nunca es un documento mal hecho: es que **dos
 documentos de la misma pieza dicen cosas distintas**, o que se trabajó sobre una versión que no era la vigente. Cuatro
 casos reales, todos de Patagonia (Insert, IP PAD y apoyacabezas): la HO-990 dice adhesivo SikaMelt y la BOM y el AMFE dicen
-Fenoclor; el ancho del rollo del Insert aparece con cuatro valores (1400, 1200, 1500 y 1150 mm); dos fichas técnicas dan
+Fenoclor; el ancho del rollo del Insert aparece con cuatro valores (1400, 1200, 1500 y 1150 mm: el informe del 15/10 y
+el encargo dicen «tres», que son los que la memoria llama «en circulación» —FT141, la copia del mail y lo que pidió
+Marcelo—; el cuarto, 1150, es el ancho de las tizadas `INSERT 26-1-26`, que la misma memoria anota aparte); dos fichas técnicas dan
 dos densidades de espuma (35 y 45 kg/m³); y VW vio en BeOn letras distintas de las nuestras (el 15/10 hubo que
 reconstruirlo a mano).
 
@@ -33,7 +35,7 @@ reconstruye a mano qué vio el cliente antes de cada BeOn; y cuando cambia algo,
    cuatro casos).
 2. **Dónde vive la ficha**. Recomiendo **el repo** (`data/configuracion/<pieza>.json`): queda el historial de cada cambio
    con fecha (git), y vos ya aceptaste que el repo público tenga datos de la empresa. La otra opción es la carpeta
-   `DATOS` de la nube de Ingeniería (la ven los demás, sin historial). Elegí una; si no decís nada, va al repo.
+   `DATOS` de la nube de Ingeniería (la ven los demás, sin historial). Elegí una: hasta que lo digas, la fase (a) no arranca.
 3. Nada más: leer el servidor es libre por el contrato de autonomía, y escribir letras en los listados maestros sigue
    siendo con tu OK, como hoy (esta ficha los LEE, no los escribe).
 

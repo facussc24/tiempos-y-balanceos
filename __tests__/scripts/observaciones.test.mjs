@@ -1,8 +1,8 @@
 /**
  * Tests de `scripts/_lib/observaciones.mjs` y `scripts/_observaciones.mjs` — el libro de observaciones recibidas
  * (tanda 13, item 5). Caso de respuesta conocida: las 6 observaciones de Carlos al AMFE de ductos (10/08 y 20/08/2026,
- * `docs/ductos-amfe-hallazgos.md`): 5 sobre el AMFE y 1 sobre el flujograma; 1 la caza un control solo, 1 a medias, 4 a
- * mano. En las dos direcciones: una observacion de una clase ya cerrada dice VOLVIO; una de clase nueva, no.
+ * `docs/ductos-amfe-hallazgos.md`): 5 sobre el AMFE y 1 sobre el flujograma; ninguna la caza un control solo para cualquier AMFE,
+ * 2 a medias y 4 a mano (el caso de abajo copia el libro real del 17/10). Dos direcciones: una clase ya cerrada dice VOLVIO; una nueva, no.
  */
 import { describe, it, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
@@ -20,7 +20,7 @@ const obs = (extra = {}) => ({
 });
 const ductos = () => ({
   observaciones: [
-    obs({ id: 'm', fecha: '2026-08-10', clase: 'materiales-vs-bom', gate: 'amfeAutoria.mjs' }),
+    obs({ id: 'm', fecha: '2026-08-10', clase: 'materiales-vs-bom', gate: 'amfeAutoria.mjs (solo generadores nuevos)', gate_parcial: true }),
     obs({ id: '1', clase: 'foto-de-otra-pieza' }),
     obs({ id: '2', clase: 'operacion-que-falta', gate: '_verificarNumeracion.mjs', gate_parcial: true }),
     obs({ id: '3', clase: 'codigos-por-operacion' }),
@@ -30,14 +30,14 @@ const ductos = () => ({
 });
 
 describe('libro de observaciones — el caso de ductos', () => {
-  it('5 sobre AMFE y 1 sobre flujograma; el AMFE: 1 la caza solo, 1 a medias, 3 a mano', () => {
+  it('5 sobre AMFE y 1 sobre flujograma; el AMFE: ninguna la caza sola, 2 a medias, 3 a mano (como el libro real)', () => {
     const r = resumen(ductos());
-    expect(r.amfe).toEqual({ total: 5, auto: 1, parcial: 1, manual: 3, abiertas: 5, rotas: 0 });
+    expect(r.amfe).toEqual({ total: 5, auto: 0, parcial: 2, manual: 3, abiertas: 5, rotas: 0 });
     expect(r.flujograma).toEqual({ total: 1, auto: 0, parcial: 0, manual: 1, abiertas: 1, rotas: 0 });
   });
   it('antes de mandar un AMFE salen primero las de mirar a mano, despues las de a medias y al final las que caza un control', () => {
     const { observaciones } = antesDeMandar(ductos(), 'amfe');
-    expect(observaciones.map(cobertura)).toEqual(['manual', 'manual', 'manual', 'parcial', 'auto']);
+    expect(observaciones.map(cobertura)).toEqual(['manual', 'manual', 'manual', 'parcial', 'parcial']);
     expect(antesDeMandar(ductos(), 'Flujograma').observaciones.map((o) => o.id)).toEqual(['5']);
     expect(textoAntesDeMandar(ductos(), 'hoja de proceso')).toMatch(/No hay observaciones recibidas/);
   });
@@ -82,7 +82,7 @@ describe('libro de observaciones — el comando', () => {
     const archivo = join(dir, 'obs.md');
     try {
       writeFileSync(archivo, md(ductos()));
-      expect(correr(archivo).stdout).toMatch(/amfe\s+5 · las caza un control solo: 1 · a medias: 1 · a mano: 3/);
+      expect(correr(archivo).stdout).toMatch(/amfe\s+5 · las caza un control solo: 0 · a medias: 2 · a mano: 3/);
       expect(correr(archivo, '--antes-de-mandar', 'AMFE').stdout).toMatch(/^Antes de mandar un AMFE: 5 observacion/);
       expect(correr(archivo, '--cerrar', '3', '--como', 'tabla de codigos en el generador').status).toBe(0);
       const a = correr(archivo, '--anotar', '--de', 'Carlos Baptista', '--documento', 'AMFE', '--que', 'de nuevo sin tabla de codigos', '--clase', 'codigos-por-operacion');
@@ -94,6 +94,15 @@ describe('libro de observaciones — el comando', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+
+  it('en una PC sin el libro: leer sale en 0 y lo dice (tres skills lo mandan correr); anotar o cerrar, en error', () => {
+    const falta = join(tmpdir(), `no-existe-${process.pid}`, 'obs.md');
+    const r = correr(falta, '--antes-de-mandar', 'AMFE');
+    expect(r.status).toBe(0);
+    expect(r.stdout).toMatch(/No esta el libro de observaciones en esta PC/);
+    expect(correr(falta).status).toBe(0);
+    expect(correr(falta, '--cerrar', 'x', '--como', 'y').status).toBe(1);
   });
 
   it('frena sin escribir: argumento desconocido, anotar sin clase, cerrar sin --como, dos modos juntos', () => {

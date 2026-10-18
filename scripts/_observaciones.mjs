@@ -43,7 +43,14 @@ if (op['--anotar']) {
 }
 if (op['--cerrar'] && !op['--como']) { console.error('--cerrar necesita --como (que se hizo para que no vuelva). No hago nada.'); process.exit(2); }
 
-if (!existsSync(ARCHIVO)) { console.error(`no existe el libro de observaciones: ${ARCHIVO}`); process.exit(1); }
+if (!existsSync(ARCHIVO)) {
+  // Tres skills mandan correr esto antes de mandar un documento: en una PC sin la memoria (la notebook de Calidad antes
+  // de bajarla) no tiene que fallar, tiene que decirlo y dejar seguir (revision de la madre, 17/10). Anotar o cerrar si
+  // falla: escribirian en un libro que no esta.
+  if (op['--anotar'] || op['--cerrar']) { console.error(`no existe el libro de observaciones: ${ARCHIVO}. No hago nada.`); process.exit(1); }
+  console.log(`No esta el libro de observaciones en esta PC (${ARCHIVO}): no hay observaciones recibidas para mirar. Si la PC es nueva, bajar la memoria (node scripts/_nube.mjs --bajar --aplicar).`);
+  process.exit(0);
+}
 
 try {
   const bloque = leerBloque(readFileSync(ARCHIVO, 'utf8'), CLAVE);

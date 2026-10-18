@@ -104,6 +104,15 @@ describe('aptitud de maquina — el criterio del I-AC-021', () => {
     expect(e.avisos.join(' ')).toMatch(/PROCESO NO ESTABLE[\s\S]*grupo de trabajo analiza/);
   });
 
+  it('PP y PPK salen de los mismos 25 subgrupos de la carta: un subgrupo 26 corrido no cambia la aptitud y se dice', () => {
+    const base = estudio(repetir(grupo, 25), { lie: 6, lse: 14 });
+    const conCola = estudio([...repetir(grupo, 25), 4, 4, 16, 16, 4, 3, 17], { lie: 6, lse: 14 });
+    expect(conCola.aptitud.pp).toBeCloseTo(base.aptitud.pp, 12);
+    expect(conCola.aptitud.ppk).toBeCloseTo(base.aptitud.ppk, 12);
+    expect(conCola.resumenAptitud.n).toBe(125);
+    expect(conCola.avisos.join(' ')).toMatch(/PP y PPK salen de los 125 valores[\s\S]*los otros 7 no entran/);
+  });
+
   it('con mas de 25 subgrupos los limites salen de los 25 primeros, y lo que sobra se dice', () => {
     const e = estudio([...repetir(grupo, 26), 10, 10]);
     expect(e.subgrupos).toBe(26);
@@ -145,6 +154,7 @@ describe('aptitud de maquina — el comando', () => {
     expect(correr('--valores', '1 2', '--archivo', 'x.txt').status).toBe(2);
     expect(correr('--valores').status).toBe(2);
     expect(correr('--valores', '1 2', '--lse', 'mucho').status).toBe(2);
+    expect(correr('--valores', '1 2', '--lie', '').status).toBe(2); // vacio no es 0
   });
   it('un valor ilegible sale con error 1 y lo dice', () => {
     const r = correr('--valores', '12,04 doce');

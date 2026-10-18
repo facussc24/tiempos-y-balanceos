@@ -35,6 +35,7 @@ if (!!op['--valores'] === !!op['--archivo']) {
 
 const numero = (nombre) => {
   if (op[nombre] === undefined) return undefined;
+  if (!String(op[nombre]).trim()) { console.error(`${nombre} esta vacio: va un numero (la tolerancia del plano)`); process.exit(2); }
   const v = Number(String(op[nombre]).replace(',', '.'));
   if (!Number.isFinite(v)) { console.error(`${nombre} no es un numero: "${op[nombre]}"`); process.exit(2); }
   return v;

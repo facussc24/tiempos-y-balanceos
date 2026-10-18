@@ -55,8 +55,14 @@ def hoja_columnas(src, tipo, n, gap):
         sys.exit(f'*** la hoja de columnas tiene {len(piezas)} contornos, esperaba {2 * n}')
     piezas.sort(key=lambda p: (round(p.bounds[0], 3), p.bounds[1]))
     col1, col2 = piezas[:n], piezas[n:]
-    der = translate(col1[0], -col1[0].bounds[0], -col1[0].bounds[1])
-    izq = translate(col2[0], -col2[0].bounds[0], -col2[0].bounds[1])
+    # acomodar_columnas.py pone la columna DER en x = 0 (`columna(der, 0)`) y la IZQ a su derecha: la primera columna en X
+    # es la DER. Se verifica en vez de suponerlo: la columna 1 arranca en 0 y sus N piezas son la misma forma, y la otra
+    # columna es otra forma (la mano espejo). Si acomodar_columnas cambia, esto frena en vez de pintar las manos al reves.
+    al_origen = lambda p: translate(p, -p.bounds[0], -p.bounds[1])
+    der, izq = al_origen(col1[0]), al_origen(col2[0])
+    if abs(col1[0].bounds[0]) > 0.01 or any(al_origen(p).symmetric_difference(der).area > 1.0 for p in col1) \
+            or any(al_origen(p).symmetric_difference(izq).area > 1.0 for p in col2):
+        sys.exit('*** la hoja de columnas no tiene una columna DER en x = 0 y otra IZQ al lado (cambio acomodar_columnas.py?): no mido')
     return der, izq, piezas
 
 
@@ -205,7 +211,7 @@ def es_der(p, der):
 def main(argv):
     if len(argv) < 4:
         sys.exit(__doc__)
-    src, tipo, n, gap = argv[0], argv[1], int(argv[2]), float(argv[3])
+    src, tipo, n, gap = argv[0], argv[1], int(argv[2]), float(argv[3].replace(',', '.'))
     resto, ancho, png = argv[4:], None, None
     while resto:
         a = resto.pop(0)
