@@ -47,7 +47,7 @@ export function tipoAdjunto(nombre) {
  *   - una palabra de version o copia (v3, 2A, 10B, R13, Rev25, «REV 12», una letra sola, modelo, final, corregido…);
  *   - una fecha separada por un espacio («DUCTO COZZUOL 8-8-25»);
  *   - un numero suelto de 1 a 3 cifras SOLO si va separado por un espacio («INSERTO -1», «Corte 1») o entre parentesis
- *     (la copia de Windows, «(2)»). Pegado con -, _ o . es parte del nombre. Medido en la copia el 18/10/2026: de 40
+ *     (la copia de Windows, «(2)»). Pegado con -, _ o . es parte del nombre. Medido en la copia el 17/10/2026: de 40
  *     piezas que juntaban mas de un nombre, dos eran cosas distintas y las dos por un numero pegado: «ESTANTERIA-1»
  *     (otra estanteria que «ESTANTERIA», mails del 21/08 con asuntos distintos) y «MYLAR MP7315-16» (otro codigo que MP7315).
  */
@@ -60,7 +60,7 @@ const NUMERO_SUELTO = /(?:\s+-?\s*\d{1,3}|\s*\(\d{1,3}\))$/;
  * mayusculas. «TOPE TOP ROLL 10B.STL» -> «tope top roll»; «ESTANTERIA INSERTO -1.rar» -> «estanteria inserto»;
  * «ESTANTERIA-1.rar» -> «estanteria 1». Un nombre que es solo version («1.stl») queda como esta.
  * La clave se tapa sobre el nombre crudo, ANTES de normalizar: normalizar parte en los guiones y una clave partida ya no
- * la reconoce nadie (revision por API del 18/10, punto 1).
+ * la reconoce nadie (revision por API, encargo E261018-bbbc, punto 1).
  */
 export function piezaDe(nombre) {
     let raiz = taparClaves(String(nombre ?? '')).replace(/\.[a-z0-9_]+$/i, '').trim();

@@ -140,6 +140,14 @@ describe('juntar por tarea', () => {
         expect(carlos).toContain('Telas Nuevas PWa 21-9694 y 21-9695');
         expect(fak.split('## Otros planes')[0]).toContain('Leonardo Enrique Lattanzi');
     });
+    it('en el orden inverso (primero Fak la asigna a otro, despues Carlos a Fak) tampoco se cae de ninguna lista', async () => {
+        const deFakPrimero = { ...mail('P04'), id: 'R0', fecha: '2026-06-20 10:00', cuerpo: mail('P04').cuerpo.replace('TAREAPROC', 'TAREATELAS').replace('Armar procedimiento de carga en ARB', 'Telas Nuevas PWa 21-9694 y 21-9695') };
+        const { mails } = await leerMails(jsonlDe([deFakPrimero, mail('P01')]), { conCuerpo: true, filtro: esAvisoPlanner });
+        const md = aMarkdown(juntar(mails), { hoy: '2026-10-17', leidos: 2, contados: mails.length, fechaMin: 'a', fechaMax: 'b' });
+        const [carlos, fak] = md.split('## Tareas que Fak asigno a otros');
+        expect(carlos).toContain('Telas Nuevas PWa 21-9694 y 21-9695');
+        expect(fak.split('## Otros planes')[0]).toContain('Leonardo Enrique Lattanzi');
+    });
     it('el plan viejo «Tareas» no se mezcla con el de Carlos', async () => {
         const { res, mails } = await todo();
         const md = aMarkdown(res, { hoy: '2026-10-17', leidos: 20, contados: mails.length, fechaMin: 'a', fechaMax: 'b' });

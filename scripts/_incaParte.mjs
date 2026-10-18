@@ -104,7 +104,7 @@ export function huecos(orden) {
 /**
  * Ordena los partes por fecha y arma la historia: por pieza sin BKA y por BKA en rojo, primera y ultima vez. Cada pieza
  * lleva ademas `deCorridoDesde`: el primer parte de su racha actual (sin cortes entre los partes de la copia), porque una
- * pieza que salio y volvio no esta «desde» su primera aparicion (revision por API del 18/10, punto 7; ese dia: 0 casos).
+ * pieza que salio y volvio no esta «desde» su primera aparicion (revision por API, encargo E261018-bbbc, punto 7; ese dia: 0 casos).
  */
 export function historia(partes) {
     const orden = [...partes].sort((a, b) => (a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0));

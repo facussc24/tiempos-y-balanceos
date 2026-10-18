@@ -24,7 +24,7 @@ const RAIZ = path.resolve(AQUI, '..', '..');
 const SCRIPT = path.join(RAIZ, 'scripts', '_adjuntosIndice.mjs');
 const CLAVE = ['sk', 'ant', 'api03', 'PRUEBA' + 'x'.repeat(28)].join('-');
 // Cualquier PEDAZO de la clave, tambien partido o en minusculas: normalizar un nombre parte en los guiones y una clave
-// partida («sk ant api03 pruebaxxx…») ya no la reconoce el tapador (revision por API del 18/10, punto 1).
+// partida («sk ant api03 pruebaxxx…») ya no la reconoce el tapador (revision por API, encargo E261018-bbbc, punto 1).
 const PEDAZO_DE_CLAVE = /sk\W*ant\W*api|prueba\W*x{8}/i;
 const CASOS = JSON.parse(fs.readFileSync(path.join(AQUI, 'lectoresMailTanda14.casos.json'), 'utf8'));
 

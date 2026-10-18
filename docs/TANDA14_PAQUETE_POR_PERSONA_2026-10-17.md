@@ -118,7 +118,7 @@ validar sin mirar el arb:** el nombre exacto de los botones de su camino y que l
   plan se dejó de usar). Los mails no avisan cuando una tarea se completa: el listado dice «asignada el …, último aviso
   de vencida el …», nunca «abierta». Detalle: `exports/planner_carlos_2026-10-17.md`.
 - **Los 3D de Pablo Gamboa le llegan a Fak siempre y a Carlos en la mitad**: de los 431 adjuntos de diseño y
-  comprimidos del índice, 193 los mandó Pablo y 58 Carlos (recontado el 18/10 con los `.jt` y el `.tar` ya sumados: los
+  comprimidos del índice, 193 los mandó Pablo y 58 Carlos (recontado el 17/10 con los `.jt` y el `.tar` ya sumados: los
   6 archivos nuevos no son de Pablo ni de Carlos, y los números no cambian). Los mails de Pablo con esos adjuntos son 91: los 91 llevan a
   Fak (en «Para» 26, solo en copia 65) y 46 llevan a Carlos (23 en «Para» y 23 en copia). El «casi siempre con Fak en
   copia» del informe D se sostiene (65 de 91); el «a Carlos» vale para la mitad.
@@ -261,10 +261,13 @@ está verificado.
   cuatro de Federico). Fuente: la lista de skills de la cuenta, leída el 17/10.
 - **El pedido «que Ingeniería valide el punto 5» está en el aporte de Federico, no en un mail suyo**: se leyó de ahí.
 - **En el índice, un número pegado con guion, guion bajo o punto es parte del nombre de la pieza**; separado por un
-  espacio o entre paréntesis es una versión o una copia. Medido el 18/10 sobre los 40 grupos que juntaban más de un
+  espacio o entre paréntesis es una versión o una copia. Medido el 17/10 sobre los 40 grupos que juntaban más de un
   nombre: 2 juntaban cosas distintas y los dos por un número pegado («ESTANTERIA-1» con «ESTANTERIA», que son dos
-  estanterías con asuntos distintos el 21/08, y «MYLAR MP7315-16» con «MYLAR MP7315»). Los asuntos de los mails siguen
-  al lado de cada pieza.
+  estanterías con asuntos distintos el 21/08, y «MYLAR MP7315-16» con «MYLAR MP7315»). La regla nueva separa 5 grupos,
+  no solo esos 2 (medido por el auditor): también las hojas 3 y 4 de «Insonos_Sheet» (bien separadas), el fixture
+  «Dispositivo_SAB1740_fixture_1» (sin abrir el archivo no se sabe si es otra pieza) y «Definitivo.2» y «Definitivo.3»,
+  que por el hilo «DXF TRASERO» son dos versiones del mismo DXF y ahora quedan en dos filas. No se esconde nada: las
+  filas están a la vista, la búsqueda las trae y los asuntos de los mails siguen al lado de cada pieza.
 - **El índice de adjuntos incluye más que la lista pedida**: `.catpart`, `.catproduct`, `.sldprt`, `.sldasm`, `.3mf`,
   `.x_t`, `.f3d`, y los comprimidos (`.rar`, `.zip`, `.7z`) aparte, «sin abrir»: el 3D de la estantería del inserto
   estaba en dos `.rar`, y sin ellos el caso de respuesta conocida no aparecía.

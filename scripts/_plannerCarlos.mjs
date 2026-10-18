@@ -128,7 +128,7 @@ const clave = (t) => t.id || `titulo:${normalizarTexto(t.plan)}:${normalizarText
  * maxDias, ultimoAviso, ultimoEstado ({ cuando, estado, dias } del ultimo aviso que la nombra), aFak (le llego a Fak:
  * asignacion en la Bandeja o cualquier aviso de vencimiento, que Planner manda solo a quien la tiene) y deFak (Fak se la
  * asigno a otro: sale de Enviados). Las dos marcas se suman y no se pisan: si una tarea cambia de dueño aparece en las
- * dos listas en vez de caerse de una (revision por API del 18/10, punto 5; medido ese dia: 0 casos reales).
+ * dos listas en vez de caerse de una (revision por API, encargo E261018-bbbc, punto 5; medido ese dia: 0 casos reales).
  */
 export function juntar(mails) {
     const tareas = new Map();

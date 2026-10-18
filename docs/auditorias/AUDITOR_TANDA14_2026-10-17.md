@@ -475,7 +475,7 @@ El código anda bien:
 
 Riesgo bajo: los 29 partes reales no tienen un `%` así. Lo que falta es un `expect` con el `%` adentro del valor.
 
-respuesta: ____
+respuesta: aplicado en `ad495ef8`: test del valor de `tlks` codificado y con un `%` mal formado adentro.
 
 **2. [Nit · dato del documento] «los 50 mails en inglés «You have late tasks»».**
 Dónde: `docs/TANDA14_PAQUETE_POR_PERSONA_2026-10-17.md:25`.
@@ -489,7 +489,7 @@ Conté los encabezados de los 76 mails de vencimientos:
 El 50 está bien como «mails en inglés con tareas vencidas». La frase entre comillas, en cambio, es la de 34. El total
 de 76 también cierra.
 
-respuesta: ____
+respuesta: aplicado en `ad495ef8`: el paquete dice «50 mails con asunto «You have late tasks» (34 dicen eso adentro y 16 «You have a late task»)».
 
 **3. [Nit · dato del documento, sobre un número que propuse yo en la ronda 1] Los 279 de Carlos incluyen un aviso de
 Teams.**
@@ -505,7 +505,7 @@ Los «278 de la Bandeja» del documento cuentan ese aviso de Teams. El 279 sale 
 igual sin decirlo. No cambia el «el que más le escribe». Si se cuenta solo el remitente «Carlos Baptista», son 278
 (277 + 1).
 
-respuesta: ____
+respuesta: aplicado en `ad495ef8`: «279 mails con su nombre de remitente… uno es un aviso de «Carlos Baptista en Teams»».
 
 **Y 1 nit más:** el mensaje de `6061fd70` dice «9 tests nuevos» y son 6 (`it`): de 40 a 46 con `convencionesScripts`,
 de 37 a 43 en la copia. No se arregla sin reescribir la historia.
@@ -701,7 +701,7 @@ Lo que falta es que el documento y el comentario del código digan lo medido. La
 - 1 que no se puede decir sin abrir los archivos (el fixture);
 - 1 que parte dos versiones (Definitivo.2 y .3).
 
-respuesta: ____
+respuesta: corregido en el paquete («Decidí distinto»): la regla separa 5 grupos, con los tres de más nombrados (Insonos bien separado; SAB1740 sin saber; Definitivo.2 y .3 son versiones y quedan en dos filas, a la vista).
 
 **2. [Nit · ROBUSTNESS] El test de las dos marcas del Planner prueba un solo orden.**
 Dónde: `__tests__/scripts/plannerCarlos.test.mjs:133-142` y `scripts/_plannerCarlos.mjs:161`.
@@ -721,7 +721,7 @@ Ningún test se pone en rojo. Hoy hay 0 tareas reales con las dos marcas, así q
 
 El arreglo es un segundo caso, con el orden al revés, que pida la tarea en las dos listas.
 
-respuesta: ____
+respuesta: aplicado: test del orden inverso en `plannerCarlos.test.mjs`; el mutante fino (`deFak` pisando con `aFak` intacto) ahora deja 1 test en rojo.
 
 **3. [Nit · dato] «18/10» en 8 renglones por un trabajo del 17/10.**
 Dónde:
@@ -742,7 +742,7 @@ Lo que dicen los comandos:
 O sea, «medido el 18/10» y «revisión por API del 18/10» nombran un día que en Argentina todavía no empezó. El mensaje
 de `9390a97c` dice lo mismo, y eso no se arregla sin reescribir la historia.
 
-respuesta: ____
+respuesta: corregido: las fechas de lo medido dicen 17/10 y la revisión se cita por su encargo (E261018-bbbc), sin fecha.
 
 ### Lo que no es hallazgo en esta ronda (para que nadie lo reabra)
 

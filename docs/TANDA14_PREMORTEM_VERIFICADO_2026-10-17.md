@@ -60,7 +60,7 @@ escribe `"disableAllHooks": true` (con el Bloc de notas, 30 segundos), o abre la
 (en la PC principal `claude` está en el PATH). Después se saca. Fuentes: `disableAllHooks` es un campo de la
 configuración de hooks de la documentación oficial (relevada en `docs/_archive/research-claude-code-2026-07/research_hooks.json`);
 `--safe-mode` figura en `claude --help` de la versión 2.1.301 de esta PC («Start with all customizations (… hooks …)
-disabled — useful for troubleshooting a broken configuration», medido el 18/10). **Que alguno de los dos destrabe de
+disabled — useful for troubleshooting a broken configuration», medido el 17/10). **Que alguno de los dos destrabe de
 verdad una sesión trabada no se probó acá: lo verifica la tanda 15.**
 
 ## Lo que no coincide (la tabla del informe, medida hoy en la PC principal)
