@@ -38,8 +38,8 @@ instaló**: `claude plugin list` dio lo mismo antes y después (32 renglones; lo
 | 13 | CodeBurn | **Ficha para el sí** |
 | 14 | SkillSpector | **Ficha para el sí** |
 | 15 | book-to-skill | **Ficha** |
-| 16 | El método de open-steps | **Hecho**: molde `node scripts/_pruebaDisparoSkills.mjs --open-steps <skill>` (25 frases reales + 3 ajenas, 252 llamadas contadas y NO hechas) |
-| 17 | Las señales de humanizer | **Hecho**: 9 avisos nuevos en el canon de `_sinFirmaIA.py`; 0 avisos sobre 135 entregables reales de Barack |
+| 16 | El método de open-steps | **Hecho**: molde `node scripts/_pruebaDisparoSkills.mjs --open-steps <skill>` (25 frases reales + 3 ajenas, 252 llamadas contadas y NO hechas; el encargo dice 225 = 25 × 3 × 3, y el informe F suma las «3 frases ajenas para la dirección contraria»: (25 + 3) × 3 × 3 = 252) |
+| 17 | Las señales de humanizer | **Hecho**: 9 avisos nuevos en el canon de `_sinFirmaIA.py`. Ruido medido: 0 avisos en 135 archivos de 20 carpetas de entregables de `exports/` (planes de control, hojas, reclamos, BeOn, borradores de mail; medición propia del 18/10); el auditor midió 789 documentos de `exports/` con 1 aviso (un texto en inglés de Bambu) y encontró frases de los mails de Fak y del manual de AMFE de la casa, que se sacaron de la lista |
 | 18 | CAD-Agent-Hub (MCP de CATIA con análisis) | **Ficha** (no sirve hoy: pide R28 y la casa tiene R21) |
 | 19 | context-mode | **Ficha** |
 | 20 | Aviso: repos que prometen CATIA completa o licencias | **Hecho**: chequeo 1 de `docs/REVISAR_ANTES_DE_INSTALAR.md` |
@@ -170,8 +170,8 @@ se instala · recomendación con su fuente.
   como paquetes `.skill` y bajarlos ya es instalar.
 - **Si se instala:** skills nuevas en la lista de descriptions, que ya pasa el tope de unos 8.000 caracteres (lo midió la
   hija de la tanda 12 el 17/10: en esta PC, `beon` y `planes-de-control` salen solo con el nombre).
-- **Recomendación:** **nunca como fuente.** Otra skill de calidad de la comunidad (`Quality-Engineering-Skills`) exige
-  acción para todo AP alto y S 9-10 para las características especiales, y las dos cosas chocan con la casa (`amfe.md` §4,
+- **Recomendación:** **nunca como fuente.** Otra skill de calidad de la comunidad (`Quality-Engineering-Skills`) pide
+  acción o justificación para todo AP alto y S 9-10 para las características especiales, y las dos cosas chocan con la casa (`amfe.md` §4,
   `caracteristicas-especiales.md`). Si se prueba, correrla sobre un AMFE ya auditado y separar lo que coincide, lo que
   choca y lo nuevo. Fuente: informe F, ítems 2 y 8.
 

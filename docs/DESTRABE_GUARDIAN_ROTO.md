@@ -7,8 +7,9 @@ inferido sin probar (arreglar `guardianes.mjs` desde otro worktree).
 
 Cuando en TODAS las sesiones cualquier comando, escritura o edición vuelve frenado con un texto del despachador
 (`_dispatcher.sh`) que dice que algo no cargó. La sesión trabada no se puede destrabar sola: el freno le corta justo las
-herramientas con que lo arreglaría. Si lo roto es solo `scripts/_lib/guardianes.mjs`, la sesión todavía puede editarlo
-(el despachador deja pasar un Edit o un Write sobre ese archivo y sus datos); para todo lo demás, esto.
+herramientas con que lo arreglaría. Si lo roto es que `scripts/_lib/guardianes.mjs` no carga, la sesión todavía puede
+editarlo (el despachador deja pasar un Edit o un Write sobre ese archivo y sus datos); si carga pero frena todo, o si lo
+roto es otra cosa, esto.
 
 ## Qué hace Fak
 
@@ -21,6 +22,9 @@ herramientas con que lo arreglaría. Si lo roto es solo `scripts/_lib/guardianes
    ```
      "disableAllHooks": true,
    ```
+
+   Si el archivo tiene solo `{}`, el renglón va sin la coma del final: `{ "disableAllHooks": true }`. Si ya tiene
+   `"disableAllHooks"`, no se pega otro: se cambia su valor a `true`.
 
 4. Abrir una sesión nueva en `C:\Dev\BarackMercosul` y pedirle que arregle el guardián roto. Esa sesión corre **sin
    ningún freno de la casa y sin los mods** (presupuesto de agentes, tablero): conviene que arregle solo eso.

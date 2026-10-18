@@ -162,8 +162,8 @@ Medido con el canon del worktree sobre texto escrito por personas (`medir_humani
 
 | Corpus | Textos | Con aviso humanizer |
 |---|---|---|
-| Mails enviados por Fak (`.mail-cache`) | 1.688 | 4: «no dudes en consultarme» (04/12/2024), «no dudes en preguntarme» (13/02/2026), «Cabe destacar» (27/08/2024), un 📎 a principio de renglón (01/04/2025) |
-| Mails recibidos (planta, clientes, proveedores) | 4.477 | 22: 15 emojis de avisos automáticos de Power BI y de eventos, 5 «Cabe destacar / Cabe resaltar» de gente de Barack, 1 «no dudes en consultarme», 1 «no es solo un estándar, sino…» |
+| Mails enviados por Fak (`.mail-cache`) | 1.688 | 4: 2 con «no dudes en …», 1 con «cabe destacar», 1 con un emoji a principio de renglón (las frases y fechas exactas se sacaron al commitear: el contenido de los mails no va al repo público) |
+| Mails recibidos (planta, clientes, proveedores) | 4.477 | 22: 15 emojis de avisos automáticos, 5 «cabe destacar / resaltar», 1 «no dudes en …», 1 «no es solo X, sino …» |
 | Documentos del SGC en texto (`.sgc-cache`: sgc, empresa-extracted, sgc-servidor, emitidos-respaldo) | 675 | 5: «Es importante resaltar» en el manual de AMFE de la casa (`07-AMFE-FMEA-de-proceso-CM-Revision02`), «crea sinergias» en Formel Q, y 3 más en normas |
 | `exports/` con el detector real (`exports_humanizer.py`) | 789 | 1, en un texto en inglés de Bambu (`impresion_3d\fuentes_bambu\plates.txt`, «👇Click») |
 

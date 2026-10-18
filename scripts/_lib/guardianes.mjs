@@ -181,7 +181,9 @@ export function mcpComoHerramienta(t) {
   // python que guarda el listado maestro o manda un mail si se le decia «bash» (auditor tanda 15, I1). Frena lo que
   // frene cualquiera de las dos.
   const lenguaje = primero('language', 'lang', 'languageId', 'runtime').trim().toLowerCase().replace(/\.exe$/, '');
-  const deConsola = /^(shell|shellscript|bash|sh|zsh|cmd|bat|batch|powershell|pwsh|ps1)$/.test(lenguaje);
+  // la lectura cruda se suma siempre que se declare un lenguaje que no sea python (fish, ksh, nu o uno desconocido
+  // tambien: revision por API, tanda 15); sin lenguaje, como antes (el codigo de modelado de build123d no se lee crudo)
+  const deConsola = lenguaje !== '' && !/^(python|python3|py)$/.test(lenguaje);
   const envuelto = codigo ? `python - <<'CODIGO_MCP'\n${codigo}\nCODIGO_MCP` : '';
   const cmd = primero('command', 'cmd', 'script', 'commands') || (codigo ? (deConsola ? `${codigo}\n${envuelto}` : envuelto) : '');
   const file = primero('file_path', 'path', 'filePath', 'filename', 'file', 'destination', 'dest', 'target', 'target_path', 'output_path');
