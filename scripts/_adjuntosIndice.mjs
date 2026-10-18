@@ -24,7 +24,7 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-    rutaMailsJsonl, salidaPorDefecto, leerMails, celda, escribirSalida, leerArgs, normalizarTexto, fechaLocal,
+    rutaMailsJsonl, salidaPorDefecto, leerMails, celda, escribirSalida, leerArgs, normalizarTexto, fechaLocal, taparClaves,
 } from './_lib/lectorMails.mjs';
 
 /** Lo que pidio el encargo (tanda 14) y lo que suma este indice porque Barack lo recibe (CATIA, SolidWorks, Bambu). */
@@ -42,19 +42,34 @@ export function tipoAdjunto(nombre) {
     return null;
 }
 
-/** Lo que se tira del final de un nombre para quedarse con la pieza: version, copia, «modelo», un numero suelto. */
-const VERSION_FINAL = /^(v\d+[a-z]?|\d{1,3}[a-z]?|[a-z]|rev[a-z0-9]*|r\d+|modelo|final|nuevo|nueva|modificado|modificada|copia|corregido|ok)$/;
+/*
+ * Lo que se saca del final del nombre CRUDO (antes de normalizar: asi se sabe como esta pegado) para quedarse con la pieza:
+ *   - una palabra de version o copia (v3, 2A, 10B, R13, Rev25, «REV 12», una letra sola, modelo, final, corregido…);
+ *   - una fecha separada por un espacio («DUCTO COZZUOL 8-8-25»);
+ *   - un numero suelto de 1 a 3 cifras SOLO si va separado por un espacio («INSERTO -1», «Corte 1») o entre parentesis
+ *     (la copia de Windows, «(2)»). Pegado con -, _ o . es parte del nombre. Medido en la copia el 18/10/2026: de 40
+ *     piezas que juntaban mas de un nombre, dos eran cosas distintas y las dos por un numero pegado: «ESTANTERIA-1»
+ *     (otra estanteria que «ESTANTERIA», mails del 21/08 con asuntos distintos) y «MYLAR MP7315-16» (otro codigo que MP7315).
+ */
+const PALABRA_VERSION = /[\s_.-]+(v\d+[a-z]?|\d{1,3}[a-z]|[a-z]|rev\s*[a-z0-9]*|r\d+|modelo|final|nuevo|nueva|modificado|modificada|copia|corregido|ok)$/i;
+const FECHA_FINAL = /\s+\d{1,2}[-._]\d{1,2}[-._]\d{2,4}$/;
+const NUMERO_SUELTO = /(?:\s+-?\s*\d{1,3}|\s*\(\d{1,3}\))$/;
 
 /**
- * La pieza a la que pertenece un archivo: el nombre sin extension, sin tildes ni mayusculas, sin las marcas de version
- * del final. «TOPE TOP ROLL 10B.STL» -> «tope top roll»; «ESTANTERIA INSERTO -1.rar» -> «estanteria inserto».
- * Un nombre que es solo version («1.stl») queda como esta.
+ * La pieza a la que pertenece un archivo: el nombre sin extension y sin las marcas de version del final, sin tildes ni
+ * mayusculas. «TOPE TOP ROLL 10B.STL» -> «tope top roll»; «ESTANTERIA INSERTO -1.rar» -> «estanteria inserto»;
+ * «ESTANTERIA-1.rar» -> «estanteria 1». Un nombre que es solo version («1.stl») queda como esta.
+ * La clave se tapa sobre el nombre crudo, ANTES de normalizar: normalizar parte en los guiones y una clave partida ya no
+ * la reconoce nadie (revision por API del 18/10, punto 1).
  */
 export function piezaDe(nombre) {
-    const sinExt = String(nombre ?? '').replace(/\.[a-z0-9_]+$/i, '');
-    const tokens = normalizarTexto(sinExt).split(' ').filter(Boolean);
-    while (tokens.length > 1 && VERSION_FINAL.test(tokens[tokens.length - 1])) tokens.pop();
-    return tokens.join(' ');
+    let raiz = taparClaves(String(nombre ?? '')).replace(/\.[a-z0-9_]+$/i, '').trim();
+    for (;;) {
+        const sin = raiz.replace(PALABRA_VERSION, '').replace(FECHA_FINAL, '').replace(NUMERO_SUELTO, '').trim();
+        if (sin === raiz || !normalizarTexto(sin)) break;
+        raiz = sin;
+    }
+    return normalizarTexto(raiz);
 }
 
 /** Una fila por adjunto de diseño (o comprimido) de cada mail. El mismo archivo en dos mails da dos filas. */
@@ -181,7 +196,7 @@ async function main() {
     const hoy = fechaLocal();
     const md = aMarkdown(filas, { hoy, leidos, contados: mails.length, fechaMin, fechaMax, consulta: a.buscar });
     const out = a.out || (a.buscar ? null : salidaPorDefecto(`adjuntos_3d_dxf_${hoy}.md`));
-    if (out) { escribirSalida(out, md); console.log(`Dejado en ${out}`); } else console.log(md);
+    if (out) { escribirSalida(out, md); console.log(`Dejado en ${out}`); } else console.log(taparClaves(md));
     const cad = filas.filter((f) => f.tipo === 'cad').length;
     console.log(`${cad} adjuntos de diseño y ${filas.length - cad} comprimidos sin abrir (${mails.length} mails sin repetir leidos de ${path.basename(jsonl)}).`);
 }

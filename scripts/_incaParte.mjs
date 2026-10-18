@@ -101,21 +101,26 @@ export function huecos(orden) {
     return out;
 }
 
-/** Ordena los partes por fecha y arma la historia: por pieza sin BKA y por BKA en rojo, primera y ultima vez. */
+/**
+ * Ordena los partes por fecha y arma la historia: por pieza sin BKA y por BKA en rojo, primera y ultima vez. Cada pieza
+ * lleva ademas `deCorridoDesde`: el primer parte de su racha actual (sin cortes entre los partes de la copia), porque una
+ * pieza que salio y volvio no esta «desde» su primera aparicion (revision por API del 18/10, punto 7; ese dia: 0 casos).
+ */
 export function historia(partes) {
     const orden = [...partes].sort((a, b) => (a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0));
     const piezas = new Map();
     const rojos = new Map();
-    for (const p of orden) {
+    orden.forEach((p, i) => {
         for (const pz of p.sinBka.piezas) {
-            const h = piezas.get(pz) ?? { pieza: pz, primera: p.fecha, ultima: p.fecha, partes: 0 };
+            const h = piezas.get(pz) ?? { pieza: pz, primera: p.fecha, ultima: p.fecha, partes: 0, deCorridoDesde: p.fecha };
+            if (i > 0 && !orden[i - 1].sinBka.piezas.includes(pz)) h.deCorridoDesde = p.fecha;
             h.ultima = p.fecha; h.partes += 1; piezas.set(pz, h);
         }
         for (const r of p.rojos.filter((x) => /red/i.test(x.estado))) {
             const h = rojos.get(r.bka) ?? { ...r, primera: p.fecha, ultima: p.fecha, partes: 0 };
             h.ultima = p.fecha; h.partes += 1; rojos.set(r.bka, h);
         }
-    }
+    });
     return { orden, piezas: [...piezas.values()], rojos: [...rojos.values()], faltan: huecos(orden) };
 }
 
@@ -142,9 +147,9 @@ export function aMarkdown(partes, meta) {
     o.push(`- **Piezas sin acuerdo de capacidad (BKA): ${ultimo.sinBka.total}** (${ultimo.sinBka.masDeDosSemanas} con mas de 2 semanas: el parte dice que ahi INCA le avisa al comprador de VW).`);
     if (ultimo.sinBka.piezas.length !== ultimo.sinBka.total) o.push(`- ⚠ El mail dice ${ultimo.sinBka.total} y el enlace trae ${ultimo.sinBka.piezas.length} piezas: revisar en INCA.`);
     o.push('');
-    o.push('| Pieza | Aparece sin BKA desde el parte del | Partes en que aparece |');
-    o.push('|---|---|---|');
-    for (const pz of ultimo.sinBka.piezas) { const h = piezas.find((x) => x.pieza === pz); o.push(`| ${celda(pz)} | ${dmy(h?.primera)} | ${h?.partes ?? 0} de ${orden.length} |`); }
+    o.push('| Pieza | Sin BKA de corrido desde el parte del | Primera vez sin BKA | Partes en que aparece |');
+    o.push('|---|---|---|---|');
+    for (const pz of ultimo.sinBka.piezas) { const h = piezas.find((x) => x.pieza === pz); o.push(`| ${celda(pz)} | ${dmy(h?.deCorridoDesde)} | ${dmy(h?.primera)} | ${h?.partes ?? 0} de ${orden.length} |`); }
     o.push('');
     if (ultimo.otrasTareas.some((t) => t.total)) o.push(`Otras tareas abiertas en el ultimo parte: ${ultimo.otrasTareas.filter((t) => t.total).map((t) => `${celda(t.tarea)} ${t.total}`).join(' · ')}.\n`);
     o.push(`BKA en rojo en el ultimo parte: ${ultimo.rojos.length ? ultimo.rojos.map((r) => `${r.bka} ${celda(r.descripcion)} (${celda(r.pieza)})`).join(' · ') : 'ninguno'}.`);

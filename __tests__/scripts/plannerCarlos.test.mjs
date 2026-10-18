@@ -16,13 +16,14 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-    fechaDeAviso, idiomaAviso, tareaDeAsignacion, tareasDeVencimientos, estadoDeEncabezado, diasDeAtraso, juntar, aMarkdown, esAvisoPlanner, PLAN_CARLOS,
+    fechaDeAviso, idiomaAviso, tareaDeAsignacion, tareasDeVencimientos, estadoDeEncabezado, diasDeAtraso, juntar, aMarkdown, esAvisoPlanner, textoEstado, PLAN_CARLOS,
 } from '../../scripts/_plannerCarlos.mjs';
 import { leerMails } from '../../scripts/_lib/lectorMails.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const SCRIPT = path.resolve(AQUI, '..', '..', 'scripts', '_plannerCarlos.mjs');
 const CLAVE = ['sk', 'ant', 'api03', 'PRUEBA' + 'y'.repeat(28)].join('-');
+const PEDAZO_DE_CLAVE = /sk\W*ant\W*api|prueba\W*y{8}/i;   // cualquier pedazo, tambien partido
 const CASOS = JSON.parse(fs.readFileSync(path.join(AQUI, 'lectoresMailTanda14.casos.json'), 'utf8'));
 const mail = (id) => JSON.parse(JSON.stringify(CASOS.planner.find((m) => m.id === id)).replaceAll('{{CLAVE_FALSA}}', CLAVE));
 
@@ -121,6 +122,24 @@ describe('juntar por tarea', () => {
         expect(proc[0].deFak).toBe(true);
         expect(proc[0].asignadaA).toBe('Leonardo Enrique Lattanzi; Paulo Hernan Centurion');
     });
+    it('el estado de cada tarea es el del ULTIMO aviso que la nombra (revision por API, punto 2)', async () => {
+        const { res } = await todo();
+        const por = (id) => res.tareas.find((t) => t.id === id);
+        expect(textoEstado(por('TAREATELAS').ultimoEstado)).toBe('vencida, 7 dias (aviso del 08/07/2026)');
+        expect(textoEstado(por('TAREABOM').ultimoEstado)).toBe('vencida, 1 dia (aviso del 25/06/2026)');
+        expect(textoEstado(por('TAREA0').ultimoEstado)).toBe('asignada (aviso del 28/04/2026)');
+        expect(textoEstado(null)).toBe('—');
+    });
+    it('una tarea que Carlos le asigna a Fak y Fak reasigna sale en las dos listas, no se cae de una (punto 5)', async () => {
+        const deCarlos = mail('P01');
+        const reasignada = { ...mail('P04'), id: 'R1', fecha: '2026-06-24 10:00', cuerpo: mail('P04').cuerpo.replace('TAREAPROC', 'TAREATELAS').replace('Armar procedimiento de carga en ARB', 'Telas Nuevas PWa 21-9694 y 21-9695') };
+        const { mails } = await leerMails(jsonlDe([deCarlos, reasignada]), { conCuerpo: true, filtro: esAvisoPlanner });
+        const res = juntar(mails);
+        const md = aMarkdown(res, { hoy: '2026-10-17', leidos: 2, contados: mails.length, fechaMin: 'a', fechaMax: 'b' });
+        const [carlos, fak] = md.split('## Tareas que Fak asigno a otros');
+        expect(carlos).toContain('Telas Nuevas PWa 21-9694 y 21-9695');
+        expect(fak.split('## Otros planes')[0]).toContain('Leonardo Enrique Lattanzi');
+    });
     it('el plan viejo «Tareas» no se mezcla con el de Carlos', async () => {
         const { res, mails } = await todo();
         const md = aMarkdown(res, { hoy: '2026-10-17', leidos: 20, contados: mails.length, fechaMin: 'a', fechaMax: 'b' });
@@ -144,6 +163,7 @@ describe('la salida', () => {
         const md = aMarkdown(res, { hoy: '2026-10-17', leidos: 20, contados: mails.length, fechaMin: 'a', fechaMax: 'b' });
         expect(md).not.toContain(CLAVE);
         expect(md).not.toMatch(/sk-ant-/);
+        expect(md).not.toMatch(PEDAZO_DE_CLAVE);
         expect(md).toContain('[clave retirada]');
     });
     it('la corrida entera da el numero de tareas medido y escribe el archivo', async () => {
@@ -153,6 +173,6 @@ describe('la salida', () => {
         expect(r.status).toBe(0);
         // TELAS, BEON, BOM, CLAVE y las 8 del mismo minuto: 12 del plan de Carlos asignadas a Fak
         expect(r.stdout).toMatch(/12 tareas de «Actividades Ingenieria» asignadas a Fak/);
-        expect(fs.readFileSync(out, 'utf8')).not.toMatch(/sk-ant-/);
+        expect(fs.readFileSync(out, 'utf8')).not.toMatch(PEDAZO_DE_CLAVE);
     });
 });

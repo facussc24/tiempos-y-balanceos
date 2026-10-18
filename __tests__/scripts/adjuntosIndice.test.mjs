@@ -23,6 +23,9 @@ const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const RAIZ = path.resolve(AQUI, '..', '..');
 const SCRIPT = path.join(RAIZ, 'scripts', '_adjuntosIndice.mjs');
 const CLAVE = ['sk', 'ant', 'api03', 'PRUEBA' + 'x'.repeat(28)].join('-');
+// Cualquier PEDAZO de la clave, tambien partido o en minusculas: normalizar un nombre parte en los guiones y una clave
+// partida («sk ant api03 pruebaxxx…») ya no la reconoce el tapador (revision por API del 18/10, punto 1).
+const PEDAZO_DE_CLAVE = /sk\W*ant\W*api|prueba\W*x{8}/i;
 const CASOS = JSON.parse(fs.readFileSync(path.join(AQUI, 'lectoresMailTanda14.casos.json'), 'utf8'));
 
 function jsonlDe(mails) {
@@ -55,10 +58,28 @@ describe('la pieza de un archivo (sin la version del final)', () => {
         expect(piezaDe('TOPE TOP ROLL 2A.STL')).toBe('tope top roll');
         expect(piezaDe('ESTANTERIA INSERTO -1.rar')).toBe('estanteria inserto');
         expect(piezaDe('PIEZA v3.dxf')).toBe('pieza');
+        expect(piezaDe('IP CORTO REV 12.dxf')).toBe('ip corto');
+        expect(piezaDe('PATAGONIA-Armrest_Rear_Pattern-China_20251217_R13.dxf')).toBe('patagonia armrest rear pattern china 20251217');
+    });
+    it('saca una fecha y la copia de Windows «(2)»', () => {
+        expect(piezaDe('DUCTO COZZUOL 8-8-25.rar')).toBe('ducto cozzuol');
+        expect(piezaDe('Rearrest Patagonia 24-9-25.rar')).toBe('rearrest patagonia');
+        expect(piezaDe('2GJ_858_418_A VZG7963_24072020 (2).step')).toBe('2gj 858 418 a vzg7963 24072020');
+    });
+    it('un numero PEGADO con guion es parte del nombre (casos reales del 21/08 y de los mylar)', () => {
+        expect(piezaDe('ESTANTERIA-1.rar')).toBe('estanteria 1');
+        expect(piezaDe('ESTANTERIA.rar')).toBe('estanteria');
+        expect(piezaDe('MYLAR MP7315-16.dwg')).toBe('mylar mp7315 16');
+        expect(piezaDe('MYLAR MP7315.dxf')).toBe('mylar mp7315');
     });
     it('no deja el nombre vacio ni toca las palabras de la pieza', () => {
         expect(piezaDe('1.stl')).toBe('1');
         expect(piezaDe('ESTANTERIA ARMADA ESPUMA INSERTO.rar')).toBe('estanteria armada espuma inserto');
+    });
+    it('una clave en el nombre se tapa ANTES de normalizar: no queda ningun pedazo', () => {
+        const p = piezaDe(`PIEZA ${CLAVE}.dwg`);
+        expect(p).not.toMatch(PEDAZO_DE_CLAVE);
+        expect(p).toBe('pieza clave retirada');
     });
 });
 
@@ -111,11 +132,11 @@ describe('dos piezas distintas con el mismo nombre de archivo', () => {
             { ...base, id: '2', fecha: '2026-08-21 12:19', asunto: 'RE: ESTANTERIA IP Y TOP ROLL', adjuntos: ['ESTANTERIA-1.rar'] },
         ];
         const f = filasDeAdjuntos(mails);
-        expect(porPieza(f)).toHaveLength(1);           // el nombre solo no las separa...
+        expect(porPieza(f).map((p) => p.pieza).sort()).toEqual(['estanteria', 'estanteria 1']);   // son dos piezas
         const md = aMarkdown(f, { hoy: '2026-10-17', leidos: 2, contados: 2, fechaMin: 'a', fechaMax: 'b' });
-        const fila = md.split('\n').find((l) => l.startsWith('| estanteria |'));
-        expect(fila).toContain('«ESTANTERIA DE CAJAS»');  // ...pero los asuntos se ven al lado, sin el «RE:»
-        expect(fila).toContain('«ESTANTERIA IP Y TOP ROLL»');
+        const fila = md.split('\n').find((l) => l.startsWith('| estanteria 1 |'));
+        expect(fila).toContain('«ESTANTERIA IP Y TOP ROLL»');  // con su asunto al lado, sin el «RE:»
+        expect(md.split('\n').find((l) => l.startsWith('| estanteria |'))).toContain('«ESTANTERIA DE CAJAS»');
     });
 });
 
@@ -132,6 +153,7 @@ describe('la salida', () => {
         const md = aMarkdown(f, { hoy: '2026-10-17', leidos: 16, contados: mails.length, fechaMin: 'a', fechaMax: 'b' });
         expect(md).not.toContain(CLAVE);
         expect(md).not.toMatch(/sk-ant-/);
+        expect(md).not.toMatch(PEDAZO_DE_CLAVE);          // tampoco partida en la columna Pieza
         expect(md).toContain('[clave retirada]');
     });
     it('la corrida entera escribe el archivo pedido, sin la clave, y frena con una opcion desconocida', () => {
@@ -142,7 +164,13 @@ describe('la salida', () => {
         const md = fs.readFileSync(out, 'utf8');
         expect(md).toContain('# Adjuntos 3D y DXF que llegaron por mail');
         expect(md).not.toMatch(/sk-ant-/);
-        expect(r.stdout).not.toMatch(/sk-ant-/);
+        expect(md).not.toMatch(PEDAZO_DE_CLAVE);
+        expect(r.stdout).not.toMatch(PEDAZO_DE_CLAVE);
+        // --buscar sin --out imprime por consola: tampoco ahi
+        const busqueda = spawnSync(process.execPath, [SCRIPT, '--mails', jsonl, '--buscar', 'pieza'], { encoding: 'utf8' });
+        expect(busqueda.status).toBe(0);
+        expect(busqueda.stdout).toContain('pieza clave retirada');
+        expect(busqueda.stdout).not.toMatch(PEDAZO_DE_CLAVE);
         const mal = spawnSync(process.execPath, [SCRIPT, '--abrir-outlook'], { encoding: 'utf8' });
         expect(mal.status).toBe(1);
         expect(mal.stderr).toContain('opcion desconocida');

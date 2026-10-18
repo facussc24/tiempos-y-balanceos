@@ -19,6 +19,7 @@ import { esParteInca, fechaDelParte, piezasDelEnlace, leerParte, historia, hueco
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const SCRIPT = path.resolve(AQUI, '..', '..', 'scripts', '_incaParte.mjs');
 const CLAVE = ['sk', 'ant', 'api03', 'PRUEBA' + 'z'.repeat(28)].join('-');
+const PEDAZO_DE_CLAVE = /sk\W*ant\W*api|prueba\W*z{8}/i;   // cualquier pedazo, tambien partido
 const CASOS = JSON.parse(fs.readFileSync(path.join(AQUI, 'lectoresMailTanda14.casos.json'), 'utf8'));
 const mails = () => CASOS.inca.map((m) => JSON.parse(JSON.stringify(m).replaceAll('{{CLAVE_FALSA}}', CLAVE)));
 const partes = () => mails().filter(esParteInca).map(leerParte);
@@ -69,6 +70,17 @@ describe('leer un parte', () => {
     });
 });
 
+describe('de corrido desde (revision por API, punto 7)', () => {
+    it('una pieza que salio y volvio esta «de corrido» desde que volvio; la primera vez queda aparte', () => {
+        const parte = (fecha, piezas) => ({ fecha, cw: '', sinBka: { total: piezas.length, masDeDosSemanas: 0, piezas }, otrasTareas: [], rojos: [] });
+        const { piezas } = historia([parte('2026-04-01', ['A', 'B']), parte('2026-04-08', ['B']), parte('2026-04-15', ['A', 'B'])]);
+        expect(piezas.find((x) => x.pieza === 'A')).toMatchObject({ primera: '2026-04-01', deCorridoDesde: '2026-04-15', partes: 2 });
+        expect(piezas.find((x) => x.pieza === 'B')).toMatchObject({ primera: '2026-04-01', deCorridoDesde: '2026-04-01', partes: 3 });
+        const md = aMarkdown([parte('2026-04-01', ['A']), parte('2026-04-08', []), parte('2026-04-15', ['A'])], { hoy: 'h', leidos: 3, fechaMin: 'a', fechaMax: 'b' });
+        expect(md).toContain('| A | 15/04/2026 | 01/04/2026 | 2 de 3 |');
+    });
+});
+
 describe('la historia', () => {
     it('el BKA en rojo con su primer y ultimo parte', () => {
         const { rojos, orden } = historia(partes());
@@ -113,6 +125,7 @@ describe('la salida', () => {
         const md = aMarkdown(partes(), { hoy: '2026-10-17', leidos: 4, fechaMin: 'a', fechaMax: 'b' });
         expect(md).not.toContain(CLAVE);
         expect(md).not.toMatch(/sk-ant-/);
+        expect(md).not.toMatch(PEDAZO_DE_CLAVE);
         expect(md).toContain('[clave retirada]');
     });
     it('la corrida entera lista las piezas del ultimo parte', () => {
@@ -123,6 +136,6 @@ describe('la salida', () => {
         const r = spawnSync(process.execPath, [SCRIPT, '--mails', jsonl, '--out', out], { encoding: 'utf8' });
         expect(r.status).toBe(0);
         expect(r.stdout).toContain(`3 partes; el ultimo (14/10/2026) trae 6 piezas sin BKA: ${SEIS.join(', ')}.`);
-        expect(fs.readFileSync(out, 'utf8')).not.toMatch(/sk-ant-/);
+        expect(fs.readFileSync(out, 'utf8')).not.toMatch(PEDAZO_DE_CLAVE);
     });
 });

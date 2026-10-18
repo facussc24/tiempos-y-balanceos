@@ -125,7 +125,10 @@ const clave = (t) => t.id || `titulo:${normalizarTexto(t.plan)}:${normalizarText
 /**
  * Junta los avisos por tarea. Devuelve { tareas, avisosAsignacion, avisosVencimiento, renglonesVencida }.
  * Cada tarea: titulo, plan, asigno, asignadaA, asignadaEl, vence, avisosVencida, primerVencida, ultimoVencida,
- * maxDias, ultimoAviso, deFak (true si la asigno Fak a otro: sale de Enviados).
+ * maxDias, ultimoAviso, ultimoEstado ({ cuando, estado, dias } del ultimo aviso que la nombra), aFak (le llego a Fak:
+ * asignacion en la Bandeja o cualquier aviso de vencimiento, que Planner manda solo a quien la tiene) y deFak (Fak se la
+ * asigno a otro: sale de Enviados). Las dos marcas se suman y no se pisan: si una tarea cambia de dueño aparece en las
+ * dos listas en vez de caerse de una (revision por API del 18/10, punto 5; medido ese dia: 0 casos reales).
  */
 export function juntar(mails) {
     const tareas = new Map();
@@ -134,12 +137,14 @@ export function juntar(mails) {
     let renglonesVencida = 0;
     const tarea = (t) => {
         const k = clave(t);
-        const prev = tareas.get(k) ?? { id: t.id, titulo: t.titulo, plan: t.plan, asigno: null, asignadaA: null, asignadaEl: null, vence: null, venceCambio: [], avisosVencida: 0, primerVencida: null, ultimoVencida: null, maxDias: null, ultimoAviso: null, deFak: false };
+        const prev = tareas.get(k) ?? { id: t.id, titulo: t.titulo, plan: t.plan, asigno: null, asignadaA: null, asignadaEl: null, vence: null, venceCambio: [], avisosVencida: 0, primerVencida: null, ultimoVencida: null, maxDias: null, ultimoAviso: null, ultimoEstado: null, aFak: false, deFak: false };
         if (t.titulo) prev.titulo = t.titulo;
         if (!prev.plan && t.plan) prev.plan = t.plan;
         tareas.set(k, prev);
         return prev;
     };
+    // El estado de la tarea segun el ULTIMO aviso que la nombra (por fecha y hora del mail).
+    const anotarEstado = (p, cuando, estado, dias = null) => { if (!p.ultimoEstado || cuando >= p.ultimoEstado.cuando) p.ultimoEstado = { cuando, estado, dias }; };
     const nuevoVence = (p, v) => { if (v && p.vence && v !== p.vence && !p.venceCambio.includes(p.vence)) p.venceCambio.push(p.vence); if (v) p.vence = v; };
     for (const m of mails) {
         if (!esAvisoPlanner(m)) continue;
@@ -153,7 +158,8 @@ export function juntar(mails) {
             // Una tarea asignada a tres personas manda tres avisos: se juntan los nombres.
             const a = m.clase === 'enviados' ? m.para : 'Facundo Santoro';
             p.asignadaA = p.asignadaA && !p.asignadaA.split('; ').includes(a) ? `${p.asignadaA}; ${a}` : (p.asignadaA || a);
-            p.deFak = m.clase === 'enviados';
+            if (m.clase === 'enviados') p.deFak = true; else p.aFak = true;
+            anotarEstado(p, m.fecha, 'asignada');
             if (!p.asignadaEl || dia < p.asignadaEl) p.asignadaEl = dia;
             nuevoVence(p, t.vence);
             continue;
@@ -163,7 +169,9 @@ export function juntar(mails) {
         avisosVencimiento += 1;
         for (const t of lista) {
             const p = tarea(t);
+            p.aFak = true;
             nuevoVence(p, t.vence);
+            anotarEstado(p, m.fecha, t.estado, t.dias);
             if (!p.ultimoAviso || dia > p.ultimoAviso) p.ultimoAviso = dia;
             if (t.estado !== 'vencida') continue;
             renglonesVencida += 1;
@@ -178,11 +186,18 @@ export function juntar(mails) {
 
 const dmy = (iso) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : '—');
 
+/** «vencida, 7 dias (aviso del 08/07/2026)»: lo que dijo el ultimo aviso. Nunca «abierta» ni «cerrada». */
+export function textoEstado(e) {
+    if (!e) return '—';
+    const atraso = e.estado === 'vencida' && e.dias != null ? `, ${e.dias} ${e.dias === 1 ? 'dia' : 'dias'}` : '';
+    return `${e.estado}${atraso} (aviso del ${dmy(String(e.cuando).slice(0, 10))})`;
+}
+
 /** El markdown. `meta`: { hoy, leidos, contados, fechaMin, fechaMax }. */
 export function aMarkdown(res, meta) {
-    const deCarlos = res.tareas.filter((t) => normalizarTexto(t.plan) === normalizarTexto(PLAN_CARLOS) && !t.deFak);
+    const deCarlos = res.tareas.filter((t) => normalizarTexto(t.plan) === normalizarTexto(PLAN_CARLOS) && t.aFak);
     const deFak = res.tareas.filter((t) => t.deFak);
-    const otras = res.tareas.filter((t) => !t.deFak && normalizarTexto(t.plan) !== normalizarTexto(PLAN_CARLOS));
+    const otras = res.tareas.filter((t) => t.aFak && normalizarTexto(t.plan) !== normalizarTexto(PLAN_CARLOS));
     const conAsignacion = deCarlos.filter((t) => t.asignadaEl);
     const vencidas = deCarlos.filter((t) => t.avisosVencida > 0);
     const ultimo = deCarlos.map((t) => t.ultimoAviso).filter(Boolean).sort().pop();
@@ -204,12 +219,14 @@ export function aMarkdown(res, meta) {
     o.push('');
     o.push(`## Tareas de «${PLAN_CARLOS}» asignadas a Fak — la mas nueva primero`);
     o.push('');
-    o.push('| Tarea | Asigno | Asignada el | Vence | Avisos de vencida | Primer y ultimo aviso de vencida | Mayor atraso que dijo un aviso |');
-    o.push('|---|---|---|---|---|---|---|');
+    o.push('La columna «Estado segun el ultimo aviso» dice lo que dijo el ultimo mail de Planner sobre esa tarea (asignada, por vencer, vence hoy o vencida): no dice si se completo despues.');
+    o.push('');
+    o.push('| Tarea | Asigno | Asignada el | Vence | Estado segun el ultimo aviso | Avisos de vencida | Primer y ultimo aviso de vencida | Mayor atraso que dijo un aviso |');
+    o.push('|---|---|---|---|---|---|---|---|');
     const orden = (t) => t.asignadaEl || t.primerVencida || t.ultimoAviso || '';
     for (const t of [...deCarlos].sort((a, b) => (orden(a) < orden(b) ? 1 : -1))) {
         const vence = t.vence ? dmy(t.vence) + (t.venceCambio.length ? ` (antes ${t.venceCambio.map(dmy).join(', ')})` : '') : '—';
-        o.push(`| ${celda(t.titulo)} | ${celda(t.asigno) || '(no hay aviso de asignacion)'} | ${dmy(t.asignadaEl)} | ${vence} | ${t.avisosVencida} | ${t.avisosVencida ? `${dmy(t.primerVencida)} → ${dmy(t.ultimoVencida)}` : '—'} | ${t.maxDias != null ? `${t.maxDias} dias` : '—'} |`);
+        o.push(`| ${celda(t.titulo)} | ${celda(t.asigno) || '(no hay aviso de asignacion)'} | ${dmy(t.asignadaEl)} | ${vence} | ${textoEstado(t.ultimoEstado)} | ${t.avisosVencida} | ${t.avisosVencida ? `${dmy(t.primerVencida)} → ${dmy(t.ultimoVencida)}` : '—'} | ${t.maxDias != null ? `${t.maxDias} ${t.maxDias === 1 ? 'dia' : 'dias'}` : '—'} |`);
     }
     o.push('');
     o.push('## Tareas que Fak asigno a otros');
@@ -225,9 +242,9 @@ export function aMarkdown(res, meta) {
     o.push('');
     if (!otras.length) o.push('Ninguno.');
     else {
-        o.push('| Tarea | Plan | Asigno | Asignada el | Vence | Avisos de vencida |');
-        o.push('|---|---|---|---|---|---|');
-        for (const t of otras) o.push(`| ${celda(t.titulo)} | ${celda(t.plan)} | ${celda(t.asigno) || '—'} | ${dmy(t.asignadaEl)} | ${dmy(t.vence)} | ${t.avisosVencida} |`);
+        o.push('| Tarea | Plan | Asigno | Asignada el | Vence | Estado segun el ultimo aviso | Avisos de vencida |');
+        o.push('|---|---|---|---|---|---|---|');
+        for (const t of otras) o.push(`| ${celda(t.titulo)} | ${celda(t.plan)} | ${celda(t.asigno) || '—'} | ${dmy(t.asignadaEl)} | ${dmy(t.vence)} | ${textoEstado(t.ultimoEstado)} | ${t.avisosVencida} |`);
     }
     return o.join('\n');
 }
@@ -244,7 +261,7 @@ async function main() {
     const md = aMarkdown(res, { hoy, leidos, contados: mails.length, fechaMin, fechaMax });
     const out = a.out || salidaPorDefecto(`planner_carlos_${hoy}.md`);
     escribirSalida(out, md);
-    const deCarlos = res.tareas.filter((t) => normalizarTexto(t.plan) === normalizarTexto(PLAN_CARLOS) && !t.deFak);
+    const deCarlos = res.tareas.filter((t) => normalizarTexto(t.plan) === normalizarTexto(PLAN_CARLOS) && t.aFak);
     console.log(`Dejado en ${out}`);
     console.log(`${deCarlos.length} tareas de «${PLAN_CARLOS}» asignadas a Fak · ${res.avisosAsignacion} avisos de asignacion · ${res.avisosVencimiento} mails de vencimientos con ${res.renglonesVencida} renglones de vencida.`);
 }

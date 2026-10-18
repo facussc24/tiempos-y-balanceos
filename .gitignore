@@ -61,7 +61,7 @@ evals/results/
 exports/explicaciones/
 # listas de borradores de Outlook (asuntos y destinatarios): scripts/_mails.py --limpiar-borradores
 exports/BORRADORES_OUTLOOK_*/
-# lo que sacan de los mails los lectores de la tanda 14 (asuntos, remitentes, tareas): el repo es publico
+# salidas generadas por los lectores de la tanda 14 (indice de adjuntos, Planner, INCA): se regeneran con cada corrida
 exports/adjuntos_3d_dxf_*.md
 exports/planner_carlos_*.md
 exports/inca_parte_*.md
