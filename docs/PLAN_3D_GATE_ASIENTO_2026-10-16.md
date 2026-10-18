@@ -90,7 +90,7 @@ Hija Opus 5.5, encargo `E261017-91f6`, rama `claude/gate-asiento-tanda2`, sin pu
 |---|---|---|---|---|---|
 | Apoyos (pose de diseño) | **ROJO**: 7 (4 bloques + 3 pasadores metidos 3,75 mm en el tapizado tapado) = los 7 que declara `casos_3d.json` | **ROJO**: 4 bloques | **ROJO por la letra**: 4; renglón 4-2-1 VERDE (una superficie, dispersión 0,000) | el gate NO CORRE y lo dice | **VERDE** (3) |
 | Ventana banda / punta (mín. 1,0 / 0,6) | **ROJO** 0,23 / 0,24 (publicado 0,20 / 0,24) | VERDE 1,21 / 0,75 (publicado 1,19 / 0,75) | VERDE 1,21 / 0,75 | — | — |
-| Asiento (% que se hamaca > 0,3 mm) | **100** tapados, **68** abiertos | **28**; en la punta **1,69 mm** | 0, máxima 0,16; punta NO APLICA (cae adentro de los apoyos): AVISO desde la ronda 1 | — | 0 |
+| Asiento (% que se hamaca > 0,3 mm) | **100** tapados, **68** abiertos | **28**; en la punta **1,69 mm** | 0, máxima 0,16; VERDE con la punta NO APLICA escrita (la mano de la escena cae adentro de sus apoyos; la decide la prueba física) | — | 0 |
 | Gemelo, espesor desparejo (50 casos) | — | 66 %, máx. 1,31 (= tanda 11) | 8 %, máx. 0,54 (= tanda 11) | — | — |
 
 Tolerancias, fijadas antes de medir: simulación exacta (0 % y 0,01 mm, las de `casos_3d.json`); ventana 0,05 mm.
@@ -130,10 +130,29 @@ Informe y respuestas: `docs/auditorias/TANDA2_GATE_ASIENTO_auditor_2026-10-17.md
   grande o una zona metida dan ROJO; sin panel enfrente, SIN DATO. v14 7, v15 4, v16 4, iguales alejadas 0,10 mm.
 - **Activación** (I3): si el pliego, la escena o `--etiqueta` no coinciden, código 2; G-E5 avisa la omisión.
 - **G-E5** (I4) coteja la firma de la pieza; **candado** (I5) firma también umbrales, escena y panel; **peor variante**
-  (I6) por veredicto; **punta** (I7) se simula siempre y un NO APLICA deja el asiento en **AVISO**: la v16 pasa de
-  «asiento VERDE» a «asiento AVISO» (la punta la decide la prueba física). Recalibrado: reproduce exacto.
+  (I6) por veredicto; **punta** (I7) se simula siempre (en la ronda 1 un NO APLICA dejaba el asiento en AVISO; la
+  ronda 2 mostró que eso frenaba para siempre a la v16 y se sacó: ver abajo). Recalibrado: reproduce exacto.
 - Detalles: el criterio de aceptación rechaza relleno («?», «pendiente»); la cabecera STEP se reordena en su lugar sin
   tocar comentarios ni otras entidades; una calibración de prueba corta no pisa el registro.
+
+### Ronda 2 del auditor y revisión por API (18/10, la última ronda)
+
+Informe de la ronda 2: `docs/auditorias/TANDA2_GATE_ASIENTO_auditor_ronda2_2026-10-18.md`; la revisión por API la trajo
+la madre. Las respuestas de las dos rondas, punto por punto: `docs/auditorias/TANDA2_GATE_ASIENTO_respuestas_2026-10-18.md`.
+- **Apoyos por geometría**: cada zona es un punto, un riel (dos puntos, sus extremos) o una superficie grande (ROJO);
+  ROJO si no son exactamente tres puntos que no estén en línea. Tres apoyos en fila ya no pasan. El mínimo (3, mecánico)
+  va aparte del máximo de `casos_3d.json`.
+- **Cobertura**: si la pieza se sale de la grilla de la escena, SIN DATO.
+- **Punta**: NO APLICA se decide por la geometría y no deja AVISO; la pieza puede declarar su `mano_punta`.
+- **Calibración** y **verificar** juzgan el asiento con la misma función; la simulación sin reposo da SIN DATO; con 50
+  casos se dice el ruido (±7 puntos). Recalibrado: reproduce exacto.
+- **Cabecera STEP**: la entrega sigue con un aviso si no se puede leer o arreglar; `arreglar` no toca la nube sin la
+  frase de Fak.
+- Valores fijados contra los casos conocidos (sin fuente externa, a revisar con una pieza nueva): `largo_frac` 0,25,
+  `metido` −0,02, la banda (paso 0,01, tolerancia 0,02, 8 mm bajo la punta). La tolerancia de la ventana (0,05) se fijó
+  antes de medir y está explicada en `asiento_casos.json`.
+- Quedan abiertos (nits): G-E5 no ata el STL que juzgó el gate al STEP que se entrega, y un `FILE_NAME(` escrito adentro
+  de un comentario confundiría al lector de la cabecera (teórico: OpenCASCADE 7.8 no escribe comentarios).
 
 ### Qué necesita de Fak, pieza por pieza
 

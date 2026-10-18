@@ -208,7 +208,19 @@ def declarado(nombre):
 
 
 COBERTURA_MIN_PCT = 40      # cad-3d.md GATE 3: un barrido de rayos con menos de ~40 % de impactos no es un resultado
+PUNTOS_MIN = 3              # Z y los dos giros: tres grados de libertad (Carr Lane 3-2-1). No es un umbral: es el minimo
+#                             mecanico, y va separado del maximo de casos_3d.json (revisor por API del 18/10: el maximo
+#                             hacia de minimo; con el maximo en 4 por el 4-2-1, tres apoyos habrian dado ROJO)
 _RANGO = {"ROJO": 3, "SIN DATO": 2, "AVISO": 1, "VERDE": 0}
+
+
+def fuera_de_la_grilla(malla, gr):
+    """% de los vértices de la pieza que caen afuera del rectángulo de la grilla."""
+    v = np.asarray(malla.vertices)
+    m = h = gr.paso / 2.0
+    adentro = ((v[:, 0] >= gr.xs[0] - m) & (v[:, 0] <= gr.xs[-1] + h) &
+               (v[:, 1] >= gr.ys[0] - m) & (v[:, 1] <= gr.ys[-1] + h))
+    return 100.0 * float((~adentro).mean()) if len(v) else 100.0
 
 
 def fila_apoyos(cx, malla, U):
@@ -229,30 +241,41 @@ def fila_apoyos(cx, malla, U):
                      for a in ap]
         r1 = dict(ev.a1_apoyos(elementos, U))
         motivos = [r1["motivo"]]
-        restr = sum(a["restricciones"] for a in ap)
-        r1["restricciones"] = restr
-        largos = [a for a in ap if a["restricciones"] > 1]
+        npt, sep, en_linea = A.puntos_de_apoyo(ap, info["largo_menor_pieza"], info["largo_frac"])
+        r1.update(puntos_de_apoyo=npt, separacion_de_la_linea_mm=sep, en_linea=en_linea)
+        rieles = [a for a in ap if a["tipo"] == "riel"]
+        sup_g = [a for a in ap if a["tipo"] == "superficie"]
         metidos = [a for a in ap if a["metido"]]
-        if info["pct_pieza_con_panel"] < COBERTURA_MIN_PCT:
+        fuera = fuera_de_la_grilla(malla, cx.grf)
+        info["pct_pieza_en_la_grilla"] = round(100.0 - fuera, 2)
+        if fuera > 0:
+            # la cobertura se mide con la PIEZA ENTERA, no solo con lo que cae adentro de la grilla (auditor, ronda 2,
+            # R2-I2: un apoyo afuera de la grilla no se veia y la cobertura daba 100 %)
+            r1["veredicto"] = "SIN DATO"
+            motivos = ["%.1f %% de la pieza queda afuera de la grilla de la escena: lo que apoya ahi no se ve" % fuera]
+        elif info["pct_pieza_con_panel"] < COBERTURA_MIN_PCT:
             r1["veredicto"] = "SIN DATO"
             motivos = ["solo %.0f %% de la pieza tiene panel enfrente (minimo %d %%): la pieza no esta en el frame de la "
-                       "escena o la grilla no la cubre" % (info["pct_pieza_con_panel"], COBERTURA_MIN_PCT)]
+                       "escena" % (info["pct_pieza_con_panel"], COBERTURA_MIN_PCT)]
         elif not ap:
             r1["veredicto"] = "SIN DATO"
             motivos = ["ninguna zona de la pieza toca el panel: no se pudo medir"]
         else:
-            if restr > U["apoyos_z_max"]:
+            if sup_g:
                 r1["veredicto"] = "ROJO"
-                motivos.append("%d restricciones en Z y los dos giros (sobran %d)" % (restr, restr - U["apoyos_z_max"]))
-            if any(a["restricciones"] == 3 for a in ap):
+                motivos.append("%d superficie(s) de apoyo grande(s): apoya en sus puntos mas altos, que cambian con la "
+                               "tolerancia (ficha-utillajes B2: apoyos chicos)" % len(sup_g))
+            if npt > U["apoyos_z_max"]:
                 r1["veredicto"] = "ROJO"
-                motivos.append("una superficie de apoyo grande (larga en x y en y): apoya en sus puntos mas altos, que "
-                               "cambian con la tolerancia (ficha-utillajes B2: apoyos chicos)")
-            if restr < U["apoyos_z_max"]:
+                motivos.append("%d puntos de apoyo para Z y los dos giros (sobran %d)%s" % (
+                    npt, npt - U["apoyos_z_max"], (", %d riel(es) cuentan por dos" % len(rieles)) if rieles else ""))
+            if npt < PUNTOS_MIN:
                 r1["veredicto"] = "ROJO"
-                motivos.append("%d restriccion(es): no alcanzan para Z y los dos giros, la pieza vuelca" % restr)
-            if largos and not any(a["restricciones"] == 3 for a in ap):
-                motivos.append("%d apoyo(s) largo(s) (cuentan por dos)" % len(largos))
+                motivos.append("%d punto(s) de apoyo: no alcanzan para Z y los dos giros, la pieza vuelca" % npt)
+            elif en_linea:
+                r1["veredicto"] = "ROJO"
+                motivos.append("los puntos de apoyo estan EN LINEA (se apartan %.1f mm de su recta): no controlan el giro "
+                               "alrededor de esa linea, la pieza vuelca" % sep)
             if metidos:
                 r1["veredicto"] = "ROJO"
                 motivos.append("%d metido(s) en el blando hasta %.2f mm: la pieza no puede asentar como se diseno"
@@ -295,51 +318,72 @@ def correr_sim(cx, malla, variante, mano, n, gemelo=False):
     return A.simular(cx.Hs, cx.Ht, T, cx.gr, e, cx.zp, cx.tap, ab, mano, n, e["sorteo"]["semilla"], gemelo=gemelo)
 
 
+def veredicto_asiento(variantes, U, escena):
+    """El juicio del asiento a partir de las simulaciones ya corridas: {variante: {"normal": s, "punta": sp o None}}.
+    Lo usan IGUAL `verificar` (fila_asiento) y `calibrar` (revisor por API del 18/10: la calibracion juzgaba solo con el
+    porcentaje y verificar ademas con la maxima, el plastico y la punta). Devuelve (veredicto, motivos)."""
+    malos, sin_dato = [], []
+    um = escena["sorteo"].get("hamaca_umbral_mm", 0.3)
+    for nom, r in variantes.items():
+        s = r.get("normal")
+        if not s or s.get("sin_dato") or s.get("casos_sin_reposo"):
+            sin_dato.append("%s: %s" % (nom, (s or {}).get("motivo") or "%d caso(s) sin reposo" % (s or {}).get("casos_sin_reposo", 0)))
+            continue
+        if s["pct_hamaca"] > U["hamaca_pct_max"]:
+            malos.append("%s: se hamaca > %s mm en %d de 100 (maximo %s)" % (nom, um, s["pct_hamaca"], U["hamaca_pct_max"]))
+        if s["hamaca_max_mm"] > U["hamaca_max_mm"]:
+            malos.append("%s: hamaca maxima %.2f mm (maximo %s)" % (nom, s["hamaca_max_mm"], U["hamaca_max_mm"]))
+        if s["pct_toca_plastico"] > 0:
+            malos.append("%s: toca plastico en %d de 100" % (nom, s["pct_toca_plastico"]))
+        p = r.get("punta")
+        if isinstance(p, dict) and p.get("veredicto") != "NO APLICA" and "hamaca_mediana_mm" in p:
+            if p["hamaca_mediana_mm"] > U["punta_mediana_max_mm"]:
+                malos.append("%s: apretando en la punta se mueve %.2f mm (maximo %s)" % (nom, p["hamaca_mediana_mm"],
+                                                                                        U["punta_mediana_max_mm"]))
+        elif isinstance(p, dict) and (p.get("sin_dato") or p.get("casos_sin_reposo")):
+            sin_dato.append("%s punta: %s" % (nom, p.get("motivo") or "casos sin reposo"))
+    if malos:
+        return "ROJO", malos
+    if sin_dato:
+        return "SIN DATO", sin_dato
+    return "VERDE", []
+
+
 def fila_asiento(cx, malla, U, n, poligonos, log=print):
     e = cx.e
     out = {"casos": n, "hipotesis": e["sorteo"].get("_", "")[:200], "variantes": {}}
-    malos = []
+    if n < e["sorteo"].get("casos_calibracion", n):
+        # con menos casos que la calibracion el porcentaje tiene mas ruido: se dice cuanto (revisor por API, 18/10)
+        out["ruido_pct"] = "con %d casos un porcentaje tiene +-%.0f puntos de ruido (un desvio, en el peor caso p = 50 %%); " \
+                           "cerca del umbral, correr con --casos-sim %d" % (n, 100 * (0.25 / n) ** 0.5,
+                                                                          e["sorteo"]["casos_calibracion"])
+    notas = []
     for v in e.get("variantes") or [{"nombre": "nominal"}]:
         t0 = time.time()
         s = correr_sim(cx, malla, v["nombre"], e["mano"], n)
-        log("  simulacion %s: se hamaca en %d de 100, maxima %.2f mm (%.0f s)"
-            % (v["nombre"], s["pct_hamaca"], s["hamaca_max_mm"], time.time() - t0))
+        log("  simulacion %s: %s (%.0f s)" % (v["nombre"], s.get("motivo") or "se hamaca en %d de 100, maxima %.2f mm"
+                                              % (s["pct_hamaca"], s["hamaca_max_mm"]), time.time() - t0))
         r = {"normal": s}
         mano_punta = getattr(cx, "mano_punta", None) or e.get("mano_punta")
         if mano_punta:
-            # se corre SIEMPRE; es «no aplica» solo si los puntos caen adentro de los apoyos que la simulacion ve (sin los
-            # metidos) Y la simulacion da casi cero (auditor del 17/10, I7). Un NO APLICA deja el renglon en AVISO.
+            # «no aplica» se decide por la GEOMETRIA: todos los puntos de la mano «punta» caen adentro de los apoyos que
+            # la simulacion ve (sin los metidos). No depende del resultado y no deja el renglon en AVISO (auditor, ronda
+            # 2, R2-I3: el AVISO dependia del numero y frenaba para siempre a una pieza con los apoyos en las puntas).
+            # Se simula igual y el numero queda escrito.
             sp = correr_sim(cx, malla, v["nombre"], mano_punta, n)
             pol = poligonos.get(v["nombre"])
             dentro = A.adentro_del_poligono(mano_punta, pol) if pol is not None and len(pol) else np.zeros(0, bool)
-            if len(dentro) and dentro.all() and sp["hamaca_mediana_mm"] <= 0.05:
+            if len(dentro) and dentro.all():
                 r["punta"] = dict(sp, veredicto="NO APLICA", motivo=(
-                    "todos los puntos de la mano 'punta' caen adentro de los apoyos y la simulacion da %.2f mm: no es la "
-                    "punta de la placa. La punta la decide la prueba fisica" % sp["hamaca_mediana_mm"]))
+                    "los puntos de la mano 'punta' de la escena caen adentro de los apoyos: no es la punta de esta placa "
+                    "(simulada igual: %s mm). Para medirla, declarar 'mano_punta' de la pieza en su borde; si no, la "
+                    "decide la prueba fisica" % sp.get("hamaca_mediana_mm")))
+                notas.append("%s: punta no aplica (la mano de la escena cae adentro de los apoyos)" % v["nombre"])
             else:
                 r["punta"] = sp
         out["variantes"][v["nombre"]] = r
-        if s["pct_hamaca"] > U["hamaca_pct_max"]:
-            malos.append("%s: se hamaca > %s mm en %d de 100 (maximo %s)" % (v["nombre"], e["sorteo"].get("hamaca_umbral_mm", 0.3),
-                                                                              s["pct_hamaca"], U["hamaca_pct_max"]))
-        if s["hamaca_max_mm"] > U["hamaca_max_mm"]:
-            malos.append("%s: hamaca maxima %.2f mm (maximo %s)" % (v["nombre"], s["hamaca_max_mm"], U["hamaca_max_mm"]))
-        if s["pct_toca_plastico"] > 0:
-            malos.append("%s: toca plastico en %d de 100" % (v["nombre"], s["pct_toca_plastico"]))
-        p = r.get("punta")
-        if isinstance(p, dict) and p.get("veredicto") != "NO APLICA" and p["hamaca_mediana_mm"] > U["punta_mediana_max_mm"]:
-            malos.append("%s: apretando en la punta se mueve %.2f mm (maximo %s)" % (v["nombre"], p["hamaca_mediana_mm"],
-                                                                                    U["punta_mediana_max_mm"]))
-    sin_punta = any(isinstance(r.get("punta"), dict) and r["punta"].get("veredicto") == "NO APLICA"
-                    for r in out["variantes"].values())
-    if malos:
-        out["veredicto"] = "ROJO"
-    elif sin_punta:
-        out["veredicto"] = "AVISO"
-        malos.append("dentro de los umbrales, pero la punta no se pudo medir con la simulacion: la decide la prueba fisica")
-    else:
-        out["veredicto"] = "VERDE"
-    out["motivo"] = "; ".join(malos) or "dentro de los umbrales"
+    out["veredicto"], motivos = veredicto_asiento(out["variantes"], U, e)
+    out["motivo"] = "; ".join(motivos + notas) or "dentro de los umbrales"
     return out
 
 
@@ -400,9 +444,13 @@ def imprimir(filas, nombre):
                 s = r["normal"]
                 p = r.get("punta")
                 pt = ("; punta %s" % p["veredicto"]) if isinstance(p, dict) and "veredicto" in p else (
-                    "; apretando en la punta se mueve %.2f mm" % p["hamaca_mediana_mm"] if p else "")
-                partes.append("%s: se hamaca en %d de 100, maxima %.2f mm%s" % (vn, s["pct_hamaca"], s["hamaca_max_mm"], pt))
-            txt = " | ".join(partes) + " — " + f["motivo"]
+                    "; apretando en la punta se mueve %.2f mm" % p["hamaca_mediana_mm"]
+                    if isinstance(p, dict) and "hamaca_mediana_mm" in p else "")
+                if s.get("sin_dato"):
+                    partes.append("%s: sin dato" % vn)
+                else:
+                    partes.append("%s: se hamaca en %d de 100, maxima %.2f mm%s" % (vn, s["pct_hamaca"], s["hamaca_max_mm"], pt))
+            txt = " | ".join(partes) + " — " + f["motivo"] + ((" (" + f["ruido_pct"] + ")") if f.get("ruido_pct") else "")
         if k == "gemelo" and "pct_hamaca" in f:
             txt = "espesor desparejo: se hamaca en %d de 100, maxima %.2f mm (informativo)" % (f["pct_hamaca"], f["hamaca_max_mm"])
         print("  %-13s %-11s %s" % (k, f["veredicto"], txt))
@@ -478,9 +526,11 @@ def calibrar(casos, nombre_escena, workdir_path, n=None, log=print):
                 if abs(sp["hamaca_mediana_mm"] - pub["punta_mediana_mm"]) > U["reproduccion_tol_mm"]:
                     dif.append("%s punta: %.2f mm contra %.2f publicado" % (nom, sp["hamaca_mediana_mm"], pub["punta_mediana_mm"]))
         # los veredictos esperados de los casos conocidos
+        # el asiento se juzga con la MISMA funcion que en verificar (revisor por API del 18/10)
+        vars_cal = {k: {"normal": s, "punta": r["sim"].get(k + "_punta")} for k, s in r["sim"].items()
+                    if not k.startswith("gemelo") and not k.endswith("_punta")}
         ver = {"apoyos": r["apoyos"]["veredicto"], "ventana": r["ventana"]["veredicto"],
-               "asiento": "ROJO" if any(s["pct_hamaca"] > U["hamaca_pct_max"] for k, s in r["sim"].items()
-                                        if not k.startswith("gemelo") and not k.endswith("_punta")) else "VERDE"}
+               "asiento": veredicto_asiento(vars_cal, U, e)[0]}
         for k, esp in (P.get("esperado") or {}).items():
             if k in ver and ver[k] != esp:
                 dif.append("%s %s: dio %s, se esperaba %s" % (nom, k, ver[k], esp))
@@ -602,7 +652,8 @@ def verificar(casos, nombre_escena, pieza, stl, etiqueta_cli, workdir_path, n, s
         return USO
     vt = veredicto_total(filas)
     aviso = modo.get("modo") == "aviso"
-    log("\n%s%s" % (vt, (" — modo AVISO hasta el %s: export_deliverables y gate_entregable lo informan, no frenan"
+    log("\n%s%s" % (vt, (" — modo AVISO hasta el %s: gate_entregable lo informa (G-E5, tambien cuando corre desde "
+                         "export_deliverables --final) y no frena"
                          % modo.get("revisar")) if aviso else ""))
     wd.record_evidence(w, "asiento", corre=True, etiqueta=et, origen=de, escena=nombre_escena, pieza=pieza,
                        pieza_archivo=os.path.abspath(stl), pieza_firma=wd.file_signature(stl), casos=nc,

@@ -373,8 +373,19 @@ def main():
             # entrega (conservando su fecha, por G-E2) y se vuelve a LEER: se verifica el archivo que se entrega.
             if f.lower().endswith((".step", ".stp")):
                 dst = os.path.join(args.deliver, os.path.basename(f))
-                cambio, orden = step_cabecera.arreglar_archivo(dst)
-                if step_cabecera.orden_de_archivo(dst) != step_cabecera.CLAVES:
+                # si la cabecera no se puede leer o arreglar (le falta una entidad o HEADER;), la entrega SIGUE con un
+                # aviso, como antes de este paso (revisor por API del 18/10: abortaba con un traceback)
+                try:
+                    cambio, orden = step_cabecera.arreglar_archivo(dst)
+                except (OSError, ValueError) as e:
+                    print("  AVISO cabecera STEP de %s: no se pudo arreglar (%s); se entrega como estaba"
+                          % (os.path.basename(f), e))
+                    cambio, orden = False, None
+                o = step_cabecera.orden_de_archivo(dst)
+                if o is None:
+                    print("  AVISO cabecera STEP de %s: no se encontro una cabecera completa para revisar"
+                          % os.path.basename(f))
+                elif o != step_cabecera.CLAVES:
                     raise SystemExit("[GATE cabecera STEP] %s quedo con la cabecera fuera de orden" % dst)
                 if cambio:
                     print("  cabecera STEP de %s reordenada (tenia %s; ISO 10303-21)"

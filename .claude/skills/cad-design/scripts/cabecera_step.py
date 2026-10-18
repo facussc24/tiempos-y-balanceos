@@ -57,10 +57,26 @@ def revisar(rutas):
     return 1 if n["al reves"] else 0
 
 
-def arreglar(rutas):
+def arreglar(rutas, ok_fak=None):
+    """Reordena en el lugar. NO toca un archivo que está solo en la nube (abrirlo lo descarga) ni uno de la nube de
+    Ingeniería u otra carpeta de OneDrive (es un entregable) sin `--ok-fak "<la frase de Fak, con fecha>"` (revisor por
+    API del 18/10: el docstring prometía el OK y el código no lo pedía)."""
     mal = 0
     for p in rutas:
-        cambio, orden = sc.arreglar_archivo(p)
+        if sc.solo_en_la_nube(p):
+            print("  NO       %s: esta solo en la nube (abrirlo lo descarga); se baja a pedido de Fak" % p)
+            mal += 1
+            continue
+        if sc.en_la_nube(p) and not ok_fak:
+            print("  NO       %s: esta en la nube y es un entregable; reemplazarlo pide --ok-fak \"<frase de Fak>\"" % p)
+            mal += 1
+            continue
+        try:
+            cambio, orden = sc.arreglar_archivo(p)
+        except (OSError, ValueError) as e:
+            print("  ERROR    %s: %s" % (p, e))
+            mal += 1
+            continue
         print("  %s %s%s" % ("ARREGLADO" if cambio else "ya estaba", p,
                              (" (tenia %s)" % ", ".join(orden)) if cambio else ""))
         if sc.orden_de_archivo(p) != sc.CLAVES:
@@ -75,8 +91,10 @@ def main(argv=None):
     r.add_argument("rutas", nargs="+")
     a_ = sub.add_parser("arreglar")
     a_.add_argument("rutas", nargs="+")
+    a_.add_argument("--ok-fak", default=None, metavar="FRASE",
+                    help="la frase de Fak, con fecha, que autoriza reemplazar un STEP que esta en la nube")
     a = ap.parse_args(argv)
-    return revisar(a.rutas) if a.cmd == "revisar" else arreglar(a.rutas)
+    return revisar(a.rutas) if a.cmd == "revisar" else arreglar(a.rutas, a.ok_fak)
 
 
 if __name__ == "__main__":

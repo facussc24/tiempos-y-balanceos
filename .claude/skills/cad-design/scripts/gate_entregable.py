@@ -83,8 +83,9 @@ def _texto_ok(c, v):
         return False
     ph = c.get("placeholders", {})
     t = v.strip()
-    # relleno que no dice nada (auditor del 17/10, N1): menos de 3 letras o numeros, o un «pendiente» / «a definir»
-    if sum(ch.isalnum() for ch in t) < 3 and not any(ch.isdigit() for ch in t):
+    # relleno que no dice nada (auditor del 17/10, N1): menos de 2 letras o numeros, o un «pendiente» / «a definir».
+    # Con 2 pasan «sí», «no» y «OK», que pueden ser una respuesta (ronda 2, N-b)
+    if sum(ch.isalnum() for ch in t) < 2 and not any(ch.isdigit() for ch in t):
         return False
     if t.lower().strip(".") in ("pendiente", "a definir", "por definir", "n/a", "na", "tbd", "xxx", "ver", "idem"):
         return False

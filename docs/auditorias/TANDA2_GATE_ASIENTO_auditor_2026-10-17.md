@@ -62,7 +62,7 @@ Lo que está bien, verificado corriendo:
   5. Informar el % de la grilla con pieza enfrente; por debajo de un mínimo, SIN DATO.
   6. El test tiene que mantener v14 = 7, v15 = 4 y v16 = 4, también con la v16 bajada 0,10 mm.
   7. Cambia `asiento.py`: cambia la firma y hay que recalibrar entero (150 casos, unos 20 min).
-- respuesta: ARREGLADO (ronda 1). La luz base es la más chica de las zonas no metidas y el corte es base + 0,10; las metidas se cuentan siempre; menos de tres restricciones da ROJO (vuelca); 0 zonas o menos del 40 % de la pieza con panel enfrente dan SIN DATO; se informa la cobertura. Medido: v14 7, v15 4, v16 4, también alejadas 0,06 y 0,10 mm (antes 0 y VERDE). Casos en `test_gate_asiento.py` 2b (cuatro apoyos 0,11 más lejos: ROJO; pieza fuera del frame: SIN DATO). Recalibrado.
+- respuesta: ____
 
 **I2 · [Importante] TRUE BUG + TEXTO — el inventario cuenta regiones que se tocan, no qué movimiento controla cada una.**
 `cadlib/asiento.py:184` (`ndimage.label` con 8 vecinos sobre la grilla de 0,25 mm).
@@ -94,7 +94,7 @@ Lo que está bien, verificado corriendo:
   2. O, más simple: que el renglón cuente «puntos extremos de la huella de contacto» en vez de componentes.
   3. Caso ROJO del nervio y de los rieles en `test_gate_asiento.py`.
   4. Corregir el texto de `cad-3d.md` y `SKILL.md` a lo que mide.
-- respuesta: ARREGLADO (ronda 1). Cada zona dice qué controla: Z y, si su huella mide un cuarto del largo de la pieza o más en x o en y, el giro correspondiente; las restricciones se suman y Z más los dos giros necesitan tres; una zona larga en las dos direcciones es una superficie grande y da ROJO. El 0,25 se fijó contra los casos (deja v14 = 7, v15 = 4, v16 = 4). Casos ROJO en el test: dos rieles, placa entera, nervio de luz 0,09, dos apoyos. Textos de SKILL.md y cad-3d.md corregidos a lo que mide.
+- respuesta: ____
 
 **I3 · [Importante] TRUE BUG — la activación falla abierta: «rígido» en el pliego o en `--etiqueta` apaga el gate sobre una escena declarada blanda, y sin ninguna de las dos etiquetas G-E5 calla.**
 `gate_asiento.py:146-159` (orden: `--etiqueta`, después el pliego, después la escena) y `473-479`.
@@ -113,7 +113,7 @@ Lo que está bien, verificado corriendo:
      coinciden».
   2. En `gate_entregable.py`, G-E5 avisa cuando el pliego no declara ninguna de las dos etiquetas.
   3. Dar vuelta el caso del test: rígido contra una escena blanda da 2.
-- respuesta: ARREGLADO (ronda 1). `etiqueta_de` junta las tres fuentes (--etiqueta, pliego, escena) y si no coinciden devuelve el conflicto: `verificar` sale con código 2 sin elegir; un pliego con las dos etiquetas también. G-E5 avisa si el pliego no declara ninguna de las dos, si no hay pliego o si el workdir no tiene manifest. El caso del test se dio vuelta (rígido contra escena blanda: 2) y se sumaron los de --etiqueta y de G-E5.
+- respuesta: ____
 
 **I4 · [Importante] TRUE BUG — G-E5 acepta la última evidencia de asiento sin mirar si habla de la pieza que se entrega.**
 `gate_entregable.py:313` (`find_evidence(workdir_path, "asiento", corre=True)`, sin `check_signature`).
@@ -124,7 +124,7 @@ Lo que está bien, verificado corriendo:
 - `SKILL.md` («G-E5 … corrió el GATE A y dio VERDE») promete más de lo que el código mira.
 - Arreglo propuesto: `workdir.check_signature(ea, "pieza_firma", ea["pieza_archivo"])`. Si no coincide, o el archivo
   no existe: el mismo aviso (o rojo, en modo freno). Más un caso en `test_gate_entregable_tanda2.py`.
-- respuesta: ARREGLADO (ronda 1). G-E5 coteja `pieza_firma` contra `pieza_archivo` con `workdir.check_signature`; retocada, borrada o sin archivo en la evidencia: aviso (rojo en modo freno). Caso en `test_gate_entregable_tanda2.py`.
+- respuesta: ____
 
 **I5 · [Importante] ROBUSTNESS — el candado de calibración firma solo dos archivos: la escena, los umbrales y lo que decide el veredicto pueden cambiar sin recalibrar.**
 `cadlib/asiento.py:399-405` (firma de `asiento.py` y `gate_asiento.py`) y `gate_asiento.py:446-455`.
@@ -142,7 +142,7 @@ Lo que está bien, verificado corriendo:
   2. Que `verificar` la compare cuando usa esa escena, y para otra escena exija al menos la firma de los umbrales y de
      `eval_casos_3d.py`.
   3. Un caso en el test que cambie un número de la escena y espere código 3.
-- respuesta: ARREGLADO (ronda 1). La firma de las cuentas cubre `cadlib/asiento.py`, `gate_asiento.py`, `eval_casos_3d.py` y los umbrales de `casos_3d.json`; el registro guarda además la firma de la escena (sin las notas `_`) y la del panel, y `verificar` las compara sobre la escena calibrada (otra escena: se juzga con las cuentas calibradas y se dice). Casos en el test (un número de la escena cambiado, otro panel: no vigente).
+- respuesta: ____
 
 **I6 · [Importante] TRUE BUG (latente) — la «peor» variante se elige por cantidad de apoyos, no por veredicto.**
 `gate_asiento.py:226-227` (`if peor is None or r1["apoyos_z"] > ...`), y `evaluar` informa solo `pv[peor]["A1"]`.
@@ -154,7 +154,7 @@ Lo que está bien, verificado corriendo:
   con variantes que no se contienen esconde el ROJO.
 - Arreglo propuesto: elegir la variante con el peor veredicto (ROJO antes que VERDE) y, entre iguales, la de más
   apoyos. O informar el A1 de cada variante y que el total tome el peor.
-- respuesta: ARREGLADO (ronda 1). La peor variante se elige por veredicto (ROJO > SIN DATO > AVISO > VERDE) y, entre iguales, por cantidad de apoyos. Caso de dos variantes disjuntas con un metido en el test.
+- respuesta: ____
 
 **I7 · [Importante] ROBUSTNESS — «punta NO APLICA» se decide con el polígono de TODAS las celdas de apoyo, y en la v14 tapa 5,9 mm que la simulación sí mide; además NO APLICA no pesa en el total.**
 `gate_asiento.py:261-267`, `cadlib/asiento.py:159-168`, y `veredicto_total` (`gate_asiento.py:317-324`), que no mira la
@@ -175,7 +175,7 @@ punta.
   2. Correr la simulación igual y declarar NO APLICA solo si da cerca de 0.
   3. Que NO APLICA haga del total un AVISO (no VERDE).
   4. Permitir `mano_punta` por pieza, como `esquinas`.
-- respuesta: ARREGLADO (ronda 1). El polígono se arma solo con los apoyos que la simulación ve y que no están metidos; la punta se simula siempre y es NO APLICA solo si además da 0,05 mm o menos; un NO APLICA deja el renglón de asiento en AVISO y el total no da VERDE. `mano_punta` puede ir por pieza, como `esquinas`.
+- respuesta: ____
 
 **I8 · [Importante] TEXTO (REVIEW.md punto 10) — se cambió una regla y nadie dice si las sesiones abiertas la toman.**
 `.claude/rules/cad-3d.md` (renglón del GATE A en PRE-ENTREGA, la Elegoo / A2L y la cabecera STEP).
@@ -185,7 +185,7 @@ punta.
 - Arreglo propuesto: un renglón en el mensaje de fusión o en el cierre de la madre. No es código.
 - Actualización a las 23:55: el árbol tiene un cambio SIN COMMITEAR en el plan, guardado a las 23:52 y que no es mío
   («Qué necesita de Fak, pieza por pieza»). Agrega ese renglón. Con el commit, I8 queda resuelto.
-- respuesta: RESUELTO en el plan (sección «Qué necesita de Fak, pieza por pieza»: las sesiones no ven nada hasta que la madre funda la rama; después la regla entra al tocar un archivo 3D y la sesión que ya la cargó sigue con la vieja hasta reabrirse). El cambio sin commitear del plan era de la propia hija: va en el commit de la ronda 1.
+- respuesta: ____
 
 ## Hallazgos Nit y Preexistente
 
@@ -198,7 +198,7 @@ punta.
   - Hay precedente en la casa: `minCaracteresComo` 25 del pliego.
   - Arreglo: un largo mínimo y una lista de literales («?», «-», «x», «pendiente», «a definir», «N/A»), con su caso en
     el test. Pesa el 24/10, si pasa a freno.
-  - respuesta: ARREGLADO (ronda 1). `_texto_ok` rechaza menos de 3 letras o números (salvo que traiga un número) y «pendiente», «a definir», «n/a», «tbd» y parecidos. Los tres casos del informe avisan en el test.
+  - respuesta: ____
 - **N2 · [Nit] ROBUSTNESS + TEXTO — `cabecera_en_orden` reescribe la cabecera entera.**
   - Lugar: `cadlib/step_cabecera.py:21-33`. La expresión regular es la de `catia_medir.py`, que ya existía; lo nuevo es
     usarla con los entregables.
@@ -215,27 +215,27 @@ punta.
     escribe en orden. El STEP de `test_gates_entrega` salió en orden.
   - Arreglo: intercambiar las tres entidades en su lugar y dejar el resto de la cabecera intacto. Comparar el texto de
     las tres antes y después. Un caso con `);` adentro de un texto.
-  - respuesta: ARREGLADO (ronda 1). `cabecera_en_orden` intercambia las tres entidades EN SU LUGAR con un lector que respeta comillas y paréntesis; comentarios, FILE_POPULATION y finales de línea quedan como estaban, y compara el texto de las tres antes y después. Casos en `test_step_cabecera.py` (comentario + FILE_POPULATION + CRLF, y «);» adentro de un texto).
+  - respuesta: ____
 - **N3 · [Nit] ROBUSTNESS — `calibrar --casos-sim N` pisa el registro commiteado.**
   - Lugar: `gate_asiento.py:436-437`.
   - Qué pasa: con menos de 150 casos no puede reproducir (el 68 % no sale con 20), así que escribe `reproduce: false`
     en `data/asiento_calibracion.json`. Deja el gate en código 3 y un archivo del repo modificado.
   - Es por diseño seguro (falla cerrado), pero una prueba rápida no debería escribir el registro.
   - Arreglo: escribir el registro solo con los casos de la escena, o con `--registrar`.
-  - respuesta: ARREGLADO (ronda 1). `calibrar` con otra cantidad de casos que la de la escena corre y dice si reproduce, pero NO escribe el registro.
+  - respuesta: ____
 - Y 4 nits más, sin detalle:
   - `os.utime` con flotantes pierde 100 ns (inofensivo para G-E2, que tolera 1 s);
   - `gate_proceso.py plantilla` acepta `apoya-sobre-blando,apoya-sobre-rigido` juntas;
   - el `esperado` de la v16 en `asiento_casos.json` no lo compara nada;
   - el test de fijaciones no prueba que `--tuerca-baja` deje el motivo en el `_datos.json`.
 - **P1 · [Preexistente]** `test_gates_entrega.py:4`: `SyntaxWarning: invalid escape sequence '\S'`, igual en `main`.
-  - respuesta: No se toca: es de `main` (tanda anterior) y no de esta rama.
+  - respuesta: ____
 - **P2 · [Preexistente] FALSE POSITIVE del detector** — `python scripts/_sinFirmaIA.py docs/PLAN_3D_GATE_ASIENTO_2026-10-16.md`
   marca BLOQUEANTE por la ruta `.claude/skills/...` de la parte de arriba (escrita antes de la hija).
   - Lo mismo pasa en `main` con `docs/PLAN_3D_A_FONDO_2026-10-17.md`.
   - Es un plan interno, no un documento de Barack. Ningún archivo de la rama lleva «Claude» en el nombre. Los JSON
     nuevos, la ficha y el banco dan 0.
-  - respuesta: Coincido: falso positivo del detector sobre un plan interno que nombra rutas `.claude/`; no se toca acá.
+  - respuesta: ____
 
 ## Lo que se miró y está bien (sin hallazgo)
 

@@ -119,6 +119,33 @@ peor, pv = G.fila_apoyos(cxv, pieza(TRES, extra=[m70]), U)
 chequear(pv[peor]["A1"]["veredicto"] == "ROJO" and peor == "abre_R2",
          "dos variantes que abren zonas distintas: se informa la del ROJO (%s), no la VERDE" % peor)
 
+print("2c. revisor por API (18/10) y ronda 2 del auditor: geometria de los apoyos y cobertura")
+linea = [(15, 20), (50, 20), (85, 20)]
+peor, pv = G.fila_apoyos(cx, pieza(linea), U)
+chequear(pv[peor]["A1"]["veredicto"] == "ROJO" and pv[peor]["A1"]["en_linea"],
+         "tres apoyos chicos EN LINEA: ROJO aunque sean tres (vuelca) — %s" % pv[peor]["A1"]["motivo"][-90:])
+peor, pv = G.fila_apoyos(cx, pieza(TRES), U)
+chequear(pv[peor]["A1"]["veredicto"] == "VERDE" and pv[peor]["A1"]["puntos_de_apoyo"] == 3 and not pv[peor]["A1"]["en_linea"],
+         "tres apoyos que controlan tres movimientos distintos (triangulo): VERDE")
+riel = caja(10, 90, 6, 10, -5.0, -0.05)
+peor, pv = G.fila_apoyos(cx, pieza([(50, 32)], extra=[riel]), U)
+chequear(pv[peor]["A1"]["veredicto"] == "VERDE" and pv[peor]["A1"]["puntos_de_apoyo"] == 3,
+         "un riel y un apoyo afuera de su eje: tres puntos que no estan en linea, VERDE")
+peor, pv = G.fila_apoyos(cx, pieza([(95 - 3, 8)], extra=[caja(10, 80, 6, 10, -5.0, -0.05)]), U)
+chequear(pv[peor]["A1"]["veredicto"] == "ROJO", "un riel y un apoyo SOBRE su eje: en linea, ROJO")
+peor, pv = G.fila_apoyos(cx, pieza([(50, 20)], extra=rieles), U)
+chequear(pv[peor]["A1"]["veredicto"] == "ROJO", "dos rieles y un apoyo: cinco puntos, ROJO")
+diag = trimesh.creation.box(extents=[70, 4, 4.95])
+diag.apply_transform(trimesh.transformations.rotation_matrix(np.radians(20), [0, 0, 1]))
+diag.apply_translation([50, 20, -2.525])
+peor, pv = G.fila_apoyos(cx, pieza([(15, 32)], extra=[diag]), U)
+tipos = sorted(a["tipo"] for a in pv[peor]["apoyos"])
+chequear("superficie" not in tipos and "riel" in tipos, "un riel en DIAGONAL se mide como riel, no como superficie (%s)" % tipos)
+afuera = pieza(TRES, extra=[caja(96, 104, 18, 22, -5.0, -0.05)])
+peor, pv = G.fila_apoyos(cx, afuera, U)
+chequear(pv[peor]["A1"]["veredicto"] == "SIN DATO", "un apoyo que cae afuera de la grilla: SIN DATO, no VERDE (ronda 2, R2-I2)")
+chequear(G.PUNTOS_MIN == 3 and U["apoyos_z_max"] == 3, "el minimo (3, mecanico) va separado del maximo de casos_3d.json")
+
 print("3. simulacion apretando")
 f = G.fila_asiento(cx, pieza(TRES), U, 20, {"nominal": np.array(TRES, float)}, log=lambda *a: None)
 chequear(f["veredicto"] == "VERDE", "tres apoyos con la mano adentro: no se hamaca (%s)" % f["motivo"])
@@ -131,10 +158,22 @@ chequear(f["veredicto"] == "ROJO", "cuatro apoyos con uno sobre una meseta mas l
 esc_p = dict(ESCENA, mano_punta=[[30, 20], [70, 20]])
 cxp = G.Contexto(esc_p, None, mallas=(PLAST, BLANDO))
 f = G.fila_asiento(cxp, pieza(CUATRO), U, 5, {"nominal": np.array(CUATRO, float)}, log=lambda *a: None)
-chequear(f["variantes"]["nominal"]["punta"].get("veredicto") == "NO APLICA" and f["veredicto"] == "AVISO",
-         "la mano 'punta' adentro del poligono de apoyos y la simulacion en 0: NO APLICA y el renglon queda en AVISO, no VERDE")
-chequear(G.veredicto_total({"apoyos": {"veredicto": "VERDE"}, "ventana": {"veredicto": "VERDE"}, "asiento": f}) == "AVISO",
-         "con la punta sin medir el total no es VERDE")
+chequear(f["variantes"]["nominal"]["punta"].get("veredicto") == "NO APLICA" and f["veredicto"] == "VERDE"
+         and "punta no aplica" in f["motivo"] and "hamaca_mediana_mm" in f["variantes"]["nominal"]["punta"],
+         "la mano 'punta' adentro de los apoyos: NO APLICA por la GEOMETRIA, simulada igual, dicho en el motivo y sin AVISO "
+         "(auditor ronda 2, R2-I3)")
+cxm2 = G.Contexto(esc_p, None, mallas=(PLAST, BLANDO_M))
+cxm2.Ht[(cxm2.gr.XY[:, 0] - 85) ** 2 + (cxm2.gr.XY[:, 1] - 32) ** 2 <= 25] = 0.4
+f2 = G.fila_asiento(cxm2, pieza(CUATRO), U, 5, {"nominal": np.array(CUATRO, float)}, log=lambda *a: None)
+chequear(f2["variantes"]["nominal"]["punta"].get("veredicto") == "NO APLICA",
+         "los mismos apoyos sobre dos mesetas: NO APLICA igual (ya no depende de que la simulacion de cero)")
+sd = G.veredicto_asiento({"x": {"normal": {"sin_dato": True, "motivo": "sin reposo"}}}, U, ESCENA)
+chequear(sd[0] == "SIN DATO", "una simulacion sin reposo en ningun caso: SIN DATO, no revienta (revisor por API, punto 4)")
+gr0 = A.Grilla([0, 10], [0, 4], 1.0, 0.137)
+S0 = A.simular(np.full(len(gr0.XY), np.nan), np.full(len(gr0.XY), np.nan), np.full(len(gr0.XY), -5.0), gr0,
+               dict(ESCENA, centro=[5, 2], esquinas=[[0, 0], [10, 4]]), np.zeros(len(gr0.XY), bool),
+               np.zeros(len(gr0.XY), bool), np.zeros(len(gr0.XY), bool), [[5, 2]], 2, 7)
+chequear(S0.get("sin_dato") is True or "pct_hamaca" in S0, "simular sin panel enfrente no revienta (%s)" % sorted(S0)[:3])
 
 print("4. ventana")
 pared = trimesh.util.concatenate([caja(-2, 2, 4.0, 5.0, -10.0, -6.0), caja(-2, 2, 4.0, 4.6, -6.0, -5.0)])
@@ -202,9 +241,18 @@ if not os.path.isdir(r"C:\Dev\_utrim"):
     print("   (no esta C:\\Dev\\_utrim en esta PC: se saltea)")
 else:
     if "--completo" in sys.argv:
-        with tempfile.TemporaryDirectory():
-            rc = G.calibrar(casos, "upper_trim_two", r"C:\Dev\_utrim\gate_asiento")
-        chequear(rc == 0, "calibrar corre entero y reproduce")
+        # la calibracion entera escribe su registro en un TEMPORAL: no pisa el commiteado (revisor por API, punto 5)
+        with tempfile.TemporaryDirectory() as td:
+            viejo = G.CALIB
+            G.CALIB = os.path.join(td, "asiento_calibracion.json")
+            try:
+                rc = G.calibrar(casos, "upper_trim_two", r"C:\Dev\_utrim\gate_asiento")
+                nuevo = G._json(G.CALIB) if os.path.isfile(G.CALIB) else {}
+            finally:
+                G.CALIB = viejo
+        chequear(rc == 0 and nuevo.get("reproduce"), "calibrar corre entero (150 casos) y REPRODUCE, simulado hoy")
+    else:
+        print("   (sin --completo: lo de abajo se LEE de la calibracion guardada, no se vuelve a simular)")
     ok, msg = G.calibracion_vigente()
     chequear(ok, "la calibracion commiteada es de esta version de las cuentas: %s" % msg)
     c = G._json(G.CALIB)

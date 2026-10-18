@@ -15,7 +15,17 @@ import os
 import re
 
 CLAVES = ("FILE_DESCRIPTION", "FILE_NAME", "FILE_SCHEMA")
-_SOLO_NUBE = 0x400000 | 0x1000          # FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS | FILE_ATTRIBUTE_OFFLINE
+# FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS | FILE_ATTRIBUTE_RECALL_ON_OPEN | FILE_ATTRIBUTE_OFFLINE (el segundo lo sumo el
+# revisor por API del 18/10)
+_SOLO_NUBE = 0x400000 | 0x40000 | 0x1000
+_NUBE = ("BARACK ARGENTINA SRL", "ONEDRIVE")           # la biblioteca de Ingenieria y la nube personal
+
+
+def en_la_nube(path):
+    """True si el archivo vive en una carpeta de OneDrive (la biblioteca de Ingenieria o la nube personal): ahi un STEP
+    es un entregable y reemplazarlo pide el OK de Fak (plan del sistema, tanda 2, punto 5)."""
+    p = os.path.abspath(path).upper()
+    return any(n in p for n in _NUBE)
 
 
 def _fin_de_entidad(cab, ini):
@@ -86,11 +96,19 @@ def solo_en_la_nube(path):
         return False
 
 
-def orden_de_archivo(path, leer=20000):
-    """El orden de las tres entidades en la cabecera del archivo, leyendo solo el principio; None si no se puede leer
-    una cabecera (no es un STEP, o le falta alguna)."""
+def orden_de_archivo(path, leer=2_000_000):
+    """El orden de las tres entidades en la cabecera del archivo, leyendo hasta el ENDSEC de la cabecera (como mucho
+    `leer` bytes); None si no se puede leer una cabecera (no es un STEP, o le falta alguna). Antes leía 20.000 bytes y
+    una cabecera más larga daba None (revisor por API del 18/10)."""
+    t = ""
     with open(path, "rb") as f:
-        t = f.read(leer).decode("latin-1")
+        while len(t) < leer:
+            trozo = f.read(65536)
+            if not trozo:
+                break
+            t += trozo.decode("latin-1")
+            if "ENDSEC;" in t:
+                break
     if "HEADER;" not in t or "ENDSEC;" not in t:
         return None
     cab = t[t.index("HEADER;"):t.index("ENDSEC;")]

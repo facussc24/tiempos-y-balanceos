@@ -62,6 +62,24 @@ with tempfile.TemporaryDirectory() as td:
     chequear("FILE_NAME('pieza);v2','2026',('A'),('B'),'OC 7.8','OC','U');" in cab
              and cab.index("FILE_DESCRIPTION") < cab.index("FILE_NAME") < cab.index("FILE_SCHEMA"),
              "un «);» adentro de un texto no corta la entidad y el orden queda ISO")
+    # revisor por API del 18/10: cabecera larga, carpeta de la nube y cabecera rota
+    larga = os.path.join(td, "larga.step")
+    with open(larga, "wb") as f:
+        f.write(OCC.replace("FILE_DESCRIPTION(('Open CASCADE Model')", "FILE_DESCRIPTION(('" + "x" * 30000 + "')")
+                .encode("latin-1"))
+    chequear(sc.orden_de_archivo(larga) == ("FILE_NAME", "FILE_DESCRIPTION", "FILE_SCHEMA"),
+             "una cabecera de mas de 20.000 bytes se lee entera (antes daba None)")
+    nube = os.path.join(td, "OneDrive - prueba")
+    os.makedirs(nube)
+    pn = os.path.join(nube, "entregado.step")
+    open(pn, "wb").write(OCC.encode("latin-1"))
+    chequear(cabecera_step.arreglar([pn]) == 1 and sc.orden_de_archivo(pn)[0] == "FILE_NAME",
+             "arreglar no reemplaza un STEP de una carpeta de OneDrive sin --ok-fak")
+    chequear(cabecera_step.arreglar([pn], ok_fak="Fak 18/10: dale") == 0 and sc.orden_de_archivo(pn) == sc.CLAVES,
+             "con la frase de Fak, si")
+    rota = os.path.join(td, "rota.step")
+    open(rota, "w").write("ISO-10303-21;\nHEADER;\nFILE_NAME('x');\nENDSEC;\n")
+    chequear(cabecera_step.arreglar([rota]) == 1, "una cabecera rota da ERROR en el renglon, sin reventar")
     try:
         sc.cabecera_en_orden(OCC.replace("FILE_SCHEMA", "FILE_XXX"))
         chequear(False, "una cabecera sin FILE_SCHEMA tiene que frenar")

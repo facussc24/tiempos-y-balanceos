@@ -11,4 +11,6 @@ criteria: |
 focus: last_message
 ---
 
+Fuentes de los datos del prompt: «una inclinada 0,78 grados» = `C:/Dev/_utrim/params_v10.json`, `nido._z_cara_solido` («La cara de y<0 es un PLANO INCLINADO 0,78 grados»); «oreja a 0,25 mm del tapizado» = `data/casos_3d.json`, v15 `_fuente` («orejas de las puntas como tope antivuelco a 0,25 bajo el tapizado»); ventana 1,19 / 0,75 = `params_v10.json` `_v15`.
+
 Respuesta conocida. Virolador v15 del Upper Trim (13/10/2026, no impresa): simulacion de asiento, 150 casos, semilla 7: se hamaca mas de 0,3 mm en 28 de cada 100 casos, y apretando en la punta de la placa se mueve 1,69 mm (mediana). El gate de asiento (gate_asiento.py, tanda 2, 17/10) la da ROJO en apoyos (cuatro bloques) y en asiento, VERDE en ventana (1,21 / 0,75). Reglas: ficha-utillajes.md U2, U7, U8, B2, B3.

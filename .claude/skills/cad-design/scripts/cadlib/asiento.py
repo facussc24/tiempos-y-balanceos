@@ -181,11 +181,14 @@ def inventario(H, T, gr, delta=0.10, metido=-0.02, largo_frac=0.25):
       zonas que no están metidas (auditor del 17/10, I1: con una luz absoluta, una pieza diseñada 0,11 mm más lejos daba
       «0 apoyos» y VERDE). Una zona con luz NEGATIVA está metida en el blando y se cuenta siempre: la pieza no puede
       asentar como se diseñó (la firma de los pasadores de la v14).
-    - Cada zona controla Z; si su huella es larga en x (al menos `largo_frac` del largo de la pieza) controla además el
-      giro alrededor de y, y si es larga en y, el giro alrededor de x (auditor, I2: dos rieles o una placa entera
-      contaban como uno o dos apoyos y daban VERDE). `restricciones` es la suma: Z y los dos giros necesitan tres.
-      El 0,25 se fijó contra los casos el 17/10: deja la v14 en 7, la v15 en 4 y la v16 en 4, y da ROJO a dos rieles,
-      a una placa entera y a cuatro apoyos unidos por un nervio.
+    - Cada zona se mira por su EJE PRINCIPAL (componentes principales de su huella, así un riel en diagonal se mide
+      bien): si su largo es menos de `largo_frac` del largo mayor de la pieza es un PUNTO de apoyo; si llega, es un RIEL
+      y apoya en sus dos extremos (dos puntos); si además su ancho llega a `largo_frac` del largo menor de la pieza es
+      una SUPERFICIE grande (auditor, I2 y ronda 2; revisor por API del 18/10: dos rieles o una placa entera contaban
+      como uno o dos apoyos). Con esos puntos, `puntos_de_apoyo()` mira la geometría.
+      **`largo_frac` = 0,25 y `metido` = -0,02 se fijaron contra los casos conocidos el 17/10, sin fuente externa (no hay
+      guía publicada para apoyar sobre blando): a revisar con una pieza nueva.** Dejan la v14 en 7 zonas, la v15 en 4 y la
+      v16 en 4, también alejadas 0,10 mm, y dan ROJO a dos rieles, a una placa entera y a un nervio que une los apoyos.
     Devuelve (apoyos, luz, info)."""
     from scipy import ndimage
     gap = H - T
@@ -202,26 +205,56 @@ def inventario(H, T, gr, delta=0.10, metido=-0.02, largo_frac=0.25):
     pie = gr.XY[np.isfinite(T)]
     Lx = float(np.ptp(pie[:, 0])) if len(pie) else 0.0
     Ly = float(np.ptp(pie[:, 1])) if len(pie) else 0.0
-    info.update(largo_pieza_x=round(Lx, 1), largo_pieza_y=round(Ly, 1))
+    Lmax, Lmin = max(Lx, Ly), min(Lx, Ly)
+    info.update(largo_pieza_x=round(Lx, 1), largo_pieza_y=round(Ly, 1), largo_frac=largo_frac)
     apoyos = []
     for i in range(1, n + 1):
         idx = np.where(lab == i)[0]
         xy = gr.XY[idx]
-        ex, ey = float(np.ptp(xy[:, 0])), float(np.ptp(xy[:, 1]))
-        largo_x = Lx > 0 and ex >= largo_frac * Lx
-        largo_y = Ly > 0 and ey >= largo_frac * Ly
-        controla = ["Z"] + (["giro en y"] if largo_x else []) + (["giro en x"] if largo_y else [])
+        c = xy.mean(0)
+        if len(xy) >= 3:
+            w, v = np.linalg.eigh(np.cov((xy - c).T))
+            eje = v[:, int(np.argmax(w))]
+        else:
+            eje = np.array([1.0, 0.0])
+        nrm = np.array([-eje[1], eje[0]])
+        s = (xy - c) @ eje
+        largo, ancho = float(np.ptp(s)), float(np.ptp((xy - c) @ nrm))
+        if Lmax > 0 and largo >= largo_frac * Lmax and Lmin > 0 and ancho >= largo_frac * Lmin:
+            tipo, puntos = "superficie", [c + s.min() * eje, c + s.max() * eje]
+        elif Lmax > 0 and largo >= largo_frac * Lmax:
+            tipo, puntos = "riel", [c + s.min() * eje, c + s.max() * eje]
+        else:
+            tipo, puntos = "punto", [c]
         apoyos.append({
             "celdas": int(len(idx)),
             "x": [round(float(xy[:, 0].min()), 1), round(float(xy[:, 0].max()), 1)],
             "y": [round(float(xy[:, 1].min()), 1), round(float(xy[:, 1].max()), 1)],
-            "centro": [round(float(xy[:, 0].mean()), 2), round(float(xy[:, 1].mean()), 2)],
+            "centro": [round(float(c[0]), 2), round(float(c[1]), 2)],
+            "largo_mm": round(largo, 1), "ancho_mm": round(ancho, 1),
             "luz_min_mm": round(float(np.nanmin(gap[idx])), 3),
             "metido": bool(np.nanmin(gap[idx]) < metido),
-            "controla": controla,
-            "restricciones": len(controla),
+            "tipo": tipo,
+            "puntos": [[round(float(p[0]), 2), round(float(p[1]), 2)] for p in puntos],
+            "restricciones": len(puntos),
             "_idx": idx})
+    info["largo_menor_pieza"] = round(Lmin, 1)
     return apoyos, gap, info
+
+
+def puntos_de_apoyo(apoyos, largo_menor, largo_frac=0.25):
+    """Qué movimientos controlan, juntos, los apoyos: Z y los dos giros necesitan TRES puntos de apoyo que no estén en
+    línea (revisor por API del 18/10: sumar restricciones daba VERDE a tres apoyos en línea, y la pieza vuelca). Devuelve
+    (cantidad de puntos, separación de la línea en mm, en_linea). En línea = los puntos se apartan de su recta menos de
+    `largo_frac` del largo menor de la pieza (el mismo 0,25, fijado contra los casos conocidos: a revisar)."""
+    P = np.array([p for a in apoyos for p in a["puntos"]], float)
+    if len(P) < 2:
+        return len(P), 0.0, True
+    c = P.mean(0)
+    w, v = np.linalg.eigh(np.cov((P - c).T)) if len(P) >= 3 else (None, None)
+    eje = v[:, int(np.argmax(w))] if w is not None else (P[1] - P[0]) / max(1e-9, np.linalg.norm(P[1] - P[0]))
+    sep = float(np.ptp((P - c) @ np.array([-eje[1], eje[0]])))
+    return len(P), round(sep, 2), bool(sep < largo_frac * largo_menor)
 
 
 def superficies(apoyos, H, gr, tol_mm=0.05):
@@ -325,7 +358,9 @@ def tramo_recto(yh, zs, tol):
 
 def tope_de_banda(malla_pieza, sonda, z_desde, z_hasta, paso=0.01, tol=0.02):
     """La banda recta de la pared que aprieta de costado: el z más alto hasta donde la pared de la PIEZA sigue
-    vertical. Rayos horizontales desde afuera de la pieza hacia su pared (la sonda)."""
+    vertical. Rayos horizontales desde afuera de la pieza hacia su pared (la sonda).
+    `paso` 0,01 y `tol` 0,02 mm: fijados contra los casos conocidos el 17/10 (la pared de la pieza es vertical en la v14
+    y la v15 y su chaflán se aparta más de 0,02 en el primer centésimo), a revisar con una pieza nueva."""
     zs = np.arange(z_desde, z_hasta, paso)
     t = tramo_recto(perfil_horizontal(malla_pieza, sonda["x"], sonda["y_desde"], sonda["dir"], zs), zs, tol)
     return (t[1], t[2]) if t else (None, None)
@@ -349,6 +384,8 @@ def ventana(escena, malla_s, malla_pieza, log=print):
         det["banda_motivo"] = "la escena no declara el z del labio ('apriete.z_labio')"
         return None, punta, det
     zt = float(np.asarray(malla_pieza.vertices)[:, 2].max())
+    # la banda se busca en los 8 mm de abajo de la punta de la pieza: fijado contra los casos conocidos (el anillo del
+    # virolador mide 4,1 de alto); a revisar con una pieza nueva de otro alto
     bandas = []
     for s in ap["sondas"]:
         tb, yb = tope_de_banda(malla_pieza, s, zt - 8.0, zt + 0.005)
@@ -411,15 +448,26 @@ def simular(Hs, Ht, T, gr, escena, zp, tap, abiertas, mano, n, semilla, gemelo=F
         poses = np.array(poses)
         centro = reposo(g, XY, cx, cy, (cx, cy), lim_z, lim_g)[0]
         lejos = max(0.0, -centro[0]) if centro is not None else np.nan
-        res.append({"hamaca": float((poses.max(0) - poses.min(0)).max()), "plastico": plast, "lejos": float(lejos)})
-    h = np.array([r["hamaca"] for r in res])
+        # si el programa lineal no encontro reposo para NINGUN punto de la mano, ese caso no se pudo medir (revisor por
+        # API del 18/10: antes reventaba); con al menos uno, la cuenta es la misma de siempre
+        hc = float((poses.max(0) - poses.min(0)).max()) if len(poses) else np.nan
+        res.append({"hamaca": hc, "plastico": plast, "lejos": float(lejos)})
+    h_todos = np.array([r["hamaca"] for r in res])
+    sin = int(np.isnan(h_todos).sum())
+    h = h_todos[~np.isnan(h_todos)]
     um = s.get("hamaca_umbral_mm", 0.3)
-    return {"casos": n, "semilla": semilla,
-            "hamaca_mediana_mm": round(float(np.median(h)), 2),
-            "hamaca_max_mm": round(float(h.max()), 2),
-            "pct_hamaca": round(100 * float((h > um).mean())),
-            "pct_toca_plastico": round(100 * float(np.mean([r["plastico"] for r in res]))),
-            "lejos_max_mm": round(float(np.nanmax([r["lejos"] for r in res])), 2)}
+    if not len(h):
+        return {"casos": n, "semilla": semilla, "casos_sin_reposo": sin, "sin_dato": True,
+                "motivo": "en ningun caso la pieza encontro donde quedarse quieta apretando: no se pudo medir"}
+    out = {"casos": n, "semilla": semilla,
+           "hamaca_mediana_mm": round(float(np.median(h)), 2),
+           "hamaca_max_mm": round(float(h.max()), 2),
+           "pct_hamaca": round(100 * float((h > um).mean())),
+           "pct_toca_plastico": round(100 * float(np.mean([r["plastico"] for r in res]))),
+           "lejos_max_mm": round(float(np.nanmax([r["lejos"] for r in res])), 2)}
+    if sin:
+        out["casos_sin_reposo"] = sin
+    return out
 
 
 def _firma_de_archivos():
@@ -448,8 +496,11 @@ def _sin_notas(x):
 
 def firma_escena(escena):
     """Lo que entra a las cuentas de una escena (sin las notas que empiezan con «_»): grilla, zonas, mano, sorteos,
-    piezas. Si cambia un número de la escena calibrada, la calibración deja de valer para ella."""
-    return hashlib.sha1(json.dumps(_sin_notas(escena), sort_keys=True).encode("utf-8")).hexdigest()[:16]
+    piezas con números publicados. Si cambia un número de la escena calibrada, la calibración deja de valer para ella.
+    Una pieza NUEVA (sin «publicado») no entra a la firma: sumarla no obliga a recalibrar (auditor, ronda 2)."""
+    e = _sin_notas(escena)
+    e["piezas"] = {k: v for k, v in (e.get("piezas") or {}).items() if "publicado" in v}
+    return hashlib.sha1(json.dumps(e, sort_keys=True).encode("utf-8")).hexdigest()[:16]
 
 
 _FIRMA_AL_CARGAR = _firma_de_archivos()
