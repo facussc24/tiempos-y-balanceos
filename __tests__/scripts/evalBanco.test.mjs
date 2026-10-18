@@ -38,9 +38,10 @@ describe('manifiesto de bancos', () => {
 });
 
 describe('banco cad-design (tanda 11)', () => {
-  it('los 3 casos de respuesta conocida (virolador v14, tornillo de 7 mm, pines del insert) existen con prompt y criterio', () => {
+  it('los 4 casos de respuesta conocida (virolador v14 y v15 —este de la tanda 2, 17/10—, tornillo de 7 mm, pines del insert) existen con prompt y criterio', () => {
     const b = M.bancos['cad-design'];
-    expect(b.casos).toHaveLength(3);
+    expect(b.casos).toHaveLength(4);
+    expect(b.casos).toContain('evals/banco/cad/virolador-v15-cuatro-bloques');
     expect(b.skills).toEqual(['cad-design']);
     expect(b.reglas).toEqual([]);
     for (const c of b.casos) {

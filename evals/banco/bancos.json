@@ -138,6 +138,7 @@
       "_nota": "Tanda 11 (17/10/2026): casos de respuesta conocida del diseno 3D (virolador v14, tornillo de 7 mm, pines del insert). Convencion de la tanda 12: el brazo con lleva solo la skill (las fichas viven en su reference/).",
       "casos": [
         "evals/banco/cad/virolador-apoyos-y-asiento",
+        "evals/banco/cad/virolador-v15-cuatro-bloques",
         "evals/banco/cad/tornillo-impreso-parado",
         "evals/banco/cad/pin-cota-del-proceso"
       ],

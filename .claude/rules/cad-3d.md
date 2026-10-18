@@ -338,6 +338,13 @@ función vive dentro del ruido de la máquina no pasa el gate. Memorias `impreso
 
 **PRE-ENTREGA (lo demás):** render + MIRAR yo el resultado + interferencia contra el sustrato RÍGIDO
 ≈ 0 (no vs el tapizado blando) + CADGenBench (validez→forma→interface→topología) + adjuntar evidencia.
+**Y si el utillaje apoya sobre algo BLANDO (tapizado, espuma, goma, chapa fina), además el GATE A de asiento**
+(tanda 2, 17/10/2026): `gate_asiento.py verificar --escena <escena> --pieza <pieza> --workdir W` — apoyos en la pose
+de diseño (ROJO si más de tres controlan Z y los giros, o si uno está metido en el blando), ventana de asiento (ROJO si
+es de décimas aunque el choque dé cero) y simulación apretando («se hamaca en N de 100»). No reemplaza a la
+interferencia contra el rígido: se le suma. Nació porque la v14 del virolador pasó todos los gates y se hamaca en la
+mano; no juzga sin reproducir antes la v14 y la v15. La primera semana avisa (G-E5 de `gate_entregable.py`) y pasa a
+freno con el sí de Fak y los falsos positivos medidos. Detalle: skill `cad-design`, GATE A.
 Nunca decir "listo" sin esto — "un cambio rápido sin verificar no es rápido, es un ida-y-vuelta más".
 Ojo con el **encuadre del render**: si el cuadro se calcula sobre la unión de las capas, cuanto más
 corrido está el dispositivo más grande da el cuadro y **menos se ve el error**. Encuadre anclado a la

@@ -230,7 +230,33 @@ exacta, sombra proyectada, contorno por segunda derivada de la profundidad, mani
 para poner el operario en la escena, **fondo blanco** — Fak 02/09: *"necesito verlos bien los
 modelos 3D, con fondo blanco"*).
 
-> **Lo que los gates NO cubren, y hay que saberlo:** todos nacieron DESPUÉS de que una persona encontrara el bug. Son tests de regresión: demuestran memoria, no capacidad de detección. Las dos clases que siguen abiertas: el **estado real del material** (el STEP es la pieza fría y desnuda; en uso tiene tela, adhesivo, calor y springback) y la **unicidad del posicionamiento** (nada verifica que haya UNA sola forma de montar el utillaje). Y falta lo que la auditoría del 24/08 dejó abierto para ensambles: **partes de catálogo con procedencia** (hoy GATE 1 exige que toda cota salga del CAD medido o de Fak — para un rodamiento comprado no hay fuente válida posible) y **cálculo del conjunto** (eje entre apoyos, vuelco, par en el volante): el único cálculo estructural del sistema es `viga_voladizo.py`, que sirve para láminas impresas en PLA.
+**GATE A — ASIENTO SOBRE BLANDO** (`gate_asiento.py`, tanda 2, 17/10/2026; plan `docs/PLAN_3D_GATE_ASIENTO_2026-10-16.md`).
+El virolador v14 pasó todos los gates de arriba y en la planta se hamaca sobre el panel tapizado. Este gate se le
+**suma** a la interferencia contra el sustrato rígido (que sigue igual): corre solo si el utillaje apoya sobre algo
+blando (etiqueta `apoya-sobre-blando` en el pliego de `gate_proceso.py`; sobre rígido no corre y lo dice).
+
+```
+gate_asiento.py calibrar  --escena upper_trim_two --workdir C:\Dev\_utrim\gate_asiento     # una vez por version
+gate_asiento.py verificar --escena <escena> --pieza <nombre> [--stl pieza.stl] --workdir W  # cada pieza
+```
+
+- **Apoyos** (pose de DISEÑO, grilla de 0,25 mm): cuántas superficies tocan el panel; Z y los dos giros se controlan
+  con tres; ROJO si hay más o si alguno está METIDO en el blando. Renglón aparte, informativo: 4-2-1 sobre una misma
+  superficie (`ficha-utillajes.md` U7/U8). La ubicación en el plano (X, Y, giro en Z) no la mide: rayos verticales.
+- **Ventana**: cuánto puede alejarse el panel y la banda sigue apretando, y cuánto acercarse antes de tocar plástico.
+  Mínimos 1,0 y 0,6 mm (`data/casos_3d.json`). La v14 da 0,23 / 0,24: ROJO aunque el choque dé cero.
+- **Asiento**: la simulación del 13/10 llevada a `cadlib/asiento.py` («se hamaca en N de 100», «se mueve X mm en la
+  punta»), más el gemelo de espesor desparejo (informativo). Los sorteos del blando son una hipótesis declarada, no una
+  medición, hasta escanear el panel.
+- **Disciplina:** par BIEN/MAL sintético propio en cada corrida (código 3 si no separa) y **no juzga una pieza nueva
+  sin calibración vigente**: `calibrar` tiene que haber reproducido EXACTO lo publicado de la v14 (100 y 68 de 100) y la
+  v15 (28 de 100, 1,69 mm en la punta) con la misma versión de las cuentas (`data/asiento_calibracion.json`).
+- **Modo:** AVISO la primera semana (`procesoCanon.data.json` → `gateAsiento`, revisar el 24/10): `gate_entregable.py`
+  lo informa (G-E5) y no frena. Pasa a freno con el sí de Fak y el número de falsos positivos medido.
+- **Lo que aprendió al nacer:** la grilla de 1 mm de la simulación no ve el tercer pasador de la v14 (0,9 mm de ancho
+  cae entre dos puntos). El inventario usa una grilla fina y el gate avisa todo apoyo que la simulación no ve.
+
+> **Lo que los gates NO cubren, y hay que saberlo:** todos nacieron DESPUÉS de que una persona encontrara el bug. Son tests de regresión: demuestran memoria, no capacidad de detección. Las dos clases que siguen abiertas: el **estado real del material** (el STEP es la pieza fría y desnuda; en uso tiene tela, adhesivo, calor y springback; el GATE A cubre el asiento sobre blando con una hipótesis del blando, no con una medición) y la **unicidad del posicionamiento** (el GATE A cuenta los apoyos en Z; nada verifica todavía que haya UNA sola forma de ubicarlo en el plano). Y falta lo que la auditoría del 24/08 dejó abierto para ensambles: **partes de catálogo con procedencia** (hoy GATE 1 exige que toda cota salga del CAD medido o de Fak — para un rodamiento comprado no hay fuente válida posible) y **cálculo del conjunto** (eje entre apoyos, vuelco, par en el volante): el único cálculo estructural del sistema es `viga_voladizo.py`, que sirve para láminas impresas en PLA.
 
 ## 1. Entorno — UN solo intérprete
 

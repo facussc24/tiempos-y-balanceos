@@ -240,6 +240,26 @@ def verificar(entrega, motor, renders, workdir_path=None, sin_render=False, moti
             else:
                 avisos.append("G-E3b · %s" % msg)
 
+    # ---- G-E5: si el utillaje apoya sobre blando, corrio el gate de asiento (tanda 2, 17/10/2026) ----
+    ga = c.get("gateAsiento") or {}
+    msg5 = None
+    if workdir_path and os.path.isfile(os.path.join(workdir_path, workdir.MANIFEST)):
+        pd = workdir.find_evidence(workdir_path, "proceso_declarado") or {}
+        if "apoya-sobre-blando" in (pd.get("tags") or []):
+            ea = workdir.find_evidence(workdir_path, "asiento", corre=True)
+            if ea is None:
+                msg5 = "el utillaje apoya sobre blando y gate_asiento.py no corrio sobre esta pieza"
+            elif ea.get("veredicto") != "VERDE":
+                msg5 = "gate_asiento.py dio %s (%s)" % (ea.get("veredicto"), ", ".join(
+                    "%s %s" % (k, v) for k, v in (ea.get("filas") or {}).items() if v not in ("VERDE", "INFORMATIVO")))
+    elif not workdir_path:
+        avisos.append("G-E5 · sin --workdir no se puede mirar si el utillaje apoya sobre blando (gate_asiento.py)")
+    if msg5:
+        if ga.get("modo") == "freno":
+            rojo("G-E5", msg5, "gate_asiento.py verificar --escena <escena> --pieza <pieza> --workdir W")
+        else:
+            avisos.append("G-E5 · %s — modo AVISO hasta el %s (procesoCanon gateAsiento)" % (msg5, ga.get("revisar")))
+
     # ---- salida ----
     print("GATE DE ENTREGABLE — %s" % entrega)
     for o in fmt["obligatorios"]:
