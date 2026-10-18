@@ -47,6 +47,20 @@ que nunca es verde: es «para mirar» o «no corrió») y suma las reglas de con
 | `piezas-antes-que-pasos` | #7 hojas del cambio de molde «extremadamente difícil de comprender» (25/09) | PowerPoint que manda seguir una pantalla |
 | `letra-minima` | Garner et al. 2013 (proyectar 18 pt); IMDS 09/10 (leer 10 pt; el pie y el número de página no cuentan) | PowerPoint de la casa |
 
+**Cómo se corre.** `python scripts/revisar.py <archivo>` alcanza para lo común; las banderas dicen lo que el revisor no
+puede adivinar:
+
+| Bandera | Cuándo |
+|---|---|
+| `--documento "<qué es>"` | siempre que pueda haber formulario oficial para eso («hoja de proceso», «camino de inspeccion», «plan de control», «amfe», «flujograma»). Sin ella, la regla del formulario sale **SIN MIRAR** (y lo dice), salvo que el archivo ya lleve el código de un formulario |
+| `--oficial` | el archivo es un formulario oficial del SGC o del cliente: no corren las reglas de diseño de la casa (B2, gris, letra). **Si el archivo lleva el código del formulario (I-IN-002.4, I-AC-032, I-AC-005.x), se detecta solo** |
+| `--modo correccion` | se corrigió el archivo de OTRO: cada celda pintada con los amarillos de la lista lleva su comentario «ANTES: …» (el modo por defecto es `rearmado`: limpio, sin amarillo ni notas) |
+| `--tipo proyectar` / `leer` / `a3` / `mail` / `html` / `explicacion` | el tipo de entregable, si la extensión no alcanza (un PowerPoint de más de 40 cm de ancho se toma solo como A3) |
+| `--formulario <plantilla.xlsx>` | las columnas que la plantilla no tiene son columnas inventadas |
+
+Sale **0** si todo lo que corrió está en verde, **1** si algo frena y **3** si alguna regla no pudo correr (por ejemplo,
+sin `node` no corre la voz): una regla que no corrió no es un verde.
+
 **Casos de respuesta conocida** (`python scripts/revisar.py --selftest`, test `__tests__/scripts/revisar.test.mjs`): los
 13 entregables devueltos, como gemelos mínimos armados en `scripts/_lib/revisarCasos.py` con la cita de Fak al lado
 (los originales están fuera del repo, que es público). **Los 10 por contenido dan ROJO antes y VERDE después; los 3
@@ -62,6 +76,15 @@ alineada al AMFE 158» en las láminas 7 y 10) y la lámina del Insert (epígraf
 midiendo contra esos archivos antes de darlas por buenas: el pie y el número de página no cuentan para la letra mínima,
 una fila pintada entera es una banda del formulario y no una corrección, y una hoja nombra sus piezas también con las
 llamadas «REF. n» de la misma lámina (y «tocar» o «apretar» no son palabras de pantalla).
+
+**Auditoría del 18/10** (`docs/auditorias/TANDA16_FORMATOS_auditor_2026-10-18.md`, Opus, y el revisor-pedido): 9
+agujeros cerrados, cada uno con su contraejemplo fijo en el selftest (`contraejemplos()` de `revisarCasos.py`): una fila
+de datos pintada entera ya no pasa por banda del formulario; la columna «Fuente» se busca en todas las filas de cabecera;
+la firma corre también en texto y HTML, mira archivos de hasta 1 GB y, si no pudo mirar entero, dice «no corrió»; el
+número de página se perdona solo en texto suelto, no en una tabla; la hora se acepta con el día en el renglón de al lado;
+el código de un formulario no coincide dentro de otro más largo; un formulario oficial se reconoce por su código; la
+imagen para mirar sale por PDF, con todas las láminas y sin deformar. El caso del PowerPoint de 61 MB no está en el
+selftest (armar un archivo así en cada corrida no tiene sentido): lo cubre el tope nuevo.
 
 **Lo que no ve:** lo visual (portada oscura, tarjetas de colores, fotos «mejoradas»): eso lo mira una persona sobre el
 render; si una hoja de reunión pregunta cosas que ya se saben (#3); si un número está bien.

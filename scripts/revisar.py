@@ -48,11 +48,11 @@ DATOS = json.load(io.open(os.path.join(AQUI, "_lib", "formatoCasa.data.json"), e
 TEMA = json.load(io.open(os.path.join(AQUI, "_lib", "tema.json"), encoding="utf-8"))
 INGLES = json.load(io.open(os.path.join(RAIZ, "core", "amfe", "forbiddenContent.data.json"), encoding="utf-8"))["ENGLISH_RANDOM_TERMS"]
 
-TIPOS = ["proyectar", "leer", "una-pagina", "excel", "html", "mail", "texto", "explicacion"]
+TIPOS = ["proyectar", "leer", "a3", "una-pagina", "excel", "html", "mail", "texto", "explicacion"]
 POR_EXTENSION = {".pptx": "leer", ".xlsx": "excel", ".xlsm": "excel", ".xltx": "excel", ".xls": "excel", ".pdf": "una-pagina",
                  ".html": "html", ".htm": "html", ".txt": "texto", ".md": "texto", ".docx": "una-pagina"}
 
-ROJO, VERDE, NO_APLICA, NO_CORRIO, MIRAR = "ROJO", "VERDE", "no aplica", "NO CORRIO", "PARA MIRAR"
+ROJO, VERDE, NO_APLICA, NO_CORRIO, MIRAR, SIN_MIRAR = "ROJO", "VERDE", "no aplica", "NO CORRIO", "PARA MIRAR", "SIN MIRAR"
 
 
 def v(clave):
@@ -78,12 +78,14 @@ class Doc:
         self.pedazos = []      # (lugar, texto)
         self.laminas = []      # pptx: [{n, texto, imagenes, tamanos:[(pt, lugar)], tablas}]
         self.excel = None      # {hojas: [{nombre, celdas:{(f,c): {...}}, oculta}]}
+        self.ancho_cm = None   # pptx: ancho de la lamina
 
 
 def leer_pptx(ruta, d):
     from pptx import Presentation
     from pptx.enum.shapes import MSO_SHAPE_TYPE
     prs = Presentation(ruta)
+    d.ancho_cm = prs.slide_width / 360000
 
     def recorrer(shapes, lam):
         for sh in shapes:
@@ -241,12 +243,18 @@ def primero(regla, hallados, que, de, max_donde=3):
 
 def regla_firma(ruta, op):
     py = sys.executable or "python"
-    args = [py, os.path.join(AQUI, "_sinFirmaIA.py"), "--json", ruta]
+    # un solo archivo: tope alto (el detector corta a 60 MB por defecto y un PowerPoint real pesa 51,6) y que diga lo que
+    # no pudo mirar entero (auditor 18/10: un pptx de 61 MB con «Armado por Claude» salia VERDE)
+    args = [py, os.path.join(AQUI, "_sinFirmaIA.py"), "--json", "--marcar-parciales", "--max-mb", "1000", ruta]
     if not op.oficial:
         args.insert(3, "--logo-bloquea")
     try:
-        p = subprocess.run(args, capture_output=True, text=True, encoding="utf-8", timeout=300)
-        hs = json.loads(p.stdout or "[]")
+        p = subprocess.run(args, capture_output=True, text=True, encoding="utf-8", timeout=600)
+        if p.returncode not in (0, 1):
+            return r("firma-ia", NO_CORRIO, que=f"_sinFirmaIA.py salio con {p.returncode}: {(p.stderr or p.stdout)[-160:]}")
+        hs = json.loads(p.stdout)
+        if not isinstance(hs, list):
+            raise ValueError("no devolvio una lista")
     except (subprocess.SubprocessError, ValueError, OSError) as e:
         return r("firma-ia", NO_CORRIO, que=f"_sinFirmaIA.py no corrio: {e}")
     malos = [h for h in hs if h.get("nivel") == "BLOQUEANTE"]
@@ -254,6 +262,10 @@ def regla_firma(ruta, op):
     if malos:
         return r("firma-ia", ROJO, "; ".join(f"{h.get('lugar')}: {h.get('que')}" for h in malos[:3]),
                  "el documento dice o deja ver que lo hizo una IA, o lleva un logo que no es el oficial", de)
+    sin_mirar = [h for h in hs if h.get("regla") in ("grande", "ilegible", "revision-parcial")]
+    if sin_mirar:
+        return r("firma-ia", NO_CORRIO, "; ".join(f"{h.get('lugar')}: {h.get('que')}" for h in sin_mirar[:2]),
+                 "no pudo mirar el archivo entero", de)
     return r("firma-ia", VERDE, de=de)
 
 
@@ -298,16 +310,13 @@ def regla_jerga(d):
                    DATOS["jerga_interna"]["de"])
 
 
-def fila_de_cabecera(celdas):
-    """La primera fila con 2 o mas celdas de texto (la cabecera de la tabla). Devuelve (fila, {col: texto})."""
+def filas_de_texto(celdas):
+    """{fila: {col: texto}} de las filas con 2 o mas celdas de texto (candidatas a cabecera de una tabla)."""
     filas = {}
     for (f, c), info in celdas.items():
         if isinstance(info["valor"], str) and info["valor"].strip():
             filas.setdefault(f, {})[c] = info["valor"].strip()
-    for f in sorted(filas):
-        if len(filas[f]) >= 2:
-            return f, filas[f]
-    return None, {}
+    return {f: x for f, x in filas.items() if len(x) >= 2}
 
 
 def regla_columnas(d, op):
@@ -328,25 +337,48 @@ def regla_columnas(d, op):
     for h in d.excel["hojas"]:
         if h["oculta"]:
             continue
-        f, cab = fila_de_cabecera(h["celdas"])
-        for c, texto in sorted(cab.items()):
-            n = norm(texto)
-            if n in lista or (plantilla is not None and n not in plantilla):
-                hall.append((f"pestaña {h['nombre']}, fila {f} col {c}", texto))
+        filas = filas_de_texto(h["celdas"])
+        # la lista negra se busca en TODAS las filas tipo cabecera: un formulario lleva su encabezado arriba y la tabla
+        # mas abajo (auditor 18/10: con «fecha» al lado del titulo, la columna «Fuente» de la tabla pasaba)
+        for f, cab in sorted(filas.items()):
+            for c, texto in sorted(cab.items()):
+                if norm(texto) in lista:
+                    hall.append((f"pestaña {h['nombre']}, fila {f} col {c}", texto))
+        if plantilla is not None and filas:
+            # contra la plantilla: la cabecera es la fila con mas textos de las primeras 30
+            f = max((x for x in filas if x <= 30), key=lambda x: (len(filas[x]), -x), default=None)
+            for c, texto in sorted((filas.get(f) or {}).items()):
+                if norm(texto) not in plantilla and norm(texto) not in lista:
+                    hall.append((f"pestaña {h['nombre']}, fila {f} col {c}", texto))
     que = "columna que no pide el formulario (la derive yo): afuera" if plantilla is not None else "columna inventada (Fuente, Notas, cálculo propio): afuera"
     return primero("columnas-inventadas", hall, que, de)
+
+
+def codigo_oficial(d, codigos):
+    """El primer codigo de formulario oficial que aparece en el documento, o None. Un codigo no cuenta si sigue un
+    punto y un numero («I-IN-002» no es «I-IN-002.4»; auditor 18/10)."""
+    todo = " ".join(t for _, t in d.pedazos).upper()
+    for code in codigos:
+        if re.search(re.escape(code.upper()) + r"(?![.\d])", todo):
+            return code
+    return None
 
 
 def regla_formulario(d, op):
     de = DATOS["formularios"]["de"]
     if not op.documento:
-        return r("formulario-oficial", NO_APLICA, que="sin --documento no se sabe que es")
+        todos = [c for x in v("formularios").values() for c in x]
+        code = codigo_oficial(d, todos)
+        if code:
+            return r("formulario-oficial", VERDE, que=f"lleva el formulario oficial {code}", de=de)
+        # se DICE que no se miro (revisor-pedido 18/10: callaba y el cierre decia «VERDE en todas»)
+        return r("formulario-oficial", SIN_MIRAR, que="falta --documento \"<que es>\": si para esto hay formulario oficial "
+                 "(hoja de proceso, plan de control, AMFE, flujograma), el revisor no lo puede saber solo", de=de)
     clave = norm(op.documento)
     forms = {norm(k): x for k, x in v("formularios").items()}
     if clave not in forms:
         return r("formulario-oficial", VERDE, que=f"para «{op.documento}» no hay formulario oficial en la lista: va el formato de la casa", de=de)
-    todo = " ".join(t for _, t in d.pedazos).upper()
-    if any(code.upper() in todo for code in forms[clave]):
+    if codigo_oficial(d, forms[clave]):
         return r("formulario-oficial", VERDE, de=de)
     return r("formulario-oficial", ROJO, "todo el documento",
              f"para «{op.documento}» hay formulario oficial ({' o '.join(forms[clave])}) y este archivo no lo usa (paso 0)", de)
@@ -373,7 +405,12 @@ def regla_amarillo(d, op):
         for (f, c), info in h["celdas"].items():
             if info["fondo"] in amar:
                 por_fila[f] = por_fila.get(f, 0) + 1
-        bandas = {f for f, n in por_fila.items() if h.get("ancho", 0) >= 4 and n >= 0.8 * h["ancho"]}
+        # ... pero solo si la fila es un TITULO: a lo sumo una celda con texto y ningun comentario (auditor 18/10: una fila de
+        # datos pintada entera se escondia como banda)
+        def es_titulo(f):
+            celdas = [i for (ff, _c), i in h["celdas"].items() if ff == f]
+            return sum(1 for i in celdas if i["valor"] not in (None, "")) <= 1 and not any(i["comentario"] for i in celdas)
+        bandas = {f for f, n in por_fila.items() if h.get("ancho", 0) >= 4 and n >= 0.8 * h["ancho"] and es_titulo(f)}
         for (f, c), info in sorted(h["celdas"].items()):
             if f in bandas:
                 continue
@@ -429,9 +466,13 @@ def regla_gris_y_flechitas(d):
 
 
 def regla_letra(d, tipo):
-    t = TEMA["tamanos"]["pptx_proyectar" if tipo == "proyectar" else "pptx_leer"]
-    cuerpo = t["cuerpo_min"]
-    tabla = t.get("tabla_min", cuerpo)
+    if tipo == "a3":  # la hoja de una pagina A3 se mide con los minimos del A3 del tema (12 pt texto, 9 pt tablas)
+        t = TEMA["tamanos"]["a3"]
+        cuerpo, tabla = t["texto_min"], t["tabla_min"]
+    else:
+        t = TEMA["tamanos"]["pptx_proyectar" if tipo == "proyectar" else "pptx_leer"]
+        cuerpo = t["cuerpo_min"]
+        tabla = t.get("tabla_min", cuerpo)
     de = t["_fuente"]
     autor = TEMA["pie"]["autor"]
 
@@ -441,7 +482,9 @@ def regla_letra(d, tipo):
         return txt.strip().isdigit() or autor in txt
     hall = []
     for lam in d.laminas:
-        chicos = [(pt, k, txt) for pt, k, txt in lam["tamanos"] if pt < (tabla if k == "tabla" else cuerpo) and not es_pie(txt)]
+        # el pie se perdona solo en texto suelto: en una tabla un numero a 6 pt es un dato chico (auditor 18/10)
+        chicos = [(pt, k, txt) for pt, k, txt in lam["tamanos"]
+                  if pt < (tabla if k == "tabla" else cuerpo) and not (k == "texto" and es_pie(txt))]
         if chicos:
             pt, k, txt = min(chicos)
             hall.append((f"lamina {lam['n']}", f"{k} a {pt:g} pt (minimo {tabla if k == 'tabla' else cuerpo}): {txt[:40]}"))
@@ -485,7 +528,12 @@ def regla_contador_y_hora(d, tipo):
     dia = re.compile(v("dia_re"), re.I)
     hall = [(l, t) for l, t in d.pedazos if cont.search(t)]
     if tipo == "html":
-        hall += [(l, t) for l, t in d.pedazos if hora.search(t) and not dia.search(t)]
+        # el dia puede estar en el renglon de al lado (la pagina del programita pone «dom 18/10» en una celda y la hora
+        # en otra: falso rojo medido por el auditor el 18/10)
+        p = d.pedazos
+        for i, (l, t) in enumerate(p):
+            if hora.search(t) and not any(dia.search(p[j][1]) for j in range(max(0, i - 1), min(len(p), i + 2))):
+                hall.append((l, t))
     return primero("contador-y-hora", hall, "contador interno, o una hora sin su día", de)
 
 
@@ -512,20 +560,26 @@ def render(ruta, carpeta):
             subprocess.run([sys.executable, os.path.join(AQUI, "_xlsxAPdf.py"), tmp, "--apply"], capture_output=True, timeout=300)
             pdf = os.path.splitext(copia)[0] + ".pdf"
         elif ext == ".pptx" and os.name == "nt":
-            png = base + ".png"
-            subprocess.run([sys.executable, os.path.join(AQUI, "lamina_proceso", "exportar.py"), os.path.abspath(ruta), png],
-                           capture_output=True, timeout=300, cwd=carpeta)
-            if os.path.isfile(png):
-                return r("render", MIRAR, png, "mirarla como la ve el que la recibe")
-            return r("render", NO_CORRIO, que="PowerPoint no exporto la imagen")
+            # por PDF, que respeta el tamaño de la lamina (la imagen directa de exportar.py sale siempre A3: un 16:9 quedaba
+            # deformado, auditor 18/10) y trae TODAS las laminas, no solo la primera
+            pdf = base + ".pdf"
+            subprocess.run([sys.executable, os.path.join(AQUI, "lamina_proceso", "exportar.py"), os.path.abspath(ruta),
+                            base + "_exportar.png", pdf], capture_output=True, timeout=300, cwd=carpeta)
         else:
             return r("render", NO_CORRIO, que=f"para {ext} no hay render aca (o no es Windows): abrirlo y mirarlo")
         if not pdf or not os.path.isfile(pdf):
             return r("render", NO_CORRIO, que="no se genero el PDF para rasterizar")
         import fitz
+        hechas = []
         with fitz.open(pdf) as doc:
-            doc[0].get_pixmap(dpi=110).save(base + ".png")
-        return r("render", MIRAR, base + ".png", "mirarla como la ve el que la recibe")
+            for i, pag in enumerate(doc, 1):
+                if i > 20:
+                    break
+                destino = f"{base}_{i:02d}.png" if len(doc) > 1 else base + ".png"
+                pag.get_pixmap(dpi=110).save(destino)
+                hechas.append(destino)
+        return r("render", MIRAR, "; ".join(hechas[:3]) + (f"; y {len(hechas) - 3} mas" if len(hechas) > 3 else ""),
+                 "mirarla como la ve el que la recibe")
     except (subprocess.SubprocessError, OSError, RuntimeError, ImportError) as e:
         return r("render", NO_CORRIO, que=str(e)[:160])
 
@@ -535,11 +589,18 @@ def revisar(ruta, op):
     ext = os.path.splitext(ruta)[1].lower()
     if ext not in LECTORES:
         raise SystemExit(f"no se leer {ext}: van {', '.join(sorted(LECTORES))}. No hago nada.")
-    tipo = op.tipo or POR_EXTENSION[ext]
     d = Doc()
     LECTORES[ext](ruta, d)
-    res = [regla_firma(ruta, op) if ext not in (".txt", ".md", ".html", ".htm") else r("firma-ia", NO_APLICA, que="texto plano: lo mira la voz y la jerga"),
-           regla_formulario(d, op), regla_notas(d), regla_recomendaciones(d, op), regla_jerga(d)]
+    tipo = op.tipo or ("a3" if ext == ".pptx" and (d.ancho_cm or 0) > 40 else POR_EXTENSION[ext])
+    res = []
+    # un formulario oficial se reconoce solo por su codigo: ahi no corren las reglas de diseño de la casa (revisor-pedido
+    # 18/10: el plan de control aceptado daba ROJO en «titulo en B2» si se corria sin --oficial)
+    code = codigo_oficial(d, [c for x in v("formularios").values() for c in x])
+    if code and not op.oficial:
+        op.oficial = True
+        res.append(r("formulario-detectado", MIRAR, que=f"lleva el formulario oficial {code}: corren el paso 0 y las reglas de contenido, no las de diseño"))
+    # la firma corre tambien en texto y html (auditor 18/10: «Lo revisé con Claude» en un mail salia VERDE)
+    res += [regla_firma(ruta, op), regla_formulario(d, op), regla_notas(d), regla_recomendaciones(d, op), regla_jerga(d)]
     if tipo == "mail":
         res.append(regla_voz(ruta))
     if tipo in ("una-pagina", "html", "texto", "explicacion"):
@@ -554,12 +615,12 @@ def revisar(ruta, op):
             res += [regla_b2(d), regla_gris_y_flechitas(d)]
     if d.laminas:
         res += [regla_fuente_sin_captura(d), regla_piezas_antes(d)]
-        if not op.oficial and tipo in ("proyectar", "leer"):
+        if not op.oficial and tipo in ("proyectar", "leer", "a3"):
             res.append(regla_letra(d, tipo))
     if not op.sin_render:
         res.append(render(ruta, op.render_en or os.path.join(tempfile.gettempdir(), "revisar")))
     return {"archivo": ruta, "tipo": tipo, "modo": op.modo, "oficial": op.oficial, "reglas": res,
-            "rojos": sum(1 for x in res if x["estado"] == ROJO)}
+            "rojos": sum(1 for x in res if x["estado"] == ROJO), "no_corrieron": sum(1 for x in res if x["estado"] == NO_CORRIO and x["regla"] != "render")}
 
 
 def imprimir(rep):
@@ -568,10 +629,16 @@ def imprimir(rep):
         if x["estado"] == NO_APLICA:
             continue
         linea = f"  [{x['estado']}] {x['regla']}"
-        if x["estado"] in (ROJO, NO_CORRIO, MIRAR):
+        if x["estado"] in (ROJO, NO_CORRIO, MIRAR, SIN_MIRAR):
             linea += f" — {x['que']}" + (f"\n      {x['donde']}" if x["donde"] else "")
         print(linea)
-    print(f"  => {'ROJO: ' + str(rep['rojos']) + ' regla(s) frenan' if rep['rojos'] else 'VERDE en todas las reglas que aplican'}")
+    if rep["rojos"]:
+        print(f"  => ROJO: {rep['rojos']} regla(s) frenan")
+    elif rep["no_corrieron"]:
+        # una regla que no corrio no es un verde (auditor 18/10: sin node, el mail largo salia «VERDE en todas»)
+        print(f"  => SIN VERDE: {rep['no_corrieron']} regla(s) no corrieron; lo demas esta en verde")
+    else:
+        print("  => VERDE en todas las reglas que corrieron")
 
 
 def opciones(argv=None):
@@ -603,7 +670,7 @@ def main():
         print(json.dumps(rep, ensure_ascii=False, indent=1))
     else:
         imprimir(rep)
-    sys.exit(1 if rep["rojos"] else 0)
+    sys.exit(1 if rep["rojos"] else (3 if rep["no_corrieron"] else 0))
 
 
 if __name__ == "__main__":

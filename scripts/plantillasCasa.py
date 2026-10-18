@@ -80,17 +80,18 @@ def _logo(sl, x, y, alto_cm):
     sl.shapes.add_picture(temaCasa.logo(), Cm(x), Cm(y), height=Cm(alto_cm))
 
 
-def _pie(sl, ancho, alto, titulo, n, pt=9):
+def _pie(sl, ancho, alto, titulo, n, pt=9, fecha="[fecha]", rev="[rev.]"):
+    """Pie: titulo · fecha · autor · revision · pagina. En una plantilla la fecha y la revision quedan para llenar."""
     t = _tema()
     gris = t["colores"]["gris"]["valor"]
-    fecha = datetime.date.today().strftime("%d/%m/%Y")
     _caja(sl, 1.2, alto - 1.25, ancho - 2.4, 0.03, gris)
-    _texto(sl, 1.2, alto - 1.15, ancho - 6, 0.8, f"{titulo} · {fecha} · {t['pie']['autor']} · Rev. A", pt, gris)
+    _texto(sl, 1.2, alto - 1.15, ancho - 6, 0.8, f"{titulo} · {fecha} · {t['pie']['autor']} · Rev. {rev}", pt, gris)
     _texto(sl, ancho - 3.2, alto - 1.15, 2.0, 0.8, str(n), pt, gris)
 
 
-def lamina(prs, tipo, titulo, evidencia=None, fuente=None, n=1, titulo_doc="[Título del documento]"):
-    """Una lamina «afirmacion + evidencia»: titulo que afirma, UNA evidencia (imagen o caja vacia) y la fuente al pie."""
+def lamina(prs, tipo, titulo, evidencia=None, fuente=None, n=1, titulo_doc="[Título del documento]", fecha=None, rev="A"):
+    """Una lamina «afirmacion + evidencia»: titulo que afirma, UNA evidencia (imagen o caja vacia) y la fuente al pie.
+    Con evidencia es una lamina real: el pie lleva la fecha de hoy (o la que se pase) y la revision."""
     from pptx.util import Cm
     t = _tema()
     tam = t["tamanos"]["pptx_proyectar" if tipo == "proyectar" else "pptx_leer"]
@@ -103,8 +104,9 @@ def lamina(prs, tipo, titulo, evidencia=None, fuente=None, n=1, titulo_doc="[Tí
     y0, alto_ev = 5.4, H - 5.4 - 2.6
     if evidencia:
         pic = sl.shapes.add_picture(evidencia, Cm(1.2), Cm(y0), height=Cm(alto_ev))
-        if pic.width > Cm(W - 2.4):
-            pic.width = int(Cm(W - 2.4))
+        if pic.width > Cm(W - 2.4):  # se achica entera, sin deformarla
+            esc = Cm(W - 2.4) / pic.width
+            pic.width, pic.height = int(pic.width * esc), int(pic.height * esc)
     else:
         _caja(sl, 1.2, y0, W - 2.4, alto_ev, t["colores"]["relleno"]["valor"], t["colores"]["gris"]["valor"])
         _texto(sl, 1.8, y0 + 0.6, W - 3.6, 3,
@@ -112,7 +114,10 @@ def lamina(prs, tipo, titulo, evidencia=None, fuente=None, n=1, titulo_doc="[Tí
                pt_cuerpo, t["colores"]["texto"]["valor"])
     if fuente:
         _texto(sl, 1.2, H - 2.3, W - 2.4, 0.9, fuente, tam["cuerpo_min"], t["colores"]["gris"]["valor"])
-    _pie(sl, W, H, titulo_doc, n)
+    if evidencia:
+        _pie(sl, W, H, titulo_doc, n, fecha=fecha or datetime.date.today().strftime("%d/%m/%Y"), rev=rev)
+    else:
+        _pie(sl, W, H, titulo_doc, n)
     return sl
 
 

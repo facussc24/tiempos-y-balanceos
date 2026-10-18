@@ -3,7 +3,7 @@
  * Gemelo de scripts/_lib/temaCasa.py: si el logo no es el oficial, o no esta, TIRA (no devuelve el tema).
  * core-prohibiciones.md §9: el logo de Barack sale de UN solo archivo. Tanda 16, pieza 3.
  */
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,7 +18,10 @@ const cache = new Map();
 
 /** El tema con `logo.ruta` absoluta. Tira si el logo no es el oficial. */
 export function cargarTema({ rutaTema = TEMA_JSON, raiz = RAIZ } = {}) {
-  const clave = `${resolve(rutaTema)}|${resolve(raiz)}`;
+  // la clave lleva la fecha de tema.json: un proceso que corre horas (el programita) toma el tema nuevo sin reiniciarse
+  let mtime = 0;
+  try { mtime = statSync(rutaTema).mtimeMs; } catch { /* lo dice la lectura de abajo */ }
+  const clave = `${resolve(rutaTema)}|${resolve(raiz)}|${mtime}`;
   if (cache.has(clave)) return cache.get(clave);
   let tema;
   try { tema = JSON.parse(readFileSync(rutaTema, 'utf8')); } catch (e) { throw new Error(`no pude leer el tema ${rutaTema}: ${e.message}`); }

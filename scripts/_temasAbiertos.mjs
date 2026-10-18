@@ -117,9 +117,12 @@ export function seguimientosAbiertos(dir, hoy) {
   } catch (err) { return [{ id: '(no se pudo leer)', que: err.message, detalle: '', cierra: '' }]; }
 }
 
-const COLOR = { urgente: '#C00000', 'en curso': '#BF8F00', 'en espera': '#7F6000', abierto: colorCss('cabecera'), hecho: '#548235', cerrado: '#7F7F7F', apagado: '#7F7F7F' };
+// el azul de «abierto» sale del tema al ARMAR la pagina, no al importar el modulo: asi el modulo se importa aunque falte
+// el logo (auditor 18/10), y la pagina igual no se arma con un logo que no es el oficial
+const colores = () => ({ urgente: '#C00000', 'en curso': '#BF8F00', 'en espera': '#7F6000', abierto: colorCss('cabecera'), hecho: '#548235', cerrado: '#7F7F7F', apagado: '#7F7F7F' });
 
 export function armarHtml({ filas, seguimientos, hoy, logo }) {
+  const COLOR = colores();
   const fila = (f) => `<tr class="${f.estado === 'cerrado' || f.estado === 'apagado' ? 'gris' : ''}">
   <td><b>${esc(f.tema)}</b>${f.alias.length ? `<div class="alias">Fak lo llama: ${esc(f.alias.slice(0, 6).join(', '))}</div>` : ''}<div class="desc">${esc(f.descripcion)}</div></td>
   <td><span class="estado" style="background:${COLOR[f.estado] ?? COLOR.abierto}">${esc(f.estado)}</span></td>

@@ -59,7 +59,7 @@
       "de": "#8 banda 11/10 «renueva pusiste hora pero no día»"
     },
     "dia_re": {
-      "valor": "\\b(\\d{1,2}/\\d{1,2}|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|hoy|mañana|ayer)\\b"
+      "valor": "\\b(\\d{1,2}/\\d{1,2}|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|lun|mar|mi[eé]|jue|vie|s[aá]b|dom|hoy|mañana|ayer)\\b"
     },
     "flechitas": {
       "valor": ["→", "←", "⇒", "➜", "➔", "▶", "◀"],

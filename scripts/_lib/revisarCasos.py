@@ -196,6 +196,56 @@ def casos(d):
     ]
 
 
+def pptx_tabla(ruta, pt):
+    """Una lamina 16:9 con una tabla de numeros a `pt` puntos."""
+    from pptx import Presentation
+    from pptx.util import Cm, Pt
+    prs = Presentation()
+    prs.slide_width, prs.slide_height = Cm(33.867), Cm(19.05)
+    sl = prs.slides.add_slide(prs.slide_layouts[6])
+    tb = sl.shapes.add_textbox(Cm(1.5), Cm(1.5), Cm(30), Cm(2))
+    run = tb.text_frame.paragraphs[0].add_run()
+    run.text, run.font.size = "La OP 30 pasa de 2 a 1 operario", Pt(30)
+    tabla = sl.shapes.add_table(2, 3, Cm(1.5), Cm(5), Cm(20), Cm(3)).table
+    for i in range(2):
+        for k in range(3):
+            c = tabla.cell(i, k)
+            c.text = str(10 * i + k)
+            c.text_frame.paragraphs[0].runs[0].font.size = Pt(pt)
+    cp = prs.core_properties
+    cp.author, cp.last_modified_by, cp.comments, cp.title = AUTOR, AUTOR, "", ""
+    prs.save(ruta)
+    return ruta
+
+
+# Contraejemplos de la auditoria del 18/10 (docs/auditorias/TANDA16_FORMATOS_auditor_2026-10-18.md): cada uno es un
+# agujero que el auditor encontro y que quedo cerrado. (id, argumentos, armar, regla que tiene que dar ROJO | None = VERDE)
+def contraejemplos(d):
+    j = lambda n: os.path.join(d, n)  # noqa: E731
+    fila = {f"{c}5": {"v": f"dato {c}", "fondo": "FFFF00", "nota": "cambiado"} for c in "ABCDEF"}
+    return [
+        ("fila-de-datos-amarilla-entera", ["--oficial"],
+         lambda: xlsx(j("c1.xlsx"), [{"nombre": "PC", "celdas": {"A1": "PLAN DE CONTROL I-AC-032", **{f"{c}4": f"Col {c}" for c in "ABCDEF"}, **fila}}]),
+         "amarillo-y-antes"),
+        ("banda-del-formulario-sigue-pasando", ["--oficial"],
+         lambda: xlsx(j("c2.xlsx"), [{"nombre": "PC", "celdas": {**{f"{c}2": {"v": "PLAN DE CONTROL I-AC-032" if c == "A" else None, "fondo": "FFFF00"} for c in "ABCDEF"},
+                                                                 **{f"{c}4": f"Col {c}" for c in "ABCDEF"}}}]), None),
+        ("columna-fuente-debajo-de-un-encabezado", ["--oficial"],
+         lambda: xlsx(j("c3.xlsx"), [{"nombre": "PC", "celdas": {"A1": "PLAN DE CONTROL I-AC-032", "D1": "FECHA: 15/10/2026",
+                                                                 "A4": "Caracteristica", "B4": "Metodo", "C4": "Fuente", "A5": "Costura", "B5": "Visual", "C5": "plano"}}]),
+         "columnas-inventadas"),
+        ("mail-que-nombra-a-la-ia", ["--tipo", "mail"],
+         lambda: texto(j("c4.txt"), "Carlos, te paso el plan. Lo revisé con Claude antes de mandarlo."), "firma-ia"),
+        ("tabla-de-numeros-chicos-para-proyectar", ["--tipo", "proyectar"], lambda: pptx_tabla(j("c5.pptx"), 6), "letra-minima"),
+        ("hora-con-el-dia-en-la-celda-de-al-lado", ["--tipo", "html"],
+         lambda: texto(j("c6.html"), "<html><body><table><tr><td>dom 18/10</td></tr><tr><td>a las 13:29</td></tr></table></body></html>"), None),
+        ("formulario-oficial-sin-banderas", [],
+         lambda: xlsx(j("c7.xlsx"), [{"nombre": "PC", "celdas": {"A1": "PLAN DE CONTROL I-AC-032", "A3": "Caracteristica", "B3": "Clase", "A4": "Costura", "B4": "D"}}]), None),
+        ("el-codigo-del-flujograma-no-es-el-de-la-hoja", ["--documento", "flujograma", "--tipo", "leer"],
+         lambda: pptx(j("c8.pptx"), [{"textos": [("Form: I-IN-002.4-R01 hoja de operaciones", None)], "foto": True}], carpeta=d), "formulario-oficial"),
+    ]
+
+
 def selftest(revisar, opciones):
     ok = True
     contenido_ok = 0
@@ -218,6 +268,14 @@ def selftest(revisar, opciones):
             ok &= caso_ok
             if clase == "contenido" and caso_ok:
                 contenido_ok += 1
+        print("Contraejemplos de la auditoria del 18/10")
+        for cid, args, armar, regla in contraejemplos(d):
+            rep = revisar(armar(), opciones(["x", "--sin-render", *args]))
+            frena = [x["regla"] for x in rep["reglas"] if x["estado"] == "ROJO"]
+            bien = (regla in frena) if regla else not frena
+            ok &= bien
+            esperado = f"ROJO en {regla}" if regla else "VERDE"
+            print(f"  {cid:<42} {'ROJO (' + ', '.join(frena) + ')' if frena else 'VERDE'}{'' if bien else f'  <-- esperaba {esperado}'}")
     print(f"  por contenido: {contenido_ok} de 10 dan ROJO antes y VERDE despues; visuales: la version que quedo da VERDE")
     print("SELFTEST OK" if ok else "SELFTEST FALLA")
     return 0 if ok else 1
