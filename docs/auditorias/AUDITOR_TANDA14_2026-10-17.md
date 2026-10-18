@@ -551,8 +551,8 @@ rojo. Quedan tres nits:
 | Tests de la tanda | OK | los 3 tests + `convencionesScripts`: **53 de 53** (eran 47 en `ad495ef8`; 6 `it` nuevos: 3 del índice, 2 del Planner, 1 de INCA) |
 | TypeScript | OK | `npx tsc --noEmit`: 0 errores |
 | Build | OK | `npm run build`: «built in 41.32s» |
-| ESLint | OK | los 6 archivos de código y tests tocados: sin avisos |
-| Git local | OK | árbol limpio al empezar; el único commit mío es esta sección |
+| ESLint | no mide | exit 0 en los 6 archivos tocados, pero la config no aplica reglas a estos `.mjs`. `npx eslint --print-config` da 0 reglas activas para `scripts/_adjuntosIndice.mjs` y para un test. Una sonda por stdin con `debugger` y una variable sin usar, como `scripts/_sondaLint.mjs`, también da exit 0 |
+| Git local | OK | árbol limpio al empezar; mis commits son solo esta sección (y su arreglo) y la memoria del auditor |
 | Fundir | OK | `git merge-tree` contra `origin/main` `87679546`: sin conflictos |
 | CI | no aplica | la rama no se empuja (encargo sin push) |
 | Mutantes | 14 de 17 mueren | los 3 que viven: M37b es el nit 2; M49 y M50 son equivalentes con los datos de hoy (detalle abajo) |
@@ -675,13 +675,16 @@ midió lo que la regla nueva separa. Separa estos 5:
 |---|---|---|
 | «estanteria» | `ESTANTERIA.rar` / `ESTANTERIA-1.rar` | 21/08, Pablo Gamboa, «ESTANTERIA DE CAJAS» / «ESTANTERIA IP Y TOP ROLL»: buscado |
 | «mylar mp7315» | `MYLAR MP7315` / `MYLAR MP7315-16` | 27/08 y 28/08 al 01/09, Pablo Gamboa: buscado |
-| «insonos sheet» | `Insonos_Sheet_3.dwg` / `Insonos_Sheet_4.dwg` | el mismo mail del 08/08/2025, «DUCTOS DWG LISTOS»: son hojas distintas de un juego, separarlas está bien |
+| «insonos sheet» | `Insonos_Sheet_3.dwg` / `Insonos_Sheet_4.dwg` | el mismo mail del 08/08/2025, «DUCTOS DWG LISTOS»: por el nombre son dos hojas distintas del mismo juego, y separarlas está bien |
 | «dispositivo sab1740 fixture» | `Dispositivo_SAB1740_fixture.step` / `…_fixture_1.step` | el mismo mail del 24/08/2026, Carlos Baptista: no se puede decir sin abrir los archivos |
 | «definitivo» | `Definitivo.2.dxf` / `Definitivo.3.dxf` | 17/07 «DXF TRASERO» y 20/07 «RE: DXF TRASERO», los dos de Facundo Santoro |
 
 El último caso, por el nombre y por el hilo, son dos versiones del mismo DXF (no abrí los archivos). La regla nueva las
-deja en dos filas. Según la cuenta del propio autor (2 de 40 juntaban mal), esos tres grupos de abajo estaban bien
-juntados.
+deja en dos filas. La cuenta del autor («2 de 40 juntaban mal») no nombra los otros tres:
+
+- las hojas 3 y 4 de Insonos probablemente estaban mal juntadas, y el «2» no las contó;
+- el fixture no se puede decir;
+- Definitivo.2 y .3 estaban bien juntados.
 
 No esconde nada:
 
@@ -691,8 +694,12 @@ No esconde nada:
 
 Por eso es nit. El punto, pegado a un número, es el único caso medido en que la regla separa versiones.
 
-Lo que falta es que el documento y el comentario del código digan el costo medido: «separa 5 grupos: los 2 buscados,
-2 que no cambian nada y 1 que parte dos versiones (Definitivo.2 y .3)».
+Lo que falta es que el documento y el comentario del código digan lo medido. La regla separa 5 grupos:
+
+- los 2 buscados (ESTANTERIA-1 y MYLAR MP7315-16);
+- 1 que probablemente estaba mal juntado y el «2 de 40» no contó (las hojas 3 y 4 de Insonos);
+- 1 que no se puede decir sin abrir los archivos (el fixture);
+- 1 que parte dos versiones (Definitivo.2 y .3).
 
 respuesta: ____
 
