@@ -331,3 +331,197 @@ No verificable desde acá: las skills de la cuenta de claude.ai (punto «Foto a 
 - Los commits se hicieron con rutas: la transcripción muestra `git commit … -- scripts/_lib/lectorMails.mjs
   scripts/_adjuntosIndice.mjs …`, y cada commit trae solo archivos de la tanda.
 - Ningún hook, regla ni `CLAUDE.md` tocado.
+
+## Ronda 2 (diff d8211553..3f0a5d44)
+
+Revisé solo el diff nuevo: `6061fd70` (los arreglos en los tres lectores y sus tests) y `3f0a5d44` (los dos documentos
+y las respuestas de arriba). Es la segunda y última ronda: lo que quede abierto va al cierre para Fak.
+
+### Resultado: fundir · 0 Importante, 3 Nit (y 1 más), 0 Preexistente
+
+Los arreglos hacen lo que dicen. Los 9 nits de la ronda 1 quedaron aplicados o corregidos, y M19 y M20 ahora mueren.
+Los números nuevos de los documentos salen de correr los lectores. Ninguna salida lleva una clave ni la palabra Claude.
+Quedan 3 nits chicos y uno más, de un mensaje de commit. Ninguno frena la fusión.
+
+| Control | Estado | Detalle |
+|---|---|---|
+| Tests de la tanda | OK | `npx vitest run` de los 3 tests + `convencionesScripts`: **46 de 46** (en la ronda 1 eran 40) |
+| TypeScript | OK | `npx tsc --noEmit`: 0 errores |
+| Build | OK | `npm run build`: «built in 35.76s» |
+| Git local | OK | árbol limpio al empezar; el único commit mío es esta sección |
+| Fundir | OK | `git merge-tree` contra main `44b6b555`: sin conflictos |
+| Mutantes | OK | M19 y M20 mueren. De 15 mutantes nuevos sobre el código de esta ronda, mueren 11 (detalle abajo) |
+| Claves y «Claude» | OK | 0 en las 3 salidas. `python scripts/_sinFirmaIA.py`: 0 bloqueantes y 0 avisos en las 3 |
+| La copia de mails | sin tocar | md5 de `mails.jsonl` igual que en la ronda 1 (`c71363c1…`), al empezar y al cerrar |
+
+### Lo que pidió el encargo, punto por punto
+
+**1. Los tests.** Los 3 de la tanda más `convencionesScripts`: 46 de 46. Son 6 `it` nuevos (con 17 `expect`).
+
+**2. M19 y M20.** Armé una copia en el scratchpad con los archivos de `HEAD` (`git show`), `node_modules` por enlace
+(junction) y vitest con `globals`. El worktree no se tocó.
+
+| Mutante | Resultado |
+|---|---|
+| M0 control | verde, 43 de 43 (los 3 tests, sin `convencionesScripts`) |
+| M19 «> 2 semanas» lee la columna del Total | **muere** (1 en rojo) |
+| M20 las piezas salen del último enlace | **muere** (1 en rojo) |
+
+**3. `huecos()`.** Lo corrí con casos armados a mano:
+
+| Caso | Lo que da |
+|---|---|
+| Dos partes el mismo día, y después uno a la semana | ninguno |
+| Tres semanas seguidas | ninguno |
+| Dos partes en orden inverso (sin pasar por `historia`) | ninguno |
+| Los mismos dos, por `historia()` (que ordena) | 27/05, 03/06 y 10/06 |
+| Miércoles a jueves de la semana siguiente (8 días) | ninguno |
+| Miércoles a miércoles de dos semanas (14 días) | el miércoles del medio |
+| Cruce de año: 24/12/2025 a 14/01/2026 | 31/12 y 07/01 |
+| Un solo parte, o ninguno | ninguno |
+
+En la salida real (`node scripts/_incaParte.mjs --out <scratchpad>`), el aviso dice «Partes que faltan en la copia (el
+parte sale cada miercoles): 27/05/2026, 03/06/2026, 10/06/2026. Las cuentas de «partes» de abajo son de los 29 que
+estan». Los 29 partes reales caen en miércoles (29 de 29) y ninguno repite fecha.
+
+El «17 partes, no 17 semanas corridas» del paquete cierra así: del 15/04 al 26/08 hay 20 miércoles; menos los 3 que
+faltan, quedan 17. O sea, el B00000330933 estuvo en rojo en todos los partes de la copia entre esas dos fechas.
+
+**4. Los números de los documentos, corridos.** Los tres lectores con `--out` a mi carpeta temporal. Las tres salidas
+son idénticas byte a byte a las de `exports/` del checkout principal (de las 20:44 y 20:45). Para lo que no imprime un
+lector, armé una sonda que importa los mismos módulos del worktree e imprime solo conteos, sin ningún cuerpo de mail.
+
+| Dato del documento | Medido | Cómo |
+|---|---|---|
+| 311 adjuntos de diseño + 120 comprimidos = 431 | 311 + 120 = 431 | `_adjuntosIndice.mjs --out` |
+| Pablo mandó 193, Carlos 58 | 193 y 58 | `filasDeAdjuntos` por remitente |
+| 91 mails de Pablo con 3D; Fak en los 91 (26 en «Para», 65 solo en copia) | 91; 26 + 65; 0 sin Fak | `para` y `cc` de esos 91 |
+| Carlos en 46 (23 en «Para» y 23 en copia) | 23 + 23 = 46 | ídem |
+| El mail del 02/09/2025 «Conjunto tela FSC RH / LH P2X (208) 2D Y 3D» entra por `.jt` | entra, con sus 4 `.jt` | salida del índice |
+| ESTANTERIA.rar y ESTANTERIA-1.rar con sus asuntos al lado | «ESTANTERIA DE CAJAS»; «ESTANTERIA IP Y TOP ROLL» | salida del índice |
+| 38 tareas, 33 con aviso de vencida, último el 08/07; 76 mails de vencimientos | 38; 33; 08/07/2026; 76 (con 152 renglones de vencida) | `_plannerCarlos.mjs --out` |
+| El «50» del informe D | 50 mails en inglés de vencida, pero ver el nit 2 | encabezados de los 76 mails |
+| 279 mails de Carlos desde el 01/06, uno en Eliminados | 279, pero ver el nit 3 | `leerMails` por remitente y carpeta |
+| 29 partes; 3 piezas desde el 11/03 y 3 desde el 01/04 | igual | `_incaParte.mjs --out` |
+| Tanda 3 fundida a las 05:56; tanda 5 a las 10:30 y push a las 10:40 | 05:56:00; 10:30:31; push 10:40:44 | `git reflog show main` y `origin/main` |
+| Punto 5 de Federico: 9 afirmaciones = 7 sí, 1 no, 1 a medias; y 2 que faltan | 7 «Sí», 1 «No», 1 «A medias» y 2 «Falta» | conté la columna «¿Coincide?» de la tabla |
+
+**Viejo contra nuevo.** Corrí también las versiones de `d8211553` sobre la misma copia y comparé:
+
+- **INCA:** cambian solo el aviso de los partes que faltan y la frase del comprador. Las tablas son iguales: leer el
+  enlace sin decodificar el renglón entero no movió ninguna pieza.
+- **Planner:** la salida es idéntica byte a byte. Es lo esperado: el nit 5 no movía ninguna cifra.
+- **Índice:** sacando la columna nueva de asuntos, difieren 21 renglones, y todos se explican:
+  - los 4 del resumen;
+  - las 4 filas `.jt` del 02/09/2025;
+  - la fila del MQB, que suma su `.jt`;
+  - la fila del `.tar` de VW (09/12/2024);
+  - y sus 6 renglones de detalle.
+
+  Facundo Santoro pasa de 83 a 87 (los 4 `.jt`). Nada más se movió.
+
+**5. Claves y la palabra Claude.**
+
+- En las 3 salidas: 0 apariciones del patrón de la clave, 0 «clave retirada» y 0 «claude». El detector de la casa da 0
+  bloqueantes y 0 avisos en las tres.
+- En los renglones que agrega el diff: 0 apariciones del patrón de la clave, y tampoco en los mensajes de los 2 commits.
+- «claude» aparece 3 veces en los renglones agregados, todas en el paquete:
+  - la ruta de la carpeta `_CUARENTENA_CLAUDE POR AREA`, que ya estaba (el renglón cambió por la fecha 03/10);
+  - la ruta del repo `.claude/skills/`;
+  - el nombre de la plataforma, `claude.ai`, en la ficha de «foto a tabla».
+
+  Las 3 están en un documento del repo para Fak, no en un entregable de Barack: no es hallazgo.
+- El cuerpo del mail de Pedro del 09/10 no se abrió ni se imprimió. Las sondas de conteo pasan por `leerMails`, que
+  arma la clave de repetidos en memoria, igual que en la ronda 1. El filtro del Planner no lo deja entrar.
+
+**Mutantes nuevos, sobre el código de esta ronda** (misma copia, uno por vez):
+
+| Mutante | Resultado |
+|---|---|
+| M22 `huecos`: umbral de 7 días en vez de 8 | vive (equivalente: con 8 días el bucle no agrega nada igual) |
+| M23 `huecos` incluye el día del parte siguiente | muere (1) |
+| M24 `huecos` siempre vacío | muere (2) |
+| M25 sin el aviso de los partes que faltan | muere (1) |
+| M26a vuelve a decodificar el renglón entero | muere (1) |
+| M26b sin el `try` al decodificar el valor de `tlks` | **vive** (nit 1) |
+| M27 separa solo por coma, sin `%2C` | **vive** (nit 1) |
+| M28 el renglón de consola de INCA sin `taparClaves` | vive (sin test; ver abajo) |
+| M29 `diasDeAtraso` sin «de retraso» | muere (1) |
+| M30 el encabezado sin «vencida hoy» | muere (1) |
+| M31 `diasDeAtraso` toma el primer número del renglón | muere (1) |
+| M32 el asunto sin sacarle el «RE:» | muere (1) |
+| M33 la columna de asuntos vacía | muere (1) |
+| M34 sin `.jt` | muere (1) |
+| M35 sin `.tar` | muere (1) |
+
+### Hallazgos de la ronda 2
+
+**1. [Nit · ROBUSTNESS] El arreglo del nit 7 está probado en una sola dirección.**
+Dónde: `__tests__/scripts/incaParte.test.mjs:59` y `scripts/_incaParte.mjs:51`.
+
+El test nuevo pone el `%` mal formado **afuera** del valor de `tlks` (`a=100%&tlks=_A1,_B2`). Eso mata a M26a (volver a
+decodificar el renglón entero), pero el `catch` no corre nunca. Por eso viven dos mutantes:
+
+- M26b: sin el `try`, un `%` mal formado **adentro** del valor frena el script.
+- M27: separar solo por coma. Solo importa cuando el `catch` corrió.
+
+El código anda bien:
+
+- `piezasDelEnlace('6 <https://x/inca?tlks=_A1%2C_B2%ZZ&duns=1>')` da `["A1","B2%ZZ"]`, sin tirar error.
+- Con `_A1%2C_B2`, da `["A1","B2"]`.
+
+Riesgo bajo: los 29 partes reales no tienen un `%` así. Lo que falta es un `expect` con el `%` adentro del valor.
+
+respuesta: ____
+
+**2. [Nit · dato del documento] «los 50 mails en inglés «You have late tasks»».**
+Dónde: `docs/TANDA14_PAQUETE_POR_PERSONA_2026-10-17.md:25`.
+
+Conté los encabezados de los 76 mails de vencimientos:
+
+- 34 dicen «You have late tasks».
+- 16 dicen «You have a late task».
+- 3 en castellano dicen «Tiene una tarea retrasada».
+
+El 50 está bien como «mails en inglés con tareas vencidas». La frase entre comillas, en cambio, es la de 34. El total
+de 76 también cierra.
+
+respuesta: ____
+
+**3. [Nit · dato del documento, sobre un número que propuse yo en la ronda 1] Los 279 de Carlos incluyen un aviso de
+Teams.**
+Dónde: `docs/TANDA14_PAQUETE_POR_PERSONA_2026-10-17.md:120`.
+
+Medido por remitente y carpeta desde el 01/06:
+
+- 277 de «Carlos Baptista» en la Bandeja;
+- 1 de él en Eliminados (12/06, «RV: Seguimiento Proyectos»);
+- 1 de «Carlos Baptista en Teams» en la Bandeja.
+
+Los «278 de la Bandeja» del documento cuentan ese aviso de Teams. El 279 sale de mi nit 9 de la ronda 1, que lo contó
+igual sin decirlo. No cambia el «el que más le escribe». Si se cuenta solo el remitente «Carlos Baptista», son 278
+(277 + 1).
+
+respuesta: ____
+
+**Y 1 nit más:** el mensaje de `6061fd70` dice «9 tests nuevos» y son 6 (`it`): de 40 a 46 con `convencionesScripts`,
+de 37 a 43 en la copia. No se arregla sin reescribir la historia.
+
+### Lo que no es hallazgo en esta ronda (para que nadie lo reabra)
+
+- **M22 vive:** es equivalente (ver la tabla).
+- **M28 vive:** el renglón de consola de INCA no tiene test, pero las piezas salen de un enlace de VW, así que el riesgo
+  es nulo. Además, el cambio aprieta, no afloja.
+- **`huecos()` y un parte corrido de día:** si un parte llegara un viernes, 9 días después del anterior, `huecos()`
+  daría como faltante el miércoles del medio. Eso es lo que dice su comentario: «un salto de mas de 8 dias es un parte
+  que no esta». Hoy hay 0 casos: los 29 partes son de un miércoles.
+- **«El parte dice que ahi INCA le avisa al comprador de VW»:** el pie del parte dice «The responsible buyer will be
+  notificated if the tasks are waiting for processing longer than two weeks». «De VW» es una lectura, no una cita
+  textual. Se sostiene.
+- **La ficha de «foto a tabla»:** el aporte de Federico del 06/10 (renglón 108) nombra «foto a tabla» entre «las
+  habilidades» que van por separado. Que esté habilitada en la cuenta de claude.ai no se puede verificar desde acá,
+  igual que en la ronda 1. En `.claude/skills/` del repo no está.
+- **Las respuestas de la ronda 1:** las 9 tienen su «respuesta» y verifiqué cada una contra el código o contra el
+  documento.
+
+Ronda 2 = última. Lo abierto (los 3 nits y el del commit) va al cierre para Fak.
