@@ -13,6 +13,10 @@ Origen: post de Andrej Karpathy del 01/10/2026 (lenguaje controlado → dibujo �
 probado ese día con el caso de la espuma del IP Pad. Fak, 02/10/2026: *"aplicarlo permanente para
 cuando alguien quiere y pide una mejor explicación o nota que no entiende"*.
 
+<!-- paso0:inicio -->
+**Paso 0 — qué formato se usa, antes de armar nada** (detalle en `docs/FORMATO_CASA.md`). En este orden: (1) si hay **formulario oficial del SGC** para esto, se usa ese; (2) si el **cliente tiene plantilla propia** (VW, BeOn, SMRC), se clona la suya; (3) si un **compañero ya usa un formato** para esto (Leo, Carlos, Gamboa) o hay uno en `FORMATOS GENERAL`, se copia ese; (4) recién ahí, el **formato de la casa** (`scripts/_lib/tema.json`). Y dos modos que no se mezclan: **corregir el archivo de otro** lleva color propio y «ANTES: …» en cada celda tocada (06/10); **rearmarlo entero** va limpio, sin amarillo ni notas (15/10). Antes de mostrarlo: `python scripts/revisar.py <archivo>`.
+<!-- paso0:fin -->
+
 ## Cuándo se usa
 
 - La persona dice que no entendió, o pide que se lo expliquen mejor, más fácil o más corto.

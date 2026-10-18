@@ -7,6 +7,10 @@ description: Exportar un AMFE de Barack a Excel oficial («el AMFE en Excel», �
 
 Incidente fuente 2026-06-25 (AMFE 128/129 Amarok): entregué Excel con carátula VACÍA, modos de falla salteados (1,3,4,5,2) y revisiones inyectadas en la hoja de datos. Fak: "así no me podés entregar un AMFE". Esta skill codifica el estándar para que no se repita.
 
+<!-- paso0:inicio -->
+**Paso 0 — qué formato se usa, antes de armar nada** (detalle en `docs/FORMATO_CASA.md`). En este orden: (1) si hay **formulario oficial del SGC** para esto, se usa ese; (2) si el **cliente tiene plantilla propia** (VW, BeOn, SMRC), se clona la suya; (3) si un **compañero ya usa un formato** para esto (Leo, Carlos, Gamboa) o hay uno en `FORMATOS GENERAL`, se copia ese; (4) recién ahí, el **formato de la casa** (`scripts/_lib/tema.json`). Y dos modos que no se mezclan: **corregir el archivo de otro** lleva color propio y «ANTES: …» en cada celda tocada (06/10); **rearmarlo entero** va limpio, sin amarillo ni notas (15/10). Antes de mostrarlo: `python scripts/revisar.py <archivo>`.
+<!-- paso0:fin -->
+
 ## 0. Usar `buildAmfeOficialWorkbook` — NO armar la carátula a mano (2026-07-03)
 
 El export oficial se genera con **`buildAmfeOficialWorkbook(doc, { revisions, status })`** (`modules/amfe/amfeExcelExport.ts`). Produce un workbook de 2 hojas — **`Caratula` + `AMFE`** — igual que los AMFEs oficiales reales de Barack (ej. AMFE 150 Patagonia). Incluye:

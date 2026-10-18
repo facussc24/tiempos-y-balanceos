@@ -17,6 +17,10 @@ parte de arriba del Top Roll, donde va el vinilo, en metro cuadrado, del trasero
 delantero"*. Fak: *"hiciste un muy buen laburo... es una tarea que vamos a repetir en el futuro
 muy cercano"*. El caso completo, con sus numeros y sus rutas: `examples/top_roll_patagonia/`.
 
+<!-- paso0:inicio -->
+**Paso 0 — qué formato se usa, antes de armar nada** (detalle en `docs/FORMATO_CASA.md`). En este orden: (1) si hay **formulario oficial del SGC** para esto, se usa ese; (2) si el **cliente tiene plantilla propia** (VW, BeOn, SMRC), se clona la suya; (3) si un **compañero ya usa un formato** para esto (Leo, Carlos, Gamboa) o hay uno en `FORMATOS GENERAL`, se copia ese; (4) recién ahí, el **formato de la casa** (`scripts/_lib/tema.json`). Y dos modos que no se mezclan: **corregir el archivo de otro** lleva color propio y «ANTES: …» en cada celda tocada (06/10); **rearmarlo entero** va limpio, sin amarillo ni notas (15/10). Antes de mostrarlo: `python scripts/revisar.py <archivo>`.
+<!-- paso0:fin -->
+
 ## 0. Que se entrega (lo que le gusto a Fak)
 
 Tres numeros por pieza, y **no se mezclan**: son tres magnitudes distintas.
