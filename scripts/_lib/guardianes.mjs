@@ -530,9 +530,11 @@ const FIRMA_PREFIJO_COLECCION_RE = /(?:\b(?:sheets|worksheets|names|comments|sha
 const FIRMA_RAIZ_RE = /(?:^|[\s"'=])(?:[yY]:[\\/]|\/y\/|[^"'\n]*Ingenier[ií]a y Proyecto)/;
 // P16: «Claude Fak» y CLAUDE.md quedan exentos tambien SIN barra final (`cd ".../Claude Fak" && node …`): el nombre
 // exacto seguido de barra, comilla o fin. Un espacio NO alcanza: «Claude Fak notas» o «Claude Fakultad» son otra carpeta.
+// Desde la mudanza del 17/10/2026 la carpeta de la memoria es «ASISTENTE INGENIERIA\5- FACUNDO (memoria y configuracion)»
+// (canon scripts/_lib/nubeCarpetas.data.json): queda exenta igual que la vieja, colgada de la biblioteca y no de otro lado.
 // La carpeta exenta es la de la BIBLIOTECA de Ingenieria: una carpeta «Claude Fak» en el servidor (`Y:\...`) no lo es
 // (auditor, 11/10/2026).
-const FIRMA_EXENTOS_RE = /(?:[\\/]\.claude[\\/]|[\\/]memory[\\/]|[\\/]docs[\\/]|[\\/]__tests__[\\/]|[\\/]_archive[\\/]|[\\/]claude-area[\\/]|CLAUDES_POR_AREA|CLAUDE POR AREA|Claude Barack|Base Claude Ingenieria|INSTALAR CLAUDE|ACTUALIZACION_CLAUDE|Ingenier[ií]a y Proyecto - General(?:[\\/][^\\/"'\n]+[\\/]\.\.)?[\\/]Claude Fak(?=[\\/"']|$)|firmaIA|_sinFirmaIA|_limpiarListadoHoClaude|guardianes\.mjs|cierreGuard\.mjs|CLAUDE\.md(?=["']|$)|LECCIONES_APRENDIDAS\.md$|MEMORY\.md$|\.claude[\\/])/i;
+const FIRMA_EXENTOS_RE = /(?:[\\/]\.claude[\\/]|[\\/]memory[\\/]|[\\/]docs[\\/]|[\\/]__tests__[\\/]|[\\/]_archive[\\/]|[\\/]claude-area[\\/]|CLAUDES_POR_AREA|CLAUDE POR AREA|Claude Barack|Base Claude Ingenieria|INSTALAR CLAUDE|ACTUALIZACION_CLAUDE|Ingenier[ií]a y Proyecto - General(?:[\\/][^\\/"'\n]+[\\/]\.\.)?[\\/](?:Claude Fak|ASISTENTE INGENIERIA[\\/]5- FACUNDO \(memoria y configuracion\))(?=[\\/"']|$)|firmaIA|_sinFirmaIA|_limpiarListadoHoClaude|guardianes\.mjs|cierreGuard\.mjs|CLAUDE\.md(?=["']|$)|LECCIONES_APRENDIDAS\.md$|MEMORY\.md$|\.claude[\\/])/i;
 // Comandos que solo leen o que guardan texto que no es un documento (un mensaje de commit lleva
 // "Co-Authored-By: Claude" por convencion del repo, y no sale de aca como documento de Barack).
 //
@@ -2764,7 +2766,7 @@ ${VID_CIERRE}`);
       return bloqueo(`[VIDEO-MAQUINA] BLOQUEADO: esto ${motivo} y el disco ${disco} de esta PC tiene ${gb.toFixed(1)} GB libres (menos de ${VID_GB_MINIMO}).
 
 Lo pesado en disco se hace desde CATA, la notebook de Calidad (tiene el disco grande: 239 GB libres el 15/10): dejarle el
-pedido en FACUNDO\\ de la nube de Ingenieria (PEDIDO N - <que> - <fecha>.txt; memoria
+pedido en ASISTENTE INGENIERIA\\6- PEDIDOS ENTRE PC (FACUNDO)\\ de la nube de Ingenieria (PEDIDO N - <que> - <fecha>.txt; memoria
 reference_canal_entre_pcs_pedidos_facundo) o decirselo a Fak si esta en esa PC. Mover o renombrar adentro del disco no cuenta
 (un mv a la biblioteca pasa). Regla video-maquina.md, tanda 1.6 (16/10/2026).
 

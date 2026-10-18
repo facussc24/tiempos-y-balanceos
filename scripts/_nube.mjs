@@ -85,7 +85,7 @@ const CLAUDE = join(HOME, '.claude');
 const NUBE_INGENIERIA = buscarNube(HOME);
 const NUBE_VIEJA = buscarNubeVieja(HOME);
 // TRANSICION (01/10/2026, regla nube-ingenieria.md). La copia pasa de la OneDrive personal de Fak a
-// `Claude Fak` en la nube de Ingenieria. Mientras esa carpeta este vacia y la vieja siga existiendo,
+// la nube de Ingenieria (hoy ASISTENTE INGENIERIA\5- FACUNDO, mudanza del 17/10/2026). Mientras esa carpeta este vacia y la vieja siga existiendo,
 // se LEE de la vieja (leer de ahi no rompe la regla). SUBIR va siempre a Ingenieria.
 const EN_TRANSICION = !process.argv.includes('--subir') && !process.argv.includes('--sincronizar')
     && !existsSync(join(NUBE_INGENIERIA, 'claude-memoria')) && existsSync(join(NUBE_VIEJA, 'claude-memoria'));
@@ -292,7 +292,7 @@ if ((bajar || sincronizar) && !existsSync(NUBE)) {
     console.error(`\n[X] NO EXISTE en esta PC la carpeta de la nube de Ingenieria con la memoria de Claude:\n    ${NUBE}\n`);
     console.error('    Sin eso no hay nada que bajar. Suele ser una de tres:');
     console.error('      1. Esta PC no tiene sincronizada la biblioteca de Ingenieria con la cuenta de Fak');
-    console.error('         (la carpeta "Claude Fak" tiene permiso solo para el): abrir el sitio "Ingenieria y');
+    console.error('         (la carpeta de la memoria tiene permiso solo para el): abrir el sitio "Ingenieria y');
     console.error('         Proyecto" en Teams o SharePoint, entrar a Documentos y apretar "Sincronizar".');
     console.error('      2. OneDrive todavia no termino de sincronizar la carpeta.');
     console.error('      3. Nunca se subio: correr "--subir --aplicar" en la PC que tiene la memoria.');
@@ -507,7 +507,16 @@ console.log(aplicar
 console.log('-'.repeat(74) + '\n');
 
 function leeme() {
+    // Los cinco renglones de arriba son los del LEEME de la carpeta unica (mudanza del 17/10/2026,
+    // scripts/_lib/nubeOrden.data.json, destino 5): asi la subida no le pisa el LEEME que dejo la mudanza.
+    let cinco = [];
+    try {
+        const orden = JSON.parse(readFileSync(join(REPO, 'scripts', '_lib', 'nubeOrden.data.json'), 'utf8'));
+        cinco = (orden.destinos.find((d) => d.id === '5') || {}).leeme || [];
+    } catch { /* sin el canon, el LEEME de siempre */ }
     return [
+        ...cinco,
+        ...(cinco.length ? [''] : []),
         '========================================================================',
         '  MEMORIA Y CONFIGURACION DE CLAUDE (Fak) — NUBE DE INGENIERIA',
         '  Carpeta con permiso solo para Fak: tiene claves. No compartirla.',
@@ -533,7 +542,8 @@ function leeme() {
         '',
         '2) Con la cuenta de Fak, sincronizar la biblioteca de Ingenieria: en Teams o',
         '   SharePoint, sitio "Ingenieria y Proyecto" > Documentos > "Sincronizar".',
-        '   Asi aparece esta misma carpeta ("Claude Fak") del otro lado.',
+        '   Asi aparece esta misma carpeta del otro lado (ASISTENTE INGENIERIA >',
+        '   5- FACUNDO (memoria y configuracion)).',
         '',
         '3) Traer la memoria y la configuracion (lo corre Claude solo al arrancar):',
         '',

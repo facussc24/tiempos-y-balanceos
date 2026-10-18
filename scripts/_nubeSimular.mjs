@@ -58,10 +58,27 @@ export function renderSimulado(d) {
     const aRevisar = [...codigo.values()].filter((x) => x.origen !== 'copia en la nube' && soloForma(x));
     const L = [];
     const opcion = canon.nombres_carpeta_unica.find((o) => o.nombre === nombreUnico);
-    L.push(`# Simulado de la carpeta única de la nube — nada se movió ni se borró`);
+    // Lo que todavia esta en la raiz de la biblioteca y tiene lugar en la carpeta unica (mudanza del 17/10/2026,
+    // scripts/_nubeMudar.mjs): cero = ya no queda nada por mover.
+    const pendientes = plan.filas.filter((f) => f.existe && f.destino);
+    L.push(pendientes.length
+        ? `# Simulado de la carpeta única de la nube — nada se movió ni se borró`
+        : `# Carpeta única de la nube — no queda nada por mover`);
     L.push('');
     L.push(`Medido el ${medicion.medido} con \`node scripts/_nubeSimular.mjs\` (solo lee). Nombre usado en este simulado: **${nombreUnico}**. ${fraseEspacio(medicion.libre_antes, medicion.libre_despues)}`);
     L.push('');
+    L.push('## Lo que queda por mover');
+    L.push('');
+    if (pendientes.length) {
+        L.push(`**${pendientes.length} carpeta${pendientes.length === 1 ? '' : 's'}** de la raíz todavía tiene${pendientes.length === 1 ? '' : 'n'} lugar en la carpeta única: ${pendientes.map((f) => `\`${f.nombre}\``).join(', ')}. Se mueven con \`node scripts/_nubeMudar.mjs --aplicar\` (sin \`--aplicar\` solo muestra el plan).`);
+    } else {
+        L.push(`**Nada.** Ninguna carpeta de la lista quedó en la raíz de la biblioteca: todas están adentro de «${nombreUnico}» (mudanza del 17/10/2026, \`scripts/_nubeMudar.mjs\`).`);
+    }
+    L.push('');
+    if (!pendientes.length) {
+        if (plan.nuevas.length) L.push(`**Ojo:** en la raíz hay ${plan.nuevas.length} carpeta${plan.nuevas.length === 1 ? '' : 's'} que parece${plan.nuevas.length === 1 ? '' : 'n'} nuestra${plan.nuevas.length === 1 ? '' : 's'} y no está${plan.nuevas.length === 1 ? '' : 'n'} en la lista: ${plan.nuevas.map((n) => `\`${n}\``).join(', ')}.\n`);
+        return L.join('\n');
+    }
     L.push('## Lo que necesito de vos');
     L.push('');
     L.push(`1. **El sí a este simulado.** ${canon.si_general} Con este sí se mueve; antes se publican los programas que buscan las carpetas en los dos lugares, el viejo y el nuevo, para que los mails de cada PC no dejen de subir.`);

@@ -26,7 +26,9 @@ REPO = AQUI.parents[1]
 PLUGIN_REPO = Path(r"C:\Dev\barack-claude")
 DEMO = Path(os.environ.get("CLAUDE_AREA_HOME", r"C:\ClaudeBarack"))
 EXPORTS = REPO / "exports" / "CLAUDES_POR_AREA_20261001" / "fuentes"
-RESPALDO = Path.home() / "BARACK ARGENTINA SRL" / "Ingeniería y Proyecto - General" / "Claude Fak" / "repo-privado"
+sys.path.insert(0, str(REPO / "scripts" / "_lib"))
+from nube_carpetas import carpeta_nube  # noqa: E402  canon de carpetas (mudanza del 17/10/2026): nueva si existe, si no la vieja
+RESPALDO = (carpeta_nube("facundo") or Path.home() / "BARACK ARGENTINA SRL" / "Ingeniería y Proyecto - General") / "repo-privado"
 
 # Frases que dicen "Claude nunca envia un mail". Dejan de ser verdad cuando la promesa mail-enviar esta probada.
 FRASES_NO_ENVIA = [

@@ -29,13 +29,20 @@ MINIMO_MEMORIAS=20   # por debajo de esto la PC no tiene cerebro util, no es "fa
 # La carpeta del OneDrive corporativo trae el nombre del tenant y el usuario cambia
 # segun la PC: se busca con glob, nunca hardcodeada.
 # Desde el 01/10/2026 vive en la nube de INGENIERIA (regla nube-ingenieria.md: nada en la nube
-# personal de Fak): `BARACK ARGENTINA SRL\Ingenieria y Proyecto - General\Claude Fak`. Cuenta solo
+# personal de Fak), adentro de `BARACK ARGENTINA SRL\Ingenieria y Proyecto - General`. Cuenta solo
 # si ya tiene algo adentro (`claude-memoria`): la carpeta vacia no sirve para bajar. El lugar viejo
 # (`OneDrive*BARACK*/Barack-cerebro`) queda como segunda opcion mientras alguna PC lo conserve.
+# Desde la mudanza del 17/10/2026 la carpeta es «ASISTENTE INGENIERIA/5- FACUNDO (memoria y configuracion)»; la vieja,
+# en la raiz de la biblioteca, se sigue buscando despues (una PC que todavia no bajo la mudanza). Los dos nombres, en
+# este orden, son la clave «facundo» de scripts/_lib/nubeCarpetas.data.json (lo verifica __tests__/scripts/nubeCarpetas.test.mjs).
+NUBE_FACUNDO_NUEVA="ASISTENTE INGENIERIA/5- FACUNDO (memoria y configuracion)"
+NUBE_FACUNDO_VIEJA="Claude Fak"
 nube_path() {
-  local d
-  for d in "$HOME"/"BARACK ARGENTINA SRL"/Ingenier*a\ y\ Proyecto\ -\ General/"Claude Fak"; do
-    [ -d "$d/claude-memoria" ] && { echo "$d"; return 0; }
+  local d n
+  for n in "$NUBE_FACUNDO_NUEVA" "$NUBE_FACUNDO_VIEJA"; do
+    for d in "$HOME"/"BARACK ARGENTINA SRL"/Ingenier*a\ y\ Proyecto\ -\ General/"$n"; do
+      [ -d "$d/claude-memoria" ] && { echo "$d"; return 0; }
+    done
   done
   for d in "$HOME"/OneDrive*BARACK*/Barack-cerebro; do
     [ -d "$d" ] && { echo "$d"; return 0; }
@@ -79,7 +86,7 @@ if [ "$CANT" -lt "$MINIMO_MEMORIAS" ]; then
   else
     echo ""
     echo "Ademas esta PC NO tiene la carpeta de la nube de Ingenieria donde esta guardada. Buscada como"
-    echo "\$HOME/BARACK ARGENTINA SRL/Ingenieria y Proyecto - General/Claude Fak"
+    echo "\$HOME/BARACK ARGENTINA SRL/Ingenieria y Proyecto - General/$NUBE_FACUNDO_NUEVA"
     echo ""
     echo "Decirle a Fak, en una linea y sin la palabra 'cerebro', que en esta PC falta sincronizar la nube"
     echo "de Ingenieria con su cuenta (iniciar sesion en OneDrive y apretar Sincronizar). Por ejemplo:"

@@ -16,7 +16,7 @@
  * La carpeta de prueba queda en el TEMP del sistema (vacia: nada la escribe con marcar:false y escapes:false).
  *
  * Los datos NO van al repo (traen mensajes de Fak y salidas de herramientas): se leen de la carpeta del informe en la nube
- * de Ingenieria (`Claude Fak\viernes-17-plan-sistema\20-informes\scripts\frenos\`, `clasif2.json` + `frenos_bruto4.jsonl`).
+ * de Ingenieria (`ASISTENTE INGENIERIA\5- FACUNDO (memoria y configuracion)\viernes-17-plan-sistema\20-informes\scripts\frenos\`, `clasif2.json` + `frenos_bruto4.jsonl`).
  *
  *   node scripts/_frenosMedir.mjs --base <ruta a guardianes.mjs> [--nuevo <ruta>] [--datos <carpeta>] [--json <salida>] [--casos]
  *   (--nuevo por defecto: el guardianes.mjs de este checkout; --casos lista cada freno que cambio)

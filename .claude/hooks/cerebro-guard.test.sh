@@ -15,6 +15,8 @@ cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 G="$PWD/.claude/hooks/cerebro-guard.sh"
 ok=0; fail=0
 
+# El nombre de la carpeta vieja sale del hook (no se repite aca como literal).
+VIEJA_RAIZ=$(sed -n 's/^NUBE_FACUNDO_VIEJA="\(.*\)"$/\1/p' "$G")
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
@@ -26,9 +28,14 @@ armar() {
   mkdir -p "$mem"
   local i=0
   while [ "$i" -lt "$1" ]; do : > "$mem/memoria_$i.md"; i=$((i+1)); done
-  if [ "$2" = "si" ] || [ "$2" = "vieja" ]; then
-    # "si" = donde vive desde el 01/10/2026 (nube de Ingenieria); "vieja" = la OneDrive personal.
-    local nube="$casa/BARACK ARGENTINA SRL/Ingeniería y Proyecto - General/Claude Fak"
+  if [ "$2" = "si" ] || [ "$2" = "vieja" ] || [ "$2" = "raiz" ] || [ "$2" = "las2" ]; then
+    # "si" = donde vive desde la mudanza del 17/10/2026 (carpeta unica de la nube de Ingenieria); "raiz" = donde vivia
+    # del 01/10 al 17/10 (en la raiz de la biblioteca); "las2" = las dos a la vez (gana la nueva); "vieja" = la OneDrive
+    # personal. Los nombres son los del canon (clave «facundo» de scripts/_lib/nubeCarpetas.data.json).
+    local bib="$casa/BARACK ARGENTINA SRL/Ingeniería y Proyecto - General"
+    local nube="$bib/ASISTENTE INGENIERIA/5- FACUNDO (memoria y configuracion)"
+    [ "$2" = "raiz" ] && nube="$bib/$VIEJA_RAIZ"
+    [ "$2" = "las2" ] && { mkdir -p "$bib/$VIEJA_RAIZ/claude-memoria"; printf '{\n  "fecha": "%s",\n  "pc": "%s"\n}\n' "$4" "LA-VIEJA" > "$bib/$VIEJA_RAIZ/_ESTADO.json"; }
     [ "$2" = "vieja" ] && nube="$casa/OneDrive - BARACK ARGENTINA SRL/Barack-cerebro"
     mkdir -p "$nube/claude-memoria"
     printf '{\n  "fecha": "%s",\n  "pc": "%s"\n}\n' "$4" "$3" > "$nube/_ESTADO.json"
@@ -56,7 +63,13 @@ probar 'node scripts/_nube.mjs --bajar'    "$CASA" PC-NUEVA "cero memorias: da e
 probar 'ANTES DE CUALQUIER OTRA COSA'      "$CASA" PC-NUEVA "cero memorias: lo marca prioritario"
 
 CASA=$(armar 0 si PC-VIEJA "2026-09-03 11:39")
-probar 'Ingeniería y Proyecto - General/Claude Fak' "$CASA" PC-NUEVA "baja de la nube de Ingenieria"
+probar 'Ingeniería y Proyecto - General/ASISTENTE INGENIERIA/5- FACUNDO' "$CASA" PC-NUEVA "baja de la carpeta unica (lugar nuevo, 17/10/2026)"
+
+CASA=$(armar 0 raiz PC-VIEJA "2026-09-03 11:39")
+probar "Ingeniería y Proyecto - General/$VIEJA_RAIZ" "$CASA" PC-NUEVA "sin la mudanza bajada, la encuentra en la raiz (lugar viejo)"
+
+CASA=$(armar 300 las2 OTRA-PC "2099-01-01 00:00")
+probar "OTRA-PC" "$CASA" ESTA-PC "con las dos carpetas gana la nueva (lee su _ESTADO, no el de la vieja)"
 
 CASA=$(armar 0 vieja PC-VIEJA "2026-09-03 11:39")
 probar 'node scripts/_nube.mjs --bajar'    "$CASA" PC-NUEVA "una PC que todavia tiene la copia en el lugar viejo tambien la encuentra"

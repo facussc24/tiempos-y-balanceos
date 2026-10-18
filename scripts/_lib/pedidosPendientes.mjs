@@ -30,7 +30,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buscarBiblioteca } from './nubeRutas.mjs';
+import { buscarBiblioteca, resolverCarpeta } from './nubeRutas.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const CANON = JSON.parse(fs.readFileSync(path.join(AQUI, 'pedidosCanon.data.json'), 'utf8'));
@@ -125,7 +125,7 @@ export function pedidosPendientes({ archivos, pc, nombre = '' }) {
     const cuando = [p.origen ? `de ${p.origen}` : '', `${fechaCorta(p.fecha)}${p.hora ? ` ${p.hora}` : ''}`.trim()].filter(Boolean).join(', ');
     const aclaracion = p.destino === 'todos' ? ' [el encabezado no dice para que PC es: mirarlo]' : '';
     lineas.push(`${MARCA} Hay un pedido para esta PC sin su «listo»: PEDIDO ${p.numero} - ${p.que}${cuando ? ` (${cuando})` : ''}${aclaracion}. ` +
-      `Esta en la carpeta ${CANON.carpeta} de la nube de Ingenieria; si ya se hizo o cuando se haga, dejar «PEDIDO ${p.numero} - listo <que>.txt» ahi mismo.`);
+      `Esta en la carpeta ${CANON.carpeta_nombre} de la nube de Ingenieria; si ya se hizo o cuando se haga, dejar «PEDIDO ${p.numero} - listo <que>.txt» ahi mismo.`);
   }
   if (viejos.length) {
     const etiqueta = (p) => `PEDIDO ${p.numero} (${p.que})`;
@@ -150,7 +150,9 @@ export function renglonesDeLaCarpeta({ carpeta = process.env.BARACK_FACUNDO, pc 
   if (!dir) {
     const bib = buscarBiblioteca();
     if (!bib) return [];
-    dir = path.join(bib, CANON.carpeta);
+    // Desde la mudanza del 17/10/2026 la carpeta FACUNDO vive entera en «ASISTENTE INGENIERIA\6- PEDIDOS ENTRE PC
+    // (FACUNDO)»; la clave del canon de carpetas la encuentra en el lugar nuevo y, si esta PC no lo tiene, en el viejo.
+    dir = resolverCarpeta(CANON.carpeta_clave, bib).ruta;
   }
   let nombres;
   try { nombres = fs.readdirSync(dir); } catch { return []; }

@@ -17,9 +17,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { buscarBiblioteca } from '../../../scripts/_lib/nubeRutas.mjs';
+import { buscarBiblioteca, entradaCarpeta, resolverCarpeta } from '../../../scripts/_lib/nubeRutas.mjs';
 
-export const CARPETA = 'INSTALAR EN UNA PC NUEVA/2- Mails de Calidad';
+/** Subcarpeta de la de instaladores (clave `instalar` del canon nubeCarpetas.data.json; mudanza del 17/10/2026). */
+export const SUBCARPETA = '2- Mails de Calidad';
+/** Ruta nueva, relativa a la biblioteca. */
+export const CARPETA = path.join(...entradaCarpeta('instalar').nueva, SUBCARPETA);
+/** Donde se publica: la carpeta de instaladores nueva si existe; si no, la vieja; si no hay ninguna, la nueva. */
+export const carpetaDestino = (biblioteca) => path.join(resolverCarpeta('instalar', biblioteca).ruta, SUBCARPETA);
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const AREA = path.resolve(AQUI, '..');
 /** [origen, destino dentro de CARPETA, se pisa si ya existe] */
@@ -39,7 +44,7 @@ const hash = (p) => crypto.createHash('sha256').update(fs.readFileSync(p)).diges
 
 /** Lo que hay que hacer, sin hacerlo: [{ destino, estado: 'nuevo'|'distinto'|'igual'|'se_respeta' }]. */
 export function plan(biblioteca) {
-    const base = path.join(biblioteca, CARPETA);
+    const base = carpetaDestino(biblioteca);
     return ARCHIVOS.map(([origen, rel, pisa]) => {
         const destino = path.join(base, ...rel.split('/'));
         let estado = 'nuevo';
@@ -69,6 +74,6 @@ if (esElPrograma) {
     for (const p of plan(bib)) console.log(`${p.estado.padEnd(10)} ${p.destino}`);
     if (process.argv.includes('--aplicar')) {
         const hecho = aplicar(bib);
-        console.log(`\nPublicado: ${hecho.length} archivo(s) en ${path.join(bib, CARPETA)}`);
+        console.log(`\nPublicado: ${hecho.length} archivo(s) en ${carpetaDestino(bib)}`);
     } else console.log('\n(solo dice que haria: --aplicar para publicarlo)');
 }
