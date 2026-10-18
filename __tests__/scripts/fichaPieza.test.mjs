@@ -168,6 +168,37 @@ describe('compararAtributos: las operaciones', () => {
   });
 });
 
+describe('excepciones escritas de la casa (plan §3: se escriben con su fuente, no se esconden)', () => {
+  const ficha = () => ({
+    documentos: [doc('flujograma:154'), doc('amfe:158')],
+    atributos: [
+      at('operaciones', 'flujograma:154', '', { lista: ['10', '110', '111', '120'] }),
+      at('operaciones', 'amfe:158', '', { lista: ['10', '110', '120'] }),
+    ],
+    excepciones: [{ atributo: 'operaciones', documento: 'amfe:158', noLleva: ['111'], fuente: 'numeracionPatagonia.data.json: la 111 no lleva AMFE propio (amfe.md §9)' }],
+  });
+  it('la 111 que el AMFE no lleva por convencion no da rojo, y el detalle lo dice con la fuente', () => {
+    const r = compararAtributos(ficha()).find((x) => x.atributo === 'operaciones');
+    expect(r.estado).toBe('verde');
+    expect(r.detalle).toMatch(/111.*amfe\.md §9/);
+  });
+  it('gemelo: otra operacion que falta sigue dando rojo', () => {
+    const f = ficha();
+    f.atributos[1].lista = ['10', '120'];
+    const r = compararAtributos(f).find((x) => x.atributo === 'operaciones');
+    expect(r.estado).toBe('rojo');
+    expect(r.detalle).toMatch(/amfe:158 no tiene 110/);
+    expect(r.detalle).not.toMatch(/no tiene 110, 111/);
+  });
+  it('una tizada de vigencia a confirmar que se pasa del rollo: el rojo lo avisa', () => {
+    const f = { documentos: [doc('ft:141'), doc('tizada:x', { vigente: 'a confirmar' })], atributos: [
+      at('espuma.ancho_rollo', 'ft:141', '1200 de ancho por rollo.'),
+      at('espuma.ancho_tizada', 'tizada:x', '<WIDTH>135.0000</WIDTH>', { unidad: 'cm', rol: 'tope', de: 'espuma.ancho_rollo' }),
+    ] };
+    expect(compararAtributos(f).find((x) => x.atributo === 'espuma.ancho_tizada').detalle).toMatch(/vigencia a confirmar: tizada:x/);
+  });
+});
+
 describe('compararAtributos: la costura del APB de puerta (la otra direccion: tiene que dar VERDE)', () => {
   const ficha = {
     // La especificacion de agosto de 2025 decia 4 en 16 y ya no es la vigente (memoria

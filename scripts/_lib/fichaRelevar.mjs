@@ -66,6 +66,12 @@ export function letraDe(texto) {
   return m ? m[1].toUpperCase() : null;
 }
 
+/** «08/09/2026» -> «2026-09-08»; lo que ya viene AAAA-MM-DD (o no se entiende) queda como esta. */
+export function fechaIso(f) {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(f || '').trim());
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : f;
+}
+
 /** La letra del historial que estaba vigente en una fecha (para un adjunto sin letra en el nombre). */
 export function letraEnFecha(revisiones, fechaIso) {
   const aIso = (f) => { const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(f || ''); return m ? `${m[3]}-${m[2]}-${m[1]}` : f; };
@@ -147,6 +153,7 @@ async function leerFuente(f, ctx, fichaDocs) {
       const texto = f.lector === 'doc' ? L.textoDoc(ruta) : L.textoPdf(ruta);
       r.atributos.push(...extraerDeTexto(texto, f.extraer, base));
       if (f.letra) { const m = new RegExp(f.letra.patron, 'i').exec(texto); if (m) r.doc.letra = m[1].toUpperCase(); }
+      if (f.fecha) { const m = new RegExp(f.fecha.patron, 'i').exec(texto); if (m) r.doc.fecha = m[1]; }
       const enNombre = /_(\d{4})(\d{2})(\d{2})\.\w+$/.exec(ruta);   // «BOM ARB ultimo nivel_Insert_20261009.pdf»
       if (f.fechaDelNombre && enNombre) r.doc.fecha = `${enNombre[1]}-${enNombre[2]}-${enNombre[3]}`;
       r.doc.donde = rutaFicha;
@@ -168,6 +175,7 @@ async function leerFuente(f, ctx, fichaDocs) {
       // La lista de una carpeta no pisa la letra leida ADENTRO del documento: solo la pone si no hay otra
       // y todas las copias dicen la misma en el nombre (relevarFicha la aplica con letraCopia).
       r.doc.copias = delDoc.map((a) => `${rutaFicha}/${a}`);
+      r.dondeCopia = rutaFicha;
       if (letras.length === 1 && delDoc.every((a) => letraDe(a))) r.letraCopia = letras[0];
       else if (!delDoc.length) r.avisos.push(`la carpeta ${rutaFicha} no tiene ningun archivo de este documento`);
       else r.avisos.push(`en ${rutaFicha} hay ${delDoc.length} archivo(s) de este documento con letra(s) ${letras.join(', ') || 'ninguna en el nombre'}: cual es la vigente lo dice el maestro`);
@@ -180,6 +188,7 @@ async function leerFuente(f, ctx, fichaDocs) {
       for (const c of f.cliente || []) {
         const adjunto = m.adjuntos.find((a) => a.toLowerCase() === String(c.adjunto).toLowerCase());
         const entrada = { documento: c.documento, donde: f.donde || 'mail', fecha: (m.fecha || '').slice(0, 10), fuente: `${b} (cache de mails, id ...${f.mail.slice(-16)})` };
+        if (c.zanja) entrada.zanja = c.zanja;   // quien o que papel lo puede contestar (configurado en la fuente)
         if (!adjunto) { r.cliente.push({ ...entrada, letra: null, estado: 'a confirmar', nota: `${c.adjunto} no esta entre los adjuntos de ese mail` }); continue; }
         const enNombre = letraDe(adjunto);
         if (enNombre) { r.cliente.push({ ...entrada, letra: enNombre, adjunto }); continue; }
@@ -251,7 +260,9 @@ export async function relevarFicha(ficha, opts = {}) {
       const r = await leerFuente(f, ctx, docs);
       if (d) {
         Object.assign(d, r.doc, { leido: ctx.hoy });
+        if (d.fecha) d.fecha = fechaIso(d.fecha);
         if (r.letraCopia && !d.letra) d.letra = r.letraCopia;
+        if (r.dondeCopia && !d.donde) d.donde = r.dondeCopia;
         d.avisos.push(...r.avisos);
         if (r.materialConfirmado !== undefined) d.materialNoConfirmado = !r.materialConfirmado;
       }
@@ -282,7 +293,10 @@ export function pendientesDe(ficha, fallas = []) {
     // un export del arb o una tizada no llevan letra: su version es la fecha (`sinLetra` en la ficha)
     if (!d.letra && !d.sinLetra) p.push({ documento: d.id, que: 'letra vigente', estado: 'a confirmar', zanja: d.maestro?.zanja || d.maestro?.ruta || 'el maestro del documento' });
     if (d.maestro?.estado === 'a confirmar') p.push({ documento: d.id, que: 'el maestro en el servidor', estado: 'a confirmar', zanja: d.maestro.zanja || d.maestro.ruta });
-    for (const c of d.cliente || []) if (!c.letra) p.push({ documento: d.id, que: `letra que tiene el cliente (${c.donde})`, estado: 'a confirmar', zanja: c.nota ? `${c.nota}; ${c.fuente}` : c.fuente });
+    for (const c of d.cliente || []) {
+      if (!c.letra) p.push({ documento: d.id, que: `letra que tiene el cliente (${c.donde})${c.nota ? `: ${c.nota}` : ''}`, estado: 'a confirmar', zanja: c.zanja || c.fuente });
+      else if (c.inferida) p.push({ documento: d.id, que: `letra que tiene el cliente (${c.donde}): probablemente la ${c.letra}, deducida por la fecha del historial`, estado: 'a confirmar', zanja: c.zanja || `abrir el adjunto ${c.adjunto || ''} de ${c.fuente}` });
+    }
     for (const a of d.avisos || []) p.push({ documento: d.id, que: a, estado: 'aviso' });
   }
   for (const f of fallas) p.push({ que: `fuente sin leer: ${f}`, estado: 'falla' });

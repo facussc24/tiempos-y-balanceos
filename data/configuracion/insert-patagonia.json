@@ -42,6 +42,7 @@
           "donde": "mail a Novax (H. Giacopuzzi)",
           "fecha": "2026-09-08",
           "fuente": "mail «RV: Documentación PPAP - NOVAX (Top Roll, APB, Insert) - Nivel Actualizado» del 2026-09-08 18:45 a Hernan Giacopuzzi (cache de mails, id ...0002D78C819A0000)",
+          "zanja": "abrir el adjunto «FLUJOGRAMA_154-INSERT.pdf» del mail del 08/09 (en el cache de mails solo esta el nombre)",
           "letra": "B",
           "inferida": true,
           "adjunto": "FLUJOGRAMA_154-INSERT.pdf",
@@ -53,7 +54,7 @@
         "en {biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/20- Flujograma de proceso hay 1 archivo(s) de este documento con letra(s) ninguna en el nombre: cual es la vigente lo dice el maestro"
       ],
       "letra": "D",
-      "fecha": "06/10/2026",
+      "fecha": "2026-10-06",
       "revisiones": [
         {
           "letra": "A",
@@ -94,6 +95,7 @@
           "donde": "mail a Novax (H. Giacopuzzi)",
           "fecha": "2026-09-08",
           "fuente": "mail «RV: Documentación PPAP - NOVAX (Top Roll, APB, Insert) - Nivel Actualizado» del 2026-09-08 18:45 a Hernan Giacopuzzi (cache de mails, id ...0002D78C819A0000)",
+          "zanja": "lo que se le mostro a Novax en la visita a Barack que anuncia el mail del 08/09 («Nuestro AMFE y Hojas de operaciones... las podemos ver fisicamente en Barack durante tu visita del Jueves»): Calidad (Manuel Meszaros)",
           "letra": null,
           "estado": "a confirmar",
           "nota": "AMFE 158 - INSERT - Rev.A.pdf no esta entre los adjuntos de ese mail",
@@ -102,7 +104,7 @@
       ],
       "avisos": [],
       "letra": "A",
-      "fecha": "01/10/2026",
+      "fecha": "2026-10-01",
       "actualizado": "2026-10-01T14:57:29.815+00:00",
       "donde": "Supabase amfe_documents AMFE-INS-PAT",
       "leido": "2026-10-18"
@@ -124,6 +126,7 @@
           "donde": "mail a Novax (H. Giacopuzzi)",
           "fecha": "2026-09-08",
           "fuente": "mail «RV: Documentación PPAP - NOVAX (Top Roll, APB, Insert) - Nivel Actualizado» del 2026-09-08 18:45 a Hernan Giacopuzzi (cache de mails, id ...0002D78C819A0000)",
+          "zanja": "lo que se le mostro a Novax en la visita a Barack que anuncia el mail del 08/09 («Nuestro AMFE y Hojas de operaciones... las podemos ver fisicamente en Barack durante tu visita del Jueves»): Calidad (Manuel Meszaros)",
           "letra": null,
           "estado": "a confirmar",
           "nota": "HO-990_INSERT_PATAGONIA_REV.A.pdf no esta entre los adjuntos de ese mail",
@@ -132,7 +135,7 @@
       ],
       "avisos": [],
       "letra": "A",
-      "fecha": "08/09/2026",
+      "fecha": "2026-09-08",
       "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/26- Instrucciones de Proceso/INSERT/HO-990_INSERT_PATAGONIA_REV.A.pptx",
       "leido": "2026-10-18"
     },
@@ -146,7 +149,7 @@
       "cliente": [],
       "avisos": [],
       "letra": "A",
-      "fecha": "08/09/2026",
+      "fecha": "2026-09-08",
       "donde": "{principal}/exports/HO_CORREGIDAS_20261007/INSERTO/HO-990_INSERT_PATAGONIA_REV.A.pptx",
       "leido": "2026-10-18"
     },
@@ -186,7 +189,8 @@
         "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/14-Especificaciones de Materiales/01- BOM/00- BOM MATERIAL/BOM 002 - INSERT REV.A.xlsx"
       ],
       "leido": "2026-10-18",
-      "letra": "A"
+      "letra": "A",
+      "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/14-Especificaciones de Materiales/01- BOM/00- BOM MATERIAL"
     },
     {
       "id": "ft:141",
@@ -201,6 +205,7 @@
       "cliente": [],
       "avisos": [],
       "letra": "A",
+      "fecha": "2025-11-13",
       "donde": "{biblioteca}/INGENIERIA BARACK (NUNCA BORRAR)/6- ARCHIVO DE CORREO/ADJUNTOS/CALIDAD - QUALITY PROJECTS/2025/FT141 Espuma PU back for Insert.doc",
       "leido": "2026-10-18"
     },
@@ -213,6 +218,7 @@
       "cliente": [],
       "avisos": [],
       "letra": "A",
+      "fecha": "2025-11-13",
       "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/8- Ficha tecnica/01- Ficha tecnica/Insert/01- Editables/FT Espuma PU back for Insert.doc",
       "leido": "2026-10-18"
     },
@@ -228,6 +234,7 @@
       "leido": "2026-10-18",
       "materialNoConfirmado": false,
       "letra": "A",
+      "fecha": "2025-11-19",
       "donde": "{biblioteca}/INGENIERIA BARACK (NUNCA BORRAR)/6- ARCHIVO DE CORREO/ADJUNTOS/CALIDAD - QUALITY PROJECTS/2025/FT149 Espuma PU back for IP PAD.doc"
     },
     {
@@ -270,6 +277,7 @@
           "donde": "mail a Novax (H. Giacopuzzi)",
           "fecha": "2026-09-08",
           "fuente": "mail «RV: Documentación PPAP - NOVAX (Top Roll, APB, Insert) - Nivel Actualizado» del 2026-09-08 18:45 a Hernan Giacopuzzi (cache de mails, id ...0002D78C819A0000)",
+          "zanja": "abrir el adjunto «GE - 278 INSERT.pdf» del mail del 08/09 (el nombre no dice la letra) o Calidad",
           "letra": null,
           "estado": "a confirmar",
           "adjunto": "GE - 278 INSERT.pdf",
@@ -287,7 +295,8 @@
         "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/19-Normas y Especificaciones de embalaje/GE - 278 INSERT - cajon negro Rev C.xlsx",
         "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/19-Normas y Especificaciones de embalaje/GE - 278 INSERT.pdf"
       ],
-      "leido": "2026-10-18"
+      "leido": "2026-10-18",
+      "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/19-Normas y Especificaciones de embalaje"
     },
     {
       "id": "ge:283",
@@ -301,7 +310,8 @@
       "copias": [
         "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/19-Normas y Especificaciones de embalaje/GE - 283 INSERT PALLET.pdf"
       ],
-      "leido": "2026-10-18"
+      "leido": "2026-10-18",
+      "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/19-Normas y Especificaciones de embalaje"
     },
     {
       "id": "imds:insert",
@@ -318,7 +328,8 @@
         "la carpeta {biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/23- IMDS no tiene ningun archivo de este documento"
       ],
       "copias": [],
-      "leido": "2026-10-18"
+      "leido": "2026-10-18",
+      "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/23- IMDS"
     },
     {
       "id": "pc:insert",
@@ -347,7 +358,8 @@
       "copias": [
         "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/12-Plan de Control/Plan de Control - INSERT TAPIZADO.xlsx"
       ],
-      "leido": "2026-10-18"
+      "leido": "2026-10-18",
+      "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/12-Plan de Control"
     }
   ],
   "fuentes": [
@@ -556,7 +568,10 @@
           "atributo": "espuma.ancho_rollo",
           "patron": "\\d{3,4}\\s*(?:mm)?\\s*de ancho por rollo[^|]*"
         }
-      ]
+      ],
+      "fecha": {
+        "patron": "Fecha\\s*\\|\\s*\\|\\s*(\\d\\d/\\d\\d/\\d{4})"
+      }
     },
     {
       "id": "ft141-legajo",
@@ -576,7 +591,10 @@
           "atributo": "espuma.ancho_rollo",
           "patron": "\\d{3,4}\\s*(?:mm)?\\s*de ancho por rollo[^|]*"
         }
-      ]
+      ],
+      "fecha": {
+        "patron": "Fecha\\s*\\|\\s*\\|\\s*(\\d\\d/\\d\\d/\\d{4})"
+      }
     },
     {
       "id": "ft149-material",
@@ -608,7 +626,10 @@
           "atributo": "espuma.ancho_rollo",
           "patron": "\\d{3,4}\\s*(?:mm)?\\s*de ancho por rollo[^|]*"
         }
-      ]
+      ],
+      "fecha": {
+        "patron": "Fecha\\s*\\|\\s*\\|\\s*(\\d\\d/\\d\\d/\\d{4})"
+      }
     },
     {
       "id": "tizada-26-1-26-del",
@@ -692,19 +713,23 @@
         {
           "documento": "flujograma:154",
           "adjunto": "FLUJOGRAMA_154-INSERT.pdf",
-          "letraPor": "historial"
+          "letraPor": "historial",
+          "zanja": "abrir el adjunto «FLUJOGRAMA_154-INSERT.pdf» del mail del 08/09 (en el cache de mails solo esta el nombre)"
         },
         {
           "documento": "ge:278",
-          "adjunto": "GE - 278 INSERT.pdf"
+          "adjunto": "GE - 278 INSERT.pdf",
+          "zanja": "abrir el adjunto «GE - 278 INSERT.pdf» del mail del 08/09 (el nombre no dice la letra) o Calidad"
         },
         {
           "documento": "amfe:158",
-          "adjunto": "AMFE 158 - INSERT - Rev.A.pdf"
+          "adjunto": "AMFE 158 - INSERT - Rev.A.pdf",
+          "zanja": "lo que se le mostro a Novax en la visita a Barack que anuncia el mail del 08/09 («Nuestro AMFE y Hojas de operaciones... las podemos ver fisicamente en Barack durante tu visita del Jueves»): Calidad (Manuel Meszaros)"
         },
         {
           "documento": "ho:990",
-          "adjunto": "HO-990_INSERT_PATAGONIA_REV.A.pdf"
+          "adjunto": "HO-990_INSERT_PATAGONIA_REV.A.pdf",
+          "zanja": "lo que se le mostro a Novax en la visita a Barack que anuncia el mail del 08/09 («Nuestro AMFE y Hojas de operaciones... las podemos ver fisicamente en Barack durante tu visita del Jueves»): Calidad (Manuel Meszaros)"
         }
       ]
     },
@@ -1173,6 +1198,12 @@
     },
     {
       "documento": "flujograma:154",
+      "que": "letra que tiene el cliente (mail a Novax (H. Giacopuzzi)): probablemente la B, deducida por la fecha del historial",
+      "estado": "a confirmar",
+      "zanja": "abrir el adjunto «FLUJOGRAMA_154-INSERT.pdf» del mail del 08/09 (en el cache de mails solo esta el nombre)"
+    },
+    {
+      "documento": "flujograma:154",
       "que": "en {biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/20- Flujograma de proceso hay 1 archivo(s) de este documento con letra(s) ninguna en el nombre: cual es la vigente lo dice el maestro",
       "estado": "aviso"
     },
@@ -1184,9 +1215,9 @@
     },
     {
       "documento": "amfe:158",
-      "que": "letra que tiene el cliente (mail a Novax (H. Giacopuzzi))",
+      "que": "letra que tiene el cliente (mail a Novax (H. Giacopuzzi)): AMFE 158 - INSERT - Rev.A.pdf no esta entre los adjuntos de ese mail",
       "estado": "a confirmar",
-      "zanja": "AMFE 158 - INSERT - Rev.A.pdf no esta entre los adjuntos de ese mail; mail «RV: Documentación PPAP - NOVAX (Top Roll, APB, Insert) - Nivel Actualizado» del 2026-09-08 18:45 a Hernan Giacopuzzi (cache de mails, id ...0002D78C819A0000)"
+      "zanja": "lo que se le mostro a Novax en la visita a Barack que anuncia el mail del 08/09 («Nuestro AMFE y Hojas de operaciones... las podemos ver fisicamente en Barack durante tu visita del Jueves»): Calidad (Manuel Meszaros)"
     },
     {
       "documento": "ho:990",
@@ -1196,9 +1227,9 @@
     },
     {
       "documento": "ho:990",
-      "que": "letra que tiene el cliente (mail a Novax (H. Giacopuzzi))",
+      "que": "letra que tiene el cliente (mail a Novax (H. Giacopuzzi)): HO-990_INSERT_PATAGONIA_REV.A.pdf no esta entre los adjuntos de ese mail",
       "estado": "a confirmar",
-      "zanja": "HO-990_INSERT_PATAGONIA_REV.A.pdf no esta entre los adjuntos de ese mail; mail «RV: Documentación PPAP - NOVAX (Top Roll, APB, Insert) - Nivel Actualizado» del 2026-09-08 18:45 a Hernan Giacopuzzi (cache de mails, id ...0002D78C819A0000)"
+      "zanja": "lo que se le mostro a Novax en la visita a Barack que anuncia el mail del 08/09 («Nuestro AMFE y Hojas de operaciones... las podemos ver fisicamente en Barack durante tu visita del Jueves»): Calidad (Manuel Meszaros)"
     },
     {
       "documento": "ft:141",
@@ -1220,9 +1251,9 @@
     },
     {
       "documento": "ge:278",
-      "que": "letra que tiene el cliente (mail a Novax (H. Giacopuzzi))",
+      "que": "letra que tiene el cliente (mail a Novax (H. Giacopuzzi)): el adjunto no dice la letra en el nombre",
       "estado": "a confirmar",
-      "zanja": "el adjunto no dice la letra en el nombre; mail «RV: Documentación PPAP - NOVAX (Top Roll, APB, Insert) - Nivel Actualizado» del 2026-09-08 18:45 a Hernan Giacopuzzi (cache de mails, id ...0002D78C819A0000)"
+      "zanja": "abrir el adjunto «GE - 278 INSERT.pdf» del mail del 08/09 (el nombre no dice la letra) o Calidad"
     },
     {
       "documento": "ge:278",
@@ -1275,5 +1306,15 @@
       "estado": "aviso"
     }
   ],
-  "relevado": "2026-10-18"
+  "relevado": "2026-10-18",
+  "excepciones": [
+    {
+      "atributo": "operaciones",
+      "documento": "amfe:158",
+      "noLleva": [
+        "111"
+      ],
+      "fuente": "scripts/_lib/numeracionPatagonia.data.json, nota del AMFE-INS-PAT: «los almacenamientos WIP (23, 51, 61, 72, 81, 92) y la 111 no llevan AMFE propio (amfe.md §9)»"
+    }
+  ]
 }

@@ -113,7 +113,7 @@ function registrar() {
   if (!claves.length) { linea(`ficha: ${tipo} ${numero}${familia ? ` (familia ${familia})` : ''} no esta en ninguna ficha de pieza (sin ficha, no se registra nada)`); return 0; }
   for (const clave of claves) {
     const emision = { fecha: flag('--fecha') || new Date().toISOString().slice(0, 10), destino: flag('--destino') || '-', quien: flag('--quien') || null };
-    const nueva = registrarDocumento(leerFicha(clave), { tipo, numero, letra, emision });
+    const nueva = registrarDocumento(leerFicha(clave), { tipo, numero, letra, fecha: emision.fecha, emision });
     guardarFicha(clave, nueva);
     linea(`ficha ${clave}: ${tipo} ${numero} letra ${letra ?? '(sin letra)'} registrado (${emision.destino}); queda para commitear: data/configuracion/${clave}.json`);
   }

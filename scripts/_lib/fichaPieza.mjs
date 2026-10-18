@@ -189,6 +189,19 @@ export function compararAtributos(ficha) {
     const valores = [...declara, ...topes].filter((v) => v.valor !== null);
     const sinValor = [...declara, ...topes].filter((v) => v.valor === null);
     const r = { atributo, estado: 'una_fuente', valores, sinValor, referencias, fueraDeComparacion: fuera, detalle: '' };
+    const avisoVigencia = (ids) => { const x = [...new Set(ids)].filter((id) => docs.get(id)?.vigente === 'a confirmar'); return x.length ? ` (vigencia a confirmar: ${x.join(', ')})` : ''; };
+
+    // Una convencion de la casa escrita en la ficha con su fuente («la 111 no lleva AMFE propio»): se
+    // cuenta como cubierta en ESE documento y el detalle la nombra.
+    const excepciones = (ficha.excepciones || []).filter((e) => e.atributo === atributo);
+    const notasExcepcion = [];
+    for (const e of excepciones) {
+      const v = valores.find((x) => x.documento === e.documento && Array.isArray(x.valor));
+      if (!v) continue;
+      v.valor = [...new Set([...v.valor, ...e.noLleva])].sort((a, b) => Number(a) - Number(b));
+      notasExcepcion.push(`${e.documento} no lleva ${e.noLleva.join(', ')} por convencion (${e.fuente})`);
+    }
+    const conExcepciones = (s) => (notasExcepcion.length ? `${s} · ${notasExcepcion.join('; ')}` : s);
 
     if (topes.length) {
       const base = declarados(topes[0].de);
@@ -196,9 +209,9 @@ export function compararAtributos(ficha) {
       const minimo = Math.min(...base.map((b) => b.valor));
       const pasados = topes.filter((t) => t.valor !== null && t.valor > minimo);
       r.estado = pasados.length ? 'rojo' : 'verde';
-      r.detalle = pasados.length
+      r.detalle = (pasados.length
         ? `${pasados.map((t) => `${t.documento} usa ${t.valor}`).join('; ')}, mas que el ${topes[0].de} mas chico declarado (${minimo})`
-        : `entra en el ${topes[0].de} declarado (${minimo})`;
+        : `entra en el ${topes[0].de} declarado (${minimo})`) + avisoVigencia(topes.map((t) => t.documento));
       return r;
     }
     const universo = vigentes.filter((a) => a.rol === 'universo').map((a) => conValor(a, docs)).filter((v) => v.valor !== null);
@@ -212,13 +225,12 @@ export function compararAtributos(ficha) {
     }
     const distintos = valores.filter((v, i) => valores.findIndex((w) => igual(w.valor, v.valor)) === i);
     r.estado = distintos.length > 1 ? 'rojo' : 'verde';
-    r.detalle = atributo === 'operaciones' && r.estado === 'rojo' ? detalleOperaciones(valores) : quienDiceQue(valores);
+    r.detalle = conExcepciones(atributo === 'operaciones' && r.estado === 'rojo' ? detalleOperaciones(valores) : quienDiceQue(valores));
     const compartidos = valores.filter((v) => v.otraPieza);
     if (compartidos.length) {
       r.detalle += ` (${compartidos.map((v) => `${v.documento} es de la pieza ${v.otraPieza}${v.porMaterial ? `: comparte el material ${v.porMaterial}` : ''}`).join('; ')})`;
     }
-    const aConfirmar = [...papeles].filter((id) => docs.get(id)?.vigente === 'a confirmar');
-    if (aConfirmar.length) r.detalle += ` (vigencia a confirmar: ${aConfirmar.join(', ')})`;
+    r.detalle += avisoVigencia([...papeles]);
     return r;
   });
 }
@@ -271,7 +283,7 @@ export function compararCliente(ficha) {
     const peor = (e) => { if (e === 'rojo' || (e === 'a_confirmar' && estado === 'verde')) estado = e; };
     for (const c of d.cliente) {
       const donde = [c.donde, c.fecha].filter(Boolean).join(' ');
-      if (!c.letra) { peor('a_confirmar'); lineas.push(`no se sabe que letra tiene el cliente${donde ? ` (${donde})` : ''}: lo zanja ${c.fuente || 'una fuente que falta nombrar'}`); continue; }
+      if (!c.letra) { peor('a_confirmar'); lineas.push(`no se sabe que letra tiene el cliente${donde ? ` (${donde})` : ''}${c.nota ? ` (${c.nota})` : ''}: lo zanja ${c.zanja || c.fuente || 'una fuente que falta nombrar'}`); continue; }
       const marca = c.inferida ? ' (inferida, no leida en el documento)' : '';
       // Una letra deducida (por la fecha del historial) no es un dato leido: no da rojo ni verde.
       if (c.inferida) {
