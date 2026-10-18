@@ -14,6 +14,10 @@ instaló**: `claude plugin list` dio lo mismo antes y después (32 renglones; lo
    Cada uno pasa antes por `docs/REVISAR_ANTES_DE_INSTALAR.md`.
 3. **El sí para probar el latido por mod** (ítem 4): es un cambio mediano que toca `hora-guard`; se prueba en una tarde
    con Fak cerca, no en una noche sola.
+4. **Destacar la carpeta** `C:\Dev\BarackMercosul` en el selector de la app, una vez en cada PC (ítem 1; 2 minutos, lo
+   hace él).
+5. Opcional: **si quiere que el borrador de los viernes para Pedro use el formato 3P explícito** (ítem 7); hoy la tarea
+   ya pide casi lo mismo y no se tocó.
 
 ## Los 20 ítems del plan, con su estado
 
@@ -71,7 +75,7 @@ Los seis pedidos conocidos de Bash siguen dando 2 2 2 2 0 0.
   - Por eso el arreglo ya rige acá. Un `cat a b` o un `grep -r` de varios archivos podría seguir sin cargarlas: se
     infiere del texto del cambio, no se probó.
 - **Decidí distinto del encargo:** el dato no va en «la ficha de la PC». La PC principal no tiene ficha a propósito
-  (`session-start-context.sh:28-29`: «la casa está escrita para ella»). Crearla sumaría su texto a cada sesión de esta
+  (`session-start-context.sh:29-30`: «la casa está escrita para ella»). Crearla sumaría su texto a cada sesión de esta
   PC; queda en este documento.
 
 ---
@@ -150,8 +154,9 @@ se instala · recomendación con su fuente.
   inyección, con la regla citada. No resuelve lo del virolador (eso fue el apoyo; lo cubre el gate de asiento de la
   tanda 2).
 - **Datos:** `earthtojake/text-to-cad`, 20.697★, MIT, último cambio 15/10/2026.
-- **Si se instala:** un plugin y un servidor MCP que escribe archivos. Hoy sus llamadas que escriben pasan por los
-  guardianes (matcher de la tanda 3). Corre en su propio Python con `uv`, no debería pisar `.venv-cad` (sin verificar).
+- **Si se instala:** un plugin y un servidor MCP que escribe archivos. Sus llamadas pasan por los guardianes solo si el
+  nombre de cada herramienta lleva un verbo del matcher de la tanda 3 (crear, guardar, exportar, generar…); los nombres
+  reales no se conocen todavía: se verifican el día que se instale (chequeo 4 de `REVISAR_ANTES_DE_INSTALAR.md`). Corre en su propio Python con `uv`, no debería pisar `.venv-cad` (sin verificar).
   Manda estadísticas de uso por defecto (`uvx cadgen telemetry off`). **Su README pide apagar Smart App Control de
   Windows 11 si está prendido, y eso no tiene vuelta atrás sin reinstalar Windows**: lo decide Fak.
 - **Recomendación:** no apagar Smart App Control por esto. Si Fak quiere probarlo, en una sesión aparte y primero
@@ -163,7 +168,8 @@ se instala · recomendación con su fuente.
   como **vara de comparación** para el estudio de aptitud de máquina (tanda 13) y para un AMFE antes de Calidad.
 - **Datos:** `jherrodthomas/automotive-skills-suite`, 3.216★, MIT, último cambio 13/10/2026. Contenido sin leer: vienen
   como paquetes `.skill` y bajarlos ya es instalar.
-- **Si se instala:** skills nuevas en la lista (la lista de descriptions ya pasa el tope: tanda 12).
+- **Si se instala:** skills nuevas en la lista de descriptions, que ya pasa el tope de unos 8.000 caracteres (lo midió la
+  hija de la tanda 12 el 17/10: en esta PC, `beon` y `planes-de-control` salen solo con el nombre).
 - **Recomendación:** **nunca como fuente.** Otra skill de calidad de la comunidad (`Quality-Engineering-Skills`) exige
   acción para todo AP alto y S 9-10 para las características especiales, y las dos cosas chocan con la casa (`amfe.md` §4,
   `caracteristicas-especiales.md`). Si se prueba, correrla sobre un AMFE ya auditado y separar lo que coincide, lo que
@@ -175,6 +181,9 @@ se instala · recomendación con su fuente.
 - **Datos:** `getagentseal/codeburn`, 11.463★, MIT, último cambio 15/10/2026, app para Windows (Store y `.exe`).
 - **Si se instala:** una app de escritorio con telemetría (se apaga en la app); baja precios de LiteLLM una vez por día.
   `optimize --apply` **escribe la configuración**: no usarlo.
+- **Qué costaría:** el código es MIT, sin pago por usarlo; lee los registros que ya están en el disco y **no llama a
+  ninguna API paga** (los precios los baja de una lista pública). Si la app de la Tienda cobra, el informe no lo dice:
+  no se verificó. El costo real es el tiempo de mirarla y el riesgo de `--apply`.
 - **Recomendación:** sí, solo lectura, con la revisión de `REVISAR_ANTES_DE_INSTALAR.md`; primera prueba: un día ya
   medido con `_tokens.mjs`, comparando totales por modelo. No se sabe si lee las sesiones de la app ni cómo separa las dos
   cuentas de Fak. Fuente: informe F, ítem 3.
@@ -185,6 +194,10 @@ se instala · recomendación con su fuente.
 - **Datos:** `NVIDIA/SkillSpector`, 20.298★, Apache-2.0, último cambio 15/10/2026. Se instala con `uv tool install`.
 - **Si se instala:** una herramienta de consola. La pasada «con modelo» manda el texto de la skill a un modelo (se puede
   no usar).
+- **Qué costaría:** el código es Apache-2.0, sin pago. La pasada estática (la que se usaría) corre en la PC y no gasta
+  nada; la consulta de vulnerabilidades va a OSV.dev, que es gratis, y tiene modo sin conexión. **La pasada «con modelo»
+  gasta la API del modelo que se le configure**: no se usa (esta casa no hace llamadas pagas sin el sí de Fak,
+  `api-claude.md`).
 - **Recomendación:** sí, como ayuda del chequeo 3 de `REVISAR_ANTES_DE_INSTALAR.md`, nunca como juez («un escaneo limpio
   no es una auditoría»). Va a dar falsos positivos en skills que corren scripts, que son casi todas las de la casa.
   Fuente: informe F, ítem 6.

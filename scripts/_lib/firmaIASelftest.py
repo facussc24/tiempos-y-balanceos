@@ -218,11 +218,14 @@ def correr() -> int:
 
         print('SEÑALES DE TEXTO ESCRITO POR IA (humanizer, tanda 15) — aviso, no freno')
         caso('«no es solo X, es Y»', _docx(j('hu1.docx'), 'No es solo un plano, es la base del proceso.'), False, debe_avisar='humanizer-no-es-x-es-y')
-        caso('«cabe destacar» / «sin lugar a dudas»', _docx(j('hu2.docx'), 'Cabe destacar que la OP 30 cambia sin lugar a dudas.'), False, debe_avisar='humanizer-palabras')
+        caso('«sin lugar a dudas»', _docx(j('hu2.docx'), 'Sin lugar a dudas la OP 30 cambia.'), False, debe_avisar='humanizer-palabras')
         caso('resto de la charla: «¡Excelente pregunta! Espero que te sirva»', _docx(j('hu3.docx'), '¡Excelente pregunta! Espero que te sirva.'), False, debe_avisar='humanizer-chat')
         caso('«la tabla de abajo muestra»', _docx(j('hu4.docx'), 'La tabla de abajo muestra los consumos del Insert.'), False, debe_avisar='humanizer-habla-del-documento')
         caso('«los expertos coinciden»', _docx(j('hu5.docx'), 'Los expertos coinciden en que el adhesivo sirve.'), False, debe_avisar='humanizer-autoridad')
         caso('«hasta donde sé»', _docx(j('hu6.docx'), 'Hasta donde sé, el plano es la revisión C.'), False, debe_avisar='humanizer-descargo')
+        caso('«sumerjámonos»', _docx(j('hu8.docx'), 'Sumerjámonos en el detalle del Insert.'), False, debe_avisar='humanizer-arranque')
+        caso('«esa es la verdadera clave»', _docx(j('hu9.docx'), 'Esa es la verdadera clave del proceso.'), False, debe_avisar='humanizer-frase-profunda')
+        caso('título que arranca con un emoji', _docx(j('hu10.docx'), '🚀 Lanzamiento del Insert'), False, debe_avisar='humanizer-titulo-emoji')
         caso('frases de planta: «No es solo la OP 30: también la 40», «La OP 30 pasa de 2 a 1 operario», «Proveedor no es el mismo: es otro»: nada',
              _docx(j('hu7.docx'), 'No es solo la OP 30: también la 40. La OP 30 pasa de 2 a 1 operario. Proveedor no es el mismo: es otro.'), False, sin_avisos=True)
 

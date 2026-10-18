@@ -69,7 +69,7 @@ PASOS:
 
 ## Opción para el cuerpo: el formato 3P (Progreso, Planes, Problemas) — documentado, la tarea NO se cambió
 
-Tanda 15 (18/10/2026), ítem 7 del informe E. La skill oficial `internal-comms` de Anthropic
+Tanda 15 (18/10/2026), ítem 7 del plan (punto 8 del informe E). La skill oficial `internal-comms` de Anthropic
 (github.com/anthropics/skills, carpeta `skills/internal-comms`, Apache 2.0; las pautas en `examples/3p-updates.md`) tiene
 un formato de parte semanal en tres partes que entra en una pantalla: **Progreso** (qué se hizo, con el número medido),
 **Planes** (qué sigue) y **Problemas** (qué frena o qué hace falta). Es casi lo que ya pide el paso 5 de arriba («qué

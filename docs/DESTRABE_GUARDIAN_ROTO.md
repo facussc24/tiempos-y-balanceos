@@ -39,7 +39,8 @@ sesión sin CLAUDE.md, skills, plugins, hooks, MCP ni memoria (o con la variable
   leído el 18/10): trae los mensajes «hooks are turned off in your settings (disableAllHooks)» y «the session runs in
   safe mode», y los dos casos apagan también los mods instalados. `claude --help` de esa versión lista `--safe-mode`.
 - **Precedencia**: un `"disableAllHooks": false` en el `.claude/settings.json` del repo le ganaría al `true` del usuario.
-  Medido el 18/10: ni el settings del repo ni el del usuario tienen esa clave, y no hay `settings.local.json`.
+  Medido el 18/10: ni el settings del repo, ni el del usuario, ni el `.claude/settings.local.json` del checkout principal
+  (existe, del 14/10) tienen esa clave.
 - **No se probó** que una sesión ya abierta tome el cambio sin reabrirse (la doc dice que los cambios a los hooks
   «normalmente» se toman solos): por eso el paso 4 abre una sesión nueva.
 - **No se probó de punta a punta** con un guardián roto de verdad: lanzar una sesión de prueba desde esta PC por
@@ -47,6 +48,8 @@ sesión sin CLAUDE.md, skills, plugins, hooks, MCP ni memoria (o con la variable
 
 ## Para no llegar a esto
 
-Antes de fundir algo que toque `guardianes.mjs` o un hook: `node --check scripts/_lib/guardianes.mjs` y el despachador
-con los seis pedidos conocidos de `__tests__/scripts/despachadorPayloadsConocidos.jsonl` (tienen que dar
-2 2 2 2 0 0). Está en `docs/TANDA14_PREMORTEM_VERIFICADO_2026-10-17.md` y en la regla `codigo-madre.md`.
+Antes de fundir algo que toque `guardianes.mjs` o un hook: `node --check scripts/_lib/guardianes.mjs` y
+`node scripts/_despachadorPayloads.mjs` (los seis pedidos conocidos de `__tests__/scripts/despachadorPayloadsConocidos.jsonl`
+con un HOME aparte; tiene que dar 2 2 2 2 0 0). **Nunca con el HOME real**: dos de los pedidos escriben el listado
+maestro y gastan el permiso de un solo uso que Fak haya dejado (auditor de la tanda 15). Está en la regla
+`codigo-madre.md` y su test corre en cada suite.

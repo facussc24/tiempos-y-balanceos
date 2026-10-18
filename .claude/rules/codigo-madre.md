@@ -35,8 +35,9 @@ ahí mismo por el camino chico y se anota igual. Al abrir una sesión de código
 
 ## Un guardián o un hook: antes de fundir, y si igual se rompe
 
-Antes de fundir algo que toque `scripts/_lib/guardianes.mjs` o un hook: `node --check` del archivo y el despachador con
-los seis pedidos de `__tests__/scripts/despachadorPayloadsConocidos.jsonl` (tienen que dar 2 2 2 2 0 0). Si igual se rompe
+Antes de fundir algo que toque `scripts/_lib/guardianes.mjs` o un hook: `node --check` del archivo y
+`node scripts/_despachadorPayloads.mjs` (el despachador con los seis pedidos conocidos, con un HOME aparte: con el real
+gasta el permiso de un solo uso que Fak haya dejado; tiene que dar 2 2 2 2 0 0, y su test corre en cada suite). Si igual se rompe
 en main y traba todas las sesiones, el destrabe es el oficial y lo hace Fak en 30 segundos: `"disableAllHooks": true` en
 el `settings.json` de su usuario (con el Bloc de notas) o `claude --safe-mode` en la consola de la PC principal (en CATA
 `claude` no está en el PATH); después se saca. Paso a paso, fuentes y lo que no se probó: `docs/DESTRABE_GUARDIAN_ROTO.md`
