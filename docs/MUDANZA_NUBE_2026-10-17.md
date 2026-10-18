@@ -79,7 +79,8 @@ nombres adentro, y un test verifica que coincidan con el canon.
 | `scripts/_mails.py` | los mails del equipo | clave `mails`; la búsqueda vieja queda de respaldo |
 | `tools/claude-area/puerta.py` | el respaldo del repo en la memoria | clave `facundo` |
 | `scripts/_lib/guardianes.mjs` (`FIRMA_EXENTOS_RE`) + `firmaIA.data.json` | la excepción del guardián de firma | también exime `ASISTENTE INGENIERIA\5- FACUNDO (memoria y configuracion)`, colgada de la biblioteca (con su gemelo rojo) |
-| `scripts/_lib/viernesPlanificacion.mjs`, `_frenosMedir.mjs` | texto con la ruta | la nueva |
+| `scripts/_lib/viernesPlanificacion.mjs`, `_frenosMedir.mjs`, skill `novedades-claude` | texto con la ruta | la nueva |
+| `scripts/_programita.mjs` | el estado de las PC (`_ESTADO.json` de la memoria) | por `buscarNube` (lo marcó el revisor: armaba la ruta vieja a mano y el panel quedaba vacío) |
 | `tools/instalar_mi_pc/publicar.mjs`, `tools/claude-area/mails_pc/publicar.mjs`, `tools/claude-area/mejoras/publicar.mjs` | dónde publicar | por el canon (`instalar`, `equipo`) |
 | `tools/instalar_mi_pc/instalar_mi_pc.ps1` | la memoria y el Node del paquete viejo | primero el lugar nuevo, después la raíz |
 | `tools/claude-area/mails_pc/instalar.ps1`, `subir.ps1` | los mails y la lista de lo privado | primero el lugar nuevo, después la búsqueda de siempre |
@@ -110,19 +111,34 @@ a crear una carpeta vieja: lo revisé en el código (cuando no encuentra la carp
 | `cerebro-guard` | no ve la nube (solo importa en una PC nueva o si otra PC subió después) |
 | Guardián de firma | frena un comando que escriba a mano en `5- FACUNDO…\claude-…` (`_nube.mjs` escribe por dentro y no lo frena) |
 
-**Cómo se pone bien:** fundir la rama en main. En esta PC alcanza con eso; los hooks y la tarea corren desde main.
+**Cómo se pone bien:** fundir la rama en main. Para lo de esta tabla alcanza con eso, porque los hooks y la tarea
+corren desde main. La subida de los mails de esta PC es otra cosa: es un programa instalado aparte (tabla de abajo).
 
 ### 2. En cada PC (hay que volver a correr el instalador o traer el repo)
 
 | PC | Qué deja de andar | Cómo se vuelve a poner bien |
 |---|---|---|
-| **Esta PC** | La tarea «Barack - mis mails a la nube» (`%LOCALAPPDATA%\BarackMailsFak\subir.ps1`, instalada el 08/10) no encuentra la carpeta de mails y no sube nada; anota «sin nube» y reintenta. Desde las 18:36 de hoy ya fallaba por otra causa: «Outlook está abierto pero no responde». | Volver a correr el instalador de mails con los mismos parámetros del 08/10 (`instalar.ps1` de `ASISTENTE INGENIERIA\1- INSTALAR (doble clic)\2- Mails de Calidad`, ya publicado con la versión nueva). Lo hace Claude en una sesión con Fak: registra una tarea de Windows. |
+| **Esta PC** | La tarea «Barack - mis mails a la nube» (`%LOCALAPPDATA%\BarackMailsFak\subir.ps1`, instalada el 08/10) no encuentra la carpeta de mails y no sube nada; anota «sin nube» y reintenta. Desde las 12:37 de hoy ya fallaba por otra causa: «Outlook está abierto pero no responde» (a las 10:37, «Outlook cerrado»). | Volver a correr el instalador de mails con los mismos parámetros del 08/10 (`instalar.ps1` de `ASISTENTE INGENIERIA\1- INSTALAR (doble clic)\2- Mails de Calidad`, ya publicado con la versión nueva). Lo hace Claude en una sesión con Fak: registra una tarea de Windows. |
 | **CATA** (notebook de Calidad) | (a) Su copia del repo: `_nube.mjs --sincronizar` sale con «NO EXISTE» **antes** de traer el repo de GitHub, así que la versión nueva **no le llega sola**. (b) La subida de los mails de Calidad (tarea «Barack - mails de Calidad»). | (a) Después del push de main: abrir una sesión en `C:\Dev\BarackMercosul` de CATA y correr `git pull` (o dejarle un PEDIDO). (b) Doble clic en `ASISTENTE INGENIERIA\1- INSTALAR (doble clic)\2- Mails de Calidad\Mails-PC-Calidad.cmd` (ya publicado con la versión nueva). |
-| **PC de Carlos** | (a) La subida de sus mails (`mails_solo`): no encuentra la carpeta de mails. (b) Su asistente sabe que las mejoras están en «MEJORAS CLAUDE». | (a) Volver a correr `instalar_mails_solo.ps1` (versión de la rama) en su PC. (b) Se corrige solo en la próxima publicación de mejoras (`tools/claude-area/mejoras/publicar.mjs` ya escribe la carpeta nueva). |
+| **PC de Carlos** | (a) La subida de sus mails (tarea «Barack - mails de Carlos», programa `mails_solo`): no encuentra la carpeta de mails. Subió bien hasta el 16/10 a las 14:02 (`4- MAILS DEL EQUIPO\mails\_salud\CARLOS.json`). (b) Su asistente sabe que las mejoras están en «MEJORAS CLAUDE». | (a) Su instalador (`Mails-Carlos.cmd` + `mails-carlos\`) estaba en `ACTUALIZACION_CLAUDE_LIMPIO`, que fue a la Papelera el 12/10: hay que armarle uno nuevo. Son los dos `.ps1` de `tools/claude-area/mails_solo/` (versión de la rama) en una carpeta de la nube que Carlos vea, más un `Mails-Carlos.cmd` que corra `powershell -NoProfile -ExecutionPolicy Bypass -File instalar_mails_solo.ps1 -Pc CARLOS -Nombre Carlos` (así lo documenta el `.ps1`, renglones 6-7). Lo arma Claude cuando Fak lo diga; Carlos le hace doble clic. Hasta entonces sus mails nuevos no suben y nada se pierde (quedan en su Outlook). (b) Se corrige solo en la próxima publicación de mejoras (`tools/claude-area/mejoras/publicar.mjs` ya escribe la carpeta nueva). |
 | PC de Pedro, PC de Federico | nada (el simulado lo midió: sus programas no buscan estas carpetas) | — |
 | PC con el asistente por área viejo o el paquete «Base Claude» (en cuarentena) | dejan de encontrar su carpeta | no se reinstalan: están en cuarentena desde el 06/10 |
 
 ## Lo que encontré y no es de esta mudanza
+
+- **`AUTOMATIZACION BARACK`** (en la raíz, creada hoy a las 13:22 por la tanda 8) es la otra carpeta del asistente que
+  quedó afuera: la cola de automatización de Pedro. No estaba en la lista del encargo y la leen
+  `scripts/_automatizacionCandidatos.mjs` (renglón 298) y la tarea de los viernes
+  (`docs/AUTOMATIZACION_PEDRO_TAREA_VIERNES.md`), que la buscan en la raíz. Moverla rompe las dos hasta cambiarlas: lo
+  decide Fak (sería `ASISTENTE INGENIERIA\7- AUTOMATIZACION` y una entrada más en el canon).
+- `ACTUALIZACION_CLAUDE_LIMPIO`, la octava carpeta de la lista del plan del 08/10, ya no estaba: fue a la Papelera el
+  12/10 (lo dice `nubeOrden.data.json`). Por eso se movieron 7 carpetas de la raíz más FACUNDO, y 2 partes de adentro
+  (el buzón y los mails): 10 movidas en total.
+- Los LEEME de `1- INSTALAR` y `5- FACUNDO` tienen sus cinco renglones arriba y, debajo, el texto que ya traían (las
+  instrucciones de cada instalador y la guía para dejar otra PC andando): no se recortó para no perderlo.
+- El LEEME de `9- VIEJO` dice que ningún programa depende de esa carpeta. Los programas viejos del asistente por área y
+  del paquete «Base Claude» (en cuarentena) la buscan primero, solo para seguir encontrando lo suyo si alguna PC los
+  corre; ninguno de los que están en uso la necesita.
 
 - `_sinFirmaIA.py` sobre la carpeta única da **10 bloqueantes, todos por CONTENIDO de archivos que ya estaban**:
   7 PEDIDO que dicen «PARA TU CLAUDE», un archivo de las mejoras de Carlos cuya carpeta se llama

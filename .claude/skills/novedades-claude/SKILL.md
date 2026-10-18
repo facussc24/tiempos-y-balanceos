@@ -75,8 +75,8 @@ Detalle y límites medidos: memoria `reference_leer_x_con_el_navegador_de_la_app
 Antes de poner algo en la lista, que sea NUEVO y que no esté ya decidido:
 - Lo ya leído: `C:\Dev\BarackMercosul\exports\explicaciones\novedades_*.md` (las lecturas anteriores), `.sgc-cache/x-seguimiento/`
   (crudos, artículos y listados del lector viejo hasta el 04/10) y, en la nube de Ingeniería,
-  `Claude Fak\viernes-17-plan-sistema\20-informes\novedades_x_2026-10-15.md` (55 puntos del 18/05 al 15/10).
-- Lo ya decidido: el plan del sistema vigente (`Claude Fak\viernes-…\10-PLAN_SISTEMA_*.md`: el §4 «Descartado con
+  `ASISTENTE INGENIERIA\5- FACUNDO (memoria y configuracion)\viernes-17-plan-sistema\20-informes\novedades_x_2026-10-15.md` (55 puntos del 18/05 al 15/10).
+- Lo ya decidido: el plan del sistema vigente (`ASISTENTE INGENIERIA\5- FACUNDO (memoria y configuracion)\viernes-…\10-PLAN_SISTEMA_*.md`: el §4 «Descartado con
   motivo» y lo que cada tanda descartó en su propio texto; buscar el nombre en el archivo entero) y la cola
   `docs/COLA_CAMBIOS_CODIGO.md` (`git grep` del nombre de la función). Lo descartado no se vuelve a proponer salvo
   que la novedad cambie el motivo. Ejemplos del plan del 16/10: fast mode y `/fast` (cobran aparte; §0.5), Managed

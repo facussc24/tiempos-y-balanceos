@@ -32,6 +32,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { colaDe, estadoDe } from './_lib/colgados.mjs';
 import { RAIZ_APP } from './_hijaEstado.mjs';
+import { buscarNube } from './_lib/nubeRutas.mjs';
 import {
   armarTarea, estadoSesion, html, leerArb, leerEstadoNube, leerMails, leerNocheTarea, leerNube, leerResultado,
   leerSeguimiento, leerSelftest, leerWindows,
@@ -183,7 +184,8 @@ export function generar(op) {
   const seg = ultimoSeguimiento(CANON.impresora_carpetas.map((r) => ruta(r, repo)));
   const impresora = { ...leerSeguimiento(seg ? leer(seg.ruta) : null, seg?.mtimeMs ?? null, ahora, { umbral: CANON.detector_umbral, recienteMin: CANON.impresora_reciente_minutos }), carpeta: seg ? path.dirname(seg.ruta) : null };
   const foto = seg ? copiarFoto(path.dirname(seg.ruta), salida) : null;
-  const nubeIng = path.join(os.homedir(), 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General', 'Claude Fak', '_ESTADO.json');
+  // la carpeta de la memoria por el canon de carpetas (mudanza del 17/10/2026: nueva si existe, si no la vieja)
+  const nubeIng = path.join(buscarNube(os.homedir(), {}), '_ESTADO.json');
   const pagina = html({
     ahora, pc: process.env.COMPUTERNAME, refresco: CANON.refresco_segundos, logo: 'logo.png',
     sesionesHoras: CANON.sesiones_horas, selftestsHoras: CANON.selftests_cada_horas,
