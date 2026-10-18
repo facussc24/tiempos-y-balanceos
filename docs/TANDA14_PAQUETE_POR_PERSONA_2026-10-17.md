@@ -22,7 +22,7 @@ Las tres herramientas nuevas de esta tanda (solo leen la copia de mails; salidas
 | Herramienta | Qué contesta | Lo que dio hoy |
 |---|---|---|
 | `node scripts/_adjuntosIndice.mjs [--buscar "<palabras>"]` | En qué mail está un 3D o un DXF, por pieza y versión, con los asuntos al lado | 311 adjuntos de diseño y 120 comprimidos sin abrir; «estanteria inserto» trae los dos mails de agosto (25/08 `ESTANTERIA INSERTO -1.rar`, 28/08 `ESTANTERIA ARMADA ESPUMA INSERTO.rar`) → `exports/adjuntos_3d_dxf_2026-10-17.md` |
-| `node scripts/_plannerCarlos.mjs` | Las tareas del Planner «Actividades Ingenieria» de Carlos, de los avisos por mail | 38 tareas asignadas a Fak (12/11/2025 al 23/06/2026), 33 con aviso de vencida, último aviso de vencida el 08/07. El «50 avisos de vencidas» del informe D son los 50 mails en inglés «You have late tasks»; con los otros avisos de vencimiento (por vencer, vence hoy, en castellano) son 76 mails → `exports/planner_carlos_2026-10-17.md` |
+| `node scripts/_plannerCarlos.mjs` | Las tareas del Planner «Actividades Ingenieria» de Carlos, de los avisos por mail | 38 tareas asignadas a Fak (12/11/2025 al 23/06/2026), 33 con aviso de vencida, último aviso de vencida el 08/07. El «50 avisos de vencidas» del informe D son los 50 mails en inglés con asunto «You have late tasks» (34 dicen eso adentro y 16 «You have a late task»); con los otros avisos de vencimiento (por vencer, vence hoy, en castellano) son 76 mails → `exports/planner_carlos_2026-10-17.md` |
 | `node scripts/_incaParte.mjs` | El parte semanal de VW (INCA): piezas sin acuerdo de capacidad y acuerdos en rojo | 29 partes (11/03 al 14/10); el del 14/10 trae 6 piezas sin acuerdo; el B00000330933 (apoyabrazos trasero) estuvo en rojo en 17 partes, del 15/04 al 26/08. A la copia le faltan los partes del 27/05, 03/06 y 10/06: son 17 partes, no 17 semanas corridas → `exports/inca_parte_2026-10-17.md` |
 
 ---
@@ -117,8 +117,8 @@ validar sin mirar el arb:** el nombre exacto de los botones de su camino y que l
 
 ### Qué le pregunta a Fak
 
-- **279 mails suyos desde el 01/06** (el que más le escribe; uno solo quedó en Eliminados). **De los 278 de la Bandeja,
-  85 nombran BOM, arb, códigos o consumos.** Los asuntos
+- **279 mails con su nombre de remitente desde el 01/06** (el que más le escribe; uno es un aviso de «Carlos Baptista en
+  Teams» y otro solo quedó en Eliminados). **De los 278 de la Bandeja, 85 nombran BOM, arb, códigos o consumos.** Los asuntos
   que más se repiten ahí: «Consumo actualizado aplix» (6), «Vinilos proyecto» (4), «Consumos P703 TOP ROLL & APB» (3),
   «CONSUMOS P703», «Consulta códigos de compra – BOM Ductos», «Códigos y colores - Proyecto Patagonia (VW427)»,
   «BOM-AMFE 21-9902-8944-9689» y «Forecast sansuy proyecto» (2 cada uno).

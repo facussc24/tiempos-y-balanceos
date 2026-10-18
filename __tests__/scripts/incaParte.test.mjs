@@ -59,6 +59,10 @@ describe('leer un parte', () => {
     it('un % mal formado en otro lado del renglon no frena la lectura de las piezas', () => {
         expect(piezasDelEnlace('6 <https://lso.volkswagen.de/inca/x?a=100%&tlks=_A1,_B2&duns=1>')).toEqual(['A1', 'B2']);
     });
+    it('el valor de tlks codificado se lee igual, y con un % mal formado adentro no frena (ronda 2 del auditor)', () => {
+        expect(piezasDelEnlace('6 <https://lso.volkswagen.de/inca/x?tlks=_A1%2C_B2&duns=1>')).toEqual(['A1', 'B2']);
+        expect(piezasDelEnlace('6 <https://lso.volkswagen.de/inca/x?tlks=_A1%2C_B2%ZZ&duns=1>')).toEqual(['A1', 'B2%ZZ']);
+    });
     it('el rojo del apoyabrazos trasero, con su pieza', () => {
         const p = leerParte(mails()[1]);
         expect(p.rojos).toEqual([{ bka: 'B00000330933', descripcion: 'ARMREST REAR', pieza: '2HC885081', estado: 'Red' }]);
