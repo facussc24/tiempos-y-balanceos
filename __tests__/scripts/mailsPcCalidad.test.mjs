@@ -455,25 +455,41 @@ describe('mails_pc: el instalador y la tarea de punta a punta (con un Outlook de
         'exit 0',
         '',
     ].join('\r\n');
-    /** La biblioteca de mentira y la carpeta del instalador (programa\ con los archivos del repo y el lector falso). */
-    function armarBiblioteca(cuentas) {
+    /**
+     * La biblioteca de mentira y la carpeta del instalador (programa\ con los archivos del repo y el lector falso).
+     * `layout` (mudanza del 17/10/2026): 'vieja' = los mails en `_CUARENTENA_Claude Barack\mails` y el paquete publicado en una
+     * carpeta de primer nivel; 'nueva' = los mails en `ASISTENTE INGENIERIA\4- MAILS DEL EQUIPO\mails` y el paquete en
+     * `ASISTENTE INGENIERIA\9- VIEJO (no usar)\_CUARENTENA_CLAUDE POR AREA`; 'ambas' = las dos cosas a la vez, con la lista de lo
+     * privado de la vieja MAS NUEVA (por fecha) que la del lugar nuevo: tiene que ganar la del lugar nuevo.
+     */
+    function armarBiblioteca(cuentas, layout = 'vieja') {
         const t = fs.mkdtempSync(path.join(os.tmpdir(), 'mails-pc-e2e-'));
         temporales.push(t);
         const bib = path.join(t, 'Ingeniería y Proyecto - General');
-        const mails = path.join(bib, '_CUARENTENA_Claude Barack', 'mails');
-        fs.mkdirSync(path.join(mails, '_entrada'), { recursive: true });
-        const comun = path.join(bib, 'PAQUETE', '1- PUBLICADO', 'contenido', 'conocimiento', 'comun');
-        fs.mkdirSync(comun, { recursive: true });
-        fs.writeFileSync(path.join(comun, 'mails_privados.json'), JSON.stringify(PRIVADOS_OK), 'utf8');
-        const bin = path.join(bib, 'PAQUETE', '1- PUBLICADO', 'contenido', 'marketplace', 'plugins', 'barack-area', 'bin');
-        fs.mkdirSync(bin, { recursive: true });
-        fs.copyFileSync(process.execPath, path.join(bin, 'node.exe'));
+        const mailsViejo = path.join(bib, '_CUARENTENA_Claude Barack', 'mails');
+        const mailsNuevo = path.join(bib, 'ASISTENTE INGENIERIA', '4- MAILS DEL EQUIPO', 'mails');
+        const paqueteViejo = path.join(bib, 'PAQUETE');
+        const paqueteNuevo = path.join(bib, 'ASISTENTE INGENIERIA', '9- VIEJO (no usar)', '_CUARENTENA_CLAUDE POR AREA');
+        const mails = layout === 'vieja' ? mailsViejo : mailsNuevo;
+        for (const m of layout === 'ambas' ? [mailsViejo, mailsNuevo] : [mails]) fs.mkdirSync(path.join(m, '_entrada'), { recursive: true });
+        const paquetes = layout === 'vieja' ? [paqueteViejo] : layout === 'nueva' ? [paqueteNuevo] : [paqueteNuevo, paqueteViejo];
+        for (const [i, paquete] of paquetes.entries()) {
+            const comun = path.join(paquete, '1- PUBLICADO', 'contenido', 'conocimiento', 'comun');
+            fs.mkdirSync(comun, { recursive: true });
+            const lista = path.join(comun, 'mails_privados.json');
+            fs.writeFileSync(lista, JSON.stringify({ ...PRIVADOS_OK, _que_es: paquete === paqueteNuevo ? 'lista del lugar nuevo' : 'lista del lugar viejo' }), 'utf8');
+            const mtime = new Date(Date.now() - 600000 + i * 300000);      // la primera de la lista es la mas vieja: en «ambas», la vieja es la mas nueva por fecha
+            fs.utimesSync(lista, mtime, mtime);
+            const bin = path.join(paquete, '1- PUBLICADO', 'contenido', 'marketplace', 'plugins', 'barack-area', 'bin');
+            fs.mkdirSync(bin, { recursive: true });
+            fs.copyFileSync(process.execPath, path.join(bin, 'node.exe'));
+        }
         const programa = path.join(bib, 'INSTALAR MAILS', 'programa');
         fs.mkdirSync(programa, { recursive: true });
         for (const f of ['mails_pc.mjs', 'mails_area.mjs']) fs.copyFileSync(path.join(AREA, f), path.join(programa, f));
         for (const f of ['instalar.ps1', 'subir.ps1', 'casillas.json']) fs.copyFileSync(path.join(AREA, 'mails_pc', f), path.join(programa, f));
         fs.writeFileSync(path.join(programa, 'mails_outlook.ps1'), lectorFalso(cuentas), 'ascii');
-        return { t, bib, mails, programa, raiz: path.join(t, 'BarackMailsPC') };
+        return { t, bib, mails, mailsViejo, mailsNuevo, paqueteViejo, paqueteNuevo, programa, raiz: path.join(t, 'BarackMailsPC') };
     }
     const CUENTAS = [['f.prueba@barackmercosul.com', 'f.prueba@barackmercosul.com', 'principal', 'true'], [CALIDAD, 'Calidad', 'adicional', 'false'], ['', 'Archivo', 'no_exchange', 'false']];
     const saludDe = (b) => JSON.parse(fs.readFileSync(path.join(b.mails, '_salud', `${process.env.COMPUTERNAME}.json`), 'utf8'));
@@ -553,6 +569,63 @@ describe('mails_pc: el instalador y la tarea de punta a punta (con un Outlook de
         expect(PS(path.join(b.raiz, 'subir.ps1'), []).status).toBe(0);
         expect(archivos(path.join(b.mails, '_entrada'))).toEqual([]);
         expect(saludDe(b).resultado.resultado).toBe('apagado');
+    }, 400000);
+
+    // Mudanza del 17/10/2026 (todo lo del asistente en «ASISTENTE INGENIERIA»). Estos .ps1 corren en otras PC sin el repo y
+    // llevan los nombres adentro; cada PC toma la version nueva recien al reinstalar. Tienen que andar con el lugar NUEVO, con el
+    // de ANTES, y si estan los dos gana el nuevo (la misma regla de scripts/_lib/nubeRutas.mjs).
+    const CANON = JSON.parse(fs.readFileSync(path.join(RAIZ, 'scripts', '_lib', 'nubeCarpetas.data.json'), 'utf8'));
+    const nuevaDelCanon = (clave) => CANON.carpetas.find((c) => c.clave === clave).nueva.join('\\');
+    const subidosDe = (mails, autor) => archivos(path.join(mails, '_entrada', autor)).flatMap((f) => fs.readFileSync(path.join(mails, '_entrada', autor, f), 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)));
+    it('las rutas nuevas que llevan adentro el instalador y la tarea son las del canon (claves mails y area_vieja)', () => {
+        for (const f of ['instalar.ps1', 'subir.ps1']) {
+            const texto = fs.readFileSync(path.join(AREA, 'mails_pc', f), 'ascii');
+            expect(texto, f).toContain(`Join-Path $bib '${nuevaDelCanon('mails')}'`);
+            expect(texto, f).toContain(`Join-Path $bib '${nuevaDelCanon('area_vieja')}'`);
+        }
+    });
+    for (const layout of ['vieja', 'nueva', 'ambas']) {
+        it.runIf(conPowerShell)(`mudanza, layout «${layout}»: el instalador y la tarea usan ${layout === 'vieja' ? 'el lugar de antes' : 'el lugar nuevo (y si estan los dos, solo ese)'}`, () => {
+            const b = armarBiblioteca(CUENTAS, layout);
+            const i = PS(path.join(b.programa, 'instalar.ps1'), ['-Raiz', b.raiz, '-SinTarea']);
+            expect(i.status, i.stdout + i.stderr).toBe(0);
+            // Node y la lista de lo privado salieron del paquete publicado del lugar que corresponde (y en «ambas» gana el nuevo aunque la vieja sea mas nueva por fecha)
+            expect(fs.existsSync(path.join(b.raiz, 'node', 'node.exe'))).toBe(true);
+            const instalada = JSON.parse(fs.readFileSync(path.join(b.raiz, 'casa', 'publicado', 'conocimiento', 'comun', 'mails_privados.json'), 'utf8'));
+            expect(instalada._que_es).toBe(layout === 'vieja' ? 'lista del lugar viejo' : 'lista del lugar nuevo');
+            // la carpeta de mails que vio el instalador: ahi dejo su salud
+            expect(saludDe(b).resultado).toMatchObject({ resultado: 'inventario', suben: [CALIDAD] });
+            // la tarea: tal cual la lanza Windows. El programa tiene que aceptar la carpeta (resultado «ok»), no solo encontrarla
+            const s = PS(path.join(b.raiz, 'subir.ps1'), []);
+            expect(s.status, s.stdout + s.stderr).toBe(0);
+            const lugar = layout === 'vieja' ? b.mailsViejo : b.mailsNuevo;
+            const salud = saludDe(b);
+            expect(salud.resultado).toMatchObject({ resultado: 'ok', casillas: [expect.objectContaining({ casilla: CALIDAD, entrada: 1 })] });
+            const arriba = archivos(path.join(lugar, '_entrada'));
+            expect(arriba).toHaveLength(1);
+            expect(arriba[0].split(/[\\/]/)[0]).toBe('calidad');
+            expect(subidosDe(lugar, 'calidad').map((m) => m.asunto)).toEqual(['Reclamo de prueba']);
+            // en «ambas» la carpeta de antes queda como estaba: ni mails ni salud
+            if (layout === 'ambas') expect(archivos(b.mailsViejo)).toEqual([]);
+        }, 400000);
+    }
+    it.runIf(conPowerShell)('mudanza: la tarea toma la lista de lo privado ampliada del lugar nuevo, y no la de la carpeta de antes aunque este tambien', () => {
+        const b = armarBiblioteca(CUENTAS, 'ambas');
+        expect(PS(path.join(b.programa, 'instalar.ps1'), ['-Raiz', b.raiz, '-SinTarea']).status).toBe(0);
+        const ampliar = (paquete, marca) => {
+            const lista = path.join(paquete, '1- PUBLICADO', 'contenido', 'conocimiento', 'comun', 'mails_privados.json');
+            const j = JSON.parse(fs.readFileSync(lista, 'utf8'));
+            j.direcciones.push(`${marca.replace(/ /g, '.')}@barack.test`);
+            j.total_direcciones = j.direcciones.length;
+            j._que_es = marca;
+            fs.writeFileSync(lista, JSON.stringify(j), 'utf8');
+        };
+        ampliar(b.paqueteNuevo, 'ampliada nueva');
+        ampliar(b.paqueteViejo, 'ampliada vieja');
+        expect(PS(path.join(b.raiz, 'subir.ps1'), []).status).toBe(0);
+        const local = JSON.parse(fs.readFileSync(path.join(b.raiz, 'casa', 'publicado', 'conocimiento', 'comun', 'mails_privados.json'), 'utf8'));
+        expect(local._que_es).toBe('ampliada nueva');
+        expect(fs.readFileSync(path.join(b.raiz, 'mails.log'), 'utf8')).toMatch(/tomada la publicada/);
     }, 400000);
 
     it('el instalador y la tarea no mandan nada afuera ni dejan nada en la nube personal', () => {

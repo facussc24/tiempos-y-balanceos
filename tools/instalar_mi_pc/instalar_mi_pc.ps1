@@ -64,8 +64,12 @@ else {
 }
 if (-not $desdePendrive) {
   if (-not $bib -or -not (Test-Path -LiteralPath $bib -PathType Container)) { Mal 'no encuentro en esta PC la biblioteca de Ingenieria. Tiene que estar sincronizada con tu cuenta (Explorador: BARACK ARGENTINA SRL > Ingenieria y Proyecto - General).' }
-  foreach ($d in @(Get-ChildItem -LiteralPath $bib -Directory -ErrorAction SilentlyContinue)) {
-    if ((Test-Path -LiteralPath (Join-Path $d.FullName 'claude-memoria')) -and (Test-Path -LiteralPath (Join-Path $d.FullName 'claude-config'))) { $nube = $d.FullName; break }
+  # La carpeta de la memoria: primero su lugar nuevo (mudanza del 17/10/2026; la fuente es scripts/_lib/nubeCarpetas.data.json,
+  # clave facundo: este archivo corre en otra PC sin el repo y lleva el nombre adentro) y despues las carpetas de primer nivel.
+  $basesMemoria = @(Join-Path $bib 'ASISTENTE INGENIERIA\5- FACUNDO (memoria y configuracion)')
+  $basesMemoria += @(Get-ChildItem -LiteralPath $bib -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
+  foreach ($d in $basesMemoria) {
+    if ((Test-Path -LiteralPath (Join-Path $d 'claude-memoria')) -and (Test-Path -LiteralPath (Join-Path $d 'claude-config'))) { $nube = $d; break }
   }
   if (-not $nube) { Mal 'no veo en la nube de Ingenieria la carpeta con tu memoria y tu configuracion. Tiene permiso solo para tu cuenta: sincroniza la biblioteca con tu cuenta (SharePoint > Documentos > Sincronizar) y espera a que termine.' }
   Ok ('tu memoria y tu configuracion: ' + $nube)
@@ -81,8 +85,12 @@ if (-not $node) {
   foreach ($p in @((Join-Path $paquete 'node\node.exe'), (Join-Path $env:LOCALAPPDATA 'BarackMailsPC\node\node.exe'), (Join-Path $env:LOCALAPPDATA 'MiAsistente\node\node.exe'))) { if (Test-Path -LiteralPath $p) { $node = $p; break } }
 }
 if (-not $node -and $bib) {
-  foreach ($d in @(Get-ChildItem -LiteralPath $bib -Directory -ErrorAction SilentlyContinue)) {
-    $n = Join-Path $d.FullName '1- PUBLICADO\contenido\marketplace\plugins\barack-area\bin\node.exe'
+  # Node del paquete publicado: primero su lugar nuevo (mudanza del 17/10/2026; la fuente es scripts/_lib/nubeCarpetas.data.json,
+  # clave area_vieja: este archivo corre en otra PC sin el repo y lleva el nombre adentro) y despues las carpetas de primer nivel.
+  $basesNode = @(Join-Path $bib 'ASISTENTE INGENIERIA\9- VIEJO (no usar)\_CUARENTENA_CLAUDE POR AREA')
+  $basesNode += @(Get-ChildItem -LiteralPath $bib -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
+  foreach ($base in $basesNode) {
+    $n = Join-Path $base '1- PUBLICADO\contenido\marketplace\plugins\barack-area\bin\node.exe'
     if (Test-Path -LiteralPath $n) {
       $propio = Join-Path $env:LOCALAPPDATA 'MiAsistente\node\node.exe'
       if ($Ensayo) { Haria ('copiar Node de la nube a ' + $propio); $node = $n }

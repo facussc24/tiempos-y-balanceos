@@ -49,13 +49,15 @@ if (-not (Test-Path -LiteralPath $node)) {
 }
 if (-not (Test-Path -LiteralPath $programa)) { Log ('no esta el programa de mails: ' + $programa); exit 0 }
 
-# La carpeta de mails de la biblioteca de Ingenieria: la de siempre, se llame "Claude Barack" o "_CUARENTENA_Claude Barack"
+# La carpeta de mails de la biblioteca de Ingenieria: primero el lugar nuevo (mudanza del 17/10/2026) y despues los de antes, se
+# llame "_CUARENTENA_Claude Barack" o "Claude Barack". La fuente es scripts/_lib/nubeCarpetas.data.json (clave mails: nueva y
+# despues viejas, en ese orden); este archivo corre en otra PC sin el repo y lleva los nombres adentro.
 $org = Join-Path $env:USERPROFILE 'BARACK ARGENTINA SRL'
 $bib = $null
 $destino = $null
 foreach ($b in @(Get-ChildItem -LiteralPath $org -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -like 'Ingenier*a y Proyecto - General' })) {
-  foreach ($n in @('Claude Barack', '_CUARENTENA_Claude Barack')) {
-    $m = Join-Path $b.FullName ($n + '\mails')
+  foreach ($n in @('ASISTENTE INGENIERIA\4- MAILS DEL EQUIPO\mails', '_CUARENTENA_Claude Barack\mails', 'Claude Barack\mails')) {
+    $m = Join-Path $b.FullName $n
     if (Test-Path -LiteralPath $m -PathType Container) { $bib = $b.FullName; $destino = $m; break }
   }
   if ($destino) { break }
@@ -71,7 +73,8 @@ if ((Get-ScheduledTask -TaskName 'Barack - Claude por area' -ErrorAction Silentl
 
 # Las listas publicadas: solo lo que apaga o endurece
 $comunNube = $null
-foreach ($raiz in @('CLAUDE POR AREA', '_CUARENTENA_CLAUDE POR AREA')) {
+# (canon, clave area_vieja: nueva y despues viejas, en ese orden)
+foreach ($raiz in @('ASISTENTE INGENIERIA\9- VIEJO (no usar)\_CUARENTENA_CLAUDE POR AREA', '_CUARENTENA_CLAUDE POR AREA', 'CLAUDE POR AREA')) {
   $cn = Join-Path $bib ($raiz + '\1- PUBLICADO\contenido\conocimiento\comun')
   if (Test-Path -LiteralPath $cn -PathType Container) { $comunNube = $cn; break }
 }

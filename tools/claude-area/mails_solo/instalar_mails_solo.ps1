@@ -45,25 +45,29 @@ Write-Host ('  MAILS DE ' + $Nombre.ToUpper() + ' A LA NUBE DE INGENIERIA') -For
 Write-Host ''
 if ($env:COMPUTERNAME -ne $Pc) { Mal ('esto es para la PC ' + $Pc + ' y esta PC es ' + $env:COMPUTERNAME) }
 
-# 1) la biblioteca de Ingenieria y la carpeta de mails de siempre
+# 1) la biblioteca de Ingenieria y la carpeta de mails: primero el lugar nuevo (mudanza del 17/10/2026) y despues los de antes.
+#    La fuente es scripts/_lib/nubeCarpetas.data.json (clave mails: nueva y despues viejas, en ese orden); este archivo corre en
+#    otra PC sin el repo y lleva los nombres adentro.
 $org = Join-Path $env:USERPROFILE 'BARACK ARGENTINA SRL'
 $bib = $null
 $destino = $null
 foreach ($b in @(Get-ChildItem -LiteralPath $org -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -like 'Ingenier*a y Proyecto - General' })) {
-  foreach ($n in @('Claude Barack', '_CUARENTENA_Claude Barack')) {
-    $m = Join-Path $b.FullName ($n + '\mails')
+  foreach ($n in @('ASISTENTE INGENIERIA\4- MAILS DEL EQUIPO\mails', '_CUARENTENA_Claude Barack\mails', 'Claude Barack\mails')) {
+    $m = Join-Path $b.FullName $n
     if (Test-Path -LiteralPath $m -PathType Container) { $bib = $b.FullName; $destino = $m; break }
   }
   if ($destino) { break }
 }
-if (-not $destino) { Mal 'no encuentro en esta PC la carpeta de mails de la nube de Ingenieria (Claude Barack\mails). Revisar que la biblioteca de Ingenieria este sincronizada.' }
+if (-not $destino) { Mal 'no encuentro en esta PC la carpeta de mails de la nube de Ingenieria (ASISTENTE INGENIERIA\4- MAILS DEL EQUIPO\mails). Revisar que la biblioteca de Ingenieria este sincronizada.' }
 Ok ('carpeta de la nube: ' + $destino)
 
 # 2) las listas: las del ultimo paquete publicado (si estan), si no las que ya tiene la PC
 $listas = @{}
+# (el paquete publicado del asistente por area; canon, clave area_vieja: nueva y despues viejas, en ese orden)
+$AREA_VIEJA = @('ASISTENTE INGENIERIA\9- VIEJO (no usar)\_CUARENTENA_CLAUDE POR AREA', '_CUARENTENA_CLAUDE POR AREA', 'CLAUDE POR AREA')
 foreach ($f in @('personas.json', 'mails_privados.json')) {
   $listas[$f] = $null
-  foreach ($raiz in @('CLAUDE POR AREA', '_CUARENTENA_CLAUDE POR AREA')) {
+  foreach ($raiz in $AREA_VIEJA) {
     $pub = Join-Path $bib ($raiz + '\1- PUBLICADO\contenido\conocimiento\comun\' + $f)
     if ((Test-Path -LiteralPath $pub) -and (Leer-Json $pub)) { $listas[$f] = $pub; break }
   }
@@ -98,7 +102,7 @@ $nodePropio = Join-Path $estado 'node\node.exe'
 if (-not (Test-Path -LiteralPath $nodePropio)) {
   New-Item -ItemType Directory -Force -Path (Split-Path -Parent $nodePropio) | Out-Null
   $origenes = @((Join-Path $viejo 'node\node.exe'))
-  foreach ($raiz in @('CLAUDE POR AREA', '_CUARENTENA_CLAUDE POR AREA')) { $origenes += (Join-Path $bib ($raiz + '\1- PUBLICADO\contenido\marketplace\plugins\barack-area\bin\node.exe')) }
+  foreach ($raiz in $AREA_VIEJA) { $origenes += (Join-Path $bib ($raiz + '\1- PUBLICADO\contenido\marketplace\plugins\barack-area\bin\node.exe')) }
   foreach ($o in $origenes) {
     if (Test-Path -LiteralPath $o) {
       try { Copy-Item -LiteralPath $o -Destination ($nodePropio + '.nuevo') -Force; Move-Item -LiteralPath ($nodePropio + '.nuevo') -Destination $nodePropio -Force; break } catch { }
