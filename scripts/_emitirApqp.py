@@ -35,6 +35,8 @@ import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATOS = os.path.join(REPO, "scripts", "_lib", "emisionesApqp.data.json")
+sys.path.insert(0, os.path.join(REPO, "scripts", "_lib"))
+from fichaRegistro import registrar_en_ficha  # noqa: E402  el renglon en la ficha de la pieza (tanda 13)
 EXTENSIONES = {"flujograma": (".pdf", ".png"), "amfe": (".xlsx", ".pdf")}
 PESO_MINIMO = 10_000   # una fuente de menos de 10 KB es un export que fallo
 
@@ -371,6 +373,27 @@ def selftest():
          banderas == [(False, False, False), (True, True, False), (True, False, True)])
     caso("   --pisar y --reemplazar juntas -> error y no emite",
          main(["174-amfe", "--apply", "--pisar", "--reemplazar"], decir=salida.append, emitir_con=espia) == 1 and len(llamadas) == 3)
+    # la ficha de la pieza: registra una vez despues de emitir bien, nunca en seco ni si la emision fallo
+    registros = []
+    anota = lambda campos, decir=None: (registros.append(campos), True)[1]   # noqa: E731
+    main(["174-amfe"], decir=salida.append, emitir_con=espia, registrar_con=anota)
+    caso("   ficha: el dry-run no registra", registros == [])
+    main(["174-amfe", "--apply"], decir=salida.append, emitir_con=lambda *a, **kw: 1, registrar_con=anota)
+    caso("   ficha: una emision que fallo no registra", registros == [])
+    main(["174-amfe", "--apply"], decir=salida.append, emitir_con=espia, registrar_con=anota)
+    caso("   ficha: una emision que salio bien registra una vez, con tipo, nombre y destino",
+         len(registros) == 1 and registros[0]["tipo"] and registros[0]["nombre"] and registros[0]["destino"])
+    caso("   ficha: si el registro falla, el resultado de la emision no cambia",
+         main(["174-amfe", "--apply"], decir=salida.append, emitir_con=espia, registrar_con=lambda c, decir=None: False) == 0)
+    caso("   ficha: con un espia y sin pedirlo, no registra (no llama a node)",
+         main(["174-amfe", "--apply"], decir=salida.append, emitir_con=espia) == 0 and len(registros) == 1)
+
+    def roto(*a, **kw):
+        raise OSError("node no esta")
+    dichos = []
+    caso("   ficha: registrar_en_ficha con node roto no tira: devuelve False y lo dice",
+         registrar_en_ficha({"tipo": "amfe", "nombre": "AMFE 999 - X - Rev.A"}, decir=dichos.append, correr=roto) is False
+         and any("no se pudo registrar" in d for d in dichos))
     # los datos reales cargan y cada entrada esta completa
     datos = json.load(open(DATOS, encoding="utf-8"))
     completos = all(all(k in e for k in ("tipo", "nombre", "salida", "maestro", "legajo", "casillero"))
@@ -386,7 +409,7 @@ def selftest():
 BANDERAS = {"--apply", "--pisar", "--reemplazar", "--lista"}
 
 
-def main(argv, decir=print, emitir_con=None):
+def main(argv, decir=print, emitir_con=None, registrar_con=None):
     args = [a for a in argv if not a.startswith("--")]
     # Lo que escribe frena ante un argumento que no conoce: el 01/10/2026 un "--instalar --help"
     # que crei inofensivo instalo de verdad (LECCIONES). Aca "--apply --help" emitia.
@@ -406,9 +429,18 @@ def main(argv, decir=print, emitir_con=None):
     if args[0] not in datos["emisiones"]:
         decir(f"ERROR: la clave '{args[0]}' no existe en emisionesApqp.data.json. Hay: {', '.join(datos['emisiones'])}")
         return 1
-    return (emitir_con or emitir)(datos["emisiones"][args[0]], datos["raices"], REPO,
-                                  os.path.join(REPO, ".sgc-cache", "emitidos-respaldo"),
-                                  apply="--apply" in argv, pisar=pisar, reemplazar=reemplazar, decir=decir)
+    e = datos["emisiones"][args[0]]
+    resultado = (emitir_con or emitir)(e, datos["raices"], REPO,
+                                       os.path.join(REPO, ".sgc-cache", "emitidos-respaldo"),
+                                       apply="--apply" in argv, pisar=pisar, reemplazar=reemplazar, decir=decir)
+    # Una emision que salio bien deja su renglon en la ficha de configuracion de la pieza (tanda 13).
+    # Solo despues de copiar y verificar, nunca en el dry-run, y sin frenar nada: registrar_en_ficha
+    # dice en un renglon si no pudo. El selftest, que emite con un espia, no registra salvo que lo pida.
+    if resultado == 0 and "--apply" in argv and (registrar_con is not None or emitir_con is None):
+        (registrar_con or registrar_en_ficha)({"tipo": e["tipo"], "nombre": e["nombre"],
+                                               "destino": ruta(e["maestro"], datos["raices"]),
+                                               "quien": "_emitirApqp.py"}, decir=decir)
+    return resultado
 
 
 if __name__ == "__main__":

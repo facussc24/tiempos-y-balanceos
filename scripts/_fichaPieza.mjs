@@ -11,8 +11,10 @@
  *   node scripts/_fichaPieza.mjs --relevar  <pieza> [--parcial] [--dry-run]
  *                                                             vuelve a leer todos los documentos y reescribe la ficha
  *   node scripts/_fichaPieza.mjs --registrar --tipo flujograma --nombre "FLUJOGRAMA 154 - INSERT - Rev.D"
- *                                --destino <carpeta> [--fecha AAAA-MM-DD] [--quien _emitirApqp]
+ *                                --destino <carpeta> [--fecha AAAA-MM-DD] [--quien _emitirApqp] [--familia Insert]
  *                                                             lo llaman los emisores despues de emitir de verdad
+ *                                                             (_emitirApqp.py, _bomLegajo.py, _exportAmfeOficial.ts);
+ *                                                             la ficha queda cambiada en el repo: se commitea
  *
  * SOLO LECTURA sobre todo lo de la empresa: Supabase con el cliente que solo sabe leer, el arb por su
  * export, la nube y Y: leyendo archivos, los mails por el cache local. Lo unico que escribe es el JSON de
@@ -24,7 +26,7 @@ import { relevarFicha } from './_lib/fichaRelevar.mjs';
 const argv = process.argv.slice(2);
 const flag = (n) => { const i = argv.indexOf(n); return i >= 0 && argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : null; };
 const tiene = (n) => argv.includes(n);
-const CONOCIDAS = new Set(['--lista', '--mostrar', '--comparar', '--json', '--cambio', '--atributo', '--codigo', '--relevar', '--parcial', '--dry-run', '--registrar', '--tipo', '--nombre', '--numero', '--letra', '--destino', '--fecha', '--quien']);
+const CONOCIDAS = new Set(['--lista', '--mostrar', '--comparar', '--json', '--cambio', '--atributo', '--codigo', '--relevar', '--parcial', '--dry-run', '--registrar', '--tipo', '--nombre', '--numero', '--letra', '--destino', '--fecha', '--quien', '--familia']);
 const desconocidas = argv.filter((a) => a.startsWith('--') && !CONOCIDAS.has(a));
 if (desconocidas.length) { console.error(`No conozco ${desconocidas.join(', ')}. Mira el uso arriba del archivo.`); process.exit(2); }
 
@@ -104,8 +106,11 @@ function registrar() {
   const numero = flag('--numero') || leido?.numero;
   const letra = flag('--letra') || leido?.letra;
   if (!tipo || !numero) { console.error('ficha: falta --tipo y --numero (o un --nombre con numero y «Rev.X»)'); return 2; }
-  const claves = fichasCon(tipo, numero);
-  if (!claves.length) { linea(`ficha: ${tipo} ${numero} no esta en ninguna ficha de pieza (sin ficha, no se registra nada)`); return 0; }
+  // Un numero propio (flujograma 154, AMFE 158) es de una sola pieza; un id generico como bom:legajo lo
+  // tienen todas las fichas: ahi manda la familia de la BOM (_lib/bomLegajos.data.json).
+  const familia = flag('--familia');
+  const claves = fichasCon(tipo, numero).filter((c) => !familia || leerFicha(c).pieza?.familiaBom === familia);
+  if (!claves.length) { linea(`ficha: ${tipo} ${numero}${familia ? ` (familia ${familia})` : ''} no esta en ninguna ficha de pieza (sin ficha, no se registra nada)`); return 0; }
   for (const clave of claves) {
     const emision = { fecha: flag('--fecha') || new Date().toISOString().slice(0, 10), destino: flag('--destino') || '-', quien: flag('--quien') || null };
     const nueva = registrarDocumento(leerFicha(clave), { tipo, numero, letra, emision });

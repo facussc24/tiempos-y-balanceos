@@ -17,6 +17,8 @@
  * Borrador que todavia no esta en Supabase:  ... --amfe <clave> --json <archivo.json> --sin-auditoria
  */
 import { writeFileSync, mkdirSync, readFileSync, existsSync, rmSync, statSync, renameSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 import XLSX from 'xlsx-js-style';
 import { buildAmfeOficialWorkbook } from '../modules/amfe/amfeExcelExport';
@@ -251,3 +253,18 @@ console.info(
   + `| ops ${doc.operations.length} | FM ${renumerados} | hojas ${releido.SheetNames.join(',')} | ${bytes} bytes`
 );
 console.info('->', dest);
+
+// 4. El renglon en la ficha de configuracion de la pieza (tanda 13): solo el export que va al cliente
+//    (con su auditoria de cliente; ni --sin-auditoria ni un borrador --json). Nunca frena el export: el
+//    archivo ya esta escrito y verificado; si no se puede registrar, se dice en un renglon.
+if (!process.argv.includes('--sin-auditoria') && !JSON_FILE) {
+  const numero = String(doc?.header?.amfeNumber ?? '').trim();
+  const letra = String(doc?.header?.rev ?? doc?.header?.revisionLevel ?? '').trim();
+  if (numero) {
+    const r = spawnSync(process.execPath, [fileURLToPath(new URL('./_fichaPieza.mjs', import.meta.url)), '--registrar',
+      '--tipo', 'amfe', '--numero', numero, ...(letra ? ['--letra', letra] : []), '--destino', dest,
+      '--quien', '_exportAmfeOficial.ts (export para el cliente)'], { encoding: 'utf8', timeout: 60_000 });
+    const dicho = String(r.stdout || r.stderr || r.error?.message || '').trim();
+    console.info(r.status === 0 ? `   ${dicho}` : `   ficha de la pieza: no se pudo registrar (${dicho.slice(-200)}); el export ya quedo hecho`);
+  }
+}

@@ -33,7 +33,8 @@ import { fileURLToPath } from 'node:url';
 const AQUI = dirname(fileURLToPath(import.meta.url));
 export const RAIZ_REPO = resolve(AQUI, '..', '..');
 export const CANON = JSON.parse(readFileSync(join(AQUI, 'fichaPieza.data.json'), 'utf8'));
-export const CARPETA_FICHAS = join(RAIZ_REPO, 'data', 'configuracion');
+// BARACK_FICHAS_DIR: otra carpeta de fichas, para que un test corra --registrar sin tocar las de verdad.
+export const CARPETA_FICHAS = process.env.BARACK_FICHAS_DIR || join(RAIZ_REPO, 'data', 'configuracion');
 
 // ---------------------------------------------------------------------------
 // normalizar
