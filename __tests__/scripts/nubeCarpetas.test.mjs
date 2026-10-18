@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 import {
     CANON_CARPETAS, CARPETA_UNICA, resolverCarpeta, carpetaNube, buscarNube, entradaCarpeta, ORGANIZACION,
 } from '../../scripts/_lib/nubeRutas.mjs';
-import { planMudanza, moverYVerificar, contar, comparar, largoSharePoint } from '../../scripts/_nubeMudar.mjs';
+import { planMudanza, moverYVerificar, contar, comparar, largoSharePoint, escribirLeemes } from '../../scripts/_nubeMudar.mjs';
 import { plan as planInstalar } from '../../tools/instalar_mi_pc/publicar.mjs';
 import { plan as planMailsPc } from '../../tools/claude-area/mails_pc/publicar.mjs';
 import { carpetaDe } from '../../tools/claude-area/mejoras/publicar.mjs';
@@ -157,7 +157,7 @@ describe('cada programa, en las dos direcciones', () => {
         expect(leer('NUBE_FACUNDO_VIEJA')).toBe(vieja0('facundo').join('/'));
         const t = spawnSync('bash', [join(RAIZ, '.claude', 'hooks', 'cerebro-guard.test.sh')], { encoding: 'utf8' });
         expect(t.status, t.stdout + t.stderr).toBe(0);
-    });
+    }, 120000);   // corre un .sh de 17 casos: con la PC cargada pasa de los 5 s de vitest
 });
 
 describe('_nubeMudar.mjs (sin tocar la nube)', () => {
@@ -204,6 +204,25 @@ describe('_nubeMudar.mjs (sin tocar la nube)', () => {
         crear(f.destino);
         expect(planMudanza(bib).find((x) => x.clave === 'equipo').estado).toBe('las_dos');
         expect(moverYVerificar(f)).toMatchObject({ ok: false, motivo: expect.stringMatching(/ya existe/) });
+    });
+    it('los LEEME: crea los que faltan, al que ya existe le agrega los cinco renglones ARRIBA sin perder nada, y no repite', () => {
+        const bib = bibVieja();
+        for (const f of planMudanza(bib)) expect(moverYVerificar(f).ok).toBe(true);
+        const orden = JSON.parse(readFileSync(join(RAIZ, 'scripts', '_lib', 'nubeOrden.data.json'), 'utf8'));
+        const d5 = orden.destinos.find((d) => d.id === '5');
+        const leeme5 = join(bib, CARPETA_UNICA, d5.nombre, 'LEEME.txt');
+        writeFileSync(leeme5, 'INSTRUCCIONES VIEJAS\r\nrenglon 2\r\n', 'utf8');
+        const r = escribirLeemes(bib, orden);
+        expect(r).toHaveLength(orden.destinos.length + 1);
+        expect(r.filter((x) => x.accion === 'creado')).toHaveLength(orden.destinos.length);
+        expect(r.find((x) => x.ruta === leeme5).accion).toBe('agregado arriba');
+        const t = readFileSync(leeme5, 'utf8');
+        expect(t.startsWith(d5.leeme[0])).toBe(true);
+        expect(t).toContain('INSTRUCCIONES VIEJAS\r\nrenglon 2');
+        expect(escribirLeemes(bib, orden).every((x) => x.accion === 'ya estaba')).toBe(true);
+        const raiz = readFileSync(join(bib, CARPETA_UNICA, 'LEEME.txt'), 'utf8').split('\r\n').filter(Boolean);
+        expect(raiz).toHaveLength(5);
+        expect(raiz[0]).toMatch(/^ASISTENTE INGENIERIA: /);
     });
     it('contar no cuenta los archivos de sistema de OneDrive; comparar ve tamaños distintos; el largo en SharePoint suma el prefijo', () => {
         const { bib } = casa();

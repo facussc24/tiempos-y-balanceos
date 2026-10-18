@@ -1,4 +1,8 @@
-INSTALAR EN UNA PC NUEVA
+1- INSTALAR (doble clic): los instaladores del asistente, uno por PC o por persona.
+Cada subcarpeta tiene su instalador; su propio LEEME dice qué archivo se abre.
+La PC tiene que tener sincronizada la biblioteca de Ingeniería.
+No editar lo que está en «programa»: se reemplaza solo con cada versión.
+Dudas: Facundo Santoro (Ingeniería).
 
 Esta carpeta se abre desde la PC nueva (tiene que ver la nube de Ingeniería).
 Cada subcarpeta tiene un solo archivo para hacer doble clic.

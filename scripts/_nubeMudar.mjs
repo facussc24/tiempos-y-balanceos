@@ -23,11 +23,11 @@
  * Lo medido (antes y despues de cada carpeta) queda en exports/explicaciones/nube_mudanza_<fecha>.json.
  * Solo lee y renombra: no abre ningun archivo (contar y medir por atributos no los baja de la nube).
  */
-import { readdirSync, statSync, lstatSync, mkdirSync, renameSync, existsSync, writeFileSync } from 'fs';
+import { readdirSync, lstatSync, mkdirSync, renameSync, existsSync, writeFileSync, readFileSync } from 'fs';
 import { join, dirname, relative, resolve, sep } from 'path';
 import { fileURLToPath } from 'url';
 import { buscarBiblioteca, esCarpeta, CANON_CARPETAS } from './_lib/nubeRutas.mjs';
-import { medirPorAtributos, rutaSalida, mb } from './_lib/nubeOrden.mjs';
+import { medirPorAtributos, rutaSalida, mb, cargarCanon } from './_lib/nubeOrden.mjs';
 
 /** Archivos que OneDrive y Windows dejan solos y no son de nadie (los mismos que ignora nubeMedir.ps1). */
 const IGNORADO = (n) => n === 'Thumbs.db' || n === 'desktop.ini' || n.startsWith('~$') || n.startsWith('.849C9593');
@@ -91,6 +91,29 @@ export function largoSharePoint(destinoRel, rel, canon = CANON_CARPETAS) {
 }
 
 function linea(t = '') { console.log(t); }
+
+/**
+ * Los LEEME de la carpeta unica (los textos del simulado: `nubeOrden.data.json`, `leeme_raiz` y `destinos[].leeme`,
+ * cinco renglones cada uno). Uno que no existe se crea; uno que ya existe y no empieza con esos renglones los recibe
+ * ARRIBA, con todo lo que tenia abajo (nunca se pisa: el de 1- INSTALAR y el de 5- FACUNDO traen instrucciones).
+ * Devuelve [{ ruta, accion: 'creado'|'agregado arriba'|'ya estaba' }].
+ */
+export function escribirLeemes(bib, orden, unica = CANON_CARPETAS.unica, { escribir = true } = {}) {
+    const lista = [{ carpeta: join(bib, unica), renglones: orden.leeme_raiz.map((l) => l.replace('{NOMBRE}', unica)) },
+        ...orden.destinos.map((d) => ({ carpeta: join(bib, unica, d.nombre), renglones: d.leeme }))];
+    const out = [];
+    for (const { carpeta, renglones } of lista) {
+        if (!esCarpeta(carpeta)) { out.push({ ruta: join(carpeta, 'LEEME.txt'), accion: 'falta la carpeta' }); continue; }
+        const ruta = join(carpeta, 'LEEME.txt');
+        const nuevo = renglones.join('\r\n') + '\r\n';
+        if (!existsSync(ruta)) { if (escribir) writeFileSync(ruta, nuevo, 'utf8'); out.push({ ruta, accion: 'creado' }); continue; }
+        const viejo = readFileSync(ruta, 'utf8').replace(/^﻿/, '');
+        if (viejo.startsWith(renglones[0])) { out.push({ ruta, accion: 'ya estaba' }); continue; }
+        if (escribir) writeFileSync(ruta, nuevo + '\r\n' + viejo, 'utf8');
+        out.push({ ruta, accion: 'agregado arriba' });
+    }
+    return out;
+}
 
 /**
  * Mueve UNA carpeta y la verifica. Justo antes: lo que falta subir (si no es 0, no se mueve) y el conteo archivo por
@@ -164,7 +187,12 @@ export function main(argv = process.argv.slice(2)) {
         for (const x of frenos) linea(`  [X] ${x}`);
         return 1;
     }
-    if (!aMover.length) { linea('No queda nada por mover: todas las carpetas del canon estan en su lugar nuevo (o no existen).'); return 0; }
+    if (!aMover.length) {
+        linea('No queda nada por mover: todas las carpetas del canon estan en su lugar nuevo (o no existen).');
+        // los LEEME se completan igual (si una corrida anterior paro antes de escribirlos)
+        for (const l of escribirLeemes(bib, cargarCanon(), CANON_CARPETAS.unica, { escribir: aplicar })) if (l.accion !== 'ya estaba') linea(`[LEEME] ${aplicar ? '' : '(se haria) '}${l.accion.padEnd(16)} ${relBib(l.ruta)}`);
+        return 0;
+    }
     if (!aplicar) { linea(`Se moverian ${aMover.length} carpeta(s), en este orden. Para hacerlo: node scripts/_nubeMudar.mjs --aplicar`); return 0; }
 
     // 2) Mover, de a una, y contar de nuevo en el lugar nuevo.
@@ -187,6 +215,10 @@ export function main(argv = process.argv.slice(2)) {
         }
         linea(`[OK] ${f.clave.padEnd(15)} ${String(fila.antes.archivos).padStart(6)} archivos, ${String(fila.antes.carpetas).padStart(5)} carpetas, ${mb(fila.antes.bytes).padStart(9)}  ->  ${fila.destino}`);
     }
+    // 3) Los LEEME, despues de medir (no entran en el conteo de antes y despues de cada carpeta).
+    registro.leemes = escribirLeemes(bib, cargarCanon());
+    guardar();
+    for (const l of registro.leemes) linea(`[LEEME] ${l.accion.padEnd(16)} ${relBib(l.ruta)}`);
     linea(`\nListo: ${aMover.length} carpeta(s) movidas, todas con el mismo conteo antes y despues. Registro: ${salida}`);
     return 0;
 }
