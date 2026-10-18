@@ -113,7 +113,7 @@ nombres adentro, y un test verifica que coincidan con el canon.
 | `tools/claude-area/antes_de_la_reunion.py` | el estado del asistente por área (solo lo lee e informa) | clave `area_vieja` |
 | `tools/claude-area/ensayo_pc_nueva.sh` | una nube de mentira | el nombre en una variable |
 | `scripts/_paquete.mjs`, `tools/claude-area/sync_area.ps1`, `hola/Instalar Claude (doble clic).cmd` | el asistente por área y el paquete «Base Claude», para USARLOS (publicar, instalar, sincronizar) | **sin cambios, a propósito**: el 06/10 el asistente por área se puso en cuarentena cambiándole el nombre para que estos programas no lo encuentren, y la mudanza no lo revive (lo marcó el auditor: la primera versión de la rama los hacía encontrar `9- VIEJO` y publicar ahí). Siguen buscando solo «CLAUDE POR AREA» y «Base Claude Ingenieria» en la raíz, que ya no existen: no encuentran nada y no publican nada. Para USAR el asistente por área, ningún programa acepta el nombre en cuarentena ni `9- VIEJO`. Para LEER dos archivos publicados, sí: `mails_pc\instalar.ps1`, `mails_pc\subir.ps1`, `mails_solo\*.ps1` e `instalar_mi_pc.ps1` llevan escrita la ruta `9- VIEJO (no usar)\_CUARENTENA_CLAUDE POR AREA\1- PUBLICADO` para la lista de lo privado y el Node, como antes la tenían en la raíz (ver «`9- VIEJO` no se puede borrar todavía») |
-| `tools/paquete-equipo/mails_equipo.py`, `sync_equipo.ps1` | — | no buscan ninguna carpeta (reciben la base ya resuelta): solo cambió el texto de ayuda |
+| `tools/paquete-equipo/mails_equipo.py`, `sync_equipo.ps1` | — | **sin cambios** (iguales a main): no buscan ninguna carpeta, reciben la base ya resuelta |
 | `scripts/_nubeSimular.mjs` + `nubeOrden.data.json` | el simulado | dice «no queda nada por mover»; FACUNDO con destino `6-` y su LEEME |
 | `scripts/_nubeMudar.mjs` (nuevo) | la mudanza | `--simular` (por defecto) y `--aplicar` |
 | `CLAUDE.md`, `.claude/rules/{nube-ingenieria,api-claude,video-maquina}.md`, `.claude/pcs/CATA.md` | texto | la ruta nueva de los pedidos y de la memoria |
@@ -152,7 +152,7 @@ corren desde main. La subida de los mails de esta PC es otra cosa: es un program
 
 | PC | Qué deja de andar | Cómo se vuelve a poner bien |
 |---|---|---|
-| **Esta PC** | La tarea «Barack - mis mails a la nube» (`%LOCALAPPDATA%\BarackMailsFak\subir.ps1`, instalada el 08/10) no encuentra la carpeta de mails y no sube nada; anota «sin nube» y reintenta. Desde las 12:37 de hoy ya fallaba por otra causa: «Outlook está abierto pero no responde» (a las 10:37, «Outlook cerrado»). | Volver a correr el instalador de mails con los mismos parámetros del 08/10 (`instalar.ps1` de `ASISTENTE INGENIERIA\1- INSTALAR (doble clic)\2- Mails de Calidad`). La copia publicada es igual a la rama: `node tools/claude-area/mails_pc/publicar.mjs` da «igual» en los 9 archivos y respeta `casillas.json` (medido el 18/10 a las 00:45, después de republicar el `mails_area.mjs` de la ronda 2). Lo hace Claude en una sesión con Fak: registra una tarea de Windows. |
+| **Esta PC** | La tarea «Barack - mis mails a la nube» (`%LOCALAPPDATA%\BarackMailsFak\subir.ps1`, instalada el 08/10) no encuentra la carpeta de mails y no sube nada; anota «sin nube» y reintenta. Desde las 12:37 de hoy ya fallaba por otra causa: «Outlook está abierto pero no responde» (a las 10:37, «Outlook cerrado»). | Volver a correr el instalador de mails con los mismos parámetros del 08/10 (`instalar.ps1` de `ASISTENTE INGENIERIA\1- INSTALAR (doble clic)\2- Mails de Calidad`). La copia publicada es igual a la rama: `node tools/claude-area/mails_pc/publicar.mjs` da «igual» en 8 archivos y respeta el noveno, `casillas.json`, que no se pisa a propósito (medido el 18/10 a las 00:45, después de republicar el `mails_area.mjs` de la ronda 2). Lo hace Claude en una sesión con Fak: registra una tarea de Windows. |
 | **CATA** (notebook de Calidad) | (a) Su copia del repo: `_nube.mjs --sincronizar` sale con «NO EXISTE» **antes** de traer el repo de GitHub, así que la versión nueva **no le llega sola**. (b) La subida de los mails de Calidad (tarea «Barack - mails de Calidad»). | (a) Después del push de main: abrir una sesión en `C:\Dev\BarackMercosul` de CATA y correr `git pull` (o dejarle un PEDIDO). (b) Doble clic en `ASISTENTE INGENIERIA\1- INSTALAR (doble clic)\2- Mails de Calidad\Mails-PC-Calidad.cmd` (la copia publicada es igual a la rama: ver la fila de arriba). Si se funde con cambios a esos programas, se republica con `node tools/claude-area/mails_pc/publicar.mjs --aplicar`. |
 | **PC de Carlos** | (a) La subida de sus mails (tarea «Barack - mails de Carlos», programa `mails_solo`): no encuentra la carpeta de mails. Subió bien hasta el 16/10 a las 14:02 (`4- MAILS DEL EQUIPO\mails\_salud\CARLOS.json`). (b) Su asistente sabe que las mejoras están en «MEJORAS CLAUDE». | (a) Su instalador (`Mails-Carlos.cmd` + `mails-carlos\`) estaba en `ACTUALIZACION_CLAUDE_LIMPIO`, que fue a la Papelera el 12/10: hay que armarle uno nuevo. Son los dos `.ps1` de `tools/claude-area/mails_solo/` (versión de la rama) en una carpeta de la nube que Carlos vea, más un `Mails-Carlos.cmd` que corra `powershell -NoProfile -ExecutionPolicy Bypass -File instalar_mails_solo.ps1 -Pc CARLOS -Nombre Carlos` (así lo documenta el `.ps1`, renglones 6-7). Lo arma Claude cuando Fak lo diga; Carlos le hace doble clic. Hasta entonces sus mails nuevos no suben y nada se pierde (quedan en su Outlook). (b) Se corrige solo en la próxima publicación de mejoras (`tools/claude-area/mejoras/publicar.mjs` ya escribe la carpeta nueva). |
 | PC de Pedro, PC de Federico | nada (el simulado lo midió: sus programas no buscan estas carpetas) | — |
@@ -197,7 +197,7 @@ archivo se contestan acá):
 | I4 · el informe decía que nada depende de `9- VIEJO` | Cerrado: el LEEME de `9- VIEJO` y este informe dicen qué leen de ahí los instaladores y que no se borra todavía |
 | Nit 1 · la copia publicada de Mails de Calidad tenía el `mails_area.mjs` viejo | Cerrado: se republicó el 18/10; `publicar.mjs` da todo «igual» |
 | Nit 2 · textos que describían lo revertido | Cerrado: `sync_equipo.ps1` y `mails_equipo.py` volvieron a main; se corrigieron los comentarios de `ensayo_pc_nueva.sh` y `mails_area.mjs` |
-| Nit 3 · `main --aplicar` sin test y `guardar()` sin `try` después de mover | Cerrado: tres tests de punta a punta en `nubeCarpetas.test.mjs` (verde, rojo con archivos sin subir, registro que no se pisa); si no puede guardar después de mover, para y muestra la fila |
+| Nit 3 · `main --aplicar` sin test y `guardar()` sin `try` después de mover | Arreglado, con test en `nubeCarpetas.test.mjs` para cada camino: todo en verde (y la segunda corrida no mueve nada); archivos sin subir (no mueve ninguna) junto con un registro del mismo día que no se pisa; registro imposible de escribir antes de empezar (no mueve nada); registro que deja de poder escribirse después de mover una carpeta (para ahí y muestra su fila); y un conteo que falla después de mover (lo dice y no da ok) |
 | Nit (y 1 más) · registro pisado con dos corridas en el mismo minuto | Cerrado: hora con segundos y un número si también existe |
 | P1 · el guardián de firma exime una copia de la biblioteca en otro disco | Aceptado y escrito en un test: es la misma comparación «contiene» que ya usaba `\Claude Fak\` |
 | P2 · el aviso de no correr `--subir` desde main | Cerrado: está en «Hasta que la rama se funda» |
@@ -208,17 +208,25 @@ archivo se contestan acá):
 |---|---|---|
 | 1 | `puerta.py`: sin biblioteca, el respaldo caía en la raíz | Arreglado: cae en `…\ASISTENTE INGENIERIA\5- FACUNDO (memoria y configuracion)\repo-privado`; test con vieja, nueva, las dos y sin biblioteca |
 | 2 | el test corría `python` y `bash` sin mirar si existen (CI de ubuntu) | Arreglado: busca `python` o `python3`; los casos de `_mails.py`, `puerta.py` y `firmaIA.py` corren solo en Windows y el nombre del caso lo dice; el de `bash` corre si hay `bash` |
-| 3 | el aviso de pedidos nombraba siempre la carpeta nueva | Arreglado: nombra la carpeta donde encontró los pedidos; test con las tres situaciones |
+| 3 | el aviso de pedidos nombraba siempre la carpeta nueva | Arreglado: nombra la carpeta donde encontró los pedidos, con el separador del sistema; test con las tres situaciones, que compara con ese mismo separador (corre igual en ubuntu; ubuntu real no se pudo correr en esta PC) |
 | 4 | contradicciones del informe | Arreglado: renglón de los nombres en cuarentena, «ya publicado» con su medida, el párrafo repetido de `AUTOMATIZACION BARACK`, y la sección «Lo que no se cumplió tal cual» |
 | 5 | `carpeta-guard` y `nube-personal-guard` | Explicado con la prueba (punto 4 de «Lo que no se cumplió tal cual») |
 | 6 | `_mails.py` con las dos carpetas lee de las dos | Medido y decidido así: es solo lectura, y una PC sin reinstalar puede seguir subiendo al lugar viejo; leer las dos no pierde esos mails. Test: con las dos devuelve `[nueva, vieja]` |
 | 7 | `_nubeMudar`: registro, `guardar()`, LEEME por el primer renglón, `main` sin test | Arreglado: ver Nit 3 de arriba; los LEEME se comparan por sus cinco renglones y, si cambia uno que no es el primero, se cambian los cinco sin tocar lo de abajo (test) |
 | 8 | `antes_de_la_reunion.py` le pasa una ruta absoluta a `_nubeSubio.ps1` | Medido, no hacía falta arreglo: el `.ps1` usa la ruta tal cual si es absoluta (`[IO.Path]::IsPathRooted`, renglón 23); con la carpeta real dio «SUBIO TODO» y salida 0, y con una que no existe, salida 2 |
-| 9 | mayúsculas en `firmaIA.data.json` y la ruta en `Y:` | Medido: Node y Python pasan las dos partes a minúscula antes de comparar (test con mayúsculas mezcladas); la de `Y:` es una copia de la biblioteca entera y queda exenta, aceptado (P1) |
+| 9 | mayúsculas en `firmaIA.data.json` y la ruta en `Y:` | Medido: Node y Python pasan las dos partes a minúscula antes de comparar (en Node, con un test de mayúsculas mezcladas; en Python, por el código: `firmaIA.py`, renglón 94, `.lower()` del canon y renglón 100 de la ruta); la de `Y:` es una copia de la biblioteca entera y queda exenta, aceptado (P1) |
 | 10 | faltaba «las dos presentes: gana la nueva» | Agregado en el aviso de pedidos y en `puerta.py`; en `resolverCarpeta` ya estaba para cada carpeta |
 
-Quedan **abiertos, para Fak**, los cuatro puntos de «Lo que no se cumplió tal cual», más la carpeta
-`AUTOMATIZACION BARACK`.
+**Lo que queda esperando a Fak:**
+1. Qué hacer con los 10 bloqueantes del detector de firma (punto 1 de «Lo que no se cumplió tal cual»).
+2. Si el asistente por área en cuarentena sigue sin revivir (punto 3; hoy queda sin revivir).
+3. Si `AUTOMATIZACION BARACK` entra a la carpeta única.
+4. Las reinstalaciones: los mails de esta PC, los mails de Calidad en CATA y el instalador nuevo de Carlos (sección «En
+   cada PC»).
+5. Antes de borrar `9- VIEJO`, darles otro lugar a la lista de lo privado y al Node.
+
+Y **queda pendiente de mirar** (no de Fak): la primera corrida de «Barack - mi asistente al dia» después de fundir, que es
+la prueba de `--sincronizar` con el código de la rama (punto 2), y el CI de ubuntu sobre la rama, que no corrió.
 
 ## Cómo se repite o se vuelve atrás
 

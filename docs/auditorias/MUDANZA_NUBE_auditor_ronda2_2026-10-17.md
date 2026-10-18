@@ -58,7 +58,7 @@ Lo que se revisó es solo el diff nuevo, `6c1f9532..41e06577`: 13 archivos. Ante
 - **Qué decidir** (no bloquea la fusión), una de dos:
   - decir en el informe y en el LEEME de `9- VIEJO` qué programas leen de ahí y qué se rompe si se borra;
   - o sacar de `9- VIEJO` lo que se usa (la lista de lo privado y el Node) a una carpeta en uso.
-- respuesta: ____
+- respuesta: contestada en docs/MUDANZA_NUBE_2026-10-17.md, «Respuestas a las revisiones» (18/10)
 
 ## Hallazgos Nit (tope 3; y 1 más)
 
@@ -71,7 +71,7 @@ Lo que se revisó es solo el diff nuevo, `6c1f9532..41e06577`: 13 archivos. Ante
    - El informe (`:130`) dice «ya publicado con la versión nueva». Hay que republicar después de fundir
      (`tools/claude-area/mails_pc/publicar.mjs`).
 
-   respuesta: ____
+   respuesta: contestada en docs/MUDANZA_NUBE_2026-10-17.md, «Respuestas a las revisiones» (18/10)
 2. **[Nit · textos] Siguen describiendo lo que se revirtió:**
    - `tools/paquete-equipo/sync_equipo.ps1:16-18`, `tools/paquete-equipo/mails_equipo.py:27-29` y `:551` dicen que
      `_paquete.mjs --donde` busca «Base Claude Ingenieria» primero en `9- VIEJO`. Medido contra la biblioteca real:
@@ -84,7 +84,7 @@ Lo que se revisó es solo el diff nuevo, `6c1f9532..41e06577`: 13 archivos. Ante
        `:80`.
      - `:443-444` nombra «la que quedo en `ASISTENTE INGENIERIA\9- VIEJO (no usar)`». El test `:995` prueba que esa da null.
 
-   respuesta: ____
+   respuesta: contestada en docs/MUDANZA_NUBE_2026-10-17.md, «Respuestas a las revisiones» (18/10)
 3. **[Nit · robustez] `scripts/_nubeMudar.mjs`: los caminos nuevos no tienen test.**
    - `main()` con `--aplicar` sigue sin test (`grep aplicar` en `nubeCarpetas.test.mjs` da 0). Eso deja sin test los tres
      caminos de este diff:
@@ -97,7 +97,7 @@ Lo que se revisó es solo el diff nuevo, `6c1f9532..41e06577`: 13 archivos. Ante
        movida sin su fila.
    - No bloquea: la mudanza ya está aplicada y en seco da «no queda nada por mover».
 
-   respuesta: ____
+   respuesta: contestada en docs/MUDANZA_NUBE_2026-10-17.md, «Respuestas a las revisiones» (18/10)
 - y 1 más: si también existe el registro con la hora, `:207` lo pisa. Pasa con dos corridas en el mismo minuto.
 
 ## Hallazgos Preexistentes (no se le cargan a la rama)
@@ -109,9 +109,9 @@ Lo que se revisó es solo el diff nuevo, `6c1f9532..41e06577`: 13 archivos. Ante
   - Es la misma comparación por «contiene» que usan las demás entradas (`\Claude Fak\`, `\.claude\`).
   - Lo que pedía la ronda 1, que la entrada lleve la biblioteca adelante, está hecho.
 
-  respuesta: ____
+  respuesta: contestada en docs/MUDANZA_NUBE_2026-10-17.md, «Respuestas a las revisiones» (18/10)
 - **P2 · [Preexistente] `main:scripts/_nube.mjs:445`.** El informe sigue sin el renglón «no correr `_nube.mjs --subir` desde main
-  hasta fundir». Vale solo hasta que se funda. respuesta: ____
+  hasta fundir». Vale solo hasta que se funda. respuesta: contestada en docs/MUDANZA_NUBE_2026-10-17.md, «Respuestas a las revisiones» (18/10)
 
 ## Verificado como cerrado (el detalle está en las respuestas del informe de la ronda 1)
 - **I1:**

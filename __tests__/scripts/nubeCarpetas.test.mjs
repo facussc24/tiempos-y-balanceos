@@ -119,7 +119,8 @@ describe('cada programa, en las dos direcciones', () => {
             });
             expect(r.stdout, lugar).toMatch(/PEDIDO 90 - probar la mudanza/);
             expect(r.stdout, lugar).not.toMatch(/PEDIDO 91/);    // con las dos, se lee la nueva
-            expect(r.stdout, lugar).toContain(`Esta en la carpeta ${(lugar === 'vieja' ? vieja0('pedidos') : nueva('pedidos')).join('\\')} de la nube`);
+            // con el separador del sistema (en el CI de ubuntu es «/»): el aviso arma la ruta con path.relative
+            expect(r.stdout, lugar).toContain(`Esta en la carpeta ${join(...(lugar === 'vieja' ? vieja0('pedidos') : nueva('pedidos')))} de la nube`);
         }
     });
     it.runIf(EN_WINDOWS_CON_PY)('_mails.py: la carpeta de mails del equipo, nueva primero y la vieja tambien (solo Windows)', () => {
@@ -302,6 +303,38 @@ describe('_nubeMudar.mjs (sin tocar la nube)', () => {
         expect(callado(() => mainMudar(['--aplicar'], { home: c.home, medir: medirStub(0), dirRegistro: c.reg }))).toBe(0);
         expect(readFileSync(join(c.reg, `nube_mudanza_${hoy}.json`), 'utf8')).toBe('{"de":"antes"}');
         expect(readdirSync(c.reg)).toHaveLength(2);
+    });
+    it('main --aplicar ROJO: si no puede escribir el registro antes de empezar, no mueve nada', () => {
+        const c = casaVieja();
+        const noEsCarpeta = join(c.reg, 'soy un archivo');
+        writeFileSync(noEsCarpeta, 'x');
+        expect(callado(() => mainMudar(['--aplicar'], { home: c.home, medir: medirStub(0), dirRegistro: noEsCarpeta }))).toBe(1);
+        expect(planMudanza(c.bib).every((f) => f.estado === 'mover')).toBe(true);
+    });
+    it('main --aplicar ROJO: si deja de poder escribir el registro despues de mover una carpeta, para ahi y muestra su fila', () => {
+        const c = casaVieja();
+        let llamadas = 0, salida = '';
+        // la 1a medicion es la de antes de empezar; la 2a, la de la primera carpeta justo antes de moverla: ahi se rompe el
+        // registro (se reemplaza el archivo por una carpeta con su mismo nombre), asi el guardado de despues de mover falla
+        const medir = (bib, nombres) => {
+            if (++llamadas === 2) { const f = join(c.reg, readdirSync(c.reg)[0]); rmSync(f); mkdirSync(f); }
+            return medirStub(0)(bib, nombres);
+        };
+        const log = console.log; console.log = (t = '') => { salida += `${t}\n`; };
+        let codigo;
+        try { codigo = mainMudar(['--aplicar'], { home: c.home, medir, dirRegistro: c.reg }); } finally { console.log = log; }
+        expect(codigo).toBe(1);
+        expect(salida).toMatch(/PARE: «buzon» se movio y verifico, pero no pude escribir el registro/);
+        expect(salida).toMatch(/Su fila: \{"clave":"buzon"/);
+        expect(planMudanza(c.bib).map((f) => f.estado)).toEqual(CANON_CARPETAS.carpetas.map((e, i) => (i === 0 ? 'ya_movida' : 'mover')));
+    });
+    it('moverYVerificar ROJO: si se movio pero no se puede contar en el lugar nuevo, lo dice y no da ok', () => {
+        const c = casaVieja();
+        const f = planMudanza(c.bib).find((x) => x.clave === 'equipo');
+        const renombrarYEsconder = (a, b) => { renameSync(a, b); renameSync(b, `${b} escondida`); };
+        const r = moverYVerificar(f, { renombrar: renombrarYEsconder });
+        expect(r.ok).toBe(false);
+        expect(r.motivo).toMatch(/se movio, pero no se pudo contar en el lugar nuevo/);
     });
     it('escribirLeemes: si en el canon cambia un renglon que no es el primero, se cambian los cinco y lo de abajo queda', () => {
         const c = casaVieja();
