@@ -78,7 +78,7 @@ function cambio(clave) {
   if (!atributo && !codigo) { console.error('Falta --atributo <nombre> o --codigo <codigo del arb>'); return 2; }
   const r = queTocaUnCambio(leerFicha(clave), { atributo, codigo });
   linea(`Si cambia «${r.cambio}», estos documentos de la pieza lo nombran:`);
-  for (const d of r.documentos) linea(`  - ${d.id} (letra ${d.letra ?? 'a confirmar'}${d.vigente ? '' : ', no vigente'})${d.maestro ? ` · maestro: ${d.maestro.ruta}` : ''}${d.cliente.some((c) => c.letra) ? ' · el cliente tiene una copia' : ''}`);
+  for (const d of r.documentos) linea(`  - ${d.id} (${d.letra ? `letra ${d.letra}` : d.sinLetra ? `sin letra, del ${d.fecha ?? '?'}` : 'letra a confirmar'}${d.vigente ? '' : ', no vigente'})${d.maestro ? ` · maestro: ${d.maestro.ruta}` : ''}${d.cliente.some((c) => c.letra) ? ' · el cliente tiene una copia' : ''}`);
   if (r.aviso) linea(`  (${r.aviso})`);
   linea('');
   linea(`El SGC manda revisar por SCP: ${r.queNombraElSgc}.`);

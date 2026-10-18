@@ -281,7 +281,7 @@ export function queTocaUnCambio(ficha, { atributo, codigo } = {}) {
   const ids = [...new Set((ficha.atributos || []).filter((a) => a.rol !== 'cliente' && a.rol !== 'referencia' && !a.cita && nombra(a)).map((a) => a.documento))];
   const documentos = ids.map((id) => {
     const d = docs.get(id) || { id };
-    return { id, tipo: d.tipo, numero: d.numero, letra: d.letra ?? null, vigente: d.vigente !== false, donde: d.donde || null, maestro: d.maestro || null, cliente: d.cliente || [] };
+    return { id, tipo: d.tipo, numero: d.numero, letra: d.letra ?? null, sinLetra: Boolean(d.sinLetra), fecha: d.fecha ?? null, vigente: d.vigente !== false, donde: d.donde || null, maestro: d.maestro || null, cliente: d.cliente || [] };
   });
   const r = { cambio: atributo || codigo, documentos, recordatorio: CANON.ecr.recordatorio.join('\n'), queNombraElSgc: CANON.ecr.documentos_que_nombra_el_sgc, fuente: CANON.ecr.fuente };
   if (!documentos.length) r.aviso = `ningun documento de la ficha nombra «${atributo || codigo}»: o no se releva todavia o el nombre del atributo es otro`;
