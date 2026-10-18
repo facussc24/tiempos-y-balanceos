@@ -56,7 +56,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cadlib import workdir  # noqa: E402
+from cadlib import step_cabecera, workdir  # noqa: E402
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 CANON = os.path.join(AQUI, "procesoCanon.data.json")
@@ -239,6 +239,25 @@ def verificar(entrega, motor, renders, workdir_path=None, sin_render=False, moti
                 rojo("G-E3b", msg, cm["calibracion"])
             else:
                 avisos.append("G-E3b · %s" % msg)
+
+    # ---- G-E6: la cabecera de cada STEP entregado en el orden de ISO 10303-21 (tanda 2, 17/10/2026) ----
+    # AVISO y no rojo: export_deliverables.py ya la arregla en la copia que entrega y la vuelve a leer (ese es el
+    # freno); aca se avisa lo que llego a la carpeta por otro camino. CATIA V5 lee VACIO un STEP con la cabecera al revés.
+    for s in steps:
+        if step_cabecera.solo_en_la_nube(s):
+            avisos.append("G-E6 · %s esta solo en la nube: no se leyo su cabecera (leerlo lo descarga)" % os.path.basename(s))
+            continue
+        try:
+            o = step_cabecera.orden_de_archivo(s)
+        except OSError as e:
+            avisos.append("G-E6 · no se pudo leer %s: %s" % (os.path.basename(s), e))
+            continue
+        if o is None:
+            avisos.append("G-E6 · %s: no se encontro una cabecera STEP completa" % os.path.basename(s))
+        elif o != step_cabecera.CLAVES:
+            avisos.append("G-E6 · %s tiene la cabecera fuera de orden (%s): CATIA V5 lo lee VACIO. Arreglo: "
+                          "cabecera_step.py arreglar \"%s\" (o entregar con export_deliverables.py, que ya lo hace)"
+                          % (os.path.basename(s), ", ".join(o), s))
 
     # ---- G-E5: si el utillaje apoya sobre blando, corrio el gate de asiento (tanda 2, 17/10/2026) ----
     ga = c.get("gateAsiento") or {}

@@ -369,5 +369,7 @@ Entorno: TODO corre con `.venv-cad\Scripts\python.exe` (Py3.12: gmsh + build123d
 Tolerancias de impresión: 0,3-0,5 mm/lado en lo que entra en un vano, panza ≥2 mm, inserto heat-set +
 pin anti-giro. Toda holgura lleva escrita su unidad (por lado o al diámetro) y la máquina con que se midió; las
 reglas de diseño para imprimir (orientación contra la carga, paredes, roscas y la tuerca impresa ≥ el diámetro del
-tornillo, que `make_screw_nut.py` frena) viven en `cad-design/reference/ficha-fdm.md`. Autoridad de identidad = master real, no proxy (unifica con
+tornillo, que `make_screw_nut.py` frena) viven en `cad-design/reference/ficha-fdm.md`. El STEP que se entrega lleva la
+cabecera en el orden de ISO 10303-21 (si no, CATIA V5 lo lee vacío): lo arregla `export_deliverables.py` en la copia y
+lo revisa `cabecera_step.py revisar <carpeta>`. Autoridad de identidad = master real, no proxy (unifica con
 `feedback_identidad_codigo_pieza_autoridad_destino`).
