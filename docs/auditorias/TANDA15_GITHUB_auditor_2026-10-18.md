@@ -274,3 +274,114 @@ Context Mode. Si se instala, mirar antes si trae una herramienta de varios coman
 
 Respuesta del autor al lado de cada hallazgo (arreglado / rechazado / a propósito / no importa):
 I1 ____ · I2 ____ · N1 ____ · N2 ____ · N3 ____ · P1 ____
+
+---
+
+## Ronda 2 (18/10/2026, la última): solo el diff `51fdfbe3..HEAD` (`d240e1f7` y `3f98580d`)
+
+### Veredicto: FUNDIR · 0 Importante, 0 Nit, 1 Preexistente
+
+Los dos importantes de la ronda 1 están cerrados y los medí con ataques. La lectura doble no deja pasar nada que main
+frene y no frena nada legítimo que main deje pasar. Lo único que queda abierto (P2) viene de la tanda 3, no de esta.
+
+| Chequeo | Estado | Detalle |
+|---|---|---|
+| TypeScript | OK | 0 errores |
+| Build | OK | built en 30,3 s |
+| `node --check` | OK | `guardianes.mjs` y `_despachadorPayloads.mjs` |
+| Git | OK | árbol limpio, 8 adelante de main y 0 atrás, sin pushear (por encargo) |
+| CI de main | OK | `candado.yml` completed success `f5551eb6` · `deploy.yml` completed success `411f200f` |
+| Dependencias | OK | 0 renglones con UNMET, ERR o missing |
+| `node scripts/_despachadorPayloads.mjs` | OK | worktree `2 2 2 2 0 0` (1,5 s) · `--raiz C:\Dev\BarackMercosul` `2 2 2 2 0 0` · el listado de `~/.claude` (`*-ok` y `.permisos-un-uso.log`) dio igual antes y después |
+| Tests | OK | `npx vitest run --pool=threads` con los 6 archivos: 237 tests en verde; `~/.claude` real sin cambios |
+| Selftest | OK | `python scripts/_sinFirmaIA.py --selftest`: «todo verde (50 casos)» (47 + los 3 nuevos) |
+
+Todas las pruebas usaron un HOME aislado. Los scripts quedaron en `%TEMP%\aud15r2\` (`r2.mjs`, `r2c.mjs`, `desp.mjs`,
+`plantado.mjs`, `terminador.mjs`, `mutar.mjs` y la copia `mut\` para los mutantes). No se corrió código de ninguna
+MCP: solo se evaluaron llamadas.
+
+### Lo de la ronda 1
+
+- **I1, arreglado y verificado.**
+  - Con `evaluar()`, 9 códigos Python × 11 valores de `language`, contra main: no se pierde ningún freno. Los valores
+    fueron sin `language`, `bash`, `shellscript`, `powershell.exe`, `fish`, `javascript`, `node`, `python3.11`,
+    «Python » y `desconocido`, y también la lista `['bash']`.
+  - Con el despachador real, LISTADO con `bash`, MAIL con `bash`, LISTADO con `javascript` y MAIL con `fish` dan
+    exit 2 en los dos checkouts.
+  - Mutante en una copia, con el renglón de la ronda 1 (solo la lectura cruda): pierde `apqp-cliente-guard` y
+    `mail-guard`. O sea, los rojos nuevos de `mcpDespachador.test.mjs:162-173` frenan de verdad.
+- **Ataques a la lectura doble (el código crudo va primero, el envuelto después).** Probé un relleno de 7.000
+  caracteres detrás (pasa el corte de 6.000), una comilla suelta (`x = '\''`), `print('it\'s')`, una comilla doble
+  suelta, un paréntesis abierto y un heredoc crudo `x = 1 <<ZZ`, delante y detrás. Contra LISTADO, MAIL, push forzado
+  y `rmtree`, con `bash` y con `javascript`, no se pierde nada frente a main.
+- **Falsos rojos: ninguno nuevo.** Medí 22 llamadas legítimas y 3 largas contra main y no aparece ningún freno, aviso,
+  recordatorio ni contexto nuevo:
+  - `ctx_execute` de consola: `ls`, `npm run build`, `npm test`, vitest, `git status`/`log`, `grep`, `node -e`,
+    `npm ls` y `tsc`;
+  - JavaScript: flechas con `>`, `&&`/`||`, `<<` de bits, `fetch`, lectura de `package.json`, escritura al TEMP y
+    regex con `$`;
+  - TypeScript y Python;
+  - build123d modelando con `python`, con `python3` y sin `language`, y exportando un STEP a `exports/`;
+  - largas: JavaScript de 4.315 caracteres con `<<` arriba, y consola de 3.949.
+
+  Con el despachador real, `ls`, `npm run build`, JavaScript y build123d dan exit 0 en los dos.
+- **I2, arreglado y verificado, con un caso que no queda vacío.**
+  - Puse un HOME de mentira con el permiso de un solo uso adentro (Node lo escribe en una carpeta temporal, como
+    `apqpClienteGuard.test.mjs:139`). Con ese HOME afuera, `correrPayloads` da `2 2 2 2 0 0` y **el permiso sigue
+    ahí**.
+  - Control: el despachador directo, con ese HOME y el pedido 2, da exit 0 y **se lo come**.
+  - Mutantes en la copia:
+    - `apqp-cliente-guard` anulado → «2 0 0 2 0 0 → NO SE FUNDE», exit 1;
+    - `guardianes.mjs` que no compila → «2 2 2 2 2 2», exit 1;
+    - sin bash en el PATH → «ojo: algún pedido no corrió», exit 1.
+  - El HOME temporal se borra: en `%TEMP%` había 3 carpetas `despachador-payloads-*` antes y 3 después. Esas 3 son de
+    las 12:09 y 12:10, de la versión de `d240e1f7`, que todavía no las borraba.
+  - Mi primer intento armaba el permiso con `: >` en Bash. Lo frenó `permiso-un-uso-guard` aunque la carpeta era de
+    mentira. No lo esquivé por Bash.
+- **N1, arreglado**: `firmaCanonJs.test.mjs` en verde.
+- **N2, arreglado.** Lo volví a medir con el mismo corpus:
+  - mails enviados por Fak: de 4 avisos a 1 (queda el emoji a principio de renglón);
+  - mails recibidos: de 22 a 16 (15 emojis de avisos automáticos y 1 «no es solo X, sino…»);
+  - documentos del SGC: de 5 a 1.
+- **N3, arreglado.** El `settings.local.json` del checkout principal tiene las claves `permissions`, `skillOverrides`
+  y `enabledMcpjsonServers`, y no tiene `disableAllHooks`.
+- **Los 7 nits contados:** se tomaron 6. Son los títulos y el caso de 252, el renglón `session-start-context.sh:29-30`
+  (verificado: «la casa esta escrita para ella» está en el 30), las tres citas, «acción o justificación», los 3 rojos
+  `hu8` a `hu10` y `DESTRABE:10`. La alternativa WSL de text-to-cad no entró; no importa.
+- **P1 sigue igual.** Es preexistente y no es de esta tanda.
+
+### Lo que queda abierto (para el cierre a Fak)
+
+#### P2 · Preexistente · `scripts/_lib/guardianes.mjs:187` — un renglón `CODIGO_MCP` en el código cierra el envoltorio antes de tiempo
+
+**Qué pasa.** El código de una MCP se envuelve en un heredoc que siempre termina en `CODIGO_MCP`. Si el código trae un
+renglón que dice solo eso, el heredoc se cierra ahí, y lo que viene después ya no se lee como Python. Ese código es
+Python válido: `CODIGO_MCP=0` y, en el renglón siguiente, `CODIGO_MCP`. Lo verifiqué con `compile()`: 5 sentencias.
+
+**Reproducción.** Despachador real, HOME aislado, `mcp__build123d__execute` con `shutil.copy` al listado maestro (solo
+biblioteca estándar; `%TEMP%\aud15r2\terminador.mjs`):
+
+| Entrada | main | worktree |
+|---|---|---|
+| sin el renglón | exit 2, `[APQP-CLIENTE] BLOQUEADO` | exit 2, `[APQP-CLIENTE] BLOQUEADO` |
+| con el renglón delante | exit 0 | exit 0 |
+| con el renglón, `language: 'python'` | exit 0 | exit 0 |
+| con el renglón, `language: 'bash'` | exit 0 | exit 0 |
+
+Control: con otro nombre (`CODIGO_MCPX`), los dos checkouts dan exit 2. Con el renglón, `mail-guard` y
+`borrado-masivo-guard` siguen frenando (`r2.mjs`, sección B). El envoltorio viene de la ronda 2 de la tanda 3
+(hallazgo 16), y este agujero no lo abre esta tanda: hay que escribir ese renglón a propósito.
+
+**Arreglo sugerido** (lo decide la sesión principal): elegir un terminador que no aparezca como renglón en el código
+(por ejemplo, sumarle un número hasta que no esté) y agregar un rojo en `mcpDespachador.test.mjs`.
+
+#### Sin verificar (no es hallazgo)
+
+El test nuevo `despachadorPayloads.test.mjs` va a correr los seis pedidos por primera vez en el CI, que es Linux
+(ubuntu). Acá no lo pude simular: no hay una distribución de WSL ni Docker.
+- Lo que sugiere que pasa: `apqpClienteGuard.test.mjs` y `guardianes.test.mjs:793` ya prueban esos mismos comandos y
+  están en verde en el CI. Además, `guardianes.mjs` no decide nada según el sistema operativo
+  (`grep process.platform`: 0).
+- Lo confirma el primer `candado.yml` después de fundir.
+
+Respuesta del autor (ronda 2): P2 ____
