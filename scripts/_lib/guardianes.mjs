@@ -175,7 +175,10 @@ export function mcpComoHerramienta(t) {
   // Ronda 2 (17/10, hallazgo 16): el codigo que una MCP corre (`mcp__build123d__execute {code}`) se mira como el de un
   // `python -` con ese codigo en un heredoc: lo ven los mismos guardianes que a un python -c
   const codigo = primero('code', 'source');
-  const cmd = primero('command', 'cmd', 'script', 'commands') || (codigo ? `python - <<'CODIGO_MCP'\n${codigo}\nCODIGO_MCP` : '');
+  // Tanda 15 (18/10): si la MCP dice que el codigo es de CONSOLA (Context Mode: `ctx_execute {language: 'shell', code}`),
+  // se mira como el comando que es, no envuelto en un python: envuelto, un `git commit` sin rutas pasaba sin verlo
+  const deConsola = /^(shell|bash|sh|zsh|cmd|batch|powershell|pwsh|ps1)$/i.test(primero('language', 'lang', 'runtime').trim());
+  const cmd = primero('command', 'cmd', 'script', 'commands') || (codigo ? (deConsola ? codigo : `python - <<'CODIGO_MCP'\n${codigo}\nCODIGO_MCP`) : '');
   const file = primero('file_path', 'path', 'filePath', 'filename', 'file', 'destination', 'dest', 'target', 'target_path', 'output_path');
   // el contenido cuenta solo si va a un ARCHIVO: el texto de un mensaje o de un documento de otra plataforma (Claude Docs,
   // un chat) no es un documento de Barack en disco, y el guardian de firma lo leeria como tal
