@@ -15,6 +15,10 @@
 # Sale con 0 si las ocho comprobaciones dan bien (siete con --paquete); con 1 si alguna no.
 set -u
 PLUGIN_REPO='C:\Dev\barack-claude'
+# El nombre de la carpeta del area en la nube de MENTIRA y en el "pendrive": uno de los nombres de area del canon
+# (scripts/_lib/nubeCarpetas.data.json, clave area_vieja; este es el de antes de la mudanza del 17/10/2026 y el programa lo sigue
+# reconociendo, igual que el nuevo, _CUARENTENA_CLAUDE POR AREA). Un solo lugar para cambiarlo; lo comprueba claudeAreaInstalar.test.mjs.
+AREA_NUBE='CLAUDE POR AREA'
 AREA="Producción"; DEJAR=""; PAQUETE=""; SIG=""
 for a in "$@"; do
   if [ "$SIG" = paquete ]; then PAQUETE="$a"; SIG=""; continue; fi
@@ -34,22 +38,22 @@ FALLAS=0; TOTAL=0
 bien() { echo "   BIEN  $1"; TOTAL=$((TOTAL + 1)); }
 mal()  { echo "   MAL   $1"; TOTAL=$((TOTAL + 1)); FALLAS=$((FALLAS + 1)); }
 
-mkdir -p "$TP/nube/CLAUDE POR AREA" "$TP/pendrive" "$TP/clave" "$TP/pc/estado" "$TP/pc/usuario" "$TP/pc/perfil-windows" "$TP/pc/localappdata"
+mkdir -p "$TP/nube/$AREA_NUBE" "$TP/pendrive" "$TP/clave" "$TP/pc/estado" "$TP/pc/usuario" "$TP/pc/perfil-windows" "$TP/pc/localappdata"
 if [ -n "$PAQUETE" ]; then
   echo "== 1. copiar al pendrive el paquete ya publicado: $PAQUETE"
   ORIGEN="$(cygpath -u "$PAQUETE")"
   [ -f "$ORIGEN/1- PUBLICADO/VERSION.json" ] || { echo "   ese paquete no trae «1- PUBLICADO\\VERSION.json»"; exit 1; }
   HUELLA_ANTES="$(find "$ORIGEN" -type f -printf '%P %s\n' | sort | sha256sum | cut -c1-16)"
-  cp -r "$ORIGEN" "$TP/pendrive/CLAUDE POR AREA"
+  cp -r "$ORIGEN" "$TP/pendrive/$AREA_NUBE"
   echo "      versión $(grep -o '"version": [0-9]*' "$ORIGEN/1- PUBLICADO/VERSION.json" | grep -o '[0-9]*'), clave $(grep -o '"clave": "[0-9a-f]*"' "$ORIGEN/1- PUBLICADO/VERSION.json" | cut -d'"' -f4)"
 else
   echo "== 1. publicar (clave temporal) y copiar al pendrive"
   CLAUDE_AREA_CLAVE="$T\\clave\\publicador.key" node scripts/_paquete.mjs --generar-clave >/dev/null 2>&1
-  CLAUDE_AREA_NUBE="$T\\nube\\CLAUDE POR AREA" CLAUDE_AREA_CLAVE="$T\\clave\\publicador.key" \
+  CLAUDE_AREA_NUBE="$T\\nube\\$AREA_NUBE" CLAUDE_AREA_CLAVE="$T\\clave\\publicador.key" \
     node tools/claude-area/armar_publicable.mjs --plugin-repo "$PLUGIN_REPO" --salida "$T\\armado1" --publicar --nota "ensayo de PC nueva" 2>&1 | tail -1 | cut -c1-160
-  cp -r "$TP/nube/CLAUDE POR AREA" "$TP/pendrive/"
+  cp -r "$TP/nube/$AREA_NUBE" "$TP/pendrive/"
 fi
-PEN="$TP/pendrive/CLAUDE POR AREA/1- PUBLICADO"
+PEN="$TP/pendrive/$AREA_NUBE/1- PUBLICADO"
 [ -f "$PEN/Instalar.cmd" ] && [ -f "$PEN/CLAUDE.md" ] && [ -f "$PEN/publicador.pub" ] && bien "el pendrive trae Instalar.cmd, el CLAUDE.md del «instalá» y la clave pública" || mal "al pendrive le falta Instalar.cmd, CLAUDE.md o publicador.pub"
 
 echo "== 2. instalar desde el pendrive, con SU Node, sin Node ni Git en el PATH y sin la nube a la vista"
@@ -101,7 +105,7 @@ else
   [ -n "$CAMBIADO" ] || { CAMBIADO="ensayo.md"; mkdir -p "$TP/conocimiento2/comun"; }
   MARCA="Renglon del ensayo: esto llego con la version 2."
   printf '\n- %s\n' "$MARCA" >> "$TP/conocimiento2/comun/$CAMBIADO"
-  CLAUDE_AREA_NUBE="$T\\pendrive\\CLAUDE POR AREA" CLAUDE_AREA_CLAVE="$T\\clave\\publicador.key" \
+  CLAUDE_AREA_NUBE="$T\\pendrive\\$AREA_NUBE" CLAUDE_AREA_CLAVE="$T\\clave\\publicador.key" \
     node tools/claude-area/armar_publicable.mjs --plugin-repo "$PLUGIN_REPO" --conocimiento "$T\\conocimiento2" --salida "$T\\armado2" --publicar --nota "ensayo: version 2" 2>&1 | tail -1 | cut -c1-160
   # desde la copia INSTALADA, con su Node y las carpetas de prueba de la PC; la nube NO se le dice
   en_la_pc() {

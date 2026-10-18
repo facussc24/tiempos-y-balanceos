@@ -29,6 +29,9 @@
  *   ingenieria:  <biblioteca>\Base Claude Ingenieria\            (publicado y buzon en la misma carpeta)
  *   area:        <biblioteca>\CLAUDE POR AREA\1- PUBLICADO\      (lo que bajan las PC)
  *                <biblioteca>\CLAUDE POR AREA\4- BUZON\          (lo que suben: salud\, aportes\)
+ *   Esas son las rutas de ANTES de la mudanza del 17/10/2026. Desde entonces la base y el area viven adentro de
+ *   `ASISTENTE INGENIERIA\9- VIEJO (no usar)\` y el buzon esta aparte, en `ASISTENTE INGENIERIA\3- BUZON (...)\4- BUZON`:
+ *   se busca primero el lugar nuevo y, si no esta, el viejo (`RUTAS_NUBE`, mas abajo).
  *
  * QUE HAY EN LA NUBE (en la carpeta publicada)
  *   contenido\...          copia de los archivos de la lista (misma ruta relativa que en el repo)
@@ -97,6 +100,23 @@ export const PROYECTOS = {
     area: { carpeta: 'CLAUDE POR AREA', publicado: '1- PUBLICADO', buzon: '4- BUZON' },
 };
 export const PROYECTO_POR_DEFECTO = 'ingenieria';
+/**
+ * Donde estan, en la biblioteca de Ingenieria, las carpetas que este programa busca. MUDANZA DEL 17/10/2026: todo lo del
+ * asistente paso a una sola carpeta, `ASISTENTE INGENIERIA`; la base del equipo y el area quedaron en `9- VIEJO (no usar)` y el
+ * buzon dejo de colgar del area. Cada clave es una lista de rutas (tramos relativos a la biblioteca): la PRIMERA es el lugar
+ * NUEVO y las que siguen son los viejos. Regla unica del canon: la nueva si existe; si no, la primera vieja que exista.
+ * FUENTE: scripts/_lib/nubeCarpetas.data.json (claves base_vieja, area_vieja y buzon). Los nombres van escritos aca y no se
+ * importan de `scripts/_lib/nubeRutas.mjs` porque este programa viaja SOLO (a la carpeta publicada del area como
+ * `programas/_paquete.mjs` y a la base del equipo como `scripts/_paquete.mjs`) y corre en PC sin el repo; `--publicar` se
+ * niega a publicar un programa que importa un archivo que no viaja. Los tests (paquete.test.mjs) comprueban que coincidan.
+ */
+export const RUTAS_NUBE = {
+    base_vieja: [['ASISTENTE INGENIERIA', '9- VIEJO (no usar)', 'Base Claude Ingenieria'], ['Base Claude Ingenieria']],
+    area_vieja: [['ASISTENTE INGENIERIA', '9- VIEJO (no usar)', '_CUARENTENA_CLAUDE POR AREA'], ['_CUARENTENA_CLAUDE POR AREA'], ['CLAUDE POR AREA']],
+    buzon: [['ASISTENTE INGENIERIA', '3- BUZON (lo que mandan las PC)', '4- BUZON'], ['_CUARENTENA_CLAUDE POR AREA', '4- BUZON'], ['CLAUDE POR AREA', '4- BUZON']],
+};
+/** Las rutas que se prueban para la carpeta de cada proyecto, en orden (la nueva primero). */
+const RUTAS_DEL_PROYECTO = { ingenieria: RUTAS_NUBE.base_vieja, area: RUTAS_NUBE.area_vieja };
 /** Identificadores de area (tools/claude-area/CONTRATO.md). Sin `areas` en la lista = `comun`. */
 export const AREAS = ['comun', 'calidad', 'ingenieria', 'logistica', 'compras', 'produccion', 'mantenimiento', 'rrhh', 'direccion'];
 export const AREA_COMUN = 'comun';
@@ -490,8 +510,9 @@ export function referenciasSueltas(archivos) {
 
 /**
  * Carpeta publicada de la biblioteca de SharePoint sincronizada, o null. Por defecto es
- * `Base Claude Ingenieria`; con `proyecto = 'area'` es `CLAUDE POR AREA\1- PUBLICADO` (la carpeta madre
+ * `Base Claude Ingenieria`; con `proyecto = 'area'` es `<carpeta del area>\1- PUBLICADO` (la carpeta madre
  * tiene que existir; `1- PUBLICADO` la crea el primer --publicar, como `contenido\`).
+ * La carpeta madre se busca en el lugar NUEVO y, si no esta, en los viejos (`RUTAS_NUBE`, mudanza del 17/10/2026).
  * Cuelga de `<home>\<...BARACK...>\<biblioteca>\` y el nombre de la biblioteca lleva tilde y cambia
  * entre PCs, asi que se BUSCA comparando sin tildes ni mayusculas. Se mira con statSync y no con el
  * Dirent: la carpeta de OneDrive puede ser un reparse point. No se inventa una ruta: si no esta, null.
@@ -499,7 +520,11 @@ export function referenciasSueltas(archivos) {
 export function buscarNube(home = process.env.USERPROFILE || os.homedir(), proyecto = PROYECTO_POR_DEFECTO) {
     const def = PROYECTOS[proyecto];
     if (!def) return null;
-    const raizProyecto = buscarCarpetaEnBiblioteca(home, def.carpeta);
+    let raizProyecto = null;
+    for (const tramos of RUTAS_DEL_PROYECTO[proyecto]) {
+        raizProyecto = buscarRutaEnBiblioteca(home, tramos);
+        if (raizProyecto) break;
+    }
     if (!raizProyecto) return null;
     return def.publicado ? path.join(raizProyecto, def.publicado) : raizProyecto;
 }
@@ -511,30 +536,81 @@ export function nombreNube(proyecto = PROYECTO_POR_DEFECTO) {
 }
 
 /**
- * Donde escriben las PC (salud, aportes). En la estructura de areas es `4- BUZON`, hermana de
- * `1- PUBLICADO`; en la de siempre es la misma carpeta publicada. Se decide por el nombre de la
- * carpeta, asi una nube pasada con --nube se interpreta igual que una encontrada sola.
+ * Donde escriben las PC (salud, aportes). En la estructura de areas es el `buzon` del canon (`RUTAS_NUBE`): desde la mudanza del
+ * 17/10/2026 ya NO cuelga del area sino de `ASISTENTE INGENIERIA\3- BUZON (...)`; antes era `4- BUZON`, hermana de `1- PUBLICADO`.
+ * En la de siempre (la base del equipo) es la misma carpeta publicada. Se decide por el nombre de la carpeta, asi una nube pasada
+ * con --nube se interpreta igual que una encontrada sola.
+ *
+ * Regla del canon: el buzon nuevo si existe; si no, el primer viejo que exista. Si no existe ninguno: el nuevo cuando el area ya
+ * esta en su lugar nuevo o la mudanza ya empezo (la biblioteca tiene la carpeta unica, `ASISTENTE INGENIERIA`); y si el area sigue en
+ * el lugar de antes en una biblioteca que todavia no bajo la mudanza (o es una copia con otra forma: un pendrive, una carpeta de
+ * prueba), el de siempre, colgado del area: asi no se arma un arbol paralelo.
  */
 export function carpetaBuzon(nube) {
     if (!nube) return null;
     const def = PROYECTOS.area;
-    if (normTexto(path.basename(nube)) === normTexto(def.publicado)) return path.join(path.dirname(nube), def.buzon);
-    return nube;
+    if (normTexto(path.basename(nube)) !== normTexto(def.publicado)) return nube;
+    const area = path.dirname(nube);
+    const lugar = lugarDelArea(area);
+    if (lugar) {
+        const [nuevo, ...viejos] = RUTAS_NUBE.buzon.map((tramos) => path.join(lugar.biblioteca, ...tramos));
+        if (esCarpeta(nuevo)) return nuevo;
+        const viejo = viejos.find(esCarpeta);
+        if (viejo) return viejo;
+        if (lugar.enLaNueva || esCarpeta(path.join(lugar.biblioteca, RUTAS_NUBE.buzon[0][0]))) return nuevo;   // el area ya se mudo, o la mudanza ya empezo (existe la carpeta unica)
+    }
+    return path.join(area, def.buzon);
 }
 
 /**
- * ¿La carpeta publicada trae la FORMA de la nube del proyecto de areas (`CLAUDE POR AREA\1- PUBLICADO`)? Solo ahi hay
- * un `4- BUZON` al lado. Una copia con otro nombre (un pendrive, una carpeta de red) no tiene buzon: no se escribe
- * nada adentro ni al lado.
+ * ¿La carpeta publicada trae la FORMA de la nube del proyecto de areas (`<carpeta del area>\1- PUBLICADO`, con el nombre de la
+ * carpeta del area nuevo o viejo, `RUTAS_NUBE.area_vieja`)? Solo ahi hay un buzon. Una copia con otro nombre (un pendrive, una
+ * carpeta de red) no tiene buzon: no se escribe nada adentro ni al lado.
  */
 export function tieneFormaDeNube(nube) {
     if (!nube) return false;
     const def = PROYECTOS.area;
-    return normTexto(path.basename(nube)) === normTexto(def.publicado) && normTexto(path.basename(path.dirname(nube))) === normTexto(def.carpeta);
+    const nombres = RUTAS_NUBE.area_vieja.map((tramos) => normTexto(tramos[tramos.length - 1]));
+    return normTexto(path.basename(nube)) === normTexto(def.publicado) && nombres.includes(normTexto(path.basename(path.dirname(nube))));
+}
+
+/** true si en `p` hay una carpeta, sea directa o del otro lado de un enlace. */
+function esCarpeta(p) {
+    try { return fs.statSync(p).isDirectory(); } catch { return false; }
+}
+
+/**
+ * Donde esta la carpeta del area: la biblioteca de la que cuelga y si esta en su lugar NUEVO. Sale de comparar el final de la ruta
+ * con las rutas de `RUTAS_NUBE.area_vieja` (sin tildes ni mayusculas); null si la carpeta no esta en ninguna forma que el canon conozca.
+ */
+function lugarDelArea(area) {
+    const partes = path.resolve(area).split(path.sep);
+    for (const [i, tramos] of RUTAS_NUBE.area_vieja.entries()) {
+        if (partes.length <= tramos.length) continue;
+        const cola = partes.slice(partes.length - tramos.length);
+        if (tramos.every((t, k) => normTexto(t) === normTexto(cola[k]))) {
+            const biblioteca = partes.slice(0, partes.length - tramos.length).join(path.sep);
+            return { biblioteca: /^[A-Za-z]:$/.test(biblioteca) ? `${biblioteca}${path.sep}` : biblioteca, enLaNueva: i === 0 };
+        }
+    }
+    return null;
+}
+
+/** La carpeta de esa ruta (tramos relativos a la biblioteca) o null: el primer tramo se busca como siempre y el resto se baja por nombre. */
+function buscarRutaEnBiblioteca(home, tramos) {
+    let actual = buscarCarpetaEnBiblioteca(home, tramos[0]);
+    for (const t of tramos.slice(1)) {
+        if (!actual) return null;
+        let hijos;
+        try { hijos = fs.readdirSync(actual); } catch { return null; }
+        const hijo = hijos.find((n) => normTexto(n) === normTexto(t));
+        actual = hijo && esCarpeta(path.join(actual, hijo)) ? path.join(actual, hijo) : null;
+    }
+    return actual;
 }
 
 function buscarCarpetaEnBiblioteca(home, nombreCarpeta) {
-    const esDir = (p) => { try { return fs.statSync(p).isDirectory(); } catch { return false; } };
+    const esDir = esCarpeta;
     const listar = (p) => { try { return fs.readdirSync(p); } catch { return []; } };
     const buscada = normTexto(nombreCarpeta);
     const encontradas = [];

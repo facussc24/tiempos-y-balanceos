@@ -13,7 +13,9 @@
 
   Parametros (para probar):
     -Destino    carpeta de la base (por defecto, la que contiene este script)
-    -Nube       carpeta "Base Claude Ingenieria" (por defecto se la busca sola)
+    -Nube       carpeta "Base Claude Ingenieria" (por defecto se la busca sola: "_paquete.mjs --donde" la busca primero en
+                ASISTENTE INGENIERIA\9- VIEJO (no usar), donde quedo con la mudanza del 17/10/2026, y si no esta, en la raiz
+                de la biblioteca de Ingenieria; esta tarea no busca ninguna carpeta por su cuenta)
     -EstadoDir  donde viven log, estado y perfil (por defecto %LOCALAPPDATA%\BarackEquipo)
     -SinBase / -SinMails      saltea un paso
     -PrioridadNormal          no se baja la prioridad del proceso (la tarea la baja sola; esto es para pruebas)

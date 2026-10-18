@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { mirar, renglon, detalle, episodiosDe, diasHabilesEntre, saludQueMirar, MINUTOS_ENTRE_EPISODIOS } from '../../tools/claude-area/vigia.mjs';
+import { mirar, renglon, detalle, episodiosDe, diasHabilesEntre, saludQueMirar, buzonDeLaNube, MINUTOS_ENTRE_EPISODIOS } from '../../tools/claude-area/vigia.mjs';
 
 const VIGIA = path.resolve('tools/claude-area/vigia.mjs');
 const AHORA = new Date(2026, 9, 6, 10, 30);   // martes 06/10/2026 10:30
@@ -215,5 +215,66 @@ describe('vigia: las piezas', () => {
         const r = mirar({ buzon, ahora: AHORA });
         expect(r.episodios).toHaveLength(1);
         expect(r.episodios[0].frenos[0].comandos[0]).toBe('a b c');       // una sola linea, sin caracteres de control
+    });
+});
+
+// Mudanza del 17/10/2026: el buzon ya no cuelga del area ("CLAUDE POR AREA\4- BUZON"): esta en "ASISTENTE INGENIERIA\3- BUZON (...)".
+// El --hook lo busca con el canon (scripts/_lib/nubeCarpetas.data.json, clave `buzon`): el nuevo si existe y, si no, el viejo.
+describe('vigia: el buzon de la nube de Ingenieria despues de la mudanza (canon, clave buzon): el nuevo, si no el viejo, con los dos gana el nuevo', () => {
+    const CANON = JSON.parse(fs.readFileSync(path.resolve('scripts/_lib/nubeCarpetas.data.json'), 'utf8'));
+    const { nueva, viejas } = CANON.carpetas.find((c) => c.clave === 'buzon');
+    const BIB = ['BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General'];
+    /** Una PC de mentira con su biblioteca y esos buzones (tramos relativos a la biblioteca). */
+    const pc = (nombre, ...buzones) => {
+        const casa = path.join(dir, nombre);
+        for (const tramos of buzones) fs.mkdirSync(path.join(casa, ...BIB, ...tramos, 'salud'), { recursive: true });
+        fs.mkdirSync(path.join(casa, ...BIB), { recursive: true });
+        return casa;
+    };
+    const buzonEn = (casa, tramos) => path.join(casa, ...BIB, ...tramos);
+
+    it('buzonDeLaNube: layout viejo -> el viejo (en sus dos nombres de antes), nuevo -> el nuevo, los dos -> el nuevo, ninguno -> el nuevo (que no existe)', () => {
+        for (const [i, vieja] of viejas.entries()) {
+            const casa = pc(`vieja${i}`, vieja);
+            expect(buzonDeLaNube(casa), vieja.join('/')).toBe(buzonEn(casa, vieja));
+        }
+        const soloNueva = pc('nueva', nueva);
+        expect(buzonDeLaNube(soloNueva)).toBe(buzonEn(soloNueva, nueva));
+        const los2 = pc('los2', nueva, ...viejas);
+        expect(buzonDeLaNube(los2)).toBe(buzonEn(los2, nueva));
+        const ninguno = pc('ninguno');
+        expect(buzonDeLaNube(ninguno)).toBe(buzonEn(ninguno, nueva));
+        expect(fs.existsSync(buzonEn(ninguno, nueva))).toBe(false);
+    });
+
+    it('--hook (el arranque de la sesion): lee el buzon nuevo, y con los dos buzones lee el nuevo y no el viejo', () => {
+        const env = (casa) => ({ ...process.env, USERPROFILE: casa, HOME: casa, CLAUDE_AREA_NUBE: '' });
+        const poner = (casa, tramos, pcNombre) => {
+            const carpeta = path.join(buzonEn(casa, tramos), 'avisos', pcNombre);
+            fs.mkdirSync(carpeta, { recursive: true });
+            fs.writeFileSync(path.join(carpeta, '2026-10-06T090200-mail.json'), JSON.stringify({ nivel: 'hoy', tipo: 'mail', mensaje: 'x', cuando: '2026-10-06T09:02:00', pc: pcNombre, usuario_windows: 'u', area: 'ingenieria', origen: 'barack-area', regla: 'pedido' }), 'utf8');
+        };
+        const correr = (casa) => spawnSync(process.execPath, [VIGIA, '--hook'], { encoding: 'utf8', env: env(casa) });
+        // solo el nuevo
+        const nuevo = pc('hookNuevo', nueva);
+        poner(nuevo, nueva, 'PC-NUEVA');
+        let r = correr(nuevo);
+        expect(r.status).toBe(0);
+        expect(r.stdout).toMatch(/^PC de área: 1 episodio nuevo en que un control frenó al asistente\. Detalle: /);
+        // los dos: el nuevo tiene 1 episodio (PC-NUEVA) y el viejo 2 (PC-VIEJA-1 y PC-VIEJA-2); si leyera el viejo diria 2 episodios
+        const dos = pc('hookLosDos', nueva, viejas[1]);
+        poner(dos, nueva, 'PC-NUEVA');
+        poner(dos, viejas[1], 'PC-VIEJA-1');
+        poner(dos, viejas[1], 'PC-VIEJA-2');
+        r = correr(dos);
+        expect(r.status).toBe(0);
+        expect(r.stdout).toMatch(/^PC de área: 1 episodio nuevo /);
+        // solo el viejo (la nube de esa PC todavia no bajo la mudanza): sigue andando
+        const viejo = pc('hookViejo', viejas[0]);
+        poner(viejo, viejas[0], 'PC-VIEJA-1');
+        poner(viejo, viejas[0], 'PC-VIEJA-2');
+        r = correr(viejo);
+        expect(r.status).toBe(0);
+        expect(r.stdout).toMatch(/^PC de área: 2 episodios nuevos /);
     });
 });

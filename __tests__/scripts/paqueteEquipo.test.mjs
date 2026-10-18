@@ -846,3 +846,110 @@ describe.skipIf(!ES_WINDOWS || !PY)('punta a punta: Instalar.ps1 y sync_equipo.p
         expect(st.mails.resultado).toBe('falta_privados');
     });
 });
+
+// ---------------------------------------------------------------------------------------------
+// MUDANZA DEL 17/10/2026. La base del equipo ("Base Claude Ingenieria") quedo en cuarentena y, con la mudanza, adentro de
+// «ASISTENTE INGENIERIA\9- VIEJO (no usar)». sync_equipo.ps1 y mails_equipo.py NO buscan ninguna carpeta: reciben la base ya
+// resuelta (`-Nube` / `--nube`, o la que dice `_paquete.mjs --donde`, que lleva los nombres adentro y busca primero el lugar nuevo
+// y despues el viejo: sus pruebas estan en paquete.test.mjs). Aca se prueba la cadena tal como corre en la PC del companero.
+// Canon: scripts/_lib/nubeCarpetas.data.json (clave base_vieja).
+// ---------------------------------------------------------------------------------------------
+describe('la base del equipo despues de la mudanza (canon base_vieja): sync_equipo.ps1 y mails_equipo.py reciben la base donde este', () => {
+    const CANON = JSON.parse(fs.readFileSync(path.join(RAIZ, 'scripts', '_lib', 'nubeCarpetas.data.json'), 'utf8'));
+    const { nueva: BASE_NUEVA, viejas: [BASE_VIEJA] } = CANON.carpetas.find((c) => c.clave === 'base_vieja');
+    const BIB = ['BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General'];
+
+    it('los textos de ayuda de sync_equipo.ps1 (-Nube) y de mails_equipo.py (--nube) nombran el lugar nuevo de la base (el del canon) y el nombre de siempre, y dicen que no la buscan ellos', () => {
+        const lugarNuevo = BASE_NUEVA.slice(0, -1).join('\\');                                   // ASISTENTE INGENIERIA\9- VIEJO (no usar)
+        const nombre = BASE_NUEVA[BASE_NUEVA.length - 1];                                         // Base Claude Ingenieria
+        expect(BASE_VIEJA).toEqual([nombre]);
+        const ps1 = fs.readFileSync(path.join(TOOLS, 'sync_equipo.ps1'), 'utf8');
+        const py = fs.readFileSync(path.join(TOOLS, 'mails_equipo.py'), 'utf8').replace(/\\\\/g, '\\');   // (en el .py las barras van duplicadas)
+        for (const [n, texto] of [['sync_equipo.ps1', ps1], ['mails_equipo.py', py]]) {
+            expect(texto, n).toContain(lugarNuevo);
+            expect(texto, n).toContain(nombre);
+            expect(texto, n).toContain('_paquete.mjs --donde');
+        }
+        expect(ps1).toContain('no busca ninguna carpeta por su cuenta');
+        expect(py).toContain('NO la busca este script');
+    });
+
+    describe.skipIf(!ES_WINDOWS || !PY)('de punta a punta con PowerShell: sync_equipo.ps1 SIN -Nube (la encuentra _paquete.mjs --donde en la biblioteca de mentira)', () => {
+        const sincronizar = (home, pc, estado, fuente) => {
+            const sync = path.join(pc, 'tools', 'paquete-equipo', 'sync_equipo.ps1');
+            for (let i = 0; i < 8; i++) {   // el mutex de la tarea es de toda la sesion de Windows: si otra corrida lo tiene, no hace nada y lo dice
+                try { fs.unlinkSync(path.join(estado, 'sync.log')); } catch { /* todavia no habia log */ }
+                const r = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', sync, '-EstadoDir', estado, '-FuenteMailsPrueba', fuente, '-PrioridadNormal'],
+                    { encoding: 'utf8', timeout: 170000, env: { ...process.env, USERPROFILE: home } });
+                const log = fs.existsSync(path.join(estado, 'sync.log')) ? fs.readFileSync(path.join(estado, 'sync.log'), 'utf8') : '';
+                if (!/ya hay otra corrida en marcha/.test(log)) return r;
+                Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5000);
+            }
+            throw new Error('la tarea siguio ocupada por otra corrida durante 40 s');
+        };
+        /** La PC del companero con lo justo para correr la tarea, y la biblioteca de mentira (aun vacia). */
+        function pcDeMentira() {
+            const pc = dir('pc');
+            for (const rel of ['scripts/_paquete.mjs', 'tools/paquete-equipo/sync_equipo.ps1', 'tools/paquete-equipo/mails_equipo.py']) copiarReal(RAIZ, pc, rel);
+            const estado = dir('estado');
+            esc(estado, 'perfil.json', JSON.stringify({ autor: 'Prueba Equipo - Ingenieria' }));
+            const fuente = esc(tmp, 'fuente.jsonl', JSON.stringify({ id: '<a@x>', fecha: '2026-10-16 10:00', de_mail: 'a@ejemplo.com', para_mails: [], cc_mails: [], asunto: 'x', cuerpo: 'y' }) + '\n');
+            return { pc, estado, fuente, home: dir('home') };
+        }
+        /** Publica la base (con esa marca en una regla) y deja la carpeta en `tramos` de la biblioteca. Se publica en una ruta corta y despues se mueve: --publicar mide la ruta (tope de 239 caracteres). */
+        function baseEn(home, tramos, marca) {
+            const origen = armarOrigenEq();
+            esc(origen, '.claude/rules/regla.md', `# regla\n${marca}\n`);
+            const corta = dir(`corta-${marca}`, 'Base');
+            expect(P.publicar({ origen, nube: corta, lista: LISTA_EQ, identidad: NOIDENT, ahora: new Date(2026, 9, 2, 10) }).estado).toBe('publicado');
+            const destino = path.join(home, ...BIB, ...tramos);
+            fs.mkdirSync(path.dirname(destino), { recursive: true });
+            fs.renameSync(corta, destino);
+            return destino;
+        }
+        const resultado = (estado) => JSON.parse(fs.readFileSync(path.join(estado, 'estado.json'), 'utf8'));
+
+        it('con la base solo en el lugar NUEVO ("9- VIEJO") la baja y encuentra la carpeta para los mails (sin privados.json: falta_privados, no sin_nube)', () => {
+            const { pc, estado, fuente, home } = pcDeMentira();
+            baseEn(home, BASE_NUEVA, 'solo la nueva');
+            const s = sincronizar(home, pc, estado, fuente);
+            expect(s.status, s.stdout + s.stderr).toBe(0);
+            expect(leer(pc, '.claude/rules/regla.md')).toContain('solo la nueva');
+            const st = resultado(estado);
+            expect(st.base.resultado, JSON.stringify(st)).toBe('ok');
+            expect(st.mails.resultado, JSON.stringify(st)).toBe('falta_privados');
+            expect(st.errores).toEqual([]);
+        });
+
+        it('con la base solo en el lugar de antes (la nube todavia no bajo la mudanza) sigue andando igual', () => {
+            const { pc, estado, fuente, home } = pcDeMentira();
+            baseEn(home, BASE_VIEJA, 'solo la vieja');
+            const s = sincronizar(home, pc, estado, fuente);
+            expect(s.status, s.stdout + s.stderr).toBe(0);
+            expect(leer(pc, '.claude/rules/regla.md')).toContain('solo la vieja');
+            const st = resultado(estado);
+            expect(st.base.resultado, JSON.stringify(st)).toBe('ok');
+            expect(st.mails.resultado, JSON.stringify(st)).toBe('falta_privados');
+        });
+
+        it('con la base en los dos lugares gana la del lugar nuevo', () => {
+            const { pc, estado, fuente, home } = pcDeMentira();
+            baseEn(home, BASE_VIEJA, 'la de antes');
+            baseEn(home, BASE_NUEVA, 'la de la mudanza');
+            const s = sincronizar(home, pc, estado, fuente);
+            expect(s.status, s.stdout + s.stderr).toBe(0);
+            expect(leer(pc, '.claude/rules/regla.md')).toContain('la de la mudanza');
+            expect(leer(pc, '.claude/rules/regla.md')).not.toContain('la de antes');
+        });
+
+        it('sin la base en ningun lado: lo dice (sin_nube) y no falla', () => {
+            const { pc, estado, fuente, home } = pcDeMentira();
+            fs.mkdirSync(path.join(home, ...BIB, BASE_NUEVA[0]), { recursive: true });   // la carpeta unica existe pero la base todavia no se mudo ni esta en la raiz
+            const s = sincronizar(home, pc, estado, fuente);
+            expect(s.status, s.stdout + s.stderr).toBe(0);
+            const st = resultado(estado);
+            expect(st.base.resultado, JSON.stringify(st)).toBe('error');
+            expect(st.mails.resultado, JSON.stringify(st)).toBe('sin_nube');
+        });
+    });
+});

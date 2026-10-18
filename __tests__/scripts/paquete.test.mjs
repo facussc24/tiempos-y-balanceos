@@ -2060,3 +2060,134 @@ describe('la carpeta de la nube por proyecto: la de siempre por defecto, CLAUDE 
         expect(correr(['--donde']).stdout.trim()).toBe(path.join(nubeArea, '1- PUBLICADO'));
     });
 });
+
+// ---------------------------------------------------------------------------------------------
+// MUDANZA DEL 17/10/2026. La base del equipo y el area pasaron a «ASISTENTE INGENIERIA\9- VIEJO (no usar)» y el buzon quedo
+// aparte, en «ASISTENTE INGENIERIA\3- BUZON (...)». Este programa viaja SOLO a las PC (programas/_paquete.mjs y scripts/_paquete.mjs),
+// asi que lleva los nombres adentro (RUTAS_NUBE) y NO importa scripts/_lib/nubeRutas.mjs: aca se comprueba que coinciden con el
+// canon scripts/_lib/nubeCarpetas.data.json y que se busca el lugar nuevo y, si no esta, el viejo (con los dos gana el nuevo).
+// ---------------------------------------------------------------------------------------------
+describe('la nube despues de la mudanza (canon nubeCarpetas.data.json): el lugar nuevo y, si no esta, el viejo', () => {
+    const CANON = JSON.parse(fs.readFileSync(path.join(RAIZ, 'scripts', '_lib', 'nubeCarpetas.data.json'), 'utf8'));
+    const canon = (clave) => CANON.carpetas.find((c) => c.clave === clave);
+    const BIB = ['BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General'];
+    const [AREA_NUEVA, ...AREAS_VIEJAS] = [canon('area_vieja').nueva, ...canon('area_vieja').viejas];
+    const [BUZON_NUEVO, ...BUZONES_VIEJOS] = [canon('buzon').nueva, ...canon('buzon').viejas];
+    const [BASE_NUEVA, ...BASES_VIEJAS] = [canon('base_vieja').nueva, ...canon('base_vieja').viejas];
+    /** Una PC de mentira con su biblioteca y las carpetas `crear` (tramos relativos a la biblioteca). Devuelve { home, bib }. */
+    const pc = (nombre, ...crear) => {
+        const bib = dir(nombre, ...BIB);
+        for (const tramos of crear) fs.mkdirSync(path.join(bib, ...tramos), { recursive: true });
+        return { home: path.join(tmp, nombre), bib };
+    };
+    const buzonDe = (bib, area) => P.carpetaBuzon(path.join(bib, ...area, '1- PUBLICADO'));
+
+    it('los nombres que el programa lleva adentro son, en orden, la nueva y las viejas del canon (base_vieja, area_vieja y buzon)', () => {
+        for (const clave of ['base_vieja', 'area_vieja', 'buzon']) {
+            expect(P.RUTAS_NUBE[clave], clave).toEqual([canon(clave).nueva, ...canon(clave).viejas]);
+        }
+        expect(Object.keys(P.RUTAS_NUBE).sort()).toEqual(['area_vieja', 'base_vieja', 'buzon']);
+    });
+
+    it('buscarNube (area): con el layout viejo resuelve el viejo, con el nuevo el nuevo, con los dos gana el nuevo, sin ninguno null', () => {
+        for (const [i, vieja] of AREAS_VIEJAS.entries()) {
+            const { home, bib } = pc(`vieja${i}`, vieja);
+            expect(P.buscarNube(home, 'area'), vieja.join('/')).toBe(path.join(bib, ...vieja, '1- PUBLICADO'));
+        }
+        const solaNueva = pc('nueva', AREA_NUEVA);
+        expect(P.buscarNube(solaNueva.home, 'area')).toBe(path.join(solaNueva.bib, ...AREA_NUEVA, '1- PUBLICADO'));
+        const ambas = pc('ambas', AREA_NUEVA, ...AREAS_VIEJAS);
+        expect(P.buscarNube(ambas.home, 'area')).toBe(path.join(ambas.bib, ...AREA_NUEVA, '1- PUBLICADO'));
+        // la carpeta unica existe pero el area todavia no se mudo: sigue el viejo
+        const mediaMudanza = pc('media', [AREA_NUEVA[0]], AREAS_VIEJAS[0]);
+        expect(P.buscarNube(mediaMudanza.home, 'area')).toBe(path.join(mediaMudanza.bib, ...AREAS_VIEJAS[0], '1- PUBLICADO'));
+        const nada = pc('nada', [AREA_NUEVA[0]]);
+        expect(P.buscarNube(nada.home, 'area')).toBe(null);
+    });
+
+    it('buscarNube (la base del equipo): lo mismo, y la base vieja en la raiz sigue siendo la que se encuentra mientras no se mude', () => {
+        for (const [i, vieja] of BASES_VIEJAS.entries()) {
+            const { home, bib } = pc(`baseVieja${i}`, vieja);
+            expect(P.buscarNube(home), vieja.join('/')).toBe(path.join(bib, ...vieja));
+        }
+        const solaNueva = pc('baseNueva', BASE_NUEVA);
+        expect(P.buscarNube(solaNueva.home)).toBe(path.join(solaNueva.bib, ...BASE_NUEVA));
+        const ambas = pc('baseAmbas', BASE_NUEVA, ...BASES_VIEJAS);
+        expect(P.buscarNube(ambas.home)).toBe(path.join(ambas.bib, ...BASE_NUEVA));
+        expect(P.buscarNube(pc('baseNada', [BASE_NUEVA[0]]).home)).toBe(null);
+    });
+
+    it('--donde por linea de comandos dice la carpeta del lugar nuevo o, si no esta, la del viejo (lo que usa sync_equipo.ps1 y sync_area.ps1)', () => {
+        const correr = (args, home) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8', timeout: 60000, env: { ...process.env, USERPROFILE: home, CLAUDE_AREA_NUBE: '', CLAUDE_AREA_ESTADO: dir('estado-vacio') } });
+        // (--donde solo contesta si la carpeta publicada existe: la crea el primer --publicar, aca se la deja hecha)
+        const vieja = pc('cliVieja', [...AREAS_VIEJAS[1], '1- PUBLICADO'], BASES_VIEJAS[0]);
+        expect(correr(['--donde', '--proyecto', 'area'], vieja.home).stdout.trim()).toBe(path.join(vieja.bib, ...AREAS_VIEJAS[1], '1- PUBLICADO'));
+        expect(correr(['--donde'], vieja.home).stdout.trim()).toBe(path.join(vieja.bib, ...BASES_VIEJAS[0]));
+        const nueva = pc('cliNueva', [...AREA_NUEVA, '1- PUBLICADO'], BASE_NUEVA, [...AREAS_VIEJAS[1], '1- PUBLICADO'], BASES_VIEJAS[0]);
+        expect(correr(['--donde', '--proyecto', 'area'], nueva.home).stdout.trim()).toBe(path.join(nueva.bib, ...AREA_NUEVA, '1- PUBLICADO'));
+        expect(correr(['--donde'], nueva.home).stdout.trim()).toBe(path.join(nueva.bib, ...BASE_NUEVA));
+    });
+
+    it('carpetaBuzon: el buzon nuevo si existe, si no el viejo que exista, con los dos gana el nuevo; y ya no cuelga del area', () => {
+        // layout viejo: el buzon cuelga del area, en cualquiera de sus dos nombres de antes
+        for (const [i, area] of AREAS_VIEJAS.entries()) {
+            const buzonViejo = BUZONES_VIEJOS[i];
+            const { bib } = pc(`buzonViejo${i}`, area, buzonViejo);
+            expect(buzonDe(bib, area), area.join('/')).toBe(path.join(bib, ...buzonViejo));
+        }
+        // layout nuevo: el area quedo en 9- VIEJO y el buzon esta aparte
+        const nuevo = pc('buzonNuevo', AREA_NUEVA, BUZON_NUEVO);
+        expect(buzonDe(nuevo.bib, AREA_NUEVA)).toBe(path.join(nuevo.bib, ...BUZON_NUEVO));
+        // los dos (el viejo todavia no se mudo del area, el nuevo ya existe): gana el nuevo
+        const los2 = pc('buzonLos2', AREAS_VIEJAS[1], BUZONES_VIEJOS[1], BUZON_NUEVO);
+        expect(buzonDe(los2.bib, AREAS_VIEJAS[1])).toBe(path.join(los2.bib, ...BUZON_NUEVO));
+        // el area ya se mudo pero el buzon viejo sigue en el lugar de antes: el que exista
+        const mixto = pc('buzonMixto', AREA_NUEVA, BUZONES_VIEJOS[1]);
+        expect(buzonDe(mixto.bib, AREA_NUEVA)).toBe(path.join(mixto.bib, ...BUZONES_VIEJOS[1]));
+        // el area en el lugar nuevo y ningun buzon: se crea en el nuevo, nunca en uno viejo ni adentro del area
+        const sinBuzon = pc('buzonSinNada', AREA_NUEVA);
+        expect(buzonDe(sinBuzon.bib, AREA_NUEVA)).toBe(path.join(sinBuzon.bib, ...BUZON_NUEVO));
+        // el area en el lugar de antes y ningun buzon (una biblioteca que todavia no bajo la mudanza): el de siempre, colgado del area, sin armar un arbol paralelo
+        const sinMudar = pc('buzonSinMudar', AREAS_VIEJAS[1]);
+        expect(buzonDe(sinMudar.bib, AREAS_VIEJAS[1])).toBe(path.join(sinMudar.bib, ...AREAS_VIEJAS[1], '4- BUZON'));
+        // la mudanza ya empezo (existe la carpeta unica) pero el area sigue en la raiz y no hay ningun buzon: se crea en el NUEVO, nunca en uno viejo
+        const empezada = pc('buzonEmpezada', AREAS_VIEJAS[1], [BUZON_NUEVO[0]]);
+        expect(buzonDe(empezada.bib, AREAS_VIEJAS[1])).toBe(path.join(empezada.bib, ...BUZON_NUEVO));
+        // una copia con otra forma (un pendrive) no tiene buzon propio: cuelga de la copia, como siempre
+        expect(P.carpetaBuzon(path.join(tmp, 'pendrive', 'Copia', '1- PUBLICADO'))).toBe(path.join(tmp, 'pendrive', 'Copia', '4- BUZON'));
+        // y la base del equipo (no termina en 1- PUBLICADO) sigue siendo la misma carpeta
+        expect(P.carpetaBuzon(path.join(tmp, ...BASE_NUEVA))).toBe(path.join(tmp, ...BASE_NUEVA));
+    });
+
+    it('tieneFormaDeNube acepta el nombre del area nuevo y los de antes, y rechaza cualquier otro', () => {
+        for (const area of [AREA_NUEVA, ...AREAS_VIEJAS]) expect(P.tieneFormaDeNube(path.join(tmp, ...area, '1- PUBLICADO')), area.join('/')).toBe(true);
+        expect(P.tieneFormaDeNube(path.join(tmp, 'Copia de seguridad', '1- PUBLICADO'))).toBe(false);
+        expect(P.tieneFormaDeNube(path.join(tmp, ...AREAS_VIEJAS[1], 'otra cosa'))).toBe(false);
+        expect(P.tieneFormaDeNube(null)).toBe(false);
+    });
+
+    it('de punta a punta: la salud que deja --actualizar cae en el buzon nuevo (area en 9- VIEJO), en el viejo si es el unico, y en el nuevo si estan los dos', () => {
+        const origen = armarOrigen(V1_AREA);
+        const { rutaClave, rutaPub } = claves();
+        const probar = (nombre, area, buzones, esperado) => {
+            const { bib } = pc(nombre, ...buzones);
+            // se publica en una ruta corta y despues se mueve la carpeta del area a su lugar: --publicar mide la ruta (tope de 239 caracteres) y la de
+            // la biblioteca nueva es mas larga que la de antes (la salud, que es lo que se prueba, se escribe en la actualizacion y no mide nada)
+            const corta = dir(`${nombre}-pub`, 'AREA');
+            expect(pub(origen, path.join(corta, '1- PUBLICADO'), LISTA_AREA, { proyecto: 'area', clavePrivada: rutaClave }).estado, nombre).toBe('publicado');
+            const nube = path.join(bib, ...area, '1- PUBLICADO');
+            fs.mkdirSync(path.dirname(nube), { recursive: true });
+            fs.renameSync(path.join(corta, '1- PUBLICADO'), nube);
+            const r = act(dir(`${nombre}-pc`), nube, { identidad: { usuario: 'u', pc: 'PC-01' }, clavePublica: rutaPub });
+            expect(r.estado, nombre).toBe('actualizado');
+            expect(r.salud, nombre).toBe(path.join(bib, ...esperado, 'salud', 'PC-01.json'));
+            expect(fs.existsSync(r.salud), nombre).toBe(true);
+            expect(fs.existsSync(path.join(nube, 'salud')), nombre).toBe(false);
+        };
+        probar('saludNueva', AREA_NUEVA, [BUZON_NUEVO], BUZON_NUEVO);
+        probar('saludSinBuzon', AREA_NUEVA, [], BUZON_NUEVO);
+        probar('saludVieja', AREAS_VIEJAS[1], [BUZONES_VIEJOS[1]], BUZONES_VIEJOS[1]);
+        probar('saludLosDos', AREAS_VIEJAS[1], [BUZONES_VIEJOS[1], BUZON_NUEVO], BUZON_NUEVO);
+        probar('saludMudanzaEmpezada', AREAS_VIEJAS[1], [[BUZON_NUEVO[0]]], BUZON_NUEVO);   // el area sigue en la raiz, existe la carpeta unica y no hay buzon: el nuevo
+    });
+});
