@@ -175,7 +175,17 @@ export function mcpComoHerramienta(t) {
   // Ronda 2 (17/10, hallazgo 16): el codigo que una MCP corre (`mcp__build123d__execute {code}`) se mira como el de un
   // `python -` con ese codigo en un heredoc: lo ven los mismos guardianes que a un python -c
   const codigo = primero('code', 'source');
-  const cmd = primero('command', 'cmd', 'script', 'commands') || (codigo ? `python - <<'CODIGO_MCP'\n${codigo}\nCODIGO_MCP` : '');
+  // Tanda 15 (18/10): si la MCP dice que el codigo es de CONSOLA (Context Mode: `ctx_execute {language: 'shell', code}`),
+  // los guardianes ven las DOS lecturas juntas, la cruda (envuelto, un `git commit` sin rutas pasaba) y la envuelta en
+  // python: el `language` lo pone quien llama, y una MCP que lo ignora (build123d corre python igual) dejaba pasar un
+  // python que guarda el listado maestro o manda un mail si se le decia «bash» (auditor tanda 15, I1). Frena lo que
+  // frene cualquiera de las dos.
+  const lenguaje = primero('language', 'lang', 'languageId', 'runtime').trim().toLowerCase().replace(/\.exe$/, '');
+  // la lectura cruda se suma siempre que se declare un lenguaje que no sea python (fish, ksh, nu o uno desconocido
+  // tambien: revision por API, tanda 15); sin lenguaje, como antes (el codigo de modelado de build123d no se lee crudo)
+  const deConsola = lenguaje !== '' && !/^(python|python3|py)$/.test(lenguaje);
+  const envuelto = codigo ? `python - <<'CODIGO_MCP'\n${codigo}\nCODIGO_MCP` : '';
+  const cmd = primero('command', 'cmd', 'script', 'commands') || (codigo ? (deConsola ? `${codigo}\n${envuelto}` : envuelto) : '');
   const file = primero('file_path', 'path', 'filePath', 'filename', 'file', 'destination', 'dest', 'target', 'target_path', 'output_path');
   // el contenido cuenta solo si va a un ARCHIVO: el texto de un mensaje o de un documento de otra plataforma (Claude Docs,
   // un chat) no es un documento de Barack en disco, y el guardian de firma lo leeria como tal

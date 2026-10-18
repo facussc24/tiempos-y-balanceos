@@ -359,3 +359,33 @@ describe('disparoSkills · la prueba entera con API falsa', () => {
     expect(fs.existsSync(path.join(dir, 'no-permitida'))).toBe(false);
   });
 });
+
+describe('disparoSkills · el molde de open-steps (tanda 15): UNA skill, frases reales propias y ajenas, sin llamar', () => {
+  const nombres = ['explicar-mejor', 'imprimir', 'flujogramas'];
+  const mensajes = [
+    ...Array.from({ length: 30 }, (_, i) => msg(`no entiendo nada de esto numero ${i}, explicame facil`, ['explicar-mejor'])),
+    msg('imprimime los flujogramas en la de arriba', ['imprimir']),
+    msg('armame el flujograma del insert', ['flujogramas']),
+    msg('arma el flujo y explicamelo', ['flujogramas', 'explicar-mejor']),
+    msg('una pregunta suelta sin ninguna skill cargada'),
+  ];
+  it('con 3 ajenas disponibles: 25 propias + 3 ajenas, 3 corridas y 3 modelos = 252 llamadas (el metodo entero)', () => {
+    const conTres = [...mensajes, msg('mandame el pdf a la impresora de ingenieria', ['imprimir'])];
+    const p = D.planOpenSteps(conTres, 'explicar-mejor', nombres);
+    expect([p.frases.length, p.ajenas.length, p.llamadas]).toEqual([25, 3, 252]);
+  });
+  it('elige 25 frases propias y las ajenas que haya (2 aca: otra skill cargada, esta no), y cuenta (25 + 2) x 3 x 3', () => {
+    const p = D.planOpenSteps(mensajes, 'explicar-mejor', nombres);
+    expect(p.frases).toHaveLength(25);
+    expect(p.ajenas).toHaveLength(2);
+    expect(p.ajenas.map((f) => f.texto).join(' ')).not.toMatch(/explicamelo|pregunta suelta/);
+    expect(p.llamadas).toBe((25 + 2) * 3 * 3);
+    expect(p.faltanFrases).toBe(0);
+  });
+  it('con pocas frases lo dice, y una skill que no existe frena', () => {
+    const p = D.planOpenSteps(mensajes.slice(30), 'imprimir', nombres);
+    expect(p.frases).toHaveLength(1);
+    expect(p.faltanFrases).toBe(24);
+    expect(() => D.planOpenSteps(mensajes, 'no-existe', nombres)).toThrow(/no conozco/);
+  });
+});

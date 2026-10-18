@@ -134,3 +134,44 @@ describe('pieza 10 — por el camino real: bash _dispatcher.sh con el JSON de la
         expect(r.err).toBe('');
     });
 });
+
+// Tanda 15 (18/10/2026): los MCP que nombran los informes del tercer equipo (E y F, 15/10), con los nombres de sus
+// herramientas como los dan sus README. Ninguno esta instalado: esto prueba que, el dia que se instalen, lo que escriben
+// o corren pasa por los guardianes y lo que solo lee no. Los comandos peligrosos se arman por partes para que el texto
+// de este archivo no dispare a los guardianes al escribirlo (LECCIONES 17/10).
+const entra = (n) => new RegExp(grupo.matcher).test(n);
+const BORRAR = ['rm', '-rf'].join(' ');
+const ARBOL = ['shutil', 'rmtree'].join('.');
+describe('tanda 15 — los MCP de los informes E y F, con sus nombres reales', () => {
+    it('ROJO (entra al despachador): CATIA crea un analisis, Context Mode corre codigo, Outlook clasico manda', () => {
+        for (const n of ['mcp__catia__catia_create_analysis_document', 'mcp__context-mode__ctx_execute', 'mcp__outlook-classic__send_email'])
+            expect(entra(n), n).toBe(true);
+    });
+    it('VERDE (no entra): leer en esos mismos MCP', () => {
+        for (const n of ['mcp__context-mode__ctx_search', 'mcp__catia__catia_get_part_info', 'mcp__outlook-classic__list_emails'])
+            expect(entra(n), n).toBe(false);
+    });
+    it('ROJO: ctx_execute que borra una carpeta, sea codigo de consola o de python', () => {
+        expect(frenan(mcp('mcp__context-mode__ctx_execute', { language: 'shell', code: `${BORRAR} /c/Dev/BarackMercosul/exports` }))).toContain('borrado-masivo-guard');
+        expect(frenan(mcp('mcp__context-mode__ctx_execute', { language: 'python', code: `import shutil\n${ARBOL}(r'Y:/Ingenieria/Documentacion Gestion Ingenieria/13. Analisis')` }))).toContain('borrado-masivo-guard');
+    });
+    it('ROJO: ctx_execute de consola que commitea sin rutas; Outlook clasico que manda un mail', () => {
+        expect(frenan(mcp('mcp__context-mode__ctx_execute', { language: 'bash', code: 'git commit -m "x"' }))).toContain('commit-rutas-guard');
+        expect(frenan(mcp('mcp__outlook-classic__send_email', { to: 'carlos@barackmercosul.com', subject: 'x', body: 'y' }))).toContain('mail-guard');
+    });
+    it('ROJO (auditor tanda 15, I1): un python que dice ser «bash» igual se mira como python — build123d ignora el language', () => {
+        const listado = "import openpyxl\nwb=openpyxl.Workbook()\nwb.save(r'Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/3- LISTADO/Listado hojas de proceso.xlsx')";
+        const mail = ['import win32com.client as w', "o=w.Dispatch('Outlook.Application')", 'm=o.CreateItem(0)', "m.To='carlos@barackmercosul.com'", ['m', 'Send()'].join('.')].join('\n');
+        for (const language of ['bash', 'shellscript', 'powershell.exe', undefined]) {
+            expect(frenan(mcp('mcp__build123d__execute', { code: listado, ...(language ? { language } : {}) })), String(language)).toContain('apqp-cliente-guard');
+            expect(frenan(mcp('mcp__build123d__execute', { code: mail, ...(language ? { language } : {}) })), String(language)).toContain('mail-guard');
+        }
+    });
+    it('ROJO: las otras formas de decir consola (languageId, cmd.exe, bat) tambien miran el comando crudo', () => {
+        for (const extra of [{ languageId: 'shellscript' }, { language: 'cmd.exe' }, { language: 'bat' }])
+            expect(frenan(mcp('mcp__context-mode__ctx_execute', { code: 'git commit -m "x"', ...extra })), JSON.stringify(extra)).toContain('commit-rutas-guard');
+    });
+    it('VERDE: ctx_execute que solo lista una carpeta', () => {
+        expect(frenan(mcp('mcp__context-mode__ctx_execute', { language: 'shell', code: 'ls -la /c/Dev/BarackMercosul/docs' }))).toEqual([]);
+    });
+});

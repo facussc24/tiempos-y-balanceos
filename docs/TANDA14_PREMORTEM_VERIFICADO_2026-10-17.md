@@ -61,7 +61,9 @@ escribe `"disableAllHooks": true` (con el Bloc de notas, 30 segundos), o abre la
 configuración de hooks de la documentación oficial (relevada en `docs/_archive/research-claude-code-2026-07/research_hooks.json`);
 `--safe-mode` figura en `claude --help` de la versión 2.1.301 de esta PC («Start with all customizations (… hooks …)
 disabled — useful for troubleshooting a broken configuration», medido el 17/10). **Que alguno de los dos destrabe de
-verdad una sesión trabada no se probó acá: lo verifica la tanda 15.**
+verdad una sesión trabada no se probó acá: lo verifica la tanda 15.** (18/10, tanda 15: verificado en el ejecutable
+2.1.302 y escrito como procedimiento para Fak en `docs/DESTRABE_GUARDIAN_ROTO.md` y en `codigo-madre.md`; la prueba de
+punta a punta con un guardián roto sigue sin hacerse.)
 
 ## Lo que no coincide (la tabla del informe, medida hoy en la PC principal)
 

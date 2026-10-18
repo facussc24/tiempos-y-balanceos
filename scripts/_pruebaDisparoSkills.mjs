@@ -16,6 +16,18 @@
  *   node scripts/_pruebaDisparoSkills.mjs --max 100 --dias 60 --solo-repo --json
  *
  * Sale con 0 ok · 1 fallo algo · 2 argumento · 3 falta la clave de la API. Lo usa el job nocturno por `correr()`.
+ *
+ * EL METODO DE OPEN-STEPS, para UNA skill (tanda 15, 18/10/2026; kharmanskyi/open-steps, MIT, informe F item 4). La
+ * prueba de arriba mira TODAS las skills a la vez con Haiku; open-steps mira UNA a fondo: 25 frases reales de Fak en
+ * cuyo turno se cargo, 3 frases ajenas (la direccion contraria: tiene que NO dispararse), 3 corridas por frase y 3
+ * modelos (Haiku, Sonnet, Opus): (25 + 3) × 3 × 3 = 252 llamadas. Procedimiento:
+ *   1. node scripts/_pruebaDisparoSkills.mjs --open-steps <skill>     el molde: elige las frases y cuenta las llamadas
+ *      (ejemplo: --open-steps explicar-mejor). No llama a nada.
+ *   2. Con el OK de Fak (gasta API: `api-claude.md`), cada frase va a cada modelo 3 veces con el mismo prefijo de
+ *      descriptions de la prueba de arriba (armarSystem) y se anota que skill eligio.
+ *   3. Se lee por modelo: % de frases propias donde la elige (activacion) y % de ajenas donde NO la elige. Una
+ *      description que en Haiku dispara bien y en Opus no (o al reves) se reescribe y se vuelve a medir.
+ * La logica del molde: planOpenSteps() de scripts/_lib/disparoSkills.mjs (test en disparoSkills.test.mjs).
  */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,7 +38,7 @@ import { leerTranscripts } from './_lib/transcriptsFak.mjs';
 import { RAIZ, escribirEnBase, basesPermitidas, tokensAprox } from './_lib/propuestasSkills.mjs';
 import {
   listaDeSkills, armarVerdad, armarSystem, armarSchema, armarPedidoLote, enLotes, interpretarLote, puntuar,
-  peoresDescriptions, armarInforme, tokensDeItems, TOPE_MENSAJES, TAMANO_LOTE,
+  peoresDescriptions, armarInforme, tokensDeItems, TOPE_MENSAJES, TAMANO_LOTE, planOpenSteps,
 } from './_lib/disparoSkills.mjs';
 
 /** Haiku 5.5, esfuerzo bajo: es volumen barato (`api-claude.md` §2). */
@@ -136,9 +148,34 @@ export async function correr({
 // CLI
 // ─────────────────────────────────────────────────────────────────────────────
 
-const USO = 'uso: node scripts/_pruebaDisparoSkills.mjs [--simular] [--max <N>] [--dias <N>] [--solo-repo] [--json]';
+const USO = 'uso: node scripts/_pruebaDisparoSkills.mjs [--simular] [--max <N>] [--dias <N>] [--solo-repo] [--json] | --open-steps <skill> [--dias <N>]';
+
+/** El molde de open-steps para UNA skill: arma el plan con frases reales y lo imprime. NUNCA llama a la API. */
+async function planDeOpenSteps(skill, dias) {
+  const skills = listaDeSkills({ raiz: RAIZ });
+  // los registros se buscan por el nombre del checkout PRINCIPAL: desde un worktree, la ruta del worktree no tiene registros
+  const principal = RAIZ.split(`${path.sep}.claude${path.sep}worktrees${path.sep}`)[0];
+  const tr = await leerTranscripts({ ahora: Date.now(), desde: new Date(Date.now() - dias * 86400e3), tope: 20000, repo: principal });
+  const p = planOpenSteps(tr.mensajes ?? [], skill, skills.map((s) => s.nombre));
+  console.log(`Metodo de open-steps para «${p.skill}» (${dias} dias de registros):`);
+  console.log(`  ${p.frases.length} frases reales de Fak con «${p.skill}» cargada${p.faltanFrases ? ` (faltan ${p.faltanFrases} para las 25: con menos, el porcentaje vale menos)` : ''} · ${p.ajenas.length} ajenas (otra skill, no esta)`);
+  console.log(`  ${p.corridas} corridas × ${p.modelos.length} modelos (${p.modelos.join(', ')}) = ${p.llamadas} llamadas a la API (NO se hicieron: se corren con el OK de Fak)`);
+  for (const f of p.frases.slice(0, 5)) console.log(`    · ${String(f.fecha ?? '').slice(0, 10)} «${f.texto.replace(/\s+/g, ' ').slice(0, 100)}»`);
+  for (const f of p.ajenas) console.log(`    ✗ ajena: «${f.texto.replace(/\s+/g, ' ').slice(0, 100)}»`);
+  console.log('  Se lee: por modelo, % de las frases propias donde elige la skill (cerca de 100 = se dispara sola) y % de las ajenas donde NO la elige.');
+  return 0;
+}
 
 async function main(argv) {
+  const iOs = argv.indexOf('--open-steps');
+  if (iOs >= 0) {
+    const skill = argv[iOs + 1];
+    if (!skill || skill.startsWith('--')) { console.error(`--open-steps lleva el nombre de una skill.\n${USO}`); return 2; }
+    const iD = argv.indexOf('--dias');
+    const dias = iD >= 0 ? Number(argv[iD + 1]) : 90;
+    if (!Number.isInteger(dias) || dias <= 0) { console.error(`--dias lleva un numero entero mayor que 0.\n${USO}`); return 2; }
+    try { return await planDeOpenSteps(skill, dias); } catch (e) { console.error(e.message); return 1; }
+  }
   const CON_VALOR = ['--max', '--dias'];
   const SIN_VALOR = ['--simular', '--json', '--solo-repo'];
   const op = {};

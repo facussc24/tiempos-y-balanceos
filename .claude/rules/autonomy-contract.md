@@ -34,6 +34,7 @@ Si dudo entre dos filas, aplico la mas restrictiva. Principios: hacer sin pregun
 | Cualquier cambio al codigo: el camino por tamaño (chico / mediano / grande) | Regla `codigo-madre.md` (Fak 09/10/2026); pedidos chicos de la semana → `docs/COLA_CAMBIOS_CODIGO.md` |
 | Remover feature / borrar archivos | Siempre preguntar |
 | Cambiar dependencias | Confirmar antes |
+| Instalar una skill, un plugin o un MCP de la comunidad | Preguntar, con la revisión de `docs/REVISAR_ANTES_DE_INSTALAR.md` hecha antes (original crudo, buscar inyección, fijar a un commit; tanda 15, 18/10/2026) |
 | Tocar boton dev-login | **Prohibido** (regla dev-login) |
 
 ## D. Auditoria e integraciones

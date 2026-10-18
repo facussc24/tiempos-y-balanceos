@@ -308,3 +308,43 @@ export function armarInforme({ fecha, verdad, puntaje, peores, skills, costoUsd 
 
 /** Tokens aproximados de la muestra, para estimar. */
 export const tokensDeItems = (items) => items.reduce((s, it) => s + tokensAprox(it.texto) + 12, 0);
+
+/**
+ * El METODO DE OPEN-STEPS (kharmanskyi/open-steps, MIT; informe F del 15/10, item 4; tanda 15, 18/10/2026), como
+ * molde: para UNA skill, 25 frases REALES de Fak en cuyo turno se cargo esa skill, 3 frases ajenas (turnos donde se
+ * cargo OTRA skill y esta no: la direccion contraria), 3 corridas de cada frase y 3 modelos. Lo que mide: si la skill se
+ * dispara sola con lo que Fak escribe de verdad (activacion = frases donde el modelo la elige / frases, por modelo y por
+ * corrida; en las ajenas tiene que NO elegirla). Es logica pura: arma el plan y el numero de llamadas, no llama a nada.
+ * Correrlo entero son (25 + 3) x 3 x 3 = 252 llamadas: se corre con el OK de Fak (gasta API).
+ */
+export function planOpenSteps(mensajes, skill, nombresConocidos, {
+  frases = 25, ajenas = 3, corridas = 3, modelos = ['haiku', 'sonnet', 'opus'], largoMin = 15, largoMax = 3000,
+} = {}) {
+  const s = String(skill).toLowerCase();
+  const conocidos = new Set([...nombresConocidos].map((n) => String(n).toLowerCase()));
+  if (!conocidos.has(s)) throw new Error(`no conozco la skill «${skill}»`);
+  const vistos = new Set();
+  const propias = [];
+  const otras = [];
+  for (const m of Array.isArray(mensajes) ? mensajes : []) {
+    const texto = String(m?.texto ?? '').trim();
+    if (texto.length < largoMin || texto.length > largoMax) continue;
+    const clave = normal(texto);
+    if (vistos.has(clave)) continue;
+    vistos.add(clave);
+    const cargas = (m.cargas || []).map((c) => String(c).toLowerCase());
+    const item = { fecha: m.fecha ?? null, texto };
+    if (cargas.includes(s)) propias.push(item);
+    else if (cargas.length && cargas.every((c) => conocidos.has(c))) otras.push(item);
+  }
+  // las mas nuevas primero (lo que Fak escribe hoy), con el hash de desempate para que el plan sea el mismo en cada corrida
+  const orden = (a, b) => String(b.fecha ?? '').localeCompare(String(a.fecha ?? '')) || hashTexto(a.texto).localeCompare(hashTexto(b.texto));
+  const elegidas = propias.sort(orden).slice(0, frases);
+  const ajenasElegidas = otras.sort(orden).slice(0, ajenas);
+  return {
+    skill, modelos: [...modelos], corridas,
+    frases: elegidas, ajenas: ajenasElegidas,
+    faltanFrases: Math.max(0, frases - elegidas.length),
+    llamadas: (elegidas.length + ajenasElegidas.length) * corridas * modelos.length,
+  };
+}
