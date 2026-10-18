@@ -22,7 +22,7 @@ Las tres herramientas nuevas de esta tanda (solo leen la copia de mails; salidas
 | Herramienta | Qué contesta | Lo que dio hoy |
 |---|---|---|
 | `node scripts/_adjuntosIndice.mjs [--buscar "<palabras>"]` | En qué mail está un 3D o un DXF, por pieza y versión, con los asuntos al lado | 311 adjuntos de diseño y 120 comprimidos sin abrir; «estanteria inserto» trae los dos mails de agosto (25/08 `ESTANTERIA INSERTO -1.rar`, 28/08 `ESTANTERIA ARMADA ESPUMA INSERTO.rar`) → `exports/adjuntos_3d_dxf_2026-10-17.md` |
-| `node scripts/_plannerCarlos.mjs` | Las tareas del Planner «Actividades Ingenieria» de Carlos, de los avisos por mail | 38 tareas asignadas a Fak (12/11/2025 al 23/06/2026), 33 con aviso de vencida, último aviso de vencida el 08/07. El «50 avisos de vencidas» del informe D son los 50 mails en inglés con asunto «You have late tasks» (34 dicen eso adentro y 16 «You have a late task»); con los otros avisos de vencimiento (por vencer, vence hoy, en castellano) son 76 mails → `exports/planner_carlos_2026-10-17.md` |
+| `node scripts/_plannerCarlos.mjs` | Las tareas del Planner «Actividades Ingenieria» de Carlos, de los avisos por mail: vencimiento y estado según el último aviso (asignada, por vencer, vence hoy o vencida; los mails no dicen si se completó) | 38 tareas asignadas a Fak (12/11/2025 al 23/06/2026), 33 con aviso de vencida, último aviso de vencida el 08/07. El «50 avisos de vencidas» del informe D son los 50 mails en inglés con asunto «You have late tasks» (34 dicen eso adentro y 16 «You have a late task»); con los otros avisos de vencimiento (por vencer, vence hoy, en castellano) son 76 mails → `exports/planner_carlos_2026-10-17.md` |
 | `node scripts/_incaParte.mjs` | El parte semanal de VW (INCA): piezas sin acuerdo de capacidad y acuerdos en rojo | 29 partes (11/03 al 14/10); el del 14/10 trae 6 piezas sin acuerdo; el B00000330933 (apoyabrazos trasero) estuvo en rojo en 17 partes, del 15/04 al 26/08. A la copia le faltan los partes del 27/05, 03/06 y 10/06: son 17 partes, no 17 semanas corridas → `exports/inca_parte_2026-10-17.md` |
 
 ---
@@ -60,19 +60,10 @@ Salud al 13/10: versión 21 instalada = la publicada; ve `Y:` y `Z:`; tiene Pyth
 **Sus habilidades ya están en la cuenta**: las cinco que nombra en el aporte («foto a tabla, auditoría de consumos,
 planes de entrega, firme y forecast, carga de programas») figuran hoy como skills habilitadas de la cuenta de Fak en
 claude.ai: `foto-a-tabla`, `auditoria-consumos-arb`, `armado-planes-entrega-v2`, `extraccion-firme-forecast`,
-`carga-programas-arb`, y una sexta, `resumen-contexto-mrp`. **«Foto a tabla» no hace falta construirla**: existe (no en
-el repo, en la cuenta). Lo que sí queda como trabajo: comparar `auditoria-consumos-arb` con la `verificacion-consumos`
-de la casa antes de que dos skills digan cosas distintas sobre el mismo consumo.
-
-**Ficha de la skill candidata «foto a tabla»** (no se construyó nada):
-
-| Campo | Qué dice |
-|---|---|
-| Qué hace | Pasa a un Excel limpio, para copiar y pegar, una foto o captura de una tabla (declaraciones de stock, planillas de proveedores, listas de precios). No es para leer PDF ni para editar un Excel que ya existe (su propia descripción en la cuenta) |
-| Dónde está | En la cuenta de claude.ai de Fak, habilitada (lista de skills leída el 17/10). No está en `.claude/skills/` del repo |
-| De quién es | La nombra Federico como habilidad suya (aporte del 06/10) |
-| Qué falta decidir | Si las sesiones del repo la usan tal cual desde la cuenta o se copia al repo con los controles de la casa (sin firma de IA, números verificados contra la foto). Si se copia, es una skill nueva: camino mediano, con casos de respuesta conocida |
-| Quién decide | Fak |
+`carga-programas-arb`, y una sexta, `resumen-contexto-mrp`. **«Foto a tabla» ya existe en la cuenta, así que no hay
+skill candidata que documentar ni que construir**: pasa a un Excel una foto o captura de una tabla (su descripción en la
+cuenta); no está en `.claude/skills/` del repo. Lo que sí queda como trabajo: comparar `auditoria-consumos-arb` con la
+`verificacion-consumos` de la casa antes de que dos skills digan cosas distintas sobre el mismo consumo.
 
 ### El punto 5 de Federico, contra los papeles de la casa
 
@@ -127,7 +118,8 @@ validar sin mirar el arb:** el nombre exacto de los botones de su camino y que l
   plan se dejó de usar). Los mails no avisan cuando una tarea se completa: el listado dice «asignada el …, último aviso
   de vencida el …», nunca «abierta». Detalle: `exports/planner_carlos_2026-10-17.md`.
 - **Los 3D de Pablo Gamboa le llegan a Fak siempre y a Carlos en la mitad**: de los 431 adjuntos de diseño y
-  comprimidos del índice, 193 los mandó Pablo y 58 Carlos. Los mails de Pablo con esos adjuntos son 91: los 91 llevan a
+  comprimidos del índice, 193 los mandó Pablo y 58 Carlos (recontado el 18/10 con los `.jt` y el `.tar` ya sumados: los
+  6 archivos nuevos no son de Pablo ni de Carlos, y los números no cambian). Los mails de Pablo con esos adjuntos son 91: los 91 llevan a
   Fak (en «Para» 26, solo en copia 65) y 46 llevan a Carlos (23 en «Para» y 23 en copia). El «casi siempre con Fak en
   copia» del informe D se sostiene (65 de 91); el «a Carlos» vale para la mitad.
 
@@ -268,6 +260,11 @@ está verificado.
 - **«Foto a tabla» no queda como skill candidata**: ya existe como skill habilitada de la cuenta (junto con las otras
   cuatro de Federico). Fuente: la lista de skills de la cuenta, leída el 17/10.
 - **El pedido «que Ingeniería valide el punto 5» está en el aporte de Federico, no en un mail suyo**: se leyó de ahí.
+- **En el índice, un número pegado con guion, guion bajo o punto es parte del nombre de la pieza**; separado por un
+  espacio o entre paréntesis es una versión o una copia. Medido el 18/10 sobre los 40 grupos que juntaban más de un
+  nombre: 2 juntaban cosas distintas y los dos por un número pegado («ESTANTERIA-1» con «ESTANTERIA», que son dos
+  estanterías con asuntos distintos el 21/08, y «MYLAR MP7315-16» con «MYLAR MP7315»). Los asuntos de los mails siguen
+  al lado de cada pieza.
 - **El índice de adjuntos incluye más que la lista pedida**: `.catpart`, `.catproduct`, `.sldprt`, `.sldasm`, `.3mf`,
   `.x_t`, `.f3d`, y los comprimidos (`.rar`, `.zip`, `.7z`) aparte, «sin abrir»: el 3D de la estantería del inserto
   estaba en dos `.rar`, y sin ellos el caso de respuesta conocida no aparecía.
