@@ -246,7 +246,9 @@ def regla_firma(ruta, op):
     # un solo archivo: tope alto (el detector corta a 60 MB por defecto y un PowerPoint real pesa 51,6) y que diga lo que
     # no pudo mirar entero (auditor 18/10: un pptx de 61 MB con «Armado por Claude» salia VERDE)
     args = [py, os.path.join(AQUI, "_sinFirmaIA.py"), "--json", "--marcar-parciales", "--max-mb", "1000", ruta]
-    if not op.oficial:
+    # el logo frena salvo que la persona diga --oficial: detectar un codigo de formulario NO apaga este freno (revision
+    # por API 18/10: una lamina de la casa que cite «I-AC-032» dejaba pasar un logo no oficial)
+    if not getattr(op, "oficial_pedido", op.oficial):
         args.insert(3, "--logo-bloquea")
     try:
         p = subprocess.run(args, capture_output=True, text=True, encoding="utf-8", timeout=600)
@@ -338,9 +340,13 @@ def regla_columnas(d, op):
         if h["oculta"]:
             continue
         filas = filas_de_texto(h["celdas"])
-        # la lista negra se busca en TODAS las filas tipo cabecera: un formulario lleva su encabezado arriba y la tabla
-        # mas abajo (auditor 18/10: con «fecha» al lado del titulo, la columna «Fuente» de la tabla pasaba)
+        # la lista negra se busca en la PRIMERA fila de cada bloque (la de arriba no tiene texto): un formulario lleva su
+        # encabezado arriba y la tabla mas abajo (auditor 18/10: con «fecha» al lado del titulo, la columna «Fuente» de la
+        # tabla pasaba), y una fila de datos no cuenta (API 18/10: un estado «Verificado» daria falso rojo)
+        con_texto = {f for (f, _c), i in h["celdas"].items() if i["valor"] not in (None, "")}
         for f, cab in sorted(filas.items()):
+            if f - 1 in con_texto:
+                continue
             for c, texto in sorted(cab.items()):
                 if norm(texto) in lista:
                     hall.append((f"pestaña {h['nombre']}, fila {f} col {c}", texto))
@@ -359,7 +365,7 @@ def codigo_oficial(d, codigos):
     punto y un numero («I-IN-002» no es «I-IN-002.4»; auditor 18/10)."""
     todo = " ".join(t for _, t in d.pedazos).upper()
     for code in codigos:
-        if re.search(re.escape(code.upper()) + r"(?![.\d])", todo):
+        if re.search(re.escape(code.upper()) + r"(?!\.\d)", todo):
             return code
     return None
 
@@ -479,7 +485,9 @@ def regla_letra(d, tipo):
     def es_pie(txt):
         # el pie (titulo · fecha · autor) y el numero de pagina van mas chicos: medido en el PowerPoint del IMDS
         # aceptado el 09/10 (cuerpo 10 a 14 pt, pie y numero a 9 pt)
-        return txt.strip().isdigit() or autor in txt
+        # el pie de la casa: «titulo · fecha · F.Santoro …» (con sus puntos medios); un «Realizó: F.Santoro» suelto no
+        # es pie (revision por API 18/10)
+        return txt.strip().isdigit() or (autor in txt and txt.count("·") >= 2)
     hall = []
     for lam in d.laminas:
         # el pie se perdona solo en texto suelto: en una tabla un numero a 6 pt es un dato chico (auditor 18/10)
@@ -585,10 +593,15 @@ def render(ruta, carpeta):
 
 
 # ---------------------------------------------------------------- armado
+class NoSeLee(Exception):
+    """Un archivo que el revisor no sabe leer: sale 2, nunca 1 (1 es ROJO)."""
+
+
 def revisar(ruta, op):
     ext = os.path.splitext(ruta)[1].lower()
     if ext not in LECTORES:
-        raise SystemExit(f"no se leer {ext}: van {', '.join(sorted(LECTORES))}. No hago nada.")
+        raise NoSeLee(f"no se leer {ext}: van {', '.join(sorted(LECTORES))}. No hago nada.")
+    op.oficial_pedido = op.oficial
     d = Doc()
     LECTORES[ext](ruta, d)
     tipo = op.tipo or ("a3" if ext == ".pptx" and (d.ancho_cm or 0) > 40 else POR_EXTENSION[ext])
@@ -665,7 +678,14 @@ def main():
     if not op.archivo or not os.path.isfile(op.archivo):
         print("falta el archivo a revisar (o no existe). No hago nada.")
         sys.exit(2)
-    rep = revisar(op.archivo, op)
+    try:
+        rep = revisar(op.archivo, op)
+    except NoSeLee as e:
+        print(e)
+        sys.exit(2)
+    except Exception as e:  # noqa: BLE001 — un archivo roto o una libreria que falta no es un ROJO: es «no pude»
+        print(f"no pude revisar {op.archivo}: {type(e).__name__}: {e}")
+        sys.exit(3)
     if op.json:
         print(json.dumps(rep, ensure_ascii=False, indent=1))
     else:

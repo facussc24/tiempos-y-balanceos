@@ -45,4 +45,14 @@ describe.runIf(hayPython)('revisar.py', () => {
   it('sin archivo no hace nada y sale 2', () => {
     expect(revisar(join(tmpdir(), 'no-existe-revisar.pptx')).status).toBe(2);
   });
+
+  it('un tipo de archivo que no sabe leer sale 2 y un archivo roto sale 3, nunca 1 (1 es ROJO)', () => {
+    const d = mkdtempSync(join(tmpdir(), 'revisar-'));
+    try {
+      writeFileSync(join(d, 'x.xyz'), 'algo');
+      expect(revisar(join(d, 'x.xyz'), '--sin-render').status).toBe(2);
+      writeFileSync(join(d, 'roto.pptx'), 'esto no es un pptx');
+      expect(revisar(join(d, 'roto.pptx'), '--sin-render').status).toBe(3);
+    } finally { rmSync(d, { recursive: true, force: true }); }
+  }, 60000);
 });

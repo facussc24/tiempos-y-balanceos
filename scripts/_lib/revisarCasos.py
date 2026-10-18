@@ -241,6 +241,12 @@ def contraejemplos(d):
          lambda: texto(j("c6.html"), "<html><body><table><tr><td>dom 18/10</td></tr><tr><td>a las 13:29</td></tr></table></body></html>"), None),
         ("formulario-oficial-sin-banderas", [],
          lambda: xlsx(j("c7.xlsx"), [{"nombre": "PC", "celdas": {"A1": "PLAN DE CONTROL I-AC-032", "A3": "Caracteristica", "B3": "Clase", "A4": "Costura", "B4": "D"}}]), None),
+        # revision por API del 18/10
+        ("estado-verificado-en-una-fila-de-datos", ["--tipo", "excel"],
+         lambda: xlsx(j("c9.xlsx"), [{"nombre": "Datos", "celdas": {"B2": "Estado de las piezas", "B4": "Pieza", "C4": "Estado",
+                                                                    "B5": "Bracket", "C5": "Verificado"}}]), None),
+        ("codigo-del-formulario-con-punto-final", ["--documento", "plan de control"],
+         lambda: xlsx(j("c10.xlsx"), [{"nombre": "PC", "celdas": {"A1": "Formulario I-AC-032.", "A3": "Caracteristica", "B3": "Clase", "A4": "Costura", "B4": "D"}}]), None),
         ("el-codigo-del-flujograma-no-es-el-de-la-hoja", ["--documento", "flujograma", "--tipo", "leer"],
          lambda: pptx(j("c8.pptx"), [{"textos": [("Form: I-IN-002.4-R01 hoja de operaciones", None)], "foto": True}], carpeta=d), "formulario-oficial"),
     ]

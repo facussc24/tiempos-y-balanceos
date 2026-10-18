@@ -38,7 +38,7 @@ que nunca es verde: es «para mirar» o «no corrió») y suma las reglas de con
 | `jerga` | #8 «283 llamadas en curso???» (11/10) + el inglés suelto del canon del AMFE | todo |
 | `voz` | #13 «le mandaste un testamento» | `--tipo mail` |
 | `lo-importante-primero` | informe G §2.2 b | una página, pantalla, texto |
-| `contador-y-hora` | #8 «renueva pusiste hora pero no día» | pantalla y texto |
+| `contador-y-hora` | #8 «renueva pusiste hora pero no día» | el contador, en pantalla y texto; la hora sin día, solo en pantalla (html) |
 | `medio` | #11 «los txt son al pedo… un PDF» (31/08) | `--tipo explicacion` |
 | `columnas-inventadas` | #10 columna Fuente; #9 columnas derivadas (`--formulario` compara contra la plantilla) | Excel |
 | `amarillo-y-antes` | #6 «todo amarillo»; modo corrección 06/10 | Excel (las bandas del formulario no cuentan) |
@@ -58,8 +58,10 @@ puede adivinar:
 | `--tipo proyectar` / `leer` / `a3` / `mail` / `html` / `explicacion` | el tipo de entregable, si la extensión no alcanza (un PowerPoint de más de 40 cm de ancho se toma solo como A3) |
 | `--formulario <plantilla.xlsx>` | las columnas que la plantilla no tiene son columnas inventadas |
 
-Sale **0** si todo lo que corrió está en verde, **1** si algo frena y **3** si alguna regla no pudo correr (por ejemplo,
-sin `node` no corre la voz): una regla que no corrió no es un verde.
+Sale **0** si todo lo que corrió está en verde, **1** si algo frena, **2** si no sabe leer ese tipo de archivo y **3** si
+alguna regla no pudo correr (por ejemplo, sin `node` no corre la voz) o el archivo está roto: una regla que no corrió no
+es un verde. Detectar un formulario por su código apaga las reglas de diseño, **no** el freno del logo: ese solo lo apaga
+un `--oficial` dicho por la persona.
 
 **Casos de respuesta conocida** (`python scripts/revisar.py --selftest`, test `__tests__/scripts/revisar.test.mjs`): los
 13 entregables devueltos, como gemelos mínimos armados en `scripts/_lib/revisarCasos.py` con la cita de Fak al lado

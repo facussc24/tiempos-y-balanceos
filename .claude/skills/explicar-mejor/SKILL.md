@@ -113,6 +113,19 @@ lleva crédito al final por su licencia) y el armador `tools/claude-area/video/a
 arma el video desde un `escenas.json`. El guion se escribe con las reglas del escalón 1 y las láminas
 son los dibujos del escalón 2. Al 02/10/2026 este escalón no se probó todavía para una explicación.
 
+## Cuando la explicación pasa a un formato para mostrar (PowerPoint, hoja de una página)
+
+Las plantillas salen del tema de la casa (`python scripts/plantillasCasa.py`, deja `templates/CASA_*`; reglas en
+`docs/FORMATO_CASA.md`):
+
+- **PowerPoint para proyectar** (`CASA_PRESENTACION_PROYECTAR.pptx`): título que AFIRMA en una oración, UNA evidencia
+  por lámina, cuerpo de 18 pt o más (Garner et al. 2013, d = 0,81).
+- **PowerPoint para mandar y leer** (`CASA_PRESENTACION_LEER.pptx`): lo mismo con 10 pt o más (sale de un solo caso,
+  el IMDS del 09/10). Los dos tipos no se mezclan en el mismo archivo.
+- **Hoja de una página A3** (`CASA_HOJA_A3.pptx`): la primera línea dice qué pasa y qué se necesita, de quién y para
+  cuándo; abajo los 6 bloques del A3 (situación, objetivo, causa, contramedida, plan, seguimiento).
+- Antes de mostrarla: `python scripts/revisar.py <archivo>` (`--tipo proyectar` si es para proyectar).
+
 ## Lo que no cambia
 
 - **Nada inventado.** Cada dato del texto, del dibujo y de la página está en una fuente. Lo que falta

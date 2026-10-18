@@ -6,7 +6,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, readFileSync, copyFileSync, mkdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, copyFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -76,6 +76,17 @@ describe('tema de la casa', () => {
       .filter((p) => { try { return readFileSync(join(RAIZ, p), 'utf8').includes('logo_barack.png'); } catch { return false; } });
     expect(quienLoNombra).toEqual([]);
     expect(readFileSync(join(RAIZ, 'scripts/lamina_proceso/insert_patagonia.py'), 'utf8')).toMatch(/temaCasa\.logo\(\)/);
+  });
+
+  // la lamina regenerada el 18/10 vive en exports/ (fuera de git): este control corre solo en la PC que la tiene
+  const LAMINA = 'C:/Dev/BarackMercosul/exports/LAMINA_PROCESO_INSERT_LOGO_OFICIAL_20261018/Proceso de fabricacion - Insert Patagonia.pptx';
+  it.runIf(hayPython && existsSync(LAMINA))('la lamina del Insert regenerada lleva adentro el logo oficial (sha256) y no el viejo', () => {
+    const codigo = 'import zipfile, hashlib, sys\nz = zipfile.ZipFile(sys.argv[1])\nfor n in z.namelist():\n    if n.startswith("ppt/media/"): print(hashlib.sha256(z.read(n)).hexdigest())';
+    const r = spawnSync(PY, ['-c', codigo, LAMINA], { encoding: 'utf8' });
+    expect(r.status, r.stderr).toBe(0);
+    const hashes = r.stdout.split(/\r?\n/).filter(Boolean);
+    expect(hashes).toContain(OFICIAL);
+    expect(hashes.some((h) => h.startsWith('deef25cd'))).toBe(false);
   });
 
   const MIGRADOS = ['scripts/img/generar_hojas_img.py', 'scripts/hotmelt/generar_hojas_hotmelt.py', 'scripts/hotmelt/generar_hojas_hotmelt_a3.py', 'scripts/hotmelt/hoja_pptx.py', 'scripts/novax/generar_hojas_insert.py'];

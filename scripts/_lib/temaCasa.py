@@ -39,7 +39,11 @@ _CACHE = {}
 
 def cargar(ruta_tema=TEMA_JSON, raiz=RAIZ):
     """El tema como dict, con 'logo.ruta' absoluta. Frena (TemaError) si el logo no es el oficial."""
-    clave = (os.path.abspath(ruta_tema), os.path.abspath(raiz))
+    try:  # la fecha de tema.json va en la clave, igual que en temaCasa.mjs: un proceso largo toma el tema nuevo
+        mtime = os.path.getmtime(ruta_tema)
+    except OSError:
+        mtime = 0
+    clave = (os.path.abspath(ruta_tema), os.path.abspath(raiz), mtime)
     if clave in _CACHE:
         return _CACHE[clave]
     try:
