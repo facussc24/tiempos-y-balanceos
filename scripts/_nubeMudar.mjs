@@ -197,7 +197,9 @@ export function main(argv = process.argv.slice(2)) {
 
     // 2) Mover, de a una, y contar de nuevo en el lugar nuevo.
     const registro = { fecha: new Date().toISOString(), biblioteca: bib, unica: CANON_CARPETAS.unica, carpetas: [] };
-    const salida = rutaSalida(`nube_mudanza_${new Date().toISOString().slice(0, 10)}.json`);
+    // el registro va al lado del simulado (exports/explicaciones del checkout principal); fecha LOCAL, no la de UTC
+    const hoy = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    const salida = join(dirname(rutaSalida('x.md')), `nube_mudanza_${hoy}.json`);
     const guardar = () => { try { mkdirSync(dirname(salida), { recursive: true }); writeFileSync(salida, JSON.stringify(registro, null, 2), 'utf8'); } catch (e) { console.error(`(no pude guardar el registro: ${e.message})`); } };
     const sinSubirAhora = (f) => {
         const m = medirPorAtributos(bib, [relBib(f.origen)], { topeSeg: 600 }).carpetas[0];

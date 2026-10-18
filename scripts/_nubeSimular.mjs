@@ -304,7 +304,7 @@ function main() {
     writeFileSync(salida, md, 'utf8');
     const nCod = new Set([...refs.values()].flat().filter((x) => x.categoria !== 'texto').map((x) => `${x.origen}|${x.ruta}`)).size;
     console.log(`Listo: ${salida}`);
-    console.log(`${plan.filas.length} carpetas en la lista (${aMedir.length} medidas), ${nCod} archivos de codigo o tarea que las buscan por nombre, ${dependNubeRutas.length} que dependen de Claude Fak por nubeRutas.mjs. Nada se movio.`);
+    console.log(`${plan.filas.length} carpetas en la lista (${aMedir.length} medidas), ${nCod} archivos de codigo o tarea que las buscan por nombre, ${dependNubeRutas.length} que buscan la carpeta de la memoria por nubeRutas.mjs. Este simulado no mueve nada.`);
 }
 
 if (process.argv[1] && resolve(fileURLToPath(import.meta.url)).toLowerCase() === resolve(process.argv[1]).toLowerCase()) main();
