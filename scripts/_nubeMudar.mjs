@@ -135,7 +135,10 @@ export function moverYVerificar(f, { relBib = (p) => p, sinSubirAhora = () => 0,
     } catch (e) {
         return { ...fila, ok: false, motivo: `no se pudo mover (${e.code || ''} ${e.message}); la carpeta quedo donde estaba` };
     }
-    const despues = contar(f.destino);
+    let despues;
+    try { despues = contar(f.destino); } catch (e) {
+        return { ...fila, ok: false, motivo: `se movio, pero no se pudo contar en el lugar nuevo (${e.code || ''} ${e.message}): revisar a mano antes de seguir` };
+    }
     const cmp = comparar(antes, despues);
     fila.despues = { archivos: despues.archivos, carpetas: despues.carpetas, bytes: despues.bytes };
     fila.origen_sigue = existsSync(f.origen);
@@ -199,8 +202,12 @@ export function main(argv = process.argv.slice(2)) {
     const registro = { fecha: new Date().toISOString(), biblioteca: bib, unica: CANON_CARPETAS.unica, carpetas: [] };
     // el registro va al lado del simulado (exports/explicaciones del checkout principal); fecha LOCAL, no la de UTC
     const hoy = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-    const salida = join(dirname(rutaSalida('x.md')), `nube_mudanza_${hoy}.json`);
-    const guardar = () => { try { mkdirSync(dirname(salida), { recursive: true }); writeFileSync(salida, JSON.stringify(registro, null, 2), 'utf8'); } catch (e) { console.error(`(no pude guardar el registro: ${e.message})`); } };
+    // una segunda corrida del mismo dia no pisa la primera: lleva la hora en el nombre (auditor 17/10, Nit 1)
+    let salida = join(dirname(rutaSalida('x.md')), `nube_mudanza_${hoy}.json`);
+    if (existsSync(salida)) salida = salida.replace(/\.json$/, `_${new Date().toTimeString().slice(0, 5).replace(':', '')}.json`);
+    // sin registro no se mueve: lo que se movio tiene que quedar anotado con su conteo
+    const guardar = () => { mkdirSync(dirname(salida), { recursive: true }); writeFileSync(salida, JSON.stringify(registro, null, 2), 'utf8'); };
+    try { guardar(); } catch (e) { linea(`[X] No puedo escribir el registro (${salida}): ${e.message}. No se movio nada.`); return 1; }
     const sinSubirAhora = (f) => {
         const m = medirPorAtributos(bib, [relBib(f.origen)], { topeSeg: 600 }).carpetas[0];
         return m && m.terminado ? m.total.sin_subir : null;

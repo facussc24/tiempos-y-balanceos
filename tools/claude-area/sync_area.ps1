@@ -6,8 +6,8 @@
     1) ACTUALIZAR  node _paquete.mjs --actualizar --proyecto area   (baja lo nuevo, firmado; nunca pisa ni borra;
                                                                      deja la salud de la PC en el buzon de la nube)
     2) AVISOS      sube la cola local de avisos del plugin (<estado>\avisos-pendientes\<pc>\) al buzon (mover, no copiar)
-    3) INVENTARIO  una vez por semana, inventario.ps1 -> <buzon>\inventario\<pc>.json   (<buzon> = 4- BUZON, ver "EL BUZON")
-    4) SALUD       completa en <buzon>\salud\<pc>.json lo que el programa de la base no sabe (disco, Y:, Z:, Python, politica)
+    3) INVENTARIO  una vez por semana, inventario.ps1 -> 4- BUZON\inventario\<pc>.json
+    4) SALUD       completa en 4- BUZON\salud\<pc>.json lo que el programa de la base no sabe (disco, Y:, Z:, Python, politica)
     5) MAILS       node mails_area.mjs: sube a la nube de Ingenieria los mails de trabajo de ESTA PC, SOLO si la lista
                    de personas publicada dice "mails": "sube" para su persona (apagado por defecto; sin Claude; solo lee
                    Outlook). Corre antes de la salud, que anota como le fue. Solo con la nube de Barack a la vista.
@@ -19,16 +19,11 @@
   red, un pendrive), el programa de la base usa la carpeta de la que se instalo esta PC (<estado>\origen.json), si hoy
   esta a la vista. Aca NO se le pasa --nube en ese caso: la elige el. Esta tarea mira origen.json solo para saber si
   esa carpeta trae buzon: avisos, inventario y salud van a su "4- BUZON" unicamente si tiene la forma de la nube
-  (<carpeta del area>\1- PUBLICADO, con el nombre del area nuevo o viejo); en una copia con otro nombre no se escribe nada y los avisos quedan en la cola.
-
-  EL BUZON (17/10/2026). Desde la mudanza a "ASISTENTE INGENIERIA" el buzon (4- BUZON) ya no cuelga del area: esta aparte, en
-  "ASISTENTE INGENIERIA\3- BUZON (lo que mandan las PC)". Se usa el buzon nuevo si existe y, si no, el de antes (el que cuelga del
-  area, o el que quedo en la raiz de la biblioteca). Los nombres, en $AREA_NUBE y $BUZON_NUBE (abajo), vienen de
-  scripts/_lib/nubeCarpetas.data.json: este programa corre en las PC sin el repo.
+  (CLAUDE POR AREA\1- PUBLICADO); en una copia con otro nombre no se escribe nada y los avisos quedan en la cola.
 
   Parametros (para probar):
     -HomeDir     la carpeta de la PC (por defecto CLAUDE_AREA_HOME, o la de arriba de publicado\programas, o C:\ClaudeBarack)
-    -Nube        la carpeta del area (la nueva, en "ASISTENTE INGENIERIA\9- VIEJO (no usar)", o la de antes) o directamente su 1- PUBLICADO (por defecto CLAUDE_AREA_NUBE o se la pide al programa)
+    -Nube        la carpeta CLAUDE POR AREA o directamente su 1- PUBLICADO (por defecto CLAUDE_AREA_NUBE o se la pide al programa)
     -EstadoDir   donde viven log, estado y la clave publica (por defecto CLAUDE_AREA_ESTADO o %LOCALAPPDATA%\BarackEquipo)
     -SinActualizar / -SinAvisos / -SinInventario / -SinMails   saltean un paso     -ForzarInventario  lo corre aunque no haya pasado la semana
     -ClavesInventario <claves del registro>         SOLO PRUEBAS: se las pasa a inventario.ps1 -Claves
@@ -75,43 +70,6 @@ param(
 $ErrorActionPreference = 'Continue'
 $TAREA = 'Barack - Claude por area'
 $DIAS_INVENTARIO = 7
-
-# ---- donde esta el area y el buzon en la nube (mudanza del 17/10/2026) --------------------------------------
-# Rutas relativas a la biblioteca de Ingenieria, el lugar NUEVO primero y despues los viejos. Regla unica: la nueva si existe;
-# si no, la primera vieja que exista. FUENTE: scripts/_lib/nubeCarpetas.data.json (claves area_vieja y buzon). Van escritas
-# aca porque este programa viaja firmado a cada PC y corre sin el repo; claudeAreaInstalar.test.mjs comprueba que coincidan.
-$AREA_NUBE = @('ASISTENTE INGENIERIA\9- VIEJO (no usar)\_CUARENTENA_CLAUDE POR AREA', '_CUARENTENA_CLAUDE POR AREA', 'CLAUDE POR AREA')
-$BUZON_NUBE = @('ASISTENTE INGENIERIA\3- BUZON (lo que mandan las PC)\4- BUZON', '_CUARENTENA_CLAUDE POR AREA\4- BUZON', 'CLAUDE POR AREA\4- BUZON')
-$NOMBRES_AREA = @($AREA_NUBE | ForEach-Object { Split-Path -Leaf $_ })
-
-# Desde la ruta de la carpeta del area: la biblioteca de la que cuelga y si esta en su lugar nuevo ($null si el nombre no es de ningun lugar del canon).
-function Lugar-Del-Area([string]$area) {
-  $a = $area.TrimEnd('\')
-  for ($i = 0; $i -lt $AREA_NUBE.Count; $i++) {
-    $rel = '\' + $AREA_NUBE[$i]
-    if ($a.Length -gt $rel.Length -and $a.EndsWith($rel, [StringComparison]::OrdinalIgnoreCase)) {
-      $bib = $a.Substring(0, $a.Length - $rel.Length)
-      if ($bib -match '^[A-Za-z]:$') { $bib += '\' }
-      return @{ Biblioteca = $bib; EnLaNueva = ($i -eq 0) }
-    }
-  }
-  return $null
-}
-
-# El buzon: ya NO cuelga del area. El nuevo si existe; si no, el primer viejo que exista; si no hay ninguno, el nuevo cuando el area
-# ya esta en su lugar nuevo o la mudanza ya empezo (existe la carpeta unica) y, si no, el de siempre (colgado del area). Mismo criterio que carpetaBuzon() de _paquete.mjs: las dos
-# puntas (la salud que deja el programa de la base y la que completa esta tarea) tienen que caer en la misma carpeta.
-function Resolver-Buzon([string]$area) {
-  $lugar = Lugar-Del-Area $area
-  if ($lugar) {
-    foreach ($rel in $BUZON_NUBE) {
-      $p = Join-Path $lugar.Biblioteca $rel
-      if (Test-Path -LiteralPath $p -PathType Container) { return $p }
-    }
-    if ($lugar.EnLaNueva -or (Test-Path -LiteralPath (Join-Path $lugar.Biblioteca ($BUZON_NUBE[0] -split '\\')[0]) -PathType Container)) { return (Join-Path $lugar.Biblioteca $BUZON_NUBE[0]) }
-  }
-  return (Join-Path $area '4- BUZON')
-}
 
 # ---- todo o nada (CONTRATO): o las tres rutas son las reales o las tres son de prueba ---------------------
 # Una mezcla (una PC de prueba con la nube real, o el estado real) escribiria salud o avisos falsos en la nube
@@ -439,15 +397,14 @@ try {
   # El buzon (avisos, inventario, salud): el de la nube; con la recordada, solo si trae la forma de la nube.
   $PubBuzon = $Pub
   if ($Recordada) {
-    if ((Split-Path -Leaf $Recordada) -eq '1- PUBLICADO' -and ($NOMBRES_AREA -contains (Split-Path -Leaf (Split-Path -Parent $Recordada)))) { $PubBuzon = $Recordada }
+    if ((Split-Path -Leaf $Recordada) -eq '1- PUBLICADO' -and (Split-Path -Leaf (Split-Path -Parent $Recordada)) -eq 'CLAUDE POR AREA') { $PubBuzon = $Recordada }
     Log ('nube: no la veo por nombre; uso la carpeta de donde se instalo esta PC (' + $Recordada + ')' + $(if (-not $PubBuzon) { ' - sin buzon: no trae la forma de la nube' } else { '' }))
   }
   $estado.publicado = $(if ($Recordada) { $Recordada } else { $Pub })
   $estado.nube = $(if ($Recordada) { 'recordada' } elseif ($Pub) { $(if ($nubeIndicada) { 'indicada' } else { 'por_nombre' }) } else { 'sin_nube' })
   $Buzon = $null
-  $RaizArea = $null
-  # $RaizArea es la carpeta del AREA (de ahi la ve mails_area.mjs); el buzon se resuelve aparte porque ya no cuelga del area
-  if ($PubBuzon) { $RaizArea = Split-Path -Parent $PubBuzon; $Buzon = Resolver-Buzon $RaizArea }
+  $RaizBuzon = $null
+  if ($PubBuzon) { $RaizBuzon = Split-Path -Parent $PubBuzon; $Buzon = Join-Path $RaizBuzon '4- BUZON' }
   $pc = Nombre-Pc
 
   # Una carpeta RECORDADA recibe algo de esta PC (avisos, inventario, salud) SOLO si la firma verifico en ESTA corrida: el
@@ -495,14 +452,14 @@ try {
     Log ('la firma de la carpeta de donde se instalo esta PC (' + $Recordada + ') no verifico en esta corrida: no escribo nada en la carpeta recordada (ni avisos, ni inventario, ni salud)')
     $PubBuzon = $null
     $Buzon = $null
-    $RaizArea = $null
+    $RaizBuzon = $null
   }
 
   # ---- 2) la cola de avisos del plugin -> buzon (mover uno por uno, sin pisar; -Simular solo lo lista) ----
   $cola = Join-Path $EstadoDir ('avisos-pendientes\' + $pc)
   if ($SinAvisos) { Log 'avisos: salteado (-SinAvisos)' }
   elseif ($recordadaSinVerificar) { $estado.avisos = @{ resultado = 'sin_verificar' }; Log 'avisos: la firma de la carpeta recordada no verifico, quedan en la cola local' }
-  elseif (-not $Buzon -or -not (Test-Path -LiteralPath $RaizArea)) { $estado.avisos = @{ resultado = 'sin_nube' }; Log 'avisos: no veo un buzon de la nube, quedan en la cola local' }
+  elseif (-not $Buzon -or -not (Test-Path -LiteralPath $RaizBuzon)) { $estado.avisos = @{ resultado = 'sin_nube' }; Log 'avisos: no veo un buzon de la nube, quedan en la cola local' }
   elseif (-not (Test-Path $cola)) { $estado.avisos = @{ resultado = 'sin_cola'; movidos = 0 } }
   else {
     $destinoAvisos = Join-Path $Buzon ('avisos\' + $pc)
@@ -538,7 +495,7 @@ try {
   if ($SinInventario) { Log 'inventario: salteado (-SinInventario)' }
   elseif (-not $toca) { $estado.inventario = @{ resultado = 'no_toca' } }
   elseif ($recordadaSinVerificar) { $estado.inventario = @{ resultado = 'sin_verificar' }; Log 'inventario: la firma de la carpeta recordada no verifico, no lo subo' }
-  elseif (-not $Buzon -or -not (Test-Path -LiteralPath $RaizArea)) { $estado.inventario = @{ resultado = 'sin_nube' } }
+  elseif (-not $Buzon -or -not (Test-Path -LiteralPath $RaizBuzon)) { $estado.inventario = @{ resultado = 'sin_nube' } }
   elseif (-not (Test-Path $invScript)) { $estado.inventario = @{ resultado = 'sin_script' }; Fallo "no esta $invScript" }
   else {
     $ps = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
@@ -562,7 +519,7 @@ try {
   if ($SinMails) { Log 'mails: salteado (-SinMails)' }
   elseif (-not (Test-Path $mailsScript)) { $resumenMails = 'sin_script'; $estado.mails = @{ resultado = $resumenMails } }
   elseif (-not $node) { $resumenMails = 'sin_node'; $estado.mails = @{ resultado = $resumenMails } }
-  elseif ($Recordada -or $recordadaSinVerificar -or -not $RaizArea -or -not (Test-Path -LiteralPath $RaizArea)) {
+  elseif ($Recordada -or $recordadaSinVerificar -or -not $RaizBuzon -or -not (Test-Path -LiteralPath $RaizBuzon)) {
     # solo con la nube de Barack a la vista (por nombre o indicada): a una carpeta recordada (un pendrive, una copia) no van mails
     $resumenMails = 'sin_nube'; $estado.mails = @{ resultado = $resumenMails }
   }
@@ -573,7 +530,7 @@ try {
     Log 'mails: el paso de actualizar no verifico lo instalado en esta corrida; no leo ni subo nada (se reintenta)'
   }
   else {
-    $args5 = @($mailsScript, '--home', $HomeDir, '--raiz-nube', $RaizArea, '--estado', $EstadoDir, '--max-minutos', [string]([math]::Max(2, $MinutosMails - 2)))
+    $args5 = @($mailsScript, '--home', $HomeDir, '--raiz-nube', $RaizBuzon, '--estado', $EstadoDir, '--max-minutos', [string]([math]::Max(2, $MinutosMails - 2)))
     if ($Simular) { $args5 += '--simular' }
     $corridaMails = Correr-Node $args5 $MinutosMails $Pub
     if ($corridaMails.Cortado) { $resumenMails = 'cortado'; $estado.mails = @{ resultado = $resumenMails }; Fallo "mails paso de $MinutosMails min y lo corte" }
@@ -599,7 +556,7 @@ try {
 
   # ---- 4) salud: lo que el programa de la base no sabe ---------------------------------------------------
   if ($recordadaSinVerificar) { $estado.salud = @{ resultado = 'sin_verificar' } }
-  elseif ($Buzon -and (Test-Path -LiteralPath $RaizArea)) {
+  elseif ($Buzon -and (Test-Path -LiteralPath $RaizBuzon)) {
     $rutaSalud = Join-Path $Buzon ('salud\' + $pc + '.json')
     if (-not (Test-Path $rutaSalud)) { $estado.salud = @{ resultado = 'sin_salud' } }
     else {

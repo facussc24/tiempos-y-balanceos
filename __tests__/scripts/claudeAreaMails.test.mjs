@@ -970,53 +970,53 @@ describe('mails_area: la mudanza del 17/10/2026 (carpeta de mails en el lugar nu
         return { t, bib, en: (...tramos) => path.join(bib, ...tramos) };
     }
 
-    it('los nombres que lleva adentro coinciden, en orden, con «nueva» y «viejas» del canon (claves mails y area_vieja)', () => {
+    it('los mails coinciden, en orden, con «nueva» y «viejas» del canon; el asistente por area se busca SOLO por su nombre sin cuarentena', () => {
         expect(MAILS_TRAMOS).toEqual(delCanon('mails'));
-        expect(AREA_VIEJA_TRAMOS).toEqual(delCanon('area_vieja'));
         expect(MAILS_TRAMOS[0]).toEqual(MAILS_NUEVA);
-        expect(AREA_VIEJA_TRAMOS[0]).toEqual(AREA_NUEVA);
+        // auditor 17/10/2026, I1: la cuarentena del 06/10 se hizo cambiando el nombre para que nadie lo encuentre; la mudanza
+        // no la revive. El nombre sin cuarentena es uno de los viejos del canon; los de cuarentena y 9- VIEJO, no se aceptan.
+        expect(AREA_VIEJA_TRAMOS).toEqual([['CLAUDE POR AREA']]);
+        expect(delCanon('area_vieja')).toContainEqual(['CLAUDE POR AREA']);
     });
 
     describe('carpetaDeMails(raizNube)', () => {
-        it('layout de antes: la «mails» de «Claude Barack» (o de «_CUARENTENA_Claude Barack») a partir de «CLAUDE POR AREA» (o de la que esta en cuarentena)', () => {
+        it('layout de antes: la «mails» de «Claude Barack» (o de «_CUARENTENA_Claude Barack») a partir de «CLAUDE POR AREA»', () => {
             const a = biblioteca([['CLAUDE POR AREA'], ['Claude Barack', 'mails']]);
             expect(carpetaDeMails(a.en('CLAUDE POR AREA'))).toBe(a.en('Claude Barack', 'mails'));
-            const b = biblioteca([['_CUARENTENA_CLAUDE POR AREA'], ['_CUARENTENA_Claude Barack', 'mails']]);
-            expect(carpetaDeMails(b.en('_CUARENTENA_CLAUDE POR AREA'))).toBe(b.en('_CUARENTENA_Claude Barack', 'mails'));
+            const b = biblioteca([['CLAUDE POR AREA'], ['_CUARENTENA_Claude Barack', 'mails']]);
+            expect(carpetaDeMails(b.en('CLAUDE POR AREA'))).toBe(b.en('_CUARENTENA_Claude Barack', 'mails'));
         });
-        it('layout nuevo: la «mails» de «ASISTENTE INGENIERIA\\4- MAILS DEL EQUIPO», a partir del asistente por area que quedo en «9- VIEJO (no usar)»', () => {
-            const a = biblioteca([AREA_NUEVA, MAILS_NUEVA]);
-            expect(carpetaDeMails(a.en(...AREA_NUEVA))).toBe(a.en(...MAILS_NUEVA));
-        });
-        it('si estan los dos, gana el nuevo (a partir de cualquiera de las dos carpetas del asistente por area)', () => {
-            const a = biblioteca([['CLAUDE POR AREA'], AREA_NUEVA, ['Claude Barack', 'mails'], MAILS_NUEVA]);
+        it('layout nuevo: a partir de «CLAUDE POR AREA», la «mails» de «ASISTENTE INGENIERIA\\4- MAILS DEL EQUIPO»; si estan las dos, gana la nueva', () => {
+            const a = biblioteca([['CLAUDE POR AREA'], MAILS_NUEVA]);
             expect(carpetaDeMails(a.en('CLAUDE POR AREA'))).toBe(a.en(...MAILS_NUEVA));
-            expect(carpetaDeMails(a.en(...AREA_NUEVA))).toBe(a.en(...MAILS_NUEVA));
+            const b = biblioteca([['CLAUDE POR AREA'], ['Claude Barack', 'mails'], MAILS_NUEVA]);
+            expect(carpetaDeMails(b.en('CLAUDE POR AREA'))).toBe(b.en(...MAILS_NUEVA));
         });
-        it('la regla es la del canon: la «mails» nueva si existe; si la nueva todavia esta vacia (mudanza a medias), la vieja que tiene los mails', () => {
-            const a = biblioteca([AREA_NUEVA, ['ASISTENTE INGENIERIA', '4- MAILS DEL EQUIPO'], ['Claude Barack', 'mails', '_entrada']]);
-            expect(carpetaDeMails(a.en(...AREA_NUEVA))).toBe(a.en('Claude Barack', 'mails'));
+        it('ROJO: el asistente en cuarentena (en la raiz o en 9- VIEJO) no se usa, aunque los mails esten (la mudanza no lo revive)', () => {
+            const a = biblioteca([AREA_NUEVA, MAILS_NUEVA, ['_CUARENTENA_CLAUDE POR AREA']]);
+            expect(carpetaDeMails(a.en(...AREA_NUEVA))).toBeNull();
+            expect(carpetaDeMails(a.en('_CUARENTENA_CLAUDE POR AREA'))).toBeNull();
         });
-        it('todavia no hay ninguna «mails»: se crea en el lugar NUEVO si ya esta su carpeta; si no, no se crea (ni en el lugar de antes ni inventando la biblioteca)', () => {
-            const a = biblioteca([AREA_NUEVA, ['ASISTENTE INGENIERIA', '4- MAILS DEL EQUIPO'], ['Claude Barack']]);
-            expect(carpetaDeMails(a.en(...AREA_NUEVA))).toBe(a.en(...MAILS_NUEVA));
-            const b = biblioteca([AREA_NUEVA, ['Claude Barack']]);
-            expect(carpetaDeMails(b.en(...AREA_NUEVA))).toBeNull();
-            const c = biblioteca([AREA_NUEVA]);
-            expect(carpetaDeMails(c.en(...AREA_NUEVA))).toBeNull();
+        it('la regla es la del canon: si la nueva todavia esta vacia (mudanza a medias), la vieja que tiene los mails; sin ninguna, la nueva solo si esta su carpeta', () => {
+            const a = biblioteca([['CLAUDE POR AREA'], ['ASISTENTE INGENIERIA', '4- MAILS DEL EQUIPO'], ['Claude Barack', 'mails', '_entrada']]);
+            expect(carpetaDeMails(a.en('CLAUDE POR AREA'))).toBe(a.en('Claude Barack', 'mails'));
+            const b = biblioteca([['CLAUDE POR AREA'], ['ASISTENTE INGENIERIA', '4- MAILS DEL EQUIPO'], ['Claude Barack']]);
+            expect(carpetaDeMails(b.en('CLAUDE POR AREA'))).toBe(b.en(...MAILS_NUEVA));
+            const c = biblioteca([['CLAUDE POR AREA'], ['Claude Barack']]);
+            expect(carpetaDeMails(c.en('CLAUDE POR AREA'))).toBeNull();
         });
-        it('sigue exigiendo que sea la carpeta del asistente por area (por nombre y por ubicacion) y que exista', () => {
+        it('sigue exigiendo que sea la carpeta del asistente por area (por nombre y en la raiz) y que exista', () => {
             const a = biblioteca([['otra carpeta'], ['ASISTENTE INGENIERIA', 'CLAUDE POR AREA'], ['Claude Barack', 'mails'], MAILS_NUEVA]);
             expect(carpetaDeMails(a.en('otra carpeta'))).toBeNull();
-            expect(carpetaDeMails(a.en('ASISTENTE INGENIERIA', 'CLAUDE POR AREA'))).toBeNull();      // el nombre sin la ubicacion de la mudanza
-            expect(carpetaDeMails(a.en(...AREA_NUEVA))).toBeNull();                                    // no existe
+            expect(carpetaDeMails(a.en('ASISTENTE INGENIERIA', 'CLAUDE POR AREA'))).toBeNull();
+            expect(carpetaDeMails(path.join(a.bib, 'CLAUDE POR AREA'))).toBeNull();      // no existe
         });
         it('una carpeta del lugar nuevo que es un enlace a otro lado no se usa', () => {
-            const a = biblioteca([AREA_NUEVA, ['ASISTENTE INGENIERIA']]);
+            const a = biblioteca([['CLAUDE POR AREA'], ['ASISTENTE INGENIERIA']]);
             const otroLado = path.join(a.t, 'otro-lado');
             fs.mkdirSync(path.join(otroLado, 'mails'), { recursive: true });
             fs.symlinkSync(otroLado, a.en('ASISTENTE INGENIERIA', '4- MAILS DEL EQUIPO'), 'junction');
-            expect(carpetaDeMails(a.en(...AREA_NUEVA))).toBeNull();
+            expect(carpetaDeMails(a.en('CLAUDE POR AREA'))).toBeNull();
         });
     });
 
@@ -1051,8 +1051,8 @@ describe('mails_area: la mudanza del 17/10/2026 (carpeta de mails en el lugar nu
             pc.raizNube = b.en(...raizNube);
             return { pc, b };
         }
-        it('layout nuevo, por la carpeta del asistente por area: el mail queda en «4- MAILS DEL EQUIPO\\mails\\_entrada»', async () => {
-            const { pc, b } = pcCon([AREA_NUEVA, MAILS_NUEVA], AREA_NUEVA);
+        it('layout nuevo, por «CLAUDE POR AREA»: el mail queda en «4- MAILS DEL EQUIPO\\mails\\_entrada»', async () => {
+            const { pc, b } = pcCon([['CLAUDE POR AREA'], MAILS_NUEVA], ['CLAUDE POR AREA']);
             const r = await hoy(pc);
             expect([r.codigo, r.resumen.resultado]).toEqual([0, 'ok']);
             expect(archivos(b.en('ASISTENTE INGENIERIA'))).toEqual([path.join('4- MAILS DEL EQUIPO', 'mails', '_entrada', 'c.prueba', '20261005-160000.jsonl')]);
@@ -1064,7 +1064,7 @@ describe('mails_area: la mudanza del 17/10/2026 (carpeta de mails en el lugar nu
             expect(archivos(b.en('Claude Barack'))).toEqual([path.join('mails', '_entrada', 'c.prueba', '20261005-160000.jsonl')]);
         });
         it('los dos layouts a la vez: sube al nuevo y no escribe nada en el viejo', async () => {
-            const { pc, b } = pcCon([['CLAUDE POR AREA'], AREA_NUEVA, ['Claude Barack', 'mails', '_entrada'], MAILS_NUEVA], ['CLAUDE POR AREA']);
+            const { pc, b } = pcCon([['CLAUDE POR AREA'], ['Claude Barack', 'mails', '_entrada'], MAILS_NUEVA], ['CLAUDE POR AREA']);
             const r = await hoy(pc);
             expect([r.codigo, r.resumen.resultado]).toEqual([0, 'ok']);
             expect(archivos(b.en(...MAILS_NUEVA))).toEqual([path.join('_entrada', 'c.prueba', '20261005-160000.jsonl')]);

@@ -58,7 +58,8 @@ variable `BARACK_NUBE_CEREBRO` apuntando a la carpeta nueva. El de la rama no se
 worktree porque usa como «repo» la carpeta del worktree y habría subido o bajado `.env.example` y las claves contra esa
 carpeta. En seco, el de la rama apunta solo a la carpeta nueva.
 
-**Rutas largas:** 6.513 rutas pasan de 260 caracteres en esta PC (ya había 928 antes y OneDrive las sincronizaba;
+**Rutas largas:** unas 6.500 rutas pasan de 260 caracteres en esta PC (6.513 antes de mover, 6.458 medidas después por
+el auditor) (ya había 928 antes y OneDrive las sincronizaba;
 `LongPathsEnabled = 1`). El tope que manda es el de SharePoint, 400: la más larga quedó en 361. `_nubeMudar.mjs`
 frena si alguna pasa de 400.
 
@@ -86,7 +87,10 @@ nombres adentro, y un test verifica que coincidan con el canon.
 | `tools/claude-area/mails_pc/instalar.ps1`, `subir.ps1` | los mails y la lista de lo privado | primero el lugar nuevo, después la búsqueda de siempre |
 | `tools/claude-area/mails_solo/instalar_mails_solo.ps1`, `subir_mails.ps1` | los mails | nuevo, `_CUARENTENA_Claude Barack`, `Claude Barack` |
 | `tools/claude-area/mails_area.mjs` | los mails desde el área | por el canon (tramos adentro) |
-| `scripts/_paquete.mjs` (constante `RUTAS_NUBE`), `tools/claude-area/sync_area.ps1`, `vigia.mjs`, `antes_de_la_reunion.py`, `ensayo_pc_nueva.sh`, `hola/Instalar Claude (doble clic).cmd` | el asistente por área viejo, su buzón y el paquete «Base Claude» | primero `9- VIEJO` y `3- BUZON`, después el lugar viejo. `_paquete.mjs` viaja solo a otras PC y lleva los nombres adentro (un test los compara con el canon). Si una biblioteca sin mudar no tiene buzón, sigue colgándolo del área, como siempre |
+| `tools/claude-area/vigia.mjs` | el buzón (solo lo lee) | clave `buzon`: `3- BUZON`, y si no el lugar viejo |
+| `tools/claude-area/antes_de_la_reunion.py` | el estado del asistente por área (solo lo lee e informa) | clave `area_vieja` |
+| `tools/claude-area/ensayo_pc_nueva.sh` | una nube de mentira | el nombre en una variable |
+| `scripts/_paquete.mjs`, `tools/claude-area/sync_area.ps1`, `hola/Instalar Claude (doble clic).cmd` | el asistente por área y el paquete «Base Claude», para USARLOS (publicar, instalar, sincronizar) | **sin cambios, a propósito**: el 06/10 el asistente por área se puso en cuarentena cambiándole el nombre para que estos programas no lo encuentren, y la mudanza no lo revive (lo marcó el auditor: la primera versión de la rama los hacía encontrar `9- VIEJO` y publicar ahí). Siguen buscando solo «CLAUDE POR AREA» y «Base Claude Ingenieria» en la raíz, que ya no existen: no encuentran nada y no publican nada. Los nombres en cuarentena y `9- VIEJO` están solo en el canon de la mudanza |
 | `tools/paquete-equipo/mails_equipo.py`, `sync_equipo.ps1` | — | no buscan ninguna carpeta (reciben la base ya resuelta): solo cambió el texto de ayuda |
 | `scripts/_nubeSimular.mjs` + `nubeOrden.data.json` | el simulado | dice «no queda nada por mover»; FACUNDO con destino `6-` y su LEEME |
 | `scripts/_nubeMudar.mjs` (nuevo) | la mudanza | `--simular` (por defecto) y `--aplicar` |
@@ -111,6 +115,10 @@ a crear una carpeta vieja: lo revisé en el código (cuando no encuentra la carp
 | `cerebro-guard` | no ve la nube (solo importa en una PC nueva o si otra PC subió después) |
 | Guardián de firma | frena un comando que escriba a mano en `5- FACUNDO…\claude-…` (`_nube.mjs` escribe por dentro y no lo frena) |
 
+**Las sesiones abiertas:** el hook `cerebro-guard`, el aviso de pedidos y el guardián de firma los toman solas en cuanto
+la rama está en main. `CLAUDE.md` y las reglas (`nube-ingenieria`, `api-claude`, `video-maquina`) entran al arrancar:
+una sesión que ya estaba abierta sigue leyendo que los pedidos están en `FACUNDO\` hasta que se la reabre.
+
 **Cómo se pone bien:** fundir la rama en main. Para lo de esta tabla alcanza con eso, porque los hooks y la tarea
 corren desde main. La subida de los mails de esta PC es otra cosa: es un programa instalado aparte (tabla de abajo).
 
@@ -122,7 +130,7 @@ corren desde main. La subida de los mails de esta PC es otra cosa: es un program
 | **CATA** (notebook de Calidad) | (a) Su copia del repo: `_nube.mjs --sincronizar` sale con «NO EXISTE» **antes** de traer el repo de GitHub, así que la versión nueva **no le llega sola**. (b) La subida de los mails de Calidad (tarea «Barack - mails de Calidad»). | (a) Después del push de main: abrir una sesión en `C:\Dev\BarackMercosul` de CATA y correr `git pull` (o dejarle un PEDIDO). (b) Doble clic en `ASISTENTE INGENIERIA\1- INSTALAR (doble clic)\2- Mails de Calidad\Mails-PC-Calidad.cmd` (ya publicado con la versión nueva). |
 | **PC de Carlos** | (a) La subida de sus mails (tarea «Barack - mails de Carlos», programa `mails_solo`): no encuentra la carpeta de mails. Subió bien hasta el 16/10 a las 14:02 (`4- MAILS DEL EQUIPO\mails\_salud\CARLOS.json`). (b) Su asistente sabe que las mejoras están en «MEJORAS CLAUDE». | (a) Su instalador (`Mails-Carlos.cmd` + `mails-carlos\`) estaba en `ACTUALIZACION_CLAUDE_LIMPIO`, que fue a la Papelera el 12/10: hay que armarle uno nuevo. Son los dos `.ps1` de `tools/claude-area/mails_solo/` (versión de la rama) en una carpeta de la nube que Carlos vea, más un `Mails-Carlos.cmd` que corra `powershell -NoProfile -ExecutionPolicy Bypass -File instalar_mails_solo.ps1 -Pc CARLOS -Nombre Carlos` (así lo documenta el `.ps1`, renglones 6-7). Lo arma Claude cuando Fak lo diga; Carlos le hace doble clic. Hasta entonces sus mails nuevos no suben y nada se pierde (quedan en su Outlook). (b) Se corrige solo en la próxima publicación de mejoras (`tools/claude-area/mejoras/publicar.mjs` ya escribe la carpeta nueva). |
 | PC de Pedro, PC de Federico | nada (el simulado lo midió: sus programas no buscan estas carpetas) | — |
-| PC con el asistente por área viejo o el paquete «Base Claude» (en cuarentena) | dejan de encontrar su carpeta | no se reinstalan: están en cuarentena desde el 06/10 |
+| PC con el asistente por área viejo o el paquete «Base Claude» (en cuarentena) | el área ya no la encontraban desde la cuarentena del 06/10; el paquete «Base Claude» deja de encontrarse ahora (pasó a `9- VIEJO`) | no se reinstalan: están en cuarentena. Ni el código de main ni el de la rama los hacen encontrar `9- VIEJO` |
 
 ## Lo que encontré y no es de esta mudanza
 
@@ -136,20 +144,18 @@ corren desde main. La subida de los mails de esta PC es otra cosa: es un program
   (el buzón y los mails): 10 movidas en total.
 - Los LEEME de `1- INSTALAR` y `5- FACUNDO` tienen sus cinco renglones arriba y, debajo, el texto que ya traían (las
   instrucciones de cada instalador y la guía para dejar otra PC andando): no se recortó para no perderlo.
-- El LEEME de `9- VIEJO` dice que ningún programa depende de esa carpeta. Los programas viejos del asistente por área y
-  del paquete «Base Claude» (en cuarentena) la buscan primero, solo para seguir encontrando lo suyo si alguna PC los
-  corre; ninguno de los que están en uso la necesita.
+- El LEEME de `9- VIEJO` dice que ningún programa depende de esa carpeta, y es así: los que publican o instalan no la
+  buscan. Solo la miran, sin escribir, `antes_de_la_reunion.py` (informa la versión del área) y los instaladores de
+  mails, que leen de ahí la lista de lo privado publicada si existe, como antes la leían de la cuarentena en la raíz.
 
-- `_sinFirmaIA.py` sobre la carpeta única da **10 bloqueantes, todos por CONTENIDO de archivos que ya estaban**:
-  7 PEDIDO que dicen «PARA TU CLAUDE», un archivo de las mejoras de Carlos cuya carpeta se llama
-  `01-tu-claude-sabe-que-sos-vos`, la ruta `C:\ClaudeBarack` del LEEME de los instaladores y el LEEME largo de la
-  memoria. La mudanza no creó ningún nombre con la palabra Claude: los 9 nombres nuevos (la carpeta única, sus 7
-  subcarpetas y los LEEME) pasan limpios. No aflojé el control para esos 10.
+- `_sinFirmaIA.py` (el de la rama) sobre la carpeta única da **10 bloqueantes, todos por CONTENIDO de archivos que ya
+  estaban**: 8 PEDIDO que dicen «PARA TU CLAUDE», un archivo de las mejoras de Carlos cuya carpeta se llama
+  `01-tu-claude-sabe-que-sos-vos` y la ruta `C:\ClaudeBarack` del LEEME de los instaladores. La mudanza no creó ningún
+  nombre con la palabra Claude: los 9 nombres nuevos (la carpeta única, sus 7 subcarpetas y los LEEME) pasan limpios.
+  No aflojé el control para esos 10. Con el detector de main la misma carpeta da 649, porque main todavía no exime
+  `5- FACUNDO` (la memoria, como eximía `Claude Fak`): eso se arregla al fundir la rama.
 - En la raíz apareció hoy `AUTOMATIZACION BARACK` (la cola de automatización de la tanda 8, que usa
   `scripts/_automatizacionCandidatos.mjs`). No estaba en la lista de la mudanza y quedó donde está.
-- Si una PC todavía tiene el paquete viejo «Base Claude» y su tarea vuelve a correr, `mails_equipo.py` escribiría sus mails
-  en `9- VIEJO (no usar)\Base Claude Ingenieria\mails\_entrada` y no en `4- MAILS DEL EQUIPO`. Ese paquete está en
-  cuarentena; no lo redirigí porque decide adónde van mails de una persona.
 - El plugin del asistente por área viejo (`comun.mjs`, `carpetaBuzon`, en el repo `barack-claude`) sigue colgando el buzón
   del área. Está en cuarentena y no es de este repo.
 - El LEEME de los instaladores no nombra la subcarpeta `5- Mails para el asistente de Leo Lattanzi`, que sí existe.

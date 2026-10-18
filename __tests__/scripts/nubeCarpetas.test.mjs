@@ -160,6 +160,24 @@ describe('cada programa, en las dos direcciones', () => {
     }, 120000);   // corre un .sh de 17 casos: con la PC cargada pasa de los 5 s de vitest
 });
 
+describe('detector de firma (firmaIA.data.json): la carpeta nueva de la memoria exenta SOLO en la biblioteca', () => {
+    const casos = [
+        [true, 'C:\\Users\\x\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\ASISTENTE INGENIERIA\\5- FACUNDO (memoria y configuracion)\\claude-memoria\\a.md'],
+        [true, 'C:\\Users\\x\\BARACK ARGENTINA SRL\\Ingenieria y Proyecto - General\\ASISTENTE INGENIERIA\\5- FACUNDO (memoria y configuracion)\\LEEME.txt'],
+        [false, 'Y:\\BARACK\\ASISTENTE INGENIERIA\\5- FACUNDO (memoria y configuracion)\\x.docx'],
+        [false, 'C:\\Users\\x\\Desktop\\ASISTENTE INGENIERIA\\5- FACUNDO (memoria y configuracion)\\x.docx'],
+        [false, 'C:\\Users\\x\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\ASISTENTE INGENIERIA\\1- INSTALAR (doble clic)\\x.docx'],
+    ];
+    it('Node (rutaExcluida) y Python (ruta_excluida), en las dos direcciones', async () => {
+        const { rutaExcluida } = await import('../../scripts/_lib/firmaIA.mjs');
+        for (const [esperado, ruta] of casos) expect(rutaExcluida(ruta), ruta).toBe(esperado);
+        const prog = `import sys, json; sys.path.insert(0, r'${join(RAIZ, 'scripts', '_lib')}'); import firmaIA; print(json.dumps([firmaIA.ruta_excluida(r) for r in json.loads(sys.argv[1])]))`;
+        const r = python(['-c', prog, JSON.stringify(casos.map((c) => c[1]))]);
+        expect(r.status, r.stderr).toBe(0);
+        expect(JSON.parse(r.stdout)).toEqual(casos.map((c) => c[0]));
+    });
+});
+
 describe('_nubeMudar.mjs (sin tocar la nube)', () => {
     /** Una biblioteca con el layout VIEJO completo y unos archivos adentro. */
     function bibVieja() {

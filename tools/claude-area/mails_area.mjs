@@ -77,9 +77,10 @@ export const MAILS_TRAMOS = [
     ['_CUARENTENA_Claude Barack', 'mails'],
     ['Claude Barack', 'mails'],
 ];
+// El asistente por area se busca SOLO por su nombre sin cuarentena, como antes de la mudanza: el 06/10 se lo puso en
+// cuarentena cambiandole el nombre justamente para que los programas no lo encuentren, y la mudanza no lo revive
+// (auditor del 17/10/2026, I1). Los nombres en cuarentena y su lugar en 9- VIEJO estan solo en el canon de la mudanza.
 export const AREA_VIEJA_TRAMOS = [
-    ['ASISTENTE INGENIERIA', '9- VIEJO (no usar)', '_CUARENTENA_CLAUDE POR AREA'],
-    ['_CUARENTENA_CLAUDE POR AREA'],
     ['CLAUDE POR AREA'],
 ];
 export const NOMBRE_AVISO = 'AVISO - los mails de trabajo de esta PC se comparten con Ingenieria.txt';

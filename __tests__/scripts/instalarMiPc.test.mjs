@@ -255,10 +255,12 @@ describe('instalar_mi_pc.ps1', () => {
     }
     // La memoria y la configuracion de Fak (clave «facundo» del canon): antes del 17/10/2026 en la raiz de la biblioteca,
     // despues en la carpeta unica. El instalador de una PC nueva las tiene que encontrar en los dos lugares.
-    const LUGARES_DE_LA_MEMORIA = {
-        vieja: ['Claude Fak'],
-        nueva: ['ASISTENTE INGENIERIA', '5- FACUNDO (memoria y configuracion)'],
-    };
+    // del canon, no escritos a mano: si el canon cambia y el .ps1 no, este test cae (auditor 17/10, Nit 2)
+    const FACUNDO = JSON.parse(fs.readFileSync(path.join(RAIZ, 'scripts', '_lib', 'nubeCarpetas.data.json'), 'utf8')).carpetas.find((c) => c.clave === 'facundo');
+    const LUGARES_DE_LA_MEMORIA = { vieja: FACUNDO.viejas[0], nueva: FACUNDO.nueva };
+    it('la ruta nueva de la memoria que lleva adentro el instalador es la del canon (clave facundo)', () => {
+        expect(fs.readFileSync(path.join(DIR, 'instalar_mi_pc.ps1'), 'utf8')).toContain(`Join-Path $bib '${FACUNDO.nueva.join('\\')}'`);
+    });
     for (const layout of ['vieja', 'nueva', 'ambas']) {
         it.runIf(conPowerShell)(`la memoria sale ${layout === 'vieja' ? 'del lugar de antes' : 'del lugar nuevo (y si estan los dos, de ese)'} (layout «${layout}», en ensayo)`, () => {
             const t = fs.mkdtempSync(path.join(os.tmpdir(), 'mi-pc-mem-'));
