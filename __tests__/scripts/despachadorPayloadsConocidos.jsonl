@@ -1,0 +1,6 @@
+{"tool_name":"Bash","tool_input":{"command":"cat .env.local"},"session_id":"prueba-madre","cwd":"C:\\Dev\\BarackMercosul"}
+{"tool_name":"Bash","tool_input":{"command":"cp /c/tmp/nuevo.xlsx \"Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/3- LISTADO/Listado hojas de proceso.xlsx\""},"session_id":"prueba-madre","cwd":"C:\\Dev\\BarackMercosul"}
+{"tool_name":"Bash","tool_input":{"command":"mv \"Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/3- LISTADO/Listado hojas de proceso.xlsx\" \"$TEMP/listado.xlsx\""},"session_id":"prueba-madre","cwd":"C:\\Dev\\BarackMercosul"}
+{"tool_name":"Bash","tool_input":{"command":"grep -rn VITE_SUPABASE_URL . --include=.env.local"},"session_id":"prueba-madre","cwd":"C:\\Dev\\BarackMercosul"}
+{"tool_name":"Bash","tool_input":{"command":"ls -la .env.local | head -3"},"session_id":"prueba-madre","cwd":"C:\\Dev\\BarackMercosul"}
+{"tool_name":"Bash","tool_input":{"command":"cp \"Y:/BARACK/CALIDAD/DOCUMENTACION SGC/HOJAS DE OPERACIONES/3- LISTADO/Listado hojas de proceso.xlsx\" \"$TEMP/listado_lectura.xlsx\""},"session_id":"prueba-madre","cwd":"C:\\Dev\\BarackMercosul"}
