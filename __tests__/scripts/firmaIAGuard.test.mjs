@@ -320,6 +320,10 @@ const VERDES_P16 = [
     ['el .add( de un Set de JS', ctx('Bash', { cmd: `node -e "const s = new Set(); s.add('Claude Barack'); console.log(s.size)"` })],
     ['la carpeta Claude Fak sin barra final: cd y despues un script (antes se exigia la barra)', ctx('Bash', { cmd: `cd "${NP}/Claude Fak" && node scripts/_nube.mjs --subir memoria` })],
     ['la carpeta Claude Fak entre comillas simples, sin barra, como argumento', ctx('Bash', { cmd: `python scripts/_x.py --carpeta '${NP}/Claude Fak'` })],
+    // Mudanza del 17/10/2026: la memoria vive en la carpeta unica y sus subcarpetas (claude-memoria, claude-config,
+    // claude-registros) siguen llevando la palabra; la exencion pasa a la ruta nueva, colgada de la biblioteca.
+    ['la carpeta nueva de la memoria (mudanza 17/10): copiar a su claude-memoria', ctx('Bash', { cmd: `cp a.md "${NP}/ASISTENTE INGENIERIA/5- FACUNDO (memoria y configuracion)/claude-memoria/a.md"` })],
+    ['la carpeta nueva de la memoria sin barra final: cd y un script', ctx('Bash', { cmd: `cd "${NP}/ASISTENTE INGENIERIA/5- FACUNDO (memoria y configuracion)" && node scripts/_nube.mjs --subir memoria` })],
 ];
 const ROJOS_P16 = [
     ['una celda que diga Claude (el caso del listado): el gemelo rojo de la fila', ctx('Bash', { cmd: `python -c "ws.Cells(r, 10).Value = 'Claude'"` })],
@@ -350,6 +354,10 @@ const ROJOS_P16 = [
     ['variable de Word en minuscula por PowerShell', ctx('PowerShell', { cmd: `$doc.Variables.add('origen', 'Claude')` })],
     ['una carpeta de la nube que se llama parecido: Claude Fakultad', ctx('Bash', { cmd: `mkdir -p "${NP}/2- PROYECTOS/Claude Fakultad"` })],
     ['una carpeta de la nube que arranca igual: Claude Fak notas', ctx('Bash', { cmd: `mkdir -p "${NP}/Claude Fak notas"` })],
+    // Gemelos rojos de la exencion nueva (17/10): la carpeta unica en sí NO está exenta (es de la empresa), ni otra
+    // subcarpeta suya, ni una «5- FACUNDO…» colgada de otro lado.
+    ['la carpeta unica no esta exenta: una carpeta nueva con la palabra en 1- INSTALAR', ctx('Bash', { cmd: `mkdir -p "${NP}/ASISTENTE INGENIERIA/1- INSTALAR (doble clic)/Claude nuevo"` })],
+    ['una 5- FACUNDO (memoria y configuracion) en el SERVIDOR no es la exenta', ctx('Bash', { cmd: `mkdir -p "Y:/BARACK/CALIDAD/ASISTENTE INGENIERIA/5- FACUNDO (memoria y configuracion)/claude-memoria"` })],
     ['un documento en la nube que nombra la carpeta Claude Fak (la regla 4 no se toca)', ctx('Write', { file: `${NUBE}\\1- GENERAL\\nota.txt`, content: 'Los archivos estan en la carpeta Claude Fak.' })],
 ];
 

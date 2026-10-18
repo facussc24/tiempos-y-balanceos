@@ -25,7 +25,8 @@
  *                   casillas). Un mail personal que no use ninguna de esas palabras pasa: se le dice a la persona.
  *     en espera  -> el mail de menos de un dia: todavia no sube (la persona tiene ese dia para borrarlo). Y el primer
  *                   dia despues de prenderse la PC solo se deja el aviso: la primera copia es al dia siguiente.
- *     entrada    -> <biblioteca de Ingenieria>\Claude Barack\mails\_entrada\<persona>\<fecha-hora>.jsonl
+ *     entrada    -> <biblioteca de Ingenieria>\ASISTENTE INGENIERIA\4- MAILS DEL EQUIPO\mails\_entrada\<persona>\<fecha-hora>.jsonl
+ *                   (antes de la mudanza del 17/10/2026: ...\Claude Barack\mails\_entrada\..., que se sigue encontrando)
  *
  * Reglas que cumple:
  *   - Apagado por defecto: sin fila de la persona, con dos filas, sin PC en la fila o con cualquier valor que no sea
@@ -67,7 +68,22 @@ export const LOTE = 300;               // mails por archivo
 export const MAX_MINUTOS = 10;         // la tarea corta este paso a los 12 (y Windows corta la tarea entera a los 30)
 export const SEGUNDOS_SIN_RESPUESTA = 75;   // sin una linea del lector en ese tiempo: Outlook no contesta
 export const DIAS_DE_PAUSA = 7;        // despues de dos corridas seguidas sin respuesta
-export const CARPETA_HERMANA = 'Claude Barack';
+// Las carpetas de la biblioteca de Ingenieria que este programa busca, del lugar NUEVO al viejo (mudanza del 17/10/2026).
+// La fuente es scripts/_lib/nubeCarpetas.data.json (clave «mails»: `nueva` y despues `viejas`, en ese orden; del area, solo el
+// nombre sin cuarentena: ver AREA_VIEJA_TRAMOS).
+// Este archivo se copia a otras PC sin el repo y no puede leer ese canon: lleva los nombres adentro, y un test
+// (__tests__/scripts/claudeAreaMails.test.mjs) verifica que coincidan.
+export const MAILS_TRAMOS = [
+    ['ASISTENTE INGENIERIA', '4- MAILS DEL EQUIPO', 'mails'],
+    ['_CUARENTENA_Claude Barack', 'mails'],
+    ['Claude Barack', 'mails'],
+];
+// El asistente por area se busca SOLO por su nombre sin cuarentena, como antes de la mudanza: el 06/10 se lo puso en
+// cuarentena cambiandole el nombre justamente para que los programas no lo encuentren, y la mudanza no lo revive
+// (auditor del 17/10/2026, I1). Los nombres en cuarentena y su lugar en 9- VIEJO estan solo en el canon de la mudanza.
+export const AREA_VIEJA_TRAMOS = [
+    ['CLAUDE POR AREA'],
+];
 export const NOMBRE_AVISO = 'AVISO - los mails de trabajo de esta PC se comparten con Ingenieria.txt';
 export const ARCHIVO_ESTADO = 'mails-area-estado.json';
 export const ARCHIVO_SUBIDOS = 'mails-area-subidos.txt';
@@ -414,27 +430,48 @@ export function clasificar(m, priv) {
     return 'entrada';
 }
 
-/** La carpeta `...\Claude Barack\mails` de la biblioteca de Ingenieria, a partir de `...\CLAUDE POR AREA`. null si no se ve. */
+/** Si `ruta` termina en esos tramos (sin importar mayusculas ni tildes), la carpeta de arriba de todos; si no, null. */
+function sinLosTramos(ruta, tramos) {
+    let dir = ruta;
+    for (let i = tramos.length - 1; i >= 0; i--) {
+        if (normalizar(path.basename(dir)) !== normalizar(tramos[i])) return null;
+        dir = path.dirname(dir);
+    }
+    return dir;
+}
+
+/**
+ * La carpeta `mails` de la biblioteca de Ingenieria, a partir de la carpeta del asistente por area (`...\CLAUDE POR AREA`,
+ * en la raiz; la que esta en cuarentena o en `9- VIEJO (no usar)` no se acepta). null si no se ve.
+ * La misma regla que scripts/_lib/nubeRutas.mjs: la `mails` nueva si existe; si no, la primera vieja que exista; y si no existe
+ * ninguna, la nueva (que se crea al subir) pero solo si ya esta su carpeta «4- MAILS DEL EQUIPO»: nunca crea una `mails` en el
+ * lugar de antes ni inventa la biblioteca. Nunca cuelga de un enlace.
+ */
 export function carpetaDeMails(raizNube) {
     if (!raizNube) return null;
     const raiz = path.resolve(raizNube);
-    if (normalizar(path.basename(raiz)) !== 'claude por area' || !esCarpeta(raiz)) return null;
-    const hermana = path.join(path.dirname(raiz), CARPETA_HERMANA);
-    return esCarpeta(hermana) && !esEnlace(hermana) ? path.join(hermana, 'mails') : null;
+    if (!esCarpeta(raiz)) return null;
+    let bib = null;
+    for (const t of AREA_VIEJA_TRAMOS) { bib = sinLosTramos(raiz, t); if (bib) break; }
+    if (!bib) return null;
+    const sana = (p) => esCarpeta(p) && !esEnlace(p);
+    const rutas = MAILS_TRAMOS.map((t) => path.join(bib, ...t));
+    return rutas.find((r) => esCarpeta(r) && sana(path.dirname(r))) || (sana(path.dirname(rutas[0])) ? rutas[0] : null);
 }
 
 /**
  * La carpeta de mails dicha por su ruta (`--carpeta-mails`), para una PC que sube SOLO sus mails, sin el resto del
  * asistente: el 07/10/2026 la PC de Carlos quedo sin la tarea completa y «CLAUDE POR AREA» paso a cuarentena, y Fak quiere
- * seguir recibiendo sus mails. Tiene que existir, llamarse «mails», colgar de «Claude Barack» (o «_CUARENTENA_Claude
- * Barack»), estar adentro de la biblioteca de Ingenieria y no ser un enlace (ni ella ni la de arriba): a un pendrive, a
- * una copia o a otra carpeta de la biblioteca (que nadie lee como mails) no van.
+ * seguir recibiendo sus mails. Tiene que existir, llamarse «mails», colgar de «ASISTENTE INGENIERIA\4- MAILS DEL EQUIPO» (o,
+ * de antes de la mudanza del 17/10/2026, de «Claude Barack» o «_CUARENTENA_Claude Barack»), estar adentro de la biblioteca de
+ * Ingenieria y no ser un enlace (ni ella ni la de arriba): a un pendrive, a una copia o a otra carpeta de la biblioteca
+ * (que nadie lee como mails) no van.
  */
 export function carpetaDeMailsIndicada(ruta) {
     if (!ruta) return null;
     const r = path.resolve(ruta);
     if (normalizar(path.basename(r)) !== 'mails' || !esCarpeta(r) || esEnlace(r) || esEnlace(path.dirname(r))) return null;
-    if (!/^(?:_cuarentena_)?claude barack$/.test(normalizar(path.basename(path.dirname(r))))) return null;
+    if (!MAILS_TRAMOS.some((t) => sinLosTramos(r, t) !== null)) return null;
     return r.split(/[\\/]+/).map(normalizar).includes('ingenieria y proyecto - general') ? r : null;
 }
 
@@ -509,7 +546,7 @@ const TEXTO_AVISO = (desde, conEspera = true) => [
     'Lo que no quieras compartir, borralo en el día, pasalo a una carpeta «Personal», o avisá.',
     '',
     'QUIÉN LOS PUEDE LEER',
-    'La gente de Ingeniería, en la biblioteca de Ingeniería (carpeta «Claude Barack», «mails»).',
+    'La gente de Ingeniería, en la biblioteca de Ingeniería (carpeta «ASISTENTE INGENIERIA», «4- MAILS DEL EQUIPO»).',
     '',
     'CÓMO FUNCIONA',
     'Lo hace solo un programa de esta PC. Solo lee: no manda, no borra y no cambia nada de tu correo.',
@@ -684,7 +721,7 @@ export async function correr(opciones) {
     if (!casilla || !autor) return salir('sin_casilla', { detalle: 'la fila de la persona no trae su casilla de mail' });
     if (esPrivada(casilla, priv)) return salir('privado', { detalle: 'la casilla de esta persona esta en la lista de lo privado' });
 
-    // 3) a donde: la carpeta de mails de la biblioteca de Ingenieria (al lado de «CLAUDE POR AREA», o dicha por su ruta)
+    // 3) a donde: la carpeta de mails de la biblioteca de Ingenieria (la del canon, a partir de la carpeta del asistente por area, o dicha por su ruta)
     const carpetaMails = opciones.carpetaMails ? carpetaDeMailsIndicada(opciones.carpetaMails) : carpetaDeMails(opciones.raizNube);
     if (!carpetaMails) return salir('sin_nube', { detalle: 'no veo la biblioteca de Ingenieria (se reintenta)' });
 

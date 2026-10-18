@@ -197,9 +197,9 @@ describe('planCarpetaUnica y LEEME', () => {
         expect(fila('_CUARENTENA_Claude Barack').partes[0].destino).toBe(`${nombre}\\4- MAILS DEL EQUIPO\\mails`);
         expect(fila('Base Claude Ingenieria').destino).toMatch(/9- VIEJO/);
     });
-    it('FACUNDO no tiene destino: lo decide Fak, con tres opciones', () => {
-        expect(fila('FACUNDO').destino).toBeNull();
-        expect(fila('FACUNDO').opciones).toHaveLength(3);
+    it('FACUNDO va entera a 6- (Fak lo decidio el 17/10/2026): ya no hay opciones que preguntar', () => {
+        expect(fila('FACUNDO').destino).toBe(`${nombre}\\6- PEDIDOS ENTRE PC (FACUNDO)`);
+        expect(fila('FACUNDO').opciones).toBeNull();
     });
     it('la que ya fue a la Papelera se lista como «ya no esta»; una carpeta nuestra nueva se avisa', () => {
         expect(fila('ACTUALIZACION_CLAUDE_LIMPIO').existe).toBe(false);
@@ -225,10 +225,12 @@ describe('planCarpetaUnica y LEEME', () => {
 });
 
 describe('el guardian de firma sobre las rutas nuevas (medido con su propia funcion)', () => {
-    it('la carpeta unica y sus destinos pasan; lo que viaja adentro de 5- con «claude» en el nombre, no', () => {
+    it('la carpeta unica, sus destinos y lo que viaja adentro de 5- pasan: la excepcion siguio a la ruta nueva (mudanza 17/10)', () => {
+        // Hasta la mudanza, `5-\claude-memoria` frenaba (el simulado lo pedia: «esa excepcion tiene que nombrar la ruta
+        // nueva»). Desde el 17/10 FIRMA_EXENTOS_RE y firmaIA.data.json la nombran; su gemelo rojo vive en firmaIAGuard.test.mjs.
         const rutas = rutasAProbar(BIB, 'ASISTENTE INGENIERIA', canon, ['claude-memoria']);
-        const frenan = rutas.filter((r) => frenaGuardian(r));
-        expect(frenan).toEqual([`${BIB}\\ASISTENTE INGENIERIA\\5- FACUNDO (memoria y configuracion)\\claude-memoria`]);
+        expect(rutas.filter((r) => frenaGuardian(r))).toEqual([]);
+        expect(rutas).toContain(`${BIB}\\ASISTENTE INGENIERIA\\5- FACUNDO (memoria y configuracion)\\claude-memoria`);
     });
     it('hoy, Claude Fak colgada de la raiz pasa (por eso la excepcion tiene que seguirla al mover)', () => {
         expect(frenaGuardian(`${BIB}\\Claude Fak\\claude-memoria`)).toBeNull();
@@ -301,7 +303,16 @@ describe('renderSimulado con datos de mentira', () => {
         expect(md).toMatch(/nada se movió ni se borró/);
         expect(md).toMatch(/El sí a este simulado/);
         for (const o of canon.nombres_carpeta_unica) expect(md).toContain(`«${o.nombre}»`);
-        expect(md).toMatch(/Qué hacemos con `FACUNDO`/);
+        // FACUNDO ya esta decidida (17/10): no se vuelve a preguntar, y figura entre lo que queda por mover
+        expect(md).not.toMatch(/Qué hacemos con `FACUNDO`/);
+        expect(md).toMatch(/\*\*3 carpetas\*\* de la raíz todavía tienen lugar/);
+    });
+    it('con la raiz sin ninguna carpeta de la lista dice que no queda nada por mover (la prueba de la mudanza)', () => {
+        const planVacio = planCarpetaUnica(['ASISTENTE INGENIERIA', 'PROYECTOS', 'VARIOS'], canon, nombre);
+        const md0 = renderSimulado({ canon, nombreUnico: nombre, plan: planVacio, medicion: { ...medicion, carpetas: [] }, refs: new Map(), dependNubeRutas: [], guardian: [], noLeidos: [], chats: '', forma: [] });
+        expect(md0).toMatch(/no queda nada por mover/);
+        expect(md0).toMatch(/\*\*Nada\.\*\*/);
+        expect(md0).not.toMatch(/Lo que necesito de vos/);
     });
     it('una carpeta que no termino de medirse lo dice, no da el numero como total', () => {
         expect(md).toMatch(/\| `Claude Fak` \| `ASISTENTE INGENIERIA\\5- FACUNDO \(memoria y configuracion\)` \| 10 \(no terminó\)/);

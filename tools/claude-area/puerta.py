@@ -26,7 +26,12 @@ REPO = AQUI.parents[1]
 PLUGIN_REPO = Path(r"C:\Dev\barack-claude")
 DEMO = Path(os.environ.get("CLAUDE_AREA_HOME", r"C:\ClaudeBarack"))
 EXPORTS = REPO / "exports" / "CLAUDES_POR_AREA_20261001" / "fuentes"
-RESPALDO = Path.home() / "BARACK ARGENTINA SRL" / "Ingeniería y Proyecto - General" / "Claude Fak" / "repo-privado"
+sys.path.append(str(REPO / "scripts" / "_lib"))   # al final: ningun archivo de esa carpeta tapa un modulo de Python
+from nube_carpetas import canon as _canon_nube, carpeta_nube  # noqa: E402  canon de carpetas (mudanza del 17/10/2026)
+# La carpeta de la memoria: la nueva si existe, si no la vieja. Sin la biblioteca sincronizada, la ruta NUEVA debajo de la
+# biblioteca canonica (no existe, y la puerta lo dice), nunca la raiz de la biblioteca.
+_FACUNDO_NUEVA = next(c["nueva"] for c in _canon_nube()["carpetas"] if c["clave"] == "facundo")
+RESPALDO = (carpeta_nube("facundo") or Path.home().joinpath("BARACK ARGENTINA SRL", "Ingeniería y Proyecto - General", *_FACUNDO_NUEVA)) / "repo-privado"
 
 # Frases que dicen "Claude nunca envia un mail". Dejan de ser verdad cuando la promesa mail-enviar esta probada.
 FRASES_NO_ENVIA = [

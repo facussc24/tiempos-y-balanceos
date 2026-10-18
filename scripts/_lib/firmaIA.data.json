@@ -27,9 +27,10 @@
   },
   "rutas_excluidas": {
     "fuente": "Carpetas que llevan 'Claude' en el nombre por decision de Fak y no son documentos de la empresa: la configuracion y la memoria (nube-ingenieria.md, 01/10/2026) y el asistente de area que se publica a los compañeros (project_claudes_por_area). Lo que esta adentro no sale como documento de Barack.",
-    "contiene": ["\\Claude Fak\\", "/Claude Fak/", "\\.claude\\", "/.claude/", "\\claude-area\\", "/claude-area/",
+    "contiene": ["\\Claude Fak\\", "/Claude Fak/", "proyecto - general\\asistente ingenieria\\5- facundo (memoria y configuracion)\\", "proyecto - general/asistente ingenieria/5- facundo (memoria y configuracion)/","\\.claude\\", "/.claude/", "\\claude-area\\", "/claude-area/",
                  "\\CLAUDES_POR_AREA", "/CLAUDES_POR_AREA", "\\_CUARENTENA_CLAUDE POR AREA\\", "\\_CUARENTENA_Claude Barack\\",
                  "\\Base Claude Ingenieria\\", "\\0- INSTALAR CLAUDE (entrar aca)\\", "\\ACTUALIZACION_CLAUDE_LIMPIO\\"],
+    "nota_mudanza": "Mudanza del 17/10/2026: la carpeta de la memoria paso a ASISTENTE INGENIERIA\\5- FACUNDO (memoria y configuracion). Su entrada va atada a la biblioteca (\"Proyecto - General\\\\\" adelante: la biblioteca se llama «Ingeniería y Proyecto - General», con o sin tilde) para que la misma carpeta en el servidor o en el Escritorio NO quede exenta (auditor 17/10, I2). Test en las dos direcciones: __tests__/scripts/nubeCarpetas.test.mjs.",
     "nota_contiene": "Las ultimas siete son el asistente de area (exports/CLAUDES_POR_AREA_*, y en la nube de Ingenieria su instalador, su base y sus cuarentenas) y una copia de la configuracion: hablan de Claude porque el producto ES Claude (barrido del 08/10/2026)."
   },
   "logo": {

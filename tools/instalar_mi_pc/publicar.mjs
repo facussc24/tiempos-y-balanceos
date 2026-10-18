@@ -17,9 +17,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { buscarBiblioteca } from '../../scripts/_lib/nubeRutas.mjs';
+import { buscarBiblioteca, entradaCarpeta, resolverCarpeta } from '../../scripts/_lib/nubeRutas.mjs';
 
-export const CARPETA = 'INSTALAR EN UNA PC NUEVA';
+/** La carpeta de instaladores (clave `instalar` del canon nubeCarpetas.data.json; mudanza del 17/10/2026): ruta nueva,
+ *  relativa a la biblioteca. Se publica en la nueva si existe; si no, en la vieja; si no hay ninguna, en la nueva. */
+export const CARPETA = path.join(...entradaCarpeta('instalar').nueva);
+export const carpetaDestino = (biblioteca) => resolverCarpeta('instalar', biblioteca).ruta;
 export const SUBCARPETA = '1- Mi asistente completo';
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 /** [origen, destino dentro de CARPETA] */
@@ -35,7 +38,7 @@ const hash = (p) => crypto.createHash('sha256').update(fs.readFileSync(p)).diges
 
 /** Lo que hay que hacer, sin hacerlo: [{ origen, destino, estado: 'nuevo'|'distinto'|'igual' }]. */
 export function plan(biblioteca) {
-    const base = path.join(biblioteca, CARPETA);
+    const base = carpetaDestino(biblioteca);
     return ARCHIVOS.map(([origen, rel]) => {
         const destino = path.join(base, ...rel.split('/'));
         const estado = !fs.existsSync(destino) ? 'nuevo' : (hash(origen) === hash(destino) ? 'igual' : 'distinto');
@@ -64,6 +67,6 @@ if (esElPrograma) {
     for (const p of plan(bib)) console.log(`${p.estado.padEnd(10)} ${p.destino}`);
     if (process.argv.includes('--aplicar')) {
         const hecho = aplicar(bib);
-        console.log(`\nPublicado: ${hecho.length} archivo(s) en ${path.join(bib, CARPETA)}`);
+        console.log(`\nPublicado: ${hecho.length} archivo(s) en ${carpetaDestino(bib)}`);
     } else console.log('\n(solo dice que haria: --aplicar para publicarlo)');
 }

@@ -30,7 +30,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buscarBiblioteca } from './nubeRutas.mjs';
+import { buscarBiblioteca, resolverCarpeta } from './nubeRutas.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const CANON = JSON.parse(fs.readFileSync(path.join(AQUI, 'pedidosCanon.data.json'), 'utf8'));
@@ -111,8 +111,9 @@ const esParaMi = (p, pc, nombre) => {
  *   `nombre` es el COMPUTERNAME (para que un pedido «para CATA» no le llegue a la otra notebook).
  * @returns {{lineas: string[], nuevos: object[], viejos: object[]}}
  */
-export function pedidosPendientes({ archivos, pc, nombre = '' }) {
-  const pedidos = (archivos || []).filter((a) => RE_PEDIDO.test(a.nombre)).map((a) => leerPedido(a.nombre, a.cabecera || []));
+export function pedidosPendientes({ archivos, pc, nombre = '', carpeta = CANON.carpeta_nombre }) {
+  // cada archivo puede traer la carpeta donde esta (con las dos carpetas, la nueva y la vieja, se leen las dos)
+  const pedidos = (archivos || []).filter((a) => RE_PEDIDO.test(a.nombre)).map((a) => ({ ...leerPedido(a.nombre, a.cabecera || []), carpeta: a.carpeta }));
   const listos = new Set(pedidos.filter((p) => p.esListo).map((p) => p.listoDe));
   // Sin numero no hay forma de cerrarlo (son los de antes del 14/10, hechos en su momento): no se nombran.
   const abiertos = pedidos.filter((p) => !p.esListo && p.numero && !listos.has(p.numero) && esParaMi(p, pc, nombre));
@@ -125,7 +126,7 @@ export function pedidosPendientes({ archivos, pc, nombre = '' }) {
     const cuando = [p.origen ? `de ${p.origen}` : '', `${fechaCorta(p.fecha)}${p.hora ? ` ${p.hora}` : ''}`.trim()].filter(Boolean).join(', ');
     const aclaracion = p.destino === 'todos' ? ' [el encabezado no dice para que PC es: mirarlo]' : '';
     lineas.push(`${MARCA} Hay un pedido para esta PC sin su «listo»: PEDIDO ${p.numero} - ${p.que}${cuando ? ` (${cuando})` : ''}${aclaracion}. ` +
-      `Esta en la carpeta ${CANON.carpeta} de la nube de Ingenieria; si ya se hizo o cuando se haga, dejar «PEDIDO ${p.numero} - listo <que>.txt» ahi mismo.`);
+      `Esta en la carpeta ${p.carpeta || carpeta} de la nube de Ingenieria; si ya se hizo o cuando se haga, dejar «PEDIDO ${p.numero} - listo <que>.txt» ahi mismo.`);
   }
   if (viejos.length) {
     const etiqueta = (p) => `PEDIDO ${p.numero} (${p.que})`;
@@ -146,15 +147,25 @@ export function primerosRenglones(ruta, n = 2) {
 
 /** Lee la carpeta real (o BARACK_FACUNDO) y devuelve los renglones para esta PC; [] si la nube no esta. */
 export function renglonesDeLaCarpeta({ carpeta = process.env.BARACK_FACUNDO, pc = process.env.BARACK_PC || quienSoy(), nombre = process.env.COMPUTERNAME || os.hostname() } = {}) {
-  let dir = carpeta;
-  if (!dir) {
+  // [ruta, nombre que dice el aviso] de cada carpeta que se lee
+  let dirs = carpeta ? [[carpeta, undefined]] : null;
+  if (!dirs) {
     const bib = buscarBiblioteca();
     if (!bib) return [];
-    dir = path.join(bib, CANON.carpeta);
+    // Desde la mudanza del 17/10/2026 la carpeta FACUNDO vive entera en «ASISTENTE INGENIERIA\6- PEDIDOS ENTRE PC
+    // (FACUNDO)» (clave «pedidos» del canon de carpetas). Se leen la nueva Y la vieja si estan las dos: una PC que todavia
+    // no tiene el codigo nuevo (CATA hasta su git pull) deja sus pedidos en la vieja, y no se pueden perder (auditor
+    // ronda 3, 18/10). Cada aviso nombra la carpeta donde esta su pedido.
+    const r = resolverCarpeta(CANON.carpeta_clave, bib);
+    dirs = [r.nueva, ...r.viejas].filter((d) => { try { return fs.statSync(d).isDirectory(); } catch { return false; } })
+      .map((d) => [d, path.relative(bib, d)]);
   }
-  let nombres;
-  try { nombres = fs.readdirSync(dir); } catch { return []; }
-  const archivos = nombres.filter((n) => RE_PEDIDO.test(n)).map((n) => ({ nombre: n, cabecera: primerosRenglones(path.join(dir, n)) }));
+  const archivos = [];
+  for (const [dir, nombreCarpeta] of dirs) {
+    let nombres;
+    try { nombres = fs.readdirSync(dir); } catch { continue; }
+    for (const n of nombres) if (RE_PEDIDO.test(n)) archivos.push({ nombre: n, cabecera: primerosRenglones(path.join(dir, n)), carpeta: nombreCarpeta });
+  }
   return pedidosPendientes({ archivos, pc: pc === 'notebook' ? 'notebook' : 'principal', nombre }).lineas;
 }
 

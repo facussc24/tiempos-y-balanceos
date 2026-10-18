@@ -189,6 +189,6 @@ siguiente sin tocar el estado). Una segunda corrida del mismo dia no pisa el rep
   se le lleva solo lo confirmado, en pocas lineas, sin informe.
 - El repo es publico: nada con texto de AMFE ni cuerpos de mails va a un archivo versionado.
 - **Gemini** (tanda 5, 17/10/2026): no se instala; es segunda opinion desde la cuenta de Fak, con la convencion de
-  `Claude Fak\investigaciones-gemini\` en la nube de Ingenieria (`_indice.md`: prompts, respuestas tal cual, verificado
+  `ASISTENTE INGENIERIA\5- FACUNDO (memoria y configuracion)\investigaciones-gemini\` en la nube de Ingenieria (`_indice.md`: prompts, respuestas tal cual, verificado
   fuente por fuente por la sesion de la manana; cada prompt con «datos de Barack que lleva: ninguno» o el OK de Fak; a
   Fak le llega solo lo confirmado).

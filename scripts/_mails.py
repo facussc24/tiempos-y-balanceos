@@ -62,6 +62,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_li
 import mailsLectura  # noqa: E402
 import mailsBorradores  # noqa: E402
 from sinElevar import es_error_elevacion, relanzar_si_elevado  # noqa: E402
+from nube_carpetas import resolver_carpeta as _resolver_carpeta  # noqa: E402  canon de carpetas (mudanza 17/10/2026)
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # BARACK_MAIL_CACHE: otra carpeta de cache (la usan los tests para no tocar el real).
@@ -187,13 +188,23 @@ def _carpetas_equipo():
     out = []
     for b in sorted(bibliotecas):
         raiz = os.path.join(org, b)
+        # Desde la mudanza del 17/10/2026 los mails viven en `ASISTENTE INGENIERIA\4- MAILS DEL EQUIPO\mails`: la clave
+        # `mails` del canon de carpetas (scripts/_lib/nubeCarpetas.data.json) los encuentra en el lugar nuevo y, si esta
+        # PC todavia no bajo la mudanza, en el viejo. Lo de abajo queda como respaldo (otro nombre viejo en la raiz).
+        try:
+            nueva = str(_resolver_carpeta('mails', raiz)[0])
+            if os.path.isdir(os.path.join(nueva, '_entrada')):
+                out.append(nueva)
+        except (OSError, KeyError, ValueError):
+            pass
         try:
             hijos = sorted(os.listdir(raiz))
         except OSError:
             continue
         for h in hijos:
-            if CARPETA_EQUIPO_RE.search(h) and os.path.isdir(os.path.join(raiz, h, 'mails', '_entrada')):
-                out.append(os.path.join(raiz, h, 'mails'))
+            m = os.path.join(raiz, h, 'mails')
+            if CARPETA_EQUIPO_RE.search(h) and os.path.isdir(os.path.join(m, '_entrada')) and m not in out:
+                out.append(m)
     return out
 
 
@@ -1135,7 +1146,7 @@ def buzones():
         print('  %d mails estan en mas de un buzon y se muestran una sola vez. De la nube NO salen los archivos adjuntos, solo sus nombres.'
               % u['compartidos'])
     else:
-        print('nube del equipo: NO la veo en esta PC. La busque en %s\\Ingenieria y Proyecto - General\\*Claude Barack\\mails\\_entrada.'
+        print('nube del equipo: NO la veo en esta PC. La busque en %s\\Ingenieria y Proyecto - General\\ASISTENTE INGENIERIA\\4- MAILS DEL EQUIPO\\mails\\_entrada (y en el lugar de antes de la mudanza del 17/10).'
               % os.path.join(os.path.expanduser('~'), ORGANIZACION))
         print('  Si la carpeta se movio: BARACK_MAIL_EQUIPO=<ruta de la carpeta mails>. Mientras tanto solo tengo el buzon de Fak.')
     print()

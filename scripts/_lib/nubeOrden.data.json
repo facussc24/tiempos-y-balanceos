@@ -52,10 +52,18 @@
         "No editar a mano: gana el archivo más nuevo y un cambio hecho a mano se puede perder.",
         "Dudas: Facundo Santoro (Ingeniería)."
       ] },
+    { "id": "6", "nombre": "6- PEDIDOS ENTRE PC (FACUNDO)", "que": "La carpeta FACUNDO entera: los pedidos entre las PC de Facundo y sus entregables.",
+      "leeme": [
+        "6- PEDIDOS ENTRE PC (FACUNDO): la carpeta FACUNDO entera, mudada acá el 17/10/2026.",
+        "Adentro están los pedidos entre las PC de Facundo («PEDIDO N … .txt») y entregables de Barack (IMDS, BeOn, hojas).",
+        "Cada PC de Facundo lee los pedidos al arrancar; la que hace uno deja «PEDIDO N - listo …» acá mismo.",
+        "No renombrar los PEDIDO: el aviso de arranque los busca por su nombre.",
+        "Dudas: Facundo Santoro (Ingeniería)."
+      ] },
     { "id": "9", "nombre": "9- VIEJO (no usar)", "que": "Instaladores y versiones anteriores, guardados por si hace falta mirar algo.",
       "leeme": [
         "9- VIEJO (no usar): instaladores y versiones anteriores, guardados por si hace falta mirar algo.",
-        "Antes de traer algo acá se cambian los programas que lo buscaban, para que ninguno dependa de esta carpeta.",
+        "Ojo: los instaladores de mails y el de una PC nueva todavía leen de acá la lista de lo privado y el programa Node.",
         "No ejecutar nada de acá.",
         "Se borra solo con el OK de Facundo.",
         "Dudas: Facundo Santoro (Ingeniería)."
@@ -65,7 +73,7 @@
     "{NOMBRE}: lo del asistente de Ingeniería, todo en un solo lugar.",
     "Lo arma y lo mantiene Facundo Santoro (Ingeniería). No mover ni renombrar: hay programas que buscan estas carpetas por su nombre.",
     "1- INSTALAR: un instalador por PC. 2- EQUIPO: lo publicado para los compañeros. 3- BUZON: lo que mandan las PC.",
-    "4- MAILS DEL EQUIPO: la copia de los mails de trabajo. 5- FACUNDO: memoria y configuración. 9- VIEJO: no usar.",
+    "4- MAILS DEL EQUIPO: la copia de los mails de trabajo. 5- FACUNDO: memoria y configuración. 6- PEDIDOS: lo que se piden las PC de Facundo. 9- VIEJO: no usar.",
     "Dudas: Facundo Santoro (Ingeniería)."
   ],
 
@@ -81,13 +89,8 @@
     { "nombre": "Claude Fak", "destino": "5", "motivo": "Plan del 08/10 §1.4: 5- FACUNDO (memoria y configuración) es «lo que hoy es Claude Fak». Las subcarpetas investigaciones-gemini (tanda 5) y viernes-17-plan-sistema viajan adentro." },
     { "nombre": "Base Claude Ingenieria", "destino": "9", "motivo": "Plan del 08/10 §1.4: Base Claude Ingenieria va a 9- VIEJO." },
     { "nombre": "0- INSTALAR CLAUDE (entrar aca)", "destino": "9", "motivo": "Plan del 08/10 §1.4: 0- INSTALAR va a 9- VIEJO. Su LEEME ya dice que está en cuarentena y que no se ejecute." },
-    { "nombre": "FACUNDO", "destino": null, "excluir_si_antes": "VARIOS[\\\\/]+$", "exigir_en_archivo": "Ingenier[ií]a y Proyecto|buscarBiblioteca|biblioteca|nube de Ingenier",
-      "motivo": "El árbol del 08/10 no le da lugar y adentro hay dos cosas: el canal de pedidos entre tus PC (los «PEDIDO N … .txt», que lee el aviso de arranque de cada sesión) y entregables de Barack (IMDS, BeOn, hojas corregidas, «PLANOS VW NUNCA BORRAR»). Lo decidís vos.",
-      "opciones": [
-        "Dejarla donde está: no rompe nada; queda una carpeta tuya afuera de la carpeta única.",
-        "Mover solo los «PEDIDO N … .txt» a «3- BUZON (lo que mandan las PC)\\PEDIDOS»: hay que cambiar el aviso de arranque y la memoria del canal; los entregables se quedan donde están.",
-        "Moverla entera a la carpeta única, al lado de «5- FACUNDO»: mete entregables de Barack adentro de la carpeta del asistente, y también hay que cambiar el aviso de arranque."
-      ] },
+    { "nombre": "FACUNDO", "destino": "6", "excluir_si_antes": "VARIOS[\\\\/]+$", "exigir_en_archivo": "Ingenier[ií]a y Proyecto|buscarBiblioteca|biblioteca|nube de Ingenier",
+      "motivo": "Lo decidiste el 17/10/2026: entera, como carpeta propia adentro de la carpeta única y sin cambiar el nombre de ningún «PEDIDO N … .txt» (el aviso de arranque la busca por la clave «pedidos» de scripts/_lib/nubeCarpetas.data.json, en el lugar nuevo y en el viejo)." },
     { "nombre": "ACTUALIZACION_CLAUDE_LIMPIO", "destino": null, "ya_no_esta": "fue a la Papelera el 12/10", "motivo": "Se lista solo para mostrar quién la sigue nombrando." }
   ],
   "detectar_nuevas": "claude|asistente|^_CUARENTENA_",

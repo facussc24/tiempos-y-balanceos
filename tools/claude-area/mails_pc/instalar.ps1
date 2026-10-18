@@ -66,16 +66,22 @@ else {
 }
 if (-not $bib -or -not (Test-Path -LiteralPath $bib -PathType Container)) { Mal 'no encuentro en esta PC la biblioteca de Ingenieria. Tiene que estar sincronizada (en el Explorador: BARACK ARGENTINA SRL > Ingenieria y Proyecto - General).' }
 
-# la carpeta de mails: la que tiene "mails\_entrada" (si hay mas de una, la que no esta en cuarentena)
-$candidatas = @()
-foreach ($d in @(Get-ChildItem -LiteralPath $bib -Directory -ErrorAction SilentlyContinue)) {
-  $m = Join-Path $d.FullName 'mails'
-  if (Test-Path -LiteralPath (Join-Path $m '_entrada') -PathType Container) { $candidatas += $m }
-}
+# la carpeta de mails: primero el lugar nuevo (mudanza del 17/10/2026; la fuente es scripts/_lib/nubeCarpetas.data.json, clave
+# mails: este archivo corre en otra PC sin el repo y lleva el nombre adentro). Si no esta, la que tiene "mails\_entrada" en un
+# primer nivel de la biblioteca (si hay mas de una, la que no esta en cuarentena).
 $destino = $null
-if ($candidatas.Count -gt 0) {
-  $sin = @($candidatas | Where-Object { (Split-Path -Leaf (Split-Path -Parent $_)) -notlike '_CUARENTENA_*' })
-  if ($sin.Count -ge 1) { $destino = $sin[0] } else { $destino = $candidatas[0] }
+$mailsNueva = Join-Path $bib 'ASISTENTE INGENIERIA\4- MAILS DEL EQUIPO\mails'
+if (Test-Path -LiteralPath (Join-Path $mailsNueva '_entrada') -PathType Container) { $destino = $mailsNueva }
+if (-not $destino) {
+  $candidatas = @()
+  foreach ($d in @(Get-ChildItem -LiteralPath $bib -Directory -ErrorAction SilentlyContinue)) {
+    $m = Join-Path $d.FullName 'mails'
+    if (Test-Path -LiteralPath (Join-Path $m '_entrada') -PathType Container) { $candidatas += $m }
+  }
+  if ($candidatas.Count -gt 0) {
+    $sin = @($candidatas | Where-Object { (Split-Path -Leaf (Split-Path -Parent $_)) -notlike '_CUARENTENA_*' })
+    if ($sin.Count -ge 1) { $destino = $sin[0] } else { $destino = $candidatas[0] }
+  }
 }
 if (-not $destino) { Mal 'no encuentro en la nube de Ingenieria la carpeta de mails. Revisar que la biblioteca este sincronizada del todo.' }
 Ok ('carpeta de la nube: ' + $destino)
@@ -83,10 +89,19 @@ Ok ('carpeta de la nube: ' + $destino)
 # la lista de lo privado publicada (la mas nueva) y el Node del paquete publicado
 $privados = $null
 $nodeNube = $null
-foreach ($d in @(Get-ChildItem -LiteralPath $bib -Directory -ErrorAction SilentlyContinue)) {
-  $p = Join-Path $d.FullName '1- PUBLICADO\contenido\conocimiento\comun\mails_privados.json'
-  if ((Test-Path -LiteralPath $p) -and ((-not $privados) -or ((Get-Item -LiteralPath $p).LastWriteTime -gt (Get-Item -LiteralPath $privados).LastWriteTime))) { $privados = $p }
-  $n = Join-Path $d.FullName '1- PUBLICADO\contenido\marketplace\plugins\barack-area\bin\node.exe'
+# El paquete publicado: primero su lugar nuevo (canon, clave area_vieja) y despues las carpetas de primer nivel, como siempre.
+# Si la lista de lo privado esta en el lugar nuevo, gana esa; si no, la mas nueva de las de primer nivel.
+$areaNueva = Join-Path $bib 'ASISTENTE INGENIERIA\9- VIEJO (no usar)\_CUARENTENA_CLAUDE POR AREA'
+$basesPublicado = @($areaNueva)
+$basesPublicado += @(Get-ChildItem -LiteralPath $bib -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
+$privadosDelLugarNuevo = $false
+foreach ($base in $basesPublicado) {
+  $p = Join-Path $base '1- PUBLICADO\contenido\conocimiento\comun\mails_privados.json'
+  if (-not $privadosDelLugarNuevo -and (Test-Path -LiteralPath $p) -and ((-not $privados) -or ((Get-Item -LiteralPath $p).LastWriteTime -gt (Get-Item -LiteralPath $privados).LastWriteTime))) {
+    $privados = $p
+    if ($base -eq $areaNueva) { $privadosDelLugarNuevo = $true }
+  }
+  $n = Join-Path $base '1- PUBLICADO\contenido\marketplace\plugins\barack-area\bin\node.exe'
   if ((-not $nodeNube) -and (Test-Path -LiteralPath $n)) { $nodeNube = $n }
 }
 if (-not $privados -or -not (Leer-Json $privados)) { Mal 'no encuentro la lista de lo privado en la nube de Ingenieria (sin ella no se copia nada, a proposito).' }

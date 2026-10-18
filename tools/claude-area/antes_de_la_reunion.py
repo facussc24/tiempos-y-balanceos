@@ -11,6 +11,10 @@ import subprocess
 import sys
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Este control corre en esta PC, con el repo: lee el canon de las carpetas de la nube (scripts/_lib/nubeCarpetas.data.json),
+# donde esta el asistente por area desde la mudanza del 17/10/2026 y donde estaba antes.
+sys.path.append(os.path.join(RAIZ, "scripts", "_lib"))   # al final: ningun archivo de esa carpeta tapa un modulo de Python
+import nube_carpetas  # noqa: E402
 CASA = r"C:\ClaudeBarack"
 ENTREGABLES = os.path.join(RAIZ, "exports", "CLAUDES_POR_AREA_20261001")
 VIDEOS = ["Video - Claude en Barack.mp4"]   # uno solo desde el 04/10/2026 (pedido de Facundo)
@@ -146,20 +150,29 @@ def paquete(carpeta):
     return ver
 
 
+def carpeta_area_nube(home=None):
+    """(carpeta, cual): la carpeta del asistente por area en la nube de Ingenieria de esta PC. Desde la mudanza del 17/10/2026 esta en
+    «ASISTENTE INGENIERIA\\9- VIEJO (no usar)»; se la busca ahi y, si no esta, donde estaba antes (canon: clave area_vieja).
+    cual es 'nueva', 'vieja' o 'ninguna' (no existe ninguna: la ruta que vuelve es la nueva). (None, None) si la biblioteca no esta sincronizada."""
+    bib = nube_carpetas.buscar_biblioteca(home or os.path.expanduser("~"))
+    if bib is None:
+        return None, None
+    ruta, cual = nube_carpetas.resolver_carpeta("area_vieja", bib)
+    return str(ruta), cual
+
+
 def la_nube(ver):
     """La copia de la nube de Ingenieria: que sea la misma version que el paquete para llevar y que haya subido."""
-    org = os.path.join(os.path.expanduser("~"), "BARACK ARGENTINA SRL")
-    bib = [os.path.join(org, n) for n in (os.listdir(org) if os.path.isdir(org) else []) if re.match(r"^Ingenier.{1,2}a y Proyecto - General$", n)]
-    carpeta = os.path.join(bib[0], "CLAUDE POR AREA") if bib else None
+    carpeta, cual = carpeta_area_nube()
     print("La copia de la nube (%s)" % (carpeta or "no veo la biblioteca de Ingenieria"))
-    if not carpeta or not os.path.isdir(carpeta):
-        decir("OJO", "no esta la carpeta «CLAUDE POR AREA» en la nube de Ingenieria: las PC se instalan solo desde el pendrive")
+    if not carpeta or cual == "ninguna":
+        decir("OJO", "no esta la carpeta del asistente por area en la nube de Ingenieria (ni en el lugar nuevo ni en el de antes): las PC se instalan solo desde el pendrive")
         return
     v = leer_json(os.path.join(carpeta, "1- PUBLICADO", "VERSION.json"))
     igual = bool(v and ver and v.get("manifest_sha256") == ver.get("manifest_sha256"))
     decir("BIEN" if igual else "MAL", "version %s%s" % ((v or {}).get("version"), ", la misma que el paquete para llevar" if igual else "; el paquete para llevar es la %s: no son la misma" % (ver or {}).get("version")))
     try:
-        r = subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", os.path.join(RAIZ, "scripts", "_nubeSubio.ps1"), "-Carpeta", "CLAUDE POR AREA"],
+        r = subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", os.path.join(RAIZ, "scripts", "_nubeSubio.ps1"), "-Carpeta", carpeta],
                            capture_output=True, text=True, timeout=180, encoding="utf-8", errors="replace")
         decir("BIEN" if r.returncode == 0 else "OJO", "subio entera a la nube" if r.returncode == 0 else "todavia hay archivos sin subir a la nube: esperar y medir de nuevo")
     except Exception as e:

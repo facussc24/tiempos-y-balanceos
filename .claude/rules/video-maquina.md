@@ -85,7 +85,7 @@ video (`yt-dlp`), copiar del telefono (`tel_copiar.ps1`, `CopyHere`), copiar rec
 copiar un video o un comprimido de 100 MB o mas (el guardian MIDE el archivo de origen; un video que no puede medir y viene
 de la biblioteca tambien cuenta). **No cuenta** mover o renombrar adentro del disco (el paso 6 de arriba pasa), un zip chico,
 expulsar el pendrive, ni el texto de un comando que es codigo (echo, python, heredocs, el `copy` del codec de ffmpeg); la
-copia al pendrive se mide contra el pendrive. El pedido se le deja a CATA como `PEDIDO N` en `FACUNDO\` de la nube (memoria
+copia al pendrive se mide contra el pendrive. El pedido se le deja a CATA como `PEDIDO N` en `ASISTENTE INGENIERIA\6- PEDIDOS ENTRE PC (FACUNDO)\` de la nube (memoria
 `reference_canal_entre_pcs_pedidos_facundo`). El guardian lo frena (tanda 1.6 del plan del sistema, 16/10/2026; la v1 la
 rechazo el auditor Opus esa noche por frenar 21 de 28 comandos reales que no eran pesados; la v2 se probo con esos 28); el
 10 lo puso el plan y el 100 MB lo puse yo (un video del telefono pesa ~430 MB): si Fak los cambia, van en `guardianes.mjs`.

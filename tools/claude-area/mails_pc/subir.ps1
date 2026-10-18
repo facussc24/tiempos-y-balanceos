@@ -52,22 +52,31 @@ if (-not $bib) {
   foreach ($b in @(Get-ChildItem -LiteralPath $org -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -like 'Ingenier*a y Proyecto - General' })) { $bib = $b.FullName; break }
 }
 if (-not $bib) { Log 'sin nube: no veo la biblioteca de Ingenieria (se reintenta)'; exit 0 }
-$candidatas = @()
-foreach ($d in @(Get-ChildItem -LiteralPath $bib -Directory -ErrorAction SilentlyContinue)) {
-  $m = Join-Path $d.FullName 'mails'
-  if (Test-Path -LiteralPath (Join-Path $m '_entrada') -PathType Container) { $candidatas += $m }
-}
 $destino = $null
-if ($candidatas.Count -gt 0) {
-  $sin = @($candidatas | Where-Object { (Split-Path -Leaf (Split-Path -Parent $_)) -notlike '_CUARENTENA_*' })
-  if ($sin.Count -ge 1) { $destino = $sin[0] } else { $destino = $candidatas[0] }
+# Primero el lugar nuevo (mudanza del 17/10/2026; la fuente es scripts/_lib/nubeCarpetas.data.json, clave mails: este archivo
+# corre en otra PC sin el repo y lleva el nombre adentro). Si no esta, la busqueda de siempre, por la forma.
+$mailsNueva = Join-Path $bib 'ASISTENTE INGENIERIA\4- MAILS DEL EQUIPO\mails'
+if (Test-Path -LiteralPath (Join-Path $mailsNueva '_entrada') -PathType Container) { $destino = $mailsNueva }
+if (-not $destino) {
+  $candidatas = @()
+  foreach ($d in @(Get-ChildItem -LiteralPath $bib -Directory -ErrorAction SilentlyContinue)) {
+    $m = Join-Path $d.FullName 'mails'
+    if (Test-Path -LiteralPath (Join-Path $m '_entrada') -PathType Container) { $candidatas += $m }
+  }
+  if ($candidatas.Count -gt 0) {
+    $sin = @($candidatas | Where-Object { (Split-Path -Leaf (Split-Path -Parent $_)) -notlike '_CUARENTENA_*' })
+    if ($sin.Count -ge 1) { $destino = $sin[0] } else { $destino = $candidatas[0] }
+  }
 }
 if (-not $destino) { Log 'sin nube: no veo la carpeta de mails (se reintenta)'; exit 0 }
 
 # La lista de lo privado publicada: solo si tiene todo lo de la instalada (puede agregar gente, nunca sacar)
 $vLocal = Join-Path $comun 'mails_privados.json'
-foreach ($d in @(Get-ChildItem -LiteralPath $bib -Directory -ErrorAction SilentlyContinue)) {
-  $vNube = Join-Path $d.FullName '1- PUBLICADO\contenido\conocimiento\comun\mails_privados.json'
+# El paquete publicado: primero su lugar nuevo (canon, clave area_vieja) y despues las carpetas de primer nivel, como siempre
+$basesPublicado = @(Join-Path $bib 'ASISTENTE INGENIERIA\9- VIEJO (no usar)\_CUARENTENA_CLAUDE POR AREA')
+$basesPublicado += @(Get-ChildItem -LiteralPath $bib -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
+foreach ($base in $basesPublicado) {
+  $vNube = Join-Path $base '1- PUBLICADO\contenido\conocimiento\comun\mails_privados.json'
   if (-not (Test-Path -LiteralPath $vNube)) { continue }
   if ((Test-Path -LiteralPath $vLocal) -and ((Get-FileHash -LiteralPath $vNube).Hash -ne (Get-FileHash -LiteralPath $vLocal).Hash)) {
     $vn = Leer-Json $vNube

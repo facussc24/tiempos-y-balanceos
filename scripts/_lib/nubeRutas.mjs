@@ -4,8 +4,9 @@
  *
  * DESDE EL 01/10/2026 VIVE EN LA NUBE DE INGENIERIA, no en la nube personal de Fak.
  * Regla dura de Fak (`.claude/rules/nube-ingenieria.md`): "no quiero nada en mi nube personal... solo
- * laburamos en la nube de ingenieria". Carpeta aprobada por el ese dia, con permiso solo para el:
- *     <home>\BARACK ARGENTINA SRL\Ingenieria y Proyecto - General\Claude Fak\
+ * laburamos en la nube de ingenieria". Desde la mudanza del 17/10/2026 la carpeta es
+ *     <home>\BARACK ARGENTINA SRL\Ingenieria y Proyecto - General\ASISTENTE INGENIERIA\5- FACUNDO (memoria y configuracion)\
+ * y la de antes, en la raiz, se sigue encontrando por el canon `nubeCarpetas.data.json` mientras una PC no baje la mudanza.
  * `buscarNube()` devuelve SIEMPRE una ruta adentro de la biblioteca de Ingenieria, exista o no:
  * nunca vuelve a apuntar a `OneDrive - BARACK ARGENTINA SRL`. `buscarNubeVieja()` queda solo para
  * la mudanza y para avisar si una PC todavia tiene la copia en el lugar viejo.
@@ -18,16 +19,59 @@
  * SALTEABA. `statSync` sigue el enlace y mira lo que hay del otro lado: eso es lo que se pregunta.
  * Tests en `__tests__/scripts/nubeRutas.test.mjs`, con una junction (no pide admin).
  */
-import { readdirSync, statSync } from 'fs';
+import { readdirSync, readFileSync, statSync } from 'fs';
 import { homedir } from 'os';
-import { join } from 'path';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
 
 /** Primer nivel de la carpeta sincronizada: el nombre de la organizacion. */
 export const ORGANIZACION = 'BARACK ARGENTINA SRL';
 /** Nombre de la biblioteca de Ingenieria tal como la cuelga Windows al sincronizarla (para el fallback). */
 export const BIBLIOTECA_CANONICA = 'Ingeniería y Proyecto - General';
-/** Carpeta, adentro de la biblioteca, donde vive mi memoria (aprobada por Fak el 01/10/2026). */
-export const CARPETA_EN_INGENIERIA = 'Claude Fak';
+
+/**
+ * CANON DE CARPETAS (mudanza del 17/10/2026). Desde ese dia todo lo del asistente vive adentro de una sola carpeta
+ * de la biblioteca, «ASISTENTE INGENIERIA». Cada carpeta (la memoria, los mails, el buzon, los pedidos...) tiene su
+ * ruta nueva y sus rutas viejas en `nubeCarpetas.data.json`, y se resuelve con UNA regla: la nueva si existe; si no,
+ * la primera vieja que exista; si no existe ninguna, la nueva (lo que crea, crea en el lugar nuevo). Asi el codigo
+ * anda antes y despues de mover, y en una PC donde la nube todavia no bajo la mudanza.
+ */
+export const CANON_CARPETAS = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'nubeCarpetas.data.json'), 'utf8'));
+/** La carpeta unica, en la raiz de la biblioteca. */
+export const CARPETA_UNICA = CANON_CARPETAS.unica;
+
+/** La entrada del canon de esa clave (`facundo`, `mails`, `buzon`, `pedidos`, `instalar`, `equipo`...). */
+export function entradaCarpeta(clave) {
+    const e = CANON_CARPETAS.carpetas.find((c) => c.clave === clave);
+    if (!e) throw new Error(`nubeRutas: no hay carpeta «${clave}» en nubeCarpetas.data.json`);
+    return e;
+}
+
+/**
+ * Resuelve una carpeta del canon adentro de la biblioteca `bib`.
+ * @returns {{ ruta: string, cual: 'nueva'|'vieja'|'ninguna', nueva: string, viejas: string[] }}
+ */
+export function resolverCarpeta(clave, bib, existe = esCarpeta) {
+    const e = entradaCarpeta(clave);
+    const nueva = join(bib, ...e.nueva);
+    const viejas = e.viejas.map((t) => join(bib, ...t));
+    if (existe(nueva)) return { ruta: nueva, cual: 'nueva', nueva, viejas };
+    const v = viejas.find((p) => existe(p));
+    if (v) return { ruta: v, cual: 'vieja', nueva, viejas };
+    return { ruta: nueva, cual: 'ninguna', nueva, viejas };
+}
+
+/**
+ * La ruta de una carpeta del canon en ESTA PC (o en el `home` de prueba). Sin biblioteca sincronizada, la ruta
+ * canonica nueva debajo de `home` (no existe, y el que la usa lo dice).
+ */
+export function carpetaNube(clave, home = homedir()) {
+    const bib = buscarBiblioteca(home) || join(home, ORGANIZACION, BIBLIOTECA_CANONICA);
+    return resolverCarpeta(clave, bib).ruta;
+}
+
+/** Ruta, relativa a la biblioteca, de la carpeta de mi memoria en el lugar NUEVO (la vieja, en el canon). */
+export const CARPETA_EN_INGENIERIA = join(...entradaCarpeta('facundo').nueva);
 /** Variable que apunta a una copia de esa carpeta fuera de la nube (un pendrive): ver `buscarNube`. */
 export const VARIABLE_CEREBRO = 'BARACK_NUBE_CEREBRO';
 
@@ -55,18 +99,19 @@ export function buscarBiblioteca(home = homedir()) {
 
 /**
  * @param {string} [home] carpeta del usuario (por defecto la real)
- * @returns {string} `...\Ingenieria y Proyecto - General\Claude Fak`: adentro de la biblioteca si esta
+ * @returns {string} la carpeta `facundo` del canon (la nueva si existe, si no la vieja): adentro de la biblioteca si esta
  *   PC la tiene sincronizada (exista o no la carpeta, para que `--subir --aplicar` la cree ahi); si no
  *   la tiene, la ruta canonica debajo de `home`, que no existe y hace que `--bajar` lo diga.
  */
 export function buscarNube(home = homedir(), env = process.env) {
     // Una PC que se arma desde un pendrive (08/10/2026, notebook de Calidad): la copia de la memoria viaja en una carpeta
-    // con la misma forma que `Claude Fak` y se dice con esta variable. Solo vale si esa carpeta existe y trae la memoria,
+    // con la misma forma que la carpeta de la memoria y se dice con esta variable. Solo vale si esa carpeta existe y trae la memoria,
     // y NUNCA si apunta a la nube personal (regla nube-ingenieria.md).
     const forzada = env && env[VARIABLE_CEREBRO];
     if (forzada && esCarpeta(join(forzada, 'claude-memoria')) && !/OneDrive - BARACK/i.test(forzada)) return forzada;
-    const bib = buscarBiblioteca(home);
-    return join(bib || join(home, ORGANIZACION, BIBLIOTECA_CANONICA), CARPETA_EN_INGENIERIA);
+    // Desde la mudanza del 17/10/2026: «5- FACUNDO (memoria y configuracion)» adentro de la carpeta unica, y si esta
+    // PC todavia no la tiene, la vieja (canon nubeCarpetas.data.json).
+    return carpetaNube('facundo', home);
 }
 
 /**

@@ -29,6 +29,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { leerJson, sanitizar, leerFecha, fechaHora, diaMes, plural, escribirAtomico, leerArgumentos, carpetaBuzon, ahoraDe } from './comun.mjs';
 import { leerSalud, clasificarPc } from './tablero.mjs';
+import { carpetaNube } from '../../scripts/_lib/nubeRutas.mjs';
 
 export const MINUTOS_ENTRE_EPISODIOS = 45;   // dos avisos de la misma PC a menos de esto son el mismo episodio
 const TOPE_AVISO_BYTES = 64 * 1024;
@@ -223,9 +224,13 @@ export function detalle({ episodios, pcs, versionReferencia }) {
     return `${r.join('\n')}\n`;
 }
 
-/** El buzon de la nube de Ingenieria en la PC del administrador (solo para --hook: las pruebas pasan siempre --buzon). */
+/**
+ * El buzon de la nube de Ingenieria en la PC del administrador (solo para --hook: las pruebas pasan siempre --buzon).
+ * Desde la mudanza del 17/10/2026 el buzon ya no cuelga del area: es la clave `buzon` del canon (scripts/_lib/nubeCarpetas.data.json),
+ * el lugar nuevo si existe y, si no, el viejo. Este programa corre en el repo, asi que lee el canon con nubeRutas.mjs.
+ */
 export function buzonDeLaNube(home = os.homedir()) {
-    return path.join(home, 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General', 'CLAUDE POR AREA', '4- BUZON');
+    return carpetaNube('buzon', home);
 }
 
 function main(argv) {

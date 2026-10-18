@@ -28,7 +28,7 @@ En la PC hay dos carpetas de OneDrive con nombre parecido. Las dos son de la emp
 
 | Qué | Dónde está hoy | Estado |
 |---|---|---|
-| Mi memoria y la configuración de Claude | **Mudada el 01/10/2026** a `BARACK ARGENTINA SRL\Ingeniería y Proyecto - General\Claude Fak\` (aprobada por Fak). Sin permiso especial: Fak decidió que no hace falta (*"ya fue la privacidad"*); no volver a proponerlo | En la personal queda la copia vieja `Barack-cerebro\`, congelada: ya no se escribe ahí. Sacarla es borrar: con el OK de Fak |
+| Mi memoria y la configuración de Claude | **Mudada el 01/10/2026** a la nube de Ingeniería (aprobada por Fak) y el **17/10/2026** a la carpeta única: `BARACK ARGENTINA SRL\Ingeniería y Proyecto - General\ASISTENTE INGENIERIA\5- FACUNDO (memoria y configuracion)\` (todo lo del asistente vive en `ASISTENTE INGENIERIA`; cada carpeta, nueva y vieja, en `scripts/_lib/nubeCarpetas.data.json`). Sin permiso especial: Fak decidió que no hace falta (*"ya fue la privacidad"*); no volver a proponerlo | En la personal queda la copia vieja `Barack-cerebro\`, congelada: ya no se escribe ahí. Sacarla es borrar: con el OK de Fak |
 | El Escritorio (la cola de tareas) | `OneDrive - BARACK ARGENTINA SRL\Desktop\` | Lo guarda ahí Windows, no yo. Sigue funcionando como está hasta que Fak decida |
 | La copia de `docs-local` | `OneDrive - BARACK ARGENTINA SRL\Barack-docs-local\` | Sin mudar |
 

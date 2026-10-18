@@ -213,6 +213,69 @@ describe('instalar_mi_pc.ps1', () => {
         expect(r.stdout).toMatch(/tu memoria y tu configuracion/);
         expect(fs.existsSync(repo)).toBe(false);
     }, 120000);
+
+    // Mudanza del 17/10/2026 (todo lo del asistente en «ASISTENTE INGENIERIA»): el Node del paquete publicado del asistente por area
+    // (clave area_vieja del canon scripts/_lib/nubeCarpetas.data.json) se busca primero en el lugar nuevo y, si no esta, en las carpetas
+    // de primer nivel de antes. Este instalador corre en otra PC sin el repo y lleva el nombre adentro.
+    it('el lugar nuevo del paquete publicado que lleva adentro es el del canon (clave area_vieja)', () => {
+        const canon = JSON.parse(fs.readFileSync(path.join(RAIZ, 'scripts', '_lib', 'nubeCarpetas.data.json'), 'utf8'));
+        const nueva = canon.carpetas.find((c) => c.clave === 'area_vieja').nueva.join('\\');
+        expect(ps1.toString('ascii')).toContain(`Join-Path $bib '${nueva}'`);
+    });
+    const NODE_DEL_PAQUETE = ['1- PUBLICADO', 'contenido', 'marketplace', 'plugins', 'barack-area', 'bin', 'node.exe'];
+    const LUGARES_DEL_PAQUETE = {
+        vieja: ['CLAUDE POR AREA'],
+        nueva: ['ASISTENTE INGENIERIA', '9- VIEJO (no usar)', '_CUARENTENA_CLAUDE POR AREA'],
+    };
+    for (const layout of ['vieja', 'nueva', 'ambas']) {
+        it.runIf(conPowerShell)(`el Node de la nube sale ${layout === 'vieja' ? 'del lugar de antes' : 'del lugar nuevo (y si estan los dos, de ese)'} (layout «${layout}», en ensayo)`, () => {
+            const t = fs.mkdtempSync(path.join(os.tmpdir(), 'mi-pc-'));
+            temporales.push(t);
+            const bib = path.join(t, 'biblioteca');      // (sin tilde: la consola de PowerShell escribe la salida en otra codificacion y no se podria comparar la ruta)
+            // la memoria y la configuracion de Fak, como estaban (primer nivel): este caso mira solo el Node
+            for (const c of ['claude-memoria', 'claude-config']) fs.mkdirSync(path.join(bib, 'Claude Fak', c), { recursive: true });
+            const nodes = {};
+            for (const cual of layout === 'ambas' ? ['vieja', 'nueva'] : [layout]) {
+                nodes[cual] = path.join(bib, ...LUGARES_DEL_PAQUETE[cual], ...NODE_DEL_PAQUETE);
+                fs.mkdirSync(path.dirname(nodes[cual]), { recursive: true });
+                fs.writeFileSync(nodes[cual], 'no es un node de verdad: en ensayo no se ejecuta', 'utf8');
+            }
+            // una PC donde no hay Node en el PATH ni instalado por otros programas (si no, el instalador ni mira la nube)
+            const env = { ...process.env, PATH: [path.join(process.env.SystemRoot || 'C:\\Windows', 'System32'), process.env.SystemRoot || 'C:\\Windows', path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0')].join(path.delimiter), LOCALAPPDATA: path.join(t, 'local'), USERPROFILE: t };
+            const powershell = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+            const r = spawnSync(powershell, ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', path.join(DIR, 'instalar_mi_pc.ps1'), '-Ensayo', '-Biblioteca', bib, '-Repo', path.join(t, 'repo')], { encoding: 'utf8', env, timeout: 120000 });
+            expect(r.status, r.stdout + r.stderr).toBe(0);
+            // (la ruta puede venir en su forma corta 8.3 o larga segun como la arme PowerShell: se comparan resueltas)
+            const dichos = [...r.stdout.matchAll(/^\s*OK\s+Node: (.+)$/gm)].map((m) => fs.realpathSync.native(m[1].trim()).toLowerCase());
+            expect(dichos).toEqual([fs.realpathSync.native(nodes[layout === 'vieja' ? 'vieja' : 'nueva']).toLowerCase()]);
+            expect(r.stdout).toMatch(/\[ensayo\] haria: copiar Node de la nube/);
+            expect(fs.existsSync(path.join(t, 'repo'))).toBe(false);
+            expect(fs.existsSync(path.join(t, 'local', 'MiAsistente'))).toBe(false);      // el ensayo no copia el Node: solo dice que lo haria
+        }, 180000);
+    }
+    // La memoria y la configuracion de Fak (clave «facundo» del canon): antes del 17/10/2026 en la raiz de la biblioteca,
+    // despues en la carpeta unica. El instalador de una PC nueva las tiene que encontrar en los dos lugares.
+    // del canon, no escritos a mano: si el canon cambia y el .ps1 no, este test cae (auditor 17/10, Nit 2)
+    const FACUNDO = JSON.parse(fs.readFileSync(path.join(RAIZ, 'scripts', '_lib', 'nubeCarpetas.data.json'), 'utf8')).carpetas.find((c) => c.clave === 'facundo');
+    const LUGARES_DE_LA_MEMORIA = { vieja: FACUNDO.viejas[0], nueva: FACUNDO.nueva };
+    it('la ruta nueva de la memoria que lleva adentro el instalador es la del canon (clave facundo)', () => {
+        expect(fs.readFileSync(path.join(DIR, 'instalar_mi_pc.ps1'), 'utf8')).toContain(`Join-Path $bib '${FACUNDO.nueva.join('\\')}'`);
+    });
+    for (const layout of ['vieja', 'nueva', 'ambas']) {
+        it.runIf(conPowerShell)(`la memoria sale ${layout === 'vieja' ? 'del lugar de antes' : 'del lugar nuevo (y si estan los dos, de ese)'} (layout «${layout}», en ensayo)`, () => {
+            const t = fs.mkdtempSync(path.join(os.tmpdir(), 'mi-pc-mem-'));
+            temporales.push(t);
+            const bib = path.join(t, 'biblioteca');
+            for (const cual of layout === 'ambas' ? ['vieja', 'nueva'] : [layout]) {
+                for (const c of ['claude-memoria', 'claude-config']) fs.mkdirSync(path.join(bib, ...LUGARES_DE_LA_MEMORIA[cual], c), { recursive: true });
+            }
+            const powershell = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+            const r = spawnSync(powershell, ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', path.join(DIR, 'instalar_mi_pc.ps1'), '-Ensayo', '-Biblioteca', bib, '-Repo', path.join(t, 'repo')], { encoding: 'utf8', env: { ...process.env, LOCALAPPDATA: path.join(t, 'local'), USERPROFILE: t }, timeout: 120000 });
+            expect(r.status, r.stdout + r.stderr).toBe(0);
+            const dicha = (r.stdout.match(/tu memoria y tu configuracion: (.+)$/m) || [])[1];
+            expect(dicha && fs.realpathSync.native(dicha.trim()).toLowerCase()).toBe(fs.realpathSync.native(path.join(bib, ...LUGARES_DE_LA_MEMORIA[layout === 'vieja' ? 'vieja' : 'nueva'])).toLowerCase());
+        }, 180000);
+    }
 });
 
 describe('publicar: una sola carpeta en la nube, sin la palabra del asistente en los nombres', () => {
