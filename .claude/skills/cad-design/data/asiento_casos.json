@@ -49,8 +49,8 @@
       "apriete": {
         "tipo": "costado",
         "sondas": [{"x": 0.0, "y_desde": 20.0, "dir": -1}, {"x": 0.0, "y_desde": -20.0, "dir": 1}],
-        "z_labio_declarado": -7.49,
-        "_": "el anillo aprieta el vinilo de COSTADO contra la pared de la ranura: sigue apretando mientras su banda recta llegue mas alla del labio de plastico. La banda y el labio se MIDEN (rayos horizontales sobre la pieza y sobre el plastico); el labio declarado (params_v10.json '_v15', 13/10: 'el labio de plastico (z -7,49)') es la segunda fuente: si no coinciden en 0,05, el gate aborta."
+        "z_labio": -7.49,
+        "_": "el anillo aprieta el vinilo de COSTADO contra la pared de la ranura: sigue apretando mientras su banda recta llegue mas alla del labio. La banda recta de la PIEZA se MIDE (rayos horizontales). El labio NO se puede medir: la pared de la ranura tiene desmoldeo (0,4 mm en 7 mm, medido el 17/10) y no hay un borde fisico en ese z; es una cota de DISENO de la escena: ranura_z_one.json -7,4917 = arriba de la banda que aprieta del dedo de la v9 (z -8,39 a -7,49, params_v10.json 'macho'), y params_v10.json '_v15' lo llama 'labio de plastico (z -7,49)'. Corregido el 17/10 despues de medir: la primera version de este archivo decia que el labio se media."
       },
       "piezas": {
         "v14": {
@@ -67,7 +67,8 @@
           "stl": "C:/Dev/_utrim/out/v15_two.stl",
           "_fuente": "la v15 del 13/10 (no impresa)",
           "publicado": {
-            "listones_tapados": {"pct_hamaca": 28, "punta_mediana_mm": 1.69}
+            "listones_tapados": {"pct_hamaca": 28, "punta_mediana_mm": 1.69},
+            "gemelo_50": {"pct_hamaca": 66, "hamaca_max_mm": 1.31, "_": "renglon informativo: sim_asiento_v16.py --error-local, 50 casos, semilla 7 (C:/Dev/_utrim/out/sim_v16_gemelo_normal.json, 17/10)"}
           },
           "ventana_publicada": {"banda": 1.19, "punta": 0.75, "_": "params_v10.json '_v15': 'ventana +1,19 / -0,75'"},
           "esperado": {"apoyos": "ROJO", "ventana": "VERDE", "asiento": "ROJO"},
@@ -76,6 +77,8 @@
         "v16": {
           "stl": "C:/Dev/_utrim/out/v16/virolador_v16_two.stl",
           "_fuente": "la v16 de la tanda 11 (17/10), laminada y sin imprimir; su veredicto lo da la prueba fisica de Fak",
+          "esquinas": [[-38.1, -27], [127.9, -27], [-38.1, 25], [127.9, 25]],
+          "_esquinas": "las de SU placa (168 mm): la tanda 11 midio la v16 en x -38,1 / 127,9 (docs/PLAN_3D_A_FONDO_2026-10-17.md, 'Ojo al comparar'); la v14 y la v15 se miden en -35 / 125 (las de la escena)",
           "esperado": {"apoyos": "ROJO", "apoyos_4_2_1": "VERDE", "ventana": "VERDE", "asiento": "VERDE"},
           "_esperado": "lo que la tanda 11 midio con la copia de la simulacion: 0 de 100, maxima 0,16; la punta no es medible (los puntos de la mano 'punta' caen adentro de los apoyos). No es caso de calibracion: es la primera pieza que el gate juzga despues de calibrar."
         }
