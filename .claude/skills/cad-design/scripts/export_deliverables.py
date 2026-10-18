@@ -15,7 +15,8 @@ manifest, una sola vez:
                            diseno las deja pasar marcadas, la ENTREGA no.
 
 y por cada pieza (1) collision_check con n_inside=0 y contacto, (2) evidencia de ensamble
-si el STEP trae 2+ solidos, (3) un render mas nuevo que el STEP.
+si el STEP trae 2+ solidos, (3) un render mas nuevo que el STEP. Al copiar, (4) la cabecera
+del STEP ENTREGADO queda en el orden de ISO 10303-21 y se vuelve a leer (17/10/2026).
 
 Con --final (la entrega que va a Fak, no una copia de trabajo) corre ademas el GATE DE
 ENTREGABLE sobre la carpeta destino: PDF + STEP + simulacion grabada, misma corrida, y
@@ -32,7 +33,7 @@ import shutil
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cadlib import envcheck, geom, workdir  # noqa: E402
+from cadlib import envcheck, geom, step_cabecera, workdir  # noqa: E402
 
 import gmsh  # noqa: E402
 
@@ -367,6 +368,28 @@ def main():
             # cuando se CONSTRUYO cada cosa, que es lo que dice medir.
             shutil.copy2(f, args.deliver)
             delivered.append(os.path.basename(f))
+            # Cabecera STEP en el orden de ISO 10303-21 (tanda 2, 17/10/2026): OpenCASCADE 7.8 escribe FILE_NAME
+            # antes que FILE_DESCRIPTION y CATIA V5 lee ese archivo VACIO sin avisar. Se arregla la COPIA que se
+            # entrega (conservando su fecha, por G-E2) y se vuelve a LEER: se verifica el archivo que se entrega.
+            if f.lower().endswith((".step", ".stp")):
+                dst = os.path.join(args.deliver, os.path.basename(f))
+                # si la cabecera no se puede leer o arreglar (le falta una entidad o HEADER;), la entrega SIGUE con un
+                # aviso, como antes de este paso (revisor por API del 18/10: abortaba con un traceback)
+                try:
+                    cambio, orden = step_cabecera.arreglar_archivo(dst)
+                except (OSError, ValueError) as e:
+                    print("  AVISO cabecera STEP de %s: no se pudo arreglar (%s); se entrega como estaba"
+                          % (os.path.basename(f), e))
+                    cambio, orden = False, None
+                o = step_cabecera.orden_de_archivo(dst)
+                if o is None:
+                    print("  AVISO cabecera STEP de %s: no se encontro una cabecera completa para revisar"
+                          % os.path.basename(f))
+                elif o != step_cabecera.CLAVES:
+                    raise SystemExit("[GATE cabecera STEP] %s quedo con la cabecera fuera de orden" % dst)
+                if cambio:
+                    print("  cabecera STEP de %s reordenada (tenia %s; ISO 10303-21)"
+                          % (os.path.basename(f), ", ".join(orden)))
         print("entregado: %s (%s)" % (base, ", ".join(os.path.splitext(x)[1] for x in outs)))
 
     # ---- GATE DE ENTREGABLE: solo la entrega que va a Fak ----

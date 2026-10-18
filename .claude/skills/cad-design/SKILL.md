@@ -213,6 +213,16 @@ De las tres entregas rechazadas, **dos no fallaron por el diseño: fallaron por 
   escalón sí): que el motor ande se prueba, no se asume.
 - **G-E3b — cuánto color tiene el render**, medido sobre los píxeles del objeto. **Se informa;
   no bloquea.** Un número bajo es una razón para mirar la imagen, no un veredicto.
+- **G-E5, G-E6 y G-E7 (tanda 2, 17/10/2026), AVISO la primera semana** (`procesoCanon.data.json`, revisar el 24/10).
+  Ojo: suman renglones AVISO en la salida de TODAS las entregas, también de las viejas (sin pliego, sin criterio): el
+  veredicto no cambia, la salida sí. El día que pasen a freno, G-E7 frena toda entrega sin `criterio_aceptacion.json`.
+  **G-E5** si el pliego dice `apoya-sobre-blando`, corrió el GATE A y dio VERDE; **G-E6** la cabecera de cada STEP de
+  la carpeta en el orden de ISO 10303-21 (el freno es `export_deliverables.py`, que la arregla en la copia que entrega y
+  la vuelve a leer; para lo ya entregado, `cabecera_step.py revisar <carpeta>`, que no abre lo que está solo en la
+  nube); **G-E7** el criterio de aceptación escrito ANTES de imprimir en `<workdir>/criterio_aceptacion.json`, una
+  lista de `{"que": lo que se mide en la pieza impresa, "con": el instrumento o la prueba, "acepta": el valor o la
+  condición}` (`reference/ficha-utillajes.md` K1; patrón vivo `examples/gancho_mochila/verificar_gancho.py`). Lo
+  mismo va en el PDF, con las palabras de Fak.
 - **G-E4 — revisión ciega, después del GATE E verde y antes de mostrárselo a Fak (22/09/2026).**
   Los gates en verde no vieron lo que Fak vio a ojo: el dispositivo del Insert (24/08 a 22/09,
   cadena de 75 pasos verde) volvió cinco veces (*"hacés todo a medias sin testearlo"*, *"puesto
@@ -230,7 +240,44 @@ exacta, sombra proyectada, contorno por segunda derivada de la profundidad, mani
 para poner el operario en la escena, **fondo blanco** — Fak 02/09: *"necesito verlos bien los
 modelos 3D, con fondo blanco"*).
 
-> **Lo que los gates NO cubren, y hay que saberlo:** todos nacieron DESPUÉS de que una persona encontrara el bug. Son tests de regresión: demuestran memoria, no capacidad de detección. Las dos clases que siguen abiertas: el **estado real del material** (el STEP es la pieza fría y desnuda; en uso tiene tela, adhesivo, calor y springback) y la **unicidad del posicionamiento** (nada verifica que haya UNA sola forma de montar el utillaje). Y falta lo que la auditoría del 24/08 dejó abierto para ensambles: **partes de catálogo con procedencia** (hoy GATE 1 exige que toda cota salga del CAD medido o de Fak — para un rodamiento comprado no hay fuente válida posible) y **cálculo del conjunto** (eje entre apoyos, vuelco, par en el volante): el único cálculo estructural del sistema es `viga_voladizo.py`, que sirve para láminas impresas en PLA.
+**GATE A — ASIENTO SOBRE BLANDO** (`gate_asiento.py`, tanda 2, 17/10/2026; plan `docs/PLAN_3D_GATE_ASIENTO_2026-10-16.md`).
+El virolador v14 pasó todos los gates de arriba y en la planta se hamaca sobre el panel tapizado. Este gate se le
+**suma** a la interferencia contra el sustrato rígido (que sigue igual): corre solo si el utillaje apoya sobre algo
+blando (etiqueta `apoya-sobre-blando` en el pliego de `gate_proceso.py`; sobre rígido no corre y lo dice).
+
+```
+gate_asiento.py calibrar  --escena upper_trim_two --workdir C:\Dev\_utrim\gate_asiento     # una vez por version
+gate_asiento.py verificar --escena <escena> --pieza <nombre> [--stl pieza.stl] --workdir W  # cada pieza
+```
+
+- **Apoyos** (pose de DISEÑO, grilla de 0,25 mm): es apoyo toda zona de la pieza a 0,10 mm o menos de la luz más
+  chica (no de una luz fija: una pieza 0,11 mm más lejos no se escapa). Cada zona se mira por su eje: chica = un punto
+  de apoyo; larga (un cuarto del largo mayor de la pieza o más) = un riel, que apoya en sus dos extremos; larga y ancha
+  = una superficie grande, ROJO. Z y los dos giros necesitan **tres puntos que no estén en línea**: ROJO si hay más, si
+  hay menos, si están en línea (tres apoyos en fila vuelcan) o si una zona está METIDA en el blando; SIN DATO si la
+  pieza se sale de la grilla de la escena o menos del 40 % tiene panel enfrente. El 0,25 y el −0,02 de «metido» se
+  fijaron contra los casos conocidos, sin fuente externa: a revisar con una pieza nueva.
+  Renglón aparte, informativo: 4-2-1 sobre una misma superficie (`ficha-utillajes.md` U7/U8). La ubicación en el
+  plano (X, Y, giro en Z) no la mide: rayos verticales.
+- **Ventana**: cuánto puede alejarse el panel y la banda sigue apretando, y cuánto acercarse antes de tocar plástico.
+  Mínimos 1,0 y 0,6 mm (`data/casos_3d.json`). La v14 da 0,23 / 0,24: ROJO aunque el choque dé cero.
+- **Asiento**: la simulación del 13/10 llevada a `cadlib/asiento.py` («se hamaca en N de 100», «se mueve X mm en la
+  punta»), más el gemelo de espesor desparejo (informativo). Los sorteos del blando son una hipótesis declarada, no una
+  medición, hasta escanear el panel.
+- **Disciplina:** par BIEN/MAL sintético propio en cada corrida (código 3 si no separa) y **no juzga una pieza nueva
+  sin calibración vigente**: `calibrar` tiene que haber reproducido EXACTO lo publicado de la v14 (100 y 68 de 100) y la
+  v15 (28 de 100, 1,69 mm en la punta) con la misma versión de las cuentas, de los umbrales, de la escena y del panel
+  (`data/asiento_calibracion.json`). Si dos fuentes dicen cosas distintas sobre dónde apoya (pliego, escena,
+  `--etiqueta`), sale con código 2: no elige. «Punta NO APLICA» se decide por la geometría (la mano de la escena cae
+  adentro de los apoyos): se simula igual, se dice en el renglón y la punta de esa pieza se declara con `mano_punta` o la
+  decide la prueba física. `verificar` corre 50 casos (la calibración, 150): con 50 un porcentaje tiene ±7 puntos de
+  ruido, y cerca del umbral se corre con `--casos-sim 150`.
+- **Modo:** AVISO la primera semana (`procesoCanon.data.json` → `gateAsiento`, revisar el 24/10): `gate_entregable.py`
+  lo informa (G-E5) y no frena. Pasa a freno con el sí de Fak y el número de falsos positivos medido.
+- **Lo que aprendió al nacer:** la grilla de 1 mm de la simulación no ve el tercer pasador de la v14 (0,9 mm de ancho
+  cae entre dos puntos). El inventario usa una grilla fina y el gate avisa todo apoyo que la simulación no ve.
+
+> **Lo que los gates NO cubren, y hay que saberlo:** todos nacieron DESPUÉS de que una persona encontrara el bug. Son tests de regresión: demuestran memoria, no capacidad de detección. Las dos clases que siguen abiertas: el **estado real del material** (el STEP es la pieza fría y desnuda; en uso tiene tela, adhesivo, calor y springback; el GATE A cubre el asiento sobre blando con una hipótesis del blando, no con una medición) y la **unicidad del posicionamiento** (el GATE A cuenta los apoyos en Z; nada verifica todavía que haya UNA sola forma de ubicarlo en el plano). Y falta lo que la auditoría del 24/08 dejó abierto para ensambles: **partes de catálogo con procedencia** (hoy GATE 1 exige que toda cota salga del CAD medido o de Fak — para un rodamiento comprado no hay fuente válida posible) y **cálculo del conjunto** (eje entre apoyos, vuelco, par en el volante): el único cálculo estructural del sistema es `viga_voladizo.py`, que sirve para láminas impresas en PLA.
 
 ## 1. Entorno — UN solo intérprete
 

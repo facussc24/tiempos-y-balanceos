@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **17/10 — Una simulación que reproduce lo publicado puede estar ciega a una parte de la pieza.** Graduado a `reference_gate_asiento_simulacion_ciega`.
+
 - **17/10 — Un caso de prueba peligroso (leer el archivo de secretos, borrar, pisar el listado maestro) no se pega en el chat: un filtro de la plataforma cortó a la hija que imprimió los casos del auditor y la ronda perdió una sesión; los casos viajan por archivo con el nombre del secreto como marcador y los tests los llaman por su código.** Graduado al encargo de la ronda 3 de la tanda 3 (E261017-88fe) y a `__tests__/scripts/guardianesRonda3.casos.json`.
 
 - **11/10 — Antes de un push que agrega archivos o toca `settings.json` va la suite COMPLETA, y un umbral de una regla no lo aflojo yo: va como propuesta.** Graduado a `feedback_suite_completa_antes_del_push` y `feedback_un_numero_de_la_regla_no_lo_cambio_yo`.

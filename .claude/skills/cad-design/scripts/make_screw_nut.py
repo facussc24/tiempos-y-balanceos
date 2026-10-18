@@ -14,6 +14,11 @@ El resultado es --clearance/2 de luz radial en cresta y en flanco.
 
 Orientacion de impresion asumida: tornillo PARADO con la cabeza sobre la cama (rosca en Z,
 sin soportes); tuerca apoyada de plano. Por eso la cabeza no lleva chaflan abajo.
+OJO (14/10/2026, ficha-fdm.md O1/O4): un tornillo que recibe carga de COSTADO impreso parado se
+parte bajo la cabeza por la linea de capa; ese va ACOSTADO. Parado sirve solo sin carga lateral.
+
+Piso de la tuerca (regla de Leo, 13/10/2026, ficha-fdm.md R2): --nut-h >= --major. Mas baja
+solo con --tuerca-baja "<motivo>", que queda escrito en el _datos.json.
 
 Uso:
     python make_screw_nut.py --major 4.0 --pitch 1.0 --clearance 0.25 \
@@ -249,6 +254,18 @@ def build_nut(*, major, pitch, nut_af, nut_h, nut_chamfer, entry_chamfer=1.0, st
 
 
 # --------------------------------------------------------------------------- main
+def piso_tuerca(major, nut_h):
+    """(ok, mensaje). Regla de Leo (13/10/2026, ficha-fdm.md R2): la tuerca IMPRESA mide de alto al menos el diametro
+    del tornillo; cuanto mas alta, mas agarre. Es mas exigente que una ISO 4032 de acero (0,83-0,85 D de M6 a M10)
+    porque el plastico aguanta menos. Cuanto mas alto conviene (1,5 D contra 2,5 D) no esta resuelto: a medir en la A2L
+    (ficha-fdm.md R3). Con carga o par, tuerca y tornillo de acero (R5)."""
+    if nut_h + 1e-9 >= major:
+        return True, "tuerca %.2f mm = %.2f D (piso de Leo: 1,0 D)" % (nut_h, nut_h / major)
+    return False, ("la tuerca impresa mide %.2f mm de alto y el tornillo %.2f mm de diametro (%.2f D): el piso es "
+                   "1,0 D = %.2f mm (regla de Leo, ficha-fdm.md R2). Si va mas baja a proposito, --tuerca-baja "
+                   "\"<motivo>\"" % (nut_h, major, nut_h / major, major))
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -275,7 +292,10 @@ def main(argv=None):
     p.add_argument("--knurl-n", type=int, default=12)
     p.add_argument("--knurl-depth", type=float, default=0.8)
     p.add_argument("--nut-af", type=float, required=True, help="entre caras de la tuerca (mm)")
-    p.add_argument("--nut-h", type=float, required=True)
+    p.add_argument("--nut-h", type=float, required=True,
+                   help="alto de la tuerca (mm). Piso: el diametro del tornillo (regla de Leo, ficha-fdm.md R2)")
+    p.add_argument("--tuerca-baja", default=None, metavar="MOTIVO",
+                   help="permite una tuerca mas baja que el diametro; el motivo queda escrito en el _datos.json")
     p.add_argument("--starts", type=int, default=1,
                    help="entradas de rosca. El avance por vuelta pasa a starts*pitch SIN "
                         "adelgazar el nucleo: 3 entradas = 3x mas rapido de enroscar, mismo "
@@ -291,6 +311,10 @@ def main(argv=None):
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--name", default="tornillo")
     a = p.parse_args(argv)
+    ok_piso, msg_piso = piso_tuerca(a.major, a.nut_h)
+    if not ok_piso and not a.tuerca_baja:
+        raise SystemExit("[make_screw_nut] " + msg_piso)
+    print("[make_screw_nut] %s%s" % (msg_piso, (" — mas baja a proposito: %s" % a.tuerca_baja) if not ok_piso else ""))
 
     a.out.mkdir(parents=True, exist_ok=True)
 
@@ -445,6 +469,9 @@ def main(argv=None):
             "diam_mayor_rosca_mm": round(nth.major_diameter, 3),
             "diam_menor_mm": round(2 * nth.min_radius, 3),
             "vueltas": round(a.nut_h / a.pitch, 1),
+            "alto_sobre_diametro": round(a.nut_h / a.major, 2),
+            "piso_de_leo_1D": bool(ok_piso),
+            "tuerca_baja_motivo": a.tuerca_baja,
             "volumen_mm3": round(nut.volume, 1),
         },
         "rosca_presente_pct": round(100 * frac_rosca, 1),

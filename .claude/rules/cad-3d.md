@@ -334,10 +334,20 @@ tolerancia. La boca cónica del gancho salió de aplicar esto: deja de depender 
 *Enforcement:* el `params.json` de la pieza lleva la tolerancia de proceso medida al lado de la
 holgura de diseño, y `verificar_*.py` falla si la holgura de diseño no la supera — una pieza cuya
 función vive dentro del ruido de la máquina no pasa el gate. Memorias `impresora_3d_fak`
-(**Elegoo RAPID PLA+**, Neptune 4 Max, boquilla 0,4), `roscas_impresas_3d`.
+(el caso del gancho se midió en la **Elegoo** Neptune 4 Max con RAPID PLA+; desde el 13/10/2026 las piezas
+nuevas van a la **Bambu A2L con PLA Lite**, boquilla 0,4, y un número de una no se traslada a la otra sin decirlo:
+`cad-design/reference/ficha-fdm.md`), `roscas_impresas_3d`.
 
 **PRE-ENTREGA (lo demás):** render + MIRAR yo el resultado + interferencia contra el sustrato RÍGIDO
 ≈ 0 (no vs el tapizado blando) + CADGenBench (validez→forma→interface→topología) + adjuntar evidencia.
+**Y si el utillaje apoya sobre algo BLANDO (tapizado, espuma, goma, chapa fina), además el GATE A de asiento**
+(tanda 2, 17/10/2026): `gate_asiento.py verificar --escena <escena> --pieza <pieza> --workdir W` — apoyos en la pose
+de diseño (cada zona que toca es un punto, o dos si es un riel: ROJO si no son exactamente tres puntos que no estén
+en línea, si hay una superficie grande o si una zona está metida en el blando), ventana de asiento (ROJO si
+es de décimas aunque el choque dé cero) y simulación apretando («se hamaca en N de 100»). No reemplaza a la
+interferencia contra el rígido: se le suma. Nació porque la v14 del virolador pasó todos los gates y se hamaca en la
+mano; no juzga sin reproducir antes la v14 y la v15. La primera semana avisa (G-E5 de `gate_entregable.py`) y pasa a
+freno con el sí de Fak y los falsos positivos medidos. Detalle: skill `cad-design`, GATE A.
 Nunca decir "listo" sin esto — "un cambio rápido sin verificar no es rápido, es un ida-y-vuelta más".
 Ojo con el **encuadre del render**: si el cuadro se calcula sobre la unión de las capas, cuanto más
 corrido está el dispositivo más grande da el cuadro y **menos se ve el error**. Encuadre anclado a la
@@ -358,5 +368,9 @@ un assert que corte si sale la otra.
 
 Entorno: TODO corre con `.venv-cad\Scripts\python.exe` (Py3.12: gmsh + build123d + trimesh).
 Tolerancias de impresión: 0,3-0,5 mm/lado en lo que entra en un vano, panza ≥2 mm, inserto heat-set +
-pin anti-giro. Autoridad de identidad = master real, no proxy (unifica con
+pin anti-giro. Toda holgura lleva escrita su unidad (por lado o al diámetro) y la máquina con que se midió; las
+reglas de diseño para imprimir (orientación contra la carga, paredes, roscas y la tuerca impresa ≥ el diámetro del
+tornillo, que `make_screw_nut.py` frena) viven en `cad-design/reference/ficha-fdm.md`. El STEP que se entrega lleva la
+cabecera en el orden de ISO 10303-21 (si no, CATIA V5 lo lee vacío): lo arregla `export_deliverables.py` en la copia y
+lo revisa `cabecera_step.py revisar <carpeta>`. Autoridad de identidad = master real, no proxy (unifica con
 `feedback_identidad_codigo_pieza_autoridad_destino`).

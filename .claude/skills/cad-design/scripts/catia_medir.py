@@ -51,20 +51,10 @@ def cnext_abiertos(correr=subprocess.run):
     return [int(m.group(1)) for m in re.finditer(r'"CNEXT\.exe","(\d+)"', r.stdout or "", re.I)]
 
 
-def cabecera_en_orden(texto):
-    """Devuelve (texto_corregido, orden_que_tenia). ISO 10303-21 fija FILE_DESCRIPTION, FILE_NAME, FILE_SCHEMA."""
-    i, j = texto.index("HEADER;") + len("HEADER;"), texto.index("ENDSEC;")
-    cab = texto[i:j]
-    claves = ("FILE_DESCRIPTION", "FILE_NAME", "FILE_SCHEMA")
-    partes = {}
-    for k in claves:
-        m = re.search(k + r"\s*\(.*?\)\s*;", cab, re.S)
-        if not m:
-            raise ValueError(f"la cabecera no trae {k}")
-        partes[k] = m.group(0)
-    orden = sorted(claves, key=lambda k: cab.index(partes[k]))
-    nueva = "\n" + "\n".join(partes[k] for k in claves) + "\n"
-    return texto[:i] + nueva + texto[j:], orden
+# Devuelve (texto_corregido, orden_que_tenia). Vive en cadlib desde la tanda 2 (17/10/2026): la usan tambien
+# export_deliverables.py, gate_entregable.py y cabecera_step.py. Una sola copia de la regla ISO 10303-21.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from cadlib.step_cabecera import cabecera_en_orden  # noqa: E402
 
 
 def copia_con_cabecera(step, carpeta):

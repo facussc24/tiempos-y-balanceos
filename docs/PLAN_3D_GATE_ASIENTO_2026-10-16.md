@@ -75,3 +75,102 @@ misma hija, después del gate, en el orden del plan.
 
 Su sí a este plan (un «dale» alcanza). Nada más: los datos se miden, el escaneo del panel se prueba el día que haya pieza, y el
 filo de las ranuras lo decide el diseño en la tanda 11.
+
+## Resultados (17/10/2026, escrito después de correr todo; lo de arriba no se tocó)
+
+Hija Opus 5.5, encargo `E261017-91f6`, rama `claude/gate-asiento-tanda2`, sin push.
+
+### Los casos de respuesta conocida
+
+`gate_asiento.py calibrar` (150 casos, semilla 7) **reproduce EXACTO** lo publicado el 13/10, y deja el registro en
+`.claude/skills/cad-design/data/asiento_calibracion.json` con la firma del núcleo: si `cadlib/asiento.py` o
+`gate_asiento.py` cambian, `verificar` no juzga una pieza nueva (código 3) hasta volver a calibrar.
+
+| | v14 | v15 | v16 (primera pieza nueva) | chapa rígida | 3 apoyos sintéticos |
+|---|---|---|---|---|---|
+| Apoyos (pose de diseño) | **ROJO**: 7 (4 bloques + 3 pasadores metidos 3,75 mm en el tapizado tapado) = los 7 que declara `casos_3d.json` | **ROJO**: 4 bloques | **ROJO por la letra**: 4; renglón 4-2-1 VERDE (una superficie, dispersión 0,000) | el gate NO CORRE y lo dice | **VERDE** (3) |
+| Ventana banda / punta (mín. 1,0 / 0,6) | **ROJO** 0,23 / 0,24 (publicado 0,20 / 0,24) | VERDE 1,21 / 0,75 (publicado 1,19 / 0,75) | VERDE 1,21 / 0,75 | — | — |
+| Asiento (% que se hamaca > 0,3 mm) | **100** tapados, **68** abiertos | **28**; en la punta **1,69 mm** | 0, máxima 0,16; VERDE con la punta NO APLICA escrita (la mano de la escena cae adentro de sus apoyos; la decide la prueba física) | — | 0 |
+| Gemelo, espesor desparejo (50 casos) | — | 66 %, máx. 1,31 (= tanda 11) | 8 %, máx. 0,54 (= tanda 11) | — | — |
+
+Tolerancias, fijadas antes de medir: simulación exacta (0 % y 0,01 mm, las de `casos_3d.json`); ventana 0,05 mm.
+
+### Decidí distinto del plan, con la evidencia
+
+1. **La v15 da ROJO en apoyos, no verde** como decía la tabla de arriba: tiene cuatro bloques rígidos que controlan la
+   altura. Es lo que midió la tanda 11 (`casos_3d.json`) y la simulación lo confirma (28 de 100). No se aflojó la regla.
+2. **El labio de plástico no se mide: es una cota declarada de la escena.** La pared de la ranura tiene desmoldeo (0,4 mm
+   en 7 mm) y no hay un borde en z −7,49; ese número es el arriba de la banda que apretaba el dedo de la v9
+   (`ranura_z_one.json`). Lo que sí se mide es la banda recta de la PIEZA (rayos horizontales): −7,26 en la v14 y −6,28
+   en la v15, contra −7,29 y −6,30 publicados.
+3. **El inventario de apoyos usa una grilla de 0,25 mm, no la de 1 mm de la simulación**: la de 1 mm no ve el tercer
+   pasador de la v14 (0,9 mm de ancho entre dos puntos). La simulación sigue con la de 1 mm (si no, no reproduce) y el
+   gate avisa cada apoyo que ella no ve. Mirar el vértice más alto de cada celda se probó y se descartó: cerca de la
+   ranura mezcla dos alturas del panel y dio 18 apoyos fantasma.
+4. **Las esquinas que se miden son de cada pieza**: la v16 tiene placa de 168 mm y se mide en x −38,1 / 127,9 (como la
+   tanda 11); la v14 y la v15, en −35 / 125.
+5. **Pasa a freno con el sí de Fak**: hoy `procesoCanon.data.json` → `gateAsiento.modo = aviso`, revisar el 24/10.
+
+### Las otras piezas de la tanda 2
+
+| Pieza | Qué quedó | Archivo |
+|---|---|---|
+| build123d-mcp 0.3.90 | **No se probó**: en esta PC solo está la 0.3.83 y probar la nueva es bajarla (instalar). Procedimiento escrito para el sí de Fak | `reference/build123d-mcp.md` |
+| Ficha de fijaciones | `make_screw_nut.py` no modela una tuerca impresa más baja que el diámetro (regla de Leo) sin `--tuerca-baja "<motivo>"` | `scripts/make_screw_nut.py`, `test_fijaciones.py`, `ficha-fdm.md` R2 |
+| Ficha FDM | Ya existía (tanda 11). Se sumó lo que trae el perfil del laminador: agujeros 0, contorno 0, pie de elefante 0,15; y `cad-3d.md` la enlaza y deja de presentar la Elegoo como la máquina actual | `ficha-fdm.md` M4, `cad-3d.md` |
+| Cabecera STEP | `export_deliverables.py` la arregla en la copia que entrega y la vuelve a leer; G-E6 avisa; `cabecera_step.py revisar` para lo ya entregado. En la nube (`5. 3D`): 63 STEP, 4 en la PC y en orden, **59 solo en la nube sin abrir** (abrirlos los descarga) | `cadlib/step_cabecera.py`, `cabecera_step.py`, `test_step_cabecera.py` |
+| Criterios de aceptación | G-E7: `<workdir>/criterio_aceptacion.json` (qué se mide, con qué, con qué valor se acepta), aviso la primera semana | `gate_entregable.py`, `test_gate_entregable_tanda2.py` |
+| Skill de la impresora con lo de Leo | Las dos observaciones de Leo (tuerca ≥ diámetro; más alta, más agarre) van a la ficha y al freno de `make_screw_nut.py`; la orientación ya no queda «pendiente»; enlaza la ficha FDM, el GATE A y el criterio. No hay otro mail ni audio de Leo en la carpeta del viernes: solo las dos notas de Fak | `impresion-3d-bambu/SKILL.md` |
+
+### Ronda 1 del auditor Opus (18/10, madrugada): 8 importantes, todos arreglados
+
+Informe y respuestas: `docs/auditorias/TANDA2_GATE_ASIENTO_auditor_2026-10-17.md`. Lo que cambió en el gate:
+- **Inventario** (I1, I2): el corte es la luz más chica + 0,10 (no 0,10 fijo: una pieza 0,11 mm más lejos daba
+  «0 apoyos» VERDE); cada zona dice qué controla (Z, y un giro si es larga); menos de tres restricciones, una superficie
+  grande o una zona metida dan ROJO; sin panel enfrente, SIN DATO. v14 7, v15 4, v16 4, iguales alejadas 0,10 mm.
+- **Activación** (I3): si el pliego, la escena o `--etiqueta` no coinciden, código 2; G-E5 avisa la omisión.
+- **G-E5** (I4) coteja la firma de la pieza; **candado** (I5) firma también umbrales, escena y panel; **peor variante**
+  (I6) por veredicto; **punta** (I7) se simula siempre (en la ronda 1 un NO APLICA dejaba el asiento en AVISO; la
+  ronda 2 mostró que eso frenaba para siempre a la v16 y se sacó: ver abajo). Recalibrado: reproduce exacto.
+- Detalles: el criterio de aceptación rechaza relleno («?», «pendiente»); la cabecera STEP se reordena en su lugar sin
+  tocar comentarios ni otras entidades; una calibración de prueba corta no pisa el registro.
+
+### Ronda 2 del auditor y revisión por API (18/10, la última ronda)
+
+Informe de la ronda 2: `docs/auditorias/TANDA2_GATE_ASIENTO_auditor_ronda2_2026-10-18.md`; la revisión por API la trajo
+la madre. Las respuestas de las dos rondas, punto por punto: `docs/auditorias/TANDA2_GATE_ASIENTO_respuestas_2026-10-18.md`.
+- **Apoyos por geometría**: cada zona es un punto, un riel (dos puntos, sus extremos) o una superficie grande (ROJO);
+  ROJO si no son exactamente tres puntos que no estén en línea. Tres apoyos en fila ya no pasan. El mínimo (3, mecánico)
+  va aparte del máximo de `casos_3d.json`.
+- **Cobertura**: si la pieza se sale de la grilla de la escena, SIN DATO.
+- **Punta**: NO APLICA se decide por la geometría y no deja AVISO; la pieza puede declarar su `mano_punta`.
+- **Calibración** y **verificar** juzgan el asiento con la misma función; la simulación sin reposo da SIN DATO; con 50
+  casos se dice el ruido (±7 puntos). Recalibrado: reproduce exacto.
+- **Cabecera STEP**: la entrega sigue con un aviso si no se puede leer o arreglar; `arreglar` no toca la nube sin la
+  frase de Fak.
+- Valores fijados contra los casos conocidos (sin fuente externa, a revisar con una pieza nueva): `largo_frac` 0,25,
+  `metido` −0,02, la banda (paso 0,01, tolerancia 0,02, 8 mm bajo la punta). La tolerancia de la ventana (0,05) se fijó
+  antes de medir y está explicada en `asiento_casos.json`.
+- Quedan abiertos (nits): G-E5 no ata el STL que juzgó el gate al STEP que se entrega, y un `FILE_NAME(` escrito adentro
+  de un comentario confundiría al lector de la cabecera (teórico: OpenCASCADE 7.8 no escribe comentarios).
+
+### Qué necesita de Fak, pieza por pieza
+
+| Pieza | Qué necesita |
+|---|---|
+| Gate de asiento | Nada para usarlo como aviso. Para pasarlo a **freno** (después del 24/10): su sí, con el número de falsos positivos de la semana. Un candidato ya conocido: la v16 da ROJO en apoyos «por la letra» (cuatro apoyos coplanares, que la ficha de utillajes U7/U8 admite como 4-2-1); el veredicto de la v16 lo da su prueba física (apretar en cinco lugares), que sigue siendo de Fak |
+| build123d-mcp 0.3.90 | Su sí para bajarla (es instalar) |
+| Ficha de fijaciones, ficha FDM | Nada |
+| Cabecera STEP | Nada para lo nuevo (`export_deliverables.py` la arregla). Para los **59 STEP ya entregados que están solo en la nube** (`5. 3D`): su sí para bajarlos y revisarlos (abrirlos los descarga) y, si salen al revés, su OK para reemplazarlos (son entregables) |
+| Criterio de aceptación (G-E7) | Nada como aviso; su sí para pasarlo a freno, igual que el gate |
+| Skill de la impresora | Nada. Si Leo mandó más observaciones (un mail o un audio) que no estén en la carpeta del viernes, que Fak las pase |
+
+Las sesiones abiertas: los cambios están en esta rama; ninguna sesión los ve hasta que la madre funda la rama en `main`.
+Después, la regla `cad-3d.md` (con `paths:`) entra cuando una sesión toca un archivo 3D; la que ya la cargó sigue con la
+versión vieja hasta reabrirse. Las skills se leen al cargarlas.
+
+### Regresión
+
+Los tests de la skill que ya existían dan lo mismo que antes, renglón por renglón (`test_gates_entrega`,
+`test_gates_proceso`, `test_eval_casos_3d`, `test_criterios`, `test_gate_cuerpos`, `eval_casos_3d.py` sobre las corridas
+del 17/10, `test_catia_medir`); el banco `cad-design` pasa a 4 casos.

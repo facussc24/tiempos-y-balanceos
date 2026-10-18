@@ -47,8 +47,33 @@
       {
         "id": "carro-movil",
         "que": "El dispositivo se desplaza cargado (ruedas, traslado entre puestos)"
+      },
+      {
+        "id": "apoya-sobre-blando",
+        "que": "El utillaje apoya sobre algo BLANDO de la pieza del cliente (tapizado, espuma, goma, chapa fina): corre gate_asiento.py (apoyos, ventana de asiento y simulacion apretando)",
+        "fuente": "tanda 2 del plan del sistema, docs/PLAN_3D_GATE_ASIENTO_2026-10-16.md (virolador v14, 13/10/2026: paso todos los gates y se hamaca sobre el panel tapizado)"
+      },
+      {
+        "id": "apoya-sobre-rigido",
+        "que": "El utillaje apoya sobre chapa o plastico RIGIDO: gate_asiento.py no corre; lo juzga la interferencia contra el sustrato rigido (check_collision.py)",
+        "fuente": "idem; caso de control: el posicionador del Top Roll trasero"
       }
     ]
+  },
+  "criterioAceptacion": {
+    "modo": "aviso",
+    "desde": "2026-10-17",
+    "revisar": "2026-10-24",
+    "que": "G-E7 de gate_entregable.py: el criterio de aceptacion de la pieza impresa escrito ANTES de imprimir, en <workdir>/criterio_aceptacion.json: una lista de {\"que\": lo que se mide, \"con\": el instrumento o la prueba, \"acepta\": el valor o la condicion}. Mientras el modo es 'aviso' se informa y no frena.",
+    "fuente": "ficha-utillajes.md K1; plan del sistema tanda 2 punto 7; patron vivo examples/gancho_mochila/verificar_gancho.py",
+    "pasa_a_freno": "Con el si de Fak, igual que gateAsiento."
+  },
+  "gateAsiento": {
+    "modo": "aviso",
+    "desde": "2026-10-17",
+    "revisar": "2026-10-24",
+    "que": "Mientras el modo es 'aviso', gate_entregable.py informa en un renglon AVISO si la pieza apoya sobre blando y gate_asiento.py no corrio o dio ROJO; no frena la entrega. El veredicto del propio gate_asiento.py es honesto siempre (ROJO = codigo 1).",
+    "pasa_a_freno": "Con el si de Fak y el numero de falsos positivos medido en esa semana (plan del 16/10, 'Que puede romper'). Para frenar: modo 'freno'. Ninguna sesion lo cambia sola."
   },
   "familiasDeFuerza": {
     "_leeme": "G-P1. Cada familia es una PREGUNTA que el pliego tiene que contestar antes de tocar CAD. 'aplica_si' vacio = SIEMPRE obligatoria. El gate no juzga la respuesta: juzga que exista, que nombre una pieza del dispositivo y que traiga una magnitud o un TBD con motivo.",

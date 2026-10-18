@@ -25,6 +25,12 @@ Los cuatro checks:
   G-E3b Sobre los pixeles de los renders declarados: que fraccion del objeto tiene color
         de verdad. Se MIDE y se informa; no bloquea.
 
+Tres mas de la tanda 2 (17/10/2026), los tres AVISO la primera semana (procesoCanon):
+  G-E5  Si el pliego dice 'apoya-sobre-blando', gate_asiento.py corrio y dio VERDE.
+  G-E6  La cabecera de cada STEP entregado en el orden de ISO 10303-21 (si no, CATIA V5 lo
+        lee VACIO). El freno es export_deliverables.py, que la arregla en la copia.
+  G-E7  El criterio de aceptacion escrito antes de imprimir (<workdir>/criterio_aceptacion.json).
+
 SOBRE G-E3b, Y POR QUE NO BLOQUEA. Dos hipotesis mias, las dos caidas contra datos reales
 el mismo dia. Queda escrito con los numeros para que nadie las reinvente:
 
@@ -56,7 +62,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cadlib import workdir  # noqa: E402
+from cadlib import step_cabecera, workdir  # noqa: E402
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 CANON = os.path.join(AQUI, "procesoCanon.data.json")
@@ -67,6 +73,23 @@ OK, FALLA, USO = 0, 1, 2
 def canon():
     with open(CANON, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def _texto_ok(c, v):
+    """Un campo del criterio de aceptacion dice algo: texto o numero, no vacio y no un literal de plantilla."""
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        return True
+    if not isinstance(v, str) or not v.strip():
+        return False
+    ph = c.get("placeholders", {})
+    t = v.strip()
+    # relleno que no dice nada (auditor del 17/10, N1): menos de 2 letras o numeros, o un «pendiente» / «a definir».
+    # Con 2 pasan «sí», «no» y «OK», que pueden ser una respuesta (ronda 2, N-b)
+    if sum(ch.isalnum() for ch in t) < 2 and not any(ch.isdigit() for ch in t):
+        return False
+    if t.lower().strip(".") in ("pendiente", "a definir", "por definir", "n/a", "na", "tbd", "xxx", "ver", "idem"):
+        return False
+    return t not in ph.get("literales", []) and not any(t.upper().startswith(p.upper()) for p in ph.get("prefijos", []))
 
 
 def _archivos(carpeta):
@@ -239,6 +262,87 @@ def verificar(entrega, motor, renders, workdir_path=None, sin_render=False, moti
                 rojo("G-E3b", msg, cm["calibracion"])
             else:
                 avisos.append("G-E3b · %s" % msg)
+
+    # ---- G-E6: la cabecera de cada STEP entregado en el orden de ISO 10303-21 (tanda 2, 17/10/2026) ----
+    # AVISO y no rojo: export_deliverables.py ya la arregla en la copia que entrega y la vuelve a leer (ese es el
+    # freno); aca se avisa lo que llego a la carpeta por otro camino. CATIA V5 lee VACIO un STEP con la cabecera al revés.
+    for s in steps:
+        if step_cabecera.solo_en_la_nube(s):
+            avisos.append("G-E6 · %s esta solo en la nube: no se leyo su cabecera (leerlo lo descarga)" % os.path.basename(s))
+            continue
+        try:
+            o = step_cabecera.orden_de_archivo(s)
+        except OSError as e:
+            avisos.append("G-E6 · no se pudo leer %s: %s" % (os.path.basename(s), e))
+            continue
+        if o is None:
+            avisos.append("G-E6 · %s: no se encontro una cabecera STEP completa" % os.path.basename(s))
+        elif o != step_cabecera.CLAVES:
+            avisos.append("G-E6 · %s tiene la cabecera fuera de orden (%s): CATIA V5 lo lee VACIO. Arreglo: "
+                          "cabecera_step.py arreglar \"%s\" (o entregar con export_deliverables.py, que ya lo hace)"
+                          % (os.path.basename(s), ", ".join(o), s))
+
+    # ---- G-E7: el criterio de aceptacion escrito ANTES de imprimir (tanda 2, 17/10/2026; ficha-utillajes K1) ----
+    # Que se mide en la pieza impresa, con que y con que valor se acepta: <workdir>/criterio_aceptacion.json, una lista
+    # de {"que", "con", "acepta"}. Patron vivo: examples/gancho_mochila/verificar_gancho.py. AVISO la primera semana.
+    ca = c.get("criterioAceptacion") or {}
+    msg7 = None
+    if workdir_path:
+        pca = os.path.join(workdir_path, "criterio_aceptacion.json")
+        if not os.path.isfile(pca):
+            msg7 = ("no hay criterio de aceptacion escrito (%s): que se mide en la pieza impresa, con que y con que "
+                    "valor se acepta" % pca)
+        else:
+            try:
+                with open(pca, "r", encoding="utf-8") as f:
+                    lista = json.load(f)
+                malos = [i for i, x in enumerate(lista if isinstance(lista, list) else [None])
+                         if not isinstance(x, dict) or not all(_texto_ok(c, x.get(k)) for k in ("que", "con", "acepta"))]
+                if not lista or malos:
+                    msg7 = "criterio_aceptacion.json: renglon(es) %s sin 'que', 'con' y 'acepta'" % (malos or "-")
+            except (OSError, ValueError) as e:
+                msg7 = "criterio_aceptacion.json no se pudo leer: %s" % e
+    else:
+        avisos.append("G-E7 · sin --workdir no se puede mirar el criterio de aceptacion")
+    if msg7:
+        if ca.get("modo") == "freno":
+            rojo("G-E7", msg7, "ficha-utillajes.md K1: el criterio se escribe antes de imprimir")
+        else:
+            avisos.append("G-E7 · %s — modo AVISO hasta el %s (procesoCanon criterioAceptacion)" % (msg7, ca.get("revisar")))
+
+    # ---- G-E5: si el utillaje apoya sobre blando, corrio el gate de asiento (tanda 2, 17/10/2026) ----
+    ga = c.get("gateAsiento") or {}
+    msg5 = None
+    if workdir_path and os.path.isfile(os.path.join(workdir_path, workdir.MANIFEST)):
+        pd = workdir.find_evidence(workdir_path, "proceso_declarado")
+        tags = (pd or {}).get("tags") or []
+        if pd is None:
+            avisos.append("G-E5 · no hay pliego de gate_proceso en el workdir: no se sabe si el utillaje apoya sobre blando")
+        elif "apoya-sobre-blando" in tags:
+            ea = workdir.find_evidence(workdir_path, "asiento", corre=True)
+            if ea is None:
+                msg5 = "el utillaje apoya sobre blando y gate_asiento.py no corrio sobre esta pieza"
+            else:
+                # la evidencia tiene que hablar de la pieza que hay HOY (auditor del 17/10, I4; misma leccion del 24/08)
+                ok_f, motivo_f = (workdir.check_signature(ea, "pieza_firma", ea.get("pieza_archivo"))
+                                  if ea.get("pieza_archivo") else (False, "la evidencia no dice que archivo juzgo"))
+                if not ok_f:
+                    msg5 = "la evidencia de gate_asiento.py no habla de la pieza de hoy: %s" % motivo_f
+                elif ea.get("veredicto") != "VERDE":
+                    msg5 = "gate_asiento.py dio %s (%s)" % (ea.get("veredicto"), ", ".join(
+                        "%s %s" % (k, v) for k, v in (ea.get("filas") or {}).items() if v not in ("VERDE", "INFORMATIVO")))
+        elif "apoya-sobre-rigido" not in tags:
+            avisos.append("G-E5 · el pliego no dice si el utillaje apoya sobre blando o sobre rigido "
+                          "(etiqueta apoya-sobre-blando / apoya-sobre-rigido): lo que hay que cazar es la omision")
+    elif workdir_path:
+        avisos.append("G-E5 · el workdir no tiene manifest: no se sabe si el utillaje apoya sobre blando")
+    else:
+        avisos.append("G-E5 · sin --workdir no se puede mirar si el utillaje apoya sobre blando (gate_asiento.py)")
+    if msg5:
+        if ga.get("modo") == "freno":
+            rojo("G-E5", msg5, "gate_asiento.py verificar --escena <escena> --pieza <pieza> --workdir W")
+        else:
+            avisos.append("G-E5 · %s — modo AVISO hasta el %s (procesoCanon gateAsiento)" % (msg5, ga.get("revisar")))
 
     # ---- salida ----
     print("GATE DE ENTREGABLE — %s" % entrega)

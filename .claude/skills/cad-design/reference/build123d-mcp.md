@@ -43,3 +43,20 @@ luz 10,0, `validate` ROJO sobre shell abierto y VERDE sobre sólido sano (los do
 agreement 0,000000% contra gmsh/OCC en un STEP real de 28 sólidos (34.186.208,822 mm³).
 **Upgrade de versión = cambiar el pin y re-correr `test_build123d_mcp.py` (exit 0 = adoptar);
 nunca subir el pin sin el test.**
+
+## Estado al 17/10/2026 (tanda 2 del plan del sistema): la 0.3.90 NO está en esta PC
+
+- La última publicada es la **0.3.90** (PyPI, 25/09/2026); la 0.3.87 dice arreglar los cuelgues de Windows en las
+  primeras llamadas **sin** `BUILD123D_IN_PROCESS=1` (CHANGELOG, informe `afuera_3d.md` §4 punto 1). Si eso se
+  confirma con nuestro test, el «obligatorio» de arriba queda viejo.
+- En la caché de `uv` de esta PC solo está la **0.3.83** (medido el 17/10: `%LOCALAPPDATA%\uv\cache`). Probar la 0.3.90
+  es BAJARLA (instalar algo nuevo): no se hizo sin el sí de Fak. Cuando lo dé, el procedimiento es el de arriba, en
+  este orden: (1) un `.mcp.json` temporal con `build123d-mcp==0.3.90` (no se commitea); (2)
+  `test_build123d_mcp.py` dos veces, con `BUILD123D_IN_PROCESS=1` y sin; (3) los nombres de las herramientas se leen
+  del `tools/list` real de esa versión, no de la doc (la de la rama principal no coincide con PyPI ni con el CHANGELOG);
+  (4) medir el arranque en frío y con caché; (5) prenderlo solo en sesiones de diseño 3D.
+- Los gates propios quedan igual (plan del sistema, decisión 19): miden contra el archivo del cliente; la herramienta
+  es para ver y medir durante el diseño.
+- **Ojo, encontrado el 17/10:** en el checkout principal hay un `.mcp.json` SIN commitear con la 0.3.83 prendida. Por
+  eso las sesiones que abren ahí esperan 30 s y anotan «build123d CONNECT_TIMEOUT» al arrancar (le pasó a la sesión de
+  la tanda 2). No es de esta tanda y no se tocó: el doc de arriba dice que se apaga sacando ese archivo.

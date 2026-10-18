@@ -434,8 +434,11 @@ distribución, orientación por la dirección de la fibra) y seguir desarrolland
    - **Una placa de más de 3 h o que termina de noche pide el `.ok` con la frase de Fak**, también en la sesión
      de Leo (la placa A de su soporte de microscopio dura 8 h): Leo se lo pide a Fak y la sesión escribe la frase
      textual y la fecha. Lo mismo `--sin-margen`. Sin eso, no sale.
-3. **El criterio de orientación por fibra queda pendiente para la tanda 11** (ficha de ingeniería de producto):
-   no se inventa; mientras tanto la orientación la decide quien arma la placa.
+3. **El criterio de orientación lo escribió la tanda 11** (17/10/2026) en la ficha FDM del skill `cad-design`
+   (`cad-design/reference/ficha-fdm.md` §1): la carga principal va **paralela a las capas**, nunca tirando de ellas
+   (O1), y el caso de la casa es el tornillo de 7 mm que, impreso parado, se partió bajo la cabeza (O4). Quien arma
+   la placa la orienta con ese criterio; hacia dónde va la carga sale del GATE P del diseño (qué fuerzas actúan y en
+   qué etapa), no se adivina al laminar.
 
 ## 3. Las cinco trampas (todas dieron "Success" con un código que no servía)
 
@@ -482,7 +485,15 @@ destapó la trampa 2.
   versión del archivo del 13/10 salió así y se reemplazó. Otra cama: `--cama "<nombre>"`.
 - El archivo va a la carpeta de la pieza en la nube de Ingeniería (`1- GENERAL\5. 3D\...`), con
   el tiempo y los gramos en el mensaje.
-- La pieza en sí pasa primero por los gates del skill `cad-design`.
+- La pieza en sí pasa primero por los gates del skill `cad-design`. **Las reglas de DISEÑO para imprimir no viven
+  acá** (esta skill es cómo imprimir): viven en `cad-design/reference/ficha-fdm.md` — orientación contra la carga,
+  holguras con su unidad (por lado o al diámetro), paredes, roscas y tuercas (la regla de Leo: la tuerca impresa
+  mide al menos el diámetro del tornillo, y `make_screw_nut.py` no la modela más baja sin un motivo escrito) y lo
+  que queda «a medir en la A2L». Lo que trae el perfil del laminador: compensación de agujeros **0** (no compensa) y
+  pie de elefante 0,15 (ficha FDM, M4).
+- Si el utillaje apoya sobre algo blando (tapizado, espuma), además el **GATE A de asiento** (`gate_asiento.py`) y,
+  para toda pieza, el **criterio de aceptación escrito antes de imprimir** (qué se mide en la pieza impresa, con qué
+  y con qué valor se acepta: `cad-design/reference/ficha-utillajes.md` K1; lo mira `gate_entregable.py`, G-E7).
 
 ## 6. Los otros programas de `scripts/`
 
