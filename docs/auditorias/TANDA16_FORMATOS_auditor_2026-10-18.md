@@ -199,3 +199,221 @@ lado, da ROJO.
    que `revisar.py` los caza hasta que existan los gemelos de la fila entera en amarillo y de la columna debajo de un
    encabezado: hoy el control es parcial.
 3. Los nits, a criterio.
+
+---
+
+## Ronda 2 — 18/10/2026 (solo el diff 90209a42..HEAD: bf6f70e2, 4e69b716, 8664f871, 3eda7f08)
+
+### Resultado: FUNDIR CON ARREGLOS · 4 Importante, 3 Nit, 1 Preexistente
+
+De los 7 Importantes de la ronda 1 quedan cerrados 6 (1, 3, 4, 5, 6 y 7). Los medí con los mismos casos de
+`%TEMP%\aud16-CeAH\`. El 2 sigue abierto: el arreglo anda en el gemelo armado, pero no en el formulario real del 15/10,
+donde la cabecera de la tabla está pegada al encabezado. Los arreglos abrieron tres agujeros nuevos:
+
+- Si un documento de la casa NOMBRA el código de un formulario, se apagan sus reglas de diseño.
+- La ventana de ±1 renglón toma el día de otra cosa. Es el reclamo #8 tal cual.
+- El pie de la lámina del IMDS, el caso con el que se calibró la regla, ahora da falso rojo.
+
+Nada empeora respecto de `main` (ahí `revisar.py` no existe) y ningún gate depende del código de salida de `revisar.py`
+(grep: solo lo llaman los tests). Lo que queda abierto va al cierre para Fak.
+
+| Check | Estado | Detalle |
+|---|---|---|
+| `revisar.py --selftest` | OK | 10 de 10 dan rojo→verde, los 3 visuales dan verde y los 10 contraejemplos nuevos dan lo esperado (13,7 s) |
+| Tests pedidos | OK | 6 archivos, 50 tests, 0 fallas (el del logo de la lámina corrió: el archivo está en esta PC) |
+| py_compile, node --check, eslint de lo tocado | OK | sin errores |
+| TypeScript / build | no aplica | el diff no toca la app (0 archivos .ts/.tsx); en la ronda 1 dieron limpio |
+| Plantillas | OK | regeneradas = commiteadas, parte por parte. Ya no llevan fecha fija (el pie dice «[fecha]» y «[rev.]»). Las 4 pasan `revisar.py` y `_sinFirmaIA.py --logo-bloquea` |
+| Git | OK | árbol limpio en 3eda7f08; la rama sigue sin pushear (a propósito) |
+| Diferencial sobre entregables reales | ver abajo | `revisar.py` de 90209a42 contra el de HEAD, sin render, sobre 252 archivos de `exports/` (Excel, PowerPoint y HTML desde el 01/10, de menos de 60 MB) |
+
+### Los 7 Importantes de la ronda 1
+
+| # | Estado | Medido |
+|---|---|---|
+| 1 amarillo en la fila entera | cerrado | `amarillo_filas.xlsx` → ROJO (24 celdas); en modo corrección → ROJO. El `.xls` aceptado del 15/10 sigue VERDE y el de «correcciones» sigue ROJO. El diferencial trajo un caso real: `revision-pc-puertas-patagonia/Revision PC APB, Insert y Top Roll Patagonia - 01-10-2026.xlsx` tiene la fila 8 de datos pintada entera en FFF2CC («A definir juntos»). Antes pasaba como banda; ahora da ROJO, y es un rojo verdadero |
+| 2 columna inventada debajo del encabezado | **abierto en el formulario real** | ver R2-1 |
+| 3 firma que no pudo mirar | cerrado | los mutantes del detector (se cae, sale 0 sin imprimir, devuelve un objeto) dan `NO CORRIO`, `SIN VERDE` y exit 3. El pptx de 60,6 MB con «Armado por Claude» → ROJO (el tope pasó a 1000 MB) |
+| 4 firma en texto y HTML | cerrado | `mail_ia.txt` y `pantalla_ia.html` → ROJO «nombra a Claude» |
+| 5 números chicos en una tabla | cerrado | `tabla_numeros.pptx` → ROJO «tabla a 6 pt: 100»; el control con texto → ROJO |
+| 6 render deformado, y solo la lámina 1 | cerrado | círculo de 8×8 cm en una lámina 16:9: PNG de 1467×825 (1,778), círculo de 344×344 px (ancho/alto 1,000), en x 434-778 contra 433-780 esperado. Un deck de 3 láminas da 3 PNG. PowerPoint quedó cerrado |
+| 7 falso rojo en la pantalla del programita | cerrado | `tareas.html` regenerado con el worktree → `contador-y-hora: VERDE`, exit 0. `<td>sáb 17/10</td><td>10:59</td>`, el `<br>` y «vie» → VERDE; «renueva 13:00» solo → ROJO |
+
+Nits de la ronda 1:
+
+- Cerrados:
+  - El `NO CORRIO` que salía en verde: sin `node`, el mail «testamento» da `SIN VERDE` y exit 3.
+  - `_temasAbiertos` sin el logo: el módulo se importa y `armarHtml` frena con «no esta el logo oficial».
+  - La fecha fija de las plantillas.
+  - El tipo A3.
+  - «I-IN-002» que coincidía adentro de «I-IN-002.4».
+- Sigue igual: la letra heredada o con autoajuste (`letra_heredada.pptx` → VERDE).
+
+### Importantes nuevos o que siguen
+
+#### R2-1. [Importante · TRUE BUG, sigue el #2] La cabecera real del plan de control oficial no se mira — `scripts/revisar.py:348` y `:355`
+
+En el formulario real, la cabecera de la tabla de controles está en la fila 69 («Nº PIEZA / PROCESO», «NOMBRE DEL
+PROCESO», …, «PLAN DE REACCION ANTE DESCONTROL») y pegada al bloque de encabezado (fila 68: «BARACK MERCOSUL»). Las dos
+ramas de la regla la saltean:
+
+- `:348`: la lista negra saltea toda fila que tenga texto en la de arriba. En las primeras 99 filas de la primera pestaña
+  del `.xls` real, solo mira la 44 (firmas), la 61 y la 72 («TAM», «FREC»). Ni la 69 ni la 70.
+- `:355`: con `--formulario`, la cabecera se busca solo en las primeras 30 filas. Gana la 10 (la tabla de REVISIONES) y
+  la 69 no se compara nunca.
+
+Cómo lo armé: una copia de
+`exports/PC_APC_PATAGONIA_20261015/PC APOYACABEZAS Patagonia - propuesta de Ingenieria 15-10-2026.xls`, editada con
+Excel por COM: O69 = «FUENTE» y O76 = «plano rev C» (`%TEMP%\aud16-CeAH\r2\cabecera.py`).
+
+- `revisar.py` sin banderas, con `--oficial --documento "plan de control"` y con `--formulario <la copia sin tocar>` →
+  **`columnas-inventadas: VERDE` en los tres**, exit 0.
+- Control: la copia sin tocar → VERDE.
+
+Lo que lo deja pasar y lo que queda mal escrito:
+
+- El gemelo `columna-fuente-debajo-de-un-encabezado` (`scripts/_lib/revisarCasos.py:233-236`) pasa porque deja vacías
+  las filas 2 y 3: no tiene la forma del formulario real.
+- `docs/FORMATO_CASA.md:84` dice que la columna «Fuente» «se busca en todas las filas de cabecera»; la medición dice que
+  no.
+- El libro de observaciones sigue dando por cerrado el #10 (`excel-2026-07-24-15`) con esta regla.
+
+Dirección (sin probar):
+
+- En la lista negra, mirar cada fila con 3 textos o más hasta la primera fila de datos de cada bloque, no solo la
+  primera del bloque.
+- Con `--formulario`, comparar la fila del entregable que más coincide con la plantilla, sin el tope de 30.
+- Un gemelo con el encabezado pegado a la cabecera (la copia real o el mismo armado).
+
+respuesta: ____
+
+#### R2-2. [Importante · TRUE BUG, nuevo en 8664f871] Nombrar un código de formulario apaga las reglas de diseño en un documento de la casa — `scripts/revisar.py:611-614`
+
+`codigo_oficial` busca el código en TODO el texto. Si lo encuentra, pone `op.oficial = True` y dejan de correr
+`titulo-en-b2`, `gris-y-flechitas` y `letra-minima`. Un documento de la casa que solo cita el formulario («según el
+plan de control I-AC-032») pasa como formulario oficial.
+
+- Lámina 16:9 para proyectar, con título de 30 pt y un cuadro a 7 pt que termina en «(formulario I-AC-032)» →
+  `formulario-detectado` y `=> VERDE`, exit 0. La misma lámina sin la cita → `letra-minima: ROJO «texto a 7 pt (minimo
+  18)»`.
+- Excel con el título en A1 y «Formulario: I-AC-032» en B6 → VERDE, exit 0. Sin B6 → `titulo-en-b2: ROJO`.
+- Visto en un archivo real: `exports/explicaciones/beon_revisiones_patagonia_15-10.html` es una explicación de la casa
+  que nombra I-AC-005.3. Da `formulario-detectado` y `formulario-oficial: VERDE «lleva el formulario oficial
+  I-AC-005.3»`. Ahí no se perdió ninguna regla, porque en HTML no corren las de diseño.
+- Es una excepción nueva con un solo gemelo, el verde (`formulario-oficial-sin-banderas`, `revisarCasos.py:242-243`):
+  punto 1 de REVIEW.md.
+- Dirección: reconocer el formulario por el lugar del código (las primeras filas de cada pestaña, el cajetín de la
+  lámina), no por cualquier mención. Y un gemelo rojo con la lámina de arriba.
+
+respuesta: ____
+
+#### R2-3. [Importante · TRUE BUG, nuevo en 8664f871] La hora toma el día de otro renglón — `scripts/revisar.py:541-544`
+
+Para arreglar el #7, la regla acepta el día en el renglón de antes o en el de después, sin mirar si habla de la misma
+cosa. El reclamo #8 al pie de la letra pasa si el renglón de al lado tiene una fecha cualquiera.
+
+- `<div>Cupo de la semana: gastado 63 %, quedan 37 %</div><div>se renueva a las 13:00</div><div>ultima vuelta: sáb 17/10
+  10:59</div>` → `contador-y-hora: VERDE`, exit 0. Control: lo mismo sin «sáb 17/10» → ROJO «renglon 2: se renueva a las
+  13:00».
+- En el diferencial, 2 páginas reales pasaron de ROJO a VERDE por esto:
+  - `exports/explicaciones/noche-2026-10-09.html`: «CI verde a las 00:30», sin día, toma el «hoy» del título que sigue
+    («2. Cómo se toca el código desde hoy»).
+  - `lo-que-se-viene-2026-10-09.html`: «cada madrugada a las 6:30» toma el «mañana» de «A la mañana te llevo…». Este es
+    discutible, porque la hora es de todos los días.
+- Para la ventana solo hay gemelo verde (`hora-con-el-dia-en-la-celda-de-al-lado`, `revisarCasos.py:240-241`). El
+  gemelo rojo del #8 (`banda_antes.html`) no pone a prueba la ventana, porque ninguno de sus renglones vecinos tiene
+  día. La dirección que di en la ronda 1 decía «del mismo bloque»; quedó en ±1 renglón sin mirar el bloque.
+- Dirección, en dos partes (las dos sin código):
+  - «El vecino vale solo si tiene el día y no tiene hora propia, o si tiene la MISMA hora» cubre el armado de arriba y
+    deja en verde la página del programita (repite 13:29 en los dos renglones), `c6` y los `<td>` (ahí el vecino tiene
+    solo el día).
+  - Esa condición NO cubre los dos casos reales: «desde hoy» y «A la mañana» tampoco tienen hora propia. Ahí el
+    problema está en `dia_re` (`formatoCasa.data.json:62`): «hoy» en un título y «mañana» en el sentido de la parte del
+    día cuentan como día. Esa lista ya estaba en la ronda 1; la ventana la estira al renglón de al lado.
+  - Gemelo rojo con el HTML de arriba.
+
+respuesta: ____
+
+#### R2-4. [Importante · ROBUSTEZ, falso rojo, nuevo en 3eda7f08] El pie de la lámina del IMDS ya no se perdona — `scripts/revisar.py:490`
+
+El arreglo que pidió la revisión por API exige dos «·» para tomar un texto como pie. El pie de la lámina del IMDS, el
+caso con el que se midió la regla (comentario de `:486-487` y `tema.json:49`), usa guiones.
+
+- `exports/explicaciones/formatos_antes_despues_2026-10-18/_trabajo/imds_hoy.pptx` es la lámina del IMDS del 09/10 que
+  se usó para el antes/después:
+  - con 90209a42 y con 8664f871: `letra-minima: VERDE`;
+  - con HEAD: `ROJO «texto a 9 pt (minimo 10): IMDS Patagonia - 09/10/2026 - F.Santoro»`, exit 1.
+- `docs/FORMATO_CASA.md:71-72` sigue diciendo «0 falsos rojos sobre los aceptados (PowerPoint del IMDS rehecho del
+  09/10…)».
+- Límite de la medición: el PowerPoint original del 09/10 no está en esta PC (lo busqué en `exports/` y en las dos
+  carpetas de OneDrive). Lo medido es la copia de `_trabajo`.
+- Dirección: pie es el texto que lleva el autor y una fecha (con «·» o con « - »), o el que está abajo de la lámina. El
+  «Realizó: F.Santoro» suelto de la revisión por API sigue sin ser pie. Y un gemelo verde con el pie del IMDS.
+
+respuesta: ____
+
+### Nits (3)
+
+- [Nit] `scripts/revisar.py:346-352` — «Verificado» sigue dando falso rojo en la primera fila de un grupo de datos que
+  viene después de una fila vacía. `verificado_grupo.xlsx`: B4 Pieza | Estado, datos en las filas 5 y 6, la 7 vacía, y
+  en la 8 «Funda» | «Verificado» → `columnas-inventadas: ROJO «fila 8 col 3: Verificado»`. En los 97 Excel reales del
+  diferencial no apareció ningún caso así. respuesta: ____
+- [Nit] `scripts/revisar.py:251` — el arreglo de `oficial_pedido` anda en las dos direcciones, pero no tiene gemelo: si
+  alguien lo revierte, ni el selftest ni el test lo ven. Lo medí con un mutante de `_sinFirmaIA.py` que frena solo si
+  le llega `--logo-bloquea`, sobre una lámina que cita I-AC-032: sin banderas → ROJO; con `--oficial` → VERDE; con el
+  `revisar.py` de 8664f871 → VERDE. respuesta: ____
+- [Nit] `scripts/revisar.py:574-575` — el render le sigue pidiendo a `exportar.py` la imagen A3, y en la carpeta del
+  render queda `<nombre>_exportar.png` de 4961×3508 (deformada en una lámina 16:9) al lado de las buenas. El informe no
+  la nombra, pero el archivo está. respuesta: ____
+
+### Preexistente (1)
+
+- [Preexistente] `scripts/revisar.py:573-579` — si PowerPoint no exporta, el render rasteriza el PDF viejo que haya
+  quedado con el mismo nombre en la carpeta. La carpeta por defecto es `%TEMP%\revisar`, compartida por todas las
+  corridas. Lo medí con un mutante de `exportar.py` que sale 1, sobre otro `tres.pptx` de una sola lámina: da `PARA
+  MIRAR` con las 3 láminas del archivo anterior. La versión 90209a42 hacía lo mismo con el PNG (también medido). Además,
+  con `--render-en` relativo el render no corre en ninguna de las dos versiones (`NO CORRIO`). respuesta: ____
+
+### Preguntas (no son hallazgos)
+
+1. **El logo del formulario de hoja de proceso.**
+   - Lo que decidió Fak: el 10/10 dijo que el logo de letras finas del formulario de HO «avise sin frenar» (P83,
+     `docs/COLA_CAMBIOS_CODIGO.md:251`).
+   - Lo que hace `revisar.py`: frena por el logo salvo que la persona diga `--oficial`, también cuando detecta el
+     formulario solo. 8664f871 apagaba ese freno al detectar el formulario y 3eda7f08 lo volvió a prender.
+   - Lo medido: en el diferencial, 55 archivos de `exports/` dan `firma-ia: ROJO` por el logo sin `--oficial` (HO 21-9463
+     a 9475 REV.A, HO THERMOFORMADO, el embalaje de Gamboa, las grampas). En `HO 21-9463 REV.A.xlsx`, con `--oficial`
+     da VERDE.
+   - No es un cambio respecto de la ronda 1 (90209a42 hacía lo mismo) y `FORMATO_CASA.md` lo dice.
+   - La pregunta: si una sesión corrige uno de esos archivos y corre `revisar.py` sin `--oficial`, ¿va a cambiar el logo
+     antes de que Fak lo pida?
+2. **Las explicaciones sobre el sistema.** Ahora que la firma corre en HTML, 23 páginas de `exports/` pasan a ROJO por
+   nombrar a Claude (`CLAUDES_POR_AREA_20261001/fuentes/*.html`, `explicaciones/explicacion-sistema-claude-2026-10-08.html`,
+   `seguir-novedades-claude.html`, …). Son páginas para Fak que tratan justamente de Claude. ¿Se revisan con
+   `revisar.py` o quedan afuera?
+
+### Sobre el diferencial
+
+- Los 55 cambios de `firma-ia` de VERDE a ROJO en Excel y PowerPoint NO salen del diff. La copia de 90209a42 que armé no
+  tenía el logo oficial al lado, y su detector comparaba solo por hash («OJO: el chequeo del logo… no corre»). Los
+  descarto.
+- Ningún archivo real pasó a exit 3 ni a `NO CORRIO`. La versión vieja pasó los 900 s en los 3
+  `Listado_Maestro_FLUJOGRMAS*.xlsx`; la nueva los termina.
+- 123 archivos se detectan como formulario (HO, AMFE y el plan de control). Todos son formularios, menos la explicación
+  de R2-2.
+- 6 caminos de inspección de grampas (`IMPRESION_0710_V3/fuentes/logo_oficial/`, archivos del 07/10) pasan a
+  `letra-minima: ROJO` (11 pt contra 12) porque ahora se toman como A3. Los 12 pt son lo que dice `tema.json`. No llevan
+  el código del formulario, así que no se detectan como formulario. Tienen los mismos nombres que los 6 de
+  `hojas-grampas-patagonia-01-10/`, pero con el logo oficial y en una carpeta de impresión. Si alguno de estos se
+  imprimió y quedó aceptado, el tipo A3 automático es un falso rojo nuevo. No lo pude saber: queda para Fak.
+
+### Para el cierre con Fak
+
+1. Quedan abiertos R2-1 a R2-4, cada uno con su reproducción arriba.
+2. Libro de observaciones:
+   - El #6 (`plan-de-control-2026-10-15-11`) ya tiene su gemelo y un caso real que lo confirma.
+   - El #10 (`excel-2026-07-24-15`) sigue sin cazarse en el formulario real (R2-1).
+   - El #8 (`pantalla-2026-10-11-13`, cerrado el 18/10 con «revisar.py --tipo html, regla contador-y-hora») queda
+     cazado a medias: el contador interno se caza, pero la hora sin día pasa si el renglón de al lado tiene una fecha
+     cualquiera (R2-3).
+3. Las dos preguntas de arriba, y si los 6 caminos de grampas del 07/10 se aceptaron (Sobre el diferencial).

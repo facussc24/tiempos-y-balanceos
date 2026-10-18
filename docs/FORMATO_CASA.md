@@ -53,15 +53,14 @@ puede adivinar:
 | Bandera | Cuándo |
 |---|---|
 | `--documento "<qué es>"` | siempre que pueda haber formulario oficial para eso («hoja de proceso», «camino de inspeccion», «plan de control», «amfe», «flujograma»). Sin ella, la regla del formulario sale **SIN MIRAR** (y lo dice), salvo que el archivo ya lleve el código de un formulario |
-| `--oficial` | el archivo es un formulario oficial del SGC o del cliente: no corren las reglas de diseño de la casa (B2, gris, letra). **Si el archivo lleva el código del formulario (I-IN-002.4, I-AC-032, I-AC-005.x), se detecta solo** |
+| `--oficial` | el archivo es un formulario oficial del SGC o del cliente: no corren las reglas de diseño de la casa (B2, gris, letra). Si el archivo nombra el código de un formulario (I-IN-002.4, I-AC-032, I-AC-005.x), el revisor lo dice y sugiere `--oficial`, **pero no lo decide solo**: nombrar un código en una lámina de la casa no la vuelve un formulario |
 | `--modo correccion` | se corrigió el archivo de OTRO: cada celda pintada con los amarillos de la lista lleva su comentario «ANTES: …» (el modo por defecto es `rearmado`: limpio, sin amarillo ni notas) |
 | `--tipo proyectar` / `leer` / `a3` / `mail` / `html` / `explicacion` | el tipo de entregable, si la extensión no alcanza (un PowerPoint de más de 40 cm de ancho se toma solo como A3) |
 | `--formulario <plantilla.xlsx>` | las columnas que la plantilla no tiene son columnas inventadas |
 
 Sale **0** si todo lo que corrió está en verde, **1** si algo frena, **2** si no sabe leer ese tipo de archivo y **3** si
 alguna regla no pudo correr (por ejemplo, sin `node` no corre la voz) o el archivo está roto: una regla que no corrió no
-es un verde. Detectar un formulario por su código apaga las reglas de diseño, **no** el freno del logo: ese solo lo apaga
-un `--oficial` dicho por la persona.
+es un verde. Las reglas de diseño y el freno del logo solo los apaga un `--oficial` dicho por la persona.
 
 **Casos de respuesta conocida** (`python scripts/revisar.py --selftest`, test `__tests__/scripts/revisar.test.mjs`): los
 13 entregables devueltos, como gemelos mínimos armados en `scripts/_lib/revisarCasos.py` con la cita de Fak al lado
@@ -81,12 +80,14 @@ llamadas «REF. n» de la misma lámina (y «tocar» o «apretar» no son palabr
 
 **Auditoría del 18/10** (`docs/auditorias/TANDA16_FORMATOS_auditor_2026-10-18.md`, Opus, y el revisor-pedido): 9
 agujeros cerrados, cada uno con su contraejemplo fijo en el selftest (`contraejemplos()` de `revisarCasos.py`): una fila
-de datos pintada entera ya no pasa por banda del formulario; la columna «Fuente» se busca en todas las filas de cabecera;
+de datos pintada entera ya no pasa por banda del formulario; la columna «Fuente» se busca en cada fila que tiene más rótulos que la de arriba (la cabecera, aunque vaya pegada al encabezado del formulario);
 la firma corre también en texto y HTML, mira archivos de hasta 1 GB y, si no pudo mirar entero, dice «no corrió»; el
-número de página se perdona solo en texto suelto, no en una tabla; la hora se acepta con el día en el renglón de al lado;
-el código de un formulario no coincide dentro de otro más largo; un formulario oficial se reconoce por su código; la
+número de página se perdona solo en texto suelto, no en una tabla; la hora necesita el día en el mismo renglón, y una fila de tabla del HTML cuenta como un renglón;
+el código de un formulario no coincide dentro de otro más largo; el pie del IMDS con guiones cuenta como pie; la
 imagen para mirar sale por PDF, con todas las láminas y sin deformar. El caso del PowerPoint de 61 MB no está en el
-selftest (armar un archivo así en cada corrida no tiene sentido): lo cubre el tope nuevo.
+selftest (armar un archivo así en cada corrida no tiene sentido): lo cubre el tope nuevo. La ronda 2 (la última) encontró 4 más y se cerraron con su caso, sin una tercera ronda: la cabecera pegada al encabezado, nombrar un código apagaba la letra, la hora tomaba el día de otro renglón y el pie con guiones.
+
+**Encontrado de paso** (no se tocó: la pieza 8 era solo el tema): la página del programita dice «la última terminó (93 capas) a las 13:29» sin día; `revisar.py` la marca en rojo, que es justo el reclamo del 11/10.
 
 **Lo que no ve:** lo visual (portada oscura, tarjetas de colores, fotos «mejoradas»): eso lo mira una persona sobre el
 render; si una hoja de reunión pregunta cosas que ya se saben (#3); si un número está bien.

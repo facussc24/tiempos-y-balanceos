@@ -208,7 +208,9 @@ def leer_docx(ruta, d):
 def leer_html(ruta, d):
     t = io.open(ruta, encoding="utf-8", errors="replace").read()
     t = re.sub(r"(?is)<(style|script)\b.*?</\1>", " ", t)
-    t = re.sub(r"(?is)<(br|/p|/div|/tr|/li|/h\d|/td|/th)\b[^>]*>", "\n", t)
+    # cada fila de una tabla es UN renglon (el dia de una celda vale para la hora de la celda de al lado)
+    t = re.sub(r"(?is)<tr\b.*?</tr>", lambda m: " ".join(re.sub(r"(?s)<[^>]+>", " ", m.group(0)).split()) + "\n", t)
+    t = re.sub(r"(?is)<(br|/p|/div|/li|/h\d)\b[^>]*>", "\n", t)
     t = re.sub(r"(?s)<[^>]+>", " ", t)
     t = t.replace("&nbsp;", " ").replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", '"')
     for i, renglon in enumerate(t.splitlines(), 1):
@@ -343,16 +345,22 @@ def regla_columnas(d, op):
         # la lista negra se busca en la PRIMERA fila de cada bloque (la de arriba no tiene texto): un formulario lleva su
         # encabezado arriba y la tabla mas abajo (auditor 18/10: con «fecha» al lado del titulo, la columna «Fuente» de la
         # tabla pasaba), y una fila de datos no cuenta (API 18/10: un estado «Verificado» daria falso rojo)
-        con_texto = {f for (f, _c), i in h["celdas"].items() if i["valor"] not in (None, "")}
+        # una fila es cabecera si la de arriba no tiene texto o tiene MENOS textos (auditor ronda 2: en el plan de control
+        # real la cabecera de la tabla va pegada al encabezado, que tiene pocos rotulos); una fila de datos tiene tantos
+        # como su cabecera
+        por_fila = {}
+        for (f, _c), i in h["celdas"].items():
+            if isinstance(i["valor"], str) and i["valor"].strip():
+                por_fila[f] = por_fila.get(f, 0) + 1
         for f, cab in sorted(filas.items()):
-            if f - 1 in con_texto:
+            if por_fila.get(f - 1, 0) >= len(cab):
                 continue
             for c, texto in sorted(cab.items()):
                 if norm(texto) in lista:
                     hall.append((f"pestaña {h['nombre']}, fila {f} col {c}", texto))
         if plantilla is not None and filas:
             # contra la plantilla: la cabecera es la fila con mas textos de las primeras 30
-            f = max((x for x in filas if x <= 30), key=lambda x: (len(filas[x]), -x), default=None)
+            f = max(filas, key=lambda x: (len(filas[x]), -x), default=None)  # toda la hoja: la del PC real esta en la fila 69
             for c, texto in sorted((filas.get(f) or {}).items()):
                 if norm(texto) not in plantilla and norm(texto) not in lista:
                     hall.append((f"pestaña {h['nombre']}, fila {f} col {c}", texto))
@@ -487,7 +495,8 @@ def regla_letra(d, tipo):
         # aceptado el 09/10 (cuerpo 10 a 14 pt, pie y numero a 9 pt)
         # el pie de la casa: «titulo · fecha · F.Santoro …» (con sus puntos medios); un «Realizó: F.Santoro» suelto no
         # es pie (revision por API 18/10)
-        return txt.strip().isdigit() or (autor in txt and txt.count("·") >= 2)
+        # separado por «·», « - » o «|» (el del IMDS del 09/10 usa guiones: auditor ronda 2)
+        return txt.strip().isdigit() or (autor in txt and txt.count("·") + txt.count(" - ") + txt.count("|") >= 2)
     hall = []
     for lam in d.laminas:
         # el pie se perdona solo en texto suelto: en una tabla un numero a 6 pt es un dato chico (auditor 18/10)
@@ -540,7 +549,10 @@ def regla_contador_y_hora(d, tipo):
         # en otra: falso rojo medido por el auditor el 18/10)
         p = d.pedazos
         for i, (l, t) in enumerate(p):
-            if hora.search(t) and not any(dia.search(p[j][1]) for j in range(max(0, i - 1), min(len(p), i + 2))):
+            # el dia va en el MISMO renglon; una fila de tabla del html se lee como un solo renglon (leer_html), que es
+            # donde el programita pone el dia al lado de la hora (auditor ronda 2: mirar el renglon vecino tomaba el dia
+            # de otro dato)
+            if hora.search(t) and not dia.search(t):
                 hall.append((l, t))
     return primero("contador-y-hora", hall, "contador interno, o una hora sin su día", de)
 
@@ -610,8 +622,9 @@ def revisar(ruta, op):
     # 18/10: el plan de control aceptado daba ROJO en «titulo en B2» si se corria sin --oficial)
     code = codigo_oficial(d, [c for x in v("formularios").values() for c in x])
     if code and not op.oficial:
-        op.oficial = True
-        res.append(r("formulario-detectado", MIRAR, que=f"lleva el formulario oficial {code}: corren el paso 0 y las reglas de contenido, no las de diseño"))
+        # NO apaga las reglas de diseño por su cuenta (auditor ronda 2: con solo nombrar el codigo en una lamina de la
+        # casa, la letra chica pasaba): lo dice, y la persona decide con --oficial
+        res.append(r("formulario-detectado", MIRAR, que=f"nombra el formulario oficial {code}: si ES ese formulario, correlo con --oficial (no corren las reglas de diseño de la casa)"))
     # la firma corre tambien en texto y html (auditor 18/10: «Lo revisé con Claude» en un mail salia VERDE)
     res += [regla_firma(ruta, op), regla_formulario(d, op), regla_notas(d), regla_recomendaciones(d, op), regla_jerga(d)]
     if tipo == "mail":
