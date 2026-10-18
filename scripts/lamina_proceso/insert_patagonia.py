@@ -19,9 +19,17 @@ caja(0, 0, W, H, relleno=FONDO)
 # ------------------------------------------------------------ encabezado
 caja(0, 0, W, 30, relleno=BLANCO)
 caja(0, 30, W, 1.6, relleno=AZUL)
+# El logo es SOLO el oficial (core-prohibiciones.md §9), verificado por sha256 al cargar el tema de la casa
+# (tanda 16: el PNG que estaba al lado de este archivo no era el oficial y quedo sin uso). El ancho sale de la proporcion
+# de la imagen, no de un numero escrito.
+sys.path.insert(0, os.path.join(AQUI, "..", "_lib"))
+import temaCasa  # noqa: E402
+from PIL import Image  # noqa: E402
+LOGO = temaCasa.logo()
 lh = 15.0
-lw = lh * 1181 / 354
-sp.add_picture(os.path.join(AQUI, "logo_barack.png"), Mm(13), Mm(7.5), Mm(lw), Mm(lh))
+with Image.open(LOGO) as _im:
+    lw = lh * _im.width / _im.height
+sp.add_picture(LOGO, Mm(13), Mm(7.5), Mm(lw), Mm(lh))
 caja(13 + lw + 7, 7, 0.5, 16, relleno=GRIS_BORDE)
 tx = 13 + lw + 13
 texto(tx, 5.2, 260, 12, "PROCESO DE FABRICACIÓN  ·  INSERT DE PUERTA", tam=22, color=AZUL, negrita=True)

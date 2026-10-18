@@ -68,6 +68,16 @@ describe('tema de la casa', () => {
     } finally { rmSync(d, { recursive: true, force: true }); }
   });
 
+  it('ningun script vuelve a nombrar el logo no oficial de la lamina; la lamina pide el logo al tema', () => {
+    // el PNG viejo (scripts/lamina_proceso/logo_barack.png, sha256 deef25cd...) queda en el disco sin uso: borrar lleva pregunta
+    const r = spawnSync('git', ['ls-files', '*.py', '*.mjs', '*.js', '*.sh'], { cwd: RAIZ, encoding: 'utf8' });
+    const quienLoNombra = r.stdout.split(/\r?\n/).filter(Boolean)
+      .filter((p) => !p.startsWith('__tests__/'))
+      .filter((p) => { try { return readFileSync(join(RAIZ, p), 'utf8').includes('logo_barack.png'); } catch { return false; } });
+    expect(quienLoNombra).toEqual([]);
+    expect(readFileSync(join(RAIZ, 'scripts/lamina_proceso/insert_patagonia.py'), 'utf8')).toMatch(/temaCasa\.logo\(\)/);
+  });
+
   const MIGRADOS = ['scripts/img/generar_hojas_img.py', 'scripts/hotmelt/generar_hojas_hotmelt.py', 'scripts/hotmelt/generar_hojas_hotmelt_a3.py', 'scripts/hotmelt/hoja_pptx.py', 'scripts/novax/generar_hojas_insert.py'];
 
   it('los generadores migrados ya no escriben el azul a mano y lo piden al tema', () => {
