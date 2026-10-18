@@ -16,8 +16,8 @@
 set -u
 PLUGIN_REPO='C:\Dev\barack-claude'
 # El nombre de la carpeta del area en la nube de MENTIRA y en el "pendrive": uno de los nombres de area del canon
-# (scripts/_lib/nubeCarpetas.data.json, clave area_vieja; este es el de antes de la mudanza del 17/10/2026 y el programa lo sigue
-# reconociendo, igual que el nuevo, _CUARENTENA_CLAUDE POR AREA). Un solo lugar para cambiarlo; lo comprueba claudeAreaInstalar.test.mjs.
+# (scripts/_lib/nubeCarpetas.data.json, clave area_vieja): el nombre sin cuarentena, el unico que los programas del area
+# reconocen (la cuarentena del 06/10 no se revive con la mudanza del 17/10/2026). Un solo lugar para cambiarlo.
 AREA_NUBE='CLAUDE POR AREA'
 AREA="Producción"; DEJAR=""; PAQUETE=""; SIG=""
 for a in "$@"; do

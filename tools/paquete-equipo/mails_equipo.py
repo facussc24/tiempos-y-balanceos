@@ -24,10 +24,6 @@ Reglas que cumple este script:
 
 Identidad de un mail: el Message-ID de internet (el mismo en todos los buzones que lo recibieron).
 
-La carpeta de la nube (`--nube`) NO la busca este script: la resuelve `_paquete.mjs --donde` (primero en su lugar nuevo, adentro de
-`ASISTENTE INGENIERIA\\9- VIEJO (no usar)`, y si no esta, en la raiz de la biblioteca) y se la pasa `sync_equipo.ps1`. Este script
-escribe `mails\\_entrada` adentro de la que le pasan.
-
 Uso a mano (por defecto usa %LOCALAPPDATA%\\BarackEquipo):
     python mails_equipo.py --nube "<carpeta Base Claude Ingenieria>"
     python mails_equipo.py --nube X --dry-run          # cuenta, no escribe
@@ -548,7 +544,7 @@ def main(argv=None):
         except Exception:
             pass
     ap = argparse.ArgumentParser(description='Deja en la nube del equipo los mails de trabajo de esta PC.')
-    ap.add_argument('--nube', help='carpeta "Base Claude Ingenieria" de la biblioteca sincronizada, donde este (ASISTENTE INGENIERIA\\9- VIEJO (no usar) o la raiz de la biblioteca)')
+    ap.add_argument('--nube', help='carpeta "Base Claude Ingenieria" de la biblioteca sincronizada')
     ap.add_argument('--estado-dir', help='carpeta local de estado (por defecto %%LOCALAPPDATA%%\\BarackEquipo)')
     ap.add_argument('--dias-atras', type=int, help='primera corrida: hasta cuantos dias hacia atras mira (%d)' % DIAS_ATRAS_POR_DEFECTO)
     ap.add_argument('--desde', help='AAAA-MM-DD: mira desde esa fecha (ignora la marca de la ultima pasada)')

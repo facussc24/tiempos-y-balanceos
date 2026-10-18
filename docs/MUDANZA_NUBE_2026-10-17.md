@@ -119,6 +119,10 @@ a crear una carpeta vieja: lo revisé en el código (cuando no encuentra la carp
 la rama está en main. `CLAUDE.md` y las reglas (`nube-ingenieria`, `api-claude`, `video-maquina`) entran al arrancar:
 una sesión que ya estaba abierta sigue leyendo que los pedidos están en `FACUNDO\` hasta que se la reabre.
 
+**Hasta fundir, NO correr `node scripts/_nube.mjs --subir --aplicar` desde main:** es el único camino del código viejo
+que crea su carpeta si no la ve, y volvería a crear `Claude Fak` en la raíz con una copia de la memoria. `--sincronizar`
+y `--bajar` no lo hacen (salen con «NO EXISTE»).
+
 **Cómo se pone bien:** fundir la rama en main. Para lo de esta tabla alcanza con eso, porque los hooks y la tarea
 corren desde main. La subida de los mails de esta PC es otra cosa: es un programa instalado aparte (tabla de abajo).
 
@@ -144,9 +148,12 @@ corren desde main. La subida de los mails de esta PC es otra cosa: es un program
   (el buzón y los mails): 10 movidas en total.
 - Los LEEME de `1- INSTALAR` y `5- FACUNDO` tienen sus cinco renglones arriba y, debajo, el texto que ya traían (las
   instrucciones de cada instalador y la guía para dejar otra PC andando): no se recortó para no perderlo.
-- El LEEME de `9- VIEJO` dice que ningún programa depende de esa carpeta, y es así: los que publican o instalan no la
-  buscan. Solo la miran, sin escribir, `antes_de_la_reunion.py` (informa la versión del área) y los instaladores de
-  mails, que leen de ahí la lista de lo privado publicada si existe, como antes la leían de la cuarentena en la raíz.
+- **`9- VIEJO` no se puede borrar todavía** (lo marcó el auditor en la segunda ronda). Ningún programa escribe ahí ni
+  publica ahí, pero tres leen de ahí, como antes leían de la cuarentena en la raíz: el instalador de mails de Calidad
+  (`mails_pc\instalar.ps1`) toma la lista de lo privado publicada y **frena si no la encuentra** (es la única copia); el
+  instalador de una PC nueva (`instalar_mi_pc.ps1`) y el de los mails de Carlos sacan de ahí el programa Node si la PC
+  no lo tiene. Su LEEME ya lo dice. Antes de borrar `9- VIEJO` hay que darles otro lugar a esos dos archivos.
+  `antes_de_la_reunion.py` también la mira, solo para informar la versión del área.
 
 - `_sinFirmaIA.py` (el de la rama) sobre la carpeta única da **10 bloqueantes, todos por CONTENIDO de archivos que ya
   estaban**: 8 PEDIDO que dicen «PARA TU CLAUDE», un archivo de las mejoras de Carlos cuya carpeta se llama

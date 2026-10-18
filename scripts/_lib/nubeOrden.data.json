@@ -63,7 +63,7 @@
     { "id": "9", "nombre": "9- VIEJO (no usar)", "que": "Instaladores y versiones anteriores, guardados por si hace falta mirar algo.",
       "leeme": [
         "9- VIEJO (no usar): instaladores y versiones anteriores, guardados por si hace falta mirar algo.",
-        "Antes de traer algo acá se cambian los programas que lo buscaban, para que ninguno dependa de esta carpeta.",
+        "Ojo: los instaladores de mails y el de una PC nueva todavía leen de acá la lista de lo privado y el programa Node.",
         "No ejecutar nada de acá.",
         "Se borra solo con el OK de Facundo.",
         "Dudas: Facundo Santoro (Ingeniería)."

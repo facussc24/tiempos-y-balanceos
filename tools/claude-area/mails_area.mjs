@@ -69,7 +69,8 @@ export const MAX_MINUTOS = 10;         // la tarea corta este paso a los 12 (y W
 export const SEGUNDOS_SIN_RESPUESTA = 75;   // sin una linea del lector en ese tiempo: Outlook no contesta
 export const DIAS_DE_PAUSA = 7;        // despues de dos corridas seguidas sin respuesta
 // Las carpetas de la biblioteca de Ingenieria que este programa busca, del lugar NUEVO al viejo (mudanza del 17/10/2026).
-// La fuente es scripts/_lib/nubeCarpetas.data.json (claves «mails» y «area_vieja»: `nueva` y despues `viejas`, en ese orden).
+// La fuente es scripts/_lib/nubeCarpetas.data.json (clave «mails»: `nueva` y despues `viejas`, en ese orden; del area, solo el
+// nombre sin cuarentena: ver AREA_VIEJA_TRAMOS).
 // Este archivo se copia a otras PC sin el repo y no puede leer ese canon: lleva los nombres adentro, y un test
 // (__tests__/scripts/claudeAreaMails.test.mjs) verifica que coincidan.
 export const MAILS_TRAMOS = [
@@ -440,8 +441,8 @@ function sinLosTramos(ruta, tramos) {
 }
 
 /**
- * La carpeta `mails` de la biblioteca de Ingenieria, a partir de la carpeta del asistente por area (`...\CLAUDE POR AREA`
- * de antes de la mudanza, o la que quedo en `ASISTENTE INGENIERIA\9- VIEJO (no usar)`). null si no se ve.
+ * La carpeta `mails` de la biblioteca de Ingenieria, a partir de la carpeta del asistente por area (`...\CLAUDE POR AREA`,
+ * en la raiz; la que esta en cuarentena o en `9- VIEJO (no usar)` no se acepta). null si no se ve.
  * La misma regla que scripts/_lib/nubeRutas.mjs: la `mails` nueva si existe; si no, la primera vieja que exista; y si no existe
  * ninguna, la nueva (que se crea al subir) pero solo si ya esta su carpeta «4- MAILS DEL EQUIPO»: nunca crea una `mails` en el
  * lugar de antes ni inventa la biblioteca. Nunca cuelga de un enlace.
