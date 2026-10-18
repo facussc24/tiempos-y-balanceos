@@ -528,3 +528,234 @@ de 37 a 43 en la copia. No se arregla sin reescribir la historia.
   documento.
 
 Ronda 2 = última. Lo abierto (los 3 nits y el del commit) va al cierre para Fak.
+
+## Ronda 3 (diff ad495ef8..9390a97c, revisión por API)
+
+Revisé solo el diff nuevo: `72cbc38e` (los tres lectores, sus tests y el comentario del `.gitignore`) y `9390a97c` (los
+dos documentos). Lo de las rondas 1 y 2 no se repite. Las dos rondas de `REVIEW.md` ya pasaron: lo que quede abierto
+va al cierre para Fak.
+
+### Resultado: fundir · 0 Importante, 3 Nit, 0 Preexistente
+
+Los cinco arreglos hacen lo que dicen y los números nuevos de los documentos salen de correr los lectores. Ningún
+control afloja: la clave del nombre del adjunto ahora se tapa antes de normalizar, y sacar ese tapado pone 3 tests en
+rojo. Quedan tres nits:
+
+- la regla nueva de las piezas separa 5 grupos, no 2, y uno de ellos son, por nombre y por hilo, dos versiones del
+  mismo DXF;
+- el test de las dos marcas del Planner prueba un solo orden;
+- 8 renglones dicen «18/10» por un trabajo del 17/10.
+
+| Control | Estado | Detalle |
+|---|---|---|
+| Tests de la tanda | OK | los 3 tests + `convencionesScripts`: **53 de 53** (eran 47 en `ad495ef8`; 6 `it` nuevos: 3 del índice, 2 del Planner, 1 de INCA) |
+| TypeScript | OK | `npx tsc --noEmit`: 0 errores |
+| Build | OK | `npm run build`: «built in 41.32s» |
+| ESLint | OK | los 6 archivos de código y tests tocados: sin avisos |
+| Git local | OK | árbol limpio al empezar; el único commit mío es esta sección |
+| Fundir | OK | `git merge-tree` contra `origin/main` `87679546`: sin conflictos |
+| CI | no aplica | la rama no se empuja (encargo sin push) |
+| Mutantes | 14 de 17 mueren | los 3 que viven: M37b es el nit 2; M49 y M50 son equivalentes con los datos de hoy (detalle abajo) |
+| Claves y «Claude» | OK | 0 en las 3 salidas nuevas; `python scripts/_sinFirmaIA.py`: 0 bloqueantes y 0 avisos en las 3 |
+| La copia de mails | sin tocar | md5 de `mails.jsonl` igual al empezar y al cerrar (`c71363c1…`, el mismo de las rondas 1 y 2) |
+
+### Lo que pidió el encargo, punto por punto
+
+**a. Los tests.** `npx vitest run` de los 3 tests de la tanda más `convencionesScripts`: 53 de 53. En la copia del
+scratchpad (solo los 3 de la tanda) el control da 50 de 50.
+
+**b. Mutantes.** Misma receta que en la ronda 2: una copia en el scratchpad con los archivos de `HEAD` (`git show`),
+`node_modules` por enlace (junction) y vitest con `globals`. Un mutante por vez; el worktree no se tocó.
+
+| Mutante | Resultado |
+|---|---|
+| M0 control | verde, 50 de 50 |
+| M36 `piezaDe` sin `taparClaves` | muere (3: el test unitario nuevo, el de la salida y la corrida entera) |
+| M37a el literal del encargo: el `if` entero vuelve a `p.deFak = m.clase === 'enviados'` | muere (3), pero por otra razón: ver abajo |
+| M37b `deFak` pisando y `aFak` sumando | **vive** (nit 2) |
+| M37c `aFak` pisando y `deFak` sumando | muere (1) |
+| M38 la lista de Carlos vuelve a filtrar por «no es de Fak» | muere (1) |
+| M39 sin `aFak` en los avisos de vencimiento | muere (2) |
+| M40 sin la racha | muere (1) |
+| M41 la columna «de corrido» muestra la primera vez | muere (1) |
+| M42 el estado se queda con el primer aviso | muere (1) |
+| M43 el estado sin los días de atraso | muere (1) |
+| M44 la asignación no anota estado | muere (1) |
+| M45 la palabra de versión vuelve a sacar un número pegado | muere (2) |
+| M46 el número suelto acepta pegado con `-`, `_` o `.` | muere (2) |
+| M47 sin la fecha final | muere (1) |
+| M48 sin la copia de Windows «(2)» | muere (1) |
+| M49 la consola de `--buscar` sin `taparClaves` | vive (equivalente) |
+| M50 el estado con `>` en vez de `>=` | vive (equivalente con los datos de hoy) |
+
+M37a muere porque reemplazar el `if` entero borra también la marca `aFak` en las asignaciones. Así, la tarea se cae de
+la lista de Carlos. No prueba que pisar `deFak` se detecte: eso lo mide M37b.
+
+**c. La regla nueva de `piezaDe` sobre todos los nombres reales.** Una sonda le pone a cada nombre real de adjunto la
+pieza vieja (`ad495ef8`) y la nueva (`HEAD`). Después compara los grupos: cuántos grupos nuevos salen de cada grupo
+viejo, y al revés. Solo lee nombres, fechas, remitentes y asuntos.
+
+- **Juntes:** 431 filas y 323 nombres distintos. Los grupos con más de un nombre eran **40** (36 de diseño y 4
+  comprimidos): coincide con el «40» del autor. Con la regla nueva quedan 37.
+- **Juntes nuevos:** ninguno. La regla nueva no junta nada que antes estuviera separado.
+- **Separaciones:** **5**, no 2. Están en el nit 1.
+- **Nombres que cambian de texto:** 24. De esos, 8 son los de las separaciones y 16 cambian de texto sin cambiar de
+  grupo. Por ejemplo:
+  - `5GO.881.931.stp` era «5go» y ahora es «5go 881 931» (antes se comía el número de pieza);
+  - `PIEZA_NUEVA-3.dxf` era «pieza»;
+  - los cuatro `INSERT PATAGONIA … - 2026-10-15.dxf` ahora conservan la fecha ISO.
+
+  Ninguno arma un grupo distinto.
+- **Viejo contra nuevo, la salida entera** (`node scripts/_adjuntosIndice.mjs --out` con las dos versiones):
+  - el resumen y las dos tablas de detalle quedan idénticos;
+  - el `diff` marca 47 renglones, todos en las tablas por pieza: 21 filas viejas y 26 nuevas. Son las 5 separaciones
+    más las filas que cambian de nombre.
+- **La palabra de versión no se come palabras reales:** ningún nombre pierde una palabra que empiece con «rev». Las
+  únicas palabras comunes que se sacan son 2 «FINAL» y 1 «NUEVO», igual que antes.
+
+**d. El estado del Planner real.** Corrí `node scripts/_plannerCarlos.mjs --out` con la versión nueva y con la vieja.
+
+Valores distintos de la columna «Estado segun el ultimo aviso», en las 41 filas de las dos tablas que la tienen (38 de
+Carlos y 3 de otros planes):
+
+| Estado | Filas |
+|---|---|
+| vencida, N días | 35 |
+| asignada | 3 |
+| por vencer | 2 |
+| vence hoy | 1 |
+
+Ninguna dice «abierta». La única «abierta» del archivo está en la aclaración de arriba: «si una tarea esta abierta o
+cerrada».
+
+Sacando la columna nueva y su renglón de aclaración, la salida vieja y la nueva son iguales, salvo «1 dias» → «1 dia»
+en 3 filas.
+
+Cinco tareas contra los avisos crudos. Usé solo los 134 avisos que deja pasar el filtro del Planner y miré el renglón
+de la tarea en el último aviso que la nombra:
+
+| Tarea | Último aviso que la nombra | Lo que dice la columna |
+|---|---|---|
+| «Telas Nuevas PWa 21-9694 y 21-9695» | 08/07, sección «You have a late task», `7/1/2026 7 days late` | vencida, 7 días (aviso del 08/07/2026) |
+| «PPAP HEADREST» | 25/05, «You have late tasks», `5/18/2026 7 days late`; antes hubo 23 avisos: la asignación, por vencer, vence hoy y vencida, dos veces porque el vencimiento cambió del 07/05 al 18/05 | vencida, 7 días (aviso del 25/05/2026) |
+| «ECR de modificación de termoformada…» | 12/05, «You have upcoming tasks», `Due in 2 days` | por vencer (aviso del 12/05/2026) |
+| «PPAP IP PAD» | 07/05, «You have tasks due today» | vence hoy (aviso del 07/05/2026) |
+| «estandarizar proceso de PUR Inyeccion» | 09/02, la asignación; no hay otro aviso | asignada (aviso del 09/02/2026) |
+
+Las cinco coinciden.
+
+En los datos reales hay 54 tareas. Las que tienen las dos marcas («le llegó a Fak» y «la asignó Fak») son **0**,
+como dice el comentario del código; las que no tienen ninguna, también 0.
+
+**e. Las cifras de los documentos, contra los lectores.**
+
+| Dato del documento | Medido | Cómo |
+|---|---|---|
+| Pre-mortem: 4 aplicados, 5 a medias, 0 que falten, 1 que ya no aplica | filas 1, 4, 8 y 10 aplicado; 2, 3, 5, 6 y 9 a medias; 7 ya no aplica | conté la columna Estado. El resumen nombra justo las filas a medias |
+| 193 de Pablo, 58 de Carlos, y los 6 `.jt` y `.tar` no son de ninguno de los dos | 193 y 58 con o sin esos 6; sus remitentes son otros 3 | `filasDeAdjuntos` por remitente |
+| 40 grupos con más de un nombre | 40 | sonda del punto c (ver el nit 1 por el «2») |
+| «estanteria inserto» trae los dos mails de agosto | 2 filas en 2 mails: 25/08 y 28/08 | `buscar()` |
+| 38 tareas, 58 avisos de asignación, 76 mails de vencimientos | igual | consola de `_plannerCarlos.mjs` |
+| `--safe-mode` en `claude --help` de la 2.1.301 | `claude --version` da 2.1.301; la ayuda dice «Start with all customizations (… hooks …) disabled — useful for troubleshooting a broken configuration» | corrido acá |
+| `disableAllHooks` en `research_hooks.json` | 2 apariciones («disableAllHooks:true apaga todos (salvo managed)») | `grep` |
+| «Foto a tabla» dice una sola cosa | quedan 2 menciones en el paquete (renglones 60-64 y 260) y las dos dicen lo mismo; la ficha ya no está | `grep` |
+
+### Hallazgos de la ronda 3
+
+**1. [Nit · ROBUSTNESS, y un dato del documento] La regla del número pegado separa 5 grupos, no 2.**
+Dónde:
+
+- `scripts/_adjuntosIndice.mjs:45-53` (el comentario de la regla);
+- `docs/TANDA14_PAQUETE_POR_PERSONA_2026-10-17.md:263-267`.
+
+La medición del autor miró los 40 grupos que juntaban más de un nombre y encontró 2 que juntaban cosas distintas. No
+midió lo que la regla nueva separa. Separa estos 5:
+
+| Grupo viejo | Queda en | Mails |
+|---|---|---|
+| «estanteria» | `ESTANTERIA.rar` / `ESTANTERIA-1.rar` | 21/08, Pablo Gamboa, «ESTANTERIA DE CAJAS» / «ESTANTERIA IP Y TOP ROLL»: buscado |
+| «mylar mp7315» | `MYLAR MP7315` / `MYLAR MP7315-16` | 27/08 y 28/08 al 01/09, Pablo Gamboa: buscado |
+| «insonos sheet» | `Insonos_Sheet_3.dwg` / `Insonos_Sheet_4.dwg` | el mismo mail del 08/08/2025, «DUCTOS DWG LISTOS»: son hojas distintas de un juego, separarlas está bien |
+| «dispositivo sab1740 fixture» | `Dispositivo_SAB1740_fixture.step` / `…_fixture_1.step` | el mismo mail del 24/08/2026, Carlos Baptista: no se puede decir sin abrir los archivos |
+| «definitivo» | `Definitivo.2.dxf` / `Definitivo.3.dxf` | 17/07 «DXF TRASERO» y 20/07 «RE: DXF TRASERO», los dos de Facundo Santoro |
+
+El último caso, por el nombre y por el hilo, son dos versiones del mismo DXF (no abrí los archivos). La regla nueva las
+deja en dos filas. Según la cuenta del propio autor (2 de 40 juntaban mal), esos tres grupos de abajo estaban bien
+juntados.
+
+No esconde nada:
+
+- las dos filas salen con el mismo asunto al lado;
+- el detalle no cambia;
+- buscar «definitivo» trae las dos.
+
+Por eso es nit. El punto, pegado a un número, es el único caso medido en que la regla separa versiones.
+
+Lo que falta es que el documento y el comentario del código digan el costo medido: «separa 5 grupos: los 2 buscados,
+2 que no cambian nada y 1 que parte dos versiones (Definitivo.2 y .3)».
+
+respuesta: ____
+
+**2. [Nit · ROBUSTNESS] El test de las dos marcas del Planner prueba un solo orden.**
+Dónde: `__tests__/scripts/plannerCarlos.test.mjs:133-142` y `scripts/_plannerCarlos.mjs:161`.
+
+El test arma primero la asignación de Carlos a Fak (Bandeja) y después la de Fak a otro (Enviados). En ese orden,
+pisar `deFak` termina en «sí» igual, y por eso M37b vive: 50 de 50 en verde.
+
+Lo corrí en el orden inverso, con los mismos dos avisos del archivo de casos. Primero Fak se la asigna a otro y después
+Carlos se la asigna a Fak:
+
+| Versión | Sale en «Tareas que Fak asigno a otros» | Sale en la lista de Carlos |
+|---|---|---|
+| Código de `HEAD` | sí | sí |
+| M37b | **no** | sí |
+
+Ningún test se pone en rojo. Hoy hay 0 tareas reales con las dos marcas, así que no cambia ninguna salida.
+
+El arreglo es un segundo caso, con el orden al revés, que pida la tarea en las dos listas.
+
+respuesta: ____
+
+**3. [Nit · dato] «18/10» en 8 renglones por un trabajo del 17/10.**
+Dónde:
+
+- `scripts/_adjuntosIndice.mjs:50` y `:63`;
+- `scripts/_plannerCarlos.mjs:131`;
+- `scripts/_incaParte.mjs:107`;
+- `__tests__/scripts/adjuntosIndice.test.mjs:27`;
+- `docs/TANDA14_PAQUETE_POR_PERSONA_2026-10-17.md:121` y `:264`;
+- `docs/TANDA14_PREMORTEM_VERIFICADO_2026-10-17.md:63`.
+
+Lo que dicen los comandos:
+
+- los commits `72cbc38e` y `9390a97c` son del 17/10 a las 21:14 y 21:16 (-0300);
+- `date` en esta PC, al cerrar, da sábado 17/10 21:29;
+- `date -u`, en cambio, ya da domingo 18/10 00:29.
+
+O sea, «medido el 18/10» y «revisión por API del 18/10» nombran un día que en Argentina todavía no empezó. El mensaje
+de `9390a97c` dice lo mismo, y eso no se arregla sin reescribir la historia.
+
+respuesta: ____
+
+### Lo que no es hallazgo en esta ronda (para que nadie lo reabra)
+
+- **M49 vive porque es equivalente.** Todo lo que sale de un mail hacia la consola de `--buscar` ya pasa por `celda()`,
+  y la pieza pasa por `piezaDe()`, que ahora tapa. Es el mismo cinturón doble de M2 en la ronda 1. El test nuevo de la
+  consola sí mira la salida entera con el patrón de los pedazos de la clave.
+- **M50 vive porque los datos de hoy no lo distinguen.** En los datos reales hay 8 tareas con dos avisos del mismo
+  minuto: asignada y por vencer el 28/04 17:21 y el 11/05 09:28, y asignaciones múltiples. En ninguna de las 8 ese
+  empate es el último aviso: 0 filas en las que `>` o `>=` cambie la columna.
+- **«De corrido desde» de INCA no ve los 3 partes que faltan en la copia** (27/05, 03/06 y 10/06). Pero el aviso que
+  está arriba de la misma tabla nombra las tres fechas y dice «no de semanas corridas». Hoy «de corrido desde» es igual
+  a «primera vez» en las 6 piezas: 0 casos, como dice el comentario. Viejo contra nuevo, la única diferencia es la
+  columna nueva.
+- **Las 4 «claude» que suman los documentos** son la ruta `.claude/skills/`, la ruta del archivo de investigación y dos
+  veces el comando `claude`, en documentos del repo para Fak. No es un entregable de Barack. En los renglones agregados
+  y en los mensajes de los 2 commits no aparece el patrón de la clave.
+- **«Foto a tabla» habilitada en la cuenta:** igual que en las rondas 1 y 2, desde acá no se puede verificar. El
+  documento cita la fuente: la lista de skills de la cuenta, leída el 17/10.
+- **El comentario del `.gitignore`:** cambia solo el texto; los tres patrones siguen iguales.
+- **La copia de mails no se tocó, y el cuerpo del mail de Pedro del 09/10 no se abrió.** Las sondas pasan por
+  `leerMails`: la del índice sin cuerpos, y la del Planner con el filtro de avisos de Planner, que no lo deja entrar.
+
+Ronda 3 = revisión del diff de la API. Lo abierto (los 3 nits) va al cierre para Fak.
