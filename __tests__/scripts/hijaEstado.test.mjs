@@ -79,6 +79,19 @@ describe('estadoHija · VERDE', () => {
     expect(r.app).toBeNull();
   });
 
+  it('el uuid pelado de la app (el local_ sin prefijo) tambien se resuelve: por el registro de la app, no como conversacion (cola N17-8, 18/10/2026)', () => {
+    const { local } = armar();
+    const pelado = local.replace(/^local_/, '');
+    const r = estadoHija({ id: pelado, raizApp, raizProyectos, ahoraMs: AHORA });
+    expect(r.ok).toBe(true);
+    expect(r.app).not.toBeNull();
+    expect(r.ojos.join(' ')).not.toMatch(/no encuentro la conversación/);
+    // y un uuid que no es de nadie sigue diciendo que no encuentra la conversacion
+    const r2 = estadoHija({ id: 'ffffffff-0000-0000-0000-000000000000', raizApp, raizProyectos, ahoraMs: AHORA });
+    expect(r2.ok).toBe(false);
+    expect(r2.ojos.join(' ')).toMatch(/no encuentro la conversación/);
+  });
+
   it('una herramienta que lleva menos de --espera-min sin resultado no es un OJO (esta trabajando)', () => {
     const { local } = armar({ pendienteMin: 1 });
     expect(estadoHija({ id: local, raizApp, raizProyectos, ahoraMs: AHORA }).ok).toBe(true);

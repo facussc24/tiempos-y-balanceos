@@ -112,11 +112,19 @@ export function estadoHija({ id, raizApp = RAIZ_APP(), raizProyectos = RAIZ_PROY
   const ojos = [];
   const datos = [];
   const esLocal = /^local_/.test(String(id));
-  const app = esLocal ? leerRegistroApp(id, raizApp) : null;
+  let app = esLocal ? leerRegistroApp(id, raizApp) : null;
   if (esLocal && !app) ojos.push(`no encuentro el registro de la app para ${id}: todavía no arrancó, o el id está mal`);
-  const cli = app?.cliSessionId ?? (esLocal ? null : id);
+  let cli = app?.cliSessionId ?? (esLocal ? null : id);
+  let t = cli ? leerTranscript(cli, raizProyectos) : null;
+  // 18/10/2026 (cola N17-8): el uuid pelado de una sesion de la app (el «local_…» sin su prefijo) NO es el id de la
+  // conversacion, y con el no hay transcript que encontrar. Si no aparece como conversacion, se busca su registro en
+  // la app como local_<uuid> y de ahi sale el cliSessionId (la madre del 17/10 lo paso asi cuatro veces y leyo
+  // «todavia no escribio nada» de hijas que llevaban horas trabajando).
+  if (!esLocal && !t) {
+    const appLocal = leerRegistroApp(`local_${id}`, raizApp);
+    if (appLocal) { app = appLocal; cli = appLocal.cliSessionId ?? null; t = cli ? leerTranscript(cli, raizProyectos) : null; }
+  }
   if (app) datos.push(`título: ${app.title || '(sin título)'} · modelo (app): ${app.model} · modo (app): ${app.permissionMode} · tarea que la lanzó: ${app.scheduledTaskId ?? 'ninguna'}`);
-  const t = cli ? leerTranscript(cli, raizProyectos) : null;
   if (!t) {
     if (cli) ojos.push(`no encuentro la conversación ${cli}.jsonl: todavía no escribió nada (volver a mirar en un minuto)`);
     // H7 (auditor 16/10/2026): sin cliSessionId en el registro de la app no hay nada que leer, y «arrancó bien» salía igual.
