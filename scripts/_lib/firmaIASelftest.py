@@ -167,7 +167,7 @@ def correr() -> int:
         if ok and debe_avisar:
             ok = any(debe_avisar == h.regla for h in hs if h.nivel == 'AVISO')
         if ok and sin_avisos:
-            ok = not [h for h in hs if h.regla.startswith('logo-') or h.regla in ('reproceso-delata', 'antes-despues')]
+            ok = not [h for h in hs if h.regla.startswith(('logo-', 'humanizer-')) or h.regla in ('reproceso-delata', 'antes-despues')]
         print(f'  {"ok  " if ok else "MAL "}  {nombre}')
         if not ok:
             fallas += 1
@@ -215,6 +215,16 @@ def correr() -> int:
              _docx(j('fd5.docx'), 'Reproceso: eliminación de hilo sobrante. Reproceso: eliminación de arrugas en horno. Reproceso de costura o scrap / Pieza rechazada por cliente. Sacabocado exacto, impacta en el acta compacta.'), False, sin_avisos=True)
         caso('«eliminamos los reprocesos a pedido del cliente»: avisa', _docx(j('fd6.docx'), 'Se eliminaron los reprocesos de la OP 32 a pedido del cliente.'), False, debe_avisar='reproceso-delata')
         caso('«Antes de coser, verificar la tensión»: nada', _docx(j('fd4.docx'), 'Antes de coser, verificar la tensión del hilo.'), False, sin_avisos=True)
+
+        print('SEÑALES DE TEXTO ESCRITO POR IA (humanizer, tanda 15) — aviso, no freno')
+        caso('«no es solo X, es Y»', _docx(j('hu1.docx'), 'No es solo un plano, es la base del proceso.'), False, debe_avisar='humanizer-no-es-x-es-y')
+        caso('«cabe destacar» / «sin lugar a dudas»', _docx(j('hu2.docx'), 'Cabe destacar que la OP 30 cambia sin lugar a dudas.'), False, debe_avisar='humanizer-palabras')
+        caso('resto de la charla: «¡Excelente pregunta! Espero que te sirva»', _docx(j('hu3.docx'), '¡Excelente pregunta! Espero que te sirva.'), False, debe_avisar='humanizer-chat')
+        caso('«la tabla de abajo muestra»', _docx(j('hu4.docx'), 'La tabla de abajo muestra los consumos del Insert.'), False, debe_avisar='humanizer-habla-del-documento')
+        caso('«los expertos coinciden»', _docx(j('hu5.docx'), 'Los expertos coinciden en que el adhesivo sirve.'), False, debe_avisar='humanizer-autoridad')
+        caso('«hasta donde sé»', _docx(j('hu6.docx'), 'Hasta donde sé, el plano es la revisión C.'), False, debe_avisar='humanizer-descargo')
+        caso('frases de planta: «No es solo la OP 30: también la 40», «La OP 30 pasa de 2 a 1 operario», «Proveedor no es el mismo: es otro»: nada',
+             _docx(j('hu7.docx'), 'No es solo la OP 30: también la 40. La OP 30 pasa de 2 a 1 operario. Proveedor no es el mismo: es otro.'), False, sin_avisos=True)
 
         print('LOGO DE BARACK (cola H9) — el no oficial frena en un documento PROPIO y avisa en uno ajeno')
         import hashlib
