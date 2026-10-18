@@ -96,7 +96,7 @@ function linea(t = '') { console.log(t); }
  * Los LEEME de la carpeta unica (los textos del simulado: `nubeOrden.data.json`, `leeme_raiz` y `destinos[].leeme`,
  * cinco renglones cada uno). Uno que no existe se crea; uno que ya existe y no empieza con esos renglones los recibe
  * ARRIBA, con todo lo que tenia abajo (nunca se pisa: el de 1- INSTALAR y el de 5- FACUNDO traen instrucciones).
- * Devuelve [{ ruta, accion: 'creado'|'agregado arriba'|'ya estaba' }].
+ * Devuelve [{ ruta, accion: 'creado'|'agregado arriba'|'actualizado'|'ya estaba'|'falta la carpeta' }].
  */
 export function escribirLeemes(bib, orden, unica = CANON_CARPETAS.unica, { escribir = true } = {}) {
     const lista = [{ carpeta: join(bib, unica), renglones: orden.leeme_raiz.map((l) => l.replace('{NOMBRE}', unica)) },
@@ -108,7 +108,15 @@ export function escribirLeemes(bib, orden, unica = CANON_CARPETAS.unica, { escri
         const nuevo = renglones.join('\r\n') + '\r\n';
         if (!existsSync(ruta)) { if (escribir) writeFileSync(ruta, nuevo, 'utf8'); out.push({ ruta, accion: 'creado' }); continue; }
         const viejo = readFileSync(ruta, 'utf8').replace(/^﻿/, '');
-        if (viejo.startsWith(renglones[0])) { out.push({ ruta, accion: 'ya estaba' }); continue; }
+        const sus = viejo.split(/\r?\n/);
+        // los cinco renglones completos, no solo el primero (revision por API, 18/10): si estan iguales, nada; si arranca con
+        // el mismo primer renglon pero los otros cambiaron en el canon, se cambian esos cinco y lo de abajo queda igual
+        if (renglones.every((l, i) => sus[i] === l)) { out.push({ ruta, accion: 'ya estaba' }); continue; }
+        if (sus[0] === renglones[0]) {
+            if (escribir) writeFileSync(ruta, [...renglones, ...sus.slice(renglones.length)].join('\r\n'), 'utf8');
+            out.push({ ruta, accion: 'actualizado' });
+            continue;
+        }
         if (escribir) writeFileSync(ruta, nuevo + '\r\n' + viejo, 'utf8');
         out.push({ ruta, accion: 'agregado arriba' });
     }
@@ -147,11 +155,15 @@ export function moverYVerificar(f, { relBib = (p) => p, sinSubirAhora = () => 0,
     return { ...fila, ok: true };
 }
 
-export function main(argv = process.argv.slice(2)) {
+/**
+ * `opciones` es para probarlo con una biblioteca de mentira: `home` (de donde sale la biblioteca), `medir` (en vez de
+ * nubeMedir.ps1, que mira los atributos de OneDrive) y `dirRegistro` (en vez de exports/explicaciones del checkout principal).
+ */
+export function main(argv = process.argv.slice(2), { home, medir = medirPorAtributos, dirRegistro } = {}) {
     const desconocidos = argv.filter((a) => !['--simular', '--aplicar'].includes(a));
     if (desconocidos.length) { console.error(`Argumento desconocido: ${desconocidos.join(' ')} (solo --simular o --aplicar)`); return 2; }
     const aplicar = argv.includes('--aplicar');
-    const bib = buscarBiblioteca();
+    const bib = buscarBiblioteca(home);
     if (!bib) { console.error('No encuentro la biblioteca de Ingenieria sincronizada en esta PC.'); return 2; }
     const plan = planMudanza(bib);
     const aMover = plan.filter((f) => f.estado === 'mover');
@@ -160,7 +172,7 @@ export function main(argv = process.argv.slice(2)) {
 
     // 1) Antes de tocar nada: contar todo, medir lo que falta subir y el largo en SharePoint.
     const relBib = (p) => relative(bib, p);
-    const medicion = aMover.length ? medirPorAtributos(bib, aMover.map((f) => relBib(f.origen)), { topeSeg: 600 }) : { carpetas: [] };
+    const medicion = aMover.length ? medir(bib, aMover.map((f) => relBib(f.origen)), { topeSeg: 600 }) : { carpetas: [] };
     const sinSubirDe = new Map(medicion.carpetas.map((c) => [c.nombre, c]));
     const frenos = [];
     for (const f of plan) {
@@ -202,20 +214,27 @@ export function main(argv = process.argv.slice(2)) {
     const registro = { fecha: new Date().toISOString(), biblioteca: bib, unica: CANON_CARPETAS.unica, carpetas: [] };
     // el registro va al lado del simulado (exports/explicaciones del checkout principal); fecha LOCAL, no la de UTC
     const hoy = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-    // una segunda corrida del mismo dia no pisa la primera: lleva la hora en el nombre (auditor 17/10, Nit 1)
-    let salida = join(dirname(rutaSalida('x.md')), `nube_mudanza_${hoy}.json`);
-    if (existsSync(salida)) salida = salida.replace(/\.json$/, `_${new Date().toTimeString().slice(0, 5).replace(':', '')}.json`);
+    // una segunda corrida no pisa la de antes: si el nombre del dia ya esta, la hora con segundos y, si tambien, un numero
+    const dir = dirRegistro || dirname(rutaSalida('x.md'));
+    const base = `nube_mudanza_${hoy}`;
+    let salida = join(dir, `${base}.json`);
+    for (let i = 1; existsSync(salida); i++) salida = join(dir, `${base}_${new Date().toTimeString().slice(0, 8).replace(/:/g, '')}${i > 1 ? `_${i}` : ''}.json`);
     // sin registro no se mueve: lo que se movio tiene que quedar anotado con su conteo
     const guardar = () => { mkdirSync(dirname(salida), { recursive: true }); writeFileSync(salida, JSON.stringify(registro, null, 2), 'utf8'); };
     try { guardar(); } catch (e) { linea(`[X] No puedo escribir el registro (${salida}): ${e.message}. No se movio nada.`); return 1; }
     const sinSubirAhora = (f) => {
-        const m = medirPorAtributos(bib, [relBib(f.origen)], { topeSeg: 600 }).carpetas[0];
+        const m = medir(bib, [relBib(f.origen)], { topeSeg: 600 }).carpetas[0];
         return m && m.terminado ? m.total.sin_subir : null;
     };
     for (const f of aMover) {
         const fila = moverYVerificar(f, { relBib, sinSubirAhora });
         registro.carpetas.push(fila);
-        guardar();
+        try { guardar(); } catch (e) {
+            // ya se movio: que el conteo quede al menos en la pantalla, y no se sigue con la siguiente
+            linea(`[X] PARE: «${f.clave}» ${fila.ok ? 'se movio y verifico' : 'quedo a medias'}, pero no pude escribir el registro (${e.message}).`);
+            linea(`    Su fila: ${JSON.stringify(fila)}`);
+            return 1;
+        }
         if (!fila.ok) {
             linea(`[X] PARE en «${f.clave}»: ${fila.motivo}`);
             if (fila.diferencias) for (const [n, l] of Object.entries(fila.diferencias)) if (l.length) linea(`    ${n} (${l.length}): ${l.slice(0, 10).join(' · ')}`);
@@ -226,7 +245,7 @@ export function main(argv = process.argv.slice(2)) {
     }
     // 3) Los LEEME, despues de medir (no entran en el conteo de antes y despues de cada carpeta).
     registro.leemes = escribirLeemes(bib, cargarCanon());
-    guardar();
+    try { guardar(); } catch (e) { linea(`[!] Las carpetas se movieron y verificaron, pero no pude anotar los LEEME en el registro (${e.message}).`); }
     for (const l of registro.leemes) linea(`[LEEME] ${l.accion.padEnd(16)} ${relBib(l.ruta)}`);
     linea(`\nListo: ${aMover.length} carpeta(s) movidas, todas con el mismo conteo antes y despues. Registro: ${salida}`);
     return 0;

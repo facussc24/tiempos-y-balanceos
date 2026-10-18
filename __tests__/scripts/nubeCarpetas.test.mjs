@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 import {
     CANON_CARPETAS, CARPETA_UNICA, resolverCarpeta, carpetaNube, buscarNube, entradaCarpeta, ORGANIZACION,
 } from '../../scripts/_lib/nubeRutas.mjs';
-import { planMudanza, moverYVerificar, contar, comparar, largoSharePoint, escribirLeemes } from '../../scripts/_nubeMudar.mjs';
+import { planMudanza, moverYVerificar, contar, comparar, largoSharePoint, escribirLeemes, main as mainMudar } from '../../scripts/_nubeMudar.mjs';
 import { plan as planInstalar } from '../../tools/instalar_mi_pc/publicar.mjs';
 import { plan as planMailsPc } from '../../tools/claude-area/mails_pc/publicar.mjs';
 import { carpetaDe } from '../../tools/claude-area/mejoras/publicar.mjs';
@@ -40,7 +40,13 @@ function casa() {
 const crear = (...p) => { mkdirSync(join(...p), { recursive: true }); return join(...p); };
 const vieja0 = (clave) => entradaCarpeta(clave).viejas[0];
 const nueva = (clave) => entradaCarpeta(clave).nueva;
-const python = (args, env = {}) => spawnSync('python', args, { encoding: 'utf8', env: { ...process.env, ...env } });
+// Python: el que haya (`python` en Windows, a veces solo `python3` en el CI de ubuntu); null si no hay ninguno.
+const PY = ['python', 'python3'].find((p) => { try { return spawnSync(p, ['--version'], { encoding: 'utf8' }).status === 0; } catch { return false; } }) || null;
+const python = (args, env = {}) => spawnSync(PY, args, { encoding: 'utf8', env: { ...process.env, ...env } });
+// `_mails.py`, `puerta.py` y `firmaIA.py` se prueban con rutas y carpeta de usuario de Windows (USERPROFILE, «C:\…») y
+// `_mails.py` importa ayudantes de Windows: en el CI de ubuntu esos casos se saltean (la nube solo existe en las PC de la casa).
+const EN_WINDOWS_CON_PY = process.platform === 'win32' && !!PY;
+const HAY_BASH = (() => { try { return spawnSync('bash', ['-c', 'exit 0']).status === 0; } catch { return false; } })();
 
 describe('el canon', () => {
     it('cada carpeta va adentro de la carpeta unica, y ningun nombre NUEVO lleva la palabra Claude', () => {
@@ -76,6 +82,7 @@ describe('resolverCarpeta (Node) y resolver_carpeta (Python): nueva si existe, s
                 for (const t of crearTramos) crear(bib, ...t);
                 const r = resolverCarpeta(c.clave, bib);
                 expect([r.cual, r.ruta], `${c.clave} ${cual}`).toEqual([cual, join(bib, esperada)]);
+                if (!PY) continue;   // sin Python en esta maquina: se prueba solo el lado de Node
                 const py = python([join(RAIZ, 'scripts', '_lib', 'nube_carpetas.py'), c.clave, bib]);
                 expect(py.status, py.stderr).toBe(0);
                 expect(JSON.parse(py.stdout), `python ${c.clave} ${cual}`).toEqual({ ruta: join(bib, esperada), cual });
@@ -98,21 +105,24 @@ describe('resolverCarpeta (Node) y resolver_carpeta (Python): nueva si existe, s
 });
 
 describe('cada programa, en las dos direcciones', () => {
-    it('aviso de pedidos (hook pedidos-pendientes): lee la carpeta vieja y la nueva', () => {
+    it('aviso de pedidos (hook pedidos-pendientes): lee la vieja, la nueva y con las dos la nueva; nombra la carpeta donde lo encontro', () => {
         const pedido = 'PEDIDO 90 - probar la mudanza - 17-10-2026.txt';
         const cuerpo = 'PARA: PC principal\nDE: notebook 17/10/2026 20:00\n\nQUE HACER: nada\n';
-        for (const lugar of ['vieja', 'nueva']) {
+        for (const lugar of ['vieja', 'nueva', 'las2']) {
             const { home, bib } = casa();
             const dir = crear(bib, ...(lugar === 'vieja' ? vieja0('pedidos') : nueva('pedidos')));
             writeFileSync(join(dir, pedido), cuerpo, 'utf8');
+            if (lugar === 'las2') writeFileSync(join(crear(bib, ...vieja0('pedidos')), 'PEDIDO 91 - el de la vieja - 17-10-2026.txt'), cuerpo, 'utf8');
             const r = spawnSync(process.execPath, [join(RAIZ, 'scripts', '_lib', 'pedidosPendientes.mjs'), '--hook'], {
                 input: '{}', encoding: 'utf8',
                 env: { ...process.env, USERPROFILE: home, HOME: home, BARACK_PC: 'principal', COMPUTERNAME: 'DESKTOP-14JG95B', BARACK_FACUNDO: '' },
             });
             expect(r.stdout, lugar).toMatch(/PEDIDO 90 - probar la mudanza/);
+            expect(r.stdout, lugar).not.toMatch(/PEDIDO 91/);    // con las dos, se lee la nueva
+            expect(r.stdout, lugar).toContain(`Esta en la carpeta ${(lugar === 'vieja' ? vieja0('pedidos') : nueva('pedidos')).join('\\')} de la nube`);
         }
     });
-    it('_mails.py: la carpeta de mails del equipo, nueva primero y la vieja como respaldo', () => {
+    it.runIf(EN_WINDOWS_CON_PY)('_mails.py: la carpeta de mails del equipo, nueva primero y la vieja tambien (solo Windows)', () => {
         const prog = `import sys, importlib.util; sys.argv=['x']; spec=importlib.util.spec_from_file_location('m', r'${join(RAIZ, 'scripts', '_mails.py')}'); m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m); import json; print(json.dumps(m._carpetas_equipo()))`;
         for (const lugar of ['vieja', 'nueva', 'las2']) {
             const { home, bib } = casa();
@@ -120,22 +130,31 @@ describe('cada programa, en las dos direcciones', () => {
             if (lugar !== 'vieja') crear(bib, ...nueva('mails'), '_entrada');
             // sin BARACK_MAIL_EQUIPO en el entorno (con esa variable el programa no busca: usa la que le dan)
             const env = Object.fromEntries(Object.entries({ ...process.env, USERPROFILE: home, HOME: home }).filter(([k]) => k !== 'BARACK_MAIL_EQUIPO'));
-            const r2 = spawnSync('python', ['-c', prog], { encoding: 'utf8', env });
+            const r2 = spawnSync(PY, ['-c', prog], { encoding: 'utf8', env });
             expect(r2.status, r2.stderr).toBe(0);
             const out = JSON.parse(r2.stdout.trim().split('\n').pop());
-            const esperada = lugar === 'vieja' ? join(bib, ...vieja0('mails')) : join(bib, ...nueva('mails'));
-            expect(out[0], lugar).toBe(esperada);
+            // con las dos lee de las dos, la nueva primero: una PC que todavia no reinstalo puede seguir subiendo al lugar viejo
+            // y esos mails no se pierden de la busqueda (es solo lectura; _mails.py junta los repetidos entre buzones)
+            const esperada = { vieja: [join(bib, ...vieja0('mails'))], nueva: [join(bib, ...nueva('mails'))], las2: [join(bib, ...nueva('mails')), join(bib, ...vieja0('mails'))] }[lugar];
+            expect(out, lugar).toEqual(esperada);
         }
     });
-    it('puerta.py: el respaldo de la memoria, en la vieja y en la nueva', () => {
+    it.runIf(EN_WINDOWS_CON_PY)('puerta.py: el respaldo de la memoria, en la vieja, en la nueva, con las dos y sin biblioteca (solo Windows)', () => {
         const prog = `import sys, importlib.util; sys.argv=['x']; spec=importlib.util.spec_from_file_location('p', r'${join(RAIZ, 'tools', 'claude-area', 'puerta.py')}'); m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m); print(m.RESPALDO)`;
-        for (const lugar of ['vieja', 'nueva']) {
+        for (const lugar of ['vieja', 'nueva', 'las2']) {
             const { home, bib } = casa();
-            crear(bib, ...(lugar === 'vieja' ? vieja0('facundo') : nueva('facundo')));
+            if (lugar !== 'nueva') crear(bib, ...vieja0('facundo'));
+            if (lugar !== 'vieja') crear(bib, ...nueva('facundo'));
             const r = python(['-c', prog], { USERPROFILE: home, HOME: home });
             expect(r.status, r.stderr).toBe(0);
             expect(r.stdout.trim(), lugar).toBe(join(bib, ...(lugar === 'vieja' ? vieja0('facundo') : nueva('facundo')), 'repo-privado'));
         }
+        // sin la biblioteca sincronizada: la ruta NUEVA debajo de la biblioteca canonica (no la raiz de la biblioteca)
+        const home = join(TMP, `sinbib${n++}`);
+        mkdirSync(home, { recursive: true });
+        const r = python(['-c', prog], { USERPROFILE: home, HOME: home });
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stdout.trim()).toBe(join(home, ORGANIZACION, 'Ingeniería y Proyecto - General', ...nueva('facundo'), 'repo-privado'));
     });
     it('los tres publicadores publican donde esta la carpeta (vieja o nueva) y, sin ninguna, en la nueva', () => {
         for (const lugar of ['vieja', 'nueva', 'ninguna']) {
@@ -150,11 +169,13 @@ describe('cada programa, en las dos direcciones', () => {
             expect(carpetaDe(bib, { nombre: 'Carlos Baptista' }), lugar).toBe(join(bib, ...(lugar === 'vieja' ? vieja0('equipo') : nueva('equipo')), 'Carlos Baptista'));
         }
     });
-    it('hook cerebro-guard: sus dos nombres son los del canon, en ese orden (los casos de punta a punta, en su .test.sh)', () => {
+    it('hook cerebro-guard: sus dos nombres son los del canon, en ese orden', () => {
         const sh = readFileSync(join(RAIZ, '.claude', 'hooks', 'cerebro-guard.sh'), 'utf8');
         const leer = (v) => (sh.match(new RegExp(`^${v}="([^"]*)"$`, 'm')) || [])[1];
         expect(leer('NUBE_FACUNDO_NUEVA')).toBe(nueva('facundo').join('/'));
         expect(leer('NUBE_FACUNDO_VIEJA')).toBe(vieja0('facundo').join('/'));
+    });
+    it.runIf(HAY_BASH)('hook cerebro-guard: los casos de punta a punta (su .test.sh: nueva, vieja y las dos)', () => {
         const t = spawnSync('bash', [join(RAIZ, '.claude', 'hooks', 'cerebro-guard.test.sh')], { encoding: 'utf8' });
         expect(t.status, t.stdout + t.stderr).toBe(0);
     }, 120000);   // corre un .sh de 17 casos: con la PC cargada pasa de los 5 s de vitest
@@ -168,9 +189,16 @@ describe('detector de firma (firmaIA.data.json): la carpeta nueva de la memoria 
         [false, 'C:\\Users\\x\\Desktop\\ASISTENTE INGENIERIA\\5- FACUNDO (memoria y configuracion)\\x.docx'],
         [false, 'C:\\Users\\x\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General\\ASISTENTE INGENIERIA\\1- INSTALAR (doble clic)\\x.docx'],
     ];
-    it('Node (rutaExcluida) y Python (ruta_excluida), en las dos direcciones', async () => {
+    it('Node (rutaExcluida), en las dos direcciones; las mayusculas no importan (las dos partes se comparan en minuscula)', async () => {
         const { rutaExcluida } = await import('../../scripts/_lib/firmaIA.mjs');
         for (const [esperado, ruta] of casos) expect(rutaExcluida(ruta), ruta).toBe(esperado);
+        expect(rutaExcluida('C:\\x\\INGENIERIA Y PROYECTO - GENERAL\\Asistente Ingenieria\\5- Facundo (Memoria y Configuracion)\\a.md')).toBe(true);
+        // Limite conocido y aceptado (revision por API, 18/10): una COPIA de la biblioteca entera en otro disco
+        // («...\Ingeniería y Proyecto - General\ASISTENTE INGENIERIA\5- FACUNDO...») tambien queda exenta, igual que la
+        // entrada vieja «\Claude Fak\», que eximia esa carpeta en cualquier lado. Es la configuracion, no un documento.
+        expect(rutaExcluida('Y:\\copia\\Ingeniería y Proyecto - General\\ASISTENTE INGENIERIA\\5- FACUNDO (memoria y configuracion)\\a.md')).toBe(true);
+    });
+    it.runIf(EN_WINDOWS_CON_PY)('Python (ruta_excluida), los mismos casos (solo Windows: son rutas de Windows)', () => {
         const prog = `import sys, json; sys.path.insert(0, r'${join(RAIZ, 'scripts', '_lib')}'); import firmaIA; print(json.dumps([firmaIA.ruta_excluida(r) for r in json.loads(sys.argv[1])]))`;
         const r = python(['-c', prog, JSON.stringify(casos.map((c) => c[1]))]);
         expect(r.status, r.stderr).toBe(0);
@@ -241,6 +269,52 @@ describe('_nubeMudar.mjs (sin tocar la nube)', () => {
         const raiz = readFileSync(join(bib, CARPETA_UNICA, 'LEEME.txt'), 'utf8').split('\r\n').filter(Boolean);
         expect(raiz).toHaveLength(5);
         expect(raiz[0]).toMatch(/^ASISTENTE INGENIERIA: /);
+    });
+    // main --aplicar de punta a punta con una biblioteca de mentira (revision por API, 18/10: no tenia test). La medicion de
+    // OneDrive (atributos) se reemplaza: en una carpeta temporal ningun archivo «subio».
+    const medirStub = (sinSubir) => (bib, nombres) => ({ carpetas: nombres.map((nombre) => ({ nombre, terminado: true, total: { sin_subir: sinSubir, archivos: 0, bytes: 0 } })) });
+    function casaVieja() {
+        const c = casa();
+        for (const e of CANON_CARPETAS.carpetas) writeFileSync(join(crear(c.bib, ...e.viejas[0]), `${e.clave}.txt`), e.clave);
+        return { ...c, reg: crear(TMP, `registro${n++}`) };
+    }
+    const callado = (fn) => { const log = console.log; console.log = () => {}; try { return fn(); } finally { console.log = log; } };
+    it('main --aplicar: mueve todo, verifica cada carpeta, escribe los LEEME y el registro; la segunda corrida no mueve nada ni pisa el registro', () => {
+        const c = casaVieja();
+        expect(callado(() => mainMudar(['--aplicar'], { home: c.home, medir: medirStub(0), dirRegistro: c.reg }))).toBe(0);
+        expect(planMudanza(c.bib).every((f) => f.estado === 'ya_movida')).toBe(true);
+        const regs = readdirSync(c.reg);
+        expect(regs).toHaveLength(1);
+        const r = JSON.parse(readFileSync(join(c.reg, regs[0]), 'utf8'));
+        expect(r.carpetas.map((x) => x.ok)).toEqual(CANON_CARPETAS.carpetas.map(() => true));
+        expect(r.carpetas.every((x) => JSON.stringify(x.antes) === JSON.stringify(x.despues))).toBe(true);
+        expect(r.leemes.filter((l) => l.accion === 'creado')).toHaveLength(r.leemes.length);
+        expect(callado(() => mainMudar(['--aplicar'], { home: c.home, medir: medirStub(0), dirRegistro: c.reg }))).toBe(0);
+        expect(readdirSync(c.reg)).toHaveLength(1);      // nada que mover: no hay registro nuevo
+    });
+    it('main --aplicar ROJO: con archivos sin subir no mueve ninguna; un registro del mismo dia no se pisa', () => {
+        const c = casaVieja();
+        expect(callado(() => mainMudar(['--aplicar'], { home: c.home, medir: medirStub(2), dirRegistro: c.reg }))).toBe(1);
+        expect(planMudanza(c.bib).every((f) => f.estado === 'mover')).toBe(true);
+        expect(readdirSync(c.reg)).toHaveLength(0);
+        const hoy = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+        writeFileSync(join(c.reg, `nube_mudanza_${hoy}.json`), '{"de":"antes"}');
+        expect(callado(() => mainMudar(['--aplicar'], { home: c.home, medir: medirStub(0), dirRegistro: c.reg }))).toBe(0);
+        expect(readFileSync(join(c.reg, `nube_mudanza_${hoy}.json`), 'utf8')).toBe('{"de":"antes"}');
+        expect(readdirSync(c.reg)).toHaveLength(2);
+    });
+    it('escribirLeemes: si en el canon cambia un renglon que no es el primero, se cambian los cinco y lo de abajo queda', () => {
+        const c = casaVieja();
+        expect(callado(() => mainMudar(['--aplicar'], { home: c.home, medir: medirStub(0), dirRegistro: c.reg }))).toBe(0);
+        const orden = JSON.parse(readFileSync(join(RAIZ, 'scripts', '_lib', 'nubeOrden.data.json'), 'utf8'));
+        const d9 = orden.destinos.find((d) => d.id === '9');
+        const ruta = join(c.bib, CARPETA_UNICA, d9.nombre, 'LEEME.txt');
+        writeFileSync(ruta, [d9.leeme[0], 'renglon viejo', ...d9.leeme.slice(2), '', 'nota de abajo'].join('\r\n'), 'utf8');
+        expect(escribirLeemes(c.bib, orden).find((x) => x.ruta === ruta).accion).toBe('actualizado');
+        const t = readFileSync(ruta, 'utf8').split('\r\n');
+        expect(t.slice(0, 5)).toEqual(d9.leeme);
+        expect(t[t.length - 1]).toBe('nota de abajo');
+        expect(escribirLeemes(c.bib, orden).find((x) => x.ruta === ruta).accion).toBe('ya estaba');
     });
     it('contar no cuenta los archivos de sistema de OneDrive; comparar ve tamaños distintos; el largo en SharePoint suma el prefijo', () => {
         const { bib } = casa();

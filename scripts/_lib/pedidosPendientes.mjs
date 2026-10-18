@@ -111,7 +111,7 @@ const esParaMi = (p, pc, nombre) => {
  *   `nombre` es el COMPUTERNAME (para que un pedido «para CATA» no le llegue a la otra notebook).
  * @returns {{lineas: string[], nuevos: object[], viejos: object[]}}
  */
-export function pedidosPendientes({ archivos, pc, nombre = '' }) {
+export function pedidosPendientes({ archivos, pc, nombre = '', carpeta = CANON.carpeta_nombre }) {
   const pedidos = (archivos || []).filter((a) => RE_PEDIDO.test(a.nombre)).map((a) => leerPedido(a.nombre, a.cabecera || []));
   const listos = new Set(pedidos.filter((p) => p.esListo).map((p) => p.listoDe));
   // Sin numero no hay forma de cerrarlo (son los de antes del 14/10, hechos en su momento): no se nombran.
@@ -125,7 +125,7 @@ export function pedidosPendientes({ archivos, pc, nombre = '' }) {
     const cuando = [p.origen ? `de ${p.origen}` : '', `${fechaCorta(p.fecha)}${p.hora ? ` ${p.hora}` : ''}`.trim()].filter(Boolean).join(', ');
     const aclaracion = p.destino === 'todos' ? ' [el encabezado no dice para que PC es: mirarlo]' : '';
     lineas.push(`${MARCA} Hay un pedido para esta PC sin su «listo»: PEDIDO ${p.numero} - ${p.que}${cuando ? ` (${cuando})` : ''}${aclaracion}. ` +
-      `Esta en la carpeta ${CANON.carpeta_nombre} de la nube de Ingenieria; si ya se hizo o cuando se haga, dejar «PEDIDO ${p.numero} - listo <que>.txt» ahi mismo.`);
+      `Esta en la carpeta ${carpeta} de la nube de Ingenieria; si ya se hizo o cuando se haga, dejar «PEDIDO ${p.numero} - listo <que>.txt» ahi mismo.`);
   }
   if (viejos.length) {
     const etiqueta = (p) => `PEDIDO ${p.numero} (${p.que})`;
@@ -147,17 +147,19 @@ export function primerosRenglones(ruta, n = 2) {
 /** Lee la carpeta real (o BARACK_FACUNDO) y devuelve los renglones para esta PC; [] si la nube no esta. */
 export function renglonesDeLaCarpeta({ carpeta = process.env.BARACK_FACUNDO, pc = process.env.BARACK_PC || quienSoy(), nombre = process.env.COMPUTERNAME || os.hostname() } = {}) {
   let dir = carpeta;
+  let nombreCarpeta;          // el que dice el aviso: la carpeta donde se encontraron los pedidos, relativa a la biblioteca
   if (!dir) {
     const bib = buscarBiblioteca();
     if (!bib) return [];
     // Desde la mudanza del 17/10/2026 la carpeta FACUNDO vive entera en «ASISTENTE INGENIERIA\6- PEDIDOS ENTRE PC
     // (FACUNDO)»; la clave del canon de carpetas la encuentra en el lugar nuevo y, si esta PC no lo tiene, en el viejo.
     dir = resolverCarpeta(CANON.carpeta_clave, bib).ruta;
+    nombreCarpeta = path.relative(bib, dir);
   }
   let nombres;
   try { nombres = fs.readdirSync(dir); } catch { return []; }
   const archivos = nombres.filter((n) => RE_PEDIDO.test(n)).map((n) => ({ nombre: n, cabecera: primerosRenglones(path.join(dir, n)) }));
-  return pedidosPendientes({ archivos, pc: pc === 'notebook' ? 'notebook' : 'principal', nombre }).lineas;
+  return pedidosPendientes({ archivos, pc: pc === 'notebook' ? 'notebook' : 'principal', nombre, ...(nombreCarpeta ? { carpeta: nombreCarpeta } : {}) }).lineas;
 }
 
 const esPrincipal = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
