@@ -67,6 +67,20 @@ PASOS:
 7. Terminá con tres líneas: la ruta del borrador, la del relevamiento (o por qué no se generó) y el resultado de los dos controles.
 ```
 
+## Opción para el cuerpo: el formato 3P (Progreso, Planes, Problemas) — documentado, la tarea NO se cambió
+
+Tanda 15 (18/10/2026), ítem 7 del informe E. La skill oficial `internal-comms` de Anthropic
+(github.com/anthropics/skills, carpeta `skills/internal-comms`, Apache 2.0; las pautas en `examples/3p-updates.md`) tiene
+un formato de parte semanal en tres partes que entra en una pantalla: **Progreso** (qué se hizo, con el número medido),
+**Planes** (qué sigue) y **Problemas** (qué frena o qué hace falta). Es casi lo que ya pide el paso 5 de arriba («qué
+avanzó, qué sigue, qué hace falta»), así que el prompt de la tarea queda como está.
+
+Si Fak quiere que el borrador lo use explícito, el cambio es en el paso 5 del prompt de la tarea programada y respeta su
+voz: tres renglones cortos que arrancan «Avance:», «Lo próximo:» y «Me falta:» (nada de títulos en inglés ni secciones
+numeradas), el último solo si hay algo, todo por debajo de los 585 caracteres. El tono del ejemplo oficial es genérico y
+en inglés: no se copia el texto, solo las tres partes. Cambiar la tarea es con el sí de Fak (la creó él con la madre el
+17/10).
+
 ## Lo que no hace y por qué
 
 - No arma el mail en Outlook (regla del encargo de la tanda 8: el borrador es un `.md` que Fak copia).
