@@ -124,3 +124,11 @@ con su leyenda.
 **Capturas para que Fak elija** (18/10, fuera de git): `exports/explicaciones/formatos_antes_despues_2026-10-18/`, con
 una lámina (IMDS del 09/10 contra la pregunta 5 sola con el tema), la hoja A3 y un Excel (el mapeo de vinilos tal como
 está contra los mismos datos en B2). Lo que Fak elija pasa a `tema.json`.
+
+## Los 13 reclamos, en el libro de observaciones
+
+Las 13 filas de la tabla 1.3 del informe G entraron el 18/10 como observaciones de forma al libro de la tanda 13
+(`node scripts/_observaciones.mjs`, datos en la memoria `project_observaciones_recibidas`), con la cita, la fecha y quién
+lo marcó, y cerradas: 11 con la regla de `revisar.py` que las caza como control, y 2 «a mano» (el PowerPoint del IMDS
+y la hoja de la reunión: lo visual lo mira una persona). Antes de mandar un documento:
+`node scripts/_observaciones.mjs --antes-de-mandar "<tipo>"`.
