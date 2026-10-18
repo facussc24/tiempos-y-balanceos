@@ -334,7 +334,9 @@ tolerancia. La boca cónica del gancho salió de aplicar esto: deja de depender 
 *Enforcement:* el `params.json` de la pieza lleva la tolerancia de proceso medida al lado de la
 holgura de diseño, y `verificar_*.py` falla si la holgura de diseño no la supera — una pieza cuya
 función vive dentro del ruido de la máquina no pasa el gate. Memorias `impresora_3d_fak`
-(**Elegoo RAPID PLA+**, Neptune 4 Max, boquilla 0,4), `roscas_impresas_3d`.
+(el caso del gancho se midió en la **Elegoo** Neptune 4 Max con RAPID PLA+; desde el 13/10/2026 las piezas
+nuevas van a la **Bambu A2L con PLA Lite**, boquilla 0,4, y un número de una no se traslada a la otra sin decirlo:
+`cad-design/reference/ficha-fdm.md`), `roscas_impresas_3d`.
 
 **PRE-ENTREGA (lo demás):** render + MIRAR yo el resultado + interferencia contra el sustrato RÍGIDO
 ≈ 0 (no vs el tapizado blando) + CADGenBench (validez→forma→interface→topología) + adjuntar evidencia.
@@ -365,5 +367,7 @@ un assert que corte si sale la otra.
 
 Entorno: TODO corre con `.venv-cad\Scripts\python.exe` (Py3.12: gmsh + build123d + trimesh).
 Tolerancias de impresión: 0,3-0,5 mm/lado en lo que entra en un vano, panza ≥2 mm, inserto heat-set +
-pin anti-giro. Autoridad de identidad = master real, no proxy (unifica con
+pin anti-giro. Toda holgura lleva escrita su unidad (por lado o al diámetro) y la máquina con que se midió; las
+reglas de diseño para imprimir (orientación contra la carga, paredes, roscas y la tuerca impresa ≥ el diámetro del
+tornillo, que `make_screw_nut.py` frena) viven en `cad-design/reference/ficha-fdm.md`. Autoridad de identidad = master real, no proxy (unifica con
 `feedback_identidad_codigo_pieza_autoridad_destino`).
