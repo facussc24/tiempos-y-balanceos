@@ -38,7 +38,8 @@ function mostrar(clave) {
   for (const d of f.documentos) {
     const vig = d.vigente === false ? ' [no vigente]' : d.vigente === 'a confirmar' ? ' [vigencia a confirmar]' : '';
     linea(`- ${d.id}  ${d.nombre || ''}${vig}`);
-    linea(`    letra vigente: ${d.letra ?? 'a confirmar'}${d.fecha ? ` (${d.fecha})` : ''} · leido en: ${d.donde || '-'}`);
+    const letra = d.letra ?? (d.sinLetra ? 'no lleva (su version es la fecha)' : 'a confirmar');
+    linea(`    letra vigente: ${letra}${d.fecha ? ` (${d.fecha})` : ''} · leido en: ${d.donde || '-'}`);
     if (d.maestro) linea(`    maestro: ${d.maestro.ruta}${d.maestro.estado ? ` — ${d.maestro.estado}` : ''}`);
     for (const c of d.cliente || []) linea(`    cliente: ${c.letra ? `letra ${c.letra}${c.inferida ? ' (inferida)' : ''}` : 'a confirmar'} — ${c.donde} ${c.fecha || ''}${c.nota ? ` · ${c.nota}` : ''}`);
     for (const e of d.emisiones || []) linea(`    emitido: letra ${e.letra} el ${e.fecha} → ${e.destino}${e.quien ? ` (${e.quien})` : ''}`);

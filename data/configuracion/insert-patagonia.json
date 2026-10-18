@@ -1,0 +1,1203 @@
+{
+  "_que_es": "Ficha de configuracion del Insert de Patagonia (tanda 13 item 1; plan docs/PLAN_FICHA_CONFIGURACION_PIEZA_2026-10-17.md). pieza, documentos (id, nombre, maestro, vigente) y fuentes se configuran una vez: son la lista de papeles de la pieza y donde mirarlos. Todo lo demas (letra, fecha, cliente, atributos, pendientes) lo escribe node scripts/_fichaPieza.mjs --relevar insert-patagonia y los emisores al emitir: no se edita a mano.",
+  "pieza": {
+    "clave": "insert-patagonia",
+    "nombre": "Insert de puerta Patagonia",
+    "proyecto": "VW427-1LA_K Patagonia",
+    "cliente": "NOVAX (para VWA)",
+    "productosArb": [
+      "N 227",
+      "N 389",
+      "N 390",
+      "N 391",
+      "N 392",
+      "N 393",
+      "N 394",
+      "N 395",
+      "N 396",
+      "N 397",
+      "N 398",
+      "N 399",
+      "N 400",
+      "N 401",
+      "N 402",
+      "N 403"
+    ]
+  },
+  "documentos": [
+    {
+      "id": "flujograma:154",
+      "tipo": "flujograma",
+      "numero": "154",
+      "nombre": "Flujograma de proceso 154 INSERT (I-IN-002/III)",
+      "maestro": {
+        "ruta": "Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\8. Flujograma ...\\CLIENTES\\VWA\\PATAGONIA\\",
+        "estado": "a confirmar",
+        "zanja": "el maestro de Gestion Ingenieria y el listado maestro de flujogramas en Y: (sin montar el 18/10/2026)"
+      },
+      "cliente": [
+        {
+          "documento": "flujograma:154",
+          "donde": "mail a Novax (H. Giacopuzzi)",
+          "fecha": "2026-09-08",
+          "fuente": "mail «RV: Documentación PPAP - NOVAX (Top Roll, APB, Insert) - Nivel Actualizado» del 2026-09-08 18:45 a Hernan Giacopuzzi (cache de mails, id ...0002D78C819A0000)",
+          "letra": "B",
+          "inferida": true,
+          "adjunto": "FLUJOGRAMA_154-INSERT.pdf",
+          "nota": "el adjunto no dice la letra; es la ultima del historial con fecha hasta el 2026-09-08"
+        }
+      ],
+      "avisos": [
+        "en {biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/20- Flujograma de proceso hay 1 archivo(s) de este documento con letra(s) ninguna en el nombre: cual es la vigente lo dice el maestro"
+      ],
+      "letra": "D",
+      "fecha": "06/10/2026",
+      "revisiones": [
+        {
+          "letra": "A",
+          "fecha": "12/11/2025"
+        },
+        {
+          "letra": "B",
+          "fecha": "08/09/2026"
+        },
+        {
+          "letra": "C",
+          "fecha": "11/09/2026"
+        },
+        {
+          "letra": "D",
+          "fecha": "06/10/2026"
+        }
+      ],
+      "donde": "repo tools/flowchart/data/154-INSERT.json",
+      "leido": "2026-10-18",
+      "copias": [
+        "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/20- Flujograma de proceso/FLUJOGRAMA_154-INSERT.pdf"
+      ]
+    },
+    {
+      "id": "amfe:158",
+      "tipo": "amfe",
+      "numero": "158",
+      "nombre": "AMFE de proceso 158 INSERT (AMFE-INS-PAT)",
+      "maestro": {
+        "ruta": "Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\13. AMFE ...\\2. AMFES DE PROCESO\\VWA\\VW427-1LA_K-PATAGONIA\\",
+        "estado": "a confirmar",
+        "zanja": "el listado maestro de AMFE en Y: (sin montar el 18/10/2026)"
+      },
+      "cliente": [
+        {
+          "documento": "amfe:158",
+          "donde": "mail a Novax (H. Giacopuzzi)",
+          "fecha": "2026-09-08",
+          "fuente": "mail «RV: Documentación PPAP - NOVAX (Top Roll, APB, Insert) - Nivel Actualizado» del 2026-09-08 18:45 a Hernan Giacopuzzi (cache de mails, id ...0002D78C819A0000)",
+          "letra": null,
+          "estado": "a confirmar",
+          "nota": "AMFE 158 - INSERT - Rev.A.pdf no esta entre los adjuntos de ese mail"
+        }
+      ],
+      "avisos": [],
+      "letra": "A",
+      "fecha": "01/10/2026",
+      "actualizado": "2026-10-01T14:57:29.815+00:00",
+      "donde": "Supabase amfe_documents AMFE-INS-PAT",
+      "leido": "2026-10-18"
+    },
+    {
+      "id": "ho:990",
+      "tipo": "ho",
+      "numero": "990",
+      "nombre": "HO-990 Insert, copia del legajo de Novax (copia del servidor del 13/10)",
+      "vigente": "a confirmar",
+      "maestro": {
+        "ruta": "Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\HOJAS DE OPERACIONES\\1- CLIENTES\\...",
+        "estado": "a confirmar",
+        "zanja": "la HO-990 del SGC y el listado de hojas de proceso en Y: (sin montar el 18/10/2026)"
+      },
+      "cliente": [
+        {
+          "documento": "ho:990",
+          "donde": "mail a Novax (H. Giacopuzzi)",
+          "fecha": "2026-09-08",
+          "fuente": "mail «RV: Documentación PPAP - NOVAX (Top Roll, APB, Insert) - Nivel Actualizado» del 2026-09-08 18:45 a Hernan Giacopuzzi (cache de mails, id ...0002D78C819A0000)",
+          "letra": null,
+          "estado": "a confirmar",
+          "nota": "HO-990_INSERT_PATAGONIA_REV.A.pdf no esta entre los adjuntos de ese mail"
+        }
+      ],
+      "avisos": [],
+      "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/26- Instrucciones de Proceso/INSERT/HO-990_INSERT_PATAGONIA_REV.A.pptx",
+      "leido": "2026-10-18",
+      "letra": "A",
+      "fecha": "08/09/2026"
+    },
+    {
+      "id": "ho:990-copia-0710",
+      "tipo": "ho",
+      "numero": "990-copia-0710",
+      "copiaDe": "ho:990",
+      "nombre": "HO-990 Insert, copia corregida del 07/10 (exports/HO_CORREGIDAS_20261007)",
+      "vigente": "a confirmar",
+      "cliente": [],
+      "avisos": [],
+      "donde": "{principal}/exports/HO_CORREGIDAS_20261007/INSERTO/HO-990_INSERT_PATAGONIA_REV.A.pptx",
+      "leido": "2026-10-18",
+      "letra": "A",
+      "fecha": "08/09/2026"
+    },
+    {
+      "id": "bom:arb",
+      "tipo": "bom",
+      "numero": "arb",
+      "nombre": "BOM del arb (ultimo nivel) de los 16 codigos del Insert",
+      "cliente": [],
+      "avisos": [],
+      "fecha": "2026-10-13",
+      "donde": "export del arb {arb}",
+      "exportDelArb": "2026-10-13T11:42:15.293Z",
+      "leido": "2026-10-18",
+      "sinLetra": true
+    },
+    {
+      "id": "bom:legajo",
+      "tipo": "bom",
+      "numero": "legajo",
+      "nombre": "BOM ARB ultimo nivel del legajo (casillero 7, copia del 13/10)",
+      "cliente": [],
+      "avisos": [],
+      "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/7-Lista de materiales preliminares/01_BOM MATERIAL/BOM ARB ultimo nivel_Insert_20261009.pdf",
+      "leido": "2026-10-18",
+      "sinLetra": true,
+      "fecha": "2026-10-09"
+    },
+    {
+      "id": "bom:002",
+      "tipo": "bom",
+      "numero": "002",
+      "nombre": "BOM 002 INSERT del legajo (casillero 14)",
+      "cliente": [],
+      "avisos": [],
+      "copias": [
+        "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/14-Especificaciones de Materiales/01- BOM/00- BOM MATERIAL/BOM 002 - INSERT REV.A.xlsx"
+      ],
+      "leido": "2026-10-18",
+      "letra": "A"
+    },
+    {
+      "id": "ft:141",
+      "tipo": "ft",
+      "numero": "141",
+      "nombre": "FT141 Espuma PU back for Insert, copia adjunta en un mail de Calidad",
+      "maestro": {
+        "ruta": "Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\2. Maestro de Fichas Tecnicas de Productos (I-IN-001II)\\Fichas Tecnicas Internas (I-IN-002)\\FT141 Espuma PU back for Insert.doc",
+        "estado": "a confirmar",
+        "zanja": "el maestro de fichas tecnicas en Y: (sin montar el 18/10/2026)"
+      },
+      "cliente": [],
+      "avisos": [],
+      "letra": "A",
+      "donde": "{biblioteca}/INGENIERIA BARACK (NUNCA BORRAR)/6- ARCHIVO DE CORREO/ADJUNTOS/CALIDAD - QUALITY PROJECTS/2025/FT141 Espuma PU back for Insert.doc",
+      "leido": "2026-10-18"
+    },
+    {
+      "id": "ft:141-copia-legajo",
+      "tipo": "ft",
+      "numero": "141-copia-legajo",
+      "copiaDe": "ft:141",
+      "nombre": "Ficha de la espuma del Insert en el legajo (casillero 8, sin codigo de ficha)",
+      "cliente": [],
+      "avisos": [],
+      "letra": "A",
+      "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/8- Ficha tecnica/01- Ficha tecnica/Insert/01- Editables/FT Espuma PU back for Insert.doc",
+      "leido": "2026-10-18"
+    },
+    {
+      "id": "ft:149",
+      "tipo": "ft",
+      "numero": "149",
+      "nombre": "FT149 Espuma PU back for IP PAD (otra pieza: comparte la espuma 427ESP001TRO01 desde el 02/10/2026)",
+      "pieza": "ip-pad",
+      "porMaterial": "427ESP001TRO01",
+      "cliente": [],
+      "avisos": [],
+      "leido": "2026-10-18",
+      "letra": "A",
+      "donde": "{biblioteca}/INGENIERIA BARACK (NUNCA BORRAR)/6- ARCHIVO DE CORREO/ADJUNTOS/CALIDAD - QUALITY PROJECTS/2025/FT149 Espuma PU back for IP PAD.doc"
+    },
+    {
+      "id": "tizada:espuma-26-1-26",
+      "tipo": "tizada",
+      "numero": "espuma-26-1-26",
+      "nombre": "Tizadas de espuma INSERT 26-1-26 (copia del legajo)",
+      "vigente": "a confirmar",
+      "cliente": [],
+      "avisos": [],
+      "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/13-Especificaciones de Ingenieria F/02 -Computo Tizada de Corte- Consumo de Materiales/INSERT FR+RR/02- espuma/INSERT 26-1-26/INSERT TRA PAT 5MM.MRK",
+      "leido": "2026-10-18",
+      "sinLetra": true
+    },
+    {
+      "id": "tizada:espuma-9-9-25",
+      "tipo": "tizada",
+      "numero": "espuma-9-9-25",
+      "nombre": "Tizadas de espuma INSERT PAT ESP 9-9-25 (copia del legajo)",
+      "vigente": "a confirmar",
+      "cliente": [],
+      "avisos": [],
+      "donde": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/13-Especificaciones de Ingenieria F/02 -Computo Tizada de Corte- Consumo de Materiales/INSERT FR+RR/02- espuma/INSERT FR+RR/INSERT FR+RR/INSERT PAT ESP 9-9-25/MIX/INSERT MIX ESP PAT 3MM.MRK",
+      "leido": "2026-10-18",
+      "sinLetra": true
+    },
+    {
+      "id": "ge:278",
+      "tipo": "ge",
+      "numero": "278",
+      "nombre": "Ficha de embalaje GE-278 INSERT",
+      "maestro": {
+        "ruta": "Y:\\Ingenieria\\Documentacion Gestion Ingenieria\\17. Fichas de embalaje\\2- CLIENTES\\...",
+        "estado": "a confirmar",
+        "zanja": "Gestion Ingenieria 17. Fichas de embalaje en Y: (sin montar el 18/10/2026)"
+      },
+      "cliente": [
+        {
+          "documento": "ge:278",
+          "donde": "mail a Novax (H. Giacopuzzi)",
+          "fecha": "2026-09-08",
+          "fuente": "mail «RV: Documentación PPAP - NOVAX (Top Roll, APB, Insert) - Nivel Actualizado» del 2026-09-08 18:45 a Hernan Giacopuzzi (cache de mails, id ...0002D78C819A0000)",
+          "letra": null,
+          "estado": "a confirmar",
+          "adjunto": "GE - 278 INSERT.pdf",
+          "nota": "el adjunto no dice la letra en el nombre"
+        }
+      ],
+      "avisos": [
+        "en {biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/19-Normas y Especificaciones de embalaje hay 5 archivo(s) de este documento con letra(s) B, C: cual es la vigente lo dice el maestro"
+      ],
+      "copias": [
+        "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/19-Normas y Especificaciones de embalaje/GE - 278 INSERT - cajon negro Rev B.pdf",
+        "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/19-Normas y Especificaciones de embalaje/GE - 278 INSERT - cajon negro Rev B.xlsx",
+        "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/19-Normas y Especificaciones de embalaje/GE - 278 INSERT - cajon negro Rev C.pdf",
+        "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/19-Normas y Especificaciones de embalaje/GE - 278 INSERT - cajon negro Rev C.xlsx",
+        "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/19-Normas y Especificaciones de embalaje/GE - 278 INSERT.pdf"
+      ],
+      "leido": "2026-10-18"
+    },
+    {
+      "id": "ge:283",
+      "tipo": "ge",
+      "numero": "283",
+      "nombre": "Ficha de embalaje GE-283 INSERT PALLET",
+      "cliente": [],
+      "avisos": [
+        "en {biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/19-Normas y Especificaciones de embalaje hay 1 archivo(s) de este documento con letra(s) ninguna en el nombre: cual es la vigente lo dice el maestro"
+      ],
+      "copias": [
+        "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/19-Normas y Especificaciones de embalaje/GE - 283 INSERT PALLET.pdf"
+      ],
+      "leido": "2026-10-18"
+    },
+    {
+      "id": "imds:insert",
+      "tipo": "imds",
+      "numero": "insert",
+      "nombre": "IMDS del Insert (lo carga Calidad)",
+      "maestro": {
+        "ruta": "IMDS (mdsystem.com)",
+        "estado": "a confirmar",
+        "zanja": "Calidad / el IMDS de la pieza"
+      },
+      "cliente": [],
+      "avisos": [
+        "la carpeta {biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/23- IMDS no tiene ningun archivo de este documento"
+      ],
+      "copias": [],
+      "leido": "2026-10-18"
+    },
+    {
+      "id": "pc:insert",
+      "tipo": "pc",
+      "numero": "insert",
+      "nombre": "Plan de control del Insert (es de Calidad)",
+      "maestro": {
+        "ruta": "Calidad",
+        "estado": "a confirmar",
+        "zanja": "Calidad (Nicolas Perez)"
+      },
+      "cliente": [
+        {
+          "documento": "pc:insert",
+          "donde": "mail a Novax (H. Giacopuzzi)",
+          "fecha": "2026-10-15",
+          "fuente": "mail «RE: PC NOVAX» del 2026-10-15 14:59 a 'Hernan Giacopuzzi' (cache de mails, id ...0002F19DAC940000)",
+          "letra": "0",
+          "adjunto": "PC INSERTO PATAGONIA REV 0.pdf"
+        }
+      ],
+      "avisos": [
+        "en {biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/12-Plan de Control hay 1 archivo(s) de este documento con letra(s) ninguna en el nombre: cual es la vigente lo dice el maestro"
+      ],
+      "copias": [
+        "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/12-Plan de Control/Plan de Control - INSERT TAPIZADO.xlsx"
+      ],
+      "leido": "2026-10-18"
+    }
+  ],
+  "fuentes": [
+    {
+      "id": "flujograma-repo",
+      "documento": "flujograma:154",
+      "lector": "flujograma",
+      "clave": "154-INSERT"
+    },
+    {
+      "id": "flujograma-legajo",
+      "documento": "flujograma:154",
+      "lector": "carpeta",
+      "ruta": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/20- Flujograma de proceso",
+      "patron": "154"
+    },
+    {
+      "id": "amfe-live",
+      "documento": "amfe:158",
+      "lector": "amfe",
+      "claveSupabase": "AMFE-INS-PAT",
+      "extraer": [
+        {
+          "atributo": "adhesivo",
+          "patron": "adhesivo (?:base|termo)|fenoclor|sika\\s*melt|hot\\s*melt"
+        },
+        {
+          "atributo": "hilo",
+          "patron": "\\bFX\\d{3}",
+          "juntar": true
+        },
+        {
+          "atributo": "espuma",
+          "patron": "espuma",
+          "rol": "menciona"
+        }
+      ]
+    },
+    {
+      "id": "ho990-legajo",
+      "documento": "ho:990",
+      "lector": "pptx",
+      "es": "copia del legajo de Novax",
+      "ruta": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/26- Instrucciones de Proceso/INSERT/HO-990_INSERT_PATAGONIA_REV.A.pptx",
+      "letra": {
+        "patron": "Fecha / Revisi[oó]n \\| [^|]*Rev\\.\\s*([A-Z])",
+        "hoja": 1
+      },
+      "extraer": [
+        {
+          "atributo": "adhesivo",
+          "patron": "[^|.]{0,50}(?:sika\\s*melt|fenoclor)[^|.]{0,30}"
+        },
+        {
+          "atributo": "cita.flujograma",
+          "patron": "Flujograma Base \\| [^|]+",
+          "hoja": 1,
+          "cita": "flujograma:154"
+        },
+        {
+          "atributo": "operaciones",
+          "patron": "OP (\\d+)",
+          "hoja": 1,
+          "lista": true
+        },
+        {
+          "atributo": "espuma",
+          "patron": "espuma de poliuretano[^|.]{0,60}",
+          "rol": "menciona"
+        }
+      ],
+      "fecha": {
+        "patron": "Fecha / Revisi[oó]n \\| (\\d\\d/\\d\\d/\\d{4})",
+        "hoja": 1
+      }
+    },
+    {
+      "id": "ho990-0710",
+      "documento": "ho:990-copia-0710",
+      "lector": "pptx",
+      "es": "copia corregida del 07/10",
+      "ruta": "{principal}/exports/HO_CORREGIDAS_20261007/INSERTO/HO-990_INSERT_PATAGONIA_REV.A.pptx",
+      "letra": {
+        "patron": "Fecha / Revisi[oó]n \\| [^|]*Rev\\.\\s*([A-Z])",
+        "hoja": 1
+      },
+      "extraer": [
+        {
+          "atributo": "adhesivo",
+          "patron": "[^|.]{0,50}(?:sika\\s*melt|fenoclor)[^|.]{0,30}"
+        },
+        {
+          "atributo": "cita.flujograma",
+          "patron": "Flujograma Base \\| [^|]+",
+          "hoja": 1,
+          "cita": "flujograma:154"
+        },
+        {
+          "atributo": "operaciones",
+          "patron": "OP (\\d+)",
+          "hoja": 1,
+          "lista": true
+        }
+      ],
+      "fecha": {
+        "patron": "Fecha / Revisi[oó]n \\| (\\d\\d/\\d\\d/\\d{4})",
+        "hoja": 1
+      }
+    },
+    {
+      "id": "bom-arb",
+      "documento": "bom:arb",
+      "lector": "bom",
+      "ruta": "{arb}",
+      "productos": [
+        "N 227",
+        "N 389",
+        "N 390",
+        "N 391",
+        "N 392",
+        "N 393",
+        "N 394",
+        "N 395",
+        "N 396",
+        "N 397",
+        "N 398",
+        "N 399",
+        "N 400",
+        "N 401",
+        "N 402",
+        "N 403"
+      ],
+      "extraer": [
+        {
+          "atributo": "adhesivo",
+          "patron": "\\bADHESIVO\\b|ADFA|SIKA|923852"
+        },
+        {
+          "atributo": "espuma.densidad",
+          "patron": "ESPUMA"
+        },
+        {
+          "atributo": "vinilo.ancho_rollo",
+          "patron": "SANLEATHER"
+        },
+        {
+          "atributo": "hilo",
+          "patron": "^FX\\d{3}",
+          "juntar": true
+        }
+      ]
+    },
+    {
+      "id": "bom-legajo-pdf",
+      "documento": "bom:legajo",
+      "lector": "pdf",
+      "es": "BOM ARB ultimo nivel del legajo",
+      "ruta": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/7-Lista de materiales preliminares/01_BOM MATERIAL/BOM ARB ultimo nivel_Insert_20261009.pdf",
+      "extraer": [
+        {
+          "atributo": "espuma",
+          "patron": "427ESP001TRO01[^\\n]{0,60}",
+          "rol": "menciona"
+        },
+        {
+          "atributo": "adhesivo",
+          "patron": "AD\\s*-\\s*ADFA\\d*[^\\n]{0,40}"
+        }
+      ],
+      "fechaDelNombre": true
+    },
+    {
+      "id": "bom002-carpeta",
+      "documento": "bom:002",
+      "lector": "carpeta",
+      "ruta": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/14-Especificaciones de Materiales/01- BOM/00- BOM MATERIAL",
+      "patron": "^BOM 002"
+    },
+    {
+      "id": "ft141-correo",
+      "documento": "ft:141",
+      "lector": "doc",
+      "es": "FT141 adjunta en un mail de Calidad (archivo de correo de la nube)",
+      "ruta": "{biblioteca}/INGENIERIA BARACK (NUNCA BORRAR)/6- ARCHIVO DE CORREO/ADJUNTOS/CALIDAD - QUALITY PROJECTS/2025/FT141 Espuma PU back for Insert.doc",
+      "letra": {
+        "patron": "\\|\\s*\\d\\d/\\d\\d/\\d\\d\\s*\\|\\s*([A-Z])\\s*\\|"
+      },
+      "extraer": [
+        {
+          "atributo": "espuma.densidad",
+          "patron": "densidad[^|]*"
+        },
+        {
+          "atributo": "espuma.ancho_rollo",
+          "patron": "\\d{3,4}\\s*(?:mm)?\\s*de ancho por rollo[^|]*"
+        }
+      ]
+    },
+    {
+      "id": "ft141-legajo",
+      "documento": "ft:141-copia-legajo",
+      "lector": "doc",
+      "es": "ficha de la espuma del legajo de Novax",
+      "ruta": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/8- Ficha tecnica/01- Ficha tecnica/Insert/01- Editables/FT Espuma PU back for Insert.doc",
+      "letra": {
+        "patron": "\\|\\s*\\d\\d/\\d\\d/\\d\\d\\s*\\|\\s*([A-Z])\\s*\\|"
+      },
+      "extraer": [
+        {
+          "atributo": "espuma.densidad",
+          "patron": "densidad[^|]*"
+        },
+        {
+          "atributo": "espuma.ancho_rollo",
+          "patron": "\\d{3,4}\\s*(?:mm)?\\s*de ancho por rollo[^|]*"
+        }
+      ]
+    },
+    {
+      "id": "ft149-material",
+      "documento": "ft:149",
+      "lector": "bom",
+      "ruta": "{arb}",
+      "productos": [
+        "2HC858417B FAM",
+        "2HC858417C GKK",
+        "2HC858417C GKN"
+      ],
+      "material": "427ESP001TRO01"
+    },
+    {
+      "id": "ft149-correo",
+      "documento": "ft:149",
+      "lector": "doc",
+      "es": "FT149 adjunta en un mail de Calidad (archivo de correo de la nube)",
+      "ruta": "{biblioteca}/INGENIERIA BARACK (NUNCA BORRAR)/6- ARCHIVO DE CORREO/ADJUNTOS/CALIDAD - QUALITY PROJECTS/2025/FT149 Espuma PU back for IP PAD.doc",
+      "letra": {
+        "patron": "\\|\\s*\\d\\d/\\d\\d/\\d\\d\\s*\\|\\s*([A-Z])\\s*\\|"
+      },
+      "extraer": [
+        {
+          "atributo": "espuma.densidad",
+          "patron": "densidad[^|]*"
+        },
+        {
+          "atributo": "espuma.ancho_rollo",
+          "patron": "\\d{3,4}\\s*(?:mm)?\\s*de ancho por rollo[^|]*"
+        }
+      ]
+    },
+    {
+      "id": "tizada-26-1-26-del",
+      "documento": "tizada:espuma-26-1-26",
+      "lector": "mrk",
+      "es": "tizada de espuma, delantero",
+      "ruta": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/13-Especificaciones de Ingenieria F/02 -Computo Tizada de Corte- Consumo de Materiales/INSERT FR+RR/02- espuma/INSERT 26-1-26/INSERT DEL PAT 5MM.MRK",
+      "extraer": [
+        {
+          "atributo": "espuma.ancho_tizada",
+          "rol": "tope",
+          "de": "espuma.ancho_rollo",
+          "unidad": "cm"
+        }
+      ]
+    },
+    {
+      "id": "tizada-26-1-26-tra",
+      "documento": "tizada:espuma-26-1-26",
+      "lector": "mrk",
+      "es": "tizada de espuma, trasero",
+      "ruta": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/13-Especificaciones de Ingenieria F/02 -Computo Tizada de Corte- Consumo de Materiales/INSERT FR+RR/02- espuma/INSERT 26-1-26/INSERT TRA PAT 5MM.MRK",
+      "extraer": [
+        {
+          "atributo": "espuma.ancho_tizada",
+          "rol": "tope",
+          "de": "espuma.ancho_rollo",
+          "unidad": "cm"
+        }
+      ]
+    },
+    {
+      "id": "tizada-9-9-25-mix",
+      "documento": "tizada:espuma-9-9-25",
+      "lector": "mrk",
+      "es": "tizada de espuma, mixta",
+      "ruta": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/13-Especificaciones de Ingenieria F/02 -Computo Tizada de Corte- Consumo de Materiales/INSERT FR+RR/02- espuma/INSERT FR+RR/INSERT FR+RR/INSERT PAT ESP 9-9-25/MIX/INSERT MIX ESP PAT 3MM.MRK",
+      "extraer": [
+        {
+          "atributo": "espuma.ancho_tizada",
+          "rol": "tope",
+          "de": "espuma.ancho_rollo",
+          "unidad": "cm"
+        }
+      ]
+    },
+    {
+      "id": "ge278-carpeta",
+      "documento": "ge:278",
+      "lector": "carpeta",
+      "ruta": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/19-Normas y Especificaciones de embalaje",
+      "patron": "^GE - 278"
+    },
+    {
+      "id": "ge283-carpeta",
+      "documento": "ge:283",
+      "lector": "carpeta",
+      "ruta": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/19-Normas y Especificaciones de embalaje",
+      "patron": "^GE - 283"
+    },
+    {
+      "id": "imds-carpeta",
+      "documento": "imds:insert",
+      "lector": "carpeta",
+      "ruta": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/23- IMDS",
+      "patron": "."
+    },
+    {
+      "id": "pc-carpeta",
+      "documento": "pc:insert",
+      "lector": "carpeta",
+      "ruta": "{biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/12-Plan de Control",
+      "patron": "INSERT"
+    },
+    {
+      "id": "mail-novax-0809",
+      "lector": "mail",
+      "donde": "mail a Novax (H. Giacopuzzi)",
+      "mail": "00000000E4D41C8C2BAD844C9314E04F2B1194AB0700A5314641F8E93F47AC63DCFB6F41303100000000010C0000A5314641F8E93F47AC63DCFB6F4130310002D78C819A0000",
+      "cliente": [
+        {
+          "documento": "flujograma:154",
+          "adjunto": "FLUJOGRAMA_154-INSERT.pdf",
+          "letraPor": "historial"
+        },
+        {
+          "documento": "ge:278",
+          "adjunto": "GE - 278 INSERT.pdf"
+        },
+        {
+          "documento": "amfe:158",
+          "adjunto": "AMFE 158 - INSERT - Rev.A.pdf"
+        },
+        {
+          "documento": "ho:990",
+          "adjunto": "HO-990_INSERT_PATAGONIA_REV.A.pdf"
+        }
+      ]
+    },
+    {
+      "id": "mail-novax-1510",
+      "lector": "mail",
+      "donde": "mail a Novax (H. Giacopuzzi)",
+      "mail": "00000000E4D41C8C2BAD844C9314E04F2B1194AB0700A5314641F8E93F47AC63DCFB6F41303100000000010C0000A5314641F8E93F47AC63DCFB6F4130310002F19DAC940000",
+      "cliente": [
+        {
+          "documento": "pc:insert",
+          "adjunto": "PC INSERTO PATAGONIA REV 0.pdf"
+        }
+      ]
+    }
+  ],
+  "pendientesFijos": [
+    {
+      "que": "Paso 0 del plan: Artemis («Matriz interactiva de productos» v0.4, Y:\\Ingenieria\\...\\20 - Desarrollo Interno\\) no se abrio: Y: no esta montada desde casa (18/10/2026). Si ya guarda la letra vigente por documento, esta ficha la lee de ahi.",
+      "estado": "lunes",
+      "zanja": "abrirlo en la empresa con Y: montada"
+    },
+    {
+      "que": "Cual de las dos tizadas de espuma es la vigente (INSERT 26-1-26 a 115 cm o INSERT PAT ESP 9-9-25 a 135 cm)",
+      "estado": "a confirmar",
+      "zanja": "la planilla oficial de Mesa de Corte en el servidor o Pablo Gamboa (regla consumos-entregables §6)"
+    },
+    {
+      "que": "Marcelo Nieve pidio rollo de espuma de 1,5 m en dic-2025: es un pedido, no un documento vigente (no entra en la comparacion)",
+      "estado": "referencia",
+      "zanja": "memoria project_boms_patagonia_procesos"
+    }
+  ],
+  "atributos": [
+    {
+      "documento": "flujograma:154",
+      "fuente": "flujograma del repo (tools/flowchart/data/154-INSERT.json)",
+      "leido": "2026-10-18",
+      "fuenteId": "flujograma-repo",
+      "atributo": "operaciones",
+      "texto": "10 20 21 22 50 60 70 71 80 90 91 93 100 101 102 110 111 120",
+      "lista": [
+        "10",
+        "20",
+        "21",
+        "22",
+        "50",
+        "60",
+        "70",
+        "71",
+        "80",
+        "90",
+        "91",
+        "93",
+        "100",
+        "101",
+        "102",
+        "110",
+        "111",
+        "120"
+      ]
+    },
+    {
+      "documento": "amfe:158",
+      "fuente": "AMFE en Supabase live (AMFE-INS-PAT, updated_at 2026-10-01T14:57:29.815+00:00)",
+      "leido": "2026-10-18",
+      "fuenteId": "amfe-live",
+      "atributo": "operaciones",
+      "texto": "10 20 21 22 50 60 70 71 80 90 91 93 100 101 102 110 120",
+      "lista": [
+        "10",
+        "20",
+        "21",
+        "22",
+        "50",
+        "60",
+        "70",
+        "71",
+        "80",
+        "90",
+        "91",
+        "93",
+        "100",
+        "101",
+        "102",
+        "110",
+        "120"
+      ]
+    },
+    {
+      "documento": "amfe:158",
+      "fuente": "AMFE en Supabase live (AMFE-INS-PAT, updated_at 2026-10-01T14:57:29.815+00:00)",
+      "leido": "2026-10-18",
+      "fuenteId": "amfe-live",
+      "atributo": "adhesivo",
+      "texto": "OP 10: Adhesivo base solvente Fenoclor (codigo AD - ADFA15)"
+    },
+    {
+      "documento": "amfe:158",
+      "fuente": "AMFE en Supabase live (AMFE-INS-PAT, updated_at 2026-10-01T14:57:29.815+00:00)",
+      "leido": "2026-10-18",
+      "fuenteId": "amfe-live",
+      "atributo": "adhesivo",
+      "texto": "OP 10: Reticulante para adhesivo Fenoclor (codigo AD - REGV0.6)"
+    },
+    {
+      "documento": "amfe:158",
+      "fuente": "AMFE en Supabase live (AMFE-INS-PAT, updated_at 2026-10-01T14:57:29.815+00:00)",
+      "leido": "2026-10-18",
+      "fuenteId": "amfe-live",
+      "atributo": "hilo",
+      "texto": "OP 10: Hilo vista 20/3 (Linhanyl) - 3 variantes de color (Jet Black FX483TK-E0PTO, Alpe Gray FX483TK-11930E, Gray Violet FX483TK-11703E) + OP 10: Hilo de union 30/3 Jet Black (Linhanyl) (codigo FX284-E0PTO)"
+    },
+    {
+      "documento": "amfe:158",
+      "fuente": "AMFE en Supabase live (AMFE-INS-PAT, updated_at 2026-10-01T14:57:29.815+00:00)",
+      "leido": "2026-10-18",
+      "fuenteId": "amfe-live",
+      "atributo": "espuma",
+      "texto": "OP 10: Espuma de poliuretano del panel decorativo (codigo 427-ESP-001-TRO-01)",
+      "rol": "menciona"
+    },
+    {
+      "documento": "ho:990",
+      "fuente": "copia del legajo de Novax ({biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/26- Instrucciones de Proceso/INSERT/HO-990_INSERT_PATAGONIA_REV.A.pptx)",
+      "leido": "2026-10-18",
+      "fuenteId": "ho990-legajo",
+      "atributo": "adhesivo",
+      "texto": "peratura de aplicación del adhesivo termofusible (SikaMelt) en la unidad fusora (140°C -"
+    },
+    {
+      "documento": "ho:990",
+      "fuente": "copia del legajo de Novax ({biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/26- Instrucciones de Proceso/INSERT/HO-990_INSERT_PATAGONIA_REV.A.pptx)",
+      "leido": "2026-10-18",
+      "fuenteId": "ho990-legajo",
+      "atributo": "cita.flujograma",
+      "texto": "Flujograma Base | 154 Rev. B (08/09/2026)",
+      "cita": "flujograma:154"
+    },
+    {
+      "documento": "ho:990",
+      "fuente": "copia del legajo de Novax ({biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/26- Instrucciones de Proceso/INSERT/HO-990_INSERT_PATAGONIA_REV.A.pptx)",
+      "leido": "2026-10-18",
+      "fuenteId": "ho990-legajo",
+      "atributo": "operaciones",
+      "texto": "10 20 21 22 50 60 70 71 90 91 93 100 101 102 110 120",
+      "lista": [
+        "10",
+        "20",
+        "21",
+        "22",
+        "50",
+        "60",
+        "70",
+        "71",
+        "90",
+        "91",
+        "93",
+        "100",
+        "101",
+        "102",
+        "110",
+        "120"
+      ]
+    },
+    {
+      "documento": "ho:990",
+      "fuente": "copia del legajo de Novax ({biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/26- Instrucciones de Proceso/INSERT/HO-990_INSERT_PATAGONIA_REV.A.pptx)",
+      "leido": "2026-10-18",
+      "fuenteId": "ho990-legajo",
+      "atributo": "espuma",
+      "texto": "espuma de poliuretano (PUR) con el espesor y densidad especificados en la ficha t",
+      "rol": "menciona"
+    },
+    {
+      "documento": "ho:990-copia-0710",
+      "fuente": "copia corregida del 07/10 ({principal}/exports/HO_CORREGIDAS_20261007/INSERTO/HO-990_INSERT_PATAGONIA_REV.A.pptx)",
+      "leido": "2026-10-18",
+      "fuenteId": "ho990-0710",
+      "atributo": "adhesivo",
+      "texto": "peratura de aplicación del adhesivo termofusible (SikaMelt) en la unidad fusora (140°C -"
+    },
+    {
+      "documento": "ho:990-copia-0710",
+      "fuente": "copia corregida del 07/10 ({principal}/exports/HO_CORREGIDAS_20261007/INSERTO/HO-990_INSERT_PATAGONIA_REV.A.pptx)",
+      "leido": "2026-10-18",
+      "fuenteId": "ho990-0710",
+      "atributo": "cita.flujograma",
+      "texto": "Flujograma Base | 154 Rev. B (08/09/2026)",
+      "cita": "flujograma:154"
+    },
+    {
+      "documento": "ho:990-copia-0710",
+      "fuente": "copia corregida del 07/10 ({principal}/exports/HO_CORREGIDAS_20261007/INSERTO/HO-990_INSERT_PATAGONIA_REV.A.pptx)",
+      "leido": "2026-10-18",
+      "fuenteId": "ho990-0710",
+      "atributo": "operaciones",
+      "texto": "10 20 21 22 50 60 70 71 90 91 93 100 101 102 110 120",
+      "lista": [
+        "10",
+        "20",
+        "21",
+        "22",
+        "50",
+        "60",
+        "70",
+        "71",
+        "90",
+        "91",
+        "93",
+        "100",
+        "101",
+        "102",
+        "110",
+        "120"
+      ]
+    },
+    {
+      "documento": "bom:arb",
+      "fuente": "export del arb del 2026-10-13 11:42 ({arb}), 16 productos",
+      "leido": "2026-10-18",
+      "fuenteId": "bom-arb",
+      "atributo": "adhesivo",
+      "texto": "AD - ADFA15 ADHESIVO FA X 18 L.",
+      "codigo": "AD - ADFA15"
+    },
+    {
+      "documento": "bom:arb",
+      "fuente": "export del arb del 2026-10-13 11:42 ({arb}), 16 productos",
+      "leido": "2026-10-18",
+      "fuenteId": "bom-arb",
+      "atributo": "espuma.densidad",
+      "texto": "427ESP001TRO01 ESPUMA DE PU DENSIDAD 35KG/M3",
+      "codigo": "427ESP001TRO01"
+    },
+    {
+      "documento": "bom:arb",
+      "fuente": "export del arb del 2026-10-13 11:42 ({arb}), 16 productos",
+      "leido": "2026-10-18",
+      "fuenteId": "bom-arb",
+      "atributo": "vinilo.ancho_rollo",
+      "texto": "1246030226 SANLEATHER IV CL74 S085 NEGRO 1,1X1400 E",
+      "codigo": "1246030226"
+    },
+    {
+      "documento": "bom:arb",
+      "fuente": "export del arb del 2026-10-13 11:42 ({arb}), 16 productos",
+      "leido": "2026-10-18",
+      "fuenteId": "bom-arb",
+      "atributo": "vinilo.ancho_rollo",
+      "texto": "1246030225 SANLEATHER IV CL74 S704 1,1X1400 ESP3,00",
+      "codigo": "1246030225"
+    },
+    {
+      "documento": "bom:arb",
+      "fuente": "export del arb del 2026-10-13 11:42 ({arb}), 16 productos",
+      "leido": "2026-10-18",
+      "fuenteId": "bom-arb",
+      "atributo": "vinilo.ancho_rollo",
+      "texto": "1246030223 SANLEATHER IV CL74 S782 1,1X1400 ESP3,00",
+      "codigo": "1246030223"
+    },
+    {
+      "documento": "bom:arb",
+      "fuente": "export del arb del 2026-10-13 11:42 ({arb}), 16 productos",
+      "leido": "2026-10-18",
+      "fuenteId": "bom-arb",
+      "atributo": "vinilo.ancho_rollo",
+      "texto": "1246030224 SANLEATHER IV ML14 S769 1,1X1400 ESP3,00",
+      "codigo": "1246030224"
+    },
+    {
+      "documento": "bom:arb",
+      "fuente": "export del arb del 2026-10-13 11:42 ({arb}), 16 productos",
+      "leido": "2026-10-18",
+      "fuenteId": "bom-arb",
+      "atributo": "hilo",
+      "texto": "FX284-E0PTO Hilo union Negro Titan Pantone 19-4205 T + FX483TK-E0PTO HILO JET BLACK 20/3 + FX483TK-11930E ALPE GRAY TGA IP3 DECOR DBL STCH 20/3 + FX483TK-11703E GRAY VIOLET TGA AT2 DECOR DBL STCH 20/3"
+    },
+    {
+      "documento": "bom:legajo",
+      "fuente": "BOM ARB ultimo nivel del legajo ({biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/7-Lista de materiales preliminares/01_BOM MATERIAL/BOM ARB ultimo nivel_Insert_20261009.pdf)",
+      "leido": "2026-10-18",
+      "fuenteId": "bom-legajo-pdf",
+      "atributo": "espuma",
+      "texto": "427ESP001TRO01 ESPUMA DE PU DENSIDAD 35KG/M3",
+      "rol": "menciona"
+    },
+    {
+      "documento": "bom:legajo",
+      "fuente": "BOM ARB ultimo nivel del legajo ({biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/7-Lista de materiales preliminares/01_BOM MATERIAL/BOM ARB ultimo nivel_Insert_20261009.pdf)",
+      "leido": "2026-10-18",
+      "fuenteId": "bom-legajo-pdf",
+      "atributo": "espuma",
+      "texto": "427ESP001TRO01 y de Tesa 52110 de los semielaborados INY-INS0005-V1 a INY-",
+      "rol": "menciona"
+    },
+    {
+      "documento": "bom:legajo",
+      "fuente": "BOM ARB ultimo nivel del legajo ({biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/7-Lista de materiales preliminares/01_BOM MATERIAL/BOM ARB ultimo nivel_Insert_20261009.pdf)",
+      "leido": "2026-10-18",
+      "fuenteId": "bom-legajo-pdf",
+      "atributo": "adhesivo",
+      "texto": "AD - ADFA15 ADHESIVO FA X 18 L."
+    },
+    {
+      "documento": "ft:141",
+      "fuente": "FT141 adjunta en un mail de Calidad (archivo de correo de la nube) ({biblioteca}/INGENIERIA BARACK (NUNCA BORRAR)/6- ARCHIVO DE CORREO/ADJUNTOS/CALIDAD - QUALITY PROJECTS/2025/FT141 Espuma PU back for Insert.doc)",
+      "leido": "2026-10-18",
+      "fuenteId": "ft141-correo",
+      "atributo": "espuma.densidad",
+      "texto": "densidad 35Kg/m3 +/-5Kg/m3"
+    },
+    {
+      "documento": "ft:141",
+      "fuente": "FT141 adjunta en un mail de Calidad (archivo de correo de la nube) ({biblioteca}/INGENIERIA BARACK (NUNCA BORRAR)/6- ARCHIVO DE CORREO/ADJUNTOS/CALIDAD - QUALITY PROJECTS/2025/FT141 Espuma PU back for Insert.doc)",
+      "leido": "2026-10-18",
+      "fuenteId": "ft141-correo",
+      "atributo": "espuma.ancho_rollo",
+      "texto": "1400 de ancho por rollo."
+    },
+    {
+      "documento": "ft:141-copia-legajo",
+      "fuente": "ficha de la espuma del legajo de Novax ({biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/8- Ficha tecnica/01- Ficha tecnica/Insert/01- Editables/FT Espuma PU back for Insert.doc)",
+      "leido": "2026-10-18",
+      "fuenteId": "ft141-legajo",
+      "atributo": "espuma.densidad",
+      "texto": "densidad 35Kg/m3"
+    },
+    {
+      "documento": "ft:141-copia-legajo",
+      "fuente": "ficha de la espuma del legajo de Novax ({biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/8- Ficha tecnica/01- Ficha tecnica/Insert/01- Editables/FT Espuma PU back for Insert.doc)",
+      "leido": "2026-10-18",
+      "fuenteId": "ft141-legajo",
+      "atributo": "espuma.ancho_rollo",
+      "texto": "1200 de ancho por rollo."
+    },
+    {
+      "documento": "ft:149",
+      "fuente": "FT149 adjunta en un mail de Calidad (archivo de correo de la nube) ({biblioteca}/INGENIERIA BARACK (NUNCA BORRAR)/6- ARCHIVO DE CORREO/ADJUNTOS/CALIDAD - QUALITY PROJECTS/2025/FT149 Espuma PU back for IP PAD.doc)",
+      "leido": "2026-10-18",
+      "fuenteId": "ft149-correo",
+      "atributo": "espuma.densidad",
+      "texto": "densidad 45Kg/m3"
+    },
+    {
+      "documento": "ft:149",
+      "fuente": "FT149 adjunta en un mail de Calidad (archivo de correo de la nube) ({biblioteca}/INGENIERIA BARACK (NUNCA BORRAR)/6- ARCHIVO DE CORREO/ADJUNTOS/CALIDAD - QUALITY PROJECTS/2025/FT149 Espuma PU back for IP PAD.doc)",
+      "leido": "2026-10-18",
+      "fuenteId": "ft149-correo",
+      "atributo": "espuma.ancho_rollo",
+      "texto": "1400mm de ancho por rollo mínimo"
+    },
+    {
+      "documento": "tizada:espuma-26-1-26",
+      "fuente": "tizada de espuma, delantero ({biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/13-Especificaciones de Ingenieria F/02 -Computo Tizada de Corte- Consumo de Materiales/INSERT FR+RR/02- espuma/INSERT 26-1-26/INSERT DEL PAT 5MM.MRK)",
+      "leido": "2026-10-18",
+      "fuenteId": "tizada-26-1-26-del",
+      "atributo": "espuma.ancho_tizada",
+      "texto": "<WIDTH>115.0000</WIDTH>",
+      "rol": "tope",
+      "de": "espuma.ancho_rollo",
+      "unidad": "cm"
+    },
+    {
+      "documento": "tizada:espuma-26-1-26",
+      "fuente": "tizada de espuma, trasero ({biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/13-Especificaciones de Ingenieria F/02 -Computo Tizada de Corte- Consumo de Materiales/INSERT FR+RR/02- espuma/INSERT 26-1-26/INSERT TRA PAT 5MM.MRK)",
+      "leido": "2026-10-18",
+      "fuenteId": "tizada-26-1-26-tra",
+      "atributo": "espuma.ancho_tizada",
+      "texto": "<WIDTH>115.0000</WIDTH>",
+      "rol": "tope",
+      "de": "espuma.ancho_rollo",
+      "unidad": "cm"
+    },
+    {
+      "documento": "tizada:espuma-9-9-25",
+      "fuente": "tizada de espuma, mixta ({biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/13-Especificaciones de Ingenieria F/02 -Computo Tizada de Corte- Consumo de Materiales/INSERT FR+RR/02- espuma/INSERT FR+RR/INSERT FR+RR/INSERT PAT ESP 9-9-25/MIX/INSERT MIX ESP PAT 3MM.MRK)",
+      "leido": "2026-10-18",
+      "fuenteId": "tizada-9-9-25-mix",
+      "atributo": "espuma.ancho_tizada",
+      "texto": "<WIDTH>135.0000</WIDTH>",
+      "rol": "tope",
+      "de": "espuma.ancho_rollo",
+      "unidad": "cm"
+    }
+  ],
+  "pendientes": [
+    {
+      "que": "Paso 0 del plan: Artemis («Matriz interactiva de productos» v0.4, Y:\\Ingenieria\\...\\20 - Desarrollo Interno\\) no se abrio: Y: no esta montada desde casa (18/10/2026). Si ya guarda la letra vigente por documento, esta ficha la lee de ahi.",
+      "estado": "lunes",
+      "zanja": "abrirlo en la empresa con Y: montada"
+    },
+    {
+      "que": "Cual de las dos tizadas de espuma es la vigente (INSERT 26-1-26 a 115 cm o INSERT PAT ESP 9-9-25 a 135 cm)",
+      "estado": "a confirmar",
+      "zanja": "la planilla oficial de Mesa de Corte en el servidor o Pablo Gamboa (regla consumos-entregables §6)"
+    },
+    {
+      "que": "Marcelo Nieve pidio rollo de espuma de 1,5 m en dic-2025: es un pedido, no un documento vigente (no entra en la comparacion)",
+      "estado": "referencia",
+      "zanja": "memoria project_boms_patagonia_procesos"
+    },
+    {
+      "documento": "flujograma:154",
+      "que": "el maestro en el servidor",
+      "estado": "a confirmar",
+      "zanja": "el maestro de Gestion Ingenieria y el listado maestro de flujogramas en Y: (sin montar el 18/10/2026)"
+    },
+    {
+      "documento": "flujograma:154",
+      "que": "en {biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/20- Flujograma de proceso hay 1 archivo(s) de este documento con letra(s) ninguna en el nombre: cual es la vigente lo dice el maestro",
+      "estado": "aviso"
+    },
+    {
+      "documento": "amfe:158",
+      "que": "el maestro en el servidor",
+      "estado": "a confirmar",
+      "zanja": "el listado maestro de AMFE en Y: (sin montar el 18/10/2026)"
+    },
+    {
+      "documento": "amfe:158",
+      "que": "letra que tiene el cliente (mail a Novax (H. Giacopuzzi))",
+      "estado": "a confirmar",
+      "zanja": "AMFE 158 - INSERT - Rev.A.pdf no esta entre los adjuntos de ese mail; mail «RV: Documentación PPAP - NOVAX (Top Roll, APB, Insert) - Nivel Actualizado» del 2026-09-08 18:45 a Hernan Giacopuzzi (cache de mails, id ...0002D78C819A0000)"
+    },
+    {
+      "documento": "ho:990",
+      "que": "el maestro en el servidor",
+      "estado": "a confirmar",
+      "zanja": "la HO-990 del SGC y el listado de hojas de proceso en Y: (sin montar el 18/10/2026)"
+    },
+    {
+      "documento": "ho:990",
+      "que": "letra que tiene el cliente (mail a Novax (H. Giacopuzzi))",
+      "estado": "a confirmar",
+      "zanja": "HO-990_INSERT_PATAGONIA_REV.A.pdf no esta entre los adjuntos de ese mail; mail «RV: Documentación PPAP - NOVAX (Top Roll, APB, Insert) - Nivel Actualizado» del 2026-09-08 18:45 a Hernan Giacopuzzi (cache de mails, id ...0002D78C819A0000)"
+    },
+    {
+      "documento": "ft:141",
+      "que": "el maestro en el servidor",
+      "estado": "a confirmar",
+      "zanja": "el maestro de fichas tecnicas en Y: (sin montar el 18/10/2026)"
+    },
+    {
+      "documento": "ge:278",
+      "que": "letra vigente",
+      "estado": "a confirmar",
+      "zanja": "Gestion Ingenieria 17. Fichas de embalaje en Y: (sin montar el 18/10/2026)"
+    },
+    {
+      "documento": "ge:278",
+      "que": "el maestro en el servidor",
+      "estado": "a confirmar",
+      "zanja": "Gestion Ingenieria 17. Fichas de embalaje en Y: (sin montar el 18/10/2026)"
+    },
+    {
+      "documento": "ge:278",
+      "que": "letra que tiene el cliente (mail a Novax (H. Giacopuzzi))",
+      "estado": "a confirmar",
+      "zanja": "el adjunto no dice la letra en el nombre; mail «RV: Documentación PPAP - NOVAX (Top Roll, APB, Insert) - Nivel Actualizado» del 2026-09-08 18:45 a Hernan Giacopuzzi (cache de mails, id ...0002D78C819A0000)"
+    },
+    {
+      "documento": "ge:278",
+      "que": "en {biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/19-Normas y Especificaciones de embalaje hay 5 archivo(s) de este documento con letra(s) B, C: cual es la vigente lo dice el maestro",
+      "estado": "aviso"
+    },
+    {
+      "documento": "ge:283",
+      "que": "letra vigente",
+      "estado": "a confirmar",
+      "zanja": "el maestro del documento"
+    },
+    {
+      "documento": "ge:283",
+      "que": "en {biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/19-Normas y Especificaciones de embalaje hay 1 archivo(s) de este documento con letra(s) ninguna en el nombre: cual es la vigente lo dice el maestro",
+      "estado": "aviso"
+    },
+    {
+      "documento": "imds:insert",
+      "que": "letra vigente",
+      "estado": "a confirmar",
+      "zanja": "Calidad / el IMDS de la pieza"
+    },
+    {
+      "documento": "imds:insert",
+      "que": "el maestro en el servidor",
+      "estado": "a confirmar",
+      "zanja": "Calidad / el IMDS de la pieza"
+    },
+    {
+      "documento": "imds:insert",
+      "que": "la carpeta {biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/23- IMDS no tiene ningun archivo de este documento",
+      "estado": "aviso"
+    },
+    {
+      "documento": "pc:insert",
+      "que": "letra vigente",
+      "estado": "a confirmar",
+      "zanja": "Calidad (Nicolas Perez)"
+    },
+    {
+      "documento": "pc:insert",
+      "que": "el maestro en el servidor",
+      "estado": "a confirmar",
+      "zanja": "Calidad (Nicolas Perez)"
+    },
+    {
+      "documento": "pc:insert",
+      "que": "en {biblioteca}/PROYECTOS/NOVAX copia servidor 13-10/Tapizadas puerta/12-Plan de Control hay 1 archivo(s) de este documento con letra(s) ninguna en el nombre: cual es la vigente lo dice el maestro",
+      "estado": "aviso"
+    }
+  ],
+  "relevado": "2026-10-18"
+}

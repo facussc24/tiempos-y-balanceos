@@ -74,7 +74,9 @@ export function letraEnFecha(revisiones, fechaIso) {
 async function leerFuente(f, ctx, fichaDocs) {
   const hoy = ctx.hoy;
   const ruta = f.ruta ? await resolverRuta(f.ruta, ctx) : null;
-  const base = { documento: f.documento, fuente: f.es ? `${f.es} (${ruta || f.lector})` : (ruta || f.lector), leido: hoy, fuenteId: f.id };
+  // En la ficha queda la ruta con {biblioteca}/{principal}/{arb}: es la misma en las tres PC.
+  const rutaFicha = f.ruta || f.lector;
+  const base = { documento: f.documento, fuente: f.es ? `${f.es} (${rutaFicha})` : rutaFicha, leido: hoy, fuenteId: f.id };
   const r = { doc: {}, atributos: [], cliente: [], avisos: [] };
   if (ruta && !['carpeta', 'flujograma', 'amfe', 'mail'].includes(f.lector) && !existsSync(ruta)) throw new Error(`no esta el archivo: ${ruta}`);
 
@@ -106,9 +108,9 @@ async function leerFuente(f, ctx, fichaDocs) {
         break;
       }
       const dias = Math.floor((Date.parse(hoy) - Date.parse(bom.fecha)) / 86_400_000);
-      Object.assign(r.doc, { fecha: bom.fecha.slice(0, 10), donde: `export del arb ${bom.ruta}`, exportDelArb: bom.fecha });
+      Object.assign(r.doc, { fecha: bom.fecha.slice(0, 10), donde: `export del arb ${rutaFicha}`, exportDelArb: bom.fecha });
       if (dias > CANON.bom_vieja_dias) r.avisos.push(`el export del arb tiene ${dias} dias (del ${bom.fecha.slice(0, 10)}): antes de dar verde, exportarlo de nuevo (python scripts/_arbVer.py export)`);
-      const b = { ...base, fuente: `export del arb del ${bom.fecha.slice(0, 16).replace('T', ' ')} (${bom.ruta}), ${f.productos.length} productos` };
+      const b = { ...base, fuente: `export del arb del ${bom.fecha.slice(0, 16).replace('T', ' ')} (${rutaFicha}), ${f.productos.length} productos` };
       for (const e of f.extraer || []) {
         const re = new RegExp(e.patron, 'i');
         const hits = bom.lineas.filter((l) => re.test(`${l.codigo} ${l.descripcion}`));
@@ -123,11 +125,12 @@ async function leerFuente(f, ctx, fichaDocs) {
         const texto = hojas.filter((h) => !e.hoja || h.hoja === e.hoja).map((h) => h.texto).join(' | ');
         r.atributos.push(...extraerDeTexto(texto, [e], base));
       }
-      if (f.letra) {
-        const m = new RegExp(f.letra.patron, 'i').exec(hojas.filter((h) => !f.letra.hoja || h.hoja === f.letra.hoja).map((h) => h.texto).join(' | '));
-        if (m) r.doc.letra = m[1].toUpperCase();
+      for (const [campo, regla] of [['letra', f.letra], ['fecha', f.fecha]]) {
+        if (!regla) continue;
+        const m = new RegExp(regla.patron, 'i').exec(hojas.filter((h) => !regla.hoja || h.hoja === regla.hoja).map((h) => h.texto).join(' | '));
+        if (m) r.doc[campo] = campo === 'letra' ? m[1].toUpperCase() : m[1];
       }
-      r.doc.donde = ruta;
+      r.doc.donde = rutaFicha;
       break;
     }
     case 'doc':
@@ -135,14 +138,16 @@ async function leerFuente(f, ctx, fichaDocs) {
       const texto = f.lector === 'doc' ? L.textoDoc(ruta) : L.textoPdf(ruta);
       r.atributos.push(...extraerDeTexto(texto, f.extraer, base));
       if (f.letra) { const m = new RegExp(f.letra.patron, 'i').exec(texto); if (m) r.doc.letra = m[1].toUpperCase(); }
-      r.doc.donde = ruta;
+      const enNombre = /_(\d{4})(\d{2})(\d{2})\.\w+$/.exec(ruta);   // «BOM ARB ultimo nivel_Insert_20261009.pdf»
+      if (f.fechaDelNombre && enNombre) r.doc.fecha = `${enNombre[1]}-${enNombre[2]}-${enNombre[3]}`;
+      r.doc.donde = rutaFicha;
       break;
     }
     case 'mrk': {
       const w = L.anchoMrk(ruta);
       if (!w) throw new Error(`${ruta} no trae <WIDTH>`);
       for (const e of f.extraer || []) r.atributos.push({ ...base, atributo: e.atributo, texto: w, ...soloDefinidos(e) });
-      r.doc.donde = ruta;
+      r.doc.donde = rutaFicha;
       break;
     }
     case 'carpeta': {
@@ -153,16 +158,16 @@ async function leerFuente(f, ctx, fichaDocs) {
       const letras = [...new Set(delDoc.map(letraDe).filter(Boolean))].sort();
       // La lista de una carpeta no pisa la letra leida ADENTRO del documento: solo la pone si no hay otra
       // y todas las copias dicen la misma en el nombre (relevarFicha la aplica con letraCopia).
-      r.doc.copias = delDoc.map((a) => `${ruta}/${a}`);
+      r.doc.copias = delDoc.map((a) => `${rutaFicha}/${a}`);
       if (letras.length === 1 && delDoc.every((a) => letraDe(a))) r.letraCopia = letras[0];
-      else if (!delDoc.length) r.avisos.push(`la carpeta ${ruta} no tiene ningun archivo de este documento`);
-      else r.avisos.push(`en ${ruta} hay ${delDoc.length} archivo(s) de este documento con letra(s) ${letras.join(', ') || 'ninguna en el nombre'}: cual es la vigente lo dice el maestro`);
+      else if (!delDoc.length) r.avisos.push(`la carpeta ${rutaFicha} no tiene ningun archivo de este documento`);
+      else r.avisos.push(`en ${rutaFicha} hay ${delDoc.length} archivo(s) de este documento con letra(s) ${letras.join(', ') || 'ninguna en el nombre'}: cual es la vigente lo dice el maestro`);
       break;
     }
     case 'mail': {
       if (!f.mail) throw new Error('la fuente de mail no dice que mail (campo «mail»)');
       const m = await (ctx.leerMail || L.mailDelCache)(f.mail, ctx.repo);
-      const b = `mail «${m.asunto}» del ${m.fecha} a ${m.para}${m.cc ? ` (CC ${m.cc})` : ''}`;
+      const b = `mail «${m.asunto}» del ${m.fecha} a ${m.para}`;   // sin la lista de copias: alcanza con a quien fue
       for (const c of f.cliente || []) {
         const adjunto = m.adjuntos.find((a) => a.toLowerCase() === String(c.adjunto).toLowerCase());
         const entrada = { documento: c.documento, donde: f.donde || 'mail', fecha: (m.fecha || '').slice(0, 10), fuente: `${b} (cache de mails, id ...${f.mail.slice(-16)})` };
@@ -246,7 +251,8 @@ export async function relevarFicha(ficha, opts = {}) {
 export function pendientesDe(ficha, fallas = []) {
   const p = [...(ficha.pendientesFijos || [])];
   for (const d of ficha.documentos) {
-    if (!d.letra) p.push({ documento: d.id, que: 'letra vigente', estado: 'a confirmar', zanja: d.maestro?.zanja || d.maestro?.ruta || 'el maestro del documento' });
+    // un export del arb o una tizada no llevan letra: su version es la fecha (`sinLetra` en la ficha)
+    if (!d.letra && !d.sinLetra) p.push({ documento: d.id, que: 'letra vigente', estado: 'a confirmar', zanja: d.maestro?.zanja || d.maestro?.ruta || 'el maestro del documento' });
     if (d.maestro?.estado === 'a confirmar') p.push({ documento: d.id, que: 'el maestro en el servidor', estado: 'a confirmar', zanja: d.maestro.zanja || d.maestro.ruta });
     for (const c of d.cliente || []) if (!c.letra) p.push({ documento: d.id, que: `letra que tiene el cliente (${c.donde})`, estado: 'a confirmar', zanja: c.nota ? `${c.nota}; ${c.fuente}` : c.fuente });
     for (const a of d.avisos || []) p.push({ documento: d.id, que: a, estado: 'aviso' });
