@@ -310,6 +310,41 @@ describe('detalles que la revision por API encontro', () => {
   });
 });
 
+describe('nits del auditor: nada da verde sin haber medido', () => {
+  it('«35 ± 5 kg/m3» es 35, no 5', () => {
+    expect(normalizar('espuma.densidad', 'densidad 35 ± 5 kg/m3').valor).toBe(35);
+    expect(normalizar('espuma.densidad', 'densidad 35 +/- 5 kg/m3').valor).toBe(35);
+  });
+  it('un tope ilegible no da verde', () => {
+    const f = { documentos: [doc('ft:141'), doc('tizada:x')], atributos: [
+      at('espuma.ancho_rollo', 'ft:141', '1400 de ancho por rollo.'),
+      at('espuma.ancho_tizada', 'tizada:x', 'sin ancho', { rol: 'tope', de: 'espuma.ancho_rollo' }),
+    ] };
+    expect(compararAtributos(f).find((x) => x.atributo === 'espuma.ancho_tizada').estado).toBe('una_fuente');
+  });
+  it('si el documento citado no tiene letra, dos HO que citan la misma no dan verde', () => {
+    const f = { documentos: [doc('flujograma:154', { letra: null }), doc('ho:990'), doc('ho:990-b')], atributos: [
+      at('cita.flujograma', 'ho:990', '154 Rev. B', { cita: 'flujograma:154' }),
+      at('cita.flujograma', 'ho:990-b', '154 Rev. B', { cita: 'flujograma:154' }),
+    ] };
+    const r = compararAtributos(f).find((x) => x.atributo === 'cita.flujograma');
+    expect(r.estado).toBe('una_fuente');
+    expect(r.detalle).toMatch(/flujograma:154.*a confirmar/);
+  });
+  it('--comparar con fuentes sin leer no sale 0', () => {
+    const f = { documentos: [doc('ft:141')], atributos: [], pendientes: [{ estado: 'falla', que: 'fuente sin leer: x' }] };
+    expect(resumenComparacion(f).codigoSalida).toBe(1);
+  });
+  it('ADFA15 no es ADFA150; 52110-00000-00 si es 52110', () => {
+    const f = (amfe) => ({ documentos: [doc('bom:arb'), doc('amfe:158')], atributos: [
+      at('materiales.codigos', 'bom:arb', '', { rol: 'universo', lista: ['AD - ADFA15', '52110'] }),
+      at('materiales.codigos', 'amfe:158', amfe),
+    ] });
+    expect(compararAtributos(f('(codigo AD - ADFA150)')).find((x) => x.atributo === 'materiales.codigos').estado).toBe('rojo');
+    expect(compararAtributos(f('(codigo 52110-00000-00)')).find((x) => x.atributo === 'materiales.codigos').estado).toBe('verde');
+  });
+});
+
 describe('un solo papel no es una comparacion', () => {
   it('atributo con una sola fuente vigente: UNA FUENTE, ni verde ni rojo', () => {
     const f = { documentos: [doc('ft:141')], atributos: [at('espuma.densidad', 'ft:141', '35Kg/m3')] };

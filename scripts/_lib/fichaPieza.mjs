@@ -68,7 +68,8 @@ function normalizarAncho(texto, unidad) {
 }
 
 function normalizarDensidad(texto) {
-  const m = /(\d+(?:[.,]\d+)?)\s*kg\s*\/\s*m\s*(?:3|³)/i.exec(texto);
+  // «35 ± 5 kg/m3» o «35Kg/m3 +/-5Kg/m3»: el nominal es el primero, la tolerancia no
+  const m = /(\d+(?:[.,]\d+)?)\s*(?:(?:±|\+\s*\/\s*-)\s*\d+(?:[.,]\d+)?\s*)?kg\s*\/\s*m\s*(?:3|³)/i.exec(texto);
   return m ? { valor: numero(m[1]) } : { valor: null, nota: 'no trae una densidad en kg/m3' };
 }
 
@@ -206,6 +207,7 @@ export function compararAtributos(ficha) {
     if (topes.length) {
       const base = declarados(topes[0].de);
       if (!base.length) { r.detalle = `no hay ${topes[0].de} declarado contra que medir`; return r; }
+      if (topes.some((t) => t.valor === null)) { r.detalle = `${topes.filter((t) => t.valor === null).map((t) => t.documento).join(', ')} sin un ancho legible: no se puede medir`; return r; }
       const minimo = Math.min(...base.map((b) => b.valor));
       const pasados = topes.filter((t) => t.valor !== null && t.valor > minimo);
       r.estado = pasados.length ? 'rojo' : 'verde';
@@ -214,6 +216,9 @@ export function compararAtributos(ficha) {
         : `entra en el ${topes[0].de} declarado (${minimo})`) + avisoVigencia(topes.map((t) => t.documento));
       return r;
     }
+    // Una cita cuyo documento citado no tiene letra no se compara entre los que citan: falta la vara.
+    const citasSinVara = [...new Set(propias.filter((a) => a.cita && !docs.get(a.cita)?.letra).map((a) => a.cita))];
+    if (citasSinVara.length) { r.detalle = `la letra vigente de ${citasSinVara.join(', ')} esta a confirmar: no hay contra que comparar lo que citan`; return r; }
     const universo = vigentes.filter((a) => a.rol === 'universo').map((a) => conValor(a, docs)).filter((v) => v.valor !== null);
     if (universo.length) return compararContraUniverso(r, universo, valores);
     // Se cuentan DOCUMENTOS, no renglones: cuatro vinilos de la misma BOM son un solo papel.
@@ -246,9 +251,17 @@ export function codigosDeTexto(texto) {
   return [...new Set(out)];
 }
 
-// «52110-00000-00» del AMFE es el «52110» del arb: un codigo cubre al otro si uno empieza con el otro
-// (con al menos 5 caracteres, para que un «AD» no tape nada).
-const cubre = (a, b) => { const x = codigoPlano(a); const y = codigoPlano(b); return x === y || (Math.min(x.length, y.length) >= 5 && (x.startsWith(y) || y.startsWith(x))); };
+// «52110-00000-00» del AMFE es el «52110» del arb: un codigo cubre al otro si es igual, o si los primeros
+// TRAMOS del largo (separados por guion, espacio o barra) forman el corto y los tramos que sobran son todos
+// ceros. Asi «AD - ADFA150» no pasa por «AD - ADFA15» (le sobra un 0 dentro del mismo tramo).
+const cubreTramos = (largo, corto) => {
+  const tramos = String(largo).split(/[\s\-/]+/).filter(Boolean);
+  for (let i = 1; i < tramos.length; i++) {
+    if (codigoPlano(tramos.slice(0, i).join('')) === codigoPlano(corto)) return tramos.slice(i).every((t) => /^0+$/.test(t));
+  }
+  return false;
+};
+const cubre = (a, b) => codigoPlano(a) === codigoPlano(b) || cubreTramos(a, b) || cubreTramos(b, a);
 
 /**
  * Los materiales: todo codigo que nombra un documento (el AMFE en su recepcion) tiene que estar en el
@@ -320,7 +333,9 @@ export function resumenComparacion(ficha) {
   const atributos = compararAtributos(ficha);
   const cliente = compararCliente(ficha);
   const rojos = atributos.filter((r) => r.estado === 'rojo').length + cliente.filter((r) => r.estado === 'rojo').length;
-  return { atributos, cliente, rojos, codigoSalida: rojos ? 1 : 0 };
+  // una ficha con fuentes sin leer no sale 0: «sin rojos» con papeles sin leer no es verde
+  const sinLeer = (ficha.pendientes || []).filter((p) => p.estado === 'falla').length;
+  return { atributos, cliente, rojos, sinLeer, codigoSalida: rojos || sinLeer ? 1 : 0 };
 }
 
 // ---------------------------------------------------------------------------

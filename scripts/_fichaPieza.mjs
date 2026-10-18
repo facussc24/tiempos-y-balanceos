@@ -69,7 +69,7 @@ function comparar(clave) {
   const avisos = (f.pendientes || []).filter((p) => p.estado === 'aviso' || p.estado === 'falla');
   if (avisos.length) { linea(''); for (const a of avisos) linea(`ojo: ${a.documento ? `${a.documento}: ` : ''}${a.que}`); }
   linea('');
-  linea(r.rojos ? `${r.rojos} rojo(s). La ficha dice quien dice que; cual vale lo decide el dueño del documento.` : 'Sin rojos.');
+  linea(r.rojos ? `${r.rojos} rojo(s). La ficha dice quien dice que; cual vale lo decide el dueño del documento.` : r.sinLeer ? `Sin rojos, pero con ${r.sinLeer} fuente(s) sin leer: no es un verde.` : 'Sin rojos.');
   return r.codigoSalida;
 }
 
