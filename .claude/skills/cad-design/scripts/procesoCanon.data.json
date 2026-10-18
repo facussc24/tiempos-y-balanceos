@@ -60,6 +60,14 @@
       }
     ]
   },
+  "criterioAceptacion": {
+    "modo": "aviso",
+    "desde": "2026-10-17",
+    "revisar": "2026-10-24",
+    "que": "G-E7 de gate_entregable.py: el criterio de aceptacion de la pieza impresa escrito ANTES de imprimir, en <workdir>/criterio_aceptacion.json: una lista de {\"que\": lo que se mide, \"con\": el instrumento o la prueba, \"acepta\": el valor o la condicion}. Mientras el modo es 'aviso' se informa y no frena.",
+    "fuente": "ficha-utillajes.md K1; plan del sistema tanda 2 punto 7; patron vivo examples/gancho_mochila/verificar_gancho.py",
+    "pasa_a_freno": "Con el si de Fak, igual que gateAsiento."
+  },
   "gateAsiento": {
     "modo": "aviso",
     "desde": "2026-10-17",

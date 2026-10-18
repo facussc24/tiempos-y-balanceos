@@ -25,6 +25,12 @@ Los cuatro checks:
   G-E3b Sobre los pixeles de los renders declarados: que fraccion del objeto tiene color
         de verdad. Se MIDE y se informa; no bloquea.
 
+Tres mas de la tanda 2 (17/10/2026), los tres AVISO la primera semana (procesoCanon):
+  G-E5  Si el pliego dice 'apoya-sobre-blando', gate_asiento.py corrio y dio VERDE.
+  G-E6  La cabecera de cada STEP entregado en el orden de ISO 10303-21 (si no, CATIA V5 lo
+        lee VACIO). El freno es export_deliverables.py, que la arregla en la copia.
+  G-E7  El criterio de aceptacion escrito antes de imprimir (<workdir>/criterio_aceptacion.json).
+
 SOBRE G-E3b, Y POR QUE NO BLOQUEA. Dos hipotesis mias, las dos caidas contra datos reales
 el mismo dia. Queda escrito con los numeros para que nadie las reinvente:
 
@@ -67,6 +73,17 @@ OK, FALLA, USO = 0, 1, 2
 def canon():
     with open(CANON, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def _texto_ok(c, v):
+    """Un campo del criterio de aceptacion dice algo: texto o numero, no vacio y no un literal de plantilla."""
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        return True
+    if not isinstance(v, str) or not v.strip():
+        return False
+    ph = c.get("placeholders", {})
+    t = v.strip()
+    return t not in ph.get("literales", []) and not any(t.upper().startswith(p.upper()) for p in ph.get("prefijos", []))
 
 
 def _archivos(carpeta):
@@ -258,6 +275,34 @@ def verificar(entrega, motor, renders, workdir_path=None, sin_render=False, moti
             avisos.append("G-E6 · %s tiene la cabecera fuera de orden (%s): CATIA V5 lo lee VACIO. Arreglo: "
                           "cabecera_step.py arreglar \"%s\" (o entregar con export_deliverables.py, que ya lo hace)"
                           % (os.path.basename(s), ", ".join(o), s))
+
+    # ---- G-E7: el criterio de aceptacion escrito ANTES de imprimir (tanda 2, 17/10/2026; ficha-utillajes K1) ----
+    # Que se mide en la pieza impresa, con que y con que valor se acepta: <workdir>/criterio_aceptacion.json, una lista
+    # de {"que", "con", "acepta"}. Patron vivo: examples/gancho_mochila/verificar_gancho.py. AVISO la primera semana.
+    ca = c.get("criterioAceptacion") or {}
+    msg7 = None
+    if workdir_path:
+        pca = os.path.join(workdir_path, "criterio_aceptacion.json")
+        if not os.path.isfile(pca):
+            msg7 = ("no hay criterio de aceptacion escrito (%s): que se mide en la pieza impresa, con que y con que "
+                    "valor se acepta" % pca)
+        else:
+            try:
+                with open(pca, "r", encoding="utf-8") as f:
+                    lista = json.load(f)
+                malos = [i for i, x in enumerate(lista if isinstance(lista, list) else [None])
+                         if not isinstance(x, dict) or not all(_texto_ok(c, x.get(k)) for k in ("que", "con", "acepta"))]
+                if not lista or malos:
+                    msg7 = "criterio_aceptacion.json: renglon(es) %s sin 'que', 'con' y 'acepta'" % (malos or "-")
+            except (OSError, ValueError) as e:
+                msg7 = "criterio_aceptacion.json no se pudo leer: %s" % e
+    else:
+        avisos.append("G-E7 · sin --workdir no se puede mirar el criterio de aceptacion")
+    if msg7:
+        if ca.get("modo") == "freno":
+            rojo("G-E7", msg7, "ficha-utillajes.md K1: el criterio se escribe antes de imprimir")
+        else:
+            avisos.append("G-E7 · %s — modo AVISO hasta el %s (procesoCanon criterioAceptacion)" % (msg7, ca.get("revisar")))
 
     # ---- G-E5: si el utillaje apoya sobre blando, corrio el gate de asiento (tanda 2, 17/10/2026) ----
     ga = c.get("gateAsiento") or {}

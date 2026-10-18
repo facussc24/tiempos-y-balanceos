@@ -213,6 +213,14 @@ De las tres entregas rechazadas, **dos no fallaron por el diseño: fallaron por 
   escalón sí): que el motor ande se prueba, no se asume.
 - **G-E3b — cuánto color tiene el render**, medido sobre los píxeles del objeto. **Se informa;
   no bloquea.** Un número bajo es una razón para mirar la imagen, no un veredicto.
+- **G-E5, G-E6 y G-E7 (tanda 2, 17/10/2026), AVISO la primera semana** (`procesoCanon.data.json`, revisar el 24/10):
+  **G-E5** si el pliego dice `apoya-sobre-blando`, corrió el GATE A y dio VERDE; **G-E6** la cabecera de cada STEP de
+  la carpeta en el orden de ISO 10303-21 (el freno es `export_deliverables.py`, que la arregla en la copia que entrega y
+  la vuelve a leer; para lo ya entregado, `cabecera_step.py revisar <carpeta>`, que no abre lo que está solo en la
+  nube); **G-E7** el criterio de aceptación escrito ANTES de imprimir en `<workdir>/criterio_aceptacion.json`, una
+  lista de `{"que": lo que se mide en la pieza impresa, "con": el instrumento o la prueba, "acepta": el valor o la
+  condición}` (`reference/ficha-utillajes.md` K1; patrón vivo `examples/gancho_mochila/verificar_gancho.py`). Lo
+  mismo va en el PDF, con las palabras de Fak.
 - **G-E4 — revisión ciega, después del GATE E verde y antes de mostrárselo a Fak (22/09/2026).**
   Los gates en verde no vieron lo que Fak vio a ojo: el dispositivo del Insert (24/08 a 22/09,
   cadena de 75 pasos verde) volvió cinco veces (*"hacés todo a medias sin testearlo"*, *"puesto
