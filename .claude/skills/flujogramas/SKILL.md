@@ -391,6 +391,9 @@ cada corrida. Eso no dice nada del contenido.
 
 (El formulario, el número en el nombre del archivo y los campos que no existen: arriba, antes del §0.)
 
+Antes de emitir, mirar lo que ya le marcaron a un flujograma: `node scripts/_observaciones.mjs --antes-de-mandar
+flujograma` (libro de observaciones recibidas, tanda 13; el 20/08 Carlos marcó que faltaba la tabla de códigos).
+
 La **revision solo sube en un hito oficial** (prelanzamiento / PPAP / ECN) y la fila de
 revisiones dice **textual que cambio**, operacion por operacion.
 

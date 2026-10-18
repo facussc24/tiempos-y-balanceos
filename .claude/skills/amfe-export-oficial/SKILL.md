@@ -103,6 +103,8 @@ exportados en `exports/`: 9 con la carátula llena, ninguno frenaría. Los expor
 (`_exportOficial.ts`, `_exportAmfeAmarok.ts`) no lo tienen.
 
 ## Checklist antes de entregar un Excel de AMFE
+- [ ] **Lo que ya le marcaron a un AMFE**: `node scripts/_observaciones.mjs --antes-de-mandar AMFE` (libro de
+      observaciones recibidas, tanda 13): lo que sale «A MANO» no lo caza ningún control y se mira uno por uno.
 - [ ] Hoja **Caratula** presente y **primera** (workbook = `Caratula`, `AMFE`).
 - [ ] Carátula con TODOS los campos llenos (abrir el .xlsx y mirar el bloque de identificación; con
       `_exportAmfeOficial.ts` lo frena `caratulaVacia.mjs` sobre el archivo releído).

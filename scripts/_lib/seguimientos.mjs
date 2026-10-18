@@ -24,6 +24,8 @@
  *      que quedo esperando se avisa en cada arranque.
  */
 
+import { AREAS } from './nocturno.mjs';   // nocturno.mjs no importa nada: es puro (la lista de areas de la casa)
+
 export const DIAS = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 
 const sinTildes = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -121,6 +123,91 @@ export function abiertos(datos) {
   return datos.seguimientos.filter((s) => s && s.estado !== 'cerrado');
 }
 
+/*
+ * VENCIMIENTOS (tanda 13, item 4, 17/10/2026): los compromisos con FECHA que son de Ingenieria (la accion D7 de un 8D,
+ * un ECR a nombre de Fak, lo que el prometio en un mail con fecha). No se insiste: VENCEN. Caso que lo origino: la D7
+ * del 8D 11010843 («incorporar el modo de falla de recorte de vinilo» al AMFE) tenia plazo 17/09/2026 y Fak se entero
+ * el 21/09, cuatro dias despues, porque el 8D no le llego por mail (memoria `project_8d_11010843_tapa_amarok`).
+ *
+ * Viven en el mismo bloque json, en una lista aparte (opcional):
+ *   "vencimientos": [{ id, que, vence: 'AAAA-MM-DD', area: 'ingenieria'|'calidad'|'logistica'|'otra' (las AREAS de nocturno.mjs), estado, fuente? }]
+ * Al arrancar se muestran TODOS los abiertos de Ingenieria, del que vence primero al ultimo; los de otra area no se
+ * le llevan a Fak (contrato de autonomia §F: el 8D como documento y el PPAP son de Calidad; la D7 es de el) y solo
+ * aparecen en el listado completo. Un vencimiento mal escrito se dice, igual que un seguimiento: nunca se calla.
+ */
+export const AREA_PROPIA = 'ingenieria';
+/**
+ * Las areas que se conocen: la misma lista con que la noche etiqueta los mails (una sola en la casa). Un area que no
+ * esta aca es un vencimiento MAL ESCRITO y se avisa: con «ingeneria» o «Ing.» quedaba afuera del arranque en silencio
+ * (auditor 17/10), que es justo el olvido que esto quiere evitar.
+ */
+export const AREAS_CONOCIDAS = AREAS;
+
+function listaVencimientos(datos) {
+  if (datos?.vencimientos === undefined) return [];
+  if (!Array.isArray(datos.vencimientos)) throw new Error('"vencimientos" no es una lista');
+  return datos.vencimientos;
+}
+
+/** Los abiertos. Un renglon vacio (null) NO se descarta: sigue para que el arranque lo diga como mal escrito. */
+export function vencimientosAbiertos(datos) {
+  return listaVencimientos(datos).filter((v) => !(v && v.estado === 'cerrado'));
+}
+
+const diasEntre = (desde, hasta) => Math.round((aFecha(hasta) - aFecha(desde)) / 86400000);
+
+/** Estado de UN vencimiento: tira si esta mal escrito (sin fecha, sin area). `faltan` < 0 = vencido hace -faltan dias. */
+export function estadoVencimiento(v, hoy) {
+  aFecha(hoy);
+  if (!v || typeof v !== 'object') throw new Error('hay un vencimiento vacio');
+  if (!v.que) throw new Error(`el vencimiento "${v.id || '(sin id)'}" no dice que vence ("que")`);
+  aFecha(v.vence);
+  const area = sinTildes(v.area);
+  if (!area) throw new Error(`el vencimiento "${v.id || '(sin id)'}" no dice de que area es ("area": "ingenieria" si es de Fak)`);
+  if (!AREAS.includes(area)) throw new Error(`el vencimiento "${v.id || '(sin id)'}" tiene un area que no conozco: "${v.area}" (van ${AREAS.join(', ')})`);
+  const faltan = diasEntre(hoy, v.vence);
+  return { faltan, vencido: faltan < 0, hoy: faltan === 0, propio: area === AREA_PROPIA, area };
+}
+
+/** El renglon de UN vencimiento para el arranque. Mal escrito: lo dice. */
+export function renglonVencimiento(v, hoy) {
+  const id = v?.id || '(sin id)';
+  let e;
+  try {
+    e = estadoVencimiento(v, hoy);
+  } catch (err) {
+    return `- ${id}: ESTA MAL ESCRITO en la memoria y no se puede saber cuando vence (${err.message}). Arreglarlo AHORA y decirselo a Fak.`;
+  }
+  let l = `- ${id}: ${v.que}. `;
+  if (e.vencido) l += `VENCIO el ${fechaCorta(v.vence)} (hace ${-e.faltan} dia${-e.faltan === 1 ? '' : 's'}): decirselo a Fak al empezar. `;
+  else if (e.hoy) l += `VENCE HOY (${fechaCorta(v.vence)}): decirselo a Fak al empezar. `;
+  else l += `Vence el ${fechaCorta(v.vence)} (faltan ${e.faltan} dia${e.faltan === 1 ? '' : 's'}). `;
+  if (v.fuente) l += `Fuente: ${v.fuente}.`;
+  return l.trim();
+}
+
+/**
+ * Orden: los mal escritos primero (sin estado, `e` nulo), despues del que vence antes al que vence despues. Dos mal
+ * escritos empatan en 0 (no `-Infinity - -Infinity`, que da NaN y deja el orden indefinido: revision de la madre, 17/10);
+ * el sort de JS es estable, asi que entre ellos queda el orden de la memoria.
+ */
+export function porVencimiento(a, b) {
+  const ka = a.e ? a.e.faltan : -Infinity;
+  const kb = b.e ? b.e.faltan : -Infinity;
+  return ka === kb ? 0 : ka < kb ? -1 : 1;
+}
+
+/** Los vencimientos que se le muestran a Fak: abiertos, de Ingenieria (o mal escritos), del que vence primero. */
+export function vencimientosParaElArranque(datos, hoy) {
+  const conEstado = vencimientosAbiertos(datos).map((v) => {
+    try { return { v, e: estadoVencimiento(v, hoy) }; } catch { return { v, e: null }; }
+  });
+  return conEstado
+    .filter(({ e }) => !e || e.propio)
+    .sort(porVencimiento)
+    .map(({ v }) => v);
+}
+
 const fechaCorta = (iso) => `${nombreDia(iso)} ${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
 const conCopia = (e) => (e.escala ? ` CON ${e.cc.length ? e.cc.join(' y ') : 'LA COPIA DE ESCALAMIENTO (falta cargar a quien)'} EN COPIA` : '');
 
@@ -152,33 +239,49 @@ export function renglonHook(s, hoy) {
   return l.trim();
 }
 
-/** Texto para el hook de arranque: corto, y vacio SOLO si no hay nada abierto. */
+/** Texto para el hook de arranque: corto, y vacio SOLO si no hay nada abierto (ni seguimientos ni vencimientos). */
 export function textoHook(datos, hoy) {
   const segs = abiertos(datos);
-  if (!segs.length) return '';
-  const lineas = ['[SEGUIMIENTOS CON FECHA — Fak, 02/10/2026: "no me puedo olvidar de esto". Detalle: memoria project_seguimientos_con_fecha]'];
-  for (const s of segs.slice(0, TOPE_HOOK)) lineas.push(renglonHook(s, hoy));
-  if (segs.length > TOPE_HOOK) lineas.push(`... y ${segs.length - TOPE_HOOK} mas: node scripts/_seguimientos.mjs los lista todos.`);
+  const lineas = [];
+  if (segs.length) {
+    lineas.push('[SEGUIMIENTOS CON FECHA — Fak, 02/10/2026: "no me puedo olvidar de esto". Detalle: memoria project_seguimientos_con_fecha]');
+    for (const s of segs.slice(0, TOPE_HOOK)) lineas.push(renglonHook(s, hoy));
+    if (segs.length > TOPE_HOOK) lineas.push(`... y ${segs.length - TOPE_HOOK} mas: node scripts/_seguimientos.mjs los lista todos.`);
+  }
+  let venc;
+  try {
+    venc = vencimientosParaElArranque(datos, hoy);
+  } catch (err) {
+    lineas.push(`[VENCIMIENTOS DE INGENIERIA] NO SE PUDO LEER la lista de la memoria project_seguimientos_con_fecha: ${err.message}. Arreglarla AHORA y decirselo a Fak: mientras tanto nadie avisa lo que vence.`);
+    venc = [];
+  }
+  if (venc.length) {
+    lineas.push('[VENCIMIENTOS DE INGENIERIA — lo que vence primero, arriba (la D7 del 8D 11010843 vencio el 17/09 y Fak se entero el 21/09). Detalle: memoria project_seguimientos_con_fecha]');
+    for (const v of venc.slice(0, TOPE_HOOK)) lineas.push(renglonVencimiento(v, hoy));
+    if (venc.length > TOPE_HOOK) lineas.push(`... y ${venc.length - TOPE_HOOK} mas: node scripts/_seguimientos.mjs los lista todos.`);
+  }
   return lineas.join('\n');
 }
 
 /**
  * Saca de la memoria el bloque ```json que tiene la lista "seguimientos" (puede haber otro
  * bloque json de ejemplo antes). Devuelve { datos, antes, despues, salto } para reescribirlo.
+ * `clave` elige otro bloque (tanda 13: "parametros" de la ficha de una maquina, `parametrosMaquina.mjs`).
  */
-export function leerBloque(md) {
+export function leerBloque(md, clave = 'seguimientos') {
   const re = /```json[ \t]*\r?\n([\s\S]*?)\r?\n```/g;
   let m;
   let primerError = null;
   while ((m = re.exec(md)) !== null) {
     let datos;
     try { datos = JSON.parse(m[1]); } catch (e) { primerError = primerError || e; continue; }
-    if (datos && typeof datos === 'object' && 'seguimientos' in datos) {
+    if (datos && typeof datos === 'object' && clave in datos) {
       return { datos, antes: md.slice(0, m.index), despues: md.slice(m.index + m[0].length), salto: md.includes('\r\n') ? '\r\n' : '\n' };
     }
   }
-  if (primerError) throw new Error(`el bloque json de la memoria de seguimientos no se puede leer: ${primerError.message}`);
-  throw new Error('la memoria de seguimientos no tiene un bloque ```json con la lista "seguimientos"');
+  const de = clave === 'seguimientos' ? 'de seguimientos' : `(bloque "${clave}")`;
+  if (primerError) throw new Error(`el bloque json de la memoria ${de} no se puede leer: ${primerError.message}`);
+  throw new Error(`la memoria ${de} no tiene un bloque \`\`\`json con la lista "${clave}"`);
 }
 
 export function escribirBloque({ datos, antes, despues, salto = '\n' }) {
@@ -188,10 +291,13 @@ export function escribirBloque({ datos, antes, despues, salto = '\n' }) {
 
 export function buscar(datos, id) {
   const lista = Array.isArray(datos?.seguimientos) ? datos.seguimientos : [];
-  const s = lista.find((x) => x && x.id === id);
-  if (!s) throw new Error(`no hay un seguimiento "${id}" (hay: ${lista.map((x) => x?.id).join(', ') || 'ninguno'})`);
+  const venc = Array.isArray(datos?.vencimientos) ? datos.vencimientos : [];
+  const s = lista.find((x) => x && x.id === id) || venc.find((x) => x && x.id === id);
+  if (!s) throw new Error(`no hay un seguimiento ni un vencimiento "${id}" (hay: ${[...lista, ...venc].map((x) => x?.id).join(', ') || 'ninguno'})`);
   return s;
 }
+
+const esVencimiento = (datos, s) => Array.isArray(datos?.vencimientos) && datos.vencimientos.includes(s);
 
 /**
  * Anota un intento. Se valida TODO antes de tocar los datos: un seguimiento mal escrito, uno
@@ -200,6 +306,7 @@ export function buscar(datos, id) {
  */
 export function anotar(datos, id, { fecha, que, enviado, hoy }) {
   const s = buscar(datos, id);
+  if (esVencimiento(datos, s)) throw new Error(`"${id}" es un vencimiento: no se insiste, vence. Cuando se cumple se cierra con --cerrar`);
   if (s.estado === 'cerrado') throw new Error(`el seguimiento "${id}" esta cerrado: no se anota nada`);
   if (!que || String(que).startsWith('--')) throw new Error('falta --que: que se hizo');
   aFecha(fecha);

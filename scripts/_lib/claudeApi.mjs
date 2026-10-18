@@ -92,7 +92,7 @@ export const DESCUENTO_LOTE = 0.5;
 /** Cabecera beta del fallback "default" (el servidor elige el modelo segun el motivo del rechazo). */
 export const BETA_FALLBACK = 'server-side-fallback-2026-07-01';
 
-/** Error propio: `tipo` dice que paso (sin_clave | rechazo | truncado | json | modelo | lote | api). */
+/** Error propio: `tipo` dice que paso (sin_clave | rechazo | truncado | json | modelo | lote | adjunto | api). */
 export class ErrorApi extends Error {
   constructor(tipo, mensaje, detalle = {}) {
     super(mensaje);
@@ -246,6 +246,93 @@ export function crearCliente({ apiKey, timeoutMs = 10 * 60 * 1000, maxRetries = 
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// PDFs y fotos en el pedido (tanda 13, item 14, 17/10/2026)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Hasta el 17/10/2026 la puerta solo mandaba texto: la API no podia leer el manual escaneado del AIAG-VDA (las escalas
+ * O/D siguen saliendo del borrador 2017) ni una hoja de proceso impresa (informe B del 15/10, punto 4). Un PDF va como
+ * bloque `document` y una foto como bloque `image`, los dos en base64 y ADELANTE del texto del pedido (skill claude-api,
+ * «Document & File Input» y «Vision»). Topes, de la doc oficial (platform.claude.com/docs/en/build-with-claude/pdf-support,
+ * leida el 17/10/2026, tabla «Check PDF requirements»): «Maximum request size 32 MB», «Maximum pages per request 600 (100
+ * when the request's context window is under 1M tokens)», «Format: Standard PDF (no passwords/encryption)», y «Both
+ * limits are on the entire request payload»: las 600 paginas son de TODO el pedido, no de cada PDF. Los cuatro modelos
+ * de la casa tienen contexto de 1M (tabla «Current Models» de la skill claude-api, cache del 06/10/2026), asi que va 600.
+ * El costo de un adjunto NO sale de contar caracteres: se mide con contarTokens() (count_tokens, gratis) antes de
+ * pagar, como hace `_apiTarea.mjs`. Lo que esta seccion lee del disco es solo el archivo que se le pasa.
+ */
+export const TIPOS_ADJUNTO = Object.freeze({
+  '.pdf': { bloque: 'document', media: 'application/pdf' },
+  '.png': { bloque: 'image', media: 'image/png' },
+  '.jpg': { bloque: 'image', media: 'image/jpeg' },
+  '.jpeg': { bloque: 'image', media: 'image/jpeg' },
+  '.gif': { bloque: 'image', media: 'image/gif' },
+  '.webp': { bloque: 'image', media: 'image/webp' },
+});
+export const TOPE_PEDIDO_BYTES = 32 * 1024 * 1024;
+export const TOPE_PAGINAS_PDF = 600;
+
+/** Los primeros bytes de cada tipo: un archivo que se llama .pdf y no es un PDF no se manda (se pagaria por nada). */
+const FIRMA_ADJUNTO = {
+  'application/pdf': (b) => b.subarray(0, 5).toString('latin1') === '%PDF-',
+  'image/png': (b) => b[0] === 0x89 && b.subarray(1, 4).toString('latin1') === 'PNG',
+  'image/jpeg': (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
+  'image/gif': (b) => b.subarray(0, 4).toString('latin1') === 'GIF8',
+  'image/webp': (b) => b.subarray(0, 4).toString('latin1') === 'RIFF' && b.subarray(8, 12).toString('latin1') === 'WEBP',
+};
+
+/**
+ * Paginas de un PDF contando los objetos `/Type /Page` (no `/Pages`). Es aproximado: un PDF que guarda sus objetos
+ * comprimidos puede dar 0, y 0 no frena (el costo real lo dice count_tokens); uno con revisiones agregadas al final
+ * puede contar de mas (frena de mas, nunca de menos). Sirve para frenar ANTES un pedido de mas de 600 paginas.
+ */
+export function paginasPdf(buf) {
+  const m = Buffer.from(buf).toString('latin1').match(/\/Type\s*\/Page(?![A-Za-z])/g);
+  return m ? m.length : 0;
+}
+
+/**
+ * Un archivo -> { bloque, ruta, bytes, paginas }. Tira ErrorApi 'adjunto' si no es PDF ni foto, si por dentro no es lo
+ * que dice su nombre, o si el PDF pasa las 600 paginas. `leer` se cambia en los tests.
+ */
+export function bloqueAdjunto(ruta, { leer = (p) => fs.readFileSync(p) } = {}) {
+  const ext = path.extname(String(ruta ?? '')).toLowerCase();
+  const tipo = TIPOS_ADJUNTO[ext];
+  if (!tipo) {
+    throw new ErrorApi('adjunto', `no se manda "${ruta}" como PDF o foto: van ${Object.keys(TIPOS_ADJUNTO).join(', ')}. Un texto va dentro del mensaje.`);
+  }
+  const buf = Buffer.from(leer(ruta));
+  if (!FIRMA_ADJUNTO[tipo.media](buf)) throw new ErrorApi('adjunto', `"${ruta}" se llama ${ext} y por dentro no es ${tipo.media}: no se manda`);
+  const paginas = tipo.bloque === 'document' ? paginasPdf(buf) : null;
+  if (paginas > TOPE_PAGINAS_PDF) throw new ErrorApi('adjunto', `"${ruta}" tiene ${paginas} paginas: la API toma hasta ${TOPE_PAGINAS_PDF} por pedido (partirlo antes)`);
+  if (tipo.bloque === 'document' && /\/Encrypt\b/.test(buf.toString('latin1'))) {
+    throw new ErrorApi('adjunto', `"${ruta}" es un PDF con contraseña o cifrado: la API no lo toma (guardarlo sin proteccion antes)`);
+  }
+  return {
+    bloque: { type: tipo.bloque, source: { type: 'base64', media_type: tipo.media, data: buf.toString('base64') } },
+    ruta: String(ruta), bytes: buf.length, paginas,
+  };
+}
+
+/**
+ * El contenido del mensaje del usuario con los PDF y las fotos ADELANTE y el texto al final. `usuario` es texto o una
+ * lista de bloques. Tira si todo junto (en base64) pasa los 32 MB que acepta un pedido.
+ */
+export function contenidoConAdjuntos(usuario, rutas = [], opciones = {}) {
+  const adjuntos = rutas.map((r) => bloqueAdjunto(r, opciones));
+  const paginas = adjuntos.reduce((s, a) => s + (a.paginas || 0), 0);
+  if (paginas > TOPE_PAGINAS_PDF) {
+    throw new ErrorApi('adjunto', `los PDF del pedido suman ${paginas} paginas: la API toma hasta ${TOPE_PAGINAS_PDF} en todo el pedido (mandarlos en pedidos separados)`);
+  }
+  const texto = Array.isArray(usuario) ? usuario : [{ type: 'text', text: String(usuario ?? '') }];
+  const total = adjuntos.reduce((s, a) => s + a.bloque.source.data.length, 0) + Buffer.byteLength(JSON.stringify(texto));
+  if (total > TOPE_PEDIDO_BYTES) {
+    throw new ErrorApi('adjunto', `los adjuntos suman ${(total / 1024 / 1024).toFixed(1).replace('.', ',')} MB ya pasados a base64: la API acepta hasta 32 MB por pedido (mandarlos en pedidos separados)`);
+  }
+  return [...adjuntos.map((a) => a.bloque), ...texto];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Armar el pedido (puro) e interpretar la respuesta (puro)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -254,7 +341,8 @@ export function crearCliente({ apiKey, timeoutMs = 10 * 60 * 1000, maxRetries = 
  *
  *   modelo     'opus' | 'sonnet' | 'haiku' | 'fable' | id completo
  *   system     texto o lista de bloques {type:'text', text}; estable y adelante, para el cache
- *   usuario    el mensaje del usuario (texto o bloques), o `mensajes` ya armados
+ *   usuario    el mensaje del usuario (texto o bloques), o `mensajes` ya armados. Con PDFs o fotos:
+ *              `usuario: contenidoConAdjuntos(texto, [rutas])` (los bloques van adelante del texto)
  *   maxTokens  por defecto 16000 (una respuesta cortada por el tope es un error, no un resultado)
  *   effort     'low'|'medium'|'high'|'xhigh'|'max' (Opus 5.5 arranca en medium: se pone explicito)
  *   cacheTtl   '5m' | '1h' | null — marca el ULTIMO bloque del system para que se reuse entre pedidos

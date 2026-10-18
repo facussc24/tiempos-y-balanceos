@@ -9,6 +9,10 @@
  * Los datos viven en la memoria `project_seguimientos_con_fecha.md` (bloque ```json), no en el
  * repo, que es publico. Este script no manda mails: dice que toca y lleva la cuenta.
  *
+ * VENCIMIENTOS (tanda 13, item 4, 17/10/2026): en el mismo bloque, la lista opcional "vencimientos" con los compromisos
+ * con fecha de Ingenieria (la D7 de un 8D, un ECR). El arranque los muestra del que vence primero; los de otra area
+ * solo salen en el listado. Se cierran con --cerrar, como un seguimiento; --anotar no va (no se insiste: vencen).
+ *
  * Uso:
  *   node scripts/_seguimientos.mjs                      lista lo abierto y que toca hoy
  *   node scripts/_seguimientos.mjs --hook               texto corto para el arranque (vacio si no hay nada)
@@ -24,7 +28,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { abiertos, estadoDe, textoHook, leerBloque, escribirBloque, anotar, cerrar, aIso, aFecha, nombreDia } from './_lib/seguimientos.mjs';
+import { abiertos, estadoDe, textoHook, leerBloque, escribirBloque, anotar, cerrar, aIso, aFecha, nombreDia, vencimientosAbiertos, estadoVencimiento, porVencimiento, AREA_PROPIA } from './_lib/seguimientos.mjs';
 
 const ARCHIVO = process.env.BARACK_SEGUIMIENTOS
   || join(homedir(), '.claude', 'projects', 'C--Dev-BarackMercosul', 'memory', 'project_seguimientos_con_fecha.md');
@@ -105,6 +109,17 @@ try {
         : `  proxima insistencia: ${nombreDia(e.proxima)} ${e.proxima}${e.escala ? ` (ya con ${e.cc.join(' y ') || 'la copia de escalamiento'} en copia)` : ''}`);
       if (s.mail) console.log(`  mail: "${s.mail.asunto}" · para ${[].concat(s.mail.para).join(', ')} · cc ${[].concat(s.mail.cc || []).join(', ')}`);
       if (s.se_cierra_cuando) console.log(`  se cierra cuando: ${s.se_cierra_cuando}`);
+    }
+    const venc = vencimientosAbiertos(datos);
+    console.log(`\nVencimientos abiertos: ${venc.length}${venc.length ? ' (los de otra area no salen en el arranque)' : ''}`);
+    const conEstado = venc.map((v) => { try { return { v, e: estadoVencimiento(v, HOY) }; } catch (err) { return { v, err }; } });
+    conEstado.sort(porVencimiento);
+    for (const { v, e, err } of conEstado) {
+      console.log(`\n${v?.id || '(sin id)'} — ${v?.que || '(sin que)'}`);
+      if (err) { rotos++; console.log(`  >> ESTA MAL ESCRITO: ${err.message}`); continue; }
+      const cuando = e.vencido ? `VENCIO el ${nombreDia(v.vence)} ${v.vence} (hace ${-e.faltan} dias)` : e.hoy ? `VENCE HOY (${v.vence})` : `vence el ${nombreDia(v.vence)} ${v.vence} (faltan ${e.faltan} dias)`;
+      console.log(`  ${cuando} · area: ${e.area}${e.propio ? '' : ` (no es de ${AREA_PROPIA}: no se le lleva a Fak)`}`);
+      if (v.fuente) console.log(`  fuente: ${v.fuente}`);
     }
     if (rotos) process.exit(1);
   }

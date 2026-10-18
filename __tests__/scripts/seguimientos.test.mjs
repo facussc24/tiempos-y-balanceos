@@ -12,7 +12,7 @@ import { mkdtempSync, writeFileSync, readFileSync, unlinkSync, rmdirSync } from 
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { estadoDe, textoHook, renglonHook, abiertos, aFecha, leerBloque, escribirBloque, anotar, cerrar, nombreDia, TOPE_HOOK } from '../../scripts/_lib/seguimientos.mjs';
+import { estadoDe, textoHook, renglonHook, abiertos, aFecha, leerBloque, escribirBloque, anotar, cerrar, nombreDia, TOPE_HOOK, porVencimiento } from '../../scripts/_lib/seguimientos.mjs';
 
 const RAIZ = resolve(fileURLToPath(import.meta.url), '../../..');
 
@@ -285,6 +285,112 @@ describe('seguimientos — el aviso no se calla (auditoria del 02/10/2026)', () 
       const conDos = readFileSync(archivo, 'utf8');
       expect(correr('--anotar', 'reunion', '--que', 'segundo pedido', '--enviado').status).toBe(1);
       expect(readFileSync(archivo, 'utf8')).toBe(conDos);
+    } finally {
+      unlinkSync(archivo);
+      rmdirSync(dir);
+    }
+  });
+});
+
+describe('vencimientos de Ingenieria (tanda 13, item 4) — el caso de la D7 del 8D 11010843', () => {
+  // La D7 de Fak («incorporar el modo de falla de recorte de vinilo» al AMFE) tenia plazo 17/09/2026 y el se entero el
+  // 21/09 (memoria project_8d_11010843_tapa_amarok). Estos son datos de prueba: la memoria real no la carga (su
+  // estado esta en duda y se mira en Supabase desde la PC principal).
+  const d7 = (extra = {}) => ({
+    id: 'd7-8d-11010843', que: 'D7 del 8D 11010843: modo de falla del recorte de vinilo en el AMFE', vence: '2026-09-17',
+    area: 'ingenieria', estado: 'abierto', fuente: '8D en KPM', ...extra,
+  });
+  const ppap = { id: 'ppap-calidad', que: 'Entrega del PPAP', vence: '2026-09-15', area: 'Calidad', estado: 'abierto' };
+  const md = (datos) => `Arriba.\n\n\`\`\`json\n${JSON.stringify(datos, null, 2)}\n\`\`\`\n`;
+
+  it('el 21/09 dice que la D7 VENCIO hace 4 dias, y el plazo de PPAP (de Calidad) no aparece', () => {
+    const t = textoHook({ seguimientos: [], vencimientos: [d7(), ppap] }, '2026-09-21');
+    expect(t).toMatch(/\[VENCIMIENTOS DE INGENIERIA/);
+    expect(t).toMatch(/d7-8d-11010843: .*VENCIO el jueves 17\/09 \(hace 4 dias\): decirselo a Fak al empezar/);
+    expect(t).not.toMatch(/ppap-calidad|PPAP/);
+    expect(t).not.toMatch(/SEGUIMIENTOS CON FECHA/); // sin seguimientos abiertos no sale ese encabezado
+  });
+
+  it('antes del plazo dice cuantos dias faltan; el mismo dia dice VENCE HOY', () => {
+    expect(textoHook({ seguimientos: [], vencimientos: [d7()] }, '2026-09-10')).toMatch(/Vence el jueves 17\/09 \(faltan 7 dias\)/);
+    expect(textoHook({ seguimientos: [], vencimientos: [d7()] }, '2026-09-16')).toMatch(/faltan 1 dia\)/);
+    expect(textoHook({ seguimientos: [], vencimientos: [d7()] }, '2026-09-17')).toMatch(/VENCE HOY/);
+  });
+
+  it('ordena del que vence primero al ultimo; uno cerrado no sale; sin nada abierto, silencio', () => {
+    const t = textoHook({ seguimientos: [], vencimientos: [d7({ id: 'tarde', vence: '2026-10-30' }), d7({ id: 'temprano', vence: '2026-10-20' }), d7({ id: 'listo', estado: 'cerrado' })] }, '2026-10-17');
+    expect(t.indexOf('temprano')).toBeGreaterThan(0);
+    expect(t.indexOf('temprano')).toBeLessThan(t.indexOf('tarde'));
+    expect(t).not.toMatch(/listo/);
+    expect(textoHook({ seguimientos: [], vencimientos: [d7({ estado: 'cerrado' })] }, '2026-10-17')).toBe('');
+    expect(textoHook({ seguimientos: [] }, '2026-10-17')).toBe(''); // memoria vieja, sin la lista: igual que antes
+  });
+
+  it('mal escrito se dice y va arriba de todo, sin callar al sano; la lista que no es lista tampoco se calla', () => {
+    const t = textoHook({ seguimientos: [], vencimientos: [d7(), { id: 'sin-fecha', que: 'algo', area: 'ingenieria' }, { id: 'sin-area', que: 'x', vence: '2026-10-20' }] }, '2026-09-21');
+    expect(t).toMatch(/sin-fecha: ESTA MAL ESCRITO/);
+    expect(t).toMatch(/sin-area: ESTA MAL ESCRITO.*de que area es/);
+    expect(t).toMatch(/d7-8d-11010843: .*VENCIO/);
+    expect(t.indexOf('sin-fecha')).toBeLessThan(t.indexOf('d7-8d-11010843'));
+    expect(textoHook({ seguimientos: [], vencimientos: 'texto' }, '2026-09-21')).toMatch(/NO SE PUDO LEER la lista/);
+  });
+
+  it('un area mal escrita o un renglon vacio se DICEN en el arranque (auditor 17/10: quedaban afuera en silencio)', () => {
+    for (const area of ['ingeneria', 'Ing.', 'ingenieria de procesos', 5]) {
+      const t = textoHook({ seguimientos: [], vencimientos: [d7({ id: 'tipeo', area })] }, '2026-09-21');
+      expect(t, String(area)).toMatch(/tipeo: ESTA MAL ESCRITO.*area que no conozco/);
+    }
+    for (const area of ['ingenieria', 'Ingeniería', ' INGENIERIA ']) {
+      expect(textoHook({ seguimientos: [], vencimientos: [d7({ area })] }, '2026-09-21'), area).toMatch(/VENCIO el jueves 17\/09/);
+    }
+    expect(textoHook({ seguimientos: [], vencimientos: [d7({ area: 'logistica' })] }, '2026-09-21')).toBe(''); // de otra area, conocida: no se lleva
+    expect(textoHook({ seguimientos: [], vencimientos: [null] }, '2026-09-21')).toMatch(/\(sin id\): ESTA MAL ESCRITO.*vencimiento vacio/);
+  });
+
+  it('dos mal escritos empatan (0, no NaN) y quedan arriba en el orden de la memoria; los sanos, del que vence primero', () => {
+    const rotoA = { id: 'rotoA', que: 'x', area: 'ingenieria' };          // sin fecha
+    const rotoB = { id: 'rotoB', que: 'y', vence: '17/09', area: 'ingenieria' };
+    const t = textoHook({ seguimientos: [], vencimientos: [d7({ id: 'tarde', vence: '2026-10-30' }), rotoA, d7({ id: 'temprano', vence: '2026-10-20' }), rotoB] }, '2026-10-17');
+    const orden = ['rotoA', 'rotoB', 'temprano', 'tarde'].map((id) => t.indexOf(`- ${id}:`));
+    expect(orden.every((p) => p > 0)).toBe(true);
+    expect([...orden].sort((a, b) => a - b)).toEqual(orden);
+    expect(porVencimiento({ e: null }, { e: null })).toBe(0);
+    expect(porVencimiento({ e: null }, { e: { faltan: -5 } })).toBe(-1);
+    expect(porVencimiento({ e: { faltan: 3 } }, { e: { faltan: -5 } })).toBe(1);
+  });
+
+  it('seguimientos y vencimientos salen juntos, cada uno con su encabezado', () => {
+    const t = textoHook({ seguimientos: [seg({ intentos: [enviado('2026-10-02')] })], vencimientos: [d7()] }, '2026-10-05');
+    expect(t).toMatch(/SEGUIMIENTOS CON FECHA[\s\S]*HOY TOCA INSISTIR[\s\S]*VENCIMIENTOS DE INGENIERIA[\s\S]*VENCIO/);
+  });
+
+  it('un vencimiento no se anota (no se insiste: vence) pero se cierra', () => {
+    const datos = { seguimientos: [seg()], vencimientos: [d7()] };
+    expect(() => anotar(datos, 'd7-8d-11010843', { fecha: '2026-09-21', que: 'x', enviado: true, hoy: '2026-09-21' })).toThrow(/es un vencimiento/);
+    cerrar(datos, 'd7-8d-11010843', { fecha: '2026-09-21', motivo: 'cargada en el AMFE' });
+    expect(datos.vencimientos[0].estado).toBe('cerrado');
+    expect(textoHook(datos, '2026-09-22')).not.toMatch(/VENCIMIENTOS/);
+  });
+
+  it('el script: --hook avisa la D7 y calla el PPAP; el listado nombra los dos y dice que el de Calidad no se lleva', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'vencimientos-'));
+    const archivo = join(dir, 'seg.md');
+    const correr = (...a) => spawnSync('node', [join(RAIZ, 'scripts/_seguimientos.mjs'), ...a], {
+      encoding: 'utf8', env: { ...process.env, BARACK_SEGUIMIENTOS: archivo, BARACK_HOY: '2026-09-21' },
+    });
+    try {
+      writeFileSync(archivo, md({ seguimientos: [], vencimientos: [d7(), ppap] }));
+      const h = correr('--hook');
+      expect(h.status).toBe(0);
+      expect(h.stdout).toMatch(/VENCIO el jueves 17\/09 \(hace 4 dias\)/);
+      expect(h.stdout).not.toMatch(/PPAP/);
+      const l = correr();
+      expect(l.status).toBe(0);
+      expect(l.stdout).toMatch(/Vencimientos abiertos: 2/);
+      expect(l.stdout).toMatch(/ppap-calidad[\s\S]*no es de ingenieria: no se le lleva a Fak/);
+      expect(correr('--anotar', 'd7-8d-11010843', '--que', 'x').status).toBe(1);
+      expect(correr('--cerrar', 'd7-8d-11010843', '--motivo', 'cargada').status).toBe(0);
+      expect(correr('--hook').stdout).toBe('');
     } finally {
       unlinkSync(archivo);
       rmdirSync(dir);
