@@ -105,7 +105,7 @@ describe('resolverCarpeta (Node) y resolver_carpeta (Python): nueva si existe, s
 });
 
 describe('cada programa, en las dos direcciones', () => {
-    it('aviso de pedidos (hook pedidos-pendientes): lee la vieja, la nueva y con las dos la nueva; nombra la carpeta donde lo encontro', () => {
+    it('aviso de pedidos (hook pedidos-pendientes): lee la vieja, la nueva y con las dos, las dos; cada aviso nombra la carpeta de su pedido', () => {
         const pedido = 'PEDIDO 90 - probar la mudanza - 17-10-2026.txt';
         const cuerpo = 'PARA: PC principal\nDE: notebook 17/10/2026 20:00\n\nQUE HACER: nada\n';
         for (const lugar of ['vieja', 'nueva', 'las2']) {
@@ -118,7 +118,9 @@ describe('cada programa, en las dos direcciones', () => {
                 env: { ...process.env, USERPROFILE: home, HOME: home, BARACK_PC: 'principal', COMPUTERNAME: 'DESKTOP-14JG95B', BARACK_FACUNDO: '' },
             });
             expect(r.stdout, lugar).toMatch(/PEDIDO 90 - probar la mudanza/);
-            expect(r.stdout, lugar).not.toMatch(/PEDIDO 91/);    // con las dos, se lee la nueva
+            // con las dos se leen las dos (una PC sin el codigo nuevo deja sus pedidos en la vieja: auditor ronda 3)
+            if (lugar === 'las2') expect(r.stdout).toContain('PEDIDO 91 - el de la vieja');
+            if (lugar === 'las2') expect(r.stdout).toContain(`Esta en la carpeta ${join(...vieja0('pedidos'))} de la nube`);
             // con el separador del sistema (en el CI de ubuntu es «/»): el aviso arma la ruta con path.relative
             expect(r.stdout, lugar).toContain(`Esta en la carpeta ${join(...(lugar === 'vieja' ? vieja0('pedidos') : nueva('pedidos')))} de la nube`);
         }
@@ -348,6 +350,10 @@ describe('_nubeMudar.mjs (sin tocar la nube)', () => {
         expect(t.slice(0, 5)).toEqual(d9.leeme);
         expect(t[t.length - 1]).toBe('nota de abajo');
         expect(escribirLeemes(c.bib, orden).find((x) => x.ruta === ruta).accion).toBe('ya estaba');
+        // un renglon agregado a mano adentro del bloque: no se borra, los cinco van arriba de todo
+        writeFileSync(ruta, [d9.leeme[0], 'agregado a mano', 'renglon viejo', ...d9.leeme.slice(2)].join('\r\n'), 'utf8');
+        expect(escribirLeemes(c.bib, orden).find((x) => x.ruta === ruta).accion).toBe('agregado arriba');
+        expect(readFileSync(ruta, 'utf8')).toContain('agregado a mano');
     });
     it('contar no cuenta los archivos de sistema de OneDrive; comparar ve tamaños distintos; el largo en SharePoint suma el prefijo', () => {
         const { bib } = casa();

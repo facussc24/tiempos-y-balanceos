@@ -112,7 +112,10 @@ export function escribirLeemes(bib, orden, unica = CANON_CARPETAS.unica, { escri
         // los cinco renglones completos, no solo el primero (revision por API, 18/10): si estan iguales, nada; si arranca con
         // el mismo primer renglon pero los otros cambiaron en el canon, se cambian esos cinco y lo de abajo queda igual
         if (renglones.every((l, i) => sus[i] === l)) { out.push({ ruta, accion: 'ya estaba' }); continue; }
-        if (sus[0] === renglones[0]) {
+        // solo si arriba hay un bloque de exactamente esos renglones (y despues una linea en blanco o el final): un renglon
+        // agregado a mano debajo del primero no se borra; en ese caso se agregan arriba (auditor ronda 3, 18/10)
+        const bloque = sus.indexOf('') === -1 ? sus.length : sus.indexOf('');
+        if (sus[0] === renglones[0] && bloque === renglones.length) {
             if (escribir) writeFileSync(ruta, [...renglones, ...sus.slice(renglones.length)].join('\r\n'), 'utf8');
             out.push({ ruta, accion: 'actualizado' });
             continue;
