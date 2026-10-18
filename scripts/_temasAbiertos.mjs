@@ -16,6 +16,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { abiertos, aIso, estadoDe, leerBloque } from './_lib/seguimientos.mjs';
+import { cargarTema, colorCss } from './_lib/temaCasa.mjs';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MEMORIA = process.env.BARACK_MEMORIA || path.join(os.homedir(), '.claude', 'projects', 'C--Dev-BarackMercosul', 'memory');
@@ -116,12 +117,12 @@ export function seguimientosAbiertos(dir, hoy) {
   } catch (err) { return [{ id: '(no se pudo leer)', que: err.message, detalle: '', cierra: '' }]; }
 }
 
-const COLOR = { urgente: '#C00000', 'en curso': '#BF8F00', 'en espera': '#7F6000', abierto: '#44546A', hecho: '#548235', cerrado: '#7F7F7F', apagado: '#7F7F7F' };
+const COLOR = { urgente: '#C00000', 'en curso': '#BF8F00', 'en espera': '#7F6000', abierto: colorCss('cabecera'), hecho: '#548235', cerrado: '#7F7F7F', apagado: '#7F7F7F' };
 
 export function armarHtml({ filas, seguimientos, hoy, logo }) {
   const fila = (f) => `<tr class="${f.estado === 'cerrado' || f.estado === 'apagado' ? 'gris' : ''}">
   <td><b>${esc(f.tema)}</b>${f.alias.length ? `<div class="alias">Fak lo llama: ${esc(f.alias.slice(0, 6).join(', '))}</div>` : ''}<div class="desc">${esc(f.descripcion)}</div></td>
-  <td><span class="estado" style="background:${COLOR[f.estado] ?? '#44546A'}">${esc(f.estado)}</span></td>
+  <td><span class="estado" style="background:${COLOR[f.estado] ?? COLOR.abierto}">${esc(f.estado)}</span></td>
   <td class="fecha">${esc(f.fecha)}${f.fechaDeArchivo ? '<div class="nota">fecha del archivo</div>' : ''}</td>
   <td>${f.pendientes.length ? `<ul>${f.pendientes.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>` : '<span class="nota">la memoria no dice que falte algo</span>'}</td>
   <td class="archivo">${esc(f.archivo)}</td></tr>`;
@@ -133,7 +134,7 @@ export function armarHtml({ filas, seguimientos, hoy, logo }) {
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Temas abiertos</title>
 <style>
-:root{--azul:#44546A}
+:root{--azul:${COLOR.abierto}}
 body{font-family:Calibri,Carlito,Arial,sans-serif;color:#222;background:#fff;margin:0;padding:16px 24px}
 header{display:flex;align-items:center;gap:16px;border-bottom:3px solid var(--azul);padding-bottom:8px;margin-bottom:12px}
 header img{height:44px}
@@ -162,8 +163,8 @@ ${filas.map(fila).join('\n')}
 export function generar({ memoria = MEMORIA, hoy = process.env.BARACK_HOY || aIso(new Date()), out = path.join(REPO, 'exports', 'explicaciones', 'temas_abiertos.html') } = {}) {
   let canon = null;
   try { canon = JSON.parse(fs.readFileSync(path.join(REPO, 'scripts', '_lib', 'temasCanon.data.json'), 'utf8')); } catch { /* sin alias */ }
-  const logoRuta = path.join(REPO, 'tools', 'flowchart', 'assets', 'barack_logo.png');
-  const logo = fs.existsSync(logoRuta) ? `data:image/png;base64,${fs.readFileSync(logoRuta).toString('base64')}` : null;
+  // el logo sale del tema, que lo verifica por sha256 contra el oficial (tanda 16): si no es el oficial, no hay pagina
+  const logo = `data:image/png;base64,${fs.readFileSync(cargarTema().logo.ruta).toString('base64')}`;
   const filas = temasDeMemoria(memoria, aliasDelCanon(canon));
   const html = armarHtml({ filas, seguimientos: seguimientosAbiertos(memoria, hoy), hoy, logo });
   fs.mkdirSync(path.dirname(out), { recursive: true });

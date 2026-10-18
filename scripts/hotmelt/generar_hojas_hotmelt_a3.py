@@ -48,7 +48,9 @@ from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls
 
 # ─── PALETA CORPORATIVA SGC (GAMBOA / BARACK) ─────────────────────────────────
-AZUL                = RGBColor(0x44, 0x54, 0x6A)  # Azul pizarra oscuro cabeceras (#44546A)
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "_lib"))
+import temaCasa  # noqa: E402  el azul de cabecera sale del tema de la casa (scripts/_lib/tema.json, tanda 16)
+AZUL                = RGBColor.from_string(temaCasa.color("cabecera"))  # Azul pizarra oscuro cabeceras (#44546A)
 AZUL2               = RGBColor(0x44, 0x72, 0xC4)  # Azul acento seguridad (#4472C4)
 AZUL_TEXTO          = RGBColor(0x1F, 0x49, 0x7D)  # Azul énfasis (#1F497D)
 BLANCO              = RGBColor(0xFF, 0xFF, 0xFF)
