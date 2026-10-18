@@ -36,7 +36,9 @@ import matriz_datos as MD  # noqa: E402
 from criterio_hilo import es_hilo  # noqa: E402
 
 AR = MD.AR
-AZUL = '1F3A5F'
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "_lib"))
+import temaCasa  # noqa: E402  el azul de la casa (scripts/_lib/tema.json): lo eligio el dueño, Fak 18/10/2026
+AZUL = temaCasa.color("acento")  # el azul de la casa (antes 1F3A5F, sin papel)
 GRIS = 'F2F2F2'
 BORDE = Border(*(Side(style='thin', color='999999'),) * 4)
 

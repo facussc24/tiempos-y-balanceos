@@ -31,7 +31,7 @@ cosas, simplemente debés saber hacerlas"*. **El diseño no se pregunta: se deci
 4. Máximo 3 componentes y unos 12 pasos por hoja. Con más, dos láminas (componentes / armado).
 5. Una tarjeta = número, título, foto de la máquina o el puesto, la pieza que sale, y el dato.
    Nada de párrafos. El dato de costos ("USO POR PIEZA") va en una tira al pie de la tarjeta.
-6. Colores de Barack (azul `004E98`, sin papel: queda hasta que Fak elija el azul del tema), fondo claro, fotos
+6. Colores de Barack (el azul de la casa, `#44546A`, que eligió el dueño: lo lee del tema desde el 18/10), fondo claro, fotos
    grandes. Sin marcas de IA, sin notas explicativas, sin metadatos de python-pptx (el armado ya pone autor y título).
    **El logo es el oficial y sale del tema** (`temaCasa.logo()`, verificado por sha256; 18/10/2026: el PNG que estaba
    al lado del generador no era el oficial y quedó sin uso).

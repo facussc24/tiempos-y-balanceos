@@ -89,6 +89,16 @@ describe('tema de la casa', () => {
     expect(hashes.some((h) => h.startsWith('deef25cd'))).toBe(false);
   });
 
+  it('el azul de la casa lo eligio el dueño (18/10) y los generadores que tenian otro azul lo leen del tema', () => {
+    expect(TEMA.colores.acento.valor).toBe('44546A');
+    expect(TEMA.colores.acento.estado).toMatch(/ELEGIDO/);
+    for (const p of ['scripts/lamina_proceso/motor.py', '.claude/skills/superficie-vinilo-3d/scripts/svlib_lamina.py', 'scripts/hilos/matriz_hilos.py', 'scripts/hilos/plan_medicion_hilos.py']) {
+      const t = readFileSync(join(RAIZ, p), 'utf8');
+      expect(t, p).toMatch(/temaCasa\.color\("acento"\)/);
+      expect(t, p).not.toMatch(/AZUL\w* = "004E98"|AZUL_B = RGBColor\(0x1B, 0x4F, 0x8F\)|AZUL\w* = '1F3A5F'|AZUL = RGBColor\(0x1F, 0x3A, 0x5F\)/);
+    }
+  });
+
   const MIGRADOS = ['scripts/img/generar_hojas_img.py', 'scripts/hotmelt/generar_hojas_hotmelt.py', 'scripts/hotmelt/generar_hojas_hotmelt_a3.py', 'scripts/hotmelt/hoja_pptx.py', 'scripts/novax/generar_hojas_insert.py'];
 
   it('los generadores migrados ya no escriben el azul a mano y lo piden al tema', () => {

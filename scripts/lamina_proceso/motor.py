@@ -31,7 +31,9 @@ DATOS = os.path.abspath(sys.argv[2]) if len(sys.argv) > 2 else os.getcwd()
 FOTOS = json.load(open(os.path.join(DATOS, "fotos.json"), encoding="utf-8"))
 
 # ---------------------------------------------------------------- paleta
-AZUL = "004E98"       # azul del logo de Barack
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "_lib"))
+import temaCasa  # noqa: E402  el azul de la casa (scripts/_lib/tema.json): lo eligio el dueño, Fak 18/10/2026
+AZUL = temaCasa.color("acento")  # el azul de la casa (antes 004E98, sin papel)
 AZUL_OSC = "0B2545"
 AZUL_CLARO = "E6EEF7"
 GRIS_TXT = "5A6672"

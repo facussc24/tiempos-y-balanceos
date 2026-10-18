@@ -24,13 +24,13 @@
     },
     "acento": {
       "valor": "44546A",
-      "estado": "PROPUESTO: lo elige Fak. Es el unico azul con papel; mientras no elija, los generadores con otro azul NO se cambian (decidir por el no es mio).",
-      "en_uso_sin_papel": {
-        "004E98": "scripts/lamina_proceso/motor.py (lamina de proceso, «azul del logo»)",
-        "1B4F8F": ".claude/skills/superficie-vinilo-3d/scripts/svlib_lamina.py (PowerPoint de superficie de vinilo, «azul Barack»)",
-        "1F3A5F": "scripts/hilos/matriz_hilos.py y scripts/hilos/plan_medicion_hilos.py (Excel y PowerPoint de hilos)",
-        "1A5FA8": "el zip Sistema_Procesos_Barack_v1.0.zip de FORMATOS GENERAL (de la nube, no se toca)"
-      }
+      "estado": "ELEGIDO: lo eligio el dueño; Fak lo confirmo el 18/10/2026 («ese azul lo elegio el dueño lo tenia anotado en un lguar»).",
+      "pasaron_a_este_azul_el_18_10": {
+        "004E98": "scripts/lamina_proceso/motor.py (lamina de proceso)",
+        "1B4F8F": ".claude/skills/superficie-vinilo-3d/scripts/svlib_lamina.py (PowerPoint de superficie de vinilo, titulos)",
+        "1F3A5F": "scripts/hilos/matriz_hilos.py y scripts/hilos/plan_medicion_hilos.py (Excel y PowerPoint de hilos)"
+      },
+      "fuera_del_repo": "el zip Sistema_Procesos_Barack_v1.0.zip de FORMATOS GENERAL trae 1A5FA8 y su propio logo: es de la nube, no se toca"
     },
     "fondo": { "valor": "FFFFFF" },
     "texto": { "valor": "000000" },

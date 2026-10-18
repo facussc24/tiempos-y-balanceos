@@ -132,7 +132,9 @@ def hilos_del_modelo(base, m):
 
 # ---------------------------------------------------------------------------- planilla
 
-AZUL_XL = '1F3A5F'
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "_lib"))
+import temaCasa  # noqa: E402  el azul de la casa (scripts/_lib/tema.json): lo eligio el dueño, Fak 18/10/2026
+AZUL_XL = temaCasa.color("acento")  # el azul de la casa (antes 1F3A5F, sin papel)
 BORDE = Border(*(Side(style='thin', color='999999'),) * 4)
 
 
@@ -243,7 +245,7 @@ def planilla(base, modelos, salida):
 
 # ---------------------------------------------------------------------------- PowerPoint
 
-AZUL = RGBColor(0x1F, 0x3A, 0x5F)
+AZUL = RGBColor.from_string(temaCasa.color("acento"))  # el azul de la casa (antes 1F3A5F)
 GRIS_TXT = RGBColor(0x59, 0x59, 0x59)
 NEGRO = RGBColor(0x22, 0x22, 0x22)
 BLANCO = RGBColor(0xFF, 0xFF, 0xFF)

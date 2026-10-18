@@ -27,7 +27,10 @@ from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Emu, Inches, Pt
 
-AZUL_B = RGBColor(0x1B, 0x4F, 0x8F)       # azul Barack (titulos)
+import sys  # noqa: E402
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..", "scripts", "_lib"))
+import temaCasa  # noqa: E402  el azul de la casa (scripts/_lib/tema.json): lo eligio el dueño, Fak 18/10/2026
+AZUL_B = RGBColor.from_string(temaCasa.color("acento"))  # el azul de la casa (titulos; antes 1B4F8F, sin papel)
 AZUL = RGBColor(0x2A, 0x7F, 0xD4)         # lo que se ve
 NARANJA = RGBColor(0xFF, 0x8C, 0x1A)      # el borde que se dobla
 OSC = RGBColor(0x2B, 0x2B, 0x2B)

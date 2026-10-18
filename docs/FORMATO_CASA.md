@@ -103,9 +103,9 @@ las skills oficiales `pptx`, `xlsx`, `docx` y `pdf` no se copian (su licencia lo
   impreso queda en unos 127 dpi.
 - **Letra**: Calibri. **Colores**: fondo blanco, texto negro, cabecera de tabla `#44546A` con letra blanca (fijo: tiene
   papel), gris `9AA3AD`, relleno `F3F4F6`, rojo `C00000` solo para marcar el renglón que importa.
-- **El azul de acento lo elige Fak.** Propuesto `#44546A`, el único con papel. Hoy hay otros azules sin papel en tres
-  generadores (`004E98` la lámina de proceso, `1B4F8F` la superficie de vinilo, `1F3A5F` los de hilos) y uno en el
-  zip `Sistema_Procesos_Barack_v1.0.zip` de la nube (`1A5FA8`). No se cambian hasta que Fak elija.
+- **El azul de la casa es `#44546A` y lo eligió el dueño** (Fak lo confirmó el 18/10/2026). Ese día pasaron a ese azul los
+  tres generadores que tenían otro sin papel (`004E98` la lámina de proceso, `1B4F8F` la superficie de vinilo, `1F3A5F`
+  los de hilos). El zip `Sistema_Procesos_Barack_v1.0.zip` de la nube trae `1A5FA8`: es de la nube y no se toca.
 - **Quién lo lee hoy**: los seis generadores de hoja de proceso y la página de temas abiertos, que ya usaban `#44546A`
   (salida idéntica, probado en `__tests__/scripts/temaCasa.test.mjs`), la lámina del Insert (el logo), el programita
   (logo, letra y colores) y las plantillas de abajo. La letra de los generadores de hoja de proceso sigue escrita en
