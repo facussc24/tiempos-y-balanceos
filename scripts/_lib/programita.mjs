@@ -14,6 +14,7 @@
  * Colores: verde = anda · ambar = ojo, no es una rotura · rojo = roto o atrasado · gris = sin dato o no aplica.
  */
 import { leerNoche } from '../../mods/tablero/hooks/estado.mjs';
+import { colorCss, letraCss } from './temaCasa.mjs';
 
 const dos = (n) => String(n).padStart(2, '0');
 const DIAS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
@@ -272,19 +273,21 @@ export function html(e) {
   const rojos = [...e.tareas, ...e.sesiones, ...e.selftests, n, imp].filter((x) => x && x.color === 'rojo').length;
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="refresh" content="${e.refresco}"><title>Barack · tareas en segundo plano</title><style>
-:root{--fondo:#eceff1;--hoja:#fff;--texto:#111827;--suave:#4b5563;--borde:#d0d5da;--verde:#1a7f37;--ambar:#9a6700;--rojo:#cf222e;--gris:#6b7280}
-body{margin:0;background:var(--fondo);color:var(--texto);font-family:"Segoe UI",system-ui,sans-serif;font-size:15px;line-height:1.45}
-header{display:flex;align-items:center;gap:16px;background:var(--hoja);border-bottom:1px solid var(--borde);padding:10px 16px}
-header img{height:42px}header h1{font-size:19px;margin:0}header .cu{margin-left:auto;text-align:right}
+/* tema de la casa (scripts/_lib/tema.json, tanda 16): «mucho más 2D y mucho más serio» (Fak, 13/10) — plano, sin esquinas
+   redondeadas ni sombras, la letra y los colores de Barack, el logo oficial arriba a la izquierda */
+:root{--fondo:${colorCss('relleno')};--hoja:${colorCss('fondo')};--texto:${colorCss('texto')};--suave:#4b5563;--borde:${colorCss('gris')};--acento:${colorCss('acento')};--verde:#1a7f37;--ambar:#9a6700;--rojo:${colorCss('rojo_marca')};--gris:#6b7280}
+body{margin:0;background:var(--fondo);color:var(--texto);font-family:${letraCss()};font-size:15px;line-height:1.45}
+header{display:flex;align-items:center;gap:16px;background:var(--hoja);border-bottom:3px solid var(--acento);padding:10px 16px}
+header img{height:42px}header h1{font-size:19px;margin:0;color:var(--acento)}header .cu{margin-left:auto;text-align:right}
 main{max-width:1180px;margin:0 auto;padding:14px 16px 30px}
-section{background:var(--hoja);border:1px solid var(--borde);border-radius:8px;padding:12px 14px;margin-bottom:14px}
-h2{font-size:16px;margin:0 0 8px}table{width:100%;border-collapse:collapse}td,th{text-align:left;vertical-align:top;padding:6px 8px;border-top:1px solid var(--borde)}
+section{background:var(--hoja);border:1px solid var(--borde);padding:12px 14px;margin-bottom:14px}
+h2{font-size:16px;margin:0 0 8px;color:var(--acento)}table{width:100%;border-collapse:collapse}td,th{text-align:left;vertical-align:top;padding:6px 8px;border-top:1px solid var(--borde)}
 th{font-size:12px;color:var(--suave);font-weight:600;border-top:0}
 .cu{color:var(--suave);font-size:12.5px}.det{color:var(--suave);font-size:13px}.rojo-t{color:var(--rojo)}
 .est{font-weight:600;white-space:nowrap}.est i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;vertical-align:-1px}
 .verde{color:var(--verde)}.verde i{background:var(--verde)}.ambar{color:var(--ambar)}.ambar i{background:var(--ambar)}
 .rojo{color:var(--rojo)}.rojo i{background:var(--rojo)}.gris{color:var(--gris)}.gris i{background:var(--gris)}
-.imp{display:flex;gap:14px;flex-wrap:wrap}.imp img{max-width:360px;width:100%;border-radius:6px;border:1px solid var(--borde)}
+.imp{display:flex;gap:14px;flex-wrap:wrap}.imp img{max-width:360px;width:100%;border:1px solid var(--borde)}
 .resumen{font-size:15px;margin:0 0 12px}
 @media (max-width:640px){td,th{padding:5px 4px}header h1{font-size:16px}}
 </style></head><body>

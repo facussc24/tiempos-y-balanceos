@@ -37,6 +37,7 @@ import {
   armarTarea, estadoSesion, html, leerArb, leerEstadoNube, leerMails, leerNocheTarea, leerNube, leerResultado,
   leerSeguimiento, leerSelftest, leerWindows,
 } from './_lib/programita.mjs';
+import { cargarTema, sha256 } from './_lib/temaCasa.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const CANON = JSON.parse(fs.readFileSync(path.join(AQUI, '_lib', 'programita.data.json'), 'utf8'));
@@ -166,8 +167,11 @@ export function generar(op) {
   const ahora = Date.now();
   const { repo, salida } = op;
   fs.mkdirSync(salida, { recursive: true });
+  // el logo sale del tema (verificado por sha256 contra el oficial); la copia de la pagina se compara en cada vuelta y
+  // se repone si alguien la cambio (tanda 16: antes solo se copiaba si faltaba)
   const logo = path.join(salida, 'logo.png');
-  if (!fs.existsSync(logo)) fs.copyFileSync(path.join(AQUI, '..', 'tools', 'flowchart', 'assets', 'barack_logo.png'), logo);
+  const oficial = cargarTema();
+  if (!fs.existsSync(logo) || sha256(logo) !== oficial.logo.sha256) fs.copyFileSync(oficial.logo.ruta, logo);
   const archivoMedido = path.join(salida, 'medido.json');
   let medido = {};
   try { medido = JSON.parse(fs.readFileSync(archivoMedido, 'utf8')); } catch { medido = {}; }
