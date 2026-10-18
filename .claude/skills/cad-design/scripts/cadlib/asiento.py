@@ -171,22 +171,46 @@ def adentro_del_poligono(puntos, poligono_xy):
 # =====================================================================================
 # 1. inventario de apoyos (pose de DISEÑO)
 # =====================================================================================
-def inventario(H, T, gr, delta=0.10, metido=-0.02):
-    """Superficies de la pieza que tocan el panel en la pose de DISEÑO (como se modeló, sin moverla).
+def inventario(H, T, gr, delta=0.10, metido=-0.02, largo_frac=0.25):
+    """Superficies de la pieza que tocan el panel en la pose de DISEÑO (como se modeló, sin moverla), y qué movimientos
+    controla cada una.
 
     En la pose de reposo un programa lineal deja casi siempre tres contactos activos: ahí todo parece isostático y el
-    control es ciego. Por eso se cuenta en la pose de diseño: toda zona de la pieza a `delta` o menos del panel es un
-    apoyo rígido (delta = holgura de diseño 0,05 + 0,05). Una zona con luz NEGATIVA está metida en el blando: la pieza
-    no puede asentar como se diseñó (la firma de los pasadores de la v14)."""
+    control es ciego. Por eso se cuenta en la pose de diseño.
+    - Es apoyo toda zona a `delta` o menos (0,10 = holgura de diseño 0,05 + 0,05) de la LUZ BASE: la más chica de las
+      zonas que no están metidas (auditor del 17/10, I1: con una luz absoluta, una pieza diseñada 0,11 mm más lejos daba
+      «0 apoyos» y VERDE). Una zona con luz NEGATIVA está metida en el blando y se cuenta siempre: la pieza no puede
+      asentar como se diseñó (la firma de los pasadores de la v14).
+    - Cada zona controla Z; si su huella es larga en x (al menos `largo_frac` del largo de la pieza) controla además el
+      giro alrededor de y, y si es larga en y, el giro alrededor de x (auditor, I2: dos rieles o una placa entera
+      contaban como uno o dos apoyos y daban VERDE). `restricciones` es la suma: Z y los dos giros necesitan tres.
+      El 0,25 se fijó contra los casos el 17/10: deja la v14 en 7, la v15 en 4 y la v16 en 4, y da ROJO a dos rieles,
+      a una placa entera y a cuatro apoyos unidos por un nervio.
+    Devuelve (apoyos, luz, info)."""
     from scipy import ndimage
     gap = H - T
-    m = np.isfinite(gap) & (gap <= delta)
+    ok = np.isfinite(gap)
+    info = {"puntos_pieza": int(np.isfinite(T).sum()), "puntos_con_panel": int(ok.sum())}
+    info["pct_pieza_con_panel"] = round(100.0 * info["puntos_con_panel"] / max(1, info["puntos_pieza"]), 1)
+    no_met = ok & (gap >= metido)
+    base = float(np.min(gap[no_met])) if no_met.any() else 0.0
+    corte = max(base, 0.0) + delta
+    info.update(luz_base_mm=round(base, 3), corte_mm=round(corte, 3))
+    m = ok & ((gap <= corte) | (gap < metido))
     lab, n = ndimage.label(m.reshape(gr.shape), structure=np.ones((3, 3)))
     lab = lab.ravel()
+    pie = gr.XY[np.isfinite(T)]
+    Lx = float(np.ptp(pie[:, 0])) if len(pie) else 0.0
+    Ly = float(np.ptp(pie[:, 1])) if len(pie) else 0.0
+    info.update(largo_pieza_x=round(Lx, 1), largo_pieza_y=round(Ly, 1))
     apoyos = []
     for i in range(1, n + 1):
         idx = np.where(lab == i)[0]
         xy = gr.XY[idx]
+        ex, ey = float(np.ptp(xy[:, 0])), float(np.ptp(xy[:, 1]))
+        largo_x = Lx > 0 and ex >= largo_frac * Lx
+        largo_y = Ly > 0 and ey >= largo_frac * Ly
+        controla = ["Z"] + (["giro en y"] if largo_x else []) + (["giro en x"] if largo_y else [])
         apoyos.append({
             "celdas": int(len(idx)),
             "x": [round(float(xy[:, 0].min()), 1), round(float(xy[:, 0].max()), 1)],
@@ -194,8 +218,10 @@ def inventario(H, T, gr, delta=0.10, metido=-0.02):
             "centro": [round(float(xy[:, 0].mean()), 2), round(float(xy[:, 1].mean()), 2)],
             "luz_min_mm": round(float(np.nanmin(gap[idx])), 3),
             "metido": bool(np.nanmin(gap[idx]) < metido),
+            "controla": controla,
+            "restricciones": len(controla),
             "_idx": idx})
-    return apoyos, gap
+    return apoyos, gap, info
 
 
 def superficies(apoyos, H, gr, tol_mm=0.05):
@@ -227,10 +253,10 @@ def superficies(apoyos, H, gr, tol_mm=0.05):
     return {"superficies": len(grupos), "dispersion_mm": round(float(np.max(np.abs(A @ c - hz))), 3)}
 
 
-def no_vistos_por_la_simulacion(apoyos_fino, grf, gap_grueso, gr, delta=0.10):
-    """Apoyos de la grilla fina que NINGÚN punto de la grilla de la simulación toca (a `delta` o menos): elementos más
-    angostos que el paso, que la simulación no puede ver. Devuelve sus índices en `apoyos_fino`."""
-    toca = np.isfinite(gap_grueso) & (gap_grueso <= delta)
+def no_vistos_por_la_simulacion(apoyos_fino, grf, gap_grueso, gr, corte=0.10):
+    """Apoyos de la grilla fina que NINGÚN punto de la grilla de la simulación toca (con el mismo corte del inventario):
+    elementos más angostos que el paso, que la simulación no puede ver. Devuelve sus índices en `apoyos_fino`."""
+    toca = np.isfinite(gap_grueso) & (gap_grueso <= corte)
     pts = gr.XY[toca]
     fuera = []
     for j, a in enumerate(apoyos_fino):
@@ -397,12 +423,33 @@ def simular(Hs, Ht, T, gr, escena, zp, tap, abiertas, mano, n, semilla, gemelo=F
 
 
 def _firma_de_archivos():
+    """El código que hace las cuentas y decide (este archivo, gate_asiento.py y eval_casos_3d.py) y los UMBRALES de
+    data/casos_3d.json (auditor del 17/10, I5: cambiar un umbral o el veredicto de apoyos no invalidaba la calibración)."""
     h = hashlib.sha1()
-    for p in (os.path.abspath(__file__), os.path.join(AQUI, "..", "gate_asiento.py")):
+    for p in (os.path.abspath(__file__), os.path.join(AQUI, "..", "gate_asiento.py"),
+              os.path.join(AQUI, "..", "eval_casos_3d.py")):
         if os.path.isfile(p):
             with open(p, "rb") as f:
                 h.update(f.read().replace(b"\r\n", b"\n"))
+    c3 = os.path.join(AQUI, "..", "..", "data", "casos_3d.json")
+    if os.path.isfile(c3):
+        with open(c3, encoding="utf-8") as f:
+            h.update(json.dumps(json.load(f).get("umbrales"), sort_keys=True).encode("utf-8"))
     return h.hexdigest()[:16]
+
+
+def _sin_notas(x):
+    if isinstance(x, dict):
+        return {k: _sin_notas(v) for k, v in x.items() if not k.startswith("_")}
+    if isinstance(x, list):
+        return [_sin_notas(v) for v in x]
+    return x
+
+
+def firma_escena(escena):
+    """Lo que entra a las cuentas de una escena (sin las notas que empiezan con «_»): grilla, zonas, mano, sorteos,
+    piezas. Si cambia un número de la escena calibrada, la calibración deja de valer para ella."""
+    return hashlib.sha1(json.dumps(_sin_notas(escena), sort_keys=True).encode("utf-8")).hexdigest()[:16]
 
 
 _FIRMA_AL_CARGAR = _firma_de_archivos()

@@ -18,18 +18,63 @@ CLAVES = ("FILE_DESCRIPTION", "FILE_NAME", "FILE_SCHEMA")
 _SOLO_NUBE = 0x400000 | 0x1000          # FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS | FILE_ATTRIBUTE_OFFLINE
 
 
-def cabecera_en_orden(texto):
-    """(texto_corregido, orden_que_tenia). Frena (ValueError) si falta alguna de las tres."""
-    i, j = texto.index("HEADER;") + len("HEADER;"), texto.index("ENDSEC;")
-    cab = texto[i:j]
-    partes = {}
+def _fin_de_entidad(cab, ini):
+    """Índice justo después del «;» que cierra la entidad que arranca en `ini`, respetando los textos entre comillas
+    simples (en STEP una comilla adentro de un texto se escribe '') y los paréntesis. None si no cierra."""
+    prof, i, n = 0, ini, len(cab)
+    while i < n:
+        ch = cab[i]
+        if ch == "'":
+            i += 1
+            while i < n:
+                if cab[i] == "'":
+                    if i + 1 < n and cab[i + 1] == "'":
+                        i += 2
+                        continue
+                    break
+                i += 1
+        elif ch == "(":
+            prof += 1
+        elif ch == ")":
+            prof -= 1
+        elif ch == ";" and prof == 0:
+            return i + 1
+        i += 1
+    return None
+
+
+def _tramos(cab):
+    """{clave: (inicio, fin)} de cada una de las tres entidades dentro de la cabecera. Frena si falta alguna."""
+    tr = {}
     for k in CLAVES:
-        m = re.search(k + r"\s*\(.*?\)\s*;", cab, re.S)
+        m = re.search(r"(?<![A-Z_])" + k + r"\s*\(", cab)
         if not m:
             raise ValueError("la cabecera no trae %s" % k)
-        partes[k] = m.group(0)
-    orden = sorted(CLAVES, key=lambda k: cab.index(partes[k]))
-    nueva = "\n" + "\n".join(partes[k] for k in CLAVES) + "\n"
+        fin = _fin_de_entidad(cab, m.start())
+        if fin is None:
+            raise ValueError("la entidad %s de la cabecera no cierra" % k)
+        tr[k] = (m.start(), fin)
+    return tr
+
+
+def cabecera_en_orden(texto):
+    """(texto_corregido, orden_que_tenia). Intercambia las tres entidades EN SU LUGAR: lo demás de la cabecera
+    (comentarios, FILE_POPULATION, finales de línea) queda como estaba (auditor del 17/10, N2: la versión anterior
+    reescribía la cabecera entera y un «);» adentro de un texto la cortaba). Frena (ValueError) si falta alguna."""
+    i, j = texto.index("HEADER;") + len("HEADER;"), texto.index("ENDSEC;")
+    cab = texto[i:j]
+    tr = _tramos(cab)
+    orden = sorted(CLAVES, key=lambda k: tr[k][0])
+    huecos = [tr[k] for k in orden]                     # las tres posiciones, de arriba hacia abajo
+    nueva, ultimo = [], 0
+    for (a, b), k in zip(huecos, CLAVES):                # en la primera posición va FILE_DESCRIPTION, etc.
+        nueva.append(cab[ultimo:a])
+        nueva.append(cab[tr[k][0]:tr[k][1]])
+        ultimo = b
+    nueva.append(cab[ultimo:])
+    nueva = "".join(nueva)
+    if sorted(cab[a:b] for a, b in tr.values()) != sorted(nueva[a:b] for a, b in _tramos(nueva).values()):
+        raise ValueError("al reordenar cambio el texto de una entidad de la cabecera")
     return texto[:i] + nueva + texto[j:], orden
 
 
@@ -49,13 +94,11 @@ def orden_de_archivo(path, leer=20000):
     if "HEADER;" not in t or "ENDSEC;" not in t:
         return None
     cab = t[t.index("HEADER;"):t.index("ENDSEC;")]
-    pos = []
-    for k in CLAVES:
-        m = re.search(k + r"\s*\(", cab)
-        if not m:
-            return None
-        pos.append((m.start(), k))
-    return tuple(k for _, k in sorted(pos))
+    try:
+        tr = _tramos(cab)
+    except ValueError:
+        return None
+    return tuple(sorted(CLAVES, key=lambda k: tr[k][0]))
 
 
 def arreglar_archivo(path):

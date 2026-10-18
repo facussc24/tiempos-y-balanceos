@@ -90,7 +90,7 @@ Hija Opus 5.5, encargo `E261017-91f6`, rama `claude/gate-asiento-tanda2`, sin pu
 |---|---|---|---|---|---|
 | Apoyos (pose de diseño) | **ROJO**: 7 (4 bloques + 3 pasadores metidos 3,75 mm en el tapizado tapado) = los 7 que declara `casos_3d.json` | **ROJO**: 4 bloques | **ROJO por la letra**: 4; renglón 4-2-1 VERDE (una superficie, dispersión 0,000) | el gate NO CORRE y lo dice | **VERDE** (3) |
 | Ventana banda / punta (mín. 1,0 / 0,6) | **ROJO** 0,23 / 0,24 (publicado 0,20 / 0,24) | VERDE 1,21 / 0,75 (publicado 1,19 / 0,75) | VERDE 1,21 / 0,75 | — | — |
-| Asiento (% que se hamaca > 0,3 mm) | **100** tapados, **68** abiertos | **28**; en la punta **1,69 mm** | 0, máxima 0,16; punta NO APLICA (cae adentro de los apoyos) | — | 0 |
+| Asiento (% que se hamaca > 0,3 mm) | **100** tapados, **68** abiertos | **28**; en la punta **1,69 mm** | 0, máxima 0,16; punta NO APLICA (cae adentro de los apoyos): AVISO desde la ronda 1 | — | 0 |
 | Gemelo, espesor desparejo (50 casos) | — | 66 %, máx. 1,31 (= tanda 11) | 8 %, máx. 0,54 (= tanda 11) | — | — |
 
 Tolerancias, fijadas antes de medir: simulación exacta (0 % y 0,01 mm, las de `casos_3d.json`); ventana 0,05 mm.
@@ -121,6 +121,34 @@ Tolerancias, fijadas antes de medir: simulación exacta (0 % y 0,01 mm, las de `
 | Cabecera STEP | `export_deliverables.py` la arregla en la copia que entrega y la vuelve a leer; G-E6 avisa; `cabecera_step.py revisar` para lo ya entregado. En la nube (`5. 3D`): 63 STEP, 4 en la PC y en orden, **59 solo en la nube sin abrir** (abrirlos los descarga) | `cadlib/step_cabecera.py`, `cabecera_step.py`, `test_step_cabecera.py` |
 | Criterios de aceptación | G-E7: `<workdir>/criterio_aceptacion.json` (qué se mide, con qué, con qué valor se acepta), aviso la primera semana | `gate_entregable.py`, `test_gate_entregable_tanda2.py` |
 | Skill de la impresora con lo de Leo | Las dos observaciones de Leo (tuerca ≥ diámetro; más alta, más agarre) van a la ficha y al freno de `make_screw_nut.py`; la orientación ya no queda «pendiente»; enlaza la ficha FDM, el GATE A y el criterio. No hay otro mail ni audio de Leo en la carpeta del viernes: solo las dos notas de Fak | `impresion-3d-bambu/SKILL.md` |
+
+### Ronda 1 del auditor Opus (18/10, madrugada): 8 importantes, todos arreglados
+
+Informe y respuestas: `docs/auditorias/TANDA2_GATE_ASIENTO_auditor_2026-10-17.md`. Lo que cambió en el gate:
+- **Inventario** (I1, I2): el corte es la luz más chica + 0,10 (no 0,10 fijo: una pieza 0,11 mm más lejos daba
+  «0 apoyos» VERDE); cada zona dice qué controla (Z, y un giro si es larga); menos de tres restricciones, una superficie
+  grande o una zona metida dan ROJO; sin panel enfrente, SIN DATO. v14 7, v15 4, v16 4, iguales alejadas 0,10 mm.
+- **Activación** (I3): si el pliego, la escena o `--etiqueta` no coinciden, código 2; G-E5 avisa la omisión.
+- **G-E5** (I4) coteja la firma de la pieza; **candado** (I5) firma también umbrales, escena y panel; **peor variante**
+  (I6) por veredicto; **punta** (I7) se simula siempre y un NO APLICA deja el asiento en **AVISO**: la v16 pasa de
+  «asiento VERDE» a «asiento AVISO» (la punta la decide la prueba física). Recalibrado: reproduce exacto.
+- Detalles: el criterio de aceptación rechaza relleno («?», «pendiente»); la cabecera STEP se reordena en su lugar sin
+  tocar comentarios ni otras entidades; una calibración de prueba corta no pisa el registro.
+
+### Qué necesita de Fak, pieza por pieza
+
+| Pieza | Qué necesita |
+|---|---|
+| Gate de asiento | Nada para usarlo como aviso. Para pasarlo a **freno** (después del 24/10): su sí, con el número de falsos positivos de la semana. Un candidato ya conocido: la v16 da ROJO en apoyos «por la letra» (cuatro apoyos coplanares, que la ficha de utillajes U7/U8 admite como 4-2-1); el veredicto de la v16 lo da su prueba física (apretar en cinco lugares), que sigue siendo de Fak |
+| build123d-mcp 0.3.90 | Su sí para bajarla (es instalar) |
+| Ficha de fijaciones, ficha FDM | Nada |
+| Cabecera STEP | Nada para lo nuevo (`export_deliverables.py` la arregla). Para los **59 STEP ya entregados que están solo en la nube** (`5. 3D`): su sí para bajarlos y revisarlos (abrirlos los descarga) y, si salen al revés, su OK para reemplazarlos (son entregables) |
+| Criterio de aceptación (G-E7) | Nada como aviso; su sí para pasarlo a freno, igual que el gate |
+| Skill de la impresora | Nada. Si Leo mandó más observaciones (un mail o un audio) que no estén en la carpeta del viernes, que Fak las pase |
+
+Las sesiones abiertas: los cambios están en esta rama; ninguna sesión los ve hasta que la madre funda la rama en `main`.
+Después, la regla `cad-3d.md` (con `paths:`) entra cuando una sesión toca un archivo 3D; la que ya la cargó sigue con la
+versión vieja hasta reabrirse. Las skills se leen al cargarlas.
 
 ### Regresión
 

@@ -1,8 +1,9 @@
 {
- "_que_es": "Registro de la calibracion del gate de asiento: con ESTA version de cadlib/asiento.py (firma_nucleo) la simulacion reprodujo lo publicado de la v14 y la v15. Lo escribe 'gate_asiento.py calibrar'; 'verificar' no juzga una pieza nueva si la firma no coincide o si reproduce es false.",
- "fecha": "2026-10-17 23:15",
- "firma_nucleo": "393dcd58c83519e5",
+ "_que_es": "Registro de la calibracion del gate de asiento: con ESTA version de las cuentas (firma_nucleo: cadlib/asiento.py, gate_asiento.py, eval_casos_3d.py y los umbrales de casos_3d.json), ESTA escena (firma_escena) y ESTE panel (panel_firma) la simulacion reprodujo lo publicado de la v14 y la v15. Lo escribe 'gate_asiento.py calibrar' con los casos de la escena; 'verificar' no juzga una pieza nueva si alguna firma no coincide o si reproduce es false.",
+ "fecha": "2026-10-18 00:15",
+ "firma_nucleo": "1f6b58fe4ca07e16",
  "escena": "upper_trim_two",
+ "firma_escena": "e0420620392b3472",
  "panel_firma": "514b93b720eb9971",
  "casos": 150,
  "semilla": 7,
@@ -14,7 +15,17 @@
     "veredicto": "ROJO",
     "apoyos_z": 7,
     "ubicadores_xy": 0,
-    "motivo": "7 apoyos rigidos controlan Z y los dos giros (maximo 3); 3 metido(s) en el blando hasta 3.75 mm: la pieza no puede asentar como se diseno"
+    "motivo": "7 apoyos rigidos controlan Z y los dos giros (maximo 3); 9 restricciones en Z y los dos giros (sobran 6); 2 apoyo(s) largo(s) (cuentan por dos); 3 metido(s) en el blando hasta 3.75 mm: la pieza no puede asentar como se diseno",
+    "restricciones": 9,
+    "inventario": {
+     "puntos_pieza": 157660,
+     "puntos_con_panel": 126214,
+     "pct_pieza_con_panel": 80.1,
+     "luz_base_mm": 0.05,
+     "corte_mm": 0.15,
+     "largo_pieza_x": 191.8,
+     "largo_pieza_y": 61.2
+    }
    },
    "apoyos_declarados": 7,
    "no_vistos": [
@@ -83,7 +94,17 @@
     "veredicto": "ROJO",
     "apoyos_z": 4,
     "ubicadores_xy": 0,
-    "motivo": "4 apoyos rigidos controlan Z y los dos giros (maximo 3)"
+    "motivo": "4 apoyos rigidos controlan Z y los dos giros (maximo 3); 6 restricciones en Z y los dos giros (sobran 3); 2 apoyo(s) largo(s) (cuentan por dos)",
+    "restricciones": 6,
+    "inventario": {
+     "puntos_pieza": 156894,
+     "puntos_con_panel": 125448,
+     "pct_pieza_con_panel": 80.0,
+     "luz_base_mm": 0.05,
+     "corte_mm": 0.15,
+     "largo_pieza_x": 191.8,
+     "largo_pieza_y": 61.2
+    }
    },
    "apoyos_declarados": 4,
    "no_vistos": [],

@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **17/10 — Una simulación que reproduce el número publicado puede estar ciega a una parte de la pieza: la grilla de 1 mm de la del asiento no veía el tercer pasador de la v14 (0,9 mm), y un número declarado en un archivo (el «labio» z −7,49) puede no existir en la geometría.** El gate de asiento cuenta apoyos con su propia grilla fina y avisa lo que la simulación no ve; el labio quedó como cota declarada con su fuente. Detalle: `docs/PLAN_3D_GATE_ASIENTO_2026-10-16.md` §Resultados.
+
 - **17/10 — Un caso de prueba peligroso (leer el archivo de secretos, borrar, pisar el listado maestro) no se pega en el chat: un filtro de la plataforma cortó a la hija que imprimió los casos del auditor y la ronda perdió una sesión; los casos viajan por archivo con el nombre del secreto como marcador y los tests los llaman por su código.** Graduado al encargo de la ronda 3 de la tanda 3 (E261017-88fe) y a `__tests__/scripts/guardianesRonda3.casos.json`.
 
 - **11/10 — Antes de un push que agrega archivos o toca `settings.json` va la suite COMPLETA, y un umbral de una regla no lo aflojo yo: va como propuesta.** Graduado a `feedback_suite_completa_antes_del_push` y `feedback_un_numero_de_la_regla_no_lo_cambio_yo`.

@@ -248,9 +248,13 @@ gate_asiento.py calibrar  --escena upper_trim_two --workdir C:\Dev\_utrim\gate_a
 gate_asiento.py verificar --escena <escena> --pieza <nombre> [--stl pieza.stl] --workdir W  # cada pieza
 ```
 
-- **Apoyos** (pose de DISEÑO, grilla de 0,25 mm): cuántas superficies tocan el panel; Z y los dos giros se controlan
-  con tres; ROJO si hay más o si alguno está METIDO en el blando. Renglón aparte, informativo: 4-2-1 sobre una misma
-  superficie (`ficha-utillajes.md` U7/U8). La ubicación en el plano (X, Y, giro en Z) no la mide: rayos verticales.
+- **Apoyos** (pose de DISEÑO, grilla de 0,25 mm): es apoyo toda zona de la pieza a 0,10 mm o menos de la luz más
+  chica (no de una luz fija: una pieza 0,11 mm más lejos no se escapa); cada zona controla Z y, si su huella es larga
+  (un cuarto del largo de la pieza o más), además un giro (un riel cuenta por dos; una placa entera es una superficie
+  grande y da ROJO). Z y los dos giros se controlan con tres restricciones: ROJO si hay más, si hay menos (vuelca) o si
+  alguna zona está METIDA en el blando; SIN DATO si menos del 40 % de la pieza tiene panel enfrente (fuera del frame).
+  Renglón aparte, informativo: 4-2-1 sobre una misma superficie (`ficha-utillajes.md` U7/U8). La ubicación en el
+  plano (X, Y, giro en Z) no la mide: rayos verticales.
 - **Ventana**: cuánto puede alejarse el panel y la banda sigue apretando, y cuánto acercarse antes de tocar plástico.
   Mínimos 1,0 y 0,6 mm (`data/casos_3d.json`). La v14 da 0,23 / 0,24: ROJO aunque el choque dé cero.
 - **Asiento**: la simulación del 13/10 llevada a `cadlib/asiento.py` («se hamaca en N de 100», «se mueve X mm en la
@@ -258,7 +262,9 @@ gate_asiento.py verificar --escena <escena> --pieza <nombre> [--stl pieza.stl] -
   medición, hasta escanear el panel.
 - **Disciplina:** par BIEN/MAL sintético propio en cada corrida (código 3 si no separa) y **no juzga una pieza nueva
   sin calibración vigente**: `calibrar` tiene que haber reproducido EXACTO lo publicado de la v14 (100 y 68 de 100) y la
-  v15 (28 de 100, 1,69 mm en la punta) con la misma versión de las cuentas (`data/asiento_calibracion.json`).
+  v15 (28 de 100, 1,69 mm en la punta) con la misma versión de las cuentas, de los umbrales, de la escena y del panel
+  (`data/asiento_calibracion.json`). Si dos fuentes dicen cosas distintas sobre dónde apoya (pliego, escena,
+  `--etiqueta`), sale con código 2: no elige. «Punta NO APLICA» deja el asiento en AVISO, nunca en VERDE.
 - **Modo:** AVISO la primera semana (`procesoCanon.data.json` → `gateAsiento`, revisar el 24/10): `gate_entregable.py`
   lo informa (G-E5) y no frena. Pasa a freno con el sí de Fak y el número de falsos positivos medido.
 - **Lo que aprendió al nacer:** la grilla de 1 mm de la simulación no ve el tercer pasador de la v14 (0,9 mm de ancho

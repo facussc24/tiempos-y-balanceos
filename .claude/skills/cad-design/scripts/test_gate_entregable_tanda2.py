@@ -43,9 +43,13 @@ def armar(td, cabecera, tags, asiento=None, criterio=None):
     open(os.path.join(ent, "pieza.step"), "w").write(cabecera)
     os.utime(os.path.join(ent, "pieza.pdf"), None)
     w = wd.ensure_workdir(os.path.join(td, "w"))
-    wd.record_evidence(w, "proceso_declarado", tags=tags)
+    if tags is not None:
+        wd.record_evidence(w, "proceso_declarado", tags=tags)
     if asiento:
-        wd.record_evidence(w, "asiento", corre=True, veredicto=asiento, filas={"apoyos": asiento})
+        stl = os.path.join(td, "pieza.stl")
+        open(stl, "w").write("solid x\nendsolid x\n")
+        wd.record_evidence(w, "asiento", corre=True, veredicto=asiento, filas={"apoyos": asiento},
+                           pieza_archivo=stl, pieza_firma=wd.file_signature(stl))
     if criterio is not None:
         json.dump(criterio, open(os.path.join(w, "criterio_aceptacion.json"), "w", encoding="utf-8"))
     return ent, w
@@ -78,6 +82,27 @@ with tempfile.TemporaryDirectory() as td:
     ent, w = armar(td, ISO, ["apoya-sobre-rigido"], criterio=CRIT)
     rc, out = correr(ent, w)
     chequear(rc == 0 and "G-E5" not in out, "una pieza sobre rigido no pide gate_asiento")
+
+print("ronda 1 del auditor (I3, I4, N1)")
+with tempfile.TemporaryDirectory() as td:
+    ent, w = armar(td, ISO, ["apoya-sobre-blando"], asiento="VERDE", criterio=CRIT)
+    open(os.path.join(td, "pieza.stl"), "a").write("retocada\n")
+    rc, out = correr(ent, w)
+    chequear("no habla de la pieza de hoy" in out, "asiento VERDE pero la pieza se retoco despues: G-E5 avisa (I4)")
+with tempfile.TemporaryDirectory() as td:
+    ent, w = armar(td, ISO, ["hay-apriete"], criterio=CRIT)
+    rc, out = correr(ent, w)
+    chequear("no dice si el utillaje apoya sobre blando o sobre rigido" in out, "un pliego sin etiqueta de apoyo: G-E5 avisa (I3)")
+with tempfile.TemporaryDirectory() as td:
+    ent, w = armar(td, ISO, None, criterio=CRIT)
+    rc, out = correr(ent, w)
+    chequear("no hay pliego de gate_proceso" in out, "sin pliego en el workdir: G-E5 avisa")
+for relleno in ({"que": "?", "con": "?", "acepta": "?"}, {"que": "x", "con": "x", "acepta": 0},
+                {"que": "-", "con": "a definir", "acepta": "pendiente"}):
+    with tempfile.TemporaryDirectory() as td:
+        ent, w = armar(td, ISO, ["apoya-sobre-rigido"], criterio=[relleno])
+        rc, out = correr(ent, w)
+        chequear("G-E7" in out, "criterio de relleno %s: G-E7 avisa (N1)" % json.dumps(relleno, ensure_ascii=False))
 
 viejo = ge.canon
 try:

@@ -342,7 +342,8 @@ nuevas van a la **Bambu A2L con PLA Lite**, boquilla 0,4, y un número de una no
 ≈ 0 (no vs el tapizado blando) + CADGenBench (validez→forma→interface→topología) + adjuntar evidencia.
 **Y si el utillaje apoya sobre algo BLANDO (tapizado, espuma, goma, chapa fina), además el GATE A de asiento**
 (tanda 2, 17/10/2026): `gate_asiento.py verificar --escena <escena> --pieza <pieza> --workdir W` — apoyos en la pose
-de diseño (ROJO si más de tres controlan Z y los giros, o si uno está metido en el blando), ventana de asiento (ROJO si
+de diseño (cada zona que toca controla Z y, si es larga, un giro: ROJO si suman más o menos de tres restricciones, si
+hay una superficie grande o si una zona está metida en el blando), ventana de asiento (ROJO si
 es de décimas aunque el choque dé cero) y simulación apretando («se hamaca en N de 100»). No reemplaza a la
 interferencia contra el rígido: se le suma. Nació porque la v14 del virolador pasó todos los gates y se hamaca en la
 mano; no juzga sin reproducir antes la v14 y la v15. La primera semana avisa (G-E5 de `gate_entregable.py`) y pasa a

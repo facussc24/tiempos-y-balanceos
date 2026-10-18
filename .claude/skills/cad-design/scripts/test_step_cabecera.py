@@ -51,6 +51,17 @@ with tempfile.TemporaryDirectory() as td:
     q = os.path.join(td, "no_es.step")
     open(q, "w").write("hola")
     chequear(sc.orden_de_archivo(q) is None, "un archivo que no es STEP: sin cabecera (no inventa un orden)")
+    # ronda 1 del auditor (N2): lo demas de la cabecera queda como estaba, y un «);» adentro de un texto no la corta
+    raro = ("ISO-10303-21;\r\nHEADER;\r\n/* comentario */\r\nFILE_NAME('pieza);v2','2026',('A'),('B'),'OC 7.8','OC','U');\r\n"
+            "FILE_DESCRIPTION(('Model'),'2;1');\r\nFILE_SCHEMA(('AP214'));\r\nFILE_POPULATION('x','y',());\r\nENDSEC;\r\n"
+            "DATA;\r\nENDSEC;\r\nEND-ISO-10303-21;\r\n")
+    nuevo, orden = sc.cabecera_en_orden(raro)
+    cab = nuevo.split("ENDSEC;")[0]
+    chequear("/* comentario */" in cab and "FILE_POPULATION('x','y',());" in cab and "\n" not in cab.replace("\r\n", ""),
+             "el comentario, FILE_POPULATION y los \\r\\n de la cabecera quedan como estaban")
+    chequear("FILE_NAME('pieza);v2','2026',('A'),('B'),'OC 7.8','OC','U');" in cab
+             and cab.index("FILE_DESCRIPTION") < cab.index("FILE_NAME") < cab.index("FILE_SCHEMA"),
+             "un «);» adentro de un texto no corta la entidad y el orden queda ISO")
     try:
         sc.cabecera_en_orden(OCC.replace("FILE_SCHEMA", "FILE_XXX"))
         chequear(False, "una cabecera sin FILE_SCHEMA tiene que frenar")

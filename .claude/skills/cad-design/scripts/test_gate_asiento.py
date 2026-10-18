@@ -89,6 +89,36 @@ chequear(pv[peor]["A1"]["apoyos_z"] == 4 and pv[peor]["no_vistos_por_la_simulaci
          "un apoyo de 0,6 mm entre dos puntos de la grilla: el inventario lo cuenta y avisa que la simulacion no lo ve "
          "(%s)" % pv[peor]["no_vistos_por_la_simulacion"])
 
+print("2b. ronda 1 del auditor (I1, I2, I6): lo que antes se esquivaba")
+peor, pv = G.fila_apoyos(cx, pieza(CUATRO, alto=-0.16), U)
+chequear(pv[peor]["A1"]["veredicto"] == "ROJO" and pv[peor]["A1"]["apoyos_z"] == 4,
+         "cuatro apoyos diseñados 0,11 mm mas lejos: siguen siendo 4, ROJO (antes 0 apoyos, VERDE)")
+peor, pv = G.fila_apoyos(cx, pieza(TRES, alto=-0.16), U)
+chequear(pv[peor]["A1"]["veredicto"] == "VERDE", "tres apoyos 0,11 mm mas lejos: VERDE")
+rieles = [caja(10, 90, 6, 10, -5.0, -0.05), caja(10, 90, 30, 34, -5.0, -0.05)]
+peor, pv = G.fila_apoyos(cx, pieza([], extra=rieles), U)
+chequear(pv[peor]["A1"]["veredicto"] == "ROJO", "dos rieles a lo largo: ROJO (cada uno cuenta por dos) — %s"
+         % pv[peor]["A1"]["motivo"])
+placa = [caja(8, 92, 5, 35, -5.0, -0.05)]
+peor, pv = G.fila_apoyos(cx, pieza([], extra=placa), U)
+chequear(pv[peor]["A1"]["veredicto"] == "ROJO", "una placa entera apoyada: ROJO (superficie grande)")
+nervio = [caja(15, 85, 7, 9, -5.0, -0.09), caja(15, 85, 31, 33, -5.0, -0.09), caja(14, 16, 8, 32, -5.0, -0.09)]
+peor, pv = G.fila_apoyos(cx, pieza(CUATRO, extra=nervio), U)
+chequear(pv[peor]["A1"]["veredicto"] == "ROJO", "cuatro apoyos unidos por un nervio de luz 0,09: ROJO")
+peor, pv = G.fila_apoyos(cx, pieza([(15, 8), (85, 20)]), U)
+chequear(pv[peor]["A1"]["veredicto"] == "ROJO", "dos apoyos chicos: ROJO (no alcanzan para Z y los dos giros)")
+lejos = pieza(TRES)
+lejos.apply_translation([1000, 0, 0])
+peor, pv = G.fila_apoyos(cx, lejos, U)
+chequear(pv[peor]["A1"]["veredicto"] == "SIN DATO", "pieza fuera del frame: SIN DATO, no VERDE (%s)" % pv[peor]["A1"]["motivo"])
+esc_v = dict(ESCENA, variantes=[{"nombre": "abre_R1", "abiertas": [{"cx": 70, "cy": 20, "hx": 3, "hy": 3}]},
+                                {"nombre": "abre_R2", "abiertas": [{"cx": 30, "cy": 20, "hx": 3, "hy": 3}]}])
+cxv = G.Contexto(esc_v, None, mallas=(PLAST, BLANDO))
+m70 = caja(68, 72, 18, 22, -5.0, 0.4)                                      # metido, solo se ve cuando NO se abre en 70
+peor, pv = G.fila_apoyos(cxv, pieza(TRES, extra=[m70]), U)
+chequear(pv[peor]["A1"]["veredicto"] == "ROJO" and peor == "abre_R2",
+         "dos variantes que abren zonas distintas: se informa la del ROJO (%s), no la VERDE" % peor)
+
 print("3. simulacion apretando")
 f = G.fila_asiento(cx, pieza(TRES), U, 20, {"nominal": np.array(TRES, float)}, log=lambda *a: None)
 chequear(f["veredicto"] == "VERDE", "tres apoyos con la mano adentro: no se hamaca (%s)" % f["motivo"])
@@ -101,8 +131,10 @@ chequear(f["veredicto"] == "ROJO", "cuatro apoyos con uno sobre una meseta mas l
 esc_p = dict(ESCENA, mano_punta=[[30, 20], [70, 20]])
 cxp = G.Contexto(esc_p, None, mallas=(PLAST, BLANDO))
 f = G.fila_asiento(cxp, pieza(CUATRO), U, 5, {"nominal": np.array(CUATRO, float)}, log=lambda *a: None)
-chequear(f["variantes"]["nominal"]["punta"].get("veredicto") == "NO APLICA",
-         "la mano 'punta' adentro del poligono de apoyos: NO APLICA, no 0,00 mm")
+chequear(f["variantes"]["nominal"]["punta"].get("veredicto") == "NO APLICA" and f["veredicto"] == "AVISO",
+         "la mano 'punta' adentro del poligono de apoyos y la simulacion en 0: NO APLICA y el renglon queda en AVISO, no VERDE")
+chequear(G.veredicto_total({"apoyos": {"veredicto": "VERDE"}, "ventana": {"veredicto": "VERDE"}, "asiento": f}) == "AVISO",
+         "con la punta sin medir el total no es VERDE")
 
 print("4. ventana")
 pared = trimesh.util.concatenate([caja(-2, 2, 4.0, 5.0, -10.0, -6.0), caja(-2, 2, 4.0, 4.6, -6.0, -5.0)])
@@ -130,8 +162,17 @@ with tempfile.TemporaryDirectory() as td:
     from cadlib import workdir as wd
     wd.ensure_workdir(wd_)
     wd.record_evidence(wd_, "proceso_declarado", tags=["hay-apriete", "apoya-sobre-rigido"])
-    chequear(G.etiqueta_de({"apoya_sobre": "blando"}, None, wd_)[0] == "rigido",
-             "la etiqueta del pliego de gate_proceso manda sobre la de la escena")
+    et, _, conf = G.etiqueta_de({"apoya_sobre": "blando"}, None, wd_)
+    chequear(et is None and conf, "pliego «rigido» contra escena «blando»: conflicto, no se elige una (auditor I3)")
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        rc = G.verificar(casos, "upper_trim_two", "v14", None, None, wd_, None, None)
+    chequear(rc == 2 and "NO COINCIDEN" in buf.getvalue(), "la v14 con un pliego «rigido»: codigo 2, no «NO CORRE»")
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        rc = G.verificar(casos, "upper_trim_two", "v14", None, "rigido", None, None, None)
+    chequear(rc == 2, "la v14 con --etiqueta rigido: codigo 2")
+    chequear(G.etiqueta_de({"apoya_sobre": "rigido"}, None, wd_)[0] == "rigido", "pliego y escena de acuerdo: corre")
 
 print("6. sin calibracion vigente no juzga")
 viejo = G.CALIB
@@ -140,11 +181,20 @@ with tempfile.TemporaryDirectory() as td:
     json.dump({"reproduce": True, "firma_nucleo": "otra"}, open(falso, "w", encoding="utf-8"))
     G.CALIB = falso
     ok, msg = G.calibracion_vigente()
-    chequear(not ok and "cambio" in msg, "firma del nucleo distinta: no vigente (%s)" % msg[:80])
+    chequear(not ok and "cambiaron" in msg, "firma del nucleo distinta: no vigente (%s)" % msg[:80])
     json.dump({"reproduce": False, "firma_nucleo": A.firma_nucleo(), "diferencias": ["x"]}, open(falso, "w", encoding="utf-8"))
     chequear(not G.calibracion_vigente()[0], "una calibracion que no reprodujo no habilita")
     G.CALIB = os.path.join(td, "no_existe.json")
     chequear(not G.calibracion_vigente()[0], "sin registro: no vigente")
+    esc = casos["escenas"]["upper_trim_two"]
+    json.dump({"reproduce": True, "firma_nucleo": A.firma_nucleo(), "escena": "upper_trim_two",
+               "firma_escena": A.firma_escena(esc), "panel_firma": "P1"}, open(falso, "w", encoding="utf-8"))
+    G.CALIB = falso
+    chequear(G.calibracion_vigente("upper_trim_two", esc, "P1")[0], "misma escena y mismo panel: vigente")
+    otra = json.loads(json.dumps(esc))
+    otra["sorteo"]["cede"] = [0, 0]
+    chequear(not G.calibracion_vigente("upper_trim_two", otra)[0], "un numero de la escena cambiado: no vigente (auditor I5)")
+    chequear(not G.calibracion_vigente("upper_trim_two", esc, "P2")[0], "otro panel: no vigente")
 G.CALIB = viejo
 
 print("7. casos conocidos (registro de calibracion)")

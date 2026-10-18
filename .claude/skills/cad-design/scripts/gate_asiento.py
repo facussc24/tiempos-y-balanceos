@@ -144,19 +144,28 @@ def autotest(n=20):
 # activación
 # =====================================================================================
 def etiqueta_de(escena, cli=None, workdir_path=None):
-    """(etiqueta, de dónde salió). Manda --etiqueta; después el pliego de gate_proceso en el workdir; después la escena."""
+    """(etiqueta, de dónde salió, conflicto). Las fuentes son --etiqueta, el pliego de gate_proceso en el workdir y la
+    escena. Si dos dicen cosas distintas NO se elige una (auditor del 17/10, I3: «rígido» en el pliego apagaba el gate
+    sobre la v14): se devuelve el conflicto y el gate sale con código 2."""
+    fuentes = []
     if cli:
-        return ETIQ.get(cli), "--etiqueta"
+        fuentes.append((ETIQ.get(cli), "--etiqueta"))
     if workdir_path and os.path.isfile(os.path.join(workdir_path, wd.MANIFEST)):
         e = wd.find_evidence(workdir_path, "proceso_declarado")
         tags = set((e or {}).get("tags") or [])
+        if {"apoya-sobre-blando", "apoya-sobre-rigido"} <= tags:
+            return None, None, "el pliego de gate_proceso trae las dos etiquetas (apoya-sobre-blando y apoya-sobre-rigido)"
         if "apoya-sobre-blando" in tags:
-            return "blando", "pliego de gate_proceso (etiqueta apoya-sobre-blando)"
+            fuentes.append(("blando", "pliego de gate_proceso (etiqueta apoya-sobre-blando)"))
         if "apoya-sobre-rigido" in tags:
-            return "rigido", "pliego de gate_proceso (etiqueta apoya-sobre-rigido)"
+            fuentes.append(("rigido", "pliego de gate_proceso (etiqueta apoya-sobre-rigido)"))
     if escena.get("apoya_sobre"):
-        return ETIQ.get(escena["apoya_sobre"]), "escena '%s'" % escena.get("_nombre")
-    return None, None
+        fuentes.append((ETIQ.get(escena["apoya_sobre"]), "escena '%s'" % escena.get("_nombre")))
+    if not fuentes:
+        return None, None, None
+    if len({f[0] for f in fuentes}) > 1:
+        return None, None, "las fuentes no coinciden: " + "; ".join("%s dice %s" % (d, v) for v, d in fuentes)
+    return fuentes[0][0], " y ".join(d for _, d in fuentes), None
 
 
 # =====================================================================================
@@ -168,6 +177,7 @@ class Contexto(object):
     def __init__(self, escena, cache_dir, log=print, mallas=None):
         self.e = escena
         self.esquinas = None                           # las de la pieza, si declara las suyas (ver correr_sim)
+        self.mano_punta = None                         # idem para la mano «punta» (auditor del 17/10, I7)
         if mallas is not None:                         # tests: mallas sintéticas, sin STEP
             self.ms, self.mt = mallas
             self.firma_panel = "sintetico"
@@ -197,7 +207,13 @@ def declarado(nombre):
     return sum(1 for e in v.get("elementos", []) if e.get("rigido") and e.get("tipo") == "apoyo_z")
 
 
+COBERTURA_MIN_PCT = 40      # cad-3d.md GATE 3: un barrido de rayos con menos de ~40 % de impactos no es un resultado
+_RANGO = {"ROJO": 3, "SIN DATO": 2, "AVISO": 1, "VERDE": 0}
+
+
 def fila_apoyos(cx, malla, U):
+    """El inventario en cada variante del panel; se informa la PEOR por veredicto y, entre iguales, la de más apoyos
+    (auditor del 17/10, I6: elegirla por cantidad escondía un ROJO de un apoyo metido)."""
     e = cx.e
     peor = None
     por_variante = {}
@@ -206,24 +222,55 @@ def fila_apoyos(cx, malla, U):
     for v in e.get("variantes") or [{"nombre": "nominal", "abiertas": []}]:
         H = A.panel_nominal(cx.Hs, cx.Ht, cx.zp, A.en_rects(cx.gr.XY, v["abiertas"]))
         Hf = A.panel_nominal(cx.Hsf, cx.Htf, cx.zpf, A.en_rects(cx.grf.XY, v["abiertas"]))
-        ap, _ = A.inventario(Hf, Tf, cx.grf)
+        ap, _, info = A.inventario(Hf, Tf, cx.grf)
         sup = A.superficies(ap, Hf, cx.grf)
-        nv = A.no_vistos_por_la_simulacion(ap, cx.grf, H - T, cx.gr)
+        nv = A.no_vistos_por_la_simulacion(ap, cx.grf, H - T, cx.gr, corte=info["corte_mm"])
         elementos = [{"nombre": "apoyo en x %.1f y %.1f" % tuple(a["centro"]), "tipo": "apoyo_z", "rigido": True}
                      for a in ap]
-        r1 = ev.a1_apoyos(elementos, U)
+        r1 = dict(ev.a1_apoyos(elementos, U))
+        motivos = [r1["motivo"]]
+        restr = sum(a["restricciones"] for a in ap)
+        r1["restricciones"] = restr
+        largos = [a for a in ap if a["restricciones"] > 1]
         metidos = [a for a in ap if a["metido"]]
-        if metidos:
-            r1 = dict(r1, veredicto="ROJO", motivo=r1["motivo"] + "; %d metido(s) en el blando hasta %.2f mm: la pieza "
-                      "no puede asentar como se diseno" % (len(metidos), -min(a["luz_min_mm"] for a in metidos)))
+        if info["pct_pieza_con_panel"] < COBERTURA_MIN_PCT:
+            r1["veredicto"] = "SIN DATO"
+            motivos = ["solo %.0f %% de la pieza tiene panel enfrente (minimo %d %%): la pieza no esta en el frame de la "
+                       "escena o la grilla no la cubre" % (info["pct_pieza_con_panel"], COBERTURA_MIN_PCT)]
+        elif not ap:
+            r1["veredicto"] = "SIN DATO"
+            motivos = ["ninguna zona de la pieza toca el panel: no se pudo medir"]
+        else:
+            if restr > U["apoyos_z_max"]:
+                r1["veredicto"] = "ROJO"
+                motivos.append("%d restricciones en Z y los dos giros (sobran %d)" % (restr, restr - U["apoyos_z_max"]))
+            if any(a["restricciones"] == 3 for a in ap):
+                r1["veredicto"] = "ROJO"
+                motivos.append("una superficie de apoyo grande (larga en x y en y): apoya en sus puntos mas altos, que "
+                               "cambian con la tolerancia (ficha-utillajes B2: apoyos chicos)")
+            if restr < U["apoyos_z_max"]:
+                r1["veredicto"] = "ROJO"
+                motivos.append("%d restriccion(es): no alcanzan para Z y los dos giros, la pieza vuelca" % restr)
+            if largos and not any(a["restricciones"] == 3 for a in ap):
+                motivos.append("%d apoyo(s) largo(s) (cuentan por dos)" % len(largos))
+            if metidos:
+                r1["veredicto"] = "ROJO"
+                motivos.append("%d metido(s) en el blando hasta %.2f mm: la pieza no puede asentar como se diseno"
+                               % (len(metidos), -min(a["luz_min_mm"] for a in metidos)))
+        r1["motivo"] = "; ".join(motivos)
+        r1["inventario"] = info
         r1b = ev.a1b_cuatro_coplanares(elementos, sup, U)
-        poligono = np.vstack([cx.grf.XY[a["_idx"]] for a in ap]) if ap else np.zeros((0, 2))
+        # el poligono para decidir si la mano «punta» cae adentro: SOLO apoyos que la simulacion ve y que no estan
+        # metidos (auditor, I7: los pasadores metidos de la v14 agrandaban el poligono y tapaban 5,9 mm)
+        vis = [a for j, a in enumerate(ap) if j not in nv and not a["metido"]]
+        poligono = np.vstack([cx.grf.XY[a["_idx"]] for a in vis]) if vis else np.zeros((0, 2))
         por_variante[v["nombre"]] = {
             "A1": r1, "A1b": r1b,
             "apoyos": [{k: x for k, x in a.items() if k != "_idx"} for a in ap],
             "no_vistos_por_la_simulacion": [ap[j]["centro"] for j in nv],
             "_poligono": poligono}
-        if peor is None or r1["apoyos_z"] > por_variante[peor]["A1"]["apoyos_z"]:
+        clave = (_RANGO.get(r1["veredicto"], 0), r1["apoyos_z"])
+        if peor is None or clave > (_RANGO.get(por_variante[peor]["A1"]["veredicto"], 0), por_variante[peor]["A1"]["apoyos_z"]):
             peor = v["nombre"]
     return peor, por_variante
 
@@ -258,14 +305,18 @@ def fila_asiento(cx, malla, U, n, poligonos, log=print):
         log("  simulacion %s: se hamaca en %d de 100, maxima %.2f mm (%.0f s)"
             % (v["nombre"], s["pct_hamaca"], s["hamaca_max_mm"], time.time() - t0))
         r = {"normal": s}
-        if e.get("mano_punta"):
+        mano_punta = getattr(cx, "mano_punta", None) or e.get("mano_punta")
+        if mano_punta:
+            # se corre SIEMPRE; es «no aplica» solo si los puntos caen adentro de los apoyos que la simulacion ve (sin los
+            # metidos) Y la simulacion da casi cero (auditor del 17/10, I7). Un NO APLICA deja el renglon en AVISO.
+            sp = correr_sim(cx, malla, v["nombre"], mano_punta, n)
             pol = poligonos.get(v["nombre"])
-            dentro = A.adentro_del_poligono(e["mano_punta"], pol) if pol is not None and len(pol) else np.zeros(0, bool)
-            if len(dentro) and dentro.all():
-                r["punta"] = {"veredicto": "NO APLICA", "motivo": "todos los puntos de la mano 'punta' caen ADENTRO del "
-                              "poligono de apoyos: no es la punta (auditor del 17/10, I1). La punta la decide la prueba fisica."}
+            dentro = A.adentro_del_poligono(mano_punta, pol) if pol is not None and len(pol) else np.zeros(0, bool)
+            if len(dentro) and dentro.all() and sp["hamaca_mediana_mm"] <= 0.05:
+                r["punta"] = dict(sp, veredicto="NO APLICA", motivo=(
+                    "todos los puntos de la mano 'punta' caen adentro de los apoyos y la simulacion da %.2f mm: no es la "
+                    "punta de la placa. La punta la decide la prueba fisica" % sp["hamaca_mediana_mm"]))
             else:
-                sp = correr_sim(cx, malla, v["nombre"], e["mano_punta"], n)
                 r["punta"] = sp
         out["variantes"][v["nombre"]] = r
         if s["pct_hamaca"] > U["hamaca_pct_max"]:
@@ -276,10 +327,18 @@ def fila_asiento(cx, malla, U, n, poligonos, log=print):
         if s["pct_toca_plastico"] > 0:
             malos.append("%s: toca plastico en %d de 100" % (v["nombre"], s["pct_toca_plastico"]))
         p = r.get("punta")
-        if isinstance(p, dict) and "hamaca_mediana_mm" in p and p["hamaca_mediana_mm"] > U["punta_mediana_max_mm"]:
+        if isinstance(p, dict) and p.get("veredicto") != "NO APLICA" and p["hamaca_mediana_mm"] > U["punta_mediana_max_mm"]:
             malos.append("%s: apretando en la punta se mueve %.2f mm (maximo %s)" % (v["nombre"], p["hamaca_mediana_mm"],
                                                                                     U["punta_mediana_max_mm"]))
-    out["veredicto"] = "ROJO" if malos else "VERDE"
+    sin_punta = any(isinstance(r.get("punta"), dict) and r["punta"].get("veredicto") == "NO APLICA"
+                    for r in out["variantes"].values())
+    if malos:
+        out["veredicto"] = "ROJO"
+    elif sin_punta:
+        out["veredicto"] = "AVISO"
+        malos.append("dentro de los umbrales, pero la punta no se pudo medir con la simulacion: la decide la prueba fisica")
+    else:
+        out["veredicto"] = "VERDE"
     out["motivo"] = "; ".join(malos) or "dentro de los umbrales"
     return out
 
@@ -315,12 +374,12 @@ def evaluar(cx, malla, nombre, n, gemelo=True, log=print):
 
 
 def veredicto_total(filas):
+    """ROJO > SIN DATO > AVISO > VERDE. Solo VERDE sale con código 0: lo que no se pudo medir no da verde."""
     claves = ("apoyos", "ventana", "asiento")
     vs = [filas[k]["veredicto"] for k in claves if k in filas]
-    if "ROJO" in vs:
-        return "ROJO"
-    if "SIN DATO" in vs:
-        return "SIN DATO"
+    for nivel in ("ROJO", "SIN DATO", "AVISO"):
+        if nivel in vs:
+            return nivel
     return "VERDE"
 
 
@@ -381,6 +440,7 @@ def calibrar(casos, nombre_escena, workdir_path, n=None, log=print):
         log("== %s" % nom)
         malla = cargar_pieza(P["stl"])
         cx.esquinas = P.get("esquinas")
+        cx.mano_punta = P.get("mano_punta")
         peor, pv = fila_apoyos(cx, malla, U)
         d = declarado(nom)
         r = {"apoyos": pv[peor]["A1"], "apoyos_declarados": d,
@@ -412,7 +472,7 @@ def calibrar(casos, nombre_escena, workdir_path, n=None, log=print):
             if abs(s["pct_hamaca"] - pub["pct_hamaca"]) > U["reproduccion_tol_pct"]:
                 dif.append("%s %s: %d %% contra %d %% publicado" % (nom, clave, s["pct_hamaca"], pub["pct_hamaca"]))
             if "punta_mediana_mm" in pub:
-                sp = correr_sim(cx, malla, clave, e["mano_punta"], nc)
+                sp = correr_sim(cx, malla, clave, cx.mano_punta or e["mano_punta"], nc)
                 r["sim"][clave + "_punta"] = sp
                 log("  %s apretando en la punta: %.2f mm" % (clave, sp["hamaca_mediana_mm"]))
                 if abs(sp["hamaca_mediana_mm"] - pub["punta_mediana_mm"]) > U["reproduccion_tol_mm"]:
@@ -427,32 +487,53 @@ def calibrar(casos, nombre_escena, workdir_path, n=None, log=print):
         r["veredictos"] = ver
         res[nom] = r
     rep = not dif
-    reg = {"_que_es": "Registro de la calibracion del gate de asiento: con ESTA version de cadlib/asiento.py (firma_nucleo) la "
-                      "simulacion reprodujo lo publicado de la v14 y la v15. Lo escribe 'gate_asiento.py calibrar'; 'verificar' "
-                      "no juzga una pieza nueva si la firma no coincide o si reproduce es false.",
+    reg = {"_que_es": "Registro de la calibracion del gate de asiento: con ESTA version de las cuentas (firma_nucleo: "
+                      "cadlib/asiento.py, gate_asiento.py, eval_casos_3d.py y los umbrales de casos_3d.json), ESTA escena "
+                      "(firma_escena) y ESTE panel (panel_firma) la simulacion reprodujo lo publicado de la v14 y la v15. Lo "
+                      "escribe 'gate_asiento.py calibrar' con los casos de la escena; 'verificar' no juzga una pieza nueva si "
+                      "alguna firma no coincide o si reproduce es false.",
            "fecha": time.strftime("%Y-%m-%d %H:%M"), "firma_nucleo": A.firma_nucleo(), "escena": nombre_escena,
-           "panel_firma": cx.firma_panel, "casos": nc, "semilla": e["sorteo"]["semilla"], "reproduce": rep,
-           "diferencias": dif, "resultados": _sin_privados(res)}
-    with open(CALIB, "w", encoding="utf-8") as f:
-        json.dump(reg, f, indent=1, ensure_ascii=False)
+           "firma_escena": A.firma_escena(e), "panel_firma": cx.firma_panel, "casos": nc,
+           "semilla": e["sorteo"]["semilla"], "reproduce": rep, "diferencias": dif, "resultados": _sin_privados(res)}
     log("")
     for x in dif:
         log("NO REPRODUCE: %s" % x)
+    if nc != e["sorteo"]["casos_calibracion"]:
+        # una corrida corta de prueba no pisa el registro commiteado (auditor del 17/10, N3)
+        log("CALIBRACION de prueba con %d casos (la escena pide %d): %s. El registro NO se escribe."
+            % (nc, e["sorteo"]["casos_calibracion"], "reproduce" if rep else "%d diferencia(s)" % len(dif)))
+        return OK if rep else ROJO_
+    with open(CALIB, "w", encoding="utf-8") as f:
+        json.dump(reg, f, indent=1, ensure_ascii=False)
     log("CALIBRACION: %s (registro en %s)" % ("REPRODUCE lo publicado" if rep else "%d diferencia(s)" % len(dif),
                                             os.path.relpath(CALIB, AQUI)))
     return OK if rep else ROJO_
 
 
-def calibracion_vigente():
+def calibracion_vigente(nombre_escena=None, escena=None, panel_firma=None):
+    """(vigente, mensaje). Compara la firma de las cuentas siempre; si la escena es la calibrada, también la de la escena
+    y (si se pasa) la del panel. Otra escena no tiene casos conocidos: se juzga con las cuentas calibradas y se dice."""
     if not os.path.isfile(CALIB):
         return False, "no hay registro de calibracion (correr 'gate_asiento.py calibrar')"
     c = _json(CALIB)
     if not c.get("reproduce"):
         return False, "la ultima calibracion NO reprodujo lo publicado: %s" % c.get("diferencias")
     if c.get("firma_nucleo") != A.firma_nucleo():
-        return False, ("cadlib/asiento.py o gate_asiento.py cambio desde la ultima calibracion (firma %s, calibrada %s): "
-                       "volver a correr 'gate_asiento.py calibrar'" % (A.firma_nucleo(), c.get("firma_nucleo")))
-    return True, "calibrada el %s (firma %s): reprodujo v14 y v15" % (c.get("fecha"), c.get("firma_nucleo"))
+        return False, ("las cuentas cambiaron desde la ultima calibracion (cadlib/asiento.py, gate_asiento.py, "
+                       "eval_casos_3d.py o los umbrales de casos_3d.json; firma %s, calibrada %s): volver a correr "
+                       "'gate_asiento.py calibrar'" % (A.firma_nucleo(), c.get("firma_nucleo")))
+    extra = ""
+    if nombre_escena and nombre_escena == c.get("escena") and escena is not None:
+        if c.get("firma_escena") != A.firma_escena(escena):
+            return False, ("la escena '%s' cambio desde la calibracion (firma %s, calibrada %s): volver a calibrar"
+                           % (nombre_escena, A.firma_escena(escena), c.get("firma_escena")))
+        if panel_firma and c.get("panel_firma") and panel_firma != c.get("panel_firma"):
+            return False, "el panel de la escena cambio desde la calibracion (firma %s, calibrada %s)" % (
+                panel_firma, c.get("panel_firma"))
+    elif nombre_escena:
+        extra = ("; la escena '%s' no tiene casos conocidos: se juzga con las cuentas calibradas en '%s'"
+                 % (nombre_escena, c.get("escena")))
+    return True, "calibrada el %s (firma %s): reprodujo v14 y v15%s" % (c.get("fecha"), c.get("firma_nucleo"), extra)
 
 
 # =====================================================================================
@@ -464,8 +545,11 @@ def verificar(casos, nombre_escena, pieza, stl, etiqueta_cli, workdir_path, n, s
         return USO
     e = casos["escenas"][nombre_escena]
     e["_nombre"] = nombre_escena
-    et, de = etiqueta_de(e, etiqueta_cli, workdir_path)
+    et, de, conflicto = etiqueta_de(e, etiqueta_cli, workdir_path)
     modo = modo_canon()
+    if conflicto:
+        log("[gate_asiento] DOS FUENTES NO COINCIDEN (codigo 2) sobre donde apoya la pieza: %s. No se elige una." % conflicto)
+        return USO
     if et is None:
         log("[gate_asiento] no se sabe si la pieza apoya sobre blando o sobre rigido: declarar la etiqueta "
             "(apoya-sobre-blando / apoya-sobre-rigido) en el pliego de gate_proceso, en la escena o con --etiqueta")
@@ -484,7 +568,7 @@ def verificar(casos, nombre_escena, pieza, stl, etiqueta_cli, workdir_path, n, s
     if not sep:
         log("AUTOTEST NO SEPARA (codigo 3): el gate no juzga nada.")
         return NO_JUZGA
-    ok_c, msg_c = calibracion_vigente()
+    ok_c, msg_c = calibracion_vigente(nombre_escena, e)
     log("  calibracion %s" % msg_c)
     if not ok_c:
         log("SIN CALIBRAR (codigo 3): no se juzga una pieza nueva con una simulacion que no reprodujo los casos conocidos.")
@@ -503,7 +587,12 @@ def verificar(casos, nombre_escena, pieza, stl, etiqueta_cli, workdir_path, n, s
         return USO
     w = wd.ensure_workdir(workdir_path)
     cx = Contexto(e, os.path.join(w, "cache"), log)
+    ok_p, msg_p = calibracion_vigente(nombre_escena, e, cx.firma_panel)
+    if not ok_p:
+        log("SIN CALIBRAR (codigo 3): %s" % msg_p)
+        return NO_JUZGA
     cx.esquinas = (e.get("piezas", {}).get(pieza) or {}).get("esquinas")
+    cx.mano_punta = (e.get("piezas", {}).get(pieza) or {}).get("mano_punta")
     malla = cargar_pieza(stl)
     nc = n or e["sorteo"]["casos"]
     filas, fuentes, _ = evaluar(cx, malla, pieza, nc, gemelo=not sin_gemelo, log=log)

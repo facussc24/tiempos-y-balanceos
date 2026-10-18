@@ -83,6 +83,11 @@ def _texto_ok(c, v):
         return False
     ph = c.get("placeholders", {})
     t = v.strip()
+    # relleno que no dice nada (auditor del 17/10, N1): menos de 3 letras o numeros, o un «pendiente» / «a definir»
+    if sum(ch.isalnum() for ch in t) < 3 and not any(ch.isdigit() for ch in t):
+        return False
+    if t.lower().strip(".") in ("pendiente", "a definir", "por definir", "n/a", "na", "tbd", "xxx", "ver", "idem"):
+        return False
     return t not in ph.get("literales", []) and not any(t.upper().startswith(p.upper()) for p in ph.get("prefijos", []))
 
 
@@ -308,15 +313,29 @@ def verificar(entrega, motor, renders, workdir_path=None, sin_render=False, moti
     ga = c.get("gateAsiento") or {}
     msg5 = None
     if workdir_path and os.path.isfile(os.path.join(workdir_path, workdir.MANIFEST)):
-        pd = workdir.find_evidence(workdir_path, "proceso_declarado") or {}
-        if "apoya-sobre-blando" in (pd.get("tags") or []):
+        pd = workdir.find_evidence(workdir_path, "proceso_declarado")
+        tags = (pd or {}).get("tags") or []
+        if pd is None:
+            avisos.append("G-E5 · no hay pliego de gate_proceso en el workdir: no se sabe si el utillaje apoya sobre blando")
+        elif "apoya-sobre-blando" in tags:
             ea = workdir.find_evidence(workdir_path, "asiento", corre=True)
             if ea is None:
                 msg5 = "el utillaje apoya sobre blando y gate_asiento.py no corrio sobre esta pieza"
-            elif ea.get("veredicto") != "VERDE":
-                msg5 = "gate_asiento.py dio %s (%s)" % (ea.get("veredicto"), ", ".join(
-                    "%s %s" % (k, v) for k, v in (ea.get("filas") or {}).items() if v not in ("VERDE", "INFORMATIVO")))
-    elif not workdir_path:
+            else:
+                # la evidencia tiene que hablar de la pieza que hay HOY (auditor del 17/10, I4; misma leccion del 24/08)
+                ok_f, motivo_f = (workdir.check_signature(ea, "pieza_firma", ea.get("pieza_archivo"))
+                                  if ea.get("pieza_archivo") else (False, "la evidencia no dice que archivo juzgo"))
+                if not ok_f:
+                    msg5 = "la evidencia de gate_asiento.py no habla de la pieza de hoy: %s" % motivo_f
+                elif ea.get("veredicto") != "VERDE":
+                    msg5 = "gate_asiento.py dio %s (%s)" % (ea.get("veredicto"), ", ".join(
+                        "%s %s" % (k, v) for k, v in (ea.get("filas") or {}).items() if v not in ("VERDE", "INFORMATIVO")))
+        elif "apoya-sobre-rigido" not in tags:
+            avisos.append("G-E5 · el pliego no dice si el utillaje apoya sobre blando o sobre rigido "
+                          "(etiqueta apoya-sobre-blando / apoya-sobre-rigido): lo que hay que cazar es la omision")
+    elif workdir_path:
+        avisos.append("G-E5 · el workdir no tiene manifest: no se sabe si el utillaje apoya sobre blando")
+    else:
         avisos.append("G-E5 · sin --workdir no se puede mirar si el utillaje apoya sobre blando (gate_asiento.py)")
     if msg5:
         if ga.get("modo") == "freno":
