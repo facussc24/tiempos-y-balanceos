@@ -48,7 +48,7 @@ incidente vive en los snapshots.
 - **11/09 — Un dry-run verde no prueba el `--apply`, y lo que escribe frena ante un argumento que no conoce.** Graduado a la memoria `no_entregable_ejecutable_sin_verificar` y a `_paquete.mjs`.
 - **07/09 — Un cero puede ser del sistema y no del hecho, y la columna la nombra el que manda el dato.** Antes de concluir desde un campo, mirar si la poblacion de ese campo lo llena. Memoria `datos_produccion_pcp_federico`.
 - **07/09 — Un sistema se diseña para el que lo va a usar, y su estado se declara cuando es verdad.** Antes de poner un control, escribir que ve el que no lo pidio; el marcador de "instalado" va en el ultimo paso. Memoria `project_claude_barack_fase0`.
-- **Lo que yo construyo lo prueba algo que no sea yo, y un control solo ve lo que DECLARA.** Un gate que no puede dar verde está tan roto como el que no puede dar rojo, y **lo que FALTA no se ve** (un gate verde mientras dos hojas mandaban imprimir 9 piezas que ninguna lista nombraba; 01/10, flujograma 160: skill `flujogramas` §0 bis). Memorias `un_control_se_audita_en_las_dos_direcciones`, `sims_carros_metodos`.
+- **Lo que yo construyo lo prueba algo que no sea yo, y un control solo ve lo que DECLARA.** Un gate que no puede dar verde está tan roto como el que no puede dar rojo, y **lo que FALTA no se ve** (skill `flujogramas` §0 bis). Memoria `un_control_se_audita_en_las_dos_direcciones`.
 - **El entregable se revalida contra la fuente justo antes de mandarlo, y un mail se verifica por DESTINATARIOS.** Graduado a `mail-envio.md` + `_mailEnviar.py` y a las memorias `mail_ya_enviado`, `dejar_el_mail_listo_para_enviar`, `no_pisar_archivo_que_toco_fak`, `mails_de_barack_se_comparten`.
 - **04/09 — El denominador de un "cuanto falta" se mide antes de decirlo, y un "reanudar" que salta por nombre pelado descarta en silencio.** La ocurrencia se cuenta en el recorrido, no se deduce del disco; el cotejo final va contra la fuente, base por base. Memoria `leer_buzones_ost_pst`.
 - **24/08 — Un hueco interno detectado no se escribe como causa: se resuelve, o se pregunta, y si sigue abierto va en el mail.** El test, para todo tipo de documento: ¿esta frase deja mal a Barack, a un compañero o a un proveedor? Graduado a la memoria `documento_no_confiesa_como_se_hizo`.
@@ -70,7 +70,7 @@ incidente vive en los snapshots.
 
 - **13/10 — Un utillaje que apoya sobre algo blando se simula APOYADO y APRETADO antes de imprimirlo, y ante un «no anda» se mide antes de dar una teoría.** Graduado a `feedback_diseno_3d_medir_antes_de_explicar_y_simular_el_uso` y al gate de asiento de la tanda 2.
 
-- **14-15/10 — Lo que Fak nombra se identifica por su FORMA y su FUNCIÓN, no por el nombre de una carpeta ni por la última pieza parecida; entre versiones manda la que él validó.** Memorias `reference_plotter_aol_corte_insert`, `project_pines_costura_cnc_insert`, `project_insert_muesca_costura_cnc`, `reference_valores_costura_patagonia_confirmados`; las citas, en el snapshot 2026-10-18.
+- **14-15/10 — Lo que Fak nombra se identifica por su FORMA y su FUNCIÓN, no por el nombre de una carpeta ni por la última pieza parecida; entre versiones manda la que él validó.** Memorias `reference_plotter_aol_corte_insert`, `project_pines_costura_cnc_insert`, `reference_valores_costura_patagonia_confirmados` (citas: snapshot 2026-10-18).
 
 - **15/10 — Plan de control: se genera releyendo flujograma, AMFE y fichas de embalaje JUSTO antes, y si se rearma entero va limpio: sin amarillo ni notas, una característica por fila, la D sola.** Graduado al skill `planes-de-control` §4 y §5.
 
@@ -88,11 +88,11 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
-- **19/10 — «Un mail que me mandaron» se busca en el buzón de Fak en la nube, también desde CATA (es su notebook), nunca en el Outlook de Calidad; un mail de Fak desde CATA no se ofrece: va como PEDIDO a la principal; y en un plan de control no va «según HO de corte».** Graduado a `feedback_mails_de_fak_se_buscan_en_la_nube_tambien_en_cata` y `feedback_plan_de_control_sin_referencias_a_la_ho`.
+- **19/10 — En CATA, los mails de Fak se leen en la nube y se mandan por PEDIDO a la principal; un plan de control no remite a la HO.** Graduado a `feedback_mails_de_fak_se_buscan_en_la_nube_tambien_en_cata` y `feedback_plan_de_control_sin_referencias_a_la_ho`.
 
 - **18/10 — Al Fak estudiante no se le da una nota: el "7" de Matemática terminó en 2 y el 18/10 repetí "ya sacás 5 de 10"** (*"no hagas falsas promesas"*). Solo techo, dicho como techo, o un rango salido de simulacros reales. Graduado al `CLAUDE.md` de `Estudio-UNLaM` («Cómo se habla de la nota») y a `feedback_estudio_unlam_nota_no_se_promete`.
 
-- **15/10 — A Fak no se le pregunta lo que contesta un manual, una prueba que puedo correr, el propio diseño o la norma con el papel delante: se aplica y se informa** (*"preguntás muchas boludeces"*, *"ya sabés decidir en base a datos"*; 11 de 18 puntos de una lista eran míos). Graduado a `feedback_la_info_ya_la_tengo_no_preguntar` y `feedback_con_recomendacion_no_se_pregunta`.
+- **15/10 — A Fak no se le pregunta lo que contesta un manual, una prueba que puedo correr, el propio diseño o la norma con el papel delante: se aplica y se informa** (*"ya sabés decidir en base a datos"*). Graduado a `feedback_la_info_ya_la_tengo_no_preguntar` y `feedback_con_recomendacion_no_se_pregunta`.
 
 - **16/10 — Lo que Fak confirma de su material con la pieza en la mano queda como DATO y el programa no lo vuelve a dudar; la impresora se busca por su serie, no por una dirección fija.** Graduado a `feedback_lo_que_fak_confirma_de_su_material_no_se_vuelve_a_dudar` y al skill `impresion-3d-bambu`.
 
@@ -153,7 +153,7 @@ incidente vive en los snapshots.
 - **26/09 — Un audit que pide Fak incluye aplicar lo que encuentra: el informe solo no es el entregable.** Graduado a la memoria `feedback_audit_incluye_aplicar`.
 - **Un entregable tecnicamente correcto falla igual si el que lo mira no entiende lo que esta viendo; lo que explica va en un PDF visual, no en un .txt; si nombra una fuente, lleva su captura, y lo nuevo no sale sin un caso de respuesta conocida (01/10).** Graduado al skill `editar-video` §5, a `cad-3d.md` GATE E + `gate_entregable.py` y a la memoria `entregables_para_fak`.
 - **Lo que sale de aca lo define el destinatario: que entra, la voz, el largo y el idioma.** El test de que entra: **¿el que lee tiene que hacer algo con esto hoy?** El resto graduado a `mail-envio.md` (voz medida + su gate) y a las memorias `mail_corto_como_los_de_fak`, `sin_ingles_random`, `traduccion_va_completa_en_idioma_destino`.
-- **El cierre de una tarea dice que recomiendo, el comando y lo que le cambia una decision, con las palabras de Fak y para leerse una vez; el chat pasa el mismo test que un mail, y un «pasar mail» del Asaichi no es la orden de armarlo hoy (01/10).** Graduado a `no_hacer_informes`, `feedback_mail_de_una_tarea_va_con_la_info_procesada` y al hook Stop `cierre-guard.sh` (chequeo 5).
+- **El cierre de una tarea dice que recomiendo, el comando y lo que le cambia una decision, con las palabras de Fak y para leerse una vez; el chat pasa el mismo test que un mail (01/10).** Graduado a `no_hacer_informes`, `feedback_mail_de_una_tarea_va_con_la_info_procesada` y al hook Stop `cierre-guard.sh` (chequeo 5).
 - **Antes de pedir o de traer de afuera, mirar lo que ya hay adentro (*"ya deberías saber la respuesta"*); con la fuente a medias se define el próximo paso, no el plan; un chequeo negativo cierra ese camino, no prueba que el dato no exista.** Graduado a `la_info_ya_la_tengo_no_preguntar`, `ordenes_compra_disco_z`, `no_concluir_con_la_fuente_incompleta`.
 - **Material de Fak no se borra para hacer lugar: va a la nube, y el disco se libera deshidratando.** Graduado entero a la memoria `material_de_fak_no_se_borra_va_a_la_nube` (*"nunca di esa orden"*, *"nunca los borres"*).
 - **01 y 12/09 — Despues de la segunda correccion seguida se deja de parchear y se barre la tabla ENTERA; barrer una COLUMNA no es barrer la tabla.** Graduado a la memoria `feedback_despues_de_la_segunda_correccion_se_barre_la_tabla`.
