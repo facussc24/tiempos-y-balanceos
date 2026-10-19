@@ -87,3 +87,36 @@ Fak: no se toca (pasó el 17/10 a las 09:11 y se cerró así).
 - Un STEP de cliente entra como pieza con un cuerpo y un conjunto de superficies (el tapizado); uno de OpenCASCADE, como
   pieza con un `MANIFOLD_SOLID_BREP`.
 - El informe de importación de cada STEP queda en `%LOCALAPPDATA%\DassaultSystemes\CATReport\<nombre>.err`.
+
+## 19/10/2026 — una noche de práctica: diseñar EN CATIA desde cero (base en `scripts/catia/`)
+
+Pedido de Fak (19/10, 01:00): *"practicando con catia... la idea es que puedas diseñar todo con catia desde 0"*. Se
+hicieron 14 ejercicios de lo básico a una pieza real, cada uno medido contra su cuenta y contra build123d; la evidencia
+(scripts, CATPart, STEP, PDF, capturas y `NOTAS.md` con el detalle) queda en `C:\Dev\_catia_practica\` (fuera del repo).
+
+**Qué hay en `scripts/catia/`** (corre con `C:\Dev\_catia_env`; la carpeta de trabajo es `CATIA_TRABAJO`, por defecto
+`C:\Dev\_catia_practica`): `catia_base.py` (CATIA propia por pid, vigía de cuadros, `topologia`/`aristas_con_extremos`
+para elegir caras y aristas por POSICIÓN, `medir` con centro de gravedad, capturas a PNG, `correr(..., fresca=True)`),
+`enums.py` (valores de cualquier enumeración de CATIA leídos de las typelibs, sin arrancarla), `compara.py` (lo que sobra,
+lo que falta y la distancia entre dos STEP, NO ciego: probado con el gemelo corrido 0,1 mm), `choque_exacto.py`
+(intersección B-Rep y luz mínima), y como ejemplo completo `v16_poligonos.py` + `ej13_v16.py` (el virolador v16 rehecho).
+
+**Qué es confiable y qué no (medido):**
+
+| Tema | Resultado | Cómo se usa |
+|---|---|---|
+| Part Design (croquis acotado, pad, pocket, 4 tipos de agujero, revolución, nervio, redondeo, chaflán, cáscara, desmoldeo, patrones, espejo, parámetros y fórmulas, material y masa) | Exacto contra la cuenta y contra build123d | Ver `NOTAS.md`: grados de libertad del croquis, ejes de cada plano (ZX: H→Z, V→X), sentidos medidos |
+| Superficies (extruir, revolución, transición, relleno, unir, cerrar, espesor, cortar, spline) | Exacto | Los sentidos se miden (desplazamiento y corte); una superficie de corte tiene que pasarse del borde |
+| Multi-sección SÓLIDA de Part Design | **Falló siempre** (hasta con dos hexágonos) | Por superficie: transición vértice a vértice + rellenos + unir con `SetDeviation(0.01)` + **`Invert = True`** + cerrar |
+| Ensamble con restricciones | Exacto (perno en 15; 30; 10) | Ejes y puntos con nombre propio y `CreateReferenceFromName(raiz/instancia/!Nombre)` |
+| Choque de CATIA (`Clashes`) | **Ciego en ±0,3 mm**: 0,2 y 0,3 de choque = «contacto 0,0»; luz real 0,107 (v14 vs panel) = «contacto 0,0» | No decide holguras de décimas. Exacto: segundo cuerpo + `AddNewIntersect`, o `choque_exacto.py` |
+| Cálculo estático GPS | Flecha 0,7977 contra 0,8 de la cuenta (0,3 %) | Se compara la flecha; la tensión en un empotramiento tiene pico de esquina |
+| Plano (Drafting) a PDF | Anda: vistas, cotas desde el croquis, marco y cajetín | Sin croquis acotado no hay cotas automáticas |
+| Exportar STEP/STL | **CATIA exporta lo VISIBLE**: con las superficies de construcción a la vista salieron 8 cáscaras y 968 caras de más | Ocultar los sets de superficies antes de exportar; controlar 1 sólido / 1 cáscara y el volumen del STL |
+| La v16 rehecha en CATIA desde sus datos | sobra 0, falta 0, distancia máxima 0,0016 mm contra la v16 real | `ej13_v16.py`; 14 pasos en ~1,5 min |
+
+**Trampas que dejan la sesión rota** (después hasta un pad falla): medir un cuerpo vacío; sumar un cuerpo de muchas
+caras con `AddNewAdd` («el servidor lanzó una excepción»); engancharse a una CATIA que se está cerrando. Para lo largo,
+CATIA recién abierta. Un script cortado puede hacer que COM arranque otra CATIA sola (padre `svchost`): se identifica por
+hora y padre antes de tocarla. Unidades de `Measurable`: `Length` en mm, `Area` en m², `Volume` en m³; `Analyze.Volume`
+en mm³; lo que vuelve de VBScript trae coma decimal.
