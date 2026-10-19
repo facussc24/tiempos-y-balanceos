@@ -1,0 +1,8 @@
+Locations Axis	Global	
+Values axis	Global	
+x(mm)	y(mm)	z(mm)	Value(N_m2)	
+21	8	65	7,59218e+007	
+21	-8	65	8,3644e+007	
+24	-8	68	2,04506e+007	
+24	8	68	2,15876e+007	
+28	8	68	8,66953e+006	

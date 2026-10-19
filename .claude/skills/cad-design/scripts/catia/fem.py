@@ -6,7 +6,8 @@ voladizo: 0,797 mm contra 0,8015 de la cuenta, malla parabolica de 2,5 mm).
   poner_acero(c, doc)                      material del catalogo con part.GetItem("CATMatManagerVBExt") (NO "VBA")
   importar(c, ruta_catpart) -> Estudio     Documents.Add("Analysis") + StartWorkbench("GPSCfg") + ImportDefineFile
   est.empotrar(nombres_de_caras)           SAMClamp
-  est.fuerza(nombres_de_caras, (fx,fy,fz)) SAMDistributedForce: el total en N repartido en esas caras
+  est.fuerza(nombres_de_caras, (fx,fy,fz)) SAMDistributedForce sobre esas caras (con UNA cara medido: es el total;
+                                           con VARIAS, si reparte o suma por cara: ej59)
   est.malla(orden="Parabolic", tam="2mm")  OJO: la malla por defecto es LINEAL y en flexion da -66 % sin avisar
   est.calcular() ; est.exportar(imagen) -> [(x, y, z, valores...)]
 Los nombres de cara salen de catia_base.topologia(doc, cuerpo, "Face") (d["nombre"]), con la pieza abierta antes."""
@@ -36,7 +37,10 @@ def poner_acero(c, doc, familia="Metal", nombre="Steel"):
     mdoc = c.Documents.Read(CATALOGO)
     mm.ApplyMaterialOnPart(doc.Part, material_por_indice(mdoc, familia, nombre), 0)
     doc.Part.Update()
-    return doc.GetWorkbench("SPAWorkbench").Inertias.Add(doc.Product).Density
+    dens = doc.GetWorkbench("SPAWorkbench").Inertias.Add(doc.Product).Density
+    if abs(dens - 1000.0) < 1e-6:
+        raise RuntimeError("el material no quedo: la densidad sigue en 1000 (la de una pieza sin material)")
+    return dens
 
 
 def propiedades(part):
@@ -76,7 +80,10 @@ class Estudio:
         return [v.GetValue("", k, 1, 1) for k in (1, 2, 3)]
 
     def malla(self, orden="Parabolic", tam="2mm"):
-        mp = self.mo.MeshManager.AnalysisMeshParts.Item(1)
+        partes = self.mo.MeshManager.AnalysisMeshParts
+        if partes.Count != 1:                      # las demas quedarian con la malla LINEAL por defecto, sin aviso
+            raise RuntimeError(f"hay {partes.Count} mallas: malla() sabe ajustar una sola")
+        mp = partes.Item(1)
         mp.SetGlobalSpecification("ElementOrder", orden)
         mp.SetGlobalSpecification("SizeValue", tam)
 
@@ -92,7 +99,10 @@ class Estudio:
         im.ExportData(self.c.FileSystem.GetFolder(carpeta), nombre, "txt")
         if not os.path.exists(ruta):
             raise RuntimeError(f"ExportData no dejo {ruta}")
-        return leer_export(open(ruta, encoding="latin-1").read())
+        filas = leer_export(open(ruta, encoding="latin-1").read())
+        if not filas:                              # un txt solo con encabezados no es «sin desplazamiento»: no se midio
+            raise RuntimeError(f"{ruta} no trae ningun nodo")
+        return filas
 
 
 def leer_export(texto):

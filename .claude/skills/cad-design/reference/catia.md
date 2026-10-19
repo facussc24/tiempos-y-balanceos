@@ -4,6 +4,11 @@ Medido el 17/10/2026 (tanda 11) sobre lo probado el 10/10 y el 13/10 (memoria `r
 `.sgc-cache/investigacion-2026-10-11/catia/`, `.sgc-cache/catia-2026-10-13/` y `.sgc-cache/catia-2026-10-17/`).
 Licencia: la confirmó Fak el 13/10 (*«la licencia es oficial»*); no se vuelve a preguntar.
 
+**Antes de investigar algo de CATIA afuera (foros, agentes, la ayuda), se busca ADENTRO**: `grep -ri "<tema>"` en esta
+página, en `C:\Dev\_catia_practica\NOTAS.md` y en los `ej*.py` de la práctica. El 19/10 de tarde se lanzó un equipo de
+4 agentes para «poner material por COM» y la respuesta (`CATMatManagerVBExt`, simulación a 0,7977) estaba desde esa
+madrugada en el ej12 y en la tabla de abajo.
+
 **Decisión: no hay skill `catia` aparte.** CATIA es una herramienta más de `cad-design` (medir, chocar, abrir lo del
 cliente) y una skill nueva tendría que probar que se dispara con un mensaje real de Fak (`mejora-implementada.md`) sin
 agregar nada que esta página no diga. Se revisa si algún día se diseña EN CATIA por programa.
