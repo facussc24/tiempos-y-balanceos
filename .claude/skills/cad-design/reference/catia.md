@@ -387,6 +387,10 @@ Antes de buscar en foros, se busca ahí.
   Array(x1,y1,x2,y2), Nothing, angulo)` (0 horizontal, 90 vertical), `d.MoveValue dx, dy, 0, 0` para correr el texto y
   `d.GetValue.Value` para leer lo que midió CATIA. **Límite**: la cota va entre puntos que puse yo, no sigue al 3D si el
   carro cambia (la geometría generada no se alcanza por COM, ver «Cota de diámetro a mano»). Para una cota que siga a la
-  pieza: `Isolate` y perder la asociación, o generarla de las restricciones (`DrawingSheet.GenerateDimensions`, que en
-  un tubo por croquis tira todas las medidas de cada perfil: sin probar).
+  pieza: **`DrawingSheet.GenerateDimensions()`** (probado en ej70: bloque con pad 50 → cota 50; pad a 65 → la cota
+  GENERADA pasa a 65 y la de a mano sigue en 50). Saca solo lo que la pieza tiene como parámetro o restricción (el
+  largo del pad; las líneas sueltas del croquis no). **Y no sigue con `Sheet.Update()` solo**: hace falta
+  `GenerativeBehavior.Update()` de CADA vista (sin eso quedó en 50). Para el carro: las medidas generales tienen que
+  existir como parámetros/restricciones en el modelo para que el plano las genere. `Add2` de distancia entre dos
+  puntos en vertical va con ángulo 90: con 0 mide la distancia horizontal (0) y falla «The method Add2 failed».
 - Script de práctica: `C:\Dev\_catia_practica\ej66_plano_despiece.py` (fuera del repo).
