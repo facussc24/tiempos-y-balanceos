@@ -38,6 +38,11 @@ lista suelta, 26/30 con estos 8 grupos; lo que faltó en esos exámenes está ma
   se dimensiona con las distancias de seguridad de norma (ISO 13857 alcance, ISO 13855 velocidad de aproximación) y la
   temperatura de superficie que se puede tocar (ISO 13732-1) ⊕
 - Peso del propio útil y cambio de variante SIN herramientas ⊕
+- Números de referencia con fuente (no dejarlos TBD): levantar entre codo y nudillos, hombres 25 kg / mujeres 16 kg
+  cerca del cuerpo (HSE INDG143); plano de trabajo de pie: liviano 5-10 cm bajo el codo, pesado 20-40 cm bajo el codo
+  (CCOHS); empuje: diseñar para el 75 % de la población femenina con las tablas de Liberty Mutual (el número sale de
+  la tabla: A SACAR; ojo: el «200 N» que usé en los exámenes salía del enunciado, no tiene fuente) ⊕
+- Mecanismos (palanca, pisador, prensa neumática): ningún punto de ATRAPAMIENTO de dedos ⊕
 
 **5. Uniones, fabricación y máquina**
 - Cada unión: dónde apoya, dónde se suelda o atornilla, con cuánta área (`uniones.py`).
@@ -47,6 +52,12 @@ lista suelta, 26/30 con estos 8 grupos; lo que faltó en esos exámenes está ma
 - ¿Cómo se fija y se repone en la máquina (repetible; sin imanes cerca de calor)? ¿Cuánta ALTURA o LUZ libre hay (prensa
   abierta, platina que cierra, recorrido de la herramienta) y qué no puede tocar? ⊕ (se me pasó dos veces)
 - ¿Qué proceso viene después de fabricarlo (galvanizado → venteo; pintura; horno)? ⊕
+- Si va al HERRERO, el plano lleva: sección y ESPESOR del tubo, tipo y largo de soldadura, refuerzos donde van las
+  ruedas y los niveles, tolerancias de armado, la POSICIÓN de cada barra (no solo el largo), lista de materiales;
+  ruedas con diámetro, MATERIAL y configuración (dos fijas + dos giratorias con freno, o la que se decida) y su
+  capacidad por rueda ⊕ (faltó en 4 de 5 rondas de la tanda)
+- Si va a la IMPRESORA: gramos, horas y costo; perímetros, relleno y orientación; insertos roscados donde se
+  atornilla; tolerancia de impresión medida; vida útil esperada con los ciclos del turno y cómo se repone ⊕
 
 **6. Calor, adhesivo y blando**
 - ¿A qué temperatura está lo que toca (pieza tibia, platina, hot melt, punzón, verano en planta)? PLA ~55 °C, PETG ~75 °C;
@@ -73,6 +84,8 @@ pedido; por la API, `node scripts/_apiTarea.mjs --modelo opus`, ~US$ 0,30, o el 
 examen abierto 7: 27/30 con los 8 grupos solos, 29/30 con la revisión (trajo la traba de los rollos, el oreo de las piezas
 encoladas, la cuenta del material que sobra al doblar una esquina R40). Lo que la revisión afirma sin fuente se verifica
 antes de usarlo (ej.: un límite ATEX de superficie plástica quedó «a verificar»).
+
+**Tanda automática (19/10 noche):** 5 rondas de 3 pedidos contestados por otro modelo usando SOLO esta lista: 117/150 (78 %) sola y 125/150 (83 %) con la revisión; lo que faltó en 4 o 5 rondas (plano del herrero, números de ergonomía, impreso sin números, atrapamiento, ruedas) se agregó arriba con ⊕. Script: `C:\Dev\_catia_practica\tanda_examenes_api.py`.
 
 **Cómo se probó (19/10/2026):** primero 13 preguntas contra los 11 casos reales de la casa (frente 4, parte b): frenaban 7; los 4 que no (pines, triangulito, Top Roll, gancho doble) dieron 4 más. Después exámenes a ciegas escritos por otra IA con las respuestas guardadas aparte: de trampas 5/5, 6/6 y 6/6; abiertos (mail de supervisor con grilla oculta de 10 puntos) 24/30 y 25/30 con la lista suelta, 26/30, 28/30, 26/30 y 27/30 con estos 8 grupos (~89 %). Las preguntas marcadas ⊕ son las que faltaban. Límite: los exámenes los escribió una IA; la prueba que vale es un pedido real.
 
