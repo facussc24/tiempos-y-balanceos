@@ -225,3 +225,61 @@ CATIA propia queda abierto y sale un AVISO (`cerrar_del_ejercicio`, probado en `
 archivo DE la carpeta de trabajo que Fak abra ahí se toma como del ejercicio.
 - **`body.HybridShapes` también lista operaciones** (EdgeFillet, CircPattern) además de puntos y líneas: ocultar «todos»
   ocultó la pieza (captura vacía y la ventana de Fak en blanco, ej32). Se oculta SOLO el objeto que el programa creó.
+
+## 19/10/2026 (tarde) — los 10 de Too Tall Toby, ensambles, plano, mecanismo y reparar superficies
+
+| Ejercicio | Qué practica | CATIA contra la respuesta |
+|---|---|---|
+| TTT 01-07 Flanged Hub | Shaft escalonado, Stiffener + CircPattern ×3, agujero con caja ×6 | 373,51 g contra 372,99 ± 1 (nervio de 20° leído parejo: dicho como lectura dudosa) |
+| TTT 01-03 C Clamp Base | `croquis.dibujar` + avellanado (`Type 3`, `HeadAngle 90`) | 96,13 = 96,13 |
+| TTT 01-04 Angle Bracket | R4 corrido entero con el brazo ancho y recortado después | 310,00 = 310,00 |
+| TTT 01-08 Tie Plate | Oreja + `AddNewMirror` ANTES de la placa (los recortes no le comen la placa) | 3 387,06 = 3 387,06 |
+| TTT 01-06 Bearing Jig | Perfil con tangencias desde build123d (`de_build123d.py`) + Intersect | 328,02 = 328,02 |
+| TTT 01-01 Bearing Bracket | Punta en dos arcos de 90, cola de milano | 797,15 = 797,15 |
+| TTT 23-T-24 Curved Support | Tangencias encadenadas resueltas en Python | 1 295,68 contra 1 294 ± 3 |
+| TTT 24-SPO-06 Buffer Stand | En PULGADAS (×25,4 en cada número) | 3,9327 lb contra 3,923 ± 0,02 |
+| TTT 01-09 Corner Tie | Pestaña inclinada armada plana + `AddNewRotate2` + Split | 307,23 = 307,23 |
+| Ensamble bracket + eje | Dos coincidencias PUNTO-PUNTO (una de rectas puede salir invertida); cdg con `Analyze.GetGravityCenter` por VBScript | cdg = gemelo al milésimo |
+| Ensamble con luz 0,1 | El choque de CATIA dice «contacto 0,0» con 0,1 de luz | luz 0,1000 medida afuera (abajo) |
+| Resorte | `AddNewHelix` + `AddNewPlaneNormal` + `AddNewRibFromRef` (sin croquis) | a 0,0003 % de π·r²·largo |
+| Tabla de diseño del CSWP | `CreateDesignTable` + `AddAssociation`, tabla en METROS | las 3 respuestas oficiales |
+| Biela-manivela (DMU Kinematics) | 3 revoluciones + 1 prismática + comando de ángulo, todo en UNA macro VBScript | x de la corredera con diferencia 0,0000 en 6 ángulos |
+
+**Herramientas nuevas (`scripts/catia/`, prueba sin CATIA `test_herramientas_tarde.py`, cada caso visto en rojo):**
+- `de_build123d.py <modulo> <funcion> <carpeta>` / `tramos(cara)`: el contorno de una cara de build123d a tramos de
+  `croquis.dibujar`. Arcos de más de 170° se parten en dos (el de 180 es ambiguo) y las puntas se redondean a 6
+  decimales (ruido de 1e-7 deja el perfil ABIERTO en CATIA). Para perfiles que salen de una cuenta (tangencias).
+- `pantalla.py`: `mover(pid)` lleva la ventana de ESA CATIA a la pantalla que no es la principal y la maximiza; con una
+  sola pantalla no hace nada. Lo llama `correr` en modo mirar.
+- `acomodar_cotas.py`: `acomodar(c, hoja)` saca las cotas repetidas entre vistas (`Dimensions.Remove`) y separa las que
+  se pisan (`GetBoundaryBox` por VBScript, `MoveValue(x, y, 0, 0)`). Las cotas de `GenerateDimensions` son las del
+  croquis, no las que pide un taller: esas se acotan a mano (`Dimensions.Add`, pendiente).
+- `catia_base.medir()` **se niega con un cuerpo VACÍO** (`ValueError`): medirlo rompía la sesión entera (KeyError en todas
+  las mediciones siguientes; pasó dos veces).
+
+**Plano de taller (Drafting):** `DefineFrontView(1,0,0, 0,1,0)`, `DefineProjectionView(gs, n)` (CatProjViewType: derecha 0,
+izquierda 1, arriba 2, abajo 3), `DefineSectionView([x1,y1,x2,y2], "SectionView", "Offset", 1, gs)`,
+`DefineIsometricView(...)`, `GenerateDimensions()`, `ExportData(ruta, "pdf")`. Tolerancias:
+`SetTolerances(1, "TOL_NUM2", "", "", 0.1, -0.1, 0)` sale «213 ±0,1»; un H7 va sobre un DIÁMETRO y `DimType` es de solo
+lectura (un R no se pasa a Ø por programa).
+
+**Reparar superficies (lo que va a pedir Paulo):**
+- Cara perdida: `AddNewBoundaryOfSurface` → `AddNewNear(borde, punto)` para separar los lazos → Fill SOLO del contorno de
+  afuera → `AddNewHybridSplit(tapa, boca, lado)` → Join con `SetDeviation(0.01)` → `CloseSurface`.
+  **Un Fill con los dos lazos TAPA el agujero y el volumen no lo ve** (membrana de espesor cero): el control de una
+  reparación es VOLUMEN Y ÁREA.
+- Rendijas entre caras: el Join de fábrica falla; con `SetDeviation` apenas mayor que la rendija medida (no 0,1 a ciegas:
+  pega caras que no van juntas) cierra. Healing también: `AddNewHealing(join)` + `SetMergingDistance(0.1)` (la propiedad
+  `MergingDistance` es de solo lectura).
+
+**Trampas nuevas:**
+- **`GetMinimumDistance` entre piezas de un ensamble falla por programa** con cualquier referencia. Lo que anda: exportar
+  el producto a STEP y medir con OpenCASCADE `BRepExtrema_DistShapeShape` (0,1000 exacto).
+- Las listas de referencias (juntas de un mecanismo, `GetGravityCenter`, `Position.Get/SetComponents`) no pasan desde
+  Python: van por `SystemService.Evaluate` con una macro VBScript.
+- La guía resumida de build123d trajo un dato mal en 4 ejercicios (clip, ranura, punto de tangencia, planta):
+  **el plano manda, la guía solo desempata**, y una tangencia se verifica con la geometría.
+- En el gemelo: `scale()` de build123d no escala el corrimiento de un `Pos` aplicado a un croquis (el hueco quedó a 4 mm
+  en vez de 4 in); `EllipticalCenterArc` con `end_angle` falla sin `angular_direction`. Medir cada parte (volumen + caja)
+  ubica el error en un paso.
+- Pendiente: la chapa (SM Hanger) no se maneja por COM en R21; se hace como sólido.

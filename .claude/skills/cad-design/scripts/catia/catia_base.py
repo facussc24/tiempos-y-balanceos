@@ -260,6 +260,12 @@ def sketch(part, body, plano, dibujar):
 
 
 def medir(doc, part, obj):
+    try:                                   # 19/10: medir un cuerpo SIN operaciones rompe todas las mediciones de la sesion
+        vacio = obj.Shapes.Count == 0      # (ej13 y ej38): se niega antes de tocar el SPA
+    except Exception:  # noqa: BLE001
+        vacio = False                      # no es un cuerpo (cara, arista, set): se mide normal
+    if vacio:
+        raise ValueError("medir(): el cuerpo esta VACIO (sin operaciones); medirlo rompe la sesion de CATIA")
     spa = doc.GetWorkbench("SPAWorkbench")
     m = spa.GetMeasurable(ref(part, obj))
     out = {}
@@ -490,6 +496,12 @@ def correr(nombre, cuerpo, visible=False, fresca=False):
     if fresca:
         reiniciar_mia()
     c, pid = conectar(visible or mirar)
+    if mirar and pid:                                 # Fak 19/10: CATIA siempre en su segunda pantalla
+        try:
+            import pantalla
+            print("  ", pantalla.mover(pid))
+        except Exception as e:  # noqa: BLE001
+            print("   no pude mover CATIA a la segunda pantalla:", repr(e)[:80])
     if mirar:                                         # lo que dejo abierto el ejercicio ANTERIOR, nada mas (auditor 19/10:
         cerrar_del_ejercicio(c, reg_avisos := [])     # un documento que Fak abra en esta CATIA visible no se toca)
         for a in reg_avisos:
