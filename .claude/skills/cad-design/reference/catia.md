@@ -4,6 +4,11 @@ Medido el 17/10/2026 (tanda 11) sobre lo probado el 10/10 y el 13/10 (memoria `r
 `.sgc-cache/investigacion-2026-10-11/catia/`, `.sgc-cache/catia-2026-10-13/` y `.sgc-cache/catia-2026-10-17/`).
 Licencia: la confirmó Fak el 13/10 (*«la licencia es oficial»*); no se vuelve a preguntar.
 
+**Antes de investigar algo de CATIA afuera (foros, agentes, la ayuda), se busca ADENTRO**: `grep -ri "<tema>"` en esta
+página, en `C:\Dev\_catia_practica\NOTAS.md` y en los `ej*.py` de la práctica. El 19/10 de tarde se lanzó un equipo de
+4 agentes para «poner material por COM» y la respuesta (`CATMatManagerVBExt`, simulación a 0,7977) estaba desde esa
+madrugada en el ej12 y en la tabla de abajo.
+
 **Decisión: no hay skill `catia` aparte.** CATIA es una herramienta más de `cad-design` (medir, chocar, abrir lo del
 cliente) y una skill nueva tendría que probar que se dispara con un mensaje real de Fak (`mejora-implementada.md`) sin
 agregar nada que esta página no diga. Se revisa si algún día se diseña EN CATIA por programa.
@@ -313,3 +318,40 @@ además `compara.py`.
   en vez de 4 in); `EllipticalCenterArc` con `end_angle` falla sin `angular_direction`. Medir cada parte (volumen + caja)
   ubica el error en un paso.
 - Pendiente, sin probar: chapa (Sheet Metal) por COM en R21 (el SM Hanger de Too Tall Toby).
+
+## 19/10/2026 — SIMULACIÓN por elementos finitos (Generative Structural Analysis) por programa: `scripts/catia/fem.py`
+
+**La fuente que lo destrabó: la ayuda OFICIAL instalada**, `B21\intel_a\code\bin\V5Automation.chm` (se descomprime
+con `hh.exe -decompile <carpeta corta sin espacios> <copia.chm>`; con una ruta larga no extrae nada y no avisa). Trae
+los ejemplos de Dassault en `online\CAAScdAniUseCases\macros\`: CAAAniUserMaterial.CATScript (material),
+CAAAniPreproOnProduct.catvbs (análisis desde la pieza, empotramiento, fuerza), CAAAniMeshOctTetra.catvbs (malla).
+Antes de buscar en foros, se busca ahí.
+
+- **Material** (`fem.poner_acero`): `part.GetItem("CATMatManagerVBExt")` + `ApplyMaterialOnPart(part, material, 0)`, el
+  material del catálogo por índice (`material_catia.material_por_indice`). «CATMatManagerVBA» da «GetItem failed» en
+  VBScript, VBA y CATScript, y `PasteSpecial "CATMatLink"` no da error y no aplica nada. El control es la DENSIDAD
+  (acero del catálogo 7 860; sin material 1 000). **«Guardar» sobre una copia abierta NO conservó el material**
+  (reabierta: 1 000); «Guardar como» a un archivo nuevo, sí. Sin material, la importación falla con el aviso «Material is
+  not properly defined».
+- **Análisis** (`fem.importar`): `Documents.Add("Analysis")` + `StartWorkbench("GPSCfg")` ANTES de
+  `ImportDefineFile(ruta, "CATAnalysisImport", Dim a(0))`; `LinkedDocuments.Item(1)` da la pieza; caso
+  (`AnalysisCases.Add`), `RestraintSet` y `LoadSet` (`AnalysisSets.Add(tipo, 0)`), `AddSolution("StaticSet")`; caras por
+  topología → `part.CreateReferenceFromName`; `SAMClamp` y `SAMDistributedForce` con `AddSupportFromProduct`; el vector
+  por `BasicComponents.GetItem("SAMForceVector.1")`; `Compute`; `AnalysisImages.Add("Disp_Symbol" |
+  "StressVonMises_Iso_Smooth", False, False, True).ExportData(carpeta, nombre, "txt")` → `fem.leer_export` (coma decimal,
+  exponente «e-005»; desplazamiento en mm, Von Mises en N/m²).
+- **Caso de respuesta conocida (ej57)**: viga de acero 200 × 20 × 10 en voladizo con 100 N en la punta: la cuenta
+  (Euler-Bernoulli + corte) da 0,8015 mm. **La malla POR DEFECTO es LINEAL y da 0,273 mm: −66 %, sin ningún aviso.**
+  Con `SetGlobalSpecification("ElementOrder", "Parabolic")` y `("SizeValue", tam)`: 10 mm −0,90 %, 5 mm −0,64 %, 2,5 mm
+  −0,55 % (converge; el resto es el empotramiento de la cara entera). **Una simulación sin malla parabólica y sin estudio
+  de convergencia no se cree.** En una chapa de 4: elementos de 2 mm o menos (dos o más en el espesor).
+- **La fuerza distribuida sobre VARIAS caras es el TOTAL repartido** (ej59, medido): 100 N sobre las dos mitades de la
+  punta (una ranura de 0,2 × 1 mm la parte) = 0,79707 mm, igual que en una sola cara; sumando por cara sería 1,594.
+  Ojo al armar esa prueba: dos pads pegados FUNDEN su cara de punta en una sola; se cuenta cuántas caras hay y su área.
+- **Pieza de verdad (ej58)**: el soporte de chapa del ej54, fijo en los pies y con 500 N en los dos Ø10 de las orejas:
+  flecha máxima 0,126 / 0,1306 / 0,1315 mm y Von Mises máximo 139,8 / 132,7 / 132,6 MPa con malla parabólica de 4 / 2 /
+  1,5 mm (converge; el máximo está en la unión de la oreja con la placa, sobre el doblez con radio), contra 250 MPa de
+  fluencia del acero del catálogo: margen 1,9. Tardó ~35 min las tres mallas: la convergencia se corre sin mostrar y la
+  FOTO con la malla gruesa (con 150 000 nodos CATIA dibujó triángulos sueltos y la pantalla quedó gris un rato largo).
+- **Regla práctica (no medida acá): el máximo de tensión puede estar en un canto vivo** (borde del empotramiento, de un agujero): ahí sube al achicar la
+  malla y no es real. Antes de compararlo con la fluencia se mira DÓNDE está y si converge.
