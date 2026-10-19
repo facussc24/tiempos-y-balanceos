@@ -159,8 +159,8 @@ en mm³; lo que vuelve de VBScript trae coma decimal.
    `AddNewRemove` (huella) o `AddNewIntersect` (choque exacto, con su gemelo corrido como control). El choque de CATIA
    (`Clashes`) NO decide décimas. **Una luz contra la pieza del cliente** (19/10, ej25): ni OpenCASCADE ni el Offset
    pelado de CATIA desplazan un panel de 1 309 caras; con `HybridShapeOffset.SuppressMode = 2` sí (piel por `Extract`
-   con `PropagationType = 1`, luz medida 0,492 a 0,5 en las caras), pero le quedan agujeros: no cierra, y el nido que
-   corta con ella dio distancia 0 y gemelo sin choque. **Sin verificar: no usarlo para un entregable todavía.**
+   con `PropagationType = 1`; luz mínima medida 0,492, mediana 0,5 y hasta 0,86 en aristas vivas), pero le quedan
+   agujeros: no cierra, y el nido que corta con ella toca el panel (distancia 0, `choque_exacto.py` → «toca»). **Sin verificar: no usarlo para un entregable todavía.**
 7. **Verificar con otro motor antes de mostrar**: `compara.py` contra la referencia (sobra / falta / distancia, no ciego) o
    `choque_exacto.py`; STEP con 1 sólido y 1 cáscara; STL cerrado con el volumen del B-Rep.
 8. **Plano**: `plano_de_step.py` para el general; cortes y cotas desde el croquis (`DefineSectionView`, `GenerateDimensions`).
