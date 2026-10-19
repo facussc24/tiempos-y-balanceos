@@ -66,6 +66,8 @@ lista suelta, 26/30 con estos 8 grupos; lo que faltó en esos exámenes está ma
 - ¿De dónde sale la elasticidad? (la casa: «sin gomas ni espumitas»)
 - Adhesivo fresco: ¿se desliza algo sobre él? ¿Dónde va el sobrante? Tiempo abierto contra el tiempo real de cada paso.
 - ¿Dónde corta el filo? (placa de corte sacrificial, nunca el PLA) ⊕
+- Troquel de fleje o molde de termoformado de prototipo: reglas de fabricante en `ficha-troqueles-termoformado.md`
+  (SIN AUDITAR: se abre la fuente antes de usar un número)
 
 **7. Error de carga**
 - ¿Qué error es posible: al revés, girada, espejada, capa faltante, variante equivocada? Que no entre o que se vea ⊕
