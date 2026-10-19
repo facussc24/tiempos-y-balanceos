@@ -120,3 +120,12 @@ caras con `AddNewAdd` («el servidor lanzó una excepción»); engancharse a una
 CATIA recién abierta. Un script cortado puede hacer que COM arranque otra CATIA sola (padre `svchost`): se identifica por
 hora y padre antes de tocarla. Unidades de `Measurable`: `Length` en mm, `Area` en m², `Volume` en m³; `Analyze.Volume`
 en mm³; lo que vuelve de VBScript trae coma decimal.
+
+**Agregado a las 03:50 del 19/10:**
+- **Choque exacto adentro de CATIA con piezas reales** (`scripts/catia/choque_exacto_en_catia.py`): el utillaje pegado como
+  cuerpo en la pieza del panel (`Selection.Copy` + `PasteSpecial("CATPrtResultWithOutLink")`) y `AddNewIntersect`: la v16
+  contra el panel del cliente da sin choque (OpenCASCADE: luz 0,0455) y el gemelo subido 1 mm 69,561 mm³ contra 69,573
+  de OpenCASCADE. Un STEP de build123d entra a CATIA como ensamble y su cuerpo no se puede copiar: para CATIA se escribe
+  con `STEPControl_Writer`.
+- **Reglas de la casa adentro de la pieza** (Knowledge): `Relations.CreateCheck(nombre, "", "Pared >= 2mm")` y se lee
+  `Diagnosis` (True/False); probado en las dos direcciones.
