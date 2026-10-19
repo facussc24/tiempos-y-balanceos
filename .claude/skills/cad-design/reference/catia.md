@@ -394,3 +394,10 @@ Antes de buscar en foros, se busca ahí.
   existir como parámetros/restricciones en el modelo para que el plano las genere. `Add2` de distancia entre dos
   puntos en vertical va con ángulo 90: con 0 mide la distancia horizontal (0) y falla «The method Add2 failed».
 - Script de práctica: `C:\Dev\_catia_practica\ej66_plano_despiece.py` (fuera del repo).
+- **Cotas generadas encima de la geometría → `acomodar_cotas.sacar_afuera(c, vista, contorno)`** (ej66c, 19/10): las
+  cajas de las cotas (`GetBoundaryBox`) vienen en coordenadas de la VISTA, o sea mm del modelo en los ejes H/V de la
+  vista (el 1000 del carro: y 12-35 sobre la barra 0-30), mientras `Size` da mm de HOJA y su centro es `v.X, v.Y`. Por
+  eso el contorno lo pasa el que llama (la caja del modelo proyectada en H/V). Horizontal → arriba/abajo según la mitad,
+  vertical → izquierda/derecha, escalonadas de a 8 mm de hoja. En el frente del carro: 4 movidas, 0 adentro. Límite:
+  si el VALOR ya cae apenas afuera, la línea de cota sigue pegada al borde (el 540 de la planta). Test con las cajas
+  reales y mutante que da rojo (`test_herramientas_tarde.py` 3 ter).

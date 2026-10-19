@@ -84,6 +84,24 @@ chequear("cajas encimadas se pisan", ac.se_pisan([0, 0, 10, 5], [8, 2, 20, 7]))
 chequear("cajas separadas no se pisan", not ac.se_pisan([0, 0, 10, 5], [15, 0, 20, 5]))
 chequear("a 0,5 con margen 1 se pisan", ac.se_pisan([0, 0, 10, 5], [10.5, 0, 20, 5]))
 
+# 3 ter. destino_afuera con las cajas reales del carro (ej66c, coordenadas de vista); frente 0..1000 x 0..800
+CONT = (0.0, 0.0, 1000.0, 800.0)
+u = {}
+abajo = ac.destino_afuera([452.5, 11.8, 547.5, 35.2], CONT, 50.0, u)
+arriba = ac.destino_afuera([452.5, 781.8, 547.5, 805.2], CONT, 50.0, u)
+izq = ac.destino_afuera([-8.2, 365.0, 15.2, 435.0], CONT, 50.0, u)
+der = ac.destino_afuera([901.8, 365.0, 925.2, 435.0], CONT, 50.0, u)
+chequear("el 1000 de abajo sale por abajo (y < 0)", abajo is not None and abajo[2] == "abajo" and abajo[1] < 0, abajo)
+chequear("el 1000 de arriba sale por arriba (y > 800)", arriba is not None and arriba[2] == "arriba" and arriba[1] > 800,
+         arriba)
+chequear("los 740 salen por los costados",
+         izq[2] == "izquierda" and izq[0] < 0 and der[2] == "derecha" and der[0] > 1000, (izq, der))
+chequear("una cota que ya esta afuera no se mueve", ac.destino_afuera([452.5, 900.0, 547.5, 925.0], CONT, 50.0, {}) is None)
+u2 = {}
+p1 = ac.destino_afuera([0, 780, 100, 800], CONT, 50.0, u2)
+p2 = ac.destino_afuera([200, 780, 300, 800], CONT, 50.0, u2)
+chequear("dos del mismo lado se escalonan de a un paso", abs((p2[1] - p1[1]) - 50.0) < 1e-9, (p1, p2))
+
 # 3 bis. acomodar() con un plano falso (Views / Dimensions / GetBoundaryBox por Evaluate)
 class Dim:
     def __init__(self, valor, tipo, caja_):

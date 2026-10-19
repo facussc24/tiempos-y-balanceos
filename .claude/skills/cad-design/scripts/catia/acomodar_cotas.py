@@ -77,3 +77,40 @@ def acomodar(c, hoja, orden=None, sacar_repetidas=False):
                 pisadas += 1
     return {"sacadas": sacadas, "repetidas_sacadas": len(sacadas), "movimientos": movidas, "siguen_pisadas": pisadas,
             "vistas_que_no_estan": faltan}
+
+
+def destino_afuera(cd, contorno, paso, usados):
+    """Adonde va el VALOR de una cota que cae adentro del contorno de la vista. Cajas en coordenadas de la VISTA (mm del
+    modelo: medido en ej66c, el 1000 de abajo del carro venia en y 12-35, encima de la barra de 0-30). Horizontal (mas
+    ancha que alta): arriba o abajo del contorno segun la mitad en que estaba; vertical: izquierda o derecha. `usados`
+    cuenta cuantas van de cada lado para escalonarlas de a `paso`. Devuelve (x, y, lado), o None si ya esta afuera."""
+    x0, y0, x1, y1 = contorno
+    if cd[2] <= x0 or cd[0] >= x1 or cd[3] <= y0 or cd[1] >= y1:
+        return None
+    cx, cy = (cd[0] + cd[2]) / 2, (cd[1] + cd[3]) / 2
+    if cd[2] - cd[0] >= cd[3] - cd[1]:
+        lado = "arriba" if cy >= (y0 + y1) / 2 else "abajo"
+    else:
+        lado = "derecha" if cx >= (x0 + x1) / 2 else "izquierda"
+    k = usados.get(lado, 0) + 1
+    usados[lado] = k
+    return {"arriba": (cx, y1 + k * paso), "abajo": (cx, y0 - k * paso),
+            "derecha": (x1 + k * paso, cy), "izquierda": (x0 - k * paso, cy)}[lado] + (lado,)
+
+
+def sacar_afuera(c, vista, contorno, paso_hoja=8.0):
+    """Lleva afuera del contorno de la geometria cada cota cuyo valor cae encima de ella. `contorno` = (x0, y0, x1, y1)
+    en coordenadas de la vista (la proyeccion de la caja del modelo en los ejes de la vista: CATIA no lo da en esas
+    coordenadas; `Size` devuelve mm de hoja). El paso entre cotas del mismo lado es `paso_hoja` mm de HOJA (dividido por
+    la escala). Devuelve cuantas movio y cuantas siguen adentro (el control: 0)."""
+    paso = paso_hoja / vista.Scale
+    usados, movidas = {}, 0
+    ds = vista.Dimensions
+    dims = [ds.Item(i) for i in range(1, ds.Count + 1)]
+    for d in dims:
+        dest = destino_afuera(caja(c, d), contorno, paso, usados)
+        if dest is not None:
+            d.MoveValue(dest[0], dest[1], 0, 0)
+            movidas += 1
+    adentro = sum(1 for d in dims if destino_afuera(caja(c, d), contorno, paso, {}) is not None)
+    return {"movidas": movidas, "siguen_adentro": adentro, "lados": usados}
