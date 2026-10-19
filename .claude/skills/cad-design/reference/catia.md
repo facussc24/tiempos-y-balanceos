@@ -133,6 +133,9 @@ en mm³; lo que vuelve de VBScript trae coma decimal.
   dos agujeros: 8 cotas en la vista de arriba y el espesor en el corte). `CreateClosedCircle` no trae punto centro: se crea
   `CreatePoint` y `circulo.CenterPoint = punto`. Corte: `DefineSectionView([x1, y1, x2, y2], "SectionView" | "SectionCut",
   "Offset", 1, gb_padre)` con el perfil en coordenadas de la PIEZA (con otras no da error: corta por otro lado).
+- **Plano automático de cualquier STEP** (`scripts/catia/plano_de_step.py <step> <salida.pdf> [--titulo]`): A3 con vistas
+  superior, frente, lateral e isométrica, escala normalizada elegida para que entre (v16 1:1, panel del cliente 1:2), marco
+  y cajetín con la caja MEDIDA con build123d (no pone cotas que no salen de un croquis). ~30 s con la CATIA abierta.
 - **Familia de piezas por tabla de diseño**: `Relations.CreateDesignTable(nombre, "", False, ruta.txt)` (tabulado) +
   `AddAssociation(part.Parameters.Item("Largo"), "Largo")` + `Configuration = n`: tres tamaños exactos. Encabezado SIN
   unidad = valores en METROS (con «(mm)» la asociación falla): 100 mm se escribe 0,1.
