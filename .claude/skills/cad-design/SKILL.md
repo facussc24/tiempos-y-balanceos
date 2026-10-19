@@ -17,6 +17,10 @@ las fuentes). La librería y los CLIs viven en `.claude/skills/cad-design/script
 un CLI por gate, todos con `--help`). Acá se los nombra pelados (`gate_zona.py`); la ruta completa
 es esa, **no** el `scripts/` de la raíz del repo, que es otro.
 
+**ANTES DEL PRIMER CROQUIS: las 13 preguntas de `reference/preguntas-antes-de-disenar.md`, contestadas por escrito**
+(rígida o flexible, secuencia, fuerzas por etapa, cómo entra y sale, **cada unión con su área**…). Es el criterio de
+diseñador, que va antes de la herramienta (Fak, 19/10/2026: *"¿por qué te lo tuve que decir? eso debés preguntártelo vos"*).
+
 ## 4. Verificar antes de cerrar — REGLA DURA
 
 Render → MIRARLO → corregir, DESPUÉS de cada cambio (no post-export). Criterio CADGenBench
