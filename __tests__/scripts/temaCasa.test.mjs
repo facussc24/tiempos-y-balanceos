@@ -69,7 +69,7 @@ describe('tema de la casa', () => {
   });
 
   it('ningun script vuelve a nombrar el logo no oficial de la lamina; la lamina pide el logo al tema', () => {
-    // el PNG viejo (scripts/lamina_proceso/logo_barack.png, sha256 deef25cd...) queda en el disco sin uso: borrar lleva pregunta
+    // el PNG viejo (scripts/lamina_proceso/logo_barack.png, sha256 deef25cd...) se borro el 18/10 con el si de Fak: que nadie lo vuelva a nombrar
     const r = spawnSync('git', ['ls-files', '*.py', '*.mjs', '*.js', '*.sh'], { cwd: RAIZ, encoding: 'utf8' });
     const quienLoNombra = r.stdout.split(/\r?\n/).filter(Boolean)
       .filter((p) => !p.startsWith('__tests__/'))
