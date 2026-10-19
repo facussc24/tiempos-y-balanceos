@@ -57,6 +57,16 @@ with tempfile.TemporaryDirectory() as td:
     cambio, _ = sc.arreglar_archivo(r, conservar_fecha=False)
     chequear(cambio and sc.orden_de_archivo(r) == sc.CLAVES and int(os.path.getmtime(r)) != 1000000000,
              "con conservar_fecha=False (OneDrive) queda en orden y con fecha nueva")
+    # y `arreglar` lo pide solo en una carpeta de OneDrive (auditor del 18/10: nada lo probaba); afuera conserva la fecha
+    od = os.path.join(td, "OneDrive - prueba de la fecha")
+    os.makedirs(od)
+    s = os.path.join(od, "occ.step")
+    with open(s, "wb") as f:
+        f.write(OCC.encode("latin-1"))
+    os.utime(s, (1000000000, 1000000000))
+    chequear(sc.en_la_nube(s), "una carpeta con OneDrive en la ruta cuenta como nube")
+    chequear(cabecera_step.arreglar([s], ok_fak="prueba") == 0 and int(os.path.getmtime(s)) != 1000000000,
+             "arreglar en OneDrive deja fecha nueva")
     q = os.path.join(td, "no_es.step")
     open(q, "w").write("hola")
     chequear(sc.orden_de_archivo(q) is None, "un archivo que no es STEP: sin cabecera (no inventa un orden)")

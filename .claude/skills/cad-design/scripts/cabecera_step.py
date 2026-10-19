@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # Interprete: cualquier Python 3.10+ (solo lee y escribe texto).
 #   python cabecera_step.py revisar <archivos o carpetas...>     # solo lee; saltea lo que esta solo en la nube
-#   python cabecera_step.py arreglar <archivo.step...>           # reordena en el lugar (conserva la fecha)
+#   python cabecera_step.py arreglar <archivo.step...>           # reordena en el lugar (conserva la fecha; en OneDrive
+#                                                                  no: fecha nueva, si no OneDrive lo toma como conflicto)
 """Cabecera de los STEP: ISO 10303-21 fija FILE_DESCRIPTION, FILE_NAME, FILE_SCHEMA (tanda 2, 17/10/2026).
 
 OpenCASCADE 7.8 (build123d, cadquery) la escribe al revés y CATIA V5 R21 lee ese STEP VACÍO sin avisar.
