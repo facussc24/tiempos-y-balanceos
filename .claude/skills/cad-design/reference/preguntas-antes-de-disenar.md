@@ -7,7 +7,7 @@ tubo cuyas patas tocaban el marco por una arista: *"¿por qué te lo tuve que de
 **Se contestan POR ESCRITO, en el chat o en el pliego, antes del primer croquis.** Lo que no se sabe va TBD y se dice;
 no se inventa (`core-prohibiciones` §1).
 
-## Las 13 obligatorias (cada una ya costó un error real en la casa)
+## Las 17 obligatorias (cada una ya costó un error real en la casa)
 
 1. **¿La pieza es rígida o flexible?** Rígida: 3-2-1, nada redundante. Flexible (tapizado, termoformado, chapa fina):
    N-2-1, más apoyos (ficha-utillajes U2). Va primera porque cambia todo lo demás.
@@ -28,6 +28,17 @@ no se inventa (`core-prohibiciones` §1).
     se traslada sin decirlo. Si es otro taller, con qué matrices o herramientas trabaja.
 12. **¿Toca algo blando, pintado o clase A?** Bordes redondeados, área, y la simulación apoyada y apretada (GATE A).
 13. **¿Cuál es el criterio de aceptación, escrito ANTES?** (cuánto, medido cómo, con qué pieza).
+14. **¿La cota que gobierna sale de cómo se hace HOY en planta, o del dibujo?** (pines de la CNC: el DXF decía Ø3 y en
+    planta el agujero se hace con sacabocado Ø2; con Ø3 queda suelto).
+15. **¿Qué hay y qué SE MUEVE alrededor: la máquina, su puerta, la prensa, la mano?** Si no hay 3D ni medidas de la
+    máquina, se piden o se miden antes (triangulito de la hot press: la puerta golpea la cola del dedo, 19/10).
+16. **¿Tengo el 3D REAL y COMPLETO del conjunto?** Un export parcial o un proxy hace modificar la pieza equivocada
+    (Top Roll: la torre equivocada con 2 sólidos de un ensamble; adhesivado: un proxy de 3 mm desviado hasta 5 mm).
+17. **¿El pedido es «lo mismo pero doble, simétrico o más grande»?** Se rehace la cuenta que gobierna antes de tocar el
+    modelo: el mecanismo puede no admitir la variante (gancho de mochila doble: se anula el momento y se cae).
+
+**Cómo se probó la lista (19/10):** contra los 11 casos reales de la casa (frente 4, parte b). Con las 13 primeras, 7
+casos los frenaba alguna pregunta; los 4 que no (pines, triangulito, Top Roll, gancho doble) dieron las preguntas 14 a 17.
 
 Después de estas, y antes de cerrar: **el tamaño del conjunto contra lo que hace** (GATE 4: un dispositivo que
 aprieta 6 N no puede pesar medio kilo).
