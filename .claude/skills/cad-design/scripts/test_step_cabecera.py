@@ -48,6 +48,15 @@ with tempfile.TemporaryDirectory() as td:
     chequear(int(os.path.getmtime(p)) == 1000000000, "la fecha de modificacion no cambia")
     chequear(sc.arreglar_archivo(p) == (False, sc.CLAVES), "una cabecera ya en orden no se toca (idempotente)")
     chequear(cabecera_step.revisar([td]) == 0, "revisar sale 0 con todos en orden")
+    # 18/10: en OneDrive la fecha tiene que cambiar (con la misma fecha, OneDrive deja el de la nube y crea una copia
+    # de conflicto con el arreglo)
+    r = os.path.join(td, "occ_nube.step")
+    with open(r, "wb") as f:
+        f.write(OCC.encode("latin-1"))
+    os.utime(r, (1000000000, 1000000000))
+    cambio, _ = sc.arreglar_archivo(r, conservar_fecha=False)
+    chequear(cambio and sc.orden_de_archivo(r) == sc.CLAVES and int(os.path.getmtime(r)) != 1000000000,
+             "con conservar_fecha=False (OneDrive) queda en orden y con fecha nueva")
     q = os.path.join(td, "no_es.step")
     open(q, "w").write("hola")
     chequear(sc.orden_de_archivo(q) is None, "un archivo que no es STEP: sin cabecera (no inventa un orden)")

@@ -119,9 +119,12 @@ def orden_de_archivo(path, leer=2_000_000):
     return tuple(sorted(CLAVES, key=lambda k: tr[k][0]))
 
 
-def arreglar_archivo(path):
+def arreglar_archivo(path, conservar_fecha=True):
     """Reordena la cabecera EN EL LUGAR, sin tocar un byte del resto (latin-1 ida y vuelta, finales de línea como
     estaban) y conservando la fecha de modificación (G-E2 compara fechas). Devuelve (cambió, orden_que_tenía).
+    Con `conservar_fecha=False` la fecha queda la de ahora: es lo que va en una carpeta de OneDrive, donde el mismo
+    archivo con otro contenido y la MISMA fecha es un conflicto y OneDrive se queda con el de la nube (18/10/2026: el v14
+    del virolador volvió a la cabecera al revés y el arreglo quedó en «...-DESKTOP-14JG95B.step»).
     Después de escribir vuelve a LEER el archivo: si no quedó en orden, ValueError."""
     with open(path, "rb") as f:
         crudo = f.read()
@@ -132,7 +135,8 @@ def arreglar_archivo(path):
     st = os.stat(path)
     with open(path, "wb") as f:
         f.write(nuevo.encode("latin-1"))
-    os.utime(path, (st.st_atime, st.st_mtime))
+    if conservar_fecha:
+        os.utime(path, (st.st_atime, st.st_mtime))
     if orden_de_archivo(path) != CLAVES:
         raise ValueError("despues de arreglar, la cabecera de %s sigue fuera de orden" % path)
     return True, tuple(orden)

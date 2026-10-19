@@ -72,7 +72,8 @@ def arreglar(rutas, ok_fak=None):
             mal += 1
             continue
         try:
-            cambio, orden = sc.arreglar_archivo(p)
+            # en OneDrive, con fecha nueva: con la misma fecha OneDrive lo toma como conflicto y deja el de la nube
+            cambio, orden = sc.arreglar_archivo(p, conservar_fecha=not sc.en_la_nube(p))
         except (OSError, ValueError) as e:
             print("  ERROR    %s: %s" % (p, e))
             mal += 1
