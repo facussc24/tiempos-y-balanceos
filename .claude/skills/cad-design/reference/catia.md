@@ -445,3 +445,12 @@ solucionador: Ø160 → 113,1371, Ø159,86 → 113,0381, error de posición **0,
   quedar la pieza, y se controla el signo de la posición resuelta.
 - **`Move.Apply` con una matriz de VBScript: cargar los 12 valores con `CDbl`** (`For i = 0 To 11: t(i) = CDbl(0)`): con los
   lugares sin cargar (Empty) no mueve y la posición sale con basura de 1e-313. En una corrida además quedó sin resolver.
+
+## 19/10/2026 (noche) — presión y simetría en la simulación (ej75, ajuste por contracción, banco E17)
+
+`Estudio.presion(caras, pa)` (SAMPressure; el valor se busca por el prefijo `SAMPressureMag`: `GetItem("SAMPressureMag.1")`
+FALLA aunque la ayuda lo liste así) y `Estudio.deslizar(caras)` (SAMSurfaceSlider = condición de simetría para un cuarto
+de pieza). Probado: dos cuartos de anillo de aluminio (40-45 y 45-100, 15 de profundidad), la presión publicada
+2,79e7 Pa en el contacto: el de adentro se cierra 0,14704 mm, el de afuera se abre 0,03296, **suma 0,18000 = interferencia**
+(α·R·ΔT), igual en toda la profundidad. El anillo fino absorbe el 82 %. Ojo: la fórmula supone el MISMO material en los
+dos: un buje de acero en un cuerpo impreso no se calcula con esto (y el plástico fluye con el tiempo).

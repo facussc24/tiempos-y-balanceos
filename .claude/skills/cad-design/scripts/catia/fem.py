@@ -116,6 +116,26 @@ class Estudio:
             v.SetValue("", k, 1, 1, float(val))
         return [v.GetValue("", k, 1, 1) for k in (1, 2, 3)]
 
+    def presion(self, nombres, pa):
+        """Presion (N/m2) normal a las caras, positiva = empuja HACIA la pieza (SAMPressure / SAMPressureMag.1, de la
+        lista de entidades de CAAAniPreprocessingFeatures). Devuelve el valor que quedo cargado."""
+        if self.ls is None:
+            raise RuntimeError("un estudio de frecuencias no lleva cargas")
+        p = self.ls.AnalysisEntities.Add("SAMPressure")
+        self._soportes(p, nombres)
+        bc = p.BasicComponents
+        nombres_bc = [bc.Item(i).Name for i in range(1, bc.Count + 1)]
+        v = next((bc.Item(i) for i, n in enumerate(nombres_bc, start=1) if n.startswith("SAMPressureMag")), None)
+        if v is None:
+            raise RuntimeError(f"la presion no trae SAMPressureMag; trae {nombres_bc}")
+        v.SetValue("", 1, 1, 1, float(pa))
+        return v.GetValue("", 1, 1, 1)
+
+    def deslizar(self, nombres):
+        """Apoyo deslizante (SAMSurfaceSlider): la cara no se mueve en su normal y desliza en su plano. Es la condicion
+        de SIMETRIA para modelar un cuarto de pieza."""
+        self._soportes(self.rs.AnalysisEntities.Add("SAMSurfaceSlider"), nombres)
+
     def malla(self, orden="Parabolic", tam="2mm"):
         partes = self.mo.MeshManager.AnalysisMeshParts
         if partes.Count != 1:                      # las demas quedarian con la malla LINEAL por defecto, sin aviso

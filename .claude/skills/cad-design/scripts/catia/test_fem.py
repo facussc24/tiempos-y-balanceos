@@ -111,6 +111,37 @@ ef, sets_f, sol_f = estudio_init("FrequencySet")
 chequear("Estudio FrequencySet: solo RestraintSet (sin LoadSet) y AddSolution(FrequencySet)",
          sets_f.creados == ["RestraintSet"] and sol_f == ["FrequencySet"], (sets_f.creados, sol_f))
 chequear("Estudio FrequencySet: fuerza() se niega", se_niega(lambda: ef.fuerza(["cara"], (0, 0, -1))))
+chequear("Estudio FrequencySet: presion() se niega", se_niega(lambda: ef.presion(["cara"], 1e6)))
+
+
+class ValorFalso:
+    def __init__(self, nombre):
+        self.Name, self.v = nombre, None
+
+    def SetValue(self, _s, _a, _b, _c, v):
+        self.v = v
+
+    def GetValue(self, _s, _a, _b, _c):
+        return self.v
+
+
+def estudio_presion(nombres_bc):
+    e = fem.Estudio.__new__(fem.Estudio)
+    e.prod = "p"
+    e.part = types.SimpleNamespace(CreateReferenceFromName=lambda n: n)
+    items = [ValorFalso(n) for n in nombres_bc]
+    bc = types.SimpleNamespace(Count=len(items), Item=lambda i: items[i - 1])
+    ent = types.SimpleNamespace(BasicComponents=bc, AddSupportFromProduct=lambda p, r: None)
+    e.ls = types.SimpleNamespace(AnalysisEntities=types.SimpleNamespace(Add=lambda t: ent))
+    return e, items
+
+
+# 19/10 (ej75): CATIA numera el componente distinto que la lista de la ayuda (GetItem("SAMPressureMag.1") fallo)
+ep, it = estudio_presion(["SAMDTPtrPressure.1", "SAMPressureMag.3"])
+chequear("presion(): encuentra SAMPressureMag aunque cambie el numero y carga el valor",
+         ep.presion(["cara"], 2.79e7) == 2.79e7 and it[1].v == 2.79e7 and it[0].v is None, [x.v for x in it])
+ep2, _ = estudio_presion(["SAMDTPtrPressure.1"])
+chequear("presion(): sin SAMPressureMag se niega (no carga en otro componente)", se_niega(lambda: ep2.presion(["c"], 1.0)))
 es, sets_s, sol_s = estudio_init("StaticSet")
 chequear("Estudio StaticSet: RestraintSet + LoadSet y AddSolution(StaticSet)",
          sets_s.creados == ["RestraintSet", "LoadSet"] and sol_s == ["StaticSet"], (sets_s.creados, sol_s))
