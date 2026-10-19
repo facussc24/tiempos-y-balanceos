@@ -34,7 +34,9 @@ lista suelta, 26/30 con estos 8 grupos; lo que faltó en esos exámenes está ma
 **4. Operario y puesto**
 - ¿Cómo ENTRA la pieza y queda ubicada aunque la apoyen torcida? ¿Cómo SALE sin herramienta?
 - Ergonomía: altura de toma y de trabajo, alcance, peso a levantar (HSE/NIOSH), una o dos manos, guantes ⊕
-- Seguridad: manos lejos de calor, adhesivo, punzón, aguja y cierre de prensa; sin puntos de atrapamiento.
+- Seguridad: manos lejos de calor, adhesivo, punzón, aguja y cierre de prensa; sin puntos de atrapamiento; una guarda
+  se dimensiona con las distancias de seguridad de norma (ISO 13857 alcance, ISO 13855 velocidad de aproximación) y la
+  temperatura de superficie que se puede tocar (ISO 13732-1) ⊕
 - Peso del propio útil y cambio de variante SIN herramientas ⊕
 
 **5. Uniones, fabricación y máquina**
@@ -42,7 +44,8 @@ lista suelta, 26/30 con estos 8 grupos; lo que faltó en esos exámenes está ma
 - ¿Quién lo fabrica y con qué? (A2L con PLA Lite/PETG; herrero con plano; taller). ¿ENTRA EN LA CAMA? Si se parte, que
   las uniones no se coman la tolerancia ⊕
 - Carga respecto de las capas (paralela, nunca tirando de ellas); orientación de impresión ⊕
-- ¿Cómo se fija y se repone en la máquina (repetible; sin imanes cerca de calor)? ⊕
+- ¿Cómo se fija y se repone en la máquina (repetible; sin imanes cerca de calor)? ¿Cuánta ALTURA o LUZ libre hay (prensa
+  abierta, platina que cierra, recorrido de la herramienta) y qué no puede tocar? ⊕ (se me pasó dos veces)
 - ¿Qué proceso viene después de fabricarlo (galvanizado → venteo; pintura; horno)? ⊕
 
 **6. Calor, adhesivo y blando**
@@ -64,7 +67,7 @@ lista suelta, 26/30 con estos 8 grupos; lo que faltó en esos exámenes está ma
 - Costo y tiempo de hacerlo contra lo que ahorra (scrap o retrabajo de hoy) ⊕
 - Al final: el tamaño del conjunto contra lo que hace (GATE 4).
 
-**Cómo se probó (19/10/2026):** primero 13 preguntas contra los 11 casos reales de la casa (frente 4, parte b): frenaban 7; los 4 que no (pines, triangulito, Top Roll, gancho doble) dieron 4 más. Después exámenes a ciegas escritos por otra IA con las respuestas guardadas aparte: de trampas 5/5, 6/6 y 6/6; abiertos (mail de supervisor con grilla oculta de 10 puntos) 24/30 y 25/30 con la lista suelta, 26/30 y 28/30 con estos 8 grupos. Las preguntas marcadas ⊕ son las que faltaban. Límite: los exámenes los escribió una IA; la prueba que vale es un pedido real.
+**Cómo se probó (19/10/2026):** primero 13 preguntas contra los 11 casos reales de la casa (frente 4, parte b): frenaban 7; los 4 que no (pines, triangulito, Top Roll, gancho doble) dieron 4 más. Después exámenes a ciegas escritos por otra IA con las respuestas guardadas aparte: de trampas 5/5, 6/6 y 6/6; abiertos (mail de supervisor con grilla oculta de 10 puntos) 24/30 y 25/30 con la lista suelta, 26/30, 28/30 y 26/30 con estos 8 grupos. Las preguntas marcadas ⊕ son las que faltaban. Límite: los exámenes los escribió una IA; la prueba que vale es un pedido real.
 
 ## La lista completa (60 preguntas, auditada el 19/10 contra los cuatro informes: 0 números inventados)
 
