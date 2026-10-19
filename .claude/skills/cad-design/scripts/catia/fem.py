@@ -6,8 +6,9 @@ voladizo: 0,797 mm contra 0,8015 de la cuenta, malla parabolica de 2,5 mm).
   poner_acero(c, doc)                      material del catalogo con part.GetItem("CATMatManagerVBExt") (NO "VBA")
   importar(c, ruta_catpart) -> Estudio     Documents.Add("Analysis") + StartWorkbench("GPSCfg") + ImportDefineFile
   est.empotrar(nombres_de_caras)           SAMClamp
-  est.fuerza(nombres_de_caras, (fx,fy,fz)) SAMDistributedForce sobre esas caras (con UNA cara medido: es el total;
-                                           con VARIAS, si reparte o suma por cara: ej59)
+  est.fuerza(nombres_de_caras, (fx,fy,fz)) SAMDistributedForce: el TOTAL en N repartido entre esas caras (medido,
+                                           ej59: 100 N sobre las 2 mitades de la punta = 0,797 mm, igual que en 1 cara;
+                                           si sumara por cara daria 1,594)
   est.malla(orden="Parabolic", tam="2mm")  OJO: la malla por defecto es LINEAL y en flexion da -66 % sin avisar
   est.calcular() ; est.exportar(imagen) -> [(x, y, z, valores...)]
 Los nombres de cara salen de catia_base.topologia(doc, cuerpo, "Face") (d["nombre"]), con la pieza abierta antes."""

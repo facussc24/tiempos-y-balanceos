@@ -345,5 +345,13 @@ Antes de buscar en foros, se busca ahí.
   Con `SetGlobalSpecification("ElementOrder", "Parabolic")` y `("SizeValue", tam)`: 10 mm −0,90 %, 5 mm −0,64 %, 2,5 mm
   −0,55 % (converge; el resto es el empotramiento de la cara entera). **Una simulación sin malla parabólica y sin estudio
   de convergencia no se cree.** En una chapa de 4: elementos de 2 mm o menos (dos o más en el espesor).
-- **El máximo de tensión puede estar en un canto vivo** (borde del empotramiento, de un agujero): ahí sube al achicar la
+- **La fuerza distribuida sobre VARIAS caras es el TOTAL repartido** (ej59, medido): 100 N sobre las dos mitades de la
+  punta (una ranura de 0,2 × 1 mm la parte) = 0,79707 mm, igual que en una sola cara; sumando por cara sería 1,594.
+  Ojo al armar esa prueba: dos pads pegados FUNDEN su cara de punta en una sola; se cuenta cuántas caras hay y su área.
+- **Pieza de verdad (ej58)**: el soporte de chapa del ej54, fijo en los pies y con 500 N en los dos Ø10 de las orejas:
+  flecha máxima 0,126 / 0,1306 / 0,1315 mm y Von Mises máximo 139,8 / 132,7 / 132,6 MPa con malla parabólica de 4 / 2 /
+  1,5 mm (converge; el máximo está en la unión de la oreja con la placa, sobre el doblez con radio), contra 250 MPa de
+  fluencia del acero del catálogo: margen 1,9. Tardó ~35 min las tres mallas: la convergencia se corre sin mostrar y la
+  FOTO con la malla gruesa (con 150 000 nodos CATIA dibujó triángulos sueltos y la pantalla quedó gris un rato largo).
+- **Regla práctica (no medida acá): el máximo de tensión puede estar en un canto vivo** (borde del empotramiento, de un agujero): ahí sube al achicar la
   malla y no es real. Antes de compararlo con la fluencia se mira DÓNDE está y si converge.
