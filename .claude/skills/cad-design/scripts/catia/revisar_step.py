@@ -12,6 +12,7 @@ Como se lee: en una piel abierta de un solo pedazo (un tapizado) un lazo es el c
 diseno o falla: se mira); en algo que deberia ser CERRADO cualquier lazo es una abertura. Una cara dada vuelta NO se
 detecta (el cosido la endereza)."""
 import json
+import os
 import re
 import sys
 
@@ -133,11 +134,20 @@ def main(ruta):
                 "pedazos": len(trozos),
                 "por_pedazo": trozos, "bordes_libres": len(ab0),
                 "rendijas_bordes_que_cierran_al_recoser": len(ab0) - len(ab1), "recoser_mm": COSIDO_RENDIJAS}
-    print(json.dumps({"solidos_declarados": declarados, "solidos_leidos": len(filas),
-                      "solido_roto_probable": declarados > len(filas), "solidos": filas, "caras_total": len(caras),
+    # una pieza usada dos veces en un ensamble se declara UNA vez y se lee dos (misma TShape): se cuentan las formas
+    # DISTINTAS, si no la repetida tapa a un solido roto (auditor ronda 2, caso n13)
+    distintas = []
+    for so in solidos:
+        if not any(so.wrapped.IsPartner(d.wrapped) for d in distintas):
+            distintas.append(so)
+    print(json.dumps({"solidos_declarados": declarados, "solidos_leidos": len(filas), "formas_distintas": len(distintas),
+                      "solido_roto_probable": declarados > len(distintas), "solidos": filas, "caras_total": len(caras),
                       "superficies_sueltas": piel}))
     return 0
 
 
 if __name__ == "__main__":
+    if len(sys.argv) < 2 or not os.path.isfile(sys.argv[1]):
+        print(json.dumps({"error": "falta el archivo o no existe: " + (sys.argv[1] if len(sys.argv) > 1 else "(sin argumento)")}))
+        sys.exit(2)
     sys.exit(main(sys.argv[1]))

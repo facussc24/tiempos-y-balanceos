@@ -48,6 +48,21 @@ chequear("solido declarado con una cara de menos: el lector lo deja en superfici
 bj, bc = revisar(caso("basura.step"), codigo=True)
 chequear("archivo basura: sale con codigo 2 y error (no da «sano»)", bc == 2 and "error" in bj, (bc, bj))
 
+# ronda 2 del auditor (19/10)
+n13 = revisar(caso("n13_ensamble_instancia_y_roto.step"))
+chequear("una pieza repetida en el ensamble NO tapa al solido roto (formas distintas 1 < declarados 2)",
+         n13["solido_roto_probable"] and n13["formas_distintas"] == 1 and n13["solidos_leidos"] == 2, n13)
+n13b = revisar(caso("n13b_ensamble_control.step"))
+chequear("el mismo roto sin la repetida tambien avisa", n13b["solido_roto_probable"], n13b)
+r2 = revisar(caso("n05_rendija_0.2.step"))["superficies_sueltas"]
+chequear("rendija de 0,2: NO cierra al recoser a 0,1 (8 bordes libres, 0 rendijas)",
+         r2["bordes_libres"] == 8 and r2[RENDIJAS] == 0, r2)
+g3 = revisar(caso("g03_hueco_las_dos_pieles_abiertas.step"))
+chequear("solido hueco (BREP_WITH_VOIDS) con las dos pieles abiertas: se cuenta como declarado y avisa",
+         g3["solidos_declarados"] == 1 and g3["solido_roto_probable"], g3)
+nx, nc = revisar(os.path.join(AQUI, "_casos_fem", "no_existe.step"), codigo=True)
+chequear("archivo que no existe: codigo 2 y error", nc == 2 and "error" in nx, (nc, nx))
+
 from build123d import Sphere, export_step  # noqa: E402
 esf = os.path.join(tempfile.mkdtemp(prefix="revstep_"), "esfera.step")
 export_step(Sphere(10), esf)
