@@ -68,6 +68,12 @@ lista suelta, 26/30 con estos 8 grupos; lo que faltó en esos exámenes está ma
 - Costo y tiempo de hacerlo contra lo que ahorra (scrap o retrabajo de hoy) ⊕
 - Al final: el tamaño del conjunto contra lo que hace (GATE 4).
 
+**Y al terminar la propuesta: una REVISIÓN por otro modelo que solo diga qué le falta** (sin elogios, máximo 8 ítems por
+pedido; por la API, `node scripts/_apiTarea.mjs --modelo opus`, ~US$ 0,30, o el agente `revisor-pedido`). Medido en el
+examen abierto 7: 27/30 con los 8 grupos solos, 29/30 con la revisión (trajo la traba de los rollos, el oreo de las piezas
+encoladas, la cuenta del material que sobra al doblar una esquina R40). Lo que la revisión afirma sin fuente se verifica
+antes de usarlo (ej.: un límite ATEX de superficie plástica quedó «a verificar»).
+
 **Cómo se probó (19/10/2026):** primero 13 preguntas contra los 11 casos reales de la casa (frente 4, parte b): frenaban 7; los 4 que no (pines, triangulito, Top Roll, gancho doble) dieron 4 más. Después exámenes a ciegas escritos por otra IA con las respuestas guardadas aparte: de trampas 5/5, 6/6 y 6/6; abiertos (mail de supervisor con grilla oculta de 10 puntos) 24/30 y 25/30 con la lista suelta, 26/30, 28/30, 26/30 y 27/30 con estos 8 grupos (~89 %). Las preguntas marcadas ⊕ son las que faltaban. Límite: los exámenes los escribió una IA; la prueba que vale es un pedido real.
 
 ## La lista completa (60 preguntas, auditada el 19/10 contra los cuatro informes: 0 números inventados)
