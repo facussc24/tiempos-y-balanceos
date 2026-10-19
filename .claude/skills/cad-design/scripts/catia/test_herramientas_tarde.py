@@ -65,9 +65,79 @@ chequear("cajas encimadas se pisan", ac.se_pisan([0, 0, 10, 5], [8, 2, 20, 7]))
 chequear("cajas separadas no se pisan", not ac.se_pisan([0, 0, 10, 5], [15, 0, 20, 5]))
 chequear("a 0,5 con margen 1 se pisan", ac.se_pisan([0, 0, 10, 5], [10.5, 0, 20, 5]))
 
+# 3 bis. acomodar() con un plano falso (Views / Dimensions / GetBoundaryBox por Evaluate)
+class Dim:
+    def __init__(self, valor, tipo, caja_):
+        self.valor, self.DimType, self.caja = valor, tipo, list(caja_)
+
+    def GetValue(self):
+        return types.SimpleNamespace(Value=self.valor)
+
+    def MoveValue(self, x, y, *_):
+        w, h = self.caja[2] - self.caja[0], self.caja[3] - self.caja[1]
+        self.caja = [x - w / 2, y - h / 2, x + w / 2, y + h / 2]
+
+
+class Lista:
+    def __init__(self, items):
+        self.items = items
+
+    @property
+    def Count(self):
+        return len(self.items)
+
+    def Item(self, i):
+        return self.items[i - 1]
+
+    def Remove(self, i):
+        del self.items[i - 1]
+
+
+def vista(nombre, dims):
+    return types.SimpleNamespace(Name=nombre, Dimensions=Lista(dims))
+
+
+def plano():
+    planta = vista("Planta", [Dim(40.0, 0, (0, 0, 8, 3)), Dim(10.0, 0, (20, 0, 28, 3)), Dim(10.0, 0, (40, 0, 48, 3))])
+    frente = vista("Frente", [Dim(40.0, 0, (0, 50, 8, 53)), Dim(40.0, 9, (20, 50, 28, 53)),
+                              Dim(90.0, 0, (60, 50, 68, 53)), Dim(90.0, 0, (60, 50, 68, 53))])
+    return types.SimpleNamespace(Views=Lista([planta, frente])), planta, frente
+
+
+def evaluar(_macro, _l, _f, args):
+    x0, y0, x1, y1 = args[0].caja
+    return ";".join(str(v) for v in (x0, y0, x1, y0, x1, y1, x0, y1))
+
+
+cfake = types.SimpleNamespace(SystemService=types.SimpleNamespace(Evaluate=evaluar))
+hoja, planta, frente = plano()
+r = ac.acomodar(cfake, hoja)
+chequear("acomodar() por defecto no saca ninguna cota", r["repetidas_sacadas"] == 0 and
+         planta.Dimensions.Count == 3 and frente.Dimensions.Count == 4, r)
+chequear("acomodar() separa dos cotas con la MISMA caja", r["siguen_pisadas"] == 0 and r["movimientos"] > 0, r)
+hoja, planta, frente = plano()
+r = ac.acomodar(cfake, hoja, sacar_repetidas=True)
+chequear("sacar_repetidas: dentro de una misma vista nunca (los dos 10 de la planta quedan)",
+         planta.Dimensions.Count == 3, [d.valor for d in planta.Dimensions.items])
+chequear("sacar_repetidas: entre vistas, mismo valor y tipo (el 40 del frente) sale y se lista",
+         [(s["vista"], s["valor"], s["tipo"]) for s in r["sacadas"]] == [("Frente", 40.0, 0)], r["sacadas"])
+chequear("sacar_repetidas: mismo valor y OTRO tipo (el diametro 40) queda",
+         any(d.valor == 40.0 and d.DimType == 9 for d in frente.Dimensions.items))
+r = ac.acomodar(cfake, plano()[0], orden=["Front view"])
+chequear("una vista pedida que no existe se avisa", r["vistas_que_no_estan"] == ["Front view"], r)
+
 # 4. de_build123d.tramos en .venv-cad
 VENV = r"C:\Dev\BarackMercosul\.venv-cad\Scripts\python.exe"
 if os.path.exists(VENV):
+    rc = subprocess.run([VENV, os.path.join(AQUI, "_b123d_casos.py")], capture_output=True, text=True)
+    try:
+        import json as _json
+        k = _json.loads(rc.stdout.strip().splitlines()[-1])
+        chequear("de_build123d: 300 perfiles girados, ninguno ABIERTO", k["girados_abiertos"] == 0, k)
+        chequear("de_build123d: circunferencia entera en 3 arcos y cerrada", k["circulo_arcos"] == 3 and k["circulo_abierto"] == 0, k)
+        chequear("de_build123d: una cara con agujero se niega", k["con_agujero"] == "se nego", k)
+    except Exception as e:  # noqa: BLE001
+        chequear("de_build123d (casos) corrio", False, (rc.stderr or str(e))[-300:])
     codigo = (
         "import sys, json, math; sys.path.insert(0, r'%s')\n"
         "from build123d import BuildSketch, BuildLine, Line, ThreePointArc, make_face\n"

@@ -247,30 +247,60 @@ archivo DE la carpeta de trabajo que Fak abra ahí se toma como del ejercicio.
 
 **Herramientas nuevas (`scripts/catia/`, prueba sin CATIA `test_herramientas_tarde.py`, cada caso visto en rojo):**
 - `de_build123d.py <modulo> <funcion> <carpeta>` / `tramos(cara)`: el contorno de una cara de build123d a tramos de
-  `croquis.dibujar`. Arcos de más de 170° se parten en dos (el de 180 es ambiguo) y las puntas se redondean a 6
-  decimales (ruido de 1e-7 deja el perfil ABIERTO en CATIA). Para perfiles que salen de una cuenta (tangencias).
+  `croquis.dibujar`. Cada punta sale del VÉRTICE compartido del contorno y después se redondea a 6 decimales (redondear
+  `position_at` solo dejaba 14 de 300 perfiles girados ABIERTOS: auditor 19/10); un arco se parte en ceil(ángulo/170)
+  tramos (el de 180 es ambiguo; la circunferencia entera va en 3); una cara con agujeros se NIEGA (los agujeros van
+  aparte) y la línea de comandos exige UNA cara. Elipses y splines: error «sin traducir». Para perfiles de una cuenta.
 - `pantalla.py`: `mover(pid)` lleva la ventana de ESA CATIA a la pantalla que no es la principal y la maximiza; con una
-  sola pantalla no hace nada. Lo llama `correr` en modo mirar.
-- `acomodar_cotas.py`: `acomodar(c, hoja)` saca las cotas repetidas entre vistas (`Dimensions.Remove`) y separa las que
-  se pisan (`GetBoundaryBox` por VBScript, `MoveValue(x, y, 0, 0)`). Las cotas de `GenerateDimensions` son las del
-  croquis, no las que pide un taller: esas se acotan a mano (`Dimensions.Add`, pendiente).
+  sola pantalla no hace nada. Lo llama `correr` en modo mirar; corrido a mano sin pid solo mueve la CATIA que es mía
+  (`es_mia`: pid + hora de arranque).
+- `acomodar_cotas.py`: `acomodar(c, hoja)` separa las cotas que se pisan (`GetBoundaryBox` por VBScript,
+  `MoveValue(x, y, 0, 0)`) en todas las vistas y avisa las vistas pedidas que no existen. Sacar repetidas es OPCIONAL
+  (`sacar_repetidas=True`): con solo el valor no se sabe si es la misma cota (un ancho 40 en la planta y una profundidad
+  40 en el frente son dos), así que saca solo entre vistas DISTINTAS, con el mismo valor y DimType, y devuelve la lista
+  de lo sacado para mirarla en el PDF. Las cotas de `GenerateDimensions` son las del croquis, no las que pide un taller.
 - `catia_base.medir()` **se niega con un cuerpo VACÍO** (`ValueError`): medirlo rompía la sesión entera (KeyError en todas
   las mediciones siguientes; pasó dos veces).
 
 **Plano de taller (Drafting):** `DefineFrontView(1,0,0, 0,1,0)`, `DefineProjectionView(gs, n)` (CatProjViewType: derecha 0,
 izquierda 1, arriba 2, abajo 3), `DefineSectionView([x1,y1,x2,y2], "SectionView", "Offset", 1, gs)`,
 `DefineIsometricView(...)`, `GenerateDimensions()`, `ExportData(ruta, "pdf")`. Tolerancias:
-`SetTolerances(1, "TOL_NUM2", "", "", 0.1, -0.1, 0)` sale «213 ±0,1»; un H7 va sobre un DIÁMETRO y `DimType` es de solo
-lectura (un R no se pasa a Ø por programa).
+`SetTolerances(1, "TOL_NUM2", "", "", 0.1, -0.1, 0)` sale «213 ±0,1»; `DimType` es de solo lectura (un R no se pasa a Ø).
+**Cota de diámetro a mano con H7 (ej50, «Ø15H7» en el PDF):** la geometría GENERADA de una vista no se alcanza
+(`GeometricElements` trae 1 elemento, `Selection.Search` no encuentra círculos); `DrawingView.Isolate()` la pasa a 2D
+propia (41 elementos, círculos con `.Radius`) y `Dimensions.Add(9, [círculo], [0, 0], 0)` por VBScript da el Ø 15,000.
+Costo: **la vista aislada ya no sigue a la pieza**. La tolerancia ALFANUMÉRICA no se guarda por programa
+(`SetTolerances(2, "TOL_ALPHA1", "H7", ...)` sin error y `GetTolerances` devuelve tipo 0; `TOL_NUM3` tampoco): el H7 va
+como texto con `d.GetValue().SetBaultText(1, "", "H7", "", "")`. **Un Set sin error no prueba nada: se relee con el Get.**
+Y `ExportData(ruta, "pdf")` con la hoja sin definir (`PaperSize`, `Orientation`) no da error ni crea el archivo.
 
 **Reparar superficies (lo que va a pedir Paulo):**
 - Cara perdida: `AddNewBoundaryOfSurface` → `AddNewNear(borde, punto)` para separar los lazos → Fill SOLO del contorno de
   afuera → `AddNewHybridSplit(tapa, boca, lado)` → Join con `SetDeviation(0.01)` → `CloseSurface`.
   **Un Fill con los dos lazos TAPA el agujero y el volumen no lo ve** (membrana de espesor cero): el control de una
   reparación es VOLUMEN Y ÁREA.
-- Rendijas entre caras: el Join de fábrica falla; con `SetDeviation` apenas mayor que la rendija medida (no 0,1 a ciegas:
-  pega caras que no van juntas) cierra. Healing también: `AddNewHealing(join)` + `SetMergingDistance(0.1)` (la propiedad
-  `MergingDistance` es de solo lectura).
+- Rendijas de 0,05 entre caras: el Join de fábrica falla; con `SetDeviation(0.1)` cierra (30 075 = respeta la cara
+  corrida). Criterio, sin medir: la desviación apenas mayor que la rendija medida, porque una grande puede pegar caras que
+  no van juntas. Healing también: `AddNewHealing(join)` + `SetMergingDistance(0.1)` (`MergingDistance` es de solo lectura).
+- Cara con la normal dada vuelta: el Join la orienta solo. Cara REPETIDA: el Join falla, y **un Join roto que queda en el
+  árbol hace fallar todo `Update` siguiente** (se borra apenas falla); se sacan las repetidas por área + centro (ej53).
+- **CloseSurface TAPA SOLA cualquier abertura plana, sin error** (ej53): un agujero de 2 × 2 (Join 6 196) sale 6 200, la
+  caja SIN la cara de arriba sale cerrada (30 000) y la placa con un agujero pasante al que le falta la PARED sale MACIZA
+  (7 500 en vez de 7 107,301): el agujero desaparece. Antes de cerrar un STEP de cliente se mide su borde libre
+  (`AddNewBoundaryOfSurface` + largo) y el volumen se compara contra lo esperado.
+
+**Superficies con respuesta exacta (ej51, ej52; todas a menos de 0,0001 %):** `AddNewRevol(recta, 360, 0, eje)` y
+multi-section (`AddNewLoft` + `AddSectionToLoft s, 1, Nothing` en una macro VBScript, que devuelve `lf.Name`) dan el mismo
+tronco de cono = π(r1+r2)s; `AddNewFill` + `AddBound` = πr²; Join + `CloseSurface` = πh(r1²+r1r2+r2²)/3; barrido
+(`AddNewPlaneNormal(guía, punto)` + círculo + `AddNewSweepExplicit`) = Pappus. Un círculo de GSD va con `SetLimitation(1)`.
+`AddNewOffset(sup, 3, orient, 0.01)`, `AddNewThickSurface(sup, lado, 2, 0)`, `AddNewHybridSplit(sup, plano, lado)` y
+`AddNewFilletBiTangent(s1, s2, R, o1, o2, 1, 0)`: **el lado no se adivina, se prueba y se elige por la medida** (área,
+volumen o cdg contra la cuenta); en el empalme 2 de las 4 orientaciones dan error y una sola da la cuenta.
+
+**CSWA «Tool Block» etapas 3 y 4 (ej41b): 628,18 y 432,58 g = respuestas, al primer intento** (forma = gemelo, 0,002 mm).
+La masa de la etapa 3 NO veía que en el gemelo la ranura estaba a otra altura (`Cylinder(..., align=None)` de build123d
+arranca en z 0): una ranura que no se cruza con nada saca lo mismo a cualquier altura. Lo destapó la etapa 4; por eso
+además `compara.py`.
 
 **Trampas nuevas:**
 - **`GetMinimumDistance` entre piezas de un ensamble falla por programa** con cualquier referencia. Lo que anda: exportar
@@ -282,4 +312,4 @@ lectura (un R no se pasa a Ø por programa).
 - En el gemelo: `scale()` de build123d no escala el corrimiento de un `Pos` aplicado a un croquis (el hueco quedó a 4 mm
   en vez de 4 in); `EllipticalCenterArc` con `end_angle` falla sin `angular_direction`. Medir cada parte (volumen + caja)
   ubica el error en un paso.
-- Pendiente: la chapa (SM Hanger) no se maneja por COM en R21; se hace como sólido.
+- Pendiente, sin probar: chapa (Sheet Metal) por COM en R21 (el SM Hanger de Too Tall Toby).
