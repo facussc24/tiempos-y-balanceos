@@ -15,6 +15,8 @@ incidente vive en los snapshots.
 
 - **18/10 — Una prueba que corre los guardianes de verdad (el despachador con pedidos peligrosos) va con un HOME aparte: con el real gasta el permiso de un solo uso que Fak dejó.** Graduado a `codigo-madre.md` y `scripts/_despachadorPayloads.mjs`.
 
+- **18/10 — Un archivo que se arregla adentro de OneDrive se escribe con fecha NUEVA y se mira después de que sube: con la fecha vieja OneDrive lo tomó como conflicto, dejó el original y el arreglo en «-DESKTOP-….step».** Graduado a `cabecera_step.py` y `test_step_cabecera.py`.
+
 - **17/10 — Una simulación que reproduce lo publicado puede estar ciega a una parte de la pieza.** Graduado a `reference_gate_asiento_simulacion_ciega`.
 
 - **17/10 — Un caso de prueba peligroso (leer secretos, borrar, pisar un listado) no se pega en el chat: viaja por archivo y los tests lo llaman por su código.** Graduado a `__tests__/scripts/guardianesRonda3.casos.json`; el caso entero, en el snapshot 2026-10-18.
