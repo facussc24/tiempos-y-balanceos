@@ -355,3 +355,10 @@ Antes de buscar en foros, se busca ahí.
   FOTO con la malla gruesa (con 150 000 nodos CATIA dibujó triángulos sueltos y la pantalla quedó gris un rato largo).
 - **Regla práctica (no medida acá): el máximo de tensión puede estar en un canto vivo** (borde del empotramiento, de un agujero): ahí sube al achicar la
   malla y no es real. Antes de compararlo con la fluencia se mira DÓNDE está y si converge.
+- **Frecuencias naturales (ej60)**: `fem.importar(c, ruta, "FrequencySet")` (sin cargas: `fuerza` se niega), empotrar,
+  malla parabólica y `est.frecuencias(carpeta)` → [(modo, Hz)]. **El valor NO está como parámetro de la solución, ni en
+  sus «salidas», ni en el txt exportado de cada modo** (medido): sale del INFORME oficial (`PostManager
+  .AddExistingCaseForReport` + `BuildReport`, ejemplo CAAAniPostProBasicReport), tabla «Mode number / Frequency Hz».
+  Viga del ej57 empotrada, malla de 5 mm: 204,19 / 405,47 / 1 265,3 Hz contra la cuenta de voladizo 203,71 / 407,43 /
+  1 276,7 (+0,24 / −0,48 / −0,9 %); el informe trae también la masa (0,3144 kg). Un sensor `SAMGlobalSensor` existe
+  pero la ayuda no da el texto de `SetIdentifier`: no se adivinó.

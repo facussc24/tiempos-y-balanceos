@@ -35,6 +35,14 @@ chequear("leer_export: Von Mises real de 4 columnas (ej58), 5 nodos", len(vm) ==
 chequear("leer_export: 7,59218e+007 N/m2 = 75,92 MPa", abs(vm[0][3] - 7.59218e7) < 1, vm[:1])
 
 
+modos = fem.leer_frecuencias(open(os.path.join(AQUI, "_casos_fem", "informe_frecuencias_ej60.html"),
+                                  encoding="latin-1").read())
+chequear("leer_frecuencias: 10 modos del informe real (ej60)", len(modos) == 10 and modos[0][0] == 1, modos[:2])
+chequear("leer_frecuencias: modo 1 = 204,19 Hz y modo 2 = 405,47 Hz (cuenta 203,71 / 407,43)",
+         modos[:2] == [(1, 204.19), (2, 405.47)], modos[:2])
+chequear("leer_frecuencias: un html sin tabla de modos da []", fem.leer_frecuencias("<html>Energy</html>") == [])
+
+
 class MallaFalsa:
     def __init__(self):
         self.spec = {}

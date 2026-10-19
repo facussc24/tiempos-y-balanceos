@@ -51,7 +51,8 @@ def propiedades(part):
 
 
 class Estudio:
-    def __init__(self, c, nombre_doc):
+    def __init__(self, c, nombre_doc, solucion="StaticSet"):
+        """solucion: "StaticSet" (cargas y desplazamientos) o "FrequencySet" (frecuencias naturales: sin cargas)."""
         self.c = c
         self.ad = c.Documents.Item(nombre_doc)
         am = self.ad.Analysis
@@ -61,8 +62,8 @@ class Estudio:
         self.caso = self.mo.AnalysisCases.Add()
         sets = self.caso.AnalysisSets
         self.rs = sets.Add("RestraintSet", 0)
-        self.ls = sets.Add("LoadSet", 0)
-        self.sol = self.caso.AddSolution("StaticSet")
+        self.ls = sets.Add("LoadSet", 0) if solucion == "StaticSet" else None
+        self.sol = self.caso.AddSolution(solucion)
 
     def _soportes(self, ent, nombres):
         for n in nombres:
@@ -72,6 +73,8 @@ class Estudio:
         self._soportes(self.rs.AnalysisEntities.Add("SAMClamp"), nombres)
 
     def fuerza(self, nombres, vector):
+        if self.ls is None:
+            raise RuntimeError("un estudio de frecuencias no lleva cargas")
         f = self.ls.AnalysisEntities.Add("SAMDistributedForce")
         self._soportes(f, nombres)
         v = f.BasicComponents.GetItem("SAMForceVector.1")
@@ -106,6 +109,45 @@ class Estudio:
         return filas
 
 
+    def frecuencias(self, carpeta):
+        """Frecuencias naturales (Hz) por modo, del INFORME oficial (PostManager.AddExistingCaseForReport + BuildReport,
+        ejemplo CAAAniPostProBasicReport.catvbs): la solucion no las expone como parametro ni en el txt exportado
+        (medido ej60). Caso de respuesta conocida: viga del ej57 empotrada, 204,19 / 405,47 Hz contra 203,71 / 407,43.
+        Control de que el informe es de ESTA corrida: su fecha de modificacion (no se borra el viejo)."""
+        import time
+        os.makedirs(carpeta, exist_ok=True)
+        html = os.path.join(carpeta, "index.html")
+        t0 = time.time() - 1.0
+        pm = self.mo.PostManager
+        pm.AddExistingCaseForReport(self.caso)
+        pm.BuildReport(self.c.FileSystem.GetFolder(carpeta), "informe", False)
+        if not os.path.exists(html) or os.path.getmtime(html) < t0:
+            raise RuntimeError(f"BuildReport no dejo un {html} nuevo")
+        modos = leer_frecuencias(open(html, encoding="latin-1", errors="ignore").read())
+        if not modos:
+            raise RuntimeError(f"{html} no trae la tabla de modos")
+        return modos
+
+
+def leer_frecuencias(html):
+    """[(modo, Hz)] de la tabla «Mode number / Frequency Hz / Stability» del informe de CATIA."""
+    import re
+    j = html.find("Stability")
+    if j < 0:
+        return []
+    tabla = html[j: html.find("</TABLE>", j)]
+    modos = []
+    for fila in re.findall(r"<TR>(.*?)</TR>", tabla, flags=re.S | re.I):
+        celdas = [re.sub(r"<[^>]+>|&nbsp;", " ", x).strip()
+                  for x in re.findall(r"<TD[^>]*>(.*?)</TD>", fila, flags=re.S | re.I)]
+        if len(celdas) >= 2:
+            try:
+                modos.append((int(celdas[0]), float(celdas[1])))
+            except ValueError:
+                continue
+    return modos
+
+
 def leer_export(texto):
     """Filas numericas del txt de ExportData: x y z (mm) y los valores; coma decimal; los renglones de encabezado
     («Locations Axis», «x(mm) ...») se saltean. Solo filas con 4 numeros o mas."""
@@ -121,6 +163,6 @@ def leer_export(texto):
     return filas
 
 
-def importar(c, ruta_catpart):
+def importar(c, ruta_catpart, solucion="StaticSet"):
     c.DisplayFileAlerts = False
-    return Estudio(c, c.SystemService.Evaluate(MACRO_IMPORT, 0, "CATMain", [c, ruta_catpart]))
+    return Estudio(c, c.SystemService.Evaluate(MACRO_IMPORT, 0, "CATMain", [c, ruta_catpart]), solucion)
