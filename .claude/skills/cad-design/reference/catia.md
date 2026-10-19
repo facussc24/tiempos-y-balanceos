@@ -313,3 +313,32 @@ además `compara.py`.
   en vez de 4 in); `EllipticalCenterArc` con `end_angle` falla sin `angular_direction`. Medir cada parte (volumen + caja)
   ubica el error en un paso.
 - Pendiente, sin probar: chapa (Sheet Metal) por COM en R21 (el SM Hanger de Too Tall Toby).
+
+## 19/10/2026 — SIMULACIÓN por elementos finitos (Generative Structural Analysis) por programa: `scripts/catia/fem.py`
+
+**La fuente que lo destrabó: la ayuda OFICIAL instalada**, `B21\intel_a\code\bin\V5Automation.chm` (se descomprime
+con `hh.exe -decompile <carpeta corta sin espacios> <copia.chm>`; con una ruta larga no extrae nada y no avisa). Trae
+los ejemplos de Dassault en `online\CAAScdAniUseCases\macros\`: CAAAniUserMaterial.CATScript (material),
+CAAAniPreproOnProduct.catvbs (análisis desde la pieza, empotramiento, fuerza), CAAAniMeshOctTetra.catvbs (malla).
+Antes de buscar en foros, se busca ahí.
+
+- **Material** (`fem.poner_acero`): `part.GetItem("CATMatManagerVBExt")` + `ApplyMaterialOnPart(part, material, 0)`, el
+  material del catálogo por índice (`material_catia.material_por_indice`). «CATMatManagerVBA» da «GetItem failed» en
+  VBScript, VBA y CATScript, y `PasteSpecial "CATMatLink"` no da error y no aplica nada. El control es la DENSIDAD
+  (acero del catálogo 7 860; sin material 1 000). **«Guardar» sobre una copia abierta NO conservó el material**
+  (reabierta: 1 000); «Guardar como» a un archivo nuevo, sí. Sin material, la importación falla con el aviso «Material is
+  not properly defined».
+- **Análisis** (`fem.importar`): `Documents.Add("Analysis")` + `StartWorkbench("GPSCfg")` ANTES de
+  `ImportDefineFile(ruta, "CATAnalysisImport", Dim a(0))`; `LinkedDocuments.Item(1)` da la pieza; caso
+  (`AnalysisCases.Add`), `RestraintSet` y `LoadSet` (`AnalysisSets.Add(tipo, 0)`), `AddSolution("StaticSet")`; caras por
+  topología → `part.CreateReferenceFromName`; `SAMClamp` y `SAMDistributedForce` con `AddSupportFromProduct`; el vector
+  por `BasicComponents.GetItem("SAMForceVector.1")`; `Compute`; `AnalysisImages.Add("Disp_Symbol" |
+  "StressVonMises_Iso_Smooth", False, False, True).ExportData(carpeta, nombre, "txt")` → `fem.leer_export` (coma decimal,
+  exponente «e-005»; desplazamiento en mm, Von Mises en N/m²).
+- **Caso de respuesta conocida (ej57)**: viga de acero 200 × 20 × 10 en voladizo con 100 N en la punta: la cuenta
+  (Euler-Bernoulli + corte) da 0,8015 mm. **La malla POR DEFECTO es LINEAL y da 0,273 mm: −66 %, sin ningún aviso.**
+  Con `SetGlobalSpecification("ElementOrder", "Parabolic")` y `("SizeValue", tam)`: 10 mm −0,90 %, 5 mm −0,64 %, 2,5 mm
+  −0,55 % (converge; el resto es el empotramiento de la cara entera). **Una simulación sin malla parabólica y sin estudio
+  de convergencia no se cree.** En una chapa de 4: elementos de 2 mm o menos (dos o más en el espesor).
+- **El máximo de tensión puede estar en un canto vivo** (borde del empotramiento, de un agujero): ahí sube al achicar la
+  malla y no es real. Antes de compararlo con la fluencia se mira DÓNDE está y si converge.
