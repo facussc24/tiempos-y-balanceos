@@ -10,7 +10,9 @@ Con --corredizo dx,dy,dz y --zona x0,y0,z0,x1,y1,z1 los triangulos de esa caja s
 esa direccion: traba si n·c < -sen(tol)), no contra la apertura.
 Uso: python contrasalidas.py pieza.step --dir 0,0,1 --particion 0 [--angulo-min 0.5] [--corredizo 1,0,0 --zona ...]
 Imprime un JSON: area total, area que traba, area sin desmoldeo, y la caja de lo que traba. Sale 1 si algo traba.
-Limite: es una prueba LOCAL por normal; no ve una pared que tapa a otra (sombra) ni el recorrido de un corredizo."""
+Limite: es una prueba LOCAL por normal (no simula el recorrido de un corredizo ni el choque de una pared que mira bien
+pero queda detras de otra). La pieza se PARTE por el plano antes de juzgar (el lado lo decide el corte) y la normal es la
+de la superficie real (sin ruido de teselado). Umbrales 0,5 grados (sin desmoldeo) y 0,1 grados (traba): eleccion mia."""
 import argparse
 import json
 import math
@@ -18,17 +20,33 @@ import sys
 
 
 def triangulos(forma, tol=0.01):
-    vs, tris = forma.tessellate(tol, 0.2)
-    for a, b, c in tris:
-        p, q, r = vs[a], vs[b], vs[c]
-        u = (q.X - p.X, q.Y - p.Y, q.Z - p.Z)
-        v = (r.X - p.X, r.Y - p.Y, r.Z - p.Z)
-        n = (u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0])
-        m = math.sqrt(n[0] ** 2 + n[1] ** 2 + n[2] ** 2)
-        if m < 1e-12:
-            continue
-        cen = ((p.X + q.X + r.X) / 3, (p.Y + q.Y + r.Y) / 3, (p.Z + q.Z + r.Z) / 3)
-        yield cen, (n[0] / m, n[1] / m, n[2] / m), m / 2
+    """Por CARA: el area sale del triangulo y la NORMAL de la superficie real en el centro del triangulo (normal_at),
+    no de la normal del triangulo: en redondeos la del triangulo se desvia hasta 0,9 grados (auditor 19/10: una caja con
+    aristas R2 daba TRABA 0,03 mm2 de puro teselado)."""
+    for cara in forma.faces():
+        vs, tris = cara.tessellate(tol, 0.2)
+        for a, b, c in tris:
+            p, q, r = vs[a], vs[b], vs[c]
+            u = (q.X - p.X, q.Y - p.Y, q.Z - p.Z)
+            v = (r.X - p.X, r.Y - p.Y, r.Z - p.Z)
+            n = (u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0])
+            m = math.sqrt(n[0] ** 2 + n[1] ** 2 + n[2] ** 2)
+            if m < 1e-12:
+                continue
+            cen = ((p.X + q.X + r.X) / 3, (p.Y + q.Y + r.Y) / 3, (p.Z + q.Z + r.Z) / 3)
+            nr = cara.normal_at(cara.project_to_surface(cen) if hasattr(cara, "project_to_surface") else cen)
+            yield cen, unit((nr.X, nr.Y, nr.Z)), m / 2
+
+
+def mitades(forma, d, particion):
+    """La pieza partida por el plano de particion: (mitad que sale en +d, mitad que sale en -d). El lado lo decide el
+    CORTE, no el centro de cada triangulo (auditor 19/10: con la particion fuera del medio, un prisma de 4 grados daba
+    SALE con 239 mm2 que traban)."""
+    from build123d import Keep, Plane
+    pl = Plane(origin=tuple(particion * x for x in d), z_dir=d)
+    arriba = forma.split(pl, keep=Keep.TOP)
+    abajo = forma.split(pl, keep=Keep.BOTTOM)
+    return arriba, abajo
 
 
 def unit(v):
@@ -46,22 +64,27 @@ def revisar(forma, d=(0, 0, 1), particion=0.0, angulo_min=0.5, tol_traba=0.1, co
     s_min, s_tol = math.sin(math.radians(angulo_min)), math.sin(math.radians(tol_traba))
     total = traba = sin_ang = en_corredizo = 0.0
     caja = [math.inf] * 3 + [-math.inf] * 3
-    for cen, n, a in triangulos(forma):
-        total += a
-        nd = n[0] * d[0] + n[1] * d[1] + n[2] * d[2]
-        if c is not None and dentro(cen, zona):
-            en_corredizo += a
-            malo = (n[0] * c[0] + n[1] * c[1] + n[2] * c[2]) < -s_tol
-        else:
-            lado = cen[0] * d[0] + cen[1] * d[1] + cen[2] * d[2] - particion
-            malo = nd < -s_tol if lado >= 0 else nd > s_tol
-            if abs(nd) < s_min:
-                sin_ang += a
-        if malo:
-            traba += a
-            for i in range(3):
-                caja[i] = min(caja[i], cen[i])
-                caja[i + 3] = max(caja[i + 3], cen[i])
+    for signo, mitad in zip((1, -1), mitades(forma, d, particion)):
+        if mitad is None or not mitad.solids():
+            continue
+        for cen, n, a in triangulos(mitad):
+            nd = n[0] * d[0] + n[1] * d[1] + n[2] * d[2]
+            en_plano = abs(cen[0] * d[0] + cen[1] * d[1] + cen[2] * d[2] - particion) < 1e-6 and abs(abs(nd) - 1) < 1e-6
+            if en_plano:                      # la cara de particion (la que dejo el corte o la que ya estaba ahi)
+                continue
+            total += a
+            if c is not None and dentro(cen, zona):
+                en_corredizo += a
+                malo = (n[0] * c[0] + n[1] * c[1] + n[2] * c[2]) < -s_tol
+            else:
+                malo = signo * nd < -s_tol
+                if abs(nd) < s_min:
+                    sin_ang += a
+            if malo:
+                traba += a
+                for i in range(3):
+                    caja[i] = min(caja[i], cen[i])
+                    caja[i + 3] = max(caja[i + 3], cen[i])
     return {"area_total_mm2": round(total, 2), "area_que_traba_mm2": round(traba, 2),
             "area_sin_desmoldeo_mm2": round(sin_ang, 2), "area_en_corredizo_mm2": round(en_corredizo, 2),
             "caja_de_lo_que_traba": [round(x, 2) for x in caja] if traba else None,
@@ -86,9 +109,18 @@ def main():
     if not forma.solids():
         print(json.dumps({"error": "el archivo no trae solidos"}))
         sys.exit(2)
-    f3 = lambda s: tuple(float(x) for x in s.split(","))  # noqa: E731
-    r = revisar(forma, f3(a.dir), a.particion, a.angulo_min, corredizo=f3(a.corredizo) if a.corredizo else None,
-                zona=f3(a.zona) if a.zona else None)
+    try:
+        d = tuple(float(x) for x in a.dir.split(","))
+        cz = tuple(float(x) for x in a.corredizo.split(",")) if a.corredizo else None
+        zn = tuple(float(x) for x in a.zona.split(",")) if a.zona else None
+        if len(d) != 3 or math.sqrt(sum(x * x for x in d)) < 1e-9:
+            raise ValueError("--dir tiene que ser x,y,z no nulo")
+        if (cz is None) != (zn is None) or (cz and len(cz) != 3) or (zn and len(zn) != 6):
+            raise ValueError("--corredizo x,y,z y --zona x0,y0,z0,x1,y1,z1 van juntos")
+    except ValueError as e:
+        print(json.dumps({"error": str(e)}))
+        sys.exit(2)
+    r = revisar(forma, d, a.particion, a.angulo_min, corredizo=cz, zona=zn)
     print(json.dumps(r))
     sys.exit(1 if r["veredicto"] == "TRABA" else 0)
 

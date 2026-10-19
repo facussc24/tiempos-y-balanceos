@@ -13,7 +13,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from build123d import Box, Cylinder, Pos, Rot, extrude, mirror, Rectangle, Plane  # noqa: E402
+from build123d import Box, Cylinder, Pos, Rot, Sphere, extrude, fillet, mirror, Rectangle, Plane  # noqa: E402
 import contrasalidas as cs  # noqa: E402
 
 fallas = []
@@ -54,6 +54,21 @@ chequear("el hueco con corredizo en +X: SALE", r5["veredicto"] == "SALE" and r5[
 r6 = cs.revisar(caja, particion=10.0)
 chequear("gemelo: con la particion arriba de todo la caja TRABA (la cara de arriba mira contra la apertura -Z)",
          r6["veredicto"] == "TRABA" and abs(r6["area_que_traba_mm2"] - 800) < 1, r6)
+
+# auditor 19/10 (medido cortando la pieza por el plano)
+prisma = extrude(Rectangle(40, 20), amount=10, taper=4)
+r7 = cs.revisar(prisma, particion=2)
+chequear("prisma de 4 grados con la particion en z 2: TRABA 239,46 (antes daba SALE)",
+         r7["veredicto"] == "TRABA" and abs(r7["area_que_traba_mm2"] - 239.46) < 0.1, r7)
+chequear("el mismo con la particion en z 8: traba 944,4 (antes 1174,9)",
+         abs(cs.revisar(prisma, particion=8)["area_que_traba_mm2"] - 944.4) < 0.1)
+chequear("caja con la particion en su base: SALE (la cara apoyada en el plano es la de particion)",
+         cs.revisar(caja, particion=-5)["veredicto"] == "SALE")
+chequear("caja con aristas R2: SALE (sin ruido de teselado)",
+         cs.revisar(fillet(Box(40, 20, 10).edges(), 2))["veredicto"] == "SALE")
+chequear("esfera partida en el ecuador: SALE", cs.revisar(Sphere(10))["veredicto"] == "SALE")
+r8 = cs.revisar(hueco_h, corredizo=(-1, 0, 0), zona=(38.6, -0.6, -0.6, 48.8, 0.6, 0.6))
+chequear("corredizo en el sentido equivocado (-X, hacia el fondo del hueco): TRABA", r8["veredicto"] == "TRABA", r8)
 
 print("RESULTADO:", "OK" if not fallas else f"{len(fallas)} FALLAS {fallas}")
 sys.exit(1 if fallas else 0)

@@ -142,6 +142,18 @@ chequear("presion(): encuentra SAMPressureMag aunque cambie el numero y carga el
          ep.presion(["cara"], 2.79e7) == 2.79e7 and it[1].v == 2.79e7 and it[0].v is None, [x.v for x in it])
 ep2, _ = estudio_presion(["SAMDTPtrPressure.1"])
 chequear("presion(): sin SAMPressureMag se niega (no carga en otro componente)", se_niega(lambda: ep2.presion(["c"], 1.0)))
+
+# deslizar(): crea un SAMSurfaceSlider (no un empotramiento) y le carga TODAS las caras (auditor 19/10: vivian los
+# mutantes SAMSurfaceSlider -> SAMClamp y deslizar vacio)
+creados, soportes = [], []
+ed = fem.Estudio.__new__(fem.Estudio)
+ed.prod = "p"
+ed.part = types.SimpleNamespace(CreateReferenceFromName=lambda n: n)
+ed.rs = types.SimpleNamespace(AnalysisEntities=types.SimpleNamespace(
+    Add=lambda t: creados.append(t) or types.SimpleNamespace(AddSupportFromProduct=lambda p, r: soportes.append(r))))
+ed.deslizar(["y0", "x0", "z0"])
+chequear("deslizar(): un SAMSurfaceSlider con las tres caras", creados == ["SAMSurfaceSlider"] and soportes == ["y0", "x0", "z0"],
+         (creados, soportes))
 es, sets_s, sol_s = estudio_init("StaticSet")
 chequear("Estudio StaticSet: RestraintSet + LoadSet y AddSolution(StaticSet)",
          sets_s.creados == ["RestraintSet", "LoadSet"] and sol_s == ["StaticSet"], (sets_s.creados, sol_s))

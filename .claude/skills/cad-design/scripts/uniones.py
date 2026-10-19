@@ -9,6 +9,8 @@ otro y se divide el volumen comun por 0,01), arma el grafo de uniones y da ROJO 
   - una pieza no apoya en ninguna otra con al menos --min-area mm2;
   - el conjunto queda partido en mas de un grupo;
   - dos piezas se solapan (volumen comun sin correr > --tol-solape mm3).
+Un contacto en LINEA o en punto (un tubo redondo acostado, una arista) NO es union: se informa en solo_linea_o_punto y
+la pieza queda sin apoyo. El --min-area de 20 mm2 es eleccion mia sin fuente (la separacion cara/linea es la que manda).
 Uso: python uniones.py <conjunto.step> [--min-area 20] [--tol-solape 0.001]
 Sale 0 si todo une, 1 si hay ROJO, 2 si el archivo no trae dos solidos o mas. Imprime un JSON.
 Limite: mide contacto cara contra cara; un tornillo que atraviesa dos piezas con juego no cuenta como union."""
@@ -31,17 +33,37 @@ def cerca(a, b, margen=0.05):
                 or q.max.Y + margen < p.min.Y or p.max.Z + margen < q.min.Z or q.max.Z + margen < p.min.Z)
 
 
-def contacto(a, b):
+def contacto(a, b, eps=EPS):
     from build123d import Pos
-    mejor = 0.0
-    for d in ((EPS, 0, 0), (-EPS, 0, 0), (0, EPS, 0), (0, -EPS, 0), (0, 0, EPS), (0, 0, -EPS)):
-        mejor = max(mejor, volumen(Pos(*d) * a, b) / EPS)
-    return mejor
+    mejor = (0.0, None)
+    for d in ((1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)):
+        area = volumen(Pos(*(eps * x for x in d)) * a, b) / eps
+        if area > mejor[0]:
+            mejor = (area, d)
+    return mejor[0]
+
+
+def contacto_tipo(a, b):
+    """Area de contacto y si es de CARA o de LINEA. Hundiendo una pieza en la otra eps y eps/4: dos caras que apoyan dan
+    la MISMA area (no depende del hundimiento); un cilindro sobre un plano (contacto en linea) da un area que va con la
+    raiz del hundimiento: a eps/4 da la mitad. Auditor 19/10: un tubo redondo acostado sobre una placa daba 73 mm2 y
+    VERDE con el calculo de un solo hundimiento (el error de la arista del carro, en redondo)."""
+    from build123d import Pos
+    mejor = (0.0, None)
+    for d in ((1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)):
+        area = volumen(Pos(*(EPS * x for x in d)) * a, b) / EPS
+        if area > mejor[0]:
+            mejor = (area, d)
+    area, d = mejor
+    if d is None:
+        return 0.0, "nada"
+    chica = volumen(Pos(*(EPS / 4 * x for x in d)) * a, b) / (EPS / 4)
+    return area, ("cara" if chica >= 0.9 * area else "linea")
 
 
 def revisar(solidos, min_area=20.0, tol_solape=1e-3):
     n = len(solidos)
-    uniones, solapes = [], []
+    uniones, solapes, lineas = [], [], []
     for i, j in itertools.combinations(range(n), 2):
         a, b = solidos[i], solidos[j]
         if not cerca(a, b):
@@ -50,8 +72,10 @@ def revisar(solidos, min_area=20.0, tol_solape=1e-3):
         if s > tol_solape:
             solapes.append({"a": i, "b": j, "mm3": round(s, 3)})
             continue
-        area = contacto(a, b)
-        if area >= min_area:
+        area, tipo = contacto_tipo(a, b)
+        if tipo == "linea":
+            lineas.append({"a": i, "b": j, "mm2_aparente": round(area, 1)})
+        elif area >= min_area:
             uniones.append({"a": i, "b": j, "mm2": round(area, 1)})
     grupo = list(range(n))
 
@@ -66,7 +90,8 @@ def revisar(solidos, min_area=20.0, tol_solape=1e-3):
     con_union = {u["a"] for u in uniones} | {u["b"] for u in uniones}
     sueltas = [k for k in range(n) if k not in con_union]
     rojo = bool(sueltas or solapes or grupos > 1)
-    return {"solidos": n, "uniones": uniones, "piezas_sin_apoyo": sueltas, "solapes": solapes, "grupos": grupos,
+    return {"solidos": n, "uniones": uniones, "solo_linea_o_punto": lineas, "piezas_sin_apoyo": sueltas,
+            "solapes": solapes, "grupos": grupos,
             "veredicto": "ROJO" if rojo else "VERDE"}
 
 

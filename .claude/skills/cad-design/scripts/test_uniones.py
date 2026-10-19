@@ -8,7 +8,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from build123d import Box, Pos  # noqa: E402
+from build123d import Box, Cylinder, Pos, Rot  # noqa: E402
 import uniones  # noqa: E402
 
 T, E, L, W, H = 30.0, 2.0, 1000.0, 600.0, 800.0
@@ -57,6 +57,19 @@ chequear("pata 1 mm mas larga: ROJO por solape", r3["veredicto"] == "ROJO" and l
 
 r4 = uniones.revisar(bien + [Pos(L / 2, W / 2, H + 5 + 1) * Box(200, 200, 2)])
 chequear("estante suelto a 5 mm: ROJO, dos grupos", r4["veredicto"] == "ROJO" and r4["grupos"] == 2, r4)
+
+# auditor 19/10: un tubo REDONDO acostado sobre una placa toca por una linea (73 mm2 aparentes): no es union
+placa = Pos(0, 0, -5) * Box(200, 100, 10)
+r5 = uniones.revisar([placa, Pos(0, 0, 15) * Rot(0, 90, 0) * Cylinder(15, 100)])
+chequear("tubo redondo sobre placa (contacto en LINEA): ROJO e informado como solo linea",
+         r5["veredicto"] == "ROJO" and len(r5["solo_linea_o_punto"]) == 1 and not r5["uniones"], r5)
+r6 = uniones.revisar([placa, Pos(0, 0, 15) * Box(30, 30, 30)])
+chequear("cubo apoyado: contacto de CARA 900 mm2, VERDE",
+         r6["veredicto"] == "VERDE" and r6["uniones"][0]["mm2"] == 900.0, r6)
+r7 = uniones.revisar([placa, Pos(0, 0, 15) * Box(30, 30, 30), Pos(0, 300, -5) * Box(200, 100, 10),
+                      Pos(0, 300, 15) * Box(30, 30, 30)])
+chequear("dos subconjuntos sanos separados: ROJO por dos grupos (cada pieza apoya en otra)",
+         r7["veredicto"] == "ROJO" and r7["grupos"] == 2 and not r7["piezas_sin_apoyo"], r7)
 
 print("RESULTADO:", "OK" if not fallas else f"{len(fallas)} FALLAS {fallas}")
 sys.exit(1 if fallas else 0)

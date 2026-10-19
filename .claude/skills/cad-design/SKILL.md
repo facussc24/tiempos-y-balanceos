@@ -17,7 +17,7 @@ las fuentes). La librería y los CLIs viven en `.claude/skills/cad-design/script
 un CLI por gate, todos con `--help`). Acá se los nombra pelados (`gate_zona.py`); la ruta completa
 es esa, **no** el `scripts/` de la raíz del repo, que es otro.
 
-**ANTES DEL PRIMER CROQUIS: las 17 preguntas de `reference/preguntas-antes-de-disenar.md`, contestadas por escrito**
+**ANTES DEL PRIMER CROQUIS: los 8 grupos de preguntas de `reference/preguntas-antes-de-disenar.md`, recorridos TODOS por escrito**
 (rígida o flexible, secuencia, fuerzas por etapa, cómo entra y sale, **cada unión con su área**…). Es el criterio de
 diseñador, que va antes de la herramienta (Fak, 19/10/2026: *"¿por qué te lo tuve que decir? eso debés preguntártelo vos"*).
 

@@ -7,41 +7,63 @@ tubo cuyas patas tocaban el marco por una arista: *"¿por qué te lo tuve que de
 **Se contestan POR ESCRITO, en el chat o en el pliego, antes del primer croquis.** Lo que no se sabe va TBD y se dice;
 no se inventa (`core-prohibiciones` §1).
 
-## Las 17 obligatorias (cada una ya costó un error real en la casa)
+## Las obligatorias, en 8 grupos (se recorren TODOS, por escrito; en cada uno, una línea o «no aplica: por qué»)
 
-1. **¿La pieza es rígida o flexible?** Rígida: 3-2-1, nada redundante. Flexible (tapizado, termoformado, chapa fina):
-   N-2-1, más apoyos (ficha-utillajes U2). Va primera porque cambia todo lo demás.
-2. **La secuencia en una línea:** quién apoya qué sobre qué, calor, presión, tiempo, qué hace la mano (GATE 1 p. 5).
-3. **Qué fuerza actúa en CADA etapa y qué pieza la resuelve.** La etapa muda es la que nadie pensó («mientras se
-   rocía, se vuela la tela»: GATE P).
-4. **¿Qué mandó el que pide (video, plano, foto)?** Es el pliego; se mira antes (el video de Eissmann, dos vueltas sin usar).
-5. **¿Hay algo andando en planta que haga algo parecido?** (`indice_dispositivos.py`; «no entiendo por qué no lo hacemos»).
-6. **¿Dónde exactamente?** La zona se confirma con Fak sobre un render antes de medir (GATE 0).
-7. **¿De dónde sale la elasticidad?** Si la pieza trae material blando, ése es el elástico y el utillaje va rígido.
-   En la casa: *"PLA, sin gomas ni espumitas"* (virolador, 12/08).
-8. **¿Cómo ENTRA la pieza y queda centrada aunque la apoyen torcida, y cómo SALE sin herramienta?**
-9. **Cada unión: ¿dónde apoya, dónde se suelda o atornilla, y con cuánta área?** «0 de solape» no es «unido»: se
-   mide con `scripts/uniones.py` en toda estructura (las patas del carro del 19/10 tocaban por una arista).
-10. **¿En qué dirección va la carga respecto de las capas?** Paralela a las capas, nunca tirando de ellas (el
-    tornillo de 7 mm impreso parado se partió bajo la cabeza, 14/10).
-11. **¿Qué máquina lo hace y con qué material?** Desde el 13/10 la Bambu A2L con PLA Lite; un número de la Elegoo no
-    se traslada sin decirlo. Si es otro taller, con qué matrices o herramientas trabaja.
-12. **¿Toca algo blando, pintado o clase A?** Bordes redondeados, área, y la simulación apoyada y apretada (GATE A).
-13. **¿Cuál es el criterio de aceptación, escrito ANTES?** (cuánto, medido cómo, con qué pieza).
-14. **¿La cota que gobierna sale de cómo se hace HOY en planta, o del dibujo?** (pines de la CNC: el DXF decía Ø3 y en
-    planta el agujero se hace con sacabocado Ø2; con Ø3 queda suelto).
-15. **¿Qué hay y qué SE MUEVE alrededor: la máquina, su puerta, la prensa, la mano?** Si no hay 3D ni medidas de la
-    máquina, se piden o se miden antes (triangulito de la hot press: la puerta golpea la cola del dedo, 19/10).
-16. **¿Tengo el 3D REAL y COMPLETO del conjunto?** Un export parcial o un proxy hace modificar la pieza equivocada
-    (Top Roll: la torre equivocada con 2 sólidos de un ensamble; adhesivado: un proxy de 3 mm desviado hasta 5 mm).
-17. **¿El pedido es «lo mismo pero doble, simétrico o más grande»?** Se rehace la cuenta que gobierna antes de tocar el
-    modelo: el mecanismo puede no admitir la variante (gancho de mochila doble: se anula el momento y se cae).
+Probadas el 19/10/2026: contra 11 casos reales de la casa y contra exámenes a ciegas (abiertos: 24/30 y 25/30 con la
+lista suelta, 26/30 con estos 8 grupos; lo que faltó en esos exámenes está marcado ⊕).
 
-**Cómo se probó la lista (19/10):** contra los 11 casos reales de la casa (frente 4, parte b). Con las 13 primeras, 7
-casos los frenaba alguna pregunta; los 4 que no (pines, triangulito, Top Roll, gancho doble) dieron las preguntas 14 a 17.
+**1. Función y proceso**
+- ¿Rígida o flexible? Rígida: 3-2-1, y 4-2-1 sobre UN mismo plano medido si la mano aprieta fuera del triángulo
+  (ficha-utillajes U7/U8, sin prueba física no está zanjado); flexible: N-2-1 (U2).
+- La secuencia en una línea: quién apoya qué sobre qué, calor, presión, tiempo, qué hace la mano.
+- ¿Qué mandó el que pide (video, plano, foto)? ¿Qué hay andando en planta que haga algo parecido?
+- ¿Dónde exactamente? (zona confirmada con Fak sobre un render)
+- ¿La cota que gobierna sale de cómo se hace HOY en planta, o del dibujo? (sacabocado Ø2 contra el Ø3 del DXF)
+- ¿El pedido es «lo mismo pero doble, simétrico o más grande»? Rehacer la cuenta que gobierna.
+- Ciclo: piezas por turno → segundos por pieza; el dispositivo no lo alarga ⊕
 
-Después de estas, y antes de cerrar: **el tamaño del conjunto contra lo que hace** (GATE 4: un dispositivo que
-aprieta 6 N no puede pesar medio kilo).
+**2. La pieza**
+- ¿Tengo el 3D real y completo? ¿Qué variación trae entre piezas y lotes (alabeo, ±distancia)?
+- ¿Qué referencia pide el cliente (la cota de tolerancia es «respecto de qué»)? ⊕
+- Variantes (izquierda/derecha, con y sin): ¿uno o varios dispositivos?
+
+**3. Cargas**
+- Qué fuerza actúa en CADA etapa y qué pieza la resuelve (la etapa muda es la que nadie pensó).
+- Peso total y por rueda/apoyo; vuelco; empuje = pendiente + rodadura ⊕; golpe del punzón o del sacabocado.
+
+**4. Operario y puesto**
+- ¿Cómo ENTRA la pieza y queda ubicada aunque la apoyen torcida? ¿Cómo SALE sin herramienta?
+- Ergonomía: altura de toma y de trabajo, alcance, peso a levantar (HSE/NIOSH), una o dos manos, guantes ⊕
+- Seguridad: manos lejos de calor, adhesivo, punzón, aguja y cierre de prensa; sin puntos de atrapamiento.
+- Peso del propio útil y cambio de variante SIN herramientas ⊕
+
+**5. Uniones, fabricación y máquina**
+- Cada unión: dónde apoya, dónde se suelda o atornilla, con cuánta área (`uniones.py`).
+- ¿Quién lo fabrica y con qué? (A2L con PLA Lite/PETG; herrero con plano; taller). ¿ENTRA EN LA CAMA? Si se parte, que
+  las uniones no se coman la tolerancia ⊕
+- Carga respecto de las capas (paralela, nunca tirando de ellas); orientación de impresión ⊕
+- ¿Cómo se fija y se repone en la máquina (repetible; sin imanes cerca de calor)? ⊕
+- ¿Qué proceso viene después de fabricarlo (galvanizado → venteo; pintura; horno)? ⊕
+
+**6. Calor, adhesivo y blando**
+- ¿A qué temperatura está lo que toca (pieza tibia, platina, hot melt, verano en planta)? PLA ~55 °C, PETG ~75 °C ⊕
+- ¿Toca algo blando, pintado o clase A? Que no marque; simulación apoyada y apretada (GATE A).
+- ¿De dónde sale la elasticidad? (la casa: «sin gomas ni espumitas»)
+- Adhesivo fresco: ¿se desliza algo sobre él? ¿Dónde va el sobrante? Tiempo abierto contra el tiempo real de cada paso.
+- ¿Dónde corta el filo? (placa de corte sacrificial, nunca el PLA) ⊕
+
+**7. Error de carga**
+- ¿Qué error es posible: al revés, girada, espejada, capa faltante, variante equivocada? Que no entre o que se vea ⊕
+
+**8. Vida del dispositivo y criterio**
+- ¿Qué se gasta, qué se ensucia (hot melt, polvo), cómo se limpia y se repone, dónde se guarda vacío? ⊕
+- Si es calibre: cuánto de la tolerancia consume, repetibilidad y reproducibilidad, pieza patrón.
+- El criterio de aceptación, escrito ANTES (cuánto, medido cómo, con qué pieza).
+- ¿Se queda en planta o viaja (al cliente, retornable)? ⊕
+- Costo y tiempo de hacerlo contra lo que ahorra (scrap o retrabajo de hoy) ⊕
+- Al final: el tamaño del conjunto contra lo que hace (GATE 4).
+
+**Cómo se probó (19/10/2026):** primero 13 preguntas contra los 11 casos reales de la casa (frente 4, parte b): frenaban 7; los 4 que no (pines, triangulito, Top Roll, gancho doble) dieron 4 más. Después exámenes a ciegas escritos por otra IA con las respuestas guardadas aparte: de trampas 5/5, 6/6 y 6/6; abiertos (mail de supervisor con grilla oculta de 10 puntos) 24/30 y 25/30 con la lista suelta y 26/30 con estos 8 grupos. Las preguntas marcadas ⊕ son las que faltaban. Límite: los exámenes los escribió una IA; la prueba que vale es un pedido real.
 
 ## La lista completa (60 preguntas, auditada el 19/10 contra los cuatro informes: 0 números inventados)
 

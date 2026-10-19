@@ -102,6 +102,40 @@ p1 = ac.destino_afuera([0, 780, 100, 800], CONT, 50.0, u2)
 p2 = ac.destino_afuera([200, 780, 300, 800], CONT, 50.0, u2)
 chequear("dos del mismo lado se escalonan de a un paso", abs((p2[1] - p1[1]) - 50.0) < 1e-9, (p1, p2))
 
+
+# 3 quater. sacar_afuera() con una vista falsa: las cotas se MUEVEN (MoveValue) y el paso usa la escala (auditor 19/10:
+# vivian los mutantes «adentro = 0», «/ -> *» en la escala y «sin MoveValue»)
+class CotaFalsa:
+    def __init__(self, caja):
+        self.c = list(caja)
+
+    def MoveValue(self, x, y, _a, _b):
+        w, h = self.c[2] - self.c[0], self.c[3] - self.c[1]
+        self.c = [x - w / 2, y - h / 2, x + w / 2, y + h / 2]
+
+
+cotas_f = [CotaFalsa(b) for b in ([452.5, 11.8, 547.5, 35.2], [452.5, 781.8, 547.5, 805.2], [-8.2, 365.0, 15.2, 435.0])]
+vista_f = types.SimpleNamespace(Scale=0.15, Dimensions=types.SimpleNamespace(Count=3, Item=lambda i: cotas_f[i - 1]))
+c_f = types.SimpleNamespace(SystemService=types.SimpleNamespace(
+    Evaluate=lambda _m, _l, _f, args: ";".join(str(v) for v in (args[0].c[0], args[0].c[1], args[0].c[2], args[0].c[1],
+                                                                  args[0].c[2], args[0].c[3], args[0].c[0], args[0].c[3]))))
+rs = ac.sacar_afuera(c_f, vista_f, (0.0, 0.0, 1000.0, 800.0), paso_hoja=8.0)
+chequear("sacar_afuera: mueve las 3 que estaban encima y no queda ninguna adentro",
+         rs["movidas"] == 3 and rs["siguen_adentro"] == 0, rs)
+chequear("sacar_afuera: el paso es 8 mm de HOJA / escala 0,15 = 53,3 de vista (la de abajo queda en y -53,3)",
+         abs((cotas_f[0].c[1] + cotas_f[0].c[3]) / 2 + 8.0 / 0.15) < 1e-6, cotas_f[0].c)
+
+
+class CotaQuieta(CotaFalsa):
+    def MoveValue(self, *a):                 # CATIA no la movio (cota bloqueada): el control lo tiene que contar
+        pass
+
+
+quietas = [CotaQuieta(b) for b in ([452.5, 11.8, 547.5, 35.2], [-8.2, 365.0, 15.2, 435.0])]
+vista_q = types.SimpleNamespace(Scale=0.15, Dimensions=types.SimpleNamespace(Count=2, Item=lambda i: quietas[i - 1]))
+rq = ac.sacar_afuera(c_f, vista_q, (0.0, 0.0, 1000.0, 800.0))
+chequear("sacar_afuera: si CATIA no la movio, siguen_adentro la cuenta (2), no da 0", rq["siguen_adentro"] == 2, rq)
+
 # 3 bis. acomodar() con un plano falso (Views / Dimensions / GetBoundaryBox por Evaluate)
 class Dim:
     def __init__(self, valor, tipo, caja_):

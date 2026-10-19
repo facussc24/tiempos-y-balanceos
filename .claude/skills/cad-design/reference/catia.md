@@ -398,7 +398,7 @@ Antes de buscar en foros, se busca ahí.
   cajas de las cotas (`GetBoundaryBox`) vienen en coordenadas de la VISTA, o sea mm del modelo en los ejes H/V de la
   vista (el 1000 del carro: y 12-35 sobre la barra 0-30), mientras `Size` da mm de HOJA y su centro es `v.X, v.Y`. Por
   eso el contorno lo pasa el que llama (la caja del modelo proyectada en H/V). Horizontal → arriba/abajo según la mitad,
-  vertical → izquierda/derecha, escalonadas de a 8 mm de hoja. En el frente del carro: 4 movidas, 0 adentro. Límite:
+  vertical → izquierda/derecha, escalonadas de a 8 mm de hoja. En el frente del carro: 4 movidas con las patas viejas y 3 con las corregidas (log ej66c de las 17:13), 0 adentro. Límite:
   si el VALOR ya cae apenas afuera, la línea de cota sigue pegada al borde (el 540 de la planta). Test con las cajas
   reales y mutante que da rojo (`test_herramientas_tarde.py` 3 ter).
 - **Uniones de una estructura → `scripts/uniones.py <conjunto.step>`** (19/10): «0 de solape» no dice «unido». Las patas
@@ -465,3 +465,10 @@ internos de las cotas (`` `PartBody\Pocket.1\...` < `...` ``) dio «cumple» SIE
 silencio)**. Con parámetros PROPIOS (`Parameters.CreateDimension("Alto","LENGTH",v)` + `CreateFormula` hacia la cota +
 la tabla asociada al parámetro propio) el chequeo «Prof < Alto» da False justo en la fila mala. Todo chequeo se prueba
 con su caso malo antes de creerle.
+- **Correcciones del auditor Opus (19/10 noche) a `uniones.py` y `contrasalidas.py`:** (1) un tubo REDONDO acostado sobre
+  una placa daba VERDE con 73 mm² (contacto en línea): ahora se hunde la pieza 0,01 y 0,0025 — un contacto de CARA da la
+  misma área, uno en LÍNEA la mitad — y la línea va a `solo_linea_o_punto`, sin unión; (2) `contrasalidas` decidía el lado
+  de cada triángulo por su centro (prisma de 4° con la partición en z 2: SALE con 239 mm² que traban): ahora PARTE la pieza
+  por el plano y juzga cada mitad, sin contar la cara de partición; (3) la normal sale de la superficie real
+  (`normal_at`), no del triángulo (una caja con R2 daba TRABA de puro teselado). Tests con los casos del auditor y los
+  mutantes que vivían (dos grupos, corredizo al revés, sacar_afuera y deslizar con objetos falsos).
