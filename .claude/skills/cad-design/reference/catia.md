@@ -472,3 +472,6 @@ con su caso malo antes de creerle.
   por el plano y juzga cada mitad, sin contar la cara de partición; (3) la normal sale de la superficie real
   (`normal_at`), no del triángulo (una caja con R2 daba TRABA de puro teselado). Tests con los casos del auditor y los
   mutantes que vivían (dos grupos, corredizo al revés, sacar_afuera y deslizar con objetos falsos).
+- **Un plano para el herrero pide la POSICIÓN de cada barra que no va en una esquina** (ej79, carro de troqueles, 19/10):
+  `GenerateDimensions` da el LARGO de cada barra, no dónde va. El travesaño del medio no tenía ninguna cota que lo ubicara;
+  se agregó a mano desde el borde a su cara (L/2 − T/2 = 680). Antes de cerrar un plano: ¿cada pieza tiene largo Y lugar?
