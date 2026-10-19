@@ -12,7 +12,24 @@ CASOS = {"v16": os.path.join(PRACTICA, "ej13_v16", "out_etapa5.stp"),
          "gemelo_1mm": os.path.join(PRACTICA, "v14_choque", "v16_subida_1mm.step")}
 
 
+def veredicto(res):
+    """«No choca» vale solo si en la MISMA corrida el gemelo (corrido hacia el panel) SI dio choque: una CATIA danada da
+    «Update failed» hasta en un pad y se leeria como «no choca» (auditor del 19/10). Sin gemelo con choque: «sin medir»."""
+    gem = [r for n, r in res.items() if n.startswith("gemelo")]
+    control_ok = bool(gem) and all(r.get("interseccion", 0) > 0 for r in gem)
+    out = {}
+    for n, r in res.items():
+        if n.startswith("gemelo"):
+            out[n] = "choca (control)" if r.get("interseccion", 0) > 0 else "SIN MEDIR: el gemelo no dio choque"
+        elif not control_ok:
+            out[n] = "SIN MEDIR: el gemelo no dio choque en esta corrida"
+        else:
+            out[n] = "choca" if r.get("interseccion", 0) > 0 else "no choca"
+    return out
+
+
 def cuerpo(c, reg):
+    res = {}
     for nombre, ruta in CASOS.items():
         def hacer(nombre=nombre, ruta=ruta):
             c.Documents.Open(ruta)
@@ -55,8 +72,11 @@ def cuerpo(c, reg):
                     d.Close()
                 except Exception:  # noqa: BLE001
                     pass
-            return {"utillaje": v_util, "pegado": v_pegado, "interseccion": inter, "estado": estado}
+            res[nombre] = {"utillaje": v_util, "pegado": v_pegado, "interseccion": inter, "estado": estado}
+            return res[nombre]
         reg.paso(nombre, hacer)
+    reg.datos["veredicto"] = veredicto(res)
+    print("VEREDICTO", reg.datos["veredicto"])
 
 
 if __name__ == "__main__":

@@ -35,7 +35,9 @@ def vol_sh(sh):
 
 def booleana(Op, x, y, fuzz=1e-4):
     """19/10: dos solidos de motores distintos con caras COINCIDENTES hacen fallar la booleana sin tolerancia (A-B
-    devolvia A entero y A^B = 0). Con fuzz 1e-4 da lo mismo que con 1e-2: se usa 1e-4."""
+    devolvia A entero y A^B = 0). Segun el par, cierra con 1e-4 (etapa 2 de la v16) o recien con 1e-2 (v16 de CATIA
+    contra la original): por eso se prueban 1e-4, 1e-3 y 1e-2 y se informa cual cerro. Con una pieza CORRIDA no cierra
+    con ninguna (comun 0): el que separa ahi es la distancia (0,1 contra 0,0016)."""
     op = Op()
     la, lb = TopTools_ListOfShape(), TopTools_ListOfShape()
     la.Append(x.solids()[0].wrapped)

@@ -91,8 +91,10 @@ Fak: no se toca (pasó el 17/10 a las 09:11 y se cerró así).
 ## 19/10/2026 — una noche de práctica: diseñar EN CATIA desde cero (base en `scripts/catia/`)
 
 Pedido de Fak (19/10, 01:00): *"practicando con catia... la idea es que puedas diseñar todo con catia desde 0"*. Se
-hicieron 14 ejercicios de lo básico a una pieza real, cada uno medido contra su cuenta y contra build123d; la evidencia
-(scripts, CATPart, STEP, PDF, capturas y `NOTAS.md` con el detalle) queda en `C:\Dev\_catia_practica\` (fuera del repo).
+hicieron 22 ejercicios de lo básico a una pieza real, cada uno medido contra su cuenta (y contra build123d donde había
+STEP); la evidencia (scripts, CATPart, STEP, PDF, capturas y `NOTAS.md` con el detalle) queda en `C:\Dev\_catia_practica\`
+(fuera del repo). Ojo: `registro.json` de cada ejercicio guarda solo la ÚLTIMA corrida; los números de corridas
+anteriores que se citan (968 caras de más, STL de 85 849,6, 18 minutos) están en `NOTAS.md`, no en un registro.
 
 **Qué hay en `scripts/catia/`** (corre con `C:\Dev\_catia_env`; la carpeta de trabajo es `CATIA_TRABAJO`, por defecto
 `C:\Dev\_catia_practica`): `catia_base.py` (CATIA propia por pid, vigía de cuadros, `topologia`/`aristas_con_extremos`
@@ -105,11 +107,11 @@ lo que falta y la distancia entre dos STEP, NO ciego: probado con el gemelo corr
 
 | Tema | Resultado | Cómo se usa |
 |---|---|---|
-| Part Design (croquis acotado, pad, pocket, 4 tipos de agujero, revolución, nervio, redondeo, chaflán, cáscara, desmoldeo, patrones, espejo, parámetros y fórmulas, material y masa) | Exacto contra la cuenta y contra build123d | Ver `NOTAS.md`: grados de libertad del croquis, ejes de cada plano (ZX: H→Z, V→X), sentidos medidos |
+| Part Design (croquis acotado, pad, pocket, 4 tipos de agujero, revolución, nervio, redondeo, chaflán, cáscara, desmoldeo, patrones, espejo, parámetros y fórmulas, material y masa) | Exacto contra la cuenta (y contra build123d donde se exportó); el patrón RECTANGULAR solo después de elegir el sentido de cada dirección midiendo (1 de 4 combinaciones da los 9 agujeros; `dbg_rect.py`) | Ver `NOTAS.md`: grados de libertad del croquis, ejes de cada plano (ZX: H→Z, V→X), sentidos medidos |
 | Superficies (extruir, revolución, transición, relleno, unir, cerrar, espesor, cortar, spline) | Exacto | Los sentidos se miden (desplazamiento y corte); una superficie de corte tiene que pasarse del borde |
 | Multi-sección SÓLIDA de Part Design | **Falló siempre** (hasta con dos hexágonos) | Por superficie: transición vértice a vértice + rellenos + unir con `SetDeviation(0.01)` + **`Invert = True`** + cerrar |
 | Ensamble con restricciones | Exacto (perno en 15; 30; 10) | Ejes y puntos con nombre propio y `CreateReferenceFromName(raiz/instancia/!Nombre)` |
-| Choque de CATIA (`Clashes`) | **Ciego en ±0,3 mm**: 0,2 y 0,3 de choque = «contacto 0,0»; luz real 0,107 (v14 vs panel) = «contacto 0,0» | No decide holguras de décimas. Exacto: segundo cuerpo + `AddNewIntersect`, o `choque_exacto.py` |
+| Choque de CATIA (`Clashes`) | **No distingue choques de hasta 0,3 mm de un contacto**: 0,2 y 0,3 de choque = «contacto 0,0»; y una luz real de 0,107 (v14 vs panel) también dio «contacto 0,0» (del lado de la luz solo se midió ese caso) | No decide holguras de décimas. Exacto: segundo cuerpo + `AddNewIntersect`, o `choque_exacto.py` |
 | Cálculo estático GPS | Flecha 0,7977 contra 0,8 de la cuenta (0,3 %) | Se compara la flecha; la tensión en un empotramiento tiene pico de esquina |
 | Plano (Drafting) a PDF | Anda: vistas, cotas desde el croquis, marco y cajetín | Sin croquis acotado no hay cotas automáticas |
 | Exportar STEP/STL | **CATIA exporta lo VISIBLE**: con las superficies de construcción a la vista salieron 8 cáscaras y 968 caras de más | Ocultar los sets de superficies antes de exportar; controlar 1 sólido / 1 cáscara y el volumen del STL |

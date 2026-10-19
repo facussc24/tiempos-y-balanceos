@@ -29,35 +29,79 @@ ESTADO = os.path.join(PRACTICA, "mi_catia.json")
 VENV_CAD = r"C:\Dev\BarackMercosul\.venv-cad\Scripts\python.exe"
 
 
-def cnext_abiertos():
-    r = subprocess.run(["tasklist", "/FI", "IMAGENAME eq CNEXT.exe", "/FO", "CSV", "/NH"],
-                       capture_output=True, text=True, timeout=20)
+def cnext_abiertos(correr=subprocess.run):
+    """PIDs de CNEXT.exe, o None si NO SE PUDO MIRAR (tasklist fallo): «no pude mirar» no es «no hay CATIA»
+    (auditor del 17/10, I4, y del 19/10)."""
+    try:
+        r = correr(["tasklist", "/FI", "IMAGENAME eq CNEXT.exe", "/FO", "CSV", "/NH"],
+                   capture_output=True, text=True, timeout=20)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if getattr(r, "returncode", 0) != 0:
+        return None
     return [int(m.group(1)) for m in re.finditer(r'"CNEXT\.exe","(\d+)"', r.stdout or "", re.I)]
 
 
-def _pid_guardado():
+def hora_de_arranque(pid):
+    """Hora de creacion del proceso (FILETIME en 100 ns), o None. Junto con el pid identifica el proceso: Windows recicla
+    los pids, la hora de creacion no se repite."""
     try:
-        return json.load(open(ESTADO, encoding="utf-8")).get("pid")
-    except (OSError, ValueError):
+        import win32api
+        import win32con
+        import win32process
+        h = win32api.OpenProcess(win32con.PROCESS_QUERY_LIMITED_INFORMATION if hasattr(win32con, "PROCESS_QUERY_LIMITED_INFORMATION")
+                                 else 0x1000, False, int(pid))
+        try:
+            return int(win32process.GetProcessTimes(h)["CreationTime"].timestamp() * 1e6)
+        finally:
+            win32api.CloseHandle(h)
+    except Exception:  # noqa: BLE001
         return None
 
 
+def _guardado():
+    try:
+        return json.load(open(ESTADO, encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def _pid_guardado():
+    return _guardado().get("pid")
+
+
+def es_mia(pids, guardado, hora=hora_de_arranque):
+    """True solo si hay UNA CATIA y es la que arranque yo: mismo pid Y misma hora de arranque que la guardada (19/10,
+    auditor: un mi_catia.json viejo y una CATIA de Fak con el pid reciclado se tomaban por mia y se cerraban)."""
+    if pids is None or len(pids) != 1:
+        return False
+    pid = pids[0]
+    if not guardado.get("pid") or pid != guardado["pid"] or guardado.get("hora") is None:
+        return False
+    return hora(pid) == guardado["hora"]
+
+
 def conectar(visible=False):
-    """Devuelve (catia, pid). Arranca la propia si no hay ninguna; se engancha solo a la propia."""
+    """Devuelve (catia, pid). Arranca la propia si no hay ninguna; se engancha solo a la propia (pid + hora de arranque).
+    Si no se puede saber que procesos hay, no hace nada."""
     pids = cnext_abiertos()
+    if pids is None:
+        raise SystemExit("No pude saber si hay una CATIA abierta (tasklist fallo): no arranco ni me engancho a nada.")
     if not pids:
         t0 = time.time()
         c = win32com.client.Dispatch("CATIA.Application")
-        pids = cnext_abiertos()
+        pids = cnext_abiertos() or []
         pid = pids[0] if len(pids) == 1 else None
-        json.dump({"pid": pid, "arranco": time.strftime("%Y-%m-%d %H:%M:%S"), "seg": round(time.time() - t0, 1)},
+        json.dump({"pid": pid, "hora": hora_de_arranque(pid) if pid else None,
+                   "arranco": time.strftime("%Y-%m-%d %H:%M:%S"), "seg": round(time.time() - t0, 1)},
                   open(ESTADO, "w", encoding="utf-8"))
     else:
-        mio = _pid_guardado()
-        if len(pids) != 1 or pids[0] != mio:
-            raise SystemExit(f"Hay una CATIA que no es la mia (pids {pids}, la mia {mio}): no toco nada.")
+        g = _guardado()
+        if not es_mia(pids, g):
+            raise SystemExit(f"Hay una CATIA que no es la mia (pids {pids}, la mia {g.get('pid')} con otra hora de "
+                             f"arranque o sin registrar): no toco nada.")
         c = win32com.client.GetActiveObject("CATIA.Application")
-        pid = mio
+        pid = g["pid"]
     c.DisplayFileAlerts = False
     if visible:
         c.Visible = True
@@ -342,20 +386,24 @@ def medir_step(step):
 def reiniciar_mia():
     """Cierra MI CATIA (Quit y, si no se va en 30 s, termina SOLO su pid). 19/10: despues de un «el servidor lanzo una
     excepcion» la instancia queda danada y hasta un pad simple da «Update failed» en las corridas siguientes."""
-    mio = _pid_guardado()
-    if not mio or mio not in cnext_abiertos():
-        return
+    pids = cnext_abiertos()
+    if pids is None:
+        raise SystemExit("No pude saber si hay una CATIA abierta (tasklist fallo): no reinicio nada.")
+    g = _guardado()
+    if not pids or not es_mia(pids, g):
+        return                       # no hay ninguna, o la que hay NO es la mia: no se toca (conectar despues se niega)
+    mio = g["pid"]
     try:
         c, _ = conectar()
         apagar(c)
     except Exception:  # noqa: BLE001
         pass
-    if mio in cnext_abiertos():
+    if mio in (cnext_abiertos() or []) and es_mia([mio], g):
         subprocess.run(["taskkill", "/PID", str(mio), "/F"], capture_output=True)
     # que desaparezca DEL TODO antes de arrancar otra: engancharse a una que se esta cerrando dejo el motor de macros
     # y las mediciones rotos en toda la corrida (19/10)
     for _ in range(40):
-        if mio not in cnext_abiertos():
+        if mio not in (cnext_abiertos() or []):
             break
         time.sleep(1)
     time.sleep(3)
