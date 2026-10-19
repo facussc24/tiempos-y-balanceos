@@ -177,6 +177,22 @@ class Registro:
         self.carpeta = os.path.join(PRACTICA, nombre)
         os.makedirs(self.carpeta, exist_ok=True)
 
+    def mostrar(self):
+        """CATIA_MIRAR=lento (19/10, Fak quiere ver como crece la pieza): despues de cada paso encuadra la vista
+        isometrica y espera CATIA_PAUSA segundos (2 por defecto). Con CATIA_MIRAR=1 o sin variable no hace nada."""
+        c = getattr(self, "catia", None)
+        if c is None or os.environ.get("CATIA_MIRAR") != "lento":
+            return
+        try:
+            v = c.ActiveWindow.ActiveViewer
+            v.Viewpoint3D.PutSightDirection((-0.577, -0.577, -0.577))
+            v.Viewpoint3D.PutUpDirection((0.0, 0.0, 1.0))
+            v.Reframe()
+            v.Update()
+        except Exception:  # noqa: BLE001
+            pass
+        time.sleep(float(os.environ.get("CATIA_PAUSA", "2")))
+
     def paso(self, que, fn):
         t = time.time()
         try:
@@ -184,6 +200,7 @@ class Registro:
             self.pasos.append({"paso": que, "ok": True, "seg": round(time.time() - t, 2),
                                **({"dato": r} if isinstance(r, (str, int, float, dict, list, tuple)) else {})})
             print(f"  ok    {que}" + (f"  -> {r}" if isinstance(r, (str, int, float, dict, list, tuple)) else ""))
+            self.mostrar()
             return r
         except Exception as e:  # noqa: BLE001
             self.pasos.append({"paso": que, "ok": False, "seg": round(time.time() - t, 2), "error": repr(e)[:500],
@@ -356,6 +373,10 @@ def captura(c, reg, nombre, vistas=("iso",), ocultar_planos=True):
     subprocess.run([VENV_CAD, os.path.join(AQUI, "bmp_a_png.py"), png] + pngs, check=True, capture_output=True)
     for b in pngs:
         os.remove(b)
+    try:                                   # 19/10: dejar la ventana con arbol + pieza (2); 0 es SOLO el arbol (blanco)
+        c.ActiveWindow.Layout = 2
+    except Exception:  # noqa: BLE001
+        pass
     return png
 
 
@@ -415,13 +436,21 @@ def correr(nombre, cuerpo, visible=False, fresca=False):
     """Esqueleto de un ejercicio: conectar, vigia, cuerpo(c, reg), guardar el registro. fresca=True arranca con una
     CATIA recien abierta (para construcciones largas)."""
     pythoncom.CoInitialize()
+    mirar = os.environ.get("CATIA_MIRAR") in ("1", "lento")  # 19/10: Fak quiere ver los disenos; la ultima pieza queda abierta
     if fresca:
         reiniciar_mia()
-    c, pid = conectar(visible)
+    c, pid = conectar(visible or mirar)
+    if mirar:                                         # lo que dejo abierto el ejercicio anterior (es mi CATIA)
+        for i in range(c.Documents.Count, 0, -1):
+            try:
+                c.Documents.Item(i).Close()
+            except Exception:  # noqa: BLE001
+                pass
     vig = Vigia(pid) if pid else None
     if vig:
         vig.start()
     reg = Registro(nombre)
+    reg.catia = c
     try:
         cuerpo(c, reg)
     finally:
@@ -430,7 +459,7 @@ def correr(nombre, cuerpo, visible=False, fresca=False):
         except Exception:  # noqa: BLE001
             n_docs = 0
             reg.datos["catia_no_responde_al_cerrar"] = True
-        for i in range(n_docs, 0, -1):                # la CATIA es la mia: lo que quedo abierto por una falla se cierra
+        for i in range(0 if mirar else n_docs, 0, -1):  # la CATIA es la mia: lo que quedo abierto se cierra (salvo mirar)
             try:
                 c.Documents.Item(i).Close()
             except Exception:  # noqa: BLE001

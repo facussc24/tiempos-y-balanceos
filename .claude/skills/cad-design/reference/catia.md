@@ -165,3 +165,51 @@ en mm³; lo que vuelve de VBScript trae coma decimal.
    `choque_exacto.py`; STEP con 1 sólido y 1 cáscara; STL cerrado con el volumen del B-Rep.
 8. **Plano**: `plano_de_step.py` para el general; cortes y cotas desde el croquis (`DefineSectionView`, `GenerateDimensions`).
 9. **Al terminar**: cerrar la CATIA propia (`apagar`) para que no le quede abierta a Fak.
+
+## 19/10/2026 (de día) — ejercicios REALES con respuesta publicada, pieza paramétrica y Fak mirando
+
+Pedido de Fak: *"que practique con ejercicios reales de catia... que vayas avanzando de nivel"*. Cada pieza se hizo en
+CATIA y se comparó contra la respuesta PUBLICADA y contra un gemelo en build123d (forma, no solo volumen: `compara.py`).
+
+| Ejercicio | Qué practica | CATIA contra la respuesta |
+|---|---|---|
+| CSWP Sample Exam 2 de SolidWorks (U. de Alberta), etapa 1, 3 juegos de parámetros | Part Design con croquis acotado contra ejes y fórmulas (A..E, X = A/3, Y = B/3 + 10) | 14 207,34 / 16 490,47 / 15 100,46 g contra ,34 / ,45 / ,47 |
+| Mismo examen, etapa 2 (preguntas 4 y 5) | Modificar: sacar un bloque, bolsillo nuevo, garganta en un cilindro | 13 206,39 / 14 208,00 contra ,40 / ,00 |
+| Too Tall Toby 01-05 Paste Sleeve | Superficies: loft de dos ranuras, tapas, Join, CloseSurface; hueco como 2.º cuerpo + Remove | 56,73 g contra 57,08 ± 1 |
+| Too Tall Toby 01-02 Post Cap | Revolución con cuarto de elipse, asa con Rib, Groove con desmolde 4°, R1 de encuentro | 43,09 = 43,09 |
+| Too Tall Toby 01-10 Light Cap | Sección de pared extruida simétrica + revoluciones de 180° | 211,30 = 211,30 |
+
+Fuentes de ejercicios con respuesta: el PDF del CSWP (Univ. de Alberta) y los 13 planos de Too Tall Toby de la guía de
+build123d (https://build123d.readthedocs.io/en/stable/tttt.html, libres para uso educativo; se miran en el navegador).
+
+**Pieza paramétrica (`scripts/catia/croquis.py`):** `Croquis(part, body, plano, nombre).perfil(pts, arcos)`, `.hv()`,
+`.a_eje_V(obj, "B - C + 7.5mm")`, `.a_eje_H(...)`, `.radio(arco, "C - 80mm")`, `.cerrar()`; parámetros con
+`part.Parameters.CreateDimension("A", "LENGTH", 213)` y fórmulas con `part.Relations.CreateFormula`; los largos de pad
+y pocket (`FirstLimit.Dimension`) y los offsets de plano (`plane.Offset`) también llevan fórmula. Cambiando SOLO los
+parámetros la pieza dio las 5 respuestas del examen. Las constantes de una fórmula llevan unidad («69mm»). Los
+redondeos y chaflanes elegidos por posición sobreviven al cambio de parámetros.
+
+**Lo que costó un intento (y su control):**
+- **Un pad o una revolución puede crecer para el lado equivocado SIN error** (los dos cilindros del CSWP salieron para
+  afuera). `centro_agregado(m0, m1)` dice hacia dónde creció; `elegir_sentido(...)` prueba las DOS orientaciones y deja
+  la que suma más: **un umbral no alcanza** (una revolución de 180° hacia adentro también suma: 18 998 contra 41 620).
+- **Shell que no abre una base partida en varias caras** (pad + 2 revoluciones = 3 caras abajo): con una anda, con las
+  tres falla en cualquier orden. Se rodea dibujando la SECCIÓN DE PARED y extruyéndola / revolucionándola.
+- **Garganta en un cilindro apoyado en un muro: Shaft del perfil escalonado**, no Pad + Groove (el Groove corta el muro).
+- Arcos de 180° justos: ángulos explícitos (`ranura()`); `angulos_arco` rechaza el caso ambiguo.
+- Elipse en un croquis: `CreateEllipse(cH, cV, ejeMayorH, ejeMayorV, Rmayor, Rmenor, t0, t1)`; t se mide desde el eje
+  mayor y el menor está a +90°. Chaflán: `AddNewChamfer(ref, 0, modo, 0, L1, L2oAngulo)`, modo 0 = dos largos,
+  1 = largo + ángulo. Agujero con caja que tiene que seguir a un parámetro: dos vaciados acotados (el Hole queda clavado
+  en la coordenada).
+- **Leer el plano es el cuello de botella, no CATIA.** Cuatro malas lecturas en cinco ejercicios, cazadas comparando
+  contra la respuesta: un radio que dependía de un parámetro y lo tomé fijo; un R15 que era de otra esquina; un fondo
+  RECTO que leí como arco; una RANURA que leí como elipse. Con varios juegos de parámetros, la forma de la diferencia
+  señala la causa: cambia de signo → una medida que depende de un parámetro; constante → un detalle fijo; proporcional
+  entre dos casos → una sola causa que crece con ese parámetro.
+- **Ningún número de enumeración de memoria**: `ActiveWindow.Layout = 0` deja SOLO el árbol (Fak vio la pantalla en
+  blanco); 2 = árbol + pieza, 1 = solo la pieza. `enums.py <nombre>` lo lee en un segundo.
+
+**Para que Fak mire:** `CATIA_MIRAR=1` arranca la CATIA propia visible y deja la última pieza abierta;
+`CATIA_MIRAR=lento` (+ `CATIA_PAUSA=3`) encuadra y espera después de cada paso para que se vea crecer la pieza. La
+ventana queda DETRÁS de lo que Fak tenga adelante (Windows no deja pasar al frente solo): se le dice que toque «CATIA V5»
+en la barra de tareas. Con su propia CATIA abierta, la base no se engancha (no es «la mía»).
