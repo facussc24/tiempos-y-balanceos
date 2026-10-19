@@ -11,14 +11,14 @@ a `mcp__build123d__*` en toda la historia** y 30 s de timeout de conexión en CA
 sesión (`uvx` no llega a responder en esta notebook), así que se sacó de `.mcp.json` y de
 `enabledMcpjsonServers`. El skill trabaja igual: build123d corre in-process desde `.venv-cad`.
 Para usarlo como segunda opinión en una sesión, recrear `.mcp.json` en la raíz del repo con
-exactamente esto (versión **pineada 0.3.83**, `BUILD123D_IN_PROCESS=1` **obligatorio en esta
+exactamente esto (versión **pineada 0.3.90** desde el 18/10/2026, `BUILD123D_IN_PROCESS=1` **obligatorio en esta
 notebook**: el worker subprocess del server se cuelga en Windows — medido: `import_cad_file` no
 responde ni con 300 s de budget; in-process responde en 8 s), agregar
 `"enabledMcpjsonServers": ["build123d"]` a `.claude/settings.json`, y abrir una sesión nueva: sus
 tools aparecen como `mcp__build123d__*`. Al terminar, volver a sacarlo (no commitear el `.mcp.json`).
 
 ```json
-{ "mcpServers": { "build123d": { "command": "uvx", "args": ["--python", "3.12", "build123d-mcp==0.3.83"],
+{ "mcpServers": { "build123d": { "command": "uvx", "args": ["--python", "3.12", "build123d-mcp==0.3.90"],
                                  "env": { "BUILD123D_IN_PROCESS": "1" } } } }
 ```
 
@@ -44,7 +44,21 @@ agreement 0,000000% contra gmsh/OCC en un STEP real de 28 sólidos (34.186.208,8
 **Upgrade de versión = cambiar el pin y re-correr `test_build123d_mcp.py` (exit 0 = adoptar);
 nunca subir el pin sin el test.**
 
-## Estado al 17/10/2026 (tanda 2 del plan del sistema): la 0.3.90 NO está en esta PC
+## 18/10/2026: ADOPTADA la 0.3.90 (sí de Fak: «dale metele entonces»)
+
+- `test_build123d_mcp.py --version 0.3.90` (in-process, que es como corre acá): **7/7 OK en 124 s, ADOPTAR**: volumen y
+  caja analíticos exactos, solape 4.500 mm³ y par separado con luz 10, y los dos colores de `validate` (la pieza mala da
+  rojo). Expone 48 herramientas. La corrida SIN in-process no se hizo (el test fuerza `BUILD123D_IN_PROCESS=1`): el
+  «obligatorio» de arriba sigue vigente hasta medirlo.
+- Revisión del cambio contra la 0.3.83 (`docs/REVISAR_ANTES_DE_INSTALAR.md` §5, sobre la caché de `uv`, sin ejecutar
+  nada del paquete): 6 archivos nuevos (`tools/drawing_evidence`, `edit_features`, `execute_file`, `mesh_analysis`,
+  `prepare_drawing`, `recognise_features`), 17 cambiados, 0 borrados; **0 renglones agregados** con red, procesos,
+  `eval`/`exec`, `.ssh`, `.env`, `settings.json`, `.claude` o frases de inyección.
+- `execute_file` corre un archivo de código: su verbo cae en el matcher del despachador de MCP (`[Ee]xecute`), pero el
+  código vive en el archivo y no en el pedido, así que el guardián no lo lee. El archivo lo escribe antes un Write o un
+  Bash, que sí pasan por los guardianes.
+
+## Estado al 17/10/2026 (tanda 2 del plan del sistema): la 0.3.90 NO estaba en esta PC (histórico)
 
 - La última publicada es la **0.3.90** (PyPI, 25/09/2026); la 0.3.87 dice arreglar los cuelgues de Windows en las
   primeras llamadas **sin** `BUILD123D_IN_PROCESS=1` (CHANGELOG, informe `afuera_3d.md` §4 punto 1). Si eso se
