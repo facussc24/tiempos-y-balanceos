@@ -46,7 +46,8 @@ lista suelta, 26/30 con estos 8 grupos; lo que faltó en esos exámenes está ma
 - ¿Qué proceso viene después de fabricarlo (galvanizado → venteo; pintura; horno)? ⊕
 
 **6. Calor, adhesivo y blando**
-- ¿A qué temperatura está lo que toca (pieza tibia, platina, hot melt, verano en planta)? PLA ~55 °C, PETG ~75 °C ⊕
+- ¿A qué temperatura está lo que toca (pieza tibia, platina, hot melt, punzón, verano en planta)? PLA ~55 °C, PETG ~75 °C;
+  y el calor que se ACUMULA ciclo tras ciclo (medir en régimen, no en un ciclo frío) ⊕
 - ¿Toca algo blando, pintado o clase A? Que no marque; simulación apoyada y apretada (GATE A).
 - ¿De dónde sale la elasticidad? (la casa: «sin gomas ni espumitas»)
 - Adhesivo fresco: ¿se desliza algo sobre él? ¿Dónde va el sobrante? Tiempo abierto contra el tiempo real de cada paso.
@@ -63,7 +64,7 @@ lista suelta, 26/30 con estos 8 grupos; lo que faltó en esos exámenes está ma
 - Costo y tiempo de hacerlo contra lo que ahorra (scrap o retrabajo de hoy) ⊕
 - Al final: el tamaño del conjunto contra lo que hace (GATE 4).
 
-**Cómo se probó (19/10/2026):** primero 13 preguntas contra los 11 casos reales de la casa (frente 4, parte b): frenaban 7; los 4 que no (pines, triangulito, Top Roll, gancho doble) dieron 4 más. Después exámenes a ciegas escritos por otra IA con las respuestas guardadas aparte: de trampas 5/5, 6/6 y 6/6; abiertos (mail de supervisor con grilla oculta de 10 puntos) 24/30 y 25/30 con la lista suelta y 26/30 con estos 8 grupos. Las preguntas marcadas ⊕ son las que faltaban. Límite: los exámenes los escribió una IA; la prueba que vale es un pedido real.
+**Cómo se probó (19/10/2026):** primero 13 preguntas contra los 11 casos reales de la casa (frente 4, parte b): frenaban 7; los 4 que no (pines, triangulito, Top Roll, gancho doble) dieron 4 más. Después exámenes a ciegas escritos por otra IA con las respuestas guardadas aparte: de trampas 5/5, 6/6 y 6/6; abiertos (mail de supervisor con grilla oculta de 10 puntos) 24/30 y 25/30 con la lista suelta, 26/30 y 28/30 con estos 8 grupos. Las preguntas marcadas ⊕ son las que faltaban. Límite: los exámenes los escribió una IA; la prueba que vale es un pedido real.
 
 ## La lista completa (60 preguntas, auditada el 19/10 contra los cuatro informes: 0 números inventados)
 
