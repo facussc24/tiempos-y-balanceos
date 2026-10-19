@@ -86,6 +86,8 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **18/10 — Al Fak estudiante no se le da una nota: el "7" de Matemática terminó en 2 y el 18/10 repetí "ya sacás 5 de 10"** (*"no hagas falsas promesas"*). Solo techo, dicho como techo, o un rango salido de simulacros reales. Graduado al `CLAUDE.md` de `Estudio-UNLaM` («Cómo se habla de la nota») y a `feedback_estudio_unlam_nota_no_se_promete`.
+
 - **15/10 — A Fak no se le pregunta lo que contesta un manual, una prueba que puedo correr, el propio diseño o la norma con el papel delante: se aplica y se informa** (*"preguntás muchas boludeces"*, *"ya sabés decidir en base a datos"*; 11 de 18 puntos de una lista eran míos). Graduado a `feedback_la_info_ya_la_tengo_no_preguntar` y `feedback_con_recomendacion_no_se_pregunta`.
 
 - **16/10 — Lo que Fak confirma de su material con la pieza en la mano queda como DATO y el programa no lo vuelve a dudar; la impresora se busca por su serie, no por una dirección fija.** Graduado a `feedback_lo_que_fak_confirma_de_su_material_no_se_vuelve_a_dudar` y al skill `impresion-3d-bambu`.
