@@ -61,13 +61,14 @@ lista suelta, 26/30 con estos 8 grupos; lo que faltó en esos exámenes está ma
 
 **8. Vida del dispositivo y criterio**
 - ¿Qué se gasta, qué se ensucia (hot melt, polvo), cómo se limpia y se repone, dónde se guarda vacío? ⊕
-- Si es calibre: cuánto de la tolerancia consume, repetibilidad y reproducibilidad, pieza patrón.
+- Si es calibre: cuánto de la tolerancia consume, repetibilidad y reproducibilidad, pieza patrón, y QUÉ SE HACE con la
+  pieza que no pasa (se separa, aviso, quién decide) ⊕
 - El criterio de aceptación, escrito ANTES (cuánto, medido cómo, con qué pieza).
 - ¿Se queda en planta o viaja (al cliente, retornable)? ⊕
 - Costo y tiempo de hacerlo contra lo que ahorra (scrap o retrabajo de hoy) ⊕
 - Al final: el tamaño del conjunto contra lo que hace (GATE 4).
 
-**Cómo se probó (19/10/2026):** primero 13 preguntas contra los 11 casos reales de la casa (frente 4, parte b): frenaban 7; los 4 que no (pines, triangulito, Top Roll, gancho doble) dieron 4 más. Después exámenes a ciegas escritos por otra IA con las respuestas guardadas aparte: de trampas 5/5, 6/6 y 6/6; abiertos (mail de supervisor con grilla oculta de 10 puntos) 24/30 y 25/30 con la lista suelta, 26/30, 28/30 y 26/30 con estos 8 grupos. Las preguntas marcadas ⊕ son las que faltaban. Límite: los exámenes los escribió una IA; la prueba que vale es un pedido real.
+**Cómo se probó (19/10/2026):** primero 13 preguntas contra los 11 casos reales de la casa (frente 4, parte b): frenaban 7; los 4 que no (pines, triangulito, Top Roll, gancho doble) dieron 4 más. Después exámenes a ciegas escritos por otra IA con las respuestas guardadas aparte: de trampas 5/5, 6/6 y 6/6; abiertos (mail de supervisor con grilla oculta de 10 puntos) 24/30 y 25/30 con la lista suelta, 26/30, 28/30, 26/30 y 27/30 con estos 8 grupos (~89 %). Las preguntas marcadas ⊕ son las que faltaban. Límite: los exámenes los escribió una IA; la prueba que vale es un pedido real.
 
 ## La lista completa (60 preguntas, auditada el 19/10 contra los cuatro informes: 0 números inventados)
 
