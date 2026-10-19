@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **19/10 — Lo que una herramienta llama «contacto» o «sin choque» se mide con un método exacto antes de decidir con eso: el choque de CATIA dijo «contacto 0,0» con 0,3 mm de choque y con 0,1 mm de luz.** Graduado a `cad-design/reference/catia.md` y `reference_catia_por_com`.
+
 - **18/10 — Una prueba que corre los guardianes de verdad (el despachador con pedidos peligrosos) va con un HOME aparte: con el real gasta el permiso de un solo uso que Fak dejó.** Graduado a `codigo-madre.md` y `scripts/_despachadorPayloads.mjs`.
 
 - **17/10 — Una simulación que reproduce lo publicado puede estar ciega a una parte de la pieza.** Graduado a `reference_gate_asiento_simulacion_ciega`.
