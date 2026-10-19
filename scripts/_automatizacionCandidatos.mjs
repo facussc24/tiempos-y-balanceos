@@ -1,6 +1,7 @@
 /**
  * _automatizacionCandidatos.mjs — de donde salen los candidatos de la cola de automatizacion de Barack para Pedro
- * (plan del sistema 16/10/2026, tanda 8 punto 2 bis; cola en la nube de Ingenieria: `AUTOMATIZACION BARACK\cola.md`).
+ * (plan del sistema 16/10/2026, tanda 8 punto 2 bis; cola en la nube de Ingenieria: `ASISTENTE INGENIERIA\7- AUTOMATIZACION\cola.md`, que se busca por la clave
+ * «automatizacion» de `scripts/_lib/nubeCarpetas.data.json`: la ruta nueva y, si todavia no existe, `AUTOMATIZACION BARACK`).
  *
  * Una vez por quincena relee los mails de la casa (la copia local que arma `scripts/_mails.py`) buscando los
  * procesos largos nombrados (ECR/ECO, arb, BeOn, la impresora) y los que se hacen "a mano", y PROPONE filas para la
@@ -24,7 +25,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { buscarBiblioteca } from './_lib/nubeRutas.mjs';
+import { carpetaNube } from './_lib/nubeRutas.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const CANON = JSON.parse(fs.readFileSync(path.join(AQUI, '_lib', 'automatizacionCandidatos.data.json'), 'utf8'));
@@ -295,7 +296,7 @@ function main() {
         console.log('Uso: node scripts/_automatizacionCandidatos.mjs [--dias N] [--out <archivo>] [--cola <ruta>] [--mails <ruta>]');
         return;
     }
-    const rutaCola = args.cola || path.join(buscarBiblioteca() || '', 'AUTOMATIZACION BARACK', 'cola.md');
+    const rutaCola = args.cola || path.join(carpetaNube('automatizacion'), 'cola.md');
     if (args.out && esLaCola(args.out, rutaCola)) {
         console.error('No piso la cola: --out tiene que ser otro archivo (la cola la decide Facundo).');
         process.exit(1);

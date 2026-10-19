@@ -60,6 +60,14 @@
         "No renombrar los PEDIDO: el aviso de arranque los busca por su nombre.",
         "Dudas: Facundo Santoro (Ingeniería)."
       ] },
+    { "id": "7", "nombre": "7- AUTOMATIZACION", "que": "La cola de automatización de Barack para Pedro: cola.md, borradores del mail de los viernes y relevamientos.",
+      "leeme": [
+        "7- AUTOMATIZACION: la cola de automatización de Barack para Pedro, mudada acá el 18/10/2026.",
+        "cola.md la decide Facundo; ningún programa la edita.",
+        "borradores: el mail de los viernes a Pedro, que se copia a mano a Outlook (no sale solo).",
+        "relevamientos: los candidatos que propone el programa cada quincena.",
+        "Dudas: Facundo Santoro (Ingeniería)."
+      ] },
     { "id": "9", "nombre": "9- VIEJO (no usar)", "que": "Instaladores y versiones anteriores, guardados por si hace falta mirar algo.",
       "leeme": [
         "9- VIEJO (no usar): instaladores y versiones anteriores, guardados por si hace falta mirar algo.",
@@ -73,7 +81,7 @@
     "{NOMBRE}: lo del asistente de Ingeniería, todo en un solo lugar.",
     "Lo arma y lo mantiene Facundo Santoro (Ingeniería). No mover ni renombrar: hay programas que buscan estas carpetas por su nombre.",
     "1- INSTALAR: un instalador por PC. 2- EQUIPO: lo publicado para los compañeros. 3- BUZON: lo que mandan las PC.",
-    "4- MAILS DEL EQUIPO: la copia de los mails de trabajo. 5- FACUNDO: memoria y configuración. 6- PEDIDOS: lo que se piden las PC de Facundo. 9- VIEJO: no usar.",
+    "4- MAILS DEL EQUIPO: la copia de los mails de trabajo. 5- FACUNDO: memoria y configuración. 6- PEDIDOS: lo que se piden las PC de Facundo. 7- AUTOMATIZACION: la cola de Pedro. 9- VIEJO: no usar.",
     "Dudas: Facundo Santoro (Ingeniería)."
   ],
 
@@ -91,6 +99,7 @@
     { "nombre": "0- INSTALAR CLAUDE (entrar aca)", "destino": "9", "motivo": "Plan del 08/10 §1.4: 0- INSTALAR va a 9- VIEJO. Su LEEME ya dice que está en cuarentena y que no se ejecute." },
     { "nombre": "FACUNDO", "destino": "6", "excluir_si_antes": "VARIOS[\\\\/]+$", "exigir_en_archivo": "Ingenier[ií]a y Proyecto|buscarBiblioteca|biblioteca|nube de Ingenier",
       "motivo": "Lo decidiste el 17/10/2026: entera, como carpeta propia adentro de la carpeta única y sin cambiar el nombre de ningún «PEDIDO N … .txt» (el aviso de arranque la busca por la clave «pedidos» de scripts/_lib/nubeCarpetas.data.json, en el lugar nuevo y en el viejo)." },
+    { "nombre": "AUTOMATIZACION BARACK", "destino": "7", "motivo": "La creó la tanda 8 el 17/10 a las 13:22 y quedó afuera de la mudanza porque no estaba en la lista del encargo. Entra a la carpeta única con el sí de Fak del 18/10/2026; la buscan por la clave «automatizacion» de scripts/_lib/nubeCarpetas.data.json, en el lugar nuevo y en el viejo." },
     { "nombre": "ACTUALIZACION_CLAUDE_LIMPIO", "destino": null, "ya_no_esta": "fue a la Papelera el 12/10", "motivo": "Se lista solo para mostrar quién la sigue nombrando." }
   ],
   "detectar_nuevas": "claude|asistente|^_CUARENTENA_",
