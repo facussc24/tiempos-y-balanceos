@@ -31,6 +31,10 @@ def comun(a_list, b_list, fuzz):
     op.SetTools(lb)
     op.SetFuzzyValue(fuzz)
     op.Build()
+    # una operacion que no termino devuelve una forma vacia y su volumen da 0: se leia «no choca» (19/10, nido con luz
+    # del ej25c: el gemelo subido 1 mm tambien daba 0). Sin terminar o con errores es «sin medir», nunca 0
+    if not op.IsDone() or op.Shape().IsNull():           # HasErrors no esta expuesto en OCP
+        return None
     return vol(op.Shape())
 
 
@@ -46,10 +50,23 @@ def dist(a_list, b_list):
 
 out = {"solidos_utillaje": len(u), "solidos_panel": len(p),
        "vol_utillaje": round(sum(s.volume for s in u), 3), "vol_panel": round(sum(s.volume for s in p), 3)}
-for fz in (1e-4, 1e-3, 1e-2):
-    out[f"interseccion_fuzz_{fz}"] = round(comun(u, p, fz), 4)
+def redondo(x):
+    return "SIN MEDIR" if x is None else round(x, 4)
+
+
+inters = [comun(u, p, fz) for fz in (1e-4, 1e-3, 1e-2)]
+for fz, x in zip((1e-4, 1e-3, 1e-2), inters):
+    out[f"interseccion_fuzz_{fz}"] = redondo(x)
 out["distancia_min"] = round(dist(u, p), 4)
 dz = float(sys.argv[3]) if len(sys.argv) > 3 else 1.0
 g = [s.moved(Location((0, 0, dz))) for s in u]
-out[f"gemelo_subido_{dz}_interseccion"] = round(comun(g, p, 1e-4), 4)
+gem = comun(g, p, 1e-4)
+out[f"gemelo_subido_{dz}_interseccion"] = redondo(gem)
+# «no choca» solo si todas las intersecciones se midieron, dan 0 y el gemelo de la misma corrida SI choco
+if any(x is None for x in inters) or gem is None or gem <= 0:
+    out["veredicto"] = "SIN MEDIR (una operacion fallo o el gemelo no choco: el control no ve)"
+elif max(inters) > 0:
+    out["veredicto"] = "CHOCA"
+else:
+    out["veredicto"] = "no choca"
 print(json.dumps(out))
