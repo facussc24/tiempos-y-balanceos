@@ -401,3 +401,8 @@ Antes de buscar en foros, se busca ahí.
   vertical → izquierda/derecha, escalonadas de a 8 mm de hoja. En el frente del carro: 4 movidas, 0 adentro. Límite:
   si el VALOR ya cae apenas afuera, la línea de cota sigue pegada al borde (el 540 de la planta). Test con las cajas
   reales y mutante que da rojo (`test_herramientas_tarde.py` 3 ter).
+- **Uniones de una estructura → `scripts/uniones.py <conjunto.step>`** (19/10): «0 de solape» no dice «unido». Las patas
+  del carro de práctica tocaban el marco por una ARISTA y lo vio Fak. Mide el área de contacto de cada par (corre una
+  pieza 0,01 mm en ±X/±Y/±Z) y da ROJO si una pieza no apoya, si hay solape o si el conjunto queda en dos grupos. Carro
+  corregido: 12 sólidos, patas 224 mm² arriba y abajo, VERDE. Test con el error real en rojo: `test_uniones.py`.
+  **Se corre en toda estructura antes del plano.**

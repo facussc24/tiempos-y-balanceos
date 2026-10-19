@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **19/10 — En una estructura cada unión se MIDE (área de contacto donde va la soldadura), no alcanza «0 solape»: las patas del carro de práctica tocaban el marco por una arista y lo vio Fak en el plano** (*"¿por qué te lo tuve que decir?"*). Es la regla del caballete (`cad-3d.md` GATE 3: toda interfaz que carga peso lleva su control) y no la apliqué.
+
 - **19/10 — Lo que una herramienta llama «contacto» o «sin choque» se mide con un método exacto antes de decidir con eso: el choque de CATIA dijo «contacto 0,0» con 0,3 mm de choque y con 0,1 mm de luz.** Graduado a `cad-design/reference/catia.md` y `reference_catia_por_com`.
 
 - **18/10 — Una prueba que corre los guardianes de verdad (el despachador con pedidos peligrosos) va con un HOME aparte: con el real gasta el permiso de un solo uso que Fak dejó.** Graduado a `codigo-madre.md` y `scripts/_despachadorPayloads.mjs`.
@@ -88,7 +90,11 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **19/10 — Un plan de control no lleva el nombre de Fak ni una revisión nueva (la abre Calidad, Manuel Meszaros), va con el logo oficial y la recepción va material por material como los planes de Calidad** (*"me encuentro con errores boludos"*). Dije «está bien» sin mirar el logo ni comparar contra un plan de Calidad. Graduado al skill `planes-de-control` §0 y §3.1; investigación el viernes 23/10 (`pc-errores-boludos-viernes`).
+
 - **19/10 — En CATA, los mails de Fak se leen en la nube y se mandan por PEDIDO a la principal; un plan de control no remite a la HO.** Graduado a `feedback_mails_de_fak_se_buscan_en_la_nube_tambien_en_cata` y `feedback_plan_de_control_sin_referencias_a_la_ho`.
+
+- **19/10 — A quién se le pide un dato se decide por quién lo TIENE, no por el nombre del sector: turnos y lugar en la línea de un capacitario los define Ingeniería; el OEE real, Producción** (*"en qué te basás para pedirle eso a Federico"*). Memoria `project_ppap_p21_hilo_naranja_my2026`.
 
 - **18/10 — Al Fak estudiante no se le da una nota: el "7" de Matemática terminó en 2 y el 18/10 repetí "ya sacás 5 de 10"** (*"no hagas falsas promesas"*). Solo techo, dicho como techo, o un rango salido de simulacros reales. Graduado al `CLAUDE.md` de `Estudio-UNLaM` («Cómo se habla de la nota») y a `feedback_estudio_unlam_nota_no_se_promete`.
 
