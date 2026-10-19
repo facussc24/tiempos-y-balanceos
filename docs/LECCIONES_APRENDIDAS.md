@@ -88,7 +88,7 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
-- **19/10 — «Un mail que me mandaron» se busca en el buzón de Fak en la nube, también desde CATA (es su notebook), nunca en el Outlook de Calidad; y en un plan de control no va «según HO de corte».** Graduado a `feedback_mails_de_fak_se_buscan_en_la_nube_tambien_en_cata` y `feedback_plan_de_control_sin_referencias_a_la_ho`.
+- **19/10 — «Un mail que me mandaron» se busca en el buzón de Fak en la nube, también desde CATA (es su notebook), nunca en el Outlook de Calidad; un mail de Fak desde CATA no se ofrece: va como PEDIDO a la principal; y en un plan de control no va «según HO de corte».** Graduado a `feedback_mails_de_fak_se_buscan_en_la_nube_tambien_en_cata` y `feedback_plan_de_control_sin_referencias_a_la_ho`.
 
 - **18/10 — Al Fak estudiante no se le da una nota: el "7" de Matemática terminó en 2 y el 18/10 repetí "ya sacás 5 de 10"** (*"no hagas falsas promesas"*). Solo techo, dicho como techo, o un rango salido de simulacros reales. Graduado al `CLAUDE.md` de `Estudio-UNLaM` («Cómo se habla de la nota») y a `feedback_estudio_unlam_nota_no_se_promete`.
 
