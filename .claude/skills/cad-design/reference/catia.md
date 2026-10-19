@@ -362,3 +362,9 @@ Antes de buscar en foros, se busca ahí.
   Viga del ej57 empotrada, malla de 5 mm: 204,19 / 405,47 / 1 265,3 Hz contra la cuenta de voladizo 203,71 / 407,43 /
   1 276,7 (+0,24 / −0,48 / −0,9 %); el informe trae también la masa (0,3144 kg). Un sensor `SAMGlobalSensor` existe
   pero la ayuda no da el texto de `SetIdentifier`: no se adivinó.
+- **Material propio (PLA, ej61-62)**: el catálogo no trae PLA. `fem.poner_acero` y después `fem.material_propio(part, E,
+  densidad, poisson=None)` cambia los parámetros del material aplicado (buscados por palabra en el nombre completo
+  «…\Steel.1\Young Modulus»). Medido: E a la mitad → flecha doble exacta (1,59414 contra 0,79707); viga en PLA Basic
+  (TDS Bambu V3.0 en `4- MANUALES\IMPRESORA 3D BAMBU LAB A2L\`: E X-Y 2 580 MPa, Z 2 060, densidad 1,24 g/cm³) con 1 N:
+  0,61788 mm contra 0,62016 (−0,37 %). La TDS no trae Poisson: 0,266 → 0,36 mueve la flecha 0,47 %. El material sigue
+  LLAMÁNDOSE «Steel» en el árbol: antes de entregar una pieza, renombrarlo o decirlo.

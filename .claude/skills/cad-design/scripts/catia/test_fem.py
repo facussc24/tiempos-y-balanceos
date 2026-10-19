@@ -116,6 +116,39 @@ except RuntimeError:
 fem.material_por_indice = _orig
 
 
+class Param:
+    def __init__(self, nombre, valor):
+        self.Name, self.valor, self.Value = nombre, valor, None
+
+    def ValuateFromString(self, s):
+        self.valor = s
+
+    def ValueAsString(self):
+        return self.valor if self.Value is None else str(self.Value)
+
+
+def part_falsa(materiales=1):
+    ps = []
+    for m in range(materiales):
+        for n, v in (("Young Modulus", "2e+011N_m2"), ("Density", "7860kg_m3"), ("Poisson Ratio", "0,266")):
+            ps.append(Param(f"viga\\Steel\\Steel.{m + 1}\\{n}", v))
+    ps.append(Param("viga\\PartBody\\Pad.1\\FirstLimit\\Length", "200mm"))
+    lista = types.SimpleNamespace(Count=len(ps), Item=lambda i: ps[i - 1])
+    return types.SimpleNamespace(Parameters=lista, Update=lambda: None), ps
+
+
+pf, ps_f = part_falsa()
+r = fem.material_propio(pf, 2.58e9, 1240, None)
+chequear("material_propio: Young y densidad del PLA (TDS Bambu V3.0), Poisson sin tocar",
+         ps_f[0].valor == "2.580000e+09N_m2" and ps_f[1].valor == "1240kg_m3" and ps_f[2].valor == "0,266", r)
+pf2, _ = part_falsa(2)
+try:
+    fem.material_propio(pf2, 2.58e9, 1240)
+    chequear("material_propio: con DOS materiales aplicados se niega", False, "no se nego")
+except RuntimeError:
+    chequear("material_propio: con DOS materiales aplicados se niega", True)
+
+
 def familia(nombre, mats):
     ms = types.SimpleNamespace(Count=len(mats), Item=lambda j: types.SimpleNamespace(Name=mats[j - 1]))
     return types.SimpleNamespace(Name=nombre, Materials=ms)

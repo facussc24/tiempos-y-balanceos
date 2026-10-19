@@ -44,6 +44,29 @@ def poner_acero(c, doc, familia="Metal", nombre="Steel"):
     return dens
 
 
+def material_propio(part, young_pa, densidad_kg_m3, poisson=None):
+    """Cambia los valores del material YA aplicado (p. ej. el acero de poner_acero) para un material que el catalogo no
+    trae (PLA: TDS Bambu PLA Basic V3.0, Young X-Y 2,58e9 Pa / Z 2,06e9, densidad 1240). Medido (ej61): el cambio LLEGA
+    a la simulacion (E a la mitad = flecha doble exacta) y queda al reabrir con Guardar como; ej62: viga en PLA a −0,37 %
+    de la cuenta. Los parametros se buscan por palabra en el nombre COMPLETO («...\\Steel.1\\Young Modulus»); el nombre
+    del material en el arbol sigue siendo el del catalogo. poisson=None lo deja como esta (la TDS del PLA no lo trae)."""
+    ps = part.Parameters
+    por_nombre = {ps.Item(i).Name: ps.Item(i) for i in range(1, ps.Count + 1)}
+
+    def uno(palabra):
+        cand = [v for k, v in por_nombre.items() if palabra in k]
+        if len(cand) != 1:
+            raise RuntimeError(f"hay {len(cand)} parametros con «{palabra}»: tiene que haber un solo material aplicado")
+        return cand[0]
+    uno("Young Modulus").ValuateFromString(f"{young_pa:.6e}N_m2")
+    uno("Density").ValuateFromString(f"{densidad_kg_m3:g}kg_m3")
+    if poisson is not None:
+        uno("Poisson Ratio").Value = float(poisson)
+    part.Update()
+    return {k.split("\\")[-1]: uno(k.split("\\")[-1]).ValueAsString() for k in ("Young Modulus", "Density",
+                                                                                "Poisson Ratio")}
+
+
 def propiedades(part):
     ps = part.Parameters
     return {ps.Item(i).Name.split("\\")[-1]: ps.Item(i).ValueAsString() for i in range(1, ps.Count + 1)
