@@ -23,7 +23,14 @@ ya nos marcaron. Las fuentes con su ruta estan en `referencias.md`, al lado de e
   13/10: *"armemos lo que podamos con lo que tengamos, la idea es avanzar"*).
 - Nada sale a Calidad ni al cliente sin el OK de Fak para ese mail (`mail-envio.md`).
 - Ningun documento dice que lo hizo Claude: `python scripts/_sinFirmaIA.py <archivo>` antes de mostrarlo
-  (`core-prohibiciones.md` §9). Autor `F.Santoro`.
+  (`core-prohibiciones.md` §9).
+- **En un plan de control no figura Fak y no se abre revision** (Fak, 19/10/2026, sobre el del APB trasero
+  central: *"en realidad no puede figurar mi nombre en los planes de control, no pongas una nueva revision, deja a
+  Manuel Meszaros"*). La tabla de REVISIONES queda como la dejo Calidad; la revision la abre Calidad (Manuel
+  Meszaros) cuando lo emite. Fecha original = la de su emision; fecha de revision, vacia.
+- **El logo es el oficial** (`tools/flowchart/assets/barack_logo.png`, hash `5d9207e12856`): el formulario viejo de
+  Amarok trae el logo con fondo gris y se cambia antes de mostrarlo. `_sinFirmaIA.py` no lo ve en un `.xls`
+  (19/10/2026): mirarlo a ojo en el PDF.
 
 ## 1. Antes de escribir una fila: las entradas
 
@@ -115,6 +122,9 @@ referencia, anual). VW lo exige como *Layout inspection and functional testing* 
 
 ### 3.1 Recepcion (operacion 10)
 
+- **Sin bloque generico "Todos los materiales"**: los planes de Calidad (Rev 0 APB/Inserto/Top Roll de Patagonia,
+  Amarok) arrancan la recepcion directo con el primer material; embalaje, remito y lote los cubre el P-10/I. El del
+  19/10 lo saco de los modos de falla del AMFE y Fak lo marco (*"me suena raro eso de todos los materiales"*).
 - **Una fila por material de la BOM** que se compra (los semielaborados propios no se reciben), con el
   codigo del arb y el del proveedor.
 - Las caracteristicas, especificaciones, instrumento y muestra **salen del plan de recepcion de ese
