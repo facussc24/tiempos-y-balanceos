@@ -372,3 +372,21 @@ Antes de buscar en foros, se busca ahí.
   sigue LLAMÁNDOSE «Steel» en el árbol: antes de entregar una pieza, renombrarlo o decirlo. **Y la FLUENCIA queda la del
   acero (250 MPa)**: no entra en el cálculo, pero un margen contra ella sería falso (30 MPa en PLA: 8,3 contra 250, 1,2
   contra 35). Para el PLA se compara contra la tracción de la TDS (35 X-Y / 31 Z MPa); la TDS no da fluencia.
+
+## 19/10/2026 (noche) — plano de despiece para el herrero (ej66, carro de tubo del ej65)
+
+- **La lista de cortes sale del MODELO, no se tipea**: un cuerpo por barra, largo = volumen / sección (224 mm² del tubo
+  30 × 30 × 2), contado con `Counter`. En el plano va como texto del cajetín y se controla **leyendo el PDF de vuelta**
+  (`pymupdf`, renglones «4 x 1000 mm»).
+- **Que una vista no pise el cajetín se mide**: `DrawingView.Size b` llena (xmin, xmax, ymin, ymax) en mm de hoja, pero
+  el arreglo por referencia no vuelve desde Python (TypeError de SAFEARRAY): va en una macro VBScript que devuelve texto
+  (`evaluar`). El primer plano tenía la isométrica encima de la lista y el texto pasado del margen; con la caja de cada
+  vista contra el cajetín el programa frena en vez de entregarlo.
+- **Cotas generales a mano en una vista**: `v.Activate` ANTES de `v.Factory2D.CreatePoint` (sin activar: «The method
+  CreatePoint failed»), puntos en coordenadas de la vista (= mm del modelo), `v.Dimensions.Add2(0, Array(p1,p2),
+  Array(x1,y1,x2,y2), Nothing, angulo)` (0 horizontal, 90 vertical), `d.MoveValue dx, dy, 0, 0` para correr el texto y
+  `d.GetValue.Value` para leer lo que midió CATIA. **Límite**: la cota va entre puntos que puse yo, no sigue al 3D si el
+  carro cambia (la geometría generada no se alcanza por COM, ver «Cota de diámetro a mano»). Para una cota que siga a la
+  pieza: `Isolate` y perder la asociación, o generarla de las restricciones (`DrawingSheet.GenerateDimensions`, que en
+  un tubo por croquis tira todas las medidas de cada perfil: sin probar).
+- Script de práctica: `C:\Dev\_catia_practica\ej66_plano_despiece.py` (fuera del repo).
