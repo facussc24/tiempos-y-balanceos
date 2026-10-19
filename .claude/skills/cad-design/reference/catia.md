@@ -129,3 +129,10 @@ en mm³; lo que vuelve de VBScript trae coma decimal.
   con `STEPControl_Writer`.
 - **Reglas de la casa adentro de la pieza** (Knowledge): `Relations.CreateCheck(nombre, "", "Pared >= 2mm")` y se lee
   `Diagnosis` (True/False); probado en las dos direcciones.
+- **Plano para el taller con cotas reales: se acota el CROQUIS** y `hoja.GenerateDimensions()` las pasa al plano (placa con
+  dos agujeros: 8 cotas en la vista de arriba y el espesor en el corte). `CreateClosedCircle` no trae punto centro: se crea
+  `CreatePoint` y `circulo.CenterPoint = punto`. Corte: `DefineSectionView([x1, y1, x2, y2], "SectionView" | "SectionCut",
+  "Offset", 1, gb_padre)` con el perfil en coordenadas de la PIEZA (con otras no da error: corta por otro lado).
+- **Familia de piezas por tabla de diseño**: `Relations.CreateDesignTable(nombre, "", False, ruta.txt)` (tabulado) +
+  `AddAssociation(part.Parameters.Item("Largo"), "Largo")` + `Configuration = n`: tres tamaños exactos. Encabezado SIN
+  unidad = valores en METROS (con «(mm)» la asociación falla): 100 mm se escribe 0,1.
