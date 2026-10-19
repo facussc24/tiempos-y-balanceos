@@ -169,7 +169,9 @@ en mm³; lo que vuelve de VBScript trae coma decimal.
 ## 19/10/2026 (de día) — ejercicios REALES con respuesta publicada, pieza paramétrica y Fak mirando
 
 Pedido de Fak: *"que practique con ejercicios reales de catia... que vayas avanzando de nivel"*. Cada pieza se hizo en
-CATIA y se comparó contra la respuesta PUBLICADA y contra un gemelo en build123d (forma, no solo volumen: `compara.py`).
+CATIA y se comparó contra la respuesta PUBLICADA y contra un gemelo en build123d (volumen siempre; forma con `compara.py`
+en ej26 —sobra 0, falta 0, 0,005 mm— y ej29 —0,021 mm—; el gemelo de ej30 no tiene el R1 y el de ej31 no ubica las
+puntas, así que ahí solo volumen).
 
 | Ejercicio | Qué practica | CATIA contra la respuesta |
 |---|---|---|
@@ -186,13 +188,16 @@ build123d (https://build123d.readthedocs.io/en/stable/tttt.html, libres para uso
 `.a_eje_V(obj, "B - C + 7.5mm")`, `.a_eje_H(...)`, `.radio(arco, "C - 80mm")`, `.cerrar()`; parámetros con
 `part.Parameters.CreateDimension("A", "LENGTH", 213)` y fórmulas con `part.Relations.CreateFormula`; los largos de pad
 y pocket (`FirstLimit.Dimension`) y los offsets de plano (`plane.Offset`) también llevan fórmula. Cambiando SOLO los
-parámetros la pieza dio las 5 respuestas del examen. Las constantes de una fórmula llevan unidad («69mm»). Los
+parámetros los dos modelos dieron las 5 respuestas del examen (ej27 las 3 de la etapa 1, ej28 las 2 de la etapa 2). Las constantes de una fórmula llevan unidad («69mm»). Los
 redondeos y chaflanes elegidos por posición sobreviven al cambio de parámetros.
 
 **Lo que costó un intento (y su control):**
 - **Un pad o una revolución puede crecer para el lado equivocado SIN error** (los dos cilindros del CSWP salieron para
-  afuera). `centro_agregado(m0, m1)` dice hacia dónde creció; `elegir_sentido(...)` prueba las DOS orientaciones y deja
-  la que suma más: **un umbral no alcanza** (una revolución de 180° hacia adentro también suma: 18 998 contra 41 620).
+  afuera). `centro_agregado(m0, m1)` dice hacia dónde creció y es el control GENERAL (el lado del plano del croquis).
+  `elegir_sentido(...)` prueba las DOS orientaciones y deja la que suma más, y SOLO sirve cuando el lado malo se mete en
+  material (la revolución de 180° hacia adentro del Light Cap: 18 998 contra 41 620; un umbral fijo no la separaba).
+  **Cuando el lado malo da al aire suma MÁS** (los cilindros del CSWP: 514 695 al aire contra 460 829 hacia el muro): ahí
+  `elegir_sentido` elige mal; se usa `centro_agregado` (auditor Opus, 19/10).
 - **Shell que no abre una base partida en varias caras** (pad + 2 revoluciones = 3 caras abajo): con una anda, con las
   tres falla en cualquier orden. Se rodea dibujando la SECCIÓN DE PARED y extruyéndola / revolucionándola.
 - **Garganta en un cilindro apoyado en un muro: Shaft del perfil escalonado**, no Pad + Groove (el Groove corta el muro).
@@ -212,4 +217,9 @@ redondeos y chaflanes elegidos por posición sobreviven al cambio de parámetros
 **Para que Fak mire:** `CATIA_MIRAR=1` arranca la CATIA propia visible y deja la última pieza abierta;
 `CATIA_MIRAR=lento` (+ `CATIA_PAUSA=3`) encuadra y espera después de cada paso para que se vea crecer la pieza. La
 ventana queda DETRÁS de lo que Fak tenga adelante (Windows no deja pasar al frente solo): se le dice que toque «CATIA V5»
-en la barra de tareas. Con su propia CATIA abierta, la base no se engancha (no es «la mía»).
+en la barra de tareas. Con su propia CATIA abierta, la base no se engancha (no es «la mía»). **Qué se cierra**: solo
+lo del ejercicio (nunca guardado, o guardado en la carpeta de trabajo); un documento que Fak abra desde otro lado en la
+CATIA propia queda abierto y sale un AVISO (`cerrar_del_ejercicio`, probado en `test_correr_mirar.py`). Límite: un
+archivo DE la carpeta de trabajo que Fak abra ahí se toma como del ejercicio.
+- **`body.HybridShapes` también lista operaciones** (EdgeFillet, CircPattern) además de puntos y líneas: ocultar «todos»
+  ocultó la pieza (captura vacía y la ventana de Fak en blanco, ej32). Se oculta SOLO el objeto que el programa creó.

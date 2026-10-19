@@ -3,7 +3,11 @@ import sys
 
 import pythoncom
 
-from enums import typelibs  # noqa: E402  (enums.py corre su barrido al importarse solo si se le pasan textos)
+if len(sys.argv) < 2:
+    raise SystemExit("uso: miembros.py <Interfaz>   (ej.: Chamfer, Factory2D, Shell)")
+_args, sys.argv = sys.argv, sys.argv[:1]          # enums.py barre las enumeraciones al importarse si ve argumentos
+from enums import typelibs  # noqa: E402
+sys.argv = _args
 
 for guid, maj, mi, nombre in typelibs():
     try:

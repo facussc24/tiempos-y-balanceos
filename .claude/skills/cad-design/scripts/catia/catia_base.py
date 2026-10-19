@@ -184,6 +184,10 @@ class Registro:
         if c is None or os.environ.get("CATIA_MIRAR") != "lento":
             return
         try:
+            pausa = float(os.environ.get("CATIA_PAUSA", "2").replace(",", "."))
+        except ValueError:
+            pausa = 2.0
+        try:
             v = c.ActiveWindow.ActiveViewer
             v.Viewpoint3D.PutSightDirection((-0.577, -0.577, -0.577))
             v.Viewpoint3D.PutUpDirection((0.0, 0.0, 1.0))
@@ -191,7 +195,7 @@ class Registro:
             v.Update()
         except Exception:  # noqa: BLE001
             pass
-        time.sleep(float(os.environ.get("CATIA_PAUSA", "2")))
+        time.sleep(pausa)
 
     def paso(self, que, fn):
         t = time.time()
@@ -432,6 +436,34 @@ def reiniciar_mia():
         raise SystemExit(f"despues de reiniciar sigue habiendo CATIA: {cnext_abiertos()}")
 
 
+def es_del_ejercicio(doc):
+    """Un documento es del ejercicio si nunca se guardo (sin ruta) o vive en la carpeta de trabajo (PRACTICA). Lo que
+    Fak abra desde otro lado en la CATIA propia (visible en modo mirar) no lo es. Limite: si Fak abre un archivo DE la
+    carpeta de trabajo en esta CATIA, se toma como del ejercicio."""
+    try:
+        ruta = doc.FullName or ""
+    except Exception:  # noqa: BLE001
+        return False
+    if not os.path.isabs(ruta):
+        return True
+    return os.path.normcase(os.path.abspath(ruta)).startswith(os.path.normcase(os.path.abspath(PRACTICA)))
+
+
+def cerrar_del_ejercicio(c, avisos):
+    for i in range(c.Documents.Count, 0, -1):
+        d = c.Documents.Item(i)
+        if es_del_ejercicio(d):
+            try:
+                d.Close()
+            except Exception:  # noqa: BLE001
+                pass
+        else:
+            try:
+                avisos.append(f"no cierro {d.FullName}: no es del ejercicio")
+            except Exception:  # noqa: BLE001
+                avisos.append("no cierro un documento que no es del ejercicio")
+
+
 def correr(nombre, cuerpo, visible=False, fresca=False):
     """Esqueleto de un ejercicio: conectar, vigia, cuerpo(c, reg), guardar el registro. fresca=True arranca con una
     CATIA recien abierta (para construcciones largas)."""
@@ -440,12 +472,10 @@ def correr(nombre, cuerpo, visible=False, fresca=False):
     if fresca:
         reiniciar_mia()
     c, pid = conectar(visible or mirar)
-    if mirar:                                         # lo que dejo abierto el ejercicio anterior (es mi CATIA)
-        for i in range(c.Documents.Count, 0, -1):
-            try:
-                c.Documents.Item(i).Close()
-            except Exception:  # noqa: BLE001
-                pass
+    if mirar:                                         # lo que dejo abierto el ejercicio ANTERIOR, nada mas (auditor 19/10:
+        cerrar_del_ejercicio(c, reg_avisos := [])     # un documento que Fak abra en esta CATIA visible no se toca)
+        for a in reg_avisos:
+            print("  AVISO", a)
     vig = Vigia(pid) if pid else None
     if vig:
         vig.start()
@@ -459,11 +489,8 @@ def correr(nombre, cuerpo, visible=False, fresca=False):
         except Exception:  # noqa: BLE001
             n_docs = 0
             reg.datos["catia_no_responde_al_cerrar"] = True
-        for i in range(0 if mirar else n_docs, 0, -1):  # la CATIA es la mia: lo que quedo abierto se cierra (salvo mirar)
-            try:
-                c.Documents.Item(i).Close()
-            except Exception:  # noqa: BLE001
-                pass
+        if not mirar and n_docs:                      # sin mirar: se cierra lo del ejercicio (lo de Fak, nunca)
+            cerrar_del_ejercicio(c, reg.datos.setdefault("avisos", []))
         if vig:
             vig.parar()
             reg.datos["cuadros"] = vig.vistos

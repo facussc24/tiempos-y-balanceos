@@ -83,9 +83,14 @@ def centro_agregado(m0, m1):
 
 
 def elegir_sentido(part, medir_vol, aplicar_a, aplicar_b, quiero="mas"):
-    """Prueba las DOS orientaciones de una operacion y deja la que suma mas (o saca mas). Un umbral no alcanza: una
-    revolucion de 180 hacia ADENTRO tambien suma (18 998 contra 41 620 mm3, ej31b). aplicar_a / aplicar_b ponen cada
-    orientacion; medir_vol() mide el cuerpo. Devuelve (cual, volumen)."""
+    """Prueba las DOS orientaciones de una operacion y deja la que suma mas (o saca mas) volumen.
+    SOLO SIRVE cuando el lado equivocado se mete en MATERIAL que ya existe (la revolucion de 180 hacia adentro del Light
+    Cap suma 18 998 contra 41 620 hacia afuera, ej31b; un umbral fijo no la separaba). Cuando el lado equivocado da al
+    AIRE suma MAS que el bueno (los cilindros del CSWP, ej26: al aire suman el cilindro entero, 514 695 contra 460 829
+    hacia adentro del muro): ahi el control es centro_agregado() contra el plano del croquis (auditor Opus, 19/10).
+    aplicar_a / aplicar_b ponen cada orientacion; medir_vol() mide el cuerpo. Devuelve (cual, volumen)."""
+    if quiero not in ("mas", "menos"):
+        raise ValueError(f"quiero = 'mas' o 'menos' (sin tilde), no {quiero!r}")
     aplicar_a()
     part.Update()
     va = medir_vol()
@@ -102,7 +107,7 @@ def elegir_sentido(part, medir_vol, aplicar_a, aplicar_b, quiero="mas"):
 
 class Croquis:
     """Croquis acotado contra sus ejes con formulas sobre los parametros de la pieza (part.Parameters). Patron de la pieza
-    parametrica del CSWP (ej27/ej28): cambiar SOLO los parametros dio las 5 respuestas del examen a 0,02 g o menos.
+    parametrica del CSWP (ej27/ej28): cambiar SOLO los parametros dio las respuestas del examen a 0,02 g o menos (dos modelos: ej27 con 3, ej28 con 2).
     Las constantes de una formula llevan unidad («69mm»)."""
 
     def __init__(self, part, body, plano, nombre):
