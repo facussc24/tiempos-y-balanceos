@@ -406,3 +406,7 @@ Antes de buscar en foros, se busca ahí.
   pieza 0,01 mm en ±X/±Y/±Z) y da ROJO si una pieza no apoya, si hay solape o si el conjunto queda en dos grupos. Carro
   corregido: 12 sólidos, patas 224 mm² arriba y abajo, VERDE. Test con el error real en rojo: `test_uniones.py`.
   **Se corre en toda estructura antes del plano.**
+- **¿La pieza sale del molde? → `scripts/contrasalidas.py pieza.step --dir 0,0,1 --particion 0`** (19/10): área que
+  TRABA y área de pared sin desmoldeo, por triángulo con la normal hacia afuera; `--corredizo 1,0,0 --zona ...` juzga una
+  caja contra un corredizo. Probado: caja recta 1200 mm² sin desmoldeo; con 4° a cada lado, 0; hisopo con mango hueco
+  O1 × 10 traba 31,4 mm² (π·d·L) en la punta, y con corredizo en +X sale. Límite: prueba local por normal, no ve sombras.
