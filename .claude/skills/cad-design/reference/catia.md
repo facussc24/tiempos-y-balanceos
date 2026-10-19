@@ -410,3 +410,28 @@ Antes de buscar en foros, se busca ahí.
   TRABA y área de pared sin desmoldeo, por triángulo con la normal hacia afuera; `--corredizo 1,0,0 --zona ...` juzga una
   caja contra un corredizo. Probado: caja recta 1200 mm² sin desmoldeo; con 4° a cada lado, 0; hisopo con mango hueco
   O1 × 10 traba 31,4 mm² (π·d·L) en la punta, y con corredizo en +X sale. Límite: prueba local por normal, no ve sombras.
+
+## 19/10/2026 — REVISAR un STEP de cliente antes de trabajarlo: `scripts/catia/revisar_step.py` (corre en .venv-cad)
+
+`revisar_step.py <archivo.step>` → JSON (código 2 si el archivo no trae ninguna cara: basura NO es «sano»). Cómo se lee:
+- **`solido_roto_probable`** (sólidos DECLARADOS en el texto del archivo contra sólidos LEÍDOS) es el aviso que importa
+  de un sólido: **el lector convierte un sólido roto en superficies sueltas sin avisar** (auditor 19/10: caja declarada
+  sólido con una cara de menos → 0 sólidos y 5 caras sueltas). Por eso «0 bordes abiertos» en un sólido leído no alcanza.
+  Las aristas de largo ~0 (polos, costuras colapsadas) son «degeneradas», no agujeros (two_wireless: 44 de 0,0 mm).
+- **Superficies sueltas**: se cosen (sin forzar una sola piel) y salen por PEDAZO con sus lazos; además `caras_repetidas`
+  y `rendijas_bordes_que_cierran_al_recoser` (recosidas a 0,1 mm, la desviación del Join que cerró las rendijas en ej48).
+  **En una piel ABIERTA de un solo pedazo** (un tapizado) un lazo es el contorno y cada lazo de más un hueco, de diseño o
+  falla. **En algo que debería ser CERRADO, cualquier lazo es una abertura** (una caja sin tapa da 1 lazo de 160: con la
+  regla de la piel se leería «sana»). Una cara dada vuelta NO se detecta: el cosido la endereza.
+- Caso real two_wireless.stp (Patagonia, Upper Trim, «DUAL 50W»): sólido declarado 1 = leído 1, 91 765,561 mm³ (CATIA
+  91 791,099), 0 abiertos; piel 189 caras, 50 305 mm², 1 pedazo, 3 lazos: 777,8 (contorno) + 116,3 + 116,3 = los dos huecos
+  de los cargadores (one_wireless da 777,8 + 116,3: uno solo). 17 s.
+- Casos de respuesta conocida (`test_revisar_step.py`, 12): agujero de 2 × 2 → 1 lazo de 8 mm y 0 rendijas; caja con cara
+  dada vuelta → 0; rendija de 0,05 (ej48) → 8 bordes que cierran al recoser y la de 0,2 no; cara repetida → 1 repetida,
+  2 pedazos; sólido con una cara de menos → `solido_roto_probable`; basura y archivo inexistente → código 2; esfera →
+  polos degenerados no cuentan. Ronda 2 del auditor: **una pieza usada dos veces en un ensamble se declara UNA vez y se
+  lee dos**, y tapaba a un sólido roto: por eso se comparan los declarados contra las **formas distintas**
+  (`formas_distintas`, por `IsPartner`), no contra los leídos (n13). Un hueco (BREP_WITH_VOIDS) con las dos pieles
+  abiertas también avisa. Límite conocido: un hueco con solo la piel de AFUERA abierta se lee como sólido válido sin aviso.
+- Antes de reparar en CATIA (Join con desviación, Healing, Fill: ver «Reparar superficies») se revisa con esto, y
+  después de reparar se vuelve a revisar: CloseSurface tapa sola cualquier abertura plana y no avisa.
