@@ -435,3 +435,13 @@ Antes de buscar en foros, se busca ahí.
   abiertas también avisa. Límite conocido: un hueco con solo la piel de AFUERA abierta se lee como sólido válido sin aviso.
 - Antes de reparar en CATIA (Join con desviación, Healing, Fill: ver «Reparar superficies») se revisa con esto, y
   después de reparar se vuelve a revisar: CloseSurface tapa sola cualquier abertura plana y no avisa.
+
+## 19/10/2026 (noche) — ensamble que RESUELVE la geometría: bloque en V (ej74, banco E3)
+
+El eje de un cilindro atado por dos restricciones de distancia (= R) a los dos planos del V; la altura la calcula el
+solucionador: Ø160 → 113,1371, Ø159,86 → 113,0381, error de posición **0,0990 = publicado** (0,707 × 0,14). Dos trampas:
+- **La distancia a un PLANO sigue la NORMAL del plano, no la posición de arranque**: con normales hacia abajo el eje cayó
+  a −113 (adentro del bloque) aunque arrancaba en z = 200. Se definen los planos con la normal del lado donde tiene que
+  quedar la pieza, y se controla el signo de la posición resuelta.
+- **`Move.Apply` con una matriz de VBScript: cargar los 12 valores con `CDbl`** (`For i = 0 To 11: t(i) = CDbl(0)`): con los
+  lugares sin cargar (Empty) no mueve y la posición sale con basura de 1e-313. En una corrida además quedó sin resolver.
