@@ -19,18 +19,34 @@ def chequear(nombre, cond, detalle=""):
         fallas.append(nombre)
 
 
-def revisar(ruta):
+def revisar(ruta, codigo=False):
     r = subprocess.run([sys.executable, os.path.join(AQUI, "revisar_step.py"), ruta], capture_output=True, text=True)
-    return json.loads([x for x in r.stdout.splitlines() if x.startswith("{")][-1])
+    j = json.loads([x for x in r.stdout.splitlines() if x.startswith("{")][-1])
+    return (j, r.returncode) if codigo else j
 
 
-a = revisar(os.path.join(AQUI, "_casos_fem", "caja_agujero_2x2.step"))
-p = a["superficies_sueltas"]
-chequear("agujero 2 x 2: 6 caras sueltas y UN lazo libre de 8 mm cerrado",
-         p["caras"] == 6 and len(p["lazos"]) == 1 and abs(p["lazos"][0]["largo_mm"] - 8.0) < 1e-6 and p["lazos"][0]["cerrado"], p)
-b = revisar(os.path.join(AQUI, "_casos_fem", "caja_cara_dada_vuelta.step"))
-chequear("caja sana con una cara dada vuelta: cero bordes libres",
-         b["superficies_sueltas"]["bordes_libres"] == 0 and b["superficies_sueltas"]["lazos"] == [], b)
+def caso(n):
+    return os.path.join(AQUI, "_casos_fem", n)
+
+
+RENDIJAS = "rendijas_bordes_que_cierran_al_recoser"
+a = revisar(caso("caja_agujero_2x2.step"))["superficies_sueltas"]
+chequear("agujero 2 x 2: un pedazo con UN lazo libre de 8 mm y ninguna rendija",
+         a["pedazos"] == 1 and a["por_pedazo"][0]["lazos"] == [{"largo_mm": 8.0, "cerrado": True}] and a[RENDIJAS] == 0, a)
+b = revisar(caso("caja_cara_dada_vuelta.step"))["superficies_sueltas"]
+chequear("caja sana con una cara dada vuelta: cero bordes libres (la cara dada vuelta NO se detecta)",
+         b["bordes_libres"] == 0, b)
+r5 = revisar(caso("caja_rendija_005.step"))["superficies_sueltas"]
+chequear("rendija de 0,05 (ej48): no revienta y los 8 bordes libres CIERRAN al coser a 0,1 (son rendijas)",
+         r5["bordes_libres"] == 8 and r5[RENDIJAS] == 8, r5)
+rp = revisar(caso("caja_cara_repetida.step"))["superficies_sueltas"]
+chequear("cara repetida: no revienta y la cuenta (1 repetida, queda como pedazo aparte)",
+         rp["caras_repetidas"] == 1 and rp["pedazos"] == 2, rp)
+sr = revisar(caso("solido_cara_de_menos.step"))
+chequear("solido declarado con una cara de menos: el lector lo deja en superficies y se avisa solido_roto_probable",
+         sr["solidos_declarados"] == 1 and sr["solidos_leidos"] == 0 and sr["solido_roto_probable"], sr)
+bj, bc = revisar(caso("basura.step"), codigo=True)
+chequear("archivo basura: sale con codigo 2 y error (no da «sano»)", bc == 2 and "error" in bj, (bc, bj))
 
 from build123d import Sphere, export_step  # noqa: E402
 esf = os.path.join(tempfile.mkdtemp(prefix="revstep_"), "esfera.step")
