@@ -149,7 +149,8 @@ con su leyenda.
 
 **Capturas para que Fak elija** (18/10, fuera de git): `exports/explicaciones/formatos_antes_despues_2026-10-18/`, con
 una lámina (IMDS del 09/10 contra la pregunta 5 sola con el tema), la hoja A3 y un Excel (el mapeo de vinilos tal como
-está contra los mismos datos en B2). Lo que Fak elija pasa a `tema.json`.
+está contra los mismos datos en B2). **Fak eligió las tres el 18/10/2026** (*"me gustan, los 3... mejor que los
+estándar... siempre es mejor un formato Barack con nuestros colores"*): quedó escrito en `tema.json` (`aprobado`).
 
 ## Los 13 reclamos, en el libro de observaciones
 
