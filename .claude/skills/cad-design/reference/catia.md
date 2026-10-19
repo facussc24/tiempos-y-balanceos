@@ -372,3 +372,19 @@ Antes de buscar en foros, se busca ahí.
   sigue LLAMÁNDOSE «Steel» en el árbol: antes de entregar una pieza, renombrarlo o decirlo. **Y la FLUENCIA queda la del
   acero (250 MPa)**: no entra en el cálculo, pero un margen contra ella sería falso (30 MPa en PLA: 8,3 contra 250, 1,2
   contra 35). Para el PLA se compara contra la tracción de la TDS (35 X-Y / 31 Z MPa); la TDS no da fluencia.
+
+## 19/10/2026 — REVISAR un STEP de cliente antes de trabajarlo: `scripts/catia/revisar_step.py` (corre en .venv-cad)
+
+`revisar_step.py <archivo.step>` → JSON: cada sólido (volumen, área, caras, válido, bordes abiertos, aristas degeneradas)
+y las superficies sueltas (las que no son de ningún sólido: típicamente la piel de un tapizado) con sus bordes libres
+agrupados en LAZOS. Cómo se lee:
+- **Un sólido con bordes abiertos > 0 está roto** (le falta una cara o hay rendijas). Las aristas de largo ~0 (polos,
+  costuras colapsadas) se cuentan aparte como «degeneradas» y NO son agujeros: en two_wireless.stp la primera pasada
+  daba 44 «abiertas» de 0,0 mm.
+- **Superficies sueltas: un lazo = el contorno; cada lazo de más es un hueco** (de diseño o una falla: se mira cuál). Caso
+  real two_wireless.stp (Patagonia, Upper Trim, «DUAL 50W»): sólido 91 765,561 mm³ (CATIA 91 791,099), válido, 0 abiertos;
+  piel 189 caras, 50 305 mm², 3 lazos cerrados: 777,8 (contorno) + 116,3 + 116,3 = los dos huecos de los cargadores.
+- Casos de respuesta conocida (`test_revisar_step.py`): caja con un agujero de 2 × 2 → UN lazo de 8 mm; caja sana con una
+  cara dada vuelta → 0 bordes libres; esfera → 0 abiertos con los polos como degeneradas.
+- Antes de reparar en CATIA (Join con desviación, Healing, Fill: ver «Reparar superficies») se revisa con esto, y
+  después de reparar se vuelve a revisar: CloseSurface tapa sola cualquier abertura plana y no avisa.
