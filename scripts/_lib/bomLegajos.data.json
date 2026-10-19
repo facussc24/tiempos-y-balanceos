@@ -99,6 +99,20 @@
         "MP8404",
         "MP8405"
       ]
+    },
+    "APB P703": {
+      "legajo": "Y:\\BARACK\\CALIDAD\\DOCUMENTACION SGC\\PPAP CLIENTES\\REYDEL-SMRC\\FORD P703\\APB\\APQP\\7-Lista de materiales preliminares\\ARB",
+      "biblioteca": "SMRC\\P703",
+      "piezas": [
+        "0247607-04-FZHE",
+        "0247608-04-FZHE",
+        "0247609-04-FZHE",
+        "0247610-04-FZHE",
+        "0247611-04-FZHE",
+        "0247612-04-FZHE",
+        "0247613-04-FZHE",
+        "0247614-04-FZHE"
+      ]
     }
   }
 }
