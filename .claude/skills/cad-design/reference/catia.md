@@ -141,3 +141,24 @@ en mm³; lo que vuelve de VBScript trae coma decimal.
 - **Familia de piezas por tabla de diseño**: `Relations.CreateDesignTable(nombre, "", False, ruta.txt)` (tabulado) +
   `AddAssociation(part.Parameters.Item("Largo"), "Largo")` + `Configuration = n`: tres tamaños exactos. Encabezado SIN
   unidad = valores en METROS (con «(mm)» la asociación falla): 100 mm se escribe 0,1.
+
+## Receta: cómo encarar un dispositivo EN CATIA con `scripts/catia/` (19/10)
+
+1. **Datos primero, fuera del repo**: copiar a la carpeta de trabajo (`CATIA_TRABAJO`) los STEP y JSON que hacen falta; de
+   la carpeta de Fak o de `_utrim` solo se lee. Nada se inventa: cada cota sale de un archivo medido o de Fak.
+2. **Un script por pieza con `catia_base.correr(nombre, cuerpo, fresca=True)`**: CATIA propia recién abierta, vigía de
+   cuadros, registro por paso. Cada paso mide lo que hizo (`medir`) contra su cuenta; un sentido (extrusión, corte,
+   desplazamiento) se decide por lo que SUMA o SACA, no por el centro de gravedad de un cuerpo que ya tiene otra cosa.
+3. **Croquis acotados** (contar grados de libertad), con los ejes del plano medidos (XY: H→X; YZ: H→Y; ZX: H→Z, V→X):
+   así el plano sale con cotas solo.
+4. **Caras y aristas por posición** (`topologia`, `aristas_con_extremos`), nunca por nombre interno; buscar en la
+   operación que las creó, no en el cuerpo entero (con piezas de cientos de lados tarda minutos).
+5. **Todo en el cuerpo principal**: sumar un cuerpo grande con `AddNewAdd` puede dejar la sesión rota. Superficies de
+   construcción en un set aparte, OCULTAS antes de exportar.
+6. **Contra la pieza del cliente**: pegarla como cuerpo (`Copy` + `PasteSpecial("CATPrtResultWithOutLink")`) y usar
+   `AddNewRemove` (huella) o `AddNewIntersect` (choque exacto, con su gemelo corrido como control). El choque de CATIA
+   (`Clashes`) NO decide décimas.
+7. **Verificar con otro motor antes de mostrar**: `compara.py` contra la referencia (sobra / falta / distancia, no ciego) o
+   `choque_exacto.py`; STEP con 1 sólido y 1 cáscara; STL cerrado con el volumen del B-Rep.
+8. **Plano**: `plano_de_step.py` para el general; cortes y cotas desde el croquis (`DefineSectionView`, `GenerateDimensions`).
+9. **Al terminar**: cerrar la CATIA propia (`apagar`) para que no le quede abierta a Fak.
