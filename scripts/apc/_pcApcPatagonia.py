@@ -247,28 +247,28 @@ def filas_variante(key):
     # --- corte: 20 / 21 / 22 del flujograma Rev.A; la HO todavia tiene las pestañas 20 a 28
     R.append(seccion('Proceso'))
     mesa = 'Máquina de corte N° BM 068 / BM 069'
-    f1 = "1 (la HO dice 'Frec. 1')"
+    f1 = '1'
     corte = [
         ('20', 'Preparación y carga de vinilo', '20.1 a 20.4', [
-            dict(proc='Código de material del rollo', esp='Según planilla de mesa de corte', inst='Visual — planilla de corte (HO pestaña 20.1)',
+            dict(proc='Código de material del rollo', esp='Según planilla de mesa de corte', inst='Visual — planilla de corte',
                  tam='1 control', frec=f1, reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.'),
-            dict(proc='Posición del lado vista del vinilo', esp='Según planilla de mesa de corte', inst='Visual — planilla de corte (HO pestaña 20.1)',
+            dict(proc='Posición del lado vista del vinilo', esp='Según planilla de mesa de corte', inst='Visual — planilla de corte',
                  tam='1 control', frec=f1, reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.'),
             dict(proc='Alineación del vinilo detrás de los rodillos (los parámetros de velocidad no los cambia el operador)', esp='Alineado',
-                 inst='Visual (HO pestaña 20.3)', tam='1 control', frec=f1, reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.'),
+                 inst='Visual', tam='1 control', frec=f1, reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.'),
             dict(proc='Velocidad y tensión del vinilo', esp='Según instructivo de parámetros por producto (valores TBD: el instructivo no está en el legajo)',
-                 inst='Instructivo de parámetros — visual (HO pestaña 20.4)', **SETUP),
-            dict(proc='Cantidad de capas', esp='Según planilla de mesa de corte', inst='Panel de la máquina — visual (HO pestaña 20.4)', **SETUP),
-            dict(prod='Largo de la capa (tizada + demasía)', esp='Según planilla de mesa de corte', inst='Regla (código TBD) (HO pestaña 20.4)',
+                 inst='Instructivo de parámetros — visual', **SETUP),
+            dict(proc='Cantidad de capas', esp='Según planilla de mesa de corte', inst='Panel de la máquina — visual', **SETUP),
+            dict(prod='Largo de la capa (tizada + demasía)', esp='Según planilla de mesa de corte', inst='Regla (código TBD)',
                  tam='1 control', frec='Primera capa de cada tizada', reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.')]),
         ('21', 'Corte automático de componentes', '21.1 a 21.4', [
-            dict(proc='Alineación del vinilo hasta las líneas rojas de la mesa', esp='Recto y coincidente con las marcas rojas', inst='Visual (HO pestaña 21.1)',
+            dict(proc='Alineación del vinilo hasta las líneas rojas de la mesa', esp='Recto y coincidente con las marcas rojas', inst='Visual',
                  tam='1 control', frec=f1, reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.'),
-            dict(proc='Ancho de cuchilla', esp='4 mm mínimo', inst='Calibre MC167 (HO pestaña 21.2)', tam='1 control', frec='Antes de cada corte',
+            dict(proc='Ancho de cuchilla', esp='4 mm mínimo', inst='Calibre MC167', tam='1 control', frec='Antes de cada corte',
                  reg='Registro de set up', resp='Operador de producción', reac='Según P-09/I.'),
-            dict(proc='Alineación del cabezal y margen', esp='Margen máximo 2,5 cm por lado', inst='Visual + láser de la máquina (HO pestaña 21.3)',
+            dict(proc='Alineación del cabezal y margen', esp='Margen máximo 2,5 cm por lado', inst='Visual + láser de la máquina',
                  tam='1 control', frec='Antes de cada corte', reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.'),
-            dict(proc='Posición del cabezal y elevación del plato', esp='Según HO pestaña 21.4', inst='Visual', tam='1 control',
+            dict(proc='Posición del cabezal y elevación del plato', esp='Plato elevado antes de iniciar el corte', inst='Visual', tam='1 control',
                  frec='Antes de cada corte', reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.'),
             dict(proc='Verificación automática de medidas del vinilo (sensores de la máquina)', esp='La máquina no arranca si el vinilo no cumple las medidas',
                  inst='Verificación del sensor con falla simulada (I-AC-032)', tam='TBD', frec='TBD', reg='TBD',
@@ -369,7 +369,7 @@ def filas_variante(key):
         R.append(fila('nueva', src + f'. Tamaño 100 %: la verificación es un paso de la instrucción en cada ciclo. Frecuencia de registro TBD '
                       f'(el ciclo de control de la {ho} en esta pestaña está en TBD)', '',
                       op=f'Operación {op}.', nom=nom, maq='Dispositivo de tapizado / molde PIP' if op in ('50', '51') else 'Mesa de tapizado',
-                      n='1.0', prod=prod, esp=f'Según {ho} pestaña {op} (fotos OK / NOK)', inst=inst,
+                      n='1.0', prod=prod, esp='Según fotos OK / NOK del puesto', inst=inst,
                       tam='100%', frec='TBD', reg='Autocontrol', resp='Operador de producción', reac='Según P-09/I.'))
 
     # --- inyeccion PU
