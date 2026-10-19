@@ -425,7 +425,12 @@ def correr(nombre, cuerpo, visible=False, fresca=False):
     try:
         cuerpo(c, reg)
     finally:
-        for i in range(c.Documents.Count, 0, -1):     # la CATIA es la mia: lo que quedo abierto por una falla se cierra
+        try:                                          # si CATIA se murio a mitad de corrida, Documents revienta: igual
+            n_docs = c.Documents.Count                # se guarda el registro (auditor ronda 2, 19/10)
+        except Exception:  # noqa: BLE001
+            n_docs = 0
+            reg.datos["catia_no_responde_al_cerrar"] = True
+        for i in range(n_docs, 0, -1):                # la CATIA es la mia: lo que quedo abierto por una falla se cierra
             try:
                 c.Documents.Item(i).Close()
             except Exception:  # noqa: BLE001

@@ -41,5 +41,7 @@ v = veredicto({"v16": {"interseccion": 0.0}, "gemelo_1mm": {"interseccion": 0.0}
 chequear(v["v16"].startswith("SIN MEDIR"), "gemelo vacio (CATIA danada) -> «sin medir», no «no choca»")
 v = veredicto({"v16": {"interseccion": 0.0}})
 chequear(v["v16"].startswith("SIN MEDIR"), "sin gemelo -> «sin medir»")
+v = veredicto({"gemelo_1mm": {"interseccion": 69.5}}, ["v16", "gemelo_1mm"])
+chequear(v.get("v16", "").startswith("SIN MEDIR"), "caso cuyo paso fallo entero -> aparece como «sin medir»")
 print("RESULTADO:", "OK" if not fallas else f"{len(fallas)} FALLAS")
 sys.exit(1 if fallas else 0)

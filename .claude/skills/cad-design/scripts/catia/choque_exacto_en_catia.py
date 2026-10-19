@@ -12,12 +12,13 @@ CASOS = {"v16": os.path.join(PRACTICA, "ej13_v16", "out_etapa5.stp"),
          "gemelo_1mm": os.path.join(PRACTICA, "v14_choque", "v16_subida_1mm.step")}
 
 
-def veredicto(res):
+def veredicto(res, casos=None):
     """«No choca» vale solo si en la MISMA corrida el gemelo (corrido hacia el panel) SI dio choque: una CATIA danada da
-    «Update failed» hasta en un pad y se leeria como «no choca» (auditor del 19/10). Sin gemelo con choque: «sin medir»."""
+    «Update failed» hasta en un pad y se leeria como «no choca» (auditor del 19/10). Sin gemelo con choque: «sin medir».
+    `casos`: la lista de lo que se QUERIA medir; un caso cuyo paso fallo entero sale «SIN MEDIR: el paso fallo»."""
     gem = [r for n, r in res.items() if n.startswith("gemelo")]
     control_ok = bool(gem) and all(r.get("interseccion", 0) > 0 for r in gem)
-    out = {}
+    out = {n: "SIN MEDIR: el paso fallo" for n in (casos or []) if n not in res}
     for n, r in res.items():
         if n.startswith("gemelo"):
             out[n] = "choca (control)" if r.get("interseccion", 0) > 0 else "SIN MEDIR: el gemelo no dio choque"
@@ -66,7 +67,8 @@ def cuerpo(c, reg):
                 inter = medir(dp, pp, pegado).get("volume", 0.0)
                 estado = "choca"
             except Exception as e:  # noqa: BLE001
-                inter, estado = 0.0, f"interseccion vacia (Update fallo: no choca) {repr(e)[:60]}"
+                # el veredicto lo da veredicto() con el gemelo; aca solo se anota lo que paso
+                inter, estado = 0.0, f"interseccion vacia (Update fallo) {repr(e)[:60]}"
             for d in (dp, dv):
                 try:
                     d.Close()
@@ -75,7 +77,7 @@ def cuerpo(c, reg):
             res[nombre] = {"utillaje": v_util, "pegado": v_pegado, "interseccion": inter, "estado": estado}
             return res[nombre]
         reg.paso(nombre, hacer)
-    reg.datos["veredicto"] = veredicto(res)
+    reg.datos["veredicto"] = veredicto(res, list(CASOS))
     print("VEREDICTO", reg.datos["veredicto"])
 
 
