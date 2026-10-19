@@ -454,3 +454,14 @@ de pieza). Probado: dos cuartos de anillo de aluminio (40-45 y 45-100, 15 de pro
 2,79e7 Pa en el contacto: el de adentro se cierra 0,14704 mm, el de afuera se abre 0,03296, **suma 0,18000 = interferencia**
 (α·R·ΔT), igual en toda la profundidad. El anillo fino absorbe el 82 %. Ojo: la fórmula supone el MISMO material en los
 dos: un buje de acero en un cuerpo impreso no se calcula con esto (y el plástico fluye con el tiempo).
+
+## 19/10/2026 (noche) — familia de piezas con TABLA DE DISEÑO (ej76)
+
+`part.Relations.CreateDesignTable(nombre, comentario, False, ruta_txt)` con un .txt separado por tabulaciones (encabezado
+«Alto (mm)\tProf (mm)», una fila por variante) + `dt.AddAssociation(parametro, "Alto")` + `dt.Configuration = k`. Probado:
+4 variantes de un tope, volumen = 40·20·alto − π·25·prof en las cuatro. **Una fila mal cargada (agujero más hondo que el
+bloque) arma igual, sin aviso**: la familia lleva un chequeo. **TRAMPA: un `CreateCheck` escrito sobre los nombres
+internos de las cotas (`` `PartBody\Pocket.1\...` < `...` ``) dio «cumple» SIEMPRE, también en la fila mala (falla en
+silencio)**. Con parámetros PROPIOS (`Parameters.CreateDimension("Alto","LENGTH",v)` + `CreateFormula` hacia la cota +
+la tabla asociada al parámetro propio) el chequeo «Prof < Alto» da False justo en la fila mala. Todo chequeo se prueba
+con su caso malo antes de creerle.
