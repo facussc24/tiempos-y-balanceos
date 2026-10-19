@@ -1,4 +1,5 @@
 {
+  "outputStyle": "Voz de Fak",
   "hooks": {
     "SessionStart": [
       {
