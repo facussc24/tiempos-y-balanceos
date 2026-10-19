@@ -23,46 +23,56 @@ NOMBRE_SIGLAS = 'Propuesta de siglas AMFE 150 APB trasero central 19-10-2026'
 
 # (para quien, operacion, que falta, de donde sale lo que hay hoy)
 PENDIENTES = [
-    ('Calidad', '10 Recepción', 'Plan de recepción del vinilo Sansuy 197.025.0425-6 (TIPO IV IS LE 1,10 mm): tolerancia de espesor y gramaje',
-     'No hay plan de recepción de este código. Hoy el plan usa los instrumentos del AMFE y los datos de la BOM (1,10 mm de espesor, rollo de 1,40 m); '
-     'flamabilidad < 100 mm/min como en los planes de recepción de vinilos Sansuy'),
+    ('Calidad', '10 Recepción', 'Plan de recepción del vinilo Sansuy 197.025.0425-6: tolerancia del ancho del rollo y código del medidor de espesor, '
+     'la balanza y la cinta métrica de recepción',
+     'El plan toma del plan Rev. 1 el espesor (1,8 a 2,5 mm) y el gramaje (800 a 1000 g/m²). En el cronograma 2026 Rev. 7 los medidores de '
+     'espesor MC006 y MC369 están en Laboratorio, la cinta métrica MC406 en Mesa de corte y la de recepción es la MC403'),
     ('Calidad', '10 Recepción', 'Planes de recepción de los fieltros 427TEL003COR01 y RES30020TIT, del Aplix APLIX_225LLB, del cierre 427VAR001COS01 y de la cinta sarga 5825',
-     'No hay planes de estos códigos. El plan usa los valores del AMFE (480 g/m², 270 a 320 g/m², cierre 360 ± 1 mm)'),
-    ('Calidad', '10 Recepción', 'Controles de recepción de los consignados de VW (estructura 2HC.885.925, posavasos 2HC.885.119, marco 2HC.885.725, tornillo 2HC.075.701.GS)',
-     'No hay planes de estos códigos. El plan usa los controles del AMFE; el marco no tiene control en el AMFE y su aspecto queda TBD'),
-    ('Calidad', '10 Recepción', 'Poliol FF-629: el plan de recepción 822 no tiene unidades en viscosidad, densidad y tiempos, y dice vencimiento "según certificado" '
-     '(el AMFE pide vida útil remanente de 6 meses). Isocianato 1394: el 819 escribe la densidad en "gr/m³"', 'Planes de recepción 822 y 819 Rev. B'),
-    ('Calidad', 'Instrumentos', 'Cámara de flamabilidad MC184 vencida desde el 11/09/2026 y calibre MC413 de recepción vencido desde el 08/07/2026',
+     'No hay planes de estos códigos. El plan usa los valores del AMFE (480 g/m², 270 a 320 g/m², cierre 360 ± 1 mm). La cinta: el arb tiene '
+     'la 5825 de 24 mm; el AMFE y el plan Rev. 1 nombran la 5826 de 25 mm con espesor 1,2 ± 0,1 mm'),
+    ('Calidad', '10 Recepción', 'Qué se controla al recibir la bolsa PP 427VAR002TAP01 y las etiquetas ET-SATO',
+     'No tienen plan de recepción ni control en el AMFE o en el plan Rev. 1'),
+    ('Calidad', '10 Recepción', 'Vencimiento del isocianato 1394 y del poliol FF-629',
+     'AMFE y plan Rev. 1: más de 6 meses desde la recepción. Plan de recepción 819: 6 meses desde producido. Plan 822: según certificado. '
+     'Especificación de Mas-Tin: 6 meses de almacenamiento'),
+    ('Calidad', '10 Recepción', 'Unidades en los planes de recepción: el 819 escribe la densidad del isocianato en "gr/m³" y el 822 no tiene unidades; '
+     'el 1043 escribe la flamabilidad del hilo "100 mm/min" sin el "<"',
+     'El plan va con g/cm³, cps, kg/m³ y s (especificación y certificados de Mas-Tin) y < 100 mm/min (TL 1010)'),
+    ('Calidad', 'Instrumentos', 'Cámara de flamabilidad MC184 vencida desde el 11/09/2026 y calibre MC413 vencido desde el 08/07/2026',
      'Cronograma de calibración 2026 Rev. 7'),
     ('Calidad', 'Instrumentos', 'Códigos MC de la regla de costura, la plantilla Mylar del APB trasero central, el calibre de tapizado, la regla de largo de capa, '
-     'las balanzas (recepción y pieza espumada), el termómetro y los calibres de la cinta',
-     'No figuran en el cronograma 2026 Rev. 7 asignados a esta pieza. Sí está el calibre de forma MC505 (APB TAPA PATAGONIA); '
-     'la balanza MC481 está en inyección VWA sin pieza asignada'),
-    ('Calidad', '40, 50 y 60', 'Frecuencia y registro de los valores medibles (margen, puntadas, peso): el plan los deja en 100 % de autocontrol, como la hoja '
-     'de operaciones 986 y el plan Rev. 1', 'VW pidió en su auditoría VDA 6.3 que se registren los valores medibles de costura'),
-    ('Calidad', 'Encabezado', 'Número de plan, letra de revisión, equipo y contacto', 'La revisión es sobre el plan Rev. 1 del 31/07/2026'),
-    ('Calidad', 'Lay out', 'Cotas del plano y ensayos de VW para el test de lay out anual', 'Plano del cliente y requisitos de VW'),
+     'las balanzas (recepción y pieza espumada) y el termómetro',
+     'No figuran en el cronograma 2026 Rev. 7 asignados a esta pieza. Para la pieza espumada están la balanza MC423 (Inyección PUR, vencida el '
+     '12/10/2026) y la MC481 (Inyección VWA). El calibre de forma MC505 es de esta pieza: el cronograma lo ubica en Inyección VWA y la hoja de operaciones en Tapizado'),
+    ('Calidad', '30, 80 y 82', 'Frecuencia de los controles de armado de kits y de los dos retrabajos', 'El plan las deja en TBD'),
+    ('Calidad', 'Encabezado', 'Número de plan, equipo y contacto. La próxima revisión la abre Calidad', 'El plan sigue en la Rev. 1 del 31/07/2026'),
+    ('Calidad', 'Lay out', 'Cotas del plano y cuáles ensayos del plan de validación entran en el lay out. La flamabilidad horizontal va con el valor de la TL 1010 (< 100 mm/min); el plan Rev. 1 decía ≤ 100 mm',
+     'Plan de validación DV&PV preliminar del 07/04/2025 (TL 1010, VW 50180, VW 50185, PV 2005, VW 50190, resistencia, rigidez, durabilidad, portavasos)'),
     ('Calidad', '80 y 82 Retrabajos', 'Si VW aprobó los retrabajos de la pieza', 'Los retrabajos están en el flujograma 151, el AMFE 150 y la hoja de operaciones 986'),
+    ('Leo Lattanzi', '10 / 50 Inyección PU', 'Qué sistema de poliuretano lleva la pieza',
+     'El arb y el plan Rev. 1 dicen ISO-PLUS 1394 + POLI-PLUS FF-629 (el plan va con esos); la BOM005 Rev. A dice ISO-PLUS 1355 + POLI-PLUS FF-636'),
     ('Leo Lattanzi', '50 Inyección PU', 'Tolerancias del tiempo de colada, el caudal y las presiones; temperatura de poliol, isocianato y molde',
-     'Validación de espumado de marzo 2026: programa N° 9, colada 7,00 s, caudal 4,00 kg/min, relación 200/40, presión 0,8 / 1,3 bar, corrección 100 % / 65 %'),
-    ('Leo Lattanzi', '50 Inyección PU', 'Peso de la pieza espumada con su tolerancia', 'Validación de marzo 2026: una pieza pesó 1.608 g'),
-    ('Planta', '20 Corte', 'Valores de velocidad de la máquina y tensión del vinilo', 'La hoja de operaciones nombra un instructivo de parámetros por producto'),
+     'Validación de espumado de marzo 2026: programa N° 9, colada 7,00 s, caudal 4,00 kg/min, relación 200/40, presión 0,8 / 1,3 bar, corrección 100 % / 65 %. '
+     'La especificación de Mas-Tin da 27 a 35 °C para los componentes y 27 a 40 °C para el molde (condiciones de laboratorio)'),
+    ('Leo Lattanzi', '50 Inyección PU', 'Peso de la pieza espumada con su tolerancia',
+     'Plan Rev. 1: 530 ± 30 g. Validación de marzo 2026: 444 g de espuma y 1.608 g la pieza'),
+    ('Planta', '20 Corte', 'Valores de velocidad de la máquina y tensión del vinilo, y cantidad de capas',
+     'La hoja de operaciones dice cargar las capas de la planilla de corte; el plan Rev. 1 dice 20 capas'),
     ('Planta', '40 / 50', 'Número de la máquina de coser y de la inyectora', 'Para completar la columna de máquina (la mesa de corte es la BM 149)'),
     ('Planta', '60 Tapizado', 'Temperatura y tiempo del horno', 'El set up del horno lo nombran la hoja de operaciones 986, el AMFE 150 y el plan Rev. 1, sin valores'),
     ('Planta', '80 Retrabajo', 'Largo máximo del hilo sobrante', 'El AMFE pide definirlo en la instrucción de retrabajo'),
     ('Ingeniería', 'Hoja de operaciones 986', 'Embalaje: la hoja dice 126 piezas por medio 111970; la ficha vigente GE-102 Rev. C dice 30 piezas por cajón CKV3755',
      'El plan va con la GE-102 Rev. C (07/10/2026)'),
     ('Ingeniería', 'Hoja de operaciones 986', 'Hojas 30, 80 y 82 sin ciclo de control; hoja 40 sin el control de puntadas y margen; peso de la hoja 50 en TBD',
-     'El plan ya tiene esos controles'),
+     'El plan ya tiene los controles de costura y peso'),
     ('Ingeniería', 'AMFE 150', 'Códigos que no coinciden con la BOM del arb: hilo FX284TK-E0PTO (arb: FX284-E0PTO), cinta 5826 de 25 mm (arb: 5825 de 24 mm), '
      'fieltros PA3840 y 427VIN026COR01 (arb: 427TEL003COR01 y RES30020TIT)', 'BOM arb último nivel del 22/09/2026'),
     ('Ingeniería', 'AMFE 150', 'Op 10 nombra "tela tapizado"; la BOM no tiene tela (el tapizado es el vinilo)', 'BOM arb último nivel del 22/09/2026'),
+    ('Ingeniería', 'AMFE 150', 'Sigla de la flamabilidad del vinilo, los fieltros, el Aplix, la cinta y la del lay out', 'El plan Rev. 1 las marca D; el AMFE 150 no las tiene asignadas'),
     ('Ingeniería', 'AMFE 150', 'Op 40 tiene modos de falla de costura vista y de dobladillo; la pieza no lleva costura vista. '
      'Op 40 tiene "sellado del orificio inferior" en la máquina de coser (es de la op 50)', 'Especificación de costura y cinta del 05/10/2026'),
     ('Ingeniería', 'AMFE 150', 'Op 90 dice "apoyacabezas" en la prevención del embalaje; op 50 nombra un "inserto EPP"; op 20 tiene una causa de '
      '"instrucción del reproceso"', 'La pieza no lleva inserto EPP (BOM arb del 22/09/2026)'),
-    ('Ingeniería', 'AMFE 150', 'Isocianato: el AMFE pide vida útil remanente de 6 meses desde la recepción; el plan de recepción 819 dice 6 meses desde producido',
-     'El plan va con el plan de recepción 819'),
 ]
 
 
@@ -167,9 +177,9 @@ def main():
     ws.title = 'Pendientes'
     hoja(ws, 'Plan de control APB trasero central Patagonia — lo que falta definir',
          '2HC.885.081 RL1 · propuesta de Ingeniería del 19/10/2026', ('Quién', 'Operación', 'Qué falta', 'Lo que hay hoy'),
-         PENDIENTES, (14, 18, 62, 62))
-    wb.properties.creator = 'Facundo Santoro'
-    wb.properties.lastModifiedBy = 'Facundo Santoro'
+         [x for x in PENDIENTES if x[0] != 'Ingeniería'], (14, 18, 62, 62))   # lo de Ingenieria no va a Calidad (auditor, 19/10)
+    wb.properties.creator = 'Barack Mercosul'
+    wb.properties.lastModifiedBy = 'Barack Mercosul'
     destino = os.path.join(salida, NOMBRE + '.xlsx')
     wb.save(destino)
     exportar_pdf(destino)
@@ -180,10 +190,14 @@ def main():
     ws.title = 'Propuesta de siglas'
     filas = siglas(amfe_json)
     hoja(ws, 'AMFE 150 APB trasero central — siglas que marca el criterio y no están asignadas',
-         'Criterio I-AC-005 rev.B: S 9 o 10 = crítica (D); S 5 a 8 con O 4 o más = SC. Las asigna Fak.',
+         'Criterio I-AC-005 rev.B: S 9 o 10 = crítica (D); S 5 a 8 con O 4 o más = SC. Las asigna Ingeniería.',
          ('Op', 'Modo de falla', 'S y O de sus causas', 'El criterio marca'), filas, (6, 80, 22, 16))
-    wb.properties.creator = 'Facundo Santoro'
-    wb.properties.lastModifiedBy = 'Facundo Santoro'
+    # aparte, para Ingenieria: las correcciones de nuestros documentos que salieron del cruce (no van en el mail a Calidad)
+    ws2 = wb.create_sheet('Correcciones de Ingeniería')
+    hoja(ws2, 'Correcciones de Ingeniería que salieron del plan de control', '2HC.885.081 RL1 · 19/10/2026',
+         ('Quién', 'Documento', 'Qué corregir', 'De dónde sale'), [x for x in PENDIENTES if x[0] == 'Ingeniería'], (14, 22, 62, 50))
+    wb.properties.creator = 'Barack Mercosul'
+    wb.properties.lastModifiedBy = 'Barack Mercosul'
     destino = os.path.join(salida, NOMBRE_SIGLAS + '.xlsx')
     wb.save(destino)
     print(destino, len(filas), 'modos de falla')

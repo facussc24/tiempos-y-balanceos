@@ -29,7 +29,7 @@ ya nos marcaron. Las fuentes con su ruta estan en `referencias.md`, al lado de e
   Manuel Meszaros"*). La tabla de REVISIONES queda como la dejo Calidad; la revision la abre Calidad (Manuel
   Meszaros) cuando lo emite. Fecha original = la de su emision; fecha de revision, vacia.
 - **El logo es el oficial** (`tools/flowchart/assets/barack_logo.png`, hash `5d9207e12856`): el formulario viejo de
-  Amarok trae el logo con fondo gris y se cambia antes de mostrarlo. `_sinFirmaIA.py` no lo ve en un `.xls`
+  Amarok trae el logo viejo (elipse azul, sha1 `6b905fecd74c`) y se cambia antes de mostrarlo. `_sinFirmaIA.py` no lo ve en un `.xls`
   (19/10/2026): mirarlo a ojo en el PDF.
 
 ## 1. Antes de escribir una fila: las entradas
@@ -47,7 +47,7 @@ inventados (Fak 10/10). La verdad es lo que se hace en planta y tiene papel. Jun
 | **Plano y especificaciones del cliente** | legajo `6-Planos` / `13-Especificaciones`, normas VW en `docs-local\normas-vw` | caracteristicas especiales designadas (TLD, CC), cotas, ensayos PV/TL |
 | **Cronograma de calibracion** | `Y:\...\CALIBRACION\Cronograma calibracion\13-Cronograma de calibracion <año> REV.N.xls` | el codigo MC existe, esta en ese sector y vigente |
 | **Fichas de embalaje vigentes** | `Y:\...\Fichas Embalaje` / legajo `19-` | todas las vigentes de la pieza (GE-xxx) |
-| **Plan existente y sus versiones** | mails de Calidad, legajo `12-` / `24-` / `32-` | **se listan todas y manda la mas nueva validada** (LECCIONES 14/10) |
+| **Plan existente y sus versiones** | mails de Calidad, legajo `12-` / `24-` / `32-` | **se listan todas y manda la mas nueva validada** (LECCIONES 14/10). **Se buscan en los mails, no solo en el legajo** (`python scripts/_mails.py --buscar "plan de control <pieza>"` y los adjuntos): el 19/10 la Rev 1 del APB trasero central (M. Nieve, 31/07) estaba solo en un mail del 12/08, y la propuesta dejo en TBD espesor, gramaje, primera/ultima pieza y lay out que esa Rev 1 ya tenia. **El plan de Calidad de la pieza es la base del formulario** si existe en Excel; si solo hay PDF (como esa Rev 1), el formulario de una pieza hermana sirve, pero se le cambia el logo: el de Amarok trajo el viejo |
 | **Reclamos, 8D, alertas de la pieza o la familia** | `8D`, `Alertas de calidad`, KPM | IATF 8.5.1.1 f/h: el control que nacio de un reclamo va al plan, con el reclamo nombrado |
 | **Auditorias del cliente** | `Plan de acción - VW - VDA 6.3 - 2025.xlsx` y siguientes | lo que el cliente ya marco no se repite (ver §6) |
 | **Fase** | la dice Fak o el pedido | prototipo / prelanzamiento / produccion (§2.3) |
@@ -67,6 +67,10 @@ Plantilla oficial: `Y:\...\SISTEMA\SISTEMA SGC\Instructivos\CALIDAD\Anexos\I-AC-
 Prelanzamiento y Produccion A.xls` (recepcion: `I-AC-005.2 ... Recepcion A.xls`). Calidad trabaja sobre
 sus propios planes como base (p. ej. `PC PWA.xlsx`); lo que importa es que sea **su** formulario, nunca el
 export de la app (09/10).
+
+**Formulario nuevo (medido el 19/10/2026)**: Calidad ya usa en 2026 uno con pie `I-AC-005.1 - Jun.26 - C` (IP PAD
+Patagonia, 03/07/2026; APB central Amarok Rev03, 24/08/2026), con casillas tildables. En `Anexos` sigue solo la rev A de
+2021. Cual es el vigente lo dice Calidad; hasta que lo diga, se usa el del plan de Calidad de la pieza o la familia.
 
 ### 2.1 Primera hoja
 
@@ -110,7 +114,7 @@ del APC tenia SI y NO marcados) · aprobacion del cliente.
 | I | Calibre o tecnica | instrumento con codigo: `Regla MC N° 334`, `Mylar de control MC345`, `Calibre MC 212`, `Camara de flamabilidad MC184`, `Visual / muestra patron` |
 | J-K | Muestra: tamaño y frecuencia | concretos: `1 Pieza · Inicio de turno / Falla mantenimiento / Corte de energía / Problema de calidad`, `100% · Por lote`, `1 Muestra · Por entrega`, `3% del lote`, `5 piezas · Anual` |
 | L | Metodo de control y registro | el registro real: `Registro de set up`, `Autocontrol`, `P-10/I.` + `Sistema ARB`, `I-AC-027.I` (ensayo), `Informe de laboratorio` |
-| M | Responsable | por fila: `Auditor de recepcion`, `Operador de produccion`, `Inspector de calidad`, `Laboratorio`. Nunca el mismo rol en todas (09/10: "Lider de produccion" en las 24 filas) |
+| M | Responsable | por fila, con los nombres de Calidad (medido en 27 planes el 19/10/2026): `Recepción de materiales.` (los 4 de Patagonia), `Operador de produccion`, `Operador de calidad` (20 de 27; `Inspector de calidad` casi no se usa), `Operador de logística` en embalaje (11 a 13), `Metrólogo` / `Laboratorio`. Nunca el mismo rol en todas (09/10: "Lider de produccion" en las 24 filas) |
 | N | Plan de reaccion | `Según P-09/I.` en proceso, `P-14.` en recepcion (ver §3.5) |
 
 Al final, **`TEST DE LAY OUT`**: el control anual de cotas y ensayos del cliente (Cecilia: cotas del plano
@@ -135,6 +139,14 @@ referencia, anual). VW lo exige como *Layout inspection and functional testing* 
   peso con balanza, ancho con cinta (memoria `reference_planes_control_recepcion_barack`). "Por
   certificado" solo cuando el plan de recepcion dice certificado.
 - Responsable `Auditor de recepcion`, frecuencia `Por entrega`, registro `P-10/I.` (y `ARB`), reaccion `P-14.`
+- **Las siglas del AMFE que son de "todos los materiales"** (contaminacion, especificacion erronea) van en la fila de
+  esa caracteristica de cada material: SC de contaminacion en una fila `Aspecto / limpieza`, SC de especificacion en las
+  filas de dimensiones y color; la D de flamabilidad y emisiones en el material de tapizado que de verdad se compra
+  (19/10: el AMFE decia "tela tapizado" y la BOM solo tiene vinilo).
+- **Unidades**: si el plan de recepcion no las trae, salen del certificado y la especificacion del proveedor
+  (`Recepcion De Materiales\2 - certificados de calidad\` y `3 - Fichas Tecnicas de Proveedores\`), no se dejan TBD.
+- **El sistema de quimicos se cruza en tres papeles** (arb, BOM del cliente o BOM005, plan de Calidad): el 19/10 el arb
+  decia ISO 1394 + FF-629 y la BOM005 ISO 1355 + FF-636. Si no coinciden, va a la lista con los dos y a quien lo sabe.
 
 ### 3.2 Proceso
 
@@ -142,8 +154,10 @@ referencia, anual). VW lo exige como *Layout inspection and functional testing* 
   `Varilla desalineada` (Rev 0 APC) → ✓ `Costura completa, sin saltos` con `Visual / muestra patron`, o
   `Posicion de la varilla` con su cota y su dispositivo.
 - **Set up** por maquina, con lo que se verifica (programa cargado, parametros, cuchilla, aguja, hilo,
-  capas) y la frecuencia completa de Calidad: **inicio de turno / falla de mantenimiento / corte de
-  energia / problema de calidad** (IATF 8.5.1.3 y 8.5.1.4). Si existe hoja de set up, se nombra con su
+  capas) y la frecuencia que use el plan de Calidad de esa pieza o familia: la mas comun es **inicio de turno /
+  despues de cada intervencion mecanica o parada de mas de 1 h** (18 de 22 planes medidos el 19/10/2026, y la Rev 1
+  del APB trasero central); la de PWA es **inicio de turno / falla de mantenimiento / corte de energia / problema de
+  calidad** (4 planes). Las dos cubren IATF 8.5.1.3 y 8.5.1.4. Si existe hoja de set up, se nombra con su
   numero y se copian los valores; `Ver hoja de set up` sin valores en ninguna parte = celda vacia
   disfrazada (06/10).
 - **Primera y ultima pieza** cuando aplica (IATF 8.5.1.1 b, 8.5.1.3 d): el patron Toyota/TBA es `1 Pieza ·
@@ -192,6 +206,10 @@ de los APC Patagonia estan (MC506/507/508) y el 15/10 los deje en TBD hasta que 
 rev B.1) detiene el proceso, controla hacia atras hasta piezas buenas, segrega, y con 3 no conformes
 consecutivas del mismo defecto para la linea y escala. Para un poka-yoke que falla y para una
 caracteristica CC/D, verificar que el P-09/I alcance; si hace falta algo mas, va a la lista para Calidad.
+
+**Una frecuencia tambien es un dato**: `100 % · Por lote` va solo si un papel lo dice (HO, AMFE, plan de Calidad). El
+19/10 kits y retrabajos salieron al 100 % "por la HO" y la HO tenia esas hojas en TBD (`amfe.md` §17.7). Y el codigo MC
+se cruza tambien por SECTOR: la cinta MC406 es de Mesa de corte; la de recepcion es la MC403.
 
 ### 3.6 Lo que falta no se rellena
 
@@ -260,7 +278,11 @@ un valor parecido de otra pieza, ni "segun especificacion" generico (`core-prohi
    Rev 0 dan ROJO (33 `D/TLD`, 18 celdas con varias marcas, amarillo en la tabla); la propuesta rearmada da 3 ROJO,
    uno por hoja: la fila 3.0 «Flamabilidad y emisiones del conjunto» lleva «D / D» en una celda.
 7. Lo que pide una fila nueva o un dato sin papel va a un `.txt` aparte ("que queda para la reunion").
-8. Auditor antes de mostrar; se le muestra a Fak abierto; el mail a Calidad, con su OK.
+8. Auditor antes de mostrar; se le muestra a Fak abierto; el mail a Calidad, con su OK. **El mail no lleva preguntas
+   abiertas del plan**: las dudas van en la lista de pendientes adjunta (Fak, 09/10/2026: *"elimina esa parte y manda
+   el mail"*). Corto, en su voz, como respuesta al mail que lo pidio.
+8 bis. **Si se arma con un generador, el arreglo va al generador**: corregir solo el archivo deja que la proxima corrida
+   devuelva el error (19/10: el logo y la revision con el nombre de Fak se corrigieron a mano y el script los seguia escribiendo).
 9. **Las fichas de embalaje se piden al dia**: el 15/10 el plan salio con GE-103/104/105 Rev C y Carlos habia
    mandado esa misma manana la Rev D (48 por bin). Antes de cerrar, buscar en los mails de Carlos la ultima
    version y mirar la carpeta `19-Normas y Especificaciones de embalaje` del legajo.
