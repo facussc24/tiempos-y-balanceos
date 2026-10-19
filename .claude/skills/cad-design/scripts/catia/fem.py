@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""fem.py — simulacion estatica por elementos finitos en CATIA V5 R21 (Generative Structural Analysis) por programa.
+"""fem.py — simulacion por elementos finitos en CATIA V5 R21 (Generative Structural Analysis) por programa: estatica
+(cargas, desplazamiento, Von Mises) y frecuencias naturales (importar(..., "FrequencySet") + est.frecuencias); material
+del catalogo (poner_acero) o propio (material_propio, p. ej. PLA).
 Lo que anda, sacado de los ejemplos OFICIALES de la ayuda instalada (V5Automation.chm: CAAAniUserMaterial.CATScript,
 CAAAniPreproOnProduct.catvbs, CAAAniMeshOctTetra.catvbs) y probado contra una respuesta exacta en el ej57 (viga en
 voladizo: 0,797 mm contra 0,8015 de la cuenta, malla parabolica de 2,5 mm).
@@ -49,7 +51,10 @@ def material_propio(part, young_pa, densidad_kg_m3, poisson=None):
     trae (PLA: TDS Bambu PLA Basic V3.0, Young X-Y 2,58e9 Pa / Z 2,06e9, densidad 1240). Medido (ej61): el cambio LLEGA
     a la simulacion (E a la mitad = flecha doble exacta) y queda al reabrir con Guardar como; ej62: viga en PLA a −0,37 %
     de la cuenta. Los parametros se buscan por palabra en el nombre COMPLETO («...\\Steel.1\\Young Modulus»); el nombre
-    del material en el arbol sigue siendo el del catalogo. poisson=None lo deja como esta (la TDS del PLA no lo trae)."""
+    del material en el arbol sigue siendo el del catalogo. poisson=None lo deja como esta (la TDS del PLA no lo trae).
+    OJO: la FLUENCIA («Yield Strength») queda la del acero (250 MPa) y se devuelve para que se vea: en el calculo lineal
+    no entra, pero un margen contra «la fluencia del material» seria falso. Para el PLA se compara contra la TRACCION de
+    la TDS (35 X-Y / 31 Z MPa); la TDS no trae fluencia y no se inventa."""
     ps = part.Parameters
     por_nombre = {ps.Item(i).Name: ps.Item(i) for i in range(1, ps.Count + 1)}
 
@@ -58,13 +63,18 @@ def material_propio(part, young_pa, densidad_kg_m3, poisson=None):
         if len(cand) != 1:
             raise RuntimeError(f"hay {len(cand)} parametros con «{palabra}»: tiene que haber un solo material aplicado")
         return cand[0]
-    uno("Young Modulus").ValuateFromString(f"{young_pa:.6e}N_m2")
-    uno("Density").ValuateFromString(f"{densidad_kg_m3:g}kg_m3")
-    if poisson is not None:
-        uno("Poisson Ratio").Value = float(poisson)
+    # se buscan TODOS antes de escribir: si uno falla, no queda la pieza a medio cambiar
+    p_e, p_d = uno("Young Modulus"), uno("Density")
+    p_nu = uno("Poisson Ratio") if poisson is not None else None
+    p_e.ValuateFromString(f"{young_pa:.6e}N_m2")
+    p_d.ValuateFromString(f"{densidad_kg_m3:g}kg_m3")
+    if p_nu is not None:
+        p_nu.Value = float(poisson)
     part.Update()
-    return {k.split("\\")[-1]: uno(k.split("\\")[-1]).ValueAsString() for k in ("Young Modulus", "Density",
-                                                                                "Poisson Ratio")}
+    out = {k: uno(k).ValueAsString() for k in ("Young Modulus", "Density", "Poisson Ratio")}
+    fl = [v for k, v in por_nombre.items() if "Yield Strength" in k]
+    out["Yield Strength (queda la del acero: NO usar como resistencia)"] = fl[0].ValueAsString() if fl else None
+    return out
 
 
 def propiedades(part):

@@ -41,6 +41,79 @@ chequear("leer_frecuencias: 10 modos del informe real (ej60)", len(modos) == 10 
 chequear("leer_frecuencias: modo 1 = 204,19 Hz y modo 2 = 405,47 Hz (cuenta 203,71 / 407,43)",
          modos[:2] == [(1, 204.19), (2, 405.47)], modos[:2])
 chequear("leer_frecuencias: un html sin tabla de modos da []", fem.leer_frecuencias("<html>Energy</html>") == [])
+completo = open(os.path.join(AQUI, "_casos_fem", "informe_completo_ej60.html"), encoding="latin-1",
+                errors="ignore").read()
+modos_c = fem.leer_frecuencias(completo)
+chequear("leer_frecuencias: el informe COMPLETO (con «Modal participation» despues) da exactamente 10 modos",
+         len(modos_c) == 10 and modos_c[-1][0] == 10, len(modos_c))
+
+import tempfile  # noqa: E402
+import time  # noqa: E402
+
+
+def estudio_con_informe(escribe=True, nombre="index.html", viejo=False, texto=None):
+    e = fem.Estudio.__new__(fem.Estudio)
+    e.c = types.SimpleNamespace(FileSystem=types.SimpleNamespace(GetFolder=lambda p: p))
+    e.caso = "caso"
+
+    def build(carpeta, titulo, _x):
+        if escribe:
+            ruta = os.path.join(carpeta, nombre)
+            open(ruta, "w", encoding="latin-1").write(texto if texto is not None else completo)
+            if viejo:
+                t = time.time() - 3600
+                os.utime(ruta, (t, t))
+    pm = types.SimpleNamespace(AddExistingCaseForReport=lambda c: None, BuildReport=build)
+    e.mo = types.SimpleNamespace(PostManager=pm)
+    return e
+
+
+def se_niega(f):
+    try:
+        f()
+        return False
+    except RuntimeError:
+        return True
+
+
+chequear("frecuencias(): informe nuevo -> 10 modos",
+         len(estudio_con_informe().frecuencias(tempfile.mkdtemp(prefix="inf_"))) == 10)
+d_viejo = tempfile.mkdtemp(prefix="inf_")
+chequear("frecuencias(): un informe VIEJO (de hace 1 h) se niega",
+         se_niega(lambda: estudio_con_informe(viejo=True).frecuencias(d_viejo)))
+chequear("frecuencias(): si BuildReport escribe con otro nombre se niega",
+         se_niega(lambda: estudio_con_informe(nombre="otro.html").frecuencias(tempfile.mkdtemp(prefix="inf_"))))
+chequear("frecuencias(): un informe sin la tabla de modos se niega",
+         se_niega(lambda: estudio_con_informe(texto="<html>Energy</html>").frecuencias(tempfile.mkdtemp(prefix="inf_"))))
+
+
+class SetsFalsos:
+    def __init__(self):
+        self.creados = []
+
+    def Add(self, tipo, _n):
+        self.creados.append(tipo)
+        return types.SimpleNamespace(AnalysisEntities=None)
+
+
+def estudio_init(solucion):
+    sets = SetsFalsos()
+    sol = []
+    caso = types.SimpleNamespace(AnalysisSets=sets, AddSolution=lambda s: sol.append(s) or "sol")
+    am = types.SimpleNamespace(AnalysisModels=types.SimpleNamespace(Item=lambda i: types.SimpleNamespace(
+        AnalysisCases=types.SimpleNamespace(Add=lambda: caso))), LinkedDocuments=types.SimpleNamespace(
+        Item=lambda i: types.SimpleNamespace(Product="p", Part="pt")))
+    cf = types.SimpleNamespace(Documents=types.SimpleNamespace(Item=lambda n: types.SimpleNamespace(Analysis=am)))
+    return fem.Estudio(cf, "Analysis1", solucion), sets, sol
+
+
+ef, sets_f, sol_f = estudio_init("FrequencySet")
+chequear("Estudio FrequencySet: solo RestraintSet (sin LoadSet) y AddSolution(FrequencySet)",
+         sets_f.creados == ["RestraintSet"] and sol_f == ["FrequencySet"], (sets_f.creados, sol_f))
+chequear("Estudio FrequencySet: fuerza() se niega", se_niega(lambda: ef.fuerza(["cara"], (0, 0, -1))))
+es, sets_s, sol_s = estudio_init("StaticSet")
+chequear("Estudio StaticSet: RestraintSet + LoadSet y AddSolution(StaticSet)",
+         sets_s.creados == ["RestraintSet", "LoadSet"] and sol_s == ["StaticSet"], (sets_s.creados, sol_s))
 
 
 class MallaFalsa:
@@ -130,7 +203,8 @@ class Param:
 def part_falsa(materiales=1):
     ps = []
     for m in range(materiales):
-        for n, v in (("Young Modulus", "2e+011N_m2"), ("Density", "7860kg_m3"), ("Poisson Ratio", "0,266")):
+        for n, v in (("Young Modulus", "2e+011N_m2"), ("Density", "7860kg_m3"), ("Poisson Ratio", "0,266"),
+                     ("Yield Strength", "2,5e+008N_m2")):
             ps.append(Param(f"viga\\Steel\\Steel.{m + 1}\\{n}", v))
     ps.append(Param("viga\\PartBody\\Pad.1\\FirstLimit\\Length", "200mm"))
     lista = types.SimpleNamespace(Count=len(ps), Item=lambda i: ps[i - 1])
@@ -141,6 +215,17 @@ pf, ps_f = part_falsa()
 r = fem.material_propio(pf, 2.58e9, 1240, None)
 chequear("material_propio: Young y densidad del PLA (TDS Bambu V3.0), Poisson sin tocar",
          ps_f[0].valor == "2.580000e+09N_m2" and ps_f[1].valor == "1240kg_m3" and ps_f[2].valor == "0,266", r)
+chequear("material_propio: devuelve la fluencia que QUEDA del acero (para que no se use como resistencia del PLA)",
+         any("Yield" in k and v == "2,5e+008N_m2" for k, v in r.items()), r)
+pf3, ps3 = part_falsa()
+r3 = fem.material_propio(pf3, 2.58e9, 1240, 0.36)
+chequear("material_propio: con poisson lo escribe", ps3[2].Value == 0.36, r3)
+pf4, ps4 = part_falsa()
+ps4.append(Param("viga\\Relleno\\Density_relleno", "1kg_m3"))
+pf4 = types.SimpleNamespace(Parameters=types.SimpleNamespace(Count=len(ps4), Item=lambda i: ps4[i - 1]),
+                            Update=lambda: None)
+chequear("material_propio: si un parametro es ambiguo se niega SIN haber tocado E",
+         se_niega(lambda: fem.material_propio(pf4, 2.58e9, 1240)) and ps4[0].valor == "2e+011N_m2", ps4[0].valor)
 pf2, _ = part_falsa(2)
 try:
     fem.material_propio(pf2, 2.58e9, 1240)
