@@ -43,6 +43,25 @@ with BuildSketch() as s:
         ThreePointArc((10, 0), (0, 10), (-10, 0))
     make_face()
 semi = tramos(s.sketch.faces()[0])
+import math  # noqa: E402
+from build123d import CenterArc  # noqa: E402
+with BuildSketch() as s:                          # sector de 300 grados: cada arco < 180 y la suma tiene que dar 300
+    with BuildLine():                             # (auditor ronda 2: con los puntos medios mal repartidos salia 100 + 160)
+        CenterArc((0, 0), 20, 0, 300)
+        Line((20 * math.cos(math.radians(300)), 20 * math.sin(math.radians(300))), (0, 0))
+        Line((0, 0), (20, 0))
+    make_face()
+sector = [x for x in tramos(s.sketch.faces()[0]) if x[0] == "A"]
+
+
+def grados(x):
+    c, a, b = x[1], x[3], x[4]
+    ua, ub = (a[0] - c[0], a[1] - c[1]), (b[0] - c[0], b[1] - c[1])
+    cos = (ua[0] * ub[0] + ua[1] * ub[1]) / (math.hypot(*ua) * math.hypot(*ub))
+    return math.degrees(math.acos(max(-1.0, min(1.0, cos))))
+
+
+sector_grados = [round(grados(x), 3) for x in sector]
 with BuildSketch() as s:
     Rectangle(40, 20)
     Circle(4, mode=Mode.SUBTRACT)
@@ -53,4 +72,4 @@ except SystemExit as e:
     con_agujero = "se nego" if "agujero" in str(e) else str(e)
 print(json.dumps({"girados_abiertos": mal, "circulo_arcos": sum(1 for x in circulo if x[0] == "A"),
                   "circulo_abierto": abiertas(circulo), "semi_arcos": sum(1 for x in semi if x[0] == "A"),
-                  "semi_abierto": abiertas(semi), "con_agujero": con_agujero}))
+                  "semi_abierto": abiertas(semi), "con_agujero": con_agujero, "sector_grados": sector_grados}))

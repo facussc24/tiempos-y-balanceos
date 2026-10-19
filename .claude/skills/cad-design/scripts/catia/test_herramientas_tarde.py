@@ -60,6 +60,25 @@ chequear("dos pantallas: elige la que no es la principal", pantalla.elegir_monit
 chequear("dos pantallas en otro orden: igual", pantalla.elegir_monitor([m2, m1]) is m2)
 chequear("una sola pantalla: None (no mueve)", pantalla.elegir_monitor([m1]) is None)
 
+# 2 bis. pantalla.py corrido a mano sin pid con una CATIA que no es mia: se niega y no mueve nada
+import runpy  # noqa: E402
+_orig = (cb._guardado, cb.cnext_abiertos, cb.es_mia, sys.argv)
+cb._guardado, cb.cnext_abiertos, cb.es_mia = (lambda: {"pid": 4242}), (lambda: [4242]), (lambda p, g: False)
+sys.argv = ["pantalla.py"]
+movidas = []
+_mw = pantalla.win32gui.MoveWindow
+pantalla.win32gui.MoveWindow = lambda *a: movidas.append(a)
+try:
+    runpy.run_path(os.path.join(AQUI, "pantalla.py"), run_name="__main__")
+    chequear("pantalla.py a mano con una CATIA ajena se niega", False, "no se nego")
+except SystemExit as e:
+    chequear("pantalla.py a mano con una CATIA ajena se niega", "no es la que arranque" in str(e) and not movidas, str(e))
+except Exception as e:  # noqa: BLE001
+    chequear("pantalla.py a mano con una CATIA ajena se niega", False, repr(e)[:80])
+finally:
+    cb._guardado, cb.cnext_abiertos, cb.es_mia, sys.argv = _orig
+    pantalla.win32gui.MoveWindow = _mw
+
 # 3. cotas que se pisan
 chequear("cajas encimadas se pisan", ac.se_pisan([0, 0, 10, 5], [8, 2, 20, 7]))
 chequear("cajas separadas no se pisan", not ac.se_pisan([0, 0, 10, 5], [15, 0, 20, 5]))
@@ -136,6 +155,8 @@ if os.path.exists(VENV):
         chequear("de_build123d: 300 perfiles girados, ninguno ABIERTO", k["girados_abiertos"] == 0, k)
         chequear("de_build123d: circunferencia entera en 3 arcos y cerrada", k["circulo_arcos"] == 3 and k["circulo_abierto"] == 0, k)
         chequear("de_build123d: una cara con agujero se niega", k["con_agujero"] == "se nego", k)
+        chequear("de_build123d: sector de 300 en arcos < 180 que suman 300",
+                 all(g < 180 for g in k["sector_grados"]) and abs(sum(k["sector_grados"]) - 300) < 0.01, k["sector_grados"])
     except Exception as e:  # noqa: BLE001
         chequear("de_build123d (casos) corrio", False, (rc.stderr or str(e))[-300:])
     codigo = (

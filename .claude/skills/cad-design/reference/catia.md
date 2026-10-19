@@ -295,7 +295,7 @@ tronco de cono = π(r1+r2)s; `AddNewFill` + `AddBound` = πr²; Join + `CloseSur
 (`AddNewPlaneNormal(guía, punto)` + círculo + `AddNewSweepExplicit`) = Pappus. Un círculo de GSD va con `SetLimitation(1)`.
 `AddNewOffset(sup, 3, orient, 0.01)`, `AddNewThickSurface(sup, lado, 2, 0)`, `AddNewHybridSplit(sup, plano, lado)` y
 `AddNewFilletBiTangent(s1, s2, R, o1, o2, 1, 0)`: **el lado no se adivina, se prueba y se elige por la medida** (área,
-volumen o cdg contra la cuenta); en el empalme 2 de las 4 orientaciones dan error y una sola da la cuenta.
+volumen o cdg contra la cuenta); en el empalme, de las 3 orientaciones probadas, 2 dan error y (−1, 1) da la cuenta (la cuarta no se probó).
 
 **CSWA «Tool Block» etapas 3 y 4 (ej41b): 628,18 y 432,58 g = respuestas, al primer intento** (forma = gemelo, 0,002 mm).
 La masa de la etapa 3 NO veía que en el gemelo la ranura estaba a otra altura (`Cylinder(..., align=None)` de build123d
