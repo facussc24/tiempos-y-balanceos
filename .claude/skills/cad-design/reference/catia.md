@@ -147,8 +147,10 @@ en mm³; lo que vuelve de VBScript trae coma decimal.
 1. **Datos primero, fuera del repo**: copiar a la carpeta de trabajo (`CATIA_TRABAJO`) los STEP y JSON que hacen falta; de
    la carpeta de Fak o de `_utrim` solo se lee. Nada se inventa: cada cota sale de un archivo medido o de Fak.
 2. **Un script por pieza con `catia_base.correr(nombre, cuerpo, fresca=True)`**: CATIA propia recién abierta, vigía de
-   cuadros, registro por paso. Cada paso mide lo que hizo (`medir`) contra su cuenta; un sentido (extrusión, corte,
-   desplazamiento) se decide por lo que SUMA o SACA, no por el centro de gravedad de un cuerpo que ya tiene otra cosa.
+   cuadros, registro por paso (con `fresca=True` se NIEGA a reiniciar si en la CATIA propia hay un documento que no es
+   del ejercicio). Cada paso mide lo que hizo (`medir`) contra su cuenta; el sentido de una extrusión o un corte se
+   decide por el centro de gravedad de LO AGREGADO contra el plano (`croquis.centro_agregado`), no por el del cuerpo
+   entero; «suma más» (`elegir_sentido`) solo cuando el lado malo se mete en material (ver la sección del 19/10 de día).
 3. **Croquis acotados** (contar grados de libertad), con los ejes del plano medidos (XY: H→X; YZ: H→Y; ZX: H→Z, V→X):
    así el plano sale con cotas solo.
 4. **Caras y aristas por posición** (`topologia`, `aristas_con_extremos`), nunca por nombre interno; buscar en la

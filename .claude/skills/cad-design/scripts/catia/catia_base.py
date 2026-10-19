@@ -26,6 +26,7 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 PRACTICA = os.environ.get("CATIA_TRABAJO", r"C:\Dev\_catia_practica")
 os.makedirs(PRACTICA, exist_ok=True)
 ESTADO = os.path.join(PRACTICA, "mi_catia.json")
+CATIA_INSTALADA = os.environ.get("CATIA_INSTALADA", r"C:\Program Files (x86)\Dassault Systemes\B21")
 VENV_CAD = r"C:\Dev\BarackMercosul\.venv-cad\Scripts\python.exe"
 
 
@@ -418,8 +419,18 @@ def reiniciar_mia():
     if not pids or not es_mia(pids, g):
         return                       # no hay ninguna, o la que hay NO es la mia: no se toca (conectar despues se niega)
     mio = g["pid"]
+    c, _ = conectar()
+    ajenos = []                      # auditor ronda 2 (19/10): fresca=True cerraba lo que Fak abrio en la CATIA propia
+    for i in range(1, c.Documents.Count + 1):
+        try:
+            d = c.Documents.Item(i)
+            if not es_del_ejercicio(d):
+                ajenos.append(d.FullName)
+        except Exception:  # noqa: BLE001
+            ajenos.append(f"documento {i} (no se pudo leer)")
+    if ajenos:
+        raise SystemExit(f"No reinicio mi CATIA: tiene abierto algo que no es del ejercicio {ajenos}. Que lo cierre Fak.")
     try:
-        c, _ = conectar()
         apagar(c)
     except Exception:  # noqa: BLE001
         pass
@@ -446,22 +457,29 @@ def es_del_ejercicio(doc):
         return False
     if not os.path.isabs(ruta):
         return True
-    return os.path.normcase(os.path.abspath(ruta)).startswith(os.path.normcase(os.path.abspath(PRACTICA)))
+    r = os.path.normcase(os.path.abspath(ruta))
+    for base in (PRACTICA, CATIA_INSTALADA):     # la instalacion: el catalogo de materiales que abre un ejercicio
+        b = os.path.join(os.path.normcase(os.path.abspath(base)), "")   # con separador: _catia_practica_vieja no entra
+        if r.startswith(b):
+            return True
+    return False
 
 
 def cerrar_del_ejercicio(c, avisos):
-    for i in range(c.Documents.Count, 0, -1):
-        d = c.Documents.Item(i)
-        if es_del_ejercicio(d):
-            try:
+    try:
+        n = c.Documents.Count
+    except Exception:  # noqa: BLE001
+        avisos.append("no se pudo contar los documentos")
+        return
+    for i in range(n, 0, -1):
+        try:                                     # todo adentro: esto corre en el finally de correr (auditor ronda 2)
+            d = c.Documents.Item(i)
+            if es_del_ejercicio(d):
                 d.Close()
-            except Exception:  # noqa: BLE001
-                pass
-        else:
-            try:
+            else:
                 avisos.append(f"no cierro {d.FullName}: no es del ejercicio")
-            except Exception:  # noqa: BLE001
-                avisos.append("no cierro un documento que no es del ejercicio")
+        except Exception as e:  # noqa: BLE001
+            avisos.append(f"documento {i}: {repr(e)[:80]}")
 
 
 def correr(nombre, cuerpo, visible=False, fresca=False):

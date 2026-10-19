@@ -127,6 +127,53 @@ chequear("(d) mirando: el documento de Fak NO se cierra", "FAK_tablero" not in c
 res, cat = correr(None, [FAK], [[4321]], H)
 chequear("(d) sin mirar: el documento de Fak tampoco", "FAK_tablero" not in cat.cerrados, cat.cerrados)
 
+# (d2) fresca=True con un documento de Fak en la CATIA propia: se niega a reiniciar y no cierra nada (auditor ronda 2)
+for mirar in ("1", None):
+    res, cat = correr(mirar, [EJ_VIEJO, FAK], [[4321]], H, fresca=True)
+    chequear(f"(d2) fresca=True con un documento de Fak (mirar={mirar}): se niega y no cierra nada",
+             res == "SystemExit" and cat.cerrados == [], (res, cat.cerrados))
+res, cat = correr(None, [EJ_VIEJO], [[4321], [], []], H, fresca=True)
+chequear("(d2) fresca=True solo con lo del ejercicio: reinicia (cierra lo viejo)", "ej31" in cat.cerrados, (res, cat.cerrados))
+
+# (d3) que es del ejercicio: carpeta parecida NO, catalogo de la instalacion SI, FullName que revienta NO
+D = types.SimpleNamespace
+chequear("(d3) carpeta parecida (_catia_test_X_vieja) no es del ejercicio",
+         not cb.es_del_ejercicio(D(FullName=TRABAJO + "_vieja\\x.CATPart")))
+chequear("(d3) archivo en la carpeta de trabajo si", cb.es_del_ejercicio(D(FullName=os.path.join(TRABAJO, "a", "x.CATPart"))))
+chequear("(d3) catalogo de materiales de la instalacion si",
+         cb.es_del_ejercicio(D(FullName=os.path.join(cb.CATIA_INSTALADA, "intel_a", "startup", "materials", "Catalog.CATMaterial"))))
+
+
+class Revienta:
+    @property
+    def FullName(self):
+        raise RuntimeError("COM")
+
+
+chequear("(d3) FullName que revienta: NO es del ejercicio (lado seguro)", not cb.es_del_ejercicio(Revienta()))
+
+# (d4) un cierre que revienta en el finally no impide guardar el registro (auditor ronda 2)
+os.environ.pop("CATIA_MIRAR", None)
+cat = preparar([EJ_VIEJO], [[4321]], {"pid": 4321, "hora": 111}, H)
+
+
+def item_roto(i):
+    raise RuntimeError("Item roto")
+
+
+cat.Documents.Item = item_roto
+reg_json = os.path.join(TRABAJO, "_test_finally", "registro.json")
+try:
+    os.remove(reg_json)
+except OSError:
+    pass
+try:
+    cb.correr("_test_finally", lambda c, reg: None)
+    corrio = True
+except Exception:  # noqa: BLE001
+    corrio = False
+chequear("(d4) Item que revienta al cerrar: correr termina y guarda registro.json", corrio and os.path.exists(reg_json))
+
 # (e) pausa con coma
 os.environ["CATIA_MIRAR"] = "lento"
 for pausa in ("1,5", "dos"):
