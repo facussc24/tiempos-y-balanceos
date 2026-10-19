@@ -475,3 +475,9 @@ con su caso malo antes de creerle.
 - **Un plano para el herrero pide la POSICIÓN de cada barra que no va en una esquina** (ej79, carro de troqueles, 19/10):
   `GenerateDimensions` da el LARGO de cada barra, no dónde va. El travesaño del medio no tenía ninguna cota que lo ubicara;
   se agregó a mano desde el borde a su cara (L/2 − T/2 = 680). Antes de cerrar un plano: ¿cada pieza tiene largo Y lugar?
+- **Redondear TODAS las aristas de una caja de una vez deja esquinas SIN esfera** (ej80, molde de PU, 19/10):
+  `AddNewSolidEdgeFilletWithConstantRadius` con las 12 aristas → STEP de 18 caras (6 planos + 12 cilindros), cada esquina
+  es la intersección de 3 cilindros: **+0,15 % de volumen y un filo en la esquina** que un molde copia en la pieza.
+  En DOS pasos (las 4 verticales; después una horizontal con propagación por tangencia, `1`) da 8 esferas (26 caras) y
+  el volumen EXACTO de Steiner (1 129 194,67 = build123d = cuenta). En un molde o una pieza blanda: dos pasos, y se
+  controla contando las caras esféricas del STEP.
