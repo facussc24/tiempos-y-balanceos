@@ -128,7 +128,7 @@
 | Distancia minima entre flejes | — | No se encontro | SIN FUENTE | |
 | Puentes (tramos sin cortar del tablero) | Separados ~1/4" (≈ 6 mm); largo de la muesca del puente ~1/4" | https://patents.google.com/patent/US5566594 | ABIERTA | Descripcion historica de tableros de madera para carton |
 | Ancho de herramientas de muesca en el fleje | 0,3 a 2,0 mm (0,3-1,0 de a 0,1 mm; luego 1,2, 1,5 y 2,0) | https://cito.de/en/MV/boxline/diecutting/manual_nick_grinder/manual-nick-tools | ABIERTA · VERIFICADA 20/10 (textual) | Fabricante de herramientas; mundo del carton |
-| Muescas: profundidad | No mas profunda que el espesor del material; angosta; desfasadas entre si | https://briarpress.org/38004 | ABIERTA | Foro, sin anchos numericos |
+| Muescas: profundidad | No mas profunda que el espesor del material; angosta; desfasadas entre si | https://briarpress.org/38004 | ABIERTA · VERIFICADA 20/10 (textual; son opiniones de un foro, no regla) | Foro, sin anchos numericos |
 | Ancho de muesca 0,012-0,020" | — | https://briarpress.org/42136 (resumen del buscador, no se abrio) | SECUNDARIA | Foro |
 | Muescas / puentes para vinilo y espuma | — | No se encontro | SIN FUENTE | |
 | Muesca de profundidad en dobladora automatica | 0,18-1 mm | https://yitaipackage.en.made-in-china.com/product/NvkEYFbDEzpe/China-Automatic-Steel-Rule-Bender-Bending-Machine-for-Die-Cutting.html | ABIERTA | Capacidad de maquina |
