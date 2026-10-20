@@ -1,0 +1,39 @@
+# Verificación: Crítica de base: ¿diseñar de cero o configurar plantillas?
+
+Verificado el 20/10/2026. Se abrieron con web_fetch 8 fuentes (AssemCAD y el ICED17 en PDF completo). La fila 8 quedó solo con búsqueda porque se llegó al tope de lecturas.
+
+## Afirmaciones clave
+
+| # | Afirmación (corta) | Fuente (link) | Abierta | Veredicto | Cita textual |
+|---|---|---|---|---|---|
+| 1 | Claude solo conserva el ensamble en 0,8 %; con AssemCAD, 82,5 %. «Con la biblioteca» | https://arxiv.org/abs/2607.05123 (PDF) | sí, completo | **Parcial.** Las cifras están (tabla 4), pero el salto es de todo el sistema: especificación, axiomas, verificación y biblioteca. No hay ablación que separe la biblioteca. La métrica la juzga un LLM. Con GPT-5.5 sube de 64,2 a 71,7 y su puntaje general BAJA de 5,20 a 4,92 | «Assembly preservation is evaluated using an LLM-based code judge» |
+| 2 | Unión booleana con poscondición «un solo sólido o error» (recuerdo 3) | misma | sí | **Confirmada** (SafeUnion, Prop. 1; «phantom bore» en tabla 8) | «it never silently returns a disconnected compound» |
+| 3 | Configurador CAD+PLM: −79 % en 20 configuraciones, solo con modelos estandarizados; equilibrio entre 10 y 150 por año | https://www.mdpi.com/2673-4052/7/5/146 | sí (resumen y figuras) | **Confirmada** la de −79 % y la condición. **Parcial** lo de 10 a 150: es el rango anual proyectado, no el punto de equilibrio. Los 11,84 h → 2,47 h no se ven en lo abierto (el resumen dice de 8–16 h a 2–3 h) | «provided that parametric models and data structures are properly standardised» |
+| 4 | ICED17: la causa raíz mayor son los requisitos; las decisiones previas al concepto tienen defecto el 59 % de las veces, contra 28 % y 22 % | https://www.designsociety.org/download-publication/39558/... (la /publication/39558 del informe pide ser miembro) | sí, completo | **Parcial.** La tabla 4 dice 59/28/22, pero con 17 actividades (10 con defecto). El **resumen del propio paper** dice que la tasa NO difiere de forma significativa. Lo significativo es el costo: 13× de retrabajo, porque el error temprano se detecta tarde. Lo de requisitos se confirma | «We found no significant difference in the rate of occurrence» |
+| 5 | Revisión KBE: los problemas de 2012 siguen; lo ad hoc trae costo de mantenimiento | https://www.sciencedirect.com/science/article/abs/pii/S1474034623000204 | sí (resumen e intro) | **Confirmada** la primera parte. **Parcial** lo del mantenimiento: es una crítica de ~2000 que cita la introducción, no un hallazgo de la revisión, que además aclara que no evalúa el impacto práctico | «short-term benefits in using KBE, but also generates longer-term problems» |
+| 6 | ArtiCAD: definir los puntos de unión en el diseño; si no, el LLM falla | https://arxiv.org/html/2604.10992v1 | sí | **Confirmada**, con ablación: sin ese paso el éxito baja de 100 % a 89,2 % y «Motion» de 3,82 a 3,16. Ojo: el informe la tenía como «solo búsqueda» | «the system faces a massive search space and often fails» |
+| 7 | METR 2026: −18 % y −4 %, intervalos que cruzan cero, datos poco confiables | https://metr.org/blog/2026-02-24-uplift-update/ | sí | **Parcial.** Las cifras están, pero METR dice que el sesgo va **hacia abajo**: la aceleración real sería mayor. El informe usa el dato solo como alerta | «our estimate reported above is a lower-bound on the true productivity effects» |
+| 8 | «Más del 75 % del diseño es reuso» | ScienceDirect S1474034608000293 (informe); hallada en S0010448507001807 | no (tope) | **Parcial / sin verificar.** Es una estimación de segunda mano, sobre reuso de *conocimiento* (diseño por casos), no de *piezas* | «conservatively estimated that more than 75% of engineering design activity comprises case-based design» |
+
+## Evidencia en contra
+
+- **La IA sola no siempre falla tanto.** En la propia tabla 1 de ArtiCAD, Claude-Opus-4.6 en un solo ciclo (sin división en agentes) compila el 100 % y saca Geo 3,13 / Motion 3,66, contra 3,41 / 3,82 de ArtiCAD: mejora real pero chica, medida por jueces VLM. El 0,8 % de Claude en AssemCAD es un caso extremo: GPT da 67 % en el mismo banco, armado por los mismos autores. Que la IA no sepa armar mecanismos depende mucho de cómo se mida.
+- **El reuso de casos aportó poco a la calidad.** En la ablación de ArtiCAD, quitar el almacén de experiencias deja la calidad casi igual (3,37 contra 3,41) y solo sube las iteraciones (4,4 contra 3,1). El reuso ahorra vueltas; no está probado que mejore el diseño.
+- **Automatizar dispositivos con reglas y bibliotecas tiene 40 años de baja adopción.** El CAFD (diseño de utillajes asistido) existe desde 1983 con bases de componentes, reglas y razonamiento por casos. Aun así, SME (Rong et al., 2010, abierta) dice que su aplicación industrial es «very limited». También dice que los requisitos operativos (facilidad de uso, a prueba de error, tiempo de sujeción) son «difficult to model». Esos son justo los que le fallaron al sistema. Una revisión de 2014 (Hashemi, solo búsqueda) marca la adaptación de casos como un «bottleneck» y dice que se probó con piezas simplificadas.
+- **Poca ganancia en lo hecho a medida.** Un paper de ICED'09 (Reed, solo búsqueda) dice que los sistemas KBE dan «little benefit» en productos a medida y de bajo volumen. Eso es una planta que hace un dispositivo distinto cada vez: la biblioteca puede cubrir una parte chica de cada dispositivo nuevo.
+- **ICED17 apoya más la verificación temprana que la aprobación previa.** Los autores atribuyen el costo a no poder saber si una decisión temprana es correcta hasta las pruebas. Eso apoya probar pronto el mecanismo (prototipo crudo, chequeo cinemático) más que aprobar una especificación en papel.
+- **Humano en el lazo.** Sele y Chugunova (2024, confirmado por búsqueda) usaron una tarea de pronosticar percentiles de estudiantes, no de ingeniería: trasladarlo al diseño es una suposición.
+- **PowerCopy por macro tiene límites declarados.** Según IBM APAR HD70594 (solo búsqueda), al instanciar por macro no se puede re-rutear y se pierden colores y atributos de cara: lo da como «PERMANENT RESTRICTION».
+- **Buscado sin resultado:** un estudio que compare de cero contra plantilla con un LLM en CAD mecánico, y post-mortems de uso de LLM-CAD en plantas. Tampoco lo había encontrado el informe.
+
+## Lo que le falta al informe
+
+1. **Licencia:** instanciar PowerCopy/UDF por API pediría la licencia KT1 / Product Knowledge Template (respuesta de foro y APAR de IBM, solo búsqueda). Hay que confirmar que la casa la tenga antes de «probar en una tarde».
+2. **La literatura específica de utillajes** (CAFD, SME 2010; Hashemi 2014). También el caso Johansson 2017, automatización del diseño de utillajes automotrices (Proc. CIRP), que aparece en las referencias de Kügler y nadie revisó.
+3. **Un dato propio de repetición:** de los últimos N dispositivos, qué porcentaje de piezas se repitió. Sin eso, «biblioteca primero» es una suposición. MDPI solo proyecta beneficio entre 10 y 150 configuraciones por año.
+4. **Lo propio de imprimir en FDM** (holguras, orientación, puentes): AssemCAD aclara que su «production-ready» excluye manufactura y tolerancias.
+5. **El otro remedio que sugiere ICED17:** acortar el tiempo hasta detectar el error temprano (probar el mecanismo impreso en crudo), no solo aprobar antes.
+
+## Confianza del informe (alta/media/baja) y por qué, en 2 frases
+
+**Media.** Las fuentes existen y las cifras están, pero el informe las estira: atribuye a la biblioteca el salto de AssemCAD sin ablación, usa el 59 % de ICED17 cuando el propio paper dice que esa diferencia no es significativa, y omite el contraejemplo de ArtiCAD y la baja adopción del CAFD. «Especificación primero + poscondiciones» queda bien apoyado; «la biblioteca de componentes como primer cambio» queda débil hasta medir cuánto se repite de verdad.
