@@ -481,3 +481,8 @@ con su caso malo antes de creerle.
   En DOS pasos (las 4 verticales; después una horizontal con propagación por tangencia, `1`) da 8 esferas (26 caras) y
   el volumen EXACTO de Steiner (1 129 194,67 = build123d = cuenta). En un molde o una pieza blanda: dos pasos, y se
   controla contando las caras esféricas del STEP.
+- **La cáscara (`AddNewShell`) falla si la cara que se saca está rodeada de REDONDEOS tangentes** (ej81, 19/10): con las
+  12 aristas redondeadas (en uno o dos pasos), «The method Update failed» con cualquier espesor (2, 1, 0,5), tomando la
+  cara del cuerpo o de la extrusión y con cualquier objeto de trabajo. Con solo las 4 verticales redondeadas (los bordes
+  de la cara de arriba vivos) anda y da EXACTO: 112 457,6 mm³ = 250×80 con R15 menos 246×76 con R13, por 60 y 58. Orden:
+  primero la cáscara, después redondear los bordes de la boca.
