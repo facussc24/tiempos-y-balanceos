@@ -7,7 +7,7 @@ Fecha: 20-21/10/2026 · Para leer el viernes 23/10
 - Lo que es mío va marcado «(opinión)».
 - Cuando la verificación corrigió un dato, uso la versión corregida.
 - En el cuerpo, cada afirmación lleva entre corchetes el número de su fuente en «Fuentes», al final.
-- Cinco fuentes no tienen link en el material y van marcadas «(sin link)».
+- Diez fuentes no tienen link en el material y van marcadas «(sin link)»; otras cuatro lo tienen incompleto, y así figura en «Fuentes».
 - Las afirmaciones que no tienen fuente en la lista van marcadas «(sin fuente)».
 
 **Anexos.** El material de respaldo está en `docs/investigacion-3d-2026-10-23/`, con su README: la crítica interna, los informes por frente con su verificación y las refutaciones. En el cuerpo:
@@ -50,7 +50,7 @@ Las 5 cosas que cambiaría primero (§10), en lugar de sumar más texto (opinió
 2. biblioteca de constructores de la casa, más catálogo con procedencia;
 3. las marcas que más importan, convertidas en código;
 4. herramientas rápidas y edición incremental;
-5. dieta de la skill y lazo de aprendizaje medido.
+5. dieta de la skill y lazo de aprendizaje medido. (Tras la segunda ronda, el #1 y el #5 suman el cierre con la pieza impresa probada en el puesto: §12.4.)
 
 **Huecos de la primera ronda** (diseño generativo, DFM/DFA y los copilotos de SolidWorks, Onshape, Creo y NX): se cubrieron en una segunda ronda, en el §12.
 
@@ -278,7 +278,7 @@ Clases: **(a)** la regla existía y nada la disparó; **(b)** la regla no exist�
 - el Assistant de Inventor no crea features (sin fuente);
 - de SOLIDWORKS no vino nada.
 
-El diseño generativo y el DFM/DFA no se investigaron.
+El diseño generativo y el DFM/DFA no se investigaron en la primera ronda. Los cuatro huecos se cubrieron en la segunda (§12), donde además se confirma el dato de Onshape [138].
 
 ## 5. Tus ideas, una por una
 
@@ -490,7 +490,7 @@ Lo que cambiaría del dibujo:
 
 ## 10. Las 5 cosas que cambiaría primero
 
-Todo esto queda propuesto, no aplicado: no toqué la skill.
+Todo esto queda propuesto, no aplicado: no toqué la skill. Tras la segunda ronda, el #1 y el #5 suman el cierre en planta: la pieza impresa se prueba en el puesto antes de darla por buena (§12.4).
 
 **1. Fases con contrato y criterio de salida verificable, con la seguridad dentro del mecanismo (opinión).**
 - **Qué:** contrato YAML firmado (§8, fase 0); fases livianas con vuelta atrás; sin barrido verde no se toca la forma; revisor de fase con checklist de sí/no.
@@ -542,7 +542,7 @@ Todo esto queda propuesto, no aplicado: no toqué la skill.
 
 - ¿Querés que la IA diseñe el dispositivo entero, o que configure, verifique y documente mientras vos decidís el concepto? La evidencia de afuera respalda lo segundo.
 - De tus últimos N dispositivos, ¿qué porcentaje de piezas se repitió? Sin ese dato, «biblioteca primero» es una suposición.
-- ¿Qué versión de V5 y qué licencias tiene tu PC: KWA, KT1/PKT, KIN, DMU Space Analysis?
+- ¿Qué versión de V5 y qué licencias tiene tu PC: KWA, KWE, KT1/PKT, KIN, DMU Space Analysis?
 - ¿Necesitás CATIA para *diseñar*, o solo para medir y entregar? El §3 de la skill describe build123d y gmsh, no CATIA, y CATIA no traga mallas (anexo 00).
 - ¿Cuántas horas y cuántas vueltas lleva hoy un dispositivo? Sin esa línea base, ninguna mejora se puede demostrar.
 - ¿Qué cargas sostenidas, ciclos y temperaturas tiene cada puesto (hot melt, sol)? Con PLA y PETG en la A2L, eso decide dónde va metal.
@@ -556,7 +556,7 @@ Todo esto queda propuesto, no aplicado: no toqué la skill.
 
 ## 12. Los huecos, cubiertos en una segunda ronda
 
-Los cuatro huecos se investigaron con el mismo método que el resto del informe: un informe por frente y una verificación que abrió las fuentes y buscó evidencia en contra (anexos f11 a f14). Las cuatro verificaciones le dan confianza «media» a su informe. Donde una verificación corrigió algo, va la versión corregida.
+Los cuatro huecos se investigaron con el mismo método que el resto del informe: un informe por frente y una verificación que abrió las fuentes y buscó evidencia en contra (anexos f11 a f14). Las cuatro verificaciones le dan confianza «media» a su informe. Donde una verificación corrigió algo, va la versión corregida. Los «P» remiten a las propuestas de `docs/PROPUESTAS_SKILL_3D_2026-10-23.md`.
 
 ### 12.1 Diseño generativo y optimización topológica (anexo f11)
 

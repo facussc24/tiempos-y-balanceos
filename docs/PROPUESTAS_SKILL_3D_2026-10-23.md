@@ -13,7 +13,7 @@ No se aplicó nada: la skill, la memoria y los pendientes quedan como estaban. T
 **Cómo están ordenadas.** El orden es por impacto: cuántas causas de raíz toca cada propuesta y cuántas otras destraba.
 - P1 a P4 cambian *cuándo* se dispara el control, que es el patrón de raíz.
 - P5 a P11 atacan una causa concreta del 20/10 o el lazo de aprendizaje.
-- P12 a P14 son controles puntuales.
+- P12 a P14 son controles puntuales. P15, de la segunda ronda, está en el «Agregado» del final, que además modifica P1, P2, P4, P5, P6, P12 y «Lo que NO propongo»: donde choque con el cuerpo, vale el agregado.
 
 Las 5 del informe (§10) son paraguas; acá están partidas en piezas que se pueden decidir por separado. **★ marca la pieza central de cada una de las 5.** Las demás dicen de cuál salen.
 
@@ -582,7 +582,7 @@ El tamaño sigue la tabla «El tamaño del cambio decide el camino» de `.claude
 1. **P11 primero:** es la base contra la que se prueba todo lo demás y no depende de nada. Hay que decidir cuántos casos se suman al virolador.
 2. **Las cinco decisiones de P10, empezando por «con qué se diseña»** (de eso dependen P2 y P9).
    - También tres o cuatro apoyos, porque la revisión de G-E5 a G-E7 y del GATE A vence el 24/10, al día siguiente.
-   - Junto con esto, revisar la versión de V5 y la licencia DMU para P3.
+   - Junto con esto, revisar la versión de V5, la licencia DMU para P3 y la KWE (Knowledge Expert, candidata para P6 en CATIA).
 3. **P1, P3 y P4 juntas:** cuántas fases hay, qué cierres firmás vos, qué campos lleva el contrato y si CATIA es segundo juez del barrido.
 4. **P2, P5 y P6:**
    - si se arma el módulo de constructores en los dos entornos, y con qué dato de repetición;
@@ -591,11 +591,11 @@ El tamaño sigue la tabla «El tamaño del cambio decide el camino» de `.claude
 5. **El resto, después de lo anterior:**
    - P7 y P8: quién anota las marcas, cuál es el archivo de «por qué» y cómo se calibra el revisor;
    - P9: la receta de `catia.md`;
-   - P12 a P14: aviso o freno.
+   - P12 a P14: aviso o freno; P15: qué cuenta como prueba en planta (pieza real o sustituta, cuántos ciclos) y quién la carga.
 
 ## Agregado tras la segunda ronda (informe §12)
 
-**Fila nueva para la tabla:**
+Los números entre corchetes de este agregado remiten a «Fuentes» del informe. **Fila nueva para la tabla:**
 
 | P | Qué | Causas que ataca | De las 5 | Tamaño |
 |---|---|---|---|---|
