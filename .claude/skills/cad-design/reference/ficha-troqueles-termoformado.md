@@ -144,10 +144,10 @@
 | Regla | Numero | Fuente | Estado | Contexto / aviso |
 |---|---|---|---|---|
 | Macho / hembra (Formlabs, blog de prototipado) | Macho 4-5°; hembra 1,5-3° | https://formlabs.com/blog/prototyping-vacuum-forming/ — "For male molds, 4-5 degrees of draft is recommended" | ABIERTA · VERIFICADA 20/10 (macho 4-5°, hembra 1,5-3°, textual) | Fabricante de impresoras 3D (resina) |
-| Texturas | Una superficie texturada aumenta el desmoldeo necesario | misma pagina | ABIERTA | Sin numero |
-| Macho / hembra (Stratasys, guia FDM) | Macho 3-4°; hembra 2-3° | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ — Tabla 1 | ABIERTA | Fabricante de impresoras FDM. Valores de referencia |
+| Texturas | Una superficie texturada aumenta el desmoldeo necesario | misma pagina | ABIERTA · VERIFICADA 20/10 (textual) | Sin numero |
+| Macho / hembra (Stratasys, guia FDM) | Macho 3-4°; hembra 2-3° | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ — Tabla 1 | ABIERTA · VERIFICADA 20/10 (textual) | Fabricante de impresoras FDM. Valores de referencia |
 | Minimo con moldes impresos en resina (Formlabs, guia de termoformado) | 2-3° minimo; casos reales: 3° general (IPC), ≥ 2° (Glassboard), 3° (Formech) | https://formlabs.com/eu/blog/thermoforming-with-3d-printed-molds-formech | ABIERTA · VERIFICADA 20/10 (textual) | Casos reales de laminas de 1,5-3 mm |
-| Rango general de moldes de envases | 1°-5°; embuticion profunda, texturas o material de mucha contraccion: 3°-5°; PET reciclado: minimo 2° | https://gabler-thermoform.com/what-draft-angles-radii-and-wall-ratios-does-thermoforming-require/ | ABIERTA | Fabricante de maquinas |
+| Rango general de moldes de envases | 1°-5°; embuticion profunda, texturas o material de mucha contraccion: 3°-5°; PET reciclado: minimo 2° | https://gabler-thermoform.com/what-draft-angles-radii-and-wall-ratios-does-thermoforming-require/ | ABIERTA · VERIFICADA 20/10 (textual) | Fabricante de maquinas |
 | Minimo general | 1°-3°; "5° o mas ayuda mucho al desmoldeo" | https://www.digitalengineering247.com/download/3d-printed-vacuum-form-molds | ABIERTA | Nota tecnica de un proveedor de impresion 3D |
 | Desmoldeo 5-7° en moldes conicos | 5-7° | Folleto de Eastman (PDF no leido en el navegador) | SECUNDARIA | Fabricante de lamina de copoliester |
 | Desmoldeo para piel de vinilo con espuma | — | No se encontro | SIN FUENTE | |
@@ -160,7 +160,7 @@
 | Diametros usados en casos reales | 0,5 mm minimo imprimible en Grey Resin; IPC 1 mm (1,2 mm en la V2, especificacion 0,8-1,2 mm); Glassboard 1,5 mm; Formech 1 mm. Con Rigid 10K / Fast Model hay que perforar los menores de 1 mm | https://formlabs.com/eu/blog/thermoforming-with-3d-printed-molds-formech | ABIERTA · VERIFICADA 20/10 (textual) | Laminas de 1,5-3 mm |
 | Pared minima del molde impreso | 1-2 mm | misma pagina | ABIERTA | |
 | Un caso con PETG | Agujeros de 1 mm donde queda aire atrapado | https://fabacademy.org/2025/labs/leon/students/david-fernandez/assignments/week17.html | ABIERTA | Trabajo de un estudiante (Fab Academy), Mayku FormBox | **VERIFICADA 20/10 (textual).**
-| Moldes FDM con relleno ralo | La porosidad del relleno evita los canales; brecha de trama maxima 0,003" (0,076 mm) | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ | ABIERTA | Fabricante FDM; con PC / ULTEM 9085 |
+| Moldes FDM con relleno ralo | La porosidad del relleno evita los canales; brecha de trama maxima 0,003" (0,076 mm) | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ | ABIERTA · VERIFICADA 20/10 (textual) | Fabricante FDM; con PC / ULTEM 9085 |
 | Donde ponerlos | En bolsillos internos y rincones donde se atrapa aire; "agujeros para ayudar al vacio a tirar la lamina alrededor de detalles" | https://formlabs.com/blog/prototyping-vacuum-forming/ y https://www.bu.edu/epic/equipment/thermoforming | VERIFICADA 20/10 en Formlabs («vent holes» en bolsillos internos) · ABIERTA | Sin separacion numerica |
 | Separacion entre agujeros | — | No se encontro | SIN FUENTE | |
 | Agujero de vacio y marca en el lado vista del vinilo | — | No se encontro | SIN FUENTE | |
@@ -169,24 +169,24 @@
 
 | Regla | Numero | Fuente | Estado | Contexto / aviso |
 |---|---|---|---|---|
-| Causa | Varios machos cercanos entre si; el webbing aparece cuando no se controla el flujo de la lamina caliente | https://soa.syr.edu/resources/technology/digital-fabrication/vacuum-forming.php y https://es.formech.com/blog/formech-technical-newsletter-webbing | ABIERTA | Universidad / Formech. La pagina de Formech tiene las soluciones como imagen: no se pudieron leer |
-| Remedio basico | Separar los machos, o usar hembras (negativos): reduce o elimina el webbing | https://soa.syr.edu/resources/technology/digital-fabrication/vacuum-forming.php | ABIERTA | Sin distancia |
+| Causa | Varios machos cercanos entre si; el webbing aparece cuando no se controla el flujo de la lamina caliente | https://soa.syr.edu/resources/technology/digital-fabrication/vacuum-forming.php y https://es.formech.com/blog/formech-technical-newsletter-webbing | ABIERTA · VERIFICADA 20/10 solo la parte de soa.syr.edu (machos cercanos) | Universidad / Formech. La pagina de Formech tiene las soluciones como imagen: no se pudieron leer |
+| Remedio basico | Separar los machos, o usar hembras (negativos): reduce o elimina el webbing | https://soa.syr.edu/resources/technology/digital-fabrication/vacuum-forming.php | ABIERTA · VERIFICADA 20/10 (textual) | Sin distancia |
 | Distancia al borde de la abertura | 0,3-1,0 × la altura del molde (ej.: molde de 50 mm -> 25 mm con 0,5 ×) | https://es.formech.com/blog/formech-technical-newsletter-tooling-materials-8 | ABIERTA | Fabricante de maquinas; para un solo bloque de altura uniforme. **No es separacion entre machos** | **20/10: NO verificable en la página web (las medidas están en una imagen y en el PDF del boletín); el PDF no se abre de noche.**
 | Lamina demasiado grande | Genera webbing y dificulta el desmoldeo | misma pagina | ABIERTA | |
 | Separacion entre machos | 1 pulgada de separacion por cada pulgada de profundidad de cavidad (1:1) | Folleto de Eastman (PDF no leido) | SECUNDARIA | Fabricante de copoliester, para bandejas. Es la unica regla numerica de separacion entre machos que salio |
 | Remedios de Formech (boletin 2) | Molde demasiado alto respecto de su base: agregar un faldon a 45°; bloques en angulo en las esquinas; alambres u hojas de acero en el marco de sujecion; marco en el tapon de ayuda; aplicar el vacio gradual; hembra en lugar de macho | https://digilab.uma.es/pdf/formech_PDF/Technical-Newsletter-2-Webbings.pdf | SECUNDARIA | Resumen del buscador; el PDF no se abrio (ver seccion E) |
 | Tapon de ayuda | ~80 % del tamaño de la cavidad; desciende 70-75 % de la profundidad | Boletin de Formech sobre tapon de ayuda (resumen del buscador) | SECUNDARIA | |
-| Aristas vivas del molde | Romper con chaflanes o radios para reducir el rasgado y el webbing | https://formlabs.com/blog/prototyping-vacuum-forming/ | ABIERTA | Sin dimension |
+| Aristas vivas del molde | Romper con chaflanes o radios para reducir el rasgado y el webbing | https://formlabs.com/blog/prototyping-vacuum-forming/ | ABIERTA · VERIFICADA 20/10 (textual) | Sin dimension |
 | Mas desmoldeo ayuda | En embuticiones profundas con paredes verticales | https://www.digitalengineering247.com/download/3d-printed-vacuum-form-molds | ABIERTA | |
 | Exceso de calor y tiempo | Un caso con PETG tuvo webbing en la base en los 2 primeros ciclos; se corrigio calentando solo hasta que la lamina "empezo a combarse" | https://fabacademy.org/2025/labs/leon/students/david-fernandez/assignments/week17.html | ABIERTA | Estudiante, una sola prueba | **VERIFICADA 20/10 (textual).**
-| Hembra: profundidad del agujero | Menor al 75 % del ancho | https://soa.syr.edu/resources/technology/digital-fabrication/vacuum-forming.php | ABIERTA | Regla de taller de universidad |
+| Hembra: profundidad del agujero | Menor al 75 % del ancho | https://soa.syr.edu/resources/technology/digital-fabrication/vacuum-forming.php | ABIERTA · VERIFICADA 20/10 (textual) | Regla de taller de universidad |
 
 ### B4. Radios minimos
 
 | Regla | Numero | Fuente | Estado | Contexto / aviso |
 |---|---|---|---|---|
-| Radio minimo de herramienta (Stratasys) | 0,050" (1,27 mm) o el espesor de la lamina | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ — Tabla 1 | ABIERTA | |
-| Radio interior (Gabler) | Minimo 0,5 mm en lamina fina; mejor 1-3 mm; radios exteriores ≥ el espesor de la lamina; borde de brida redondeado al menos el espesor | https://gabler-thermoform.com/what-draft-angles-radii-and-wall-ratios-does-thermoforming-require/ | ABIERTA | Fabricante de maquinas |
+| Radio minimo de herramienta (Stratasys) | 0,050" (1,27 mm) o el espesor de la lamina | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ — Tabla 1 | ABIERTA · VERIFICADA 20/10 (textual) | |
+| Radio interior (Gabler) | Minimo 0,5 mm en lamina fina; mejor 1-3 mm; radios exteriores ≥ el espesor de la lamina; borde de brida redondeado al menos el espesor | https://gabler-thermoform.com/what-draft-angles-radii-and-wall-ratios-does-thermoforming-require/ | ABIERTA · VERIFICADA 20/10 (textual) | Fabricante de maquinas |
 | Radio minimo (Digital Engineering) | "Mayor que el espesor del material" | https://www.digitalengineering247.com/download/3d-printed-vacuum-form-molds | ABIERTA | Sin valor |
 | Radio minimo de contorno | 5/64" (1,98 mm) | Folleto de Eastman | SECUNDARIA | |
 
@@ -194,10 +194,10 @@
 
 | Regla | Numero | Fuente | Estado | Contexto / aviso |
 |---|---|---|---|---|
-| Relacion maxima de embuticion | 3:1 como maximo en la mayoria de las operaciones al vacio | https://formlabs.com/blog/prototyping-vacuum-forming/ — "A 3:1 draw ratio is generally considered to be the maximum" | ABIERTA | |
-| Espesor de lamina de partida | Relacion de embuticion × espesor deseado de la pieza = espesor minimo de lamina | misma pagina | ABIERTA | |
-| Relacion de embuticion areal (Stratasys) | 3:1 como maximo | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ | ABIERTA | |
-| Relacion de espesor de pared | Objetivo 3:1 a 4:1 (la pared mas fina es un tercio de la lamina); revisar si se acerca o pasa 4:1 | https://gabler-thermoform.com/what-draft-angles-radii-and-wall-ratios-does-thermoforming-require/ | ABIERTA | |
+| Relacion maxima de embuticion | 3:1 como maximo en la mayoria de las operaciones al vacio | https://formlabs.com/blog/prototyping-vacuum-forming/ — "A 3:1 draw ratio is generally considered to be the maximum" | ABIERTA · VERIFICADA 20/10 (textual) | |
+| Espesor de lamina de partida | Relacion de embuticion × espesor deseado de la pieza = espesor minimo de lamina | misma pagina | ABIERTA · VERIFICADA 20/10 (textual) | |
+| Relacion de embuticion areal (Stratasys) | 3:1 como maximo | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ | ABIERTA · VERIFICADA 20/10 (textual) | |
+| Relacion de espesor de pared | Objetivo 3:1 a 4:1 (la pared mas fina es un tercio de la lamina); revisar si se acerca o pasa 4:1 | https://gabler-thermoform.com/what-draft-angles-radii-and-wall-ratios-does-thermoforming-require/ | ABIERTA · VERIFICADA 20/10 (textual) | |
 | Adelgazamiento en las paredes casi verticales de un bloque | Alrededor del 50 % | https://es.formech.com/blog/formech-technical-newsletter-tooling-materials-8 | ABIERTA | Con una cuadricula impresa de 10 mm en la lamina se ve donde estira mas |
 | Contraccion de la pieza | 0,4 %-0,8 % segun plastico y espesor | https://www.digitalengineering247.com/download/3d-printed-vacuum-form-molds | ABIERTA | |
 | Estirado maximo / relacion para vinilo + espuma | — | No se encontro | SIN FUENTE | |
@@ -208,13 +208,13 @@
 | Regla | Numero | Fuente | Estado | Contexto / aviso |
 |---|---|---|---|---|
 | PLA vs PETG | PETG recomendado como material del patron impreso; "PLA se ablanda y se deforma con el uso" | https://www.bu.edu/epic/equipment/thermoforming | ABIERTA · VERIFICADA 20/10 (textual) | Universidad (laboratorio) |
-| Temperatura de la lamina en ese laboratorio | ABS 260-280 °F (≈ 127-138 °C); PETG y HIPS 260-270 °F (≈ 127-132 °C) | misma pagina | ABIERTA | Conversion mia |
+| Temperatura de la lamina en ese laboratorio | ABS 260-280 °F (≈ 127-138 °C); PETG y HIPS 260-270 °F (≈ 127-132 °C). La pagina las llama "GTT" (temperatura de transicion vitrea) y pide medir la lamina con termometro infrarrojo antes de formar | misma pagina | ABIERTA · VERIFICADA 20/10 (textual; la pagina las rotula "GTT") | Conversion mia |
 | HDT del PLA Basic de Bambu | 57 °C a 0,45 MPa; 54 °C a 1,8 MPa | https://wiki.bambulab.com/filament-acc/abs-asa-pc/bambu_pla_basic_technical_data_sheet.pdf | SECUNDARIA | Ficha tecnica en PDF, solo el resumen del buscador |
 | HDT del PETG (impresion 3D) | — | No se pudo abrir ninguna ficha | SIN FUENTE | Las paginas de Bambu devolvieron error 402/403 |
-| Temperatura del molde en casos reales | ~60 °C despues de 5 y de 10 piezas, igual para las tres laminas del ensayo de Formlabs (PETG 0,5 mm a 110 °C, PP 1,0 mm a 130 °C, PE 2,0 mm a 110 °C), con moldes de resina; molde de IPC estable a 75 °C con canales de enfriamiento con agua a 20 °C | https://formlabs.com/global/blog/thermoforming-with-3d-printed-molds-ipc-technical-study/ | ABIERTA | Moldes de resina, no de FDM |
-| Resinas de alta temperatura | Rigid 10K: HDT 218 °C; High Temp Resin: HDT 238 °C (a 0,45 MPa) | misma pagina y https://formlabs.com/blog/prototyping-vacuum-forming/ | ABIERTA | Fabricante |
-| Enfriamiento entre piezas | 8-10 min para moldes en Grey/Fast Model; 2-3 min en Rigid 10K | https://formlabs.com/global/blog/thermoforming-with-3d-printed-molds-ipc-technical-study/ | ABIERTA | |
-| Moldes FDM de PC / ULTEM 9085 | PC: lamina de ABS a 182 °C, el molde se mantiene bajo 104 °C; no recomendado arriba de 182 °C. ASA: no recomendado. ULTEM 9085 con Kydex a 204 °C, molde a 127 °C | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ | ABIERTA | No son PLA ni PETG |
+| Temperatura del molde en casos reales | ~60 °C despues de 5 y de 10 piezas, igual para las tres laminas del ensayo de Formlabs (PETG 0,5 mm a 110 °C, PP 1,0 mm a 130 °C, PE 2,0 mm a 110 °C), con moldes de resina; molde de IPC estable a 75 °C con canales de enfriamiento con agua a 20 °C | https://formlabs.com/global/blog/thermoforming-with-3d-printed-molds-ipc-technical-study/ | ABIERTA · VERIFICADA 20/10 (textual) | Moldes de resina, no de FDM |
+| Resinas de alta temperatura | Rigid 10K: HDT 218 °C a 0,45 MPa (estudio IPC); High Temp Resin: HDT 238 °C (blog de prototipado, sin presion) | misma pagina y https://formlabs.com/blog/prototyping-vacuum-forming/ | ABIERTA · VERIFICADA 20/10 (corregida) | Fabricante |
+| Enfriamiento entre piezas | 8-10 min para moldes en Grey/Fast Model; "podria bajar a 2-3 min" con un material como Rigid 10K (estimacion de Glassboard, no medida) | https://formlabs.com/global/blog/thermoforming-with-3d-printed-molds-ipc-technical-study/ | ABIERTA · VERIFICADA 20/10 (corregida) | |
+| Moldes FDM de PC / ULTEM 9085 | PC: lamina de ABS a 182 °C, el molde se mantiene bajo 104 °C; no recomendado arriba de 182 °C. ASA: no recomendado. ULTEM 9085 con Kydex a 204 °C, molde a 127 °C | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ | ABIERTA · VERIFICADA 20/10 (textual) | No son PLA ni PETG |
 | Perimetros / relleno del molde de PETG | 3 perimetros para rigidez (un caso); relleno ≥ 30 % | https://fabacademy.org/2025/labs/leon/students/david-fernandez/assignments/week17.html (perimetros); relleno ≥ 30 %: guia de Mayku | ABIERTA (perimetros) / SECUNDARIA (relleno) | La pagina de Mayku dio 404 |
 | Molde de MDF | Nada especifico encontrado. Madera en general: "cientos a miles de ciclos"; no usar carton ni espuma azul o rosa (el vacio los deforma) | https://formlabs.com/blog/introduction-to-vacuum-forming/ y https://soa.syr.edu/resources/technology/digital-fabrication/vacuum-forming.php | ABIERTA | Datos genericos de madera, no MDF |
 | MDF: piezas y temperatura maximas | — | No se encontro | SIN FUENTE | |
@@ -223,12 +223,12 @@
 
 | Regla | Numero | Fuente | Estado | Contexto / aviso |
 |---|---|---|---|---|
-| Moldes impresos en general | "Docenas y docenas" de piezas con buen cuidado | https://formlabs.com/blog/prototyping-vacuum-forming/ | ABIERTA | Fabricante |
-| Resina Rigid 10K | IPC: 20 piezas sin degradacion, esperaban unas 50; Formech: 50 piezas por herramienta | https://formlabs.com/global/blog/thermoforming-with-3d-printed-molds-ipc-technical-study/ | ABIERTA | Laminas de 1,5-3 mm de PS / ABS / HIPS |
-| Moldes en resina, otros | PETG de 0,5 mm: la calidad bajo despues de ~10 ciclos; PP y PE de 15-20+ ciclos sin llegar a falla | misma pagina | ABIERTA | |
-| Molde sin enfriamiento | El primer molde de IPC se rompio y quedo pegado a la pieza despues de 2 ciclos | misma pagina | ABIERTA | |
-| Molde FDM de PC | 223 piezas de ABS de 3 mm hasta que la deriva pasa 0,254 mm; reemplazar a las ~285 | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ | ABIERTA | Ciclo de 2 min 30 s |
-| Molde FDM de ULTEM 9085 | 23 piezas de Kydex de 4,78 mm, deriva de ±0,0254 mm tras el primer corrimiento | misma pagina | ABIERTA | |
+| Moldes impresos en general | "Docenas y docenas" de piezas con buen cuidado | https://formlabs.com/blog/prototyping-vacuum-forming/ | ABIERTA · VERIFICADA 20/10 (textual) | Fabricante |
+| Resina Rigid 10K | IPC: 20 piezas sin degradacion, esperaban unas 50; Formech: 50 piezas por herramienta | https://formlabs.com/global/blog/thermoforming-with-3d-printed-molds-ipc-technical-study/ | ABIERTA · VERIFICADA 20/10 (textual) | Laminas de 1,5-3 mm de PS / ABS / HIPS |
+| Moldes en resina, otros | PETG de 0,5 mm: la calidad bajo despues de ~10 ciclos; PP y PE de 15-20+ ciclos sin llegar a falla | misma pagina | ABIERTA · VERIFICADA 20/10 (textual) | |
+| Molde sin enfriamiento | El primer molde de IPC se rompio y quedo pegado a la pieza despues de 2 ciclos | misma pagina | ABIERTA · VERIFICADA 20/10 (textual) | |
+| Molde FDM de PC | 223 piezas de ABS de 3 mm hasta que la deriva pasa 0,254 mm; a los 285 ciclos la deformacion llego a ~0,508 mm; la guia dice reemplazar el molde cuando aparece degradacion visible | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ | ABIERTA · VERIFICADA 20/10 (corregida) | Ciclo de 2 min 30 s |
+| Molde FDM de ULTEM 9085 | 23 piezas de Kydex de 4,78 mm, deriva de ±0,0254 mm tras el primer corrimiento | misma pagina | ABIERTA · VERIFICADA 20/10 (textual) | |
 | Molde FDM de PLA o PETG impreso en una impresora de escritorio | — | No se encontro | SIN FUENTE | Hay que ensayarlo |
 | Molde de MDF | — | No se encontro | SIN FUENTE | |
 
@@ -236,10 +236,10 @@
 
 | Regla | Numero | Fuente | Estado | Contexto / aviso |
 |---|---|---|---|---|
-| Moldes de resina | "Muy buena rugosidad"; la PS formada salio lisa sin marcas; ~20 minutos de lijado para terminar el molde en Fast Model Resin | https://formlabs.com/global/blog/thermoforming-with-3d-printed-molds-ipc-technical-study/ | ABIERTA | Fabricante. Laminas rigidas de 1,5-3 mm |
+| Moldes de resina | "Muy buena rugosidad"; la PS formada salio lisa sin marcas; ~20 minutos de lijado para terminar el molde en Fast Model Resin | https://formlabs.com/global/blog/thermoforming-with-3d-printed-molds-ipc-technical-study/ | ABIERTA · VERIFICADA 20/10 parcial (rugosidad y 20 min de lijado; "PS lisa sin marcas" no se confirmo) | Fabricante. Laminas rigidas de 1,5-3 mm |
 | Molde FDM de PETG lijado | "Tuve que lijar la superficie del molde impreso" | https://fabacademy.org/2025/labs/leon/students/david-fernandez/assignments/week17.html | ABIERTA | Estudiante |
 | PolyJet | Superficies muy lisas con poco o nada de posproceso | https://www.digitalengineering247.com/download/3d-printed-vacuum-form-molds | ABIERTA | No dice si el acabado se copia a la pieza |
-| Textura | Aumenta el desmoldeo necesario | https://formlabs.com/blog/prototyping-vacuum-forming/ | ABIERTA | |
+| Textura | Aumenta el desmoldeo necesario | https://formlabs.com/blog/prototyping-vacuum-forming/ | ABIERTA · VERIFICADA 20/10 (textual) | |
 | Las lineas de capa del FDM se copian a la lamina; tapar con relleno o imprimacion | Cualitativo | Resumen del buscador (foros y un articulo de moldes de silicona) | SECUNDARIA | No se probo en moldes de vacio |
 | Cuanto se copia la rugosidad del molde en el lado vista del vinilo o en el grano | — | No se encontro | SIN FUENTE | |
 
