@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * _pendriveAsistente.mjs — arma en un pendrive "mi asistente completo" para otra PC de Fak (CATA, la notebook): el instalador,
  * la memoria, las skills, reglas, agentes, comandos, hooks, planes, el settings y las claves.
