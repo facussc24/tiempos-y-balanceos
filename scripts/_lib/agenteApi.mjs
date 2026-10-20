@@ -509,7 +509,12 @@ function marcarCache(mensajes) {
 async function ejecutarHerramienta(uso, paso, k, ctx) {
   const t0 = ctx.ahora();
   const reg = { k, herramienta: uso.name, entrada: tapar(JSON.stringify(uso.input ?? {})).slice(0, 600), veredicto: 'permitido' };
-  const fin = (contenido, esError) => ({ contenido, esError, registro: { ...reg, duracionMs: ctx.ahora() - t0 } });
+  // Un error sin salida (un comando que sale con codigo != 0 y no imprime nada) iba con content vacio y la API corta la
+  // corrida: «content cannot be empty if `is_error` is true» (verificador f11, 20/10/2026).
+  const fin = (contenido, esError) => ({
+    contenido: esError && !String(contenido ?? '').trim() ? `ERROR sin salida (codigo ${reg.codigo ?? '?'})` : contenido,
+    esError, registro: { ...reg, duracionMs: ctx.ahora() - t0 },
+  });
   const bloqueado = (motivo) => { reg.veredicto = 'bloqueado'; reg.motivo = motivo; return fin(`BLOQUEADO: ${motivo}. No reintentar`, true); };
   try {
     const motivo = await permitir(uso.name, uso.input, ctx);

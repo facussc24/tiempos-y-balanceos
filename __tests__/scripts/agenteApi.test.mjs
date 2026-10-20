@@ -141,6 +141,21 @@ describe('agenteApi: la politica, pura', () => {
     expect(op.registro.lineas[0]).toMatchObject({ busquedas: 3, lecturas: 2 });
   });
 
+  it('regresion 20/10/2026: un comando que falla sin imprimir nada vuelve con texto, no con content vacio (la API lo rechaza con is_error)', async () => {
+    const { cliente, op } = armar([{ content: [usoDe('correr_comando', { cmd: 'ls notas.md' })] }, TERMINAR]);
+    op.ejecutor.correr_comando = async () => ({ texto: '', codigo: 2 });
+    const r = await correrAgente(op);
+    expect(r.terminado).toBe(true);
+    const resultado = cliente.llamadas[1].messages[2].content[0];
+    expect(resultado).toMatchObject({ type: 'tool_result', is_error: true });
+    expect(resultado.content).toBe('ERROR sin salida (codigo 2)');
+    // gemelo: un comando que sale bien sin imprimir nada sigue yendo vacio y sin is_error
+    const ok = armar([{ content: [usoDe('correr_comando', { cmd: 'ls notas.md' })] }, TERMINAR]);
+    ok.op.ejecutor.correr_comando = async () => ({ texto: '', codigo: 0 });
+    await correrAgente(ok.op);
+    expect(ok.cliente.llamadas[1].messages[2].content[0].is_error).toBeUndefined();
+  });
+
   it('rojo: un paso que se pasa del tope de busquedas corta la corrida antes de la proxima llamada', async () => {
     const muchas = { input_tokens: 1000, output_tokens: 200, server_tool_use: { web_search_requests: 6 } };
     const { cliente, op } = armar([{ content: [usoDe('leer_archivo', { ruta: 'notas.md' })], usage: muchas }, TERMINAR]);
