@@ -13,5 +13,10 @@ Material de respaldo de `docs/INVESTIGACION_SISTEMA_3D_2026-10-23.md` y `docs/PR
 - `f08_informe.md` y `f08_verificacion.md`: Repos y arquitecturas para implementar el sistema entero (investigación con búsqueda y lectura web; la verificación abrió las fuentes clave y dice confirmada / parcial / desmentida).
 - `f09_informe.md` y `f09_verificacion.md`: Crítica de base: ¿diseñar de cero o configurar plantillas? (investigación con búsqueda y lectura web; la verificación abrió las fuentes clave y dice confirmada / parcial / desmentida).
 - `f10_informe.md` y `f10_verificacion.md`: Aprender CATIA y automatizarlo (investigación con búsqueda y lectura web; la verificación abrió las fuentes clave y dice confirmada / parcial / desmentida).
+- `f11_informe.md` y `f11_verificacion.md`: Diseño generativo y optimización topológica para utillajes impresos (investigación con búsqueda y lectura web; la verificación abrió las fuentes clave y dice confirmada / parcial / desmentida).
+- `f12_informe.md` y `f12_verificacion.md`: DFM y DFA aplicados a dispositivos de planta (investigación con búsqueda y lectura web; la verificación abrió las fuentes clave y dice confirmada / parcial / desmentida).
+- `f13_informe.md` y `f13_verificacion.md`: Copilotos de IA de SolidWorks, Onshape y Creo: qué hacen de verdad (investigación con búsqueda y lectura web; la verificación abrió las fuentes clave y dice confirmada / parcial / desmentida).
+- `f14_informe.md` y `f14_verificacion.md`: Cómo diseñan los equipos reales de utillajes (fuentes académicas y de oficio) (investigación con búsqueda y lectura web; la verificación abrió las fuentes clave y dice confirmada / parcial / desmentida).
 - `90_refutacion_del_informe.md`, `91_refutacion_de_las_propuestas.md`: los refutadores que revisaron los dos documentos contra este material.
 - `92_revision_contra_el_pedido.md`: la revisión de los dos documentos contra el pedido textual de Fak.
+- `93_refutacion_de_la_segunda_ronda.md`: el refutador de la segunda ronda (f11 a f14: el §12 del informe y P15).

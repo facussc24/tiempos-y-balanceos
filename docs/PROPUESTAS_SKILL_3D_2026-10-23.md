@@ -592,3 +592,67 @@ El tamaño sigue la tabla «El tamaño del cambio decide el camino» de `.claude
    - P7 y P8: quién anota las marcas, cuál es el archivo de «por qué» y cómo se calibra el revisor;
    - P9: la receta de `catia.md`;
    - P12 a P14: aviso o freno.
+
+## Agregado tras la segunda ronda (informe §12)
+
+**Fila nueva para la tabla:**
+
+| P | Qué | Causas que ataca | De las 5 | Tamaño |
+|---|---|---|---|---|
+| P15 | Cierre en planta: prueba de la pieza impresa en el puesto | patrón «controles en los extremos» (falta el de la planta), reuso de diseños sin probar | #1 y #5 | mediano |
+
+### P15. Cierre en planta: la pieza impresa se prueba en el puesto antes de darla por buena
+**De las 5 del informe: parte de #1 y de #5.**
+
+- **Qué problema ataca:** hoy todos los controles miran el modelo. Ninguno mira la pieza impresa probada con el tapizado real (según P1-P14: K5 solo la registra). Además, el índice de lo «fabricado y andando», que es el paso 1 de la búsqueda (P5), puede recibir diseños que nunca se probaron.
+  - **Evidencia, estándar de Marwood** (http://marwoodinternational.com/wp-content/uploads/2019/07/Marwood-Fixture-Standards.pdf):
+    - pide «Written approval of the final design is required before proceeding with fixture build»;
+    - el mismo texto aclara que aprobar el diseño no garantiza la función, porque lo que decide es la prueba (16.1). Esa prueba es un Gauge R&R, la repetibilidad de un calibre metálico de chapa: trasladarla a la pieza impresa en el puesto es analogía;
+    - usa tres listas: diseño, recepción y cierre.
+  - **Omni3D:** «define the acceptance test before printing» (https://omni3d.com/3d-printed-jigs-and-fixtures/; es un vendedor; solo búsqueda).
+  - **Reusar puede copiar defectos** (fijación por ejemplos), y la evidencia está mezclada (informe §12.4, fuentes sin abrir). Lo que entra al índice tiene que estar probado.
+  - **Una hoja de chequeo no tuvo efecto** en un aula; los autores lo atribuyen a la motivación (que sea por falta de consecuencia es lectura nuestra) (Booth, informe §12.2, fuente sin abrir).
+  - **En la casa:** `ficha-utillajes.md` K5 ya pide la primera pieza impresa como dato, y P7 la manda al registro. Lo que falta es que tenga consecuencia.
+- **Qué cambia, exactamente:**
+  - **El criterio de aceptación del pliego** (P4, formato `{que, con, acepta}` de G-E7) se corre con la primera pieza impresa en el puesto, con la pieza del cliente o con una sustituta anotada como tal.
+  - **Antes, una recepción corta:** las cotas que el pliego marca como interfaz (holguras, insertos) se miden sobre la pieza impresa y se comparan con el modelo.
+  - **El resultado tiene tres estados:** pasa, falla o no probado. Se registra quién probó, la fecha y una foto o medida, en el registro de P7 con fase 4 (fabricación y entrega).
+  - **Consecuencia:**
+    - sin un «pasa», el dispositivo no entra a `indice_dispositivos.py` como «fabricado y andando»; lo ya fabricado y en uso entra como «pasa por uso» (fecha y quién) o «no probado» visible, nunca excluido (ver P5);
+    - un «falla» entra con su defecto anotado, visible en la búsqueda, y vuelve al banco (P11) como caso.
+  - **No frena la entrega del PDF:** frena el alta en el índice y el reuso.
+- **Tamaño:** mediano. Toca varios archivos (pliego, registro e índice) y cambia lo que entra al índice. Tiene caso anterior: G-E7 y K5.
+- **Riesgo:**
+  - **Burocracia.** Tres puertas formales pueden ser sobrecarga para un único usuario (verificación del anexo f14); por eso es una sola puerta, al final.
+  - **Que no haya pieza del cliente a mano.** Se acepta una sustituta, y queda anotado.
+  - **Que «no probado» quede para siempre.** El índice lo muestra así, y no cuenta como reusable.
+  - **Que no se carguen los datos.** Es el mismo riesgo que P7.
+- **Cómo se prueba:**
+  - El virolador del 20/10 tiene que quedar en el índice como «pasa», «falla» o «no probado», según lo que haya dado en la planta. Sin un «pasa», no cuenta como reusable.
+  - Gemelo: un dispositivo sin evidencia que intenta entrar como «andando» tiene que dar rojo. Uno con «falla» tiene que aparecer con su defecto en la búsqueda de P5.
+- **Depende de:**
+  - P4 (el criterio de aceptación adelantado), P7 (el registro) y P5 (la búsqueda que lee el índice);
+  - tus decisiones: qué cuenta como prueba (pieza real o sustituta, cuántos ciclos) y si la carga la hacés vos o la IA con tu confirmación.
+
+**Cambios a propuestas existentes:**
+
+- **P1:** en la fase 4, «fabricación y entrega», agregar al final el cierre en planta de P15. No frena la entrega; frena el alta como «andando». Motivo: aprobar el diseño no garantiza la función (Marwood 16.1, por analogía: allí la prueba es un Gauge R&R de un calibre metálico; informe §12.4 [150]).
+- **P2:**
+  - sumar a la lista de constructores una **placa de identificación** grabada o en relieve, con número, peso y secuencia de operación;
+  - en la viñeta de opinión sobre el aspecto profesional, cambiar «queda en los radios y chaflanes por defecto» por «queda en los radios y chaflanes por defecto y en la identificación».
+
+  Motivo: el estándar de Marwood pide identificación (placa con número, peso estampado, secuencia de cierre grabada) [150]. Llamar a eso «profesional» y que resuelva las «cajas peladas» es opinión.
+- **P4:** agregar el campo **material previsto** al pliego, junto a «ciclos y temperatura». Motivo: Stratasys pone el material como «first step» y pide trabajar por debajo del HDT menos 28 °C [134]. Esa regla es de una guía para máquinas industriales: sirve como referencia, no como número de la A2L.
+- **P5:**
+  - en el paso 1 de la búsqueda, cambiar «`indice_dispositivos.py`» por «`indice_dispositivos.py`, solo dispositivos con "pasa" en P15; lo ya fabricado y en uso entra como "pasa por uso" (fecha y quién) o "no probado" visible, nunca excluido; los "falla" se muestran con su defecto»;
+  - sumar como riesgo la fijación por ejemplos.
+
+  Motivo: reusar puede copiar defectos y la evidencia está mezclada [154, 155] (fuentes sin abrir).
+- **P6:**
+  - **Chaflán.** En «Riesgo», cambiar «Falta decidir si un chaflán cuenta como "no vivo"» por «Falta decidir si un chaflán cuenta como "no vivo" a partir de un tamaño mínimo; lo decidís vos». Motivo: el estándar de Marwood usa el chaflán «to remove any burrs or sharp edges» [150], aunque solo en los rasgos que no son de control y en acero o aluminio, así que como apoyo es débil; la skill ya pone chaflán en la cara de cama (G6).
+  - **Aviso inicial.** Si la primera semana solo avisa, que el aviso tenga una fecha de vencimiento escrita en `procesoCanon.data.json`, después de la cual pasa a frenar. Motivo: una hoja de chequeo no tuvo efecto en un aula; los autores lo atribuyen a la motivación (que sea por falta de consecuencia es lectura nuestra) [133] (fuente sin abrir).
+- **P12:** en «Riesgo», el «aviso para que lo revises vos» queda igual, pero con fecha de revisión escrita y con registro de cada aviso descartado y su motivo. Mismo motivo que en P6, con la misma salvedad [133] (fuente sin abrir).
+- **Lo que NO propongo, ítem Knowledgeware:**
+  - sumar al final: «Knowledge Expert (KWE) también permite, por macro, bases de reglas, chequeos, informe y resaltado de lo que no cumple [144]. Es candidato para los controles de P6 dentro de CATIA, pero recién después de confirmar la licencia»;
+  - en el «Orden sugerido», punto 2, agregar KWE a las licencias que hay que revisar.
+- **Lo que NO propongo, ítem nuevo:** «Diseño generativo u optimización topológica. Ninguno de los seis problemas fue de peso o rigidez. La TO supone material isótropo y el FDM no lo es [118]. En un estudio con CF-PLA, la simulación sobreestimó la rigidez entre 14 y 52 % [122] (fuente sin abrir). Si algún día una pieza que el operario levanta pesa demasiado, se prueba una vez como mapa (PyTopo3D [115] o los 30 días de Fusion [113]) y las costillas se ponen con los constructores de P2.»

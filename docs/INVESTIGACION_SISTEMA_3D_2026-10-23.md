@@ -2,7 +2,7 @@
 
 Fecha: 20-21/10/2026 · Para leer el viernes 23/10
 
-**Cómo se hizo.** Se investigaron 10 frentes por la API, con búsqueda y lectura web. Otro modelo verificó cada frente: abrió las fuentes clave y buscó evidencia en contra (anexos fNN, verificación). Además se hizo una crítica de la skill real (`SKILL.md`, `reference\`) y del caso del virolador (anexo 00).
+**Cómo se hizo.** Se investigaron 14 frentes por la API, con búsqueda y lectura web (10 en una primera ronda y 4 en una segunda, para los huecos: §12). Otro modelo verificó cada frente: abrió las fuentes clave y buscó evidencia en contra (anexos fNN, verificación). Además se hizo una crítica de la skill real (`SKILL.md`, `reference\`) y del caso del virolador (anexo 00).
 - Lo que solo salió del buscador va marcado «(fuente sin abrir)».
 - Lo que es mío va marcado «(opinión)».
 - Cuando la verificación corrigió un dato, uso la versión corregida.
@@ -52,7 +52,7 @@ Las 5 cosas que cambiaría primero (§10), en lugar de sumar más texto (opinió
 4. herramientas rápidas y edición incremental;
 5. dieta de la skill y lazo de aprendizaje medido.
 
-**Huecos:** no se cubrieron el diseño generativo, el DFM/DFA ni los copilotos de SolidWorks, Onshape y Creo (de estos últimos, solo datos sueltos; §4).
+**Huecos de la primera ronda** (diseño generativo, DFM/DFA y los copilotos de SolidWorks, Onshape, Creo y NX): se cubrieron en una segunda ronda, en el §12.
 
 ## 1. El diagnóstico: las causas de raíz del virolador
 
@@ -554,6 +554,164 @@ Todo esto queda propuesto, no aplicado: no toqué la skill.
 - ¿Las patas regulables, para qué?
 - ¿Podés imprimir una réplica de un STEP de catálogo? Las condiciones de TraceParts limitan el uso a diseño o visualización [44], y la réplica impresa no parece cubierta (lectura nuestra; conviene consultar).
 
+## 12. Los huecos, cubiertos en una segunda ronda
+
+Los cuatro huecos se investigaron con el mismo método que el resto del informe: un informe por frente y una verificación que abrió las fuentes y buscó evidencia en contra (anexos f11 a f14). Las cuatro verificaciones le dan confianza «media» a su informe. Donde una verificación corrigió algo, va la versión corregida.
+
+### 12.1 Diseño generativo y optimización topológica (anexo f11)
+
+La optimización topológica (TO) consiste en que el programa decida dónde sacar material según las cargas y los apoyos. El diseño generativo es la versión comercial que propone varias formas con ese criterio.
+
+**Qué se encontró.**
+- **Fusion.** El diseño generativo viene en «Fusion for Design» (USD 2.190/año). En el Fusion base (USD 680/año) se paga por uso.
+  - El análisis lineal estático (cálculo de tensiones con material elástico) sí está incluido en el base.
+  - Hay 30 días de prueba, y el plan personal es solo para uso no comercial [113].
+- **Opciones gratis en Python.**
+  - pyMOTO: licencia MIT, se instala con `pip` [114].
+  - PyTopo3D: entra y sale en STL y respeta las zonas que no se tocan. Tardó 147 s con 8.192 elementos, y los autores admiten límites de escala [115].
+  - Lo que devuelven es una malla, no un modelo de build123d o CATIA [115]. Abrir una STL en CATIA V5 pide licencia de Digitized Shape Editor [116] (fuente sin abrir).
+
+**Qué confirma.**
+- (opinión) Está bien que la TO no figure entre las 5 del §10: ninguno de los seis problemas del §1 fue de peso o de rigidez.
+- El único caso de utillajes de autopartista con números (SL Corp: −40 % de peso, −10 % de plazo) no usó TO, sino vaciado con estructura interna. Además, la página no dice que fuera FDM, y es un caso publicado por Materialise, que es vendedor [117].
+- La anisotropía del §4.10 se sostiene. Los criterios que suponen el mismo material en todas las direcciones «may not be suitable» para impresión. El +37 % de rigidez al alinear relleno y forma se logró con trayectorias controladas, que un laminador común no da [118].
+
+**Qué contradice o matiza.**
+- El informe del frente decía que ningún estudio FDM medía el tiempo de impresión. **La verificación lo desmintió:** repartir el relleno con TO en PLA dio +258 % de carga con la misma masa y +23 % de tiempo [119] (fuente sin abrir).
+- También decía que las restricciones de Fusion para FDM solo las contaba un blog. **Desmentido:** Autodesk las documenta. Además publicó un fixture impreso en ASA con diseño generativo, aunque sin compararlo contra el macizo [120].
+- El +84 % del relleno graduado se midió contra el peor relleno uniforme, en una probeta plana de PLA [121].
+- En CF-PLA, la simulación sobreestimó entre 14 y 52 % la rigidez medida [122] (fuente sin abrir). (opinión) Si algún día se suma un control de rigidez por FEA (análisis por elementos finitos), tiene que aplicar ese descuento.
+
+**Qué es nuevo.**
+- Usar la TO como mapa y no como pieza final. Con Fusion, un equipo terminó imprimiendo al 20 % de relleno porque la forma salía sobredimensionada [123] (fuente sin abrir).
+- (opinión) Solo vale la pena para una pieza que el operario levanta o que tarda horas en imprimirse. En ese caso alcanza con una corrida de PyTopo3D, y las costillas se ponen a mano con los constructores de P2.
+- Bambu Studio ya permite relleno por zona, pero la wiki avisa que puede debilitar la unión [124] (fuente sin abrir).
+- beso hace TO gratis con CalculiX [125] (fuente sin abrir).
+
+### 12.2 DFM, DFA y diseño para impresión (anexo f12)
+
+- **DFM:** diseñar pensando en cómo se fabrica.
+- **DFA:** diseñar pensando en cómo se arma.
+- **DfAM:** la versión de lo anterior para impresión 3D.
+
+**Qué se encontró.**
+- **augura** frena (`--exit-code`) solo por ERROR: pieza no estanca, que no entra en la cama o que se vuelca.
+  - Voladizo y pared fina son avisos y no frenan.
+  - Con STL anda degradado, y la búsqueda de orientación pide STEP [96].
+- **mcp-dfm** mide envolvente, voladizo y espesor sobre STEP, contra límites que pone quien lo llama.
+  - No declara una pieza «fabricable» y marca `unverified` lo que no pudo medir.
+  - El espesor es una muestra, no el mínimo, y no descuenta la cara apoyada en la cama [126].
+- **Otro chequeo sobre malla** contaba la cara de cama como voladizo, y hubo que separar «no medido» de PASS [127] (esto sale de los issues #65 y #66, citados a través del #81; no consta que se hayan abierto).
+
+**Qué confirma.**
+- **§2.2, controles que no aprueban de más:** los dos casos anteriores [126, 127].
+- **§4.10, números con su eje y pieza de prueba propia** (todas fuentes sin abrir):
+  - el voladizo aceptable depende del material y de la estrategia: en un estudio, hasta 25° desde la horizontal en PLA y 30° en PETG [128]; en una P1S salieron otros números [129];
+  - Bambu Studio no usa un ángulo, sino un grado de voladizo por línea [130];
+  - los blogs de holguras no coinciden entre «total» y «por lado» [131];
+  - Fab Academy imprime piezas de prueba en su propia máquina [132].
+- **§3.2 y P6, texto contra control:** una hoja de errores usada como filtro pasa/no pasa en un taller bajó los errores. En un aula no tuvo efecto; los autores lo atribuyen a la motivación (que sea por falta de consecuencia es lectura nuestra) [133] (fuente sin abrir).
+- **P9, control de «lo demás no cambió»:** ~64 % de las ediciones «exitosas» de los modelos de punta corrompen en silencio rasgos que nadie pidió tocar [9] (fuente sin abrir para esta cifra).
+- **Rediseñar en pasos chicos verificados** [29], en su versión chica: ese trabajo mide si la edición reproduce una pieza objetivo, no si gana fabricabilidad.
+
+**Qué contradice o matiza.**
+- (opinión, anexo f12) Nada de esto detecta lo que falló en el virolador: palanca de cero, cajas peladas, mecanismo. Respalda que P1-P14 no propongan todavía un chequeo propio de fabricación.
+- **Material primero.** Stratasys pone el material como «first step», pide trabajar por debajo del HDT menos 28 °C y avisa del creep. Pero es una guía para sus máquinas industriales, y sus cifras no se trasladan a una A2L [134]. El material no figura entre los campos del contrato de P4.
+- **Consolidar piezas.** El informe del frente presentaba a Stratasys como restrictiva; la verificación corrigió que la promueve, con la orientación como una condición más [134]. En contra: consolidar con impresión suele costar más en total, porque ante una falla se cambia la pieza entera [135] (fuente sin abrir).
+- **DFA de Boothroyd-Dewhurst.** El índice mide armado en serie (opinión: no aplica a un dispositivo único). Sus tres preguntas sí sirven en el concepto para contar las piezas mínimas [136] (fuente sin abrir):
+  - ¿se mueve respecto de las otras?
+  - ¿es de otro material?
+  - ¿tiene que separarse para armar?
+- **Agentes de IA para DFM.** El único agente DFM para FDM con un modelo de lenguaje probó un solo caso: una casita de pájaros [137].
+
+### 12.3 Copilotos de SOLIDWORKS, Onshape, Creo y NX (anexo f13)
+
+**Qué se encontró.**
+- **Creo 13** (según la página de venta):
+  - Advise es un chat sobre la documentación, sin ver el modelo;
+  - Assist (beta) lee el modelo;
+  - Automate (alfa) trabaja en un sandbox (copia aislada) y nada cambia sin aprobación de un ingeniero [24].
+- **Onshape:**
+  - el AI Advisor «does not have access to your data» [138], así que el dato que en §4 iba sin fuente queda confirmado;
+  - la búsqueda por descripción generada con IA se anunció en marzo para documentos públicos, y en octubre está en Labs (acceso temprano) (fuente sin abrir);
+  - los agentes siguen en desarrollo, con acciones «tracked, visible, and reversible» [139].
+- **SOLIDWORKS:**
+  - en febrero, What's Wrong recomendaba sin actuar [140];
+  - en FD04, según un revendedor, Leo revisa piezas, ensambles y planos contra la checklist de la empresa, pide estar conectado a 3DEXPERIENCE y gasta tokens (créditos de uso; 2.100 gratis, una sola vez) [141];
+  - el mismo revendedor avisa: «If your business mainly involves designing just a few parts, AI will be less useful» [141].
+- **NX** elige caras y aristas parecidas y las redondea o chaflana de una vez [142] (sin verificar).
+
+**Qué confirma.**
+- **§3.1:** nada de esto corre en V5.
+- **P1 y P8:** lo que toca el modelo trabaja aislado y espera aprobación [24, 139]. Lo de Creo sale de la página de venta, con Automate en alfa; lo de Onshape es una intención a futuro.
+- **P9:** Onshape anuncia cambios rastreados y reversibles, pero según la verificación es una visión a futuro, sin fecha: confirma una intención del vendedor, no una práctica [139].
+- **P3:** según un resumen de CAD-bench, en tareas funcionales los modelos sacan 3,7 %. Una caja reductora compiló en el 96,9 % de los casos y funcionó en el 4,0 %. En el puntaje general, los agentes con retroalimentación llegan a 67,7 % contra 59,9 % del mejor modelo; son 17 tareas [143].
+
+**Qué contradice o matiza.**
+- **CATIA por COM.** El informe del frente dijo que nada se enchufa por COM a CATIA. **Para chequeos, la verificación lo desmintió:** Knowledge Expert, de CATIA V5, crea por macro bases de reglas y chequeos, arma el informe y resalta lo que no cumple [144].
+  - Esto amplía el §4.8: además de KWA, hay que preguntar por KWE, la licencia de Knowledge Expert (sin verificar).
+- **Los chequeos contra checklist no son nuevos ni son IA.** Design Checker ya los hacía [145] (fuente sin abrir).
+  - Además, «a defined engineering check is not the same thing as a complete design review» [146]. Lo dice un competidor que vende revisión.
+  - (opinión) O sea, tus controles solo atrapan lo que alguien escribió.
+- **Cantos y ergonomía.** No apareció ningún control comercial de cantos, ergonomía ni acabado (anexo f13). Y omitir redondeos pedidos es una falla típica del CAD hecho por modelos [147] (fuente sin abrir). Las dos cosas apoyan P6.
+
+**Qué es nuevo.**
+- (opinión, patrón de Creo) Autonomía por niveles: en cada fase, la IA modifica solo cuando la verificación de la anterior dio verde. Es P1 con otro nombre.
+- (opinión) La selección masiva de NX es la idea para que un constructor redondee todas las aristas de una vez. En CATIA sigue sin probar (riesgo de P2).
+
+### 12.4 Cómo diseñan los equipos reales de utillajes (anexo f14)
+
+**Qué se encontró.**
+- **Una revisión académica** describe cuatro pasos y seis clases de requisitos, entre ellas colisión y usabilidad [148]. Los pasos son:
+  1. planificar el montaje;
+  2. planificar el fixture;
+  3. diseñar las unidades;
+  4. verificar.
+
+  La verificación pesa entre 35 y 47 % de los trabajos, pero se trata de estabilidad en mecanizado [148].
+- **Sobre más de 75 herramientas,** la investigación está «segmentada». Lo menos apoyado es el diseño de detalle de la estructura física, que es justo donde trabaja la skill [149].
+- **Un estándar de compra** de un proveedor de calibres de chequeo de chapa (no es una norma de OEM) [150]:
+  - exige aprobación escrita del diseño antes de construir;
+  - usa tres listas: diseño, recepción y cierre;
+  - aclara que aprobar el diseño no garantiza la función: lo que decide es la prueba (Gauge R&R, un estudio de repetibilidad).
+
+**Qué confirma.**
+- **P6 y P12:** el chaflán en los bordes, «to remove any burrs or sharp edges», y los clamps sin «pinch points» están escritos en un estándar; no son gusto [150]. Salvedad: el chaflán (7.3) vale solo para los rasgos que no son de control, en acero o aluminio; como apoyo de «chaflán = no vivo» en la zona de mano es débil.
+- **P9:** ArtiCAD guarda las piezas sin falla y regenera solo las afectadas [15].
+- **P3:** según un resumen de CADEngBench, los modelos aciertan 542 de 960 caras de contacto, y solo 143 con el marco de la junta correcto [151] (fuente sin abrir). (opinión) La cinemática la tiene que controlar un solver o la prueba física, no el modelo.
+- **§3.4 y P4:** los diseñadores co-evolucionan problema y solución, es decir, los ajustan juntos (fuentes sin abrir):
+  - «not a matter of first fixing the problem and then searching» [152];
+  - lo mismo se observó en una empresa [153].
+
+  Por eso el contrato tiene que poder reabrirse.
+
+**Qué contradice o matiza.**
+- **Razonamiento por casos** (partir de un diseño anterior parecido). Se lo llama «the most successful approach», pero lo dice una revisión firmada por autores de un sistema de ese tipo, sin comparación medida [148].
+- **Fijación por ejemplos** (copiar rasgos de un ejemplo, defectos incluidos). La evidencia está mezclada (fuentes sin abrir):
+  - en una réplica con ingenieros, las advertencias no la redujeron [154];
+  - otro estudio, de 2020, encontró menos fijación con el ejemplo dado que con la idea propia [155].
+
+  Matiza P2 y P5: la biblioteca puede copiar defectos. (opinión) A la biblioteca solo debería entrar lo que pasó la prueba en planta.
+- **ArtiCAD** [15]:
+  - solo maneja árboles cinemáticos, sin lazos cerrados (mecanismos donde las barras forman un circuito, como un cuatro barras o una rodillera);
+  - sacar su memoria de casos casi no cambia la calidad (3,37 contra 3,41); solo baja las vueltas de 4,4 a 3,1.
+
+  Esto confirma el §3.5. Y las «juntas antes que geometría» del §4.2 no cubren tal cual el virolador.
+- **El alcance de la literatura.** Toda es de fixtures de mecanizado; de palancas o prensas manuales no apareció nada (anexo f14).
+
+**Qué es nuevo.**
+- **La prueba física como puerta final:** el estándar exige una prueba (Gauge R&R de un calibre metálico) [150]; trasladarla a la pieza impresa en el puesto es analogía. Hoy los controles miran el modelo, no la pieza impresa probada en el puesto (según P1-P14: K5 solo la registra). Va como P15.
+  - Para un único usuario, tres puertas formales pueden ser sobrecarga; lo que se transfiere es la última (anexo f14).
+- **El estándar pide identificación** (llamarlo «profesional» es opinión) [150]:
+  - placa con número;
+  - peso estampado;
+  - secuencia de cierre grabada;
+  - instrucciones.
+
+  (opinión) Grabado o en relieve sale barato en FDM, y completa el aspecto que P2 deja en manos de los radios y los chaflanes.
+
+**Sobre las 5 del §10:** cambian el #1 y el #5 en un punto: el cierre del proceso suma la prueba de la pieza impresa en el puesto (P15). Las otras tres quedan igual.
+
 ## Fuentes
 
 Los links de los frentes FDM y simulación vinieron sin prefijo de protocolo y así van.
@@ -692,3 +850,46 @@ Los links de los frentes FDM y simulación vinieron sin prefijo de protocolo y a
 - [110] Foro COE, PowerCopy por macro — https://www.coe.org/p/fo/et/thread=23458 — s/f — sin abrir
 - [111] GoEngineer, CATIA V5 KBE — https://store.goengineer.com/products/catia-v5-knowledge-based-engineering — s/f — sin abrir
 - [112] 3DS, catálogo EDU V5 — https://www.3ds.com/assets/edu/document/learning-experiences-for-catiav5.pdf — s/f — sin abrir
+- [113] Autodesk, Fusion Subscription Types — https://www.autodesk.com/products/fusion-360/blog/fusion-subscription-types/ — 12/03/2026 (mod. 22/09/2026) — abierta
+- [114] pyMOTO — https://github.com/aatmdelissen/pyMOTO — vista 20/10/2026 — abierta
+- [115] PyTopo3D, arXiv 2504.05604 — https://arxiv.org/pdf/2504.05604 — abr 2025 — abierta
+- [116] Technia, abrir STL en CATIA V5 (Digitized Shape Editor) — (sin link) — s/f — sin abrir
+- [117] Materialise, 3D-Printed Jigs and Fixtures with a 40% Weight Reduction (SL Corp) — https://www.materialise.com/en/inspiration/cases/3d-printed-jigs-fixtures-weight-reduction — 10/02/2018 — abierta
+- [118] Printing-induced strength anisotropy in TO — https://www.sciencedirect.com/science/article/abs/pii/S2214860423003433 — 2023 — abierta (resumen e introducción)
+- [119] Springer 2023, TO para repartir el relleno en PLA (s00170-023-12554-z) — (sin link) — 2023 — sin abrir
+- [120] Autodesk, Fusion 360 generatively designed fixture — https://www.autodesk.com/products/fusion-360/blog/fusion-360-generatively-designed-fixture/ — 2020 — abierta
+- [121] Simplified local infill size optimization for FDM PLA parts (Sci Rep 13, 5933) — https://www.nature.com/articles/s41598-023-33181-4 — 2023 — abierta
+- [122] MDPI Appl. Sci. 16/20/10372, TO en FDM con CF-PLA — (sin link) — 2026 — sin abrir
+- [123] Frontiers 2024, diseño generativo de Fusion en ABS — (sin link) — 2024 — sin abrir
+- [124] Wiki y foro de Bambu, modificadores de relleno por zona — (sin link) — s/f — sin abrir
+- [125] beso (Python + CalculiX) — https://github.com/calculix/beso — s/f — sin abrir
+- [126] mcp-dfm — https://github.com/Casys-AI/mcp-dfm — s/f — abierta
+- [127] 3d-cli issue #81 (y los issues #65 y #66 que enlaza) — https://github.com/alex-mextner/3d-cli/issues/81 — ~11/10/2026 — abierta
+- [128] Mititelu et al., Macromolecular Symposia, ángulo crítico de voladizo — onlinelibrary.wiley.com/doi/full/10.1002/masy.70376 — 2026 — sin abrir
+- [129] Fab Academy, prueba de voladizo en una P1S — fabacademy.org/2024/labs/formshop/... (link incompleto en el material) — 2024 — sin abrir
+- [130] Bambu Studio wiki, Slow down for overhang — https://wiki.bambulab.com/en/software/bambu-studio/slow-down-for-overhang — s/f — sin abrir
+- [131] Guías de holguras (3dprintbounty y 3dprofilefix) — https://3dprintbounty.com/blog/3d-printing-tolerances-guide y https://www.3dprofilefix.com/guides/clearance-fit-tolerance-guide.html — ~07/2026 — sin abrir (blogs)
+- [132] Fab Academy, prueba de la impresora en una A1 mini — https://fabacademy.org/2025/labs/chaihuo/docs/week5/chaihuo/week05_group_assignment_3d_printer_test_en/ — 2025 — sin abrir
+- [133] Booth et al., hoja DfAM (Purdue) — https://engineering.purdue.edu/cdesign/wp/wp-content/uploads/2017/08/MD-17-1084.pdf (fragmento vía academia.edu/53004080) — 2017 — sin abrir
+- [134] Stratasys, Design Considerations: FDM Additive Manufacturing Tooling — https://www.stratasys.com/contentassets/b7785854f88542eb96af69c22af766f5/dg_fdm_designconsiderationsfdmtooling_0718a.pdf — 2016-2018 — abierta
+- [135] Knofius et al., consolidación con AM (Int. J. Production Economics) — sciencedirect.com/science/article/abs/pii/S0925527318304468 — 2019 — sin abrir
+- [136] IJEAT, preguntas de partes mínimas de Boothroyd-Dewhurst — https://www.ijeat.org/wp-content/uploads/papers/v9i2/B4942129219.pdf — ~2019 — sin abrir
+- [137] AgentsCAD: Automated DFM of FDM Parts — https://arxiv.org/html/2607.02448v2 — 07/07/2026 — abierta
+- [138] Onshape, What's New 1.205 (AI Advisor) — https://www.onshape.com/en/resource-center/what-is-new/ai-advisor-configurable-variable-studios-simulation — 10/10/2025 — abierta
+- [139] AI in Onshape: From First Features to AI Agents (blog oficial) — https://www.onshape.com/en/blog/ai-artificial-intelligence-cloud-native-cad-pdm-platform — 19/03/2026 — abierta
+- [140] 10 AI tools coming to Solidworks in 2026 (engineering.com) — https://www.engineering.com/10-ai-tools-coming-to-solidworks-in-2026/ — 13/02/2026 — abierta
+- [141] What's New in SOLIDWORKS 2026 FD04 (Ohmycad, revendedor) — https://ohmycad.com/en/whats-new-in-solidworks-2026/ — 17/09/2026 — abierta
+- [142] AI-enabled design, Designcenter NX (Siemens) — https://blogs.sw.siemens.com/designcenter/ai-enabled-design-whats-new-in-designcenter-nx-december-2025-release/ — 28/01/2026 — abierta
+- [143] Resumen de CAD-bench (lacuna) — lacuna.tiptreesystems.com (link incompleto en el material) — 2026 — abierta
+- [144] CATIA V5 Automation, Knowledge Expert (CAAKhwAutomationPrinciples) — catiadesign.org/_doc/V5Automation/online/CAAScdKhwTechArticles/CAAKhwAutomationPrinciples.htm — s/f — abierta
+- [145] SOLIDWORKS Design Checker (ayuda 2023) — help.solidworks.com/2023/english/SolidWorks/solidworks_design_checker/c_welcome_design_checker.htm — 2023 — sin abrir
+- [146] SOLIDWORKS AI in 2026 (CoLab, competidor) — https://www.colabsoftware.com/post/solidworks-ai — 14/09/2026 — abierta
+- [147] Fallas típicas del CAD generado por LLM, arXiv 2603.11831 — arxiv.org/pdf/2603.11831 — 2026 — sin abrir
+- [148] Hashemi et al., Recent Developments on CAFD: Case Based Reasoning Approaches — https://journals.sagepub.com/doi/10.1155/2014/484928 — 2014 — abierta
+- [149] Boyle, Rong y Brown, A review and analysis of current CAFD approaches — https://www.sciencedirect.com/science/article/abs/pii/S0736584510000499 — 2011 — abierta (resumen)
+- [150] Marwood, Checking Fixture & Gauge Standards — http://marwoodinternational.com/wp-content/uploads/2019/07/Marwood-Fixture-Standards.pdf — rev. 15/06/2018 — abierta
+- [151] Resumen de CADEngBench (pith.science) — pith.science (link incompleto en el material) — s/f — sin abrir
+- [152] Dorst y Cross, Creativity in the design process: co-evolution — oro.open.ac.uk/3278/1/Creativity_-_coevolution.pdf — 2001 — sin abrir
+- [153] Co-evolución de problema y solución en una empresa — sciencedirect.com/science/article/abs/pii/S0142694X13000033 — s/f — sin abrir
+- [154] Viswanathan y Linsey, fijación por ejemplos con ingenieros (citado en scholarworks.sjsu.edu) — (link incompleto en el material) — 2013 — sin abrir
+- [155] Fijación con ejemplo dado y con idea propia (J. Mechanical Design 142/10) — asmedigitalcollection.asme.org/mechanicaldesign/article/142/10/101402 — 2020 — sin abrir

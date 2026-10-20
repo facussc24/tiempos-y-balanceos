@@ -1,0 +1,40 @@
+# Verificación: Copilotos de IA de SolidWorks, Onshape y Creo: qué hacen de verdad
+
+Verificado el 20/10/2026. Abrí 8 páginas (más no se pudo en esta corrida: se terminó el cupo de lecturas por turno). Los links van sin «https://».
+
+## Afirmaciones clave
+
+| # | Afirmación (corta) | Fuente (link) | Abierta | Veredicto | Cita textual |
+|---|---|---|---|---|---|
+| 1 | Creo: Advise no ve el modelo; Assist (beta) sí; Automate (alfa) crea geometría en un sandbox y espera aprobación | ptc.com/en/products/creo | sí | **Confirmada** (es la página de venta; beta y alfa, sin fecha de disponibilidad general) | «ensuring nothing changes in your model without approval from an engineer» |
+| 2 | Onshape busca modelos por una descripción generada con IA («qué es la pieza») | onshape.com/en/blog/ai-artificial-intelligence-cloud-native-cad-pdm-platform | sí | **Parcial**: en marzo de 2026 estaba anunciada («to release»), no disponible, y para documentos públicos; en octubre de 2026 aparece en Onshape Labs (acceso temprano) | «Onshape to release … AI-powered search in public documents» |
+| 3 | Agentes de Onshape «en desarrollo», con permisos revocables y acciones rastreadas y reversibles | ídem | sí | **Confirmada** (es una visión a futuro, sin fecha) | «Their actions are fully tracked, visible, and reversible» |
+| 4 | SOLIDWORKS FD04: Leo revisa piezas, ensambles y planos contra la checklist de la empresa y analiza croquis | ohmycad.com/en/whats-new-in-solidworks-2026/ (revendedor; CoLab dice lo mismo) | sí | **Confirmada** según un revendedor y un competidor; el blog oficial no lo abrí | «against a release checklist, the company's checklist, or an industry standard» |
+| 5 | Leo pide SW 2026 SP3.0 o posterior conectado a 3DEXPERIENCE; 2.100 tokens gratis una sola vez, packs de 25.000; un plano cuesta de cientos a miles | ídem | sí | **Confirmada**. El precio de los packs «aún no se anunció» | «The 2,100 free tokens are enough for testing, but not for production.» |
+| 6 | Feb/2026: What's Wrong y Assembly Performance Doctor recomiendan pero no actúan; el modelado por chat y «de requisitos a modelo» estaban en desarrollo | engineering.com/10-ai-tools-coming-to-solidworks-in-2026/ | sí | **Confirmada** | «cannot currently take action on its own recommendations» |
+| 7 | Onshape AI Advisor no tiene acceso a los datos del usuario | onshape.com/en/resource-center/what-is-new/ai-advisor-configurable-variable-studios-simulation | sí (el informe no la había abierto) | **Confirmada** (fecha 10/10/2025) | «it does not have access to your data» |
+| 8 | Crítica: un chequeo definido no es una revisión completa | colabsoftware.com/post/solidworks-ai | sí | **Confirmada** (lo dice un competidor que vende revisión de diseño) | «a defined engineering check is not the same thing as a complete design review» |
+
+No verificadas (sin cupo para abrirlas): Select Similar Faces de NX, el precio por tokens de Creo (PDSVISION), el servidor MCP de Onshape en Labs y Solid Edge 2026. En lo que pesa para la decisión, el informe cita bien: ninguna cita resultó inventada. Lo flojo son las conclusiones que saca de ahí (abajo).
+
+## Evidencia en contra
+
+1. **Los controles por checklist no son nuevos ni son IA.** El informe dice que los controles automáticos son «el patrón comercial que más crece» y que FD04 «es lo mismo que sus gates». SOLIDWORKS Design Checker (versiones Professional y Premium) ya hacía eso sin IA desde hace años: controla contra el estándar de la empresa, incluidos los croquis, aprende chequeos de un archivo existente, corre en lote y autocorrige (help.solidworks.com/2023/english/SolidWorks/solidworks_design_checker/c_welcome_design_checker.htm y javelin-tech.com/3d/solidworks-design-checker/, solo búsqueda). Lo nuevo en FD04 es pedirlo en lenguaje natural, no el control. Que SOLIDWORKS lo tenga no prueba que el patrón crezca ni que sirva.
+2. **CATIA V5 ya trae chequeos por regla, y se manejan por programa.** Knowledge Expert crea una base de reglas, chequeos por tipo de objeto, un reporte y el resaltado de lo que no cumple, todo desde una macro (`CreateRuleBase`, `CreateCheck`, `Deduce()`, `Report()`, `Highlight()`). Fuente: catiadesign.org/_doc/V5Automation/online/CAAScdKhwTechArticles/CAAKhwAutomationPrinciples.htm, abierta (copia de la documentación CAA de Dassault): «To highlight the elements which do not satisfy the checks». La comunidad de Dassault agrega que las reglas pueden aplicarse a «faces and edges» (3dswym, KWE, solo búsqueda). El informe dice «Nada de lo hallado se enchufa por COM a su CATIA». Para chequeos, eso es falso: lo que falta saber es si la licencia de la planta incluye KWA o KWE (TBD).
+3. **Los LLM fallan justo en lo que le dolió al sistema (el mecanismo).** CAD-bench (ICML 2026, resumen abierto en lacuna.tiptreesystems.com): los modelos promedian 58,5 % en piezas estáticas difíciles y 3,7 % en tareas funcionales. Una caja reductora compiló en el 96,9 % de los casos y funcionó en el 4,0 %. Los mismos autores marcan sus límites: son solo 17 tareas y los puntajes dependen de supuestos de ingeniería. Ningún copiloto comercial verificado promete mecanismos que funcionen. El orden «mecanismo antes que estética» va bien, pero hace falta un control funcional (movimiento y choques), no solo una checklist.
+4. **Omisión de redondeos.** Un paper de 2026 enumera entre las fallas típicas del CAD generado por LLM la «omission of specified refinement features such as fillets» (arxiv.org/pdf/2603.11831, solo búsqueda). Text2CAD-Bench y BenchCAD (solo búsqueda) también muestran fallas en chaflanes, redondeos y barridos y ejes de extrusión cambiados. Eso apoya un control medible de cantos vivos, no a «ojo de diseñador».
+5. **Lo que los propios vendedores declaran como límite.** Ohmycad (revendedor de SOLIDWORKS) avisa que con pocas piezas el beneficio baja: «If your business mainly involves designing just a few parts, AI will be less useful». Es el caso de una planta que diseña pocos dispositivos. Las funciones que modifican el modelo cuestan tokens y piden la plataforma en la nube.
+6. **Usuarios.** Un hilo de foro (polytechforum, solo búsqueda, anecdótico) describe sugerencias de la IA «from a generic instruction manual». Leo AI, que es competidor, dice que las demos de 2025 de AURA no salieron (solo búsqueda, con sesgo).
+7. **Qué busqué y no encontré:** post-mortems o fallas de campo de Creo Automate y de los agentes de Onshape. No los hay porque están en alfa o en desarrollo: no existe evidencia de uso real, ni a favor ni en contra.
+
+## Lo que le falta al informe
+
+1. Que CATIA V5 ya tiene Knowledgeware (Check, Expert Check y reportes por macro COM). Antes de copiar el «checklist ejecutable» de SOLIDWORKS en Python, ver si la licencia lo incluye (fuente: punto 2).
+2. La evidencia independiente de dónde fallan los LLM: los mecanismos (CAD-bench, 3,7 %) y la omisión de redondeos (arXiv 2603.11831). De ahí salen dos controles concretos: uno funcional y uno de cantos medidos.
+3. Que el ciclo cerrado le gana al «de una»: en CAD-bench los agentes con retroalimentación llegan a 67,7 % y el mejor modelo solo a 59,9 %. Apoya el patrón «generar, medir, corregir» frente a la checklist sola.
+4. La disponibilidad real fecha por fecha: la búsqueda por descripción de Onshape está en Labs, Creo Assist y Automate en beta y alfa. Nada de eso se puede probar hoy, y menos desde CATIA V5.
+5. Que el control por checklist existía sin IA (Design Checker), así que el «patrón que más crece» está sobrevalorado.
+
+## Confianza del informe (alta/media/baja) y por qué, en 2 frases
+
+**Media.** Las 8 afirmaciones que abrí están bien citadas (7 confirmadas y 1 parcial, la búsqueda de Onshape, que estaba anunciada y no disponible), y el informe declara con honestidad sus sesgos de fuente. Pero sus conclusiones para decidir («es lo mismo que sus gates», «el patrón que más crece», «nada se enchufa a CATIA») se apoyan en marketing: se le pasaron los chequeos nativos de CATIA V5 y la evidencia independiente de que los LLM fallan en mecanismos y redondeos.
