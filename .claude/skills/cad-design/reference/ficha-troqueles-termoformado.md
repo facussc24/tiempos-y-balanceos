@@ -143,7 +143,7 @@
 
 | Regla | Numero | Fuente | Estado | Contexto / aviso |
 |---|---|---|---|---|
-| Macho / hembra (Formlabs, blog de prototipado) | Macho 4-5°; hembra 1,5-3° | https://formlabs.com/blog/prototyping-vacuum-forming/ — "For male molds, 4-5 degrees of draft is recommended" | ABIERTA | Fabricante de impresoras 3D (resina) |
+| Macho / hembra (Formlabs, blog de prototipado) | Macho 4-5°; hembra 1,5-3° | https://formlabs.com/blog/prototyping-vacuum-forming/ — "For male molds, 4-5 degrees of draft is recommended" | ABIERTA · VERIFICADA 20/10 (macho 4-5°, hembra 1,5-3°, textual) | Fabricante de impresoras 3D (resina) |
 | Texturas | Una superficie texturada aumenta el desmoldeo necesario | misma pagina | ABIERTA | Sin numero |
 | Macho / hembra (Stratasys, guia FDM) | Macho 3-4°; hembra 2-3° | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ — Tabla 1 | ABIERTA | Fabricante de impresoras FDM. Valores de referencia |
 | Minimo con moldes impresos en resina (Formlabs, guia de termoformado) | 2-3° minimo; casos reales: 3° general (IPC), ≥ 2° (Glassboard), 3° (Formech) | https://formlabs.com/eu/blog/thermoforming-with-3d-printed-molds-formech | ABIERTA | Casos reales de laminas de 1,5-3 mm |
@@ -161,7 +161,7 @@
 | Pared minima del molde impreso | 1-2 mm | misma pagina | ABIERTA | |
 | Un caso con PETG | Agujeros de 1 mm donde queda aire atrapado | https://fabacademy.org/2025/labs/leon/students/david-fernandez/assignments/week17.html | ABIERTA | Trabajo de un estudiante (Fab Academy), Mayku FormBox |
 | Moldes FDM con relleno ralo | La porosidad del relleno evita los canales; brecha de trama maxima 0,003" (0,076 mm) | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ | ABIERTA | Fabricante FDM; con PC / ULTEM 9085 |
-| Donde ponerlos | En bolsillos internos y rincones donde se atrapa aire; "agujeros para ayudar al vacio a tirar la lamina alrededor de detalles" | https://formlabs.com/blog/prototyping-vacuum-forming/ y https://www.bu.edu/epic/equipment/thermoforming | ABIERTA | Sin separacion numerica |
+| Donde ponerlos | En bolsillos internos y rincones donde se atrapa aire; "agujeros para ayudar al vacio a tirar la lamina alrededor de detalles" | https://formlabs.com/blog/prototyping-vacuum-forming/ y https://www.bu.edu/epic/equipment/thermoforming | VERIFICADA 20/10 en Formlabs («vent holes» en bolsillos internos) · ABIERTA | Sin separacion numerica |
 | Separacion entre agujeros | — | No se encontro | SIN FUENTE | |
 | Agujero de vacio y marca en el lado vista del vinilo | — | No se encontro | SIN FUENTE | |
 
