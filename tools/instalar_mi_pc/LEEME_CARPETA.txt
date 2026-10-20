@@ -8,20 +8,11 @@ Esta carpeta se abre desde la PC nueva (tiene que ver la nube de Ingeniería).
 Cada subcarpeta tiene un solo archivo para hacer doble clic.
 
   1- Mi asistente completo
-        Deja tu asistente entero en esa PC: tus skills, tu memoria, tus reglas y tus claves.
+        Deja tu memoria y tus claves en esa PC. Tus skills y reglas no están en la nube: van por pendrive.
         Si la PC tenía instalado el asistente "por área", lo apaga.
 
   2- Mails de Calidad
         Copia los mails de las cuentas de Calidad de esa PC a la nube de Ingeniería.
-
-  3- Asistente de Pedro Ergo
-        El asistente de Ingeniería para Pedro, sin los frenos del asistente "por área", con su nombre y su mail.
-        Trae Python y los programas. Doble clic en la PC de Pedro.
-
-  4- Asistente de Federico Kipersain
-        El asistente de Ingeniería para Federico, con su nombre y su mail, sin los frenos del asistente "por área".
-        Queda adentro de C:\ClaudeBarack: abre Claude en esa carpeta y es el de Ingeniería; en cualquier otra
-        carpeta sigue su Claude personal. Trae Python y los programas. Doble clic en la PC de Federico.
 
 Los instaladores 1 y 2 necesitan que la PC tenga sincronizada la biblioteca de Ingeniería con tu cuenta.
 

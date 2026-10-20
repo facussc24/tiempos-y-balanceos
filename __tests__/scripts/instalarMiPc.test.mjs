@@ -267,7 +267,8 @@ describe('instalar_mi_pc.ps1', () => {
             temporales.push(t);
             const bib = path.join(t, 'biblioteca');
             for (const cual of layout === 'ambas' ? ['vieja', 'nueva'] : [layout]) {
-                for (const c of ['claude-memoria', 'claude-config']) fs.mkdirSync(path.join(bib, ...LUGARES_DE_LA_MEMORIA[cual], c), { recursive: true });
+                // solo la memoria: desde el 20/10/2026 claude-config ya no esta en la nube (las skills van por pendrive)
+                fs.mkdirSync(path.join(bib, ...LUGARES_DE_LA_MEMORIA[cual], 'claude-memoria'), { recursive: true });
             }
             const powershell = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
             const r = spawnSync(powershell, ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', path.join(DIR, 'instalar_mi_pc.ps1'), '-Ensayo', '-Biblioteca', bib, '-Repo', path.join(t, 'repo')], { encoding: 'utf8', env: { ...process.env, LOCALAPPDATA: path.join(t, 'local'), USERPROFILE: t }, timeout: 120000 });

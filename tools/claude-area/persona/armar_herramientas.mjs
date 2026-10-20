@@ -17,6 +17,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { frenarSiEsNube } from '../../../scripts/_lib/soloLocal.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(AQUI, '..', '..', '..');
@@ -47,6 +48,8 @@ function args(argv) {
 const tam = (p) => `${(fs.statSync(p).size / 1e6).toFixed(0)} MB`;
 
 export function armarHerramientas({ out, solo = null }) {
+    // 20/10/2026: repo.zip lleva las skills del proyecto; no se arma en la nube (va por pendrive).
+    frenarSiEsNube(path.resolve(out), 'La caja de herramientas');
     fs.mkdirSync(out, { recursive: true });
     const hacer = (k) => !solo || solo.includes(k);
     const hecho = {};

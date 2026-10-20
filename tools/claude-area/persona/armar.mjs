@@ -22,6 +22,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { frenarSiEsNube } from '../../../scripts/_lib/soloLocal.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const MEMORIA_FAK = path.join(os.homedir(), '.claude', 'projects', 'C--Dev-BarackMercosul', 'memory');
@@ -213,6 +214,8 @@ export function armar(opciones) {
     const persona = JSON.parse(fs.readFileSync(path.join(AQUI, `${opciones.persona}.json`), 'utf8'));
     const datos = JSON.parse(fs.readFileSync(path.join(AQUI, 'memorias.data.json'), 'utf8'));
     const out = path.resolve(opciones.out);
+    // 20/10/2026: el asistente de otra persona lleva las skills de Fak; no se arma en la nube (va por pendrive).
+    frenarSiEsNube(out, 'El asistente de otra persona');
     const inst = path.join(out, '_instalador');
     if (fs.existsSync(inst) && !opciones.reemplazar) throw new Error(`ya hay un paquete en ${inst} (con --reemplazar se renombra el viejo, no se borra)`);
     // Se arma adentro del destino y se renombra al final: nada queda en %TEMP% (cada armado son ~450 MB) y no se

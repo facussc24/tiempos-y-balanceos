@@ -918,6 +918,9 @@ export function publicar({ origen, nube, lista, notas = [], simular = false, for
         return res;
     }
     if (!nube) { res.errores.push(`no encuentro la carpeta "${nombreNube(proyecto)}" en la biblioteca sincronizada. Creala una vez en la biblioteca de SharePoint o pasá --nube <carpeta>`); return res; }
+    // 20/10/2026: la base lleva skills y reglas; a una nube no se publica.
+    // (copia de esRutaDeNube de scripts/_lib/soloLocal.mjs: este archivo viaja solo en la base y no puede importarla)
+    if (/[\\/][^\\/]*barack argentina srl[\\/]/i.test(`${String(nube).replace(/[\\/]+$/, '')}\\`)) { res.errores.push(`${nube}: las skills no se publican en la nube desde el 20/10/2026 (van por pendrive)`); return res; }
     // la carpeta publicada del proyecto de areas (`1- PUBLICADO`) es del programa: se crea al escribir si su carpeta madre existe
     const crearNube = !fs.existsSync(nube);
     if (crearNube && !(normTexto(path.basename(nube)) === normTexto(PROYECTOS.area.publicado) && fs.existsSync(path.dirname(nube)))) {

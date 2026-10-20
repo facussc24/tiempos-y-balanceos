@@ -3,7 +3,10 @@ MI ASISTENTE COMPLETO EN OTRA PC
 QUÉ HACE
 Deja en esa PC tu asistente entero, igual al de tu PC de Ingeniería:
   - el repo con las reglas, los skills del proyecto y las instrucciones de trabajo (carpeta C:\Dev\BarackMercosul),
-  - tu memoria, tus skills y reglas globales, tus subagentes, tus hooks, tu settings y tus claves (todo eso viaja por la nube),
+  - tu memoria y tus claves,
+  - tus skills y reglas globales, tus subagentes, tus hooks y tu settings: SOLO si lo abrís desde el pendrive
+    (desde el 20/10/2026 no están en la nube; el pendrive se arma en tu PC de Ingeniería con
+    node scripts/_pendriveAsistente.mjs --destino E:\ --aplicar),
   - y apaga el asistente "por área" si alguien lo instaló antes (ese es el recortado, que no instala programas).
 No borra nada de esa PC.
 
@@ -15,7 +18,7 @@ QUÉ HAY QUE HACER (una sola vez, en la PC nueva)
 Si algo no se puede (por ejemplo la red de la empresa bloquea GitHub), la ventana dice el motivo.
 
 PARA MANTENERLO AL DÍA
-  En tu PC de Ingeniería:  node scripts/_nube.mjs --subir --aplicar
-  En la otra PC:           volver a hacer doble clic en este archivo.
+  La memoria se sincroniza sola cada 2 horas por la nube.
+  Las skills nuevas: armar de nuevo el pendrive y volver a hacer doble clic en este archivo desde el pendrive.
 
 Dudas: Facundo Santoro (Ingeniería).

@@ -1,6 +1,8 @@
 /**
- * _nube.mjs — sincroniza el CEREBRO (memorias + config de Claude + secretos del repo)
+ * _nube.mjs — sincroniza la memoria de Claude, los registros de las charlas y los secretos del repo
  * contra OneDrive, para que otra PC arranque sabiendo todo lo que sabe esta.
+ * Desde el 20/10/2026 la CONFIG (skills, reglas, agentes, comandos, hooks, planes, settings) NO viaja por la
+ * nube: vive solo en las PC de Fak y va por pendrive (scripts/_pendriveAsistente.mjs, scripts/_lib/soloLocal.mjs).
  *
  * QUE VA Y QUE NO — y por que (decidido el 2026-09-03)
  *
@@ -47,8 +49,8 @@
  *    node scripts/_nube.mjs --sincronizar [--aplicar]
  *        Las dos direcciones a la vez, sin espejo: gana el archivo mas nuevo, nada se borra, y lo
  *        local que se va a pisar y esta PC edito despues de su ultimo sync se guarda antes en
- *        <nube>\_conflictos\<PC>\<fecha>\. Solo memoria, reglas, skills, agentes, comandos, hooks,
- *        planes y las claves: los caches (.sgc-cache, .arb-cache, .mail-cache) y settings.json
+ *        <nube>\_conflictos\<PC>\<fecha>\. Solo memoria y las claves (reglas, skills, agentes,
+ *        comandos, hooks y planes ya no, desde el 20/10/2026): los caches (.sgc-cache, .arb-cache, .mail-cache) y settings.json
  *        quedan para --subir/--bajar a mano (el buzon lo escriben las dos PC y los settings traen
  *        rutas de la PC de origen). Si el repo esta limpio y atras de GitHub, lo trae (--ff-only).
  *        Logica pura y probada: scripts/_lib/nubeSincronizar.mjs.
@@ -71,6 +73,7 @@ import {
 import { carpetasDeRegistros, subirRegistros, contarRegistros, leerSettings, avisoLimpieza } from './_lib/nubeRegistros.mjs';
 import { leerVersionClaude, avisoVersion } from './_lib/nubeVersion.mjs';
 import { psRun } from './_lib/powershell.mjs';
+import { PIEZAS_SOLO_LOCAL, SUELTOS_SOLO_LOCAL, CARPETA_CONFIG_EN_NUBE } from './_lib/soloLocal.mjs';
 
 const HOME = homedir();
 // El repo es el padre de scripts/, no una ruta fija: si se clona en otra carpeta, el
@@ -92,7 +95,7 @@ const EN_TRANSICION = !process.argv.includes('--subir') && !process.argv.include
 const NUBE = EN_TRANSICION ? NUBE_VIEJA : NUBE_INGENIERIA;
 
 // Cada pieza: [clave, carpeta local, subcarpeta en la nube, que es]
-const PIEZAS = [
+const PIEZAS_TODAS = [
     ['memoria', join(CLAUDE, 'projects', 'C--Dev-BarackMercosul', 'memory'), 'claude-memoria', 'lo que Claude aprendio de Fak'],
     ['reglas', join(CLAUDE, 'rules'), 'claude-config\\rules', 'reglas globales de Claude Code'],
     ['skills', join(CLAUDE, 'skills'), 'claude-config\\skills', 'skills globales'],
@@ -106,12 +109,22 @@ const PIEZAS = [
 ];
 
 // Archivos sueltos: [carpeta de origen, nombre, subcarpeta nube, que es]
-const SUELTOS = [
+const SUELTOS_TODOS = [
     [CLAUDE, 'settings.json', 'claude-config', 'settings globales de Claude Code'],
     [REPO, '.env.local', 'repo-privado', 'credenciales Supabase (NO van a git)'],
     [REPO, '.env.example', 'repo-privado', 'plantilla de variables'],
     [REPO, '.qr-secret', 'repo-privado', 'clave de firma de los QR de documentos'],
 ];
+
+// 20/10/2026 (Fak: *"lo que no quiero es que tengan mis skills... quiero tenerlas en local"*): las skills, reglas,
+// agentes, comandos, hooks, planes y el settings ya no viajan por la nube, en ninguna direccion. A otra PC van por
+// pendrive. Lo que habia en la nube se movio a C:\Dev\ASISTENTE-LOCAL\ (scripts/_lib/soloLocal.mjs).
+const PIEZAS = PIEZAS_TODAS.filter(([clave]) => !PIEZAS_SOLO_LOCAL.has(clave));
+const SUELTOS = SUELTOS_TODOS.filter(([, nombre]) => !SUELTOS_SOLO_LOCAL.has(nombre));
+/** Si la carpeta de la configuracion reaparecio en la nube (por ejemplo, una PC con el programa viejo), se avisa. */
+const avisoConfigEnNube = () => (existsSync(join(NUBE, CARPETA_CONFIG_EN_NUBE))
+    ? `en la nube volvio a aparecer ${CARPETA_CONFIG_EN_NUBE}\\ (las skills y la configuracion viven solo en la PC desde el 20/10): puede ser una PC con el programa viejo; mirar quien y sacarla con el OK de Fak`
+    : null);
 
 // 16/10/2026 (tanda 1.7): el settings de ESTA PC se deja para esta PC con el mismo ajustador del instalador: si vino de
 // otra PC (sus rutas de usuario, su PATH) se ajusta entero; si ya es de aca, solo se cablean los hooks globales que falten
@@ -391,6 +404,9 @@ if (sincronizar) {
         avisos.push(`pc nueva: no pude medir que le falta a esta PC (${String(e && e.message ? e.message : e).slice(0, 80)})`);
     }
 
+    const avConfig = avisoConfigEnNube();
+    if (avConfig) avisos.push(avConfig);
+
     // El codigo viaja por GitHub, no por la nube: si el repo esta limpio y atras, se trae; si tiene
     // commits sin pushear, se avisa (la otra PC no los ve). Sin red, se dice y se sigue.
     const git = estadoGitCompleto();
@@ -549,8 +565,9 @@ function leeme() {
         '',
         '       node scripts/_nube.mjs --bajar --aplicar',
         '',
-        '   Ese comando deja las memorias, las reglas, los hooks, los skills y las',
-        '   credenciales en su lugar. Listo.',
+        '   Ese comando deja las memorias y las credenciales en su lugar. Las skills,',
+        '   las reglas, los hooks y la configuracion NO estan en la nube (desde el',
+        '   20/10/2026 viven solo en la PC): se pasan con el pendrive.',
         '',
         '',
         '------------------------------------------------------------------------',
@@ -572,8 +589,8 @@ function leeme() {
         '  claude-memoria/   Lo que Claude sabe de como trabajas. Lo mas valioso de',
         '                    todo esto: sin esta carpeta el Claude de la otra PC',
         '                    arranca de cero.',
-        '  claude-config/    rules, skills, agents, commands, hooks, settings.json.',
-        '                    Las reglas y los guards que evitan que repita errores.',
+        '  (sin claude-config: desde el 20/10/2026 las skills, reglas, agentes,',
+        '                    hooks y el settings viven solo en la PC; van por pendrive)',
         '  claude-registros/ Los registros .jsonl de las charlas de cada PC (de todas',
         '                    sus carpetas, menos las temporales y las de estudio), una',
         '                    carpeta por proyecto. Solo suben (--sincronizar): la PC',

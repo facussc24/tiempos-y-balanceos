@@ -23,6 +23,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { validarTexto, limpiarTexto } from '../persona/armar.mjs';
 import { entradaCarpeta, resolverCarpeta } from '../../../scripts/_lib/nubeRutas.mjs';
+import { esRutaDeNube } from '../../../scripts/_lib/soloLocal.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const NUBE_INGENIERIA = 'C:\\Users\\FacundoS-PC\\BARACK ARGENTINA SRL\\Ingeniería y Proyecto - General';
@@ -186,6 +187,8 @@ function catalogoPrevio(carpeta) {
 export function publicar({ persona, mejoras, out, version, aplicar = false }) {
   // una subcarpeta por persona (`MEJORAS CLAUDE\Carlos Baptista`): publicar para otro no toca la de nadie
   const carpeta = carpetaDe(out, persona);
+  // 20/10/2026 (Fak: *"lo que no quiero es que tengan mis skills"*): las mejoras llevan sus skills; a la nube no van.
+  if (esRutaDeNube(carpeta)) return { problemas: [`${carpeta}: las skills de Fak no se publican en la nube desde el 20/10/2026 (van por pendrive); no se publico nada`] };
   const previo = catalogoPrevio(carpeta);
   // la carpeta es una sola: publicar para otra persona encima le sacaria la suya a la que ya la tiene
   if (previo && previo.para && previo.para.nombre !== persona.nombre) {

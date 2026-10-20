@@ -40,7 +40,9 @@ Write-Host ''
 # 1) de donde sale mi memoria y mi configuracion: de este pendrive (carpeta "nube" al lado de "programa"), o si no, de la
 #    biblioteca de Ingenieria (la que contiene este archivo)
 $paquete = Split-Path -Parent $aqui
-$desdePendrive = (Test-Path -LiteralPath (Join-Path $paquete 'nube\claude-memoria')) -and (Test-Path -LiteralPath (Join-Path $paquete 'nube\claude-config'))
+# 20/10/2026: las skills y la configuracion ya no estan en la nube (viven en las PC de Fak y viajan por pendrive, lo arma
+#    scripts/_pendriveAsistente.mjs): alcanza con la memoria para reconocer el pendrive y la nube.
+$desdePendrive = Test-Path -LiteralPath (Join-Path $paquete 'nube\claude-memoria')
 $bib = $null
 $nube = $null
 if ($desdePendrive) {
@@ -69,7 +71,7 @@ if (-not $desdePendrive) {
   $basesMemoria = @(Join-Path $bib 'ASISTENTE INGENIERIA\5- FACUNDO (memoria y configuracion)')
   $basesMemoria += @(Get-ChildItem -LiteralPath $bib -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
   foreach ($d in $basesMemoria) {
-    if ((Test-Path -LiteralPath (Join-Path $d 'claude-memoria')) -and (Test-Path -LiteralPath (Join-Path $d 'claude-config'))) { $nube = $d; break }
+    if (Test-Path -LiteralPath (Join-Path $d 'claude-memoria')) { $nube = $d; break }
   }
   if (-not $nube) { Mal 'no veo en la nube de Ingenieria la carpeta con tu memoria y tu configuracion. Tiene permiso solo para tu cuenta: sincroniza la biblioteca con tu cuenta (SharePoint > Documentos > Sincronizar) y espera a que termine.' }
   Ok ('tu memoria y tu configuracion: ' + $nube)
@@ -158,7 +160,7 @@ else {
 # 4) la memoria y la configuracion (lo que escribe el programa del repo: nunca borra nada de esta PC)
 if (Test-Path -LiteralPath (Join-Path $Repo 'scripts\_nube.mjs')) {
   Write-Host ''
-  Write-Host '  Trayendo tu memoria, tus skills, tus reglas y tus claves de la nube...'
+  Write-Host '  Trayendo tu memoria y tus claves...'
   Push-Location $Repo
   if ($Ensayo) { & $node 'scripts\_nube.mjs' --bajar 2>&1 | ForEach-Object { Write-Host ('    ' + $_) -ForegroundColor DarkGray } }
   else {
@@ -166,8 +168,21 @@ if (Test-Path -LiteralPath (Join-Path $Repo 'scripts\_nube.mjs')) {
     if ($LASTEXITCODE -ne 0) { Pop-Location; Mal 'no pude traer la memoria de la nube (el detalle esta arriba).' }
   }
   Pop-Location
-  if (-not $Ensayo) { Ok 'memoria, skills, reglas y claves en su lugar' }
+  if (-not $Ensayo) { Ok 'memoria y claves en su lugar' }
 } else { Haria 'traer la memoria y la configuracion con scripts\_nube.mjs --bajar --aplicar' }
+
+# 4 bis) las skills, reglas, agentes, comandos, hooks y planes: solo vienen en el pendrive (20/10/2026, no estan en la nube).
+#        Se copian sin borrar nada de esta PC (robocopy /E).
+$config = Join-Path $nube 'claude-config'
+if (Test-Path -LiteralPath $config -PathType Container) {
+  foreach ($sub in @('rules', 'skills', 'agents', 'commands', 'hooks', 'plans')) {
+    $o = Join-Path $config $sub
+    if (-not (Test-Path -LiteralPath $o -PathType Container)) { continue }
+    if ($Ensayo) { Haria ('copiar ' + $sub + ' a ' + (Join-Path $claudeDir $sub)); continue }
+    & robocopy $o (Join-Path $claudeDir $sub) /E /COPY:DAT /R:1 /W:1 /NP /NFL /NDL /NJH /NJS | Out-Null
+    if ($LASTEXITCODE -ge 8) { Ojo ('no pude copiar ' + $sub + ' (robocopy ' + $LASTEXITCODE + ')') } else { Ok ($sub + ' en su lugar') }
+  }
+} else { Ojo 'tus skills, reglas y hooks no vienen aca (no estan en la nube desde el 20/10): traelos con el pendrive (node scripts\_pendriveAsistente.mjs en la PC principal).' }
 
 # 5) el settings.json de Claude: el tuyo, sin lo que es de la otra PC, y con el asistente por area apagado
 $ajuste = Join-Path $aqui 'ajustar_settings.mjs'
@@ -183,7 +198,7 @@ if (Test-Path -LiteralPath $origenSettings) {
     if ($Ensayo) { Haria 'dejar tu settings.json de Claude' } else { Ok 'settings.json de Claude: el tuyo' }
     if ($r.respaldo) { Ok ('lo que habia quedo guardado en ' + $r.respaldo) }
   } else { Ojo ('no pude dejar tu settings.json de Claude: ' + $salida) }
-} else { Ojo 'en la nube no esta tu settings.json de Claude.' }
+} else { Ojo 'tu settings.json de Claude no viene aca (desde el 20/10 viaja solo por pendrive).' }
 
 # 6) el asistente "por area": si esta, se apaga (no se borra nada)
 $tarea = Get-ScheduledTask -TaskName $TAREA_POR_AREA -ErrorAction SilentlyContinue

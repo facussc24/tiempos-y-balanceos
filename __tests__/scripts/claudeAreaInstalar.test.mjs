@@ -1604,9 +1604,15 @@ function publicarOtra(armada, nube, n = 2) {
     esc(armada.conocimiento, `comun/novedad-v${n}.md`, `# Novedad de la versión ${n}\n`);
     const st = path.join(tmp, `staging-v${n}`);
     expect(A.armarPublicable({ pluginRepo: armada.repo, conocimiento: armada.conocimiento, programasDe: RAIZ, salida: st, ahora: F(2 + n) }).estado).toBe('armado');
-    const r = A.publicarPublicable({ salida: st, nube, clavePrivada: armada.rutaClave, identidad: { usuario: '', pc: '' }, ahora: F(2 + n) });
+    // Desde el 20/10/2026 `publicar` no escribe en una ruta con nombre de nube (las skills van por pendrive). Cuando la
+    // prueba simula la biblioteca por su nombre real, se publica en una carpeta comun y se copia ahi, como haria el pendrive.
+    const enNube = /[\\/][^\\/]*barack argentina srl[\\/]/i.test(`${nube}\\`);
+    const destino = enNube ? path.join(tmp, `nube-local-v${n}`) : nube;
+    if (enNube) copiarCarpeta(nube, destino);
+    const r = A.publicarPublicable({ salida: st, nube: destino, clavePrivada: armada.rutaClave, identidad: { usuario: '', pc: '' }, ahora: F(2 + n) });
     expect(r.errores).toEqual([]);
     expect(r.version).toBe(n);
+    if (enNube) copiarCarpeta(destino, nube);
     return r;
 }
 const mismaCarpeta = (a, b) => fs.realpathSync.native(a).toLowerCase() === fs.realpathSync.native(b).toLowerCase();
