@@ -207,7 +207,7 @@
 
 | Regla | Numero | Fuente | Estado | Contexto / aviso |
 |---|---|---|---|---|
-| PLA vs PETG | PETG recomendado como material del patron impreso; "PLA se ablanda y se deforma con el uso" | https://www.bu.edu/epic/equipment/thermoforming | ABIERTA | Universidad (laboratorio) |
+| PLA vs PETG | PETG recomendado como material del patron impreso; "PLA se ablanda y se deforma con el uso" | https://www.bu.edu/epic/equipment/thermoforming | ABIERTA · VERIFICADA 20/10 (textual) | Universidad (laboratorio) |
 | Temperatura de la lamina en ese laboratorio | ABS 260-280 °F (≈ 127-138 °C); PETG y HIPS 260-270 °F (≈ 127-132 °C) | misma pagina | ABIERTA | Conversion mia |
 | HDT del PLA Basic de Bambu | 57 °C a 0,45 MPa; 54 °C a 1,8 MPa | https://wiki.bambulab.com/filament-acc/abs-asa-pc/bambu_pla_basic_technical_data_sheet.pdf | SECUNDARIA | Ficha tecnica en PDF, solo el resumen del buscador |
 | HDT del PETG (impresion 3D) | — | No se pudo abrir ninguna ficha | SIN FUENTE | Las paginas de Bambu devolvieron error 402/403 |
