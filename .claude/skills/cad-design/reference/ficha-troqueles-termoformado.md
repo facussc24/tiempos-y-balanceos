@@ -25,7 +25,7 @@
 | Espesor 2 pt y 3 pt | 2 pt = 0,71 mm; 3 pt = 1,05 mm (tambien 4 pt = 1,42; 1,3 pt = 0,45; 1,5 pt = 0,53). Tolerancia de espesor ±0,015 mm (2 pt) y ±0,020 mm (3 pt) | https://www.voestalpine.com/precision-strip/products-brands/scandie/product-information — tabla espesor mm / pt / tolerancia | ABIERTA · VERIFICADA 20/10 (textual) | Fabricante de fleje (Scandie). Otro listado da 3 pt = 1,07 mm (ver A2); aca figura 1,05 mm | **VERIFICADA 20/10 en voestalpine (0,71 ±0,015 = 2 pt; 1,05 ±0,020 = 3 pt, textual).**
 | Espesores en pulgada | 2 pt = 0,028" (0,71 mm); hasta 8 pt = 0,112" (2,84 mm) | https://fremontcuttingdies.com/steel-rule-dies/ — "2pt (0.028″, 0.71mm) to 8pt (0.112″, 2.84mm)" | ABIERTA · VERIFICADA 20/10 (textual) | Troquelador de EEUU |
 | Alturas disponibles | 22-50 mm en los grados 350 HF, 400 HF y 700 HFD; 22-100 mm en los grados 400, 450, 450 HF y 500 HF; 2 pt y 3 pt disponibles en todos (4 pt en todos menos el 700 HFD) | https://www.voestalpine.com/precision-strip/products-brands/scandie/about-the-brand/cutting-rules — tabla por grado | ABIERTA · VERIFICADA 20/10 (textual) | Fabricante de fleje. La pagina /scandie/cutting-rules da solo 22-30 mm en 2 y 3 pt: no confundirlas |
-| Altura "estandar" 23,8 mm (0,937") | 23,8 mm = 0,937" (conversion mia). Aparece como altura de arranque en una dobladora rotativa (23,8-26,9 mm) | https://www.ytdiemaker.com/automatic-bending-machine/rotary-rule-bending-machine.html — "Bending blade height 23.8–26.9 mm" | ABIERTA | Solo muestra que 23,8 es altura comun de maquina; NO dice "estandar". Los listados "2pt/3pt 0.937" (ebay) y "0.71*23.80" (globalsources) solo salieron del buscador: SECUNDARIA |
+| Altura "estandar" 23,8 mm (0,937") | 23,8 mm = 0,937" (conversion mia). Aparece como altura de arranque en una dobladora rotativa (23,8-26,9 mm) | https://www.ytdiemaker.com/automatic-bending-machine/rotary-rule-bending-machine.html — "Bending blade height 23.8–26.9 mm" | ABIERTA · VERIFICADA 20/10 (textual) | Solo muestra que 23,8 es altura comun de maquina; NO dice "estandar". Los listados "2pt/3pt 0.937" (ebay) y "0.71*23.80" (globalsources) solo salieron del buscador: SECUNDARIA |
 | Altura del fleje, rango general | 19 mm (0,75") a 76,2 mm (3,00") | https://fremontcuttingdies.com/steel-rule-dies/ | ABIERTA · VERIFICADA 20/10 (textual) | Troquelador de EEUU |
 | Tolerancia de altura | ±0,020 mm (altura < 35 mm); ±0,030 mm (≥ 35 mm); rectitud max 0,5 mm por metro | https://www.voestalpine.com/precision-strip/products-brands/scandie/product-information — "tolerances ... European Diecutting Association (ESU)" | ABIERTA · VERIFICADA 20/10 (textual) | Es la unica referencia a una asociacion del sector (ESU), via fabricante |
 | Tipos de bisel | CB (center bevel), SB (side bevel), LCB (long center bevel), LSB (long side bevel) | https://www.voestalpine.com/precision-strip/products-brands/scandie/cutting-rules — pagina "Bevel Execution": define CB, SB, LCB y LSB (el resumen de la lectura los trajo como Center / Side / Long Center / Long Side Bevel) | ABIERTA · VERIFICADA 20/10 (textual) | La tabla de grados de la otra pagina de voestalpine (about-the-brand/cutting-rules) solo lista los codigos sin definirlos |
@@ -68,8 +68,8 @@
 
 | Regla | Numero | Fuente | Estado | Contexto / aviso |
 |---|---|---|---|---|
-| Material del tablero | Contrachapado multilaminado de abedul o arce, fibras cruzadas | https://www.optica.org/about/newsroom/corporate_member_news/2024/die_board_cutting_with_co2_lasers — "typically birch or maple" | ABIERTA | Nota de un fabricante de laser (Luxinar) |
-| Espesor del tablero cortado con laser | 12-18 mm (ensayos con laser CO2 de 100-1000 W) | misma pagina | ABIERTA | Fabricante de laser |
+| Material del tablero | Contrachapado grueso de abedul o arce | https://www.optica.org/about/newsroom/corporate_member_news/2024/die_board_cutting_with_co2_lasers — "typically birch or maple" | ABIERTA · VERIFICADA 20/10 (corregida: "fibras cruzadas" no esta en la fuente) | Nota de un fabricante de laser (Luxinar) |
+| Espesor del tablero cortado con laser | 12-18 mm (ensayos con laser CO2 de 100-1000 W) | misma pagina | ABIERTA · VERIFICADA 20/10 (textual) | Fabricante de laser |
 | Espesor tipico de tablero | 5/8" a 3/4" (≈ 16-19 mm); el laser corta "limpio" hasta ~3/8" (≈ 9,5 mm) segun la patente (antigua) | https://patents.google.com/patent/US5566594 | ABIERTA | Patente de tablero apilado; el limite de 3/8" es lo que dice la patente, y la fila anterior da 12-18 mm cortados con laser |
 | Ancho de la ranura laser | Ranura ≈ ancho del fleje, un poco menor para que quede a presion; ejemplo 0,028" (0,71 mm) para fleje 2 pt | https://sawmillcreek.org/goto/post?id=1446855 (foro: dice 0,028" de ancho) y https://tombrowninc.com/blog/basics-steel-rule-die-cutting/ ("slightly less than the width of the cutting blade") | ABIERTA · VERIFICADA 20/10 solo tombrown (ranura un poco mas angosta que el fleje); el 0,028" del foro sin revisar | Foro de carpinteria + troquelador. Un valor de 0,026-0,027" para encaje a presion salio de un resumen del buscador de una patente: SECUNDARIA |
 | Forma de la ranura | Mejor con forma de "reloj de arena invertido": solo las laminas de arriba y de abajo aprietan el fleje | https://sawmillcreek.org/goto/post?id=1446855 | ABIERTA | Opinion de un troquelador en un foro |
@@ -84,7 +84,7 @@
 | Rotar y dar vuelta | "Rotate & Flip the Pad for Even Wear"; no concentrar cortes en una zona; guardar en horizontal | misma pagina | ABIERTA · VERIFICADA 20/10 (textual) | Proveedor; sin frecuencia |
 | Profundidad maxima de corte en la tabla | 0,01" (0,3 mm) | misma pagina — "A maximum cutting depth of 0.01" (0.3 mm) is recommended" | ABIERTA · VERIFICADA 20/10 (textual) | Proveedor; la frase es ambigua (profundidad de huella en la tabla) |
 | Colada vs extruida | La colada tiene paralelismo ±0,008" (±0,2 mm), no se arquea y se puede rectificar; la extruida es "descartable" y se arquea | misma pagina | ABIERTA · VERIFICADA 20/10 (textual) | Proveedor |
-| Tabla de maquina clicker | PP, Shore D 74-78, espesor 25 y 50 mm, tolerancia ±0,8 mm | https://www.shoesmachines.com/plastic-cutting-board.html | ABIERTA | Fabricante de prensas hidraulicas de corte (cuero, goma, tela). El listado dice "PP" |
+| Tabla de maquina clicker | PP, Shore D 74-78, espesor 25 y 50 mm, tolerancia ±0,8 mm | https://www.shoesmachines.com/plastic-cutting-board.html | ABIERTA · VERIFICADA 20/10 (textual) | Fabricante de prensas hidraulicas de corte (cuero, goma, tela). El listado dice "PP" |
 | Dureza de la tabla respecto de la goma | La tabla ("anvil") debe ser mas dura que la goma expulsora; para corte pasante se nombran UHMW-PE, nylon, poliuretano | https://www.ytdiemaker.com/others-supplier/die-cutting-rubber.html | ABIERTA · VERIFICADA 20/10 (textual) | Sin valor Shore D |
 | Equilibrio blandura / duracion | Shore D 70 como compromiso: blanda para cuidar el filo, resistente para durar | https://www.hammerheadindustrial.com/products/1-polypropylene-cutting-boards | ABIERTA | Proveedor | **20/10: verificado en hammerhead solo «PP, Shore D 70»; rotar/dar vuelta y la huella maxima NO estan en esa pagina.**
 | Camas de HDPE de 1/2" y 1" en prensas clicker | 12,7 y 25,4 mm | https://www.crossco.com/products/tft/fabric-garment-testing/clicker-presses-hydraulic-pneumatic-fabric/ | SECUNDARIA | La pagina abierta no mostro el material ni el espesor; el dato salio del buscador |
@@ -98,7 +98,7 @@
 | Penetracion del fleje en la tabla | Maximo 0,3 mm (0,01") | https://www.starpackagingsupplies.com/C/838/DieCuttingBoards | ABIERTA · VERIFICADA 20/10 (textual) | Proveedor de tablas de PP |
 | Largo del fleje pasado el espesor del material | "0,5-1,5 mm mas alla del espesor del material" | https://www.ytdiemaker.com/others-supplier/die-cutting-rubber.html | ABIERTA · VERIFICADA 20/10 (textual) | Proveedor chino; se refiere a cuanto debe pasar el filo, no a como se regula la prensa. Ver conflicto en C |
 | Tolerancia dimensional del corte con fleje | ±0,010-0,015" (±0,25-0,38 mm); la flexion del fleje limita a ±0,010" | https://colvin-friedman.com/die-cutting-tolerances/ | ABIERTA · VERIFICADA 20/10 parcial (general, flexion, PVC y espuma PU; celda cerrada y radios chicos sin revisar) | Troquelador. Por material: PVC flexible > 0,020": ±0,015-0,025"; espuma PU baja densidad hasta 0,5": ±0,030-0,050"; espuma de celda cerrada densa: ±0,010-0,025"; radios chicos (0,062-0,50"): ±0,010-0,030" |
-| Una matriz sin filo necesita mas fuerza y compresion | Cualitativo | https://www.jbc-tech.com/blog/posts/steel-rule-die-cutting-101/ — "A dull die will require more force and compression" | ABIERTA | Sin numeros |
+| Una matriz sin filo necesita mas fuerza y compresion | Cualitativo | https://www.jbc-tech.com/blog/posts/steel-rule-die-cutting-101/ — "A dull die will require more force and compression" | ABIERTA · VERIFICADA 20/10 (textual) | Sin numeros |
 | Procedimiento de ajuste para vinilo + espuma | — | No se encontro | SIN FUENTE | Hay que probar |
 
 ### A7. Fuerza de corte
@@ -116,8 +116,8 @@
 | Regla | Numero | Fuente | Estado | Contexto / aviso |
 |---|---|---|---|---|
 | Idoneidad del fleje para agujeros chicos | "No es bueno para troqueles de diametro chico o formas complejas si uno no sabe lo que hace" | https://www.mmdigest.com/archives/Digests/200905/2009.05.12.05.html (Spencer Chase) | ABIERTA | Opinion en un foro de modelismo; los punzones tubulares se compran en pasos de 1/64" (chicos) y 1/16" (grandes) |
-| Separacion entre bordes de agujeros | "0,125" (≈ 3,2 mm) entre bordes", mayor segun el diametro del punzon y el espesor | https://bgpeck.com/die-cutting/ | ABIERTA | Troquelador; vale para agujeros troquelados, no queda claro si es dentro de un troquel de fleje |
-| Tamaños de agujero estandar | Pasos de 1/64" | https://bgpeck.com/die-cutting/ | ABIERTA | |
+| Separacion entre bordes de agujeros | "0,125" (≈ 3,2 mm) entre bordes", mayor segun el diametro del punzon y el espesor | https://bgpeck.com/die-cutting/ | ABIERTA · VERIFICADA 20/10 solo "0,125 entre bordes" | Troquelador; vale para agujeros troquelados, no queda claro si es dentro de un troquel de fleje |
+| Tamaños de agujero estandar | Pasos de 1/64" | https://bgpeck.com/die-cutting/ | ABIERTA · VERIFICADA 20/10 (textual) | |
 | Como se fijan los punzones | A presion en ranuras de la madera; se aflojan con el desgaste | https://patents.justia.com/patent/20150190942 (via buscador) | SECUNDARIA | Patente |
 | Diametro minimo / construccion del sacabocados para un ojal de X mm dentro del troquel | — | No se encontro | SIN FUENTE | Preguntar al troquelador / a la casa que vende punzones |
 
@@ -148,7 +148,7 @@
 | Macho / hembra (Stratasys, guia FDM) | Macho 3-4°; hembra 2-3° | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ — Tabla 1 | ABIERTA · VERIFICADA 20/10 (textual) | Fabricante de impresoras FDM. Valores de referencia |
 | Minimo con moldes impresos en resina (Formlabs, guia de termoformado) | 2-3° minimo; casos reales: 3° general (IPC), ≥ 2° (Glassboard), 3° (Formech) | https://formlabs.com/eu/blog/thermoforming-with-3d-printed-molds-formech | ABIERTA · VERIFICADA 20/10 (textual) | Casos reales de laminas de 1,5-3 mm |
 | Rango general de moldes de envases | 1°-5°; embuticion profunda, texturas o material de mucha contraccion: 3°-5°; PET reciclado: minimo 2° | https://gabler-thermoform.com/what-draft-angles-radii-and-wall-ratios-does-thermoforming-require/ | ABIERTA · VERIFICADA 20/10 (textual) | Fabricante de maquinas |
-| Minimo general | 1°-3°; "5° o mas ayuda mucho al desmoldeo" | https://www.digitalengineering247.com/download/3d-printed-vacuum-form-molds | ABIERTA | Nota tecnica de un proveedor de impresion 3D |
+| Minimo general | 1°-3°; "5° o mas ayuda mucho al desmoldeo" | https://www.digitalengineering247.com/download/3d-printed-vacuum-form-molds | ABIERTA · VERIFICADA 20/10 (textual) | Nota tecnica de un proveedor de impresion 3D |
 | Desmoldeo 5-7° en moldes conicos | 5-7° | Folleto de Eastman (PDF no leido en el navegador) | SECUNDARIA | Fabricante de lamina de copoliester |
 | Desmoldeo para piel de vinilo con espuma | — | No se encontro | SIN FUENTE | |
 
@@ -156,9 +156,9 @@
 
 | Regla | Numero | Fuente | Estado | Contexto / aviso |
 |---|---|---|---|---|
-| Diametro maximo respecto de la lamina | El diametro "no debe superar el espesor de la lamina que lo cubre"; si no, la lamina se mete en el agujero y deja marca o se rompe | https://atna-mam.utcluj.ro/index.php/Acta/article/view/2028 (Boca y Sover, Acta Technica Napocensis) | ABIERTA | Paper revisado, sobre moldes de fabricacion aditiva. Lograron agujeros de 0,35 mm cambiando inclinacion y parametros de impresion |
+| Diametro maximo respecto de la lamina | El diametro "no debe superar el espesor de la lamina que lo cubre"; si no, la lamina se mete en el agujero y deja marca o se rompe | https://atna-mam.utcluj.ro/index.php/Acta/article/view/2028 (Boca y Sover, Acta Technica Napocensis) | ABIERTA · VERIFICADA 20/10 (textual, en el resumen del paper) | Paper revisado, sobre moldes de fabricacion aditiva. Lograron agujeros de 0,35 mm cambiando inclinacion y parametros de impresion |
 | Diametros usados en casos reales | 0,5 mm minimo imprimible en Grey Resin; IPC 1 mm (1,2 mm en la V2, especificacion 0,8-1,2 mm); Glassboard 1,5 mm; Formech 1 mm. Con Rigid 10K / Fast Model hay que perforar los menores de 1 mm | https://formlabs.com/eu/blog/thermoforming-with-3d-printed-molds-formech | ABIERTA · VERIFICADA 20/10 (textual) | Laminas de 1,5-3 mm |
-| Pared minima del molde impreso | 1-2 mm | misma pagina | ABIERTA | |
+| Pared minima del molde impreso | 1-2 mm | misma pagina | ABIERTA · NO VERIFICABLE sin el PDF del paper (el resumen no lo dice) | |
 | Un caso con PETG | Agujeros de 1 mm donde queda aire atrapado | https://fabacademy.org/2025/labs/leon/students/david-fernandez/assignments/week17.html | ABIERTA | Trabajo de un estudiante (Fab Academy), Mayku FormBox | **VERIFICADA 20/10 (textual).**
 | Moldes FDM con relleno ralo | La porosidad del relleno evita los canales; brecha de trama maxima 0,003" (0,076 mm) | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ | ABIERTA · VERIFICADA 20/10 (textual) | Fabricante FDM; con PC / ULTEM 9085 |
 | Donde ponerlos | En bolsillos internos y rincones donde se atrapa aire; "agujeros para ayudar al vacio a tirar la lamina alrededor de detalles" | https://formlabs.com/blog/prototyping-vacuum-forming/ y https://www.bu.edu/epic/equipment/thermoforming | VERIFICADA 20/10 en Formlabs («vent holes» en bolsillos internos) · ABIERTA | Sin separacion numerica |
@@ -171,13 +171,13 @@
 |---|---|---|---|---|
 | Causa | Varios machos cercanos entre si; el webbing aparece cuando no se controla el flujo de la lamina caliente | https://soa.syr.edu/resources/technology/digital-fabrication/vacuum-forming.php y https://es.formech.com/blog/formech-technical-newsletter-webbing | ABIERTA · VERIFICADA 20/10 solo la parte de soa.syr.edu (machos cercanos) | Universidad / Formech. La pagina de Formech tiene las soluciones como imagen: no se pudieron leer |
 | Remedio basico | Separar los machos, o usar hembras (negativos): reduce o elimina el webbing | https://soa.syr.edu/resources/technology/digital-fabrication/vacuum-forming.php | ABIERTA · VERIFICADA 20/10 (textual) | Sin distancia |
-| Distancia al borde de la abertura | 0,3-1,0 × la altura del molde (ej.: molde de 50 mm -> 25 mm con 0,5 ×) | https://es.formech.com/blog/formech-technical-newsletter-tooling-materials-8 | ABIERTA | Fabricante de maquinas; para un solo bloque de altura uniforme. **No es separacion entre machos** | **20/10: NO verificable en la página web (las medidas están en una imagen y en el PDF del boletín); el PDF no se abre de noche.**
-| Lamina demasiado grande | Genera webbing y dificulta el desmoldeo | misma pagina | ABIERTA | |
+| Distancia al borde de la abertura | 0,3-1,0 × la altura del molde (ej.: molde de 50 mm -> 25 mm con 0,5 ×) | https://es.formech.com/blog/formech-technical-newsletter-tooling-materials-8 | ABIERTA · VERIFICADA 20/10 (textual) | Fabricante de maquinas; para un solo bloque de altura uniforme. **No es separacion entre machos** | **20/10: NO verificable en la página web (las medidas están en una imagen y en el PDF del boletín); el PDF no se abre de noche.**
+| Lamina demasiado grande | Genera webbing y dificulta el desmoldeo | misma pagina | ABIERTA · VERIFICADA 20/10 (textual) | |
 | Separacion entre machos | 1 pulgada de separacion por cada pulgada de profundidad de cavidad (1:1) | Folleto de Eastman (PDF no leido) | SECUNDARIA | Fabricante de copoliester, para bandejas. Es la unica regla numerica de separacion entre machos que salio |
 | Remedios de Formech (boletin 2) | Molde demasiado alto respecto de su base: agregar un faldon a 45°; bloques en angulo en las esquinas; alambres u hojas de acero en el marco de sujecion; marco en el tapon de ayuda; aplicar el vacio gradual; hembra en lugar de macho | https://digilab.uma.es/pdf/formech_PDF/Technical-Newsletter-2-Webbings.pdf | SECUNDARIA | Resumen del buscador; el PDF no se abrio (ver seccion E) |
 | Tapon de ayuda | ~80 % del tamaño de la cavidad; desciende 70-75 % de la profundidad | Boletin de Formech sobre tapon de ayuda (resumen del buscador) | SECUNDARIA | |
 | Aristas vivas del molde | Romper con chaflanes o radios para reducir el rasgado y el webbing | https://formlabs.com/blog/prototyping-vacuum-forming/ | ABIERTA · VERIFICADA 20/10 (textual) | Sin dimension |
-| Mas desmoldeo ayuda | En embuticiones profundas con paredes verticales | https://www.digitalengineering247.com/download/3d-printed-vacuum-form-molds | ABIERTA | |
+| Mas desmoldeo ayuda | En embuticiones profundas con paredes verticales | https://www.digitalengineering247.com/download/3d-printed-vacuum-form-molds | ABIERTA · VERIFICADA 20/10 (corregida: la pagina dice que mas desmoldeo ayuda contra el WEBBING en esas geometrias) | |
 | Exceso de calor y tiempo | Un caso con PETG tuvo webbing en la base en los 2 primeros ciclos; se corrigio calentando solo hasta que la lamina "empezo a combarse" | https://fabacademy.org/2025/labs/leon/students/david-fernandez/assignments/week17.html | ABIERTA | Estudiante, una sola prueba | **VERIFICADA 20/10 (textual).**
 | Hembra: profundidad del agujero | Menor al 75 % del ancho | https://soa.syr.edu/resources/technology/digital-fabrication/vacuum-forming.php | ABIERTA · VERIFICADA 20/10 (textual) | Regla de taller de universidad |
 
@@ -187,7 +187,7 @@
 |---|---|---|---|---|
 | Radio minimo de herramienta (Stratasys) | 0,050" (1,27 mm) o el espesor de la lamina | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ — Tabla 1 | ABIERTA · VERIFICADA 20/10 (textual) | |
 | Radio interior (Gabler) | Minimo 0,5 mm en lamina fina; mejor 1-3 mm; radios exteriores ≥ el espesor de la lamina; borde de brida redondeado al menos el espesor | https://gabler-thermoform.com/what-draft-angles-radii-and-wall-ratios-does-thermoforming-require/ | ABIERTA · VERIFICADA 20/10 (textual) | Fabricante de maquinas |
-| Radio minimo (Digital Engineering) | "Mayor que el espesor del material" | https://www.digitalengineering247.com/download/3d-printed-vacuum-form-molds | ABIERTA | Sin valor |
+| Radio minimo (Digital Engineering) | "Mayor que el espesor del material" | https://www.digitalengineering247.com/download/3d-printed-vacuum-form-molds | ABIERTA · VERIFICADA 20/10 (textual) | Sin valor |
 | Radio minimo de contorno | 5/64" (1,98 mm) | Folleto de Eastman | SECUNDARIA | |
 
 ### B5. Relacion de estirado y adelgazamiento
@@ -198,8 +198,8 @@
 | Espesor de lamina de partida | Relacion de embuticion × espesor deseado de la pieza = espesor minimo de lamina | misma pagina | ABIERTA · VERIFICADA 20/10 (textual) | |
 | Relacion de embuticion areal (Stratasys) | 3:1 como maximo | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ | ABIERTA · VERIFICADA 20/10 (textual) | |
 | Relacion de espesor de pared | Objetivo 3:1 a 4:1 (la pared mas fina es un tercio de la lamina); revisar si se acerca o pasa 4:1 | https://gabler-thermoform.com/what-draft-angles-radii-and-wall-ratios-does-thermoforming-require/ | ABIERTA · VERIFICADA 20/10 (textual) | |
-| Adelgazamiento en las paredes casi verticales de un bloque | Alrededor del 50 % | https://es.formech.com/blog/formech-technical-newsletter-tooling-materials-8 | ABIERTA | Con una cuadricula impresa de 10 mm en la lamina se ve donde estira mas |
-| Contraccion de la pieza | 0,4 %-0,8 % segun plastico y espesor | https://www.digitalengineering247.com/download/3d-printed-vacuum-form-molds | ABIERTA | |
+| Adelgazamiento en las paredes casi verticales de un bloque | Alrededor del 50 % | https://es.formech.com/blog/formech-technical-newsletter-tooling-materials-8 | ABIERTA · VERIFICADA 20/10 (textual) | Con una cuadricula impresa de 10 mm en la lamina se ve donde estira mas |
+| Contraccion de la pieza | 0,4 %-0,8 % segun plastico y espesor | https://www.digitalengineering247.com/download/3d-printed-vacuum-form-molds | ABIERTA · VERIFICADA 20/10 (textual) | |
 | Estirado maximo / relacion para vinilo + espuma | — | No se encontro | SIN FUENTE | |
 | Temperatura de piel PVC | 180-225 °C (patente de piel de panel); 160 °C o mas para copiar textura de molde (patente japonesa; la espuma de PP puede romperse arriba de eso) | Patentes (resumen del buscador) | SECUNDARIA | No son reglas de proceso: son ejemplos de patentes |
 
@@ -238,7 +238,7 @@
 |---|---|---|---|---|
 | Moldes de resina | "Muy buena rugosidad"; la PS formada salio lisa sin marcas; ~20 minutos de lijado para terminar el molde en Fast Model Resin | https://formlabs.com/global/blog/thermoforming-with-3d-printed-molds-ipc-technical-study/ | ABIERTA · VERIFICADA 20/10 parcial (rugosidad y 20 min de lijado; "PS lisa sin marcas" no se confirmo) | Fabricante. Laminas rigidas de 1,5-3 mm |
 | Molde FDM de PETG lijado | "Tuve que lijar la superficie del molde impreso" | https://fabacademy.org/2025/labs/leon/students/david-fernandez/assignments/week17.html | ABIERTA | Estudiante |
-| PolyJet | Superficies muy lisas con poco o nada de posproceso | https://www.digitalengineering247.com/download/3d-printed-vacuum-form-molds | ABIERTA | No dice si el acabado se copia a la pieza |
+| PolyJet | Superficies muy lisas con poco o nada de posproceso | https://www.digitalengineering247.com/download/3d-printed-vacuum-form-molds | ABIERTA · VERIFICADA 20/10 (textual) | No dice si el acabado se copia a la pieza |
 | Textura | Aumenta el desmoldeo necesario | https://formlabs.com/blog/prototyping-vacuum-forming/ | ABIERTA · VERIFICADA 20/10 (textual) | |
 | Las lineas de capa del FDM se copian a la lamina; tapar con relleno o imprimacion | Cualitativo | Resumen del buscador (foros y un articulo de moldes de silicona) | SECUNDARIA | No se probo en moldes de vacio |
 | Cuanto se copia la rugosidad del molde en el lado vista del vinilo o en el grano | — | No se encontro | SIN FUENTE | |
