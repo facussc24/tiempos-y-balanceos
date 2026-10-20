@@ -530,3 +530,8 @@ con su caso malo antes de creerle.
 - **Una palanca bajada viene acostada para imprimir**: el armado sale de medir sus agujeros (distancias entre ejes) y
   probar las conexiones posibles del cuatro barras: la que traba y abre ~100° es la de un sargento de catálogo; la otra
   daba una vuelta entera. El nombre de las piezas en la página del autor no alcanza para saber cuál es cuál.
+- **Simular un recorrido RÁPIDO** (Fak, 20/10: *«es muy grave que te lleve tanto tiempo»*): el booleano exacto de
+  OpenCASCADE contra el panel del cliente (1.261 caras) tardaba ~5 min por posición. Con mallas hechas una vez
+  (`tessellate(0,05)`) y `manifold3d` (ya instalado en `.venv-cad`): **65 posiciones en 4,5 s**, gemelo (barra 2 mm
+  abajo) 378 mm³. Ojo: dos caras que se tocan por diseño (una base pegada) dan ~0,06 mm³ de ruido de malla; se
+  filtran por par, no subiendo el umbral. El exacto queda para la posición cerrada. `virolador_auto/sim_rapida.py`.
