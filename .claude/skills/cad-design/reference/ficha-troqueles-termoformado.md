@@ -118,7 +118,7 @@
 | Idoneidad del fleje para agujeros chicos | "No es bueno para troqueles de diametro chico o formas complejas si uno no sabe lo que hace" | https://www.mmdigest.com/archives/Digests/200905/2009.05.12.05.html (Spencer Chase) | ABIERTA · VERIFICADA 20/10 (textual) | Opinion en un foro de modelismo; los punzones tubulares se compran en pasos de 1/64" (chicos) y 1/16" (grandes) |
 | Separacion entre bordes de agujeros | "0,125" (≈ 3,2 mm) entre bordes", mayor segun el diametro del punzon y el espesor | https://bgpeck.com/die-cutting/ | ABIERTA · VERIFICADA 20/10 solo "0,125 entre bordes" | Troquelador; vale para agujeros troquelados, no queda claro si es dentro de un troquel de fleje |
 | Tamaños de agujero estandar | Pasos de 1/64" | https://bgpeck.com/die-cutting/ | ABIERTA · VERIFICADA 20/10 (textual) | |
-| Como se fijan los punzones | A presion en ranuras de la madera; se aflojan con el desgaste | https://patents.justia.com/patent/20150190942 (via buscador) | SECUNDARIA | Patente |
+| Como se fijan los punzones | A presion en ranuras de la madera; se aflojan con el desgaste | https://patents.justia.com/patent/20150190942 (via buscador) | SECUNDARIA · 20/10 la pagina devuelve 403 | Patente |
 | Diametro minimo / construccion del sacabocados para un ojal de X mm dentro del troquel | — | No se encontro | SIN FUENTE | Preguntar al troquelador / a la casa que vende punzones |
 
 ### A9. Distancia entre flejes, puentes y muescas (nicks)
@@ -209,7 +209,7 @@
 |---|---|---|---|---|
 | PLA vs PETG | PETG recomendado como material del patron impreso; "PLA se ablanda y se deforma con el uso" | https://www.bu.edu/epic/equipment/thermoforming | ABIERTA · VERIFICADA 20/10 (textual) | Universidad (laboratorio) |
 | Temperatura de la lamina en ese laboratorio | ABS 260-280 °F (≈ 127-138 °C); PETG y HIPS 260-270 °F (≈ 127-132 °C). La pagina las llama "GTT" (temperatura de transicion vitrea) y pide medir la lamina con termometro infrarrojo antes de formar | misma pagina | ABIERTA · VERIFICADA 20/10 (textual; la pagina las rotula "GTT") | Conversion mia |
-| HDT del PLA Basic de Bambu | 57 °C a 0,45 MPa; 54 °C a 1,8 MPa | https://wiki.bambulab.com/filament-acc/abs-asa-pc/bambu_pla_basic_technical_data_sheet.pdf | SECUNDARIA | Ficha tecnica en PDF, solo el resumen del buscador |
+| HDT del PLA Basic de Bambu | 57 °C a 0,45 MPa; 54 °C a 1,8 MPa | https://wiki.bambulab.com/filament-acc/abs-asa-pc/bambu_pla_basic_technical_data_sheet.pdf | SECUNDARIA · 20/10 el PDF devuelve 402 sin el navegador (abrirlo con Fak en la ventana) | Ficha tecnica en PDF, solo el resumen del buscador |
 | HDT del PETG (impresion 3D) | — | No se pudo abrir ninguna ficha | SIN FUENTE | Las paginas de Bambu devolvieron error 402/403 |
 | Temperatura del molde en casos reales | ~60 °C despues de 5 y de 10 piezas, igual para las tres laminas del ensayo de Formlabs (PETG 0,5 mm a 110 °C, PP 1,0 mm a 130 °C, PE 2,0 mm a 110 °C), con moldes de resina; molde de IPC estable a 75 °C con canales de enfriamiento con agua a 20 °C | https://formlabs.com/global/blog/thermoforming-with-3d-printed-molds-ipc-technical-study/ | ABIERTA · VERIFICADA 20/10 (textual) | Moldes de resina, no de FDM |
 | Resinas de alta temperatura | Rigid 10K: HDT 218 °C a 0,45 MPa (estudio IPC); High Temp Resin: HDT 238 °C (blog de prototipado, sin presion) | misma pagina y https://formlabs.com/blog/prototyping-vacuum-forming/ | ABIERTA · VERIFICADA 20/10 (corregida) | Fabricante |
