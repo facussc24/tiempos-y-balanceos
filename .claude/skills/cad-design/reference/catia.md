@@ -493,3 +493,6 @@ con su caso malo antes de creerle.
   `AddNewThickSurface(sup, 0, 3, 0)` → 88 129,12 mm³ = cuenta exacta (R 597 a 600): **el espesor «interno» crece hacia el
   CENTRO de la curva**. Trampa: `SetLimitation(1)` deja el CÍRCULO ENTERO (3 769,9 mm de largo, anillo completo); con 0 o 2
   queda el arco de 310. Se mide el largo de la curva antes de usarla.
+- **Chaflán en las 12 aristas de una vez** (ej84, 19/10): CATIA 1 181 250,00 contra build123d 1 181 166,67 mm³: la
+  diferencia es EXACTA, 8 esquinas × k³/12 (k = 5): cada programa cierra distinto la esquina donde se juntan tres
+  chaflanes. No es error, pero la esquina sale distinta según con qué se hizo (un molde la copia).
