@@ -24,6 +24,14 @@ En la PC hay dos carpetas de OneDrive con nombre parecido. Las dos son de la emp
    en la PC. `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/_nubeSubio.ps1` (sale con
    0 si subió todo).
 
+## Las skills y la configuracion NO van a ninguna nube (Fak, 20/10/2026)
+
+*"Lo que no quiero es que tengan mis skills... quiero tenerlas en local"*. Skills, reglas, agentes, comandos, hooks,
+planes y el settings viven solo en las PC de Fak; a CATA o la notebook van por pendrive
+(`node scripts/_pendriveAsistente.mjs --destino E:\ --aplicar`). La memoria, los registros de las charlas, los mails y
+las claves siguen en la nube de Ingenieria. Freno en codigo: `scripts/_lib/soloLocal.mjs` (test `soloLocal.test.mjs`).
+Lo que estaba subido quedo en `C:\Dev\ASISTENTE-LOCAL\`. Memoria `feedback_skills_solo_en_la_pc_no_en_la_nube`.
+
 ## Lo que hoy sigue en la nube personal (falta mudar; cada mudanza con el OK de Fak)
 
 | Qué | Dónde está hoy | Estado |
