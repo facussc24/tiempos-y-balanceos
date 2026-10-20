@@ -486,3 +486,6 @@ con su caso malo antes de creerle.
   cara del cuerpo o de la extrusión y con cualquier objeto de trabajo. Con solo las 4 verticales redondeadas (los bordes
   de la cara de arriba vivos) anda y da EXACTO: 112 457,6 mm³ = 250×80 con R15 menos 246×76 con R13, por 60 y 58. Orden:
   primero la cáscara, después redondear los bordes de la boca.
+- **Molde: DESMOLDEO primero, RADIOS después** (ej82, 19/10). Desmoldeo 4° en los costados y después las verticales R15:
+  1 106 821,5 mm³, igual que build123d. Al revés (radios y después desmoldeo de las 8 caras laterales) da +0,26 %: no es un
+  error, el redondeo se inclina con el desmoldeo y su radio deja de ser 15 a lo largo del alto. El orden cambia la forma.
