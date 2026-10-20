@@ -178,8 +178,8 @@ describe('agente por API: escaneo de lo que escribe y entorno de lo que corre', 
     expect(e.ANTHROPIC_API_KEY).toBeUndefined();
   });
 
-  it('el tope de busquedas es de la corrida: cada pedido lleva lo que queda y, sin resto, la herramienta no va', async () => {
-    expect(armarHerramientas(7).at(-1)).toEqual({ type: 'web_search_20250305', name: 'web_search', max_uses: 7 });
+  it('el tope de busquedas es de la corrida, con la MISMA lista de herramientas en cada pedido (20/10/2026: si la lista cambia, la API rechaza el paso 2); pasarse corta', async () => {
+    expect(armarHerramientas(7, 0).at(-1)).toEqual({ type: 'web_search_20250305', name: 'web_search', max_uses: 7 });
     expect(armarHerramientas(0).map((h) => h.name)).not.toContain('web_search');
     expect(armarHerramientas(-3).map((h) => h.name)).not.toContain('web_search');
     const conBusquedas = (cuantas) => ({ input_tokens: 1000, output_tokens: 200, server_tool_use: { web_search_requests: cuantas } });
@@ -190,10 +190,20 @@ describe('agente por API: escaneo de lo que escribe y entorno de lo que corre', 
     ]);
     const r = await correrAgente({ cliente, modelo: 'sonnet', system: 's', encargo: 'e', carpeta, corrida: 'test', ejecutor: ejecutorSeco(), registro: registroEnMemoria(), guardian: sinGuardian, registrar: () => {}, topes: { busquedas: 20 } });
     expect(r.busquedas).toBe(20);
-    const deBusqueda = (i) => cliente.llamadas[i].tools.find((h) => h.name === 'web_search');
-    expect(deBusqueda(0).max_uses).toBe(20);
-    expect(deBusqueda(1).max_uses).toBe(5);
-    expect(deBusqueda(2)).toBeUndefined();
+    expect(r.terminado).toBe(true);   // llegar justo al tope no corta
+    expect(cliente.llamadas).toHaveLength(3);
+    expect(cliente.llamadas[1].tools).toEqual(cliente.llamadas[0].tools);
+    expect(cliente.llamadas[2].tools).toEqual(cliente.llamadas[0].tools);
+    expect(cliente.llamadas[0].tools.find((h) => h.name === 'web_search').max_uses).toBe(20);
+    // gemelo rojo: 15 + 6 = 21 pasa el tope y la corrida se corta antes del tercer pedido
+    const pasado = clienteGuion([
+      { content: [usoDe('leer_archivo', { ruta: 'notas.md' })], usage: conBusquedas(15) },
+      { content: [usoDe('leer_archivo', { ruta: 'notas.md' })], usage: conBusquedas(6) },
+      { content: [usoDe('terminar', { entregable: 'x', resumen: 'listo' })] },
+    ]);
+    const r2 = await correrAgente({ cliente: pasado, modelo: 'sonnet', system: 's', encargo: 'e', carpeta, corrida: 'test', ejecutor: ejecutorSeco(), registro: registroEnMemoria(), guardian: sinGuardian, registrar: () => {}, topes: { busquedas: 20 } });
+    expect(r2.corte).toMatch(/^busquedas: 21 de 20/);
+    expect(pasado.llamadas).toHaveLength(2);
   });
 });
 
