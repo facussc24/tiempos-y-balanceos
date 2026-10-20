@@ -13,6 +13,7 @@
  *   - .video/<work|seg|zoom|win|cuadros|niveles|v2>/  intermedios del render del
  *     institucional (10/09). Los masters viven en OneDrive `5- VIDEOS Y FOTOS`
  *     y el entregable final esta en `.video/final`.
+ *   - %TEMP%\ck5myn1t, Diagnostics, Outlook Logging, edge-prueba-*: restos que vuelven solos.
  *
  * Lo que NO toca nunca: `in/`, `entrega/`, `.sgc-cache`, `.venv-*`, `docs/`,
  * cualquier cosa fuera del repo, y cualquier archivo de Fak
@@ -110,10 +111,30 @@ function planTempClaude() {
   return rutas;
 }
 
+/**
+ * Restos de la carpeta temporal de Windows que vuelven solos en cada pasada (memoria
+ * reference_disco_lleno_causas_notebook: 10/08, 11/09, 02/10, 04/10 y 20/10/2026): paquetes extraidos del
+ * instalador de Visual Studio, registros de Office y de diagnostico, y mis copias de prueba de Edge.
+ * Ninguno es material de Fak; se regeneran si hacen falta. OK de Fak 20/10/2026: "si borra eso que recomendaste".
+ */
+function planRestosTemp() {
+  const base = process.env.TEMP || process.env.TMP || '';
+  if (!base || !existsSync(base)) return [];
+  const fijos = ['ck5myn1t', 'Diagnostics', 'Outlook Logging'].map((n) => join(base, n));
+  let edge = [];
+  try {
+    edge = readdirSync(base, { withFileTypes: true })
+      .filter((e) => e.isDirectory() && e.name.startsWith('edge-prueba-'))
+      .map((e) => join(base, e.name));
+  } catch { /* ignorar */ }
+  return [...fijos, ...edge].filter((p) => existsSync(p));
+}
+
 const grupos = [
   { nombre: 'snapshots de backup viejos', rutas: planBackups() },
   { nombre: 'intermedios de render de video', rutas: planVideo() },
   { nombre: 'temporales de Claude (> 12 h)', rutas: planTempClaude() },
+  { nombre: 'restos de Temp (instaladores, logs)', rutas: planRestosTemp() },
 ];
 
 let totalBytes = 0;
