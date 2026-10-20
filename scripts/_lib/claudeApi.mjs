@@ -174,9 +174,11 @@ const aaaammdd = (f) => `${f.getFullYear()}${p2(f.getMonth() + 1)}${p2(f.getDate
 /**
  * La clave activa, con su origen. Desde el 09/10/2026 puede haber mas de una: ademas de
  * `ANTHROPIC_API_KEY` (la principal, la del plan de Fak), lineas `ANTHROPIC_API_KEY_HASTA_AAAAMMDD=...`
- * con claves prestadas que vencen ese dia (la del dueno de la empresa, $100 hasta el 20/10/2026).
- * Regla: se gasta primero la que vence antes, mientras no haya vencido; vencida, se sigue con la
- * principal sin tocar nada. El entorno (`ANTHROPIC_API_KEY`) le gana a todo, como siempre.
+ * con claves prestadas que vencen ese dia. Una prestada de RENUEVA_PRESTADAS no vence: se recarga un dia fijo de cada
+ * mes (la del dueño de la empresa, US$ 100 el 20; Fak 20/10/2026).
+ * Regla: se gasta primero la que pierde el saldo antes (la que vence, o la renovable cuya proxima recarga llega antes),
+ * mientras siga vigente y sin marca de agotada; si no queda ninguna, la principal. El entorno (`ANTHROPIC_API_KEY`)
+ * le gana a todo, como siempre.
  * Devuelve { clave, origen: 'entorno'|'secundaria'|'principal'|null, hasta: 'AAAAMMDD'|null }.
  * NUNCA se imprime ni se loguea la clave (el secretos-guard frena los comandos que la leerian).
  */
@@ -205,9 +207,24 @@ export function ultimaRenovacion(hasta, hoy = new Date(), renueva = RENUEVA_PRES
   return new Date(a, m, diaDe(a, m));
 }
 
-/** ¿La prestada sigue vigente hoy? Una renovable, siempre; las demas, hasta su dia (inclusive). */
+/** ¿La prestada sigue vigente hoy? Una renovable (con un dia valido), siempre; las demas, hasta su dia (inclusive). */
 export function prestadaVigente(hasta, hoy = new Date(), renueva = RENUEVA_PRESTADAS) {
-  return renueva[hasta] != null || hasta >= aaaammdd(hoy);
+  return ultimaRenovacion(hasta, hoy, renueva) != null || hasta >= aaaammdd(hoy);
+}
+
+/**
+ * Cuando pierde el saldo que tiene ahora (AAAAMMDD): una que vence, su dia; una renovable, la vispera de su proxima
+ * recarga. Ordena las prestadas: se gasta primero la que lo pierde antes (revisor Opus 20/10/2026: ordenar por `hasta`
+ * dejaba a la renovable siempre primero y una prestada nueva que vence se quedaba sin usar).
+ */
+export function prestadaPierdeSaldo(hasta, hoy = new Date(), renueva = RENUEVA_PRESTADAS) {
+  const ultima = ultimaRenovacion(hasta, hoy, renueva);
+  if (!ultima) return hasta;
+  const dia = Number(renueva[hasta]);
+  const a = ultima.getMonth() === 11 ? ultima.getFullYear() + 1 : ultima.getFullYear();
+  const m = (ultima.getMonth() + 1) % 12;
+  const proxima = new Date(a, m, Math.min(dia, new Date(a, m + 1, 0).getDate()));
+  return aaaammdd(new Date(proxima.getFullYear(), proxima.getMonth(), proxima.getDate() - 1));
 }
 
 /**
@@ -241,8 +258,8 @@ export function claveActiva({ env = process.env, archivoEnv = path.join(RAIZ, '.
   const prestadas = Object.entries(local)
     .map(([k, v]) => ({ m: /^ANTHROPIC_API_KEY_HASTA_(\d{8})$/.exec(k), clave: String(v ?? '').trim() }))
     .filter((x) => x.m && x.clave && prestadaVigente(x.m[1], hoy, renueva) && !prestadaAgotada(x.m[1], { dir: dirMarcas, hoy, renueva }))
-    .map((x) => ({ clave: x.clave, hasta: x.m[1] }))
-    .sort((a, b) => a.hasta.localeCompare(b.hasta));
+    .map((x) => ({ clave: x.clave, hasta: x.m[1], pierde: prestadaPierdeSaldo(x.m[1], hoy, renueva) }))
+    .sort((a, b) => a.pierde.localeCompare(b.pierde) || a.hasta.localeCompare(b.hasta));
   if (prestadas.length) return { clave: prestadas[0].clave, origen: 'secundaria', hasta: prestadas[0].hasta };
   const principal = String(local.ANTHROPIC_API_KEY ?? '').trim();
   return principal ? { clave: principal, origen: 'principal', hasta: null } : { clave: null, origen: null, hasta: null };

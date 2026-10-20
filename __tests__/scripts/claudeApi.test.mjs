@@ -310,6 +310,19 @@ describe('claudeApi · la clave', () => {
     expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: new Date(2026, 10, 3), dirMarcas: dir }).clave).toBe('sk-ant-principal');
     expect(A.prestadaAgotada('20261020', { dir, hoy: new Date(2026, 10, 21) })).toBe(false);
     expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: new Date(2026, 10, 21), dirMarcas: dir }).clave).toBe('sk-ant-dueno');
+    // re-marcar en el ciclo nuevo (agregar al archivo actualiza su fecha) vuelve a saltarla, sin utimes de por medio
+    A.marcarPrestadaAgotada('20261020', { dir });
+    expect(A.prestadaAgotada('20261020', { dir })).toBe(true);
+    // orden: una prestada que vence ANTES de la proxima recarga se gasta primero; si vence despues, primero la renovable
+    fs.rmSync(marca);
+    fs.writeFileSync(env, 'ANTHROPIC_API_KEY=sk-ant-principal\nANTHROPIC_API_KEY_HASTA_20261020=sk-ant-dueno\nANTHROPIC_API_KEY_HASTA_20261105=sk-ant-otra\nANTHROPIC_API_KEY_HASTA_20261130=sk-ant-tarde\n');
+    expect(A.prestadaPierdeSaldo('20261020', el21)).toBe('20261119');
+    expect(A.prestadaPierdeSaldo('20261020', new Date(2026, 11, 25))).toBe('20270119');
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el21, dirMarcas: dir }).clave).toBe('sk-ant-otra');
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: new Date(2026, 10, 6), dirMarcas: dir }).clave).toBe('sk-ant-dueno');
+    // un dia mal cargado en la tabla no la deja vigente para siempre
+    expect(A.prestadaVigente('20261020', dic, { 20261020: 0 })).toBe(false);
+    expect(A.prestadaVigente('20261020', dic, { 20261020: 32 })).toBe(false);
     // gemelo: una prestada que NO esta en la tabla sigue venciendo y su marca no vence
     expect(A.prestadaVigente('20261105', new Date(2026, 10, 6))).toBe(false);
     fs.writeFileSync(path.join(dir, 'prestada_agotada_20991231'), 'x');

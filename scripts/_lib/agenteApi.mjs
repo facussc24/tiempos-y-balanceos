@@ -6,13 +6,15 @@
  * aca, en codigo, nunca en el prompt: una pagina buscada puede traer ordenes (diseño §4).
  *
  *   correrAgente({ cliente, modelo, system, encargo, carpeta, ejecutor, registro, topes, ... })
- *     -> { terminado, corte, paso, gastadoUsd, busquedas, bloqueos, entregable, resumen, mensajes }
+ *     -> { terminado, corte, paso, gastadoUsd, busquedas, lecturas, bloqueos, entregable, resumen, mensajes }
  *
  * Herramientas del modelo: leer_archivo · escribir_archivo (solo <carpeta>/trabajo) · correr_comando (lista
  * blanca + guardianes + tope de tiempo + recorte a 4 KB; un .py corre adentro de la caja de agenteCaja.py, que
  * vigila lo que el script hace mientras corre) · leer_pdf · terminar (la unica salida limpia) y
- * web_search del servidor. Lo prohibido vuelve como tool_result con is_error y "No reintentar"; el segundo
- * bloqueo corta. Los topes (pasos, reloj, dolares) se miran ANTES de cada llamada. Un paso = una llamada.
+ * web_search y web_fetch del servidor (la misma lista en toda la corrida). Lo prohibido vuelve como tool_result con
+ * is_error y "No reintentar"; el segundo bloqueo corta. Los topes (pasos, reloj, dolares, busquedas, paginas leidas) se
+ * miran ANTES de cada llamada; el de dolares estima el proximo paso con la entrada del anterior, asi que un paso que lee
+ * muchas paginas puede pasarlo (cada pagina trae hasta LECTURA_MAX_TOKENS). Un paso = una llamada.
  * No toca claudeApi.mjs: usa armarParametros/interpretarRespuesta/registrarGasto y suma lo que falta encima.
  */
 import crypto from 'node:crypto';
@@ -34,8 +36,14 @@ export const COMANDO_MAX_S = 600;
 export const PRECIO_BUSQUEDA_USD = 0.01;    // A VERIFICAR: $10 cada 1.000 busquedas; no esta en PRECIOS
 export const CARACTERES_POR_TOKEN = 3.5;    // la misma estimacion que BARACK_TOKENS_POR_CARACTER
 export const HERRAMIENTA_BUSQUEDA = 'web_search_20250305'; // A VERIFICAR: el `type` del server tool
-export const HERRAMIENTA_LECTURA = 'web_fetch_20250910';   // leer una pagina del lado del servidor (20/10/2026: sin ella el agente solo veia fragmentos de la busqueda)
+// Leer una pagina del lado del servidor (20/10/2026: sin ella el agente solo veia fragmentos de la busqueda). Medido ese
+// dia: anda sin cabecera beta (19 pasos de 7 corridas reales leyeron de 1 a 5 paginas, registro.jsonl de .sgc-cache/inv3d/runs).
+// A VERIFICAR contra la doc: el precio (aca se asume que la lectura no se cobra aparte: sus tokens ya entran en el usage).
+export const HERRAMIENTA_LECTURA = 'web_fetch_20250910';
 export const LECTURA_MAX_TOKENS = 10000;                  // cuanto trae, como mucho, cada pagina leida
+// `max_uses` por PEDIDO: chico y fijo, para que la lista no cambie y el exceso sobre el tope de la corrida quede acotado
+// (la corrida corta recien cuando SE PASA: en el peor caso termina con tope + MAX_USOS_POR_PEDIDO). Revisor Opus 20/10.
+export const MAX_USOS_POR_PEDIDO = 8;
 export const RECORDATORIO = 'Cerraste el turno sin llamar a terminar(entregable, resumen). Si el trabajo esta hecho, llamala ahora; si no, segui con las herramientas. Otro turno sin terminar corta la corrida.';
 
 /** Un pedido que no se hace: el ejecutor real lo tira cuando el escaneo frena un script antes de correrlo. */
@@ -67,8 +75,8 @@ export function armarHerramientas(busquedas = TOPES_DEFECTO.busquedas, lecturas 
     h('correr_comando', `Corre un comando de bash en la carpeta de trabajo. Lista blanca: ls, cat, grep, head, tail, wc, pwd (sobre el repo o la carpeta de trabajo), git de lectura y python sobre un .py que hayas escrito en la carpeta de trabajo. El .py corre adentro de una caja: no escribe fuera de la carpeta de trabajo, no abre programas ni sale a la red, y de COM usa solo CATIA. Rutas con barras normales; sin ; & $ \` < > \\ { } ( ) ! # ni heredoc, y sin ~ al principio de una palabra. La salida llega recortada a ${RECORTE_BYTES} bytes; la completa queda en salidas/.`, { cmd: S, segundos: { ...N, description: `tope de tiempo (120 por defecto, maximo ${COMANDO_MAX_S})` } }, ['cmd']),
     h('leer_pdf', 'Extrae el texto de un PDF (hasta 20 paginas por llamada; sin `paginas`, las primeras 20).', { ruta: S, paginas: { type: 'array', items: N } }, ['ruta']),
     h('terminar', 'La UNICA salida limpia: el entregable (ruta o texto) y un resumen de lo hecho y de lo que quedo pendiente.', { entregable: S, resumen: S }, ['entregable', 'resumen']),
-    ...(quedan > 0 ? [{ type: HERRAMIENTA_BUSQUEDA, name: 'web_search', max_uses: quedan }] : []),
-    ...(paginas > 0 ? [{ type: HERRAMIENTA_LECTURA, name: 'web_fetch', max_uses: paginas, max_content_tokens: LECTURA_MAX_TOKENS }] : []),
+    ...(quedan > 0 ? [{ type: HERRAMIENTA_BUSQUEDA, name: 'web_search', max_uses: Math.min(quedan, MAX_USOS_POR_PEDIDO) }] : []),
+    ...(paginas > 0 ? [{ type: HERRAMIENTA_LECTURA, name: 'web_fetch', max_uses: Math.min(paginas, MAX_USOS_POR_PEDIDO), max_content_tokens: LECTURA_MAX_TOKENS }] : []),
   ];
 }
 
@@ -331,8 +339,8 @@ export function entornoDeCaja(carpeta, env = process.env) {
 export function chequearTopes(estado, topes, { modelo, maxTokens, ahora }) {
   if (estado.paso >= topes.pasos) return `pasos: ${estado.paso} de ${topes.pasos}`;
   // la lista de herramientas no cambia en la corrida (armarHerramientas): pasarse del tope de busquedas o lecturas corta
-  if (topes.busquedas != null && n(estado.busquedas) > n(topes.busquedas)) return `busquedas: ${estado.busquedas} de ${topes.busquedas}`;
-  if (topes.lecturas != null && n(estado.lecturas) > n(topes.lecturas)) return `lecturas: ${estado.lecturas} de ${topes.lecturas}`;
+  if (n(topes.busquedas) > 0 && n(estado.busquedas) > n(topes.busquedas)) return `busquedas: ${estado.busquedas} de ${topes.busquedas}`;
+  if (n(topes.lecturas) > 0 && n(estado.lecturas) > n(topes.lecturas)) return `lecturas: ${estado.lecturas} de ${topes.lecturas}`;
   const min = (ahora - estado.inicio) / 60000;
   if (min >= topes.minutos) return `tiempo: ${Math.round(min)} min de ${topes.minutos}`;
   // el proximo turno, estimado por arriba: toda la ultima entrada a precio de cache + max_tokens de salida

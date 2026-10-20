@@ -63,7 +63,10 @@ de Fable, Opus y Sonnet medido ese dia). La noche no la usa.
 - **Una prestada sin saldo se marca sola** (`.sgc-cache/api/prestada_agotada_<hasta>`): ante un 400 «credit balance is too
   low» con una clave prestada, `claudeApi.mjs` la marca, reintenta UNA vez con la clave que sigue y el reemplazo vale para
   el resto del proceso (11/10/2026 02:15: la prestada de Pedro se agoto en medio de 12 pedidos). La marca no vence: si
-  recargan esa prestada, se borra a mano (`--check` lo avisa).
+  recargan esa prestada, se borra a mano (`--check` lo avisa). **Salvo una prestada renovable** (`RENUEVA_PRESTADAS` de
+  `claudeApi.mjs`; la del dueño se recarga el 20 y no vence, Fak 20/10/2026): su marca vale solo si es posterior a la
+  ultima recarga, y entre prestadas se gasta primero la que pierde el saldo antes. Pendiente: `--check` y el tablero
+  todavia la muestran como «vence el 20/10».
 
 ## 3. Los 5 candados de la noche (`scripts/_nocturno.mjs`, tarea de Windows 06:30)
 

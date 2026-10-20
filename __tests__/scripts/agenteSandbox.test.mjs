@@ -194,7 +194,7 @@ describe('agente por API: escaneo de lo que escribe y entorno de lo que corre', 
     expect(cliente.llamadas).toHaveLength(3);
     expect(cliente.llamadas[1].tools).toEqual(cliente.llamadas[0].tools);
     expect(cliente.llamadas[2].tools).toEqual(cliente.llamadas[0].tools);
-    expect(cliente.llamadas[0].tools.find((h) => h.name === 'web_search').max_uses).toBe(20);
+    expect(cliente.llamadas[0].tools.find((h) => h.name === 'web_search').max_uses).toBe(8);   // MAX_USOS_POR_PEDIDO: acota el exceso sobre el tope
     // gemelo rojo: 15 + 6 = 21 pasa el tope y la corrida se corta antes del tercer pedido
     const pasado = clienteGuion([
       { content: [usoDe('leer_archivo', { ruta: 'notas.md' })], usage: conBusquedas(15) },

@@ -176,6 +176,20 @@ describe('saldoPorClave: gastado y lo que queda, por clave', () => {
     const s = A.saldoPorClave({ dir, env: ENV, ahora: EL_11 });
     expect(s.claves[0]).toEqual({ nombre: 'principal', gastadoUsd: 210, creditoUsd: 200, quedanUsd: 0 });
   });
+  it('la renovable (se recarga el 20): pasada su fecha no figura vencida, y la marca de un ciclo anterior no la deja agotada (las dos direcciones)', () => {
+    const el25nov = new Date(2026, 10, 25, 12, 0, 0);
+    ledger('2026-11', [fila('2026-11-21 10:00:00', 12, 'prestada-20261020')]);
+    const marca = path.join(dir, 'prestada_agotada_20261020');
+    fs.writeFileSync(marca, '2026-10-11 02:21:34 sin saldo (credit balance is too low)\n');
+    fs.utimesSync(marca, new Date(2026, 9, 11), new Date(2026, 9, 11));
+    const viejo = A.saldoPorClave({ dir, env: ENV, ahora: el25nov });
+    expect(viejo.claves.find((c) => c.nombre === 'prestada')).toEqual({ nombre: 'prestada', hasta: '20261020', gastadoUsd: 12, agotada: false, vencida: false });
+    fs.utimesSync(marca, new Date(2026, 10, 22), new Date(2026, 10, 22));
+    const nuevo = A.saldoPorClave({ dir, env: ENV, ahora: el25nov });
+    expect(nuevo.claves.find((c) => c.nombre === 'prestada')).toMatchObject({ agotada: true, vencida: false });
+    // gemelo: sin la tabla de renovables, la misma prestada el 25/11 figura vencida
+    expect(A.saldoPorClave({ dir, env: ENV, ahora: el25nov, renueva: {} }).claves.find((c) => c.nombre === 'prestada').vencida).toBe(true);
+  });
   it('una prestada vencida se marca vencida; BARACK_API_CREDITO_USD cambia el credito; la del entorno va aparte', () => {
     ledger('2026-10', [fila('2026-10-02 10:00:00', 5, 'prestada-20261005'), fila('2026-10-08 10:00:00', 7, 'entorno'), fila('2026-10-09 10:00:00', 40, 'principal')]);
     const s = A.saldoPorClave({ dir, env: { ...ENV, BARACK_API_CREDITO_USD: '100' }, ahora: EL_11 });
