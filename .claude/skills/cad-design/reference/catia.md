@@ -501,3 +501,7 @@ con su caso malo antes de creerle.
   vista y la de a mano se salta si su valor ya está. Quedan a mano solo las que el modelo no tiene como parámetro (alto
   total, ancho total, posición de una barra). Probado también: poner las cotas a mano antes de `sacar_afuera` y separar
   al final no cambió nada en ese plano (0 pisadas en los dos órdenes).
+- **Una cota a mano que el generador pone sale de lo que TIENE el modelo, no del modelo en el que se pensó** (ej79b, 20/10):
+  el mismo plano corrido sobre el carro del ej65 le puso «posición del travesaño del medio = 485» a un carro SIN travesaño
+  del medio. Antes de agregar una cota de posición se confirma que el cuerpo existe (por su nombre en `part.Bodies`); con
+  eso el ej65 no la lleva y el carro de troqueles sí (680).
