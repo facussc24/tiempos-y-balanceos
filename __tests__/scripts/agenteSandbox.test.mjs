@@ -215,6 +215,11 @@ describe('agente por API: la linea de comandos', () => {
     expect(() => leerArgumentos(['--encargo', 'e.md', '--modelo', 'haiku'], {})).toThrow(/opus\|sonnet\|fable/);
     expect(() => leerArgumentos(['--seco'], {})).toThrow(/falta --encargo/);
     expect(() => leerArgumentos(['--encargo', 'e.md', '--apply'], {})).toThrow(/no conozco el argumento/);
+    // --max-tokens (20/10/2026): 8192 por defecto, se puede subir hasta 128000, fuera de rango no arranca
+    expect(leerArgumentos(['--encargo', 'e.md'], {}).maxTokens).toBe(8192);
+    expect(leerArgumentos(['--encargo', 'e.md', '--max-tokens', '32000'], {}).maxTokens).toBe(32000);
+    expect(() => leerArgumentos(['--encargo', 'e.md', '--max-tokens', '500'], {})).toThrow(/--max-tokens va de 1024/);
+    expect(() => leerArgumentos(['--encargo', 'e.md', '--max-tokens', '200000'], {})).toThrow(/--max-tokens va de 1024/);
   });
 });
 
