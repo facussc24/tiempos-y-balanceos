@@ -505,3 +505,28 @@ con su caso malo antes de creerle.
   el mismo plano corrido sobre el carro del ej65 le puso «posición del travesaño del medio = 485» a un carro SIN travesaño
   del medio. Antes de agregar una cota de posición se confirma que el cuerpo existe (por su nombre en `part.Bodies`); con
   eso el ej65 no la lleva y el carro de troqueles sí (680).
+
+## 20/10/2026 — virolador manual del Upper Trim, diseñado en CATIA con Fak mirando (`C:\Dev\_catia_practica\virolador_auto\`)
+
+- **«El servidor lanzó una excepción» en `SaveAs` puede dejar el archivo ESCRITO pero ROTO**: el CATPart quedó en disco con
+  su tamaño y después `Documents.Open` falló y `AddComponentsFromFiles` lo salteó **sin avisar** (13 → 13 componentes).
+  Después de un guardado con excepción se reabre el archivo antes de creerle; el STEP de la misma corrida estaba sano.
+- **`AddComponentsFromFiles` acepta un STEP directo** (lo convierte al insertarlo): así entraron la parte fija y el panel
+  cuando su CATPart estaba roto. Abrir un STEP de varios sólidos con `Documents.Open` da un conjunto y no deja `SaveAs .CATPart`.
+- **Una malla (STL bajado, pasado a STEP facetado) es inusable en CATIA**: 3.700 triángulos = 150.000 entidades y
+  «Converting Data» más de 15 minutos con la sesión trabada. Una pieza impresa de catálogo se REDIBUJA: cortes cada 0,5 mm,
+  tramos de contorno igual, pad por tramo (volumen ±1,4 % de la malla); queda liviana, editable y animable.
+- **Redondeo por COM**: con una CARA como referencia `AddNewSolidEdgeFilletWithConstantRadius` falla; arista por arista
+  sobre un contorno de 72 lados tardó más de 10 min. Para piezas impresas, el canto se dibuja en escalones de capa.
+- **Muchas mediciones en una misma sesión la tumban**: cada pad medido dos veces para controlar el sentido; al sumar 20
+  mediciones más se cayó en el macho siguiente, también con CATIA recién abierta. `pad(..., chequear=False)` para lo que
+  repite una orientación ya controlada; las piezas largas de polígono, primero.
+- **Animar un mecanismo sin DMU**: cada componente con su matriz por `Position.SetComponents` (VBScript por `Evaluate`;
+  los 12 valores = columnas de R y el origen) y la cinemática calculada afuera (cuatro barras por intersección de
+  círculos). Funciona y se graba; DMU Kinematics queda para probar (seguimiento del 23/10).
+- **No rearmar desde cero en cada corrección** (Fak, 20/10: *«todo el tiempo estás rehaciendo el modelo… no vaya a ser que
+  solo ralentice el proceso»*): el script que arma todo sirve para la primera vez; después se abre el guardado y se toca lo
+  que cambia.
+- **Una palanca bajada viene acostada para imprimir**: el armado sale de medir sus agujeros (distancias entre ejes) y
+  probar las conexiones posibles del cuatro barras: la que traba y abre ~100° es la de un sargento de catálogo; la otra
+  daba una vuelta entera. El nombre de las piezas en la página del autor no alcanza para saber cuál es cuál.

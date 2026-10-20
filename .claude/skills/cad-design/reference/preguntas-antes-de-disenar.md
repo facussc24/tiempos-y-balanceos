@@ -50,6 +50,10 @@ lista suelta, 26/30 con estos 8 grupos; lo que faltó en esos exámenes está ma
 - Mecanismos (palanca, pisador, prensa neumática): ningún punto de ATRAPAMIENTO de dedos ⊕
 
 **5. Uniones, fabricación y máquina**
+- **¿Lo que se mueve ya existe de catálogo?** (sargento de palanca, bisagra, guía, resorte, perilla, imán). Se busca la
+  pieza comercial con su 3D publicado (Misumi, Jergens, TraceParts, GrabCAD) y se usa su modelo; no se dibuja de cero ni
+  se inventa su envolvente. Bajar el archivo, con el OK de Fak (Fak, 20/10/2026, virolador manual: *"muchas cosas ya
+  existen... no hace falta que diseñes todo desde 0"*) ⊕
 - Cada unión: dónde apoya, dónde se suelda o atornilla, con cuánta área (`uniones.py`).
 - ¿Quién lo fabrica y con qué? (A2L con PLA Lite/PETG; herrero con plano; taller). ¿ENTRA EN LA CAMA? Si se parte, que
   las uniones no se coman la tolerancia ⊕
