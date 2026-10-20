@@ -20,3 +20,4 @@ Material de respaldo de `docs/INVESTIGACION_SISTEMA_3D_2026-10-23.md` y `docs/PR
 - `90_refutacion_del_informe.md`, `91_refutacion_de_las_propuestas.md`: los refutadores que revisaron los dos documentos contra este material.
 - `92_revision_contra_el_pedido.md`: la revisión de los dos documentos contra el pedido textual de Fak.
 - `93_refutacion_de_la_segunda_ronda.md`: el refutador de la segunda ronda (f11 a f14: el §12 del informe y P15).
+- `94_control_de_coherencia.md`: el control final de coherencia entre los dos documentos después de pegar la segunda ronda (los 10 arreglos, ya aplicados).
