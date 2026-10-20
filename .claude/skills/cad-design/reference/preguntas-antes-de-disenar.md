@@ -42,6 +42,11 @@ lista suelta, 26/30 con estos 8 grupos; lo que faltó en esos exámenes está ma
   cerca del cuerpo (HSE INDG143); plano de trabajo de pie: liviano 5-10 cm bajo el codo, pesado 20-40 cm bajo el codo
   (CCOHS); empuje: diseñar para el 75 % de la población femenina con las tablas de Liberty Mutual (el número sale de
   la tabla: A SACAR; ojo: el «200 N» que usé en los exámenes salía del enunciado, no tiene fuente) ⊕
+- Estantería o carro que se carga y descarga seguido: los niveles entre RODILLA y HOMBRO (ergonomics.com.au, «When is a
+  shelf height unsafe?», y guías de seguridad de universidades; abierto 20/10). Ninguna fuente abierta da los mm: el
+  alto útil en mm es TBD hasta tener la tabla antropométrica, y con él se cuentan los niveles. Ejemplo del 20/10 (fila
+  33 de los mails, 1 h de buffer = 144 piezas de 901 x 197 x 76): acostadas salen ~18 módulos, de canto ~4; esa cuenta se
+  le devuelve al que pide ANTES de dibujar ⊕
 - Mecanismos (palanca, pisador, prensa neumática): ningún punto de ATRAPAMIENTO de dedos ⊕
 
 **5. Uniones, fabricación y máquina**
