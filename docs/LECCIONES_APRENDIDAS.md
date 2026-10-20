@@ -90,7 +90,7 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
-- **19/10 — Un plan de control no lleva el nombre de Fak ni una revisión nueva (la abre Calidad, Manuel Meszaros), va con el logo oficial y la recepción va material por material como los planes de Calidad** (*"me encuentro con errores boludos"*). Dije «está bien» sin mirar el logo ni comparar contra un plan de Calidad. Graduado al skill `planes-de-control` §0 y §3.1; investigación el viernes 23/10 (`pc-errores-boludos-viernes`).
+- **19/10 — «Está bien» de un plan de control se dice después de compararlo contra un plan de Calidad y mirar logo y nombres** (*"errores boludos"*). Graduado al skill `planes-de-control`; viernes 23/10 (`pc-errores-boludos-viernes`).
 
 - **19/10 — En CATA, los mails de Fak se leen en la nube y se mandan por PEDIDO a la principal; un plan de control no remite a la HO.** Graduado a `feedback_mails_de_fak_se_buscan_en_la_nube_tambien_en_cata` y `feedback_plan_de_control_sin_referencias_a_la_ho`.
 
