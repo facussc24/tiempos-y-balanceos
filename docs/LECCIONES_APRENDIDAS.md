@@ -13,6 +13,10 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **20/10 — Una mejora implementada que depende de que me acuerde de un flag está apagada: lancé la vigilancia de la Bambu sin `--detector` y lo vio Fak** (*"imperdonable... es bastante grave"*). Viernes 23/10: `detector-impresion-olvidado-viernes`.
+
+- **20/10 — Pasar a un patrón las marcas de una foto es SUPERPONER y CALCAR, zona por zona, y mostrar cada marca con el corte encima; no forzar las medidas de Fak ni detectar manchas por programa** (*"¿por qué lo complejizaste tanto?... olvidate de mis medidas, que se parezca a la foto"*). Siete versiones por eso.
+
 - **19/10 — En una estructura cada unión se MIDE (área de contacto donde va la soldadura), no alcanza «0 solape»: las patas del carro de práctica tocaban el marco por una arista y lo vio Fak en el plano** (*"¿por qué te lo tuve que decir?"*). Es la regla del caballete (`cad-3d.md` GATE 3: toda interfaz que carga peso lleva su control) y no la apliqué.
 
 - **19/10 — Lo que una herramienta llama «contacto» o «sin choque» se mide con un método exacto antes de decidir con eso: el choque de CATIA dijo «contacto 0,0» con 0,3 mm de choque y con 0,1 mm de luz.** Graduado a `cad-design/reference/catia.md` y `reference_catia_por_com`.
@@ -89,6 +93,8 @@ incidente vive en los snapshots.
 - **25/09 — Una difusion que corrige un error PROPIO dice solo el valor que queda, en el mail y en el PDF** (Fak: *"si ponemos el antes y el despues me escrachas"*). Graduado a la memoria `documento_no_confiesa_como_se_hizo`.
 
 ## Entregables y comunicacion con Fak
+
+- **20/10 — Que Calidad aprobó algo no va en el mail de difusión salvo que Fak lo pida** (*"no pongas que está aprobado por Calidad"*): se dice qué es y cómo se usa. Caso: calibre L de la costura del Insert, memoria `project_calibre_l_costura_insert`.
 
 - **19/10 — «Está bien» de un plan de control se dice después de compararlo contra un plan de Calidad y mirar logo y nombres** (*"errores boludos"*). Graduado al skill `planes-de-control`; viernes 23/10 (`pc-errores-boludos-viernes`).
 
