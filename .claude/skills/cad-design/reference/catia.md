@@ -489,3 +489,7 @@ con su caso malo antes de creerle.
 - **Molde: DESMOLDEO primero, RADIOS después** (ej82, 19/10). Desmoldeo 4° en los costados y después las verticales R15:
   1 106 821,5 mm³, igual que build123d. Al revés (radios y después desmoldeo de las 8 caras laterales) da +0,26 %: no es un
   error, el redondeo se inclina con el desmoldeo y su radio deja de ser 15 a lo largo del alto. El orden cambia la forma.
+- **Espesor sobre una superficie CURVA** (ej83, 19/10): arco por 3 puntos (`AddNewCircle3Points`) R600 × 310, extruido 95,
+  `AddNewThickSurface(sup, 0, 3, 0)` → 88 129,12 mm³ = cuenta exacta (R 597 a 600): **el espesor «interno» crece hacia el
+  CENTRO de la curva**. Trampa: `SetLimitation(1)` deja el CÍRCULO ENTERO (3 769,9 mm de largo, anillo completo); con 0 o 2
+  queda el arco de 310. Se mide el largo de la curva antes de usarla.
