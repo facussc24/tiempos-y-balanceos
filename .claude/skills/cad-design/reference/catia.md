@@ -496,3 +496,8 @@ con su caso malo antes de creerle.
 - **Chaflán en las 12 aristas de una vez** (ej84, 19/10): CATIA 1 181 250,00 contra build123d 1 181 166,67 mm³: la
   diferencia es EXACTA, 8 esquinas × k³/12 (k = 5): cada programa cierra distinto la esquina donde se juntan tres
   chaflanes. No es error, pero la esquina sale distinta según con qué se hizo (un molde la copia).
+- **Cota a mano solo si CATIA no la genera** (ej79b, 20/10): con `GenerateDimensions` el largo del carro ya sale (verde,
+  sigue al modelo); poner además la cota a mano del mismo valor lo dejaba DOBLE. Se lee la lista de cotas generadas de la
+  vista y la de a mano se salta si su valor ya está. Quedan a mano solo las que el modelo no tiene como parámetro (alto
+  total, ancho total, posición de una barra). Probado también: poner las cotas a mano antes de `sacar_afuera` y separar
+  al final no cambió nada en ese plano (0 pisadas en los dos órdenes).
