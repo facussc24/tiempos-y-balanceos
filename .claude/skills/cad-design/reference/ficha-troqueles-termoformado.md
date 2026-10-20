@@ -1,6 +1,6 @@
 # Troqueles de fleje y moldes de termoformado de prototipo: reglas de fabricantes
 
-> Informe de un investigador (19/10/2026, frente 5 del criterio de diseñador). **20/10: las 98 filas ABIERTA se cotejaron una por una contra su pagina; 9 se corrigieron o quedaron parciales (lo dice su fila). Las SECUNDARIA siguen sin abrir salvo las marcadas.** **Ninguna regla es norma**: todas son de
+> Informe de un investigador (19/10/2026, frente 5 del criterio de diseñador). **20/10: las 98 filas ABIERTA se cotejaron una por una contra su pagina; 10 se corrigieron o quedaron parciales y 1 no se puede verificar sin el PDF (lo dice su fila). Las SECUNDARIA siguen sin abrir salvo las marcadas.** **Ninguna regla es norma**: todas son de
 > fabricantes o proveedores, y casi nada habla de vinilo con espuma. Cada fila dice su fuente y si se leyó (ABIERTA) o
 > solo el resumen del buscador (SECUNDARIA). **Antes de usar un número en un diseño de la casa, abrir su fuente**; los
 > «SIN FUENTE» no se usan. Lo que diga la casa (Pablo Gamboa, mesa de corte, troqueles que andan) manda sobre esto.
