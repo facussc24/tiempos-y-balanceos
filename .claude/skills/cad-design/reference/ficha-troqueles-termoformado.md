@@ -159,7 +159,7 @@
 | Diametro maximo respecto de la lamina | El diametro "no debe superar el espesor de la lamina que lo cubre"; si no, la lamina se mete en el agujero y deja marca o se rompe | https://atna-mam.utcluj.ro/index.php/Acta/article/view/2028 (Boca y Sover, Acta Technica Napocensis) | ABIERTA | Paper revisado, sobre moldes de fabricacion aditiva. Lograron agujeros de 0,35 mm cambiando inclinacion y parametros de impresion |
 | Diametros usados en casos reales | 0,5 mm minimo imprimible en Grey Resin; IPC 1 mm (1,2 mm en la V2, especificacion 0,8-1,2 mm); Glassboard 1,5 mm; Formech 1 mm. Con Rigid 10K / Fast Model hay que perforar los menores de 1 mm | https://formlabs.com/eu/blog/thermoforming-with-3d-printed-molds-formech | ABIERTA · VERIFICADA 20/10 (textual) | Laminas de 1,5-3 mm |
 | Pared minima del molde impreso | 1-2 mm | misma pagina | ABIERTA | |
-| Un caso con PETG | Agujeros de 1 mm donde queda aire atrapado | https://fabacademy.org/2025/labs/leon/students/david-fernandez/assignments/week17.html | ABIERTA | Trabajo de un estudiante (Fab Academy), Mayku FormBox |
+| Un caso con PETG | Agujeros de 1 mm donde queda aire atrapado | https://fabacademy.org/2025/labs/leon/students/david-fernandez/assignments/week17.html | ABIERTA | Trabajo de un estudiante (Fab Academy), Mayku FormBox | **VERIFICADA 20/10 (textual).**
 | Moldes FDM con relleno ralo | La porosidad del relleno evita los canales; brecha de trama maxima 0,003" (0,076 mm) | https://www.stratasys.com/en/resources/resource-guides/fdm-thermoforming/ | ABIERTA | Fabricante FDM; con PC / ULTEM 9085 |
 | Donde ponerlos | En bolsillos internos y rincones donde se atrapa aire; "agujeros para ayudar al vacio a tirar la lamina alrededor de detalles" | https://formlabs.com/blog/prototyping-vacuum-forming/ y https://www.bu.edu/epic/equipment/thermoforming | VERIFICADA 20/10 en Formlabs («vent holes» en bolsillos internos) · ABIERTA | Sin separacion numerica |
 | Separacion entre agujeros | — | No se encontro | SIN FUENTE | |
@@ -178,7 +178,7 @@
 | Tapon de ayuda | ~80 % del tamaño de la cavidad; desciende 70-75 % de la profundidad | Boletin de Formech sobre tapon de ayuda (resumen del buscador) | SECUNDARIA | |
 | Aristas vivas del molde | Romper con chaflanes o radios para reducir el rasgado y el webbing | https://formlabs.com/blog/prototyping-vacuum-forming/ | ABIERTA | Sin dimension |
 | Mas desmoldeo ayuda | En embuticiones profundas con paredes verticales | https://www.digitalengineering247.com/download/3d-printed-vacuum-form-molds | ABIERTA | |
-| Exceso de calor y tiempo | Un caso con PETG tuvo webbing en la base en los 2 primeros ciclos; se corrigio calentando solo hasta que la lamina "empezo a combarse" | https://fabacademy.org/2025/labs/leon/students/david-fernandez/assignments/week17.html | ABIERTA | Estudiante, una sola prueba |
+| Exceso de calor y tiempo | Un caso con PETG tuvo webbing en la base en los 2 primeros ciclos; se corrigio calentando solo hasta que la lamina "empezo a combarse" | https://fabacademy.org/2025/labs/leon/students/david-fernandez/assignments/week17.html | ABIERTA | Estudiante, una sola prueba | **VERIFICADA 20/10 (textual).**
 | Hembra: profundidad del agujero | Menor al 75 % del ancho | https://soa.syr.edu/resources/technology/digital-fabrication/vacuum-forming.php | ABIERTA | Regla de taller de universidad |
 
 ### B4. Radios minimos
