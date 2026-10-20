@@ -85,6 +85,9 @@ def destino_afuera(cd, contorno, paso, usados):
     ancha que alta): arriba o abajo del contorno segun la mitad en que estaba; vertical: izquierda o derecha. `usados`
     cuenta cuantas van de cada lado para escalonarlas de a `paso`. Devuelve (x, y, lado), o None si ya esta afuera."""
     x0, y0, x1, y1 = contorno
+    # 19/10: probe correr tambien las que quedan afuera pero pegadas (margen de medio paso) y EMPEORO el plano del ej79:
+    # chocaron con las cotas a mano y el frente quedo con 2 adentro. Se dejo como estaba; el arreglo es ordenar contra el
+    # dibujo y entre cotas en la MISMA pasada.
     if cd[2] <= x0 or cd[0] >= x1 or cd[3] <= y0 or cd[1] >= y1:
         return None
     cx, cy = (cd[0] + cd[2]) / 2, (cd[1] + cd[3]) / 2
