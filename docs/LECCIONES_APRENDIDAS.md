@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **21/10 — Lo que dice la salida de un programa mío («clave prestada: vencida») se cruza con la memoria antes de repetírselo a Fak: la memoria ya decía que se renueva el 20** (*"no venció, ya lo hablamos varias veces... vos sabés cuándo se renueva cada una"*). Caso y fechas: `reference_api_claude_clave_y_ciclo`.
+
 - **20/10 — Una mejora implementada que depende de que me acuerde de un flag está apagada: lancé la vigilancia de la Bambu sin `--detector` y lo vio Fak** (*"imperdonable... es bastante grave"*). Viernes 23/10: `detector-impresion-olvidado-viernes`.
 
 - **20/10 — Pasar a un patrón las marcas de una foto es SUPERPONER y CALCAR, zona por zona, y mostrar cada marca con el corte encima; no forzar las medidas de Fak ni detectar manchas por programa** (*"¿por qué lo complejizaste tanto?... olvidate de mis medidas, que se parezca a la foto"*). Siete versiones por eso.
