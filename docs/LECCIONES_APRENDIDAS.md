@@ -13,7 +13,7 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
-- **21/10 — Lo que dice un programa mío se cruza con la memoria antes de repetírselo a Fak.** Graduado a `reference_api_claude_clave_y_ciclo`.
+- **21/10 — Lo que Fak presenta de pie es una ayuda para acordarse, en su voz y con lo nuestro, no un PDF para leer.** Memoria `feedback_hoja_de_reunion_para_mostrar`.
 
 - **20/10 — Una mejora implementada que depende de que me acuerde de un flag está apagada: lancé la vigilancia de la Bambu sin `--detector` y lo vio Fak** (*"imperdonable... es bastante grave"*). Viernes 23/10: `detector-impresion-olvidado-viernes`.
 
