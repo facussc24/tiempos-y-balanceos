@@ -15,7 +15,7 @@ incidente vive en los snapshots.
 
 - **20/10 — Una mejora implementada que depende de que me acuerde de un flag está apagada: lancé la vigilancia de la Bambu sin `--detector` y lo vio Fak** (*"imperdonable... es bastante grave"*). Viernes 23/10: `detector-impresion-olvidado-viernes`.
 
-- **20/10 — Pasar a un patrón las marcas de una foto es SUPERPONER y CALCAR, zona por zona, y mostrar cada marca con el corte encima; no forzar las medidas de Fak ni detectar manchas por programa** (*"¿por qué lo complejizaste tanto?... olvidate de mis medidas, que se parezca a la foto"*). Siete versiones por eso.
+- **20-21/10 — Pasar a un patrón lo que marcan una foto o un video es SUPERPONER y CALCAR zona por zona; cada «acá» del audio se cruza con la FORMA del cuadro contra los recortes cortados (las «V» eran las 2 de Pedro, no los piquetes), y lo que no depende de la respuesta se hace antes de preguntar** (*"olvidate de mis medidas, que se parezca a la foto"*; *"¿cómo van a ser las chiquitas esas?"*). Viernes 23/10: `skill-2d-foto-a-patron-viernes`, `video-a-patron-preguntas-obvias-viernes`.
 
 - **19/10 — En una estructura cada unión se MIDE (área de contacto donde va la soldadura), no alcanza «0 solape»: las patas del carro de práctica tocaban el marco por una arista y lo vio Fak en el plano** (*"¿por qué te lo tuve que decir?"*). Es la regla del caballete (`cad-3d.md` GATE 3: toda interfaz que carga peso lleva su control) y no la apliqué.
 
