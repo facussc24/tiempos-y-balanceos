@@ -27,6 +27,8 @@
     "specialChars": [ { "mark": "D/TLD", "meaning": "CARACTERÍSTICA CRÍTICA" } ],
     "footerNote": "Para toda operación marcada con D/TLD es obligatorio consultar el Plan de Control del UPPER TRIM PANEL y el AMFE 174 de esa operación."
   },
+  "_conectores": "20/10/2026, reunion de AMFE del 09/10 (punto 7): que se entienda mejor como se mueven los materiales. El conector A del adhesivo se reemplaza por un tercer ramal con su traslado, que llega a la 30 junto con la microfibra y el sustrato.",
+  "_dtld_20_10": "20/10/2026: VW (Diego Pandolfi, 16/10) valida la inflamabilidad con la pieza tapizada y no se ensaya la materia prima. La D/TLD queda en la 10, sobre la causa 'microfibra de un articulo distinto del validado' del AMFE 174 (S=9 O=4), A CONFIRMAR por Fak. 'Material sin liberar' sigue con S=9 y D/TLD (puede entrar un articulo no validado). La fila de inflamabilidad del corte sale del AMFE (sirven las dos versiones de microfibra).",
   "_dtld": "09/10/2026: observacion del cliente (Cozzuol), transmitida por Fak: se saca la D/TLD del CORTE (operacion 20); queda solo en la 10. Pendiente alinear el AMFE 174 (causa de la 20 se corta la version sin antiflama, S=9 O=8). Antes: asignada por Fak el 08/10/2026 (propuesta del 02/10). Calidad pidio marcar la inflamabilidad ('proceso 10, poner D'). La marca de una operacion es la union de las siglas de sus causas en el AMFE 174: operacion 10 (microfibra sin antiflama, S=9 O=8; material sin liberar, S=9 O=4) y operacion 20 (se corta la version sin antiflama, S=9 O=8). Critica = S 9 o 10; para VW se escribe D/TLD.",
   "_conjuntos": "El plano 2HC.864.263 (C00610730_05, hoja 4) no le da numero propio a la cubierta suede ni a su sustrato (items 17 a 20): los numeros son de los CONJUNTOS. La cubierta SINGLE va en el .C y en el .D (agregado el 25/11/2025); el 'sin logo' / 'con logo' del plano es la tampografia del marco decorativo plastico, otra pieza: la cubierta lleva en los dos el simbolo de carga por embossing; la DUAL, en el .B. Hasta el 02/10/2026 esta tabla decia 'N de pieza cliente' y al SINGLE le faltaba el .D.",
   "products": [
@@ -42,9 +44,7 @@
     { "type": "inspection", "description": "INSPECCIÓN DE MATERIA PRIMA" },
     { "type": "condition", "labelCondition": "¿MATERIAL CONFORME?", "labelDown": "SI",
       "branchSide": { "labelNode": "NO", "type": "terminal", "text": "RECLAMO DE CALIDAD AL PROVEEDOR" } },
-    { "type": "storage", "description": "ALMACENADO EN SECTOR DE RECEPCIÓN DE MATERIA PRIMA CONTROLADA E IDENTIFICADA" },
-    { "type": "transfer", "description": "TRASLADO DE ADHESIVO DESDE ALMACÉN A SECTOR DE ADHESIVADO",
-      "branchSide": { "type": "connector", "text": "A", "description": "ADHESIVO" },
+    { "type": "storage", "description": "ALMACENADO EN SECTOR DE RECEPCIÓN DE MATERIA PRIMA CONTROLADA E IDENTIFICADA",
       "branches": [
         [
           { "type": "transfer", "description": "TRASLADO DE MICROFIBRA A SECTOR DE MESA DE CORTE" },
@@ -57,9 +57,12 @@
         ],
         [
           { "type": "transfer", "description": "TRASLADO DEL SUSTRATO PLÁSTICO A SECTOR DE TAPIZADO" }
+        ],
+        [
+          { "type": "transfer", "description": "TRASLADO DE ADHESIVO DESDE ALMACÉN A SECTOR DE ADHESIVADO" }
         ]
       ] },
-    { "stepId": "30", "type": "operation", "description": "ADHESIVADO DE MICROFIBRA Y SUSTRATO", "incomingConnector": "A" },
+    { "stepId": "30", "type": "operation", "description": "ADHESIVADO DE MICROFIBRA Y SUSTRATO" },
     { "stepId": "31", "type": "op-ins", "description": "INSPECCIÓN DE PIEZA ADHESIVADA" },
     { "type": "condition", "labelCondition": "¿ADHESIVADO OK?", "labelDown": "SI",
       "branchSide": { "labelNode": "NO", "type": "terminal", "text": "SCRAP" } },
