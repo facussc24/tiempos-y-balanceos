@@ -17,7 +17,15 @@ Material de respaldo de `docs/INVESTIGACION_SISTEMA_3D_2026-10-23.md` y `docs/PR
 - `f12_informe.md` y `f12_verificacion.md`: DFM y DFA aplicados a dispositivos de planta (investigación con búsqueda y lectura web; la verificación abrió las fuentes clave y dice confirmada / parcial / desmentida).
 - `f13_informe.md` y `f13_verificacion.md`: Copilotos de IA de SolidWorks, Onshape y Creo: qué hacen de verdad (investigación con búsqueda y lectura web; la verificación abrió las fuentes clave y dice confirmada / parcial / desmentida).
 - `f14_informe.md` y `f14_verificacion.md`: Cómo diseñan los equipos reales de utillajes (fuentes académicas y de oficio) (investigación con búsqueda y lectura web; la verificación abrió las fuentes clave y dice confirmada / parcial / desmentida).
+- `f15_informe.md` y `f15_verificacion.md`: Agentes de IA que se mejoran solos: habilidades que se escriben, prueban y guardan (investigación con búsqueda y lectura web; la verificación abrió las fuentes clave y dice confirmada / parcial / desmentida).
+- `f16_informe.md` y `f16_verificacion.md`: Practicar diseño mecánico sin casos reales: ejercicios automáticos y corrección automática (investigación con búsqueda y lectura web; la verificación abrió las fuentes clave y dice confirmada / parcial / desmentida).
+- `f17_informe.md` y `f17_verificacion.md`: Un ciclo nocturno de auto-mejora para un sistema de diseño 3D con Claude por API (investigación con búsqueda y lectura web; la verificación abrió las fuentes clave y dice confirmada / parcial / desmentida).
+- `f18_informe.md` y `f18_verificacion.md`: Cómo escribir un buen prompt para un agente que trabaja horas solo (2025-2026) (investigación con búsqueda y lectura web; la verificación abrió las fuentes clave y dice confirmada / parcial / desmentida).
+- `f19_informe.md` y `f19_verificacion.md`: Plantillas publicadas de prompts para trabajo autónomo largo y repetible (investigación con búsqueda y lectura web; la verificación abrió las fuentes clave y dice confirmada / parcial / desmentida).
 - `90_refutacion_del_informe.md`, `91_refutacion_de_las_propuestas.md`: los refutadores que revisaron los dos documentos contra este material.
 - `92_revision_contra_el_pedido.md`: la revisión de los dos documentos contra el pedido textual de Fak.
 - `93_refutacion_de_la_segunda_ronda.md`: el refutador de la segunda ronda (f11 a f14: el §12 del informe y P15).
-- `94_control_de_coherencia.md`: el control final de coherencia entre los dos documentos después de pegar la segunda ronda (los 10 arreglos, ya aplicados).
+- `94_control_de_coherencia.md`: el control final de coherencia entre los dos documentos (10 arreglos, ya aplicados).
+- `95_refutacion_automejora.md`: el refutador de `docs/INVESTIGACION_AUTOMEJORA_2026-10-21.md` (f15 a f17).
+- `96_que_se_le_escapa_a_fak.md`: revisor «fuera de la caja» del 21/10 sobre el plan del viernes y el sistema (su alarma de los mails resultó vieja: los mails suben, verificado el 21/10 08:37).
+- f18 y f19 (cómo escribir el prompt de un agente que trabaja horas solo, y plantillas publicadas): base del prompt fijo de los viernes, en la nube `ASISTENTE INGENIERIA\5- FACUNDO (memoria y configuracion)\viernes-23-plan-sistema\00_PEGAR_TODOS_LOS_VIERNES.txt`.
