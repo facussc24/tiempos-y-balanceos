@@ -117,8 +117,8 @@ const FECHA = '01/10/2026';
 const REV = 'A';   // la letra sube cuando el documento se EMITE (amfe.md 4bis); criterio en revision, 08/10/2026
 // La fecha de revision se mueve con el ultimo cambio aunque la letra espere a la emision
 // (amfe.md 4bis.3): propuesta del 20/10/2026.
-const REV_FECHA = '20/10/2026';
-const REV_FECHA_ISO = '2026-10-20';
+const REV_FECHA = '21/10/2026';
+const REV_FECHA_ISO = '2026-10-21';
 const FLUJOGRAMA = 'tools/flowchart/data/160-UPPER-TRIM-PANEL.json';
 
 // Nivel 1 (amfe.md §8): que entrega la pieza. Identico en todas las operaciones.
@@ -304,7 +304,8 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
           // recepcion no hay ensayo de inflamabilidad: D=10.
           // Sigla: S=9 -> critica por criterio (D/TLD para VW). La tenia asignada por Fak la
           // inflamabilidad de la OP 10 (08 y 09/10/2026); aca sigue a la misma caracteristica
-          // en su fila nueva y queda A CONFIRMAR por Fak (caracteristicas-especiales.md §4).
+          // en su fila nueva. 21/10/2026, Fak: "las decisiones del amfe tomalas vos": queda por
+          // criterio (S=9, I-AC-005 punto 5). El plano no la designa (cajetin Safety doc. vacio).
           falla('Microfibra de un articulo distinto del validado', EF_LEGAL_FUEGO, [
             dtld(causa('Cambio de articulo o proveedor sin revalidar la pieza',
               'Material direccionado por VW, codigo en la lista de materiales',
@@ -375,7 +376,8 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
         'Que a produccion solo salga material ingresado, controlado e identificado',
         'Material identificado por lote y liberado antes de habilitarlo al sector',
         [
-          // S=9 O=4: critica por criterio; la D/TLD la tenia asignada Fak (08/10/2026).
+          // S=9 O=4: critica por criterio; la D/TLD la tenia asignada Fak (08/10/2026) y queda
+          // (21/10/2026, Fak: "las decisiones del amfe tomalas vos").
           falla('Material entregado a produccion sin liberar', EF_SIN_LIBERAR, [
             dtld(causa('Material retirado antes de terminar su control de recepcion',
               'Zona de material pendiente separada de la de liberado',
@@ -637,19 +639,8 @@ const OP30 = operacion('30', 'ADHESIVADO DE MICROFIBRA Y SUSTRATO',
           ]),
         ]),
     ]),
-    // Ficha tecnica del adhesivo FA: se deja secar antes de reactivarlo con calor.
-    we('Method', 'Secado del adhesivo antes del activado', [
-      funcion(
-        'Dejar secar el adhesivo aplicado antes de activarlo',
-        'Adhesivo seco antes del activado, segun la ficha tecnica del adhesivo',
-        [
-          falla('Pieza que pasa al activado con el adhesivo sin secar', EF_DESPEGUE, [
-            causa('Piezas en espera sin la hora de adhesivado',
-              SIN_PREVENCION,
-              10, 'Sin registro de la hora de adhesivado en la pieza', 10),
-          ]),
-        ]),
-    ]),
+    // El secado del adhesivo (ficha tecnica del FA) se analizaba aca hasta el 20/10/2026; desde
+    // el 21/10 esta en la OP 33, el almacenamiento donde las piezas quedan secando.
     // Riesgo cronico (vapores de solvente): P1-8, no 10. La ficha del adhesivo dice que es de
     // base solvente. Reunion de AMFE del 09/10/2026: el control de la extraccion lo hace
     // Seguridad e Higiene (turbinas y planilla de reposicion de filtros). La frecuencia de ese
@@ -669,7 +660,10 @@ const OP30 = operacion('30', 'ADHESIVADO DE MICROFIBRA Y SUSTRATO',
     // Reunion de AMFE del 09/10/2026 ("agregar medio ambiente"): los residuos (latas de
     // adhesivo, trapos con solvente, recortes) se declaran como residuos especiales gestionados
     // con manifiesto, en general, sin detallar lo que va a chatarra. El control de la separacion
-    // en el puesto no se nombro: D=10. Sigla: S=9 -> critica por criterio; la asigna Fak.
+    // en el puesto no se nombro: D=10. Sigla: ninguna (21/10/2026, decidido con el pedido de Fak
+    // "las decisiones del amfe tomalas vos"). Es un efecto en la planta, no una caracteristica
+    // del producto: igual que las 8 causas de seguridad del operario (S=10) de este AMFE, que
+    // tampoco llevan sigla. D/TLD no puede ser: es legal sobre el vehiculo y la designa VW.
     we('Environment', 'Residuos del sector de adhesivado', [
       funcion(
         'Separar los residuos con adhesivo o solvente como residuo especial',
@@ -752,6 +746,47 @@ const OP31 = operacion('31', 'INSPECCION DE PIEZA ADHESIVADA',
   ]);
 
 // ===========================================================================
+// OP 33 — ALMACENAMIENTO EN MEDIOS WIP PARA SECADO DEL ADHESIVO
+// Reunion de AMFE del 09/10/2026 (audio, min 25:59): "y el adhesivo tambien tenes tu WIP", sin
+// respuesta. 21/10/2026, Fak en planta (audio de WhatsApp, 0:49 a 1:08): las piezas adhesivadas
+// necesitan quedar secando en algun lado y el medio no esta disenado; Fak, en el chat: "dijo que
+// si vamos a necesitar un WIP, no esta disenado". Mismo criterio que la 22 (los WIP se declaran,
+// decision de la reunion). El numero 32 no se usa: fue el reproceso de la primera Rev. A y la
+// pregunta de si los reprocesos vuelven al flujograma sigue abierta. Medio, cantidad de piezas y
+// tiempo de secado: sin definir.
+// ===========================================================================
+const OP33 = operacion('33', 'ALMACENAMIENTO EN MEDIOS WIP PARA SECADO DEL ADHESIVO',
+  'Dejar secar el adhesivo de la microfibra y del sustrato hasta el activado sin danar las piezas',
+  [
+    we('Method', 'Medio WIP de secado', [
+      funcion(
+        'Guardar las piezas adhesivadas sin que el adhesivo toque nada ni junte suciedad',
+        'Piezas separadas, con la cara adhesivada libre, identificadas por variante',
+        [
+          falla('Pieza adhesivada marcada o con suciedad pegada en el medio', EF_SCRAP_INTERNO, [
+            causa('Medio de secado sin definir',
+              SIN_PREVENCION,
+              10, VISUAL_FINAL, 8),
+          ]),
+        ]),
+    ]),
+    // Ficha tecnica del adhesivo FA: se deja secar antes de reactivarlo con calor. Viene de la
+    // OP 30 (hasta el 20/10/2026), sin cambios en la falla, la causa ni los controles.
+    we('Method', 'Secado del adhesivo antes del activado', [
+      funcion(
+        'Dejar secar el adhesivo aplicado antes de activarlo',
+        'Adhesivo seco antes del activado, segun la ficha tecnica del adhesivo',
+        [
+          falla('Pieza que pasa al activado con el adhesivo sin secar', EF_DESPEGUE, [
+            causa('Piezas en espera sin la hora de adhesivado',
+              SIN_PREVENCION,
+              10, 'Sin registro de la hora de adhesivado en la pieza', 10),
+          ]),
+        ]),
+    ]),
+  ]);
+
+// ===========================================================================
 // OP 40 — ACTIVADO DEL ADHESIVO CON CALOR
 // La ficha tecnica del adhesivo FA dice que el pegado se hace por reactivacion con calor
 // (infrarrojo, flash o aire caliente) y posterior prensado; Fak lo confirmo el 01/10/2026. La
@@ -761,18 +796,20 @@ const OP31 = operacion('31', 'INSPECCION DE PIEZA ADHESIVADA',
 // aca no se nombra la herramienta. Reunion de AMFE del 09/10/2026 (audio, min 12:30 a 13:17):
 // se pregunto si la pistola de calor es para el adhesivo o para la tela ("son dos metodos
 // totalmente distintos") y no hubo respuesta: el metodo lo define Ingenieria y hay que ver el
-// proceso real. Sigue sin nombrarse.
+// proceso real. 21/10/2026: Fak lo pregunto en planta (audio de WhatsApp de esa manana, 0:15 a
+// 0:26): "¿con que activamos el adhesivo? ¿con pistola de calor?" ... "por ahora si". Se nombra
+// la pistola de calor; tiempo, distancia y temperatura siguen sin definir.
 // ===========================================================================
 const OP40 = operacion('40', 'ACTIVADO DEL ADHESIVO CON CALOR',
   'Reactivar con calor el adhesivo de la microfibra y del sustrato justo antes del tapizado',
   [
-    we('Method', 'Aplicacion de calor sobre el adhesivo', [
+    we('Machine', 'Pistola de calor', [
       funcion(
         'Llevar el adhesivo de las dos partes a su temperatura de activado',
         'Adhesivo activado en toda la superficie, sin dano de la microfibra ni del sustrato',
         [
           falla('Adhesivo sin activar o activado en forma despareja', EF_DESPEGUE, [
-            causa('Calor aplicado a mano, sin tiempo ni distancia definidos',
+            causa('Pistola de calor usada sin tiempo ni distancia definidos',
               OPERARIO,
               O_OPERARIO, ADHERENCIA, D_ADHERENCIA),
           ]),
@@ -782,7 +819,7 @@ const OP40 = operacion('40', 'ACTIVADO DEL ADHESIVO CON CALOR',
               10, ADHERENCIA, D_ADHERENCIA),
           ]),
           falla('Microfibra o sustrato marcado por exceso de calor', EF_ASPECTO, [
-            causa('Calor aplicado sin temperatura ni tiempo de referencia',
+            causa('Pistola de calor sin temperatura ni tiempo de referencia',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
           ]),
@@ -1197,7 +1234,7 @@ const OP80 = operacion('80', 'EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO',
     ]),
   ]);
 
-const OPERACIONES = [OP10, OP20, OP21, OP22, OP30, OP31, OP40, OP41, OP42, OP50, OP60, OP70, OP80];
+const OPERACIONES = [OP10, OP20, OP21, OP22, OP30, OP31, OP33, OP40, OP41, OP42, OP50, OP60, OP70, OP80];
 
 const doc = {
   header: {
@@ -1265,7 +1302,7 @@ const flujo = JSON.parse(readFileSync(FLUJOGRAMA, 'utf8'));
 // El chequeo comun no cuenta un almacenado numerado como operacion con AMFE (criterio de la
 // casa hasta la reunion del 09/10/2026). En este AMFE el WIP 22 si va: se lo marca como paso
 // solo para la comparacion, sin tocar el flujograma ni el chequeo de los demas AMFE.
-const ALMACENAMIENTOS_CON_AMFE = ['22'];
+const ALMACENAMIENTOS_CON_AMFE = ['22', '33'];
 const flujoParaChequeo = JSON.parse(JSON.stringify(flujo), (k, v) => (
   v && v.type === 'storage' && ALMACENAMIENTOS_CON_AMFE.includes(String(v.stepId)) ? { ...v, type: 'operation' } : v));
 const { errores, stats, candidatas, sinPrevencion, sinDeteccion } = chequeosDeAutoria(doc, {
@@ -1427,6 +1464,6 @@ const PROXIMA_REVISION = {
   // 20/10/2026: se suman la inflamabilidad sobre la pieza tapizada (VW, 16/10) y lo de la
   // reunion de AMFE del 09/10. La parte de los reprocesos sigue esperando la validacion de
   // Calidad (mail de Fak del 19/10).
-  item: '10, 20, 22, 30, 31, 32, 40, 42, 70, 71, 72',
-  details: 'OP 32 SE INTEGRA A LA OP 31: EL REPASO DE ADHESIVO ES PARTE DE LA INSPECCION DE PIEZA ADHESIVADA. OP 71 Y 72 SE INTEGRAN A LA OP 70, QUE PASA A TERMINACION Y CONTROL FINAL DE CALIDAD (REACTIVACION DE BORDES CON CALOR Y LIMPIEZA DE ADHESIVO). OP 30: GRUMOS DE ADHESIVO POR PISTOLA SUCIA. OP 10 Y 20: LA INFLAMABILIDAD SE VALIDA CON LA PIEZA TAPIZADA (VW); SALE EL ENSAYO DE LA MICROFIBRA Y LA D/TLD QUEDA EN LA OP 10. OP 10: SUSTRATO CONSIGNADO CON CONTROL VISUAL. OP 20: SENTIDO DEL PELO. OP 22: ALMACENAMIENTO WIP. OP 30 Y 31: EXTRACCION Y RESIDUOS ESPECIALES. OP 40, 42 Y 70: GUANTES CALOR-CORTE. OP 31 Y 70: RIESGOS DEL OPERARIO EN EL REPASO Y EN LA TERMINACION.',
+  item: '10, 20, 22, 30, 31, 32, 33, 40, 42, 70, 71, 72',
+  details: 'OP 32 SE INTEGRA A LA OP 31: EL REPASO DE ADHESIVO ES PARTE DE LA INSPECCION DE PIEZA ADHESIVADA. OP 71 Y 72 SE INTEGRAN A LA OP 70, QUE PASA A TERMINACION Y CONTROL FINAL DE CALIDAD (REACTIVACION DE BORDES CON CALOR Y LIMPIEZA DE ADHESIVO). OP 30: GRUMOS DE ADHESIVO POR PISTOLA SUCIA. OP 10 Y 20: LA INFLAMABILIDAD SE VALIDA CON LA PIEZA TAPIZADA (VW); SALE EL ENSAYO DE LA MICROFIBRA Y LA D/TLD QUEDA EN LA OP 10. OP 10: SUSTRATO CONSIGNADO CON CONTROL VISUAL. OP 20: SENTIDO DEL PELO. OP 22: ALMACENAMIENTO WIP. OP 33: ALMACENAMIENTO WIP PARA SECADO DEL ADHESIVO (EL SECADO PASA DE LA OP 30 A LA 33). OP 40: ACTIVADO CON PISTOLA DE CALOR. OP 30 Y 31: EXTRACCION Y RESIDUOS ESPECIALES. OP 40, 42 Y 70: GUANTES CALOR-CORTE. OP 31 Y 70: RIESGOS DEL OPERARIO EN EL REPASO Y EN LA TERMINACION.',
 };
