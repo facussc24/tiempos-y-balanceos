@@ -310,7 +310,10 @@ describe('claudeApi · la clave', () => {
     expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: new Date(2026, 10, 3), dirMarcas: dir }).clave).toBe('sk-ant-principal');
     expect(A.prestadaAgotada('20261020', { dir, hoy: new Date(2026, 10, 21) })).toBe(false);
     expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: new Date(2026, 10, 21), dirMarcas: dir }).clave).toBe('sk-ant-dueno');
-    // re-marcar en el ciclo nuevo (agregar al archivo actualiza su fecha) vuelve a saltarla, sin utimes de por medio
+    // re-marcar en el ciclo nuevo vuelve a saltarla: la marca vieja (2020) no vale hoy; agregar al archivo actualiza su
+    // fecha y ahi si vale. Si marcar no actualizara la fecha, el segundo expect daria false (revisor Opus 21/10/2026).
+    fs.utimesSync(marca, new Date(2020, 0, 1), new Date(2020, 0, 1));
+    expect(A.prestadaAgotada('20261020', { dir })).toBe(false);
     A.marcarPrestadaAgotada('20261020', { dir });
     expect(A.prestadaAgotada('20261020', { dir })).toBe(true);
     // orden: una prestada que vence ANTES de la proxima recarga se gasta primero; si vence despues, primero la renovable

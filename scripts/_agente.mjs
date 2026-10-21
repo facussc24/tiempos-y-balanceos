@@ -3,7 +3,7 @@
  *
  * Uso:
  *   node scripts/_agente.mjs --encargo <md> [--modelo opus|sonnet|fable] [--fable-pedido "Fak dd/mm hh:mm: <lo que dijo>"] [--carpeta <dir>]
- *                            [--pasos N] [--minutos N] [--dolares N] [--seco]
+ *                            [--pasos N] [--minutos N] [--dolares N] [--max-tokens N] [--lecturas N] [--seco]
  *
  *   --encargo  el pedido (un .md): va tal cual como primer mensaje del usuario
  *   --modelo   sonnet (high) ejecuta el bucle por defecto; opus y fable van en xhigh. Haiku queda afuera (diseño §2).
@@ -11,6 +11,7 @@
  *   --pasos / --minutos / --dolares  topes de la corrida (60 / 120 / BARACK_AGENTE_TOPE_USD o 6)
  *   --max-tokens  salida maxima por paso (8192; hasta 128000). 20/10/2026: con esfuerzo alto el pensamiento se come los
  *              8192 y 6 de 10 investigaciones se cortaron al escribir el informe («respuesta truncada por max_tokens»)
+ *   --lecturas paginas que el agente puede leer en la corrida (20; 0 = sin lectura de paginas, solo busqueda)
  *   --seco    sin red y sin costo: un cliente de guion y un ejecutor que solo anota
  *
  * No arranca con el semaforo del ciclo en rojo, con otra corrida en curso ni a la hora de la noche (06:00-07:30).
@@ -25,7 +26,7 @@ import { escribirSeguro } from './_lib/escrituraSegura.mjs';
 import { leerTextoSeguro } from './_apiTarea.mjs';
 import { correrAgente, ejecutorReal, ejecutorSeco, clienteGuion, registroEnDisco, usoDe, tapar, RAIZ, TOPES_DEFECTO } from './_lib/agenteApi.mjs';
 
-const USO = 'uso: node scripts/_agente.mjs --encargo <md> [--modelo opus|sonnet|fable] [--fable-pedido "Fak dd/mm hh:mm: <lo que dijo>"] [--carpeta <dir>] [--pasos N] [--minutos N] [--dolares N] [--max-tokens N] [--seco]';
+const USO = 'uso: node scripts/_agente.mjs --encargo <md> [--modelo opus|sonnet|fable] [--fable-pedido "Fak dd/mm hh:mm: <lo que dijo>"] [--carpeta <dir>] [--pasos N] [--minutos N] [--dolares N] [--max-tokens N] [--lecturas N] [--seco]';
 export const MAX_TOKENS_DEFECTO = 8192;
 export const MAX_TOKENS_TOPE = 128000;   // el maximo de salida de Opus, Sonnet y Fable (medido el 11/10/2026, api-claude.md §2)
 const ESFUERZO = { sonnet: 'high', opus: 'xhigh', fable: 'xhigh' };   // Sonnet ejecuta, Opus/Fable deciden (diseño §2); `max` nunca (techo-agentes.md)
@@ -34,11 +35,11 @@ const RUTAS_SYSTEM = ['CLAUDE.md', '.claude/rules/api-claude.md', 'MEMORY.md']; 
 
 export function leerArgumentos(argv, env = process.env) {
   const tope = Number(env.BARACK_AGENTE_TOPE_USD);
-  const op = { modelo: 'sonnet', pasos: TOPES_DEFECTO.pasos, minutos: TOPES_DEFECTO.minutos, dolares: tope > 0 ? tope : TOPES_DEFECTO.dolares, 'max-tokens': MAX_TOKENS_DEFECTO, seco: false };
+  const op = { modelo: 'sonnet', pasos: TOPES_DEFECTO.pasos, minutos: TOPES_DEFECTO.minutos, dolares: tope > 0 ? tope : TOPES_DEFECTO.dolares, 'max-tokens': MAX_TOKENS_DEFECTO, lecturas: TOPES_DEFECTO.lecturas, seco: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--seco') { op.seco = true; continue; }
-    if (['--encargo', '--modelo', '--carpeta', '--pasos', '--minutos', '--dolares', '--max-tokens', '--fable-pedido'].includes(a) && i + 1 < argv.length) { op[a.slice(2)] = argv[++i]; continue; }
+    if (['--encargo', '--modelo', '--carpeta', '--pasos', '--minutos', '--dolares', '--max-tokens', '--lecturas', '--fable-pedido'].includes(a) && i + 1 < argv.length) { op[a.slice(2)] = argv[++i]; continue; }
     throw new ErrorApi('api', `no conozco el argumento ${a}. No hago nada.\n${USO}`);
   }
   if (!op.encargo) throw new ErrorApi('api', `falta --encargo.\n${USO}`);
@@ -50,6 +51,8 @@ export function leerArgumentos(argv, env = process.env) {
   for (const k of ['pasos', 'minutos', 'dolares']) { op[k] = Number(op[k]); if (!(op[k] > 0)) throw new ErrorApi('api', `--${k} tiene que ser un numero mayor que 0`); }
   op.maxTokens = Number(op['max-tokens']);
   if (!(Number.isInteger(op.maxTokens) && op.maxTokens >= 1024 && op.maxTokens <= MAX_TOKENS_TOPE)) throw new ErrorApi('api', `--max-tokens va de 1024 a ${MAX_TOKENS_TOPE}`);
+  op.lecturas = Number(op.lecturas);
+  if (!(Number.isInteger(op.lecturas) && op.lecturas >= 0)) throw new ErrorApi('api', '--lecturas va con un entero de 0 en adelante (0 = sin lectura de paginas)');
   op.effort = ESFUERZO[op.modelo];
   // Fable solo con la frase de Fak que lo pidio para esta corrida (api-claude.md §2; tanda 5): sin ella no arranca
   op.pedidoFable = exigirPedidoFable(resolverModelo(op.modelo), op['fable-pedido']) ?? undefined;
@@ -93,7 +96,7 @@ async function main(argv) {
   const corrida = `${s.slice(0, 10).replace(/-/g, '')}_${s.slice(11, 16).replace(':', '')}`;
   const carpeta = path.resolve(op.carpeta ?? path.join(RAIZ, '.sgc-cache', 'agente', corrida));
   const encargo = leerTextoSeguro(op.encargo, { que: 'encargo' });
-  const topes = { pasos: op.pasos, minutos: op.minutos, dolares: op.dolares, busquedas: TOPES_DEFECTO.busquedas, lecturas: TOPES_DEFECTO.lecturas };
+  const topes = { pasos: op.pasos, minutos: op.minutos, dolares: op.dolares, busquedas: TOPES_DEFECTO.busquedas, lecturas: op.lecturas };
   const system = armarSystem({ carpeta, topes });
   const registro = registroEnDisco(carpeta);
   let cliente, ejecutor, registrar, soltar = () => {};
@@ -114,7 +117,7 @@ async function main(argv) {
     soltar = tomarCandado(path.dirname(carpeta));
     ejecutor = ejecutorReal({ carpeta });
   }
-  console.log(`agente ${corrida}: ${resolverModelo(op.modelo)} ${op.effort} · topes ${topes.pasos} pasos / ${topes.minutos} min / ${usd(topes.dolares)} / ${topes.busquedas} busquedas · carpeta ${path.relative(process.cwd(), carpeta) || '.'}${op.seco ? ' · EN SECO' : ''}`);
+  console.log(`agente ${corrida}: ${resolverModelo(op.modelo)} ${op.effort} · topes ${topes.pasos} pasos / ${topes.minutos} min / ${usd(topes.dolares)} / ${topes.busquedas} busquedas / ${topes.lecturas} paginas / salida ${op.maxTokens} por paso · carpeta ${path.relative(process.cwd(), carpeta) || '.'}${op.seco ? ' · EN SECO' : ''}`);
   let r;
   try { r = await correrAgente({ cliente, modelo: op.modelo, effort: op.effort, system, encargo, carpeta, corrida, ejecutor, registro, topes, registrar, maxTokens: op.maxTokens, pedidoFable: op.pedidoFable }); } finally { soltar(); }
   console.log(`${r.terminado ? 'TERMINADO' : `CORTE: ${r.corte}`} · ${r.paso} pasos · ${Math.round(r.duracionMs / 60000)} min · ${r.busquedas} busquedas · ${r.bloqueos} bloqueo(s) · costo real ${usd(r.gastadoUsd)} · registro en ${path.relative(process.cwd(), path.join(carpeta, 'registro.jsonl'))}`);

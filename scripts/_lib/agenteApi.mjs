@@ -36,11 +36,17 @@ export const COMANDO_MAX_S = 600;
 export const PRECIO_BUSQUEDA_USD = 0.01;    // A VERIFICAR: $10 cada 1.000 busquedas; no esta en PRECIOS
 export const CARACTERES_POR_TOKEN = 3.5;    // la misma estimacion que BARACK_TOKENS_POR_CARACTER
 export const HERRAMIENTA_BUSQUEDA = 'web_search_20250305'; // A VERIFICAR: el `type` del server tool
-// Leer una pagina del lado del servidor (20/10/2026: sin ella el agente solo veia fragmentos de la busqueda). Medido ese
-// dia: anda sin cabecera beta (19 pasos de 7 corridas reales leyeron de 1 a 5 paginas, registro.jsonl de .sgc-cache/inv3d/runs).
-// A VERIFICAR contra la doc: el precio (aca se asume que la lectura no se cobra aparte: sus tokens ya entran en el usage).
+// Leer una pagina del lado del servidor (20/10/2026: sin ella el agente solo veia fragmentos de la busqueda). Fuente: doc
+// oficial «Web fetch tool», platform.claude.com/docs/en/agents-and-tools/tool-use/web-fetch-tool (consultada 21/10/2026):
+// `web_fetch_20250910` es la version basica (las de 2026 suman filtrado con codigo), sin cabecera beta; `max_content_tokens`
+// recorta lo que entra; «no additional charges beyond standard token costs». Medido el 20/10: 19 pasos de 7 corridas reales
+// leyeron de 1 a 5 paginas sin beta.
 export const HERRAMIENTA_LECTURA = 'web_fetch_20250910';
 export const LECTURA_MAX_TOKENS = 10000;                  // cuanto trae, como mucho, cada pagina leida
+// La lectura solo abre URL que ya aparecieron en la charla; por defecto cuentan tambien los resultados de las herramientas
+// PROPIAS (leer_archivo, correr_comando), y por ahi el agente podria armar una URL con datos del repo y pedirla (la doc lo
+// llama riesgo de exfiltracion; revisor Opus 21/10/2026). Se apagan: quedan las URL del encargo y de busquedas o lecturas.
+export const LECTURA_FUENTES_URL = Object.freeze({ client_tool_results: { type: 'none' } });
 // `max_uses` por PEDIDO: chico y fijo, para que la lista no cambie y el exceso sobre el tope de la corrida quede acotado
 // (la corrida corta recien cuando SE PASA: en el peor caso termina con tope + MAX_USOS_POR_PEDIDO). Revisor Opus 20/10.
 export const MAX_USOS_POR_PEDIDO = 8;
@@ -76,7 +82,7 @@ export function armarHerramientas(busquedas = TOPES_DEFECTO.busquedas, lecturas 
     h('leer_pdf', 'Extrae el texto de un PDF (hasta 20 paginas por llamada; sin `paginas`, las primeras 20).', { ruta: S, paginas: { type: 'array', items: N } }, ['ruta']),
     h('terminar', 'La UNICA salida limpia: el entregable (ruta o texto) y un resumen de lo hecho y de lo que quedo pendiente.', { entregable: S, resumen: S }, ['entregable', 'resumen']),
     ...(quedan > 0 ? [{ type: HERRAMIENTA_BUSQUEDA, name: 'web_search', max_uses: Math.min(quedan, MAX_USOS_POR_PEDIDO) }] : []),
-    ...(paginas > 0 ? [{ type: HERRAMIENTA_LECTURA, name: 'web_fetch', max_uses: Math.min(paginas, MAX_USOS_POR_PEDIDO), max_content_tokens: LECTURA_MAX_TOKENS }] : []),
+    ...(paginas > 0 ? [{ type: HERRAMIENTA_LECTURA, name: 'web_fetch', max_uses: Math.min(paginas, MAX_USOS_POR_PEDIDO), max_content_tokens: LECTURA_MAX_TOKENS, url_sources: LECTURA_FUENTES_URL }] : []),
   ];
 }
 

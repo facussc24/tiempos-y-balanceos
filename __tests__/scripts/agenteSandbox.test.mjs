@@ -220,6 +220,11 @@ describe('agente por API: la linea de comandos', () => {
     expect(leerArgumentos(['--encargo', 'e.md', '--max-tokens', '32000'], {}).maxTokens).toBe(32000);
     expect(() => leerArgumentos(['--encargo', 'e.md', '--max-tokens', '500'], {})).toThrow(/--max-tokens va de 1024/);
     expect(() => leerArgumentos(['--encargo', 'e.md', '--max-tokens', '200000'], {})).toThrow(/--max-tokens va de 1024/);
+    // --lecturas (21/10/2026): 20 por defecto, 0 apaga la lectura de paginas, negativo o con coma no arranca
+    expect(leerArgumentos(['--encargo', 'e.md'], {}).lecturas).toBe(20);
+    expect(leerArgumentos(['--encargo', 'e.md', '--lecturas', '0'], {}).lecturas).toBe(0);
+    expect(() => leerArgumentos(['--encargo', 'e.md', '--lecturas', '-1'], {})).toThrow(/--lecturas va con un entero/);
+    expect(() => leerArgumentos(['--encargo', 'e.md', '--lecturas', '2.5'], {})).toThrow(/--lecturas va con un entero/);
   });
 });
 

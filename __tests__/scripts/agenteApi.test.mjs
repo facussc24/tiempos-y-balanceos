@@ -117,7 +117,13 @@ describe('agenteApi: la politica, pura', () => {
     expect(chequearTopes({ paso: 60, inicio: 0, gastadoUsd: 0, ultimaEntrada: 0 }, topes, { modelo: 'sonnet', maxTokens: 100, ahora: 0 })).toMatch(/^pasos/);
     expect(chequearTopes({ paso: 1, inicio: 0, gastadoUsd: 0, ultimaEntrada: 0 }, topes, { modelo: 'sonnet', maxTokens: 100, ahora: 121 * 60000 })).toMatch(/^tiempo/);
     expect(armarHerramientas(7, 0).at(-1)).toEqual({ type: 'web_search_20250305', name: 'web_search', max_uses: 7 });
-    expect(armarHerramientas(7, 5).at(-1)).toEqual({ type: 'web_fetch_20250910', name: 'web_fetch', max_uses: 5, max_content_tokens: 10000 });
+    // la lectura no puede abrir URL que salgan de las herramientas propias (riesgo de exfiltracion, doc web-fetch-tool)
+    expect(armarHerramientas(7, 5).at(-1)).toEqual({ type: 'web_fetch_20250910', name: 'web_fetch', max_uses: 5, max_content_tokens: 10000, url_sources: { client_tool_results: { type: 'none' } } });
+    // tope 0 o negativo: la herramienta no va y la corrida NO se corta por eso (verde); pasarse de un tope positivo, si (rojo)
+    expect(armarHerramientas(7, 0).map((x) => x.name)).not.toContain('web_fetch');
+    const sinTope = { pasos: 60, minutos: 120, dolares: 6, busquedas: 0, lecturas: -3 };
+    expect(chequearTopes({ paso: 1, inicio: 0, gastadoUsd: 0, ultimaEntrada: 0, busquedas: 4, lecturas: 2 }, sinTope, { modelo: 'sonnet', maxTokens: 100, ahora: 0 })).toBeNull();
+    expect(chequearTopes({ paso: 1, inicio: 0, gastadoUsd: 0, ultimaEntrada: 0, busquedas: 4, lecturas: 2 }, { ...sinTope, busquedas: 3 }, { modelo: 'sonnet', maxTokens: 100, ahora: 0 })).toMatch(/^busquedas/);
     expect(armarHerramientas(20, 20).map((x) => x.max_uses).filter(Boolean)).toEqual([8, 8]);   // por pedido, como mucho 8
     expect(armarHerramientas(0, 0).map((x) => x.name)).not.toContain('web_search');
     // pasarse del tope de busquedas o de paginas corta; llegar justo, no. En el peor caso la corrida termina con
