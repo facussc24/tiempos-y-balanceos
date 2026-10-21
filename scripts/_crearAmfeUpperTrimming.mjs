@@ -90,8 +90,9 @@
  * control final; plan de recepcion de la microfibra y del sustrato; ensayo de adherencia de
  * serie. El AMFE dice DONDE FALTA CONTROL; no se rellena.
  *
- * SIGLAS: ninguna. Las CC/SC las asigna Fak o el cliente (core-prohibiciones §2). El script
- * lista al final las causas que por S y O son candidatas, para que el decida.
+ * SIGLAS: las CC/SC las asigna Fak o el cliente (core-prohibiciones §2). Desde el 20/10/2026 hay
+ * dos D/TLD en la OP 10 (inflamabilidad, S=9); el 21/10 Fak delego la decision ("las decisiones
+ * del amfe tomalas vos") y quedaron por criterio. --candidatas lista las demas por S y O.
  *
  * Uso:  node scripts/_crearAmfeUpperTrimming.mjs            (arma, valida y muestra; no escribe)
  *       node scripts/_crearAmfeUpperTrimming.mjs --apply    (escribe en Supabase)
@@ -145,8 +146,8 @@ const VISUAL_FINAL = 'Control visual 100% en el control final de calidad';
 const VISUAL_ADHESIVADO = 'Control visual del adhesivo en la inspeccion de pieza adhesivada';
 // D/TLD: la marca de VW para la caracteristica critica (S = 9 o 10; aca, la inflamabilidad, que
 // es requisito legal). La pidio Calidad al revisar la Rev. A el 02/10/2026 ("proceso 10, poner
-// D"; "control de flamabilidad -> D"). Las tres causas marcadas tienen S=9 por su efecto. La
-// asigna Fak: sin su OK esta propuesta no se escribe (caracteristicas-especiales.md §4).
+// D"; "control de flamabilidad -> D"). Desde el 20/10/2026 son dos causas, las dos de la OP 10
+// y con S=9 por su efecto; el 21/10 Fak delego la decision y quedan por criterio.
 const dtld = (c) => ({ ...c, specialChar: 'D/TLD' });
 // El plan de validacion TL 496 pide la adherencia por PV 2034, una sola vez y todavia sin
 // resultado. Eso valida el proceso; no es un control de la produccion. En la serie no hay
@@ -581,7 +582,7 @@ const OP22 = operacion('22', 'ALMACENAMIENTO EN MEDIOS WIP',
 // "presion de pistola adhesivadora", "limpieza de pistola con diluyente al final de turno").
 // ===========================================================================
 const OP30 = operacion('30', 'ADHESIVADO DE MICROFIBRA Y SUSTRATO',
-  'Aplicar adhesivo sobre la microfibra y sobre el sustrato y dejarlo secar antes del activado',
+  'Aplicar adhesivo sobre la microfibra y sobre el sustrato, sin grumos ni zonas sin cubrir',
   [
     we('Material', 'Mezcla de adhesivo FA con reticulante GV', [
       funcion(
@@ -761,7 +762,7 @@ const OP33 = operacion('33', 'ALMACENAMIENTO EN MEDIOS WIP PARA SECADO DEL ADHES
     we('Method', 'Medio WIP de secado', [
       funcion(
         'Guardar las piezas adhesivadas sin que el adhesivo toque nada ni junte suciedad',
-        'Piezas separadas, con la cara adhesivada libre, identificadas por variante',
+        'Piezas separadas, con la cara adhesivada libre',
         [
           falla('Pieza adhesivada marcada o con suciedad pegada en el medio', EF_SCRAP_INTERNO, [
             causa('Medio de secado sin definir',
@@ -813,15 +814,23 @@ const OP40 = operacion('40', 'ACTIVADO DEL ADHESIVO CON CALOR',
               OPERARIO,
               O_OPERARIO, ADHERENCIA, D_ADHERENCIA),
           ]),
-          falla('Pieza que se tapiza con el adhesivo ya enfriado', EF_DESPEGUE, [
-            causa('Espera sin tiempo maximo entre activado y tapizado',
-              SIN_PREVENCION,
-              10, ADHERENCIA, D_ADHERENCIA),
-          ]),
           falla('Microfibra o sustrato marcado por exceso de calor', EF_ASPECTO, [
             causa('Pistola de calor sin temperatura ni tiempo de referencia',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
+          ]),
+        ]),
+    ]),
+    // La espera es del metodo, no de la pistola (auditor, 21/10/2026).
+    we('Method', 'Tiempo entre activado y tapizado', [
+      funcion(
+        'Tapizar con el adhesivo todavia activo',
+        'Tapizado dentro del tiempo abierto del adhesivo activado',
+        [
+          falla('Pieza que se tapiza con el adhesivo ya enfriado', EF_DESPEGUE, [
+            causa('Espera sin tiempo maximo entre activado y tapizado',
+              SIN_PREVENCION,
+              10, ADHERENCIA, D_ADHERENCIA),
           ]),
         ]),
     ]),
