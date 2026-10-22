@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **21/10 — «Una bisagra ya hecha» en un diseño 3D es un MODELO ya hecho para imprimir, no una de chapa comprada; y antes de diseñar de cero una pieza estándar se busca la hecha** (*"te dije que de chapa nada... lo hacés en 3D"*). Memorias `feedback_licencias_3d_no_frenan_uso_interno` y `project_plantilla_perforado_insert`.
+
 - **20/10 — Una mejora implementada que depende de que me acuerde de un flag está apagada: lancé la vigilancia de la Bambu sin `--detector` y lo vio Fak** (*"imperdonable... es bastante grave"*). Viernes 23/10: `detector-impresion-olvidado-viernes`.
 
 - **20/10 — Pasar a un patrón las marcas de una foto es SUPERPONER y CALCAR, zona por zona, y mostrar cada marca con el corte encima; no forzar las medidas de Fak ni detectar manchas por programa** (*"¿por qué lo complejizaste tanto?... olvidate de mis medidas, que se parezca a la foto"*). Siete versiones por eso.
@@ -24,8 +26,6 @@ incidente vive en los snapshots.
 - **18/10 — Una prueba que corre los guardianes de verdad (el despachador con pedidos peligrosos) va con un HOME aparte: con el real gasta el permiso de un solo uso que Fak dejó.** Graduado a `codigo-madre.md` y `scripts/_despachadorPayloads.mjs`.
 
 - **17/10 — Una simulación que reproduce lo publicado puede estar ciega a una parte de la pieza.** Graduado a `reference_gate_asiento_simulacion_ciega`.
-
-- **17/10 — Un caso de prueba peligroso (leer secretos, borrar, pisar un listado) no se pega en el chat: viaja por archivo y los tests lo llaman por su código.** Graduado a `__tests__/scripts/guardianesRonda3.casos.json`; el caso entero, en el snapshot 2026-10-18.
 
 - **11/10 — Antes de un push que agrega archivos o toca `settings.json` va la suite COMPLETA, y un umbral de una regla no lo aflojo yo: va como propuesta.** Graduado a `feedback_suite_completa_antes_del_push` y `feedback_un_numero_de_la_regla_no_lo_cambio_yo`.
 
