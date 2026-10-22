@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **22/10 — Antes de mandar a imprimir se MIDE qué queda en el aire, capa por capa (puente con dos apoyos o voladizo con uno), y lo que no se banca va con soporte o se rediseña: dos veces en el día un techo de hexágono sin soporte** (*"nunca usás soportes... no verificaste antes de mandar... siempre lo mismo"*). Viernes 23/10: `3d-control-voladizos-antes-de-mandar-viernes`.
+
 - **22/10 — Un diseño se hace con tornillería de ferretería común de Argentina (bulón hexagonal DIN 933, tuerca común, cabeza tanque); lo que haría un carrocero o un fresado lo hace una pieza impresa** (*"no tienen fresados ni carrocero... considerá que vivimos en Argentina"*: viaje perdido). Memoria `feedback_tornilleria_comun_argentina`.
 
 - **21/10 — «Una bisagra ya hecha» en un diseño 3D es un MODELO ya hecho para imprimir, no una de chapa comprada; y antes de diseñar de cero una pieza estándar se busca la hecha** (*"te dije que de chapa nada... lo hacés en 3D"*). Memorias `feedback_licencias_3d_no_frenan_uso_interno` y `project_plantilla_perforado_insert`.
