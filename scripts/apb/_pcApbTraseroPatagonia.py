@@ -148,7 +148,7 @@ def filas_proceso():
         fila(f30, **b30, n='1.0', prod='Cantidad de componentes del kit', esp='Completo según lista de materiales del kit y la orden de producción',
              inst='Conteo visual', **SINPAPEL),
         fila(f30, n='2.0', prod='Componente correcto (variante y color)', esp='Según orden de producción', inst='Visual contra orden de producción', **SINPAPEL),
-        fila(f30, n='3.0', prod='Aspecto de los componentes', esp='Sin rasgaduras, manchas ni defectos de corte', inst='Visual', **SINPAPEL),
+        fila(f30, n='3.0', prod='Aspecto de los componentes', esp='Sin rasgaduras, manchas ni defectos de corte', inst='Visual / muestra límite (TBD: la define Calidad)', **SINPAPEL),
     ]
 
     # --- 40 costura union
@@ -162,12 +162,13 @@ def filas_proceso():
         ('Margen (toma) de costura', '8 ± 1 mm', 'Regla (código MC TBD)', True),
         ('Densidad de puntada', '4 puntadas en 16 mm ± 1 mm', 'Regla (código MC TBD)', True),
         ('Atraque', '3 a 4 puntadas, una vez atrás y una adelante', 'Visual', False),
-        ('Cinta de manipulación: costura', 'Se cose solo la parte de adentro (25 mm); los 75 mm de afuera no llevan costura', 'Regla (código MC TBD)', False),
-        ('Cierre cosido en la abertura de la funda', 'Cierre completo y alineado con la abertura', 'Visual / muestra patrón', False),
-        ('Costura completa', 'Sin costura floja, salteada ni faltante', 'Visual / muestra patrón', True),
-        ('Funda sin arrugas ni pliegues', 'Según muestra patrón', 'Visual / muestra patrón', True),
+        ('Cinta de manipulación: largo cosido (parte de adentro)', '25 mm (tolerancia TBD)', 'Regla (código MC TBD)', False),
+        ('Cinta de manipulación: largo sin coser (afuera de la pieza)', '75 mm (tolerancia TBD)', 'Regla (código MC TBD)', False),
+        ('Cierre cosido en la abertura de la funda', 'Cierre completo y alineado con la abertura', 'Visual / muestra límite (TBD: la define Calidad)', False),
+        ('Costura completa', 'Sin costura floja, salteada ni faltante', 'Visual / muestra límite (TBD: la define Calidad)', True),
+        ('Funda sin arrugas ni pliegues', 'Sin arrugas ni pliegues', 'Visual / muestra límite (TBD: la define Calidad)', True),
         # AMFE 150 op 40, "rotura del vinilo en la zona de la costura" (S10 O3, detección visual)
-        ('Vinilo sin roturas en la zona de costura', 'Sin roturas ni perforaciones', 'Visual', False),
+        ('Vinilo sin roturas en la zona de costura', 'Sin roturas ni perforaciones', 'Visual / muestra límite (TBD: la define Calidad)', False),
     ], start=2):
         R += doble(f40 + (f' + {REV1}' if prim else ''), {}, f'{n}.0', prod=prod, esp=esp, inst=inst, primera=prim)
 
@@ -180,8 +181,8 @@ def filas_proceso():
                       ('Relación poliol / isocianato', '200 / 40'),
                       ('Presión de poliol', '0,8 bar (tolerancia TBD)'),
                       ('Presión de isocianato', '1,3 bar (tolerancia TBD)'),
-                      ('Coeficiente de corrección de poliol', '100 %'),
-                      ('Coeficiente de corrección de isocianato', '65 %'),
+                      ('Coeficiente de corrección de poliol', '100 % (tolerancia TBD)'),
+                      ('Coeficiente de corrección de isocianato', '65 % (tolerancia TBD)'),
                       ('Temperatura de poliol', 'TBD'),
                       ('Temperatura de isocianato', 'TBD'),
                       ('Temperatura del molde', 'TBD')]:
@@ -189,11 +190,12 @@ def filas_proceso():
     R.append(fila(f50, n='2.0', proc='Colocación de la estructura, el hard felt con Aplix y la pieza postiza en el molde',
                   esp='En posición, contra la guía del molde, antes de cerrar', inst='Visual', **AUTO))
     for n, (prod, esp, inst) in enumerate([
-        ('Adherencia estructura - espuma', 'Sin despegues', 'Visual / muestra patrón'),
-        ('Adherencia espuma - hard felt', 'Sin despegues', 'Visual / muestra patrón'),
-        ('Aplix', 'Presente y en posición', 'Visual / muestra patrón'),
-        ('Aspecto de la pieza espumada', 'Sin burbujas, cortes ni marcas', 'Visual / muestra patrón'),
-        ('Orificio inferior', 'Sellado completo', 'Visual'),
+        ('Adherencia estructura - espuma', 'Sin despegues', 'Visual / muestra límite (TBD: la define Calidad)'),
+        ('Adherencia espuma - hard felt', 'Sin despegues', 'Visual / muestra límite (TBD: la define Calidad)'),
+        ('Aplix presente', '1 Aplix por pieza', 'Visual'),
+        ('Posición del Aplix', 'En su lugar en el molde, sin corrimiento', 'Visual / muestra límite (TBD: la define Calidad)'),
+        ('Aspecto de la pieza espumada', 'Sin burbujas, cortes ni marcas', 'Visual / muestra límite (TBD: la define Calidad)'),
+        ('Orificio inferior', 'Sellado completo, sin espuma a la vista', 'Visual / muestra límite (TBD: la define Calidad)'),
     ], start=3):
         R += doble(f50, {}, f'{n}.0', prod=prod, esp=esp, inst=inst)
     # el AMFE 150 op 50 pide el peso "con hoja de registro" (valor medible); la tolerancia va a la lista
@@ -209,11 +211,11 @@ def filas_proceso():
     b60 = {}
     first = True
     for n, (prod, esp, inst) in enumerate([
-        ('Funda sin arrugas, pliegues ni marcas', 'Según muestra patrón', 'Visual / muestra patrón'),
-        ('Posición del felt respecto del vinilo', 'Según muestra patrón', 'Visual / muestra patrón'),
+        ('Funda sin arrugas, pliegues ni marcas', 'Sin arrugas, pliegues ni marcas', 'Visual / muestra límite (TBD: la define Calidad)'),
+        ('Posición del felt respecto del vinilo', 'Felt centrado, sin corrimiento', 'Visual / muestra límite (TBD: la define Calidad)'),
         ('Costura alineada', 'Según calibre', 'Calibre de tapizado (código MC TBD)'),
-        ('Funda sin desgarros ni perforaciones', 'Sin roturas', 'Visual'),
-        ('Cierre de la funda', 'Cerrado completo, sin separación', 'Visual y táctil'),
+        ('Funda sin desgarros ni perforaciones', 'Sin desgarros ni perforaciones', 'Visual / muestra límite (TBD: la define Calidad)'),
+        ('Cierre de la funda', 'Cerrado completo, sin separación', 'Visual y táctil / muestra límite (TBD: la define Calidad)'),
         ('Rebaba de espuma visible', 'Sin rebaba visible', 'Visual / muestra límite'),
     ], start=2):
         R += doble(f60, b60 if first else {}, f'{n}.0', prod=prod, esp=esp, inst=inst)
@@ -223,11 +225,14 @@ def filas_proceso():
     f61 = f'{FLUJO} op 61 + {HO} hoja 61 + AMFE 150 op 61'
     b61 = dict(op='Operación 61.', nom='Montaje de portavasos y marco', maq='Manual')
     R += [
-        fila(f61, **b61, n='1.0', prod='Encastre del portavasos 2HC.885.119 y del marco 2HC.885.725', esp='Encastrado y trabado',
-             inst='Visual / muestra patrón', **AUTO),
-        fila(f61, n='2.0', prod='Apertura y cierre del portavasos', esp='Abre y cierra', inst='Prueba funcional manual', **AUTO),
+        fila(f61, **b61, n='1.0', prod='Encastre del portavasos 2HC.885.119', esp='Encastrado y trabado, sin juego', inst='Visual y táctil / muestra límite (TBD: la define Calidad)', **AUTO),
+        fila(f61, n='2.0', prod='Encastre del marco 2HC.885.725', esp='Encastrado y trabado, sin juego', inst='Visual y táctil / muestra límite (TBD: la define Calidad)', **AUTO),
+        fila(f61, n='3.0', prod='Apertura y cierre del portavasos', esp='Se abre y se cierra a mano hasta el tope, sin trabarse (fuerza y recorrido TBD)',
+             inst='Prueba funcional manual', **AUTO),
         # HO-986 hoja 61: OP / OC
-        fila(f61, n='3.0', prod='Aspecto del portavasos y del marco', esp='Sin cortes, manchas ni marcas', inst='Visual / muestra patrón',
+        fila(f61, n='4.0', prod='Aspecto del portavasos', esp='Sin cortes, manchas ni marcas', inst='Visual / muestra límite (TBD: la define Calidad)',
+             **dict(AUTO, resp='Operador de producción / Operador de calidad')),
+        fila(f61, n='5.0', prod='Aspecto del marco', esp='Sin cortes, manchas ni marcas', inst='Visual / muestra límite (TBD: la define Calidad)',
              **dict(AUTO, resp='Operador de producción / Operador de calidad')),
     ]
 
@@ -236,24 +241,26 @@ def filas_proceso():
     b70 = dict(op='Operación 70.', nom='Control final de calidad y pruebas funcionales', maq='Manual / calibre de control')
     first = True
     for n, (prod, esp, inst) in enumerate([
-        ('Deformaciones', 'Sin deformaciones', 'Visual / muestra patrón'),
-        ('Marcas en el vinilo', 'Sin marcas', 'Visual / muestra patrón'),
-        ('Costuras', 'Sin costuras abiertas', 'Visual'),
-        ('Cierre', 'Bien colocado, sin aberturas', 'Visual'),
-        ('Cinta de manipulación', 'Presente; 75 mm afuera de la pieza', 'Visual'),
-        ('Portavasos y marco', 'Bien colocados', 'Visual'),
-        ('Funcionamiento del portavasos', 'Abre y cierra', 'Prueba funcional manual'),
+        ('Deformaciones', 'Sin deformaciones', 'Visual / muestra límite (TBD: la define Calidad)'),
+        ('Marcas en el vinilo', 'Sin marcas', 'Visual / muestra límite (TBD: la define Calidad)'),
+        ('Costura de unión', 'Sin costura abierta, floja ni salteada', 'Visual / muestra límite (TBD: la define Calidad)'),
+        ('Cierre de la funda', 'Cerrado en todo su largo, sin aberturas', 'Visual / muestra límite (TBD: la define Calidad)'),
+        ('Cinta de manipulación presente', '1 cinta por pieza', 'Visual'),
+        ('Largo de la cinta de manipulación afuera de la pieza', '75 mm (tolerancia TBD)', 'Regla (código MC TBD)'),
+        ('Portavasos 2HC.885.119 colocado', 'Encastrado y trabado, sin juego', 'Visual y táctil / muestra límite (TBD: la define Calidad)'),
+        ('Marco 2HC.885.725 colocado', 'Encastrado y trabado, sin juego', 'Visual y táctil / muestra límite (TBD: la define Calidad)'),
+        ('Apertura y cierre del portavasos', 'Se abre y se cierra a mano hasta el tope, sin trabarse (fuerza y recorrido TBD)', 'Prueba funcional manual'),
     ], start=1):
         R.append(fila(f70, **(b70 if first else {}), n=f'{n}.0', prod=prod, esp=esp, inst=inst, **FINAL))
         first = False
-    R.append(fila(f70, n='8.0', prod='Dimensional', esp='Según calibre de forma', inst='Calibre de forma APB TAPA PATAGONIA MC505',
+    R.append(fila(f70, n='10.0', prod='Dimensional', esp='Según calibre de forma', inst='Calibre de forma APB TAPA PATAGONIA MC505',
                   tam='1 Pieza', frec='Primera pieza', reg='Registro de control', resp='Operador de calidad', reac='Según P-09/I.'))
-    R.append(fila(f70, n='9.0', prod='Identificación de la pieza', esp=f'Etiqueta ET-SATO-50X20 con código {CODIGO}', inst='Visual', **FINAL))
-    R.append(fila(f70, n='10.0', prod='Embolsado', esp='Pieza en bolsa PP 600 x 500 mm (427VAR002TAP01)', inst='Visual', **FINAL))
+    R.append(fila(f70, n='11.0', prod='Identificación de la pieza', esp=f'Etiqueta ET-SATO-50X20 con código {CODIGO}', inst='Visual', **FINAL))
+    R.append(fila(f70, n='12.0', prod='Embolsado', esp='Pieza en bolsa PP 600 x 500 mm (427VAR002TAP01)', inst='Visual', **FINAL))
     # AMFE 150 op 70, "pieza con rebaba visible": iluminación dirigida y muestra límite
-    R.append(fila(f70, n='11.0', prod='Rebaba de espuma visible', esp='Sin rebaba visible', inst='Visual con iluminación dirigida / muestra límite', **FINAL))
+    R.append(fila(f70, n='13.0', prod='Rebaba de espuma visible', esp='Sin rebaba visible', inst='Visual con iluminación dirigida / muestra límite (TBD: la define Calidad)', **FINAL))
     # plan Rev 1 de Calidad, "Inspección final + Sistema ARB"
-    R.append(fila(f70 + f' + {REV1}', n='12.0', proc='Carga en el sistema ARB', esp='Cantidad OK / cantidad NOK', inst='Sistema ARB',
+    R.append(fila(f70 + f' + {REV1}', n='14.0', proc='Carga en el sistema ARB', esp='Cantidad OK / cantidad NOK', inst='Sistema ARB',
                   tam='100%', frec='Por lote', reg='Sistema ARB', resp='Operador de calidad', reac='Según P-09/I.'))
 
     # --- 80 y 82 retrabajos (estan en el flujograma, el AMFE y la HO)
@@ -261,17 +268,17 @@ def filas_proceso():
     b80 = dict(op='Operación 80.', nom='Reproceso: corrección de defectos generales', maq='Herramientas de retrabajo (tijera / piquete)')
     R += [
         fila(f80, **b80, n='1.0', prod='Hilo sobrante', esp='Cortado al ras o atado; largo residual máximo TBD', inst='Visual', **SINPAPEL),
-        fila(f80, n='2.0', prod='Nudo o atado', esp='Firme, no se deshace', inst='Visual y táctil', **SINPAPEL),
-        fila(f80, n='3.0', prod='Encastres plásticos', esp='Sin roturas ni fisuras', inst='Visual', **SINPAPEL),
+        fila(f80, n='2.0', prod='Nudo o atado', esp='Firme, no se deshace al tirar a mano', inst='Visual y táctil / muestra límite (TBD: la define Calidad)', **SINPAPEL),
+        fila(f80, n='3.0', prod='Encastres plásticos', esp='Sin roturas ni fisuras', inst='Visual / muestra límite (TBD: la define Calidad)', **SINPAPEL),
         fila(f80, n='4.0', prod='Pieza retrabajada', esp='Vuelve a la operación 70 y se controla completa; si no se puede corregir, va a scrap',
              inst='Control final completo', tam='100%', frec='Cada pieza retrabajada', reg='Registro de control', resp='Operador de calidad', reac='Según P-09/I.'),
     ]
     f82 = f'{FLUJO} op 82 + {HO} hoja 82 + AMFE 150 op 82'
     b82 = dict(op='Operación 82.', nom='Reproceso: re-tapizado de funda', maq='Mesa de re-tapizado')
     R += [
-        fila(f82, **b82, n='1.0', prod='Estado de la pieza espumada al retirar la funda', esp='Sin daños; si está dañada, va a scrap', inst='Visual', **SINPAPEL),
-        fila(f82, n='2.0', prod='Encastres plásticos', esp='Sin roturas ni fisuras', inst='Visual', **SINPAPEL),
-        fila(f82, n='3.0', prod='Funda re-tapizada', esp='Sin arrugas ni pliegues, con el tensado de la operación 60', inst='Visual / muestra patrón', **SINPAPEL),
+        fila(f82, **b82, n='1.0', prod='Estado de la pieza espumada al retirar la funda', esp='Sin roturas ni deformaciones; si está dañada, va a scrap', inst='Visual / muestra límite (TBD: la define Calidad)', **SINPAPEL),
+        fila(f82, n='2.0', prod='Encastres plásticos', esp='Sin roturas ni fisuras', inst='Visual / muestra límite (TBD: la define Calidad)', **SINPAPEL),
+        fila(f82, n='3.0', prod='Funda re-tapizada', esp='Sin arrugas ni pliegues, con el tensado de la operación 60', inst='Visual / muestra límite (TBD: la define Calidad)', **SINPAPEL),
         fila(f82, n='4.0', prod='Pieza retrabajada', esp='Vuelve a la operación 70 y se controla completa',
              inst='Control final completo', tam='100%', frec='Cada pieza retrabajada', reg='Registro de control', resp='Operador de calidad', reac='Según P-09/I.'),
     ]

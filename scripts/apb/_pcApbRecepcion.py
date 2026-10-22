@@ -20,7 +20,7 @@ Cada fila de `filas`: (caracteristica, sigla, especificacion, instrumento, cambi
 LOTE = dict(tam='1 Muestra por lote')
 ANUAL = dict(tam='---', frec='Anual')
 REV1 = 'plan Rev 1 de Calidad de esta pieza (M. Nieve, 31/07/2026)'
-LIMPIO = ('Aspecto / limpieza', 'SC', 'Sin suciedad ni contaminación; embalaje con protección', 'Visual', None)
+LIMPIO = ('Aspecto / limpieza', 'SC', 'Sin suciedad ni contaminación; embalaje con protección', 'Visual / muestra límite (TBD: la define Calidad)', None)
 LIBRE = ('La pieza debe estar libre de rebaba, marcas de herramental, deformaciones, bordes afilados, aceite, grasa '
          'y cualquier otro defecto que afecte su conformación')
 # consignados de VW: el plan Rev 1 (p. 2 a 5) dice muestra "Según acuerdo plan de control del proveedor"
@@ -34,7 +34,7 @@ RECEPCION = [
                  '+ AMFE 150 op 10 (lote; flamabilidad TL 1010 y emisiones VW 50180 D/TLD S9 O3; SC FM 3 y 4) + plan 1036 (registro del ensayo)'),
          filas=[
              LIMPIO,
-             ('Color y grabado', 'SC', 'Según patrón de aspecto', 'Visual con patrón', None),
+             ('Color y grabado', 'SC', 'Según patrón de aspecto', 'Visual / patrón de aspecto (TBD: confirmar con Calidad)', None),
              ('Espesor', 'SC', '1,8 a 2,5 mm', 'Medidor de espesor (código TBD)', None),
              ('Gramaje', 'SC', '800 a 1000 g/m²', 'Balanza (código TBD)', None),
              ('Ancho del rollo', 'SC', '1400 mm (tolerancia TBD)', 'Cinta métrica (código TBD)', None),
@@ -68,7 +68,7 @@ RECEPCION = [
          filas=[
              LIMPIO,
              ('Largo del cierre', 'SC', '360 ± 1 mm', 'Regla (código TBD)', None),
-             ('Dientes', '', 'Sin dientes faltantes ni dañados', 'Visual con patrón', None),
+             ('Dientes', '', 'Sin dientes faltantes ni dañados', 'Visual / patrón de aspecto (TBD: confirmar con Calidad)', None),
          ]),
     dict(prod='Cinta sarga 24 mm — código 5825',
          fuente='BOM arb 22/09/2026 (SC FM 3 y 4 del AMFE 150). Sin plan de recepción de este código (el 1005, obsoleto, es de la 5826 de 25 mm)',
@@ -116,32 +116,32 @@ RECEPCION = [
     dict(prod='Estructura interna del apoyabrazos 2HC.885.925 (consignado VWA)',
          fuente=f'BOM arb 22/09/2026 + AMFE 150 op 10 (SC FM 3 y 4) + {REV1} (color, dimensional y aspecto)',
          filas=[
-             ('Aspecto / limpieza', 'SC', LIBRE + '; sin faltante de pintura', 'Visual con patrón', None),
-             ('Color', 'SC', 'Negro, según patrón de aspecto', 'Visual con patrón', None),
+             ('Aspecto / limpieza', 'SC', LIBRE + '; sin faltante de pintura', 'Visual / patrón de aspecto (TBD: confirmar con Calidad)', None),
+             ('Color', 'SC', 'Negro, según patrón de aspecto', 'Visual / patrón de aspecto (TBD: confirmar con Calidad)', None),
              DIM_PROV,
          ]),
     dict(prod='Posavasos 2HC.885.119 (consignado VWA)',
          fuente=f'BOM arb 22/09/2026 + AMFE 150 op 10 (SC FM 3 y 4) + {REV1} (pestañas, color, dimensional y aspecto)',
          filas=[
-             ('Aspecto / limpieza', 'SC', LIBRE, 'Visual con patrón', ACUERDO),
+             ('Aspecto / limpieza', 'SC', LIBRE, 'Visual / patrón de aspecto (TBD: confirmar con Calidad)', ACUERDO),
              ('Pestañas de retención', '', ('Las 8 pestañas sujetan el vaso, sin roturas, deformación ni interferencias, '
                                            'y permiten sacarlo a mano'), 'Ensayo funcional con vaso patrón', ACUERDO),
-             ('Color', 'SC', 'Negro, según patrón de aspecto', 'Visual con patrón', None),
+             ('Color', 'SC', 'Negro, según patrón de aspecto', 'Visual / patrón de aspecto (TBD: confirmar con Calidad)', None),
              DIM_PROV,
          ]),
     dict(prod='Marco posavasos 2HC.885.725 (consignado VWA)',
          fuente=f'BOM arb 22/09/2026 + AMFE 150 op 10 (SC FM 3 y 4) + {REV1} (aspecto, color y dimensional)',
          filas=[
-             ('Aspecto / limpieza', 'SC', LIBRE, 'Visual con patrón', None),
-             ('Color', 'SC', 'Negro, según patrón de aspecto', 'Visual con patrón', None),
+             ('Aspecto / limpieza', 'SC', LIBRE, 'Visual / patrón de aspecto (TBD: confirmar con Calidad)', None),
+             ('Color', 'SC', 'Negro, según patrón de aspecto', 'Visual / patrón de aspecto (TBD: confirmar con Calidad)', None),
              DIM_PROV,
          ]),
     dict(prod='Tornillo fijador 2HC.075.701.GS (consignado VWA)',
          fuente=f'BOM arb 22/09/2026 + AMFE 150 op 10 (SC FM 3 y 4) + {REV1} (tipo, color y aspecto)',
          filas=[
-             ('Aspecto / limpieza', 'SC', LIBRE, 'Visual con patrón', None),
+             ('Aspecto / limpieza', 'SC', LIBRE, 'Visual / patrón de aspecto (TBD: confirmar con Calidad)', None),
              ('Largo', 'SC', '12,2 ± 0,5 mm', 'Certificado del proveedor', ACUERDO),
-             ('Color', 'SC', 'Negro, según patrón de aspecto', 'Visual con patrón', None),
+             ('Color', 'SC', 'Negro, según patrón de aspecto', 'Visual / patrón de aspecto (TBD: confirmar con Calidad)', None),
          ]),
     dict(prod='Bolsa PP 600 x 500 mm — código 427VAR002TAP01',
          fuente='BOM arb (medida corregida el 24/09/2026). Sin plan de recepción ni control en el AMFE o el plan Rev 1: TBD a la lista',

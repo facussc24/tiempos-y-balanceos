@@ -152,7 +152,8 @@ def filas_proceso():
         ('Toma (margen) de costura', '6 mm (tolerancia TBD)', 'Regla (código MC TBD)'),
         ('Atraque', '3 a 4 puntadas al inicio y al final, una vez atrás y una adelante', 'Visual'),
         ('Costura completa', 'Sin puntadas flojas, saltadas ni faltantes', 'Visual / muestra límite (TBD: la define Calidad)'),
-        ('Vivo (piping) alineado y continuo (L2 / L3); unión directa de los paños (L1)', 'Sin vivo torcido ni cortado', 'Visual / muestra límite (TBD: la define Calidad)'),
+        ('Vivo (piping) alineado y continuo (solo L2 / L3)', 'Sin vivo torcido ni cortado', 'Visual / muestra límite (TBD: la define Calidad)'),
+        ('Unión directa de los paños (solo L1)', 'Paños unidos sin desfasaje', 'Visual / muestra límite (TBD: la define Calidad)'),
     ], start=2):
         R += doble(f40, {}, str(n), prod=prod, esp=esp, inst=inst)
     R.append(fila(f40, n='7', prod='Vinilo sin roturas en la zona de costura', esp='Sin roturas ni perforaciones', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO))
@@ -180,9 +181,9 @@ def filas_proceso():
     for n, (prod, esp, inst) in enumerate([
         ('Densidad de puntada', '4 puntadas en 16 mm ± 1 mm', 'Regla (código MC TBD)'),
         ('Separación de la costura al borde', '4 mm ± 0,5 mm', 'Regla (código MC TBD)'),
-        ('Color del hilo según versión', 'L1 Alpe Gray / L2 y L3 Gray Violet', 'Visual / muestra límite (TBD: la define Calidad)'),
+        ('Color del hilo según versión', 'L1 Alpe Gray / L2 y L3 Gray Violet', 'Visual contra el patrón de color del hilo'),
         ('Atraque', '3 a 4 puntadas al inicio y al final, una vez atrás y una adelante', 'Visual'),
-        ('Costura completa, paralela al borde', 'Sin puntadas flojas, saltadas ni faltantes', 'Visual / muestra límite (TBD: la define Calidad)'),
+        ('Costura completa', 'Sin puntadas flojas, saltadas ni faltantes', 'Visual / muestra límite (TBD: la define Calidad)'),
     ], start=2):
         R += doble(f42, {}, str(n), prod=prod, esp=esp, inst=inst)
 
@@ -191,7 +192,7 @@ def filas_proceso():
     b50 = dict(op='Operación 50.', nom='Troquelado de espumas', maq='Troqueladora · troquel N° TBD')
     R += [
         fila(f50, **b50, n='1', proc='Espuma correcta cargada (código y espesor)', esp='La de la orden de producción', inst='Visual contra etiqueta del rollo', **SINPAPEL),
-        fila(f50, n='2', prod='Espesor de la espuma troquelada', esp='Según especificación de la espuma (ver recepción)', inst='Calibre (código MC TBD)', **SINPAPEL),
+        fila(f50, n='2', prod='Espesor de la espuma troquelada', esp='CONFLICTO: 3 mm (ficha técnica Barack) / 3,15 mm (BOM006) (tolerancia TBD)', inst='Calibre (código MC TBD)', **SINPAPEL),
         fila(f50, n='3', prod='Forma y dimensión de la espuma troquelada', esp='Contorno completo, sin cortes incompletos', inst='Visual / muestra límite (TBD: la define Calidad)', **SINPAPEL),
     ]
 
@@ -221,12 +222,12 @@ def filas_proceso():
 
     # --- 80 control de adhesivado (hoja 80: con la mano, grumos y uniformidad; patrones en el puesto)
     f80 = f'{FLUJO} op 80 + {HO} hoja 80 + {AMFE} op 80'
-    b80 = dict(op='Operación 80.', nom='Control de calidad adhesivado', maq='Patrones de aceptación y rechazo en el puesto')
+    b80 = dict(op='Operación 80.', nom='Control de calidad adhesivado', maq='Piezas NOK de referencia en el puesto (a confirmar por Calidad)')
     ctl80 = dict(tam='TBD', frec='TBD', reg='Registro de control', resp=OC, reac=REAC)
     R += [
-        fila(f80, **b80, n='1', prod='Adhesivo uniforme en la zona vista, sin grumos', esp='Sin grumos ni zonas desparejas', inst='Visual y táctil / muestra límite (TBD: la define Calidad)', **ctl80),
-        fila(f80, n='2', prod='Adhesivo en el vinilo', esp='Sin falta ni exceso de adhesivo', inst='Visual / muestra límite (TBD: la define Calidad)', **ctl80),
-        fila(f80, n='3', prod='Adhesivo en el sustrato', esp='Sin falta de adhesivo', inst='Visual / muestra límite (TBD: la define Calidad)', **ctl80),
+        fila(f80, **b80, n='1', prod='Adhesivo uniforme en la zona vista, sin grumos', esp='Sin grumos ni zonas desparejas', inst='Visual y táctil contra las piezas NOK del puesto', **ctl80),
+        fila(f80, n='2', prod='Adhesivo en el vinilo', esp='Sin falta ni exceso de adhesivo', inst='Visual contra las piezas NOK del puesto (falta y exceso de adhesivo)', **ctl80),
+        fila(f80, n='3', prod='Adhesivo en el sustrato', esp='Sin falta de adhesivo', inst='Visual contra las piezas NOK del puesto (falta de adhesivo en el sustrato)', **ctl80),
     ]
 
     # --- 81 retrabajo de adhesivado (AMFE 149 op 81: reinspeccion obligatoria en op 80)
@@ -245,7 +246,7 @@ def filas_proceso():
         fila(f90, **b90, n='1', proc='Temperatura de la pistola de calor', esp=CALOR_90, inst='TBD', **SETUP),
         fila(f90, n='2', prod='Costura encastrada en la ranura del sustrato', esp='Talón de costura dentro de la canaleta de la pieza plástica', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO),
         fila(f90, n='3', proc='Clamps cerrados sobre la costura', esp='Todos los clamps cerrados', inst='Visual', **AUTO),
-        fila(f90, n='4', prod='Ancho de la zona pegada debajo de la costura', esp='5 cm (tolerancia TBD)', inst='Regla (código MC TBD)', **AUTO),
+        fila(f90, n='4', prod='Ancho de la zona pegada debajo de la costura', esp='5 cm (tolerancia TBD)', inst='Regla (código MC TBD)', **dict(AUTO, reg='Registro de control')),
     ]
 
     # --- 91 tapizado y fijado superior
@@ -254,11 +255,11 @@ def filas_proceso():
     R += [
         fila(f91, **b91, n='1', proc='Temperatura de la pistola de calor', esp=CALOR_91, inst='TBD', **SETUP),
         fila(f91, proc='Tiempo de aplicación de calor', esp=CALOR_91, inst='TBD', **SETUP),
-        fila(f91, n='2', prod='Tapizado sin arrugas', esp='Según muestra límite (TBD)', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO),
-        fila(f91, n='3', prod='Sin marcas de tapizado', esp='Según muestra límite (TBD)', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO),
-        fila(f91, n='4', prod='Posición del vinilo respecto de la pieza plástica', esp='Según muestra límite (TBD)', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO),
+        fila(f91, n='2', prod='Tapizado sin arrugas', esp='Sin arrugas', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO),
+        fila(f91, n='3', prod='Sin marcas de tapizado', esp='Sin marcas', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO),
+        fila(f91, n='4', prod='Posición del vinilo respecto de la pieza plástica', esp='Vinilo centrado, sin corrimiento', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO),
         fila(f91, n='5', prod='Adherencia del vinilo a la pieza plástica', esp='Sin despegues', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO),
-        fila(f91, n='6', prod='Costura alineada en el perfil', esp='100 mm ± 1 mm', inst='Calibre de control (código MC TBD)', **AUTO),
+        fila(f91, n='6', prod='Costura alineada en el perfil', esp='100 mm ± 1 mm', inst='Calibre de control (código MC TBD)', **dict(AUTO, reg='Registro de control')),
     ]
 
     # --- 100 wrapping + edge folding (AMFE 149 op 100: set up de parametros al inicio de turno; bordes 100 % visual)
@@ -270,7 +271,7 @@ def filas_proceso():
         fila(f100, n='2', proc='Pieza encastrada completa antes de accionar los pedales', esp='Pieza apoyada en todo el nido', inst='Visual', **AUTO),
         fila(f100, n='3', prod='Virolado de todo el contorno de la pieza', esp='Borde plegado completo, sin arrugas ni despegues', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO),
         fila(f100, n='4', prod='Pegado de todos los pliegues', esp='Pliegues pegados', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO),
-        fila(f100, n='5', prod='Zonas críticas despejadas de material excedente', esp='Según muestra límite (TBD)', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO),
+        fila(f100, n='5', prod='Zonas críticas despejadas de material excedente', esp='Sin material excedente en las zonas críticas (TBD: las define Calidad)', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO),
         fila(f100, n='6', prod='Vinilo sin zonas quemadas en la cara vista', esp='Sin quemaduras', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO),
         fila(f100, n='7', prod='Pieza plástica sin deformaciones por calor', esp='Sin deformaciones', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO),
     ]
@@ -279,17 +280,19 @@ def filas_proceso():
     f110 = f'{FLUJO} op 110 + {HO} hoja 110 + {AMFE} op 110 + {PRELIM} (op 60 logo) + BOM Barack V3 (componentes) + cronograma 2026 Rev.7 (MC400)'
     b110 = dict(op='Operación 110.', nom='Soldadura con ultrasonido y ensamble', maq='Dispositivo de ultrasonido (N° TBD) · atornilladora Atlas Copco MC400')
     R += [
-        fila(f110, **b110, n='1', proc='Parámetros de ultrasonido', esp=ULTRASONIDO, inst='Visual en el panel / patrón de referencia', **SETUP),
-        fila(f110, n='2', prod='Logo airbag 2HC.853.438 presente y en posición', clas='D', esp='Logo en su alojamiento, posicionado por el dispositivo', inst='Visual', **AUTO),
-        fila(f110, n='3', prod='Fijación del logo airbag', clas='D', esp='El logo no se mueve al empujarlo a mano (fuerza de prueba TBD)', inst='Prueba manual de fijación', **AUTO),
-        # plano del cliente C00751801 p. 3: el logo se fija con 2 puntos de soldadura
-        fila(f110, prod='Puntos de soldadura del logo airbag', clas='D', esp='= 2 (plano C00751801)', inst='Conteo visual', **AUTO),
-        fila(f110, n='4', prod='Resistencia de la soldadura', esp='TBD', inst='Ensayo destructivo', tam='TBD', frec='TBD', reg='Registro de control', resp=OC, reac=REAC),
-        fila(f110, n='5', prod='Aspecto de la zona soldada', esp='Sin despegues, cortes ni manchas', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO),
-        fila(f110, n='6', prod='Carcasa de difusor 2HC.819.728', esp='Montada en su alojamiento, según plano C00751801', inst='Visual contra el plano', **AUTO),
-        fila(f110, n='7', prod='Clips 2HC.867.190.A', esp='L1: 12 / L2 y L3: 10', inst='Conteo visual', **AUTO),
-        fila(f110, n='8', prod='Tornillos 2HC.075.701.HE', esp='5 tornillos colocados', inst='Conteo visual', **AUTO),
-        fila(f110, n='9', proc='Torque de atornillado', esp='TBD', inst='Atornilladora Atlas Copco MC400', **SETUP),
+        fila(f110, **b110, n='1', proc='Parámetros de ultrasonido', esp=ULTRASONIDO, inst='Visual en el panel de la máquina', **SETUP),
+        # logo airbag: D/TLD S9 O2 (AMFE 149 op 110, "logo airbag faltante o mal soldado"); el plano del cliente C00751801
+        # tiene el logo en la lista de materiales (pag. 3) y sus 2 alojamientos con nervio antierror (pag. 6)
+        fila(f110, n='2', prod='Logo airbag presente', clas='D', esp='Logo 2HC.853.438 presente', inst='Visual contra el plano', **AUTO),
+        fila(f110, n='3', prod='Posición del logo airbag', clas='D', esp='En sus 2 alojamientos con nervio antierror (plano C00751801, pág. 6)',
+             inst='Visual contra el plano', **AUTO),
+        fila(f110, n='4', prod='Fijación del logo airbag', clas='D', esp='El logo no se mueve al empujarlo a mano (fuerza de prueba TBD)', inst='Prueba manual de fijación', **AUTO),
+        fila(f110, n='5', prod='Resistencia de la soldadura', esp='TBD', inst='Ensayo destructivo', tam='TBD', frec='TBD', reg='Registro de control', resp=OC, reac=REAC),
+        fila(f110, n='6', prod='Aspecto de la zona soldada', esp='Sin despegues, cortes ni manchas', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO),
+        fila(f110, n='7', prod='Carcasa de difusor 2HC.819.728', esp='Montada en su alojamiento, según plano C00751801', inst='Visual contra el plano', **AUTO),
+        fila(f110, n='8', prod='Clips 2HC.867.190.A', esp='L1: 12 / L2 y L3: 10', inst='Conteo visual', **AUTO),
+        fila(f110, n='9', prod='Tornillos 2HC.075.701.HE', esp='5 tornillos colocados', inst='Conteo visual', **AUTO),
+        fila(f110, n='10', proc='Torque de atornillado', esp='TBD', inst='Atornilladora Atlas Copco MC400', **SETUP),
     ]
 
     # --- 120 terminacion: engrampado de puntas (hoja A3 del 01/10/2026), refilado y sellado de puntas (AMFE 149 op 120)
@@ -312,14 +315,17 @@ def filas_proceso():
              tam='5 piezas', frec='Por lote de inyección del sustrato', reg='Según instructivo de medición de calibre', resp='Metrología.', reac=REAC),
         fila(f130, n='2', prod='Vinilo sin despegues', esp='Sin despegues del vinilo', inst='Visual / muestra límite (TBD: la define Calidad)', **fin),
         fila(f130, n='3', prod='Aspecto: sin cortes, manchas, rayas ni arrugas', esp='Sin cortes, manchas, rayas ni arrugas', inst='Visual / muestra límite (TBD: la define Calidad)', **fin),
-        fila(f130, n='4', prod='Costura alineada', esp='Sin costura torcida ni corrida', inst='Visual / muestra límite (TBD: la define Calidad)', **fin),
+        # la costura que se ve en la pieza terminada es la vista (la de union queda dentro de la canaleta)
+        fila(f130, n='4', prod='Costura vista alineada y paralela al borde', esp='Sin costura vista torcida ni corrida', inst='Visual / muestra límite (TBD: la define Calidad)', **fin),
         fila(f130, n='5', prod='Logo airbag presente', esp='Logo 2HC.853.438 presente', inst='Visual contra el plano', **fin),
-        fila(f130, prod='Logo airbag sin daños', esp='Sin rayas, golpes ni marcas', inst='Visual / muestra límite (TBD: la define Calidad)', **fin),
-        fila(f130, n='6', prod='Carcasa de difusor', esp='Carcasa 2HC.819.728 montada, según plano C00751801', inst='Visual contra el plano', **fin),
-        fila(f130, n='7', prod='Clips', esp='L1: 12 / L2 y L3: 10', inst='Conteo visual', **fin),
-        fila(f130, n='8', prod='Tornillos', esp='5 por pieza', inst='Conteo visual', **fin),
-        fila(f130, n='9', prod='Grampas de las puntas', esp='High (L2 / L3): 11 / Low (L1): 12', inst='Conteo visual', **fin),
-        fila(f130, n='10', prod='Identificación de la pieza', esp='Etiqueta ET-SATO-50X20 con el código de la versión', inst='Visual', **fin),
+        # plan preliminar (inspeccion final: "terminacion con soldadura ultrasonido ok") y AMFE 149 op 120 ("verificar fijacion y soldaduras")
+        fila(f130, n='6', prod='Logo airbag soldado', esp='El logo no se mueve al empujarlo a mano (fuerza de prueba TBD)', inst='Prueba manual de fijación', **fin),
+        fila(f130, n='7', prod='Logo airbag sin daños', esp='Sin rayas, golpes ni marcas', inst='Visual / muestra límite (TBD: la define Calidad)', **fin),
+        fila(f130, n='8', prod='Carcasa de difusor', esp='Carcasa 2HC.819.728 montada, según plano C00751801', inst='Visual contra el plano', **fin),
+        fila(f130, n='9', prod='Clips', esp='L1: 12 / L2 y L3: 10', inst='Conteo visual', **fin),
+        fila(f130, n='10', prod='Tornillos', esp='5 por pieza', inst='Conteo visual', **fin),
+        fila(f130, n='11', prod='Grampas de las puntas', esp='High (L2 / L3): 11 / Low (L1): 12', inst='Conteo visual', **fin),
+        fila(f130, n='12', prod='Identificación de la pieza', esp='Etiqueta ET-SATO-50X20 con el código de la versión', inst='Visual', **fin),
     ]
 
     # --- 140 retrabajo de producto terminado (vuelve a la 130, flujograma)
@@ -420,7 +426,7 @@ def main():
         logos = logo_oficial(ws)
         # la hoja de revisiones del formulario (Rev.) trae el mismo logo viejo
         logos += logo_en_celda(wb.Worksheets('Rev.'), 'B2')
-        n = escribir(ws, filas, salto_antes_de=('Proceso', 'Operación 70.', 'Operación 110.', 'TEST DE LAY OUT'))
+        n = escribir(ws, filas, salto_antes_de=('Proceso', 'Operación 41.', 'Operación 70.', 'Operación 110.', 'TEST DE LAY OUT'))
         # los titulos de las columnas (filas 31 y 32 del formulario) se repiten en cada hoja impresa
         ws.PageSetup.PrintTitleRows = '$31:$32'
         wb.BuiltinDocumentProperties('Author').Value = 'Barack Mercosul'

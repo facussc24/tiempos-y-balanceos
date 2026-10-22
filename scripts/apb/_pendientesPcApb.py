@@ -18,8 +18,8 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
 LOGO = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                     'tools', 'flowchart', 'assets', 'barack_logo.png')
-NOMBRE = 'Pendientes plan de control APB trasero central Patagonia 19-10-2026'
-NOMBRE_SIGLAS = 'Propuesta de siglas AMFE 150 APB trasero central 19-10-2026'
+NOMBRE = 'Pendientes plan de control APB trasero central Patagonia 22-10-2026'
+NOMBRE_SIGLAS = 'Propuesta de siglas AMFE 150 APB trasero central 22-10-2026'
 
 # (para quien, operacion, que falta, de donde sale lo que hay hoy)
 PENDIENTES = [
@@ -45,13 +45,25 @@ PENDIENTES = [
      'No figuran en el cronograma 2026 Rev. 7 asignados a esta pieza. Para la pieza espumada están la balanza MC423 (Inyección PUR, vencida el '
      '12/10/2026) y la MC481 (Inyección VWA). El calibre de forma MC505 es de esta pieza: el cronograma lo ubica en Inyección VWA y la hoja de operaciones en Tapizado'),
     ('Calidad', '30, 80 y 82', 'Frecuencia de los controles de armado de kits y de los dos retrabajos', 'El plan las deja en TBD'),
+    ('Calidad', '10 a 82', 'Muestras límite (o fotos de aceptación y rechazo) de: limpieza de los materiales, aspecto de los kits, costura (unión, '
+     'cierre, funda), vinilo sin roturas, pieza espumada (adherencias, Aplix, aspecto, orificio), tapizado (funda, felt, desgarros, cierre, rebaba), '
+     'portavasos y marco (encastre y aspecto), control final y retrabajos',
+     'No hay muestra patrón de esta pieza (la nombran el AMFE 150, la hoja de operaciones y el plan Rev. 1, pero no existe). El plan escribe '
+     '"muestra límite (TBD: la define Calidad)" en cada una (devolución de A. Aguayo del 22/10/2026)'),
+    ('Calidad', '10 Recepción', 'Si existen los patrones de aspecto y color de los consignados, del vinilo y del cierre', 'El plan Rev. 1 los nombra; el plan '
+     'escribe "patrón de aspecto (TBD: confirmar con Calidad)". El hilo FX284-E0PTO tiene patrón en su plan de recepción 1043'),
+    ('Calidad', '40 y 70', 'Tolerancia de la cinta de manipulación: 25 mm cosidos y 75 mm afuera de la pieza',
+     'Especificación de costura y cinta del 05/10/2026 (LAH.000.881.N v6 y corte A-A del plano). El plano de VW no acota el lazo: el bloque de '
+     'tolerancias generales del plano no se le aplica. Se mide con regla en la 40 y en la 70'),
+    ('Calidad', '61 y 70', 'Fuerza y recorrido de la prueba de apertura y cierre del portavasos', 'El plan pide abrirlo y cerrarlo a mano hasta el tope '
+     'sin que se trabe. La norma de laboratorio del portavasos no es el criterio del puesto'),
     ('Calidad', 'Encabezado', 'Número de plan, equipo y contacto. La próxima revisión la abre Calidad', 'El plan sigue en la Rev. 1 del 31/07/2026'),
     ('Calidad', 'Lay out', 'Cotas del plano y cuáles ensayos del plan de validación entran en el lay out. La flamabilidad horizontal va con el valor de la TL 1010 (< 100 mm/min); el plan Rev. 1 decía ≤ 100 mm',
      'Plan de validación DV&PV preliminar del 07/04/2025 (TL 1010, VW 50180, VW 50185, PV 2005, VW 50190, resistencia, rigidez, durabilidad, portavasos)'),
     ('Calidad', '80 y 82 Retrabajos', 'Si VW aprobó los retrabajos de la pieza', 'Los retrabajos están en el flujograma 151, el AMFE 150 y la hoja de operaciones 986'),
     ('Leo Lattanzi', '10 / 50 Inyección PU', 'Qué sistema de poliuretano lleva la pieza',
      'El arb y el plan Rev. 1 dicen ISO-PLUS 1394 + POLI-PLUS FF-629 (el plan va con esos); la BOM005 Rev. A dice ISO-PLUS 1355 + POLI-PLUS FF-636'),
-    ('Leo Lattanzi', '50 Inyección PU', 'Tolerancias del tiempo de colada, el caudal y las presiones; temperatura de poliol, isocianato y molde',
+    ('Leo Lattanzi', '50 Inyección PU', 'Tolerancias del tiempo de colada, el caudal, las presiones y los coeficientes de corrección; temperatura de poliol, isocianato y molde',
      'Validación de espumado de marzo 2026: programa N° 9, colada 7,00 s, caudal 4,00 kg/min, relación 200/40, presión 0,8 / 1,3 bar, corrección 100 % / 65 %. '
      'La especificación de Mas-Tin da 27 a 35 °C para los componentes y 27 a 40 °C para el molde (condiciones de laboratorio)'),
     ('Leo Lattanzi', '50 Inyección PU', 'Peso de la pieza espumada con su tolerancia',
