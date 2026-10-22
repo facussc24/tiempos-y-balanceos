@@ -151,8 +151,8 @@ referencia, anual). VW lo exige como *Layout inspection and functional testing* 
 ### 3.2 Proceso
 
 - **Una fila = una caracteristica con criterio, nunca un modo de falla.** ✗ `Costura descosida o débil`,
-  `Varilla desalineada` (Rev 0 APC) → ✓ `Costura completa, sin saltos` con `Visual / muestra patron`, o
-  `Posicion de la varilla` con su cota y su dispositivo.
+  `Varilla desalineada` (Rev 0 APC) → ✓ `Presencia del atraque = 2 x 3 puntadas` con `Control visual / Muestra
+  patron` (Amarok), o `Posicion de la varilla` con su cota y su dispositivo. Y el criterio, concreto (§3.3 bis).
 - **Set up** por maquina, con lo que se verifica (programa cargado, parametros, cuchilla, aguja, hilo,
   capas) y la frecuencia que use el plan de Calidad de esa pieza o familia: la mas comun es **inicio de turno /
   despues de cada intervencion mecanica o parada de mas de 1 h** (18 de 22 planes medidos el 19/10/2026, y la Rev 1
@@ -200,26 +200,47 @@ utiliza terminos muy ambiguos"*. Fak: *"tomatelo en serio"*. Lo que vale para ca
 
 1. **Una medida se mide.** Si la especificacion tiene un numero con unidad (75 mm, 250 °C, 140 g/m2), la columna I
    lleva un instrumento con su codigo MC (§3.4) y la H su tolerancia (± , rango, minimo o maximo). «Visual» queda para
-   atributos. La tolerancia sale de un papel (plano, su bloque de tolerancias generales, la especificacion de la
-   pieza); si ninguno la da, `TBD` y a la lista. **La misma caracteristica se controla igual en todas las operaciones**:
-   la cinta iba con regla en la 40 y «Visual» en la 70.
-2. **Un control visual dice QUE se rechaza, de modo que dos inspectores decidan igual**: el defecto concreto que se
-   ve (puntada saltada, hilo suelto, separacion entre el cierre y el vinilo, tapa que no traba) y/o **contra que se
-   compara** (muestra patron, muestra limite, catalogo de defectos, calibre, plantilla, las lineas de la mesa).
-   ✗ `Sin costuras abiertas · Visual`, `Bien colocado, sin aberturas · Visual`, `Bien colocados · Visual`,
-   `Sellado completo`, `Sin roturas`. ✓ `Sin deformaciones · Visual / muestra patron` y
-   `Sin rebaba visible · Visual con iluminacion dirigida / muestra limite` (Agustin las dejo pasar). Una muestra limite
-   se nombra solo si existe; si no, va a la lista como algo que Calidad tiene que definir.
-3. **Una prueba funcional dice el criterio de aceptacion** (que se acciona y que tiene que pasar: abre hasta el tope,
-   traba al cerrar), sacado de la especificacion de la pieza o del componente. `Abre y cierra · Prueba funcional manual`
-   es ambiguo; sin papel, `TBD` y a la lista.
+   atributos; una muestra patron no mide. Vale tambien la medicion de la propia maquina (pantalla, laser) y el
+   certificado del proveedor en recepcion. La tolerancia sale de un papel (plano, su bloque de tolerancias generales,
+   la especificacion de la pieza); si ninguno la da, `75 mm (tolerancia TBD)` y a la lista: nunca la medida pelada
+   (`100 mm/min` de flamabilidad es `< 100 mm/min`). **La misma caracteristica se controla igual en todas las
+   operaciones**: la cinta iba con regla en la 40 y «Visual» en la 70.
+2. **Un control visual nombra contra que se compara, de modo que dos inspectores decidan igual**: muestra patron,
+   muestra limite, fotos OK/NOK del puesto, catalogo o biblia de defectos, calibre, plantilla, el plano, las lineas de
+   la mesa, la orden o la etiqueta; y ademas dice el defecto concreto que se rechaza. Es la linea que trazo Agustin: lo
+   que dejo pasar tenia la muestra nombrada o un codigo; lo que marco no tenia ninguna referencia, aunque nombrara un
+   defecto (`Sin costuras abiertas`). ✗ `Sin costuras abiertas · Visual`, `Bien colocado, sin aberturas · Visual`,
+   `Bien colocados · Visual`, `Sellado completo · Visual`, `Sin roturas · Visual`. ✓ `Sin deformaciones · Visual /
+   muestra patron`, `Sin rebaba visible · Visual con iluminacion dirigida / muestra limite` (Agustin las dejo pasar).
+   **Una muestra se nombra solo si existe** (la tiene Calidad o la puso la HO): si no existe, la fila va
+   `Visual / muestra limite (TBD: la define Calidad)` y a la lista; nunca se escribe una muestra que no hay. Un valor
+   que se cuenta o se lee (`= 34`, `30/3`, `1 envoltorio por pieza`) no necesita muestra.
+3. **Una prueba funcional dice que se acciona y con que valor o contra que muestra se acepta**, sacado de la
+   especificacion de la pieza o del componente (fuerza, recorrido, torque con su instrumento, como el `1,5 Nm ·
+   Torquimetro / MC444` del Amarok). `Abre y cierra · Prueba funcional manual` es ambiguo; sin papel, `TBD` y a la lista.
 4. **Una fila, una caracteristica** tambien en la especificacion: `Presente; 75 mm afuera de la pieza` son dos
-   (presencia, que es visual, y largo, que se mide).
+   (presencia, que es visual, y largo, que se mide). Y la caracteristica (columna E) dice CUAL: `Costuras` o
+   `Portavasos y marco` (Agustin las marco tambien) se parten en cada costura con el nombre que le da la HO, y en
+   `Portavasos` y `Marco` en filas separadas.
+5. **Los planes viejos de la casa no son el modelo para esto**: el barrido del 22/10 encontro el mismo patron en los
+   de Calidad (Amarok: `Bien colocado, sin gaps, mal ajuste · Visual.`; TBA y Taos: `Costura firme`) y en la Rev 0 de Nicolas. La vara es la de Agustin: un texto de un plan
+   viejo se copia solo si la pasa. Como lo escribe Calidad cuando esta bien (cache `.sgc-cache\planes-control-2026-10-15\servidor\`):
+   - `Presencia del atraque = 2 x 3 puntadas · Control visual / Muestra patron` (APB central Amarok)
+   - `30 aplix colocados en posicion correcta · Pieza patron` (PWA 21-6034, Cecilia)
+   - `Cantidad de orificios ø 4 ± 0,5 = 30 · Pieza patron / Control visual` (PWA 21-6034)
+   - `Tornillos ajustados a un torque diferente de 1,5 Nm · Torquimetro / MC444` (prueba funcional con valor, Amarok)
+   - El paso a paso con la accion fisica: `Verificar presencia, ubicacion y correcto costurado de 1 plate. 1- Jalar con
+     la mano la extension del plate...` (TBA 71951)
+   - Un conteo se puede controlar a ojo (`Cantidad de grampas = 34 · Visual.`): no es una medida.
 
-Gate: `python scripts/_planControlLimpio.py "<plan>"` da ROJO `MEDIDA_VISUAL` y `CRITERIO_AMBIGUO` en cualquier modo,
-y AVISO `SIN_TOLERANCIA` (§5 punto 6 bis). Calibrado contra la captura de Agustin: de las 12 filas de la operacion 70
-marca las 5 que el marco y deja pasar las 7 que el dejo en blanco; sobre el plan entero del 19/10 da 22 ROJO, todos
-del mismo tipo (recepcion, kits, costura, espumado, tapizado, portavasos y retrabajos).
+Gate: `python scripts/_planControlLimpio.py "<plan>" --rearmado` da ROJO `MEDIDA_VISUAL`, `SIN_TOLERANCIA` y
+`CRITERIO_AMBIGUO` (§5 punto 6 bis); en una correccion de pocas celdas (sin `--rearmado`) solo AVISA, porque el resto
+del texto es de Calidad. `CRITERIO_AMBIGUO` no mira las caracteristicas de proceso (un estado de la maquina, «plato
+elevado antes del corte»), salvo en recepcion, donde la columna PROCESO trae la del material. Calibrado contra la
+captura de Agustin: de las 12 filas de la operacion 70 marca las 5 que el marco y deja pasar las 7 que el dejo en
+blanco. Sobre el plan entero del 19/10 da 26 ROJO en 25 filas: 21 criterios ambiguos (7 de recepcion, kits, costura,
+espumado, tapizado, portavasos, los 5 del control final y retrabajos), la cinta a ojo de la 70 y 4 medidas sin
+tolerancia (la cinta en la 40 y la 70 y los coeficientes de la dosificadora). Limites: lee palabras, no entiende.
 
 ### 3.4 Instrumentos
 
@@ -308,8 +329,9 @@ un valor parecido de otra pieza, ni "segun especificacion" generico (`core-prohi
    Rev 0 dan ROJO (33 `D/TLD`, 18 celdas con varias marcas, amarillo en la tabla); la propuesta rearmada da 3 ROJO,
    uno por hoja: la fila 3.0 «Flamabilidad y emisiones del conjunto» lleva «D / D» en una celda.
 6 bis. **Desde el 22/10/2026 el mismo gate mira el criterio de cada fila** (§3.3 bis): `MEDIDA_VISUAL` (una medida
-   controlada a ojo) y `CRITERIO_AMBIGUO` (visual o funcional sin referencia y sin ningun numero ni codigo) frenan en
-   todos los modos, porque son lo que Calidad devuelve; `SIN_TOLERANCIA` avisa. Antes de mostrar un plan, cero ROJO.
+   controlada a ojo), `SIN_TOLERANCIA` (una medida sin tolerancia ni TBD declarado) y `CRITERIO_AMBIGUO` (visual o
+   funcional sin contra que se compara) frenan con `--rearmado` y `--definitivo`, porque son lo que Calidad devuelve;
+   en una correccion de pocas celdas avisan. Antes de mostrar un plan rearmado, cero ROJO.
 7. Lo que pide una fila nueva o un dato sin papel va a un `.txt` aparte ("que queda para la reunion").
 8. Auditor antes de mostrar; se le muestra a Fak abierto; el mail a Calidad, con su OK. **El mail no lleva preguntas
    abiertas del plan**: las dudas van en la lista de pendientes adjunta (Fak, 09/10/2026: *"elimina esa parte y manda
@@ -377,7 +399,9 @@ final · embalaje. Lo que un plan de APC tiene que tener, ademas de lo general:
   lateral), cronograma 2026 Rev. 7, sector Inyeccion VWA.
 - Primera aplicacion completa: `scripts/apc/_pcApcPatagonia.py` y `exports/PC_APC_PATAGONIA_20261015/`
   (auditoria en `.sgc-cache/auditorias/planes_control_skill_apc_2026-10-15.md`).
-- **Final y lay out**: funda alineada, sin espuma a la vista ni migraciones por costura, cerrado completo,
+- **Final y lay out** (que se mira; COMO se escribe cada uno, §3.3 bis: contra que muestra o calibre se compara y
+  el defecto que se rechaza):
+  funda alineada, sin espuma a la vista ni migraciones por costura, cerrado completo,
   distancia entre astas contra calibre/respaldo; anual: PV2005 cambio de climas, compresion PV 3410 del
   conjunto (VW lo pidio en la VDA 6.3), dureza/indentacion y extraccion de funda si el cliente los pide.
 - **Flamabilidad**: D/TLD solo si el plano la designa; ensayo en camara MC184 en recepcion.

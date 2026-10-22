@@ -34,6 +34,13 @@ describe('_planControlLimpio.py --selftest (el plan de control limpio de Fak, 15
     expect(out).toMatch(/ok {2}Aguayo: cinta 75 mm visual sin tolerancia +esperado=1/);
     expect(out).toMatch(/ok {2}Aguayo: funcionamiento abre y cierra +esperado=1/);
     expect(out).toMatch(/ok {2}cinta medida con regla y tolerancia +esperado=0/);
-    expect((out.match(/^ {2}ok {2}/gm) || []).length).toBe(21);
+    // auditoria independiente del 22/10: los arreglos a medias de la cinta frenan y el texto de Calidad solo avisa
+    expect(out).toMatch(/ok {2}cinta con tolerancia TBD y control visual +esperado=1/);
+    expect(out).toMatch(/ok {2}cinta con muestra patron: una muestra no mide +esperado=1/);
+    expect(out).toMatch(/ok {2}cinta con regla pero sin tolerancia +esperado=1/);
+    expect(out).toMatch(/ok {2}Aguayo en una correccion de pocas celdas: avisa, no frena +esperado=0/);
+    expect(out).toMatch(/ok {2}recepcion: la caracteristica va en PROCESO/);
+    expect(out).toMatch(/ok {2}medida no: 100 x 60 según ficha/);
+    expect((out.match(/^ {2}ok {2}/gm) || []).length).toBe(53);
   });
 });
