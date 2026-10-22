@@ -6,7 +6,7 @@ leccion es un bullet legible de hasta 600 caracteres; el detalle vive en la memo
 que cita (gate por bullet: regla `lecciones-consolidacion.md`). La historia completa de cada
 incidente vive en los snapshots.
 
-- **Snapshots** (la version larga de cada consolidacion): los tres ultimos son [2026-10-08](docs/_archive/LECCIONES_snapshot_2026-10-08.md) · [2026-10-11](docs/_archive/LECCIONES_snapshot_2026-10-11.md) · [2026-10-18](docs/_archive/LECCIONES_snapshot_2026-10-18.md) y el historico 2026-03-30 a 07-02, [2026H1](docs/_archive/LECCIONES_APRENDIDAS_2026H1_completo.md); los demas estan en `docs/_archive/`.
+- **Snapshots** (la version larga de cada consolidacion): los tres ultimos son [2026-10-11](docs/_archive/LECCIONES_snapshot_2026-10-11.md) · [2026-10-18](docs/_archive/LECCIONES_snapshot_2026-10-18.md) · [2026-10-22](docs/_archive/LECCIONES_snapshot_2026-10-22.md) y el historico 2026-03-30 a 07-02, [2026H1](docs/_archive/LECCIONES_APRENDIDAS_2026H1_completo.md); los demas estan en `docs/_archive/`.
 - **Tabla incidente → regla**: `docs/_archive/INCIDENTES_REGLAS_AMFE.md`
 - Lo ya codificado no se repite aca: reglas de `.claude/rules/` y sus gates ejecutables
   (amfe.md + amfeValidator, database.md, verify-supabase-live.md, no-pfd-no-ho.md, techo-agentes.md, cad-3d.md).
@@ -25,25 +25,7 @@ incidente vive en los snapshots.
 
 - **19/10 — En una estructura cada unión se MIDE (área de contacto donde va la soldadura), no alcanza «0 solape»: las patas del carro de práctica tocaban el marco por una arista y lo vio Fak en el plano** (*"¿por qué te lo tuve que decir?"*). Es la regla del caballete (`cad-3d.md` GATE 3: toda interfaz que carga peso lleva su control) y no la apliqué.
 
-- **19/10 — Lo que una herramienta llama «contacto» o «sin choque» se mide con un método exacto antes de decidir con eso: el choque de CATIA dijo «contacto 0,0» con 0,3 mm de choque y con 0,1 mm de luz.** Graduado a `cad-design/reference/catia.md` y `reference_catia_por_com`.
-
-- **18/10 — Una prueba que corre los guardianes de verdad (el despachador con pedidos peligrosos) va con un HOME aparte: con el real gasta el permiso de un solo uso que Fak dejó.** Graduado a `codigo-madre.md` y `scripts/_despachadorPayloads.mjs`.
-
-- **17/10 — Una simulación que reproduce lo publicado puede estar ciega a una parte de la pieza.** Graduado a `reference_gate_asiento_simulacion_ciega`.
-
-- **11/10 — Antes de un push que agrega archivos o toca `settings.json` va la suite COMPLETA, y un umbral de una regla no lo aflojo yo: va como propuesta.** Graduado a `feedback_suite_completa_antes_del_push` y `feedback_un_numero_de_la_regla_no_lo_cambio_yo`.
-
-- **11-12/10 — Lo que va a un registro (una hora, «lo dije en el chat») se MIDE antes de escribirlo (`date`, el commit, el archivo), nunca de memoria; desde un worktree, lo de main se prueba con `git -C` y rutas absolutas.** Graduado a `reference_entrar_a_main_desde_un_worktree`.
-
 - **11/10 — Un subagente al que se le pide ubicar dónde está una clave la imprime en su salida: el encargo dice con qué buscar (`grep -l`, `-c`), no «no la repitas».**
-
-- **10-11/10 — Una tanda de hijas se mide por el cupo SEMANAL y por el de 5 h, cada hora: tres o cuatro a la vez suben el semanal ~4 puntos por hora.** Graduado a `trabajar-hasta-la-hora.md` punto 5 y a `reference_api_claude_clave_y_ciclo`.
-
-- **11/10 — Lo que escribe la API se AUDITA antes de commitear (3 y 2 errores reales en dos tandas), y lo que afirma de un dato que no vio se mide antes de codear.** Graduado a `api-claude.md` §2 y §5 y a `feedback_la_respuesta_conocida_se_mide_antes_del_gate`.
-
-- **09-10/10 — Un control que suma trabajo a un chequeo con tope de tiempo se mide en el MODO en que corre ese chequeo, y el auditor Opus no se saltea.** Graduado al auditor (`metodo_correr_no_solo_leer`) y a `_sinFirmaIA.py`; el caso, en el snapshot 2026-10-18.
-
-- **07/10 — «El estándar» se COMPARA contra una hoja real de la casa (la HO de Excel), no contra lo que dejó la sesión anterior.** Graduado al canon 4.5 y a `bloque_plan()`; la cita y el caso, en el snapshot 2026-10-18.
 
 - **22/09-06/10 — Lo que construyo para otros, o lo que AFLOJA un control, lo prueba OTRO: contra el viejo, a ciegas, con el corte escrito antes; y si Fak ya aceptó el riesgo, mi freno no le gana a su pedido.** Graduado a `un_control_se_audita_en_las_dos_direcciones` y `project_claudes_por_area`.
 - **02 y 09/10 — De un flujograma, un AMFE o una hoja de reunión sale la PALABRA «reproceso», nunca su análisis; un AMFE escrito de cero se delata por el largo de sus frases.** Graduado a `reference_iatf_retrabajo_8714_y_antecedentes_barack`, `amfeAutoria.mjs` y `_sinFirmaIA.py`.
@@ -55,12 +37,10 @@ incidente vive en los snapshots.
 - **11/09 — El system prompt es la foto del arranque: antes de concluir que algo quedó sin hacer, mirar el disco y el `git log`.** Graduado a la memoria `el_system_prompt_es_la_foto_del_arranque`.
 - **08-13/09 — Lo que pasa del otro lado no lo veo, y lo que apunta a un lugar vacío no falla: el vacío se lee como «roto»; un default que ninguna corrida usa falla sin romperse.** Memorias `worktree_sin_env_local`, `hablarle_a_otra_pc`, `dispositivo_adhesivado_insert`.
 - **Antes de construir un control propio, correr el que ya viene; en una interfaz ajena el límite casi siempre está de mi lado; con un camino cerrado se busca otro antes de frenar** (*"buscale la solución, no pares"*). Graduado a `claude_plugin_cli`, `crlf_en_claude_md_reglas_y_memory`, `reference_capturar_la_app_claude_sin_clics` y `arb-operar`.
-- **11/09 — Un dry-run verde no prueba el `--apply`, y lo que escribe frena ante un argumento que no conoce.** Graduado a la memoria `no_entregable_ejecutable_sin_verificar` y a `_paquete.mjs`.
 - **07/09 — Un cero puede ser del sistema y no del hecho, y la columna la nombra el que manda el dato.** Antes de concluir desde un campo, mirar si la poblacion de ese campo lo llena. Memoria `datos_produccion_pcp_federico`.
 - **07/09 — Un sistema se diseña para el que lo va a usar, y su estado se declara cuando es verdad.** Antes de poner un control, escribir que ve el que no lo pidio; el marcador de "instalado" va en el ultimo paso. Memoria `project_claude_barack_fase0`.
 - **Lo que yo construyo lo prueba algo que no sea yo, y un control solo ve lo que DECLARA.** Un gate que no puede dar verde está tan roto como el que no puede dar rojo, y **lo que FALTA no se ve** (skill `flujogramas` §0 bis). Memoria `un_control_se_audita_en_las_dos_direcciones`.
 - **El entregable se revalida contra la fuente justo antes de mandarlo, y un mail se verifica por DESTINATARIOS.** Graduado a `mail-envio.md` + `_mailEnviar.py` y a las memorias `mail_ya_enviado`, `dejar_el_mail_listo_para_enviar`, `no_pisar_archivo_que_toco_fak`, `mails_de_barack_se_comparten`.
-- **04/09 — El denominador de un "cuanto falta" se mide antes de decirlo, y un "reanudar" que salta por nombre pelado descarta en silencio.** La ocurrencia se cuenta en el recorrido, no se deduce del disco; el cotejo final va contra la fuente, base por base. Memoria `leer_buzones_ost_pst`.
 - **24/08 — Un hueco interno detectado no se escribe como causa: se resuelve, o se pregunta, y si sigue abierto va en el mail.** El test, para todo tipo de documento: ¿esta frase deja mal a Barack, a un compañero o a un proveedor? Graduado a la memoria `documento_no_confiesa_como_se_hizo`.
 - **Una cosa no se identifica por su etiqueta: se abre; y antes de declarar un error, preguntar si es convención de la casa.** Graduado a `el_nombre_no_es_el_contenido`, `el_nombre_de_la_pieza_no_identifica_el_proyecto`, `sgc_propio_ingenieria`, `ho_generales_compartidas`, `aplix_medida_16x16_dominante`, `unidad_oc_es_etiqueta_del_maestro`.
 - **Una muestra no es un patron, ni una sola ni varias, y lo verificado se reporta con su alcance real: partes verificadas distinto no se suman.** Graduado a la memoria `feedback_una_muestra_no_es_un_patron`.
@@ -70,11 +50,7 @@ incidente vive en los snapshots.
 - **El chequeo frena, no decide; y la objecion de Fak es un dato, no una opinion a refutar: ante un "no anda", preguntar como falla.** Graduado a la memoria `feedback_el_chequeo_frena_no_decide` (y `cad-3d.md` GATE 0).
 - **Un plan de accion heredado se arrastra fila por fila: fusionar dos filas pierde alcance, media fila que se cae no la ve nadie, y un issue no se cierra con evidencia de una parte del alcance.** Graduado a la memoria `plan_heredado_se_arrastra_fila_por_fila`.
 
-- **07/10 — Un mail que Fak pide «con lo que encuentres» lleva UNA pregunta y lo mínimo para entenderla, no el informe del agente pegado.** Graduado a `feedback_mail_corto_como_los_de_fak`.
-
 - **02 y 05/10 — Para un código el arb es la fuente, pero antes de decir «el arb tiene mal X» se confirma que la BOM leída es la de ESE código (10 productos cargados dos veces con otra grafía).** Graduado a `feedback_arb_es_la_fuente_de_un_codigo` y `scripts/hilos/cruce_programa_arb.py`.
-
-- **05/10 — Un largo que sale de un plano se calcula SUMANDO sus cotas, no midiendo el dibujo.** Graduado a `feedback_largo_de_un_plano_se_suma_de_las_cotas`.
 
 - **13/10 — En una hoja de proceso, una pieza de nombre raro lleva su aclaración entre paréntesis y su recuadro con el nombre en la foto; el pie solo no alcanza.** Graduado al skill `hojas-de-proceso` 0.8 b bis y a `feedback_palabra_rara_en_una_hoja_se_aclara_y_se_marca`.
 
@@ -114,12 +90,7 @@ incidente vive en los snapshots.
 
 - **13/10 — Si Fak pide que algo quede automático, no se le deja una lista de pasos ni un archivo para editar** (*"hacé eso vos... ni pienso leer eso"*), **y un «no aprietes nada» se dice después de medir que avanza.** Graduado al skill `impresion-3d-bambu` §1 bis.
 
-- **11/10 — Una pantalla que Fak mira todos los días se escribe con SUS palabras, como un entregable («disponible», «gastado», con día y hora).** Graduado a `feedback_lenguaje_del_entregable_palabras_de_fak`; las citas, en el snapshot 2026-10-18.
-
 - **09-10/10 — Un «no puedo» a Fak es un problema mío, y una pregunta que le hago NO frena el resto: lo que no depende de ella se hace mientras tanto.** Graduado a `_mailEnviar.py` paso 4b, `mail-envio.md` y `feedback_la_caja_soy_yo_pensar_fuera_de_lo_que_dijo_fak`; los dos casos, en el snapshot 2026-10-18.
-- **09/10 — El historial de revisiones también confiesa: una corrección por observación interna, antes de que el documento salga, no abre revisión.** Graduado a `documento_no_confiesa_como_se_hizo`; el caso del 160/174, en el snapshot 2026-10-18.
-
-- **09/10 — El alcance de un reclamo lo marca DÓNDE va el material, no la frase amplia del pedido.** Graduado a `project_reclamo_agujas_fieltro_pwa`.
 
 - **09/10 — Un PowerPoint para un gerente se arma como lo haría un ingeniero de la casa (blanco, tablas y capturas reales; *"parece hecho con IA"*) y el logo es SOLO el oficial.** Graduado a `feedback_powerpoint_para_un_gerente_como_ingeniero_de_la_casa` y `feedback_logo_oficial_barack_en_todo_documento`.
 
@@ -130,8 +101,6 @@ incidente vive en los snapshots.
 - **08/10 — Mi Claude para OTRA persona va filtrado y con SU identidad** (a Carlos la memoria cruda le dejó "el usuario es Facundo"); y una pregunta de Fak no es una orden de diseño. Graduado a `validarTexto()` de `tools/claude-area/persona/armar.mjs` y a `project_claude_para_pedro`.
 
 - **08/10 — Ante un pedido con dos lecturas se arma lo principal y lo accesorio va después; lo que Fak va a usar se deja en UNA carpeta con doble clic numerados.** Memoria `project_instalar_mi_asistente_pc_nueva`; el caso del instalador, en el snapshot 2026-10-18.
-
-- **08/10 — Lo que escribo en un entregable lo tiene que poder defender Fak.** Graduado a `feedback_entregables_para_fak`.
 
 - **07-08/10 — Toma de tiempos por video = TIEMPOS + VIDEO RECORTADO adentro del PowerPoint, sin planilla; el rato en que el operario prueba no es proceso; un link a la nube se le pide a OneDrive.** Memorias `project_tiempos_forrado_ductos_patagonia`, `reference_link_nube_se_pide_a_onedrive`.
 
