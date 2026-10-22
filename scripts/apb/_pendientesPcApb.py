@@ -48,9 +48,9 @@ PENDIENTES = [
      'cierre, funda), vinilo sin roturas, pieza espumada (adherencias, Aplix, aspecto, orificio), tapizado (funda, felt, desgarros, cierre, rebaba), '
      'portavasos y marco (encastre y aspecto), control final y retrabajos',
      'No hay muestra patrón de esta pieza (la nombran el AMFE 150, la hoja de operaciones y el plan Rev. 1, pero no existe). El plan escribe '
-     '"muestra límite (TBD: la define Calidad)" en cada una (devolución de A. Aguayo del 22/10/2026)'),
+     '"muestra límite (TBD)" en cada una (devolución de A. Aguayo del 22/10/2026)'),
     ('Calidad', '10 Recepción', 'Si existen los patrones de aspecto y color de los consignados, del vinilo y del cierre', 'El plan Rev. 1 los nombra; el plan '
-     'escribe "patrón de aspecto (TBD: confirmar con Calidad)". El hilo FX284-E0PTO tiene patrón en su plan de recepción 1043'),
+     'escribe "patrón de aspecto (TBD)". El hilo FX284-E0PTO tiene patrón en su plan de recepción 1043'),
     ('Calidad', '40 y 70', 'Tolerancia de la cinta de manipulación: 25 mm cosidos y 75 mm afuera de la pieza',
      'Especificación de costura y cinta del 05/10/2026 (LAH.000.881.N v6 y corte A-A del plano). El plano de VW no acota el lazo: el bloque de '
      'tolerancias generales del plano no se le aplica. Se mide con regla en la 40 y en la 70'),

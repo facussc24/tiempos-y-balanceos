@@ -59,7 +59,7 @@ PENDIENTES = [
      'deformación por calor (100); zona soldada (110); '
      'refilado y puntas selladas (120); despegues, aspecto, costura vista y logo en el control final (130)',
      'Del IP PAD no hay muestra patrón, muestra límite, biblia de defectos ni fotos OK/NOK (buscado en el SGC, el legajo y los mails el 22/10/2026). '
-     'El plan escribe "Visual / muestra límite (TBD: la define Calidad)" en cada una. En la op 80 usa las piezas NOK colgadas en el puesto '
+     'El plan escribe "Visual / muestra límite (TBD)" en cada una. En la op 80 usa las piezas NOK colgadas en el puesto '
      '(falta de adhesivo en vinilo y en sustrato, exceso): confirmar que son del IP PAD y que siguen ahí'),
     ('Calidad', '10 Recepción', 'Patrón de color y de grabado de los vinilos Sanleather IV, patrón de color del Sanflex G KL, del cordón de piping '
      'y de la cinta Tesa (color y liner)', 'El plan de recepción 1048 controla el color de la Tesa a la vista. Los hilos tienen patrón según sus planes '

@@ -18,6 +18,8 @@ Siempre (cualquier plan de control, tambien las correcciones de pocas celdas):
   CONFLICTO      ROJO   "CONFLICTO" adentro de una celda de la tabla, en cualquier modo (§5 punto 8 ter, Fak 22/10/2026: dos
                         papeles que no coinciden se resuelven buscando la decision y, si sigue la duda, preguntandole
                         a Fak; un plan que va a Calidad no muestra "CONFLICTO: 45 / 35")
+  TBD_CON_DUENO  ROJO   un TBD que dice quien lo define ("(TBD: la define Calidad)", "TBD (equipo de Calidad)"), en
+                        cualquier modo (§3.6, Fak 22/10/2026: "simplemente TBD"; quien contesta va en los pendientes)
 Con --rearmado (el plan se rearmo entero, §5 punto 3):
   AMARILLO       ROJO   celda de la tabla (debajo del encabezado CLASIF.) con relleno amarillo
   NOTA           ROJO   comentario o nota en una celda de la tabla
@@ -38,6 +40,7 @@ AMARILLOS = {'FFFF00'}                      # el amarillo puro con que se marcan
 RE_TLD = re.compile(r'\bTLD\b', re.I)
 RE_TBD = re.compile(r'\bTBD\b', re.I)
 RE_CONFLICTO = re.compile(r'\bCONFLICTO\b', re.I)
+RE_TBD_DUENO = re.compile(r'\(\s*TBD\s*:[^)]*\b(defin|confirm|calidad)|\bTBD\s*\([^)]*\b(defin\w*|calidad)\b', re.I)
 
 
 def _rgb6(valor):
@@ -120,6 +123,8 @@ def revisar(hojas, rearmado=False, definitivo=False):
                         hallazgos.append(('AVISO', 'SIGLA_RARA', nombre, celda(r, c), m))
             if RE_CONFLICTO.search(v):
                 hallazgos.append(('ROJO', 'CONFLICTO', nombre, celda(r, c), v.replace('\n', ' / ')[:80]))
+            if RE_TBD_DUENO.search(v):
+                hallazgos.append(('ROJO', 'TBD_CON_DUENO', nombre, celda(r, c), v.replace('\n', ' / ')[:80]))
             if definitivo and RE_TBD.search(v):
                 hallazgos.append(('ROJO', 'TBD', nombre, celda(r, c), v.replace('\n', ' / ')[:80]))
         if rearmado:
@@ -204,6 +209,8 @@ def selftest():
         amar = _plan(d, 'amarillo', [('SC', '4 ± 1 mm')], amarillas=[0])
         nota = _plan(d, 'nota', [('SC', '4 ± 1 mm')], notas=[0])
         tbd = _plan(d, 'tbd', [('SC', 'TBD')])
+        dueno = _plan(d, 'dueno', [('', 'Visual / muestra límite (TBD: la define Calidad)'), ('', 'TBD (equipo de Calidad)')])
+        tbd_nota = _plan(d, 'tbdnota', [('', 'Visual / muestra límite (TBD)'), ('', 'TBD (el operador no la modifica)')])
         conf = _plan(d, 'conflicto', [('', 'CONFLICTO: 45 ± 5 kg/m³ (ficha) / 35 kg/m³ (arb)')])
         casos += [
             ('amarillo en la tabla, correccion de pocas celdas', amar, [], 0, []),
@@ -214,6 +221,8 @@ def selftest():
             ('TBD, definitivo', tbd, ['--definitivo'], 1, ['TBD']),
             ('CONFLICTO, correccion', conf, [], 1, ['CONFLICTO']),
             ('CONFLICTO, rearmado (version de trabajo)', conf, ['--rearmado'], 1, ['CONFLICTO']),
+            ('TBD que dice quien lo define, rearmado', dueno, ['--rearmado'], 1, ['TBD_CON_DUENO']),
+            ('TBD pelado y TBD con una nota, rearmado', tbd_nota, ['--rearmado'], 0, []),
             ('sin columna CLASIF.', _plan(d, 'sin', [('SC', 'x')], con_clasif=False), [], 2, ['SIN_CLASIF']),
         ]
         malos = 0

@@ -216,6 +216,10 @@ se cruza tambien por SECTOR: la cinta MC406 es de Mesa de corte; la de recepcion
 
 Celda sin papel = `TBD`, y la lista "lo que necesito de Calidad / de planta" al lado del archivo. Nunca
 un valor parecido de otra pieza, ni "segun especificacion" generico (`core-prohibiciones.md` §1).
+**El `TBD` va pelado**: nada de `(TBD: la define Calidad)`, `(TBD: confirmar con Calidad)` ni `TBD (equipo de
+Calidad)` en la celda (Fak, 22/10/2026: *"'lo define Calidad' no me gusta, aunque haya hecho eso... no va... tendrias
+que poner ahi simplemente TBD"*). Quien lo contesta va en la lista de pendientes, no en el plan.
+Gate: `_planControlLimpio.py`, `TBD_CON_DUENO` (ROJO en cualquier modo).
 
 ## 4. Cruce con el AMFE y el flujograma
 

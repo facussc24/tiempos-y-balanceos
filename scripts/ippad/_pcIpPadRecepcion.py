@@ -28,7 +28,7 @@ TODAS = dict(tam='100%')
 ANUAL = dict(tam='---', frec='Anual')
 ENSAYO = dict(reg='I-AC-027.I / P-10/I. / ARB')
 LOTE = ('Lote / trazabilidad', '', 'Lote en el certificado y en la etiqueta, registrado en ARB', 'Visual / certificado del proveedor', None)
-LIMPIO = ('Aspecto / limpieza', '', 'Sin suciedad, manchas ni contaminación; embalaje sin daños', 'Visual / muestra límite (TBD: la define Calidad)', None)
+LIMPIO = ('Aspecto / limpieza', '', 'Sin suciedad, manchas ni contaminación; embalaje sin daños', 'Visual / muestra límite (TBD)', None)
 FLAMA = ('Flamabilidad', 'D', FLAMABILIDAD, 'Cámara de flamabilidad MC184', ENSAYO)
 
 
@@ -49,8 +49,8 @@ RECEPCION = [
          fuente='BOM arb 06/10/2026 + AMFE 149 op 10 (vinilo: espesor, color, flamabilidad D/TLD S10 O2) + ' + VINILO['fuente'],
          filas=[
              LIMPIO,
-             ('Color', '', 'Según patrón de color de cada versión (TBD: lo define Calidad)', 'Visual / patrón de color (TBD)', None),
-             ('Grabado', '', 'Grabado narbe H, según patrón de grabado (TBD: lo define Calidad)', 'Visual / patrón de grabado (TBD)', None),
+             ('Color', '', 'Según patrón de color de cada versión (TBD)', 'Visual / patrón de color (TBD)', None),
+             ('Grabado', '', 'Grabado narbe H, según patrón de grabado (TBD)', 'Visual / patrón de grabado (TBD)', None),
              ('Espesor', '', VINILO['espesor'], VINILO['inst_espesor'], None),
              ('Peso', '', VINILO['peso'], VINILO['inst_peso'], None),
              ('Ancho del rollo', '', VINILO['ancho'], 'Cinta métrica MC403', None),
@@ -69,7 +69,7 @@ RECEPCION = [
     dict(prod='Cordón de piping PVC 1,3 mm negro — 427VAR002COS01 (solo L2 / L3)',
          fuente='BOM arb 06/10/2026 + AMFE 149 op 10 (piping tubing: aspecto contra patrón por entrega; dimensional por informe del proveedor por lote; cantidad contra remito; lote en ARB)',
          filas=[
-             ('Aspecto', '', 'Sin rebaba, marcas ni deformación', 'Visual / muestra límite (TBD: la define Calidad)', None),
+             ('Aspecto', '', 'Sin rebaba, marcas ni deformación', 'Visual / muestra límite (TBD)', None),
              ('Diámetro', '', '1,3 mm (tolerancia TBD)', 'Informe de control dimensional del proveedor', dict(frec='Por lote.')),
              ('Color', '', 'Negro', 'Visual / patrón de color (TBD)', None),
              ('Cantidad', '', 'Igual al remito', 'Conteo contra remito', None),
@@ -144,7 +144,7 @@ RECEPCION = [
          filas=[
              ('Código del logo', '', '2HC.853.438', 'Visual contra remito', TODAS),
              ('Presencia del logo en el envío', 'D', 'Cantidad igual al remito', 'Conteo contra remito', TODAS),
-             ('Aspecto', '', 'Sin rebaba, marcas, deformación ni bordes filosos', 'Visual / muestra límite (TBD: la define Calidad)', TODAS),
+             ('Aspecto', '', 'Sin rebaba, marcas, deformación ni bordes filosos', 'Visual / muestra límite (TBD)', TODAS),
          ]),
     dict(prod='Clip de retención — 2HC.867.190.A (consignado VW)',
          fuente='AMFE 149 op 10 (clips faltantes o incorrectos; deteccion: inspeccion visual 100 % en recepcion) + BOM Barack V3 (L1 12 / L2-L3 10)',
@@ -157,5 +157,5 @@ RECEPCION = [
     dict(prod='Carcasa de difusor de aire (plate) — 2HC.819.728 (consignado VW)',
          fuente='AMFE 149 op 10 (plate dañado o incorrecto; deteccion: inspeccion visual 100 % en recepcion) + BOM Barack V3',
          filas=[('Código', '', '2HC.819.728', 'Visual contra remito', TODAS),
-                ('Estado', '', 'Sin golpes ni roturas', 'Visual / muestra límite (TBD: la define Calidad)', TODAS)]),
+                ('Estado', '', 'Sin golpes ni roturas', 'Visual / muestra límite (TBD)', TODAS)]),
 ]
