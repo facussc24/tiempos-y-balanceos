@@ -66,6 +66,10 @@ RE_TOLERANCIA = re.compile(r'±|\+\s*/?\s*-|\+\s*\d|\d\s*[^\d\s]{0,6}\s*(a|-|–
 # una posicion ("etiqueta a 30 ± 5 mm del borde") si lo es
 RE_INSUMO = re.compile(r'\b(bolsas?|etiquetas?|cajas?|caj[oó]n|separador(es)?|l[aá]minas?|pallets?|film|envoltorio)\b.*'
                        r'\d\s*[xX×]\s*\d', re.I)
+# una fila que IDENTIFICA un insumo (su tipo, su modelo) nombra su medida, no la controla: "Tipo de grampa · Dorking 84/06,
+# 6 mm", "Grampa cargada · Grampa Dorking 84/06 de 6 mm" (plan del IP PAD, 22/10)
+RE_IDENTIFICA = re.compile(r'\btipo\b|identificaci|\bc[oó]digo\b|\bmodelo\b', re.I)
+RE_MODELO = re.compile(r'[^\W\d_]{3,}\s+\d+/\d+')
 # un codigo: letras y numeros mezclados (427VAR002TAP01, ET-SATO-50X20, CARTSEP03, GE-102)
 RE_CODIGO = re.compile(r'\b(?=[A-Z0-9.\-]*[A-Z]{2})(?=[A-Z0-9.\-]*\d{2})[A-Z0-9][A-Z0-9.\-]{5,}\b')
 # una cantidad que se cuenta o un valor que se lee ("2 x 3 puntadas", "= 34", "1 envoltorio por pieza", "30/3", "3")
@@ -81,8 +85,9 @@ RE_MIDE = re.compile(r'regla|cinta m[eé]trica|calibre|\bMC\s*-?\d|balanza|panta
 RE_REF_INS = re.compile(r'muestra|patr[oó]n|l[ií]mite|cat[aá]logo|biblia|\bfotos?\b|calibre|plantilla|mylar|dispositivo|galga|'
                         r'regla|cinta m[eé]trica|\bMC\s*-?\d|balanza|pantalla|display|\bpanel\b|\bHMI\b|l[aá]ser|\bcert|'
                         r'informe|sistema arb|en (la )?etiqueta|\bficha\b|\bplano\b|'
-                        r'contra (la |el |los |las )?(orden|lista|planilla|muestra|pieza|plano|fotos?)', re.I)
+                        r'contra (la |el |los |las )?(orden|lista|planilla|muestra|pieza|plano|fotos?|remito|patr)', re.I)
 RE_REF_ESP = re.compile(r'muestra|patr[oó]n|l[ií]mite|cat[aá]logo|biblia|\bfotos?\b|\bplano\b|calibre|plantilla|mylar|'
+                        r'dispositivo|\btopes?\b|'
                         r'l[ií]neas? (rojas?|marcad|de la mesa)|'
                         r'seg[uú]n (la |el |los |las )?(lista|orden|planilla|plano|ficha|hoja|especificaci|certificado|informe)',
                         re.I)
@@ -156,21 +161,23 @@ def columnas_metodo(celdas, fila0, col):
     return (esp if esp is not None else col + 1), (ins if ins is not None else col + 2)
 
 
-def revisar_criterio(esp, ins, proceso=False):
-    """Codigos de las tres reglas del mail de Agustin Aguayo (22/10/2026) para una fila: especificacion y calibre.
-    CRITERIO_AMBIGUO mira solo las caracteristicas de PRODUCTO (lo que se acepta o rechaza de la pieza): una de proceso
-    ("Plato elevado antes de iniciar el corte") es un estado de la maquina, no un criterio de aceptacion."""
+def revisar_criterio(esp, ins, proceso=False, caract=''):
+    """Codigos de las tres reglas del mail de Agustin Aguayo (22/10/2026) para una fila: especificacion, calibre y el
+    nombre de la caracteristica. CRITERIO_AMBIGUO mira solo las caracteristicas de PRODUCTO (lo que se acepta o rechaza
+    de la pieza): una de proceso ("Plato elevado antes de iniciar el corte") es un estado de la maquina."""
     esp, ins = (esp or '').strip(), (ins or '').strip()
     if not esp or not ins:
         return []
     sentidos = bool(RE_SENTIDOS.search(ins))
-    medida = bool(RE_MEDIDA.search(esp)) and not RE_INSUMO.search(esp)
+    identifica = RE_INSUMO.search(esp) or RE_IDENTIFICA.search(caract or '') or RE_MODELO.search(esp)
+    medida = bool(RE_MEDIDA.search(esp)) and not identifica
     salida = []
     if medida and sentidos and not RE_MIDE.search(ins):
         salida.append('MEDIDA_VISUAL')
     if medida and not RE_TOLERANCIA.search(esp) and not RE_TBD.search(esp):  # un TBD ya la declara pendiente
         salida.append('SIN_TOLERANCIA')
-    concreta = RE_MEDIDA.search(esp) or RE_CODIGO.search(esp) or RE_CANTIDAD.search(esp) or RE_REF_ESP.search(esp) or RE_TBD.search(esp)
+    contado = re.search(r'conteo', ins, re.I) and re.search(r'\d', esp)  # lo que se cuenta tiene su numero
+    concreta = contado or RE_MEDIDA.search(esp) or RE_CODIGO.search(esp) or RE_CANTIDAD.search(esp) or RE_REF_ESP.search(esp) or RE_TBD.search(esp)
     if sentidos and not proceso and not concreta and not RE_REF_INS.search(ins):
         salida.append('CRITERIO_AMBIGUO')
     return salida
@@ -201,7 +208,10 @@ def revisar(hojas, rearmado=False, definitivo=False):
             prod = h['celdas'].get((r, col - 2), '').strip()
             proceso = ('RECEP' not in op_nombre.upper() and bool(h['celdas'].get((r, col - 1), '').strip())
                        and prod.upper() in ('', 'N/A', 'NA', '-'))
-            for cod in revisar_criterio(esp, ins, proceso):
+            caract = prod if prod.upper() not in ('', 'N/A', 'NA', '-') else h['celdas'].get((r, col - 1), '')
+            if 'RECEP' in op_nombre.upper():  # en recepcion la caracteristica va en PROCESO
+                caract = h['celdas'].get((r, col - 1), '') or prod
+            for cod in revisar_criterio(esp, ins, proceso, caract):
                 hallazgos.append((nivel_fila(r), cod, nombre, celda(r, c_esp), f'{esp} | {ins}'.replace('\n', ' / ')[:90]))
         for (r, c), v in sorted(h['celdas'].items()):
             if r <= fila0:
@@ -393,6 +403,15 @@ def selftest():
                 ('Espesor', '', '1,8 mm a 2,5 mm', 'Medidor de espesor MC 100'),
                 ('Temperatura', '', '250 °C a 280 °C', 'Pirómetro MC 200'),
                 ('Presión', '', '0,8 ± 0,1 bar', 'Visual en el panel de la máquina')]), R, 0, []),
+            # el plan del IP PAD (22/10): identificar un insumo, contar con su numero, comparar contra el remito
+            ('IP PAD: tipo de grampa, conteo con numero, contra remito', p('ippad_verdes', [
+                ('', 'Tipo de grampa', 'Dorking 84/06, 6 mm', 'Etiqueta del producto'),
+                ('', 'Grampa cargada', 'Grampa Dorking 84/06 de 6 mm', 'Visual'),
+                ('Clips', '', 'L1: 12 / L2 y L3: 10', 'Conteo visual'),
+                ('Cantidad', '', 'Igual al remito', 'Conteo contra remito'),
+                ('Posición', '', 'Alineada con el sustrato, contra los topes del dispositivo', 'Visual')]), R, 0, []),
+            ('IP PAD: 5 cm debajo de la costura, a ojo', p('ippad_rojo', [
+                ('Zona de adhesivo', '', 'Únicamente 5 cm debajo de la costura', 'Visual')]), R, 1, ['MEDIDA_VISUAL']),
         ]
         # la lectura de medidas, directa: lo que es medida y lo que no (auditor, 22/10: "60 según", "30/3N", "100 % poliester")
         for texto, es in [('75 mm', True), ('250 °C', True), ('Secado 24 h', True), ('1,5 Nm', True), ('200 N', True),

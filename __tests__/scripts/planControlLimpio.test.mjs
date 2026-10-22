@@ -45,6 +45,7 @@ describe('_planControlLimpio.py --selftest (el plan de control limpio de Fak, 15
     expect(out).toMatch(/ok {2}correccion de pocas celdas: la celda amarilla \(nuestra\) frena +esperado=1/);
     expect(out).toMatch(/ok {2}medida no: hilo 30\/3Nm/);
     expect(out).toMatch(/ok {2}tolerancia si: 1,8 mm a 2,5 mm/);
-    expect((out.match(/^ {2}ok {2}/gm) || []).length).toBe(64);
+    expect(out).toMatch(/ok {2}IP PAD: tipo de grampa, conteo con numero, contra remito +esperado=0/);
+    expect((out.match(/^ {2}ok {2}/gm) || []).length).toBe(66);
   });
 });
