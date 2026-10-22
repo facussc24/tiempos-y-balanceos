@@ -204,7 +204,10 @@ utiliza terminos muy ambiguos"*. Fak: *"tomatelo en serio"*. Lo que vale para ca
    certificado del proveedor en recepcion. La tolerancia sale de un papel (plano, su bloque de tolerancias generales,
    la especificacion de la pieza); si ninguno la da, `75 mm (tolerancia TBD)` y a la lista: nunca la medida pelada
    (`100 mm/min` de flamabilidad es `< 100 mm/min`). **La misma caracteristica se controla igual en todas las
-   operaciones**: la cinta iba con regla en la 40 y «Visual» en la 70.
+   operaciones**: la cinta iba con regla en la 40 y «Visual» en la 70. **El bloque de tolerancias generales del plano
+   del cliente vale solo para las cotas de ESE plano**: los 75 mm de la cinta salen del dimensional que hizo Barack
+   (`Tol.: XXX`) y en el plano de VW el lazo no tiene cota (medido el 22/10/2026): sin tolerancia, no se le aplica el ±2,5.
+   El instrumento, del sector donde se controla: en `Inyeccion VWA` el cronograma 2026 no tiene reglas ni cintas.
 2. **Un control visual nombra contra que se compara, de modo que dos inspectores decidan igual**: muestra patron,
    muestra limite, fotos OK/NOK del puesto, catalogo o biblia de defectos, calibre, plantilla, el plano, las lineas de
    la mesa, la orden o la etiqueta; y ademas dice el defecto concreto que se rechaza. Es la linea que trazo Agustin: lo
@@ -212,12 +215,16 @@ utiliza terminos muy ambiguos"*. Fak: *"tomatelo en serio"*. Lo que vale para ca
    defecto (`Sin costuras abiertas`). ✗ `Sin costuras abiertas · Visual`, `Bien colocado, sin aberturas · Visual`,
    `Bien colocados · Visual`, `Sellado completo · Visual`, `Sin roturas · Visual`. ✓ `Sin deformaciones · Visual /
    muestra patron`, `Sin rebaba visible · Visual con iluminacion dirigida / muestra limite` (Agustin las dejo pasar).
-   **Una muestra se nombra solo si existe** (la tiene Calidad o la puso la HO): si no existe, la fila va
+   **Una muestra se nombra solo si existe**, y que el AMFE, la HO o un plan viejo digan «muestra patron» no prueba que
+   exista (APB trasero, 22/10: lo dicen los tres y no hay ninguna de esa pieza; la «Biblia de defectos Proyecto APB
+   PATAGONIA» del SGC es de otro apoyabrazos). Se pregunta a Calidad o se busca el archivo; si no existe, la fila va
    `Visual / muestra limite (TBD: la define Calidad)` y a la lista; nunca se escribe una muestra que no hay. Un valor
    que se cuenta o se lee (`= 34`, `30/3`, `1 envoltorio por pieza`) no necesita muestra.
 3. **Una prueba funcional dice que se acciona y con que valor o contra que muestra se acepta**, sacado de la
    especificacion de la pieza o del componente (fuerza, recorrido, torque con su instrumento, como el `1,5 Nm ·
    Torquimetro / MC444` del Amarok). `Abre y cierra · Prueba funcional manual` es ambiguo; sin papel, `TBD` y a la lista.
+   Una norma de ensayo de laboratorio (p. ej. CVTC 34028 de portavasos, con camara y dinamometro) no es el criterio del
+   puesto, y solo vale para la pieza si un papel la liga a ella.
 4. **Una fila, una caracteristica** tambien en la especificacion: `Presente; 75 mm afuera de la pieza` son dos
    (presencia, que es visual, y largo, que se mide). Y la caracteristica (columna E) dice CUAL: `Costuras` o
    `Portavasos y marco` (Agustin las marco tambien) se parten en cada costura con el nombre que le da la HO, y en
@@ -228,14 +235,15 @@ utiliza terminos muy ambiguos"*. Fak: *"tomatelo en serio"*. Lo que vale para ca
    - `Presencia del atraque = 2 x 3 puntadas · Control visual / Muestra patron` (APB central Amarok)
    - `30 aplix colocados en posicion correcta · Pieza patron` (PWA 21-6034, Cecilia)
    - `Cantidad de orificios ø 4 ± 0,5 = 30 · Pieza patron / Control visual` (PWA 21-6034)
-   - `Tornillos ajustados a un torque diferente de 1,5 Nm · Torquimetro / MC444` (prueba funcional con valor, Amarok)
+   - `Tornillos ajustados a un torque diferente de 1,5 Nm · Torquimetro / MC444` (prueba funcional con instrumento con
+     codigo, Amarok; con la vara de Agustin le falta la tolerancia del torque)
    - El paso a paso con la accion fisica: `Verificar presencia, ubicacion y correcto costurado de 1 plate. 1- Jalar con
      la mano la extension del plate...` (TBA 71951)
    - Un conteo se puede controlar a ojo (`Cantidad de grampas = 34 · Visual.`): no es una medida.
 
 Gate: `python scripts/_planControlLimpio.py "<plan>" --rearmado` da ROJO `MEDIDA_VISUAL`, `SIN_TOLERANCIA` y
-`CRITERIO_AMBIGUO` (§5 punto 6 bis); en una correccion de pocas celdas (sin `--rearmado`) solo AVISA, porque el resto
-del texto es de Calidad. `CRITERIO_AMBIGUO` no mira las caracteristicas de proceso (un estado de la maquina, «plato
+`CRITERIO_AMBIGUO` (§5 punto 6 bis); en una correccion de pocas celdas (sin `--rearmado`) frena solo en las celdas
+amarillas (las que escribimos nosotros) y en el resto AVISA, porque ese texto es de Calidad. `CRITERIO_AMBIGUO` no mira las caracteristicas de proceso (un estado de la maquina, «plato
 elevado antes del corte»), salvo en recepcion, donde la columna PROCESO trae la del material. Calibrado contra la
 captura de Agustin: de las 12 filas de la operacion 70 marca las 5 que el marco y deja pasar las 7 que el dejo en
 blanco. Sobre el plan entero del 19/10 da 26 ROJO en 25 filas: 21 criterios ambiguos (7 de recepcion, kits, costura,
@@ -331,7 +339,7 @@ un valor parecido de otra pieza, ni "segun especificacion" generico (`core-prohi
 6 bis. **Desde el 22/10/2026 el mismo gate mira el criterio de cada fila** (§3.3 bis): `MEDIDA_VISUAL` (una medida
    controlada a ojo), `SIN_TOLERANCIA` (una medida sin tolerancia ni TBD declarado) y `CRITERIO_AMBIGUO` (visual o
    funcional sin contra que se compara) frenan con `--rearmado` y `--definitivo`, porque son lo que Calidad devuelve;
-   en una correccion de pocas celdas avisan. Antes de mostrar un plan rearmado, cero ROJO.
+   en una correccion de pocas celdas frenan en las celdas amarillas y avisan en el resto. Antes de mostrarlo, cero ROJO.
 7. Lo que pide una fila nueva o un dato sin papel va a un `.txt` aparte ("que queda para la reunion").
 8. Auditor antes de mostrar; se le muestra a Fak abierto; el mail a Calidad, con su OK. **El mail no lleva preguntas
    abiertas del plan**: las dudas van en la lista de pendientes adjunta (Fak, 09/10/2026: *"elimina esa parte y manda
@@ -352,9 +360,11 @@ un valor parecido de otra pieza, ni "segun especificacion" generico (`core-prohi
 4. ¿Cada material comprado de la BOM tiene recepcion, con lo que dice su plan de recepcion?
 5. ¿Cada fila es una caracteristica con criterio (no un modo de falla) y producto/proceso separados?
 6. ¿Cada especificacion tiene valor, tolerancia y unidad, o `TBD`/`CONFLICTO` en la lista? ¿Toda medida se mide con
-   un instrumento con codigo (nunca «Visual»), igual en todas las operaciones donde aparece? (§3.3 bis)
-6 bis. ¿Cada control visual o funcional dice el defecto que se rechaza o contra que se compara (muestra patron, limite,
-   calibre, plantilla)? Nada de «bien colocado», «sin costuras abiertas», «abre y cierra» solos (§3.3 bis)
+   un instrumento con codigo, la lectura de la maquina o el certificado (nunca «Visual» ni una muestra patron), igual en
+   todas las operaciones donde aparece? (§3.3 bis)
+6 bis. ¿Cada control visual o funcional nombra contra que se compara (muestra patron o limite que EXISTE, fotos OK/NOK,
+   calibre, plantilla, plano) y el defecto que se rechaza? Nada de «bien colocado», «sin costuras abiertas», «abre y
+   cierra» solos (§3.3 bis)
 7. ¿Cada instrumento tiene codigo MC, y ese codigo esta en el cronograma, en ese sector y vigente?
 8. ¿Set up por maquina con las cuatro situaciones de arranque? ¿Primera/ultima pieza donde aplica?
 9. ¿Parametros de proceso con valor, y acondicionamiento de quimicos (mezcla, agitacion, temperatura)?

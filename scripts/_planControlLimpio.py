@@ -54,27 +54,33 @@ RE_TBD = re.compile(r'\bTBD\b|\bCONFLICTO\b', re.I)
 # una medida: numero seguido de su unidad ("75 mm", "250 °C", "800 g/m²", "7,00 s", "1,5 Nm", "200 N", "65 %").
 # (?!\w) con acentos: "60 según" no es "60 s", "2 más" no es "2 m". La N de Newton va separada ("30/3N" es un hilo) y
 # el % seguido de una palabra es composicion ("100 % poliester"), no medida.
-RE_MEDIDA = re.compile(r'\d\s*(?:mm/min|kg/min|g/m2|g/m²|gr/m2|gr/m²|g/s|mm|cm|°\s*C|º\s*C|Nm|kN|kPa|mPa|cps|cP|[Cc]poise|'
-                       r'kg|gr|g|segundos|seg|s|minutos|min|horas|hs|h|bar|m)(?!\w)|\d\s*%(?!\s*[^\W\d_])|\d\s+N(?![\w°º])')
-RE_TOLERANCIA = re.compile(r'±|\+\s*/?\s*-|\+\s*\d|\d\s*(a|-|–)\s*\d|[<>≤≥]|\bm[aá]x|(?<![/\w])m[ií]n(?!\w)|m[ií]nimo|entre|toler',
-                           re.I)
-# la medida que nombra un insumo (la bolsa, la etiqueta, el separador) no es una medida que se controla
-RE_INSUMO = re.compile(r'\b(bolsas?|etiquetas?|cajas?|caj[oó]n|separador(es)?|l[aá]minas?|pallets?|film|envoltorio)\b', re.I)
+# Un numero que va despues de una barra no es medida: "30/3Nm" es el titulo de un hilo y "200 / 40" una relacion.
+_NUM = r'(?<![/\d.,])(?<!/\s)\d+(?:[.,]\d+)?'
+RE_MEDIDA = re.compile(_NUM + r'\s*(?:mm/min|kg/min|g/m2|g/m²|gr/m2|gr/m²|g/s|mm|cm|°\s*C|º\s*C|Nm|kN|kPa|mPa|cps|cP|[Cc]poise|'
+                       r'kg|gr|g|segundos|seg|s|minutos|min|horas|hs|h|bar|m)(?!\w)|' + _NUM + r'\s*%(?!\s*[^\W\d_])|'
+                       + _NUM + r'\s+N(?![\w°º])')
+# tolerancia: ±, +x/-y, un rango (tambien con la unidad repetida: "1,8 mm a 2,5 mm", "250 °C a 280 °C"), <, >, max, min
+RE_TOLERANCIA = re.compile(r'±|\+\s*/?\s*-|\+\s*\d|\d\s*[^\d\s]{0,6}\s*(a|-|–|hasta)\s*\d|[<>≤≥]|\bm[aá]x|(?<![/\w])m[ií]n(?!\w)|'
+                           r'm[ií]nimo|entre|toler', re.I)
+# el TAMAÑO de un insumo (la bolsa de 600 x 500 mm, la etiqueta de 20x50mm) lo nombra, no es una medida que se controla;
+# una posicion ("etiqueta a 30 ± 5 mm del borde") si lo es
+RE_INSUMO = re.compile(r'\b(bolsas?|etiquetas?|cajas?|caj[oó]n|separador(es)?|l[aá]minas?|pallets?|film|envoltorio)\b.*'
+                       r'\d\s*[xX×]\s*\d', re.I)
 # un codigo: letras y numeros mezclados (427VAR002TAP01, ET-SATO-50X20, CARTSEP03, GE-102)
 RE_CODIGO = re.compile(r'\b(?=[A-Z0-9.\-]*[A-Z]{2})(?=[A-Z0-9.\-]*\d{2})[A-Z0-9][A-Z0-9.\-]{5,}\b')
 # una cantidad que se cuenta o un valor que se lee ("2 x 3 puntadas", "= 34", "1 envoltorio por pieza", "30/3", "3")
 RE_CANTIDAD = re.compile(r'=\s*\d|\d+\s*(x\s*\d+\s*)?(puntadas|unidades|un\b|piezas|pzas|grampas|aplix|orificios|clips|tornillos|'
-                         r'capas|cabos|pliegos|remaches)|^\s*\d+\s+[^\W\d_]|^[\d\s.,/x×=+-]+$', re.I)
+                         r'capas|cabos|pliegos|remaches)|^\s*\d+\s+[^\W\d_][^,;]*\bpor\b|^[\d\s.,/x×=+-]+$', re.I)
 # control solo con los sentidos: visual, tactil, conteo, prueba funcional a mano, inspeccion del operador
 RE_SENTIDOS = re.compile(r'visual|t[aá]ctil|funcional|conteo|manual|inspecci[oó]n|operador', re.I)
 # lo que MIDE (para MEDIDA_VISUAL): instrumento, la medicion de la maquina, o el certificado/informe del proveedor
-RE_MIDE = re.compile(r'regla|cinta m[eé]trica|calibre|\bMC\s*-?\d|balanza|pantalla|display|medidor|micr[oó]metro|term[oó]metro|'
-                     r'pir[oó]metro|dinam[oó]metro|galga|torqu|mylar|plantilla|dispositivo|l[aá]ser|c[aá]mara|cert|informe|'
-                     r'laboratorio|sistema', re.I)
+RE_MIDE = re.compile(r'regla|cinta m[eé]trica|calibre|\bMC\s*-?\d|balanza|pantalla|display|\bpanel\b|\bHMI\b|indicador|medidor|'
+                     r'micr[oó]metro|term[oó]metro|pir[oó]metro|dinam[oó]metro|galga|torqu|mylar|plantilla|dispositivo|'
+                     r'l[aá]ser|c[aá]mara|\bcert|informe|laboratorio|sistema', re.I)
 # contra que se compara un control visual (para CRITERIO_AMBIGUO), en el calibre o en la especificacion
 RE_REF_INS = re.compile(r'muestra|patr[oó]n|l[ií]mite|cat[aá]logo|biblia|\bfotos?\b|calibre|plantilla|mylar|dispositivo|galga|'
-                        r'regla|cinta m[eé]trica|\bMC\s*-?\d|balanza|pantalla|display|l[aá]ser|cert|informe|sistema arb|'
-                        r'etiqueta|\bficha\b|\bplano\b|'
+                        r'regla|cinta m[eé]trica|\bMC\s*-?\d|balanza|pantalla|display|\bpanel\b|\bHMI\b|l[aá]ser|\bcert|'
+                        r'informe|sistema arb|en (la )?etiqueta|\bficha\b|\bplano\b|'
                         r'contra (la |el |los |las )?(orden|lista|planilla|muestra|pieza|plano|fotos?)', re.I)
 RE_REF_ESP = re.compile(r'muestra|patr[oó]n|l[ií]mite|cat[aá]logo|biblia|\bfotos?\b|\bplano\b|calibre|plantilla|mylar|'
                         r'l[ií]neas? (rojas?|marcad|de la mesa)|'
@@ -183,7 +189,8 @@ def revisar(hojas, rearmado=False, definitivo=False):
         nombre = h['nombre'].strip()
         celda = lambda r, c: f'{nombre}!{chr(65 + c) if c < 26 else c}{r + 1}'
         c_esp, c_ins = columnas_metodo(h['celdas'], fila0, col)
-        nivel = 'ROJO' if rearmado else 'AVISO'
+        # en una correccion de pocas celdas frena solo lo que escribimos nosotros (las celdas amarillas, §5 punto 3)
+        nivel_fila = lambda r: 'ROJO' if rearmado or {(r, c_esp), (r, c_ins)} & h['amarillas'] else 'AVISO'  # noqa: E731
         op_nombre = ''
         for r in sorted({r for (r, _c) in h['celdas'] if r > fila0 + 1}):
             # el nombre de la operacion (columna B, cinco a la izquierda de CLASIF.) vale hasta la proxima
@@ -195,7 +202,7 @@ def revisar(hojas, rearmado=False, definitivo=False):
             proceso = ('RECEP' not in op_nombre.upper() and bool(h['celdas'].get((r, col - 1), '').strip())
                        and prod.upper() in ('', 'N/A', 'NA', '-'))
             for cod in revisar_criterio(esp, ins, proceso):
-                hallazgos.append((nivel, cod, nombre, celda(r, c_esp), f'{esp} | {ins}'.replace('\n', ' / ')[:90]))
+                hallazgos.append((nivel_fila(r), cod, nombre, celda(r, c_esp), f'{esp} | {ins}'.replace('\n', ' / ')[:90]))
         for (r, c), v in sorted(h['celdas'].items()):
             if r <= fila0:
                 continue
@@ -373,15 +380,31 @@ def selftest():
                 ('Composición', '', '100 % poliéster (VW 50106)', 'Certificado del proveedor'),
                 ('Viscosidad', '', '2400 Cpoise ±15%', 'Visual / Según Cert. del proveedor'),
                 ('Identificación', '', 'Etiqueta 20x50mm + sello WQ', 'Control visual')]), R, 0, []),
+            # ronda 2 de la auditoria (22/10)
+            ('correccion de pocas celdas: la celda amarilla (nuestra) frena', p('amar_crit', [
+                ('Embalaje', '', 'Pieza en bolsa cerrada y etiquetada', 'Visual')], amarillas=[0]), [], 1, ['CRITERIO_AMBIGUO']),
+            ('posicion de la etiqueta medida a ojo', p('etq_pos', [
+                ('Posición de la etiqueta', '', 'A 30 ± 5 mm del borde', 'Visual')]), R, 1, ['MEDIDA_VISUAL']),
+            ('ver etiqueta no es referencia; un numero adelante no es cantidad', p('etq_ver', [
+                ('Portavasos', '', 'Bien colocados', 'Visual (ver etiqueta)'),
+                ('Costuras', '', '2 costuras sin abrir', 'Visual')]), R, 1, ['CRITERIO_AMBIGUO']),
+            ('titulo del hilo 30/3Nm, rangos con la unidad repetida, lectura en el panel', p('r2_verdes', [
+                ('Hilo', '', 'Nm 30/3Nm negro', 'Visual en etiqueta'),
+                ('Espesor', '', '1,8 mm a 2,5 mm', 'Medidor de espesor MC 100'),
+                ('Temperatura', '', '250 °C a 280 °C', 'Pirómetro MC 200'),
+                ('Presión', '', '0,8 ± 0,1 bar', 'Visual en el panel de la máquina')]), R, 0, []),
         ]
         # la lectura de medidas, directa: lo que es medida y lo que no (auditor, 22/10: "60 según", "30/3N", "100 % poliester")
         for texto, es in [('75 mm', True), ('250 °C', True), ('Secado 24 h', True), ('1,5 Nm', True), ('200 N', True),
                           ('120 mm/min', True), ('65 %', True), ('800 a 1000 g/m²', True), ('2400 Cpoise', True),
                           ('100 x 60 según ficha', False), ('2 más', False), ('3 sólo', False), ('hilo 30/3N', False),
-                          ('100 % poliéster', False), ('Aguja N° 18', False)]:
+                          ('100 % poliéster', False), ('Aguja N° 18', False), ('hilo 30/3Nm', False),
+                          ('relación 200 / 40', False)]:
             casos.append((f'medida {"si" if es else "no"}: {texto}', None, None, None, bool(RE_MEDIDA.search(texto)) != es))
         for texto, tiene in [('75 ± 2 mm', True), ('Ø 12,7 mm +0,02 / -0,1 mm', True), ('1,8 a 2,5 mm', True),
                              ('< 100 mm/min', True), ('1400 mm (tolerancia TBD)', True), ('120 mm/min', False),
+                             ('1,8 mm a 2,5 mm', True), ('25,5% a 26,5%', True), ('300 cps a 500 cps', True),
+                             ('250 °C a 280 °C', True), ('12 s - 18 s', True),
                              ('75 mm afuera de la pieza', False)]:
             casos.append((f'tolerancia {"si" if tiene else "no"}: {texto}', None, None, None,
                           bool(RE_TOLERANCIA.search(texto)) != tiene))

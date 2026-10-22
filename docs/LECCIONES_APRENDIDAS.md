@@ -94,7 +94,7 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
-- **22/10 — En un plan de control una medida se mide (instrumento con código y tolerancia) y un control visual dice qué se rechaza o contra qué muestra se compara: Calidad devolvió la op 70 del APB trasero** (Agustín Aguayo: *"indica una métrica y dice que se hace visual... términos muy ambiguos"*). Graduado a la skill `planes-de-control` §3.3 bis y a `_planControlLimpio.py` (`MEDIDA_VISUAL`, `CRITERIO_AMBIGUO`).
+- **22/10 — Plan de control: una medida se mide y un control visual nombra contra qué se compara (Calidad devolvió el APB trasero).** Graduado a `planes-de-control` §3.3 bis y `_planControlLimpio.py`.
 
 - **20/10 — Que Calidad aprobó algo no va en el mail de difusión salvo que Fak lo pida** (*"no pongas que está aprobado por Calidad"*): se dice qué es y cómo se usa. Caso: calibre L de la costura del Insert, memoria `project_calibre_l_costura_insert`.
 
