@@ -3,7 +3,7 @@
  *
  * El chequeo mira el plan de control que se entrega como lo miro Fak el 15/10/2026 (LECCIONES 15/10; skill
  * planes-de-control §5, puntos 3 a 6): la D sola y no D/TLD, una marca por celda, y si el plan se rearmo entero,
- * sin amarillo ni notas (y sin TBD si va como definitivo). El selftest arma planes chicos en .xlsx con openpyxl (el
+ * sin amarillo ni notas (y sin TBD si va como definitivo), y nunca un CONFLICTO (22/10/2026). El selftest arma planes chicos en .xlsx con openpyxl (el
  * CI lo instala) y prueba cada codigo en ROJO y en VERDE. Mismo criterio que arbExcelSelftest.test.mjs: NUNCA skip
  * si falta python.
  */
@@ -28,6 +28,9 @@ describe('_planControlLimpio.py --selftest (el plan de control limpio de Fak, 15
     expect(out).toMatch(/ok {2}amarillo en la tabla, correccion de pocas celdas +esperado=0/);
     expect(out).toMatch(/ok {2}limpio con banner amarillo de la plantilla, definitivo +esperado=0/);
     expect(out).toMatch(/ok {2}TBD, definitivo +esperado=1/);
-    expect((out.match(/^ {2}ok {2}/gm) || []).length).toBe(12);
+    // Fak 22/10/2026: un "CONFLICTO: 45 / 35" no sale en ningun plan, tampoco en la version de trabajo (skill §5 punto 8 ter)
+    expect(out).toMatch(/ok {2}CONFLICTO, correccion +esperado=1/);
+    expect(out).toMatch(/ok {2}CONFLICTO, rearmado \(version de trabajo\) +esperado=1/);
+    expect((out.match(/^ {2}ok {2}/gm) || []).length).toBe(14);
   });
 });

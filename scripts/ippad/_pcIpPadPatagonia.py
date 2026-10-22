@@ -32,7 +32,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _pcIpPadForm import (HOJA_FORM, abrir_excel, autor_limpio_xlsx, celda_superior, chequeo_sin_remision_a_la_ho,  # noqa: E402
                           escribir, fila, logo_en_celda, logo_oficial, nivel_actualizacion, poner, seccion)
-from _pcIpPadValores import ADHESIVO, CALOR_90, CALOR_91, FLAMA_PIEZA, ULTRASONIDO, VIROLADO  # noqa: E402
+from _pcIpPadValores import ADHESIVO, CALOR_90, CALOR_91, ESPUMA, FLAMA_PIEZA, ULTRASONIDO, VIROLADO  # noqa: E402
 
 FECHA = '22/10/2026'
 CODIGOS = '2HC.858.417.B FAM (L1) / 2HC.858.417.C GKK (L2) / 2HC.858.417.C GKN (L3)'
@@ -101,9 +101,9 @@ def filas_proceso():
                   esp='Según plan de control de inyección plástica IP PAD (Rev. A, 14/06/2026)',
                   inst='---', tam='---', frec='---', reg='---', resp='---', reac=REAC))
 
-    # --- 30 preparacion y carga de vinilo (hoja 30) — maquina: el AMFE dice BMA090 y el preliminar BM 149 (a la lista)
+    # --- 30 preparacion y carga de vinilo (hoja 30) — maquina: el AMFE dice BMA090 y el preliminar BM 149; numero TBD hasta que lo confirme Fak (22/10)
     f30 = f'{FLUJO} op 30 + {HO} hoja 30 + {AMFE} op 30-31'
-    b30 = dict(op='Operación 30.', nom='Preparación y carga de vinilo', maq='Mesa de corte automática (N° CONFLICTO: BMA090 / BM 149)')
+    b30 = dict(op='Operación 30.', nom='Preparación y carga de vinilo', maq='Mesa de corte automática (N° TBD)')
     R += [
         fila(f30, **b30, n='1', proc='Código de material del rollo', esp='Igual al de la orden de producción y la planilla de mesa de corte',
              inst='Visual contra planilla de corte', **HO_UNO),
@@ -112,7 +112,7 @@ def filas_proceso():
 
     # --- 31 corte automatico (hojas 31 a 37)
     f31 = f'{FLUJO} op 31 + {HO} hojas 31 a 37 + {AMFE} op 30-31'
-    b31 = dict(op='Operación 31.', nom='Corte automático de componentes', maq='Mesa de corte automática (N° CONFLICTO: BMA090 / BM 149)')
+    b31 = dict(op='Operación 31.', nom='Corte automático de componentes', maq='Mesa de corte automática (N° TBD)')
     R += [
         fila(f31, **b31, n='1', proc='Alineación del vinilo detrás de los rodillos', esp='Vinilo alineado detrás de los rodillos', inst='Visual', **HO_UNO),
         fila(f31, n='2', proc='Velocidad de la máquina', esp='TBD (el operador no la modifica)', inst='Visual en el panel de la máquina', **SETUP_CORTE),
@@ -192,7 +192,7 @@ def filas_proceso():
     b50 = dict(op='Operación 50.', nom='Troquelado de espumas', maq='Troqueladora · troquel N° TBD')
     R += [
         fila(f50, **b50, n='1', proc='Espuma correcta cargada (código y espesor)', esp='La de la orden de producción', inst='Visual contra etiqueta del rollo', **SINPAPEL),
-        fila(f50, n='2', prod='Espesor de la espuma troquelada', esp='CONFLICTO: 3 mm (ficha técnica Barack) / 3,15 mm (BOM006) (tolerancia TBD)', inst='Calibre (código MC TBD)', **SINPAPEL),
+        fila(f50, n='2', prod='Espesor de la espuma troquelada', esp=ESPUMA['espesor'], inst='Calibre (código MC TBD)', **SINPAPEL),
         fila(f50, n='3', prod='Forma y dimensión de la espuma troquelada', esp='Contorno completo, sin cortes incompletos', inst='Visual / muestra límite (TBD: la define Calidad)', **SINPAPEL),
     ]
 

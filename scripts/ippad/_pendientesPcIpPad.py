@@ -64,15 +64,13 @@ PENDIENTES = [
     ('Calidad', '10 Recepción', 'Patrón de color y de grabado de los vinilos Sanleather IV, patrón de color del Sanflex G KL, del cordón de piping '
      'y de la cinta Tesa (color y liner)', 'El plan de recepción 1048 controla el color de la Tesa a la vista. Los hilos tienen patrón según sus planes '
      'de recepción (1043, 1063 y 1064): confirmar que existe y usarlo también en la costura vista (op 42)'),
-    ('Calidad', '10, 40, 41 y 90', 'Tolerancias de la toma de costura de unión (6 mm), de la distancia de la 2ª costura al vivo (6 mm), del ancho de la zona '
-     'pegada debajo de la costura (5 cm) y del espesor de la cinta Tesa (100 µm)', 'Los valores de costura de Patagonia dicen 6 mm justos y la hoja de operaciones 5 cm, sin tolerancia'),
+    ('Calidad', '10, 40, 41, 50 y 90', 'Tolerancias de la toma de costura de unión (6 mm), de la distancia de la 2ª costura al vivo (6 mm), del ancho de la zona '
+     'pegada debajo de la costura (5 cm), del espesor de la cinta Tesa (100 µm) y del espesor de la espuma de soporte (3 mm)',
+     'Los valores de costura de Patagonia dicen 6 mm justos y la hoja de operaciones 5 cm, sin tolerancia. La ficha técnica de la espuma (FT141) dice 3 mm sin tolerancia'),
     ('Calidad', '110 Logo airbag (D)', 'Criterio de la prueba de fijación del logo (fuerza o método de aceptación)',
      'El plan controla presencia y posición contra el plano C00751801 (lista de materiales y los 2 alojamientos con nervio antierror) y la '
      'fijación con una prueba manual en la 110 y en el control final, con la fuerza TBD'),
     ('Calidad', '81 y 140 Retrabajos', 'Si VW aprobó los retrabajos de la pieza', 'Están en el flujograma 157, el AMFE 149 y la hoja de operaciones 985'),
-    ('Leo Lattanzi', '10 Recepción', 'Densidad, espesor y código de la espuma de soporte',
-     'Ficha del proveedor (Mentvil, calidad 45) y ficha técnica Barack Rev. A (19/11/2025): 45 kg/m³ y 3 mm; BOM006 y BOM V3: 427ESP002TRO01 '
-     'de 3,15 mm 45 kg/m³; arb: 427ESP001TRO01 de 35 kg/m³'),
     ('Leo Lattanzi', '70 Adhesivado', 'Relación de mezcla del adhesivo FA con el reticulante GV, tiempo de agitación y vida útil de la mezcla',
      'La auditoría VDA 6.3 de VW (2025) marcó que la mezcla y la agitación no estaban en el plan de control. El plan pone la vida útil de la '
      'ficha técnica vigente del reticulante (HT.REGV Rev. 4: 4 a 8 h); la relación de mezcla y el tiempo de agitación no figuran en ningún papel de la pieza'),
@@ -81,8 +79,7 @@ PENDIENTES = [
     ('Leo Lattanzi', '110 Ultrasonido y ensamble', 'Parámetros del ultrasonido del logo airbag, método y valor del ensayo de resistencia de la soldadura, '
      'y torque de los tornillos 2HC.075.701.HE', 'La lista de equipos del 14/11/2025 nombra el equipo sin valores; la atornilladora MC400 es de 0,5 a 2 Nm'),
     ('Planta', '30 a 110', 'Número de cada máquina: mesa de corte, máquinas de coser de unión y de vista, troqueladora y troquel, dispositivo de ensamble, '
-     'pistola de adhesivado, máquina de virolado y ultrasonido', 'Para completar la columna de máquina. La mesa de corte figura BMA090 en el AMFE 149 '
-     'y BM 149 en el plan preliminar'),
+     'pistola de adhesivado, máquina de virolado y ultrasonido', 'Para completar la columna de máquina'),
     ('Planta', '31 Corte', 'Velocidad de la máquina y tensión del vinilo', 'La hoja de operaciones pide verificarlas con un instructivo de parámetros que no está'),
     ('Planta', '150 Embalaje', 'Medio de embalaje y cantidad por medio', 'No hay ficha de embalaje de serie: la GE-279 es borrador y la GE-288 es de repuestos'),
 ]
@@ -95,7 +92,8 @@ INGENIERIA = [
     ('Ingeniería', 'AMFE 149', 'Op 120: el control de detección de "aplicar calor excesivamente" dice "undefined"', 'Supabase, updated_at 15/10/2026'),
     ('Ingeniería', 'AMFE 149', 'Op 70: el elemento "Parámetros presión y temperatura" tiene la función "Asegurar alineación de costura"', 'Supabase, updated_at 15/10/2026'),
     ('Ingeniería', 'AMFE 149', 'Op 10: "Identificación o documentación de lote faltante" repetido 3 veces; "Piping tubing negro (código TBD)" es el 427VAR002COS01; '
-     'la espuma dice 3,15 mm 45 kg/m³', 'BOM arb del 06/10/2026'),
+     'la espuma dice 3,15 mm 45 kg/m³ y desde el 05/10/2026 es la del Insert (427ESP001TRO01, 35 kg/m³, 3 mm; FT141 y mail de C. Baptista). '
+     'La ficha técnica FT149 del IP PAD sigue diciendo 45 kg/m³', 'BOM arb del 06/10/2026'),
     ('Ingeniería', 'AMFE 149', 'Op 110 no tiene el ensamble de la carcasa, los clips y los tornillos', 'El flujograma dice "soldadura con ultrasonido y ensamble"'),
     ('Ingeniería', 'AMFE 149', 'La flamabilidad nombra la TL 1010; el plano pide CVTC 52034 ≤ 70 mm/min', 'Plano C00751801 y hoja ADV PKK1'),
     ('Ingeniería', 'Siglas', 'El AMFE 149 marca D/TLD la flamabilidad del vinilo y de la espuma y el logo airbag; el plano C00751801 no designa D/TLD '

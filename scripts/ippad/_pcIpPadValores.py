@@ -28,15 +28,17 @@ SANFLEX = dict(
     ancho='Mínimo 1400 mm',
 )
 
-# espuma de soporte: densidad 45 en la ficha de Mentvil (45 ± 5 kg/m3), la ficha tecnica de Barack Rev A (L. Lattanzi,
-# 19/11/2025) y el ensayo interno del 22/12/2025; el arb describe su codigo 427ESP001TRO01 con 35 kg/m3. Espesor: 3 mm en la
-# ficha de Barack y el ensayo, 3,15 mm en la BOM006 y la BOM V3. CONFLICTO, no se elige
+# espuma de soporte: el IP PAD lleva la espuma del Insert desde el 05/10/2026 (mail de C. Baptista "RE: Espuma IP Pad e
+# Insert - Patagonia", 05/10/2026 14:30: "punto cerrado, queda con espuma de inserto las dos piezas unificadas"; cargado en
+# las tres BOM del arb el 06/10). Valores de la ficha tecnica FT141 (C. Baptista, 13/11/2025): 35 ± 5 kg/m3, 3 mm, 1400 mm.
+# La FT149 del IP PAD (45 kg/m3), la BOM006 y la BOM V3 (427ESP002TRO01, 3,15 mm) son anteriores a esa decision.
+# Un papel viejo contra uno nuevo no se escribe como CONFLICTO en el plan: se busca la decision (skill planes-de-control §5 punto 8 ter).
 ESPUMA = dict(
-    codigo='427ESP001TRO01 (arb) / 427ESP002TRO01 (BOM006 y BOM Barack V3)',
-    fuente='ficha del proveedor (Mentvil, calidad 45) + ficha técnica Barack Rev A (19/11/2025) + ensayo interno del 22/12/2025 + BOM006',
-    densidad='CONFLICTO: 45 ± 5 kg/m³ (ficha del proveedor y ficha técnica Barack) / 35 kg/m³ (descripción del arb)',
+    codigo='427ESP001TRO01',
+    fuente='ficha técnica Barack FT141 (13/11/2025) + mail de C. Baptista del 05/10/2026 (espuma unificada con el Insert) + BOM arb 06/10/2026',
+    densidad='35 ± 5 kg/m³',
     inst_densidad='Troquel de gramaje MC418 y balanza MC160',
-    espesor='CONFLICTO: 3 mm (ficha técnica Barack) / 3,15 mm (BOM006 y BOM Barack V3)',
+    espesor='3 mm (tolerancia TBD)',
     inst_espesor='Micrómetro MC405',
 )
 

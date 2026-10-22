@@ -15,11 +15,14 @@ Siempre (cualquier plan de control, tambien las correcciones de pocas celdas):
   VARIAS_MARCAS  ROJO   dos marcas o mas en la misma celda de CLASIF.: una caracteristica por fila (§5 punto 4:
                         con varias en la misma celda se lee "SC SC SC")
   SIGLA_RARA     AVISO  una marca que no es D, SC ni CC (`caracteristicas-especiales.md` punto 5: no se adivina)
+  CONFLICTO      ROJO   "CONFLICTO" adentro de una celda de la tabla, en cualquier modo (§5 punto 8 ter, Fak 22/10/2026: dos
+                        papeles que no coinciden se resuelven buscando la decision y, si sigue la duda, preguntandole
+                        a Fak; un plan que va a Calidad no muestra "CONFLICTO: 45 / 35")
 Con --rearmado (el plan se rearmo entero, §5 punto 3):
   AMARILLO       ROJO   celda de la tabla (debajo del encabezado CLASIF.) con relleno amarillo
   NOTA           ROJO   comentario o nota en una celda de la tabla
 Con --definitivo (implica --rearmado; §5 punto 6, Fak 15/10: "un plan de control verdadero sin esas cosas"):
-  TBD            ROJO   TBD o CONFLICTO adentro de una celda de la tabla
+  TBD            ROJO   TBD adentro de una celda de la tabla
 
 Lo de arriba del encabezado (titulos, revisiones, firmas) no se mira: la plantilla de Calidad trae banners
 amarillos. Sale con 1 si hay un ROJO, 0 si no, 2 si no se pudo leer el archivo o no tiene la columna CLASIF.
@@ -33,7 +36,8 @@ import tempfile
 MARCAS_VALIDAS = {'D', 'SC', 'CC'}
 AMARILLOS = {'FFFF00'}                      # el amarillo puro con que se marcan las celdas cambiadas
 RE_TLD = re.compile(r'\bTLD\b', re.I)
-RE_TBD = re.compile(r'\bTBD\b|\bCONFLICTO\b', re.I)
+RE_TBD = re.compile(r'\bTBD\b', re.I)
+RE_CONFLICTO = re.compile(r'\bCONFLICTO\b', re.I)
 
 
 def _rgb6(valor):
@@ -114,6 +118,8 @@ def revisar(hojas, rearmado=False, definitivo=False):
                 for m in ms:
                     if m not in MARCAS_VALIDAS and not RE_TLD.search(m):
                         hallazgos.append(('AVISO', 'SIGLA_RARA', nombre, celda(r, c), m))
+            if RE_CONFLICTO.search(v):
+                hallazgos.append(('ROJO', 'CONFLICTO', nombre, celda(r, c), v.replace('\n', ' / ')[:80]))
             if definitivo and RE_TBD.search(v):
                 hallazgos.append(('ROJO', 'TBD', nombre, celda(r, c), v.replace('\n', ' / ')[:80]))
         if rearmado:
@@ -198,6 +204,7 @@ def selftest():
         amar = _plan(d, 'amarillo', [('SC', '4 ± 1 mm')], amarillas=[0])
         nota = _plan(d, 'nota', [('SC', '4 ± 1 mm')], notas=[0])
         tbd = _plan(d, 'tbd', [('SC', 'TBD')])
+        conf = _plan(d, 'conflicto', [('', 'CONFLICTO: 45 ± 5 kg/m³ (ficha) / 35 kg/m³ (arb)')])
         casos += [
             ('amarillo en la tabla, correccion de pocas celdas', amar, [], 0, []),
             ('amarillo en la tabla, rearmado', amar, ['--rearmado'], 1, ['AMARILLO']),
@@ -205,6 +212,8 @@ def selftest():
             ('nota en la tabla, rearmado', nota, ['--rearmado'], 1, ['NOTA']),
             ('TBD, rearmado (version de trabajo)', tbd, ['--rearmado'], 0, []),
             ('TBD, definitivo', tbd, ['--definitivo'], 1, ['TBD']),
+            ('CONFLICTO, correccion', conf, [], 1, ['CONFLICTO']),
+            ('CONFLICTO, rearmado (version de trabajo)', conf, ['--rearmado'], 1, ['CONFLICTO']),
             ('sin columna CLASIF.', _plan(d, 'sin', [('SC', 'x')], con_clasif=False), [], 2, ['SIN_CLASIF']),
         ]
         malos = 0

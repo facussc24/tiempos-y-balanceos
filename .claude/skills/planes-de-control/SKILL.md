@@ -165,7 +165,8 @@ referencia, anual). VW lo exige como *Layout inspection and functional testing* 
   Operador de produccion`, dos filas por caracteristica.
 - **Parametros de proceso con valor y tolerancia** (IATF Anexo A: "parametros de proceso, incluyendo
   ajustes y tolerancias"): temperaturas, tiempos, presiones, caudales, relaciones de mezcla, velocidades.
-  Si dos papeles dan valores distintos, la celda va `CONFLICTO: <A> (fuente) / <B> (fuente)` y a la lista.
+  Si dos papeles dan valores distintos, **no se escribe `CONFLICTO` en la celda**: se resuelve con el §5 punto 8 ter
+  (buscar la decision; si sigue la duda, preguntarle a Fak).
 - **Acondicionamiento de quimicos** (mezcla, agitacion, temperatura de componentes, vencimiento, FIFO):
   la VDA 6.3 de VW nos marco *"la mezcla y agitacion de adhesivo y reticulante no estan descriptos en el
   Plan de Control, tampoco se definieron los tiempos de agitacion"*.
@@ -273,7 +274,7 @@ un valor parecido de otra pieza, ni "segun especificacion" generico (`core-prohi
    resuelven ANTES de mandarlo como definitivo.
    **Gate de los puntos 3 a 6 (tanda 12, 17/10/2026)**: `python scripts/_planControlLimpio.py "<plan.xls>"` frena
    (sale con 1) si la columna CLASIF. dice `D/TLD` o lleva dos marcas en una celda; con `--rearmado` frena ademas el
-   amarillo y las notas de la tabla, y con `--definitivo` el `TBD` y el `CONFLICTO`. Lo de arriba del encabezado
+   amarillo y las notas de la tabla, y con `--definitivo` el `TBD`; el `CONFLICTO` frena siempre (punto 8 ter). Lo de arriba del encabezado
    (banners de la plantilla) no lo mira. Corrido el 17/10 sobre los dos planes del 15/10: las correcciones de la
    Rev 0 dan ROJO (33 `D/TLD`, 18 celdas con varias marcas, amarillo en la tabla); la propuesta rearmada da 3 ROJO,
    uno por hoja: la fila 3.0 «Flamabilidad y emisiones del conjunto» lleva «D / D» en una celda.
@@ -283,6 +284,21 @@ un valor parecido de otra pieza, ni "segun especificacion" generico (`core-prohi
    el mail"*). Corto, en su voz, como respuesta al mail que lo pidio.
 8 bis. **Si se arma con un generador, el arreglo va al generador**: corregir solo el archivo deja que la proxima corrida
    devuelva el error (19/10: el logo y la revision con el nombre de Fak se corrigieron a mano y el script los seguia escribiendo).
+8 ter. **Dos papeles que no coinciden NO se escriben como `CONFLICTO: A / B` en el plan, ni en la version de trabajo**
+   (Fak, 22/10/2026, sobre el plan del IP PAD que tenia *"CONFLICTO: 45 ± 5 kg/m³ (ficha del proveedor y ficha técnica
+   Barack) / 35 kg/m³ (descripción del arb)"*: *"cuando vamos a enviar algo... no podemos dejar este tipo de notas, aunque
+   sean verdaderas... primero buscar, porque si hubieses buscado hubieses descubierto que por orden de Carlos eso se
+   cambió... hay mails, hay evidencia... y si dudabas me preguntás, no pasa nada"*; *"capaz ni lo revisan y le llega al
+   cliente, te imaginás? sería gravísimo"*). El camino, en este orden:
+   1. **Buscar la decision**: el mas nuevo de los dos papeles casi nunca es un error, es un cambio. Mails
+      (`python scripts/_mails.py --buscar "<tema>"`), la memoria del tema, el arb y la BOM vigentes, ECR/ECO. Caso: la
+      espuma del IP PAD se unifico con la del Insert por mail de Carlos del 05/10/2026 (FT141: 35 ± 5 kg/m³, 3 mm), y
+      la FT149, la BOM006 y la BOM V3 eran anteriores.
+   2. **Si un papel lo resuelve**: se escribe ESE valor (la fuente queda en el generador, no en la celda) y el papel
+      viejo desalineado va a la lista de Ingenieria para Fak, no a la de Calidad.
+   3. **Si sigue la duda**: se le pregunta a Fak en el chat, como listita (*"hay un conflicto, no lo entiendo, explicámelo
+      y lo resolvemos"*). Mientras tanto la celda va `TBD` y el plan **no se muestra como listo para mandar**.
+   Gate: `_planControlLimpio.py` frena (`CONFLICTO`, ROJO) en cualquier modo, no solo con `--definitivo`.
 9. **Las fichas de embalaje se piden al dia**: el 15/10 el plan salio con GE-103/104/105 Rev C y Carlos habia
    mandado esa misma manana la Rev D (48 por bin). Antes de cerrar, buscar en los mails de Carlos la ultima
    version y mirar la carpeta `19-Normas y Especificaciones de embalaje` del legajo.
@@ -296,7 +312,7 @@ un valor parecido de otra pieza, ni "segun especificacion" generico (`core-prohi
 3. ¿Cada operacion del flujograma tiene filas, con su numero y nombre?
 4. ¿Cada material comprado de la BOM tiene recepcion, con lo que dice su plan de recepcion?
 5. ¿Cada fila es una caracteristica con criterio (no un modo de falla) y producto/proceso separados?
-6. ¿Cada especificacion tiene valor, tolerancia y unidad, o `TBD`/`CONFLICTO` en la lista?
+6. ¿Cada especificacion tiene valor, tolerancia y unidad, o `TBD` en la lista? ¿Ningun `CONFLICTO` (punto 8 ter: se busca la decision o se le pregunta a Fak)?
 7. ¿Cada instrumento tiene codigo MC, y ese codigo esta en el cronograma, en ese sector y vigente?
 8. ¿Set up por maquina con las cuatro situaciones de arranque? ¿Primera/ultima pieza donde aplica?
 9. ¿Parametros de proceso con valor, y acondicionamiento de quimicos (mezcla, agitacion, temperatura)?
@@ -326,7 +342,7 @@ final · embalaje. Lo que un plan de APC tiene que tener, ademas de lo general:
   `28- Corrida de Produccion\HTO`). **Esa planilla es un registro de pruebas**: sirve para saber que
   parametros van; los valores salen de la HO-968/969/970 o de la parametria liberada. El componente del
   plan (POLI-PLUS FF-629 en la Rev 0) se cruza con el de la planilla de pruebas (F636/FF636): si no es el
-  mismo, es `CONFLICTO` a preguntar.
+  mismo, se busca la decision y, si sigue la duda, se le pregunta a Fak (§5 punto 8 ter).
 - **Componentes PU**: planes de recepcion 818 (ISO-PLUS 1290: NCO 25,5-26,5 %, viscosidad, densidad) y
   822 (POLI-PLUS FF-629: viscosidad, densidad libre, tiempos de crema y pegajosidad), vencimiento y FIFO
   (VW marco *"el FIFO para espumas de apoyacabezas no es asegurado"*).
