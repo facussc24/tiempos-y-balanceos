@@ -18,8 +18,8 @@
  *     con practica). Por la Tabla P2 oficial un control de conducta va de 6 a 9; se uso O=7
  *     (ver O_OPERARIO). Es un JUICIO: lo respaldan los dos remitos y el mail de Calidad; en
  *     contra, la planilla de cumplimiento del cliente decia "entregado 0" al 29/09 y la
- *     tercera pasada del auditor pidio 8 o 9. Esa evidencia NO cubre los reprocesos (32, 71
- *     y 72): nadie reproceso una pieza todavia. Queda dicho a Fak; si el decide 8, cambia
+ *     tercera pasada del auditor pidio 8 o 9. Esa evidencia NO cubre el repaso de adhesivo
+ *     (operacion 31) ni la terminacion (70). Queda dicho a Fak; si el decide 8, cambia
  *     O_OPERARIO y 11 causas de aspecto pasan de prioridad media a alta (contado el 02/10).
  *   - El adhesivado y el tapizado se registran junto con los del IP Pad (programa de la semana
  *     40: "REGISTRO DE PRODUCCION - ADHESIVADO IP Y UPPER TRIMMING" y "Tapizado IP PAD y UPPER
@@ -57,14 +57,42 @@
  *     segun TL 496; color y apariencia segun FAKOM), TL 496 §3.3, PV 2034, TL 1010.
  *   - Embalaje: gama GE-103 Rev.1 (medio retornable, carton entre pisos, etiqueta).
  *
+ * REVISION DE CALIDAD DEL 02/10/2026 (marcas de Cecilia Rodriguez sobre el flujograma y notas
+ * de Agustina; fotos en la carpeta de la tarea). Lo que entro en esta version:
+ *   - Los reprocesos 32, 71 y 72 no se declaran: el repaso de adhesivo queda dentro de la 31 y
+ *     la reactivacion de bordes y la limpieza de adhesivo son la terminacion, dentro de la 70.
+ *     Sus modos de falla siguen analizados (IATF 16949 8.7.1.4; RAC N 2 de la auditoria 2019).
+ *   - D/TLD en las tres causas de inflamabilidad (S=9): la asigna Fak, ver dtld().
+ *   - Grumos de adhesivo por la pistola sucia (instruccion IO-15 del SGC).
+ *   - Textos cortos, como el resto de los AMFE de la casa (amfe.md 11): la causa tenia 12
+ *     palabras de mediana y 61 de 75 pasaban de 10; en los otros AMFE la mediana es de 4 a 7.
+ * Lo que espera la reunion de AMFE con Calidad y Seguridad e Higiene: limpieza del sustrato con
+ * alcohol isopropilico antes de adhesivar (no consta que se haga hoy), ensayo de adherencia de
+ * serie, "agregar medio ambiente", el control con mylar "al 100 %", el almacenamiento WIP (22).
+ *
+ * PROPUESTA DEL 20/10/2026 (sin emitir, sigue Rev. A hacia afuera por pedido de Fak del 09/10):
+ *   - Inflamabilidad: VW (Diego Pandolfi, 16/10/2026: "considerar el sustrato forrado como
+ *     muestra para la validacion de flamabilidad") y Carlos Baptista (16/10, a Ingenieria:
+ *     "actualizamos el AMFE, el flujograma y el resto de la documentacion"): se valida con la
+ *     pieza tapizada, no se ensaya la materia prima, y Compras compra el vinilo sin ignifugo
+ *     (con ignifugo tambien sirve). Fuera "microfibra sin antiflama" (OP 10) y "se corta la
+ *     version sin antiflama" (OP 20). Queda la microfibra de un articulo distinto del validado.
+ *     La pieza tapizada ya se ensayo: Manuel Meszaros, 25/09/2026, "el ensayo en producto
+ *     terminado tiene un resultado OK en ambas condiciones" (con y sin tratamiento).
+ *   - Reunion de AMFE con Calidad y Seguridad e Higiene del 09/10/2026 (lista de la carpeta del
+ *     Escritorio "AMFE CON SEGURIDAD E HIGIENE"): sentido del pelo en el corte, sustrato
+ *     consignado controlado a la vista, almacenamiento WIP 22 en el AMFE, guantes calor-corte,
+ *     extraccion controlada por Seguridad e Higiene, residuos especiales con manifiesto.
+ *
  * LO QUE NO EXISTE PARA ESTA PIEZA Y POR ESO NO SE DECLARA COMO CONTROL
  * Hoja de proceso del adhesivado, del activado, del tapizado, del virolado y del troquelado;
  * muestra patron (Cozzuol, 29/05/2026: "No master sample available"); criterios escritos del
  * control final; plan de recepcion de la microfibra y del sustrato; ensayo de adherencia de
  * serie. El AMFE dice DONDE FALTA CONTROL; no se rellena.
  *
- * SIGLAS: ninguna. Las CC/SC las asigna Fak o el cliente (core-prohibiciones §2). El script
- * lista al final las causas que por S y O son candidatas, para que el decida.
+ * SIGLAS: las CC/SC las asigna Fak o el cliente (core-prohibiciones §2). Desde el 20/10/2026 hay
+ * dos D/TLD en la OP 10 (inflamabilidad, S=9); el 21/10 Fak delego la decision ("las decisiones
+ * del amfe tomalas vos") y quedaron por criterio. --candidatas lista las demas por S y O.
  *
  * Uso:  node scripts/_crearAmfeUpperTrimming.mjs            (arma, valida y muestra; no escribe)
  *       node scripts/_crearAmfeUpperTrimming.mjs --apply    (escribe en Supabase)
@@ -87,6 +115,11 @@ const AMFE_KEY = 'AMFE-UT-PAT';
 // del 01/10/2026.
 const NUMERO_EMPRESA = '174';
 const FECHA = '01/10/2026';
+const REV = 'A';   // la letra sube cuando el documento se EMITE (amfe.md 4bis); criterio en revision, 08/10/2026
+// La fecha de revision se mueve con el ultimo cambio aunque la letra espere a la emision
+// (amfe.md 4bis.3): propuesta del 20/10/2026.
+const REV_FECHA = '21/10/2026';
+const REV_FECHA_ISO = '2026-10-21';
 const FLUJOGRAMA = 'tools/flowchart/data/160-UPPER-TRIM-PANEL.json';
 
 // Nivel 1 (amfe.md §8): que entrega la pieza. Identico en todas las operaciones.
@@ -110,11 +143,24 @@ const SIN_PREVENCION = 'Sin control preventivo';
 const OPERARIO = 'Operarios del sector con practica en piezas tapizadas a mano';
 const O_OPERARIO = 7;
 const VISUAL_FINAL = 'Control visual 100% en el control final de calidad';
+const VISUAL_ADHESIVADO = 'Control visual del adhesivo en la inspeccion de pieza adhesivada';
+// D/TLD: la marca de VW para la caracteristica critica (S = 9 o 10; aca, la inflamabilidad, que
+// es requisito legal). La pidio Calidad al revisar la Rev. A el 02/10/2026 ("proceso 10, poner
+// D"; "control de flamabilidad -> D"). Desde el 20/10/2026 son dos causas, las dos de la OP 10
+// y con S=9 por su efecto; el 21/10 Fak delego la decision y quedan por criterio.
+const dtld = (c) => ({ ...c, specialChar: 'D/TLD' });
 // El plan de validacion TL 496 pide la adherencia por PV 2034, una sola vez y todavia sin
 // resultado. Eso valida el proceso; no es un control de la produccion. En la serie no hay
 // ensayo de adherencia: D=10 (tercera pasada de la auditoria de cliente, 01/10/2026: con D=9
 // la misma ausencia valia 9 aca y 10 en "sin control posterior").
 const ADHERENCIA = 'Sin ensayo de adherencia en la serie';
+// Reunion de AMFE del 09/10/2026: guante "calor-corte" para el trabajo con calor y con cuchilla
+// (OP 40, 42 y 70); donde no es comodo se usa el de tareas generales. Sigue siendo un control
+// de conducta: O=7.
+const GUANTE_CALOR_CORTE = 'Guantes calor-corte del sector';
+// Reunion de AMFE del 09/10/2026: la extraccion la controla Seguridad e Higiene.
+const EXTRACCION = 'Extraccion con filtros repuestos segun planilla de Seguridad e Higiene';
+const EXTRACCION_CONTROL = 'Control de las turbinas por Seguridad e Higiene';
 const D_ADHERENCIA = 10;
 
 // ---------------------------------------------------------------------------
@@ -123,20 +169,32 @@ const D_ADHERENCIA = 10;
 //   el operario · 7 parte de la produccion a scrap / reemplazo en el campo · 6 paro de linea
 //   de hasta una hora · 5 retrabajo fuera de linea / clasificacion sin paro.
 // ---------------------------------------------------------------------------
+// Desde el 16/10/2026 la inflamabilidad se valida con la pieza tapizada (VW): el efecto es el
+// de la pieza, no el de la microfibra sola.
 const EF_LEGAL_FUEGO = {
   s: 9,
-  local: 'Microfibra sin evidencia de cumplir el limite de velocidad de combustion',
+  local: 'Pieza tapizada sin evidencia de cumplir el limite de velocidad de combustion',
   next: 'Bloqueo del lote en la recepcion de Cozzuol',
   end: 'Incumplimiento de un requisito legal de inflamabilidad en el habitaculo del vehiculo',
 };
-// Material que entra a produccion sin liberar: el efecto mas grave es el de la microfibra,
-// que ya llego una vez sin tratamiento antiflama. Tres pasadas de la auditoria de cliente lo
-// marcaron: la S es la del efecto mas grave del modo de falla (Tabla P1).
+// Material que entra a produccion sin liberar. La recepcion verifica que el articulo sea el
+// pedido: sin liberar puede entrar una microfibra distinta de la validada con la pieza
+// tapizada, y ese es el efecto mas grave (Tabla P1-9). El 20/10/2026 la propuesta lo habia
+// bajado a 7 y la auditoria de cliente lo marco (SETEC pag. 100: la S es la del efecto mas grave).
 const EF_SIN_LIBERAR = {
   s: 9,
   local: 'Material sin liberar usado en la pieza',
   next: 'Bloqueo del lote en la recepcion de Cozzuol',
-  end: 'Posible incumplimiento del requisito legal de inflamabilidad en el habitaculo del vehiculo',
+  end: 'Posible pieza con un material no validado: incumplimiento del requisito legal de inflamabilidad',
+};
+// Residuo especial descartado como comun: incumplimiento de la reglamentacion dentro de la
+// planta. P1-9 ("in-plant regulatory noncompliance"), como la seguridad del operario que se
+// escribe con la Ley 19587.
+const EF_RESIDUO = {
+  s: 9,
+  local: 'Residuo especial fuera del circuito de manifiesto; posible incumplimiento de la ley de residuos peligrosos',
+  next: 'Sin efecto en la planta del cliente',
+  end: 'Sin efecto en el vehiculo',
 };
 // Sustrato o pieza fuera de las medidas de montaje del plano: no entra en la consola. P1-7.
 const EF_NO_MONTA = {
@@ -177,9 +235,9 @@ const EF_ASPECTO = {
   next: 'Posible clasificacion de piezas en la planta de Cozzuol',
   end: 'Aspecto por debajo del estandar percibido por el usuario',
 };
-const EF_ASPECTO_REPROCESO = {
+const EF_ASPECTO_TERMINACION = {
   s: 5,
-  local: 'Pieza con mancha de adhesivo en zona vista, que va a reproceso',
+  local: 'Pieza con mancha de adhesivo en zona vista, que se limpia en la terminacion',
   next: 'Posible clasificacion de piezas en la planta de Cozzuol',
   end: 'Aspecto por debajo del estandar percibido por el usuario',
 };
@@ -236,16 +294,23 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
   [
     we('Material', 'Microfibra suede Meisheng MS-9PQ009-BK25-2', [
       funcion(
-        'Cumplir el limite de velocidad de combustion que exige el cliente',
-        'Inflamabilidad segun el plano de la pieza y TL 1010',
+        'Entregar la microfibra del articulo validado con la pieza tapizada',
+        'Articulo con el que la pieza tapizada cumple la inflamabilidad del plano y TL 1010',
         [
-          // Ya paso: el primer lote llego sin tratamiento antiflama y el ensayo interno del
-          // 10/09/2026 (informe N°19-26, camara MC 184) dio rechazado. O=8. La deteccion existe
-          // y funciono, pero es un ensayo que se hizo a pedido, no por lote: P3-9.
-          falla('Microfibra recibida sin tratamiento antiflama', EF_LEGAL_FUEGO, [
-            causa('El articulo existe en una version sin tratamiento antiflama, que se distingue por el ultimo digito del codigo',
-              'Codigo de la version antiflama cargado en el maestro de insumos y en la lista de materiales',
-              8, 'Ensayo de inflamabilidad en el laboratorio de Barack con camara de flamabilidad, por muestreo', 9),
+          // 16/10/2026 (VW): la inflamabilidad se valida con la pieza tapizada y la materia
+          // prima no se ensaya; sirve con y sin ignifugo (Carlos, 16/10). La pieza tapizada se
+          // ensayo OK con las dos (Manuel Meszaros, 25/09/2026). Lo que queda es un articulo
+          // distinto del validado: el material esta direccionado por VW y ya llego una vez un
+          // lote pedido solo por codigo, sin plano ni norma (Manuel, 24/09): O=4. En la
+          // recepcion no hay ensayo de inflamabilidad: D=10.
+          // Sigla: S=9 -> critica por criterio (D/TLD para VW). La tenia asignada por Fak la
+          // inflamabilidad de la OP 10 (08 y 09/10/2026); aca sigue a la misma caracteristica
+          // en su fila nueva. 21/10/2026, Fak: "las decisiones del amfe tomalas vos": queda por
+          // criterio (S=9, I-AC-005 punto 5). El plano no la designa (cajetin Safety doc. vacio).
+          falla('Microfibra de un articulo distinto del validado', EF_LEGAL_FUEGO, [
+            dtld(causa('Cambio de articulo o proveedor sin revalidar la pieza',
+              'Material direccionado por VW, codigo en la lista de materiales',
+              4, 'Sin ensayo de inflamabilidad en la recepcion', 10)),
           ]),
         ]),
       funcion(
@@ -255,38 +320,41 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
           falla('Microfibra recibida con un color distinto del aprobado', EF_ASPECTO, [
             causa('Variacion de tono entre partidas del proveedor',
               'Articulo y color declarados en la orden de compra',
-              6, 'Sin muestra patron de color para comparar en la recepcion', 10),
+              6, 'Sin muestra patron de color en la recepcion', 10),
           ]),
           // El informe del proveedor del lote 260819-04 da un espesor por encima del rango del
           // plano: la variacion ya se vio. O=8.
           falla('Microfibra recibida con espesor o gramaje fuera del plano', EF_ASPECTO, [
             causa('Variacion del proceso del proveedor entre partidas',
-              'Ficha tecnica del proveedor con el espesor y el gramaje del articulo',
+              'Ficha tecnica del proveedor con espesor y gramaje',
               8, 'Sin plan de control de recepcion para este material', 10),
           ]),
           falla('Rollo recibido manchado, marcado o con pliegues', EF_SCRAP_INTERNO, [
-            causa('Dano del rollo en el transporte desde el proveedor',
+            causa('Dano del rollo en el transporte',
               SIN_PREVENCION,
               10, 'Inspeccion visual del estado del rollo al recibirlo', 8),
           ]),
         ]),
     ]),
-    we('Material', 'Sustrato plastico inyectado provisto por Cozzuol', [
+    // Reunion de AMFE del 09/10/2026: el sustrato es material CONSIGNADO por Cozzuol y en la
+    // recepcion solo se controla a la vista (aristas, rebabas y punto de inyeccion). El resto
+    // de ese tramo del audio es dudoso y no se usa. Si el control es al 100 % no consta: P3-9.
+    we('Material', 'Sustrato plastico consignado por Cozzuol', [
       funcion(
         'Entregar el sustrato dentro de medida y sin deformaciones, rebabas ni marcas',
         'Sustrato de la variante pedida, segun el plano y apto para tapizar',
         [
           // Hay un informe dimensional del 08/09/2026 sobre una pieza, con cotas fuera de plano.
-          // Es una medicion unica, no un control de recepcion: P3-9.
+          // Fue una medicion unica; en la recepcion de serie no se mide (reunion del 09/10).
           falla('Sustrato recibido fuera de medida', EF_NO_MONTA, [
-            causa('Variacion dimensional del proceso de inyeccion del proveedor',
+            causa('Variacion dimensional de la inyeccion del proveedor',
               SIN_PREVENCION,
-              10, 'Control dimensional por muestreo, sin plan de control de recepcion para el sustrato', 9),
+              10, 'Sin control dimensional en la recepcion: material consignado', 10),
           ]),
-          falla('Sustrato recibido deformado, con rebabas o con marcas', EF_ASPECTO, [
-            causa('Dano o defecto de inyeccion que llega en el lote del proveedor',
+          falla('Sustrato con rebabas, aristas o punto de inyeccion marcado', EF_ASPECTO, [
+            causa('Defecto de inyeccion o dano en el lote recibido',
               SIN_PREVENCION,
-              10, 'Sin plan de control de recepcion para el sustrato', 10),
+              10, 'Inspeccion visual de aristas, rebabas y punto de inyeccion', 9),
           ]),
         ]),
     ]),
@@ -297,10 +365,10 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
         [
           // Planes de recepcion 729 y 730: certificado por partida; color, viscosidad y
           // vencimiento, una muestra por lote de entrega. Material de serie hace anos: O=3.
-          falla('Adhesivo o reticulante recibido distinto del especificado o cerca de su vencimiento', EF_DESPEGUE, [
-            causa('El proveedor entrega una partida distinta de la pedida o con poca vida util',
+          falla('Adhesivo o reticulante distinto del pedido o por vencer', EF_DESPEGUE, [
+            causa('Partida equivocada o con poca vida util',
               'Certificado de calidad del proveedor por partida',
-              3, 'Control de recepcion de color, viscosidad y vencimiento contra el certificado, una muestra por lote de entrega', 9),
+              3, 'Control de color, viscosidad y vencimiento, una muestra por lote', 9),
           ]),
         ]),
     ]),
@@ -309,10 +377,12 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
         'Que a produccion solo salga material ingresado, controlado e identificado',
         'Material identificado por lote y liberado antes de habilitarlo al sector',
         [
-          falla('Material entregado a produccion sin haber sido ingresado ni liberado', EF_SIN_LIBERAR, [
-            causa('El material se retira del deposito antes de que termine su control de recepcion',
-              'Zona de material pendiente de control fisicamente separada de la de material liberado',
-              4, 'Control de la identificacion de lote en el sector, al inicio de turno', 9),
+          // S=9 O=4: critica por criterio; la D/TLD la tenia asignada Fak (08/10/2026) y queda
+          // (21/10/2026, Fak: "las decisiones del amfe tomalas vos").
+          falla('Material entregado a produccion sin liberar', EF_SIN_LIBERAR, [
+            dtld(causa('Material retirado antes de terminar su control de recepcion',
+              'Zona de material pendiente separada de la de liberado',
+              4, 'Control de la identificacion de lote al inicio de turno', 9)),
           ]),
         ]),
     ]),
@@ -324,7 +394,7 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
           falla('Materia prima mojada por filtraciones del techo', EF_SCRAP_INTERNO, [
             causa('Deterioro de la cubierta del deposito',
               'Mantenimiento preventivo de la cubierta',
-              3, 'Control visual del deposito en el recorrido de turno y despues de cada lluvia', 8),
+              3, 'Control visual del deposito en cada turno y tras cada lluvia', 8),
           ]),
         ]),
     ]),
@@ -335,14 +405,14 @@ const OP10 = operacion('10', 'RECEPCION DE MATERIA PRIMA',
         [
           // Redactadas como en el AMFE del Armrest Door Panel de Patagonia (mismo deposito).
           falla('Autoelevador operado con una falla no detectada', EF_SEG_OPERARIO, [
-            causa('Falla en el sistema hidraulico o en los frenos del autoelevador',
+            causa('Falla hidraulica o de frenos del autoelevador',
               'Check list diario del autoelevador y mantenimiento preventivo',
               6, 'Inspeccion previa al uso en cada turno', 8),
           ]),
           falla('Dano del embalaje de la materia prima durante el movimiento', EF_SCRAP_INTERNO, [
-            causa('El material se deposita sin proteccion durante el movimiento y el almacenaje',
+            causa('Material movido o estibado sin proteccion',
               'Procedimiento de estiba y uso de embalajes cerrados',
-              5, 'Inspeccion visual del estado del embalaje al recibirlo en el sector', 8),
+              5, 'Inspeccion visual del embalaje al recibirlo en el sector', 8),
           ]),
         ]),
     ]),
@@ -364,30 +434,29 @@ const OP20 = operacion('20', 'CORTE DE MICROFIBRA',
         [
           // El programa equivocado se ve en la plantilla, pero solo en la primera pieza: P3-9.
           falla('Contorno o hueco del cargador distinto del patron liberado', EF_SCRAP_INTERNO, [
-            causa('El programa de corte cargado en la mesa no es el de la revision liberada del patron',
-              'Codigo y nombre del programa verificados en el set up de la mesa de corte',
-              4, 'Control de forma de la primera pieza contra la plantilla mylar', 9),
+            causa('Programa de corte de una revision no liberada',
+              'Codigo y nombre del programa verificados en el set up',
+              4, 'Control de la primera pieza con la plantilla mylar', 9),
           ]),
           falla('Se corta una variante distinta de la pedida', EF_SCRAP_INTERNO, [
-            causa('Los archivos de corte de las dos variantes conviven en el programa y se diferencian por un hueco',
-              'Codigo y nombre del programa verificados en el set up de la mesa de corte',
-              4, 'Control de forma de la primera pieza contra la plantilla mylar de la variante', 9),
+            causa('Las dos variantes se diferencian solo por un hueco',
+              'Codigo y nombre del programa verificados en el set up',
+              4, 'Control de la primera pieza con la plantilla mylar de la variante', 9),
           ]),
-          falla('Microfibra montada en la mesa con la cara vista invertida', EF_SCRAP_INTERNO, [
-            causa('El rollo entra en el portarrollos en los dos sentidos',
-              'La planilla de corte indica como se coloca el rollo',
-              4, 'Control visual de la posicion de la cara vista contra la planilla de corte', 8),
+          falla('Microfibra montada con la cara vista invertida', EF_SCRAP_INTERNO, [
+            causa('El rollo entra en los dos sentidos',
+              'Planilla de corte con el sentido del rollo',
+              4, 'Control visual de la cara vista contra la planilla de corte', 8),
           ]),
-        ]),
-      funcion(
-        'Cortar el material que pide la orden de corte',
-        'Microfibra de la version antiflama, identificada por el codigo del rollo',
-        [
-          // Mismo riesgo que en la recepcion, del lado de planta: O=8.
-          falla('Se corta microfibra de la version sin tratamiento antiflama', EF_LEGAL_FUEGO, [
-            causa('Los rollos de las dos versiones se distinguen solo por el codigo de su etiqueta',
-              'Rollo identificado en la recepcion con su codigo de material',
-              8, 'Verificacion del codigo del rollo contra la planilla de corte, antes de montarlo', 8),
+          // Reunion de AMFE del 09/10/2026: el sentido del pelo de la microfibra se agrega como
+          // caracteristica a controlar en el corte. Hoy no hay control escrito: O=10 y D=10.
+          // (La fila "se corta la version sin antiflama" salio el 20/10/2026: VW valida con la
+          // pieza tapizada y sirven las dos versiones; ademas el cliente habia pedido el 09/10
+          // sacar la D/TLD del corte.)
+          falla('Pieza cortada con el pelo en otro sentido', EF_ASPECTO, [
+            causa('Sentido del pelo sin definir para el corte',
+              SIN_PREVENCION,
+              10, 'Sin control del sentido del pelo en el corte', 10),
           ]),
         ]),
     ]),
@@ -398,17 +467,17 @@ const OP20 = operacion('20', 'CORTE DE MICROFIBRA',
         [
           falla('Borde de la microfibra deshilachado o con rebaba', EF_ASPECTO, [
             causa('La cuchilla pierde filo entre dos afilados',
-              'Afilado automatico de la cuchilla y criterio de cambio por ancho minimo, verificado en el set up',
+              'Afilado automatico y cambio de cuchilla por ancho minimo',
               4, VISUAL_FINAL, 8),
           ]),
           falla('Microfibra mal alineada sobre la mesa de corte', EF_SCRAP_INTERNO, [
-            causa('El material se detiene antes o despues de la marca y queda fuera de escuadra',
-              'Lineas de tope al costado de la mesa y chequeo automatico de medidas por sensores',
+            causa('Material detenido fuera de la marca, sin escuadra',
+              'Lineas de tope en la mesa y sensores de medida',
               4, 'Verificacion visual del material contra las marcas, antes de cada corte', 8),
           ]),
           falla('Corte incompleto, con zonas sin separar', EF_SCRAP_INTERNO, [
-            causa('La succion cae durante el corte y la capa se mueve',
-              'El corte no arranca hasta que el vacio esta activo',
+            causa('Caida de la succion durante el corte',
+              'El corte no arranca sin vacio activo',
               5, 'Control del tendido y del despegue de la capa durante el corte', 8),
           ]),
         ]),
@@ -418,8 +487,8 @@ const OP20 = operacion('20', 'CORTE DE MICROFIBRA',
         'Que del corte salga la variante y la cantidad correcta, identificada',
         'Corte identificado con la variante y la cantidad de la orden',
         [
-          falla('Corte identificado con una variante o una cantidad que no corresponde', EF_SCRAP_INTERNO, [
-            causa('La etiqueta se coloca en el bin despues de retirar el corte',
+          falla('Corte identificado con otra variante u otra cantidad', EF_SCRAP_INTERNO, [
+            causa('Etiqueta colocada despues de retirar el corte',
               'Etiqueta emitida con la orden de corte',
               4, 'Cotejo de la etiqueta contra el contenido al cerrar el bin', 8),
           ]),
@@ -443,16 +512,16 @@ const OP21 = operacion('21', 'CONTROL CON MYLAR',
         'Verificar el contorno y el hueco del cargador de la pieza cortada contra la plantilla de su variante',
         'Pieza dentro del area OK de la plantilla: ni mas grande ni mas chica',
         [
-          falla('Se libera el corte contra la plantilla de la otra variante', EF_SCRAP_INTERNO, [
-            causa('Las plantillas de las dos variantes se diferencian por un hueco',
+          falla('Corte liberado con la plantilla de la otra variante', EF_SCRAP_INTERNO, [
+            causa('Plantillas que se diferencian solo por un hueco',
               'Plantilla codificada por referencia y material',
               4, 'Cotejo de la identificacion de la plantilla contra la planilla de corte', 8),
           ]),
           // Lo que se le escapa a este control se ve recien al tapizar: la tela no llega al
           // borde. La deteccion es aguas abajo, a la vista.
-          falla('Pieza mas chica que el area OK que pasa como conforme', EF_SCRAP_VISTA, [
-            causa('Una pieza mas chica entra dentro del contorno de la plantilla y parece conforme',
-              'Banda de tolerancia marcada en la plantilla, con criterio en los dos sentidos',
+          falla('Pieza mas chica que el area OK dada por conforme', EF_SCRAP_VISTA, [
+            causa('La pieza chica entra dentro del contorno de la plantilla',
+              'Banda de tolerancia en la plantilla, en los dos sentidos',
               4, VISUAL_FINAL, 8),
           ]),
         ]),
@@ -463,9 +532,38 @@ const OP21 = operacion('21', 'CONTROL CON MYLAR',
         'Primera pieza liberada por el inspector de calidad antes de producir',
         [
           falla('El lote sigue cortandose antes de liberar la primera pieza', EF_SCRAP_INTERNO, [
-            causa('La mesa puede seguir cortando mientras se hace el control de la primera pieza',
-              'Liberacion de la primera pieza por el inspector de calidad antes de producir',
+            causa('La mesa no queda bloqueada durante el control',
+              'Liberacion de la primera pieza por el inspector de calidad',
               5, 'Firma del inspector en la ficha de liberacion de inicio de produccion', 8),
+          ]),
+        ]),
+    ]),
+  ]);
+
+// ===========================================================================
+// OP 22 — ALMACENAMIENTO EN MEDIOS WIP
+// Reunion de AMFE del 09/10/2026: los almacenamientos intermedios se declaran en el flujograma y
+// en el AMFE, y llevan hoja de proceso (cuantas piezas y en que medio). Cambia el criterio de la
+// casa (amfe.md §9: el WIP no tenia AMFE propio): decision de esa reunion, a confirmar por Fak.
+// La hoja todavia no existe: la cantidad por medio no esta definida.
+// ===========================================================================
+const OP22 = operacion('22', 'ALMACENAMIENTO EN MEDIOS WIP',
+  'Guardar los cortes de microfibra hasta el tapizado sin danarlos ni mezclar variantes',
+  [
+    we('Method', 'Medio WIP de cortes', [
+      funcion(
+        'Guardar los cortes sin marcarlos y separados por variante',
+        'Cortes identificados por variante, sin marcas ni pliegues',
+        [
+          falla('Corte marcado o plegado en el medio WIP', EF_SCRAP_INTERNO, [
+            causa('Cantidad de cortes por medio sin definir',
+              SIN_PREVENCION,
+              10, VISUAL_FINAL, 8),
+          ]),
+          falla('Cortes de las dos variantes en el mismo medio', EF_SCRAP_INTERNO, [
+            causa('Medios WIP iguales para las dos variantes',
+              'Etiqueta emitida con la orden de corte',
+              4, 'Cotejo de la etiqueta contra el contenido al cerrar el bin', 8),
           ]),
         ]),
     ]),
@@ -479,9 +577,12 @@ const OP21 = operacion('21', 'CONTROL CON MYLAR',
 // de la pieza (ese flujo dice "por proyeccion o por rodillo"; la ficha del adhesivo, "a
 // soplete o pincel") y el 01/10/2026 se estaba discutiendo como mejorarlo: no se nombra la
 // herramienta. La mezcla tiene instruccion (IO-08); la aplicacion sobre esta pieza no tiene hoja.
+// La pistola entra solo por los grumos: la nombran las notas de Calidad del 02/10/2026 ("limpieza
+// de pistola - grumos") y el plan de control preliminar de Calidad (PC UPER TRIM Rev 0, 05/10/2026:
+// "presion de pistola adhesivadora", "limpieza de pistola con diluyente al final de turno").
 // ===========================================================================
 const OP30 = operacion('30', 'ADHESIVADO DE MICROFIBRA Y SUSTRATO',
-  'Aplicar adhesivo sobre la microfibra y sobre el sustrato y dejarlo secar antes del activado',
+  'Aplicar adhesivo sobre la microfibra y sobre el sustrato, sin grumos ni zonas sin cubrir',
   [
     we('Material', 'Mezcla de adhesivo FA con reticulante GV', [
       funcion(
@@ -489,18 +590,18 @@ const OP30 = operacion('30', 'ADHESIVADO DE MICROFIBRA Y SUSTRATO',
         'Mezcla segun la instruccion IO-08, con componentes vigentes',
         [
           falla('Mezcla de adhesivo fuera de la relacion definida', EF_DESPEGUE, [
-            causa('El reticulante se vuelca a mano en la lata de adhesivo',
-              'Instruccion IO-08: una botella de reticulante por lata de adhesivo',
+            causa('Reticulante agregado a mano',
+              'Instruccion IO-08, una botella de reticulante por lata',
               4, 'Sin control de la mezcla despues de preparada', 10),
           ]),
           // El set up se hace al lanzar el turno, no en cada mezcla: P3-9.
           falla('Adhesivo o reticulante vencido usado en la mezcla', EF_DESPEGUE, [
-            causa('El componente vence estando en el deposito o en el puesto',
+            causa('Componente vencido en el deposito o en el puesto',
               'Fecha de vencimiento en la etiqueta de cada envase',
-              4, 'Verificacion de las fechas de vencimiento en el set up de lanzamiento del sector', 9),
+              4, 'Verificacion de vencimientos en el set up de lanzamiento', 9),
           ]),
           falla('Mezcla de adhesivo usada fuera de su vida util', EF_DESPEGUE, [
-            causa('La mezcla preparada queda en el puesto sin la hora de preparacion a la vista',
+            causa('Mezcla sin la hora de preparacion a la vista',
               SIN_PREVENCION,
               10, 'Sin registro de la hora de preparacion de la mezcla', 10),
           ]),
@@ -512,41 +613,67 @@ const OP30 = operacion('30', 'ADHESIVADO DE MICROFIBRA Y SUSTRATO',
         'Microfibra y sustrato cubiertos por completo, sin exceso',
         [
           falla('Adhesivo insuficiente o con zonas sin cubrir', EF_DESPEGUE, [
-            causa('La cobertura del adhesivo depende de como se aplica en cada pieza',
+            causa('Aplicacion manual, la cobertura varia entre piezas',
               OPERARIO,
-              O_OPERARIO, 'Control visual del colocado del adhesivo en la inspeccion de pieza adhesivada', 8),
+              O_OPERARIO, VISUAL_ADHESIVADO, 8),
           ]),
-          falla('Exceso de adhesivo que traspasa la microfibra o deja zonas brillantes', EF_ASPECTO, [
-            causa('La cantidad de adhesivo que recibe cada pieza no tiene una referencia definida',
+          falla('Exceso de adhesivo que traspasa o deja brillo', EF_ASPECTO, [
+            causa('Cantidad de adhesivo por pieza sin referencia',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
           ]),
         ]),
     ]),
-    // Ficha tecnica del adhesivo FA: se deja secar antes de reactivarlo con calor.
-    we('Method', 'Secado del adhesivo antes del activado', [
+    // Pedido de Calidad al revisar la Rev. A (02/10/2026): "limpieza de pistola - grumos". El
+    // adhesivo mezclado va a la marmita (IO-08) y la limpieza de la pistola tiene instruccion
+    // propia en el SGC (IO-15, Rev.01). Falta confirmar en la reunion de AMFE que en este
+    // sector se limpia con esa instruccion y cada cuanto: por eso no lleva frecuencia.
+    we('Machine', 'Pistola de adhesivado', [
       funcion(
-        'Dejar secar el adhesivo aplicado antes de activarlo',
-        'Adhesivo seco antes del activado, segun la ficha tecnica del adhesivo',
+        'Aplicar el adhesivo sin grumos',
+        'Pistola limpia, sin restos de adhesivo seco',
         [
-          falla('Pieza que pasa al activado con el adhesivo sin secar', EF_DESPEGUE, [
-            causa('Las piezas adhesivadas esperan sin la hora de adhesivado a la vista',
-              SIN_PREVENCION,
-              10, 'Sin registro de la hora de adhesivado en la pieza', 10),
+          falla('Grumos de adhesivo sobre la pieza', EF_ASPECTO, [
+            causa('Restos de adhesivo seco en la pistola',
+              'Limpieza de la pistola segun la instruccion IO-15',
+              4, VISUAL_ADHESIVADO, 8),
           ]),
         ]),
     ]),
+    // El secado del adhesivo (ficha tecnica del FA) se analizaba aca hasta el 20/10/2026; desde
+    // el 21/10 esta en la OP 33, el almacenamiento donde las piezas quedan secando.
     // Riesgo cronico (vapores de solvente): P1-8, no 10. La ficha del adhesivo dice que es de
-    // base solvente; la campana es la del sector donde se registra el adhesivado de la pieza.
+    // base solvente. Reunion de AMFE del 09/10/2026: el control de la extraccion lo hace
+    // Seguridad e Higiene (turbinas y planilla de reposicion de filtros). La frecuencia de ese
+    // control no se dijo: no cubre todos los turnos, P3-9.
     we('Environment', 'Sector de adhesivado', [
       funcion(
         'Mantener el puesto ventilado durante la aplicacion',
         'Extraccion en marcha mientras se adhesiva',
         [
           falla('Operario expuesto a los vapores del adhesivo', EF_SALUD_CRONICA, [
-            causa('El adhesivo es de base solvente y libera vapores al aplicarlo y mientras seca',
-              'Campana de extraccion del sector de adhesivado',
-              3, 'Control del funcionamiento de la extraccion al inicio de turno', 8),
+            causa('Adhesivo de base solvente que libera vapores',
+              EXTRACCION,
+              3, EXTRACCION_CONTROL, 9),
+          ]),
+        ]),
+    ]),
+    // Reunion de AMFE del 09/10/2026 ("agregar medio ambiente"): los residuos (latas de
+    // adhesivo, trapos con solvente, recortes) se declaran como residuos especiales gestionados
+    // con manifiesto, en general, sin detallar lo que va a chatarra. El control de la separacion
+    // en el puesto no se nombro: D=10. Sigla: ninguna (21/10/2026, decidido con el pedido de Fak
+    // "las decisiones del amfe tomalas vos"). Es un efecto en la planta, no una caracteristica
+    // del producto: igual que las 8 causas de seguridad del operario (S=10) de este AMFE, que
+    // tampoco llevan sigla. D/TLD no puede ser: es legal sobre el vehiculo y la designa VW.
+    we('Environment', 'Residuos del sector de adhesivado', [
+      funcion(
+        'Separar los residuos con adhesivo o solvente como residuo especial',
+        'Residuos especiales gestionados con manifiesto',
+        [
+          falla('Residuo con adhesivo o solvente descartado como comun', EF_RESIDUO, [
+            causa('Latas, trapos y recortes con adhesivo en el puesto',
+              'Residuos especiales gestionados con manifiesto',
+              4, 'Sin control de la separacion de residuos en el puesto', 10),
           ]),
         ]),
     ]),
@@ -556,9 +683,14 @@ const OP30 = operacion('30', 'ADHESIVADO DE MICROFIBRA Y SUSTRATO',
 // OP 31 — INSPECCION DE PIEZA ADHESIVADA
 // El sector registra piezas OK, NOK y scrap por hora (planilla de PCP "Adhesivado IP y Upper
 // Trimming"). No hay una referencia escrita de la zona que tiene que quedar cubierta.
+//
+// 02/10/2026: Calidad y el cliente pidieron no declarar el reproceso de falta de adhesivo (la
+// operacion 32 de la primera Rev. A). La tarea no desaparece: completar el adhesivo donde falto
+// es parte de esta operacion, y sus tres modos de falla siguen analizados aca (IATF 16949
+// 8.7.1.4 pide el analisis de riesgo; sin el, en 2019 fue la no conformidad de la RAC N 2).
 // ===========================================================================
 const OP31 = operacion('31', 'INSPECCION DE PIEZA ADHESIVADA',
-  'Verificar la microfibra y el sustrato adhesivados antes de activar el adhesivo',
+  'Verificar el adhesivado de la microfibra y del sustrato y completarlo donde falte, antes del activado',
   [
     we('Measurement', 'Control visual de la pieza adhesivada', [
       funcion(
@@ -567,41 +699,89 @@ const OP31 = operacion('31', 'INSPECCION DE PIEZA ADHESIVADA',
         [
           // Lo que se le escapa a este control ya no se ve: el adhesivo queda tapado.
           falla('Pieza con falta de adhesivo que pasa el control', EF_DESPEGUE, [
-            causa('La cobertura del adhesivo se juzga a ojo, sin una referencia de la zona que debe quedar cubierta',
+            causa('Cobertura juzgada a ojo, sin referencia de la zona',
               OPERARIO,
               O_OPERARIO, ADHERENCIA, D_ADHERENCIA),
+          ]),
+        ]),
+    ]),
+    we('Method', 'Repaso de adhesivo en la zona faltante', [
+      funcion(
+        'Completar el adhesivo en la zona faltante sin cargar de mas el resto',
+        'Adhesivo uniforme en la zona repasada',
+        [
+          // 08/10/2026 (auditoria de cliente): el repaso se hace DESPUES de la inspeccion de la
+          // 31 y el adhesivo queda tapado al tapizar; la misma operacion dice que la pieza
+          // repasada no vuelve a un control. Ningun control la ve: D=10.
+          falla('Zona sin adhesivo que queda sin cubrir despues del repaso', EF_DESPEGUE, [
+            causa('Adhesivo repuesto a mano en la zona faltante',
+              OPERARIO,
+              O_OPERARIO, 'Sin control posterior al repaso', 10),
+          ]),
+          falla('Exceso de adhesivo en la zona repasada', EF_ASPECTO, [
+            causa('La zona repasada recibe una segunda capa',
+              OPERARIO,
+              O_OPERARIO, VISUAL_FINAL, 8),
+          ]),
+          falla('Pieza repasada que pasa al activado sin control', EF_DESPEGUE, [
+            causa('Pieza repasada sin identificacion',
+              SIN_PREVENCION,
+              10, 'Sin control posterior a la inspeccion de pieza adhesivada', 10),
+          ]),
+        ]),
+    ]),
+    // 08/10/2026 (auditoria de cliente): el repaso usa el mismo adhesivo de base solvente que la
+    // OP 30, en el mismo sector: mismo riesgo y mismo control que en la OP 30.
+    we('Environment', 'Sector de adhesivado', [
+      funcion(
+        'Mantener el puesto ventilado durante el repaso',
+        'Extraccion en marcha mientras se repasa el adhesivo',
+        [
+          falla('Operario expuesto a los vapores del adhesivo en el repaso', EF_SALUD_CRONICA, [
+            causa('Adhesivo de base solvente que libera vapores',
+              EXTRACCION,
+              3, EXTRACCION_CONTROL, 9),
           ]),
         ]),
     ]),
   ]);
 
 // ===========================================================================
-// OP 32 — REPROCESO: FALTA DE ADHESIVO
-// El de las piezas tapizadas hermanas (flujogramas 153, 154 y 159): reponer adhesivo en la
-// zona donde falto y volver al control. Sin hoja escrita para esta pieza.
+// OP 33 — ALMACENAMIENTO EN MEDIOS WIP PARA SECADO DEL ADHESIVO
+// Reunion de AMFE del 09/10/2026 (audio, min 25:59): "y el adhesivo tambien tenes tu WIP", sin
+// respuesta. 21/10/2026, Fak en planta (audio de WhatsApp, 0:49 a 1:08): las piezas adhesivadas
+// necesitan quedar secando en algun lado y el medio no esta disenado; Fak, en el chat: "dijo que
+// si vamos a necesitar un WIP, no esta disenado". Mismo criterio que la 22 (los WIP se declaran,
+// decision de la reunion). El numero 32 no se usa: fue el reproceso de la primera Rev. A y la
+// pregunta de si los reprocesos vuelven al flujograma sigue abierta. Medio, cantidad de piezas y
+// tiempo de secado: sin definir.
 // ===========================================================================
-const OP32 = operacion('32', 'REPROCESO: FALTA DE ADHESIVO',
-  'Reponer adhesivo en la zona de la microfibra o del sustrato donde falto',
+const OP33 = operacion('33', 'ALMACENAMIENTO EN MEDIOS WIP PARA SECADO DEL ADHESIVO',
+  'Dejar secar el adhesivo de la microfibra y del sustrato hasta el activado sin danar las piezas',
   [
-    we('Method', 'Reposicion manual de adhesivo en la zona faltante', [
+    we('Method', 'Medio WIP de secado', [
       funcion(
-        'Cubrir con adhesivo la zona faltante sin cargar de mas el resto',
-        'Adhesivo uniforme en la zona reprocesada',
+        'Guardar las piezas adhesivadas sin que el adhesivo toque nada ni junte suciedad',
+        'Piezas separadas, con la cara adhesivada libre',
         [
-          falla('Zona sin adhesivo que queda sin cubrir despues del reproceso', EF_DESPEGUE, [
-            causa('El adhesivo se repone a mano solo en la zona donde falto',
-              OPERARIO,
-              O_OPERARIO, 'Reverificacion en la inspeccion de pieza adhesivada', 8),
-          ]),
-          falla('Exceso de adhesivo en la zona reprocesada que traspasa la microfibra', EF_ASPECTO, [
-            causa('La zona reprocesada recibe una segunda capa de adhesivo',
-              OPERARIO,
-              O_OPERARIO, VISUAL_FINAL, 8),
-          ]),
-          falla('Pieza reprocesada que pasa al activado sin volver a la inspeccion', EF_DESPEGUE, [
-            causa('La pieza reprocesada no lleva una identificacion que la distinga de la ya inspeccionada',
+          falla('Pieza adhesivada marcada o con suciedad pegada en el medio', EF_SCRAP_INTERNO, [
+            causa('Medio de secado sin definir',
               SIN_PREVENCION,
-              10, 'Sin control posterior a la inspeccion de pieza adhesivada', 10),
+              10, VISUAL_FINAL, 8),
+          ]),
+        ]),
+    ]),
+    // Ficha tecnica del adhesivo FA: se deja secar antes de reactivarlo con calor. Viene de la
+    // OP 30 (hasta el 20/10/2026), sin cambios en la falla, la causa ni los controles.
+    we('Method', 'Secado del adhesivo antes del activado', [
+      funcion(
+        'Dejar secar el adhesivo aplicado antes de activarlo',
+        'Adhesivo seco antes del activado, segun la ficha tecnica del adhesivo',
+        [
+          falla('Pieza que pasa al activado con el adhesivo sin secar', EF_DESPEGUE, [
+            causa('Piezas en espera sin la hora de adhesivado',
+              SIN_PREVENCION,
+              10, 'Sin registro de la hora de adhesivado en la pieza', 10),
           ]),
         ]),
     ]),
@@ -614,30 +794,43 @@ const OP32 = operacion('32', 'REPROCESO: FALTA DE ADHESIVO',
 // lista de herramentales no tiene una maquina para esto, y ningun documento fija la
 // temperatura ni el tiempo. El unico papel de la pieza que nombra una fuente de calor es el
 // flujo de proceso de la cotizacion, y la nombra para el virolado (pistola de calor, OP 42):
-// aca no se nombra la herramienta.
+// aca no se nombra la herramienta. Reunion de AMFE del 09/10/2026 (audio, min 12:30 a 13:17):
+// se pregunto si la pistola de calor es para el adhesivo o para la tela ("son dos metodos
+// totalmente distintos") y no hubo respuesta: el metodo lo define Ingenieria y hay que ver el
+// proceso real. 21/10/2026: Fak lo pregunto en planta (audio de WhatsApp de esa manana, 0:15 a
+// 0:26): "¿con que activamos el adhesivo? ¿con pistola de calor?" ... "por ahora si". Se nombra
+// la pistola de calor; tiempo, distancia y temperatura siguen sin definir.
 // ===========================================================================
 const OP40 = operacion('40', 'ACTIVADO DEL ADHESIVO CON CALOR',
   'Reactivar con calor el adhesivo de la microfibra y del sustrato justo antes del tapizado',
   [
-    we('Method', 'Aplicacion de calor sobre el adhesivo', [
+    we('Machine', 'Pistola de calor', [
       funcion(
         'Llevar el adhesivo de las dos partes a su temperatura de activado',
         'Adhesivo activado en toda la superficie, sin dano de la microfibra ni del sustrato',
         [
           falla('Adhesivo sin activar o activado en forma despareja', EF_DESPEGUE, [
-            causa('La temperatura que alcanza el adhesivo depende del tiempo y de la distancia de aplicacion del calor',
+            causa('Pistola de calor usada sin tiempo ni distancia definidos',
               OPERARIO,
               O_OPERARIO, ADHERENCIA, D_ADHERENCIA),
           ]),
-          falla('Pieza que se tapiza con el adhesivo ya enfriado', EF_DESPEGUE, [
-            causa('La pieza activada espera antes del tapizado sin un tiempo maximo a la vista',
-              SIN_PREVENCION,
-              10, ADHERENCIA, D_ADHERENCIA),
-          ]),
           falla('Microfibra o sustrato marcado por exceso de calor', EF_ASPECTO, [
-            causa('El calor se aplica sin una temperatura ni un tiempo de referencia',
+            causa('Pistola de calor sin temperatura ni tiempo de referencia',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
+          ]),
+        ]),
+    ]),
+    // La espera es del metodo, no de la pistola (auditor, 21/10/2026).
+    we('Method', 'Tiempo entre activado y tapizado', [
+      funcion(
+        'Tapizar con el adhesivo todavia activo',
+        'Tapizado dentro del tiempo abierto del adhesivo activado',
+        [
+          falla('Pieza que se tapiza con el adhesivo ya enfriado', EF_DESPEGUE, [
+            causa('Espera sin tiempo maximo entre activado y tapizado',
+              SIN_PREVENCION,
+              10, ADHERENCIA, D_ADHERENCIA),
           ]),
         ]),
     ]),
@@ -649,8 +842,8 @@ const OP40 = operacion('40', 'ACTIVADO DEL ADHESIVO CON CALOR',
         'Guantes puestos durante el activado',
         [
           falla('Quemadura del operario al aplicar el calor', EF_SEG_OPERARIO, [
-            causa('El calor se aplica cerca de las manos que sostienen la pieza',
-              'Guantes y ropa de trabajo del sector',
+            causa('Calor aplicado cerca de la mano que sostiene la pieza',
+              GUANTE_CALOR_CORTE,
               7, 'Control del uso de guantes en el recorrido de turno', 9),
           ]),
         ]),
@@ -668,7 +861,7 @@ const OP41 = operacion('41', 'TAPIZADO MANUAL',
         'Ubicar la microfibra centrada, con el hueco del cargador sobre el del sustrato',
         'Microfibra centrada respecto del sustrato y del hueco del cargador',
         [
-          falla('Microfibra desalineada respecto del sustrato o del hueco del cargador', EF_ASPECTO, [
+          falla('Microfibra desalineada respecto del sustrato o del hueco', EF_ASPECTO, [
             causa('La microfibra se posiciona a mano sobre el sustrato',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
@@ -681,29 +874,29 @@ const OP41 = operacion('41', 'TAPIZADO MANUAL',
         'Microfibra adherida en toda la superficie, sin arrugas, pliegues, burbujas, manchas ni marcas de presion en zona vista',
         [
           falla('Pieza tapizada con arrugas o pliegues en zona vista', EF_ASPECTO, [
-            causa('La microfibra se estira y se acomoda a mano sobre las curvas del sustrato',
+            causa('Microfibra estirada a mano sobre las curvas del sustrato',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
           ]),
           // La ficha del adhesivo pide reactivacion con calor y posterior prensado. El
           // prensado corto no se ve.
           falla('Microfibra asentada con presion insuficiente', EF_DESPEGUE, [
-            causa('La presion de asentado se da a mano y no se mide',
+            causa('Presion de asentado manual, sin medicion',
               OPERARIO,
               O_OPERARIO, ADHERENCIA, D_ADHERENCIA),
           ]),
           falla('Microfibra con marcas de presion', EF_ASPECTO, [
-            causa('La presion para asentar la microfibra se da a mano, sin una referencia',
+            causa('Presion de asentado manual, sin referencia',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
           ]),
           falla('Microfibra con burbujas o levantada del sustrato', EF_DESPEGUE, [
-            causa('El asentado a mano no llega a toda la superficie en los radios del sustrato',
+            causa('El asentado a mano no llega a los radios',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
           ]),
-          falla('Cara vista de la microfibra manchada con adhesivo', EF_ASPECTO_REPROCESO, [
-            causa('La cara vista toca restos de adhesivo de la mesa o de las manos durante el tapizado',
+          falla('Cara vista de la microfibra manchada con adhesivo', EF_ASPECTO_TERMINACION, [
+            causa('Restos de adhesivo en la mesa o en las manos',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
           ]),
@@ -727,8 +920,8 @@ const OP42 = operacion('42', 'VIROLADO + REFILADO',
         'Dejar la microfibra doblada y pegada en todo el contorno',
         'Bordes virolados y adheridos, sin tela despegada',
         [
-          falla('Borde de la microfibra despegado en el contorno de la pieza', EF_DESPEGUE, [
-            causa('El doblez se hace a mano y se suelta antes de que el adhesivo tome',
+          falla('Borde de la microfibra despegado en el contorno', EF_DESPEGUE, [
+            causa('El doblez se suelta antes de que el adhesivo tome',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
           ]),
@@ -739,13 +932,13 @@ const OP42 = operacion('42', 'VIROLADO + REFILADO',
         'Dar calor al borde para que el adhesivo tome en el doblez',
         'Borde adherido en todo el contorno, sin marcas de calor en la cara vista',
         [
-          falla('Borde de la microfibra despegado por falta de calor en el doblez', EF_DESPEGUE, [
-            causa('El calor que recibe el borde depende del tiempo y de la distancia de la pistola',
+          falla('Borde despegado por falta de calor en el doblez', EF_DESPEGUE, [
+            causa('Pistola de calor usada sin tiempo ni distancia definidos',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
           ]),
           falla('Microfibra marcada o brillante por el calor en el borde', EF_ASPECTO, [
-            causa('El calor de la pistola se aplica sin una temperatura ni un tiempo de referencia',
+            causa('Pistola de calor sin temperatura ni tiempo de referencia',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
           ]),
@@ -758,7 +951,7 @@ const OP42 = operacion('42', 'VIROLADO + REFILADO',
         [
           // Hay una ayuda tecnica, pero sin historial en serie: O=5 (Tabla P2).
           falla('Microfibra despegada en la pared del hueco del cargador', EF_DESPEGUE, [
-            causa('La microfibra doblada tiende a volver a su posicion mientras el adhesivo toma',
+            causa('La microfibra doblada se vuelve mientras el adhesivo toma',
               'Virolador que sostiene la microfibra contra la pared del hueco',
               5, VISUAL_FINAL, 8),
           ]),
@@ -770,12 +963,12 @@ const OP42 = operacion('42', 'VIROLADO + REFILADO',
         'Sobrante cortado al ras, sin rebaba ni deshilachado y sin sustrato a la vista',
         [
           falla('Borde refilado con rebaba o deshilachado', EF_ASPECTO, [
-            causa('El sobrante se corta a mano, sin una guia para la herramienta',
+            causa('Sobrante cortado a mano, sin guia',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
           ]),
           falla('Microfibra cortada de mas, con el sustrato a la vista', EF_SCRAP_VISTA, [
-            causa('La herramienta de corte se guia a mano contra el borde del sustrato',
+            causa('Herramienta guiada a mano contra el borde del sustrato',
               OPERARIO,
               O_OPERARIO, VISUAL_FINAL, 8),
           ]),
@@ -787,13 +980,13 @@ const OP42 = operacion('42', 'VIROLADO + REFILADO',
         'Guantes puestos durante el virolado y el refilado',
         [
           falla('Corte del operario con la herramienta de refilado', EF_SEG_OPERARIO, [
-            causa('El refilado se hace a mano con una herramienta de filo expuesto',
-              'Guantes anticorte del sector',
+            causa('Refilado a mano con herramienta de filo expuesto',
+              GUANTE_CALOR_CORTE,
               7, 'Control del uso de guantes en el recorrido de turno', 9),
           ]),
           falla('Quemadura del operario con la pistola de calor', EF_SEG_OPERARIO, [
-            causa('La pistola de calor se usa cerca de la mano que sostiene el doblez',
-              'Guantes y ropa de trabajo del sector',
+            causa('Pistola usada cerca de la mano que sostiene el doblez',
+              GUANTE_CALOR_CORTE,
               7, 'Control del uso de guantes en el recorrido de turno', 9),
           ]),
         ]),
@@ -825,7 +1018,7 @@ const OP50 = operacion('50', 'TROQUELADO DE AGUJEROS',
               5, VISUAL_FINAL, 8),
           ]),
           falla('Pieza troquelada con los cilindros de la otra variante', EF_MONTAJE, [
-            causa('Los cilindros que actuan se seleccionan a mano segun la variante',
+            causa('Cilindros seleccionados a mano segun la variante',
               SIN_PREVENCION,
               10, VISUAL_FINAL, 8),
           ]),
@@ -835,7 +1028,7 @@ const OP50 = operacion('50', 'TROQUELADO DE AGUJEROS',
               10, VISUAL_FINAL, 8),
           ]),
           falla('Microfibra marcada o desgarrada alrededor del agujero', EF_ASPECTO, [
-            causa('Troquel sin filo que arrastra la microfibra en lugar de cortarla',
+            causa('Troquel sin filo que arrastra la microfibra',
               SIN_PREVENCION,
               10, VISUAL_FINAL, 8),
           ]),
@@ -847,7 +1040,7 @@ const OP50 = operacion('50', 'TROQUELADO DE AGUJEROS',
         'Manos fuera de la zona de troquelado durante el ciclo',
         [
           falla('Atrapamiento de la mano en el dispositivo troquelador', EF_SEG_OPERARIO, [
-            causa('La pieza se acomoda con la mano dentro de la zona de troquelado',
+            causa('Mano dentro de la zona de troquelado al acomodar',
               'Accionamiento del dispositivo con dos pulsadores',
               3, 'Sin verificacion periodica de los pulsadores definida', 10),
           ]),
@@ -870,23 +1063,23 @@ const OP60 = operacion('60', 'EMBOSSING DEL LOGO DE CARGA',
         'Logo completo y en posicion, sin dano de la microfibra alrededor',
         [
           falla('Logo grabado incompleto o con poca definicion', EF_ASPECTO, [
-            causa('Temperatura del molde por debajo de la que necesita la microfibra',
-              'Hoja de proceso de la prensa, con el control de temperatura del molde antes de producir',
+            causa('Temperatura del molde baja para la microfibra',
+              'Hoja de proceso con control de temperatura antes de producir',
               9, VISUAL_FINAL, 8),
-            causa('Carrera de la prensa mas corta que la que necesita la pieza',
-              'Hoja de proceso de la prensa, con los parametros de referencia del proveedor',
+            causa('Carrera de la prensa corta para la pieza',
+              'Hoja de proceso con los parametros de referencia del proveedor',
               9, VISUAL_FINAL, 8),
           ]),
           falla('Microfibra quemada, brillante o marcada alrededor del logo', EF_ASPECTO, [
-            causa('Temperatura del molde por encima de la que admite la microfibra',
-              'Hoja de proceso de la prensa, con el control de temperatura del molde antes de producir',
+            causa('Temperatura del molde alta para la microfibra',
+              'Hoja de proceso con control de temperatura antes de producir',
               9, VISUAL_FINAL, 8),
-            causa('Tiempo de prensado mas largo que el que admite la microfibra',
-              'Hoja de proceso de la prensa, con los parametros de referencia del proveedor',
+            causa('Tiempo de prensado largo para la microfibra',
+              'Hoja de proceso con los parametros de referencia del proveedor',
               9, VISUAL_FINAL, 8),
           ]),
           falla('Logo grabado fuera de posicion o girado', EF_ASPECTO, [
-            causa('La posicion de la pieza bajo el molde no tiene una referencia definida',
+            causa('Pieza bajo el molde sin referencia de posicion',
               SIN_PREVENCION,
               10, VISUAL_FINAL, 8),
           ]),
@@ -900,12 +1093,12 @@ const OP60 = operacion('60', 'EMBOSSING DEL LOGO DE CARGA',
           // El instructivo de la prensa pide verificar en cada turno la parada de emergencia y
           // que el mando bimanual no este puenteado.
           falla('Atrapamiento de la mano entre el molde y la pieza', EF_SEG_OPERARIO, [
-            causa('La pieza se acomoda con la mano dentro de la zona de prensado',
+            causa('Mano dentro de la zona de prensado al acomodar',
               'Mando bimanual y parada de emergencia de la prensa',
-              3, 'Verificacion de la parada de emergencia y del mando bimanual en cada turno', 8),
+              3, 'Verificacion de parada de emergencia y mando bimanual en cada turno', 8),
           ]),
           falla('Quemadura del operario con el molde caliente', EF_SEG_OPERARIO, [
-            causa('El molde trabaja caliente y queda al alcance de la mano al cargar y retirar la pieza',
+            causa('Molde caliente al alcance de la mano en la carga',
               'Guantes indicados en la hoja de proceso de la prensa',
               7, 'Control del uso de guantes en el recorrido de turno', 9),
           ]),
@@ -914,13 +1107,67 @@ const OP60 = operacion('60', 'EMBOSSING DEL LOGO DE CARGA',
   ]);
 
 // ===========================================================================
-// OP 70 — CONTROL FINAL DE CALIDAD
+// OP 70 — TERMINACION Y CONTROL FINAL DE CALIDAD
 // Visual al 100 %. El plano pide la pieza sin defectos visibles; no hay muestra patron ni
 // criterios escritos, ni ensayo de adherencia de serie.
+//
+// 02/10/2026: Calidad reviso la Rev. A y pidio que los reprocesos 71 (reactivacion de adhesivo
+// por calor) y 72 (mancha de adhesivo) no se declaren como reproceso: "poner como operacion de
+// terminacion" (notas de Agustina; marcas de Cecilia Rodriguez sobre el flujograma). Segun Fak
+// lo pidio el cliente en la visita de ese dia. Las dos tareas pasan a ser la terminacion de la
+// pieza, en este mismo puesto, y sus modos de falla siguen analizados aca: IATF 16949 8.7.1.4
+// pide el analisis de riesgo de lo que se retrabaja, y en 2019 la auditoria externa le marco a
+// Barack una no conformidad por un retrabajo de tapizado sin AMFE ni instruccion (RAC N 2).
+// Ninguna de las dos tareas tiene hoja escrita para esta pieza.
 // ===========================================================================
-const OP70 = operacion('70', 'CONTROL FINAL DE CALIDAD',
-  'Controlar al 100 % la pieza terminada antes de embalarla y decidir si sigue, va a reproceso o es scrap',
+const OP70 = operacion('70', 'TERMINACION Y CONTROL FINAL DE CALIDAD',
+  'Terminar la pieza y controlarla al 100 % antes de embalarla',
   [
+    we('Method', 'Terminacion de bordes con calor', [
+      funcion(
+        'Volver a pegar con calor y presion el borde que quedo levantado',
+        'Microfibra adherida en todo el contorno, sin marcas en la cara vista',
+        [
+          falla('Borde que vuelve a despegarse despues de la terminacion', EF_DESPEGUE, [
+            causa('Calor y presion aplicados a mano',
+              OPERARIO,
+              O_OPERARIO, ADHERENCIA, D_ADHERENCIA),
+          ]),
+          // 08/10/2026 (auditoria de cliente): esta misma operacion dice que no hay secuencia
+          // definida entre la terminacion y el control: no se puede acreditar el control final.
+          falla('Microfibra marcada o brillante por el calor de la terminacion', EF_ASPECTO, [
+            causa('Calor sobre la cara vista sin temperatura de referencia',
+              OPERARIO,
+              O_OPERARIO, 'Sin control posterior a la terminacion', 10),
+          ]),
+        ]),
+    ]),
+    we('Method', 'Limpieza de restos de adhesivo', [
+      funcion(
+        'Quitar los restos de adhesivo de la cara vista sin marcar la microfibra',
+        'Cara vista sin restos de adhesivo ni marcas de la limpieza',
+        [
+          falla('Cara vista con restos de adhesivo o marcada al limpiar', EF_ASPECTO, [
+            causa('Limpieza a mano sobre la cara vista',
+              OPERARIO,
+              O_OPERARIO, 'Sin control posterior a la terminacion', 10),
+          ]),
+        ]),
+    ]),
+    // 08/10/2026 (auditoria de cliente): la terminacion aplica calor como el activado (OP 40) y
+    // el virolado (OP 42), en el mismo sector: mismo riesgo y mismo control que en la OP 40.
+    we('Man', 'Operador de Produccion', [
+      funcion(
+        'Aplicar el calor de la terminacion sin exponerse a una quemadura',
+        'Guantes puestos durante la terminacion',
+        [
+          falla('Quemadura del operario en la terminacion con calor', EF_SEG_OPERARIO, [
+            causa('Calor aplicado cerca de la mano que sostiene la pieza',
+              GUANTE_CALOR_CORTE,
+              7, 'Control del uso de guantes en el recorrido de turno', 9),
+          ]),
+        ]),
+    ]),
     we('Measurement', 'Control visual de la pieza terminada', [
       funcion(
         'Detectar en la pieza terminada los defectos del tapizado, de los agujeros y del logo',
@@ -928,17 +1175,17 @@ const OP70 = operacion('70', 'CONTROL FINAL DE CALIDAD',
         [
           // Lo que se le escapa a este control no lo mira nadie despues: D=10.
           falla('Pieza con un defecto que pasa el control final', EF_ESCAPE, [
-            causa('El aspecto se juzga a ojo, sin muestra patron ni criterios de aceptacion escritos',
+            causa('Aspecto juzgado a ojo, sin muestra patron ni criterios',
               SIN_PREVENCION,
               10, 'Sin control posterior al control final', 10),
           ]),
         ]),
       funcion(
-        'Volver a controlar toda pieza que sale de un reproceso',
-        'Pieza reprocesada reverificada en el control final antes de embalarla',
+        'Controlar la pieza despues de terminarla',
+        'Toda pieza terminada pasa por el control visual antes de embalarla',
         [
-          falla('Pieza reprocesada que se embala sin volver al control final', EF_ESCAPE, [
-            causa('La pieza reprocesada no lleva una identificacion que la distinga de la ya controlada',
+          falla('Pieza embalada sin control despues de la terminacion', EF_ESCAPE, [
+            causa('Sin secuencia definida entre la terminacion y el control',
               SIN_PREVENCION,
               10, 'Sin control posterior al control final', 10),
           ]),
@@ -947,54 +1194,12 @@ const OP70 = operacion('70', 'CONTROL FINAL DE CALIDAD',
         'Verificar la adherencia de la microfibra sobre el sustrato',
         'Adherencia segun TL 496 y PV 2034',
         [
-          falla('Pieza con adherencia por debajo del requisito que pasa el control final', EF_DESPEGUE, [
-            causa('El control final es visual y la adherencia no se ve',
+          falla('Pieza con adherencia baja que pasa el control final', EF_DESPEGUE, [
+            causa('La adherencia no se ve en un control visual',
               SIN_PREVENCION,
               10, ADHERENCIA, D_ADHERENCIA),
           ]),
         ]),
-    ]),
-  ]);
-
-// ===========================================================================
-// OP 71 y 72 — LOS REPROCESOS DEL CONTROL FINAL
-// Los que ya tienen las piezas tapizadas hermanas y aplican a una pieza sin costura
-// (flujogramas 153 y 159). Entran desde la Rev. A por el criterio de Fak del 23/09/2026: los
-// reprocesos conocidos y posibles van de entrada. Ninguno tiene hoja escrita para esta pieza.
-// ===========================================================================
-const reproceso = (numero, nombre, funcionOp, elemento, funcionElemento, requisito, fallas) => operacion(numero, nombre,
-  funcionOp, [we('Method', elemento, [
-    funcion(funcionElemento, requisito, fallas),
-  ])]);
-
-const OP71 = reproceso('71', 'REPROCESO: REACTIVACION DE ADHESIVO POR CALOR',
-  'Volver a pegar con calor la zona o el borde despegado de la pieza terminada',
-  'Reactivado manual del adhesivo en la zona despegada',
-  'Aplicar calor y presion sobre la zona despegada sin marcar la cara vista',
-  'Microfibra adherida en la zona reprocesada, sin marcas en la cara vista',
-  [
-    falla('Zona que vuelve a despegarse despues del reproceso', EF_DESPEGUE, [
-      causa('El calor y la presion del reproceso se aplican a mano',
-        OPERARIO,
-        O_OPERARIO, ADHERENCIA, D_ADHERENCIA),
-    ]),
-    falla('Microfibra marcada o brillante por el calor del reproceso', EF_ASPECTO, [
-      causa('El calor se aplica del lado de la cara vista sin una temperatura de referencia',
-        OPERARIO,
-        O_OPERARIO, 'Reverificacion en el control final', 8),
-    ]),
-  ]);
-
-const OP72 = reproceso('72', 'REPROCESO: MANCHA DE ADHESIVO',
-  'Borrar la mancha de adhesivo de la cara vista de la pieza terminada',
-  'Borrado manual de la mancha de adhesivo',
-  'Quitar el adhesivo de la cara vista sin marcar la microfibra',
-  'Cara vista sin restos de adhesivo ni marcas del borrado',
-  [
-    falla('Cara vista con restos de adhesivo o marcada despues del borrado', EF_ASPECTO, [
-      causa('El borrado se hace a mano sobre la cara vista',
-        OPERARIO,
-        O_OPERARIO, 'Reverificacion en el control final', 8),
     ]),
   ]);
 
@@ -1009,17 +1214,17 @@ const OP80 = operacion('80', 'EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO',
         'Embalar con la cantidad, la variante y la identificacion que pide el cliente',
         'Cantidad por medio, separadores e identificacion segun la gama de embalaje',
         [
-          falla('Medio despachado con una cantidad distinta de la de la gama', EF_CANTIDAD, [
-            causa('Las piezas se cuentan a mano por piso al armar el medio',
-              'Gama de embalaje con las piezas por piso y los pisos por medio',
+          falla('Medio con una cantidad distinta de la de la gama', EF_CANTIDAD, [
+            causa('Piezas contadas a mano por piso',
+              'Gama de embalaje con piezas por piso y pisos por medio',
               4, 'Autocontrol segun P-09/I', 8),
           ]),
-          falla('Pieza de una variante embalada en el medio de la otra', EF_VARIANTE, [
-            causa('Las dos variantes se embalan en el mismo sector y se diferencian por un hueco del cargador',
+          falla('Pieza embalada en el medio de la otra variante', EF_VARIANTE, [
+            causa('Variantes embaladas juntas, se diferencian por un hueco',
               SIN_PREVENCION,
               10, 'Sin control de la variante de cada pieza al armar el medio', 10),
           ]),
-          falla('Medio despachado con una etiqueta que no corresponde a su contenido', EF_VARIANTE, [
+          falla('Medio con una etiqueta que no corresponde', EF_VARIANTE, [
             causa('La etiqueta se coloca a mano al completar el medio',
               'Etiqueta definida en la gama de embalaje',
               4, 'Autocontrol segun P-09/I', 8),
@@ -1027,10 +1232,10 @@ const OP80 = operacion('80', 'EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO',
           // El carton separa los pisos, no las piezas de un mismo piso: son dos causas. Lo que
           // se marca adentro del medio cerrado ya no lo ve nadie en planta: D=10.
           falla('Microfibra marcada o sucia por el propio embalaje', EF_ASPECTO_CLIENTE, [
-            causa('Las piezas de un piso se apoyan sobre las del piso de abajo',
-              'Carton entre pisos y piezas con el lado vista hacia arriba, segun la gama de embalaje',
+            causa('Piezas apoyadas sobre las del piso de abajo',
+              'Carton entre pisos y lado vista hacia arriba, segun gama',
               4, 'Sin control del medio despues de cerrado', 10),
-            causa('Dentro de un mismo piso las piezas quedan en contacto entre si',
+            causa('Piezas de un mismo piso en contacto entre si',
               SIN_PREVENCION,
               10, 'Sin control del medio despues de cerrado', 10),
           ]),
@@ -1038,7 +1243,7 @@ const OP80 = operacion('80', 'EMBALAJE Y ETIQUETADO DE PRODUCTO TERMINADO',
     ]),
   ]);
 
-const OPERACIONES = [OP10, OP20, OP21, OP30, OP31, OP32, OP40, OP41, OP42, OP50, OP60, OP70, OP71, OP72, OP80];
+const OPERACIONES = [OP10, OP20, OP21, OP22, OP30, OP31, OP33, OP40, OP41, OP42, OP50, OP60, OP70, OP80];
 
 const doc = {
   header: {
@@ -1058,10 +1263,10 @@ const doc = {
     location: 'PLANTA HURLINGHAM',
     modelYear: 'VW427 PATAGONIA',
     amfeNumber: NUMERO_EMPRESA,
-    rev: 'A',
-    revisionLevel: 'A',
+    rev: REV,
+    revisionLevel: REV,
     amfeDate: FECHA,
-    revDate: FECHA,
+    revDate: REV_FECHA,
     responsibleEngineer: 'Carlos Baptista (Ingenieria)',
     processResponsible: 'Carlos Baptista',
     elaboratedBy: 'Facundo Santoro',
@@ -1089,6 +1294,10 @@ const doc = {
       pswDate: '',
       modifiedBy: 'FS',
     },
+    // La fila de la PROXIMA letra se agrega recien cuando el documento se emite (amfe.md 4bis).
+    // Fak, 08/10/2026: "la revision B solo se hace cuando vamos a someter el APQP al cliente";
+    // el criterio exacto lo define la tarea aparte que se abrio ese dia. Texto ya preparado:
+    // PROXIMA_REVISION, abajo.
   ],
 };
 
@@ -1099,8 +1308,14 @@ const doc = {
 // flujograma en su orden y con su nombre, tres efectos, AP de la tabla, un control que no
 // existe lleva 10, scrap con S >= 7, niveles de funcion distintos, sin TBD.
 const flujo = JSON.parse(readFileSync(FLUJOGRAMA, 'utf8'));
+// El chequeo comun no cuenta un almacenado numerado como operacion con AMFE (criterio de la
+// casa hasta la reunion del 09/10/2026). En este AMFE el WIP 22 si va: se lo marca como paso
+// solo para la comparacion, sin tocar el flujograma ni el chequeo de los demas AMFE.
+const ALMACENAMIENTOS_CON_AMFE = ['22', '33'];
+const flujoParaChequeo = JSON.parse(JSON.stringify(flujo), (k, v) => (
+  v && v.type === 'storage' && ALMACENAMIENTOS_CON_AMFE.includes(String(v.stepId)) ? { ...v, type: 'operation' } : v));
 const { errores, stats, candidatas, sinPrevencion, sinDeteccion } = chequeosDeAutoria(doc, {
-  flujograma: flujo,
+  flujograma: flujoParaChequeo,
   controlDeConducta: { texto: OPERARIO, o: O_OPERARIO },
 });
 const { nWE, nFn, nFM, nCausas, apCount } = stats;
@@ -1111,8 +1326,8 @@ const { nWE, nFn, nFM, nCausas, apCount } = stats;
 // La etiqueta no es materia prima que se recibe y se controla como tal: se trata en el embalaje.
 const PRODUCTOS_ARB = ['MP8404', 'MP8405'];
 const COBERTURA_BOM = {
-  '13600': 'Sustrato plastico inyectado provisto por Cozzuol',
-  '13601': 'Sustrato plastico inyectado provisto por Cozzuol',
+  '13600': 'Sustrato plastico consignado por Cozzuol',
+  '13601': 'Sustrato plastico consignado por Cozzuol',
   '9PQ009-BK25-2': 'Microfibra suede Meisheng MS-9PQ009-BK25-2',
   'AD - ADFA15': 'Adhesivo FA y reticulante GV',
   'AD - REGV0.6': 'Adhesivo FA y reticulante GV',
@@ -1189,8 +1404,8 @@ const columnas = {
   ap_h_count: apCount.H || 0,
   ap_m_count: apCount.M || 0,
   coverage_percent: nCausas > 0 ? Math.round((causasConSOD / nCausas) * 100) : 0,
-  last_revision_date: FECHA_ISO,
-  revision_level: 'A',
+  last_revision_date: REV_FECHA_ISO,
+  revision_level: REV,
   data: JSON.stringify(doc),
   revisions: JSON.stringify(doc.revisions),
 };
@@ -1250,3 +1465,14 @@ const { data: v } = await sb.from('amfe_documents').select('id,operation_count,c
 const back = parseData(v[0].data);
 console.log(`  verificado: filas=${v.length} ops=${v[0].operation_count} causas=${v[0].cause_count} | data.operations es array: ${Array.isArray(back.operations)} | ops leidas: ${back.operations.length} | updated_at ${v[0].updated_at}`);
 process.exit(v.length === 1 && back.operations.length === doc.operations.length ? 0 : 1);
+
+// Fila de revision preparada para la proxima emision (cambios con OK de Fak del 08/10/2026:
+// pedido de Cozzuol de no declarar reprocesos, observaciones de Calidad del 02/10, D/TLD).
+// eslint-disable-next-line no-unused-vars
+const PROXIMA_REVISION = {
+  // 20/10/2026: se suman la inflamabilidad sobre la pieza tapizada (VW, 16/10) y lo de la
+  // reunion de AMFE del 09/10. La parte de los reprocesos sigue esperando la validacion de
+  // Calidad (mail de Fak del 19/10).
+  item: '10, 20, 22, 30, 31, 32, 33, 40, 42, 70, 71, 72',
+  details: 'OP 32 SE INTEGRA A LA OP 31: EL REPASO DE ADHESIVO ES PARTE DE LA INSPECCION DE PIEZA ADHESIVADA. OP 71 Y 72 SE INTEGRAN A LA OP 70, QUE PASA A TERMINACION Y CONTROL FINAL DE CALIDAD (REACTIVACION DE BORDES CON CALOR Y LIMPIEZA DE ADHESIVO). OP 30: GRUMOS DE ADHESIVO POR PISTOLA SUCIA. OP 10 Y 20: LA INFLAMABILIDAD SE VALIDA CON LA PIEZA TAPIZADA (VW); SALE EL ENSAYO DE LA MICROFIBRA Y LA D/TLD QUEDA EN LA OP 10. OP 10: SUSTRATO CONSIGNADO CON CONTROL VISUAL. OP 20: SENTIDO DEL PELO. OP 22: ALMACENAMIENTO WIP. OP 33: ALMACENAMIENTO WIP PARA SECADO DEL ADHESIVO (EL SECADO PASA DE LA OP 30 A LA 33). OP 40: ACTIVADO CON PISTOLA DE CALOR. OP 30 Y 31: EXTRACCION Y RESIDUOS ESPECIALES. OP 40, 42 Y 70: GUANTES CALOR-CORTE. OP 31 Y 70: RIESGOS DEL OPERARIO EN EL REPASO Y EN LA TERMINACION.',
+};

@@ -413,10 +413,12 @@ describe('canon de flujogramas', () => {
             // Solo las FUERTES (dos tercios o mas de los hermanos): desde el 157 Rev.C (06/10/2026) su
             // inyeccion se llama INYECCION y entra en la cuenta, y el 153 queda con una diferencia
             // debil y cierta — 3 de 5 almacenan el sustrato despues del control y el 153 lo lleva
-            // directo a PU. Una debil avisa; no es una diferencia inventada.
+            // directo a PU. Una debil avisa; no es una diferencia inventada. Desde el 21/10/2026 el
+            // 160 (Upper Trim) dibuja el WIP de secado del adhesivo (33): 4 de 6 hermanos lo tienen y
+            // el 153 no, otra debil y cierta.
             const dif = compararConHermanos(leer('153-ARMREST-DOOR-PANEL.json'), sin('153-ARMREST-DOOR-PANEL'));
             expect(dif.filter((d) => d.fuerte)).toEqual([]);
-            expect(dif.map((d) => `${d.sector}.${d.rasgo}`)).toEqual(['INYECCION.wip']);
+            expect(dif.map((d) => `${d.sector}.${d.rasgo}`)).toEqual(['INYECCION.wip', 'ADHESIVADO.wip']);
         });
     });
 });
