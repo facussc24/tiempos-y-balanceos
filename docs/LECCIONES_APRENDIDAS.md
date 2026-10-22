@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **22/10 — Un diseño se hace con tornillería de ferretería común de Argentina (bulón hexagonal DIN 933, tuerca común, cabeza tanque); lo que haría un carrocero o un fresado lo hace una pieza impresa** (*"no tienen fresados ni carrocero... considerá que vivimos en Argentina"*: viaje perdido). Memoria `feedback_tornilleria_comun_argentina`.
+
 - **21/10 — «Una bisagra ya hecha» en un diseño 3D es un MODELO ya hecho para imprimir, no una de chapa comprada; y antes de diseñar de cero una pieza estándar se busca la hecha** (*"te dije que de chapa nada... lo hacés en 3D"*). Memorias `feedback_licencias_3d_no_frenan_uso_interno` y `project_plantilla_perforado_insert`.
 
 - **20/10 — Una mejora implementada que depende de que me acuerde de un flag está apagada: lancé la vigilancia de la Bambu sin `--detector` y lo vio Fak** (*"imperdonable... es bastante grave"*). Viernes 23/10: `detector-impresion-olvidado-viernes`.
