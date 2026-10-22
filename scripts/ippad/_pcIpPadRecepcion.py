@@ -28,7 +28,7 @@ TODAS = dict(tam='100%')
 ANUAL = dict(tam='---', frec='Anual')
 ENSAYO = dict(reg='I-AC-027.I / P-10/I. / ARB')
 LOTE = ('Lote / trazabilidad', '', 'Lote en el certificado y en la etiqueta, registrado en ARB', 'Visual / certificado del proveedor', None)
-LIMPIO = ('Aspecto / limpieza', '', 'Sin suciedad, manchas ni contaminación; embalaje sin daños', 'Visual', None)
+LIMPIO = ('Aspecto / limpieza', '', 'Sin suciedad, manchas ni contaminación; embalaje sin daños', 'Visual / muestra límite (TBD: la define Calidad)', None)
 FLAMA = ('Flamabilidad', 'D', FLAMABILIDAD, 'Cámara de flamabilidad MC184', ENSAYO)
 
 
@@ -49,7 +49,7 @@ RECEPCION = [
          fuente='BOM arb 06/10/2026 + AMFE 149 op 10 (vinilo: espesor, color, flamabilidad D/TLD S10 O2) + ' + VINILO['fuente'],
          filas=[
              LIMPIO,
-             ('Color y grabado', '', 'Según patrón de cada color', 'Visual contra patrón', None),
+             ('Color y grabado', '', 'Según patrón de color (TBD: lo define Calidad)', 'Visual / patrón de color (TBD)', None),
              ('Espesor', '', VINILO['espesor'], VINILO['inst_espesor'], None),
              ('Peso', '', VINILO['peso'], VINILO['inst_peso'], None),
              ('Ancho del rollo', '', VINILO['ancho'], 'Cinta métrica MC403', None),
@@ -59,7 +59,7 @@ RECEPCION = [
     dict(prod='Vinilo de piping Sansuy Sanflex G KL naranja S202 — 124.505.0372-7 (solo L2 / L3)',
          fuente='BOM arb 06/10/2026 + BOM Barack V3 (25 mm de ancho) + AMFE 149 op 10 (piping: inspección visual y dimensional) + ' + SANFLEX['fuente'],
          filas=[
-             ('Color', '', 'Naranja S202 (certificado: Laranja S-202), igual al patrón', 'Visual contra patrón', None),
+             ('Color', '', 'Naranja S202 (certificado: Laranja S-202)', 'Visual / patrón de color (TBD)', None),
              ('Espesor', '', SANFLEX['espesor'], SANFLEX['inst_espesor'], None),
              ('Ancho del rollo', '', SANFLEX['ancho'], 'Cinta métrica MC403', None),
              ('Flamabilidad', '', 'Autoextinguible, máximo 100 mm/min', 'Certificado del proveedor', None),
@@ -68,9 +68,9 @@ RECEPCION = [
     dict(prod='Cordón de piping PVC 1,3 mm negro — 427VAR002COS01 (solo L2 / L3)',
          fuente='BOM arb 06/10/2026 + AMFE 149 op 10 (piping tubing: aspecto contra patrón por entrega; dimensional por informe del proveedor por lote; cantidad contra remito; lote en ARB)',
          filas=[
-             ('Aspecto', '', 'Sin rebaba, marcas ni deformación', 'Visual contra patrón de aspecto', None),
+             ('Aspecto', '', 'Sin rebaba, marcas ni deformación', 'Visual / muestra límite (TBD: la define Calidad)', None),
              ('Diámetro', '', '1,3 mm (tolerancia TBD)', 'Informe de control dimensional del proveedor', dict(frec='Por lote.')),
-             ('Color', '', 'Negro', 'Visual', None),
+             ('Color', '', 'Negro', 'Visual / patrón de color (TBD)', None),
              ('Cantidad', '', 'Igual al remito', 'Conteo contra remito', None),
              LOTE,
          ]),
@@ -85,9 +85,9 @@ RECEPCION = [
     dict(prod='Cinta adhesiva transfer Tesa 52110 (1500 mm x 200 m) — plan de recepción N° 1048',
          fuente='plan de recepcion 1048 Rev A (Tesa 52110 Transfer Glassine, 27/08/2025)',
          filas=[
-             ('Color', '', 'Transparente', 'Visual', None),
+             ('Color', '', 'Transparente', 'Certificado del proveedor', None),
              ('Espesor', '', '100 µm', 'Certificado del proveedor', None),
-             ('Liner', '', 'Glassine (papel cristal), color amarillo', 'Visual', None),
+             ('Liner', '', 'Glassine (papel cristal), color amarillo', 'Certificado del proveedor', None),
              ('Peso de la cinta sin liner', '', '100 ± 10 g/m²', 'Certificado del proveedor', None),
              ('Adhesión y fuerza de despegue', '', 'Según plan de control de recepción N° 1048', 'Certificado del proveedor', None),
              ('Vencimiento', '', 'Mínimo 12 meses', 'Etiqueta del producto', None),
@@ -96,7 +96,7 @@ RECEPCION = [
          fuente='plan de recepcion 729 Rev E (25/09/2025)',
          filas=[
              ('Certificado de calidad', '', 'Con número de partida', 'Certificado del proveedor', None),
-             ('Color', '', 'Incoloro a ámbar claro', 'Visual', None),
+             ('Color', '', 'Incoloro a ámbar claro', 'Visual contra la ficha técnica del proveedor (HT.PU-FA Rev. 4)', None),
              ('Viscosidad', '', '2400 cP ± 15 %', 'Certificado del proveedor', None),
              ('Vencimiento', '', 'Menos de 179 días, según certificado y ficha técnica', 'Certificado del proveedor', None),
          ]),
@@ -104,7 +104,7 @@ RECEPCION = [
          fuente='plan de recepcion 730 Rev C (25/09/2025)',
          filas=[
              ('Certificado de calidad', '', 'Con número de partida', 'Certificado del proveedor', None),
-             ('Color', '', 'Verde', 'Visual', None),
+             ('Color', '', 'Verde', 'Visual contra la ficha técnica del proveedor (HT.REGV Rev. 4)', None),
              ('Viscosidad', '', '50 cP ± 25 %', 'Certificado del proveedor', None),
              ('Vencimiento', '', 'Menos de 179 días, según certificado', 'Certificado del proveedor', None),
          ]),
@@ -142,7 +142,7 @@ RECEPCION = [
          filas=[
              ('Código del logo', '', '2HC.853.438', 'Visual contra remito', TODAS),
              ('Presencia del logo en el envío', 'D', 'Cantidad igual al remito', 'Conteo contra remito', TODAS),
-             ('Aspecto', '', 'Sin rebaba, marcas, deformación ni bordes filosos', 'Visual contra patrón', TODAS),
+             ('Aspecto', '', 'Sin rebaba, marcas, deformación ni bordes filosos', 'Visual / muestra límite (TBD: la define Calidad)', TODAS),
          ]),
     dict(prod='Clip de retención — 2HC.867.190.A (consignado VW)',
          fuente='AMFE 149 op 10 (clips faltantes o incorrectos; deteccion: inspeccion visual 100 % en recepcion) + BOM Barack V3 (L1 12 / L2-L3 10)',
@@ -152,5 +152,6 @@ RECEPCION = [
          filas=[('Código y cantidad', '', '2HC.075.701.HE, igual al remito', 'Visual / conteo contra remito', TODAS)]),
     dict(prod='Carcasa de difusor de aire (plate) — 2HC.819.728 (consignado VW)',
          fuente='AMFE 149 op 10 (plate dañado o incorrecto; deteccion: inspeccion visual 100 % en recepcion) + BOM Barack V3',
-         filas=[('Código y estado', '', '2HC.819.728, sin golpes ni roturas', 'Visual', TODAS)]),
+         filas=[('Código', '', '2HC.819.728', 'Visual contra remito', TODAS),
+                ('Estado', '', 'Sin golpes ni roturas', 'Visual / muestra límite (TBD: la define Calidad)', TODAS)]),
 ]

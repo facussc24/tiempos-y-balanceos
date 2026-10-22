@@ -53,6 +53,16 @@ PENDIENTES = [
      'El plan pone flamabilidad ≤ 70 mm/min (CVTC 52034, plano C00751801), adhesión ≥ 525 N/m (CVTC 35041), rayado, solidez a la luz, fogging '
      'y olor, con la cantidad de la hoja ADV, en laboratorio (la hoja ADV pide laboratorio acreditado por la terminal). El plan preliminar decía '
      'flamabilidad con 1 muestra por auditoría de producto. Los materiales se reciben con < 100 mm/min (planes de recepción y certificados)'),
+    ('Calidad', '10 a 130', 'Muestras límite (o fotos de aceptación y rechazo) de: limpieza de los materiales, aspecto del cordón y del logo, vinilo sin '
+     'roturas, vivo, espuma troquelada, Tesa en el ensamble, adhesivado (superficie, cantidad, grumos), tapizado, virolado, zona soldada y control final',
+     'Del IP PAD no hay muestra patrón, muestra límite, biblia de defectos ni fotos OK/NOK (buscado en el SGC, el legajo y los mails el 22/10/2026). '
+     'El plan escribe "Visual / muestra límite (TBD: la define Calidad)" en cada una'),
+    ('Calidad', '10 Recepción', 'Patrón de color de los vinilos Sanleather IV, del Sanflex G KL y del cordón de piping',
+     'Los hilos ya tienen patrón en sus planes de recepción (1043, 1063 y 1064)'),
+    ('Calidad', '40, 41 y 90', 'Tolerancias de la toma de costura de unión (6 mm), de la distancia de la 2ª costura al vivo (6 mm) y del ancho de la zona '
+     'pegada debajo de la costura (5 cm)', 'Los valores de costura de Patagonia dicen 6 mm justos y la hoja de operaciones 5 cm, sin tolerancia'),
+    ('Calidad', '110 Logo airbag (D)', 'Criterio de la prueba de fijación del logo (fuerza o método de aceptación)',
+     'El plano C00751801 fija el logo con 2 puntos de soldadura: el plan los cuenta. La fuerza de la prueba manual va TBD'),
     ('Calidad', '81 y 140 Retrabajos', 'Si VW aprobó los retrabajos de la pieza', 'Están en el flujograma 157, el AMFE 149 y la hoja de operaciones 985'),
     ('Leo Lattanzi', '10 Recepción', 'Densidad, espesor y código de la espuma de soporte',
      'Ficha del proveedor (Mentvil, calidad 45) y ficha técnica Barack Rev. A (19/11/2025): 45 kg/m³ y 3 mm; BOM006 y BOM V3: 427ESP002TRO01 '
