@@ -46,6 +46,10 @@ describe('_planControlLimpio.py --selftest (el plan de control limpio de Fak, 15
     expect(out).toMatch(/ok {2}medida no: hilo 30\/3Nm/);
     expect(out).toMatch(/ok {2}tolerancia si: 1,8 mm a 2,5 mm/);
     expect(out).toMatch(/ok {2}IP PAD: tipo de grampa, conteo con numero, contra remito +esperado=0/);
-    expect((out.match(/^ {2}ok {2}/gm) || []).length).toBe(66);
+    // ronda 3: las exenciones (identificar un insumo, conteo, remito, dispositivo) no abren agujeros
+    expect(out).toMatch(/ok {2}ronda 3, frena: Doble pespunte a 6 mm del borde/);
+    expect(out).toMatch(/ok {2}ronda 3, frena: Bien colocado en el dispositivo/);
+    expect(out).toMatch(/ok {2}ronda 3, pasa: vencimiento en meses +esperado=0/);
+    expect((out.match(/^ {2}ok {2}/gm) || []).length).toBe(77);
   });
 });

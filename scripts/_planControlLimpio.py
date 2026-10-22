@@ -55,7 +55,7 @@ RE_TBD = re.compile(r'\bTBD\b|\bCONFLICTO\b', re.I)
 # (?!\w) con acentos: "60 según" no es "60 s", "2 más" no es "2 m". La N de Newton va separada ("30/3N" es un hilo) y
 # el % seguido de una palabra es composicion ("100 % poliester"), no medida.
 # Un numero que va despues de una barra no es medida: "30/3Nm" es el titulo de un hilo y "200 / 40" una relacion.
-_NUM = r'(?<![/\d.,])(?<!/\s)\d+(?:[.,]\d+)?'
+_NUM = r'(?<![/\d.,])\d+(?:[.,]\d+)?'
 RE_MEDIDA = re.compile(_NUM + r'\s*(?:mm/min|kg/min|g/m2|g/m²|gr/m2|gr/m²|g/s|mm|cm|°\s*C|º\s*C|Nm|kN|kPa|mPa|cps|cP|[Cc]poise|'
                        r'kg|gr|g|segundos|seg|s|minutos|min|horas|hs|h|bar|m)(?!\w)|' + _NUM + r'\s*%(?!\s*[^\W\d_])|'
                        + _NUM + r'\s+N(?![\w°º])')
@@ -70,11 +70,18 @@ RE_INSUMO = re.compile(r'\b(bolsas?|etiquetas?|cajas?|caj[oó]n|separador(es)?|l
 # 6 mm", "Grampa cargada · Grampa Dorking 84/06 de 6 mm" (plan del IP PAD, 22/10)
 RE_IDENTIFICA = re.compile(r'\btipo\b|identificaci|\bc[oó]digo\b|\bmodelo\b', re.I)
 RE_MODELO = re.compile(r'[^\W\d_]{3,}\s+\d+/\d+')
+# ...salvo que la fila hable de una posicion, un paso o una cantidad: eso si se controla ("a 6 mm del borde",
+# "4 puntadas cada 16 mm", "mezcla 100/5 en peso") (auditor, ronda 3)
+RE_POSICION = re.compile(r'\ba\s+\d|\bcada\b|\bborde|\bdesde\b|\bhasta\b|debajo|encima|\bentre\b|distancia|posici|\bpeso\b|'
+                         r'mezcla|relaci|afuera|adentro|sobresal', re.I)
+# lo que se cuenta tiene su numero COMO cantidad ("L1: 12", "= 34", "5 por pieza", "total 11"), no "operacion 140"
+RE_CONTEO_NUM = re.compile(r'[:=]\s*\d|^\s*\d+\b|\btotal\s+\d', re.I)
 # un codigo: letras y numeros mezclados (427VAR002TAP01, ET-SATO-50X20, CARTSEP03, GE-102)
 RE_CODIGO = re.compile(r'\b(?=[A-Z0-9.\-]*[A-Z]{2})(?=[A-Z0-9.\-]*\d{2})[A-Z0-9][A-Z0-9.\-]{5,}\b')
 # una cantidad que se cuenta o un valor que se lee ("2 x 3 puntadas", "= 34", "1 envoltorio por pieza", "30/3", "3")
 RE_CANTIDAD = re.compile(r'=\s*\d|\d+\s*(x\s*\d+\s*)?(puntadas|unidades|un\b|piezas|pzas|grampas|aplix|orificios|clips|tornillos|'
-                         r'capas|cabos|pliegos|remaches)|^\s*\d+\s+[^\W\d_][^,;]*\bpor\b|^[\d\s.,/x×=+-]+$', re.I)
+                         r'capas|cabos|pliegos|remaches)|^\s*\d+\s+[^\W\d_][^,;]*\bpor\b|^[\d\s.,/x×=+-]+$|'
+                         r'\d+\s*(meses|d[ií]as|a[nñ]os|semanas)\b|\bremito\b', re.I)
 # control solo con los sentidos: visual, tactil, conteo, prueba funcional a mano, inspeccion del operador
 RE_SENTIDOS = re.compile(r'visual|t[aá]ctil|funcional|conteo|manual|inspecci[oó]n|operador', re.I)
 # lo que MIDE (para MEDIDA_VISUAL): instrumento, la medicion de la maquina, o el certificado/informe del proveedor
@@ -85,9 +92,9 @@ RE_MIDE = re.compile(r'regla|cinta m[eé]trica|calibre|\bMC\s*-?\d|balanza|panta
 RE_REF_INS = re.compile(r'muestra|patr[oó]n|l[ií]mite|cat[aá]logo|biblia|\bfotos?\b|calibre|plantilla|mylar|dispositivo|galga|'
                         r'regla|cinta m[eé]trica|\bMC\s*-?\d|balanza|pantalla|display|\bpanel\b|\bHMI\b|l[aá]ser|\bcert|'
                         r'informe|sistema arb|en (la )?etiqueta|\bficha\b|\bplano\b|'
-                        r'contra (la |el |los |las )?(orden|lista|planilla|muestra|pieza|plano|fotos?|remito|patr)', re.I)
+                        r'contra (la |el |los |las )?(orden|lista|planilla|muestra|pieza|plano|fotos?)', re.I)
 RE_REF_ESP = re.compile(r'muestra|patr[oó]n|l[ií]mite|cat[aá]logo|biblia|\bfotos?\b|\bplano\b|calibre|plantilla|mylar|'
-                        r'dispositivo|\btopes?\b|'
+                        r'contra (el |los |la )?(topes?|dispositivo)|'
                         r'l[ií]neas? (rojas?|marcad|de la mesa)|'
                         r'seg[uú]n (la |el |los |las )?(lista|orden|planilla|plano|ficha|hoja|especificaci|certificado|informe)',
                         re.I)
@@ -169,14 +176,15 @@ def revisar_criterio(esp, ins, proceso=False, caract=''):
     if not esp or not ins:
         return []
     sentidos = bool(RE_SENTIDOS.search(ins))
-    identifica = RE_INSUMO.search(esp) or RE_IDENTIFICA.search(caract or '') or RE_MODELO.search(esp)
+    identifica = RE_INSUMO.search(esp) or ((RE_IDENTIFICA.search(caract or '') or RE_MODELO.search(esp))
+                                           and not RE_POSICION.search(esp))
     medida = bool(RE_MEDIDA.search(esp)) and not identifica
     salida = []
     if medida and sentidos and not RE_MIDE.search(ins):
         salida.append('MEDIDA_VISUAL')
     if medida and not RE_TOLERANCIA.search(esp) and not RE_TBD.search(esp):  # un TBD ya la declara pendiente
         salida.append('SIN_TOLERANCIA')
-    contado = re.search(r'conteo', ins, re.I) and re.search(r'\d', esp)  # lo que se cuenta tiene su numero
+    contado = re.search(r'conteo', ins, re.I) and RE_CONTEO_NUM.search(esp)  # lo que se cuenta tiene su numero
     concreta = contado or RE_MEDIDA.search(esp) or RE_CODIGO.search(esp) or RE_CANTIDAD.search(esp) or RE_REF_ESP.search(esp) or RE_TBD.search(esp)
     if sentidos and not proceso and not concreta and not RE_REF_INS.search(ins):
         salida.append('CRITERIO_AMBIGUO')
@@ -410,6 +418,20 @@ def selftest():
                 ('Clips', '', 'L1: 12 / L2 y L3: 10', 'Conteo visual'),
                 ('Cantidad', '', 'Igual al remito', 'Conteo contra remito'),
                 ('Posición', '', 'Alineada con el sustrato, contra los topes del dispositivo', 'Visual')]), R, 0, []),
+            # ronda 3 (22/10): las exenciones no abren agujeros; cada caso tiene que frenar solo
+            *[(f'ronda 3, frena: {e} · {i}', p(f'r3_{k}', [(c, '', e, i)]), R, 1, [cod]) for k, (c, e, i, cod) in enumerate([
+                ('Tipo de costura', 'Doble pespunte a 6 mm del borde', 'Visual', 'MEDIDA_VISUAL'),
+                ('Tipo de puntada', '4 puntadas cada 16 mm', 'Visual', 'MEDIDA_VISUAL'),
+                ('Identificación de la pieza', 'Código 2HC.885.081 RL1, a 30 ± 5 mm del borde', 'Visual', 'MEDIDA_VISUAL'),
+                ('Grampas', 'Grampa Dorking 84/06 a 10 mm del borde', 'Visual', 'MEDIDA_VISUAL'),
+                ('Grampas', 'Grampas firmes y sin salir, operación 140', 'Conteo visual', 'CRITERIO_AMBIGUO'),
+                ('Grampas', 'Bien colocados en las 2 puntas', 'Conteo visual', 'CRITERIO_AMBIGUO'),
+                ('Logo', 'Sin golpes ni roturas', 'Visual / conteo contra remito', 'CRITERIO_AMBIGUO'),
+                ('Logo', 'Bien colocado en el dispositivo', 'Visual', 'CRITERIO_AMBIGUO'),
+                ('Logo', 'Presente / 75 mm afuera de la pieza', 'Visual / muestra patrón', 'MEDIDA_VISUAL'),
+                ('Modelo de cinta de manipulación', 'Presente; 75 mm afuera de la pieza', 'Visual', 'MEDIDA_VISUAL')])],
+            ('ronda 3, pasa: vencimiento en meses', p('r3_meses', [
+                ('Vencimiento', '', '6 Meses / Desde producido', 'Visual')]), R, 0, []),
             ('IP PAD: 5 cm debajo de la costura, a ojo', p('ippad_rojo', [
                 ('Zona de adhesivo', '', 'Únicamente 5 cm debajo de la costura', 'Visual')]), R, 1, ['MEDIDA_VISUAL']),
         ]
