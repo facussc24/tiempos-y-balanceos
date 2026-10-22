@@ -272,10 +272,18 @@ Gate: `_planControlLimpio.py`, `TBD_CON_DUENO` (ROJO en cualquier modo).
    - Alcance: es la notacion del plan de control. El AMFE sigue escribiendo `D/TLD` (regla
      `caracteristicas-especiales.md`, columna "Documento para VW"). La sigla se sigue COPIANDO de la causa del
      AMFE con su S y su O: esto cambia como se escribe, no cuando va.
+   - **PROVISORIO hasta el viernes 23/10 (Fak: *"dejalo pendiente para analizar lo de D/TLD, asi el viernes buscamos
+     evidencia fuerte de que hacer en estos casos"*): la `D` va solo si el plano del cliente la designa** (casillero «Sicherh.-Dok. / Safety doc.» = `TLD` del
+     cajetin VW, VW 01058 §5.1.4). **Si el plano no la designa, la critica se escribe `CC`** (Fak, 22/10/2026, sobre
+     el IP PAD, plano SAIC C00751801 sin ese casillero: *"el plano tiene D/TLD o por que carajo pusimos una D... y si
+     cambias la D por CC... y el de APB tambien, misma logica: pone CC si el plano no dice D/TLD"*). Casos medidos:
+     APB trasero 2HC.885.081 TZ 004 dice `TLD` -> D; IP PAD C00751801 no lo tiene -> CC. Antes de poner una D, abrir
+     el cajetin del plano vigente (skill `leer-planos`). Abierto para el viernes 23/10: si la VDA 6.3 de VW (D en toda
+     comprobacion obligatoria) cambia esto (vencimiento `dtld-vs-cc-hallazgo-viernes`).
 6. **El plan que se entrega como definitivo no lleva `TBD` ni explicaciones de `CONFLICTO` adentro de las
    celdas** (Fak, 15/10: *"luego de resolver todas estas dudas... vamos a armar un plan de control verdadero sin
-   esas cosas"*). Mientras haya dudas, la version de trabajo puede tenerlas, con la lista aparte; las dudas se
-   resuelven ANTES de mandarlo como definitivo.
+   esas cosas"*). Mientras haya dudas, la version de trabajo puede tener `TBD` (nunca `CONFLICTO`, punto 8 ter),
+   con la lista aparte; las dudas se resuelven ANTES de mandarlo como definitivo.
    **Gate de los puntos 3 a 6 (tanda 12, 17/10/2026)**: `python scripts/_planControlLimpio.py "<plan.xls>"` frena
    (sale con 1) si la columna CLASIF. dice `D/TLD` o lleva dos marcas en una celda; con `--rearmado` frena ademas el
    amarillo y las notas de la tabla, y con `--definitivo` el `TBD`; el `CONFLICTO` frena siempre (punto 8 ter). Lo de arriba del encabezado

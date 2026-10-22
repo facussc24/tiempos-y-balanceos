@@ -34,6 +34,7 @@ describe('_planControlLimpio.py --selftest (el plan de control limpio de Fak, 15
     // Fak 22/10/2026: "lo define Calidad no va... simplemente TBD" (skill §3.6)
     expect(out).toMatch(/ok {2}TBD que dice quien lo define, rearmado +esperado=1/);
     expect(out).toMatch(/ok {2}TBD pelado y TBD con una nota, rearmado +esperado=0/);
-    expect((out.match(/^ {2}ok {2}/gm) || []).length).toBe(16);
+    expect(out).toMatch(/ok {2}nota con CONFLICTO, correccion +esperado=1/);
+    expect((out.match(/^ {2}ok {2}/gm) || []).length).toBe(17);
   });
 });

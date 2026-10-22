@@ -6,8 +6,8 @@ PC CENTRAL y PC LATERAL), en el MISMO formulario de Calidad.
 Pedido de Fak, 15/10/2026: armar la skill de planes de control y despues "mejorar los de los APC...
 aunque no coincida perfectamente con el AMFE o flujograma... con todos los parametros disponibles".
 Camino: skill `planes-de-control` §5 (el que Fak aprobo el 06/10 con el PC de Nicolas): copia, cada
-fila nueva o cambiada en amarillo con un comentario (fuente + ANTES), lo que no tiene papel va TBD o
-CONFLICTO y a la lista aparte. Las filas que quedan como las tenia Calidad van en blanco.
+fila nueva o cambiada en amarillo con un comentario (fuente + ANTES), lo que no tiene papel va
+TBD y a la lista aparte (nunca CONFLICTO: skill §5 punto 8 ter). Las filas que quedan como las tenia Calidad van en blanco.
 
 Fuentes (leidas el 15/10/2026; detalle en la lista que acompaña el archivo):
   flujograma 152 Rev.A del 15/10/2026 (tools/flowchart/data/152-APOYACABEZAS.json) - manda la numeracion

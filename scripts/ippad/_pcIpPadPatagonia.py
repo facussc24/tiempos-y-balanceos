@@ -5,7 +5,7 @@ _pcIpPadPatagonia.py — propuesta de Ingenieria del plan de control de COSTURA 
 Pedido: Manuel Meszaros a Fak, 19/10/2026 09:36 (tercera prioridad: "el plan de control del IP PAD (3 referencias)");
 PEDIDO 14 de la PC principal (22/10/2026); Fak, 22/10: "nico no hizo un carajo... es una tarea 100% tuya".
 Camino: skill `planes-de-control` §5 punto 3, rearmado entero = archivo limpio (sin amarillo ni notas) y los cambios en
-la lista aparte; una caracteristica por fila; la D sola en rojo; ninguna celda remite a la hoja de operaciones.
+la lista aparte; una caracteristica por fila; la critica en rojo (CC: el plano no designa D/TLD, Fak 22/10/2026); ninguna celda remite a la hoja de operaciones.
 
 Formulario: el del plan de Calidad `PC INYECCION PLASTICA IP PAD.xlsx` (legajo 12-, Rev A del 14/06/2026, formulario
 I-AC-005.1 - Jun.26 - C), de esta misma pieza. Ese plan cubre la recepcion de la resina y la inyeccion del sustrato (20 a
@@ -282,11 +282,12 @@ def filas_proceso():
     R += [
         fila(f110, **b110, n='1', proc='Parámetros de ultrasonido', esp=ULTRASONIDO, inst='Visual en el panel de la máquina', **SETUP),
         # logo airbag: D/TLD S9 O2 (AMFE 149 op 110, "logo airbag faltante o mal soldado"); el plano del cliente C00751801
-        # tiene el logo en la lista de materiales (pag. 3) y sus 2 alojamientos con nervio antierror (pag. 6)
-        fila(f110, n='2', prod='Logo airbag presente', clas='D', esp='Logo 2HC.853.438 presente', inst='Visual contra el plano', **AUTO),
-        fila(f110, n='3', prod='Posición del logo airbag', clas='D', esp='En sus 2 alojamientos con nervio antierror (plano C00751801, pág. 6)',
+        # tiene el logo en la lista de materiales (pag. 3) y sus 2 alojamientos con nervio antierror (pag. 6). El plano no designa
+        # D/TLD: en el plan va CC (Fak 22/10/2026)
+        fila(f110, n='2', prod='Logo airbag presente', clas='CC', esp='Logo 2HC.853.438 presente', inst='Visual contra el plano', **AUTO),
+        fila(f110, n='3', prod='Posición del logo airbag', clas='CC', esp='En sus 2 alojamientos con nervio antierror (plano C00751801, pág. 6)',
              inst='Visual contra el plano', **AUTO),
-        fila(f110, n='4', prod='Fijación del logo airbag', clas='D', esp='El logo no se mueve al empujarlo a mano (fuerza de prueba TBD)', inst='Prueba manual de fijación', **AUTO),
+        fila(f110, n='4', prod='Fijación del logo airbag', clas='CC',esp='El logo no se mueve al empujarlo a mano (fuerza de prueba TBD)', inst='Prueba manual de fijación', **AUTO),
         fila(f110, n='5', prod='Resistencia de la soldadura', esp='TBD', inst='Ensayo destructivo', tam='TBD', frec='TBD', reg='Registro de control', resp=OC, reac=REAC),
         fila(f110, n='6', prod='Aspecto de la zona soldada', esp='Sin despegues, cortes ni manchas', inst='Visual / muestra límite (TBD)', **AUTO),
         fila(f110, n='7', prod='Carcasa de difusor 2HC.819.728', esp='Montada en su alojamiento, según plano C00751801', inst='Visual contra el plano', **AUTO),

@@ -15,7 +15,8 @@ De donde sale cada fila (relevado el 22/10/2026):
     tiene papel va TBD y a la lista de pendientes
   - consignados de VW (logo airbag, clip, tornillo, carcasa de difusor): AMFE 149 op 10, "Inspección visual 100% en recepcion"
   - siglas: se COPIAN del AMFE 149 op 10 (Supabase, updated_at 15/10/2026): D/TLD en flamabilidad del vinilo (S10 O2) y de
-    la espuma (S10 O2), y en el logo airbag (S9 O2). En el plan de control se escribe D sola (skill planes-de-control §5.5).
+    la espuma (S10 O2), y en el logo airbag (S9 O2). En el plan de control se escribe CC: el plano C00751801 (SAIC) no
+    designa D/TLD (Fak 22/10/2026: "cambia la D por CC... si el plano no dice D/TLD"; skill planes-de-control §5.5).
   - responsable, muestra y frecuencia: como el plan de inyeccion de Calidad de esta pieza (1 muestra, por lote de entrega,
     P-10/I. / ARB, Auditor de recepcion, P-14.)
 Instrumentos contra el cronograma de calibracion 2026 Rev.7: cinta de recepcion MC403; camara de flamabilidad MC184.
@@ -29,7 +30,7 @@ ANUAL = dict(tam='---', frec='Anual')
 ENSAYO = dict(reg='I-AC-027.I / P-10/I. / ARB')
 LOTE = ('Lote / trazabilidad', '', 'Lote en el certificado y en la etiqueta, registrado en ARB', 'Visual / certificado del proveedor', None)
 LIMPIO = ('Aspecto / limpieza', '', 'Sin suciedad, manchas ni contaminación; embalaje sin daños', 'Visual / muestra límite (TBD)', None)
-FLAMA = ('Flamabilidad', 'D', FLAMABILIDAD, 'Cámara de flamabilidad MC184', ENSAYO)
+FLAMA = ('Flamabilidad', 'CC', FLAMABILIDAD, 'Cámara de flamabilidad MC184', ENSAYO)
 
 
 def _hilo(codigo, plan, titulo, color):
@@ -143,7 +144,7 @@ RECEPCION = [
          fuente='AMFE 149 op 10 (logo faltante o mal posicionado, D/TLD S9 O2; deteccion: inspeccion visual 100 % en recepcion) + BOM arb',
          filas=[
              ('Código del logo', '', '2HC.853.438', 'Visual contra remito', TODAS),
-             ('Presencia del logo en el envío', 'D', 'Cantidad igual al remito', 'Conteo contra remito', TODAS),
+             ('Presencia del logo en el envío', 'CC','Cantidad igual al remito', 'Conteo contra remito', TODAS),
              ('Aspecto', '', 'Sin rebaba, marcas, deformación ni bordes filosos', 'Visual / muestra límite (TBD)', TODAS),
          ]),
     dict(prod='Clip de retención — 2HC.867.190.A (consignado VW)',

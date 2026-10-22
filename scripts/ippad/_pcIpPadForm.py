@@ -172,8 +172,8 @@ def escribir(ws, filas, salto_antes_de=()):
             cel.Value = valor
             if 'TBD' in str(valor) or 'CONFLICTO' in str(valor):
                 cel.Font.Color = ROJO_FUENTE
-            if campo == 'clas' and str(valor).strip() == 'D':
-                cel.Font.Color = ROJO_FUENTE   # la casa marca la D en rojo (planes de Calidad, VDA 6.3 de VW 6.2.3)
+            if campo == 'clas' and str(valor).strip() in ('D', 'CC'):
+                cel.Font.Color = ROJO_FUENTE   # la casa marca la critica en rojo (planes de Calidad, VDA 6.3 de VW 6.2.3)
                 cel.Font.Bold = True
         if f.get('_une'):
             # segunda fila de primera/ultima pieza: la caracteristica se combina con la de arriba (columnas E a J)

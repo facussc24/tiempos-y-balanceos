@@ -15,7 +15,7 @@ Siempre (cualquier plan de control, tambien las correcciones de pocas celdas):
   VARIAS_MARCAS  ROJO   dos marcas o mas en la misma celda de CLASIF.: una caracteristica por fila (§5 punto 4:
                         con varias en la misma celda se lee "SC SC SC")
   SIGLA_RARA     AVISO  una marca que no es D, SC ni CC (`caracteristicas-especiales.md` punto 5: no se adivina)
-  CONFLICTO      ROJO   "CONFLICTO" adentro de una celda de la tabla, en cualquier modo (§5 punto 8 ter, Fak 22/10/2026: dos
+  CONFLICTO      ROJO   "CONFLICTO" adentro de una celda o de una nota de la tabla, en cualquier modo (§5 punto 8 ter, Fak 22/10/2026: dos
                         papeles que no coinciden se resuelven buscando la decision y, si sigue la duda, preguntandole
                         a Fak; un plan que va a Calidad no muestra "CONFLICTO: 45 / 35")
   TBD_CON_DUENO  ROJO   un TBD que dice quien lo define ("(TBD: la define Calidad)", "TBD (equipo de Calidad)"), en
@@ -66,12 +66,14 @@ def leer(ruta):
                     color = libro.colour_map.get(xf.background.pattern_colour_index)
                     if xf.background.fill_pattern and color == (255, 255, 0):
                         amarillas.add((r, c))
-            hojas.append({'nombre': s.name, 'celdas': celdas, 'amarillas': amarillas, 'notas': set(s.cell_note_map)})
+            notas_texto = {k: str(getattr(n, 'text', '') or '') for k, n in s.cell_note_map.items()}
+            hojas.append({'nombre': s.name, 'celdas': celdas, 'amarillas': amarillas, 'notas': set(s.cell_note_map),
+                          'notas_texto': notas_texto})
         return hojas
     import openpyxl
     libro = openpyxl.load_workbook(ruta)
     for s in libro.worksheets:
-        celdas, amarillas, notas = {}, set(), set()
+        celdas, amarillas, notas, notas_texto = {}, set(), set(), {}
         for fila in s.iter_rows():
             for cel in fila:
                 r, c = cel.row - 1, cel.column - 1
@@ -82,7 +84,8 @@ def leer(ruta):
                     amarillas.add((r, c))
                 if cel.comment is not None:
                     notas.add((r, c))
-        hojas.append({'nombre': s.title, 'celdas': celdas, 'amarillas': amarillas, 'notas': notas})
+                    notas_texto[(r, c)] = str(cel.comment.text or '')
+        hojas.append({'nombre': s.title, 'celdas': celdas, 'amarillas': amarillas, 'notas': notas, 'notas_texto': notas_texto})
     return hojas
 
 
@@ -127,6 +130,10 @@ def revisar(hojas, rearmado=False, definitivo=False):
                 hallazgos.append(('ROJO', 'TBD_CON_DUENO', nombre, celda(r, c), v.replace('\n', ' / ')[:80]))
             if definitivo and RE_TBD.search(v):
                 hallazgos.append(('ROJO', 'TBD', nombre, celda(r, c), v.replace('\n', ' / ')[:80]))
+        # una nota de Excel con CONFLICTO tambien sale con el plan (auditor 22/10: el APC del 15/10 tenia 3)
+        for (r, c), t in sorted(h.get('notas_texto', {}).items()):
+            if r > fila0 and RE_CONFLICTO.search(t):
+                hallazgos.append(('ROJO', 'CONFLICTO', nombre, celda(r, c) + ' (nota)', t.replace('\n', ' / ')[:80]))
         if rearmado:
             for (r, c) in sorted(h['amarillas']):
                 if r > fila0:
@@ -168,7 +175,7 @@ def main(argv):
 
 # ---------------------------------------------------------------- selftest (sin archivos reales: el CI no los tiene)
 
-def _plan(dir_, nombre, filas, amarillas=(), notas=(), banner_amarillo=False, con_clasif=True):
+def _plan(dir_, nombre, filas, amarillas=(), notas=(), banner_amarillo=False, con_clasif=True, texto_nota='fuente + ANTES'):
     import openpyxl
     from openpyxl.comments import Comment
     from openpyxl.styles import PatternFill
@@ -189,7 +196,7 @@ def _plan(dir_, nombre, filas, amarillas=(), notas=(), banner_amarillo=False, co
     for i in amarillas:
         s.cell(row=7 + i, column=8).fill = amarillo
     for i in notas:
-        s.cell(row=7 + i, column=8).comment = Comment('fuente + ANTES', 'F.Santoro')
+        s.cell(row=7 + i, column=8).comment = Comment(texto_nota, 'F.Santoro')
     ruta = os.path.join(dir_, nombre + '.xlsx')
     wb.save(ruta)
     return ruta
@@ -223,6 +230,8 @@ def selftest():
             ('CONFLICTO, rearmado (version de trabajo)', conf, ['--rearmado'], 1, ['CONFLICTO']),
             ('TBD que dice quien lo define, rearmado', dueno, ['--rearmado'], 1, ['TBD_CON_DUENO']),
             ('TBD pelado y TBD con una nota, rearmado', tbd_nota, ['--rearmado'], 0, []),
+            ('nota con CONFLICTO, correccion', _plan(d, 'notaconf', [('', '45 ± 5 kg/m³')], notas=[0],
+                                                    texto_nota='CONFLICTO: 45 (ficha) / 35 (arb)'), [], 1, ['CONFLICTO']),
             ('sin columna CLASIF.', _plan(d, 'sin', [('SC', 'x')], con_clasif=False), [], 2, ['SIN_CLASIF']),
         ]
         malos = 0

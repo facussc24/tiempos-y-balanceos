@@ -45,7 +45,7 @@ PENDIENTES = [
      'El plan las deja en TBD. La hoja de operaciones dice frecuencia "1" en las hojas 30, 32 y 34, sin unidad'),
     ('Calidad', '32 Control con Mylar', 'Frecuencia del control del contorno',
      'El plan pone las dos: 1 pieza en arranque, mantenimiento, corte de energía y problema de calidad (hoja de operaciones) y 100 % por lote (AMFE 149)'),
-    ('Calidad', '10 y 110 Logo airbag (D)', 'Registro de los controles del logo airbag, que llevan D, y si el P-09/I alcanza como plan de reacción',
+    ('Calidad', '10 y 110 Logo airbag (CC)', 'Registro de los controles del logo airbag, que llevan CC, y si el P-09/I alcanza como plan de reacción',
      'El plan va con autocontrol al 100 %, como el AMFE 149'),
     ('Calidad', 'Encabezado', 'Número de plan y equipo. La próxima revisión la abre Calidad', 'El plan va con la Rev. 0 del plan preliminar (05/04/2025) '
      'y el contacto y el equipo del plan de inyección del IP PAD (G. Cal; C. Rodríguez / A. Aguayo)'),
@@ -67,7 +67,7 @@ PENDIENTES = [
     ('Calidad', '10, 40, 41, 50 y 90', 'Tolerancias de la toma de costura de unión (6 mm), de la distancia de la 2ª costura al vivo (6 mm), del ancho de la zona '
      'pegada debajo de la costura (5 cm), del espesor de la cinta Tesa (100 µm) y del espesor de la espuma de soporte (3 mm)',
      'Los valores de costura de Patagonia dicen 6 mm justos y la hoja de operaciones 5 cm, sin tolerancia. La ficha técnica de la espuma (FT141) dice 3 mm sin tolerancia'),
-    ('Calidad', '110 Logo airbag (D)', 'Criterio de la prueba de fijación del logo (fuerza o método de aceptación)',
+    ('Calidad', '110 Logo airbag (CC)', 'Criterio de la prueba de fijación del logo (fuerza o método de aceptación)',
      'El plan controla presencia y posición contra el plano C00751801 (lista de materiales y los 2 alojamientos con nervio antierror) y la '
      'fijación con una prueba manual en la 110 y en el control final, con la fuerza TBD'),
     ('Calidad', '81 y 140 Retrabajos', 'Si VW aprobó los retrabajos de la pieza', 'Están en el flujograma 157, el AMFE 149 y la hoja de operaciones 985'),
@@ -92,12 +92,12 @@ INGENIERIA = [
     ('Ingeniería', 'AMFE 149', 'Op 120: el control de detección de "aplicar calor excesivamente" dice "undefined"', 'Supabase, updated_at 15/10/2026'),
     ('Ingeniería', 'AMFE 149', 'Op 70: el elemento "Parámetros presión y temperatura" tiene la función "Asegurar alineación de costura"', 'Supabase, updated_at 15/10/2026'),
     ('Ingeniería', 'AMFE 149', 'Op 10: "Identificación o documentación de lote faltante" repetido 3 veces; "Piping tubing negro (código TBD)" es el 427VAR002COS01; '
-     'la espuma dice 3,15 mm 45 kg/m³ y desde el 05/10/2026 es la del Insert (427ESP001TRO01, 35 kg/m³, 3 mm; FT141 y mail de C. Baptista). '
+     'la espuma dice 3,15 mm 45 kg/m³ y desde el 05/10/2026 es la del Insert (427ESP001TRO01 en la BOM del arb; 35 kg/m³ y 3 mm de la FT141; mail de C. Baptista). '
      'La ficha técnica FT149 del IP PAD sigue diciendo 45 kg/m³', 'BOM arb del 06/10/2026'),
     ('Ingeniería', 'AMFE 149', 'Op 110 no tiene el ensamble de la carcasa, los clips y los tornillos', 'El flujograma dice "soldadura con ultrasonido y ensamble"'),
     ('Ingeniería', 'AMFE 149', 'La flamabilidad nombra la TL 1010; el plano pide CVTC 52034 ≤ 70 mm/min', 'Plano C00751801 y hoja ADV PKK1'),
     ('Ingeniería', 'Siglas', 'El AMFE 149 marca D/TLD la flamabilidad del vinilo y de la espuma y el logo airbag; el plano C00751801 no designa D/TLD '
-     '(la tabla KCDS marca solo AQC en la perilla del aireador, que es consignada)', 'El plan copia la D del AMFE'),
+     '(la tabla KCDS marca solo AQC en la perilla del aireador, que es consignada)', 'El plan escribe CC'),
     ('Ingeniería', 'Costura', 'Toma de la costura de unión: 6 mm exactos (desvío de Barack) contra 8 ± 1 mm de la LAH.000.881.N, sin nota en el plano',
      'La LAH pide que los desvíos acordados con VW queden en el plano'),
     ('Ingeniería', 'Vivo L2 / L3', 'El informe del 23/03/2026 propone pegar el vivo con hot-melt; la hoja de operaciones y el flujograma lo cosen', 'El plan va cosido'),
