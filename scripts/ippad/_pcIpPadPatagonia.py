@@ -156,7 +156,7 @@ def filas_proceso():
         ('Unión directa de los paños (solo L1)', 'Paños unidos sin desfasaje', 'Visual / muestra límite (TBD: la define Calidad)'),
     ], start=2):
         R += doble(f40, {}, str(n), prod=prod, esp=esp, inst=inst)
-    R.append(fila(f40, n='7', prod='Vinilo sin roturas en la zona de costura', esp='Sin roturas ni perforaciones', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO))
+    R.append(fila(f40, n='8', prod='Vinilo sin roturas en la zona de costura', esp='Sin roturas ni perforaciones', inst='Visual / muestra límite (TBD: la define Calidad)', **AUTO))
 
     # --- 41 segunda costura de union, solo L2 y L3
     f41 = f'{FLUJO} op 41 + {COSTURA} + {HO} hoja 41 + {AMFE} op 41 + {PRELIM}'
@@ -225,7 +225,7 @@ def filas_proceso():
     b80 = dict(op='Operación 80.', nom='Control de calidad adhesivado', maq='Piezas NOK de referencia en el puesto (a confirmar por Calidad)')
     ctl80 = dict(tam='TBD', frec='TBD', reg='Registro de control', resp=OC, reac=REAC)
     R += [
-        fila(f80, **b80, n='1', prod='Adhesivo uniforme en la zona vista, sin grumos', esp='Sin grumos ni zonas desparejas', inst='Visual y táctil contra las piezas NOK del puesto', **ctl80),
+        fila(f80, **b80, n='1', prod='Adhesivo uniforme en la zona vista, sin grumos', esp='Sin grumos ni zonas desparejas', inst='Visual y táctil / muestra límite (TBD: la define Calidad)', **ctl80),
         fila(f80, n='2', prod='Adhesivo en el vinilo', esp='Sin falta ni exceso de adhesivo', inst='Visual contra las piezas NOK del puesto (falta y exceso de adhesivo)', **ctl80),
         fila(f80, n='3', prod='Adhesivo en el sustrato', esp='Sin falta de adhesivo', inst='Visual contra las piezas NOK del puesto (falta de adhesivo en el sustrato)', **ctl80),
     ]
@@ -319,7 +319,7 @@ def filas_proceso():
         fila(f130, n='4', prod='Costura vista alineada y paralela al borde', esp='Sin costura vista torcida ni corrida', inst='Visual / muestra límite (TBD: la define Calidad)', **fin),
         fila(f130, n='5', prod='Logo airbag presente', esp='Logo 2HC.853.438 presente', inst='Visual contra el plano', **fin),
         # plan preliminar (inspeccion final: "terminacion con soldadura ultrasonido ok") y AMFE 149 op 120 ("verificar fijacion y soldaduras")
-        fila(f130, n='6', prod='Logo airbag soldado', esp='El logo no se mueve al empujarlo a mano (fuerza de prueba TBD)', inst='Prueba manual de fijación', **fin),
+        fila(f130, n='6', prod='Fijación del logo airbag', esp='El logo no se mueve al empujarlo a mano (fuerza de prueba TBD)', inst='Prueba manual de fijación', **fin),
         fila(f130, n='7', prod='Logo airbag sin daños', esp='Sin rayas, golpes ni marcas', inst='Visual / muestra límite (TBD: la define Calidad)', **fin),
         fila(f130, n='8', prod='Carcasa de difusor', esp='Carcasa 2HC.819.728 montada, según plano C00751801', inst='Visual contra el plano', **fin),
         fila(f130, n='9', prod='Clips', esp='L1: 12 / L2 y L3: 10', inst='Conteo visual', **fin),

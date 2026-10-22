@@ -23,10 +23,9 @@ NOMBRE_SIGLAS = 'Propuesta de siglas AMFE 150 APB trasero central 22-10-2026'
 
 # (para quien, operacion, que falta, de donde sale lo que hay hoy)
 PENDIENTES = [
-    ('Calidad', '10 Recepción', 'Plan de recepción del vinilo Sansuy 197.025.0425-6: tolerancia del ancho del rollo y código del medidor de espesor, '
-     'la balanza y la cinta métrica de recepción',
-     'El plan toma del plan Rev. 1 el espesor (1,8 a 2,5 mm) y el gramaje (800 a 1000 g/m²). En el cronograma 2026 Rev. 7 los medidores de '
-     'espesor MC006 y MC369 están en Laboratorio, la cinta métrica MC406 en Mesa de corte y la de recepción es la MC403'),
+    ('Calidad', '10 Recepción', 'Plan de recepción del vinilo Sansuy 197.025.0425-6: tolerancia del ancho del rollo y código de la balanza de recepción',
+     'El plan toma del plan Rev. 1 el espesor (1,8 a 2,5 mm) y el gramaje (800 a 1000 g/m²), y usa el micrómetro MC405 y la cinta MC403, que el '
+     'cronograma 2026 Rev. 7 tiene en Recepción de Calidad'),
     ('Calidad', '10 Recepción', 'Planes de recepción de los fieltros 427TEL003COR01 y RES30020TIT, del Aplix APLIX_225LLB, del cierre 427VAR001COS01 y de la cinta sarga 5825',
      'No hay planes de estos códigos. El plan usa los valores del AMFE (480 g/m², 270 a 320 g/m², cierre 360 ± 1 mm). La cinta: el arb tiene '
      'la 5825 de 24 mm; el AMFE y el plan Rev. 1 nombran la 5826 de 25 mm con espesor 1,2 ± 0,1 mm'),
@@ -188,7 +187,7 @@ def main():
     ws = wb.active
     ws.title = 'Pendientes'
     hoja(ws, 'Plan de control APB trasero central Patagonia — lo que falta definir',
-         '2HC.885.081 RL1 · propuesta de Ingeniería del 19/10/2026', ('Quién', 'Operación', 'Qué falta', 'Lo que hay hoy'),
+         '2HC.885.081 RL1 · propuesta de Ingeniería del 22/10/2026', ('Quién', 'Operación', 'Qué falta', 'Lo que hay hoy'),
          [x for x in PENDIENTES if x[0] != 'Ingeniería'], (14, 18, 62, 62))   # lo de Ingenieria no va a Calidad (auditor, 19/10)
     wb.properties.creator = 'Barack Mercosul'
     wb.properties.lastModifiedBy = 'Barack Mercosul'

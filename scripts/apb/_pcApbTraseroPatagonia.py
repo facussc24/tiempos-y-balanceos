@@ -162,8 +162,8 @@ def filas_proceso():
         ('Margen (toma) de costura', '8 ± 1 mm', 'Regla (código MC TBD)', True),
         ('Densidad de puntada', '4 puntadas en 16 mm ± 1 mm', 'Regla (código MC TBD)', True),
         ('Atraque', '3 a 4 puntadas, una vez atrás y una adelante', 'Visual', False),
-        ('Cinta de manipulación: largo cosido (parte de adentro)', '25 mm (tolerancia TBD)', 'Regla (código MC TBD)', False),
-        ('Cinta de manipulación: largo sin coser (afuera de la pieza)', '75 mm (tolerancia TBD)', 'Regla (código MC TBD)', False),
+        ('Cinta de manipulación: largo cosido (parte de adentro)', '25 mm (tolerancia TBD)', 'Regla (código MC TBD)', True),
+        ('Cinta de manipulación: largo sin coser (afuera de la pieza)', '75 mm (tolerancia TBD)', 'Regla (código MC TBD)', True),
         ('Cierre cosido en la abertura de la funda', 'Cierre completo y alineado con la abertura', 'Visual / muestra límite (TBD: la define Calidad)', False),
         ('Costura completa', 'Sin costura floja, salteada ni faltante', 'Visual / muestra límite (TBD: la define Calidad)', True),
         ('Funda sin arrugas ni pliegues', 'Sin arrugas ni pliegues', 'Visual / muestra límite (TBD: la define Calidad)', True),
@@ -199,7 +199,7 @@ def filas_proceso():
     ], start=3):
         R += doble(f50, {}, f'{n}.0', prod=prod, esp=esp, inst=inst)
     # el AMFE 150 op 50 pide el peso "con hoja de registro" (valor medible); la tolerancia va a la lista
-    R.append(fila(f50, n='8.0', prod='Peso de la pieza espumada', esp='TBD', inst='Balanza (código TBD)',
+    R.append(fila(f50, n='9.0', prod='Peso de la pieza espumada', esp='TBD', inst='Balanza (código TBD)',
                   tam='100%', frec='Por lote', reg='Hoja de registro', resp='Operador de producción', reac='Según P-09/I.'))
 
     # --- 60 tapizado
@@ -215,8 +215,8 @@ def filas_proceso():
         ('Posición del felt respecto del vinilo', 'Felt centrado, sin corrimiento', 'Visual / muestra límite (TBD: la define Calidad)'),
         ('Costura alineada', 'Según calibre', 'Calibre de tapizado (código MC TBD)'),
         ('Funda sin desgarros ni perforaciones', 'Sin desgarros ni perforaciones', 'Visual / muestra límite (TBD: la define Calidad)'),
-        ('Cierre de la funda', 'Cerrado completo, sin separación', 'Visual y táctil / muestra límite (TBD: la define Calidad)'),
-        ('Rebaba de espuma visible', 'Sin rebaba visible', 'Visual / muestra límite'),
+        ('Cierre de la funda', 'Cerrado en todo su largo, sin aberturas', 'Visual y táctil / muestra límite (TBD: la define Calidad)'),
+        ('Rebaba de espuma visible', 'Sin rebaba visible', 'Visual con iluminación dirigida / muestra límite (TBD: la define Calidad)'),
     ], start=2):
         R += doble(f60, b60 if first else {}, f'{n}.0', prod=prod, esp=esp, inst=inst)
         first = False
@@ -244,7 +244,7 @@ def filas_proceso():
         ('Deformaciones', 'Sin deformaciones', 'Visual / muestra límite (TBD: la define Calidad)'),
         ('Marcas en el vinilo', 'Sin marcas', 'Visual / muestra límite (TBD: la define Calidad)'),
         ('Costura de unión', 'Sin costura abierta, floja ni salteada', 'Visual / muestra límite (TBD: la define Calidad)'),
-        ('Cierre de la funda', 'Cerrado en todo su largo, sin aberturas', 'Visual / muestra límite (TBD: la define Calidad)'),
+        ('Cierre de la funda', 'Cerrado en todo su largo, sin aberturas', 'Visual y táctil / muestra límite (TBD: la define Calidad)'),
         ('Cinta de manipulación presente', '1 cinta por pieza', 'Visual'),
         ('Largo de la cinta de manipulación afuera de la pieza', '75 mm (tolerancia TBD)', 'Regla (código MC TBD)'),
         ('Portavasos 2HC.885.119 colocado', 'Encastrado y trabado, sin juego', 'Visual y táctil / muestra límite (TBD: la define Calidad)'),
@@ -413,7 +413,7 @@ def escribir(ws, filas):
 
     r = primera
     grupos, grupo_ini = [], None
-    salto_90 = None
+    saltos = []
     for f in filas:
         if '_seccion' in f:
             if grupo_ini is not None:
@@ -462,8 +462,8 @@ def escribir(ws, filas):
                 rr = ws.Range(ws.Cells(r - 1, c), ws.Cells(r, c))
                 rr.Merge()
                 rr.VerticalAlignment = -4108
-        if f['op'] == 'Operación 90.':
-            salto_90 = r
+        if f['op'] in ('Operación 60.', 'Operación 70.', 'Operación 80.', 'Operación 90.'):
+            saltos.append(r)
         r += 1
     if grupo_ini is not None:
         grupos.append((grupo_ini, r - 1))
@@ -480,8 +480,8 @@ def escribir(ws, filas):
     except Exception:
         pass
     # el embalaje (op 90) quedaba partido entre dos hojas con el medio cortado: empieza en hoja nueva
-    if salto_90:
-        ws.HPageBreaks.Add(ws.Cells(salto_90, 1))
+    for sr in saltos:
+        ws.HPageBreaks.Add(ws.Cells(sr, 1))
     return len([f for f in filas if '_seccion' not in f])
 
 

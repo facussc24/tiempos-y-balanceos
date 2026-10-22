@@ -35,9 +35,9 @@ RECEPCION = [
          filas=[
              LIMPIO,
              ('Color y grabado', 'SC', 'Según patrón de aspecto', 'Visual / patrón de aspecto (TBD: confirmar con Calidad)', None),
-             ('Espesor', 'SC', '1,8 a 2,5 mm', 'Medidor de espesor (código TBD)', None),
+             ('Espesor', 'SC', '1,8 a 2,5 mm', 'Micrómetro MC405', None),
              ('Gramaje', 'SC', '800 a 1000 g/m²', 'Balanza (código TBD)', None),
-             ('Ancho del rollo', 'SC', '1400 mm (tolerancia TBD)', 'Cinta métrica (código TBD)', None),
+             ('Ancho del rollo', 'SC', '1400 mm (tolerancia TBD)', 'Cinta métrica MC403', None),
              ('Flamabilidad (TL 1010)', '', '< 100 mm/min', 'Cámara de flamabilidad MC184', dict(reg='I-AC-027.I / P-10/I. / ARB')),
              ('Certificado de flamabilidad TL 1010', 'D', 'Certificado vigente por lote', 'Certificado del proveedor', None),
              ('Certificado de emisiones VW 50180', 'D', 'Certificado vigente por lote', 'Certificado del proveedor', None),
@@ -75,7 +75,7 @@ RECEPCION = [
          filas=[
              LIMPIO,
              ('Ancho', 'SC', '24 mm (tolerancia TBD)', 'Calibre (código TBD)', None),
-             ('Espesor', 'SC', 'TBD', 'Medidor de espesor (código TBD)', None),
+             ('Espesor', 'SC', 'TBD', 'Micrómetro MC405', None),
          ]),
     dict(prod='Hilo unión Nm 30/3 negro — código FX284-E0PTO (Linhanyl)',
          fuente='Plan de recepción N° 1043 Rev B (03/09/2025) + BOM arb 22/09/2026 + TL 1010 Tabla 1 (BR < 100) + AMFE 150 op 10 (SC FM 3 y 4)',

@@ -87,7 +87,7 @@ RECEPCION = [
          fuente='plan de recepcion 1048 Rev A (Tesa 52110 Transfer Glassine, 27/08/2025)',
          filas=[
              ('Color', '', 'Transparente', 'Visual / patrón de color (TBD)', None),
-             ('Espesor', '', '100 µm', 'Certificado del proveedor', None),
+             ('Espesor', '', '100 µm (tolerancia TBD)', 'Certificado del proveedor', None),
              ('Tipo de liner', '', 'Glassine (papel cristal)', 'Visual / según certificado del proveedor', None),
              ('Color del liner', '', 'Amarillo', 'Visual / patrón de color (TBD)', None),
              ('Peso de la cinta sin liner', '', '100 ± 10 g/m²', 'Certificado del proveedor', None),
