@@ -191,6 +191,36 @@ referencia, anual). VW lo exige como *Layout inspection and functional testing* 
 - No copiar el final de otra pieza (Rev 0 APC: *"5 piezas por lote de inyeccion de sustrato plastico"* en
   un apoyacabezas).
 
+### 3.3 bis Criterio de aceptacion: medible, o visual con referencia (Calidad, 22/10/2026)
+
+Agustin Aguayo (auditor de producto terminado y metrologia) devolvio el plan del APB trasero del 19/10 con la
+operacion 70 en rojo: *"el control de la cinta de manipulacion indica una metrica y dice que se hace visual, ademas de
+que falta las tolerancias"* y *"los controles de costura, cierre, portavasos y el funcionamiento (que son visuales)
+utiliza terminos muy ambiguos"*. Fak: *"tomatelo en serio"*. Lo que vale para cada fila, en cualquier operacion:
+
+1. **Una medida se mide.** Si la especificacion tiene un numero con unidad (75 mm, 250 °C, 140 g/m2), la columna I
+   lleva un instrumento con su codigo MC (§3.4) y la H su tolerancia (± , rango, minimo o maximo). «Visual» queda para
+   atributos. La tolerancia sale de un papel (plano, su bloque de tolerancias generales, la especificacion de la
+   pieza); si ninguno la da, `TBD` y a la lista. **La misma caracteristica se controla igual en todas las operaciones**:
+   la cinta iba con regla en la 40 y «Visual» en la 70.
+2. **Un control visual dice QUE se rechaza, de modo que dos inspectores decidan igual**: el defecto concreto que se
+   ve (puntada saltada, hilo suelto, separacion entre el cierre y el vinilo, tapa que no traba) y/o **contra que se
+   compara** (muestra patron, muestra limite, catalogo de defectos, calibre, plantilla, las lineas de la mesa).
+   ✗ `Sin costuras abiertas · Visual`, `Bien colocado, sin aberturas · Visual`, `Bien colocados · Visual`,
+   `Sellado completo`, `Sin roturas`. ✓ `Sin deformaciones · Visual / muestra patron` y
+   `Sin rebaba visible · Visual con iluminacion dirigida / muestra limite` (Agustin las dejo pasar). Una muestra limite
+   se nombra solo si existe; si no, va a la lista como algo que Calidad tiene que definir.
+3. **Una prueba funcional dice el criterio de aceptacion** (que se acciona y que tiene que pasar: abre hasta el tope,
+   traba al cerrar), sacado de la especificacion de la pieza o del componente. `Abre y cierra · Prueba funcional manual`
+   es ambiguo; sin papel, `TBD` y a la lista.
+4. **Una fila, una caracteristica** tambien en la especificacion: `Presente; 75 mm afuera de la pieza` son dos
+   (presencia, que es visual, y largo, que se mide).
+
+Gate: `python scripts/_planControlLimpio.py "<plan>"` da ROJO `MEDIDA_VISUAL` y `CRITERIO_AMBIGUO` en cualquier modo,
+y AVISO `SIN_TOLERANCIA` (§5 punto 6 bis). Calibrado contra la captura de Agustin: de las 12 filas de la operacion 70
+marca las 5 que el marco y deja pasar las 7 que el dejo en blanco; sobre el plan entero del 19/10 da 22 ROJO, todos
+del mismo tipo (recepcion, kits, costura, espumado, tapizado, portavasos y retrabajos).
+
 ### 3.4 Instrumentos
 
 Cada codigo MC se cruza con el cronograma de calibracion: que exista, que este en el sector donde se
@@ -277,6 +307,9 @@ un valor parecido de otra pieza, ni "segun especificacion" generico (`core-prohi
    (banners de la plantilla) no lo mira. Corrido el 17/10 sobre los dos planes del 15/10: las correcciones de la
    Rev 0 dan ROJO (33 `D/TLD`, 18 celdas con varias marcas, amarillo en la tabla); la propuesta rearmada da 3 ROJO,
    uno por hoja: la fila 3.0 «Flamabilidad y emisiones del conjunto» lleva «D / D» en una celda.
+6 bis. **Desde el 22/10/2026 el mismo gate mira el criterio de cada fila** (§3.3 bis): `MEDIDA_VISUAL` (una medida
+   controlada a ojo) y `CRITERIO_AMBIGUO` (visual o funcional sin referencia y sin ningun numero ni codigo) frenan en
+   todos los modos, porque son lo que Calidad devuelve; `SIN_TOLERANCIA` avisa. Antes de mostrar un plan, cero ROJO.
 7. Lo que pide una fila nueva o un dato sin papel va a un `.txt` aparte ("que queda para la reunion").
 8. Auditor antes de mostrar; se le muestra a Fak abierto; el mail a Calidad, con su OK. **El mail no lleva preguntas
    abiertas del plan**: las dudas van en la lista de pendientes adjunta (Fak, 09/10/2026: *"elimina esa parte y manda
@@ -296,7 +329,10 @@ un valor parecido de otra pieza, ni "segun especificacion" generico (`core-prohi
 3. ¿Cada operacion del flujograma tiene filas, con su numero y nombre?
 4. ¿Cada material comprado de la BOM tiene recepcion, con lo que dice su plan de recepcion?
 5. ¿Cada fila es una caracteristica con criterio (no un modo de falla) y producto/proceso separados?
-6. ¿Cada especificacion tiene valor, tolerancia y unidad, o `TBD`/`CONFLICTO` en la lista?
+6. ¿Cada especificacion tiene valor, tolerancia y unidad, o `TBD`/`CONFLICTO` en la lista? ¿Toda medida se mide con
+   un instrumento con codigo (nunca «Visual»), igual en todas las operaciones donde aparece? (§3.3 bis)
+6 bis. ¿Cada control visual o funcional dice el defecto que se rechaza o contra que se compara (muestra patron, limite,
+   calibre, plantilla)? Nada de «bien colocado», «sin costuras abiertas», «abre y cierra» solos (§3.3 bis)
 7. ¿Cada instrumento tiene codigo MC, y ese codigo esta en el cronograma, en ese sector y vigente?
 8. ¿Set up por maquina con las cuatro situaciones de arranque? ¿Primera/ultima pieza donde aplica?
 9. ¿Parametros de proceso con valor, y acondicionamiento de quimicos (mezcla, agitacion, temperatura)?

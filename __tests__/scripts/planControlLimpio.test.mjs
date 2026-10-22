@@ -3,7 +3,8 @@
  *
  * El chequeo mira el plan de control que se entrega como lo miro Fak el 15/10/2026 (LECCIONES 15/10; skill
  * planes-de-control §5, puntos 3 a 6): la D sola y no D/TLD, una marca por celda, y si el plan se rearmo entero,
- * sin amarillo ni notas (y sin TBD si va como definitivo). El selftest arma planes chicos en .xlsx con openpyxl (el
+ * sin amarillo ni notas (y sin TBD si va como definitivo). Desde el 22/10/2026, ademas, una medida no se controla
+ * "Visual" y un control visual no se escribe con terminos ambiguos (mail de Agustin Aguayo, Calidad). El selftest arma planes chicos en .xlsx con openpyxl (el
  * CI lo instala) y prueba cada codigo en ROJO y en VERDE. Mismo criterio que arbExcelSelftest.test.mjs: NUNCA skip
  * si falta python.
  */
@@ -28,6 +29,11 @@ describe('_planControlLimpio.py --selftest (el plan de control limpio de Fak, 15
     expect(out).toMatch(/ok {2}amarillo en la tabla, correccion de pocas celdas +esperado=0/);
     expect(out).toMatch(/ok {2}limpio con banner amarillo de la plantilla, definitivo +esperado=0/);
     expect(out).toMatch(/ok {2}TBD, definitivo +esperado=1/);
-    expect((out.match(/^ {2}ok {2}/gm) || []).length).toBe(12);
+    // mail de Agustin Aguayo (Calidad, 22/10/2026) sobre el plan del APB trasero: lo que marco y lo que dejo pasar
+    expect(out).toMatch(/ok {2}Aguayo: las 7 filas que dejo en blanco +esperado=0/);
+    expect(out).toMatch(/ok {2}Aguayo: cinta 75 mm visual sin tolerancia +esperado=1/);
+    expect(out).toMatch(/ok {2}Aguayo: funcionamiento abre y cierra +esperado=1/);
+    expect(out).toMatch(/ok {2}cinta medida con regla y tolerancia +esperado=0/);
+    expect((out.match(/^ {2}ok {2}/gm) || []).length).toBe(21);
   });
 });

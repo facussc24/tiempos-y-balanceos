@@ -15,6 +15,16 @@ Siempre (cualquier plan de control, tambien las correcciones de pocas celdas):
   VARIAS_MARCAS  ROJO   dos marcas o mas en la misma celda de CLASIF.: una caracteristica por fila (§5 punto 4:
                         con varias en la misma celda se lee "SC SC SC")
   SIGLA_RARA     AVISO  una marca que no es D, SC ni CC (`caracteristicas-especiales.md` punto 5: no se adivina)
+  MEDIDA_VISUAL  ROJO   la especificacion es una medida (numero con unidad) y el control es solo visual, tactil o
+                        una prueba funcional: se mide con un instrumento con codigo (§3.3 bis). No cuenta la medida
+                        que es parte del nombre de un insumo con su codigo ("bolsa PP 600 x 500 mm (427VAR002TAP01)")
+  CRITERIO_AMBIGUO ROJO control visual o funcional sin muestra patron/limite, calibre ni documento contra el que se
+                        compara, y con una especificacion sin ningun numero ni codigo ("Bien colocado", "Abre y cierra")
+  SIN_TOLERANCIA AVISO  una medida sin tolerancia (sin ±, rango, minimo ni maximo)
+  Los tres salen del mail de Agustin Aguayo (Calidad, 22/10/2026) sobre el plan del APB trasero: "el control de la
+  cinta de manipulacion indica una metrica y dice que se hace visual, ademas de que falta las tolerancias" y "los
+  controles de costura, cierre, portavasos y el funcionamiento (que son visuales) utiliza terminos muy ambiguos".
+  Calibrados contra su captura: marco 3.0 a 7.0 de la operacion 70 y dejo pasar 1.0, 2.0 y 8.0 a 12.0.
 Con --rearmado (el plan se rearmo entero, §5 punto 3):
   AMARILLO       ROJO   celda de la tabla (debajo del encabezado CLASIF.) con relleno amarillo
   NOTA           ROJO   comentario o nota en una celda de la tabla
@@ -34,6 +44,18 @@ MARCAS_VALIDAS = {'D', 'SC', 'CC'}
 AMARILLOS = {'FFFF00'}                      # el amarillo puro con que se marcan las celdas cambiadas
 RE_TLD = re.compile(r'\bTLD\b', re.I)
 RE_TBD = re.compile(r'\bTBD\b|\bCONFLICTO\b', re.I)
+# una medida: numero seguido de su unidad ("75 mm", "4 ± 1 mm", "250 °C", "140 gr/m2", "7,00 s", "65 %")
+RE_MEDIDA = re.compile(r'\d\s*(mm|cm|m|°\s*C|º\s*C|N|kN|g|gr|kg|s|seg|min|bar|%|g/m2|gr/m2|kg/min|mm/min|g/s)(?![A-Za-z0-9])')
+RE_TOLERANCIA = re.compile(r'±|\+/?-|\d\s*(a|-)\s*\d|[<>≤≥]|m[aá]x|m[ií]n|entre|toler', re.I)
+# el nombre de un insumo con su codigo: letras y numeros mezclados (427VAR002TAP01, ET-SATO-50X20, CARTSEP03)
+RE_CODIGO = re.compile(r'\b(?=[A-Z0-9.\-]*[A-Z]{2})(?=[A-Z0-9.\-]*\d{2})[A-Z0-9][A-Z0-9.\-]{5,}\b')
+# control solo con los sentidos: visual, tactil, conteo, prueba funcional a mano
+RE_SENTIDOS = re.compile(r'visual|t[aá]ctil|funcional|conteo|manual', re.I)
+# lo que vuelve objetivo un control visual: una referencia fisica o escrita contra la que se compara, o un instrumento
+RE_REFERENCIA = re.compile(r'muestra|patr[oó]n|l[ií]mite|cat[aá]logo|biblia|calibre|regla|cinta|\bMC\s*\d|balanza|pantalla|'
+                           r'display|contra |dispositivo|plantilla|mylar|term[oó]metro|pir[oó]metro|dinam[oó]metro|sistema|'
+                           r'galga|torqu|programa|l[aá]ser|l[ií]neas? |certificado|'
+                           r'seg[uú]n (la |el )?(lista|orden|planilla|plano|ficha|hoja|especificaci)', re.I)
 
 
 def _rgb6(valor):
@@ -90,6 +112,39 @@ def marcas(texto):
     return [t for t in re.split(r'[\s,;]+', texto.strip().upper()) if t]
 
 
+def columnas_metodo(celdas, fila0, col):
+    """(columna de ESPECIFICACION, columna de CALIBRE) por el texto del encabezado; si no esta, las del formulario
+    I-AC-005.1 (una y dos a la derecha de CLASIF.)."""
+    esp = ins = None
+    for (r, c), v in celdas.items():
+        if fila0 <= r <= fila0 + 2 and c > col:
+            u = v.upper()
+            if esp is None and 'ESPECIFICAC' in u:
+                esp = c
+            if ins is None and ('CALIBRE' in u or 'TECNICA' in u or 'TÉCNICA' in u):
+                ins = c
+    return (esp if esp is not None else col + 1), (ins if ins is not None else col + 2)
+
+
+def revisar_criterio(esp, ins, proceso=False):
+    """Codigos de las tres reglas del mail de Agustin Aguayo (22/10/2026) para una fila: especificacion y calibre.
+    CRITERIO_AMBIGUO mira solo las caracteristicas de PRODUCTO (lo que se acepta o rechaza de la pieza): una de proceso
+    ("Plato elevado antes de iniciar el corte") es un estado de la maquina, no un criterio de aceptacion."""
+    esp, ins = (esp or '').strip(), (ins or '').strip()
+    if not esp or not ins or RE_TBD.search(esp):
+        return []
+    sentidos = bool(RE_SENTIDOS.search(ins)) and not RE_REFERENCIA.search(ins)
+    medida = bool(RE_MEDIDA.search(esp)) and not RE_CODIGO.search(esp)
+    salida = []
+    if medida and sentidos:
+        salida.append(('ROJO', 'MEDIDA_VISUAL'))
+    if medida and not RE_TOLERANCIA.search(esp):
+        salida.append(('AVISO', 'SIN_TOLERANCIA'))
+    if sentidos and not proceso and not re.search(r'\d', esp) and not RE_REFERENCIA.search(esp):
+        salida.append(('ROJO', 'CRITERIO_AMBIGUO'))
+    return salida
+
+
 def revisar(hojas, rearmado=False, definitivo=False):
     """Lista de hallazgos (nivel, codigo, hoja, celda, evidencia). Con ninguna hoja con CLASIF., un ERROR."""
     rearmado = rearmado or definitivo
@@ -102,6 +157,13 @@ def revisar(hojas, rearmado=False, definitivo=False):
         fila0, col = enc
         nombre = h['nombre'].strip()
         celda = lambda r, c: f'{nombre}!{chr(65 + c) if c < 26 else c}{r + 1}'
+        c_esp, c_ins = columnas_metodo(h['celdas'], fila0, col)
+        for r in sorted({r for (r, _c) in h['celdas'] if r > fila0 + 1}):
+            esp, ins = h['celdas'].get((r, c_esp), ''), h['celdas'].get((r, c_ins), '')
+            # en el formulario I-AC-005.1 PROCESO va justo a la izquierda de CLASIF. y PRODUCTO a la izquierda de PROCESO
+            proceso = bool(h['celdas'].get((r, col - 1), '').strip()) and not h['celdas'].get((r, col - 2), '').strip()
+            for nivel, cod in revisar_criterio(esp, ins, proceso):
+                hallazgos.append((nivel, cod, nombre, celda(r, c_esp), f'{esp} | {ins}'.replace('\n', ' / ')[:90]))
         for (r, c), v in sorted(h['celdas'].items()):
             if r <= fila0:
                 continue
@@ -157,7 +219,8 @@ def main(argv):
 
 # ---------------------------------------------------------------- selftest (sin archivos reales: el CI no los tiene)
 
-def _plan(dir_, nombre, filas, amarillas=(), notas=(), banner_amarillo=False, con_clasif=True):
+def _plan(dir_, nombre, filas, amarillas=(), notas=(), banner_amarillo=False, con_clasif=True, metodos=()):
+    """metodos: filas (producto, proceso, especificacion, calibre) que van debajo de `filas`."""
     import openpyxl
     from openpyxl.comments import Comment
     from openpyxl.styles import PatternFill
@@ -175,6 +238,10 @@ def _plan(dir_, nombre, filas, amarillas=(), notas=(), banner_amarillo=False, co
             s.cell(row=7 + i, column=7, value=clasif)
         if espec:
             s.cell(row=7 + i, column=8, value=espec)
+    for i, (prod, proc, espec, ins) in enumerate(metodos, start=len(filas)):
+        s.cell(row=7 + i, column=5 if prod else 6, value=prod or proc)
+        s.cell(row=7 + i, column=8, value=espec)
+        s.cell(row=7 + i, column=9, value=ins)
     for i in amarillas:
         s.cell(row=7 + i, column=8).fill = amarillo
     for i in notas:
@@ -206,6 +273,35 @@ def selftest():
             ('TBD, rearmado (version de trabajo)', tbd, ['--rearmado'], 0, []),
             ('TBD, definitivo', tbd, ['--definitivo'], 1, ['TBD']),
             ('sin columna CLASIF.', _plan(d, 'sin', [('SC', 'x')], con_clasif=False), [], 2, ['SIN_CLASIF']),
+        ]
+        # las 12 filas de la operacion 70 del plan del APB trasero, tal cual las marco Agustin Aguayo (Calidad, 22/10/2026)
+        rojas = [('Costuras', '', 'Sin costuras abiertas', 'Visual'),
+                 ('Cierre', '', 'Bien colocado, sin aberturas', 'Visual'),
+                 ('Cinta de manipulación', '', 'Presente; 75 mm afuera de la pieza', 'Visual'),
+                 ('Portavasos y marco', '', 'Bien colocados', 'Visual'),
+                 ('Funcionamiento del portavasos', '', 'Abre y cierra', 'Prueba funcional manual')]
+        blancas = [('Deformaciones', '', 'Sin deformaciones', 'Visual / muestra patrón'),
+                   ('Marcas en el vinilo', '', 'Sin marcas', 'Visual / muestra patrón'),
+                   ('Dimensional', '', 'Según calibre de forma', 'Calibre de forma APB TAPA PATAGONIA MC505'),
+                   ('Identificación de la pieza', '', 'Etiqueta ET-SATO-50X20 con código 2HC.885.081 RL1', 'Visual'),
+                   ('Embolsado', '', 'Pieza en bolsa PP 600 x 500 mm (427VAR002TAP01)', 'Visual'),
+                   ('Rebaba de espuma visible', '', 'Sin rebaba visible', 'Visual con iluminación dirigida / muestra límite'),
+                   ('', 'Carga en el sistema ARB', 'Cantidad OK / cantidad NOK', 'Sistema ARB')]
+        casos += [
+            ('Aguayo: las 7 filas que dejo en blanco', _plan(d, 'ag_blancas', [], metodos=blancas), [], 0, []),
+            ('Aguayo: costura sin costuras abiertas, visual', _plan(d, 'ag_cost', [], metodos=rojas[:1]), [], 1, ['CRITERIO_AMBIGUO']),
+            ('Aguayo: cierre bien colocado, visual', _plan(d, 'ag_cie', [], metodos=rojas[1:2]), [], 1, ['CRITERIO_AMBIGUO']),
+            ('Aguayo: cinta 75 mm visual sin tolerancia', _plan(d, 'ag_cin', [], metodos=rojas[2:3]), [], 1,
+             ['MEDIDA_VISUAL', 'SIN_TOLERANCIA']),
+            ('Aguayo: portavasos bien colocados, visual', _plan(d, 'ag_por', [], metodos=rojas[3:4]), [], 1, ['CRITERIO_AMBIGUO']),
+            ('Aguayo: funcionamiento abre y cierra', _plan(d, 'ag_fun', [], metodos=rojas[4:5]), [], 1, ['CRITERIO_AMBIGUO']),
+            ('cinta medida con regla y tolerancia', _plan(d, 'cin_ok', [], metodos=[
+                ('Cinta de manipulación: largo afuera', '', '75 ± 2 mm', 'Regla MC 403')]), [], 0, []),
+            ('referencia escrita en el control (lineas de la mesa, laser)', _plan(d, 'refs', [], metodos=[
+                ('Alineación del vinilo', '', 'Coincidente con las líneas rojas de la mesa', 'Visual'),
+                ('Sobrante', '', 'Máximo 2,5 cm por lado', 'Visual y láser de la máquina')]), [], 0, []),
+            ('caracteristica de proceso visual (estado de la maquina)', _plan(d, 'proc', [], metodos=[
+                ('', 'Plato elevado', 'Plato elevado antes de iniciar el corte', 'Visual')]), [], 0, []),
         ]
         malos = 0
         for nombre, ruta, flags, esperado, codigos in casos:
