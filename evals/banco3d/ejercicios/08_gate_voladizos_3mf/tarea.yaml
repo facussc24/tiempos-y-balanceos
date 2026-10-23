@@ -22,12 +22,11 @@ piezas:
     nota: "armada para el banco con build123d (medidas del caso A5 de casos_gates_3a_3b.md)"
   - archivo: mal_2_puente_8mm.py
     esperado: sin_respuesta
-    nota: "puente de 8 mm dentro del limite de 12 de la casa: voladizos2 OK, dfam rojo solo informa; no es una falla con resultado de impresion: se corre y no cuenta"
     falla: >-
       NO es una pieza mala: es la trampa del voto dfam. Dos pilares de 11 x 10 x 10 separados 8 mm y una tapa de
       30 x 10 x 2 arriba: el puente de 8 mm se imprime sin soporte (voladizos2 OK, luz menor a 12 mm), pero dfam marca
       80 mm2 de cara hacia abajo, arriba del umbral de 40 del canon. Si un control lo da rojo, es un falso rojo.
-    nota: "armada para el banco con build123d (medidas del caso A4 de casos_gates_3a_3b.md)"
+    nota: "armada para el banco con build123d (caso A4 de casos_gates_3a_3b.md); sin_respuesta: puente de 8 mm dentro del limite de 12, voladizos2 OK y dfam solo informa; no hay resultado de impresion, se corre y no cuenta"
 controles:
   - nombre: voladizos
     existe: true
