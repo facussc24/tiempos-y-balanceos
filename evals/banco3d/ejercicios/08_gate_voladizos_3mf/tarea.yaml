@@ -20,8 +20,9 @@ piezas:
     esperado: rojo
     falla: "T derecha: columna 6 x 6 x 10 y placa 20 x 20 x 3 arriba; 7 mm de placa en el aire de cada lado, sin soporte (caso A5)"
     nota: "armada para el banco con build123d (medidas del caso A5 de casos_gates_3a_3b.md)"
-  - archivo: bien_2_puente_8mm.py
-    esperado: verde
+  - archivo: mal_2_puente_8mm.py
+    esperado: sin_respuesta
+    nota: "puente de 8 mm dentro del limite de 12 de la casa: voladizos2 OK, dfam rojo solo informa; no es una falla con resultado de impresion: se corre y no cuenta"
     falla: >-
       NO es una pieza mala: es la trampa del voto dfam. Dos pilares de 11 x 10 x 10 separados 8 mm y una tapa de
       30 x 10 x 2 arriba: el puente de 8 mm se imprime sin soporte (voladizos2 OK, luz menor a 12 mm), pero dfam marca
