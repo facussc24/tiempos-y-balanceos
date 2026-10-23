@@ -1151,7 +1151,7 @@ TRAMPA_77 = ("la impresora sigue en PREPARE, etapa 77 («Preparando AMS»), reng
 # la lanza sola, como proceso aparte, con el detector; apagarlo pide la frase de Fak y queda escrito.
 CANON_DETECTOR = Path(__file__).with_name("detectorCanon.data.json")
 FRASE_MINIMA = 10                       # la misma que --acepto-voladizos (voladizosCanon.data.json, frase_minima)
-VIGILANCIA_ESPERA_S = 5.0               # se mira el proceso aparte este tiempo: uno que no arranca sale antes
+VIGILANCIA_ESPERA_S = 20.0              # se mira el proceso aparte este tiempo: uno que no arranca sale antes (5 s no alcanzaba con la PC cargada: el hijo tarda en escribir vigilancia.pid; medido 23/10 19:25)
 CONSOLA_VIGILANCIA = "vigilancia_consola.log"
 # Lo que IMPRIME el proceso aparte va a vigilancia_consola.log y no a seguimiento.log: ese lo escribe el mismo
 # --seguir (anotar_log imprime Y escribe cada renglon), y con la consola ahi cada renglon quedaria dos veces; al

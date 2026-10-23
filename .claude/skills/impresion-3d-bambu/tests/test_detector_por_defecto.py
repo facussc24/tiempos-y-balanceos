@@ -277,7 +277,7 @@ class B5SinCamara(_Gate3b):
 class B7HijoQueNoArranca(_Gate3b):
     def setUp(self):
         super().setUp()
-        br.VIGILANCIA_ESPERA_S = 5.0
+        br.VIGILANCIA_ESPERA_S = 25.0   # 5 s no alcanzaba con la PC cargada (23/10 19:30): el hijo tarda en arrancar
 
     def test_B7_sale_con_16_a_los_3_s(self):
         br.LANZADOR = self.lanzador_que_anota("import sys, time; time.sleep(3); sys.exit(16)")
