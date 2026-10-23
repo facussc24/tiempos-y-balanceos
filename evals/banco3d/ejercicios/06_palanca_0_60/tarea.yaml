@@ -1,0 +1,43 @@
+id: 06_palanca_0_60
+nombre: "Palanca que gira de 0 a 60 grados sin chocar ni pellizcar"
+falla_real:
+  - cita: "choque o interferencia, 4 casos (empujador del Top Roll que atraviesa la pared, patas del carro que tocan el marco por una arista, tornillo de 30 mm con la maquina, pieza copiada del 3D de Leo)"
+    fecha: "21/07 a 21/10/2026"
+    fuente: "FALLAS_3D_REALES_23-10.md item 3"
+  - cita: "P3 (barrido con guardas y cronometro, menos de 2 minutos) y P12 (luz minima a lo largo del recorrido, dedo 25 mm, mano 100 mm, con la pose)"
+    fecha: "23/10/2026"
+    fuente: "docs/PROPUESTAS_SKILL_3D_2026-10-23.md:32,41,465"
+  - cita: "«Un dispositivo giratorio no falla en la pose de carga: falla a 137 grados»"
+    fecha: "24/08/2026"
+    fuente: ".claude/skills/cad-design/scripts/gate_giro.py:4-8"
+pedido: |
+  Diseñar una palanca que gira de 0 a 60 grados sobre su base (como la palanca de traba del virolador manual del
+  20/10) sin tocar nada en ninguna pose y sin que la luz contra la base baje de 25 mm. Entregar base, soporte del eje y
+  palanca por separado, con el eje y el rango.
+piezas:
+  - archivo: bien.py
+    esperado: verde
+  - archivo: mal_1_choca_a_35.py
+    esperado: rojo
+    falla: "un travesaño fijo de la base en el camino: choca en las poses del medio (~25 a 45 grados) y en 0 y 60 esta libre"
+  - archivo: mal_2_pellizco_15_a_50.py
+    esperado: rojo
+    falla: "no choca, pero a 50 grados pasa a 15 mm de un bloque fijo (pinza de dedo)"
+  - archivo: mal_3_choca_a_60.py
+    esperado: rojo
+    falla: "choca en el extremo de 60 grados"
+controles:
+  - nombre: barrido_palanca
+    existe: true
+    formato: stl
+formatos: [stl, step]
+notas: |
+  - Piezas de ENSAYO del banco (medidas sin fuente de Barack).
+  - El json trae "movil", "junta" (el soporte del eje: contra el se mide el choque pero no la luz, que es constante y
+    se juzga aparte), "eje" {origen, dir} y "rango_grados". Giro positivo = regla de la mano derecha alrededor de dir;
+    con dir (0,-1,0) la palanca sube.
+  - Valor gemelo del control: el mismo mal_1 con --paso 60 (mira solo 0 y 60) tiene que dar VERDE; con el paso de 2,5
+    da ROJO. Esa diferencia es lo que el ejercicio enseña.
+  - Cada mal_*.py verifica sobre lo construido que choca (o pellizca) en la pose que dice y que esta libre donde dice.
+  - No se envolvio gate_giro.py: barre 0 a 360 grados sobre nubes de puntos y no acepta un rango; aca el choque es el
+    volumen exacto del booleano y la luz la distancia exacta.
