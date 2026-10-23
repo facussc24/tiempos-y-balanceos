@@ -36,7 +36,9 @@ def main():
     m = re.search(r'puente mas largo\s+([\d.]+)\s*\|\s*voladizo mas largo\s+([\d.]+)', linea)
     medidas = {'puente_mas_largo_mm': float(m.group(1)), 'voladizo_mas_largo_mm': float(m.group(2))} if m else {}
     medidas['dada_vuelta'] = dada
-    medidas['limites'] = {'puente_mm': 12.0, 'voladizo_mm': 2.0}
+    medidas['limites'] = {'puente_mm': 12.0, 'voladizo_mm': 2.0,
+                          '_fuente': 'banco: constantes LUZ_PUENTE y VOLADIZO de chequeo_voladizos2.py (control del '
+                                     '22/10), sin fuente de proceso de Barack'}
     if linea.startswith('OJO'):
         resto = linea.split('->', 1)[1].strip() if '->' in linea else ''
         salir('rojo', f'queda en el aire: {resto}'[:500], medidas)

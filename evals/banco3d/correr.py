@@ -9,7 +9,9 @@ Uso:
 Reglas de conteo:
   - un mutante (pieza con esperado rojo) cuenta CAZADO si al menos un corrector listado da rojo;
   - un corrector con existe:false, que no esta en correctores/, o que sale con 2 (error) NO cuenta como rojo;
-  - una BIEN cuenta EN VERDE si al menos un corrector la juzgo y ninguno dio rojo ni error.
+  - una BIEN cuenta EN VERDE si al menos un corrector la juzgo y ninguno dio rojo ni error;
+  - una pieza con esperado sin_respuesta (no hay resultado real que diga si esta bien o mal) se corre y se informa,
+    pero no cuenta ni como mutante ni como BIEN.
 La carpeta .build no se vacia (aca no se borra nada): de cada pieza se usan solo los archivos escritos en esta corrida.
 Sale con 0 cuando la corrida termina (aunque queden mutantes sin cazar); 2 si no pudo correr."""
 import argparse, concurrent.futures as cf, datetime as dt, glob, importlib.metadata as md, json, os, platform
@@ -126,11 +128,17 @@ def correr_ejercicio(tarea):
                 continue
             j = juzgar(c, cons)
             j['esperado'] = p['esperado']
+            j['opciones'] = c['opciones']
+            j['formato'] = c['formato']
+            j['existe'] = c['existe']
             res['controles'][c['nombre']] = j
         cons.pop('rutas', None)
         obt = [j['obtenido'] for j in res['controles'].values()]
         if p['esperado'] == 'rojo':
             res['resultado'] = 'cazado' if 'rojo' in obt else 'no cazado'
+        elif p['esperado'] == 'sin_respuesta':
+            res['resultado'] = 'sin respuesta'
+            res['nota'] = p.get('nota', '')
         else:
             juzgo = any(o in ('verde', 'rojo') for o in obt)
             res['resultado'] = ('en verde' if juzgo and 'rojo' not in obt and 'error' not in obt
@@ -150,7 +158,7 @@ def git(*a):
 
 
 def resumen(ejercicios):
-    mut = cazados = bien = bien_verde = 0
+    mut = cazados = bien = bien_verde = sin_resp = 0
     faltan = set()
     for e in ejercicios.values():
         faltan.update(e['faltan'])
@@ -158,24 +166,58 @@ def resumen(ejercicios):
             if p['esperado'] == 'rojo':
                 mut += 1
                 cazados += p['resultado'] == 'cazado'
+            elif p['esperado'] == 'sin_respuesta':
+                sin_resp += 1
             else:
                 bien += 1
                 bien_verde += p['resultado'] == 'en verde'
     return {'mutantes': mut, 'cazados': cazados, 'bien': bien, 'bien_en_verde': bien_verde,
-            'correctores_que_faltan': sorted(faltan)}
+            'sin_respuesta': sin_resp, 'correctores_que_faltan': sorted(faltan)}
 
 
-def comparar(actual, congelado):
-    regresion, nuevos = [], []
+def comparar(actual, congelado, solo=None):
+    """Avisos contra una corrida congelada: BIEN que se pierden, mutantes que se dejan de cazar, mutantes nuevos
+    cazados, piezas que faltan o cambiaron de esperado, y controles cuyas opciones o umbrales cambiaron."""
+    av = {'bien_perdidas': [], 'mutantes_perdidos': [], 'mutantes_nuevos': [], 'piezas_cambiadas': [],
+          'opciones_cambiadas': []}
+    cong = congelado.get('ejercicios', {})
+    for eid, e_antes in cong.items():
+        if eid not in actual:
+            if not solo:
+                av['piezas_cambiadas'].append(f'{eid}: el ejercicio ya no esta')
+            continue
+        for arch in e_antes.get('piezas', {}):
+            if arch not in actual[eid]['piezas']:
+                av['piezas_cambiadas'].append(f'{eid}/{arch}: la pieza ya no esta')
     for eid, e in actual.items():
-        antes = congelado.get('ejercicios', {}).get(eid, {}).get('piezas', {})
+        antes = cong.get(eid, {}).get('piezas', {})
         for arch, p in e['piezas'].items():
-            a = antes.get(arch, {}).get('resultado')
-            if p['esperado'] != 'rojo' and a == 'en verde' and p['resultado'] != 'en verde':
-                regresion.append(f'{eid}/{arch}')
+            pa = antes.get(arch, {})
+            a = pa.get('resultado')
+            if not pa:
+                av['piezas_cambiadas'].append(f'{eid}/{arch}: pieza nueva (no estaba en el congelado)')
+            elif pa.get('esperado') != p['esperado']:
+                av['piezas_cambiadas'].append(f'{eid}/{arch}: esperado {pa.get("esperado")} -> {p["esperado"]}')
+            if p['esperado'] == 'verde' and a == 'en verde' and p['resultado'] != 'en verde':
+                av['bien_perdidas'].append(f'{eid}/{arch} ({p["resultado"]})')
+            if p['esperado'] == 'rojo' and a == 'cazado' and p['resultado'] != 'cazado':
+                av['mutantes_perdidos'].append(f'{eid}/{arch}')
             if p['esperado'] == 'rojo' and p['resultado'] == 'cazado' and a != 'cazado':
-                nuevos.append(f'{eid}/{arch}')
-    return regresion, nuevos
+                av['mutantes_nuevos'].append(f'{eid}/{arch}')
+            if not pa:
+                continue
+            for n, j in p['controles'].items():
+                ja = pa.get('controles', {}).get(n)
+                if ja is None:
+                    av['opciones_cambiadas'].append(f'{eid}/{arch}: control nuevo {n}')
+                    continue
+                for k in ('opciones', 'formato', 'existe'):
+                    if k in ja and ja.get(k) != j.get(k):
+                        av['opciones_cambiadas'].append(f'{eid}/{arch} {n}: {k} {ja.get(k)} -> {j.get(k)}')
+            for n in pa.get('controles', {}):
+                if n not in p['controles']:
+                    av['opciones_cambiadas'].append(f'{eid}/{arch}: ya no corre el control {n}')
+    return av
 
 
 def ultimo_score():
@@ -231,19 +273,26 @@ def main():
     for eid in sorted(ejercicios):
         for arch, p in ejercicios[eid]['piezas'].items():
             ctl = ', '.join(f'{n}={j["obtenido"]}' for n, j in p['controles'].items())
-            print(f'  {eid:22s} {arch:34s} esperado {p["esperado"]:5s} -> {p["resultado"]:10s} [{ctl}]')
+            print(f'  {eid:22s} {arch:34s} esperado {p["esperado"]:13s} -> {p["resultado"]:13s} [{ctl}]')
     faltan = r['correctores_que_faltan']
     print(f'BANCO 3D: caza {r["cazados"]} de {r["mutantes"]} mutantes (un mutante cuenta cazado si al menos un '
           f'corrector listado da rojo) · BIEN en verde {r["bien_en_verde"]} de {r["bien"]} · correctores que faltan: '
-          f'{len(faltan)}' + (f' ({", ".join(faltan)})' if faltan else ''))
+          f'{len(faltan)}' + (f' ({", ".join(faltan)})' if faltan else '')
+          + (f' · sin respuesta (no cuentan): {r["sin_respuesta"]}' if r['sin_respuesta'] else ''))
     print(f'scores: {os.path.relpath(destino, BASE)}  ({meta["duracion_s"]} s)')
     if a.congelado:
         ruta = a.congelado if os.path.isabs(a.congelado) else os.path.join(BASE, a.congelado)
         with open(ruta, encoding='utf-8') as f:
             cong = json.load(f)
-        reg, nuevos = comparar(ejercicios, cong)
-        print('BIEN que antes daba verde y ahora rojo: ' + (', '.join(reg) if reg else 'ninguna'))
-        print('mutantes nuevos cazados: ' + (', '.join(nuevos) if nuevos else 'ninguno'))
+        av = comparar(ejercicios, cong, a.solo)
+
+        def lista(xs, nada):
+            return ', '.join(xs) if xs else nada
+        print('BIEN que antes daba verde y ahora rojo: ' + lista(av['bien_perdidas'], 'ninguna'))
+        print('mutantes que antes se cazaban y ahora no: ' + lista(av['mutantes_perdidos'], 'ninguno'))
+        print('mutantes nuevos cazados: ' + lista(av['mutantes_nuevos'], 'ninguno'))
+        print('piezas que faltan o cambiaron de esperado: ' + lista(av['piezas_cambiadas'], 'ninguna'))
+        print('controles con opciones o umbrales cambiados: ' + lista(av['opciones_cambiadas'], 'ninguno'))
     return 0
 
 

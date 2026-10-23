@@ -1,7 +1,7 @@
-"""01 porta-bulon - MAL 2: techo cerrado con TAPITA de sacrificio de 0,4 (el agujero arranca 0,4 arriba del techo).
-Es la pieza de la placa v5 del 22/10: mismo volumen (1644,5 mm3) que el objeto 4 del .gcode.3mf de la placa v5.
-El seguimiento '3d-control-voladizos-antes-de-mandar-viernes' dice que la queja de Fak de las 15:40 («nunca usas
-soportes...») fue con la foto de los porta-bulones de la placa v5. Se COPIAN el STL y el STEP reales de la probeta."""
+"""01 porta-bulon - pieza SIN RESPUESTA (esperado sin_respuesta, no cuenta): techo cerrado con TAPITA de sacrificio
+de 0,4 (el agujero arranca 0,4 arriba del techo). Es la pieza de la placa v5 del 22/10: mismo volumen (1644,5 mm3) que
+el objeto 4 del .gcode.3mf de la placa v5. Nunca imprimio el techo: se salteo a las 15:41, antes de llegar a el
+(revision 09_revision_banco3d.md). Se COPIAN el STL y el STEP reales de la probeta."""
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from _comun import copiar, carpeta_salida

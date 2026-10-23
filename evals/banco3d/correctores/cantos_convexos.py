@@ -86,7 +86,11 @@ def main():
             if r < a.umbral - 1e-3:
                 chicos.append({'punto': [round(p.X, 2), round(p.Y, 2), round(p.Z, 2)], 'radio': round(r, 3),
                                'tipo': t.name.lower()})
-    medidas = {'umbral_mm': a.umbral, 'zona': zona, 'convexas_revisadas': convexas, 'cantos_vivos': len(vivos),
+    medidas = {'umbral_mm': a.umbral,
+               'umbrales': {'radio_mm': a.umbral,
+                            '_fuente': ('casa: R1,5 de ficha-utillajes.md E5 (docs/PROPUESTAS_SKILL_3D_2026-10-23.md '
+                                        'P6 l.101)') if abs(a.umbral - 1.5) < 1e-9 else 'pasado por --umbral'},
+               'zona': zona, 'convexas_revisadas': convexas, 'cantos_vivos': len(vivos),
                'radios_chicos': len(chicos), 'ejemplos': (vivos + chicos)[:6]}
     if vivos or chicos:
         rmin = min([0.0] * bool(vivos) + [c['radio'] for c in chicos])

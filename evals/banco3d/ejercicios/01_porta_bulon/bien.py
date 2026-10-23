@@ -1,5 +1,6 @@
 """01 porta-bulon - BIEN: porta-bulon M6 con PUENTES ESCALONADOS (el techo con agujero se arma con dos capas de
-puentes). Es el 3D real que dejo generador/porta_bulon.py el 22/10 (version de las 15:40). Se COPIA, no se redibuja.
+puentes). Es el 3D real que dejo generador/porta_bulon.py la tarde del 22/10. Se COPIA, no se redibuja. BIEN solo por diseno:
+no hay impresion registrada sin soporte.
 No hay STEP real de esta version: solo STL."""
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

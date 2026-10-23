@@ -38,6 +38,10 @@ controles:
   - nombre: estabilidad_apoyo
     existe: true
     formato: stl
+    opciones: ["--sin-eval"]
+    nota: >-
+      Con --sin-eval mide solo la geometria: no reconoce la v14 por sha256 ni lee lo declarado en eval_casos_3d
+      (revision 09). Si asi la v14 da verde, queda como mutante NO cazado: el control que la cazaria es asiento_blando.
   - nombre: asiento_blando
     existe: false
     nota: "el que mediria el asiento sobre el tapizado en un diseño NUEVO: lo haria .claude/skills/cad-design/scripts/gate_asiento.py (nacio por la v14, pide --escena y --pieza); no se envolvio el 23/10 por tiempo"

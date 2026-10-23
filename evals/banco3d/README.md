@@ -34,6 +34,10 @@ C:/Dev/BarackMercosul/.venv-cad/Scripts/python.exe -I evals/banco3d/correr.py --
 - Un corrector que todavía no existe (`existe: false`), que no está en `correctores/`, o que sale con error, **no**
   cuenta como rojo: el mutante queda sin cazar y el corrector suma en «correctores que faltan».
 - **BIEN en verde Y de M**: la BIEN cuenta si al menos un corrector la juzgó y ninguno dio rojo ni error.
+- **Sin respuesta** (`esperado: sin_respuesta`): pieza sin resultado real que diga si está bien o mal (por ejemplo,
+  la tapita del 01, que nunca imprimió el techo). Se corre y se informa, pero no entra ni en N ni en M.
+- Con `--congelado` avisa: BIEN que antes daban verde y ahora no, mutantes que antes se cazaban y ahora no, mutantes
+  nuevos cazados, piezas que faltan o cambiaron de esperado, y controles con opciones o umbrales cambiados.
 - El esperado de cada pieza sale de lo que pasó con la pieza real (cita de Fak, foto, papel), **no** de lo que dice
   el corrector. Por eso un corrector puede dejar pasar un mutante: eso es lo que el banco tiene que mostrar.
 

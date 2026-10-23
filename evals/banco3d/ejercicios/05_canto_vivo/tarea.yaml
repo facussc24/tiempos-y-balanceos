@@ -1,20 +1,20 @@
 id: 05_canto_vivo
 nombre: Canto vivo donde va la mano o la pieza - redondeo de la casa R1,5
 falla_real:
-  cita: "bordes en punta que marcan la pieza (virolador Upper Trim v11, 18/08); cajas del virolador del 20/10 con cantos vivos en la zona de la mano"
+  cita: "bordes en punta que marcan la pieza (virolador Upper Trim, pieza impresa el 18/08, corregida en la v11)"
   fecha: 2026-08-18
   fuente: >-
-    FALLAS_3D_REALES_23-10.md punto 4 (feedback_diseno_3d_medir_antes_de_explicar_y_simular_el_uso.md:12-13;
-    project_uppertrim_pisador_utillaje.md:15,111). Radio de la casa R1,5: docs/PROPUESTAS_SKILL_3D_2026-10-23.md P6
-    (l.101: «Redondeo por defecto: R1,5 (ficha-utillajes.md E5, CASA)»). No lei esas dos memorias enteras: la cita
-    sale del resumen de FALLAS_3D_REALES.
+    FALLAS_3D_REALES_23-10.md punto 4; project_uppertrim_pisador_utillaje.md:107-111 (revision 09). Las «cajas del
+    virolador del 20/10 con cantos vivos» NO son una queja de Fak: son el caso propuesto para probar P6
+    (docs/PROPUESTAS_SKILL_3D_2026-10-23.md l.114 y l.272). Radio de la casa R1,5: PROPUESTAS P6 l.101
+    («Redondeo por defecto: R1,5 (ficha-utillajes.md E5, CASA)»).
 pedido: >-
   Mango para un dispositivo que agarra el operario: todas las aristas de afuera que sobresalen (incluidos los bordes de
   los agujeros) con el redondeo de la casa R1,5, para que no marque la mano ni la pieza.
 piezas:
   - archivo: bien.py
     esperado: verde
-    nota: "mango de prueba armado para el banco (barra 100 x 30 x 20, dos agujeros de 8), R1,5 en todas las aristas; medidas de ejemplo, no es un diseno de Barack"
+    nota: "pieza de ensayo del banco (barra 100 x 30 x 20, dos agujeros de 8), R1,5 en todas las aristas; medidas de ejemplo, no es un diseno de Barack"
   - archivo: mal_1_sin_radio.py
     esperado: rojo
     falla: "sin radio (R0): canto vivo en las 12 aristas de la barra y en los bordes de los agujeros"

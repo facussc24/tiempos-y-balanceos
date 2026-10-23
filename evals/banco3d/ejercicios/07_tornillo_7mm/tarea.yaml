@@ -1,19 +1,16 @@
 id: 07_tornillo_7mm
-nombre: Tornillo impreso de 7 mm de la costura CNC del Insert - radio bajo la cabeza, largo y cabeza ancha
+nombre: Tornillo impreso de 7 mm de la costura CNC del Insert - radio bajo la cabeza
 falla_real:
   cita: >-
-    «no tienen un fillet que reparta la presion que se genera al aplicarle una fuerza horizontal» (24/08, tornillo
-    M4 v5 partido en la union cabeza-vastago); «no es demasiado largo 30? va a chocar con la maquina, te dije un poco
-    mas» (20/10); «ninguno entra porque el cabezal se ensancha en la punta» (22/10)
-  fecha: 2026-10-22
+    «no tienen un fillet que reparta la presion que se genera al aplicarle una fuerza horizontal» (24/08: el tornillo
+    impreso v5 del pin TRA-IZQ, rosca 5,05, partio en la union cabeza-vastago)
+  fecha: 2026-08-24
   fuente: >-
-    memoria project_tornillo_cabeza_ancha_impreso.md (24/08 «RESUELTO», 20/10 tarde y 20/10). La cita del 22/10 sale
-    de FALLAS_3D_REALES_23-10.md punto 2: NO la encontre en la memoria que ese archivo cita (ultima modificacion de la
-    memoria: 20/10).
+    memoria project_tornillo_cabeza_ancha_impreso.md, entrada «RESUELTO 24/08» (l.112-113 segun la revision 09).
 pedido: >-
   Tornillo impreso de 7 mm (rosca nominal 6,9, paso 1, holgura 0,50) para el pin traba TRA-IZQ de la costura CNC del
   Insert, impreso acostado en PLA sin soportes, largo 30. Tiene que aguantar el empujon de costado sin partirse bajo la
-  cabeza, entrar con la cabeza en su lugar y no chocar con la maquina.
+  cabeza: radio en la union cabeza-vastago.
 piezas:
   - archivo: bien.py
     esperado: verde
@@ -25,25 +22,25 @@ piezas:
     esperado: rojo
     falla: "sin radio bajo la cabeza: canto vivo entre la cabeza y el vastago, se parte con el empujon de costado"
     nota: >-
-      Mutante armado a partir del STEP del BIEN (se saca el acuerdo de 0,9). La rotura por falta de radio es la del
-      24/08 (tornillo M4 v5, memoria); la del 14/10 fue con el radio 0,9 ya puesto y la memoria la atribuye a que se
-      imprimio PARADO (capas perpendiculares al eje): ese caso no lo cubre este mutante.
+      Pieza de ensayo del banco: armada a partir del STEP del BIEN (se le saca el acuerdo de 0,9). La falla real de
+      falta de radio es la del 24/08 (tornillo v5 del pin TRA-IZQ). La rotura del 14/10 fue con el radio 0,9 ya puesto
+      y la memoria la atribuye a que se imprimio PARADO (capas perpendiculares al eje): este mutante no la cubre.
   - archivo: mal_2_largo_27.py
-    esperado: rojo
-    falla: "largo 27: carpeta OBSOLETO (NO IMPRIMIR) del 20/10, reemplazado por el de 30"
+    esperado: sin_respuesta
+    nota: >-
+      Tornillo de 27 del 20/10 (STL y STEP reales, carpeta OBSOLETO). No cuenta: quedo obsoleto por decision, no por
+      una falla; el «va a chocar con la maquina» Fak lo dijo creyendo que eran 30 cm (memoria, 20/10 tarde) y el de 30
+      quedo VIGENTE. Una caja que deja pasar al de 30 nunca le daria rojo al de 27.
     fuente: "5. 3D/Tornillo 7mm impreso - costura CNC insert (prueba 14-10)/OBSOLETO - TORNILLO LARGO 27 y 28 (20-10) (NO IMPRIMIR)/TORNILLO 7mm acostado holgura 0,50 - largo 27.stl (y .step)"
     sha256: 2ed419cdf43dad3267308d2c80df1e3aaa09ffc84b7b8164b74c246475ffa4b4
     sha256_step: 12618fe8f6763d285e7b5a182f85035158a44bffd67267c76dce2fd01db4b536
-    nota: >-
-      Evidencia debil: segun la memoria el «va a chocar» fue porque Fak creyo que eran 30 cm, y el 27 quedo OBSOLETO
-      por decision (vale el de 30), no por una falla medida. FALLAS_3D_REALES dice «el de 30 mm choca con la maquina»:
-      contradice la memoria. El lugar libre de la maquina NO esta en ningun papel: caja TBD.
   - archivo: mal_3_cabeza_ancha.py
-    esperado: rojo
-    falla: "la cabeza se ensancha en la base (la cara que apoya en la cama): no entra"
+    esperado: sin_respuesta
     nota: >-
-      Mutante armado a partir del STEP del BIEN: pestana de 0,4 de alto que sobresale 0,3 por lado. Esos dos numeros
-      son VALORES DE PRUEBA del banco, no medidos; la forma real del ensanche es TBD (foto de Fak del 22/10, no la vi).
+      Pieza de ensayo del banco, sin falla real: la frase «se ensancha en la punta» del 22/10 es del sacabocado de
+      los bujes, no del tornillo (revision 09: sesion 281d65ab 11:32:18Z; memoria project_plantilla_perforado_insert.md:120).
+      Queda solo como prueba del chequeo de ancho de cabeza de cabeza_tornillo (pestana de 0,3 por lado y 0,4 de alto,
+      valores de prueba), fuera del conteo.
 controles:
   - nombre: cabeza_tornillo
     existe: true
@@ -59,7 +56,8 @@ controles:
 formatos: [stl, step]
 notas: >-
   Umbral del radio: 0,9 = radio del tornillo validado (FUENTE/medidas holgura 0,50.json, fillet_en_la_base_mm 0.9)
-  con 0,1 de tolerancia de medida. Tolerancia de ancho de la cabeza: 0,1 (valor del banco, no de un papel).
+  con 0,1 de tolerancia de medida (del banco). Tolerancia de ancho de la cabeza: 0,1 (del banco, no de un papel).
   Ademas del BIEN, el corrector mide 0,90 en el tornillo de 27 y en el de 3 puntos (parado, 14/10); en uno parado no
   mide el ancho de la cabeza (eje vertical).
-  Falla real que este banco NO cubre: «no enrosca en los primeros mm» (16/10).
+  Fallas reales del tornillo que este banco NO cubre: se partio impreso parado (14/10) y no enrosca en los primeros mm
+  (16/10).

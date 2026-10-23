@@ -129,7 +129,13 @@ def main():
                'radio_vastago_mm': round(r_vastago, 3), 'radio_cabeza_mm': round(r_cabeza, 3),
                'largo_cabeza_mm': largo_cabeza, 'ancho_cabeza_base_mm': ancho_base,
                'ancho_cabeza_arriba_mm': ancho_arriba, 'umbral_radio_mm': a.umbral, 'tolerancia_mm': a.tolerancia,
-               'tol_ancho_mm': a.tol_ancho}
+               'tol_ancho_mm': a.tol_ancho,
+               'umbrales': {'radio_mm': a.umbral, 'tolerancia_mm': a.tolerancia, 'tol_ancho_mm': a.tol_ancho,
+                            '_fuente': {'radio_mm': 'medido: fillet_en_la_base_mm 0.9 de "FUENTE (STEP para modificar)/'
+                                                    'medidas holgura 0,50.json" (tornillo validado)'
+                                        if abs(a.umbral - 0.9) < 1e-9 else 'pasado por --umbral',
+                                        'tolerancia_mm': 'banco (23/10/2026), sin fuente de Barack',
+                                        'tol_ancho_mm': 'banco (23/10/2026), sin fuente de Barack'}}}
     malos = []
     if radio < a.umbral - a.tolerancia:
         malos.append(f'radio bajo la cabeza {radio:.2f} mm (pide {a.umbral} - {a.tolerancia})')

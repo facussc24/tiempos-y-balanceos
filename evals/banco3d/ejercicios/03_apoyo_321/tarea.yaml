@@ -36,3 +36,5 @@ notas: |
     de la cara del perno que toca la placa) y el corrector vuelve a medir que cada punto toque la placa y el perno.
   - Umbrales del corrector (triangulo >= 25 % de la huella; < 5 % = casi alineados; secundario separado >= 30 % del
     largo; contacto a <= 0,05 mm) son del banco, sin fuente de Barack.
+  - Limite conocido (revision 09): apoyo_321 cuenta los puntos que DECLARA el .json del conjunto (apoyo_321.py l.76) y
+    solo mide que cada uno toque; un cuarto perno sin declarar pasaria. No cambia el conteo de hoy.

@@ -1,9 +1,6 @@
 id: 04_nido_holgura
 nombre: "Nido con holgura de 0,2 mm por lado"
 falla_real:
-  - cita: "tornillo impreso de 7 mm: «ninguno entra porque el cabezal se ensancha en la punta»"
-    fecha: "22/10/2026"
-    fuente: "FALLAS_3D_REALES_23-10.md item 2; memoria project_tornillo_cabeza_ancha_impreso.md:22,28,55"
   - cita: "gancho de mochila: cuatro impresiones persiguiendo una holgura de +-0,15 mm, del tamaño del error de la impresora"
     fecha: "22-24/08/2026"
     fuente: ".claude/rules/cad-3d.md, GATE 5"

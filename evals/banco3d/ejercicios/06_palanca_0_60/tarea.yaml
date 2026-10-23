@@ -1,15 +1,12 @@
 id: 06_palanca_0_60
 nombre: "Palanca que gira de 0 a 60 grados sin chocar ni pellizcar"
 falla_real:
-  - cita: "choque o interferencia, 4 casos (empujador del Top Roll que atraviesa la pared, patas del carro que tocan el marco por una arista, tornillo de 30 mm con la maquina, pieza copiada del 3D de Leo)"
+  - cita: "choque o interferencia, 3 casos (empujador del Top Roll que atraviesa la pared, patas del carro que tocan el marco por una arista, pieza copiada del 3D de Leo)"
     fecha: "21/07 a 21/10/2026"
-    fuente: "FALLAS_3D_REALES_23-10.md item 3"
-  - cita: "P3 (barrido con guardas y cronometro, menos de 2 minutos) y P12 (luz minima a lo largo del recorrido, dedo 25 mm, mano 100 mm, con la pose)"
-    fecha: "23/10/2026"
-    fuente: "docs/PROPUESTAS_SKILL_3D_2026-10-23.md:32,41,465"
-  - cita: "«Un dispositivo giratorio no falla en la pose de carga: falla a 137 grados»"
-    fecha: "24/08/2026"
-    fuente: ".claude/skills/cad-design/scripts/gate_giro.py:4-8"
+    fuente: >-
+      FALLAS_3D_REALES_23-10.md item 3, sin el caso del tornillo de 30 mm (Fak dijo «va a chocar» creyendo que eran
+      30 cm: memoria project_tornillo_cabeza_ancha_impreso.md, 20/10 tarde). P3, P12 y el comentario de gate_giro.py no
+      van aca: son propuestas y codigo, no fallas que marco Fak (revision 09).
 pedido: |
   Diseñar una palanca que gira de 0 a 60 grados sobre su base (como la palanca de traba del virolador manual del
   20/10) sin tocar nada en ninguna pose y sin que la luz contra la base baje de 25 mm. Entregar base, soporte del eje y

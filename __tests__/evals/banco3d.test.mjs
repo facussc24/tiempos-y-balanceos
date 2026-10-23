@@ -45,11 +45,15 @@ describe('banco3d: contrato de tarea.yaml', () => {
         expect(mal.length).toBeGreaterThanOrEqual(1);
         expect(bien.length + mal.length).toBe(t.piezas.length);
         for (const p of t.piezas) {
-          expect(['verde', 'rojo']).toContain(p.esperado);
+          // sin_respuesta: no hay resultado real que diga si esta bien o mal; se corre, se informa y no cuenta.
+          expect(['verde', 'rojo', 'sin_respuesta']).toContain(p.esperado);
           expect(existsSync(join(EJ, dir, p.archivo)), `${dir}/${p.archivo} no existe`).toBe(true);
-          if (p.archivo.startsWith('mal_')) expect(noVacio(p.falla), `${dir}/${p.archivo} sin falla`).toBe(true);
+          if (p.esperado === 'rojo') expect(noVacio(p.falla), `${dir}/${p.archivo} sin falla`).toBe(true);
+          if (p.esperado === 'sin_respuesta') expect(noVacio(p.nota), `${dir}/${p.archivo} sin nota`).toBe(true);
+          if (p.archivo.startsWith('mal_')) expect(p.esperado, `${dir}/${p.archivo}`).not.toBe('verde');
         }
         expect(bien[0].esperado).toBe('verde');
+        expect(mal.filter((p) => p.esperado === 'rojo').length, `${dir}: ningun mutante cuenta`).toBeGreaterThanOrEqual(1);
       });
       it('controles: nombre y, si dice que existe, el corrector esta en correctores/', () => {
         expect(Array.isArray(t.controles) && t.controles.length > 0).toBe(true);

@@ -24,6 +24,17 @@ def ruta_nube(relativa):
     return os.path.join(NUBE_3D, *relativa.split('/'))
 
 
+def verificar(relativa, sha_esperado):
+    """Devuelve la ruta de NUBE_3D/relativa si existe y su sha256 coincide; si no, sale con 2."""
+    origen = ruta_nube(relativa)
+    if not os.path.exists(origen):
+        salir_error(f'no esta la fuente: {relativa}')
+    h = sha256(origen)
+    if h != sha_esperado:
+        salir_error(f'la fuente cambio (sha256 {h}, se esperaba {sha_esperado}): {relativa}')
+    return origen
+
+
 def copiar(relativa, sha_esperado, carpeta, nombre_salida):
     """Copia NUBE_3D/relativa a carpeta/nombre_salida si el sha256 coincide. Devuelve la ruta copiada."""
     origen = ruta_nube(relativa)
