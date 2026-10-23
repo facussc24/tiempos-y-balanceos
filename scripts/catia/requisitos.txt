@@ -1,0 +1,3 @@
+# Lo que necesita el obrero de CATIA (Arrancar-obrero.cmd lo instala solo si falta).
+pywin32
+# Opcional: psutil (mide la RAM libre; sin psutil el obrero usa la funcion de Windows). Se instala con: pip install psutil
