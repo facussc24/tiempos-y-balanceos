@@ -207,7 +207,7 @@ def main():
     else:
         det = ("apoya en %.0f mm2 (%.0f %% de la huella), centro de masa a %.1f mm del borde"
                % (med["area_apoyo_mm2"], 100 * med["apoyo_sobre_huella"], med["margen_cm_mm"]))
-        if version:
+        if version and "eval_casos_3d" in medidas:     # con --sin-eval no hay envoltorio (23/10: KeyError)
             det += "; eval_casos_3d %s: %s" % (version, medidas["eval_casos_3d"].get("veredictos"))
     if aviso:
         det += " | aviso: " + aviso
