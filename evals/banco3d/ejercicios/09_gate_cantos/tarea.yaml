@@ -1,0 +1,41 @@
+id: 09_gate_cantos
+nombre: Gate de cantos convexos donde va la mano - tope con la mano arriba y la cama viva
+falla_real:
+  cita: "bordes en punta que marcan la pieza (virolador Upper Trim, pieza impresa el 18/08, corregida en la v11)"
+  fecha: 2026-08-18
+  fuente: >-
+    La misma falla del ejercicio 05 (FALLAS_3D_REALES_23-10.md punto 4; radio de la casa R1,5 de ficha-utillajes.md
+    E5, docs/PROPUESTAS_SKILL_3D_2026-10-23.md l.101). Este ejercicio es el del gate 3c del viernes 23/10
+    (gate_aristas.py --cantos-convexos, el mismo que corre export_deliverables.py): casos C1 a C9 de
+    viernes-23-plan-sistema/banco3d-material/casos_gates_3c_3f.md, escritos por un critico ANTES del gate.
+pedido: >-
+  En la entrega, el gate de cantos tiene que frenar el canto vivo o el redondeo chico donde va la mano (el contorno de
+  arriba de un tope) y dejar pasar el tope bien redondeado aunque su cara de cama quede viva: la cama no la toca nadie
+  y lleva chaflan, no R1,5 (G6). Por eso la zona de mano va declarada (franja z 12 a 16 del tope) y el gate cuenta
+  toda arista que TOQUE la zona, no solo las que tienen el punto medio adentro.
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    nota: "tope 60 x 20 x 15 armado para el banco con build123d: R1,5 arriba y en las 4 verticales, abajo vivo (medidas de ejemplo, no es un diseno de Barack)"
+  - archivo: mal_1_canto_vivo_arriba.py
+    esperado: rojo
+    falla: "el contorno de arriba sin radio (R0): 4 cantos vivos donde apoya la mano; las verticales si tienen R1,5"
+    nota: "armada para el banco con build123d"
+  - archivo: mal_2_radio_0_5_arriba.py
+    esperado: rojo
+    falla: "R0,5 arriba y en las verticales: redondeo menor que el de la casa (R1,5) donde va la mano"
+    nota: "armada para el banco con build123d"
+controles:
+  - nombre: gate_cantos
+    existe: true
+    formato: step
+    opciones: ["--umbral", "1.5", "--zona=-31,-11,12,31,11,16"]
+    nota: >-
+      El gate como corre de verdad: gate_aristas.py --step <pieza.step> --cantos-convexos (autotest propio BIEN/MAL
+      antes de juzgar). El corrector juzga por lo medido (veredicto de la linea JSON), no por el codigo de salida, que
+      hasta el 30/10/2026 es 0 aunque haya rojos (modo aviso). NO MEDIDO sale como error (no cuenta como verde).
+formatos: [stl, step]
+notas: >-
+  Ejercicio nuevo del gate 3c (23/10/2026): NO cuenta para aceptar el gate (el banco congelado del bloque 2 es la vara).
+  Las tres piezas son de ensayo, armadas para el banco. Sigue pendiente el par real de P6 (las cajas del virolador del
+  20/10 en rojo y los topes redondeados de la v16 en verde), que necesita la zona de mano real del pliego.
