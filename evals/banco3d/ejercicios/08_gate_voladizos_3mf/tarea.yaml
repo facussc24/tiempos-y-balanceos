@@ -20,7 +20,7 @@ piezas:
     esperado: rojo
     falla: "T derecha: columna 6 x 6 x 10 y placa 20 x 20 x 3 arriba; 7 mm de placa en el aire de cada lado, sin soporte (caso A5)"
     nota: "armada para el banco con build123d (medidas del caso A5 de casos_gates_3a_3b.md)"
-  - archivo: mal_2_puente_8mm.py
+  - archivo: bien_2_puente_8mm.py
     esperado: verde
     falla: >-
       NO es una pieza mala: es la trampa del voto dfam. Dos pilares de 11 x 10 x 10 separados 8 mm y una tapa de

@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * El molde para «quiero mejorar X» (skill `mejorar`, viernes 23/10/2026). Siete pasos en orden fijo, con freno que
  * corre solo: no deja marcar el paso 5 (cambio chico) sin el 3 (qué ya existe) y el 4 (banco congelado), no deja
