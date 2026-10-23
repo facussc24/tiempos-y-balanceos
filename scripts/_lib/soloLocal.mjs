@@ -35,6 +35,6 @@ export function esRutaDeNube(ruta) {
 /** Frena (tira) si `ruta` es de una nube. `que` dice que se queria escribir, para el mensaje. */
 export function frenarSiEsNube(ruta, que) {
     if (!esRutaDeNube(ruta)) return;
-    throw new Error(`${que} no se escribe en la nube (Fak, 20/10/2026: las skills y la configuracion viven solo en su PC; `
+    throw new Error(`${que} no se escribe en la nube (regla vigente del 23/10/2026: la configuracion va a la nube de Ingenieria por _nube.mjs, nunca escrita a mano en la nube; `
         + `a otra PC van por pendrive). Destino rechazado: ${ruta}. Elegir una carpeta local (ej. C:\\Dev\\ASISTENTE-LOCAL\\...). No se escribio nada.`);
 }

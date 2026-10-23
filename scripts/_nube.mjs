@@ -575,7 +575,7 @@ function leeme() {
         '  DESPUES, PARA MANTENERLO AL DIA',
         '------------------------------------------------------------------------',
         '',
-        '  En la PC donde trabajaste:      node scripts/_nube.mjs --subir --aplicar',
+        '  En la PC donde trabajaste:      node scripts/_nube.mjs --subir --aplicar   (solo la PC principal: --subir es espejo y borra en la nube lo que esa PC no tiene; en una notebook usar --sincronizar)',
         '  En la otra, antes de arrancar:  node scripts/_nube.mjs --bajar --aplicar',
         '  Para ver como esta la cosa:     node scripts/_nube.mjs',
         '',
