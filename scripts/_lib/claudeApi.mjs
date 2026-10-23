@@ -174,9 +174,11 @@ const aaaammdd = (f) => `${f.getFullYear()}${p2(f.getMonth() + 1)}${p2(f.getDate
 /**
  * La clave activa, con su origen. Desde el 09/10/2026 puede haber mas de una: ademas de
  * `ANTHROPIC_API_KEY` (la principal, la del plan de Fak), lineas `ANTHROPIC_API_KEY_HASTA_AAAAMMDD=...`
- * con claves prestadas que vencen ese dia (la del dueno de la empresa, $100 hasta el 20/10/2026).
- * Regla: se gasta primero la que vence antes, mientras no haya vencido; vencida, se sigue con la
- * principal sin tocar nada. El entorno (`ANTHROPIC_API_KEY`) le gana a todo, como siempre.
+ * con claves prestadas que vencen ese dia. Una prestada de RENUEVA_PRESTADAS no vence: se recarga un dia fijo de cada
+ * mes (la del dueño de la empresa, US$ 100 el 20; Fak 20/10/2026).
+ * Regla: se gasta primero la que pierde el saldo antes (la que vence, o la renovable cuya proxima recarga llega antes),
+ * mientras siga vigente y sin marca de agotada; si no queda ninguna, la principal. El entorno (`ANTHROPIC_API_KEY`)
+ * le gana a todo, como siempre.
  * Devuelve { clave, origen: 'entorno'|'secundaria'|'principal'|null, hasta: 'AAAAMMDD'|null }.
  * NUNCA se imprime ni se loguea la clave (el secretos-guard frena los comandos que la leerian).
  */
@@ -186,7 +188,56 @@ const aaaammdd = (f) => `${f.getFullYear()}${p2(f.getMonth() + 1)}${p2(f.getDate
  * TODAS las llamadas fallaban con "credit balance is too low" aunque la principal tuviera saldo.
  */
 const archivoAgotada = (hasta, dir) => path.join(dir, `prestada_agotada_${hasta}`);
-export function prestadaAgotada(hasta, { dir = DIR_API } = {}) { return fs.existsSync(archivoAgotada(hasta, dir)); }
+
+/**
+ * Prestadas que NO vencen: se recargan solas un dia fijo de cada mes. Clave = el AAAAMMDD con que se pego la linea
+ * `ANTHROPIC_API_KEY_HASTA_AAAAMMDD`; valor = el dia del mes en que se renueva. Dato de Fak, 20/10/2026: la del dueño
+ * *"no vencida mañana, se renuevan todos los meses"*, *"da por vencida pero se equivoca, es un error, usala igual"*.
+ * Hasta ese dia el codigo la daba por muerta desde el 21/10 y la marca de agotada se borraba a mano cada 20.
+ */
+export const RENUEVA_PRESTADAS = Object.freeze({ 20261020: 20 });
+
+/** El inicio (00:00 local) de la ultima renovacion de una prestada renovable, o null si no se renueva. */
+export function ultimaRenovacion(hasta, hoy = new Date(), renueva = RENUEVA_PRESTADAS) {
+  const dia = Number(renueva[hasta]);
+  if (!(dia >= 1 && dia <= 31)) return null;
+  const diaDe = (a, m) => Math.min(dia, new Date(a, m + 1, 0).getDate());   // un 31 en un mes de 30 cae en el ultimo dia
+  let a = hoy.getFullYear(); let m = hoy.getMonth();
+  if (hoy.getDate() < diaDe(a, m)) { m -= 1; if (m < 0) { m = 11; a -= 1; } }
+  return new Date(a, m, diaDe(a, m));
+}
+
+/** ¿La prestada sigue vigente hoy? Una renovable (con un dia valido), siempre; las demas, hasta su dia (inclusive). */
+export function prestadaVigente(hasta, hoy = new Date(), renueva = RENUEVA_PRESTADAS) {
+  return ultimaRenovacion(hasta, hoy, renueva) != null || hasta >= aaaammdd(hoy);
+}
+
+/**
+ * Cuando pierde el saldo que tiene ahora (AAAAMMDD): una que vence, su dia; una renovable, la vispera de su proxima
+ * recarga. Ordena las prestadas: se gasta primero la que lo pierde antes (revisor Opus 20/10/2026: ordenar por `hasta`
+ * dejaba a la renovable siempre primero y una prestada nueva que vence se quedaba sin usar).
+ */
+export function prestadaPierdeSaldo(hasta, hoy = new Date(), renueva = RENUEVA_PRESTADAS) {
+  const ultima = ultimaRenovacion(hasta, hoy, renueva);
+  if (!ultima) return hasta;
+  const dia = Number(renueva[hasta]);
+  const a = ultima.getMonth() === 11 ? ultima.getFullYear() + 1 : ultima.getFullYear();
+  const m = (ultima.getMonth() + 1) % 12;
+  const proxima = new Date(a, m, Math.min(dia, new Date(a, m + 1, 0).getDate()));
+  return aaaammdd(new Date(proxima.getFullYear(), proxima.getMonth(), proxima.getDate() - 1));
+}
+
+/**
+ * Sin saldo = hay marca. En una renovable la marca vale solo si es de DESPUES de la ultima renovacion: la del ciclo
+ * anterior se ignora sola (sin borrarla), y si se vuelve a agotar se marca de nuevo.
+ */
+export function prestadaAgotada(hasta, { dir = DIR_API, hoy = new Date(), renueva = RENUEVA_PRESTADAS } = {}) {
+  const ruta = archivoAgotada(hasta, dir);
+  if (!fs.existsSync(ruta)) return false;
+  const desde = ultimaRenovacion(hasta, hoy, renueva);
+  if (!desde) return true;
+  return fs.statSync(ruta).mtime >= desde;
+}
 export function marcarPrestadaAgotada(hasta, { dir = DIR_API, ahora = new Date() } = {}) {
   agregarSeguro(archivoAgotada(hasta, dir), `${selloLocal(ahora)} sin saldo (credit balance is too low)\n`);
 }
@@ -200,16 +251,15 @@ export function clavesPrestadas({ archivoEnv = path.join(RAIZ, '.env.local') } =
     .map((x) => ({ clave: x.clave, hasta: x.m[1] }));
 }
 
-export function claveActiva({ env = process.env, archivoEnv = path.join(RAIZ, '.env.local'), hoy = new Date(), dirMarcas = DIR_API } = {}) {
+export function claveActiva({ env = process.env, archivoEnv = path.join(RAIZ, '.env.local'), hoy = new Date(), dirMarcas = DIR_API, renueva = RENUEVA_PRESTADAS } = {}) {
   const directa = String(env.ANTHROPIC_API_KEY ?? '').trim();
   if (directa) return { clave: directa, origen: 'entorno', hasta: null };
   const local = leerEnv(archivoEnv);
-  const limite = aaaammdd(hoy);
   const prestadas = Object.entries(local)
     .map(([k, v]) => ({ m: /^ANTHROPIC_API_KEY_HASTA_(\d{8})$/.exec(k), clave: String(v ?? '').trim() }))
-    .filter((x) => x.m && x.clave && x.m[1] >= limite && !prestadaAgotada(x.m[1], { dir: dirMarcas }))
-    .map((x) => ({ clave: x.clave, hasta: x.m[1] }))
-    .sort((a, b) => a.hasta.localeCompare(b.hasta));
+    .filter((x) => x.m && x.clave && prestadaVigente(x.m[1], hoy, renueva) && !prestadaAgotada(x.m[1], { dir: dirMarcas, hoy, renueva }))
+    .map((x) => ({ clave: x.clave, hasta: x.m[1], pierde: prestadaPierdeSaldo(x.m[1], hoy, renueva) }))
+    .sort((a, b) => a.pierde.localeCompare(b.pierde) || a.hasta.localeCompare(b.hasta));
   if (prestadas.length) return { clave: prestadas[0].clave, origen: 'secundaria', hasta: prestadas[0].hasta };
   const principal = String(local.ANTHROPIC_API_KEY ?? '').trim();
   return principal ? { clave: principal, origen: 'principal', hasta: null } : { clave: null, origen: null, hasta: null };
@@ -717,10 +767,9 @@ function marcasDeAgotada(dir) {
  * `estimado` queda en true. `quedanUsd` es el credito del plan menos lo anotado aca: una cuenta del ledger, NO el
  * saldo que muestra Anthropic (ese no se puede leer con la clave).
  */
-export function saldoPorClave({ dir = DIR_API, env = process.env, ahora = new Date(), creditoPrestadas = CREDITO_PRESTADAS_USD, repartoViejo = REPARTO_SIN_ETIQUETA } = {}) {
+export function saldoPorClave({ dir = DIR_API, env = process.env, ahora = new Date(), creditoPrestadas = CREDITO_PRESTADAS_USD, repartoViejo = REPARTO_SIN_ETIQUETA, renueva = RENUEVA_PRESTADAS } = {}) {
   const ciclo = cicloDe(ahora, cicloDia(env));
   const marcas = marcasDeAgotada(dir);
-  const hoy = aaaammdd(ahora);
   const gastado = new Map();
   const sinEtiqueta = new Map();   // lo repartido por la tabla de arriba, por clave: solo eso es estimado
   let estimado = false;
@@ -753,7 +802,8 @@ export function saldoPorClave({ dir = DIR_API, env = process.env, ahora = new Da
   const prestadas = new Set(marcas.map((m) => m.hasta));
   for (const k of gastado.keys()) { const m = /^prestada-(\d{8})$/.exec(k); if (m) prestadas.add(m[1]); }
   for (const hasta of [...prestadas].sort()) {
-    claves.push({ nombre: 'prestada', hasta, gastadoUsd: r2(gastado.get(`prestada-${hasta}`) ?? 0), agotada: marcas.some((m) => m.hasta === hasta), vencida: hasta < hoy });
+    // una renovable no vence y su marca de agotada vale solo en el ciclo en que se puso (prestadaAgotada)
+    claves.push({ nombre: 'prestada', hasta, gastadoUsd: r2(gastado.get(`prestada-${hasta}`) ?? 0), agotada: prestadaAgotada(hasta, { dir, hoy: ahora, renueva }), vencida: !prestadaVigente(hasta, ahora, renueva) });
   }
   for (const [k, v] of gastado) if (k !== 'principal' && !/^prestada-\d{8}$/.test(k)) claves.push({ nombre: k, gastadoUsd: r2(v) });
   return { actualizado: selloLocal(ahora), ciclo: { desde: ciclo.desde, hasta: ciclo.hasta, proximo: ciclo.proximo, texto: ciclo.texto }, estimado, claves };

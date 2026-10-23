@@ -6,13 +6,15 @@
  * aca, en codigo, nunca en el prompt: una pagina buscada puede traer ordenes (diseño §4).
  *
  *   correrAgente({ cliente, modelo, system, encargo, carpeta, ejecutor, registro, topes, ... })
- *     -> { terminado, corte, paso, gastadoUsd, busquedas, bloqueos, entregable, resumen, mensajes }
+ *     -> { terminado, corte, paso, gastadoUsd, busquedas, lecturas, bloqueos, entregable, resumen, mensajes }
  *
  * Herramientas del modelo: leer_archivo · escribir_archivo (solo <carpeta>/trabajo) · correr_comando (lista
  * blanca + guardianes + tope de tiempo + recorte a 4 KB; un .py corre adentro de la caja de agenteCaja.py, que
  * vigila lo que el script hace mientras corre) · leer_pdf · terminar (la unica salida limpia) y
- * web_search del servidor. Lo prohibido vuelve como tool_result con is_error y "No reintentar"; el segundo
- * bloqueo corta. Los topes (pasos, reloj, dolares) se miran ANTES de cada llamada. Un paso = una llamada.
+ * web_search y web_fetch del servidor (la misma lista en toda la corrida). Lo prohibido vuelve como tool_result con
+ * is_error y "No reintentar"; el segundo bloqueo corta. Los topes (pasos, reloj, dolares, busquedas, paginas leidas) se
+ * miran ANTES de cada llamada; el de dolares estima el proximo paso con la entrada del anterior, asi que un paso que lee
+ * muchas paginas puede pasarlo (cada pagina trae hasta LECTURA_MAX_TOKENS). Un paso = una llamada.
  * No toca claudeApi.mjs: usa armarParametros/interpretarRespuesta/registrarGasto y suma lo que falta encima.
  */
 import crypto from 'node:crypto';
@@ -27,13 +29,27 @@ import { esSecreto } from '../_apiTarea.mjs';
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 export const RAIZ = path.resolve(AQUI, '..', '..');
 
-export const TOPES_DEFECTO = Object.freeze({ pasos: 60, minutos: 120, dolares: 6, busquedas: 20 });
+export const TOPES_DEFECTO = Object.freeze({ pasos: 60, minutos: 120, dolares: 6, busquedas: 20, lecturas: 20 });
 export const RECORTE_BYTES = 4096;          // lo que le llega al modelo por resultado: mitad cabeza, mitad cola
 export const LECTURA_MAX_BYTES = 20 * 1024;
 export const COMANDO_MAX_S = 600;
 export const PRECIO_BUSQUEDA_USD = 0.01;    // A VERIFICAR: $10 cada 1.000 busquedas; no esta en PRECIOS
 export const CARACTERES_POR_TOKEN = 3.5;    // la misma estimacion que BARACK_TOKENS_POR_CARACTER
 export const HERRAMIENTA_BUSQUEDA = 'web_search_20250305'; // A VERIFICAR: el `type` del server tool
+// Leer una pagina del lado del servidor (20/10/2026: sin ella el agente solo veia fragmentos de la busqueda). Fuente: doc
+// oficial «Web fetch tool», platform.claude.com/docs/en/agents-and-tools/tool-use/web-fetch-tool (consultada 21/10/2026):
+// `web_fetch_20250910` es la version basica (las de 2026 suman filtrado con codigo), sin cabecera beta; `max_content_tokens`
+// recorta lo que entra; «no additional charges beyond standard token costs». Medido el 20/10: 19 pasos de 7 corridas reales
+// leyeron de 1 a 5 paginas sin beta.
+export const HERRAMIENTA_LECTURA = 'web_fetch_20250910';
+export const LECTURA_MAX_TOKENS = 10000;                  // cuanto trae, como mucho, cada pagina leida
+// La lectura solo abre URL que ya aparecieron en la charla; por defecto cuentan tambien los resultados de las herramientas
+// PROPIAS (leer_archivo, correr_comando), y por ahi el agente podria armar una URL con datos del repo y pedirla (la doc lo
+// llama riesgo de exfiltracion; revisor Opus 21/10/2026). Se apagan: quedan las URL del encargo y de busquedas o lecturas.
+export const LECTURA_FUENTES_URL = Object.freeze({ client_tool_results: { type: 'none' } });
+// `max_uses` por PEDIDO: chico y fijo, para que la lista no cambie y el exceso sobre el tope de la corrida quede acotado
+// (la corrida corta recien cuando SE PASA: en el peor caso termina con tope + MAX_USOS_POR_PEDIDO). Revisor Opus 20/10.
+export const MAX_USOS_POR_PEDIDO = 8;
 export const RECORDATORIO = 'Cerraste el turno sin llamar a terminar(entregable, resumen). Si el trabajo esta hecho, llamala ahora; si no, segui con las herramientas. Otro turno sin terminar corta la corrida.';
 
 /** Un pedido que no se hace: el ejecutor real lo tira cuando el escaneo frena un script antes de correrlo. */
@@ -50,19 +66,23 @@ const N = { type: 'integer' };
 const h = (name, description, properties, required) => ({ name, description, input_schema: { type: 'object', properties, required, additionalProperties: false } });
 
 /**
- * `web_search` corre del lado del servidor: nunca llega como tool_use, sus resultados vienen en el content.
- * `busquedas` es lo que QUEDA de la corrida: `max_uses` vale por pedido, asi que el bucle le pasa el resto en cada
- * paso y, cuando no queda ninguna, la herramienta no va (HOY-24b: el tope era por pedido y no por corrida).
+ * `web_search` y `web_fetch` corren del lado del servidor: nunca llegan como tool_use, sus resultados vienen en el content.
+ * La lista es LA MISMA en todos los pasos de una corrida (20/10/2026): hasta ese dia el bucle le pasaba a `max_uses` lo
+ * que quedaba, la lista cambiaba en el paso 2 y la API rechazaba el pedido («Invalid `signature` in `thinking` block...
+ * The `tools` list differs»): ninguna corrida con busqueda pasaba del primer paso. El tope de la corrida (HOY-24b) lo
+ * controla ahora `chequearTopes` con lo que el usage dice que se uso; `max_uses` acota cada pedido.
  */
-export function armarHerramientas(busquedas = TOPES_DEFECTO.busquedas) {
+export function armarHerramientas(busquedas = TOPES_DEFECTO.busquedas, lecturas = TOPES_DEFECTO.lecturas) {
   const quedan = Math.max(0, Math.floor(n(busquedas)));
+  const paginas = Math.max(0, Math.floor(n(lecturas)));
   return [
     h('leer_archivo', 'Lee un archivo de texto del repo o de la carpeta de trabajo (hasta 20 KB por lectura; desde/hasta son lineas desde 1). Una ruta relativa sale de la carpeta de trabajo.', { ruta: S, desde: N, hasta: N }, ['ruta']),
     h('escribir_archivo', 'Escribe (pisa) un archivo SOLO adentro de la carpeta de trabajo. Mantene notas.md con tu avance.', { ruta: S, texto: S }, ['ruta', 'texto']),
     h('correr_comando', `Corre un comando de bash en la carpeta de trabajo. Lista blanca: ls, cat, grep, head, tail, wc, pwd (sobre el repo o la carpeta de trabajo), git de lectura y python sobre un .py que hayas escrito en la carpeta de trabajo. El .py corre adentro de una caja: no escribe fuera de la carpeta de trabajo, no abre programas ni sale a la red, y de COM usa solo CATIA. Rutas con barras normales; sin ; & $ \` < > \\ { } ( ) ! # ni heredoc, y sin ~ al principio de una palabra. La salida llega recortada a ${RECORTE_BYTES} bytes; la completa queda en salidas/.`, { cmd: S, segundos: { ...N, description: `tope de tiempo (120 por defecto, maximo ${COMANDO_MAX_S})` } }, ['cmd']),
     h('leer_pdf', 'Extrae el texto de un PDF (hasta 20 paginas por llamada; sin `paginas`, las primeras 20).', { ruta: S, paginas: { type: 'array', items: N } }, ['ruta']),
     h('terminar', 'La UNICA salida limpia: el entregable (ruta o texto) y un resumen de lo hecho y de lo que quedo pendiente.', { entregable: S, resumen: S }, ['entregable', 'resumen']),
-    ...(quedan > 0 ? [{ type: HERRAMIENTA_BUSQUEDA, name: 'web_search', max_uses: quedan }] : []),
+    ...(quedan > 0 ? [{ type: HERRAMIENTA_BUSQUEDA, name: 'web_search', max_uses: Math.min(quedan, MAX_USOS_POR_PEDIDO) }] : []),
+    ...(paginas > 0 ? [{ type: HERRAMIENTA_LECTURA, name: 'web_fetch', max_uses: Math.min(paginas, MAX_USOS_POR_PEDIDO), max_content_tokens: LECTURA_MAX_TOKENS, url_sources: LECTURA_FUENTES_URL }] : []),
   ];
 }
 
@@ -324,6 +344,9 @@ export function entornoDeCaja(carpeta, env = process.env) {
 /** El motivo del corte si NO hay que hacer la proxima llamada, null si se puede. Puro: se chequea antes de pagar. */
 export function chequearTopes(estado, topes, { modelo, maxTokens, ahora }) {
   if (estado.paso >= topes.pasos) return `pasos: ${estado.paso} de ${topes.pasos}`;
+  // la lista de herramientas no cambia en la corrida (armarHerramientas): pasarse del tope de busquedas o lecturas corta
+  if (n(topes.busquedas) > 0 && n(estado.busquedas) > n(topes.busquedas)) return `busquedas: ${estado.busquedas} de ${topes.busquedas}`;
+  if (n(topes.lecturas) > 0 && n(estado.lecturas) > n(topes.lecturas)) return `lecturas: ${estado.lecturas} de ${topes.lecturas}`;
   const min = (ahora - estado.inicio) / 60000;
   if (min >= topes.minutos) return `tiempo: ${Math.round(min)} min de ${topes.minutos}`;
   // el proximo turno, estimado por arriba: toda la ultima entrada a precio de cache + max_tokens de salida
@@ -492,7 +515,12 @@ function marcarCache(mensajes) {
 async function ejecutarHerramienta(uso, paso, k, ctx) {
   const t0 = ctx.ahora();
   const reg = { k, herramienta: uso.name, entrada: tapar(JSON.stringify(uso.input ?? {})).slice(0, 600), veredicto: 'permitido' };
-  const fin = (contenido, esError) => ({ contenido, esError, registro: { ...reg, duracionMs: ctx.ahora() - t0 } });
+  // Un error sin salida (un comando que sale con codigo != 0 y no imprime nada) iba con content vacio y la API corta la
+  // corrida: «content cannot be empty if `is_error` is true» (verificador f11, 20/10/2026).
+  const fin = (contenido, esError) => ({
+    contenido: esError && !String(contenido ?? '').trim() ? `ERROR sin salida (codigo ${reg.codigo ?? '?'})` : contenido,
+    esError, registro: { ...reg, duracionMs: ctx.ahora() - t0 },
+  });
   const bloqueado = (motivo) => { reg.veredicto = 'bloqueado'; reg.motivo = motivo; return fin(`BLOQUEADO: ${motivo}. No reintentar`, true); };
   try {
     const motivo = await permitir(uso.name, uso.input, ctx);
@@ -525,28 +553,30 @@ export async function correrAgente({
   const fraseFable = fraseFableDe(id, pedidoFable);   // Fable solo con la frase de Fak (api-claude.md §2): sin ella tira aca
   const mensajes = [{ role: 'user', content: [{ type: 'text', text: String(encargo ?? '') }] }];
   const estado = {
-    corrida, modelo: id, paso: 0, gastadoUsd: 0, busquedas: 0, bloqueos: 0, sinTerminar: 0, corte: null, entregable: null, resumen: null,
+    corrida, modelo: id, paso: 0, gastadoUsd: 0, busquedas: 0, lecturas: 0, bloqueos: 0, sinTerminar: 0, corte: null, entregable: null, resumen: null,
     inicio: ahora(), ultimaEntrada: Math.ceil((textoDe(system).length + String(encargo ?? '').length) / CARACTERES_POR_TOKEN),
   };
   const ctx = { carpeta, guardian, ejecutor, registro, ahora };
+  const herramientas = armarHerramientas(t.busquedas, t.lecturas);   // una sola lista para toda la corrida (ver armarHerramientas)
   for (;;) {
     const freno = chequearTopes(estado, t, { modelo: id, maxTokens, ahora: ahora() });
     if (freno) { estado.corte = freno; break; }
     marcarCache(mensajes);
     const { params } = armarParametros({ modelo: id, system, mensajes, maxTokens, effort, cacheTtl: '1h', fallbacks: false, pedidoFable });
-    params.tools = armarHerramientas(t.busquedas - estado.busquedas);   // lo que queda de la corrida, no el tope entero cada vez
+    params.tools = herramientas;
     const t0 = ahora();
     let res;
     try { res = await cliente.beta.messages.create(params); } catch (e) { estado.corte = `api: ${tapar(e?.message ?? e)}`; break; }
     const r = interpretarRespuesta(res, { modelo: id, duracionMs: ahora() - t0 });
     const busq = n(r.usage?.server_tool_use?.web_search_requests);
+    const lect = n(r.usage?.server_tool_use?.web_fetch_requests);   // la lectura no se cobra aparte: sus tokens ya estan en el usage
     const costo = Math.round((r.costoUsd + busq * PRECIO_BUSQUEDA_USD) * 1e6) / 1e6;   // costoUsd ignora las busquedas: se suman aca
-    estado.paso++; estado.gastadoUsd = Math.round((estado.gastadoUsd + costo) * 1e6) / 1e6; estado.busquedas += busq;
+    estado.paso++; estado.gastadoUsd = Math.round((estado.gastadoUsd + costo) * 1e6) / 1e6; estado.busquedas += busq; estado.lecturas += lect;
     estado.ultimaEntrada = tokensEntrada(r.usage);
     registrar({ ...r, costoUsd: costo }, `agente:${corrida}`, etiquetaClave(cliente?.apiKey), fraseFable);
     const contenido = Array.isArray(res?.content) ? res.content : [];
     mensajes.push({ role: 'assistant', content: contenido });
-    const linea = { n: estado.paso, hora: selloLocal(new Date(ahora())), modelo: r.modeloRespuesta ?? id, stop: r.stopReason, duracionMs: r.duracionMs, busquedas: busq, costoUsd: costo, acumuladoUsd: estado.gastadoUsd, herramientas: [] };
+    const linea = { n: estado.paso, hora: selloLocal(new Date(ahora())), modelo: r.modeloRespuesta ?? id, stop: r.stopReason, duracionMs: r.duracionMs, busquedas: busq, lecturas: lect, costoUsd: costo, acumuladoUsd: estado.gastadoUsd, herramientas: [] };
     if (r.rechazo) estado.corte = `rechazo de la API (${r.rechazo.categoria ?? 'sin categoria'})`;
     else if (r.truncado) estado.corte = `respuesta truncada por max_tokens (${maxTokens})`;
     else if (r.stopReason !== 'pause_turn') {   // pause_turn: se reenvia tal cual, sin agregar nada

@@ -116,7 +116,59 @@ describe('agenteApi: la politica, pura', () => {
     const topes = { pasos: 60, minutos: 120, dolares: 6 };
     expect(chequearTopes({ paso: 60, inicio: 0, gastadoUsd: 0, ultimaEntrada: 0 }, topes, { modelo: 'sonnet', maxTokens: 100, ahora: 0 })).toMatch(/^pasos/);
     expect(chequearTopes({ paso: 1, inicio: 0, gastadoUsd: 0, ultimaEntrada: 0 }, topes, { modelo: 'sonnet', maxTokens: 100, ahora: 121 * 60000 })).toMatch(/^tiempo/);
-    expect(armarHerramientas(7).at(-1)).toEqual({ type: 'web_search_20250305', name: 'web_search', max_uses: 7 });
+    expect(armarHerramientas(7, 0).at(-1)).toEqual({ type: 'web_search_20250305', name: 'web_search', max_uses: 7 });
+    // la lectura no puede abrir URL que salgan de las herramientas propias (riesgo de exfiltracion, doc web-fetch-tool)
+    expect(armarHerramientas(7, 5).at(-1)).toEqual({ type: 'web_fetch_20250910', name: 'web_fetch', max_uses: 5, max_content_tokens: 10000, url_sources: { client_tool_results: { type: 'none' } } });
+    // tope 0 o negativo: la herramienta no va y la corrida NO se corta por eso (verde); pasarse de un tope positivo, si (rojo)
+    expect(armarHerramientas(7, 0).map((x) => x.name)).not.toContain('web_fetch');
+    const sinTope = { pasos: 60, minutos: 120, dolares: 6, busquedas: 0, lecturas: -3 };
+    expect(chequearTopes({ paso: 1, inicio: 0, gastadoUsd: 0, ultimaEntrada: 0, busquedas: 4, lecturas: 2 }, sinTope, { modelo: 'sonnet', maxTokens: 100, ahora: 0 })).toBeNull();
+    expect(chequearTopes({ paso: 1, inicio: 0, gastadoUsd: 0, ultimaEntrada: 0, busquedas: 4, lecturas: 2 }, { ...sinTope, busquedas: 3 }, { modelo: 'sonnet', maxTokens: 100, ahora: 0 })).toMatch(/^busquedas/);
+    expect(armarHerramientas(20, 20).map((x) => x.max_uses).filter(Boolean)).toEqual([8, 8]);   // por pedido, como mucho 8
+    expect(armarHerramientas(0, 0).map((x) => x.name)).not.toContain('web_search');
+    // pasarse del tope de busquedas o de paginas corta; llegar justo, no. En el peor caso la corrida termina con
+    // tope + 8 (MAX_USOS_POR_PEDIDO): la lista no puede cambiar, asi que el exceso se acota por pedido
+    const conBusq = { pasos: 60, minutos: 120, dolares: 6, busquedas: 20, lecturas: 10 };
+    const base = { paso: 1, inicio: 0, gastadoUsd: 0, ultimaEntrada: 0 };
+    expect(chequearTopes({ ...base, busquedas: 20, lecturas: 10 }, conBusq, { modelo: 'sonnet', maxTokens: 100, ahora: 0 })).toBeNull();
+    expect(chequearTopes({ ...base, busquedas: 21, lecturas: 0 }, conBusq, { modelo: 'sonnet', maxTokens: 100, ahora: 0 })).toMatch(/^busquedas/);
+    expect(chequearTopes({ ...base, busquedas: 0, lecturas: 11 }, conBusq, { modelo: 'sonnet', maxTokens: 100, ahora: 0 })).toMatch(/^lecturas/);
+  });
+
+  it('regresion 20/10/2026: la lista de herramientas es IDENTICA en todos los pasos aunque se usen busquedas (si cambia, la API rechaza el thinking del paso 2)', async () => {
+    const conBusqueda = { input_tokens: 1000, output_tokens: 200, server_tool_use: { web_search_requests: 3, web_fetch_requests: 2 } };
+    const { cliente, op } = armar([{ content: [usoDe('leer_archivo', { ruta: 'notas.md' })], usage: conBusqueda }, TERMINAR]);
+    const r = await correrAgente({ ...op, topes: { busquedas: 20, lecturas: 20 } });
+    expect(r.terminado).toBe(true);
+    expect(cliente.llamadas).toHaveLength(2);
+    expect(cliente.llamadas[1].tools).toEqual(cliente.llamadas[0].tools);
+    expect(r.busquedas).toBe(3);
+    expect(r.lecturas).toBe(2);
+    expect(op.registro.lineas[0]).toMatchObject({ busquedas: 3, lecturas: 2 });
+  });
+
+  it('regresion 20/10/2026: un comando que falla sin imprimir nada vuelve con texto, no con content vacio (la API lo rechaza con is_error)', async () => {
+    const { cliente, op } = armar([{ content: [usoDe('correr_comando', { cmd: 'ls notas.md' })] }, TERMINAR]);
+    op.ejecutor.correr_comando = async () => ({ texto: '', codigo: 2 });
+    const r = await correrAgente(op);
+    expect(r.terminado).toBe(true);
+    const resultado = cliente.llamadas[1].messages[2].content[0];
+    expect(resultado).toMatchObject({ type: 'tool_result', is_error: true });
+    expect(resultado.content).toBe('ERROR sin salida (codigo 2)');
+    // gemelo: un comando que sale bien sin imprimir nada sigue yendo vacio y sin is_error
+    const ok = armar([{ content: [usoDe('correr_comando', { cmd: 'ls notas.md' })] }, TERMINAR]);
+    ok.op.ejecutor.correr_comando = async () => ({ texto: '', codigo: 0 });
+    await correrAgente(ok.op);
+    expect(ok.cliente.llamadas[1].messages[2].content[0].is_error).toBeUndefined();
+  });
+
+  it('rojo: un paso que se pasa del tope de busquedas corta la corrida antes de la proxima llamada', async () => {
+    const muchas = { input_tokens: 1000, output_tokens: 200, server_tool_use: { web_search_requests: 6 } };
+    const { cliente, op } = armar([{ content: [usoDe('leer_archivo', { ruta: 'notas.md' })], usage: muchas }, TERMINAR]);
+    const r = await correrAgente({ ...op, topes: { busquedas: 5 } });
+    expect(r.terminado).toBe(false);
+    expect(r.corte).toMatch(/^busquedas: 6 de 5/);
+    expect(cliente.llamadas).toHaveLength(1);
   });
 
   it('registroEnDisco: una linea JSONL por paso, la salida completa aparte y mensajes.json al cerrar', () => {

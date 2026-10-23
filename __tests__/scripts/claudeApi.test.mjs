@@ -277,14 +277,60 @@ describe('claudeApi · la clave', () => {
     const env = path.join(dir, '.env.prueba');
     fs.writeFileSync(env, 'ANTHROPIC_API_KEY=sk-ant-principal\nANTHROPIC_API_KEY_HASTA_20261020=sk-ant-dueno\nANTHROPIC_API_KEY_HASTA_20261105=sk-ant-otra\n');
     const el9 = new Date(2026, 9, 9), el20 = new Date(2026, 9, 20), el21 = new Date(2026, 9, 21), dic = new Date(2026, 11, 1);
-    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el9, dirMarcas: dir })).toEqual({ clave: 'sk-ant-dueno', origen: 'secundaria', hasta: '20261020' });
-    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el20, dirMarcas: dir }).clave).toBe('sk-ant-dueno');
-    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el21, dirMarcas: dir })).toEqual({ clave: 'sk-ant-otra', origen: 'secundaria', hasta: '20261105' });
-    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: dic, dirMarcas: dir })).toEqual({ clave: 'sk-ant-principal', origen: 'principal', hasta: null });
+    const venc = { renueva: {} };   // aca las dos prestadas VENCEN (la renovable real se prueba en el test de abajo)
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el9, dirMarcas: dir, ...venc })).toEqual({ clave: 'sk-ant-dueno', origen: 'secundaria', hasta: '20261020' });
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el20, dirMarcas: dir, ...venc }).clave).toBe('sk-ant-dueno');
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el21, dirMarcas: dir, ...venc })).toEqual({ clave: 'sk-ant-otra', origen: 'secundaria', hasta: '20261105' });
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: dic, dirMarcas: dir, ...venc })).toEqual({ clave: 'sk-ant-principal', origen: 'principal', hasta: null });
     expect(A.claveActiva({ env: { ANTHROPIC_API_KEY: 'sk-ant-entorno' }, archivoEnv: env, hoy: el9 }).origen).toBe('entorno');
-    expect(A.leerClave({ env: {}, archivoEnv: env, hoy: el9, dirMarcas: dir })).toBe('sk-ant-dueno');
+    expect(A.leerClave({ env: {}, archivoEnv: env, hoy: el9, dirMarcas: dir, ...venc })).toBe('sk-ant-dueno');
     fs.writeFileSync(env, 'ANTHROPIC_API_KEY_HASTA_20261020=sk-ant-dueno\n');
-    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: dic, dirMarcas: dir })).toEqual({ clave: null, origen: null, hasta: null });
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: dic, dirMarcas: dir, ...venc })).toEqual({ clave: null, origen: null, hasta: null });
+  });
+
+  it('prestada RENOVABLE (la del dueño, se recarga el 20; Fak 20/10/2026): no vence, y la marca de agotada vale solo en su ciclo', () => {
+    const env = path.join(dir, '.env.prueba');
+    fs.writeFileSync(env, 'ANTHROPIC_API_KEY=sk-ant-principal\nANTHROPIC_API_KEY_HASTA_20261020=sk-ant-dueno\n');
+    expect(A.RENUEVA_PRESTADAS['20261020']).toBe(20);
+    const el21 = new Date(2026, 9, 21), dic = new Date(2026, 11, 1);
+    // el 21/10 y en diciembre sigue siendo la que se usa (antes caia en la principal)
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el21, dirMarcas: dir })).toEqual({ clave: 'sk-ant-dueno', origen: 'secundaria', hasta: '20261020' });
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: dic, dirMarcas: dir }).clave).toBe('sk-ant-dueno');
+    // ultima renovacion: el 20 del mes si ya paso, si no el del mes anterior; un 31 cae en el ultimo dia del mes
+    expect(A.ultimaRenovacion('20261020', new Date(2026, 9, 19))).toEqual(new Date(2026, 8, 20));
+    expect(A.ultimaRenovacion('20261020', new Date(2026, 9, 20, 0, 5))).toEqual(new Date(2026, 9, 20));
+    expect(A.ultimaRenovacion('20261020', new Date(2027, 0, 5))).toEqual(new Date(2026, 11, 20));
+    expect(A.ultimaRenovacion('X', new Date(2026, 1, 28), { X: 31 })).toEqual(new Date(2026, 1, 28));
+    expect(A.ultimaRenovacion('20991231', new Date())).toBeNull();
+    // la marca: puesta en este ciclo, vale (salta a la principal); de un ciclo anterior, se ignora sola
+    A.marcarPrestadaAgotada('20261020', { dir });
+    const marca = path.join(dir, 'prestada_agotada_20261020');
+    fs.utimesSync(marca, new Date(2026, 9, 25), new Date(2026, 9, 25));
+    expect(A.prestadaAgotada('20261020', { dir, hoy: new Date(2026, 10, 3) })).toBe(true);
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: new Date(2026, 10, 3), dirMarcas: dir }).clave).toBe('sk-ant-principal');
+    expect(A.prestadaAgotada('20261020', { dir, hoy: new Date(2026, 10, 21) })).toBe(false);
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: new Date(2026, 10, 21), dirMarcas: dir }).clave).toBe('sk-ant-dueno');
+    // re-marcar en el ciclo nuevo vuelve a saltarla: la marca vieja (2020) no vale hoy; agregar al archivo actualiza su
+    // fecha y ahi si vale. Si marcar no actualizara la fecha, el segundo expect daria false (revisor Opus 21/10/2026).
+    fs.utimesSync(marca, new Date(2020, 0, 1), new Date(2020, 0, 1));
+    expect(A.prestadaAgotada('20261020', { dir })).toBe(false);
+    A.marcarPrestadaAgotada('20261020', { dir });
+    expect(A.prestadaAgotada('20261020', { dir })).toBe(true);
+    // orden: una prestada que vence ANTES de la proxima recarga se gasta primero; si vence despues, primero la renovable
+    fs.rmSync(marca);
+    fs.writeFileSync(env, 'ANTHROPIC_API_KEY=sk-ant-principal\nANTHROPIC_API_KEY_HASTA_20261020=sk-ant-dueno\nANTHROPIC_API_KEY_HASTA_20261105=sk-ant-otra\nANTHROPIC_API_KEY_HASTA_20261130=sk-ant-tarde\n');
+    expect(A.prestadaPierdeSaldo('20261020', el21)).toBe('20261119');
+    expect(A.prestadaPierdeSaldo('20261020', new Date(2026, 11, 25))).toBe('20270119');
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: el21, dirMarcas: dir }).clave).toBe('sk-ant-otra');
+    expect(A.claveActiva({ env: {}, archivoEnv: env, hoy: new Date(2026, 10, 6), dirMarcas: dir }).clave).toBe('sk-ant-dueno');
+    // un dia mal cargado en la tabla no la deja vigente para siempre
+    expect(A.prestadaVigente('20261020', dic, { 20261020: 0 })).toBe(false);
+    expect(A.prestadaVigente('20261020', dic, { 20261020: 32 })).toBe(false);
+    // gemelo: una prestada que NO esta en la tabla sigue venciendo y su marca no vence
+    expect(A.prestadaVigente('20261105', new Date(2026, 10, 6))).toBe(false);
+    fs.writeFileSync(path.join(dir, 'prestada_agotada_20991231'), 'x');
+    fs.utimesSync(path.join(dir, 'prestada_agotada_20991231'), new Date(2020, 0, 1), new Date(2020, 0, 1));
+    expect(A.prestadaAgotada('20991231', { dir })).toBe(true);
   });
 
   it('una prestada marcada «sin saldo» se saltea y sigue la principal; sin marca se usa (las dos direcciones)', () => {
