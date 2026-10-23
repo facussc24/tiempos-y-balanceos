@@ -8,7 +8,7 @@
  * configuracion SALEN en `--subir` y ENTRAN en `--bajar` (a `claude-config\` de la carpeta de Fak en la nube de
  * Ingenieria), y nada apunta a la nube personal. Lo que no cambio: los armadores para otras personas no escriben en una nube.
  */
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -66,11 +66,15 @@ describe('desde el 23/10/2026 la configuracion viaja por la nube de Ingenieria',
 
 // Corrida real de _nube.mjs en dry-run (sin --aplicar no copia ni borra nada) contra una PC y una nube de mentira:
 // la PC de mentira se dice con USERPROFILE y la nube con BARACK_NUBE_CEREBRO (scripts/_lib/nubeRutas.mjs).
-describe('_nube.mjs de verdad, en dry-run, con una PC y una nube de mentira', () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'nube-config-'));
-    afterAll(() => { try { rmSync(tmp, { recursive: true, force: true }); } catch { /* temporal */ } });
-    const casa = join(tmp, 'casa');
-    const nube = join(tmp, 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General', 'ASISTENTE INGENIERIA', '5- FACUNDO (memoria y configuracion)');
+// Solo en Windows: _nube.mjs copia con robocopy, que no existe en el runner de GitHub (ubuntu-latest, candado.yml).
+describe.runIf(process.platform === 'win32')('_nube.mjs de verdad, en dry-run, con una PC y una nube de mentira', () => {
+    let tmp = ''; let casa = ''; let nube = '';
+    beforeAll(() => {
+        tmp = mkdtempSync(join(tmpdir(), 'nube-config-'));
+        casa = join(tmp, 'casa');
+        nube = join(tmp, 'BARACK ARGENTINA SRL', 'Ingeniería y Proyecto - General', 'ASISTENTE INGENIERIA', '5- FACUNDO (memoria y configuracion)');
+    });
+    afterAll(() => { try { if (tmp) rmSync(tmp, { recursive: true, force: true }); } catch { /* temporal */ } });
     const escribir = (ruta, texto = 'x') => { mkdirSync(join(ruta, '..'), { recursive: true }); writeFileSync(ruta, texto, 'utf8'); };
     const CONFIG = [['skills', 'skills', 'a/SKILL.md'], ['agentes', 'agents', 'a.md'], ['comandos', 'commands', 'c.md'],
         ['hooks', 'hooks', 'h.sh'], ['reglas', 'rules', 'r.md'], ['planes', 'plans', 'p.md']];
