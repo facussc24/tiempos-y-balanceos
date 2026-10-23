@@ -1,0 +1,42 @@
+id: 08_gate_voladizos_3mf
+nombre: Gate de voladizos antes de laminar - caja sana y puente de 8 mm (los dos se imprimen sin soporte)
+falla_real:
+  cita: "«nunca usas soportes ni sabes usarlos... no verificaste antes de mandar... siempre lo mismo»"
+  fecha: 2026-10-22
+  fuente: >-
+    La misma falla del ejercicio 01 (porta-bulon de la placa probeta, 22/10, dos veces en el dia). Este ejercicio es
+    el del gate 3a del viernes 23/10 (laminar_bambu.py -> voladizos_3mf.py, dos votos): casos A1 y A4 de
+    viernes-23-plan-sistema/banco3d-material/casos_gates_3a_3b.md, escritos por un explorador ANTES del gate.
+pedido: >-
+  Antes de laminar, el control de voladizos tiene que dejar pasar lo que se imprime bien sin soporte: una caja maciza
+  apoyada en la cama y un puente corto (8 mm entre dos pilares, muy por debajo de la luz de 12 mm del control). Un
+  control que solo mira el area que mira hacia abajo (dfam) marca el puente en rojo: por eso dfam es voto informativo
+  y no frena solo.
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    nota: "caja 20 x 20 x 10 apoyada en la cama, armada para el banco con build123d (medidas de ejemplo, no es un diseno de Barack)"
+  - archivo: mal_1_puente_8mm.py
+    esperado: verde
+    falla: >-
+      NO es una pieza mala: es la trampa del voto dfam. Dos pilares de 11 x 10 x 10 separados 8 mm y una tapa de
+      30 x 10 x 2 arriba: el puente de 8 mm se imprime sin soporte (voladizos2 OK, luz menor a 12 mm), pero dfam marca
+      80 mm2 de cara hacia abajo, arriba del umbral de 40 del canon. Si un control lo da rojo, es un falso rojo.
+    nota: "armada para el banco con build123d (medidas del caso A4 de casos_gates_3a_3b.md)"
+controles:
+  - nombre: voladizos
+    existe: true
+    formato: stl
+    opciones: []
+  - nombre: dfam
+    existe: false
+    formato: stl
+    nota: >-
+      El voto dfam vive en la skill (.claude/skills/impresion-3d-bambu/scripts/dfam/dfam_tool.py, solo _overhang_facts,
+      45 grados, umbral 40 mm2 en voladizosCanon.data.json) y es informativo: no hay corrector del banco que lo envuelva.
+formatos: [stl, step]
+notas: >-
+  Ejercicio nuevo del gate 3a (23/10/2026): NO cuenta para aceptar el gate (el banco congelado del bloque 2 es la vara).
+  Las dos piezas son verdes: el ejercicio mide falsos rojos, no mutantes cazados. El caso que si frena (porta-bulon de
+  la placa v4, voladizo 3,7 mm) es el mal_1 del ejercicio 01 y la placa real se prueba en
+  .claude/skills/impresion-3d-bambu/tests/test_voladizos_3mf.py (A2, A3, A7).

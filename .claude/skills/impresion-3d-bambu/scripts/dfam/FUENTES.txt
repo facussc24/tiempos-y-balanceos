@@ -1,0 +1,32 @@
+FUENTE DE LOS ARCHIVOS DE ESTA CARPETA
+======================================
+Repositorio : https://github.com/earthtojake/text-to-cad
+Licencia    : MIT (LICENSE de la raiz y skills/dfam-check/LICENSE son identicos; Copyright (c) 2026 Thompson Labs LLC)
+Commit      : 2f793659fb7bab537e2f00836e06448fc4087cb2   (20/10/2026, "Release 0.7.26")
+Bajado      : 23/10/2026, de https://raw.githubusercontent.com/earthtojake/text-to-cad/2f793659fb7bab537e2f00836e06448fc4087cb2/<ruta>
+Autorizado  : por Fak el 23/10/2026 (dfam_tool.py con su licencia, para el control de voladizos antes de laminar)
+
+Archivos (copia textual, sin tocar; el hash git de cada uno coincide con el del arbol del commit):
+  LICENSE                                         1074 bytes  blob 30be518b2415d9a7514d4bfb879c157d18673b6b
+  skills/dfam-check/LICENSE                       1074 bytes  blob 30be518b2415d9a7514d4bfb879c157d18673b6b
+  skills/dfam-check/SKILL.md                      5979 bytes  blob 0bd202058ed33da048d880e0914fd60f1708a81e
+  skills/dfam-check/scripts/dfam_tool.py         15277 bytes  blob 522ef78f9cbde1e7413b868e2b2745954f5f692c   (399 lineas)
+  skills/dfam-check/requirements.txt               367 bytes  blob a877a70d2864f32fd88a946f2c7c25a9d17aad16
+  skills/dfam-check/references/process-limits.md  3089 bytes  blob bdac17ed6068fb8544fe3a03f1dbe6e6bcacdeac
+
+Pedidos: LICENSE, dfam_tool.py y SKILL.md. Se sumaron requirements.txt (lista de dependencias, 8 renglones) y
+process-limits.md (tabla de limites por proceso a la que remite el SKILL.md), porque son chicos y sin ellos
+el script no se entiende. Quedaron sin bajar: skills/dfam-check/agents/openai.yaml (209 bytes, no sirve) y el resto
+del repositorio (3344 entradas en el arbol).
+
+Renglon de atribucion sugerido si se usa codigo o texto:
+  "dfam_tool.py de earthtojake/text-to-cad (skills/dfam-check), MIT, 2f79365"
+
+COPIA EN LA SKILL impresion-3d-bambu (23/10/2026)
+=================================================
+En esta carpeta (scripts/dfam/) van solo dfam_tool.py (skills/dfam-check/scripts/dfam_tool.py) y LICENSE
+(skills/dfam-check/LICENSE), copia textual con los mismos blob de arriba, y este archivo. SKILL.md, requirements.txt y
+process-limits.md quedaron en la carpeta de fuentes del viernes 23/10, no aca.
+voladizos_3mf.py usa UNA sola funcion: _overhang_facts(malla, 45) (area de las caras que miran hacia abajo a menos de
+45 grados de la horizontal, sin contar las que apoyan en la cama). El resto de dfam_tool.py no se llama (measure entero
+tarda unos 35 s por pieza). dfam es voto INFORMATIVO: no frena solo (voladizosCanon.data.json, "dfam").

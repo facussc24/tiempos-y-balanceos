@@ -5,6 +5,14 @@ Uso (python del sistema o .venv-cad):
                    [--proceso "0.20mm Standard"] [--impresora "Bambu Lab A2L"]
                    [--boquilla 0.4] [--color "#000000" ...] [--parte-filamento "1=2" --parte-filamento "2=1"]
                    [--acomodar]   (reacomoda las piezas; si salen en varias placas, frena)
+                   [--acepto-voladizos "<frase de Fak, 10 caracteres o mas>"]
+  laminar_bambu.py --solo-voladizos <entrada.3mf>   solo el control de voladizos (JSON), sin laminar; sale 0/1/2
+
+VOLADIZOS ANTES DE LAMINAR (desde el 23/10/2026; falla del 22/10: el porta-bulon se imprimio con voladizos sin
+soporte y el control existia y nadie lo corrio): antes de crear la carpeta y antes de bambu-studio.exe se mide cada
+parte con voladizos_3mf.py (dos votos: chequeo_voladizos2.py frena, dfam solo avisa). Hasta el aviso_hasta de
+voladizosCanon.data.json avisa y lamina igual; desde el dia siguiente frena (exit 1) con tres salidas: soportes
+(--ajuste enable_support=1), rotar, o --acepto-voladizos "<frase>" (queda en resumen.json y en el registro).
 
 Por que existe: pasarle a bambu-studio.exe los perfiles del sistema tal cual NO resuelve la
 herencia (`inherits`): el 13/10/2026 salio boquilla 200 C, flujo 1, densidad 0 y un solo
@@ -23,8 +31,26 @@ import sys
 import zipfile
 from pathlib import Path
 
-EXE = Path(r"C:\Program Files\Bambu Studio\bambu-studio.exe")
+# BAMBU_STUDIO_EXE: otro laminador (los tests ponen uno de juguete, .py, para no abrir Bambu Studio de verdad)
+EXE = Path(os.environ.get("BAMBU_STUDIO_EXE") or r"C:\Program Files\Bambu Studio\bambu-studio.exe")
 SIS = Path(os.environ["APPDATA"]) / "BambuStudio" / "system" / "BBL"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import voladizos_3mf as vz  # noqa: E402  (solo biblioteca estandar: la medicion corre en el Python del 3D)
+try:
+    sys.stdout.reconfigure(errors="replace")     # un nombre de parte con un caracter raro no corta el laminado
+except (AttributeError, ValueError):
+    pass
+
+# --solo-voladizos: el control solo, antes del argparse (entrada, salida y --filamento no hacen falta)
+if "--solo-voladizos" in sys.argv:
+    _i = sys.argv.index("--solo-voladizos")
+    if _i + 1 >= len(sys.argv):
+        raise SystemExit("a --solo-voladizos le falta el archivo (.3mf o .stl)")
+    _med = vz.medir(Path(sys.argv[_i + 1]).resolve())
+    _dec = vz.decidir(_med)
+    print("\n".join(_dec["texto"]))
+    print(json.dumps({**_med, "gate": {k: v for k, v in _dec.items() if k != "partes"}}, ensure_ascii=False))
+    sys.exit(vz.codigo(_med))
 
 
 def indice(tipo):
@@ -144,12 +170,38 @@ ap.add_argument("--cama", default=None, help="por defecto, la default_bed_type d
 ap.add_argument("--color", action="append", default=[], help="un color por filamento, #RRGGBB")
 ap.add_argument("--acomodar", action="store_true",
                 help="reacomoda las piezas en la cama (un .3mf armado para otra impresora mas grande)")
+ap.add_argument("--acepto-voladizos", default=None, metavar="FRASE",
+                help="Fak asume lo que queda en el aire: lamina igual y queda registrado (frase de 10 caracteres o mas)")
 a = ap.parse_args()
 
 out = Path(a.salida).resolve()      # absoluta: bambu-studio corre con otra carpeta de trabajo
 if out.exists() and any(out.iterdir()):
     raise SystemExit(f"la carpeta de salida ya tiene archivos y no se pisa: {out}")
+# VOLADIZOS ANTES DE LAMINAR: corre antes de crear la carpeta (un freno no deja nada y el reintento en la misma
+# carpeta anda) y antes de bambu-studio.exe. Un control que no midio NUNCA da verde.
+if a.acepto_voladizos is not None and not vz.frase_valida(a.acepto_voladizos):
+    print(f"NO SE LAMINA: --acepto-voladizos necesita la frase de Fak (10 caracteres o mas); llego «{a.acepto_voladizos}»")
+    sys.exit(1)
+_med_vol = vz.medir(Path(a.entrada).resolve())
+VOLADIZOS = vz.decidir(_med_vol, acepto=a.acepto_voladizos, ajustes=a.ajuste)
+VOLADIZOS["archivo"] = str(Path(a.entrada).resolve())
+print("\n".join(VOLADIZOS["texto"]), flush=True)
+if not VOLADIZOS["sigue"]:
+    sys.exit(1)
+if VOLADIZOS["estado"] == "aceptado":
+    import registro  # noqa: E402
+    registro.anotar({"tipo": "voladizos aceptados", "archivo": VOLADIZOS["archivo"], "frase": VOLADIZOS["frase"],
+                     "fecha_del_control": VOLADIZOS["hoy"], "modo": VOLADIZOS["modo"],
+                     "salida": str(out),
+                     "partes": [{"parte": p["parte"], "veredicto": p["veredicto"], "dfam_mm2": p["dfam_mm2"],
+                                 **{k: (p.get("voladizos2") or {}).get(k) for k in ("voto", "voladizo_mm", "puente_mm",
+                                                                                     "z_mm", "motivo")}}
+                                for p in VOLADIZOS["partes"] if p["veredicto"] != "verde"]})
+    print("  (anotado en el registro de la impresora: voladizos aceptados)")
+
 out.mkdir(parents=True, exist_ok=True)
+# el resultado del control queda escrito ya (si Bambu Studio falla despues, igual se ve; imprimir_pieza.py lo lee)
+json.dump(VOLADIZOS, open(out / "voladizos.json", "w", encoding="utf-8"), indent=1, ensure_ascii=False)
 tmp = out / "_perfiles"
 tmp.mkdir()
 
@@ -198,7 +250,7 @@ for i, f in enumerate(a.filamento):
 
 def correr(entrada, carpeta, nombre, con_perfiles):
     carpeta.mkdir(parents=True, exist_ok=True)
-    cmd = [str(EXE), "--debug", "2"]
+    cmd = ([sys.executable, str(EXE)] if EXE.suffix.lower() == ".py" else [str(EXE)]) + ["--debug", "2"]
     if con_perfiles:
         cmd += ["--load-settings", f"{f_maq};{f_pro}", "--load-filaments", ";".join(f_fil)]
     if CAMA:
@@ -309,7 +361,11 @@ if not resumen["densidad"] or set(resumen["densidad"].split(",")) <= {"0"}:
 if len(a.filamento) > 1 and not resumen["cambios_de_filamento"]:
     fallas.append("se pidieron varios filamentos y el codigo no cambia de filamento")
 resumen["fallas"] = fallas
+resumen["voladizos"] = VOLADIZOS
 json.dump(resumen, open(out / "resumen.json", "w", encoding="utf-8"), indent=1, ensure_ascii=False)
 for k, v in resumen.items():
-    print(f"  {k}: {v}")
+    if k != "voladizos":
+        print(f"  {k}: {v}")
+# el control de voladizos va AL FINAL: quien muestra solo la cola de la salida (imprimir_pieza.py) lo ve igual
+print("\n".join(VOLADIZOS["texto"]))
 sys.exit(1 if fallas else 0)

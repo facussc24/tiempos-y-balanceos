@@ -49,7 +49,8 @@ ULTIMO_ESTADO = ((Path(os.environ["BAMBU_DATOS"]).parent if os.environ.get("BAMB
 
 CIERRES = ("terminada", "fallida", "cancelada")
 TIPOS = set(CIERRES) | {"enviada", "confirmada", "mantenimiento", "ip", "placa_libre", "rollo terminado",
-                        "rollo cargado", "visto", "pesado", "tara", "cambio de rollo"}
+                        "rollo cargado", "visto", "pesado", "tara", "cambio de rollo",
+                        "voladizos aceptados"}   # laminar_bambu.py --acepto-voladizos (23/10/2026)
 CON_TRABAJO = set(CIERRES) | {"enviada", "confirmada", "cambio de rollo"}
 ROLLO_NOMINAL = 1000.0
 # Tara del carrete reutilizable de Bambu SIN MEDIR: la tienda dice 250 g y en el foro se pesan de 208 a 260 g
