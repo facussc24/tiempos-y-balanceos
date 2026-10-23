@@ -1,0 +1,32 @@
+id: 04_nido_holgura
+nombre: "Nido con holgura de 0,2 mm por lado"
+falla_real:
+  - cita: "gancho de mochila: cuatro impresiones persiguiendo una holgura de +-0,15 mm, del tamaño del error de la impresora"
+    fecha: "22-24/08/2026"
+    fuente: ".claude/rules/cad-3d.md, GATE 5"
+pedido: |
+  Diseñar el nido (alojamiento) de una pieza de 60 x 40 x 20 para que entre con 0,2 mm de luz en cada lado, sin
+  chocar y sin bailar. Entregar la pieza y el nido como partes separadas del conjunto.
+piezas:
+  - archivo: bien.py
+    esperado: verde
+  - archivo: mal_1_luz_cero.py
+    esperado: rojo
+    falla: "luz 0,0: entra apretada (las caras se tocan)"
+  - archivo: mal_2_luz_1mm.py
+    esperado: rojo
+    falla: "luz 1,0 mm por lado: baila"
+  - archivo: mal_3_nido_corrido.py
+    esperado: rojo
+    falla: "nido corrido: 0,2 de un lado y -0,1 del otro (el nido se mete 0,1 mm en la pieza)"
+controles:
+  - nombre: holgura_nido
+    existe: true
+    formato: stl
+formatos: [stl, step]
+notas: |
+  - Pieza y nido de ENSAYO del banco (medidas sin fuente de Barack). La holgura de 0,2 por lado es la del pedido del
+    banco; la ficha FDM de la casa (.claude/rules/cad-3d.md) dice 0,3-0,5 por lado para lo que entra en un vano
+    impreso: para una pieza impresa real se le pasan al corrector --min/--max de esa ficha.
+  - La pieza apoya en el fondo del nido, asi que la distancia minima global da 0 siempre: el corrector mide la luz por
+    lado en rebanadas a 3 alturas entre el fondo y el borde, y el choque con el booleano exacto.

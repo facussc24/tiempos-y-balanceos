@@ -1,0 +1,58 @@
+id: 01_porta_bulon
+nombre: Porta-bulon de la plantilla del Insert - lo que queda en el aire al imprimir
+falla_real:
+  cita: "«nunca hacés soporte, esta pieza claramente lo necesitaba y salió así, mal»"
+  fecha: 2026-10-22
+  fuente: >-
+    Fak 22/10 14:33, foto 'WhatsApp Image 2026-10-22 at 2.33.09 PM.jpeg' con los 3 porta-bulones de la placa probeta
+    v4 enmaranados en el hexagono (memoria project_seguimientos_con_fecha.md; revision
+    viernes-23-plan-sistema/informes/09_revision_banco3d.md). Contexto, no es la falla de esta pieza: a las 15:39 Fak
+    escribio «me parece que volviste a mandar a imprimir sin soportes las tuerquitas... no verificaste antes de
+    mandar... siempre lo mismo» sobre la v5, y enseguida «capaz me equivoco» (habla del procedimiento).
+pedido: >-
+  Porta-bulon impreso para un bulon hexagonal M6 x 30 DIN 933: cuerpo de 22 que entra en el agujero de 26 del marco,
+  alojamiento hexagonal de 10,4 abierto hacia la cama y agujero pasante de 6,6. Se imprime con el cuerpo abajo y sin
+  soportes: nada puede quedar en el aire (puente de mas de 12 mm o punta suelta de mas de 2 mm).
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    fuente: "5. 3D/VWA/PATAGONIA - PLANTILLA PERFORADO INSERT/v3 - 2026-10-21 - alineada a la costura (concepto)/generador/casos voladizos (porta-bulon 22-10)/PORTA-BULON M6 hexagonal (puentes escalonados).stl"
+    sha256: 220da17910697ca8c8cadb36034672fa3f511d49e5c5989f881b3dac9f5ab812
+    nota: >-
+      BIEN solo por diseno: puentes escalonados (version de generador/porta_bulon.py de la tarde del 22/10, despues de las 15:40), sin impresion
+      registrada sin soporte (solo se imprimio con soporte, en la placa de la noche, sin resultado anotado). El mismo
+      archivo, con el mismo sha256, esta en 'Piezas para imprimir'. Es la BIEN mas debil del banco: se hizo junto con
+      el corrector.
+  - archivo: mal_1_techo_con_agujero.py
+    esperado: rojo
+    falla: "techo del hexagono con el agujero de 6,6 en el medio: salio enmaranado en la placa probeta v4 (foto de Fak 22/10 14:33)"
+    fuente: "5. 3D/VWA/PATAGONIA - PLANTILLA PERFORADO INSERT/v3 - 2026-10-21 - alineada a la costura (concepto)/Probeta plaquitas intercambiables (22-10)/_VIEJO - no usar/PLACA PROBETA v4 - plaquitas en el punto nuevo + 6 bujes + 3 porta-bulones.3mf (objeto id 10, geometry_9)"
+    sha256: e33cb88e8c28209002e92627cbfc75d8f263bd41e3d9727516de478c38f23da9
+    nota: >-
+      Malla REAL impresa, sacada del .3mf en cada corrida (zipfile + ElementTree): 729 vertices, 1630,87 mm3. Los
+      objetos geometry_10 y geometry_11 son la misma pieza en otro lugar de la placa: cuentan como UN mutante.
+  - archivo: mal_2_tapita.py
+    esperado: sin_respuesta
+    nota: >-
+      Techo cerrado con tapita de sacrificio de 0,4 (placa v5). No es ni BIEN ni MAL: nunca imprimio el techo (se
+      salteo a las 15:41, antes de llegar a el; pausa en la capa 19 de 129). Se informa y no cuenta. El corrector da
+      OK (puente 10,4).
+    fuente: "5. 3D/VWA/PATAGONIA - PLANTILLA PERFORADO INSERT/v3 - 2026-10-21 - alineada a la costura (concepto)/Probeta plaquitas intercambiables (22-10)/PORTA-BULON M6 hexagonal.stl (y .step)"
+    sha256: 0a4f0293a3328da21115c510ede2fef51a882fddbdb0ba1c6d1a2f3618188479
+    sha256_step: c2e3b09a7b51ff73a3f13e06c279e0dcd4087edd472ec96bc6dcba56648b9238
+controles:
+  - nombre: voladizos
+    existe: true
+    formato: stl
+    opciones: []
+formatos: [stl]
+respuesta_conocida:
+  fuente: "memoria project_seguimientos_con_fecha.md, seguimiento 3d-control-voladizos-antes-de-mandar-viernes; revision 09_revision_banco3d.md"
+  texto: "3 de 3 OJO (geometry_9/10/11 de la placa v4: voladizo 3,7, puente 8,1, z 4,5)"
+  medido_23_10: >-
+    chequeo_voladizos2.py sobre geometry_9 sacada del .3mf de la v4: OJO, voladizo 3,7, puente 8,1, z 4,5. Las otras
+    dos dan lo mismo (revision 09). Puentes escalonados: OK (puente 8,1, voladizo 1,0). Tapita: OK (puente 10,4).
+notas: >-
+  Solo STL: de la malla de la v4 y de los puentes escalonados no hay STEP real (no se redibujan para tenerlo).
+  El corrector es chequeo_voladizos2.py copiado byte a byte (sha256 08a234e0...), llamado por el envoltorio
+  voladizos.py. Los umbrales 12 mm (puente) y 2 mm (voladizo) son los del control del 22/10, sin fuente de proceso.

@@ -1,0 +1,65 @@
+id: 02_virolador
+nombre: "Virolador del Upper Trim: que no se hamaque"
+falla_real:
+  - cita: "«queda como flotando»"
+    fecha: "agosto 2026"
+    fuente: "memoria feedback_diseno_3d_medir_antes_de_explicar_y_simular_el_uso.md:12"
+  - cita: "v14 «se hamacaba en la mano» (impresa y probada sobre el panel real)"
+    fecha: "13/10/2026"
+    fuente: "memoria feedback_diseno_3d_medir_antes_de_explicar_y_simular_el_uso.md:3,11-12; .claude/skills/cad-design/data/casos_3d.json (v14: A1, A2 y A3 en ROJO)"
+  - cita: "«el diseño actual es una basura» / las versiones viejas «fueron absolutos fracasos»"
+    fecha: "20/10/2026"
+    fuente: "memoria project_uppertrim_pisador_utillaje.md:15,18 (lo dijo al arrancar el concepto manual nuevo: va por la linea de versiones anteriores, no por una pieza en particular)"
+  - cita: "FALLAS_3D_REALES_23-10.md, item 4 (tres veces)"
+    fecha: "23/10/2026"
+    fuente: "viernes-23-plan-sistema/FALLAS_3D_REALES_23-10.md"
+pedido: |
+  Diseñar el virolador del Upper Trim (2 ranuras) para que, apoyado y apretado sobre el panel tapizado, no se hamaque:
+  ventana de asiento de al menos 1 mm de banda y 0,6 mm de punta, como mucho 3 apoyos rigidos en Z (o 4 sobre una
+  misma superficie medida) y una base que apoye en una superficie, no en una linea.
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    origen: "nube de Ingenieria, 5. 3D/VWA/PATAGONIA - VIROLADOR UPPER TRIM/v16 - 2026-10-17/VIROLADOR v16 - 2 ranuras - 1 CUERPO.stl"
+    sha256: 48aa8294ee934f51bae41de9c3183368fb881dbf63113d9ea30d4149f39acc82
+    origen_step: "misma carpeta, VIROLADOR v16 - 2 ranuras (sin grabado).step"
+    sha256_step: ed83ade9716bc5e0f573906ba0a91e5a209f4c49bda3b01ff0a3381a96a55f98
+  - archivo: mal_1_v14_se_hamaca.py
+    esperado: rojo
+    falla: "la v14 real: ventana de asiento de 0,2 mm de banda y 0,24 de punta; 7 apoyos rigidos sobre 3 superficies; en la simulacion apretando se hamaca en 100 de 100 casos. Sobre una mesa NO se hamaca: la capa geometrica sola da verde"
+    origen: "nube de Ingenieria, 5. 3D/VWA/PATAGONIA - VIROLADOR UPPER TRIM/v14 - 2026-10-13/VIROLADOR v14 - 2 ranuras - 1 CUERPO.stl"
+    sha256: e19246cae52fe1f0afb6a37671a686b4be3cf60dbea18e56647c1af20a6d0914
+    origen_step: "misma carpeta, VIROLADOR v14 - 2 ranuras (sin grabado).step"
+    sha256_step: aa60842ee022aeac2689fa1da75a3b71a1d4e309f50944473993658ec3a1a6be
+  - archivo: mal_2_fondo_en_v.py
+    esperado: rojo
+    falla: "mutante sintetico sobre la v16: cuña en V de 4 mm bajo el fondo, la pieza apoya en una linea y se hamaca (no es una pieza que se haya impreso)"
+controles:
+  - nombre: estabilidad_apoyo
+    existe: true
+    formato: stl
+    opciones: ["--sin-eval"]
+    nota: >-
+      Con --sin-eval mide solo la geometria: no reconoce la v14 por sha256 ni lee lo declarado en eval_casos_3d
+      (revision 09). Si asi la v14 da verde, queda como mutante NO cazado: el control que la cazaria es asiento_blando.
+  - nombre: asiento_blando
+    existe: false
+    nota: "el que mediria el asiento sobre el tapizado en un diseño NUEVO: lo haria .claude/skills/cad-design/scripts/gate_asiento.py (nacio por la v14, pide --escena y --pieza); no se envolvio el 23/10 por tiempo"
+formatos: [stl, step]
+notas: |
+  - La v16 es el BIEN de este corrector, no un diseño aprobado por Fak: nunca se imprimio (memoria
+    project_uppertrim_pisador_utillaje.md, v16 «LAMINADA, NO IMPRESA») y eval_casos_3d.py la espera ROJA en A1 (4 apoyos
+    en Z), aceptada solo porque los 4 estan sobre una misma superficie (A1b VERDE). Su A3 (simulacion apretando) no tiene
+    corrida guardada: el corrector la da verde en lo medido y lo dice en «sin dato».
+  - El envoltorio de eval_casos_3d.py juzga un inventario DECLARADO de apoyos y la simulacion del 13/10, no la geometria
+    del archivo. Para que un archivo no pueda «decir» que es la v14 o la v16, el corrector exige el sha256 del STL real.
+    O sea: el rojo de la v14 sale de RECONOCERLA, no de medir su asiento. A un diseño nuevo que se hamaque igual que la
+    v14 solo le corre la capa geometrica, que es ciega a esa falla (la v14 en la mesa da verde): para eso falta el
+    control asiento_blando (existe: false).
+  - El concepto manual del 20/10 (C:/Dev/_catia_practica/virolador_auto/build_manual.py) no entra como mutante: maneja
+    CATIA (pythoncom), no construye en .venv-cad, y no tiene una hamaca documentada (nunca se imprimio). Su falla
+    documentada son las aristas vivas (P6), que es el ejercicio 05_canto_vivo.
+  - Los .py copian las piezas reales desde la nube en cada corrida y salen con codigo 2 si el sha256 no coincide; los
+    binarios no van al repo. mal_2 tarda ~1 min (importar el STEP real de la v16).
+  - Umbrales de la capa geometrica (apoyo >= 25 % de la huella, centro de masa a >= 10 mm del borde, puntos a < 0,3 mm
+    del plano) son del banco, sin fuente de Barack.

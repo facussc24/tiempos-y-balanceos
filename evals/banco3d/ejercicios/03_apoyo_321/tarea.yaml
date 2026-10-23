@@ -1,0 +1,40 @@
+id: 03_apoyo_321
+nombre: "Ubicacion 3-2-1 de una pieza en un dispositivo"
+falla_real:
+  - cita: "diseñar sin mirar la pieza real o el ensamble: posicionador Top Roll adivinado; el empujador atraviesa la pared rigida del pico"
+    fecha: "21/07/2026"
+    fuente: "FALLAS_3D_REALES_23-10.md items 3 y 5; memoria project_posicionador_toproll_trasero.md:41-46; feedback_3d_honest_capability.md:32"
+  - cita: "apoyos de mas: la v14 del virolador tenia 7 apoyos rigidos controlando Z sobre 3 superficies; la v15, 4 sobre 2 superficies (las dos se hamacan)"
+    fecha: "13/10/2026 y 17/10/2026"
+    fuente: ".claude/skills/cad-design/data/casos_3d.json (A1 y A1b) y eval_casos_3d.py"
+pedido: |
+  Diseñar el apoyo de una placa en su dispositivo con el principio 3-2-1: 3 apoyos en el plano primario (no alineados y
+  lo mas separados posible, con el centro de masa adentro), 2 en el secundario bien separados y 1 en el terciario.
+  Entregar el conjunto y la lista de puntos de apoyo por plano.
+piezas:
+  - archivo: bien.py
+    esperado: verde
+  - archivo: mal_1_cuatro_en_primario.py
+    esperado: rojo
+    falla: "4 apoyos coplanares en el primario: sobredeterminado"
+  - archivo: mal_2_primarios_alineados.py
+    esperado: rojo
+    falla: "los 3 del primario casi alineados cerca de un borde: se hamaca y el centro de masa cae afuera"
+  - archivo: mal_3_dos_en_primario.py
+    esperado: rojo
+    falla: "solo 2 apoyos en el primario: gira sobre la linea que los une"
+controles:
+  - nombre: apoyo_321
+    existe: true
+    formato: stl
+formatos: [stl, step]
+notas: |
+  - Pieza de ENSAYO del banco (placa 200 x 120 x 10, pernos de diametro 10): no es una pieza ni un dispositivo de
+    Barack. Las fallas reales de arriba son las que motivan el ejercicio, no estas medidas.
+  - El conjunto escribe un STEP por parte (apoyo_321__placa.step, apoyo_321__apoyos.step), el conjunto entero
+    (apoyo_321.stl/.step) y apoyo_321.json con los puntos de apoyo por plano. Los puntos salen de la geometria (centro
+    de la cara del perno que toca la placa) y el corrector vuelve a medir que cada punto toque la placa y el perno.
+  - Umbrales del corrector (triangulo >= 25 % de la huella; < 5 % = casi alineados; secundario separado >= 30 % del
+    largo; contacto a <= 0,05 mm) son del banco, sin fuente de Barack.
+  - Limite conocido (revision 09): apoyo_321 cuenta los puntos que DECLARA el .json del conjunto (apoyo_321.py l.76) y
+    solo mide que cada uno toque; un cuarto perno sin declarar pasaria. No cambia el conteo de hoy.

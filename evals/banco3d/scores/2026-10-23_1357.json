@@ -1,0 +1,115 @@
+{
+ "run": "2026-10-23_1357",
+ "fecha": "2026-10-23T13:57:36",
+ "solo": "01_porta_bulon",
+ "resumen": {
+  "mutantes": 2,
+  "cazados": 1,
+  "bien": 1,
+  "bien_en_verde": 1,
+  "correctores_que_faltan": []
+ },
+ "ejercicios": {
+  "01_porta_bulon": {
+   "nombre": "Porta-bulon de la plantilla del Insert - lo que queda en el aire al imprimir",
+   "piezas": {
+    "bien.py": {
+     "esperado": "verde",
+     "falla": "",
+     "construccion": {
+      "ok": true,
+      "detalle": "ok",
+      "segundos": 1.4,
+      "archivos": [
+       "porta_bulon_puentes_escalonados.stl"
+      ]
+     },
+     "controles": {
+      "voladizos": {
+       "obtenido": "verde",
+       "detalle": "nada en el aire: puentes hasta 12 mm, voladizos hasta 2 mm",
+       "medidas": {
+        "puente_mas_largo_mm": 8.1,
+        "voladizo_mas_largo_mm": 1.0,
+        "dada_vuelta": false,
+        "limites": {
+         "puente_mm": 12.0,
+         "voladizo_mm": 2.0
+        }
+       },
+       "segundos": 64.3,
+       "archivo": "porta_bulon_puentes_escalonados.stl",
+       "esperado": "verde"
+      }
+     },
+     "resultado": "en verde"
+    },
+    "mal_1_techo_con_agujero.py": {
+     "esperado": "rojo",
+     "falla": "techo del hexagono con el agujero de 6,6 en el medio: los hilos terminan en el agujero y quedan sueltos (marana en la placa probeta v4, foto de Fak 22/10 14:33)",
+     "construccion": {
+      "ok": true,
+      "detalle": "ok",
+      "segundos": 1.8,
+      "archivos": [
+       "porta_bulon_techo_con_agujero.stl"
+      ]
+     },
+     "controles": {
+      "voladizos": {
+       "obtenido": "rojo",
+       "detalle": "queda en el aire: ['z 4.5: voladizo 3.7 / puente 8.1 mm (59 mm2)']",
+       "medidas": {
+        "puente_mas_largo_mm": 8.1,
+        "voladizo_mas_largo_mm": 3.7,
+        "dada_vuelta": false,
+        "limites": {
+         "puente_mm": 12.0,
+         "voladizo_mm": 2.0
+        }
+       },
+       "segundos": 62.4,
+       "archivo": "porta_bulon_techo_con_agujero.stl",
+       "esperado": "rojo"
+      }
+     },
+     "resultado": "cazado"
+    },
+    "mal_2_tapita.py": {
+     "esperado": "rojo",
+     "falla": "techo cerrado con tapita de sacrificio de 0,4 (placa v5 del 22/10): Fak lo marco a las 15:40 con la foto de los porta-bulones de la placa v5",
+     "construccion": {
+      "ok": true,
+      "detalle": "ok",
+      "segundos": 1.4,
+      "archivos": [
+       "porta_bulon_tapita.step",
+       "porta_bulon_tapita.stl"
+      ]
+     },
+     "controles": {
+      "voladizos": {
+       "obtenido": "verde",
+       "detalle": "nada en el aire: puentes hasta 12 mm, voladizos hasta 2 mm",
+       "medidas": {
+        "puente_mas_largo_mm": 10.4,
+        "voladizo_mas_largo_mm": 0.0,
+        "dada_vuelta": false,
+        "limites": {
+         "puente_mm": 12.0,
+         "voladizo_mm": 2.0
+        }
+       },
+       "segundos": 52.2,
+       "archivo": "porta_bulon_tapita.stl",
+       "esperado": "rojo"
+      }
+     },
+     "resultado": "no cazado"
+    }
+   },
+   "faltan": [],
+   "segundos": 183.3
+  }
+ }
+}
