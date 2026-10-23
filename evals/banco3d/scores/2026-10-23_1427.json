@@ -1,0 +1,506 @@
+{
+ "run": "2026-10-23_1427",
+ "fecha": "2026-10-23T14:27:21",
+ "solo": null,
+ "resumen": {
+  "mutantes": 7,
+  "cazados": 5,
+  "bien": 3,
+  "bien_en_verde": 3,
+  "correctores_que_faltan": [
+   "largo_envolvente"
+  ]
+ },
+ "ejercicios": {
+  "01_porta_bulon": {
+   "nombre": "Porta-bulon de la plantilla del Insert - lo que queda en el aire al imprimir",
+   "piezas": {
+    "bien.py": {
+     "esperado": "verde",
+     "falla": "",
+     "construccion": {
+      "ok": true,
+      "detalle": "ok",
+      "segundos": 0.5,
+      "archivos": [
+       "porta_bulon_puentes_escalonados.stl"
+      ]
+     },
+     "controles": {
+      "voladizos": {
+       "obtenido": "verde",
+       "detalle": "nada en el aire: puentes hasta 12 mm, voladizos hasta 2 mm",
+       "medidas": {
+        "puente_mas_largo_mm": 8.1,
+        "voladizo_mas_largo_mm": 1.0,
+        "dada_vuelta": false,
+        "limites": {
+         "puente_mm": 12.0,
+         "voladizo_mm": 2.0
+        }
+       },
+       "segundos": 16.4,
+       "archivo": "porta_bulon_puentes_escalonados.stl",
+       "esperado": "verde"
+      }
+     },
+     "resultado": "en verde"
+    },
+    "mal_1_techo_con_agujero.py": {
+     "esperado": "rojo",
+     "falla": "techo del hexagono con el agujero de 6,6 en el medio: los hilos terminan en el agujero y quedan sueltos (marana en la placa probeta v4, foto de Fak 22/10 14:33)",
+     "construccion": {
+      "ok": true,
+      "detalle": "ok",
+      "segundos": 0.5,
+      "archivos": [
+       "porta_bulon_techo_con_agujero.stl"
+      ]
+     },
+     "controles": {
+      "voladizos": {
+       "obtenido": "rojo",
+       "detalle": "queda en el aire: ['z 4.5: voladizo 3.7 / puente 8.1 mm (59 mm2)']",
+       "medidas": {
+        "puente_mas_largo_mm": 8.1,
+        "voladizo_mas_largo_mm": 3.7,
+        "dada_vuelta": false,
+        "limites": {
+         "puente_mm": 12.0,
+         "voladizo_mm": 2.0
+        }
+       },
+       "segundos": 12.8,
+       "archivo": "porta_bulon_techo_con_agujero.stl",
+       "esperado": "rojo"
+      }
+     },
+     "resultado": "cazado"
+    },
+    "mal_2_tapita.py": {
+     "esperado": "rojo",
+     "falla": "techo cerrado con tapita de sacrificio de 0,4 (placa v5 del 22/10): Fak lo marco a las 15:40 con la foto de los porta-bulones de la placa v5",
+     "construccion": {
+      "ok": true,
+      "detalle": "ok",
+      "segundos": 0.5,
+      "archivos": [
+       "porta_bulon_tapita.step",
+       "porta_bulon_tapita.stl"
+      ]
+     },
+     "controles": {
+      "voladizos": {
+       "obtenido": "verde",
+       "detalle": "nada en el aire: puentes hasta 12 mm, voladizos hasta 2 mm",
+       "medidas": {
+        "puente_mas_largo_mm": 10.4,
+        "voladizo_mas_largo_mm": 0.0,
+        "dada_vuelta": false,
+        "limites": {
+         "puente_mm": 12.0,
+         "voladizo_mm": 2.0
+        }
+       },
+       "segundos": 12.2,
+       "archivo": "porta_bulon_tapita.stl",
+       "esperado": "rojo"
+      }
+     },
+     "resultado": "no cazado"
+    }
+   },
+   "faltan": [],
+   "segundos": 43.0
+  },
+  "05_canto_vivo": {
+   "nombre": "Canto vivo donde va la mano o la pieza - redondeo de la casa R1,5",
+   "piezas": {
+    "bien.py": {
+     "esperado": "verde",
+     "falla": "",
+     "construccion": {
+      "ok": true,
+      "detalle": "ok",
+      "segundos": 30.8,
+      "archivos": [
+       "mango_R1_5.step",
+       "mango_R1_5.stl"
+      ]
+     },
+     "controles": {
+      "cantos_convexos": {
+       "obtenido": "verde",
+       "detalle": "26 aristas o redondeos convexos, todos con R >= 1.5",
+       "medidas": {
+        "umbral_mm": 1.5,
+        "zona": null,
+        "convexas_revisadas": 26,
+        "cantos_vivos": 0,
+        "radios_chicos": 0,
+        "ejemplos": []
+       },
+       "segundos": 34.0,
+       "archivo": "mango_R1_5.step",
+       "esperado": "verde"
+      }
+     },
+     "resultado": "en verde"
+    },
+    "mal_1_sin_radio.py": {
+     "esperado": "rojo",
+     "falla": "sin radio (R0): canto vivo en las 12 aristas de la barra y en los bordes de los agujeros",
+     "construccion": {
+      "ok": true,
+      "detalle": "ok",
+      "segundos": 24.1,
+      "archivos": [
+       "mango_R0.step",
+       "mango_R0.stl"
+      ]
+     },
+     "controles": {
+      "cantos_convexos": {
+       "obtenido": "rojo",
+       "detalle": "16 cantos vivos (R0) y 0 redondeos menores que R1.5; el mas chico R0.0",
+       "medidas": {
+        "umbral_mm": 1.5,
+        "zona": null,
+        "convexas_revisadas": 18,
+        "cantos_vivos": 16,
+        "radios_chicos": 0,
+        "ejemplos": [
+         {
+          "punto": [
+           -50.0,
+           -15.0,
+           0.0
+          ],
+          "largo": 20.0,
+          "radio": 0.0
+         },
+         {
+          "punto": [
+           -50.0,
+           0.0,
+           -10.0
+          ],
+          "largo": 30.0,
+          "radio": 0.0
+         },
+         {
+          "punto": [
+           -50.0,
+           15.0,
+           0.0
+          ],
+          "largo": 20.0,
+          "radio": 0.0
+         },
+         {
+          "punto": [
+           -50.0,
+           0.0,
+           10.0
+          ],
+          "largo": 30.0,
+          "radio": 0.0
+         },
+         {
+          "punto": [
+           0.0,
+           -15.0,
+           -10.0
+          ],
+          "largo": 100.0,
+          "radio": 0.0
+         },
+         {
+          "punto": [
+           0.0,
+           -15.0,
+           10.0
+          ],
+          "largo": 100.0,
+          "radio": 0.0
+         }
+        ]
+       },
+       "segundos": 24.3,
+       "archivo": "mango_R0.step",
+       "esperado": "rojo"
+      }
+     },
+     "resultado": "cazado"
+    },
+    "mal_2_radio_0_5.py": {
+     "esperado": "rojo",
+     "falla": "R0,5 en todas las aristas: redondeo menor que el de la casa (R1,5)",
+     "construccion": {
+      "ok": true,
+      "detalle": "ok",
+      "segundos": 25.3,
+      "archivos": [
+       "mango_R0_5.step",
+       "mango_R0_5.stl"
+      ]
+     },
+     "controles": {
+      "cantos_convexos": {
+       "obtenido": "rojo",
+       "detalle": "0 cantos vivos (R0) y 24 redondeos menores que R1.5; el mas chico R0.5",
+       "medidas": {
+        "umbral_mm": 1.5,
+        "zona": null,
+        "convexas_revisadas": 26,
+        "cantos_vivos": 0,
+        "radios_chicos": 24,
+        "ejemplos": [
+         {
+          "punto": [
+           -49.85,
+           -14.85,
+           0.0
+          ],
+          "radio": 0.5,
+          "tipo": "cylinder"
+         },
+         {
+          "punto": [
+           -49.85,
+           0.0,
+           -9.85
+          ],
+          "radio": 0.5,
+          "tipo": "cylinder"
+         },
+         {
+          "punto": [
+           -49.85,
+           0.0,
+           9.85
+          ],
+          "radio": 0.5,
+          "tipo": "cylinder"
+         },
+         {
+          "punto": [
+           -49.85,
+           14.85,
+           0.0
+          ],
+          "radio": 0.5,
+          "tipo": "cylinder"
+         },
+         {
+          "punto": [
+           -49.75,
+           -14.75,
+           -9.85
+          ],
+          "radio": 0.5,
+          "tipo": "sphere"
+         },
+         {
+          "punto": [
+           -49.75,
+           -14.75,
+           9.85
+          ],
+          "radio": 0.5,
+          "tipo": "sphere"
+         }
+        ]
+       },
+       "segundos": 30.5,
+       "archivo": "mango_R0_5.step",
+       "esperado": "rojo"
+      }
+     },
+     "resultado": "cazado"
+    }
+   },
+   "faltan": [],
+   "segundos": 168.9
+  },
+  "07_tornillo_7mm": {
+   "nombre": "Tornillo impreso de 7 mm de la costura CNC del Insert - radio bajo la cabeza, largo y cabeza ancha",
+   "piezas": {
+    "bien.py": {
+     "esperado": "verde",
+     "falla": "",
+     "construccion": {
+      "ok": true,
+      "detalle": "ok",
+      "segundos": 1.6,
+      "archivos": [
+       "tornillo_7mm_largo_30_vigente.step",
+       "tornillo_7mm_largo_30_vigente.stl"
+      ]
+     },
+     "controles": {
+      "cabeza_tornillo": {
+       "obtenido": "verde",
+       "detalle": "radio bajo la cabeza 0.90 mm; cabeza 13.955 abajo / 13.955 arriba",
+       "medidas": {
+        "radio_bajo_cabeza_mm": 0.9,
+        "largo_del_acuerdo_mm": 0.8,
+        "radio_vastago_mm": 2.724,
+        "radio_cabeza_mm": 7.419,
+        "largo_cabeza_mm": 2.8,
+        "ancho_cabeza_base_mm": 13.955,
+        "ancho_cabeza_arriba_mm": 13.955,
+        "umbral_radio_mm": 0.9,
+        "tolerancia_mm": 0.1,
+        "tol_ancho_mm": 0.1
+       },
+       "segundos": 16.9,
+       "archivo": "tornillo_7mm_largo_30_vigente.stl",
+       "esperado": "verde"
+      },
+      "largo_envolvente": {
+       "obtenido": "falta",
+       "detalle": "el corrector todavia no existe",
+       "medidas": {},
+       "segundos": 0.0,
+       "esperado": "verde"
+      }
+     },
+     "resultado": "en verde"
+    },
+    "mal_1_sin_radio.py": {
+     "esperado": "rojo",
+     "falla": "sin radio bajo la cabeza: canto vivo entre la cabeza y el vastago, se parte con el empujon de costado",
+     "construccion": {
+      "ok": true,
+      "detalle": "ok",
+      "segundos": 43.9,
+      "archivos": [
+       "fuente__vigente.step",
+       "tornillo_7mm_largo_30_sin_radio.step",
+       "tornillo_7mm_largo_30_sin_radio.stl"
+      ]
+     },
+     "controles": {
+      "cabeza_tornillo": {
+       "obtenido": "rojo",
+       "detalle": "radio bajo la cabeza 0.00 mm (pide 0.9 - 0.1)",
+       "medidas": {
+        "radio_bajo_cabeza_mm": 0.0,
+        "largo_del_acuerdo_mm": 0.0,
+        "radio_vastago_mm": 2.724,
+        "radio_cabeza_mm": 7.419,
+        "largo_cabeza_mm": 2.8,
+        "ancho_cabeza_base_mm": 13.955,
+        "ancho_cabeza_arriba_mm": 13.955,
+        "umbral_radio_mm": 0.9,
+        "tolerancia_mm": 0.1,
+        "tol_ancho_mm": 0.1
+       },
+       "segundos": 14.6,
+       "archivo": "tornillo_7mm_largo_30_sin_radio.stl",
+       "esperado": "rojo"
+      },
+      "largo_envolvente": {
+       "obtenido": "falta",
+       "detalle": "el corrector todavia no existe",
+       "medidas": {},
+       "segundos": 0.0,
+       "esperado": "rojo"
+      }
+     },
+     "resultado": "cazado"
+    },
+    "mal_2_largo_27.py": {
+     "esperado": "rojo",
+     "falla": "largo 27: carpeta OBSOLETO (NO IMPRIMIR) del 20/10, reemplazado por el de 30",
+     "construccion": {
+      "ok": true,
+      "detalle": "ok",
+      "segundos": 1.1,
+      "archivos": [
+       "tornillo_7mm_largo_27_obsoleto.step",
+       "tornillo_7mm_largo_27_obsoleto.stl"
+      ]
+     },
+     "controles": {
+      "cabeza_tornillo": {
+       "obtenido": "verde",
+       "detalle": "radio bajo la cabeza 0.90 mm; cabeza 13.955 abajo / 13.955 arriba",
+       "medidas": {
+        "radio_bajo_cabeza_mm": 0.9,
+        "largo_del_acuerdo_mm": 0.8,
+        "radio_vastago_mm": 2.724,
+        "radio_cabeza_mm": 7.419,
+        "largo_cabeza_mm": 2.8,
+        "ancho_cabeza_base_mm": 13.955,
+        "ancho_cabeza_arriba_mm": 13.955,
+        "umbral_radio_mm": 0.9,
+        "tolerancia_mm": 0.1,
+        "tol_ancho_mm": 0.1
+       },
+       "segundos": 9.8,
+       "archivo": "tornillo_7mm_largo_27_obsoleto.stl",
+       "esperado": "rojo"
+      },
+      "largo_envolvente": {
+       "obtenido": "falta",
+       "detalle": "el corrector todavia no existe",
+       "medidas": {},
+       "segundos": 0.0,
+       "esperado": "rojo"
+      }
+     },
+     "resultado": "no cazado"
+    },
+    "mal_3_cabeza_ancha.py": {
+     "esperado": "rojo",
+     "falla": "la cabeza se ensancha en la base (la cara que apoya en la cama): no entra",
+     "construccion": {
+      "ok": true,
+      "detalle": "ok",
+      "segundos": 37.3,
+      "archivos": [
+       "fuente__vigente.step",
+       "tornillo_7mm_largo_30_cabeza_ancha.step",
+       "tornillo_7mm_largo_30_cabeza_ancha.stl"
+      ]
+     },
+     "controles": {
+      "cabeza_tornillo": {
+       "obtenido": "rojo",
+       "detalle": "la cabeza se ensancha en la base: 14.63 abajo contra 13.96 arriba",
+       "medidas": {
+        "radio_bajo_cabeza_mm": 0.898,
+        "largo_del_acuerdo_mm": 0.8,
+        "radio_vastago_mm": 2.724,
+        "radio_cabeza_mm": 7.419,
+        "largo_cabeza_mm": 2.8,
+        "ancho_cabeza_base_mm": 14.632,
+        "ancho_cabeza_arriba_mm": 13.955,
+        "umbral_radio_mm": 0.9,
+        "tolerancia_mm": 0.1,
+        "tol_ancho_mm": 0.1
+       },
+       "segundos": 12.5,
+       "archivo": "tornillo_7mm_largo_30_cabeza_ancha.stl",
+       "esperado": "rojo"
+      },
+      "largo_envolvente": {
+       "obtenido": "falta",
+       "detalle": "el corrector todavia no existe",
+       "medidas": {},
+       "segundos": 0.0,
+       "esperado": "rojo"
+      }
+     },
+     "resultado": "cazado"
+    }
+   },
+   "faltan": [
+    "largo_envolvente"
+   ],
+   "segundos": 137.8
+  }
+ }
+}
