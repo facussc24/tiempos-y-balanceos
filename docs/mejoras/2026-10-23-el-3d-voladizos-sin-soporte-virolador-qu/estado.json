@@ -1,0 +1,59 @@
+{
+  "x": "el 3D: voladizos sin soporte, virolador que se hamaca, tornillo de 7 mm (Fak 21/10: tenés que convertirte en un verdadero diseñador 3D)",
+  "creado": "2026-10-23 15:39",
+  "pasos": [
+    {
+      "n": 1,
+      "nombre": "Qué me falló (mensajes de Fak y LECCIONES, con conteo)",
+      "hecho": true,
+      "evidencia": "FALLAS_3D_REALES_23-10.md (nube, viernes-23-plan-sistema): 7 fallas repetidas del 09 al 23/10 con cita y fecha; corregido al pie el 23/10 15:20 (tornillo: 2 de 4 no eran reales)",
+      "fecha": "2026-10-23 15:39"
+    },
+    {
+      "n": 2,
+      "nombre": "Qué no sé (huecos escritos antes de buscar)",
+      "hecho": true,
+      "evidencia": "que no se: medir voladizos por capa, asiento sobre blando (asiento_blando no existe), caja de la maquina para el largo (TBD), CATIA solo por COM (informe 03 y 04)",
+      "fecha": "2026-10-23 15:39"
+    },
+    {
+      "n": 3,
+      "nombre": "Qué ya existe hecho y probado (oficial > plugin oficial > repo con estrellas y tests)",
+      "hecho": true,
+      "evidencia": "REPOS_CLAUDE_3D_YA_HECHOS_23-10.md + informes 02 (cadgenbench Apache-2.0, SynthCAD MIT: forma del banco) y 03 (agentic-3d-modeling MIT: 6 aportes; dfam_tool MIT: voladizos por area)",
+      "fecha": "2026-10-23 15:39"
+    },
+    {
+      "n": 4,
+      "nombre": "Banco con pieza BIEN y pieza MAL, congelado («hoy caza X de N»)",
+      "hecho": true,
+      "evidencia": "evals/banco3d congelado 98940479: caza 14 de 15, BIEN 7 de 7, faltan 2 correctores",
+      "fecha": "2026-10-23 15:39"
+    },
+    {
+      "n": 5,
+      "nombre": "Cambio chico como freno que corre solo (nunca regla de texto), con test",
+      "hecho": true,
+      "evidencia": "gate 3a voladizos antes de laminar (merge 8b708a06): voladizos_3mf.py con dos votos, aviso hasta el 30/10 y freno desde el 31/10 con salida; 28 tests; revisor Fable FUNDIR",
+      "fecha": "2026-10-23 16:23"
+    },
+    {
+      "n": 6,
+      "nombre": "Medir de nuevo: entra solo si el banco sube y nada que pasaba deja de pasar",
+      "hecho": true,
+      "evidencia": "banco en main tras el 3a: los 15 congelados siguen 14/15 y BIEN 7/7 (sin regresion); con el caso nuevo 08 del gate: 15/16 y BIEN 9/9; la placa v4 real por el gate da AVISO (ROJO) donde antes no corria nada · congelado 14/15 (BIEN 7/7) → nuevo 15/16 (BIEN 9/9)",
+      "fecha": "2026-10-23 16:29"
+    },
+    {
+      "n": 7,
+      "nombre": "Preguntar solo lo de la lista «solo Fak» (PREGUNTAS_FAK.md)",
+      "hecho": false,
+      "evidencia": "",
+      "fecha": ""
+    }
+  ],
+  "banco": {
+    "congelado": "C:\\Dev\\BarackMercosul\\evals\\banco3d\\scores\\congelado.json",
+    "atado": "2026-10-23 15:39"
+  }
+}
