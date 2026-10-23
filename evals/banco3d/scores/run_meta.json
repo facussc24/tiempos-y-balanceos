@@ -1,8 +1,8 @@
 {
- "run": "2026-10-23_1427",
- "fecha": "2026-10-23T14:27:21",
- "duracion_s": 169.1,
- "git_commit": "cca123d9bb3093317d70a58279ce51a5590f6775",
+ "run": "2026-10-23_1522",
+ "fecha": "2026-10-23T15:22:46",
+ "duracion_s": 240.5,
+ "git_commit": "72a7df0cae30ddb1fa53e3a2ba5006f359a29432",
  "git_rama": "viernes-23/banco3d",
  "git_sucio": true,
  "python": "3.12.13",
@@ -12,7 +12,11 @@
  "jobs": 4,
  "ejercicios": [
   "01_porta_bulon",
+  "02_virolador",
+  "03_apoyo_321",
+  "04_nido_holgura",
   "05_canto_vivo",
+  "06_palanca_0_60",
   "07_tornillo_7mm"
  ]
 }
