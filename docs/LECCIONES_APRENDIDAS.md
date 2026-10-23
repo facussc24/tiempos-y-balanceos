@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **23/10 — Si Fak avisa que se va en N minutos y dice «frená todo», se para de lanzar agentes en ese mismo turno y se cierra lo abierto (commit, push, hora terminada); la tanda de 36 h no vale más que su frase de ese momento** (*"en 7 minutos me voy a mi casa y estás lanzando agentes?"*). Lo que estaba a mitad queda en su worktree sin commit y se anota en AVANCE para retomar.
+
 - **23/10 — «La parte de abajo» de algo que Fak tiene puesto es la de abajo como se usa, no la del dibujo de cotas: la foto marcada lo cazó antes de cortar.** Memoria `project_dedal_pablo_ferula_v2`.
 
 - **20/10 — Una mejora implementada que depende de que me acuerde de un flag está apagada: lancé la vigilancia de la Bambu sin `--detector` y lo vio Fak** (*"imperdonable... es bastante grave"*). Viernes 23/10: `detector-impresion-olvidado-viernes`.
