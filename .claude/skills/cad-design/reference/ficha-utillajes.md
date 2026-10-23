@@ -67,3 +67,13 @@ informe `docs/INVESTIGACION_3D_AFUERA_2026-10-17.md`). Lo que sigue es de la cas
 | K3 | Si se mide con calibre algo que decide, el sistema de medición tiene que poder verlo: %GRR < 10 % adecuado, > 30 % inaceptable (AIAG MSA) | spcforexcel, *Acceptance Criteria for MSA* (ABIERTA, PDF) |
 | K4 | Un ensayo funcional con la pieza del cliente, en la secuencia real (apoyar, apretar en varios lugares, esperar lo que dura el proceso, sacar) | CASA (GATE P de `SKILL.md`) |
 | K5 | El resultado de la prueba vuelve al registro de versiones de esa pieza el mismo día y se convierte en la próxima iteración | CASA (`utillajes-de-apriete.md`) |
+
+## Uniones con perno o tornillo en un pivote (U10-U12)
+
+> Adaptado de evnchn-agentic/agentic-3d-modeling, MIT, commit 12e7c84 (licencia en `LICENCIA_agentic-3d-modeling_MIT.txt`). Traído el 23/10/2026 tras comparar sección por sección (informe `03_skill_compare_y_dfam.md` del viernes 23/10). Ninguna regla se presenta como norma ABIERTA: son criterio del autor, salvo que se diga otra cosa.
+
+| # | Regla | Número | Fuente |
+|---|---|---|---|
+| U10 | En un pivote con tornillo o perno, **un solo miembro sujeta** (la rosca o la tuerca). Los miembros que tienen que girar llevan agujero de paso y una superficie de apoyo explícita (casquillo, hombro o arandela de empuje). Dos miembros girantes agarrados al mismo perno traban la articulación. Contar los agarres de cada pivote antes de dar la pieza por buena | — | evnchn, SKILL.md:33. Criterio del autor, sin fuente externa citada |
+| U11 | Un pivote cargado va en **doble corte** (el eslabón móvil entre dos placas). Una unión solapada de dos placas es corte simple: el tornillo se flexa y los agujeros se ovalizan con los ciclos; solo para poca carga y pocos ciclos. Para movimiento cíclico, tornillo de hombro + casquillo, y un separador o el hombro fija el apriete para que el rozamiento no dependa del par de la tuerca | — | evnchn, SKILL.md:17-18. Criterio del autor, sin fuente externa citada |
+| U12 | Cerrar la **pila a lo largo del eje del perno**: cabeza + placas + separadores + tuerca no pueden comerse el largo de rosca que muerde. Verificar el largo enroscado contra un mínimo elegido, no solo que «entra» en la proyección | El mínimo no se copia (el autor da «≥ 1×D en metal» como ejemplo): para plástico impreso ver R3 de `ficha-fdm.md` (1,5·D contra 2,5·D, sin reconciliar) | evnchn, SKILL.md:33-34 · A MEDIR EN LA A2L para el plástico |

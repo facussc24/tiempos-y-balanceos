@@ -489,3 +489,13 @@ Las 9-17 salen del virolador del Upper Trim (08/2026, tres rondas: resorte → r
       primero lo que sale de la casa (la imagen que va a Fak, el plano del tornero),
       despues lo interno. Y el numero que aparece en dos lugares del MISMO documento y no
       coincide es la firma barata de esto — se busca a proposito.
+
+> Lecciones 40-43: adaptadas de evnchn-agentic/agentic-3d-modeling, MIT, commit 12e7c84 (licencia en `LICENCIA_agentic-3d-modeling_MIT.txt`); traídas el 23/10/2026. Son del autor, no vividas acá, salvo que se diga lo contrario.
+
+40. **Después de cada corte o booleano, afirmar que el volumen bajó lo esperado** (V_antes − V_después ≈ volumen de la herramienta que quedó dentro del sólido). Un corte que no baja el volumen no cortó: contorno en el sentido contrario, herramienta fuera de lugar. Es el complemento de `a_plano.py:128`, que controla lo opuesto (que NO cambie). *(Fuente: evnchn, SKILL.md:80 y :101.)*
+
+41. **Sentido del contorno en build123d:** `extrude` sigue la normal de la cara. Un `Polygon` armado a mano en sentido horario extruye hacia −Z y un corte con ese contorno **no corta** (el volumen casi no baja). Listar los puntos en sentido antihorario y afirmar la caída de volumen (ítem 40). *(Fuente: evnchn, SKILL.md:101; build123d 0.10.0; el autor lo reporta como vivido, acá no se reprodujo.)*
+
+42. **Un filete de radio ≥ el espesor de pared se come la pared:** ponerle tope (ejemplo del autor: 0,5 mm en una pared de 1 mm) y avisar que fue una decisión. *(Fuente: evnchn, SKILL.md:104.)*
+
+43. **No espejar en bloque:** el espejo de un perfil simétrico en X parece un giro de 180° y da vuelta chaflanes y chavetas. Espejar solo lo que está referido al borde que se movió; lo referido al borde propio no se espeja. *(Fuente: evnchn, SKILL.md:105.)*

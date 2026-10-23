@@ -300,6 +300,13 @@ son **idénticos bit a bit** (36.530 impactos, desvío máximo 0,000e+00 mm) sal
 rejilla de barrido **no debe arrancar en el borde del bbox**: hay que correrla hacia adentro
 (`lo + paso·(i + 0,137)`), que además es la regla de no aliasear. Sin ese offset, python puro y
 embree difieren en 460 de 40.000 rayos — todos sobre el borde exacto.
+**Las versiones del entorno CAD son fijas.** Subirlas es un acto deliberado: subir, re-correr
+`smoke_test.py` y `eval_casos_3d.py`, y comparar los STEP/STL exportados con los anteriores antes
+de creerle (el STEP trae `FILE_NAME` con fecha: sacar esa línea antes de comparar). Al recrear el
+venv, chequear con `import` de los módulos y no con «existe el binario». Medido el 23/10/2026:
+build123d 0.11.1, trimesh 5.0.0, numpy 2.4.6, scipy 1.18.0, shapely 2.1.2, embreex 4.4.0; sin lxml
+ni fcl. *(Criterio adaptado de evnchn-agentic/agentic-3d-modeling, MIT, 12e7c84; licencia en
+`reference/LICENCIA_agentic-3d-modeling_MIT.txt`; las versiones son medición propia.)*
 El venv **no tiene pip**: instalar con `uv pip install --python .venv-cad\Scripts\python.exe <pkg>`.
 
 | Qué | Comando |
@@ -360,7 +367,10 @@ literales sueltos en el código.
 7. **Armar lo que Fak mira** — el PDF visual (imagen grande arriba, pocos renglones abajo, una
    idea por página), los renders con `foto3d.py` (**nunca matplotlib**, fondo blanco, con el
    operario a escala en la misma escena que el dispositivo cargado) y la **simulación grabada**
-   de la secuencia del proceso.
+   de la secuencia del proceso. Para superponer sobre la pieza real, un **PDF a escala 1:1**
+   (página = pieza en mm ÷ 25,4, sin recorte «tight», con barra de verificación de 10 mm;
+   imprimir al 100 %; si la barra no mide 10 mm, la hoja no sirve). *(Adaptado de
+   evnchn-agentic/agentic-3d-modeling, MIT, 12e7c84; `reference/LICENCIA_agentic-3d-modeling_MIT.txt`.)*
 8. **Entregar** — `export_deliverables.py --workdir W --pieces out_print/*.step --deliver <destino>
    [--glb] --final --motor foto3d --render <destino>/render_*.png` → exige evidencia (gates
    §0), exporta STL binario fino (curvatura 40) + GLB, copia, corre el GATE E sobre la carpeta
