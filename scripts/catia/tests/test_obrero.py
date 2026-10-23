@@ -57,7 +57,7 @@ class Base(unittest.TestCase):
             f.write(dato if isinstance(dato, str) else json.dumps(dato))
 
     def correr(self, *extra, ejercicios=EJERCICIOS, host="PRUEBA"):
-        cmd = [sys.executable, "-I", OBRERO, "--cola", self.cola, "--hostname", host, "--una-vuelta", "--local",
+        cmd = [sys.executable, "-I", OBRERO, "--cola", self.cola, "--hostname", host, "--una-vuelta", "--ram-min-gb", "0", "--local",
                self.local, "--ejercicios", ejercicios, "--edad-min-seg", "0", "--reintentos-lectura", "2",
                "--espera-lectura", "0", "--espera-reintento-catia", "0", *extra]
         r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
@@ -136,7 +136,7 @@ class CicloEnSeco(Base):
         """Como corre en la notebook (sin --una-vuelta): uno que no se toma no tapa la cola y el obrero queda vivo."""
         self.asignar("a001-PRUEBA.txt", {"item": "a001", "ejercicio": "00_prueba_sin_catia", "hostname": "OTRAPC"})
         self.asignar("a002-PRUEBA.txt", {"item": "a002", "ejercicio": "00_prueba_sin_catia"})
-        cmd = [sys.executable, "-I", OBRERO, "--cola", self.cola, "--hostname", "PRUEBA", "--local", self.local,
+        cmd = [sys.executable, "-I", OBRERO, "--cola", self.cola, "--hostname", "PRUEBA", "--ram-min-gb", "0", "--local", self.local,
                "--edad-min-seg", "0", "--espera-seg", "1", "--espera-lectura", "0"]
         p = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         try:
@@ -166,7 +166,7 @@ class CicloEnSeco(Base):
     def test_recien_llegado_se_deja_para_despues(self):
         self.asignar("n001-PRUEBA.txt", {"item": "n001", "ejercicio": "00_prueba_sin_catia"})
         cmd_extra = ("--edad-min-seg", "3600")
-        r = subprocess.run([sys.executable, "-I", OBRERO, "--cola", self.cola, "--hostname", "PRUEBA", "--una-vuelta",
+        r = subprocess.run([sys.executable, "-I", OBRERO, "--cola", self.cola, "--hostname", "PRUEBA", "--una-vuelta", "--ram-min-gb", "0",
                             "--local", self.local, *cmd_extra], capture_output=True, text=True, timeout=120)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertFalse(os.path.exists(self.mia("resultado-n001.txt")))
