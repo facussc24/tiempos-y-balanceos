@@ -27,8 +27,8 @@
       "fuente": "d24e5d74 31/08 22:02 'Dame el OK y arranco' — Fak: 'no arrancaste ni siquiera?'"
     },
     {
-      "re": "cuando (me )?digas\\b",
-      "fuente": "97ffa544 02/09 13:41 'Ese lo hago cuando digas' — Fak: 'estás esperando que te diga ok nada más' · efb991de 31/08 'Lo cierro cuando me digas'"
+      "re": "cuando (me )?digas\\b(?!\\s*[«\"“])",
+      "fuente": "97ffa544 02/09 13:41 'Ese lo hago cuando digas' — Fak: 'estás esperando que te diga ok nada más' · efb991de 31/08 'Lo cierro cuando me digas' · 23/10/2026: seguido de una cita no cuenta (749f61db 23/10 14:49, «Que cuando digas «vamos a mejorar X» lo haga solo»: citaba un pedido de Fak y el control frenó el cierre)"
     },
     {
       "re": "no toqu[eé] nada todav[ií]a",

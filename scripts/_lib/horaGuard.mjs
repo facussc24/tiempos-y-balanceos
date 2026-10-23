@@ -53,8 +53,10 @@ function parecida(w, p) {
 const alguna = (w, lista) => lista.some((p) => parecida(w, p));
 /** Un verbo de trabajar dicho como pedido: "quedate", "labrua"; no el pasado de un reclamo ("no te quedaste hasta las 8"). */
 const esVerbo = (w) => !/ste$/.test(w) && alguna(w, CANON.verbos);
-/** El reloj: las palabras cortas van exactas ("croe" es "creo" mal escrito, no "cron"). */
-const esReloj = (w) => CANON.reloj.some((p) => (p.length <= 5 ? w === p : parecida(w, p)));
+/** El reloj: las palabras cortas van exactas ("croe" es "creo" mal escrito, no "cron"; 23/10/2026: "alarga" no es
+ *  "alarma", y por un cambio de letra el informe de un subagente pasaba por un pedido de reloj). Las largas
+ *  ("cronometro", "despertador") siguen aceptando errores de tipeo ("cronrormetro"). */
+const esReloj = (w) => CANON.reloj.some((p) => (p.length <= 6 ? w === p : parecida(w, p)));
 
 /**
  * Las horas escritas en el texto normalizado, con su posicion (indice de palabra): "8pm", "10am", "a las 20",
@@ -70,10 +72,18 @@ export function horasEn(palabras) {
     if (m) { out.push({ i, hora: Number(m[1]), minuto: Number(m[2]), sufijo: '' }); return; }
     m = w.match(/^(\d{1,2})$/);                                                      // "hasta 8" · "a las 20" · "8 pm"
     if (m) {
-      const antes = palabras.slice(Math.max(0, i - 2), i).join(' ');
+      const p1 = palabras[i - 1] || '';                                              // la palabra de adelante
+      const p2 = palabras[i - 2] || '';
       const sig = palabras[i + 1] || '';
       const suf = /^(am|pm|hs)$/.test(sig) ? sig : '';
-      if (suf || /\b(hasta|las|la|als|ala|alas)$/.test(antes) || /hasta (las|la|als|ala) ?$/.test(antes)) out.push({ i, hora: Number(m[1]), minuto: 0, sufijo: suf });
+      // 23/10/2026 (informes de subagentes leidos como pedidos): el articulo solo no alcanza ("las 5 formas", "las 7
+      // quejas"); cuenta con a / para / desde / hasta adelante ("a las 20", "hasta las 8"). "alas" / "ala" es el "a las"
+      // pegado de Fak. Y "hasta 2 veces", "hasta 3 dias" no son una hora. El "hasta" con error de tipeo ("hsata las 20",
+      // "asta las 8") sigue valiendo, como en el resto del modulo (parecida).
+      const conArticulo = /^(las|la|als)$/.test(p1) && (/^(a|para|desde)$/.test(p2) || parecida(p2, 'hasta'));
+      const pegado = /^(alas|ala)$/.test(p1);
+      const trasHasta = p1 === 'hasta' && !/^(veces|vez|dias|dia|piezas|pieza|kg|mil)$/.test(sig);
+      if (suf || conArticulo || pegado || trasHasta) out.push({ i, hora: Number(m[1]), minuto: 0, sufijo: suf });
     }
   });
   return out.filter((h) => h.hora >= 0 && h.hora <= 24 && h.minuto < 60);
@@ -108,8 +118,10 @@ export function pideHasta(texto) {
     if (cerca(h, idxNoPares)) { pide = true; senales.push('no_pares+hasta'); }
     if (cerca(h, idxReloj)) { pide = true; senales.push('reloj+hasta'); }
   }
-  // un reloj pedido con una hora cerca, aunque no diga "hasta": "manana a las 10am quiero ver... ponete un cronometro"
-  if (!pide && idxReloj.length && horas.some((x) => cerca(x.i, idxReloj) || cerca(x.i, idxVerbo))) { pide = true; senales.push('reloj+hora'); }
+  // un reloj pedido con una hora cerca, aunque no diga "hasta": "manana a las 10am quiero ver... ponete un cronometro".
+  // El reloj tiene que estar cerca de ESA hora (23/10/2026: con un reloj en cualquier parte del texto, un informe largo
+  // con una hora al lado de un verbo pasaba por pedido).
+  if (!pide && idxReloj.length && horas.some((x) => cerca(x.i, idxReloj))) { pide = true; senales.push('reloj+hora'); }
   let sinHora = false;
   if (!pide) {
     for (const frase of CANON.largo) {
@@ -450,6 +462,9 @@ function ultimoEn(lineas) {
       if (!lineas[k] || !(lineas[k].includes('"user"') || lineas[k].includes('"queue-operation"') || lineas[k].includes('"queued_command"'))) continue;
       let j = null; try { j = JSON.parse(lineas[k]); } catch { continue; }
       if (j.isSidechain || j.isMeta) continue;
+      // lo que el registro marca de otro origen (el informe de un subagente, otra sesion, el aviso de una tarea) no lo
+      // escribio Fak: el mismo criterio que esMensajeRealDeUsuario en cierreGuard.mjs (23/10/2026)
+      if (j.origin?.kind && j.origin.kind !== 'human') continue;
       let c = null;
       // Lo que Fak escribe mientras la sesion esta ocupada no vuelve a aparecer como turno `user`: queda en la cola
       // (`enqueue`) o entra a mitad de turno como adjunto (`queued_command` de origen humano). El 04/10/2026, 66 de sus
