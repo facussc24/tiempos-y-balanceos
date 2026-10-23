@@ -12,8 +12,14 @@ El JSON:
     "adjuntos": ["Y:/.../uno.pdf", "..."],
     "cc_extra": ["Nombre", "..."],                 (opcional: suma copias a las del original)
     "reemplazar_borradores": false,                (opcional, ver abajo)
-    "solo_remitente": false                        (opcional: true = Responder, no Responder a todos)
+    "solo_remitente": false,                       (opcional: true = Responder, no Responder a todos)
+    "imagenes": {"clave": "C:/.../foto.png"}       (opcional: un renglon del cuerpo que es exactamente
+                                                    [[img:clave]] se reemplaza por esa foto DENTRO del mail)
   }
+
+Fotos dentro del cuerpo (Fak, 23/10/2026: "pone las fotos directamente sobre el mail asi ni siquiera tienen que
+abrir el power point"): cada foto va como adjunto oculto con su Content-ID y el cuerpo la muestra con
+<img src="cid:...">, que es como Outlook guarda una imagen pegada.
 
 Por que una respuesta y no un mail nuevo (PPAP del APB P21 hilo naranja, 23/09/2026): el mail
 nuevo con "RE:" en el asunto no queda en la conversacion del cliente y no lleva abajo lo que el
@@ -75,6 +81,12 @@ def responder(cfg):
         rp.Recipients.Add(nombre).Type = 2          # olCC; nunca como string en .CC (regla mail-envio.md)
     for a in cfg.get('adjuntos', []):
         rp.Attachments.Add(a)
+    for clave, ruta in cfg.get('imagenes', {}).items():
+        if not os.path.isfile(ruta):
+            sys.exit(f'ABORTADO: no existe la imagen {ruta}')
+        foto = rp.Attachments.Add(ruta, 1, 0)                       # 1 = olByValue
+        foto.PropertyAccessor.SetProperty('http://schemas.microsoft.com/mapi/proptag/0x3712001F', clave)  # Content-ID
+        foto.PropertyAccessor.SetProperty('http://schemas.microsoft.com/mapi/proptag/0x7FFE000B', True)  # oculto
     # El gerente va siempre, como minimo en copia (regla dura de Fak, 02/10/2026).
     # "sin_gerente": true lo saca, solo con el OK de Fak para ese mail.
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '_lib'))
@@ -90,8 +102,18 @@ def responder(cfg):
     rp.Display()
     time.sleep(1.5)
     html = rp.HTMLBody or ''
-    bloque = ''.join('<p style="font-family:Calibri,sans-serif;font-size:11pt;margin:0 0 6pt 0;">%s</p>'
-                     % (linea or '&nbsp;') for linea in cfg['cuerpo'].split('\n'))
+    imagenes = cfg.get('imagenes', {})
+
+    def renglon(linea):
+        clave = linea.strip()[6:-2] if linea.strip().startswith('[[img:') and linea.strip().endswith(']]') else None
+        if clave is not None:
+            if clave not in imagenes:
+                sys.exit(f'ABORTADO: el cuerpo pide la imagen "{clave}" y no esta en "imagenes"')
+            return '<p style="margin:0 0 10pt 0;"><img src="cid:%s" width="900" style="max-width:100%%;"></p>' % clave
+        return ('<p style="font-family:Calibri,sans-serif;font-size:11pt;margin:0 0 6pt 0;">%s</p>'
+                % (linea or '&nbsp;'))
+
+    bloque = ''.join(renglon(linea) for linea in cfg['cuerpo'].split('\n'))
     i = html.lower().find('<body')
     j = html.find('>', i) + 1 if i >= 0 else 0
     rp.HTMLBody = html[:j] + bloque + html[j:]
