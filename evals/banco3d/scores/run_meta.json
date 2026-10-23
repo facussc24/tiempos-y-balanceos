@@ -1,9 +1,9 @@
 {
- "run": "2026-10-23_1527",
- "fecha": "2026-10-23T15:27:27",
- "duracion_s": 260.1,
- "git_commit": "edb878a3eee715e9b35d2d7eb3e0bcb0bb20ac7d",
- "git_rama": "viernes-23/banco3d",
+ "run": "2026-10-23_1623",
+ "fecha": "2026-10-23T16:23:12",
+ "duracion_s": 364.6,
+ "git_commit": "8b708a0694badb98afaf81053debd718a93f2132",
+ "git_rama": "main",
  "git_sucio": false,
  "python": "3.12.13",
  "python_exe": "C:\\Dev\\BarackMercosul\\.venv-cad\\Scripts\\python.exe",
@@ -17,6 +17,7 @@
   "04_nido_holgura",
   "05_canto_vivo",
   "06_palanca_0_60",
-  "07_tornillo_7mm"
+  "07_tornillo_7mm",
+  "08_gate_voladizos_3mf"
  ]
 }
