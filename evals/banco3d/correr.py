@@ -247,6 +247,9 @@ def main():
         print(f'no hay ejercicios{" con id " + a.solo if a.solo else ""}')
         return 2
     t0, inicio = time.time(), dt.datetime.now()
+    # estado del repo ANTES de correr (al final ya esta el scores nuevo sin commitear y daria sucio siempre)
+    git_antes = {'git_commit': git('rev-parse', 'HEAD'), 'git_rama': git('rev-parse', '--abbrev-ref', 'HEAD'),
+                 'git_sucio': bool(git('status', '--porcelain', '--', BASE))}
     ejercicios = {}
     with cf.ThreadPoolExecutor(max_workers=max(1, a.j)) as ex:
         for eid, res in ex.map(correr_ejercicio, tareas):
@@ -264,8 +267,7 @@ def main():
     except Exception:
         b123 = 'no instalado'
     meta = {'run': datos['run'], 'fecha': datos['fecha'], 'duracion_s': round(time.time() - t0, 1),
-            'git_commit': git('rev-parse', 'HEAD'), 'git_rama': git('rev-parse', '--abbrev-ref', 'HEAD'),
-            'git_sucio': bool(git('status', '--porcelain', '--', BASE)), 'python': platform.python_version(),
+            **git_antes, 'python': platform.python_version(),
             'python_exe': PY, 'build123d': b123, 'hostname': socket.gethostname(), 'jobs': a.j,
             'ejercicios': sorted(ejercicios)}
     with open(os.path.join(SCORES, 'run_meta.json'), 'w', encoding='utf-8') as f:
