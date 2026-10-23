@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **23/10 — «La parte de abajo» de algo que Fak tiene puesto es la de abajo como se usa, no la del dibujo de cotas: la foto marcada lo cazó antes de cortar.** Memoria `project_dedal_pablo_ferula_v2`.
+
 - **20/10 — Una mejora implementada que depende de que me acuerde de un flag está apagada: lancé la vigilancia de la Bambu sin `--detector` y lo vio Fak** (*"imperdonable... es bastante grave"*). Viernes 23/10: `detector-impresion-olvidado-viernes`.
 
 - **20/10 — Pasar a un patrón las marcas de una foto es SUPERPONER y CALCAR, zona por zona, y mostrar cada marca con el corte encima; no forzar las medidas de Fak ni detectar manchas por programa** (*"¿por qué lo complejizaste tanto?... olvidate de mis medidas, que se parezca a la foto"*). Siete versiones por eso.
