@@ -310,6 +310,13 @@ def main():
     rc, out, _, _ = export(w9b, p9b, d, "--hoy", "2026-11-02")
     check("C9", "sin zona declarada: el 02/11 sigue como AVISO y entrega (decision del canon, sin_zona_en_entrega)",
           rc == 0 and "AVISO [GATE cantos]" in out and "Sin zona de mano declarada" in out, out, "exit %s" % rc)
+    evm = workdir.find_evidence(w9b, "cantos_convexos", fixture="mango_R0.step")
+    dlm = workdir.find_evidence(w9b, "delivery")
+    check("C9", "el manifest no se contradice: la evidencia del gate guarda lo medido (sin modo) y la entrega dice aviso",
+          evm and "modo" not in evm and evm.get("cantos_vivos") == 16 and dlm
+          and dlm["cantos_por_pieza"]["mango_R0.step"]["modo"] == "aviso", out,
+          "evidencia modo %s, entrega %s" % (evm and evm.get("modo"),
+                                             dlm and dlm["cantos_por_pieza"]["mango_R0.step"]["modo"]))
     w9c, p9c = wd_export("w9_bien", r15)
     d = os.path.join(w9c, "entrega")
     rc, out, _, _ = export(w9c, p9c, d, "--hoy", "2026-11-02")

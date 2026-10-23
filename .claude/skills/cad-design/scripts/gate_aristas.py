@@ -735,7 +735,9 @@ def main_cantos(a):
             try:
                 from cadlib import workdir as _wd
                 _wd.ensure_workdir(a.workdir)
-                ev = {k: v for k, v in res.items() if k != "gate"}
+                # la evidencia guarda lo MEDIDO; el modo (aviso/freno) lo decide quien la usa: la entrega
+                # sin zona declarada es aviso aunque aca diera freno (cantosCanon, sin_zona_en_entrega)
+                ev = {k: v for k, v in res.items() if k not in ("gate", "modo")}
                 _wd.record_evidence(a.workdir, "cantos_convexos",
                                     fixture=os.path.basename(a.step), **ev)
             except Exception as e:                            # pragma: no cover
