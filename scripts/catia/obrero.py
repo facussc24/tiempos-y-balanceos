@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""obrero.py: el programa que corre en la notebook con CATIA, sin sesion de asistente.
+"""obrero.py: el programa que corre solo en la notebook con CATIA, sin nadie adelante.
 
 Cada 60 s mira `COLA 3D\\asignados\\*-<NOMBRE-PC>.txt` (lo deja la PC principal por la nube). Cada asignado es JSON
 {"item": "...", "ejercicio": "<id>", "instrucciones": "...", "asignado": "<fecha>"}. Toma de a UNO, en orden de nombre,
@@ -224,18 +224,26 @@ class Obrero:
         import catia_base  # sin pywin32 se importa igual (lo de COM va adentro de las funciones)
         return catia_base
 
-    def limpiar_catia(self, trabajo):
+    @staticmethod
+    def leer_mi_catia(trabajo):
+        """Lo que conectar() guardo de la CATIA que arranco (pid + hora de arranque), o None."""
+        try:
+            with open(os.path.join(trabajo, "mi_catia.json"), encoding="utf-8") as f:
+                g = json.load(f)
+            return g if isinstance(g, dict) and g.get("pid") else None
+        except (OSError, ValueError):
+            return None
+
+    def limpiar_catia(self, trabajo, vista=None):
         """Despues de cada corrida con CATIA: si quedo abierta LA DE ESTA CORRIDA (pid + hora de arranque que conectar()
-        guardo en <trabajo>\\mi_catia.json, y es la unica abierta), se cierra. Cualquier otra no se toca."""
+        guardo en <trabajo>\\mi_catia.json, y es la unica abierta), se cierra. Cualquier otra no se toca. `vista` es la
+        copia que el obrero guardo mientras corria: apagar() borra el archivo aunque CATIA no se haya ido (un cuadro
+        abierto frena el Quit), y sin esa copia la CATIA de la corrida quedaria abierta y trabaria la cola."""
         b = self.base()
         pids = b.cnext_abiertos()
         if not pids:
             return "sin CATIA abierta" if pids is not None else "no se pudo mirar (tasklist fallo): no toco nada"
-        try:
-            with open(os.path.join(trabajo, "mi_catia.json"), encoding="utf-8") as f:
-                g = json.load(f)
-        except (OSError, ValueError):
-            g = {}
+        g = self.leer_mi_catia(trabajo) or vista or {}
         if not b.es_mia(pids, g):
             return f"hay CATIA abierta (pids {pids}) que no es la de esta corrida: no se toca"
         subprocess.run(["taskkill", "/PID", str(g["pid"]), "/F"], capture_output=True)
@@ -316,18 +324,22 @@ class Obrero:
         with open(os.path.join(trabajo, "stdout.txt"), "w", encoding="utf-8") as so, \
                 open(os.path.join(trabajo, "stderr.txt"), "w", encoding="utf-8") as se:
             p = subprocess.Popen(cmd, cwd=trabajo, env=env, stdout=so, stderr=se, stdin=subprocess.DEVNULL)
-            corto = False
+            corto, vista = False, None
             while True:
                 try:
                     codigo = p.wait(timeout=2)
                     break
                 except subprocess.TimeoutExpired:
+                    if vista is None:
+                        vista = self.leer_mi_catia(trabajo)
                     if time.time() - t0 > self.a.timeout_seg:
                         p.kill()
                         codigo = p.wait()
                         corto = True
                         break
-        return codigo, corto, round(time.time() - t0, 1)
+        if vista is None:
+            vista = self.leer_mi_catia(trabajo)
+        return codigo, corto, round(time.time() - t0, 1), vista
 
     def procesar(self, nombre, ruta, item):
         """Devuelve 'hecho' (dejo resultado) o 'pospuesto' (queda pendiente para otra vuelta)."""
@@ -363,8 +375,9 @@ class Obrero:
         while intentos < max_intentos:
             intentos += 1
             trabajo = os.path.join(self.local, "trabajo", f"{item}__{sello}__{intentos}")
+            vista = None
             try:
-                codigo, corto, seg = self.correr_una_vez(ej, asignado, trabajo)
+                codigo, corto, seg, vista = self.correr_una_vez(ej, asignado, trabajo)
             except Exception as e:  # noqa: BLE001
                 codigo, corto, seg = None, False, 0.0
                 self.log(f"{item}: no se pudo lanzar el ejercicio: {e!r}")
@@ -376,9 +389,12 @@ class Obrero:
                     pass
             self.log(f"{item}: intento {intentos} termino con codigo {codigo}"
                      f"{' (cortado por tiempo)' if corto else ''} en {seg} s")
+            if vista:
+                res["catia_de_la_corrida"] = vista
             if catia:
                 try:
-                    self.log(f"{item}: {self.limpiar_catia(trabajo)}")
+                    res["catia_al_terminar"] = self.limpiar_catia(trabajo, vista)
+                    self.log(f"{item}: {res['catia_al_terminar']}")
                 except Exception as e:  # noqa: BLE001
                     self.log(f"{item}: AVISO al mirar CATIA despues de la corrida: {e!r}")
             if codigo == SALIDA_CATIA_AJENA and not corto:

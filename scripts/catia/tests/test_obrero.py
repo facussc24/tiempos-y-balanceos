@@ -234,6 +234,33 @@ class ReintentosCatia(Base):
         self.assertIn("CATIA no arranco en 3 intentos", res["error"])
 
 
+    def test_guarda_la_catia_de_la_corrida_aunque_borren_el_archivo(self):
+        """apagar() borra mi_catia.json aunque CATIA no se haya ido: el obrero se queda con la copia que vio."""
+        import catia_base
+        pids = catia_base.cnext_abiertos()
+        d = os.path.join(self.tmp, "ejercicios", "borra_estado")
+        os.makedirs(d)
+        with open(os.path.join(d, "catia.py"), "w", encoding="utf-8") as f:
+            f.write("import json, os, sys, time\n"
+                    "t = sys.argv[1]\n"
+                    "json.dump({'pid': 999999, 'hora': 1, 'arranco': 'prueba'}, open(os.path.join(t, 'mi_catia.json'), 'w'))\n"
+                    "time.sleep(5)\n"
+                    "os.remove(os.path.join(t, 'mi_catia.json'))\n"
+                    "json.dump({'ok': True, 'archivos': []}, open(os.path.join(t, 'salida.json'), 'w'))\n")
+        with open(os.path.join(d, "ejercicio.json"), "w", encoding="utf-8") as f:
+            json.dump({"usa_catia": True}, f)
+        self.asignar("m001-PRUEBA.txt", {"item": "m001", "ejercicio": "borra_estado"})
+        r = self.correr(ejercicios=os.path.join(self.tmp, "ejercicios"))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        if pids:
+            self.assertFalse(os.path.exists(self.mia("resultado-m001.txt")))
+            return
+        res = leer(self.mia("resultado-m001.txt"))
+        self.assertTrue(res["ok"], res)
+        self.assertEqual(res["catia_de_la_corrida"]["pid"], 999999)
+        self.assertEqual(res["catia_al_terminar"], "sin CATIA abierta")
+
+
 class Piezas(unittest.TestCase):
     def test_item_de_archivo(self):
         f = obrero.item_de_archivo

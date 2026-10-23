@@ -1,8 +1,8 @@
-# Obrero de CATIA (notebook sin sesión de asistente)
+# Obrero de CATIA (notebook que trabaja sola)
 
 Pedido de Fak, 23/10/2026 14:25-14:30: «puedo dejar una notebook gamer y vos en paralelo vas resolviendo otras cosas...
-me gusta la idea». Una notebook con CATIA V5 corre `obrero.py`; la PC principal le deja trabajo en la nube y lee lo que
-vuelve. La notebook gasta procesador, no cupo de la cuenta.
+me gusta la idea». Una notebook con CATIA V5 corre `obrero.py` sin nadie adelante; la PC principal le deja trabajo en la
+nube y lee lo que vuelve.
 
 ## Carpetas (todo adentro de `...\viernes-23-plan-sistema\COLA 3D\`)
 

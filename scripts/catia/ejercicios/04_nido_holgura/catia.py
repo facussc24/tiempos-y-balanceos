@@ -220,6 +220,11 @@ def main():
     except Exception:  # noqa: BLE001
         salida["error"] = "excepcion fuera de un paso: " + traceback.format_exc()[-800:]
     finally:
+        try:                                    # el vigia sigue andando mientras CATIA se cierra: un cuadro de un solo
+            cb.apagar(c)                        # OK abierto frena el Quit (memoria 13/10) y el vigia lo acepta
+            salida["catia_apagada"] = True
+        except Exception as e:  # noqa: BLE001
+            salida["catia_apagada"] = f"no se pudo apagar: {e!r}"[:200]
         if vig:
             vig.parar()
             reg.datos["cuadros"] = vig.vistos
@@ -227,11 +232,6 @@ def main():
             fallas = reg.guardar()
         except Exception as e:  # noqa: BLE001
             salida["error_registro"] = repr(e)[:200]
-        try:
-            cb.apagar(c)
-            salida["catia_apagada"] = True
-        except Exception as e:  # noqa: BLE001
-            salida["catia_apagada"] = f"no se pudo apagar: {e!r}"[:200]
     salida.pop("_carpeta")
     salida["archivos"].append(os.path.join("04_nido_holgura", "registro.json"))
     salida["pasos_con_falla"] = fallas
