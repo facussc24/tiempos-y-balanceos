@@ -1,0 +1,16 @@
+{
+ "run": "2026-10-23_1357",
+ "fecha": "2026-10-23T13:57:36",
+ "duracion_s": 183.6,
+ "git_commit": "38e862d5c4d38782b703e1d8ad8a5be62804f82d",
+ "git_rama": "viernes-23/banco3d",
+ "git_sucio": true,
+ "python": "3.12.13",
+ "python_exe": "C:\\Dev\\BarackMercosul\\.venv-cad\\Scripts\\python.exe",
+ "build123d": "0.11.1",
+ "hostname": "DESKTOP-14JG95B",
+ "jobs": 4,
+ "ejercicios": [
+  "01_porta_bulon"
+ ]
+}
