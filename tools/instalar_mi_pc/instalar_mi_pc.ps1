@@ -40,8 +40,8 @@ Write-Host ''
 # 1) de donde sale mi memoria y mi configuracion: de este pendrive (carpeta "nube" al lado de "programa"), o si no, de la
 #    biblioteca de Ingenieria (la que contiene este archivo)
 $paquete = Split-Path -Parent $aqui
-# 20/10/2026: las skills y la configuracion ya no estan en la nube (viven en las PC de Fak y viajan por pendrive, lo arma
-#    scripts/_pendriveAsistente.mjs): alcanza con la memoria para reconocer el pendrive y la nube.
+# 23/10/2026: las skills y la configuracion vuelven a estar en la nube (claude-config); del 20 al 23/10 viajaban solo por
+#    pendrive (scripts/_pendriveAsistente.mjs). Alcanza con la memoria para reconocer el pendrive y la nube.
 $desdePendrive = Test-Path -LiteralPath (Join-Path $paquete 'nube\claude-memoria')
 $bib = $null
 $nube = $null
@@ -171,7 +171,7 @@ if (Test-Path -LiteralPath (Join-Path $Repo 'scripts\_nube.mjs')) {
   if (-not $Ensayo) { Ok 'memoria y claves en su lugar' }
 } else { Haria 'traer la memoria y la configuracion con scripts\_nube.mjs --bajar --aplicar' }
 
-# 4 bis) las skills, reglas, agentes, comandos, hooks y planes: solo vienen en el pendrive (20/10/2026, no estan en la nube).
+# 4 bis) las skills, reglas, agentes, comandos, hooks y planes: vienen en claude-config, de la nube (de nuevo desde el 23/10/2026) o del pendrive.
 #        Se copian sin borrar nada de esta PC (robocopy /E).
 $config = Join-Path $nube 'claude-config'
 if (Test-Path -LiteralPath $config -PathType Container) {
@@ -182,7 +182,7 @@ if (Test-Path -LiteralPath $config -PathType Container) {
     & robocopy $o (Join-Path $claudeDir $sub) /E /COPY:DAT /R:1 /W:1 /NP /NFL /NDL /NJH /NJS | Out-Null
     if ($LASTEXITCODE -ge 8) { Ojo ('no pude copiar ' + $sub + ' (robocopy ' + $LASTEXITCODE + ')') } else { Ok ($sub + ' en su lugar') }
   }
-} else { Ojo 'tus skills, reglas y hooks no vienen aca (no estan en la nube desde el 20/10): traelos con el pendrive (node scripts\_pendriveAsistente.mjs en la PC principal).' }
+} else { Ojo 'tus skills, reglas y hooks no vinieron (no hay claude-config): en la PC principal correr node scripts\_nube.mjs --subir --aplicar y aca node scripts\_nube.mjs --bajar --aplicar.' }
 
 # 5) el settings.json de Claude: el tuyo, sin lo que es de la otra PC, y con el asistente por area apagado
 $ajuste = Join-Path $aqui 'ajustar_settings.mjs'
@@ -198,7 +198,7 @@ if (Test-Path -LiteralPath $origenSettings) {
     if ($Ensayo) { Haria 'dejar tu settings.json de Claude' } else { Ok 'settings.json de Claude: el tuyo' }
     if ($r.respaldo) { Ok ('lo que habia quedo guardado en ' + $r.respaldo) }
   } else { Ojo ('no pude dejar tu settings.json de Claude: ' + $salida) }
-} else { Ojo 'tu settings.json de Claude no viene aca (desde el 20/10 viaja solo por pendrive).' }
+} else { Ojo 'tu settings.json de Claude no vino (no esta en claude-config): lo trae node scripts\_nube.mjs --bajar --aplicar despues de un --subir en la PC principal.' }
 
 # 6) el asistente "por area": si esta, se apaga (no se borra nada)
 $tarea = Get-ScheduledTask -TaskName $TAREA_POR_AREA -ErrorAction SilentlyContinue

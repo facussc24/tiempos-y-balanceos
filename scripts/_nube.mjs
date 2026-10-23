@@ -1,8 +1,10 @@
 /**
  * _nube.mjs — sincroniza la memoria de Claude, los registros de las charlas y los secretos del repo
  * contra OneDrive, para que otra PC arranque sabiendo todo lo que sabe esta.
- * Desde el 20/10/2026 la CONFIG (skills, reglas, agentes, comandos, hooks, planes, settings) NO viaja por la
- * nube: vive solo en las PC de Fak y va por pendrive (scripts/_pendriveAsistente.mjs, scripts/_lib/soloLocal.mjs).
+ * La CONFIG (skills, reglas, agentes, comandos, hooks, planes, settings) viaja otra vez por la nube desde el 23/10/2026
+ * (Fak: "necesito que mis notebooks siempre estén sincronizadas"; del 20 al 23/10 estuvo solo en las PC y iba por
+ * pendrive; scripts/_lib/soloLocal.mjs). Los mods no: viajan por GitHub (mods/ del repo) y cada PC los instala con
+ * `node scripts/_modsInstalar.mjs --aplicar` (esa copia la cambia solo el instalador, que valida y prueba antes).
  *
  * QUE VA Y QUE NO — y por que (decidido el 2026-09-03)
  *
@@ -49,8 +51,8 @@
  *    node scripts/_nube.mjs --sincronizar [--aplicar]
  *        Las dos direcciones a la vez, sin espejo: gana el archivo mas nuevo, nada se borra, y lo
  *        local que se va a pisar y esta PC edito despues de su ultimo sync se guarda antes en
- *        <nube>\_conflictos\<PC>\<fecha>\. Solo memoria y las claves (reglas, skills, agentes,
- *        comandos, hooks y planes ya no, desde el 20/10/2026): los caches (.sgc-cache, .arb-cache, .mail-cache) y settings.json
+ *        <nube>\_conflictos\<PC>\<fecha>\. Memoria, reglas, skills, agentes,
+ *        comandos, hooks, planes (otra vez desde el 23/10/2026) y las claves: los caches (.sgc-cache, .arb-cache, .mail-cache) y settings.json
  *        quedan para --subir/--bajar a mano (el buzon lo escriben las dos PC y los settings traen
  *        rutas de la PC de origen). Si el repo esta limpio y atras de GitHub, lo trae (--ff-only).
  *        Logica pura y probada: scripts/_lib/nubeSincronizar.mjs.
@@ -73,7 +75,7 @@ import {
 import { carpetasDeRegistros, subirRegistros, contarRegistros, leerSettings, avisoLimpieza } from './_lib/nubeRegistros.mjs';
 import { leerVersionClaude, avisoVersion } from './_lib/nubeVersion.mjs';
 import { psRun } from './_lib/powershell.mjs';
-import { PIEZAS_SOLO_LOCAL, SUELTOS_SOLO_LOCAL, CARPETA_CONFIG_EN_NUBE } from './_lib/soloLocal.mjs';
+import { PIEZAS_SOLO_LOCAL, SUELTOS_SOLO_LOCAL } from './_lib/soloLocal.mjs';
 
 const HOME = homedir();
 // El repo es el padre de scripts/, no una ruta fija: si se clona en otra carpeta, el
@@ -116,15 +118,11 @@ const SUELTOS_TODOS = [
     [REPO, '.qr-secret', 'repo-privado', 'clave de firma de los QR de documentos'],
 ];
 
-// 20/10/2026 (Fak: *"lo que no quiero es que tengan mis skills... quiero tenerlas en local"*): las skills, reglas,
-// agentes, comandos, hooks, planes y el settings ya no viajan por la nube, en ninguna direccion. A otra PC van por
-// pendrive. Lo que habia en la nube se movio a C:\Dev\ASISTENTE-LOCAL\ (scripts/_lib/soloLocal.mjs).
+// 23/10/2026 (Fak: *"skills todo; necesito que mis notebooks siempre estén sincronizadas"*): las listas de solo-local
+// quedaron vacias y todo vuelve a viajar a claude-config\ (del 20 al 23/10 las skills, reglas, agentes, comandos, hooks,
+// planes y el settings no salian de la PC). El filtro queda: si algun dia una pieza deja de viajar, se saca en soloLocal.mjs.
 const PIEZAS = PIEZAS_TODAS.filter(([clave]) => !PIEZAS_SOLO_LOCAL.has(clave));
 const SUELTOS = SUELTOS_TODOS.filter(([, nombre]) => !SUELTOS_SOLO_LOCAL.has(nombre));
-/** Si la carpeta de la configuracion reaparecio en la nube (por ejemplo, una PC con el programa viejo), se avisa. */
-const avisoConfigEnNube = () => (existsSync(join(NUBE, CARPETA_CONFIG_EN_NUBE))
-    ? `en la nube volvio a aparecer ${CARPETA_CONFIG_EN_NUBE}\\ (las skills y la configuracion viven solo en la PC desde el 20/10): puede ser una PC con el programa viejo; mirar quien y sacarla con el OK de Fak`
-    : null);
 
 // 16/10/2026 (tanda 1.7): el settings de ESTA PC se deja para esta PC con el mismo ajustador del instalador: si vino de
 // otra PC (sus rutas de usuario, su PATH) se ajusta entero; si ya es de aca, solo se cablean los hooks globales que falten
@@ -404,9 +402,6 @@ if (sincronizar) {
         avisos.push(`pc nueva: no pude medir que le falta a esta PC (${String(e && e.message ? e.message : e).slice(0, 80)})`);
     }
 
-    const avConfig = avisoConfigEnNube();
-    if (avConfig) avisos.push(avConfig);
-
     // El codigo viaja por GitHub, no por la nube: si el repo esta limpio y atras, se trae; si tiene
     // commits sin pushear, se avisa (la otra PC no los ve). Sin red, se dice y se sigue.
     const git = estadoGitCompleto();
@@ -503,7 +498,12 @@ if (subir && aplicar && fallos === 0) {
         try { return execSync('git rev-parse --short HEAD', { cwd: REPO, encoding: 'utf8' }).trim(); }
         catch { return '?'; }
     })();
+    // 23/10/2026: se conserva lo que ya tenia (por_pc, el ultimo --sincronizar de cada PC). Escrito de cero, ultimoSyncDe()
+    // daba 0 en las dos PC y su proxima sincronizacion resguardaba en _conflictos todo lo que fuera a pisar.
+    let previo = {};
+    try { previo = JSON.parse(readFileSync(join(NUBE, '_ESTADO.json'), 'utf8')) || {}; } catch { previo = {}; }
     writeFileSync(join(NUBE, '_ESTADO.json'), JSON.stringify({
+        ...previo,
         fecha: new Date().toISOString().slice(0, 16).replace('T', ' '),
         pc: process.env.COMPUTERNAME || 'desconocida',
         commitRepo: commit,
@@ -565,9 +565,10 @@ function leeme() {
         '',
         '       node scripts/_nube.mjs --bajar --aplicar',
         '',
-        '   Ese comando deja las memorias y las credenciales en su lugar. Las skills,',
-        '   las reglas, los hooks y la configuracion NO estan en la nube (desde el',
-        '   20/10/2026 viven solo en la PC): se pasan con el pendrive.',
+        '   Ese comando deja en su lugar las memorias, las credenciales, las skills,',
+        '   las reglas, los agentes, los hooks y el settings (desde el 23/10/2026',
+        '   vuelven a viajar por aca). Los mods se instalan aparte, desde el repo:',
+        '       node scripts/_modsInstalar.mjs --aplicar',
         '',
         '',
         '------------------------------------------------------------------------',
@@ -589,8 +590,9 @@ function leeme() {
         '  claude-memoria/   Lo que Claude sabe de como trabajas. Lo mas valioso de',
         '                    todo esto: sin esta carpeta el Claude de la otra PC',
         '                    arranca de cero.',
-        '  (sin claude-config: desde el 20/10/2026 las skills, reglas, agentes,',
-        '                    hooks y el settings viven solo en la PC; van por pendrive)',
+        '  claude-config/    Las skills, reglas, agentes, comandos, hooks, planes y el',
+        '                    settings.json de Claude Code (de nuevo desde el 23/10/2026;',
+        '                    del 20 al 23/10 estuvieron solo en la PC).',
         '  claude-registros/ Los registros .jsonl de las charlas de cada PC (de todas',
         '                    sus carpetas, menos las temporales y las de estudio), una',
         '                    carpeta por proyecto. Solo suben (--sincronizar): la PC',

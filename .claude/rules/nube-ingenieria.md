@@ -24,13 +24,23 @@ En la PC hay dos carpetas de OneDrive con nombre parecido. Las dos son de la emp
    en la PC. `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/_nubeSubio.ps1` (sale con
    0 si subió todo).
 
-## Las skills y la configuracion NO van a ninguna nube (Fak, 20/10/2026)
+## Las skills y la configuracion van a la nube de Ingenieria, para sincronizar las notebooks (Fak, 23/10/2026)
 
-*"Lo que no quiero es que tengan mis skills... quiero tenerlas en local"*. Skills, reglas, agentes, comandos, hooks,
-planes y el settings viven solo en las PC de Fak; a CATA o la notebook van por pendrive
-(`node scripts/_pendriveAsistente.mjs --destino E:\ --aplicar`). La memoria, los registros de las charlas, los mails y
-las claves siguen en la nube de Ingenieria. Freno en codigo: `scripts/_lib/soloLocal.mjs` (test `soloLocal.test.mjs`).
-Lo que estaba subido quedo en `C:\Dev\ASISTENTE-LOCAL\`. Memoria `feedback_skills_solo_en_la_pc_no_en_la_nube`.
+*"Me gustaría volver a subir la inteligencia a la nube para sincronizar entre mis notebooks... ya fue, skills todo;
+necesito que mis notebooks siempre estén sincronizadas"*. Skills, reglas, agentes, comandos, hooks, planes y el settings
+van a `claude-config\` de `ASISTENTE INGENIERIA\5- FACUNDO (memoria y configuracion)\`, junto a la memoria, los registros
+de las charlas y las claves (`repo-privado\`, como siempre). Nunca a la nube personal.
+- **Cada notebook las baja** con `node scripts/_nube.mjs --bajar --aplicar`. Necesita el repo clonado de GitHub (con este
+  cambio traido por `git pull`), Node y la biblioteca de Ingenieria sincronizada con la cuenta de Fak. La tarea de cada
+  2 h (`--sincronizar`) las intercambia sola: gana el mas nuevo, nada se borra. El settings va solo con `--subir`/`--bajar`
+  (trae rutas de la PC de origen; al bajar se ajusta a la PC).
+- **Los mods no van por la nube**: su fuente viaja por GitHub (`mods/`) y cada PC los instala con
+  `node scripts/_modsInstalar.mjs --aplicar` (esa copia la cambia solo el instalador, que valida y prueba antes).
+- En codigo: `scripts/_lib/soloLocal.mjs` (listas de solo-local vacias; test `soloLocal.test.mjs`). Los armadores de
+  asistentes para compañeros siguen sin escribir en una nube.
+- Historia: del 20 al 23/10/2026 estuvieron solo en las PC (*"quiero tenerlas en local"*) y viajaban por pendrive
+  (`scripts/_pendriveAsistente.mjs`, que sigue andando para una PC sin la biblioteca). Memoria
+  `feedback_skills_solo_en_la_pc_no_en_la_nube` (al pie, lo revertido).
 
 ## Lo que hoy sigue en la nube personal (falta mudar; cada mudanza con el OK de Fak)
 

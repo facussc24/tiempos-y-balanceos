@@ -68,7 +68,7 @@ export function avisoPcNueva(d) {
   if (!f.length) return '';
   const lista = f.map((p) => `${queDe(p, d)} -> ${p.comando}`).join(' · ');
   return `${MARCA_PC_NUEVA} A esta PC (${d.pc || os.hostname()}) le falta${f.length === 1 ? '' : 'n'} ${f.length} cosa${f.length === 1 ? '' : 's'} para correr los scripts de la casa: ${lista}. ` +
-    'Se instalan con el si de Fak en el chat, desde la carpeta del repo; la memoria viaja por la nube; las skills, reglas y hooks, por pendrive (scripts/_pendriveAsistente.mjs, desde el 20/10/2026).';
+    'Se instalan con el si de Fak en el chat, desde la carpeta del repo; la memoria, las skills, las reglas y los hooks viajan por la nube (node scripts/_nube.mjs --bajar --aplicar o --sincronizar, de nuevo desde el 23/10/2026); los mods, con node scripts/_modsInstalar.mjs --aplicar.';
 }
 
 /** Las dependencias reales de esta PC (lee el disco, pregunta por los programas; no instala nada). */
