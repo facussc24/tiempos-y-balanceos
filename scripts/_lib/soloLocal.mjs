@@ -1,22 +1,27 @@
 /**
- * soloLocal.mjs — las skills, reglas, agentes, hooks y la configuracion de Claude viven SOLO en las PC de Fak.
+ * soloLocal.mjs — que piezas de la configuracion de Claude NO viajan por la nube de Ingenieria. Desde el 23/10/2026: NINGUNA.
  *
- * Fak, 20/10/2026: *"lo que no quiero es que tengan mis skills... quiero tenerlas en local"*, *"si quiero usar la nube
- * pero me molesta que mi codigo este subido ahi"*, *"no me molesta tener que pasarle a CATA cada tanto por el pendrive"*.
- * La memoria, los registros de las charlas y los mails siguen yendo a la nube; esto no.
+ * Fak, 23/10/2026 15:30 (revierte su regla del 20/10): *"me gustaría volver a subir la inteligencia a la nube para
+ * sincronizar entre mis notebooks... así no pierdo tiempo con esa mierda... github, nube, así laburo más rápido; el otro
+ * día te había dicho que no pero mejor sí, ya fue, skills todo; necesito que mis notebooks siempre estén sincronizadas"*.
+ * Desde ahi las skills, reglas, agentes, comandos, hooks, planes y el settings vuelven a `claude-config\` de
+ * `ASISTENTE INGENIERIA\5- FACUNDO (memoria y configuracion)\` (nunca a la nube personal `OneDrive - BARACK ARGENTINA SRL\`),
+ * y cada notebook las baja con `node scripts/_nube.mjs --bajar --aplicar` (o la tarea `--sincronizar` cada 2 h).
+ * Historia: del 20 al 23/10/2026 estuvieron solo en las PC (*"quiero tenerlas en local"*) y viajaban por pendrive
+ * (`scripts/_pendriveAsistente.mjs`, que sigue andando para una PC sin la biblioteca sincronizada).
  *
- * Lo usan `scripts/_nube.mjs` (no sube ni sincroniza estas piezas) y los armadores de asistentes para otras personas
- * (`tools/claude-area/persona/armar.mjs`, `tools/claude-area/mejoras/publicar.mjs`), que no escriben en una nube.
- * Lo que habia en la nube se movio el 20/10/2026 a `C:\Dev\ASISTENTE-LOCAL\` (copia verificada antes de sacarlo).
+ * Lo que NO cambia: los armadores de asistentes para OTRAS personas (`tools/claude-area/persona/armar.mjs`,
+ * `armar_herramientas.mjs`, `tools/claude-area/mejoras/publicar.mjs`) siguen sin escribir en una nube (`frenarSiEsNube`):
+ * lo de Fak fue sobre sus notebooks, no sobre publicar sus skills para los compañeros.
  */
 
-/** Piezas de `_nube.mjs` que ya no viajan por la nube. */
-export const PIEZAS_SOLO_LOCAL = new Set(['reglas', 'skills', 'agentes', 'comandos', 'hooks', 'planes']);
+/** Piezas de `_nube.mjs` que no viajan por la nube. Vacia desde el 23/10/2026 (Fak: "skills todo"). */
+export const PIEZAS_SOLO_LOCAL = new Set();
 
-/** Archivos sueltos de `_nube.mjs` que ya no viajan (el settings trae los hooks y la configuracion). */
-export const SUELTOS_SOLO_LOCAL = new Set(['settings.json']);
+/** Archivos sueltos de `_nube.mjs` que no viajan. Vacia desde el 23/10/2026: el settings vuelve a subir y bajar. */
+export const SUELTOS_SOLO_LOCAL = new Set();
 
-/** Subcarpeta de la nube donde estaba la configuracion: si reaparece, la subio una PC con el programa viejo. */
+/** Subcarpeta de la nube donde va la configuracion (skills, reglas, agentes, comandos, hooks, planes, settings). */
 export const CARPETA_CONFIG_EN_NUBE = 'claude-config';
 
 /**
