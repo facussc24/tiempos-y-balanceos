@@ -94,6 +94,12 @@ for parte, fil, _ in plan:
     cmd += ["--parte-filamento", f"{parte}={fil}"]
 r = subprocess.run(cmd, text=True, capture_output=True)
 print(r.stdout[-1800:])
+# el control de voladizos (23/10/2026) se lee de su archivo y no de la cola de la salida: un AVISO que quedo fuera de
+# los 1800 caracteres de arriba se veria igual
+import voladizos_3mf as vz  # noqa: E402
+_aviso_vol = vz.aviso_de_carpeta(a.carpeta)
+if _aviso_vol:
+    print(_aviso_vol)
 if r.returncode != 0:
     print(r.stderr[-600:])
     raise SystemExit("el laminado no paso los controles: no se manda")

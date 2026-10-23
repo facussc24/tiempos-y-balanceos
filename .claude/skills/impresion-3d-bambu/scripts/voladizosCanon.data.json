@@ -1,0 +1,30 @@
+{
+  "_que_es": "Canon del control de voladizos ANTES de laminar (voladizos_3mf.py; lo llama laminar_bambu.py antes de crear la carpeta y antes de bambu-studio.exe). Nace de la falla del 22/10/2026 (Fak, dos veces en el dia: «nunca usas soportes... siempre lo mismo»): el porta-bulon de la placa probeta se imprimio con voladizos sin soporte; el control (chequeo_voladizos2.py) existia y nadie lo corrio. Fak, 23/10/2026: gate que corre solo, con test, en modo AVISO 7 dias y despues freno (a Fak le avisa y si confirma pasa).",
+  "version": "2026-10-23.1",
+  "aviso_hasta": "2026-10-30",
+  "_aviso_hasta": "Hasta esta fecha INCLUSIVE el control avisa y se lamina igual (exit 0, aviso en pantalla, en voladizos.json y en resumen.json). Desde el dia siguiente frena (exit 1) si una parte da rojo o no se pudo medir. La fecha de hoy sale de BAMBU_HOY=AAAA-MM-DD (los tests) o del reloj de la PC. Renglon en scripts/_lib/retiros.data.json (retiros_decididos, impresion-3d-bambu:voladizos-aviso-a-freno).",
+  "tope_segundos": 120,
+  "_tope_segundos": "Tope total de la medicion (todas las partes en paralelo, un subproceso por parte con timeout). Lo que no se midio en ese tiempo queda NO MEDIDO, nunca verde. Medido el 23/10 (casos_gates_3a_3b.md): plaquita 26,6 s, buje 4,0 s, porta-bulon 2,3 s; la placa v4 en serie ~111 s. Se puede bajar con BAMBU_VOLADIZOS_TOPE (los tests).",
+  "voladizos2": {
+    "script": "evals/banco3d/correctores/chequeo_voladizos2.py (copia byte a byte del control del 22/10; no se edita; sha256 en __tests__/evals/banco3d.test.mjs)",
+    "capa_mm": 0.2,
+    "luz_puente_mm": 12.0,
+    "voladizo_mm": 2.0,
+    "_numeros": "Son las constantes CAPA, LUZ_PUENTE y VOLADIZO del propio script: aca solo se copian para el texto; el que manda es el script.",
+    "puede_frenar": true
+  },
+  "dfam": {
+    "script": "scripts/dfam/dfam_tool.py (earthtojake/text-to-cad, MIT, commit 2f79365), solo la funcion _overhang_facts",
+    "angulo_deg": 45,
+    "umbral_mm2": 40,
+    "_umbral_mm2": "Ventana medida el 23/10/2026 sobre piezas reales de la placa v4 (casos_gates_3a_3b.md): los 6 bujes dan 5,6 a 8,2 mm2 y el porta-bulon fallado da 74,4 mm2; cualquier umbral entre 8,2 y 74,4 separa esos dos. Se fijo 40 (mas o menos el medio) ANTES de mirar los resultados del gate; no se toca para que pase un test.",
+    "puede_frenar": false,
+    "_puede_frenar": "dfam mide AREA que mira hacia abajo, no largo de hilo: marca un puente corto que se imprime bien (puente de 8 mm: 80 mm2) y marco MAS area en el porta-bulon de la placa v5 (108,6 mm2) que en el fallado de la v4 (74,4 mm2). Por eso solo da aviso informativo; el freno es de voladizos2."
+  },
+  "frase_minima": 10,
+  "salidas": [
+    "soportes: repetir con --ajuste enable_support=1 (la clave esta en fdm_process_common.json de Bambu Studio y vale 0 por defecto)",
+    "rotar la pieza o cambiar el diseno (por ejemplo una membrana de una capa que cierra el agujero: ficha-fdm G11, seccion 9, desde el 23/10) y volver a laminar",
+    "si Fak lo asume: repetir con --acepto-voladizos \"<frase de Fak, 10 caracteres o mas>\" (queda en resumen.json, en voladizos.json y en el registro)"
+  ]
+}
