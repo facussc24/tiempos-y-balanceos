@@ -30,7 +30,20 @@ describe('cierre-guard · «cuando digas» seguido de una cita no es un pedido d
       expect(r.bloquea, t).toBe(true);
       expect(r.frase, t).toMatch(/cuando (me )?digas/i);
     }
-    expect(CANON.permiso.find((p) => /^cuando/.test(p.re)).re).toBe('cuando (me )?digas\\b(?!\\s*[«"“])');
+    expect(CANON.permiso.find((p) => /^cuando/.test(p.re)).re).toBe('cuando (me )?digas\\b(?!\\s*[«"“](?!\\s*(segu[ií]|contin[uú][aá]|arranc[aá]|hacelo|adelante|ok)\\s*[»"”]))');
+  });
+
+  it('VERDE que sigue: una cita de UNA palabra de arranque es pedir permiso igual (03292ba3 10/09 14:10, textual)', () => {
+    const CIERRE_0910 = 'Entendido: los agentes están bien y relanzarlos no es problema. Los frené por la lectura literal de "frená un poco"; lo anoto como corrección tuya para no repetirlo.\n\nQuedó todo guardado y commiteado (el último arreglo, el del guard que no dejaba terminar el turno, pasó sus 28 tests). Cuando digas "seguí", relanzo los auditores y retomo la Ola B desde el informe.';
+    const r = evaluarPermiso(CIERRE_0910);
+    expect(r.bloquea).toBe(true);
+    expect(r.frase).toMatch(/cuando digas/i);
+    for (const t of ['Lo retomo cuando me digas «continuá».', 'Sigo cuando digas “arrancá”.', 'Lo corro cuando digas «hacelo»', 'Queda listo; cuando digas "adelante", lo cargo.', 'Cuando me digas «ok» sigo.']) {
+      expect(evaluarPermiso(t).bloquea, t).toBe(true);
+    }
+    // y la cita de varias palabras, o de una palabra que no es de arranque (el OK de un mail), sigue sin frenar
+    expect(evaluarPermiso(CIERRE_1449).bloquea).toBe(false);
+    expect(evaluarPermiso('Sale cuando me digas «mandalo».').bloquea).toBe(false);
   });
 
   it('VERDE (ya pasaba, queda como guardia): el informe de un subagente en cola no es el ultimo mensaje de Fak para el relevador', async () => {

@@ -57,6 +57,8 @@ const esVerbo = (w) => !/ste$/.test(w) && alguna(w, CANON.verbos);
  *  "alarma", y por un cambio de letra el informe de un subagente pasaba por un pedido de reloj). Las largas
  *  ("cronometro", "despertador") siguen aceptando errores de tipeo ("cronrormetro"). */
 const esReloj = (w) => CANON.reloj.some((p) => (p.length <= 6 ? w === p : parecida(w, p)));
+/** Despues de «hasta N», estas palabras dicen que N cuenta cosas, no que es una hora (23/10/2026). */
+const NO_HORA_TRAS_HASTA = ['veces', 'dias', 'pieza', 'piezas', 'notebook', 'notebooks', 'agente', 'agentes', 'archivo', 'archivos', 'sesion', 'sesiones'];
 
 /**
  * Las horas escritas en el texto normalizado, con su posicion (indice de palabra): "8pm", "10am", "a las 20",
@@ -82,7 +84,9 @@ export function horasEn(palabras) {
       // "asta las 8") sigue valiendo, como en el resto del modulo (parecida).
       const conArticulo = /^(las|la|als)$/.test(p1) && (/^(a|para|desde)$/.test(p2) || parecida(p2, 'hasta'));
       const pegado = /^(alas|ala)$/.test(p1);
-      const trasHasta = p1 === 'hasta' && !/^(veces|vez|dias|dia|piezas|pieza|kg|mil)$/.test(sig);
+      // Lo que cuenta cosas despues de «hasta N» no es una hora: las palabras cortas exactas, las largas con error de
+      // tipeo (Fak 23/10 14:18: «puedo djearte hasta 3 notoboks con catia» se leia como las 3).
+      const trasHasta = p1 === 'hasta' && !(/^(vez|dia|kg|mil|%)$/.test(sig) || alguna(sig, NO_HORA_TRAS_HASTA));
       if (suf || conArticulo || pegado || trasHasta) out.push({ i, hora: Number(m[1]), minuto: 0, sufijo: suf });
     }
   });

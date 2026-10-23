@@ -137,6 +137,18 @@ describe('horaGuard — la hora y el reloj, exactos (23/10/2026)', () => {
     for (const t of ['laburá hasta las 8', 'quedate laburando hasta 8', 'labura hasta las 20 hs', 'continua desde las 9 hasta las 12']) expect(H.pideHasta(t).pide, t).toBe(true);
   });
 
+  it('(b) «hasta N notebooks / agentes / archivos / sesiones / %» cuenta cosas, no es una hora (mensaje de Fak del 23/10, textual)', () => {
+    // registro 8ec29120, 23/10 14:18: el freno de hora leia «hasta 3 notoboks» como las 3
+    const FAK_1418 = 'no se osea yo decia vasrias notbooks apra avanzr mas rapido en el aprendizaje entendeS? puedo djearte hasta 3 notoboks con catia par auqe es madnes ordene sy te pasen reustlaods tnendes? por la nube pdoraias coimucanoirte...';
+    expect(H.pideHasta(FAK_1418).pide).toBe(false);
+    for (const t of ['hasta 3 notebooks', 'hasta 2 notebook', 'hasta 4 agentes', 'hasta 1 agente', 'hasta 5 archivos', 'hasta 1 archivo', 'hasta 3 sesiones', 'hasta 1 sesion', 'hasta 20 %']) {
+      expect(H.horasEn(palabras(t)), t).toEqual([]);
+    }
+    // VERDE que sigue: con el articulo es una hora, aunque despues diga notebooks
+    expect(H.horasEn(palabras('hasta las 3')).map((x) => x.hora)).toEqual([3]);
+    expect(H.pideHasta('dejá laburando las 3 notebooks hasta las 3').pide).toBe(true);
+  });
+
   it('VERDE: el «hasta» mal escrito antes del articulo sigue valiendo («hsata las 20», «asta las 8», «hasat la 1»)', () => {
     for (const [t, h] of [['quedate laburando hsata las 20', 20], ['segui asta las 8', 8], ['labura hasat la 1', 1]]) {
       const p = H.pideHasta(t);
