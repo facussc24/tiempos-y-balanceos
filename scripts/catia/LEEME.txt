@@ -1,0 +1,11 @@
+OBRERO DE CATIA (notebook) - qué es y cómo se usa - 23/10/2026
+1. Esta carpeta la deja armada la PC principal. No hace falta tocar nada de acá adentro.
+2. Para arrancarlo: doble clic en Arrancar-obrero.cmd. Queda una ventana negra abierta: no la cierre.
+3. Si falta Python o pywin32, la ventana lo dice y espera una tecla (pywin32 lo intenta instalar solo).
+4. Cada minuto mira COLA 3D\asignados\ y corre lo que diga <item>-<nombre de esta PC>.txt, de a uno.
+5. Abre su propia CATIA, hace la pieza y la cierra. Si usted tiene una CATIA abierta, no la toca: espera a que la cierre.
+6. Deja todo en COLA 3D\<nombre de esta PC>\: resultado-<item>.txt, STEP y fotos, latido.json y obrero.log.
+7. Con menos de 3 GB de RAM libre no arranca nada: espera. Cada ejercicio tiene 20 minutos como mucho.
+8. Para pararlo: Ctrl+C en la ventana negra o cerrarla. Para volver a arrancarlo: doble clic otra vez.
+9. La notebook enchufada y sin suspender (Configuración > Sistema > Energía > Suspender: nunca).
+10. Si algo anda mal, las últimas líneas de COLA 3D\<nombre de esta PC>\obrero.log dicen qué pasó.
