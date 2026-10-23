@@ -1,0 +1,19 @@
+{
+  "_que_es": "Canon del detector de fallas en la vigilancia (gate 3b, 23/10/2026). Lo leen bambu_red.py (--imprimir y --seguir) y tests/test_detector_por_defecto.py (casos B1 a B9 de casos_gates_3a_3b.md). Nace de la falla del 20/10/2026 18:36 (Fak: «olvido tuyo? imperdonable... investigar esto y evitar que suceda en el futuro con alguna otra implementación»): la vigilancia de la Bambu se lanzó sin --detector, porque --imprimir solo imprimía el comando y --seguir dejaba el detector apagado por defecto. Regla de la casa (LECCIONES 20/10): una mejora que depende de que alguien se acuerde de un flag está apagada.",
+  "version": "2026-10-23.1",
+  "por_defecto": "detector",
+  "_por_defecto": "--imprimir --apply lanza solo, como proceso aparte, --seguir \"<carpeta>\\seguimiento_<trabajo>\" --fotos-en 3,10 --cada 30 --detector, y el renglón que imprime es el mismo comando que lanza. Sin --despertar: un proceso aparte que sale con 10 a los N minutos no lo relanza nadie. --seguir a mano también va con el detector por defecto (--detector se sigue aceptando y no cambia nada).",
+  "sin_camara": "solo-medir",
+  "_sin_camara": "Si al mandar la cámara no da una foto (foto() falla: hasta ~30 s), la vigilancia va con --solo-medir, se avisa «sin cámara accesible: la vigilancia va con --solo-medir (solo estado)» y queda en el registro. La impresión no se frena por la cámara.",
+  "de_noche": "solo-medir",
+  "_de_noche": "De 20:45 a 08:15 (NOCHE_DESDE y NOCHE_HASTA de bambu_red.py, medidas el 13 y el 14/10) la cámara no ve: con la luz de la impresora prendida la foto sale casi negra (SKILL.md, «De noche la cámara no ve», 15/10 22:05). Una foto negra no es «se ve bien». Decisión: en esas horas --seguir anota la lectura del detector con «(DE NOCHE: anota, no cuenta)», no da alarma y no la suma a la base ni a las tres seguidas; de día vuelve a alarmar. Se decide por la hora de cada vuelta, no por la hora del envío: una pieza mandada a la tarde que pasa las 20:45 tiene detector hasta esa hora, y una que sigue a la mañana lo recupera. Medido el 23/10/2026 con fotos negras SINTÉTICAS (gris 0, 8 y 20 sobre 1536 x 1080, con el recorte de la placa 200,0,1300,460): detector_fallas.py da «success» con distancia a sana 0,289 a 0,300 (sana real del 13/10: 0,23 a 0,27), o sea que diría «se ve bien» sin ver nada; con una foto real de noche, sin medir. Por eso de noche no cuenta: ni para alarmar ni para decir que está bien.",
+  "frase_minima": 10,
+  "_frase_minima": "--sin-detector solo con --acepto \"<frase textual de Fak, 10 caracteres o más>\" (la misma medida que --acepto-voladizos). Sin la frase: exit 1 «NO SE MANDA: --sin-detector necesita la frase de Fak», antes de leer la impresora y de subir, con o sin --apply. Con la frase queda en el registro (renglón «enviada» y renglón «vigilancia»), en la ficha y en el primer renglón de seguimiento.log («VIGILANCIA SIN DETECTOR»). La vigilancia del estado no se apaga: el comando lleva --seguir con --sin-detector.",
+  "vueltas_sin_medir": 3,
+  "_vueltas_sin_medir": "Con el detector prendido, tras 3 vueltas imprimiendo sin ninguna lectura el log dice «DETECTOR SIN MEDIR» con el motivo (el Python del detector no está, o la cámara o el detector no devolvieron nada). El que manda es VUELTAS_SIN_MEDIR de bambu_red.py; acá solo se copia para el texto.",
+  "modo": "aviso",
+  "_modo": "Este control no frena impresiones: avisa (sin cámara, detector sin medir, vigilancia que no arrancó). Lo único que frena es --sin-detector sin la frase. Se revisa el 30/10/2026 (scripts/_lib/retiros.data.json, impresion-3d-bambu:detector-por-defecto).",
+  "revisar": "2026-10-30",
+  "pieza_alta": "TBD",
+  "_pieza_alta": "PLAN_BLOQUE3.md (3b) pide --solo-medir para piezas altas (la cámara baja de la A2L da falsas alarmas con piezas altas, 20/10 15:49), pero no hay una altura medida desde la que pase: queda TBD para Fak. Hoy una pieza alta va con --detector."
+}
