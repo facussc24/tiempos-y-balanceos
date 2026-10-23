@@ -1,0 +1,23 @@
+{
+  "_que_es": "Canon del gate de cantos convexos donde va la mano (gate_aristas.py --cantos-convexos; lo corre export_deliverables.py sobre cada pieza entregada). Nace de la falla real: bordes en punta que marcan la pieza o la mano (virolador Upper Trim, pieza impresa el 18/08/2026, corregida en la v11; evals/banco3d/ejercicios/05_canto_vivo/tarea.yaml). Propuesta P6 de docs/PROPUESTAS_SKILL_3D_2026-10-23.md (l.249) y su Agregado (l.651: aviso con fecha de vencimiento escrita). Fak, 23/10/2026: gate que corre solo, con test, en modo AVISO 7 dias y despues freno (a Fak le avisa y si confirma pasa).",
+  "version": "2026-10-23.1",
+  "umbral_mm": 1.5,
+  "_umbral_mm": "R1,5 de la casa: .claude/skills/cad-design/reference/ficha-utillajes.md l.57 (E5: ningun canto que toque la mano o la pieza del cliente sin redondear; R1,5 desde el 18/08) y docs/PROPUESTAS_SKILL_3D_2026-10-23.md l.101. No tiene fuente externa: el radio minimo publicado para la mano es SIN FUENTE (la misma ficha lo dice).",
+  "aviso_hasta": "2026-10-30",
+  "_aviso_hasta": "Hasta esta fecha INCLUSIVE el gate avisa (exit 0, AVISO en pantalla y en el manifest) y la entrega sigue. Desde el dia siguiente (31/10/2026) un rojo frena: gate_aristas.py sale con 1 y export_deliverables.py con SystemExit [GATE cantos] antes de crear la carpeta destino. La fecha de hoy sale del reloj de la PC; --hoy o CAD_HOY=AAAA-MM-DD solo valen con CAD_GATE_TEST=1 (los tests). Renglon en scripts/_lib/retiros.data.json (retiros_decididos, cad-design:cantos-aviso-a-freno).",
+  "sin_zona_en_entrega": "aviso",
+  "_sin_zona_en_entrega": "Si la entrega no tiene zona de mano declarada (manifest params.zona_mano o campo zona_mano del pliego de gate_proceso.py), export_deliverables.py corre el gate con --sin-zona \"sin zona declarada en el pliego\" (juzga la pieza entera) y el resultado queda SIEMPRE como aviso, tambien despues del 30/10: no se frena por falta de zona esta primera semana, porque el campo zona_mano del pliego (P4) todavia no existe y la pieza entera da rojos en lo que no toca nadie (la cara de cama, G6). Ademas los tests de entrega de la skill (test_gates_entrega.py y los que llaman a export_deliverables.py) entregan cajas con cantos vivos sin zona: si esto frenara, dejarian de pasar el 31/10. Se revisa el 30/10 con Fak, junto con el aviso a freno.",
+  "tope_segundos": 300,
+  "_tope_segundos": "Tope total de la medicion por pieza (import + aristas + caras). Pasado el tope: NO MEDIDO (exit 2, medido:false), nunca verde. Medido el 23/10/2026: el mango del ejercicio 05 (26 caras curvas) tarda unos 12 s con el corrector del banco; casos_gates_3c_3f.md anoto 25-81 s segun la carga de la PC. export_deliverables.py le suma 120 s de margen al subproceso.",
+  "frase_minima": 10,
+  "salidas": [
+    "redondear los cantos que tocan la mano con R1,5 o mas (fillet de las aristas listadas) y volver a correr",
+    "declarar la zona de mano real (--zona x0,y0,z0,x1,y1,z1, o params.zona_mano en el manifest) si los rojos estan donde no toca nadie",
+    "si Fak lo asume: --acepto-cantos \"<frase de Fak, 10 caracteres o mas>\" con --workdir (queda en el manifest con fecha, firma del STEP y cantidad; vale para esa firma sola)"
+  ],
+  "limites_conocidos": [
+    "Las caras curvas que no son cilindro, esfera o toro (BSpline, revolucion, offset: lo que suele traer un STEP de CATIA en los redondeos) no se juzgan: se cuentan (caras_curvas_sin_juzgar) y se avisa.",
+    "El chaflan cuenta como dos aristas vivas (decidir a partir de que tamano no es vivo es de Fak: Agregado de P6).",
+    "La cara de cama lleva chaflan y no R1,5 (G6): sin zona declarada sale como rojo; por eso sin zona es aviso."
+  ]
+}

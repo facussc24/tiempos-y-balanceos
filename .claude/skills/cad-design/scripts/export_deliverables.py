@@ -18,6 +18,15 @@ y por cada pieza (1) collision_check con n_inside=0 y contacto, (2) evidencia de
 si el STEP trae 2+ solidos, (3) un render mas nuevo que el STEP. Al copiar, (4) la cabecera
 del STEP ENTREGADO queda en el orden de ISO 10303-21 y se vuelve a leer (17/10/2026).
 
+(C) CANTOS CONVEXOS donde va la mano (gate 3c, 23/10/2026; P6): por cada pieza corre
+gate_aristas.py --cantos-convexos sobre el archivo de out/ que se entrega y lee SU salida (no le
+cree a una evidencia vieja del manifest): la firma tiene que ser la de ese archivo, medido:true y
+los conteos enteros. La zona de mano sale de params.zona_mano del manifest o del campo zona_mano
+del pliego; sin zona juzga la pieza entera y queda como aviso. Hasta el aviso_hasta de
+cantosCanon.data.json (30/10/2026) avisa y entrega; desde el 31/10 un rojo o un NO MEDIDO con
+zona declarada sale con [GATE cantos] antes de crear la carpeta destino. Salida de Fak:
+gate_aristas.py ... --workdir W --acepto-cantos "<frase>" (vale para esa firma sola).
+
 Con --final (la entrega que va a Fak, no una copia de trabajo) corre ademas el GATE DE
 ENTREGABLE sobre la carpeta destino: PDF + STEP + simulacion grabada, misma corrida, y
 renders con motor declarado y con color medido (gate_entregable.py). Sin --final la
@@ -170,6 +179,104 @@ def _aviso_frame_impresion(base, mesh):
               % (base, centro[0], centro[1], lo[2]))
 
 
+def _zona_mano(w, base):
+    """(zona, fuente) de la zona de mano declarada para la pieza, o (None, None).
+
+    Primero params.zona_mano del manifest; si no, el campo zona_mano del pliego que verifico
+    gate_proceso.py (proceso_declarado). Puede ser una caja [x0,y0,z0,x1,y1,z1] para todas las
+    piezas o un dict {nombre de pieza: caja}."""
+    z, fuente = (workdir.load_manifest(w).get("params") or {}).get("zona_mano"), "manifest params.zona_mano"
+    if z is None:
+        ev = workdir.find_evidence(w, "proceso_declarado") or {}
+        pl = ev.get("pliego")
+        for cand in ((os.path.join(w, pl), pl) if pl else ()):
+            if os.path.isfile(cand):
+                import json
+                try:
+                    with open(cand, encoding="utf-8") as f:
+                        z = json.load(f).get("zona_mano")
+                except (OSError, ValueError, AttributeError):
+                    z = None
+                fuente = "pliego %s, campo zona_mano" % pl
+                break
+    if isinstance(z, dict):
+        z = z.get(base, z.get(os.path.splitext(base)[0]))
+    if z is None:
+        return None, None
+    try:
+        z = [float(x) for x in z]
+        assert len(z) == 6 and all(z[i] <= z[i + 3] for i in range(3))
+    except (TypeError, ValueError, AssertionError):
+        raise SystemExit("[GATE cantos] la zona_mano de '%s' (%s) se escribe [x0,y0,z0,x1,y1,z1] con "
+                         "x0<=x1, y0<=y1, z0<=z1; llego %r" % (base, fuente, z))
+    return z, fuente
+
+
+def gate_cantos(w, piece, base, hoy_arg=None):
+    """GATE de cantos convexos sobre EL ARCHIVO QUE SE ENTREGA. Devuelve el resumen o SystemExit.
+
+    Corre gate_aristas.py por subproceso (con tope) y juzga la linea JSON de ESA corrida: una
+    evidencia del manifest con medido:false, sin conteo o de otra firma no vale como verde."""
+    import json
+    import subprocess
+    import gate_aristas as ga
+    can = ga.canon_cantos()
+    try:
+        hoy = ga.hoy_cantos(hoy_arg)
+    except (ga.NoMedido, ValueError) as e:
+        raise SystemExit("[GATE cantos] %s" % e)
+    zona, fuente = _zona_mano(w, base)
+    firma = workdir.file_signature(piece)
+    cmd = [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "gate_aristas.py"),
+           "--step", piece, "--cantos-convexos", "--umbral", str(can["umbral_mm"]), "--workdir", w]
+    cmd += ["--zona=" + ",".join("%g" % x for x in zona)] if zona else ["--sin-zona", "sin zona declarada en el pliego"]
+    if hoy_arg:
+        cmd += ["--hoy", hoy_arg]
+    tope = float(os.environ.get("CAD_CANTOS_TOPE") or can["tope_segundos"]) \
+        if os.environ.get("CAD_GATE_TEST") == "1" else float(can["tope_segundos"])
+    cmd += ["--tope-seg", "%g" % tope]
+    j = None
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                           timeout=tope + 120, env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+        for linea in reversed((r.stdout or "").splitlines()):
+            if linea.startswith('{"gate": "cantos_convexos"'):
+                j = json.loads(linea)
+                break
+    except (subprocess.TimeoutExpired, ValueError):
+        j = None
+    ok, motivo = ga.salida_cantos_valida(j, firma)
+    n_malos = (j["cantos_vivos"] + j["radios_chicos"]) if ok else None
+    aceptada = bool(ok and n_malos and workdir.find_evidence(w, "cantos_aceptados", fixture=base,
+                                                             step_firma=firma))
+    modo = ga.modo_cantos(ok, n_malos or 0, hoy, can["aviso_hasta"], zona is not None, aceptada)
+    if ok:
+        texto = ("%d cantos vivos (R0) y %d redondeos menores que R%s en %s"
+                 % (j["cantos_vivos"], j["radios_chicos"], ga._mm(can["umbral_mm"]),
+                    "la zona de mano (%s)" % fuente if zona else "la pieza entera (sin zona declarada)"))
+    else:
+        texto = "NO MEDIDO: %s" % motivo
+    resumen = {"modo": modo, "medido": ok, "step_firma": firma, "zona": zona, "zona_fuente": fuente,
+               "cantos_vivos": j.get("cantos_vivos") if ok else None,
+               "radios_chicos": j.get("radios_chicos") if ok else None,
+               "hoy": hoy.isoformat(), "motivo": None if ok else motivo}
+    if modo == "freno":
+        raise SystemExit(
+            "[GATE cantos] '%s': %s. Desde el %s esto frena la entrega.\n"
+            "Salidas: %s" % (base, texto, ga._dia_siguiente(can["aviso_hasta"]), "; ".join(can["salidas"])))
+    if modo == "aviso":
+        print("  AVISO [GATE cantos] '%s': %s%s" % (
+            base, texto, "" if zona else ". Sin zona de mano declarada: queda como aviso (cantosCanon, "
+                                         "sin_zona_en_entrega); declararla en params.zona_mano o en el pliego"))
+        if zona:
+            print("    freno desde %s" % ga._dia_siguiente(can["aviso_hasta"]))
+    elif modo == "aceptado":
+        print("  [GATE cantos] '%s': %s, ACEPTADO por frase en el manifest (firma %s)" % (base, texto, firma))
+    else:
+        print("  [GATE cantos] '%s': OK, %s" % (base, texto))
+    return resumen
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--workdir", required=True)
@@ -186,7 +293,8 @@ def main():
                          "NUNCA (demostrado en corrida el 03/09). Se coteja contra los "
                          "solidos del STEP y queda escrito en el manifest.")
     ap.add_argument("--skip-gate", action="append", default=[],
-                    choices=["zona", "proceso", "collision", "render", "ensamble", "entregable"],
+                    choices=["zona", "proceso", "collision", "render", "ensamble", "entregable",
+                             "cantos"],
                     help="saltear un gate (queda registrado; exige --reason)")
     ap.add_argument("--reason", default=None, help="justificacion del --skip-gate")
     ap.add_argument("--final", action="store_true",
@@ -194,10 +302,15 @@ def main():
                          "sobre la carpeta destino (PDF + STEP + simulacion + renders legibles)")
     ap.add_argument("--motor", default="", help="--final: motor de imagen de los renders (ver procesoCanon)")
     ap.add_argument("--render", nargs="*", default=[], help="--final: los PNG que muestran el 3D")
+    ap.add_argument("--hoy", default=None,
+                    help="solo tests: fecha simulada AAAA-MM-DD para el gate de cantos (exige CAD_GATE_TEST=1)")
     args = ap.parse_args()
 
     if args.skip_gate and not args.reason:
         raise SystemExit("--skip-gate exige --reason (la huella queda en el manifest)")
+    if args.hoy and os.environ.get("CAD_GATE_TEST") != "1":
+        raise SystemExit("--hoy solo vale con CAD_GATE_TEST=1 (fecha simulada de los tests)")
+    cantos_por_pieza = {}
 
     declarados = {}
     for d in args.ensamble:
@@ -331,6 +444,11 @@ def main():
                     "Renderizar y MIRAR el resultado (render_step.py / check_collision.py --render) "
                     "antes de entregar." % (w, base))
 
+        # GATE CANTOS (3c, 23/10/2026): va ultimo en el loop y antes de crear la carpeta destino,
+        # asi un freno no deja nada entregado y los mensajes de los gates de arriba salen primero.
+        if "cantos" not in args.skip_gate:
+            cantos_por_pieza[base] = gate_cantos(w, piece, base, args.hoy)
+
     # ---- export + entrega ----
     os.makedirs(args.deliver, exist_ok=True)
     delivered = []
@@ -411,6 +529,7 @@ def main():
     workdir.record_evidence(w, "delivery", dest=args.deliver, files=delivered,
                             final=bool(args.final),
                             cuerpos_por_pieza=cuerpos_por_pieza,
+                            cantos_por_pieza=cantos_por_pieza,
                             ensambles_declarados=args.ensamble,
                             skipped_gates=args.skip_gate, reason=args.reason)
     print("\nENTREGA OK -> %s (%d archivos). Evidencia registrada en el manifest." % (args.deliver, len(delivered)))

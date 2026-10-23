@@ -57,6 +57,11 @@ USO
     gate_aristas.py --step pieza.step --t-fino 1.4 --tension-nominal 8.9 --json out.json
     gate_aristas.py --step pieza.step --t-fino 1.4 --verificar-material
     gate_aristas.py --solo-autotest        # probar el detector sin juzgar ninguna pieza
+    gate_aristas.py --step pieza.step --cantos-convexos --umbral 1.5 --zona x0,y0,z0,x1,y1,z1
+                    [--sin-zona "<motivo>"] [--tope-seg N] [--workdir W] [--acepto-cantos "<frase>"]
+                    # CANTOS CONVEXOS donde va la mano (P6, gate 3c, 23/10/2026): ver el bloque
+                    # "CANTOS CONVEXOS" mas abajo. Aviso hasta el aviso_hasta de
+                    # cantosCanon.data.json (30/10/2026) y freno desde el dia siguiente.
 
     --t-fino          espesor de la pared delgada que flexiona [mm]. Es la cota que define
                       el radio exigido (0,5.t) y la que separa lo critico de lo cosmetico.
@@ -74,6 +79,9 @@ CODIGOS DE SALIDA
     0  no quedan aristas concavas vivas
     1  quedan aristas concavas vivas (o fillets concavos con radio insuficiente)
     3  el AUTOTEST fallo: el detector no probo distinguir, no se juzga nada
+    modo --cantos-convexos: 0 verde, aviso (hasta el 30/10) o aceptado con frase; 1 freno, frase
+    corta o frase usada para otra firma; 2 NO MEDIDO (sin zona, STEP truncado o ilegible, sin
+    OCP, tope de tiempo): nunca verde; 3 autotest propio fallado.
 
 NOTA HISTORICA — los dos falsos verdes (2026-08-08). v1 marcaba toda arista plano-plano:
 exit 1 sobre cualquier pieza, o sea ruido, y el ruido se apaga. v2 sondeaba un punto sobre
@@ -94,20 +102,26 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from OCP.BRep import BRep_Tool  # noqa: E402
-from OCP.BRepAdaptor import BRepAdaptor_Curve, BRepAdaptor_Surface  # noqa: E402
-from OCP.GCPnts import GCPnts_AbscissaPoint  # noqa: E402
-from OCP.GeomAbs import (GeomAbs_Cylinder, GeomAbs_Plane,  # noqa: E402
-                         GeomAbs_Torus)
-from OCP.GeomLProp import GeomLProp_SLProps  # noqa: E402
-from OCP.ShapeAnalysis import ShapeAnalysis_Surface  # noqa: E402
-from OCP.TopAbs import (TopAbs_EDGE, TopAbs_FACE,  # noqa: E402
-                        TopAbs_REVERSED)
-from OCP.TopExp import TopExp, TopExp_Explorer  # noqa: E402
-from OCP.TopoDS import TopoDS  # noqa: E402
-from OCP.TopTools import (TopTools_IndexedDataMapOfShapeListOfShape,  # noqa: E402
-                          TopTools_IndexedMapOfShape)
-from OCP.gp import gp_Pnt, gp_Vec  # noqa: E402
+# Sin OCP el modo de cantos sale NO MEDIDO (exit 2), nunca verde; el modo de concavas sigue
+# como antes (el ImportError se levanta en main).
+try:
+    from OCP.BRep import BRep_Tool  # noqa: E402
+    from OCP.BRepAdaptor import BRepAdaptor_Curve, BRepAdaptor_Surface  # noqa: E402
+    from OCP.GCPnts import GCPnts_AbscissaPoint  # noqa: E402
+    from OCP.GeomAbs import (GeomAbs_Cylinder, GeomAbs_Plane,  # noqa: E402
+                             GeomAbs_Torus)
+    from OCP.GeomLProp import GeomLProp_SLProps  # noqa: E402
+    from OCP.ShapeAnalysis import ShapeAnalysis_Surface  # noqa: E402
+    from OCP.TopAbs import (TopAbs_EDGE, TopAbs_FACE,  # noqa: E402
+                            TopAbs_REVERSED)
+    from OCP.TopExp import TopExp, TopExp_Explorer  # noqa: E402
+    from OCP.TopoDS import TopoDS  # noqa: E402
+    from OCP.TopTools import (TopTools_IndexedDataMapOfShapeListOfShape,  # noqa: E402
+                              TopTools_IndexedMapOfShape)
+    from OCP.gp import gp_Pnt, gp_Vec  # noqa: E402
+    _OCP_ERROR = None
+except ImportError as _e:                                     # pragma: no cover
+    _OCP_ERROR = _e
 
 # PLA impreso, capas perpendiculares a la traccion (el peor caso y el mas comun)
 PLA_Z_ESTATICO = (25.0, 35.0)
@@ -400,6 +414,450 @@ def autotest():
 
 
 # =========================================================================================
+# CANTOS CONVEXOS DONDE VA LA MANO (P6, gate 3c, 23/10/2026)
+# =========================================================================================
+# La falla real: bordes en punta que marcan la pieza o la mano (virolador Upper Trim, pieza
+# impresa el 18/08, corregida en la v11). La regla existia (ficha-utillajes.md E5: ningun canto
+# que toque la mano o la pieza del cliente sin redondear, R1,5 de la casa) y ningun control la
+# disparaba: el modo de arriba caza CONCAVAS (fatiga); los cantos que cortan son CONVEXOS.
+#
+# ORIGEN DE LA LOGICA. Copiada de evals/banco3d/correctores/cantos_convexos.py (corrector del
+# banco, 23/10/2026), con los mismos criterios: arista entre dos caras no tangentes (10 grados)
+# probada con dos puntos a 0,05 mm a los costados (medio +- e(n2-n1)): si los dos quedan afuera
+# del solido, es un canto vivo (R0); cara cilindrica, esferica o torica convexa con radio menor
+# que el umbral (tolerancia 1e-3): redondeo chico. Tres cambios, medidos el 23/10 y escritos:
+#   1. ZONA POR CONTACTO: cuenta toda arista o cara que TOQUE la caja de la zona (puntos a lo
+#      largo de la arista + distancia exacta BRepExtrema). El corrector mira solo el punto medio:
+#      las aristas largas que la mano agarra quedaban afuera (caso C4).
+#   2. CONVEXIDAD DE LAS CARAS CURVAS POR EL SIGNO RADIAL (como fillets_concavos, arriba): la
+#      cara es convexa si su normal EXTERIOR apunta lejos del eje (cilindro), del centro del
+#      tubo (toro) o del centro (esfera). El corrector prueba p - n.r.0,99 adentro del material,
+#      que da "adentro" tambien en un AGUJERO: medido sobre el mango del 05, los 2 agujeros de
+#      R4 salen como "redondeo convexo" (26 convexas: 24 redondeos + 2 agujeros). Aca da 24.
+#   3. CILINDRO DE VUELTA COMPLETA (pin, vastago; la suma de sus caras coaxiales cubre 2.pi) NO
+#      es un redondeo de canto: no cuenta como radio chico y se lista aparte. La arista de la
+#      punta del pin (plano contra cilindro) SIGUE contando como canto vivo si no tiene radio.
+# Las caras curvas de otro tipo (BSpline, revolucion, offset: lo que suele traer un STEP de
+# CATIA en los redondeos) NO se juzgan: se cuentan y se avisa. Es un limite conocido.
+CANON_CANTOS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cantosCanon.data.json")
+
+
+class NoMedido(Exception):
+    """La medicion no se pudo hacer: el gate NUNCA da verde en este caso (exit 2)."""
+
+
+def canon_cantos():
+    with open(CANON_CANTOS, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def hoy_cantos(hoy_arg=None):
+    """La fecha de hoy. --hoy o CAD_HOY solo valen con CAD_GATE_TEST=1 (los tests); si no, el reloj."""
+    from datetime import date
+    simulada = hoy_arg or os.environ.get("CAD_HOY", "").strip() or None
+    if simulada:
+        if os.environ.get("CAD_GATE_TEST") != "1":
+            raise NoMedido("--hoy / CAD_HOY solo valen con CAD_GATE_TEST=1 (fecha simulada de los tests)")
+        return date.fromisoformat(simulada)
+    return date.today()
+
+
+def modo_cantos(medido, n_malos, hoy, aviso_hasta, zona_declarada=True, aceptada=False):
+    """verde | aceptado | aviso | freno. Una sola funcion para el gate y para la entrega.
+
+    Sin zona declarada en la ENTREGA (export_deliverables) es siempre aviso hasta que el pliego
+    tenga el campo zona_mano (P4) y Fak decida: cantosCanon.data.json, sin_zona_en_entrega."""
+    from datetime import date
+    if isinstance(aviso_hasta, str):
+        aviso_hasta = date.fromisoformat(aviso_hasta)
+    if medido and n_malos == 0:
+        return "verde"
+    if medido and aceptada:
+        return "aceptado"
+    if not zona_declarada or hoy <= aviso_hasta:
+        return "aviso"
+    return "freno"
+
+
+def salida_cantos_valida(j, firma):
+    """(ok, motivo): la linea JSON del gate habla de ESTE archivo y trae lo medido."""
+    if not isinstance(j, dict) or j.get("gate") != "cantos_convexos":
+        return False, "no hay salida del gate de cantos"
+    if j.get("medido") is not True:
+        return False, "NO MEDIDO: %s" % (j.get("motivo") or "medido no es true")
+    for k in ("cantos_vivos", "radios_chicos", "convexas_revisadas"):
+        v = j.get(k)
+        if not isinstance(v, int) or isinstance(v, bool) or v < 0:
+            return False, "la salida no trae el conteo '%s'" % k
+    if not firma or j.get("step_firma") != firma:
+        return False, ("la medicion no habla del archivo que se entrega (firma %s, medido %s)"
+                       % (firma, j.get("step_firma")))
+    return True, ""
+
+
+def _mm(x):
+    return ("%g" % round(float(x), 3)).replace(".", ",")
+
+
+def cantos_convexos(pieza, umbral=1.5, zona=None, t0=None, tope_seg=None):
+    """Cantos convexos con radio < umbral que tocan la zona (toda la pieza si zona es None).
+
+    pieza: un Shape de build123d (import_step). Devuelve un dict con los conteos y ejemplos.
+    Levanta NoMedido si no hay solidos o si se pasa el tope de tiempo."""
+    from build123d import GeomType
+    from OCP.BRepAdaptor import BRepAdaptor_Surface as _Surf
+    from OCP.BRepClass3d import BRepClass3d_SolidClassifier
+    from OCP.TopAbs import TopAbs_IN
+    import time as _t
+    t0 = t0 or _t.time()
+    solidos = pieza.solids()
+    if not solidos:
+        raise NoMedido("el STEP no trae solidos")
+    clas = [BRepClass3d_SolidClassifier(s.wrapped) for s in solidos]
+
+    def adentro(v):
+        P = gp_Pnt(float(v.X), float(v.Y), float(v.Z))
+        for c in clas:                     # mismo criterio que Solid.is_inside de build123d
+            c.Perform(P, 1e-6)
+            if c.State() == TopAbs_IN or c.IsOnAFace():
+                return True
+        return False
+
+    def tope():
+        if tope_seg is not None and _t.time() - t0 > tope_seg:
+            raise NoMedido("tope de %s s: la medicion no termino" % _mm(tope_seg))
+
+    caja = None
+    if zona is not None:
+        from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox
+        caja = BRepPrimAPI_MakeBox(gp_Pnt(*zona[:3]), gp_Pnt(*zona[3:])).Shape()
+
+    def en_caja(x, y, z):
+        return all(zona[i] - 1e-6 <= c <= zona[i + 3] + 1e-6 for i, c in enumerate((x, y, z)))
+
+    def toca(obj, puntos):
+        if caja is None:
+            return True
+        bb = obj.bounding_box()
+        if (bb.max.X < zona[0] - 1e-3 or bb.min.X > zona[3] + 1e-3 or bb.max.Y < zona[1] - 1e-3
+                or bb.min.Y > zona[4] + 1e-3 or bb.max.Z < zona[2] - 1e-3 or bb.min.Z > zona[5] + 1e-3):
+            return False
+        if any(en_caja(p.X, p.Y, p.Z) for p in puntos()):
+            return True
+        from OCP.BRepExtrema import BRepExtrema_DistShapeShape
+        d = BRepExtrema_DistShapeShape(obj.wrapped, caja)
+        return bool(d.IsDone() and d.Value() <= 1e-6)
+
+    caras_de = {}
+    for f in pieza.faces():
+        for e in f.edges():
+            caras_de.setdefault(e, []).append(f)
+    vivos, chicos, completos, sin_juzgar = [], [], [], 0
+    convexas, en_zona, n_err = 0, 0, 0
+    for e, fs in caras_de.items():
+        tope()
+        if len(fs) != 2 or e.length < 1e-3:
+            continue
+        if not toca(e, lambda: [e.position_at(k / 40.0) for k in range(41)]):
+            continue
+        en_zona += 1
+        p = e.position_at(0.5)
+        try:
+            n1, n2 = fs[0].normal_at(p), fs[1].normal_at(p)
+        except Exception:
+            n_err += 1
+            continue
+        if n1.dot(n2) > math.cos(math.radians(10)):     # caras tangentes: borde de un redondeo
+            continue
+        d = (n2 - n1)
+        if d.length < 1e-9:
+            continue
+        d = d.normalized() * 0.05
+        if not adentro(p + d) and not adentro(p - d):
+            convexas += 1
+            vivos.append({"punto": [round(p.X, 2), round(p.Y, 2), round(p.Z, 2)],
+                          "largo": round(e.length, 2), "radio": 0.0})
+
+    cil = {}                                            # cilindros convexos por eje: vuelta completa
+    for f in pieza.faces():
+        tope()
+        t = f.geom_type
+        if t == GeomType.PLANE:
+            continue
+        if not toca(f, lambda: [f.position_at(u / 4.0, v / 4.0) for u in range(5)
+                                for v in range(5)]):
+            continue
+        if t not in (GeomType.CYLINDER, GeomType.SPHERE, GeomType.TORUS):
+            sin_juzgar += 1
+            continue
+        s = _Surf(f.wrapped)
+        p = f.position_at(0.5, 0.5)
+        pv = np.array([p.X, p.Y, p.Z], float)
+        n = f.normal_at(p)
+        nv = np.array([n.X, n.Y, n.Z], float)
+        completa, clave, du = False, None, 0.0
+        if t == GeomType.CYLINDER:
+            c = s.Cylinder()
+            r = float(c.Radius())
+            o, dz = _v(c.Axis().Location()), _v(c.Axis().Direction())
+            w = pv - o
+            radial = w - np.dot(w, dz) * dz
+            k = int(np.argmax(np.abs(dz)))
+            dz_c = dz if dz[k] > 0 else -dz
+            pie = o - np.dot(o, dz_c) * dz_c
+            clave = (round(r, 3),) + tuple(np.round(dz_c, 3)) + tuple(np.round(pie, 2))
+            du = float(s.LastUParameter() - s.FirstUParameter())
+        elif t == GeomType.SPHERE:
+            c = s.Sphere()
+            r = float(c.Radius())
+            radial = pv - _v(c.Location())
+        else:
+            c = s.Torus()
+            r = float(c.MinorRadius())
+            o, dz = _v(c.Axis().Location()), _v(c.Axis().Direction())
+            w = pv - o
+            wp = w - np.dot(w, dz) * dz
+            kk = np.linalg.norm(wp)
+            if kk < 1e-9:
+                sin_juzgar += 1
+                continue
+            radial = pv - (o + float(c.MajorRadius()) * wp / kk)
+            completa = float(s.LastVParameter() - s.FirstVParameter()) >= 2 * math.pi - 1e-3
+        if float(np.dot(nv, radial)) <= 0:              # normal hacia el centro: concava (agujero)
+            continue
+        convexas += 1
+        reg = {"punto": [round(p.X, 2), round(p.Y, 2), round(p.Z, 2)], "radio": round(r, 3),
+               "tipo": t.name.lower()}
+        if clave is not None:
+            cil.setdefault(clave, []).append((du, reg))
+            continue
+        if completa:
+            completos.append(reg)
+        elif r < umbral - 1e-3:
+            chicos.append(reg)
+    for clave, lista in cil.items():
+        if sum(du for du, _ in lista) >= 2 * math.pi - 1e-2:
+            completos.extend(reg for _, reg in lista)
+        else:
+            chicos.extend(reg for _, reg in lista if reg["radio"] < umbral - 1e-3)
+    radios = [x["radio"] for x in chicos] + ([0.0] if vivos else [])
+    return {"convexas_revisadas": convexas, "aristas_en_zona": en_zona,
+            "cantos_vivos": len(vivos), "radios_chicos": len(chicos),
+            "cilindros_completos": len(completos), "caras_curvas_sin_juzgar": sin_juzgar,
+            "aristas_sin_normal": n_err, "rmin": (min(radios) if radios else None),
+            "ejemplos": (vivos + chicos)[:8], "completos": completos[:4]}
+
+
+def _par_cantos():
+    """Piezas del autotest (40 x 30 x 20; medidas de ensayo, no son de Barack)."""
+    from build123d import Box, Cylinder, Location, fillet
+    viva = Box(40, 30, 20)
+    r1 = fillet(Box(40, 30, 20).edges(), 1.0)
+    r2 = fillet(Box(40, 30, 20).edges(), 2.0)
+    agujero = fillet(Box(40, 30, 20).edges(), 2.0) - Cylinder(1.0, 40)
+    pin = Box(40, 30, 4) + Cylinder(1.0, 10).moved(Location((0, 0, 7)))
+    return viva, r1, r2, agujero, pin
+
+
+def autotest_cantos():
+    """Lista de problemas; vacia = el detector separa BIEN de MAL en las dos direcciones."""
+    try:
+        viva, r1, r2, agujero, pin = _par_cantos()
+    except Exception as e:                                    # pragma: no cover
+        return ["no se pudo construir el par del autotest: %s: %s" % (type(e).__name__, e)]
+    prob = []
+    casos = (
+        ("MAL caja con canto vivo", viva, None, dict(cantos_vivos=12, radios_chicos=0)),
+        ("MAL caja con R1", r1, None, dict(cantos_vivos=0, radios_chicos=20)),
+        ("BIEN caja con R2", r2, None, dict(cantos_vivos=0, radios_chicos=0, convexas_revisadas=20)),
+        ("agujero de 2 en caja R2 (el agujero no es un redondeo)", agujero, None,
+         dict(cantos_vivos=2, radios_chicos=0)),
+        ("zona por contacto (x de 15 a 25: la tocan 8 aristas, 4 por el punto medio)", viva,
+         [15.0, -20.0, -20.0, 25.0, 20.0, 20.0], dict(cantos_vivos=8)),
+        ("pin de 2 sobre placa (vuelta completa: no es redondeo; la punta si es canto)", pin,
+         [-5.0, -5.0, 1.0, 5.0, 5.0, 20.0], dict(radios_chicos=0, cilindros_completos=1)),
+    )
+    for nombre, pieza, zona, esperado in casos:
+        try:
+            r = cantos_convexos(pieza, 1.5, zona)
+        except Exception as e:
+            prob.append("%s: el detector fallo (%s: %s)" % (nombre, type(e).__name__, e))
+            continue
+        malos = {k: r.get(k) for k in esperado if r.get(k) != esperado[k]}
+        print("    %-76s vivos=%s chicos=%s convexas=%s" % (nombre, r["cantos_vivos"],
+                                                            r["radios_chicos"], r["convexas_revisadas"]))
+        if malos:
+            prob.append("%s: esperado %s, dio %s" % (nombre, esperado, malos))
+    return prob
+
+
+def _leer_step_cantos(ruta):
+    if not os.path.isfile(ruta):
+        raise NoMedido("no existe el archivo: %s" % ruta)
+    if not ruta.lower().endswith((".step", ".stp")):
+        raise NoMedido("el gate de cantos trabaja sobre STEP (caras y aristas exactas)")
+    with open(ruta, "rb") as fh:
+        fh.seek(max(0, os.path.getsize(ruta) - 4096))
+        cola = fh.read()
+    if b"END-ISO-10303-21" not in cola:
+        raise NoMedido("STEP truncado o incompleto (no termina en END-ISO-10303-21;)")
+    from build123d import import_step
+    try:
+        return import_step(ruta)
+    except Exception as e:
+        raise NoMedido("STEP ilegible: %s: %s" % (type(e).__name__, e))
+
+
+def _dia_siguiente(iso):
+    from datetime import date, timedelta
+    return (date.fromisoformat(iso) + timedelta(days=1)).isoformat()
+
+
+def main_cantos(a):
+    """Modo --cantos-convexos. 0 verde/aviso/aceptado, 1 freno o frase mal, 2 NO MEDIDO, 3 autotest."""
+    import time as _t
+    t0 = _t.time()
+    try:
+        can = canon_cantos()
+    except (OSError, ValueError) as e:
+        print("NO MEDIDO: no se pudo leer %s (%s)" % (CANON_CANTOS, e))
+        return 2
+    umbral = a.umbral if a.umbral is not None else float(can["umbral_mm"])
+    tope_seg = a.tope_seg if a.tope_seg is not None else float(can["tope_segundos"])
+    res = {"gate": "cantos_convexos", "medido": False, "veredicto": "no_medido", "modo": None,
+           "step": a.step, "step_firma": None, "umbral_mm": umbral, "zona": None,
+           "sin_zona": None, "hoy": None, "aviso_hasta": can["aviso_hasta"], "motivo": None}
+
+    def cerrar(codigo, texto):
+        res["segundos"] = round(_t.time() - t0, 1)
+        print(texto)
+        if a.workdir and a.step:
+            try:
+                from cadlib import workdir as _wd
+                _wd.ensure_workdir(a.workdir)
+                ev = {k: v for k, v in res.items() if k != "gate"}
+                _wd.record_evidence(a.workdir, "cantos_convexos",
+                                    fixture=os.path.basename(a.step), **ev)
+            except Exception as e:                            # pragma: no cover
+                print("  (no se pudo escribir la evidencia en el manifest: %s)" % e)
+        if a.json:
+            with open(a.json, "w", encoding="utf-8") as f:
+                json.dump(res, f, indent=1, ensure_ascii=False)
+        print(json.dumps(res, ensure_ascii=True), flush=True)
+        return codigo
+
+    def no_medido(motivo):
+        res["motivo"] = motivo
+        return cerrar(2, "NO MEDIDO: %s. Un control que no midio nunca da verde." % motivo)
+
+    if _OCP_ERROR is not None:
+        return no_medido("falta OCP (el nucleo de OpenCASCADE): %s" % _OCP_ERROR)
+    try:
+        hoy = hoy_cantos(a.hoy)
+    except (NoMedido, ValueError) as e:
+        return no_medido(str(e))
+    res["hoy"] = hoy.isoformat()
+
+    print("AUTOTEST del detector de cantos convexos (piezas BIEN/MAL propias)")
+    prob = autotest_cantos()
+    if prob:
+        print("  [AUTOTEST FALLA]")
+        for x in prob:
+            print("    - " + x)
+        print("  No se juzga ninguna pieza con un detector que no probo distinguir.")
+        return 3
+    print("  [AUTOTEST OK] el detector separa BIEN de MAL.\n")
+    if a.solo_autotest:
+        return 0
+    if not a.step:
+        print("hace falta --step (o --solo-autotest)")
+        return 2
+    if a.acepto_cantos is not None and len(a.acepto_cantos.strip()) < int(can["frase_minima"]):
+        res["motivo"] = "frase corta"
+        return cerrar(1, "NO SE ACEPTA: --acepto-cantos necesita la frase de Fak (%d caracteres o mas); "
+                      "llego «%s» (frase corta)" % (int(can["frase_minima"]), a.acepto_cantos))
+    if a.acepto_cantos is not None and not a.workdir:
+        res["motivo"] = "aceptacion sin manifest"
+        return cerrar(1, "NO SE ACEPTA: la aceptacion queda escrita en el manifest; falta --workdir")
+    if a.zona and a.sin_zona is not None:
+        return no_medido("--zona y --sin-zona a la vez: elegir una")
+    if a.zona:
+        try:
+            zona = [float(x) for x in a.zona.split(",")]
+            assert len(zona) == 6 and all(zona[i] <= zona[i + 3] for i in range(3))
+        except (ValueError, AssertionError):
+            return no_medido("--zona se escribe x0,y0,z0,x1,y1,z1 con x0<=x1, y0<=y1, z0<=z1")
+        res["zona"] = zona
+    elif a.sin_zona is not None and len(a.sin_zona.strip()) >= 5:
+        zona = None
+        res["sin_zona"] = a.sin_zona.strip()
+    else:
+        return no_medido("falta zona de mano: --zona x0,y0,z0,x1,y1,z1 (donde la toca el operario o "
+                         "la pieza del cliente) o --sin-zona \"<motivo>\" para juzgar la pieza entera")
+    if os.path.isfile(a.step):
+        from cadlib import workdir as _wd
+        res["step_firma"] = _wd.file_signature(a.step)
+    try:
+        pieza = _leer_step_cantos(a.step)
+        r = cantos_convexos(pieza, umbral, zona, t0=t0, tope_seg=tope_seg)
+    except NoMedido as e:
+        return no_medido(str(e))
+    res.update({k: r[k] for k in ("convexas_revisadas", "aristas_en_zona", "cantos_vivos",
+                                  "radios_chicos", "cilindros_completos",
+                                  "caras_curvas_sin_juzgar", "aristas_sin_normal", "rmin",
+                                  "ejemplos")})
+    res["medido"] = True
+    n_malos = r["cantos_vivos"] + r["radios_chicos"]
+    res["veredicto"] = "rojo" if n_malos else "verde"
+    print("pieza: %s   umbral R%s   %s" % (os.path.basename(a.step), _mm(umbral),
+          ("zona %s" % a.zona) if zona else ("pieza entera (sin zona: %s)" % res["sin_zona"])))
+    print("  convexas revisadas: %d (aristas que tocan la zona: %d)   cilindros completos (pin, "
+          "vastago; no son redondeo): %d" % (r["convexas_revisadas"], r["aristas_en_zona"],
+                                              r["cilindros_completos"]))
+    if r["caras_curvas_sin_juzgar"]:
+        print("  [OJO] %d caras curvas de otro tipo (BSpline, revolucion) NO se juzgan: mirarlas"
+              % r["caras_curvas_sin_juzgar"])
+    for x in r["ejemplos"]:
+        print("   R%-6s en (%8.2f,%8.2f,%8.2f)%s" % (_mm(x["radio"]), x["punto"][0], x["punto"][1],
+              x["punto"][2], ("  largo %s" % _mm(x["largo"])) if "largo" in x else ""))
+    resumen = ("%d cantos vivos (R0) y %d redondeos menores que R%s, el mas chico R%s"
+               % (r["cantos_vivos"], r["radios_chicos"], _mm(umbral), _mm(r["rmin"] or 0)))
+    aceptada = False
+    if n_malos and a.acepto_cantos is not None:
+        from cadlib import workdir as _wd
+        frase = a.acepto_cantos.strip()
+        man = _wd.load_manifest(a.workdir) if os.path.isfile(
+            os.path.join(a.workdir, _wd.MANIFEST)) else {}
+        otra = [e for e in man.get("evidence", []) if e.get("kind") == "cantos_aceptados"
+                and (e.get("frase") or "").strip() == frase and e.get("step_firma") != res["step_firma"]]
+        if otra:
+            res["motivo"] = "frase usada para otra version"
+            return cerrar(1, "NO SE ACEPTA: esa frase ya acepto otra version del STEP (firma %s; hoy %s). "
+                          "Una aceptacion vale para UNA firma: mirar la pieza nueva y escribir otra."
+                          % (otra[-1].get("step_firma"), res["step_firma"]))
+        _wd.ensure_workdir(a.workdir)
+        _wd.record_evidence(a.workdir, "cantos_aceptados", fixture=os.path.basename(a.step),
+                            step=a.step, step_firma=res["step_firma"], frase=frase,
+                            fecha=hoy.isoformat(), cantidad=n_malos, umbral_mm=umbral,
+                            zona=res["zona"], sin_zona=res["sin_zona"])
+        res["aceptacion"] = {"frase": frase, "fecha": hoy.isoformat(), "cantidad": n_malos}
+        aceptada = True
+    modo = modo_cantos(True, n_malos, hoy, can["aviso_hasta"], True, aceptada)
+    res["modo"] = modo
+    if modo == "verde":
+        return cerrar(0, "[OK] %d aristas o redondeos convexos en la zona, todos con R >= %s"
+                      % (r["convexas_revisadas"], _mm(umbral)))
+    if modo == "aceptado":
+        return cerrar(0, "[ACEPTADO] %s. Queda en el manifest: frase, fecha, firma del STEP y cantidad."
+                      % resumen)
+    salidas = "; ".join(can["salidas"])
+    if modo == "aviso":
+        return cerrar(0, "AVISO: %s; freno desde %s. Salidas: %s"
+                      % (resumen, _dia_siguiente(can["aviso_hasta"]), salidas))
+    return cerrar(1, "FRENO: %s. Salidas: %s" % (resumen, salidas))
+
+
+# =========================================================================================
 def main():
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -418,7 +876,27 @@ def main():
                         "Descuenta las uniones A RAS (180 grados), que no concentran. "
                         "Cuesta ~0,1 s por arista concava.")
     p.add_argument("--json", help="volcar el resultado")
+    g = p.add_argument_group("cantos convexos donde va la mano (P6, gate 3c)")
+    g.add_argument("--cantos-convexos", action="store_true",
+                   help="modo nuevo: aristas CONVEXAS sin radio o con radio < --umbral en la zona")
+    g.add_argument("--umbral", type=float, default=None,
+                   help="radio minimo [mm]; por defecto el de cantosCanon.data.json (R1,5 de la casa)")
+    g.add_argument("--zona", help="caja de la zona de mano x0,y0,z0,x1,y1,z1 [mm]: cuenta toda arista "
+                                  "que la TOQUE")
+    g.add_argument("--sin-zona", default=None, metavar="MOTIVO",
+                   help="juzgar la pieza entera; el motivo queda escrito")
+    g.add_argument("--tope-seg", type=float, default=None,
+                   help="tope de tiempo [s]; pasado el tope: NO MEDIDO (exit 2), nunca verde")
+    g.add_argument("--hoy", default=None, help="fecha simulada AAAA-MM-DD (solo con CAD_GATE_TEST=1)")
+    g.add_argument("--acepto-cantos", default=None, metavar="FRASE",
+                   help="Fak asume los cantos: frase de 10 caracteres o mas; queda en el manifest con "
+                        "fecha, firma del STEP y cantidad (exige --workdir)")
+    g.add_argument("--workdir", default=None, help="workdir con manifest.json donde queda la evidencia")
     a = p.parse_args()
+    if a.cantos_convexos:
+        return main_cantos(a)
+    if _OCP_ERROR is not None:
+        raise _OCP_ERROR
 
     # --- el detector se prueba SIEMPRE, antes de mirar la pieza --------------------------
     print("AUTOTEST del detector (par sintetico BIEN/MAL)")
