@@ -9,8 +9,8 @@ Uso (python del sistema):
 - `--color-parte N=<color>`: la parte N del objeto va con el rollo de ese color. El color se
   escribe en castellano (negro, blanco, amarillo, verde, rojo, azul, gris, naranja) o #RRGGBB.
 - Lamina con laminar_bambu.py (sus controles), muestra quien imprime que, y arma el plan de envio.
-- Sin --apply NO manda nada. Con --apply sube el archivo y manda la orden; despues hay que lanzar
-  el seguimiento en segundo plano (imprime el comando).
+- Sin --apply NO manda nada. Con --apply sube el archivo, manda la orden y bambu_red.imprimir lanza
+  sola la vigilancia con el detector, como proceso aparte (23/10/2026); si no arranca, lo dice.
 """
 import argparse
 import json
@@ -111,8 +111,8 @@ q = subprocess.run([sys.executable, str(AQUI / "quien_imprime_que.py"), str(carp
 print(q.stdout)
 rc = br.imprimir(str(salida), None, a.apply)
 if a.apply and rc == 0:
-    # el comando de la vigilancia es UNO solo: el que imprimio --imprimir arriba («AHORA, EN SEGUNDO PLANO», con su
-    # carpeta por envio y --despertar); antes aca salia otro distinto, sin --despertar (revision 16/10)
-    print("\nSEGUIMIENTO: lanzar en segundo plano el comando de arriba («AHORA, EN SEGUNDO PLANO»), sumando a "
-          "--fotos-en las capas del cambio de color")
+    # la vigilancia es UNA sola y ya la lanzo bambu_red.imprimir (proceso aparte, con el detector, gate 3b 23/10/2026):
+    # lanzar otra sobre la misma carpeta saldria 15. Antes aca se pedia lanzarla a mano y el 20/10 salio sin --detector
+    print("\nSEGUIMIENTO: ya lo lanzó --imprimir (renglón «LANZO LA VIGILANCIA APARTE»). Si arriba dice «LA VIGILANCIA "
+          "NO ARRANCÓ», lanzar a mano ese mismo comando en segundo plano")
 sys.exit(rc)

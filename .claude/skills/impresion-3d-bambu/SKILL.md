@@ -19,6 +19,10 @@ real, ver §7.
 **Reglas que valen para toda la skill:**
 - `--imprimir --apply` y `--seguir` se lanzan **siempre en segundo plano y nunca dentro de `timeout`**
   (un `timeout 100` cortó la subida de 20 MB el 15/10; la vigilancia tiene que poder despertar a la sesión).
+- **La vigilancia la lanza `--imprimir --apply` sola, con el detector** (gate 3b, 23/10/2026; falla real del
+  20/10: se vigiló sin `--detector`, Fak: *«olvido tuyo? imperdonable»*). Apagar el detector es
+  `--sin-detector --acepto "<frase textual de Fak>"` y queda escrito; sin la frase no se manda. Ver «Vigilar
+  hasta que termine» y `scripts/detectorCanon.data.json`.
 - **Prohibido esperar con un `ping` a una dirección fija** (el 15/10 un bucle preguntó por la .198 tres horas
   mientras la impresora estaba en la .111): se espera con `--seguir <carpeta> --buscar`.
 - **El código de acceso se dice que está en la foto o en el archivo; no se transcribe en el chat** (13/10:
@@ -68,12 +72,28 @@ python .claude/skills/impresion-3d-bambu/scripts/bambu_red.py --imprimir <archiv
   Avisa cuando no hay borde y el apoyo total es chico (menos de 1000 mm²); con una pieza
   angosta, redonda o acostada, se relamina con `--ajuste brim_type=outer_only --ajuste brim_width=6`
   (y, si la forma lo permite, una cara de apoyo más ancha).
-- **Vigilar hasta que termine** (solo lee; se lanza en segundo plano y su salida me despierta).
-  **Se lanza en el MISMO mensaje en que se manda**: el 15/10/2026 se mandó sin vigilancia y la falla la vio
-  Fak (*"el software no te despertó nunca?"*). El comando es UNO solo, el que `--apply` imprime en el renglón
-  «AHORA, EN SEGUNDO PLANO» (`--fotos-en 3,10 --despertar 5 --cada 30`, con **una carpeta por envío**,
-  `seguimiento_<trabajo>`: una reimpresión en la carpeta vieja heredaba su estado y sus fotos); `imprimir_pieza.py`
-  remite a ese mismo. Pasadas las primeras capas se relanza con `--despertar 10` (§1 ter). Si arranca con la
+- **Vigilar hasta que termine** (solo lee). **Desde el 23/10/2026 la lanza `--imprimir --apply` sola**, al
+  terminar de mandar (también si la conexión se corta después de la orden; no si la impresora la rechaza):
+  un proceso aparte (`DETACHED_PROCESS`) con `--seguir "<carpeta>\seguimiento_<trabajo>" --fotos-en 3,10
+  --cada 30 --detector`, **sin `--despertar`** (un proceso aparte que sale con 10 no lo relanza nadie). El
+  renglón «LANZO LA VIGILANCIA APARTE: …» es exactamente el comando lanzado. Después dice la verdad: «VIGILANDO:
+  proceso aparte PID n» solo si el proceso vive y dejó su `vigilancia.pid`; «LA VIGILANCIA NO ARRANCÓ … lanzala
+  a mano, en segundo plano: <comando>» si salió (la impresión sigue); un 15 («ya hay otra vigilancia») cuenta
+  como vigilada. Queda en el registro (renglón `vigilancia`: modo, comando, PID, resultado) y en la ficha.
+  Antes prueba la cámara (hasta ~30 s): **sin cámara accesible la vigilancia va con `--solo-medir`** y lo avisa;
+  la impresión no se frena por la cámara. **No lances otra vigilancia sobre esa carpeta** (saldría 15). Lo que
+  imprime el proceso queda en `vigilancia_consola.log`; `seguimiento.log` lo escribe él mismo. **La sesión no se
+  despierta con ese proceso** (no es suyo): para mirar, abrir las fotos de la carpeta y la última línea de
+  `seguimiento.log` (`SALIDA n` = terminó). Sin medir con la impresora real: que sobreviva al cierre de la
+  sesión entera (medido solo: sigue vivo al terminar la llamada que lo lanzó).
+  `--en-seco`: arma todo sin hablar con la impresora (no lee su estado ni la cámara, no sube, no manda, no
+  escribe registro, ficha ni `seguimiento_*`) y dice qué comando lanzaría y qué frenos quedaron sin evaluar.
+  Antes (hasta el 22/10) el comando se imprimía en «AHORA, EN SEGUNDO PLANO» y lo lanzaba la sesión, con
+  `--despertar 5`; el 15/10 se mandó sin vigilancia y la falla la vio Fak (*"el software no te despertó
+  nunca?"*); el 20/10 se lanzó sin `--detector`. **Una carpeta por envío** (`seguimiento_<trabajo>`: una
+  reimpresión en la carpeta vieja heredaba su estado y sus fotos). A mano, `--seguir` también va con el
+  detector por defecto; pasadas las primeras capas se puede relanzar con `--despertar 10` (§1 ter) si la
+  vigilancia aparte ya no corre. Si arranca con la
   pantalla todavía en el «finalizada» de la pieza anterior (de la skill, de Bambu Studio o de la pantalla), espera
   hasta 10 min a que empiece la nueva, contando también las relanzadas de `--despertar` (sale 1 si no empieza).
   Espera solo si hay un envío de la skill de los últimos 15 min que todavía no arrancó.
@@ -269,10 +289,15 @@ Autorización suya, durable: **si veo una falla clara, la pauso yo** y le aviso.
 
 **De noche la cámara no ve** (desde ~20:45 se apagan las luces de la planta; con la luz de la impresora
 prendida la foto sale casi negra igual, 15/10 22:05): **de noche se vigila solo el estado**. Una foto
-negra no es «se ve bien».
+negra no es «se ve bien». **El detector, de noche** (decisión del 23/10, `detectorCanon.data.json`, `de_noche`):
+de 20:45 a 08:15 `--seguir` anota su lectura con «(DE NOCHE: anota, no cuenta)», no da alarma y no la suma a la
+base; se decide por la hora de cada vuelta, así una pieza de la tarde tiene detector hasta las 20:45 y lo
+recupera a la mañana. Medido el 23/10 con fotos negras sintéticas: `detector_fallas.py` las da por «sana» (0,289 a 0,300; sana real 0,23 a 0,27): diría «se ve bien» sin ver nada. Con una foto real de noche, sin medir.
 
-**Cómo se corre:** en segundo plano, el comando que imprime `--apply` (`--fotos-en 3,10 --despertar 5`, sumando las
-capas del cambio de color) para las primeras capas; pasadas esas, el mismo con `--despertar 10`. Qué hacer con cada salida:
+**Cómo se corre:** la lanza `--imprimir --apply` sola (proceso aparte, con el detector, sin `--despertar`). A mano
+(si dijo «LA VIGILANCIA NO ARRANCÓ», o para relanzarla), en segundo plano, el comando que imprimió, sumando a
+`--fotos-en` las capas del cambio de color; con `--despertar 10` si la sesión la quiere seguir con fotos. Qué
+hacer con cada salida:
 
 | Salida | Qué pasó | Qué hago |
 |---|---|---|
@@ -319,8 +344,9 @@ impresora, `reference/runbook-impresora.md` (una carilla para Leo y Paulo). Lo e
 corre el modelo abierto de PrintGuard (5 MB, solo `onnxruntime`; entorno en
 `C:\Dev\_printguard\.venv`, copia para reinstalar en `2- SOFTWARE\DETECTOR DE FALLAS IMPRESION 3D
 (PrintGuard)\` de la nube). Da dos distancias por foto: a «sana» y a «fallada».
-`--seguir ... --solo-medir` lo registra una vez por minuto sin dar alarma; `--detector` da la
-alarma (salida 11) si tres fotos seguidas superan el umbral (0,45, o 1,8 veces la base de esa
+`--seguir ... --solo-medir` lo registra una vez por minuto sin dar alarma; `--detector` (**por defecto desde el
+23/10/2026**; apagarlo es `--sin-detector --acepto "<frase de Fak>"`, y el primer renglón de `seguimiento.log` dice
+«VIGILANCIA SIN DETECTOR») da la alarma (salida 11) si tres fotos seguidas superan el umbral (0,45, o 1,8 veces la base de esa
 impresión). Medido: 5 fotos sanas de la A2L → «sana» con 0,23 a 0,27; 12 fallas reales de Wikimedia
 → 7 detectadas y 5 no (se le escapa una capa corrida); un enredo real pegado sobre la pieza sube
 la distancia con su tamaño (0,24 → 0,29 → 0,70 → «fallada»). **No decide: elige cuándo miro yo.**
@@ -331,7 +357,8 @@ sigue; la meta de Fak es pasarla a cada 30 min cuando el filtro esté validado.
 `python .claude/skills/impresion-3d-bambu/scripts/instalar_detector.py --probar` copia el modelo
 desde `2- SOFTWARE\DETECTOR DE FALLAS IMPRESION 3D (PrintGuard)\` de la nube de Ingeniería a
 `C:\Dev\_printguard\`, arma el entorno (unos 100 MB) y comprueba que contesta. Si ya está, no toca
-nada. Correrlo antes del primer `--seguir --detector` en esa PC.
+nada. Correrlo antes del primer `--seguir --detector` en esa PC. Si falta, la vigilancia anda igual y tras 3 vueltas
+imprimiendo sin lectura su log dice «DETECTOR SIN MEDIR» con el motivo («bandera puesta» no es «detector midiendo»).
 
 **Lo que dice Bambu de esta impresora está en `reference/bambu-a2l-oficial.md`** (wiki oficial de
 la A2L, leída el 13/10/2026, con la página de cada dato): la placa y por qué se despega una pieza,

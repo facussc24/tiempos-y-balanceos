@@ -4,8 +4,12 @@ Uso (python del sistema):
   bambu_red.py --preparar 192.168.1.198     arma el archivo de datos (IP y numero de serie; el codigo
                                             de acceso lo escribe Fak a mano, este script NUNCA lo muestra)
   bambu_red.py --estado                     SOLO LEE: estado, temperaturas y filamentos cargados
-  bambu_red.py --imprimir <x.gcode.3mf> [--mapa 0,1] [--apply] [--sin-margen]   plan; con --apply sube y manda
+  bambu_red.py --imprimir <x.gcode.3mf> [--mapa 0,1] [--apply] [--sin-margen] [--en-seco]
+               [--sin-detector --acepto "<frase de Fak>"]
+                                            plan; con --apply sube, manda y LANZA SOLA la vigilancia con el detector
+                                            (proceso aparte); --en-seco arma todo y no habla con la impresora
   bambu_red.py --seguir <carpeta> [--fotos-en 3,10] [--despertar 5] [--cada 30] [--buscar] [--en-pausa]
+               [--solo-medir | --sin-detector --acepto "<frase de Fak>"]   el detector va prendido por defecto
   bambu_red.py --foto x.jpg | --pausar | --reanudar | --cancelar | --velocidad [1-4] | --luz [on|off]
   bambu_red.py --saltear <x.gcode.3mf> [12,15] [--apply] | --ambiente [min] | --avisar-retiro
   bambu_red.py --ficha <carpeta> | --selftest | --version | --pedir-codigo
@@ -1082,7 +1086,7 @@ def ficha(archivo):
         return {}
 
 
-def anotar_envio_en_ficha(archivo, ajustes, gramos, trabajo_id, chips, lugares):
+def anotar_envio_en_ficha(archivo, ajustes, gramos, trabajo_id, chips, lugares, frase=None):
     """La ficha de la pieza: nombre (las palabras de Fak = el nombre del archivo), archivo vigente, ajustes, gramos y
     minutos estimados y cada envio. --seguir la completa al cerrar. «descartado» lo escribe la sesion a mano."""
     import registro
@@ -1092,7 +1096,9 @@ def anotar_envio_en_ficha(archivo, ajustes, gramos, trabajo_id, chips, lugares):
               "minutos_estimados": ajustes.get("minutos"), "actualizada": registro.ahora_iso()})
     f.setdefault("envios", []).append({"trabajo_id": trabajo_id, "fecha": registro.ahora_iso(), "archivo": archivo.name,
                                        "chips": chips, "lugares": lugares, "resultado": None, "minutos_reales": None,
-                                       "foto_final": None})
+                                       "foto_final": None, "vigilancia_pedida": "sin detector" if frase else "detector",
+                                       **({"sin_detector": {"frase": frase, "fecha": registro.ahora_iso()}}
+                                          if frase else {})})
     _escribir_json(archivo.parent / "ficha.json", f)
 
 
@@ -1138,7 +1144,244 @@ TRAMPA_77 = ("la impresora sigue en PREPARE, etapa 77 («Preparando AMS»), reng
              "(falta ams_mapping2). Cancelala (--cancelar o el cuadrado rojo) y avisá a Fak")
 
 
-def imprimir(archivo, mapa, aplicar, sin_margen=False):
+# ---- La vigilancia la lanza --imprimir, con el detector (gate 3b, 23/10/2026) ----
+# Falla real (Fak, 20/10/2026 18:36: «olvido tuyo? imperdonable... evitar que suceda en el futuro»): la vigilancia se
+# lanzo a mano y sin --detector, porque --imprimir solo IMPRIMIA el comando y --seguir lo dejaba apagado por defecto.
+# Una mejora que depende de que alguien se acuerde de un flag esta apagada (LECCIONES 20/10): ahora --imprimir --apply
+# la lanza sola, como proceso aparte, con el detector; apagarlo pide la frase de Fak y queda escrito.
+CANON_DETECTOR = Path(__file__).with_name("detectorCanon.data.json")
+FRASE_MINIMA = 10                       # la misma que --acepto-voladizos (voladizosCanon.data.json, frase_minima)
+VIGILANCIA_ESPERA_S = 5.0               # se mira el proceso aparte este tiempo: uno que no arranca sale antes
+CONSOLA_VIGILANCIA = "vigilancia_consola.log"
+# Lo que IMPRIME el proceso aparte va a vigilancia_consola.log y no a seguimiento.log: ese lo escribe el mismo
+# --seguir (anotar_log imprime Y escribe cada renglon), y con la consola ahi cada renglon quedaria dos veces; al
+# relanzar, el historial del detector (que se relee del log) contaria cada lectura dos veces.
+LANZADOR = None                         # los tests ponen una funcion(argv, ruta_consola) -> objeto con .pid y .poll()
+
+
+def canon_detector():
+    """detectorCanon.data.json (la decision de noche, la frase minima, hasta cuando avisa); {} si no esta."""
+    try:
+        return json.loads(CANON_DETECTOR.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def error_de_frase(sin_detector, acepto):
+    """None si --sin-detector / --acepto estan bien; si no, el texto de por que no."""
+    minimo = int(canon_detector().get("frase_minima") or FRASE_MINIMA)
+    if acepto is not None and not sin_detector:
+        return "--acepto va solo con --sin-detector (sin --sin-detector no hay nada que aceptar)"
+    if sin_detector and (not isinstance(acepto, str) or len(acepto.strip()) < minimo):
+        return (f"--sin-detector necesita la frase de Fak (--acepto \"<su frase textual, {minimo} caracteres o más>\"); "
+                "sin ella la vigilancia va con el detector")
+    return None
+
+
+def de_noche_ahora(cuando=None):
+    """La camara no ve: de las 20:45 a las 08:15 (NOCHE_DESDE y NOCHE_HASTA, medidas el 13 y el 14/10)."""
+    t = cuando or _ahora()
+    hora = (t.hour, t.minute)
+    return hora >= NOCHE_DESDE or hora < NOCHE_HASTA
+
+
+def argv_vigilancia(carpeta, modo, frase=None):
+    """El comando de la vigilancia. El MISMO se imprime y se lanza. Sin --despertar: un proceso aparte que sale con 10
+    a los N minutos no lo relanza nadie (SKILL.md, «Vigilar hasta que termine»)."""
+    argv = [sys.executable, str(Path(__file__).resolve()), "--seguir", str(carpeta), "--fotos-en", "3,10", "--cada", "30"]
+    if modo == "sin detector":
+        return argv + ["--sin-detector", "--acepto", str(frase)]
+    return argv + (["--solo-medir"] if modo == "solo-medir" else ["--detector"])
+
+
+def texto_de_comando(argv):
+    """El argv en un renglon que una consola bash (y shlex) leen igual: comillas dobles en todo lo que no es una
+    palabra simple; adentro, solo se escapan la comilla y la barra que va antes de otra barra, de una comilla o del final."""
+    def q(a):
+        a = str(a)
+        if re.fullmatch(r"[A-Za-z0-9_.,:=+/@-]+", a):
+            return a
+        return '"' + re.sub(r'\\(?=\\|"|$)', r'\\\\', a).replace('"', '\\"') + '"'
+    return " ".join(q(a) for a in argv)
+
+
+def _popen_aparte(argv, consola):
+    """Un proceso aparte, que no muere con la consola ni con la llamada que lanzo --imprimir (medido el 23/10/2026:
+    sigue vivo despues de terminar la llamada que lo lanzo; al cerrar la sesion entera, sin medir)."""
+    import subprocess
+    kw = ({"creationflags": subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt"
+          else {"start_new_session": True})
+    with open(consola, "ab") as salida:
+        return subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=salida, stderr=subprocess.STDOUT,
+                                cwd=str(Path(consola).parent), env=dict(os.environ, PYTHONIOENCODING="utf-8"),
+                                close_fds=True, **kw)
+
+
+def lanzar_vigilancia(argv, carpeta):
+    """Lanza la vigilancia y dice la verdad sobre ella: «VIGILANDO» solo si el proceso vive y su vigilancia.pid (lo
+    escribe el Candado del propio --seguir) lo nombra. Un 15 («ya hay otra vigilancia») cuenta como vigilada. Nunca
+    frena la impresion: la orden ya salio. Devuelve {"resultado", "pid", "salida"}."""
+    carpeta = Path(carpeta)
+    texto = texto_de_comando(argv)
+    print("  LANZO LA VIGILANCIA APARTE:", texto, flush=True)
+    a_mano = f"lanzala a mano, en segundo plano: {texto}"
+    lanzador = LANZADOR
+    if lanzador is None and os.environ.get("BAMBU_PRUEBA") == "1":
+        print("  (prueba, BAMBU_PRUEBA=1: no se lanza ningún proceso aparte)")
+        return {"resultado": "no lanzada (prueba)", "pid": None, "salida": None}
+    try:
+        p = (lanzador or _popen_aparte)(argv, carpeta / CONSOLA_VIGILANCIA)
+    except (OSError, ValueError) as e:
+        print(f"  LA VIGILANCIA NO ARRANCÓ ({type(e).__name__}: {e}). La impresión sigue: {a_mano}")
+        return {"resultado": "no arranco", "pid": None, "salida": None}
+    fin = time.time() + VIGILANCIA_ESPERA_S
+    rc = p.poll()
+    while rc is None and time.time() < fin:
+        time.sleep(0.2)
+        rc = p.poll()
+    if rc == SALIDA_YA_VIGILADA:
+        print(f"  ya había otra vigilancia sobre {carpeta} (salida 15): esa sigue vigilando")
+        return {"resultado": "ya vigilada", "pid": p.pid, "salida": rc}
+    if rc is not None:
+        print(f"  LA VIGILANCIA NO ARRANCÓ: el proceso aparte salió con {rc} (mirá {carpeta / CONSOLA_VIGILANCIA}). "
+              f"La impresión sigue: {a_mano}")
+        return {"resultado": "no arranco", "pid": p.pid, "salida": rc}
+    try:
+        dueno = json.loads((carpeta / "vigilancia.pid").read_text(encoding="utf-8")).get("pid")
+    except (OSError, ValueError, AttributeError):
+        dueno = None
+    if dueno == p.pid and _pid_vivo(p.pid):
+        print(f"  VIGILANDO: proceso aparte PID {p.pid}; deja {carpeta / 'seguimiento.log'} y las fotos en esa carpeta. "
+              "No lances otra vigilancia sobre esa carpeta (saldría 15)")
+        return {"resultado": "vigilando", "pid": p.pid, "salida": None}
+    print(f"  AVISO: el proceso aparte (PID {p.pid}) no dejó su vigilancia.pid en {VIGILANCIA_ESPERA_S:.0f} s: no lo doy "
+          f"por vigilando. Mirá {carpeta / CONSOLA_VIGILANCIA}; si no aparece, {a_mano}")
+    return {"resultado": "sin confirmar", "pid": p.pid, "salida": None}
+
+
+def probar_camara(carpeta, d):
+    """(True, "") si la camara manda una foto; (False, motivo) si no. Tarda hasta ~30 s (foto(): 10 + 20 s)."""
+    import contextlib
+    try:
+        with open(os.devnull, "w") as nada, contextlib.redirect_stdout(nada):
+            ok = foto(str(Path(carpeta) / "camara_al_mandar.jpg"), d) == 0
+        return ok, "" if ok else "no llegó ninguna foto en 20 s"
+    except FallaImpresora as e:
+        return False, e.texto
+    except (Exception, SystemExit) as e:
+        return False, f"{type(e).__name__}: {e}"
+
+
+def modo_de_vigilancia(frase, camara_ok):
+    """(modo, motivo). 'sin detector' solo con la frase de Fak; sin camara, 'solo-medir' (el detector no tiene que
+    mirar y la impresion no se frena por eso); si no, 'detector'. De noche lo resuelve el propio --seguir por hora
+    (detectorCanon.data.json, de_noche): anota y no da alarma."""
+    if frase:
+        return "sin detector", f"--sin-detector con la frase de Fak «{frase}»"
+    if camara_ok is False:
+        return "solo-medir", "sin cámara accesible: la vigilancia va con --solo-medir (solo estado)"
+    return "detector", ""
+
+
+def anotar_vigilancia_en_ficha(archivo, trabajo_id, dato):
+    ruta = Path(archivo).parent / "ficha.json"
+    f = ficha(archivo)
+    for e in f.get("envios", []):
+        if e.get("trabajo_id") == trabajo_id:
+            e["vigilancia"] = dato
+    if f:
+        _escribir_json(ruta, f)
+
+
+def vigilar_lo_mandado(archivo, trabajo_id, d, frase=None):
+    """Despues de mandar la orden: prueba la camara, elige el modo, lanza la vigilancia aparte y lo anota (registro y
+    ficha). Cualquier falla aca se dice y no cambia la salida de --imprimir: la orden ya salio."""
+    import registro
+    carpeta = Path(archivo).parent / ("seguimiento_" + trabajo_id)
+    try:
+        ruta_de_prueba_ok(carpeta)
+        carpeta.mkdir(parents=True, exist_ok=True)
+        camara_ok, motivo_cam = (None, "") if frase else probar_camara(carpeta, d)
+        modo, motivo = modo_de_vigilancia(frase, camara_ok)
+        if modo == "solo-medir":
+            print(f"  AVISO: {motivo} ({motivo_cam})")
+        elif modo == "sin detector":
+            print(f"  AVISO: VIGILANCIA SIN DETECTOR ({motivo}); la vigilancia del estado sigue")
+        if modo != "sin detector" and not PY_DETECTOR.exists():
+            print(f"  AVISO: en esta PC no está el detector ({PY_DETECTOR}): la vigilancia va igual y su log va a decir "
+                  "«DETECTOR SIN MEDIR» (instalar_detector.py --probar)")
+        argv = argv_vigilancia(carpeta, modo, frase)
+        res = lanzar_vigilancia(argv, carpeta)
+    except (Exception, SystemExit) as e:
+        print(f"  LA VIGILANCIA NO ARRANCÓ ({type(e).__name__}: {e}). La impresión sigue: lanzá a mano --seguir "
+              f"\"{carpeta}\" --fotos-en 3,10 --cada 30 en segundo plano")
+        return None
+    dato = {"modo": modo, "motivo": motivo or None, "comando": texto_de_comando(argv), "carpeta": str(carpeta),
+            "resultado": res["resultado"], "pid": res["pid"], "salida": res["salida"], "fecha": registro.ahora_iso()}
+    if frase:
+        dato["frase"] = frase
+    try:
+        registro.anotar({"tipo": "vigilancia", "trabajo_id": trabajo_id, **dato})
+    except (Exception, SystemExit) as e:
+        print("  (no se pudo anotar la vigilancia en el registro:", type(e).__name__, e, ")")
+    try:
+        anotar_vigilancia_en_ficha(archivo, trabajo_id, dato)
+    except (Exception, SystemExit) as e:
+        print("  (no se pudo anotar la vigilancia en la ficha:", type(e).__name__, e, ")")
+    return dato
+
+
+def _en_seco(archivo, mapa, frase):
+    """--en-seco: arma todo lo que se puede sin la impresora y no habla con ella. No lee su estado (leer_estado() usa
+    la red y concilia el registro), no prueba la camara, no sube, no manda, no escribe el registro, la ficha ni
+    seguimiento_*, no dibuja la primera capa y no lanza ningun proceso."""
+    import registro
+    ajustes = ajustes_del_archivo(archivo)
+    minutos_archivo, inicio = ajustes.get("minutos"), _ahora()
+    minutos = minutos_archivo or 0
+    fin = inicio + timedelta(minutes=minutos * FACTOR_TIEMPO)
+    nombre = registro.nombre_en_impresora(archivo)
+    trabajo_id = inicio.strftime("%Y%m%d-%H%M%S-") + nombre.split(".")[0]
+    print("EN SECO: no se consultó la impresora (ni su estado ni la cámara); no se sube nada, no se manda la orden, no "
+          "se escribe el registro ni la ficha y no se lanza ningún proceso")
+    print("PLAN: subir", archivo.name, f"({archivo.stat().st_size/1e6:.1f} MB) como", nombre)
+    if mapa:
+        print("      filamento del archivo -> lugar del cargador:", {i + 1: m + 1 for i, m in enumerate(mapa)})
+    print(f"      {minutos // 60} h {minutos % 60} min estimados: terminaría a las {fin:%H:%M}"
+          + (f" del {fin:%d/%m}" if fin.date() != inicio.date() else ""))
+    falta_ok = falta_ok_de_fak(archivo, minutos_archivo, inicio)
+    if falta_ok:
+        print("      CON --apply NO SE MANDARÍA:", falta_ok)
+    print("      frenos SIN EVALUAR (necesitan la impresora): impresora ocupada, placa libre, rollos y colores cargados "
+          "(y el --mapa automático), gramos por rollo, ambiente y la cámara")
+    print("      evaluados en seco: una sola placa, la frase de --sin-detector y el OK de Fak (pieza larga o de noche)")
+    modo, motivo = modo_de_vigilancia(frase, None)
+    if motivo:
+        print("      AVISO:", motivo)
+    if _de_noche(inicio, fin):
+        print("      DE NOCHE: de 20:45 a 08:15 la cámara no ve; la vigilancia anota el detector y no da alarma "
+              "(detectorCanon.data.json)")
+    carpeta = archivo.parent / ("seguimiento_" + trabajo_id)
+    print("  LANZARÍA LA VIGILANCIA APARTE:", texto_de_comando(argv_vigilancia(carpeta, modo, frase)))
+    print("      (la carpeta y el número de trabajo salen de la hora real del envío)")
+    return 0
+
+
+def imprimir(archivo, mapa, aplicar, sin_margen=False, en_seco=False, sin_detector=False, acepto=None):
+    """Sube un .gcode.3mf, le pide a la impresora que lo imprima y LANZA SOLA la vigilancia aparte con el detector
+    (con --solo-medir si no hay camara; sin detector solo con --sin-detector y la frase de Fak). Sin --apply solo
+    muestra el plan; con --en-seco no habla con la impresora. Los parametros nuevos tienen valor por defecto:
+    imprimir_pieza.py llama imprimir(archivo, None, apply)."""
+    envio = {}
+    try:
+        return _imprimir(archivo, mapa, aplicar, sin_margen, en_seco, sin_detector, acepto, envio)
+    finally:
+        # tambien si la conexion se corta DESPUES de mandar la orden: la impresion puede estar andando
+        if envio.get("mandada") and not envio.get("rechazada"):
+            vigilar_lo_mandado(envio["archivo"], envio["trabajo_id"], envio["d"], envio.get("frase"))
+
+
+def _imprimir(archivo, mapa, aplicar, sin_margen, en_seco, sin_detector, acepto, envio):
     """Sube un .gcode.3mf y le pide a la impresora que lo imprima. Sin --apply solo muestra el plan.
     Frena (antes de subir nada) si: el archivo trae varias placas, el material o el color no son los cargados, la
     impresora esta ocupada, no alcanzan los gramos (o es de noche con poco rollo y sin respaldo), la placa tiene
@@ -1161,6 +1404,16 @@ def imprimir(archivo, mapa, aplicar, sin_margen=False):
         return 1
     if not placas:
         raise FallaImpresora(f"{archivo.name} no trae el codigo de la placa 1 (Metadata/plate_1.gcode)")
+    # la frase de --sin-detector se controla ANTES de leer la impresora y de subir (tambien sin --apply y en seco)
+    error = error_de_frase(sin_detector, acepto)
+    if error:
+        print("   NO SE MANDA:", error)
+        return 1
+    frase = acepto.strip() if sin_detector else None
+    if en_seco:
+        if aplicar:
+            print("   --en-seco manda sobre --apply: no se manda nada")
+        return _en_seco(archivo, mapa, frase)
     d = cargar_datos()
     est0 = leer_estado(d)
     if not est0.get("gcode_state") or not isinstance(est0.get("ams"), dict):
@@ -1241,7 +1494,8 @@ def imprimir(archivo, mapa, aplicar, sin_margen=False):
     print(f"      {minutos // 60} h {minutos % 60} min estimados: la primera capa empieza en 6-16 min (arranque de la "
           f"A2L) y termina a las {fin:%H:%M}" + (f" del {fin:%d/%m}" if fin.date() != inicio.date() else ""))
     if _de_noche(inicio, fin):
-        print("      DE NOCHE: después de las 20:45 la cámara no ve (planta a oscuras); se vigila solo el estado")
+        print("      DE NOCHE: después de las 20:45 la cámara no ve (planta a oscuras): la vigilancia anota el detector "
+              "y no da alarma de 20:45 a 08:15 (detectorCanon.data.json); el estado se vigila igual")
     for a in al_mandar:
         print("      CON --apply NO SE MANDA:", a)
     # temperatura del lugar contra lo que pide Bambu (avisa; la decision de imprimir igual es de Fak)
@@ -1301,10 +1555,12 @@ def imprimir(archivo, mapa, aplicar, sin_margen=False):
             "ajustes": {k: v for k, v in ajustes.items() if k not in ("minutos", "capas")},
             "filamentos": [{"lugar": mapa[i] + 1, "material": lug1.get(mapa[i], ("", "", ""))[1],
                             "color": col, "gramos": float(g or 0), "rollo": chips.get(mapa[i])}
-                           for i, (_, _, _, col, g) in enumerate(fil)]})
+                           for i, (_, _, _, col, g) in enumerate(fil)],
+            "vigilancia_pedida": "sin detector" if frase else "detector",
+            **({"sin_detector": {"frase": frase, "fecha": registro.ahora_iso()}} if frase else {})})
         try:
             anotar_envio_en_ficha(archivo, {k: v for k, v in ajustes.items()}, {i + 1: float(g or 0) for i, (*_, g) in enumerate(fil)},
-                                  trabajo_id, [chips.get(m) for m in mapa], [m + 1 for m in mapa])
+                                  trabajo_id, [chips.get(m) for m in mapa], [m + 1 for m in mapa], frase=frase)
         except (OSError, FallaImpresora) as e:
             print("  (no se pudo escribir la ficha de la pieza:", e, ")")
         try:
@@ -1313,12 +1569,13 @@ def imprimir(archivo, mapa, aplicar, sin_margen=False):
             registro.cerrar(trabajo_id, "cancelada", avance_pct=0, minutos_reales=None,
                             nota="la orden no salio: se corto la conexion al mandarla")
             raise
+        envio.update(mandada=True, archivo=archivo, trabajo_id=trabajo_id, d=d, frase=frase)
         print("  ORDEN DE IMPRIMIR MANDADA", time.strftime("%H:%M:%S"))
-        # 15/10/2026: se mando y nadie vigilo; la falla la vio Fak al 27 %. La vigilancia la lanza la sesion (en
-        # segundo plano, para que su salida la despierte, y nunca dentro de `timeout`): este renglon se lo recuerda.
-        # una carpeta por envio: una reimpresion no hereda el estado, las fotos ni la base del detector de la anterior
-        print(f"  AHORA, EN SEGUNDO PLANO: bambu_red.py --seguir \"{archivo.parent / ('seguimiento_' + trabajo_id)}\" "
-              "--fotos-en 3,10 --despertar 5 --cada 30")
+        # 15/10/2026: se mando y nadie vigilo (la falla la vio Fak al 27 %); 20/10: se vigilo sin el detector. Desde el
+        # 23/10 la vigilancia la lanza imprimir() al salir (proceso aparte, con el detector), aunque la conexion se
+        # corte en la espera de abajo; una carpeta por envio: una reimpresion no hereda el estado, las fotos ni la
+        # base del detector de la anterior
+        print(f"  la vigilancia se lanza sola al terminar este comando, en {archivo.parent / ('seguimiento_' + trabajo_id)}")
         t_orden, confirmada, ultimo = time.time(), False, None
         while time.time() - t_orden < ORDEN_ESPERA_S:
             nuevos = c.leer(5, hasta=lambda v, p: v.get("gcode_state") == "RUNNING" or p.get("command") == "project_file")
@@ -1326,6 +1583,7 @@ def imprimir(archivo, mapa, aplicar, sin_margen=False):
             resp = next((p for p in nuevos if p.get("command") == "project_file" and p.get("result")), None)
             if resp and str(resp.get("result")).lower() != "success":
                 print("  LA IMPRESORA RECHAZO LA ORDEN:", resp.get("result"), resp.get("reason") or "")
+                envio["rechazada"] = True
                 registro.cerrar(trabajo_id, "cancelada", avance_pct=0, minutos_reales=None,
                                 nota=f"la impresora rechazo la orden: {resp.get('result')} {resp.get('reason') or ''}".strip())
                 return 1
@@ -2013,11 +2271,14 @@ RECORTE_PLACA = "200,0,1300,460"      # zona de la placa en la foto de la A2L (1
 # de un solo color ni en 20 con 12 cambios de color. Costo: una falla real se avisa ~4 min despues.
 SEGUIDAS = 3
 UMBRAL_DETECTOR = 0.45                # distancia a "pieza sana"; sana medida el 13/10/2026: 0,23 a 0,27
+VUELTAS_SIN_MEDIR = 3                 # vueltas imprimiendo sin una lectura del detector -> «DETECTOR SIN MEDIR» en el log
 
 
 def medir_foto(ruta, d=None):
     """Saca una foto y devuelve las distancias del detector ({'success':..,'failure':..}) o None."""
     import subprocess
+    if not PY_DETECTOR.exists():            # sin el detector no se le saca una foto por vuelta a la camara
+        return None
     try:
         ruta.parent.mkdir(parents=True, exist_ok=True)
         foto(str(ruta), d)
@@ -2029,8 +2290,8 @@ def medir_foto(ruta, d=None):
         return None
 
 
-def seguir(carpeta, cada=60, fotos_en=(), despertar_min=0, detector=False, solo_medir=False, buscar=False,
-           en_pausa=False):
+def seguir(carpeta, cada=60, fotos_en=(), despertar_min=0, detector=True, solo_medir=False, buscar=False,
+           en_pausa=False, frase_sin_detector=None):
     """Vigila la impresion hasta que termina. SOLO LEE (estado + camara), con UNA conexion que queda abierta.
 
     Salidas: 0 termino bien · 1 fallo, se cancelo o el trabajo ya no esta · 2 pausa o alarma (con su texto: posible
@@ -2043,6 +2304,9 @@ def seguir(carpeta, cada=60, fotos_en=(), despertar_min=0, detector=False, solo_
     hora estimada de fin + 1 h. --en-pausa: con la impresora en pausa no sale; mira cada 5 min hasta que vuelva.
     Deja en <carpeta> seguimiento.log (fecha y hora con zona), estado_seguimiento.json (el reloj de «quieta» y el
     trabajo, para la proxima relanzada) y fotos: capa 1, las capas pedidas, una cada 15 minutos y la final.
+    El detector va prendido por defecto (23/10/2026); --solo-medir lo deja anotando sin alarma; sin detector solo con
+    --sin-detector y la frase de Fak, y entonces el primer renglon del log dice «VIGILANCIA SIN DETECTOR». De noche
+    (de 20:45 a 08:15, detectorCanon.data.json) el detector anota y no da alarma: una foto negra no es «se ve bien».
     """
     d = cargar_datos()
     carpeta = Path(carpeta)
@@ -2050,12 +2314,14 @@ def seguir(carpeta, cada=60, fotos_en=(), despertar_min=0, detector=False, solo_
     carpeta.mkdir(parents=True, exist_ok=True)
     candado = Candado(carpeta)
     try:
-        return _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_medir, buscar, en_pausa)
+        return _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_medir, buscar, en_pausa,
+                       frase_sin_detector)
     finally:
         candado.soltar()
 
 
-def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_medir, buscar, en_pausa):
+def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_medir, buscar, en_pausa,
+            frase_sin_detector=None):
     import registro
     ruta_estado = carpeta / "estado_seguimiento.json"
     try:
@@ -2075,6 +2341,7 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
     except (Exception, SystemExit) as e:
         print(f"  (no se pudo leer el registro al arrancar: {type(e).__name__}: {e}; se vigila igual)", flush=True)
     vig = Vigia(time.time(), previo, buscar=buscar, en_pausa=en_pausa, trabajo_cerrado=cerrado)
+    noche_solo_mide = canon_detector().get("de_noche", "solo-medir") == "solo-medir"
     extra = {k: previo.get(k) for k in ("sin_camara_desde", "tray_now", "fin_estimado", "rollo_anotado", "chip_activo",
                                         "esperando_desde")}
     log = open(carpeta / "seguimiento.log", "a", encoding="utf-8")
@@ -2171,10 +2438,25 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
                          "nota": "el respaldo automatico paso al rollo igual; reparto estimado por capas"})
         anotar_log(f"{_iso()} cambio de rollo: del lugar {viejo + 1} al {nuevo + 1} en la capa {v.get('layer_num')}")
 
+    sin_medir = {"vueltas": 0, "avisado": False}
+
     def detector_linea(v):
         """El filtro barato (sin tokens): una foto por vuelta pasada por el modelo de PrintGuard. Devuelve
         (texto para la linea, True si hay alarma)."""
         dd = medir_foto(carpeta / "por_minuto" / f"{time.strftime('%H%M%S')}.jpg", d)
+        if not dd:
+            # «bandera puesta» no es «detector midiendo» (B6, 23/10): tras N vueltas sin lectura queda escrito
+            sin_medir["vueltas"] += 1
+            if sin_medir["vueltas"] >= VUELTAS_SIN_MEDIR and not sin_medir["avisado"]:
+                sin_medir["avisado"] = True
+                motivo = (f"no está el Python del detector ({PY_DETECTOR}; instalar_detector.py --probar)"
+                          if not PY_DETECTOR.exists() else "la cámara o el detector no devolvieron una lectura")
+                anotar_log(f"{_iso()} DETECTOR SIN MEDIR hace {sin_medir['vueltas']} vueltas: {motivo}. "
+                           "La vigilancia del estado sigue")
+            return "", False
+        if sin_medir["avisado"]:
+            anotar_log(f"{_iso()} el detector volvió a medir")
+        sin_medir.update(vueltas=0, avisado=False)
         # Una foto sacada durante un cambio de filamento NO cuenta: la cama se va para atras y la escena cambia
         # (13/10/2026: notas de 23, 32 y 54 sobre 100 con la pieza sana, las tres en cambios de color). Se relee el
         # estado justo despues de la foto: si antes o despues la impresora no estaba imprimiendo (etapa distinta de
@@ -2191,8 +2473,11 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
         if dd and (v.get("stg_cur") != 0 or despues != 0):
             return txt + (f" | detector exito {dd['success']:.3f} falla {dd['failure']:.3f} "
                           f"(NO CUENTA: etapa {v.get('stg_cur')}->{despues})"), False
-        if not dd:
-            return txt, False
+        if noche_solo_mide and de_noche_ahora():
+            # de 20:45 a 08:15 la foto sale negra: se anota y no cuenta (no entra en la base ni en las 3 seguidas,
+            # y el renglon no lo relee la proxima relanzada)
+            return txt + (f" | detector exito {dd['success']:.3f} falla {dd['failure']:.3f} "
+                          "(DE NOCHE: anota, no cuenta)"), False
         historial.append(dd["success"])
         base = sorted(historial[:8])[len(historial[:8]) // 2]       # mediana de las primeras 8
         alarma = (not solo_medir and len(historial) >= 9
@@ -2385,6 +2670,13 @@ def _seguir(d, carpeta, candado, cada, fotos_en, despertar_min, detector, solo_m
             return 10
         return None
 
+    if not detector:
+        anotar_log(f"{_iso()} VIGILANCIA SIN DETECTOR: frase de Fak «{frase_sin_detector}» (--sin-detector); "
+                   "la vigilancia del estado sigue")
+        al_registro(lambda: registro.anotar({"tipo": "vigilancia", "modo": "sin detector", "frase": frase_sin_detector,
+                                             "carpeta": str(carpeta), "pid": os.getpid(), "lanzada_por": "--seguir"}))
+    elif solo_medir:
+        anotar_log(f"{_iso()} VIGILANCIA SOLO MIDE (--solo-medir: el detector anota y no da alarma)")
     try:
         while True:
             r = _vuelta()
@@ -2523,18 +2815,29 @@ def despachar(argv):
     if a == "--seguir" and len(argv) >= 3:
         # --seguir <carpeta> [--fotos-en 41,44] [--despertar N] [--cada S] [--detector | --solo-medir]
         #                    [--buscar] [--en-pausa]
+        #                    [--sin-detector --acepto "<frase de Fak>"]   (el detector va por defecto desde el 23/10)
         capas = tuple(_numeros(_valor(argv, "--fotos-en"), "--fotos-en")) if "--fotos-en" in argv else ()
+        sin_detector, acepto = "--sin-detector" in argv, _valor(argv, "--acepto")
+        error = error_de_frase(sin_detector, acepto)
+        if not error and sin_detector and ("--detector" in argv or "--solo-medir" in argv):
+            error = "--sin-detector no va junto con --detector ni con --solo-medir"
+        if error:
+            print("NO SE LANZA LA VIGILANCIA:", error)
+            return SALIDA_ERROR_PROGRAMA
         return seguir(argv[2], cada=_valor(argv, "--cada", int, 60), fotos_en=capas,
                       despertar_min=_valor(argv, "--despertar", int, 0),
-                      detector="--detector" in argv or "--solo-medir" in argv,
-                      solo_medir="--solo-medir" in argv, buscar="--buscar" in argv, en_pausa="--en-pausa" in argv)
+                      detector=not sin_detector, solo_medir="--solo-medir" in argv, buscar="--buscar" in argv,
+                      en_pausa="--en-pausa" in argv, frase_sin_detector=acepto.strip() if sin_detector else None)
     if a in ("--pausar", "--reanudar", "--cancelar"):
         return orden_simple({"--pausar": "pause", "--reanudar": "resume", "--cancelar": "stop"}[a])
     if a == "--imprimir" and len(argv) >= 3:
         # --mapa 0,1 : filamento 1 del archivo -> lugar 1 del cargador, filamento 2 -> lugar 2
         # --sin-margen: manda aunque la cuenta de gramos no alcance (SOLO con la frase de Fak en el chat)
+        # --en-seco: arma todo sin hablar con la impresora; --sin-detector: SOLO con --acepto "<frase de Fak>"
         mapa = _numeros(_valor(argv, "--mapa"), "--mapa") if "--mapa" in argv else None
-        return imprimir(argv[2], mapa, "--apply" in argv, sin_margen="--sin-margen" in argv)
+        return imprimir(argv[2], mapa, "--apply" in argv, sin_margen="--sin-margen" in argv,
+                        en_seco="--en-seco" in argv, sin_detector="--sin-detector" in argv,
+                        acepto=_valor(argv, "--acepto"))
     if a == "--ficha" and len(argv) >= 3:
         return mostrar_ficha(argv[2])
     if a == "--selftest":

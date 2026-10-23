@@ -10,6 +10,12 @@
       "justifica": "22/10/2026, Fak, dos veces en el dia («nunca usas soportes... siempre lo mismo»): el porta-bulon de la placa probeta v4 salio con voladizos sin soporte (voladizos2: voladizo 3,7 mm; dfam 74,4 mm2) y el control existia y nadie lo corrio. Fak 23/10: modo AVISO 7 dias y despues freno.",
       "fuente": ".claude/skills/impresion-3d-bambu/scripts/voladizosCanon.data.json (aviso_hasta) y voladizos_3mf.py; casos A0-A12 en tests/test_voladizos_3mf.py"
     },
+    "impresion-3d-bambu:detector-por-defecto": {
+      "revisar": "2026-10-30",
+      "que": "--imprimir --apply lanza solo, como proceso aparte, la vigilancia con --detector (sin camara: --solo-medir; de noche el detector anota y no alarma); --seguir a mano tambien va con el detector por defecto. Modo AVISO: no frena impresiones; lo unico que frena es --sin-detector sin la frase de Fak (--acepto, 10 caracteres o mas). El 30/10 se revisa lo que aviso en la semana (vigilancias que no arrancaron, DETECTOR SIN MEDIR, sin camara) y si la vigilancia aparte hace falta que despierte a la sesion.",
+      "justifica": "20/10/2026 18:36, Fak: «olvido tuyo? imperdonable... investigar esto y evitar que suceda en el futuro con alguna otra implementacion»: la vigilancia de la Bambu se lanzo sin --detector; --imprimir solo imprimia el comando y --seguir lo dejaba apagado por defecto (informe 04 del 23/10).",
+      "fuente": ".claude/skills/impresion-3d-bambu/scripts/detectorCanon.data.json (revisar, de_noche) y bambu_red.py (vigilar_lo_mandado, lanzar_vigilancia); casos B1-B9 en tests/test_detector_por_defecto.py"
+    },
     "lanzar-sesion-hija:camino-b": {
       "revisar": "2026-10-23",
       "que": "El camino B de lanzar una hija (tarea manual + run_scheduled_task) queda como respaldo escrito y se saca si en una semana no hizo falta.",
