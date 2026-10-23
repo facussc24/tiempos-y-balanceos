@@ -300,6 +300,10 @@ def _leer_partes(ruta):
                 cid = c.get("objectid")
                 sub = c.get(P_PATH) or path
                 tipo = tipo_parte.get((raiz_id, cid), "normal_part")
+                if tipo == "negative_part":
+                    # un volumen negativo le saca material a la pieza: sin restarlo, la medida no es la del objeto
+                    notas.append(f"NEGATIVO: parte {cid} es negative_part: volumen negativo no medido")
+                    continue
                 if tipo != "normal_part":
                     notas.append(f"parte {cid} es {tipo}: no se mide (no es material impreso)")
                     continue
@@ -314,12 +318,15 @@ def _leer_partes(ruta):
         o = objs.get(oid)
         nombre = nombre_obj.get(oid) or (o.get("name") if o is not None else None) or f"objeto {oid}"
         if it.get("printable") == "0":
-            out.append((nombre, oid, None, None, ["printable=0: Bambu no lo imprime; no se mide"]))
+            out.append((nombre, oid, None, None, ["printable=0: no se midio (Bambu no lo imprimiria)"]))
             continue
         vs, fs, notas = [], [], []
         juntar(it.get(P_PATH) or "3D/3dmodel.model", oid, matriz(it.get("transform")), oid, vs, fs, notas)
         if not vs:
             out.append((nombre, oid, None, None, notas + ["sin malla"]))
+            continue
+        if any(n.startswith("NEGATIVO:") for n in notas):
+            out.append((nombre, oid, None, None, notas))
             continue
         out.append((nombre, oid, np.vstack(vs), np.vstack(fs), notas))
     if not out:
@@ -400,8 +407,6 @@ def medir_aca(entrada, tope):
         if V is None:
             p.update({"veredicto": "no_medido", "voladizos2": {"voto": "NO MEDIDO", "motivo": "; ".join(notas)},
                       "dfam": {"voto": "NO MEDIDO", "motivo": "; ".join(notas)}, "dfam_mm2": None})
-            if any("printable=0" in n for n in notas):
-                p["veredicto"] = "verde"
             continue
         p["caja_mm"] = [round(float(x), 2) for x in (V.max(0) - V.min(0))]
         # dos objetos con la misma malla (copias en distinto lugar de la placa) se miden una vez

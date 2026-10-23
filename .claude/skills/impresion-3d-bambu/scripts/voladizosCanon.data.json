@@ -24,7 +24,7 @@
   "frase_minima": 10,
   "salidas": [
     "soportes: repetir con --ajuste enable_support=1 (la clave esta en fdm_process_common.json de Bambu Studio y vale 0 por defecto)",
-    "rotar la pieza o cambiar el diseno (por ejemplo una membrana de una capa que cierra el agujero: ficha-fdm G11) y volver a laminar",
+    "rotar la pieza o cambiar el diseno (por ejemplo una membrana de una capa que cierra el agujero: ficha-fdm G11, seccion 9, desde el 23/10) y volver a laminar",
     "si Fak lo asume: repetir con --acepto-voladizos \"<frase de Fak, 10 caracteres o mas>\" (queda en resumen.json, en voladizos.json y en el registro)"
   ]
 }

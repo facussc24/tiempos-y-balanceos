@@ -192,7 +192,7 @@ if VOLADIZOS["estado"] == "aceptado":
     import registro  # noqa: E402
     registro.anotar({"tipo": "voladizos aceptados", "archivo": VOLADIZOS["archivo"], "frase": VOLADIZOS["frase"],
                      "fecha_del_control": VOLADIZOS["hoy"], "modo": VOLADIZOS["modo"],
-                     "salida": str(out),
+                     "salida": str(out), "motivo": VOLADIZOS["motivo"], "faltan": VOLADIZOS["faltan"],
                      "partes": [{"parte": p["parte"], "veredicto": p["veredicto"], "dfam_mm2": p["dfam_mm2"],
                                  **{k: (p.get("voladizos2") or {}).get(k) for k in ("voto", "voladizo_mm", "puente_mm",
                                                                                      "z_mm", "motivo")}}

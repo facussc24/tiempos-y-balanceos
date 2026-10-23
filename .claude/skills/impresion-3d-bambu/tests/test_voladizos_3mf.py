@@ -90,14 +90,15 @@ DADA_VUELTA_X = "1 0 0 0 -1 0 0 0 -1 0 0 13"        # 180 grados en X (vector fi
 
 
 def tmf(ruta, objetos):
-    """3MF chico a mano: objetos = [(nombre, (V, F), transform o None)]; un item del build por objeto."""
+    """3MF chico a mano: objetos = [(nombre, (V, F), transform o None[, atributos extra del item])]; un item por objeto."""
     res, build = [], []
-    for i, (nombre, (V, F), tr) in enumerate(objetos, start=1):
+    for i, (nombre, (V, F), tr, *extra) in enumerate(objetos, start=1):
         vs = "".join(f'<vertex x="{x}" y="{y}" z="{z}"/>' for x, y, z in V)
         ts = "".join(f'<triangle v1="{a}" v2="{b}" v3="{c}"/>' for a, b, c in F)
         res.append(f'<object id="{i}" name="{nombre}" type="model"><mesh><vertices>{vs}</vertices>'
                    f'<triangles>{ts}</triangles></mesh></object>')
-        build.append(f'<item objectid="{i}"' + (f' transform="{tr}"' if tr else "") + "/>")
+        build.append(f'<item objectid="{i}"' + (f' transform="{tr}"' if tr else "") + "".join(f" {x}" for x in extra)
+                     + "/>")
     modelo = ('<?xml version="1.0" encoding="UTF-8"?><model unit="millimeter" '
               'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"><resources>' + "".join(res)
               + "</resources><build>" + "".join(build) + "</build></model>")
@@ -267,6 +268,32 @@ class A1aA9Sinteticas(unittest.TestCase):
         self.assertEqual(med["veredicto"], "no_medido")
         self.assertRegex(med["motivo"], r"falta (numpy|trimesh|shapely)")
 
+    def test_printable_0_y_volumen_negativo_quedan_no_medido(self):
+        rc, med, out = solo(tmf(self.tmp / "no_imprimible.3mf", [("caja", CAJA, None, 'printable="0"')]))
+        self.assertEqual((rc, med["veredicto"]), (2, "no_medido"), out)
+        self.assertEqual(parte(med, "caja")["veredicto"], "no_medido")
+        vs = "".join(f'<vertex x="{x}" y="{y}" z="{z}"/>' for x, y, z in CAJA[0])
+        ts = "".join(f'<triangle v1="{a}" v2="{b}" v3="{c}"/>' for a, b, c in CAJA[1])
+        malla = f"<mesh><vertices>{vs}</vertices><triangles>{ts}</triangles></mesh>"
+        modelo = ('<?xml version="1.0" encoding="UTF-8"?><model unit="millimeter" '
+                  'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"><resources>'
+                  f'<object id="1" type="model">{malla}</object><object id="3" type="model">{malla}</object>'
+                  '<object id="2" type="model"><components><component objectid="1"/><component objectid="3" '
+                  'transform="0.5 0 0 0 0.5 0 0 0 0.5 0 0 2"/></components></object></resources>'
+                  '<build><item objectid="2"/></build></model>')
+        cfg = ('<?xml version="1.0" encoding="UTF-8"?><config><object id="2"><metadata key="name" value="caja_hueca"/>'
+               '<part id="1" subtype="normal_part"/><part id="3" subtype="negative_part"/></object></config>')
+        neg = self.tmp / "con_negativo.3mf"
+        with zipfile.ZipFile(self.caja) as zi, zipfile.ZipFile(neg, "w") as zo:
+            for n in zi.namelist():
+                zo.writestr(n, modelo if n == "3D/3dmodel.model" else zi.read(n))
+            zo.writestr("Metadata/model_settings.config", cfg)
+        rc, med, out = solo(neg)
+        self.assertEqual((rc, med["veredicto"]), (2, "no_medido"), out)
+        p = parte(med, "caja_hueca")
+        self.assertEqual(p["veredicto"], "no_medido")
+        self.assertIn("volumen negativo no medido", p["voladizos2"]["motivo"])
+
     def test_a9_sin_python_del_3d_sin_script_o_sin_dfam(self):
         rc, med, out = solo(self.caja, BAMBU_PY_CAD=str(self.tmp / "no_existe" / "python.exe"))
         self.assertEqual((rc, med["veredicto"]), (2, "no_medido"), out)
@@ -318,6 +345,17 @@ class A0A6A10A11Laminar(unittest.TestCase):
         ev = [e for e in registro.leer() if e.get("tipo") == "voladizos aceptados"]
         self.assertTrue(any(e["frase"] == FRASE and e["partes"][0]["parte"] == "t_derecha" for e in ev), ev)
         self.assertFalse([m for n, e, m in registro.validar() if n == "ROJO" and e.get("tipo") == "voladizos aceptados"])
+
+    def test_a6_aceptado_sin_medir_deja_el_motivo_en_el_registro(self):
+        out_dir = self.tmp / "a6_no_medido"
+        rc, out = correr([self.caja, out_dir, "--filamento", "Bambu PLA Lite", "--acepto-voladizos", FRASE],
+                         BAMBU_HOY="2026-10-31", BAMBU_REGISTRO=str(self.reg),
+                         BAMBU_PY_CAD=str(self.tmp / "no_existe" / "python.exe"))
+        self.assertEqual(rc, 0, out)
+        ev = [e for e in registro.leer() if e.get("tipo") == "voladizos aceptados"
+              and Path(e.get("salida") or "").name == out_dir.name]       # la temporal puede venir en nombre corto
+        self.assertEqual(len(ev), 1, ev)
+        self.assertIn("falta el Python del 3D", ev[0]["motivo"])
 
     def test_a6_se_niega_sin_frase_o_con_frase_corta(self):
         for mala in ("", "si", "ok dale"):
