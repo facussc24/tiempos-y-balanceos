@@ -53,6 +53,57 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
 - **Los radios de un perfil como arcos del croquis, no como redondeos por COM**: con el sentido de cada arco elegido por
   su punto medio, la mano del croquis ZX (H→Z, V→X) no importa (08, CATA).
 
+- **El centro de algo chico agregado a algo grande no sale de `catia_base.medir`** (10, CATA): `medir` redondea el cdg a
+  0,001 mm y el centro de lo agregado sale de restar dos centros: el error llega a (v0 + v1) × 0,0005 / dv = 0,38 mm con
+  588 mm³ sobre 226 000. Para un control de centésimas, el cdg con todos los decimales (`GetCOG` por VBScript).
+- **Plano por ecuación** (`AddNewPlaneEquation(a, b, c, d)`): `GetPlane` da el origen en el pie de la perpendicular desde
+  el origen y H = dirección 1, V = dirección 2 también en un plano que no es de origen (10, CATA).
+- **Un nervio en CUÑA no sale con Stiffener** (espesor parejo: el ej32 dio 373,51 g por eso): prisma (trapecio en un plano
+  normal al filo) + pad simétrico + patrón circular (10, CATA). Y **el orden ahorra booleanos**: exterior sin el rebaje,
+  nervios, y recién después el Groove del rebaje, que se lleva lo que caía en el hueco.
+- **Shaft y Groove con el perfil apoyado en el eje y la CenterLine encima**: CATIA toma la CenterLine como eje aunque se
+  pise con un lado del perfil (10, CATA).
+- **Un juez de mutantes pide tres cosas** (12, CATA): que CATIA reproduzca el modelo malo (cruce con el `mal_*.py`, los
+  TRES: `juez_comun.comparar` mira solo las partes que midió build123d, revisor), que el control dé ROJO contra el papel y
+  que la masa sea la del mutante. Solo «rojo» no alcanza: una pieza rota cualquiera también da rojo.
+- **Un ejercicio de otro se reusa importándolo** (`importlib`): el 12 importa el 07 entero y decide qué operación saltea;
+  el 11 y el 15 hacen lo mismo con el 07 y el 11.
+- **El control de Knowledgeware va sobre un parámetro PROPIO que mueve la geometría** (14, CATA): `Radio` → los dos
+  redondeos, `Luz` → las cotas del croquis; el cruce de volumen de cada variante prueba que lo mueve. Las expresiones
+  aceptan `and` (`Luz >= 0.1mm and Luz <= 0.4mm`) y las constantes llevan unidad.
+- **«Sin radio» es APAGAR el redondeo**: el parámetro `...\EdgeFillet.1\Activity` atado por fórmula a un booleano propio
+  (`CreateBoolean("Redondeado", True)`), y el control lo nombra (`Radio >= 1.5mm and Redondeado == true`). Con
+  `part.Inactivate` a mano, el control que mira solo `Radio` queda verde con la pieza mal (14, CATA, gemelo en la prueba).
+- **Una pieza que no es de revolución necesita una tercera restricción para fijar el giro, y su ORIENTACIÓN decide la
+  pose** (16, CATA): dos puntos sobre el eje + paralelismo de planos (`AddBiEltCst(8, ...)`) con `.Orientation = 0`; con 1,
+  la barra queda hacia −X (gemelo medido en la misma corrida). Las piezas se dibujan en su propio sistema y entran al
+  ensamble en el origen: si se dibujan ya en su lugar, el ensamble no prueba nada.
+- **`Position.GetComponents`** (por VBScript): los 12 números son X, Y y Z de la pieza en el ensamble y al final su
+  origen; un punto p va a `o + p.x X + p.y Y + p.z Z` (16, CATA, medido; el 17 lo usa para mover la palanca en
+  OpenCASCADE).
+
+## DMU Kinematics (17, principal)
+
+- **`NbDof` cuenta el grado libre que mueve el comando**: un mecanismo de una revolución y un comando da «1;1;1» y se
+  simula (la biela del ej49 dio «1;4;1»). Esperar 0 fue un error mío (primera corrida, 10:15).
+- **El comando de ángulo de CATIA gira al revés de la convención del banco** (el giro que levanta la palanca): el signo
+  se mide en la primera pose y queda en `salida.json`; con él la punta cayó a 0,000 mm de la trigonometría en 0, 35, 50 y
+  60°.
+- **Choques y luces de un mecanismo: OpenCASCADE sobre los STEP de CATIA movidos con la `Position` del mecanismo**
+  (`medir_choques.py`). Con build123d 0.11 un `Location` no se arma desde una `Matrix`: va por `gp_Trsf.SetValues` +
+  `TopLoc_Location`. La luz se mide contra lo mismo que mide el banco: la del 06 no incluye el soporte del eje (a 2 mm
+  de la palanca en toda pose); con el soporte adentro, la luz del mal_2 daba 2 en vez de 15.
+
+## Planos (15, principal)
+
+- `DefinePolygonalClippingView(perfil)` y `DefineBreakout(perfil, plano1, plano2)` (ayuda de automatización,
+  `DrawingViewGenerativeBehavior`) son las respuestas b y c de las preguntas 1 y 2 del examen. **Que no tiren error no
+  prueba que hagan algo** (revisor del 15): el control mide el PDF con pymupdf (`medir_plano.py`: el ancho del recorte, los
+  trazos del rayado del arranque, el texto de cada cota).
+- `GenerateDimensions` trae las cotas que se apoyan en geometría (radios, largo del pad); las distancias a los ejes del
+  croquis NO (medido una vez, 10:05); un ángulo contra el eje del croquis sale con su línea cruzando la hoja y sin texto
+  legible: se borra. `GetValue().Value` de un ángulo viene en RADIANES.
+
 ## Superficies (GSD)
 
 - **Loft desde Python con `AddSectionToLoft(ref, 1, None)` anda con croquis como secciones** (09: igual que el ej29);
