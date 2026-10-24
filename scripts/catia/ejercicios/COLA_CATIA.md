@@ -115,6 +115,9 @@ Fak: *"los reales de Barack al final"*. Cada uno se rehace EN CATIA desde sus da
 | 48 | CATA | `48_gancho_mochila` | El gancho para colgar la mochila de la pata del escritorio (mordaza auto-trabante, v2) rehecho EN CATIA desde sus datos: `build_gancho.py` + `params.json` de `.claude/skills/cad-design/examples/gancho_mochila/` (perfil del clip con su juego, alas, brazo que baja hacia afuera, boca) | El STEP que genera `build_gancho.py --out <carpeta>` con el `params.json` del repo (`gancho_mochila_v2.step`, build123d, 20 s): `compara.py` del 32 (sobra y falta <= 1 mm³, distancia máxima <= 0,01 mm en los dos sentidos), volumen y centro de gravedad; `cuentas.json` trae a/L y el resto de lo que el diseño exige | el 32 (rehacer un dispositivo y compararlo contra su STEP) |
 | 49 | principal | `49_gancho_doble` | El gancho doble (`build_gancho_doble.py` + `params_doble.json` de `.claude/skills/cad-design/examples/gancho_mochila/`) rehecho en CATIA | El STEP que genera `build_gancho_doble.py` (`gancho_doble_v1.step`, 68,60 cm³): igual que el 48 | el 32 |
 | 50 | CATA | `50_gancho_leo` | El gancho de Leo (`build_gancho_leo.py` + `params_leo.json` de `.claude/skills/cad-design/examples/gancho_mochila/`) rehecho en CATIA | El STEP que genera `build_gancho_leo.py` (`gancho_LEO.step`, 97,34 cm³): igual que el 48 | el 32 |
+| 51 | CATA | `51_porta_bulon` | El porta-bulón de la plantilla del Insert (ejercicio 01 del banco 3D) en CATIA Part Design | Su `bien.py` medido con build123d (juez comun con `con_bien=True`: 0,5 mm³ y 0,01 mm de centro); los `mal_*.py` del banco dicen qué falla tiene que dar rojo | el 05 y el 07 (con_bien=True) |
+| 52 | CATA | `52_tornillo_7mm` | El tornillo impreso de 7 mm de la costura CNC del Insert (ejercicio 07 del banco 3D): vástago, cabeza, el RADIO bajo la cabeza y la rosca (hélice + barrido como el 38) | Su `bien.py` (con_bien=True); los `mal_*.py` (sin radio, largo 27, cabeza ancha) tienen que dar rojo | el 05 y el 07 (con_bien=True) |
+| 53 | principal | `53_virolador_banco` | El virolador del ejercicio 02 del banco 3D (el que no se hamaca) en CATIA | Su `bien.py` (con_bien=True); `mal_1_v14_se_hamaca` y `mal_2_fondo_en_v` tienen que dar rojo | el 05 y el 07 (con_bien=True) |
 
 ## Lo que sigue, en este orden (Fak, 24/10/2026 a la mañana)
 
@@ -184,3 +187,6 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 48 | pendiente | | |
 | 49 | pendiente | | |
 | 50 | pendiente | | |
+| 51 | pendiente | | |
+| 52 | pendiente | | |
+| 53 | pendiente | | |
