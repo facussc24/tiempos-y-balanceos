@@ -119,6 +119,15 @@ Fak: *"los reales de Barack al final"*. Cada uno se rehace EN CATIA desde sus da
 | 52 | CATA | `52_tornillo_7mm` | El tornillo impreso de 7 mm de la costura CNC del Insert (ejercicio 07 del banco 3D): vástago, cabeza, el RADIO bajo la cabeza y la rosca (hélice + barrido como el 38) | Su `bien.py` (con_bien=True); los `mal_*.py` (sin radio, largo 27, cabeza ancha) tienen que dar rojo | el 05 y el 07 (con_bien=True) |
 | 53 | principal | `53_virolador_banco` | El virolador del ejercicio 02 del banco 3D (el que no se hamaca) en CATIA | Su `bien.py` (con_bien=True); `mal_1_v14_se_hamaca` y `mal_2_fondo_en_v` tienen que dar rojo | el 05 y el 07 (con_bien=True) |
 
+## Más piezas con respuesta exacta (24/10 tarde)
+
+| N | Quién | Carpeta | Qué se construye en CATIA | Respuesta conocida | Método ya probado |
+|---|---|---|---|---|---|
+| 54 | CATA | `54_espesor_curvo` | Espesor sobre una superficie CURVA (como un tapizado sobre su sustrato): arco R600 de 310 de largo extruido 95, `AddNewThickSurface` de 3 mm hacia adentro y hacia afuera | Fórmula del sector de anillo: θ/2 (R2² − R1²) h con θ = 310/600: adentro (R 597-600) 88 127,7 mm³, afuera (R 600-603) 88 569,4 mm³; el largo del arco medido (310, no el círculo) | ej83_espesor_curvo |
+| 55 | principal | `55_tubo_doblado` | Tubo cuadrado 30 × 30 × 2 doblado a 90° (barandas y largueros de los carros): barrido del perfil hueco por recta 40 + arco R20 + recta 30 | Pappus: V = A · L = 224 × (40 + 10π + 30) = 22 717,2 mm³ (radio interior de la curva 5 > 0) | ej85_tubo_doblado |
+| 56 | CATA | `56_chaflan_12` | Chaflán 5 × 5 en las 12 aristas de una caja 250 × 80 × 60 de una vez (cómo cierra CATIA la esquina de tres chaflanes) | build123d haciendo lo mismo (chamfer de todas las aristas): volumen y centro a 0,5 mm³ y 0,01 mm, y la comparación booleana | ej84_chaflan_12 |
+| 57 | principal | `57_macho_desmoldeo` | Macho de molde: desmoldeo de 4° en los 4 costados y DESPUÉS las 4 aristas verticales R15 (el orden de un molde) | build123d haciendo lo mismo (extrusión con ángulo + redondeo de las aristas laterales): volumen, centro y comparación booleana | ej82_macho_desmoldeo_radios |
+
 ## Lo que sigue, en este orden (Fak, 24/10/2026 a la mañana)
 
 *"quiero que hagas todos los ejercicios oficiales de catia no? y luego diseños reales"*; *"te decía diseños reales de
@@ -190,3 +199,7 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 51 | pendiente | | |
 | 52 | pendiente | | |
 | 53 | no se hace | Duplica el 32: el bien.py del ejercicio 02 del banco 3D copia el mismo STEP del v16 entregado que el 32 ya juzga contra CATIA (sobra 0, falta 0, 0,0016 mm). Medido el 24/10 leyendo bien.py (22 renglones, `copiar("v16_step", ...)`) | |
+| 54 | pendiente | | |
+| 55 | pendiente | | |
+| 56 | pendiente | | |
+| 57 | pendiente | | |
