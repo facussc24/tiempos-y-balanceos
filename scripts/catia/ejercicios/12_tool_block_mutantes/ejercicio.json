@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "Los tres mutantes del Tool Block del examen de muestra CATIA V5 Associate (mal_1 q3 sin el agujero de 14, mal_2 q5 sin la ranura R41, mal_3 q6 con el vaciado sin las paredes de la ranura) en CATIA Part Design con el 07 y la operacion salteada; cruce de volumen y centro de gravedad contra cada mal_*.py del 13 del banco 3D; el juez tiene que dar ROJO contra la lamina 12 en los tres y la masa de CATIA (Steel del catalogo) tiene que ser la del mutante; STEP y captura BMP por mutante",
+ "banco": "13_examen_catia_associate",
+ "respuesta_conocida": {
+  "que": "masa de cada mutante en Steel de CATIA (7860 kg/m3) y ROJO contra la lamina 12 (934,78 / 625,00 / 430,39 g)",
+  "valor": {"mal_1_q3": 986.81, "mal_2_q5": 798.54, "mal_3_q6": 416.20},
+  "unidad": "g",
+  "tolerancia": 1.0,
+  "fuente": "evals/banco3d/ejercicios/13_examen_catia_associate/tarea.yaml (piezas mal_*): mal_1 a mano, pi x 7^2 x 43 x 0,00786 = +52,03 g sobre la lamina 12 del examen; mal_2 y mal_3 los da el modelo, no el examen; lamina 12 del examen CATIA V5 Associate (carpeta y sha256 en el tarea.yaml)"
+ }
+}
