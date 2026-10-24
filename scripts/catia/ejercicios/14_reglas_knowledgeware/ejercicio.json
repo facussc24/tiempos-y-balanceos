@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "Las reglas del banco 3D como controles adentro de la pieza (Knowledgeware): el mango del 05 con el parametro Radio que manda los dos redondeos, el booleano Redondeado que manda su encendido (Activity) y el control «Radio >= 1.5mm and Redondeado == true», y el nido del 04 con el parametro Luz que manda el croquis acotado del bolsillo y el control «Luz >= 0.1mm and Luz <= 0.4mm»; cada variante (buena y mutantes) cambiando solo el parametro, con el volumen contra el script del banco y el control verde o rojo segun el tarea.yaml",
+ "banco": ["05_canto_vivo", "04_nido_holgura"],
+ "respuesta_conocida": {
+  "que": "el control da verde con la pieza buena y rojo con cada mutante, y cada variante tiene el volumen de su script del banco",
+  "valor": {"mango_bien": true, "mango_mal_2": false, "mango_mal_1": false, "nido_bien": true, "nido_mal_1": false, "nido_mal_2": false},
+  "unidad": "verde (true) / rojo (false)",
+  "tolerancia": "volumen 0,5 mm3 y cdg 0,01 mm por variante (juez_comun)",
+  "fuente": "evals/banco3d/ejercicios/05_canto_vivo/tarea.yaml y 04_nido_holgura/tarea.yaml (que pieza es verde y cual roja); umbrales de evals/banco3d/correctores/cantos_convexos.py (--umbral 1.5) y holgura_nido.py (--min 0.1, --max 0.4)"
+ }
+}
