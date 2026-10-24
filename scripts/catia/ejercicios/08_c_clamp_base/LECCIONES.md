@@ -29,3 +29,7 @@ Para la centralización (LECCIONES_CATIA.md / catia.md), lo nuevo que dejó este
    punto medio (`barrido()`), la mano del croquis ZX (H→Z, V→X, la contraria del mundo XZ) no importa.
 6. La captura BMP muestra los planos de origen (XY, YZ, ZX) del documento: el STEP no los lleva (se midió con build123d),
    pero en la imagen se ven. Si la captura va a un entregable, ocultar también `OriginElements`.
+
+**24/10, topología del STEP (PEDIDO 32):** el boceto del punto de `AddNewHoleFromPoint` queda visible y el STEP salía con un
+vértice suelto en (-9; 0; 34): 1 sólido y 1 cáscara, pero 37 vértices con 1 fuera del sólido (topologia_step.py del 54). Se oculta
+`h.Sketch` con lo demás antes de exportar: 08_vert (24/10 17:08) verde y 36 vértices, nada suelto.
