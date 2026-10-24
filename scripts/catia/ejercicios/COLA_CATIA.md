@@ -128,6 +128,18 @@ Fak: *"los reales de Barack al final"*. Cada uno se rehace EN CATIA desde sus da
 | 56 | CATA | `56_chaflan_12` | Chaflán 5 × 5 en las 12 aristas de una caja 250 × 80 × 60 de una vez (cómo cierra CATIA la esquina de tres chaflanes) | La cuenta con los tres planos que se cortan en un punto en cada esquina (queda K³/4: 1 181 250 mm³) y el gemelo de build123d cortado por los 12 planos, con compara.py (corregido el 24/10 con CATA: `chamfer()` de build123d cierra la esquina con un triángulo y da 83,333 menos; no podía dar verde con la pieza bien) | ej84_chaflan_12 |
 | 57 | principal | `57_macho_desmoldeo` | Macho de molde: desmoldeo de 4° en los 4 costados y DESPUÉS las 4 aristas verticales R15 (el orden de un molde) | build123d haciendo lo mismo (extrusión con ángulo + redondeo de las aristas laterales): volumen, centro y comparación booleana | ej82_macho_desmoldeo_radios |
 
+## Operaciones que el banco no tenía (24/10 15:50)
+
+Contadas con los nombres COM reales en el banco, la práctica y `catia_base`: `AddNewRectPattern` 0, `AddNewShell` 1,
+`AddNewSolidTritangentFillet` 0. La referencia se arma SIN la operación que se prueba (lección del 56) y la respuesta se
+calcula al escribir la fila (lección del 54; script de la principal, 24/10).
+
+| N | Quién | Carpeta | Qué se construye en CATIA | Respuesta conocida | Método ya probado |
+|---|---|---|---|---|---|
+| 58 | principal | `58_patron_rectangular` | Placa 200 × 120 × 6 desde (0, 0, 0) con UN agujero D10 pasante en (25, 20) y `AddNewRectPattern` de 4 × 3 a paso 40 (X) y 35 (Y), como una plantilla de perforado | 200·120·6 − 12·π·5²·6 = 138 345,133 mm³; centro (100,6131; 60,2044; 3); 12 caras cilíndricas de R5; la forma contra la placa menos 12 cilindros puestos uno por uno (sin patrón) con compara.py | nuevo (pocket + patrón) |
+| 59 | CATA | `59_caja_vaciada` | Caja 120 × 80 × 50 vaciada con `AddNewShell` (pared 3 hacia adentro, la cara de arriba sacada): una carcasa abierta | 120·80·50 − 114·74·47 = 83 508 mm³ exacto; centro (60; 40; 17,8781) con la caja desde (0, 0, 0); la forma contra la caja menos la caja interior puesta a mano (sin shell) con compara.py | `AddNewShell` (1 uso en el banco) |
+| 60 | principal | `60_nervio_punta_redonda` | Nervio 100 × 6 × 40 (X, Y, Z) con la punta redonda por redondeo TRITANGENTE (las dos caras laterales tangentes y la de arriba se va) | 100 · (6·37 + π·3²/2) = 23 613,717 mm³; centro z 19,6838; la forma contra el perfil (rectángulo 6 × 37 + semicírculo R3) extruido 100, sin redondeo, con compara.py | nuevo |
+
 ## Lo que sigue, en este orden (Fak, 24/10/2026 a la mañana)
 
 *"quiero que hagas todos los ejercicios oficiales de catia no? y luego diseños reales"*; *"te decía diseños reales de
@@ -203,3 +215,6 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 55 | hecho | PC principal, R21, 24/10/2026 15:03 (`55_20261024_1503`; cierre de las 15:30 con la forma): ok true; 22 717,168 mm³ = Pappus; centro (61,31; 43,267; 0) contra la cuenta (61,3097; 43,2671; 0); el STEP 1/1/0 con lo mismo; contra el barrido de build123d sobra 0, falta 0, distancias exactas 0 y 0. Revisor Sonnet: un perfil girado 10° en su plano tiene el mismo volumen y centro → se agregó la comparación de forma (gemelo_tubo.py + compara.py) y sus rojos | (este commit) |
 | 56 | hecho (CATA) | CATA, R21, 24/10/2026 15:33 (`56_r3`, código del commit; la primera 15:17, igual): ok true; 1 181 250,000 mm³ y centro (0 · 0 · 30), la cuenta con los tres planos de chaflán que se cortan en un punto en cada esquina (queda K³/4); contra el gemelo de build123d cortado por los 12 planos (sin chamfer()) sobra 0, falta 0, distancia 0,0 por malla y exacta, 18 caras de cada lado. Lo que pide la fila (chamfer() de build123d a 0,5 mm³) no puede dar verde: chamfer() pone un triángulo en cada esquina (K³/6, 26 caras) y queda 83,333 abajo; el juez UBICA esa diferencia: 8 piezas de 10,4167 mm³, una por esquina, y nada del otro lado. Revisor Sonnet: sin graves; menores arreglados (una pieza sin volumen contaba como cero, caras contra 18) | (este commit) |
 | 57 | hecho | PC principal, R21, 24/10/2026 15:06 (`57_20261024_1506`; cierre de las 15:34 con la forma): ok true; desmoldeo 1 118 335,2 = el prismatoide; 4 aristas laterales; macho 1 106 821,516 contra 1 106 821,554 del gemelo (fórmula cerrada 1 106 821,5538) y centro z 29,269; el STEP 1/1/0 (1 106 821,755); contra el STEP del gemelo sobra 0, falta 0, distancias exactas 0 y 0. Revisor Sonnet: la fila prometía la comparación booleana y no se hacía (250 y 80 cambiados dan el mismo volumen y centro) → agregada con sus rojos; el rojo «4,1 grados» eran 4,025° (503 mm³): corregido | (este commit) |
+| 58 | pendiente | | |
+| 59 | pendiente | | |
+| 60 | pendiente | | |
