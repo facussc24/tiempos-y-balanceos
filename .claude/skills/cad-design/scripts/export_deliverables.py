@@ -27,6 +27,14 @@ cantosCanon.data.json (30/10/2026) avisa y entrega; desde el 31/10 un rojo o un 
 zona declarada sale con [GATE cantos] antes de crear la carpeta destino. Salida de Fak:
 gate_aristas.py ... --workdir W --acepto-cantos "<frase>" (vale para esa firma sola).
 
+(T) TORNILLOS: largo de agarre y de rosca contra la pila real (gate 3e, 23/10/2026; P14). Si la entrega declara
+tornillos (--tornillos <json>, params.tornillos del manifest o campo tornillos del pliego), corre gate_tornillos.py
+sobre el STEP de out/ y lee SU salida (firma de ese archivo, medido:true, largo, pila y margen por tornillo). Hasta
+el aviso_hasta de tornillosCanon.data.json (30/10/2026) avisa y entrega; desde el 31/10 un rojo o un NO MEDIDO sale
+con [GATE tornillos] antes de crear la carpeta destino. Sin tornillos declarados no mide nada; si un solido del STEP
+se llama como tornillo, tuerca o inserto, avisa «¿que tornillo va aca?» sin frenar. Salida de Fak:
+gate_tornillos.py ... --workdir W --acepto-tornillos "<frase>" (vale para esa firma y esos tornillos).
+
 Con --final (la entrega que va a Fak, no una copia de trabajo) corre ademas el GATE DE
 ENTREGABLE sobre la carpeta destino: PDF + STEP + simulacion grabada, misma corrida, y
 renders con motor declarado y con color medido (gate_entregable.py). Sin --final la
@@ -277,6 +285,134 @@ def gate_cantos(w, piece, base, hoy_arg=None):
     return resumen
 
 
+def _tornillos_decl(w, base, arg):
+    """(ruta del json de tornillos, fuente) para la pieza, o (None, None) si la entrega no declara tornillos.
+
+    Primero --tornillos; si no, params.tornillos del manifest (ruta relativa al workdir, o la lista/el dict en linea,
+    que se escribe en cache/); si no, el campo tornillos del pliego que verifico gate_proceso.py. Si el json dice
+    "conjunto" y no es esta pieza, no se aplica a esta pieza."""
+    import json
+    decl, fuente = None, None
+    if arg:
+        decl, fuente = arg, "--tornillos"
+    else:
+        decl = (workdir.load_manifest(w).get("params") or {}).get("tornillos")
+        fuente = "manifest params.tornillos"
+        if decl is None:
+            ev = workdir.find_evidence(w, "proceso_declarado") or {}
+            pl = ev.get("pliego")
+            for cand in ((os.path.join(w, pl), pl) if pl else ()):
+                if os.path.isfile(cand):
+                    try:
+                        with open(cand, encoding="utf-8") as f:
+                            decl = json.load(f).get("tornillos")
+                    except (OSError, ValueError, AttributeError):
+                        decl = None
+                    fuente = "pliego %s, campo tornillos" % pl
+                    break
+    if decl is None:
+        return None, None
+    if isinstance(decl, (list, dict)):
+        ruta = os.path.join(w, "cache", "tornillos_%s.json" % os.path.splitext(base)[0])
+        os.makedirs(os.path.dirname(ruta), exist_ok=True)
+        with open(ruta, "w", encoding="utf-8") as f:
+            json.dump(decl if isinstance(decl, dict) else {"tornillos": decl}, f, indent=1, ensure_ascii=False)
+        decl = ruta
+    elif not os.path.isabs(decl) and not os.path.isfile(decl) and os.path.isfile(os.path.join(w, decl)):
+        decl = os.path.join(w, decl)
+    try:
+        with open(decl, encoding="utf-8") as f:
+            conj = (json.load(f) or {}).get("conjunto")
+    except (OSError, ValueError, AttributeError):
+        conj = None                                   # lo dice el gate como NO MEDIDO
+    if conj and os.path.basename(str(conj)) not in (base, os.path.splitext(base)[0]):
+        return None, None
+    return decl, fuente
+
+
+def _aviso_sin_tornillos(piece, base):
+    """Sin tornillos declarados: si algun solido del STEP se llama como tornillo, tuerca o inserto, avisa sin frenar.
+    Nunca levanta una excepcion (es un aviso)."""
+    try:
+        import re
+        if _contar_solidos(piece) < 2:
+            return
+        import gate_tornillos as gt
+        from build123d import import_step
+        nombres = [n for n, _ in gt.solidos_con_nombre(import_step(piece))]
+        pat = re.compile(r"tornill|bul[oó]n|screw|bolt|tuerca|\bnut|inserto|insert|perno|\bM\d{1,2}\b", re.I)
+        sosp = [n for n in nombres if pat.search(n)]
+        if sosp:
+            print("  AVISO [GATE tornillos] '%s': ¿que tornillo va aca? El conjunto trae %s y la entrega no declara "
+                  "tornillos (--tornillos <json> o params.tornillos): el largo de agarre no se midio."
+                  % (base, ", ".join(sosp[:6]) + (" y %d mas" % (len(sosp) - 6) if len(sosp) > 6 else "")))
+    except Exception:
+        pass
+
+
+def gate_tornillos(w, piece, base, decl, hoy_arg=None):
+    """GATE de tornillos sobre EL ARCHIVO QUE SE ENTREGA. Devuelve el resumen o SystemExit.
+
+    Corre gate_tornillos.py por subproceso y juzga la linea JSON de ESA corrida: una evidencia del manifest con
+    medido:false, sin numeros por tornillo o de otra firma no vale como verde."""
+    import json
+    import subprocess
+    import gate_tornillos as gt
+    can = gt.canon()
+    try:
+        hoy = gt.hoy_tornillos(hoy_arg)
+    except (gt.NoMedido, ValueError) as e:
+        raise SystemExit("[GATE tornillos] %s" % e)
+    firma = workdir.file_signature(piece)
+    cmd = [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "gate_tornillos.py"),
+           "--step", piece, "--tornillos", decl, "--workdir", w]
+    if hoy_arg:
+        cmd += ["--hoy", hoy_arg]
+    j = None
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                           timeout=900, env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+        for linea in reversed((r.stdout or "").splitlines()):
+            if linea.startswith('{"gate": "tornillos"'):
+                j = json.loads(linea)
+                break
+    except (subprocess.TimeoutExpired, ValueError):
+        j = None
+    ok, motivo = gt.salida_valida(j, firma)
+    rojos = [t for t in j["tornillos"] if t["veredicto"] == "rojo"] if ok else []
+    ids = {t["id"] for t in rojos}
+    aceptada = False
+    if ok and rojos:
+        for e in workdir.load_manifest(w).get("evidence", []):
+            if (e.get("kind") == "tornillos_aceptados" and e.get("fixture") == base and e.get("step_firma") == firma
+                    and ids <= set(e.get("ids") or [])):
+                aceptada = True
+    modo = gt.modo_tornillos(ok, len(rojos), hoy, can["aviso_hasta"], aceptada)
+    por_tornillo = [{k: t.get(k) for k in ("id", "veredicto", "largo_medido_mm", "pila_mm", "margen_mm", "pila",
+                                            "inserto", "carga_N", "rojos", "avisos")}
+                    for t in j["tornillos"]] if ok else []
+    if not ok:
+        texto = "NO MEDIDO: %s" % motivo
+    elif rojos:
+        texto = "; ".join("%s: %s" % (t["id"], " / ".join(t["rojos"])) for t in rojos)
+    else:
+        texto = "%d tornillos pasan la pila y toman su rosca" % len(por_tornillo)
+    resumen = {"modo": modo, "medido": ok, "step_firma": firma, "tornillos_json": decl, "hoy": hoy.isoformat(),
+               "tornillos": por_tornillo, "motivo": None if ok else motivo}
+    if modo == "freno":
+        raise SystemExit(
+            "[GATE tornillos] '%s': %s. Desde el %s esto frena la entrega.\n"
+            "Salidas: %s" % (base, texto, gt.dia_siguiente(can["aviso_hasta"]), "; ".join(can["salidas"])))
+    if modo == "aviso":
+        print("  AVISO [GATE tornillos] '%s': %s\n    freno desde %s"
+              % (base, texto, gt.dia_siguiente(can["aviso_hasta"])))
+    elif modo == "aceptado":
+        print("  [GATE tornillos] '%s': %s, ACEPTADO por frase en el manifest (firma %s)" % (base, texto, firma))
+    else:
+        print("  [GATE tornillos] '%s': OK, %s" % (base, texto))
+    return resumen
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--workdir", required=True)
@@ -294,7 +430,8 @@ def main():
                          "solidos del STEP y queda escrito en el manifest.")
     ap.add_argument("--skip-gate", action="append", default=[],
                     choices=["zona", "proceso", "collision", "render", "ensamble", "entregable",
-                             "cantos"],
+                             "cantos",
+                             "tornillos"],
                     help="saltear un gate (queda registrado; exige --reason)")
     ap.add_argument("--reason", default=None, help="justificacion del --skip-gate")
     ap.add_argument("--final", action="store_true",
@@ -303,7 +440,11 @@ def main():
     ap.add_argument("--motor", default="", help="--final: motor de imagen de los renders (ver procesoCanon)")
     ap.add_argument("--render", nargs="*", default=[], help="--final: los PNG que muestran el 3D")
     ap.add_argument("--hoy", default=None,
-                    help="solo tests: fecha simulada AAAA-MM-DD para el gate de cantos (exige CAD_GATE_TEST=1)")
+                    help="solo tests: fecha simulada AAAA-MM-DD para los gates de cantos y tornillos "
+                         "(exige CAD_GATE_TEST=1)")
+    ap.add_argument("--tornillos", default=None, metavar="JSON",
+                    help="json de los tornillos del conjunto (gate_tornillos.py); sin esto se lee params.tornillos "
+                         "del manifest o el campo tornillos del pliego")
     args = ap.parse_args()
 
     if args.skip_gate and not args.reason:
@@ -311,6 +452,7 @@ def main():
     if args.hoy and os.environ.get("CAD_GATE_TEST") != "1":
         raise SystemExit("--hoy solo vale con CAD_GATE_TEST=1 (fecha simulada de los tests)")
     cantos_por_pieza = {}
+    tornillos_por_pieza = {}
 
     declarados = {}
     for d in args.ensamble:
@@ -449,6 +591,14 @@ def main():
         if "cantos" not in args.skip_gate:
             cantos_por_pieza[base] = gate_cantos(w, piece, base, args.hoy)
 
+        # GATE TORNILLOS (3e, 23/10/2026): tambien antes de crear la carpeta destino.
+        if "tornillos" not in args.skip_gate:
+            decl, _fuente = _tornillos_decl(w, base, args.tornillos)
+            if decl:
+                tornillos_por_pieza[base] = gate_tornillos(w, piece, base, decl, args.hoy)
+            else:
+                _aviso_sin_tornillos(piece, base)
+
     # ---- export + entrega ----
     os.makedirs(args.deliver, exist_ok=True)
     delivered = []
@@ -530,6 +680,7 @@ def main():
                             final=bool(args.final),
                             cuerpos_por_pieza=cuerpos_por_pieza,
                             cantos_por_pieza=cantos_por_pieza,
+                            tornillos_por_pieza=tornillos_por_pieza,
                             ensambles_declarados=args.ensamble,
                             skipped_gates=args.skip_gate, reason=args.reason)
     print("\nENTREGA OK -> %s (%d archivos). Evidencia registrada en el manifest." % (args.deliver, len(delivered)))
