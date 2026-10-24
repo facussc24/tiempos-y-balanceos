@@ -38,14 +38,17 @@
  *   - tope por corrida: BARACK_API_TOPE_CORRIDA_USD (por defecto $8). Si lo gastado en ESTA corrida lo
  *     supera, los pasos que faltan quedan 'saltado' ("tope por corrida ($X de $8)") y la noche sale con 1.
  *   - tres pasos seguidos en error: la noche se frena y lo anota.
- *   --sin-tope levanta el del ciclo y el de la corrida.
+ *   --sin-tope levanta el del ciclo y el de la corrida PARA ARRANCAR; desde el 23/10/2026 (6a) cada llamada a la API
+ *   pasa igual por el freno de la puerta (claudeApi.frenoDelCiclo, por clave): si la clave que paga ya cruzo su tope, el
+ *   paso falla con «tope del ciclo cruzado» salvo el permiso de un uso ~/.claude/.api-tope-ok (api-claude.md).
  *
  * Uso:
  *   node scripts/_nocturno.mjs                    la noche entera (lo corre la tarea de Windows)
  *   node scripts/_nocturno.mjs --simular          que haria y cuanto costaria, sin gastar ni guardar
  *   node scripts/_nocturno.mjs --solo mails       un paso solo (datos | preauditoria | mails | prioridades | novedades |
  *                                                 vigilante | propuestas | disparo; un semanal con --solo corre aunque no toque)
- *   node scripts/_nocturno.mjs --sin-tope         corre aunque el presupuesto del ciclo este en rojo o la corrida pase su tope
+ *   node scripts/_nocturno.mjs --sin-tope         arranca aunque el ciclo este en rojo o la corrida pase su tope (cada llamada
+ *                                                 igual frena en la puerta si su clave cruzo el tope: 6a, 23/10/2026)
  *   node scripts/_nocturno.mjs --estado           la ultima noche: linea, pasos, prioridades y edad
  *   node scripts/_nocturno.mjs --agendar          registra la tarea diaria de las 06:30 (pide la clave)
  *   node scripts/_nocturno.mjs --desagendar       la borra
