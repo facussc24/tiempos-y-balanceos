@@ -13,7 +13,7 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
-- **24/10 — Una ficha que resume un papel no es el papel, y la causa de una diferencia no se escribe si el papel no la dice: en el ejercicio 42 de CATIA tomé el «2,32e-4 m²» de la ficha del banco como lo impreso y le inventé una causa al «16.2 kN» («redondea el área antes»); el PDF del MIT imprime 0,00023234 m². Lo cazó el revisor al abrirlo.** Ya es `core-prohibiciones.md` §1; el caso, en el LECCIONES.md del ejercicio 42.
+- **24/10 — Una ficha que resume un papel no es el papel: si el original se puede abrir, se abre, y la causa de una diferencia no se escribe si el papel no la dice.** Graduado a `core-prohibiciones.md` §1 y `scripts/catia/LECCIONES_CATIA.md` (ejercicio 42).
 
 - **24/10 — El modelo de un revisor se elige por lo que revisa y por el cupo que gasta, no se fija en el encargo: escribí «revisor Fable por ejercicio» en los dos encargos de CATIA con el cupo de Fable al 66 % (la regla de la casa ya decía Fable solo para un cambio grande, `techo-agentes.md`); lo vio Fak** (*"eso debimos haberlo pensado antes, ¿no?"*). Por ejercicio alcanza el juez por programa más un revisor Sonnet; Fable, al cambiar el método o fundir la tanda.
 
@@ -33,7 +33,7 @@ incidente vive en los snapshots.
 
 - **11/10 — Antes de un push que agrega archivos o toca `settings.json` va la suite COMPLETA, y un umbral de una regla no lo aflojo yo: va como propuesta.** Graduado a `feedback_suite_completa_antes_del_push` y `feedback_un_numero_de_la_regla_no_lo_cambio_yo`.
 
-- **11-12/10 y 24/10 — Lo que va a un registro (una hora, «lo dije en el chat») se MIDE antes de escribirlo, nunca de memoria (el 24/10, cinco horas tipeadas en un día): en un texto escrito por comando, `$(date +%H:%M)` adentro del mismo comando; desde un worktree, lo de main con `git -C`.** Graduado a `reference_entrar_a_main_desde_un_worktree`.
+- **11-12/10 y 24/10 — Lo que va a un registro (una hora, «lo dije en el chat») se MIDE antes de escribirlo, nunca de memoria (el 24/10, cinco horas tipeadas en un día y las dos cifras de la fila 54 de la COLA de CATIA, que no salían de su fórmula y las cazó CATA): en un texto escrito por comando, `$(date +%H:%M)` adentro del mismo comando; desde un worktree, lo de main con `git -C`.** Graduado a `reference_entrar_a_main_desde_un_worktree` y `scripts/catia/LECCIONES_CATIA.md`.
 
 - **11/10 — Un subagente al que se le pide ubicar dónde está una clave la imprime en su salida: el encargo dice con qué buscar (`grep -l`, `-c`), no «no la repitas».**
 
