@@ -67,6 +67,18 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
   falso. Se escribe «bien si |x − y| <= tol» y lo demás es rojo; y el `ok` exige además que no haya error del juez (una
   excepción fuera de un paso deja `ok_pasos` en verdadero).
 
+- **La respuesta conocida es el GENERADOR, no la malla del bien.py** (51, CATA): el bien.py del banco copia solo el STL,
+  que da 1 611,928 mm³ contra 1 612,483 del sólido exacto (0,555, más que la tolerancia): con `con_bien=True` un CATIA
+  perfecto daba rojo. El generador de la nube escribe ese STL byte por byte (sha256 en cada corrida) y el STEP, que va a
+  `compara.py`; los `bien.py` / `mal_*.py` quedan como gemelos que separan (bien a menos de 1 mm³, cada mal a más de 5).
+- **Una fila de la COLA no es la respuesta: la respuesta es la fórmula o el papel** (54 y 56, CATA): la fila 54 traía
+  88 127,7 y 88 569,4, que no salen de su propia fórmula (88 129,125 y 88 570,875), y la 56 pedía comparar contra
+  `chamfer()` de build123d, que cierra la esquina distinto. El número de una fila se calcula con el comando al escribirla.
+- **Volumen y centro no ven una superficie suelta al lado del sólido** (54, CATA): 54_r1 dio la cuenta exacta con la R600
+  suelta en el STEP (1 sólido, 2 cáscaras, 17 aristas y 17 vértices contra 12 y 8). `topologia_step.py` del 54 cuenta
+  todo lo suelto. `juez_comun` MIDE sólidos, cáscaras y caras sueltas del STEP pero no los exige: lo exige el cierre de
+  cada ejercicio (13 `catia.py` y `practica_en_juez` con gemelo de centro, medido el 24/10); uno nuevo lo tiene que pedir.
+
 ## Part Design y Knowledgeware
 
 - **Un croquis totalmente restringido con tangencias, puntos sobre rectas, ángulo y fórmulas anda por COM en R21, al
@@ -147,6 +159,30 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
   15 minutos** (32, principal, 24/10: `compara.py` contra el virolador v16 entregado): se midió antes de cortarlo.
   Corrido solo tardó **16 min 22 s** (11:47:58 a 12:04:20) y dio lo mismo que el 19/10 (sobra 0, falta 0, 0,0016 mm):
   el tope de espera pasó de 900 s a 2 400 s. Es tiempo, no tolerancia: los umbrales no se tocaron.
+
+- **Ocultar (`VisProperties.SetShow`) en un documento que NO es el activo no hace nada** (54, CATA): con dos piezas armadas
+  y cerradas después, la de adentro salió con la superficie a la vista y suelta en su STEP. Cada pieza se cierra (ocultar,
+  STEP, captura) mientras es el documento activo; 06, 13, 14, 17 y 24 ya lo hacen.
+- **El lado de `AddNewThickSurface` no se supone: se prueba y se mira el centro** (54, CATA): sobre el arco R600 (de
+  izquierda a derecha por (0, 600), extruido en +Z) (0, 3, 0) dio ADENTRO y (0, 0, 3) AFUERA; en un cilindro de la
+  práctica (0, 2, 0) dio afuera. Depende de la normal de la superficie: `elegir_forma` prueba una, mira si el centro cayó
+  del lado pedido y si no la borra y prueba la otra.
+- **CATIA cierra la esquina de tres chaflanes con los tres planos que se cortan en un punto; `chamfer()` de build123d le
+  pone un triángulo** (56, CATA): K³/4 contra K³/6 por esquina, 8 piezas de 10,4167 mm³ (83,333 en la caja). La referencia
+  se arma SIN la operación que se prueba (la caja cortada por los 12 planos): otro `chamfer()` compara dos criterios de
+  esquina, no la pieza. Donde no se juntan tres (las 4 aristas verticales R15 del 57, principal) el redondeo de CATIA y el
+  de OpenCASCADE dan la misma forma: sobra 0, falta 0, exacta 0.
+- **`AddNewChamfer` modo 1 es largo + ÁNGULO** (51, CATA): (modo 1, 0,5) hizo un chaflán de 0,5 mm a 0,5° y el paso dio ok.
+  Cada chaflán se verifica por lo que saca (0,5 × 0,5: ~0,125 mm³ por mm de arista). Cinco aristas juntas (cuatro rectas y
+  un círculo) dieron «Update failed»; en dos grupos, rectas y círculo, anduvo (causa no aislada).
+- **El centro de lo que saca un vaciado chico se lee SIN redondear** (51, CATA): `medir()` redondea a 0,001 y el centro de
+  lo sacado se despeja de dos centros, con el error por V0 / dV (~270 en la boca de 6 mm³). Un margen para ese ruido fue
+  peor (dejó pasar la ranura al revés); anduvo `medir_fino()` y exigir que el vaciado saque más de 1 mm³ con su centro
+  del lado de su plano.
+- **`topologia()` sobre una operación cuenta las caras de ESA operación, no las del sólido** (56, CATA): dio 12 sobre el
+  chaflán y el juez las comparó con las 18 del gemelo. Las del sólido se cuentan en el STEP.
+- **Rutas de más de 260 caracteres**: en CATA el STL del bien.py del 51 queda a 308 y Windows dice que no existe; los
+  gemelos corren con el prefijo `\\?\` (memoria `reference_max_path_260_ruta_no_abre`).
 
 ## Piezas reales del cliente (fase 3: 32 a 35)
 

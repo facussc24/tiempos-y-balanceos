@@ -211,7 +211,9 @@ redondeos y chaflanes elegidos por posición sobreviven al cambio de parámetros
 - Arcos de 180° justos: ángulos explícitos (`ranura()`); `angulos_arco` rechaza el caso ambiguo.
 - Elipse en un croquis: `CreateEllipse(cH, cV, ejeMayorH, ejeMayorV, Rmayor, Rmenor, t0, t1)`; t se mide desde el eje
   mayor y el menor está a +90°. Chaflán: `AddNewChamfer(ref, 0, modo, 0, L1, L2oAngulo)`, modo 0 = dos largos,
-  1 = largo + ángulo. Agujero con caja que tiene que seguir a un parámetro: dos vaciados acotados (el Hole queda clavado
+  1 = largo + ángulo ((1, 0,5) hizo 0,5 mm a 0,5° y el paso dio ok: cada chaflán se verifica por lo que saca, 51 de CATA).
+  **Ocultar (`SetShow`) en un documento que no es el activo no hace nada** (54 de CATA): cada pieza se cierra (ocultar,
+  STEP, captura) mientras es la activa, o su STEP sale con la superficie suelta. Agujero con caja que tiene que seguir a un parámetro: dos vaciados acotados (el Hole queda clavado
   en la coordenada).
 - **Leer el plano es el cuello de botella, no CATIA.** Cuatro malas lecturas en cinco ejercicios, cazadas comparando
   contra la respuesta: un radio que dependía de un parámetro y lo tomé fijo; un R15 que era de otra esquina; un fondo
@@ -490,12 +492,17 @@ con su caso malo antes de creerle.
   1 106 821,5 mm³, igual que build123d. Al revés (radios y después desmoldeo de las 8 caras laterales) da +0,26 %: no es un
   error, el redondeo se inclina con el desmoldeo y su radio deja de ser 15 a lo largo del alto. El orden cambia la forma.
 - **Espesor sobre una superficie CURVA** (ej83, 19/10): arco por 3 puntos (`AddNewCircle3Points`) R600 × 310, extruido 95,
-  `AddNewThickSurface(sup, 0, 3, 0)` → 88 129,12 mm³ = cuenta exacta (R 597 a 600): **el espesor «interno» crece hacia el
-  CENTRO de la curva**. Trampa: `SetLimitation(1)` deja el CÍRCULO ENTERO (3 769,9 mm de largo, anillo completo); con 0 o 2
+  `AddNewThickSurface(sup, 0, 3, 0)` → 88 129,12 mm³ = cuenta exacta (R 597 a 600). **El lado NO se supone** (54 de CATA,
+  24/10): sobre ese arco (0, 3, 0) dio adentro y (0, 0, 3) afuera, y en un cilindro (0, 2, 0) dio afuera; depende de la
+  normal de la superficie. Se prueba una forma, se mira de qué lado cayó el centro y si no es el pedido se borra y se prueba
+  la otra. Trampa: `SetLimitation(1)` deja el CÍRCULO ENTERO (3 769,9 mm de largo, anillo completo); con 0 o 2
   queda el arco de 310. Se mide el largo de la curva antes de usarla.
 - **Chaflán en las 12 aristas de una vez** (ej84, 19/10): CATIA 1 181 250,00 contra build123d 1 181 166,67 mm³: la
   diferencia es EXACTA, 8 esquinas × k³/12 (k = 5): cada programa cierra distinto la esquina donde se juntan tres
-  chaflanes. No es error, pero la esquina sale distinta según con qué se hizo (un molde la copia).
+  chaflanes. No es error, pero la esquina sale distinta según con qué se hizo (un molde la copia). CATIA deja los tres planos
+  cortándose en un punto (K³/4 en el cubo de esquina); para compararla, la referencia se arma SIN `chamfer()`: la caja
+  cortada por los 12 planos (56 de CATA: sobra 0, falta 0, exacta 0). Sin esquina de tres (las 4 verticales R15 del
+  macho, 57) el redondeo de CATIA y el de OpenCASCADE dan la misma forma.
 - **Cota a mano solo si CATIA no la genera** (ej79b, 20/10): con `GenerateDimensions` el largo del carro ya sale (verde,
   sigue al modelo); poner además la cota a mano del mismo valor lo dejaba DOBLE. Se lee la lista de cotas generadas de la
   vista y la de a mano se salta si su valor ya está. Quedan a mano solo las que el modelo no tiene como parámetro (alto
