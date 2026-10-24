@@ -53,6 +53,8 @@ $escribio = (Test-Path $estado) -and ((Get-Item $estado).LastWriteTime -ge $inic
 if ($code -eq 0 -and -not $escribio) {
   Escribir 'RESULTADO: ERROR - node salio bien pero no escribio .claude\state\nocturno.json (resultado vacio)'
   exit 5
+} elseif ($code -eq 6) {
+  Escribir 'RESULTADO: NO ARRANCO - presupuesto del ciclo en rojo; el estado y el historial quedaron escritos (node scripts\_nocturno.mjs --estado)'
 } elseif ($code -eq 3) {
   Escribir 'RESULTADO: ERROR - falta la clave de la API (node scripts\_claude.mjs --check)'
 } elseif ($code -ne 0) {

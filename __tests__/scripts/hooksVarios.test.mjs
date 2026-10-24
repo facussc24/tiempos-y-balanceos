@@ -183,6 +183,21 @@ describe('session-start-context.sh (SessionStart) — el nucleo post-compact se 
     expect(r.stdout).toContain('[PC] Esta sesion corre en CATA');
     expect(r.stdout.length).toBeLessThan(6000);
   });
+  it('6b (23/10/2026): si la ultima noche no arranco, el arranque imprime UN renglon [NOCHE] con el motivo; si corrio bien, nada', () => {
+    const dir = fs.mkdtempSync(path.join(TMP, 'noche-'));
+    const base = { fecha: '2026-10-23', inicio: '2026-10-23 06:30:19', fin: '2026-10-23 06:30:19', finMs: Date.now() - 3600e3, pasos: [], costoUsd: 0, corte: null };
+    const malo = path.join(dir, 'malo.json');
+    fs.writeFileSync(malo, JSON.stringify({ ...base, noArranco: 'presupuesto del ciclo en rojo (ciclo del 30/09 al 29/10): $372.76 de $170. No arranco (--sin-tope para forzar).', lineaTablero: 'Noche 23/10 06:30 · no arrancó' }));
+    const bueno = path.join(dir, 'bueno.json');
+    fs.writeFileSync(bueno, JSON.stringify({ ...base, pasos: [{ nombre: 'mails', estado: 'ok', detalle: '3 mails', costoUsd: 0.01 }], noArranco: null, lineaTablero: 'Noche 23/10 06:30 · mails: 3 mails · $0,01' }));
+    const con = inicio({ COMPUTERNAME: 'DESKTOP-14JG95B', BARACK_NOCTURNO_ESTADO: posix(malo) });
+    expect(con.status, con.stderr).toBe(0);
+    expect(con.stdout).toMatch(/\[NOCHE\] Noche 23\/10 06:30 NO ARRANCO: presupuesto del ciclo en rojo/);
+    expect(con.stdout.split('[NOCHE]').length - 1).toBe(1);
+    const sin = inicio({ COMPUTERNAME: 'DESKTOP-14JG95B', BARACK_NOCTURNO_ESTADO: posix(bueno) });
+    expect(sin.status, sin.stderr).toBe(0);
+    expect(sin.stdout).not.toContain('[NOCHE]');
+  });
   it('H6 / N1 (auditor 16/10): el aviso «PC nueva» de la ULTIMA sincronizacion se imprime al arrancar; si la ultima dijo que no falta nada (archivo vacio), nada', () => {
     const dir = fs.mkdtempSync(path.join(TMP, 'pcn-'));
     const archivo = path.join(dir, 'pc-nueva.txt');

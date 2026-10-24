@@ -50,7 +50,9 @@
  *   node scripts/_nocturno.mjs --agendar          registra la tarea diaria de las 06:30 (pide la clave)
  *   node scripts/_nocturno.mjs --desagendar       la borra
  *
- * Sale con 0 ok · 1 fallo un paso o la noche se corto sola · 2 argumento · 3 falta la clave.
+ * Sale con 0 ok · 1 fallo un paso o la noche se corto sola · 2 argumento · 3 falta la clave · 6 no arranco (presupuesto
+ *   del ciclo en rojo; el estado y el historial quedan escritos igual). Cada corrida agrega una linea a
+ *   .claude/state/nocturno-historial.jsonl y el arranque de la sesion dice [NOCHE] si no corrio (6b, 23/10/2026).
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -79,6 +81,7 @@ import {
   armarEstado, edadHoras, comandoAgendar, comandoDesagendar, comandoEstadoTarea, leerEstadoTarea,
   ultimaCorrida, anotarCorrida, corridaCompleta, tocaSemanal, detalleVigilante,
   pausaPorPresupuesto, FACTOR_TOKENIZADOR, leerMarcador, anotarMarcador, juntarDesdeMarcador,
+  SALIDA_NO_ARRANCO, ARCHIVO_HISTORIAL,
 } from './_lib/nocturno.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
@@ -90,6 +93,8 @@ const DIR_NOVEDADES = process.env.BARACK_NOVEDADES_DIR || path.join(RAIZ, '.sgc-
 
 /** Desde donde lee cada paso que lee por marcador (tanda 5): { novedadesLargo: { hastaMs, fecha } }. */
 export const RUTA_MARCADORES = path.join(RAIZ, '.claude', 'state', 'nocturno-marcadores.json');
+/** Una linea JSON por corrida: nocturno.json se pisa cada dia, esto no (6b, 23/10/2026). */
+export const RUTA_HISTORIAL = path.join(RAIZ, '.claude', 'state', ARCHIVO_HISTORIAL);
 
 const leerJson = (ruta) => { try { return JSON.parse(fs.readFileSync(ruta, 'utf8')); } catch { return null; } };
 
@@ -381,9 +386,16 @@ async function pasoDisparo({ cliente, simular, ahora, transcripts, restanteUsd =
 // La noche
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Agrega la corrida al historial (una linea JSON). Pasa por escrituraSegura como todo lo que escribe la noche. */
+export function registrarHistorial(estado, ruta = RUTA_HISTORIAL) {
+  agregarSeguro(ruta, `${JSON.stringify(estado)}\n`);
+  return ruta;
+}
+
 function guardarEstado(estado) {
   escribirSeguro(RUTA_ESTADO, `${JSON.stringify(estado, null, 2)}\n`);
   agregarSeguro(RUTA_LOG, `${selloLocal()}  ${estado.lineaTablero}\n`);
+  registrarHistorial(estado);
 }
 
 async function noche({ simular, solo, sinTope }) {
@@ -399,7 +411,7 @@ async function noche({ simular, solo, sinTope }) {
   if (!arranque.ok) {
     if (!simular) guardarEstado(armarEstado({ inicio, fin: new Date(), noArranco: arranque.motivo, presupuesto: presupuestoDelMes() }));
     console.log(arranque.motivo);
-    return 0;
+    return SALIDA_NO_ARRANCO;        // 6b (23/10/2026): un «no arranco» que sale con 0 no lo ve nadie
   }
 
   const datos = { hallazgos: null, reporte: null, mails: [], resumenNovedades: null, prioridades: null, semanales: {} };
@@ -470,6 +482,8 @@ function mostrarEstado() {
   const h = edadHoras(e);
   console.log(e.lineaTablero);
   console.log(`de hace ${h ?? '?'} h${h != null && h > 26 ? ' — VIEJO: la ultima noche no corrio o fallo antes de escribir' : ''}`);
+  const historial = fs.existsSync(RUTA_HISTORIAL) ? fs.readFileSync(RUTA_HISTORIAL, 'utf8').split('\n').filter(Boolean).length : 0;
+  console.log(`  historial: ${historial} corrida(s) en ${path.relative(RAIZ, RUTA_HISTORIAL)}`);
   if (e.corte) console.log(`  SE CORTO SOLA: ${e.corte.detalle}`);
   for (const p of e.pasos || []) console.log(`  [${p.estado}] ${p.nombre}: ${p.detalle}`);
   for (const m of e.mails || []) console.log(`  mail [${m.area}] ${m.asunto} — ${m.linea}`);

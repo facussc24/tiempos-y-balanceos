@@ -804,6 +804,41 @@ export function edadHoras(estado, ahora = Date.now()) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// «No corrio» se VE (viernes 23/10/2026, punto debil 6b). El 23/10 a las 06:30 nocturno.json quedo en
+// «no arranco: presupuesto del ciclo en rojo», la noche salio con 0 y ninguna sesion lo dijo.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Codigo de salida de _nocturno.mjs cuando la noche NO ARRANCA (presupuesto del ciclo en rojo). Distinto de 0 (ok),
+ *  1 (fallo un paso), 2 (argumento), 3 (falta la clave) y de los 4 y 5 que usa el envoltorio _nocturno.ps1. */
+export const SALIDA_NO_ARRANCO = 6;
+
+/** Una linea JSON por corrida, al lado de nocturno.json (que se pisa cada dia). */
+export const ARCHIVO_HISTORIAL = 'nocturno-historial.jsonl';
+
+/**
+ * El renglon [NOCHE] para el arranque de la sesion, o '' si la ultima noche corrio bien (el detalle lo da --estado).
+ * `estado` es el JSON de nocturno.json (null si no existe). Pura: la hora y la ruta se pasan.
+ */
+export function lineaNoche(estado, { ahora = Date.now(), ruta = '.claude/state/nocturno.json', horasViejo = HORAS_VIEJO } = {}) {
+  const ver = 'Ver: node scripts/_nocturno.mjs --estado · node scripts/_claude.mjs --check';
+  if (!estado) return `[NOCHE] No hay ninguna noche registrada (${ruta} no existe): la tarea de las ${HORA_TAREA} no corrio nunca en esta PC o se borro el estado. ${ver}`;
+  const h = edadHoras(estado, ahora);
+  if (h == null) return `[NOCHE] El estado de la noche (${ruta}) no trae la hora de fin: no se sabe cuando corrio. ${ver}`;
+  const fecha = String(estado.fecha ?? '');
+  const cuando = `${fecha.slice(8, 10)}/${fecha.slice(5, 7)} ${String(estado.fin ?? '').slice(11, 16)}`.trim();
+  if (h > horasViejo) return `[NOCHE] La ultima noche registrada es del ${cuando} (hace ${h} h): la de hoy NO CORRIO (la tarea de Windows no arranco o fallo antes de escribir). ${ver}`;
+  if (estado.noArranco) return `[NOCHE] Noche ${cuando} NO ARRANCO: ${String(estado.noArranco).trim()} Historial: .claude/state/${ARCHIVO_HISTORIAL}`;
+  const pasos = Array.isArray(estado.pasos) ? estado.pasos : [];
+  const malos = pasos.filter((p) => p && (p.estado === 'error' || p.corte || p.pausa)).map((p) => p.nombre);
+  if (estado.corte || malos.length) {
+    const que = estado.corte ? `se corto sola (${estado.corte.detalle ?? estado.corte.motivo ?? 'tope'})` : `con problemas en ${malos.join(', ')}`;
+    return `[NOCHE] Noche ${cuando} ${estado.corte ? que : que}: ${String(estado.lineaTablero ?? '').slice(0, 220)} · node scripts/_nocturno.mjs --estado`;
+  }
+  return '';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // La tarea de Windows (texto de PowerShell; lo corre _nocturno.mjs con psRun)
 // ─────────────────────────────────────────────────────────────────────────────
 

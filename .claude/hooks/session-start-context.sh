@@ -76,6 +76,10 @@ bash "$ROOT/.claude/hooks/cerebro-guard.sh" 2>/dev/null
 
 # La ficha de esta PC y el ultimo aviso «PC nueva» (funcion de arriba).
 ficha_pc
+# Noche de Claude (6b, viernes 23/10/2026): si la ultima noche NO CORRIO, no arranco o fallo, un renglon [NOCHE] al
+# arrancar (el 23/10 a las 06:30 quedo «no arranco: presupuesto en rojo» en nocturno.json y ninguna sesion lo dijo).
+# Nada si corrio bien. Solo lee el estado, nunca frena; no al compactar. BARACK_NOCTURNO_ESTADO: tests.
+node "$ROOT/scripts/_lib/nocturnoHook.mjs" --hook 2>/dev/null
 
 # Seguimientos con fecha: lo que hay que volver a pedir (lunes y viernes) hasta que contesten.
 # Va DESPUES del cerebro porque los datos viven en la memoria. Detalla hasta 10 (unos 5 KB) y
