@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "Resorte por GSD en CATIA: circulo R2 barrido por una helice R20, paso 10, alto 50 (AddNewHelix + AddNewPlaneNormal + AddNewCircleCtrRad + AddNewRibFromRef), y el mismo con el circulo en el plano ZX del origen (a 4,55 grados del normal); volumen contra la formula del tubo barrido, largo de la helice contra la cuenta y STEP medido con build123d; pieza = ej45 de la practica copiado con cambios anotados",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "volumen del resorte con el perfil normal al camino y con el perfil inclinado",
+  "valor": {"normal": 7920.644, "inclinado": 7895.684},
+  "unidad": "mm3",
+  "tolerancia": 0.5,
+  "fuente": "formula de geometria (fila 38 de COLA_CATIA.md): volumen de un tubo barrido con el perfil centrado en el camino = area x largo del camino, pi * 2^2 * 5 * sqrt((2 pi 20)^2 + 10^2); con el perfil plano a un angulo t del normal, la seccion normal es la proyeccion (area x cos t), t = atan(10 / (2 pi 20)) = 4,54987 grados; tolerancia 0,5 mm3, la de juez_comun"
+ }
+}

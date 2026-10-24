@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "CSWA Sample Exam 2013 oficial de SolidWorks, «Tool Block» etapas 1 (A 81, B 57, C 43) y 2 (84, 59, 45) en CATIA, cada una en su CATPart: contorno con R19 tangente a la recta de 10 grados, R29 y R5 (perfil del gemelo de la practica pasado por de_build123d.py), pad de C y agujero D14; masa de CATIA (Steel con Density 7 900) contra el examen, volumen y centro contra el gemelo de build123d y STEP medido con build123d; pieza = ej41 de la practica copiado con cambios anotados",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "masa de la pieza en acero AISI 1020 de 0,0079 g/mm3, por etapa",
+  "valor": {"etapa_1": 939.54, "etapa_2": 1032.32},
+  "unidad": "g",
+  "tolerancia": 0.1,
+  "fuente": "CSWA Sample Exam 2013, SolidWorks (https://www.solidworks.com/sw/docs/EDU_CSWA_Sample_Exam_2013_ENG.pdf; desde CATA no carga: leido por el revisor en la copia de web.archive.org del 21/05/2024 de esa URL, «CAD Instructor Guide» apendice A): pregunta 3 «Tool Block - Step 1» pag. 4 del PDF (impresa 308; dibujo en la 3), A 81, B 57, C 43, MMGS a 2 decimales, AISI 1020 0,0079 g/mm3, opciones 1028,33 / 118,93 / 577,64 / 939,54; pregunta 4 «Step 2» (84, 59, 45); respuestas pag. 9 (impresa 313): 3 d) 939,54 g y 4) 1 032,32 g. Tolerancia 0,1 g: la del ejercicio 19 (CSWP de SolidWorks; un chaflan faltante pesa ~1 g); el examen es de opcion multiple y su pista dice «a menos del 1 %»"
+ }
+}
