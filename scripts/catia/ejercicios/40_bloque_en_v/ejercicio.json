@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "Bloque en V de 90 grados como ENSAMBLE en CATIA: el V con dos planos (y - z = 0 y -y - z = 0) en su CATPart, un cilindro con su eje en otro, y dos restricciones de distancia R entre el eje y cada plano que resuelve el solucionador; altura del eje para D 160 y D 159,86 y su diferencia contra el papel; pieza = ej74 de la practica copiado con cambios anotados",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "error de desplazamiento del eje en el V (dY, diferencia de alturas entre D 160 y D 159,86); no es el error de posicionamiento de la cota H del papel, 0,189",
+  "valor": 0.099,
+  "unidad": "mm",
+  "tolerancia": 0.0005,
+  "fuente": "Shuping Lv, «Discussion on Calculation Method of Positioning Error», ICMMCT 2018, Advances in Engineering Research vol. 152, Atlantis Press (https://www.atlantis-press.com/article/25900049.pdf), Example 1, pags. 265-266: eje D 160 (-0,14 / 0), V de 90 grados, dY = dD / (2 sen(a/2)) = 0,707 x 0,14 = 0,099 mm; tolerancia medio digito del valor publicado. Las alturas z = R raiz(2) (113,137 y 113,038) son cuenta de geometria"
+ }
+}
