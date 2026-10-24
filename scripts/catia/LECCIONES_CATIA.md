@@ -140,6 +140,17 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
   la posición el volumen del nido contra el de la práctica (171 459,136, el mismo en las dos CATIA hasta el último decimal).
 - **El sha256 se calcula sobre la COPIA que abre CATIA**, no sobre el original (35 y 33). **Una ruta a la skill desde un
   ejercicio va por `jc.REPO`**: el paquete del obrero copia `ejercicios/` y no `.claude/skills` (35, revisor Sonnet).
+- **Un STEP de OpenCASCADE 7.8 con la cabecera al revés CATIA lo abre VACÍO** (34, principal, corrida de las 12:19): el
+  v16 entregado (`v16_ref`) entró con el PartBody sin nada y el cuadro de importación se aceptó igual; `medir()` se negó a
+  medir el cuerpo vacío y la sesión siguió sana. Ya estaba en `catia.md` (`catia_medir.py`): el juez abre una COPIA con la
+  cabecera en orden (`step_cabecera.arreglar_archivo`) y exige que desde el fin de la cabecera sea idéntica al original.
+- **`GetMinimumDistance` tampoco anda entre dos cuerpos de la MISMA pieza** (34: «The method GetMinimumDistance
+  failed», en el v16 y en el gemelo; entre piezas de un ensamble ya fallaba, 19/10). La distancia la da OpenCASCADE; el
+  «no choca» de CATIA (Intersect con Update fallido) vale porque el gemelo, medido DESPUÉS en la misma corrida, choca con
+  el volumen de OpenCASCADE.
+- **El gemelo de referencia se mide sobre el archivo que abre CATIA** (34): el 69,573 de `catia.md` era el v16 movido en
+  memoria; el archivo `v16_subida_1mm.step` da 69,5649 en OpenCASCADE y 69,561 en CATIA. Y CATIA lee ese STEP con 0,65 mm³
+  menos que OpenCASCADE (89 277,636 contra 89 278,287, 7e-6): dentro de la tolerancia de volumen.
 - **El obrero corta un ejercicio a los 1 200 s** (`obrero.py --timeout-seg`, por defecto): el tope interno de un post-proceso
   tiene que quedar por debajo (35: 900 s). El 32 no entra: CATIA más la comparación contra el entregado pasan los 20 min;
   corre solo en la PC principal, a mano o con `--timeout-seg 3000`.

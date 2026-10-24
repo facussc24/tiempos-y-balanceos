@@ -563,3 +563,5 @@ prueba sin CATIA; el detalle de cada lección, con su medición, en **`scripts/c
   `virolador_v10_two.step` distintos en la práctica); antes de decir que CATIA perdió geometría al exportar, medir con la
   integración fina de OpenCASCADE (eps 1e-6: la de por defecto da −0,05 % sobre un STEP todo NURBS), y decidir el STEP
   exportado por 1 sólido y 0 caras sueltas (una cara perdida casi no cambia el volumen y BRepCheck la da válida) (33).
+  `GetMinimumDistance` falla también entre dos cuerpos de la MISMA pieza (34): la distancia la da OpenCASCADE, y el «no
+  choca» de un Intersect con Update fallido vale solo si el gemelo de la misma corrida choca con el volumen esperado (34).

@@ -1,0 +1,52 @@
+{
+ "que": "choque_exacto.py (OpenCASCADE) del v16 y del gemelo contra el panel; el juez del 34 compara CATIA contra esto",
+ "sha256": {
+  "panel": "fb74d9772b21fb48a915819a54968a863d9d6a35cd7cd78655c55b02955e4a1e",
+  "v16": "5b6cff1a4911f5690dae27b90e434033333beb741dd3146852720e2da25865e3",
+  "gemelo_1mm": "d732ec7e7e3133e3e009e429dd7dc727cb2b4dd411ff1c4bb943eecd5842829b"
+ },
+ "comando": {
+  "v16": "<.venv-cad>/python -I .claude/skills/cad-design/scripts/catia/choque_exacto.py C:\\Dev\\_catia_practica\\v16_ref\\virolador_v10_two.step C:\\Dev\\_catia_practica\\v14_choque\\panel_marco_local.step 1.0",
+  "gemelo_1mm": "<.venv-cad>/python -I .claude/skills/cad-design/scripts/catia/choque_exacto.py C:\\Dev\\_catia_practica\\v14_choque\\v16_subida_1mm.step C:\\Dev\\_catia_practica\\v14_choque\\panel_marco_local.step 1.0"
+ },
+ "casos": {
+  "v16": {
+   "vol_utillaje": 89278.483,
+   "interseccion": 0.0,
+   "distancia_min": 0.0455,
+   "veredicto": "no choca",
+   "crudo": {
+    "solidos_utillaje": 1,
+    "solidos_panel": 1,
+    "vol_utillaje": 89278.483,
+    "vol_panel": 91767.169,
+    "interseccion_fuzz_0.0001": 0.0,
+    "interseccion_fuzz_0.001": 0.0,
+    "interseccion_fuzz_0.01": 0.0,
+    "distancia_min": 0.0455,
+    "gemelo_subido_1.0_interseccion": 69.5651,
+    "veredicto": "no choca"
+   }
+  },
+  "gemelo_1mm": {
+   "vol_utillaje": 89278.287,
+   "interseccion": 69.5649,
+   "distancia_min": 0.0,
+   "veredicto": "CHOCA",
+   "crudo": {
+    "solidos_utillaje": 1,
+    "solidos_panel": 1,
+    "vol_utillaje": 89278.287,
+    "vol_panel": 91767.169,
+    "interseccion_fuzz_0.0001": 69.5649,
+    "interseccion_fuzz_0.001": 69.5646,
+    "interseccion_fuzz_0.01": 69.5589,
+    "distancia_min": 0.0,
+    "gemelo_subido_1.0_interseccion": 297.8632,
+    "veredicto": "CHOCA"
+   }
+  }
+ },
+ "fecha": "2026-10-24 12:25",
+ "origen": "salida de corridas ya hechas: choque_exacto_v16_panel.txt, choque_exacto_gemelo_panel.txt"
+}

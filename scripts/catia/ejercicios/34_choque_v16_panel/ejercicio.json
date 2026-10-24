@@ -1,0 +1,23 @@
+{
+ "usa_catia": true,
+ "descripcion": "Choque EXACTO adentro de CATIA del virolador v16 entregado contra el panel del cliente del Upper Trim, y del gemelo (el v16 subido 1 mm): cada utillaje pegado como cuerpo en una copia del panel (PasteSpecial sin vinculo) y AddNewIntersect contra el cuerpo del panel; el gemelo va despues y tiene que chocar en la misma corrida. Entradas por sha256 (ninguna se sube al repo); CATIA abre copias con la cabecera en el orden de ISO 10303-21 (el v16 entregado la trae al reves y CATIA lo leia vacio). Corre solo en la PC principal",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "interseccion y distancia minima de cada utillaje contra el panel",
+  "valor": {
+   "v16": {
+    "interseccion_mm3": 0.0,
+    "distancia_min_mm": 0.0455,
+    "veredicto": "no choca"
+   },
+   "gemelo_1mm": {
+    "interseccion_mm3": 69.5649,
+    "distancia_min_mm": 0.0,
+    "veredicto": "CHOCA"
+   }
+  },
+  "unidad": "mm3 / mm",
+  "tolerancia": "interseccion vacia <= 1e-4 mm3; con volumen, max(0,5 mm3, 1e-5 v) (practica_en_juez.tol_volumen); distancia de CATIA, si la da, 0,005 mm",
+  "fuente": "OpenCASCADE (choque_exacto.py de la skill cad-design: booleana exacta con tres tolerancias y BRepExtrema) sobre los MISMOS tres archivos, 24/10/2026 12:22-12:25; referencia_occ.json con los sha256 y el comando. El 69,573 de catia.md era el gemelo movido en memoria, no este archivo"
+ }
+}
