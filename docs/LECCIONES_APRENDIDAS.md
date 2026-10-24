@@ -6,7 +6,7 @@ leccion es un bullet legible de hasta 600 caracteres; el detalle vive en la memo
 que cita (gate por bullet: regla `lecciones-consolidacion.md`). La historia completa de cada
 incidente vive en los snapshots.
 
-- **Snapshots** (la version larga de cada consolidacion): los tres ultimos son [2026-10-11](docs/_archive/LECCIONES_snapshot_2026-10-11.md) · [2026-10-18](docs/_archive/LECCIONES_snapshot_2026-10-18.md) · [2026-10-23](docs/_archive/LECCIONES_snapshot_2026-10-23.md) y el historico 2026-03-30 a 07-02, [2026H1](docs/_archive/LECCIONES_APRENDIDAS_2026H1_completo.md); los demas estan en `docs/_archive/`.
+- **Snapshots** (la version larga de cada consolidacion): los tres ultimos son [2026-10-18](docs/_archive/LECCIONES_snapshot_2026-10-18.md) · [2026-10-23](docs/_archive/LECCIONES_snapshot_2026-10-23.md) · [2026-10-24](docs/_archive/LECCIONES_snapshot_2026-10-24.md) y el historico 2026-03-30 a 07-02, [2026H1](docs/_archive/LECCIONES_APRENDIDAS_2026H1_completo.md); los demas estan en `docs/_archive/`.
 - **Tabla incidente → regla**: `docs/_archive/INCIDENTES_REGLAS_AMFE.md`
 - Lo ya codificado no se repite aca: reglas de `.claude/rules/` y sus gates ejecutables
   (amfe.md + amfeValidator, database.md, verify-supabase-live.md, no-pfd-no-ho.md, techo-agentes.md, cad-3d.md).
@@ -25,13 +25,7 @@ incidente vive en los snapshots.
 
 - **19/10 — En una estructura cada unión se MIDE (área de contacto donde va la soldadura), no alcanza «0 solape»: las patas del carro de práctica tocaban el marco por una arista y lo vio Fak en el plano** (*"¿por qué te lo tuve que decir?"*). Es la regla del caballete (`cad-3d.md` GATE 3: toda interfaz que carga peso lleva su control) y no la apliqué.
 
-- **19/10 — Lo que una herramienta llama «contacto» o «sin choque» se mide con un método exacto antes de decidir con eso: el choque de CATIA dijo «contacto 0,0» con 0,3 mm de choque y con 0,1 mm de luz.** Graduado a `cad-design/reference/catia.md` y `reference_catia_por_com`.
-
-- **18/10 — Una prueba que corre los guardianes de verdad (el despachador con pedidos peligrosos) va con un HOME aparte: con el real gasta el permiso de un solo uso que Fak dejó.** Graduado a `codigo-madre.md` y `scripts/_despachadorPayloads.mjs`.
-
 - **17/10 — Una simulación que reproduce lo publicado puede estar ciega a una parte de la pieza.** Graduado a `reference_gate_asiento_simulacion_ciega`.
-
-- **17/10 — Un caso de prueba peligroso (leer secretos, borrar, pisar un listado) no se pega en el chat: viaja por archivo y los tests lo llaman por su código.** Graduado a `__tests__/scripts/guardianesRonda3.casos.json`; el caso entero, en el snapshot 2026-10-18.
 
 - **11/10 — Antes de un push que agrega archivos o toca `settings.json` va la suite COMPLETA, y un umbral de una regla no lo aflojo yo: va como propuesta.** Graduado a `feedback_suite_completa_antes_del_push` y `feedback_un_numero_de_la_regla_no_lo_cambio_yo`.
 
@@ -41,15 +35,11 @@ incidente vive en los snapshots.
 
 - **10-11/10 — Una tanda de hijas se mide por el cupo SEMANAL y por el de 5 h, cada hora: tres o cuatro a la vez suben el semanal ~4 puntos por hora.** Graduado a `trabajar-hasta-la-hora.md` punto 5 y a `reference_api_claude_clave_y_ciclo`.
 
-- **11/10 — Lo que escribe la API se AUDITA antes de commitear (3 y 2 errores reales en dos tandas), y lo que afirma de un dato que no vio se mide antes de codear.** Graduado a `api-claude.md` §2 y §5 y a `feedback_la_respuesta_conocida_se_mide_antes_del_gate`.
-
 - **09-10/10 — Un control que suma trabajo a un chequeo con tope de tiempo se mide en el MODO en que corre ese chequeo, y el auditor Opus no se saltea.** Graduado al auditor (`metodo_correr_no_solo_leer`) y a `_sinFirmaIA.py`; el caso, en el snapshot 2026-10-18.
 
 - **07/10 — «El estándar» se COMPARA contra una hoja real de la casa (la HO de Excel), no contra lo que dejó la sesión anterior.** Graduado al canon 4.5 y a `bloque_plan()`; la cita y el caso, en el snapshot 2026-10-18.
 
 - **22/09-06/10 — Lo que construyo para otros, o lo que AFLOJA un control, lo prueba OTRO: contra el viejo, a ciegas, con el corte escrito antes; y si Fak ya aceptó el riesgo, mi freno no le gana a su pedido.** Graduado a `un_control_se_audita_en_las_dos_direcciones` y `project_claudes_por_area`.
-- **02 y 09/10 — De un flujograma, un AMFE o una hoja de reunión sale la PALABRA «reproceso», nunca su análisis; un AMFE escrito de cero se delata por el largo de sus frases.** Graduado a `reference_iatf_retrabajo_8714_y_antecedentes_barack`, `amfeAutoria.mjs` y `_sinFirmaIA.py`.
-- **22/09 — Un cambio de criterio (o un número) se barre por su FRASE en todo el repo, y un guardián que falla sin bloquear está apagado.** Graduado al test 5c de `hooksTienenTest` (`${CLAUDE_PROJECT_DIR}`) y a `puerta.py` (puerta D).
 - **22/09 — La VARA también se audita, y lo primero que se le mira es la FECHA**: la tabla AP y las escalas O/D salían de un borrador de 2017 del AIAG-VDA. La tabla AP ya es la oficial (23/09); las escalas, pendientes. Memoria `project_tabla_ap_de_la_casa_es_el_borrador_2017`.
 - **22/09 — Un gate contesta lo que le preguntan: los obstáculos se listan del CONJUNTO, no del subconjunto, centrado y simetría también se miden, y un control que frena dice CUÁL renglón lo frena.** Graduado a `chequeo_centrado.py` y a la memoria `dispositivo_adhesivado_insert`.
 - **21/09 — Antes de ejecutar un pedido que toca a un cliente, se abre el sistema del CLIENTE: ahi esta si el trabajo ya se hizo y por que esta trabado** (un 8D cerrado hacia semanas en KPM; un "agregale la norma" que era un PPAP rechazado en IMDS). Memorias `8d_11010843_tapa_amarok`, `project_imds_barack`.
@@ -63,8 +53,6 @@ incidente vive en los snapshots.
 - **Una cosa no se identifica por su etiqueta sino por su FORMA y su FUNCIÓN: se abre; antes de declarar un error, se pregunta si es convención de la casa; entre versiones manda la que Fak validó.** Graduado a `el_nombre_no_es_el_contenido`, `el_nombre_de_la_pieza_no_identifica_el_proyecto`, `sgc_propio_ingenieria`, `ho_generales_compartidas`, `aplix_medida_16x16_dominante`, `unidad_oc_es_etiqueta_del_maestro`, `reference_plotter_aol_corte_insert`, `project_pines_costura_cnc_insert`, `reference_valores_costura_patagonia_confirmados`.
 - **Una muestra no es un patron, ni una sola ni varias, y lo verificado se reporta con su alcance real: partes verificadas distinto no se suman.** Graduado a la memoria `feedback_una_muestra_no_es_un_patron`.
 - **Verificar el script no es verificar el entregable: un dry-run verde no prueba el `--apply`, se abre el archivo que quedó en la carpeta, se juzga en su forma final (impreso, en el zoom en que se usa, lo que ve el LECTOR) y un render no se mira: se mide.** Graduado a `no_entregable_ejecutable_sin_verificar`, `_paquete.mjs`, `cad-design` (39), `git-deploy.md`, `hojas-proceso.md` §5, `_xlsxAPdf.py`, `cajetin.py`, `ppap_novax_tapizadas_puerta`, `columnas_de_un_entregable`, `reference_medir_una_hoja_de_matplotlib`.
-- **Un defecto que aparece donde no toque es del mecanismo, no mio: un contador derivado que ningun camino de escritura mantiene miente en silencio.** Antes de dar por arreglado lo que rompi, contar en cuantos lugares mas esta. Graduado a `saveAmfe()` (`scripts/_lib/amfeIo.mjs`) y a su test `saveAmfeConteos.test.mjs`.
-- **10-11/09 — Si algo mío vuelve por cuarta vez, el número objetivo lo elegí yo: se MIDE una referencia real; si vuelve una quinta, la equivocada es la FUENTE** (*"usá esa canción, las tuyas son malísimas"*). Graduado al skill `editar-video` §3, §4.1, §6.2 y `scripts/_video.py`.
 - **El chequeo frena, no decide; y la objecion de Fak es un dato, no una opinion a refutar: ante un "no anda", preguntar como falla.** Graduado a la memoria `feedback_el_chequeo_frena_no_decide` (y `cad-3d.md` GATE 0).
 - **Un plan de accion heredado se arrastra fila por fila: fusionar dos filas pierde alcance, media fila que se cae no la ve nadie, y un issue no se cierra con evidencia de una parte del alcance.** Graduado a la memoria `plan_heredado_se_arrastra_fila_por_fila`.
 
@@ -78,8 +66,6 @@ incidente vive en los snapshots.
 
 - **13/10 — Un utillaje que apoya sobre algo blando se simula APOYADO y APRETADO antes de imprimirlo, y ante un «no anda» se mide antes de dar una teoría.** Graduado a `feedback_diseno_3d_medir_antes_de_explicar_y_simular_el_uso` y al gate de asiento de la tanda 2.
 
-
-- **15/10 — Plan de control: se genera releyendo flujograma, AMFE y fichas de embalaje JUSTO antes, y si se rearma entero va limpio: sin amarillo ni notas, una característica por fila, la D sola.** Graduado al skill `planes-de-control` §4 y §5.
 
 ## Identidad de un dato
 
