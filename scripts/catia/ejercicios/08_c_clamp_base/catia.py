@@ -351,7 +351,13 @@ def construir(cb, c, reg, salida):
                  if "cdg" in d and abs(d["cdg"][0] - x0) < 0.01 and abs(d["cdg"][2] - EJE_Z) < 0.01]
         if len(caras) != 1:
             raise RuntimeError(f"cara izquierda del tope en x {x0:g}: {len(caras)} candidatas")
-        _, est["m"], info = agujero_hole(cb, doc, part, body, sf, caras[0]["ref"], ops["agujero"], est["m"])
+        h, est["m"], info = agujero_hole(cb, doc, part, body, sf, caras[0]["ref"], ops["agujero"], est["m"])
+        # el boceto del punto del Hole queda visible y el STEP salia con un vertice suelto en (-9; 0; 34) (medido el 24/10
+        # en 08_r2, PEDIDO 32): se oculta con lo demas antes de exportar
+        try:
+            est["ocultos"].append(h.Sketch)
+        except Exception as e:  # noqa: BLE001
+            info["boceto_del_hole"] = repr(e)[:120]
         return info
 
     seguir = reg.paso(f"U de perfil en ZX (R{R_EXT:g} afuera, R{R_INT:g} adentro), pad de {ESP / 2:g} por lado",

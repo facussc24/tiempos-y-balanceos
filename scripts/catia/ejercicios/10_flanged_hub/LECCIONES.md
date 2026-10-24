@@ -33,3 +33,7 @@ Para la centralización (LECCIONES_CATIA.md / catia.md), lo nuevo que dejó este
    el perfil, `volumen_revolucion`) dio igual que CATIA y que build123d (225 829,051 el exterior, 74 902,151 el rebaje).
 6. **Hole Type 2 (con caja) + patrón ×6** desde la cara de z 8: la cara se eligió por topología del cuerpo (la corona de
    z 8 tiene el centro sobre el eje, una sola candidata). Saca 644,027 cada uno = la cuenta; no hizo falta darlo vuelta.
+
+**24/10, topología del STEP (PEDIDO 32):** el boceto del punto de `AddNewHoleFromPoint` queda visible y el STEP salía con un
+vértice suelto en (53,975; 0; 8): 103 vértices con 1 fuera del sólido (topologia_step.py del 54). Se oculta `h.Sketch` con lo
+demás antes de exportar: 10_vert (24/10 17:09) verde y 102 vértices, nada suelto.

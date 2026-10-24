@@ -301,6 +301,12 @@ def construir(cb, c, reg, salida):
         if len(caras) != 1:
             raise RuntimeError(f"cara de arriba de la brida (z {E_BRIDA:g}, centrada): {len(caras)} candidatas")
         h = sf.AddNewHoleFromPoint(float(R_BC), 0.0, float(E_BRIDA), caras[0]["ref"], 10.0)
+        # el boceto del punto del Hole quedaba visible: el STEP salia con un vertice suelto en (53,975; 0; 8) (medido el
+        # 24/10 en 10_r3, PEDIDO 32); se oculta con lo demas antes de exportar
+        try:
+            est["ocultos"].append(h.Sketch)
+        except Exception as e:  # noqa: BLE001
+            salida["boceto_del_hole"] = repr(e)[:120]
         h.Type = 2                                  # catCounterboredHole (CatHoleType), como el ej32
         h.Diameter.Value = D_PAS
         h.HeadDiameter.Value = D_CAJA
