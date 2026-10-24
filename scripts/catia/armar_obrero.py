@@ -13,7 +13,8 @@ import sys
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 SUELTOS = ["obrero.py", "catia_base.py", "requisitos.txt", "LEEME.txt", "Arrancar-obrero.cmd",
-           "juez_comun.py", "medir_b123d.py"]       # 23/10: los ejercicios 03, 05 y 06 importan juez_comun
+           "juez_comun.py", "medir_b123d.py",       # 23/10: los ejercicios 03, 05 y 06 importan juez_comun
+           "practica_en_juez.py"]                    # 24/10 (CATA): 25, 27, 29, 32 a 50 lo importan (tol_volumen)
 CON_FIN_DE_LINEA_WINDOWS = {".cmd", ".txt"}
 NO_COPIAR = {"__pycache__", "tests"}
 
