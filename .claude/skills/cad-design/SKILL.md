@@ -136,6 +136,22 @@ cliente, la primera hipótesis es el sistema de medición.*
   que corre en **cada** invocación: si no separa, sale con **código 3** y no juzga nada.
   `--verificar-material` da una segunda opinión con un método que no comparte código (fracción
   de material alrededor de la arista); sobre 5 piezas coincidieron en 1094/1094.
+- **Los cuatro gates del viernes 23/10/2026** (3c, 3d, 3e, 3f): los corre `export_deliverables.py` antes de
+  crear la carpeta destino; cada uno **avisa hasta el 30/10/2026 y frena desde el 31/10** (`*Canon.data.json`,
+  `aviso_hasta`; renglón en `scripts/_lib/retiros.data.json`), un NO MEDIDO sale con 2 y nunca verde, y la salida
+  de Fak es una frase suya atada a la firma del STEP (nunca autofirmable desde el export):
+  - **Cantos** (`gate_aristas.py --cantos-convexos`): canto vivo donde va la mano. Salida: `--acepto-cantos "<frase>"`.
+  - **Barrido** (`barrido.py <conjunto.json> --workdir W`): el recorrido entero de una parte móvil, no solo los
+    extremos; se dispara con `--movimiento <conjunto.json>` o `params.movimiento`; sin movimiento declarado, un
+    perno coaxial avisa «¿se mueve?». Salida: `--acepto-barrido "<frase>"`. Tope de 120 s por barrido (pregunta 15).
+  - **Tornillos** (`gate_tornillos.py --step <conjunto> --tornillos <json>`): largo de agarre y de rosca contra la
+    pila real; se dispara con `--tornillos <json>`, `params.tornillos` o el campo `tornillos` del pliego; un sólido
+    que se llama como tornillo sin declarar avisa «¿qué tornillo va acá?». Salida: `--acepto-tornillos "<frase>"`.
+  - **Fases** (`gate_fase.py iniciar | cerrar --fase N | pasar --fase N | estado`, `fases.json` en el workdir): las
+    cinco fases de P1 (0 contrato, 1 concepto, 2 mecanismo, 3 detalle, 4 entrega) con criterio de salida medible;
+    cerrar la 2 corre el barrido y cerrar la 3 los cantos; un STEP cambiado después del OK reabre la fase; un
+    `fases.json` armado a mano da NO MEDIDO. **Hoy frena solo si el diseño arrancó con `iniciar`** (sin
+    `fases.json` la entrega avisa; pregunta 21 de Fak). Salida: `--acepto-fase "<frase>"`.
 - `reconocer_caras.py --step <f> [--cilindros]` — tipo de cada cara (plano/cilindro/cono/
   esfera) **sin barrer rayos**: `GetType()` para las analíticas + `ShapeAnalysis_Canonical`
   `Recognition` para recuperar las que el STEP guardó como NURBS. Sobre nuestras salidas

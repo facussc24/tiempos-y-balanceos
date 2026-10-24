@@ -3255,7 +3255,8 @@ Regla: .claude/rules/nube-ingenieria.md`);
 
 // ── permiso-un-uso-guard (tanda 3, pieza 9, 16/10/2026) ───────────────────
 // Un permiso de un solo uso de Fak (`~/.claude/.apqp-listado-ok`, `.arb-cerrar-ok`, `.nube-personal-ok`, `.espacio-ok`,
-// `.agent-opus-ok`, `.agent-cupo-ok`, `.agent-limit`, `.workflow-ok`: la lista vive en `permisosUnUso.data.json`) lo
+// `.agent-opus-ok`, `.agent-cupo-ok`, `.agent-limit`; la lista vive en `permisosUnUso.data.json`; el `.workflow-ok`
+// se retiro el 24/10/2026) lo
 // arma la sesion solo con la frase de Fak en el MISMO turno, citada en el comando: `: > ~/.claude/.x-ok # Fak 15/10
 // 13:55: "hacelo si"`. La cita se compara con el ultimo mensaje real de Fak del transcript (texto y hora). Sin cita, o si
 // no cierra, frena. Por la tool Write/Edit, frena siempre. Logica, motivo y limites: scripts/_lib/permisoUnUso.mjs.
