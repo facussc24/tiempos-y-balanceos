@@ -637,6 +637,7 @@ export function revisarCita(payload, r = { ok: true }, { ahora = new Date(), hom
   const bloque = bloquePedido(prompt);
   const faltan = [];
   let resultado; let porQue = ''; let citas = []; const origen = [];
+  let sinFak = false;      // una hija sin mensajes de Fak: aviso siempre (revisor 23/10), hasta decidirlo el 30/10 con el registro
   if (!bloque) {
     resultado = 'sin cita';
     faltan.push('no hay un renglón «PEDIDO DE FAK: "<frase textual de Fak>"»');
@@ -651,7 +652,7 @@ export function revisarCita(payload, r = { ok: true }, { ahora = new Date(), hom
     if (!citas.length) { resultado = 'sin cita'; faltan.push('el renglón PEDIDO DE FAK no trae su frase entre comillas: un resumen con tus palabras no es la frase de Fak'); }
     else if (!largas.length) { resultado = 'sin cita'; faltan.push(`la cita tiene menos de ${CITA.minPalabrasCita} palabras: no alcanza para saber qué pidió`); }
     else if (leer() === null) resultado = 'sin transcript';
-    else if (!msgs.length) { resultado = 'cita no rastreada'; faltan.push('esta sesión no tiene ningún mensaje de Fak (una hija o un worktree): su frase vive en la sesión que te lanzó'); }
+    else if (!msgs.length) { resultado = 'cita no rastreada'; sinFak = true; faltan.push('esta sesión no tiene ningún mensaje de Fak (una hija o un worktree): su frase vive en la sesión que te lanzó'); }
     else {
       for (const c of largas) {
         const rc = rastrearCita(c, msgs);
@@ -681,7 +682,7 @@ export function revisarCita(payload, r = { ok: true }, { ahora = new Date(), hom
   let nivel;
   if (resultado === 'trabajo propio' || resultado === 'sin transcript') nivel = 'aviso';
   else if (!faltan.length) nivel = 'ok';
-  else nivel = frena(ahora) ? 'freno' : 'aviso';
+  else nivel = frena(ahora) && !sinFak ? 'freno' : 'aviso';
 
   const donde = origen.map((o) => `de=${o.mensaje.desdeElUltimo} ${o.metodo} ${o.cobertura.toFixed(2)}`).join(' | ');
   const detalle = [donde, `anclas=${anclas.saleDe} agregados=${anclas.agregado}`, porQue && `por que: ${porQue}`, ...faltan].filter(Boolean).join(' ; ');

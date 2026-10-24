@@ -185,6 +185,8 @@ describe('6g · lo que NO cuenta como palabras de Fak (no_es_de_fak y los prefij
     expect(a.resultado).toBe('cita no rastreada');
     expect(a.faltan[0]).toMatch(/no tiene ningún mensaje de Fak/);
     expect(mensajesDeFakDeLaSesion({ transcript_path: tp }, HOME)).toEqual([]);
+    // revisor 23/10: sin una salida honesta (su frase vive en la sesion madre), desde el 31/10 sigue en AVISO, no freno
+    expect(revisar(agente(conCita(CORREGIDA), {}, tp), PRIMER_FRENO).nivel).toBe('aviso');
   });
 });
 
