@@ -374,3 +374,46 @@ describe('C12 · el PRIMER mensaje de la sesion (el prompt de Fak) se mira siemp
     expect(otra.nivel).toBe('freno');
   });
 });
+
+// 24/10/2026 (cola del 24/10 00:35): la respuesta corta de Fak a una pregunta numerada («2. si 3. si hace tood si») dejo
+// dos lanzamientos legitimos en «cita no rastreada». Una cita corta vale SOLO si es un mensaje suyo ENTERO, copiado tal cual.
+describe('C13 · una respuesta corta de Fak vale como cita solo copiada ENTERA, tal cual la escribio', () => {
+  const CORTA = '2. si 3. si hace tood si';
+  const conCorta = (cita) => `PEDIDO DE FAK: "${cita}"\n1. Aplicar las siete lineas «NO es para X» a las skills [agregado mío]\n${RELLENO}`;
+  const base = [...REALES, deFak('¿aplico las siete lineas y prendo Workflow?', '2026-10-24T02:50:00.000Z')];
+
+  it('VERDE: la respuesta corta esta como mensaje entero de Fak (con su tipeo) -> cita rastreada', () => {
+    const tp = transcript([...base, deFak(CORTA, '2026-10-24T02:55:00.000Z')]);
+    const a = revisar(agente(conCorta(CORTA), {}, tp));
+    expect(a.resultado, a.detalle).toBe('cita rastreada');
+    expect(a.nivel).toBe('ok');
+    expect(a.detalle).toMatch(/mensaje entero/);
+  });
+
+  it('VERDE: la misma respuesta con mayusculas, acentos o puntuacion distinta (plano a plano) tambien', () => {
+    const tp = transcript([...base, deFak('2. Sí, 3. sí hacé tood sí', '2026-10-24T02:55:00.000Z')]);
+    expect(revisar(agente(conCorta(CORTA), {}, tp)).resultado).toBe('cita rastreada');
+  });
+
+  it('ROJO: un «si» suelto que es solo un trozo de un mensaje mas largo no vale: sin cita, como antes', () => {
+    const tp = transcript([...base, deFak('si hacelo pero despues me mostras el diff', '2026-10-24T02:55:00.000Z')]);
+    const a = revisar(agente(conCorta('si hacelo'), {}, tp));
+    expect(a.resultado).toBe('sin cita');
+    expect(a.faltan.join(' ')).toMatch(/copiada ENTERA/);
+  });
+
+  it('ROJO: la respuesta corta no esta en ningun mensaje de la sesion -> no rastreada (7 palabras sin contenido); y desde el 31/10 frena', () => {
+    const tp = transcript(base);
+    expect(revisar(agente(conCorta(CORTA), {}, tp)).resultado).toBe('cita no rastreada');
+    expect(revisar(agente(conCorta(CORTA), {}, tp), PRIMER_FRENO).nivel).toBe('freno');
+  });
+
+  it('con el canon apagado (respuestaCortaLiteral=false) vuelve la conducta vieja: no rastreada aunque este entera', () => {
+    const tp = transcript([...base, deFak(CORTA, '2026-10-24T02:55:00.000Z')]);
+    const antes = CITA.respuestaCortaLiteral;
+    try {
+      CITA.respuestaCortaLiteral = false;
+      expect(revisar(agente(conCorta(CORTA), {}, tp)).resultado).toBe('cita no rastreada');
+    } finally { CITA.respuestaCortaLiteral = antes; }
+  });
+});
