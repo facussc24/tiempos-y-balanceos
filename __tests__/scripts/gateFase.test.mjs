@@ -46,7 +46,8 @@ describe('gate de fases: canon, renglon de retiro y cableado', () => {
   });
   it('export_deliverables.py corre el gate de fases antes de crear la carpeta destino y deja saltearlo con --reason', () => {
     const s = readFileSync(join(SCR, 'export_deliverables.py'), 'utf8');
-    expect(s).toMatch(/"cantos", "barrido", "fases"\]/);
+    // "fases" despues de "barrido" en la lista de --skip-gate, pegados o no (en main el 3e ya agrego "tornillos")
+    expect(s).toMatch(/choices=\[[^\]]*"barrido"[^\]]*"fases"[^\]]*\]/);
     expect(s).toMatch(/\[GATE fases\]/);
     const iGate = s.indexOf('fases_res = gate_fases(w, args.pieces, args.hoy)');
     const iDest = s.indexOf('os.makedirs(args.deliver, exist_ok=True)');

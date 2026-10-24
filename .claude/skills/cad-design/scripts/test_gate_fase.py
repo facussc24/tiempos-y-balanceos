@@ -351,6 +351,24 @@ def main():
     rc, out, j, _ = fase("pasar", "--fase", "3", "--workdir", w1, "--hoy", FRENO, env=ENV_REAL)
     check("F5", "--hoy sin CAD_GATE_TEST=1 -> NO MEDIDO (exit 2)", rc == 2 and "CAD_GATE_TEST" in out, out,
           "exit %s" % rc)
+    wB, pB, mB = wd("w5_fabricado")
+    with open(os.path.join(wB, "fases.json"), "w", encoding="utf-8") as f:
+        json.dump({"version": 1, "actual": 3, "fases": {str(k): {"estado": "cerrada"} for k in range(4)}}, f)
+    rc, out, j, _ = fase("pasar", "--fase", "4", "--workdir", wB, "--hoy", FRENO)
+    check("F5", "fases.json armado a mano con {\"estado\": \"cerrada\"} de la 0 a la 3 y nada mas (caso B del revisor) "
+          "-> pasar --fase 4 el 02/11 da NO MEDIDO (exit 2), nunca verde", rc == 2 and j and j["veredicto"] ==
+          "no_medido" and "sin lo que escribe gate_fase.py cerrar" in out, out, "exit %s" % rc)
+    wC, pC, mC = wd("w5_sin_ok")
+    dC = leer(w1)
+    dC["fases"]["2"].pop("ok_fak", None)
+    with open(os.path.join(wC, "fases.json"), "w", encoding="utf-8") as f:
+        json.dump(dC, f)
+    rc, out, j, _ = fase("pasar", "--fase", "3", "--workdir", wC, "--hoy", FRENO)
+    check("F5", "un cierre legitimo de la 2 al que se le borro a mano el OK de Fak -> NO MEDIDO (exit 2)",
+          rc == 2 and "el OK de Fak con su frase" in out, out, "exit %s" % rc)
+    rc, out, j, _ = fase("pasar", "--fase", "3", "--workdir", w1, "--hoy", FRENO)
+    check("F5", "contraprueba: el cierre legitimo de la F1 (escrito por cerrar) sigue en verde (exit 0)",
+          rc == 0 and j and j["veredicto"] == "verde", out, "exit %s" % rc)
 
     # ------------------------------------------------------------------------------------------------------------
     print("\nF6 salida: aviso, freno y la frase de Fak")
@@ -447,6 +465,26 @@ def main():
     check("F7", "la secuencia del 20/10 (entrega con el mecanismo sin cerrar: solo hay una aceptacion de pasar a la 3) "
           "-> SystemExit «[GATE fases]» y D vacia", rc != 0 and "[GATE fases]" in out
           and "fase 2 (mecanismo) no esta cerrada" in out and vacia(d), out, "exit %s" % rc)
+    d = os.path.join(wB, "entrega_fabricada")
+    rc, out, _, _ = export(wB, pB, d, "--movimiento", mB, "--hoy", FRENO)
+    check("F7", "la entrega del 02/11 con el fases.json armado a mano (caso B del revisor) -> SystemExit «[GATE fases]» "
+          "NO MEDIDO y D vacia (antes salia ENTREGA OK)", rc != 0 and "[GATE fases]" in out and "NO MEDIDO" in out
+          and vacia(d), out, "exit %s, D vacia %s" % (rc, vacia(d)))
+    wE, pE, mE = wd("w7_acepta_pieza")
+    fase("iniciar", "--workdir", wE)
+    fase("cerrar", "--fase", "0", "--workdir", wE, "--ok-fak", OK0, "--hoy", FRENO)
+    fase("cerrar", "--fase", "1", "--workdir", wE, "--nota", NOTA1, "--hoy", FRENO)
+    frase_e = "Fak 24/10: entregar asi, el mecanismo lo cierro en la v2"
+    rc, out, j, _ = fase("pasar", "--fase", "4", "--workdir", wE, "--acepto-fase", frase_e, "--hoy", FRENO)
+    check("F7", "--acepto-fase para la 4 sin ningun cierre con STEP y sin --step -> NO MEDIDO (la aceptacion necesita "
+          "una firma)", rc == 2 and "ninguna fase cerro con STEP" in out, out, "exit %s" % rc)
+    rc, out, j, _ = fase("pasar", "--fase", "4", "--workdir", wE, "--step", pE, "--acepto-fase", frase_e,
+                         "--hoy", FRENO)
+    d = os.path.join(wE, "entrega")
+    rc2, out2, _, _ = export(wE, pE, d, "--movimiento", mE, "--hoy", FRENO)
+    check("F7", "sin cierre con STEP y una sola pieza: la entrega usa la firma de esa pieza y reconoce la aceptacion de "
+          "la 4 (ACEPTADO el 02/11)", rc == 0 and rc2 == 0 and "ACEPTADO por Fak en fases.json" in out2
+          and not vacia(d), out + out2, "exits %s, %s" % (rc, rc2))
     w7b, p7b, m7b = wd("w7_sin_fases")
     d = os.path.join(w7b, "entrega")
     rc, out, _, _ = export(w7b, p7b, d, "--movimiento", m7b, "--hoy", FRENO)

@@ -249,13 +249,55 @@ def barrido_valido(man, firma):
 # ----------------------------------------------------------------------------------------------------------------
 # una fase cerrada, ¿sigue vigente?
 # ----------------------------------------------------------------------------------------------------------------
+def faltantes_del_cierre(n, cierre, can=None):
+    """Lo que `cerrar` siempre escribe y a este cierre le falta (lista vacia = completo). Un fases.json armado o
+    editado a mano con {"estado": "cerrada"} y nada mas NO es un cierre: es NO MEDIDO, nunca verde (P1 l.75: «que la
+    IA llene las evidencias solo para pasar»; revisor del 24/10, caso B)."""
+    can = can or canon_fase()
+    fc = _fase_canon(can, n)
+    minimo = int(can["frase_minima"])
+
+    def frase(x):
+        return isinstance(x, str) and len(x.strip()) >= minimo
+
+    falta = []
+    ev = cierre.get("evidencia") if isinstance(cierre.get("evidencia"), dict) else {}
+    if fc["usa_step"] and not (cierre.get("step") and cierre.get("step_firma")):
+        falta.append("la firma del STEP (step y step_firma)")
+    if cierre.get("estado") == "aceptada":
+        if not frase((cierre.get("aceptacion") or {}).get("frase")):
+            falta.append("la frase de la aceptacion de Fak")
+        return falta
+    if fc["pide_ok_fak"] and not frase((cierre.get("ok_fak") or {}).get("frase")):
+        falta.append("el OK de Fak con su frase")
+    if int(n) == 1 and not frase(ev.get("nota")):
+        falta.append("la nota del concepto")
+    if int(n) == 2:
+        if ev.get("movimiento"):
+            if not ev.get("firma_conjunto"):
+                falta.append("la firma del conjunto del barrido")
+        elif not frase(ev.get("sin_moviles")):
+            falta.append("el movimiento (barrido) o «sin partes moviles» con su motivo")
+    if int(n) == 3 and not ev.get("cantos_estado"):
+        falta.append("el resultado de los cantos")
+    if int(n) == 4 and not ev.get("entrega"):
+        falta.append("la entrega --final")
+    return falta
+
+
 def vigencia(w, n, cierre, man, step_hoy=None):
     """(ok, motivos, cambio) de una fase cerrada. cambio=True si lo que la cerro cambio despues (firma, conjunto,
-    pliego): con OK de Fak eso la REABRE. NoMedido si no se puede leer lo que hay que comparar."""
+    pliego): con OK de Fak eso la REABRE. NoMedido si no se puede leer lo que hay que comparar, o si el cierre no trae
+    lo que `cerrar` escribe (fases.json armado a mano)."""
     motivos, cambio = [], False
     if not cierre or cierre.get("estado") not in ("cerrada", "aceptada"):
         estado = (cierre or {}).get("estado") or "sin cerrar"
         return False, ["la fase %s esta %s" % (n, estado)], False
+    falta = faltantes_del_cierre(n, cierre)
+    if falta:
+        raise NoMedido("la fase %s figura %s en fases.json sin lo que escribe gate_fase.py cerrar (falta: %s): un "
+                       "cierre armado o editado a mano no es evidencia; volver a cerrarla con gate_fase.py cerrar"
+                       % (n, cierre.get("estado"), "; ".join(falta)))
     if cierre.get("estado") == "aceptada":
         # aceptada sin su evidencia: vale para la firma con la que se acepto
         if cierre.get("step"):
@@ -337,6 +379,9 @@ def evaluar_pasar(w, n, step=None, piezas=(), escribir=False, hoy=None):
             reabiertas.append(k)
         else:
             motivos.append("la fase %d (%s) no esta cerrada: %s" % (k, nombre, "; ".join(mot)))
+    if step_ultimo is None and piezas and len(piezas) == 1:
+        # ninguna fase cerro con STEP y se entrega una sola pieza: la aceptacion se ata a la firma de esa pieza
+        step_ultimo = piezas[0]
     if escribir and reabiertas:
         for k in reabiertas:
             c = d["fases"][str(k)]
@@ -543,6 +588,14 @@ def autotest():
         r = evaluar_pasar(w, 2)
         if r["ok"]:
             prob.append("MAL (fase 1 sin cerrar) pasa a la 2")
+        # MAL fabricado: fases.json a mano con {"estado": "cerrada"} de la 0 a la 3 y nada mas (caso B del revisor)
+        guardar_fases(w, {"version": 1, "actual": 3, "aceptaciones": [], "historial": [], "ok_usados": [],
+                          "fases": {str(k): {"estado": "cerrada"} for k in range(4)}})
+        try:
+            r = evaluar_pasar(w, 4)
+            prob.append("MAL (fases.json armado a mano, solo «cerrada») no da NO MEDIDO: %s" % r)
+        except NoMedido:
+            pass
     return prob
 
 
@@ -681,6 +734,9 @@ def main(argv=None):
             res["veredicto"] = "rojo"
             texto = "; ".join(r["motivos"])
             if a.acepto_fase is not None:
+                if not r["firma"]:
+                    raise NoMedido("la aceptacion queda atada a la firma de un STEP y ninguna fase cerro con STEP: "
+                                   "pasar --fase %d --step <pieza o conjunto> --acepto-fase \"<frase>\"" % n)
                 frase = a.acepto_fase.strip()
                 otra = [x for x in d["aceptaciones"] if (x.get("frase") or "").strip() == frase
                         and (int(x.get("fase", -1)) != n or x.get("step_firma") != r["firma"])]
