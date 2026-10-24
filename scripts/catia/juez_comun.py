@@ -328,7 +328,7 @@ def correr_ejercicio(ejercicio, construir, desplazamiento=(0.0, 0.0, 0.0), con_b
     else:                                           # sin bien.py no hay cruce: las claves quedan vacias (FIN las imprime)
         salida["diferencia_mm3"], salida["dif_cdg_mm"] = {}, {}
         iguales = True
-    salida["ok"] = not fallas and iguales
+    salida["ok"] = not fallas and iguales and not salida.get("error")     # CATA, 24/10: una excepcion fuera de un paso no queda verde
     if not con_bien:
         # sin bien.py no se comparo nada: salida.json no queda en verde hasta que el post-proceso del ejercicio compare
         # contra su respuesta (revisor del 13, 24/10: si el post-proceso revienta, quedaba «ok: true» sin comparar)

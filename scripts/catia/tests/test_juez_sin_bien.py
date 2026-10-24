@@ -53,7 +53,7 @@ def falsos():
 
 
 class SinBien(unittest.TestCase):
-    def correr(self, construir, con_bien, falsos_=None):
+    def correr(self, construir, con_bien, falsos_=None, medir_=None):
         tmp = tempfile.mkdtemp(prefix="juez-sin-bien-")
         llamadas = []
 
@@ -65,7 +65,7 @@ class SinBien(unittest.TestCase):
         viejos = {k: sys.modules.get(k) for k in ("catia_base", "pythoncom")}
         sys.modules.update(falsos_ or falsos())
         argv, med = sys.argv, jc.medir_b123d
-        sys.argv, jc.medir_b123d = ["catia.py", tmp], medir
+        sys.argv, jc.medir_b123d = ["catia.py", tmp], medir_ or medir
         try:
             with redirect_stdout(io.StringIO()) as out:
                 codigo = jc.correr_ejercicio("99_no_existe", construir, con_bien=con_bien)
@@ -156,6 +156,20 @@ class SinBien(unittest.TestCase):
         self.assertIn("bien", llamadas)
         self.assertFalse(s["ok"])
         self.assertIn("bien.py salio con 2", s["error"])
+
+    def test_con_bien_una_excepcion_fuera_de_un_paso_es_rojo(self):
+        """CATA, pedido 10 (24/10): con con_bien=True el ok era «not fallas and iguales» sin mirar el error: una excepcion
+        DESPUES de medir (fuera de un paso) quedaba verde si las medidas cuadraban."""
+        def construir(cb, c, reg, salida):
+            reg.paso("algo", lambda: 1)
+            salida["volumen_catia"]["pieza"], salida["cdg_catia_mm"]["pieza"] = 10.0, [0.0, 0.0, 0.0]
+            raise RuntimeError("se corto despues de medir")
+
+        codigo, s, _, _ = self.correr(construir, con_bien=True, medir_=lambda args, timeout=900: {
+            "partes": {"pieza": {"volumen": 10.0, "cdg_mm": [0.0, 0.0, 0.0]}}})
+        self.assertEqual(s["diferencia_mm3"], {"pieza": 0.0})       # las medidas cuadran
+        self.assertIn("se corto despues de medir", s["error"])
+        self.assertFalse(s["ok"])
 
 
 if __name__ == "__main__":
