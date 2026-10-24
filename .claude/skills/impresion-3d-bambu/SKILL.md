@@ -207,6 +207,17 @@ hace nada. La forma completa de la orden salió del programa abierto Bambuddy
 **Cómo se ve que arrancó bien:** `gcode_state` RUNNING, etapas 2 (calienta placa) → 13 (home) →
 4 (carga filamento), `mc_print_line_number` > 0 y `ams.tray_now` = el lugar del primer filamento.
 
+### La foto de la placa va ANTES de `--apply` (gate 3g, 23/10/2026)
+
+Fak, 23/10/2026 14:00: *«mandame una foto de cómo se ve la placa... de los archivos laminados... anotá para el viernes que siempre
+deben mandarle una foto»*; 14:41: *«no me mandás una foto de cómo quedaría en la placa laminada?»*. El flujo es en dos pasos y el
+programa lo exige: (1) `bambu_red.py --imprimir <x.gcode.3mf>` (sin `--apply`) saca `<pieza>_PLACA.png` del laminado (la vista de
+la placa que guarda Bambu Studio) y dice el comando siguiente; (2) **se le manda esa imagen a Fak** (SendUserFile o el chat) y
+recién después `--imprimir <x.gcode.3mf> --apply --foto-mandada <pieza>_PLACA.png`. La foto tiene que ser la de ESE laminado
+(mismo sha: si se volvió a laminar, se saca y se manda de nuevo). Hasta el 30/10 sin la foto AVISA y manda igual; desde el 31/10
+NO SE MANDA. Salida con su frase: `--sin-foto --acepto "<frase textual de Fak>"`. Canon: `scripts/placaCanon.data.json`; lógica:
+`scripts/placa_foto.py`; tests G1-G8: `tests/test_foto_placa.py`. `imprimir_pieza.py --apply` lleva el mismo `--foto-mandada`.
+
 ## 1 quater. El registro compartido (varias PC, una sola cuenta)
 
 Fak, 13/10/2026: *"normalmente imprimimos desde distintas PCs… ¿usar la nube para sincronizarnos?"*.

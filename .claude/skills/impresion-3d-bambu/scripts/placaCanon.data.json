@@ -1,0 +1,17 @@
+{
+  "_que_es": "Canon del gate 3g (viernes 23/10/2026): la FOTO DE LA PLACA laminada se le manda a Fak ANTES de mandar a imprimir. Lo leen placa_foto.py (que la saca del .gcode.3mf y la valida) y bambu_red.py --imprimir (que lo llama antes de hablar con la impresora). Nace de dos pedidos de Fak en una misma tarde, 23/10/2026 14:00 («mandame una foto de comos e ve la palca digmaos de imrpesiona tnes d eirmoprmri soea madname una foto de lsoa rhcivos laminados eso ennciesot ok? anota par ael vinre sque iempre deben amdnarle una foto de lsoc arhivos la[minados]») y 14:41 («no me madnas teuna foto de comoq uedaria digmaos en la palca laminada?»). Hasta ese dia --imprimir dibujaba la primera capa y avisaba, pero nada exigia la foto de la placa ni que se la hubieran mandado.",
+  "version": "2026-10-23.1",
+  "miniaturas": ["Metadata/plate_1.png", "Metadata/top_1.png", "Metadata/pick_1.png", "Metadata/plate_1_small.png"],
+  "_miniaturas": "Las imagenes que Bambu Studio guarda adentro del .gcode.3mf al laminar, en orden de preferencia: plate_1.png es la vista de la placa laminada que muestra el programa. Se copia tal cual a <pieza>_PLACA.png (sin renderizar nada: no depende del .venv-cad). Un archivo que no trae ninguna es NO MEDIDO, nunca verde.",
+  "aviso_hasta": "2026-10-30",
+  "_aviso_hasta": "Hasta esta fecha INCLUSIVE, --imprimir --apply sin --foto-mandada (o con una foto que no es la de ese laminado) AVISA y se manda igual (exit 0, renglon «AVISO [GATE foto de la placa]»). Es la semana de medir cuantas veces salta.",
+  "freno_desde": "2026-10-31",
+  "_freno_desde": "Desde esta fecha, --imprimir --apply sin la foto mandada NO SE MANDA (exit 1, renglon «NO SE MANDA [GATE foto de la placa]»), antes de hablar con la impresora y de subir nada. La salida es --sin-foto --acepto \"<frase textual de Fak>\", que queda anotada en <pieza>_PLACA.json. BAMBU_HOY=AAAA-MM-DD cambia «hoy» (solo los tests).",
+  "frase_minima": 10,
+  "_frase_minima": "--sin-foto solo con --acepto \"<frase textual de Fak, 10 caracteres o mas>\" (la misma medida que --acepto-voladizos y --sin-detector). Sin la frase: exit 1 «NO SE MANDA: --sin-foto necesita la frase de Fak», con o sin --apply, en seco tambien.",
+  "foto_valida": "misma placa (sha256 del .gcode.3mf igual al de la ficha <pieza>_PLACA.json) y no mas vieja que el archivo",
+  "_foto_valida": "La foto que se le mando a Fak tiene que ser la de ESTE laminado: si el archivo se volvio a laminar despues de la foto, el sha cambia y la foto ya no vale (se saca de nuevo y se manda de nuevo). Lo que NO se puede medir por programa es que Fak la haya mirado: por eso el flujo obliga a correr --imprimir sin --apply (saca la foto y dice el comando) y despues --apply --foto-mandada <png>; el renglon del medio es mandarsela (SendUserFile o el chat).",
+  "modo": "aviso hasta aviso_hasta, freno desde freno_desde",
+  "revisar": "2026-10-30",
+  "_revisar": "El 30/10 se mira placaCanon y los <pieza>_PLACA.json de la semana: cuantas veces aviso, cuantas con --sin-foto, y si la miniatura plate_1.png alcanza como «foto de la placa» o Fak quiere el render con colores (vista_previa.py). Renglon en scripts/_lib/retiros.data.json: impresion-3d-bambu:foto-de-la-placa."
+}

@@ -52,6 +52,8 @@ ap.add_argument("carpeta")
 ap.add_argument("--color-parte", action="append", required=True)
 ap.add_argument("--proceso", default="0.20mm Standard")
 ap.add_argument("--apply", action="store_true")
+ap.add_argument("--foto-mandada", default=None,
+                help="la <pieza>_PLACA.png que ya se le mando a Fak (gate 3g, 23/10/2026): con --apply hace falta")
 a = ap.parse_args()
 
 
@@ -109,7 +111,12 @@ salida = next(p for p in carpeta.glob("*.gcode.3mf") if not p.name.startswith("_
 q = subprocess.run([sys.executable, str(AQUI / "quien_imprime_que.py"), str(carpeta / "plate_1.gcode")],
                    text=True, capture_output=True)
 print(q.stdout)
-rc = br.imprimir(str(salida), None, a.apply)
+# gate 3g (23/10/2026): sin --apply, bambu_red saca <pieza>_PLACA.png y dice el comando; con --apply hace falta --foto-mandada.
+# La llamada de tres argumentos se conserva tal cual: el test B8 del detector la fija como contrato de compatibilidad.
+if a.foto_mandada:
+    rc = br.imprimir(str(salida), None, a.apply, foto_mandada=a.foto_mandada)
+else:
+    rc = br.imprimir(str(salida), None, a.apply)
 if a.apply and rc == 0:
     # la vigilancia es UNA sola y ya la lanzo bambu_red.imprimir (proceso aparte, con el detector, gate 3b 23/10/2026):
     # lanzar otra sobre la misma carpeta saldria 15. Antes aca se pedia lanzarla a mano y el 20/10 salio sin --detector
