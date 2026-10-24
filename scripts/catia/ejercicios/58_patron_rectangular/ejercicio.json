@@ -1,0 +1,69 @@
+{
+ "usa_catia": true,
+ "descripcion": "Patron rectangular: placa 200 x 120 x 6 desde (0,0,0) con UN agujero D10 pasante en (25, 20) y AddNewRectPattern de 4 x 3 a paso 40 (X) y 35 (Y), como una plantilla de perforado; el sentido de cada direccion se elige midiendo (FirstOrientation / SecondOrientation, metodo de la practica del 19/10); volumen y centro contra la cuenta, el STEP 1/1/0, los ejes de R5 del STEP en las 12 posiciones y la FORMA contra la placa menos 12 cilindros puestos uno por uno (gemelo_placa.py, sin patron) con compara.py",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "volumen y centro de la placa con los 12 agujeros; posiciones de los agujeros",
+  "valor": {
+   "volumen_mm3": 138345.133,
+   "cdg_mm": [
+    100.6131,
+    60.2044,
+    3.0
+   ],
+   "agujeros": [
+    [
+     25,
+     20
+    ],
+    [
+     25,
+     55
+    ],
+    [
+     25,
+     90
+    ],
+    [
+     65,
+     20
+    ],
+    [
+     65,
+     55
+    ],
+    [
+     65,
+     90
+    ],
+    [
+     105,
+     20
+    ],
+    [
+     105,
+     55
+    ],
+    [
+     105,
+     90
+    ],
+    [
+     145,
+     20
+    ],
+    [
+     145,
+     55
+    ],
+    [
+     145,
+     90
+    ]
+   ]
+  },
+  "unidad": "mm3 / mm",
+  "tolerancia": "tol_volumen (1e-5 del volumen: 1,38 mm3); centro 0,01 mm; forma: sobra y falta <= 1 mm3, distancias exactas <= 0,01 mm",
+  "fuente": "cuenta: 200 x 120 x 6 - 12 pi 5^2 6 = 138 345,133 mm3; centro por momentos (placa en (100, 60, 3) menos los 12 cilindros en sus ejes)"
+ }
+}
