@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "Too Tall Toby PPP01-02 Post Cap en CATIA (pieza del ej30 de la practica: Shaft con el borde en cuarto de elipse, asa con Rib de una elipse por un arco R17, hueco por Groove con desmolde de 4 grados y R3, R1 del asa); masa de CATIA (material del catalogo con Density 1020 kg/m3: ABS si esta, si no Steel) contra la guia, volumen antes del R1 contra el gemelo de build123d de la practica, STEP medido con build123d",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "masa de la pieza en ABS",
+  "valor": 43.09,
+  "unidad": "g",
+  "tolerancia": 1.0,
+  "fuente": "guia de build123d, https://build123d.readthedocs.io/en/stable/tttt.html (Too Tall Toby PPP01-02 Post Cap, ABS 1020 kg/m3); tolerancia de 1 g: la de masa del banco (control masa_esperada)"
+ }
+}
