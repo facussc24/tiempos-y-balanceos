@@ -111,6 +111,25 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
   build123d (de terceros) no entra al repo; se corre aparte y su volumen va en la configuración del ejercicio.
 - **Un comparador que hace booleanas exactas con tolerancia difusa sobre un STEP de miles de caras puede tardar más de
   15 minutos** (32, principal, 24/10: `compara.py` contra el virolador v16 entregado): se midió antes de cortarlo.
+  Corrido solo tardó **16 min 22 s** (11:47:58 a 12:04:20) y dio lo mismo que el 19/10 (sobra 0, falta 0, 0,0016 mm):
+  el tope de espera pasó de 900 s a 2 400 s. Es tiempo, no tolerancia: los umbrales no se tocaron.
+
+## Piezas reales del cliente (fase 3: 32 a 35)
+
+- **Una respuesta conocida se mide sobre el archivo que se abre, identificado por su sha256, nunca por el nombre** (33,
+  CATA; 34, principal). Los números de la COLA del panel (91 765,561 y 91 791,099) eran de `two_wireless.stp`, no de la
+  copia en el marco del virolador (91 767,169). Y en la práctica hay DOS `virolador_v10_two.step`: el de `v16_ref` es el
+  v16 (89 278 mm³); el de `v14_choque`, otro dispositivo (116 527 mm³, caja más grande).
+- **La pieza del cliente no entra al repo**: el `catia.py` toma la ruta de una variable de entorno o de la nube, verifica
+  el sha256 y (33) abre una COPIA en la carpeta de trabajo. La prueba sin CATIA usa un STEP falso con su propio sha256.
+- **Antes de decir que CATIA perdió geometría al exportar, medir fino** (33, CATA): sobre el STEP que exporta CATIA de una
+  pieza toda NURBS, la integración por defecto de build123d da −0,052 % de volumen y el centro 0,058 mm corrido; con
+  `BRepGProp.VolumeProperties_s(forma, props, 1e-6)` el mismo archivo da −0,004 % y 0,0042 mm (`medir_fino.py` del 33).
+- **El volumen no caza una cara perdida; la topología sí** (33, CATA, medido): una caja 10 × 20 × 30 exportada sin una
+  cara la lee build123d como 0 sólidos y 5 caras sueltas, y `BRepCheck_Analyzer` la da VÁLIDA. El STEP exportado se
+  decide por 1 sólido y 0 caras sueltas, además del volumen.
+- **Panel del cliente en CATIA** (33): 91 770,060 mm³ y 96 035,359 mm² contra OpenCASCADE fino 91 766,750 / 96 034,395
+  (+0,0036 %), centro a 0,0036 mm.
 
 ## DMU Kinematics (17, principal)
 
