@@ -1,0 +1,26 @@
+{
+ "usa_catia": true,
+ "descripcion": "Molde de dos mitades del hisopo de PP con lo que pide la solucion (a) del MIT 2.008: bebedero desde la cara de arriba, canal en el plano de particion, compuerta al medio del hisopo y pines expulsores en la mitad de abajo; el bloque menos la colada y los expulsores, partido por la particion. El ej72 de la practica con un cambio anotado (la carpeta de la skill sale del repo); su control con build123d sobre el STEP de CATIA corre como paso",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "lo que pide la solucion (a) (pieza, colada que llega, compuerta al medio, particion, expulsores) y la mitad de abajo del molde contra su gemelo; posicion del bebedero, radios y pines son valores de diseno del ej72",
+  "valor": {
+   "pieza_mm3": 1129.94,
+   "colada_solidos": 1,
+   "gemelo_canal_corto_solidos": 2,
+   "boca_z_mm": 15.0,
+   "canal_centro": "x 24,35 (compuerta al medio), z 0 (particion)",
+   "bebedero_centro": [
+    24.35,
+    10.0,
+    7.5
+   ],
+   "expulsores": "los 2 del ej72 (valor de diseno de la practica): cada uno toca la pieza (contacto > 1 mm2, solape < 1e-3 mm3) y queda en z <= 0. El papel muestra 4 (3 finos y 1 grande, sin cotas): la cantidad no se juzga",
+   "mitad_de_abajo": "volumen y centro del gemelo de build123d (gemelo_molde.py): 30 159,282 mm3, z -7,608, a 0,5 mm3 y 0,01 mm"
+  },
+  "unidad": "mm / mm3",
+  "tolerancia": "pieza 0,5 mm3; posiciones 0,01 mm; la boca 1e-3 mm",
+  "fuente": "MIT 2.008, examen practico 1 de 2022, problema 2 con solucion, parte (a) (https://ocw.mit.edu/courses/2-008-design-and-manufacturing-ii-spring-2025/mit2_008_s25_quiz1_prac22_sol.pdf; banco E13 de la practica): nucleo y cavidad, la pieza como espacio negativo, pines expulsores, canal y bebedero, compuerta en el medio del hisopo (el plastico fluye parejo hacia los dos lados); la pieza simplificada de la solucion: cabeza O8,6 x 15,4 + cuerpo O3 x 33,3",
+  "alcance": "fuera: el corredizo del mango hueco (la pieza es maciza) y la mitad de arriba"
+ }
+}
