@@ -319,6 +319,10 @@ def correr_ejercicio(ejercicio, construir, desplazamiento=(0.0, 0.0, 0.0), con_b
         nombre_a_parte = {os.path.splitext(os.path.basename(v))[0]: k for k, v in salida["_steps"].items()}
         salida["volumen_step_catia_en_build123d"] = {nombre_a_parte.get(k, k): d.get("volumen", d.get("error"))
                                                      for k, d in (s.get("partes") or {}).items()} or s.get("error")
+        # 24/10 (revisor del 37): el centro de gravedad y la topologia del STEP ya se median y se tiraban; el volumen no
+        # ve una ranura corrida en altura (no se cruza con nada) y el centro si. Solo se agrega: nadie decide por esto aca.
+        salida["step_catia_en_build123d"] = {nombre_a_parte.get(k, k): d for k, d in (s.get("partes") or {}).items()} \
+            or s.get("error")
     if con_bien:
         iguales = comparar(salida, desplazamiento)
     else:                                           # sin bien.py no hay cruce: las claves quedan vacias (FIN las imprime)

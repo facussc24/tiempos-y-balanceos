@@ -1,0 +1,35 @@
+{
+ "usa_catia": true,
+ "descripcion": "CSWA Sample Exam 2013 oficial de SolidWorks, «Tool Block» etapas 3 y 4 (preguntas 5 y 6) en CATIA Part Design: el ej41b de la practica del 19/10 copiado sin cambios (con croquis.py y sus contornos en ej41_tool_block/); masa de CATIA de cada etapa contra el papel, volumen y CENTRO DE GRAVEDAD de cada etapa contra el gemelo de build123d de la practica (ni la masa ni el volumen ven la altura de la ranura ni el lado del bolsillo; el centro si) y el STEP de CATIA (etapa 4) leido con build123d: 1 solido, 1 cascara, 0 caras sueltas, su volumen y su centro",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "masa de la pieza en la etapa 3 (pregunta 5) y en la etapa 4 (pregunta 6), acero AISI 1020 a 0,0079 g/mm3",
+  "valor": {
+   "etapa3": 628.18,
+   "etapa4": 432.58
+  },
+  "unidad": "g",
+  "tolerancia": 0.1,
+  "fuente": "EDU_CSWA_Sample_Exam_2013_ENG.pdf (SolidWorks), copia en la nube de Ingenieria, INGENIERIA BARACK (NUNCA BORRAR)/4- MANUALES/CATIA V5/EJERCICIOS CERTIFICACION: pag. 5 y 6 del PDF las preguntas 5 y 6 con la densidad; pag. 9 del PDF (313 del libro), «Answers»: 5) 628.18 g, 6) 432.58 g"
+ },
+ "cruces": {
+  "gemelo_build123d_mm3": {
+   "etapa3": 79516.884,
+   "etapa4": 54757.26,
+   "fuente": "ej41_tool_block/gemelo34.py de la practica del 19/10"
+  },
+  "gemelo_build123d_cdg_mm": {
+   "etapa3": [
+    45.7428,
+    32.1317,
+    26.1652
+   ],
+   "etapa4": [
+    42.6006,
+    31.6783,
+    32.1674
+   ],
+   "tolerancia_mm": 0.01
+  }
+ }
+}

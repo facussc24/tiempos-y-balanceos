@@ -1,0 +1,23 @@
+{
+ "usa_catia": true,
+ "descripcion": "Biela-manivela con DMU Kinematics (r 30, l 80): tres articulaciones de revolucion y una prismatica, comando de angulo en la manivela (macro VBScript); el ej49 de la practica del 19/10 copiado sin cambios, y sobre el mismo mecanismo la posicion completa de la biela y de la corredera en 0, 30, 60, 90, 120 y 180 grados",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "posicion de la corredera y del boton de la manivela en cada angulo, y los grados de libertad del mecanismo",
+  "valor": {
+   "corredera_x_mm": {
+    "0": 110.0,
+    "30": 104.5619,
+    "60": 90.6637,
+    "90": 74.162,
+    "120": 60.6637,
+    "180": 50.0
+   },
+   "boton_manivela_mm": "(r cos t, r sen t) con r 30 (el sentido del giro se acepta en los dos, el mismo en todos los angulos)",
+   "mecanismo": "1;4;1"
+  },
+  "unidad": "mm",
+  "tolerancia": 0.001,
+  "fuente": "cinematica de la biela-manivela (triangulo manivela-biela-guia): x = r cos t + raiz(l^2 - r^2 sen^2 t); el boton de la manivela sobre el circulo de radio r"
+ }
+}

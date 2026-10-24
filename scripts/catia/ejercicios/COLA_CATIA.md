@@ -160,9 +160,9 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 34 | hecho | PC principal, R21, 24/10/2026 12:48 (`34_20261024_1248`, código del commit): ok true; v16 «no choca» (intersección vacía en CATIA; OpenCASCADE luz 0,0455), gemelo 69,561 mm³ contra 69,5649; panel 91 770,060 en las dos aperturas. La corrida de las 12:19 abrió el v16 VACÍO (cabecera STEP al revés): ahora una copia arreglada. Revisor Sonnet: 1 grave (el panel no se medía: una apertura vacía pasaba por «no choca»), arreglado | (este commit) |
 | 35 | hecho (CATA) | CATA, R21, 24/10/2026 12:17 (`35_final`, código del commit; la primera 12:00, igual): ok true; bloque 170 × 58 × 19 (187 340) menos el panel verificado del 33 pegado sin vínculo: nido 171 459,136 mm³ = la práctica del 19/10; OpenCASCADE −0,0012 %; choque_exacto.py «toca (luz 0)» (intersección 0 con los tres fuzz, distancia 0). Hallazgo: el nido son 5 sólidos (el bloque + 4 islas de 18,16 mm³ que el panel encierra), informado y no decide. Revisor Sonnet: un grave (la ruta de choque_exacto.py desde el paquete del obrero), arreglado y corrido de nuevo | (este commit) |
 | 36 | pendiente | | |
-| 37 | pendiente | | |
+| 37 | hecho | PC principal, R21, 24/10/2026 12:58 (`37_20261024_1258`, código del commit; la primera 12:38, igual): ok true; 628,184 y 432,583 g contra 628,18 y 432,58 (acero 0,0079); gemelo a 0,086 / 0,087 mm³ y centros a 0,0004 / 0,0006 mm; STEP 1/1/0 con el centro del gemelo. Revisor Sonnet: 1 grave (ni la masa ni el volumen veían la ranura corrida en z ni el bolsillo del otro lado: ahora el centro de gravedad), arreglado | (este commit) |
 | 38 | pendiente | | |
-| 39 | pendiente | | |
+| 39 | hecho | PC principal, R21, 24/10/2026 12:41 (`39_20261024_1241`, cierre con el código del commit): ok true; corredera a 0,0000 mm de la cuenta en los seis ángulos, en la guía; botón de la manivela en (30 cos t, +30 sen t); «1;4;1». Revisor Sonnet: sin graves (la manivela quieta y la biela y la corredera cruzadas dan rojo: probado) | (este commit) |
 | 40 | pendiente | | |
 | 41 | pendiente | | |
 | 42 | pendiente | | |

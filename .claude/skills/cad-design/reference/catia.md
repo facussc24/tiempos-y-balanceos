@@ -565,3 +565,7 @@ prueba sin CATIA; el detalle de cada lección, con su medición, en **`scripts/c
   exportado por 1 sólido y 0 caras sueltas (una cara perdida casi no cambia el volumen y BRepCheck la da válida) (33).
   `GetMinimumDistance` falla también entre dos cuerpos de la MISMA pieza (34): la distancia la da OpenCASCADE, y el «no
   choca» de un Intersect con Update fallido vale solo si el gemelo de la misma corrida choca con el volumen esperado (34).
+- **Masa y volumen no ven la POSICIÓN de un rasgo que no se cruza con nada** (una ranura más alta, un bolsillo del otro
+  lado: 0,000 mm³ de diferencia); el centro de gravedad sí (0,028 mm por 0,1 mm de corrimiento). Una respuesta de masa
+  se acompaña del centro contra un gemelo (37). Y toda comparación se escribe «bien si |x − y| <= tol»: con «malo si
+  > tol» un NaN pasa (32, 34, 41).

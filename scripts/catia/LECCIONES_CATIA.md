@@ -32,6 +32,15 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
   centros alineados con el contacto): «distancia = radio» tiene raíz doble y le quita rango (37 en vez de 40).
 - `Status` de una restricción de CATIA = 0 dice «satisfecha», no «iso-restringida»: un croquis con grados libres también
   da todo en 0 (11, revisor; la interfaz `Sketch` no expone el estado del solver por COM).
+- **La masa y el volumen no ven DÓNDE está un rasgo que no se cruza con nada; el centro de gravedad sí** (37, principal,
+  revisor Sonnet, medido con el gemelo): la ranura del Tool Block corrida de −1 a +12 mm en z da 0,000 mm³ de diferencia,
+  y el bolsillo hecho del otro lado también; el centro se mueve 0,028 mm con 0,1 mm de corrimiento (8,24 mm el bolsillo
+  espejado). El 37 compara el centro de cada etapa en CATIA y el del STEP contra el gemelo a 0,01 mm. Desde el 24/10
+  `juez_comun` guarda en `step_catia_en_build123d` el centro y la topología del STEP que ya medía (antes solo el volumen).
+  Mismo hueco, sin arreglar todavía: `practica_en_juez.cerrar_con_masa` (25, 27, 29) compara solo volumen y masa.
+- **Una comparación «malo si |x − y| > tol» deja pasar un NaN** (32, 34, 41, revisores y prueba del 41): `NaN > tol` es
+  falso. Se escribe «bien si |x − y| <= tol» y lo demás es rojo; y el `ok` exige además que no haya error del juez (una
+  excepción fuera de un paso deja `ok_pasos` en verdadero).
 
 ## Part Design y Knowledgeware
 
