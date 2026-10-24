@@ -6,30 +6,17 @@ fable 20**. Diez Sonnet siguen valiendo lo mismo que antes (40); con lo mismo en
 Haiku, 5 Opus o 2 Fable. El esfuerzo es `xhigh` (el anteultimo; `max` nunca se pide). La tool
 `Workflow` estuvo deshabilitada del 06/08 al 16/10/2026; **Fak la prendio el 16/10** («Fable 5.1 ultracode de una… si o si») y queda prendida: sus agentes pasan por el mismo presupuesto.
 
-**Que tiene fuente y que no (Fak lo pregunto el 08/10 a la noche):** los PESOS salen de la tabla oficial
-de precios. La ventana de 10 minutos y el 40 NO tienen fuente externa: la ventana la puso una sesion el
-06/08 tras el incidente y el 40 son los 10 Sonnet de Fak en puntos. Nadie publico pesa por precio ni usa
-ventana (investigacion R8, 08/10). Lo respaldado es medir contra el CUPO REAL: Claude Code expone a los
-mods (`session.measure`) el % usado de las ventanas de 5 h y semanal, y `agent.spawn` deja aceptar,
-cambiar o negar el modelo de cada subagente. **Fase 3: reemplazar la ventana por un mod que pese por
-precio y frene por cupo real**; hasta entonces el presupuesto por puntos es la red de seguridad.
+**Lo que frena hoy, y donde:** la ventana de 10 min por puntos (hook `agentes-guard.sh`); la ventana de 5 h por encima del
+**85 %** (mod `presupuesto-agentes`, `mods/presupuesto-agentes/`; `~/.claude/.agent-cupo-ok` la saltea); `maxTurns` por
+definicion (buscador 30, explorador 300, investigador 400, amfe-healer 300, auditor sin tope). Por el cupo SEMANAL el mod solo
+AVISA al 60 y 85 % (Fak, 15/10: *«prefiero dejar un estandar que siempre pueda desplegar subagentes»*). El mod falla abierto
+(si falla, decide el bash); instalar, estado y volver atras: `node scripts/_modsInstalar.mjs [--aplicar | --estado | --quitar
+--aplicar]`. De donde salen los pesos (tabla de precios), por que la ventana y el 40 no tienen fuente externa, como convive el
+mod con el bash y el otro mod `tablero-casa`: `docs/_archive/REGLAS_DETALLE_2026-10-23.md` § techo-agentes.
 
-**Fase 3, instalada el 11/10/2026 (mod `presupuesto-agentes`, P33; convive con este guardian):** el mod vive en
-`mods/presupuesto-agentes/` y carga en todas las sesiones NUEVAS desde una copia fuera del repo (marketplace `mods-casa`,
-`~/.claude/mods-casa/`). La politica (`mods/presupuesto-agentes/hooks/presupuesto.mjs`, pura; test `__tests__/mods/presupuesto-agentes.test.mjs`)
-replica este guardian y, desde el 16/10/2026, por el cupo real AVISA y no frena (Fak, 15/10: *«no me convence si no tiene evidencia; prefiero dejar un estandar que siempre pueda desplegar subagentes… si no encontraste datos, propone eliminarlo»*; lo medido en `casa_subagentes_costo.md`: el freno del 74 % del 13/10 no ahorro nada y se salteo con pases en 54 de 62 lanzamientos; es una estimacion del informe, no un conteo): al 60 y al 85 % de la SEMANA deja una linea tenue con el modelo y el peso del agente, y el agente sale igual; se mide una semana y, si hay daño, se propone un freno con el numero. **La ventana de 5 h por encima del 85 % SIGUE FRENANDO** (13 agentes cortados por el limite de sesion en el informe de costos; `trabajar-hasta-la-hora.md`, punto 5). Lo que SI frena, ademas: la ventana de 10 min por puntos y `maxTurns` en cada definicion, medido contra los turnos reales desde el 01/10 (el auditor del 16/10 encontro que 60 y 80 cortaban trabajo real): buscador 30 (p95 64, no se toca), explorador 300 (p95 247, max 580), investigador 400 (p95 311, max 870), amfe-healer 300, **auditor sin tope** (la auditoria final pasa siempre y escribe su informe pasados los 100 turnos; p95 232). El tope nativo `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=10` esta en el settings global, pero el auditor leyo en el binario 2.1.299 que **no corre en modo ultracode** (probable, no medido): con ultracode el que cuenta es el presupuesto del mod. La profundidad de lanzamiento queda en su default 3 por el ritual del viernes (ahi los Sonnet del equipo lanzan Haiku con una definicion propia; el `investigador` diario no lanza subagentes y el `explorador` no tiene `Agent`). `~/.claude/.agent-cupo-ok` saltea el freno de 5 h y apaga el aviso semanal. Falla abierto: si el mod falla,
-la llamada pasa y decide el bash. Mientras conviven, bash corta primero (PreToolUse) y el mod ve lo que bash dejo pasar;
-el bash se apaga ULTIMO, con dos dias de registro coherente en `~/.claude/mods-log/presupuesto-agentes.log` (cada
-decision dice el cupo leido y de que carpeta salio la definicion). Instalar, ver el estado y volver atras:
-`node scripts/_modsInstalar.mjs [--aplicar | --estado | --quitar --aplicar]`; detalle en `mods/presupuesto-agentes/README.md`.
-El otro mod instalado, `tablero-casa` (HOY-25), solo muestra: cupo, agentes, hora de corte, API y noche, arriba del
-cuadro donde se escribe.
-
-Historia: techo de 5 (06/08/2026, dos incidentes de 21 y 40 agentes); 10 solo en Sonnet (Fak, 30/09);
-**08/10/2026, Fak: "ese techo de 10 lo puse yo, ni siquiera se si es correcto... es absurdo que solo se
-pueda usar Sonnet... eficiencia no significa siempre ahorrar tokens, significa trabajar de la mejor
-forma posible: algunas tareas van a requerir Fable o muchos Opus"**. De ahi el presupuesto por costo:
-Haiku para lo barato y muchos a la vez; Opus y Fable cuando el trabajo lo pide, descontando lo que valen.
+Historia (06/08: techo de 5 tras dos incidentes de 21 y 40 agentes; 30/09: 10 solo en Sonnet; 08/10, Fak: *«ese techo de 10 lo
+puse yo... eficiencia no significa siempre ahorrar tokens... algunas tareas van a requerir Fable o muchos Opus»*): en el
+archivo de detalle. De ahi el presupuesto por costo.
 
 Esto no vive solo aca: esta enforced en `~/.claude/settings.json` (hasta el 16/10 `disableWorkflows: true`; desde ese dia sacado y `workflowKeywordTriggerEnabled: true`,
 `workflowKeywordTriggerEnabled: false`, `CLAUDE_CODE_SUBAGENT_MODEL=claude-sonnet-5-5` como default,
@@ -87,13 +74,15 @@ poder trabajar). La historia, las citas de Fak y los tres errores que los explic
 `techo_agentes_los_dos_incidentes_2026-08`. Lo que mide si el presupuesto esta bien calibrado:
 `node scripts/_tokens.mjs` (turnos por modelo; desde el 08/10 cuenta cada mensaje una sola vez).
 
-## Lanzar o no, con los numeros de la casa (1, 2 y 4 medidos en `casa_subagentes_costo.md`, 15/10/2026, `.jsonl` desde el 06/10; 3 es la regla de Lydia Hallie; 5 es lo hecho el 16/10)
+## Lanzar o no (los numeros medidos de la casa, 15/10/2026, estan en `docs/_archive/REGLAS_DETALLE_2026-10-23.md` § techo-agentes)
 
-1. **El hilo principal es el 71 % del gasto** (≈ US$ 2.197 contra ≈ US$ 888 de 247 subagentes): un turno del principal cuesta ≈ US$ 0,20 porque relee ~469.000 tokens; un `buscador` Haiku entero, ≈ US$ 0,14. **Lanzar ahorra casi siempre cuando el que trabajaria es el principal** (leer mucho y devolver poco; varios frentes en paralelo).
-2. **Lanzar cuesta mas cuando el agente es largo, repetido o se pierde**: 22 agentes de mas de US$ 10 sumaron US$ 292 (el 33 % del gasto de subagentes); 30 de 247 no terminaron bien (13 cortados por error de API, 11 parados por el principal o por Fak). De ahi `maxTurns` por definicion.
-3. **Un subagente hace UNA tarea y devuelve** (Lydia Hallie, 10/10: el cache de un subagente vence a los 5 min; «in most cases you want your subagents to just run one task and hand back the result»); no se lo deja esperando mas trabajo.
-4. **No se relanza lo ya contestado**: los incidentes de agosto (21 y 40 agentes) fueron preguntas que ya tenian respuesta.
-5. **`explorador`, `investigador`, `auditor` y `amfe-healer` arrancan con `omitClaudeMd: true`** (16/10/2026): no cargan CLAUDE.md ni las reglas; medido ese dia: un `investigador` cargaba 98.000 a 118.000 tokens en su primer turno y un `buscador` (que ya lo tenia) 55.000; las 5 o 6 reglas que les valen van en su prompt y los hooks siguen corriendo. `buscador` y `auditor-cliente` ya lo tenian.
+1. **El hilo principal es el 71 % del gasto**: lanzar ahorra casi siempre cuando el que trabajaria es el principal (leer mucho y
+   devolver poco; varios frentes en paralelo).
+2. **Lanzar cuesta mas cuando el agente es largo, repetido o se pierde**: de ahi `maxTurns` por definicion.
+3. **Un subagente hace UNA tarea y devuelve** (Lydia Hallie, 10/10): no se lo deja esperando mas trabajo.
+4. **No se relanza lo ya contestado** (los incidentes de agosto fueron preguntas que ya tenian respuesta).
+5. **`explorador`, `investigador`, `auditor` y `amfe-healer` arrancan con `omitClaudeMd: true`** (16/10/2026): las 5 o 6 reglas
+   que les valen van en su prompt; los hooks siguen corriendo.
 
 ## Como decidir, antes de pensar en un agente
 

@@ -5,15 +5,10 @@ Fak, 03/10/2026. A las 13:50: *"quedate laburando como mínimo hasta esa hora"* 
 Y después: *"investigá qué falló y qué podemos hacer para que no vuelva a suceder"*.
 Esta regla no lleva `paths:` a propósito: entra en todas las sesiones.
 
-## Qué falló (medido)
-
-Mi último commit fue a las 17:03 y mi último mensaje a las 17:10. Dos causas, las dos mías:
-
-1. **Una sesión no sigue sola.** Cuando termino de contestar quedo parado hasta que llega un mensaje de Fak, el
-   aviso de algo que dejé corriendo (un agente, un programa en segundo plano) o un aviso programado. A las 17:10 no
-   había nada corriendo: nadie me despertó.
-2. **Traté un pedido por TIEMPO como una lista.** Cuando se me acabó la lista que tenía en la cabeza, cerré con un
-   resumen. Y trabajo había (lo que la auditoría dejó sin arreglar, más pruebas).
+Qué falló el 03/10 (medido: último commit 17:03, último mensaje 17:10; una sesión no sigue sola y traté un pedido por
+TIEMPO como una lista) y por qué el latido es un programa en segundo plano y no `CronCreate` ni la tarea programada de la
+app (0 LATIDO en 16 sesiones; 88 de 163 avisos de «terminó» despertaron la sesión): `docs/_archive/REGLAS_DETALLE_2026-10-23.md`
+§ trabajar-hasta-la-hora. **No verificado** todavía: una noche entera de punta a punta con este latido.
 
 ## La regla
 
@@ -56,27 +51,6 @@ Fak también puede usar `/goal` (propio de Claude Code): sigue turno tras turno 
 El que juzga no tiene reloj, así que la condición tiene que pedir que se muestre la hora en cada turno. Este
 mecanismo no depende de eso.
 
-## 09/10/2026: el latido por CronCreate nunca disparó; el que despierta es un programa en segundo plano (medido)
-
-En los transcripts de esta carpeta: **0 mensajes LATIDO en 16 sesiones** (las 15 del 08/10 y la de la noche, con
-35 menciones de CronCreate); un one-shot `* * * * *` seguía sin disparar 8 minutos después con la sesión quieta.
-Por eso el 03/10 y el 08/10 la sesión se quedó quieta horas mientras el hook `hora-guard` daba el latido por vivo:
-**miraba que el cron existiera (`session_crons`), no que latiera**.
-
-La tarea programada de la app (`mcp__scheduled-tasks__create_scheduled_task`, con aviso al terminar) arrancó sola el
-09/10 a las 06:39, pero **su aviso de «terminó» a la sesión que la creó no aparece en ningún registro**: la corrida se
-trabó en modo plan y la tarea ya no existe. Escrito como «ese aviso es el latido», nunca se vio funcionar.
-
-Lo que sí se vio (medido el 09/10 a la noche sobre los registros desde el 03/10): el aviso de «terminó» de un **programa
-en segundo plano**. De 163 que llegaron con la sesión recién callada, 88 la despertaron y el resto entró al turno que
-seguía abierto (`absorbed_mid_turn`): ninguno se perdió. El de un subagente: 97 de 102. Por eso el latido es
-`scripts/_latido.mjs` en segundo plano, y el control mira que su proceso esté vivo (`latidoVivo` en `horaGuard.mjs`),
-no que exista un aviso. Espera 9 minutos y no 10: el tope de un comando de Bash es 10. La sesión sale de
-`CLAUDE_CODE_SESSION_ID`, que Claude Code le da a cada comando (antes se adivinaba por el registro más nuevo y, con dos
-sesiones abiertas, podía ser la de otra).
-
-⚠ **No pude verificar** una noche entera con este latido: la prueba de punta a punta es la primera noche que Fak deje
-una hora. Lo que sí está probado: el script, la señal, el control en las dos direcciones y que su aviso despierta.
 ## Enforcement
 
 - **Hook `hora-prompt.sh`** (UserPromptSubmit; lógica en `scripts/_lib/horaGuard.mjs`, palabras en
