@@ -454,12 +454,15 @@ def guardar_pieza(doc, reg, nombre, step=True):
 
 
 def medir_step(step):
-    """Volumen, area y caja del STEP con build123d (otro motor: cruza lo que dice CATIA)."""
-    r = subprocess.run([VENV_CAD, os.path.join(AQUI, "medir_step.py"), step], capture_output=True, text=True,
+    """Volumen y centro de gravedad del STEP con build123d (otro motor: cruza lo que dice CATIA). 23/10/2026: apuntaba a un
+    medir_step.py que nunca existio (camino muerto); ahora usa medir_b123d.py step (el del juez, probado) y devuelve el dict de
+    esa parte ({volumen, cdg_mm, solidos}) o {"error": ...}; nunca un verde sin numero."""
+    r = subprocess.run([VENV_CAD, "-I", os.path.join(AQUI, "medir_b123d.py"), "step", step], capture_output=True, text=True,
                        encoding="utf-8", errors="replace", timeout=300)
     try:
-        return json.loads(r.stdout.strip().splitlines()[-1])
-    except (ValueError, IndexError):
+        partes = json.loads(r.stdout.strip().splitlines()[-1]).get("partes") or {}
+        return next(iter(partes.values())) if partes else {"error": "medir_b123d no devolvio ninguna parte"}
+    except (ValueError, IndexError, AttributeError):
         return {"error": (r.stderr or r.stdout)[-400:]}
 
 
