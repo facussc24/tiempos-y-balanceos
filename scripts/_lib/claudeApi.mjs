@@ -17,6 +17,9 @@
  *     (BARACK_API_PRESUPUESTO_USD, por defecto 170 = el credito del Max 20x con 15 % de colchon;
  *     BARACK_API_CICLO_DIA = dia del mes en que se renueva, por defecto 1) y el tope de gasto de UNA
  *     corrida de la noche (BARACK_API_TOPE_CORRIDA_USD, por defecto 8);
+ *   - el FRENO del ciclo en la puerta (23/10/2026): antes de cada pedido que se paga (llamar, llamarLargo, crearLote y
+ *     el bucle del agente) se suma lo gastado en el ciclo POR LA CLAVE que va a pagar y, si paso su tope, no se llama
+ *     (frenoDelCiclo; aviso al 60 y al 85 %; salida de un solo uso ~/.claude/.api-tope-ok con la frase de Fak);
  *   - lotes (Message Batches, mitad de precio) y el patron orquestador-workers (mapaReduce).
  *
  * CANDADOS. Este modulo NO toca Supabase, ni el arb, ni Outlook: habla con la API y escribe el
@@ -36,10 +39,11 @@
  * se prueba en __tests__/scripts/claudeApi.test.mjs con un cliente de mentira.
  */
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Anthropic from '@anthropic-ai/sdk';
-import { agregarSeguro, escribirSeguro } from './escrituraSegura.mjs';
+import { agregarSeguro, escribirSeguro, consumirPermiso } from './escrituraSegura.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const RAIZ = path.resolve(AQUI, '..', '..');
@@ -560,7 +564,7 @@ export const rutaLedger = (mes = mesLocal(), dir = DIR_API) => path.join(dir, `l
  * pago); sin ella la linea no lleva el campo. Despues deja al dia el resumen por clave (saldo.json); si ese resumen
  * falla, el gasto ya quedo anotado y no se pierde.
  */
-export function registrarGasto(r, { tarea = '', lote = false, dir = DIR_API, ahora = new Date(), clave = null, pedidoFable = null } = {}) {
+export function registrarGasto(r, { tarea = '', lote = false, dir = DIR_API, ahora = new Date(), clave = null, pedidoFable = null, topeSaltado = false } = {}) {
   const u = r.usage || {};
   // un pedido a Fable deja en el ledger la frase de Fak que lo autorizo (tanda 5). Quien llama la pasa solo si PIDIO
   // Fable (fraseFableDe): asi queda aunque el fallback del servidor haya contestado con otro modelo
@@ -581,6 +585,8 @@ export function registrarGasto(r, { tarea = '', lote = false, dir = DIR_API, aho
     // solo una etiqueta de etiquetaClave(): cualquier otro texto no se escribe (si alguien pasara la clave misma, no queda)
     ...(RE_ETIQUETA_CLAVE.test(String(clave ?? '')) ? { clave: String(clave) } : {}),
     ...(fraseFable ? { pedidoFable: fraseFable } : {}),
+    // paso con el tope del ciclo cruzado, por el permiso de un solo uso de Fak (frenoDelCiclo)
+    ...(topeSaltado ? { topeSaltado: true } : {}),
   };
   // por la puerta segura: el ledger solo puede caer en .sgc-cache (o en la carpeta de BARACK_API_DIR)
   agregarSeguro(rutaLedger(mesLocal(ahora), dir), `${JSON.stringify(entrada)}\n`);
@@ -600,10 +606,14 @@ export function leerLedger(mes = mesLocal(), dir = DIR_API) {
   return out;
 }
 
-/** Totales de un conjunto de entradas: por modelo y por tarea. */
+/**
+ * Totales de un conjunto de entradas: por modelo y por tarea. Un renglon `frenado` (el freno del ciclo no dejo llamar,
+ * costo 0) no es una llamada: se cuenta aparte en `frenados`.
+ */
 export function resumenLedger(entradas) {
-  const r = { llamadas: entradas.length, totalUsd: 0, porModelo: {}, porTarea: {}, desde: null, hasta: null };
-  for (const e of entradas) {
+  const pagadas = entradas.filter((e) => !e?.frenado);
+  const r = { llamadas: pagadas.length, frenados: entradas.length - pagadas.length, totalUsd: 0, porModelo: {}, porTarea: {}, desde: null, hasta: null };
+  for (const e of pagadas) {
     const usd = n(e.costoUsd);
     r.totalUsd += usd;
     const m = (r.porModelo[e.modelo] ||= { llamadas: 0, usd: 0, entrada: 0, salida: 0, cacheLectura: 0 });
@@ -691,8 +701,8 @@ export function leerLedgerCiclo(ciclo, dir = DIR_API) {
 }
 
 /**
- * Semaforo del ciclo: verde (< 80 %), amarillo (80-99 %), rojo (100 % o mas). Es monitoreo pasivo,
- * no un freno por llamada: el unico que frena es el job nocturno antes de ARRANCAR si esta en rojo.
+ * Semaforo del ciclo: verde (< 80 %), amarillo (80-99 %), rojo (100 % o mas), con LAS CLAVES SUMADAS. Es monitoreo:
+ * lo miran la noche y el agente antes de ARRANCAR. El freno por llamada, POR CLAVE, es frenoDelCiclo (23/10/2026).
  */
 export function estadoPresupuesto({ gastadoUsd = 0, presupuestoUsd = PRESUPUESTO_DEFECTO_USD } = {}) {
   const porcentaje = presupuestoUsd > 0 ? Math.round((gastadoUsd / presupuestoUsd) * 1000) / 10 : 0;
@@ -758,22 +768,17 @@ function marcasDeAgotada(dir) {
 }
 
 /**
- * El gasto del ciclo separado por clave, para mostrarle a Fak "gastado / quedan" (11/10/2026):
- *   { actualizado, ciclo: { desde, hasta, proximo, texto }, estimado,
- *     claves: [{ nombre: 'principal', gastadoUsd, creditoUsd, quedanUsd },
- *              { nombre: 'prestada', hasta: 'AAAAMMDD', gastadoUsd, agotada, vencida }, { nombre: 'entorno', gastadoUsd }] }
- * Cada linea del ledger dice quien pago (`clave`). Las de antes del 11/10/2026 no lo dicen: se reparten con la tabla
- * fija REPARTO_SIN_ETIQUETA (el tramo en que se uso la prestada; el resto, a la principal), no con las marcas que haya, y
- * `estimado` queda en true. `quedanUsd` es el credito del plan menos lo anotado aca: una cuenta del ledger, NO el
- * saldo que muestra Anthropic (ese no se puede leer con la clave).
+ * Quien pago que, sobre un conjunto de renglones del ledger: { gastado: Map(etiqueta -> USD), estimado }. Cada renglon
+ * dice su `clave`; los de antes del 11/10/2026 no la dicen y se reparten con REPARTO_SIN_ETIQUETA (el resto, a la
+ * principal), y entonces `estimado` es true. Los renglones `frenado` (costo 0) no cuentan. Lo usan saldoPorClave() y el
+ * freno del ciclo (frenoDelCiclo), asi el tablero y la puerta suman igual.
  */
-export function saldoPorClave({ dir = DIR_API, env = process.env, ahora = new Date(), creditoPrestadas = CREDITO_PRESTADAS_USD, repartoViejo = REPARTO_SIN_ETIQUETA, renueva = RENUEVA_PRESTADAS } = {}) {
-  const ciclo = cicloDe(ahora, cicloDia(env));
-  const marcas = marcasDeAgotada(dir);
+export function gastoPorClave(entradas, { creditoPrestadas = CREDITO_PRESTADAS_USD, repartoViejo = REPARTO_SIN_ETIQUETA } = {}) {
   const gastado = new Map();
   const sinEtiqueta = new Map();   // lo repartido por la tabla de arriba, por clave: solo eso es estimado
   let estimado = false;
-  for (const e of leerLedgerCiclo(ciclo, dir)) {
+  for (const e of entradas) {
+    if (e?.frenado) continue;
     let nombre = RE_ETIQUETA_CLAVE.test(String(e.clave ?? '')) ? e.clave : null;
     if (!nombre) {
       estimado = true;
@@ -783,7 +788,6 @@ export function saldoPorClave({ dir = DIR_API, env = process.env, ahora = new Da
     }
     gastado.set(nombre, (gastado.get(nombre) ?? 0) + n(e.costoUsd));
   }
-  const r2 = (x) => Math.round(x * 100) / 100;
   // El reparto por hora es grueso (un pedido se anota cuando TERMINA): si a una prestada le atribuye mas de lo que
   // traia, el sobrante lo pago la clave del plan. Sin este tope «quedan» salia de mas (11/10/2026: 102,17 contra los 100
   // de la prestada). El tope mira SOLO lo repartido sin etiqueta: lo que una linea etiquetada dice no se mueve (una
@@ -796,6 +800,24 @@ export function saldoPorClave({ dir = DIR_API, env = process.env, ahora = new Da
       gastado.set('principal', (gastado.get('principal') ?? 0) + (repartido - tope));
     }
   }
+  return { gastado, estimado };
+}
+
+/**
+ * El gasto del ciclo separado por clave, para mostrarle a Fak "gastado / quedan" (11/10/2026):
+ *   { actualizado, ciclo: { desde, hasta, proximo, texto }, estimado,
+ *     claves: [{ nombre: 'principal', gastadoUsd, creditoUsd, quedanUsd },
+ *              { nombre: 'prestada', hasta: 'AAAAMMDD', gastadoUsd, agotada, vencida }, { nombre: 'entorno', gastadoUsd }] }
+ * Cada linea del ledger dice quien pago (`clave`). Las de antes del 11/10/2026 no lo dicen: se reparten con la tabla
+ * fija REPARTO_SIN_ETIQUETA (el tramo en que se uso la prestada; el resto, a la principal), no con las marcas que haya, y
+ * `estimado` queda en true. `quedanUsd` es el credito del plan menos lo anotado aca: una cuenta del ledger, NO el
+ * saldo que muestra Anthropic (ese no se puede leer con la clave).
+ */
+export function saldoPorClave({ dir = DIR_API, env = process.env, ahora = new Date(), creditoPrestadas = CREDITO_PRESTADAS_USD, repartoViejo = REPARTO_SIN_ETIQUETA, renueva = RENUEVA_PRESTADAS } = {}) {
+  const ciclo = cicloDe(ahora, cicloDia(env));
+  const marcas = marcasDeAgotada(dir);
+  const { gastado, estimado } = gastoPorClave(leerLedgerCiclo(ciclo, dir), { creditoPrestadas, repartoViejo });
+  const r2 = (x) => Math.round(x * 100) / 100;
   const credito = creditoPlanUsd(env);
   const dePrincipal = gastado.get('principal') ?? 0;
   const claves = [{ nombre: 'principal', gastadoUsd: r2(dePrincipal), creditoUsd: credito, quedanUsd: r2(Math.max(0, credito - dePrincipal)) }];
@@ -818,6 +840,120 @@ export function escribirSaldo(opciones = {}) {
 
 /** '$1,23' con coma decimal, como lo lee Fak. */
 export const usd = (x) => `$${(Math.round(n(x) * 100) / 100).toFixed(2).replace('.', ',')}`;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// El freno del ciclo en la puerta, por clave (23/10/2026)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * POR QUE (PUNTOS_DEBILES_23-10.md §4). La API llego a US$ 372,76 contra un tope de 170 en el ciclo de octubre: el tope
+ * solo lo miraban la noche y el arranque del agente, que gastaron el 1 % y el 18 %; `_apiTarea.mjs` (el 80 %),
+ * `_apiLotes.mjs` y llamar() no lo consultaban, y el semaforo sumaba las dos claves contra un tope pensado para una.
+ * Ahora cada pedido que se paga pasa por frenoDelCiclo() ANTES de mandarse: se suma lo gastado en el ciclo por LA
+ * CLAVE QUE VA A PAGAR (gastoPorClave, el mismo reparto que el tablero) y, si llego a su tope, no se llama.
+ *
+ * El tope de cada clave: TOPES_CLAVE_USD; la que no figura ahi (la principal, la del entorno) usa
+ * BARACK_API_PRESUPUESTO_USD o 170, el valor de siempre. La prestada del dueño no tenia tope escrito: va con 170 igual
+ * (pedido del 23/10/2026), aunque su credito conocido es US$ 100 (CREDITO_PRESTADAS_USD): eso lo decide Fak.
+ * El ciclo de cada clave: el de facturacion (BARACK_API_CICLO_DIA); una prestada renovable (RENUEVA_PRESTADAS), desde su
+ * ultima recarga: lo gastado antes del 20 no le cuenta despues de la recarga.
+ */
+export const TOPES_CLAVE_USD = Object.freeze({ 'prestada-20261020': 170 });
+
+/** El permiso de un solo uso que deja pasar UNA llamada (o UNA corrida del agente) con el tope cruzado. */
+export const PERMISO_TOPE = '.api-tope-ok';
+/** Los avisos antes de llegar: al 60 % y al 85 % del tope de la clave, una vez por proceso. */
+export const UMBRALES_AVISO_TOPE = Object.freeze([0.6, 0.85]);
+
+/** El tope del ciclo de una clave (etiqueta de etiquetaClave), en USD. */
+export function topeDeClave(clave, { env = process.env, topes = TOPES_CLAVE_USD } = {}) {
+  const t = Number(topes?.[clave]);
+  return Number.isFinite(t) && t > 0 ? t : presupuestoMensualUsd(env);
+}
+
+/** El ciclo que cuenta para una clave: el de facturacion, o el de recarga si es una prestada renovable. */
+export function cicloDeClave(clave, { ahora = new Date(), env = process.env, renueva = RENUEVA_PRESTADAS } = {}) {
+  const m = /^prestada-(\d{8})$/.exec(String(clave ?? ''));
+  const dia = m ? Number(renueva?.[m[1]]) : NaN;
+  return cicloDe(ahora, dia >= 1 && dia <= 31 ? dia : cicloDia(env));
+}
+
+/**
+ * Cuanto lleva gastado una clave en SU ciclo y contra que tope: { clave, ciclo, gastadoUsd, topeUsd, porcentaje }.
+ * Con `entradas` no lee el disco (la medicion pasa el ledger renglon por renglon); sin ellas lee el ledger de `dir`.
+ */
+export function estadoTopeClave(clave, { dir = DIR_API, env = process.env, ahora = new Date(), topes = TOPES_CLAVE_USD, renueva = RENUEVA_PRESTADAS, entradas = null, creditoPrestadas, repartoViejo } = {}) {
+  const ciclo = cicloDeClave(clave, { ahora, env, renueva });
+  const delCiclo = (entradas ?? leerLedgerCiclo(ciclo, dir)).filter((e) => {
+    const dia = String(e?.ts ?? '').slice(0, 10);
+    return dia >= ciclo.desde && dia < ciclo.proximo;
+  });
+  const gastadoUsd = Math.round((gastoPorClave(delCiclo, { creditoPrestadas, repartoViejo }).gastado.get(clave) ?? 0) * 1e6) / 1e6;
+  const topeUsd = topeDeClave(clave, { env, topes });
+  return { clave, ciclo, gastadoUsd, topeUsd, porcentaje: topeUsd > 0 ? Math.round((gastadoUsd / topeUsd) * 1000) / 10 : 0 };
+}
+
+/** ~ de la sesion: HOME (Git Bash lo da como /c/Users/...) y si no, el del sistema. Mismo criterio que dirHome de guardianes.mjs. */
+function dirHomeApi(env = process.env) {
+  const h = String(env?.HOME ?? '').trim();
+  const m = /^\/([a-zA-Z])\/(.*)$/.exec(h);
+  if (m) return `${m[1].toUpperCase()}:/${m[2]}`;
+  return h && !h.startsWith('/') ? h : os.homedir();
+}
+
+const usdAr = (x) => (Math.round(n(x) * 100) / 100).toFixed(2).replace('.', ',');
+const fechaAr = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
+const avisosTope = new Set();
+
+/**
+ * EL FRENO. Antes de un pedido que se paga con la clave `clave` (etiqueta; una que el ledger no reconoce se le cuenta a
+ * la principal, como en saldoPorClave). Devuelve { pasa: true, permiso, ...estado } o TIRA ErrorApi 'tope' sin llamar:
+ *   - bajo el tope: pasa; al cruzar el 60 % o el 85 % avisa una linea (una vez por proceso, clave y ciclo);
+ *   - con el tope cruzado y `~/.claude/.api-tope-ok`: lo consume y pasa UNA vez (`permiso: true`);
+ *   - con el tope cruzado y sin permiso: deja un renglon `frenado` en el ledger (costo 0; salvo `anotar: false`) y tira.
+ * `home`, `avisar` y `avisados` se cambian en los tests.
+ */
+export function frenoDelCiclo({
+  clave, tarea = '', modelo = null, dir = DIR_API, env = process.env, ahora = new Date(), topes = TOPES_CLAVE_USD,
+  renueva = RENUEVA_PRESTADAS, home, anotar = true, avisar = (t) => console.error(t), avisados = avisosTope,
+} = {}) {
+  const quien = RE_ETIQUETA_CLAVE.test(String(clave ?? '')) ? clave : 'principal';
+  const est = estadoTopeClave(quien, { dir, env, ahora, topes, renueva });
+  const cuenta = `US$ ${usdAr(est.gastadoUsd)} de ${usdAr(est.topeUsd)} para la clave ${quien}`;
+  const renovacion = fechaAr(est.ciclo.proximo);
+  if (est.gastadoUsd < est.topeUsd) {
+    const umbral = [...UMBRALES_AVISO_TOPE].reverse().find((u) => est.gastadoUsd >= u * est.topeUsd);
+    const marca = (u) => `${quien}|${est.ciclo.desde}|${u}`;
+    if (umbral && !avisados.has(marca(umbral))) {
+      for (const u of UMBRALES_AVISO_TOPE) if (u <= umbral) avisados.add(marca(u));
+      avisar(`aviso: la API va por el ${Math.round(est.porcentaje)} % del tope del ciclo (${cuenta}; se renueva el ${renovacion}).`);
+    }
+    return { pasa: true, permiso: false, ...est };
+  }
+  if (consumirPermiso(PERMISO_TOPE, { home: home ?? dirHomeApi(env) })) {
+    avisar(`tope del ciclo cruzado (${cuenta}): pasa UNA vez con ~/.claude/${PERMISO_TOPE} (consumido).`);
+    return { pasa: true, permiso: true, ...est };
+  }
+  if (anotar) {
+    const linea = {
+      ts: selloLocal(ahora), tarea: String(tarea || 'sin-tarea'), modelo, lote: false, entrada: 0, salida: 0, cacheLectura: 0,
+      cacheEscritura: 0, costoUsd: 0, duracionMs: 0, id: null, frenado: true, clave: quien, gastadoCicloUsd: est.gastadoUsd, topeUsd: est.topeUsd,
+    };
+    agregarSeguro(rutaLedger(mesLocal(ahora), dir), `${JSON.stringify(linea)}\n`);
+  }
+  throw new ErrorApi('tope', `tope del ciclo cruzado: ${cuenta}; se renueva el ${renovacion}; para pasar una vez: ~/.claude/${PERMISO_TOPE} con la frase de Fak`, { clave: quien, gastadoUsd: est.gastadoUsd, topeUsd: est.topeUsd, renueva: est.ciclo.proximo });
+}
+
+/**
+ * El freno aplicado al cliente que va a pagar. Lo llaman llamar(), llamarLargo(), crearLote() y el bucle del agente
+ * (agenteApi.correrAgente). Un cliente sin `apiKey` es un doble de test (el del SDK siempre la tiene): no puede gastar y
+ * pasa sin mirar (null). `topeCiclo`: { env, home, topes, renueva, avisar, avisados } para los tests.
+ */
+export function frenarEnLaPuerta(cliente, { tarea = '', modelo = null, dirLedger = DIR_API, ahora, respaldoClave, topeCiclo = {}, registrar = true } = {}) {
+  if (!cliente?.apiKey) return null;
+  const clave = etiquetaClave(cliente.apiKey, respaldoClave ?? {});
+  return frenoDelCiclo({ clave, tarea, modelo, dir: dirLedger, ahora: ahora ?? new Date(), anotar: registrar !== false, ...topeCiclo });
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Llamar
@@ -869,19 +1005,31 @@ async function conRespaldoDeClave(clienteDado, fn, { tarea = '', respaldo = {} }
   }
 }
 
+/**
+ * El freno del ciclo va ADENTRO de lo que corre conRespaldoDeClave: mira la clave del cliente que de verdad va a pagar,
+ * tambien la de reemplazo cuando una prestada se quedo sin saldo. Su ErrorApi 'tope' sube tal cual (no como «la API fallo»).
+ */
+const subirTope = (e) => { if (e instanceof ErrorApi && e.tipo === 'tope') throw e; };
+
 export async function llamar(cliente, opciones = {}) {
-  const { tarea = '', registrar = true, tolerar = false, dirLedger = DIR_API, ahora, respaldoClave } = opciones;
+  const { tarea = '', registrar = true, tolerar = false, dirLedger = DIR_API, ahora, respaldoClave, topeCiclo } = opciones;
   const { params, betas, conSchema } = armarParametros(opciones);
   const t0 = Date.now();
   let res;
   let usado = null;   // el cliente que contesto: si la prestada se quedo sin saldo, es el de reemplazo
+  let pase = null;    // lo que dijo el freno del ciclo para ese cliente
   try {
-    res = await conRespaldoDeClave(cliente, (c) => { usado = c; return c.beta.messages.create(betas.length ? { ...params, betas } : params); }, { tarea, respaldo: respaldoClave });
+    res = await conRespaldoDeClave(cliente, (c) => {
+      pase = frenarEnLaPuerta(c, { tarea, modelo: params.model, dirLedger, ahora, respaldoClave, topeCiclo, registrar });
+      usado = c;
+      return c.beta.messages.create(betas.length ? { ...params, betas } : params);
+    }, { tarea, respaldo: respaldoClave });
   } catch (e) {
+    subirTope(e);
     throw new ErrorApi('api', `la API fallo${tarea ? ` (${tarea})` : ''}: ${e?.status ? `HTTP ${e.status} ` : ''}${e?.message ?? e}`, { causa: e });
   }
   const r = interpretarRespuesta(res, { modelo: params.model, conSchema, duracionMs: Date.now() - t0 });
-  if (registrar) registrarGasto(r, { tarea, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(usado?.apiKey, respaldoClave ?? {}), pedidoFable: fraseFableDe(params.model, opciones.pedidoFable) });
+  if (registrar) registrarGasto(r, { tarea, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(usado?.apiKey, respaldoClave ?? {}), pedidoFable: fraseFableDe(params.model, opciones.pedidoFable), topeSaltado: !!pase?.permiso });
   return tolerar ? r : exigirRespuestaUtil(r, { tarea });
 }
 
@@ -892,18 +1040,25 @@ export async function llamar(cliente, opciones = {}) {
  * al final (`finalMessage()`): nada se usa a medias, mismo ledger, mismos errores que llamar().
  */
 export async function llamarLargo(cliente, opciones = {}) {
-  const { tarea = '', registrar = true, tolerar = false, dirLedger = DIR_API, ahora, respaldoClave } = opciones;
+  const { tarea = '', registrar = true, tolerar = false, dirLedger = DIR_API, ahora, respaldoClave, topeCiclo } = opciones;
   const { params, betas, conSchema } = armarParametros(opciones);
   const t0 = Date.now();
   let res;
   let usado = null;
+  let pase = null;
   try {
-    res = await conRespaldoDeClave(cliente, (c) => { usado = c; return c.beta.messages.stream(betas.length ? { ...params, betas } : params).finalMessage(); }, { tarea, respaldo: respaldoClave });
+    res = await conRespaldoDeClave(cliente, (c) => {
+      // el freno ANTES de abrir el stream (es la puerta de _apiTarea.mjs, el 80 % del gasto de octubre)
+      pase = frenarEnLaPuerta(c, { tarea, modelo: params.model, dirLedger, ahora, respaldoClave, topeCiclo, registrar });
+      usado = c;
+      return c.beta.messages.stream(betas.length ? { ...params, betas } : params).finalMessage();
+    }, { tarea, respaldo: respaldoClave });
   } catch (e) {
+    subirTope(e);
     throw new ErrorApi('api', `la API fallo${tarea ? ` (${tarea})` : ''}: ${e?.status ? `HTTP ${e.status} ` : ''}${e?.message ?? e}`, { causa: e });
   }
   const r = interpretarRespuesta(res, { modelo: params.model, conSchema, duracionMs: Date.now() - t0 });
-  if (registrar) registrarGasto(r, { tarea, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(usado?.apiKey, respaldoClave ?? {}), pedidoFable: fraseFableDe(params.model, opciones.pedidoFable) });
+  if (registrar) registrarGasto(r, { tarea, dir: dirLedger, ahora: ahora ?? new Date(), clave: etiquetaClave(usado?.apiKey, respaldoClave ?? {}), pedidoFable: fraseFableDe(params.model, opciones.pedidoFable), topeSaltado: !!pase?.permiso });
   return tolerar ? r : exigirRespuestaUtil(r, { tarea });
 }
 
@@ -966,9 +1121,9 @@ const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
  * si el lote no termino, tira ErrorApi 'lote' con `loteId` para recogerlo despues con recogerLote.
  * Los lotes no aceptan `fallbacks`: se arma sin.
  */
-export async function lote(cliente, pedidos, { tarea = '', esperarMs = 30000, timeoutMs = 55 * 60 * 1000, dirLedger = DIR_API, ahora } = {}) {
+export async function lote(cliente, pedidos, { tarea = '', esperarMs = 30000, timeoutMs = 55 * 60 * 1000, dirLedger = DIR_API, ahora, topeCiclo } = {}) {
   if (!pedidos.length) return { loteId: null, resultados: {} };
-  const creado = await crearLote(cliente, pedidos, { tarea });
+  const creado = await crearLote(cliente, pedidos, { tarea, dirLedger, ahora, topeCiclo });
   await esperarLote(cliente, creado.lote, { esperarMs, timeoutMs });
   const resultados = await recogerLote(cliente, creado.loteId, { tarea, conSchema: creado.conSchema, modelos: creado.modelos, pedidoFableDe: creado.pedidoFableDe, dirLedger, ahora });
   return { loteId: creado.loteId, resultados };
@@ -982,8 +1137,9 @@ export const RE_CUSTOM_ID = /^[A-Za-z0-9_-]{1,64}$/;
  * esperar, asi un proceso que se cae en el medio no deja un lote pagado que nadie puede recoger. `lote()` es esto +
  * esperarLote + recogerLote. Devuelve { loteId, lote (el objeto del SDK), conSchema, modelos } — los dos ultimos, por
  * id de pedido, son lo que recogerLote necesita para interpretar y cobrar cada respuesta.
+ * El freno del ciclo se mira ANTES de crear el lote (con lo ya gastado: el costo del lote se sabe recien al recogerlo).
  */
-export async function crearLote(cliente, pedidos, { tarea = '' } = {}) {
+export async function crearLote(cliente, pedidos, { tarea = '', dirLedger = DIR_API, ahora, topeCiclo, respaldoClave } = {}) {
   if (!pedidos.length) throw new ErrorApi('lote', 'un lote sin pedidos no se manda');
   const ids = new Set();
   const requests = pedidos.map((p) => {
@@ -993,6 +1149,7 @@ export async function crearLote(cliente, pedidos, { tarea = '' } = {}) {
     const { params } = armarParametros({ ...p, fallbacks: false });
     return { custom_id: String(p.id), params };
   });
+  frenarEnLaPuerta(cliente, { tarea: `${tarea || 'lote'}:lote`, modelo: requests[0].params.model, dirLedger, ahora, respaldoClave, topeCiclo });
   let b;
   try { b = await cliente.messages.batches.create({ requests }); } catch (e) {
     throw new ErrorApi('api', `no se pudo crear el lote${tarea ? ` (${tarea})` : ''}: ${e?.message ?? e}`, { causa: e });

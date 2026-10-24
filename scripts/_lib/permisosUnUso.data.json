@@ -9,7 +9,8 @@
     { "archivo": ".agent-opus-ok", "lo_lee": "agentes-guard (Opus y Fable descuentan como Sonnet)" },
     { "archivo": ".agent-cupo-ok", "lo_lee": "agentes-guard y el mod presupuesto-agentes (saltear el freno de la ventana de 5 h)" },
     { "archivo": ".agent-limit", "lo_lee": "agentes-guard (cambiar el presupuesto de puntos)" },
-    { "archivo": ".workflow-ok", "lo_lee": "agentes-guard (un Workflow, cuando estaba apagada)" }
+    { "archivo": ".workflow-ok", "lo_lee": "agentes-guard (un Workflow, cuando estaba apagada)" },
+    { "archivo": ".api-tope-ok", "lo_lee": "el freno del ciclo de la API (frenoDelCiclo de scripts/_lib/claudeApi.mjs: UNA llamada, o UNA corrida del agente, con el tope del ciclo de esa clave cruzado; lo consume escrituraSegura.consumirPermiso)" }
   ],
   "de_la_sesion": [
     { "archivo": ".encargo-libre", "por_que": "coordinador.md: un mensaje que NO es encargo (un gracias, un aviso) a otra sesion o subagente; lo decide la sesion, por diseño. El informe de CATA lo separa de los otros diez (17 casos, por diseño)." },
