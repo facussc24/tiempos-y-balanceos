@@ -407,6 +407,20 @@ def main():
     rc, out, _, _ = export(wn, pn, d, 5, "--hoy", "2026-11-02")
     check("E5", "sin tornillos declarados y un solido llamado tornillo: AVISO «¿que tornillo va aca?» y entrega",
           rc == 0 and "que tornillo va aca" in out and not vacia(d), out, "exit %s" % rc)
+    with open(j5, encoding="utf-8") as f:
+        otro = json.load(f)
+    otro["conjunto"] = "conj_v2.step"
+    jo = os.path.join(W, "e5_otro_conjunto.tornillos.json")
+    with open(jo, "w", encoding="utf-8") as f:
+        json.dump(otro, f)
+    d = os.path.join(we, "entrega_otro_conjunto_freno")
+    rc, out, _, _ = export(we, pe, d, 5, "--tornillos", jo, "--hoy", "2026-11-02")
+    check("E5", "json que habla de otro conjunto (renombrado): el 02/11 NO MEDIDO «[GATE tornillos]» y D vacia",
+          rc != 0 and "[GATE tornillos] NO MEDIDO" in out and "conj_v2.step" in out and vacia(d), out, "exit %s" % rc)
+    d = os.path.join(we, "entrega_otro_conjunto_aviso")
+    rc, out, _, _ = export(we, pe, d, 5, "--tornillos", jo, "--hoy", "2026-10-25")
+    check("E5", "el mismo json el 25/10: AVISO NO MEDIDO y entrega (nunca verde por silencio)", rc == 0 and
+          "AVISO [GATE tornillos] NO MEDIDO" in out and not vacia(d), out, "exit %s" % rc)
 
     print("\n| caso | resultado | evidencia |\n|---|---|---|")
     for caso, nombre, res, evid in filas:

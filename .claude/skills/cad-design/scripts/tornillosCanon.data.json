@@ -33,6 +33,8 @@
     "El inserto se declara en el json (tipo inserto, largo_mm del catalogo con su fuente); si ademas esta modelado como solido aparte, la pila lo cuenta como una pieza mas.",
     "La carga solo decide si la rosca puede ir en plastico (R5); no se calcula el arrancamiento de la rosca con el numero de carga_N.",
     "Los nombres de los solidos salen de las etiquetas del STEP; sin etiqueta el solido se llama solido_N (orden de lectura).",
-    "Con tuerca (tuerca_impresa o tuerca_acero), la tuerca tiene que estar modelada: el gate toma la ultima pieza de la pila como la tuerca. Si no esta en el STEP, la cuenta se hace contra la ultima pieza que haya (declarar pila en el json lo caza: la pila declarada no coincide)."
+    "Con tuerca (tuerca_impresa o tuerca_acero), la tuerca tiene que estar modelada: el gate toma la ultima pieza de la pila como la tuerca. Si no esta en el STEP, la cuenta se hace contra la ultima pieza que haya (declarar pila en el json lo caza: la pila declarada no coincide).",
+    "Entrega de varias piezas: sin campo conjunto en el json, el gate juzga cada pieza y la que no tiene el tornillo da NO MEDIDO (frena desde el 31/10). Con conjunto y ninguna pieza con ese nombre (se renombro el conjunto), NO MEDIDO: nunca verde por silencio.",
+    "El aviso «¿que tornillo va aca?» de la entrega sin tornillos declarados busca por NOMBRE del solido (tornillo, tuerca, inserto, M5...), no por geometria: un agujero roscado sin solido de tornillo no avisa."
   ]
 }

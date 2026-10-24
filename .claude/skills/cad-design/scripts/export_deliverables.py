@@ -326,8 +326,28 @@ def _tornillos_decl(w, base, arg):
     except (OSError, ValueError, AttributeError):
         conj = None                                   # lo dice el gate como NO MEDIDO
     if conj and os.path.basename(str(conj)) not in (base, os.path.splitext(base)[0]):
-        return None, None
+        return None, "%s, que habla de %s" % (fuente, conj)    # declarado, pero no para esta pieza
     return decl, fuente
+
+
+def _tornillos_sin_pieza(fuente, piezas, hoy_arg=None):
+    """La entrega declara tornillos y ninguna pieza es el conjunto del json (p. ej. se renombro el conjunto entre
+    versiones): NO MEDIDO, nunca verde por silencio. Aviso hasta el 30/10 y freno desde el 31/10."""
+    import gate_tornillos as gt
+    can = gt.canon()
+    try:
+        hoy = gt.hoy_tornillos(hoy_arg)
+    except (gt.NoMedido, ValueError) as e:
+        raise SystemExit("[GATE tornillos] %s" % e)
+    motivo = ("la entrega declara tornillos (%s) y ese conjunto no esta entre las piezas que se entregan (%s)"
+              % (fuente, ", ".join(os.path.basename(x) for x in piezas)))
+    modo = gt.modo_tornillos(False, 0, hoy, can["aviso_hasta"])
+    if modo == "freno":
+        raise SystemExit("[GATE tornillos] NO MEDIDO: %s. Desde el %s esto frena la entrega.\n"
+                         "Corregir el campo conjunto del json (o --skip-gate tornillos --reason '...')"
+                         % (motivo, gt.dia_siguiente(can["aviso_hasta"])))
+    print("  AVISO [GATE tornillos] NO MEDIDO: %s\n    freno desde %s" % (motivo, gt.dia_siguiente(can["aviso_hasta"])))
+    return {"modo": modo, "medido": False, "motivo": motivo, "hoy": hoy.isoformat(), "tornillos": []}
 
 
 def _aviso_sin_tornillos(piece, base):
@@ -453,6 +473,7 @@ def main():
         raise SystemExit("--hoy solo vale con CAD_GATE_TEST=1 (fecha simulada de los tests)")
     cantos_por_pieza = {}
     tornillos_por_pieza = {}
+    tornillos_sin_pieza = None
 
     declarados = {}
     for d in args.ensamble:
@@ -593,11 +614,17 @@ def main():
 
         # GATE TORNILLOS (3e, 23/10/2026): tambien antes de crear la carpeta destino.
         if "tornillos" not in args.skip_gate:
-            decl, _fuente = _tornillos_decl(w, base, args.tornillos)
+            decl, fuente_t = _tornillos_decl(w, base, args.tornillos)
             if decl:
                 tornillos_por_pieza[base] = gate_tornillos(w, piece, base, decl, args.hoy)
+            elif fuente_t:
+                tornillos_sin_pieza = fuente_t
             else:
                 _aviso_sin_tornillos(piece, base)
+
+    # tornillos declarados que ninguna pieza tomo: NO MEDIDO (antes de crear la carpeta destino)
+    if "tornillos" not in args.skip_gate and tornillos_sin_pieza and not tornillos_por_pieza:
+        tornillos_por_pieza["(ninguna pieza)"] = _tornillos_sin_pieza(tornillos_sin_pieza, args.pieces, args.hoy)
 
     # ---- export + entrega ----
     os.makedirs(args.deliver, exist_ok=True)
