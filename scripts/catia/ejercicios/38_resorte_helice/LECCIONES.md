@@ -26,3 +26,7 @@ Para la centralización (LECCIONES_CATIA.md / catia.md):
    sin tocar; el juez compara cada uno contra su fórmula.
 4. **El ángulo exacto, no el redondeado**: con cos(4,55°) la cuenta da 7 895,682 y con atan(P / (2πR)) = 4,54987°, 7 895,684.
    El juez usa el exacto.
+
+**24/10, auditor de la tanda de CATA (Opus):** el juez no miraba la topología del STEP de CATIA. Con una cara suelta agregada al STEP
+seguía dando verde (le pasó de verdad al 54 en 54_r1 y al 31 en 31_final3). Desde b12fc4d1 exige 1 sólido, 1 cáscara y 0
+caras sueltas (el control del 24 y del 49), con su caso rojo en la prueba; la corrida real con el código nuevo da verde.

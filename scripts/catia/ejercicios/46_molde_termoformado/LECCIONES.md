@@ -32,3 +32,7 @@ Para la centralización (LECCIONES_CATIA.md / catia.md):
    (relación × 0,100). El `registro.json` dice `publicado_sin_desmoldeo.relacion = 1.733` porque la copia lo hereda tal
    cual de la práctica: lo publicado es 1,73. El comentario de `catia.py` pasó a `r"""` (las barras de la ruta daban
    «invalid escape sequence» en Python 3.12; lo mismo en el 44).
+
+**24/10, auditor de la tanda de CATA (Opus):** el juez no miraba la topología del STEP de CATIA. Con una cara suelta agregada al STEP
+seguía dando verde (le pasó de verdad al 54 en 54_r1 y al 31 en 31_final3). Desde b12fc4d1 exige 1 sólido, 1 cáscara y 0
+caras sueltas (el control del 24 y del 49), con su caso rojo en la prueba; la corrida real con el código nuevo da verde.

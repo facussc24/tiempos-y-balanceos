@@ -33,3 +33,7 @@ Para la centralización (LECCIONES_CATIA.md / catia.md):
 5. **La masa no ve un agujero corrido ni un perfil espejado** (revisor Sonnet): el juez compara además el centro de CATIA
    con el del gemelo a TOL_CDG por eje (etapa 1: 44,622 · 33,308 · 21,5 contra 44,6224 · 33,3076 · 21,5). El agujero de
    14 corrido 3 mm en y mueve el centro 0,17 mm. Los moldes 22 y 24 juzgan solo masa y volumen: para la centralización.
+
+**24/10, auditor de la tanda de CATA (Opus):** el juez no miraba la topología del STEP de CATIA. Con una cara suelta agregada al STEP
+seguía dando verde (le pasó de verdad al 54 en 54_r1 y al 31 en 31_final3). Desde b12fc4d1 exige 1 sólido, 1 cáscara y 0
+caras sueltas (el control del 24 y del 49), con su caso rojo en la prueba; la corrida real con el código nuevo da verde.

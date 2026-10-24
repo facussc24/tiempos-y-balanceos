@@ -24,3 +24,7 @@ Para la centralización (LECCIONES_CATIA.md / catia.md):
 4. El gemelo de build123d difiere en décimas de mm³ en las etapas 1 y 3 (0,025 y 0,100) y en nada en la 2: es lo que
    cada programa hace distinto en algún encuentro de redondeos o chaflanes; está muy por debajo de 0,5 mm³ y de lo que
    mueve la masa (0,1 mm³ = 0,0008 g).
+
+**24/10, auditor de la tanda de CATA (Opus):** el juez no miraba la topología del STEP de CATIA. Con una cara suelta agregada al STEP
+seguía dando verde (le pasó de verdad al 54 en 54_r1 y al 31 en 31_final3). Desde b12fc4d1 exige 1 sólido, 1 cáscara y 0
+caras sueltas (el control del 24 y del 49), con su caso rojo en la prueba; la corrida real con el código nuevo da verde.

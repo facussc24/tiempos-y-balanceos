@@ -24,3 +24,7 @@ Para la centralización (LECCIONES_CATIA.md / catia.md):
    prueba las compara; el R4 de la esquina del hueco es un literal en el script y acá también (`R_ESQUINA_HUECO`).
 4. El juez es el del 48 (compara.py del 32 con `revisar_comparacion`, más el centro del STEP contra el de la referencia);
    `comparar` y `_max_eje` se toman de su `catia.py`.
+
+**24/10, auditor de la tanda de CATA (Opus):** el juez no miraba la topología del STEP de CATIA. Con una cara suelta agregada al STEP
+seguía dando verde (le pasó de verdad al 54 en 54_r1 y al 31 en 31_final3). Desde b12fc4d1 exige 1 sólido, 1 cáscara y 0
+caras sueltas (el control del 24 y del 49), con su caso rojo en la prueba; la corrida real con el código nuevo da verde.

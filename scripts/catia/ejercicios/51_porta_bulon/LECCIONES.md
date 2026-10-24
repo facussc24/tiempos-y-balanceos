@@ -45,3 +45,7 @@ Para la centralización (LECCIONES_CATIA.md / catia.md):
 6. **Los gemelos se juzgan como sólidos**: la malla tiene que estar cerrada y orientada; una malla rota queda «lejos» de
    todo y pasaría por un mal_*.py que el control separa (revisor del 51). El mal_2 (tapita) el banco no lo cuenta
    (`sin_respuesta`): el 51 le pide separarse porque es otro sólido.
+
+**24/10, auditor de la tanda de CATA (Opus):** el juez no miraba la topología del STEP de CATIA. Con una cara suelta agregada al STEP
+seguía dando verde (le pasó de verdad al 54 en 54_r1 y al 31 en 31_final3). Desde b12fc4d1 exige 1 sólido, 1 cáscara y 0
+caras sueltas (el control del 24 y del 49), con su caso rojo en la prueba; la corrida real con el código nuevo da verde.

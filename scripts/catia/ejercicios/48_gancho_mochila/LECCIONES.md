@@ -30,3 +30,7 @@ Para la centralización (LECCIONES_CATIA.md / catia.md):
    `construir_gancho()` en un punto adentro de cada chaflán. Y un límite del paquete del obrero: el 48 y el 50 cargan el
    `catia.py` del 32 (por `revisar_comparacion`), que importa `practica_en_juez.py`, y `armar_obrero.py` no lo copia: desde
    el paquete el cierre daría rojo con la pieza bien (las corridas de hoy fueron desde el repo). Avisado a la principal.
+
+**24/10, auditor de la tanda de CATA (Opus):** el juez no miraba la topología del STEP de CATIA. Con una cara suelta agregada al STEP
+seguía dando verde (le pasó de verdad al 54 en 54_r1 y al 31 en 31_final3). Desde b12fc4d1 exige 1 sólido, 1 cáscara y 0
+caras sueltas (el control del 24 y del 49), con su caso rojo en la prueba; la corrida real con el código nuevo da verde.
