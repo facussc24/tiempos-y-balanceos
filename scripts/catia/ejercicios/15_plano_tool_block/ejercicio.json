@@ -1,0 +1,16 @@
+{
+ "usa_catia": true,
+ "descripcion": "Preguntas 1 y 2 del examen de muestra CATIA V5 Associate (planos): la q3 parametrica del ejercicio 11 en un plano A3 con frente, costado, isometrica, una vista de recorte con perfil (pregunta 1) y una vista de arranque por el eje del agujero (pregunta 2), cotas generadas desde el croquis, PDF y PNG; cruce de la q3 con build123d",
+ "banco": "13_examen_catia_associate",
+ "respuesta_conocida": {
+  "que": "el tipo de vista de las preguntas 1 y 2 (lamina 12) y su metodo en CATIA por programa",
+  "valor": {"pregunta_1": "b) Clipping View Profile -> DrawingViewGenerativeBehavior.DefinePolygonalClippingView",
+            "pregunta_2": "c) Breakout View -> DrawingViewGenerativeBehavior.DefineBreakout"},
+  "fuente": "Lamina 03 (preguntas) y lamina 12 (respuestas) del «CATIA V5 Associate - Part Design (PDG) Sample Exam», Dassault Systemes, V2-2015/03/30 (carpeta en la nube y sha256 en evals/banco3d/ejercicios/13_examen_catia_associate/tarea.yaml); los metodos, de la ayuda de automatizacion de CATIA V5 (interface DrawingViewGenerativeBehavior)"
+ },
+ "cruces": {
+  "volumen_y_cdg_build123d": "juez_comun: la q3 contra bien.py del 13",
+  "cotas": "las que GenerateDimensions trae del croquis del 11 (radios, angulo en radianes, largo C); las distancias a los ejes del croquis no se generan (medido)",
+  "visual": "el PNG del plano se mira: el recorte y el arranque tienen que verse como en la lamina 03"
+ }
+}
