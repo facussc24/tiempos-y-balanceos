@@ -89,6 +89,21 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
 - **La masa sale de CATIA con la densidad del papel**: un material del catálogo con su `Density` pasada a la del
   examen (18, CATA: Steel a 7 700, densidad implícita 7 700,000 en las tres etapas).
 
+- **El orden de las aristas que devuelve la topología NO es fijo entre corridas** (24, CATA): la «primera» arista que
+  cumple una posición fue otra en dos corridas (dos aristas en el mismo lugar: la del sólido y una recta del croquis).
+  Se prueba cada candidata y se controla el cambio de volumen contra la cuenta del redondeo ((1 − π/4)·r²·L).
+- **Un molde para las piezas de afuera ya resueltas** (24, CATA: `portar_ej.py` + `catia.py` con su CFG; principal:
+  `scripts/catia/practica_en_juez.py` con el ej copiado SIN cambios): tres de cuatro salieron al primer intento.
+- **El catálogo de la B21 de CATA no trae ABS**: Steel con su `Density` a 1 020 (el material sigue LLAMÁNDOSE Steel en el
+  árbol: si la pieza se entrega, renombrarlo o decirlo) (22, CATA).
+- **Un gemelo al que le falta un detalle se cruza ANTES de ese detalle** (22, CATA: el gemelo no lleva el R1 del asa;
+  se guarda el volumen de CATIA justo antes del R1).
+- **Dos módulos con el mismo nombre en carpetas distintas** (`gemelo_b123d.py`, `croquis.py`): en un mismo proceso Python
+  reusa el primero que cargó. Las pruebas cargan cada uno por ruta y con nombre propio; cada ejercicio corre en su
+  proceso (24, CATA).
+- **Pasar por STEP mueve el volumen ~4e-6 en una pieza grande con arcos** (29, principal: el gemelo de build123d da
+  228 696,0 en memoria y 228 695,116 al releer su STEP): el cruce de volumen va a 0,5 mm³ o 1e-5 del volumen.
+
 ## DMU Kinematics (17, principal)
 
 - **`NbDof` cuenta el grado libre que mueve el comando**: un mecanismo de una revolución y un comando da «1;1;1» y se
