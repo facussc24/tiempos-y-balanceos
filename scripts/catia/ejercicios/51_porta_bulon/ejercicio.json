@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "El porta-bulon M6 de la plantilla de perforado del Insert (ejercicio 01 del banco 3D) rehecho EN CATIA con las mismas operaciones, en el mismo orden, que porta_bulon() del generador de la nube: cilindro D22 x 3,8 + teton 13,6 x 3,9, alojamiento hexagonal 10,4 entre caras x 4,4 desde abajo, puentes escalonados de 0,2 (ranura y cuadrado), agujero D6,6, chaflan 0,5 en las cinco aristas de arriba y boca del hexagono 11,2 x 0,4; el STEP de CATIA contra el que escribe el generador con compara.py del 32, y el bien.py y los mal_*.py del banco como gemelos medidos como malla",
+ "banco": "01_porta_bulon",
+ "respuesta_conocida": {
+  "que": "el solido que escribe generador/porta_bulon.py de la v3 de la plantilla de perforado (nube, 5. 3D\\VWA\\PATAGONIA - PLANTILLA PERFORADO INSERT\\v3 - 2026-10-21 - alineada a la costura (concepto)), sha256 7b76456a...fe8d; su STL es el del bien.py del banco byte por byte (sha256 220da179...ab812)",
+  "valor": {"volumen_mm3": 1612.483, "cdg_z_mm": 3.2075, "sobra_mm3": 0, "falta_mm3": 0},
+  "unidad": "mm3",
+  "tolerancia": {"sobra_falta_mm3": 1.0, "distancia_mm": 0.01, "cdg_mm": 0.01, "gemelo_bien_mm3": 1.0, "gemelo_mal_mm3_mas_de": 5.0},
+  "fuente": "el generador de la nube corrido en el post-proceso con .venv-cad (con_bien=False: el bien.py copia solo el STL y la malla da 1 611,928, 0,555 menos que el solido exacto); criterio del ejercicio 32 (revisar_comparacion de 32_virolador_v16/catia.py); acordado con la principal en el PEDIDO 30 (24/10/2026)"
+ }
+}
