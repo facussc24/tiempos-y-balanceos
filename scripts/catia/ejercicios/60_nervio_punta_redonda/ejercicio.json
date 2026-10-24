@@ -1,0 +1,24 @@
+{
+ "usa_catia": true,
+ "descripcion": "Redondeo tritangente: nervio 100 x 6 x 40 (X, Y, Z) desde (0,0,0) con la punta redonda por AddNewSolidTritangentFillet (caras y = 0 e y = 6, se va la de arriba); volumen y centro contra la cuenta, el STEP 1/1/0, un solo eje de R3 en X por (y 3, z 37) y la FORMA contra la caja 100 x 6 x 37 unida a un cilindro R3, sin redondeo (gemelo_nervio.py), con compara.py",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "volumen y centro del nervio con la punta redonda; eje de la punta",
+  "valor": {
+   "volumen_mm3": 23613.717,
+   "cdg_mm": [
+    50.0,
+    3.0,
+    19.6838
+   ],
+   "eje_r3": [
+    3.0,
+    37.0,
+    "X"
+   ]
+  },
+  "unidad": "mm3 / mm",
+  "tolerancia": "tol_volumen (0,5 mm3); centro 0,01 mm; forma: sobra y falta <= 1 mm3, distancias exactas <= 0,01 mm",
+  "fuente": "cuenta: el perfil es un rectangulo 6 x 37 mas un semicirculo R3 (centro a 4R/(3 pi) arriba de z 37): 100 (6 37 + pi 9/2) = 23 613,717 mm3"
+ }
+}

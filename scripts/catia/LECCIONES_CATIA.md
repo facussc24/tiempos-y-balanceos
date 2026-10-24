@@ -240,6 +240,9 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
   con malla fina, 0,0001). `compara.py` ahora lleva cada punto de malla a más de 0,005 a su cáscara y lo mide contra la
   CÁSCARA del otro (`dist_max_exacta_*`). Contra el SÓLIDO no: un punto adentro del otro da 0 y un resalto de 0,05 pasaba
   (primer intento, cazado por el revisor con gemelos de resaltos y muescas).
+- **«Distancia exacta 0,0» quiere decir «ningún punto de malla pasó 0,005»**, no una medición de cero (revisor del 60):
+  `compara.py` recalcula exacto solo los puntos con distancia de malla mayor a 0,005; un desvío real de 0,008 en una
+  punta redonda dio 0,0. Lo que está por debajo de 0,005 lo cazan otros controles (en el 60, los ejes del R3).
 - **Las cotas derivadas se calculan como las calcula el script** (`derivadas()` de cada `build_gancho*.py`) y la prueba
   las compara con las de build123d (48, 50): si el script cambia, CATIA no queda desincronizada en silencio.
 - **Cajas a lo largo de un mismo eje son UN perfil extruido** (50, CATA): el gancho de Leo en CATIA es un croquis de 16
