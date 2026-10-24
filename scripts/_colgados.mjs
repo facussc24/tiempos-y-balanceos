@@ -13,9 +13,12 @@
  * Sale con 0 si no hay nada quieto, con 1 si hay algo para mirar, con 2 ante un argumento que no conoce.
  */
 import os from 'node:os';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { colgados } from './_lib/colgados.mjs';
 
+const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const CON_VALOR = ['--minutos', '--horas', '--a', '--raiz'];
 const args = process.argv.slice(2);
 const op = {};
@@ -33,6 +36,15 @@ if (op['--a']) {
 }
 const raiz = op['--raiz'] || path.join(os.homedir(), '.claude', 'projects');
 const lista = colgados({ raiz, ahoraMs: hastaMs ?? Date.now(), minutos: num(op['--minutos'], 10), horas: num(op['--horas'], 3), hastaMs });
+// Pedidos de la otra PC (23/10/2026, Fak: «la notebook de Calidad te mando mensajes pero hace rato no le respondes, ¿no deberias
+// chequear cada tanto?»): el hook pedidos-pendientes solo corre al arrancar la sesion; este script corre en cada despertar del
+// latido, asi que acá se repite su renglon. Misma logica (pedidosPendientes.mjs --hook); si node falla, no frena.
+try {
+  const ped = spawnSync(process.execPath, [path.join(AQUI, '_lib', 'pedidosPendientes.mjs'), '--hook'], { encoding: 'utf8', input: '{}', timeout: 20000 });
+  const texto = (ped.stdout || '').trim();
+  if (texto) console.log(texto);
+} catch { /* un aviso mas: nunca frena el chequeo de colgados */ }
+
 if (!lista.length) { console.log(`[COLGADOS] nada quieto${hastaMs ? ` a las ${op['--a']}` : ''}: ninguna conversación ni agente lleva ${num(op['--minutos'], 10)} minutos sin escribir a mitad de un turno.`); process.exit(0); }
 console.log(`[COLGADOS] ${lista.length} para MIRAR ahora (no esperar):`);
 for (const c of lista) console.log(`  ${c.texto}`);
