@@ -1,13 +1,10 @@
 ---
 name: superficie-vinilo-3d
 description: >
-  Medir sobre el 3D cuanta superficie de una pieza va tapizada (vinilo, TPO, tela): lo que
-  queda a la vista, el borde que se dobla y la pieza de material entera; cruzarlo con el patron
-  de corte, la lista del cliente y el consumo del arb; y entregarlo en un PowerPoint con su
-  evidencia. Usar cuando pidan "la
-  superficie donde va el vinilo", "cuantos m2 tiene la pieza", "cuanto material lleva", "el
-  consumo actual del proceso con una imagen", o cuando haya que demostrar un consumo de
-  tapizado con el 3D.
+  Medir sobre el 3D cuanta superficie de una pieza va tapizada (vinilo, TPO, tela), cruzarla con
+  el patron de corte, la lista del cliente y el arb, y demostrarlo en un PowerPoint. Usar cuando
+  pidan «la superficie donde va el vinilo», «cuantos m2 tiene la pieza», «cuanto material lleva»,
+  «el consumo actual del proceso con una imagen», o demostrar un consumo de tapizado con el 3D.
 ---
 
 # superficie-vinilo-3d — cuanto tapizado lleva una pieza, medido y demostrado

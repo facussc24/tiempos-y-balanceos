@@ -1,6 +1,6 @@
 ---
 name: lanzar-sesion-hija
-description: Lanzar una sesión nueva o hija de Claude Code desde esta sesión, sin que Fak pegue un prompt ni apruebe un cartel — desde el 16/10/2026 con `mcp__ccd_session__start_session` (la hija anidada debajo del chat, en Opus y en bypass, medido), encargo con `_encargo.mjs --lanzada` como prompt, y el control `_hijaEstado.mjs` que mide que arrancó bien; la tarea manual + `run_scheduled_task` queda como respaldo. Usar cuando haya que abrir otra sesión, pasarle trabajo a una sesión nueva, continuar en un chat nuevo al llegar al límite de contexto, repartir la cola entre sesiones, orquestar varias sesiones, proponer una tarea aparte como ficha (`own_initiative`), o cuando Fak pregunte si puedo abrir una sesión («¿no podés vos mismo desplegar una sesión?», 09/10; «testeá si podés abrir una sesión hija», 10/10/2026).
+description: Abrir una sesión nueva o hija sin que Fak pegue un prompt. Usar para pasarle trabajo a otra sesión, seguir en un chat nuevo al límite de contexto, repartir la cola, orquestar sesiones o proponer una tarea aparte como ficha, o si Fak pregunta «¿no podés vos mismo desplegar una sesión?» o «testeá si podés abrir una sesión hija».
 ---
 
 # Lanzar una sesión hija desde esta sesión

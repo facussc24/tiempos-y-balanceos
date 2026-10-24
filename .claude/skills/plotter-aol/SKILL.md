@@ -1,6 +1,6 @@
 ---
 name: plotter-aol
-description: "Plotter de corte AOL («el plotter de corte», «el de cuchilla», «el succionador», software «Xiao»): la mesa negra con vacio y cuchilla oscilante junto a las mesas de corte, donde se cortan los Insert — prender, origen, cuchilla y profundidad, DXF en Xiao, herramientas SP, agujeros chicos, acomodar piezas en columnas, mantenimiento y que hacer si corta mal. Usar cuando Fak hable de ese plotter, de cortar Insert u otras piezas finas ahi, o pregunte como se usa o por que corta mal. El DXF lo prepara `patrones-corte-plotter`; el HTV2A es otro plotter."
+description: "Plotter de corte AOL («el plotter de corte», «el de cuchilla», «el succionador», software «Xiao»): la mesa negra con vacio y cuchilla oscilante junto a las mesas de corte, donde se cortan los Insert — prender, origen, cuchilla y profundidad, DXF en Xiao, herramientas SP, agujeros chicos, acomodar piezas en columnas, mantenimiento y que hacer si corta mal. Usar cuando Fak hable de ese plotter, de cortar Insert u otras piezas finas ahi, o pregunte como se usa o por que corta mal. NO es para armar, girar o partir el DXF (eso es la skill patrones-corte-plotter; para cortar un DXF nuevo van las dos), ni para el HTV2A, que es otro plotter."
 ---
 
 # Plotter AOL — de prender la maquina a sacar las piezas
