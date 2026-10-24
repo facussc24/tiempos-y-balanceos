@@ -551,3 +551,11 @@ prueba sin CATIA; el detalle de cada lección, con su medición, en **`scripts/c
   regenera. Probarlo afuera con el rango de la jacobiana, no con un conteo de grados de libertad.
 - `Measurable.GetPlane` por VBScript da la posición de un plano antes de dibujar en él; `AddNewPlaneOffset(PlaneYZ, x)`
   queda en +x (CATA, 08). La densidad de un material del catálogo se cambia con su parámetro `...\Density` (08).
+- **Knowledgeware**: «sin redondeo» es apagar la operación con su `Activity` atado a un booleano propio, y el control lo
+  nombra; con `Inactivate` a mano el control que mira solo el radio queda verde con la pieza mal (14).
+- **Ensamble**: una pieza que no es de revolución necesita una tercera restricción, y la ORIENTACIÓN del paralelismo decide
+  la pose (16). `Position.GetComponents` = X, Y, Z de la pieza y su origen (16, medido).
+- **DMU**: `NbDof` cuenta el grado que mueve el comando («1;1;1» se simula); el signo del comando se mide en la primera
+  pose; los choques se miden con OpenCASCADE sobre los STEP de CATIA movidos con la `Position` (17).
+- **Planos**: `DefinePolygonalClippingView` / `DefineBreakout` (preguntas 1 y 2 del examen); que no tiren error no prueba
+  nada: se mide el PDF (15). `GenerateDimensions` no trae distancias a los ejes del croquis; un ángulo viene en radianes.

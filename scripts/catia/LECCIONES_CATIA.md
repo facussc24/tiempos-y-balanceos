@@ -86,9 +86,10 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
 
 - **`NbDof` cuenta el grado libre que mueve el comando**: un mecanismo de una revolución y un comando da «1;1;1» y se
   simula (la biela del ej49 dio «1;4;1»). Esperar 0 fue un error mío (primera corrida, 10:15).
-- **El comando de ángulo de CATIA gira al revés de la convención del banco** (el giro que levanta la palanca): el signo
-  se mide en la primera pose y queda en `salida.json`; con él la punta cayó a 0,000 mm de la trigonometría en 0, 35, 50 y
-  60°.
+- **El signo del comando sale de la regla de la mano derecha, no de un capricho de CATIA** (revisor del 17): el «Eje» de
+  las piezas va de y −40 a +40 (hacia +Y) y el banco gira alrededor de −Y, así que el comando que levanta la palanca es
+  el negativo. Se mide en la primera pose NO nula y se EXIGE −1 (otro signo con la punta bien sería otro mecanismo); con
+  él la punta cayó a 0,000 mm de la trigonometría en 0, 35, 50 y 60°. `NbDof` se anota y no frena (sin doc).
 - **Choques y luces de un mecanismo: OpenCASCADE sobre los STEP de CATIA movidos con la `Position` del mecanismo**
   (`medir_choques.py`). Con build123d 0.11 un `Location` no se arma desde una `Matrix`: va por `gp_Trsf.SetValues` +
   `TopLoc_Location`. La luz se mide contra lo mismo que mide el banco: la del 06 no incluye el soporte del eje (a 2 mm

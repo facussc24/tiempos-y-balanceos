@@ -109,7 +109,7 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 14 | hecho (CATA) | CATA, R21, 24/10/2026 09:59 (`14_r2`, código del commit): ok true; Radio, Redondeado (Activity de los redondeos) y Luz como parámetros propios que mueven la geometría; controles «Radio >= 1.5mm and Redondeado == true» y «Luz >= 0.1mm and Luz <= 0.4mm» verdes con la buena y rojos con los cuatro mutantes; las seis variantes con el volumen del banco a 0,000 mm³ | (este commit) |
 | 15 | hecho | PC principal, R21, 24/10 10:25: las dos vistas del examen (recorte y arranque) medidas en el PDF, cotas legibles, q3 = build123d; revisor Fable: el ok de las vistas era «no tiro error» (bug real) y la cota de 10° cruzaba la hoja: ahora se mide el PDF y la cota se borra | (este commit) |
 | 16 | hecho (CATA) | CATA, R21, 24/10/2026 10:09 (`16_r2`, código del commit): ok true; soporte y palanca dibujados en su sistema y llevados a la pose por 7 restricciones (estado 0): (0; −21; 10) y (0; 0; 80), rotación exacta; conjunto 478 517,325 mm³ y cdg = build123d; gemelo en la misma corrida: con el paralelo en orientación opuesta la barra va a −X | (este commit) |
-| 17 | pendiente | | |
+| 17 | hecho | PC principal, R21, 24/10 10:36: la pose la da CATIA (revolución + comando, punta exacta en 0, 35, 50 y 60°) y el choque OpenCASCADE sobre los STEP de CATIA (no AddNewIntersect); 12 de 12 chequeos del 06; revisor Fable: sin bugs, robustez aplicada (signo −1 exigido, NbDof solo se anota, la resta del soporte se controla) | (este commit) |
 | 18 | pendiente | | |
 | 19 | pendiente | | |
 | 22 | pendiente | | |
