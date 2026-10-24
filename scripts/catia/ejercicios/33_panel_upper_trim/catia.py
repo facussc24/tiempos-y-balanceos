@@ -5,9 +5,9 @@ MISMO STEP. No hay papel: la respuesta es la medicion del STEP real con otro mot
 
 El STEP es la copia del panel llevada al marco del virolador que usaron el ej15, el ej16 y el ej24 de la practica del 19/10
 (v14_choque/panel_marco_local.step, 11,2 MB, sha256 fb74d977...4e1e): pieza del cliente, NO entra al repo. Se lee de la
-variable CATIA_PANEL_UPPER_TRIM o de la carpeta «para CATA - practica 19-10» de la nube de Ingenieria, se verifica el
-sha256 y se abre una COPIA en la carpeta de trabajo (el original no se toca; su cabecera ya esta en el orden de ISO
-10303-21, la que CATIA R21 lee).
+variable CATIA_PANEL_UPPER_TRIM o de la carpeta «para CATA - practica 19-10» de la nube de Ingenieria, se copia a la
+carpeta de trabajo, se verifica el sha256 de la COPIA y se abre esa (el original no se toca; su cabecera ya esta en el
+orden de ISO 10303-21, la que CATIA R21 lee).
 
 En CATIA: Documents.Open de la copia (el objeto que devuelve no expone Part: se toma ActiveDocument, catia.md), volumen,
 area y centro de gravedad del cuerpo, y el CATPart + STEP + captura (cerrar_parte). El juez (cerrar_con_medicion):
@@ -57,12 +57,12 @@ def construir(cb, c, reg, salida):
     salida["panel"] = {"origen": origen, "sha256_esperado": SHA256}
 
     def abrir():
-        h = sha256(origen)
+        copia = os.path.join(reg.carpeta, "panel_copia.step")
+        shutil.copyfile(origen, copia)
+        h = sha256(copia)               # se verifica la COPIA, que es lo que abre CATIA y mide el juez (revisor del 35)
         salida["panel"]["sha256"] = h
         if h != SHA256:
             raise RuntimeError(f"el STEP del panel no es el esperado (sha256 {h})")
-        copia = os.path.join(reg.carpeta, "panel_copia.step")
-        shutil.copyfile(origen, copia)
         c.Documents.Open(copia)
         doc = c.ActiveDocument                      # Documents.Open no expone Part a pywin32 (catia.md)
         part = doc.Part

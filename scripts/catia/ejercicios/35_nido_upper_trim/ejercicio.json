@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "Nido que copia el panel del CLIENTE del Upper Trim: bloque 170 x 58 x 19 (de z -25 a -6) menos el cuerpo del panel pegado sin vinculo (AddNewRemove), como el ej24_nido_cliente.py de la practica del 19/10; panel = la copia verificada del ejercicio 33 (sha256, no entra al repo); control choque_exacto.py de la skill cad-design (OpenCASCADE) sobre el STEP que exporta CATIA y el del panel",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "veredicto de choque_exacto.py entre el nido y el panel: interseccion exacta 0 (fuzz 1e-4, 1e-3 y 1e-2) y distancia minima 0 (contacto)",
+  "valor": "toca (luz 0)",
+  "unidad": null,
+  "tolerancia": "1e-4 mm3 de interseccion y 1e-4 mm de distancia (TOL de choque_exacto.py)",
+  "fuente": "fila 35 de COLA_CATIA.md (interseccion 0 y distancia ~0 con OpenCASCADE) y la corrida del ej24 en la PC principal el 19/10/2026 (ej24_nido_cliente_registro.json, PEDIDO 26): bloque 187 340, nido 171 459,136 mm3, interseccion 0 / 0 / 0 y distancia 0; ese registro es de una version de choque_exacto.py sin el campo veredicto: «toca (luz 0)» es lo que da la regla de la version del repo con esos mismos numeros"
+ }
+}

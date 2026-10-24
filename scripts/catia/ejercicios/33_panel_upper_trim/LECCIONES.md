@@ -8,7 +8,8 @@ Corridas reales: CATIA R21 (B21, 32 bits) de CATA con el Python 3.12.10 del sist
   11:55 por la prueba del juez nuevo sobre esa carpeta: lo del primer juez no está en disco.
 - Después del consejo del asesor (el juez no miraba la topología del STEP exportado y medía el original de la nube en vez
   de la copia) y del revisor Fable (sin graves; la afirmación del punto 3 no estaba probada), `33_final` con el código que
-  se sube: los mismos números (`33_final` 11:56 y `33_final2` 12:10, después del arreglo del revisor; 26,2 y 29,4 s de
+  se sube: los mismos números (`33_final` 11:56, `33_final2` 12:10 después del arreglo del revisor y `33_final3` 12:16,
+  con el sha256 calculado sobre la copia que abre CATIA y no sobre el original, del revisor del 35; 26,2 y 29,4 s de
   CATIA; con el juez, unos 50 s de reloj).
 
 | Qué | Volumen (mm³) | Área (mm²) | Centro (mm) |
