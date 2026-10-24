@@ -150,6 +150,12 @@ def main():
     rc, out, _, _ = run(["-c", codigo])
     check("F0", "gate forzado a dejar pasar todo -> el autotest lo caza y sale con 3",
           rc == 3 and "AUTOTEST FALLA" in out, out, "exit %s" % rc)
+    codigo = ("import sys; sys.path.insert(0, %r); import gate_fase as gf; "
+              "gf.evaluar_pasar = lambda *a, **k: {'ok': True, 'motivos': [], 'reabiertas': [], 'firma': None, "
+              "'step': None}; sys.exit(gf.main(['pasar', '--fase', '3', '--workdir', %r]))" % (SCR, W))
+    rc, out, _, _ = run(["-c", codigo])
+    check("F0", "el autotest corre antes de cada pasar: con el gate forzado a dejar pasar todo, pasar --fase 3 sale "
+          "con 3 y no juzga", rc == 3 and "AUTOTEST FALLA" in out and "No se juzga" in out, out, "exit %s" % rc)
 
     # ------------------------------------------------------------------------------------------------------------
     print("\nF1 verde: el 06 bien con barrido verde")

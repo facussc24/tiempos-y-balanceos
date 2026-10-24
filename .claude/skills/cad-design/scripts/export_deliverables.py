@@ -451,6 +451,9 @@ def gate_fases(w, pieces, hoy_arg=None):
         return {"modo": "sin_fases", "medido": False, "hoy": hoy.isoformat()}
     ultima = gf._ultima_fase(can)
     try:
+        prob = gf.autotest()          # par BIEN/MAL propio antes de juzgar
+        if prob:
+            raise gf.NoMedido("el autotest del gate de fases fallo (%s): no se juzga" % "; ".join(prob))
         r = gf.evaluar_pasar(w, ultima, piezas=pieces)
         ok, motivos, firma, no_medido = r["ok"], r["motivos"], r["firma"], None
     except gf.NoMedido as e:

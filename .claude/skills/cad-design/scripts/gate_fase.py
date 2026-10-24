@@ -601,6 +601,15 @@ def main(argv=None):
         return 3 if prob else 0
     if not a.op or not a.workdir:
         return no_medido("falta el comando (iniciar, cerrar, pasar, estado) o --workdir")
+    if a.op in ("cerrar", "pasar"):
+        # par BIEN/MAL propio antes de juzgar (como barrido y cantos): un gate que no separa no juzga
+        prob = autotest()
+        if prob:
+            res.update(veredicto="no_medido", modo="autotest", motivo="; ".join(prob))
+            print("[AUTOTEST FALLA]")
+            for x in prob:
+                print("  - " + x)
+            return cerrar_salida(3, "No se juzga ningun workdir con un gate de fases que no probo distinguir.")
     w = os.path.abspath(a.workdir)
     res["workdir"] = w
     if a.op == "iniciar":

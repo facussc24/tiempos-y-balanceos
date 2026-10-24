@@ -57,6 +57,7 @@
     "si Fak lo asume: --acepto-fase \"<frase de Fak, 10 caracteres o mas>\" (queda en fases.json con fecha, fase y firma del STEP; vale para esa fase y esa firma sola)"
   ],
   "no_cubierto": [
+    "El freno corre solo en workdirs con fases.json: nada manda correr gate_fase.py iniciar al empezar un diseno (ni SKILL.md ni cad-guard.sh). Sin fases.json la entrega avisa «sin fases declaradas» y no frena, tambien desde el 31/10 (compatibilidad con lo ya entregado y con los tests de entrega, igual que cantosCanon sin_zona_en_entrega). Que la skill o el hook lo manden es decision de Fak: PREGUNTAS_FAK.md 21.",
     "catia_base.py (scripts/catia/, por donde se diseno el 20/10) todavia no llama al gate: el freno esta en gate_fase.py y en export_deliverables.py; un diseno que nunca pasa por la entrega no se frena (P1 l.67).",
     "pdf_entrega y los constructores de detalle no consultan la fase: frena la entrega, no el paso de la fase 3 (P1 l.65).",
     "La fase 1 es texto declarado: el gate verifica que este escrito, no que las alternativas existan (P1 l.58).",
