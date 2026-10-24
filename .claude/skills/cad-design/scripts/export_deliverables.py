@@ -27,6 +27,17 @@ cantosCanon.data.json (30/10/2026) avisa y entrega; desde el 31/10 un rojo o un 
 zona declarada sale con [GATE cantos] antes de crear la carpeta destino. Salida de Fak:
 gate_aristas.py ... --workdir W --acepto-cantos "<frase>" (vale para esa firma sola).
 
+(B) BARRIDO del recorrido (gate 3d, 23/10/2026; P3 + P12): si la entrega declara movimiento
+(--movimiento <conjunto.json> o params.movimiento del manifest), corre barrido.py sobre ese json y
+lee SU salida (no le cree a una evidencia del manifest): medido:true, poses, paso dentro de la
+guarda, pares medidos y la firma del conjunto de hoy. Las partes del json tienen que estar en out/
+(se juzga lo que se entrega) y una pieza entregada de 2+ solidos tiene que tener los mismos solidos
+que las partes. Hasta el aviso_hasta de barridoCanon.data.json (30/10/2026) avisa y entrega; desde el
+31/10 un choque o contacto en un par no declarado, o un NO MEDIDO, sale con [GATE barrido] antes de
+crear la carpeta destino (la luz menor que un dedo queda como aviso: luces_frenan). Sin movimiento
+declarado, si dos solidos comparten un eje (perno coaxial) avisa «¿se mueve?» y nunca frena.
+Salida de Fak: barrido.py <conjunto.json> --workdir W --acepto-barrido "<frase>" (vale para esa firma).
+
 Con --final (la entrega que va a Fak, no una copia de trabajo) corre ademas el GATE DE
 ENTREGABLE sobre la carpeta destino: PDF + STEP + simulacion grabada, misma corrida, y
 renders con motor declarado y con color medido (gate_entregable.py). Sin --final la
@@ -277,6 +288,196 @@ def gate_cantos(w, piece, base, hoy_arg=None):
     return resumen
 
 
+def _movimiento(w, arg):
+    """(ruta del json del conjunto, fuente) o (None, motivo de sin_movimiento o None)."""
+    if arg:
+        return os.path.abspath(arg), "--movimiento"
+    params = workdir.load_manifest(w).get("params") or {}
+    mv = params.get("movimiento")
+    if mv:
+        r = mv if os.path.isabs(mv) else os.path.join(w, mv)
+        return os.path.abspath(r), "manifest params.movimiento"
+    return None, params.get("sin_movimiento")
+
+
+def _volumenes(step_path):
+    """Volumenes de los solidos del STEP (OCC, sin mallar), ordenados."""
+    from OCP.BRepGProp import BRepGProp
+    from OCP.GProp import GProp_GProps
+    from OCP.STEPControl import STEPControl_Reader
+    from OCP.TopAbs import TopAbs_SOLID
+    from OCP.TopExp import TopExp_Explorer
+    r = STEPControl_Reader()
+    if r.ReadFile(step_path) != 1:
+        return None
+    r.TransferRoots()
+    ex = TopExp_Explorer(r.OneShape(), TopAbs_SOLID)
+    vols = []
+    while ex.More():
+        g = GProp_GProps()
+        BRepGProp.VolumeProperties_s(ex.Current(), g)
+        vols.append(g.Mass())
+        ex.Next()
+    return sorted(vols)
+
+
+def _mismos_solidos(a, b, rel=0.005):
+    return a is not None and b is not None and len(a) == len(b) and all(
+        abs(x - y) <= rel * max(abs(x), abs(y), 1e-9) for x, y in zip(a, b))
+
+
+def gate_barrido(w, mov, fuente, pieces, hoy_arg=None):
+    """GATE de barrido sobre el conjunto que se entrega. Devuelve el resumen o SystemExit.
+
+    Corre barrido.py por subproceso (con tope) y juzga la linea JSON de ESA corrida, validada con
+    barrido.salida_barrido_valida: una evidencia del manifest sin poses, sin paso, sin pares o con un
+    paso mas grueso que la guarda (el --paso 60 del banco) no vale como verde."""
+    import json
+    import subprocess
+    import barrido as gb
+    can = gb.canon_barrido()
+    try:
+        hoy = gb.hoy_barrido(hoy_arg)
+    except (gb.NoMedido, ValueError) as e:
+        raise SystemExit("[GATE barrido] %s" % e)
+    problemas, firma, j = [], None, None
+    try:
+        spec = gb.leer_conjunto(mov, float(can["paso_grados"]))
+        firma = gb.firma_conjunto(spec)[0]
+    except gb.NoMedido as e:
+        spec = None
+        problemas.append("el json del movimiento (%s) no se pudo leer: %s" % (mov, e))
+    if spec:
+        out_dir = os.path.normcase(os.path.abspath(os.path.join(w, "out")))
+        fuera = []
+        for p, r in spec["archivos"].items():
+            try:
+                dentro = os.path.commonpath([os.path.normcase(os.path.abspath(r)), out_dir]) == out_dir
+            except ValueError:          # otra unidad de disco
+                dentro = False
+            if not dentro:
+                fuera.append(p)
+        if fuera:
+            problemas.append("las partes %s del movimiento no estan en out/ (el barrido juzga los STEP que se "
+                             "entregan)" % ", ".join(sorted(fuera)))
+        firmas_partes = {workdir.file_signature(r) for r in spec["archivos"].values()}
+        vols_partes = sorted(v for r in spec["archivos"].values() for v in (_volumenes(r) or []))
+        for piece in pieces:
+            if workdir.file_signature(piece) in firmas_partes:
+                continue
+            vp = _volumenes(piece)
+            if vp and len(vp) >= 2 and not _mismos_solidos(vp, vols_partes):
+                problemas.append("'%s' tiene %d solidos que no son los de las partes del movimiento (%d): el barrido "
+                                 "no habla de lo que se entrega" % (os.path.basename(piece), len(vp), len(vols_partes)))
+    if not problemas:
+        tope = float(can["tope_segundos"])
+        cmd = [sys.executable, "-I", os.path.join(os.path.dirname(os.path.abspath(__file__)), "barrido.py"), mov,
+               "--workdir", w]
+        if hoy_arg:
+            cmd += ["--hoy", hoy_arg]
+        try:
+            r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                               timeout=tope + 120, env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+            for linea in reversed((r.stdout or "").splitlines()):
+                if linea.startswith('{"gate": "barrido"'):
+                    j = json.loads(linea)
+                    break
+        except (subprocess.TimeoutExpired, ValueError):
+            j = None
+        ok, motivo = gb.salida_barrido_valida(j, firma)
+        if not ok:
+            problemas.append(motivo)
+    ok = not problemas
+    duro = bool(ok and (j.get("choques") or j.get("contactos") or (can["luces_frenan"] and j.get("pellizcos"))))
+    rojo = bool(ok and j.get("veredicto") == "rojo")
+    aceptada = bool(ok and rojo and workdir.find_evidence(w, "barrido_aceptado", firma_conjunto=firma))
+    modo = gb.modo_barrido(ok, duro or not ok, rojo, hoy, can["aviso_hasta"], aceptada)
+    if ok:
+        partes = []
+        for c in j.get("choques") or []:
+            partes.append("choca %s-%s %s mm3 a %s" % (c["par"][0], c["par"][1], c["mm3"], c["pose"]))
+        for c in j.get("contactos") or []:
+            partes.append("toca %s-%s a %s" % (c["par"][0], c["par"][1], c["pose"]))
+        for c in j.get("pellizcos") or []:
+            partes.append("luz %s mm a %s < dedo (%s-%s)" % (c["luz_mm"], c["pose"], c["par"][0], c["par"][1]))
+        texto = "%d poses, %s" % (j["poses"], "; ".join(partes) if partes else "sin choque ni contacto en pares no "
+                                   "declarados")
+    else:
+        texto = "NO MEDIDO: %s" % "; ".join(problemas)
+    resumen = {"modo": modo, "medido": ok, "movimiento": mov, "fuente": fuente, "firma_conjunto": firma,
+               "poses": j.get("poses") if ok else None, "veredicto": j.get("veredicto") if ok else "no_medido",
+               "pose_peor": j.get("pose_peor") if ok else None, "hoy": hoy.isoformat(),
+               "motivo": None if ok else "; ".join(problemas)}
+    if modo == "freno":
+        raise SystemExit("[GATE barrido] %s: %s. Desde el %s esto frena la entrega.\nSalidas: %s"
+                         % (os.path.basename(mov), texto, gb.dia_siguiente(can["aviso_hasta"]),
+                            "; ".join(can["salidas"])))
+    if modo == "aviso":
+        print("  AVISO [GATE barrido] %s: %s%s" % (os.path.basename(mov), texto, (
+            "; freno desde %s" % gb.dia_siguiente(can["aviso_hasta"])) if (duro or not ok) else
+            "; la luz de dedo queda como aviso (luces_frenan, se revisa el %s)" % can["luces_revisar"]))
+    elif modo == "aceptado":
+        print("  [GATE barrido] %s: %s, ACEPTADO por frase en el manifest (firma %s)" % (os.path.basename(mov), texto,
+                                                                                          firma))
+    else:
+        print("  [GATE barrido] %s: OK, %s" % (os.path.basename(mov), texto))
+    return resumen
+
+
+def _cilindros(step_path, etiqueta):
+    """[(solido, punto del eje, direccion, radio)] de las caras cilindricas del STEP (OCC, sin mallar)."""
+    from OCP.BRepAdaptor import BRepAdaptor_Surface
+    from OCP.GeomAbs import GeomAbs_Cylinder
+    from OCP.STEPControl import STEPControl_Reader
+    from OCP.TopAbs import TopAbs_FACE, TopAbs_SOLID
+    from OCP.TopExp import TopExp_Explorer
+    from OCP.TopoDS import TopoDS
+    r = STEPControl_Reader()
+    if r.ReadFile(step_path) != 1:
+        return []
+    r.TransferRoots()
+    out, i = [], 0
+    ex = TopExp_Explorer(r.OneShape(), TopAbs_SOLID)
+    while ex.More():
+        fx = TopExp_Explorer(ex.Current(), TopAbs_FACE)
+        while fx.More():
+            s = BRepAdaptor_Surface(TopoDS.Face_s(fx.Current()))
+            if s.GetType() == GeomAbs_Cylinder:
+                c = s.Cylinder()
+                p, d = c.Axis().Location(), c.Axis().Direction()
+                out.append(((etiqueta, i), (p.X(), p.Y(), p.Z()), (d.X(), d.Y(), d.Z()), c.Radius()))
+            fx.Next()
+        i += 1
+        ex.Next()
+    return out
+
+
+def coaxiales(pieces, tol_eje=0.05, tol_radio=1.0):
+    """Pares de solidos distintos con caras cilindricas en el mismo eje y radios parecidos (un perno en dos piezas).
+
+    Es el indicio de que el conjunto se mueve: si nadie declaro el movimiento, la entrega avisa «¿se mueve?»."""
+    import numpy as np
+    cil = []
+    for piece in pieces:
+        cil += _cilindros(piece, os.path.basename(piece))
+    hallados = {}
+    for i in range(len(cil)):
+        si, pi, di, ri = cil[i]
+        for k in range(i + 1, len(cil)):
+            sk, pk, dk, rk = cil[k]
+            if si == sk or abs(ri - rk) > tol_radio:
+                continue
+            a = np.asarray(di, float)
+            if np.linalg.norm(np.cross(a, np.asarray(dk, float))) > 1e-3:
+                continue
+            if np.linalg.norm(np.cross(np.asarray(pk, float) - np.asarray(pi, float), a)) > tol_eje:
+                continue
+            hallados.setdefault(tuple(sorted([si, sk])), (pi, di, ri, rk))
+    return [{"solidos": ["%s:%d" % x for x in k], "punto": [round(c, 2) for c in v[0]],
+             "dir": [round(c, 3) for c in v[1]], "radios": [round(v[2], 3), round(v[3], 3)]}
+            for k, v in hallados.items()]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--workdir", required=True)
@@ -294,7 +495,7 @@ def main():
                          "solidos del STEP y queda escrito en el manifest.")
     ap.add_argument("--skip-gate", action="append", default=[],
                     choices=["zona", "proceso", "collision", "render", "ensamble", "entregable",
-                             "cantos"],
+                             "cantos", "barrido"],
                     help="saltear un gate (queda registrado; exige --reason)")
     ap.add_argument("--reason", default=None, help="justificacion del --skip-gate")
     ap.add_argument("--final", action="store_true",
@@ -303,7 +504,11 @@ def main():
     ap.add_argument("--motor", default="", help="--final: motor de imagen de los renders (ver procesoCanon)")
     ap.add_argument("--render", nargs="*", default=[], help="--final: los PNG que muestran el 3D")
     ap.add_argument("--hoy", default=None,
-                    help="solo tests: fecha simulada AAAA-MM-DD para el gate de cantos (exige CAD_GATE_TEST=1)")
+                    help="solo tests: fecha simulada AAAA-MM-DD para los gates de cantos y de barrido (exige "
+                         "CAD_GATE_TEST=1)")
+    ap.add_argument("--movimiento", default=None, metavar="CONJUNTO_JSON",
+                    help="json del conjunto que se mueve (partes en out/, movil/eje/rango o estados): corre el gate "
+                         "de barrido (tambien se toma de params.movimiento del manifest)")
     args = ap.parse_args()
 
     if args.skip_gate and not args.reason:
@@ -449,6 +654,31 @@ def main():
         if "cantos" not in args.skip_gate:
             cantos_por_pieza[base] = gate_cantos(w, piece, base, args.hoy)
 
+    # GATE BARRIDO (3d, 23/10/2026): una vez por entrega, despues de los gates por pieza y antes de crear la carpeta
+    # destino. Sin movimiento declarado, el indicio de un perno coaxial en dos solidos avisa «¿se mueve?» y no frena.
+    barrido_res = None
+    if "barrido" not in args.skip_gate:
+        mov, fuente = _movimiento(w, args.movimiento)
+        if mov:
+            barrido_res = gate_barrido(w, mov, fuente, args.pieces, args.hoy)
+        elif fuente and len(str(fuente).strip()) >= 10:
+            print("  [GATE barrido] sin movimiento declarado: %s (params.sin_movimiento)" % fuente)
+            barrido_res = {"modo": "sin_movimiento", "medido": False, "motivo": fuente}
+        else:
+            try:
+                coax = coaxiales(args.pieces)
+            except Exception as e:  # el indicio nunca rompe una entrega
+                coax = []
+                print("  (no se pudieron revisar los ejes compartidos: %s: %s)" % (type(e).__name__, e))
+            if coax:
+                c = coax[0]
+                print("  AVISO [GATE barrido] ¿se mueve? %d par(es) de solidos comparten un eje (perno coaxial): %s y "
+                      "%s en (%s) dir (%s). Si se mueve: declarar el movimiento (--movimiento <conjunto.json> o "
+                      "params.movimiento) y correr barrido.py; si no se mueve: params.sin_movimiento con el motivo."
+                      % (len(coax), c["solidos"][0], c["solidos"][1], ", ".join("%g" % x for x in c["punto"]),
+                         ", ".join("%g" % x for x in c["dir"])))
+                barrido_res = {"modo": "aviso", "medido": False, "se_mueve": coax}
+
     # ---- export + entrega ----
     os.makedirs(args.deliver, exist_ok=True)
     delivered = []
@@ -530,6 +760,7 @@ def main():
                             final=bool(args.final),
                             cuerpos_por_pieza=cuerpos_por_pieza,
                             cantos_por_pieza=cantos_por_pieza,
+                            barrido=barrido_res,
                             ensambles_declarados=args.ensamble,
                             skipped_gates=args.skip_gate, reason=args.reason)
     print("\nENTREGA OK -> %s (%d archivos). Evidencia registrada en el manifest." % (args.deliver, len(delivered)))
