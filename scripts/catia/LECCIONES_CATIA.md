@@ -185,6 +185,18 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
 - **El gemelo de referencia se mide sobre el archivo que abre CATIA** (34): el 69,573 de `catia.md` era el v16 movido en
   memoria; el archivo `v16_subida_1mm.step` da 69,5649 en OpenCASCADE y 69,561 en CATIA. Y CATIA lee ese STEP con 0,65 mm³
   menos que OpenCASCADE (89 277,636 contra 89 278,287, 7e-6): dentro de la tolerancia de volumen.
+- **La referencia de la casa también puede traer el error** (48 de CATA y 49 de la principal, gancho de mochila v2 y
+  gancho doble): en `build_gancho.py` y `build_gancho_doble.py` el triángulo de la entrada guiada del lado +Y queda en
+  sentido horario y `extrude()` lo lleva a z −28..0, debajo de la pieza: no corta nada. Se reproduce lo ENTREGADO (la
+  entrada solo del lado −Y, con la medida en el docstring y una prueba que da rojo si alguien arregla el script); el
+  script no se toca y la pregunta va a Fak. El de Leo (50) no tiene ese bucle.
+- **Ante un rojo contra la referencia, primero se UBICA la diferencia** (48, 49): booleanas referencia − CATIA y
+  CATIA − referencia con volumen, centro y caja de cada pedazo, o el script de build123d repetido con el volumen después
+  de cada operación. En el 49 dio un solo pedazo de 56 mm³ en el canto de la boca; en el 48, un paso de 33 mm³.
+- **Las cotas derivadas se calculan como las calcula el script** (`derivadas()` de cada `build_gancho*.py`) y la prueba
+  las compara con las de build123d (48, 50): si el script cambia, CATIA no queda desincronizada en silencio.
+- **Cajas a lo largo de un mismo eje son UN perfil extruido** (50, CATA): el gancho de Leo en CATIA es un croquis de 16
+  vértices y un pad, en vez de cinco booleanas; la prueba lo compara con el sólido del script sin los redondeos.
 - **El obrero corta un ejercicio a los 1 200 s** (`obrero.py --timeout-seg`, por defecto): el tope interno de un post-proceso
   tiene que quedar por debajo (35: 900 s). El 32 no entra: CATIA más la comparación contra el entregado pasan los 20 min;
   corre solo en la PC principal, a mano o con `--timeout-seg 3000`.
