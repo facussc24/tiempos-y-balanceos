@@ -535,3 +535,18 @@ con su caso malo antes de creerle.
   (`tessellate(0,05)`) y `manifold3d` (ya instalado en `.venv-cad`): **65 posiciones en 4,5 s**, gemelo (barra 2 mm
   abajo) 378 mm³. Ojo: dos caras que se tocan por diseño (una base pegada) dan ~0,06 mm³ de ruido de malla; se
   filtran por par, no subiendo el umbral. El exacto queda para la posición cerrada. `virolador_auto/sim_rapida.py`.
+
+## 24/10/2026 — banco de CATIA con juez (dos PC): lo que cambia el método
+
+Ejercicios `scripts/catia/ejercicios/08..17` (cola en `COLA_CATIA.md`), cada uno con su respuesta de un papel, juez y
+prueba sin CATIA; el detalle de cada lección, con su medición, en **`scripts/catia/LECCIONES_CATIA.md`**.
+- **El volumen de CATIA no ve un sólido con las caras hacia adentro: el control es el STL de CATIA medido con signo**
+  (`scripts/catia/medir_b123d.py stl`), cerrado y a 5 % del sólido (facetado medido: −0,24 a −1,2 %). Y «el STEP trae 1
+  sólido» no ve superficies sueltas: `medir_b123d.py step` informa `cascaras` y `caras_sueltas` (bueno = 1 / 1 / 0).
+- **Elegir el lado de una operación de superficie por la medida**: probar TODOS, medir y borrar cada uno SIEMPRE (también
+  si falló: un elemento roto en el árbol rompe cada `Update`), rehacer el que da la cuenta y guardar los otros números.
+- **Croquis totalmente restringido con fórmulas, por COM, anda** (ejercicio 11): dibujar exacto, crear las restricciones
+  (toman el valor medido), releerlas, fórmula solo en las que dependen de los parámetros; cambiar `Parameters.Item(k).Value`
+  regenera. Probarlo afuera con el rango de la jacobiana, no con un conteo de grados de libertad.
+- `Measurable.GetPlane` por VBScript da la posición de un plano antes de dibujar en él; `AddNewPlaneOffset(PlaneYZ, x)`
+  queda en +x (CATA, 08). La densidad de un material del catálogo se cambia con su parámetro `...\Density` (08).
