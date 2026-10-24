@@ -190,7 +190,8 @@ def cerrar_con_referencia(carpeta, referencia=None, comparar_con=None, medir=Non
         t = sp.get(p) if isinstance(sp, dict) else None
         topo = (t.get("solidos"), t.get("cascaras"), t.get("caras_sueltas")) if isinstance(t, dict) else None
         if topo != (1, 1, 0):
-            problemas.append(f"el STEP de {p} no es 1 solido cerrado (solidos, cascaras, caras sueltas: {topo})")
+            problemas.append(f"el STEP de {p} no es 1 solido cerrado (solidos, cascaras, caras sueltas: {topo})"
+                             + ("" if isinstance(sp, dict) else f" ({sp})"[:200]))
     s["juez"] = juez
     s["ok"] = s["ok_pasos"] and not problemas and not s["error_juez"]   # una excepcion fuera de un paso: nunca verde
     texto = "; ".join(([s["error_juez"]] if s["error_juez"] else []) + problemas)
