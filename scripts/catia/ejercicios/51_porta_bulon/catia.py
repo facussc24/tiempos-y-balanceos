@@ -148,6 +148,12 @@ def cerrar_con_referencia(carpeta, referencia=None, comparar_con=None, medir=Non
         if d is not None:
             s["contra_la_referencia"] = d
             problemas += e32.revisar_comparacion(d)
+            # PEDIDO PARA CATA 14: la distancia exacta (cada punto contra la cascara del otro) ademas de la de malla, que
+            # mezcla el facetado; las dos, presentes y <= TOL_DIST_MM
+            ex = [d.get(k) for k in ("dist_max_exacta_A_a_B", "dist_max_exacta_B_a_A")]
+            if not all(isinstance(x, (int, float)) and x <= e32.TOL_DIST_MM for x in ex):
+                problemas.append(f"distancia exacta {ex[0]} / {ex[1]} mm (compara.py del 32, tiene que ser <= "
+                                 f"{e32.TOL_DIST_MM})")
         b = (medir or jc.medir_b123d)(["step", ref["step"]])
         rb = next(iter((b.get("partes") or {}).values()), {}) if isinstance(b, dict) and "error" not in b else {}
         st = s.get("step_catia_en_build123d")

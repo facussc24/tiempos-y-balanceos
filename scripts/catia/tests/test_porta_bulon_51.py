@@ -29,7 +29,8 @@ sys.path.insert(0, CATIA_DIR)
 COMPARA = {"vol_A": 1612.483, "vol_B": 1612.483, "sobra_A_menos_B": 0.0, "falta_B_menos_A": 0.0, "comun": 1612.483,
            "booleana_cierra": True, "tolerancia_booleana": 0.0001, "dist_max_A_a_B": 0.0003, "p99_A_a_B": 0.0,
            "dist_max_B_a_A": 0.0004, "p99_B_a_A": 0.0, "caja_A": [22.0, 22.0, 7.7], "caja_B": [22.0, 22.0, 7.7],
-           "solidos": [1, 1]}                                    # 51_r6, R21 de CATA, 24/10/2026 14:45
+           "solidos": [1, 1], "dist_max_exacta_A_a_B": 0.0, "dist_max_exacta_B_a_A": 0.0}
+# 51_r7, R21 de CATA, 24/10/2026 15:02 (las exactas, del compara.py del 32 de d6fecd19, 15:06)
 CDG = [0.0, 0.0, 3.2075]
 VOL_CATIA = 1612.483
 GEMELOS = {"bien.py": 1611.928, "mal_1_techo_con_agujero.py": 1630.868, "mal_2_tapita.py": 1644.546}   # 51_r6
@@ -202,6 +203,11 @@ class Juez(unittest.TestCase):
 
     def test_rojo(self):
         self.assertIn("sobra", self.juez(comparado=dict(COMPARA, sobra_A_menos_B=5.0))["error"])
+        self.assertIn("distancia exacta", self.juez(comparado=dict(COMPARA, dist_max_exacta_B_a_A=0.05))["error"])
+        sin_exacta = {k: v for k, v in COMPARA.items() if k != "dist_max_exacta_A_a_B"}   # un compara.py viejo
+        self.assertIn("distancia exacta", self.juez(comparado=sin_exacta)["error"])
+        self.assertIn("distancia exacta", self.juez(comparado=dict(COMPARA, dist_max_exacta_A_a_B=float("nan")))
+                      ["error"])
         self.assertIn("centro", self.juez(cdg_catia=[0.0, 0.0, 3.25])["error"])
         self.assertIn("no esta el generador", self.juez(ref={"error": "no esta el generador: x"})["error"])
         g = {k: malla(v) for k, v in GEMELOS.items()}

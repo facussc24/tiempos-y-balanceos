@@ -2,7 +2,8 @@
 
 Corrida real: CATIA R21 (B21, 32 bits) de CATA con el Python 3.12.10 del sistema, en `%TEMP%\catia_cata_tanda\51_r7`
 (15:02:26-15:03:22, con el código del commit; la primera verde fue 51_r5 a las 14:42, igual). VERDE: sobra 0, falta 0,
-distancia máxima 0,0003 / 0,0004 mm, el mismo centro (0 · 0 · 3,2075) y un
+distancia máxima 0,0003 / 0,0004 mm por malla y 0,0 / 0,0 exacta (compara.py del 32 con la distancia contra la cáscara,
+PEDIDO PARA CATA 14; vuelta a juzgar a las 15:06), el mismo centro (0 · 0 · 3,2075) y un
 sólido de cada lado; 1 612,483 mm³ los dos. Gemelos del banco medidos como malla: bien.py a 0,555 mm³ de CATIA,
 mal_1 a 18,385 y mal_2 a 32,063.
 
