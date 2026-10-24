@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "Too Tall Toby PPP01-09 Corner Tie en CATIA (pieza del ej40 de la practica del 19/10, copiada por portar_ej.py con cambios minimos anotados); masa de CATIA (material del catalogo con Density 2700 kg/m3) contra la guia, volumen contra el gemelo de build123d de la practica y STEP medido con build123d; molde: el catia.py del 24",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "masa de la pieza en aluminio 1060",
+  "valor": 307.23,
+  "unidad": "g",
+  "tolerancia": 1.0,
+  "fuente": "guia de build123d, https://build123d.readthedocs.io/en/stable/tttt.html (Too Tall Toby PPP01-09 Corner Tie, aluminio 1060 2700 kg/m3); tolerancia de 1 g: la de masa del banco (control masa_esperada)"
+ }
+}

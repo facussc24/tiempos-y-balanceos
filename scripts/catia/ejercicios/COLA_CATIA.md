@@ -112,13 +112,13 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 17 | hecho | PC principal, R21, 24/10 10:36: la pose la da CATIA (revolución + comando, punta exacta en 0, 35, 50 y 60°) y el choque OpenCASCADE sobre los STEP de CATIA (no AddNewIntersect); 12 de 12 chequeos del 06; revisor Fable: sin bugs, robustez aplicada (signo −1 exigido, NbDof solo se anota, la resta del soporte se controla) | (este commit) |
 | 18 | hecho (CATA) | CATA, R21, 24/10/2026 10:15 (`18_r1`): ok true; la pieza paramétrica del ej27 (A..E, X = A/3, Y = B/3 + 10) da las tres respuestas cambiando solo los parámetros: 14 207,340 / 16 490,467 / 15 100,464 g contra 14 207,34 / 16 490,45 / 15 100,47 (masa de CATIA con Steel a 7 700 kg/m³); gemelo build123d a ≤ 0,1 mm³; revisor Fable: 0 graves, huecos de la prueba arreglados | (este commit) |
 | 19 | hecho | PC principal, R21, 24/10 10:49: 13 206,387 y 14 208,004 g (papel 13 206,40 y 14 208,00); revisor Fable: citas confirmadas en el PDF (pág. 19, 24, 26, 27); tolerancia bajada a 0,1 g (un chaflán faltante pasaba con 1 g), A..E verificados, el caso sin build123d ya no revienta | (este commit) |
-| 22 | pendiente | | |
+| 22 | hecho (CATA) | CATA, R21, 24/10/2026 10:52 (`22_final`, código del commit; la primera 10:20, igual): ok true; 43,093 g contra 43,09 (sin ABS en el catálogo: Steel con Density 1 020); antes del R1 a 0,023 mm³ del gemelo; STEP a 0,15 mm³ | (este commit) |
 | 23 | hecho | PC principal, R21, 24/10 10:51: 211,303 g contra 211,30, volumen = gemelo de la práctica; revisor Fable: sin bugs (0,1 g ve cada falta: sin R8 −0,49 g); límite anotado: planos visibles al STEP | (este commit) |
-| 24 | pendiente | | |
+| 24 | hecho (CATA) | CATA, R21, 24/10/2026 10:52 (`24_final`, código del commit): ok true; 309,997 g contra 310,00; gemelo a 0,002 mm³; es el MOLDE de 26, 28 y 30 (catia.py con CFG); el doblez prueba cada arista candidata (CAMBIO 4: el orden de la topología cambia entre corridas) | (este commit) |
 | 25 | pendiente | | |
-| 26 | pendiente | | |
+| 26 | hecho (CATA) | CATA, R21, 24/10/2026 10:53 (`26_final`): ok true; 3 387,058 g contra 3 387,06; gemelo y STEP a 0,000 mm³; molde del 24 | (este commit) |
 | 27 | pendiente | | |
-| 28 | pendiente | | |
+| 28 | hecho (CATA) | CATA, R21, 24/10/2026 10:54 (`28_final`): ok true; 797,146 g contra 797,15; gemelo a 0,027 mm³; molde del 24 | (este commit) |
 | 29 | pendiente | | |
-| 30 | pendiente | | |
+| 30 | hecho (CATA) | CATA, R21, 24/10/2026 10:54 (`30_final`): ok true; 307,231 g contra 307,23 (Aluminium pasado a 2 700); gemelo y STEP a 0,000 mm³; molde del 24 | (este commit) |
 | 31 | pendiente | | |
