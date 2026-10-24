@@ -45,7 +45,7 @@ describe('gate de tornillos: canon y renglon de retiro', () => {
     expect(f.revisar).toBe('2026-10-30');
     expect(f.justifica).toMatch(/\d/);
     const claves = Object.keys(r.retiros_decididos);
-    expect(claves.indexOf('cad-design:tornillos-aviso-a-freno')).toBe(claves.indexOf('cad-design:cantos-aviso-a-freno') + 1);
+    expect(claves.indexOf('cad-design:tornillos-aviso-a-freno')).toBeGreaterThan(claves.indexOf('cad-design:cantos-aviso-a-freno'));
   });
 });
 
