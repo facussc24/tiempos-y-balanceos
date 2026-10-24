@@ -13,6 +13,8 @@ incidente vive en los snapshots.
 
 ## Verificacion y evidencia
 
+- **24/10 — Una ficha que resume un papel no es el papel, y la causa de una diferencia no se escribe si el papel no la dice: en el ejercicio 42 de CATIA tomé el «2,32e-4 m²» de la ficha del banco como lo impreso y le inventé una causa al «16.2 kN» («redondea el área antes»); el PDF del MIT imprime 0,00023234 m². Lo cazó el revisor al abrirlo.** Ya es `core-prohibiciones.md` §1; el caso, en el LECCIONES.md del ejercicio 42.
+
 - **24/10 — El modelo de un revisor se elige por lo que revisa y por el cupo que gasta, no se fija en el encargo: escribí «revisor Fable por ejercicio» en los dos encargos de CATIA con el cupo de Fable al 66 % (la regla de la casa ya decía Fable solo para un cambio grande, `techo-agentes.md`); lo vio Fak** (*"eso debimos haberlo pensado antes, ¿no?"*). Por ejercicio alcanza el juez por programa más un revisor Sonnet; Fable, al cambiar el método o fundir la tanda.
 
 - **24/10 — Un worktree ya fundido se saca DESPUÉS de mirar si tiene un enlace adentro (`find -type l`): `git worktree remove` entra por el enlace `node_modules` que deja un constructor y borra el DESTINO (01:51: 86 paquetes del repo madre; el guardián V5 lo dice y lo frenó la segunda vez); primero se quita solo el enlace (`[System.IO.Directory]::Delete(enlace, $false)`). Y un asignado que necesita `git pull` en CATA se deja después de que CATA confirme el pull: el obrero toma el ítem antes de que su sesión lea el pedido.**
