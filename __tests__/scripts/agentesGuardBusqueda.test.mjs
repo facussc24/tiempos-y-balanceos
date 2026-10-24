@@ -163,9 +163,19 @@ describe('agentes-guard · P5: ¿esto es buscar o decidir? (aviso, no freno)', (
     expect(lineas(c, '.agent-busquedas.log')).toEqual([]);
   });
 
-  it('FRENO INTACTO: Workflow sigue denegado y sin JSON', () => {
-    const r = correr(c, { prompt: BUSCA }, 'Workflow');
+  it('Workflow (prendida el 16/10, re-prendida el 24/10/2026): pasa sin el aviso P5, que es para un Sonnet suelto, y descuenta', () => {
+    const script = `export const meta = { name: 'p5', description: 'x' }\nawait agent('${BUSCA}', { agentType: 'investigador' })`;
+    const r = correr(c, { script }, 'Workflow');
+    expect(r.status).toBe(0);
+    expect(r.stdout.trim()).toBe('');
+    expect(lineas(c, '.agent-spawns.log')[0]).toMatch(/ Workflow 4$/);
+    expect(lineas(c, '.agent-busquedas.log')).toEqual([]);
+  });
+
+  it('FRENO INTACTO: un Workflow con effort max en el guion sigue en 2, sin JSON', () => {
+    const r = correr(c, { script: `await agent('${BUSCA}', { effort: 'max' })` }, 'Workflow');
     expect(r.status).toBe(2);
     expect(r.stdout.trim()).toBe('');
+    expect(r.stderr).toContain('el maximo es xhigh');
   });
 });

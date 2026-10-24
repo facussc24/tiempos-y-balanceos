@@ -397,7 +397,7 @@ describe('supabase-guard.sh — corre _backup.mjs ANTES de un .mjs destructivo; 
 
 // ─────────────── agentes-guard (~/.claude/hooks): techo de 10 subagentes; el modelo por tarea (08/10); auditoria en Opus
 const AGENTES = path.join(os.homedir(), '.claude', 'hooks', 'agentes-guard.sh');
-describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de 10 en 10 min, modelo por tarea, Workflow denegado', () => {
+describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de 10 en 10 min, modelo por tarea, Workflow prendida y contada', () => {
   const home = path.join(TMP, 'home');
   const proyecto = path.join(TMP, 'proyecto-agentes');
   fs.mkdirSync(path.join(home, '.claude', 'agents'), { recursive: true });
@@ -490,24 +490,105 @@ describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de
     expect(correr('Agent', { subagent_type: 'investigador', model: 'opus', effort: 'max', prompt: 'x' }).exit).toBe(2);
   });
 
-  it('ROJO: Workflow siempre; el undecimo Agent (Sonnet, 4 puntos) dentro de la ventana', () => {
-    const wf = correr('Workflow', {});
-    expect(wf.exit).toBe(2);
-    expect(wf.err).toMatch(/Workflow esta deshabilitada/);
+  // Workflow prendida (Fak, 16/10; re-prendida el 24/10/2026). La llamada real trae script | scriptPath | name | args,
+  // sin model ni effort (esquema de la tool y las 25 llamadas de los registros): el guardian lee el guion. Los payloads
+  // de abajo tienen esa forma; un campo model/effort inventado arriba pasaria sin probar nada de una llamada real.
+  const guion = (cuerpo) => `export const meta = { name: 'prueba', description: 'prueba del guardian' }\n${cuerpo}`;
+  const wf = (cuerpo, extra = {}) => correr('Workflow', { script: guion(cuerpo), ...extra });
+  const registro = () => (fs.existsSync(archivo('.agent-spawns.log')) ? fs.readFileSync(archivo('.agent-spawns.log'), 'utf8') : '')
+    .split('\n').filter(Boolean).map((l) => l.split(' ').slice(1).join(' '));
+
+  it('ROJO: el undecimo Agent (Sonnet, 4 puntos) dentro de la ventana; con el presupuesto agotado un Workflow se frena igual', () => {
     for (let i = 0; i < 10; i++) expect(correr('Agent').exit, `spawn ${i + 1}`).toBe(0);
     const once = correr('Task');
     expect(once.exit).toBe(2);
     expect(once.err).toMatch(/presupuesto de subagentes agotado \(40\/40 puntos/);
+    const w = wf("await agent('revisar', { model: 'haiku' })");
+    expect(w.exit).toBe(2);
+    expect(w.err).toMatch(/presupuesto de subagentes agotado \(40\/40 puntos/);
+    expect(w.err).toMatch(/esta llamada pesa 1/);
+    expect(registro().filter((l) => l.startsWith('Workflow'))).toEqual([]);   // frenado no descuenta
   });
 
-  it('VERDE: los escapes de Fak — .agent-limit=0 apaga el techo; .workflow-ok habilita UN Workflow', () => {
+  it('VERDE: Workflow pasa y descuenta UNA vez con el modelo mas pesado que declara el guion; sin modelo, como Opus', () => {
+    const pesoDe = (cuerpo) => {
+      fs.rmSync(archivo('.agent-spawns.log'), { force: true });
+      const r = wf(cuerpo);
+      expect(r.exit, `${cuerpo}\n${r.err}`).toBe(0);
+      expect(r.out, cuerpo).toBe('');                                      // sin aviso P5: eso es para un Sonnet suelto
+      return registro().at(-1);
+    };
+    expect(pesoDe("await agent('a', { model: 'haiku', effort: 'low' })")).toBe('Workflow 1');
+    expect(pesoDe("await agent('a', { agentType: 'investigador' })")).toBe('Workflow 4');       // la definicion es sonnet
+    expect(pesoDe("await agent('a', { label: 'x' })")).toBe('Workflow 8');                     // hereda la sesion: Opus
+    expect(pesoDe('await agent("a", { model: "haiku" }); await agent("b", { model: "claude-opus-5-5", effort: "high" })')).toBe('Workflow 8');
+    expect(pesoDe("await agent('a', { model: 'fable', effort: 'xhigh' })")).toBe('Workflow 20');
+    expect(pesoDe("await agent('a', { agentType: 'auditor' })")).toBe('Workflow 8');            // adentro de un Workflow no es la auditoria final
+    // con el pase de Fak (.agent-opus-ok) Opus y Fable descuentan como Sonnet, igual que en Agent
+    fs.writeFileSync(archivo('.agent-opus-ok'), '');
+    expect(pesoDe("await agent('a', { model: 'fable' })")).toBe('Workflow 4');
+  });
+
+  it('ROJO: Workflow con effort max (comillas simples, dobles o invertidas), un model que no existe o un agentType sin definicion propia o sin xhigh; tambien con .agent-limit=0, y no gasta cupo', () => {
+    const casos = [
+      ["await agent('a', { effort: 'max' })", /effort 'max'/],
+      ['await agent("a", { effort: "max" })', /effort 'max'/],
+      ['await agent(`a`, { effort: `max` })', /effort 'max'/],
+      ["await agent('a', { model: 'gpt-5' })", /model 'gpt-5'/],
+      ["await agent('a', { agentType: 'general-purpose' })", /no tiene definicion propia/],
+      ["await agent('a', { agentType: 'en-max' })", /no dice effort: xhigh/],
+      ["await agent('a', { agentType: 'en-opus' })", /no dice model: sonnet ni haiku/],
+      ["await agent('a', { agentType: 'auditor-cliente' })", /no dice model: opus/],
+    ];
+    for (const [cuerpo, msj] of casos) {
+      const r = wf(cuerpo);
+      expect(r.exit, cuerpo).toBe(2);
+      expect(r.err, cuerpo).toMatch(/BLOQUEADO \(Workflow\)/);
+      expect(r.err, cuerpo).toMatch(msj);
+    }
+    // .agent-limit=0 apaga el conteo, no la regla de esfuerzo
+    fs.writeFileSync(archivo('.agent-limit'), '0');
+    expect(wf("await agent('a', { effort: 'max' })").exit).toBe(2);
+    expect(wf("await agent('a', { effort: 'xhigh' })").exit).toBe(0);
+    expect(registro()).toEqual([]);
+  });
+
+  it('el guion tambien se lee del archivo de scriptPath (ruta de Windows con espacio) y de .claude/workflows/<name>.js del proyecto', () => {
+    const dir = fs.mkdtempSync(path.join(TMP, 'wf-guion-'));
+    const bueno = path.join(dir, 'bueno.js');
+    const malo = path.join(dir, 'con max.js');
+    fs.writeFileSync(bueno, guion("await agent('a', { model: 'haiku' })"));
+    fs.writeFileSync(malo, guion('await agent("a", { effort: "max" })'));
+    expect(correr('Workflow', { scriptPath: bueno }).exit).toBe(0);
+    expect(registro().at(-1)).toBe('Workflow 1');
+    const m = correr('Workflow', { scriptPath: malo });
+    expect(m.exit).toBe(2);
+    expect(m.err).toMatch(/effort 'max'/);
+    const no = correr('Workflow', { scriptPath: path.join(dir, 'no-existe.js') });
+    expect(no.exit).toBe(2);
+    expect(no.err).toMatch(/No se puede leer el guion/);
+    fs.mkdirSync(path.join(proyecto, '.claude', 'workflows'), { recursive: true });
+    fs.writeFileSync(path.join(proyecto, '.claude', 'workflows', 'guardado-max.js'), guion("await agent('a', { effort: 'max' })"));
+    fs.writeFileSync(path.join(proyecto, '.claude', 'workflows', 'guardado-ok.js'), guion("await agent('a', { agentType: 'investigador', model: 'haiku' })"));
+    expect(correr('Workflow', { name: 'guardado-max' }).exit).toBe(2);
+    expect(correr('Workflow', { name: 'guardado-ok', args: { rama: 'x' } }).exit).toBe(0);
+    expect(registro().at(-1)).toBe('Workflow 4');
+  });
+
+  it('VERDE: una operacion sobre una corrida (solo runId: pararla) pasa sin descontar, aun con el presupuesto agotado', () => {
+    for (let i = 0; i < 10; i++) expect(correr('Agent').exit).toBe(0);
+    expect(correr('Workflow', { runId: 'wf_abc123' }).exit).toBe(0);
+    expect(registro().filter((l) => l.startsWith('Workflow'))).toEqual([]);
+  });
+
+  it('VERDE: .agent-limit=0 apaga el techo para Agent y para Workflow; un .workflow-ok viejo ya no hace nada (pase retirado el 24/10)', () => {
     fs.writeFileSync(archivo('.agent-limit'), '0');
     for (let i = 0; i < 12; i++) expect(correr('Agent').exit).toBe(0);
+    expect(wf("await agent('a', { model: 'fable' })").exit).toBe(0);
     fs.rmSync(archivo('.agent-limit'));
     fs.writeFileSync(archivo('.workflow-ok'), '');
-    expect(correr('Workflow', {}).exit).toBe(0);
-    expect(fs.existsSync(archivo('.workflow-ok'))).toBe(false);   // se consumio
-    expect(correr('Workflow', {}).exit).toBe(2);
+    expect(wf("await agent('a', { effort: 'max' })").exit).toBe(2);   // el pase no salta la regla
+    expect(fs.existsSync(archivo('.workflow-ok'))).toBe(true);           // y nadie lo consume
   });
 
   it('A6 ROJO: un .agent-limit=0 de hace 13 h ya no apaga el guard — el undecimo Agent bloquea y el archivo se retira', () => {

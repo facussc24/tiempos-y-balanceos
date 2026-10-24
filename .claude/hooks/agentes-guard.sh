@@ -7,9 +7,17 @@
 # Texto no frena nada. Esto si: bloquea la llamada antes de que salga.
 #
 # Reglas:
-#   Workflow           -> DENEGADO siempre. Es un script que multiplica agentes sin que
-#                         nadie vea la cuenta (cap por fase != cap total). Ese fue el bug.
-#   Agent / Task       -> maximo LIMITE spawns por ventana de VENTANA_SEG (10 desde el 30/09/2026).
+#   Workflow           -> PRENDIDA (Fak, 16/10/2026; re-prendida el 24/10/2026) y con la regla de Agent. La llamada
+#                         no trae model ni effort: van en cada agent() del guion. Se lee el guion (script, el archivo
+#                         de scriptPath o .claude/workflows/<name>.js) y se rechaza un effort fuera de
+#                         low|medium|high|xhigh (max nunca), un model que no existe y un agentType sin definicion
+#                         propia que cumpla el piso. Descuenta UNA vez, con el modelo mas pesado que declara el guion
+#                         (model: o la definicion de su agentType); sin ninguno, sus agentes heredan el de la sesion
+#                         y se cobra como Opus. LIMITES: los agentes de ADENTRO no pasan por este hook (los contaba el
+#                         mod presupuesto-agentes); el esfuerzo heredado de la sesion y un valor calculado no se ven.
+#                         Del 06/08 al 16/10 estuvo DENEGADA: un script multiplica agentes sin que nadie vea la cuenta
+#                         (cap por fase != cap total). Apagarla: "disableWorkflows": true en ~/.claude/settings.json.
+#   Agent / Task      -> maximo LIMITE spawns por ventana de VENTANA_SEG (10 desde el 30/09/2026).
 #                         Pasa solo un subagent_type cuya definicion (en <proyecto>/.claude/agents o
 #                         ~/.claude/agents) diga `model: sonnet` (el default) y `effort: xhigh`. Los
 #                         built-in (general-purpose, Explore, Plan, claude...) no dejan fijar el esfuerzo
@@ -30,9 +38,9 @@
 # Escape para Fak (no hace falta editar este script):
 #   echo 15 > ~/.claude/.agent-limit          # sube el techo a 15
 #   echo 0  > ~/.claude/.agent-limit          # 0 = sin limite (apaga el CONTEO, tambien el de pesados)
-#   touch ~/.claude/.workflow-ok              # permite UN Workflow (se consume al usarlo)
-#   touch ~/.claude/.agent-opus-ok            # 12 h: levanta el cupo de PESADOS_MAX Opus/Fable por ventana
-# La regla de esfuerzo (nunca max) no tiene escape.
+#   touch ~/.claude/.agent-opus-ok           # 12 h: levanta el cupo de PESADOS_MAX Opus/Fable por ventana
+# La regla de esfuerzo (nunca max) no tiene escape. El pase ~/.claude/.workflow-ok (un Workflow cuando estaba
+# negada) se retiro el 24/10/2026: Workflow ya no se niega por ser Workflow.
 #
 # El override VENCE a las 12 horas (A6, 10/09/2026): se respeta solo si el archivo tiene menos
 # de VENCE_SEG desde su ultima modificacion; pasado eso se retira y vuelve el techo de 10 solo.
@@ -71,7 +79,6 @@ PESADOS_MAX=3            # (historico; ya no gobierna: el presupuesto por puntos
 BASE="${HOME}/.claude"
 LOG="${BASE}/.agent-spawns.log"
 ARCHIVO_LIMITE="${BASE}/.agent-limit"
-PASE_WORKFLOW="${BASE}/.workflow-ok"
 PASE_BUILTIN="${BASE}/.agent-builtin-ok"
 LOG_BUSQUEDAS="${BASE}/.agent-busquedas.log"   # P5: "<epoch> <subagent_type> <palabra>" por Sonnet con pedido de busqueda
 
@@ -194,6 +201,36 @@ trabajo y, si hace falta, effort: low|medium|high (nunca max). Excepcion: \`audi
 \`auditor-cliente\` van en opus.
 EOF
   exit 2
+}
+
+# Workflow (24/10/2026): la misma regla que Agent, leida en el guion. Mensaje propio porque el arreglo es otro.
+rechazar_wf() {
+  cat >&2 <<EOF
+BLOQUEADO (Workflow): $1
+
+Workflow esta prendida (Fak, 16/10 y 24/10/2026) y pasa por la misma regla que Agent: cada agent() del guion va
+con effort 'low' | 'medium' | 'high' | 'xhigh' (nunca 'max'), con model 'haiku' | 'sonnet' | 'opus' | 'fable'
+segun el trabajo y, si lleva agentType, una definicion propia que cumpla el piso (investigador, explorador,
+buscador; los built-in no). Corregi el guion y relanzalo. Descuenta del presupuesto de 40 puntos cada 10 min con
+el modelo mas pesado que declara el guion; si no declara ninguno, como Opus (el de la sesion).
+EOF
+  exit 2
+}
+
+# La definicion de un agente por su nombre, en el proyecto y despues en ~/.claude/agents: deja DEF (vacio = no hay)
+# y D_NOMBRE/D_MODELO/D_ESFUERZO de leer_def. La usa la rama de Workflow para cada agentType del guion.
+buscar_def() {
+  DEF=""
+  local dir f
+  for dir in "${CLAUDE_PROJECT_DIR:+${CLAUDE_PROJECT_DIR}/.claude/agents}" "${BASE}/agents"; do
+    [ -n "$dir" ] && [ -d "$dir" ] || continue
+    for f in "$dir"/*.md; do
+      [ -f "$f" ] || continue
+      leer_def "$f"
+      if [ "$D_NOMBRE" = "$1" ]; then DEF="$f"; return 0; fi
+    done
+  done
+  return 0
 }
 
 # Pase de Fak que LEVANTA el cupo de PESADOS_MAX Opus/Fable por ventana (01/10/2026: "si habia una
@@ -333,37 +370,112 @@ if [ "$TOOL" != "Workflow" ]; then
       fi
     fi
   fi
+else
+  # ---------------------------------------------------------------- Workflow: la regla de Agent, leida en el guion
+  # Prendida desde el 16/10/2026 (Fak) y re-prendida el 24/10/2026. La llamada trae script | scriptPath | name | args
+  # (esquema de la tool y las 25 llamadas de los registros, medido el 24/10/2026): model y effort van en cada
+  # agent(prompt, { model, effort, agentType }) del guion. Va ANTES del `.agent-limit=0`: la regla de esfuerzo no tiene escape.
+  campo scriptPath; W_RUTA=$CAMPO
+  campo name; W_NOMBRE=$CAMPO
+  campo runId; W_CORRIDA=$CAMPO
+  W_EN_LINEA=0
+  RE_W_EN_LINEA='"script"[[:space:]]*:[[:space:]]*"'
+  [[ $PLANO =~ $RE_W_EN_LINEA ]] && W_EN_LINEA=1
+  # Una operacion sobre una corrida que ya existe (solo runId: pararla, ver su estado) no lanza agentes y no se frena:
+  # frenar el STOP de un Workflow desbocado seria peor que dejarlo pasar.
+  if [ -n "$W_CORRIDA" ] && [ "$W_EN_LINEA" = "0" ] && [ -z "$W_RUTA" ] && [ -z "$W_NOMBRE" ]; then permitir; fi
+
+  # Lo que se revisa: el payload (el guion en linea, con \" vuelto ") y, si hay, el archivo del guion.
+  W_TEXTO=${PLANO//\\\"/\"}
+  W_ARCHIVO=""
+  if [ -n "$W_RUTA" ]; then
+    W_ARCHIVO=${W_RUTA//\\\\/\/}; W_ARCHIVO=${W_ARCHIVO//\\/\/}
+    [ -f "$W_ARCHIVO" ] || rechazar_wf "No se puede leer el guion de scriptPath ($W_ARCHIVO): sin leerlo no se ve el modelo ni el esfuerzo de sus agentes."
+  elif [ "$W_EN_LINEA" = "0" ] && [[ $W_NOMBRE =~ ^[A-Za-z0-9._-]+$ ]]; then
+    # Un workflow guardado: el del proyecto y despues el de ~/.claude. Uno de fabrica (sin archivo) se cobra igual.
+    for F in "${CLAUDE_PROJECT_DIR:+${CLAUDE_PROJECT_DIR}/.claude/workflows/${W_NOMBRE}.js}" "${BASE}/workflows/${W_NOMBRE}.js"; do
+      if [ -n "$F" ] && [ -f "$F" ]; then W_ARCHIVO=$F; break; fi
+    done
+  fi
+  if [ -n "$W_ARCHIVO" ]; then
+    W_GUION=""
+    IFS= read -r -d '' W_GUION < "$W_ARCHIVO" || true
+    W_TEXTO+=$'\n'"$W_GUION"
+  fi
+
+  # Cada `clave: 'valor'` (comillas simples, dobles o invertidas; la clave con o sin comillas). Un valor calculado
+  # (una variable) no se lee: limite conocido. Cada texto encontrado se saca entero del resto (//): 400 agent() con el
+  # mismo `effort: 'high'` son UNA vuelta, no 400 (medido: un guion de 57 KB tardaba 10 s).
+  RE_W_ESFUERZO=$'effort["\']?[[:space:]]*:[[:space:]]*["\'`]([A-Za-z0-9_.-]*)'
+  RE_W_MODELO=$'model["\']?[[:space:]]*:[[:space:]]*["\'`]([][A-Za-z0-9_.:-]*)'
+  RE_W_TIPO=$'agentType["\']?[[:space:]]*:[[:space:]]*["\'`]([A-Za-z0-9_.:-]*)'
+
+  # Esfuerzo: como en la llamada a Agent, low|medium|high|xhigh; max nunca.
+  W_RESTO=$W_TEXTO
+  while [[ $W_RESTO =~ $RE_W_ESFUERZO ]]; do
+    V=${BASH_REMATCH[1]}
+    W_RESTO=${W_RESTO//"${BASH_REMATCH[0]}"/}
+    case "$V" in
+      ""|low|medium|high|xhigh) ;;
+      *) rechazar_wf "El guion pide effort '$V' para un agente: el maximo es xhigh, el anteultimo (Fak, 30/09/2026)." ;;
+    esac
+  done
+
+  # Modelo: el mas pesado que declara el guion (W_PESO; -1 = no declara ninguno).
+  W_PESO=-1
+  W_RESTO=$W_TEXTO
+  while [[ $W_RESTO =~ $RE_W_MODELO ]]; do
+    V=${BASH_REMATCH[1]}
+    W_RESTO=${W_RESTO//"${BASH_REMATCH[0]}"/}
+    P=-1
+    case "$V" in
+      ""|inherit) ;;
+      haiku|haiku\[*|claude-haiku-*) P=$PESO_HAIKU ;;
+      sonnet|sonnet\[*|claude-sonnet-*) P=$PESO_SONNET ;;
+      opus|opus\[*|claude-opus-*) P=$PESO_OPUS ;;
+      fable|fable\[*|claude-fable-*) P=$PESO_FABLE ;;
+      *) rechazar_wf "El guion pide model '$V': los modelos validos son haiku, sonnet, opus o fable." ;;
+    esac
+    [ "$P" -gt "$W_PESO" ] && W_PESO=$P
+  done
+
+  # agentType: el mismo piso que una definicion para Agent (sonnet+xhigh, haiku+medium/high/xhigh; auditores opus+xhigh).
+  W_RESTO=$W_TEXTO
+  while [[ $W_RESTO =~ $RE_W_TIPO ]]; do
+    V=${BASH_REMATCH[1]}
+    W_RESTO=${W_RESTO//"${BASH_REMATCH[0]}"/}
+    [ -n "$V" ] || continue
+    buscar_def "$V"
+    [ -n "$DEF" ] || rechazar_wf "agentType '$V' no tiene definicion propia (built-in o inexistente): no se le puede fijar modelo y esfuerzo."
+    P=$PESO_SONNET
+    case "$AUDITORES" in
+      *" $V "*)
+        case "$D_MODELO" in opus|claude-opus-*) ;; *) rechazar_wf "La definicion $DEF no dice model: opus (la auditoria final la hace Opus)." ;; esac
+        [ "$D_ESFUERZO" = "xhigh" ] || rechazar_wf "La definicion $DEF no dice effort: xhigh."
+        P=$PESO_OPUS ;;
+      *)
+        case "$D_MODELO" in
+          sonnet|claude-sonnet-*) [ "$D_ESFUERZO" = "xhigh" ] || rechazar_wf "La definicion $DEF no dice effort: xhigh." ;;
+          haiku|claude-haiku-*)
+            case "$D_ESFUERZO" in medium|high|xhigh) ;; *) rechazar_wf "La definicion $DEF (haiku) no dice effort: medium, high o xhigh." ;; esac
+            P=$PESO_HAIKU ;;
+          *) rechazar_wf "La definicion $DEF no dice model: sonnet ni haiku." ;;
+        esac ;;
+    esac
+    [ "$P" -gt "$W_PESO" ] && W_PESO=$P
+  done
+
+  # Sin modelo declarado, los agentes heredan el de la sesion, que este hook no ve: se cobra como Opus (en esta PC la
+  # sesion es Opus, "model": "opus[1m]"). Una sesion en Fable queda cobrada de menos: limite conocido.
+  if [ "$W_PESO" -lt 0 ]; then PESO=$PESO_OPUS; else PESO=$W_PESO; fi
+  # Con el pase de Fak (.agent-opus-ok) Opus y Fable descuentan como Sonnet, igual que en Agent.
+  if [ "$PESO" -gt "$PESO_SONNET" ] && pase_modelo_vigente; then PESO=$PESO_SONNET; fi
 fi
 
 # Limite 0 = techo desactivado a proposito por Fak (por 12 h); la regla de arriba ya corrio
 [ "$LIMITE" = "0" ] && permitir
 
-# ---------------------------------------------------------------- Workflow: denegado
-if [ "$TOOL" = "Workflow" ]; then
-  if [ -f "$PASE_WORKFLOW" ]; then
-    rm -f "$PASE_WORKFLOW"          # pase de un solo uso
-    exit 0
-  fi
-  cat >&2 <<'EOF'
-BLOQUEADO: la tool Workflow esta deshabilitada en esta maquina.
-
-Por que: el 2026-08-06 un Workflow lanzo 40 subagentes y consumio el limite de uso de
-Fak (4 horas sin poder trabajar). El modo de fallo no fue "pedi demasiado": fue que el
-script tenia un tope POR FASE (6 verificadores por fuente) y ninguno TOTAL, asi que
-8 fuentes x 6 = 48. La cuenta nunca se hizo. Un Workflow esconde la multiplicacion.
-
-Que hacer en su lugar, en este orden:
-  1. Resolvelo vos. Si ya sabes QUE archivo/celda/tabla mirar, leelo directo. Casi
-     siempre es mas rapido y el dato sale mas duro que fan-out.
-  2. Si de verdad no sabes DONDE mirar: hasta 10 llamadas a Agent, contadas y explicitas.
-  3. Si hace falta un Workflow de verdad: pediselo a Fak y que habilite el pase:
-        touch ~/.claude/.workflow-ok
-     Antes de pedirlo, decile el numero REAL de agentes = fase1 + (hallazgos x verificadores).
-EOF
-  exit 2
-fi
-
-# ---------------------------------------------------------------- Agent/Task: ventana deslizante por PUNTOS
+# ---------------------------------------------------------------- Agent/Task/Workflow: ventana deslizante por PUNTOS
 # Cada linea del log: "<epoch> <tool> <peso>", con el peso en puntos de la llamada. Las lineas viejas
 # ("pesado"/"liviano" o sin peso) cuentan como Sonnet.
 PRESUPUESTO=$((LIMITE * PESO_SONNET))

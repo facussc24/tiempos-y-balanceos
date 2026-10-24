@@ -4,7 +4,7 @@
 segun lo que cuesta** (tabla oficial de precios de Anthropic, 08/10/2026): **haiku 1 · sonnet 4 · opus 8 ·
 fable 20**. Diez Sonnet siguen valiendo lo mismo que antes (40); con lo mismo entran 40 busquedas en
 Haiku, 5 Opus o 2 Fable. El esfuerzo es `xhigh` (el anteultimo; `max` nunca se pide). La tool
-`Workflow` estuvo deshabilitada del 06/08 al 16/10/2026; **Fak la prendio el 16/10** («Fable 5.1 ultracode de una… si o si») y queda prendida: sus agentes pasan por el mismo presupuesto.
+`Workflow` estuvo deshabilitada del 06/08 al 16/10/2026; **Fak la prendio el 16/10** («Fable 5.1 ultracode de una… si o si») y queda prendida (re-prendida el 24/10, parrafo final): cada Workflow descuenta UNA vez del mismo presupuesto, con el modelo mas pesado que declara su guion (sin modelo, como Opus), y con la regla de esfuerzo de Agent.
 
 **Lo que frena hoy, y donde:** la ventana de 10 min por puntos (hook `agentes-guard.sh`); la ventana de 5 h por encima del
 **85 %** (mod `presupuesto-agentes`, `mods/presupuesto-agentes/`; `~/.claude/.agent-cupo-ok` la saltea); `maxTurns` por
@@ -108,7 +108,6 @@ y se le avisa a Fak que se llego al techo.
 ```bash
 echo 15 > ~/.claude/.agent-limit    # 15 Sonnet = 60 puntos cada 10 min (vale 12 h, despues vuelve a 40 solo)
 echo 0 > ~/.claude/.agent-limit     # apaga el CONTEO (idem, 12 h); la regla de esfuerzo sigue
-touch ~/.claude/.workflow-ok        # habilitaba UN Workflow hasta el 16/10 (hoy Workflow esta prendida)
 touch ~/.claude/.agent-opus-ok      # 12 h: Opus y Fable descuentan como Sonnet (4)
 touch ~/.claude/.agent-cupo-ok      # 12 h: saltea el freno de la ventana de 5 h (> 85 %) y apaga el aviso semanal
 ```
@@ -120,4 +119,4 @@ regla: se le nombra el cambio exacto y se hace** (el 01/10 tuvo que pedirlo cuat
 08/10/2026 a la noche, `echo 20 > ~/.claude/.agent-limit` (80 puntos) para la investigacion grande que
 pidio ("desplegando agentes, equipos de agentes, lo que sea necesario").
 
-Workflow se reactivo el 16/10/2026 sacando `disableWorkflows` de `~/.claude/settings.json` (respaldo `settings.json.antes-ultracode-2026-10-16`). Para apagarla de nuevo: volver a poner `"disableWorkflows": true`.
+Workflow se reactivo el 16/10/2026 sacando `disableWorkflows` de `~/.claude/settings.json` (respaldo `settings.json.antes-ultracode-2026-10-16`). El 23/10 a las 13:01 el settings volvio a decir `"disableWorkflows": true` sin registro de quien (la copia `claude-config\settings.json` de la nube tiene la misma hora y el mismo valor), y el guardian la negaba siempre salvo el pase `.workflow-ok`; **Fak la re-prendio el 24/10/2026**: se saco la clave otra vez (respaldo `settings.json.antes-workflow-2026-10-24`), el guardian lee el guion y la cuenta como un lanzamiento, y el pase se retiro. Los agentes de ADENTRO de un Workflow no pasan por el guardian bash (los contaba el mod `presupuesto-agentes`). Para apagarla: `"disableWorkflows": true` en `~/.claude/settings.json`.
