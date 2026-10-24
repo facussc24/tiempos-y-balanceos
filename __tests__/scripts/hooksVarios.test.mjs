@@ -495,6 +495,12 @@ describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de
   // de abajo tienen esa forma; un campo model/effort inventado arriba pasaria sin probar nada de una llamada real.
   const guion = (cuerpo) => `export const meta = { name: 'prueba', description: 'prueba del guardian' }\n${cuerpo}`;
   const wf = (cuerpo, extra = {}) => correr('Workflow', { script: guion(cuerpo), ...extra });
+  // Un guardado lo busca la tool por el meta.name de adentro del .js, no por el nombre del archivo (auditor r2, 24/10).
+  const guardar = (nombre, cuerpo, archivo = `${nombre}.js`) => {
+    fs.mkdirSync(path.join(proyecto, '.claude', 'workflows'), { recursive: true });
+    fs.writeFileSync(path.join(proyecto, '.claude', 'workflows', archivo), `export const meta = { name: '${nombre}', description: 'guardado de prueba' }
+${cuerpo}`);
+  };
   const registro = () => (fs.existsSync(archivo('.agent-spawns.log')) ? fs.readFileSync(archivo('.agent-spawns.log'), 'utf8') : '')
     .split('\n').filter(Boolean).map((l) => l.split(' ').slice(1).join(' '));
 
@@ -568,8 +574,8 @@ describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de
     expect(no.exit).toBe(2);
     expect(no.err).toMatch(/No se puede leer el guion/);
     fs.mkdirSync(path.join(proyecto, '.claude', 'workflows'), { recursive: true });
-    fs.writeFileSync(path.join(proyecto, '.claude', 'workflows', 'guardado-max.js'), guion("await agent('a', { effort: 'max' })"));
-    fs.writeFileSync(path.join(proyecto, '.claude', 'workflows', 'guardado-ok.js'), guion("await agent('a', { agentType: 'investigador', model: 'haiku' })"));
+    guardar('guardado-max', "await agent('a', { effort: 'max' })");
+    guardar('guardado-ok', "await agent('a', { agentType: 'investigador', model: 'haiku' })");
     expect(correr('Workflow', { name: 'guardado-max' }).exit).toBe(2);
     expect(correr('Workflow', { name: 'guardado-ok', args: { rama: 'x' } }).exit).toBe(0);
     expect(registro().at(-1)).toBe('Workflow 4');
@@ -581,7 +587,7 @@ describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de
     const hijo = path.join(dir, 'hijo max.js');
     fs.writeFileSync(hijo, "await agent('a', { effort: 'max' })");
     fs.mkdirSync(path.join(proyecto, '.claude', 'workflows'), { recursive: true });
-    fs.writeFileSync(path.join(proyecto, '.claude', 'workflows', 'guardado-max.js'), guion("await agent('a', { effort: 'max' })"));
+    guardar('guardado-max', "await agent('a', { effort: 'max' })");
     const rojos = [
       [{ script: guion(`return await workflow({ scriptPath: ${JSON.stringify(hijo)} })`) }, /effort 'max'/],
       [{ script: guion("return await workflow('guardado-max')") }, /effort 'max'/],
@@ -606,7 +612,7 @@ describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de
 
   it('VERDE: lo de args y description no se revisa; un guion mixto (haiku + un agent() sin modelo) se cobra como Opus; un hijo en fable pesa 20', () => {
     fs.mkdirSync(path.join(proyecto, '.claude', 'workflows'), { recursive: true });
-    fs.writeFileSync(path.join(proyecto, '.claude', 'workflows', 'guardado-fable.js'), guion("await agent('a', { model: 'fable' })"));
+    guardar('guardado-fable', "await agent('a', { model: 'fable' })");
     const pesoDe = (ti) => {
       fs.rmSync(archivo('.agent-spawns.log'), { force: true });
       const r = correr('Workflow', ti);
@@ -618,6 +624,44 @@ describe.skipIf(!fs.existsSync(AGENTES))('agentes-guard.sh (global) — techo de
     expect(pesoDe({ script: guion("agent('a', { model: 'haiku' }); agent('b', { label: 'hereda' })") })).toBe('Workflow 8');
     expect(pesoDe({ script: guion("agent('a', { model: '', effort: 'low' }); agent('b', { model: 'fable' })") })).toBe('Workflow 20');
     expect(pesoDe({ script: guion("await agent('a', { model: 'haiku' }); return await workflow('guardado-fable')") })).toBe('Workflow 20');
+  });
+
+  // Ronda 2 del auditor (24/10/2026), contra el codigo de Claude Code: con script la tool corre script aunque venga
+  // scriptPath; name se busca por el meta.name de cada .js (no por el archivo, y los .mjs no se cargan); workflow() se
+  // llama tambien con espacio, ?. o como valor; un agent() con model inherit o vacio hereda la sesion.
+  it('ronda 2: script le gana a scriptPath, name por meta.name, workflow() con otras formas e inherit; en las dos direcciones', () => {
+    const dir = fs.mkdtempSync(path.join(TMP, 'wf-r2-'));
+    const hijoOk = path.join(dir, 'hijo-ok.js');
+    fs.writeFileSync(hijoOk, "await agent('a', { model: 'haiku' })");
+    guardar('alias-max', "await agent('a', { effort: 'max' })", 'cualquiera.js');
+    guardar('otro-max', "await agent('a', { effort: 'max' })", 'limpio.js');
+    guardar('distinto', "await agent('a', { model: 'haiku' })", 'otro-max.js');
+    const rojos = [
+      [{ scriptPath: hijoOk, script: guion("agent('a', { effort: 'max' })") }, /effort 'max'/],
+      [{ name: 'alias-max' }, /effort 'max'/],
+      [{ name: 'otro-max' }, /effort 'max'/],
+      [{ script: guion("return await workflow ('alias-max')") }, /effort 'max'/],
+      [{ script: guion("return await workflow?.('alias-max')") }, /effort 'max'/],
+      [{ script: guion("const w = workflow; return await w('alias-max')") }, /argumento calculado/],
+      [{ script: guion("return await workflow.call(null, 'alias-max')") }, /argumento calculado/],
+    ];
+    for (const [ti, msj] of rojos) {
+      const r = correr('Workflow', ti);
+      expect(r.exit, JSON.stringify(ti)).toBe(2);
+      expect(r.err, JSON.stringify(ti)).toMatch(msj);
+    }
+    expect(registro()).toEqual([]);
+    const pesoDe = (ti) => {
+      fs.rmSync(archivo('.agent-spawns.log'), { force: true });
+      const r = correr('Workflow', ti);
+      expect(r.exit, `${JSON.stringify(ti)}\n${r.err}`).toBe(0);
+      return registro().at(-1);
+    };
+    expect(pesoDe({ scriptPath: path.join(dir, 'no-existe.js'), script: guion("agent('a', { model: 'haiku' })") })).toBe('Workflow 1');   // con script, el archivo no hace falta
+    expect(pesoDe({ name: 'distinto' })).toBe('Workflow 1');                                         // el archivo otro-max.js declara 'distinto'
+    expect(pesoDe({ script: guion("agent('a', { model: 'haiku' }); agent('b', { model: 'inherit' })") })).toBe('Workflow 8');
+    expect(pesoDe({ script: guion("agent('a', { model: 'haiku' }); agent ('b', { label: 'x' })") })).toBe('Workflow 8');
+    expect(pesoDe({ script: guion("// el workflow no escribe archivos\nagent('a', { model: 'sonnet' })") })).toBe('Workflow 4'); // la palabra suelta no frena
   });
 
   it('VERDE: una operacion sobre una corrida (solo runId: pararla) pasa sin descontar, aun con el presupuesto agotado', () => {

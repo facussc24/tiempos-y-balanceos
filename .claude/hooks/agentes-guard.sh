@@ -9,8 +9,8 @@
 # Reglas:
 #   Workflow           -> PRENDIDA (Fak, 16/10/2026; re-prendida el 24/10/2026) y con la regla de Agent. La llamada
 #                         no trae model ni effort: van en cada agent() del guion. El LECTOR en node (al final de este
-#                         archivo) lee el guion (script, el archivo de scriptPath o .claude/workflows/<name>.js, y UN
-#                         nivel de workflow() anidado; nunca args ni description) y se rechaza un effort fuera de
+#                         archivo) lee el guion (script, el archivo de scriptPath y el guardado cuyo meta.name es name,
+#                         y UN nivel de workflow() anidado; nunca args ni description) y se rechaza un effort fuera de
 #                         low|medium|high|xhigh (max nunca), un model que no existe, un agentType sin definicion propia
 #                         que cumpla el piso, un valor armado con ${...} y un workflow() con argumento calculado.
 #                         Descuenta UNA vez, con el modelo mas pesado del guion (model:, la definicion de su agentType,
@@ -378,10 +378,11 @@ else
   # Prendida desde el 16/10/2026 (Fak) y re-prendida el 24/10/2026. La llamada trae script | scriptPath | name | args
   # (esquema de la tool y las 25 llamadas de los registros, medido el 24/10/2026): model y effort van en cada
   # agent(prompt, { model, effort, agentType }) del guion. El guion lo lee node (el LECTOR, al final de este archivo):
-  # toma los campos de tool_input de verdad (no los de args), lee el archivo de scriptPath o el guardado de name, sigue
-  # UN nivel de workflow() anidado (lo que la tool permite) y devuelve una linea CLAVE|valor por dato. Aca se decide con
-  # la misma regla que Agent. Es el unico proceso externo del hook y solo corre para Workflow (23 llamadas distintas en
-  # toda la historia de la PC). Va ANTES del `.agent-limit=0`: ningun pase saltea la regla de esfuerzo.
+  # toma los campos de tool_input de verdad (no los de args), lee script, el archivo de scriptPath y el guardado de name
+  # (la union), sigue UN nivel de workflow() anidado (lo que la tool permite) y devuelve una linea CLAVE|valor por dato.
+  # Aca se decide con la misma regla que Agent. node corre solo para Workflow (23 llamadas distintas en toda la historia
+  # de la PC); Agent sigue sin abrir programas en el camino normal. Va ANTES del `.agent-limit=0`: ningun pase saltea la
+  # regla de esfuerzo.
   W_SALIDA=$(printf '%s' "$INPUT" | node -e "const s=require('fs').readFileSync(process.argv[1],'utf8');eval(s.slice(s.lastIndexOf('//@@LECTOR'+'_WORKFLOW@@')))" "${BASH_SOURCE[0]}" 2>/dev/null)
   W_RC=$?
   case "$W_SALIDA" in
@@ -511,11 +512,12 @@ exit 0
 # ---------------------------------------------------------------- LECTOR de la rama Workflow (node)
 # Bash no llega aca (esta despues del exit) y el heredoc es para que `bash -n` no lo lea como bash. La rama Workflow
 # le pasa el payload por stdin a node, que corre desde la marca de abajo hasta el final. Solo LEE y dice lo que ve, una
-# linea CLAVE|valor por dato; la regla la aplica el bash de arriba. Se lee: el guion de tool_input.script, el archivo
-# de tool_input.scriptPath (le gana a script y a name, como en la tool) o .claude/workflows/<name>.js del proyecto o de
-# ~/.claude, y UN nivel de workflow('nombre') / workflow({ scriptPath | name }) con literal. No se lee args ni
-# description. Limites: un valor en una variable (effort: E), formas raras de un literal (un comentario entre la
-# clave y el valor, parentesis, una clave calculada) y un workflow de fabrica (sin archivo).
+# linea CLAVE|valor por dato; la regla la aplica el bash de arriba. Se lee la UNION de lo que la tool puede correr: el
+# guion de tool_input.script, el archivo de tool_input.scriptPath y el guardado de tool_input.name (el .js cuyo meta.name
+# es ese, como lo busca la tool), y UN nivel de workflow('nombre') / workflow({ scriptPath | name }) con literal. No se
+# lee args ni description. Limites: un valor en una variable (effort: E), formas raras de un literal o de la llamada (un
+# comentario entre la clave y el valor o antes del parentesis, parentesis alrededor del valor, una clave calculada) y un
+# workflow de fabrica o de un plugin (sin archivo).
 : <<'//FIN-LECTOR-WORKFLOW'
 //@@LECTOR_WORKFLOW@@
 const fs = require('fs'), path = require('path'), os = require('os');
@@ -535,7 +537,12 @@ const hastaCierre = (src, i) => {
   }
   return src.slice(i + 1, j);
 };
-const literal = (clave) => new RegExp('(?:^|[^\\w$])["\']?' + clave + '["\']?\\s*:\\s*(["\'`])((?:\\\\.|(?!\\1)[^\\\\\\n])*)\\1');
+const literal = (clave) => new RegExp('(?:^|[^\\w$])["\']?' + clave + '["\']?\\s*:\\s*(["\'`])((?:\\\\[\\s\\S]|(?!\\1)[^\\\\\\n])*)\\1');
+// Un agent() declara su modelo si trae model con un literal que no es vacio ni inherit, o un agentType literal.
+const declaraModelo = (args) => {
+  const m = literal('model').exec(args), t = literal('agentType').exec(args);
+  return Boolean((m && m[2] && m[2] !== 'inherit') || (t && t[2]));
+};
 try {
   const p = JSON.parse(fs.readFileSync(0, 'utf8'));
   const ti = (p && typeof p.tool_input === 'object' && p.tool_input) || {};
@@ -547,28 +554,47 @@ try {
     decir('CORRIDA');
   } else {
     const guiones = [];
-    const deRuta = (r) => {
+    const deRuta = (r, obligatorio = true) => {
       const f = path.resolve(cwd, /^~[\\/]/.test(r) ? path.join(casa, r.slice(2)) : r);
-      try { guiones.push(fs.readFileSync(f, 'utf8')); } catch { decir('NO_SE_LEE', f); }
+      try { guiones.push(fs.readFileSync(f, 'utf8')); } catch { if (obligatorio) decir('NO_SE_LEE', f); }
     };
+    // Un guardado se busca como la tool (codigo de Claude Code, auditor r2 24/10/2026): por el meta.name de adentro de
+    // cada .js (no por el nombre del archivo; los .mjs no se cargan), primero el proyecto (CLAUDE_PROJECT_DIR y del cwd
+    // hacia arriba) y despues ~/.claude. Si ningun archivo lo declara es de fabrica o de un plugin: SIN_ARCHIVO.
+    const carpetas = [];
+    const sumar = (d) => { const k = path.resolve(d).toLowerCase(); if (!carpetas.some((c) => c.k === k)) carpetas.push({ k, d }); };
+    if (proyecto) sumar(path.join(proyecto, '.claude', 'workflows'));
+    for (let d = path.resolve(cwd); ; d = path.dirname(d)) {
+      sumar(path.join(d, '.claude', 'workflows'));
+      if (path.resolve(d).toLowerCase() === path.resolve(casa).toLowerCase() || path.dirname(d) === d) break;
+    }
+    sumar(path.join(casa, '.claude', 'workflows'));
+    const metaName = (t) => { const m = /\bmeta\s*=\s*\{[\s\S]{0,4000}?\bname\s*:\s*(["'`])([^"'`\n]+)\1/.exec(t); return m ? m[2] : ''; };
     const guardado = (n) => {
       if (n.includes('${')) return decir('ANIDADO_CALCULADO', n);
       if (/[\\/]|\.\./.test(n)) return decir('NOMBRE_RARO', n);
-      const dirs = [proyecto && path.join(proyecto, '.claude', 'workflows'), path.join(casa, '.claude', 'workflows')].filter(Boolean);
-      for (const d of dirs) for (const ext of ['.js', '.mjs']) {
-        const f = path.join(d, n + ext);
-        if (fs.existsSync(f)) return guiones.push(fs.readFileSync(f, 'utf8'));
+      for (const { d } of carpetas) {
+        let archivos = [];
+        try { archivos = fs.readdirSync(d).filter((a) => a.endsWith('.js')).sort(); } catch { continue; }
+        for (const a of archivos) {
+          let t = '';
+          try { t = fs.readFileSync(path.join(d, a), 'utf8'); } catch { continue; }
+          if (metaName(t) === n) return guiones.push(t);
+        }
       }
       decir('SIN_ARCHIVO', n);
     };
-    if (txt(ti.scriptPath)) deRuta(ti.scriptPath);
-    else {
-      if (txt(ti.script)) guiones.push(ti.script);
-      if (txt(ti.name)) guardado(ti.name);
-    }
+    // Con script, la tool corre script aunque venga scriptPath (el archivo solo da la ruta); con scriptPath y name corre
+    // el archivo. Se lee la UNION, que es lo seguro: script, el archivo (obligatorio solo si no hay script) y el guardado.
+    if (txt(ti.script)) guiones.push(ti.script);
+    if (txt(ti.scriptPath)) deRuta(ti.scriptPath, !txt(ti.script));
+    if (txt(ti.name)) guardado(ti.name);
     // UN nivel de workflow() anidado: el hijo se lee igual que el de arriba (la referencia de la tool: un solo nivel).
     for (const t of guiones.slice()) {
-      const re = /(?<![\w$.])workflow\(/g;
+      // usarla como valor (alias, .call, entre parentesis) no deja leer al hijo: se frena como calculado
+      const raro = /\(\s*workflow\s*\)\s*\(|(?<![\w$.])workflow\s*\.\s*(?:call|apply|bind)\b|=\s*workflow\s*(?:[;,)\n]|$)/.exec(t);
+      if (raro) decir('ANIDADO_CALCULADO', raro[0].trim());
+      const re = /(?<![\w$.])workflow\s*(?:\?\.\s*)?\(/g;
       let m;
       while ((m = re.exec(t))) {
         const arg = hastaCierre(t, m.index + m[0].length - 1).trim();
@@ -590,11 +616,11 @@ try {
         let m;
         while ((m = re.exec(t))) decir(m[2].includes('${') ? 'CALCULADO' : k, m[2].includes('${') ? clave : m[2]);
       }
-      // Un agent() que no declara model ni agentType corre en el modelo de la sesion.
-      const re = /(?<![\w$.])agent\(/g;
+      // Un agent() que no declara modelo (ni agentType) corre en el modelo de la sesion.
+      const re = /(?<![\w$.])agent\s*(?:\?\.\s*)?\(/g;
       let m;
       while ((m = re.exec(t))) {
-        if (!/(?:^|[^\w$])["']?(?:model|agentType)["']?\s*:/.test(hastaCierre(t, m.index + m[0].length - 1))) { decir('HEREDA'); break; }
+        if (!declaraModelo(hastaCierre(t, m.index + m[0].length - 1))) { decir('HEREDA'); break; }
       }
     }
   }
