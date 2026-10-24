@@ -569,6 +569,11 @@ prueba sin CATIA; el detalle de cada lección, con su medición, en **`scripts/c
   lado: 0,000 mm³ de diferencia); el centro de gravedad sí (0,028 mm por 0,1 mm de corrimiento). Una respuesta de masa
   se acompaña del centro contra un gemelo (37; 36 en CATA). Y toda comparación se escribe «bien si |x − y| <= tol»: con
   «malo si > tol» un NaN pasa (32, 34, 40, 41).
+- **Comparar CATIA contra un STEP de referencia**: la distancia de malla a malla mezcla el facetado (OpenCASCADE malla el
+  STEP de CATIA con 0,029 mm donde un cilindro corta una cara inclinada); decide la EXACTA de `compara.py`
+  (`dist_max_exacta_*`: punto a su cáscara y de ahí a la cáscara del otro, nunca contra el sólido) en los dos sentidos, y
+  el volumen de CATIA por dentro. Ante un rojo, primero se ubica la diferencia con booleanas: la referencia generada por un
+  script también puede traer el error (49 y 48: la entrada guiada del gancho no corta de un lado).
 - `AddNewRibFromRef` (barrido de GSD) respeta el ángulo del perfil: no lo pone normal al camino (38, CATA: un perfil
   inclinado 4,55° da área × largo × cos). Un ensamble se juzga por la pose que da el solucionador, arrancando la pieza
   lejos para que un solucionador quieto dé rojo (40).
