@@ -86,6 +86,7 @@ def comparar(s):
         malos.append(f"centro de CATIA {cc} y la cuenta da {[round(x, 4) for x in cdg]}")
     sp = s.get("step_catia_en_build123d")
     sp = (sp.get(PARTE) if isinstance(sp, dict) else None) or {}
+    sp = sp if isinstance(sp, dict) else {}          # un texto (la medicion fallo) es rojo, no una excepcion
     if tuple(sp.get(k) for k in ("solidos", "cascaras", "caras_sueltas")) != (1, 1, 0):
         malos.append(f"el STEP de CATIA trae {tuple(sp.get(k) for k in ('solidos', 'cascaras', 'caras_sueltas'))}: 1/1/0")
     if not cerca(sp.get("volumen"), v, pj.tol_volumen(v)):

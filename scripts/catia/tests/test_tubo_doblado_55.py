@@ -77,6 +77,7 @@ class Cierre(unittest.TestCase):
             "NaN en el volumen": {("volumen_catia", "tubo"): float("nan")},
             "NaN en el centro": {("cdg_catia_mm", "tubo"): [float("nan"), 43.267, 0.0]},
             "sin STEP medido": {("step_catia_en_build123d",): "no esta el entorno CAD"},
+            "STEP medido como texto en la parte": {("step_catia_en_build123d", "tubo"): "error al leer"},
         }
         for que, cambio in rojos.items():
             with self.subTest(que):

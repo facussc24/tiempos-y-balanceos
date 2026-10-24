@@ -208,3 +208,6 @@ Microsoft/
 # 10/10/2026 (cola P41): restos del hook permiso-guard si un proceso muere mientras anota en la lista de la tanda
 *.permiso.lock
 *.permiso.tmp
+
+# banco de CATIA: el registro de una corrida va con la corrida, no al lado del script (24/10/2026)
+scripts/catia/ejercicios/**/registro.json

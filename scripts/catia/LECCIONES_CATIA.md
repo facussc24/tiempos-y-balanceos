@@ -183,6 +183,11 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
   chaflán y el juez las comparó con las 18 del gemelo. Las del sólido se cuentan en el STEP.
 - **Rutas de más de 260 caracteres**: en CATA el STL del bien.py del 51 queda a 308 y Windows dice que no existe; los
   gemelos corren con el prefijo `\\?\` (memoria `reference_max_path_260_ruta_no_abre`).
+- **`AddNewShell(cara a sacar, espesor interno, espesor externo)` con (cara de arriba, 3, 0) da la pared hacia adentro a la
+  primera** sobre una caja sin redondeos (59, CATA; el ej81 de la práctica falló al sacar una cara rodeada de redondeos
+  tangentes, no por la llamada). La cara se elige por posición. **Ni «bajó el volumen» prueba «hacia adentro» ni el
+  volumen prueba «por la cara pedida»**: con la pared afuera también baja (94 308) y con la cara de abajo da el mismo
+  83 508 con el centro en z 32,12; lo separan el centro, lo sacado con su centro y la forma contra el gemelo.
 
 ## Piezas reales del cliente (fase 3: 32 a 35)
 
@@ -286,6 +291,10 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
   entregable, ocultar también `OriginElements`.
 - Dos PC escribiendo el mismo archivo de la nube en el mismo minuto: OneDrive arma una copia con el nombre de la PC
   (`PREGUNTAS_FAK-DESKTOP-14JG95B.md`, 24/10 08:50). Cada PC escribe en su archivo, o agrega con una edición corta.
+- **Lo que `juez_comun` deja como TEXTO cuando una medición falla (sin `.venv-cad`, un STEP ilegible) tiene que dar ROJO,
+  no una excepción** (CATA, 59, 56, 18; la principal en 55, 57, 58 y 60): `step_catia_en_build123d` puede ser un texto
+  entero o un texto DENTRO de la parte (`{"macho": "error…"}`), y un `.get()` sobre eso revienta el cierre. Se normaliza a
+  `{}` antes de leer (`sp = sp if isinstance(sp, dict) else {}`) y la prueba tiene los dos rojos.
 
 ## Tiempos medidos (24/10/2026)
 

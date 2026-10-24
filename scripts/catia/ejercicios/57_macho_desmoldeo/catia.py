@@ -84,18 +84,16 @@ def comparar(s):
     if m.get("aristas_laterales") != 4:
         malos.append(f"{m.get('aristas_laterales')} aristas laterales redondeadas y no 4")
     vg, cg = g.get("vol"), g.get("cdg")
+    sp = s.get("step_catia_en_build123d")
+    sp = (sp.get(PARTE) if isinstance(sp, dict) else None) or {}
+    sp = sp if isinstance(sp, dict) else {}          # un texto (la medicion fallo) es rojo, no una excepcion (CATA, 16:01)
     for que, v, c in (("CATIA", (s.get("volumen_catia") or {}).get(PARTE), (s.get("cdg_catia_mm") or {}).get(PARTE)),
-                      ("el STEP de CATIA", ((s.get("step_catia_en_build123d") or {}).get(PARTE) or {}).get("volumen")
-                       if isinstance(s.get("step_catia_en_build123d"), dict) else None,
-                       ((s.get("step_catia_en_build123d") or {}).get(PARTE) or {}).get("cdg_mm")
-                       if isinstance(s.get("step_catia_en_build123d"), dict) else None)):
+                      ("el STEP de CATIA", sp.get("volumen"), sp.get("cdg_mm"))):
         if not cerca(v, vg, pj.tol_volumen(vg or 0)):
             malos.append(f"volumen de {que} {v} y el gemelo da {vg}")
         dc = distancia(c, cg)
         if dc is None or not dc <= TOL_CDG_MM:
             malos.append(f"centro de {que} {c} y el gemelo da {cg}")
-    sp = s.get("step_catia_en_build123d")
-    sp = (sp.get(PARTE) if isinstance(sp, dict) else None) or {}
     if tuple(sp.get(k) for k in ("solidos", "cascaras", "caras_sueltas")) != (1, 1, 0):
         malos.append(f"el STEP de CATIA trae {tuple(sp.get(k) for k in ('solidos', 'cascaras', 'caras_sueltas'))}: 1/1/0")
     return malos

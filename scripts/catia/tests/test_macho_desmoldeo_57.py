@@ -68,6 +68,8 @@ class Cierre(unittest.TestCase):
             "STEP en dos solidos": {("step_catia_en_build123d", "macho", "solidos"): 2},
             "NaN en el desmoldeo": {("macho", "catia_desmoldeo"): float("nan")},
             "NaN en el centro del STEP": {("step_catia_en_build123d", "macho", "cdg_mm"): [float("nan"), 0.0, 29.2685]},
+            "sin STEP medido": {("step_catia_en_build123d",): "no esta el entorno CAD"},
+            "STEP medido como texto en la parte": {("step_catia_en_build123d", "macho"): "error al leer"},
         }
         for que, cambio in rojos.items():
             with self.subTest(que):
