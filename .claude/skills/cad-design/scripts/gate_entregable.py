@@ -31,6 +31,11 @@ Tres mas de la tanda 2 (17/10/2026), los tres AVISO la primera semana (procesoCa
         lee VACIO). El freno es export_deliverables.py, que la arregla en la copia.
   G-E7  El criterio de aceptacion escrito antes de imprimir (<workdir>/criterio_aceptacion.json).
 
+Una mas (24/10/2026, propuesta P13, leccion 39), SOLO si se pasan --fuentes-pagina y --medidas; SIEMPRE aviso aca:
+  G-E8  Los numeros con unidad de la pagina de entrega (pasos.json y lo que la arma) salen de los JSON de medidas
+        del modelo; ninguno tipeado, ninguno que contradiga su medida, ningun dato con dos valores. Lo juzga
+        numeros_pagina.py (que frena por su cuenta desde el 01/11/2026). Sin medidas: NO MEDIDO, nunca OK.
+
 SOBRE G-E3b, Y POR QUE NO BLOQUEA. Dos hipotesis mias, las dos caidas contra datos reales
 el mismo dia. Queda escrito con los numeros para que nadie las reinvente:
 
@@ -134,9 +139,10 @@ def croma_del_objeto(path, umbral_pixel):
 # =====================================================================================
 # verificacion
 # =====================================================================================
-def verificar(entrega, motor, renders, workdir_path=None, sin_render=False, motivo_sin_render=None):
+def verificar(entrega, motor, renders, workdir_path=None, sin_render=False, motivo_sin_render=None,
+              fuentes_pagina=None, medidas=None):
     c = canon()
-    rojos, avisos = [], []
+    rojos, avisos, infos = [], [], []
 
     def rojo(gate, msg, det=None):
         rojos.append((gate, msg, det))
@@ -344,6 +350,21 @@ def verificar(entrega, motor, renders, workdir_path=None, sin_render=False, moti
         else:
             avisos.append("G-E5 · %s — modo AVISO hasta el %s (procesoCanon gateAsiento)" % (msg5, ga.get("revisar")))
 
+    # ---- G-E8: los numeros de la pagina salen de las medidas (24/10/2026; P13 y leccion 39) ----
+    # Solo si se pasan --fuentes-pagina o --medidas; sin ellas no se corre ni se imprime nada. SIEMPRE aviso: el freno desde
+    # el 01/11 es del comando numeros_pagina.py. Si el control no midio, dice NO MEDIDO (nunca OK).
+    if fuentes_pagina is not None or medidas is not None:
+        import numeros_pagina
+        nivel, lineas8 = numeros_pagina.para_entregable(fuentes_pagina, medidas)
+        if nivel == "ok":
+            infos.append("G-E8 · %s" % lineas8[0])
+        elif nivel == "no_medido":
+            avisos.append("G-E8 · NO MEDIDO: %s (un control que no midio no da verde)" % lineas8[0])
+        else:
+            avisos.append("G-E8 · %s — modo AVISO hasta el %s (numerosCanon.data.json)"
+                          % (lineas8[0], numeros_pagina.canon()["aviso_hasta"]))
+            avisos.extend("G-E8 ·%s" % x for x in lineas8[1:])
+
     # ---- salida ----
     print("GATE DE ENTREGABLE — %s" % entrega)
     for o in fmt["obligatorios"]:
@@ -351,6 +372,8 @@ def verificar(entrega, motor, renders, workdir_path=None, sin_render=False, moti
         print("  %-20s %s" % (o["id"], ", ".join(os.path.basename(h) for h in hits) or "FALTA"))
     for nombre, frac, n in medidos:
         print("  color %-24s %.2f  (%d px de objeto)" % (nombre, frac, n))
+    for i in infos:
+        print("  INFO   %s" % i)
     print("")
     for a in avisos:
         print("  AVISO  %s" % a)
@@ -389,9 +412,14 @@ def main():
     ap.add_argument("--workdir", help="si pasa, registra la evidencia 'entregable_ok'")
     ap.add_argument("--sin-render", action="store_true", help="la entrega no lleva renders (exige --reason)")
     ap.add_argument("--reason", default=None)
+    ap.add_argument("--fuentes-pagina", nargs="+", default=None,
+                    help="G-E8: la pagina de entrega o lo que la arma (pasos.json, .md, .txt, .html); exige --medidas")
+    ap.add_argument("--medidas", nargs="+", default=None,
+                    help="G-E8: JSON de medidas del modelo contra los que se leen los numeros de la pagina "
+                         "(manifest.json, params, registro de medidas)")
     args = ap.parse_args()
     return verificar(args.entrega, args.motor, args.render, args.workdir,
-                     args.sin_render, args.reason)
+                     args.sin_render, args.reason, args.fuentes_pagina, args.medidas)
 
 
 if __name__ == "__main__":

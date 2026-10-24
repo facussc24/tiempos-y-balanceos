@@ -1,0 +1,60 @@
+id: 26_numeros_de_la_pagina
+nombre: Numeros de la pagina de entrega - el "0,1 mm" del tope que era de otra pieza (medido 0,5755) y un mismo dato con dos valores
+falla_real:
+  cita: "«El tope de borde 2 queda a 0,1 mm del plástico del borde» es falso — Medido con distancia exacta de OpenCASCADE ... tope de borde 1 = 0,577 mm, tope de borde 2 = 0,5755 mm, tope lateral = 2,016 mm; machos 0,1394 / 0,1404"
+  fecha: 2026-10-20
+  fuente: >-
+    C:\Dev\_catia_practica\virolador_auto\AUDITORIA_auditor.md hallazgo 3 (l.54-70: el 0,1 era la luz de un macho de
+    un STEP anterior; la pagina lo atribuyo al tope) y hallazgo 8 (l.122-126: «La barra queda 47 mm arriba del panel»
+    era el brazo B, 47,208; la barra estaba a 69,6). Lo que se escribio, textual, esta en el Edit de las 13:50:12 del
+    20/10 (16:50:12Z) que quedo en el transcript de la sesion cc6c4c38-cbc8-4ca8-ae11-c65defd9ca4a (linea 1784 del
+    jsonl, en ~/.claude/projects/C--Dev-BarackMercosul): «El tope de borde 2 queda a 0,1 mm del plástico del borde: si
+    el tapizado envuelve ese borde, el tope se corre (a confirmar con la pieza)» y, en el grupo «4 Operario y puesto»,
+    «(la barra queda 47 mm arriba del panel)». El pasos.json de la carpeta (sha256 e656e907371b4c8c21c8591426109adf294f9dee0ecfc09d92db844691698987,
+    16:03) YA NO TIENE esas dos frases: se corrigieron despues de la auditoria. Por eso MAL 1 es un extracto con el
+    texto de la sesion y no la copia del archivo. Leccion 39 (reference/lecciones-caras.md l.468-491): «si el dato
+    existe en el JSON, el documento lo LEE». Propuesta P13 (docs/PROPUESTAS_SKILL_3D_2026-10-23.md l.481-500).
+pedido: >-
+  El control de numeros de la pagina (numeros_pagina.py) tiene que dejar pasar una pagina cuyos numeros con unidad salen
+  del JSON de medidas que escribio el build (aunque el mismo dato aparezca dos veces con distinta precision, 0,58 y
+  0,5755, y la pagina traiga una fecha, una hora, una version, una norma y una rosca), y tiene que frenar la pagina con
+  el «0,1 mm» del tope (el JSON dice 0,5755, y los machos, que SI valen 0,1394 y 0,1404, estan en el mismo JSON: buscar
+  solo por valor deja pasar el 0,1) y el «47 mm» de la barra (47,208 es el brazo B; la barra esta a 69,6). Y la pagina en
+  que el mismo dato sale con dos valores, 0,58 y 0,8, cada uno leido de un JSON distinto (el nuevo y el viejo): ahi
+  ningun numero esta tipeado y solo lo caza la regla del dato con dos valores.
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    nota: >-
+      Modelo de ensayo armado con build123d (un panel y ocho tacos a las distancias que midio el auditor el 20/10), con
+      las luces medidas por OpenCASCADE y escritas en __medidas.json; la pagina (__pasos.json y __pagina.html) LEE esas
+      claves. No es el virolador: no existe una pagina real generada por lectura (la del 20/10 se escribio a mano).
+  - archivo: mal_1_tope_0_1_contra_0_5755.py
+    esperado: rojo
+    falla: "la pagina del 20/10 de las 13:50: «El tope de borde 2 queda a 0,1 mm del plástico del borde» (JSON: 0,5755) y «la barra queda 47 mm arriba del panel» (JSON: 69,6); el 0,1 calza por redondeo con los machos (0,1394) y el 47 con el brazo B (47,208)"
+    nota: "las dos frases son las del transcript de la sesion (ver falla_real); el resto de la pagina es la de la BIEN con sus numeros ya escritos, sin la linea de resumen. El modelo y las medidas son los mismos de la BIEN."
+  - archivo: mal_2_dos_valores_del_mismo_dato.py
+    esperado: rojo
+    falla: "el tope de borde 2 sale a 0,58 mm (JSON nuevo) y a 0,8 mm (JSON viejo que quedo en la carpeta); ningun numero esta tipeado, los dos salen de un JSON"
+    nota: "armada para el banco: la version vieja (0,8) es de ensayo, no hay una version real de 0,8 mm. La falla que copia es la de la leccion 39 (reference/lecciones-caras.md l.490-491: «el numero que aparece en dos lugares del MISMO documento y no coincide es la firma barata»; en los hechos «mu 0,30» al lado de un detalle que decia «0,60»)."
+controles:
+  - nombre: numeros_pagina
+    existe: true
+    formato: stl
+    opciones: []
+    nota: >-
+      El control como corre de verdad: numeros_pagina.py --fuentes <pieza>__pasos.json <pieza>__pagina.html --medidas
+      <pieza>__medidas*.json (autotest propio BIEN/MAL antes de juzgar). El corrector juzga por lo medido (veredicto
+      de la linea JSON del control), no por el codigo de salida, que hasta el 31/10/2026 es 0 aunque haya un rojo (modo
+      aviso). Las fuentes y los JSON los deja cada pieza al lado de su .stl (con «__» en el nombre, para que el banco no
+      los tome por la pieza). NO MEDIDO (sin JSON de medidas, ilegible) sale como error, no cuenta como verde.
+formatos: [stl, step]
+notas: >-
+  Ejercicio 26 de la tanda del 24/10/2026 (propuesta P13, parte de #3 del informe 3D). Las tres piezas son de ensayo,
+  armadas con build123d; la geometria y los textos estan en _pagina.py aparte del codigo del control. Valor gemelo
+  medido el 24/10: BIEN 8 numeros con unidad (en pasos.json y su pagina), 8 leidos, 0 dudosos, 0 tipeados, 0 contradicen, 0 con dos
+  valores; MAL 1: el 0,1 y el 47 salen «contradice» (cada uno en pasos.json y en la pagina; 4 filas) y el 0,14 de los
+  machos se lee bien; MAL 2: 8 leidos, 0 tipeados, 0 contradicen y 1 dato con dos valores. Lo que el banco NO prueba:
+  una pagina real generada por lectura (no existe), ni que el JSON haya salido del build en una pagina de verdad (en
+  este ejercicio si sale del build, pero el control no lo puede comprobar: lo dice en sus limites). Los numeros sin
+  unidad («53,7 x 13,0», «3 patitas») no se juzgan, como el control lo declara.

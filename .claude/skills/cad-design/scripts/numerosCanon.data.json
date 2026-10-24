@@ -1,0 +1,325 @@
+{
+  "_que_es": "Canon del control de numeros de la pagina de entrega (numeros_pagina.py; propuesta P13 de docs/PROPUESTAS_SKILL_3D_2026-10-23.md l.481-500; leccion 39 de reference/lecciones-caras.md). Dice QUE es un numero que el control juzga, QUE no, y con que palabras se decide si un numero de la pagina habla del mismo dato que una medida del modelo. Nace de la falla real del 20/10/2026: pasos.json del virolador manual tenia numeros escritos a mano («El tope de borde 2 queda a 0,1 mm del plástico del borde», «la barra queda 47 mm arriba del panel») y el auditor midio 0,5755 y otro dato (AUDITORIA_auditor.md hallazgos 3 y 8). Convive con la leccion 39: si el dato existe en el JSON, el documento lo LEE; si hay que escribirlo a mano, falta publicarlo.",
+  "version": "2026-10-24.1",
+  "aviso_hasta": "2026-10-31",
+  "_aviso_hasta": "Hasta esta fecha INCLUSIVE un rojo (numero tipeado, numero que contradice su medida, o un mismo dato con dos valores) avisa: exit 0, AVISO en pantalla y en el manifest. Desde el 01/11/2026 un rojo FRENA (exit 1) con una sola salida de Fak: --acepto-numeros \"<frase>\" atada a la firma de la fuente. Lo DUDOSO (el valor calza con una medida que la frase no nombra) avisa siempre y no frena nunca. gate_entregable.py --fuentes-pagina lo muestra como G-E8, siempre en AVISO. La fecha de hoy sale del reloj de la PC; --hoy o CAD_HOY=AAAA-MM-DD solo valen con CAD_GATE_TEST=1 (los tests). Renglon en scripts/_lib/retiros.data.json (cad-design:numeros-pagina-aviso-a-freno, revisar 31/10/2026).",
+  "frase_minima": 10,
+  "unidades": {
+    "mm": [
+      "mm"
+    ],
+    "mm2": [
+      "mm²",
+      "mm^2",
+      "mm2"
+    ],
+    "mm3": [
+      "mm³",
+      "mm^3",
+      "mm3"
+    ],
+    "cm": [
+      "cm"
+    ],
+    "cm2": [
+      "cm²",
+      "cm^2",
+      "cm2"
+    ],
+    "cm3": [
+      "cm³",
+      "cm^3",
+      "cm3"
+    ],
+    "m": [
+      "m"
+    ],
+    "°": [
+      "°",
+      "º",
+      "grados",
+      "grado"
+    ],
+    "°C": [
+      "°C",
+      "ºC"
+    ],
+    "N": [
+      "N"
+    ],
+    "g": [
+      "g"
+    ],
+    "kg": [
+      "kg"
+    ],
+    "%": [
+      "%"
+    ],
+    "s": [
+      "s"
+    ],
+    "min": [
+      "min"
+    ],
+    "h": [
+      "h"
+    ],
+    "MPa": [
+      "MPa"
+    ]
+  },
+  "_unidades": "Las nueve del pedido (mm, mm2, mm3, grados o el signo de grado, N, g, kg, %, s) mas las que una pagina de entrega de la casa suele publicar y que no se pueden confundir con otra: cm, cm2, cm3 y m (largos), min y h (tiempos), MPa (tension) y °C (temperatura, que NO es un angulo: «55 °C» es una temperatura y se compara solo con medidas de temperatura). Una unidad compuesta (mm/s, N/mm, g/cm3) no se juzga: el numero queda en «sin_unidad» y se cuenta. Los numeros SIN unidad (cantidades de piezas: «3 patitas», «65 posiciones»; dimensiones como «53,7 x 13,0» sin unidad) quedan fuera del control a proposito: sin unidad no se sabe si es una medida o un conteo, y marcarlos a todos taparia lo que importa. Se cuentan y se informan. La unidad se escribe pegada o con un espacio; una letra suelta (N, g, s, h, m) cuenta solo si no sigue otra letra, asi «M5» o «3 seg» no se toman por «5 m» o «3 s».",
+  "unidad_implicita": {
+    "Ø": "mm",
+    "ø": "mm",
+    "⌀": "mm"
+  },
+  "_unidad_implicita": "El simbolo de diametro (Ø, ø, ⌀) marca una medida en mm aunque no diga la unidad (el caso de la leccion 39: «pin O3,40 engrane 8», que fue el numero tipeado de la lista de materiales que va al tornero). Con otra unidad escrita (Ø5 cm) no se toma la implicita. El radio «R1,5» NO se toma: R tambien es «revision» (R01) y no hay forma de separarlos sin leer la frase.",
+  "enmascarar": [
+    {
+      "id": "fecha_dd_mm_aaaa",
+      "regex": "\\b\\d{1,2}/\\d{1,2}/\\d{2,4}\\b",
+      "flags": "",
+      "motivo": "una fecha (20/10/2026) no es una medida del modelo"
+    },
+    {
+      "id": "fecha_dd_mm_aaaa_guiones",
+      "regex": "\\b\\d{1,2}-\\d{1,2}-\\d{4}\\b",
+      "flags": "",
+      "motivo": "idem con guiones"
+    },
+    {
+      "id": "fecha_iso",
+      "regex": "\\b\\d{4}-\\d{2}-\\d{2}\\b",
+      "flags": "",
+      "motivo": "idem, forma AAAA-MM-DD"
+    },
+    {
+      "id": "fecha_dd_mm",
+      "regex": "\\b(?:0?[1-9]|[12]\\d|3[01])/(?:0?[1-9]|1[0-2])\\b(?![/\\d])",
+      "flags": "",
+      "motivo": "«el lunes 26/10»: dia y mes validos. Costo conocido: una fraccion como «1/2» tambien parece una fecha y no se juzga"
+    },
+    {
+      "id": "hora",
+      "regex": "\\b(?:[01]?\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d)?\\b",
+      "flags": "",
+      "motivo": "una hora (13:50, 14:23:07) no es una medida"
+    },
+    {
+      "id": "fecha_con_mes_en_letras",
+      "regex": "\\b\\d{1,2}\\s+de\\s+(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)(?:\\s+de\\s+\\d{4})?\\b",
+      "flags": "i",
+      "motivo": "«24 de octubre de 2026»"
+    },
+    {
+      "id": "version",
+      "regex": "\\bv\\d+(?:[.,]\\d+)*\\b",
+      "flags": "i",
+      "motivo": "una version («v16», «v3.2») dice que revision del diseno es, no una medida (el P13 la nombra como falso rojo a evitar)"
+    },
+    {
+      "id": "version_en_letras",
+      "regex": "\\bversi[oó]n\\s+\\d+(?:[.,]\\d+)*\\b",
+      "flags": "i",
+      "motivo": "«version 15»"
+    },
+    {
+      "id": "revision",
+      "regex": "\\brev(?:isi[oó]n)?\\.?\\s*\\d+\\b",
+      "flags": "i",
+      "motivo": "«rev. 3», «revision 2»"
+    },
+    {
+      "id": "norma",
+      "regex": "\\b(?:ISO|IEC|DIN|ASTM|UNE|IRAM|IATF|VDA|AIAG|SAE|ANSI|ASME|JIS|VW|TL|PV|EN)\\b[\\s/-]*\\d[\\w./:-]*",
+      "flags": "",
+      "motivo": "el nombre de una norma («ISO 13854», «IATF 16949», «VW 50180», «EN 349») lleva un numero que es un codigo, no una medida (el P13 lo nombra como falso rojo a evitar). Las siglas van en mayuscula: «en 349» no se toma"
+    },
+    {
+      "id": "rosca",
+      "regex": "\\bM\\d{1,2}(?:\\s?[x×]\\s?\\d+(?:[.,]\\d+)?)?\\b",
+      "flags": "",
+      "motivo": "una rosca («M5», «M4x16») es una designacion del tornillo, no una medida de la pagina"
+    },
+    {
+      "id": "codigo_de_pieza",
+      "regex": "\\b[A-Z]{1,4}\\d{4,}[A-Z0-9._-]*\\b",
+      "flags": "",
+      "motivo": "un codigo («P0064829») no es una medida"
+    }
+  ],
+  "_enmascarar": "Las excepciones van por FORMA (una fecha, «v» y numero, sigla de norma y numero, «M» y numero, una hora), nunca por palabra suelta: ninguna palabra de una frase salva a un numero. Lo enmascarado no se extrae. Si una forma nueva da falsos rojos se agrega aca, con su motivo.",
+  "redondos_logicos": {
+    "%": [
+      0,
+      100
+    ]
+  },
+  "_redondos_logicos": "«Que funcione al 100 %» (titulo de la fase 2 del virolador del 20/10) y «0 %» dicen «todo» o «nada», no una medida del modelo. Si el JSON trae esa cifra con su nombre, el control la lee igual (queda «leido»); solo si NO calza con nada se la deja como «exento» en vez de rojo. Costo: un «100 %» tipeado que en el modelo es 99,6 pasa por el intervalo del redondeo (99,5 a 100,5) y por esta exencion; se informa aparte.",
+  "pistas_de_unidad_en_clave": {
+    "mm": "mm",
+    "mm2": "mm2",
+    "mm3": "mm3",
+    "cm": "cm",
+    "cm2": "cm2",
+    "cm3": "cm3",
+    "m": "m",
+    "deg": "°",
+    "grados": "°",
+    "grado": "°",
+    "n": "N",
+    "g": "g",
+    "kg": "kg",
+    "pct": "%",
+    "porcentaje": "%",
+    "s": "s",
+    "seg": "s",
+    "segundos": "s",
+    "min": "min",
+    "h": "h",
+    "mpa": "MPa",
+    "celsius": "°C"
+  },
+  "_pistas_de_unidad_en_clave": "La ULTIMA palabra del nombre de la clave del JSON (luz_mm, brazo_deg, choque_mm3) dice la unidad del dato. Si la unidad escrita en la pagina es otra, esa medida no sirve para ese numero («14°» no se lee contra «margen_mm»). Una clave sin esa pista sirve para cualquier unidad.",
+  "etiquetas_hermanas": [
+    "nombre",
+    "name",
+    "id",
+    "que",
+    "etiqueta",
+    "label",
+    "pieza",
+    "kind",
+    "fixture",
+    "clave"
+  ],
+  "_etiquetas_hermanas": "Cuando una medida vive en un renglon con su nombre aparte ({\"nombre\": \"tope_borde_2\", \"luz_mm\": 0.5755}), el texto de esos campos (hasta 60 caracteres) cuenta como parte del nombre de la medida.",
+  "palabras_comunes_fuerte": 2,
+  "_palabras_comunes_fuerte": "CRITERIO PROPIO, SIN FUENTE (se sostiene con los casos medidos de test_numeros_pagina.py). Un numero de la pagina «habla» de una medida del JSON cuando la frase y el nombre de la clave comparten al menos 2 palabras con contenido («tope» y «borde» de tope_borde_2_luz_mm), o la clave tiene una sola palabra con contenido y esa esta en la frase. Con 1 palabra en comun la relacion es DEBIL: el valor calza pero la frase no nombra ese dato, y el numero queda «dudoso» (aviso), nunca «leido». Si las dos tienen un numero suelto («borde 2» y «borde 1») y no coinciden, el dato es otro. Para decir que un numero CONTRADICE una medida (rojo) hace falta mas: 2 palabras o mas en comun Y que la clave declare la misma unidad que el numero (luz_mm contra «mm»); una clave de una palabra («choque», «luz») o sin unidad puede leer un numero, no contradecirlo, porque la misma palabra nombra cosas distintas (r_mango es un radio en mm, no el angulo del mango). Medido el 24/10/2026 sobre el pasos.json del virolador de las 16:03: sin esta exigencia 7 numeros salian «contradice» contra claves de una palabra sin unidad.",
+  "ignorar_palabras": [
+    "el",
+    "la",
+    "los",
+    "las",
+    "un",
+    "una",
+    "unos",
+    "unas",
+    "de",
+    "del",
+    "al",
+    "a",
+    "en",
+    "y",
+    "o",
+    "e",
+    "u",
+    "que",
+    "con",
+    "sin",
+    "por",
+    "para",
+    "se",
+    "su",
+    "sus",
+    "lo",
+    "es",
+    "son",
+    "ser",
+    "fue",
+    "fueron",
+    "mas",
+    "menos",
+    "muy",
+    "ya",
+    "no",
+    "si",
+    "como",
+    "entre",
+    "sobre",
+    "hasta",
+    "desde",
+    "cuando",
+    "donde",
+    "este",
+    "esta",
+    "estos",
+    "estas",
+    "ese",
+    "esa",
+    "eso",
+    "mismo",
+    "misma",
+    "mismos",
+    "cada",
+    "todo",
+    "toda",
+    "todos",
+    "todas",
+    "ni",
+    "pero",
+    "sino",
+    "tambien",
+    "solo",
+    "cual",
+    "cuales",
+    "ahi",
+    "alli",
+    "aqui",
+    "hay",
+    "hacia",
+    "segun",
+    "tras",
+    "durante",
+    "bajo",
+    "ante",
+    "queda",
+    "quedan",
+    "tiene",
+    "tienen",
+    "da",
+    "dan",
+    "mide",
+    "miden",
+    "va",
+    "van",
+    "hace",
+    "hacen",
+    "mm",
+    "cm",
+    "grados",
+    "valor",
+    "value",
+    "min",
+    "max",
+    "dato",
+    "datos"
+  ],
+  "_ignorar_palabras": "Palabras sin dato: articulos, preposiciones y verbos de relleno («queda», «mide», «da»). Sirven para que dos frases no se parezcan solo por esas. No se descarta ninguna palabra del dominio (tope, borde, luz, macho, barra, panel...).",
+  "doble": {
+    "palabras_comunes_min": 2,
+    "jaccard_min": 0.5,
+    "contenida_min": 0.75
+  },
+  "_doble": "CRITERIO PROPIO, SIN FUENTE. «El mismo dato» en dos frases distintas de la pagina: misma unidad, al menos 2 palabras con contenido en comun y (o parecidas — comparten la mitad o mas de las palabras de las dos — o la frase mas corta esta dentro de la otra en tres cuartas partes); si las dos frases traen un numero suelto («borde 1» / «borde 2») y no coinciden, son datos distintos. Dos valores CHOCAN cuando sus intervalos de redondeo no se tocan: «0,58» y «0,5755» no chocan, «0,58» y «0,8» si. Dentro de UNA misma frase no se compara (ahi caen las listas «0,004 / 0,08 / 0,004 mm» y los rangos «de 30 a 6 mm»): la firma barata de la leccion 39 es el numero que aparece en dos lugares del documento.",
+  "max_rojos_en_json": 40,
+  "salidas": [
+    "publicar el dato: que el build lo escriba en el JSON de medidas y que la pagina (y pasos.json) lo LEA por clave en vez de tenerlo escrito; no pasar el numero tipeado al JSON a mano (el JSON tiene que salir del build)",
+    "si el numero NO es una medida del modelo (un dato de planta, una norma, una cifra de otra fuente): publicarlo en un JSON de datos externos con su nombre y su fuente, y que se pase en --medidas",
+    "dos valores para el mismo dato: dejar el del build y que el otro lugar lo lea tambien",
+    "si Fak lo asume: --acepto-numeros \"<frase de Fak, 10 caracteres o mas>\" con --workdir (queda en el manifest con fecha, firma de la fuente y cantidad; vale para esa firma sola)"
+  ],
+  "limites_conocidos": [
+    "No sabe si el JSON de medidas salio del build o lo escribio una mano: si se pasa el numero tipeado al JSON, lo lee como medida (el riesgo que nombra el P13). Lo que hace es decir contra QUE ruta de QUE archivo calzo cada numero, para que se vea.",
+    "Un numero sin unidad (cantidades, «53,7 x 13,0», coeficientes como «mu 0,30») no se juzga: se cuenta en sin_unidad.",
+    "Una medida dentro de una frase de un JSON (el «motivo» de un gate: «hueco de 0,577 mm») no cuenta como medida: solo valen las hojas numericas del JSON (o un texto que es SOLO un numero).",
+    "La relacion entre la frase y la medida es por palabras: una pagina que nombra al dato con otras palabras que la clave (luz / distancia / gap) sale «dudoso», no «leido». Es aviso y no frena.",
+    "Si una frase trae dos o mas numeros de la misma unidad («2° pasado el punto muerto ... a 14° queda»), la frase no dice cual es cual: ninguno se acusa de «contradice» (queda dudoso o tipeado).",
+    "Si la frase da EXACTAMENTE las mismas palabras de evidencia a DOS o mas datos distintos del JSON («luz 1,1 mm ... hace tope» comparte «tope» y «luz» con tope_borde_1, tope_borde_2 y tope_lateral) tampoco se acusa «contradice»: no dice de cual habla. Con palabras DISTINTAS para cada dato («el brazo llega 58 mm hasta la barra» comparte {barra, panel} con barra_a_panel y {brazo, panel} con brazo_B_a_panel) si se acusa: el control es una bolsa de palabras y en una frase que nombra varias piezas puede acusar de mas; el numero que no sale de ninguna medida es rojo igual (tipeado). La salida es --acepto-numeros o nombrar mejor las claves.",
+    "Para que un numero sea «contradice» (y no solo «dudoso» o «tipeado») la clave del JSON tiene que llevar la unidad al final (luz_mm, brazo_deg, choque_mm3) y compartir 2 palabras con la frase. Un JSON con claves sin unidad o de una palabra deja pasar el «0,1 mm del tope» como dudoso si algun macho vale 0,1394: nombrar bien las claves es parte de la salida «publicar el dato».",
+    "El «redondeo» es el de la cifra escrita: 0,1 calza con cualquier valor de 0,05 a 0,15. Por eso un numero solo se da por leido si ademas la frase nombra la medida; el valor solo no alcanza.",
+    "Los numeros de una lista o un rango («de 5 a 0,5 mm») se juzgan uno por uno con la unidad del final. Un numero derivado (una suma o una diferencia que no esta en el JSON) sale tipeado: si hace falta en la pagina, falta publicarlo."
+  ]
+}

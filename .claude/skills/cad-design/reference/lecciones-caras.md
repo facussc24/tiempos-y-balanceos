@@ -489,6 +489,7 @@ Las 9-17 salen del virolador del Upper Trim (08/2026, tres rondas: resorte → r
       primero lo que sale de la casa (la imagen que va a Fak, el plano del tornero),
       despues lo interno. Y el numero que aparece en dos lugares del MISMO documento y no
       coincide es la firma barata de esto — se busca a proposito.
+    - Control ejecutable (24/10/2026): `scripts/numeros_pagina.py` lee los numeros con unidad de la pagina contra los JSON de medidas del modelo y marca el tipeado, el que contradice su medida y el mismo dato con dos valores (aviso hasta el 31/10, freno desde el 01/11; `gate_entregable.py --fuentes-pagina ... --medidas ...` lo muestra como G-E8; banco: ejercicio 26).
 
 > Lecciones 40-43: adaptadas de evnchn-agentic/agentic-3d-modeling, MIT, commit 12e7c84 (licencia en `LICENCIA_agentic-3d-modeling_MIT.txt`); traídas el 23/10/2026. Son del autor, no vividas acá, salvo que se diga lo contrario.
 

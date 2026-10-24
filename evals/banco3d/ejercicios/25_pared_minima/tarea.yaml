@@ -1,0 +1,56 @@
+id: 25_pared_minima
+nombre: Pared minima imprimible - un alma de 0,30 mm que no imprime, una de 0,60 y una cuna que se afina a 0,3 (el pin con punta no es pared fina)
+falla_real:
+  cita: "un alma quedó de 0,30 mm — menos de un cordón, no imprime"
+  fecha: sin fecha en la leccion
+  fuente: >-
+    .claude/skills/cad-design/reference/lecciones-caras.md l.42-44, leccion 12 (el orden de construccion: lo agregado
+    antes de los cortes se lo comen los cortes). Control 1.2 de la investigacion de revision de diseno del 24/10/2026
+    (04_decision.md, carpeta catia-tanda-24-10 de la nube de Ingenieria). Umbrales: ficha-fdm.md l.29 (G3): con boquilla
+    0,4 un perimetro ~ 0,45 mm y menos de uno no se imprime (Prusa KB); dos perimetros = 0,8 (Stratasys, 4 x capa 0,2;
+    valor por defecto de augura).
+pedido: >-
+  El control de pared minima (espesor_pared.py) tiene que frenar la pared de caras paralelas de 0,30 mm (rojo) y avisar
+  la de 0,60 mm y la cuna que se afina de 3 a 0,3 mm (la cuna es la que augura no ve: mira el centro de cada cara y una
+  grilla de 3 x 3), y dejar pasar el bloque con un alma de 1,6 mm que lleva un pin con punta conica: la punta del cono
+  tambien se afina a 0 pero es un vertice, no una pared, y no tiene que dar falso rojo. Ademas el mismo pin tiene que ser
+  alcanzado por la grilla (el autotest lo exige), para que el verde no sea ceguera.
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    nota: "bloque 40 x 20 x 10 con alma de 1,6 y pin de 5 mm con punta conica de 4 mm, armado para el banco con build123d (medidas de ejemplo, no es un diseno de Barack)"
+  - archivo: mal_1_alma_0_30.py
+    esperado: rojo
+    falla: "la misma pieza con el alma en 0,30 mm: menos de un perimetro (0,45), caras paralelas -> ROJO"
+    nota: "armada para el banco con build123d; el esperado sale de la leccion 12 (la pieza real no se conserva)"
+  - archivo: mal_2_alma_0_60.py
+    esperado: rojo
+    falla: "la misma pieza con el alma en 0,60 mm: un perimetro si, dos no (0,8; G3) -> AVISO, que para el banco cuenta como rojo"
+    nota: "armada para el banco con build123d; el esperado sale de la regla G3 (no hay una impresion de esta pieza)"
+  - archivo: mal_3_cuna_3_a_0_3.py
+    esperado: rojo
+    falla: "cuna de 100 x 60 que va de 3 a 0,3 mm de espesor (las caras convergen 1,55 grados): la punta mide 0,3 -> AVISO (nunca rojo: caras que convergen), que para el banco cuenta como rojo"
+    nota: "armada para el banco con build123d; el esperado sale de la regla G3 y de la prueba de 04_decision.md (augura da 0 hallazgos sobre esta cuna)"
+controles:
+  - nombre: espesor_pared
+    existe: true
+    formato: step
+    opciones: ["--aviso-cuenta-rojo"]
+    nota: >-
+      El control como corre de verdad: espesor_pared.py --step <pieza.step> (autotest propio BIEN/MAL antes de juzgar).
+      El corrector juzga por lo medido (veredicto de la linea JSON), no por el codigo de salida, que hasta el 31/10/2026
+      es 0 aunque haya un rojo (modo aviso). DECISION: --aviso-cuenta-rojo hace que un AVISO cuente como rojo para el
+      banco, porque dos de los tres mutantes (alma de 0,60 y cuna) son AVISO por diseno del control: el rojo solo lo
+      da la pared de caras paralelas por debajo de 0,45. Sin la opcion esos dos mutantes quedarian sin cazar aunque el
+      control los vea. Es seguro para la pieza BIEN porque no tiene ningun aviso (la punta del pin se cuenta como punta
+      y no avisa), y si alguna vez avisara, el banco la contaria como falso rojo. NO MEDIDO sale como error (no cuenta
+      como verde).
+formatos: [stl, step]
+notas: >-
+  Ejercicio 25 de la tanda del 24/10/2026 (control 1.2). Las cuatro piezas son de ensayo, armadas para el banco con
+  build123d; la geometria esta escrita en _pared.py aparte del codigo del control para que un error no pase por los dos
+  lados. Los numeros que se miden (propios del control, con la malla de 0,01 mm): alma 1,6 / 0,30 / 0,60 y cuna 0,30
+  mm de minimo; area de cara bajo 0,45 en el alma de 0,30: 768 mm2 (2 caras de 32 x 12). No hay resultado de impresion
+  de ninguna de las piezas: el esperado de los MAL sale de la regla G3 y de la leccion 12, no de una pieza impresa.
+  Pendiente (no se hizo): una pieza real de la casa con una pared fina medida (ver ficha-fdm.md G3) y la pared "con
+  carga 1,5 a 2 mm", que sale NO MEDIDO porque el dato de que pared carga esta en el pliego.

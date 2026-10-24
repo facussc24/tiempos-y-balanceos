@@ -1,0 +1,45 @@
+{
+  "_que_es": "Canon del control de pared minima imprimible (espesor_pared.py; control 1.2 de la investigacion de revision de diseno del 24/10/2026, 04_decision.md). Mide el espesor local con rayos hacia adentro desde una grilla densa sobre cada cara y lo compara con dos umbrales. Nace de la falla real: un alma de 0,30 mm que no imprime (reference/lecciones-caras.md l.42-44, leccion 12). Convive con viga_voladizo.py --t-min 1,2 (lamina que flexiona, 3 perimetros macizos): ese es para una lamina que flexiona, este para cualquier pared.",
+  "version": "2026-10-24.1",
+  "umbral_rojo_mm": 0.45,
+  "_umbral_rojo_mm": "Un perimetro con boquilla 0,4: reference/ficha-fdm.md l.29 (G3): «con boquilla 0,4 un perimetro ~ 0,45 mm y menos de uno no se imprime» (Prusa KB; la ficha la abrio el 17/10/2026, no se reabrio el 24/10). Boquilla 0,4 = la de la Bambu A2L (.claude/rules/cad-3d.md). Solo rojo cuando las dos caras que mide el rayo son PARALELAS (ver tol_paralelas_grados).",
+  "umbral_aviso_mm": 0.8,
+  "_umbral_aviso_mm": "Dos perimetros x boquilla 0,4 = 0,8: valor por defecto de augura 0.1.7 (wall_thickness.py: DEFAULT_NOZZLE = 0.4, DEFAULT_MIN_PERIMETERS = 2, leido el 24/10/2026 en el cache de uv de esta PC). Tambien da 0,8 la regla de Stratasys de 4 x capa con capa de 0,2 (misma fila G3, DG FDM 07/2025). Una cuna que se afina (caras que convergen) es AVISO y nunca rojo.",
+  "aviso_hasta": "2026-10-31",
+  "_aviso_hasta": "Hasta esta fecha INCLUSIVE un rojo avisa (exit 0, AVISO en pantalla y en el manifest). Desde el 01/11/2026 un rojo frena: espesor_pared.py sale con 1, con una sola salida de Fak: --acepto-pared \"<frase>\" atada a la firma del STEP. El AVISO (pared de 0,45 a 0,8 con caras paralelas, o cuna) NO frena nunca. La fecha de hoy sale del reloj de la PC; --hoy o CAD_HOY=AAAA-MM-DD solo valen con CAD_GATE_TEST=1 (los tests). Renglon en scripts/_lib/retiros.data.json (cad-design:pared-aviso-a-freno, revisar 31/10/2026).",
+  "paso_mm": 0.5,
+  "_paso_mm": "Separacion media entre rayos sobre cada cara: unos 1/paso^2 rayos por mm2 de superficie. Es la resolucion del instrumento, no un criterio de diseno: una zona fina mas angosta que el paso en las dos direcciones del plano puede quedar entre dos rayos. Cada triangulo de la malla recibe al menos un rayo, y una pared fina siempre la mira alguna cara grande de cada lado. Se informa en cada corrida.",
+  "tol_malla_mm": 0.01,
+  "tol_angular_rad": 0.1,
+  "_tol_malla": "Malla con la que se miden los rayos (OCC): desvio maximo de 0,01 mm de la superficie real y 0,1 rad entre normales vecinas. En una cara curva la malla queda por dentro de la superficie, asi que el espesor medido sale hasta 2 x 0,01 mm mas chico que el real (del lado conservador). Se informa.",
+  "impacto_min_pct": 40,
+  "_impacto_min_pct": "Todo barrido de rayos reporta que % impacto; menos de ~40 % = la medicion no es valida, no es un resultado (.claude/rules/cad-3d.md, GATE 3). En un solido cerrado todo rayo que va hacia adentro termina pegando en algo: un % bajo es una malla abierta o con las normales al reves. Menos de 40 % sale NO MEDIDO (exit 2), nunca verde.",
+  "tol_paralelas_grados": 0.1,
+  "_tol_paralelas_grados": "Dos caras cuentan como PARALELAS (y recien ahi la pared fina es rojo) si el angulo entre ellas es menor que esto. Es la tolerancia de punto flotante de un STEP, no un criterio de diseno: dos planos 'iguales' de un STEP difieren ~1e-6 rad (6e-5 grados); 0,1 grado deja pasar ese ruido y deja a la cuna de ensayo (1,55 grados) 15 veces afuera. Las normales de las dos caras se piden a la superficie exacta (B-Rep), no a la malla: dos cilindros concentricos dan 180,000 grados exactos aunque sus facetas no lo den. SIN fuente externa.",
+  "cuna_extension_min_veces_umbral": 1.0,
+  "_cuna_extension": "UN NUMERO A OJO, y por eso solo puede avisar (criterios.py: sin procedencia no rechaza). Separa una CUNA (caras que convergen de a poco: AVISO) de una PUNTA (el vertice de un cono, el filo de un pin, la cresta de una rosca: no se juzga). Un par de caras que convergen con angulo phi es fino (< umbral_aviso) en una zona de largo umbral_aviso / tan(phi). Si esa zona mide al menos esto x umbral_aviso (o sea tan(phi) <= 1/valor: phi <= 45 grados con valor 1) es una cuna y avisa; si es mas corta que lo fino que es, es una punta y se cuenta aparte (puntas_sin_juzgar) sin avisar. El pin de ensayo (punta conica de 4 mm sobre Ø5, 64 grados) da una zona fina de 0,39 mm: punta. La cuna de ensayo (1,55 grados) da 29,6 mm: cuna. Con null, todo par que converge avisa (el pin tambien). Lo decide Fak.",
+  "max_rayos": 20000000,
+  "_max_rayos": "Tope de rayos por solido. Si la pieza pide mas con el paso pedido, sale NO MEDIDO (nunca se agranda el paso en silencio: una grilla gruesa puede saltarse la punta de una cuna). Los rayos se tiran por lotes de 200.000, asi que la memoria no crece con el tope; el tiempo si: la v14 real del virolador (3,9 millones de rayos) tarda unos 7 s de medicion.",
+  "tope_segundos": 300,
+  "_tope_segundos": "Tope de tiempo de la medicion por pieza (malla + rayos + clasificacion). Pasado el tope: NO MEDIDO (exit 2), nunca verde.",
+  "frase_minima": 10,
+  "con_carga": {
+    "umbral_mm": "1,5 a 2",
+    "estado": "NO MEDIDO",
+    "motivo": "«con carga 1,5 a 2 mm» (ficha-fdm.md l.29, G3, afuera_3d.md C8) pide saber que pared carga; ese dato esta en el pliego del pedido y el control no lo recibe. No hay un rango unico con fuente para elegir una cifra, y no se inventa."
+  },
+  "salidas": [
+    "engrosar la pared fina (el informe dice el punto del minimo y la caja de la zona fina) o sacarla si no hace falta",
+    "si la pared tiene que ser asi y Fak lo asume: --acepto-pared \"<frase de Fak, 10 caracteres o mas>\" con --workdir (queda en el manifest con fecha, firma del STEP y minimo; vale para esa firma sola)"
+  ],
+  "limites_conocidos": [
+    "Mide el espesor a lo largo de la normal de cada cara, hasta la primera pared de enfrente. En una cuna eso da un poco mas que la distancia perpendicular real (diferencia de cos(phi): 0,04 % con 1,55 grados).",
+    "Una zona fina mas angosta que el paso en las dos direcciones del plano puede quedar entre dos rayos (ver paso_mm).",
+    "La malla de una cara curva queda por dentro de la superficie: el espesor sale hasta 0,02 mm mas chico (conservador, pero cerca del umbral puede dar un aviso de mas).",
+    "Las caras que no son plano, cilindro, cono, esfera ni toro (BSpline, revolucion, offset: lo que suele traer un STEP de CATIA en los redondeos) tienen normal exacta solo hasta 3000 rayos finos; el resto usa la normal de la malla (error de hasta 0,1 rad entre facetas) y nunca cuenta como paralela: una pared fina de ese tipo sale AVISO, no rojo (normal_aproximada_rayos lo cuenta).",
+    "El control mide cada solido por separado (un rayo no atraviesa de un solido a otro); dos solidos que se solapan se miden como si no se solaparan.",
+    "«Con carga 1,5 a 2 mm» sale NO MEDIDO: no se sabe que pared carga.",
+    "La punta (par de caras que converge fuerte en una zona mas corta que lo fino que es) no se juzga: el filo de un cuchillo de 30 grados tampoco. Se cuenta y se informa el minimo, no avisa.",
+    "No sustituye a augura/analyze_printability: es su segunda opinion densa (augura mira el centro de cada cara y una grilla de 3 x 3 en las caras de mas de 100 mm2, y no ve la punta de una cuna)."
+  ]
+}
