@@ -318,6 +318,31 @@ def main():
     chequear(r["veredicto"] == "rojo" and any("sentido inconsistente" in m for m in r["motivos"]) and not r.get("avisos"),
              "anillo cruzado (is_valid NO) + malla volteada: rojo, y el sentido va a los motivos, no a un aviso",
              "%s" % r)
+    # el gate SUELTO (main_validez) en proceso, con el mallador reemplazado por la malla volteada: caza en cualquier PC
+    # que el modo suelto pierda el aviso (Nit 1 del auditor del 24/10: sin esto solo lo cuidaba la tuerca de la nube)
+    import contextlib
+    import io
+    exp_orig, load_orig, hoy_orig = ED_mod._stl_export, trimesh.load, os.environ.get("CAD_GATE_TEST")
+    salida = io.StringIO()
+    try:
+        ED_mod._stl_export = lambda *a, **k: None
+        trimesh.load = lambda *a, **k: volteada
+        os.environ["CAD_GATE_TEST"] = "1"
+        with contextlib.redirect_stdout(salida):
+            rc = ED_mod.main_validez(["--step", caja, "--hoy", "2026-11-02"])
+    finally:
+        ED_mod._stl_export, trimesh.load = exp_orig, load_orig
+        if hoy_orig is None:
+            os.environ.pop("CAD_GATE_TEST", None)
+        else:
+            os.environ["CAD_GATE_TEST"] = hoy_orig
+    out = salida.getvalue()
+    js = [x for x in out.splitlines() if x.startswith('{"gate": "validez"')]
+    j = json.loads(js[-1]) if js else None
+    chequear(rc == 0 and j and j["veredicto"] == "verde" and j.get("avisos") and "AVISO" in out
+             and "un solo sentido" not in out,
+             "gate suelto en proceso (caja sana + malla volteada, fecha de freno): verde con AVISO y el aviso en el JSON",
+             out[-600:])
     if _ARGS.sin_reales:
         saltos.append("V8 tuerca real: --sin-reales")
         print("   SALTEADO  tuerca real: --sin-reales")
