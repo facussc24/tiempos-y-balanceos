@@ -6,6 +6,7 @@ paths:
   - "scripts/_lib/coordinadorCanon.data.json"
   - ".claude/hooks/coordinador-guard.sh"
   - "__tests__/scripts/coordinadorGuard.test.mjs"
+  - "__tests__/scripts/coordinadorCita.test.mjs"
 ---
 
 # Rol coordinador — regla corta
@@ -89,6 +90,16 @@ es como se gasta un control hasta que alguien lo desactiva.
   exige el encargo. G4 frena la ORDEN, no la mencion: una negacion la gobierna en su oracion, y en
   un prompt que se declara de SOLO LECTURA un flag o comando citado (`--apply`, `git push`) sin
   verbo de ejecutar al lado es una mencion.
+- **La frase de Fak en el encargo (23/10/2026, item 6g; `revisarCita`, despues de `decidir`):** un `Agent`/`Task`
+  de prompt largo, un `start_session` con prompt y un `[ENCARGO]` a otra sesion traen
+  `PEDIDO DE FAK: "<su frase, copiada tal cual>"`, rastreada a un mensaje real de Fak del transcript de esa sesion
+  (literal, o 70 % de sus palabras juntas con tipeo), y cada pregunta su ancla `[sale de: "<trozo>"]` o `[agregado mío]`.
+  Sin pedido detras: `PEDIDO DE FAK: ninguno (trabajo propio: <por qué>)`, pasa con aviso. Exentos: auditor,
+  auditor-cliente, revisor-pedido, buscador y los pasos mecanicos. AVISA hasta el 30/10 y FRENA desde el 31/10
+  (canon `citaFak`); registro en `~/.claude/.encargo-cita.log`. Nace del 23/10: Fak pidio repos con Claudes ya
+  entrenados y se lanzo un agente a buscar otra cosa (*«esto es gravísimo... que no me entiendas»*). Tests:
+  `__tests__/scripts/coordinadorCita.test.mjs`. Los avisos del guardian salen por `additionalContext` (antes
+  `main()` descartaba el `aviso` de `decidir`).
 - Listas canonicas en `scripts/_lib/coordinadorCanon.data.json`, **nunca un regex escrito a
   ojo** (`feedback_heuristicas_lista_canonica_no_regex_parcial`). Una frase nueva de Fak se
   agrega ahi, con su fuente, en la misma sesion.

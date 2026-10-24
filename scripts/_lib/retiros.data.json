@@ -45,6 +45,12 @@
       "que": "La espera de node scripts/_hijaEstado.mjs (--espera-modelo) se reemplaza por wake_when_done + SendMessage con notify_when_idle si se mide que el aviso llega en la app.",
       "justifica": "Cola HOY-17 (10/10/2026): sin --espera-modelo el control daba «arranco bien» a una hija en Fable. No probado en la app todavia.",
       "fuente": ".claude/skills/lanzar-sesion-hija/SKILL.md, «Retiros con vencimiento»; plan 10-PLAN_SISTEMA_2026-10-16.md tanda 1.1"
+    },
+    "coordinador-guard:encargo-cita-aviso-a-freno": {
+      "revisar": "2026-10-30",
+      "que": "Un Agent/Task, un start_session con prompt o un encargo [ENCARGO] a otra sesion trae «PEDIDO DE FAK: \"<frase textual>\"» rastreada a un mensaje real de Fak del transcript (literal, el mensaje adentro de la cita, o 70 % de las palabras juntas con tipeo) y cada pregunta su ancla [sale de: \"…\"] o [agregado mío]; el trabajo propio se declara «PEDIDO DE FAK: ninguno (trabajo propio: <por qué>)» y pasa con aviso. Exentos: auditor, auditor-cliente, revisor-pedido, buscador y los pasos mecanicos. Hasta el 30/10 AVISA (additionalContext) y desde el 31/10 FRENA (exit 2). Cada caso queda en ~/.claude/.encargo-cita.log. El 30/10 se mira el registro: cuantos «cita no rastreada» eran citas reales con tipeo, cuantas hijas sin mensajes de Fak frenaria, y cuanto se usa «agregado mío» y «trabajo propio».",
+      "justifica": "23/10/2026 12:30, Fak (registro 749f61db, 15:30:13Z y 15:30:59Z): «no te pdio ejercicos 3 publicos con repsuta te pdioq ue ancaleis is hay reposiutoc son claudes ya entradaods ose aocn ksilsl ya hechas eso no me habias nteeindod?» y «esto es graivsiomo anotalo par ael vienres osea..que carjao.... claro osea.... es grave eh? que no me entiendeas estas son las cosa que nod ebrian psaarnos». Item 0 GRAVE de la cola del viernes 23/10; opcion 3 del informe 01 (ancla por pregunta), construida en el 6g.",
+      "fuente": "scripts/_lib/coordinadorCanon.data.json (citaFak: avisoHasta, umbral, exentos) y scripts/_lib/coordinadorGuard.mjs (revisarCita, main); casos C1-C23 en __tests__/scripts/coordinadorCita.test.mjs"
     }
   },
   "piezas": {
