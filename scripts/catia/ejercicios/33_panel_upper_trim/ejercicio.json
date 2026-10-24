@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "El panel del CLIENTE del Upper Trim (Patagonia) abierto en CATIA: copia del STEP del marco del virolador (v14_choque/panel_marco_local.step de la carpeta «para CATA - practica 19-10» de la nube, o la variable CATIA_PANEL_UPPER_TRIM; sha256 verificado; no entra al repo), volumen, area y centro de CATIA contra OpenCASCADE con integracion fina (medir_fino.py) sobre el MISMO STEP, y el STEP que exporta CATIA con 1 solido, 0 caras sueltas y el mismo volumen",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "volumen del panel en el STEP verificado (sha256 fb74d977...4e1e), medido por otro motor",
+  "valor": 91766.75,
+  "unidad": "mm3",
+  "tolerancia": 91.77,
+  "fuente": "OpenCASCADE 7.x por build123d 0.11.1 en CATA el 24/10/2026: 91 766,750 mm3 con integracion adaptativa eps 1e-6 (medir_fino.py) y 91 767,169 con la de medir_b123d.py; tolerancia 0,1 % de este ejercicio, sin fuente de Barack (el 17/10 CATIA y build123d difirieron 0,03 % sobre two_wireless.stp, catia.md «Que dio»; los 91 765,561 / 91 791,099 de la COLA son de ese archivo, no de esta copia)"
+ }
+}

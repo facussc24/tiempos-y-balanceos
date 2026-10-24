@@ -137,6 +137,6 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 30 | hecho (CATA) | CATA, R21, 24/10/2026 10:54 (`30_final`): ok true; 307,231 g contra 307,23 (Aluminium pasado a 2 700); gemelo y STEP a 0,000 mm³; molde del 24 | (este commit) |
 | 31 | hecho (CATA) | CATA, R21, 24/10/2026 11:28 (`31_final3`, código del commit; la primera 11:13, igual): ok true; chapa de 4 como sólido; 1 027,70 g contra 1 028 ± 10 (Steel con Density 7 800); 0,003 mm³ contra la REFERENCIA de la guía (constante con su fuente, no un gemelo independiente); STEP igual; molde del 24 (con tol_masa_g y volumen_referencia) | (este commit) |
 | 32 | pendiente | | |
-| 33 | pendiente | | |
+| 33 | hecho (CATA) | CATA, R21, 24/10/2026 12:10 (`33_final2`, código del commit; la primera 11:49, igual): ok true; la copia verificada (sha256 fb74d977…4e1e) de v14_choque/panel_marco_local.step: CATIA 91 770,060 mm³ / 96 035,359 mm² contra OpenCASCADE fino (eps 1e-6) 91 766,750 / 96 034,395 (+0,0036 % / +0,0010 %, centro 0,0036 mm); el STEP de CATIA 1 sólido, 0 caras sueltas, −0,0040 %. Los 91 765,561 / 91 791,099 de la fila son de two_wireless.stp, no de esta copia (build123d por defecto: 91 767,169). Hallazgo: medir_b123d sin eps sobre el STEP de CATIA da −0,052 % y el centro 0,058 mm corrido (LECCIONES.md 2); revisor Fable: sin graves | (este commit) |
 | 34 | pendiente | | |
 | 35 | pendiente | | |
