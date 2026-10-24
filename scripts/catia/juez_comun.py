@@ -21,6 +21,10 @@ import traceback
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(AQUI))
+if not os.path.isdir(os.path.join(REPO, "evals", "banco3d")):
+    # el paquete del obrero vive en la nube (COLA 3D\obrero): ahi no hay banco; el repo clonado de esa PC si lo tiene
+    # (CATA 24/10: los 006/007/008 midieron bien en CATIA pero "bien.py salio con 2: can't open file ..." por esta ruta)
+    REPO = os.environ.get("BARACK_REPO") or r"C:\Dev\BarackMercosul"
 VENV_CAD = os.environ.get("VENV_CAD", r"C:\Dev\BarackMercosul\.venv-cad\Scripts\python.exe")
 TOL_VOL = 0.5          # mm3 por parte (el mismo del 04); tolerancia del juez, del banco, sin fuente de Barack
 TOL_CDG = 0.01         # mm
