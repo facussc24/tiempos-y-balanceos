@@ -92,6 +92,8 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **23/10 — Los pedidos de la otra PC se miran en CADA despertar del latido, no solo al arrancar la sesión: CATA dejó dos a las 22:05 y 22:22 y los vi a las 22:45, cuando Fak preguntó** (*"la notebook de Calidad te mandó mensajes pero hace rato no le respondés, ¿no deberías chequear cada tanto?"*; a CATA: *"quedate escuchando o comunicándote de forma autónoma con la PC principal y resuelvan lo que tengan que resolver"*). Lo que se resuelve entre las dos PC no se le pide a él.
+
 - **20/10 — Que Calidad aprobó algo no va en el mail de difusión salvo que Fak lo pida** (*"no pongas que está aprobado por Calidad"*): se dice qué es y cómo se usa. Caso: calibre L de la costura del Insert, memoria `project_calibre_l_costura_insert`.
 
 - **19/10 — «Está bien» de un plan de control se dice después de compararlo contra un plan de Calidad y mirar logo y nombres** (*"errores boludos"*). Graduado al skill `planes-de-control`; viernes 23/10 (`pc-errores-boludos-viernes`).

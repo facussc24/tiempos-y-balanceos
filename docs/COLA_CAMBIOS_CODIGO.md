@@ -409,3 +409,5 @@ _2026-10-16: las 31 filas con el SÍ de Fak del 09/10 pasaron a HACER YA (secci�
 
 <!-- control: HACER YA 69 · PROPONER 71 · DESCARTADO 54 · HECHOS 17 · origen S1 09/10 + S2 09/10 (cuenta del 09/10; el 10/10 HOY-19 sumó 9 filas a HACER YA y 5 a PROPONER) -->
 <!-- control 2026-10-16 (tanda 10 del plan del sistema): HACER YA 94 abiertas + 83 tachadas · PROPONER 31 abiertas + 23 tachadas · DESCARTADO 54 · HECHOS 28. La cuenta del 09/10 de arriba queda como estaba -->
+
+- 24/10/2026 00:05 (sesion principal, viernes 23): `_encargo.mjs` no emite el renglon «PEDIDO DE FAK: "<frase>"» ni las anclas `[sale de: ...]` que el 6g (`revisarCita`, aviso hasta el 30/10, freno desde el 31/10) exige a un encargo: el encargo E261024-f0ae dio «sin cita» aunque llevaba `--ok-fak`. Chico: que `--ok-fak` imprima tambien `PEDIDO DE FAK: "<cita>"` y que el bloque PASOS lleve una ancla por paso o «[agregado mio]». Antes del 31/10, o los encargos de sesiones hijas quedan frenados.
