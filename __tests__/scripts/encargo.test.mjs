@@ -20,11 +20,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   armarTexto, lineasArranque, parseArgs, validarEncargo, validarArranque, skillsDisponibles,
-  detectarSegundaTarea, detectarIrreversibles, horaDeLaMadre,
+  detectarSegundaTarea, detectarIrreversibles, horaDeLaMadre, validarCita, renglonPedido,
 } from '../../scripts/_encargo.mjs';
 import { spawnSync } from 'node:child_process';
 import { fijar, terminar, enLocal, vigente } from '../../scripts/_lib/horaGuard.mjs';
-import { decidir } from '../../scripts/_lib/coordinadorGuard.mjs';
+import { decidir, revisarCita, bloquePedido } from '../../scripts/_lib/coordinadorGuard.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CANON = JSON.parse(fs.readFileSync(path.join(RAIZ, 'scripts', '_lib', 'coordinadorCanon.data.json'), 'utf8'));
@@ -273,5 +273,110 @@ describe('validacion de --skill y --carpeta', () => {
     const malo = parseArgs(['--a', 'barackmercosul-c9', '--entregable', 'Informe de medios', '--origen', 'fak',
       '--cuerpo', 'Relevá los medios de la linea 3.', '--sin-supuestos', '--skill', 'no-existe']);
     expect(validarEncargo(malo).some((e) => /--skill "no-existe"/.test(e))).toBe(true);
+  });
+});
+
+/**
+ * 6g (24/10/2026, cola del 24/10 00:05): el guardian coordinador-guard (revisarCita) pide en todo encargo el renglon
+ * «PEDIDO DE FAK: "<frase textual>"» o «PEDIDO DE FAK: ninguno (trabajo propio: <por que>)», y _encargo.mjs no lo
+ * emitia: desde el 31/10 habria frenado a todas las hijas. Las dos direcciones: con --pedido-fak el guardian rastrea
+ * la frase (ok); con --trabajo-propio pasa con aviso; sin ninguno el script NO rechaza (avisa: el que frena es el
+ * guardian) y los flags mal usados si se rechazan.
+ */
+describe('6g: el renglon PEDIDO DE FAK sale de _encargo.mjs, no de la prosa', () => {
+  const FRASE = 'el 3 lanzalo en una nueva sesion sin carpeta asi no tiene bloqueos';
+  const CUERPO = 'Dejá la tool Workflow prendida de verdad, con el papel y la máquina diciendo lo mismo [sale de: "lanzalo en una nueva sesion sin carpeta"].';
+  const AHORA = new Date('2026-10-24T05:00:00Z');   // 24/10 02:00 AR: el guardian todavia avisa
+  // ts en milisegundos, como los deja mensajesDeFakDeLaSesion (el guardian los pasa por horaAR al armar el aviso)
+  const mensajes = [{ texto: `ok. ${FRASE} queres' CON UN OPUS ALTO O ULTRACODE`, ts: Date.parse('2026-10-24T02:55:00Z') }];
+  let home;
+  beforeAll(() => { home = fs.mkdtempSync(path.join(os.tmpdir(), 'encargo-6g-')); fs.mkdirSync(path.join(home, '.claude'), { recursive: true }); });
+  afterAll(() => { try { fs.rmSync(home, { recursive: true, force: true }); } catch { /* temp */ } });
+  const payload = (prompt) => ({ tool_name: 'mcp__ccd_session__start_session', session_id: 'test-6g', tool_input: { title: 'hija-6g', prompt } });
+  const revisar = (t) => revisarCita(payload(t), { ok: true }, { ahora: AHORA, home, mensajes });
+  const sano = (...mas) => parseArgs(['--a', 'barackmercosul-c9', '--entregable', 'Workflow prendida', '--origen', 'fak', '--cuerpo', CUERPO, '--sin-supuestos', ...mas]);
+
+  it('VERDE: con --pedido-fak el renglon va debajo de ORIGEN, con la frase entre comillas dobles, y el guardian la rastrea con su ancla', () => {
+    const t = armarTexto({ ...base(), cuerpo: CUERPO, pedidoFak: FRASE, carpeta: 'C:\\Escritorio\\Tarea', skills: ['carga-arb'] });
+    const L = t.split('\n');
+    expect(L[3]).toMatch(/^ORIGEN: /);
+    expect(L[4]).toBe(`PEDIDO DE FAK: "${FRASE}"`);
+    expect(bloquePedido(t).texto).toBe(`"${FRASE}"`);
+    const r = revisar(t);
+    expect(r.resultado, r.detalle).toBe('cita rastreada');
+    expect(r.nivel, r.detalle).toBe('ok');
+    expect(validarEncargo(sano('--pedido-fak', FRASE))).toEqual([]);
+    expect(validarCita(sano('--pedido-fak', FRASE)).avisos).toEqual([]);
+  });
+
+  it('VERDE: con --trabajo-propio sale «ninguno (trabajo propio: …)», sin parentesis adentro, y el guardian lo deja pasar con aviso', () => {
+    const t = armarTexto({ ...base(), trabajoPropio: 'auditoria propia del banco 3D (nadie la pidio)' });
+    expect(t).toMatch(/^PEDIDO DE FAK: ninguno \(trabajo propio: auditoria propia del banco 3D nadie la pidio\)$/m);
+    const r = revisar(t);
+    expect(r.resultado, r.detalle).toBe('trabajo propio');
+    expect(r.nivel).toBe('aviso');
+    expect(validarEncargo(sano('--trabajo-propio', 'auditoria propia del banco 3D'))).toEqual([]);
+  });
+
+  it('sin ninguno de los dos: el texto no trae el renglon, validarEncargo NO lo rechaza (el que frena es el guardian, desde el 31/10) y el aviso lo dice', () => {
+    expect(armarTexto(base())).not.toMatch(/PEDIDO DE FAK/);
+    expect(renglonPedido({})).toBe(null);
+    const a = sano();
+    expect(validarEncargo(a)).toEqual([]);
+    expect(validarCita(a).avisos.some((m) => /falta --pedido-fak/.test(m) && /2026-10-30/.test(m))).toBe(true);
+    expect(revisar(armarTexto({ ...base(), cuerpo: CUERPO })).resultado).toBe('sin cita');
+  });
+
+  it('ROJO: --pedido-fak y --trabajo-propio a la vez, --trabajo-propio corto, o un flag sin valor', () => {
+    expect(validarEncargo(sano('--pedido-fak', FRASE, '--trabajo-propio', 'auditoria propia del banco')).some((e) => /a la vez/.test(e))).toBe(true);
+    expect(validarEncargo(sano('--trabajo-propio', 'porque')).some((e) => /10 letras/.test(e))).toBe(true);
+    expect(validarEncargo(sano('--pedido-fak')).some((e) => /--pedido-fak sin valor/.test(e))).toBe(true);
+  });
+
+  it('AVISO: una cita corta (menos de 6 palabras) o un cuerpo sin ninguna ancla no se rechazan, pero se avisa', () => {
+    const corta = validarCita(sano('--pedido-fak', 'si hacelo'));
+    expect(corta.errores).toEqual([]);
+    expect(corta.avisos.some((m) => /2 palabra/.test(m))).toBe(true);
+    const sinAncla = validarCita(parseArgs(['--cuerpo', 'Dejá la tool Workflow prendida.', '--pedido-fak', FRASE]));
+    expect(sinAncla.avisos.some((m) => /ancla/.test(m))).toBe(true);
+  });
+
+  it('las comillas adentro de la frase pasan a simples (el guardian lee la frase entre comillas dobles) y el texto entero sigue pasando los candados', () => {
+    const t = armarTexto({ ...base(), cuerpo: CUERPO, pedidoFak: 'dejá el "excel" listo «hoy» y “mañana”', carpeta: 'C:\\Escritorio\\Tarea', skills: skillsDisponibles() });
+    expect(t).toMatch(/^PEDIDO DE FAK: "dejá el 'excel' listo 'hoy' y 'mañana'"$/m);
+    expect(bloquePedido(t).texto).toBe('"dejá el \'excel\' listo \'hoy\' y \'mañana\'"');
+    expect(detectarSegundaTarea(t)).toEqual([]);
+    expect(detectarIrreversibles(t)).toEqual([]);
+    const r = decidir(
+      { tool_name: 'SendMessage', tool_input: { to: 'barackmercosul-c9', message: t } },
+      { hayEscape: () => false, leerEncargo: () => ({ id: 'E260905-abcd', texto: t, cerrado: null }) },
+    );
+    expect(r.ok, JSON.stringify(r)).toBe(true);
+  });
+
+  it('por la linea de comandos: --pedido-fak queda en el texto registrado y en el JSON del encargo; sin el, el aviso sale por stderr', () => {
+    const creados = [];
+    const correr = (...args) => spawnSync('node', [path.join(RAIZ, 'scripts', '_encargo.mjs'), ...args], { encoding: 'utf8' });
+    try {
+      const con = correr('--a', 'prueba-hija-6g', '--entregable', 'Prueba del renglon PEDIDO DE FAK', '--origen', 'fak',
+        '--cuerpo', CUERPO, '--sin-supuestos', '--sin-arranque', '--pedido-fak', FRASE);
+      expect(con.status, con.stderr).toBe(0);
+      const id = con.stdout.match(/^\[ENCARGO (E[\w-]+)\]/)[1]; creados.push(id);
+      expect(con.stdout).toContain(`PEDIDO DE FAK: "${FRASE}"`);
+      expect(con.stderr).not.toMatch(/AVISO 6g/);
+      const j = JSON.parse(fs.readFileSync(path.join(RAIZ, '.claude', 'state', 'encargos', `${id}.json`), 'utf8'));
+      expect(j.pedidoFak).toBe(FRASE);
+      expect(j.trabajoPropio).toBe(null);
+      expect(j.texto).toBe(con.stdout.trimEnd());
+      const sin = correr('--a', 'prueba-hija-6g', '--entregable', 'Prueba sin pedido', '--origen', 'continuidad',
+        '--cuerpo', 'Prueba del test encargo.test.mjs: no hay nada que hacer con este texto.', '--sin-supuestos', '--sin-arranque');
+      expect(sin.status, sin.stderr).toBe(0);
+      creados.push(sin.stdout.match(/^\[ENCARGO (E[\w-]+)\]/)[1]);
+      expect(sin.stdout).not.toMatch(/PEDIDO DE FAK/);
+      expect(sin.stderr).toMatch(/\[AVISO 6g\] falta --pedido-fak/);
+    } finally {
+      // los encargos de prueba se CIERRAN (nada se borra: regla del propio _encargo.mjs)
+      for (const id of creados) correr('--cerrar', id);
+    }
   });
 });

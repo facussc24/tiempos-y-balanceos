@@ -21,7 +21,17 @@
  *        --cuerpo "<el texto>" [--fuente <ruta>]... [--fuente-condicional "<desc>"]... \
  *        [--supuesto "<...>" | --sin-supuestos] [--etapa proyecto|serie] \
  *        [--ok-fak "<cita textual>" --hora HH:MM] \
+ *        [--pedido-fak "<la frase de Fak que pide ESTO, copiada tal cual>" | --trabajo-propio "<por que>"] \
  *        [--carpeta "<carpeta de la tarea en el Escritorio>"] [--skill <nombre>]... [--sin-arranque] [--lanzada]
+ *
+ *   PEDIDO DE FAK (24/10/2026, item 6g del viernes 23; cola del 24/10 00:05): el guardian coordinador-guard
+ *   (revisarCita) exige en todo encargo el renglon «PEDIDO DE FAK: "<frase textual>"», rastreable a un mensaje real
+ *   de Fak, o «PEDIDO DE FAK: ninguno (trabajo propio: <por que>)»; avisa hasta el 30/10 y FRENA desde el 31/10
+ *   (canon citaFak). --pedido-fak lo emite debajo de ORIGEN (las comillas de adentro pasan a simples: la frase va
+ *   entre comillas dobles) y --trabajo-propio emite el «ninguno». Sin ninguno de los dos el encargo sale igual, con
+ *   un AVISO por stderr: el que frena es el guardian, no este script (asi un encargo o un test viejo no se pone rojo
+ *   solo el 31/10). Las anclas de cada pregunta ([sale de: "<trozo>"] o [agregado mío]) van escritas en el --cuerpo;
+ *   sin ninguna, aviso.
  *
  *   ARRANQUE (desde el 05/09/2026): al final de todo encargo va la plantilla fija del canon
  *   (modo plan, la carpeta de la tarea, leer los archivos enteros, cargar los skills, cierre con
@@ -327,12 +337,70 @@ export function horaDeLaMadre({ vigente, env = process.env, home, ahora = new Da
   try { const e = vigente(id, { ahora, home }); return e ? { madre: id, hasta: e.hasta, lista: e.lista || null } : null; } catch { return null; }
 }
 
-export function armarTexto({ id, a, entregable, origen, etapa, cuerpo, fuentes, condicionales, supuestos, okFak, hora, carpeta, skills = [], sinArranque = false, lanzada = false, hereda = null }) {
+// ── 6g (24/10/2026): la frase de Fak detras del encargo, como la lee coordinadorGuard.revisarCita ─────────────
+const CITA = CANON.citaFak || {};
+const RE_ANCLA_SALE_DE = /\[\s*sale de\s*:/i;
+const RE_ANCLA_AGREGADO = /\[\s*agregado m[ií]o\s*\]/i;
+const valorDe = (a, k) => (a[k] && a[k] !== true ? String(a[k]) : '');
+
+/**
+ * El renglon «PEDIDO DE FAK: ...» que el guardian busca al principio de un renglon (bloquePedido), o null si no hay
+ * ni frase ni trabajo propio. La frase va entre comillas dobles y las comillas de adentro pasan a simples: el
+ * guardian saca la cita con "..." y una comilla doble adentro la cortaria. El por que del trabajo propio va sin
+ * parentesis: el guardian lo lee hasta el primer «)».
+ */
+export function renglonPedido({ pedidoFak = null, trabajoPropio = null } = {}) {
+  if (pedidoFak) {
+    const frase = String(pedidoFak).replace(/["“”«»]/g, "'").replace(/\s+/g, ' ').trim();
+    return `PEDIDO DE FAK: "${frase}"`;
+  }
+  if (trabajoPropio) {
+    const porQue = String(trabajoPropio).replace(/[()]/g, '').replace(/\s+/g, ' ').trim();
+    return `PEDIDO DE FAK: ${CITA.ninguno || 'ninguno'} (${CITA.trabajoPropio || 'trabajo propio'}: ${porQue})`;
+  }
+  return null;
+}
+
+/**
+ * --pedido-fak / --trabajo-propio: errores (rechazan el encargo) y avisos (salen por stderr; el encargo sale igual).
+ * Sin ninguno de los dos NO es un error: el que frena desde el dia siguiente a citaFak.avisoHasta es el guardian,
+ * y un encargo viejo o un test que no los traiga no tiene por que ponerse rojo solo ese dia.
+ */
+export function validarCita(a) {
+  const errores = [];
+  const avisos = [];
+  const pedido = valorDe(a, 'pedido-fak');
+  const propio = valorDe(a, 'trabajo-propio');
+  if (a['pedido-fak'] === true) errores.push('--pedido-fak sin valor: va la frase de Fak copiada tal cual, entre comillas');
+  if (a['trabajo-propio'] === true) errores.push('--trabajo-propio sin valor: va el por qué, con 10 letras o más');
+  if (pedido && propio) errores.push('--pedido-fak y --trabajo-propio a la vez: o sale de una frase de Fak o es trabajo propio, no las dos cosas');
+  const minLetras = CITA.minLetrasPorQue ?? 10;
+  if (propio && propio.replace(/[()]/g, '').trim().length < minLetras) errores.push(`--trabajo-propio "${propio}": el por qué va con ${minLetras} letras o más`);
+  if (pedido) {
+    const minPalabras = CITA.minPalabrasCita ?? 6;
+    const palabras = pedido.split(/\s+/).filter(Boolean).length;
+    if (palabras < minPalabras) {
+      avisos.push(`--pedido-fak tiene ${palabras} palabra(s) y el guardián pide ${minPalabras} o más para rastrearla: una respuesta corta de Fak («si», «dale») no alcanza, citá la frase del pedido original`);
+    }
+    const cuerpo = a.cuerpo === true ? '' : (a.cuerpo || '');
+    if (!RE_ANCLA_SALE_DE.test(cuerpo) && !RE_ANCLA_AGREGADO.test(cuerpo)) {
+      avisos.push('el cuerpo no trae ninguna ancla [sale de: "<trozo de la frase>"] ni [agregado mío]: el guardián 6g se la pide a cada pregunta del encargo');
+    }
+  }
+  if (!pedido && !propio) {
+    avisos.push(`falta --pedido-fak "<frase textual de Fak>" o --trabajo-propio "<por qué>": sin el renglón PEDIDO DE FAK el guardián 6g (coordinador-guard) avisa hasta el ${CITA.avisoHasta || '2026-10-30'} y frena el encargo desde el día siguiente`);
+  }
+  return { errores, avisos };
+}
+
+export function armarTexto({ id, a, entregable, origen, etapa, cuerpo, fuentes, condicionales, supuestos, okFak, hora, carpeta, skills = [], sinArranque = false, lanzada = false, hereda = null, pedidoFak = null, trabajoPropio = null }) {
   const L = [];
   L.push(`[ENCARGO ${id}]`);
   L.push(`PARA: ${a}`);
   L.push(`ENTREGABLE (uno solo): ${entregable}`);
   L.push(`ORIGEN: ${origen}${etapa ? `  ·  ETAPA DE LA PIEZA: ${etapa}` : ''}`);
+  const pedido = renglonPedido({ pedidoFak, trabajoPropio });
+  if (pedido) L.push(pedido);
   L.push('');
   L.push(cuerpo.trim());
   L.push('');
@@ -390,6 +458,7 @@ export function validarEncargo(a) {
 
   errores.push(...validarDestinoYAutorizacion({ a: a.a === true ? '' : a.a, cuerpo, okFak: a['ok-fak'] }));
   errores.push(...validarOrigenYEtapa({ origen: a.origen, etapa: a.etapa, entregable, cuerpo }));
+  errores.push(...validarCita(a).errores);
 
   const segunda = detectarSegundaTarea(cuerpo);
   if (segunda.length) {
@@ -500,6 +569,7 @@ async function main() {
     condicionales: (a['fuente-condicional'] || []).filter((f) => f !== true),
     supuestos: (a.supuesto || []).filter((s) => s !== true),
     okFak: a['ok-fak'], hora: a.hora,
+    pedidoFak: valorDe(a, 'pedido-fak') || null, trabajoPropio: valorDe(a, 'trabajo-propio') || null,
     carpeta: a.carpeta && a.carpeta !== true ? a.carpeta : null,
     skills: (a.skill || []).filter((s) => s !== true),
     sinArranque: !!a['sin-arranque'],
@@ -510,6 +580,8 @@ async function main() {
     id, a: a.a, entregable: a.entregable, origen: a.origen, etapa: a.etapa || null,
     carpeta: a.carpeta && a.carpeta !== true ? a.carpeta : null, skills: [...new Set((a.skill || []).filter((s) => s !== true))],
     lanzada: !!a.lanzada,
+    pedidoFak: valorDe(a, 'pedido-fak') || null,          // 6g: la frase de Fak detras del encargo (o null)
+    trabajoPropio: valorDe(a, 'trabajo-propio') || null,  // 6g: por que es trabajo propio, sin pedido de Fak (o null)
     hereda,     // { madre, hasta, lista } si la hija hereda la hora de la que la lanza; null si no
     creado: new Date().toISOString(), hash: hashCuerpo(texto), cerrado: null,
     // El texto completo queda guardado para que el guardian compare LITERAL lo que se manda
@@ -519,6 +591,7 @@ async function main() {
 
   console.log(texto);
   console.error(`\n[registrado ${id} — pegá el texto TAL CUAL; si lo editás, el guardián lo bloquea por hash]`);
+  for (const m of validarCita(a).avisos) console.error(`[AVISO 6g] ${m}`);
   if (hereda) console.error(`[la hija hereda la hora de trabajo de la sesión ${hereda.madre.slice(0, 8)} (hasta las ${hereda.hasta})]`);
   else if (a.lanzada && !a['sin-arranque']) console.error('[esta sesión no tiene una hora de trabajo vigente (o no vino CLAUDE_CODE_SESSION_ID): el ARRANQUE no lleva el renglón de heredar la hora]');
   return 0;
