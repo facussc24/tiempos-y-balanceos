@@ -271,7 +271,10 @@ def correr_ejercicio(ejercicio, construir, desplazamiento=(0.0, 0.0, 0.0)):
     iguales = comparar(salida, desplazamiento)
     salida["ok"] = not fallas and iguales
     if not salida["ok"] and not salida.get("error"):
-        salida["error"] = (f"pasos con falla: {fallas}; diferencia_mm3 {salida['diferencia_mm3']}; "
+        # revisor del 23/10: si build123d no pudo medir (CATA sin .venv-cad), el motivo va primero en el error principal,
+        # que es lo que el obrero publica en resultado-<item>.txt; si no, parecia una falla de comparacion
+        salida["error"] = ((f"{salida['error_build123d']}; " if salida.get("error_build123d") else "")
+                           + f"pasos con falla: {fallas}; diferencia_mm3 {salida['diferencia_mm3']}; "
                            f"dif_cdg_mm {salida['dif_cdg_mm']}")
     salida["segundos"] = round(time.time() - t0, 1)
     escribir(carpeta, salida)
