@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "Caja 120 x 80 x 50 desde (0, 0, 0) vaciada en CATIA con AddNewShell (pared 3 hacia adentro, la cara de arriba sacada, elegida por posicion): volumen y centro contra la cuenta, lo que saco la cascara (lo de adentro, centro z 26,5), 11 caras y la forma contra la caja menos la caja interior puesta a mano en build123d (sin shell) con compara.py del 32",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "120 x 80 x 50 - 114 x 74 x 47 y su centro con la caja desde (0, 0, 0); la forma, el gemelo de gemelo_caja.py (caja menos caja interior, sin la operacion de cascara)",
+  "valor": {"volumen_mm3": 83508.0, "cdg_mm": [60.0, 40.0, 17.8781], "caras": 11},
+  "unidad": "mm3",
+  "tolerancia": {"volumen_mm3": 0.5, "cdg_mm": 0.01, "sobra_falta_mm3": 1.0, "distancia_mm": 0.01},
+  "fuente": "la cuenta de la fila 59 de COLA_CATIA.md (la prueba la arma de nuevo con cinco placas) y el gemelo de build123d"
+ }
+}

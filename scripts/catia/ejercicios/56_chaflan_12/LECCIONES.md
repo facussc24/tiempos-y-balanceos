@@ -1,7 +1,7 @@
 # Lecciones del ejercicio 56 (chaflán en las 12 aristas de una caja) — CATA, 24/10/2026
 
-Corrida real: CATIA R21 (B21, 32 bits) de CATA con el Python 3.12.10 del sistema, en `%TEMP%\catia_cata_tanda\56_r3`
-(15:33:33-15:34:08, con el código del commit; la primera verde fue 56_r2 a las 15:17, igual). VERDE: 1 181 250,000 mm³ y centro (0 · 0 · 30), la cuenta exacta; contra el gemelo por planos sobra 0,
+Corrida real: CATIA R21 (B21, 32 bits) de CATA con el Python 3.12.10 del sistema, en `%TEMP%\catia_cata_tanda\56_r4`
+(15:58, con el código de main; antes 56_r3 a las 15:33 y la primera verde 56_r2 a las 15:17, iguales). VERDE: 1 181 250,000 mm³ y centro (0 · 0 · 30), la cuenta exacta; contra el gemelo por planos sobra 0,
 falta 0, distancia 0,0 por malla y exacta, 18 caras de cada lado.
 
 | | Volumen (mm³) | Caras | Esquina |

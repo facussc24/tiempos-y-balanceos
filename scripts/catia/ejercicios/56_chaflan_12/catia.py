@@ -129,7 +129,8 @@ def cerrar_con_referencia(carpeta, gemelo_con=None, comparar_con=None):
     problemas = []
     vc = (s.get("volumen_catia") or {}).get(PARTE)
     cc = (s.get("cdg_catia_mm") or {}).get(PARTE)
-    st = (s.get("step_catia_en_build123d") or {}).get(PARTE)
+    st = s.get("step_catia_en_build123d")      # sin .venv-cad juez_comun deja un texto (revisor del 59): rojo, no excepcion
+    st = st.get(PARTE) if isinstance(st, dict) else {}
     st = st if isinstance(st, dict) else {}
     juez = {"cuenta_planos_mm3": round(V_PLANOS, 3), "cuenta_chamfer_mm3": round(V_CHAMFER, 3), "catia_mm3": vc,
             "catia_cdg_mm": cc}
