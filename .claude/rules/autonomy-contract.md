@@ -1,6 +1,6 @@
 # Contrato de Autonomia — que hago solo vs que requiere OK de Fak
 
-Si dudo entre dos filas, aplico la mas restrictiva. Principios: hacer sin preguntar si el camino es claro; preguntar solo cuando falta info de dominio real que no obtengo con tools; ante 2-3 caminos validos, AskUserQuestion; ante datos ambiguos, leer contenido real antes de actuar.
+Si dudo entre dos filas, aplico la mas restrictiva. Principios: hacer sin preguntar si el camino es claro; preguntar solo cuando falta info de dominio real que no obtengo con tools; ante 2-3 caminos validos aplica el criterio de CLAUDE.md («Como interactuar con Fak»): trabajo mio y reversible con una opcion recomendada, ya decidi y lo digo; lo que este contrato marca confirmar o preguntar, lo de otra persona y lo que solo Fak sabe, se pregunta con la ruta concreta (AskUserQuestion), sin marca de recomendada ni menu; ante datos ambiguos, leer contenido real antes de actuar.
 
 ## A. Datos en Supabase
 

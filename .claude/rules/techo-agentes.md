@@ -18,9 +18,7 @@ Historia (06/08: techo de 5 tras dos incidentes de 21 y 40 agentes; 30/09: 10 so
 puse yo... eficiencia no significa siempre ahorrar tokens... algunas tareas van a requerir Fable o muchos Opus»*): en el
 archivo de detalle. De ahi el presupuesto por costo.
 
-Esto no vive solo aca: esta enforced en `~/.claude/settings.json` (hasta el 16/10 `disableWorkflows: true`; desde ese dia sacado y `workflowKeywordTriggerEnabled: true`,
-`workflowKeywordTriggerEnabled: false`, `CLAUDE_CODE_SUBAGENT_MODEL=claude-sonnet-5-5` como default,
-sin `_FORCE`) y en el hook `~/.claude/hooks/agentes-guard.sh` (PreToolUse, matcher `Agent|Task|Workflow`;
+Esto no vive solo aca: esta enforced en `~/.claude/settings.json` (`CLAUDE_CODE_SUBAGENT_MODEL=claude-sonnet-5-5` como default, sin `_FORCE`; el estado de Workflow, en su parrafo al final) y en el hook `~/.claude/hooks/agentes-guard.sh` (PreToolUse, matcher `Agent|Task|Workflow`;
 copia identica en `.claude/hooks/`), que suma los puntos de la ventana de 10 min en
 `~/.claude/.agent-spawns.log` (`<epoch> <tool> <peso>`), devuelve exit 2 cuando la llamada no entra,
 exige una definicion propia, rechaza `effort: max` en la llamada y deja pasar la auditoria final sin
@@ -116,7 +114,7 @@ touch ~/.claude/.agent-cupo-ok      # 12 h: saltea el freno de la ventana de 5 h
 ```
 
 Fak no corre comandos: cuando lo pide ("usa mas agentes", "no me importa gastar tokens", "usa mas
-Opus", "lo que sea necesario") lo escribo yo y lo digo. Sin esa frase suya, no se toca (10/09/2026).
+Opus", "lo que sea necesario") lo escribo yo y lo digo. Sin esa frase suya, no se toca (10/09/2026). Cada comando de arriba lleva en el mismo renglon la cita de Fak de ESTE turno, copiada de su mensaje (`autonomy-contract.md` §G): `echo 15 > ~/.claude/.agent-limit # Fak DD/MM HH:MM: "su frase"`; sin la cita el guardian `permiso-un-uso-guard` lo frena.
 **Si Fak repite un pedido que le negue por una regla suya, la segunda vez no se le vuelve a explicar la
 regla: se le nombra el cambio exacto y se hace** (el 01/10 tuvo que pedirlo cuatro veces). Ejemplo:
 08/10/2026 a la noche, `echo 20 > ~/.claude/.agent-limit` (80 puntos) para la investigacion grande que

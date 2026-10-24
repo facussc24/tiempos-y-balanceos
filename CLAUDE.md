@@ -168,7 +168,7 @@ semana van a `docs/COLA_CAMBIOS_CODIGO.md`).
 
 **Skills** (on-demand): son el sistema de roles y cargan solo al usarse (decision Fak 2026-08-09:
 no crear agentes-rol por dominio ni proyectos separados, multi-agente ≈ 15x tokens; subagentes solo
-para trabajo batch/paralelo, techo 10 en Sonnet 5.5 xhigh desde el 30/09/2026 y la auditoria final en Opus, regla `techo-agentes.md`). La lista con la descripcion de cada skill la inyecta Claude
+para trabajo batch/paralelo, presupuesto de 40 puntos cada 10 min (haiku 1 · sonnet 4 · opus 8 · fable 20), esfuerzo xhigh y la auditoria final en Opus, regla `techo-agentes.md`). La lista con la descripcion de cada skill la inyecta Claude
 Code en cada sesion; el detalle vive en su `SKILL.md` bajo `.claude/skills/`.
 `docs/LECCIONES_APRENDIDAS.md`: gate por bullet y ciclo de graduacion en la regla
 `lecciones-consolidacion.md` (lo miden `_cierreSesion.mjs` y el hook Stop).
