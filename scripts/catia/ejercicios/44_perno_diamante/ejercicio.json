@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "Perno diamante en CATIA: el circulo d cortado por la franja |x| <= W/2 (pad de 10) y una placa 100 x 100 con el agujero D en otro cuerpo del mismo CATPart; el STEP de CATIA (perno y placa) va a build123d, que mide la interseccion exacta del perno con la placa corrida 0 / 0,15 / 0,20 en x y la del gemelo, un perno redondo del mismo d corrido 0,15; pieza = ej67 de la practica copiado con cambios anotados, control = su cadena CONTROL en choque_perno.py",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "diametro del perno diamante para un agujero de 55,55 (minimo), distancia entre centros 45 +/- 0,15 y franja de contacto W = 2; y que con el agujero corrido 0,15 el diamante no choque y uno redondo del mismo d si",
+  "valor": 55.538,
+  "unidad": "mm",
+  "tolerancia": 0.0005,
+  "fuente": "P. H. Joshi, «Jigs and Fixtures», ejemplo 2.1 (pag. 32; ecuacion 2.1, pags. 32-34 y 40), segun el informe de la principal repo-privado\\.sgc-cache\\criterio-disenador-2026-10-19\\frente1_dispositivos.md: la formula d = 2 raiz(D^2/4 - V W - V^2) en la fila Ub10 («ABIERTA ... recalculada: el ej. 2.1 da 55,538») y D, V y W en el parrafo «Reserva» del final de la seccion E6. El 55,538 es el recalculo de la principal; el libro no se abrio desde CATA. Tolerancia medio digito; choque: 0 exacto en su lugar y menos de 1e-3 mm3 corrido 0,15 (el veredicto de la practica)"
+ }
+}

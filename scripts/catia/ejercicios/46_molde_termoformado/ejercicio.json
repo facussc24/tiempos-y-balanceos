@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "Molde macho de termoformado en CATIA (bloque 254 x 304,8 x 50,8 mm = caja de 10 x 12 x 2 pulg): las caras formadas (techo + 4 lados) y la huella medidas por topologia; despues el mismo molde con 4 grados de desmoldeo (AddNewDraft en los 4 lados, neutro la base); relacion de estirado, chapa de partida, volumen contra la cuenta (prisma y prismatoide) y STEP medido con build123d; pieza = ej69 de la practica copiado con cambios anotados",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "area formada, huella, relacion de estirado de area y espesor de chapa de partida del molde sin desmoldeo (con 4 grados: la cuenta del tronco, sin papel)",
+  "valor": {"formada_pulg2": 208, "huella_pulg2": 120, "relacion": 1.73, "chapa_pulg": 0.173},
+  "unidad": "pulg2, -, pulg",
+  "tolerancia": {"area_pulg2": 0.001, "relacion": 0.005, "chapa_pulg": 0.0005},
+  "fuente": "RapidMade, 17/11/2025 (https://rapidmade.com/draw-ratio-in-thermoforming-how-it-controls-wall-thickness-strength-and-part-quality/), segun la ficha E18 del banco de la principal (banco_ejercicios_diseno.md, «ORIGINAL; es un blog de proveedor»): area formada 2(10x2) + 2(12x2) + 10x12 = 208 pulg2, huella 120, relacion 1,73 (recalculado 1,733), chapa 1,73 x 0,100 = 0,173 pulg con distribucion ideal. La pagina no se abrio desde CATA. Tolerancias: areas a 0,001 pulg2 (son exactas), relacion y chapa a medio digito de lo publicado"
+ }
+}
