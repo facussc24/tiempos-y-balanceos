@@ -73,6 +73,20 @@ para uso educativo); la del CSWP: https://sites.ualberta.ca/~dnobes/CSWA/CSWP_Ma
 | 30 | CATA | `30_ttt_corner_tie` | TTT 01-09 Corner Tie: pestaña armada plana + Rotate + Split | guía: 307,23 g | ej40 |
 | 31 | CATA (era de la principal: pedido 8, 24/10 11:05) | `31_ttt_sm_hanger` | TTT 23-02-02 SM Hanger (chapa de 4) como sólido: la R21 no tiene la biblioteca de chapa por COM | guía: 1 028 g ± 10 | ej54 |
 
+### Fase 3: diseños reales de Barack (Fak: «los reales de Barack al final»), propuesta del 24/10 11:15
+
+La respuesta conocida acá no es un papel de afuera: es la MEDICIÓN de las piezas reales (el STEP del cliente y el del
+dispositivo entregado, con su sha256) con otro motor (OpenCASCADE / build123d), y lo que ya se midió el 19/10 en la
+práctica (`reference/catia.md`, «Qué dio»). Base: los ej de la práctica que ya lo hicieron. Se arman de a uno, con el
+mismo contrato; los archivos de cliente NO se copian al repo (se citan con ruta y sha256, como el banco 3D).
+
+| N | Quién | Qué | Respuesta conocida | Base |
+|---|---|---|---|---|
+| 32 | principal | El virolador v16 (dispositivo entregado del Upper Trim) rehecho EN CATIA desde sus datos | El STEP entregado: sobra 0, falta 0, distancia ≤ 0,002 mm (compara.py) y su volumen | ej13_v16 |
+| 33 | CATA | El panel del cliente (Upper Trim) abierto en CATIA: volumen y área contra build123d sobre el MISMO STEP | 91 765,561 mm³ (build123d; CATIA dio 91 791,099 el 17/10: la diferencia, 0,03 %, es parte de lo que se juzga) | catia.md «Qué dio» |
+| 34 | principal | Choque EXACTO en CATIA de la v16 contra el panel (y el gemelo subido 1 mm) | OpenCASCADE: v16 sin choque (luz 0,0455); gemelo 69,573 mm³ | ej16_choque_catia_real |
+| 35 | CATA | Nido que copia el panel del cliente (bloque menos el panel) | intersección 0 y distancia ~0 con OpenCASCADE | ej24_nido_cliente |
+
 ## Lo que sigue, en este orden (Fak, 24/10/2026 a la mañana)
 
 *"quiero que hagas todos los ejercicios oficiales de catia no? y luego diseños reales"*; *"te decía diseños reales de
@@ -122,3 +136,7 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 29 | pendiente | | |
 | 30 | hecho (CATA) | CATA, R21, 24/10/2026 10:54 (`30_final`): ok true; 307,231 g contra 307,23 (Aluminium pasado a 2 700); gemelo y STEP a 0,000 mm³; molde del 24 | (este commit) |
 | 31 | pendiente | | |
+| 32 | pendiente | | |
+| 33 | pendiente | | |
+| 34 | pendiente | | |
+| 35 | pendiente | | |
