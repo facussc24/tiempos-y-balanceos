@@ -380,3 +380,23 @@ describe('6g: el renglon PEDIDO DE FAK sale de _encargo.mjs, no de la prosa', ()
     }
   });
 });
+
+// HOY-34 (cola, 24/10/2026): --cerrar recibe el id del encargo, no una ruta (se uniria a la carpeta de encargos).
+describe('--cerrar solo acepta un id de encargo', () => {
+  const correr = (...args) => spawnSync('node', [path.join(RAIZ, 'scripts', '_encargo.mjs'), ...args], { encoding: 'utf8' });
+  it('ROJO: una ruta, un id con otra forma o --cerrar sin valor salen con 1 y lo dicen', () => {
+    for (const malo of ['.claude/state/encargos/E260905-abcd.json', '../E260905-abcd', 'E260905-abcd.json', 'cualquiera']) {
+      const r = correr('--cerrar', malo);
+      expect(r.status, malo).toBe(1);
+      expect(r.stderr, malo).toMatch(/--cerrar va con el id del encargo/);
+    }
+    const sinValor = correr('--cerrar');
+    expect(sinValor.status).toBe(1);
+    expect(sinValor.stderr).toMatch(/--cerrar va con el id del encargo/);
+  });
+  it('VERDE: un id bien formado que no existe sigue diciendo «No existe el encargo»', () => {
+    const r = correr('--cerrar', 'E000000-ffff');
+    expect(r.status).toBe(1);
+    expect(r.stderr).toMatch(/No existe el encargo E000000-ffff/);
+  });
+});

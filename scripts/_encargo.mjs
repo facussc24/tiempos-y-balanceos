@@ -522,6 +522,12 @@ async function main() {
   }
 
   if (a.cerrar) {
+    // HOY-34 (cola): --cerrar recibe el ID (E260905-abcd), nunca una ruta: una ruta se uniria a DIR_ESTADO y podria
+    // apuntar afuera de la carpeta de encargos.
+    if (a.cerrar === true || !/^E\d{6}-[0-9a-f]{4}$/i.test(String(a.cerrar))) {
+      console.error(`--cerrar va con el id del encargo (E260905-abcd), no con una ruta ni otra cosa: recibi "${a.cerrar === true ? '' : a.cerrar}".`);
+      return 1;
+    }
     const f = path.join(DIR_ESTADO, `${a.cerrar}.json`);
     if (!fs.existsSync(f)) { console.error(`No existe el encargo ${a.cerrar}.`); return 1; }
     const e = JSON.parse(fs.readFileSync(f, 'utf8'));
