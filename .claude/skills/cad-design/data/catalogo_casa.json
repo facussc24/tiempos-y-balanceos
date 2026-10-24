@@ -1,0 +1,67 @@
+{
+  "_que_es": "Catalogo de la casa: lo que Barack ya tiene hecho y probado para no volver a dibujarlo. Es el PRIMER paso del orden de busqueda antes de dibujar (SKILL.md GATE 1; informe 3D §8 fase 1, propuesta 2). Se consulta con: .venv-cad python -m cadlib.constructores --buscar <palabra> (desde .claude/skills/cad-design/scripts). Cada ficha dice que es, donde vive (build123d y CATIA), su estado real (que se probo y que no) y su caso del banco 3D. Los dispositivos completos ya fabricados estan en el indice aparte (indice_dispositivos.py --buscar).",
+  "version": "2026-10-24.1",
+  "fichas": [
+    {
+      "id": "caja",
+      "tipo": "constructor",
+      "que_es": "caja o tope con las 4 aristas verticales y el contorno de arriba redondeados con el radio de la casa; la cara de abajo queda viva porque se funde a otra pieza",
+      "palabras": ["caja", "tope", "pedestal", "bloque", "taco", "topes redondeados", "canto", "redondeo"],
+      "donde": {
+        "build123d": "cadlib.constructores.caja(largo, ancho, alto, radio=None, motivo=None, centro=(0, 0, 0))",
+        "catia": "scripts/catia/constructores_casa.py caja(ctx, largo, ancho, alto, radio=None, motivo=None, centro=(0, 0, 0))"
+      },
+      "origen": "caja_tope_redondeado() de C:\\Dev\\_utrim\\build_v10.py (virolador del Upper Trim, gmsh, 19/08/2026: los pedestales con canto vivo marcaban el vinilo; reference/utillajes-de-apriete.md)",
+      "estado": "la forma se imprimio al menos una vez en el virolador (v11 o v12, 19/08; Fak no sabe cual de las dos: memoria project_uppertrim_pisador_utillaje l.64 y l.155); este constructor la rehace en build123d y en CATIA en dos pasos y no se imprimio todavia con esta biblioteca",
+      "banco": "evals/banco3d/ejercicios/20_constructor_caja"
+    },
+    {
+      "id": "placa",
+      "tipo": "constructor",
+      "que_es": "placa que apoya en la cama de la impresora: contorno de abajo con chaflan a 45 grados (no filete) y arriba y verticales con el radio de la casa",
+      "palabras": ["placa", "base", "chapa", "plancha", "chaflan", "cama", "pata de elefante"],
+      "donde": {
+        "build123d": "cadlib.constructores.placa(largo, ancho, espesor, chaflan_cama=None, radio=None, motivo=None, centro=(0, 0, 0))",
+        "catia": "scripts/catia/constructores_casa.py placa(ctx, largo, ancho, espesor, chaflan_cama=None, radio=None, motivo=None, centro=(0, 0, 0))"
+      },
+      "origen": "regla ficha-fdm.md G6 (chaflan, no filete, en la cara de cama; Prusa KB y Hubs) que el 20/10 se aplico a mano en CATIA con escalones de 0,2 mm (pulir.py pad_chaflan)",
+      "estado": "el tamano del chaflan esta A DECIDIR (lenguaje_diseno.json); no impresa con esta biblioteca",
+      "banco": "evals/banco3d/ejercicios/21_constructor_placa"
+    },
+    {
+      "id": "colocar",
+      "tipo": "constructor",
+      "que_es": "ubicar una pieza (propia o de afuera) en un conjunto con una matriz que es una ROTACION propia (det +1); se niega con un espejo (det -1); marco(eje_x, eje_y) arma la matriz con det +1 por construccion",
+      "palabras": ["colocar", "ubicar", "armar", "conjunto", "ensamble", "matriz", "espejo", "det", "pose", "integrar"],
+      "donde": {
+        "build123d": "cadlib.constructores.colocar(forma, M) / marco(eje_x, eje_y, origen) / verificar_poses(json)",
+        "catia": "scripts/catia/constructores_casa.py colocar(producto_o_componente, M) (valida y llama Position.SetComponents)"
+      },
+      "origen": "hallazgo 1 de C:\\Dev\\_catia_practica\\virolador_auto\\AUDITORIA_auditor.md (20/10/2026): la palanca de MakerWorld quedo armada en espejo, det -1 en las 7 piezas y los 64 estados; CATIA la mostraba bien y al exportar el STEP la corria 140 a 370 mm",
+      "estado": "la regla det +1 se aplico el 20/10 en palanca_pose.py (estados.json actual: 65 poses, todas det +1); el control nuevo es la negativa de colocar() y el corrector pose_rigida del banco",
+      "banco": "evals/banco3d/ejercicios/22_constructor_colocar"
+    },
+    {
+      "id": "palanca_traba_makerworld",
+      "tipo": "pieza_de_catalogo",
+      "que_es": "palanca de traba de cuatro barras (sargento vertical impreso): base, brazo, mango y dos bielas; traba pasado el punto muerto",
+      "palabras": ["palanca", "traba", "sargento", "clamp", "toggle", "cuatro barras", "mango", "biela", "apriete", "virolador"],
+      "procedencia": "MakerWorld, autor Alesh, «Vertical clamp... easy print» (C:\\Dev\\_catia_practica\\virolador_auto\\palanca_makerworld\\armar_palanca.py l.2)",
+      "licencia": "no anotada en los archivos bajados. Fak 21/10/2026: una licencia no frena el uso interno en Barack (memoria feedback_licencias_3d_no_frenan_uso_interno). El repo es PUBLICO: los archivos de la palanca NO se suben al repo, se apuntan con su sha256",
+      "archivos": {
+        "carpeta": "C:\\Dev\\_catia_practica\\virolador_auto\\palanca_makerworld (PC principal; falta llevarla a la nube de Ingenieria: PREGUNTAS_FAK.md de catia-tanda-24-10)",
+        "zip_original": {"archivo": "Clamps-update_stls.zip", "sha256": "ff94d6f382439137061211ada6d5025c8cc1859cecf1e03d6bc71d7e834c3c57"},
+        "piezas_stl": {
+          "base_A": {"archivo": "stl/obj_8_P0064829.STL_A.stl", "sha256": "8b31936a31bf606d420e529fd32d180601d720b9b11328f74bc000f943375eb1"},
+          "brazo_A": {"archivo": "stl/obj_2_P0064832.STL_A.stl", "sha256": "0dc67f90ade7fd30dc8380bcdb8d5675cbc1c9e03b529961af7432102dde8d90"},
+          "mango": {"archivo": "stl/obj_3_P0064883.STL.stl", "sha256": "3e3ca227e369607fe896f783634a5eb16f0ff44fb19623d50c44219e5fea27bd"}
+        },
+        "que_pieza_es_cual": "palanca_pose.py l.19: base_A obj_8, base_B obj_10, brazo_A obj_2, brazo_B obj_4, mango obj_3, biela_1 obj_7, biela_2 obj_9",
+        "poses": {"archivo": "estados.json", "sha256": "7272d5ba476a580e3f0297bf35efb769464734c4ba67291051bb12a187d1690a", "que_trae": "65 poses (mango de 142 a 14 grados), matriz 4x4 por pieza; todas det +1 (verificar con --poses)"}
+      },
+      "cinematica": "distancias entre ejes medidas en los STL: base 14,8, pieza de 10,28 (obj_2/4), pieza de 6,7 (obj_3), bielas 17,0 (armar_palanca.py l.3 y l.12)",
+      "estado": "simulada en 65 poses sin choques (DONDE_QUEDO.md 20/10: sim_rapida.py, manifold3d, 4,5 s); armada con det +1 y CATIA = cuenta a 0,000 mm (control_posiciones.py); NO impresa en Barack. Integrarla: colocar(malla, M) con M de estados.json, nunca una matriz armada a mano",
+      "banco": "evals/banco3d/ejercicios/22_constructor_colocar (brazo_A y base_A: las asimetricas; mango y bielas son simetricas y el espejo no se ve en ellas)"
+    }
+  ]
+}

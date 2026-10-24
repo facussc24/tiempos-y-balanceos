@@ -82,6 +82,8 @@ incidente vive en los snapshots.
 
 ## Entregables y comunicacion con Fak
 
+- **24/10 — «Las investigaciones de criterio de diseñador 3D, ¿las hacemos?» pedía INVESTIGAR (qué revisan los diseñadores en piezas y moldes), no programar una propuesta vieja: el encargo lo tradujo a «hacé la propuesta 2» y Fak lo vio una hora después** (*"pero pense que vos invas a investigar... ¿no entendés algo así?"*). Si el pedido nombra investigar algo, el encargo lleva esa investigación con su frase; programar lo ya investigado va aparte.
+
 - **23/10 — Los pedidos de la otra PC se miran en CADA despertar del latido, no solo al arrancar la sesión: CATA dejó dos a las 22:05 y 22:22 y los vi a las 22:45, cuando Fak preguntó** (*"la notebook de Calidad te mandó mensajes pero hace rato no le respondés, ¿no deberías chequear cada tanto?"*; a CATA: *"quedate escuchando o comunicándote de forma autónoma con la PC principal y resuelvan lo que tengan que resolver"*). Lo que se resuelve entre las dos PC no se le pide a él.
 
 - **20/10 — Que Calidad aprobó algo no va en el mail de difusión salvo que Fak lo pida** (*"no pongas que está aprobado por Calidad"*): se dice qué es y cómo se usa. Caso: calibre L de la costura del Insert, memoria `project_calibre_l_costura_insert`.

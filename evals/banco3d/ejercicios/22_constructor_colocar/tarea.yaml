@@ -1,0 +1,49 @@
+id: 22_constructor_colocar
+nombre: Constructor de la casa - colocar una pieza de afuera con una rotacion propia (det +1), nunca en espejo
+falla_real:
+  cita: "La palanca está armada en espejo ... determinante de la matriz 3×3 = −1,000000 en base_A, base_B, brazo_A, brazo_B, mango, biela_1 y biela_2, en los 64 estados"
+  fecha: 2026-10-20
+  fuente: >-
+    C:\Dev\_catia_practica\virolador_auto\AUDITORIA_auditor.md hallazgo 1 (auditor Opus del virolador manual). Midio
+    ademas que mango y bielas son simetricas (el espejo no se ve) y que base_A, base_B, brazo_A y brazo_B no (diferencia
+    de seccion hasta 163, 240, 125 y 487 mm2); CATIA mostraba la palanca bien y al exportar el STEP la corria 140 a
+    370 mm. Anexo 00 de docs/investigacion-3d-2026-10-23/, causa 2; propuesta 2 del informe (§10.2: «palanca validada
+    con det +1»).
+pedido: >-
+  Colocar brazo_A y base_A de la palanca de MakerWorld (la del virolador del 20/10) en su pose real del estado cerrado
+  con la biblioteca de la casa (cadlib.constructores.colocar), que se niega ante un espejo, y juzgar el ARCHIVO
+  exportado: la pieza colocada tiene que ser la misma pieza girada, no reflejada.
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    nota: "brazo_A con la matriz real de estados.json (det +1, escrita el 20/10 15:25 despues del arreglo)"
+  - archivo: mal_1_brazo_espejo.py
+    esperado: rojo
+    falla: "brazo_A armado a mano con el reparto de ejes zurdo del 20/10 (u -> -Y, v -> Z, ancho -> X): det -1, pieza reflejada"
+  - archivo: mal_2_base_espejo.py
+    esperado: rojo
+    falla: "base_A armada igual, det -1"
+  - archivo: mal_3_brazo_corrido_por_el_step.py
+    esperado: rojo
+    falla: >-
+      brazo_A como lo deja un STEP exportado desde la matriz espejo (el STEP rehace Y = Z x X): rotacion propia, det +1,
+      pero corrida de lugar; el auditor midio esa consecuencia en el conjunto del 20/10 (piezas corridas 140 a 370 mm)
+controles:
+  - nombre: pose_rigida
+    existe: true
+    formato: stl
+    opciones: ["--tol", "0.05", "--tol-pose", "0.05"]
+    nota: "juzga quiralidad (det) Y la pose contra <pieza>__pose.json, que escribe la pieza con la matriz del papel"
+formatos: [stl]
+notas: >-
+  Las STL son de MakerWorld (autor Alesh) y NO se suben al repo (repo publico): _palanca.py las lee de la carpeta del
+  20/10 con su sha256 (data/catalogo_casa.json) o de BANCO3D_PALANCA; en una PC sin esa carpeta las piezas salen con 2
+  (error, no verde). El mutante es la falla real, hecha a mano: la biblioteca no deja hacerlo (colocar() se niega con
+  det -1, test_constructores.py). Valor gemelo medido el 24/10 (residuo en los dos sentidos, desde la ronda del revisor
+  Fable): brazo_A bien 0,000 mm con rotacion propia y 0,883 con espejo, desvio contra la pose del papel 0,000 mm;
+  espejado al reves (0,000 / 0,883); base_A espejada 0,964 / 0,000; brazo_A corrido por el STEP: rotacion propia
+  calza (0,00001 mm) pero se corre hasta 383,46 mm de la pose del papel (el auditor midio 140 a 370 mm en el conjunto
+  real, con su matriz de antes del arreglo). Sin el __pose.json el corrector solo juzga quiralidad y lo dice
+  (primer corte del 24/10, ciego a la pose: lo encontro el revisor). Punto ciego, medido: el
+  mango (simetrico) espejado da «simetrica, el espejo no se ve» (0,0029 / 0,0000): por eso el ejercicio usa las dos
+  piezas asimetricas.

@@ -1,0 +1,50 @@
+id: 21_constructor_placa
+nombre: Constructor de la casa - placa con chaflan a 45 grados en la cara de cama (no filete, no escalones)
+falla_real:
+  - cita: "la base tiene bordes filosos, podrian lastimar al operador, ojo con esas boludeces"
+    fecha: 2026-10-20
+    fuente: >-
+      Fak sobre el virolador manual del 20/10 (seguimiento catia-simulacion-y-cursos-viernes, punto 5, en
+      scripts/_seguimientos.mjs). Ese dia el chaflan de cama se hizo a mano en CATIA con escalones de 0,2 mm
+      (pulir.py pad_chaflan(), usado en fase3.py para la placa, las patas y la brida de los machos).
+  - cita: "Cara de abajo (la que toca la cama): chaflan, no filete"
+    fecha: 2026-10-17
+    fuente: >-
+      ficha-fdm.md G6 (Prusa KB y Hubs, ABIERTA, 45 grados). Anexo 00 de docs/investigacion-3d-2026-10-23/ §4:
+      «No falta la regla; falta que la ponga el constructor de placas». Propuesta 2 del informe (§10.2).
+pedido: >-
+  La brida del macho del 20/10 (64 x 24 x 4 mm) armada con el constructor de placas de la casa: chaflan a 45 grados en
+  todo el contorno de la cara de cama y el radio de la casa (R1,5) arriba y en las verticales.
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    nota: "cadlib.constructores.placa(64, 24, 4, chaflan_cama=0.6): el 0,6 es el que uso la casa el 20/10, sin validar (A DECIDIR en lenguaje_diseno.json)"
+  - archivo: mal_1_cama_con_filete.py
+    esperado: rojo
+    falla: "filete R0,6 en el contorno de la cama en vez de chaflan (lo que G6 prohibe)"
+  - archivo: mal_2_cama_viva.py
+    esperado: rojo
+    falla: "contorno de la cama sin chaflan (canto vivo de 90 grados)"
+  - archivo: mal_3_escalones_20_10.py
+    esperado: rojo
+    falla: >-
+      el «chaflan» como lo hizo CATIA el 20/10 (pad_chaflan de pulir.py en fase3.py): 3 escalones de 0,2 mm, cada uno
+      con canto vivo, el contorno de esquinas en poligono y arriba vivo
+controles:
+  - nombre: chaflan_cama
+    existe: true
+    formato: step
+    opciones: ["--tol-grados", "2"]
+  - nombre: cantos_convexos
+    existe: true
+    formato: step
+    opciones: ["--umbral", "1.5", "--zona=-33,-13,0.65,33,13,4.1"]
+    nota: "zona = arriba del chaflan de cama (z > 0,6): ahi va la mano; la cama lleva chaflan, no R1,5 (G6)"
+formatos: [stl, step]
+notas: >-
+  Respuesta conocida: G6 (45 grados, chaflan y no filete) y E5 (R1,5) de las fichas de la skill. El tamano del chaflan
+  no se juzga (A DECIDIR, PREGUNTAS_FAK de catia-tanda-24-10). Sin los agujeros de 5,5 de la brida real: la placa del
+  constructor no los trae y un agujero en la cama tiene su propio borde (Markforged pide chaflan tambien ahi; queda
+  fuera de este ejercicio). Medido el 24/10: BIEN 8 de 8 aristas de la cama a 45 grados (0,6 mm) y 12 redondeos
+  arriba R1,5; mal_1 8 filetes; mal_2 8 vivos; mal_3 28 vivos en la cama y 48 cantos vivos arriba. El gemelo de CATIA
+  corre en scripts/catia/ejercicios/21_constructor_placa/catia.py.

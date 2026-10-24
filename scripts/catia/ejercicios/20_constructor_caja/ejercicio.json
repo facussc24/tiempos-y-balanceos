@@ -1,0 +1,5 @@
+{
+ "usa_catia": true,
+ "descripcion": "Caja del pedestal del 20/10 (52 x 30 x 53,11) con el constructor de la casa en CATIA (constructores_casa.caja: R1,5 en las 4 verticales y el contorno de arriba, en dos pasos). Juez: mismo volumen que cadlib.constructores.caja (bien.py del banco 20) y cantos_convexos verde sobre el STEP de CATIA.",
+ "banco": "20_constructor_caja"
+}

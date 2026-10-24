@@ -1,0 +1,49 @@
+id: 20_constructor_caja
+nombre: Constructor de la casa - caja con el redondeo como propiedad (no una pieza dibujada a mano)
+falla_real:
+  - cita: "los rectangulos tienen bordes muy en punta, MARCAN la pieza"
+    fecha: 2026-08-18
+    fuente: >-
+      Fak, prueba fisica del virolador (C:\Dev\_utrim\build_v10.py, docstring de caja_tope_redondeado). De ahi salio
+      la regla «el redondeo es PROPIEDAD del constructor» (reference/utillajes-de-apriete.md) y ficha-utillajes.md E5.
+  - cita: "veo muchos cuadrados... no queda profesional"
+    fecha: 2026-10-20
+    fuente: >-
+      Fak sobre el virolador manual modelado en CATIA (C:\Dev\_catia_practica\virolador_auto\pulir.py, docstring).
+      La causa (anexo 00 de docs/investigacion-3d-2026-10-23/, causa 3): caja_tope_redondeado() vivia en el build de
+      agosto y no en la biblioteca; en CATIA se perdio. Propuesta 2 del informe (§10.2).
+pedido: >-
+  La caja del pedestal de la palanca (52 x 30 x 53,11 mm, la del 20/10) armada con el constructor de la casa: R1,5 en
+  las 4 aristas verticales y en el contorno de arriba, donde va la mano. La cara de abajo se funde a la placa y no se
+  juzga.
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    nota: "cadlib.constructores.caja(52, 30, 53.11): el radio por defecto (R1,5) sale de cantosCanon.data.json via lenguaje_diseno.json"
+  - archivo: mal_1_caja_pelada.py
+    esperado: rojo
+    falla: "la misma caja dibujada a mano (Box) sin el constructor: los 8 cantos de arriba y verticales vivos"
+  - archivo: mal_2_pedestal_20_10.py
+    esperado: rojo
+    falla: >-
+      el pedestal real del 20/10 tal como lo dejo pulir.py en CATIA: esquinas R6 hechas con un poligono de 6 tramos
+      (cada quiebre de 15 grados es una arista viva) y el contorno de arriba sin redondear
+    nota: "rrect() copiado textual de pulir.py; hueco de paredes 4 y tapa 6 como el original"
+controles:
+  - nombre: cantos_convexos
+    existe: true
+    formato: step
+    opciones: ["--umbral", "1.5", "--zona=-27,-16,0.05,27,16,54"]
+    nota: "zona = toda la caja menos el plano de abajo (z 0), que se funde a la placa"
+  - nombre: gate_cantos
+    existe: true
+    formato: step
+    opciones: ["--umbral", "1.5", "--zona=-27,-16,0.05,27,16,54"]
+    nota: "el gate 3c tal como corre en la entrega (gate_aristas.py --cantos-convexos)"
+formatos: [stl, step]
+notas: >-
+  Respuesta conocida: la regla E5 (R1,5, CASA) y el canon del gate de cantos (cantosCanon.data.json umbral_mm). El
+  esperado de mal_2 sale de la queja de Fak del 20/10 sobre esas cajas y de la geometria del archivo (pulir.py), no de
+  lo que dice el corrector. La BIEN es maciza: el hueco del pedestal no es parte de lo que el constructor promete (el
+  constructor da la caja; un vaciado se agrega aparte). El gemelo de CATIA de esta caja corre en
+  scripts/catia/ejercicios/20_constructor_caja/catia.py (juez: mismo volumen que la BIEN).

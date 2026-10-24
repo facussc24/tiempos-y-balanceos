@@ -1,0 +1,43 @@
+id: 23_correccion_lo_demas_no_cambio
+nombre: Corregir por parametros sin romper lo demas - el diff de la correccion cambia SOLO lo que se pidio
+falla_real:
+  - cita: "Rehacía el modelo entero en cada corrección"
+    fecha: 2026-10-20
+    fuente: >-
+      docs/investigacion-3d-2026-10-23/00_critica_interna_skill_y_virolador.md causa 5 (virolador manual del 20/10: la
+      receta de catia.md manda fresca=True y nada miraba que lo no tocado siguiera igual). Propuesta 4 del informe
+      (§10.4: «correcciones por parametros, con diff y control de "lo demas no cambio"») y P9 de
+      docs/PROPUESTAS_SKILL_3D_2026-10-23.md.
+  - cita: "El conjunto de CATIA que nombra la página no tiene la parte fija ni el panel"
+    fecha: 2026-10-20
+    fuente: >-
+      C:\Dev\_catia_practica\virolador_auto\AUDITORIA_auditor.md hallazgo 2 (el guardado fallo callado y el conjunto
+      quedo sin piezas). Afuera: «edit the requested feature while changing unrelated parts» (MUSE, arXiv 2605.28579,
+      informe §3.7).
+pedido: >-
+  En el conjunto brida + pedestal (piezas de la biblioteca, las del 20 y el 21) se pide «subir el pedestal 5 mm»
+  (53,11 -> 58,11). La correccion tiene que cambiar SOLO el pedestal: la brida igual y ninguna pieza que falte o sobre.
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    nota: "cambia solo el pedestal (volumen +7.790,343 mm3); la brida igual"
+  - archivo: mal_1_brida_regenerada_distinta.py
+    esperado: rojo
+    falla: "al regenerar todo, la brida salio con otro chaflan de cama (1,0 en vez de 0,6): cambio una pieza que no se pidio tocar"
+  - archivo: mal_2_conjunto_sin_la_brida.py
+    esperado: rojo
+    falla: "el conjunto corregido se guardo sin la brida (como el conjunto de CATIA del 20/10, sin la parte fija)"
+controles:
+  - nombre: lo_demas_no_cambio
+    existe: true
+    formato: step
+    opciones: ["--puede-cambiar", "pedestal", "--tol", "0.01"]
+    nota: "envuelve .claude/skills/cad-design/scripts/diff_modelo.py (autotest propio BIEN/MAL en cada corrida); compara contra <pieza>__antes.step"
+formatos: [step]
+notas: >-
+  Piezas armadas con la biblioteca (cadlib.constructores) para el banco; los solidos llevan nombre en el STEP (brida,
+  pedestal) y el control empareja por nombre. Medido el 24/10: BIEN verde (solo cambio el pedestal); mal_1 rojo, la
+  brida cambio -54,675 mm3 y su superficie se corre hasta 0,283 mm; mal_2 rojo, «brida: desaparecio». Valor gemelo
+  del control: el autotest (caja con dos agujeros; mover el de adentro de la zona da verde, mover el de afuera 3 mm da
+  rojo con 2,994 mm medidos). El primer corte del control comparaba nubes de puntos sueltos y daba 8 mm sobre una cara
+  plana que no habia cambiado: el autotest se nego a juzgar y se paso a distancia de punto a superficie.

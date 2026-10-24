@@ -53,8 +53,11 @@ trampas de código de arriba no salvan un concepto equivocado.
   orejas nuevas de los localizadores nacieron con canto vivo. Al corregir "los pedestales
   marcan" la regla real era "todo tope que enfrenta al panel va redondeado" — y una feature
   agregada en esa misma pasada es el primer lugar donde la regla se olvida. Enforcement:
-  el redondeo es PROPIEDAD del constructor (`caja_tope_redondeado()` en el build), no un
-  retoque por pieza; toda caja nueva orientada al panel pasa por ahí.
+  el redondeo es PROPIEDAD del constructor, no un retoque por pieza; toda caja nueva orientada
+  al panel pasa por ahí. Desde el 24/10/2026 el constructor vive en la biblioteca y no en un build:
+  `cadlib/constructores.py` `caja()` / `placa()` y su gemelo de CATIA `scripts/catia/constructores_casa.py`
+  (la `caja_tope_redondeado()` de agosto, en `C:\Dev\_utrim\build_v10.py`, se perdió el 20/10 al pasar a CATIA);
+  banco 3D, ejercicios 20 y 21.
 - **Lo que enseñó la PRIMERA PIEZA IMPRESA** (18/08, el dato que ningún cálculo reemplaza):
   (a) todo borde que TOCA la pieza del cliente va redondeado — no solo donde hay flexión: los
   pedestales de apoyo con canto vivo MARCAN la cara vista; (b) un encastre manual necesita

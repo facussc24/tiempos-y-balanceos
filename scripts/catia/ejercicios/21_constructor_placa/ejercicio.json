@@ -1,0 +1,5 @@
+{
+ "usa_catia": true,
+ "descripcion": "Brida del macho del 20/10 (64 x 24 x 4) con el constructor de placas de la casa en CATIA (constructores_casa.placa: R1,5 arriba y en las verticales, chaflan de cama 0,6 a 45 grados con un Chamfer y propagacion). Juez: mismo volumen que cadlib.constructores.placa (bien.py del banco 21) y chaflan_cama + cantos_convexos verdes sobre el STEP de CATIA.",
+ "banco": "21_constructor_placa"
+}

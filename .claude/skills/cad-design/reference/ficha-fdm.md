@@ -29,7 +29,7 @@ es el error que la casa ya tuvo (regla `cad-3d.md` decía 0,3-0,5 «por lado», 
 | G3 | Pared mínima: 4 × capa (Stratasys); con boquilla 0,4 un perímetro ≈ 0,45 mm y menos de uno no se imprime (Prusa); con carga 1,5 a 2 mm | mm | Stratasys DG FDM 07/2025 (ABIERTA, PDF); Prusa KB (ABIERTA, web); `afuera_3d.md` C8 |
 | G4 | Pared medida real: en una Bambu X1C con PLA Basic, una pared nominal de 0,8 salió 0,75-0,78 | −0,02 a −0,05 mm | euspen ICE26126, jun. 2026 (ABIERTA, PDF) |
 | G5 | Pines de menos de 5 mm salen solo de perímetros, sin relleno: agregar acuerdo en la base | Ø < 5 mm | Hubs (ABIERTA, web); CASA: pin del insert con acuerdo R1,2 (`project_pines_costura_cnc_insert`) |
-| G6 | Cara de abajo (la que toca la cama): **chaflán**, no filete | 45° | Prusa KB y Hubs (ABIERTA, web) |
+| G6 | Cara de abajo (la que toca la cama): **chaflán**, no filete. Lo pone `cadlib.constructores.placa()`; lo mide `evals/banco3d/correctores/chaflan_cama.py`. Tamaño: A DECIDIR (`data/lenguaje_diseno.json`) | 45° | Prusa KB y Hubs (ABIERTA, web) |
 | G7 | Esquina interna donde hay flexión: con radio, nunca viva (Kt 2,2 viva contra 1,2 con R ≥ 0,5·t). Ninguna fuente abierta da un radio mínimo para FDM; el 0,5-0,75·t de los buscadores es de inyección | R ≥ 0,5·t | CASA, `cad-3d.md` GATE 4 (FEM propio, memoria `reference_fem_y_simulacion_3d`); fuente externa: SIN FUENTE |
 | G8 | Texto en relieve ≥ 0,5 mm de alto, grabado ≥ 0,5 mm de profundo, letra ≥ 3,5 mm (5 recomendada); con trazo < 0,8 mm la casa no lo grabó (v14) | mm | Xometry (ABIERTA, web); CASA (memoria `project_uppertrim_pisador_utillaje`) |
 

@@ -1,0 +1,76 @@
+{
+  "_que_es": "Lenguaje de diseño de la casa como DATOS (propuesta 2 de docs/INVESTIGACION_SISTEMA_3D_2026-10-23.md §10.2; anexo 00 §6, fila «Lenguaje de diseño de la casa»: dos o tres radios y chaflanes estandar, tornilleria normalizada, color por funcion). Lo leen los constructores de la casa: build123d en scripts/cadlib/constructores.py y CATIA en scripts/catia/constructores_casa.py (raiz del repo). Cada valor lleva su fuente y su estado: CASA (vivido o medido en Barack), ABIERTA (fuente externa leida), A DECIDIR (sin fuente: lo decide Fak) u (opinion). Un numero que ya vive en un canon de la skill NO se repite aca: se apunta con «desde» (archivo#clave) y el cargador lo lee de ahi; test_constructores.py falla si alguien lo duplica.",
+  "version": "2026-10-24.1",
+  "radios": {
+    "mano_y_pieza": {
+      "desde": "scripts/cantosCanon.data.json#umbral_mm",
+      "uso": "todo canto que toca la mano del operario o la pieza del cliente (topes, pedestales, contorno de arriba de una placa, cantos verticales). Es el radio por defecto de los constructores caja() y placa().",
+      "fuente": "ficha-utillajes.md E5 (CASA: los rectangulos del virolador marcaban el vinilo, R1,5 desde el 18/08/2026); el valor vive en cantosCanon.data.json, el mismo que usa gate_aristas.py --cantos-convexos",
+      "estado": "CASA. Radio minimo publicado para la mano: SIN FUENTE (la ficha lo dice)"
+    },
+    "cuerpo_que_se_agarra": {
+      "mm": 3.0,
+      "uso": "cantos verticales del cuerpo de un utillaje que el operario agarra con la mano entera",
+      "fuente": "C:\\Dev\\_utrim\\params_v10.json, nota _radios: «r_canto 3,0 en los cantos verticales del cuerpo (se agarra con la mano y una arista viva impresa se astilla)» (virolador del Upper Trim, agosto 2026)",
+      "estado": "CASA (un solo dispositivo; no se midio aparte)"
+    },
+    "esquina_interior_con_flexion": {
+      "regla": "R >= 0,5 * t (t = espesor de la lamina que flexiona)",
+      "uso": "esquina CONCAVA donde hay flexion: nunca viva (Kt 2,2 viva contra 1,2 con el radio)",
+      "fuente": "ficha-fdm.md G7 (CASA, cad-3d.md GATE 4, FEM propio); fuente externa: SIN FUENTE",
+      "estado": "CASA"
+    }
+  },
+  "chaflanes": {
+    "cara_de_cama": {
+      "angulo_deg": 45,
+      "mm": null,
+      "uso": "contorno de la cara que apoya en la cama de la impresora: chaflan, no filete ni canto vivo",
+      "fuente": "ficha-fdm.md G6 (Prusa KB y Hubs, ABIERTA): chaflan a 45 grados, no filete",
+      "estado_mm": "A DECIDIR. Ninguna fuente da el tamano. La casa uso 0,6 mm en el contorno de la placa y 1,0 en las patas del virolador del 20/10 (C:\\Dev\\_catia_practica\\virolador_auto\\fase3.py l.4-6 y l.95), sin pieza impresa que lo valide. El perfil de la A2L que usa laminar_bambu.py trae elefant_foot_compensation 0,15 (ficha-fdm.md M4). Mientras sea null, placa() exige el tamano explicito y lo deja escrito en la procedencia. Pregunta en PREGUNTAS_FAK.md (catia-tanda-24-10, 24/10/2026)."
+    },
+    "entrada_de_rosca": {
+      "angulo_deg": 45,
+      "mm_min": 0.8,
+      "mm_max": 1.5,
+      "uso": "entrada de una rosca impresa",
+      "fuente": "ficha-fdm.md R1 (CASA, memoria reference_roscas_impresas_3d)",
+      "estado": "CASA"
+    }
+  },
+  "tornilleria": {
+    "fuente": "memoria feedback_tornilleria_comun_argentina (Fak, 22/10/2026: «tus proximas propuestas consideren que vivimos en Argentina e intentar pedir tornillos mas normales»)",
+    "por_defecto": [
+      "bulon cabeza hexagonal metrico DIN 933, rosca total",
+      "tuerca hexagonal comun DIN 934",
+      "tornillo M3 / M4 / M5 cabeza tanque o hexagonal",
+      "arandela plana"
+    ],
+    "no_usar_sin_avisar": [
+      "tornillo fresado (DIN 965 / DIN 7991): no estaba en la ferreteria",
+      "bulon carrocero (DIN 603): el que se consigue suele venir en pulgadas"
+    ],
+    "largos_comunes_mm": [10, 12, 16, 20, 25, 30, 35, 40],
+    "largos_a_evitar_mm": [14, 18, 22],
+    "lo_que_haria_un_carrocero_o_un_fresado": "se resuelve con una pieza impresa (porta-bulon con alojamiento hexagonal, un rebaje), no con un tornillo raro",
+    "rosca_impresa_minima": "M5, paso 1,0, holgura 0,50 al diametro (ficha-fdm.md R1, CASA)",
+    "tuerca_impresa_alto_min_D": {
+      "desde": "scripts/tornillosCanon.data.json#tuerca_impresa_altura_min_D"
+    },
+    "estado": "CASA"
+  },
+  "identificacion": {
+    "version_grabada": "la version y la fecha grabadas en la pieza («v16 / 17-10»), asi una foto dice que se imprimio (ficha-utillajes.md E7, CASA)",
+    "texto": "relieve >= 0,5 mm de alto o grabado >= 0,5 mm de profundo; letra >= 3,5 mm (5 recomendada); con trazo < 0,8 mm la casa no lo grabo (ficha-fdm.md G8: Xometry ABIERTA + CASA v14)",
+    "estado": "CASA"
+  },
+  "color_por_funcion": {
+    "estado": "(opinion) sin fuente de la casa: ningun papel de Barack fija un color por funcion. Lo decide Fak (PREGUNTAS_FAK.md, catia-tanda-24-10, 24/10/2026).",
+    "propuesta_opinion": {
+      "fijo": "lo que no se mueve (base, placa, pedestal): un mismo color en todo el dispositivo",
+      "movil": "lo que se mueve o se acciona con la mano (palanca, mango, perilla): otro color, para que se vea que se toca",
+      "contacto_con_la_pieza": "lo que apoya o aprieta la pieza del cliente (topes, machos, almohadillas): un tercer color",
+      "por_que": "anexo 00 §6: «Profesional es consistencia, no adorno» (opinion de ese anexo); con un rollo por color en la A2L (skill impresion-3d-bambu: un color por parte)"
+    }
+  }
+}
