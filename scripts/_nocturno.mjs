@@ -481,12 +481,14 @@ async function noche({ simular, solo, sinTope }) {
 
 function mostrarEstado() {
   const e = leerJson(RUTA_ESTADO);
-  if (!e) { console.log(`No hay noche registrada (${path.relative(RAIZ, RUTA_ESTADO)} no existe).`); return 0; }
+  // el historial se dice siempre, haya o no un estado: en una PC nueva (o en la CI) «0 corridas» es el dato (6b, 23/10/2026)
+  const historial = fs.existsSync(RUTA_HISTORIAL) ? fs.readFileSync(RUTA_HISTORIAL, 'utf8').split('\n').filter(Boolean).length : 0;
+  const lineaHistorial = `  historial: ${historial} corrida(s) en ${path.relative(RAIZ, RUTA_HISTORIAL)}`;
+  if (!e) { console.log(`No hay noche registrada (${path.relative(RAIZ, RUTA_ESTADO)} no existe).`); console.log(lineaHistorial); return 0; }
   const h = edadHoras(e);
   console.log(e.lineaTablero);
   console.log(`de hace ${h ?? '?'} h${h != null && h > 26 ? ' — VIEJO: la ultima noche no corrio o fallo antes de escribir' : ''}`);
-  const historial = fs.existsSync(RUTA_HISTORIAL) ? fs.readFileSync(RUTA_HISTORIAL, 'utf8').split('\n').filter(Boolean).length : 0;
-  console.log(`  historial: ${historial} corrida(s) en ${path.relative(RAIZ, RUTA_HISTORIAL)}`);
+  console.log(lineaHistorial);
   if (e.corte) console.log(`  SE CORTO SOLA: ${e.corte.detalle}`);
   for (const p of e.pasos || []) console.log(`  [${p.estado}] ${p.nombre}: ${p.detalle}`);
   for (const m of e.mails || []) console.log(`  mail [${m.area}] ${m.asunto} — ${m.linea}`);

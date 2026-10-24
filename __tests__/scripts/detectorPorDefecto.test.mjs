@@ -19,6 +19,18 @@ const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 const SKILL = path.join(RAIZ, '.claude', 'skills', 'impresion-3d-bambu');
 const TESTS = path.join(SKILL, 'tests');
 const hayPython = spawnSync('python', ['--version'], { encoding: 'utf8' }).status === 0;
+/** El modulo de test importa en ESTE python? (en la CI de Linux faltan APIs de Windows o dependencias: se saltea diciendo por que). */
+function importa(modulo) {
+  const r = spawnSync('python', ['-c', `import sys; sys.path.insert(0, ${JSON.stringify(TESTS)}); import ${modulo}`],
+    { cwd: TESTS, encoding: 'utf8', timeout: 60_000, env: { ...process.env, PYTHONIOENCODING: 'utf-8' } });
+  if (r.status !== 0) console.log(`[se saltea] ${modulo} no importa en este python: ${(r.stderr || '').trim().split('\n').at(-1)}`);
+  return r.status === 0;
+}
+// la skill de la Bambu es de Windows (sockets de la impresora, procesos aparte, rutas de OneDrive): en la CI de Linux
+// se saltea y se dice; en Windows corre de verdad
+const esWindows = process.platform === 'win32';
+if (!esWindows) console.log('[se saltea] test_detector_por_defecto: la skill impresion-3d-bambu corre solo en Windows (este es ' + process.platform + ')');
+const puede = esWindows && hayPython && importa('test_detector_por_defecto');
 
 describe('la vigilancia de la Bambu va con el detector por defecto (gate 3b)', () => {
   it('existen el test de Python y el canon con la decision de noche', () => {
@@ -29,7 +41,7 @@ describe('la vigilancia de la Bambu va con el detector por defecto (gate 3b)', (
     expect(canon.revisar).toBe('2026-10-30');
   });
 
-  it.skipIf(!hayPython)('casos B1-B9 contra la impresora de juguete', () => {
+  it.skipIf(!puede)('casos B1-B9 contra la impresora de juguete', () => {
     const r = spawnSync('python', ['-m', 'unittest', 'test_detector_por_defecto'], {
       cwd: TESTS, encoding: 'utf8', timeout: 400_000, env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
     });

@@ -2,7 +2,7 @@
 impresora de juguete (tests/impresora_juguete.py), con la subida reemplazada (_ImprimirBase): nada habla con la impresora real.
 
 Falla real (22/10/2026): la PLACA v5 pidio 51 g del negro del lugar 4; el registro no tenia pesada de ese rollo, la cuenta
-arrancaba de 1000 g («quedan ~683 g») y el rollo se termino a las 15:32. Fak, 19:23: «nunca deberia haberme quedado sin
+arrancaba de 1000 g («quedan ~683 g») y el rollo se termino a las 15:32. Fak, 16:23 (hora argentina): «nunca deberia haberme quedado sin
 filamento, en teoria vos calculabas cuanto habia... dejalo anotado para el viernes asi averiguamos el origen de esta falla»."""
 from datetime import datetime
 

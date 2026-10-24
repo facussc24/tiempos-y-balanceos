@@ -209,8 +209,8 @@ hace nada. La forma completa de la orden salió del programa abierto Bambuddy
 
 ### La foto de la placa va ANTES de `--apply` (gate 3g, 23/10/2026)
 
-Fak, 23/10/2026 14:00: *«mandame una foto de cómo se ve la placa... de los archivos laminados... anotá para el viernes que siempre
-deben mandarle una foto»*; 14:41: *«no me mandás una foto de cómo quedaría en la placa laminada?»*. El flujo es en dos pasos y el
+Fak, 23/10/2026 11:00: *«mandame una foto de cómo se ve la placa... de los archivos laminados... anotá para el viernes que siempre
+deben mandarle una foto»*; 11:41: *«no me mandás una foto de cómo quedaría en la placa laminada?»*. El flujo es en dos pasos y el
 programa lo exige: (1) `bambu_red.py --imprimir <x.gcode.3mf>` (sin `--apply`) saca `<pieza>_PLACA.png` del laminado (la vista de
 la placa que guarda Bambu Studio) y dice el comando siguiente; (2) **se le manda esa imagen a Fak** (SendUserFile o el chat) y
 recién después `--imprimir <x.gcode.3mf> --apply --foto-mandada <pieza>_PLACA.png`. La foto tiene que ser la de ESE laminado
@@ -220,7 +220,7 @@ NO SE MANDA. Salida con su frase: `--sin-foto --acepto "<frase textual de Fak>"`
 
 ### Un rollo sin pesar no vale 1000 g (gate 3h, 23/10/2026)
 
-Lo del 22/10 (Fak, 19:23: *«nunca debería haberme quedado sin filamento, en teoría vos calculabas cuánto había... dejalo anotado para
+Lo del 22/10 (Fak, 16:23: *«nunca debería haberme quedado sin filamento, en teoría vos calculabas cuánto había... dejalo anotado para
 el viernes así averiguamos el origen de esta falla»*): el negro del lugar 4 nunca se había pesado, la cuenta arrancaba de los 1000 g
 nominales (*«quedan ~683 g»*) y el rollo se terminó a mitad de la placa; la impresora tampoco lo sabe (`remain = -1`). Desde el 23/10
 `--imprimir` mira `registro.rollo(chip)["pesado"]` por cada lugar que usa el trabajo: sin pesada, sin «rollo nuevo» anotado y sin

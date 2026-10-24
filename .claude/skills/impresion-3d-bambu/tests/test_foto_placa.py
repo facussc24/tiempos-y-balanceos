@@ -1,8 +1,8 @@
 """Gate 3g (viernes 23/10/2026): la FOTO DE LA PLACA laminada se le manda a Fak ANTES de --apply. Casos G1 a G8, TODO EN
 SECO (--en-seco: no se habla con la impresora; el laminado es el de juguete de _base.gcode_3mf con la miniatura agregada).
 
-Falla real (Fak, 23/10/2026 14:00: «mandame una foto de comos e ve la palca... de lsoa rhcivos laminados... anota par ael
-vinre sque iempre deben amdnarle una foto»; 14:41: «no me madnas teuna foto de comoq uedaria digmaos en la palca laminada?»):
+Falla real (Fak, 23/10/2026 11:00 (hora argentina): «mandame una foto de comos e ve la palca... de lsoa rhcivos laminados... anota par ael
+vinre sque iempre deben amdnarle una foto»; 11:41: «no me madnas teuna foto de comoq uedaria digmaos en la palca laminada?»):
 --imprimir dibujaba la primera capa y avisaba, pero nada exigia la foto de la placa ni que se la hubieran mandado."""
 import json
 import os

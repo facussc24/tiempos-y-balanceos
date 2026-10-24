@@ -1,9 +1,9 @@
 """La FOTO DE LA PLACA laminada (lo que Bambu Studio muestra despues de laminar) se le manda a Fak ANTES de mandar a
 imprimir: gate 3g del viernes 23/10/2026.
 
-Fak, 23/10/2026 14:00, textual (con sus typos): «mandame una foto de comos e ve la palca digmaos de imrpesiona tnes d
+Fak, 23/10/2026 11:00 (hora argentina; el transcript lo guarda en UTC como 14:00), textual (con sus typos): «mandame una foto de comos e ve la palca digmaos de imrpesiona tnes d
 eirmoprmri soea madname una foto de lsoa rhcivos laminados eso ennciesot ok? anota par ael vinre sque iempre deben
-amdnarle una foto de lsoc arhivos la[minados]»; 14:41: «no me madnas teuna foto de comoq uedaria digmaos en la palca
+amdnarle una foto de lsoc arhivos la[minados]»; 11:41: «no me madnas teuna foto de comoq uedaria digmaos en la palca
 laminada?». Hasta hoy --imprimir dibujaba la primera capa y avisaba, pero nada exigia la foto de la PLACA ni que se la
 hubieran mandado: dos veces en una tarde la pidio el.
 
@@ -108,7 +108,8 @@ def extraer(archivo, salida=None):
     try:
         with zipfile.ZipFile(archivo) as z:
             nombres = set(z.namelist())
-            origen = next((m for m in MINIATURAS if m in nombres), None)
+            miniaturas = tuple((canon().get("miniaturas") or MINIATURAS))
+            origen = next((m for m in miniaturas if m in nombres), None)
             if origen is None:
                 raise SinMiniatura(f"{archivo.name} no trae ninguna imagen de la placa ({', '.join(MINIATURAS)}): "
                                    "la foto no se puede sacar de este archivo")

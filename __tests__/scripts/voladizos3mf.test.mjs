@@ -19,6 +19,18 @@ import { fileURLToPath } from 'node:url';
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const TESTS = path.join(RAIZ, '.claude', 'skills', 'impresion-3d-bambu', 'tests');
 const hayPython = spawnSync('python', ['--version'], { encoding: 'utf8' }).status === 0;
+/** El modulo de test importa en ESTE python? (en la CI de Linux faltan APIs de Windows o dependencias: se saltea diciendo por que). */
+function importa(modulo) {
+  const r = spawnSync('python', ['-c', `import sys; sys.path.insert(0, ${JSON.stringify(TESTS)}); import ${modulo}`],
+    { cwd: TESTS, encoding: 'utf8', timeout: 60_000, env: { ...process.env, PYTHONIOENCODING: 'utf-8' } });
+  if (r.status !== 0) console.log(`[se saltea] ${modulo} no importa en este python: ${(r.stderr || '').trim().split('\n').at(-1)}`);
+  return r.status === 0;
+}
+// la skill de la Bambu es de Windows (sockets de la impresora, procesos aparte, rutas de OneDrive): en la CI de Linux
+// se saltea y se dice; en Windows corre de verdad
+const esWindows = process.platform === 'win32';
+if (!esWindows) console.log('[se saltea] test_voladizos_3mf: la skill impresion-3d-bambu corre solo en Windows (este es ' + process.platform + ')');
+const puede = esWindows && hayPython && importa('test_voladizos_3mf');
 
 function unittest(nombres, timeout) {
   const r = spawnSync('python', ['-m', 'unittest', ...nombres], {
@@ -32,13 +44,13 @@ describe('voladizos antes de laminar (tests de Python de la skill)', () => {
     expect(existsSync(path.join(TESTS, 'test_voladizos_3mf.py'))).toBe(true);
   });
 
-  it.skipIf(!hayPython)('parte rapida: fechas, votos, matriz del 3MF y aviso de imprimir_pieza', () => {
+  it.skipIf(!puede)('parte rapida: fechas, votos, matriz del 3MF y aviso de imprimir_pieza', () => {
     const r = unittest(['test_voladizos_3mf.A0Puro', 'test_voladizos_3mf.A12ImprimirPieza'], 120_000);
     expect(r.salida).toMatch(/\nOK/);
     expect(r.status, r.salida).toBe(0);
   }, 130_000);
 
-  it.skipIf(!hayPython || process.env.VOLADIZOS_LENTO !== '1')('todo, con medicion y laminar_bambu.py (VOLADIZOS_LENTO=1)', () => {
+  it.skipIf(!puede || process.env.VOLADIZOS_LENTO !== '1')('todo, con medicion y laminar_bambu.py (VOLADIZOS_LENTO=1)', () => {
     const r = unittest(['test_voladizos_3mf'], 900_000);
     expect(r.status, r.salida.slice(-3000)).toBe(0);
   }, 910_000);

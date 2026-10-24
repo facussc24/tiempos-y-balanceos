@@ -52,8 +52,9 @@ if (esPrincipal) {
     try {
       const l = lineaHook();
       if (l) console.log(l);
-    } catch {
-      // un hook de contexto no frena: si algo falla, no se dice nada (el detalle lo da --estado)
+    } catch (e) {
+      // un hook de contexto no frena, pero callarse es lo mismo que «la noche corrio bien» (auditor 23/10, 6d): se dice
+      console.log(`[NOCHE] no pude leer el estado de la noche (${e?.message ?? e}). Ver: node scripts/_nocturno.mjs --estado`);
     }
   } else {
     console.log('uso: node scripts/_lib/nocturnoHook.mjs --hook');

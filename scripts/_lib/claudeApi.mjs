@@ -896,6 +896,9 @@ export function estadoTopeClave(clave, { dir = DIR_API, env = process.env, ahora
 /** ~ de la sesion: HOME (Git Bash lo da como /c/Users/...) y si no, el del sistema. Mismo criterio que dirHome de guardianes.mjs. */
 function dirHomeApi(env = process.env) {
   const h = String(env?.HOME ?? '').trim();
+  // un HOME que existe como carpeta vale tal cual: en Linux (CI, /home/x o /tmp/... en los tests) TODOS empiezan con / y
+  // la regla de abajo los tiraba (23/10/2026: 3 casos de apiFreno rojos en la CI y verdes en Windows)
+  if (h && fs.existsSync(h)) return h;
   const m = /^\/([a-zA-Z])\/(.*)$/.exec(h);
   if (m) return `${m[1].toUpperCase()}:/${m[2]}`;
   return h && !h.startsWith('/') ? h : os.homedir();

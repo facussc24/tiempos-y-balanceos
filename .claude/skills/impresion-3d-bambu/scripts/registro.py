@@ -38,7 +38,8 @@ import tempfile
 from datetime import datetime
 from pathlib import Path
 
-_NUBE_3D = (Path(os.environ["USERPROFILE"]) / "BARACK ARGENTINA SRL" / "Ingeniería y Proyecto - General"
+# USERPROFILE solo existe en Windows; en Linux (la CI) se cae a ~ para que el modulo IMPORTE (los tests redirigen igual)
+_NUBE_3D = (Path(os.environ.get("USERPROFILE") or os.path.expanduser("~")) / "BARACK ARGENTINA SRL" / "Ingeniería y Proyecto - General"
             / "INGENIERIA BARACK (NUNCA BORRAR)" / "1- GENERAL" / "5. 3D" / "IMPRESORA BAMBU A2L")
 # Las pruebas (tests/) redirigen las rutas a una carpeta temporal con BAMBU_REGISTRO y BAMBU_DATOS, y con
 # BAMBU_PRUEBA=1 este modulo se niega a escribir fuera de esa carpeta: ningun test toca el registro real.

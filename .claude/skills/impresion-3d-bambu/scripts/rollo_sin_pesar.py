@@ -2,9 +2,9 @@
 
 Falla real, 22/10/2026: a las 14:41 se mando la PLACA v5 pidiendo 51 g del negro del lugar 4 (chip ECE217DC00000100). El
 registro no tenia ninguna pesada de ese rollo y la cuenta arrancaba de los 1000 g nominales («quedan ~683 g»); el rollo se
-termino a las 15:32 (pausa del cargador) y Fak puso uno nuevo a las 16:28. Fak, 19:23 (textual, con sus typos): «nucna
+termino a las 15:32 (pausa del cargador) y Fak puso uno nuevo a las 16:28. Fak, 16:23 hora argentina (el transcript lo guarda en UTC como 19:23; textual, con sus typos): «nucna
 deberia haberme uqedado sin filamento en teoria vos calcualbas cuanto habia un clarao ejemeplo de que te ocnfuist eo no
-se... dejalo antoado apra el vinres asi averiguamos el orgien de esta falla»; 19:29: «si le tuve que poner un rorllo
+se... dejalo antoado apra el vinres asi averiguamos el orgien de esta falla»; 16:29: «si le tuve que poner un rorllo
 blanco nuevo y lo otmo igual». La impresora tampoco lo sabe: `remain = -1` en cada lugar (registro.py, 13/10/2026).
 
 Que hace: por cada lugar del cargador que el trabajo usa, si registro.rollo(chip)["pesado"] es False (ni pesada, ni «rollo
