@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "CSWP Sample Exam 2 de SolidWorks, etapa 1, PARAMETRICA en CATIA (pieza del ej27 de la practica: parametros A..E, formulas X = A/3 e Y = B/3 + 10, croquis acotados contra sus ejes con formulas): las tres etapas cambiando SOLO A..E, masa de CATIA (Steel del catalogo con Density 7700 kg/m3) contra el examen, volumen contra el gemelo de build123d de la practica y STEP de la etapa 1",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "masa de la pieza en las tres etapas del examen",
+  "valor": {"etapa_1": 14207.34, "etapa_2": 16490.45, "etapa_3": 15100.47},
+  "unidad": "g",
+  "tolerancia": 1.0,
+  "fuente": "CSWP Sample Exam 2, Universidad de Alberta (https://sites.ualberta.ca/~dnobes/CSWA/CSWP_Material/CSWP_SampleExam_2.pdf), pags. 19, 21 y 22 (parametros y densidad 0,0077 g/mm3) y 27 (respuestas); tolerancia de 1 g: la de masa del banco (control masa_esperada)"
+ }
+}
