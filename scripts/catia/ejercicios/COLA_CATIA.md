@@ -47,11 +47,28 @@ skill (en el repo). Si CATA necesita uno, lo pide por `6- PEDIDOS ENTRE PC (FACU
 | 16 | CATA | `16_palanca_ensamble` | El 06 como **ensamble** (CATProduct): base, soporte y palanca cada una en su CATPart, con restricciones (eje de la palanca coaxial con el del soporte, contacto); pose 0° | `_conjunto.py` del 06: eje en (0, 0, 80) dirección −Y, palanca horizontal hacia +X; el centro de gravedad del conjunto contra build123d (`Analyze.GetGravityCenter` por VBScript) | `06_palanca_0_60/bien.py` (base, soporte, palanca) | ej42 (ensamble bracket + eje: dos coincidencias punto-punto; cdg al milésimo); el `catia.py` 06 del juez |
 | 17 | principal | `17_palanca_dmu` | El 16 con **DMU Kinematics**: junta de revolución, comando de ángulo 0 → 60°; en 0, 30 y 60° la punta de la palanca contra la trigonometría; choque exacto (`AddNewIntersect`, nunca `Clashes`) contra la base de `mal_1` (choca entre ~25 y 45°, libre en 0 y 60) y de `mal_3` (choca a 60); luz de `mal_2` a 50° (15 mm) | `tarea.yaml` del 06 (los tres mutantes dicen dónde chocan y a cuánto pasan; el `_conjunto.py` lo verifica al construir) | `06_palanca_0_60/mal_1_choca_a_35.py`, `mal_2_pellizco_15_a_50.py`, `mal_3_choca_a_60.py` | ej49 (biela-manivela: juntas y comando en UNA macro VBScript, exacta en 6 ángulos); `choque_exacto_en_catia.py`; `catia.md` «DMU» |
 
-Cuando se acaben, la principal agrega (candidatos, sin armar todavía): la piel real de un STEP de cliente (área y espesor
-en CATIA contra build123d, con sha256 en un ejercicio nuevo del banco), los otros Too Tall Toby de la práctica del 19/10
-que todavía no tienen `bien.py` en el banco (Post Cap 43,09 g, Light Cap 211,30 g, Angle Bracket 310,00 g, Tie Plate
-3 387,06 g, Bearing Jig 328,02 g, Bearing Bracket 797,15 g, Corner Tie 307,23 g), y chapa (Sheet Metal, el SM Hanger)
-que por COM en R21 sigue sin probar.
+## Lo que sigue, en este orden (Fak, 24/10/2026 09:05-09:10)
+
+*"quiero que hagas todos los ejercicios oficiales de catia no? y luego diseños reales"*; *"te decía diseños reales de
+algún otro lado que estén las respuestas escritas así tenés una referencia para automejorarte"*; *"los reales de Barack
+al final"*.
+
+1. **Todos los ejercicios OFICIALES de CATIA** (Dassault): los exámenes de muestra de cada módulo que publiquen la
+   respuesta, más allá del de Part Design que ya está (07). La lista sale de una búsqueda en curso y entra acá como
+   filas 18 en adelante, con el mismo reparto (impares principal, pares CATA).
+2. **Piezas COMPLEJAS de afuera con la respuesta ESCRITA** (por ejemplo los Model Mania de SolidWorks, que publican la
+   masa de cada etapa; los CSWA/CSWP de muestra; los Too Tall Toby más difíciles): superficies curvas, nervios,
+   patrones, vaciados. Cada una con su plano citado (URL y fecha) y su respuesta; si el plano no se puede guardar en el
+   repo, como el 13, el `tarea.yaml` cita dónde está.
+   Candidatos ya resueltos en la práctica del 19/10 que todavía no tienen `bien.py` en el banco: Post Cap 43,09 g,
+   Light Cap 211,30 g, Angle Bracket 310,00 g, Tie Plate 3 387,06 g, Bearing Jig 328,02 g, Bearing Bracket 797,15 g,
+   Corner Tie 307,23 g; y chapa (Sheet Metal, el SM Hanger), que por COM en R21 sigue sin probar.
+3. **Al final, los diseños reales de Barack**: la piel de un STEP de cliente (área y espesor en CATIA contra build123d,
+   con sha256), los dispositivos que ya tienen su 3D medido.
+
+**Verlo en vivo** (Fak, 24/10: *"cuando vuelva de la salida te quiero ver en tiempo real diseñándolo en CATIA"*): con
+Fak en la ventana, el ejercicio corre con CATIA visible en su segunda pantalla y una pausa por paso (`CATIA_MIRAR=lento`
+de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con su OK de ese momento.
 
 ## Estado (lo actualiza cada uno en su fila al hacer el commit)
 
