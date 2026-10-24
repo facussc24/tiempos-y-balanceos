@@ -240,6 +240,7 @@ Plan del sistema del 16/10, tanda 10 y §2.11: *los 31 «sí» del 09/10 no se v
 - [x] P20 · **FUNDIDA el 2026-10-16 en P11** (sigue abierta allá) · mediano · A41i · R6 B1 · sacar timeout-guard de PostToolUse (o pasarlo al Stop) · .claude/settings.json · 51.800 corridas, 6 avisos (R6) · **Sí: un node menos en cada Bash.** · **Fak 09/10 16:55**: SÍ (tanda P12-P22)
 - [ ] P21 · mediano · A17f · R6 §4A · file-guard: texto con camino, dejar pasar .env.example y un escape nuevo .archivo-protegido-ok · guardianes.mjs:217 · hoy dice solo «es archivo protegido» · **Sí al texto y a .env.example; no al escape: no hay caso que lo pida.** · **Fak 09/10 16:55**: SÍ (tanda P12-P22)
 - [ ] P22 · mediano · A36 · R4, R6 B7 · coordinador-guard: aviso, sin freno, para los mensajes a main, a un subagente propio o las respuestas · _lib/coordinadorGuard.mjs · 05/10 frenó a 4 compañeros (F1 O8) · **Sí, probado por otro.** · **Fak 09/10 16:55**: SÍ (tanda P12-P22)
+- [ ] 2026-10-24 · chico · hallazgo mío (tanda CATIA) · cierre-guard: avisó «tocaste 1 pieza que lee los mensajes de Fak (scripts/_lib/cierreGuard.mjs)» en una sesión que solo lo LEYÓ (sin diff, último commit del archivo 16/10); el aviso tiene que mirar escrituras, no lecturas · scripts/_lib/cierreGuard.mjs (chequeo de mejora-implementada) · falso positivo, 24/10 17:00
 
 ## PROPONER A FAK (una lista para contestar sí o no por renglón)
 
