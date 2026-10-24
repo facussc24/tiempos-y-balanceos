@@ -1,0 +1,20 @@
+{
+ "usa_catia": true,
+ "descripcion": "Ajuste por contraccion de dos anillos de aluminio en CATIA (Generative Structural Analysis, fem.py de la skill): un cuarto de cada anillo en Part Design (40-45 y 45-100 mm, profundidad 15), aluminio por parametro, simetria en los cortes y la base (SAMSurfaceSlider) y la presion de interfaz del papel en la cara de contacto (SAMPressure); desplazamiento radial en r = 45 de cada anillo contra Lame y la suma contra la interferencia del papel",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "interferencia (lo que se cierra el de adentro mas lo que se abre el de afuera) y el desplazamiento radial de cada anillo",
+  "valor": {
+   "interferencia_mm": 0.18,
+   "adentro_mm": -0.147042,
+   "afuera_mm": 0.032958,
+   "presion_cargada_Pa": 27896091,
+   "presion_papel_Pa": 28000000.0,
+   "fuerza_papel_kN": 83.1
+  },
+  "unidad": "mm / Pa",
+  "tolerancia": "0,1 % de Lame en cada anillo y de la interferencia (el modelo es tension plana exacta: dio Lame a 1e-5); presion cargada = la calculada a 1e-6; nodos de r = 45: 500 o mas que se mueven parejo (1e-4 mm); geometria a 0,5 mm3, material exacto",
+  "fuente": "MIT 2.008, examen practico 1 de 2023, problema 4, pag. 13 y 14 (https://ocw.mit.edu/courses/2-008-design-and-manufacturing-ii-spring-2025/mit2_008_s25_quiz1_prac23_sol.pdf; banco E17 de la practica): d = alfa R dT = 0,18 mm, P = 2,80e7 Pa (rehecha 2,7896e7, la que se carga); cada anillo por Lame (cilindro grueso en tension plana) con esa P",
+  "nota": "el FEM no simula el contacto: se le impone la presion; la referencia contrastada es Lame y la suma contra el 0,18 sale sola si cada anillo cierra. nu 0,33 y rho 2 700 son supuestos (el papel no los da). La fuerza para separarlos (mu 0,7) se informa contra los 83,1 kN del papel, no decide"
+ }
+}

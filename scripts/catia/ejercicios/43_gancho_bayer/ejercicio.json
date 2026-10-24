@@ -1,0 +1,19 @@
+{
+ "usa_catia": true,
+ "descripcion": "Gancho de encastre (snap-fit) del manual de Bayer, ejemplo I: brazo de espesor variable (h 3,28 -> 1,64, l 19, b 9,5) en Part Design, PC con modulo secante 1 815 N/mm2 (material propio por parametro), simulado en CATIA (Generative Structural Analysis, fem.py de la skill): empotrado en la raiz, 32,5 N en la punta, malla parabolica de 0,5 mm; flecha contra el papel y contra la cuenta exacta; volumen y centro de gravedad (que ve si el trapecio esta dado vuelta) y el E de la pieza reabierta",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "flecha de la punta con 32,5 N",
+  "valor": 2.4,
+  "unidad": "mm",
+  "tolerancia": "1,5 % del papel y 1,5 % de la cuenta exacta (2,3969 mm, Castigliano sobre la viga de espesor lineal); el espesor constante daria 1,4655 (-39 %)",
+  "fuente": "Bayer, «Snap-Fit Joints for Plastics», ejemplo de calculo I, pag. 16 de 26 (https://fab.cba.mit.edu/classes/S62.12/people/vernelle.noel/Plastic_Snap_fit_design.pdf; banco E7 de la practica, .sgc-cache/criterio-disenador-2026-10-19/banco_ejercicios_diseno.md): socavado y = 2,4 mm, l 19, b 9,5, e 2 % -> h = 1,09 e l^2 / y = 3,28 mm y, con el modulo secante 1 815 N/mm2, P = (b h^2 / 6)(Es e / l) = 32,5 N. El ejercicio invierte el problema: con h 3,28 -> 1,64 y P 32,5 N la punta tiene que bajar 2,4 mm"
+ },
+ "cruces": {
+  "geometria": {
+   "volumen_mm3": 444.03,
+   "centro_x_mm": 8.4444,
+   "fuente": "trapecio: (h0 + h1)/2 l b y l (h0 + 2 h1) / (3 (h0 + h1))"
+  }
+ }
+}
