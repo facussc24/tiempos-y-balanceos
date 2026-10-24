@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * _disparoSkillsSeco.mjs — prueba de disparo EN SECO de las descriptions de los skills: sin modelo y sin API.
  *
