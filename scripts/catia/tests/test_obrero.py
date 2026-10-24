@@ -319,6 +319,75 @@ class Piezas(unittest.TestCase):
             self.assertEqual(r.returncode, 0, r.stderr[-800:])
             self.assertEqual(r.stdout.split(), ["[4321]", "None"], r.stdout)
 
+    def test_arrancar_catia_prueba_el_servidor_de_32_bits_si_la_anotacion_normal_falla(self):
+        """PEDIDO 19 de CATA (23/10/2026): la anotacion de 64 bits del registro apuntaba a la CATIA 2022 borrada y Dispatch
+        fallaba; CoCreateInstance con CLSCTX_ACTIVATE_32_BIT_SERVER abrio la R21 en 9 s. VERDE: Dispatch anda -> no se toca
+        el camino de 32 bits. VERDE 2: Dispatch falla -> 32 bits. ROJO: fallan los dos -> RuntimeError con los dos motivos."""
+        import catia_base
+        llamadas = []
+
+        def dispatch_ok(nombre):
+            llamadas.append(("dispatch", nombre))
+            return "CATIA-64"
+
+        def dispatch_roto(nombre):
+            llamadas.append(("dispatch", nombre))
+            raise OSError(-2147221164, "Clase no registrada")
+
+        def co_create(nombre, ctx):
+            llamadas.append(("co_create", nombre, ctx))
+            return "OBJ-32"
+
+        def co_create_roto(nombre, ctx):
+            raise OSError(-2146959355, "Error en la ejecucion de servidor")
+
+        envolver = lambda obj: f"envuelto:{obj}"  # noqa: E731
+        self.assertEqual(catia_base.arrancar_catia(dispatch_ok, co_create, envolver), "CATIA-64")
+        self.assertEqual([l[0] for l in llamadas], ["dispatch"])
+        llamadas.clear()
+        self.assertEqual(catia_base.arrancar_catia(dispatch_roto, co_create, envolver), "envuelto:OBJ-32")
+        self.assertEqual([l[0] for l in llamadas], ["dispatch", "co_create"])
+        self.assertEqual(llamadas[1][2], catia_base.CLSCTX_ACTIVATE_32_BIT_SERVER)
+        self.assertEqual(catia_base.CLSCTX_ACTIVATE_32_BIT_SERVER, 0x40000)
+        with self.assertRaises(RuntimeError) as cm:
+            catia_base.arrancar_catia(dispatch_roto, co_create_roto, envolver)
+        self.assertIn("Clase no registrada", str(cm.exception))
+        self.assertIn("Error en la ejecucion de servidor", str(cm.exception))
+
+    def test_exigir_archivo_caza_el_paso_ciego(self):
+        """PEDIDO 19 de CATA: el paso «captura BMP» del 04 dio ok sin que el .bmp existiera (CATIA no escribe en
+        %LOCALAPPDATA%\\obrero_catia). ROJO: no existe, o pesa 0. VERDE: existe y pesa."""
+        import catia_base
+        with tempfile.TemporaryDirectory(prefix="exigir-") as tmp:
+            no_esta = os.path.join(tmp, "no_esta.bmp")
+            with self.assertRaises(RuntimeError) as cm:
+                catia_base.exigir_archivo(no_esta, "captura iso")
+            self.assertIn("captura iso", str(cm.exception))
+            vacio = os.path.join(tmp, "vacio.bmp")
+            open(vacio, "wb").close()
+            with self.assertRaises(RuntimeError):
+                catia_base.exigir_archivo(vacio, "captura iso")
+            bien = os.path.join(tmp, "bien.bmp")
+            with open(bien, "wb") as f:
+                f.write(b"BM" + b"\x00" * 60)
+            self.assertEqual(catia_base.exigir_archivo(bien, "captura iso"), bien)
+
+    def test_local_por_defecto_en_temp_y_candado_fuera_de_local(self):
+        """PEDIDO 20 de CATA: CATIA no guarda en %LOCALAPPDATA%\\obrero_catia (SaveAs/ExportData fallan, CaptureToFile no deja
+        archivo) y si en %TEMP%. Y el candado va por PC y por cola, fuera de --local: dos obreros con distinto --local sobre la
+        misma cola chocan; dos colas distintas no."""
+        env = {"TEMP": r"C:\Tmp\prueba", "LOCALAPPDATA": r"C:\Users\x\AppData\Local"}
+        self.assertEqual(obrero.local_por_defecto(env), os.path.join(r"C:\Tmp\prueba", "obrero_catia"))
+        self.assertEqual(obrero.argumentos([]).local, obrero.local_por_defecto())
+        self.assertNotIn("AppData\\Local\\obrero_catia", obrero.argumentos([]).local)
+        a = obrero.ruta_candado(r"C:\nube\COLA 3D", env)
+        b = obrero.ruta_candado(r"c:\NUBE\cola 3d\..\COLA 3D", env)      # misma cola escrita distinto
+        c = obrero.ruta_candado(r"C:\otra\COLA 3D", env)
+        self.assertEqual(a, b)
+        self.assertNotEqual(a, c)
+        self.assertTrue(a.startswith(os.path.join(env["LOCALAPPDATA"], "obrero_catia")))
+        self.assertTrue(a.endswith(".lock"))
+
 
 if __name__ == "__main__":
     unittest.main()

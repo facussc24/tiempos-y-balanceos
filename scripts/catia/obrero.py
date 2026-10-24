@@ -17,6 +17,7 @@ Uso: python obrero.py [--cola <COLA 3D>] [--hostname X] [--una-vuelta] (ver --he
 """
 import argparse
 import ctypes
+import hashlib
 import json
 import os
 import re
@@ -24,6 +25,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import traceback
@@ -538,13 +540,31 @@ class Obrero:
             self.log("obrero detenido")
 
 
+def local_por_defecto(env=None):
+    """%TEMP%\\obrero_catia (PEDIDO 20 de CATA, 23/10/2026): CATIA no guarda adentro de %LOCALAPPDATA%\\obrero_catia."""
+    env = os.environ if env is None else env
+    base = env.get("TEMP") or env.get("TMP") or tempfile.gettempdir()
+    return os.path.join(base, "obrero_catia")
+
+
+def ruta_candado(cola, env=None):
+    """Un candado por PC y por cola, FUERA de --local: dos obreros con distinto --local sobre la misma cola tienen que
+    chocar (CATA 23/10: con el candado adentro de --local, el .cmd de la nube y el local no se veian: dos CATIA en 7,7 GB)."""
+    env = os.environ if env is None else env
+    base = env.get("LOCALAPPDATA") or os.path.expanduser("~")
+    firma = hashlib.sha1(os.path.abspath(cola).lower().encode("utf-8")).hexdigest()[:10]
+    return os.path.join(base, "obrero_catia", f"obrero-{firma}.lock")
+
+
 def argumentos(argv=None):
     p = argparse.ArgumentParser(description="Obrero de CATIA: corre los ejercicios que la PC principal deja en la nube.")
     p.add_argument("--cola", default=os.path.dirname(AQUI), help="carpeta COLA 3D (por defecto, la de arriba de obrero)")
     p.add_argument("--hostname", default=socket.gethostname(), help="nombre de esta PC (por defecto, el de Windows)")
     p.add_argument("--una-vuelta", action="store_true", help="procesa todo lo pendiente de esta PC, de a uno, y sale")
-    p.add_argument("--local", default=os.path.join(os.environ.get("LOCALAPPDATA") or os.path.expanduser("~"), "obrero_catia"),
-                   help="carpeta local de trabajo (fuera de la nube)")
+    p.add_argument("--local", default=local_por_defecto(),
+                   help="carpeta local de trabajo (fuera de la nube). Por defecto %TEMP%\\obrero_catia: CATIA R21 no escribe "
+                        "en %LOCALAPPDATA%\\obrero_catia (medido en CATA el 23/10/2026: SaveAs, ExportData y CaptureToFile "
+                        "no dejan archivo ahi; en %TEMP% si)")
     p.add_argument("--ejercicios", default=os.path.join(AQUI, "ejercicios"))
     p.add_argument("--timeout-seg", type=float, default=1200.0)
     p.add_argument("--ram-min-gb", type=float, default=0.8,
@@ -564,7 +584,8 @@ def argumentos(argv=None):
 def main(argv=None):
     a = argumentos(argv)
     ob = Obrero(a)
-    candado = Candado(os.path.join(ob.local, "obrero.lock"))
+    os.makedirs(os.path.dirname(ruta_candado(ob.cola)), exist_ok=True)
+    candado = Candado(ruta_candado(ob.cola))
     if not candado.tomar():
         print(f"Ya hay un obrero corriendo en esta PC (candado {candado.ruta}). Cierre la otra ventana negra primero.")
         return 2

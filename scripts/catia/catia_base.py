@@ -85,6 +85,46 @@ def es_mia(pids, guardado, hora=hora_de_arranque):
     return hora(pid) == guardado["hora"]
 
 
+CLSCTX_ACTIVATE_32_BIT_SERVER = 0x40000     # pide el servidor COM de 32 bits aunque el proceso que llama sea de 64
+
+
+def arrancar_catia(dispatch=None, co_create=None, envolver=None):
+    """Abre CATIA por COM. Primero por la anotacion normal (Dispatch); si falla, pide el servidor de 32 bits con
+    CoCreateInstance(CLSCTX_LOCAL_SERVER | CLSCTX_ACTIVATE_32_BIT_SERVER). CATA, 23/10/2026 (PEDIDO 19): el tecnico puso la
+    R21 de 32 bits y la anotacion de 64 bits del registro quedo apuntando a la 2022 borrada, asi que Dispatch desde un Python
+    de 64 bits fallaba; con el servidor de 32 bits CATIA abrio en 9 s. Los tres callables se inyectan para probarlo en seco."""
+    if dispatch is None or envolver is None:
+        import win32com.client
+        dispatch = dispatch or win32com.client.Dispatch
+        envolver = envolver or win32com.client.Dispatch
+    try:
+        return dispatch("CATIA.Application")
+    except Exception as primero:  # noqa: BLE001  (pywintypes.com_error, que no se importa si no hace falta)
+        error_dispatch = primero
+    try:
+        if co_create is None:
+            import pythoncom
+            import pywintypes
+            obj = pythoncom.CoCreateInstance(pywintypes.IID("CATIA.Application"), None,
+                                             pythoncom.CLSCTX_LOCAL_SERVER | CLSCTX_ACTIVATE_32_BIT_SERVER,
+                                             pythoncom.IID_IDispatch)
+        else:
+            obj = co_create("CATIA.Application", CLSCTX_ACTIVATE_32_BIT_SERVER)
+        return envolver(obj)
+    except Exception as segundo:  # noqa: BLE001
+        raise RuntimeError(f"CATIA no arranco por COM: la anotacion normal dio {error_dispatch!r} y el servidor de 32 bits "
+                           f"dio {segundo!r}") from segundo
+
+
+def exigir_archivo(ruta, que):
+    r"""Un paso que dice «ok» sin dejar el archivo es un control ciego (CATA, 23/10/2026: CaptureToFile no da error y no deja
+    nada en %LOCALAPPDATA%\obrero_catia; SaveAs y ExportData fallan ahi). Falla si no existe o pesa 0."""
+    if not os.path.isfile(ruta) or os.path.getsize(ruta) == 0:
+        raise RuntimeError(f"{que}: CATIA no dejo el archivo {ruta} (no existe o pesa 0). En algunas carpetas CATIA R21 no "
+                           "escribe (CATA 23/10: %LOCALAPPDATA%\\obrero_catia); el obrero trabaja en %TEMP%\\obrero_catia")
+    return ruta
+
+
 def conectar(visible=False):
     """Devuelve (catia, pid). Arranca la propia si no hay ninguna; se engancha solo a la propia (pid + hora de arranque).
     Si no se puede saber que procesos hay, no hace nada."""
@@ -94,7 +134,7 @@ def conectar(visible=False):
         raise SystemExit("No pude saber si hay una CATIA abierta (tasklist fallo): no arranco ni me engancho a nada.")
     if not pids:
         t0 = time.time()
-        c = win32com.client.Dispatch("CATIA.Application")
+        c = arrancar_catia()
         pids = cnext_abiertos() or []
         pid = pids[0] if len(pids) == 1 else None
         json.dump({"pid": pid, "hora": hora_de_arranque(pid) if pid else None,
@@ -384,6 +424,7 @@ def captura(c, reg, nombre, vistas=("iso",), ocultar_planos=True):
         visor.Update()
         bmp = os.path.join(reg.carpeta, f"{nombre}_{v}.bmp")
         visor.CaptureToFile(4, bmp)
+        exigir_archivo(bmp, f"captura {v}")        # CATA 23/10: CaptureToFile decia ok y no habia archivo
         pngs.append(bmp)
     png = os.path.join(reg.carpeta, f"{nombre}.png")
     subprocess.run([VENV_CAD, os.path.join(AQUI, "bmp_a_png.py"), png] + pngs, check=True, capture_output=True)
@@ -402,11 +443,13 @@ def guardar_pieza(doc, reg, nombre, step=True):
         if os.path.exists(r):
             os.remove(r)
     doc.SaveAs(rutas["catpart"])
+    exigir_archivo(rutas["catpart"], f"guardar {nombre}.CATPart")      # CATA 23/10: en %LOCALAPPDATA% SaveAs falla o no deja nada
     if step:
         rutas["step"] = os.path.join(reg.carpeta, nombre + ".stp")
         if os.path.exists(rutas["step"]):
             os.remove(rutas["step"])
         doc.ExportData(rutas["step"], "stp")
+        exigir_archivo(rutas["step"], f"exportar {nombre}.stp")
     return rutas
 
 

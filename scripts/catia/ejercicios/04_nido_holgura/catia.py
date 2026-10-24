@@ -98,6 +98,7 @@ def captura_bmp(c, carpeta, nombre):
     if os.path.exists(ruta):
         os.remove(ruta)
     v.CaptureToFile(4, ruta)
+    cb.exigir_archivo(ruta, "captura BMP")       # PEDIDO 19 de CATA: el paso decia ok sin archivo
     return ruta
 
 
