@@ -162,6 +162,9 @@ describe('6g · lo que NO cuenta como palabras de Fak (no_es_de_fak y los prefij
     'mensaje de otra sesion (<cross-session-message)': `<cross-session-message from="otra">${FRASE}</cross-session-message>`,
     'encargo de otra sesion ([ENCARGO …])': `[ENCARGO E261023-abcd]\nPARA: barackmercosul-c9\n\n${FRASE}`,
     'arranque de una hija de start_session (Background …, sin origin: medido el 23/10)': `Background (from the session that started this one):\n${FRASE}`,
+    // 24/10 02:27: el guardian tomo un <side-sessions-event> de la app (la nota de una sesion hija) por el ultimo mensaje de Fak
+    'aviso de sesiones hijas de la app (<side-sessions-event)': `<side-sessions-event>None of the sessions you started is working now; their notes are above. ${FRASE}</side-sessions-event>`,
+    'aviso del CI de la app (<ci-monitor-event)': `<ci-monitor-event>\n${FRASE}\n</ci-monitor-event>`,
   };
   for (const [nombre, texto] of Object.entries(casos)) {
     it(`C8 · ROJO · ${nombre}`, () => {
