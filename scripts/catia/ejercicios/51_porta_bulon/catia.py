@@ -183,6 +183,14 @@ def cerrar_con_referencia(carpeta, referencia=None, comparar_con=None, medir=Non
             problemas.append(f"{archivo} (la pieza bien del banco) queda a {dif} mm3 de CATIA")
         if esperado == "lejos" and not dif > LEJOS_MM3:
             problemas.append(f"{archivo} (otro solido del banco) queda a {dif} mm3 de CATIA: el control no lo separa")
+    # auditor de la tanda de CATA (24/10): una cara suelta en el STEP pasaba (salio de verdad en 54_r1 y 31_final3); el
+    # control del 24 y del 49: un solido, una cascara, ninguna cara suelta
+    sp = s.get("step_catia_en_build123d")
+    for p in (PARTE,):
+        t = sp.get(p) if isinstance(sp, dict) else None
+        topo = (t.get("solidos"), t.get("cascaras"), t.get("caras_sueltas")) if isinstance(t, dict) else None
+        if topo != (1, 1, 0):
+            problemas.append(f"el STEP de {p} no es 1 solido cerrado (solidos, cascaras, caras sueltas: {topo})")
     s["juez"] = juez
     s["ok"] = s["ok_pasos"] and not problemas and not s["error_juez"]   # una excepcion fuera de un paso: nunca verde
     texto = "; ".join(([s["error_juez"]] if s["error_juez"] else []) + problemas)

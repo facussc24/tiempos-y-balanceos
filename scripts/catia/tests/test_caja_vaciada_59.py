@@ -66,7 +66,7 @@ class Juez(unittest.TestCase):
              "cascara": {"saca": MEDIDO["saca"] if saca is None else saca,
                          "z_de_lo_sacado": MEDIDO["z_sacado"] if z_sacado is None else z_sacado},
              "step_catia_en_build123d": {"caja_vaciada": {"volumen": v, "cdg_mm": [c[0], c[1], 17.8781] if not cdg else c,
-                                                          "solidos": 1, "caras_sueltas": 0}}}
+                                                          "solidos": 1, "cascaras": 1, "caras_sueltas": 0}}}
         s["step_catia_en_build123d"]["caja_vaciada"].update(step or {})
         if step_texto:
             s["step_catia_en_build123d"] = step_texto
@@ -103,6 +103,7 @@ class Juez(unittest.TestCase):
         self.assertIn("distancia exacta", self.juez(comparado=sin)["error"])
         self.assertIn("sobra", self.juez(comparado=dict(COMPARA, sobra_A_menos_B=3.0))["error"])
         self.assertIn("2 solidos", self.juez(step={"solidos": 2})["error"])
+        self.assertIn("caras sueltas", self.juez(step={"cascaras": 2})["error"])        # auditor: las cascaras
         self.assertIn("centro del STEP", self.juez(step={"cdg_mm": [60.0, 40.0, 17.9]})["error"])
         sin_cad = self.juez(step_texto="medir_b123d no corrio: no esta .venv-cad")   # revisor: antes era una excepcion
         self.assertFalse(sin_cad["ok"])

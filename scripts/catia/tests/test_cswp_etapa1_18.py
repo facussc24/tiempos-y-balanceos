@@ -219,10 +219,12 @@ class Cuenta18(unittest.TestCase):
                   '"B - C + 7.5mm"', '"C - 7.5mm"', '"B - 69mm"', '"B - 30mm"'):
             self.assertIn(f, texto, f)
 
-    def juez(self, salida, tmp, ej, gemelo=None, step=True, ok_pasos=True):
+    def juez(self, salida, tmp, ej, gemelo=None, step=True, ok_pasos=True, topo=None):
         salida["ok_pasos"], salida["ok"] = ok_pasos, False
         salida["volumen_step_catia_en_build123d"] = ({ej.PARTE: VOL_CATIA[1] + 0.05} if step is True else
                                                      step if isinstance(step, str) else {})
+        salida["step_catia_en_build123d"] = {ej.PARTE: dict({"solidos": 1, "cascaras": 1, "caras_sueltas": 0},
+                                                            **(topo or {}))}
         ej.jc.escribir(tmp, salida)
         g = gemelo or (lambda a, b, c, d, e: {"volumen": VOL_CATIA[next(n for n, x in EXAMEN.items() if x[0] == a)]})
         return ej.cerrar_con_respuestas(tmp, medir_gemelo=g)
@@ -256,6 +258,9 @@ class Cuenta18(unittest.TestCase):
         s = self.juez(json.loads(json.dumps(salida)), tmp, ej, step=False)
         self.assertFalse(s["ok"])
         self.assertIn("el STEP de la etapa 1", s["error"])
+        s = self.juez(json.loads(json.dumps(salida)), tmp, ej, topo={"cascaras": 2, "caras_sueltas": 1})   # auditor
+        self.assertFalse(s["ok"])
+        self.assertIn("no es 1 solido cerrado", s["error"])
         # sin .venv-cad juez_comun deja un TEXTO en la clave: rojo con motivo, no una excepcion (barrido del 24/10)
         s = self.juez(json.loads(json.dumps(salida)), tmp, ej, step="medir_b123d no corrio: no esta .venv-cad")
         self.assertFalse(s["ok"])

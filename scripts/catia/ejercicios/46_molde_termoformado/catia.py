@@ -127,6 +127,14 @@ def cerrar_con_papel(carpeta):
     c0, c4 = (molde.get("0") or {}).get("chapa_partida_pulg"), (molde.get("4") or {}).get("chapa_partida_pulg")
     if not (_num(c0) and _num(c4) and c4 < c0):
         problemas.append(f"con desmoldeo la chapa no queda mas fina ({c4} contra {c0})")
+    # auditor de la tanda de CATA (24/10): una cara suelta en el STEP pasaba (salio de verdad en 54_r1 y 31_final3); el
+    # control del 24 y del 49: un solido, una cascara, ninguna cara suelta
+    sp = s.get("step_catia_en_build123d")
+    for p in tuple(PARTE.values()):
+        t = sp.get(p) if isinstance(sp, dict) else None
+        topo = (t.get("solidos"), t.get("cascaras"), t.get("caras_sueltas")) if isinstance(t, dict) else None
+        if topo != (1, 1, 0):
+            problemas.append(f"el STEP de {p} no es 1 solido cerrado (solidos, cascaras, caras sueltas: {topo})")
     s["juez"] = juez
     s["ok"] = s["ok_pasos"] and not problemas and not s["error_juez"]   # una excepcion fuera de un paso: nunca verde
     texto = "; ".join(([s["error_juez"]] if s["error_juez"] else []) + problemas)

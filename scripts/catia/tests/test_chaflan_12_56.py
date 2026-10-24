@@ -85,13 +85,13 @@ class Esquinas(unittest.TestCase):
 
 
 class Juez(unittest.TestCase):
-    def juez(self, vol=1181250.0, gemelo=None, comparado=None, ok_pasos=True, error=None):
+    def juez(self, vol=1181250.0, gemelo=None, comparado=None, ok_pasos=True, error=None, cdg=None, step=None):
         e = ej()
         tmp = tempfile.mkdtemp(prefix="ej56-")
         s = {"ok": False, "ok_pasos": ok_pasos, "pendiente": True, "volumen_catia": {"chaflan_12": vol},
-             "cdg_catia_mm": {"chaflan_12": [0.0, -0.0, 30.0]}, "chaflan": {"caras_del_chaflan": 12},
-             "step_catia_en_build123d": {"chaflan_12": {"volumen": vol, "cdg_mm": [0.0, 0.0, 30.0], "solidos": 1,
-                                                        "caras_sueltas": 0}}}
+             "cdg_catia_mm": {"chaflan_12": cdg or [0.0, -0.0, 30.0]}, "chaflan": {"caras_del_chaflan": 12},
+             "step_catia_en_build123d": {"chaflan_12": dict({"volumen": vol, "cdg_mm": [0.0, 0.0, 30.0], "solidos": 1,
+                                                             "cascaras": 1, "caras_sueltas": 0}, **(step or {}))}}
         if error:
             s["error"] = error
         with open(os.path.join(tmp, "salida.json"), "w", encoding="utf-8") as f:
@@ -107,6 +107,10 @@ class Juez(unittest.TestCase):
 
     def test_rojo(self):
         self.assertIn("volumen de CATIA", self.juez(vol=1181166.667)["error"])     # esquinas como chamfer()
+        # los tres controles que el auditor encontro sin caso rojo
+        self.assertIn("centro de CATIA", self.juez(cdg=[0.0, 0.0, 30.05])["error"])
+        self.assertIn("caras sueltas", self.juez(step={"cascaras": 2, "caras_sueltas": 1})["error"])
+        self.assertIn("centro del STEP", self.juez(step={"cdg_mm": [0.0, 0.05, 30.0]})["error"])
         g = json.loads(json.dumps(GEMELO))
         g["catia"]["caras"] = 26
         self.assertIn("26 caras", self.juez(gemelo=g)["error"])

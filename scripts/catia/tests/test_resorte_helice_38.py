@@ -104,7 +104,16 @@ class Juez(unittest.TestCase):
     def salida(self):
         return {"ok": False, "ok_pasos": True, "pendiente": True, "volumen_catia": dict(MEDIDO),
                 "largo_helice_catia": {"resorte": LARGO, "resorte_inclinado": LARGO},
-                "volumen_step_catia_en_build123d": dict(STEP)}
+                "volumen_step_catia_en_build123d": dict(STEP),
+                "step_catia_en_build123d": {p: {"solidos": 1, "cascaras": 1, "caras_sueltas": 0} for p in STEP}}
+
+    def test_cara_suelta_en_el_step(self):
+        """Auditor de la tanda (24/10): un STEP con una cara suelta pasaba."""
+        s = self.salida()
+        s["step_catia_en_build123d"]["resorte"].update(cascaras=2, caras_sueltas=1)
+        r = self.juez(s)
+        self.assertFalse(r["ok"])
+        self.assertIn("no es 1 solido cerrado", r["error"])
 
     def juez(self, s):
         ej = cargar_ej38()
