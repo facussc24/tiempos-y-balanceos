@@ -38,11 +38,18 @@ def medir(ruta):
 
 
 def medir_stl(ruta):
-    """Volumen de la malla con signo (trimesh): un solido de CATIA con las caras hacia adentro tiene el volumen B-Rep
-    bien y el STL RESTA esa parte (NOTAS 19/10, v16: 85 849,6 contra 89 278); el control es este numero contra el de CATIA."""
+    """Lo que dice la malla de un STL sobre el sentido de sus caras (trimesh). Un solido de CATIA con las caras hacia
+    adentro tiene el volumen B-Rep bien y el STL RESTA esa parte (NOTAS 19/10, v16: 85 849,6 contra 89 278, -3,84 %, del
+    orden del facetado: el porcentaje solo NO lo separa, revisor del 13, 24/10). Lo que lo separa:
+    - una zona dada vuelta pegada al resto deja la orientacion de los triangulos inconsistente (orientacion_consistente);
+    - una cascara dada vuelta suelta tiene volumen NEGATIVO (partes_negativas, cada cuerpo conectado por separado).
+    No se pudo reproducir en CATIA (el 09 sin Invert dio el mismo STL, 24/10 09:48): el detector se prueba con mallas."""
     import trimesh
     m = trimesh.load(ruta, force="mesh")
-    return {"volumen_stl": round(float(m.volume), 3), "cerrado": bool(m.is_watertight), "triangulos": len(m.faces)}
+    partes = m.split(only_watertight=False)
+    return {"volumen_stl": round(float(m.volume), 3), "cerrado": bool(m.is_watertight),
+            "orientacion_consistente": bool(m.is_winding_consistent), "partes": len(partes),
+            "partes_negativas": sum(1 for p in partes if p.volume < 0), "triangulos": len(m.faces)}
 
 
 def partes_del_conjunto(carpeta):

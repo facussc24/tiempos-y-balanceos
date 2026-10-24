@@ -540,9 +540,10 @@ con su caso malo antes de creerle.
 
 Ejercicios `scripts/catia/ejercicios/08..17` (cola en `COLA_CATIA.md`), cada uno con su respuesta de un papel, juez y
 prueba sin CATIA; el detalle de cada lección, con su medición, en **`scripts/catia/LECCIONES_CATIA.md`**.
-- **El volumen de CATIA no ve un sólido con las caras hacia adentro: el control es el STL de CATIA medido con signo**
-  (`scripts/catia/medir_b123d.py stl`), cerrado y a 5 % del sólido (facetado medido: −0,24 a −1,2 %). Y «el STEP trae 1
-  sólido» no ve superficies sueltas: `medir_b123d.py step` informa `cascaras` y `caras_sueltas` (bueno = 1 / 1 / 0).
+- **El volumen de CATIA no ve un sólido con las caras hacia adentro: el control es el STL de CATIA**
+  (`scripts/catia/medir_b123d.py stl` + `juez_comun.veredicto_stl`): cerrado, orientación de los triángulos consistente y
+  ningún cuerpo negativo. El porcentaje contra el sólido no lo separa (la v16 restó −3,84 %; el facetado da hasta −1,2 %).
+  Y «el STEP trae 1 sólido» no ve superficies sueltas: `medir_b123d.py step` informa `cascaras` y `caras_sueltas` (1/1/0).
 - **Elegir el lado de una operación de superficie por la medida**: probar TODOS, medir y borrar cada uno SIEMPRE (también
   si falló: un elemento roto en el árbol rompe cada `Update`), rehacer el que da la cuenta y guardar los otros números.
 - **Croquis totalmente restringido con fórmulas, por COM, anda** (ejercicio 11): dibujar exacto, crear las restricciones

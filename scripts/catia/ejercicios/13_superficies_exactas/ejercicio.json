@@ -1,0 +1,30 @@
+{
+ "usa_catia": true,
+ "descripcion": "Superficies de Generative Shape Design contra formulas de geometria exactas: tronco de cono por revolucion y por multi-seccion, tapas con Fill, Join + CloseSurface, tubo barrido, media esfera y toro por revolucion, cilindro extruido, offset, split, thicksurface y empalme bitangente; cada lado elegido por la medida con el otro lado medido; STEP y STL de cada pieza controlados con build123d y trimesh",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "area de cada superficie y volumen de cada solido",
+  "unidad": "mm2 y mm3",
+  "tolerancia": "0,01 % (STL: 5 %, el facetado de CATIA)",
+  "fuente": "formulas de geometria, cada una con su nombre",
+  "formulas": {
+   "lateral_revolucion": "area lateral del tronco de cono: pi (r1 + r2) s, s = raiz((r1 - r2)^2 + h^2); r1 20, r2 10, h 30",
+   "lateral_multiseccion": "la misma",
+   "tapa_r1": "circulo: pi r^2, r 20",
+   "tapa_r2": "circulo: pi r^2, r 10",
+   "volumen_tronco": "volumen del tronco de cono: pi h (r1^2 + r1 r2 + r2^2) / 3",
+   "tubo_barrido": "teorema de Pappus (superficie): 2 pi r x largo de la guia; r 5, guia R 50 de 90 grados = 50 pi / 2",
+   "media_esfera": "zona esferica de Arquimedes 2 pi R h con h = R: 2 pi R^2, R 25",
+   "toro": "teorema de Pappus: 4 pi^2 R r, R 30, r 5",
+   "cilindro": "area lateral del cilindro 2 pi r h, r 20, h 30",
+   "offset_afuera": "2 pi (r + 3) h",
+   "split_arriba": "2 pi r (h - 10)",
+   "volumen_thick": "tubo de pared 2: pi ((r + 2)^2 - r^2) h",
+   "empalme": "dos placas recortadas 2 (40 - 5) 50 mas un cuarto de cilindro (pi 5 / 2) 50"
+  }
+ },
+ "cruces": {
+  "step_catia": "el STEP de cada pieza leido con build123d: 1 solido, 1 cascara, 0 caras sueltas y el volumen de su formula",
+  "stl_catia": "el STL de cada pieza leido con trimesh: cerrado y con el volumen de CATIA a 5 %"
+ }
+}

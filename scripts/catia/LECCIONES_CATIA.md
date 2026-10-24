@@ -8,10 +8,13 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
 ## Controles: qué mira cada uno y qué NO ve
 
 - **El volumen de CATIA (SPA) no ve un sólido con las caras hacia adentro** (09, principal; NOTAS 19/10 de la práctica:
-  la v16 dio el B-Rep bien y el STL 85 849,6 contra 89 278). El control es el **STL que exporta CATIA**, medido con signo
-  (`medir_b123d.py stl`, trimesh): cerrado y con el volumen del sólido. Tolerancia 5 %: el facetado de CATIA dio −0,24 %
-  en el Paste Sleeve y −1,2 % en el tronco de cono y el tubo de pared 2 (13, 24/10 09:31); las caras hacia adentro dan
-  negativo o cientos de %. Lo encontró el revisor del 09: ningún control lo veía.
+  la v16 dio el B-Rep bien y el STL 85 849,6 contra 89 278). El control es el **STL que exporta CATIA** (`medir_b123d.py
+  stl`, trimesh) y lo juzga `juez_comun.veredicto_stl`: malla cerrada, **orientación de los triángulos consistente** y
+  **ningún cuerpo con volumen negativo**. El porcentaje contra el sólido NO separa: la v16 restó −3,84 % y el facetado de
+  una pieza chica curva da −1,2 % (13, 24/10 09:31: el 24-gono inscripto, revisor del 13); el 5 % queda solo para errores
+  gruesos. Lo encontró el revisor del 09 (ningún control lo veía) y lo corrigió el del 13 (yo había subido el umbral de
+  1 % a 5 % con un comentario sin fuente: era aflojar el control). El caso no se reprodujo en CATIA (el 09 sin `Invert`
+  dio el mismo STL, 09:48): el detector se prueba con mallas en `tests/test_medir_stl.py`.
 - **«El STEP trae 1 sólido» es ciego a las superficies de construcción que quedaron a la vista** (09, revisor): salen
   como cáscaras o caras sueltas y `solids()` sigue dando 1. `medir_b123d.py` ahora informa `cascaras` y `caras_sueltas`;
   el STEP bueno es 1 / 1 / 0.

@@ -356,7 +356,7 @@ class MasaArea(unittest.TestCase):
         d_step = {"volumen": volumen, "area": area_catia, "solidos": 1, "cascaras": 1, "caras_sueltas": 0}
         if isinstance(step, dict):
             d_step.update(step)
-        d_stl = {"volumen_stl": volumen - 3.0, "cerrado": True}
+        d_stl = {"volumen_stl": volumen - 3.0, "cerrado": True, "orientacion_consistente": True, "partes_negativas": 0}
         d_stl.update(stl or {})
 
         def medir(args):
@@ -401,6 +401,18 @@ class MasaArea(unittest.TestCase):
         self.assertIn("STL", s["error"])
         s = self.preparar(stl={"cerrado": False})
         self.assertFalse(s["ok"])
+
+    def test_rojo_cascara_dada_vuelta_aunque_el_porcentaje_de_bien(self):
+        """Como la v16 (NOTAS 19/10: -3,84 %, del orden del facetado): lo caza el cuerpo negativo o la orientacion, no el %."""
+        for cambio in ({"volumen_stl": VOL_BIEN * (1 - 0.0384), "partes_negativas": 1, "partes": 2},
+                       {"volumen_stl": VOL_BIEN * (1 - 0.0384), "orientacion_consistente": False}):
+            s = self.preparar(stl=cambio)
+            self.assertFalse(s["ok"], cambio)
+            self.assertIn("STL", s["error"])
+
+    def test_facetado_de_una_pieza_chica_curva_es_verde(self):
+        s = self.preparar(stl={"volumen_stl": VOL_BIEN * (1 - 0.0123)})    # el -1,23 % del 13
+        self.assertTrue(s["ok"], s.get("error"))
 
     def test_rojo_masa(self):
         s = self.preparar(volumen=VOL_BIEN + 1500.0)          # +1,53 g

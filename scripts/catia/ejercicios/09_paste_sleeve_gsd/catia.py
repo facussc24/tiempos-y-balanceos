@@ -24,7 +24,7 @@ cuadratica en la altura y Simpson da el volumen exacto: V = h/6 (A0 + 4 Am + A1)
 ok = cruce con build123d (0,5 mm3 y 0,01 mm de centro de gravedad: juez_comun) Y masa a 1 g o menos de 57,08 Y area
 total de la piel de CATIA a 0,01 % o menos de la de build123d sobre el mismo bien.py Y el STEP que exporta CATIA con 1
 solido, 1 cascara y 0 caras sueltas (superficies de construccion a la vista) y la misma area Y el STL que exporta CATIA
-cerrado y con el volumen del solido a 1 % (las caras hacia adentro no las ve el volumen de CATIA: el STL resta).
+cerrado y con el volumen del solido a 5 % (las caras hacia adentro no las ve el volumen de CATIA: el STL resta).
 Lo que el cruce con build123d prueba es que CATIA reproduce la lectura (a) de la pared del bien.py del 15; la lectura (b)
 (57,06 g) daria rojo aca aunque este mas cerca de la guia (tarea.yaml del 15, duda abierta).
 
@@ -50,8 +50,10 @@ DENSIDAD_G_MM3 = 1.02e-3                   # ABS, 1 020 kg/m3 (rotulo del plano,
 MASA_GUIA_G, TOL_MASA_G = 57.08, 1.0       # guia de build123d, tolerancia del rotulo (tarea.yaml del 15)
 TOL_AREA_REL = 1e-4                        # 0,01 %: CATIA y build123d sobre la misma pieza (escrito ANTES de correr)
 TOL_OP = 1.0                               # mm3: lo que suma o saca cada operacion contra la cuenta
-TOL_STL_REL = 1e-2                         # 1 %: la malla del STL contra el solido (el error de facetado es menor; con las
-                                           # caras hacia adentro el STL resta dos veces la transicion: cientos de %)
+TOL_STL_REL = 5e-2                         # 5 %: solo un error GRUESO de la malla (aca el facetado da -0,24 %; en el 13,
+                                           # -1,2 %). Las caras hacia adentro las cazan la orientacion de los triangulos y
+                                           # los cuerpos negativos (jc.veredicto_stl), no este numero: la v16 resto -3,84 %.
+                                           # Sin Invert este STL sale igual (24/10 09:48): CloseSurface lo orienta bien aca
 PI = math.pi
 
 
@@ -336,9 +338,8 @@ def cerrar_con_masa_y_area(carpeta, medir=None):
         vs = d.get("volumen_stl")
         if vs is None:
             malos.append(f"no se pudo medir el STL de CATIA: {d.get('error') or rl.get('error')}")
-        elif not d.get("cerrado") or abs(vs - vc) > TOL_STL_REL * vc:
-            malos.append(f"el STL de CATIA da {vs} mm3 (cerrado: {d.get('cerrado')}) contra {vc} del solido: caras hacia "
-                         "adentro o malla abierta (sin Invert el STL resta, NOTAS 19/10)")
+        elif jc.veredicto_stl(d, vc, TOL_STL_REL):
+            malos.append(f"el STL de CATIA: {jc.veredicto_stl(d, vc, TOL_STL_REL)}")
     else:
         malos.append("CATIA no dejo el STL" if vc is not None else "sin volumen de CATIA para comparar el STL")
     s["ok_masa_area_step"] = not malos

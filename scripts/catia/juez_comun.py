@@ -191,9 +191,42 @@ def comparar(salida, desplazamiento=(0.0, 0.0, 0.0)):
         and salida["dif_cdg_mm"].get(k) is not None and salida["dif_cdg_mm"][k] <= TOL_CDG for k in partes)
 
 
-def correr_ejercicio(ejercicio, construir, desplazamiento=(0.0, 0.0, 0.0)):
+def veredicto_stl(d, vc, tol_rel=0.05):
+    """Veredicto del STL que exporto CATIA (lo que devuelve medir_b123d.py stl) contra el volumen de CATIA `vc`: None si
+    esta bien, o el motivo. Las caras hacia adentro se cazan por la ORIENTACION de los triangulos y por cuerpos de volumen
+    negativo, no por el porcentaje: el caso real conocido (v16, NOTAS 19/10) resto -3,84 %, del orden del facetado de una
+    pieza chica curva (-1,2 % medido en el 13). `tol_rel` es solo para un error grueso (otra pieza, la mitad que falta)."""
+    if d.get("volumen_stl") is None:
+        return f"STL sin medir: {d.get('error') or 'no esta el archivo'}"
+    mal = []
+    if not d.get("cerrado"):
+        mal.append("malla abierta")
+    if d.get("orientacion_consistente") is not True:
+        mal.append("orientacion de los triangulos inconsistente o sin medir (una zona dada vuelta)")
+    if d.get("partes_negativas", 1):
+        mal.append(f"{d.get('partes_negativas', 'sin medir')} cuerpo(s) con volumen negativo (una cascara dada vuelta)")
+    if vc and abs(d["volumen_stl"] - vc) > tol_rel * vc:
+        mal.append(f"volumen {d['volumen_stl']} contra {vc} del solido: mas de {100 * tol_rel:g} %")
+    return "; ".join(mal) or None
+
+
+def mover_a_la_segunda_pantalla(pid):
+    """La ventana de ESA CATIA a la pantalla que no es la principal (pantalla.py de la skill cad-design: solo mueve la
+    ventana, no teclea ni hace clic). En el paquete del obrero no esta: lo dice y sigue."""
+    try:
+        sys.path.append(os.path.join(REPO, ".claude", "skills", "cad-design", "scripts", "catia"))
+        import pantalla
+        return pantalla.mover(pid)
+    except Exception as e:  # noqa: BLE001
+        return f"no pude mover CATIA a la segunda pantalla: {e!r}"[:200]
+
+
+def correr_ejercicio(ejercicio, construir, desplazamiento=(0.0, 0.0, 0.0), con_bien=True):
     """main() de un catia.py del juez. Uso: python catia.py <carpeta de trabajo>. Sale con 0 si corrio (aunque algo
-    fallara: eso queda en salida.json), 3 si CATIA no arranca o no conecta, 4 si hay una CATIA que no es la propia."""
+    fallara: eso queda en salida.json), 3 si CATIA no arranca o no conecta, 4 si hay una CATIA que no es la propia.
+    con_bien=False (24/10/2026, ejercicio 13 del banco de CATIA): el ejercicio no tiene bien.py en el banco 3D porque su
+    respuesta es una formula de un papel; no se mide build123d ni se compara, el ok sale solo de los pasos y lo completa
+    el post-proceso del ejercicio. El STEP que exporta CATIA se mide con build123d igual (tercer cruce)."""
     if len(sys.argv) < 2:
         print("uso: python catia.py <carpeta de trabajo>", file=sys.stderr)
         return 2
@@ -206,12 +239,12 @@ def correr_ejercicio(ejercicio, construir, desplazamiento=(0.0, 0.0, 0.0)):
 
     t0 = time.time()
     bien = os.path.join(REPO, "evals", "banco3d", "ejercicios", ejercicio, "bien.py")
-    salida = {"ok": False, "ejercicio": ejercicio, "bien_py": os.path.relpath(bien, REPO),
+    salida = {"ok": False, "ejercicio": ejercicio, "bien_py": os.path.relpath(bien, REPO) if con_bien else None,
               "volumen_catia": {}, "cdg_catia_mm": {}, "volumen_build123d": {}, "cdg_build123d_mm": {},
               "desplazamiento_respecto_de_build123d_mm": list(desplazamiento), "archivos": [],
               "_carpeta": carpeta, "_steps": {}}
     # 1) build123d sobre el mismo bien.py (no necesita CATIA)
-    b = medir_b123d(["bien", bien, os.path.join(carpeta, "_build123d")])
+    b = medir_b123d(["bien", bien, os.path.join(carpeta, "_build123d")]) if con_bien else {}
     salida["seg_build123d"] = b.get("seg")
     if "error" in b:
         salida["error_build123d"] = b["error"]
@@ -226,8 +259,13 @@ def correr_ejercicio(ejercicio, construir, desplazamiento=(0.0, 0.0, 0.0)):
         salida["error"] = f"pywin32 no esta instalado: {e!r}"
         escribir(carpeta, salida)
         return 3
+    # CATIA_MIRAR=1 o lento (Fak 24/10: «cuando vuelva... te quiero ver en tiempo real diseñándolo en CATIA»): CATIA
+    # visible, en la segunda pantalla, una pausa por paso con «lento» (catia_base.Registro.mostrar) y, al terminar,
+    # CATIA_PAUSA_FINAL segundos (30 por defecto) para mirar la pieza antes de apagarla. No queda abierta: la corrida
+    # siguiente usa otra carpeta, no la reconoceria como propia y frenaria (codigo 4). Sin la variable, como siempre.
+    mirar = os.environ.get("CATIA_MIRAR") in ("1", "lento")
     try:
-        c, pid = cb.conectar()
+        c, pid = cb.conectar(visible=mirar) if mirar else cb.conectar()
     except SystemExit as e:
         salida["error"] = str(e)
         escribir(carpeta, salida)
@@ -238,6 +276,8 @@ def correr_ejercicio(ejercicio, construir, desplazamiento=(0.0, 0.0, 0.0)):
         return 3
     salida["catia_pid"], salida["catia_hora"] = pid, cb.hora_de_arranque(pid) if pid else None
     salida["seg_hasta_conectar"] = round(time.time() - t0, 1)
+    if mirar and pid:
+        salida["pantalla"] = mover_a_la_segunda_pantalla(pid)
     escribir(carpeta, salida)                       # parcial: el juez ya sabe cual es la CATIA de esta corrida
     vig = cb.Vigia(pid) if pid else None
     if vig:
@@ -251,6 +291,13 @@ def correr_ejercicio(ejercicio, construir, desplazamiento=(0.0, 0.0, 0.0)):
         salida["error"] = "excepcion fuera de un paso: " + traceback.format_exc()[-800:]
     finally:
         try:                                        # el vigia sigue mientras CATIA se cierra (un OK abierto frena Quit)
+            if mirar:
+                try:
+                    pausa = float(os.environ.get("CATIA_PAUSA_FINAL", "30").replace(",", "."))
+                except ValueError:
+                    pausa = 30.0
+                salida["pausa_final_seg"] = pausa
+                time.sleep(pausa)
             cb.apagar(c)
             salida["catia_apagada"] = True
         except Exception as e:  # noqa: BLE001
@@ -272,9 +319,20 @@ def correr_ejercicio(ejercicio, construir, desplazamiento=(0.0, 0.0, 0.0)):
         nombre_a_parte = {os.path.splitext(os.path.basename(v))[0]: k for k, v in salida["_steps"].items()}
         salida["volumen_step_catia_en_build123d"] = {nombre_a_parte.get(k, k): d.get("volumen", d.get("error"))
                                                      for k, d in (s.get("partes") or {}).items()} or s.get("error")
-    iguales = comparar(salida, desplazamiento)
+    if con_bien:
+        iguales = comparar(salida, desplazamiento)
+    else:                                           # sin bien.py no hay cruce: las claves quedan vacias (FIN las imprime)
+        salida["diferencia_mm3"], salida["dif_cdg_mm"] = {}, {}
+        iguales = True
     salida["ok"] = not fallas and iguales
-    if not salida["ok"] and not salida.get("error"):
+    if not con_bien:
+        # sin bien.py no se comparo nada: salida.json no queda en verde hasta que el post-proceso del ejercicio compare
+        # contra su respuesta (revisor del 13, 24/10: si el post-proceso revienta, quedaba «ok: true» sin comparar)
+        salida["ok_pasos"], salida["ok"] = salida["ok"], False
+        salida["pendiente"] = "sin bien.py: el ok lo decide el post-proceso del ejercicio contra su respuesta"
+        if fallas and not salida.get("error"):
+            salida["error"] = f"pasos con falla: {fallas}"
+    elif not salida["ok"] and not salida.get("error"):
         # revisor del 23/10: si build123d no pudo medir (CATA sin .venv-cad), el motivo va primero en el error principal,
         # que es lo que el obrero publica en resultado-<item>.txt; si no, parecia una falla de comparacion
         salida["error"] = ((f"{salida['error_build123d']}; " if salida.get("error_build123d") else "")

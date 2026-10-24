@@ -79,7 +79,7 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 10 | pendiente | | |
 | 11 | hecho | PC principal, R21, 24/10 09:28: croquis de 34 restricciones resuelto en q3 y q4, 0,000 mm³ de build123d, masas a 0,002 y 0,004 g de la lámina 12; revisor Fable: sin bugs, 4 de robustez aplicados (rango 40/40 y solver simulado en la prueba, ángulo −10, coherencia de masa, desplazamiento por parte) | (este commit) |
 | 12 | pendiente | | |
-| 13 | pendiente | | |
+| 13 | hecho | PC principal, R21, 24/10 09:59: 22 pasos, 13 fórmulas a < 1e-6 (media esfera y toro nuevos), STEP 1/1/0, STL orientados; revisor Fable: el 5 % del STL era aflojar el control (bug real): el STL ahora se juzga por orientación y cuerpos negativos; robustez: ok provisorio en falso sin bien.py, borrar lo probado siempre, mensajes | (este commit) |
 | 14 | pendiente | | |
 | 15 | pendiente | | |
 | 16 | pendiente | | |
