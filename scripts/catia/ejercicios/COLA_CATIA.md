@@ -106,6 +106,16 @@ La principal pasa a CATA cada `ej*.py` de la práctica con el `registro.json` de
 | 46 | CATA | `46_molde_termoformado` | Molde macho de termoformado 254 × 304,8 × 50,8 mm: caras formadas y huella medidas en CATIA; después con desmoldeo de 4° | RapidMade (17/11/2025, banco E18): área formada 208 pulg², huella 120 pulg², relación 1,733, chapa de partida 0,173 pulg | ej69_molde_termoformado |
 | 47 | principal | `47_molde_hisopo_completo` | El molde del 42 con bebedero, canal, compuerta y pines expulsores | MIT 2.008 2022, solución (a): la colada es UN sólido que llega a la cara de arriba; cada expulsor toca la pieza y vive en la mitad de abajo (gemelo: canal corto = dos sólidos) | ej72_molde_hisopo_completo |
 
+## Fase 3, segunda tanda (24/10 13:44): dispositivos de la casa rehechos en CATIA
+
+Fak: *"los reales de Barack al final"*. Cada uno se rehace EN CATIA desde sus datos (el script de build123d de la skill y sus parámetros, los dos en el repo) y se compara contra el STEP que genera ese mismo script, que es el diseño entregado. La referencia la genera cada PC con `.venv-cad` (no se sube el STEP). Ojo con los gemelos: lo que el volumen no ve (un rasgo corrido) lo ven la comparación booleana y el centro de gravedad. Revisor Sonnet por ejercicio.
+
+| N | Quién | Carpeta | Qué se construye en CATIA | Respuesta conocida | Método ya probado |
+|---|---|---|---|---|---|
+| 48 | CATA | `48_gancho_mochila` | El gancho para colgar la mochila de la pata del escritorio (mordaza auto-trabante, v2) rehecho EN CATIA desde sus datos: `build_gancho.py` + `params.json` de `.claude/skills/cad-design/examples/gancho_mochila/` (perfil del clip con su juego, alas, brazo que baja hacia afuera, boca) | El STEP que genera `build_gancho.py --out <carpeta>` con el `params.json` del repo (`gancho_mochila_v2.step`, build123d, 20 s): `compara.py` del 32 (sobra y falta <= 1 mm³, distancia máxima <= 0,01 mm en los dos sentidos), volumen y centro de gravedad; `cuentas.json` trae a/L y el resto de lo que el diseño exige | el 32 (rehacer un dispositivo y compararlo contra su STEP) |
+| 49 | principal | `49_gancho_doble` | El gancho doble (`build_gancho_doble.py` + `params_doble.json` de `.claude/skills/cad-design/examples/gancho_mochila/`) rehecho en CATIA | El STEP que genera `build_gancho_doble.py` (`gancho_doble_v1.step`, 68,60 cm³): igual que el 48 | el 32 |
+| 50 | CATA | `50_gancho_leo` | El gancho de Leo (`build_gancho_leo.py` + `params_leo.json` de `.claude/skills/cad-design/examples/gancho_mochila/`) rehecho en CATIA | El STEP que genera `build_gancho_leo.py` (`gancho_LEO.step`, 97,34 cm³): igual que el 48 | el 32 |
+
 ## Lo que sigue, en este orden (Fak, 24/10/2026 a la mañana)
 
 *"quiero que hagas todos los ejercicios oficiales de catia no? y luego diseños reales"*; *"te decía diseños reales de
@@ -171,3 +181,6 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 45 | hecho | PC principal, R21, 24/10/2026 13:38 (`45_20261024_133831`, código del commit; la primera 13:11, igual): ok true; −0,147042 y +0,032958 mm contra Lamé (tensión plana) a 1e-5, suma 0,18000 contra 0,18 del papel; fuerza para separarlos 82,82 kN contra 83,1 (informada). Revisor Sonnet: sin graves (menores arreglados: tolerancia 1,5 % → 0,1 %, presión cargada, nodos de r = 45, presión al revés en la prueba, supuestos escritos) | (este commit) |
 | 46 | hecho (CATA) | CATA, R21, 24/10/2026 13:27 (`46_final2`, código del commit; la primera 13:14, igual): ok true; sin desmoldeo 208 / 120 pulg², relación 1,7333 (RapidMade publica 1,73; 1,733 es el recálculo) y chapa 0,1733 (0,173); con 4° la cuenta del tronco: 201,018 pulg², 1,6752, chapa 0,1675; volúmenes = prisma y prismatoide; STEP igual. Revisor Sonnet: sin graves (página de RapidMade abierta) | (este commit) |
 | 47 | pendiente | | |
+| 48 | pendiente | | |
+| 49 | pendiente | | |
+| 50 | pendiente | | |
