@@ -1,0 +1,16 @@
+{
+ "usa_catia": true,
+ "descripcion": "Elementos finitos en CATIA (Generative Structural Analysis) contra la cuenta exacta: viga de acero 200 x 20 x 10 hecha en Part Design, empotrada en x = 0; estatica con 100 N en -Z en la cara de la punta (flecha = promedio de C3 de los nodos de x = 200) y frecuencias naturales sin cargas; malla parabolica de 2,5 mm; fem.py de la skill cad-design",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "flecha de la punta y las dos primeras frecuencias naturales",
+  "valor": {
+   "flecha_mm": 0.80152,
+   "f1_Hz": 203.71,
+   "f2_Hz": 407.43
+  },
+  "unidad": "mm / Hz",
+  "tolerancia": "1,5 % (la pieza 3D empotrada en una cara entera no es la viga de la teoria; lo que se caza da 10 % o mas: malla lineal -66 %, alto 11 -25 %); el material se exige aparte (E 2e11 N/m2, nu 0,266, rho 7 860: la frecuencia sola no ve acero contra aluminio)",
+  "fuente": "resistencia de materiales: flecha de Timoshenko F L^3/(3 E I) + F L/(k G A) con k = 5/6 y G = E/(2(1+nu)); frecuencias de Euler-Bernoulli de una viga en voladizo f = (beta^2/2 pi) raiz(E I/(rho A L^4)), beta1 = 1,8751, en el alto (I = b h^3/12) y en el ancho (I = h b^3/12); E, nu y rho los del acero del catalogo de CATIA, leidos de la pieza"
+ }
+}
