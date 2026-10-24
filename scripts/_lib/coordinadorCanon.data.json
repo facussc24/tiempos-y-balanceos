@@ -262,7 +262,7 @@
     "minLetrasPalabra": 4,
     "minPalabrasFragmento": 3,
     "umbralPalabras": 0.7,
-    "_umbralPalabras": "Informe 01: con 70 % de las palabras de contenido de la cita en un mensaje de Fak (tolerando tipeo) pasan 30 de 71 citas; la misma cita contra mensajes de OTRAS sesiones pasa en 3 de 71 (4 %), con 80 % en 0. La cita literal letra por letra solo coincide en 3 de 202: Fak escribe con errores y al citarlo se corrigen.",
+    "_umbralPalabras": "Informe 01: con 70 % de las palabras de contenido de la cita en un mensaje de Fak (tolerando tipeo) pasan 30 de 71 citas; la misma cita contra mensajes de OTRAS sesiones pasa en 3 de 71 (4 %), con 80 % en 0. La cita literal letra por letra solo coincide en 3 de 202: Fak escribe con errores y al citarlo se corrigen. OJO: eso se midio el 23/10 contando las palabras en CUALQUIER parte del mensaje. Desde el 6g tienen que caer juntas, en una ventana del largo de la cita (1,5 veces sus palabras + 4): es mas estricto y NO esta re-medido sobre esas 71 citas. Lo unico medido con la ventana: de 6 formas corregidas de frases reales de Fak (749f61db, 23/10) se rastrean 4, y la frase ajena «revisa las cotas del molde nuevo» deja de pasar (daba 0,80 sin ventana). Copiada tal cual, la frase pasa siempre (literal).",
     "minLetrasAlReves": 25,
     "_minLetrasAlReves": "Al reves: un mensaje entero de Fak (normalizado) que aparece adentro de la cita tambien la rastrea, si tiene 25 letras o mas (un «dale» o un «si» no rastrea nada).",
     "tiposExentos": [
