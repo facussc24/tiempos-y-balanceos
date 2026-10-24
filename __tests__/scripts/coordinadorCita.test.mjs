@@ -165,6 +165,8 @@ describe('6g · lo que NO cuenta como palabras de Fak (no_es_de_fak y los prefij
     // 24/10 02:27: el guardian tomo un <side-sessions-event> de la app (la nota de una sesion hija) por el ultimo mensaje de Fak
     'aviso de sesiones hijas de la app (<side-sessions-event)': `<side-sessions-event>None of the sessions you started is working now; their notes are above. ${FRASE}</side-sessions-event>`,
     'aviso del CI de la app (<ci-monitor-event)': `<ci-monitor-event>\n${FRASE}\n</ci-monitor-event>`,
+    // 24/10 (auditor 30): el arranque de una sesion traspasada con hand_off_to_session (transcript a6ef87e1) lo escribe la app
+    'arranque de una sesion traspasada (hand_off_to_session)': `Tarea de Facundo Santoro (Ingeniería, Barack Mercosul), traspasada desde otra sesión:\n${FRASE}`,
   };
   for (const [nombre, texto] of Object.entries(casos)) {
     it(`C8 · ROJO · ${nombre}`, () => {

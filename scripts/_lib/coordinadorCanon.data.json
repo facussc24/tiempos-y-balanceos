@@ -282,8 +282,10 @@
       "_leeme": "Prefijos de turnos de usuario que NO escribio Fak y que la lista unica no_es_de_fak (correccionCanon.data.json) no tiene. Se suman ACA y no en la lista unica porque esa lista la usan correccionGuard, cierreGuard, explicarGuard y _probarMejora: cambiarla es decision de la sesion principal (pregunta 6 de PREGUNTAS_FAK del viernes 23/10). Medido el 23/10: el primer mensaje de una hija de start_session arranca con «Background (from the session that started this one):» y no trae origin (d7cd0e37, 6b9eab03, cc6c4c38 del 18-20/10), asi que mensajesDeFak() lo cuenta como de Fak.",
       "prefijos": [
         "[ENCARGO ",
-        "Background (from the session that started this one)"
-      ]
+        "Background (from the session that started this one)",
+        "Tarea de Facundo Santoro"
+      ],
+      "_tarea_de": "24/10/2026 (auditor 30, preexistente): el arranque de una sesion TRASPASADA con hand_off_to_session empieza «Tarea de Facundo Santoro (Ingeniería, Barack Mercosul), traspasada ... desde otra sesión» (transcript a6ef87e1, leido el 24/10): lo escribe la app con el plan que dejo la otra sesion, no Fak."
     },
     "seccionesConPreguntas": [
       "tu pregunta",
