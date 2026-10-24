@@ -1,0 +1,4 @@
+{
+ "usa_catia": true,
+ "descripcion": "Tool Block del examen de muestra CATIA V5 Associate (preguntas 3 a 6 = ejercicio 13 del banco 3D) en CATIA Part Design, una CATPart por pregunta reconstruida con sus A, B y C; material Steel del catalogo de CATIA y masa de CATIA contra la lamina 12 del examen (1 g o menos); volumen y centro de gravedad contra build123d (bien.py del 13); STEP y captura BMP por pregunta"
+}
