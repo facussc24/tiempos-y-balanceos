@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "El gancho para colgar la mochila de la pata del escritorio (mordaza auto-trabante, v2) rehecho EN CATIA desde sus datos: pieza_gancho.py lee el params.json de .claude/skills/cad-design/examples/gancho_mochila/ y hace las mismas operaciones, en el mismo orden, que build_gancho.py (clip en U, rebajes con rampa, brazo y nariz, R8 del fondo, R6 de la union, alivios R4, R3 de la nariz, chaflan de entrada); el STEP de CATIA contra el que genera build_gancho.py con compara.py del 32",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "el solido que genera build_gancho.py --out <carpeta> con el params.json del repo (gancho_mochila_v2.step)",
+  "valor": {"volumen_mm3": 40505.593, "sobra_mm3": 0, "falta_mm3": 0},
+  "unidad": "mm3",
+  "tolerancia": {"sobra_falta_mm3": 1.0, "distancia_mm": 0.01, "cdg_mm": 0.01},
+  "fuente": "build_gancho.py + params.json de .claude/skills/cad-design/examples/gancho_mochila/ (el diseno entregado), corrido en el post-proceso con .venv-cad; criterio del ejercicio 32 (revisar_comparacion de 32_virolador_v16/catia.py). Ese STEP tiene el chaflan de entrada SOLO del lado -Y: el triangulo del lado +Y queda en sentido horario y build123d lo extruye hacia -Z (medido el 24/10; pedido 11 de la principal); se reproduce lo entregado"
+ }
+}
