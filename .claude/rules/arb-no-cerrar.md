@@ -67,7 +67,7 @@ en la skill"*. Y antes: *"porque te lo tengo que decir? no te das cuenta cuando 
 Con las tres:
 
 ```bash
-touch ~/.claude/.arb-cerrar-ok          # en un comando aparte: el guardian mira ANTES de ejecutar
+: > ~/.claude/.arb-cerrar-ok # Fak DD/MM HH:MM: "su frase"   # en un comando aparte (el guardian mira ANTES de ejecutar) y con la cita de Fak de ESTE turno (autonomy-contract §G)
 taskkill //F //PID <pid de produc.exe>
 rm -f ~/.claude/.arb-cerrar-ok          # si el kill no nombro al arb, el permiso quedaria armado
 ```
@@ -94,7 +94,7 @@ tipea la clave, ni corre `_arbLanzar.py` salvo `--diagnostico`.
 Si de verdad hay que cerrarlo: **preguntarle a Fak, con el motivo**. Si ya dijo que sí:
 
 ```bash
-touch ~/.claude/.arb-cerrar-ok
+: > ~/.claude/.arb-cerrar-ok # Fak DD/MM HH:MM: "su frase"
 ```
 
 Vale para **un** comando: el guardián lo consume y vuelve a quedar armado.

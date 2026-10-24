@@ -106,10 +106,10 @@ y se le avisa a Fak que se llego al techo.
 ## Escapes (los escribo yo solo cuando Fak lo pide textual, y lo digo)
 
 ```bash
-echo 15 > ~/.claude/.agent-limit    # 15 Sonnet = 60 puntos cada 10 min (vale 12 h, despues vuelve a 40 solo)
-echo 0 > ~/.claude/.agent-limit     # apaga el CONTEO (idem, 12 h); la regla de esfuerzo sigue
-touch ~/.claude/.agent-opus-ok      # 12 h: Opus y Fable descuentan como Sonnet (4)
-touch ~/.claude/.agent-cupo-ok      # 12 h: saltea el freno de la ventana de 5 h (> 85 %) y apaga el aviso semanal
+echo 15 > ~/.claude/.agent-limit # Fak DD/MM HH:MM: "su frase"    # 15 Sonnet = 60 puntos cada 10 min (vale 12 h, despues vuelve a 40 solo)
+echo 0 > ~/.claude/.agent-limit # Fak DD/MM HH:MM: "su frase"     # apaga el CONTEO (idem, 12 h); la regla de esfuerzo sigue
+: > ~/.claude/.agent-opus-ok # Fak DD/MM HH:MM: "su frase"      # 12 h: Opus y Fable descuentan como Sonnet (4)
+: > ~/.claude/.agent-cupo-ok # Fak DD/MM HH:MM: "su frase"      # 12 h: saltea el freno de la ventana de 5 h (> 85 %) y apaga el aviso semanal
 ```
 
 Fak no corre comandos: cuando lo pide ("usa mas agentes", "no me importa gastar tokens", "usa mas

@@ -89,7 +89,7 @@ copia al pendrive se mide contra el pendrive. El pedido se le deja a CATA como `
 `reference_canal_entre_pcs_pedidos_facundo`). El guardian lo frena (tanda 1.6 del plan del sistema, 16/10/2026; la v1 la
 rechazo el auditor Opus esa noche por frenar 21 de 28 comandos reales que no eran pesados; la v2 se probo con esos 28); el
 10 lo puso el plan y el 100 MB lo puse yo (un video del telefono pesa ~430 MB): si Fak los cambia, van en `guardianes.mjs`.
-Si Fak pide hacerlo aca igual, su pedido gana: pase de un uso `: > ~/.claude/.espacio-ok`, que escribo yo y lo digo.
+Si Fak pide hacerlo aca igual, su pedido gana: pase de un uso `: > ~/.claude/.espacio-ok # Fak DD/MM HH:MM: "su frase"` (con la cita de ESE turno en el mismo comando), que escribo yo y lo digo.
 
 **Nada de esto se borra** para hacer lugar (memoria `material_de_fak_no_se_borra_va_a_la_nube`).
 

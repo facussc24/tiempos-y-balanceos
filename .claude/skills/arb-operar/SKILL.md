@@ -30,7 +30,7 @@ description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Cl
 >   CADA uno y `(Get-Process produc).Responding` entre paso y paso, con tope de tiempo. Nunca
 >   `a | tail && b` (el `tail` siempre devuelve 0) ni una pasada suelta en segundo plano.
 > - **Arb colgado: lo resuelvo yo.** `python scripts/_arbVer.py colgado` (sale 0 si esta colgado
->   y el vigilante activo) → `touch ~/.claude/.arb-cerrar-ok` → `taskkill //F //PID <pid>` →
+>   y el vigilante activo) → `: > ~/.claude/.arb-cerrar-ok # Fak DD/MM HH:MM: "su frase"` → `taskkill //F //PID <pid>` →
 >   esperar al vigilante. A Fak se le avisa, no se le pide nada (regla `arb-no-cerrar.md`).
 > - **Un `no pude poner el foco` o `la ventana no esta activa` en medio de una tanda es Fak que
 >   volvio a la PC: se corta ahi y se le avisa. No se reintenta.** El 06/10/2026 reintente la

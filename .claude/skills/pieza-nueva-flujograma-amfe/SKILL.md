@@ -226,7 +226,7 @@ node scripts/_backup.mjs
   donde iría el maestro no existe; o la línea de comandos trae algo que no conoce.
 - **Listados maestros** (flujogramas y AMFE): por Excel COM, con `_registrarUpperTrimListados.py`
   como molde (instancia propia, fechas como serial, formato copiado solo en las columnas de la
-  tabla). El pase `: > ~/.claude/.apqp-listado-ok` se crea en una llamada **aparte**, antes, y
+  tabla). El pase `: > ~/.claude/.apqp-listado-ok # Fak DD/MM HH:MM: "su frase"` (con la cita de Fak de ESE turno) se crea en una llamada **aparte**, antes, y
   vale una carga.
 - **Numeración:** agregar la pieza a `scripts/_lib/numeracionPatagonia.data.json`.
 - El flujograma: `node scripts/_flujograma.mjs <clave>` y `_emitirApqp.py <NNN-flujograma>`. El

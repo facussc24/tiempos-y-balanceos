@@ -66,7 +66,7 @@ Cuando algo de esta tabla se muda, se saca de la tabla y de `NP_TRANSICION` en e
   lógica en `scripts/_lib/guardianes.mjs`): bloquea guardar, copiar, mover o crear adentro de
   `OneDrive - BARACK ARGENTINA SRL\`. Deja pasar leer, sacar de ahí y el Escritorio.
   Probado en las dos direcciones: `__tests__/scripts/nubePersonalGuard.test.mjs`.
-- Escape de un solo uso, solo si Fak dijo que ESE archivo va ahí: `: > ~/.claude/.nube-personal-ok`.
+- Escape de un solo uso, solo si Fak dijo que ESE archivo va ahí: `: > ~/.claude/.nube-personal-ok # Fak DD/MM HH:MM: "su frase"` (la cita de ESE turno va en el mismo comando: `autonomy-contract.md` §G).
 - Límite conocido: el guardián mira el texto del comando; un script que escribe ahí por dentro no
   lo nombra. Por eso `_nube.mjs` resuelve su destino con `buscarNube()` (`scripts/_lib/nubeRutas.mjs`),
   que devuelve SIEMPRE una ruta de la biblioteca de Ingeniería (test `nubeRutas.test.mjs`).
