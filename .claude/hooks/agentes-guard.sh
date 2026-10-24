@@ -8,16 +8,19 @@
 #
 # Reglas:
 #   Workflow           -> PRENDIDA (Fak, 16/10/2026; re-prendida el 24/10/2026) y con la regla de Agent. La llamada
-#                         no trae model ni effort: van en cada agent() del guion. Se lee el guion (script, el archivo
-#                         de scriptPath o .claude/workflows/<name>.js) y se rechaza un effort fuera de
-#                         low|medium|high|xhigh (max nunca), un model que no existe y un agentType sin definicion
-#                         propia que cumpla el piso. Descuenta UNA vez, con el modelo mas pesado que declara el guion
-#                         (model: o la definicion de su agentType); sin ninguno, sus agentes heredan el de la sesion
-#                         y se cobra como Opus. LIMITES: los agentes de ADENTRO no pasan por este hook (los contaba el
-#                         mod presupuesto-agentes); el esfuerzo heredado de la sesion y un valor calculado no se ven.
-#                         Del 06/08 al 16/10 estuvo DENEGADA: un script multiplica agentes sin que nadie vea la cuenta
-#                         (cap por fase != cap total). Apagarla: "disableWorkflows": true en ~/.claude/settings.json.
-#   Agent / Task      -> maximo LIMITE spawns por ventana de VENTANA_SEG (10 desde el 30/09/2026).
+#                         no trae model ni effort: van en cada agent() del guion. El LECTOR en node (al final de este
+#                         archivo) lee el guion (script, el archivo de scriptPath o .claude/workflows/<name>.js, y UN
+#                         nivel de workflow() anidado; nunca args ni description) y se rechaza un effort fuera de
+#                         low|medium|high|xhigh (max nunca), un model que no existe, un agentType sin definicion propia
+#                         que cumpla el piso, un valor armado con ${...} y un workflow() con argumento calculado.
+#                         Descuenta UNA vez, con el modelo mas pesado del guion (model:, la definicion de su agentType,
+#                         y Opus si algun agent() no declara ninguno: hereda el de la sesion). LIMITES: los agentes de
+#                         ADENTRO no pasan por este hook (los contaba el mod presupuesto-agentes); el esfuerzo que
+#                         heredan de la sesion, un valor en una variable (effort: E) y formas raras de un literal (un
+#                         comentario entre clave y valor, una clave calculada) no se ven; una sesion Fable se cobra
+#                         como Opus. Del 06/08 al 16/10 estuvo DENEGADA: un script multiplica agentes sin que nadie vea
+#                         la cuenta (cap por fase != cap total). Apagarla: "disableWorkflows": true en ~/.claude/settings.json.
+#   Agent / Task       -> maximo LIMITE spawns por ventana de VENTANA_SEG (10 desde el 30/09/2026).
 #                         Pasa solo un subagent_type cuya definicion (en <proyecto>/.claude/agents o
 #                         ~/.claude/agents) diga `model: sonnet` (el default) y `effort: xhigh`. Los
 #                         built-in (general-purpose, Explore, Plan, claude...) no dejan fijar el esfuerzo
@@ -38,8 +41,8 @@
 # Escape para Fak (no hace falta editar este script):
 #   echo 15 > ~/.claude/.agent-limit          # sube el techo a 15
 #   echo 0  > ~/.claude/.agent-limit          # 0 = sin limite (apaga el CONTEO, tambien el de pesados)
-#   touch ~/.claude/.agent-opus-ok           # 12 h: levanta el cupo de PESADOS_MAX Opus/Fable por ventana
-# La regla de esfuerzo (nunca max) no tiene escape. El pase ~/.claude/.workflow-ok (un Workflow cuando estaba
+#   touch ~/.claude/.agent-opus-ok            # 12 h: Opus y Fable descuentan como Sonnet (4); era el cupo de PESADOS_MAX
+# La regla de esfuerzo (nunca max) no tiene pase: ningun archivo la saltea. El pase ~/.claude/.workflow-ok (un Workflow cuando estaba
 # negada) se retiro el 24/10/2026: Workflow ya no se niega por ser Workflow.
 #
 # El override VENCE a las 12 horas (A6, 10/09/2026): se respeta solo si el archivo tiene menos
@@ -374,99 +377,74 @@ else
   # ---------------------------------------------------------------- Workflow: la regla de Agent, leida en el guion
   # Prendida desde el 16/10/2026 (Fak) y re-prendida el 24/10/2026. La llamada trae script | scriptPath | name | args
   # (esquema de la tool y las 25 llamadas de los registros, medido el 24/10/2026): model y effort van en cada
-  # agent(prompt, { model, effort, agentType }) del guion. Va ANTES del `.agent-limit=0`: la regla de esfuerzo no tiene escape.
-  campo scriptPath; W_RUTA=$CAMPO
-  campo name; W_NOMBRE=$CAMPO
-  campo runId; W_CORRIDA=$CAMPO
-  W_EN_LINEA=0
-  RE_W_EN_LINEA='"script"[[:space:]]*:[[:space:]]*"'
-  [[ $PLANO =~ $RE_W_EN_LINEA ]] && W_EN_LINEA=1
-  # Una operacion sobre una corrida que ya existe (solo runId: pararla, ver su estado) no lanza agentes y no se frena:
-  # frenar el STOP de un Workflow desbocado seria peor que dejarlo pasar.
-  if [ -n "$W_CORRIDA" ] && [ "$W_EN_LINEA" = "0" ] && [ -z "$W_RUTA" ] && [ -z "$W_NOMBRE" ]; then permitir; fi
-
-  # Lo que se revisa: el payload (el guion en linea, con \" vuelto ") y, si hay, el archivo del guion.
-  W_TEXTO=${PLANO//\\\"/\"}
-  W_ARCHIVO=""
-  if [ -n "$W_RUTA" ]; then
-    W_ARCHIVO=${W_RUTA//\\\\/\/}; W_ARCHIVO=${W_ARCHIVO//\\/\/}
-    [ -f "$W_ARCHIVO" ] || rechazar_wf "No se puede leer el guion de scriptPath ($W_ARCHIVO): sin leerlo no se ve el modelo ni el esfuerzo de sus agentes."
-  elif [ "$W_EN_LINEA" = "0" ] && [[ $W_NOMBRE =~ ^[A-Za-z0-9._-]+$ ]]; then
-    # Un workflow guardado: el del proyecto y despues el de ~/.claude. Uno de fabrica (sin archivo) se cobra igual.
-    for F in "${CLAUDE_PROJECT_DIR:+${CLAUDE_PROJECT_DIR}/.claude/workflows/${W_NOMBRE}.js}" "${BASE}/workflows/${W_NOMBRE}.js"; do
-      if [ -n "$F" ] && [ -f "$F" ]; then W_ARCHIVO=$F; break; fi
-    done
-  fi
-  if [ -n "$W_ARCHIVO" ]; then
-    W_GUION=""
-    IFS= read -r -d '' W_GUION < "$W_ARCHIVO" || true
-    W_TEXTO+=$'\n'"$W_GUION"
-  fi
-
-  # Cada `clave: 'valor'` (comillas simples, dobles o invertidas; la clave con o sin comillas). Un valor calculado
-  # (una variable) no se lee: limite conocido. Cada texto encontrado se saca entero del resto (//): 400 agent() con el
-  # mismo `effort: 'high'` son UNA vuelta, no 400 (medido: un guion de 57 KB tardaba 10 s).
-  RE_W_ESFUERZO=$'effort["\']?[[:space:]]*:[[:space:]]*["\'`]([A-Za-z0-9_.-]*)'
-  RE_W_MODELO=$'model["\']?[[:space:]]*:[[:space:]]*["\'`]([][A-Za-z0-9_.:-]*)'
-  RE_W_TIPO=$'agentType["\']?[[:space:]]*:[[:space:]]*["\'`]([A-Za-z0-9_.:-]*)'
-
-  # Esfuerzo: como en la llamada a Agent, low|medium|high|xhigh; max nunca.
-  W_RESTO=$W_TEXTO
-  while [[ $W_RESTO =~ $RE_W_ESFUERZO ]]; do
-    V=${BASH_REMATCH[1]}
-    W_RESTO=${W_RESTO//"${BASH_REMATCH[0]}"/}
-    case "$V" in
-      ""|low|medium|high|xhigh) ;;
-      *) rechazar_wf "El guion pide effort '$V' para un agente: el maximo es xhigh, el anteultimo (Fak, 30/09/2026)." ;;
-    esac
-  done
-
-  # Modelo: el mas pesado que declara el guion (W_PESO; -1 = no declara ninguno).
-  W_PESO=-1
-  W_RESTO=$W_TEXTO
-  while [[ $W_RESTO =~ $RE_W_MODELO ]]; do
-    V=${BASH_REMATCH[1]}
-    W_RESTO=${W_RESTO//"${BASH_REMATCH[0]}"/}
+  # agent(prompt, { model, effort, agentType }) del guion. El guion lo lee node (el LECTOR, al final de este archivo):
+  # toma los campos de tool_input de verdad (no los de args), lee el archivo de scriptPath o el guardado de name, sigue
+  # UN nivel de workflow() anidado (lo que la tool permite) y devuelve una linea CLAVE|valor por dato. Aca se decide con
+  # la misma regla que Agent. Es el unico proceso externo del hook y solo corre para Workflow (23 llamadas distintas en
+  # toda la historia de la PC). Va ANTES del `.agent-limit=0`: ningun pase saltea la regla de esfuerzo.
+  W_SALIDA=$(printf '%s' "$INPUT" | node -e "const s=require('fs').readFileSync(process.argv[1],'utf8');eval(s.slice(s.lastIndexOf('//@@LECTOR'+'_WORKFLOW@@')))" "${BASH_SOURCE[0]}" 2>/dev/null)
+  W_RC=$?
+  case "$W_SALIDA" in
+    *"FIN|"*) ;;
+    *) rechazar_wf "No se pudo leer el guion (el lector en node no contesto; salida $W_RC): sin leerlo no se ve el modelo ni el esfuerzo de sus agentes." ;;
+  esac
+  W_PESO=-1   # el modelo mas pesado que declara el guion; -1 = no hay ningun dato
+  while IFS= read -r W_LINEA || [ -n "$W_LINEA" ]; do
+    W_LINEA=${W_LINEA%$'\r'}
+    W_CLAVE=${W_LINEA%%|*}
+    V=${W_LINEA#*|}
     P=-1
-    case "$V" in
-      ""|inherit) ;;
-      haiku|haiku\[*|claude-haiku-*) P=$PESO_HAIKU ;;
-      sonnet|sonnet\[*|claude-sonnet-*) P=$PESO_SONNET ;;
-      opus|opus\[*|claude-opus-*) P=$PESO_OPUS ;;
-      fable|fable\[*|claude-fable-*) P=$PESO_FABLE ;;
-      *) rechazar_wf "El guion pide model '$V': los modelos validos son haiku, sonnet, opus o fable." ;;
-    esac
-    [ "$P" -gt "$W_PESO" ] && W_PESO=$P
-  done
-
-  # agentType: el mismo piso que una definicion para Agent (sonnet+xhigh, haiku+medium/high/xhigh; auditores opus+xhigh).
-  W_RESTO=$W_TEXTO
-  while [[ $W_RESTO =~ $RE_W_TIPO ]]; do
-    V=${BASH_REMATCH[1]}
-    W_RESTO=${W_RESTO//"${BASH_REMATCH[0]}"/}
-    [ -n "$V" ] || continue
-    buscar_def "$V"
-    [ -n "$DEF" ] || rechazar_wf "agentType '$V' no tiene definicion propia (built-in o inexistente): no se le puede fijar modelo y esfuerzo."
-    P=$PESO_SONNET
-    case "$AUDITORES" in
-      *" $V "*)
-        case "$D_MODELO" in opus|claude-opus-*) ;; *) rechazar_wf "La definicion $DEF no dice model: opus (la auditoria final la hace Opus)." ;; esac
-        [ "$D_ESFUERZO" = "xhigh" ] || rechazar_wf "La definicion $DEF no dice effort: xhigh."
-        P=$PESO_OPUS ;;
-      *)
-        case "$D_MODELO" in
-          sonnet|claude-sonnet-*) [ "$D_ESFUERZO" = "xhigh" ] || rechazar_wf "La definicion $DEF no dice effort: xhigh." ;;
-          haiku|claude-haiku-*)
-            case "$D_ESFUERZO" in medium|high|xhigh) ;; *) rechazar_wf "La definicion $DEF (haiku) no dice effort: medium, high o xhigh." ;; esac
-            P=$PESO_HAIKU ;;
-          *) rechazar_wf "La definicion $DEF no dice model: sonnet ni haiku." ;;
+    case "$W_CLAVE" in
+      FIN|SIN_ARCHIVO) ;;   # SIN_ARCHIVO: un workflow de fabrica, sin archivo que leer; se cobra igual
+      CORRIDA) permitir ;;  # solo runId (parar o ver una corrida): no lanza agentes y no se frena
+      HEREDA) P=$PESO_OPUS ;;   # un agent() sin model ni agentType corre en el modelo de la sesion: como Opus
+      NO_SE_LEE) rechazar_wf "No se puede leer el guion $V: sin leerlo no se ve el modelo ni el esfuerzo de sus agentes." ;;
+      NOMBRE_RARO) rechazar_wf "El nombre de workflow '$V' no es el de un workflow guardado (lleva una barra o ..)." ;;
+      CALCULADO) rechazar_wf "El guion arma $V con \${...}: no se puede revisar. Escribilo literal." ;;
+      ANIDADO_CALCULADO) rechazar_wf "El guion llama a workflow() con un argumento calculado ($V): no se puede leer el guion hijo. Escribi el nombre o la ruta literal." ;;
+      ERROR) rechazar_wf "No se pudo leer la llamada ($V)." ;;
+      EFFORT)
+        case "$V" in
+          ""|low|medium|high|xhigh) ;;
+          *) rechazar_wf "El guion pide effort '$V' para un agente: el maximo es xhigh, el anteultimo (Fak, 30/09/2026)." ;;
         esac ;;
+      MODEL)
+        case "$V" in
+          ""|inherit) ;;
+          haiku|haiku\[*|claude-haiku-*) P=$PESO_HAIKU ;;
+          sonnet|sonnet\[*|claude-sonnet-*) P=$PESO_SONNET ;;
+          opus|opus\[*|claude-opus-*) P=$PESO_OPUS ;;
+          fable|fable\[*|claude-fable-*) P=$PESO_FABLE ;;
+          *) rechazar_wf "El guion pide model '$V': los modelos validos son haiku, sonnet, opus o fable." ;;
+        esac ;;
+      TIPO)
+        # el mismo piso que una definicion para Agent: sonnet+xhigh, haiku+medium/high/xhigh; auditores opus+xhigh
+        if [ -n "$V" ]; then
+          buscar_def "$V"
+          [ -n "$DEF" ] || rechazar_wf "agentType '$V' no tiene definicion propia (built-in o inexistente): no se le puede fijar modelo y esfuerzo."
+          P=$PESO_SONNET
+          case "$AUDITORES" in
+            *" $V "*)
+              case "$D_MODELO" in opus|claude-opus-*) ;; *) rechazar_wf "La definicion $DEF no dice model: opus (la auditoria final la hace Opus)." ;; esac
+              [ "$D_ESFUERZO" = "xhigh" ] || rechazar_wf "La definicion $DEF no dice effort: xhigh."
+              P=$PESO_OPUS ;;
+            *)
+              case "$D_MODELO" in
+                sonnet|claude-sonnet-*) [ "$D_ESFUERZO" = "xhigh" ] || rechazar_wf "La definicion $DEF no dice effort: xhigh." ;;
+                haiku|claude-haiku-*)
+                  case "$D_ESFUERZO" in medium|high|xhigh) ;; *) rechazar_wf "La definicion $DEF (haiku) no dice effort: medium, high o xhigh." ;; esac
+                  P=$PESO_HAIKU ;;
+                *) rechazar_wf "La definicion $DEF no dice model: sonnet ni haiku." ;;
+              esac ;;
+          esac
+        fi ;;
+      *) rechazar_wf "Respuesta inesperada del lector del guion: $W_LINEA" ;;
     esac
     [ "$P" -gt "$W_PESO" ] && W_PESO=$P
-  done
+  done <<< "$W_SALIDA"
 
-  # Sin modelo declarado, los agentes heredan el de la sesion, que este hook no ve: se cobra como Opus (en esta PC la
-  # sesion es Opus, "model": "opus[1m]"). Una sesion en Fable queda cobrada de menos: limite conocido.
+  # Sin ningun dato (un workflow de fabrica, un guion sin agent()), como Opus: el modelo de la sesion en esta PC
+  # ("model": "opus[1m]"). Una sesion en Fable queda cobrada de menos: limite conocido.
   if [ "$W_PESO" -lt 0 ]; then PESO=$PESO_OPUS; else PESO=$W_PESO; fi
   # Con el pase de Fak (.agent-opus-ok) Opus y Fable descuentan como Sonnet, igual que en Agent.
   if [ "$PESO" -gt "$PESO_SONNET" ] && pase_modelo_vigente; then PESO=$PESO_SONNET; fi
@@ -529,3 +507,100 @@ fi
 printf '%s %s %s\n' "$AHORA" "$TOOL" "$PESO" >> "$LOG"
 permitir   # P5: sale con 0; con AVISO puesto imprime el JSON y anota. No vuelve: el exit 0 de abajo queda de respaldo.
 exit 0
+
+# ---------------------------------------------------------------- LECTOR de la rama Workflow (node)
+# Bash no llega aca (esta despues del exit) y el heredoc es para que `bash -n` no lo lea como bash. La rama Workflow
+# le pasa el payload por stdin a node, que corre desde la marca de abajo hasta el final. Solo LEE y dice lo que ve, una
+# linea CLAVE|valor por dato; la regla la aplica el bash de arriba. Se lee: el guion de tool_input.script, el archivo
+# de tool_input.scriptPath (le gana a script y a name, como en la tool) o .claude/workflows/<name>.js del proyecto o de
+# ~/.claude, y UN nivel de workflow('nombre') / workflow({ scriptPath | name }) con literal. No se lee args ni
+# description. Limites: un valor en una variable (effort: E), formas raras de un literal (un comentario entre la
+# clave y el valor, parentesis, una clave calculada) y un workflow de fabrica (sin archivo).
+: <<'//FIN-LECTOR-WORKFLOW'
+//@@LECTOR_WORKFLOW@@
+const fs = require('fs'), path = require('path'), os = require('os');
+const salida = [];
+const decir = (k, v = '') => salida.push(k + '|' + String(v).replace(/[\r\n]+/g, ' '));
+// Lo que va entre el abridor de src[i] y su cierre, salteando strings; aproximado (un ${} con comillas adentro lo
+// confunde) y con tope, para que un parentesis sin cerrar no recorra el guion entero en cada llamada.
+const hastaCierre = (src, i) => {
+  let prof = 0, q = null, j = i;
+  const tope = Math.min(src.length, i + 50000);
+  for (; j < tope; j++) {
+    const c = src[j];
+    if (q) { if (c === '\\') { j++; continue; } if (c === q) q = null; continue; }
+    if (c === '"' || c === "'" || c === '`') { q = c; continue; }
+    if (c === '(' || c === '[' || c === '{') prof++;
+    else if (c === ')' || c === ']' || c === '}') { prof--; if (prof === 0) return src.slice(i + 1, j); }
+  }
+  return src.slice(i + 1, j);
+};
+const literal = (clave) => new RegExp('(?:^|[^\\w$])["\']?' + clave + '["\']?\\s*:\\s*(["\'`])((?:\\\\.|(?!\\1)[^\\\\\\n])*)\\1');
+try {
+  const p = JSON.parse(fs.readFileSync(0, 'utf8'));
+  const ti = (p && typeof p.tool_input === 'object' && p.tool_input) || {};
+  const casa = process.env.HOME || os.homedir();
+  const proyecto = process.env.CLAUDE_PROJECT_DIR || '';
+  const cwd = typeof p.cwd === 'string' && p.cwd ? p.cwd : process.cwd();
+  const txt = (v) => (typeof v === 'string' && v ? v : '');
+  if (txt(ti.runId) && !txt(ti.script) && !txt(ti.scriptPath) && !txt(ti.name)) {
+    decir('CORRIDA');
+  } else {
+    const guiones = [];
+    const deRuta = (r) => {
+      const f = path.resolve(cwd, /^~[\\/]/.test(r) ? path.join(casa, r.slice(2)) : r);
+      try { guiones.push(fs.readFileSync(f, 'utf8')); } catch { decir('NO_SE_LEE', f); }
+    };
+    const guardado = (n) => {
+      if (n.includes('${')) return decir('ANIDADO_CALCULADO', n);
+      if (/[\\/]|\.\./.test(n)) return decir('NOMBRE_RARO', n);
+      const dirs = [proyecto && path.join(proyecto, '.claude', 'workflows'), path.join(casa, '.claude', 'workflows')].filter(Boolean);
+      for (const d of dirs) for (const ext of ['.js', '.mjs']) {
+        const f = path.join(d, n + ext);
+        if (fs.existsSync(f)) return guiones.push(fs.readFileSync(f, 'utf8'));
+      }
+      decir('SIN_ARCHIVO', n);
+    };
+    if (txt(ti.scriptPath)) deRuta(ti.scriptPath);
+    else {
+      if (txt(ti.script)) guiones.push(ti.script);
+      if (txt(ti.name)) guardado(ti.name);
+    }
+    // UN nivel de workflow() anidado: el hijo se lee igual que el de arriba (la referencia de la tool: un solo nivel).
+    for (const t of guiones.slice()) {
+      const re = /(?<![\w$.])workflow\(/g;
+      let m;
+      while ((m = re.exec(t))) {
+        const arg = hastaCierre(t, m.index + m[0].length - 1).trim();
+        let a;
+        if ((a = /^(["'`])([^"'`\n]+)\1/.exec(arg))) { guardado(a[2]); continue; }
+        if (arg.startsWith('{')) {
+          const sp = literal('scriptPath').exec(arg), nm = literal('name').exec(arg);
+          if (/(?:^|[^\w$])["']?scriptPath["']?\s*:/.test(arg)) {   // scriptPath le gana a name: si no es literal, calculado
+            if (sp && !sp[2].includes('${')) { deRuta(sp[2]); continue; }
+          } else if (nm) { guardado(nm[2]); continue; }
+          else if (literal('script').test(arg)) continue;   // guion en linea: ya esta en el texto del padre
+        }
+        decir('ANIDADO_CALCULADO', arg.slice(0, 60));
+      }
+    }
+    for (const t of guiones) {
+      for (const [clave, k] of [['effort', 'EFFORT'], ['model', 'MODEL'], ['agentType', 'TIPO']]) {
+        const re = new RegExp(literal(clave).source, 'g');
+        let m;
+        while ((m = re.exec(t))) decir(m[2].includes('${') ? 'CALCULADO' : k, m[2].includes('${') ? clave : m[2]);
+      }
+      // Un agent() que no declara model ni agentType corre en el modelo de la sesion.
+      const re = /(?<![\w$.])agent\(/g;
+      let m;
+      while ((m = re.exec(t))) {
+        if (!/(?:^|[^\w$])["']?(?:model|agentType)["']?\s*:/.test(hastaCierre(t, m.index + m[0].length - 1))) { decir('HEREDA'); break; }
+      }
+    }
+  }
+} catch (e) {
+  decir('ERROR', (e && e.message ? e.message : String(e)).slice(0, 120));
+}
+decir('FIN');
+process.stdout.write([...new Set(salida)].join('\n') + '\n');
+//FIN-LECTOR-WORKFLOW
