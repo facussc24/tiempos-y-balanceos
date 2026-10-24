@@ -140,7 +140,17 @@ class Juez(unittest.TestCase):
         return {"ok": False, "ok_pasos": True, "pendiente": True,
                 "volumen_catia": {"tool_block_e1": VOL[1], "tool_block_e2": VOL[2]},
                 "masa_catia_g": {"tool_block_e1": MASA[1], "tool_block_e2": MASA[2]}, "cdg_catia_mm": json.loads(json.dumps(CDG)),
-                "volumen_step_catia_en_build123d": {"tool_block_e1": VOL[1], "tool_block_e2": VOL[2] - 0.001}}
+                "volumen_step_catia_en_build123d": {"tool_block_e1": VOL[1], "tool_block_e2": VOL[2] - 0.001},
+                "step_catia_en_build123d": {p: {"solidos": 1, "cascaras": 1, "caras_sueltas": 0}
+                                            for p in ("tool_block_e1", "tool_block_e2")}}
+
+    def test_cara_suelta_en_el_step(self):
+        """Auditor de la tanda (24/10): un STEP con una cara suelta pasaba."""
+        s = self.salida()
+        s["step_catia_en_build123d"]["tool_block_e2"].update(cascaras=2, caras_sueltas=1)
+        r = self.juez(s)
+        self.assertFalse(r["ok"])
+        self.assertIn("no es 1 solido cerrado", r["error"])
 
     def juez(self, s, gemelo=None):
         ej = cargar_ej36()

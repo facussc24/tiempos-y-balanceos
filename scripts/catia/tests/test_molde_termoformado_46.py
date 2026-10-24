@@ -23,6 +23,7 @@ MOLDE = {"0": {"huella_pulg2": 120.0, "formada_pulg2": 208.0, "relacion": 1.7333
          "4": {"huella_pulg2": 120.0, "formada_pulg2": 201.018, "relacion": 1.6752, "chapa_partida_pulg": 0.1675,
                "n_lados": 4}}                                      # 46_r1, R21 de CATA, 24/10/2026 13:14
 VOL = {"molde_0": 3932895.36, "molde_4": 3832911.295}
+TOPO = {"solidos": 1, "cascaras": 1, "caras_sueltas": 0}       # 46_final2, los dos moldes
 
 
 def cargar_ej46():
@@ -75,14 +76,24 @@ class Construir(unittest.TestCase):
         tmp = tempfile.mkdtemp(prefix="ej46-c-")
         with open(os.path.join(tmp, "salida.json"), "w", encoding="utf-8") as f:
             json.dump(dict(salida, ok=False, ok_pasos=True, pendiente=True, volumen_catia=dict(VOL),
-                           volumen_step_catia_en_build123d=dict(VOL)), f)
+                           volumen_step_catia_en_build123d=dict(VOL),
+                           step_catia_en_build123d={p: dict(TOPO) for p in VOL}), f)
         self.assertTrue(ej.cerrar_con_papel(tmp)["ok"])
 
 
 class Juez(unittest.TestCase):
     def salida(self):
         return {"ok": False, "ok_pasos": True, "pendiente": True, "molde": json.loads(json.dumps(MOLDE)),
-                "volumen_catia": dict(VOL), "volumen_step_catia_en_build123d": dict(VOL)}
+                "volumen_catia": dict(VOL), "volumen_step_catia_en_build123d": dict(VOL),
+                "step_catia_en_build123d": {p: dict(TOPO) for p in VOL}}
+
+    def test_cara_suelta_en_el_step(self):
+        """Auditor de la tanda (24/10): un STEP con una cara suelta pasaba."""
+        s = self.salida()
+        s["step_catia_en_build123d"]["molde_4"].update(cascaras=2, caras_sueltas=1)
+        r = self.juez(s)
+        self.assertFalse(r["ok"])
+        self.assertIn("no es 1 solido cerrado", r["error"])
 
     def juez(self, s):
         ej = cargar_ej46()

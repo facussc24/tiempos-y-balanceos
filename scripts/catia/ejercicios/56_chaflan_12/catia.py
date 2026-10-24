@@ -138,7 +138,7 @@ def cerrar_con_referencia(carpeta, gemelo_con=None, comparar_con=None):
         problemas.append(f"volumen de CATIA {vc} contra la cuenta {V_PLANOS:.3f} mm3 (esquinas con los planos que se cortan)")
     if not _centro_cerca(cc, CDG, jc.TOL_CDG):
         problemas.append(f"centro de CATIA {cc} contra {CDG}")
-    if st.get("solidos") != 1 or st.get("caras_sueltas") != 0:
+    if (st.get("solidos"), st.get("cascaras"), st.get("caras_sueltas")) != (1, 1, 0):      # auditor: tambien las cascaras
         problemas.append(f"el STEP de CATIA tiene {st.get('solidos')} solidos y {st.get('caras_sueltas')} caras sueltas")
     paso = os.path.join(carpeta, EJ, PARTE + ".stp")
     g = (gemelo_con or gemelo)(os.path.join(carpeta, "gemelo"), paso)

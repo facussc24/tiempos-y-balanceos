@@ -175,6 +175,14 @@ def cerrar_con_respuestas(carpeta, medir_gemelo=gemelo):
     v1 = ((s.get("etapas") or {}).get("1") or {}).get("volumen_catia")
     if not isinstance(v_step, (int, float)) or v1 is None or not abs(v_step - v1) <= TOL_VOL:
         problemas.append(f"el STEP de la etapa 1 ({v_step}) no da su volumen de CATIA ({v1})")
+    # auditor de la tanda de CATA (24/10): una cara suelta en el STEP pasaba (salio de verdad en 54_r1 y 31_final3); el
+    # control del 24 y del 49: un solido, una cascara, ninguna cara suelta
+    sp = s.get("step_catia_en_build123d")
+    for p in (PARTE,):
+        t = sp.get(p) if isinstance(sp, dict) else None
+        topo = (t.get("solidos"), t.get("cascaras"), t.get("caras_sueltas")) if isinstance(t, dict) else None
+        if topo != (1, 1, 0):
+            problemas.append(f"el STEP de {p} no es 1 solido cerrado (solidos, cascaras, caras sueltas: {topo})")
     s["juez_por_etapa"] = juez
     s["ok"] = s["ok_pasos"] and not problemas and not s["error_juez"]   # una excepcion fuera de un paso: nunca verde
     texto = "; ".join(([s["error_juez"]] if s["error_juez"] else []) + problemas)

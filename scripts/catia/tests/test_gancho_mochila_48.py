@@ -96,11 +96,13 @@ class ContraBuild123d(unittest.TestCase):
 
 
 class Juez(unittest.TestCase):
-    def juez(self, comparado=None, ref=None, cdg_catia=None, ok_pasos=True, error=None):
+    def juez(self, comparado=None, ref=None, cdg_catia=None, ok_pasos=True, error=None, topo=None):
         ej = cargar("ej48_catia_j", os.path.join(EJ48, "catia.py"))
         tmp = tempfile.mkdtemp(prefix="ej48-")
         s = {"ok": False, "ok_pasos": ok_pasos, "pendiente": True,
-             "step_catia_en_build123d": {"gancho_mochila_v2": {"cdg_mm": cdg_catia or list(CDG), "solidos": 1}}}
+             "step_catia_en_build123d": {"gancho_mochila_v2": {"cdg_mm": cdg_catia or list(CDG), "solidos": 1, "cascaras": 1, "caras_sueltas": 0}}}
+        if topo:
+            s["step_catia_en_build123d"]["gancho_mochila_v2"].update(topo)
         if error:
             s["error"] = error
         with open(os.path.join(tmp, "salida.json"), "w", encoding="utf-8") as f:
@@ -109,6 +111,12 @@ class Juez(unittest.TestCase):
         return ej.cerrar_con_referencia(tmp, referencia=lambda carpeta: r,
                                         comparar_con=lambda a, b: dict(comparado or COMPARA),
                                         medir=lambda args: {"partes": {"r": {"cdg_mm": list(CDG)}}})
+
+    def test_cara_suelta_en_el_step(self):
+        """Auditor de la tanda (24/10): un STEP con una cara suelta pasaba."""
+        s = self.juez(topo={"cascaras": 2, "caras_sueltas": 1})
+        self.assertFalse(s["ok"])
+        self.assertIn("no es 1 solido cerrado", s["error"])
 
     def test_verde(self):
         s = self.juez()
