@@ -16,7 +16,11 @@ import { ModuleErrorBoundary } from './components/ui/ModuleErrorBoundary';
 import { isProductCatalogSeeded, seedProductCatalog } from './utils/repositories/productRepository';
 import { PRODUCTS, CUSTOMER_LINES } from './src/data/productCatalogSeed';
 import { logger } from './utils/logger';
-import './utils/seed/cleanupAmfeActions'; // One-time cleanup script (window.__cleanupAmfeActions)
+// HOY-37 (cola, si de Fak 15/10): el script de limpieza de una sola vez (window.__cleanupAmfeActions) escribe en Supabase sin
+// copia y con el texto prohibido de amfe.md §4: solo en desarrollo, nunca en el build de produccion.
+if (import.meta.env.DEV) {
+    import('./utils/seed/cleanupAmfeActions');
+}
 import { AuthProvider } from './components/auth/AuthProvider';
 import { LoginPage } from './components/auth/LoginPage';
 import AppSidebar from './components/layout/AppSidebar';
