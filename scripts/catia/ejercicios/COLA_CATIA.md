@@ -27,7 +27,7 @@ Carpeta `scripts/catia/ejercicios/NN_nombre/` con:
 - Una corrida real con `salida.json → ok: true` (la ruta y la fecha van en el commit y en la fila del README).
 
 Ciclo por ejercicio: `git pull` → construir → correr en CATIA (principal: `C:\Dev\_catia_env\Scripts\python.exe`, sin otra
-CATIA abierta; CATA: su CATIA 2022 con el Python de `obrero.py`, una pieza por vez) → juez verde → revisor `explorador`
+CATIA abierta; CATA: su CATIA R21 (B21, 32 bits) con el Python de `obrero.py`, una pieza por vez) → juez verde → revisor `explorador`
 con un modelo DISTINTO del que construyó (las dos sesiones corren en Opus: el revisor va con `model: fable`) → commit con rutas (solo la carpeta del ejercicio y su test) → push. Los `ej*.py` de la práctica del 19/10
 que se citan viven en `C:\Dev\_catia_practica\` de la PC principal; el método está escrito en `reference/catia.md` de la
 skill (en el repo). Si CATA necesita uno, lo pide por `6- PEDIDOS ENTRE PC (FACUNDO)`.
@@ -47,7 +47,7 @@ skill (en el repo). Si CATA necesita uno, lo pide por `6- PEDIDOS ENTRE PC (FACU
 | 16 | CATA | `16_palanca_ensamble` | El 06 como **ensamble** (CATProduct): base, soporte y palanca cada una en su CATPart, con restricciones (eje de la palanca coaxial con el del soporte, contacto); pose 0° | `_conjunto.py` del 06: eje en (0, 0, 80) dirección −Y, palanca horizontal hacia +X; el centro de gravedad del conjunto contra build123d (`Analyze.GetGravityCenter` por VBScript) | `06_palanca_0_60/bien.py` (base, soporte, palanca) | ej42 (ensamble bracket + eje: dos coincidencias punto-punto; cdg al milésimo); el `catia.py` 06 del juez |
 | 17 | principal | `17_palanca_dmu` | El 16 con **DMU Kinematics**: junta de revolución, comando de ángulo 0 → 60°; en 0, 30 y 60° la punta de la palanca contra la trigonometría; choque exacto (`AddNewIntersect`, nunca `Clashes`) contra la base de `mal_1` (choca entre ~25 y 45°, libre en 0 y 60) y de `mal_3` (choca a 60); luz de `mal_2` a 50° (15 mm) | `tarea.yaml` del 06 (los tres mutantes dicen dónde chocan y a cuánto pasan; el `_conjunto.py` lo verifica al construir) | `06_palanca_0_60/mal_1_choca_a_35.py`, `mal_2_pellizco_15_a_50.py`, `mal_3_choca_a_60.py` | ej49 (biela-manivela: juntas y comando en UNA macro VBScript, exacta en 6 ángulos); `choque_exacto_en_catia.py`; `catia.md` «DMU» |
 
-### Filas 18 a 29 (agregadas el 24/10/2026 cerca de las 10:05, mismo reparto)
+### Filas 18, 19 y 22 a 31 (agregadas el 24/10/2026 cerca de las 10:05, mismo reparto; las 20 y 21 son de otra sesion de la PC principal, el constructor de la casa: no son de esta tanda)
 
 Dassault publica UN solo examen de muestra con respuestas (el de Part Design: 07, 11, 12 y 15 lo cubren entero; Assembly
 y Surface Design no tienen muestra publicada, búsqueda del 24/10). Siguen las piezas de afuera con la respuesta escrita,
@@ -62,16 +62,16 @@ para uso educativo); la del CSWP: https://sites.ualberta.ca/~dnobes/CSWA/CSWP_Ma
 |---|---|---|---|---|---|
 | 18 | CATA | `18_cswp_etapa1` | CSWP Sample Exam 2 de SolidWorks, etapa 1, PARAMÉTRICA (A..E + X = A/3, Y = B/3 + 10) con las 3 respuestas cambiando solo los parámetros | PDF de la U. de Alberta, pág. 18-19 y 27: 14 207,34 / 16 490,45 / 15 100,47 g, densidad 0,0077 g/mm³ | ej26, ej27 (las 3 a ≤ 0,02 g) |
 | 19 | principal | `19_cswp_etapa2` | CSWP etapa 2 (preguntas 4 y 5): modificar la pieza de la etapa 1 (sacar un bloque, bolsillo nuevo, garganta) | mismo PDF: 13 206,40 y 14 208,00 g | ej28 |
-| 20 | CATA | `20_ttt_post_cap` | TTT 01-02 Post Cap: Shaft con cuarto de elipse, asa con Rib, Groove con desmolde 4°, R3 | guía: 43,09 g, ABS 1 020 | ej30 |
-| 21 | principal | `21_ttt_light_cap` | TTT 01-10 Light Cap: sección de pared extruida simétrica + revoluciones de 180° | guía: 211,30 g | ej31b |
-| 22 | CATA | `22_ttt_angle_bracket` | TTT 01-04 Angle Bracket: R4 corrido y recortado, pata, ranuras | guía: 310,00 g, acero 7 800 | ej34 |
-| 23 | principal | `23_ttt_bearing_jig` | TTT 01-06 Bearing Jig: perfil con tangencias (de_build123d) + Intersect, chavetero | guía: 328,02 g | ej36 |
-| 24 | CATA | `24_ttt_tie_plate` | TTT 01-08 Tie Plate: oreja + Mirror antes de la placa | guía: 3 387,06 g | ej35 |
-| 25 | principal | `25_ttt_curved_support` | TTT 23-T-24 Curved Support: puente con tangencias encadenadas R30 / R66 / 8° | guía: 1 294 g ± 3, acero 7 800 | ej38 |
-| 26 | CATA | `26_ttt_bearing_bracket` | TTT 01-01 Bearing Bracket: punta en dos arcos de 90°, cola de milano | guía: 797,15 g | ej37 |
-| 27 | principal | `27_ttt_buffer_stand` | TTT 24-SPO-06 Buffer Stand, plano en PULGADAS (× 25,4) | guía: 3,923 lb ± 0,02 (ojo con la unidad) | ej39 |
-| 28 | CATA | `28_ttt_corner_tie` | TTT 01-09 Corner Tie: pestaña armada plana + Rotate + Split | guía: 307,23 g | ej40 |
-| 29 | principal | `29_ttt_sm_hanger` | TTT 23-02-02 SM Hanger (chapa de 4) como sólido: la R21 no tiene la biblioteca de chapa por COM | guía: 1 028 g ± 10 | ej54 |
+| 22 | CATA | `22_ttt_post_cap` | TTT 01-02 Post Cap: Shaft con cuarto de elipse, asa con Rib, Groove con desmolde 4°, R3 | guía: 43,09 g, ABS 1 020 | ej30 |
+| 23 | principal | `23_ttt_light_cap` | TTT 01-10 Light Cap: sección de pared extruida simétrica + revoluciones de 180° | guía: 211,30 g | ej31b |
+| 24 | CATA | `24_ttt_angle_bracket` | TTT 01-04 Angle Bracket: R4 corrido y recortado, pata, ranuras | guía: 310,00 g, acero 7 800 | ej34 |
+| 25 | principal | `25_ttt_bearing_jig` | TTT 01-06 Bearing Jig: perfil con tangencias (de_build123d) + Intersect, chavetero | guía: 328,02 g | ej36 |
+| 26 | CATA | `26_ttt_tie_plate` | TTT 01-08 Tie Plate: oreja + Mirror antes de la placa | guía: 3 387,06 g | ej35 |
+| 27 | principal | `27_ttt_curved_support` | TTT 23-T-24 Curved Support: puente con tangencias encadenadas R30 / R66 / 8° | guía: 1 294 g ± 3, acero 7 800 | ej38 |
+| 28 | CATA | `28_ttt_bearing_bracket` | TTT 01-01 Bearing Bracket: punta en dos arcos de 90°, cola de milano | guía: 797,15 g | ej37 |
+| 29 | principal | `29_ttt_buffer_stand` | TTT 24-SPO-06 Buffer Stand, plano en PULGADAS (× 25,4) | guía: 3,923 lb ± 0,02 (ojo con la unidad) | ej39 |
+| 30 | CATA | `30_ttt_corner_tie` | TTT 01-09 Corner Tie: pestaña armada plana + Rotate + Split | guía: 307,23 g | ej40 |
+| 31 | principal | `31_ttt_sm_hanger` | TTT 23-02-02 SM Hanger (chapa de 4) como sólido: la R21 no tiene la biblioteca de chapa por COM | guía: 1 028 g ± 10 | ej54 |
 
 ## Lo que sigue, en este orden (Fak, 24/10/2026 a la mañana)
 
@@ -112,8 +112,6 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 17 | pendiente | | |
 | 18 | pendiente | | |
 | 19 | pendiente | | |
-| 20 | pendiente | | |
-| 21 | pendiente | | |
 | 22 | pendiente | | |
 | 23 | pendiente | | |
 | 24 | pendiente | | |
@@ -122,3 +120,5 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 27 | pendiente | | |
 | 28 | pendiente | | |
 | 29 | pendiente | | |
+| 30 | pendiente | | |
+| 31 | pendiente | | |
