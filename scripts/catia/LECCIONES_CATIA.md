@@ -104,6 +104,14 @@ Cada lección dice de qué ejercicio y qué PC sale, y cómo se midió. Lo que y
 - **Pasar por STEP mueve el volumen ~4e-6 en una pieza grande con arcos** (29, principal: el gemelo de build123d da
   228 696,0 en memoria y 228 695,116 al releer su STEP): el cruce de volumen va a 0,5 mm³ o 1e-5 del volumen.
 
+- **Chapa como sólido** (31, CATA): sin la biblioteca de Sheet Metal por COM en la R21, la chapa sale exacta con perfiles
+  gruesos (R interior y exterior en el croquis), Fill + ThickSurface para el ensanche y dos simetrías (1 027,70 g contra
+  1 028 ± 10).
+- **Sin gemelo propio, el cruce va contra un número de referencia con su fuente** (31, CATA): el código de la guía de
+  build123d (de terceros) no entra al repo; se corre aparte y su volumen va en la configuración del ejercicio.
+- **Un comparador que hace booleanas exactas con tolerancia difusa sobre un STEP de miles de caras puede tardar más de
+  15 minutos** (32, principal, 24/10: `compara.py` contra el virolador v16 entregado): se midió antes de cortarlo.
+
 ## DMU Kinematics (17, principal)
 
 - **`NbDof` cuenta el grado libre que mueve el comando**: un mecanismo de una revolución y un comando da «1;1;1» y se

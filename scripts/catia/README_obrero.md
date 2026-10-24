@@ -77,6 +77,7 @@ Un solo obrero por PC (candado en `%LOCALAPPDATA%\obrero_catia\obrero.lock`). To
 | `28_ttt_bearing_bracket` (CATA) | Too Tall Toby 01-01 Bearing Bracket con el molde del 24. | Sí, R21 de CATA 24/10 10:54: 797,146 g contra 797,15 |
 | `29_ttt_buffer_stand` | Too Tall Toby 24-SPO-06 Buffer Stand, plano en PULGADAS (ej39 de la práctica copiado sin cambios, `practica_en_juez.py`); masa en libras con la tolerancia de la guía (± 0,02 lb); el cruce de volumen va a 0,5 mm³ o 1e-5 del volumen (medido: pasar por STEP mueve 0,9 mm³ en esta pieza). | Sí, R21 de la PC principal 24/10 11:23: 3,9327 lb contra 3,923 ± 0,02 |
 | `30_ttt_corner_tie` (CATA) | Too Tall Toby 01-09 Corner Tie con el molde del 24 (Aluminium pasado a 2 700). | Sí, R21 de CATA 24/10 10:54: 307,231 g contra 307,23 |
+| `31_ttt_sm_hanger` (CATA) | Too Tall Toby 23-02-02 SM Hanger, chapa de 4 como SÓLIDO (la R21 no tiene Sheet Metal por COM): perfiles gruesos, Fill + ThickSurface y dos simetrías, con el molde del 24; masa con la tolerancia de la guía (± 10 g); cruce contra el volumen de la referencia de la guía corrida aparte. | Sí, R21 de CATA 24/10 11:28: 1 027,70 g contra 1 028 ± 10 |
 
 Los ejercicios 03, 05 y 06 importan `juez_comun.py` (por eso `armar_obrero.py` lo copia junto con `medir_b123d.py`). En la
 notebook no hay `.venv-cad`: corren igual, pero sin build123d la salida queda con `ok: false` y el motivo («no está el
