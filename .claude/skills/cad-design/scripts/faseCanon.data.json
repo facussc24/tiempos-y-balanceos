@@ -1,0 +1,66 @@
+{
+  "_que_es": "Canon del gate de fases del diseno 3D con criterio de salida y un freno en el medio (gate_fase.py; lo corre export_deliverables.py antes de crear la carpeta destino). Nace de la falla real: Fak disena por fases y se las saltean o se sigue optimizando despues de su OK (memorias feedback_diseno_3d_por_fases_y_frenar_a_fak.md, 20/10/2026, virolador del Upper Trim: «entraste en detalles antes de hacer que funcione 100 % el diseno... debo respetar mis fases»; y feedback_no_seguir_optimizando_despues_del_ok.md, la probeta de tornillo que andaba y se rompio en tres iteraciones mas). Propuesta P1 de docs/PROPUESTAS_SKILL_3D_2026-10-23.md (l.47-84) y su Agregado (l.639: la fase 4 suma el cierre en planta de P15, que no frena la entrega). Fak, 23/10/2026: gate que corre solo, con test, en modo AVISO 7 dias y despues freno (a Fak le avisa y si confirma pasa).",
+  "version": "2026-10-24.1",
+  "aviso_hasta": "2026-10-30",
+  "_aviso_hasta": "Hasta esta fecha INCLUSIVE el gate avisa (exit 0, AVISO en pantalla, veredicto rojo en la linea JSON) y el trabajo sigue; un AVISO NUNCA escribe un cierre de fase en fases.json. Desde el dia siguiente (31/10/2026) frena: gate_fase.py sale con 1 y export_deliverables.py con SystemExit [GATE fases] antes de crear la carpeta destino. NO MEDIDO (fases.json ilegible, STEP ausente, evidencia de barrido que no valida) sale con 2 siempre, nunca verde. La fecha sale del reloj de la PC; --hoy o CAD_HOY=AAAA-MM-DD solo valen con CAD_GATE_TEST=1 (los tests). Renglon en scripts/_lib/retiros.data.json (retiros_decididos, cad-design:fases-aviso-a-freno).",
+  "frase_minima": 10,
+  "_frase_minima": "La misma de cantos y barrido: la frase de Fak (OK de la fase, --acepto-fase) o el motivo (--sin-moviles, --nota, --reason) necesita 10 caracteres o mas; «ok» o vacia se niega. La puede tipear la misma IA: por eso queda escrita con fecha y firma en fases.json y se lista al cerrar (casos_gates_3c_3f.md, cierre del critico 3).",
+  "fases": [
+    {
+      "n": 0,
+      "nombre": "contrato",
+      "criterio": "GATE P (proceso_declarado, con el pliego vigente) y GATE 0 (zona_confirmada) en el manifest, mas el OK de Fak al contrato",
+      "fuente": "P1 l.57: «0, contrato: P4, con los GATE P, 0, 1 y 2 de hoy, que son de antes de modelar»",
+      "usa_step": false,
+      "pide_ok_fak": true
+    },
+    {
+      "n": 1,
+      "nombre": "concepto",
+      "criterio": "el concepto elegido y las alternativas descartadas, escritos (--nota); es texto declarado: ningun control lo verifica",
+      "fuente": "P1 l.58: «1, concepto y busqueda: 2 o 3 alternativas con tabla de decision ... Lo de las alternativas queda como texto: ningun control lo verifica»; l.70: en la fase 1 se permite un boceto crudo",
+      "usa_step": false,
+      "pide_ok_fak": false
+    },
+    {
+      "n": 2,
+      "nombre": "mecanismo",
+      "criterio": "barrido.py verde (o aceptado por Fak) sobre el conjunto vigente si hay partes moviles, o «sin partes moviles» declarado con motivo; firma del STEP del conjunto; OK de Fak al mecanismo",
+      "fuente": "P1 l.59: «2, mecanismo con geometria cruda: sale con el barrido verde (P3) y el atrapamiento revisado (P12)»; l.65: sin barrido verde sobre el conjunto vigente no corren los constructores de detalle ni el PDF de entrega; l.74: el freno corre solo si hay partes que se mueven",
+      "usa_step": true,
+      "pide_ok_fak": true
+    },
+    {
+      "n": 3,
+      "nombre": "detalle",
+      "criterio": "gate_aristas.py --cantos-convexos medido sobre el STEP vigente: verde, aceptado por Fak, o sin zona de mano declarada (queda como aviso, como en la entrega: cantosCanon sin_zona_en_entrega)",
+      "fuente": "P1 l.60: «3, detalle con constructores: P2. Sale con los cantos convexos en verde (P6)»",
+      "usa_step": true,
+      "pide_ok_fak": false
+    },
+    {
+      "n": 4,
+      "nombre": "entrega",
+      "criterio": "export_deliverables.py --final entrego despues del cierre de la fase 3 (evidencia delivery con final true); el cierre en planta de P15 queda anotado como pendiente y no frena",
+      "fuente": "P1 l.61: «4, fabricacion y entrega: GATE 3, GATE E y export_deliverables»; Agregado l.639 (P15 no frena la entrega)",
+      "usa_step": false,
+      "pide_ok_fak": false
+    }
+  ],
+  "_pide_ok_fak": "P1 l.84: «Tu decision sobre cuantas fases hay y que cierres firmas vos. El informe propone que apruebes el contrato y el mecanismo». Se toma la propuesta del informe (fases 0 y 2) hasta que Fak decida: PREGUNTAS_FAK.md 20. La fase 2 es la de la memoria de Fak «funciona al 100 %» y la de «no seguir optimizando despues del OK»: si el STEP cambia despues de cerrarla con su OK, la fase queda REABIERTA y el mensaje cita su frase y las dos firmas. Un OK ya usado para otra firma no se vuelve a aceptar.",
+  "firma": "file_signature de cadlib/workdir.py (tamano + sha1 de los bytes), la misma de check_collision, gate_ensamble, cantos y barrido. Decision F3 (casos_gates_3c_3f.md): un reexportado identico cambia la firma (FILE_NAME lleva la hora) y FRENA igual, con la salida «volver a correr barrido.py (menos de 2 minutos) y volver a cerrar la fase»; el mensaje dice si los datos del STEP (sin la cabecera) son iguales, para que se vea que es un reexportado. Nunca verde por nombre o fecha.",
+  "tope_cantos_segundos": 300,
+  "_tope_cantos_segundos": "El de cantosCanon (tope_segundos 300): el cierre de la fase 3 corre gate_aristas.py por subproceso y lee SU salida; el barrido del cierre de la fase 2 usa el tope de barridoCanon (120 s).",
+  "salidas": [
+    "cerrar la fase que falta con su evidencia: gate_fase.py cerrar --fase N --workdir W --step conj.step [--movimiento conj.json | --sin-moviles \"<motivo>\"] [--ok-fak \"<frase de Fak>\"] [--nota \"<concepto>\"]",
+    "si el STEP cambio despues del cierre: volver a correr el control de esa fase (barrido.py, menos de 2 minutos; gate_aristas.py) y volver a cerrarla; si la fase tenia el OK de Fak, hace falta un OK nuevo (seguir optimizando despues del OK reabre la fase)",
+    "si Fak lo asume: --acepto-fase \"<frase de Fak, 10 caracteres o mas>\" (queda en fases.json con fecha, fase y firma del STEP; vale para esa fase y esa firma sola)"
+  ],
+  "no_cubierto": [
+    "El freno corre solo en workdirs con fases.json: nada manda correr gate_fase.py iniciar al empezar un diseno (ni SKILL.md ni cad-guard.sh). Sin fases.json la entrega avisa «sin fases declaradas» y no frena, tambien desde el 31/10 (compatibilidad con lo ya entregado y con los tests de entrega, igual que cantosCanon sin_zona_en_entrega). Que la skill o el hook lo manden es decision de Fak: PREGUNTAS_FAK.md 21.",
+    "catia_base.py (scripts/catia/, por donde se diseno el 20/10) todavia no llama al gate: el freno esta en gate_fase.py y en export_deliverables.py; un diseno que nunca pasa por la entrega no se frena (P1 l.67).",
+    "pdf_entrega y los constructores de detalle no consultan la fase: frena la entrega, no el paso de la fase 3 (P1 l.65).",
+    "La fase 1 es texto declarado: el gate verifica que este escrito, no que las alternativas existan (P1 l.58).",
+    "El gate no verifica que el STEP del conjunto tenga los mismos solidos que las partes del barrido; eso lo hace export_deliverables.py en el gate de barrido (D10)."
+  ]
+}

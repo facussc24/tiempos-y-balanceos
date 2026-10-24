@@ -1,0 +1,44 @@
+id: 12_gate_fase
+nombre: Gate de fases - la palanca del 06 cerrada en orden, la que salta a la entrega y la que se toca despues del OK
+falla_real:
+  cita: "entraste en detalles antes de hacer que funcione 100 % el diseno... debo respetar mis fases"
+  fecha: 2026-10-20
+  fuente: >-
+    Fak, 20/10/2026, virolador manual del Upper Trim (memoria feedback_diseno_3d_por_fases_y_frenar_a_fak.md), y la
+    probeta de tornillo que andaba y se rompio en tres iteraciones mas despues del OK de Fak
+    (feedback_no_seguir_optimizando_despues_del_ok.md); FALLAS_3D_REALES_23-10.md. Este ejercicio es el del gate 3f del
+    viernes 23/10 (gate_fase.py, el mismo que corre export_deliverables.py): casos F1 a F7 de
+    viernes-23-plan-sistema/banco3d-material/casos_gates_3c_3f.md, escritos por un critico ANTES del gate; propuesta
+    P1 de docs/PROPUESTAS_SKILL_3D_2026-10-23.md (l.47-84).
+pedido: >-
+  El gate de fases tiene que dejar pasar a la fase 3 (detalle) un conjunto con el contrato, el concepto y el mecanismo
+  cerrados en orden, con el barrido verde sobre el conjunto vigente y el OK de Fak; y dar rojo cuando se salta a la
+  entrega con el mecanismo sin cerrar (la secuencia del 20/10) o cuando el conjunto se toca despues del OK de Fak
+  (seguir optimizando despues del OK), aunque el retoque no cambie la caja, el volumen ni la cantidad de solidos.
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    nota: "la palanca BIEN del 06 (armada con su _conjunto.py sin tocarlo); fases 0, 1 y 2 cerradas con su evidencia, pasar a la 3"
+  - archivo: mal_1_imprime_sin_cerrar_mecanismo.py
+    esperado: rojo
+    falla: "contrato y concepto cerrados y pasar a la fase 4 (entrega, imprimir) sin cerrar el mecanismo: el barrido nunca corrio"
+    nota: "la misma palanca BIEN: lo que falla es la secuencia, no la pieza"
+  - archivo: mal_2_optimiza_despues_del_ok.py
+    esperado: rojo
+    falla: "el mecanismo cerrado con barrido verde y el OK de Fak, y despues el soporte del eje corrido 0,5 mm en Y: la fase 2 queda reabierta"
+    nota: "el retoque se arma con build123d sobre los STEP de la palanca BIEN"
+controles:
+  - nombre: gate_fase
+    existe: true
+    formato: json
+    nota: >-
+      El gate como corre de verdad: gate_fase.py (autotest propio BIEN/MAL; el cierre de la fase 2 corre barrido.py
+      sobre el conjunto). La pieza arma un workdir nuevo y escenario.json con la secuencia de llamadas; el corrector
+      las corre y juzga la ULTIMA por lo medido (veredicto de la linea JSON), no por el codigo de salida, que hasta el
+      30/10/2026 es 0 aunque haya rojo (modo aviso). NO MEDIDO sale como error.
+formatos: [step]
+notas: >-
+  Ejercicio nuevo del gate 3f (24/10/2026): NO cuenta para aceptar el gate (el banco congelado del bloque 2 es la
+  vara). Las piezas son las del 06, de ensayo. La evidencia de la fase 0 (zona_confirmada y proceso_declarado) va
+  sembrada en el manifest: el GATE 0 y el GATE P se prueban en sus propios tests. El caso real (los dos STEP del
+  virolador del 20/10) esta en test_gate_fase.py (F7) porque no estan versionados.

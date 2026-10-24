@@ -45,6 +45,14 @@ con [GATE tornillos] antes de crear la carpeta destino. Sin tornillos declarados
 se llama como tornillo, tuerca o inserto, avisa «¿que tornillo va aca?» sin frenar. Salida de Fak:
 gate_tornillos.py ... --workdir W --acepto-tornillos "<frase>" (vale para esa firma y esos tornillos).
 
+(F) FASES con criterio de salida (gate 3f, 24/10/2026; P1): si el workdir declaro sus fases (fases.json de
+gate_fase.py), la entrega exige poder pasar a la fase 4: las fases 0 (contrato), 1 (concepto), 2 (mecanismo) y 3
+(detalle) cerradas con su evidencia y vigentes (la firma del STEP del conjunto, la del conjunto del barrido y el pliego
+no cambiaron despues del cierre; si el STEP de una fase es una pieza que se entrega, se compara ESE archivo). Hasta el
+aviso_hasta de faseCanon.data.json (30/10/2026) avisa y entrega; desde el 31/10 sale con [GATE fases] antes de crear la
+carpeta destino. Sin fases.json (lo ya entregado) avisa «sin fases declaradas» y no frena. Salida de Fak:
+gate_fase.py pasar --fase 4 --workdir W --acepto-fase "<frase>" (vale para esa firma).
+
 Con --final (la entrega que va a Fak, no una copia de trabajo) corre ademas el GATE DE
 ENTREGABLE sobre la carpeta destino: PDF + STEP + simulacion grabada, misma corrida, y
 renders con motor declarado y con color medido (gate_entregable.py). Sin --final la
@@ -431,6 +439,57 @@ def gate_barrido(w, mov, fuente, pieces, hoy_arg=None):
     return resumen
 
 
+def gate_fases(w, pieces, hoy_arg=None):
+    """GATE de fases (3f, 24/10/2026; P1): la entrega exige poder pasar a la fase 4, o sea las fases 0 a 3 cerradas y
+    vigentes (cada una con su evidencia y la firma de lo que la cerro; si el STEP de una fase es una de las piezas que
+    se entregan, se compara ESE archivo). Devuelve el resumen o SystemExit.
+
+    Un workdir sin fases.json (lo ya entregado antes del 24/10) AVISA «sin fases declaradas» y no frena. No escribe en
+    fases.json: el que reabre una fase es gate_fase.py."""
+    import gate_fase as gf
+    can = gf.canon_fase()
+    try:
+        hoy = gf.hoy_fase(hoy_arg)
+    except (gf.NoMedido, ValueError) as e:
+        raise SystemExit("[GATE fases] %s" % e)
+    if not gf.hay_fases(w):
+        print("  AVISO [GATE fases] sin fases declaradas (el workdir no tiene fases.json): no se frena. Para un diseno "
+              "nuevo: gate_fase.py iniciar --workdir %s y cerrar cada fase con su evidencia" % w)
+        return {"modo": "sin_fases", "medido": False, "hoy": hoy.isoformat()}
+    ultima = gf._ultima_fase(can)
+    try:
+        prob = gf.autotest()          # par BIEN/MAL propio antes de juzgar
+        if prob:
+            raise gf.NoMedido("el autotest del gate de fases fallo (%s): no se juzga" % "; ".join(prob))
+        r = gf.evaluar_pasar(w, ultima, piezas=pieces)
+        ok, motivos, firma, no_medido = r["ok"], r["motivos"], r["firma"], None
+    except gf.NoMedido as e:
+        ok, motivos, firma, no_medido = False, ["NO MEDIDO: %s" % e], None, str(e)
+        r = {"reabiertas": [], "step": None}
+    aceptada = None
+    if not ok and not no_medido:
+        try:
+            aceptada = gf.aceptacion(gf.leer_fases(w), ultima, "pasar", firma)
+        except gf.NoMedido:
+            aceptada = None
+    modo = gf.modo_fase(ok, hoy, can["aviso_hasta"], bool(aceptada))
+    texto = "; ".join(motivos) if motivos else "fases 0 a %d cerradas y vigentes" % (ultima - 1)
+    resumen = {"modo": modo, "medido": no_medido is None, "motivos": motivos, "reabiertas": r["reabiertas"],
+               "step": r["step"], "step_firma": firma, "hoy": hoy.isoformat(),
+               "aceptacion": (aceptada or {}).get("frase")}
+    if modo == "freno":
+        raise SystemExit("[GATE fases] no se entrega: %s. Desde el %s esto frena la entrega.\nSalidas: %s"
+                         % (texto, gf.dia_siguiente(can["aviso_hasta"]), "; ".join(can["salidas"])))
+    if modo == "aviso":
+        print("  AVISO [GATE fases] %s; freno desde %s" % (texto, gf.dia_siguiente(can["aviso_hasta"])))
+    elif modo == "aceptado":
+        print("  [GATE fases] %s, ACEPTADO por Fak en fases.json («%s», firma %s)" % (texto, aceptada.get("frase"),
+                                                                                    firma))
+    else:
+        print("  [GATE fases] OK, %s" % texto)
+    return resumen
+
+
 def _cilindros(step_path, etiqueta):
     """[(solido, punto del eje, direccion, radio)] de las caras cilindricas del STEP (OCC, sin mallar)."""
     from OCP.BRepAdaptor import BRepAdaptor_Surface
@@ -650,7 +709,7 @@ def main():
                          "solidos del STEP y queda escrito en el manifest.")
     ap.add_argument("--skip-gate", action="append", default=[],
                     choices=["zona", "proceso", "collision", "render", "ensamble", "entregable",
-                             "cantos", "barrido", "tornillos"],
+                             "cantos", "barrido", "tornillos", "fases"],
                     help="saltear un gate (queda registrado; exige --reason)")
     ap.add_argument("--reason", default=None, help="justificacion del --skip-gate")
     ap.add_argument("--final", action="store_true",
@@ -659,7 +718,7 @@ def main():
     ap.add_argument("--motor", default="", help="--final: motor de imagen de los renders (ver procesoCanon)")
     ap.add_argument("--render", nargs="*", default=[], help="--final: los PNG que muestran el 3D")
     ap.add_argument("--hoy", default=None,
-                    help="solo tests: fecha simulada AAAA-MM-DD para los gates de cantos, barrido y tornillos "
+                    help="solo tests: fecha simulada AAAA-MM-DD para los gates de cantos, barrido, tornillos y fases "
                          "(exige CAD_GATE_TEST=1)")
     ap.add_argument("--movimiento", default=None, metavar="CONJUNTO_JSON",
                     help="json del conjunto que se mueve (partes en out/, movil/eje/rango o estados): corre el gate "
@@ -853,6 +912,11 @@ def main():
                          ", ".join("%g" % x for x in c["dir"])))
                 barrido_res = {"modo": "aviso", "medido": False, "se_mueve": coax}
 
+    # GATE FASES (3f, 24/10/2026): una vez por entrega, despues del barrido y antes de crear la carpeta destino.
+    fases_res = None
+    if "fases" not in args.skip_gate:
+        fases_res = gate_fases(w, args.pieces, args.hoy)
+
     # ---- export + entrega ----
     os.makedirs(args.deliver, exist_ok=True)
     delivered = []
@@ -936,6 +1000,7 @@ def main():
                             cantos_por_pieza=cantos_por_pieza,
                             barrido=barrido_res,
                             tornillos_por_pieza=tornillos_por_pieza,
+                            fases=fases_res,
                             ensambles_declarados=args.ensamble,
                             skipped_gates=args.skip_gate, reason=args.reason)
     print("\nENTREGA OK -> %s (%d archivos). Evidencia registrada en el manifest." % (args.deliver, len(delivered)))
