@@ -1,0 +1,54 @@
+id: 24_solido_valido
+nombre: Solido valido en la entrega - anillo de la v13 del virolador con el borde interior cruzado
+falla_real:
+  cita: "el borde interior del anillo (retiro 2,55 punto a punto) SE CRUZABA en las 4 esquinas (radio minimo del contorno 2,22) → STEP invalido, malla no orientable, volumen de malla 116,8 vs 119,7 del B-Rep"
+  fecha: 2026-10-13
+  fuente: >-
+    Memoria project_uppertrim_pisador_utillaje.md l.58-62 (v14, 13/10/2026: arreglo de un defecto del modelo; ahora
+    macho.interior_limpio con shapely.buffer). El control sale de la seccion 1.1 de investigacion_revision_diseno/
+    04_decision.md (carpeta catia-tanda-24-10, nube de Ingenieria, 5- FACUNDO), que midio el 24/10/2026 el STEP
+    resguardado de la v13 (is_valid NO y sentido de triangulos NO, con malla cerrada, 1 cuerpo y 0 cavidades: el gate de
+    validez de entonces pasaba) y el de la v14 (todo SI). Control programado en export_deliverables.py (gate_validez_solido).
+pedido: >-
+  En la entrega, el gate de validez no tiene que dejar pasar un STEP cuyo solido no es valido (is_valid de OpenCASCADE) ni
+  un STL cuyos triangulos no tienen un solo sentido, aunque la malla sea cerrada, tenga un cuerpo y no tenga cavidades. Y
+  tiene que dejar pasar el STEP sano de la v14 (el que arreglo el cruce). Es si o no, sin umbral numerico.
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    origen: "C:/Dev/_utrim/out/v14/virolador_v10_two.step (BANCO3D_UTRIM cambia la carpeta)"
+    sha256: e3ee1ad262c16f02f5295fb3930543b54b346d1c6faffbd81fb8580b5b553572
+    nota: >-
+      La v14 real: la que arreglo el cruce del contorno interior con macho.interior_limpio (memoria l.58-62). La v14 se
+      imprimio y se probo (memoria feedback_diseno_3d_medir_antes_de_explicar_y_simular_el_uso.md:3,11-12, segun el
+      ejercicio 02). No se pudo confirmar que este archivo (13/10 14:23) sea byte a byte el que se imprimio. Medida el
+      24/10: is_valid SI y triangulos con un solo sentido, 1 solido.
+  - archivo: mal_1_v13_anillo_cruzado.py
+    esperado: rojo
+    falla: "la v13 real: el borde interior del anillo cruzado en las 4 esquinas; el STEP da is_valid NO y los triangulos de la malla de la entrega quedan con sentido inconsistente, con malla cerrada, 1 cuerpo y 0 cavidades (lo que el gate de hoy mira da verde)"
+    origen: "C:/Dev/_utrim/out/v13/virolador_v10_two.step (BANCO3D_UTRIM cambia la carpeta)"
+    sha256: f398e2dc18c6d772f1a0cc6e746b10b11afd7de4addfdcf7b31e8dce3765bb81
+    nota: "el esperado rojo sale de la memoria l.58-62 (STEP invalido, malla no orientable) y de la medicion del 04_decision.md l.24; no se pudo confirmar si se imprimio asi"
+  - archivo: mal_2_anillo_sintetico.py
+    esperado: rojo
+    falla: "anillo de 40 x 20 con esquinas R2,22 y el borde interior retirado 2,55 punto a punto: 2,55 es mayor que el radio de la esquina y el borde se cruza; da is_valid NO (04_decision.md l.26)"
+    nota: >-
+      Armada para el banco con build123d (_anillo.py). 40 x 20, R2,22 y 2,55 salen del papel; la placa de 60 x 40 x 5 y el
+      alto de 3 mm del anillo son de ensayo, no salen de ningun papel. El gemelo sano es el mismo contorno con un retiro
+      de verdad (shapely.buffer): lo arma _anillo.armar(True, ...) y lo usa test_gate_validez.py; no es una pieza del banco.
+controles:
+  - nombre: solido_valido
+    existe: true
+    formato: step
+    opciones: []
+    nota: >-
+      El gate como corre de verdad: export_deliverables.py validez --step <pieza.step> (is_valid de cada solido del STEP y
+      sentido de los triangulos del STL que sale de ese STEP con LC_PRINT, en una carpeta temporal). El corrector juzga por
+      lo medido (el veredicto de la linea JSON), no por el codigo de salida, que hasta el 31/10/2026 es 0 aunque haya rojo
+      (modo aviso). NO MEDIDO sale como error (no cuenta como verde).
+formatos: [step]
+notas: >-
+  Ejercicio nuevo (24/10/2026, control 1.1 de la decision de revision de diseno). Las dos piezas reales son archivos de
+  trabajo locales (C:\Dev\_utrim\out), no estan en la nube: si no estan o cambia el sha256, la pieza no se arma y sale con 2.
+  Cada STEP real tarda entre 60 y 90 s en mallarse. Sin armar ni correr: la caja con una cara dada vuelta, el caso que
+  catia/revisar_step.py dice no ver (informe 02 de la investigacion); no entra en este ejercicio.

@@ -114,6 +114,10 @@ la pieza donde dije? — caza los errores de signo).
 - **¿Existe el 3D/STEP REAL? Si existe → PROHIBIDO usar un dibujo genérico/representativo.**
 - Toda cota se EXTRAE del CAD medido (`cadlib.geom.extract_cylinder_axes`, `analyze_step.py`)
   o es dato de Fak. CERO dimensiones inventadas/redondeadas (extiende `core-prohibiciones` #1).
+- **Antes de dibujar, el catálogo de la casa** (`python -m cadlib.constructores --buscar <qué>`): toda caja, tope o
+  placa sale de los constructores (build123d y CATIA, mismos parámetros) y una pieza de afuera se ubica con `colocar()`,
+  que se niega ante un espejo. Cada pieza deja su procedencia; las cotas que se le pasan siguen saliendo del CAD medido o
+  de Fak. Detalle: `reference/constructores-y-procedencia.md`.
 
 **GATE 2 — UN SOLO FRAME, derivado de la pieza** (`gate_frame.py`). Un marco 1,637° torcido
 produjo tres errores que parecían independientes, y uno de ellos era un defecto **inventado** en
@@ -136,6 +140,7 @@ cliente, la primera hipótesis es el sistema de medición.*
   que corre en **cada** invocación: si no separa, sale con **código 3** y no juzga nada.
   `--verificar-material` da una segunda opinión con un método que no comparte código (fracción
   de material alrededor de la arista); sobre 5 piezas coincidieron en 1094/1094.
+- `espesor_pared.py --step <pieza.step>` — pared mínima imprimible (rayos hacia adentro desde una grilla densa): rojo si una pared de caras paralelas mide < 0,45 mm, aviso < 0,8 mm o cuña; **AVISO hasta el 31/10/2026**, frena desde el 01/11 (`--acepto-pared "<frase de Fak>"`); autotest propio BIEN/MAL; canon `paredCanon.data.json`.
 - **Los cuatro gates del viernes 23/10/2026** (3c, 3d, 3e, 3f): los corre `export_deliverables.py` antes de
   crear la carpeta destino; cada uno **avisa hasta el 30/10/2026 y frena desde el 31/10** (`*Canon.data.json`,
   `aviso_hasta`; renglón en `scripts/_lib/retiros.data.json`), un NO MEDIDO sale con 2 y nunca verde, y la salida
@@ -152,6 +157,7 @@ cliente, la primera hipótesis es el sistema de medición.*
     cerrar la 2 corre el barrido y cerrar la 3 los cantos; un STEP cambiado después del OK reabre la fase; un
     `fases.json` armado a mano da NO MEDIDO. **Hoy frena solo si el diseño arrancó con `iniciar`** (sin
     `fases.json` la entrega avisa; pregunta 21 de Fak). Salida: `--acepto-fase "<frase>"`.
+- **Validez del sólido** (`export_deliverables.py`, 24/10/2026): además de malla cerrada, cuerpos y cavidades, el gate de validez ahora mira `is_valid` de cada sólido del STEP (frena) y el sentido de los triángulos del STL (con sólidos válidos solo avisa: 4 tuercas sanas de la nube lo dan) (la v13 del virolador pasaba con el anillo cruzado); **AVISO hasta el 31/10 y freno desde el 01/11** (`validezCanon.data.json`). Salida: `export_deliverables.py validez --step P --workdir W --acepto-validez "<frase>"`.
 - `reconocer_caras.py --step <f> [--cilindros]` — tipo de cada cara (plano/cilindro/cono/
   esfera) **sin barrer rayos**: `GetType()` para las analíticas + `ShapeAnalysis_Canonical`
   `Recognition` para recuperar las que el STEP guardó como NURBS. Sobre nuestras salidas
@@ -249,6 +255,10 @@ De las tres entregas rechazadas, **dos no fallaron por el diseño: fallaron por 
   lista de `{"que": lo que se mide en la pieza impresa, "con": el instrumento o la prueba, "acepta": el valor o la
   condición}` (`reference/ficha-utillajes.md` K1; patrón vivo `examples/gancho_mochila/verificar_gancho.py`). Lo
   mismo va en el PDF, con las palabras de Fak.
+- **G-E8 — ningún número tipeado en la página de entrega (24/10/2026, lección 39).** `gate_entregable.py
+  --fuentes-pagina pasos.json --medidas <json de medidas del modelo>` (o `numeros_pagina.py`, que frena por su cuenta
+  desde el 01/11/2026): cada número con unidad de la página sale de una medida del modelo; uno que no está en ninguna,
+  que la contradice o que da dos valores para el mismo dato es rojo. Sin `--medidas` es NO MEDIDO, nunca OK.
 - **G-E4 — revisión ciega, después del GATE E verde y antes de mostrárselo a Fak (22/09/2026).**
   Los gates en verde no vieron lo que Fak vio a ojo: el dispositivo del Insert (24/08 a 22/09,
   cadena de 75 pasos verde) volvió cinco veces (*"hacés todo a medias sin testearlo"*, *"puesto
@@ -303,7 +313,7 @@ gate_asiento.py verificar --escena <escena> --pieza <nombre> [--stl pieza.stl] -
 - **Lo que aprendió al nacer:** la grilla de 1 mm de la simulación no ve el tercer pasador de la v14 (0,9 mm de ancho
   cae entre dos puntos). El inventario usa una grilla fina y el gate avisa todo apoyo que la simulación no ve.
 
-> **Lo que los gates NO cubren, y hay que saberlo:** todos nacieron DESPUÉS de que una persona encontrara el bug. Son tests de regresión: demuestran memoria, no capacidad de detección. Las dos clases que siguen abiertas: el **estado real del material** (el STEP es la pieza fría y desnuda; en uso tiene tela, adhesivo, calor y springback; el GATE A cubre el asiento sobre blando con una hipótesis del blando, no con una medición) y la **unicidad del posicionamiento** (el GATE A cuenta los apoyos en Z; nada verifica todavía que haya UNA sola forma de ubicarlo en el plano). Y falta lo que la auditoría del 24/08 dejó abierto para ensambles: **partes de catálogo con procedencia** (hoy GATE 1 exige que toda cota salga del CAD medido o de Fak — para un rodamiento comprado no hay fuente válida posible) y **cálculo del conjunto** (eje entre apoyos, vuelco, par en el volante): el único cálculo estructural del sistema es `viga_voladizo.py`, que sirve para láminas impresas en PLA.
+> **Lo que los gates NO cubren, y hay que saberlo:** todos nacieron DESPUÉS de que una persona encontrara el bug. Son tests de regresión: demuestran memoria, no capacidad de detección. Las dos clases que siguen abiertas: el **estado real del material** (el STEP es la pieza fría y desnuda; en uso tiene tela, adhesivo, calor y springback; el GATE A cubre el asiento sobre blando con una hipótesis del blando, no con una medición) y la **unicidad del posicionamiento** (el GATE A cuenta los apoyos en Z; nada verifica todavía que haya UNA sola forma de ubicarlo en el plano). Y falta lo que la auditoría del 24/08 dejó abierto para ensambles: **partes de catálogo COMERCIAL con procedencia** (desde el 24/10 el catálogo de la casa es fuente válida de lo que pone el constructor —radio, chaflán, tornillería—, no de las cotas; para un rodamiento comprado sigue sin haber fuente válida posible: P5) y **cálculo del conjunto** (eje entre apoyos, vuelco, par en el volante): el único cálculo estructural del sistema es `viga_voladizo.py`, que sirve para láminas impresas en PLA.
 
 ## 1. Entorno — UN solo intérprete
 
@@ -369,8 +379,10 @@ literales sueltos en el código.
    --target P.step --name skeleton [--source-faces "BSpline surface,Torus"] [--seed x,y,z]`.
    ICP traslación-only trimmed; exit 1 si rms dudoso. Validar con features ÚNICOS (la caja
    lisa DESLIZA — es un assert del smoke test). Con nubes casi idénticas: `--trim 1.0`.
-4. **Modelar** — build123d parametrico (variables derivadas de dimensiones clave, variantes
-   por parámetro). Patrón gmsh OCC de referencia: `examples/posicionador/build_v2b.py`
+4. **Modelar** — primero los constructores de la casa (GATE 1); después build123d parametrico (variables derivadas
+   de dimensiones clave, variantes por parámetro). **Cada corrección se cierra con `diff_modelo.py antes.step
+   despues.step --puede-cambiar <pieza>`** (o `--zona` en una sola pieza): dice qué cambió y frena si cambió algo que
+   no se pidió (banco 23). Patrón gmsh OCC de referencia: `examples/posicionador/build_v2b.py`
    (construir en frame local → `occ.rotate` a global; **NUNCA `affineTransform`** con matriz
    casi-ortogonal → todo BSpline; tras cada boolean/fillet `synchronize()` + re-obtener el
    sólido, los tags renumeran). Frames: `cadlib.geom.orthonormal_frame`.

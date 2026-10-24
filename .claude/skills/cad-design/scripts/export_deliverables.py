@@ -53,6 +53,17 @@ aviso_hasta de faseCanon.data.json (30/10/2026) avisa y entrega; desde el 31/10 
 carpeta destino. Sin fases.json (lo ya entregado) avisa «sin fases declaradas» y no frena. Salida de Fak:
 gate_fase.py pasar --fase 4 --workdir W --acepto-fase "<frase>" (vale para esa firma).
 
+(V) VALIDEZ DEL SOLIDO (24/10/2026; control 1.1 de la revision de diseno): ademas de lo que gate_validez_cuerpos ya mira
+(malla cerrada, cuerpos, cavidades), mide is_valid (BRepCheck de OpenCASCADE) de cada solido del STEP que se entrega y
+is_winding_consistent del STL que sale de ese STEP (el mismo que despues se copia a la entrega). Falla real: el STEP de
+la v13 del virolador, con el borde interior del anillo cruzado en las 4 esquinas, daba malla cerrada, 1 cuerpo y 0
+cavidades y pasaba (memoria project_uppertrim_pisador_utillaje.md l.58-62). Es si o no, sin umbral numerico. Hasta el
+aviso_hasta de validezCanon.data.json (31/10/2026, inclusive) avisa y entrega; desde el 01/11 un rojo o un NO MEDIDO
+sale con [GATE validez] antes de crear la carpeta destino. Un STEP que no abre o no trae solidos es NO MEDIDO, nunca
+verde. Se puede correr suelto, sin entregar: export_deliverables.py validez --step P [--workdir W]. Salida de Fak
+(aparte, nunca en la corrida de la entrega): export_deliverables.py validez --step P --workdir W --acepto-validez
+"<frase>" (vale para esa firma sola).
+
 Con --final (la entrega que va a Fak, no una copia de trabajo) corre ademas el GATE DE
 ENTREGABLE sobre la carpeta destino: PDF + STEP + simulacion grabada, misma corrida, y
 renders con motor declarado y con color medido (gate_entregable.py). Sin --final la
@@ -692,7 +703,319 @@ def gate_tornillos(w, piece, base, decl, hoy_arg=None):
     return resumen
 
 
+# =========================================================================================
+# VALIDEZ DEL SOLIDO EN LA ENTREGA (24/10/2026; control 1.1 de la decision de revision de diseno)
+# =========================================================================================
+# La falla real: el borde interior del anillo de la v13 del virolador (retirado 2,55 mm punto a punto sobre un contorno de
+# radio minimo 2,22) se cruzaba en las 4 esquinas: STEP invalido y malla no orientable (memoria
+# project_uppertrim_pisador_utillaje.md l.58-62). Ese STEP daba malla cerrada, 1 cuerpo y 0 cavidades, o sea que
+# gate_validez_cuerpos lo dejaba pasar. Aca se miden las dos cosas que le faltaban: is_valid de cada solido del STEP y el
+# sentido de los triangulos del STL que sale de ESE STEP. Si o no, sin umbral numerico. Canon: validezCanon.data.json.
+# gate_validez_cuerpos no se toca: este gate se suma, no lo reemplaza.
+CANON_VALIDEZ = os.path.join(os.path.dirname(os.path.abspath(__file__)), "validezCanon.data.json")
+
+
+class NoMedidoValidez(Exception):
+    """La medicion no se pudo hacer: el gate NUNCA da verde en este caso."""
+
+
+def canon_validez():
+    import json
+    with open(CANON_VALIDEZ, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def hoy_validez(hoy_arg=None):
+    """La fecha de hoy. --hoy o CAD_HOY solo valen con CAD_GATE_TEST=1 (los tests); si no, el reloj."""
+    from datetime import date
+    simulada = hoy_arg or os.environ.get("CAD_HOY", "").strip() or None
+    if simulada:
+        if os.environ.get("CAD_GATE_TEST") != "1":
+            raise NoMedidoValidez("--hoy / CAD_HOY solo valen con CAD_GATE_TEST=1 (fecha simulada de los tests)")
+        return date.fromisoformat(simulada)
+    return date.today()
+
+
+def dia_siguiente_validez(iso):
+    from datetime import date, timedelta
+    return (date.fromisoformat(iso) + timedelta(days=1)).isoformat()
+
+
+def modo_validez(medido, rojo, hoy, aviso_hasta, aceptada=False):
+    """verde | aceptado | aviso | freno. Una sola funcion para el gate suelto y para la entrega.
+
+    Un NO MEDIDO (medido=False) nunca es verde y la frase de Fak no lo acepta: no hay nada medido que aceptar."""
+    from datetime import date
+    if isinstance(aviso_hasta, str):
+        aviso_hasta = date.fromisoformat(aviso_hasta)
+    if medido and not rojo:
+        return "verde"
+    if medido and aceptada:
+        return "aceptado"
+    return "aviso" if hoy <= aviso_hasta else "freno"
+
+
+def medir_solidos_step(step_path):
+    """(cantidad de solidos, [indices de los que NO pasan is_valid]) del STEP, con BRepCheck de OpenCASCADE.
+
+    NoMedidoValidez si el archivo no existe, no es STEP, esta truncado, no abre o no trae solidos."""
+    if not os.path.isfile(step_path):
+        raise NoMedidoValidez("no existe el archivo: %s" % step_path)
+    if not step_path.lower().endswith((".step", ".stp")):
+        raise NoMedidoValidez("el gate de validez trabaja sobre STEP")
+    with open(step_path, "rb") as fh:
+        fh.seek(max(0, os.path.getsize(step_path) - 4096))
+        cola = fh.read()
+    if b"END-ISO-10303-21" not in cola:
+        raise NoMedidoValidez("STEP truncado o incompleto (no termina en END-ISO-10303-21;)")
+    from OCP.BRepCheck import BRepCheck_Analyzer
+    from OCP.IFSelect import IFSelect_RetDone
+    from OCP.STEPControl import STEPControl_Reader
+    from OCP.TopAbs import TopAbs_SOLID
+    from OCP.TopExp import TopExp_Explorer
+    solidos = []
+    try:
+        r = STEPControl_Reader()
+        if r.ReadFile(step_path) != IFSelect_RetDone:
+            raise NoMedidoValidez("el STEP no abre (OpenCASCADE no lo pudo leer)")
+        r.TransferRoots()
+        ex = TopExp_Explorer(r.OneShape(), TopAbs_SOLID)
+        while ex.More():
+            solidos.append(ex.Current())
+            ex.Next()
+    except NoMedidoValidez:
+        raise
+    except Exception as e:
+        raise NoMedidoValidez("STEP ilegible: %s: %s" % (type(e).__name__, e))
+    if not solidos:
+        raise NoMedidoValidez("el STEP no trae solidos")
+    return len(solidos), [i for i, s in enumerate(solidos) if not BRepCheck_Analyzer(s).IsValid()]
+
+
+def medir_malla(mesh):
+    """(cerrada, sentido_ok) de una malla de trimesh. NoMedidoValidez si no trae triangulos."""
+    if mesh is None or len(getattr(mesh, "faces", ())) == 0:
+        raise NoMedidoValidez("el STL no trae triangulos")
+    return bool(mesh.is_watertight), bool(mesh.is_winding_consistent)
+
+
+def evaluar_validez(step_path, cargar_malla):
+    """Mide las dos cosas y devuelve el dict del gate (nunca levanta). cargar_malla() devuelve la malla de trimesh del STL
+    que sale de ese STEP, o levanta NoMedidoValidez.
+
+    Prioridad: lo medido que esta mal es ROJO aunque la otra mitad no se haya podido medir (un STEP invalido es rojo
+    aunque el mallador no pueda con el); NO MEDIDO solo si nada dio rojo y algo no se pudo medir; verde solo con las dos
+    cosas medidas y sanas."""
+    res = {"gate": "validez", "medido": False, "veredicto": "no_medido", "modo": None, "step": step_path,
+           "step_firma": None, "solidos": None, "solidos_invalidos": None, "malla_cerrada": None,
+           "sentido_consistente": None, "motivos": [], "no_medido": [], "hoy": None, "aviso_hasta": None}
+    if os.path.isfile(step_path):
+        res["step_firma"] = workdir.file_signature(step_path)
+    try:
+        n, malos = medir_solidos_step(step_path)
+        res["solidos"], res["solidos_invalidos"] = n, malos
+        if malos:
+            res["motivos"].append("%d de %d solidos del STEP no pasan is_valid (BRepCheck de OpenCASCADE)"
+                                  % (len(malos), n))
+        leer_malla = True
+    except NoMedidoValidez as e:
+        res["no_medido"].append("STEP: %s" % e)
+        leer_malla = False             # sin STEP legible no hay malla que juzgar
+    if leer_malla:
+        try:
+            cerrada, sentido = medir_malla(cargar_malla())
+            res["malla_cerrada"] = cerrada
+            res["sentido_consistente"] = sentido if cerrada else None   # en una malla abierta el sentido no se juzga
+            if not cerrada:
+                res["motivos"].append("la malla del STL no es cerrada (watertight)")
+            elif not sentido:
+                # 24/10/2026, medido sobre 76 STEP de la nube: con is_valid SI, el sentido inconsistente dio 4 rojos de
+                # mas (tuercas roscadas sanas, 9 a 18 aristas de 6.000-8.000; trimesh fix_normals las arregla) y 0 cazas
+                # propias (la v13 y el anillo los caza is_valid). Por eso solo frena junto con un solido invalido; si no,
+                # es un AVISO que se informa y no cambia el veredicto.
+                if any("is_valid" in m for m in res["motivos"]):
+                    res["motivos"].append("los triangulos del STL tienen sentido inconsistente (malla no orientable)")
+                else:
+                    res.setdefault("avisos", []).append(
+                        "los triangulos del STL tienen sentido inconsistente con solidos validos (aviso: en 4 tuercas "
+                        "sanas de la nube pasa lo mismo)")
+        except NoMedidoValidez as e:
+            res["no_medido"].append("malla: %s" % e)
+    if res["motivos"]:
+        res["medido"], res["veredicto"] = True, "rojo"
+    elif not res["no_medido"]:
+        res["medido"], res["veredicto"] = True, "verde"
+    return res
+
+
+def texto_validez(res):
+    if res["veredicto"] == "no_medido":
+        return "NO MEDIDO: %s" % "; ".join(res["no_medido"])
+    if res["veredicto"] == "rojo":
+        return "; ".join(res["motivos"]) + (" (sin medir: %s)" % "; ".join(res["no_medido"]) if res["no_medido"] else "")
+    if res.get("avisos"):
+        return ("%d solido(s) valido(s) (is_valid); AVISO: %s" % (res["solidos"], "; ".join(res["avisos"])))
+    return ("%d solido(s) valido(s) (is_valid) y los triangulos de la malla tienen un solo sentido" % res["solidos"])
+
+
+def gate_validez_solido(w, piece, lc, curvature, stl_hechos, hoy_arg=None):
+    """GATE de validez del solido sobre EL ARCHIVO QUE SE ENTREGA. Devuelve el resumen o SystemExit.
+
+    Hace la malla de la entrega (el STL de out/ junto a la pieza, que despues se copia a la carpeta destino) y la deja en
+    stl_hechos para que el bucle de entrega no la haga dos veces: se juzga el archivo que se entrega, no otro."""
+    base = os.path.basename(piece)
+    try:
+        can = canon_validez()
+        hoy = hoy_validez(hoy_arg)
+    except (OSError, ValueError, NoMedidoValidez) as e:
+        raise SystemExit("[GATE validez] %s" % e)
+    stl = os.path.join(os.path.dirname(piece) or ".", os.path.splitext(base)[0] + ".stl")
+
+    def cargar_malla():
+        envcheck.require(("trimesh",))
+        import trimesh
+        try:
+            _stl_export(piece, stl, lc, curvature)
+            m = trimesh.load(stl)
+        except Exception as e:
+            raise NoMedidoValidez("no se pudo mallar el STEP para juzgar el sentido de los triangulos (%s: %s)"
+                                  % (type(e).__name__, e))
+        stl_hechos[piece] = stl
+        return m
+
+    res = evaluar_validez(piece, cargar_malla)
+    rojo = res["veredicto"] == "rojo"
+    ev = workdir.find_evidence(w, "validez_aceptada", fixture=base, step_firma=res["step_firma"]) \
+        if rojo and res["step_firma"] else None
+    modo = modo_validez(res["medido"], rojo, hoy, can["aviso_hasta"], bool(ev))
+    res.update(modo=modo, hoy=hoy.isoformat(), aviso_hasta=can["aviso_hasta"], aceptacion=(ev or {}).get("frase"))
+    texto = texto_validez(res)
+    if modo == "freno":
+        raise SystemExit(
+            "[GATE validez] '%s': %s. Desde el %s esto frena la entrega.\n"
+            "Salidas: %s" % (base, texto, dia_siguiente_validez(can["aviso_hasta"]), "; ".join(can["salidas"])))
+    if modo == "aviso":
+        print("  AVISO [GATE validez] '%s': %s\n    freno desde %s" % (base, texto, dia_siguiente_validez(can["aviso_hasta"])))
+    elif modo == "aceptado":
+        print("  [GATE validez] '%s': %s, ACEPTADO por frase en el manifest (firma %s)" % (base, texto, res["step_firma"]))
+    else:
+        print("  [GATE validez] '%s': OK, %s" % (base, texto))
+    return res
+
+
+def main_validez(argv):
+    """Gate de validez suelto: export_deliverables.py validez --step P [--workdir W] [--acepto-validez "<frase>"].
+
+    0 verde, aviso o aceptado; 1 freno o frase mal; 2 NO MEDIDO. La ultima linea es el JSON {"gate": "validez", ...}.
+    Malla en una carpeta temporal propia, nunca junto al STEP. La salida de Fak (--acepto-validez) vive aca y no en la
+    corrida de la entrega: la frase queda en el manifest atada a la firma del STEP, y la entrega solo la LEE."""
+    import json
+    import tempfile
+    import time
+    ap = argparse.ArgumentParser(prog="export_deliverables.py validez", description=main_validez.__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--step", required=True, help="el STEP a juzgar")
+    ap.add_argument("--stl-lc", type=float, default=geom.LC_PRINT)
+    ap.add_argument("--stl-curvature", type=int, default=geom.CURVATURE_PRINT)
+    ap.add_argument("--workdir", default=None, help="workdir con manifest.json donde queda la aceptacion")
+    ap.add_argument("--acepto-validez", default=None, metavar="FRASE",
+                    help="Fak asume el solido: frase de 10 caracteres o mas; queda en el manifest con fecha y firma del "
+                         "STEP (exige --workdir). Vale para esa firma sola")
+    ap.add_argument("--hoy", default=None, help="solo tests: fecha simulada AAAA-MM-DD (exige CAD_GATE_TEST=1)")
+    ap.add_argument("--json", default=None, help="volcar el resultado")
+    a = ap.parse_args(argv)
+    t0 = time.time()
+    res = {"gate": "validez", "medido": False, "veredicto": "no_medido", "modo": None, "step": a.step,
+           "step_firma": None, "no_medido": [], "motivos": []}
+
+    def cerrar(codigo, texto):
+        res["segundos"] = round(time.time() - t0, 1)
+        print(texto)
+        if a.json:
+            with open(a.json, "w", encoding="utf-8") as f:
+                json.dump(res, f, indent=1, ensure_ascii=False)
+        print(json.dumps(res, ensure_ascii=True), flush=True)
+        return codigo
+
+    def no_medido(motivo):
+        res["no_medido"].append(motivo)
+        return cerrar(2, "NO MEDIDO: %s. Un control que no midio nunca da verde." % motivo)
+
+    try:
+        can = canon_validez()
+    except (OSError, ValueError) as e:
+        return no_medido("no se pudo leer %s (%s)" % (CANON_VALIDEZ, e))
+    try:
+        hoy = hoy_validez(a.hoy)
+    except (NoMedidoValidez, ValueError) as e:
+        return no_medido(str(e))
+    res["hoy"], res["aviso_hasta"] = hoy.isoformat(), can["aviso_hasta"]
+    frase = a.acepto_validez.strip() if a.acepto_validez is not None else None
+    if frase is not None and len(frase) < int(can["frase_minima"]):
+        res["motivos"].append("frase corta")
+        return cerrar(1, "NO SE ACEPTA: --acepto-validez necesita la frase de Fak (%d caracteres o mas); llego «%s» "
+                         "(frase corta)" % (int(can["frase_minima"]), a.acepto_validez))
+    if frase is not None and not a.workdir:
+        res["motivos"].append("aceptacion sin manifest")
+        return cerrar(1, "NO SE ACEPTA: la aceptacion queda escrita en el manifest; falta --workdir")
+
+    with tempfile.TemporaryDirectory(prefix="validez_", ignore_cleanup_errors=True) as tmp:
+        stl = os.path.join(tmp, "malla.stl")
+
+        def cargar_malla():
+            envcheck.require(("trimesh",))
+            import trimesh
+            try:
+                _stl_export(a.step, stl, a.stl_lc, a.stl_curvature)
+                return trimesh.load(stl)
+            except Exception as e:
+                raise NoMedidoValidez("no se pudo mallar el STEP para juzgar el sentido de los triangulos (%s: %s)"
+                                      % (type(e).__name__, e))
+
+        r = evaluar_validez(a.step, cargar_malla)
+    res.update({k: r[k] for k in ("medido", "veredicto", "step_firma", "solidos", "solidos_invalidos", "malla_cerrada",
+                                  "sentido_consistente", "motivos", "no_medido")})
+    res["avisos"] = list(r.get("avisos") or [])    # sin esto el modo suelto decia «un solo sentido» con el sentido malo
+    texto = texto_validez(res)
+    print("pieza: %s" % os.path.basename(a.step))
+    if res["veredicto"] == "no_medido":
+        res["modo"] = "no_medido"
+        return cerrar(2, "NO MEDIDO: %s. Un control que no midio nunca da verde." % "; ".join(res["no_medido"]))
+    aceptada = False
+    if res["veredicto"] == "verde" and frase is not None:
+        texto += " (la pieza esta sana: no hace falta frase y no se escribio ninguna aceptacion)"
+    if res["veredicto"] == "rojo" and frase is not None:
+        man = workdir.load_manifest(a.workdir) if os.path.isfile(os.path.join(a.workdir, workdir.MANIFEST)) else {}
+        otra = [e for e in man.get("evidence", []) if e.get("kind") == "validez_aceptada"
+                and (e.get("frase") or "").strip() == frase and e.get("step_firma") != res["step_firma"]]
+        if otra:
+            res["modo"] = modo_validez(True, True, hoy, can["aviso_hasta"], False)
+            return cerrar(1, "NO SE ACEPTA: esa frase ya acepto otra version del STEP (firma %s; hoy %s). Una "
+                             "aceptacion vale para UNA firma: mirar la pieza nueva y escribir otra."
+                          % (otra[-1].get("step_firma"), res["step_firma"]))
+        workdir.ensure_workdir(a.workdir)
+        workdir.record_evidence(a.workdir, "validez_aceptada", fixture=os.path.basename(a.step), step=a.step,
+                                step_firma=res["step_firma"], frase=frase, fecha=hoy.isoformat(),
+                                solidos_invalidos=res["solidos_invalidos"], malla_cerrada=res["malla_cerrada"],
+                                sentido_consistente=res["sentido_consistente"], motivos=res["motivos"])
+        res["aceptacion"] = {"frase": frase, "fecha": hoy.isoformat()}
+        aceptada = True
+    modo = modo_validez(True, res["veredicto"] == "rojo", hoy, can["aviso_hasta"], aceptada)
+    res["modo"] = modo
+    if modo == "verde":
+        return cerrar(0, "[OK] %s" % texto)
+    if modo == "aceptado":
+        return cerrar(0, "[ACEPTADO] %s. Queda en el manifest: frase, fecha y firma del STEP." % texto)
+    salidas = "; ".join(can["salidas"])
+    if modo == "aviso":
+        return cerrar(0, "AVISO: %s; freno desde %s. Salidas: %s" % (texto, dia_siguiente_validez(can["aviso_hasta"]),
+                                                                    salidas))
+    return cerrar(1, "FRENO: %s. Salidas: %s" % (texto, salidas))
+
+
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "validez":
+        sys.exit(main_validez(sys.argv[2:]))
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--workdir", required=True)
     ap.add_argument("--pieces", nargs="+", required=True, help="STEPs a entregar (tipicamente en out/)")
@@ -709,7 +1032,7 @@ def main():
                          "solidos del STEP y queda escrito en el manifest.")
     ap.add_argument("--skip-gate", action="append", default=[],
                     choices=["zona", "proceso", "collision", "render", "ensamble", "entregable",
-                             "cantos", "barrido", "tornillos", "fases"],
+                             "cantos", "barrido", "tornillos", "fases", "validez"],
                     help="saltear un gate (queda registrado; exige --reason)")
     ap.add_argument("--reason", default=None, help="justificacion del --skip-gate")
     ap.add_argument("--final", action="store_true",
@@ -718,8 +1041,8 @@ def main():
     ap.add_argument("--motor", default="", help="--final: motor de imagen de los renders (ver procesoCanon)")
     ap.add_argument("--render", nargs="*", default=[], help="--final: los PNG que muestran el 3D")
     ap.add_argument("--hoy", default=None,
-                    help="solo tests: fecha simulada AAAA-MM-DD para los gates de cantos, barrido, tornillos y fases "
-                         "(exige CAD_GATE_TEST=1)")
+                    help="solo tests: fecha simulada AAAA-MM-DD para los gates de cantos, barrido, tornillos, fases y "
+                         "validez (exige CAD_GATE_TEST=1)")
     ap.add_argument("--movimiento", default=None, metavar="CONJUNTO_JSON",
                     help="json del conjunto que se mueve (partes en out/, movil/eje/rango o estados): corre el gate "
                          "de barrido (tambien se toma de params.movimiento del manifest)")
@@ -917,13 +1240,24 @@ def main():
     if "fases" not in args.skip_gate:
         fases_res = gate_fases(w, args.pieces, args.hoy)
 
+    # GATE VALIDEZ DEL SOLIDO (24/10/2026): una vez por pieza, despues de los demas gates y antes de crear la carpeta
+    # destino, asi un freno no deja nada entregado. Hace la malla de la entrega (el STL de out/) y el bucle de abajo la
+    # reusa: se juzga el archivo que se copia.
+    validez_por_pieza = {}
+    stl_hechos = {}
+    if "validez" not in args.skip_gate:
+        for piece in args.pieces:
+            validez_por_pieza[os.path.basename(piece)] = gate_validez_solido(
+                w, piece, args.stl_lc, args.stl_curvature, stl_hechos, args.hoy)
+
     # ---- export + entrega ----
     os.makedirs(args.deliver, exist_ok=True)
     delivered = []
     for piece in args.pieces:
         base = os.path.splitext(os.path.basename(piece))[0]
         stl = os.path.join(os.path.dirname(piece) or ".", base + ".stl")
-        _stl_export(piece, stl, args.stl_lc, args.stl_curvature)
+        if stl_hechos.get(piece) != stl:      # el gate de validez ya hizo esta malla (y la juzgo): no se rehace
+            _stl_export(piece, stl, args.stl_lc, args.stl_curvature)
         n_step = _contar_solidos(piece)
         n_decl = declarados.get(base)
         if n_decl is None:
@@ -1001,6 +1335,7 @@ def main():
                             barrido=barrido_res,
                             tornillos_por_pieza=tornillos_por_pieza,
                             fases=fases_res,
+                            validez_por_pieza=validez_por_pieza,
                             ensambles_declarados=args.ensamble,
                             skipped_gates=args.skip_gate, reason=args.reason)
     print("\nENTREGA OK -> %s (%d archivos). Evidencia registrada en el manifest." % (args.deliver, len(delivered)))
