@@ -145,6 +145,7 @@ class Agujero:
         self.Type = self.CounterSunkMode = self.BottomType = None
         self.Diameter, self.HeadDepth, self.HeadAngle = Obj(Value=0.0), Obj(Value=0.0), Obj(Value=0.0)
         self.BottomLimit = Obj(LimitMode=None)
+        self.Sketch = Obj(nombre="boceto del punto del Hole")
         self.dv = doc.esperado.pop(0)
         self.invertido = False
 
@@ -310,6 +311,8 @@ class Cuenta08(unittest.TestCase):
         self.assertEqual((h.Type, h.CounterSunkMode, h.BottomType, h.BottomLimit.LimitMode), (3, 0, 0, 2))
         self.assertEqual((h.Diameter.Value, h.HeadAngle.Value), (5.5, 90.0))
         self.assertAlmostEqual(h.HeadDepth.Value, 2.85, places=9)
+        # su boceto se oculta antes de exportar (si no, el STEP lleva un vertice suelto en (-9; 0; 34): 08_r2, PEDIDO 32)
+        self.assertTrue(any(o is h.Sketch for o in doc.ocultos))
         # material: aluminio del catalogo (2 710) pasado a 2 700 y la masa de CATIA
         self.assertEqual(salida["material_catia"]["densidad_catalogo_kg_m3"], 2710.0)
         self.assertEqual(salida["material_catia"]["densidad_kg_m3"], 2700.0)

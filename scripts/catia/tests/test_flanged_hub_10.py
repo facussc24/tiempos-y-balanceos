@@ -187,7 +187,8 @@ class DocFalso:
                 dvs = {"bien": [bueno, 0.0], "al_reves": [0.0, bueno], "nunca": [0.0, 0.0]}[hole]
                 h = agregar("hole", dvs[0], punto=(x, y, z), cara=cara, Type=None, BottomType=None,
                             Diameter=Obj(Value=0.0), HeadDiameter=Obj(Value=0.0), HeadDepth=Obj(Value=0.0),
-                            BottomLimit=Obj(LimitMode=None), dado_vuelta=False)
+                            BottomLimit=Obj(LimitMode=None), dado_vuelta=False,
+                            Sketch=Obj(nombre="boceto del punto del Hole"))
 
                 def reverse():
                     h.dado_vuelta = not h.dado_vuelta
@@ -292,6 +293,9 @@ class Cuenta10(unittest.TestCase):
         self.assertEqual(fallas, [], fallas)
         self.assertEqual([r.nombre for r in doc.rasgos], ["shaft", "pad", "patron", "groove", "hole", "patron", "pocket"])
         self.assertAlmostEqual(doc.volumen(), VOL_BIEN, delta=0.01)
+        # el boceto del punto del Hole se oculta antes de exportar (vertice suelto en (53,975; 0; 8) en 10_r3, PEDIDO 32)
+        h = next(r for r in doc.rasgos if r.nombre == "hole")
+        self.assertTrue(any(o is h.Sketch for o in doc.ocultos))
         self.assertTrue(doc.cerrado)
         # revolucion: perfiles cerrados con su CenterLine en v 0 (el eje Z en el croquis ZX)
         revs = [r for r in doc.rasgos if r.nombre in ("shaft", "groove")]
