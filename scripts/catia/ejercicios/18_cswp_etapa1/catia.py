@@ -170,7 +170,8 @@ def cerrar_con_respuestas(carpeta, medir_gemelo=gemelo):
             if not abs(j["dif_gemelo_mm3"]) <= TOL_VOL:
                 problemas.append(f"etapa {n}: CATIA {vc} contra el gemelo {g['volumen']} mm3")
         juez[str(n)] = j
-    v_step = (s.get("volumen_step_catia_en_build123d") or {}).get(PARTE)
+    vs = s.get("volumen_step_catia_en_build123d")      # sin .venv-cad juez_comun deja un TEXTO: .get() reventaba (24/10)
+    v_step = vs.get(PARTE) if isinstance(vs, dict) else None
     v1 = ((s.get("etapas") or {}).get("1") or {}).get("volumen_catia")
     if not isinstance(v_step, (int, float)) or v1 is None or not abs(v_step - v1) <= TOL_VOL:
         problemas.append(f"el STEP de la etapa 1 ({v_step}) no da su volumen de CATIA ({v1})")

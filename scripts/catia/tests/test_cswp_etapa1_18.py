@@ -221,7 +221,8 @@ class Cuenta18(unittest.TestCase):
 
     def juez(self, salida, tmp, ej, gemelo=None, step=True, ok_pasos=True):
         salida["ok_pasos"], salida["ok"] = ok_pasos, False
-        salida["volumen_step_catia_en_build123d"] = {ej.PARTE: VOL_CATIA[1] + 0.05} if step else {}
+        salida["volumen_step_catia_en_build123d"] = ({ej.PARTE: VOL_CATIA[1] + 0.05} if step is True else
+                                                     step if isinstance(step, str) else {})
         ej.jc.escribir(tmp, salida)
         g = gemelo or (lambda a, b, c, d, e: {"volumen": VOL_CATIA[next(n for n, x in EXAMEN.items() if x[0] == a)]})
         return ej.cerrar_con_respuestas(tmp, medir_gemelo=g)
@@ -253,6 +254,10 @@ class Cuenta18(unittest.TestCase):
         self.assertFalse(s["ok"])
         self.assertIn("contra el gemelo", s["error"])
         s = self.juez(json.loads(json.dumps(salida)), tmp, ej, step=False)
+        self.assertFalse(s["ok"])
+        self.assertIn("el STEP de la etapa 1", s["error"])
+        # sin .venv-cad juez_comun deja un TEXTO en la clave: rojo con motivo, no una excepcion (barrido del 24/10)
+        s = self.juez(json.loads(json.dumps(salida)), tmp, ej, step="medir_b123d no corrio: no esta .venv-cad")
         self.assertFalse(s["ok"])
         self.assertIn("el STEP de la etapa 1", s["error"])
 
