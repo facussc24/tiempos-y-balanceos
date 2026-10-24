@@ -271,11 +271,14 @@ function conCandado(lista, fn) {
  * `clave` identifica el pedido (herramienta + resumen): si ya hay un renglon con esa clave, no se repite.
  * @returns {{ ok: boolean, como: 'agregado'|'ya_estaba'|'tope'|'sin_lista'|'error', error?: string }}
  */
+/** Donde van los carteles negados de una lista: la misma lista (.md) o, si es un .json, <lista>.carteles.md al lado. */
+export const archivoDeCarteles = (lista) => (/\.json$/i.test(String(lista || '')) ? String(lista).replace(/\.json$/i, '.carteles.md') : lista);
+
 export function anotarEnLista(lista, renglon, opciones = {}) {
   if (!lista || !fs.existsSync(lista)) return { ok: false, como: 'sin_lista' };
   // 24/10/2026 (cola del 24/10 00:45): si la lista es un JSON (el ESTADO.json de una tanda), un renglon markdown al final
   // la rompe y nadie puede leerla mas. Los carteles van entonces a un .md al lado (<lista sin .json>.carteles.md).
-  const destino = /\.json$/i.test(lista) ? lista.replace(/\.json$/i, '.carteles.md') : lista;
+  const destino = archivoDeCarteles(lista);
   if (destino !== lista && !fs.existsSync(destino)) {
     try { fs.writeFileSync(destino, ''); } catch (e) { return { ok: false, como: 'error', error: String((e && e.code) || e) }; }
   }
@@ -371,8 +374,8 @@ export function decidir(payload, deps = {}) {
   if (pres.presente) return { niega: false, motivo: 'fak_presente', herramienta, resumen };
   const anotado = anotarEnLista(e.lista, renglon, { clave });
   const donde = anotado.ok
-    ? `Quedó anotado en «Lo que necesita a Fak» de ${e.lista}.`
-    : `No lo pude anotar en la lista (${anotado.como === 'sin_lista' ? 'la hora fijada no tiene un archivo de lista' : anotado.como === 'tope' ? 'ya hay muchos carteles negados anotados' : 'no se pudo escribir'}): anotalo vos en «Lo que necesita a Fak», con la herramienta y lo que pedía.`;
+    ? `Quedó anotado en «Lo que necesita a Fak» de ${anotado.archivo || e.lista}.`
+    : `No lo pude anotar en la lista (${anotado.como === 'sin_lista' ? 'la hora fijada no tiene un archivo de lista' : anotado.como === 'tope' ? 'ya hay muchos carteles negados anotados' : 'no se pudo escribir'}): anotalo vos en «Lo que necesita a Fak» de ${archivoDeCarteles(e.lista)} (con una lista .json el cartel va al .carteles.md de al lado, nunca adentro del JSON), con la herramienta y lo que pedía.`;
   const van = negadasRecientes(payload.session_id, { home: deps.home, ahora }) + 1;
   const repetido = van >= CANON.aviso_repetidos ? ` Ya van ${van} permisos negados en ${CANON.ventana_repetidos_min} minutos en esta sesión: dejá de intentar cosas que piden permiso y pasá a un trabajo que no lo necesite.` : '';
   const quien = e.heredada_de ? `Fak le pidió a la sesión que te lanzó trabajar hasta las ${e.hasta}` : `Fak pidió trabajar hasta las ${e.hasta}`;
@@ -398,7 +401,7 @@ export function correr(crudo, deps = {}) {
     try { hora = obj && typeof obj.tool_name === 'string' && obj.tool_name.trim() && !esPregunta(obj.tool_name) ? horaPara(obj.session_id, { home: deps.home }) : null; } catch { hora = null; }
     registrar(['ERROR', hora ? 'se_rompio_niega_igual' : 'se_rompio', sesion, '', (obj && obj.tool_name) || '', String((e && e.stack) || e)], { home: deps.home });
     if (!hora) return '';
-    return JSON.stringify(salidaDeny(`${MARCA} No hay nadie en la ventana: Fak pidió trabajar hasta las ${hora.hasta} y este permiso no lo va a aprobar nadie ahora. El control falló al anotarlo: anotalo vos en «Lo que necesita a Fak» de la lista, con la herramienta y lo que pedía. ${NO_ESQUIVAR}`));
+    return JSON.stringify(salidaDeny(`${MARCA} No hay nadie en la ventana: Fak pidió trabajar hasta las ${hora.hasta} y este permiso no lo va a aprobar nadie ahora. El control falló al anotarlo: anotalo vos en «Lo que necesita a Fak» de ${archivoDeCarteles(hora.lista) || 'la lista'} (con una lista .json, en el .carteles.md de al lado), con la herramienta y lo que pedía. ${NO_ESQUIVAR}`));
   }
 }
 

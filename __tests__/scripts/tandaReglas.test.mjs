@@ -497,3 +497,20 @@ describe('_orquestador.mjs --hora · imprime el estado de las reglas y de las hi
     expect(ledgerEnVentana(0, 1, path.join(dir, 'nada'))).toMatchObject({ pedidos: 0, usd: 0 });
   });
 });
+
+// 24/10/2026 (auditor 30): con una lista .json los carteles negados viven en <lista>.carteles.md; si no se leen, el
+// orquestador dice «Preguntas abiertas a Fak: 0» con un cartel al lado y la señal de PARADO se pierde.
+describe('preguntasEnLista con una lista .json: suma los carteles de <lista>.carteles.md', () => {
+  it('cuenta el cartel del .md de al lado y no toca el JSON; sin .md, 0', () => {
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'tanda-json-'));
+    const estado = path.join(home, 'ESTADO.json');
+    fs.writeFileSync(estado, JSON.stringify({ items: [] }));
+    expect(T.preguntasEnLista(estado)).toEqual([]);
+    fs.writeFileSync(path.join(home, 'ESTADO.carteles.md'),
+      '## Lo que necesita a Fak\n\n- **Cartel negado 2026-10-24 00:45** Write · ESTADO.json · sesión 8ec29120\n- [x] uno ya atendido\n');
+    const abiertas = T.preguntasEnLista(estado);
+    expect(abiertas.length).toBe(1);
+    expect(abiertas[0]).toMatch(/Cartel negado 2026-10-24 00:45/);
+    expect(() => JSON.parse(fs.readFileSync(estado, 'utf8'))).not.toThrow();
+  });
+});

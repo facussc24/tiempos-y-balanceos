@@ -657,19 +657,10 @@ export function revisarCita(payload, r = { ok: true }, { ahora = new Date(), hom
     citas = [...bloque.texto.matchAll(RE_COMILLAS)].map((m) => (m[1] ?? m[2] ?? m[3]).trim()).filter(Boolean);
     const largas = citas.filter((c) => palabrasDe(c).length >= CITA.minPalabrasCita);
     if (!citas.length) { resultado = 'sin cita'; faltan.push('el renglón PEDIDO DE FAK no trae su frase entre comillas: un resumen con tus palabras no es la frase de Fak'); }
-    else if (!largas.length) {
-      // 24/10/2026 (cola del 24/10 00:35): una respuesta corta de Fak («2. si 3. si hace tood si») vale como cita SOLO si es
-      // un mensaje suyo ENTERO de esta sesion, copiado tal cual (plano a plano); un trozo o un «si» suelto siguen sin valer.
-      const halladas = CITA.respuestaCortaLiteral && leer()
-        ? citas.map((c) => ({ c, m: [...msgs].reverse().find((x) => x.plano && x.plano === plano(c)) })) : [];
-      if (halladas.length && halladas.every((h) => h.m)) {
-        for (const h of halladas) origen.push({ mensaje: h.m, metodo: 'mensaje entero', cobertura: 1 });
-        resultado = 'cita rastreada';
-      } else {
-        resultado = 'sin cita';
-        faltan.push(`la cita tiene menos de ${CITA.minPalabrasCita} palabras: no alcanza para saber qué pidió (una respuesta corta de Fak vale solo copiada ENTERA, tal cual la escribió)`);
-      }
-    }
+    // Menos de minPalabrasCita palabras sigue siendo «sin cita» aunque sea un mensaje entero de Fak («ok», «dale»): el
+    // auditor del 24/10 (informe 30) midio que abriria la puerta a lanzar cualquier cosa citando un «si»; el caso real
+    // («2. si 3. si hace tood si», 7 palabras) entra por la rama de abajo como mensaje entero.
+    else if (!largas.length) { resultado = 'sin cita'; faltan.push(`la cita tiene menos de ${CITA.minPalabrasCita} palabras: no alcanza para saber qué pidió`); }
     else if (leer() === null) resultado = 'sin transcript';
     else if (!msgs.length) { resultado = 'cita no rastreada'; sinFak = true; faltan.push('esta sesión no tiene ningún mensaje de Fak (una hija o un worktree): su frase vive en la sesión que te lanzó'); }
     else {

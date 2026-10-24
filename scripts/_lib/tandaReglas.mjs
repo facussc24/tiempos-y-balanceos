@@ -290,6 +290,11 @@ export function preguntasEnLista(lista) {
   if (!lista) return [];
   let texto = '';
   try { texto = fs.readFileSync(lista, 'utf8'); } catch { return []; }
+  // 24/10/2026 (auditor 30): con una lista .json (el ESTADO.json de una tanda) los carteles negados van a
+  // <lista>.carteles.md al lado (permisoGuard.anotarEnLista): se leen tambien, o la señal de PARADO se pierde.
+  if (/\.json$/i.test(lista)) {
+    try { texto += `\n${fs.readFileSync(lista.replace(/\.json$/i, '.carteles.md'), 'utf8')}`; } catch { /* sin carteles al lado */ }
+  }
   const out = [];
   let adentro = false;
   for (const l of texto.split(/\r?\n/)) {

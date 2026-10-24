@@ -399,13 +399,20 @@ describe('C13 · una respuesta corta de Fak vale como cita solo copiada ENTERA, 
     const tp = transcript([...base, deFak('si hacelo pero despues me mostras el diff', '2026-10-24T02:55:00.000Z')]);
     const a = revisar(agente(conCorta('si hacelo'), {}, tp));
     expect(a.resultado).toBe('sin cita');
-    expect(a.faltan.join(' ')).toMatch(/copiada ENTERA/);
+    expect(a.faltan.join(' ')).toMatch(/menos de 6 palabras/);
   });
 
   it('ROJO: la respuesta corta no esta en ningun mensaje de la sesion -> no rastreada (7 palabras sin contenido); y desde el 31/10 frena', () => {
     const tp = transcript(base);
     expect(revisar(agente(conCorta(CORTA), {}, tp)).resultado).toBe('cita no rastreada');
     expect(revisar(agente(conCorta(CORTA), {}, tp), PRIMER_FRENO).nivel).toBe('freno');
+  });
+
+  it('ROJO (auditor 30): un mensaje entero de Fak de menos de 6 palabras («ok», «dale») NO vale como cita: sin cita', () => {
+    for (const corto of ['ok', 'dale', 'si hacelo', '1']) {
+      const tp = transcript([...base, deFak(corto, '2026-10-24T02:55:00.000Z')]);
+      expect(revisar(agente(conCorta(corto), {}, tp)).resultado, corto).toBe('sin cita');
+    }
   });
 
   it('con el canon apagado (respuestaCortaLiteral=false) vuelve la conducta vieja: no rastreada aunque este entera', () => {

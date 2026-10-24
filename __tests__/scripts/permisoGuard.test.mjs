@@ -641,3 +641,17 @@ describe('anotarEnLista con una lista .json: el JSON queda intacto y el cartel v
     expect(fs.existsSync(path.join(home, 'lista.carteles.md'))).toBe(false);
   });
 });
+
+// 24/10/2026 (auditor 30, TRUE BUG): el deny decia «Quedó anotado … de …\ESTADO.json» con el renglon en ESTADO.carteles.md.
+describe('archivoDeCarteles: el aviso nombra el archivo donde quedo el cartel', () => {
+  it('con .json es <lista>.carteles.md; con .md es la misma lista', () => {
+    expect(P.archivoDeCarteles('C:\\x\\ESTADO.json')).toBe('C:\\x\\ESTADO.carteles.md');
+    expect(P.archivoDeCarteles('C:\\x\\estado.JSON')).toBe('C:\\x\\estado.carteles.md');
+    expect(P.archivoDeCarteles('C:\\x\\lista.md')).toBe('C:\\x\\lista.md');
+  });
+  it('el texto que arma decidir() para una lista .json nombra el .carteles.md y no el .json', () => {
+    const src = fs.readFileSync(path.join(RAIZ, 'scripts', '_lib', 'permisoGuard.mjs'), 'utf8');
+    expect(src).toMatch(/Quedó anotado en «Lo que necesita a Fak» de \$\{anotado\.archivo \|\| e\.lista\}/);
+    expect(src).not.toMatch(/Quedó anotado en «Lo que necesita a Fak» de \$\{e\.lista\}/);
+  });
+});
