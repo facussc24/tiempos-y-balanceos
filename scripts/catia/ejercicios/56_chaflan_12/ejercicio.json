@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "Chaflan 5 x 5 en las 12 aristas de una caja 250 x 80 x 60 de una vez en CATIA (AddNewChamfer modo 0) y como cierra la esquina de tres chaflanes: volumen y centro contra la cuenta con los tres planos que se cortan en un punto, el STEP contra el gemelo de build123d cortado por los 12 planos (compara.py del 32 con la distancia exacta) y la diferencia con chamfer() de build123d ubicada en las 8 esquinas; pieza = ej84 de la practica con tres cambios anotados",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "la caja con los 12 chaflanes donde en cada esquina los tres planos se cortan en un punto (queda K^3/4 en el cubo de esquina): V = A B C - 4 (A + B + C) K^2 / 2 + 8 (3 K^3/2 - K^3 + K^3/4); el gemelo de gemelo_chaflan.py (caja cortada por los 12 planos, sin chamfer())",
+  "valor": {"volumen_mm3": 1181250.0, "cdg_mm": [0.0, 0.0, 30.0], "caras": 18, "chamfer_build123d_mm3": 1181166.667, "diferencia_por_esquina_mm3": 10.4167},
+  "unidad": "mm3",
+  "tolerancia": {"volumen_mm3": 0.5, "cdg_mm": 0.01, "sobra_falta_mm3": 1.0, "distancia_mm": 0.01, "pieza_esquina_mm3": 0.01},
+  "fuente": "la cuenta (la esquina K^3/4 integrada en la prueba) y el gemelo por planos; la fila 56 pide chamfer() de build123d a 0,5 mm3, que no puede dar: cierra cada esquina con un triangulo (K^3/6, 26 caras) y queda 83,333 mm3 abajo (el ej84 de la practica ya lo habia medido: 0,0071 %)"
+ }
+}
