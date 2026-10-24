@@ -74,7 +74,7 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 
 | N | Estado | Corrida real (PC, fecha, resultado) | Commit |
 |---|---|---|---|
-| 08 | pendiente | | |
+| 08 | hecho (CATA) | CATA, R21, 24/10/2026 09:25 (`08_r2`, código del commit; la primera, 09:10, igual): ok true; 35 605,547 mm³ = build123d, cdg a 0,0003 mm, masa de CATIA 96,135 g (Aluminium del catálogo pasado a 2 700 kg/m³) contra 96,13 ± 1; Hole avellanado del ej33; 30 s | (este commit) |
 | 09 | hecho | PC principal, R21, 24/10 09:18: 19 pasos sin falla, −0,004 mm³ y 0,0004 mm de build123d, 56,73 g (guía 57,08 ± 1), área −3e-8, STEP 1 sólido sin caras sueltas, STL cerrado a −0,24 %; revisor Fable: 1 bug real (el control del sentido de las caras) y 3 de robustez, arreglados | (este commit) |
 | 10 | pendiente | | |
 | 11 | pendiente | | |
