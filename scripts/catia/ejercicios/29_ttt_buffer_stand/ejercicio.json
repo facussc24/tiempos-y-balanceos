@@ -1,0 +1,6 @@
+{
+ "usa_catia": true,
+ "descripcion": "Too Tall Toby 24-SPO-06 Buffer Stand en CATIA con el ej39_buffer_stand de la practica del 19/10 copiado sin cambios, corrido dentro del juez; masa contra la guia, volumen contra el gemelo de build123d de la practica y el STEP de CATIA",
+ "banco": null,
+ "respuesta_conocida": {"que": "masa de la pieza en acero 7 800 kg/m3", "valor": 3.923, "unidad": "lb", "tolerancia": 0.02, "fuente": "Guia de build123d, Too Tall Toby 24-SPO-06 Buffer Stand (https://build123d.readthedocs.io/en/stable/tttt.html)"}
+}

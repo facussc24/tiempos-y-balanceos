@@ -129,11 +129,11 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 22 | hecho (CATA) | CATA, R21, 24/10/2026 10:52 (`22_final`, código del commit; la primera 10:20, igual): ok true; 43,093 g contra 43,09 (sin ABS en el catálogo: Steel con Density 1 020); antes del R1 a 0,023 mm³ del gemelo; STEP a 0,15 mm³ | (este commit) |
 | 23 | hecho | PC principal, R21, 24/10 10:51: 211,303 g contra 211,30, volumen = gemelo de la práctica; revisor Fable: sin bugs (0,1 g ve cada falta: sin R8 −0,49 g); límite anotado: planos visibles al STEP | (este commit) |
 | 24 | hecho (CATA) | CATA, R21, 24/10/2026 10:52 (`24_final`, código del commit): ok true; 309,997 g contra 310,00; gemelo a 0,002 mm³; es el MOLDE de 26, 28 y 30 (catia.py con CFG); el doblez prueba cada arista candidata (CAMBIO 4: el orden de la topología cambia entre corridas) | (este commit) |
-| 25 | pendiente | | |
+| 25 | hecho | PC principal, R21, 24/10 11:2x (corrida con el código final): verde contra la guía; el ej de la práctica copiado sin cambios + practica_en_juez.py; revisor Fable: el cierre no era idempotente (bug real, arreglado y corrido de nuevo), la tolerancia de volumen relativa es medida, límites de la tolerancia de la guía anotados | (este commit) |
 | 26 | hecho (CATA) | CATA, R21, 24/10/2026 10:53 (`26_final`): ok true; 3 387,058 g contra 3 387,06; gemelo y STEP a 0,000 mm³; molde del 24 | (este commit) |
-| 27 | pendiente | | |
+| 27 | hecho | PC principal, R21, 24/10 11:2x (corrida con el código final): verde contra la guía; el ej de la práctica copiado sin cambios + practica_en_juez.py; revisor Fable: el cierre no era idempotente (bug real, arreglado y corrido de nuevo), la tolerancia de volumen relativa es medida, límites de la tolerancia de la guía anotados | (este commit) |
 | 28 | hecho (CATA) | CATA, R21, 24/10/2026 10:54 (`28_final`): ok true; 797,146 g contra 797,15; gemelo a 0,027 mm³; molde del 24 | (este commit) |
-| 29 | pendiente | | |
+| 29 | hecho | PC principal, R21, 24/10 11:2x (corrida con el código final): verde contra la guía; el ej de la práctica copiado sin cambios + practica_en_juez.py; revisor Fable: el cierre no era idempotente (bug real, arreglado y corrido de nuevo), la tolerancia de volumen relativa es medida, límites de la tolerancia de la guía anotados | (este commit) |
 | 30 | hecho (CATA) | CATA, R21, 24/10/2026 10:54 (`30_final`): ok true; 307,231 g contra 307,23 (Aluminium pasado a 2 700); gemelo y STEP a 0,000 mm³; molde del 24 | (este commit) |
 | 31 | pendiente | | |
 | 32 | pendiente | | |

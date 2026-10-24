@@ -64,11 +64,11 @@ def cerrar_con_papel(carpeta):
         s["dif_gemelo_mm3"] = round(v - GEMELO_MM3, 3)
         if abs(s["dif_masa_g"]) > TOL_MASA_G:
             malos.append(f"masa {s['masa_catia_g']} g contra {PAPEL_G} de la guia")
-        if abs(s["dif_gemelo_mm3"]) > TOL_MM3:
+        if abs(s["dif_gemelo_mm3"]) > max(TOL_MM3, 1e-5 * v):         # el mismo criterio que practica_en_juez
             malos.append(f"volumen {v} contra el gemelo de la practica {GEMELO_MM3}")
         vs = s.get("volumen_step_catia_en_build123d")  # sin .venv-cad viene el texto del error
         vstep = vs.get("light_cap") if isinstance(vs, dict) else vs
-        if not isinstance(vstep, (int, float)) or abs(vstep - v) > TOL_MM3:
+        if not isinstance(vstep, (int, float)) or abs(vstep - v) > max(TOL_MM3, 1e-5 * v):
             malos.append(f"el STEP de CATIA da {vstep} contra {v} de CATIA")
     s["ok_papel"] = not malos
     s["ok"] = s["ok_pasos"] and not malos

@@ -46,7 +46,7 @@ class Papel(unittest.TestCase):
     def test_verde_y_rojos(self):
         self.assertTrue(self.cerrar()["ok"])
         self.assertFalse(self.cerrar(vol=207159.364 + 0.2 / 1.02e-3, vstep=207159.364 + 0.2 / 1.02e-3)["ok"])
-        self.assertFalse(self.cerrar(vol=207160.5, vstep=207160.5)["ok"])              # 1,1 mm3 del gemelo
+        self.assertFalse(self.cerrar(vol=207162.5, vstep=207162.5)["ok"])              # 3,1 mm3 del gemelo (tol 2,07)
         self.assertFalse(self.cerrar(vstep="no esta el entorno CAD")["ok"])
         self.assertFalse(self.cerrar(ok=False)["ok"])
 

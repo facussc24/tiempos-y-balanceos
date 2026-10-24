@@ -1,0 +1,6 @@
+{
+ "usa_catia": true,
+ "descripcion": "Too Tall Toby 01-06 Bearing Jig en CATIA con el ej36_bearing_jig de la practica del 19/10 copiado sin cambios, corrido dentro del juez; masa contra la guia, volumen contra el gemelo de build123d de la practica y el STEP de CATIA",
+ "banco": null,
+ "respuesta_conocida": {"que": "masa de la pieza en acero 7 800 kg/m3", "valor": 328.02, "unidad": "g", "tolerancia": 0.1, "fuente": "Guia de build123d, Too Tall Toby 01-06 Bearing Jig (https://build123d.readthedocs.io/en/stable/tttt.html): 328,02 g; la guia tolera 1 g, aca se exigen 0,1 g (decision de la casa, como el 23)"}
+}
