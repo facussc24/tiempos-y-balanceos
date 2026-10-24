@@ -1,0 +1,21 @@
+{
+ "usa_catia": true,
+ "descripcion": "Macho de molde 250 x 80 x 60 con desmoldeo de 4 grados en los 4 costados (Draft) y despues R15 en las 4 aristas laterales; el ej82 de la practica copiado sin cambios; el desmoldeo contra el prismatoide exacto y el macho final contra el gemelo de build123d (volumen y centro) y la FORMA del STEP de CATIA contra el STEP del gemelo con compara.py (sobra y falta <= 1 mm3, distancias exactas <= 0,01 mm), STEP 1/1/0",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "volumen con el desmoldeo; volumen y centro con los radios",
+  "valor": {
+   "desmoldeo_mm3": 1118335.198,
+   "con_radios_mm3": 1106821.554,
+   "cdg_mm": [
+    0.0,
+    0.0,
+    29.2685
+   ]
+  },
+  "unidad": "mm3 / mm",
+  "tolerancia": "tol_volumen (1e-5 del volumen); centro 0,01 mm",
+  "fuente": "formula del prismatoide V = h/6 (A1 + 4 Am + A2) con la tapa achicada 60 tan 4 por lado; el macho con radios: gemelo_macho.py (build123d: extrude con taper 4 + fillet R15 de las aristas laterales, el mismo orden)",
+  "formula_cerrada_con_radios": "prismatoide - 4 R^2 (tan(phi/2) - phi/2) L, phi = acos(sen^2 4), L = 60 raiz(2 sen^2 4 + cos^2 4) / cos 4 = 1 106 821,5538 mm3 (coincide con el gemelo; revisor del 57)"
+ }
+}

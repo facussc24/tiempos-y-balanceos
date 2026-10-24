@@ -200,6 +200,6 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 52 | pendiente | | |
 | 53 | no se hace | Duplica el 32: el bien.py del ejercicio 02 del banco 3D copia el mismo STEP del v16 entregado que el 32 ya juzga contra CATIA (sobra 0, falta 0, 0,0016 mm). Medido el 24/10 leyendo bien.py (22 renglones, `copiar("v16_step", ...)`) | |
 | 54 | pendiente | | |
-| 55 | pendiente | | |
+| 55 | hecho | PC principal, R21, 24/10/2026 15:03 (`55_20261024_1503`; cierre de las 15:30 con la forma): ok true; 22 717,168 mm³ = Pappus; centro (61,31; 43,267; 0) contra la cuenta (61,3097; 43,2671; 0); el STEP 1/1/0 con lo mismo; contra el barrido de build123d sobra 0, falta 0, distancias exactas 0 y 0. Revisor Sonnet: un perfil girado 10° en su plano tiene el mismo volumen y centro → se agregó la comparación de forma (gemelo_tubo.py + compara.py) y sus rojos | (este commit) |
 | 56 | pendiente | | |
-| 57 | pendiente | | |
+| 57 | hecho | PC principal, R21, 24/10/2026 15:06 (`57_20261024_1506`; cierre de las 15:34 con la forma): ok true; desmoldeo 1 118 335,2 = el prismatoide; 4 aristas laterales; macho 1 106 821,516 contra 1 106 821,554 del gemelo (fórmula cerrada 1 106 821,5538) y centro z 29,269; el STEP 1/1/0 (1 106 821,755); contra el STEP del gemelo sobra 0, falta 0, distancias exactas 0 y 0. Revisor Sonnet: la fila prometía la comparación booleana y no se hacía (250 y 80 cambiados dan el mismo volumen y centro) → agregada con sus rojos; el rojo «4,1 grados» eran 4,025° (503 mm³): corregido | (este commit) |

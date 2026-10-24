@@ -1,0 +1,19 @@
+{
+ "usa_catia": true,
+ "descripcion": "Tubo cuadrado 30 x 30 x 2 doblado a 90 grados (barandas y largueros de los carros) por barrido del perfil hueco a lo largo de recta 40 + arco R20 + recta 30; el ej85 de la practica copiado sin cambios; volumen contra Pappus y centro de gravedad contra la cuenta por tramos (un tubo doblado al reves tiene el mismo volumen); la FORMA del STEP de CATIA contra el barrido de build123d (gemelo_tubo.py) con compara.py (un perfil girado tiene el mismo volumen y centro); STEP 1/1/0",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "volumen y centro de gravedad del tubo",
+  "valor": {
+   "volumen_mm3": 22717.168,
+   "cdg_mm": [
+    61.3097,
+    43.2671,
+    0.0
+   ]
+  },
+  "unidad": "mm3 / mm",
+  "tolerancia": "volumen tol_volumen (0,5 mm3); centro 0,01 mm",
+  "fuente": "teorema de Pappus (A L = 224 x (40 + 10 pi + 30)) y el centro por tramos: rectas en su punto medio, el cuarto de curva a r_barra 2 sen(theta/2)/theta del centro del arco, r_barra = integral r^2 dA / integral r dA = 26,5667"
+ }
+}
