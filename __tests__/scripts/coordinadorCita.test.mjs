@@ -331,7 +331,7 @@ describe('6g · main() por proceso (HOME de prueba): el aviso llega por addition
 
 // 24/10/2026 (cola del 24/10 01:03): en una sesion larga el prompt de Fak queda fuera de la cola de maxMensajes y una cita
 // copiada de ahi salia «no rastreada» (paso tres veces la noche del 24/10 con el prompt de la tanda de las 13:01).
-describe('C11 · el PRIMER mensaje de la sesion (el prompt de Fak) se mira siempre, ademas de la cola', () => {
+describe('C12 · el PRIMER mensaje de la sesion (el prompt de Fak) se mira siempre, ademas de la cola', () => {
   const PROMPT = `Tanda del viernes: ${LITERAL}. Despues segui con la lista hasta que todo este en verde.`;
   const relleno = (k) => deFak(`mensaje de relleno numero ${k} sin nada que ver con el pedido original de la tanda`,
     new Date(Date.parse('2026-10-23T16:00:00Z') + k * 60000).toISOString());
@@ -358,5 +358,19 @@ describe('C11 · el PRIMER mensaje de la sesion (el prompt de Fak) se mira siemp
     const ms = mensajesDeFakDeLaSesion({ transcript_path: tp }, HOME);
     expect(ms.length).toBe(3);
     expect(ms.filter((m) => m.texto === PROMPT).length).toBe(1);
+  });
+
+  // Efecto lateral que fijo el auditor del 24/10 (informe 29): una sesion de Fak cuya cola no tiene ningun mensaje suyo
+  // pero cuyo prompt si es de el YA NO es «una hija sin mensajes de Fak» (la valvula sinFak, que deja en aviso): con el
+  // prompt a la vista, una cita que no sale de ahi frena desde el 31/10 como en cualquier sesion de Fak. Es lo buscado.
+  it('una sesion cuyo unico mensaje de Fak es el prompt: la cita del prompt se rastrea; otra cita no, y desde el 31/10 frena', () => {
+    const fondo = Array.from({ length: CITA.maxMensajes + 5 }, (_, k) => deFak(`<task-notification>aviso ${k}</task-notification>`,
+      new Date(Date.parse('2026-10-23T16:00:00Z') + k * 60000).toISOString()));
+    const tp = transcript([deFak(PROMPT, '2026-10-23T15:31:00.000Z'), ...fondo]);
+    expect(mensajesDeFakDeLaSesion({ transcript_path: tp }, HOME).map((m) => m.texto)).toEqual([PROMPT]);
+    expect(revisar(agente(conCita(LITERAL), {}, tp)).resultado).toBe('cita rastreada');
+    const otra = revisar(agente(conCita('dejá el excel de los consumos listo para Carlos hoy mismo', ['1. ¿Cuál? [agregado mío]']), {}, tp), PRIMER_FRENO);
+    expect(otra.resultado).toBe('cita no rastreada');
+    expect(otra.nivel).toBe('freno');
   });
 });
