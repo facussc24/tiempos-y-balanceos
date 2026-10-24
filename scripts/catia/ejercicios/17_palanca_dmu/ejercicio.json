@@ -1,0 +1,18 @@
+{
+ "usa_catia": true,
+ "descripcion": "La palanca del ejercicio 06 del banco 3D con DMU Kinematics: una articulacion de revolucion y un comando de angulo (macro VBScript como el ej49 de la practica); en 0, 35, 50 y 60 grados la punta de la palanca contra la trigonometria y, con la posicion que da CATIA, el choque exacto y la luz contra la fija buena y las de los tres mutantes medidos en OpenCASCADE (medir_choques.py; Clashes no se usa)",
+ "banco": "06_palanca_0_60",
+ "respuesta_conocida": {
+  "que": "posicion de la punta en cada angulo y los chequeos de choque y luz del tarea.yaml del 06",
+  "valor": {
+   "punta_mm": "(150 cos t, 0, 80 + 150 sen t)",
+   "fija_bien": "libre en 0, 35 y 60",
+   "fija_mal1": "choca a 35, libre en 0 y 60",
+   "fija_mal2": "luz 15 mm (+-0,5) a 50, libre en 0 y 60",
+   "fija_mal3": "choca a 60, libre en 0 y 35"
+  },
+  "unidad": "mm",
+  "tolerancia": "punta 0,001 mm; luz del mal_2 +-0,5 mm (la del tarea.yaml)",
+  "fuente": "evals/banco3d/ejercicios/06_palanca_0_60/tarea.yaml y _conjunto.py (eje en (0, y, 80), el giro positivo levanta la punta); los mal_*.py dicen donde chocan"
+ }
+}

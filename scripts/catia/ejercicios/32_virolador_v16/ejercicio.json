@@ -1,0 +1,18 @@
+{
+ "usa_catia": true,
+ "descripcion": "El virolador v16 del Upper Trim (el dispositivo entregado, dos ranuras) rehecho en CATIA desde sus datos (ej13_v16.py de la practica del 19/10 con dos cambios anotados y v16_ref/poligonos.json), exportado a STEP y comparado con OpenCASCADE contra el STEP del dispositivo entregado (compara.py: comun, sobra, falta y distancia maxima en los dos sentidos). Corre solo en la PC principal: el STEP entregado vive ahi y no se sube",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "lo que sobra y lo que falta contra el entregado, la distancia maxima en los dos sentidos y el volumen",
+  "valor": {
+   "sobra_mm3": 0.0,
+   "falta_mm3": 0.0,
+   "dist_max_mm": 0.0016,
+   "vol_entregado_mm3": 89278.483
+  },
+  "unidad": "mm3 / mm",
+  "tolerancia": "sobra y falta 1 mm3; distancia maxima 0,01 mm; volumen max(0,5 mm3, 1e-5 v) (practica_en_juez.tol_volumen)",
+  "fuente": "STEP del dispositivo entregado, C:/Dev/_catia_practica/v16_ref/virolador_v10_two.step (sha256 5b6cff1a4911f5690dae27b90e434033333beb741dd3146852720e2da25865e3), medido con OpenCASCADE en cada corrida; la comparacion tarda unos 16 minutos (24/10/2026)"
+ },
+ "corre_en": "solo la PC principal (el STEP entregado vive ahi y no se sube); CATIA tarda unos 4 a 5 min (247 a 269 s) y la comparacion 16 a 19 min: con el obrero hace falta --timeout-seg 3000 (por defecto corta a los 1 200 s)"
+}
