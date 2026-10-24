@@ -28,13 +28,29 @@ por eso cada paso de este molde termina en un número.
 | 6 | **Medir de nuevo y sacarlo si no sube.** `correr.py --congelado scores/congelado.json`: entra solo si el banco congelado sube y nada que pasaba deja de pasar. Si no sube, el cambio se saca (no se «ajusta» el banco). A la semana, la vara externa (`_cuatroNumeros`: avisos de corrección sobre mensajes de Fak; mejoró = 6 % o menos dos semanas seguidas; menos de 3,5 puntos entre semanas es azar) | dos números antes/después | `06_medicion.md` + AVANCE |
 | 7 | **Preguntar solo lo de la lista «solo Fak».** Todo lo demás se decide con datos y se informa. Lo que necesita su sí va a un `PREGUNTAS_FAK.md` y el resto sigue | preguntas con la ruta concreta («esto va acá, ¿está bien?») | `PREGUNTAS_FAK.md` |
 
-## La lista «solo Fak» (lo único que se le pregunta; Fak, prompt del 23/10/2026)
+## La lista «solo Fak» (lo único que se le pregunta; Fak, prompt del 23/10/2026, textual)
 
-Mandar algo a la Bambu o a una impresora de papel · asignar CC/SC · ECR/ECO · mails (ni enviar ni borradores) · escribir en
+Mandar algo a la Bambu o a una impresora de papel (el `--detector` por defecto se prueba en seco, sin imprimir) · asignar
+CC/SC · ECR/ECO · mails (ni enviar ni borradores; no usar los conectores de Gmail, Microsoft 365 ni Drive) · escribir en
 Supabase (ningún `.mjs` con `--apply`) · abrir u operar el arb · borrar, bajar o instalar algo · gastar plata · la nube
-personal (`OneDrive - BARACK ARGENTINA SRL`) · leer o imprimir `.env*` o claves · subir el tope de gasto de la API · tocar
-una regla que él pidió que cargue siempre (`caracteristicas-especiales.md`). Lo que un manual, una prueba que puedo correr
-o el propio diseño contesta, no se le pregunta (`feedback_la_info_ya_la_tengo_no_preguntar`).
+personal (`OneDrive - BARACK ARGENTINA SRL`) · leer o imprimir `.env*` o claves. Además, el mismo prompt manda a
+`PREGUNTAS_FAK.md` lo del bloque 6 que necesita su sí: subir el tope de gasto de la API y tocar `caracteristicas-especiales.md`
+(la regla que pidió que cargue siempre). Lo que un manual, una prueba que puedo correr o el propio diseño contesta, no se le
+pregunta (`feedback_la_info_ya_la_tengo_no_preguntar`).
+
+## Cuando X es una skill: el ciclo de práctica (AGREGADO 1 de Fak, 23/10/2026)
+
+*«No entrenamiento de IA, pero para la skill: ejercicios reales anotando las mejoras y correcciones a la skill... si no existe
+nada con CATIA o similar en 3D, lo creamos nosotros con ejercicios reales hasta que mi Claude con su skill logre hacer algo
+completo»*. El ciclo: ejercicio real o público con respuesta conocida → Claude con la skill diseña → un PROGRAMA corrige
+(masa objetivo, choque, holgura, voladizo) → si falló, por qué, escrito → cambio chico a la skill como PROPUESTA en un
+archivo `PROPUESTAS_SKILL_<x>.md` (ejercicio, error, corrección, evidencia): **ninguna propuesta toca la skill sola**; la
+principal las junta y las decide con el banco → se guarda solo si el banco sube y nada se rompe → se repite con ejercicios
+que no vio. Para medir lo que la skill aporta: **primero el mismo ejercicio SIN la skill** (método de superpowers
+`writing-skills`) y después con ella, y la comparación A/B a ciegas con `skill-creator` (oficial, ya instalado). Esto es
+distinto de `skill-creator` solo: acá el juez es un programa con respuesta conocida, no un modelo. Primera vuelta real:
+`viernes-23-plan-sistema\practica\ttt\` (3 problemas de Too Tall Toby, verde los 3 al primer intento; hallazgo: la masa
+dentro de tolerancia no prueba la forma) y `practica\ttt_sin_skill\` (la mitad B).
 
 ## Lo que NO se hace (aunque haya créditos)
 
