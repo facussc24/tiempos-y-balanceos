@@ -34,6 +34,12 @@
       "justifica": "18/08/2026, virolador Upper Trim: bordes en punta que marcaban la pieza (corregido en la v11, R1,5 de la casa, ficha-utillajes.md E5). Propuesta P6 del 23/10 (docs/PROPUESTAS_SKILL_3D_2026-10-23.md l.249 y Agregado l.651). Fak 23/10: modo AVISO 7 dias y despues freno.",
       "fuente": ".claude/skills/cad-design/scripts/cantosCanon.data.json (aviso_hasta, sin_zona_en_entrega) y gate_aristas.py --cantos-convexos; casos C1-C9 en .claude/skills/cad-design/scripts/test_gate_cantos.py"
     },
+    "cad-design:barrido-aviso-a-freno": {
+      "revisar": "2026-10-30",
+      "que": "El gate de barrido del recorrido (barrido.py; lo corre export_deliverables.py cuando la entrega declara movimiento con --movimiento o params.movimiento) pasa de AVISO a FRENO el 31/10/2026: desde ese dia un choque o un contacto en un par no declarado en permitidos, o un NO MEDIDO (paso o estados mas gruesos que la guarda, malla invalida, tope de 2 minutos, lazo que no cierra, espejo), frena la entrega ([GATE barrido], la carpeta destino queda sin crear), con tres salidas (corregir, declarar los contactos legitimos, --acepto-barrido con la frase de Fak atada a la firma del conjunto). La luz menor que un dedo (25 mm) da rojo pero queda como aviso (luces_frenan false) y la de mano (100 mm) es siempre aviso: se revisan el 30/10 con lo que aviso en la semana. Sin movimiento declarado, el perno coaxial en dos solidos solo avisa «¿se mueve?».",
+      "justifica": "Choques que ningun control vio porque solo se miraban los extremos: empujador del posicionador Top Roll que atravesaba la pared (21/07/2026), patas del carro que tocaban el marco por una arista (19/10/2026), virolador de cuatro barras (20/10/2026). Propuestas P3 y P12 del 23/10 (docs/PROPUESTAS_SKILL_3D_2026-10-23.md l.120 y l.457; Agregado l.654). Fak 23/10: modo AVISO 7 dias y despues freno.",
+      "fuente": ".claude/skills/cad-design/scripts/barridoCanon.data.json (aviso_hasta, luces_frenan, luces_revisar) y barrido.py; casos D1-D10 en .claude/skills/cad-design/scripts/test_gate_barrido.py"
+    },
     "lanzar-sesion-hija:camino-b": {
       "revisar": "2026-10-23",
       "que": "El camino B de lanzar una hija (tarea manual + run_scheduled_task) queda como respaldo escrito y se saca si en una semana no hizo falta.",

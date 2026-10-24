@@ -1,0 +1,36 @@
+id: 10_gate_barrido
+nombre: Gate de barrido del recorrido - la palanca 0 a 60 con el paso grueso que antes daba verde
+falla_real:
+  cita: "choque o interferencia, 3 casos (empujador del Top Roll que atraviesa la pared, patas del carro que tocan el marco por una arista, pieza copiada del 3D de Leo)"
+  fecha: "21/07 a 21/10/2026"
+  fuente: >-
+    La misma falla del ejercicio 06 (FALLAS_3D_REALES_23-10.md item 3). Este ejercicio es el del gate 3d del viernes
+    23/10 (barrido.py, el mismo que corre export_deliverables.py cuando la entrega declara movimiento): casos D1 a D10
+    de viernes-23-plan-sistema/banco3d-material/casos_gates_3c_3f.md, escritos por un critico ANTES del gate.
+pedido: >-
+  En la entrega, el gate de barrido tiene que frenar la palanca que choca en el medio del recorrido aunque le pidan un
+  paso que solo mira los extremos (--paso 60: el 06 muestra que barrido_palanca.py le da verde), y dejar pasar la
+  palanca que recorre 0 a 60 sin tocar nada.
+piezas:
+  - archivo: bien.py
+    esperado: verde
+    nota: "la palanca BIEN del 06 (base, soporte del eje y palanca de ensayo armadas con build123d)"
+  - archivo: mal_1_choca_a_35.py
+    esperado: rojo
+    falla: "un travesano fijo de la base en el camino: choca de 25 a 45 grados y en 0 y 60 esta libre"
+    nota: "el mutante mal_1 del 06; con --paso 60 la guarda refina el paso a 3,75 grados"
+controles:
+  - nombre: gate_barrido
+    existe: true
+    formato: json
+    opciones: ["--paso", "60"]
+    nota: >-
+      El gate como corre de verdad: barrido.py <conjunto.json> (autotest propio BIEN/MAL antes de juzgar, guarda del
+      paso, cronometro con subproceso). El corrector juzga por lo medido (veredicto de la linea JSON), no por el
+      codigo de salida, que hasta el 30/10/2026 es 0 aunque haya choque (modo aviso). NO MEDIDO sale como error (no
+      cuenta como verde).
+formatos: [stl, step]
+notas: >-
+  Ejercicio nuevo del gate 3d (23/10/2026): NO cuenta para aceptar el gate (el banco congelado del bloque 2 es la
+  vara). Las piezas son las del 06, armadas con su _conjunto.py sin tocarlo. El caso real (el virolador de cuatro
+  barras del 20/10, 65 estados) esta en test_gate_barrido.py (D5, D8) porque sus STEP no estan versionados.
