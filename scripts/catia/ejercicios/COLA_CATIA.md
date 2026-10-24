@@ -113,7 +113,7 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 18 | hecho (CATA) | CATA, R21, 24/10/2026 10:15 (`18_r1`): ok true; la pieza paramétrica del ej27 (A..E, X = A/3, Y = B/3 + 10) da las tres respuestas cambiando solo los parámetros: 14 207,340 / 16 490,467 / 15 100,464 g contra 14 207,34 / 16 490,45 / 15 100,47 (masa de CATIA con Steel a 7 700 kg/m³); gemelo build123d a ≤ 0,1 mm³; revisor Fable: 0 graves, huecos de la prueba arreglados | (este commit) |
 | 19 | hecho | PC principal, R21, 24/10 10:49: 13 206,387 y 14 208,004 g (papel 13 206,40 y 14 208,00); revisor Fable: citas confirmadas en el PDF (pág. 19, 24, 26, 27); tolerancia bajada a 0,1 g (un chaflán faltante pasaba con 1 g), A..E verificados, el caso sin build123d ya no revienta | (este commit) |
 | 22 | pendiente | | |
-| 23 | pendiente | | |
+| 23 | hecho | PC principal, R21, 24/10 10:51: 211,303 g contra 211,30, volumen = gemelo de la práctica; revisor Fable: sin bugs (0,1 g ve cada falta: sin R8 −0,49 g); límite anotado: planos visibles al STEP | (este commit) |
 | 24 | pendiente | | |
 | 25 | pendiente | | |
 | 26 | pendiente | | |
