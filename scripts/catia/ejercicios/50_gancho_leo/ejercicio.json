@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "El gancho de Leo (collar sobre el tope del caño + una cuna de cada lado) rehecho EN CATIA desde sus datos: pieza_gancho_leo.py lee el params_leo.json de .claude/skills/cad-design/examples/gancho_mochila/; el contorno de las cajas de build_gancho_leo.py en un solo croquis XY de 16 vertices, pad de la profundidad del collar y los mismos seis redondeos en aristas paralelas a Z; el STEP de CATIA contra el que genera build_gancho_leo.py con compara.py del 32",
+ "banco": null,
+ "respuesta_conocida": {
+  "que": "el solido que genera build_gancho_leo.py --out <carpeta> con el params_leo.json del repo (gancho_LEO.step)",
+  "valor": {"volumen_mm3": 97335.187, "sobra_mm3": 0, "falta_mm3": 0},
+  "unidad": "mm3",
+  "tolerancia": {"sobra_falta_mm3": 1.0, "distancia_mm": 0.01, "cdg_mm": 0.01},
+  "fuente": "build_gancho_leo.py + params_leo.json de .claude/skills/cad-design/examples/gancho_mochila/ (el diseno entregado; el script aborta si el hueco medido no es espesor + juego), corrido en el post-proceso con .venv-cad; criterio del ejercicio 32 (revisar_comparacion de 32_virolador_v16/catia.py). La fila 50 da 97,34 cm3"
+ }
+}
