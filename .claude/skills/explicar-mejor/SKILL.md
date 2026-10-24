@@ -1,6 +1,6 @@
 ---
 name: explicar-mejor
-description: Cómo explicar algo para que se entienda en una sola lectura — texto corto en castellano técnico simplificado, un dibujo, una página o un video. Cargarlo ANTES de contestar cuando la persona dice que no entendió ("no entiendo", "no entendí un carajo"), pide que se lo expliquen o que sea fácil de entender ("explicame mejor", "hacelo fácil de entender", "más fácil", "sintetizá", "mucho texto"), pide el estado de una tarea o proyecto de forma que se entienda, o se nota que no entendió (pregunta dos veces lo mismo, contesta otra cosa). No es para lo que sale a terceros (mail, PDF, PowerPoint, planilla): eso sigue con sus reglas.
+description: Explicar algo para que se entienda en una sola lectura. Cargarlo ANTES de contestar si no entendió («no entiendo», «no entendí un carajo»), pide que sea fácil («explicame mejor», «hacelo fácil de entender», «más fácil», «sintetizá», «mucho texto»), pide entender el estado de una tarea o pregunta dos veces lo mismo. No es para lo que sale a terceros (mail, PDF, PowerPoint, planilla).
 ---
 
 # Explicar mejor

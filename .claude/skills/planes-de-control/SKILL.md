@@ -1,6 +1,6 @@
 ---
 name: planes-de-control
-description: Plan de control («el PC», «el PdC», «plan de contorl») de Barack, formulario I-AC-005.1 de Calidad (prelanzamiento o produccion) y el de recepcion I-AC-005.2 — de donde sale cada fila, que va en cada columna, como lo hace Calidad (planes revisados por Cecilia), IATF 8.5.1.1 + Anexo A y checklist A-10, y los errores ya marcados (la D sola, una caracteristica por fila, rearmado sin amarillo). Usar al armar, corregir o revisar un plan de control, cruzarlo con el AMFE o el flujograma, o llenar el ciclo de control de una HO desde un plan.
+description: Plan de control («el PC», «el PdC», «plan de contorl») de Barack, formularios I-AC-005.1 (prelanzamiento o produccion) y de recepcion I-AC-005.2 — como lo hace Calidad (Cecilia), IATF 8.5.1.1, Anexo A y checklist A-10. Usar al armar, corregir o revisar un plan de control, cruzarlo con el AMFE o el flujograma, o llenar el ciclo de control de una HO.
 ---
 
 # Planes de control (I-AC-005.1)

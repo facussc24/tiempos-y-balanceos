@@ -1,6 +1,6 @@
 ---
 name: impresion-3d-bambu
-description: Preparar una pieza para la impresora 3D Bambu Lab A2L de Fak sin pasar por la ventana del laminador — laminar un .3mf por comando con Bambu Studio (perfiles completos de la máquina, el proceso y el filamento), asignar un color a cada parte y dejar el archivo listo para imprimir, con controles que frenan si el código salió mal. Usar cuando Fak pida "generá el código de impresión", "dejámelo listo para imprimir", "laminalo", "en dos colores", "mandalo a la Bambu", o al entregar una pieza 3D que va a esa impresora.
+description: Laminar una pieza (.3mf) por comando con Bambu Studio para la impresora 3D Bambu Lab A2L de Fak, un color por parte, con controles que frenan. Usar cuando Fak pida «generá el código de impresión», «dejámelo listo para imprimir», «laminalo», «en dos colores», «mandalo a la Bambu», o al entregar una pieza 3D para esa impresora.
 ---
 
 # impresion-3d-bambu — dejar una pieza lista para la Bambu Lab A2L

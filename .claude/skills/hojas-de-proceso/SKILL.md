@@ -1,6 +1,6 @@
 ---
 name: hojas-de-proceso
-description: Hoja de proceso / hoja de operaciones («la hoja», «la HO», «la filmina») de Barack, formulario I-IN-002.4-R01 en PowerPoint A4 o A3 de una foto por paso — que le manda cada paso al operario y con que palabras, que foto va, pantallas de HMI legibles impresas, donde se guarda y que numero de HO lleva, y los errores que Fak ya marco (logo, plan de reaccion, numero, TBD, ciclo de control lleno, pieza rara sin aclarar, hoja cortada). Usar al armar, corregir o revisar una hoja de proceso, y siempre antes de mostrar o imprimir un paquete de hojas para planta. Canon en `docs/CRITERIOS_HOJAS_DE_PROCESO.md`.
+description: Hoja de proceso / hoja de operaciones («la hoja», «la HO», «la filmina») de Barack, formulario I-IN-002.4-R01 en PowerPoint A4 o A3 de una foto por paso — que le manda cada paso al operario y con que palabras, que foto va, pantallas de HMI legibles impresas, donde se guarda y que numero de HO lleva, y los errores que Fak ya marco (logo, plan de reaccion, numero, TBD, ciclo de control lleno, pieza rara sin aclarar, hoja cortada). Usar al armar, corregir o revisar una hoja de proceso, y siempre antes de mostrar o imprimir un paquete de hojas para planta. Canon en `docs/CRITERIOS_HOJAS_DE_PROCESO.md`. NO es para elegir impresora ni mandar el PDF a imprimir, «en la de arriba» (eso es la skill imprimir); para un paquete de planta van las dos.
 ---
 
 # Una hoja de proceso se lee de pie, al lado de la maquina, impresa en A4

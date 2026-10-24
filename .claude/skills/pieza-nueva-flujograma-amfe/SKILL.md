@@ -1,6 +1,6 @@
 ---
 name: pieza-nueva-flujograma-amfe
-description: Armar de cero el flujograma y el AMFE de proceso de una pieza que no tiene ninguno («el AMFE de <pieza>», «una pieza nueva») — papeles de ESA pieza, flujograma desde sus hermanos, AMFE con un generador que se chequea solo, calibrar S/O/D, emitir, listados y revisar antes de pasarlo a Calidad. Usar cuando Fak o Calidad piden el AMFE de una pieza sin documentos, o hay que rehacerlos enteros.
+description: Armar de cero el flujograma y el AMFE de proceso de una pieza que no tiene ninguno («el AMFE de <pieza>», «una pieza nueva») — papeles de ESA pieza, flujograma desde sus hermanos, AMFE con un generador que se chequea solo, calibrar S/O/D, emitir, listados y revisar antes de pasarlo a Calidad. Usar cuando Fak o Calidad piden el AMFE de una pieza sin documentos, o hay que rehacerlos enteros. NO es para completar o editar un AMFE que ya existe (eso es la skill amfe-cookbook o la skill amfe-domain).
 ---
 
 # Flujograma y AMFE de una pieza nueva — el método que funcionó

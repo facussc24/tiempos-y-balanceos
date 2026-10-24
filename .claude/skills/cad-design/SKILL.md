@@ -1,12 +1,14 @@
 ---
 name: cad-design
 description: >
-  Diseño y modificación de piezas 3D / CAD para Barack — importar un STEP/STL de cliente,
-  medirlo, registrarlo contra otra pieza (ICP), modelar/modificar parametrico, verificar
-  interferencia y holguras, y exportar STEP + STL + GLB + renders. Usar cuando Fak pida
-  "diseñá/modificá esto en 3D", pase un archivo 3D (STEP/STL/IGES) para editar, pida un
-  dispositivo, posicionador, fixture o utillaje impreso, o cualquier modelado de pieza. Incluye el entorno,
-  la librería cadlib + CLIs genéricos y los errores caros que NO hay que repetir.
+  Diseño y modificación de piezas 3D / CAD para Barack — importar un STEP/STL de cliente, medirlo,
+  registrarlo contra otra pieza (ICP), modelar/modificar parametrico, verificar interferencia y
+  holguras, y exportar STEP + STL + GLB + renders. Usar cuando Fak pida "diseñá/modificá esto en
+  3D", pase un archivo 3D (STEP/STL/IGES) para editar, pida un dispositivo, posicionador, fixture
+  o utillaje impreso, o cualquier modelado de pieza. Incluye cadlib + CLIs y los errores caros que
+  NO hay que repetir. NO es para mandar a imprimir una pieza ya lista (eso es la skill
+  impresion-3d-bambu), ni para pasar un render a imagen de foto real (eso es la skill
+  render-a-foto-real).
 ---
 
 # cad-design — diseñar y modificar piezas 3D en Barack

@@ -1,6 +1,6 @@
 ---
 name: verificacion-consumos
-description: Checklist canonico + validador para tablas de consumo y cargas al ERP arb (BOMs, tizadas, insumos, etiquetas, quimicos). Usar SIEMPRE antes de entregar a Fak una tabla de consumos, una carga para el arb, o una auditoria de BOM — y cuando se trabaje con INSUMOS.txt, export RELACIONES, o fichas de embalaje.
+description: Checklist canonico + validador para tablas de consumo y cargas al ERP arb (BOMs, tizadas, insumos, etiquetas, quimicos). Usar SIEMPRE antes de entregar a Fak una tabla de consumos, una carga para el arb, o una auditoria de BOM — y cuando se trabaje con INSUMOS.txt, export RELACIONES, o fichas de embalaje. Cargarlo también si Fak dice «el consumo está mal». NO es para tipear en el arb (eso es la skill arb-operar) ni para armar la difusión (eso es la skill carga-arb); una carga completa lleva las tres.
 ---
 
 # Verificacion de consumos — checklist canonico

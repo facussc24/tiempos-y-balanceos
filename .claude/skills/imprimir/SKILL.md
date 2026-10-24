@@ -1,6 +1,6 @@
 ---
 name: imprimir
-description: Imprimir un PDF en las impresoras de Barack desde Claude, sin pasar por la cola de Windows — "impresora para ingenieria" (A4, blanco y negro) e "impresora de arriba" (A3, la RICOH MP C2004, donde van los FLUJOGRAMAS; sale en blanco y negro salvo que pidan color). Cargarlo cuando piden imprimir algo ("imprimilo", "mandalo a la impresora", "imprimí los flujogramas", "sacalo en A3", "en la de arriba"), al armar un paquete de hojas de proceso para planta (qué entra, qué se revisa antes de imprimir), y para saber si una impresión salió de verdad (contador de hojas).
+description: Imprimir un PDF en las impresoras de Barack sin la cola de Windows — "impresora para ingenieria" (A4, blanco y negro) e "impresora de arriba" (A3, la RICOH MP C2004, donde van los FLUJOGRAMAS; sale en blanco y negro salvo que pidan color). Cargarlo cuando piden imprimir algo ("imprimilo", "mandalo a la impresora", "imprimí los flujogramas", "sacalo en A3", "en la de arriba"), al armar un paquete de hojas de proceso para planta (qué entra, qué se revisa antes de imprimir), y para saber si una impresión salió de verdad (contador de hojas). NO es para la impresora 3D, «imprimí los pines», «la v3», «la placa» (eso es la skill impresion-3d-bambu).
 ---
 
 # Imprimir

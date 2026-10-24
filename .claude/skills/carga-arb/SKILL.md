@@ -1,6 +1,6 @@
 ---
 name: carga-arb
-description: Ciclo completo de una modificacion de BOM en el ERP arb — tabla de carga para Fak, validacion contra el export post-carga, PDF de difusion (formato Leo) y cuerpo del mail. Usar cuando haya que cambiar/agregar/quitar un insumo en la BOM de uno o varios productos terminados, o cuando Fak pida "que quito y que agrego", "el extracto", "el PDF de Leo" o difundir un cambio de BOM. Complementa `verificacion-consumos` (que valida los NUMEROS); esta cubre el PROCESO.
+description: Ciclo completo de una modificacion de BOM en el ERP arb — tabla de carga para Fak, validacion contra el export post-carga, PDF de difusion (formato Leo) y cuerpo del mail. Usar cuando haya que cambiar/agregar/quitar un insumo en la BOM de uno o varios productos terminados, o cuando Fak pida "que quito y que agrego", "el extracto", "el PDF de Leo" o difundir un cambio de BOM. Complementa `verificacion-consumos` (que valida los NUMEROS); esta cubre el PROCESO. NO es para tipear en el arb, «te dejé abierto arb», «con el robot» (eso es la skill arb-operar).
 ---
 
 # Carga en el arb — de la tabla al mail de difusion

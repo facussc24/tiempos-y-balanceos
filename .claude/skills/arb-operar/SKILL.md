@@ -1,6 +1,6 @@
 ---
 name: arb-operar
-description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Claude — navegación, pantallas, carga y corrección de consumos, altas y sustitución de líneas de BOM, y el maestro de insumos (alta de códigos, descripción, unidad). Usar cuando haya que escribir o verificar algo en el arb, o automatizar una tarea repetitiva dentro del ERP. Complementa `carga-arb` (que arma QUÉ cargar) y `verificacion-consumos` (que valida los números); esta cubre CÓMO se opera.
+description: Operar el ERP arb (ARB Sistemas "Producción") por teclado desde Claude — navegación, pantallas, carga y corrección de consumos, altas y sustitución de líneas de BOM, y el maestro de insumos (alta de códigos, descripción, unidad). Usar cuando Fak diga «te dejé abierto arb», «entrá a arb y corregí con el robot» o «creá el código», o haya que escribir o verificar algo en el arb. NO es para armar «qué quito y qué agrego» ni la difusión (eso es la skill carga-arb), ni para decir si un consumo está bien (eso es la skill verificacion-consumos); una carga completa lleva las tres.
 ---
 
 # Operar el arb desde Claude

@@ -1,6 +1,6 @@
 ---
 name: amfe-domain
-description: Conocimiento AMFE profundo de Barack — los 3 niveles de funcion con ejemplos, de donde sale el nombre de un work element (y los 4 roles), tabla keyword→OP para fallas mal alocadas, placeholders 6M, applicableParts L0-L3, renumeracion segura, apoyacabezas delantero vs trasero. Usar al editar el contenido de un AMFE (funciones, WEs, renumerar, placeholders) cuando la regla amfe.md no alcanza. Complementa amfe-cookbook y apqp-schema.
+description: Conocimiento AMFE profundo de Barack — los 3 niveles de funcion con ejemplos, de donde sale el nombre de un work element (y los 4 roles), tabla keyword→OP para fallas mal alocadas, placeholders 6M, applicableParts L0-L3, renumeracion segura, apoyacabezas delantero vs trasero. Usar al editar el contenido de un AMFE (funciones, WEs, renumerar, placeholders) cuando la regla amfe.md no alcanza. Complementa amfe-cookbook y apqp-schema. NO es para completar lo que falta, «arreglá las operaciones vacías» (eso es la skill amfe-cookbook), ni para un AMFE sin documentos (eso es la skill pieza-nueva-flujograma-amfe).
 ---
 
 # amfe-domain — detalle profundo del dominio AMFE Barack

@@ -1,13 +1,10 @@
 ---
 name: docs-empresa
 description: >
-  Mapa de documentos reales de Barack (servidor Y:, OneDrive, repo, docs-local) + cache
-  local `.sgc-cache/`. Usar cuando se necesite un dato de: manual SGC, procedimientos
-  P-xx, instructivos I-xx, 8D, alertas, informes tecnicos, specs de cliente, normas VW,
-  manuales AIAG/VDA, biblias de defectos, HOs, auditorias; o cuando haya que buscar fotos
-  o videos de una maquina, de una pieza o de un proceso (donde estan y con que se buscan).
-  Reemplaza a NotebookLM (retirado 2026-07-23): acceso DIRECTO a originales + extractos
-  cacheados con cita de fuente.
+  Mapa de los documentos de Barack (servidor Y:, OneDrive, docs-local, `.sgc-cache/`). Usar para
+  un dato del manual SGC, procedimientos P-xx, instructivos I-xx, 8D, alertas, informes tecnicos,
+  specs de cliente, normas VW, manuales AIAG/VDA, biblias de defectos, HOs o auditorias, o buscar
+  fotos o videos de una maquina, pieza o proceso. Reemplaza a NotebookLM.
 ---
 
 # docs-empresa — donde vive cada documento y como consultarlo

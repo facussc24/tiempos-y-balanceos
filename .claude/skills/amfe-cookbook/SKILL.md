@@ -1,6 +1,6 @@
 ---
 name: amfe-cookbook
-description: Usar cuando Fak pida completar o reparar lo que le falta a un AMFE de Barack (recetas) («completa AMFE», «reparar», «completa los faltantes») — tabla tipo de issue -> accion; referencia de `_fixAmfePlaceholdersAndAllocation.mjs`. La ejecutan /fix-amfe-gaps y el agente amfe-healer; los gaps los detectan /audit-amfe y los auditores.
+description: Usar cuando Fak pida completar o reparar lo que le falta a un AMFE de Barack (recetas) («completa AMFE», «reparar», «completa los faltantes») — tabla tipo de issue -> accion; referencia de `_fixAmfePlaceholdersAndAllocation.mjs`. La ejecutan /fix-amfe-gaps y el agente amfe-healer; los gaps los detectan /audit-amfe y los auditores. NO es para cambiar a mano el contenido, «agregá el engrampado en la OP 120» (eso es la skill amfe-domain), ni para un AMFE sin documentos (eso es la skill pieza-nueva-flujograma-amfe).
 ---
 
 # AMFE Cookbook — Recetas para fijar gaps

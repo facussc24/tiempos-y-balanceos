@@ -1,6 +1,6 @@
 ---
 name: autocad-verificar
-description: Correr AutoCAD 2026 sin interfaz para verificar, auditar o normalizar un DXF/DWG antes de entregarlo. Usar cuando se genere, modifique o entregue un DXF (moldes, tizadas, patrones de corte), cuando Fak diga que un archivo "no abre" o "invalid name", o cuando haya que saber si AutoCAD acepta algo. El juez de un DXF es AutoCAD, no ezdxf.
+description: Correr AutoCAD 2026 sin interfaz para verificar, auditar o normalizar un DXF/DWG antes de entregarlo. Usar cuando se genere, modifique o entregue un DXF (moldes, tizadas, patrones de corte), cuando Fak diga que un archivo "no abre" o "invalid name", o cuando haya que saber si AutoCAD acepta algo. El juez de un DXF es AutoCAD, no ezdxf. NO es para armar o acomodar piezas del DXF (eso es la skill patrones-corte-plotter).
 ---
 
 # Verificar un DXF con AutoCAD de verdad (sin abrir la ventana)

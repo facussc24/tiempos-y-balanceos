@@ -1,6 +1,6 @@
 ---
 name: flujogramas
-description: Flujograma de proceso («el flujograma», «el flujo») de Barack, formulario I-IN-002/III, con el generador de `tools/flowchart/` — numeracion por sector, bloques de los hermanos, dibujo validado por Fak, historial de revisiones, entrega e impresion A3. Usar al armar, corregir, rehacer, emitir o imprimir un flujograma (de una pieza o para BeOn), o cuando el AMFE, el plan de control o la HO no cierran con el.
+description: Flujograma de proceso («el flujograma», «el flujo») de Barack, formulario I-IN-002/III, con el generador de `tools/flowchart/` — numeracion por sector, bloques de los hermanos, dibujo validado por Fak, historial de revisiones, entrega e impresion A3. Usar al armar, corregir, rehacer, emitir o imprimir un flujograma (de una pieza o para BeOn), o cuando el AMFE, el plan de control o la HO no cierran con el. NO es para elegir impresora ni mandar el PDF a imprimir, «en la de arriba» (eso es la skill imprimir); para imprimir un flujograma en A3 van las dos.
 ---
 
 # El flujograma manda la numeracion, y se juzga renderizado
