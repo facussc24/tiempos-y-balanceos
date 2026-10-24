@@ -116,9 +116,9 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 23 | pendiente | | |
 | 24 | hecho (CATA) | CATA, R21, 24/10/2026 10:52 (`24_final`, código del commit): ok true; 309,997 g contra 310,00; gemelo a 0,002 mm³; es el MOLDE de 26, 28 y 30 (catia.py con CFG); el doblez prueba cada arista candidata (CAMBIO 4: el orden de la topología cambia entre corridas) | (este commit) |
 | 25 | pendiente | | |
-| 26 | pendiente | | |
+| 26 | hecho (CATA) | CATA, R21, 24/10/2026 10:53 (`26_final`): ok true; 3 387,058 g contra 3 387,06; gemelo y STEP a 0,000 mm³; molde del 24 | (este commit) |
 | 27 | pendiente | | |
-| 28 | pendiente | | |
+| 28 | hecho (CATA) | CATA, R21, 24/10/2026 10:54 (`28_final`): ok true; 797,146 g contra 797,15; gemelo a 0,027 mm³; molde del 24 | (este commit) |
 | 29 | pendiente | | |
-| 30 | pendiente | | |
+| 30 | hecho (CATA) | CATA, R21, 24/10/2026 10:54 (`30_final`): ok true; 307,231 g contra 307,23 (Aluminium pasado a 2 700); gemelo y STEP a 0,000 mm³; molde del 24 | (este commit) |
 | 31 | pendiente | | |
