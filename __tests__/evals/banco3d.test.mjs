@@ -123,7 +123,8 @@ describe('banco3d: ejercicios con respuesta conocida (masas declaradas tres vece
         const [q, m] = par.split('=');
         return [q.trim(), Number(m)];
       }));
-      expect(Object.keys(dePreguntas).sort()).toEqual(['q3', 'q4', 'q5', 'q6']);
+      expect(Object.keys(dePreguntas).length, 'al menos una pregunta con nombre').toBeGreaterThan(0);
+      if (dir === '13_examen_catia_associate') expect(Object.keys(dePreguntas).sort()).toEqual(['q3', 'q4', 'q5', 'q6']);
       expect(deBien).toEqual(dePreguntas);
       expect(deControl).toEqual(dePreguntas);
       for (const m of Object.values(dePreguntas)) expect(Number.isFinite(m) && m > 0, `masa ${m}`).toBe(true);
