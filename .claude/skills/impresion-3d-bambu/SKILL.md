@@ -218,6 +218,17 @@ recién después `--imprimir <x.gcode.3mf> --apply --foto-mandada <pieza>_PLACA.
 NO SE MANDA. Salida con su frase: `--sin-foto --acepto "<frase textual de Fak>"`. Canon: `scripts/placaCanon.data.json`; lógica:
 `scripts/placa_foto.py`; tests G1-G8: `tests/test_foto_placa.py`. `imprimir_pieza.py --apply` lleva el mismo `--foto-mandada`.
 
+### Un rollo sin pesar no vale 1000 g (gate 3h, 23/10/2026)
+
+Lo del 22/10 (Fak, 19:23: *«nunca debería haberme quedado sin filamento, en teoría vos calculabas cuánto había... dejalo anotado para
+el viernes así averiguamos el origen de esta falla»*): el negro del lugar 4 nunca se había pesado, la cuenta arrancaba de los 1000 g
+nominales (*«quedan ~683 g»*) y el rollo se terminó a mitad de la placa; la impresora tampoco lo sabe (`remain = -1`). Desde el 23/10
+`--imprimir` mira `registro.rollo(chip)["pesado"]` por cada lugar que usa el trabajo: sin pesada, sin «rollo nuevo» anotado y sin
+«rollo terminado» confirmado, AVISA (hasta el 30/10) y desde el 31/10 NO MANDA. Lo que lo deja pasar es el dato: `registro.py --pesar
+<lugar> <gramos de la balanza>` o `registro.py --rollo-nuevo <lugar>`; la salida con su frase es `--sin-pesar --acepto "<frase textual
+de Fak>"` (con `--apply` queda un evento «sin pesar» en el registro). Canon: `scripts/rolloCanon.data.json`; lógica:
+`scripts/rollo_sin_pesar.py`; tests H1-H6: `tests/test_rollo_sin_pesar.py`.
+
 ## 1 quater. El registro compartido (varias PC, una sola cuenta)
 
 Fak, 13/10/2026: *"normalmente imprimimos desde distintas PCs… ¿usar la nube para sincronizarnos?"*.

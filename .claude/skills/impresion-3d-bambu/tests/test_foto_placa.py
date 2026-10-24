@@ -144,7 +144,7 @@ class FotoDeLaPlaca(_Gate3g):
         # --acepto suelto (sin --sin-foto ni --sin-detector) sigue sin valer
         r, out, _ = self.imprimir(a, "--apply", "--acepto", FRASE)
         self.assertEqual(r, 1, out)
-        self.assertIn("--acepto va solo con --sin-detector o --sin-foto", out)
+        self.assertIn("--acepto va solo con --sin-detector, --sin-foto o --sin-pesar", out)
 
     def test_G7_laminado_sin_miniatura_es_no_medido_nunca_verde(self):
         a = self.laminado(con_foto=False)

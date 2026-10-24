@@ -7,6 +7,7 @@ Uso (python del sistema):
   bambu_red.py --imprimir <x.gcode.3mf> [--mapa 0,1] [--apply] [--sin-margen] [--en-seco]
                [--sin-detector --acepto "<frase de Fak>"]
                [--foto-mandada <pieza_PLACA.png> | --sin-foto --acepto "<frase de Fak>"]   la foto de la placa va antes (gate 3g)
+               [--sin-pesar --acepto "<frase de Fak>"]   un rollo sin pesar no vale 1000 g (gate 3h)
                                             plan; con --apply sube, manda y LANZA SOLA la vigilancia con el detector
                                             (proceso aparte); --en-seco arma todo y no habla con la impresora
   bambu_red.py --seguir <carpeta> [--fotos-en 3,10] [--despertar 5] [--cada 30] [--buscar] [--en-pausa]
@@ -1372,7 +1373,7 @@ def _en_seco(archivo, mapa, frase):
 
 
 def imprimir(archivo, mapa, aplicar, sin_margen=False, en_seco=False, sin_detector=False, acepto=None,
-             foto_mandada=None, sin_foto=False):
+             foto_mandada=None, sin_foto=False, sin_pesar=False):
     """Sube un .gcode.3mf, le pide a la impresora que lo imprima y LANZA SOLA la vigilancia aparte con el detector
     (con --solo-medir si no hay camara; sin detector solo con --sin-detector y la frase de Fak). Sin --apply solo
     muestra el plan; con --en-seco no habla con la impresora. Los parametros nuevos tienen valor por defecto:
@@ -1380,14 +1381,15 @@ def imprimir(archivo, mapa, aplicar, sin_margen=False, en_seco=False, sin_detect
     envio = {}
     try:
         return _imprimir(archivo, mapa, aplicar, sin_margen, en_seco, sin_detector, acepto, envio,
-                         foto_mandada=foto_mandada, sin_foto=sin_foto)
+                         foto_mandada=foto_mandada, sin_foto=sin_foto, sin_pesar=sin_pesar)
     finally:
         # tambien si la conexion se corta DESPUES de mandar la orden: la impresion puede estar andando
         if envio.get("mandada") and not envio.get("rechazada"):
             vigilar_lo_mandado(envio["archivo"], envio["trabajo_id"], envio["d"], envio.get("frase"))
 
 
-def _imprimir(archivo, mapa, aplicar, sin_margen, en_seco, sin_detector, acepto, envio, foto_mandada=None, sin_foto=False):
+def _imprimir(archivo, mapa, aplicar, sin_margen, en_seco, sin_detector, acepto, envio, foto_mandada=None, sin_foto=False,
+              sin_pesar=False):
     """Sube un .gcode.3mf y le pide a la impresora que lo imprima. Sin --apply solo muestra el plan.
     Frena (antes de subir nada) si: el archivo trae varias placas, el material o el color no son los cargados, la
     impresora esta ocupada, no alcanzan los gramos (o es de noche con poco rollo y sin respaldo), la placa tiene
@@ -1412,8 +1414,8 @@ def _imprimir(archivo, mapa, aplicar, sin_margen, en_seco, sin_detector, acepto,
         raise FallaImpresora(f"{archivo.name} no trae el codigo de la placa 1 (Metadata/plate_1.gcode)")
     # la frase de --sin-detector se controla ANTES de leer la impresora y de subir (tambien sin --apply y en seco).
     # Desde el gate 3g la misma --acepto tambien sirve a --sin-foto: suelta (sin ninguno de los dos) sigue sin valer.
-    if acepto is not None and not sin_detector and not sin_foto:
-        print("   NO SE MANDA: --acepto va solo con --sin-detector o --sin-foto (sin ellos no hay nada que aceptar)")
+    if acepto is not None and not sin_detector and not sin_foto and not sin_pesar:
+        print("   NO SE MANDA: --acepto va solo con --sin-detector, --sin-foto o --sin-pesar (sin ellos no hay nada que aceptar)")
         return 1
     error = error_de_frase(sin_detector, acepto if sin_detector else None)
     if error:
@@ -1425,7 +1427,10 @@ def _imprimir(archivo, mapa, aplicar, sin_margen, en_seco, sin_detector, acepto,
     # --apply la saca y dice el comando; con --apply exige --foto-mandada <png> de ESTE laminado. Hasta placaCanon.aviso_hasta
     # avisa, desde freno_desde no se manda; --sin-foto --acepto "<frase>" es la salida. Corre antes de la impresora y en seco.
     import placa_foto
-    foto = placa_foto.gate(archivo, aplicar=aplicar, foto_mandada=foto_mandada, sin_foto=sin_foto, acepto=acepto)
+    # «hoy» sale del reloj de la casa (_ahora, que los tests fijan al 16/10) salvo BAMBU_HOY: asi los 35 --apply de los tests
+    # viejos no cambian de modo el 31/10 y los tests del gate eligen la fecha
+    dia_gate = placa_foto.hoy() if os.environ.get("BAMBU_HOY") else _ahora().date()
+    foto = placa_foto.gate(archivo, aplicar=aplicar, foto_mandada=foto_mandada, sin_foto=sin_foto, acepto=acepto, dia=dia_gate)
     for linea in foto["lineas"]:
         print("  ", linea)
     if foto["frena"]:
@@ -1464,6 +1469,19 @@ def _imprimir(archivo, mapa, aplicar, sin_margen, en_seco, sin_detector, acepto,
             print("   --sin-margen: se manda igual con poco rollo (solo con la frase de Fak en el chat):", "; ".join(f_g))
         elif f_g:
             fallas += f_g
+        # gate 3h (23/10/2026): un rollo que nunca se peso ni se anoto como nuevo no vale 1000 g (22/10: el negro del lugar 4
+        # «tenia ~683 g» segun la cuenta desde 1000 y se termino a mitad de la PLACA v5; Fak 19:23: «en teoria vos calculabas
+        # cuanto habia»). Aviso hasta rolloCanon.aviso_hasta, freno desde freno_desde; salida --sin-pesar --acepto "<frase>".
+        import rollo_sin_pesar
+        lug3h, chips3h = lugares_del_cargador(est0), rollos_del_cargador(est0)
+        rollos3h = [(m + 1, chips3h.get(m), registro.nombre_color(lug3h.get(m, ("", "", ""))[2]))
+                    for m in sorted({x for x in mapa if x >= 0})]
+        g3h = rollo_sin_pesar.gate(rollos3h, dia=dia_gate, aplicar=aplicar, sin_pesar=sin_pesar, acepto=acepto)
+        for linea in g3h["lineas"]:
+            print("  ", linea)
+        fallas += g3h["fallas"]
+        if aplicar and g3h["frase"]:
+            registro.anotar({"tipo": "sin pesar", "rollos": g3h["sin_pesar"], "frase": g3h["frase"], "archivo": archivo.name})
     estado_ = est0.get("gcode_state")
     al_mandar = []                         # lo que frena solo con --apply (sin --apply se muestra como aviso)
     if estado_ in ("RUNNING", "PREPARE", "PAUSE"):
@@ -2858,7 +2876,8 @@ def despachar(argv):
         return imprimir(argv[2], mapa, "--apply" in argv, sin_margen="--sin-margen" in argv,
                         en_seco="--en-seco" in argv, sin_detector="--sin-detector" in argv,
                         acepto=_valor(argv, "--acepto"),
-                        foto_mandada=_valor(argv, "--foto-mandada"), sin_foto="--sin-foto" in argv)
+                        foto_mandada=_valor(argv, "--foto-mandada"), sin_foto="--sin-foto" in argv,
+                        sin_pesar="--sin-pesar" in argv)
     if a == "--ficha" and len(argv) >= 3:
         return mostrar_ficha(argv[2])
     if a == "--selftest":
