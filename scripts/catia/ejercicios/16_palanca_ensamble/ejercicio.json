@@ -1,0 +1,12 @@
+{
+ "usa_catia": true,
+ "descripcion": "La palanca del 06 como ensamble (CATProduct): base fija, soporte y palanca dibujados en su propio sistema y llevados a la pose de 0 grados por restricciones de Assembly Design (coincidencias punto-punto entre puntos con nombre, el eje de la palanca coaxial con el del soporte, y paralelismo de planos con orientacion «misma»); posicion de cada componente, volumen y centro de gravedad del conjunto contra build123d (bien.py del 06), STEP del producto y captura",
+ "banco": "06_palanca_0_60",
+ "respuesta_conocida": {
+  "que": "centro de gravedad y volumen del conjunto en la pose de 0 grados, y la posicion de cada componente",
+  "valor": {"volumen_mm3": 478517.325, "cdg_mm": [62.5718, -2.0143, 20.3109], "origen_soporte_mm": [0, -21, 10], "origen_palanca_mm": [0, 0, 80]},
+  "unidad": "mm3 / mm",
+  "tolerancia": "volumen 0,5 mm3 y cdg 0,01 mm (juez_comun); posicion 0,001 mm y 1e-6 en la rotacion",
+  "fuente": "evals/banco3d/ejercicios/06_palanca_0_60/_conjunto.py (eje en (0, 0, 80) direccion -Y, palanca horizontal hacia +X) medido con build123d sobre su bien.py; no hay papel con la masa: la respuesta la da build123d sobre la misma pieza"
+ }
+}
