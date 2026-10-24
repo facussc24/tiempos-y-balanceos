@@ -1,0 +1,16 @@
+{
+ "usa_catia": true,
+ "descripcion": "Tool Block del examen de muestra CATIA V5 Associate (preguntas 3 y 4) como UNA pieza parametrica (Knowledgeware): parametros A, B, C, croquis de la lamina 04 totalmente restringido (tangencias, puntos sobre rectas, cotas y formulas sobre A y B), pad de largo C; con la q3 construida se cambian SOLO los parametros a los de la q4 y CATIA regenera. Material Steel del catalogo, masa de CATIA contra la lamina 12; volumen y centro de gravedad contra build123d (bien.py del 13); STEP y captura BMP por pregunta",
+ "banco": "13_examen_catia_associate",
+ "respuesta_conocida": {
+  "que": "masa de la pieza en Steel de CATIA (7 860 kg/m3) en las preguntas 3 y 4",
+  "valor": {"q3": 934.78, "q4": 1027.09},
+  "unidad": "g",
+  "tolerancia": 1.0,
+  "fuente": "Lamina 12 (respuestas) del «CATIA V5 Associate - Part Design (PDG) Sample Exam», Dassault Systemes, V2-2015/03/30; laminas 04, 05 y 06 para el plano y las cotas A, B, C (carpeta en la nube y sha256 en evals/banco3d/ejercicios/13_examen_catia_associate/tarea.yaml)"
+ },
+ "cruces": {
+  "volumen_y_cdg_build123d": "juez_comun: 0,5 mm3 y 0,01 mm contra las partes q3 y q4 de bien.py del 13 (la q4 de bien.py esta corrida 150 en x: el cdg de CATIA se corre antes de comparar y salida.json guarda el crudo)",
+  "croquis": "gdl() del croquis declarado = 0 y todas las restricciones con Status 0 antes y despues de cambiar los parametros"
+ }
+}

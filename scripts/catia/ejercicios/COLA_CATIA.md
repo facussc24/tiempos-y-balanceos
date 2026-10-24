@@ -77,7 +77,7 @@ de `catia_base`, como en la práctica del 19/10). Solo en la PC principal y con 
 | 08 | pendiente | | |
 | 09 | hecho | PC principal, R21, 24/10 09:18: 19 pasos sin falla, −0,004 mm³ y 0,0004 mm de build123d, 56,73 g (guía 57,08 ± 1), área −3e-8, STEP 1 sólido sin caras sueltas, STL cerrado a −0,24 %; revisor Fable: 1 bug real (el control del sentido de las caras) y 3 de robustez, arreglados | (este commit) |
 | 10 | pendiente | | |
-| 11 | pendiente | | |
+| 11 | hecho | PC principal, R21, 24/10 09:28: croquis de 34 restricciones resuelto en q3 y q4, 0,000 mm³ de build123d, masas a 0,002 y 0,004 g de la lámina 12; revisor Fable: sin bugs, 4 de robustez aplicados (rango 40/40 y solver simulado en la prueba, ángulo −10, coherencia de masa, desplazamiento por parte) | (este commit) |
 | 12 | pendiente | | |
 | 13 | pendiente | | |
 | 14 | pendiente | | |
