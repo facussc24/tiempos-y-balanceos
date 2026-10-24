@@ -71,7 +71,7 @@ para uso educativo); la del CSWP: https://sites.ualberta.ca/~dnobes/CSWA/CSWP_Ma
 | 28 | CATA | `28_ttt_bearing_bracket` | TTT 01-01 Bearing Bracket: punta en dos arcos de 90°, cola de milano | guía: 797,15 g | ej37 |
 | 29 | principal | `29_ttt_buffer_stand` | TTT 24-SPO-06 Buffer Stand, plano en PULGADAS (× 25,4) | guía: 3,923 lb ± 0,02 (ojo con la unidad) | ej39 |
 | 30 | CATA | `30_ttt_corner_tie` | TTT 01-09 Corner Tie: pestaña armada plana + Rotate + Split | guía: 307,23 g | ej40 |
-| 31 | principal | `31_ttt_sm_hanger` | TTT 23-02-02 SM Hanger (chapa de 4) como sólido: la R21 no tiene la biblioteca de chapa por COM | guía: 1 028 g ± 10 | ej54 |
+| 31 | CATA (era de la principal: pedido 8, 24/10 11:05) | `31_ttt_sm_hanger` | TTT 23-02-02 SM Hanger (chapa de 4) como sólido: la R21 no tiene la biblioteca de chapa por COM | guía: 1 028 g ± 10 | ej54 |
 
 ## Lo que sigue, en este orden (Fak, 24/10/2026 a la mañana)
 
