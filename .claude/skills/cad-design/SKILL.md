@@ -256,9 +256,10 @@ De las tres entregas rechazadas, **dos no fallaron por el diseño: fallaron por 
   condición}` (`reference/ficha-utillajes.md` K1; patrón vivo `examples/gancho_mochila/verificar_gancho.py`). Lo
   mismo va en el PDF, con las palabras de Fak.
 - **G-E8 — ningún número tipeado en la página de entrega (24/10/2026, lección 39).** `gate_entregable.py
-  --fuentes-pagina pasos.json --medidas <json de medidas del modelo>` (o `numeros_pagina.py`, que frena por su cuenta
-  desde el 01/11/2026): cada número con unidad de la página sale de una medida del modelo; uno que no está en ninguna,
-  que la contradice o que da dos valores para el mismo dato es rojo. Sin `--medidas` es NO MEDIDO, nunca OK.
+  --fuentes-pagina pasos.json --medidas <json de medidas del modelo>`: cada número con unidad de la página sale de una
+  medida del modelo; uno que no está en ninguna, que la contradice o que da dos valores para el mismo dato es rojo de
+  `numeros_pagina.py` (que frena por su cuenta desde el 01/11/2026). En `gate_entregable.py` G-E8 **siempre avisa** y no
+  frena la entrega. Sin `--medidas` es NO MEDIDO, nunca OK.
 - **G-E4 — revisión ciega, después del GATE E verde y antes de mostrárselo a Fak (22/09/2026).**
   Los gates en verde no vieron lo que Fak vio a ojo: el dispositivo del Insert (24/08 a 22/09,
   cadena de 75 pasos verde) volvió cinco veces (*"hacés todo a medias sin testearlo"*, *"puesto
